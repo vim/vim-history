@@ -1,5 +1,5 @@
 /*****************************************************************************
-*   $Id: sort.c,v 8.2 1999/03/27 21:17:18 darren Exp $
+*   $Id: sort.c,v 8.5 1999/09/17 07:00:10 darren Exp $
 *
 *   Copyright (c) 1996-1999, Darren Hiebert
 *
@@ -88,6 +88,8 @@ extern void externalSortTags( toStdout )
 # endif
 #endif
 	sprintf(cmd, sortTemplate, env, tagFileName(), tagFileName());
+	if (Option.verbose)
+	    printf("system(\"%s\")\n", cmd);
 	ret = system(cmd);
 	free(cmd);
 
@@ -167,9 +169,9 @@ extern void internalSortTags( toStdout )
 
     /*	Allocate a table of line pointers to be sorted.
      */
-    size_t numTags	= TagFile.numTags.added + TagFile.numTags.prev;
+    size_t numTags = TagFile.numTags.added + TagFile.numTags.prev;
     const size_t tableSize = numTags * sizeof(char *);
-    char **const table	= (char **)malloc(tableSize);	/* line pointers */
+    char **const table = (char **)malloc(tableSize);	/* line pointers */
     DebugStatement( size_t mallocSize = tableSize; )	/* cumulative total */
 
     if (table == NULL)
@@ -214,8 +216,7 @@ extern void internalSortTags( toStdout )
 
     writeSortedTags(table, numTags, toStdout);
 
-    DebugStatement( if (debug(DEBUG_STATUS))
-			printf("sort memory: %ld bytes\n", (long)mallocSize); )
+    PrintStatus(("sort memory: %ld bytes\n", (long)mallocSize));
     for (i = 0 ; i < numTags ; ++i)
 	free(table[i]);
     free(table);

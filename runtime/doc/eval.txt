@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 5.4.  Last change: 1999 Jul 09
+*eval.txt*      For Vim version 5.5.  Last change: 1999 Sep 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -334,6 +334,17 @@ environment variable					*expr-env*
 
 The String value of any environment variable.  When it is not defined, the
 result is an empty string.
+							*expr-env-expand*
+Note that there is a difference between using $VAR directly and using
+expand("$VAR").  Using it directly will only expand environment variables that
+are known inside the current Vim session.  Using expand() will first try using
+the environment variables known inside the current Vim session.  If that
+fails, a shell will be used to expand the variable.  This can be slow, but it
+does expand all variables that the shell knows about.  Example:
+>   echo $version
+>   echo expand("$version")
+The first one probably doesn't echo anything, the second echoes the $version
+variable (if you shell supports it).
 
 
 internal variable					*expr-variable*
@@ -476,6 +487,7 @@ match( {expr}, {pat})		Number	position where {pat} matches in {expr}
 matchend( {expr}, {pat})	Number	position where {pat} ends in {expr}
 matchstr( {expr}, {pat})	String	match of {pat} in {expr}
 nr2char( {expr})		String	single char with ASCII value {expr}
+rename({from}, {to})		Number  rename (move) file from {from} to {to}
 setline( {lnum}, {line})	Number	set line {lnum} to {line}
 strftime( {format}[, {time}])	String	time in specified format
 strlen( {expr})			Number	length of the String {expr}
@@ -597,6 +609,8 @@ byte2line({byte})
 		for the current buffer.  The first character has byte count
 		one.
 		Also see |line2byte()|, |go| and |:goto|.
+		{not available when compiled without the |+byte_offset|
+		feature}
 
 							*char2nr()*
 char2nr({expr})
@@ -675,8 +689,7 @@ did_filetype()	Returns non-zero when autocommands are being executed and the
 		to avoid triggering the FileType event again in the scripts
 		that detect the file type. |FileType|
 
-							*escape()*
-escape({string}, {chars})
+escape({string}, {chars})				*escape()*
 		Escape the characters in {chars} that occur in {string} with a
 		backslash.  Example:
 >			:echo escape('c:\program files\vim', ' \')
@@ -719,7 +732,7 @@ expand({expr} [, {flag}])
 		caused problems when a file name contains a space]
 
 		If the expansion fails, the result is an empty string.  A name
-		for a non-existing file is included anyway.
+		for a non-existing file is not included.
 
 		When {expr} starts with '%', '#' or '<', the expansion is done
 		like for the |cmdline-special| variables with their associated
@@ -748,6 +761,11 @@ expand({expr} [, {flag}])
 >			:let doesntwork = expand("%:h.bak")
 		Use this:
 >			:let doeswork = expand("%:h") . ".bak"
+		Also note that expanding "<cfile>" and others only returns the
+		referenced file name without further expansion.  If "<cfile>"
+		is "~/.cshrc", you need to do another expand() to have the
+		"~/" expanded into the path of the home directory:
+>			:echo expand(expand("<cfile>"))
 
 		There cannot be white space between the variables and the
 		following modifier.  The |fnamemodify()| function can be used
@@ -761,7 +779,11 @@ expand({expr} [, {flag}])
 		When {expr} does not start with '%', '#' or '<', it is
 		expanded like a file name is expanded on the command line.
 		'suffixes' and 'wildignore' are used, unless the optional
-		second argument is given and it is non-zero.
+		{flag} argument is given and it is non-zero.
+
+		Expand() can also be used to expand variables and environment
+		variables that are only known in a shell.  But this can be
+		slow, because a shell must be started.  See |expr-env-expand|.
 
 		See |glob()| for finding existing files.  See |system()| for
 		getting the raw output of an external command.
@@ -1001,7 +1023,13 @@ line2byte({lnum})
 		Return the byte count from the start of the buffer for line
 		{lnum}.  This includes the end-of-line character, depending on
 		the 'fileformat' option for the current buffer.  The first
-		line returns 1;
+		line returns 1.
+		This can also be used to get the byte count for the line just
+		below the last line:
+>			line2byte(line("$") + 1)
+		This is the file size plus one.
+		When {lnum} is invalid, or the |+byte_offset| feature has been
+		disabled at compile time, -1 is returned.
 		Also see |byte2line()|, |go| and |:goto|.
 
 							*localtime()*
@@ -1074,6 +1102,12 @@ nr2char({expr})
 		value {expr}.  Examples:
 >			nr2char(64)		returns "@"
 >			nr2char(32)		returns " "
+
+rename({from}, {to})					*rename()*
+		Rename the file by the name {from} to the name {to}.  This
+		should also work to move files across file systems.  The
+		result is a Number, which is 0 if the file was renamed
+		successfully, and non-zero when the renaming failed.
 
 							*setline()*
 setline({lnum}, {line})
@@ -1384,6 +1418,7 @@ vms			VMS version of Vim.
 wildmenu		Compiled with 'wildmenu' option.
 wildignore		Compiled with 'wildignore' option.
 winaltkeys		Compiled with 'winaltkeys' option.
+win16			Win16 version of Vim (Windows 3.1).
 win32			Win32 version of Vim (Windows 95/NT).
 writebackup		Compiled with 'writebackup' default on.
 xim			Compiled with X input method support |xim|.
@@ -1412,7 +1447,7 @@ confusion with builtin functions.
 			An argument can be defined by giving its name.  In the
 			function this can then be used as "a:name" ("a:" for
 			argument).
-			Several arguments can be given, separated by commas.
+			Up to 20 arguments can be given, separated by commas.
 			Finally, an argument "..." can be specified, which
 			means that more arguments may be following.  In the
 			function they can be used as "a:1", "a:2", etc.  "a:0"
@@ -1494,7 +1529,8 @@ This function can then be called with:
 							*:cal* *:call*
 :[range]cal[l] {name}([arguments])
 		Call a function.  The name of the function and its arguments
-		are as before.
+		are as specified with |:function|.  Up to 20 arguments can be
+		used.
 		Without a range and for functions that accept a range, the
 		function is called once, with the cursor at the current
 		position.

@@ -1,5 +1,8 @@
 " Simplistic way to make spaces and Tabs visible
-syn clear
+
+" This can be added to an already active syntax.
+"syn clear
+
 syn match Space " "
 syn match Tab "\t"
 if &background == "dark"

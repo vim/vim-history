@@ -139,7 +139,6 @@ do_menu(eap)
     {
 	if (STRCMP(menu_path, "*") == 0)	/* meaning: remove all menus */
 	    menu_path = (char_u *)"";
-	remove_menu(&root_menu, menu_path, modes, FALSE);
 
 	/*
 	 * For the PopUp menu, remove a menu for each mode separately.
@@ -152,11 +151,14 @@ do_menu(eap)
 		    p = popup_mode_name(menu_path, i);
 		    if (p != NULL)
 		    {
-			remove_menu(&root_menu, p, 1 << i, TRUE);
+			remove_menu(&root_menu, p, MENU_ALL_MODES, TRUE);
 			vim_free(p);
 		    }
 		}
 	}
+
+	/* Careful: remove_menu() changes menu_path */
+	remove_menu(&root_menu, menu_path, modes, FALSE);
     }
     else
     {
@@ -244,8 +246,8 @@ add_menu_path(menu_path, modes, pri_tab,
     char_u	*next_name;
     int		i;
     int		c;
-    int		idx;
 #ifdef USE_GUI
+    int		idx;
     int		new_idx;
 #endif
     int		pri_idx = 0;
@@ -268,8 +270,8 @@ add_menu_path(menu_path, modes, pri_tab,
 
 	/* See if it's already there */
 	lower_pri = menup;
-	idx = 0;
 #ifdef USE_GUI
+	idx = 0;
 	new_idx = 0;
 #endif
 	menu = *menup;
@@ -301,7 +303,9 @@ add_menu_path(menu_path, modes, pri_tab,
 	     * Ignore menus that are not in the menubar (PopUp and Toolbar) */
 	    if (parent != NULL || menubar_menu(menu->name))
 	    {
+#ifdef USE_GUI
 		++idx;
+#endif
 		if (menu->priority <= pri_tab[pri_idx])
 		{
 		    lower_pri = menup;
@@ -554,6 +558,14 @@ remove_menu(menup, name, modes, silent)
 	     */
 	    if (*name != NUL)
 		break;
+
+#ifdef USE_GUI_ATHENA
+	    if (((menu->modes & ~modes) & MENU_ALL_MODES) == 0)
+	    {
+		EMSG("Sorry, deleting a menu is not possible in the Athena version");
+		return FAIL;
+	    }
+#endif
 
 	    /* Remove the menu item for the given mode[s].  If the menu item
 	     * is no longer valid in ANY mode, delete it */
@@ -1270,10 +1282,15 @@ gui_update_menus_recurse(menu, mode)
 	    i = FALSE;
 	else
 	    i = TRUE;
+#ifdef USE_GUI_ATHENA
+	/* Hiding menus doesn't work for Athena, it can cause a crash. */
+       gui_mch_menu_grey(menu, i);
+#else
 	if (vim_strchr(p_go, GO_GREY) != NULL)
 	    gui_mch_menu_grey(menu, i);
 	else
 	    gui_mch_menu_hidden(menu, i);
+#endif
 	gui_update_menus_recurse(menu->children, mode);
 	menu = menu->next;
     }
@@ -1518,7 +1535,7 @@ gui_destroy_tearoffs_recurse(menu)
 execute_menu(path_name)
     char_u	*path_name;
 {
-    VimMenu	*menu = NULL;
+    VimMenu	*menu;
     char_u	*name;
     char_u	*saved_name;
     char_u	*p;

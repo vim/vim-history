@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 5.4.  Last change: 1999 Jun 11
+*quickfix.txt*  For Vim version 5.5.  Last change: 1999 Sep 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -10,7 +10,7 @@ The quickfix commands are not available when the |+quickfix| feature was
 disabled at compile time.
 
 
-Using the QuickFix mode					*quickfix*
+Using the QuickFix mode					*quickfix* *Quickfix*
 
 Vim has a special mode to speedup the edit-compile-edit cycle.  This is
 inspired by the quickfix option of the Manx's Aztec C compiler on the Amiga.

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language   : BibTeX (bibtex)
 " Maintainer : Bernd Feige <Bernd.Feige@gmx.net>
-" Last change: May 7, 1999
+" Last change: Aug 27, 1999
 
 " Thanks go to David Squire <squire@cui.unige.ch> for the change to
 " discriminate between inside and outside of bib entries :-)
@@ -27,9 +27,9 @@ syn keyword bibEntryKw contained	school series title type volume year
 syn keyword bibNSEntryKw contained	abstract isbn issn keywords url
 
 syn match bibUnescapedSpecial contained /[^\\][%&]/hs=s+1
-syn match bibKey contained /\s*[^ \t}]\+,/hs=s,he=e-1 nextgroup=bibField
+syn match bibKey contained /\s*[^ \t}="]\+,/hs=s,he=e-1 nextgroup=bibField
 syn match bibVariable contained /[^{}," \t=\k]/
-syn region bibQuote contained start=/"/ms=s+1 end=/"/ skip=/\(\\"\)/ contains=bibUnescapedSpecial,bibBrace
+syn region bibQuote contained start=/"/ end=/"/ skip=/\(\\"\)/ contains=bibUnescapedSpecial,bibBrace
 syn region bibBrace contained start=/{/ end=/}/ contains=bibUnescapedSpecial,bibBrace
 syn region bibField contained start=/\k\+\s*=\s*/ end=/[},]/me=e-1 contains=bibEntryKw,bibNSEntryKw,bibBrace,bibQuote,bibVariable
 syn region bibEntryData contained start=/[{(]/ms=e+1 end=/[})]/me=e-1 contains=bibKey,bibField

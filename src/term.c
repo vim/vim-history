@@ -1505,6 +1505,7 @@ set_termname(term)
 		mch_errmsg((char *)term);
 		mch_errmsg("'\r\n");
 		screen_start();		/* don't know where cursor is now */
+		out_flush();
 		ui_delay(2000L, TRUE);
 		set_string_option_direct((char_u *)"term", -1, term, TRUE);
 		mch_display_error();
@@ -3314,7 +3315,7 @@ check_termcode(max_offset, buf, buflen)
 	{
 	    is_click = is_drag = FALSE;
 
-#if !defined(UNIX) || defined(XTERM_MOUSE) || defined(USE_GUI)
+# if !defined(UNIX) || defined(XTERM_MOUSE) || defined(USE_GUI)
 	    if (key_name[0] == (int)KS_MOUSE)
 	    {
 		/*
@@ -3334,14 +3335,14 @@ check_termcode(max_offset, buf, buflen)
 		mouse_col = bytes[1] - ' ' - 1;
 		mouse_row = bytes[2] - ' ' - 1;
 		slen += num_bytes;
-#ifdef UNIX
+#  ifdef UNIX
 		if (use_xterm_mouse() > 1)
 		{
 		    if (mouse_code & MOUSE_DRAG_XTERM)
 			mouse_code |= MOUSE_DRAG;
 		}
-#endif
-#ifdef XTERM_CLIP
+#  endif
+#  ifdef XTERM_CLIP
 		else
 		{
 		    if (!(mouse_code & MOUSE_DRAG & ~MOUSE_CLICK_MASK))
@@ -3352,10 +3353,10 @@ check_termcode(max_offset, buf, buflen)
 			    start_xterm_trace(mouse_code);
 		    }
 		}
-#endif
+#  endif
 	    }
-#endif /* !UNIX || XTERM_MOUSE */
-#ifdef NETTERM_MOUSE
+# endif /* !UNIX || XTERM_MOUSE */
+# ifdef NETTERM_MOUSE
 	    if (key_name[0] == (int)KS_NETTERM_MOUSE)
 	    {
 		int mc, mr;
@@ -3377,8 +3378,8 @@ check_termcode(max_offset, buf, buflen)
 		mouse_code = MOUSE_LEFT;
 		slen += (p - (tp + slen));
 	    }
-#endif	/* NETTERM_MOUSE */
-#ifdef DEC_MOUSE
+# endif	/* NETTERM_MOUSE */
+# ifdef DEC_MOUSE
 	    if (key_name[0] == (int)KS_DEC_MOUSE)
 	    {
 	       /* The DEC Locator Input Model
@@ -3515,7 +3516,7 @@ check_termcode(max_offset, buf, buflen)
 
 		slen += (p - (tp + slen));
 	    }
-#endif /* DEC_MOUSE */
+# endif /* DEC_MOUSE */
 
 	    /* Interpret the mouse code */
 	    current_button = (mouse_code & MOUSE_CLICK_MASK);
@@ -3535,23 +3536,23 @@ check_termcode(max_offset, buf, buflen)
 	    }
 	    else
 	    {
-#if defined(UNIX) && defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
-# ifdef GPM_MOUSE
+# if defined(UNIX) && defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
+#  ifdef GPM_MOUSE
 		extern int gpm_flag; /* gpm library variable */
-#  ifdef USE_GUI
+#   ifdef USE_GUI
 		/*
 		 * Only for Unix, when GUI or gpm is not active, we handle
 		 * multi-clicks here.
 		 */
 		if (gpm_flag == 0 && !gui.in_use)
-#  else
+#   else
 		if (gpm_flag == 0)
-#  endif
-# else
-#  ifdef USE_GUI
+#   endif
+#  else
+#   ifdef USE_GUI
 		if (!gui.in_use)
+#   endif
 #  endif
-# endif
 		{
 		    /*
 		     * Compute the time elapsed since the previous mouse click.
@@ -3577,13 +3578,13 @@ check_termcode(max_offset, buf, buflen)
 		    orig_mouse_row = mouse_row;
 		    orig_topline = curwin->w_topline;
 		}
-# if defined(USE_GUI) || defined(GPM_MOUSE)
+#  if defined(USE_GUI) || defined(GPM_MOUSE)
 		else
 		    orig_num_clicks = NUM_MOUSE_CLICKS(mouse_code);
-# endif
-#else
+#  endif
+# else
 		orig_num_clicks = NUM_MOUSE_CLICKS(mouse_code);
-#endif
+# endif
 		is_click = TRUE;
 		orig_mouse_code = mouse_code;
 	    }

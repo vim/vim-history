@@ -1,10 +1,10 @@
-*uganda.txt*    For Vim version 5.4.  Last change: 1999 Jul 09
+*uganda.txt*    For Vim version 5.5.  Last change: 1999 Sep 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
-						*uganda* *copying* *copyright*
+					*uganda* *Uganda* *copying* *copyright*
 SUMMARY
 Vim is Charityware.  You can use and copy it as much as you like, but you are
 encouraged to make a donation to orphans in Uganda.  See |iccf| below.
@@ -113,8 +113,8 @@ personal guarantee as the author of Vim.  I trust the people that are working
 at the centre, I know them personally.  Further more, the centre is
 co-sponsored and inspected by World Vision, Save the Children Fund and
 International Child Care Fund.  The centre is visited at least once a year to
-check the progress (at our own cost).  I have visted the centre myself in 1996
-and 1998.
+check the progress (at our own cost).  I have visited the centre myself in
+1996 and 1998.
 
 If you have any further questions, send me e-mail: <Bram@vim.org>.
 
@@ -148,7 +148,7 @@ Europe:		To avoid banking costs the best thing is to send me a
 			Bram Moolenaar
 			Clematisstraat 30
 			5925 BE  Venlo
-			The Netherlands.
+			The Netherlands
 
 Others:		Transfer to one of these accounts if possible:
 		    Postbank, nr. 4548774

@@ -652,6 +652,7 @@ VimCommand(PyObject *self, PyObject *args)
     static PyObject *
 VimEval(PyObject *self, PyObject *args)
 {
+#ifdef WANT_EVAL
     char *expr;
     char *str;
     PyObject *result;
@@ -659,7 +660,6 @@ VimEval(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "s", &expr))
 	return NULL;
 
-#ifdef WANT_EVAL
     Py_BEGIN_ALLOW_THREADS
     Python_Lock_Vim();
     str = (char *)eval_to_string((char_u *)expr, NULL);
@@ -671,10 +671,6 @@ VimEval(PyObject *self, PyObject *args)
 	PyErr_SetVim("invalid expression");
 	return NULL;
     }
-#else
-    PyErr_SetVim("expressions disabled at compile time");
-    return NULL;
-#endif
 
     result = Py_BuildValue("s", str);
 
@@ -685,6 +681,10 @@ VimEval(PyObject *self, PyObject *args)
     Py_END_ALLOW_THREADS
 
     return result;
+#else
+    PyErr_SetVim("expressions disabled at compile time");
+    return NULL;
+#endif
 }
 
 /* Common routines for buffers and line ranges
@@ -951,7 +951,11 @@ BufferRepr(PyObject *self)
     else
     {
 	char *name = (char *)this->buf->b_fname;
-	int len = strlen(name);
+	int len;
+
+	if (name == NULL)
+	    name = "";
+	len = strlen(name);
 
 	if (len > 35)
 	    name = name + (35 - len);
@@ -1162,7 +1166,11 @@ RangeRepr(PyObject *self)
     else
     {
 	char *name = (char *)this->buf->buf->b_fname;
-	int len = strlen(name);
+	int len;
+
+	if (name == NULL)
+	    name = "";
+	len = strlen(name);
 
 	if (len > 45)
 	    name = name + (45 - len);

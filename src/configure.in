@@ -35,22 +35,31 @@ if test "$cross_compiling" = yes; then
   AC_MSG_ERROR([cannot compile a simple program, check CC and CFLAGS])
 fi
 
-dnl See if the compiler accepts "-Olimit 2000" or "-FOlimit,2000, needed for
-dnl some systems, because Vim uses very big case statements.
+dnl Check if the compiler accepts "-OPT:Olimit=2600", "-Olimit 2000" or
+dnl "-FOlimit,2000".  Needed for some systems, because Vim uses very big case
+dnl statements.  The order is significant, because "-FOlimit,2000 and
+dnl "-Olimit 2000" may only generate a warning.
 
 if test "$GCC" != yes; then
-  AC_MSG_CHECKING(if compiler accepts -Olimit)
   save_cflags=$CFLAGS
-  CFLAGS="$CFLAGS -Olimit 2000"
+  AC_MSG_CHECKING(if compiler accepts -OPT:Olimit)
+  CFLAGS="$CFLAGS -OPT:Olimit=2600"
   AC_TRY_LINK(, ,
+    AC_MSG_RESULT(yes),
+    [AC_MSG_RESULT(no); CFLAGS="$save_cflags"
+      AC_MSG_CHECKING(if compiler accepts -Olimit)
+      CFLAGS="$CFLAGS -Olimit 2000"
+      AC_TRY_LINK(, ,
 	AC_MSG_RESULT(yes),
-        [AC_MSG_RESULT(no); CFLAGS="$save_cflags"
-         AC_MSG_CHECKING(if compiler accepts -FOlimit)
-         CFLAGS="$CFLAGS -FOlimit,2000"
-         AC_TRY_LINK(, ,
-               AC_MSG_RESULT(yes),
-               [AC_MSG_RESULT(no); CFLAGS="$save_cflags"])
-        ])
+	[AC_MSG_RESULT(no); CFLAGS="$save_cflags"
+	  AC_MSG_CHECKING(if compiler accepts -FOlimit)
+	  CFLAGS="$CFLAGS -FOlimit,2000"
+  	  AC_TRY_LINK(, ,
+	    AC_MSG_RESULT(yes),
+            [AC_MSG_RESULT(no); CFLAGS="$save_cflags"
+	    ])
+	])
+    ])
 fi
 
 dnl gcc-cpp has the wonderful -MM option to produce nicer dependencies
@@ -263,9 +272,16 @@ AC_ARG_ENABLE(tclinterp,
 AC_MSG_RESULT($enable_tclinterp)
 
 if test "$enable_tclinterp" = "yes"; then
-	AC_SUBST(vi_cv_path_tcl)
+
 	dnl on FreeBSD tclsh is a silly script. tclsh8.0 is what we need.
-	AC_PATH_PROG(vi_cv_path_tcl, tclsh8.0)
+	AC_MSG_CHECKING(--with-tclsh argument)
+	AC_ARG_WITH(tclsh, [  --with-tclsh=PATH       which tclsh to use (default: tclsh8.0)],
+		tclsh_name="$withval",
+        	tclsh_name="tclsh8.0")
+	AC_MSG_RESULT($tclsh_name)
+	AC_PATH_PROG(vi_cv_path_tcl, $tclsh_name)
+	AC_SUBST(vi_cv_path_tcl)
+
 	if test "X$vi_cv_path_tcl" = "X"; then
 	  AC_PATH_PROG(vi_cv_path_tcl, tclsh)
 	fi
@@ -1235,7 +1251,7 @@ char**argv;
 		  japan japanese japanese.ujis ja_JP.PCK \
 		  ko ko_KR ko_KR.euc ko_KR.eucKR ko_KR.EUC korean \
 		  zh zh_CN zh_TW zh_CN.euc zh_TW.euc zh_CN.eucCN zh_TW.eucTW \
-		  zh.GBK zh_TW.BIG zh_TW.BIG5 zh_TW.EUC zh_CN.EUC
+		  zh.GBK zh_TW.BIG zh_TW.Big5 zh_TW.BIG5 zh_TW.EUC zh_CN.EUC
     do
       if ./localetest $locale
       then

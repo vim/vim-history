@@ -25,8 +25,9 @@
 #	  Athena but don't want to make gvim (the GUI version of Vim with nice
 #	  menus and scrollbars, but makes Vim bigger and startup slower).
 #	- Uncomment the line "CONF_OPT_X = --without-x" if you have X11 but
-#	  want to disable using X11 libraries.  Vim won't set the window
-#	  titles then.  This speeds up starting Vim.
+#	  want to disable using X11 libraries.  This speeds up starting Vim,
+#	  but the window title will not be set and the X11 selection can not
+#	  used.
 #	- Uncomment the line with --enable-perlinterp to enable Perl.  Makes
 #	  Vim quite a bit bigger.
 #	- Uncomment the line with --enable-pythoninterp to enable Python.
@@ -148,12 +149,13 @@
 #AIX 4.1.1	      cc	     +X11 +GUI		5.0c	 Jeff Walker
 #AIX 4.2	      gcc 2.7.2.1    +X11 +GUI_Motif	5.2	 D. Rothkamp
 #AIX 4.2.1	      cc				5.2k (C) Will Fiveash
-#AIX 4.3	      cc	     +X11 +GUI_Athena	5.3      Glauber Ribeiro
+#AIX 4.3	      cc	     +X11 +GUI_Athena	5.3	 Glauber Ribeiro
 #A/UX 3.1.1	      gcc	     +X11		4.0  (6) Jim Jagielski
 #BeOS PR	      mwcc DR3				5.0n (T) Olaf Seibert
 #BSDI 2.1 (x86)       shlicc2 gcc-2.6.3 -X11 X11R6	4.5  (1) Jos Backus
 #BSD/OS 3.0 (x86)     gcc gcc-2.7.2.1 -X11 X11R6	4.6c (1) Jos Backus
 #CYGWIN32_NT 19.3     egcs-2.90.27 -X11 -GUI		5.2	 D. Rothkamp
+#CX/UX 6.2	      cc	     +X11 +GUI_Mofif	5.4  (V) Kipp E. Howard
 #DG/UX 5.4*	      gcc 2.5.8      GUI		5.0e (H) Jonas Schlein
 #DG/UX 5.4R4.20       gcc 2.7.2      GUI		5.0s (H) Rocky Olive
 #HP-UX (most)	      c89 cc				5.1  (2) Bram Moolenaar
@@ -161,7 +163,8 @@
 #HP-UX_10.01	      gcc 2.7.2      +X11 -GUI		5.2	 D. Rothkamp
 #HP-UX_10.20	      gcc 2.7.2.1    +X11 +Motif	5.0s	 Karsten Sievert
 #HP-UX_10.20	      gcc 2.7.2.1    +X11R6 +Motif	5.1	 Kayhan Demirel
-#HP-UX 11.00 64 bit   egcs 1.1.1     -X11		5.4c     Heiko Nardmann
+#HP-UX_10.20	      gcc 2.8.1      +X11R6 +Motif	5.5a	 Axel Kielhorn
+#HP-UX 11.00 64 bit   egcs 1.1.1     -X11		5.4c	 Heiko Nardmann
 #Irix 6.3 (O2)	      cc	     ?			4.5  (L) Edouard Poor
 #Irix 6.4	      cc	     ?			5.0m (S) Rick Sayre
 #Irix 6.5	      cc	     ?			5.3  (S) David Harrison
@@ -170,16 +173,16 @@
 #FreeBSD 2.1.6	      gcc-2.6.3      +X11 -GUI Athena	5.0c	 Bram Moolenaar
 #FreeBSD 2.2.5	      gcc-2.7.2.1    X11R6 Moo-Tiff	5.4d	 Bram Moolenaar
 #FreeBSD 2.2.5	      gcc-2.7.2.1    +X11 -GUI Athena	5.4d	 Bram Moolenaar
-#FreeBSD 3.0	      gcc-2.7.2.1    +X11 GTK 1.2.3	5.4	 Bram Moolenaar
-#FreeBSD 3.0	      gcc-2.7.2.1    +X11 Athena	5.4	 Bram Moolenaar
-#FreeBSD 3.0	      gcc-2.7.2.1    +X11 Lesstif0.88.1 5.4	 Bram Moolenaar
+#FreeBSD 3.0	      gcc-2.7.2.1    +X11 GTK 1.2.3	5.5	 Bram Moolenaar
+#FreeBSD 3.0	      gcc-2.7.2.1    +X11 Athena	5.5	 Bram Moolenaar
+#FreeBSD 3.0	      gcc-2.7.2.1    +X11 Lesstif0.88.1 5.5	 Bram Moolenaar
 #Linux 2.0	      gcc-2.7.2      Infomagic Motif	4.3  (3) Ronald Rietman
 #Linux 2.0.31	      gcc	     +X11 +GUI Athena	5.0w (U) Darren Hiebert
 #Linux 2.0.33	      gcc-2.7.2.1    X11R6, Lesstif	5.0s	 Tony Nugent
-#Linux 2.0.34         gcc-2.90.29    +X11 +GTK 1.2.2    5.4m     Ant. Colombo
+#Linux 2.0.34	      gcc-2.90.29    +X11 +GTK 1.2.2	5.4m	 Ant. Colombo
 #LynxOS 2.5.0	      gcc-2.7-96q1   +X11 +GUI Athena	5.0  (O) Lorenz Hahn
 #LynxOS 2.5.0	      gcc-2.7-96q1   +X11 -GUI Athena	5.0  (O) Lorenz Hahn
-#MacOS	         CodeWarrior Pro 2   -			5.4i     Axel Kielhorn
+#MacOS		 CodeWarrior Pro 2   -			5.4i	 Axel Kielhorn
 #NEC UP4800 UNIX_SV 4.2MP  cc	     +X11R6 Motif,Athena4.6b (Q) Lennart Schultz
 #NetBSD 1.0A	      gcc-2.4.5      -X11 -GUI		3.21 (X) Juergen Weigert
 #NetBSD 1.2.1	      gcc-2.7.2.2    +X11 +GUI Athena	5.0n	 Olaf Seibert
@@ -191,6 +194,7 @@
 #SINIX-N 5.43 RM400 R4000   cc	     +X11 +GUI		5.0l (I) Martin Furter
 #SINIX-Z 5.42 i386    gcc 2.7.2.3    +X11 +GUI Motif	5.1  (I) Joachim Fehn
 #SINIX-Y 5.43 RM600 R4000  gcc 2.7.2.3 +X11 +GUI Motif	5.1  (I) Joachim Fehn
+#Reliant/SINIX 5.44   cc	     +X11 +GUI		5.5a (I) B. Pruemmer
 #SNI Targon31 TOS 4.1.11 gcc-2.4.5   +X11 -GUI		4.6c (B) Paul Slootman
 #Solaris 2.3 (sun4m)  cc	     +X11 +GUI Athena	5.0w	 Darren Hiebert
 #Solaris 2.4 (Sparc)  cc	     +X11 +GUI		3.29 (9) Glauber
@@ -198,7 +202,7 @@
 #Solaris 2.5 (sun4m)  cc (SC4.0)     +X11R6 +GUI (CDE)	4.6b (E) Andrew Large
 #Solaris 2.5	      cc	     +X11 +GUI Athena	4.2  (9) Sonia Heimann
 #Solaris 2.5	      gcc 2.5.6      +X11 Motif		5.0m (R) Ant. Colombo
-#Solaris 2.5 (Sparc)  gcc-2.7.2.3    +X11 +GUI Motif    5.4m     Ant. Colombo
+#Solaris 2.5 (Sparc)  gcc-2.7.2.3    +X11 +GUI Motif	5.4m	 Ant. Colombo
 #Solaris 2.6 (sun4u)  gcc 2.7.2.3    +X11 +GUI_Motif	5.2	 D. Rothkamp
 #Solaris 2.6 (sun4u)  cc (SC4.2)     +X11R6 +GUI (CDE)	5.0v	 Andrew Large
 #Solaris 2.6	      gcc 2.8.1      ncursus		5.3  (G) Larry W. Virden
@@ -230,7 +234,7 @@
 # (G)  Using ncursus version 4.2 has reported to cause a crash.  Use the
 #      Sun cursus library instead.
 # (H)  See line for EXTRA_LIBS below.
-# (I)  SINIX-N 5.42 and 5.43 need some EXTRA_LIBS
+# (I)  SINIX-N 5.42 and 5.43 need some EXTRA_LIBS.  Also for Reliant-Unix.
 # (J)  If you get undefined symbols, see below for a solution.
 # (K)  See lines to uncomment below for machines with 64 bit pointers.
 # (L)  For Silicon Graphics O2 workstations remove "-lnsl" from config.mk
@@ -246,6 +250,7 @@
 # (U)  Must uncomment CONF_OPT_PYTHON option below to disable Python
 #      detection, since the configure script runs into an error when it
 #      detects Python (probably because of the bash shell).
+# (V)  See lines to uncomment below.
 # (X)  Need to use the .include "config.mk" line below
 # (Y)  See line with c89 below
 # (Z)  See lines with cc or c89 below
@@ -462,9 +467,9 @@ LINT_OPTIONS = -beprxzF
 #EXTRA_DEFS = -DHPUX_DIGRAPHS
 
 ### (2) For HP-UX: 9.04 cpp default macro definition table of 128000 bytes
-###     is too small to compile many routines.  It produces too much defining
-###     and no space errors.
-###     Uncomment the following to specify a larger macro definition table.
+###	is too small to compile many routines.  It produces too much defining
+###	and no space errors.
+###	Uncomment the following to specify a larger macro definition table.
 #CFLAGS = -Wp,-H256000
 
 ### (2) For HP-UX 10.20 using the HP cc, with X11R6 and Motif 1.2, with
@@ -563,6 +568,13 @@ LINT_OPTIONS = -beprxzF
 ###   For SINIX-Y this is needed for the right prototype of gettimeofday()
 #CFLAGS = $(CFLAGS) -D_XPG_IV
 
+### (I) Reliant-Unix (aka SINIX) 5.44 with standard cc
+#       Use both "-F O3" lines for optimization or the "-g" line for debugging
+#EXTRA_LIBS = -lgen -lsocket -lnsl -lSM -lICE
+#CFLAGS = -F O3 -DSINIXN
+#LDFLAGS = -F O3
+#CFLAGS = -g -DSINIXN
+
 ### (P)  SCO 3.2.42, with different termcap names for some useful keys DJB
 #EXTRA_DEFS = -DSCOKEYS -DNETTERM_MOUSE -DDEC_MOUSE -DXTERM_MOUSE -DHAVE_GETTIMEOFDAY
 #EXTRA_LIBS = -lsocket -ltermcap -lmalloc -lc_s
@@ -646,21 +658,35 @@ LINT_OPTIONS = -beprxzF
 ### (O)  For LynxOS 2.5.0, tested on PC.
 #EXTRA_LIBS = -lXext -lSM -lICE -lbsd
 
+### (V)  For CX/UX 6.2  (on Harris/Concurrent NightHawk 4800, 5800). Remove
+###	 -Qtarget if only in a 5800 environment.  (Kipp E. Howard)
+#CFLAGS = -O -Qtarget=m88110compat
+#EXTRA_LIBS = -lgen
+
 ##################### end of system specific lines ###################
 
-### Name of the targets
-VIMTARGET	= vim
-EXTARGET	= ex
-VIEWTARGET	= view
-GVIMTARGET	= g$(VIMTARGET)
-GVIEWTARGET	= g$(VIEWTARGET)
-RVIMTARGET	= r$(VIMTARGET)
-RVIEWTARGET	= r$(VIEWTARGET)
-RGVIMTARGET	= r$(GVIMTARGET)
-RGVIEWTARGET	= r$(GVIEWTARGET)
+### Names of the programs and targets
+VIMNAME		= vim
+VIMTARGET	= $(VIMNAME)$(SUFFIX)
+EXNAME		= ex
+EXTARGET	= $(EXNAME)$(SUFFIX)
+VIEWNAME	= view
+VIEWTARGET	= $(VIEWNAME)$(SUFFIX)
+GVIMNAME	= g$(VIMNAME)
+GVIMTARGET	= $(GVIMNAME)$(SUFFIX)
+GVIEWNAME	= g$(VIEWNAME)
+GVIEWTARGET	= $(GVIEWNAME)$(SUFFIX)
+RVIMNAME	= r$(VIMNAME)
+RVIMTARGET	= $(RVIMNAME)$(SUFFIX)
+RVIEWNAME	= r$(VIEWNAME)
+RVIEWTARGET	= $(RVIEWNAME)$(SUFFIX)
+RGVIMNAME	= r$(GVIMNAME)
+RGVIMTARGET	= $(RGVIMNAME)$(SUFFIX)
+RGVIEWNAME	= r$(GVIEWNAME)
+RGVIEWTARGET	= $(RGVIEWNAME)$(SUFFIX)
 
 ### Names of the tools that are also made
-TOOLS = ctags/ctags xxd/xxd
+TOOLS = ctags/ctags$(SUFFIX) xxd/xxd$(SUFFIX)
 
 ### Installation directories.  The defaults come from configure.
 #
@@ -669,15 +695,15 @@ TOOLS = ctags/ctags xxd/xxd
 # Uncomment the next line to install Vim in your home directory.
 #prefix = $(HOME)
 
-### exec_prefix	is the top directory for the executable (default ${prefix})
+### exec_prefix	is the top directory for the executable (default $(prefix))
 #
 # Uncomment the next line to install the Vim executable in "/usr/machine/bin"
 #exec_prefix = /usr/machine
 
-### BINDIR	dir for the executable	 (default "${exec_prefix}/bin")
-### MANDIR	dir for the manual pages (default "${prefix}/man")
-### DATADIR	dir for the other files  (default "${prefix}/lib" or
-#						  "${prefix}/share")
+### BINDIR	dir for the executable	 (default "$(exec_prefix)/bin")
+### MANDIR	dir for the manual pages (default "$(prefix)/man")
+### DATADIR	dir for the other files  (default "$(prefix)/lib" or
+#						  "$(prefix)/share")
 # They may be different when using different architectures for the
 # executable and a common directory for the other files.
 #
@@ -694,7 +720,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and some things
 ### might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim54
+VIMRTDIR = /vim55
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 MACROSUBDIR = /macros
@@ -845,10 +871,10 @@ GTK_TARGETS	= $(BINDIR)/$(GVIMTARGET) \
 			$(BINDIR)/$(GVIEWTARGET) \
 			$(BINDIR)/$(RGVIMTARGET) \
 			$(BINDIR)/$(RGVIEWTARGET)
-GTK_MAN_TARGETS = $(MANSUBDIR)/$(GVIMTARGET).1 \
-			$(MANSUBDIR)/$(GVIEWTARGET).1 \
-			$(MANSUBDIR)/$(RGVIMTARGET).1 \
-			$(MANSUBDIR)/$(RGVIEWTARGET).1
+GTK_MAN_TARGETS = $(MANSUBDIR)/$(GVIMNAME).1 \
+			$(MANSUBDIR)/$(GVIEWNAME).1 \
+			$(MANSUBDIR)/$(RGVIMNAME).1 \
+			$(MANSUBDIR)/$(RGVIEWNAME).1
 GTK_TESTTARGET = gui
 
 ### Motif GUI interface.
@@ -864,10 +890,10 @@ MOTIF_TARGETS	= $(BINDIR)/$(GVIMTARGET) \
 			$(BINDIR)/$(GVIEWTARGET) \
 			$(BINDIR)/$(RGVIMTARGET) \
 			$(BINDIR)/$(RGVIEWTARGET)
-MOTIF_MAN_TARGETS = $(MANSUBDIR)/$(GVIMTARGET).1 \
-			$(MANSUBDIR)/$(GVIEWTARGET).1 \
-			$(MANSUBDIR)/$(RGVIMTARGET).1 \
-			$(MANSUBDIR)/$(RGVIEWTARGET).1
+MOTIF_MAN_TARGETS = $(MANSUBDIR)/$(GVIMNAME).1 \
+			$(MANSUBDIR)/$(GVIEWNAME).1 \
+			$(MANSUBDIR)/$(RGVIMNAME).1 \
+			$(MANSUBDIR)/$(RGVIEWNAME).1
 MOTIF_TESTTARGET = gui
 
 #For SunOS (Solaris) you might want to use this line:
@@ -898,10 +924,10 @@ ATHENA_TARGETS	= $(BINDIR)/$(GVIMTARGET) \
 			$(BINDIR)/$(GVIEWTARGET) \
 			$(BINDIR)/$(RGVIMTARGET) \
 			$(BINDIR)/$(RGVIEWTARGET)
-ATHENA_MAN_TARGETS = $(MANSUBDIR)/$(GVIMTARGET).1 \
-			$(MANSUBDIR)/$(GVIEWTARGET).1 \
-			$(MANSUBDIR)/$(RGVIMTARGET).1 \
-			$(MANSUBDIR)/$(RGVIEWTARGET).1
+ATHENA_MAN_TARGETS = $(MANSUBDIR)/$(GVIMNAME).1 \
+			$(MANSUBDIR)/$(GVIEWNAME).1 \
+			$(MANSUBDIR)/$(RGVIMNAME).1 \
+			$(MANSUBDIR)/$(RGVIEWNAME).1
 ATHENA_TESTTARGET = gui
 
 ### (J)  Sun OpenWindows 3.2 (SunOS 4.1.x) or earlier that produce these ld
@@ -928,10 +954,10 @@ BEOSGUI_TARGETS	= $(BINDIR)/$(GVIMTARGET) \
 			$(BINDIR)/$(GVIEWTARGET) \
 			$(BINDIR)/$(RGVIMTARGET) \
 			$(BINDIR)/$(RGVIEWTARGET)
-BEOSGUI_MAN_TARGETS = $(MANSUBDIR)/$(GVIMTARGET).1 \
-			$(MANSUBDIR)/$(GVIEWTARGET).1 \
-			$(MANSUBDIR)/$(RGVIMTARGET).1 \
-			$(MANSUBDIR)/$(RGVIEWTARGET).1
+BEOSGUI_MAN_TARGETS = $(MANSUBDIR)/$(GVIMNAME).1 \
+			$(MANSUBDIR)/$(GVIEWNAME).1 \
+			$(MANSUBDIR)/$(RGVIMNAME).1 \
+			$(MANSUBDIR)/$(RGVIEWNAME).1
 BEOSGUI_TESTTARGET = gui
 
 # GUI files used for making ctags
@@ -1166,7 +1192,7 @@ tools: $(TOOLS)
 #
 config config.mk: configure
 	GUI_INC_LOC="$(GUI_INC_LOC)" GUI_LIB_LOC="$(GUI_LIB_LOC)" \
-		CC="$(CC)" CFLAGS="$(CFLAGS)" \
+		CC="$(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" \
 	$(CONF_SHELL) ./configure $(CONF_OPT_GUI) $(CONF_OPT_X) \
 	$(CONF_OPT_PERL) $(CONF_OPT_PYTHON) $(CONF_OPT_TCL) \
 	$(CONF_OPT_CSCOPE) $(CONF_OPT_MULTIBYTE) $(CONF_OPT_INPUT) \
@@ -1189,20 +1215,24 @@ myself:
 # A shell script is used to try linking without unneccesary libraries.
 $(VIMTARGET): config.mk $(OBJ) version.c version.h
 	$(CC) -c $(ALL_CFLAGS) version.c
-	@LINK="$(PURIFY) $(SHRPENV) $(CC) $(LDFLAGS) -o $(VIMTARGET) $(OBJ) version.o $(ALL_LIBS)" \
-		MAKE="$(MAKE)" sh $(srcdir)/link.sh
+	@LINK="$(PURIFY) $(SHRPENV) $(CC) $(LDFLAGS) -o $(VIMTARGET) \
+		$(OBJ) version.o $(ALL_LIBS)" MAKE="$(MAKE)" \
+		sh $(srcdir)/link.sh
 
 CTAGSFILES =	ctags/entry.c ctags/main.c ctags/parse.c ctags/sort.c \
 		ctags/get.c ctags/options.c ctags/read.c ctags/strstr.c \
 		ctags/config.h ctags/ctags.h
 
-ctags/ctags: ctags/Makefile $(CTAGSFILES)
-	cd ctags; CC="$(CC)" CFLAGS="$(CFLAGS)" $(MAKE) -f Makefile
+ctags/ctags$(SUFFIX): ctags/Makefile $(CTAGSFILES)
+	cd ctags; CC="$(CC)" CFLAGS="$(CFLAGS)" \
+		$(MAKE) -f Makefile SUFFIX="$(SUFFIX)"
 
 ctags/Makefile ctags/config.h: ctags/Makefile.in
-	cd ctags; CC="$(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" ./configure --mandir="$(MANDIR)" --exec_prefix="$(exec_prefix)"
+	cd ctags; SUFFIX="$(SUFFIX)" CC="$(CC)" CFLAGS="$(CFLAGS)" \
+		LDFLAGS="$(LDFLAGS)" \
+		./configure --mandir="$(MANDIR)" --exec_prefix="$(exec_prefix)"
 
-xxd/xxd: xxd/xxd.c
+xxd/xxd$(SUFFIX): xxd/xxd.c
 	cd xxd; CC="$(CC)" CFLAGS="$(CFLAGS)" $(MAKE) -f Makefile.unix
 
 # Generate function prototypes.  This is not needed to compile vim, but if
@@ -1288,19 +1318,19 @@ install: installvim installtools
 installvim: installvimbin installvimhelp installlinks installhelplinks installmacros installtutor
 
 installvimbin: $(VIMTARGET) $(exec_prefix) $(BINDIR)
-	-if test -f $(BINDIR)/$(VIMTARGET)$(SUFFIX); then \
-	  mv -f $(BINDIR)/$(VIMTARGET)$(SUFFIX) $(BINDIR)/$(VIMTARGET).rm; \
-	  rm -f $(BINDIR)/$(VIMTARGET).rm; \
+	-if test -f $(BINDIR)/$(VIMTARGET); then \
+	  mv -f $(BINDIR)/$(VIMTARGET) $(BINDIR)/$(VIMNAME).rm; \
+	  rm -f $(BINDIR)/$(VIMNAME).rm; \
 	fi
-	$(INSTALL_PROG) $(VIMTARGET)$(SUFFIX) $(BINDIR)
-	$(STRIP) $(BINDIR)/$(VIMTARGET)$(SUFFIX)
-	chmod $(BINMOD) $(BINDIR)/$(VIMTARGET)$(SUFFIX)
+	$(INSTALL_PROG) $(VIMTARGET) $(BINDIR)
+	$(STRIP) $(BINDIR)/$(VIMTARGET)
+	chmod $(BINMOD) $(BINDIR)/$(VIMTARGET)
 # may create a link to the new executable from /usr/bin/vi
 	-$(LINKIT)
 
 # install the help files; first adjust the contents for the location
 installvimhelp: $(HELPSOURCE)/vim.1 $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) $(HELPSUBLOC) $(SYNSUBLOC) $(TUTORSUBLOC)
-	@echo generating $(MANSUBDIR)/$(VIMTARGET).1
+	@echo generating $(MANSUBDIR)/$(VIMNAME).1
 	@sed -e s+/usr/local/lib/vim+$(VIMLOC)+ \
 		-e s+$(VIMLOC)/doc+$(HELPENDLOC)+ \
 		-e s+$(VIMLOC)/syntax+$(SYNTAXENDLOC)+ \
@@ -1313,13 +1343,13 @@ installvimhelp: $(HELPSOURCE)/vim.1 $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) $(HELPSUB
 		-e s+$(VIMLOC)/ftoff.vim+$(SCRIPTENDLOC)/ftoff.vim+ \
 		-e s+$(VIMLOC)/scripts.vim+$(SCRIPTENDLOC)/scripts.vim+ \
 		-e s+$(VIMLOC)/optwin.vim+$(SCRIPTENDLOC)/optwin.vim+ \
-		$(HELPSOURCE)/vim.1 > $(MANSUBDIR)/$(VIMTARGET).1
-	chmod $(MANMOD) $(MANSUBDIR)/$(VIMTARGET).1
-	@echo generating $(MANSUBDIR)/$(VIMTARGET)tutor.1
+		$(HELPSOURCE)/vim.1 > $(MANSUBDIR)/$(VIMNAME).1
+	chmod $(MANMOD) $(MANSUBDIR)/$(VIMNAME).1
+	@echo generating $(MANSUBDIR)/$(VIMNAME)tutor.1
 	@sed -e s+/usr/local/lib/vim+$(VIMLOC)+ \
 		-e s+$(VIMLOC)/tutor+$(TUTORENDLOC)+ \
-		$(HELPSOURCE)/vimtutor.1 > $(MANSUBDIR)/$(VIMTARGET)tutor.1
-	chmod $(MANMOD) $(MANSUBDIR)/$(VIMTARGET)tutor.1
+		$(HELPSOURCE)/vimtutor.1 > $(MANSUBDIR)/$(VIMNAME)tutor.1
+	chmod $(MANMOD) $(MANSUBDIR)/$(VIMNAME)tutor.1
 	cd $(HELPSOURCE); $(INSTALL_DATA) *.txt tags $(HELPSUBLOC)
 	cd $(HELPSUBLOC); chmod $(HELPMOD) *.txt tags
 	$(INSTALL_DATA)  $(HELPSOURCE)/*.pl $(HELPSUBLOC)
@@ -1361,8 +1391,9 @@ installtutor: $(TUTORSOURCE) $(VIMLOC) $(VIMRTLOC) $(TUTORSUBLOC)
 # install helper programs ctags and xxd
 installtools: $(TOOLS) $(exec_prefix) $(BINDIR) $(MANSUBDIR) \
 		$(TOOLSSOURCE) $(VIMLOC) $(VIMRTLOC) $(TOOLSSUBLOC)
-	cd ctags; mandir="$(MANDIR)" exec_prefix="$(exec_prefix)" \
-		bindir="$(BINDIR)" $(MAKE) -e -f Makefile install
+	cd ctags; mandir="$(MANDIR)" \
+		exec_prefix="$(exec_prefix)" bindir="$(BINDIR)" \
+		$(MAKE) -e -f Makefile	SUFFIX="$(SUFFIX)" install
 	if test -f $(BINDIR)/xxd$(SUFFIX); then \
 	  mv -f $(BINDIR)/xxd$(SUFFIX) $(BINDIR)/xxd.rm; \
 	  rm -f $(BINDIR)/xxd.rm; \
@@ -1382,7 +1413,7 @@ $(HELPSOURCE)/vim.1 $(MACROSOURCE) $(TOOLSSOURCE):
 
 $(exec_prefix) $(BINDIR) $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) $(HELPSUBLOC) \
 		$(SYNSUBLOC) $(MACROSUBLOC) $(TOOLSSUBLOC) $(TUTORSUBLOC):
-	-ctags/mkinstalldirs $@
+	-$(SHELL) ctags/mkinstalldirs $@
 	-chmod $(DIRMOD) $@
 
 # create links from various names to vim.  This is only done when the links
@@ -1413,37 +1444,37 @@ $(BINDIR)/$(RGVIMTARGET):
 $(BINDIR)/$(RGVIEWTARGET):
 	cd $(BINDIR); ln -s $(VIMTARGET) $(RGVIEWTARGET)
 
-# create links for the manual pages with various names to vim.  This is only
+# create links for the manual pages with various names to vim.	This is only
 # done when the links (or manpages with the same name) don't exist yet.
-installhelplinks: $(GUI_MAN_TARGETS) $(MANSUBDIR)/$(EXTARGET).1 $(MANSUBDIR)/$(VIEWTARGET).1 $(MANSUBDIR)/$(RVIMTARGET).1 $(MANSUBDIR)/$(RVIEWTARGET).1
+installhelplinks: $(GUI_MAN_TARGETS) $(MANSUBDIR)/$(EXNAME).1 $(MANSUBDIR)/$(VIEWNAME).1 $(MANSUBDIR)/$(RVIMNAME).1 $(MANSUBDIR)/$(RVIEWNAME).1
 
-$(MANSUBDIR)/$(EXTARGET).1:
-	cd $(MANSUBDIR); ln -s $(VIMTARGET).1 $(EXTARGET).1
+$(MANSUBDIR)/$(EXNAME).1:
+	cd $(MANSUBDIR); ln -s $(VIMNAME).1 $(EXNAME).1
 
-$(MANSUBDIR)/$(VIEWTARGET).1:
-	cd $(MANSUBDIR); ln -s $(VIMTARGET).1 $(VIEWTARGET).1
+$(MANSUBDIR)/$(VIEWNAME).1:
+	cd $(MANSUBDIR); ln -s $(VIMNAME).1 $(VIEWNAME).1
 
-$(MANSUBDIR)/$(GVIMTARGET).1:
-	cd $(MANSUBDIR); ln -s $(VIMTARGET).1 $(GVIMTARGET).1
+$(MANSUBDIR)/$(GVIMNAME).1:
+	cd $(MANSUBDIR); ln -s $(VIMNAME).1 $(GVIMNAME).1
 
-$(MANSUBDIR)/$(GVIEWTARGET).1:
-	cd $(MANSUBDIR); ln -s $(VIMTARGET).1 $(GVIEWTARGET).1
+$(MANSUBDIR)/$(GVIEWNAME).1:
+	cd $(MANSUBDIR); ln -s $(VIMNAME).1 $(GVIEWNAME).1
 
-$(MANSUBDIR)/$(RVIMTARGET).1:
-	cd $(MANSUBDIR); ln -s $(VIMTARGET).1 $(RVIMTARGET).1
+$(MANSUBDIR)/$(RVIMNAME).1:
+	cd $(MANSUBDIR); ln -s $(VIMNAME).1 $(RVIMNAME).1
 
-$(MANSUBDIR)/$(RVIEWTARGET).1:
-	cd $(MANSUBDIR); ln -s $(VIMTARGET).1 $(RVIEWTARGET).1
+$(MANSUBDIR)/$(RVIEWNAME).1:
+	cd $(MANSUBDIR); ln -s $(VIMNAME).1 $(RVIEWNAME).1
 
-$(MANSUBDIR)/$(RGVIMTARGET).1:
-	cd $(MANSUBDIR); ln -s $(VIMTARGET).1 $(RGVIMTARGET).1
+$(MANSUBDIR)/$(RGVIMNAME).1:
+	cd $(MANSUBDIR); ln -s $(VIMNAME).1 $(RGVIMNAME).1
 
-$(MANSUBDIR)/$(RGVIEWTARGET).1:
-	cd $(MANSUBDIR); ln -s $(VIMTARGET).1 $(RGVIEWTARGET).1
+$(MANSUBDIR)/$(RGVIEWNAME).1:
+	cd $(MANSUBDIR); ln -s $(VIMNAME).1 $(RGVIEWNAME).1
 
 uninstall: uninstall_runtime
-	-rm -f $(BINDIR)/$(VIMTARGET)$(SUFFIX)
-	-rm -f $(MANSUBDIR)/$(VIMTARGET).1 $(MANSUBDIR)/$(VIMTARGET)tutor.1
+	-rm -f $(BINDIR)/$(VIMTARGET)
+	-rm -f $(MANSUBDIR)/$(VIMNAME).1 $(MANSUBDIR)/$(VIMNAME)tutor.1
 	-rm -f $(BINDIR)/vimtutor
 	-rm -f $(BINDIR)/ctags$(SUFFIX) $(MANSUBDIR)/ctags.1
 	-rm -f $(BINDIR)/xxd$(SUFFIX) $(MANSUBDIR)/xxd.1
@@ -1451,10 +1482,10 @@ uninstall: uninstall_runtime
 	-rm -f $(BINDIR)/$(GVIMTARGET) $(BINDIR)/$(GVIEWTARGET)
 	-rm -f $(BINDIR)/$(RVIMTARGET) $(BINDIR)/$(RVIEWTARGET)
 	-rm -f $(BINDIR)/$(RGVIMTARGET) $(BINDIR)/$(RGVIEWTARGET)
-	-rm -f $(MANSUBDIR)/$(EXTARGET).1 $(MANSUBDIR)/$(VIEWTARGET).1
-	-rm -f $(MANSUBDIR)/$(GVIMTARGET).1 $(MANSUBDIR)/$(GVIEWTARGET).1
-	-rm -f $(MANSUBDIR)/$(RVIMTARGET).1 $(MANSUBDIR)/$(RVIEWTARGET).1
-	-rm -f $(MANSUBDIR)/$(RGVIMTARGET).1 $(MANSUBDIR)/$(RGVIEWTARGET).1
+	-rm -f $(MANSUBDIR)/$(EXNAME).1 $(MANSUBDIR)/$(VIEWNAME).1
+	-rm -f $(MANSUBDIR)/$(GVIMNAME).1 $(MANSUBDIR)/$(GVIEWNAME).1
+	-rm -f $(MANSUBDIR)/$(RVIMNAME).1 $(MANSUBDIR)/$(RVIEWNAME).1
+	-rm -f $(MANSUBDIR)/$(RGVIMNAME).1 $(MANSUBDIR)/$(RGVIEWNAME).1
 
 uninstall_runtime:
 	-rm -f $(HELPSUBLOC)/*.txt $(HELPSUBLOC)/tags $(HELPSUBLOC)/*.pl
@@ -1470,11 +1501,11 @@ uninstall_runtime:
 # Clean up all the files that have been produced, except configure's.
 # We support common typing mistakes for Juergen! :-)
 clean celan: testclean
-	-rm -f *.o core $(VIMTARGET).core $(VIMTARGET)$(SUFFIX) xxd/*.o
+	-rm -f *.o core $(VIMTARGET).core $(VIMTARGET) xxd/*.o
 	-rm -f $(TOOLS) osdef.h pathdef.c if_perl.c
 	-rm -f conftest* *~ link.sed
 	if test -f ctags/Makefile; then \
-		cd ctags; $(MAKE) -f Makefile clean; \
+		cd ctags; $(MAKE) -f Makefile SUFFIX="$(SUFFIX)" clean; \
 	fi
 
 shadow:	runtime pixmaps
@@ -1508,7 +1539,7 @@ pixmaps:
 scrub scratch:
 	-rm -f config.status config.cache config.h config.log
 	-if test -f ctags/Makefile; then \
-		cd ctags; $(MAKE) -f Makefile distclean; \
+		cd ctags; $(MAKE) -f Makefile SUFFIX="$(SUFFIX)" distclean; \
 	fi
 
 distclean: clean scratch
@@ -1581,7 +1612,7 @@ py_config.o: $(PYTHON_CONFDIR)/config.c
 		$(ALL_CFLAGS)
 
 osdef.h: osdef.sh config.h osdef1.h.in osdef2.h.in
-	CC="$(CC) $(ALL_CFLAGS)" srcdir=${srcdir} sh $(srcdir)/osdef.sh
+	CC="$(CC) $(ALL_CFLAGS)" srcdir=$(srcdir) sh $(srcdir)/osdef.sh
 
 pathdef.c: Makefile config.mk
 	-@echo creating pathdef.c

@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 8.2 1999/03/28 00:30:51 darren Exp $
+dnl $Id: configure.in,v 8.4 1999/09/11 17:54:22 darren Exp $
 
 dnl	Copyright (c) 1996-1999, Darren Hiebert
 dnl
@@ -13,7 +13,7 @@ AC_CONFIG_HEADER(config.h)
 
 dnl Report system info
 dnl ------------------
-echo 'Exuberant Ctags, version 3.2.4'
+echo 'Exuberant Ctags, version 3.3'
 uname -mrsv 2>/dev/null
 
 dnl Define convenience macros
@@ -39,21 +39,20 @@ dnl Checks for configuration options
 dnl --------------------------------
 
 AC_ARG_ENABLE(etags,
-	[  --disable-etags         disable the installation of links for etags],,
+[  --disable-etags         disable the installation of links for etags],,
 	enable_etags=yes)
 
 AC_ARG_ENABLE(external-sort,
-[  --disable-external-sort use internal sort algorithm instead of system sort
-                          utility],,
+[  --disable-external-sort use internal sort algorithm instead of sort program],,
 	enable_external_sort=yes)
+
+AC_ARG_ENABLE(custom-conf,
+[  --enable-custom-conf=FILE
+                          enable custom config file for site-wide defaults])
 
 AC_ARG_ENABLE(macro-patterns,
 [  --enable-macro-patterns use patterns as default method to locate macros
                           instead of line numbers])
-
-AC_ARG_ENABLE(maintainer-mode,
-[  --enable-maintainer-mode
-                          use maintainer makefile])
 
 AC_ARG_ENABLE(extended-format,
 [  --disable-extended-format
@@ -61,15 +60,19 @@ AC_ARG_ENABLE(extended-format,
                           format only],
 	AC_DEFINE(DEFAULT_FILE_FORMAT, 1), AC_DEFINE(DEFAULT_FILE_FORMAT, 2))
 
+AC_ARG_ENABLE(maintainer-mode,
+[  --enable-maintainer-mode
+                          use maintainer makefile])
+
 
 dnl Process configuration options
 dnl -----------------------------
 
-if test "$enable_maintainer_mode" = yes ;then
+if test "$enable_maintainer_mode" = yes ; then
 	AC_MSG_RESULT(enabling maintainer mode)
 fi
 
-if test "$enable_etags" = yes ;then
+if test "$enable_etags" = yes ; then
 	install_targets="install-ctags install-etags"
 	AC_MSG_RESULT(links for etags will be installed)
 else
@@ -78,24 +81,31 @@ else
 fi
 AC_SUBST(install_targets)
 
-if test "$enable_macro_patterns" = yes ;then
+if test "$enable_custom_conf" = no -o "$enable_custom_conf" = yes ; then
+	AC_MSG_RESULT(no name supplied for custom configuration file)
+elif test -n "$enable_custom_conf" ; then
+	AC_DEFINE_UNQUOTED(CUSTOM_CONFIGURATION_FILE, "$enable_custom_conf")
+	AC_MSG_RESULT($enable_custom_conf will be used as custom configuration file)
+fi
+
+if test "$enable_macro_patterns" = yes ; then
 	AC_DEFINE(MACROS_USE_PATTERNS)
 	AC_MSG_RESULT(tag file will use patterns for macros by default)
 fi
 
-if test "$enable_external_sort" = yes; then
+if test "$enable_external_sort" = yes ; then
 	enable_external_sort=no
     AC_CHECK_PROG(sort_found, sort, yes, no)
-	if test "$sort_found" = yes; then
+	if test "$sort_found" = yes ; then
 		AC_MSG_CHECKING(whether sort accepts our command line)
 		touch /tmp/sort.test
 		sort -u -o /tmp/sort.test /tmp/sort.test 1>/dev/null 2>&1
-		if test $? -ne 0; then
+		if test $? -ne 0 ; then
 			AC_MSG_RESULT(no)
 		else
 			AC_MSG_RESULT(yes)
 			AC_PROG_AWK
-			if test -z "$AWK"; then
+			if test -z "$AWK" ; then
 				AC_MSG_RESULT(no awk found)
 			else
 				AC_DEFINE_UNQUOTED(AWK, "$AWK")
@@ -107,7 +117,7 @@ if test "$enable_external_sort" = yes; then
 		rm -f /tmp/sort.test
     fi
 fi
-if test "$enable_external_sort" != yes; then
+if test "$enable_external_sort" != yes ; then
 	AC_MSG_RESULT(using internal sort algorithm)
 fi
 
@@ -123,7 +133,7 @@ AC_CHECK_PROG(STRIP, strip, strip, :)
 dnl Checks for header files
 dnl -----------------------
 
-AC_CHECK_HEADERS(dirent.h stdlib.h time.h unistd.h)
+AC_CHECK_HEADERS(dirent.h stdlib.h string.h time.h unistd.h)
 AC_CHECK_HEADERS(sys/dir.h sys/stat.h sys/times.h sys/types.h)
 
 
@@ -172,7 +182,7 @@ AC_REPLACE_FUNCS(strstr)
 AC_CHECK_FUNCS(fgetpos, have_fgetpos=yes)
 
 dnl SEEK_SET should be in stdio.h, but may be in unistd.h on SunOS 4.1.x
-if test "$have_fgetpos" != yes; then
+if test "$have_fgetpos" != yes ; then
 	CHECK_HEADER_DEFINE(SEEK_SET, stdio.h,,
 		CHECK_HEADER_DEFINE(SEEK_SET, unistd.h,,
 			AC_DEFINE(SEEK_SET, 0)))
@@ -185,20 +195,20 @@ AC_CHECK_FUNCS(remove, have_remove=yes,
 
 AC_CHECK_FUNCS(truncate, have_truncate=yes)
 dnl === Cannot nest AC_CHECK_FUNCS() calls
-if test "$have_truncate" != yes ;then
+if test "$have_truncate" != yes  ; then
 	AC_CHECK_FUNCS(ftruncate, have_ftruncate=yes)
-	if test "$have_ftruncate" != yes ;then
+	if test "$have_ftruncate" != yes ; then
 		AC_CHECK_FUNCS(chsize)
 	fi
 fi
 
 AC_CHECK_FUNCS(putenv, have_putenv=yes)
 dnl === Cannot nest AC_CHECK_FUNCS() calls
-if test "$have_putenv" != yes ;then
+if test "$have_putenv" != yes ; then
 	AC_CHECK_FUNCS(setenv)
 else
 	AC_EGREP_HEADER(putenv, stdlib.h, have_putenv_prototype=yes)
-	if test "$have_putenv_prototype" = yes ;then
+	if test "$have_putenv_prototype" = yes ; then
 		AC_MSG_CHECKING("putenv prototype")
 		AC_EGREP_HEADER([[^A-Za-zo-9_]putenv[ 	]*\(.*const.*\)[ 	]*;],
 			stdlib.h, AC_MSG_RESULT(correct),
@@ -216,7 +226,7 @@ AC_CHECKING("for missing prototypes")
 
 AC_DEFUN(CHECK_PROTO, [AC_EGREP_HEADER([[^A-Za-z0-9_]$1([ 	]+[A-Za-z0-9_]*)?\(], $2,, AC_DEFINE(patsubst([NEED_PROTO_NAME], [NAME], translit($1, [a-z], [A-Z]))) AC_MSG_RESULT(adding prototype for $1))])
 
-if test "$have_remove" = yes; then
+if test "$have_remove" = yes ; then
 	CHECK_PROTO(remove, stdio.h)
 else
 	CHECK_PROTO(unlink,	unistd.h)
@@ -226,13 +236,13 @@ CHECK_PROTO(getenv,	stdlib.h)
 CHECK_PROTO(strstr,	string.h)
 CHECK_PROTO(stat,	sys/stat.h)
 CHECK_PROTO(lstat,	sys/stat.h)
-if test "$have_fgetpos" = yes; then
+if test "$have_fgetpos" = yes ; then
 	CHECK_PROTO(fgetpos, stdio.h)
 fi
-if test "$have_truncate" = yes; then
+if test "$have_truncate" = yes ; then
 	CHECK_PROTO(truncate, unistd.h)
 fi
-if test "$have_ftruncate" = yes; then
+if test "$have_ftruncate" = yes ; then
 	CHECK_PROTO(ftruncate, unistd.h)
 fi
 
@@ -242,7 +252,7 @@ dnl ------------
 
 
 rm -f Makefile
-if test "$enable_maintainer_mode" = yes ;then
+if test "$enable_maintainer_mode" = yes ; then
 	AC_MSG_RESULT(creating maintainer Makefile)
 	ln -s Makefile.maint Makefile
 	makefile_out=

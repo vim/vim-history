@@ -1,4 +1,4 @@
-*tips.txt*      For Vim version 5.4.  Last change: 1999 Jul 20
+*tips.txt*      For Vim version 5.5.  Last change: 1999 Aug 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -19,6 +19,7 @@ Renaming files					|rename-files|
 Speeding up external commands			|speed-up|
 Useful mappings					|useful-mappings|
 Compressing the help files			|gzip-helpfile|
+Hex editing					|hex-editing|
 Executing shell commands in a window		|shell-window|
 Using <> notation in autocommands		|autocmd-<>|
 
@@ -421,6 +422,33 @@ that knows more about this is Sam Lantinga <slouken@cs.ucdavis.edu>.
 An alternative is the "window" command, found on BSD Unix systems, which
 supports multiple overlapped windows.  Or the "screen" program, found at
 www.uni-erlangen.de, which supports a stack of windows.
+
+==============================================================================
+Hex editing					*hex-editing* *using-xxd*
+
+When you need to edit binary data, and prefer to do that on a hexadecimal
+listing, you can use the xxd program.  Use this to convert from binary to
+hexadecimal:
+>	:%!xxd
+and use this to convert it back:
+>	:%!xxd -r
+
+If one has a particular extension that one uses for binary files (such as exe,
+bin, etc), you may find it helpful to automate the process with the following
+bit of autocmds for your <.vimrc>.  Change that "*.bin" to whatever
+comma-separated list of extension(s) you find yourself wanting to edit:
+
+>	" vim -b : edit binary using xxd-format!
+>	augroup Binary
+>	  au!
+>	  au BufReadPre  *.bin let &bin=1
+>	  au BufReadPost *.bin if &bin | %!xxd
+>	  au BufReadPost *.bin set ft=xxd | endif
+>	  au BufWritePre *.bin if &bin | %!xxd -r
+>	  au BufWritePre *.bin endif
+>	  au BufWritePost *.bin if &bin | %!xxd
+>	  au BufWritePost *.bin set nomod | endif
+>	augroup END
 
 ==============================================================================
 Using <> notation in autocommands			*autocmd-<>*

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Rexx
 " Maintainer:	Thomas Geulig <geulig@nentec.de>
-" Last change:	1998 Apr 2
+" Last change:	1999 Jul 27
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -13,22 +13,17 @@ syn keyword rexxKeyword address arg begin break by call do drop echo else end
 syn keyword rexxKeyword exit forever function if interpret iterate leave nop
 syn keyword rexxKeyword module numeric off on options otherwise parse procedure
 syn keyword rexxKeyword pull push queue return say select shell signal then to
-syn keyword rexxKeyword trace until upper value var when with
+syn keyword rexxKeyword trace until upper value var when while with
 
 syn keyword rexxTodo contained	TODO FIXME XXX
 
-" String and Character constants
-" Highlight special characters (those which have a backslash) differently
-syn match rexxSpecial contained	"\\[0-7][0-7][0-7]\=\|\\."
-syn region rexxString		start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=rexxSpecial
-syn region rexxString		start=+'+ skip=+\\\\\|\\"+ end=+'+ contains=rexxSpecial
+" String constants
+syn region rexxString		start=+"+ skip=+\\\\\|\\"+ end=+"+
+syn region rexxString		start=+'+ skip=+\\\\\|\\"+ end=+'+
 syn match rexxCharacter		"'[^\\]'"
-syn match rexxSpecialCharacter	"'\\.'"
-syn match rexxSpecialCharacter	"'\\[0-7][0-7]'"
-syn match rexxSpecialCharacter	"'\\[0-7][0-7][0-7]'"
 
 "catch errors caused by wrong parenthesis
-syn region rexxParen		transparent start='(' end=')' contains=ALLBUT,rexxParenError,rexxSpecial,rexxTodo,rexxUserLabel
+syn region rexxParen		transparent start='(' end=')' contains=ALLBUT,rexxParenError,rexxTodo,rexxUserLabel
 syn match rexxParenError	")"
 syn match rexxInParen contained	"[{}]"
 
@@ -37,7 +32,7 @@ syn region rexxComment		start="/\*" end="\*/" contains=rexxTodo
 syn match rexxCommentError	"\*/"
 
 " Highlight User Labels
-syn region rexxMulti	transparent start='?' end=':' contains=ALLBUT,rexxSpecial,rexxTodo,rexxUserLabel
+syn region rexxMulti	transparent start='?' end=':' contains=ALLBUT,rexxTodo,rexxUserLabel
 syn match rexxUserLabel	"\s*\I\i*\s*:$"
 syn match rexxUserLabel	";\s*\I\i*\s*:$"ms=s+1
 syn match rexxUserLabel	"\s*\I\i*\s*:"me=e-1
@@ -53,7 +48,6 @@ if !exists("did_rexx_syntax_inits")
   " The default methods for highlighting.  Can be overridden later
   hi link rexxUserLabel		Label
   hi link rexxCharacter		Character
-  hi link rexxSpecialCharacter	rexxSpecial
   hi link rexxParenError	rexxError
   hi link rexxInParen		rexxError
   hi link rexxCommentError	rexxError
@@ -61,7 +55,6 @@ if !exists("did_rexx_syntax_inits")
   hi link rexxKeyword		Statement
   hi link rexxString		String
   hi link rexxComment		Comment
-  hi link rexxSpecial		SpecialChar
   hi link rexxTodo		Todo
 endif
 

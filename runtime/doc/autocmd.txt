@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 5.4.  Last change: 1999 Jul 17
+*autocmd.txt*   For Vim version 5.5.  Last change: 1999 Aug 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -469,7 +469,7 @@ To disable one of the file types, add a line in the myfiletypefile, see
 
 							*new-filetype*
 If a file type that you want to use is not detected yet, there are two ways to
-add it.  Do NOT modify the $VIMRUNTIME/filetype.vim file.  It will be
+add it.  It's better not modify the $VIMRUNTIME/filetype.vim file.  It will be
 overwritten when installing a new version of Vim.
 
 							*myfiletypefile*
@@ -477,12 +477,14 @@ overwritten when installing a new version of Vim.
    Create a file that contains autocommands to detect the file type.
    Example:
 >    " myfiletypefile
->    au! BufRead,BufNewFile *.mine	set filetype=mine
->    au! BufRead,BufNewFile *.xyz	set filetype=drawing
+>    augroup filetype
+>      au! BufRead,BufNewFile *.mine	set filetype=mine
+>      au! BufRead,BufNewFile *.xyz	set filetype=drawing
+>    augroup END
 
    Then add a line in your vimrc file to set the "myfiletypefile" variable to
    the name of this file.  Example:
->    let myfiletypefile = "~/vim/myfiletypes.vim
+>    let myfiletypefile = "~/vim/myfiletypes.vim"
 
    Your file when then be sourced after the default FileType autocommands have
    been installed.  This allows you to overrule any of the defaults, by using
@@ -524,6 +526,11 @@ to an unrecognized name, for example "ignored":
 >	augroup filetype
 >	au! BufNewFile,BufRead {pattern} set ft=ignored
 >	augroup END
+
+If you are setting up a system with many users, and you don't want each user
+to add/remove the same filetypes, consider creating a vimrc file that is used
+for everybody.  See |system-vimrc|.
+
 
 						*autocmd-osfiletypes*
 On operating systems which support storing a file type with the file, you can
@@ -798,6 +805,7 @@ your default settings are recovered (if entering this file from another for
 which autocommands did match).  Note that "*" will also match files starting
 with ".", unlike Unix shells.
 
+						    *autocmd-searchpat*
 Autocommands do not change the current search patterns.  Vim saves the current
 search patterns before executing autocommands then restores them after the
 autocommands finish.  This means that autocommands do not affect the strings
@@ -805,5 +813,8 @@ highlighted with the 'hlsearch' option.  Within autocommands, you can still
 use search patterns normally, e.g., with the "n" command.
 If you want an autocommand to set the search pattern, such that it is used
 after the autocommand finishes, use the ":let @/ =" command.
+The search-highlighting cannot be switched off with ":nohlsearch" in an
+autocommand.  Use the 'h' flag in the 'viminfo' option to disable search-
+highlighting when starting Vim.
 
  vim:tw=78:ts=8:sw=8:

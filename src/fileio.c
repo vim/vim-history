@@ -36,6 +36,20 @@
 # define CRYPT_MAGIC_LEN	12
 #endif
 
+#ifdef AUTOCMD
+struct aco_save
+{
+    WIN		*save_curwin;
+    BUF		*save_buf;
+    FPOS	save_cursor;
+    linenr_t	save_topline;
+};
+
+static void aucmd_prepbuf __ARGS((struct aco_save *aco));
+static void aucmd_restbuf __ARGS((struct aco_save *aco));
+
+#endif
+
 #ifdef VIMINFO
 static void check_marks_read __ARGS((void));
 #endif
@@ -139,7 +153,11 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, flags)
     int		error = FALSE;		/* errors encountered */
     int		ff_error = EOL_UNKNOWN; /* file format with errors */
     long	linerest;		/* remaining chars in line */
+#ifdef UNIX
     int		perm = 0;
+#else
+    int		perm;
+#endif
     int		fileformat;		/* end-of-line format */
     struct stat	st;
     int		file_readonly;
@@ -310,9 +328,9 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, flags)
 #endif
 	msg_scroll = msg_save;
 #ifndef UNIX
-    /*
-     * On MSDOS and Amiga we can't open a directory, check here.
-     */
+	/*
+	 * On MSDOS and Amiga we can't open a directory, check here.
+	 */
 	isdir_f = (mch_isdir(fname));
 	perm = mch_getperm(fname);  /* check if the file exists */
 	if (isdir_f)
@@ -443,7 +461,11 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, flags)
 	if (read_stdin)
 	{
 	    mch_msg("Vim: Reading from stdin...\n");
-	    cursor_on();    /* just in case */
+# ifdef USE_GUI
+	    /* Also write a message in the GUI window, if there is one. */
+	    if (gui.in_use)
+		gui_write((char_u *)"Reading from stdin...", 21);
+# endif
 	}
 	else
 #endif
@@ -533,10 +555,13 @@ retry:
 			    cryptkey = curbuf->b_p_key;
 			else
 			{
+			    /* When newfile is TRUE, store the typed key in
+			     * the 'key' option and don't free it. */
 			    cryptkey = get_crypt_key(newfile);
-			    if (!*cryptkey)	/* no key entered */
+			    /* check if empty key entered */
+			    if (cryptkey != NULL && *cryptkey == NUL)
 			    {
-				if (!newfile)
+				if (cryptkey != curbuf->b_p_key)
 				    vim_free(cryptkey);
 				cryptkey = NULL;
 			    }
@@ -792,7 +817,7 @@ retry:
     if (newfile)
 	curbuf->b_start_ffc = *curbuf->b_p_ff;	/* remember 'fileformat' */
 #ifdef CRYPTV
-    else
+    if (cryptkey != curbuf->b_p_key)
 	vim_free(cryptkey);
 #endif
 
@@ -911,7 +936,12 @@ retry:
 	    if (msg_add_fileformat(fileformat))
 		c = TRUE;
 	    msg_add_lines(c, (long)linecnt, filesize);
-	    msg_trunc_attr(IObuff, FALSE, 0);
+	    /* When reading from stdin, the screen will be cleared next; keep
+	     * the message to repeat it later. */
+	    keep_msg = msg_trunc_attr(IObuff, FALSE, 0);
+	    keep_msg_attr = 0;
+	    if (!read_stdin)
+		keep_msg = NULL;
 	}
 
 	if (error && newfile)	/* with errors we should not write the file */
@@ -1059,13 +1089,6 @@ buf_write(buf, fname, sfname, start, end, append, forceit,
     int		    fd;
     char_u	    *backup = NULL;
     char_u	    *ffname;
-#ifdef AUTOCMD
-    BUF		    *save_buf;
-    int		    buf_ffname = FALSE;
-    int		    buf_sfname = FALSE;
-    int		    buf_fname_f = FALSE;
-    int		    buf_fname_s = FALSE;
-#endif
     char_u	    *s;
     char_u	    *ptr;
     char_u	    c;
@@ -1096,7 +1119,7 @@ buf_write(buf, fname, sfname, start, end, append, forceit,
     linenr_t	    old_line_count = buf->b_ml.ml_line_count;
 #endif
     int		    attr;
-    int		    fileformat = get_fileformat(buf);
+    int		    fileformat;
 #ifdef CRYPTV
     int		    encrypted = FALSE;
 #endif
@@ -1178,89 +1201,107 @@ buf_write(buf, fname, sfname, start, end, append, forceit,
     buf->b_op_end.col = 0;
 
 #ifdef AUTOCMD
-    /*
-     * Apply PRE aucocommands.
-     * Set curbuf to the buffer to be written.
-     * Careful: The autocommands may call buf_write() recursively!
-     */
-    save_buf = curbuf;
-    curbuf = buf;
-    curwin->w_buffer = buf;
-    if (ffname == buf->b_ffname)
-	buf_ffname = TRUE;
-    if (sfname == buf->b_sfname)
-	buf_sfname = TRUE;
-    if (fname == buf->b_ffname)
-	buf_fname_f = TRUE;
-    if (fname == buf->b_sfname)
-	buf_fname_s = TRUE;
+    {
+	struct aco_save	aco;
+	BUF		*save_buf;
+	int		buf_ffname = FALSE;
+	int		buf_sfname = FALSE;
+	int		buf_fname_f = FALSE;
+	int		buf_fname_s = FALSE;
 
-    if (append)
-	apply_autocmds(EVENT_FILEAPPENDPRE, fname, fname, FALSE, curbuf);
-    else if (filtering)
-	apply_autocmds(EVENT_FILTERWRITEPRE, NULL, fname, FALSE, curbuf);
-    else if (reset_changed && whole)
-	apply_autocmds(EVENT_BUFWRITEPRE, fname, fname, FALSE, curbuf);
-    else
-	apply_autocmds(EVENT_FILEWRITEPRE, fname, fname, FALSE, curbuf);
-    /*
-     * If the autocommands deleted or unloaded the buffer, give an error
-     * message.
-     */
-    if (!buf_valid(buf) || buf->b_ml.ml_mfp == NULL)
-    {
-	--no_wait_return;
-	msg_scroll = msg_save;
-	EMSG("Autocommands deleted or unloaded buffer to be written");
-	return FAIL;
-    }
-    /*
-     * If the autocommands didn't change the current buffer, go back to the
-     * original current buffer, if it still exists.
-     */
-    if (curbuf == buf && buf_valid(save_buf))
-    {
-	curbuf = save_buf;
-	curwin->w_buffer = save_buf;
-    }
+	/*
+	 * Apply PRE aucocommands.
+	 * Set curbuf to the buffer to be written.
+	 * Careful: The autocommands may call buf_write() recursively!
+	 */
+	if (ffname == buf->b_ffname)
+	    buf_ffname = TRUE;
+	if (sfname == buf->b_sfname)
+	    buf_sfname = TRUE;
+	if (fname == buf->b_ffname)
+	    buf_fname_f = TRUE;
+	if (fname == buf->b_sfname)
+	    buf_fname_s = TRUE;
 
-    /*
-     * The autocommands may have changed the number of lines in the file.
-     * When writing the whole file, adjust the end.
-     * When writing part of the file, assume that the autocommands only
-     * changed the number of lines that are to be written (tricky!).
-     */
-    if (buf->b_ml.ml_line_count != old_line_count)
-    {
-	if (whole)					    /* writing all */
-	    end = buf->b_ml.ml_line_count;
-	else if (buf->b_ml.ml_line_count > old_line_count)  /* more lines */
-	    end += buf->b_ml.ml_line_count - old_line_count;
-	else						    /* less lines */
+	save_buf = curbuf;
+	curbuf = buf;
+	aucmd_prepbuf(&aco);
+
+	if (append)
+	    apply_autocmds(EVENT_FILEAPPENDPRE, fname, fname, FALSE, curbuf);
+	else if (filtering)
+	    apply_autocmds(EVENT_FILTERWRITEPRE, NULL, fname, FALSE, curbuf);
+	else if (reset_changed && whole)
+	    apply_autocmds(EVENT_BUFWRITEPRE, fname, fname, FALSE, curbuf);
+	else
+	    apply_autocmds(EVENT_FILEWRITEPRE, fname, fname, FALSE, curbuf);
+
+	aucmd_restbuf(&aco);
+
+	/*
+	 * If the autocommands deleted or unloaded the buffer, give an error
+	 * message.
+	 */
+	if (!buf_valid(buf) || buf->b_ml.ml_mfp == NULL)
 	{
-	    end -= old_line_count - buf->b_ml.ml_line_count;
-	    if (end < start)
+	    curbuf = curwin->w_buffer;
+	    --no_wait_return;
+	    msg_scroll = msg_save;
+	    EMSG("Autocommands deleted or unloaded buffer to be written");
+	    return FAIL;
+	}
+	/*
+	 * If the autocommands didn't change the current buffer, go back to
+	 * the original current buffer, if it still exists.
+	 */
+	if (curbuf == buf && buf_valid(save_buf))
+	{
+	    --curwin->w_buffer->b_nwindows;
+	    curbuf = save_buf;
+	    curwin->w_buffer = save_buf;
+	    ++curbuf->b_nwindows;
+	}
+	else
+	    curbuf = curwin->w_buffer;
+
+	/*
+	 * The autocommands may have changed the number of lines in the file.
+	 * When writing the whole file, adjust the end.
+	 * When writing part of the file, assume that the autocommands only
+	 * changed the number of lines that are to be written (tricky!).
+	 */
+	if (buf->b_ml.ml_line_count != old_line_count)
+	{
+	    if (whole)						/* write all */
+		end = buf->b_ml.ml_line_count;
+	    else if (buf->b_ml.ml_line_count > old_line_count)	/* more lines */
+		end += buf->b_ml.ml_line_count - old_line_count;
+	    else						/* less lines */
 	    {
-		--no_wait_return;
-		msg_scroll = msg_save;
-		EMSG("Autocommand changed number of lines in unexpected way");
-		return FAIL;
+		end -= old_line_count - buf->b_ml.ml_line_count;
+		if (end < start)
+		{
+		    --no_wait_return;
+		    msg_scroll = msg_save;
+		    EMSG("Autocommand changed number of lines in unexpected way");
+		    return FAIL;
+		}
 	    }
 	}
-    }
 
-    /*
-     * The autocommands may have changed the name of the buffer, which may be
-     * kept in fname, ffname and sfname.
-     */
-    if (buf_ffname)
-	ffname = buf->b_ffname;
-    if (buf_sfname)
-	sfname = buf->b_sfname;
-    if (buf_fname_f)
-	fname = buf->b_ffname;
-    if (buf_fname_s)
-	fname = buf->b_sfname;
+	/*
+	 * The autocommands may have changed the name of the buffer, which may
+	 * be kept in fname, ffname and sfname.
+	 */
+	if (buf_ffname)
+	    ffname = buf->b_ffname;
+	if (buf_sfname)
+	    sfname = buf->b_sfname;
+	if (buf_fname_f)
+	    fname = buf->b_ffname;
+	if (buf_fname_s)
+	    fname = buf->b_sfname;
+    }
 #endif
 
     if (shortmess(SHM_OVER))
@@ -1764,6 +1805,7 @@ nobackup:
     }
 #endif
 
+    fileformat = get_fileformat(buf);
 
     if (end > buf->b_ml.ml_line_count)
 	end = buf->b_ml.ml_line_count;
@@ -2108,31 +2150,44 @@ nofail:
     msg_scroll = msg_save;
 
 #ifdef AUTOCMD
-    write_no_eol_lnum = 0;	/* in case it was set by the previous read */
-
-    /*
-     * Apply POST autocommands.
-     * Careful: The autocommands may call buf_write() recursively!
-     */
-    save_buf = curbuf;
-    curbuf = buf;
-    curwin->w_buffer = buf;
-    if (append)
-	apply_autocmds(EVENT_FILEAPPENDPOST, fname, fname, FALSE, curbuf);
-    else if (filtering)
-	apply_autocmds(EVENT_FILTERWRITEPOST, NULL, fname, FALSE, curbuf);
-    else if (reset_changed && whole)
-	apply_autocmds(EVENT_BUFWRITEPOST, fname, fname, FALSE, curbuf);
-    else
-	apply_autocmds(EVENT_FILEWRITEPOST, fname, fname, FALSE, curbuf);
-    /*
-     * If the autocommands didn't change the current buffer, go back to the
-     * original current buffer, if it still exists.
-     */
-    if (curbuf == buf && buf_valid(save_buf))
     {
-	curbuf = save_buf;
-	curwin->w_buffer = save_buf;
+	struct aco_save	aco;
+	BUF		*save_buf;
+
+	write_no_eol_lnum = 0;	/* in case it was set by the previous read */
+
+	/*
+	 * Apply POST autocommands.
+	 * Careful: The autocommands may call buf_write() recursively!
+	 */
+	save_buf = curbuf;
+	curbuf = buf;
+	aucmd_prepbuf(&aco);
+
+	if (append)
+	    apply_autocmds(EVENT_FILEAPPENDPOST, fname, fname, FALSE, curbuf);
+	else if (filtering)
+	    apply_autocmds(EVENT_FILTERWRITEPOST, NULL, fname, FALSE, curbuf);
+	else if (reset_changed && whole)
+	    apply_autocmds(EVENT_BUFWRITEPOST, fname, fname, FALSE, curbuf);
+	else
+	    apply_autocmds(EVENT_FILEWRITEPOST, fname, fname, FALSE, curbuf);
+
+	aucmd_restbuf(&aco);
+
+	/*
+	 * If the autocommands didn't change the current buffer, go back to
+	 * the original current buffer, if it still exists.
+	 */
+	if (curbuf == buf && buf_valid(save_buf))
+	{
+	    --curwin->w_buffer->b_nwindows;
+	    curbuf = save_buf;
+	    curwin->w_buffer = save_buf;
+	    ++curbuf->b_nwindows;
+	}
+	else
+	    curbuf = curwin->w_buffer;
     }
 #endif
 
@@ -2327,10 +2382,12 @@ shorten_fname(full_path, dir_name)
 	 */
 	if (!((len > 2) && (*(p - 2) == ':')))
 #endif
-	if (vim_ispathsep(*p))
-	    ++p;
-	else
-	    p = NULL;
+	{
+	    if (vim_ispathsep(*p))
+		++p;
+	    else
+		p = NULL;
+	}
     }
 #if defined(MSDOS) || defined(MSWIN) || defined(OS2)
     /*
@@ -2350,12 +2407,14 @@ shorten_fname(full_path, dir_name)
 }
 
 /*
- * Use full path from now on for files currently being edited, both for file
- * name and swap file name.  Try to shorten the file names a bit if safe to do
- * so.
+ * When "force" is TRUE: Use full path from now on for files currently being
+ * edited, both for file name and swap file name.  Try to shorten the file
+ * names a bit, if safe to do so.
+ * When "force" is FALSE: Only try to shorten absolute file names.
  */
     void
-shorten_fnames()
+shorten_fnames(force)
+    int		force;
 {
     char_u	dirname[MAXPATHL];
     BUF		*buf;
@@ -2364,7 +2423,10 @@ shorten_fnames()
     mch_dirname(dirname, MAXPATHL);
     for (buf = firstbuf; buf != NULL; buf = buf->b_next)
     {
-	if (buf->b_fname != NULL)
+	if (buf->b_fname != NULL
+		&& (force
+		    || buf->b_sfname == NULL
+		    || mch_isFullName(buf->b_sfname)))
 	{
 	    vim_free(buf->b_sfname);
 	    buf->b_sfname = NULL;
@@ -3933,16 +3995,8 @@ do_doautocmd(arg, do_msg)
 do_autoall(arg)
     char_u	*arg;
 {
-    BUF		*save_buf = NULL;
-    WIN		*win;
-    WIN		*save_curwin = NULL;
-    int		retval;
-    FPOS	save_cursor;
-    linenr_t	save_topline = 0;
-    int		len;
-
-    save_cursor.lnum = 0;   /* init for gcc */
-    save_cursor.col = 0;
+    int			retval;
+    struct aco_save	aco;
 
     /*
      * This is a bit tricky: For some commands curwin->w_buffer needs to be
@@ -3955,66 +4009,16 @@ do_autoall(arg)
     {
 	if (curbuf->b_ml.ml_mfp != NULL)
 	{
-	    for (win = firstwin; win != NULL; win = win->w_next)
-		if (win->w_buffer == curbuf)
-		    break;
-	    /* if there is a window for this buffer, make it the curwin */
-	    if (win != NULL)
-	    {
-		save_curwin = curwin;
-		curwin = win;
-	    }
-	    else
-	    {
-		/* if there is no window for this buffer, use curwin */
-		--curwin->w_buffer->b_nwindows;
-		save_buf = curwin->w_buffer;
-		curwin->w_buffer = curbuf;
-		++curwin->w_buffer->b_nwindows;
+	    /* find a window for this buffer and save some values */
+	    aucmd_prepbuf(&aco);
 
-		/* set cursor and topline to safe values */
-		save_cursor = curwin->w_cursor;
-		curwin->w_cursor.lnum = 1;
-		curwin->w_cursor.col = 0;
-		save_topline = curwin->w_topline;
-		curwin->w_topline = 1;
-	    }
+	    /* execute the autocommands for this buffer */
 	    retval = do_doautocmd(arg, FALSE);
 	    do_modelines();
-	    if (win != NULL)	    /* restore curwin */
-	    {
-		if (win_valid(save_curwin))
-		    curwin = save_curwin;
-	    }
-	    else		    /* restore buffer for curwin */
-	    {
-		if (buf_valid(save_buf))
-		{
-		    --curwin->w_buffer->b_nwindows;
-		    curwin->w_buffer = save_buf;
-		    ++save_buf->b_nwindows;
-		    if (save_cursor.lnum <= save_buf->b_ml.ml_line_count)
-		    {
-			curwin->w_cursor = save_cursor;
-			len = STRLEN(ml_get_buf(save_buf,
-					       curwin->w_cursor.lnum, FALSE));
-			if (len == 0)
-			    curwin->w_cursor.col = 0;
-			else if ((int)curwin->w_cursor.col >= len)
-			    curwin->w_cursor.col = len - 1;
-		    }
-		    else
-		    {
-			curwin->w_cursor.lnum = save_buf->b_ml.ml_line_count;
-			curwin->w_cursor.col = 0;
-		    }
-		    /* check topline < line_count, in case lines got deleted */
-		    if (save_topline <= save_buf->b_ml.ml_line_count)
-			curwin->w_topline = save_topline;
-		    else
-			curwin->w_topline = save_buf->b_ml.ml_line_count;
-		}
-	    }
+
+	    /* restore the current window */
+	    aucmd_restbuf(&aco);
+
 	    if (retval == FAIL)
 		break;
 	}
@@ -4022,6 +4026,95 @@ do_autoall(arg)
 
     curbuf = curwin->w_buffer;
     adjust_cursor();	    /* just in case lines got deleted */
+}
+
+/*
+ * Prepare for executing autocommands for a (hidden) buffer.
+ * Search a window for the current buffer.  Save the cursor position and
+ * screen offset.
+ */
+    static void
+aucmd_prepbuf(aco)
+    struct aco_save	*aco;		/* structure to save values in */
+{
+    WIN		*win;
+
+    if (curwin->w_buffer == curbuf)
+	win = curwin;
+    else
+	for (win = firstwin; win != NULL; win = win->w_next)
+	    if (win->w_buffer == curbuf)
+		break;
+
+    /* if there is a window for the current buffer, make it the curwin */
+    if (win != NULL)
+    {
+	aco->save_curwin = curwin;
+	curwin = win;
+    }
+    else
+    {
+	/* if there is no window for the current buffer, use curwin */
+	aco->save_curwin = NULL;
+
+	aco->save_buf = curwin->w_buffer;
+	--aco->save_buf->b_nwindows;
+	curwin->w_buffer = curbuf;
+	++curbuf->b_nwindows;
+
+	/* set cursor and topline to safe values */
+	aco->save_cursor = curwin->w_cursor;
+	curwin->w_cursor.lnum = 1;
+	curwin->w_cursor.col = 0;
+	aco->save_topline = curwin->w_topline;
+	curwin->w_topline = 1;
+    }
+}
+
+/*
+ * Cleanup after executing autocommands for a (hidden) buffer.
+ * Restore the window as it was.
+ */
+    static void
+aucmd_restbuf(aco)
+    struct aco_save	*aco;		/* structure hoding saved values */
+{
+    int		len;
+
+    if (aco->save_curwin != NULL)	/* restore curwin */
+    {
+	if (win_valid(aco->save_curwin))
+	    curwin = aco->save_curwin;
+    }
+    else		    /* restore buffer for curwin */
+    {
+	if (buf_valid(aco->save_buf))
+	{
+	    --curwin->w_buffer->b_nwindows;
+	    curwin->w_buffer = aco->save_buf;
+	    ++aco->save_buf->b_nwindows;
+	    if (aco->save_cursor.lnum <= aco->save_buf->b_ml.ml_line_count)
+	    {
+		curwin->w_cursor = aco->save_cursor;
+		len = STRLEN(ml_get_buf(aco->save_buf,
+					       curwin->w_cursor.lnum, FALSE));
+		if (len == 0)
+		    curwin->w_cursor.col = 0;
+		else if ((int)curwin->w_cursor.col >= len)
+		    curwin->w_cursor.col = len - 1;
+	    }
+	    else
+	    {
+		curwin->w_cursor.lnum = aco->save_buf->b_ml.ml_line_count;
+		curwin->w_cursor.col = 0;
+	    }
+	    /* check topline < line_count, in case lines got deleted */
+	    if (aco->save_topline <= aco->save_buf->b_ml.ml_line_count)
+		curwin->w_topline = aco->save_topline;
+	    else
+		curwin->w_topline = aco->save_buf->b_ml.ml_line_count;
+	}
+    }
 }
 
 static int	autocmd_nested = FALSE;

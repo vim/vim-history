@@ -12,5 +12,6 @@ void push_showcmd __ARGS((void));
 void pop_showcmd __ARGS((void));
 void do_check_scrollbind __ARGS((int check));
 void check_scrollbind __ARGS((linenr_t topline_diff, long leftcol_diff));
+void scroll_redraw __ARGS((int up, long count));
 void start_selection __ARGS((void));
 void may_start_select __ARGS((int c));

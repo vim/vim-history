@@ -1,4 +1,4 @@
-*tagsearch.txt* For Vim version 5.4.  Last change: 1999 Jul 02
+*tagsearch.txt* For Vim version 5.5.  Last change: 1999 Aug 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -451,6 +451,8 @@ exuberant ctags		Included with the Vim distribution.  This a very good
 etags			Connected to Emacs.  Supports many languages.
 JTags			For Java, in Java.  It can be found at
 			http://www.fleiner.com/jtags/.
+ptags.py		For Python, in Python.  Found in your Python source
+			directory at Tools/scripts/ptags.py.
 
 The lines in the tags file must have one of these three formats:
 

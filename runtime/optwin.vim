@@ -1,7 +1,7 @@
 " These commands create the option window.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Jul 15
+" Last change:	1999 Sep 18
 
 " Make sure the '<' flag is not included in 'cpoptions', otherwise <CR> would
 " not be recognized.  See ":help 'cpoptions'".
@@ -98,7 +98,7 @@ fun! OW_Update(lnum, line, local, thiswin)
   if a:local
     exe "norm! " . a:thiswin . "\<C-W>w"
   endif
-  if match(a:line, "=") >= 0
+  if match(a:line, "=") >= 0 || (val != "0" && val != "1")
     call setline(a:lnum, "set " . name . "=" . val)
   else
     if val
@@ -116,6 +116,17 @@ let old_icon = &icon
 let old_sc = &sc
 let old_ru = &ru
 set notitle noicon nosc noru
+
+" If the current window is a help window, try finding a non-help window.
+" Relies on syntax highlighting to be switched on.
+let OW_thiswin = winnr()
+while exists("b:current_syntax") && b:current_syntax == "help"
+  exe "norm! \<C-W>w"
+  if OW_thiswin == winnr()
+    break
+  endif
+endwhile
+unlet OW_thiswin
 
 " Open the window
 new option-window
@@ -837,11 +848,25 @@ augroup END
 fun! OW_enter()
   let cpo_save = &cpo
   let &cpo = ""
+  " save existing mappings
+  let g:OW_mappings = ""
+  call OW_mapsave("<CR>", "n")
+  call OW_mapsave("<CR>", "i")
+  call OW_mapsave("<Space>", "n")
+  call OW_mapsave("<Space>", "i")
   noremap <CR> :call OW_CR()<CR><C-\><C-N>:echo<CR>
   inoremap <CR> <Esc>:call OW_CR()<CR>:echo<CR>
   noremap <Space> :call OW_Space()<CR>:echo<CR>
   inoremap <Space> <Esc>:call OW_Space()<CR>:echo<CR>
   let &cpo = cpo_save
+endfun
+
+fun! OW_mapsave(map, mode)
+  let m = maparg(a:map, a:mode)
+  if m != ""
+    let m = escape(m, '\|')
+    let g:OW_mappings = g:OW_mappings . ":".a:mode."map ".a:map." ".m."|"
+  endif
 endfun
 
 fun! OW_leave()
@@ -852,6 +877,10 @@ fun! OW_leave()
     iunmap <CR>
     unmap <Space>
     iunmap <Space>
+  endif
+  if exists("g:OW_mappings")
+    exe g:OW_mappings
+    unlet g:OW_mappings
   endif
   let &cpo = cpo_save
 endfun
@@ -867,10 +896,10 @@ fun! OW_unload()
   delfun OW_BinOptionL
   delfun OW_Header
   au! optwin
-  bdel option-window
-  call OW_leave()
+  bdel! option-window
   delfun OW_enter
   delfun OW_leave
+  delfun OW_mapsave
 endfun
 
 " Execute the enter autocommands now, to enable the mappings

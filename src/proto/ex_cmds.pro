@@ -10,7 +10,7 @@ char_u *make_filter_cmd __ARGS((char_u *cmd, char_u *itmp, char_u *otmp));
 int viminfo_error __ARGS((char *message, char_u *line));
 int read_viminfo __ARGS((char_u *file, int want_info, int want_marks, int forceit));
 void write_viminfo __ARGS((char_u *file, int forceit));
-void viminfo_readstring __ARGS((char_u *p));
+char_u *viminfo_readstring __ARGS((char_u *p, FILE *fp));
 void viminfo_writestring __ARGS((FILE *fd, char_u *p));
 void do_fixdel __ARGS((void));
 void print_line_no_prefix __ARGS((linenr_t lnum, int use_number));

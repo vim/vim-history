@@ -1,10 +1,10 @@
-*if_perl.txt*   For Vim version 5.4.  Last change: 1999 May 05
+*if_perl.txt*   For Vim version 5.5.  Last change: 1999 Sep 17
 
 
 		  VIM REFERENCE MANUAL    by Sven Verdoolaege
 					 and Matt Gerassimof
 
-Perl and Vim				*perl*
+Perl and Vim				*perl* *Perl*
 
 1. Editing Perl files			|perl-editing|
 2. Compiling VIM with Perl interface	|perl-compiling|

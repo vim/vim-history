@@ -14,7 +14,9 @@ BEGIN   {
 	skip_word["da"]="yes";
 	skip_word["end"]="yes";
 	skip_word["ftp"]="yes";
+	skip_word["go"]="yes";
 	skip_word["help"]="yes";
+	skip_word["home"]="yes";
 	skip_word["news"]="yes";
 	skip_word["index"]="yes";
 	skip_word["insert"]="yes";
@@ -103,10 +105,13 @@ substr($0,length($0),1) == "~" { print "<B><FONT COLOR=\"PURPLE\">" substr($0,1,
 
 NR == 1 { nf=split(FILENAME,f,".")
 	print "<HTML>";
-	print "<HEAD><TITLE>" f[1] "</TITLE></HEAD>";
+	print "<HEAD><TITLE>Vim documentation: " f[1] "</TITLE></HEAD>";
 	print "<BODY BGCOLOR=\"#ffffff\">";
-	print "<H1>Vim Documentation: " f[1] "</H1>";
+	print "<H1>Vim documentation: " f[1] "</H1>";
 	print "<A NAME=\"top\"></A>";
+	if ( FILENAME != "help.txt" ) {
+	  print "<A HREF=\"help.html\">main help file</A>\n";
+	}
 	print "<HR>";
 	print "<PRE>";
 	filename=f[1]".html";
@@ -337,7 +342,7 @@ function topback () {
 	if ( FILENAME != "tags" ) {
 	if ( FILENAME != "help.txt" ) {
 	printf("<A HREF=\"#top\">top</A> - ");
-	printf("<A HREF=\"help.html\">back to help</A>\n");
+	printf("<A HREF=\"help.html\">main help file</A>\n");
 	} else {
 	printf("<A HREF=\"#top\">top</A>\n");
 	}

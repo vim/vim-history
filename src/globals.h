@@ -84,7 +84,6 @@ EXTERN colnr_t	dollar_vcol INIT(= 0);
  */
 EXTERN int	expand_context INIT(= CONTEXT_UNKNOWN);
 EXTERN char_u	*expand_pattern INIT(= NULL);
-EXTERN int	expand_interactively INIT(= FALSE);
 EXTERN int	expand_set_path INIT(= FALSE);	/* ":set path=/dir/<Tab>" */
 
 #ifdef INSERT_EXPAND
@@ -619,9 +618,10 @@ EXTERN char_u	tolower_tab[256];	/* table for tolower() */
 EXTERN char	breakat_flags[256];	/* which characters are in 'breakat' */
 #endif
 
-extern char *Version;			/* this is in version.c */
-extern char *mediumVersion;		/* this is in version.c */
-extern char *longVersion;		/* this is in version.c */
+/* these are in version.c */
+extern char *Version;
+extern char *mediumVersion;
+extern char *longVersion;
 
 /*
  * Some file names for Unix are stored in pathdef.c, to make their value
@@ -668,6 +668,7 @@ extern struct cursor_entry cursor_table[SHAPE_COUNT];
 
 #ifdef XTERM_CLIP
 EXTERN char	*xterm_display INIT(= NULL);	/* xterm display name */
+EXTERN Display	*xterm_dpy INIT(= NULL);	/* xterm display pointer */
 #endif
 #if defined(XTERM_CLIP) || defined(USE_GUI_X11)
 EXTERN XtAppContext app_context INIT(= (XtAppContext)NULL);

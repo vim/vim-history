@@ -1,10 +1,10 @@
-*farsi.txt*     For Vim version 5.4.  Last change: 1998 Aug 17
+*farsi.txt*     For Vim version 5.5.  Last change: 1999 Sep 17
 
 
 		  VIM REFERENCE MANUAL    by Mortaza Ghassab Shiran
 
 
-Right to Left and Farsi Mapping for Vim		*farsi*
+Right to Left and Farsi Mapping for Vim		*farsi* *Farsi*
 
 {Vi does not have any of these commands}
 

@@ -1,10 +1,10 @@
-*os_vms.txt*   For Vim version 5.4.  Last change: 1999 Jul 25
+*os_vms.txt*   For Vim version 5.5.  Last change: 1999 Sep 14
 
 
 		  VIM REFERENCE MANUAL
 
 
-							*VMS*
+							*VMS* *vms*
 This file contains the particularities for the VMS version of Vim.
 
 1. VMS version of Vim 5.4	|VMS-5.4|
@@ -63,6 +63,13 @@ Notes:
 
   c) For some reason binary tag searching would not work properly,
      hence the VMS version uses linear tag searching by default.
+
+
+Use whichever or both of the following in your <login.com> to make vim
+invokable with filenames:
+
+   $ vim :== device:[path]vim.exe """-T""" """ansi"""
+   $ vi  :== device:[path]vim.exe """-T""" """ansi"""
 
 ==============================================================================
 2. VMS version of Vim 5.3					*VMS-5.3*

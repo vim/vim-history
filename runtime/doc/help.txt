@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 5.4.  Last change: 1999 Jul 16
+*help.txt*	For Vim version 5.5.  Last change: 1999 Sep 19
 
 			VIM - main help file
 									 k
@@ -17,8 +17,8 @@ Get specific help:  It is possible to go directly to whatever you want help
 		      Normal mode commands     (nothing)   :help x
 		      Visual mode commands	  v_	   :help v_u
 		      Insert mode commands	  i_	   :help i_<Esc>
-		      command-line commands	  :	   :help :quit
-		      command-line editing	  c_	   :help c_<Del>
+		      Command-line commands	  :	   :help :quit
+		      Command-line editing	  c_	   :help c_<Del>
 		      Vim command arguments	  -	   :help -r
 		      options			  '	   :help 'textwidth'
   Search for help:  Type ":help word", then hit CTRL-D to see matching
@@ -64,13 +64,14 @@ General subjects ~
 |help-tags|	all the tags you can jump to (index of tags)
 |howto.txt|	how to do the most common editing tasks
 |tips.txt|	various tips on using Vim
+|message.txt|	(error) messages and explanations
 |quotes.txt|	remarks from users of Vim
 |todo.txt|	known problems and desired extensions
+|develop.txt|	development of Vim
 |uganda.txt|	Vim distribution conditions and what do do with your money
-|message.txt|	(error) messages and explanations
 
 Basic editing ~
-|starting.txt|	starting Vim, command-line arguments, initialisation
+|starting.txt|	starting Vim, Vim command arguments, initialisation
 |editing.txt|	editing and writing files
 |motion.txt|	commands for moving around
 |scroll.txt|	scrolling the text in the window
@@ -122,13 +123,13 @@ Versions ~
 						*sys-file-list*
 Remarks about specific systems ~
 |os_amiga.txt|	Amiga
-|os_beos.txt|	BeOS/BeBox
+|os_beos.txt|	BeOS and BeBox
 |os_dos.txt|	MS-DOS and MS-Windows NT/95 common items
 |os_mac.txt|	Macintosh
 |os_mint.txt|	Atari MiNT
 |os_msdos.txt|	MS-DOS (plain DOS and DOS box under Windows)
 |os_os2.txt|	OS/2
-|os_riscos.txt|	RISC OS
+|os_riscos.txt|	RISC-OS
 |os_unix.txt|	Unix
 |os_vms.txt|	VMS
 |os_win32.txt|	MS-Windows 95/98/NT
@@ -677,7 +678,7 @@ In Insert or Command-line mode:
 
 Short explanation of each option:		*option-list*
 |'aleph'|	   |'al'|	ASCII code of the letter Aleph (Hebrew)
-|'allowrevins'|	   |'ari'|	allow CTRL-_ in Insert and Comamnd-line mode
+|'allowrevins'|	   |'ari'|	allow CTRL-_ in Insert and Command-line mode
 |'altkeymap'|	   |'akm'|	for default second language (Farsi/Hebrew)
 |'autoindent'|	   |'ai'|	take indent for new line from previous line
 |'autowrite'|	   |'aw'|	automatically write file if changed
@@ -686,7 +687,7 @@ Short explanation of each option:		*option-list*
 |'backup'|	   |'bk'|	keep backup file after overwriting a file
 |'backupdir'|	   |'bdir'|	list of directories for the backup file
 |'backupext'|	   |'bex'|	extension used for the backup file
-|'binary'|	   |'bin'|	edit binary file mode
+|'binary'|	   |'bin'|	read/write/edit file in binary mode
 |'bioskey'|	   |'biosk'|	MS-DOS: use bios calls for input characters
 |'breakat'|	   |'brk'|	characters that may cause a line break
 |'browsedir'|	   |'bsdir'|	which directory to start browsing in
@@ -1112,7 +1113,7 @@ Context-sensitive completion on the command-line:
 
 |:stop|	  :st[op][!]		Suspend VIM or start new shell. If 'aw' option
 				   is set and [!] not given write the buffer.
-|CTRL-Z|     CTRL-Z		Same as ":stop!"
+|CTRL-Z|     CTRL-Z		Same as ":stop"
 ------------------------------------------------------------------------------
 *X_st*		Starting VIM
 
@@ -1133,6 +1134,7 @@ Context-sensitive completion on the command-line:
 |-v|	-v		    Vi mode, start ex in Normal mode
 |-e|	-e		    Ex mode, start vim in Ex mode
 |-R|	-R		    Read-only mode, implies -n
+|-m|	-m		    modifications not allowed (resets 'write' option)
 |-b|	-b		    binary mode
 |-l|	-l		    lisp mode
 |-F|	-F		    Farsi mode ('fkmap' and 'rightleft' are set)
@@ -1282,8 +1284,8 @@ Context-sensitive completion on the command-line:
 |:menu|		:menu {pri} {mpath} {rhs}
 					idem, with priorities {pri}
 |:menu|		:menu ToolBar.{name} {rhs}
-					Win32: add toolbar item, giving {lhs}
-|:tmenu|	:tmenu {mpath} {text}	Win32: add tooltip to menu {mpath}
+					add toolbar item, giving {lhs}
+|:tmenu|	:tmenu {mpath} {text}	add tooltip to menu {mpath}
 |:unmenu|	:unmenu {mpath}		remove menu {mpath}
 
 ------------------------------------------------------------------------------

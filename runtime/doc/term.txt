@@ -1,4 +1,4 @@
-*term.txt*      For Vim version 5.4.  Last change: 1999 Jul 05
+*term.txt*      For Vim version 5.5.  Last change: 1999 Sep 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -481,14 +481,15 @@ screen updating a lot slower, making it possible to see what is happening.
 5. Using the mouse					*mouse-using*
 
 This section is about using the mouse on a terminal or a terminal window.  How
-to use the mouse in a GUI window is explained in |gui-mouse|.
+to use the mouse in a GUI window is explained in |gui-mouse|.  For scrolling
+with a mouse wheel see |scroll-mouse-wheel|.
 
 Don't forget to enable the mouse with this commands:
 >	:set mouse=a
 Otherwise Vim won't recognize the mouse in all modes (See 'mouse').
 
 Currently the mouse is supported for Unix in an xterm window, in a Linux
-console (with GPM), for MS-DOS and in a Windows console.
+console (with GPM |gpm-mouse|), for MS-DOS and in a Windows console.
 Mouse clicks can be used to position the cursor, select an area and paste.
 
 These characters in the 'mouse' option tell in which situations the mouse will
@@ -655,7 +656,12 @@ Vim.
 An example, for using a double click to jump to the tag under the cursor:
 >	:map <2-LeftMouse> :exe "tag ". expand("<cword>")<CR>
 
-In Insert mode, when a selected is started, Vim goes into Normal mode
+							*gpm-mouse*
+The GPM mouse is only supported when the |+mouse_gpm| feature was enabled at
+compile time.  The GPM mouse driver (Linux console) does not support quadruple
+clicks.
+
+In Insert mode, when a selection is started, Vim goes into Normal mode
 temporarily.  When Visual or Select mode ends, it returns to Insert mode.
 This is like using CTRL-O in Insert mode.  Select mode is used when the
 'selectmode' option contains "mouse".

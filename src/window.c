@@ -2143,10 +2143,8 @@ find_file_in_wildcard_path(path_so_far, wildcards, level, countptr)
 	file_name[len] = NUL;
     }
 
-    ++expand_interactively;
     expand_wildcards(1, &file_name, &nFiles, &ppFiles,
-						  EW_FILE|EW_DIR|EW_ADDSLASH);
-    --expand_interactively;
+					EW_FILE|EW_DIR|EW_ADDSLASH|EW_SILENT);
 
     if (!*rest_of_wildcards)
     {

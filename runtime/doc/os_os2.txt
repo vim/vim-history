@@ -1,9 +1,10 @@
-*os_os2.txt*    For Vim version 5.4.  Last change: 1999 Jun 11
+*os_os2.txt*    For Vim version 5.5.  Last change: 1999 Sep 14
 
 
 		  VIM REFERENCE MANUAL    by Paul Slootman
 
 
+							*OS2* *OS/2*
 This file contains the particularities for the OS/2 version of Vim.
 
 At present there is no native PM version of the GUI version of vim: The OS/2

@@ -172,9 +172,9 @@ static struct vimoption options[] =
 			    (char_u *)"light",
 #endif
 					    (char_u *)0L}},
-    {"backspace",   "bs",   P_NUM|P_VI_DEF|P_VIM,
+    {"backspace",   "bs",   P_STRING|P_VI_DEF|P_VIM|P_COMMA,
 			    (char_u *)&p_bs,
-			    {(char_u *)0L, (char_u *)0L}},
+			    {(char_u *)"", (char_u *)0L}},
     {"backup",	    "bk",   P_BOOL|P_VI_DEF|P_VIM,
 			    (char_u *)&p_bk,
 			    {(char_u *)FALSE, (char_u *)0L}},
@@ -1193,7 +1193,7 @@ static struct vimoption options[] =
     {"textauto",    "ta",   P_BOOL|P_VIM,
 			    (char_u *)&p_ta,
 			    {(char_u *)TA_DFLT, (char_u *)TRUE}},
-    {"textmode",    "tx",   P_BOOL|P_IND|P_VI_DEF,
+    {"textmode",    "tx",   P_BOOL|P_IND|P_VI_DEF|P_NO_MKRC,
 			    (char_u *)PV_TX,
 			    {
 #ifdef USE_CRNL
@@ -1475,6 +1475,7 @@ static char *(p_dy_values[]) = {"lastline", NULL};
 #ifdef USE_CLIPBOARD
 static char *(p_cb_values[]) = {"unnamed", "autoselect", NULL};
 #endif
+static char *(p_bs_values[]) = {"indent", "eol", "start", NULL};
 
 static void set_option_default __ARGS((int, int));
 static void set_options_default __ARGS((int dofree));
@@ -2590,10 +2591,17 @@ skip:
 	     * Advance to next argument.
 	     * - skip until a blank found, taking care of backslashes
 	     * - skip blanks
+	     * - skip one "=val" argument (for hidden options ":set gfn =xx")
 	     */
-	    while (*arg != NUL && !vim_iswhite(*arg))
-		if (*arg++ == '\\' && *arg != NUL)
-		    ++arg;
+	    for (i = 0; i < 2 ; ++i)
+	    {
+		while (*arg != NUL && !vim_iswhite(*arg))
+		    if (*arg++ == '\\' && *arg != NUL)
+			++arg;
+		arg = skipwhite(arg);
+		if (*arg != '=')
+		    break;
+	    }
 	}
 	arg = skipwhite(arg);
 
@@ -3051,7 +3059,8 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf)
     /* 'winaltkeys' */
     else if (varp == &p_wak)
     {
-	if (check_opt_strings(p_wak, p_wak_values, FALSE) != OK)
+	if (*p_wak == NUL
+		|| check_opt_strings(p_wak, p_wak_values, FALSE) != OK)
 	    errmsg = e_invarg;
 # ifdef WANT_MENU
 #  ifdef USE_GUI_MOTIF
@@ -3627,6 +3636,18 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf)
 		new_value_alloced = TRUE;
 	    }
 	}
+    }
+
+    /* 'backspace' */
+    else if (varp == &p_bs)
+    {
+	if (isdigit(*p_bs))
+	{
+	    if (*p_bs >'2' || p_bs[1] != NUL)
+		errmsg = e_invarg;
+	}
+	else if (check_opt_strings(p_bs, p_bs_values, TRUE) != OK)
+	    errmsg = e_invarg;
     }
 
     /* Options that are a list of flags. */
@@ -4898,7 +4919,7 @@ win_copy_options(wp_from, wp_to)
  * BCO_ENTER	We will enter the bp_to buffer.
  * BCO_ALWAYS	Always copy the options, but only set b_p_initialized when
  *		appropriate.
- * BCO_NOHELP	Don't copy the help settings.
+ * BCO_NOHELP	Don't copy the help settings from or to a help buffer.
  */
     void
 buf_copy_options(bp_from, bp_to, flags)
@@ -4908,6 +4929,7 @@ buf_copy_options(bp_from, bp_to, flags)
 {
     int	    should_copy = TRUE;
     char_u  *save_p_isk = NULL;	    /* init for GCC */
+    int	    dont_do_help;
 
     /*
      * Don't do anything of the "to" buffer is invalid.
@@ -4941,7 +4963,9 @@ buf_copy_options(bp_from, bp_to, flags)
 
 	if (should_copy || (flags & BCO_ALWAYS))
 	{
-	    if ((flags & BCO_NOHELP))		/* don't free b_p_isk */
+	    dont_do_help = (flags & BCO_NOHELP)
+					&& (bp_to->b_help || bp_from->b_help);
+	    if (dont_do_help)		/* don't free b_p_isk */
 	    {
 		save_p_isk = bp_to->b_p_isk;
 		bp_to->b_p_isk = NULL;
@@ -5025,10 +5049,12 @@ buf_copy_options(bp_from, bp_to, flags)
 #endif
 
 	    /*
-	     * Don't copy the options set by do_help(), use the saved values
-	     * Don't touch these at all when BCO_NOHELP is used.
+	     * Don't copy the options set by do_help(), use the saved values,
+	     * when going from a help buffer to a non-help buffer.
+	     * Don't touch these at all when BCO_NOHELP is used and going from
+	     * or to a help buffer.
 	     */
-	    if ((flags & BCO_NOHELP))
+	    if (dont_do_help)
 		bp_to->b_p_isk = save_p_isk;
 	    else
 	    {
@@ -5926,4 +5952,20 @@ check_opt_wim()
     for (i = 0; i < 4; ++i)
 	wim_flags[i] = new_wim_flags[i];
     return OK;
+}
+
+/*
+ * Check if backspacing over something is allowed.
+ */
+    int
+can_bs(what)
+    int		what;	    /* BS_INDENT, BS_EOL or BS_START */
+{
+    switch (*p_bs)
+    {
+	case '2':	return TRUE;
+	case '1':	return (what != BS_START);
+	case '0':	return FALSE;
+    }
+    return vim_strchr(p_bs, what) != NULL;
 }

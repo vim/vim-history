@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Jul 21
+" Last change:	1999 Sep 12
 
 if !exists("did_load_filetypes")
 let did_load_filetypes = 1
@@ -9,7 +9,7 @@ let did_load_filetypes = 1
 augroup filetype
 
 " Ignored extensions
-au BufNewFile,BufRead *.orig,*.bak	exe "doau filetype BufRead " . expand("<afile>:r")
+au BufNewFile,BufRead *.orig,*.bak,*.old	exe "doau filetype BufRead " . expand("<afile>:r")
 au BufNewFile,BufRead *~		exe "doau filetype BufRead " . substitute(expand("<afile>"), '\~$', '', '')
 
 
@@ -27,6 +27,9 @@ au BufNewFile,BufRead *.am			set ft=elf
 
 " ASN.1
 au BufNewFile,BufRead *.asn,*.asn1		set ft=asn
+
+" Active Server Pages (with Visual Basic Script)
+au BufNewFile,BufRead *.asp,*.asa		set ft=aspvbs
 
 " Assembly (all kinds)
 au BufNewFile,BufRead *.asm,*.s,*.i,*.mac	call FTCheck_asm()
@@ -125,6 +128,9 @@ au BufNewFile,BufRead *.rul			if getline(1).getline(2).getline(3).getline(4).get
 
 " DCL (Digital Command Language - vms)
 au BufNewFile,BufRead *.com			set ft=dcl
+
+" Microsoft Module Definition
+au BufNewFile,BufRead *.def			set ft=def
 
 " Dracula
 au BufNewFile,BufRead drac.*,*.drac,*.drc,*lvs,*lpe set ft=dracula
@@ -246,7 +252,7 @@ au BufNewFile,BufRead *.m4			if expand("<afile>") !~?  "html.m4$" | set ft=m4 | 
 au BufNewFile,BufRead snd.*,.letter,.followup,.article,.article.[0-9]\+,pico.[0-9]\+,mutt*[0-9],ae[0-9]\+.txt set ft=mail
 
 " Makefile
-au BufNewFile,BufRead [mM]akefile*,GNUmakefile,*.mk,*.mak set ft=make
+au BufNewFile,BufRead [mM]akefile*,GNUmakefile,*.mk,*.mak,*.dsp set ft=make
 
 " Manpage
 au BufNewFile,BufRead *.man			set ft=man
@@ -279,16 +285,27 @@ au BufNewFile,BufRead *.msql			set ft=msql
 au BufNewFile,BufRead *.rc			set ft=rc
 
 " Mutt setup file
-au BufNewFile,BufRead .muttrc			set ft=muttrc
+au BufNewFile,BufRead .muttrc*,Muttrc		set ft=muttrc
 
 " Novell netware batch files
 au BufNewFile,BufRead *.ncf			set ft=ncf
 
 " Nroff/Troff (*.ms is checked below)
-au BufNewFile,BufRead *.me,*.mm,*.tr,*.nr,*.[1-9] set ft=nroff
+au BufNewFile,BufRead *.me,*.mm,*.tr,*.nr	set ft=nroff
+au BufNewFile,BufRead *.[1-9]			call FTCheck_nroff()
+
+" This function checks if one of the first five lines start with a dot.  In
+" that case it is probably an nroff file: 'filetype' is set and 1 is returned.
+fun! FTCheck_nroff()
+  if getline(1)[0] . getline(2)[0] . getline(3)[0] . getline(4)[0] . getline(5)[0] =~ '\.'
+    set ft=nroff
+    return 1
+  endif
+  return 0
+endfun
 
 " OCAML
-au BufNewFile,BufRead *.ml			set ft=ocaml
+au BufNewFile,BufRead *.ml,*.mli,*.mll,*.mly	set ft=ocaml
 
 " OPL
 au BufNewFile,BufRead *.[Oo][Pp][Ll]		set ft=opl
@@ -379,11 +396,13 @@ au BufNewFile,BufRead *.sed			set ft=sed
 au BufNewFile,BufRead sendmail.cf		set ft=sm
 
 " SGML
-au BufNewFile,BufRead *.sgm,*.sgml		set ft=sgml
+au BufNewFile,BufRead *.sgm,*.sgml		if getline(1).getline(2).
+	\getline(3).getline(4).getline(5) =~? 'linuxdoc'|set ft=sgmllnx|
+	\else|set ft=sgml|endif
 
-" Shell scripts (sh, ksh, bash, csh)
-au BufNewFile,BufRead .profile,.bashrc,.bash_profile,.kshrc,*.sh,*.ksh,*.bash,*.env set ft=sh
-au BufNewFile,BufRead .login,.cshrc,.tcshrc,*.csh,*.tcsh set ft=csh
+" Shell scripts (sh, ksh, bash, csh); Allow .profile_foo etc.
+au BufNewFile,BufRead /etc/profile,.profile*,.bashrc*,.bash_profile*,.kshrc*,*.sh,*.ksh,*.bash,*.env set ft=sh
+au BufNewFile,BufRead .login*,.cshrc*,.tcshrc*,*.csh,*.tcsh set ft=csh
 
 " Z-Shell script
 au BufNewFile,BufRead .z*,zsh*,zlog*		set ft=zsh
@@ -419,17 +438,20 @@ au BufNewFile,BufRead *.spec			set ft=spec
 " Speedup (AspenTech plant simulator)
 au BufNewFile,BufRead *.speedup,*.spdata,*.spd	set ft=spup
 
+" Spice
+au BufNewFile,BufRead *.sp,*.spice		set ft=spice
+
 " Squid: Removed, because there are too many *.conf files that aren't Squid.
 "au BufNewFile,BufRead *.conf			set ft=squid
 
-" SQL
-au BufNewFile,BufRead *.sql			set ft=sql
+" SQL (all but the first one for Oracle Designer)
+au BufNewFile,BufRead *.sql,*.tyb,*.typ,*.tyc,*.pkb,*.pks	set ft=sql
 
 " Tags
 au BufNewFile,BufRead tags			set ft=tags
 
 " Tcl
-au BufNewFile,BufRead *.tcl,*.tk		set ft=tcl
+au BufNewFile,BufRead *.tcl,*.tk,*.itcl,*.itk	set ft=tcl
 
 " Telix Salt
 au BufNewFile,BufRead *.slt			set ft=tsalt
@@ -471,6 +493,19 @@ au BufNewFile,BufRead vgrindefs			set ft=vgrindefs
 " VRML V1.0c
 au BufNewFile,BufRead *.wrl			set ft=vrml
 
+" Winbatch
+au BufNewFile,BufRead *.wbt			set ft=winbatch
+
+" CWEB
+au BufNewFile,BufRead *.w			set ft=cweb
+
+" WEB (*.web is also used for Winbatch: Guess, based on expecting "%" comment
+" lines in a WEB file).
+au BufNewFile,BufRead *.web			if getline(1)[0].getline(2)[0].getline(3)[0].getline(4)[0].getline(5)[0] =~ "%" | set ft=web | else | set ft=winbatch | endif
+
+" Changes for WEB and CWEB
+au BufNewFile,BufRead *.ch			set ft=change
+
 " X Pixmap (dynamically sets colors, use BufEnter to make it work better)
 au BufEnter *.xpm				set ft=xpm
 
@@ -478,27 +513,11 @@ au BufEnter *.xpm				set ft=xpm
 au BufEnter *.xs				set ft=xs
 
 " X resources file
-au BufNewFile,BufRead *.Xdefaults,*/app-defaults/* set ft=xdefaults
+au BufNewFile,BufRead .Xdefaults,.Xresources,*/app-defaults/* set ft=xdefaults
 
 " Xmath
 au BufNewFile,BufRead *.msc,*.msf		set ft=xmath
-au BufNewFile,BufRead *.ms			call FTCheck_ms()
-
-" This function checks if one of the first five lines start with a dot.  In
-" that case it is probably an nroff file.  Otherwise it's assumed to be Xmath.
-fun! FTCheck_ms()
-  let lnum = 1
-  while lnum <= 5
-    if getline(lnum) =~ '^\.'
-      set ft=nroff
-      let lnum = 99
-    endif
-    let lnum = lnum + 1
-  endwhile
-  if lnum < 99
-    set ft=xmath
-  endif
-endfun
+au BufNewFile,BufRead *.ms			if !FTCheck_nroff() | set ft=xmath | endif
 
 " vim: ts=8
 " XML

@@ -56,7 +56,7 @@ coladvance(wcol)
 #ifdef MULTI_BYTE
     /* prevent cursor from moving on the trail byte */
     if (is_dbcs)
-	AdjustCursorForMultiByteCharacter();
+	AdjustCursorForMultiByteChar();
 #endif
 
     if (col <= wcol)
@@ -954,17 +954,20 @@ mch_memmove(dst_arg, src_arg, len)
 #if (!defined(HAVE_STRCASECMP) && !defined(HAVE_STRICMP)) || defined(PROTO)
 /*
  * Compare two strings, ignoring case.
- * return 0 for match, 1 for difference
+ * return 0 for match, < 0 for smaller, > 0 for bigger
  */
     int
 vim_stricmp(s1, s2)
-    char    *s1;
-    char    *s2;
+    char	*s1;
+    char	*s2;
 {
+    int		i;
+
     for (;;)
     {
-	if (TO_LOWER(*s1) != TO_LOWER(*s2))
-	    return 1;			    /* this character different */
+	i = (int)TO_LOWER(*s1) - (int)TO_LOWER(*s2);
+	if (i != 0)
+	    return i;			    /* this character different */
 	if (*s1 == NUL)
 	    break;			    /* strings match until NUL */
 	++s1;
@@ -977,18 +980,21 @@ vim_stricmp(s1, s2)
 #if (!defined(HAVE_STRNCASECMP) && !defined(HAVE_STRNICMP)) || defined(PROTO)
 /*
  * Compare two strings, for length "len", ignoring case.
- * return 0 for match, 1 for difference
+ * return 0 for match, < 0 for smaller, > 0 for bigger
  */
     int
 vim_strnicmp(s1, s2, len)
-    char    *s1;
-    char    *s2;
-    size_t  len;
+    char	*s1;
+    char	*s2;
+    size_t	len;
 {
-    while (len)
+    int		i;
+
+    while (len > 0)
     {
-	if (TO_LOWER(*s1) != TO_LOWER(*s2))
-	    return 1;			    /* this character different */
+	i = (int)TO_LOWER(*s1) - (int)TO_LOWER(*s2);
+	if (i != 0)
+	    return i;			    /* this character different */
 	if (*s1 == NUL)
 	    break;			    /* strings match until NUL */
 	++s1;
@@ -1416,6 +1422,8 @@ static struct key_name_entry
     {K_RIGHTMOUSE,	(char_u *)"RightMouse"},
     {K_RIGHTDRAG,	(char_u *)"RightDrag"},
     {K_RIGHTRELEASE,	(char_u *)"RightRelease"},
+    {K_MOUSEDOWN,	(char_u *)"MouseDown"},
+    {K_MOUSEUP,		(char_u *)"MouseUp"},
     {K_ZERO,		(char_u *)"Nul"},
     {0,			NULL}
 };

@@ -1542,6 +1542,8 @@ tclinit(eap)
 		Tcl_Channel ch1, ch2;
 
 		tcl.interp = Tcl_CreateInterp();
+		if (Tcl_Init(tcl.interp) == TCL_ERROR)
+			return;
 		tcl.do_exit = 0;
 #if 0
 		/* VIM sure is interactive */

@@ -1,9 +1,10 @@
-*os_beos.txt*	For Vim version 5.4.  Last change: 1998 Dec 19
+*os_beos.txt*	For Vim version 5.5.  Last change: 1999 Sep 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
+							*BeOS* *BeBox*
 This is a port of Vim 5.1 to the BeOS Preview Release 2 (also known as PR2)
 or later.
 
@@ -103,10 +104,7 @@ use :mappings of more than one character, unless you also :set notimeout.
 To circumvent this problem, I added a workaround to provide the necessary
 input with timeout by using an extra thread which reads ahead one character.
 As a side effect, it also makes Vim recognize when the Terminal window
-resizes. The current implementation has one disadvantage: when starting a
-subshell or other external command that reads input from the terminal, the
-first character may still be read by Vim, and acted upon when the subshell
-ends. To revert to the old situation, edit os_beos.h.
+resizes.
 
 Function keys are not supported in the Terminal since they produce very
 indistinctive character sequences.

@@ -314,7 +314,7 @@ update_screen(type)
     WIN		    *wp;
     static int	    did_intro = FALSE;
 #ifdef EXTRA_SEARCH
-    int		    did_one = FALSE;
+    int		    did_one;
 #endif
 
     if (!screen_valid(TRUE))
@@ -2549,7 +2549,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
     char_u	*p;
     char_u	*s;
     char_u	*t;
-    char_u	*linecont = NULL;
+    char_u	*linecont;
     WIN		*o_curwin;
     BUF		*o_curbuf;
     int		empty_line;
@@ -2692,7 +2692,6 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	minwid = 0;
 	maxwid = 50;
 	zeropad = FALSE;
-	base = 'D';
 	l = 1;
 	if (*s == '0')
 	{
@@ -3091,7 +3090,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	hl->userhl = 0;
     }
 
-    return num;
+    return (int)num;
 }
 #endif /* STATUSLINE */
 
@@ -6718,6 +6717,7 @@ intro_message()
     int		i;
     int		row;
     int		col;
+    char_u	vers[20];
     static char	*(lines[]) =
     {
 	"VIM - Vi IMproved",
@@ -6760,13 +6760,25 @@ intro_message()
 	    }
 	    col = strlen(lines[i]);
 	    if (i == 2)
-		col += strlen(mediumVersion);
+	    {
+		STRCPY(vers, mediumVersion);
+		if (highest_patch())
+		{
+		    /* Check for 9.9x, alpha/beta version */
+		    if (isalpha(mediumVersion[3]))
+			sprintf((char *)vers + 4, ".%d%s", highest_patch(),
+							   mediumVersion + 4);
+		    else
+			sprintf((char *)vers + 3, ".%d", highest_patch());
+		}
+		col += STRLEN(vers);
+	    }
 	    col = (Columns - col) / 2;
 	    if (col < 0)
 		col = 0;
 	    screen_puts((char_u *)lines[i], row, col, 0);
 	    if (i == 2)
-		screen_puts((char_u *)mediumVersion, row, col + 8, 0);
+		screen_puts(vers, row, col + 8, 0);
 	    ++row;
 	}
 #if defined(WIN32) && !defined(USE_GUI_WIN32)

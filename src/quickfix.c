@@ -110,7 +110,7 @@ qf_init(efile, errorformat)
     char_u	    *fmtstr = NULL;
     int		    col = 0;
     int		    type = 0;
-    int		    valid = 0;
+    int		    valid;
     long	    lnum = 0L;
     int		    enr = 0;
     FILE	    *fd;
@@ -642,7 +642,6 @@ qf_get_fnum(directory, fname)
 	    if (mch_getperm(ptr) < 0)
 	    {
 		vim_free(ptr);
-		ptr = NULL;
 		directory = qf_guess_filepath(fname);
 		if (directory)
 		    ptr = concat_fnames(directory, fname, TRUE);
@@ -767,7 +766,7 @@ qf_pop_dir(/*dirbuf, */stackptr)
 qf_clean_dir_stack(stackptr)
     struct dir_stack_t	**stackptr;
 {
-    struct dir_stack_t  *ds_ptr = NULL;
+    struct dir_stack_t  *ds_ptr;
 
     while ((ds_ptr = *stackptr) != NULL)
     {
@@ -875,7 +874,6 @@ qf_jump(dir, errornr, forceit)
     old_qf_ptr = qf_ptr;
     qf_index = qf_lists[qf_curlist].qf_index;
     old_qf_index = qf_index;
-    old_qf_fnum = qf_ptr->qf_fnum;
     if (dir == FORWARD || dir == FORWARD_FILE)	    /* next valid entry */
     {
 	while (errornr--)

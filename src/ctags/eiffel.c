@@ -1,5 +1,5 @@
 /*****************************************************************************
-*   $Id: eiffel.c,v 8.2 1999/05/09 18:32:17 darren Exp $
+*   $Id: eiffel.c,v 8.5 1999/09/11 21:24:34 darren Exp $
 *
 *   Copyright (c) 1998-1999, Darren Hiebert
 *
@@ -98,6 +98,7 @@ typedef enum eTagType {
     TAG_UNDEFINED,
     TAG_CLASS,
     TAG_FEATURE,
+    TAG_QUALIFIED_FEATURE,
     TAG_LOCAL,
     TAG_COUNT		/* must be last */
 } tagType;
@@ -244,7 +245,8 @@ static const char *tagName( type )
     /*  Note that the strings in this array must correspond to the types in
      *  the tagType enumeration.
      */
-    static const char *names[] = { "undefined", "class", "feature", "local" };
+    static const char *names[] = {
+	"undefined", "class", "feature", "feature", "local" };
 
     Assert(sizeof(names)/sizeof(names[0]) == TAG_COUNT);
 
@@ -257,7 +259,7 @@ static int tagLetter( type )
     /*  Note that the characters in this list must correspond to the types in
      *  the tagType enumeration.
      */
-    const char *const chars = "?cfl";
+    const char *const chars = "?cffl";
 
     Assert(strlen(chars) == TAG_COUNT);
 
@@ -275,9 +277,10 @@ static boolean includeTag( type, fileScope )
 	include = FALSE;
     else switch (type)
     {
-	case TAG_CLASS:		include = inc->classNames;	break;
-	case TAG_FEATURE:	include = inc->features;	break;
-	case TAG_LOCAL:		include = inc->localEntities;	break;
+	case TAG_CLASS:			include = inc->classNames;	break;
+	case TAG_FEATURE:		include = inc->features;	break;
+	case TAG_QUALIFIED_FEATURE:	include = inc->classPrefix;	break;
+	case TAG_LOCAL:			include = inc->localEntities;	break;
 
 	default: Assert("Bad type in Eiffel file" == NULL); break;
     }
@@ -326,6 +329,16 @@ static void qualifyFeatureTag( token )
 	e.otherFields.value	= otherFields[1];
 
 	makeTagEntry(&e);
+
+	if (includeTag(TAG_QUALIFIED_FEATURE, isFileScope))
+	{
+	    vString* qualified = vStringNewInit(vStringValue(token->className));
+	    vStringPut(qualified, '.');
+	    vStringCat(qualified, token->string);
+	    e.name = vStringValue(qualified);
+	    makeTagEntry(&e);
+	    vStringDelete(qualified);
+	}
     }
     vStringCopy(token->featureName, token->string);
 }
@@ -930,9 +943,6 @@ static void parseRename( token )
 static void parseInherit( token )
     tokenInfo *const token;
 {
-    while (isType(token, TOKEN_IDENTIFIER))
-	qualifyClassTag(token);
-
     do
     {
 	readToken(token);

@@ -1,12 +1,16 @@
 " Vim syntax file
 " Language:        Perl
 " Maintainer:      Nick Hibma <hibma@skylink.it>
-" Last change:     1999 May 19
+" Last change:     1999 July 31
 " Location:        http://www.etla.net/~n_hibma/vim/syntax/perl.vim
 "
 " Please download most recent version first before mailing any comments.
+" See also the file perl.vim.regression.pl to check whether your
+" modifications work in the most odd cases
+"       http://www.etla.net/~n_hibma/vim/syntax/perl.vim.regression.pl
 "
 " Original version: Sonia Heimann <niania@netsurf.org>
+" Thanks to many people for their contribution. They made it work, not me.
 
 " The following parameters are available for tuning the
 " perl syntax highlighting, with defaults given:
@@ -61,7 +65,9 @@ syn keyword perlStatementProc    alarm exec fork getpgrp getppid getpriority kil
 syn keyword perlStatementSocket  accept bind connect getpeername getsockname getsockopt listen recv send setsockopt shutdown socket socketpair
 syn keyword perlStatementIPC     msgctl msgget msgrcv msgsnd semctl semget semop shmctl shmget shmread shmwrite
 syn keyword perlStatementNetwork endprotoent endservent gethostbyaddr gethostbyname gethostent getnetbyaddr getnetbyname getnetent getprotobyname getprotobynumber getprotoent getservbyname getservbyport getservent sethostent setnetent setprotoent setservent
+syn keyword perlStatementPword   getgrent getgrgid getgrnam getlogia
 syn keyword perlStatementTime    gmtime localtime time times
+
 syn keyword perlStatementMisc    print warn formline reset scalar new delete STDIN STDOUT STDERR
 
 syn keyword perlTodo             TODO TBD FIXME XXX contained
@@ -83,7 +89,7 @@ syn match perlVarPlain "$[\\\"\[\]'&`+*.,;=%~!@$<>(0-9-]"
 syn match perlVarPlain "$:[^:]"
 " These variables are not recognized within matches.
 syn match perlVarNotInMatches "$[|)]"
-" This variable is not recognized within matches delimited by //.
+" This variable is not recognized within matches delimited by m//.
 syn match perlVarSlash "$/"
 
 " And plain identifiers
@@ -138,7 +144,7 @@ syn match perlNotEmptyLine  "^\s\+$" contained
 syn cluster perlInterpDQ contains=perlSpecialString,perlVarPlain,perlVarNotInMatches,perlVarSlash,perlVarBlock
 " These items are interpolated inside '' strings and similar constructs.
 syn cluster perlInterpSQ contains=perlSpecialStringU
-" These items are interpolated inside // matches and s/// substitutions.
+" These items are interpolated inside m// matches and s/// substitutions.
 syn cluster perlInterpSlash contains=perlSpecialString,perlSpecialMatch,perlVarPlain,perlVarBlock,perlSpecialBEOM
 " These items are interpolated inside m## matches and s### substitutions.
 syn cluster perlInterpMatch contains=@perlInterpSlash,perlVarSlash
@@ -156,7 +162,10 @@ syn match perlNumber "-\=\<\d\+L\=\>\|0[xX]\x\+\>"
 syn region perlMatch matchgroup=perlMatchStartEnd start=+[m!]/+ end=+/[xosmige]*+ contains=@perlInterpSlash
 syn region perlMatch matchgroup=perlMatchStartEnd start=+[m!]#+ end=+#[xosmige]*+ contains=@perlInterpMatch
 syn region perlMatch matchgroup=perlMatchStartEnd start=+[m!]\[+ end=+\][xosmige]*+ contains=@perlInterpMatch
-syn region perlMatch matchgroup=perlMatchStartEnd start=+[(~]/+lc=1 start=+\.\./+lc=2 start=+\s/\S+lc=1,me=e-1,rs=e-1 start=+^/+ skip=+\\/+ end=+/[xosmige]*+ contains=@perlInterpSlash
+
+" Below some hacks to recognise the // variant. This is virtually impossible to catch in all
+" cases as the / is used in so many other ways, but these should be the most obvious ones.
+syn region perlMatch matchgroup=perlMatchStartEnd start=+split /+lc=5 start=+=\~\s*/+lc=2 start=+[(~]/+lc=1 start=+\.\./+lc=2 start=+\s/[^= \t\d$@%]+lc=1,me=e-1,rs=e-1 start=+^/+ skip=+\\/+ end=+/[xosmige]*+ contains=@perlInterpSlash
 
 " Substitutions
 " caters for s///, s### and s[][]
@@ -296,6 +305,7 @@ if !exists("did_perl_syntax_inits")
   hi link perlStatementSocket   perlStatement
   hi link perlStatementIPC      perlStatement
   hi link perlStatementNetwork  perlStatement
+  hi link perlStatementPword    perlStatement
   hi link perlStatementTime     perlStatement
   hi link perlStatementMisc     perlStatement
   hi link perlFunctionName      perlIdentifier

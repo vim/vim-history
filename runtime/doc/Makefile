@@ -14,6 +14,7 @@ DOCS = \
 	autocmd.txt \
 	change.txt \
 	cmdline.txt \
+	develop.txt \
 	digraph.txt \
 	editing.txt \
 	eval.txt \
@@ -75,6 +76,7 @@ HTMLS = \
 	autocmd.html \
 	change.html \
 	cmdline.html \
+	develop.html \
 	digraph.html \
 	editing.html \
 	eval.html \
@@ -119,6 +121,7 @@ HTMLS = \
 	scroll.html \
 	starting.html \
 	syntax.html \
+	tags.html \
 	tagsearch.html \
 	term.html \
 	tips.html \
@@ -169,7 +172,7 @@ noerrors:
 .txt.html:
 	$(AWK) -f makehtml.awk $< >$@
 
-tags.ref: tags
+tags.ref tags.html: tags
 	$(AWK) -f maketags.awk tags >tags.html
 
 # Perl version of .txt to .html conversion.

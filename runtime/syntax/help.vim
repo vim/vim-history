@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Vim help file
 " Maintainer:	Bram Moolenaar (Bram@vim.org)
-" Last change:	1999 Jul 10
+" Last change:	1999 Aug 18
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -43,7 +43,7 @@ syn match helpSpecial		"\[-num]"
 syn match helpSpecial		"CTRL-."
 syn match helpSpecial		"CTRL-Break"
 syn match helpSpecial		"CTRL-{char}"
-syn region helpNotVi		start="{Vi[: ]" start="{not" start="{only" end="}" contains=helpLeadBlank
+syn region helpNotVi		start="{Vi[: ]" start="{not" start="{only" end="}" contains=helpLeadBlank,helpHyperTextJump
 syn match helpLeadBlank		"^\s\+"
 
 if !exists("did_help_syntax_inits")

@@ -1,10 +1,10 @@
-*os_riscos.txt*  For Vim version 5.4.  Last change: 1999 Jun 11
+*os_riscos.txt*  For Vim version 5.5.  Last change: 1999 Sep 14
 
 
 		  VIM REFERENCE MANUAL    by Thomas Leonard
 
 
-								*riscos*
+						*riscos* *RISCOS* *RISC-OS*
 This file contains the particularities for the RISC OS version of Vim.
 
 The RISC OS port is a completely new port and is not based on the old `archi'

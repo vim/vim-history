@@ -1,9 +1,10 @@
-*os_unix.txt*   For Vim version 5.4.  Last change: 1999 Jun 11
+*os_unix.txt*   For Vim version 5.5.  Last change: 1999 Sep 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
+							*unix* *Unix*
 This file contains the particularities for the Unix version of Vim.
 
 For compiling Vim on Unix see "INSTALL" and "Makefile" in the src directory.

@@ -440,7 +440,12 @@ vim_iswordc_buf(c, buf)
 vim_isfilec(c)
     int	c;
 {
-    return (c < 0x100 && (chartab[c] & CHAR_IF));
+    return ((c < 0x100 && (chartab[c] & CHAR_IF))
+#ifdef MULTI_BYTE
+	    /* assume that every leading byte is a filename character */
+	    || IsLeadByte(c)
+#endif
+	   );
 }
 
 /*

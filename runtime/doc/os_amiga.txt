@@ -1,9 +1,10 @@
-*os_amiga.txt*  For Vim version 5.4.  Last change: 1998 Mar 29
+*os_amiga.txt*  For Vim version 5.5.  Last change: 1999 Sep 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
+							*Amiga*
 This file contains the particularities for the Amiga version of Vim.
 
 Installation on the Amiga:

@@ -543,7 +543,7 @@ gui_mch_destroy_menu(menu)
 	    XtDestroyWidget(menu->id);
 #else
 	/*
-	 * The code above causes a crash.  Apparantly because the highlighting
+	 * The code above causes a crash.  Apparently because the highlighting
 	 * is still there, and removing it later causes the crash.
 	 * This fix just unmanages the menu item, without destroying it.  The
 	 * problem now is that the highlighting will be wrong, and we need to

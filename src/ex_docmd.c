@@ -2034,10 +2034,7 @@ do_one_cmd(cmdlinep, sourcing,
 		    break;
 		}
 #endif
-		if (*ea.arg == NUL)
-		    emsg(e_argreq);
-		else
-		    cmd_source(ea.arg, ea.forceit);
+		cmd_source(ea.arg, ea.forceit);
 		break;
 
 #ifdef VIMINFO
@@ -2395,7 +2392,8 @@ do_one_cmd(cmdlinep, sourcing,
 #endif
 	default:
 		/* Illegal commands have already been handled */
-		errormsg = (char_u *)"Sorry, this command is not implemented";
+		if (!ea.skip)
+		    errormsg = (char_u *)"Sorry, this command is not implemented";
     }
 
 
@@ -3393,7 +3391,7 @@ expand_filename(eap, cmdlinep, errormsgp)
 		 * For other systems spaces are considered to be part
 		 * of the file name.
 		 * Only check here if there is no wildcard, otherwise
-		 * ExpandOne will check for errors. This allows
+		 * ExpandOne() will check for errors. This allows
 		 * ":e `ls ve*.c`" on Unix.
 		 */
 		if (!has_wildcards)
@@ -3450,6 +3448,7 @@ expand_filename(eap, cmdlinep, errormsgp)
 		}
 		else /* n == 2 */
 		{
+		    expand_context = EXPAND_FILES;
 		    if ((p = ExpandOne(eap->arg, NULL,
 					    WILD_LIST_NOTFOUND|WILD_ADD_SLASH,
 						   WILD_EXPAND_FREE)) == NULL)
@@ -6412,7 +6411,7 @@ do_cd(eap)
 	if (new_dir == NULL || mch_chdir((char *)new_dir))
 	    emsg(e_failed);
 	else
-	    shorten_fnames();
+	    shorten_fnames(TRUE);
 	vim_free(tofree);
     }
 }
@@ -6852,7 +6851,7 @@ do_mkrc(eap, defname)
 	     * Change to session file's dir.
 	     */
 	    (void)vim_chdirfile(eap->arg);
-	    shorten_fnames();
+	    shorten_fnames(TRUE);
 
 	    failed |= (makeopens(fd) == FAIL);
 
@@ -6860,7 +6859,7 @@ do_mkrc(eap, defname)
 	    if (*dirnow)
 	    {
 		(void)mch_chdir((char *)dirnow);
-		shorten_fnames();
+		shorten_fnames(TRUE);
 	    }
 	}
 #endif
@@ -7979,7 +7978,9 @@ cmd_source(fname, forceit)
     char_u	*fname;
     int		forceit;
 {
-    if (forceit)		/* :so! read vi commands */
+    if (*fname == NUL)
+	emsg(e_argreq);
+    else if (forceit)		/* :so! read vi commands */
 	(void)openscript(fname);
 				/* :so read ex commands */
     else if (do_source(fname, FALSE, FALSE) == FAIL)

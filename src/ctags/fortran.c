@@ -1,5 +1,5 @@
 /*****************************************************************************
-*   $Id: fortran.c,v 8.2 1999/05/04 04:02:15 darren Exp $
+*   $Id: fortran.c,v 8.8 1999/09/17 06:32:39 darren Exp $
 *
 *   Copyright (c) 1998-1999, Darren Hiebert
 *
@@ -32,6 +32,7 @@
 /*============================================================================
 =   Macros
 ============================================================================*/
+#define isBlank(c)		(boolean)(c == ' ' || c == '\t')
 #define isType(token,t)		(boolean)((token)->type == (t))
 #define isKeyword(token,k)	(boolean)((token)->keyword == (k))
 
@@ -95,6 +96,7 @@ typedef enum eTokenType {
     TOKEN_OPERATOR,
     TOKEN_PAREN_CLOSE,
     TOKEN_PAREN_OPEN,
+    TOKEN_STATEMENT_END,
     TOKEN_STRING
 } tokenType;
 
@@ -173,7 +175,7 @@ static vString *parseNumeric __ARGS((int c));
 static void parseString __ARGS((vString *const string, const int delimeter));
 static void parseIdentifier __ARGS((vString *const string, const int firstChar));
 static keywordId analyzeToken __ARGS((vString *const name));
-static int skipToChar __ARGS((const int toChar));
+static void checkForLabel __ARGS((void));
 static void readToken __ARGS((tokenInfo *const token));
 static void setTagType __ARGS((tokenInfo *const token, const tagType type));
 static void nameTag __ARGS((tokenInfo *const token, const tagType type));
@@ -441,9 +443,13 @@ static int getFixedFormChar()
 
     if (Column > 0)
     {
+#ifdef STRICT_FIXED_FORM
+	/*  EXCEPTION! Some compilers permit more than 72 characters per line.
+	 */
 	if (Column > 71)
 	    c = skipLine();
 	else
+#endif
 	{
 	    c = fileGetc();
 	    ++Column;
@@ -452,6 +458,14 @@ static int getFixedFormChar()
 	{
 	    newline = TRUE;	/* need to check for continuation line */
 	    Column = 0;
+	}
+	else if (c == '&')	/* check for free source form */
+	{
+	    const int c2 = fileGetc();
+	    if (c2 == '\n')
+		longjmp(Exception, (int)ExceptionFixedFormat);
+	    else
+		fileUngetc(c2);
 	}
     }
     while (Column == 0)
@@ -489,7 +503,7 @@ static int getFixedFormChar()
 		{
 		    c = fileGetc();
 		    ++Column;
-		} while (c == ' ');
+		} while (isBlank(c));
 		if (c == '\n')
 		    Column = 0;
 		else if (Column > 6)
@@ -510,13 +524,19 @@ static int getFreeFormChar()
 {
     int c = fileGetc();
 
-    if (c == '&')
+    if (c == '&')	/* handle line continuation */
     {
 	c = fileGetc();
-	if (c == '\n')
-	    c = fileGetc();
-	else
+	if (c != '\n')
 	    fileUngetc(c);
+	else
+	{
+	    do
+		c = fileGetc();
+	    while (isBlank(c));
+	    if (c == '&')
+		c = fileGetc();
+	}
     }
     return c;
 }
@@ -614,21 +634,23 @@ static void parseString( string, delimeter )
     vString *const string;
     const int delimeter;
 {
+    const unsigned long lineNumber = getFileLine();
     int c = getChar();
 
-    while (c != EOF)
+    while (c != delimeter  &&  c != '\n'  &&  c != EOF)
     {
-	if (c == delimeter)
-	{
-	    c = getChar();
-	    if (c != delimeter)
-	    {
-		ungetChar(c);
-		break;
-	    }
-	}
 	vStringPut(string, c);
 	c = getChar();
+    }
+    if (c == '\n'  ||  c == EOF)
+    {
+	if (Option.verbose)
+	    printf("%s: unterminated character string at line %lu\n",
+		   getFileName(), lineNumber);
+	if (c == EOF)
+	    longjmp(Exception, (int)ExceptionEOF);
+	else if (! FreeSourceForm)
+	    longjmp(Exception, (int)ExceptionFixedFormat);
     }
     vStringTerminate(string);
 }
@@ -669,16 +691,35 @@ static keywordId analyzeToken( name )
     return id;
 }
 
-static int skipToChar( toChar )
-    const int toChar;
+static void checkForLabel()
 {
+    tokenInfo* token = NULL;
+    int length;
     int c;
 
     do
 	c = getChar();
-    while (c != EOF  &&  c != toChar);
+    while (isBlank(c));
 
-    return c;
+    for (length = 0  ;  isdigit(c)  &&  length < 5  ;  ++length)
+    {
+	if (token == NULL)
+	{
+	    token = newToken();
+	    token->type = TOKEN_LABEL;
+	    token->tag = TAG_LABEL;
+	}
+	vStringPut(token->string, c);
+	c = getChar();
+    }
+    if (length > 0)
+    {
+	Assert(token != NULL);
+	vStringTerminate(token->string);
+	makeFortranTag(token);
+	deleteToken(token);
+    }
+    ungetChar(c);
 }
 
 static void readToken( token )
@@ -699,9 +740,8 @@ getNextChar:
     switch (c)
     {
 	case EOF:  longjmp(Exception, (int)ExceptionEOF);	break;
-	case '\n': token->type = TOKEN_NEWLINE;			break;
-	case '!':  skipToChar('\n'); goto getNextChar;
 	case ' ':  goto getNextChar;
+	case '\t': goto getNextChar;
 	case ',':  token->type = TOKEN_COMMA;			break;
 	case '(':  token->type = TOKEN_PAREN_OPEN;		break;
 	case ')':  token->type = TOKEN_PAREN_CLOSE;		break;
@@ -725,6 +765,16 @@ getNextChar:
 	    token->type = TOKEN_OPERATOR;
 	    break;
 	}
+
+	case '!':
+	    skipLine();
+	    Column = 0;
+	    /* fall through to newline case */
+	case '\n':
+	    token->type = TOKEN_STATEMENT_END;
+	    if (FreeSourceForm)
+		checkForLabel();
+	    break;
 
 	case '.':
 	    parseIdentifier(token->string, c);
@@ -766,6 +816,8 @@ getNextChar:
 		parseString(token->string, c);
 		token->type = TOKEN_STRING;
 	    }
+	    else if (c == ';'  &&  FreeSourceForm)
+		token->type = TOKEN_STATEMENT_END;
 	    else
 		token->type = TOKEN_UNDEFINED;
 	    break;
@@ -925,6 +977,8 @@ static tokenInfo *newToken()
     token->keyword = KEYWORD_NONE;
     token->tag	   = TAG_UNDEFINED;
     token->string  = vStringNew();
+    token->lineNumber   = getFileLine();
+    token->filePosition	= getFilePosition();
 
     return token;
 }
@@ -963,7 +1017,7 @@ extern boolean createFortranTags( passCount )
     exception = (exception_t)setjmp(Exception);
     if (exception == ExceptionEOF)
 	retry = FALSE;
-    else if (exception == ExceptionFixedFormat)
+    else if (exception == ExceptionFixedFormat  &&  ! FreeSourceForm)
     {
 	if (Option.verbose)
 	    printf("%s: not fixed source form; retry as free source form\n",

@@ -94,7 +94,7 @@ IsTrailByte(base, p)
  * if the cursor moves on an trail byte, set the cursor on the lead byte.
  */
     int
-AdjustCursorForMultiByteCharacter()
+AdjustCursorForMultiByteChar()
 {
     char_u *p;
 

@@ -612,6 +612,25 @@ getcount:
 	nv_scroll_line(&ca, flag);
 	break;
 
+#ifdef USE_MOUSE
+    /* Mouse scroll wheel: default action is to scroll three lines, or one
+     * page when Shift is used. */
+    case K_MOUSEUP:
+	flag = TRUE;
+    case K_MOUSEDOWN:
+	if (mod_mask & MOD_MASK_SHIFT)
+	{
+	    (void)onepage(flag ? FORWARD : BACKWARD, 1L);
+	}
+	else
+	{
+	    ca.count1 = 3;
+	    ca.count0 = 3;
+	    nv_scroll_line(&ca, flag);
+	}
+	break;
+#endif
+
     case 'z':
 	if (!checkclearop(oap))
 	    nv_zet(&ca);
@@ -1391,7 +1410,7 @@ normal_end:
 
 #ifdef MULTI_BYTE
     if (is_dbcs)
-	AdjustCursorForMultiByteCharacter();
+	AdjustCursorForMultiByteChar();
 #endif
 }
 
@@ -1780,7 +1799,8 @@ do_pending_operator(cap, searchbuff,
 		vim_beep();
 	    else
 	    {
-		/* don't restart edit after typing <Esc> in edit() */
+		/* This is a new edit command, not a restart.  We don't edit
+		 * recursively. */
 		restart_edit = 0;
 		*command_busy = op_change(oap);	/* will call edit() */
 	    }
@@ -1846,7 +1866,8 @@ do_pending_operator(cap, searchbuff,
 #ifdef VISUALEXTRA
 	    else
 	    {
-		/* don't restart edit after typing <Esc> in edit() */
+		/* This is a new edit command, not a restart.  We don't edit
+		 * recursively. */
 		restart_edit = 0;
 		op_insert(oap);	/* handles insert & append; will call edit() */
 	    }
@@ -1947,7 +1968,7 @@ op_colon(oap)
      */
 }
 
-#ifdef USE_MOUSE
+#if defined(USE_MOUSE) || defined(PROTO)
 /*
  * Do the appropriate action for the current mouse click in the current mode.
  *
@@ -2154,10 +2175,9 @@ do_mouse(oap, c, dir, count, fix_indent)
 		{
 		    do_put(regname, BACKWARD, 1L, fix_indent | PUT_CURSEND);
 
-		    /* Repeat it with CTRL-R CTRL-R x.  Not exactly the same,
-		     * but mostly works fine. */
+		    /* Repeat it with CTRL-R CTRL-O r or CTRL-R CTRL-P r */
 		    AppendCharToRedobuff(Ctrl('R'));
-		    AppendCharToRedobuff(Ctrl('R'));
+		    AppendCharToRedobuff(fix_indent ? Ctrl('P') : Ctrl('O'));
 		    AppendCharToRedobuff(regname == 0 ? '"' : regname);
 		}
 	    }
@@ -2512,6 +2532,11 @@ do_mouse(oap, c, dir, count, fix_indent)
 		VIsual_mode = 'V';
 	    else if (mod_mask & MOD_MASK_4CLICK)
 		VIsual_mode = Ctrl('V');
+#ifdef USE_CLIPBOARD
+	    /* Make sure the clipboard gets updated.  Needed because start and
+	     * end may still be the same, and the selection needs to be owned */
+	    clipboard.vmode = NUL;
+#endif
 	}
 	if (mod_mask & MOD_MASK_2CLICK)
 	{
@@ -2856,6 +2881,7 @@ add_to_showcmd(c)
 		K_LEFTMOUSE, K_LEFTDRAG, K_LEFTRELEASE,
 		K_MIDDLEMOUSE, K_MIDDLEDRAG, K_MIDDLERELEASE,
 		K_RIGHTMOUSE, K_RIGHTDRAG, K_RIGHTRELEASE,
+		K_MOUSEDOWN, K_MOUSEUP,
 		0};
 #endif
 
@@ -3032,7 +3058,6 @@ check_scrollbind(topline_diff, leftcol_diff)
     int		old_VIsual_active = VIsual_active;
     colnr_t	tgt_leftcol = curwin->w_leftcol;
     long	topline;
-    int		win_nr = 0;
     long	y;
 
     /*
@@ -3084,8 +3109,6 @@ check_scrollbind(topline_diff, leftcol_diff)
 	    }
 	    update = 1;
 	}
-
-	++win_nr;
     }
 
     /*
@@ -3270,17 +3293,29 @@ nv_screengo(oap, dir, dist)
  */
     static void
 nv_scroll_line(cap, is_ctrl_e)
-    CMDARG  *cap;
-    int	    is_ctrl_e;	    /* TRUE for CTRL-E command */
+    CMDARG	*cap;
+    int		is_ctrl_e;	    /* TRUE for CTRL-E command */
 {
-    linenr_t	    prev_topline = curwin->w_topline;
-
     if (checkclearop(cap->oap))
 	return;
-    if (is_ctrl_e)
-	scrollup(cap->count1);
+    scroll_redraw(is_ctrl_e, cap->count1);
+}
+
+/*
+ * Scroll "count" lines up or down, and redraw.
+ */
+    void
+scroll_redraw(up, count)
+    int		up;
+    long	count;
+{
+    linenr_t	prev_topline = curwin->w_topline;
+    linenr_t	prev_lnum = curwin->w_cursor.lnum;
+
+    if (up)
+	scrollup(count);
     else
-	scrolldown(cap->count1);
+	scrolldown(count);
     if (p_so)
     {
 	cursor_correct();
@@ -3290,13 +3325,14 @@ nv_scroll_line(cap, is_ctrl_e)
 	 * first line of the buffer is already on the screen */
 	if (curwin->w_topline == prev_topline)
 	{
-	    if (is_ctrl_e)
+	    if (up)
 		cursor_down(1L, FALSE);
 	    else if (prev_topline != 1L)
 		cursor_up(1L, FALSE);
 	}
     }
-    coladvance(curwin->w_curswant);
+    if (curwin->w_cursor.lnum != prev_lnum)
+	coladvance(curwin->w_curswant);
     update_screen(VALID);
 }
 
@@ -4526,7 +4562,12 @@ nv_Replace(cap)
     else if (!checkclearopq(cap->oap))
     {
 	if (u_save_cursor() == OK)
+	{
+	    /* This is a new edit command, not a restart.  We don't edit
+	     * recursively. */
+	    restart_edit = 0;
 	    command_busy = edit('R', FALSE, cap->count1);
+	}
     }
     return command_busy;
 }
@@ -4549,7 +4590,12 @@ nv_VReplace(cap)
     else if (!checkclearopq(cap->oap))
     {
 	if (u_save_cursor() == OK)
+	{
+	    /* This is a new edit command, not a restart.  We don't edit
+	     * recursively. */
+	    restart_edit = 0;
 	    command_busy = edit('V', FALSE, cap->count1);
+	}
     }
     return command_busy;
 }
@@ -4577,6 +4623,9 @@ nv_vreplace(cap)
 		cap->extra_char = get_literal();
 	    stuffcharReadbuff(cap->extra_char);
 	    stuffcharReadbuff(ESC);
+	    /* This is a new edit command, not a restart.  We don't edit
+	     * recursively. */
+	    restart_edit = 0;
 	    command_busy = edit('v', FALSE, cap->count1);
 	}
     }
@@ -4618,6 +4667,12 @@ n_swapchar(cap)
 		++curwin->w_cursor.lnum;
 		curwin->w_cursor.col = 0;
 		redraw_curbuf_later(NOT_VALID);
+		if (n > 1)
+		{
+		    if (u_savesub(curwin->w_cursor.lnum) == FAIL)
+			break;
+		    u_clearline();
+		}
 	    }
 	    else
 		break;
@@ -4900,6 +4955,11 @@ n_start_visual_mode(c)
 #endif
     if (p_smd)
 	redraw_cmdline = TRUE;	/* show visual mode later */
+#ifdef USE_CLIPBOARD
+    /* Make sure the clipboard gets updated.  Needed because start and
+     * end may still be the same, and the selection needs to be owned */
+    clipboard.vmode = NUL;
+#endif
     update_screenline();	/* start the inversion */
 }
 
@@ -5170,7 +5230,12 @@ nv_g_cmd(cap, searchp)
 	if (!checkclearopq(oap))
 	{
 	    if (u_save_cursor() == OK)
+	    {
+		/* This is a new edit command, not a restart.  We don't edit
+		 * recursively. */
+		restart_edit = 0;
 		command_busy = edit('g', FALSE, cap->count1);
+	    }
 	}
 	break;
 
@@ -5309,7 +5374,12 @@ n_opencmd(cap)
 		       ) == OK
 		&& open_line(cap->cmdchar == 'O' ? BACKWARD : FORWARD,
 							  TRUE, FALSE, 0))
+	{
+	    /* This is a new edit command, not a restart.  We don't edit
+	     * recursively. */
+	    restart_edit = 0;
 	    command_busy = edit(cap->cmdchar, TRUE, cap->count1);
+	}
 #ifdef COMMENTS
 	fo_do_comments = FALSE;
 #endif
@@ -5636,6 +5706,10 @@ nv_esc(cap, opnum)
 nv_edit(cap)
     CMDARG *cap;
 {
+    /* <Insert> is equal to "i" */
+    if (cap->cmdchar == K_INS)
+	cap->cmdchar = 'i';
+
     /* in Visual mode "A" and "I" are an operator */
     if ((cap->cmdchar == 'A' || cap->cmdchar == 'I')
 	    && VIsual_active)
@@ -5670,6 +5744,9 @@ nv_edit(cap)
 		    inc_cursor();
 		break;
 	}
+	/* This is a new edit command, not a restart.  We don't edit
+	 * recursively. */
+	restart_edit = 0;
 	return edit(cap->cmdchar, FALSE, cap->count1);
     }
     return FALSE;

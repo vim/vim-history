@@ -19,14 +19,14 @@
 /*
  * Machine-dependent routines.
  */
+# if (!defined(HAVE_X11) || !defined(WANT_X11)) && !defined(USE_GUI_GTK)
+#  define Display int	/* avoid errors in function prototypes */
+#  define Widget int
+# endif
 # ifdef AMIGA
 #  include "os_amiga.pro"
 # endif
 # if defined(UNIX) || defined(__EMX__)
-#  if (!defined(HAVE_X11) || !defined(WANT_X11)) && !defined(USE_GUI_GTK)
-#   define Display int	/* avoid errors in function prototypes */
-#   define Widget int
-#  endif
 #  include "os_unix.pro"
 # endif
 # ifdef MSDOS

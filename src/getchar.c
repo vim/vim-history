@@ -2560,7 +2560,7 @@ ExpandMappings(prog, num_file, file)
 {
     struct mapblock	*mp;
     int			hash;
-    int			count = 0;
+    int			count;
     int			round;
     char_u		*p;
 

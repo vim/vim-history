@@ -1,4 +1,4 @@
-*gui_w32.txt*   For Vim version 5.4.  Last change: 1999 Jul 14
+*gui_w32.txt*   For Vim version 5.5.  Last change: 1999 Sep 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -129,10 +129,13 @@ seems to happen on some Windows NT versions (Windows bug?).
 3. Using the clipboard					*gui-clipboard*
 
 Windows has a clipboard, where you can copy text to, and paste text from.  Vim
-supports this in several ways.
+supports this in several ways.  For other systems see |gui-selections|.
 
 The "* register reflects the contents of the clipboard.  |quotestar|
-When the 'useclipboard' option is set, the unnamed register is the same.
+
+When the "unnamed" string is included in the 'clipboard' option, the unnamed
+register is the same.  Thus you can yank to and paste from the clipboard
+without prepending "* to commands.
 
 The 'a' flag in 'guioptions' is not included by default.  This means that text
 is only put on the clipboard when an operation is performed on it.  Just
@@ -149,9 +152,8 @@ cancel an operation.  Use CTRL-Break for that.
 
 							*CTRL-V-alternative*
 Since CTRL-V is used to paste, you can't use it to start a blockwise Visual
-selection.  You can use g<C-H><C-G> instead (g CTRL-H CTRL-G).  If that's too
-complicated for you, map CTRL-K to the old meaning of CTRL-V:
->  :nnoremap <C-K> <C-V>
+selection.  You can use CTRL-Q instead.  You can also use CTRL-Q in Insert
+mode and Command-line mode to get the old meaning of CTRL-V.
 
 NOTE: The clipboard support still has a number of bugs.  See |todo|.
 

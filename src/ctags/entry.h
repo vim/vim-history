@@ -1,5 +1,5 @@
 /*****************************************************************************
-*   $Id: entry.h,v 8.2 1999/03/27 21:08:52 darren Exp $
+*   $Id: entry.h,v 8.7 1999/09/14 03:43:26 darren Exp $
 *
 *   Copyright (c) 1998-1999, Darren Hiebert
 *
@@ -20,6 +20,11 @@
 
 #include "ctags.h"
 #include "vstring.h"
+
+/*============================================================================
+=   Macro definitions
+============================================================================*/
+#define WHOLE_FILE  -1L
 
 /*============================================================================
 =   Data declarations
@@ -72,6 +77,8 @@ extern tagFile TagFile;
 ============================================================================*/
 extern void freeTagFileResources __ARGS((void));
 extern const char *tagFileName __ARGS((void));
+extern void copyBytes __ARGS((FILE* const fromFp, FILE* const toFp, const long size));
+extern void copyFile __ARGS((const char *const from, const char *const to, const long size));
 extern void openTagFile __ARGS((void));
 extern void closeTagFile __ARGS((const boolean resize));
 extern void beginEtagsFile __ARGS((void));

@@ -1,10 +1,10 @@
 " Vim syntax file
-" Language:	SGML
-" Maintainer:	Sung-Hyun Nam <namsh@lgic.co.kr>
-"		Currently it looks not good, but I believe it is better than
-"               no syntax. If you want to enhance and maintain,
-"		You can remove my name and insert yours.
-" Last change:	1999 Jun 29
+" Language:	SGML-DTD (supported by sgmltools-2.x and DocBook)
+"		(for more information, visit www.sgmltools.org)
+" Maintainer:	Sung-Hyun Nam <namsh@kldp.org>
+"               If you want to enhance and maintain, You can remove my name
+"               and insert yours.
+" Last change:	1999/08/19
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -25,18 +25,22 @@ syn region  sgmlSpecial	oneline start="&" end=";"
 
 " tag names for DTD DocBook V3.0
 syn match   sgmlTagName contained "sect\d\+"
-syn keyword sgmlTagName contained address affiliation area areaspec author
-syn keyword sgmlTagName contained authorblurb authorgroup book bookinfo
-syn keyword sgmlTagName contained chapter copyright docinfo email emphasis
-syn keyword sgmlTagName contained entry example firstname funcdef funcsynopsis
+syn keyword sgmlTagName contained address affiliation application appendix area
+syn keyword sgmlTagName contained areaspec author
+syn keyword sgmlTagName contained authorblurb authorgroup book bookinfo bridgehead
+syn keyword sgmlTagName contained chapter command copyright date docinfo
+syn keyword sgmlTagName contained editor email emphasis
+syn keyword sgmlTagName contained entry example figure firstname funcdef funcsynopsis
 syn keyword sgmlTagName contained function glossdef glossentry glosslist
-syn keyword sgmlTagName contained glossterm graphic guimenuitem holder
-syn keyword sgmlTagName contained informaltable itemizedlist legalnotice
-syn keyword sgmlTagName contained listitem literallayout para paramdef
-syn keyword sgmlTagName contained parameter preface programlisting
-syn keyword sgmlTagName contained programlistingco prompt row screenshot
-syn keyword sgmlTagName contained simpara structfield structname subtitle
-syn keyword sgmlTagName contained surname symbol tbody tgroup thead title
+syn keyword sgmlTagName contained glossterm graphic guibutton guilabel guimenu guimenuitem holder
+syn keyword sgmlTagName contained important indexterm informaltable itemizedlist keycap legalnotice
+syn keyword sgmlTagName contained listitem literallayout note orderedlist
+syn keyword sgmlTagName contained othername para paramdef
+syn keyword sgmlTagName contained parameter preface primary programlisting
+syn keyword sgmlTagName contained programlistingco prompt releaseinfo revhistory
+syn keyword sgmlTagName contained revision revnumber row screeninfo screenshot
+syn keyword sgmlTagName contained secondary see seealso simpara structfield structname subtitle
+syn keyword sgmlTagName contained surname symbol tbody tgroup thead tip title
 syn keyword sgmlTagName contained toc type ulink userinput warning xref year
 
 syn region  sgmlEntity  oneline start="^\s\+&" end=";$"
@@ -62,4 +66,4 @@ endif
 
 let b:current_syntax = "sgml"
 
-" vim: ts=8 sts=8 sw=8 noet:
+" vim:set tw=78 ts=8 sts=8 sw=8 noet com=nb\:":

@@ -1,5 +1,5 @@
 /*****************************************************************************
-*   $Id: entry.c,v 8.4 1999/06/22 02:29:38 darren Exp $
+*   $Id: entry.c,v 8.15 1999/09/17 07:00:10 darren Exp $
 *
 *   Copyright (c) 1996-1999, Darren Hiebert
 *
@@ -39,6 +39,7 @@
 #include "options.h"
 #include "read.h"
 #include "sort.h"
+#include "strlist.h"
 
 /*============================================================================
 *=	Defines
@@ -72,7 +73,7 @@ tagFile TagFile = {
     NULL,		/* file pointer */
     { 0, 0 },		/* numTags */
     { 0, 0, 0 },	/* max */
-    { "", NULL },	/* etags */
+    { "", NULL, 0 },	/* etags */
     NULL		/* vLine */
 };
 
@@ -97,8 +98,11 @@ static boolean isValidTagAddress __ARGS((const char *const tag));
 static boolean isCtagsLine __ARGS((const char *const tag));
 static boolean isEtagsLine __ARGS((const char *const tag));
 static boolean isTagFile __ARGS((const char *const filename));
+#ifdef ENABLE_UPDATE
+static boolean isNameInList __ARGS((Arguments* const args, const char *const name, const size_t length));
+#endif
 static void sortTagFile __ARGS((void));
-static void resizeTagFile __ARGS((const long oldSize));
+static void resizeTagFile __ARGS((const long newSize));
 static void writeEtagsIncludes __ARGS((FILE *const fp));
 static size_t writeSourceLine __ARGS((FILE *const fp, const char *const line));
 static size_t writeCompactSourceLine __ARGS((FILE *const fp, const char *const line));
@@ -346,10 +350,55 @@ static boolean isTagFile( filename )
     return ok;
 }
 
+extern void copyBytes( fromFp, toFp, size )
+    FILE* const fromFp;
+    FILE* const toFp;
+    const long size;
+{
+    enum { BufferSize = 1000 };
+    long toRead, numRead;
+    char* buffer = (char*)eMalloc((size_t)BufferSize);
+    long remaining = size;
+    do
+    {
+	toRead = (0 < remaining && remaining < BufferSize) ?
+		    remaining : BufferSize;
+	numRead = fread(buffer, (size_t)1, (size_t)toRead, fromFp);
+	if (fwrite(buffer, (size_t)1, (size_t)numRead, toFp) < (size_t)numRead)
+	    error (FATAL | PERROR, "cannot complete write");
+	if (remaining > 0)
+	    remaining -= numRead;
+    } while (numRead == toRead  &&  remaining != 0);
+    free(buffer);
+}
+
+extern void copyFile( from, to, size )
+    const char *const from;
+    const char *const to;
+    const long size;
+{
+    FILE* const fromFp = fopen(from, "rb");
+    if (fromFp == NULL)
+	error (FATAL | PERROR, "cannot open file to copy");
+    else
+    {
+	FILE* const toFp = fopen(to, "wb");
+	if (toFp == NULL)
+	    error (FATAL | PERROR, "cannot open copy destination");
+	else
+	{
+	    copyBytes (fromFp, toFp, size);
+	    fclose(toFp);
+	}
+	fclose(fromFp);
+    }
+}
+
 extern void openTagFile()
 {
     static char tempName[L_tmpnam];
 
+    setDefaultTagFileName();
     TagsToStdout = isDestinationStdout();
 
     if (TagFile.vLine == NULL)
@@ -364,8 +413,12 @@ extern void openTagFile()
     }
     else
     {
-	const char *const fname  = Option.tagFileName;
-	const boolean fileExists = doesFileExist(fname);
+	const char* fname;
+	boolean fileExists;
+
+	setDefaultTagFileName();
+	fname = Option.tagFileName;
+	fileExists = doesFileExist(fname);
 
 	TagFile.name = fname;
 	if (fileExists  &&  ! isTagFile(fname))
@@ -409,53 +462,7 @@ extern void openTagFile()
 
 #ifdef USE_REPLACEMENT_TRUNCATE
 
-static int copyChars __ARGS((FILE *const fpFrom, FILE *const fpTo, const long size));
-static int copyFile __ARGS((const char *const from, const char *const to, const long size));
 static int replacementTruncate __ARGS((const char *const name, const long size));
-
-static int copyChars( fpFrom, fpTo, size )
-    FILE *const fpFrom;
-    FILE *const fpTo;
-    const long size;
-{
-    int result = -1;
-    long count;
-
-    for (count = 0  ;  count < size  ;  ++count)
-    {
-	const int c = getc(fpFrom);
-
-	if (c == EOF  ||  putc(c, fpTo) == EOF)
-	    break;
-    }
-    if (count == size)
-	result = 0;
-    return result;
-}
-
-static int copyFile( from, to, size )
-    const char *const from;
-    const char *const to;
-    const long size;
-{
-    int result = -1;
-    FILE *const fpFrom = fopen(from, "rb");
-
-    if (fpFrom != NULL)
-    {
-	FILE *const fpTo = fopen(to, "wb");
-
-	if (fpFrom != NULL)
-	{
-	    result = copyChars(fpFrom, fpTo, size);
-	    if (result == 0)
-		result = fclose(fpTo);
-	}
-	if (result == 0)
-	    result = fclose(fpFrom);
-    }
-    return result;
-}
 
 /*  Replacement for missing library function.
  */
@@ -464,17 +471,14 @@ static int replacementTruncate( name, size )
     const long size;
 {
     char tempName[L_tmpnam];
-    int result = -1;
 
     if (tmpnam(tempName) != NULL)
     {
-	result = copyFile(name, tempName, size);
-	if (result == 0)
-	    result = copyFile(tempName, name, size);
-	if (result == 0)
-	    result = remove(tempName);
+	copyFile(name, tempName, size);
+	copyFile(tempName, name, WHOLE_FILE);
+	remove(tempName);
     }
-    return result;
+    return 0;
 }
 
 #endif
@@ -485,6 +489,8 @@ static void sortTagFile()
     {
 	if (Option.sorted)
 	{
+	    if (Option.verbose)
+		printf("sorting tag file\n");
 #ifdef EXTERNAL_SORT
 	    externalSortTags(TagsToStdout);
 #else
@@ -498,26 +504,26 @@ static void sortTagFile()
 	remove(tagFileName());		/* remove temporary file */
 }
 
-static void resizeTagFile( oldSize )
-    const long oldSize;
+static void resizeTagFile( newSize )
+    const long newSize;
 {
     int result = 0;
 
 #ifdef USE_REPLACEMENT_TRUNCATE
-    result = replacementTruncate(TagFile.name, oldSize);
+    result = replacementTruncate(TagFile.name, newSize);
 #else
 # ifdef HAVE_TRUNCATE
-    result = truncate(TagFile.name, (off_t)oldSize);
+    result = truncate(TagFile.name, (off_t)newSize);
 # else
     const int fd = open(TagFile.name, O_RDWR);
 
     if (fd != -1)
     {
 #  ifdef HAVE_FTRUNCATE
-	result = ftruncate(fd, (off_t)oldSize);
+	result = ftruncate(fd, (off_t)newSize);
 #  else
 #   ifdef HAVE_CHSIZE
-	result = chsize(fd, oldSize);
+	result = chsize(fd, newSize);
 #   endif
 #  endif
 	close(fd);
@@ -531,12 +537,14 @@ static void resizeTagFile( oldSize )
 static void writeEtagsIncludes( fp )
     FILE *const fp;
 {
-    unsigned int i;
-
-    for (i = 0  ;  i < stringListCount(&Option.etagsInclude)  ;  ++i)
+    if (Option.etagsInclude)
     {
-	vString *item = stringListItem(&Option.etagsInclude, i);
-	fprintf(fp, "\f\n%s,include\n", vStringValue(item));
+	unsigned int i;
+	for (i = 0  ;  i < stringListCount(Option.etagsInclude)  ;  ++i)
+	{
+	    vString *item = stringListItem(Option.etagsInclude, i);
+	    fprintf(fp, "\f\n%s,include\n", vStringValue(item));
+	}
     }
 }
 

@@ -1,5 +1,5 @@
 /*****************************************************************************
-*   $Id: get.c,v 8.1 1999/03/04 04:16:38 darren Exp $
+*   $Id: get.c,v 8.2 1999/09/12 19:48:31 darren Exp $
 *
 *   Copyright (c) 1996-1999, Darren Hiebert
 *
@@ -57,7 +57,7 @@ typedef struct sConditionalInfo {
 /*  Defines the current state of the pre-processor.
  */
 typedef struct sCppState {
-    int	    ungetch;		/* an ungotten character, if any */
+    int	    ungetch, ungetch2;	/* ungotten characters, if any */
     boolean resolveRequired;	/* must resolve if/else/elif/endif branch */
     struct sDirective {
 	enum eState {
@@ -84,7 +84,7 @@ typedef struct sCppState {
 static boolean BraceFormat = FALSE;
 
 static cppState Cpp = {
-    0,				/* ungetch */
+    '\0', '\0',			/* ungetch characters */
     FALSE,			/* resolveRequired */
     {
 	DRCTV_NONE,		/* state */
@@ -141,6 +141,7 @@ extern void cppInit( state )
     BraceFormat = state;
 
     Cpp.ungetch         = '\0';
+    Cpp.ungetch2        = '\0';
     Cpp.resolveRequired = FALSE;
 
     Cpp.directive.state	    = DRCTV_NONE;
@@ -180,10 +181,13 @@ extern void cppEndStatement ()
 *--------------------------------------------------------------------------*/
 
 /*  This puts a character back into the input queue for the source File.
+ *  Up to two characters may be ungotten.
  */
 extern void cppUngetc( c )
     const int c;
 {
+    Assert(Cpp.ungetch2 == '\0');
+    Cpp.ungetch2 = Cpp.ungetch;
     Cpp.ungetch = c;
 }
 
@@ -613,7 +617,8 @@ extern int cppGetc()
     if (Cpp.ungetch != '\0')
     {
 	c = Cpp.ungetch;
-	Cpp.ungetch = '\0';
+	Cpp.ungetch = Cpp.ungetch2;
+	Cpp.ungetch2 = '\0';
 	return c;	    /* return here to avoid re-calling debugPutc() */
     }
     else do

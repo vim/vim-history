@@ -1169,7 +1169,6 @@ recover_names(fname, list, nr)
 	msg((char_u *)"Swap files found:");
 	msg_putchar('\n');
     }
-    expand_interactively = TRUE;
 
     /*
      * Do the loop for every directory in 'directory'.
@@ -1273,7 +1272,7 @@ recover_names(fname, list, nr)
 	if (num_names == 0)
 	    num_files = 0;
 	else if (expand_wildcards(num_names, names, &num_files, &files,
-							     EW_FILE) == FAIL)
+						   EW_FILE|EW_SILENT) == FAIL)
 	    num_files = 0;
 
 	/*
@@ -1372,7 +1371,6 @@ recover_names(fname, list, nr)
 	FreeWild(num_files, files);
     }
     vim_free(dir_name);
-    expand_interactively = FALSE;
     return file_count;
 }
 
@@ -3600,6 +3598,10 @@ findswapname(buf, dirp, old_fname)
 		    cmdline_row = msg_row;
 		    --no_wait_return;
 
+		    /* We don't want a 'q' typed at the more-prompt interrupt
+		     * loading a file. */
+		    got_int = FALSE;
+
 #if defined(GUI_DIALOG) || defined(CON_DIALOG)
 		    if (swap_exists_action)
 		    {
@@ -3623,8 +3625,6 @@ findswapname(buf, dirp, old_fname)
 # endif
 					(char_u *)"&Open Read-Only\n&Edit anyway\n&Recover\n&Quit\n&Delete it", 1))
 			{
-			    /* there are some messy ways to avoid the hit-return
-			     * message here... */
 			    case 1:
 				buf->b_p_ro = TRUE;
 				break;
@@ -3944,7 +3944,6 @@ ml_updatechunk(buf, line, len, updtype)
 		buf->b_ml.ml_usedchunks = -1;
 		return;
 	    }
-	    curchnk = buf->b_ml.ml_chunksize + curix;
 	}
 
 	if (buf->b_ml.ml_chunksize[curix].mlcs_numlines >= MLCS_MAXL)
@@ -4226,7 +4225,7 @@ goto_byte(cnt)
 # ifdef MULTI_BYTE
     /* prevent cursor from moving on the trail byte */
     if (is_dbcs)
-	AdjustCursorForMultiByteCharacter();
+	AdjustCursorForMultiByteChar();
 # endif
 }
 #endif

@@ -1,9 +1,9 @@
-*if_cscope.txt* For Vim version 5.4.  Last change: 1999 Jun 10
+*if_cscope.txt* For Vim version 5.5.  Last change: 1999 Sep 17
 
 
 		  VIM REFERENCE MANUAL    by Andy Kahn
 
-							*cscope*
+							*cscope* *Cscope*
 This document explains how to use Vim's cscope interface.
 
 Cscope is a tool like ctags, but think of it as ctags on steroids since it

@@ -1,10 +1,10 @@
-*motion.txt*    For Vim version 5.4.  Last change: 1999 Jul 10
+*motion.txt*    For Vim version 5.5.  Last change: 1999 Sep 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
-Cursor motions					*cursor-motions*
+Cursor motions					*cursor-motions* *navigation*
 
 These commands move the cursor position.  If the new position is off of the
 screen, the screen is scrolled to show the cursor (see also 'scrolljump' and
@@ -259,6 +259,8 @@ gg			Goto line [count], default first line, on the first
 			last number in it used.  End-of-line characters are
 			counted depending on the current 'fileformat' setting.
 			{not in Vi}
+			{not available when compiled without the
+			|+byte_offset| feature}
 
 These commands move to the specified line.  They stop when reaching the first
 or the last line.  The first two commands put the cursor in the same column
@@ -536,7 +538,7 @@ the word under the cursor and the space after or before it.
 ==============================================================================
 7. Various motions				*various-motions*
 
-						*m*
+						*m* *mark* *Mark*
 m{a-zA-Z}		Set mark {a-zA-Z} at cursor position (does not move
 			the cursor, this is not a motion command).
 

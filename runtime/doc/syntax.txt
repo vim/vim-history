@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 5.4.  Last change: 1999 Jul 21
+*syntax.txt*    For Vim version 5.5.  Last change: 1999 Sep 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -199,6 +199,10 @@ Note that "mysyntaxfile" is sourced AFTER defining the default autocommands
 for the supplied syntax files, so that you can override these autocommands
 with your own.
 
+If you are setting up a system with many users, and you don't want each user
+to add the same syntax file, consider creating a vimrc file that is used for
+all everybody.  See |system-vimrc|.
+
 
 NAMING CONVENTIONS
 							*group-name*
@@ -374,11 +378,16 @@ Unix shell:
 >  $ for f in *.[ch]; do gvim -f +"syn on" +"so \$VIMRUNTIME/syntax/2html.vim" +"wq" +"q" $f; done
 
 
-Assembly				*asm.vim* *asmh8300.vim* *nasm.vim*
+Assembly			*asm.vim* *asmh8300.vim* *nasm.vim* *masm.vim*
 
 There are many types of assembly languages that all use the same file name
 extensions.  Therefore you will have to select the type yourself, or add a
-line in the assembly file that Vim will recognize.
+line in the assembly file that Vim will recognize.  Currently these syntax
+files are included:
+	asm		GNU assembly (the default)
+	asmh8300	Hitachi H-8300 version of GNU assembly
+	masm		Microsoft assembly (probably works for any 80x86)
+	nasm		Netwide assembly
 
 The most flexible is to add a line in your assembly file containing:
 >	asmsyntax=nasm
@@ -476,20 +485,30 @@ highlighting, add the following line to your startup file:
 
 Case still matters for class names and TODO marks in comments.
 
-Conversely, for even stricter checks, add the following line too:
+Conversely, for even stricter checks, add one of the following lines:
 
+>  let eiffel_strict=1
 >  let eiffel_pedantic=1
 
-Currently, this will only catch improper capitalization for the five
-predefined words "Current", "Void", "Result", "Precursor", and "NONE",
-to warn against their accidental use as feature or class names.
+Setting eiffel_strict will only catch improper capitalization for the
+five predefined words "Current", "Void", "Result", "Precursor", and
+"NONE", to warn against their accidental use as feature or class names.
 
-If instead you want to use the lower-case version of "Current", "Void",
+Setting eiffel_pedantic will enforce adherence to the Eiffel style
+guidelines fairly rigorously (like arbitrary mixes of upper- and
+lowercase letters as well as outdated ways to capitalize keywords).
+
+If you want to use the lower-case version of "Current", "Void",
 "Result", and "Precursor", you can use
 
 >  let eiffel_lower_case_predef=1
 
 instead of completely turning case-sensitive highlighting off.
+
+Support for ISE's proposed new creation syntax that is already
+experimentally handled by some compilers can be enabled by:
+
+>  let eiffel_ise=1
 
 Finally, some vendors support hexadecimal constants. To handle them, add
 
@@ -589,6 +608,10 @@ flagged as an error.  Since Java 1.1 this is possible (with anonymous
 classes), and therefore is no longer marked as an error. If you prefer the old
 way, put the following line into your vim startup file:
 >  let java_mark_braces_in_parens_as_errors=1
+
+All identifiers in java.lang.* are always visible in all classes.  To
+highlight them use:
+>  let java_highlight_java_lang_ids=1
 
 Function names are not highlighted, as the way to find functions depends on
 how you write java code.  The syntax file knows two possible ways to highlight
@@ -1186,8 +1209,48 @@ transparent						*:syn-transparent*
 If the "transparent" argument is given, this item will not be highlighted
 itself, but will take the highlighting of the item it is contained in.  This
 is useful for syntax items that don't need any highlighting but are used
-only to skip over a part of the text.  The same groups as the item it is
-contained in are used, unless a "contains" argument is given too.
+only to skip over a part of the text.
+
+The "contains=" argument is also inherited from the item it is contained in,
+unless a "contains" argument is given for the transparent item itself.  To
+avoid that unwanted items are contained, use "contains=NONE".  Example, which
+highlights words in strings, but makes an exception for "vim":
+>	syn match myString /'[^']*'/ contains=myWord,myVim
+>	syn match myWord   /\<[a-z]*\>/ contained
+>	syn match myVim    /\<vim\>/ transparent contained contains=NONE
+>	hi link myString String
+>	hi link myWord   Comment
+Since the "myVim" match comes after "myWord" it is the preferred match (last
+match in the same position overrules an earlier one).  The "transparent"
+argument makes the "myVim" match use the same highlighting as "myString".  But
+it does not contain anything.  If the "contains=NONE" argument would be left
+out, then "myVim" would use the contains argument from myString and allow
+"myWord" to be contained, which will be highlighted as a Constant.  This
+happens because a contained match doesn't match inside itself in the same
+position, thus the "myVim" match doesn't overrule the "myWord" match here.
+
+When you look at the colored text, it is like looking at layers of contained
+items.  The contained item is on top of the item it is contained in, thus you
+see the contained item.  When a contained item is transparent, you can look
+through, thus you see the item it is contained in.  In a picture:
+
+		look from here
+
+	    |	|   |	|   |	|
+	    V	V   V	V   V	V
+
+	       xxxx	  yyy		more contained items
+	    ....................	contained item (transparent)
+	=============================	first item
+
+The 'x', 'y' and '=' represent a highlighted syntax item.  The '.' represent a
+transparent group.
+
+What you see is:
+
+	=======xxxx=======yyy========
+
+Thus you look through the transparent "....".
 
 
 oneline							*:syn-oneline*

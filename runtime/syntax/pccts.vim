@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	PCCTS
 " Maintainer:	Scott Bigham <dsb@cs.duke.edu>
-" Last change:	16 Apr 1999
+" Last change:	10 Aug 1999
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -28,7 +28,7 @@ syn match  pcctsDirective "^\s*#lexclass\>.*$" contains=pcctsTokenName
 syn region pcctsDirective start="^\s*#errclass\s\+[^{]\+\s\+{" end="}" contains=pcctsString,pcctsTokenName
 syn match pcctsDirective "^\s*#pred\>.*$" contains=pcctsTokenName,pcctsAction
 
-syn cluster pcctsInRule contains=pcctsString,pcctsRuleName,pcctsTokenName,pcctsAction,pcctsArgBlock,pcctsSubRule,pcctsLabel
+syn cluster pcctsInRule contains=pcctsString,pcctsRuleName,pcctsTokenName,pcctsAction,pcctsArgBlock,pcctsSubRule,pcctsLabel,pcctsComment
 
 syn region pcctsRule start="\<[a-z][A-Za-z0-9_]*\>\(\s*\[[^]]*\]\)\=\(\s*>\s*\[[^]]*\]\)\=\s*:" end=";" contains=@pcctsInRule
 

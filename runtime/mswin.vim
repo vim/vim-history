@@ -1,7 +1,7 @@
 " Set options and add mapping such that Vim behaves a lot like MS-Windows
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Apr 26
+" Last change:	1999 Aug 09
 
 " make 'cpoptions' empty
 if 1	" only do this when compiled with expression evaluation
@@ -54,6 +54,9 @@ if has("gui")
   vmenu  1.40  PopUp.&Paste		"-cx<Esc>\\Paste\\"_x
   vmenu        ToolBar.Paste		"-cx<Esc>\\Paste\\"_x
 endif
+
+" Use CTRL-Q to do what CTRL-V used to do
+noremap <C-Q> <C-V>
 
 " For CTRL-V to work autoselect must be off
 set guioptions-=a

@@ -3703,6 +3703,7 @@ read_viminfo_search_pattern(line, fp, force)
     long	off = 0;
     int		setlast = FALSE;
     static int	hlsearch_on = FALSE;
+    char_u	*val;
 
     /*
      * Old line types:
@@ -3752,16 +3753,20 @@ read_viminfo_search_pattern(line, fp, force)
     {
 	if (force || spats[idx].pat == NULL)
 	{
-	    viminfo_readstring(lp);
-	    set_last_search_pat(lp + 1, idx, magic, setlast);
-	    spats[idx].no_scs = no_scs;
-	    spats[idx].off.line = off_line;
-	    spats[idx].off.end = off_end;
-	    spats[idx].off.off = off;
+	    val = viminfo_readstring(lp + 1, fp);
+	    if (val != NULL)
+	    {
+		set_last_search_pat(val, idx, magic, setlast);
+		vim_free(val);
+		spats[idx].no_scs = no_scs;
+		spats[idx].off.line = off_line;
+		spats[idx].off.end = off_end;
+		spats[idx].off.off = off;
 #ifdef EXTRA_SEARCH
-	    if (setlast)
-		no_hlsearch = !hlsearch_on;
+		if (setlast)
+		    no_hlsearch = !hlsearch_on;
 #endif
+	    }
 	}
     }
     return vim_fgets(line, LSIZE, fp);

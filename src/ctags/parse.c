@@ -1,12 +1,13 @@
 /*****************************************************************************
-*   $Id: parse.c,v 8.2 1999/05/09 20:07:52 darren Exp $
+*   $Id: parse.c,v 8.9 1999/09/15 03:32:09 darren Exp $
 *
 *   Copyright (c) 1996-1999, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.
 *
-*   This module contains functions for parsing and scanning of a source file.
+*   This module contains functions for parsing and scanning C, C++ and Java
+*   source files.
 *****************************************************************************/
 
 /*============================================================================
@@ -326,7 +327,7 @@ static void skipMacro __ARGS((statementInfo *const st));
 static boolean skipPostArgumentStuff __ARGS((statementInfo *const st, parenInfo *const info));
 static void skipJavaThrows __ARGS((statementInfo *const st));
 static void analyzePostParens __ARGS((statementInfo *const st, parenInfo *const info));
-static void parseParens __ARGS((statementInfo *const st, parenInfo *const info));
+static int parseParens __ARGS((statementInfo *const st, parenInfo *const info));
 static void initParenInfo __ARGS((parenInfo *const info));
 static void analyzeParens __ARGS((statementInfo *const st));
 static void addContext __ARGS((statementInfo *const st));
@@ -1110,7 +1111,7 @@ static void skipToMatch( pair )
     if (c == EOF)
     {
 	if (Option.verbose)
-	    printf("%s: failed to find match for '%c' at line %ld\n",
+	    printf("%s: failed to find match for '%c' at line %lu\n",
 		   getFileName(), begin, lineNumber);
 	if (braceMatching)
 	    longjmp(Exception, (int)ExceptionBraceFormattingError);
@@ -1219,18 +1220,23 @@ static void readOperator( st )
     statementInfo *const st;
 {
     const char *const acceptable = "+-*/%^&|~!=<>,[]";
+    const tokenInfo* const prev = prevToken(st,1);
     tokenInfo *const token = activeToken(st);
     vString *const name = token->name;
     int c = skipToNonWhite();
 
     /*  When we arrive here, we have the keyword "operator" in 'name'.
      */
-    if (c == '(')
+    if (isType(prev, TOK_KEYWORD) && (prev->keyword == KEYWORD_ENUM ||
+	 prev->keyword == KEYWORD_STRUCT || prev->keyword == KEYWORD_UNION))
+	;	/* ignore "operator" keyword if preceded by these keywords */
+    else if (c == '(')
     {
-	/*  Verify whether this is a valid "()" operator.
+	/*  Verify whether this is a valid function call (i.e. "()") operator.
 	 */
 	if (cppGetc() == ')')
 	{
+	    vStringPut(name, ' ');  /* always separate operator from keyword */
 	    c = skipToNonWhite();
 	    if (c == '(')
 		vStringCatS(name, "()");
@@ -1243,21 +1249,30 @@ static void readOperator( st )
     }
     else if (isident1(c))
     {
-	if (c == 'd'  ||  c == 'n')	/* only "delete" or "new" permitted */
+	/*  Handle "new" and "delete" operators, and conversion functions
+	 *  (per 13.3.1.1.2[2] of the C++ spec).
+	 */
+	boolean whiteSpace = TRUE;	/* default causes insertion of space */
+	do
 	{
-	    vStringPut(name, ' ');
-	    do
+	    if (isspace(c))
+		whiteSpace = TRUE;
+	    else
 	    {
+		if (whiteSpace)
+		{
+		    vStringPut(name, ' ');
+		    whiteSpace = FALSE;
+		}
 		vStringPut(name, c);
-		c = cppGetc();
-	    } while (isident(c));
-	    vStringTerminate(name);
-	    vStringStrip(name);
-	}
+	    }
+	    c = cppGetc();
+	} while (! isOneOf(c, "(;")  &&  c != EOF);
+	vStringTerminate(name);
     }
     else if (isOneOf(c, acceptable))
     {
-	vStringPut(name, ' ');
+	vStringPut(name, ' ');	/* always separate operator from keyword */
 	do
 	{
 	    vStringPut(name, c);
@@ -1265,6 +1280,7 @@ static void readOperator( st )
 	} while (isOneOf(c, acceptable));
 	vStringTerminate(name);
     }
+
     cppUngetc(c);
 
     token->type	= TOK_NAME;
@@ -1620,14 +1636,14 @@ static void analyzePostParens( st, info )
 	if (! skipPostArgumentStuff(st, info))
 	{
 	    if (Option.verbose)
-	   printf("%s: confusing argument declarations beginning at line %ld\n",
+	   printf("%s: confusing argument declarations beginning at line %lu\n",
 		    getFileName(), lineNumber);
 	    longjmp(Exception, (int)ExceptionFormattingError);
 	}
     }
 }
 
-static void parseParens( st, info )
+static int parseParens( st, info )
     statementInfo *const st;
     parenInfo *const info;
 {
@@ -1635,6 +1651,7 @@ static void parseParens( st, info )
     unsigned int identifierCount = 0;
     unsigned int depth = 1;
     boolean firstChar = TRUE;
+    int nextChar = '\0';
 
     info->parameterCount = 1;
     do
@@ -1706,8 +1723,20 @@ static void parseParens( st, info )
 		}
 		else if (isType(token, TOK_PAREN_NAME))
 		{
-		    cppUngetc(c);
-		    info->nestedArgs = TRUE;
+		    c = skipToNonWhite();
+		    if (c == '*')	/* check for function pointer */
+		    {
+			skipToMatch("()");
+			c = skipToNonWhite();
+			if (c == '(')
+			    skipToMatch("()");
+		    }
+		    else
+		    {
+			cppUngetc(c);
+			cppUngetc('(');
+			info->nestedArgs = TRUE;
+		    }
 		}
 		else
 		    ++depth;
@@ -1748,6 +1777,8 @@ static void parseParens( st, info )
 
     if (! info->isNameCandidate)
 	initToken(token);
+
+    return nextChar;
 }
 
 static void initParenInfo( info )
@@ -1874,7 +1905,7 @@ static int skipInitializer( enumInitializer )
 		else if (! isBraceFormat())
 		{
 		    if (Option.verbose)
-		       printf("%s: unexpected closing brace at line %ld\n",
+		       printf("%s: unexpected closing brace at line %lu\n",
 			      getFileName(), getFileLine());
 		    longjmp(Exception, (int)ExceptionBraceFormattingError);
 		}
@@ -2157,7 +2188,7 @@ static void createTags( nestLevel, parent )
 	    else
 	    {
 		if (Option.verbose)
-		    printf("%s: unexpected closing brace at line %ld\n",
+		    printf("%s: unexpected closing brace at line %lu\n",
 			   getFileName(), getFileLine());
 		longjmp(Exception, (int)ExceptionBraceFormattingError);
 	    }
@@ -2232,7 +2263,8 @@ extern boolean createCTags( passCount )
 	{
 	    retry = TRUE;
 	    if (Option.verbose)
-	    printf("%s: retrying file with fallback brace matching algorithm\n",
+		printf(
+		   "%s: retrying file with fallback brace matching algorithm\n",
 		    getFileName());
 	}
     }

@@ -1,4 +1,4 @@
-*vi_diff.txt*   For Vim version 5.4.  Last change: 1999 Jun 10
+*vi_diff.txt*   For Vim version 5.5.  Last change: 1999 Aug 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -546,8 +546,8 @@ the opposite direction.  CTRL-B toggles the 'revins' option.  In replace mode
 The backspace key can be used just like CTRL-D to remove auto-indents.
 
 You can backspace, ctrl-U and CTRL-W over line breaks if the 'backspace' (bs)
-option is set to non-zero.  You can backspace over the start of insert if the
-'backspace' option is set to 2.
+option includes "eol".  You can backspace over the start of insert if the
+'backspace' option includes "start".
 
 When the 'paste' option is set, a few option are reset and mapping in insert
 mode and abbreviation are disabled.  This allows for pasting text in windowing

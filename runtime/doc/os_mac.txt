@@ -1,8 +1,10 @@
-*os_mac.txt*    For Vim version 5.4.  Last change: 1999 May 16
+*os_mac.txt*    For Vim version 5.5.  Last change: 1999 Sep 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
+
+					*mac* *Mac* *macintosh* *Macintosh*
 
 There was a Mac port for version 3.0 of Vim.  Here are the first few lines
 from the old file:
@@ -15,9 +17,6 @@ Eric Fischer
 <enf1@midway.uchicago.edu>, <eric@jcp.uchicago.edu>, <etaoin@uchicago.edu>
 5759 N. Guilford Ave
 Indianapolis IN 46220 USA
-
-								*mac*
-								*macintosh*
 
 This file documents the particularities of the macintosh version of Vim.
 
@@ -71,7 +70,7 @@ otherwise it will only handle mac format files.
 -Can't use the command key
 -Scrollbar are not scrolling live, and  when only the arrow or scroll area,
    a limit of 32 line or page is scrolled.
--Syntax highlighting works on 68k Macs but is *really* slow.
+-Syntax highlighting works on 68k Macs but is _really_ slow.
 
 ==============================================================================
 4. Mac Bug Report					*mac-bug*

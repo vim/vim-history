@@ -542,7 +542,6 @@ getcmdline(firstc, count, indent)
 		/* if interrupted while completing, behave like it failed */
 		if (got_int)
 		{
-		    res = FAIL;
 		    (void)vpeekc();	/* remove <C-C> from input stream */
 		    got_int = FALSE;	/* don't abandon the command line */
 		    (void)ExpandOne(NULL, NULL, 0, WILD_FREE);
@@ -858,6 +857,12 @@ getcmdline(firstc, count, indent)
 		    ccline.cmdspos += i;
 		}
 		goto cmdline_not_changed;
+
+	/* Mouse scroll wheel: ignored here */
+	case K_MOUSEDOWN:
+	case K_MOUSEUP:
+		goto cmdline_not_changed;
+
 #endif	/* USE_MOUSE */
 
 #ifdef USE_GUI
@@ -1904,7 +1909,6 @@ nextwild(type, options)
 	/* Caller can use the character as a normal char instead */
 	return FAIL;
     }
-    expand_interactively = TRUE;
 
     MSG_PUTS("...");	    /* show that we are busy */
     out_flush();
@@ -1924,12 +1928,13 @@ nextwild(type, options)
 	/*
 	 * Translate string into pattern and expand it.
 	 */
-	if ((p1 = addstar(&ccline.cmdbuff[i], oldlen)) == NULL)
+	if ((p1 = addstar(&ccline.cmdbuff[i], oldlen, expand_context)) == NULL)
 	    p2 = NULL;
 	else
 	{
 	    p2 = ExpandOne(p1, vim_strnsave(&ccline.cmdbuff[i], oldlen),
-			  WILD_HOME_REPLACE | WILD_ADD_SLASH | options, type);
+		    WILD_HOME_REPLACE|WILD_ADD_SLASH|WILD_SILENT|WILD_ESCAPE
+							      |options, type);
 	    vim_free(p1);
 	    /* longest match: make sure it is not shorter (happens with :help */
 	    if (p2 != NULL && type == WILD_LONGEST)
@@ -1970,7 +1975,6 @@ nextwild(type, options)
     vim_free(p2);
 
     redrawcmd();
-    expand_interactively = FALSE;	    /* reset for next call */
 
     /* When expanding a ":map" command and no matches are found, assume that
      * the key is supposed to be inserted literally */
@@ -2005,6 +2009,10 @@ nextwild(type, options)
  * options = WILD_NO_BEEP:	    Don't beep for multiple matches
  * options = WILD_ADD_SLASH:	    add a slash after directory names
  * options = WILD_KEEP_ALL:	    don't remove 'wildignore' entries
+ * options = WILD_SILENT:	    don't print warning messages
+ * options = WILD_ESCAPE:	    put backslash before special chars
+ *
+ * The global variable expand_context must have been set!
  */
     char_u *
 ExpandOne(str, orig, options, mode)
@@ -2096,13 +2104,13 @@ ExpandOne(str, orig, options, mode)
 	     * are wildcards, the real problem is that there was no match,
 	     * causing the pattern to be added, which has illegal characters.
 	     */
-	    if (!expand_interactively && (options & WILD_LIST_NOTFOUND))
+	    if (!(options & WILD_SILENT) && (options & WILD_LIST_NOTFOUND))
 		emsg2(e_nomatch2, str);
 #endif
 	}
 	else if (cmd_numfiles == 0)
 	{
-	    if (!expand_interactively)
+	    if (!(options & WILD_SILENT))
 		emsg2(e_nomatch2, str);
 	}
 	else
@@ -2117,7 +2125,7 @@ ExpandOne(str, orig, options, mode)
 	     * Insert backslashes into a file name before a space, \, %, # and
 	     * wildmatch characters, except '~'.
 	     */
-	    if (expand_interactively
+	    if ((options & WILD_ESCAPE)
 		    && (expand_context == EXPAND_FILES
 			|| expand_context == EXPAND_BUFFERS
 			|| expand_context == EXPAND_DIRECTORIES))
@@ -2172,8 +2180,7 @@ ExpandOne(str, orig, options, mode)
 		    non_suf_match = cmd_numfiles;
 		else
 		    non_suf_match = 1;
-		if ((!expand_interactively
-			    || expand_context == EXPAND_FILES
+		if ((expand_context == EXPAND_FILES
 			    || expand_context == EXPAND_DIRECTORIES)
 			&& cmd_numfiles > 1)	/* more than one match; check suffix */
 		{
@@ -2193,7 +2200,7 @@ ExpandOne(str, orig, options, mode)
 		     * together. Don't really want to wait for this message
 		     * (and possibly have to hit return to continue!).
 		     */
-		    if (!expand_interactively)
+		    if (!(options & WILD_SILENT))
 			emsg(e_toomany);
 		    else if (!(options & WILD_NO_BEEP))
 			beep_flush();
@@ -2328,20 +2335,17 @@ showmatches(wildmenu)
 	    /* Caller can use the character as a normal char instead */
 	    return FAIL;
 	}
-	expand_interactively = TRUE;
 
 	/* add star to file name, or convert to regexp if not exp. files. */
 	file_str = addstar(expand_pattern,
-		      (int)(ccline.cmdbuff + ccline.cmdpos - expand_pattern));
+		      (int)(ccline.cmdbuff + ccline.cmdpos - expand_pattern),
+							      expand_context);
 	if (file_str == NULL)
-	{
-	    expand_interactively = FALSE;
 	    return OK;
-	}
 
 	/* find all files that match the description */
 	if (ExpandFromContext(file_str, &num_files, &files_found, FALSE,
-						      WILD_ADD_SLASH) == FAIL)
+					  WILD_ADD_SLASH|WILD_SILENT) == FAIL)
 	{
 	    num_files = 0;
 	    files_found = (char_u **)"";
@@ -2471,30 +2475,28 @@ showmatches(wildmenu)
 	FreeWild(num_files, files_found);
     }
 
-    expand_interactively = FALSE;
     return OK;
 }
 
 /*
  * Prepare a string for expansion.
- * When expanding file names:  The string will be used with expand_wildcards().
+ * When expanding file names: The string will be used with expand_wildcards().
  * Copy the file name into allocated memory and add a '*' at the end.
- * When expanding other names:	The string will be used with regcomp().  Copy
+ * When expanding other names: The string will be used with regcomp().  Copy
  * the name into allocated memory and add ".*" at the end.
  */
     char_u *
-addstar(fname, len)
+addstar(fname, len, context)
     char_u	*fname;
     int		len;
+    int		context;	/* EXPAND_FILES etc. */
 {
     char_u	*retval;
     int		i, j;
     int		new_len;
     char_u	*tail;
 
-    if (expand_interactively
-	    && expand_context != EXPAND_FILES
-	    && expand_context != EXPAND_DIRECTORIES)
+    if (context != EXPAND_FILES && context != EXPAND_DIRECTORIES)
     {
 	/*
 	 * Matching will be done internally (on something other than files).
@@ -2503,7 +2505,7 @@ addstar(fname, len)
 	 */
 
 	/* for help tags the translation is done in find_help_tags() */
-	if (expand_context == EXPAND_HELP)
+	if (context == EXPAND_HELP)
 	    retval = vim_strnsave(fname, len);
 	else
 	{
@@ -2515,7 +2517,7 @@ addstar(fname, len)
 					   '~' needs to be replaced by "\~" */
 
 		/* Buffer names are like file names.  "." should be literal */
-		if (expand_context == EXPAND_BUFFERS && fname[i] == '.')
+		if (context == EXPAND_BUFFERS && fname[i] == '.')
 		    new_len++;		/* "." becomes "\." */
 	    }
 	    retval = alloc(new_len);
@@ -2536,7 +2538,7 @@ addstar(fname, len)
 				    break;
 			case '?':   retval[j] = '.';
 				    continue;
-			case '.':   if (expand_context == EXPAND_BUFFERS)
+			case '.':   if (context == EXPAND_BUFFERS)
 					retval[j++] = '\\';
 				    break;
 		    }
@@ -2679,8 +2681,10 @@ ExpandFromContext(pat, num_file, file, files_only, options)
 	flags |= EW_ADDSLASH;
     if (options & WILD_KEEP_ALL)
 	flags |= EW_KEEPALL;
+    if (options & WILD_SILENT)
+	flags |= EW_SILENT;
 
-    if (!expand_interactively || expand_context == EXPAND_FILES)
+    if (expand_context == EXPAND_FILES)
     {
 	/*
 	 * Expand file names.
@@ -3196,7 +3200,7 @@ get_history_entry(histype, idx)
  * "histype" may be HIST_CMD, HIST_SEARCH, HIST_EXPR or HIST_INPUT.
  */
     int
-clear_history(histype)
+clr_history(histype)
     int	    histype;
 {
     int			i;
@@ -3281,7 +3285,7 @@ del_history_idx(histype, idx)
     int	    histype;
     int	    idx;
 {
-    int	    i, j = 0;
+    int	    i, j;
 
     i = calc_hist_idx(histype, idx);
     if (i < 0)
@@ -3549,14 +3553,19 @@ read_viminfo_history(line, fp)
     FILE    *fp;
 {
     int	    type;
+    char_u  *val;
 
     type = hist_char2type(line[0]);
     if (viminfo_hisidx[type] < viminfo_hislen[type])
     {
-	viminfo_readstring(line);
-	if (!in_history(type, line + 1, viminfo_add_at_front))
-	    viminfo_history[type][viminfo_hisidx[type]++] =
-							vim_strsave(line + 1);
+	val = viminfo_readstring(line + 1, fp);
+	if (val != NULL)
+	{
+	    if (!in_history(type, val, viminfo_add_at_front))
+		viminfo_history[type][viminfo_hisidx[type]++] = val;
+	    else
+		vim_free(val);
+	}
     }
     return vim_fgets(line, LSIZE, fp);
 }

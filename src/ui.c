@@ -184,7 +184,7 @@ ui_suspend()
     mch_suspend();
 }
 
-#if !defined(UNIX) || !defined(SIGTSTP) || defined(PROTO)
+#if !defined(UNIX) || !defined(SIGTSTP) || defined(PROTO) || defined(__BEOS__)
 /*
  * When the OS can't really suspend, call this function to start a shell.
  */
@@ -1245,17 +1245,7 @@ fill_input_buf(exit_on_error)
      * If we can't get any, and there isn't any in the buffer, we give up and
      * exit Vim.
      */
-/* make sure we have all macros defined... */
-# if defined(__BEOS__)
-#  ifndef B_BEOS_VERSION_4_5
-#   define B_BEOS_VERSION 4_5 0x0450
-#  endif
-# endif
-/* Genki (R4.5) doesn't seem to like the following (exits immediately on
- * startup)
- * richard@whitequeen.com Jul 99
- */
-# if defined(__BEOS__) && B_BEOS_VERSION < B_BEOS_VERSION_4_5
+# ifdef __BEOS__
     /*
      * On the BeBox version (for now), all input is secretly performed within
      * beos_select() which is called from RealWaitForChar().
@@ -1386,5 +1376,298 @@ check_row(row)
     if (row >= (int)screen_Rows)
 	return (int)screen_Rows - 1;
     return row;
+}
+#endif
+
+/*
+ * Stuff for the X clipboard.  Shared between VMS and Unix.
+ */
+
+#if defined(XTERM_CLIP) || defined(USE_GUI_X11) || defined(PROTO)
+# include <X11/Xatom.h>
+# include <X11/Intrinsic.h>
+
+# if defined(USE_GUI) && defined(XTERM_CLIP)
+#  define X_DISPLAY	gui.in_use ? gui.dpy : xterm_dpy
+# else
+#  ifdef USE_GUI
+#   define X_DISPLAY	gui.dpy
+#  else
+#   define X_DISPLAY	xterm_dpy
+#  endif
+# endif
+
+/*
+ * Open the application context (if it hasn't been opened yet).
+ * Used for Motif and Athena GUI and the xterm clipboard.
+ */
+    void
+open_app_context()
+{
+    if (app_context == NULL)
+    {
+	XtToolkitInitialize();
+	app_context = XtCreateApplicationContext();
+    }
+}
+
+    void
+x11_setup_atoms(dpy)
+    Display	*dpy;
+{
+    clipboard.xatom = XInternAtom(dpy, "_VIM_TEXT", False);
+    clipboard.xa_compound_text = XInternAtom(dpy, "COMPOUND_TEXT", False);
+    clipboard.xa_text = XInternAtom(dpy, "TEXT", False);
+    clipboard.xa_targets = XInternAtom(dpy, "TARGETS", False);
+}
+
+/*
+ * X Selection stuff, for cutting and pasting text to other windows.
+ */
+
+static void  clip_x11_request_selection_cb __ARGS((Widget, XtPointer, Atom *, Atom *, XtPointer, long_u *, int *));
+
+/* ARGSUSED */
+    static void
+clip_x11_request_selection_cb(w, success, selection, type, value, length,
+			      format)
+    Widget	w;
+    XtPointer	success;
+    Atom	*selection;
+    Atom	*type;
+    XtPointer	value;
+    long_u	*length;
+    int		*format;
+{
+    int		motion_type;
+    long_u	len;
+    char_u	*p;
+    char	**text_list = NULL;
+
+    if (value == NULL || *length == 0)
+    {
+	clip_free_selection();	/* ??? */
+	*(int *)success = FALSE;
+	return;
+    }
+    motion_type = MCHAR;
+    p = (char_u *)value;
+    len = *length;
+    if (*type == clipboard.xatom)
+    {
+	motion_type = *p++;
+	len--;
+    }
+    else if (*type == clipboard.xa_compound_text || (
+#ifdef MULTI_BYTE
+		is_dbcs &&
+#endif
+		*type == clipboard.xa_text))
+    {
+	XTextProperty	text_prop;
+	int		n_text = 0;
+	int		status;
+
+	text_prop.value = (unsigned char *)value;
+	text_prop.encoding = *type;
+	text_prop.format = *format;
+	text_prop.nitems = STRLEN(value);
+	status = XmbTextPropertyToTextList(X_DISPLAY, &text_prop,
+							 &text_list, &n_text);
+	if (status != Success || n_text < 1)
+	{
+	    *(int *)success = FALSE;
+	    return;
+	}
+	p = (char_u *)text_list[0];
+	len = STRLEN(p);
+    }
+    clip_yank_selection(motion_type, p, (long)len);
+
+    if (text_list != NULL)
+	XFreeStringList(text_list);
+
+    XtFree((char *)value);
+    *(int *)success = TRUE;
+}
+
+    void
+clip_x11_request_selection(myShell, dpy)
+    Widget	myShell;
+    Display	*dpy;
+{
+    XEvent	event;
+    Atom	type;
+    static int	success;
+    int		i;
+
+    for (i = 0; i < 4; i++)
+    {
+	switch (i)
+	{
+	    case 0:  type = clipboard.xatom;
+	    case 1:  type = clipboard.xa_compound_text;
+	    case 2:  type = clipboard.xa_text;
+	    default: type = XA_STRING;
+	}
+	XtGetSelectionValue(myShell, XA_PRIMARY, type,
+	    clip_x11_request_selection_cb, (XtPointer)&success, CurrentTime);
+
+	/* Do we need this?: */
+	XFlush(dpy);
+
+	/*
+	 * Wait for result of selection request, otherwise if we type more
+	 * characters, then they will appear before the one that requested the
+	 * paste!  Don't worry, we will catch up with any other events later.
+	 */
+	for (;;)
+	{
+	    if (XCheckTypedEvent(dpy, SelectionNotify, &event))
+		break;
+
+	    /* Do we need this?: */
+	    XSync(dpy, False);
+	}
+
+	/* this is where clip_x11_request_selection_cb() is actually called */
+	XtDispatchEvent(&event);
+
+	if (success)
+	    return;
+    }
+}
+
+static Boolean	clip_x11_convert_selection_cb __ARGS((Widget, Atom *, Atom *, Atom *, XtPointer *, long_u *, int *));
+
+/* ARGSUSED */
+    static Boolean
+clip_x11_convert_selection_cb(w, selection, target, type, value, length, format)
+    Widget	w;
+    Atom	*selection;
+    Atom	*target;
+    Atom	*type;
+    XtPointer	*value;
+    long_u	*length;
+    int		*format;
+{
+    char_u	*string;
+    char_u	*result;
+    int		motion_type;
+
+    if (!clipboard.owned)
+	return False;	    /* Shouldn't ever happen */
+
+    /* requestor wants to know what target types we support */
+    if (*target == clipboard.xa_targets)
+    {
+	Atom *array;
+
+	if ((array = (Atom *)XtMalloc((unsigned)(sizeof(Atom) * 5))) == NULL)
+	    return False;
+	*value = (XtPointer)array;
+	array[0] = XA_STRING;
+	array[1] = clipboard.xa_targets;
+	array[2] = clipboard.xatom;
+	array[3] = clipboard.xa_text;
+	array[4] = clipboard.xa_compound_text;
+	*type = XA_ATOM;
+	*format = sizeof(Atom) * 8;
+	*length = 5;
+	return True;
+    }
+
+    if (       *target != XA_STRING
+	    && *target != clipboard.xatom
+	    && *target != clipboard.xa_text
+	    && *target != clipboard.xa_compound_text)
+	return False;
+
+    clip_get_selection();
+    motion_type = clip_convert_selection(&string, length);
+    if (motion_type < 0)
+	return False;
+
+    /* For our own format, the first byte contains the motion type */
+    if (*target == clipboard.xatom)
+	(*length)++;
+
+    *value = XtMalloc((Cardinal)*length);
+    result = (char_u *)*value;
+    if (result == NULL)
+    {
+	vim_free(string);
+	return False;
+    }
+
+    if (*target == XA_STRING)
+    {
+	mch_memmove(result, string, (size_t)(*length));
+	*type = XA_STRING;
+    }
+    else if (*target == clipboard.xa_compound_text
+	    || *target == clipboard.xa_text)
+    {
+	XTextProperty	text_prop;
+	char		*string_nt = (char *)alloc((unsigned)*length + 1);
+
+	/* create NUL terminated string which XmbTextListToTextProperty wants */
+	mch_memmove(string_nt, string, (size_t)*length);
+	string_nt[*length] = NUL;
+	XmbTextListToTextProperty(X_DISPLAY, (char **)&string_nt, 1,
+					      XCompoundTextStyle, &text_prop);
+	vim_free(string_nt);
+	XtFree(*value);			/* replace with COMPOUND text */
+	*value = (XtPointer)(text_prop.value);	/*    from plain text */
+	*length = text_prop.nitems;
+	*type = clipboard.xa_compound_text;
+    }
+    else
+    {
+	result[0] = motion_type;
+	mch_memmove(result + 1, string, (size_t)(*length - 1));
+	*type = clipboard.xatom;
+    }
+    *format = 8;	    /* 8 bits per char */
+    vim_free(string);
+    return True;
+}
+
+static void  clip_x11_lose_ownership_cb __ARGS((Widget, Atom *));
+
+/* ARGSUSED */
+    static void
+clip_x11_lose_ownership_cb(w, selection)
+    Widget  w;
+    Atom    *selection;
+{
+    clip_lose_selection();
+}
+
+    void
+clip_x11_lose_selection(myShell)
+    Widget	myShell;
+{
+    XtDisownSelection(myShell, XA_PRIMARY, CurrentTime);
+}
+
+    int
+clip_x11_own_selection(myShell)
+    Widget	myShell;
+{
+    if (XtOwnSelection(myShell, XA_PRIMARY, CurrentTime,
+	    clip_x11_convert_selection_cb, clip_x11_lose_ownership_cb,
+	    NULL) == False)
+	return FAIL;
+    return OK;
+}
+
+/*
+ * Send the current selection to the clipboard.  Do nothing for X because we
+ * will fill in the selection only when requested by another app.
+ */
+    void
+clip_x11_set_selection()
+{
 }
 #endif

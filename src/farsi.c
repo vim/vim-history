@@ -729,7 +729,7 @@ chg_l_toXor_X ()
     static void
 chg_r_to_Xor_X_()
 {
-int tempc, c;
+    int tempc, c;
 
     if (curwin->w_cursor.col)
     {
@@ -792,8 +792,7 @@ fkmap(c)
 	    arrow_used = TRUE;
 	    stop_arrow();
 
-	    revins=0;
-	    tempc = gchar_cursor();
+	    revins = 0;
 	    if (curwin->w_p_rl)
 	    {
 		while ((F_isdigit(gchar_cursor())
@@ -804,7 +803,7 @@ fkmap(c)
 				|| gchar_cursor() == F_DIVIDE
 				|| gchar_cursor() == F_PERCENT
 				|| gchar_cursor() == F_EQUALS))
-			&& gchar_cursor()!= NUL)
+			&& gchar_cursor() != NUL)
 		    ++curwin->w_cursor.col;
 	    }
 	    else
@@ -1980,7 +1979,7 @@ lrF_sub(ibuf)
 cmdl_fkmap(c)
     int c;
 {
-int	tempc;
+    int	    tempc;
 
     switch (c)
     {

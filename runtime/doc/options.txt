@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 5.4.  Last change: 1999 Jul 23
+*options.txt*   For Vim version 5.5.  Last change: 1999 Sep 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -28,7 +28,7 @@ achieve special effects.  These options come in three forms:
 :se[t] all		Show all but terminal options.
 
 :se[t] termcap		Show all terminal options.  Note that in the GUI the
-			key codes are not show, because they are generated
+			key codes are not shown, because they are generated
 			interally and can't be changed.  Changing the terminal
 			codes in the GUI is not useful either...
 
@@ -261,10 +261,19 @@ the system, mostly it is something like 256 or 1024 characters.
 			(don't type eight characters!).  Replace "termname"
 			with your terminal name.
 
+							*Linux-backspace*
 			Note about Linux: By default the backspace key
 			produces CTRL-?, which is wrong.  You can fix it by
 			putting this line in your rc.local:
 >				echo "keycode 14 = BackSpace" | loadkeys
+
+							*NetBSD-backspace*
+			Note about NetBSD: If your backspace doesn't produce
+			the right code, try this this:
+>				xmodmap -e "keycode 22 = BackSpace"
+			If this works, add this in your .Xmodmap file:
+>				keysym 22 = BackSpace
+			You need to restart for this to take effect.
 
 ==============================================================================
 2. Automatically setting options			*auto-setting*
@@ -358,15 +367,16 @@ a Trojan horse text file with modelines).
 			the command.  |session-file|
 			The created file can be loaded with a |:source|
 			command to recreate the current edit session.
-			{not in Vi} {only when compiled with the +mksession
+			{not in Vi} {only when compiled with the |+mksession|
 			feature enabled}
 
 These commands will write ":map" and ":set" commands to a file, in such a way
 that when these commands are executed, the current key mappings and options
-will be set to the same values.  The options 'columns', 'endofline', 'lines',
-'modified', 'scroll', 'term' and 'ttyfast' are not included, because these are
-terminal or file dependent.  Note that the options 'binary', 'fileformat',
-'paste' and 'readonly' are included, this might not always be what you want.
+will be set to the same values.  The options 'columns', 'endofline',
+'fileformat', 'key', 'lines', 'modified', 'scroll', 'term', 'textmode',
+'ttyfast' and 'ttymouse' are not included, because these are terminal or file
+dependent.  Note that the options 'binary', 'paste' and 'readonly' are
+included, this might not always be what you want.
 
 When special keys are used in mappings, The 'cpoptions' option will be
 temporarily made empty, to avoid the mappings to be misinterpreted.  This
@@ -470,7 +480,7 @@ buffer is created.
 
 A jump table for the options with a short description can be found at |X_op|.
 
-					*'aleph'* *'al'*
+					*'aleph'* *'al'* *aleph* *Aleph*
 'aleph' 'al'		number	(default 128 for MS-DOS, 224 otherwise)
 			global
 			{not in Vi}
@@ -567,16 +577,26 @@ A jump table for the options with a short description can be found at |X_op|.
 	done with ":syntax on".
 
 							*'backspace'* *'bs'*
-'backspace' 'bs'	number	(default 0)
+'backspace' 'bs'	string	(default "")
 			global
 			{not in Vi}
 	Influences the working of <BS>, <Del>, CTRL-W and CTRL-U in Insert
-	mode:
+	mode.  This is a list of items, separated by commas.  Each item allows
+	a way to backspace over something:
 	value	effect  ~
-	  0	Vi compatible backspacing is used.
-	  1	allow backspacing over <EOL>s and autoindent.
-	  2	allow backspacing over the start of insert.  CTRL-W and CTRL-U
+	indent  allow backspacing over autoindent
+	eol	allow backspacing over line breaks (join lines)
+	start	allow backspacing over the start of insert; CTRL-W and CTRL-U
 		stop once at the start of insert.
+
+	When the value is empty, Vi compatible backspacing is used.
+
+	For backwards compatibility with version 5.4 and earlier:
+	value	effect  ~
+	  0	same as "" (Vi compatible)
+	  1	same as "indent,eol"
+	  2	same as "indent,eol,start"
+
 	See |:fixdel| if your <BS> or <Del> key does not do what you want.
 
 				*'backup'* *'bk'* *'nobackup'* *'nobk'*
@@ -1707,6 +1727,7 @@ A jump table for the options with a short description can be found at |X_op|.
 		loaded.
 	  'g'	Grey menu items: Make menu items that are not active grey.  If
 		'g' is not included inactive menu items are not shown at all.
+		Exception: Athena will always use grey menu items.
 
 	  't'	Include tearoff menu items.  Currently only works for Win32,
 		GTK+, and Motif 1.2 GUI.
@@ -2047,8 +2068,9 @@ A jump table for the options with a short description can be found at |X_op|.
 	'isfname' for a description of the format of this option.  For C
 	programs you could use "a-z,A-Z,48-57,_,.,-,>".
 	For a help file it is set to all non-blank printable characters except
-	'*', '"' and '|'.  When the 'lisp' option is on the '-' character is
-	always included.
+	'*', '"' and '|' (so that CTRL-] on a command finds the help for that
+	command).
+	When the 'lisp' option is on the '-' character is always included.
 
 						*'isprint'* *'isp'*
 'isprint' 'isp'	string	(default for MS-DOS and Win32: "@,~-255"
@@ -3810,6 +3832,7 @@ A jump table for the options with a short description can be found at |X_op|.
 			{only in Unix, and not in the GUI}
 	Name of the terminal type for which mouse codes are to be recognized.
 	Currently these three strings are valid:
+							*xterm-mouse*
 	   xterm	xterm-like mouse handling.  The mouse generates
 			"<Esc>[Mscr", where "scr" is three bytes:
 				"s"  = button state
@@ -3820,22 +3843,28 @@ A jump table for the options with a short description can be found at |X_op|.
 			much faster and more precise.  Your xterm must at
 			least at patchlevel 88  / XFree 3.3.3 for this to
 			work.  Determine your version with "xterm -version".
-	   dec		DEC terminal mouse handling.  The mouse generates
+							*netterm-mouse*
+	   netterm	NetTerm mouse handling.  The mouse generates
 			"<Esc>}r,c<CR>", where "r,c" are two decimal numbers
 			for the row and column.
-	   netterm	NetTerm mouse handling.  The mouse generates a rather
-			complex sequence, starting with "<Esc>[".
+							*dec-mouse*
+	   dec		DEC terminal mouse handling.  The mouse generates a
+			rather complex sequence, starting with "<Esc>[".
 	The mouse handling must be enabled at compile time |+mouse_xterm|
 	|+mouse_dec| |+mouse_netterm|.
-	Only "xterm"(2) is really recognized.  DEC mouse codes are always
-	recognized, when enabled at compile time.  NetTerm mouse codes are
-	recognized when enabled at compile time, and 'ttymouse' is not
+	Only "xterm"(2) is really recognized.  NetTerm mouse codes are always
+	recognized, if enabled at compile time.  DEC terminal mouse codes
+	are recognized if enabled at compile time, and 'ttymouse' is not
 	"xterm".
 	This option is automatically set to "xterm", when the 'term' option is
-	set to a name that starts with "xterm", and 'ttymouse' not "xterm" or
-	"xterm2" already.  The main use of this option is to set it to
+	set to a name that starts with "xterm", and 'ttymouse' is not "xterm"
+	or "xterm2" already.  The main use of this option is to set it to
 	"xterm", when the terminal name doesn't start with "xterm", but it can
-	handle xterm mouse codes.  The "xterm2" value must be set explicitly.
+	handle xterm mouse codes.
+	The "xterm2" value will be set if the xterm version is reported to be
+	95 of higher.  This only works if the t_RV is set to the escape
+	sequence to request the xterm version number.  Otherwise "xterm2" must
+	be set explicitly.
 
 						*'ttyscroll'* *'tsl'*
 'ttyscroll' 'tsl'	number	(default 999)
@@ -4081,7 +4110,7 @@ A jump table for the options with a short description can be found at |X_op|.
 'wildmenu' 'wmnu'	boolean	(default off)
 			global
 			{not in Vi}
-			{not available if compiled without the +wildmenu
+			{not available if compiled without the |+wildmenu|
 			feature}
 	When 'wildmenu' is on, command-line completion operates in an enhanced
 	mode.  On pressing 'wildchar' (usually <Tab>) to invoke completion,

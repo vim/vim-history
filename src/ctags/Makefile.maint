@@ -1,16 +1,17 @@
 #*****************************************************************************
-#	$Id: Makefile.maint,v 8.6 1999/06/23 00:44:31 darren Exp $
+#	$Id: Makefile.maint,v 8.11 1999/09/17 05:48:55 darren Exp $
 #
 #   Development makefile for Exuberant Ctags, used to build releases.
 #
 #	Copyright (c) 1996-1999, Darren Hiebert
 #*****************************************************************************
 
-SOURCES		=	eiffel.c entry.c fortran.c get.c keyword.c main.c options.c \
-				parse.c read.c sort.c vstring.c
+SOURCES		=	args.c eiffel.c entry.c fortran.c get.c keyword.c \
+				main.c options.c parse.c read.c sort.c strlist.c vstring.c
 DSOURCES	=	$(SOURCES) debug.c
-HEADERS		=	ctags.h debug.h entry.h general.h get.h keyword.h main.h \
-				options.h parse.h read.h sort.h vstring.h
+HEADERS		=	args.h ctags.h debug.h entry.h general.h get.h \
+				keyword.h main.h options.h parse.h read.h sort.h \
+				strlist.h vstring.h
 
 VERSION_FILES=	ctags.h ctags.1 ctags.lsm configure.in NEWS
 
@@ -90,7 +91,7 @@ endif
 endif
 
 ctags32.exe: $(SOURCES) $(HEADERS)
-	gcc-dos -DMSDOS -O4 -Wall -s -o $@ $(SOURCES)
+	gcc-dos -DMSDOS -O2 -Wall -s -o $@ $(SOURCES)
 
 #
 # Support targets
@@ -140,7 +141,7 @@ tags: $(DSOURCES) $(HEADERS)
 syntax: syntax.vim
 syntax.vim: $(DSOURCES) $(HEADERS)
 	@ echo "-- Generating syntax file"
-	@ ctags -i=ctS -o- $^ |\
+	@ ctags --c-types=ct --file-scope -o- $^ |\
 		awk 'BEGIN{printf("syntax keyword Typedef\t")}\
 				{printf("%s ", $$1)}END{print ""}' > $@
 

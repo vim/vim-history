@@ -1,10 +1,10 @@
-*os_dos.txt*    For Vim version 5.4.  Last change: 1999 Jun 10
+*os_dos.txt*    For Vim version 5.5.  Last change: 1999 Sep 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
-								*dos*
+							*dos* *DOS*
 This file documents the common particularities of the MS-DOS and Win32
 versions of Vim.  Also see |os_win32.txt| and |os_msdos.txt|.
 

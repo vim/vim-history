@@ -9,8 +9,10 @@ Tests for autocommands:
 - FileReadPost		decompress the file
 
 Note: This test will fail if "gzip" is not available.
+$GZIP is made empty, "-v" would cause trouble.
 
 STARTTEST
+:let $GZIP = ""
 :set bin
 :au FileWritePre    *.gz   '[,']!gzip
 :au FileWritePost   *.gz   undo
@@ -28,19 +30,19 @@ gg/^end of testfile
 :au! FileAppendPre
 :" setup autocommands to decompress before reading and re-compress afterwards
 :au BufReadPre      *.gz   !gzip -d <afile>
-:au BufReadPre      *.gz   !mv <afile>:r <afile>
-:au BufReadPost     *.gz   !mv <afile> <afile>:r
+:au BufReadPre      *.gz   call rename(expand("<afile>:r"), expand("<afile>"))
+:au BufReadPost     *.gz   call rename(expand("<afile>"), expand("<afile>:r"))
 :au BufReadPost     *.gz   !gzip <afile>:r
 :e! Xtestfile.gz                " Edit compressed file
 :w>>test.out                    " Append it to the output file
-:au FilterReadPre   *.out  !mv <afile> <afile>.t
+:au FilterReadPre   *.out  call rename(expand("<afile>"), expand("<afile>").".t")
 :au FilterReadPre   *.out  !sed s/e/E/ <afile>.t ><afile>
 :au FilterReadPre   *.out  !rm <afile>.t
 :au FilterReadPost  *.out  '[,']s/x/X/g
 :e! test.out                    " Edit the output file
 :23,$!cat
 :au! FileReadPre    *.gz   !gzip -d <afile>
-:au  FileReadPre    *.gz   !mv <afile>:r <afile>
+:au  FileReadPre    *.gz   call rename(expand("<afile>:r"), expand("<afile>"))
 :au! FileReadPost   *.gz   '[,']s/l/L/
 :$r Xtestfile.gz             " Read compressed file
 :w                           " write it, after filtering
