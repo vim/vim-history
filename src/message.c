@@ -31,7 +31,9 @@ static int  msg_check_screen __ARGS((void));
 static void redir_write __ARGS((char_u *s));
 #ifdef FEAT_CON_DIALOG
 static char_u *msg_show_console_dialog __ARGS((char_u *message, char_u *buttons, int dfltbutton));
-static int msg_noquit_more = FALSE; /* quit not allowed at more prompt */
+static int	confirm_msg_used = FALSE;	/* displaying confirm_msg */
+static char_u	*confirm_msg = NULL;		/* ":confirm" message */
+static char_u	*confirm_msg_tail;		/* tail of confirm_msg */
 #endif
 
 struct msg_hist
@@ -1686,22 +1688,27 @@ msg_puts_attr(s, attr)
 			lines_left = 1;
 			break;
 		    case ':':		/* start new command line */
-			/* Since got_int is set all typeahead will be flushed,
-			 * but we want to keep this ':', remember that in a
-			 * special way. */
-			typeahead_noflush(':');
-			cmdline_row = Rows - 1;	  /* put ':' on this line */
-			skip_redraw = TRUE;	  /* skip redraw once */
-			need_wait_return = FALSE; /* don't wait in main() */
+#ifdef FEAT_CON_DIALOG
+			if (!confirm_msg_used)
+#endif
+			{
+			    /* Since got_int is set all typeahead will be
+			     * flushed, but we want to keep this ':', remember
+			     * that in a special way. */
+			    typeahead_noflush(':');
+			    cmdline_row = Rows - 1;   /* put ':' on this line */
+			    skip_redraw = TRUE;	      /* skip redraw once */
+			    need_wait_return = FALSE; /* don't wait in main() */
+			}
 			/*FALLTHROUGH*/
 		    case 'q':		/* quit */
 		    case Ctrl_C:
 		    case ESC:
 #ifdef FEAT_CON_DIALOG
-			if (msg_noquit_more)
+			if (confirm_msg_used)
 			{
-			    /* When quitting is not possible, behave like
-			     * another page can be printed */
+			    /* Jump to the choices of the dialog. */
+			    s = confirm_msg_tail;
 			    lines_left = Rows - 1;
 			}
 			else
@@ -2293,8 +2300,6 @@ do_dialog(type, title, message, buttons, dfltbutton, textfield)
     return retval;
 }
 
-char_u	*confirm_msg = NULL;	    /* ":confirm" message */
-
 /*
  * Format the dialog string, and display it at the bottom of
  * the screen. Return a string of hotkey chars (if defined) for
@@ -2362,6 +2367,9 @@ msg_show_console_dialog(message, buttons, dfltbutton)
     r = buttons;
     *q = (char_u)TO_LOWER(*r);	/* define lowercase hotkey */
 
+    /* Remember where the choices start, displaying starts here when "q" typed
+     * at the more prompt. */
+    confirm_msg_tail = p;
     *p++ = '\n';
 
     while (*r)
@@ -2410,10 +2418,10 @@ msg_show_console_dialog(message, buttons, dfltbutton)
 display_confirm_msg()
 {
     /* avoid that 'q' at the more prompt truncates the message here */
-    ++msg_noquit_more;
+    ++confirm_msg_used;
     if (confirm_msg != NULL)
 	msg_puts_attr(confirm_msg, hl_attr(HLF_M));
-    --msg_noquit_more;
+    --confirm_msg_used;
 }
 
 #endif /* FEAT_CON_DIALOG */
