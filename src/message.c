@@ -1184,6 +1184,8 @@ msg_outtrans_len_attr(msgstr, len, attr)
 	    mb_l = utfc_ptr2len_check_len(str, len + 1);
 	else if (has_mbyte)
 	    mb_l = (*mb_ptr2len_check)(str);
+	else
+	    mb_l = 1;
 	if (has_mbyte && mb_l > 1)
 	{
 	    c = (*mb_ptr2char)(str);
