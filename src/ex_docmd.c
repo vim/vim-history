@@ -6171,6 +6171,7 @@ ex_wincmd(eap)
     exarg_T	*eap;
 {
     int		xchar = NUL;
+    int		n;
 
     if (*eap->arg == 'g' || *eap->arg == Ctrl_G)
     {
@@ -6181,8 +6182,16 @@ ex_wincmd(eap)
 	    return;
 	}
 	xchar = eap->arg[1];
+	n = 2;
     }
-    do_window(*eap->arg, eap->addr_count > 0 ? eap->line2 : 0L, xchar);
+    else
+	n = 1;
+
+    eap->nextcmd = check_nextcmd(eap->arg + n);
+    if (*skipwhite(eap->arg + n) != NUL && eap->nextcmd == NULL)
+	EMSG(_(e_invarg));
+    else
+	do_window(*eap->arg, eap->addr_count > 0 ? eap->line2 : 0L, xchar);
 }
 #endif
 
