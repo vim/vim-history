@@ -27,6 +27,7 @@ static void gui_delete_lines __ARGS((int row, int count));
 static void gui_insert_lines __ARGS((int row, int count));
 static void fill_mouse_coord __ARGS((char_u *p, int col, int row));
 static void gui_do_scrollbar __ARGS((win_T *wp, int which, int enable));
+static colnr_T scroll_line_len __ARGS((linenr_T lnum));
 static void gui_update_horiz_scrollbar __ARGS((int));
 static win_T *xy2win __ARGS((int x, int y));
 
@@ -1642,9 +1643,10 @@ gui_write(s, len)
 	}
     }
 
-    /* Don't update cursor when ScreenLines[] is invalid (busy scrolling). */
-    if (can_update_cursor && force_cursor)
-	gui_update_cursor(force_cursor, TRUE);
+    /* Postponed update of the cursor (won't work if "can_update_cursor" isn't
+     * set). */
+    if (force_cursor)
+	gui_update_cursor(TRUE, TRUE);
 
     /* When switching to another window the dragging must have stopped.
      * Required for GTK, dragged_sb isn't reset. */
@@ -2866,8 +2868,7 @@ button_set:
 	else if (button ==
 # ifdef RISCOS
 		/* Only start a drag on a drag event. Otherwise
-		 * we don't get a release event.
-		 */
+		 * we don't get a release event. */
 		    MOUSE_DRAG
 # else
 		    MOUSE_LEFT
@@ -3813,12 +3814,45 @@ gui_do_scroll()
  * Horizontal scrollbar stuff:
  */
 
+/*
+ * Return length of line "lnum" for horizontal scrolling.
+ */
+    static colnr_T
+scroll_line_len(lnum)
+    linenr_T	lnum;
+{
+    char_u	*p;
+    colnr_T	col;
+    int		w;
+
+    p = ml_get(lnum);
+    col = 0;
+    if (*p != NUL)
+	for (;;)
+	{
+	    w = chartabsize(p, col);
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		p += (*mb_ptr2len_check)(p);
+	    else
+#endif
+		++p;
+	    if (*p == NUL)		/* don't count the last character */
+		break;
+	    col += w;
+	}
+    return col;
+}
+
+/* Remember which line is currently the longest, so that we don't have to
+ * search for it when scrolling horizontally. */
+static linenr_T longest_lnum = 0;
+
     static void
 gui_update_horiz_scrollbar(force)
     int		force;
 {
     long	value, size, max;	/* need 32 bit ints here */
-    char_u	*p;
 
     if (!gui.which_scrollbars[SBAR_BOTTOM])
 	return;
@@ -3853,23 +3887,42 @@ gui_update_horiz_scrollbar(force)
     {
 	value = curwin->w_leftcol;
 
-	/* Calculate max for horizontal scrollbar */
-	p = ml_get_curline();
-	max = 0;
-	if (p != NULL && p[0] != NUL)
-	    for (;;)
+	/* Calculate maximum for horizontal scrollbar. */
+	if (vim_strchr(p_go, GO_HORSCROLL) == NULL)
+	{
+	    linenr_T	lnum;
+	    colnr_T	n;
+
+	    /* Use maximum of all visible lines.  Remember the lnum of the
+	     * longest line, clostest to the cursor line.  Used when scrolling
+	     * below. */
+	    max = 0;
+	    for (lnum = curwin->w_topline; lnum < curwin->w_botline; ++lnum)
 	    {
-		int w = chartabsize(p, (colnr_T)max);
-#ifdef FEAT_MBYTE
-		if (has_mbyte)
-		    p += (*mb_ptr2len_check)(p);
-		else
-#endif
-		    ++p;
-		if (*p == NUL)		/* Don't count last character */
-		    break;
-		max += w;
+		n = scroll_line_len(lnum);
+		if (n > (colnr_T)max)
+		{
+		    max = n;
+		    longest_lnum = lnum;
+		}
+		else if (n == (colnr_T)max
+			&& abs(lnum - curwin->w_cursor.lnum)
+				  < abs(longest_lnum - curwin->w_cursor.lnum))
+		    longest_lnum = lnum;
 	    }
+	}
+	else
+	    /* Use cursor line only. */
+	    max = scroll_line_len(curwin->w_cursor.lnum);
+#ifdef FEAT_VIRTUALEDIT
+	if (virtual_active())
+	{
+	    /* May move the cursor even further to the right. */
+	    if (curwin->w_virtcol >= max)
+		max = curwin->w_virtcol;
+	}
+#endif
+
 #ifndef SCROLL_PAST_END
 	max += W_WIDTH(curwin) - 1;
 #endif
@@ -3923,6 +3976,22 @@ gui_do_horiz_scroll()
 	return FALSE;
 
     curwin->w_leftcol = scrollbar_value;
+
+    /* When the line of the cursor is too short, move the cursor to the
+     * longest visible line.  Do a sanity check on "longest_lnum", just in
+     * case. */
+    if (vim_strchr(p_go, GO_HORSCROLL) == NULL
+	    && longest_lnum >= curwin->w_topline
+	    && longest_lnum < curwin->w_botline
+	    && !virtual_active())
+    {
+	if (scrollbar_value > scroll_line_len(curwin->w_cursor.lnum))
+	{
+	    curwin->w_cursor.lnum = longest_lnum;
+	    curwin->w_cursor.col = 0;
+	}
+    }
+
     return leftcol_changed();
 }
 
