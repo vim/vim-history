@@ -1,4 +1,4 @@
-*indent.txt*    For Vim version 6.2.  Last change: 2003 May 04
+*indent.txt*    For Vim version 6.2.  Last change: 2004 Apr 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -228,13 +228,28 @@ assume a 'shiftwidth' of 4.
 		       a = a + 1;		  b = b + 1;
 <
 	lN    If N != 0 Vim will align with a case label instead of the
-	      statement after it.
+	      statement after it in the same line.
 
 		cino=			    cino=l1 >
 		    switch (a) {	      switch (a) {
 			case 1: {		  case 1: {
 				    break;	      break;
 				}		  }
+<
+	bN    If N != 0 Vim will align a final "break" with the case label,
+	      so that case..break looks like a sort of block. (default: 0).
+
+		cino=		    cino=b1 >
+		  switch (x)	      switch(x)
+		  {		      {
+		      case 1:		  case 1:
+			  a = b;	      a = b;
+			  break;	  break;
+
+		      default:		  default:
+			  a = 0;	      a = 0;
+			  break;	  break;
+		  }		      }
 <
 	gN    Place C++ scope declarations N characters from the indent of the
 	      block they are in.  (default 'shiftwidth').  A scope declaration
@@ -270,6 +285,19 @@ assume a 'shiftwidth' of 4.
 		cino=		    cino=t0		cino=t7 >
 		      int	      int			 int
 		  func()	      func()		  func()
+<
+	iN    Indent C++ base class declarations and contructor
+	      initializations, if they start in a new line (otherwise they
+	      are aligned at the right side of the ':').
+	      (default 'shiftwidth').
+
+		cino=			  cino=i0 >
+		  class MyClass :	    class MyClass :
+		      public BaseClass      public BaseClass
+		  {}			    {}
+		  MyClass::MyClass() :	    MyClass::MyClass() :
+		      BaseClass(3)	    BaseClass(3)
+		  {}			    {}
 <
 	+N    Indent a continuation line (a line that spills onto the next) N
 	      additional characters.  (default 'shiftwidth').
@@ -347,6 +375,20 @@ assume a 'shiftwidth' of 4.
 			 && (   c2		&& (   c2
 				|| c3))		    || c3))
 		      foo;			foo;
+<
+	WN    When in unclosed parentheses and N is non-zero and either
+	      using "(0" or "u0", respectively and the unclosed parentheses is
+	      the last non-white character in its line and it is not the
+	      closing parentheses, indent the following line N characters
+	      relative to the outer context (i.e. start of the line or the
+	      next unclosed parentheses). (default: 0).
+
+		cino=(0			   cino=(0,W4 >
+		  a_long_line(		    a_long_line(
+			      argument,		argument,
+			      argument);	argument);
+		  a_short_line(argument,    a_short_line(argument,
+			       argument);		 argument);
 <
 	mN    When N is non-zero, line up a line starting with a closing
 	      parentheses with the first character of the line with the
