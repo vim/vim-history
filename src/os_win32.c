@@ -2366,7 +2366,11 @@ mch_getperm(
     char_u *name)
 {
 #ifdef FEAT_MBYTE
-    if ((int)GetACP() != enc_codepage)
+    /* Apparently GetFileAttributesW() exists on Win95/98/ME, but it doesn't
+     * work. */
+    PlatformId();
+    if (g_PlatformId == VER_PLATFORM_WIN32_NT
+			&& enc_codepage >= 0 && (int)GetACP() != enc_codepage)
     {
 	WCHAR	*p = enc_to_ucs2(name, NULL);
 	long	n;
@@ -2393,7 +2397,7 @@ mch_setperm(
 {
     perm |= FILE_ATTRIBUTE_ARCHIVE;	/* file has changed, set archive bit */
 #ifdef FEAT_MBYTE
-    if ((int)GetACP() != enc_codepage)
+    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
     {
 	WCHAR	*p = enc_to_ucs2(name, NULL);
 	long	n;
@@ -2419,7 +2423,11 @@ mch_hide(char_u *name)
 #ifdef FEAT_MBYTE
     WCHAR	*p = NULL;
 
-    if ((int)GetACP() != enc_codepage)
+    /* Apparently GetFileAttributesW() exists on Win95/98/ME, but it doesn't
+     * work. */
+    PlatformId();
+    if (g_PlatformId == VER_PLATFORM_WIN32_NT
+			&& enc_codepage >= 0 && (int)GetACP() != enc_codepage)
 	p = enc_to_ucs2(name, NULL);
 #endif
 
@@ -4014,7 +4022,7 @@ mch_remove(char_u *name)
     WCHAR	*wn = NULL;
     int		n;
 
-    if ((int)GetACP() != enc_codepage)
+    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
     {
 	wn = enc_to_ucs2(name, NULL);
 	if (wn != NULL)
@@ -4155,7 +4163,7 @@ mch_rename(
     WCHAR	*wnew = NULL;
     int		retval = 0;
 
-    if ((int)GetACP() != enc_codepage)
+    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
     {
 	wold = enc_to_ucs2((char_u *)pszOldFile, NULL);
 	wnew = enc_to_ucs2((char_u *)pszNewFile, NULL);
@@ -4268,7 +4276,7 @@ mch_access(char *n, int p)
 #ifdef FEAT_MBYTE
     WCHAR	*wn = NULL;
 
-    if ((int)GetACP() != enc_codepage)
+    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
 	wn = enc_to_ucs2(n, NULL);
 #endif
 
@@ -4378,7 +4386,7 @@ mch_open(char *name, int flags, int mode)
     WCHAR	*wn;
     int		f;
 
-    if ((int)GetACP() != enc_codepage)
+    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
     {
 	wn = enc_to_ucs2(name, NULL);
 	if (wn != NULL)
@@ -4401,7 +4409,7 @@ mch_fopen(char *name, char *mode)
     WCHAR	*wn, *wm;
     FILE	*f;
 
-    if ((int)GetACP() != enc_codepage)
+    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
     {
 	wn = enc_to_ucs2(name, NULL);
 	wm = enc_to_ucs2(mode, NULL);

@@ -2628,7 +2628,7 @@ gui_mch_settitle(
     char_u  *icon)
 {
 #ifdef FEAT_MBYTE
-    if (title != NULL && enc_codepage != (int)GetACP())
+    if (title != NULL && enc_codepage >= 0 && enc_codepage != (int)GetACP())
     {
 	WCHAR	*wbuf;
 

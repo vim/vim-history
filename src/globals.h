@@ -669,7 +669,9 @@ EXTERN int	enc_dbcs INIT(= 0);		/* One of DBCS_xxx values if
 EXTERN int	enc_unicode INIT(= 0);	/* 2: UCS-2 or UTF-16, 4: UCS-4 */
 EXTERN int	enc_utf8 INIT(= FALSE);		/* UTF-8 encoded Unicode */
 # ifdef WIN3264
-EXTERN int	enc_codepage INIT(= 0);		/* codepage nr of 'encoding' */
+/* Codepage nr of 'encoding'.  Negative means it's not been set yet, zero
+ * means 'encoding' is not a valid codepage. */
+EXTERN int	enc_codepage INIT(= -1);
 # endif
 EXTERN int	has_mbyte INIT(= 0);		/* any multi-byte encoding */
 
