@@ -1466,7 +1466,7 @@ static char *(p_sessopt_values[]) = {"buffers", "winpos", "resize", "winsize", "
 static char *(p_mousem_values[]) = {"extend", "popup", "popup_setpos", "mac", NULL};
 static char *(p_slm_values[]) = {"mouse", "key", "cmd", NULL};
 static char *(p_sel_values[]) = {"inclusive", "exclusive", "old", NULL};
-#if defined(USE_MOUSE) && defined(UNIX)
+#if defined(USE_MOUSE) && (defined(UNIX) || defined(VMS))
 static char *(p_ttym_values[]) = {"xterm", "xterm2", "dec", "netterm", NULL};
 #endif
 static char *(p_km_values[]) = {"startsel", "stopsel", NULL};
@@ -3448,7 +3448,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf)
 	gui_init_which_components(oldval);
 #endif
 
-#if defined(USE_MOUSE) && defined(UNIX)
+#if defined(USE_MOUSE) && (defined(UNIX) || defined(VMS))
     /* 'ttymouse' */
     else if (varp == &p_ttym)
     {

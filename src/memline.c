@@ -885,13 +885,25 @@ ml_recover()
     }
 
     home_replace(NULL, mfp->mf_fname, NameBuff, MAXPATHL, TRUE);
-    smsg((char_u *)"Using swap file \"%s\"", NameBuff);
+    smsg((char_u *)"Using swap file \"%s\"",
+#ifdef VMS
+	    vms_fixfilename(NameBuff)
+#else
+	    NameBuff
+#endif
+	    );
 
     if (curbuf->b_ffname == NULL)
 	STRCPY(NameBuff, "No File");
     else
 	home_replace(NULL, curbuf->b_ffname, NameBuff, MAXPATHL, TRUE);
-    smsg((char_u *)"Original file \"%s\"", NameBuff);
+    smsg((char_u *)"Original file \"%s\"",
+#ifdef VMS
+	    vms_fixfilename(NameBuff)
+#else
+	    NameBuff
+#endif
+	    );
     msg_putchar('\n');
 
 /*
@@ -1196,10 +1208,14 @@ recover_names(fname, list, nr)
 	{
 	    if (fname == NULL || *fname == NULL)
 	    {
-#if defined(VMS) || defined(RISCOS)
-		names[0] = vim_strsave((char_u *)"*_sw#");
+#ifdef VMS
+		names[0] = vim_strsave((char_u *)"*_sw%");
 #else
+# ifdef RISCOS
+		names[0] = vim_strsave((char_u *)"*_sw#");
+# else
 		names[0] = vim_strsave((char_u *)"*.sw?");
+# endif
 #endif
 #ifdef UNIX
 		/* for Unix names starting with a dot are special */
@@ -1222,10 +1238,14 @@ recover_names(fname, list, nr)
 	{
 	    if (fname == NULL || *fname == NULL)
 	    {
-#ifdef RISCOS
-		names[0] = concat_fnames(dir_name, (char_u *)"*_sw#", TRUE);
+#ifdef VMS
+		names[0] = concat_fnames(dir_name, (char_u *)"*_sw%", TRUE);
 #else
+# ifdef RISCOS
+		names[0] = concat_fnames(dir_name, (char_u *)"*_sw#", TRUE);
+# else
 		names[0] = concat_fnames(dir_name, (char_u *)"*.sw?", TRUE);
+# endif
 #endif
 #ifdef UNIX
 		/* for Unix names starting with a dot are special */
@@ -1233,12 +1253,12 @@ recover_names(fname, list, nr)
 		names[2] = concat_fnames(dir_name, (char_u *)".sw?", TRUE);
 		num_names = 3;
 #else
-#ifdef VMS
-		names[1] = concat_fnames(dir_name, (char_u *)".*_sw?", TRUE);
+# ifdef VMS
+		names[1] = concat_fnames(dir_name, (char_u *)".*_sw%", TRUE);
 		num_names = 2;
-#else
+# else
 		num_names = 1;
-#endif
+# endif
 #endif
 	    }
 	    else
@@ -1472,7 +1492,13 @@ swapfile_info(fname)
 		if (b0.b0_fname[0] == NUL)
 		    MSG_PUTS("[No File]");
 		else
-		    msg_outtrans(b0.b0_fname);
+		    msg_outtrans(
+#ifdef VMS
+			    vms_fixfilename(b0.b0_fname)
+#else
+			    b0.b0_fname
+#endif
+			    );
 
 		MSG_PUTS("\n          modified: ");
 		MSG_PUTS(b0.b0_dirty ? "YES" : "no");
@@ -1601,10 +1627,14 @@ recov_file_names(names, path, prepend_dot)
      * Also try with 'shortname' set, in case the file is on a DOS filesystem.
      */
     curbuf->b_shortname = TRUE;
-#ifdef RISCOS
-    names[num_names] = modname(path, (char_u *)"_sw#", FALSE);
+#ifdef VMS
+    names[num_names] = modname(path, (char_u *)"_sw%", FALSE);
 #else
+# ifdef RISCOS
+    names[num_names] = modname(path, (char_u *)"_sw#", FALSE);
+# else
     names[num_names] = modname(path, (char_u *)".sw?", FALSE);
+# endif
 #endif
     if (names[num_names] == NULL)
 	goto end;

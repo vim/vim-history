@@ -156,7 +156,7 @@ static char *(features[]) =
 #if !defined(USE_SYSTEM) && defined(UNIX)
 	"+fork()",
 #endif
-#ifdef UNIX
+#if defined(UNIX) || defined(VMS)
 # ifdef USE_GUI_GTK
 	"+GUI_GTK",
 # else
@@ -220,17 +220,17 @@ static char *(features[]) =
 # else
 	"-mouse",
 #endif
-#ifdef UNIX
+#if defined(UNIX) || defined(VMS)
 # ifdef DEC_MOUSE
 	"+mouse_dec",
 # else
 	"-mouse_dec",
 # endif
-#ifdef GPM_MOUSE
+# ifdef GPM_MOUSE
 	"+mouse_gpm",
-#else
+# else
 	"-mouse_gpm",
-#endif
+# endif
 # ifdef NETTERM_MOUSE
 	"+mouse_netterm",
 # else
@@ -381,7 +381,7 @@ static char *(features[]) =
 #else
 	"-writebackup",
 #endif
-#ifdef UNIX
+#if defined(UNIX) || defined(VMS)
 # if defined(WANT_X11) && defined(HAVE_X11)
 	"+X11",
 # else
@@ -418,6 +418,8 @@ static char *(features[]) =
 
 static int included_patches[] =
 {   /* Add new patch number below this line */
+/**/
+    45,
 /**/
     44,
 /**/
@@ -609,7 +611,7 @@ list_version()
 	}
     }
 
-#ifdef UNIX
+#if defined(UNIX) || defined(VMS)
     MSG_PUTS("\nCompiled by ");
     MSG_PUTS(compiled_user);
     MSG_PUTS("@");
@@ -686,12 +688,15 @@ list_version()
 # endif
 #endif
 #ifdef HAVE_PATHDEF
-    version_msg("  fall-back for $VIM: \"");
-    version_msg((char *)default_vim_dir);
-    MSG_PUTS("\"\n");
+    if (*default_vim_dir != NUL)
+    {
+	version_msg("  fall-back for $VIM: \"");
+	version_msg((char *)default_vim_dir);
+	MSG_PUTS("\"\n");
+    }
     if (*default_vimruntime_dir != NUL)
     {
-	version_msg(" and for $VIMRUNTIME: \"");
+	version_msg(" f-b for $VIMRUNTIME: \"");
 	version_msg((char *)default_vimruntime_dir);
 	MSG_PUTS("\"\n");
     }

@@ -2614,15 +2614,24 @@ simplify_filename(filename)
     {
 	/* At this point "p" is pointing to the char following a "/". */
 #ifdef VMS
-	/* VMS allows disk:[directory - don't strip the [ in directory */
-	if (*p == '[' && p > filename && p[-1] == ':')
+	/* VMS allows device:[path] - don't strip the [ in directory  */
+	if ((*p == '[' || *p == '<') && p > filename && p[-1] == ':')
 	{
-	    ++components;		/* vms directory component */
+	    /* :[ or :< composition: vms directory component */
+	    ++components;
 	    p = getnextcomp(p + 1);
+	}
+	/* allow remote calls as host"user passwd"::device:[path]        */
+	else if (p[0] == ':' && p[1] == ':' && p > filename && p[-1] == '"' )
+	{
+	    /* ":: composition: vms host/passwd component */
+	    ++components;
+	    p = getnextcomp(p + 2);
+
 	}
 	else
 #endif
-	if (vim_ispathsep(*p))
+	  if (vim_ispathsep(*p))
 	    movetail(p, p + 1);		/* remove duplicate "/" */
 	else if (p[0] == '.' && vim_ispathsep(p[1]))
 	    movetail(p, p + 2);		/* strip "./" */

@@ -1,5 +1,8 @@
 /* os_vms_conf.h.  Replaces config.h for VMS */
 
+/* Open VMS is case insensitive */
+#define CASE_INSENSITIVE_FILENAME 1
+
 /* Define unless no X support found */
 /*#define HAVE_X11 1*/
 

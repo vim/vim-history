@@ -212,15 +212,7 @@
 #endif
 
 #ifndef VIM_HLP
-/*
- * If the line with $VIMRUNTIME doesn't work for you (":help" doesn't find the
- * help files), then change the zero into a one and try again.
- */
-# if 0
-#  define VIM_HLP		"$VIM_DOC:help.txt"
-# else
-#  define VIM_HLP		"$VIMRUNTIME/doc/help.txt"
-# endif
+# define VIM_HLP		"$VIMRUNTIME/doc/help.txt"
 #endif
 
 #ifndef SYNTAX_FNAME
@@ -234,11 +226,11 @@
 #endif /* VIMINFO */
 
 #ifndef DEF_BDIR
-# define DEF_BDIR		"./,sys$disk:[],tmp:,sys$login:"	/* default for 'backupdir' */
+# define DEF_BDIR		"./,tmp:,sys$login:"	/* default for 'backupdir' */
 #endif
 
 #ifndef DEF_DIR
-# define DEF_DIR		"./,sys$disk:[],tmp:,sys$login:"	/* default for 'directory' */
+# define DEF_DIR		"./,tmp:,sys$login:"	/* default for 'directory' */
 #endif
 
 #define TEMPNAME		"tmp:v?XXXXXX.txt"

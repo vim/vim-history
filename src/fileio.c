@@ -1128,7 +1128,7 @@ buf_write(buf, fname, sfname, start, end, append, forceit,
     int		    made_writable = FALSE;  /* 'w' bit has been set */
 #endif
 #ifdef VMS
-    char_u	    *cp, nfname[MAXPATHL];
+    char_u	    nfname[MAXPATHL];
 #endif
 					    /* writing everything */
     int		    whole = (start == 1 && end == buf->b_ml.ml_line_count);
@@ -1731,20 +1731,13 @@ nobackup:
      */
 #ifdef VMS
     STRCPY(nfname, fname);
-    if ((cp = vim_strchr(nfname, ';')) != NULL) /* remove version */
-	*cp = '\0';
-    vms_fixfilename(nfname);
+    vms_remove_version(nfname); /* remove version */
+    fname = nfname;
 #endif
 
-    while ((fd = open((char *)
-#ifdef VMS
-		    nfname,
-#else
-		    fname,
-#endif
-			  O_WRONLY | O_EXTRA | (append ?
-		    (forceit ? (O_APPEND | O_CREAT) : O_APPEND) :
-		    (O_CREAT | O_TRUNC))
+    while ((fd = open((char *)fname, O_WRONLY | O_EXTRA | (append
+			? (forceit ? (O_APPEND | O_CREAT) : O_APPEND)
+			: (O_CREAT | O_TRUNC))
 #ifndef macintosh
 			, 0666
 #endif
@@ -2021,7 +2014,13 @@ nobackup:
     --no_wait_return;	    /* may wait for return now */
 
 #ifndef UNIX
+# ifdef VMS
+    STRCPY(nfname, sfname);
+    vms_remove_version(nfname); /* remove version */
+    fname = nfname;
+# else
     fname = sfname;	    /* use shortname now, for the messages */
+# endif
 #endif
     if (!filtering)
     {
@@ -2402,8 +2401,10 @@ shorten_fname(full_path, dir_name)
 	{
 	    if (vim_ispathsep(*p))
 		++p;
+#ifndef VMS   /* the path separator is always part of the path */
 	    else
 		p = NULL;
+#endif
 	}
     }
 #if defined(MSDOS) || defined(MSWIN) || defined(OS2)
@@ -2532,9 +2533,8 @@ buf_modname(shortname, fname, ext, prepend_dot)
 	    return NULL;
 	STRCPY(retval, fname);
 #ifdef VMS
-	ptr = (char_u *)strrchr((char *)retval, ';');
-	if (ptr != NULL)
-	    *ptr = '\0';
+	vms_remove_version(retval); /* we do not need versions here */
+	fnamelen = STRLEN(retval);  /* it can be shorter*/
 #endif
     }
 
@@ -4320,6 +4320,13 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf)
 	    if (*p == '\\')
 		*p = '/';
     }
+#endif
+
+#ifdef VMS
+    /* remove version for correct match */
+    if (sfname != NULL)
+	vms_remove_version(sfname);
+    vms_remove_version(fname);
 #endif
 
     /*

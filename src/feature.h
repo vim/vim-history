@@ -38,13 +38,13 @@
  * default		A selection of features enabled.
  *
  * These executables are made available with MAX_FEAT defined, because they
- * are supposed to have enough RAM: Win32 (console & GUI), dos32 and OS/2.
+ * are supposed to have enough RAM: Win32 (console & GUI), dos32, OS/2 and VMS.
  * The dos16 version has very little RAM available, use MIN_FEAT.
  */
 #if !defined(MIN_FEAT) && !defined(MAX_FEAT)
 /* #define MIN_FEAT */
 /* #define MAX_FEAT */
-# if defined(MSWIN) || defined(DJGPP) || defined(OS2)
+# if defined(MSWIN) || defined(DJGPP) || defined(OS2) || defined(VMS)
 #  define MAX_FEAT
 # else
 #  ifdef MSDOS
@@ -436,7 +436,7 @@
  *			chinese and Japanese.
  * +hangul_input	Internal Hangul input method.  Must be included
  *			through configure: "--enable-hangulin"
- * Both are for Unix only.
+ * Both are for Unix only.  Works for VMS too.
  */
 #ifndef USE_XIM
 /* #define USE_XIM */
@@ -539,8 +539,11 @@
  *			is strongly discouraged: You can loose all your
  *			changes when the computer crashes while writing the
  *			file.
+ *			VMS note: It does work on VMS as well, but because of
+ *			version handling it does not have any purpose.
+ *			Overwrite will write to the new version.
  */
-#ifndef VMS		/* doesn't work on VMS */
+#ifndef VMS
 # define WRITEBACKUP
 #endif
 

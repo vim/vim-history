@@ -2522,7 +2522,7 @@ vim_getenv(name, mustfree)
 	{
 	    *mustfree = TRUE;
 	}
-	else
+	else if (*default_vim_dir != NUL)
 	{
 	    p = default_vim_dir;
 	    *mustfree = FALSE;
@@ -2917,7 +2917,9 @@ vim_ispathsep(c)
     return (c == ':' || c == '/' || c == '\\');
 #  else
 #   ifdef VMS
-    return (c == ':' || c == '[' || c == ']' || c == '/');
+    /* server"user passwd"::device:[full.path.name]fname.extension;version" */
+    return (c == ':' || c == '[' || c == ']' || c == '/'
+	    || c == '<' || c == '>' || c == '"' );
 #   else
 #    ifdef COLON_AS_PATHSEP
     return (c == ':');
@@ -5277,6 +5279,9 @@ expand_wildcards(num_pat, pat, num_file, file, flags)
 	    if (ffname == NULL)		/* out of memory */
 		break;
 	    tail = gettail((*file)[i]);
+#ifdef VMS
+	    vms_remove_version(ffname);
+#endif
 
 	    /* try all patterns in 'wildignore' */
 	    p = p_wig;

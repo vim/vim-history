@@ -701,6 +701,76 @@ struct builtin_term builtin_termcaps[] =
     {K_KMULTIPLY,	"\3167"},
 # endif
 
+# if defined(VMS) || defined(ALL_BUILTIN_TCAPS)
+/*
+ * VT320 is working as an ANSI terminal compatible DEC terminal.
+ * (it covers VT1x0, VT2x0 and VT3x0 up to VT320 on VMS as well)
+ * Note: K_F1...K_F5 are for internal use, should not be defined.
+ * TODO:- rewrite ESC[ codes to CSI
+ *      - keyboard languages (CSI ? 26 n)
+ */
+    {(int)KS_NAME,	"vt320"},
+    {(int)KS_CE,	"\033[K"},
+    {(int)KS_AL,	"\033[L"},
+#  ifdef TERMINFO
+    {(int)KS_CAL,	"\033[%p1%dL"},
+#  else
+    {(int)KS_CAL,	"\033[%dL"},
+#  endif
+    {(int)KS_DL,	"\033[M"},
+#  ifdef TERMINFO
+    {(int)KS_CDL,	"\033[%p1%dM"},
+#  else
+    {(int)KS_CDL,	"\033[%dM"},
+#  endif
+    {(int)KS_CL,	"\033[H\033[2J"},
+    {(int)KS_ME,	"\033[0m"},
+    {(int)KS_MR,	"\033[7m"},
+    {(int)KS_MS,	"y"},
+    {(int)KS_LE,	"\010"},
+#  ifdef TERMINFO
+    {(int)KS_CM,	"\033[%i%p1%d;%p2%dH"},
+#  else
+    {(int)KS_CM,	"\033[%i%d;%dH"},
+#  endif
+#  ifdef TERMINFO
+    {(int)KS_CRI,	"\033[%p1%dC"},
+#  else
+    {(int)KS_CRI,	"\033[%dC"},
+#  endif
+    {K_UP,		"\033[A"},
+    {K_DOWN,		"\033[B"},
+    {K_RIGHT,		"\033[C"},
+    {K_LEFT,		"\033[D"},
+    {K_F6,		"\033[17~"},
+    {K_F7,		"\033[18~"},
+    {K_F8,		"\033[19~"},
+    {K_F9,		"\033[20~"},
+    {K_F10,		"\033[21~"},
+/*  {K_F11,		"\033[23~"},   (ESC) should not define, sometimes does not work */
+    {K_F12,		"\033[24~"},
+    {K_F13,		"\033[25~"},
+    {K_F14,		"\033[26~"},
+    {K_F15,		"\033[28~"},	/* Help */
+    {K_F16,		"\033[29~"},	/* Select */
+    {K_F17,		"\033[31~"},
+    {K_F18,		"\033[32~"},
+    {K_F19,		"\033[33~"},
+    {K_F20,		"\033[34~"},
+    {K_INS,		"\033[2~"},
+    {K_DEL,		"\033[3~"},
+    {K_HOME,		"\033[1~"},
+    {K_END,		"\033[4~"},
+    {K_PAGEUP,		"\033[5~"},
+    {K_PAGEDOWN,	"\033[6~"},
+    {K_KPLUS,		"\033Ok"},	/* keypad plus */
+    {K_KMINUS,		"\033Om"},	/* keypad minus */
+    {K_KDIVIDE,		"\033Oo"},	/* keypad / */
+    {K_KMULTIPLY,	"\033Oj"},	/* keypad * */
+    {K_KENTER,		"\033OM"},	/* keypad Enter */
+    {K_BS,		"\x7f"},	/* for some reason 0177 doesn't work */
+# endif
+
 # if defined(ALL_BUILTIN_TCAPS) || defined(__MINT__)
 /*
  * Ordinary vt52
@@ -1197,7 +1267,7 @@ struct builtin_term builtin_termcaps[] =
 #endif
 
 #ifdef VMS
-# define DEFAULT_TERM	(char_u *)"ansi"
+# define DEFAULT_TERM	(char_u *)"vt320"
 #endif
 
 #ifdef __BEOS__
@@ -1237,7 +1307,12 @@ find_builtin_term(term)
 		return p;
 	    else
 #endif
-		if (STRCMP(term, p->bt_string) == 0)
+#ifdef VMS
+		if (STRCMP(p->bt_string, "vt320") == 0 && vim_is_vt300(term))
+		    return p;
+		else
+#endif
+		  if (STRCMP(term, p->bt_string) == 0)
 		    return p;
 	}
 	++p;
@@ -1610,7 +1685,7 @@ set_termname(term)
     }
 
 #ifdef USE_MOUSE
-# ifdef UNIX
+# if defined(UNIX) || defined(VMS)
     /*
      * For Unix, set the 'ttymouse' option to the type of mouse to be used.
      * The termcode for the mouse is added as a side effect in option.c.
@@ -1676,7 +1751,7 @@ set_termname(term)
     }
 #endif
 
-#ifdef UNIX
+#if defined(UNIX) || defined(VMS)
 /*
  * 'ttyfast' is default on for xterm, iris-ansi and a few others.
  */
@@ -1791,7 +1866,7 @@ set_mouse_termcode(n, s)
 }
 # endif
 
-# if ((defined(UNIX) || defined(OS2)) && (defined(XTERM_MOUSE) \
+# if ((defined(UNIX) || defined(VMS) || defined(OS2)) && (defined(XTERM_MOUSE) \
 	    || defined(DEC_MOUSE) || defined(GPM_MOUSE))) || defined(PROTO)
     void
 del_mouse_termcode(n)
@@ -2746,7 +2821,7 @@ settmode(tmode)
 
 #ifdef HAVE_TGETENT
 	/* Request version string (for xterm) just after switching to raw mode
-	 * (otherwise the result will be echoed).  The result it caught in
+	 * (otherwise the result will be echoed).  The result is caught in
 	 * check_termcode(). */
 	if (cur_tmode == TMODE_RAW && need_get_crv && *T_CRV)
 	{
