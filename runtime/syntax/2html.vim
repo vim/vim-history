@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer: Bram Moolenaar <Bram@vim.org>
-" Last Change: 2001 Dec 12
+" Last Change: 2002 Jul 10
 "	       (modified by David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>)
 
 " Transform a file into HTML, using the current syntax highlighting.
@@ -130,6 +130,7 @@ let s:old_title = &title
 let s:old_icon = &icon
 let s:old_et = &l:et
 let s:old_report = &report
+let s:old_search = @/
 set notitle noicon
 setlocal et
 set report=1000000
@@ -160,26 +161,23 @@ if exists("html_use_css")
 endif
 exe "normal a</head>\n<body>\n<pre>\n\e"
 
-exe "normal \<C-W>p"
+wincmd p
 
 " List of all id's
 let s:idlist = ","
+
+let s:expandedtab = ' '
+while strlen(s:expandedtab) < &ts
+  let s:expandedtab = s:expandedtab . ' '
+endwhile
 
 " Loop over all lines in the original text
 let s:end = line("$")
 let s:lnum = 1
 while s:lnum <= s:end
 
-  " Get the current line, with tabs expanded to spaces when needed
-  " FIXME: What if it changes syntax highlighting?
+  " Get the current line
   let s:line = getline(s:lnum)
-  if stridx(s:line, "\t") >= 0
-    exe s:lnum . "retab!"
-    let s:did_retab = 1
-    let s:line = getline(s:lnum)
-  else
-    let s:did_retab = 0
-  endif
   let s:len = strlen(s:line)
   let s:new = ""
 
@@ -209,9 +207,18 @@ while s:lnum <= s:end
       break
     endif
   endwhile
-  if s:did_retab
-    undo
-  endif
+
+  " Expand tabs
+  let s:pad=0
+  let s:start = 0
+  let s:idx = stridx(s:line, "\t")
+  while s:idx >= 0
+    let s:i = &ts - ((s:start + s:pad + s:idx) % &ts)
+    let s:new = substitute(s:new, '\t', strpart(s:expandedtab, 0, s:i), '')
+    let s:pad = s:pad + s:i - 1
+    let s:start = s:start + s:idx + 1
+    let s:idx = stridx(strpart(s:line, s:start), "\t")
+  endwhile
 
   exe "normal \<C-W>pa" . strtrans(s:new) . "\n\e\<C-W>p"
   let s:lnum = s:lnum + 1
@@ -278,23 +285,21 @@ while s:idlist != ""
   endif
 endwhile
 
-" Cleanup (we've already lost last user's pattern match highlighting)
+" Cleanup
 %s:\s\+$::e
-if has("extra_search")
-  nohlsearch
-endif
 
 " Restore old settings
 let &report = s:old_report
 let &title = s:old_title
 let &icon = s:old_icon
 let &paste = s:old_paste
-exe "normal \<C-W>p"
+let @/ = s:old_search
+wincmd p
 let &l:et = s:old_et
-exe "normal \<C-W>p"
+wincmd p
 
 " Save a little bit of memory (worths doing?)
-unlet s:old_et s:old_paste s:old_icon s:old_report s:old_title
+unlet s:old_et s:old_paste s:old_icon s:old_report s:old_title s:old_search
 unlet s:whatterm s:idlist s:lnum s:end s:fgc s:bgc
 unlet! s:col s:id s:attr s:len s:line s:new s:did_retab s:numblines
 delfunc s:HtmlColor
