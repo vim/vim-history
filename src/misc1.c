@@ -4199,6 +4199,7 @@ get_c_indent()
 		    amount += ind_open_imag;
 		else
 		{
+		    /* Compensate for adding ind_open_extra later. */
 		    amount -= ind_open_extra;
 		    if (amount < 0)
 			amount = 0;
@@ -4246,7 +4247,11 @@ get_c_indent()
 		    if (lookfor == LOOKFOR_UNTERM)
 			amount += ind_continuation;
 		    else if (lookfor != LOOKFOR_TERM)
+		    {
 			amount = scope_amount;
+			if (theline[0] == '{')
+			    amount += ind_open_extra;
+		    }
 		    break;
 		}
 
@@ -4427,7 +4432,16 @@ get_c_indent()
 		     */
 		    if (lookfor != LOOKFOR_TERM && theline[0] == '{')
 		    {
-			amount = cur_amount + ind_open_extra;
+			amount = cur_amount;
+			/*
+			 * Only add ind_open_extra when the current line
+			 * doesn't start with a '{', which must have a match
+			 * in the same line (scope is the same).  Probably:
+			 *	{ 1, 2 },
+			 * ->	{ 3, 4 }
+			 */
+			if (*skipwhite(l) != '{')
+			    amount += ind_open_extra;
 			break;
 		    }
 
@@ -4464,6 +4478,8 @@ get_c_indent()
 			 * ->	here;
 			 */
 			amount = cur_amount;
+			if (theline[0] == '{')
+			    amount += ind_open_extra;
 			if (lookfor != LOOKFOR_TERM)
 			{
 			    amount += ind_level + ind_no_brace;
@@ -4655,6 +4671,9 @@ term_again:
 
 			if (theline[0] == '{')
 			    amount += ind_open_extra;
+			/* See remark above: "Only add ind_open_extra.." */
+			if (*skipwhite(l) == '{')
+			    amount -= ind_open_extra;
 			lookfor = LOOKFOR_TERM;
 
 			/*
@@ -4740,6 +4759,13 @@ term_again:
 		 * not in a comment, put it the left margin.
 		 */
 		if (cin_isfuncdecl(theline))
+		    break;
+
+		/*
+		 * Finding the closing '}' of a previous function.  Put
+		 * current line at the left margin.  For when 'cino' has "fs".
+		 */
+		if (*skipwhite(l) == '}')
 		    break;
 
 		/*

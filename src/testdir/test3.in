@@ -643,6 +643,44 @@ void f()
 }
 
 STARTTEST
+:set cino={s,fs
+]]=/ foo
+ENDTEST
+
+void bar(void)
+{
+	static array[2][2] =
+	{
+		{ 1, 2 },
+		{ 3, 4 },
+	}
+
+	while (a)
+	{
+		foo(&a);
+	}
+
+	{
+		int a;
+		{
+			a = a + 1;
+		}
+	}
+	b = a;
+	}
+
+void func(void)
+	{
+	a = 1;
+	{
+		b = 2;
+	}
+	c = 3;
+	d = 4;
+	}
+/* foo */
+
+STARTTEST
 :set cino=
 /while
 ohere
