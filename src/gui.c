@@ -3992,6 +3992,26 @@ gui_find_bitmap(name, buffer, ext)
 	return FAIL;
     return OK;
 }
+
+/*
+ * Given the name of the "icon=" argument, try finding the bitmap file for the
+ * icon.  If it is an absolute path name, use it as it is.  Otherwise append
+ * "ext" and search for it in 'runtimepath'.
+ * The result is put in "buffer[MAXPATHL]".  If something fails "buffer"
+ * contains "name".
+ */
+    void
+gui_find_iconfile(name, buffer, ext)
+    char_u	*name;
+    char_u	*buffer;
+    char	*ext;
+{
+    char_u	buf[MAXPATHL + 1];
+
+    expand_env(name, buffer, MAXPATHL);
+    if (!mch_isFullName(buffer) && gui_find_bitmap(buffer, buf, ext) == OK)
+	STRCPY(buffer, buf);
+}
 #endif
 
 #if defined(FEAT_GUI_GTK) || defined(FEAT_GUI_X11) || defined(PROTO)

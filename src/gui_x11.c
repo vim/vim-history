@@ -3447,13 +3447,12 @@ get_toolbar_pixmap(menu, sen, insen)
 
     if (menu->iconfile != NULL)
     {
-	/* Use the file argument: first as an absolute path (with extension),
-	 * then as a file name (without extension). */
-	expand_env(menu->iconfile, buf, MAXPATHL);
+	/* Use the "icon="  argument. */
+	gui_find_iconfile(menu->iconfile, buf, "xpm");
 	createXpmImages(buf, NULL, sen, insen);
-	if (*sen == (Pixmap)0
-		&& gui_find_bitmap(menu->name, buf, "xpm") == OK
-		&& buf[0] != NUL)
+
+	/* If it failed, try using the menu name. */
+	if (*sen == (Pixmap)0 && gui_find_bitmap(menu->name, buf, "xpm") == OK)
 	    createXpmImages(buf, NULL, sen, insen);
 	if (*sen != (Pixmap)0)
 	    return;

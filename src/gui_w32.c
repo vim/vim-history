@@ -3238,7 +3238,26 @@ get_toolbar_bitmap(vimmenu_T *menu)
 	char_u fname[MAXPATHL];
 	HANDLE hbitmap = NULL;
 
-	if (gui_find_bitmap(menu->name, fname, "bmp") == OK)
+	if (menu->iconfile != NULL)
+	{
+	    gui_find_iconfile(menu->iconfile, fname, "bmp");
+	    hbitmap = LoadImage(
+			NULL,
+			fname,
+			IMAGE_BITMAP,
+			TOOLBAR_BUTTON_WIDTH,
+			TOOLBAR_BUTTON_HEIGHT,
+			LR_LOADFROMFILE |
+			LR_LOADMAP3DCOLORS
+			);
+	}
+
+	/*
+	 * If the LoadImage call failed, or the "icon=" file
+	 * didn't exist or wasn't specified, try the menu name
+	 */
+	if (hbitmap == NULL
+		&& (gui_find_bitmap(menu->name, fname, "bmp") == OK))
 	    hbitmap = LoadImage(
 		    NULL,
 		    fname,
@@ -3248,6 +3267,7 @@ get_toolbar_bitmap(vimmenu_T *menu)
 		    LR_LOADFROMFILE |
 		    LR_LOADMAP3DCOLORS
 		);
+
 	if (hbitmap != NULL)
 	{
 	    TBADDBITMAP tbAddBitmap;

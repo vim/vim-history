@@ -403,20 +403,17 @@ pixmap_create_by_dir(char_u *name, GdkPixmap **pixmap, GdkBitmap **mask)
 }
 
 /*
- * Creates a pixmap by using the pixmap "file".
+ * Creates a pixmap by using the pixmap "fname".
  */
     static void
-pixmap_create_from_file(char_u *file, GdkPixmap **pixmap, GdkBitmap **mask)
+pixmap_create_from_file(char_u *fname, GdkPixmap **pixmap, GdkBitmap **mask)
 {
-    char_u full_pathname[MAXPATHL + 1];
-
-    expand_env(file, full_pathname, MAXPATHL);
     *pixmap = gdk_pixmap_colormap_create_from_xpm(
 		NULL,
 		gtk_widget_get_colormap(gui.mainwin),
 		mask,
 		&gui.mainwin->style->bg[GTK_STATE_NORMAL],
-		(const char *)full_pathname);
+		(const char *)fname);
 }
 #endif
 
@@ -440,7 +437,12 @@ gui_mch_add_menu_item(vimmenu_T *menu, int idx)
 
 	    /* First try user specified bitmap, then builtin, the a blank. */
 	    if (menu->iconfile != NULL)
-		pixmap_create_from_file(menu->iconfile, &pixmap, &mask);
+	    {
+		char_u buf[MAXPATHL + 1];
+
+		gui_find_iconfile(menu->iconfile, buf, "xpm");
+		pixmap_create_from_file(buf, &pixmap, &mask);
+	    }
 	    if (pixmap == NULL && !menu->icon_builtin)
 		pixmap_create_by_dir(menu->name, &pixmap, &mask);
 	    if (pixmap == NULL && menu->iconidx >= 0)

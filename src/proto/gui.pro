@@ -51,6 +51,7 @@ void gui_mouse_moved __ARGS((int x, int y));
 void gui_mouse_correct __ARGS((void));
 void ex_gui __ARGS((exarg_T *eap));
 int gui_find_bitmap __ARGS((char_u *name, char_u *buffer, char *ext));
+void gui_find_iconfile __ARGS((char_u *name, char_u *buffer, char *ext));
 void display_errors __ARGS((void));
 int no_console_input __ARGS((void));
 void gui_update_screen __ARGS((void));
