@@ -1,7 +1,7 @@
 " These commands create the option window.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2003 Jul 22
+" Last Change:	2004 Apr 29
 
 " If there already is an option window, jump to that one.
 if bufwinnr("option-window") > 0
@@ -1133,11 +1133,11 @@ set cpo&vim
 1
 
 " reset 'modified', so that ":q" can be used to close the window
-set nomodified
+setlocal nomodified
 
 if has("syntax")
   " Use Vim highlighting, with some additional stuff
-  set ft=vim
+  setlocal ft=vim
   syn match optwinHeader "^ \=[0-9].*"
   syn match optwinName "^[a-z]*\t" nextgroup=optwinComment
   syn match optwinComment ".*" contained
@@ -1156,7 +1156,7 @@ inoremap <silent> <buffer> <CR> <Esc>:call <SID>CR()<CR>
 noremap <silent> <buffer> <Space> :call <SID>Space()<CR>
 
 " Make the buffer be deleted when the window is closed.
-set buftype=nofile bufhidden=delete noswapfile
+setlocal buftype=nofile bufhidden=delete noswapfile
 
 augroup optwin
   au! BufUnload,BufHidden option-window nested
