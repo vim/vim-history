@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.1a.  Last change: 2002 Feb 04
+*pattern.txt*   For Vim version 6.1a.  Last change: 2002 Feb 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -601,21 +601,33 @@ endless loop.  If you try it, you will get this error message: >
 	follows. |/zero-width| {not in Vi}
 	Like '(?<=pattern)" in Perl, but Vim allows non-fixed-width patterns.
 	Example			matches ~
-	\(an\_s\+\)\@<=file	"file" after "an" and white space or a
+	\(an\_s\+\)\@<=file	"file" after "an" and white space or an
 				end-of-line
+	For speed it's often much better to avoid this multi.  Try using "\zs"
+	instead |/\zs|.  To match the same as the above example:
+		an\_s\+\zsfile
 
 	"\@<=" and "\@<!" check for matches just before what follows.
 	Theoretically these matches could start anywhere before this position.
 	But to limit the time needed, only the line where what follows matches
 	is searched, and one line before that (if there is one).  This should
 	be sufficient to match most things and not be too slow.
+	The part of the pattern after "\@<=" and "\@<!" are checked for a
+	match first, thus things like "\1" don't work to reference \(\) inside
+	the preceding atom.  It does work the other way around:
+	Example			matches ~
+	\1\@<=,\([a-z]\+\)	",abc" in "abc,abc"
 
 							*/\@<!*
 \@<!	Matches with zero width if the preceding atom does NOT match just
-	before what follows. |/zero-width| {not in Vi}
+	before what follows.  Thus this matches if there is no position in the
+	current or previous line where the atom matches such that it ends just
+	before what follows.  |/zero-width| {not in Vi}
 	Like '(?<!pattern)" in Perl, but Vim allows non-fixed-width patterns.
 	The match with the preceding atom is made to end just before the match
 	with what follows, thus an atom that ends in ".*" will work.
+	Warning: This can be slow (because many positions need to be checked
+	for a match).
 	Example			matches ~
 	\(foo\)\@<!bar		any "bar" that's not in "foobar"
 	\(\/\/.*\)\@\<!in	"in" which is not after "//"
