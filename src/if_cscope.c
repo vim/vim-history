@@ -32,11 +32,14 @@
 #endif
 #include "if_cscope.h"
 
+static void	    cs_usage_msg __ARGS((int x));
 static int	    cs_add __ARGS((exarg_T *eap));
+static void	    cs_stat_emsg __ARGS((char *fname));
 static int	    cs_add_common __ARGS((char *, char *, char *));
 static int	    cs_check_for_connections __ARGS((void));
 static int	    cs_check_for_tags __ARGS((void));
 static int	    cs_cnt_connections __ARGS((void));
+static void	    cs_reading_emsg __ARGS((int idx));
 static int	    cs_cnt_matches __ARGS((int idx));
 static char *	    cs_create_cmd __ARGS((char *csoption, char *pattern));
 static int	    cs_create_connection __ARGS((int i));
@@ -56,6 +59,7 @@ static cscmd_T *    cs_lookup_cmd __ARGS((exarg_T *eap));
 static char *	    cs_make_vim_style_matches __ARGS((char *, char *,
 			char *, char *));
 static char *	    cs_manage_matches __ARGS((char **, char **, int, mcmd_e));
+static char *	    cs_parse_results __ARGS((int cnumber, char *buf, int bufsize, char **context, char **linenumber, char **search));
 static char *	    cs_pathcomponents __ARGS((char *path));
 static void	    cs_print_tags_priv __ARGS((char **, char **, int));
 static int	    cs_read_prompt __ARGS((int ));
@@ -1177,6 +1181,8 @@ clear_csinfo(i)
 }
 
 #ifndef UNIX
+static char *GetWin32Error __ARGS((void));
+
     static char *
 GetWin32Error()
 {
