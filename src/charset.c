@@ -331,22 +331,30 @@ transstr(s)
     char_u	*res;
     char_u	*p;
 #ifdef FEAT_MBYTE
-    int		l, len;
+    int		l, len, c;
+    char_u	hexbuf[11];
 #endif
 
 #ifdef FEAT_MBYTE
     if (has_mbyte)
     {
-	/* Compute the length of the result, taking into account that
-	 * multi-byte characters are copied unchanged. */
+	/* Compute the length of the result, taking account of unprintable
+	 * multi-byte characters. */
 	len = 0;
 	p = s;
 	while (*p != NUL)
 	{
 	    if ((l = (*mb_ptr2len_check)(p)) > 1)
 	    {
-		len += l;
+		c = (*mb_ptr2char)(p);
 		p += l;
+		if (vim_isprintc(c))
+		    len += l;
+		else
+		{
+		    transchar_hex(hexbuf, c);
+		    len += STRLEN(hexbuf);
+		}
 	    }
 	    else
 	    {
@@ -371,7 +379,11 @@ transstr(s)
 #ifdef FEAT_MBYTE
 	    if (has_mbyte && (l = (*mb_ptr2len_check)(p)) > 1)
 	    {
-		STRNCAT(res, p, l);	/* append printable multi-byte char */
+		c = (*mb_ptr2char)(p);
+		if (vim_isprintc(c))
+		    STRNCAT(res, p, l);	/* append printable multi-byte char */
+		else
+		    transchar_hex(res + STRLEN(res), c);
 		p += l;
 	    }
 	    else

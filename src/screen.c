@@ -2077,7 +2077,11 @@ fold_line(wp, fold_count, foldinfo, lnum, row)
 	    {
 #ifdef FEAT_MBYTE
 		if (has_mbyte && (len = (*mb_ptr2len_check)(p)) > 1)
+		{
+		    if (!vim_isprintc((*mb_ptr2char)(p)))
+			break;
 		    p += len - 1;
+		}
 		else
 #endif
 		    if (*p == TAB)
@@ -2139,7 +2143,11 @@ fold_line(wp, fold_count, foldinfo, lnum, row)
 		    ScreenLinesUC[idx] = 0;
 		else
 		{
-		    ScreenLinesUC[idx] = u8c;
+		    /* Non-BMP character: display as ? or fullwidth ?. */
+		    if (u8c >= 0x10000)
+			ScreenLinesUC[idx] = (cells == 2) ? 0xff1f : (int)'?';
+		    else
+			ScreenLinesUC[idx] = u8c;
 		    ScreenLinesC1[idx] = u8c_c1;
 		    ScreenLinesC2[idx] = u8c_c2;
 		}
@@ -3248,20 +3256,31 @@ win_line(wp, lnum, startrow, endrow)
 		    }
 		    if ((mb_l == 1 && c >= 0x80)
 			    || (mb_l >= 1 && mb_c == 0)
-			    || (mb_l > 1 && !vim_isprintc(mb_c)))
+			    || (mb_l > 1 && (!vim_isprintc(mb_c)
+							 || mb_c >= 0x10000)))
 		    {
 			/*
 			 * Illegal UTF-8 byte: display as <xx>.
+			 * Non-BMP character : display as ? or fullwidth ?.
 			 */
-			transchar_hex(extra, mb_c);
+			if (mb_c < 0x10000)
+			{
+			    transchar_hex(extra, mb_c);
 #ifdef FEAT_RIGHTLEFT
-			if (wp->w_p_rl)		/* reverse */
-			    rl_mirror(extra);
+			    if (wp->w_p_rl)		/* reverse */
+				rl_mirror(extra);
 #endif
+			}
+			else if (utf_char2cells(mb_c) != 2)
+			    STRCPY(extra, "?");
+			else
+			    /* 0xff1f in UTF-8: full-width '?' */
+			    STRCPY(extra, "\357\274\237");
+
 			p_extra = extra;
-			c = *p_extra++;
-			mb_c = c;
-			mb_utf8 = FALSE;
+			c = *p_extra;
+			mb_c = mb_ptr2char_adv(&p_extra);
+			mb_utf8 = (c >= 0x80);
 			n_extra = (int)STRLEN(p_extra);
 			c_extra = NUL;
 			if (area_attr == 0 && search_attr == 0)
@@ -5241,6 +5260,13 @@ screen_puts(text, row, col, attr)
 		{
 		    u8c = utfc_ptr2char(ptr, &u8c_c1, &u8c_c2);
 		    mbyte_cells = utf_char2cells(u8c);
+		    /* Non-BMP character: display as ? or fullwidth ?. */
+		    if (u8c >= 0x10000)
+		    {
+			u8c = (mbyte_cells == 2) ? 0xff1f : (int)'?';
+			if (attr == 0)
+			    attr = hl_attr(HLF_8);
+		    }
 		}
 	    }
 #endif
