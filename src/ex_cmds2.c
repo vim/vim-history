@@ -4667,19 +4667,19 @@ ex_language(eap)
 #ifndef LC_MESSAGES
 	if (what == VIM_LC_MESSAGES)
 	{
-	    p = vim_getenv("LC_ALL");
+	    p = mch_getenv((char_u *)"LC_ALL");
 	    if (p == NULL || *p == NUL)
 	    {
-		p = vim_getenv("LC_MESSAGES");
+		p = mch_getenv((char_u *)"LC_MESSAGES");
 		if (p == NULL || *p == NUL)
-		    p = vim_getenv("LANG");
+		    p = mch_getenv((char_u *)"LANG");
 	    }
 	}
 	else
 #endif
-	    p = setlocale(what, NULL);
+	    p = (char_u *)setlocale(what, NULL);
 	if (p == NULL || *p == NUL)
-	    p = "Unknown";
+	    p = (char_u *)"Unknown";
 	smsg((char_u *)_("Current %slanguage: \"%s\""), whatstr, p);
     }
     else
