@@ -135,6 +135,9 @@
 /* Define if tgetstr() has a second argument that is (char *) */
 #undef TGETSTR_CHAR_P
 
+/* Define if tgetent() returns zero for an error */
+#undef TGETENT_ZERO_ERR
+
 /* Define if the getcwd() function should not be used.  */
 #undef BAD_GETCWD
 
