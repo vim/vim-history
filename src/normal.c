@@ -7778,7 +7778,7 @@ nv_esc(cap)
 		&& !VIsual_active
 #endif
 		&& no_reason)
-	    msg(_("Type  :quit<Enter>  to exit Vim"));
+	    MSG(_("Type  :quit<Enter>  to exit Vim"));
 
 	restart_edit = 0;
 #ifdef FEAT_CMDWIN
