@@ -1156,6 +1156,14 @@ vim_free_in_input_buf()
 }
 #endif
 
+#if defined(USE_GUI_GTK) || defined(PROTO)
+    int
+vim_used_in_input_buf()
+{
+    return inbufcount;
+}
+#endif
+
 /* Add the given bytes to the input buffer */
     void
 add_to_input_buf(s, len)

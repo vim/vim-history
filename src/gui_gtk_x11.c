@@ -19,6 +19,11 @@
  *	:-) <dalecki@cs.net.pl> (My native language is polish and I speak
  *	native grade german too. I'm living in Göttingen.de.)
  *	--mdcki"
+ *
+ *
+ * Although some #ifdefs suggest that GTK 1.0 is supported, it isn't.  The
+ * code requires GTK version 1.1.16 or later.  Stuff for older versions will
+ * be removed some time.
  */
 
 #include "vim.h"
@@ -36,10 +41,28 @@
 
 /* slection distinguishers */
 enum {
-    SEL_TYPE_NONE,
+    SELECTION_TYPE_NONE,
     SELECTION_STRING,
     SELECTION_CLIPBOARD
 };
+
+/*
+ * Enable DND feature.  Disable this if it causes problems.
+ */
+#define GTK_DND
+
+#ifdef GTK_DND
+/* DND specification constants. */
+enum {
+  TARGET_STRING
+};
+
+static GtkTargetEntry target_table[] = {
+    { "STRING",     0, TARGET_STRING },
+    { "text/plain", 0, TARGET_STRING }
+};
+static guint n_targets = sizeof(target_table) / sizeof(target_table[0]);
+#endif
 
 /* This is the single only fixed width font in X11, which seems to be present
  * on all servers and available in all the variants we need.
@@ -50,29 +73,21 @@ enum {
 
 #define DFLT_FONT		"-adobe-courier-medium-r-normal-*-14-*-*-*-m-*-*-*"
 
-#ifdef GTK_HAVE_FEATURES_1_1_0
-static void font_sel_ok(GtkWidget *wgt, gpointer cbdata);
-static void font_sel_cancel(GtkWidget *wgt, gpointer cbdata);
-static void font_sel_destroy(GtkWidget *wgt, gpointer cbdata);
-#endif
-
-static gint expose_event(GtkWidget * widget, GdkEventExpose * event);
-static gint button_press_event(GtkWidget * widget, GdkEventButton * event);
-static gint button_release_event(GtkWidget * widget, GdkEventButton * event);
-static gint motion_notify_event(GtkWidget * widget, GdkEventMotion * event);
-static void destroy_callback(void);
-static int  delete_event_cb(GtkWidget *wgt, gpointer cbdata);
+/*
+ * Atom used to communicate save yourself from the X11 session manager. There
+ * is no need to move this into the GUI struct, since this should be always
+ * constant.
+ */
+static GdkAtom save_yourself_atom = GDK_NONE;
 
 /*
- * If of the atom used to communicate save yourself from the X11 session
- * manager. There is no need to move this into the GUI struct, since this
- * should be always constant.
+ * Atom used to recognize requests for on the fly GTK+ style configuration
+ * changes.
  */
-GdkAtom save_yourself_atom = GDK_NONE;
+static GdkAtom reread_rcfiles_atom = GDK_NONE;
 
 /*
  * Keycodes recognized by vim.
- * we will be using the techniques described here later for real work.
  */
 static struct special_key {
     guint key_sym;
@@ -306,6 +321,37 @@ visibility_event(GtkWidget * widget, GdkEventVisibility * event)
 #endif
 
 /*
+ * Redraw the corresponding portions of the screen.
+ */
+/*ARGSUSED*/
+static gint
+expose_event(GtkWidget * widget, GdkEventExpose * event)
+{
+    out_flush();		/* make sure all output has been processed */
+    gui_redraw(event->area.x, event->area.y,
+	       event->area.width, event->area.height);
+
+    /* Clear the border areas if needed */
+    if (event->area.x < FILL_X(0))
+	gdk_window_clear_area(gui.drawarea->window, 0, 0, FILL_X(0), 0);
+    if (event->area.y < FILL_Y(0))
+	gdk_window_clear_area(gui.drawarea->window, 0, 0, 0, FILL_Y(0));
+    if (event->area.x > FILL_X(Columns))
+	gdk_window_clear_area(gui.drawarea->window,
+			      FILL_X((int)Columns), 0, 0, 0);
+    if (event->area.y > FILL_Y(Rows))
+	gdk_window_clear_area(gui.drawarea->window, 0, FILL_Y((int)Rows), 0, 0);
+
+    return FALSE;
+}
+
+
+/****************************************************************************
+ * Focus handlers:
+ */
+
+
+/*
  * This is a simple state machine:
  * BLINK_NONE   not blinking at all
  * BLINK_OFF    blinking, cursor is not shown
@@ -347,18 +393,18 @@ gui_mch_stop_blink()
 
 /*ARGSUSED*/
 static gint
-gui_gtk_blink_cb(gpointer data)
+blink_cb(gpointer data)
 {
     if (blink_state == BLINK_ON) {
 	gui_undraw_cursor();
 	blink_state = BLINK_OFF;
-	blink_timer = gtk_timeout_add(blink_offtime,
-				   (GtkFunction) gui_gtk_blink_cb, NULL);
+	blink_timer = gtk_timeout_add((guint32)blink_offtime,
+				   (GtkFunction) blink_cb, NULL);
     } else {
 	gui_update_cursor(TRUE, FALSE);
 	blink_state = BLINK_ON;
-	blink_timer = gtk_timeout_add(blink_ontime,
-				   (GtkFunction) gui_gtk_blink_cb, NULL);
+	blink_timer = gtk_timeout_add((guint32)blink_ontime,
+				   (GtkFunction) blink_cb, NULL);
     }
 
     return FALSE;		/* don't happen again */
@@ -375,8 +421,8 @@ gui_mch_start_blink()
 	gtk_timeout_remove(blink_timer);
     /* Only switch blinking on if none of the times is zero */
     if (blink_waittime && blink_ontime && blink_offtime && gui.in_focus) {
-	blink_timer = gtk_timeout_add(blink_waittime,
-				   (GtkFunction) gui_gtk_blink_cb, NULL);
+	blink_timer = gtk_timeout_add((guint32)blink_waittime,
+				   (GtkFunction) blink_cb, NULL);
 	blink_state = BLINK_ON;
 	gui_update_cursor(TRUE, FALSE);
     }
@@ -437,15 +483,15 @@ focus_out_event(GtkWidget * widget, GdkEventFocus *focus, gpointer data)
 }
 
 
+/****************************************************************************
+ * Main keyboard handler:
+ */
+
 /*ARGSUSED*/
 static gint
 key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
 {
-#ifdef USE_XIM
     char_u string[256], string2[256];
-#else
-    char_u string[3], string2[3];
-#endif
     guint key_sym;
     int len;
     int i;
@@ -571,6 +617,12 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
     return TRUE;
 }
 
+
+/****************************************************************************
+ * Selection handlers:
+ */
+
+
 /*ARGSUSED*/
 static gint
 selection_clear_event(GtkWidget * widget, GdkEventSelection * event)
@@ -647,7 +699,7 @@ selection_get_event(GtkWidget *widget,
     clip_get_selection();
 
     /* get the selection from the * register */
-    motion_type = clip_convert_selection(&string, (long_u *)&length);
+    motion_type = clip_convert_selection(&string, &length);
     if (motion_type < 0)
 	return;
 
@@ -655,7 +707,7 @@ selection_get_event(GtkWidget *widget,
     if (info == SELECTION_CLIPBOARD)
 	length++;
 
-    result = (char_u *)malloc(2 * length);
+    result = lalloc((long_u)(2 * length), FALSE);
     if (result == NULL)
     {
 	vim_free(string);
@@ -676,7 +728,7 @@ selection_get_event(GtkWidget *widget,
     selection_data->type = selection_data->target;
     selection_data->format = 8;	/* 8 bits per char */
 
-    gtk_selection_data_set(selection_data, type, 8, result, length);
+    gtk_selection_data_set(selection_data, type, 8, result, (gint)length);
     vim_free(string);
     vim_free(result);
 }
@@ -771,6 +823,412 @@ gui_mch_init_check(void)
     return OK;
 }
 
+
+/****************************************************************************
+ * Mouse handling callbacks
+ */
+
+
+static guint mouse_click_timer = 0;
+static int mouse_timed_out = TRUE;
+
+/*
+ * Timer used to recognize multiple clicks of the mouse button
+ */
+static gint
+mouse_click_timer_cb(gpointer data)
+{
+    /* we don't use this information currently */
+    int *timed_out = (int *) data;
+
+    *timed_out = TRUE;
+    return FALSE;		/* don't happen again */
+}
+
+static guint motion_repeat_timer = 0;
+static int motion_repeat_offset = FALSE;
+
+static gint motion_notify_event(GtkWidget *, GdkEventMotion *);
+
+/*
+ * Timer used to recognize multiple clicks of the mouse button.
+ */
+/*ARGSUSED*/
+static gint
+motion_repeat_timer_cb(gpointer data)
+{
+    gint x, y;
+    GdkModifierType state;
+    GdkEventMotion event;
+
+    gdk_window_get_pointer(gui.drawarea->window, &x, &y, &state);
+
+    if (!(state & (GDK_BUTTON1_MASK | GDK_BUTTON2_MASK |
+		    GDK_BUTTON3_MASK | GDK_BUTTON4_MASK |
+		    GDK_BUTTON5_MASK)))
+    {
+	motion_repeat_timer = 0;
+	return FALSE;
+    }
+
+    /* If there already is a mouse click in the input buffer, wait another
+     * time (otherwise we would create a backlog of clicks) */
+    if (vim_used_in_input_buf() > 10)
+	return TRUE;
+
+    motion_repeat_timer = 0;
+
+    /* Fake a motion event.
+     * Trick: Pretend the mouse moved to the next character on every other
+     * event, otherwise drag events will be discarded, because they are still
+     * in the same character. */
+    event.is_hint = FALSE;
+    if (motion_repeat_offset)
+    {
+	event.x = x + gui.char_width;
+	motion_repeat_offset = FALSE;
+    }
+    else
+    {
+	event.x = x;
+	motion_repeat_offset = TRUE;
+    }
+    event.y = y;
+    event.state = state;
+    motion_notify_event(gui.drawarea, &event);
+
+    /* Don't happen again. We will get reinstalled in the synthetic event if
+     * needed - thus repeating should still work.
+     */
+    return FALSE;
+}
+
+/*ARGSUSED*/
+static gint
+motion_notify_event(GtkWidget * widget, GdkEventMotion * event)
+{
+    gint x, y;
+    GdkModifierType state;
+    int_u vim_modifiers;
+    int button;
+
+    if (event->is_hint)
+	gdk_window_get_pointer(event->window, &x, &y, &state);
+    else {
+	x = event->x;
+	y = event->y;
+	state = event->state;
+    }
+
+    button = (event->state & (GDK_BUTTON1_MASK | GDK_BUTTON2_MASK |
+			      GDK_BUTTON3_MASK | GDK_BUTTON4_MASK |
+			      GDK_BUTTON5_MASK))
+	      ? MOUSE_DRAG : ' ';
+
+    /* If our pointer is currently hidden, then we should show it. */
+    gui_mch_mousehide(FALSE);
+
+    /* Just moving the rodent above the drawing area without any button beeing
+     * pressed. */
+    if (button != MOUSE_DRAG) {
+	gui_mouse_moved(y);
+	return TRUE;
+    }
+
+    /* translate modifier coding between the main engine and GTK */
+    vim_modifiers = 0x0;
+    if (state & GDK_SHIFT_MASK)
+	vim_modifiers |= MOUSE_SHIFT;
+    if (state & GDK_CONTROL_MASK)
+	vim_modifiers |= MOUSE_CTRL;
+    if (state & GDK_MOD1_MASK)
+	vim_modifiers |= MOUSE_ALT;
+
+    /* inform the editor egine about the occurence of this event */
+    gui_send_mouse_event(button, x, y, FALSE, vim_modifiers);
+    if (gtk_main_level() > 0)
+	gtk_main_quit();
+
+    /*
+     * Auto repeat timer handling.
+     */
+    if (x < 0 || y < 0
+	    || x >= gui.drawarea->allocation.width
+	    || y >= gui.drawarea->allocation.height) {
+
+	int dx;
+	int dy;
+	int offshoot;
+	int delay = 10;
+
+	/* Calculate the maximal distance of the cursor from the drawing area.
+	 * (offshoot can't become negative here!).
+	 */
+	dx = x < 0 ? -x : x - gui.drawarea->allocation.width;
+	dy = y < 0 ? -y : y - gui.drawarea->allocation.height;
+
+	offshoot = dx > dy ? dx : dy;
+
+	/* Make a linearly declaying timer delay with a threshold of 5 at a
+	 * distance of 127 pixels from the main window.
+	 *
+	 * One could think endlessly about the most ergonomic variant here.
+	 * For example it could make sense to calculate the distance from the
+	 * drags start instead...
+	 *
+	 * Maybe a parabolic interpolation would suite us better here too...
+	 */
+	if (offshoot > 127) {
+	    /* 5 appears to be somehow near to my perceptual limits :-). */
+	    delay = 5;
+	} else {
+	    delay = (130 * (127 - offshoot)) / 127 + 5;
+	}
+
+	/* shoot again */
+	if (!motion_repeat_timer)
+	    motion_repeat_timer = gtk_timeout_add((guint32)delay,
+						motion_repeat_timer_cb, NULL);
+    }
+
+    return TRUE; /* handled */
+}
+
+
+/*
+ * Mouse button handling.  Note please that we are capturing multiple click's
+ * by our own timeout mechanism instead of the one provided by GTK+ istelf.
+ * This is due to the way the generic VIM code is recognizing multiple clicks.
+ */
+/*ARGSUSED*/
+static gint
+button_press_event(GtkWidget * widget, GdkEventButton * event)
+{
+    int button;
+    int repeated_click = FALSE;
+    int x, y;
+    int_u vim_modifiers;
+
+    /*
+     * Don't let additional events about multiple clicks send by GTK to us
+     * after the inital button press event confuse us.
+     */
+    if (event->type != GDK_BUTTON_PRESS)
+	return FALSE;
+
+    x = event->x;
+    y = event->y;
+
+    /* Handle multiple clicks */
+    if (!mouse_timed_out && mouse_click_timer) {
+	gtk_timeout_remove(mouse_click_timer);
+	mouse_click_timer = 0;
+	repeated_click = TRUE;
+    }
+
+    mouse_timed_out = FALSE;
+    mouse_click_timer = gtk_timeout_add((guint32)p_mouset,
+				  mouse_click_timer_cb, &mouse_timed_out);
+
+    switch (event->button) {
+    case 1:
+	button = MOUSE_LEFT;
+	break;
+    case 2:
+	button = MOUSE_MIDDLE;
+	break;
+    case 3:
+	button = MOUSE_RIGHT;
+	break;
+    case 4:
+	button = MOUSE_4;
+	break;
+    case 5:
+	button = MOUSE_5;
+	break;
+    default:
+	return FALSE;		/* Unknown button */
+    }
+
+    vim_modifiers = 0x0;
+    if (event->state & GDK_SHIFT_MASK)
+	vim_modifiers |= MOUSE_SHIFT;
+    if (event->state & GDK_CONTROL_MASK)
+	vim_modifiers |= MOUSE_CTRL;
+    if (event->state & GDK_MOD1_MASK)
+	vim_modifiers |= MOUSE_ALT;
+
+    gui_send_mouse_event(button, x, y, repeated_click, vim_modifiers);
+    if (gtk_main_level() > 0)
+	gtk_main_quit();	/* make sure the above will be handled immediately */
+
+    return TRUE;
+}
+
+/*ARGSUSED*/
+static gint
+button_release_event(GtkWidget * widget, GdkEventButton * event)
+{
+    int x, y;
+    int_u vim_modifiers;
+
+    /* Remove any motion "mashine gun" timers used for automatic further
+       extension of allocation areas if outside of the applications window
+       area .*/
+    if (motion_repeat_timer) {
+	gtk_timeout_remove(motion_repeat_timer);
+	motion_repeat_timer = 0;
+    }
+
+    x = event->x;
+    y = event->y;
+
+    vim_modifiers = 0x0;
+    if (event->state & GDK_SHIFT_MASK)
+	vim_modifiers |= MOUSE_SHIFT;
+    if (event->state & GDK_CONTROL_MASK)
+	vim_modifiers |= MOUSE_CTRL;
+    if (event->state & GDK_MOD1_MASK)
+	vim_modifiers |= MOUSE_ALT;
+
+    gui_send_mouse_event(MOUSE_RELEASE, x, y, FALSE, vim_modifiers);
+    if (gtk_main_level() > 0)
+	gtk_main_quit();		/* make sure it will be handled immediately */
+
+    return TRUE;
+}
+
+
+#ifdef GTK_DND
+/****************************************************************************
+ * Drag aNd Drop support handlers.
+ */
+
+/*
+ * DND receiver.
+ */
+/*ARGSUSED*/
+static void
+drag_data_received(GtkWidget *widget, GdkDragContext *context,
+	gint x, gint y,
+	GtkSelectionData *data,
+	guint info, guint time)
+{
+    char_u	**fnames;
+    int		redo_dirs = FALSE;
+    int		i;
+    int		n;
+    char	*start;
+    char	*stop;
+    char	*copy;
+    int		nfiles;
+    GdkModifierType current_modifiers;
+
+    /* Get the current modifier state for proper distinguishment between
+     * different operations later. */
+    current_modifiers = 0;
+    gdk_window_get_pointer(NULL, NULL, NULL, &current_modifiers);
+
+    /* guard against trash */
+    if (((data->length <=  0) && (data->format != 8))
+	    || (((char *)data->data)[data->length] != '\0')) {
+	gtk_drag_finish(context, FALSE, FALSE, time);
+
+	return;
+    }
+
+    /* Count how meny items there may be there and normalize
+     * delimiters.
+     */
+    n = 1;
+    copy = strdup((char *)data->data);
+    for (i = 0; i < data->length; ++i) {
+	if (copy[i] == '\n')
+	    ++n;
+	else if(copy[i] == '\r') {
+	    copy[i] = '\n';
+	    ++n;
+	}
+    }
+
+    fnames = (char_u **) alloc((n + 1) * sizeof(char_u *));
+
+    start = copy;
+    stop = copy;
+    nfiles = 0;
+    for (i = 0; i < n; ++i) {
+	stop = strchr(start, '\n');
+	if (stop)
+	    *stop = '\0';
+
+	if (!strlen(start))
+	    continue;
+
+	if (strncmp(start, "file:", 5)) {
+	    int j;
+
+	    free(copy);
+	    for (j = 0; j < nfiles; ++j)
+		free(fnames[j]);
+	    gtk_drag_finish(context, FALSE, FALSE, time);
+
+	    return;
+	}
+
+	if (!strncmp(start, "file://localhost", 16)) {
+	    fnames[nfiles] = (char_u *)strdup(start + 16);
+	    ++nfiles;
+	} else {
+	    fnames[nfiles] = (char_u *)strdup(start + 5);
+	    ++nfiles;
+	}
+	start = stop + 2;
+    }
+    free(copy);
+
+    /* accept */
+    gtk_drag_finish (context, TRUE, FALSE, time);
+
+    /*
+     * Handle dropping a directory on Vim.
+     */
+    if (nfiles == 1) {
+	if (mch_isdir(fnames[0])) {
+	    if (mch_chdir((char *)fnames[0]) == 0) {
+		free(fnames[0]);
+		fnames[0] = NULL;
+		redo_dirs = TRUE;
+	    }
+	}
+    } else {
+	/* Ignore any directories */
+	for (i = 0; i < nfiles; ++i) {
+	    if (mch_isdir(fnames[i])) {
+		free(fnames[i]);
+		fnames[i] = NULL;
+	    }
+	}
+    }
+
+    if (current_modifiers & GDK_SHIFT_MASK) {
+	/* Shift held down, change to first file's directory */
+	if (fnames[0] != NULL && vim_chdirfile(fnames[0]) == 0)
+	    redo_dirs = TRUE;
+    }
+
+    /* Handle the drop, :edit or :split to get to the file */
+    handle_drop(nfiles, fnames, current_modifiers & GDK_CONTROL_MASK);
+
+    if (redo_dirs)
+	shorten_fnames(TRUE);
+
+    /* Update the screen display */
+    update_screen(NOT_VALID);
+    setcursor();
+    out_flush();
+}
+#endif /* GTK_DND */
+
 /*
  * Setup the window icon after the main window has bee realized.
  */
@@ -832,6 +1290,18 @@ drawarea_realize_cb(GtkWidget *widget)
 }
 
 /*
+ * Callback routine for the "delete_event" signal on the toplevel window.
+ * Tries to vim gracefully, or refuses to exit with changed buffers.
+ */
+/*ARGSUSED*/
+static int
+delete_event_cb(GtkWidget *wgt, gpointer cbdata)
+{
+    gui_window_closed();
+    return TRUE;
+}
+
+/*
  * Initialise the X GUI.  Create all the windows, set up all the call-backs etc.
  * Returns OK for success, FAIL when the GUI can't be started.
  */
@@ -839,9 +1309,6 @@ int
 gui_mch_init()
 {
     GtkWidget *vbox;
-
-    /* Uncomment this to enable synchronous mode for debugging */
-    /* XSynchronize(gui.dpy, True); */
 
     /* Initialize values */
     gui.rev_video = FALSE;
@@ -894,17 +1361,17 @@ gui_mch_init()
     if (p_toolbar) {
 	if (strstr((const char *)p_toolbar, "text")
 		&& strstr((const char *)p_toolbar, "icons"))
-	    gui.toolbar = gtk_toolbar_new(GTK_ORIENTATION_HORIZONTAL,
-					  GTK_TOOLBAR_BOTH);
+	    gui.toolbar =
+		gtk_toolbar_new(GTK_ORIENTATION_HORIZONTAL, GTK_TOOLBAR_BOTH);
 	else if (strstr((const char *)p_toolbar, "text"))
-	    gui.toolbar = gtk_toolbar_new(GTK_ORIENTATION_HORIZONTAL,
-					  GTK_TOOLBAR_TEXT);
+	    gui.toolbar =
+		gtk_toolbar_new(GTK_ORIENTATION_HORIZONTAL, GTK_TOOLBAR_TEXT);
 	else
-	    gui.toolbar = gtk_toolbar_new(GTK_ORIENTATION_HORIZONTAL,
-					  GTK_TOOLBAR_ICONS);
+	    gui.toolbar =
+		gtk_toolbar_new(GTK_ORIENTATION_HORIZONTAL, GTK_TOOLBAR_ICONS);
     } else
-	gui.toolbar = gtk_toolbar_new(GTK_ORIENTATION_HORIZONTAL,
-				      GTK_TOOLBAR_ICONS);
+	gui.toolbar =
+	    gtk_toolbar_new(GTK_ORIENTATION_HORIZONTAL, GTK_TOOLBAR_ICONS);
 
     gtk_widget_show(gui.toolbar);
 # ifdef GTK_HAVE_FEATURES_1_1_0
@@ -930,6 +1397,7 @@ gui_mch_init()
 			  GDK_BUTTON_RELEASE_MASK |
 			  GDK_POINTER_MOTION_MASK |
 			  GDK_POINTER_MOTION_HINT_MASK);
+
     gtk_widget_show(gui.drawarea);
     gtk_form_put(GTK_FORM(gui.formwin), gui.drawarea, 0, 0);
     gtk_widget_show(gui.formwin);
@@ -951,6 +1419,7 @@ gui_mch_init()
     gui.visibility = GDK_VISIBILITY_UNOBSCURED;
     clipboard.atom = gdk_atom_intern("_VIM_TEXT", FALSE);
     save_yourself_atom = gdk_atom_intern("WM_SAVE_YOURSELF", FALSE);
+    reread_rcfiles_atom = gdk_atom_intern("_GTK_READ_RCFILES", FALSE);
 
     /*
      * Start out by adding the configured border width into the border offset.
@@ -1120,6 +1589,9 @@ form_configure_event(GtkWidget * widget, GdkEventConfigure * event)
     return TRUE;
 }
 
+/*
+ * X11 based inter client communication handler.
+ */
 /*ARGSUSED*/
 static gint
 client_event_cb(GtkWidget *widget, GdkEventClient *event)
@@ -1128,9 +1600,27 @@ client_event_cb(GtkWidget *widget, GdkEventClient *event)
 	out_flush();
 	ml_sync_all(FALSE, FALSE);      /* preserve all swap files */
 	return TRUE;
+    } else if (event->message_type == reread_rcfiles_atom) {
+	gui_mch_new_colors();
+	return TRUE;
     }
     return FALSE;
 }
+
+/*
+ * Function called when window already closed.
+ * We can't do much more here than to trying to preserve what had been done,
+ * since the window is already inevitably going away.
+ */
+static void
+destroy_callback(void)
+{
+    /* preserve files and exit */
+    preserve_exit();
+    if (gtk_main_level() > 0)
+	gtk_main_quit();
+}
+
 
 /*
  * Open the GUI window which was created by a call to gui_mch_init().
@@ -1157,19 +1647,19 @@ gui_mch_open()
     }
 
     gtk_form_set_size(GTK_FORM(gui.formwin),
-	    gui_get_base_width() + Columns * gui.char_width,
-	    gui_get_base_height() + Rows * gui.char_height);
+	    (guint)(gui_get_base_width() + Columns * gui.char_width),
+	    (guint)(gui_get_base_height() + Rows * gui.char_height));
     update_window_manager_hints();
 
     if (found_reverse_arg )
     {
-	gui.def_norm_pixel = gui_mch_get_color("White");
-	gui.def_back_pixel = gui_mch_get_color("Black");
+	gui.def_norm_pixel = gui_mch_get_color((char_u *)"White");
+	gui.def_back_pixel = gui_mch_get_color((char_u *)"Black");
     }
     else
     {
-	gui.def_norm_pixel = gui_mch_get_color("Black");
-	gui.def_back_pixel = gui_mch_get_color("White");
+	gui.def_norm_pixel = gui_mch_get_color((char_u *)"Black");
+	gui.def_back_pixel = gui_mch_get_color((char_u *)"White");
     }
 
     /* Get the colors from the "Normal" and "Menu" group (set in syntax.c or
@@ -1188,7 +1678,11 @@ gui_mch_open()
     gtk_signal_connect(GTK_OBJECT(gui.mainwin), "destroy",
 		       GTK_SIGNAL_FUNC(destroy_callback), NULL);
 
-    gtk_signal_connect(GTK_OBJECT(gui.mainwin), "client_event",
+    /* Make this run after any internal handling of the client event happaned
+     * to make sure that all changes implicated by it are already in place and
+     * we thus can make our own adjustments.
+     */
+    gtk_signal_connect_after(GTK_OBJECT(gui.mainwin), "client_event",
                        GTK_SIGNAL_FUNC(client_event_cb), NULL);
 #ifdef HANGUL_INPUT
     hangul_keyboard_set();
@@ -1206,6 +1700,19 @@ gui_mch_open()
      */
     gtk_signal_connect(GTK_OBJECT(gui.formwin), "configure_event",
 		       GTK_SIGNAL_FUNC(form_configure_event), NULL);
+
+#ifdef GTK_DND
+    /*
+     * Set up for receiving DND items.
+     */
+    gtk_drag_dest_set(gui.drawarea,
+	    GTK_DEST_DEFAULT_ALL,
+	    target_table, n_targets,
+	    GDK_ACTION_COPY | GDK_ACTION_MOVE);
+
+    gtk_signal_connect(GTK_OBJECT(gui.drawarea), "drag_data_received",
+	    GTK_SIGNAL_FUNC(drag_data_received), NULL);
+#endif
 
     gtk_widget_show(gui.mainwin);
 
@@ -1334,28 +1841,15 @@ gui_mch_show_toolbar(int showit)
 	    gtk_toolbar_set_style(GTK_TOOLBAR(gui.toolbar), GTK_TOOLBAR_ICONS);
 	}
 
-	if (strstr((const char *)p_toolbar, "tooltips"))
-	    gtk_toolbar_set_tooltips(GTK_TOOLBAR(gui.toolbar), TRUE);
-	else
-	    gtk_toolbar_set_tooltips(GTK_TOOLBAR(gui.toolbar), FALSE);
-
-	/*
-	 * Black on white will catch the attention of the user more likely then
-	 * black on grey. However due to errors / omissions in GTK+-1.1.5 this
-	 * ceased to work properly. I had been looking after it and there seems
-	 * to be no easy fix for it there. (--mdcki)
-	 *
-	 * This problem still applies for GTK+-1.2.3. (--mdcki)
-	 * And I didn't find any current example where the tooltip colors
-	 * would have need changed correctly.
-	 */
-	gtk_tooltips_set_colors(GTK_TOOLBAR(gui.toolbar)->tooltips,
-				&gui.toolbar->style->white,
-				&gui.toolbar->style->black);
 	if (!GTK_WIDGET_VISIBLE(gui.toolbar)) {
 	    gtk_widget_show(gui.toolbar);
 	    update_window_manager_hints();
 	}
+
+	if (strstr((const char *)p_toolbar, "tooltips"))
+	    gtk_toolbar_set_tooltips(GTK_TOOLBAR(gui.toolbar), TRUE);
+	else
+	    gtk_toolbar_set_tooltips(GTK_TOOLBAR(gui.toolbar), FALSE);
     }
 }
 #endif
@@ -1382,6 +1876,51 @@ gui_mch_get_fontset(char_u * name, int report_error)
     gdk_font_ref(font);
 
     return (GuiFont) font;
+}
+#endif
+
+#ifdef GTK_HAVE_FEATURES_1_1_0
+/*
+ * Get a font structure for highlighting.
+ * "cbdata" is a pointer to the global gui structure.
+ */
+/*ARGSUSED*/
+static void
+font_sel_ok(GtkWidget *wgt, gpointer cbdata)
+{
+    Gui *vw = (Gui *)cbdata;
+    GtkFontSelectionDialog *fs = (GtkFontSelectionDialog *)vw->fontdlg;
+
+    if (vw->fontname)
+	g_free(vw->fontname);
+
+    vw->fontname = (char_u *)g_strdup(
+				gtk_font_selection_dialog_get_font_name(fs));
+    gtk_widget_hide(vw->fontdlg);
+    if (gtk_main_level() > 0)
+	gtk_main_quit();
+}
+
+/*ARGSUSED*/
+static void
+font_sel_cancel(GtkWidget *wgt, gpointer cbdata)
+{
+    Gui *vw = (Gui *)cbdata;
+
+    gtk_widget_hide(vw->fontdlg);
+    if (gtk_main_level() > 0)
+	gtk_main_quit();
+}
+
+/*ARGSUSED*/
+static void
+font_sel_destroy(GtkWidget *wgt, gpointer cbdata)
+{
+    Gui *vw = (Gui *)cbdata;
+
+    vw->fontdlg = NULL;
+    if (gtk_main_level() > 0)
+	gtk_main_quit();
 }
 #endif
 
@@ -2156,7 +2695,7 @@ gui_mch_wait_for_chars(long wtime)
      * time */
 
     if (wtime > 0)
-	timer = gtk_timeout_add(wtime, input_timer_cb, &timed_out);
+	timer = gtk_timeout_add((guint32)wtime, input_timer_cb, &timed_out);
     else
 	timer = 0;
 
@@ -2263,7 +2802,7 @@ static void check_copy_area(void)
 
     gdk_flush();
 
-    /* Wait to check whether the scroll worked or not */
+    /* Wait to check whether the scroll worked or not. */
     for (;;) {
 	if (XCheckTypedEvent(GDK_DISPLAY(), NoExpose, &event))
 	    return;		/* The scroll worked. */
@@ -2381,7 +2920,7 @@ clip_mch_request_selection()
     received_selection = RS_NONE;
     (void)gtk_selection_convert(gui.drawarea,
 				    GDK_SELECTION_PRIMARY, clipboard.atom,
-				    GDK_CURRENT_TIME);
+				    (guint32)GDK_CURRENT_TIME);
     while (received_selection == RS_NONE)
 	gtk_main();		/* wait for selection_received_event */
 
@@ -2391,7 +2930,7 @@ clip_mch_request_selection()
 	received_selection = RS_NONE;
 	(void)gtk_selection_convert(gui.drawarea, GDK_SELECTION_PRIMARY,
 				    GDK_TARGET_STRING,
-				    GDK_CURRENT_TIME);
+				    (guint32)GDK_CURRENT_TIME);
 	while (received_selection == RS_NONE)
 	    gtk_main();		/* wait for selection_received_event */
     }
@@ -2401,12 +2940,12 @@ void
 clip_mch_lose_selection()
 {
     gtk_selection_owner_set(gui.drawarea,
-				     GDK_SELECTION_PRIMARY, GDK_CURRENT_TIME);
+			    GDK_SELECTION_PRIMARY, (guint32)GDK_CURRENT_TIME);
     gui_mch_update();
 }
 
 /*
- * Check whatever we allready own the selection
+ * Check whatever we allready own the selection.
  */
 int
 clip_mch_own_selection()
@@ -2429,7 +2968,7 @@ clip_mch_set_selection()
 {
     gtk_selection_owner_set(gui.drawarea,
 			    GDK_SELECTION_PRIMARY,
-			    GDK_CURRENT_TIME);
+			    (guint32)GDK_CURRENT_TIME);
     gui_mch_update();
 }
 
@@ -2499,8 +3038,6 @@ gui_mch_enable_scrollbar(GuiScrollbar * sb, int flag)
 
 /*
  * Return the lightness of a pixel.  White is 255.
- *
- * FIXME: port it compleatly to GDK.
  */
 int
 gui_mch_get_lightness(GuiColor pixel)
@@ -2510,17 +3047,20 @@ gui_mch_get_lightness(GuiColor pixel)
 
     colormap = gtk_widget_get_colormap(gui.mainwin);
     xc.pixel = pixel;
+
+    /* FIXME: this is crap in terms of actual accuracy */
     XQueryColor(GDK_DISPLAY(), GDK_COLORMAP_XCOLORMAP(colormap), &xc);
 
     return (int) (xc.red * 3 + xc.green * 6 + xc.blue) / (10 * 256);
 }
 
 #if (defined(SYNTAX_HL) && defined(WANT_EVAL)) || defined(PROTO)
+
 /*
  * Return the RGB value of a pixel as "#RRGGBB".
  *
- * FIXME: It should be possible to avoid any direct usage of Xlib. Use gdk
- * instead!
+ * Unfortunately there appears to be no way to accomplish this entierly
+ * without resorting to native X11 functions.
  */
 char_u *
 gui_mch_get_rgb(GuiColor pixel)
@@ -2528,12 +3068,7 @@ gui_mch_get_rgb(GuiColor pixel)
     XColor xc;
     GdkColormap *colormap;
     static char_u retval[10];
-    static int prevent_congestion = 0; /* Reduce the race! */
 
-    while (prevent_congestion)
-	/* shouldn't we do something here? */;
-
-    ++prevent_congestion;
     colormap = gtk_widget_get_colormap(gui.mainwin);
 
     xc.pixel = pixel;
@@ -2543,10 +3078,9 @@ gui_mch_get_rgb(GuiColor pixel)
 	    (unsigned) xc.red >> 8,
 	    (unsigned) xc.green >> 8,
 	    (unsigned) xc.blue >> 8);
-    /* hope the following is atomic enought (99.999%) */
-    --prevent_congestion;
 
-    /* WOAH!!! Returning pointer to static string! */
+    /* WOAH!!! Returning pointer to static string!  Could be overwritten when
+     * this function is called recursively (e.g., when some event occurs). */
     return retval;
 }
 #endif
@@ -2561,12 +3095,8 @@ gui_mch_get_mouse_x(void)
     int winx, winy;
     GdkModifierType mask;
 
-    if (gdk_window_get_pointer(gui.drawarea->window, &winx, &winy, &mask)) {
-	if (gui.which_scrollbars[SBAR_LEFT])
-	    return winx;
-	return winx;
-    }
-    return -1;
+    gdk_window_get_pointer(gui.drawarea->window, &winx, &winy, &mask);
+    return winx;
 }
 
 int
@@ -2575,342 +3105,16 @@ gui_mch_get_mouse_y(void)
     int winx, winy;
     GdkModifierType mask;
 
-    if (gdk_window_get_pointer(gui.drawarea->window, &winx, &winy, &mask))
-	return winy;
-    return -1;
+    gdk_window_get_pointer(gui.drawarea->window, &winx, &winy, &mask);
+    return winy;
 }
 
 void
 gui_mch_setmouse(int x, int y)
 {
-    /* Sorry for that, but we can't avoid it, since there seems to be
-       no internal GDK mechanism present to accomplish this */
+    /* Sorry for the Xlib call, but we can't avoid it, since there is no
+     * internal GDK mechanism present to accomplish this.
+     */
     XWarpPointer(GDK_DISPLAY(), (Window) 0,
 		 GDK_WINDOW_XWINDOW(gui.drawarea->window), 0, 0, 0, 0, x, y);
 }
-
-
-/*** private function defintions ***/
-
-/* redraw the corresponding portions of the screen */
-/*ARGSUSED*/
-static gint
-expose_event(GtkWidget * widget, GdkEventExpose * event)
-{
-    out_flush();		/* make sure all output has been processed */
-    gui_redraw(event->area.x, event->area.y,
-	       event->area.width, event->area.height);
-
-    /* Clear the border areas if needed */
-    if (event->area.x < FILL_X(0))
-	gdk_window_clear_area(gui.drawarea->window, 0, 0, FILL_X(0), 0);
-    if (event->area.y < FILL_Y(0))
-	gdk_window_clear_area(gui.drawarea->window, 0, 0, 0, FILL_Y(0));
-    if (event->area.x > FILL_X(Columns))
-	gdk_window_clear_area(gui.drawarea->window,
-			      FILL_X((int)Columns), 0, 0, 0);
-    if (event->area.y > FILL_Y(Rows))
-	gdk_window_clear_area(gui.drawarea->window, 0, FILL_Y((int)Rows), 0, 0);
-
-    return FALSE;
-}
-
-static guint mouse_click_timer = 0;
-static int mouse_timed_out = TRUE;
-
-/*
- * Timer used to recognize multiple clicks of the mouse button
- */
-static gint
-mouse_click_timer_cb(gpointer data)
-{
-    /* we don't use this information currently */
-    int *timed_out = (int *) data;
-
-    *timed_out = TRUE;
-    return FALSE;		/* don't happen again */
-}
-
-/*
- * Mouse button handling. Note please that we are capturing multiple click's by
- * our own timeout mechanis instead of the one provided by GTK+ istelf. This is
- * due to the way the generic VIM code is recognizing multiple clicks.
- */
-/*ARGSUSED*/
-static gint
-button_press_event(GtkWidget * widget, GdkEventButton * event)
-{
-    int button;
-    int repeated_click = FALSE;
-    int x, y;
-    int_u vim_modifiers;
-
-    /*
-     * Don't let additional events about multiple clicks send by GTK to us
-     * after the inital button press event confuse us.
-     */
-    if (event->type != GDK_BUTTON_PRESS)
-	return FALSE;
-
-    x = event->x;
-    y = event->y;
-
-
-    /* Handle multiple clicks */
-    if (!mouse_timed_out && mouse_click_timer) {
-	gtk_timeout_remove(mouse_click_timer);
-	mouse_click_timer = 0;
-	repeated_click = TRUE;
-    }
-
-    mouse_timed_out = FALSE;
-    mouse_click_timer = gtk_timeout_add(p_mouset,
-				  mouse_click_timer_cb, &mouse_timed_out);
-
-    switch (event->button)
-    {
-    case 1:
-	button = MOUSE_LEFT;
-	break;
-    case 2:
-	button = MOUSE_MIDDLE;
-	break;
-    case 3:
-	button = MOUSE_RIGHT;
-	break;
-    case 4:
-	button = MOUSE_4;
-	break;
-    case 5:
-	button = MOUSE_5;
-	break;
-    default:
-	return FALSE;		/* Unknown button */
-    }
-
-    vim_modifiers = 0x0;
-    if (event->state & GDK_SHIFT_MASK)
-	vim_modifiers |= MOUSE_SHIFT;
-    if (event->state & GDK_CONTROL_MASK)
-	vim_modifiers |= MOUSE_CTRL;
-    if (event->state & GDK_MOD1_MASK)
-	vim_modifiers |= MOUSE_ALT;
-
-    gui_send_mouse_event(button, x, y, repeated_click, vim_modifiers);
-    if (gtk_main_level() > 0)
-	gtk_main_quit();	/* make sure the above will be handled immediately */
-
-    return TRUE;
-}
-
-static guint motion_repeat_timer = 0;
-
-/*
- * Timer used to recognize multiple clicks of the mouse button
- */
-/*ARGSUSED*/
-static gint
-motion_repeat_timer_cb(gpointer data)
-{
-    gint x, y;
-    GdkModifierType state;
-    GdkEventMotion event;
-
-    gdk_window_get_pointer(gui.drawarea->window, &x, &y, &state);
-
-    if (!(state & (GDK_BUTTON1_MASK | GDK_BUTTON3_MASK)))
-	return FALSE;
-
-    /* Fake a motion event. */
-    event.is_hint = 0;
-    event.x = x;
-    event.y = y;
-    event.state = state;
-
-    /* FIXME: argh! for some unknown reason this doesn't lead to nice
-     * autoscrolling and automatic extension of the selection area.  However
-     * the autorepeating works nice already.  We need certainly to investigate
-     * this further.
-     *
-     * BTW: It doesn't work properly in the motif version too. So maybe we need
-     * to look at how it's done in the Windows version again...
-     *
-     * I'm assuming that this is somehow related to the gui_mouse_moved
-     * stuff...
-     */
-
-    motion_notify_event(gui.drawarea, &event);
-
-    /* Don't happen again. We will get reinstalled in the synthetic
-     * event if needed - thus repeating should still work.
-     */
-
-    return FALSE;
-}
-
-/*ARGSUSED*/
-static gint
-button_release_event(GtkWidget * widget, GdkEventButton * event)
-{
-    int x, y;
-    int_u vim_modifiers;
-
-    /* Remove any motion "mashine gun" timers used for automatic further
-       extension of allocation areas if outside of the applications window
-       area .*/
-    if (motion_repeat_timer) {
-	gtk_timeout_remove(motion_repeat_timer);
-	motion_repeat_timer = 0;
-    }
-
-    x = event->x;
-    y = event->y;
-
-    vim_modifiers = 0x0;
-    if (event->state & GDK_SHIFT_MASK)
-	vim_modifiers |= MOUSE_SHIFT;
-    if (event->state & GDK_CONTROL_MASK)
-	vim_modifiers |= MOUSE_CTRL;
-    if (event->state & GDK_MOD1_MASK)
-	vim_modifiers |= MOUSE_ALT;
-
-    gui_send_mouse_event(MOUSE_RELEASE, x, y, FALSE, vim_modifiers);
-    if (gtk_main_level() > 0)
-	gtk_main_quit();		/* make sure it will be handled immediately */
-
-    return TRUE;
-}
-
-
-/*ARGSUSED*/
-static gint
-motion_notify_event(GtkWidget * widget, GdkEventMotion * event)
-{
-    gint x, y;
-    GdkModifierType state;
-    int_u vim_modifiers;
-    int button;
-
-    if (event->is_hint)
-	gdk_window_get_pointer(event->window, &x, &y, &state);
-    else {
-	x = event->x;
-	y = event->y;
-	state = event->state;
-    }
-    button = (event->state & (GDK_BUTTON1_MASK | GDK_BUTTON2_MASK |
-			      GDK_BUTTON3_MASK | GDK_BUTTON4_MASK |
-			      GDK_BUTTON5_MASK))
-	      ? MOUSE_DRAG : ' ';
-
-    /* If our pointer is currently hidden, then we should show it. */
-    gui_mch_mousehide(FALSE);
-
-    /* Just moving the rodent above the drawing area without
-       any button beeing pressed. */
-    if (button != MOUSE_DRAG) {
-	gui_mouse_moved(y);
-	return TRUE;
-    }
-
-    vim_modifiers = 0x0;
-    if (state & GDK_SHIFT_MASK)
-	vim_modifiers |= MOUSE_SHIFT;
-    if (state & GDK_CONTROL_MASK)
-	vim_modifiers |= MOUSE_CTRL;
-    if (state & GDK_MOD1_MASK)
-	vim_modifiers |= MOUSE_ALT;
-
-    /* inform the editor egine about the occurence of this event */
-    gui_send_mouse_event(button, x, y, FALSE, vim_modifiers);
-    if (gtk_main_level() > 0)
-	gtk_main_quit();
-
-    /*
-     * Auto repeat timer handling.
-     */
-    if (x < 0 || y < 0
-       || x >= gui.drawarea->allocation.width
-       || y >= gui.drawarea->allocation.height) {
-
-	/* just in case remove stale timers */
-	if (motion_repeat_timer)
-	    gtk_timeout_remove(motion_repeat_timer);
-	/* shoot again */
-	motion_repeat_timer = gtk_timeout_add(100,
-					  motion_repeat_timer_cb, NULL);
-    }
-
-    return TRUE; /* handled */
-}
-
-/*
- * Callback routine for the "delete_event" signal on the toplevel window.
- * Tries to vim gracefully, or refuses to exit with changed buffers.
- */
-/*ARGSUSED*/
-static int
-delete_event_cb(GtkWidget *wgt, gpointer cbdata)
-{
-    gui_window_closed();
-    return TRUE;
-}
-
-/*
- * Function called when window already closed.
- * We can't do much more here than to trying to preserve what had been done,
- * since the window is already inevitably going away.
- */
-static void
-destroy_callback(void)
-{
-    /* preserve files and exit */
-    preserve_exit();
-    if (gtk_main_level() > 0)
-	gtk_main_quit();
-}
-
-#ifdef GTK_HAVE_FEATURES_1_1_0
-/*
- * Get a font structure for highlighting.
- * "cbdata" is a pointer to the global gui structure.
- */
-/*ARGSUSED*/
-static void
-font_sel_ok(GtkWidget *wgt, gpointer cbdata)
-{
-    Gui *vw = (Gui *)cbdata;
-    GtkFontSelectionDialog *fs = (GtkFontSelectionDialog *)vw->fontdlg;
-
-    if (vw->fontname)
-	g_free(vw->fontname);
-
-    vw->fontname = (char_u *)g_strdup(
-				gtk_font_selection_dialog_get_font_name(fs));
-    gtk_widget_hide(vw->fontdlg);
-    if (gtk_main_level() > 0)
-	gtk_main_quit();
-}
-
-/*ARGSUSED*/
-static void
-font_sel_cancel(GtkWidget *wgt, gpointer cbdata)
-{
-    Gui *vw = (Gui *)cbdata;
-
-    gtk_widget_hide(vw->fontdlg);
-    if (gtk_main_level() > 0)
-	gtk_main_quit();
-}
-
-/*ARGSUSED*/
-static void
-font_sel_destroy(GtkWidget *wgt, gpointer cbdata)
-{
-    Gui *vw = (Gui *)cbdata;
-
-    vw->fontdlg = NULL;
-    if (gtk_main_level() > 0)
-	gtk_main_quit();
-}
-#endif
