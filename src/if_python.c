@@ -41,7 +41,7 @@
 #endif
 
 #include <Python.h>
-#ifdef MACOS
+#if defined(MACOS) && !defined(MACOS_X_UNIX)
 # include "macglue.h"
 # include <CodeFragments.h>
 #endif
@@ -396,7 +396,7 @@ Python_Init(void)
 	}
 #endif
 
-#ifndef MACOS
+#if !defined(MACOS) || defined(MACOS_X_UNIX)
 	Py_Initialize();
 #else
 	PyMac_Initialize();
@@ -437,7 +437,7 @@ fail:
     static void
 DoPythonCommand(exarg_T *eap, const char *cmd)
 {
-#ifdef MACOS
+#if defined(MACOS) && !defined(MACOS_X_UNIX)
     GrafPtr oldPort;
     GetPort (&oldPort);
     /* Check if the Python library is available */
@@ -455,7 +455,7 @@ DoPythonCommand(exarg_T *eap, const char *cmd)
     Python_SaveThread();	    /* leave python */
     Python_Lock_Vim();		    /* enter vim */
     PythonIO_Flush();
-#ifdef MACOS
+#if defined(MACOS) && !defined(MACOS_X_UNIX)
     SetPort (oldPort);
 #endif
 }
