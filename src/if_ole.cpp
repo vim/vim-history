@@ -19,6 +19,7 @@
 extern "C" {
 #include "vim.h"
 extern HWND s_hwnd;
+extern HWND vim_parent_hwnd;
 }
 
 #include "if_ole.h"	// Interface definitions
@@ -184,7 +185,7 @@ CVim *CVim::Create(int* pbDoRestart)
 
 CVim::~CVim()
 {
-    if (typeinfo)
+    if (typeinfo && vim_parent_hwnd == NULL)
 	typeinfo->Release();
 }
 

@@ -843,6 +843,9 @@ main
 	    case 'u':		/* "-u {vimrc}" vim inits file */
 	    case 'U':		/* "-U {gvimrc}" gvim inits file */
 	    case 'W':		/* "-W {scriptout}" overwrite */
+#ifdef FEAT_GUI_W32
+	    case 'P':		/* "-P {parent title}" MDI parent */
+#endif
 		want_argument = TRUE;
 		break;
 
@@ -985,6 +988,12 @@ scripterror:
 			mch_exit(2);
 		    }
 		    break;
+
+#ifdef FEAT_GUI_W32
+		case 'P':		/* "-P {parent title}" MDI parent */
+		    gui_mch_set_parent(argv[0]);
+		    break;
+#endif
 		}
 	    }
 	}
@@ -2596,6 +2605,9 @@ usage()
     main_msg(_("--role <role>\tSet a unique role to identify the main window"));
 # endif
     main_msg(_("--socketid <xid>\tOpen Vim inside another GTK widget"));
+#endif
+#ifdef FEAT_GUI_W32
+    main_msg(_("-P <parent title>\tOpen Vim inside parent application"));
 #endif
 
 #ifdef FEAT_GUI_GNOME

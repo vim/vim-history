@@ -791,11 +791,40 @@ _WndProc(
     return 1;
 }
 
-
-
 /*
  * End of call-back routines
  */
+
+/* parent window, if specified with -P */
+HWND vim_parent_hwnd = NULL;
+
+    static BOOL CALLBACK
+FindWindowTitle(HWND hwnd, LPARAM lParam)
+{
+    char	buf[2048];
+    char	*title = (char *)lParam;
+
+    if (GetWindowText(hwnd, buf, sizeof(buf)))
+    {
+	if (strstr(buf, title) != NULL)
+	{
+	    /* Found it.  Store the window ref. and quit searching. */
+	    vim_parent_hwnd = FindWindowEx(hwnd, NULL, "MDIClient", NULL);
+	    return FALSE;
+	}
+    }
+    return TRUE;	/* continue searching */
+}
+
+/*
+ * Invoked for '-P "title"' argument: search for parent application to open
+ * our window in.
+ */
+    void
+gui_mch_set_parent(char *title)
+{
+    EnumWindows(FindWindowTitle, (LPARAM)title);
+}
 
     static void
 ole_error(char *arg)
@@ -893,6 +922,7 @@ gui_mch_prepare(int *argc, char **argv)
 		netbeansArg = argv[arg];
 		mch_memmove(&argv[arg], &argv[arg + 1],
 					    (--*argc - arg) * sizeof(char *));
+		argv[*argc] = NULL;
 		break;	/* enough? */
 	    }
 
@@ -986,15 +1016,29 @@ gui_mch_init(void)
 	    return FAIL;
     }
 
-    s_hwnd = CreateWindow(
-	szVimWndClass, "Vim MSWindows GUI",
-	WS_OVERLAPPEDWINDOW,
-	gui_win_x == -1 ? CW_USEDEFAULT : gui_win_x,
-	gui_win_y == -1 ? CW_USEDEFAULT : gui_win_y,
-	100,				/* Any value will do */
-	100,				/* Any value will do */
-	NULL, NULL,
-	s_hinst, NULL);
+    if (vim_parent_hwnd != NULL)
+	/* Open inside the specified parent window. */
+	s_hwnd = CreateWindowEx(
+	    WS_EX_MDICHILD,
+	    szVimWndClass, "Vim MSWindows GUI",
+	    WS_OVERLAPPEDWINDOW | WS_CHILD | WS_CLIPSIBLINGS | 0xC000,
+	    gui_win_x == -1 ? CW_USEDEFAULT : gui_win_x,
+	    gui_win_y == -1 ? CW_USEDEFAULT : gui_win_y,
+	    100,				/* Any value will do */
+	    100,				/* Any value will do */
+	    vim_parent_hwnd, NULL,
+	    s_hinst, NULL);
+    else
+	/* Open toplevel window. */
+	s_hwnd = CreateWindow(
+	    szVimWndClass, "Vim MSWindows GUI",
+	    WS_OVERLAPPEDWINDOW,
+	    gui_win_x == -1 ? CW_USEDEFAULT : gui_win_x,
+	    gui_win_y == -1 ? CW_USEDEFAULT : gui_win_y,
+	    100,				/* Any value will do */
+	    100,				/* Any value will do */
+	    NULL, NULL,
+	    s_hinst, NULL);
 
     if (s_hwnd == NULL)
 	return FAIL;
@@ -1215,6 +1259,9 @@ gui_mch_set_shellsize(int width, int height,
      * SetWindowPos as the MSDN docs say the coord systems returned by
      * these two are not compatible. */
     SetWindowPlacement(s_hwnd, &wndpl);
+
+    SetActiveWindow(s_hwnd);
+    SetFocus(s_hwnd);
 
 #ifdef FEAT_MENU
     /* Menu may wrap differently now */
@@ -2698,6 +2745,9 @@ gui_mch_dialog(
     vim_free(buttonWidths);
     vim_free(buttonPositions);
 
+    /* Focus back to our window (for when MDI is used). */
+    (void)SetFocus(s_hwnd);
+
     return nchar;
 }
 
@@ -2916,8 +2966,8 @@ get_dialog_font_metrics(void)
 
 	if (hfontTools)
 	{
-	    hdc = GetDC (s_hwnd);
-	    SelectObject (hdc, hfontTools);
+	    hdc = GetDC(s_hwnd);
+	    SelectObject(hdc, hfontTools);
 	    /*
 	     * GetTextMetrics() doesn't return the right value in
 	     * tmAveCharWidth, so we have to figure out the dialog base units
@@ -2926,7 +2976,7 @@ get_dialog_font_metrics(void)
 	    GetTextExtentPoint(hdc,
 		    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
 		    52, &size);
-	    ReleaseDC (s_hwnd, hdc);
+	    ReleaseDC(s_hwnd, hdc);
 
 	    s_dlgfntwidth = (WORD)((size.cx / 26 + 1) / 2);
 	    s_dlgfntheight = (WORD)size.cy;
