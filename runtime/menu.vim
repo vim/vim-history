@@ -2,7 +2,7 @@
 " You can also use this as a start for your own set of menus.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2002 May 15
+" Last Change:	2002 Jun 27
 
 " Note that ":an" (short for ":anoremenu") is often used to make a menu work
 " in all modes and avoid side effects from mappings defined by the user.
@@ -119,13 +119,22 @@ an 10.620 &File.E&xit<Tab>:qa			:confirm qa<CR>
 
 " Pasting blockwise and linewise selections is not possible in Insert and
 " Visual mode without the +virtualedit feature.  They are pasted as if they
-" were characterwise instead.
+" were characterwise instead.  Add to that some tricks to leave the cursor in
+" the right position, also for "gi".
 if has("virtualedit")
   nnoremap <silent> <script> <SID>Paste :call <SID>Paste()<CR>
   func! <SID>Paste()
     let ove = &ve
     set ve=all
-    normal `^"+gPi
+    normal `^
+    if @+ != ''
+      normal "+gP
+    endif
+    let c = col(".")
+    normal i
+    if col(".") < c	" compensate for i<ESC> moving the cursor left
+      normal l
+    endif
     let &ve = ove
   endfunc
 else
