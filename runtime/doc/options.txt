@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0.  Last change: 2001 Sep 26
+*options.txt*   For Vim version 6.0.  Last change: 2002 Feb 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1423,13 +1423,13 @@ A jump table for the options with a short description can be found at |Q_op|.
 				'B' included:	"\^["    (^[ is a real <Esc>)
 				'B' excluded:   "<Esc>"  (5 characters)
 				('<' excluded in both cases)
-		C	Do not concatenate sourced lines that start with a
-			backslash.  See |line-continuation|.
 		c	Searching continues at the end of any match at the
 			cursor position.  When not present searching continues
 			one character from the cursor position.  With 'c'
 			"abababababab" only gets three matches when repeating
 			"/abab", without 'c' there are five matches.
+		C	Do not concatenate sourced lines that start with a
+			backslash.  See |line-continuation|.
 		d	Using "./" in the 'tags' option doesn't mean to use
 			the tags file relative to the current file, but the
 			tags file in the current directory.
@@ -1453,6 +1453,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			argument will set the file name for the current
 			buffer, if the current buffer doesn't have a file name
 			yet.
+		g	Goto line 1 when using ":edit" without argument.
 		i	When included, interrupting the reading of a file will
 			leave it modified.
 		j	When joining lines, only add two spaces after a '.',
