@@ -5351,8 +5351,15 @@ regtilde(source, magic)
 		STRCPY(p, p + 2);		/* remove '\~' */
 	    --p;
 	}
-	else if (*p == '\\' && p[1])		/* skip escaped characters */
-	    ++p;
+	else
+	{
+	    if (*p == '\\' && p[1])		/* skip escaped characters */
+		++p;
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		p += (*mb_ptr2len_check)(p) - 1;
+#endif
+	}
     }
 
     vim_free(reg_prev_sub);
