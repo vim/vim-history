@@ -143,7 +143,7 @@ FunctionEnd
 
 ##########################################################
 Section "Vim executables and runtime files"
-SectionIn 1,2,3
+SectionIn 1 2 3
 
 # we need also this here if the user changes the instdir
 StrCpy $0 "$INSTDIR\vim${VER_MAJOR}${VER_MINOR}"
@@ -197,21 +197,21 @@ SectionEnd
 SectionDivider
 ##########################################################
 Section "Create icons on the Desktop"
-SectionIn 1,3
+SectionIn 1 3
 
 StrCpy $1 "$1 -install-icons"
 
 SectionEnd
 ##########################################################
 Section "Add Vim to the Start Menu"
-SectionIn 1,3
+SectionIn 1 3
 
 StrCpy $1 "$1 -add-start-menu"
 
 SectionEnd
 ##########################################################
 Section "Add an Edit-with-Vim context menu entry"
-SectionIn 1,3
+SectionIn 1 3
 
 SetOutPath $0
 File ..\src\GvimExt\gvimext.dll
@@ -223,7 +223,7 @@ SectionEnd
 SectionDivider
 ##########################################################
 Section "Create a _vimrc if it doesn't exist"
-SectionIn 1,3
+SectionIn 1 3
 
 StrCpy $1 "$1 -create-vimrc"
 
@@ -237,7 +237,7 @@ StrCpy $1 "$1 -create-batfiles gvim evim gview gvimdiff"
 SectionEnd
 ##########################################################
 Section "Create plugin directories in HOME or VIM"
-SectionIn 1,3
+SectionIn 1 3
 
 StrCpy $1 "$1 -create-directories home"
 
@@ -265,7 +265,7 @@ SectionEnd
 ##########################################################
 !ifdef HAVE_NLS
 Section "Native Language Support"
-SectionIn 1,3
+SectionIn 1 3
 
 SetOutPath $0\lang
 File /r ..\lang\*.*
