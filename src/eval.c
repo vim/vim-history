@@ -2908,7 +2908,7 @@ get_buf_var(avar)
     p_cpo = (char_u *)"";
 
     buf = buflist_findnr(buflist_findpat(name, name + STRLEN(name),
-							       FALSE, FALSE));
+								TRUE, FALSE));
 
     p_magic = save_magic;
     p_cpo = save_cpo;
