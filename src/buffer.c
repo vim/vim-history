@@ -4075,13 +4075,15 @@ chk_modeline(lnum)
 	     * ignore the stuff after the ':'.
 	     * "vi:set opt opt opt: foo" -- foo not interpreted
 	     * "vi:opt opt opt: foo" -- foo interpreted
+	     * Accept "se" for compatibility with Elvis.
 	     */
-	    if (STRNCMP(s, "set ", (size_t)4) == 0)
+	    if (STRNCMP(s, "set ", (size_t)4) == 0
+		    || STRNCMP(s, "se ", (size_t)3) == 0)
 	    {
 		if (*e != ':')		/* no terminating ':'? */
 		    break;
 		end = TRUE;
-		s += 4;
+		s = vim_strchr(s, ' ') + 1;
 	    }
 	    *e = NUL;			/* truncate the set command */
 
