@@ -970,6 +970,8 @@ qf_guess_filepath(filename)
  * jump to a quickfix line
  * if dir == FORWARD go "errornr" valid entries forward
  * if dir == BACKWARD go "errornr" valid entries backward
+ * if dir == FORWARD_FILE go "errornr" valid entries files backward
+ * if dir == BACKWARD_FILE go "errornr" valid entries files backward
  * else if "errornr" is zero, redisplay the same line
  * else go to entry "errornr"
  */
@@ -1044,12 +1046,13 @@ qf_jump(dir, errornr, forceit)
 	    err = NULL;
 	}
     }
-    else if (dir == BACKWARD)	    /* previous valid entry */
+    else if (dir == BACKWARD || dir == BACKWARD_FILE)  /* prev. valid entry */
     {
 	while (errornr--)
 	{
 	    old_qf_ptr = qf_ptr;
 	    prev_index = qf_index;
+	    old_qf_fnum = qf_ptr->qf_fnum;
 	    do
 	    {
 		if (qf_index == 1 || qf_ptr->qf_prev == NULL)
@@ -1066,7 +1069,8 @@ qf_jump(dir, errornr, forceit)
 		}
 		--qf_index;
 		qf_ptr = qf_ptr->qf_prev;
-	    } while (!qf_lists[qf_curlist].qf_nonevalid && !qf_ptr->qf_valid);
+	    } while ((!qf_lists[qf_curlist].qf_nonevalid && !qf_ptr->qf_valid)
+		  || (dir == BACKWARD_FILE && qf_ptr->qf_fnum == old_qf_fnum));
 	    err = NULL;
 	}
     }
@@ -2106,7 +2110,9 @@ ex_cnext(eap)
 	    ? FORWARD
 	    : eap->cmdidx == CMD_cnfile
 		? FORWARD_FILE
-		: BACKWARD,
+		: (eap->cmdidx == CMD_cpfile || eap->cmdidx == CMD_cNfile)
+		    ? BACKWARD_FILE
+		    : BACKWARD,
 	    eap->addr_count > 0 ? (int)eap->line2 : 1, eap->forceit);
 }
 

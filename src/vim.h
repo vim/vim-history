@@ -530,6 +530,7 @@ extern char* (*dyn_libintl_textdomain)(const char* domainname);
 #define FORWARD			1
 #define BACKWARD		(-1)
 #define FORWARD_FILE		3
+#define BACKWARD_FILE		(-3)
 
 /* return values for functions */
 #if !(defined(OK) && (OK == 1))
