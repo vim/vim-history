@@ -1,13 +1,14 @@
 " netrw.vim: (global plugin) Handles file transfer across a network
-" Last Change:	Jan 4, 2002
+" Last Change:	Apr 16, 2002
 " Maintainer:	Charles E. Campbell, Jr. PhD   <cec@NgrOyphSon.gPsfAc.nMasa.gov>
-" Version:	2.20
+" Version:	22
 
 " Credits:
 "  Vim editor   by Bram Moolenaar (Thanks, Bram!)
 "  rcp, ftp support by C Campbell <cec@NgrOyphSon.gPsfAc.nMasa.gov>
 "  scp  support by raf            <raf@comdyn.com.au>
 "  http support by Bram Moolenaar <bram@moolenaar.net>
+"  dav  support by C Campbell
 "  inputsecret(), BufReadCmd, BufWriteCmd contributed by C Campbell
 
 " Debugging:
@@ -32,23 +33,25 @@
 "	  up the file.
 
 " Reading:
-" :Nread ?				give help
-" :Nread "machine:file"			uses rcp
-" :Nread "machine file"			uses ftp with <.netrc>
-" :Nread "machine id password file"	uses ftp
-" :Nread "ftp://machine[#port]/file"	uses ftp  (autodetects <.netrc>)
-" :Nread "http://[user@]machine/file"	uses http (wget)
-" :Nread "rcp://machine/file"		uses rcp
-" :Nread "scp://[user@]machine/file"	uses scp
+" :Nread ?					give help
+" :Nread "machine:file"				uses rcp
+" :Nread "machine file"				uses ftp   with <.netrc>
+" :Nread "machine id password file"		uses ftp
+" :Nread "ftp://[user@]machine[[:#]port]/file"	uses ftp   autodetects <.netrc>
+" :Nread "http://[user@]machine/file"		uses http  uses wget
+" :Nread "rcp://[user@]machine/file"		uses rcp
+" :Nread "scp://[user@]machine/file"		uses scp
+" :Nread "dav://machine[:port]/file"		uses cadaver
 
 " Writing:
-" :Nwrite ?				give help
-" :Nwrite "machine:file"		uses rcp
-" :Nwrite "machine file"		uses ftp with <.netrc>
-" :Nwrite "machine id password file"	uses ftp
-" :Nwrite "ftp://machine[#port]/file"	uses ftp  (autodetects <.netrc>)
-" :Nwrite "rcp://machine/file"		uses rcp
-" :Nwrite "scp://[user@]machine/file"	uses scp
+" :Nwrite ?					give help
+" :Nwrite "machine:file"			uses rcp
+" :Nwrite "machine file"			uses ftp   with <.netrc>
+" :Nwrite "machine id password file"		uses ftp
+" :Nwrite "ftp://[user@]machine[[:#]port]/file"	uses ftp   autodetects <.netrc>
+" :Nwrite "rcp://[user@]machine/file"		uses rcp
+" :Nwrite "scp://[user@]machine/file"		uses scp
+" :Nwrite "dav://machine[:port]/file"		uses cadaver
 " http: not supported!
 
 " User And Password Changing:
@@ -111,16 +114,16 @@ if !exists("g:netrw_cygwin")
  endif
 endif
 
-" Vimrc Support:
-" Auto-detection for ftp://*, rcp://*, scp://*, and http://*
+" Transparency Support:
+" Auto-detection for ftp://*, rcp://*, scp://*, http://*, and dav://*
 " Should make file transfers across networks transparent.  Currently I haven't
 " supported appends.  Hey, gotta leave something for <netrw.vim> version 3!
 if version >= 600
  augroup Network
   au!
-  au BufReadCmd		ftp://*,rcp://*,scp://*,http://* exe "Nread 0r " . expand("<afile>") | exe "doau BufReadPost " . expand("<afile>")
-  au FileReadCmd	ftp://*,rcp://*,scp://*,http://* exe "Nread "	 . expand("<afile>") | exe "doau BufReadPost " . expand("<afile>")
-  au BufWriteCmd	ftp://*,rcp://*,scp://*		 exe "Nwrite "	 . expand("<afile>")
+  au BufReadCmd		ftp://*,rcp://*,scp://*,http://*,dav://* exe "Nread 0r " . expand("<afile>") | exe "doau BufReadPost " . expand("<afile>")
+  au FileReadCmd	ftp://*,rcp://*,scp://*,http://*,dav://* exe "Nread "	 . expand("<afile>") | exe "doau BufReadPost " . expand("<afile>")
+  au BufWriteCmd	ftp://*,rcp://*,scp://*,dav://*		 exe "Nwrite "	 . expand("<afile>")
  augroup END
 endif
 
@@ -172,13 +175,14 @@ function! s:NetRead(...)
    " Reconstruct Choice if choice starts with '"'
    if match(choice,"?") == 0
     echo "NetRead Usage:"
-    echo ":Nread machine:file                  uses rcp"
-    echo ':Nread "machine file"                uses ftp with <.netrc>'
-    echo ':Nread "machine id password file"    uses ftp'
-    echo ':Nread ftp://machine[#port]/file     uses ftp  (autodetects <.netrc>)'
-    echo ":Nread http://[user@]machine/file    uses http (wget)"
-    echo ":Nread rcp://machine/file            uses rcp"
-    echo ":Nread scp://[user@]machine/file     uses scp"
+    echo ":Nread machine:path                      uses rcp"
+    echo ':Nread "machine path"                    uses ftp   with <.netrc>'
+    echo ':Nread "machine id password path"        uses ftp'
+    echo ':Nread ftp://[user@]machine[:port]/path  uses ftp   autodetects <.netrc>'
+    echo ":Nread http://[user@]machine/path        uses http  wget"
+    echo ":Nread rcp://[user@]machine/path         uses rcp"
+    echo ":Nread scp://[user@]machine/path         uses scp"
+    echo ":Nread dav://machine[:port]/path         uses cadaver"
     break
    elseif match(choice,"^\"") != -1
 "	Decho "DBG: reconstructing choice"
@@ -291,17 +295,31 @@ function! s:NetRead(...)
   elseif     b:netrw_method  == 5	" read with http (wget)
 "	Decho "DBG: read via http (method #5)"
    if match(b:netrw_fname,"#") == -1
-    exe "!wget http://" . g:netrw_machine . "/" . b:netrw_fname . " -O " . tmpfile
+    exe "!wget -O " . tmpfile . " http://" . g:netrw_machine . "/" . b:netrw_fname
     let result = s:NetGetFile(readcmd, tmpfile)
    else
     let netrw_html= substitute(b:netrw_fname,"#.*$","","")
     let netrw_tag = substitute(b:netrw_fname,"^.*#","","")
-    exe "!wget http://" . g:netrw_machine . "/" . netrw_html . " -O " . tmpfile
+    exe "!wget -O " . tmpfile . " http://" . g:netrw_machine . "/" . netrw_html
     let result = s:NetGetFile(readcmd, tmpfile)
     exe 'norm! 1G/<\s*a\s*name=\s*"'.netrw_tag.'"'
    endif
    set ft=html
    redraw!
+   let b:netrw_lastfile = choice
+
+  ".........................................
+  " cadaver: Method #6
+  elseif     b:netrw_method  == 6	" read with cadaver
+"	Decho "DBG: read via cadaver (method #6)"
+   if g:netrw_cygwin == 1
+    let cygtmpfile=substitute(tmpfile,'^\(\a\):','//\1/','e')
+    exe "!cadaver http://" . g:netrw_machine . "/" . b:netrw_fname . " " . cygtmpfile
+   else
+"	call Decho("DBG: !cadaver http://" . g:netrw_machine . "/" . b:netrw_fname . " " . tmpfile)
+    exe "!cadaver http://" . g:netrw_machine . "/" . b:netrw_fname . " " . tmpfile
+   endif
+   let result = s:NetGetFile(readcmd, tmpfile)
    let b:netrw_lastfile = choice
 
   ".........................................
@@ -385,12 +403,13 @@ function! s:NetWrite(...) range
    " Reconstruct Choice if choice starts with '"'
    if match(choice,"?") == 0
     echo "NetWrite Usage:"
-    echo ":Nwrite machine:file                  uses rcp"
-    echo ":Nwrite \"machine file\"                uses ftp with <.netrc>"
-    echo ":Nwrite \"machine id password file\"    uses ftp"
-    echo ":Nwrite ftp://machine[#port]/file          uses ftp  (autodetects <.netrc>)"
-    echo ":Nwrite rcp://machine/file          uses rcp"
-    echo ":Nwrite scp://[user@]machine/file   uses scp"
+    echo ":Nwrite machine:path                  uses rcp"
+    echo ":Nwrite \"machine path\"                uses ftp with <.netrc>"
+    echo ":Nwrite \"machine id password path\"    uses ftp"
+    echo ":Nwrite ftp://machine[#port]/path          uses ftp  (autodetects <.netrc>)"
+    echo ":Nwrite rcp://machine/path          uses rcp"
+    echo ":Nwrite scp://[user@]machine/path   uses scp"
+    echo ":Nwrite dav://[user@]machine/path   uses cadaver"
     break
 
    elseif match(choice,"^\"") != -1
@@ -475,6 +494,17 @@ function! s:NetWrite(...) range
    endif
    let b:netrw_lastfile = choice
 
+  ".........................................
+  " dav: Method #6
+  elseif     b:netrw_method == 6	" write with cadaver
+   if g:netrw_cygwin == 1
+    let cygtmpfile=substitute(tmpfile,'^\(\a\):','//\1/','e')
+    exe "!cadaver " . cygtmpfile . " http://" . g:netrw_machine . "/" . b:netrw_fname
+   else
+    exe "!cadaver " . tmpfile . " http://" . g:netrw_machine . "/" . b:netrw_fname
+   endif
+   let b:netrw_lastfile = choice
+
   else " Complain
    echo "***warning*** unable to comply with your request<" . choice . ">"
   endif
@@ -513,6 +543,7 @@ endfunction
 "	     3: ftp + machine, id, password, and [path]filename
 "	     4: scp
 "	     5: http (wget)
+"	     6: cadaver
 function! s:NetMethod(choice)  " globals: method machine id passwd fname
 "	Decho "DBG: NetMethod(a:choice<".a:choice.">) {"
 
@@ -523,28 +554,34 @@ function! s:NetMethod(choice)  " globals: method machine id passwd fname
  let g:netrw_port    = ""
 
  " Patterns:
- " mipf   : a:machine a:id password filename  Use ftp
- " mf	  : a:machine filename		      Use ftp + <.netrc> or g:netrw_uid g:netrw_passwd
- " ftpurm : ftp://host[#port]/filename	      Use ftp + <.netrc> or g:netrw_uid g:netrw_passwd
- " rcpurm : rcp://host/filename		      Use rcp
- " rcphf  : host:filename		      Use rcp
- " scpurm : scp://[user@]host/filename	      Use scp
- " httpurm: http://[user@]host/filename       Use wget
+ " mipf   : a:machine a:id password filename		Use ftp
+ " mf	  : a:machine filename		      		Use ftp + <.netrc> or g:netrw_uid g:netrw_passwd
+ " ftpurm : ftp://[user@]host[[#:]port]/filename	Use ftp + <.netrc> or g:netrw_uid g:netrw_passwd
+ " rcpurm : rcp://[user@]host/filename			Use rcp
+ " rcphf  : [user@]host:filename			Use rcp
+ " scpurm : scp://[user@]host/filename			Use scp
+ " httpurm: http://[user@]host/filename			Use wget
+ " davurm : dav://host[:port]/path                      Use cadaver
  let mipf   = '\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)'
  let mf     = '\(\S\+\)\s\+\(\S\+\)'
- let ftpurm = 'ftp://\([^/#]\{-}\)\(#\d\+\)\=/\(.*\)$'
- let rcpurm = 'rcp://\([^/]\{-}\)/\(.*\)$'
- let rcphf  = '\(\I\i*\):\(\S\+\)'
+ let ftpurm = 'ftp://\([^/@]@\)\=\([^/#:]\{-}\)\([#:]\d\+\)\=/\(.*\)$'
+ let rcpurm = 'rcp://\([^/@]@\)\=\([^/]\{-}\)/\(.*\)$'
+ let rcphf  = '\([^@]\{-}@\)\=\(\I\i*\):\(\S\+\)'
  let scpurm = 'scp://\([^/]\{-}\)/\(.*\)$'
- let httpurm= 'http://\([^/]\{-}\)/\(.*\)$'
+ let httpurm= 'http://\([^/]\{-}\)\(/.*\)\=$'
+ let davurm = 'dav://\([^/]\{-}\)/\(.*\)\=$'
 
  " Determine Method
- " rcp://hostname/...path-to-file
+ " rcp://user@hostname/...path-to-file
  if match(a:choice,rcpurm) == 0
 "	Decho "DBG: NetMethod: rcp://..."
   let b:netrw_method = 1
-  let g:netrw_machine= substitute(a:choice,rcpurm,'\1',"")
-  let b:netrw_fname  = substitute(a:choice,rcpurm,'\2',"")
+  let userid         = substitute(a:choice,rcpurm,'\1',"")
+  let g:netrw_machine= substitute(a:choice,rcpurm,'\2',"")
+  let b:netrw_fname  = substitute(a:choice,rcpurm,'\3',"")
+  if userid != ""
+   let g:netrw_uid= userid
+  endif
 
  " scp://user@hostname/...path-to-file
  elseif match(a:choice,scpurm) == 0
@@ -553,21 +590,31 @@ function! s:NetMethod(choice)  " globals: method machine id passwd fname
   let g:netrw_machine= substitute(a:choice,scpurm,'\1',"")
   let b:netrw_fname  = substitute(a:choice,scpurm,'\2',"")
 
- " http://hostname/...path-to-file
+ " http://user@hostname/...path-to-file
  elseif match(a:choice,httpurm) == 0
 "	Decho "DBG: NetMethod: http://..."
   let b:netrw_method = 5
   let g:netrw_machine= substitute(a:choice,httpurm,'\1',"")
   let b:netrw_fname  = substitute(a:choice,httpurm,'\2',"")
+ 
+ " dav://hostname[:port]/..path-to-file..
+ elseif match(a:choice,davurm) == 0
+  let b:netrw_method= 6
+  let g:netrw_machine= substitute(a:choice,davurm,'\1',"")
+  let b:netrw_fname  = substitute(a:choice,davurm,'\2',"")
 
- " ftp://hostname/...path-to-file
+ " ftp://[user@]hostname[[:#]port]/...path-to-file
  elseif match(a:choice,ftpurm) == 0
 "	Decho "DBG: NetMethod: ftp://..."
-  let g:netrw_machine= substitute(a:choice,ftpurm,'\1',"")
-  let g:netrw_port   = substitute(a:choice,ftpurm,'\2',"")
-  let b:netrw_fname  = substitute(a:choice,ftpurm,'\3',"")
+  let userid         = substitute(a:choice,ftpurm,'\1',"")
+  let g:netrw_machine= substitute(a:choice,ftpurm,'\2',"")
+  let g:netrw_port   = substitute(a:choice,ftpurm,'\3',"")
+  let b:netrw_fname  = substitute(a:choice,ftpurm,'\4',"")
   if g:netrw_port != ""
-    let g:netrw_port = substitute(g:netrw_port,"#","","")
+    let g:netrw_port = substitute(g:netrw_port,"[#:]","","")
+  endif
+  if userid != ""
+   let g:netrw_uid= userid
   endif
   if exists("g:netrw_uid") && exists("g:netrw_passwd")
    let b:netrw_method = 3
@@ -589,8 +636,12 @@ function! s:NetMethod(choice)  " globals: method machine id passwd fname
  elseif match(a:choice,rcphf) == 0
 "	Decho "DBG: NetMethod: (rcp) host:file"
   let b:netrw_method = 1
-  let g:netrw_machine= substitute(a:choice,rcphf,'\1',"")
-  let b:netrw_fname  = substitute(a:choice,rcphf,'\2',"")
+  let userid         = substitute(a:choice,rcphf,'\1',"")
+  let g:netrw_machine= substitute(a:choice,rcphf,'\2',"")
+  let b:netrw_fname  = substitute(a:choice,rcphf,'\3',"")
+  if userid != ""
+   let g:netrw_uid= userid
+  endif
   if has("win32")
    " don't let PCs try <.netrc>
    let b:netrw_method = 3
