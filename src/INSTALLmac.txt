@@ -3,67 +3,72 @@ INSTALLmac.txt - Installation of Vim on Macintosh
 This file contains instructions for compiling Vim. If you already have an
 executable version of Vim, you don't need this.
 
------------------------------------------------------------
+An alternate way of building that Benji Fisher uses can be found here:
 
-Here's a summary of how Vim can be compiled under MacOS, depending on
-the version of MacOS, the compiler and the interface.
+	http://macvim.swdev.org/OSX/#Developers
 
-A. Supported compiler and environement
+----------------------------------------------------------------------------
+Summary
+----------------------------------------------------------------------------
 
- 1. CodeWarrior (pre-MacOS X)
- 2. MPW (pre-MacOS X)
- 3. Project Builder (MacOS X)
- 4. Unix Compiler (MacOS X)
+1 MacOS X
+ 1.1. Carbon interface
+ 1.2. X (Athena, GTK, Motif) or plain text.  
 
-B. Supported user interface
+2 MacOS Classic
+ 2.1. CodeWarrior 
+ 2.2. MPW 
 
- 1. Original MacOS Toolbox   [Compile with A.1 and A.2]
- 2. Carbon MacOS	     [Compile with A.3]
- 3. X (Athena, GTK, Motif).  [Compile with A.4]
- 4. Plain Text		     [Compile with A.4]
+NOTE: The Carbon version can only be compiled properly under
+      MacOS X.
 
- NOTE: Sorry, Cocoa is not expected to be supported for now.
+----------------------------------------------------------------------------
+1 MacOS X
+----------------------------------------------------------------------------
 
-C. Supported "OS" style
-
- 1. MacOS		     [Compile as B.1]
- 2. MacOS X		     [Compile as B.2]
- 3. BSD Unix		     [Compile as B.2, B.3 and B.4]
-
------------------------------------------------------------
-
-Special Consideration
----------------------
-
-B.2: Compiling for Carbon
-
- Currently the Carbon version can only be compiled properly under MacOS X.
- The binary created in that way does'nt work under previous version.
-
-B.3: Compiling for X
-
- You need to first install XFree86 and XDarwin.
- Please visit http://www.XDarwin.org
-
-C.1: The MacOS version
-
- Both ':' and '/' supported as path separator.
-
-C.2: The MacOS X version
-
+1.0 Considerations
+ 
  Only '/' supported as path separator.
 
-C.3: The BSD Unix version
+1.1 Carbon interface (default)
+ 
+ You can compile vim with the standard Unix routine:
+   cd ..
+   ./configure
+   make; make install
+  
+ This will create a working Vim.app application bundle in the src
+ directory.  You can move this bundle (the Vim.app directory) anywhere
+ you want, for example, /Applications.
+ 
+1.2 X-Windows or Plain Text 
+ 
+ If you do not want the Carbon interface, you must explicitly tell
+ configure to use a different GUI.
+ 
+  cd ..
+  ./configure --enable-gui=gtk2
+  make; make install
+ 
+ NOTE: The following GUI options are supported: 
+        no (for text), motif, athena, nextaw 
+        gtk, gtk2, gnome, gnome2,
+  
+ NOTE: You need to first install XFree86 and XDarwin.
+       Please visit http://www.XDarwin.org
+ 
+----------------------------------------------------------------------------
+MacOS 9 
+----------------------------------------------------------------------------
 
- Only '/' supported as path separator.
- Shell command can be invoked (:!)
+Both ':' and '/' supported as path separator.
 
------------------------------------------------------------
-
-A.1: Compiling with CodeWarior
-
+2.1: Compiling with CodeWarior
+ 
  1. Expand the resource file:
-   - ../src/os_mac.rsr.hqx (to produce ../src/gui_mac.rsrc)
+   open ../src/os_mac.rsr.hqx to produce ../src/gui_mac.rsrc:
+   % cd vim62/src
+   % open -a StuffIt\ Expander os_mac.rsr.hqx
 
  2. Expand the project file:
    - ../src/os_mac.sit.hqx (to produce ../src/vim.mcp)
@@ -81,8 +86,7 @@ A.1: Compiling with CodeWarior
 
  5. Compile
 
-
-A.2: Compiling with MPW.
+2.2: Compiling with MPW.
 
  0. You will need a recent version of the MPW and the Universal Interfaces.
     You can get both at:
@@ -94,7 +98,9 @@ A.2: Compiling with MPW.
     Apple.
 
  1. Expand the resource file:
-   - ../src/os_mac.rsr.hqx (to produce ../src/gui_mac.rsrc)
+   open ../src/os_mac.rsr.hqx to produce ../src/gui_mac.rsrc:
+   % cd vim62/src
+   % open -a StuffIt\ Expander os_mac.rsr.hqx
 
  3. Double click on os_make.make, the MPW will now open in the correct
     folder and load the CreateVimMake script. Change to the Worksheet
@@ -103,33 +109,6 @@ A.2: Compiling with MPW.
 
  4. Select "Build" from the menu (or type command-B). Type the program name
     into the dialog box.
-
-A.3: Compiling with Project Builder.
-
- 1. Expand the resource file:
-   - ../src/os_mac.rsr.hqx (to produce ../src/gui_mac.rsrc)
-
- 2. Open ../src/os_mac.pbproject with Project Builder
-
- 3. Choose between C.2 and C.3
-
-    In Target ... CCFLAGS use:
-
-     -DMACOS_X
-       if you want a normal MacOS X version (using os_mac.c)
-
-     -DMACOS_X_UNIX
-       if you want to use shell commands (using os_unix.c)
-       NOTE: some functionality may be missing
-
- 4. Hammer the build button in ;)
-
-
-A.4: Using the unix compiler.
-
- From Terminal.app you can use "configure" and "make". Refer to INSTALL for
- full detail. The MacOS port is not involve here.
-
 
 ------------------------------------------------------
 

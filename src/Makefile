@@ -2307,9 +2307,6 @@ Makefile:
 ### MacOS X installation
 ###
 ### This creates a runnable Vim.app in the src directory
-###
-### TODO: install the runtime files in Vim.app instead of
-### requiring that they be in a seperate directory.
 
 REZ    = /Developer/Tools/Rez
 RESMRG = /Developer/Tools/ResMerger
@@ -2320,19 +2317,19 @@ RESDIR = $(APPDIR)/Contents/Resources
 VERSION = 6.2
 
 ### Common flags
-M4FLAGS = $(M4FLAGS) -DAPP_EXE=$(VIMNAME) -DAPP_NAME=$(VIMNAME) \
+M4FLAGSX = $(M4FLAGS) -DAPP_EXE=$(VIMNAME) -DAPP_NAME=$(VIMNAME) \
 		-DAPP_VER=$(VERSION) -DICON_APP=$(ICON_APP)
 
 ### Icons
-# You can download Douglas Stebila's icons:
-#	http://homepage.mac.com/dstebila/code/vim/
-# TODO: Honestly, why don't we just go ahead and do this? OS 9?
-# If you place those *.icns at src directory, it will be detected by this
-# Makefile automatically, and used for Vim.
-ICON_APP = $(shell if [ -e app.icns ] ; then echo app.icns ; else echo gui_mac.icns ; fi)
-ICON_DOC = $(shell if [ -e doc.icns ] ; then echo doc.icns ; else echo ; fi)
-ICON_DOCTXT = $(shell if [ -e doc-txt.icns ] ; then echo doc-txt.icns ; else echo ; fi)
-ICONS = $(addprefix $(RESDIR)/, $(ICON_APP) $(ICON_DOC) $(ICON_DOCTXT))
+ICON_APP = gui_mac.icns
+ICONS = $(RESDIR)/$(ICON_APP)
+
+# If you uncomment the following lines the *.icns in the src directory will be
+# detected by this Makefile automatically, and used for Vim.
+#ICON_APP = $(shell if [ -e app.icns ] ; then echo app.icns ; else echo gui_mac.icns ; fi)
+#ICON_DOC = $(shell if [ -e doc.icns ] ; then echo doc.icns ; else echo ; fi)
+#ICON_DOCTXT = $(shell if [ -e doc-txt.icns ] ; then echo doc-txt.icns ; else echo ; fi)
+#ICONS = $(addprefix $(RESDIR)/, $(ICON_APP) $(ICON_DOC) $(ICON_DOCTXT))
 
 install_macosx: bundle-dir bundle-executable bundle-info bundle-resource \
 	bundle-language
@@ -2347,7 +2344,7 @@ bundle-info:  bundle-dir
 	@echo "Creating PkgInfo"
 	@echo -n "APPLVIM!" > $(APPDIR)/Contents/PkgInfo
 	@echo "Creating Info.plist"
-	m4 $(M4FLAGS) infplist.xml > $(APPDIR)/Contents/Info.plist
+	m4 $(M4FLAGSX) infplist.xml > $(APPDIR)/Contents/Info.plist
 
 bundle-resource: bundle-dir bundle-icons bundle-rsrc
 
