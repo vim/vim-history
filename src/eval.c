@@ -5201,7 +5201,8 @@ f_searchpair(argvars, retvar)
     dir = get_search_arg(&argvars[3], &flags); /* may set p_ws */
 
     /* Optional fifth argument: skip expresion */
-    if (argvars[4].var_type == VAR_UNKNOWN)
+    if (argvars[3].var_type == VAR_UNKNOWN
+	    || argvars[4].var_type == VAR_UNKNOWN)
 	skip = (char_u *)"";
     else
 	skip = get_var_string_buf(&argvars[4], nbuf3);
