@@ -1,26 +1,32 @@
+# $Id$
+#
 # Makefile for Win32 using Borland C++ compiler, version 5.5 (free version)
 
-SOURCES	= args.c eiffel.c entry.c fortran.c get.c keyword.c main.c \
-	options.c parse.c read.c sort.c strlist.c vstring.c
+!include source.mak
 
-!if ("$(BOR)"!="")
-INCL = -I$(BOR)\include
-!endif
 !if ("$(BCC)"=="")
 BCC = bcc32
 !endif
+!if ("$(BOR)"!="")
+INCLUDE = -I$(BOR)\include
+!endif
+
+DEFINES = -DWIN32
+WARNINGS = -w-aus -w-par -w-pia -w-sus
 
 ctags: ctags.exe
 
-ctags.exe: $(SOURCES) respw32
-	$(BCC) -DWIN32 $(INCL) -O2 -w-par -w-pia -w-sus -e$@ @respw32
+ctags.exe: respw32
+	$(BCC) $(CFLAGS) -O2 $(INCLUDE) -e$@ @respw32
 
 # Debug version
-dctags.exe: $(SOURCES) respw32
-	$(BCC) -DWIN32 -DDEBUG $(INCL) -w-par -w-pia -w-sus -e$@ @respw32 debug.c
+dctags.exe: respw32
+	$(BCC) $(CFLAGS) -DDEBUG $(INCLUDE) -e$@ @respw32 debug.c
 
-respw32:
-	echo $(SOURCES) > $@
+respw32: $(SOURCES) Makefile.bc5
+	echo $(DEFINES) > $@
+	echo $(WARNINGS) >> $@
+	echo $(SOURCES) >> $@
 
 clean:
 	- del *.obj

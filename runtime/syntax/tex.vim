@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language   : TeX
-" Version    : 5.6-4
+" Version    : 5.7-1
 " Maintainer : Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change: April 7, 2000
+" Last Change: June 27, 2000
 "
 " Notes:
 " 1. If you have a \begin{verbatim} that appears to overrun its boundaries,
@@ -38,7 +38,7 @@ syn region texMatcher	matchgroup=Delimiter start="\["		end="]"	contains=@texMatc
 syn region texParen	start="("		   		end=")"	contains=@texMatchGroup
 syn match  texError	"[}\])]"
 syn match  texMathError	"}"	contained
-syn region texMathMatcher	matchgroup=Delimiter start="{"  skip="\\\\\|\\}"  end="}" end="%stopzone" contained contains=@texMathMatchGroup
+syn region texMathMatcher	matchgroup=Delimiter start="{"  skip="\\\\\|\\}"  end="}" end="%stopzone\>" contained contains=@texMathMatchGroup
 
 " TeX/LaTeX keywords
 " Instead of trying to be All Knowing, I just match \..alphameric..
@@ -56,11 +56,11 @@ syn match texDelimiter	"&"
 syn match texDelimiter	"\\\\"
 
 " \begin{}/\end{} section markers
-syn match texSectionMarker "\\begin\|\\end" nextgroup=texSectionName
-syn region texSectionName matchgroup=Delimiter start="{" end="}" contained
+syn match  texSectionMarker	"\\begin\>\|\\end\>" nextgroup=texSectionName
+syn region texSectionName	matchgroup=Delimiter start="{" end="}" contained
 
 " \documentclass, \documentstyle, \usepackage
-syn match texDocumentType "\\documentclass\|\\documentstyle\|\\usepackage"		nextgroup=texSectionName,texDocumentTypeArgs
+syn match  texDocumentType	"\\documentclass\>\|\\documentstyle\>\|\\usepackage\>"	nextgroup=texSectionName,texDocumentTypeArgs
 syn region texDocumentTypeArgs matchgroup=Delimiter start="\[" end="]" contained	nextgroup=texSectionName
 
 " TeX input
@@ -153,10 +153,10 @@ syn region texMathZoneQ	start="\\begin\s*{\s*displaymath\*\s*}"	end="\\end\s*{\s
 syn region texMathZoneR	start="\\begin\s*{\s*displaymath\s*}"	end="\\end\s*{\s*displaymath\s*}"	keepend contains=@texMathZoneGroup
 syn region texMathZoneS	start="\\begin\s*{\s*multline\*\s*}"	end="\\end\s*{\s*multline\*\s*}"	keepend contains=@texMathZoneGroup
 
-syn region texMathZoneT	matchgroup=Delimiter start="\\("  matchgroup=Delimiter end="\\)\|%stopzone"	keepend contains=@texMathZoneGroup
-syn region texMathZoneU	matchgroup=Delimiter start="\\\[" matchgroup=Delimiter end="\\]\|%stopzone"	keepend contains=@texMathZoneGroup
-syn region texMathZoneV	matchgroup=Delimiter start="\$"   skip="\\\\\|\\\$" matchgroup=Delimiter end="\$" end="%stopzone" contains=@texMathZoneGroup
-syn region texMathZoneW	matchgroup=Delimiter start="\$\$" matchgroup=Delimiter end="\$\$" end="%stopzone"	keepend contains=@texMathZoneGroup
+syn region texMathZoneT	matchgroup=Delimiter start="\\("  matchgroup=Delimiter end="\\)\|%stopzone\>"	keepend contains=@texMathZoneGroup
+syn region texMathZoneU	matchgroup=Delimiter start="\\\[" matchgroup=Delimiter end="\\]\|%stopzone\>"	keepend contains=@texMathZoneGroup
+syn region texMathZoneV	matchgroup=Delimiter start="\$"   skip="\\\\\|\\\$" matchgroup=Delimiter end="\$" end="%stopzone\>" contains=@texMathZoneGroup
+syn region texMathZoneW	matchgroup=Delimiter start="\$\$" matchgroup=Delimiter end="\$\$" end="%stopzone\>"	keepend contains=@texMathZoneGroup
 
 syn match texMathOper	"[_^=]" contained
 
@@ -197,26 +197,26 @@ endif
 " separate lines used for verb` and verb# so that the end conditions
 " will appropriately terminate.  Ideally vim would let me save a
 " character from the start pattern and re-use it in the end-pattern.
-syn region texZone	start="\\begin{verbatim}"		end="\\end{verbatim}\|%stopzone"
-syn region texZone	start="\\verb`"		end="`\|%stopzone"
-syn region texZone	start="\\verb#"		end="#\|%stopzone"
-syn region texZone	start="@samp{"		end="}\|%stopzone"
-syn region texRefZone	matchgroup=texStatement start="\\cite{"	keepend end="}\|%stopzone"  contains=texComment,texDelimiter
-syn region texRefZone	matchgroup=texStatement start="\\label{"	keepend end="}\|%stopzone"  contains=texComment,texDelimiter
-syn region texRefZone	matchgroup=texStatement start="\\pageref{"	keepend end="}\|%stopzone"  contains=texComment,texDelimiter
-syn region texRefZone	matchgroup=texStatement start="\\ref{"	keepend end="}\|%stopzone"  contains=texComment,texDelimiter
+syn region texZone	start="\\begin{verbatim}"		end="\\end{verbatim}\|%stopzone\>"
+syn region texZone	start="\\verb`"		end="`\|%stopzone\>"
+syn region texZone	start="\\verb#"		end="#\|%stopzone\>"
+syn region texZone	start="@samp{"		end="}\|%stopzone\>"
+syn region texRefZone	matchgroup=texStatement start="\\cite{"	keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
+syn region texRefZone	matchgroup=texStatement start="\\label{"	keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
+syn region texRefZone	matchgroup=texStatement start="\\pageref{"	keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
+syn region texRefZone	matchgroup=texStatement start="\\ref{"	keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
 
 " handle newcommand, newenvironment
-syn match  texNewCmd		"\\newcommand"			nextgroup=texCmdName skipwhite skipnl
+syn match  texNewCmd		"\\newcommand\>"		nextgroup=texCmdName skipwhite skipnl
 syn region texCmdName contained matchgroup=Delimiter start="{"rs=s+1  end="}"	nextgroup=texCmdArgs,texCmdBody skipwhite skipnl
 syn region texCmdArgs contained matchgroup=Delimiter start="\["rs=s+1 end="]"	nextgroup=texCmdBody skipwhite skipnl
 syn region texCmdBody contained matchgroup=Delimiter start="{"rs=s+1 skip="\\\\\|\\[{}]"	matchgroup=Delimiter end="}" contains=@texCmdGroup
-syn match  texNewEnv		"\\newenvironment"		nextgroup=texEnvName skipwhite skipnl
+syn match  texNewEnv		"\\newenvironment\>"		nextgroup=texEnvName skipwhite skipnl
 syn region texEnvName contained matchgroup=Delimiter start="{"rs=s+1  end="}"	nextgroup=texEnvBgn skipwhite skipnl
 syn region texEnvBgn  contained matchgroup=Delimiter start="{"rs=s+1  end="}"	nextgroup=texEnvEnd skipwhite skipnl contains=@texEnvGroup
 syn region texEnvEnd  contained matchgroup=Delimiter start="{"rs=s+1  end="}"	skipwhite skipnl contains=@texEnvGroup
 
-syn match texDefCmd		"\\def"			nextgroup=texDefName skipwhite skipnl
+syn match texDefCmd		"\\def\>"			nextgroup=texDefName skipwhite skipnl
 syn match texDefName contained	"\\[a-zA-Z]\+"			nextgroup=texCmdBody skipwhite skipnl
 
 " TeX Lengths
@@ -272,7 +272,7 @@ syn sync match texSyncMathZoneR	groupthere NONE	"\\end\s*{\s*displaymath\s*}"
 syn sync match texSyncMathZoneS	groupthere NONE	"\\end\s*{\s*multline\*\s*}"
 syn sync match texSyncMathZoneT	groupthere NONE	"\\)"
 syn sync match texSyncMathZoneU	groupthere NONE	"\\\]"
-syn sync match texSyncStop		groupthere NONE	"%stopzone"
+syn sync match texSyncStop		groupthere NONE	"%stopzone\>"
 
 " The $..$ and $$..$$ make for impossible sync patterns.
 " The following grouptheres coupled with minlines above
@@ -284,7 +284,7 @@ syn sync match texSyncMathZoneS	groupthere NONE	"\\end{enumerate}"
 syn sync match texSyncMathZoneS	groupthere NONE	"\\end{itemize}"
 syn sync match texSyncMathZoneS	groupthere NONE	"\\end{table}"
 syn sync match texSyncMathZoneS	groupthere NONE	"\\end{tabular}"
-syn sync match texSyncMathZoneS	groupthere NONE	"\\\(sub\)*section"
+syn sync match texSyncMathZoneS	groupthere NONE	"\\\(sub\)*section\>"
 
 if !exists("did_tex_syntax_inits")
  let did_tex_syntax_inits = 1

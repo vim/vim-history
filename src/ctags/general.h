@@ -1,7 +1,7 @@
 /*****************************************************************************
 *   $Id$
 *
-*   Copyright (c) 1998-1999, Darren Hiebert
+*   Copyright (c) 1998-2000, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.
@@ -23,7 +23,7 @@
 ============================================================================*/
 
 #if defined(__STDC__) || defined(MSDOS) || defined(WIN32) || defined(OS2)
-# define ENABLE_PROTOTYPES
+# define ENABLE_PROTOTYPES 1
 #endif
 
 /*  Determine whether to use prototypes or simple declarations.
@@ -55,33 +55,35 @@
 #endif
 
 #if defined(__STDC__) || defined(MSDOS) || defined(WIN32) || defined(OS2)
-# define ENABLE_STDARG
+# define ENABLE_STDARG 1
 #endif
 
 #if defined(MSDOS) || defined(WIN32)
-# define HAVE_DOS_H
-# define HAVE_IO_H
-# define HAVE_STDLIB_H
-# define HAVE_TIME_H
-# define HAVE_CLOCK
-# define HAVE_CHSIZE
-# define HAVE_FGETPOS
-# define HAVE_STRERROR
-# define HAVE_FINDNEXT
+# define HAVE_DOS_H 1
+# define HAVE_FCNTL_H 1
+# define HAVE_IO_H 1
+# define HAVE_STDLIB_H 1
+# define HAVE_SYS_STAT_H 1
+# define HAVE_SYS_TYPES_H 1
+# define HAVE_TIME_H 1
+# define HAVE_CLOCK 1
+# define HAVE_CHSIZE 1
+# define HAVE_FGETPOS 1
+# define HAVE_STRERROR 1
+# define HAVE_FINDNEXT 1
 # ifdef __BORLANDC__
-#  define HAVE_DIR_H
-#  define HAVE_DIRENT_H
-#  define HAVE_FINDFIRST
+#  define HAVE_DIR_H 1
+#  define HAVE_DIRENT_H 1
+#  define HAVE_FINDFIRST 1
 # else
 #  ifdef _MSC_VER
-#   define HAVE__FINDFIRST
-#   define fortran avoid_fortran_clash	/* obsolete keyword in MSVC++ 5.0 */
+#   define HAVE__FINDFIRST 1
 #  else
 #   ifdef __MINGW32__
-#    define HAVE_DIR_H
-#    define HAVE_DIRENT_H
-#    define HAVE__FINDFIRST
-#    define NEED_PROTO_FGETPOS
+#    define HAVE_DIR_H 1
+#    define HAVE_DIRENT_H 1
+#    define HAVE__FINDFIRST 1
+#    define NEED_PROTO_FGETPOS 1
 #    define ffblk _finddata_t
 #    define FA_DIREC _A_SUBDIR
 #    define ff_name name
@@ -91,67 +93,83 @@
 #endif
 
 #ifdef DJGPP
-# define HAVE_DIR_H
-# define HAVE_UNISTD_H
-# define HAVE_FGETPOS
-# define HAVE_FINDFIRST
-# define HAVE_TRUNCATE
+# define HAVE_DIR_H 1
+# define HAVE_SYS_STAT_H 1
+# define HAVE_SYS_TYPES_H 1
+# define HAVE_UNISTD_H 1
+# define HAVE_FGETPOS 1
+# define HAVE_FINDFIRST 1
+# define HAVE_TRUNCATE 1
 #endif
 
 #if defined(OS2)
-# define HAVE_DIRENT_H
-# define HAVE_IO_H
-# define HAVE_TIME_H
-# define HAVE_STDLIB_H
-# define HAVE_SYS_TYPES_H
-# define HAVE_SYS_STAT_H
-# define HAVE_UNISTD_H
-# define HAVE_CLOCK
-# define HAVE_CHSIZE
-# define HAVE_FGETPOS
-# define HAVE_OPENDIR
-# define HAVE_STRERROR
-# define HAVE_TRUNCATE
+# define HAVE_DIRENT_H 1
+# define HAVE_IO_H 1
+# define HAVE_TIME_H 1
+# define HAVE_STDLIB_H 1
+# define HAVE_SYS_STAT_H 1
+# define HAVE_SYS_TYPES_H 1
+# define HAVE_UNISTD_H 1
+# define HAVE_CLOCK 1
+# define HAVE_CHSIZE 1
+# define HAVE_FGETPOS 1
+# define HAVE_OPENDIR 1
+# define HAVE_STRERROR 1
+# define HAVE_TRUNCATE 1
 #endif
 
 #ifdef AMIGA
-# define HAVE_STDLIB_H
-# define HAVE_SYS_STAT_H
-# define HAVE_TIME_H
-# define HAVE_CLOCK
-# define HAVE_FGETPOS
-# define HAVE_STRERROR
+# define HAVE_STDLIB_H 1
+# define HAVE_SYS_STAT_H 1
+# define HAVE_SYS_TYPES_H 1
+# define HAVE_TIME_H 1
+# define HAVE_CLOCK 1
+# define HAVE_FGETPOS 1
+# define HAVE_STRERROR 1
 #endif
 
-#ifdef __vms
-# define HAVE_STDLIB_H
-# define HAVE_TIME_H
-# define HAVE_CLOCK
-# define HAVE_FGETPOS
-# define HAVE_STRERROR
+#if defined(__MWERKS__) && defined(__MACINTOSH__)
+# define HAVE_STAT_H 1
 #endif
-
 
 #ifdef QDOS
-# define HAVE_DIRENT_H
-# define HAVE_STDLIB_H
-# define HAVE_SYS_STAT_H
-# define HAVE_SYS_TIMES_H
-# define HAVE_SYS_TYPES_H
-# define HAVE_TIME_H
-# define HAVE_UNISTD_H
-# define STDC_HEADERS
-# define HAVE_CLOCK
-# define HAVE_FGETPOS
-# define HAVE_FTRUNCATE
-# define HAVE_OPENDIR
-# define HAVE_PUTENV
-# define HAVE_REMOVE
-# define HAVE_STRERROR
-# define HAVE_STRSTR
-# define HAVE_TIMES
-# define HAVE_TRUNCATE
-# define NON_CONST_PUTENV_PROTOTYPE
+# define HAVE_DIRENT_H 1
+# define HAVE_STDLIB_H 1
+# define HAVE_SYS_STAT_H 1
+# define HAVE_SYS_TIMES_H 1
+# define HAVE_SYS_TYPES_H 1
+# define HAVE_TIME_H 1
+# define HAVE_UNISTD_H 1
+# define STDC_HEADERS 1
+# define HAVE_CLOCK 1
+# define HAVE_FGETPOS 1
+# define HAVE_FTRUNCATE 1
+# define HAVE_OPENDIR 1
+# define HAVE_PUTENV 1
+# define HAVE_REMOVE 1
+# define HAVE_STRERROR 1
+# define HAVE_STRSTR 1
+# define HAVE_TIMES 1
+# define HAVE_TRUNCATE 1
+# define NON_CONST_PUTENV_PROTOTYPE 1
+#endif
+
+#if defined(__vms) && !defined(VMS)
+# define VMS
+#endif
+#ifdef VMS
+# define HAVE_STDLIB_H 1
+# define HAVE_TIME_H 1
+# ifdef VAXC
+#  define HAVE_STAT_H 1
+#  define HAVE_TYPES_H 1
+# else
+#  define HAVE_SYS_STAT_H 1
+#  define HAVE_SYS_TYPES_H 1
+# endif
+# define HAVE_CLOCK 1
+# define HAVE_FGETPOS 1
+# define HAVE_STRERROR 1
 #endif
 
 /*============================================================================
@@ -160,7 +178,12 @@
 
 #undef FALSE
 #undef TRUE
+#ifdef VAXC
+typedef enum { FALSE, TRUE } booleanType;
+typedef int boolean;
+#else
 typedef enum { FALSE, TRUE } boolean;
+#endif
 
 #if !defined(HAVE_FGETPOS) && !defined(fpos_t)
 # define fpos_t long

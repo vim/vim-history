@@ -3,6 +3,8 @@
 # Makefile for UNIX-like platforms.
 #
 
+include source.mak
+
 # These are the names of the installed programs, in case you wish to change
 # them.
 #
@@ -61,13 +63,6 @@ INSTALL		= cp
 INSTALL_PROG	= $(INSTALL)
 INSTALL_DATA	= $(INSTALL)
 
-SRCS =	args.c eiffel.c entry.c fortran.c get.c keyword.c main.c \
-	options.c parse.c read.c sort.c strlist.c vstring.c
-OBJS =	args.o eiffel.o entry.o fortran.o get.o keyword.o main.o \
-	options.o parse.o read.o sort.o strlist.o vstring.o
-HDRS =	args.h ctags.h debug.h entry.h general.h get.h keyword.h main.h \
-	options.h parse.h read.h sort.h strlist.h vstring.h
-
 MANPAGE	= ctags.1
 
 AUTO_GEN   = configure config.h.in
@@ -97,13 +92,13 @@ DEST_EMAN	= $(man1dir)/$(EMAN)
 #
 all: $(CTAGS_EXEC)
 
-$(CTAGS_EXEC): $(OBJS)
-	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBOBJS)
+$(CTAGS_EXEC): $(OBJECTS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJECTS) $(LIBOBJS)
 
-dctags: debug.c $(SRCS) $(HDRS)
-	$(CC) -I. -I$(srcdir) $(DEFS) -DDEBUG -g $(LDFLAGS) -o $@ $(LIBOBJS) debug.c $(SRCS)
+dctags: debug.c $(SOURCES) $(HEADERS)
+	$(CC) -I. -I$(srcdir) $(DEFS) -DDEBUG -g $(LDFLAGS) -o $@ $(LIBOBJS) debug.c $(SOURCES)
 
-$(OBJS): $(HDRS) config.h
+$(OBJECTS): $(HEADERS) config.h
 
 #
 # generic install rules
@@ -168,13 +163,13 @@ uninstall-etags:
 # miscellaneous rules
 #
 tags: $(CTAGS_EXEC)
-	./$(CTAGS_EXEC) -p$(srcdir) $(SRCS) $(HDRS)
+	./$(CTAGS_EXEC) -p$(srcdir) $(SOURCES) $(HEADERS)
 
 TAGS: $(CTAGS_EXEC)
-	./$(CTAGS_EXEC) -e -p$(srcdir) $(SRCS) $(HDRS)
+	./$(CTAGS_EXEC) -e -p$(srcdir) $(SOURCES) $(HEADERS)
 
 clean:
-	@ rm -f $(OBJS) $(CTAGS_EXEC) tags TAGS
+	@ rm -f $(OBJECTS) $(CTAGS_EXEC) tags TAGS
 
 mostlyclean: clean
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
 *   $Id$
 *
-*   Copyright (c) 1996-1999, Darren Hiebert
+*   Copyright (c) 1998-2000, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.
@@ -12,14 +12,15 @@
 /*============================================================================
 =   Include files
 ============================================================================*/
-#include "general.h"
+#include "general.h"	/* must always come first */
 
 #include <limits.h>	/* to define INT_MAX */
 #include <string.h>
+#include <ctype.h>
 
-#include "vstring.h"
 #include "debug.h"
 #include "main.h"
+#include "vstring.h"
 
 /*============================================================================
 =   Data definitions
@@ -200,3 +201,5 @@ extern void vStringSetLength( string )
 {
     string->length = strlen(string->buffer);
 }
+
+/* vi:set tabstop=8 shiftwidth=4: */

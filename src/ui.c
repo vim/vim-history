@@ -22,7 +22,7 @@ ui_write(s, len)
     char_u  *s;
     int	    len;
 {
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     if (gui.in_use && !gui.dying)
     {
 	gui_write(s, len);
@@ -38,7 +38,7 @@ ui_write(s, len)
 #endif
 }
 
-#if (defined(USE_GUI) && defined(UNIX)) || defined(PROTO)
+#if (defined(FEAT_GUI) && defined(UNIX)) || defined(PROTO)
 /*
  * When executing an external program, there may be some typed characters that
  * are not consumed by it.  Give them back to ui_inchar() and they are stored
@@ -91,7 +91,7 @@ ui_inchar(buf, maxlen, wtime)
     int	    maxlen;
     long    wtime;	    /* don't use "time", MIPS cannot handle it */
 {
-#if defined(USE_GUI) && defined(UNIX)
+#if defined(FEAT_GUI) && defined(UNIX)
     /*
      * Use the typeahead if there is any.
      */
@@ -119,7 +119,7 @@ ui_inchar(buf, maxlen, wtime)
 	return 1;
     }
 #endif
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     if (gui.in_use)
     {
 	if (!gui_wait_for_chars(wtime))
@@ -140,7 +140,7 @@ ui_inchar(buf, maxlen, wtime)
     int
 ui_char_avail()
 {
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     if (gui.in_use)
     {
 	gui_mch_update();
@@ -163,7 +163,7 @@ ui_delay(msec, ignoreinput)
     long	msec;
     int		ignoreinput;
 {
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     if (gui.in_use && !ignoreinput)
 	gui_wait_for_chars(msec);
     else
@@ -179,7 +179,7 @@ ui_delay(msec, ignoreinput)
     void
 ui_suspend()
 {
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     if (gui.in_use)
     {
 	gui_mch_iconify();
@@ -196,27 +196,30 @@ ui_suspend()
     void
 suspend_shell()
 {
-    MSG_PUTS("new shell started\n");
+    MSG_PUTS(_("new shell started\n"));
     (void)mch_call_shell(NULL, SHELL_COOKED);
     need_check_timestamps = TRUE;
 }
 #endif
 
 /*
- * Try to get the current window size.	Put the result in Rows and Columns.
+ * Try to get the current Vim shell size.  Put the result in Rows and Columns.
+ * Use the new sizes as defaults for 'columns' and 'lines'.
  * Return OK when size could be determined, FAIL otherwise.
  */
     int
-ui_get_winsize()
+ui_get_shellsize()
 {
     int	    retval;
 
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     if (gui.in_use)
-	retval = gui_get_winsize();
+	retval = gui_get_shellsize();
     else
 #endif
-	retval = mch_get_winsize();
+	retval = mch_get_shellsize();
+
+    check_shellsize();
 
     /* adjust the default for 'lines' and 'columns' */
     if (retval == OK)
@@ -228,14 +231,16 @@ ui_get_winsize()
 }
 
 /*
- * Set the size of the window according to Rows and Columns, if possible.
+ * Set the size of the Vim shell according to Rows and Columns, if possible.
+ * The gui_set_shellsize() or mch_set_shellsize() function will try to set the
+ * new size.  If this is not possible, it will adjust Rows and Columns.
  */
     void
-ui_set_winsize()
+ui_set_shellsize()
 {
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     if (gui.in_use)
-	gui_set_winsize(
+	gui_set_shellsize(
 # ifdef WIN32
 		TRUE
 # else
@@ -244,13 +249,31 @@ ui_set_winsize()
 		);
     else
 #endif
-	mch_set_winsize();
+	mch_set_shellsize();
+}
+
+/*
+ * Called when Rows and/or Columns changed.  Adjust scroll region and mouse
+ * region.
+ */
+    void
+ui_new_shellsize()
+{
+    if (full_screen && !exiting)
+    {
+#ifdef FEAT_GUI
+	if (gui.in_use)
+	    gui_new_shellsize();
+	else
+#endif
+	    mch_new_shellsize();
+    }
 }
 
     void
 ui_breakcheck()
 {
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     if (gui.in_use)
 	gui_mch_update();
     else
@@ -265,7 +288,7 @@ ui_breakcheck()
  * Note: there are some more functions in ops.c that handle selection stuff.
  */
 
-#ifdef USE_CLIPBOARD
+#ifdef FEAT_CLIPBOARD
 
 #define char_class(c)	(c <= ' ' ? ' ' : vim_iswordc(c))
 
@@ -303,7 +326,7 @@ clip_init(can_use)
     void
 clip_update_selection()
 {
-    FPOS    start, end;
+    pos_t    start, end;
 
     /* If visual mode is only due to a redo command ("."), then ignore it */
     if (!redo_VIsual_busy && VIsual_active)
@@ -312,9 +335,9 @@ clip_update_selection()
 	{
 	    start = VIsual;
 	    end = curwin->w_cursor;
-#ifdef MULTI_BYTE
-	    if (is_dbcs && mb_isbyte1(ml_get(end.lnum),end.col))
-		end.col++;
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		end.col += mb_ptr2len_check(ml_get_cursor()) - 1;
 #endif
 	}
 	else
@@ -346,7 +369,10 @@ clip_own_selection()
     if (!clipboard.owned && clipboard.available)
     {
 	clipboard.owned = (clip_gen_own_selection() == OK);
-#ifdef HAVE_X11
+#ifdef FEAT_X11
+	/* May have to show a different kind of highlighting for the selected
+	 * area.  There is no specific redraw command for this, just redraw
+	 * all windows on the current buffer. */
 	if (clipboard.owned
 		&& get_real_state() == VISUAL
 		&& clip_isautosel()
@@ -359,7 +385,7 @@ clip_own_selection()
     void
 clip_lose_selection()
 {
-#ifdef HAVE_X11
+#ifdef FEAT_X11
     int	    was_owned = clipboard.owned;
 #endif
 
@@ -367,7 +393,10 @@ clip_lose_selection()
     clipboard.owned = FALSE;
     clip_clear_selection();
     clip_gen_lose_selection();
-#ifdef HAVE_X11
+#ifdef FEAT_X11
+    /* May have to show a different kind of highlighting for the selected
+     * area.  There is no specific redraw command for this, just redraw all
+     * windows on the current buffer. */
     if (was_owned
 	    && get_real_state() == VISUAL
 	    && clip_isautosel()
@@ -413,14 +442,14 @@ clip_auto_select()
 clip_isautosel()
 {
     return (
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 	    gui.in_use ? (vim_strchr(p_go, GO_ASEL) != NULL) :
 #endif
 	    (vim_strchr(p_cb, 't') != NULL));
 }
 
 
-#if defined(USE_GUI) || defined(PROTO)
+#if defined(FEAT_GUI) || defined(PROTO)
 
 /*
  * Stuff for general mouse selection, without using Visual mode.
@@ -936,7 +965,8 @@ clip_yank_non_visual_selection(row1, col1, row2, col2)
 
 	if (row < screen_Rows && end_col <= screen_Columns)
 	{
-	    STRNCPY(bufp, &LinePointers[row][start_col], end_col - start_col);
+	    STRNCPY(bufp, ScreenLines + LineOffset[row] + start_col,
+							 end_col - start_col);
 	    bufp += end_col - start_col;
 	}
     }
@@ -965,18 +995,19 @@ clip_get_word_boundaries(cb, row, col)
     if (row >= screen_Rows || col >= screen_Columns)
 	return;
 
-    start_class = char_class(LinePointers[row][col]);
+    start_class = char_class(ScreenLines[LineOffset[row] + col]);
 
     temp_col = col;
     for ( ; temp_col > 0; temp_col--)
-	if (char_class(LinePointers[row][temp_col - 1]) != start_class)
+	if (char_class(ScreenLines[LineOffset[row] + temp_col - 1])
+							       != start_class)
 	    break;
 
     cb->word_start_col = temp_col;
 
     temp_col = col;
     for ( ; temp_col < screen_Columns; temp_col++)
-	if (char_class(LinePointers[row][temp_col]) != start_class)
+	if (char_class(ScreenLines[LineOffset[row] + temp_col]) != start_class)
 	    break;
     cb->word_end_col = temp_col;
 
@@ -999,7 +1030,7 @@ clip_get_line_end(row)
     if (row >= screen_Rows)
 	return 0;
     for (i = screen_Columns; i > 0; i--)
-	if (LinePointers[row][i - 1] != ' ')
+	if (ScreenLines[LineOffset[row] + i - 1] != ' ')
 	    break;
     return i;
 }
@@ -1033,7 +1064,7 @@ clip_update_non_visual_selection(cb, row1, col1, row2, col2)
     }
 }
 
-#else /* If USE_GUI not defined */
+#else /* If FEAT_GUI not defined */
 
 /*
  * Called from outside to clear selected region from the display
@@ -1050,13 +1081,13 @@ clip_clear_selection()
      */
     clipboard.state = SELECT_CLEARED;
 }
-#endif /* USE_GUI */
+#endif /* FEAT_GUI */
 
     int
 clip_gen_own_selection()
 {
-#ifdef XTERM_CLIP
-# ifdef USE_GUI
+#ifdef FEAT_XCLIPBOARD
+# ifdef FEAT_GUI
     if (gui.in_use)
 	return clip_mch_own_selection();
     else
@@ -1070,8 +1101,8 @@ clip_gen_own_selection()
     void
 clip_gen_lose_selection()
 {
-#ifdef XTERM_CLIP
-# ifdef USE_GUI
+#ifdef FEAT_XCLIPBOARD
+# ifdef FEAT_GUI
     if (gui.in_use)
 	clip_mch_lose_selection();
     else
@@ -1085,8 +1116,8 @@ clip_gen_lose_selection()
     void
 clip_gen_set_selection()
 {
-#ifdef XTERM_CLIP
-# ifdef USE_GUI
+#ifdef FEAT_XCLIPBOARD
+# ifdef FEAT_GUI
     if (gui.in_use)
 	clip_mch_set_selection();
     else
@@ -1100,8 +1131,8 @@ clip_gen_set_selection()
     void
 clip_gen_request_selection()
 {
-#ifdef XTERM_CLIP
-# ifdef USE_GUI
+#ifdef FEAT_XCLIPBOARD
+# ifdef FEAT_GUI
     if (gui.in_use)
 	clip_mch_request_selection();
     else
@@ -1112,7 +1143,7 @@ clip_gen_request_selection()
 #endif
 }
 
-#endif /* USE_CLIPBOARD */
+#endif /* FEAT_CLIPBOARD */
 
 /*****************************************************************************
  * Functions that handle the input buffer.
@@ -1123,7 +1154,7 @@ clip_gen_request_selection()
  * in a portable way for a tty in RAW mode.
  */
 
-#if defined(UNIX) || defined(USE_GUI) || defined(OS2) || defined(VMS)
+#if defined(UNIX) || defined(FEAT_GUI) || defined(OS2) || defined(VMS)
 
 /*
  * Internal typeahead buffer.  Includes extra space for long key code
@@ -1133,7 +1164,15 @@ clip_gen_request_selection()
 #ifdef VMS
 # define INBUFLEN 10000 /* for proper cut/paste between X windows in ch. mode */
 #else
-# define INBUFLEN 250
+# ifdef FEAT_SUN_WORKSHOP
+   /*
+    * Sun WorkShop stuffs debugger commands into the input buffer. This requires
+    * a larger buffer...
+    */
+#  define INBUFLEN 4096
+# else
+#  define INBUFLEN 250
+# endif
 #endif
 
 static char_u	inbuf[INBUFLEN + MAX_KEY_CODE_LEN];
@@ -1157,7 +1196,7 @@ vim_is_input_buf_empty()
     return (inbufcount == 0);
 }
 
-#if defined(HAVE_OLE) || defined(PROTO)
+#if defined(FEAT_OLE) || defined(PROTO)
     int
 vim_free_in_input_buf()
 {
@@ -1165,7 +1204,7 @@ vim_free_in_input_buf()
 }
 #endif
 
-#if defined(USE_GUI_GTK) || defined(PROTO)
+#if defined(FEAT_GUI_GTK) || defined(PROTO)
     int
 vim_used_in_input_buf()
 {
@@ -1182,7 +1221,7 @@ add_to_input_buf(s, len)
     if (inbufcount + len > INBUFLEN + MAX_KEY_CODE_LEN)
 	return;	    /* Shouldn't ever happen! */
 
-#ifdef HANGUL_INPUT
+#ifdef FEAT_HANGULIN
     if ((State & (INSERT|CMDLINE)) && hangul_input_state_get())
 	if ((len = hangul_input_process(s, len)) == 0)
 	    return;
@@ -1192,7 +1231,7 @@ add_to_input_buf(s, len)
 	inbuf[inbufcount++] = *s++;
 }
 
-#if defined(HANGUL_INPUT) || defined(PROTO)
+#if defined(FEAT_HANGULIN) || defined(PROTO)
     void
 push_raw_key (s, len)
     char_u  *s;
@@ -1203,7 +1242,7 @@ push_raw_key (s, len)
 }
 #endif
 
-#if defined(USE_GUI) || defined(PROTO)
+#if defined(FEAT_GUI) || defined(PROTO)
 /* Remove everything from the input buffer.  Called when ^C is found */
     void
 trash_input_buf()
@@ -1246,7 +1285,7 @@ fill_input_buf(exit_on_error)
     extern char ibuf[];
 #endif
 
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     if (gui.in_use)
     {
 	gui_mch_update();
@@ -1273,7 +1312,7 @@ fill_input_buf(exit_on_error)
     inbufcount = 0;
 # else
 
-#  ifdef USE_SNIFF
+#  ifdef FEAT_SNIFF
     if (sniff_request_waiting)
     {
 	add_to_input_buf((char_u *)"\233sniff",6); /* results in K_SNIFF */
@@ -1336,7 +1375,7 @@ fill_input_buf(exit_on_error)
 	}
 #endif /* UNIX or OS2 or VMS*/
 }
-#endif /* defined(UNIX) || defined(USE_GUI) || defined(OS2)  || defined(VMS) */
+#endif /* defined(UNIX) || defined(FEAT_GUI) || defined(OS2)  || defined(VMS) */
 
 /*
  * Exit because of an input read error.
@@ -1346,7 +1385,7 @@ read_error_exit()
 {
     if (silent_mode)	/* Normal way to exit for "ex -s" */
 	getout(0);
-    STRCPY(IObuff, "Vim: Error reading input, exiting...\n");
+    STRCPY(IObuff, _("Vim: Error reading input, exiting...\n"));
     preserve_exit();
 }
 
@@ -1357,17 +1396,17 @@ read_error_exit()
     void
 ui_cursor_shape()
 {
-#ifdef USE_GUI
+# ifdef FEAT_GUI
     if (gui.in_use)
 	gui_upd_cursor_shape();
-#endif
-#ifdef MCH_CURSOR_SHAPE
+# endif
+# ifdef MCH_CURSOR_SHAPE
     mch_update_cursor();
-#endif
+# endif
 }
 #endif
 
-#if defined(XTERM_CLIP) || defined(USE_GUI) || defined(PROTO)
+#if defined(FEAT_XCLIPBOARD) || defined(FEAT_GUI) || defined(PROTO)
 /*
  * Check bounds for column number
  */
@@ -1401,14 +1440,14 @@ check_row(row)
  * Stuff for the X clipboard.  Shared between VMS and Unix.
  */
 
-#if defined(XTERM_CLIP) || defined(USE_GUI_X11) || defined(PROTO)
+#if defined(FEAT_XCLIPBOARD) || defined(FEAT_GUI_X11) || defined(PROTO)
 # include <X11/Xatom.h>
 # include <X11/Intrinsic.h>
 
-# if defined(USE_GUI) && defined(XTERM_CLIP)
+# if defined(FEAT_GUI) && defined(FEAT_XCLIPBOARD)
 #  define X_DISPLAY	gui.in_use ? gui.dpy : xterm_dpy
 # else
-#  ifdef USE_GUI
+#  ifdef FEAT_GUI
 #   define X_DISPLAY	gui.dpy
 #  else
 #   define X_DISPLAY	xterm_dpy
@@ -1477,8 +1516,8 @@ clip_x11_request_selection_cb(w, success, selection, type, value, length,
 	len--;
     }
     else if (*type == clipboard.xa_compound_text || (
-#ifdef MULTI_BYTE
-		is_dbcs &&
+#ifdef FEAT_MBYTE
+		cc_dbcs &&
 #endif
 		*type == clipboard.xa_text))
     {

@@ -12,9 +12,9 @@ Contents:
 6. Atari MiNT
 
 For BeBox see doc/os_bebox.txt.
-For Amiga see INSTALL_ami.txt
-For PC (MS-DOS, Windows NT, Windows 95) see INSTALL_pc.txt
-For Macintosh see INSTALL_mac.txt
+For Amiga see INSTALLami.txt
+For PC (MS-DOS, Windows NT, Windows 95) see INSTALLpc.txt
+For Macintosh see INSTALLmac.txt
 
 
 1. Generic
@@ -105,14 +105,16 @@ is the preferred choice), try selecting another one in the Makefile.
 If you are sure you have GTK installed, but for some reason configure says you
 do not, you may have left-over header files and/or library files from an older
 (and incompatible) version of GTK.  if this is the case, please check
-config.log for any error messages that may give you a hint as to what's
+auto/config.log for any error messages that may give you a hint as to what's
 happening.
 
 Unix: COMPILING WITH MULTI-BYTE
 
 When you want to compile with the multi-byte features enabled, make sure you
 compile on a machine where the locale settings actually work.  otherwise the
-configure tests may fail.
+configure tests may fail.  You need to compile with "big" features:
+
+    ./configure --with-features=big
 
 Unix: COMPILING ON LINUX
 

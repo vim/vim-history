@@ -3,7 +3,7 @@
 " Language:	SPEC: Build/install scripts for Linux RPM packages
 " Maintainer:	Donovan Rebbechi elflord@pegasus.rutgers.edu
 " URL:		http://pegasus.rutgers.edu/~elflord/vim/syntax/spec.vim
-" Last Change:	Wed Sep 22 21:42:34 EDT 1999
+" Last Change:	Wed Sep 22 21:42:34 EDT 1999 (modified 2000 Jul 10 by Bram)
 
 syn clear
 
@@ -28,7 +28,7 @@ syn region specMacroBody2 matchgroup=specMacro  start='%define\|%vendor\|%distri
 
 
 "PreAmble
-syn region specPreAmble matchgroup=specCommand start='^\(Prereq\|Summary\|Name\|Version\|Packager\|Requires\|Icon\|URL\|Source\d*\|Patch\d*\|Prefix\|Packager\|Group\|Copyright\|Release\|BuildRoot\|Distribution\|Vendor\|Provides\|ExclusiveArch\|ExclusiveOS\|Serial\|Obsoletes\|BuildArch\|BuildRequires\|BuildConflicts\|BuildPreReq\|AutoRequires\|AutoReq\)' end='$' contains=specEmail,specURL,specSpecial,specColon oneline
+syn region specPreAmble matchgroup=specCommand start='^\(Prereq\|Summary\|Name\|Version\|Packager\|Requires\|Icon\|URL\|Source\d*\|Patch\d*\|Prefix\|Packager\|Group\|Copyright\|License\|Release\|BuildRoot\|Distribution\|Vendor\|Provides\|ExclusiveArch\|ExclusiveOS\|Serial\|Obsoletes\|BuildArch\|BuildRequires\|BuildConflicts\|BuildPreReq\|AutoRequires\|AutoReq\)' end='$' contains=specEmail,specURL,specSpecial,specColon oneline
 
 syn region specPackage matchgroup=specMacro start='%package' end='^%'me=e-1 contains=specPreAmble
 " sections that contain a lot of scripts
@@ -55,7 +55,7 @@ syn region specFiles matchgroup=specMacro start='^%[Ff]iles' start='^%[Cc]onfig'
 syn match specFilesMacro '%attrib\|%defattr\|%attr\|%dir\|%config\|%docdir\|%doc'
 
 
-syn match specEmail '<[a-zA-Z0-9\-_]*\@.*>'
+syn match specEmail '<[a-zA-Z0-9\-_]*@.*>'
 
 syn match specCommandOpts '[ \t]--\=[a-zA-Z-]\+'
 

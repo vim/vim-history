@@ -2,40 +2,31 @@ Vim		Vi IMproved.  A clone of the UNIX text editor Vi.  Very useful
 		for editing programs and other plain ASCII text.  Full Vi
 		compatibility and includes all Ex commands.  Extra features
 		above Vi: Multilevel undo, multiple windows, syntax
-		highlighting, command line history, improved command line
-		editing, command typeahead display, command to display yank
-		buffers, possibility to edit binary files, file name stack,
-		support for Manx QuickFix and other compiler's error messages,
-		shows current file name in window title, on-line help,
-		rectangular cut/paste, etc., etc., etc...
+		highlighting, command line history, folding, improved command
+		line editing, command typeahead display, command to display
+		yank buffers, possibility to edit binary files, file name
+		stack, support for Manx QuickFix and other compiler's error
+		messages, shows current file name in window title, on-line
+		help, rectangular cut/paste, etc., etc., etc...
 
-		Version 5.7.  Also runs under UNIX, MSDOS and other systems.
-		vim57rt.tgz  contains the documentation and syntax files.
-		vim57bin.tgz contains the normal binaries.
-		vim57big.tgz contains a binary with more features.
-		vim57src.tgz contains the sources.
+		Version 6.0d.  Also runs under UNIX, MSDOS and other systems.
+		vim60drt.tgz  contains the documentation and syntax files.
+		vim60dbin.tgz contains the normal binaries.
+		vim60dbig.tgz contains a binary with more features.
+		vim60dsrc.tgz contains the sources.
 		Author: Bram Moolenaar et al.
 
 
-Ctags		Exuberant Ctags.  A better ctags with support for C, C++,
-		Java, Fortran and Eiffel.  It can generate tags for all of the
-		following tag types (some are optional):
-		    macro definitions
-		    enumerators
-		    function and method definitions
-		    class, enum, struct, and union names
-		    interface names (Java)
-		    namespace names (C++)
-		    typedefs
-		    variables (definitions and extern declarations)
-		    function (method) prototypes/declarations
-		    data members
+Ctags		Exuberant Ctags.  A better ctags with support for Assembler,
+		AWK, BETA, Bourne shell, C, C++, Cobol, Eiffel, Fortran,
+		Java, Lisp, Perl, Python, TCL and Vim scripts.  It can
+		generate tags for many tag types.
 		It is far less easily fooled by C code containing #if
 		preprocessor conditional constructs.  It can also be used to
 		print out a list of selected objects found in source files.
 		It can also produce Emacs-style TAGS files.
 
-		Version 3.5.1.
+		Version 4.0.
 		Author: Darren Hiebert
 
 

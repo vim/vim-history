@@ -1,0 +1,102 @@
+*multilang.txt* For Vim version 6.0d.  Last change: 2000 Jul 07
+
+
+		  VIM REFERENCE MANUAL    by Bram Moolenaar
+
+
+Multi-language features				*multilang* *multi-lang*
+
+1. Menus			|multilang-menus|
+2. Scripts			|multilang-scripts|
+
+{Vi does not have any of these features}
+
+==============================================================================
+1. Menus						*multilang-menus*
+
+The default menus are in English.  To be able to use your local language, they
+must be translated.  Normally this is automatically done for you if the $LANG
+environment variable has been set and translations for the specified language
+are available.  You don't need to do anything extra for this.
+
+Note that if changes have been made to the menus after the translation was
+done, some of the menus may be shown in English.  Please try contacting the
+maintainer of the translation and ask him to update it.  You can find the
+name and e-mail address of the translator in "$VIMRUNTIME/menu_<lang>.vim".
+
+If you want to do your own translations, you can use the |:menutrans| command,
+explained below.  For a language that has no translation yet, please consider
+becoming the maintainer and make your translations available to all Vim users.
+Send an e-mail to Bram Moolenaar <Bram@vim.org>.
+
+To add or override the menu translations, first source your translations and
+then the "menu.vim" script (this may be skipped, since they are automatically
+loaded when the GUI starts).  To avoid that a default translation is used, set
+the "did_menutrans" variable to any value.  Example: >
+
+	:source ~/vim/menu_xx_XX.ISO_8859-1.vim
+	:let did_menutrans = 1
+	:source $VIMRUNTIME/menu.vim
+<
+
+							*:menut* *:menutrans*
+:menut[rans] clear	Clear all menu translations.
+
+:menut[rans] {english} {mylang}
+			Translate menu name {english} to {mylang}.  All
+			special characters like "&" and "<Tab>" need to be
+			included.  Spaces and dots need to be escaped with a
+			backslash, just like in other |:menu| commands.
+
+
+It is recommended to put the translations for one language in a Vim script.
+Here is the start of "menu_de_DE.ISO_8859-1.vim": >
+
+	" Menu Translations:	German
+	" Translated By: 	Marcin Dalecki <dalecki@cs.net.pl>
+	" Last Change:		2000 Jun 01
+
+	menutrans clear
+
+	" Help menu
+	menutrans &Help			&Hilfe
+	menutrans &Overview<Tab><F1>	&Überblick<Tab><F1>
+	menutrans &How-to\ links	&How-to\ Index
+
+Each part of a menu path is translated separately.  The result is that
+"Help.Overview" will be translated to "Hilfe.Überblick".
+
+==============================================================================
+2. Scripts						*multilang-scripts*
+
+In Vim scripts you can use the |v:lang| variable to get the current language
+(locale).  The default value is "C" or comes from the $LANG environment
+variable.
+
+The following example shows how this variable is used in a simple way, to make
+a message adapt to language preferences of the user, >
+
+	:if v:lang =~ "de_DE"
+	:  echo "Guten Morgen"
+	:else
+	:  echo "Good morning"
+	:endif
+<
+						*:lan* *:lang* *:language*
+:lan[guage]		Print the current language (aka locale).
+			The current language can also be obtained with the
+			|v:lang| variable. {not in Vi}
+
+:lan[guage] {name}	Set the current language (aka locale) to {name}.
+			This will make a difference for items that depend on
+			the language (some messages, time and date format).
+			Not fully supported yet.
+			If this fails there will be an error message.  If it
+			succeeds there is no message.  Example: >
+				:language
+				Current language: C
+				:language de_DE.ISO_8859-1
+				:language
+				Current language: de_DE.ISO_8859-1
+<
+ vim:tw=78:sw=4

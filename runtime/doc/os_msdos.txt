@@ -1,4 +1,4 @@
-*os_msdos.txt*  For Vim version 5.7.  Last change: 1999 Sep 14
+*os_msdos.txt*  For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -70,50 +70,17 @@ driver.  Such a driver is included with the executable in CSDPMI4B.ZIP.  Run
 "CSDPMI*.ZIP" can be obtained from: "ftp.neosoft.com:pub/users/s/sandmann".
 
 							*minimal-features*
-The 16 bit DOS version has been compiled with minimal features.  These are
-missing:
-|+autocmd|	autocommands
-|+byte_offset|	":goto" and "go"
-|+cindent|	'cindent'
-|+cmdline_compl| completion of mappings/abbrev. in the command line
-|+cmdline_info|	'showcmd' and 'ruler' options
-|+comments|	'comments'
-|+cryptv|	'cryptv'
-|+dialog_con|	console dialogs
-|+digraphs|	digraph support
-|+eval|		expression evaluation, including ":if", ":while", ":let"
-|+ex_extra|	Ex commands ":retab", ":right", ":left", ":center", ":normal"
-|+extra_search|	'hlsearch' and 'incsearch'
-|+file_in_path|	searching for a file in 'path': "gf", <cfile>
-|+find_in_path|	commands that search in included files, such as "[I",
-		":ilist", ":checkpath"
-|+insert_expand| Insert mode expansion, such as CTRL-N, CTRL-X CTRL-F
-|+linebreak|	'showbreak', 'breakat' and 'linebreak'
-|+lispindent|	'lispindent'
-|+mksession|	":mksession"
-|+modify_fname|	modifiers for file names, e.g., "%:p:h"
-|+quickfix|	Quickfix commands ":make", ":cnext", "-q" command-line option
-|+scrollbind|	":scrollbind"
-|+smartindent|	'smartindent'
-|+statusline|	'statusline' and 'rulerformat'
-|+syntax|	syntax highlighting
-|+tag_binary|	binary search in tags file
-|+tag_old_static| old method to detect static tags
-|+textobjects|	text objects, such as "as", "iw"
-|+user_commands| ":command" to define new Ex commands.
-|+viminfo|	'viminfo'
-|+visualextra|	extra features for Visual (block) mode
-|+wildignore|	'wildignore'
-|+wildmenu|	'wildmenu'
-You can include (some of) these by editing feature.h and recompiling.
+The 16 bit DOS version has been compiled with minimal features.  Check the
+|+feature-list| which ones are included (marked with a "T").
+You can include more features by editing feature.h and recompiling.
 
 ==============================================================================
 2. Known problems					*msdos-problems*
 
 When using smartdrive (MS-DOS 6.x) with write-behind caching, it is possible
 that Vim will try to create a swap file on a read-only file system (e.g.
-write protected floppy).  You will then be given the message
->	A serious disk error has occurred .., Retry (r)?
+write protected floppy).  You will then be given the message >
+	A serious disk error has occurred .., Retry (r)?
 There is nothing you can do but unprotect the floppy or switch off the
 computer.  Even CTRL-ALT-DEL will not get you out of this.  This is really a
 problem of smartdrive, not Vim.  Smartdrive works fine otherwise.  If this
@@ -147,11 +114,11 @@ program known to cause this problem is "netx", which says "NetWare v. 3.26
 Workstation shell".  Replace it with version 3.32 to fix the problem.
 
 The Dos32 version will parse its arguments to handle quotation.  This is good
-to edit a file with spaces in its name, for example:
->	vim "program files\accessories\ppp.scp"
+to edit a file with spaces in its name, for example: >
+	vim "program files\accessories\ppp.scp"
 A side effect is that single quotes are removed.  Insert a backslash to avoid
-that.  For example, to edit the file "fi'le.txt":
->	vim fi\'le.txt
+that.  For example, to edit the file "fi'le.txt": >
+	vim fi\'le.txt
 
 ==============================================================================
 3. Long file names					*msdos-longfname*
@@ -173,8 +140,8 @@ port), set the terminal name to "pcansi".  You can change the termcap options
 when needed (see |terminal-options|).  Note that the
 normal IBM ansi.sys does not support all the codes of the builtin pcansi
 terminal.  If you use ansi.sys, you will need to delete the termcap entries
-t_al and t_dl with
->  :set t_al= t_dl=
+t_al and t_dl with >
+   :set t_al= t_dl=
 Otherwise, the screen will not be updated correctly.  It is better to use
 nansi.sys, nnansi.sys, or the like instead of ansi.sys.
 
@@ -275,4 +242,4 @@ To copy something from the Vim window to the clipboard,
    include anything in the VIM window: the output of a :!dir, for
    example.
 
- vim:ts=8:sw=8:tw=78:
+ vim:tw=78:

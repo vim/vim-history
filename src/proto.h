@@ -19,10 +19,15 @@
 /*
  * Machine-dependent routines.
  */
-# if (!defined(HAVE_X11) || !defined(WANT_X11)) && !defined(USE_GUI_GTK)
-#  define Display int	/* avoid errors in function prototypes */
+/* avoid errors in function prototypes */
+# if !defined(FEAT_X11) && !defined(FEAT_GUI_GTK)
+#  define Display int
 #  define Widget int
 # endif
+# ifndef FEAT_GUI_GTK
+#  define GdkEvent int
+# endif
+
 # ifdef AMIGA
 #  include "os_amiga.pro"
 # endif
@@ -63,8 +68,9 @@
 # include "ex_docmd.pro"
 # include "ex_getln.pro"
 # include "fileio.pro"
+# include "fold.pro"
 # include "getchar.pro"
-# ifdef HANGUL_INPUT
+# ifdef FEAT_HANGULIN
 #  include "hangulin.pro"
 # endif
 # include "main.pro"
@@ -83,7 +89,7 @@ smsg_attr __ARGS((int, char_u *, ...));
 # endif
 # include "memfile.pro"
 # include "memline.pro"
-# ifdef WANT_MENU
+# ifdef FEAT_MENU
 #  include "menu.pro"
 # endif
 # include "message.pro"
@@ -92,8 +98,12 @@ smsg_attr __ARGS((int, char_u *, ...));
 #ifndef HAVE_STRPBRK	    /* not generated automatically from misc2.c */
 char_u *vim_strpbrk __ARGS((char_u *s, char_u *charset));
 #endif
-# if defined(MULTI_BYTE) || defined(USE_XIM)
-#  include "multbyte.pro"
+#ifndef HAVE_QSORT
+/* Use our own qsort(), don't define the prototype when not used. */
+void qsort __ARGS((void *base, size_t elm_count, size_t elm_size, int (*cmp)(const void *, const void *)));
+#endif
+# if defined(FEAT_MBYTE) || defined(FEAT_XIM)
+#  include "multibyte.pro"
 # endif
 # include "normal.pro"
 # include "ops.pro"
@@ -113,61 +123,66 @@ char_u *vim_strpbrk __ARGS((char_u *s, char_u *charset));
 # include "version.pro"
 # include "window.pro"
 
-# ifdef HAVE_PYTHON
+# ifdef FEAT_PYTHON
 #  include "if_python.pro"
 # endif
 
-# ifdef HAVE_TCL
+# ifdef FEAT_TCL
 #  include "if_tcl.pro"
 # endif
 
-# ifdef USE_GUI
+# ifdef FEAT_GUI
 #  include "gui.pro"
-#  include "pty.pro"
+#  ifdef UNIX
+#   include "pty.pro"
+#  endif
 #  if !defined(HAVE_SETENV) && !defined(HAVE_PUTENV)
 extern int putenv __ARGS((const char *string));		/* from pty.c */
 #   ifdef USE_VIMPTY_GETENV
 extern char_u *vimpty_getenv __ARGS((const char_u *string));	/* from pty.c */
 #   endif
 #  endif
-#  ifdef USE_GUI_WIN16
+#  ifdef FEAT_GUI_W16
 #   include "gui_w16.pro"
 #  endif
-#  ifdef USE_GUI_WIN32
+#  ifdef FEAT_GUI_W32
 #   include "gui_w32.pro"
-#   ifdef HAVE_OLE
+#   ifdef FEAT_OLE
 #    include "if_ole.pro"
 #   endif
 #  endif
-#  ifdef USE_GUI_GTK
+#  ifdef FEAT_GUI_GTK
 #   include "gui_gtk.pro"
 #   include "gui_gtk_x11.pro"
 #  endif
-#  ifdef USE_GUI_MOTIF
+#  ifdef FEAT_GUI_MOTIF
 #   include "gui_motif.pro"
 #  endif
-#  ifdef USE_GUI_ATHENA
+#  ifdef FEAT_GUI_ATHENA
 #   include "gui_athena.pro"
-#ifdef USE_BROWSE
-extern char *vim_SelFile __ARGS((Widget toplevel, char *prompt, char *init_path, int (*show_entry)(), int x, int y, GuiColor fg, GuiColor bg));
+#ifdef FEAT_BROWSE
+extern char *vim_SelFile __ARGS((Widget toplevel, char *prompt, char *init_path, int (*show_entry)(), int x, int y, guicolor_t fg, guicolor_t bg));
 #endif
 #  endif
-#  ifdef USE_GUI_BEOS
+#  ifdef FEAT_GUI_BEOS
 #   include "gui_beos.pro"
 #  endif
-#  ifdef USE_GUI_MAC
+#  ifdef FEAT_GUI_MAC
 #   include "gui_mac.pro"
 #  endif
-#  ifdef USE_GUI_X11
+#  ifdef FEAT_GUI_X11
 #   include "gui_x11.pro"
 #  endif
-#  if defined(USE_GUI_AMIGA)
+#  if defined(FEAT_GUI_AMIGA)
 #    include "gui_amiga.pro"
 #  endif
 #  ifdef RISCOS
 #   include "gui_riscos.pro"
 #  endif
-# endif	/* USE_GUI */
+#  ifdef FEAT_SUN_WORKSHOP
+#   include "workshop.pro"
+#  endif
+# endif	/* FEAT_GUI */
 
 /*
  * The perl include files pollute the namespace, therfore proto.h must be
@@ -176,7 +191,7 @@ extern char *vim_SelFile __ARGS((Widget toplevel, char *prompt, char *init_path,
  * not included here for the perl files.  Use a dummy define for CV for the
  * other files.
  */
-#if defined(HAVE_PERL_INTERP) && !defined(IN_PERL_FILE)
+#if defined(FEAT_PERL) && !defined(IN_PERL_FILE)
 # define CV void
 # ifdef __BORLANDC__
 #  pragma option -pc

@@ -1,4 +1,4 @@
-/* os_vms_conf.h.  Replaces config.h for VMS */
+/* os_vms_conf.h.  Replaces auto/config.h for VMS */
 
 /* Define unless no X support found */
 /*#define HAVE_X11 1*/

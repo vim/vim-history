@@ -9,7 +9,7 @@
 /*
  * farsi.c: functions for Farsi language
  *
- * Included by main.c, when FKMAP is defined.
+ * Included by main.c, when FEAT_FKMAP is defined.
  */
 
 static int toF_Xor_X_ __ARGS((int c));
@@ -1791,8 +1791,8 @@ toF_ending(c)
     void
 conv_to_pvim()
 {
-char_u *ptr;
-int lnum, llen, i;
+    char_u	*ptr;
+    int		lnum, llen, i;
 
     for (lnum = 1; lnum <= curbuf->b_ml.ml_line_count; ++lnum)
     {
@@ -1823,28 +1823,29 @@ int lnum, llen, i;
     }
 
     /*
-    ** Following lines contains Farsi encoded character.
-    */
+     * Following lines contains Farsi encoded character.
+     */
 
     do_cmdline((char_u *)"%s/\202\231/\232/g", NULL, NULL, DOCMD_NOWAIT | DOCMD_VERBOSE);
     do_cmdline((char_u *)"%s/\201\231/\370\334/g", NULL, NULL, DOCMD_NOWAIT | DOCMD_VERBOSE);
 
-    update_screen(CLEAR);
+    /* Assume the screen has been messed up: clear it and redraw. */
+    redraw_later(CLEAR);
     MSG_ATTR(farsi_text_1, hl_attr(HLF_S));
 }
 
 /*
-** Convert the Farsi VIM into Farsi 3342 standad.
-*/
+ * Convert the Farsi VIM into Farsi 3342 standad.
+ */
     void
 conv_to_pstd()
 {
-char_u *ptr;
-int lnum, llen, i;
+    char_u	*ptr;
+    int		lnum, llen, i;
 
     /*
-    ** Following line contains Farsi encoded character.
-    */
+     * Following line contains Farsi encoded character.
+     */
 
     do_cmdline((char_u *)"%s/\232/\202\231/g", NULL, NULL, DOCMD_NOWAIT | DOCMD_VERBOSE);
 
@@ -1861,7 +1862,8 @@ int lnum, llen, i;
 	}
     }
 
-    update_screen(CLEAR);
+    /* Assume the screen has been messed up: clear it and redraw. */
+    redraw_later(CLEAR);
     MSG_ATTR(farsi_text_2, hl_attr(HLF_S));
 }
 
@@ -2265,27 +2267,29 @@ F_ischar(c)
 }
 
     void
-farsi_fkey(c)
-    int	    c;
+farsi_fkey(cap)
+    cmdarg_t	*cap;
 {
+    int		c = cap->cmdchar;
+
     if (c == K_F8)
     {
 	if (p_altkeymap)
 	{
-	    if (curwin->w_p_pers & W_R_L)
+	    if (curwin->w_farsi & W_R_L)
 	    {
-		p_fkmap=0;
+		p_fkmap = 0;
 		do_cmdline((char_u *)"set norl", NULL, NULL, DOCMD_NOWAIT);
 		MSG("");
 	    }
 	    else
 	    {
-		p_fkmap=1;
+		p_fkmap = 1;
 		do_cmdline((char_u *)"set rl", NULL, NULL, DOCMD_NOWAIT);
 		MSG("");
 	    }
 
-	    curwin->w_p_pers = curwin->w_p_pers ^ W_R_L;
+	    curwin->w_farsi = curwin->w_farsi ^ W_R_L;
 	}
     }
 
@@ -2293,8 +2297,8 @@ farsi_fkey(c)
     {
 	if (p_altkeymap && curwin->w_p_rl)
 	{
-	    curwin->w_p_pers = curwin->w_p_pers ^ W_CONV;
-	    if (curwin->w_p_pers & W_CONV)
+	    curwin->w_farsi = curwin->w_farsi ^ W_CONV;
+	    if (curwin->w_farsi & W_CONV)
 		conv_to_pvim();
 	    else
 		conv_to_pstd();

@@ -1,4 +1,4 @@
-/* gui_vms_conf.h.  Replaces config.h for VMS with GUI */
+/* gui_vms_conf.h.  Replaces auto/config.h for VMS with GUI */
 
 /* Define unless no X support found */
 #define HAVE_X11 1

@@ -1,4 +1,4 @@
-*os_vms.txt*    For Vim version 5.7   Last change: 2000 Jun 20
+*os_vms.txt*    For Vim version 6.0d.  Last change: 2000 Jul 20
 
 
 		  VIM REFERENCE MANUAL
@@ -48,23 +48,7 @@ You can download precompiled executables from:
 
 3. Compiling						*vms-compiling*
 
-Unpack the Unix and Extra archives together into one directory.  In the <.SRC>
-subdirectory you should find the make file OS_VMS.MMS.  By editing this file
-you may choose between building the character, GUI and debug version. There
-are also additional options for Perl, Python and Tcl support.
-
-You will need either the DECSET mms utility or the freely available clone of
-it called mmk (VMS has no make utility in the standard distribution). You can
-download mmk from http://www.openvms.digital.com/freeware/MMK/
-
-If you have MSS on your system, the command
-
->	mms /descrip=os_vms.mms
-
-will start building your own customised version of Vim.
-The adequate command for mmk is:
-
->	mmk /descrip=os_vms.mms
+See the file src/INSTALLvms.txt.
 
 ==============================================================================
 
@@ -110,11 +94,11 @@ Vim uses a special directory structure to hold the document and runtime files:
     vimrc    (system rc files)
     gvimrc
 
-Use:
+Use: >
 
->	define/nolog device:[leading-path-here.vim]       vim
->	define/nolog device:[leading-path-here.vim.vim56] vimruntime
->	define/nolog device:[leading-path-here.tmp]       tmp
+	define/nolog device:[leading-path-here.vim]       vim
+	define/nolog device:[leading-path-here.vim.vim56] vimruntime
+	define/nolog device:[leading-path-here.tmp]       tmp
 
 to get vim.exe to find its document, filetype, and syntax files, and to
 specify a directory where temporary files will be located. Copy the "runtime"
@@ -130,17 +114,17 @@ Usually you want to run just one version of Vim on your system, therefore
 it is enough to dedicate one directory for Vim.
 Copy all Vim runtime directory structure to the deployment position.
 Add the following lines to your LOGIN.COM (in SYS$LOGIN directory).
-Set up logical $VIM as:
+Set up logical $VIM as: >
 
->	$ define VIM device:<path>
+	$ define VIM device:<path>
 
-Set up some symbols:
+Set up some symbols: >
 
->	$ ! vi starts Vim in chr. mode.
->	$ vi*m  :== mcr device:<path>VIM.EXE
+	$ ! vi starts Vim in chr. mode.
+	$ vi*m  :== mcr device:<path>VIM.EXE
 
->	$ !gvi starts Vim in GUI mode.
->	$ gv*im :== spawn/nowait mcr device:<path>VIM.EXE -g
+	$ !gvi starts Vim in GUI mode.
+	$ gv*im :== spawn/nowait mcr device:<path>VIM.EXE -g
 
 Create .vimrc and .gvimrc files in your home directory (SYS$LOGIN).
 
@@ -151,37 +135,37 @@ own additions or resetting in home directory in files .vimrc and .gvimrc.
 It should work without problems.
 
 Note: Remember, system rc files (default for all users) does not have leading
-"." So, system rc files are:
+"." So, system rc files are: >
 
->	VIM$:vimrc
->	VIM$:gvimrc
->	VIM$:menu.vim
+	VIM$:vimrc
+	VIM$:gvimrc
+	VIM$:menu.vim
 
-and user's customised rc files are:
+and user's customised rc files are: >
 
->	sys$login:.vimrc
->	sys$login:.gvimrc
+	sys$login:.vimrc
+	sys$login:.gvimrc
 
 You can check that everything is on the right place with the :version command.
 
-Example LOGIN.COM:
+Example LOGIN.COM: >
 
->	$ define/nolog VIM RF10:[UTIL.VIM]
->	$ vi*m  :== mcr VIM:VIM.EXE
->	$ gv*im :== spawn/nowait mcr VIM:VIM.EXE -g
->	$ set disp/create/node=192.168.5.223/trans=tcpip
+	$ define/nolog VIM RF10:[UTIL.VIM]
+	$ vi*m  :== mcr VIM:VIM.EXE
+	$ gv*im :== spawn/nowait mcr VIM:VIM.EXE -g
+	$ set disp/create/node=192.168.5.223/trans=tcpip
 
 Note: This set-up should be enough, if you are working on standalone server or
 clustered environment, but if you want to use Vim as internode editor, it
-will satiate you as well. You just have to define the "whole" path:
+will satiate you as well. You just have to define the "whole" path: >
 
->	$ define VIM "<server_name>[""user password""]::device:<path>"
->	$ vi*m :== "mcr VIM:VIM.EXE"
+	$ define VIM "<server_name>[""user password""]::device:<path>"
+	$ vi*m :== "mcr VIM:VIM.EXE"
 
-as for example:
+as for example: >
 
->	$ define VIM "PLUTO::RF10:[UTIL.VIM]"
->	$ define VIM "PLUTO""ZAY mypass""::RF10:[UTIL.VIM]" ! if passwd required
+	$ define VIM "PLUTO::RF10:[UTIL.VIM]"
+	$ define VIM "PLUTO""ZAY mypass""::RF10:[UTIL.VIM]" ! if passwd required
 
 You can also use $VIMRUNTIME logical to point to proper version of Vim if you
 have installed more versions in the same time. If $VIMRUNTIME is not defined
@@ -196,24 +180,24 @@ VMS is not a native X window environment, so you can not start Vim in GUI mode
 "just like that". But anyhow it is not too complicate to get a running Vim.
 
 1) If you are working on the VMS X console:
-   Start Vim with the command:
+   Start Vim with the command: >
 
->	$ mc device:<path>VIM.EXE -g
-
+	$ mc device:<path>VIM.EXE -g
+<
    or type :gui as a command to the Vim command prompt. For more info :help gui
 
 2) If you are working on other X window environment as Unix or some remote X
-   VMS console. Set up display to your host with:
+   VMS console. Set up display to your host with: >
 
->	$ set disp/create/node=<your IP address>/trans=<transport-name>
-
+	$ set disp/create/node=<your IP address>/trans=<transport-name>
+<
    and start Vim as in point 1. You can find more help in VMS documentation or
    type: help set disp in VMS prompt.
-   Examples:
+   Examples: >
 
->	$ set disp/create/node=192.168.5.159             ! default trans is DECnet
->	$ set disp/create/node=192.168.5.159/trans=tcpip ! TCP/IP network
->	$ set disp/create/node=192.168.5.159/trans=local ! display on the same node
+	$ set disp/create/node=192.168.5.159             ! default trans is DECnet
+	$ set disp/create/node=192.168.5.159/trans=tcpip ! TCP/IP network
+	$ set disp/create/node=192.168.5.159/trans=local ! display on the same node
 
 Note: you should define just one of these.
 For more information type $help set disp in VMS prompt.
@@ -229,10 +213,10 @@ For more information type $help set disp in VMS prompt.
 8.1 backspace/delete.
 
 There are backspace/delete key inconsistencies with VMS.
-:fixdel doesn't do the trick, but the solution is:
+:fixdel doesn't do the trick, but the solution is: >
 
->	inoremap ^? ^H		" for terminal mode
->	inoremap <Del> ^H	" for gui mode
+	:inoremap ^? ^H		" for terminal mode
+	:inoremap <Del> ^H	" for gui mode
 
 Read more in ch: 8.6 (Terminal problems).
 (Bruce Hunsaker <BNHunsaker@chq.byu.edu> Vim 5.3)
@@ -240,19 +224,19 @@ Read more in ch: 8.6 (Terminal problems).
 8.2 Filters.
 
 Vim supports filters; ie. if you have a sort program that can handle
-input/output redirection like Unix (<infile >outfile), you could use
+input/output redirection like Unix (<infile >outfile), you could use >
 
->	map \s 0!'aqsort<CR>
+	:map \s 0!'aqsort<CR>
 
 (Charles E. Campbell, Jr. <cec@gryphon.gsfc.nasa.gov> Vim 5.4)
 
 8.3 VMS file version numbers.
 
 Vim is saving files into a new file with the next higher file version
-number, try these settings.
+number, try these settings. >
 
->	set nobackup        " does not create *.*_ backup files
->	set nowritebackup   " does not have any purpose on VMS. It's default.
+	:set nobackup        " does not create *.*_ backup files
+	:set nowritebackup   " does not have any purpose on VMS. It's default.
 
 Recovery is working perfect as well from the default swap file.
 Read more with :help swapfile
@@ -284,30 +268,30 @@ rf10:<user.zay.work>test.c;1
 8.5 Remote host invocation
 
 It is possible to use Vim as an internode editor.
-1. Edit some file from remote node:
+1. Edit some file from remote node: >
 
->	vi "<server>""username passwd""::<device>:<path><filename>;<version>"
+	vi "<server>""username passwd""::<device>:<path><filename>;<version>"
 
-example:
->	vi "pluto""zay passwd""::RF10:<USER.ZAY.WORK>TEST.C;1"
+example: >
+	vi "pluto""zay passwd""::RF10:<USER.ZAY.WORK>TEST.C;1"
 
 Note: syntax is very important, otherwise VMS will recognise more parameters
 instead of one (resulting with: file not found)
 
 2.  Set up Vim as your internode editor. If Vim is not installed on your host,
 just set up your IP address, full Vim path including the server name and run
-the command procedure below:
+the command procedure below: >
 
->	$ if (p1 .eqs. "") .OR. (p2 .eqs. "") then goto usage
->	$ set disp/create/node=<your_IP_here>/trans=tcpip
->	$ define "VIM "<vim_server>""''p1' ''p2'""::<device>:<vim_path>"
->	$  vi*m :== "mcr VIM:VIM.EXE"
->	$ gv*im :== "spawn/nowait mcr VIM:VIM.EXE -g"
->	$ goto end
->	$ usage:
->	$ write sys$output " Please enter username and password as a parameter."
->	$ write sys$output " Example: @SETVIM.COM username passwd"
->	$ end:
+	$ if (p1 .eqs. "") .OR. (p2 .eqs. "") then goto usage
+	$ set disp/create/node=<your_IP_here>/trans=tcpip
+	$ define "VIM "<vim_server>""''p1' ''p2'""::<device>:<vim_path>"
+	$  vi*m :== "mcr VIM:VIM.EXE"
+	$ gv*im :== "spawn/nowait mcr VIM:VIM.EXE -g"
+	$ goto end
+	$ usage:
+	$ write sys$output " Please enter username and password as a parameter."
+	$ write sys$output " Example: @SETVIM.COM username passwd"
+	$ end:
 
 Note: Never use it in clustered environment (you do not need it), and load could
 be very-very slow, but even faster then a local Emacs. :-)
@@ -334,30 +318,30 @@ Terminal entry not found in termcap
     builtin_dumb
 defaulting to 'vt320'
 ---
-The solution is to define default terminal name:
+The solution is to define default terminal name: >
 
->	$ ! unknown terminal name. let us use vt320 or ansi instead.
->	$ ! Note: it's case sensitive
->	$ define term "vt320"
+	$ ! unknown terminal name. let us use vt320 or ansi instead.
+	$ ! Note: it's case sensitive
+	$ define term "vt320"
 
 Terminals from VT100 to VT320 (as V300, VT220, VT200 ) do not need any extra
 keyboard mappings. They should work perfect as they are, including arrows,
 Ins, Del buttons etc. Except Backspace in GUI mode. To solve it, add to
-.gvimrc:
+.gvimrc: >
 
->	inoremap <Del> <BS>
+	inoremap <Del> <BS>
 
 Vim will also recognise that they are fast terminals.
 
 If you have some annoying line jumping on the screen between windows add to
-your .vimrc file:
+your .vimrc file: >
 
->	set ttyfast	" set fast terminal
+	set ttyfast	" set fast terminal
 
 Note: if you're using Vim on remote host or through very slow connection, it's
-recommended to avoid fast terminal option with:
+recommended to avoid fast terminal option with: >
 
->	set nottyfast
+	set nottyfast
 
 
 8.7 Hex-editing and other external tools
@@ -457,3 +441,4 @@ In alphabetical order:
 	Bruce Hunsaker <BNHunsaker@chq.byu.edu>
 	Sandor Kopanyi <sandor.kopanyi@altavista.net>
 
+ vim:tw=78:

@@ -1,7 +1,7 @@
 /*****************************************************************************
 *   $Id$
 *
-*   Copyright (c) 1996-1999, Darren Hiebert
+*   Copyright (c) 1996-2000, Darren Hiebert
 *
 *   Author: Darren Hiebert <darren@hiebert.com>, <darren@hiwaay.net>
 *           http://darren.hiebert.com
@@ -20,7 +20,7 @@
 /*============================================================================
 =   Include files
 ============================================================================*/
-#include "general.h"
+#include "general.h"	/* must always come first */
 
 #ifdef HAVE_STDLIB_H
 # include <stdlib.h>		/* to declare malloc(), realloc() */
@@ -38,6 +38,10 @@
 # include <clib/dos_protos.h>	/* function prototypes */
 # define ANCHOR_BUF_SIZE (512)
 # define ANCHOR_SIZE (sizeof(struct AnchorPath) + ANCHOR_BUF_SIZE)
+# ifdef __SASC
+extern struct DosLibrary *DOSBase;
+#  include <pragmas/dos_pragmas.h>
+# endif
 #endif
 
 #ifdef ENABLE_STDARG
@@ -48,11 +52,19 @@
 
 /*  To declare "struct stat" and stat().
  */
-#if defined(__MWERKS__) && defined(__MACINTOSH__)
-# include <stat.h>		/* there is no sys directory on the Mac */
-#else
+#if defined(HAVE_SYS_TYPES_H)
 # include <sys/types.h>
+#else
+# if defined(HAVE_TYPES_H)
+#  include <types.h>
+# endif
+#endif
+#ifdef HAVE_SYS_STAT_H
 # include <sys/stat.h>
+#else
+# ifdef HAVE_STAT_H
+#  include <stat.h>
+# endif
 #endif
 
 /*  To provide directory searching for recursion feature.
@@ -88,7 +100,6 @@
 # endif
 #endif
 
-#include "ctags.h"
 #include "debug.h"
 #include "entry.h"
 #include "keyword.h"
@@ -126,6 +137,12 @@
 # endif
 #endif
 
+#if (defined(MSDOS) || defined(WIN32) || defined(OS2)) && defined(UNIX_PATH_SEPARATOR)
+# define OUTPUT_PATH_SEPARATOR	'/'
+#else
+# define OUTPUT_PATH_SEPARATOR	PATH_SEPARATOR
+#endif
+
 /*  File type tests.
  */
 #ifndef S_ISREG
@@ -152,6 +169,16 @@
 # endif
 #endif
 
+#ifndef S_IXUSR
+# define S_IXUSR 0
+#endif
+#ifndef S_IXGRP
+# define S_IXGRP 0
+#endif
+#ifndef S_IXOTH
+# define S_IXOTH 0
+#endif
+
 /*  Hack for rediculous practice of Microsoft Visual C++.
  */
 #if defined(WIN32) && defined(_MSC_VER)
@@ -164,7 +191,7 @@
 #if defined(MSDOS) || defined(WIN32) || defined(OS2)
 static const char PathDelimiters[] = ":/\\";
 #endif
-#ifdef __vms
+#ifdef VMS
 static const char PathDelimiters[] = ":]>";
 #endif
 
@@ -194,9 +221,7 @@ static boolean createTagsForMatchingEntries __ARGS((char *const pattern));
 static boolean isSymbolicLink __ARGS((const char *const name));
 static boolean isNormalFile __ARGS((const char *const name));
 static boolean isDirectory __ARGS((const char *const name));
-static boolean createTagsForFile __ARGS((const char *const filePath, const langType language, const unsigned int passCount));
 static vString *sourceFilePath __ARGS((const char *const file));
-static boolean createTagsWithFallback __ARGS((const char *const fileName, const langType language));
 static boolean createTagsForDirectory __ARGS((const char *const dirName));
 static boolean createTagsForEntry __ARGS((const char *const entryName));
 static boolean createTagsFromFileInput __ARGS((FILE* const fp, const boolean filter));
@@ -310,16 +335,16 @@ extern unsigned long getFileSize( name )
 static boolean isSymbolicLink( name )
     const char *const name;
 {
-#if defined(__vms) || defined(MSDOS) || defined(WIN32) || defined(__EMX__) || defined(AMIGA)
+#if defined(MSDOS) || defined(WIN32) || defined(VMS) || defined(__EMX__) || defined(AMIGA)
     return FALSE;
 #else
     struct stat fileStatus;
-    boolean isLink = FALSE;
+    boolean result = FALSE;
 
     if (lstat(name, &fileStatus) == 0)
-	isLink = (boolean)(S_ISLNK(fileStatus.st_mode));
+	result = (boolean)(S_ISLNK(fileStatus.st_mode));
 
-    return isLink;
+    return result;
 #endif
 }
 
@@ -327,12 +352,38 @@ static boolean isNormalFile( name )
     const char *const name;
 {
     struct stat fileStatus;
-    boolean isNormal = FALSE;
+    boolean result = FALSE;
 
     if (stat(name, &fileStatus) == 0)
-	isNormal = (boolean)(S_ISREG(fileStatus.st_mode));
+	result = (boolean)(S_ISREG(fileStatus.st_mode));
 
-    return isNormal;
+    return result;
+}
+
+extern boolean isExecutable( name )
+    const char *const name;
+{
+    struct stat fileStatus;
+    boolean result = FALSE;
+
+    if (stat(name, &fileStatus) == 0)
+	result = (boolean)((fileStatus.st_mode & (S_IXUSR|S_IXGRP|S_IXOTH)) != 0);
+
+    return result;
+}
+
+extern boolean isSameFile( name1, name2 )
+    const char *const name1;
+    const char *const name2;
+{
+    boolean result = FALSE;
+#ifdef HAVE_STAT_ST_INO
+    struct stat stat1, stat2;
+
+    if (stat(name1, &stat1) == 0  &&  stat(name2, &stat2) == 0)
+	result = (boolean)(stat1.st_ino == stat2.st_ino);
+#endif
+    return result;
 }
 
 #ifdef HAVE_MKSTEMP
@@ -342,7 +393,7 @@ static boolean isSetUID __ARGS((const char *const name));
 static boolean isSetUID( name )
     const char *const name;
 {
-#if defined(__vms) || defined(MSDOS) || defined(WIN32) || defined(__EMX__) || defined(AMIGA)
+#if defined(VMS) || defined(MSDOS) || defined(WIN32) || defined(__EMX__) || defined(AMIGA)
     return FALSE;
 #else
     struct stat fileStatus;
@@ -360,7 +411,7 @@ static boolean isSetUID( name )
 static boolean isDirectory( name )
     const char *const name;
 {
-    boolean isDir = FALSE;
+    boolean result = FALSE;
 #ifdef AMIGA
     struct FileInfoBlock *const fib = (struct FileInfoBlock *)
 					eMalloc(sizeof(struct FileInfoBlock));
@@ -372,7 +423,7 @@ static boolean isDirectory( name )
 	if (flock != (BPTR)NULL)
 	{
 	    if (Examine(flock, fib))
-		isDir = ((fib->fib_DirEntryType >= 0) ? TRUE : FALSE);
+		result = ((fib->fib_DirEntryType >= 0) ? TRUE : FALSE);
 	    UnLock(flock);
 	}
 	eFree(fib);
@@ -381,9 +432,9 @@ static boolean isDirectory( name )
     struct stat fileStatus;
 
     if (stat(name, &fileStatus) == 0)
-	isDir = (boolean)S_ISDIR(fileStatus.st_mode);
+	result = (boolean)S_ISDIR(fileStatus.st_mode);
 #endif
-    return isDir;
+    return result;
 }
 
 extern boolean doesFileExist( fileName )
@@ -437,8 +488,12 @@ extern boolean isDestinationStdout()
 #if defined(MSDOS) || defined(WIN32) || defined(OS2)
 	/* nothing else special needed here */
 #else
-# ifdef __vms
+# ifdef VMS
+#  ifdef VAXC
+    || strcmp(Option.tagFileName, "sys$output") == 0
+#  else
     || strncasecmp(Option.tagFileName, "sys$output", sizeof("sys$output")) == 0
+#  endif
 # else
     || strcmp(Option.tagFileName, "/dev/stdout") == 0
 # endif
@@ -464,7 +519,7 @@ extern FILE *tempFile( mode, pName )
     if (tmpdir == NULL)
 	tmpdir = TMPDIR;
     name = (char*)eMalloc(strlen(tmpdir) + 1 + strlen(template) + 1);
-    sprintf(name, "%s%c%s", tmpdir, PATH_SEPARATOR, template);
+    sprintf(name, "%s%c%s", tmpdir, OUTPUT_PATH_SEPARATOR, template);
     fd = mkstemp(name);
     if (fd == -1)
 	error(FATAL | PERROR, "cannot open temporary file");
@@ -491,7 +546,7 @@ extern FILE *tempFile( mode, pName )
 extern const char *baseFilename( filePath )
     const char *const filePath;
 {
-#if defined(MSDOS) || defined(WIN32) || defined(OS2) || defined(__vms)
+#if defined(MSDOS) || defined(WIN32) || defined(OS2) || defined(VMS)
     const char *tail = NULL;
     unsigned int i;
 
@@ -522,7 +577,7 @@ extern boolean isAbsolutePath( path )
     return (strchr(PathDelimiters, path[0]) != NULL  ||
 	    (isalpha(path[0])  &&  path[1] == ':'));
 #else
-# ifdef __vms
+# ifdef VMS
     return (boolean)(strchr(path, ':') != NULL);
 # else
     return (boolean)(path[0] == PATH_SEPARATOR);
@@ -535,7 +590,7 @@ extern vString *combinePathAndFile( path, file )
     const char *const file;
 {
     vString *const filePath = vStringNew();
-#ifdef __vms
+#ifdef VMS
     const char *const directoryId = strstr(file, ".DIR;1");
 
     if (directoryId == NULL)
@@ -574,7 +629,7 @@ extern vString *combinePathAndFile( path, file )
     vStringCopyS(filePath, path);
     if (! terminated)
     {
-	vStringPut(filePath, PATH_SEPARATOR);
+	vStringPut(filePath, OUTPUT_PATH_SEPARATOR);
 	vStringTerminate(filePath);
     }
     vStringCatS(filePath, file);
@@ -586,48 +641,6 @@ extern vString *combinePathAndFile( path, file )
 /*----------------------------------------------------------------------------
  *	Create tags
  *--------------------------------------------------------------------------*/
-
-static boolean createTagsForFile( filePath, language, passCount )
-    const char *const filePath;
-    const langType language;
-    const unsigned int passCount;
-{
-    boolean retry = FALSE;
-
-    if (Option.etags)
-	beginEtagsFile();
-
-    if (fileOpen(filePath, language))
-    {
-	if (Option.include.fileNames)
-	{
-	    tagEntryInfo tag;
-
-	    initTagEntry(&tag, baseFilename(filePath));
-
-	    tag.isFileEntry	= TRUE;
-	    tag.lineNumberEntry = TRUE;
-	    tag.lineNumber	= 1;
-	    tag.kindName	= "file";
-	    tag.kind		= 'F';
-
-	    makeTagEntry(&tag);
-	}
-
-	if (language == LANG_EIFFEL)
-	    retry = createEiffelTags();
-	else if (language == LANG_FORTRAN)
-	    retry = createFortranTags(passCount);
-	else
-	    retry = createCTags(passCount);
-	fileClose();
-    }
-
-    if (Option.etags)
-	endEtagsFile(filePath);
-
-    return retry;
-}
 
 static vString *sourceFilePath( file )
     const char *const file;
@@ -643,27 +656,6 @@ static vString *sourceFilePath( file )
 	filePath = combinePathAndFile(Option.path, file);
 
     return filePath;
-}
-
-static boolean createTagsWithFallback( fileName, language )
-    const char *const fileName;
-    const langType language;
-{
-    const unsigned long numTags	= TagFile.numTags.added;
-    fpos_t tagFilePosition;
-    boolean resize = FALSE;
-    unsigned int passCount = 0;
-
-    fgetpos(TagFile.fp, &tagFilePosition);
-    while (createTagsForFile(fileName, language, ++passCount))
-    {
-	/*  Restore prior state of tag file.
-	 */
-	fsetpos(TagFile.fp, &tagFilePosition);
-	TagFile.numTags.added = numTags;
-	resize = TRUE;
-    }
-    return resize;
 }
 
 # if defined(MSDOS) || defined(WIN32)
@@ -769,13 +761,13 @@ static boolean createTagsForDirectory( dirName )
     DIR *const dir = opendir(dirName);
 
     if (dir == NULL)
-	error(WARNING | PERROR, "Cannot recurse into directory %s", dirName);
+	error(WARNING | PERROR, "cannot recurse into directory \"%s\"", dirName);
     else
     {
 	struct dirent *entry;
 
 	if (Option.verbose)
-	    printf("RECURSING into directory %s\n", dirName);
+	    printf("RECURSING into directory \"%s\"\n", dirName);
 	while ((entry = readdir(dir)) != NULL)
 	{
 	    const char *const entryName = entry->d_name;
@@ -786,7 +778,11 @@ static boolean createTagsForDirectory( dirName )
 		strcmp(entryName, "EIFGEN") != 0)
 	    {
 		vString *const filePath = combinePathAndFile(dirName,entryName);
-		resize |= createTagsForEntry(vStringValue(filePath));
+		if (isSameFile(dirName, vStringValue(filePath)))
+		    error(WARNING, "ignoring \"%s\" (recursive link)",
+			  vStringValue(filePath));
+		else
+		    resize |= createTagsForEntry(vStringValue(filePath));
 		vStringDelete(filePath);
 	    }
 	}
@@ -799,13 +795,14 @@ static boolean createTagsForDirectory( dirName )
     boolean resize;
 
     if (Option.verbose)
-	printf("RECURSING into directory %s\n", dirName);
+	printf("RECURSING into directory \"%s\"\n", dirName);
 
     vStringCopyS(pattern, dirName);
 #  ifdef AMIGA
     vStringCatS(pattern, "/#?");
 #  else
-    vStringCatS(pattern, "\\*.*");
+    vStringPut(pattern, OUTPUT_PATH_SEPARATOR);
+    vStringCatS(pattern, "*.*");
 #  endif
     resize = createTagsForMatchingEntries(vStringValue(pattern));
     vStringDelete(pattern);
@@ -821,15 +818,14 @@ static boolean createTagsForEntry( entryName )
     const char *const entryName;
 {
     boolean resize = FALSE;
-    langType language;
 
     if (isSymbolicLink(entryName)  &&  ! Option.followLinks)
     {
 	if (Option.verbose)
-	    printf("ignoring %s (symbolic link)\n", entryName);
+	    printf("ignoring \"%s\" (symbolic link)\n", entryName);
     }
     else if (! doesFileExist(entryName))
-	error(WARNING | PERROR, "cannot access \"%s\"", entryName);
+	error(WARNING | PERROR, "cannot open source file \"%s\"", entryName);
     else if (isDirectory(entryName))
     {
 	if (Option.recurse)
@@ -837,27 +833,17 @@ static boolean createTagsForEntry( entryName )
 	else
 	{
 	    if (Option.verbose)
-		printf("ignoring %s (directory)\n", entryName);
+		printf("ignoring \"%s\" (directory)\n", entryName);
 	    resize = FALSE;
 	}
     }
     else if (! isNormalFile(entryName))
     {
 	if (Option.verbose)
-	    printf("ignoring %s (special file)\n", entryName);
-    }
-    else if ((language = getFileLanguage(entryName)) == LANG_IGNORE)
-    {
-	if (Option.verbose)
-	    printf("ignoring %s (unknown extension)\n", entryName);
+	    printf("ignoring \"%s\" (special file)\n", entryName);
     }
     else
-    {
-	if (Option.filter) openTagFile();
-	resize = createTagsWithFallback(entryName, language);
-	if (Option.filter) closeTagFile(resize);
-	addTotals(1, 0L, 0L);
-    }
+	resize = parseFile(entryName);
     return resize;
 }
 
@@ -884,7 +870,8 @@ static boolean createTagsForArgs( args )
 	if (Option.recurse  &&
 	    (strcmp(patternS, ".") == 0  ||  strcmp(patternS, "..") == 0))
 	{
-	    vStringCatS(pattern, "\\*.*");
+	    vStringPut(pattern, OUTPUT_PATH_SEPARATOR);
+	    vStringCatS(pattern, "*.*");
 	}
 	resize |= createTagsForMatchingEntries(patternS);
 	vStringDelete(pattern);
@@ -943,7 +930,7 @@ static boolean createTagsFromListFile( fileName )
     {
 	FILE* const fp = fopen(fileName, "r");
 	if (fp == NULL)
-	    error(FATAL | PERROR, "cannot open \"%s\"", fileName);
+	    error(FATAL | PERROR, "cannot open list file \"%s\"", fileName);
 	resize = createTagsFromFileInput(fp, FALSE);
 	fclose(fp);
     }
@@ -1114,6 +1101,7 @@ extern int main( argc, argv )
     args = cArgNewFromArgv(argv);
     previewFirstOption(args);
     initOptions();
+    initParsers();
     readOptionConfiguration();
     if (Option.verbose)
 	printf("Reading options from command line\n");
@@ -1128,6 +1116,7 @@ extern int main( argc, argv )
     freeSourceFileResources();
     freeTagFileResources();
     freeOptionResources();
+    freeParserResources();
 
     exit(0);
     return 0;

@@ -22,7 +22,7 @@
 
 /* cproto doesn't create a prototype for main() */
 int _cdecl
-#if defined(USE_GUI_WIN32)
+#if defined(FEAT_GUI_W32)
 VimMain
 #else
     main
@@ -31,7 +31,7 @@ VimMain
 int (_cdecl *pmain)(int, char **);
 
 #ifndef PROTO
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 #ifndef VIMDLL
 void _cdecl SaveInst(HINSTANCE hInst);
 #endif
@@ -161,25 +161,25 @@ WinMain(
 	hLib = LoadLibrary(prog);
 	if (hLib == NULL)
 	{
-		MessageBox(0, "Could not load vim32.dll!","VIM Error",0);
+		MessageBox(0, _("Could not load vim32.dll!"),_("VIM Error"),0);
 		goto errout;
 	}
 	// fix up the function pointers
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 	pSaveInst = GetProcAddress(hLib, (LPCSTR)2);
 #endif
 	pmain = GetProcAddress(hLib, (LPCSTR)1);
 	if (pmain == NULL)
 	{
-		MessageBox(0, "Could not fix up function pointers to the DLL!","VIM Error",0);
+		MessageBox(0, _("Could not fix up function pointers to the DLL!"),_("VIM Error"),0);
 		goto errout;
 	}
 #else
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 	pSaveInst = SaveInst;
 #endif
 	pmain =
-#if defined(USE_GUI_WIN32)
+#if defined(FEAT_GUI_W32)
 	    //&& defined(__MINGW32__)
 	    VimMain
 #else
@@ -187,7 +187,7 @@ WinMain(
 #endif
 	    ;
 #endif
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 	pSaveInst(
 #ifdef __MINGW32__
 		GetModuleHandle(NULL)

@@ -1,7 +1,7 @@
 /*****************************************************************************
 *   $Id$
 *
-*   Copyright (c) 1996-1999, Darren Hiebert
+*   Copyright (c) 1996-2000, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.
@@ -12,24 +12,24 @@
 /*============================================================================
 =   Include files
 ============================================================================*/
-#include "general.h"
+#include "general.h"	/* must always come first */
 
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>	/* to declare toupper() */
 
 #include "ctags.h"
+#include "debug.h"
+#include "main.h"
 #define OPTION_WRITE
 #include "options.h"
-
-#include "main.h"
-#include "debug.h"
+#include "parse.h"
 
 /*============================================================================
 =   Defines
 ============================================================================*/
 
-#if defined(MSDOS) || defined(WIN32) || defined(OS2) || defined(__vms)
+#if defined(MSDOS) || defined(WIN32) || defined(OS2) || defined(VMS)
 # define CASE_INSENSITIVE_OS
 #endif
 
@@ -47,7 +47,7 @@
 
 /*  The following separators are permitted for list options.
  */
-#define EXTENSION_SEPARATORS   "."
+#define EXTENSION_SEPARATOR   '.'
 #define IGNORE_SEPARATORS   ", \t\n"
 
 #ifndef DEFAULT_FILE_FORMAT
@@ -59,9 +59,6 @@
 #endif
 
 #define isCompoundOption(c)	(boolean)(strchr("fohiILpDb",(c)) != NULL)
-
-#define shortOptionPending(c) \
-	(boolean)((c)->shortOptions != NULL  &&  *(c)->shortOptions != '\0')
 
 /*============================================================================
 =   Data declarations
@@ -100,48 +97,18 @@ static boolean ReachedFileNames = FALSE;
 
 static boolean StartedAsEtags = FALSE;
 
-static const char *const CExtensions[] = {
-    "c", NULL
-};
-static const char *const CppExtensions[] = {
-    "c++", "cc", "cpp", "cxx", "h", "hh", "hpp", "hxx", "h++",
-#ifndef CASE_INSENSITIVE_OS
-    "C", "H",
-#endif
-    NULL
-};
-static const char *const EiffelExtensions[] = {
-    "e", NULL
-};
-static const char *const FortranExtensions[] = {
-    "f", "for", "ftn", "f77", "f90", "f95",
-#ifndef CASE_INSENSITIVE_OS
-    "F", "FOR", "FTN", "F77", "F90", "F95",
-#endif
-    NULL
-};
-static const char *const JavaExtensions[] = {
-    "java", NULL
-};
 static const char *const HeaderExtensions[] = {
-    "h", "hh", "hpp", "hxx", "h++", "inc", "def",
-#ifndef CASE_INSENSITIVE_OS
-    "H",
-#endif
-    NULL
-};
-
-static const char *const *const DefaultLanguageMap[LANG_COUNT] = {
-    NULL,
-    CExtensions,
-    CppExtensions,
-    EiffelExtensions,
-    FortranExtensions,
-    JavaExtensions
+    "h", "H", "hh", "hpp", "hxx", "h++", "inc", "def", NULL
 };
 
 optionValues Option = {
     {	    /* include */
+        {       /* beta */
+            FALSE,		/* all patterns */
+            TRUE,		/* virtual patterns */
+            TRUE,		/* fragments */
+	    TRUE		/* slots */
+        },
 	{	/* c */
 	    TRUE,		/* -ic */
 	    TRUE,		/* -id */
@@ -212,9 +179,6 @@ optionValues Option = {
     FALSE,		/* --if0 */
     FALSE,		/* --kind-long */
     LANG_AUTO,		/* --lang */
-    {			/* --langmap */
-	NULL, NULL, NULL, NULL, NULL, NULL
-    },
     TRUE,		/* --links */
     FALSE,		/* --filter */
     NULL,		/* --filter-terminator */
@@ -249,8 +213,6 @@ static optionDescription LongOptionDescription[] = {
  {1,"  -h <list>"},
  {1,"       Specifies a list of file extensions used for headers."},
  {1,"       The default list is \".h.H.hh.hpp.hxx.h++\"."},
- {1,"  -i <types>"},
- {1,"       Nearly equivalent to --c-types=<types>."},
  {1,"  -I <list | file>"},
  {1,"       A list of tokens to be specially handled is read from either the"},
  {1,"       command line or the specified file."},
@@ -273,6 +235,15 @@ static optionDescription LongOptionDescription[] = {
  {1,"  --append=[yes|no]"},
  {1,"       Indicates whether tags should be appended to existing tag file"},
  {1,"       (default=no)."},
+ {1,"  --beta-types=types"},
+ {1,"       Specifies a list of BETA language tag types to be included in the"},
+ {1,"       output. See --c-types for the definition of the format of \"types\"."},
+ {1,"       Tags for the following BETA language contructs are supported"},
+ {1,"       (types are enabled by default except as noted):"},
+ {1,"          f   fragment definitions"},
+ {1,"          p   all patterns [off]"},
+ {1,"          s   slots (fragment uses)"},
+ {1,"          v   patterns (only virtual or rebound patterns are recorded)"},
  {1,"  --c-types=types"},
  {1,"       Specifies a list of C/C++ language tag types to include in the"},
  {1,"       output file. \"Types\" is a group of one-letter flags designating"},
@@ -303,9 +274,9 @@ static optionDescription LongOptionDescription[] = {
  {1,"      Include reference to 'file' in Emacs-style tag file (requires -e)."},
  {0,"  --excmd=number|pattern|mix"},
 #ifdef MACROS_USE_PATTERNS
- {0,"       Uses the specified type of EX command to locate tags (default=pattern)."},
+ {0,"       Uses the specified type of EX command to locate tags [pattern]."},
 #else
- {0,"       Uses the specified type of EX command to locate tags (default=mix)."},
+ {0,"       Uses the specified type of EX command to locate tags [mix]."},
 #endif
  {1,"  --eiffel-types=types"},
  {1,"       Specifies a list of Eiffel language tag types to be included in the"},
@@ -317,17 +288,31 @@ static optionDescription LongOptionDescription[] = {
  {1,"          l   local entities [off]"},
  {1,"       In addition, the following modifiers are accepted:"},
  {1,"          C   include extra, class-qualified tag entries for members [off]"},
+ {1,"  --beta-types=types"},
+ {1,"       Specifies a list of BETA language tag types to be included in the"},
+ {1,"       output. See --c-types for the definition of the format of \"types\"."},
+ {1,"       Tags for the following BETA language contructs are supported"},
+ {1,"       (all are enabled by default except where noted):"},
+ {1,"          v   patterns (virtual and final)"},
+ {1,"          p   all patterns [off]"},
+ {1,"          f   fragments"},
+ {1,"          s   slots"},
  {1,"  --file-scope=[yes|no]"},
  {1,"       Indicates whether tags scoped only for a single file (e.g. \"static\""},
- {1,"       tags) should be included in the output (default=yes)."},
+ {1,"       tags) should be included in the output [yes]."},
  {1,"  --file-tags=[yes|no]"},
- {1,"       Indicates whether tags should be generated for source file names"},
- {1,"       (default=no)."},
+ {1,"       Indicates whether tags should be generated for source file names [no]."},
+ {1,"  --filter=[yes|no]"},
+ {1,"       Behave as a filter, reading file names from standard input and"},
+ {1,"       writing tags to standard output [no]."},
+ {1,"  --filter-terminator=string"},
+ {1,"       Specifies a string to print to standard output following the tags"},
+ {1,"       for each file parsed when --filter is enabled."},
  {0,"  --format=level"},
 #if DEFAULT_FILE_FORMAT==1
- {0,"       Forces output of specified tag file format (default=1)."},
+ {0,"       Forces output of specified tag file format [1]."},
 #else
- {0,"       Forces output of specified tag file format (default=2)."},
+ {0,"       Forces output of specified tag file format [2]."},
 #endif
  {1,"  --fortran-types=types"},
  {1,"       Specifies a list of Fortran language tag types to be included in the"},
@@ -349,7 +334,7 @@ static optionDescription LongOptionDescription[] = {
  {1,"       Prints this option summary."},
  {1,"  --if0=[yes|no]"},
  {1,"       Indicates whether code within #if 0 conditional branches should"},
- {1,"       be examined for tags (default=no)."},
+ {1,"       be examined for tags [no]."},
  {1,"  --java-types=types"},
  {1,"       Specifies a list of Java language tag types to be included in the"},
  {1,"       output. See --c-types for the definition of the format of \"types\"."},
@@ -365,37 +350,53 @@ static optionDescription LongOptionDescription[] = {
  {1,"          C   include extra, class-qualified tag entries for fields [off]"},
  {1,"  --kind-long=[yes|no]"},
  {1,"       Indicates whether verbose tag descriptions are placed into tag file"},
- {1,"       (default=no)."},
- {1,"  --lang=[auto|c|c++|eiffel|fortran|java]"},
- {1,"       Interpret files as being of specified language [default=auto]."},
+ {1,"       [no]."},
+ {1,"  --lang[uage]=language"},
+ {1,"       Assume all files to be of the specified language, where 'language' is"},
+ {1,"       one of auto, asm, awk, beta, c, c++, cobol, eiffel, fortran, java, lisp,"},
+ {1,"       perl, python, scheme, sh, tcl, or vim. The word 'auto' indicates that"},
+ {1,"       the language should be automatically detected [default=auto]."},
  {1,"  --langmap=map(s)"},
  {1,"       Overrides the default mapping of language to source file extension."},
+ {1,"  --license"},
+ {1,"       Prints details of software license."},
  {0,"  --line-directives=[yes|no]"},
- {0,"       Indicates whether #line directives should be processed (default=no)."},
+ {0,"       Indicates whether #line directives should be processed [no]."},
  {1,"  --links=[yes|no]"},
- {1,"       Indicates whether symbolic links should be followed (default=yes)."},
- {1,"  --filter=yes|no"},
- {1,"       Behave as a filter, reading file names from standard input and"},
- {1,"       writing tags to standard output [default=no]."},
- {1,"  --filter-terminator=string"},
- {1,"       Specifies a string to print to standard output following the tags"},
- {1,"       for each file parsed when --filter is enabled."},
+ {1,"       Indicates whether symbolic links should be followed [yes]."},
+ {1,"  --options=file"},
+ {1,"       Specifies file from which command line options should be read."},
  {1,"  --recurse=[yes|no]"},
 #ifdef RECURSE_SUPPORTED
- {1,"       Recurse into directories supplied on command line (default=no)."},
+ {1,"       Recurse into directories supplied on command line [no]."},
 #else
  {1,"       Not supported on this platform."},
 #endif
  {0,"  --sort=[yes|no]"},
- {0,"       Indicates whether tags should be sorted (default=yes)."},
+ {0,"       Indicates whether tags should be sorted [yes]."},
  {1,"  --totals=[yes|no]"},
- {1,"       Prints statistics about source and tag files (default=no)."},
+ {1,"       Prints statistics about source and tag files [no]."},
  {1,"  --verbose=[yes|no]"},
  {1,"       Enable verbose messages describing actions on each source file."},
  {1,"  --version"},
  {1,"       Prints a version identifier to standard output."},
  {1, NULL}
 };
+
+static const char* const License =
+"This program is free software; you can redistribute it and/or\n\
+modify it under the terms of the GNU General Public License\n\
+as published by the Free Software Foundation; either version 2\n\
+of the License, or (at your option) any later version.\n\
+\n\
+This program is distributed in the hope that it will be useful,\n\
+but WITHOUT ANY WARRANTY; without even the implied warranty of\n\
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n\
+GNU General Public License for more details.\n\
+\n\
+You should have received a copy of the GNU General Public License\n\
+along with this program; if not, write to the Free Software\n\
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.\n";
 
 /*  Contains a set of strings describing the set of "features" compiled into
  *  the code.
@@ -420,14 +421,17 @@ static const char *const Features[] = {
 #ifdef AMIGA
     "amiga",
 #endif
-#ifdef __vms
+#ifdef VMS
     "vms",
 #endif
 #ifndef EXTERNAL_SORT
-    "internal_sort",
+    "internal-sort",
 #endif
 #ifdef CUSTOM_CONFIGURATION_FILE
     "custom-conf",
+#endif
+#if (defined(MSDOS) || defined(WIN32) || defined(OS2)) && defined(UNIX_PATH_SEPARATOR)
+    "unix-path-separator",
 #endif
     NULL
 };
@@ -437,23 +441,22 @@ static const char *const Features[] = {
 ============================================================================*/
 static char *stringCopy __ARGS((const char *const string));
 static void freeString __ARGS((char **const pString));
-static void freeList __ARGS((stringList** const pString));
 
+static void parseShortOption __ARGS((cookedArgs *const args));
+static void parseLongOption __ARGS((cookedArgs *const args, const char *item));
+static void cArgRead __ARGS((cookedArgs *const current));
+static boolean cArgOptionPending __ARGS((cookedArgs* const current));
 static void addExtensionList __ARGS((stringList *const slist, const char *const elist, const boolean clear));
-static const char *findExtension __ARGS((const char *const fileName));
-static langType getExtensionLanguage __ARGS((const char *const extension));
-static langType getLangType __ARGS((const char *const name));
 static void processLangOption __ARGS((const char *const option, const char *const parameter));
 static boolean installLangMap __ARGS((char *const map));
-static void installLangMapDefault __ARGS((const langType language));
-static void installLangMapDefaults __ARGS((void));
-static void freeLanguageMaps __ARGS((void));
 static void processLangMapOption __ARGS((const char *const option, const char *const parameter));
+static void processOptionFile __ARGS((const char *const option, const char *const parameter));
 static void installHeaderListDefaults __ARGS((void));
 static void processHeaderListOption __ARGS((const int option, const char *parameter));
 
 static void processCTypesOption __ARGS((const char *const option, const char *const parameter));
 static void processEiffelTypesOption __ARGS((const char *const option, const char *const parameter));
+static void processBetaTypesOption __ARGS((const char *const option, const char *const parameter));
 static void processFortranTypesOption __ARGS((const char *const option, const char *const parameter));
 static void processJavaTypesOption __ARGS((const char *const option, const char *const parameter));
 
@@ -462,10 +465,10 @@ static void readIgnoreList __ARGS((const char *const list));
 static void readIgnoreListFromFile __ARGS((const char *const fileName));
 static void processIgnoreOption __ARGS((const char *const list));
 
-static void printfFeatureList __ARGS((FILE *const where));
-static void printProgramIdentification __ARGS((FILE *const where));
-static void printInvocationDescription __ARGS((FILE *const where));
-static void printOptionDescriptions __ARGS((const optionDescription *const optDesc, FILE *const where));
+static void printfFeatureList __ARGS((void));
+static void printProgramIdentification __ARGS((void));
+static void printInvocationDescription __ARGS((void));
+static void printOptionDescriptions __ARGS((const optionDescription *const optDesc));
 static void printHelp __ARGS((const optionDescription *const optDesc));
 static void processExcmdOption __ARGS((const char *const option, const char *const parameter));
 static void processFormatOption __ARGS((const char *const option, const char *const parameter));
@@ -478,13 +481,9 @@ static boolean processBooleanOption __ARGS((const char *const option, const char
 static boolean processParametricOption __ARGS((const char *const option, const char *const parameter));
 static void processLongOption __ARGS((const char *const option, const char *const parameter));
 static void processShortOption __ARGS((const char *const option, const char *const parameter));
-static void parseFileOptions __ARGS((const char *const fileName));
+static boolean parseFileOptions __ARGS((const char *const fileName));
 static void parseConfigurationFileOptions __ARGS((void));
 static void parseEnvironmentOptions __ARGS((void));
-static void parseShortOption __ARGS((cookedArgs *const args));
-static void parseLongOption __ARGS((cookedArgs *const args, const char *item));
-
-static void cArgRead __ARGS((cookedArgs *const current));
 
 /*============================================================================
 =   Function definitions
@@ -512,7 +511,7 @@ static void freeString( pString )
     }
 }
 
-static void freeList( pList )
+extern void freeList( pList )
     stringList** const pList;
 {
     if (*pList != NULL)
@@ -589,6 +588,193 @@ extern void testEtagsInvocation()
 }
 
 /*----------------------------------------------------------------------------
+ *  Cooked argument parsing
+ *--------------------------------------------------------------------------*/
+
+static void parseShortOption( args )
+    cookedArgs* const args;
+{
+    args->simple[0] = *args->shortOptions++;
+    args->simple[1] = '\0';
+    args->item = args->simple;
+    if (! isCompoundOption(*args->simple))
+	args->parameter = "";
+    else if (*args->shortOptions == '\0')
+    {
+	argForth(args->args);
+	if (argOff(args->args))
+	    args->parameter = NULL;
+	else
+	    args->parameter = argItem(args->args);
+	args->shortOptions = NULL;
+    }
+    else
+    {
+	args->parameter = args->shortOptions;
+	args->shortOptions = NULL;
+    }
+}
+
+static void parseLongOption( args, item )
+    cookedArgs* const args;
+    const char* item;
+{
+    const char* const equal = strchr(item, '=');
+    if (equal == NULL)
+    {
+	args->item = (char*)eMalloc(strlen(item) + 1);
+	strcpy(args->item, item);
+	args->parameter = "";
+    }
+    else
+    {
+	const size_t length = equal - item;
+	args->item = (char*)eMalloc(length + 1);
+	strncpy(args->item, item, length);
+	args->item[length] = '\0';
+	args->parameter = equal + 1;
+    }
+}
+
+static void cArgRead( current )
+    cookedArgs* const current;
+{
+    char* item;
+
+    Assert(current != NULL);
+    if (! argOff(current->args))
+    {
+	item = argItem(current->args);
+	current->shortOptions = NULL;
+	Assert(item != NULL);
+	if (strncmp(item, "--", (size_t)2) == 0)
+	{
+	    current->isOption = TRUE;
+	    current->longOption = TRUE;
+	    parseLongOption(current, item + 2);
+	}
+	else if (*item == '-')
+	{
+	    current->isOption = TRUE;
+	    current->longOption = FALSE;
+	    current->shortOptions = item + 1;
+	    parseShortOption(current);
+	}
+	else
+	{
+	    current->isOption = FALSE;
+	    current->longOption = FALSE;
+	    current->item = item;
+	    current->parameter = "";
+	}
+    }
+}
+
+extern cookedArgs* cArgNewFromString( string )
+    const char* string;
+{
+    cookedArgs* const result = (cookedArgs*)eMalloc(sizeof(cookedArgs));
+    memset(result, 0, sizeof(cookedArgs));
+    result->args = argNewFromString(string);
+    cArgRead(result);
+    return result;
+}
+
+extern cookedArgs* cArgNewFromArgv( argv )
+    char* const* const argv;
+{
+    cookedArgs* const result = (cookedArgs*)eMalloc(sizeof(cookedArgs));
+    memset(result, 0, sizeof(cookedArgs));
+    result->args = argNewFromArgv(argv);
+    cArgRead(result);
+    return result;
+}
+
+extern cookedArgs* cArgNewFromFile( fp )
+    FILE* const fp;
+{
+    cookedArgs* const result = (cookedArgs*)eMalloc(sizeof(cookedArgs));
+    memset(result, 0, sizeof(cookedArgs));
+    result->args = argNewFromFile(fp);
+    cArgRead(result);
+    return result;
+}
+
+extern cookedArgs* cArgNewFromLineFile( fp )
+    FILE* const fp;
+{
+    cookedArgs* const result = (cookedArgs*)eMalloc(sizeof(cookedArgs));
+    memset(result, 0, sizeof(cookedArgs));
+    result->args = argNewFromLineFile(fp);
+    cArgRead(result);
+    return result;
+}
+
+extern void cArgDelete( current )
+    cookedArgs* const current;
+{
+    Assert(current != NULL);
+    argDelete(current->args);
+    memset(current, 0, sizeof(cookedArgs));
+    eFree(current);
+}
+
+static boolean cArgOptionPending( current )
+    cookedArgs* const current;
+{
+    boolean result = FALSE;
+    if (current->shortOptions != NULL)
+	if (*current->shortOptions != '\0')
+	    result = TRUE;
+    return result;
+}
+
+extern boolean cArgOff( current )
+    cookedArgs* const current;
+{
+    Assert(current != NULL);
+    return (boolean)(argOff(current->args) && ! cArgOptionPending(current));
+}
+
+extern boolean cArgIsOption( current )
+    cookedArgs* const current;
+{
+    Assert(current != NULL);
+    return current->isOption;
+}
+
+extern const char* cArgItem( current )
+    cookedArgs* const current;
+{
+    Assert(current != NULL);
+    return current->item;
+}
+
+extern void cArgForth( current )
+    cookedArgs* const current;
+{
+    Assert(current != NULL);
+    Assert(! cArgOff(current));
+    if (cArgOptionPending(current))
+	parseShortOption(current);
+    else
+    {
+	Assert(! argOff(current->args));
+	argForth(current->args);
+	if (! argOff(current->args))
+	    cArgRead(current);
+	else
+	{
+	    current->isOption = FALSE;
+	    current->longOption = FALSE;
+	    current->shortOptions = NULL;
+	    current->item = NULL;
+	    current->parameter = NULL;
+	}
+    }
+}
+
+/*----------------------------------------------------------------------------
  *  File extension and language mapping
  *--------------------------------------------------------------------------*/
 
@@ -598,26 +784,38 @@ static void addExtensionList( slist, elist, clear )
     const boolean clear;
 {
     char *const extensionList = (char *)eMalloc(strlen(elist) + 1);
-    const char *extension;
+    const char *extension = NULL;
     boolean first = TRUE;
 
+    strcpy(extensionList, elist);
     if (clear)
     {
 	if (Option.verbose)
 	    printf("      clearing\n");
 	stringListClear(slist);
     }
-    strcpy(extensionList, elist);
-    extension = strtok(extensionList, EXTENSION_SEPARATORS);
     if (Option.verbose)
 	printf("      adding: ");
+    if (elist != NULL  &&  *elist != '\0')
+    {
+	extension = extensionList;
+	if (elist[0] == EXTENSION_SEPARATOR)
+	    ++extension;
+    }
     while (extension != NULL)
     {
+	char *separator = strchr(extension, EXTENSION_SEPARATOR);
+	if (separator != NULL)
+	    *separator = '\0';
 	if (Option.verbose)
-	    printf("%s%s", first ? "" : ", ", extension);
+	    printf("%s%s", first ? "" : ", ",
+		   *extension == '\0' ? "(NONE)" : extension);
 	stringListAdd(slist, vStringNewInit(extension));
-	extension = strtok(NULL, EXTENSION_SEPARATORS);
 	first = FALSE;
+	if (separator == NULL)
+	    extension = NULL;
+	else
+	    extension = separator + 1;
     }
     if (Option.verbose)
     {
@@ -629,7 +827,7 @@ static void addExtensionList( slist, elist, clear )
     eFree(extensionList);
 }
 
-static const char *findExtension( fileName )
+extern const char *findExtension( fileName )
     const char *const fileName;
 {
     const char *extension;
@@ -668,73 +866,6 @@ extern boolean isFileHeader( fileName )
     return result;
 }
 
-static langType getExtensionLanguage( extension )
-    const char *const extension;
-{
-    langType language = LANG_IGNORE;
-    unsigned int i;
-    for (i = 0  ;  i < (int)LANG_COUNT  ;  ++i)
-    {
-	if (Option.langMap[i] != NULL)
-	{
-#ifdef CASE_INSENSITIVE_OS
-	    if (stringListHasInsensitive(Option.langMap[i], extension))
-#else
-	    if (stringListHas(Option.langMap[i], extension))
-#endif
-	    {
-		language = (langType)i;
-		break;
-	    }
-	}
-    }
-    return language;
-}
-
-extern langType getFileLanguage( fileName )
-    const char *const fileName;
-{
-    const char *const extension = findExtension(fileName);
-    langType language;
-
-    if (Option.language != LANG_AUTO)
-	language = Option.language;
-    else if (extension[0] == '\0')
-	language = LANG_IGNORE;		/* ignore files with no extension */
-    else
-	language = getExtensionLanguage(extension);
-
-    return language;
-}
-
-extern const char *getLanguageName( language )
-    const langType language;
-{
-    static const char *const names[] = {
-	"auto", "C", "C++", "Eiffel", "Fortran", "Java"
-    };
-
-    Assert(sizeof(names)/sizeof(names[0]) == LANG_COUNT);
-    return names[(int)language];
-}
-
-static langType getLangType( name )
-    const char *const name;
-{
-    unsigned int i;
-    langType language = LANG_IGNORE;
-
-    for (i = 0  ;  i < LANG_COUNT  ;  ++i)
-    {
-	if (strequiv(name, getLanguageName((langType)i)))
-	{
-	    language = (langType)i;
-	    break;
-	}
-    }
-    return language;
-}
-
 static void processLangOption( option, parameter )
     const char *const option;
     const char *const parameter;
@@ -745,37 +876,6 @@ static void processLangOption( option, parameter )
 	error(FATAL, "Uknown language specified in \"%s\" option", option);
     else
 	Option.language = language;
-}
-
-static void freeLanguageMaps()
-{
-    unsigned int i;
-    for (i = 0  ;  i < (int)LANG_COUNT  ;  ++i)
-	freeList(&Option.langMap[i]);
-}
-
-static void installLangMapDefault( language )
-    const langType language;
-{
-    const int i = (int)language;
-    freeList(&Option.langMap[i]);
-    if (DefaultLanguageMap[i] != NULL)
-    {
-	Option.langMap[i] = stringListNewFromArgv(DefaultLanguageMap[i]);
-	if (Option.verbose)
-	{
-	    printf("    Setting default %s map: ", getLanguageName(language));
-	    stringListPrint(Option.langMap[i]);
-	    putchar ('\n');
-	}
-    }
-}
-
-static void installLangMapDefaults()
-{
-    unsigned int i;
-    for (i = 0  ;  i < (int)LANG_COUNT  ;  ++i)
-	installLangMapDefault((langType)i);
 }
 
 static boolean installLangMap( map )
@@ -807,9 +907,9 @@ static boolean installLangMap( map )
 	{
 	    if (Option.verbose)
 		printf("    %s language map:\n", getLanguageName(language));
-	    if (Option.langMap[(int)language] == NULL)
-		Option.langMap[(int)language] = stringListNew();
-	    addExtensionList(Option.langMap[(int)language], list, clear);
+	    Assert(languageExtensions(language) != NULL);
+	    Assert(list != NULL);
+	    addExtensionList(languageExtensions(language), list, clear);
 	}
     }
     return ok;
@@ -846,6 +946,16 @@ static void processLangMapOption( option, parameter )
 	    map = NULL;
     }
     eFree(maps);
+}
+
+static void processOptionFile( option, parameter )
+    const char *const option;
+    const char *const parameter;
+{
+    if (parameter == NULL  ||  parameter[0] == '\0')
+	error(WARNING, "no option file supplied for \"%s\"", option);
+    else if (! parseFileOptions(parameter))
+	error(FATAL | PERROR, "cannot open option file \"%s\"", parameter);
 }
 
 static void installHeaderListDefaults()
@@ -907,7 +1017,7 @@ static void processCTypesOption( option, parameter )
 	defaultClear = TRUE;
 	++p;
     }
-    if (defaultClear  &&  strchr("+-", *p) == NULL)
+    if (defaultClear  &&  *p != '+'  &&  *p != '-')
     {
 	inc->classNames		= FALSE;
 	inc->defines		= FALSE;
@@ -974,6 +1084,39 @@ static void processCTypesOption( option, parameter )
     }
 }
 
+static void processBetaTypesOption( option, parameter )
+    const char *const option;
+    const char *const parameter;
+{
+    struct sBetaInclude *const inc = &Option.include.betaTypes;
+    const char *p = parameter;
+    boolean mode = TRUE;
+    int c;
+
+    if (*p != '+'  &&  *p != '-')
+    {
+	inc->virtuals		= FALSE;
+	inc->patterns		= FALSE;
+	inc->fragments		= FALSE;
+	inc->slots		= FALSE;
+    }
+    while ((c = *p++) != '\0') switch (c)
+    {
+	case '+': mode = TRUE;			break;
+	case '-': mode = FALSE;			break;
+
+	case 'p': inc->patterns		= mode;	break;
+	case 'v': inc->virtuals		= mode;	break;
+	case 'f': inc->fragments	= mode;	break;
+	case 's': inc->slots		= mode;	break;
+
+	default:
+	    error(WARNING, "Unsupported parameter '%c' for \"%s\" option",
+		    c, option);
+	    break;
+    }
+}
+
 static void processEiffelTypesOption( option, parameter )
     const char *const option;
     const char *const parameter;
@@ -983,7 +1126,7 @@ static void processEiffelTypesOption( option, parameter )
     boolean mode = TRUE;
     int c;
 
-    if (strchr("+-", *p) == NULL)
+    if (*p != '+'  &&  *p != '-')
     {
 	inc->classNames		= FALSE;
 	inc->features		= FALSE;
@@ -1015,7 +1158,7 @@ static void processFortranTypesOption( option, parameter )
     boolean mode = TRUE;
     int c;
 
-    if (strchr("+-", *p) == NULL)
+    if (*p != '+'  &&  *p != '-')
     {
 	inc->blockData		= FALSE;
 	inc->commonBlocks	= FALSE;
@@ -1062,7 +1205,7 @@ static void processJavaTypesOption( option, parameter )
     boolean mode = TRUE;
     int c;
 
-    if (strchr("+-", *p) == NULL)
+    if (*p != '+'  &&  *p != '-')
     {
 	inc->classNames		= FALSE;
 	inc->fields		= FALSE;
@@ -1213,6 +1356,10 @@ static void processIgnoreOption( list )
 {
     if (strchr("./\\", list[0]) != NULL)
 	readIgnoreListFromFile(list);
+#if defined(MSDOS) || defined(WIN32) || defined(OS2)
+    else if (isalpha(list[0])  &&  list[1] == ':')
+	readIgnoreListFromFile(list);
+#endif
     else if (strcmp(list, "-") == 0)
     {
 	freeList(&Option.ignore);
@@ -1227,52 +1374,50 @@ static void processIgnoreOption( list )
  *  Specific option processing
  *--------------------------------------------------------------------------*/
 
-static void printfFeatureList( where )
-    FILE *const where;
+static void printfFeatureList()
 {
     int i;
 
     for (i = 0 ; Features[i] != NULL ; ++i)
     {
 	if (i == 0)
-	    fprintf(where, "Optional features: ");
-	fprintf(where, "%s+%s", (i>0 ? ", " : ""), Features[i]);
+	    printf("Optional compiled features: ");
+	printf("%s+%s", (i>0 ? ", " : ""), Features[i]);
 #ifdef CUSTOM_CONFIGURATION_FILE
 	if (strcmp(Features[i], "custom-conf") == 0)
-	    fprintf(where, "=%s", CUSTOM_CONFIGURATION_FILE);
+	    printf("=%s", CUSTOM_CONFIGURATION_FILE);
 #endif
     }
     if (i > 0)
-	fputc('\n', where);
+	putchar('\n');
 }
 
-static void printProgramIdentification( where )
-    FILE *const where;
+static void printProgramIdentification()
 {
-    fprintf(where, "%s %s, by %s <%s>\n",
-	    PROGRAM_NAME, PROGRAM_VERSION, AUTHOR_NAME, AUTHOR_EMAIL);
-    printfFeatureList(where);
+    printf("%s %s, Copyright (C) 1996-2000 %s\n",
+	    PROGRAM_NAME, PROGRAM_VERSION, AUTHOR_NAME);
+    printf("  <%s>, %s\n", AUTHOR_EMAIL, PROGRAM_URL);
+    printfFeatureList();
 }
 
-static void printInvocationDescription( where )
-    FILE *const where;
+#ifdef AMIGA
+const char *VERsion = "$VER: "PROGRAM_NAME" "PROGRAM_VERSION" "__AMIGADATE__" "AUTHOR_NAME" $";
+#endif
+
+static void printInvocationDescription()
 {
-    fprintf(where, INVOCATION, getExecutableName());
+    printf(INVOCATION, getExecutableName());
 }
 
-static void printOptionDescriptions( optDesc, where )
+static void printOptionDescriptions( optDesc )
     const optionDescription *const optDesc;
-    FILE *const where;
 {
     int i;
 
     for (i = 0 ; optDesc[i].description != NULL ; ++i)
     {
 	if (! StartedAsEtags || optDesc[i].usedByEtags)
-	{
-	    fputs(optDesc[i].description, where);
-	    fputc('\n', where);
-	}
+	    puts(optDesc[i].description);
     }
 }
 
@@ -1280,11 +1425,11 @@ static void printHelp( optDesc )
     const optionDescription *const optDesc;
 {
 
-    printProgramIdentification(stdout);
+    printProgramIdentification();
     putchar('\n');
-    printInvocationDescription(stdout);
+    printInvocationDescription();
     putchar('\n');
-    printOptionDescriptions(optDesc, stdout);
+    printOptionDescriptions(optDesc);
 }
 
 static void processExcmdOption( option, parameter )
@@ -1339,6 +1484,7 @@ static void processFilterTerminatorOption( option, parameter )
  *--------------------------------------------------------------------------*/
 
 static parametricOption ParametricOptions[] = {
+    { "beta-types",		processBetaTypesOption,		FALSE	},
     { "c-types",		processCTypesOption,		FALSE	},
     { "c++-types",		processCTypesOption,		FALSE	},
     { "eiffel-types",		processEiffelTypesOption,	FALSE	},
@@ -1350,18 +1496,19 @@ static parametricOption ParametricOptions[] = {
     { "java-types",		processJavaTypesOption,		FALSE	},
     { "lang",			processLangOption,		FALSE	},
     { "language",		processLangOption,		FALSE	},
-    { "langmap",		processLangMapOption,		FALSE	}
+    { "langmap",		processLangMapOption,		FALSE	},
+    { "options",		processOptionFile,		FALSE	}
 };
 
 static booleanOption BooleanOptions[] = {
     { "append",		&Option.append,			TRUE,	TRUE	},
     { "file-scope",	&Option.include.fileScope,	TRUE,	FALSE	},
     { "file-tags",	&Option.include.fileNames,	TRUE,	FALSE	},
+    { "filter",		&Option.filter,			TRUE,	TRUE	},
     { "if0",		&Option.if0,			TRUE,	FALSE	},
     { "kind-long",	&Option.kindLong,		TRUE,	TRUE	},
     { "line-directives",&Option.lineDirectives,		TRUE,	FALSE	},
     { "links",		&Option.followLinks,		TRUE,	FALSE	},
-    { "filter",		&Option.filter,			TRUE,	TRUE	},
 #ifdef RECURSE_SUPPORTED
     { "recurse",	&Option.recurse,		TRUE,	FALSE	},
 #endif
@@ -1465,9 +1612,16 @@ static void processLongOption( option, parameter )
 #define isOption(item)	(boolean)(strcmp(item,option) == 0)
     else if (isOption("help"))
 	{ printHelp(LongOptionDescription); exit(0); }
+    else if (isOption("license"))
+    {
+	printProgramIdentification();
+	puts("");
+	puts(License);
+	exit(0);
+    }
     else if (isOption("version"))
     {
-	printProgramIdentification(stdout);
+	printProgramIdentification();
 	exit(0);
     }
 #ifndef RECURSE_SUPPORTED
@@ -1612,9 +1766,10 @@ extern void parseOptions( args )
 	parseOption(args);
 }
 
-static void parseFileOptions( fileName )
+static boolean parseFileOptions( fileName )
     const char* const fileName;
 {
+    boolean fileFound = FALSE;
     FILE* const fp = fopen(fileName, "r");
     if (fp != NULL)
     {
@@ -1624,7 +1779,9 @@ static void parseFileOptions( fileName )
 	parseOptions(args);
 	cArgDelete(args);
 	fclose(fp);
+	fileFound = TRUE;
     }
+    return fileFound;
 }
 
 extern void previewFirstOption( args )
@@ -1679,181 +1836,6 @@ extern void readOptionConfiguration()
 }
 
 /*----------------------------------------------------------------------------
- *  Cooked argument parsing
- *--------------------------------------------------------------------------*/
-
-static void parseShortOption( args )
-    cookedArgs* const args;
-{
-    args->simple[0] = *args->shortOptions++;
-    args->simple[1] = '\0';
-    args->item = args->simple;
-    if (! isCompoundOption(*args->simple))
-	args->parameter = "";
-    else if (*args->shortOptions == '\0')
-    {
-	argForth(args->args);
-	if (argOff(args->args))
-	    args->parameter = NULL;
-	else
-	    args->parameter = argItem(args->args);
-	args->shortOptions = NULL;
-    }
-    else
-    {
-	args->parameter = args->shortOptions;
-	args->shortOptions = NULL;
-    }
-}
-
-static void parseLongOption( args, item )
-    cookedArgs* const args;
-    const char* item;
-{
-    const char* const equal = strchr(item, '=');
-    if (equal == NULL)
-    {
-	args->item = (char*)eMalloc(strlen(item) + 1);
-	strcpy(args->item, item);
-	args->parameter = "";
-    }
-    else
-    {
-	const size_t length = equal - item;
-	args->item = (char*)eMalloc(length + 1);
-	strncpy(args->item, item, length);
-	args->item[length] = '\0';
-	args->parameter = equal + 1;
-    }
-}
-
-static void cArgRead( current )
-    cookedArgs* const current;
-{
-    char* item;
-
-    Assert(current != NULL);
-    if (! argOff(current->args))
-    {
-	item = argItem(current->args);
-	Assert(item != NULL);
-	if (strncmp(item, "--", (size_t)2) == 0)
-	{
-	    current->isOption = TRUE;
-	    current->longOption = TRUE;
-	    parseLongOption(current, item + 2);
-	}
-	else if (*item == '-')
-	{
-	    current->isOption = TRUE;
-	    current->longOption = FALSE;
-	    current->shortOptions = item + 1;
-	    parseShortOption(current);
-	}
-	else
-	{
-	    current->isOption = FALSE;
-	    current->longOption = FALSE;
-	    current->item = item;
-	    current->parameter = "";
-	}
-    }
-}
-
-extern cookedArgs* cArgNewFromString( string )
-    const char* string;
-{
-    cookedArgs* const result = (cookedArgs*)eMalloc(sizeof(cookedArgs));
-    memset(result, 0, sizeof(cookedArgs));
-    result->args = argNewFromString(string);
-    cArgRead(result);
-    return result;
-}
-
-extern cookedArgs* cArgNewFromArgv( argv )
-    char* const* const argv;
-{
-    cookedArgs* const result = (cookedArgs*)eMalloc(sizeof(cookedArgs));
-    memset(result, 0, sizeof(cookedArgs));
-    result->args = argNewFromArgv(argv);
-    cArgRead(result);
-    return result;
-}
-
-extern cookedArgs* cArgNewFromFile( fp )
-    FILE* const fp;
-{
-    cookedArgs* const result = (cookedArgs*)eMalloc(sizeof(cookedArgs));
-    memset(result, 0, sizeof(cookedArgs));
-    result->args = argNewFromFile(fp);
-    cArgRead(result);
-    return result;
-}
-
-extern cookedArgs* cArgNewFromLineFile( fp )
-    FILE* const fp;
-{
-    cookedArgs* const result = (cookedArgs*)eMalloc(sizeof(cookedArgs));
-    memset(result, 0, sizeof(cookedArgs));
-    result->args = argNewFromLineFile(fp);
-    cArgRead(result);
-    return result;
-}
-
-extern void cArgDelete( current )
-    cookedArgs* const current;
-{
-    Assert(current != NULL);
-    argDelete(current->args);
-    memset(current, 0, sizeof(cookedArgs));
-    eFree(current);
-}
-
-extern boolean cArgOff( current )
-    cookedArgs* const current;
-{
-    Assert(current != NULL);
-    return (boolean)(argOff(current->args) && ! shortOptionPending(current));
-}
-
-extern boolean cArgIsOption( current )
-    cookedArgs* const current;
-{
-    Assert(current != NULL);
-    return current->isOption;
-}
-
-extern const char* cArgItem( current )
-    cookedArgs* const current;
-{
-    Assert(current != NULL);
-    return current->item;
-}
-
-extern void cArgForth( current )
-    cookedArgs* const current;
-{
-    Assert(current != NULL);
-    Assert(! cArgOff(current));
-    if (shortOptionPending(current))
-	parseShortOption(current);
-    else
-    {
-	Assert(! argOff(current->args));
-	argForth(current->args);
-	if (! argOff(current->args))
-	    cArgRead(current);
-	else
-	{
-	    current->isOption = FALSE;
-	    current->longOption = FALSE;
-	    current->item = NULL;
-	    current->parameter = NULL;
-	}
-    }
-}
-
-/*----------------------------------------------------------------------------
 *-	Option initialization
 ----------------------------------------------------------------------------*/
 
@@ -1861,7 +1843,6 @@ extern void initOptions()
 {
     if (Option.verbose)
 	printf("Installing option defaults\n");
-    installLangMapDefaults();
     installHeaderListDefaults();
 }
 
@@ -1875,8 +1856,6 @@ extern void freeOptionResources()
     freeList(&Option.ignore);
     freeList(&Option.headerExt);
     freeList(&Option.etagsInclude);
-
-    freeLanguageMaps();
 }
 
 /* vi:set tabstop=8 shiftwidth=4: */

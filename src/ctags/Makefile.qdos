@@ -1,3 +1,5 @@
+# $Id$
+#
 # Makefile for ctags on QDOS/SMS systems and C68 v4.24f
 # Submitted by Thierry Godefroy <godefroy@imaginet.fr>
 
@@ -30,11 +32,7 @@ LIBS =
 
 # Target dependencies:
 
-HEADERS	 = args.h ctags.h debug.h entry.h general.h get.h \
- keyword.h main.h options.h parse.h read.h sort.h strlist.h vstring.h
-
-OBJECTS = args.o eiffel.o entry.o fortran.o get.o keyword.o main.o \
- options.o parse.o read.o sort.o strlist.o vstring.o qdos.o
+include source.mak
 
 $(EXEC) : $(OBJECTS)
     $(LD) -o$(EXEC) $(LDFLAGS) $(OBJECTS) $(LIBS)

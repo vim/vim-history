@@ -1,4 +1,4 @@
-*tagsearch.txt* For Vim version 5.7.  Last change: 2000 Jun 05
+*tagsearch.txt* For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -178,15 +178,16 @@ the same entry.
 			listing.  {not in Vi}
 			Example output:
 
-	 nr pri kind tag		file ~
->	  1 F	f    mch_delay		os_amiga.c
->			mch_delay(msec, ignoreinput)
->	> 2 F	f    mch_delay		os_msdos.c
->			mch_delay(msec, ignoreinput)
->	  3 F	f    mch_delay		os_unix.c
->			mch_delay(msec, ignoreinput)
->	Enter nr of choice (<CR> to abort):
-
+>
+	 nr pri kind tag		file
+	  1 F	f    mch_delay		os_amiga.c
+			mch_delay(msec, ignoreinput)
+	> 2 F	f    mch_delay		os_msdos.c
+			mch_delay(msec, ignoreinput)
+	  3 F	f    mch_delay		os_unix.c
+			mch_delay(msec, ignoreinput)
+	Enter nr of choice (<CR> to abort):
+<
 			See |tag-priority| for the "pri" column.  Note that
 			this depends on the current file, thus using
 			":tselect xxx" can produce different results.
@@ -241,16 +242,16 @@ g CTRL-]		Like CTRL-], but use ":tjump" instead of ":tag".
 
 
 When there is no other message, Vim shows which matching tag has been jumped
-to, and the number of matching tags:
->	tag 1 of 3 or more
+to, and the number of matching tags: >
+	tag 1 of 3 or more
 The " or more" is used to indicate that Vim didn't try all the tags files yet.
 When using ":tnext" a few times, or with ":tlast", more matches may be found.
 
 When you didn't see this message because of some other message, or you just
 want to know where you are, this command will show it again (and jump to the
-same tag as last time):
->	:0tn
-
+same tag as last time): >
+	:0tn
+<
 							*tag-skip-file*
 When a matching tag is found for which the file doesn't exist, this match is
 skipped and the next matching tag is used.  Vim reports this, to notify you of
@@ -319,13 +320,13 @@ The ":tag" and "tselect" commands accept a regular expression argument.  See
 |pattern| for the special characters that can be used.
 When the argument starts with '/', it is used as a pattern.  If the argument
 does not start with '/', it is taken literally, as a full tag name.
-Examples:
->    :tag main
-  jumps to the tag "main" that has the highest priority.
->    :tag /^get
-  jumps to the tag that starts with "get" and has the highest priority.
->    :tag /norm
-  lists all the tags that contain "norm", including "id_norm".
+Examples: >
+    :tag main
+<	jumps to the tag "main" that has the highest priority. >
+    :tag /^get
+<	jumps to the tag that starts with "get" and has the highest priority. >
+    :tag /norm
+<	lists all the tags that contain "norm", including "id_norm".
 When the argument both exists literally, and match when used as a regexp, a
 literal match has a higher priority.  For example, ":tag /open" matches "open"
 before "open_file" and "file_open".
@@ -370,8 +371,8 @@ When the {tagaddress} changes a buffer, you will get a warning message:
 	"WARNING: tag command changed a buffer!!!"
 In a future version changing the buffer will be impossible.  All this for
 security reasons: Somebody might hide a nasty command in the tags file, which
-would otherwise go unnoticed.  Example:
->	:$d|/tag-function-name/
+would otherwise go unnoticed.  Example: >
+	:$d|/tag-function-name/
 {this security prevention is not present in Vi}.
 
 In Vi the ":tag" command sets the last search pattern when the tag is searched
@@ -406,8 +407,8 @@ of using "./" is that you can define which tag file is searched first: In the
 current directory ("tags,./tags") or in the directory of the current file
 ("./tags,tags").
 
-For example:
->	:set tags=./tags,tags,/home/user/commontags
+For example: >
+	:set tags=./tags,tags,/home/user/commontags
 
 In this example the tag will first be searched for in the file "tags" in the
 directory where the current file is.  Next the "tags" file in the current
@@ -420,12 +421,12 @@ directory, instead of the tags file in the directory where the current file
 is.
 
 Instead of the comma a space may be used.  Then a backslash is required for
-the space to be included in the string option:
->	:set tags=tags\ /home/user/commontags
+the space to be included in the string option: >
+	:set tags=tags\ /home/user/commontags
 
 To include a space in a file name use three backslashes.  To include a comma
-in a file name use two backslashes.  For example, use:
->	:set tags=tag\\\ file,/home/user/common\\,tags
+in a file name use two backslashes.  For example, use: >
+	:set tags=tag\\\ file,/home/user/common\\,tags
 
 for the files "tag file" and "/home/user/common,tags".  The 'tags' option will
 have the value "tag\ file,/home/user/common\,tags".
@@ -523,14 +524,14 @@ The first lines in the tags file can contain lines that start with
 These are sorted to the first lines, only rare tags that start with "!" can
 sort to before them.  Vim only recognizes the line that indicates if the file
 was sorted.  When this line is found, Vim uses binary searching for the tags
-file:
->	!_TAG_FILE_SORTED<Tab>1
-
+file: >
+	!_TAG_FILE_SORTED<Tab>1
+<
 							*tag-search*
 The command can be any Ex command, but often it is a search command.
-Examples:
->	tag1	file1	/^main(argc, argv)/
->	tag2	file2	108
+Examples: >
+	tag1	file1	/^main(argc, argv)/
+	tag2	file2	108
 
 The command is always executed with 'magic' not set.  The only special
 characters in a search pattern are "^" (begin-of-line) and "$" (<EOL>).
@@ -580,7 +581,8 @@ The string can be any keyword or a defined macro.  For the keyword any match
 will be found.  For defined macros only lines that match with the 'define'
 option will be found.  The default is "^#\s*define", which is for C programs.
 For other languages you probably want to change this.  See 'define' for an
-example for C++.
+example for C++.  The string cannot contain an end-of-line, only matches
+within a line are found.
 
 When a match is found for a defined macro, the displaying of lines continues
 with the next line when a line ends in a backslash.
@@ -604,10 +606,10 @@ are ignored for the search, unless [!] is used.  One exception: When the line
 matches the pattern "^# *define" it is not considered to be a comment.
 
 If you want to list matches, and then select one to jump to, you could use a
-mapping to do that for you.  Here is an example:
+mapping to do that for you.  Here is an example: >
 
-> :map <F4> [I:let nr = input("Which one: ")<Bar>exe "normal " . nr ."[\t"<CR>
-
+  :map <F4> [I:let nr = input("Which one: ")<Bar>exe "normal " . nr ."[\t"<CR>
+<
 							*[i*
 [i			Display the first line that contains the keyword
 			under the cursor.  The search starts at the beginning
@@ -750,17 +752,17 @@ Common arguments for the commands above:
       "//" or inside /* */).  Note that a match may be missed if a line is
       recognized as a comment, but the comment ends halfway the line.
       And  if the line is a comment, but it is not recognized (according to
-      'comments') a match may be found in it anyway.  Example:
->		/* comment
->		   foobar */
-      A match for "foobar" is found, because this line is not recognized as a
+      'comments') a match may be found in it anyway.  Example: >
+		/* comment
+		   foobar */
+<     A match for "foobar" is found, because this line is not recognized as a
       comment (even though syntax highlighting does recognize it).
       Note: Since a macro definition mostly doesn't look like a comment, the
       [!] makes no difference for ":dlist", ":dsearch" and ":djump".
 [/]   A pattern can be surrounded by '/'.  Without '/' only whole words are
       matched, using the pattern "\<pattern\>".  Only after the second '/' a
-      next command can be appended with '|'.  Examples:
->   :isearch /string/ | echo "the last one"
+      next command can be appended with '|'.  Example: >
+	:isearch /string/ | echo "the last one"
 
 ==============================================================================
 7. 'Grep' and 'Lid'					*grep* *lid*
@@ -772,9 +774,9 @@ information on that.)
 7.1 Setting up grep
 If you have a standard "grep" program installed, the :grep command may well
 work first time with the defaults. The syntax is very similar to the standard
-command:
+command: >
 
->	:grep foo *.c
+	:grep foo *.c
 
 Will search all files with the .c extension for the substring "foo". The
 arguments to :grep are passed straight to the "grep" program, so you can use
@@ -801,15 +803,15 @@ error in |quickfix| mode. You can then use the |:cnext|, |:clist|, etc.
 commands to see the other matches.
 
 7.2 Using :grep with id-utils
-You can set up :grep to work with the GNU id-utils like this:
+You can set up :grep to work with the GNU id-utils like this: >
 
->	set grepprg=lid\ -Rgrep\ -s
->	set grepformat=%f:%l:%m
+	:set grepprg=lid\ -Rgrep\ -s
+	:set grepformat=%f:%l:%m
 
-then
->	:grep (regexp)
+then >
+	:grep (regexp)
 
 works just as you'd expect.
 (provided you remembered to mkid first :)
 
- vim:tw=78:ts=8:sw=8:
+ vim:tw=78:

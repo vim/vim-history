@@ -1,4 +1,4 @@
-*if_ole.txt*    For Vim version 5.7.  Last change: 2000 Mar 21
+*if_ole.txt*    For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore
@@ -27,17 +27,17 @@ for example, Visual Basic, Python, or Perl. The Vim application "name" (its
 Hence, in order to start a Vim instance (or connect to an already running
 instance), code similar to the following should be used:
 
-[Visual Basic]
->	Dim Vim As Object
->	Set Vim = CreateObject("Vim.Application")
+[Visual Basic] >
+	Dim Vim As Object
+	Set Vim = CreateObject("Vim.Application")
 
-[Python]
->	from win32com.client.dynamic import Dispatch
->	vim = Dispatch('Vim.Application')
+[Python] >
+	from win32com.client.dynamic import Dispatch
+	vim = Dispatch('Vim.Application')
 
-[Perl]
->	use Win32::OLE;
->	$vim = new Win32::OLE 'Vim.Application';
+[Perl] >
+	use Win32::OLE;
+	$vim = new Win32::OLE 'Vim.Application';
 
 Vim does not support acting as a "hidden" OLE server, like some other OLE
 Automation servers. When a client starts up an instance of Vim, that instance
@@ -59,14 +59,14 @@ Special keys can be given using their <..> names, as for the right hand side
 of a mapping. Note: Execution of the Ex "normal" command is not supported -
 see below |ole-normal|.
 
-Examples (Visual Basic syntax)
->	Vim.SendKeys "ihello<Esc>"
->	Vim.SendKeys "ma1GV4jy`a"
+Examples (Visual Basic syntax) >
+	Vim.SendKeys "ihello<Esc>"
+	Vim.SendKeys "ma1GV4jy`a"
 
 These examples assume that Vim starts in Normal mode. To force Normal mode,
-start the key sequence with CTRL-\ CTRL-N as in
+start the key sequence with CTRL-\ CTRL-N as in >
 
->	Vim.SendKeys "<C-\><C-N>ihello<Esc>"
+	Vim.SendKeys "<C-\><C-N>ihello<Esc>"
 
 CTRL-\ CTRL-N returns Vim to Normal mode, when in Insert or Command-line mode.
 Note that this doesn't work halfway a Vim command
@@ -78,18 +78,18 @@ This method takes a single parameter, which is an expression in Vim's normal
 format (see |expression|).  It returns a string, which is the result of
 evaluating the expression.
 
-Examples (Visual Basic syntax)
->	Line20 = Vim.Eval("getline(20)")
->	Twelve = Vim.Eval("6 + 6")		' Note this is a STRING
->	Font = Vim.Eval("&guifont")
-
+Examples (Visual Basic syntax) >
+	Line20 = Vim.Eval("getline(20)")
+	Twelve = Vim.Eval("6 + 6")		' Note this is a STRING
+	Font = Vim.Eval("&guifont")
+<
 							*ole-setforeground*
 SetForeground()		Make the Vim window come to the foreground
 
 This method takes no arguments.  No value is returned.
 
-Example (Visual Basic syntax)
->	Vim.SetForeground
+Example (Visual Basic syntax) >
+	Vim.SetForeground
 
 ==============================================================================
 3. The "normal" command					*ole-normal*
@@ -106,15 +106,15 @@ simply be aware of the limitation.
 
 Before Vim will act as an OLE server, it must be registered in the system
 registry. In order to do this, Vim should be run with a single parameter of
-"-register".
+"-register". >
 
->	gvim -register
+	gvim -register
 
 Once vim is registered, the application path is stored in the registry. Before
 moving, deleting, or upgrading Vim, the registry entries should be removed
-using the "-unregister" switch.
+using the "-unregister" switch. >
 
->	gvim -unregister
+	gvim -unregister
 
 The OLE mechanism will use the first registered Vim it finds.  If a Vim is
 already running, this one will be used.  If you want to have (several) Vim
@@ -132,4 +132,4 @@ the OLE version.  The documentation can be found in the VisVim directory, the
 README.txt file.
 
 ==============================================================================
- vim:tw=78:ts=8:sw=8:
+ vim:tw=78:

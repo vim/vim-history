@@ -236,7 +236,7 @@ beos_select(int nbits,
     }
 #endif
 
-#if USE_GUI_BEOS
+#if FEAT_GUI_BEOS
     /*
      * If not reading from terminal, pretend there is input.
      * This makes the pty reading (for the GUI) "work" for

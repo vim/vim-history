@@ -17,7 +17,7 @@
 /* ============ the header file puzzle (ca. 50-100 pieces) ========= */
 
 #ifdef HAVE_CONFIG_H	/* GNU autoconf (or something else) was here */
-# include "config.h"
+# include "auto/config.h"
 # define HAVE_PATHDEF
 
 /*
@@ -26,7 +26,7 @@
  * test program.  Other items from configure may also be wrong then!
  */
 # if (SIZEOF_INT == 0)
-    Error: configure did not run properly.  Check config.log.
+    Error: configure did not run properly.  Check auto/config.log.
 # endif
 #endif
 
@@ -35,28 +35,78 @@
 #endif
 
 #if defined macintosh
-# define USE_GUI_MAC	    /* mandatory */
+# define FEAT_GUI_MAC	    /* mandatory */
 #endif
-#if defined(USE_GUI_MOTIF) \
-    || defined(USE_GUI_GTK) \
-    || defined(USE_GUI_ATHENA) \
-    || defined(USE_GUI_MAC) \
-    || defined(USE_GUI_WIN32) \
-    || defined(USE_GUI_BEOS) \
-    || defined(USE_GUI_AMIGA)
-# ifndef USE_GUI
-#  define USE_GUI
+#if defined(FEAT_GUI_MOTIF) \
+    || defined(FEAT_GUI_GTK) \
+    || defined(FEAT_GUI_ATHENA) \
+    || defined(FEAT_GUI_MAC) \
+    || defined(FEAT_GUI_W32) \
+    || defined(FEAT_GUI_W16) \
+    || defined(FEAT_GUI_BEOS) \
+    || defined(FEAT_GUI_AMIGA)
+# ifndef FEAT_GUI
+#  define FEAT_GUI
 # endif
 #endif
 
-#if defined(USE_GUI_WIN32) || defined(USE_GUI_WIN16)
-# define USE_GUI_MSWIN
+/*
+ * SIZEOF_INT is used in feature.h, and the system-specific included files
+ * need items from feature.h.  Therefore define SIZEOF_INT here.
+ */
+#if defined(FEAT_GUI_W32) || defined(FEAT_GUI_W16)
+# define FEAT_GUI_MSWIN
 #endif
 #if defined(WIN32) || defined(WIN16)
 # define MSWIN
 #endif
+#ifdef MSDOS
+# ifdef DJGPP
+#  ifndef FEAT_GUI_GTK		/* avoid problems when generating prototypes */
+#   define SIZEOF_INT 4		/* 32 bit ints */
+#  endif
+#  define DOS32
+# else
+#  ifndef FEAT_GUI_GTK		/* avoid problems when generating prototypes */
+#   define SIZEOF_INT 2		/* 16 bit ints */
+#  endif
+#  define SMALL_MALLOC		/* 16 bit storage allocation */
+#  define DOS16
+# endif
+#endif
+#ifdef WIN32
+# define SIZEOF_INT 4
+#endif
+
+#ifdef AMIGA
+  /* Be conservative about sizeof(int). It could be 4 too. */
+# ifndef FEAT_GUI_GTK	/* avoid problems when generating prototypes */
+#  define SIZEOF_INT	2
+# endif
+#endif
+#ifdef macintosh
+# if defined(__POWERPC__) || defined (__fourbyteints__)
+#  define SIZEOF_INT 4
+# else
+#  define SIZEOF_INT 2
+# endif
+#endif
+#ifdef RISCOS
+# define SIZEOF_INT 4
+#endif
+
 
 #include "feature.h"	/* #defines for optionals and features */
+
+/* +x11 is only enabled when it's both available and wanted. */
+#if defined(HAVE_X11) && defined(WANT_X11)
+# define FEAT_X11
+#endif
+
+/* Can't use "PACKAGE" here, conflicts with a Perl include file. */
+#ifndef VIMPACKAGE
+# define VIMPACKAGE	"vim"
+#endif
 
 /*
  * Find out if function definitions should include argument types
@@ -107,7 +157,7 @@
 #endif
 
 #ifdef UNIX
-# include "osdef.h"	/* bring missing declarations in */
+# include "auto/osdef.h"	/* bring missing declarations in */
 #endif
 
 #ifdef __EMX__
@@ -144,6 +194,18 @@
 # include "os_riscos.h"
 #endif
 
+#ifdef FEAT_SUN_WORKSHOP
+# include "workshop.h"
+#endif
+
+#ifdef X_LOCALE
+# include <X11/Xlocale.h>
+#else
+# ifdef HAVE_LOCALE_H
+#  include <locale.h>
+# endif
+#endif
+
 /*
  * Maximum length of a path (for non-unix systems) Make it a bit long, to stay
  * on the safe side.  But not too long to put on the stack.
@@ -166,6 +228,23 @@ typedef unsigned char	char_u;
 typedef unsigned short	short_u;
 typedef unsigned int	int_u;
 typedef unsigned long	long_u;
+
+/*
+ * The characters and attributes cached for the screen.
+ * Currently a single byte, may become larger for multi-byte encodings.
+ */
+#define schar_t	char_u
+#define sattr_t	char_u
+
+/*
+ * The u8char_t can hold one decoded UTF-8 character.
+ * Vim always use an int (32 bits) for characters most places, so that we can
+ * handle 32 bit characters in the file.  u8char_t is only used for
+ * displaying.  That should be enough, because there is no font for > 16 bits.
+ */
+#ifdef FEAT_MBYTE
+typedef unsigned short u8char_t;
+#endif
 
 #ifndef UNIX		    /* For Unix this is included in os_unix.h */
 # include <stdio.h>
@@ -212,14 +291,39 @@ typedef unsigned long	long_u;
 /* ================ end of the header file puzzle =============== */
 
 /*
+ * The _() stuff is for using gettext().  It is a no-op when libintl.h is not
+ * found or the +multilang feature is disabled.
+ */
+#ifdef FEAT_GETTEXT
+# include <libintl.h>
+# define _(x) gettext((char *)(x))
+# ifdef gettext_noop
+#  define N_(x) gettext_noop(x)
+# else
+#  define N_(x) x
+# endif
+#else
+# define _(x) ((char *)(x))
+# define N_(x) x
+# ifdef bindtextdomain
+#  undef bindtextdomain
+# endif
+# define bindtextdomain(x, y) /* empty */
+# ifdef textdomain
+#  undef textdomain
+# endif
+# define textdomain(x) /* empty */
+#endif
+
+/*
  * flags for update_screen()
  * The higher the value, the higher the priority
  */
-#define VALID			10  /* buffer not changed */
+#define VALID			10  /* buffer not changed, or changes marked
+				       with b_mod_* */
 #define INVERTED		20  /* redisplay inverted part */
-#define VALID_TO_CURSCHAR	30  /* line at/below cursor changed */
-#define VALID_BEF_CURSCHAR	35  /* line just above cursor changed */
-#define NOT_VALID		40  /* buffer changed somewhere */
+#define REDRAW_TOP		30  /* display first w_upd_rows screen lines */
+#define NOT_VALID		40  /* buffer needs complete redraw */
 #define CLEAR			50  /* screen messed up, clear it */
 
 /*
@@ -327,6 +431,11 @@ typedef unsigned long	long_u;
 #define EXPAND_USER_CMD_FLAGS	23
 #define EXPAND_USER_NARGS	24
 #define EXPAND_USER_COMPLETE	25
+#define EXPAND_ENV_VARS		26
+
+/* Values for exmode_active (0 is no exmode) */
+#define EXMODE_NORMAL		1
+#define EXMODE_VIM		2
 
 /* Values for nextwild() and ExpandOne().  See ExpandOne() for meaning. */
 #define WILD_FREE		1
@@ -356,6 +465,25 @@ typedef unsigned long	long_u;
 /* Note: mostly EW_NOTFOUND and EW_SILENT are mutually exclusive: EW_NOTFOUND
  * is used when executing commands and EW_SILENT for interactive expanding. */
 
+#ifdef FEAT_VERTSPLIT
+# define W_WINCOL(wp)	(wp->w_wincol)
+# define W_WIDTH(wp)	(wp->w_width)
+# define W_ENDCOL(wp)	(wp->w_wincol + wp->w_width)
+# define W_VSEP_WIDTH(wp) (wp->w_vsep_width)
+#else
+# define W_WINCOL(wp)	0
+# define W_WIDTH(wp)	Columns
+# define W_ENDCOL(wp)	Columns
+# define W_VSEP_WIDTH(wp) 0
+#endif
+#ifdef FEAT_WINDOWS
+# define W_STATUS_HEIGHT(wp) (wp->w_status_height)
+# define W_WINROW(wp)	(wp->w_winrow)
+#else
+# define W_STATUS_HEIGHT(wp) 0
+# define W_WINROW(wp)	0
+#endif
+
 #ifdef NO_EXPANDPATH
 # define gen_expand_wildcards mch_expand_wildcards
 #endif
@@ -369,8 +497,20 @@ typedef unsigned long	long_u;
 #define ACTION_GOTO	2
 #define ACTION_SPLIT	3
 #define ACTION_SHOW_ALL	4
-#ifdef INSERT_EXPAND
+#ifdef FEAT_INS_EXPAND
 # define ACTION_EXPAND	5
+#endif
+
+#ifdef FEAT_SYN_HL
+# define SST_MIN_ENTRIES 150	/* minimal size for state stack array */
+# ifdef FEAT_GUI_W16
+#  define SST_MAX_ENTRIES 500	/* (only up to 64K blocks) */
+# else
+#  define SST_MAX_ENTRIES 1000	/* maximal size for state stack array */
+# endif
+# define SST_FIX_STATES	 7	/* size of sst_stack[]. */
+# define SST_DIST	 16	/* normal distance between entries */
+# define SST_INVALID	(synstate_t *)-1	/* invalid syn_state pointer */
 #endif
 
 /* Values for 'options' argument in do_search() and searchit() */
@@ -394,6 +534,7 @@ typedef unsigned long	long_u;
 #define FNAME_MESS	1	/* give error message */
 #define FNAME_EXP	2	/* expand to path */
 #define FNAME_HYP	4	/* check for hypertext link */
+#define FNAME_INCL	8	/* apply 'includeexpr' */
 
 /* Values for buflist_getfile() */
 #define GETF_SETMARK	0x01	/* set pcmark before jumping */
@@ -443,10 +584,16 @@ typedef unsigned long	long_u;
 
 /* Values for sub_cmd and which_pat argument for search_regcomp() */
 /* Also used for which_pat argument for searchit() */
-#define RE_SEARCH   0		/* save/use pat in/from search_pattern */
-#define RE_SUBST    1		/* save/use pat in/from subst_pattern */
-#define RE_BOTH	    2		/* save pat in both patterns */
-#define RE_LAST	    2		/* use last used pattern if "pat" is NULL */
+#define RE_SEARCH	0	/* save/use pat in/from search_pattern */
+#define RE_SUBST	1	/* save/use pat in/from subst_pattern */
+#define RE_BOTH		2	/* save pat in both patterns */
+#define RE_LAST		2	/* use last used pattern if "pat" is NULL */
+
+#ifdef FEAT_SYN_HL
+/* values for reg_do_extmatch */
+# define REX_SET	1	/* to allow \z\(...\), */
+# define REX_USE	2	/* to allow \z\1 et al. */
+#endif
 
 /* Return values for fullpathcmp() */
 /* Note: can use (fullpathcmp() & FPC_SAME) to check for equal files */
@@ -532,7 +679,7 @@ typedef unsigned long	long_u;
 #define TAG_NAMES	2	/* only return name of tag */
 #define	TAG_REGEXP	4	/* use tag pattern as regexp */
 #define	TAG_NOIC	8	/* don't always ignore case */
-#ifdef USE_CSCOPE
+#ifdef FEAT_CSCOPE
 # define TAG_CSCOPE	16	/* cscope tag */
 #endif
 #define TAG_VERBOSE	32	/* message verbosity */
@@ -559,6 +706,22 @@ typedef unsigned long	long_u;
 #define VIM_CANCEL	4
 #define VIM_ALL		5
 #define VIM_DISCARDALL  6
+
+/*
+ * arguments for win_split()
+ */
+#define WSP_ROOM	1	/* require enough room */
+#define WSP_VERT	2	/* split vertically */
+#define WSP_TOP		4	/* window at top-left of shell */
+#define WSP_BOT		8	/* window at bottom-right of shell */
+
+/*
+ * "flags" values for option-setting functions.
+ */
+#define OPT_FREE	1	/* free old value if it was allocated */
+#define OPT_GLOBAL	2	/* also set global value for local option */
+#define OPT_LOCAL	4	/* only set local value */
+#define OPT_MODELINE	8	/* option in modeline */
 
 /* Magic chars used in confirm dialog strings */
 #define DLG_BUTTON_SEP	'\n'
@@ -598,18 +761,23 @@ enum auto_event
     EVENT_BUFNEWFILE,		/* when creating a buffer for a new file */
     EVENT_BUFREADPOST,		/* after reading a buffer */
     EVENT_BUFREADPRE,		/* before reading a buffer */
+    EVENT_BUFREADCMD,		/* read buffer using command */
     EVENT_BUFUNLOAD,		/* just before unloading a buffer */
     EVENT_BUFHIDDEN,		/* just after buffer becomes hidden */
     EVENT_BUFWRITEPOST,		/* after writing a buffer */
     EVENT_BUFWRITEPRE,		/* before writing a buffer */
+    EVENT_BUFWRITECMD,		/* write buffer using command */
     EVENT_FILEAPPENDPOST,	/* after appending to a file */
     EVENT_FILEAPPENDPRE,	/* before appending to a file */
+    EVENT_FILEAPPENDCMD,	/* appende to a file using command */
     EVENT_FILECHANGEDSHELL,	/* after shell command that changed file */
     EVENT_FILEREADPOST,		/* after reading a file */
     EVENT_FILEREADPRE,		/* before reading a file */
+    EVENT_FILEREADCMD,		/* read from a file using command */
     EVENT_FILETYPE,		/* new file type detected (user defined) */
     EVENT_FILEWRITEPOST,	/* after writing a file */
     EVENT_FILEWRITEPRE,		/* before writing a file */
+    EVENT_FILEWRITECMD,		/* write to a file using command */
     EVENT_FILTERREADPOST,	/* after reading from a filter */
     EVENT_FILTERREADPRE,	/* before reading from a filter */
     EVENT_FILTERWRITEPOST,	/* after writing to a filter */
@@ -621,14 +789,16 @@ enum auto_event
     EVENT_STDINREADPRE,		/* before reading from stdin */
     EVENT_SYNTAX,		/* syntax selected */
     EVENT_TERMCHANGED,		/* after changing 'term' */
+    EVENT_TERMRESPONSE,		/* after setting "v:termresponse" */
     EVENT_USER,			/* user defined autocommand */
     EVENT_VIMENTER,		/* after starting Vim */
     EVENT_VIMLEAVE,		/* before exiting Vim */
     EVENT_VIMLEAVEPRE,		/* before exiting Vim and writing .viminfo */
     EVENT_WINENTER,		/* after entering a window */
     EVENT_WINLEAVE,		/* before leaving a window */
-    EVENT_FILEENCODING,		/* after changing the file-encoding (set fe=) */
-    EVENT_CURSORHOLD,
+    EVENT_CHARCODE,		/* after changing the 'charcode' option */
+    EVENT_CURSORHOLD,		/* cursor in same position for a while */
+    EVENT_FUNCUNDEFINED,	/* if calling a function which doesn't exist */
     NUM_EVENTS			/* MUST be the last one */
 };
 
@@ -636,34 +806,36 @@ typedef enum auto_event EVENT_T;
 
 /*
  * Values for index in highlight_attr[].
- * When making changes, also update the table in highlight_changed()!
+ * When making changes, also update HL_FLAGS below!
  */
 enum hlf_value
 {
-    HLF_8 = 0,	    /* Meta & special keys listed with ":map" */
-    HLF_AT,	    /* @ and ~ characters at end of screen */
-    HLF_D,	    /* directories in CTRL-D listing */
-    HLF_E,	    /* error messages */
-    HLF_H,	    /* obsolete, ignored */
-    HLF_I,	    /* incremental search */
-    HLF_L,	    /* last search string */
-    HLF_M,	    /* "--More--" message */
-    HLF_CM,	    /* Mode (e.g., "-- INSERT --") */
-    HLF_N,	    /* line number for ":number" and ":#" commands */
-    HLF_R,	    /* return to continue message and yes/no questions */
-    HLF_S,	    /* status lines */
-    HLF_SNC,	    /* status lines of not-current windows */
-    HLF_T,	    /* Titles for output from ":set all", ":autocmd" etc. */
-    HLF_V,	    /* Visual mode */
-    HLF_VNC,	    /* Visual mode, autoselecting and not clipboard owner */
-    HLF_W,	    /* warning messages */
-    HLF_WM,	    /* Wildmenu highlight */
-    HLF_COUNT	    /* MUST be the last one */
+    HLF_8 = 0	    /* Meta & special keys listed with ":map" */
+    , HLF_AT	    /* @ and ~ characters at end of screen */
+    , HLF_D	    /* directories in CTRL-D listing */
+    , HLF_E	    /* error messages */
+    , HLF_H	    /* obsolete, ignored */
+    , HLF_I	    /* incremental search */
+    , HLF_L	    /* last search string */
+    , HLF_M	    /* "--More--" message */
+    , HLF_CM	    /* Mode (e.g., "-- INSERT --") */
+    , HLF_N	    /* line number for ":number" and ":#" commands */
+    , HLF_R	    /* return to continue message and yes/no questions */
+    , HLF_S	    /* status lines */
+    , HLF_SNC	    /* status lines of not-current windows */
+    , HLF_C	    /* column to separate vertically split windows */
+    , HLF_T	    /* Titles for output from ":set all", ":autocmd" etc. */
+    , HLF_V	    /* Visual mode */
+    , HLF_VNC	    /* Visual mode, autoselecting and not clipboard owner */
+    , HLF_W	    /* warning messages */
+    , HLF_WM	    /* Wildmenu highlight */
+    , HLF_F	    /* Folded line */
+    , HLF_COUNT	    /* MUST be the last one */
 };
 
 /* the HL_FLAGS must be in the same order as the HLF_ enums! */
 #define HL_FLAGS {'8', '@', 'd', 'e', 'h', 'i', 'l', 'm', 'M', \
-		  'n', 'r', 's', 'S', 't', 'v', 'V', 'w', 'W'}
+		  'n', 'r', 's', 'S', 'c', 't', 'v', 'V', 'w', 'W', 'f'}
 
 /*
  * Boolean constants
@@ -700,6 +872,11 @@ enum hlf_value
 #define OP_REPLACE	16	/* "r"  replace chars, only for Visual mode */
 #define OP_INSERT	17	/* "I"  Insert column, only for Visual mode */
 #define OP_APPEND	18	/* "A"  Append column, only for Visual mode */
+#define OP_FOLD		19	/* "zf" define a fold */
+#define OP_FOLDOPEN	20	/* "zo" open folds */
+#define OP_FOLDOPENREC	21	/* "zO" open folds recursively */
+#define OP_FOLDCLOSE	22	/* "zc" close folds */
+#define OP_FOLDCLOSEREC	23	/* "zC" close folds recursively */
 
 /*
  * Motion types, used for operators and for yank/delete registers.
@@ -714,6 +891,7 @@ enum hlf_value
 #define MIN_COLUMNS	12	/* minimal columns for screen */
 #define MIN_LINES	2	/* minimal lines for screen */
 #define STATUS_HEIGHT	1	/* height of a status line under a window */
+#define QF_WINHEIGHT	10	/* default height for quickfix window */
 
 /*
  * Buffer sizes
@@ -808,11 +986,12 @@ enum hlf_value
 
 typedef long	    linenr_t;	    /* line number type */
 typedef unsigned    colnr_t;	    /* column number type */
+typedef unsigned short disptick_t;  /* display tick type */
 
-#define MAXLNUM (0x7fffffff)	    /* maximum (invalid) line number */
+#define MAXLNUM (0x7fffffffL)	    /* maximum (invalid) line number */
 
 #if SIZEOF_INT >= 4
-# define MAXCOL	(0x7fffffff)	    /* maximum column number, 31 bits */
+# define MAXCOL	(0x7fffffffL)	    /* maximum column number, 31 bits */
 #else
 # define MAXCOL	(0x7fff)	    /* maximum column number, 15 bits */
 #endif
@@ -881,10 +1060,9 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 
 /* Note that gui.h is included by structs.h */
 
-#include "regexp.h"	    /* for struct regexp */
 #include "structs.h"	    /* file that defines many structures */
 
-#ifdef USE_MOUSE
+#ifdef FEAT_MOUSE
 
 /* Codes for mouse button events in lower three bits: */
 # define MOUSE_LEFT	0x00
@@ -923,11 +1101,9 @@ int vim_memcmp __ARGS((void *, void *, size_t));
  */
 # define IN_UNKNOWN	1
 # define IN_BUFFER	2
-# define IN_STATUS_LINE	3	    /* Or in command line */
+# define IN_STATUS_LINE	3	    /* on status or command line */
+# define IN_SEP_LINE	4	    /* on vertical separator line */
 # define CURSOR_MOVED	0x100
-/* In addition get_fpos_of_mouse() may specify these */
-# define BEFORE_TEXTLINE	0x200
-# define AFTER_TEXTLINE		0x300
 
 /* flags for jump_to_mouse() */
 # define MOUSE_FOCUS		0x01	/* need to stay in this window */
@@ -936,13 +1112,17 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 # define MOUSE_SETPOS		0x08	/* only set current mouse position */
 # define MOUSE_MAY_STOP_VIS	0x10	/* may stop Visual mode */
 
-#endif /* USE_MOUSE */
+# if defined(UNIX) && defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
+#  define CHECK_DOUBLE_CLICK 1	/* Checking for double clicks ourselves. */
+# endif
+
+#endif /* FEAT_MOUSE */
 
 /* defines for eval_vars() */
 #define VALID_PATH		1
 #define VALID_HEAD		2
 
-/* defines for Vim variables (don't change them!) */
+/* Defines for Vim variables.  These must match vimvars[] in eval.c! */
 #define VV_COUNT	0
 #define VV_COUNT1	1
 #define VV_ERRMSG	2
@@ -951,9 +1131,17 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 #define VV_SHELL_ERROR	5
 #define VV_THIS_SESSION	6
 #define VV_VERSION	7
-#define VV_LEN		8	/* number of v: vars */
+#define VV_LNUM		8
+#define VV_TERMRESPONSE	9
+#define VV_FNAME	10
+#define VV_LANG		11
+#define VV_CC_FROM	12
+#define VV_CC_TO	13
+#define VV_CC_IN	14
+#define VV_CC_OUT	15
+#define VV_LEN		16	/* number of v: vars */
 
-#ifdef USE_CLIPBOARD
+#ifdef FEAT_CLIPBOARD
 
 /* Selection states for modeless selection */
 # define SELECT_CLEARED		0
@@ -964,8 +1152,8 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 # define SELECT_MODE_WORD	1
 # define SELECT_MODE_LINE	2
 
-# ifdef USE_GUI_WIN32
-#  ifdef HAVE_OLE
+# ifdef FEAT_GUI_W32
+#  ifdef FEAT_OLE
 #   define WM_OLE (WM_APP+0)
 #  endif
 # endif
@@ -975,8 +1163,8 @@ typedef struct VimClipboard
 {
     int		available;	    /* Is clipboard available? */
     int		owned;		    /* Flag: do we own the selection? */
-    FPOS	start;		    /* Start of selected area */
-    FPOS	end;		    /* End of selected area */
+    pos_t	start;		    /* Start of selected area */
+    pos_t	end;		    /* End of selected area */
     int		vmode;		    /* Visual mode character */
 
     /* Fields for selection that doesn't use Visual mode */
@@ -986,28 +1174,28 @@ typedef struct VimClipboard
     short_u	word_start_col;
     short_u	word_end_col;
 
-    FPOS	prev;		    /* Previous position */
+    pos_t	prev;		    /* Previous position */
     short_u	state;		    /* Current selection state */
     short_u	mode;		    /* Select by char, word, or line. */
 
-# if defined(USE_GUI_X11) || defined(XTERM_CLIP)
+# if defined(FEAT_GUI_X11) || defined(FEAT_XCLIPBOARD)
     Atom	xatom;		    /* Vim's own special selection format */
     Atom	xa_targets;
     Atom	xa_text;
     Atom	xa_compound_text;
 # endif
 
-# ifdef USE_GUI_GTK
+# ifdef FEAT_GUI_GTK
     GdkAtom	atom;		    /* Vim's own special selection format */
 # endif
 # ifdef MSWIN
     int_u	format;		    /* Vim's own special clipboard format */
 # endif
-# ifdef USE_GUI_BEOS
+# ifdef FEAT_GUI_BEOS
 				    /* no clipboard at the moment */
 # endif
 } VimClipboard;
-#endif /* USE_CLIPBOARD */
+#endif /* FEAT_CLIPBOARD */
 
 #ifdef __BORLANDC__
 /* work around a bug in the Borland 'stat' function: */
@@ -1021,15 +1209,19 @@ typedef struct VimClipboard
 #include "ex_cmds.h"	    /* Ex command defines */
 #include "proto.h"	    /* function prototypes */
 
-#ifdef USE_SNIFF
+#ifdef FEAT_SNIFF
 # include "if_sniff.h"
+#endif
+
+#ifndef FEAT_VIRTUALEDIT
+# define getvvcol(w, p, s, c, e) getvcol(w, p, s, c, e)
 #endif
 
 /* This has to go after the include of proto.h, as proto/os_win32.pro declares
  * functions of these names. The declarations would break if the defines had
  * been seen at that stage.
  */
-#if !defined(USE_GUI_WIN32) && !defined(macintosh)
+#if !defined(FEAT_GUI_W32) && !defined(macintosh)
 # define mch_errmsg(str)	fprintf(stderr, "%s", (str))
 # define mch_display_error()	fflush(stderr)
 # define mch_msg(str)		printf("%s", (str))
@@ -1040,7 +1232,7 @@ typedef struct VimClipboard
 /*
  * If console dialog not supported, but GUI dialog is, use the GUI one.
  */
-#if defined(GUI_DIALOG) && !defined(CON_DIALOG)
+#if defined(FEAT_GUI_DIALOG) && !defined(FEAT_CON_DIALOG)
 # define do_dialog gui_mch_dialog
 #endif
 
@@ -1050,8 +1242,8 @@ typedef struct VimClipboard
  * So instead the filter strings are defined here for each architecture
  * that supports gui_mch_browse()
  */
-#ifdef USE_BROWSE
-# ifdef USE_GUI_WIN32
+#ifdef FEAT_BROWSE
+# ifdef FEAT_GUI_W32
 #  define BROWSE_FILTER_MACROS \
 		(char_u *)"Vim macro files (*.vim)\0*.vim\0All Files (*.*)\0*.*\0\0"
 #  define BROWSE_FILTER_ALL_FILES (char_u *)"All Files (*.*)\0*.*\0\0"
@@ -1071,6 +1263,28 @@ typedef struct VimClipboard
 # define vim_realloc(ptr, size)  mem_realloc((ptr), (size))
 #else
 # define vim_realloc(ptr, size)  realloc((ptr), (size))
+#endif
+
+/*
+ * The following macros stop displat/event loop nesting at the wrong time.
+ */
+#ifdef ALT_X_INPUT
+# define ALT_INPUT_LOCK_OFF	suppress_alternate_input = FALSE
+# define ALT_INPUT_LOCK_ON	suppress_alternate_input = TRUE
+#endif
+
+#ifdef FEAT_MBYTE
+/* Maximum number of bytes in a multi-byte character.  It can be one 32-bit
+ * character of up to 6 bytes, or one 16-bit character of up to three bytes
+ * plus two following composing characters of three bytes each. */
+# define MB_MAXBYTES	9
+
+/*
+ * Return byte length of character that starts with byte "b".
+ * Returns 1 for a single-byte character.
+ */
+# define MB_BYTE2LEN(b)	mb_bytelen_tab[b]
+# define MB_BYTE2LEN_CHECK(b)	(((b) < 0 || (b) > 255) ? 1 : mb_bytelen_tab[b])
 #endif
 
 #endif /* VIM__H */

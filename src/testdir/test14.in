@@ -11,7 +11,13 @@ vaBiBD:?Bug?,/Piece/-2w! test.out
 :s/i/~u~/
 :s/o/~~~/
 :.w >>test.out
-o65x42o103 33axfgo78:.w >>test.out
+:if has("ebcdic")
+: let tt = "o\<C-V>193\<C-V>xc2\<C-V>o303 \<C-V>90a\<C-V>xfg\<C-V>o578\<Esc>"
+:else
+: let tt = "o\<C-V>65\<C-V>x42\<C-V>o103 \<C-V>33a\<C-V>xfg\<C-V>o78\<Esc>"
+:endif
+:exe "normal " . tt
+:.w >>test.out
 :set vb
 /^Piece
 2]maA:.w >>test.out

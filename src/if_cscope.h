@@ -8,7 +8,7 @@
  * BSD license, then sue me; I'm not worth much anyway.
  */
 
-#if defined(USE_CSCOPE) || defined(PROTO)
+#if defined(FEAT_CSCOPE) || defined(PROTO)
 
 #include <sys/types.h>		/* pid_t */
 #include <sys/stat.h>		/* dev_t, ino_t */
@@ -47,7 +47,7 @@
 
 typedef struct {
     char *  name;
-    int     (*func) __ARGS((EXARG *eap));
+    int     (*func) __ARGS((exarg_t *eap));
     char *  help;
     char *  usage;
 } cscmd_t;
@@ -66,7 +66,7 @@ typedef struct csi {
     int		    to_fd;	/* to cscope: file descriptor. */
 } csinfo_t;
 
-enum { Add, Find, Help, Kill, Reset, Show } csid;
+enum { Add, Find, Help, Kill, Reset, Show } csid_e;
 
 typedef enum {
     Store,
@@ -79,6 +79,6 @@ typedef enum {
 typedef unsigned char bool_t;	/* should prob go elsewhere */
 
 
-#endif	/* USE_CSCOPE */
+#endif	/* FEAT_CSCOPE */
 
 /* the end */

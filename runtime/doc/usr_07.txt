@@ -1,0 +1,156 @@
+*usr_07.txt*	For Vim version 6.0d.  Last change: 2000 Jul 09
+
+		     VIM USER MANUAL - by Bram Moolenaar
+		
+			  Using syntax highlighting
+
+
+|07.1|  Switching it on
+|07.2|  No or wrong colors?
+|07.3|  Different colors
+|07.4|  With colors or without colors
+|07.5|  Printing with colors
+
+     Next chapter: |usr_08.txt|  Editing more than one file
+ Previous chapter: |usr_06.txt|  Set your settings
+Table of contents: |usr_toc.txt|
+
+==============================================================================
+*07.1*  Switching it on
+
+It all starts with one simple command: >
+	:syntax on
+
+That should work in most situations to get color in your files.  Vim will
+automagically detect the type of file and load the right syntax highlighting.
+Suddenly comments are blue, keywords brown and strings red.  This makes it
+easy to overview the file.  After a while you will find that black&white text
+slows you down!
+
+If you always want to use syntax highlighting, put the "syntax on" command in
+your |vimrc| file.
+
+If you want syntax highlighting only when the terminal supports colors, you
+can put this in your |vimrc| file: >
+	if &t_Co > 1
+	   syntax on
+	endif
+
+If you want syntax highlighting only in the GUI version, put the ":syntax on"
+command in your |gvimrc| file.
+
+==============================================================================
+*07.2*  No or wrong colors?
+
+There can be a number of reasons why you don't see colors:
+
+- Your terminal does not support colors.
+	Vim will use bold, italic and underlined text, but this doesn't look
+	very nice.  You probably will want to try to get a terminal with
+	colors.  For Unix, I recommend the xterm from the XFree86 project:
+	|xfree-xterm|.
+
+- Your terminal does support colors, but Vim doesn't know this.
+	Make sure your $TERM setting is correct.  For example, when using an
+	xterm that supports colors: >
+		setenv TERM xterm-color
+<	The terminal name must match the terminal you are using.  If it
+	still doesn't work, have a look at |xterm-color|, which shows a few
+	ways to make Vim display colors (not only for an xterm).
+
+- The file type is not recognized.
+	Vim doesn't know all file types, and sometimes it's near to impossible
+	what language a file uses.  Then you can set the type manually: >
+		:set syntax=fortran
+<	To see which types are available, look in the directory
+	$VIMRUNTIME/syntax.
+	This can also be done with a |modeline|, so that the file will be
+	highlighted each time you edit it.  For example, this line can be used
+	in a Makefile: >
+		# vim: syntax=make
+<	If you are clever, you might be able to detect the file type yourself.
+	See |new-filetype| for how to tell Vim to detect that file type.
+
+- There is no highlighing for your file type.
+	You could try using a similar file type by manually setting it as
+	mentioned above.  If that isn't good enouh, you can write your own
+	syntax file, see |mysyntaxfile|.
+	
+
+Or the colors could be wrong:
+
+- The colored text is very hard to read.
+	Vim guesses the background color that you are using.  If it is black
+	(or another dark color) it will use light colors for text.  If it is
+	white (or another light color) it will use dark colors for text.  If
+	Vim guessed wrong the text will be hard to read.  To solve this, set
+	the 'background' option.  For a dark background: >
+		:set background=dark
+<	And for a light background: >
+		:set background=light
+<	Make sure you put this _before_ the ":syntax on" command, otherwise
+	the colors will already have been set.  You could do ":syntax on"
+	after setting 'background' to make Vim set the default colors again.
+
+- The colors are wrong when scrolling bottom to top.
+	Vim doesn't read the whole file to parse the text.  It starts parsing
+	wherever you are viewing the file.  That saves a lot of time, but
+	sometimes the colors are wrong.  A simple fix is hitting CTRL-L.  Or
+	scroll back a bit and then forward again.
+	For a real fix, see ":syn-sync".
+
+==============================================================================
+*07.3*  Different colors				*:syn-default-override*
+
+You can change the colors used for each item with the ":highlight" command.
+for example, to make comments green: >
+	:highlight Comment ctermfg=green guifg=green
+See |:highlight| about how to specify highlighting attributes.
+
+You can make your own preferred set of colors this way.  If you want to use
+this always, put the ":highlight" commands in your "vimrc" file.  Make sure
+they are _after_ the ":syntax on" command, because that will set the default
+colors.
+
+==============================================================================
+*07.4*  With colors or without colors
+
+Displaying text in color takes a lot of effort.  If you find the displaying
+too slow, you might want to disable syntax highlighthig for a moment: >
+	:syntax clear
+When editing another file (or the same one) the colors will come back.
+							*:syn-off*
+If you want to stop highlighting completely use: >
+	:syntax off
+This will completely disable syntax highlighting and remove it immediately for
+all buffers.
+
+							*:syn-manual*
+If you want syntax highlighting only for specific files, use this: >
+	:syntax manual
+This will enable the syntax highlighting, but not switch it on automatically
+when starting to edit a buffer.  To switch highlighting on for the current
+buffer, set the 'syntax' option: >
+	:set syntax=ON
+<
+==============================================================================
+*07.5*  Printing with colors				*syntax-printing*
+
+If you want to print your colored text, you will have to convert it to HTML
+first, and then print it from a web browser such as Netscape.  See |2html.vim|
+for details.
+
+To do this manually, edit the file you want to print: >
+	:e main.c
+The source the 2html.vim script: >
+	:source $VIMRUNTIME/syntax/2html.vim
+You will see it crunching away, and some time later another window shows the
+HTML code.  Now write this somewhere: >
+	:w main.c.html
+Open this file in your favorite browser and print it from there.
+
+Instead of printing, you could also put the HTML file on a web server, and let
+others look at the colored text.
+
+==============================================================================
+ vim:tw=78:

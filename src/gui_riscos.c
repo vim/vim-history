@@ -687,7 +687,7 @@ gui_mch_set_winpos(int x, int y)
 }
 
     void
-gui_mch_set_winsize(width, height, min_width, min_height, base_width, base_height)
+gui_mch_set_shellsize(width, height, min_width, min_height, base_width, base_height)
     int width;		/* In OS units */
     int height;
     int min_width;	/* Smallest permissable window size (ignored) */
@@ -814,14 +814,14 @@ ro_get_font(fullname, weight)
     font[i] = 0;
 
     if (height < 1 && width < 1)
-	height = width = 10;	    /* Default to 10pt */
+	height = width = 10;	/* Default to 10pt */
     else if (height < 1)
 	height = width;
     else if (width < 1)
 	width = height;
 
     if (xswi(Font_FindFont, 0, font, width << 4, height << 4, 0, 0) & v_flag)
-	return (GuiFont) 0;	    /* Can't find font */
+	return NOFONT;		/* Can't find font */
 
     return r0;
 }
@@ -933,7 +933,7 @@ zap_load_font(name)
  * Return FAIL if the font could not be loaded, OK otherwise.
  */
     int
-gui_mch_init_font(char_u *font_name)
+gui_mch_init_font(char_u *font_name, int fontset)
 {
     int	    new_handle	= 0;	    /* Use the system font by default */
 
@@ -944,7 +944,7 @@ gui_mch_init_font(char_u *font_name)
 	    zap_redraw = TRUE;
 	else
 	{
-	    EMSG2("Can't load Zap font '%s'", font_name);
+	    EMSG2(_("Can't load Zap font '%s'"), font_name);
 	    font_name = "System";   /* Error - use system font */
 	    zap_redraw = FALSE;
 	}
@@ -1017,6 +1017,12 @@ gui_mch_init_font(char_u *font_name)
     return OK;
 }
 
+    int
+gui_mch_adjust_charsize()
+{
+    return FAIL;
+}
+
 /*
  * Get a font structure for highlighting.
  */
@@ -1028,14 +1034,14 @@ gui_mch_get_font(name, giveErrorIfMissing)
     int		handle;
 
     if (!name)
-	return (GuiFont) 0;	    /* System font if no name */
+	return NOFONT;		/* System font if no name */
 
     handle = ro_get_font(name, 0);
     if (!handle)
     {
 	if (giveErrorIfMissing)
-	    EMSG2("Can't use font %s", name);
-	return (GuiFont) 0;
+	    EMSG2(_("Can't use font %s"), name);
+	return NOFONT;
     }
 
     return handle;
@@ -1082,14 +1088,14 @@ gui_mch_free_font(GuiFont font)
  * Return -1 for error.
  * NB: I've changed Green for now, since it looked really sick
  */
-    GuiColor
+    guicolor_t
 gui_mch_get_color(char_u *name)
 {
     int		i;
     struct colour
     {
 	char_u		*name;
-	GuiColor	value;
+	guicolor_t	value;
     } colours[] =
     {
 	{ "Red",		grgb(255,	0,	0)	},
@@ -1140,7 +1146,7 @@ gui_mch_get_color(char_u *name)
 	int	    c;
 
 	c = strtol(name + 1, &end, 16);
-	return (GuiColor) ((c >> 16) & 0xff) | (c & 0xff00) | ((c & 0xff) << 16);
+	return (guicolor_t) ((c >> 16) & 0xff) | (c & 0xff00) | ((c & 0xff) << 16);
     }
 
     for (i = 0; colours[i].name != NULL; i++)
@@ -1151,10 +1157,10 @@ gui_mch_get_color(char_u *name)
     if (strnicmp(name, "grey", 4) == 0 || strnicmp(name, "gray", 4) == 0)
     {
 	int level = (255 * atoi(name + 4)) / 100;
-	return (GuiColor) grgb(level, level, level);
+	return (guicolor_t) grgb(level, level, level);
     }
-    EMSG2("Missing colour : %s", name);
-    return (GuiColor) -1;
+    EMSG2(_("Missing colour : %s"), name);
+    return (guicolor_t) -1;
 }
 
 /*
@@ -1162,7 +1168,7 @@ gui_mch_get_color(char_u *name)
  * If we are using fonts then set the antialiasing colours too.
  */
     void
-gui_mch_set_colors(GuiColor fg, GuiColor bg)
+gui_mch_set_colors(guicolor_t fg, guicolor_t bg)
 {
     zap_redraw_colours[0] = bg << 8;	/* JK230798, register new background colour */
     zap_redraw_colours[1] = fg << 8;	/* JK230798, register new foreground colour */
@@ -1384,7 +1390,7 @@ draw_hollow(w, h)
  * Draw a cursor without focus.
  */
     void
-gui_mch_draw_hollow_cursor(GuiColor colour)
+gui_mch_draw_hollow_cursor(guicolor_t colour)
 {
     int x = FILL_X(gui.cursor_col);	/* Window relative, top-left */
     int y = -FILL_Y(gui.cursor_row);
@@ -1425,7 +1431,7 @@ gui_mch_draw_hollow_cursor(GuiColor colour)
 gui_mch_draw_part_cursor(w, h, colour)
     int w;
     int h;
-    GuiColor colour;
+    guicolor_t colour;
 {
     int x = FILL_X(gui.cursor_col);
     int y = -FILL_Y(gui.cursor_row);
@@ -1521,9 +1527,9 @@ ro_prequit(block)
     int
 ro_ok_to_quit()
 {
-    int	    old_confirm = confirm;
+    int	    old_confirm = cmdmod.confirm;
 
-    confirm = FALSE;	    /* Use our own, single tasking, box */
+    cmdmod.confirm = FALSE;	    /* Use our own, single tasking, box */
 
     if (check_changed_any(FALSE))
     {
@@ -1531,11 +1537,11 @@ ro_ok_to_quit()
 		"\0\0\0\0Vim contains unsaved data - quit anyway?",
 		0x17,
 		"Vim");
-	confirm = old_confirm;
+	cmdmod.confirm = old_confirm;
 	if (r1 != 1)
 	    return FALSE;
     }
-    confirm = old_confirm;
+    cmdmod.confirm = old_confirm;
     return TRUE;
 }
 
@@ -1870,7 +1876,7 @@ ro_drag_finished(block)
 	height = (block[4] - block[2]);
 
 	swi(Wimp_ForceRedraw, gui.window_handle, 0, -height, width, 0);
-	gui_resize_window(width, height);
+	gui_resize_shell(width, height);
     }
     else
     {
@@ -2077,11 +2083,11 @@ ro_message(block)
  * Converts a scrollbar's window handle into a scrollbar pointer.
  * NULL on failure.
  */
-    GuiScrollbar *
+    scrollbar_t *
 ro_find_sbar(id)
-    int	    id;
+    int		id;
 {
-    WIN	    *wp;
+    win_t	*wp;
 
     if (gui.bottom_sbar.id == id)
 	return &gui.bottom_sbar;
@@ -2108,14 +2114,14 @@ scroll_to(line, sb)
 
     /* Send a scroll event:
      *
-     * A scrollbar event is CSI (NOT K_SPECIAL), KS_SCROLLBAR,
-     * K_FILLER followed by:
+     * A scrollbar event is CSI (NOT K_SPECIAL), KS_VER_SCROLLBAR,
+     * KE_FILLER followed by:
      * one byte representing the scrollbar number, and then four bytes
      * representing a long_u which is the new value of the scrollbar.
      */
     code[0] = CSI;
-    code[1] = KS_SCROLLBAR;
-    code[2] = K_FILLER;
+    code[1] = KS_VER_SCROLLBAR;
+    code[2] = KE_FILLER;
     code[3] = sb;
     code[4] = line >> 24;
     code[5] = line >> 16;
@@ -2138,13 +2144,13 @@ h_scroll_to(col)
      *
      * A scrollbar event is CSI (NOT K_SPECIAL)
      *
-     * A horizontal scrollbar event is K_SPECIAL, KS_HORIZ_SCROLLBAR,
-     * K_FILLER followed by four bytes representing a long_u which is the
+     * A horizontal scrollbar event is K_SPECIAL, KS_HOR_SCROLLBAR,
+     * KE_FILLER followed by four bytes representing a long_u which is the
      * new value of the scrollbar.
      */
     code[0] = CSI;
-    code[1] = KS_HORIZ_SCROLLBAR;
-    code[2] = K_FILLER;
+    code[1] = KS_HOR_SCROLLBAR;
+    code[2] = KE_FILLER;
     code[4] = col >> 24;
     code[5] = col >> 16;
     code[6] = col >> 8;
@@ -2156,9 +2162,9 @@ h_scroll_to(col)
 ro_scroll(block)
     int		*block;
 {
-    GuiScrollbar    *sb;
-    int		    offset;
-    WIN		    *wp;
+    scrollbar_t	*sb;
+    int		offset;
+    win_t	*wp;
 
     /* Block is ready for Wimp_OpenWindow, and also contains:
      *
@@ -2252,7 +2258,7 @@ ro_open_main(block)
 	int	pos_wanted, pos_got;
 	int	left_bar  = gui.which_scrollbars[SBAR_LEFT];
 	int	right_bar = gui.which_scrollbars[SBAR_RIGHT];
-	WIN	*wp;
+	win_t	*wp;
 
 	/* Three cases to think about:
 	 * 1) Move to top. Open each window at the top.
@@ -2299,17 +2305,17 @@ ro_open_main(block)
 	width = block[3] - block[1];
 	height = block[4] - block[2];
 	swi(Wimp_ForceRedraw, gui.window_handle, 0, -height, width, 0);
-	gui_resize_window(width, height);
+	gui_resize_shell(width, height);
 	changed_mode = FALSE;
     }
 }
 
     void
 ro_open_window(block)
-    int	    *block;
+    int		*block;
 {
-    int	    pos;
-    GuiScrollbar *sb;
+    int		pos;
+    scrollbar_t *sb;
 
     if (block[0] == gui.window_handle)
 	ro_open_main(block);
@@ -2332,10 +2338,10 @@ ro_open_window(block)
 
     void
 ro_menu_selection(block)
-    int	    *block;
+    int		*block;
 {
-    int	    *item = wimp_menu + 7;
-    VimMenu *menu;
+    int		*item = wimp_menu + 7;
+    vimmenu_t	*menu;
     /* wimp_menu points to a wimp menu structure */
 
     for (;;)
@@ -2348,7 +2354,7 @@ ro_menu_selection(block)
 	block++;
     }
     /* item points to the wimp menu item structure chosen */
-    menu = (VimMenu *) item[5];
+    menu = (vimmenu_t *) item[5];
 
     swi(Wimp_GetPointerInfo, 0, block);
     if (block[2] == 1)
@@ -2746,7 +2752,7 @@ clip_mch_set_selection(void)
  * Make a menu either grey or not grey.
  */
     void
-gui_mch_menu_grey(VimMenu *menu, int grey)
+gui_mch_menu_grey(vimmenu_t *menu, int grey)
 {
     menu-> greyed_out = grey;
 }
@@ -2755,7 +2761,7 @@ gui_mch_menu_grey(VimMenu *menu, int grey)
  * Make menu item hidden or not hidden
  */
     void
-gui_mch_menu_hidden(VimMenu *menu, int hidden)
+gui_mch_menu_hidden(vimmenu_t *menu, int hidden)
 {
     menu-> hidden = hidden;
 }
@@ -2782,8 +2788,8 @@ gui_mch_draw_menubar(void)
  */
     void
 gui_mch_enable_scrollbar(sb, flag)
-    GuiScrollbar	*sb;
-    int			flag;
+    scrollbar_t	*sb;
+    int		flag;
 {
     if (!flag)
 	swi(Wimp_CloseWindow, 0, & (sb->id) );
@@ -2817,7 +2823,7 @@ gui_mch_start_blink(void)
  * Uses CIE luminance weights as given in the ChangeFSI help file.
  */
     int
-gui_mch_get_lightness(GuiColor pixel)
+gui_mch_get_lightness(guicolor_t pixel)
 {
     int red   = (pixel >> 16) & 0xff;
     int green = (pixel >> 8)  & 0xff;
@@ -2825,12 +2831,12 @@ gui_mch_get_lightness(GuiColor pixel)
     return ((red * 299) + (green * 587) + (blue * 114)) / 1000;
 }
 
-#if (defined(SYNTAX_HL) && defined(WANT_EVAL)) || defined(PROTO)
+#if (defined(FEAT_SYN_HL) && defined(FEAT_EVAL)) || defined(PROTO)
 /*
  * Return the RGB value of a pixel as "#RRGGBB".
  */
     char_u *
-gui_mch_get_rgb(GuiColor pixel)
+gui_mch_get_rgb(guicolor_t pixel)
 {
     static char_u retval[10];
     sprintf((char *)retval, "#%02x%02x%02x",
@@ -2857,12 +2863,12 @@ gui_mch_set_menu_pos(int x, int y, int w, int h)
 }
 
     void
-gui_mch_add_menu(VimMenu *menu, VimMenu *parent)
+gui_mch_add_menu(vimmenu_t *menu, vimmenu_t *parent)
 {
 }
 
     void
-gui_mch_add_menu_item(VimMenu *menu, VimMenu *parent)
+gui_mch_add_menu_item(vimmenu_t *menu, vimmenu_t *parent)
 {
 }
 
@@ -2872,7 +2878,7 @@ gui_mch_new_menu_colors(void)
 }
 
     void
-gui_mch_destroy_menu(VimMenu *menu)
+gui_mch_destroy_menu(vimmenu_t *menu)
 {
 }
 
@@ -2881,15 +2887,15 @@ gui_mch_destroy_menu(VimMenu *menu)
  */
     void
 gui_mch_set_scrollbar_thumb(sb, val, size, max)
-    GuiScrollbar	*sb;
-    int			val;
-    int			size;
-    int			max;
+    scrollbar_t	*sb;
+    long	val;
+    long	size;
+    long	max;
 {
-    int block[10], width, height;
+    int		block[10], width, height;
 
     width = (max + 1) * gui.char_width;
-    height = (max + 1 + sb-> wp-> w_status_height) * gui.char_height;
+    height = (max + 1 + W_STATUS_HEIGHT(sb->wp)) * gui.char_height;
 
     block[0] = block[3] = 0;
     block[1] = -height + (1 << y_eigen_factor);
@@ -2918,15 +2924,15 @@ gui_mch_set_scrollbar_thumb(sb, val, size, max)
  */
     void
 gui_mch_set_scrollbar_pos(sb, x, y, w, h)
-    GuiScrollbar *sb;
-    int x;		/* Horizontal sb position */
-    int y;		/* Top of scroll bar */
-    int w;		/* Width */
-    int h;		/* Height */
+    scrollbar_t *sb;
+    int		x;		/* Horizontal sb position */
+    int		y;		/* Top of scroll bar */
+    int		w;		/* Width */
+    int		h;		/* Height */
 {
-    int block[24];
-    int px1, py1;	/* Parent window min coords */
-    int px2, py2;	/* Parent window max coords */
+    int		block[24];
+    int		px1, py1;	/* Parent window min coords */
+    int		px2, py2;	/* Parent window max coords */
 
     /* Find where the parent window is. */
     block[0] = gui.window_handle;
@@ -2988,8 +2994,8 @@ gui_mch_set_scrollbar_pos(sb, x, y, w, h)
  */
     void
 gui_mch_create_scrollbar(sb, orient)
-    GuiScrollbar    *sb;
-    int		    orient;	/* orient is SBAR_HORIZ or SBAR_VERT */
+    scrollbar_t *sb;
+    int		orient;	/* orient is SBAR_HORIZ or SBAR_VERT */
 {
     int bar[] =
 	{
@@ -3013,15 +3019,17 @@ gui_mch_create_scrollbar(sb, orient)
     sb -> id = r0;
 }
 
+#if defined(FEAT_WINDOWS) || defined(PROTO)
     void
-gui_mch_destroy_scrollbar(GuiScrollbar *sb)
+gui_mch_destroy_scrollbar(scrollbar_t *sb)
 {
     swi(Wimp_DeleteWindow, 0, & (sb->id));
     sb -> id = -1;
 }
+#endif
 
     void
-gui_mch_set_scrollbar_colors(GuiScrollbar *sb)
+gui_mch_set_scrollbar_colors(scrollbar_t *sb)
 {
     /* Always use default RO colour scheme. */
 }
@@ -3106,20 +3114,20 @@ ro_redraw_title(window)
     }
 }
 
-/* Turn a VimMenu structure into a wimp menu structure.
+/* Turn a vimmenu_t structure into a wimp menu structure.
  * -1 if resulting menu is empty.
  * Only the children and dname items in the root menu are used.
  */
     int *
 ro_build_menu(menu)
-    VimMenu *menu;
+    vimmenu_t	*menu;
 {
-    int	    *wimp_menu;
-    int	    width = 4;
-    int	    w;
-    int	    size = 28;
-    VimMenu *item;
-    int	    *wimp_item;
+    int		*wimp_menu;
+    int		width = 4;
+    int		w;
+    int		size = 28;
+    vimmenu_t	*item;
+    int		*wimp_item;
 
     /* Find out how big the menu is so we can allocate memory for it */
     for (item = menu-> children; item; item = item-> next)
@@ -3197,9 +3205,9 @@ ro_remove_menu(menu)
 
     void
 gui_mch_show_popupmenu(menu)
-    VimMenu *menu;
+    vimmenu_t	*menu;
 {
-    int	    block[10];
+    int		block[10];
 
     /* Remove the existing menu, if any */
     if (wimp_menu != (int *) -1)
@@ -3295,7 +3303,7 @@ gui_mch_call_shell(cmd, options)
 	    block[3] = 0;
 	    block[4] = 0x808c4;	    /* Morite */
 	    swi(Wimp_SendMessage, 17, block, child_handle);
-	    MSG_PUTS("\nSending message to terminate child process.\n");
+	    MSG_PUTS(_("\nSending message to terminate child process.\n"));
 	    continue;
 	}
 	else if (reason == 8)

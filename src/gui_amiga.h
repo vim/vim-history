@@ -14,7 +14,7 @@
 
 #define SetAttrib(_ptr,_attrib,_value) ((_ptr)->_attrib=(_value))
 
-#if defined(USE_GUI_AMIGA)
+#if defined(FEAT_GUI_AMIGA)
 
 #include <intuition/intuition.h>
 
@@ -37,7 +37,7 @@ enum event {
 
 struct MyMenuItem {
     struct MenuItem menuItem;
-    struct VimMenu *guiMenu;
+    vimmenu_t	*guiMenu;
 };
 
 union myMenuItemUnion {
@@ -45,6 +45,6 @@ union myMenuItemUnion {
     struct MyMenuItem myMenuItem;
 };
 
-#endif /* USE_GUI_AMIGA*/
+#endif /* FEAT_GUI_AMIGA*/
 #endif /* __GUI_AMIGA__H */
 

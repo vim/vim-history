@@ -1,4 +1,4 @@
-*message.txt*   For Vim version 5.7.  Last change: 2000 Jun 07
+*message.txt*   For Vim version 6.0d.  Last change: 2000 Jul 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -25,13 +25,13 @@ The number of remembered messages is fixed at 20.
 2. Error messages					*error-messages*
 
 When an error message is displayed, but it is removed before you could read
-it, you can see it again with:
->  echo errmsg
-or view a list of recent messages with:
->  :messages
-
-
->  Ambiguous mapping, conflicts with "..."
+it, you can see it again with: >
+  :echo errmsg
+or view a list of recent messages with: >
+  :messages
+<
+>
+  Ambiguous mapping, conflicts with "..."
 
 The first argument for a ":map" command starts with the same character(s) as
 an already existing mapping which is given in "..." in the error message.
@@ -39,31 +39,32 @@ Note that keys like <F1> often start with "^[[". Check the output of
 ":set termcap" for that. All variations of the ":map" command give the same
 message: ":cmap", ":imap", etc.
 
-
->  ATTENTION
->  Found a swap file by the name ...
+>
+  ATTENTION
+  Found a swap file by the name ...
 
 See |ATTENTION|.
 
+>
+  Cannot allocate colormap entry for "xxxx"
+  Cannot allocate colormap entry, some colors may be incorrect
 
->  Cannot allocate colormap entry for "xxxx"
-
-This is not a message directly from Vim, but from X-Windows.  It means that
-there are not enough colors available for Vim.  It will still run, but some of
-the colors will not appear.  Try stopping other applications that use many
-colors, or start them after starting gvim.
+This means that there are not enough colors available for Vim.  It will still
+run, but some of the colors will not appear in the specified color.  Try
+stopping other applications that use many colors, or start them after starting
+gvim.
 Netscape is known to consume a lot of colors.  You can avoid this by telling
-it to use its own colormap:
->	netscape -install
-Or tell it to limit to a certain number of colors (64 should work well):
->	netscape -ncols 64
-This can also be done with a line in your Xdefaults file:
->	Netscape*installColormap: Yes
-or
->	Netscape*maxImageColors:  64
-
-
->  Can't open errorfile <filename>
+it to use its own colormap: >
+	netscape -install
+Or tell it to limit to a certain number of colors (64 should work well): >
+	netscape -ncols 64
+This can also be done with a line in your Xdefaults file: >
+	Netscape*installColormap: Yes
+or >
+	Netscape*maxImageColors:  64
+<
+>
+  Can't open errorfile <filename>
 
 When using the ":make" or ":grep" commands: The file used to save the error
 messages or grep output cannot be opened.  This can have several causes:
@@ -73,106 +74,122 @@ messages or grep output cannot be opened.  This can have several causes:
   make command is still executed in the wrong directory.
 - 'makeef' has a wrong value.
 
-
->  Command not allowed from exrc/vimrc in current dir or tag search
+>
+  Command not allowed from exrc/vimrc in current dir or tag search
 
 Some commands are not allowed for security reasons.  These commands mostly
 come from a .exrc or .vimrc file in the current directory, or from a tags
 file.  Also see 'secure'.
 
+>
+  CONVERSION ERROR
 
->  File exists (use ! to override)
+When writing a file and the text "CONVERSION ERROR" appears, this means that
+some bits were lost when converting text from the internally used UTF-8 to the
+format of the file.  The file will not be marked unmodified.  If you care
+about the loss of information, set the 'filecharcode' option to another value
+that can handle the characters in the buffer and write again.  If you don't
+care, you can abandon the buffer or reset the 'modified' option.
+
+>
+  File exists (use ! to override)
 
 You are protected from accidentally overwriting a file.  When you want to
 write anyway, use the same command, but add a "!" just after the command.
-Example:
->	:w /tmp/test
-changes to:
->	:w! /tmp/test
-
-
->  File not written: Writing is disabled by 'write' option
+Example: >
+	:w /tmp/test
+changes to: >
+	:w! /tmp/test
+<
+>
+  File not written: Writing is disabled by 'write' option
 
 The 'write' option is off.  This makes all commands that try to write a file
 generate this message.  This could be caused by a |-m| commandline argument.
 You can switch the 'write' option on with ":set write".
 
-
->  GUI cannot be used: Not enabled at compile time
+>
+  GUI cannot be used: Not enabled at compile time
 
 You are running a version of Vim that doesn't include the GUI code.  Therefore
 "gvim" and ":gui" don't work.
 
-
->  Mark has invalid line number
+>
+  Mark has invalid line number
 
 You are using a mark that has a line number that doesn't exist.  This can
 happen when you have a mark in another file, and some other program has
 deleted lines from it.
 
-
->  ml_get: invalid lnum:
+>
+  ml_get: invalid lnum:
 
 This is an internal Vim error.  Please try to find out how it can be
 reproduced, and submit a bug report |bugreport.vim|.
 
-
->  No alternate file
+>
+  No alternate file
 
 The alternate file is not defined yet.  See |alternate-file|.
 
-
->  No file name
+>
+  No file name
 
 The current buffer has no name.  To write it, use ":w fname".  Or give the
 buffer a name with ":file fname".
 
-
->  No previous substitute regular expression
+>
+  No previous substitute regular expression
 
 When using the '~' character in a pattern, it is replaced with the previously
 used pattern in a ":substitute" command.  This fails when no such command has
 been used yet.  See |/~|.
 
-
->  No previous regular expression
+>
+  No previous regular expression
 
 When using an empty search pattern, the previous search pattern is used.  But
 that is not possible if there was no previous search.
 
-
->  No such abbreviation
+>
+  No such abbreviation
 
 You have used an ":unabbreviate" command with an argument which is not an
 existing abbreviation.  All variations of this command give the same message:
 ":cunabbrev", ":iunabbrev", etc.
 
+>
+  /dev/dsp: No such file or directory
 
->  No such mapping
+Only given for GTK GUI with Gnome support.  Gnome tries to use the audio
+device and it isn't present.  You can ignore this error.
+
+>
+  No such mapping
 
 You have used an ":unmap" command with an argument which is not an existing
 mapping.  All variations of this command give the same message: ":cunmap",
 ":unmap!", etc.
 
-
->  No write since last change (use ! to override)
+>
+  No write since last change (use ! to override)
 
 You are trying to |abandon| a file that has changes.  Vim protects you from
 losing your work.  You can either write the changed file with ":w", or, if you
 are sure, |abandon| it anyway, and lose all the changes.  This can be done by
-adding a '!' character just after the command you used.  Example:
->	:e other_file
-changes to:
->	:e! other_file
-
-
->  Only one file name allowed
+adding a '!' character just after the command you used.  Example: >
+	:e other_file
+changes to: >
+	:e! other_file
+<
+>
+  Only one file name allowed
 
 The ":edit" command only accepts one file name.  When you want to specify
 several files for editing use ":next" |:next|.
 
-
->  Out of memory!
+>
+  Out of memory!
 
 Oh, oh.  You must have been doing something complicated, or some other program
 is consuming your memory.  Be careful!  Vim is not completely prepared for an
@@ -180,35 +197,35 @@ out-of-memory situation.  First make sure that any changes are saved.  Then
 try to solve the memory shortage.  To stay on the safe side, exit Vim and
 start again.  Also see |msdos-limitations|.
 
-
->  'readonly' option is set (use ! to override)
+>
+  'readonly' option is set (use ! to override)
 
 You are trying to write a file that was marked as read-only.  To write the
 file anyway, either reset the 'readonly' option, or add a '!' character just
-after the command you used.  Example
->	:w
-changes to:
->	:w!
-
-
->  Recursive use of :normal too deep
+after the command you used.  Example >
+	:w
+changes to: >
+	:w!
+<
+>
+  Recursive use of :normal too deep
 
 You are using a ":normal" command, whose argument again uses a ":normal"
 command in a recursive way.  This is restricted to 'maxmapdepth' levels.  This
-example illustrates how to get this message:
->	:map gq :normal gq<CR>
+example illustrates how to get this message: >
+	:map gq :normal gq<CR>
 If you type "gq", it will execute this mapping, which will call "gq" again.
 
-
->  Scripts nested too deep
+>
+  Scripts nested too deep
 
 Scripts can be read with the "-s" command-line argument and with the ":source"
 command.  The script can then again read another script.  This can continue
 for about 14 levels.  When more nesting is done, Vim assumes that there is a
 recursive loop somewhere and stops with this error message.
 
-
->  Tags file not sorted: {file name}
+>
+  Tags file not sorted: {file name}
 
 Vim (and Vi) expect tags files to be sorted in ASCII order.  Binary searching
 can then be used, which is a lot faster than a linear search.  If your tags
@@ -217,35 +234,35 @@ This message is only given when Vim detects a problem when searching for a
 tag.  Sometimes this message is not given, even thought the tags file is not
 properly sorted.
 
-
->  Too many file names
+>
+  Too many file names
 
 When expanding file names, more than one match was found.  Only one match is
 allowed.
 
-
->  Warning: File "{filename}" has changed since editing started
+>
+  Warning: File "{filename}" has changed since editing started
 
 The file which you have started editing has got another timestamp.  This
 probably means that some other program changed the file.  You will have to
 find out what happened, and decide which version of the file you want to keep.
 There is one situation where you get this message even though there is nothing
 wrong: If you save a file in Windows on the day the daylight saving time
-starts.  It can be fixed by adding this line in your autoexec.bat:
->	   SET TZ=-1
+starts.  It can be fixed by adding this line in your autoexec.bat: >
+	   SET TZ=-1
 Adjust the "-1" for your time zone.  Or just write the file again the next
 day.
 
-
->  Warning: File "{filename}" no longer available
+>
+  Warning: File "{filename}" no longer available
 
 The file which you have started editing has disappeared, or is no longer
 accessible.  Make sure you write the buffer somewhere to avoid loosing
 changes.
 
 
-						*connection-refused*
-> Xlib: connection to "<machine-name:0.0" refused by server
+						*connection-refused*  >
+  Xlib: connection to "<machine-name:0.0" refused by server
 
 This happens when Vim tries to connect to the X server, but the X server does
 not allow a connection.  The connection to the X server is needed to be able
@@ -258,8 +275,8 @@ and |+X11| features.
 
 This is an overview of various messages that Vim gives:
 
-							*hit-return*
->  Press RETURN or enter command to continue
+							*hit-return*  >
+  Press RETURN or enter command to continue
 This message is given when there is something on the screen for you to read,
 and the screen is about to be redrawn:
 - After executing an external command (e.g., ":!ls" and "=").
@@ -278,10 +295,10 @@ To reduce the number of hit-return prompts:
 Also see 'mouse'.  It is highlighted with the |hl-Question| group.
 
 
-							*more-prompt*
->  -- More --
->  -- More -- (RET: line, SPACE: page, d: half page, q: quit)
->  -- More -- (RET/BS: line, SPACE/b: page, d/u: half page, q: quit)
+							*more-prompt*  >
+  -- More --
+  -- More -- (RET: line, SPACE: page, d: half page, q: quit)
+  -- More -- (RET/BS: line, SPACE/b: page, d/u: half page, q: quit)
 This message is given when the screen is filled with messages.  It is only
 given when the 'more' option is on.  It is highlighted with the |hl-MoreMsg|
 group.
@@ -298,10 +315,10 @@ Type					effect ~
 					     command-line
 Any other key causes the meaning of the keys to be displayed.
 
-(*) backwards scrolling is only supported for these commands:
->    :clist
+(*) backwards scrolling is only supported for these commands: >
+    :clist
 
 Note: The typed key is directly obtained from the terminal, it is not mapped
 and typeahead is ignored.
 
- vim:ts=8:sw=8:tw=78:
+ vim:tw=78:

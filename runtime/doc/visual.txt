@@ -1,4 +1,4 @@
-*visual.txt*    For Vim version 5.7.  Last change: 2000 Jan 05
+*visual.txt*    For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -20,6 +20,7 @@ operator.  It is the only way to select a block of text.
 
 {Vi has no Visual mode, the name "visual" is used for Normal mode, to
 distinguish it from Ex mode}
+{not available when the |+visual| feature was disabled when compiling}
 
 ==============================================================================
 1. Using Visual mode					*visual-use*
@@ -30,19 +31,21 @@ Using Visual mode consists of three parts:
 2. Move to the end of the text.
    The text from the start of the Visual mode up to and including the
    character under the cursor is highlighted.
-3. Hit an operator.
+3. Type an operator command.
    The highlighted characters will be operated upon.
 
 The 'highlight' option can be used to set the display mode to use for
 highlighting in Visual mode.
+The 'virtualedit' option can be used to allow positioning the cursor to
+positions where there is no actual character.
 
 The highlighted text includes the character under the cursor.  On terminals
 where it is possible to make the cursor invisible the cursor position is
 also highlighted.  On terminals where this is not possible the cursor is
 displayed normally.  If your cursor cannot be made invisible and you want Vim
 to highlight the character under the cursor anyway, you could set the 't_cv'
-and 't_ci' options to something harmless, for example:
->	:set t_cv=^[^[ t_ci=^[^[
+and 't_ci' options to something harmless, for example: >
+ 	:set t_cv=^[^[ t_ci=^[^[
 
 With "v" the text before the start position and after the end position will
 not be highlighted.  However, All uppercase and non-alpha operators, except
@@ -170,6 +173,11 @@ use Ex commands, commands that make changes or abandon the file.  Commands
 (starting with) ".pPiIaAO&", CTRL-^, "Z", CTRL-], CTRL-T, CTRL-R, CTRL-I
 and CTRL-O cause a beep and Visual mode continues.
 
+When switching to another window on the same buffer, the cursor position in
+that window is adjusted, so that the same Visual area is still selected.  This
+is especially useful to view the start of the Visual area in one window, and
+the end in another.  You can then use <RightMouse> (or <S-LeftMouse> when
+'mousemodel' is "popup") to move either end of the Visual area.
 
 ==============================================================================
 4. Operating on the Visual area				*visual-operators*
@@ -225,8 +233,8 @@ Additionally the following commands can be used:
 
 Note that the ":vmap" command can be used to specifically map keys in Visual
 mode.  For example, if you would like the "/" command not to extend the Visual
-area, but instead take the highlighted text and search for that:
->  :vmap / y/<C-R>"<CR>
+area, but instead take the highlighted text and search for that: >
+	:vmap / y/<C-R>"<CR>
 (In the <> notation |<>|, when typing it you should type it literally; you
 need to remove the 'B' and '<' flags from 'cpoptions')
 
@@ -317,8 +325,8 @@ a line, doing something like ":!date" will replace the whole line.  If you
 want only part of the line to be replaced you will have to make a mapping for
 it.  In a future release ":" may work on partial lines.
 
-Here is an example, to replace the selected text with the output of "date":
->	:vmap _a <Esc>`>a<CR><Esc>`<i<CR><Esc>!!date<CR>kJJ
+Here is an example, to replace the selected text with the output of "date": >
+	:vmap _a <Esc>`>a<CR><Esc>`<i<CR><Esc>!!date<CR>kJJ
 
 (In the <> notation |<>|, when typing it you should type it literally; you
 need to remove the 'B' and '<' flags from 'cpoptions')
@@ -334,8 +342,8 @@ kJJ		Join the lines back together
 
 							*visual-search*
 Here is an idea for a mapping that makes it possible to do a search for the
-selected text:
->	:vmap X y/<C-R>"<CR>
+selected text: >
+	:vmap X y/<C-R>"<CR>
 
 (In the <> notation |<>|, when typing it you should type it literally; you
 need to remove the 'B' and '<' flags from 'cpoptions')
@@ -462,4 +470,4 @@ g CTRL-H		Start Select mode, blockwise.  This is like CTRL-V,
 			but starts Select mode instead of Visual mode.
 			Mnemonic: "get Highlighted".
 
- vim:tw=78:ts=8:sw=8:
+ vim:tw=78:

@@ -1,4 +1,4 @@
-*if_perl.txt*   For Vim version 5.7.  Last change: 2000 Jun 07
+*if_perl.txt*   For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Sven Verdoolaege
@@ -59,50 +59,50 @@ http://www.perl.com/CPAN-local/ports/nt/Standard/x86/
 			The default for [range] is the whole file: "1,$".
 			{not in Vi}
 
-Here are some things you can try:
+Here are some things you can try: >
 
->  :perl $a=1
->  :perldo $_ = reverse($_);1
->  :perl VIM::Msg("hello")
->  :perl $line = $curbuf->Get(42)
-
+  :perl $a=1
+  :perldo $_ = reverse($_);1
+  :perl VIM::Msg("hello")
+  :perl $line = $curbuf->Get(42)
+<
 
 							*perl-overview*
-Here is an overview of the functions that are available to Perl:
+Here is an overview of the functions that are available to Perl: >
 
->  :perl VIM::Msg("Text")		# displays a message
->  :perl VIM::Msg("Error", "ErrorMsg")	# displays an error message
->  :perl VIM::Msg("remark", "Comment")	# displays a highlighted message
->  :perl VIM::SetOption("ai")		# sets a vim option
->  :perl $nbuf = VIM::Buffers()		# returns the number of buffers
->  :perl @buflist = VIM::Buffers()	# returns array of all buffers
->  :perl $mybuf = (VIM::Buffers('qq.c'))[0] # returns buffer object for 'qq.c'
->  :perl @winlist = VIM::Windows()	# returns array of all windows
->  :perl $nwin = VIM::Windows()		# returns the number of windows
->  :perl ($success, $v) = VIM::Eval('&path') # $v: option 'path', $success: 1
->  :perl ($success, $v) = VIM::Eval('&xyz')  # $v: '' and $success: 0
->  :perl $v = VIM::Eval('expand("<cfile>")') # expands <cfile>
->  :perl $curwin->SetHeight(10)		# sets the window height
->  :perl @pos = $curwin->Cursor()	# returns (row, col) array
->  :perl @pos = (10, 10)
->  :perl $curwin->Cursor(@pos)		# sets cursor to @pos
->  :perl $curwin->Cursor(10,10)		# sets cursor to row 10 col 10
->  :perl $mybuf = $curwin->Buffer()	# returns the buffer object for window
->  :perl $curbuf->Name()		# returns buffer name
->  :perl $curbuf->Number()		# returns buffer number
->  :perl $curbuf->Count()		# returns the number of lines
->  :perl $l = $curbuf->Get(10)		# returns line 10
->  :perl @l = $curbuf->Get(1 .. 5)	# returns lines 1 through 5
->  :perl $curbuf->Delete(10)		# deletes line 10
->  :perl $curbuf->Delete(10, 20)	# delete lines 10 through 20
->  :perl $curbuf->Append(10, "Line")	# appends a line
->  :perl $curbuf->Append(10, "Line1", "Line2", "Line3") # appends 3 lines
->  :perl @l = ("L1", "L2", "L3")
->  :perl $curbuf->Append(10, @l)	# appends L1, L2 and L3
->  :perl $curbuf->Set(10, "Line")	# replaces line 10
->  :perl $curbuf->Set(10, "Line1", "Line2")	# replaces lines 10 and 11
->  :perl $curbuf->Set(10, @l)		# replaces 3 lines
-
+  :perl VIM::Msg("Text")		# displays a message
+  :perl VIM::Msg("Error", "ErrorMsg")	# displays an error message
+  :perl VIM::Msg("remark", "Comment")	# displays a highlighted message
+  :perl VIM::SetOption("ai")		# sets a vim option
+  :perl $nbuf = VIM::Buffers()		# returns the number of buffers
+  :perl @buflist = VIM::Buffers()	# returns array of all buffers
+  :perl $mybuf = (VIM::Buffers('qq.c'))[0] # returns buffer object for 'qq.c'
+  :perl @winlist = VIM::Windows()	# returns array of all windows
+  :perl $nwin = VIM::Windows()		# returns the number of windows
+  :perl ($success, $v) = VIM::Eval('&path') # $v: option 'path', $success: 1
+  :perl ($success, $v) = VIM::Eval('&xyz')  # $v: '' and $success: 0
+  :perl $v = VIM::Eval('expand("<cfile>")') # expands <cfile>
+  :perl $curwin->SetHeight(10)		# sets the window height
+  :perl @pos = $curwin->Cursor()	# returns (row, col) array
+  :perl @pos = (10, 10)
+  :perl $curwin->Cursor(@pos)		# sets cursor to @pos
+  :perl $curwin->Cursor(10,10)		# sets cursor to row 10 col 10
+  :perl $mybuf = $curwin->Buffer()	# returns the buffer object for window
+  :perl $curbuf->Name()			# returns buffer name
+  :perl $curbuf->Number()		# returns buffer number
+  :perl $curbuf->Count()		# returns the number of lines
+  :perl $l = $curbuf->Get(10)		# returns line 10
+  :perl @l = $curbuf->Get(1 .. 5)	# returns lines 1 through 5
+  :perl $curbuf->Delete(10)		# deletes line 10
+  :perl $curbuf->Delete(10, 20)		# delete lines 10 through 20
+  :perl $curbuf->Append(10, "Line")	# appends a line
+  :perl $curbuf->Append(10, "Line1", "Line2", "Line3") # appends 3 lines
+  :perl @l = ("L1", "L2", "L3")
+  :perl $curbuf->Append(10, @l)		# appends L1, L2 and L3
+  :perl $curbuf->Set(10, "Line")	# replaces line 10
+  :perl $curbuf->Set(10, "Line1", "Line2")	# replaces lines 10 and 11
+  :perl $curbuf->Set(10, @l)		# replaces 3 lines
+<
 							*perl-Msg*
 VIM::Msg({msg}, {group}?)
 			Displays the message {msg}.  The optional {group}
@@ -200,4 +200,4 @@ $main::curbuf
 			The current buffer object.
 
 
- vim:tw=78:ts=8:sw=8:
+ vim:tw=78:

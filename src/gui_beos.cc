@@ -231,20 +231,20 @@ class VimScrollBar: public BScrollBar
 {
     typedef BScrollBar Inherited;
 public:
-    VimScrollBar(GuiScrollbar *gsb, orientation posture);
+    VimScrollBar(scrollbar_t *gsb, orientation posture);
     ~VimScrollBar();
 
     virtual void ValueChanged(float newValue);
     virtual void MouseUp(BPoint where);
     void SetValue(float newval);
-    GuiScrollbar    *getGsb()
+    scrollbar_t *getGsb()
 	{ return gsb; }
 
     int32	    scrollEventCount;
 
 private:
-    GuiScrollbar   *gsb;
-    float	    ignoreValue;
+    scrollbar_t *gsb;
+    float	ignoreValue;
 };
 
 
@@ -306,7 +306,7 @@ struct VimScrollBarMsg {
 };
 
 struct VimMenuMsg {
-    VimMenu	*guiMenu;
+    vimmenu_t	*guiMenu;
 };
 
 struct VimMouseMsg {
@@ -480,13 +480,9 @@ RefsReceived(BMessage *m, bool changedir)
 	return;
     }
 
-    /* reset_VIsual(); */
-    if (VIsual_active)
-    {
-	end_visual_mode();
-	VIsual_reselect = FALSE;
-	update_curbuf(NOT_VALID);	/* delete the inversion */
-    }
+#ifdef FEAT_VISUAL
+    reset_VIsual();
+#endif
 
     char_u  **fnames;
     fnames = (char_u **) alloc(count * sizeof(char_u *));
@@ -607,7 +603,7 @@ VimApp::RefsReceived(BMessage *m)
      * split instead of abandoned.
      */
     int limit = 15;
-    while (--limit >= 0 && (!curbuf || !curbuf->b_start_ffc))
+    while (--limit >= 0 && (curbuf == NULL || curbuf->b_start_ffc == 0))
 	snooze(100000);    // 0.1 s
     if (gui.vimWindow)
 	gui.vimWindow->Minimize(false);
@@ -791,7 +787,7 @@ VimFormView::AllAttached()
 	textArea->ResizeTo(remaining.Width(), remaining.Height());
 	textArea->MoveTo(remaining.left, remaining.top);
 
-#ifdef WANT_MENU
+#ifdef FEAT_MENU
 	menuBar->ResizeTo(remaining.right, remaining.top);
 	gui.menu_height = (int) remaining.top;
 #endif
@@ -840,7 +836,7 @@ VimFormView::FrameResized(float new_width, float new_height)
     sm.height = (int) new_height;
 
     write_port(gui.vdcmp, VimMsg::Resize, &sm, sizeof(sm));
-    // calls gui_resize_window(new_width, new_height);
+    // calls gui_resize_shell(new_width, new_height);
 
     return;
 
@@ -1500,7 +1496,7 @@ VimTextAreaView::mchInsertLines(int row, int num_lines)
  * Also, place them out of sight, because Vim enables them before
  * they are positioned.
  */
-VimScrollBar::VimScrollBar(GuiScrollbar *g, orientation posture):
+VimScrollBar::VimScrollBar(scrollbar_t *g, orientation posture):
     BScrollBar(posture == B_HORIZONTAL ?  BRect(-100,-100,-10,-90) :
 					  BRect(-100,-100,-90,-10),
 		"vim scrollbar", (BView *)NULL,
@@ -1649,7 +1645,7 @@ gui_beos_process_event(bigtime_t timeout)
 	    }
 	    break;
 	case VimMsg::Resize:
-	    gui_resize_window(vm.u.NewSize.width, vm.u.NewSize.height);
+	    gui_resize_shell(vm.u.NewSize.width, vm.u.NewSize.height);
 	    break;
 	case VimMsg::ScrollBar:
 	    {
@@ -1712,8 +1708,8 @@ gui_beos_process_event(bigtime_t timeout)
 }
 
 /*
- * Here are some functions to protect access to NextScreen and
- * LinePointers. These are used from the window thread to respond
+ * Here are some functions to protect access to ScreenLines[] and
+ * LineOffset[]. These are used from the window thread to respond
  * to a Draw() callback. When that occurs, the window is already
  * locked by the system.
  *
@@ -1875,7 +1871,7 @@ gui_mch_init()
 
     gui.scrollbar_width = (int) B_V_SCROLL_BAR_WIDTH;
     gui.scrollbar_height = (int) B_H_SCROLL_BAR_HEIGHT;
-#ifdef WANT_MENU
+#ifdef FEAT_MENU
     gui.menu_height = 19;	// initial guess -
 				// correct for my default settings
 #endif
@@ -2013,7 +2009,7 @@ gui_mch_set_winpos(int x, int y)
  * Set the size of the window to the given width and height in pixels.
  */
     void
-gui_mch_set_winsize(
+gui_mch_set_shellsize(
     int		width,
     int		height,
     int		min_width,
@@ -2082,7 +2078,7 @@ gui_mch_get_screen_dimensions(
     /* XXX approximations... */
     *screen_w = (int) frame.right - 2 * gui.scrollbar_width - 20;
     *screen_h = (int) frame.bottom - gui.scrollbar_height
-#ifdef WANT_MENU
+#ifdef FEAT_MENU
 	- gui.menu_height
 #endif
 	- 30;
@@ -2112,8 +2108,8 @@ gui_mch_set_text_area_pos(
 
     void
 gui_mch_enable_scrollbar(
-    GuiScrollbar	*sb,
-    int			flag)
+    scrollbar_t	*sb,
+    int		flag)
 {
     VimScrollBar *vsb = sb->id;
     if (gui.vimWindow->Lock()) {
@@ -2136,10 +2132,10 @@ gui_mch_enable_scrollbar(
 
     void
 gui_mch_set_scrollbar_thumb(
-    GuiScrollbar       *sb,
-    int			val,
-    int			size,
-    int			max)
+    scrollbar_t *sb,
+    int		val,
+    int		size,
+    int		max)
 {
     if (gui.vimWindow->Lock()) {
 	VimScrollBar *s = sb->id;
@@ -2177,11 +2173,11 @@ gui_mch_set_scrollbar_thumb(
 
     void
 gui_mch_set_scrollbar_pos(
-    GuiScrollbar       *sb,
-    int			x,
-    int			y,
-    int			w,
-    int			h)
+    scrollbar_t *sb,
+    int		x,
+    int		y,
+    int		w,
+    int		h)
 {
     if (gui.vimWindow->Lock()) {
 	VimScrollBar *vsb = sb->id;
@@ -2193,8 +2189,8 @@ gui_mch_set_scrollbar_pos(
 
     void
 gui_mch_create_scrollbar(
-    GuiScrollbar       *sb,
-    int			orient)		/* SBAR_VERT or SBAR_HORIZ */
+    scrollbar_t *sb,
+    int		orient)		/* SBAR_VERT or SBAR_HORIZ */
 {
     orientation posture =
 	(orient == SBAR_HORIZ) ? B_HORIZONTAL : B_VERTICAL;
@@ -2208,9 +2204,10 @@ gui_mch_create_scrollbar(
     }
 }
 
+#if defined(FEAT_WINDOWS) || defined(PROTO)
     void
 gui_mch_destroy_scrollbar(
-    GuiScrollbar	*sb)
+    scrollbar_t	*sb)
 {
     if (gui.vimWindow->Lock()) {
 	sb->id->RemoveSelf();
@@ -2218,6 +2215,7 @@ gui_mch_destroy_scrollbar(
 	gui.vimWindow->Unlock();
     }
 }
+#endif
 
 /*
  * Cursor blink functions.
@@ -2292,15 +2290,23 @@ gui_mch_start_blink()
  */
     int
 gui_mch_init_font(
-    char_u		*font_name)
+    char_u		*font_name,
+    int			fontset)
 {
-    if (gui.vimWindow->Lock()) {
+    if (gui.vimWindow->Lock())
+    {
 	int rc = gui.vimTextArea->mchInitFont(font_name);
 	gui.vimWindow->Unlock();
 
 	return rc;
     }
 
+    return FAIL;
+}
+
+    int
+gui_mch_adjust_charsize()
+{
     return FAIL;
 }
 
@@ -2313,7 +2319,7 @@ gui_mch_get_font(
     static VimFont *fontList = NULL;
 
     if (!gui.in_use)		    /* can't do this when GUI not running */
-	return (GuiFont)0;
+	return NOFONT;
 
     if (!name)
 	name = (char_u *)"be_fixed_font";
@@ -2458,14 +2464,14 @@ hex_digit(int c)
  * Return the Pixel value (color) for the given color name.
  * Return -1 for error.
  */
-    GuiColor
+    guicolor_t
 gui_mch_get_color(
     char_u	*name)
 {
     typedef struct GuiColourTable
     {
 	char	    *name;
-	GuiColor     colour;
+	guicolor_t     colour;
     } GuiColourTable;
 
 #define NSTATIC_COLOURS		31
@@ -2520,7 +2526,7 @@ gui_mch_get_color(
 	g = hex_digit(name[3]) * 16 + hex_digit(name[4]);
 	b = hex_digit(name[5]) * 16 + hex_digit(name[6]);
 	if (r < 0 || g < 0 || b < 0)
-	    return (GuiColor)-1;
+	    return (guicolor_t)-1;
 	return RGB(r, g, b);
     }
     else
@@ -2542,12 +2548,12 @@ gui_mch_get_color(
 
 	fname = expand_env_save((char_u *)"$VIM/rgb.txt");
 	if (fname == NULL)
-	    return (GuiColor)-1;
+	    return (guicolor_t)-1;
 
 	fd = fopen((char *)fname, "rt");
 	vim_free(fname);
 	if (fd == NULL)
-	    return (GuiColor)-1;
+	    return (guicolor_t)-1;
 
 	while (!feof(fd))
 	{
@@ -2577,7 +2583,7 @@ gui_mch_get_color(
 		 * A LRU scheme might be better but this is simpler.
 		 * Or could use a growing array.
 		 */
-		GuiColor gcolour = RGB(r,g,b);
+		guicolor_t gcolour = RGB(r,g,b);
 
 		vim_free(table[newColour].name);
 		table[newColour].name = (char *)vim_strsave((char_u *)colour);
@@ -2596,7 +2602,7 @@ gui_mch_get_color(
 	fclose(fd);
     }
 
-    return (GuiColor)-1;
+    return (guicolor_t)-1;
 }
 
 /*
@@ -2604,7 +2610,7 @@ gui_mch_get_color(
  */
     void
 gui_mch_set_fg_color(
-    GuiColor	color)
+    guicolor_t	color)
 {
     rgb_color rgb = GUI_TO_RGB(color);
     if (gui.vimWindow->Lock()) {
@@ -2618,7 +2624,7 @@ gui_mch_set_fg_color(
  */
     void
 gui_mch_set_bg_color(
-    GuiColor	color)
+    guicolor_t	color)
 {
     rgb_color rgb = GUI_TO_RGB(color);
     if (gui.vimWindow->Lock()) {
@@ -2736,7 +2742,7 @@ gui_mch_settitle(
  * Draw a cursor without focus.
  */
     void
-gui_mch_draw_hollow_cursor(GuiColor color)
+gui_mch_draw_hollow_cursor(guicolor_t color)
 {
     gui_mch_set_fg_color(color);
 
@@ -2760,13 +2766,13 @@ gui_mch_draw_hollow_cursor(GuiColor color)
 gui_mch_draw_part_cursor(
     int		w,
     int		h,
-    GuiColor	color)
+    guicolor_t	color)
 {
     gui_mch_set_fg_color(color);
 
     BRect r;
     r.left =
-#ifdef RIGHTLEFT
+#ifdef FEAT_RIGHTLEFT
 	/* vertical line should be on the right of current point */
 	State != CMDLINE && curwin->w_p_rl ? FILL_X(gui.col + 1) - w :
 #endif
@@ -2939,7 +2945,7 @@ gui_mch_insert_lines(
     gui.vimTextArea->mchInsertLines(row, num_lines);
 }
 
-#if defined(WANT_MENU) || defined(PROTO)
+#if defined(FEAT_MENU) || defined(PROTO)
 /*
  * Menu stuff.
  */
@@ -2970,8 +2976,8 @@ gui_mch_set_menu_pos(
  */
     void
 gui_mch_add_menu(
-    VimMenu	*menu,
-    VimMenu	*parent,
+    vimmenu_t	*menu,
+    vimmenu_t	*parent,
     int		idx)
 {
     if (!menubar_menu(menu->name)
@@ -3022,7 +3028,7 @@ gui_mch_toggle_tearoffs(int enable)
 }
 
     static BMessage *
-MenuMessage(VimMenu *menu)
+MenuMessage(vimmenu_t *menu)
 {
     BMessage *m = new BMessage('menu');
     m->AddPointer("VimMenu", (void *)menu);
@@ -3035,8 +3041,8 @@ MenuMessage(VimMenu *menu)
  */
     void
 gui_mch_add_menu_item(
-    VimMenu	*menu,
-    VimMenu	*parent,
+    vimmenu_t	*menu,
+    vimmenu_t	*parent,
     int		idx)
 {
     int		mnemonic = 0;
@@ -3085,7 +3091,7 @@ gui_mch_add_menu_item(
  */
     void
 gui_mch_destroy_menu(
-    VimMenu	*menu)
+    vimmenu_t	*menu)
 {
     if (gui.vimWindow->Lock())
     {
@@ -3124,7 +3130,7 @@ gui_mch_destroy_menu(
  */
     void
 gui_mch_menu_grey(
-    VimMenu	*menu,
+    vimmenu_t	*menu,
     int		grey)
 {
     if (menu->id != NULL)
@@ -3136,7 +3142,7 @@ gui_mch_menu_grey(
  */
     void
 gui_mch_menu_hidden(
-    VimMenu	*menu,
+    vimmenu_t	*menu,
     int		hidden)
 {
     if (menu->id != NULL)
@@ -3152,11 +3158,11 @@ gui_mch_draw_menubar()
     /* Nothing to do in BeOS */
 }
 
-#endif /* WANT_MENU */
+#endif /* FEAT_MENU */
 
 /* Mouse stuff */
 
-#ifdef USE_CLIPBOARD
+#ifdef FEAT_CLIPBOARD
 /*
  * Clipboard stuff, for cutting and pasting text to other windows.
  */
@@ -3275,27 +3281,27 @@ clip_mch_set_selection()
     }
 }
 
-#endif	/* USE_CLIPBOARD */
+#endif	/* FEAT_CLIPBOARD */
 
 /*
  * Return the lightness of a pixel.  White is 255.
  */
     int
 gui_mch_get_lightness(
-    GuiColor	pixel)
+    guicolor_t	pixel)
 {
     rgb_color rgb = GUI_TO_RGB(pixel);
 
     return (int)(rgb.red * 3 + rgb.green * 6 + rgb.blue) / 10;
 }
 
-#if (defined(SYNTAX_HL) && defined(WANT_EVAL)) || defined(PROTO)
+#if (defined(FEAT_SYN_HL) && defined(FEAT_EVAL)) || defined(PROTO)
 /*
  * Return the RGB value of a pixel as "#RRGGBB".
  */
     char_u *
 gui_mch_get_rgb(
-    GuiColor	pixel)
+    guicolor_t	pixel)
 {
     static char_u retval[10];
     rgb_color rgb = GUI_TO_RGB(pixel);
@@ -3313,7 +3319,7 @@ gui_mch_setmouse(int x, int y)
 }
 
     void
-gui_mch_show_popupmenu(VimMenu *menu)
+gui_mch_show_popupmenu(vimmenu_t *menu)
 {
     TRACE();
     /* TODO */

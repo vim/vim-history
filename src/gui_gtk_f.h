@@ -16,7 +16,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif				/* __cplusplus */
+#endif
 
 #define GTK_TYPE_FORM		       (gtk_form_get_type ())
 #define GTK_FORM(obj)		       (GTK_CHECK_CAST ((obj), GTK_TYPE_FORM, GtkForm))
@@ -25,64 +25,56 @@ extern "C" {
 #define GTK_IS_FORM_CLASS(klass)       (GTK_CHECK_CLASS_TYPE ((klass), GTK_TYPE_FORM))
 
 
-    typedef struct _GtkForm GtkForm;
-    typedef struct _GtkFormClass GtkFormClass;
-    typedef struct _GtkFormChild GtkFormChild;
+typedef struct _GtkForm GtkForm;
+typedef struct _GtkFormClass GtkFormClass;
 
-    struct _GtkFormChild {
-	GtkWidget *widget;
-	GdkWindow *window;
-	gint x;		/* relative subwidget x position */
-	gint y;		/* relative subwidget y position */
-	gint mapped : 1;
-    };
+struct _GtkForm
+{
+    GtkContainer container;
 
-    struct _GtkForm {
-	GtkContainer container;
+    GList *children;
 
-	GList *children;
+    guint width;
+    guint height;
 
-	guint width;
-	guint height;
+    GdkWindow *bin_window;
 
-	GdkWindow *bin_window;
+    GdkVisibilityState visibility;
+    gulong configure_serial;
 
-	GdkVisibilityState visibility;
-	gulong configure_serial;
+    gint freeze_count;
+};
 
-	gint freeze_count;
-    };
+struct _GtkFormClass
+{
+    GtkContainerClass parent_class;
+};
 
-    struct _GtkFormClass {
-	GtkContainerClass parent_class;
-    };
+GtkType gtk_form_get_type(void);
 
-    GtkType gtk_form_get_type(void);
+GtkWidget *gtk_form_new(void);
 
-    GtkWidget *gtk_form_new(void);
+void gtk_form_put(GtkForm * form, GtkWidget * widget,
+	gint x, gint y);
 
-    void gtk_form_put(GtkForm * form, GtkWidget * widget,
-	    gint x, gint y);
+void gtk_form_move(GtkForm *form, GtkWidget * widget,
+	gint x, gint y);
 
-    void gtk_form_move(GtkForm *form, GtkWidget * widget,
-	    gint x, gint y);
+void gtk_form_move_resize(GtkForm * form, GtkWidget * widget,
+	gint x, gint y,
+	gint w, gint h);
+void gtk_form_set_size(GtkForm * form, guint width, guint height);
 
-    void gtk_form_move_resize(GtkForm * form, GtkWidget * widget,
-	    gint x, gint y,
-	    gint w, gint h);
-    void gtk_form_set_size(GtkForm * form, guint width, guint height);
+/* These disable and enable moving and repainting respectively.  If you
+ * want to update the layout's offsets but do not want it to repaint
+ * itself, you should use these functions.
+ */
 
-    /* These disable and enable moving and repainting respectively.  If you
-     * want to update the layout's offsets but do not want it to repaint
-     * itself, you should use these functions.
-     */
-
-    void gtk_form_freeze(GtkForm *form);
-    void gtk_form_thaw(GtkForm *form);
+void gtk_form_freeze(GtkForm *form);
+void gtk_form_thaw(GtkForm *form);
 
 
 #ifdef __cplusplus
 }
-
-#endif				/* __cplusplus */
-#endif				/* __GTK_FORM_H__ */
+#endif
+#endif	/* __GTK_FORM_H__ */

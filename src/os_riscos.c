@@ -49,7 +49,7 @@ map_colour(dos)
 	case 11: return rgb(224,255,255);	/* Cyan, LightCyan */
 	case 12: return rgb(255,0,0);		/* Red, LightRed */
 	case 13: return rgb(255,0,255);		/* Magenta, LightMagenta */
-	case 14: return rgb(255,255,0);		/* Yellow */
+	case 14: return rgb(255,255,0);		/* Yellow, LightYellow */
 	case 15: return rgb(255,255,255);	/* White */
     }
     return rgb(100,100,100);
@@ -359,7 +359,7 @@ mch_delay(msec, ignoreinput)
 	time_now = r0;
 	if (time_now - start_time > csec)
 	    return;
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 	/* In the GUI, allow other programs to run while waiting. */
 	if (gui.in_use)
 	    gui_mch_wait_for_chars(start_time + csec);
@@ -378,10 +378,10 @@ mch_suspend()
 }
 
     void
-mch_windinit()
+mch_shellinit()
 {
     /*
-     * Read window size first. Calls to mch_get_winsize() will
+     * Read window size first. Calls to mch_get_shellsize() will
      * simply return these values in future so that setting the
      * text window (used for scrolling) won't give strange results.
      */
@@ -392,7 +392,7 @@ mch_windinit()
      * in the desktop then we'll use the GUI version.
      * Opening a command window here messes up the GUI version startup
      */
-#ifndef USE_GUI
+#ifndef FEAT_GUI
     swi(OS_WriteI);
 #endif
     swi(OS_ReadVduVariables, buf, buf);
@@ -438,7 +438,7 @@ mch_input_isatty()
     return FALSE;
 }
 
-#ifdef WANT_TITLE
+#ifdef FEAT_TITLE
     int
 mch_can_restore_title()
 {
@@ -462,7 +462,7 @@ mch_settitle(title, icon)
 {
     if (title == NULL)
 	title = (char_u *) "<untitled>";
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     if (gui.in_use && strcmp(title, gui.window_title))
     {
 	int length;
@@ -643,7 +643,7 @@ mch_windexit(r)
     out_flush();
     ml_close_all(TRUE);		/* remove all memfiles */
 
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     if (gui.in_use)
 	gui_exit(r);
 #endif
@@ -703,26 +703,40 @@ mch_setmouse(on)
 mch_screenmode(arg)
     char_u   *arg;
 {
-    EMSG("Screen mode setting not supported");
+    EMSG(_("Screen mode setting not supported"));
     return FAIL;
 }
 
 /*
  * Try to get the current window size.
  * Return OK when size could be determined, FAIL otherwise.
- * Simply return results stored by mch_windinit() if we are the
+ * Simply return results stored by mch_shellinit() if we are the
  * machine's console. If not, we don't know how big the screen is.
  */
     int
-mch_get_winsize()
+mch_get_shellsize()
 {
     /* if size changed: screenalloc will allocate new screen buffers */
     return term_console ? OK : FAIL;
 }
 
+/*
+ * Can't change the size.
+ * Assume the user knows what he's doing and use the new values.
+ */
     void
-mch_set_winsize()
+mch_set_shellsize()
 {
+    /* Assume the user knows what he's doing and use the new values. */
+}
+
+/*
+ * Rows and/or Columns has changed.
+ */
+    void
+mch_new_shellsize()
+{
+    /* Nothing to do. */
 }
 
     int
@@ -735,7 +749,7 @@ mch_call_shell(cmd, options)
     if (cmd == NULL)
 	cmd = (char_u *) "GOS";
 
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     if (gui.in_use)
 	return gui_mch_call_shell(cmd, options);
 #endif
@@ -779,12 +793,12 @@ mch_breakcheck()
  */
     int
 mch_expandpath(gap, path, flags)
-    struct growarray	*gap;	/* Grow array for results. */
-    char_u		*path;
-    int			flags;	/* EW_* flags */
+    garray_t	*gap;	/* Grow array for results. */
+    char_u	*path;
+    int		flags;	/* EW_* flags */
 {
-    int			got;	/* Number of matches. */
-    char_u		*pattern;
+    int		got;	/* Number of matches. */
+    char_u	*pattern;
 
    /* Plan:
     *
@@ -819,10 +833,10 @@ mch_expandpath(gap, path, flags)
  */
     static int
 expand_section(gap, root, rest, flags)
-    struct growarray	*gap;
-    char_u		*root;	/* Non-wildcarded path to search */
-    char_u		*rest;	/* Wildcarded remainder of path */
-    int			flags;	/* Add dirs/files/missing objects. */
+    garray_t	*gap;
+    char_u	*root;	/* Non-wildcarded path to search */
+    char_u	*rest;	/* Wildcarded remainder of path */
+    int		flags;	/* Add dirs/files/missing objects. */
 {
     static char_u buf[MAXPATHL];	/* Temporary buffer. */
     char_u dir[MAXPATHL];
@@ -1162,7 +1176,7 @@ mch_read_filetype(file)
 	;
     type_string[i] = 0;
 
-    set_string_option_direct("osfiletype", -1, type_string, TRUE);
+    set_string_option_direct("osfiletype", -1, type_string, OPT_FREE);
     return;
 }
 
@@ -1173,7 +1187,7 @@ mch_set_filetype(file, type)
 {
     if (xswi(OS_FSControl, 31, type) & v_flag)
     {
-	EMSG("Invalid 'filetype' option - using Text");
+	EMSG(_("Invalid 'filetype' option - using Text"));
 	r2 = 0xfff;
     }
 

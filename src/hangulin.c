@@ -6,7 +6,7 @@
  * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
-#include "vim.h"   /* for Gui Vim */
+#include "vim.h"
 
 #include <X11/Xlib.h>
 
@@ -21,10 +21,10 @@
 #define AUTOMATA_ERROR		4
 #define AUTOMATA_NULL		5
 
-#define F_F	0x1	    /* 檬己 (initial sound) */
-#define F_M	0x2	    /* 吝己 (medial vowel) */
-#define F_L	0x4	    /* 辆己 (final consonant) */
-#define F_A	0x8	    /* ASCII */
+#define F_F	0x1	/* 檬己 (initial sound) */
+#define F_M	0x2	/* 吝己 (medial vowel) */
+#define F_L	0x4	/* 辆己 (final consonant) */
+#define F_A	0x8	/* ASCII */
 #define F_NULL 1
 #define M_NULL 2
 #define L_NULL 1
@@ -600,7 +600,7 @@ hangul_automata2(buf, c)
 	    return AUTOMATA_CORRECT_NEW;
 
 	default:
-	    EMSG("automata ERROR: internal");
+	    EMSG(_("automata ERROR: internal"));
 	    break;
     }
     return AUTOMATA_ERROR; /* RrEeAaLlLlYy EeRrRrOoRr */
@@ -754,7 +754,7 @@ hangul_input_process(s, len)
     {
 	/* backspace */
 	if (composing_hangul)
-	    c = Ctrl('H');
+	    c = Ctrl_H;
 	else
 	    return len;
     }

@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 5.7.  Last change: 2000 Jun 07
+*change.txt*    For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -242,9 +242,9 @@ gr{char}		Replace the virtual characters under the cursor with
 The following commands change the case of letters.  The currently active
 locale is used.  This depends on your system  On Unix, setting the $LANG
 environment variable can make a difference.  For example, to enable changing
-the case of letters with umlauts:
->	setenv LANG de
-							*~*
+the case of letters with umlauts: >
+	setenv LANG de
+<							*~*
 ~			'notildeop' option: Switch case of the character
 			under the cursor and move the cursor to the right.
 			If a [count] is given, do that many characters. {Vi:
@@ -296,16 +296,19 @@ g??			Rot13 encode current line. {not in Vi}.
 
 Adding and subtracting ~
 							*CTRL-A*
-CTRL-A			Add [count] to the number at or after the cursor.
-			{not in Vi}
+CTRL-A			Add [count] to the number or alphabetic character at
+			or after the cursor.  {not in Vi}
 
 							*CTRL-X*
-CTRL-X			Subtract [count] from the number at or after the
-			cursor.  {not in Vi}
+CTRL-X			Subtract [count] from the number or alphabetic
+			character at or after the cursor.  {not in Vi}
 
-The CTRL-A and CTRL-X commands work for (signed) decimal numbers and
-unsigned octal and hexadecimal numbers.  This depends on the 'nrformats'
-option.
+The CTRL-A and CTRL-X commands work for (signed) decimal numbers, unsigned
+octal and hexadecimal numbers and alphabetic characters.  This depends on the
+'nrformats' option.
+- When 'nrformats' includes "alpha", Vim will change the alphabetic character
+  under or after the cursor.  This is useful to make lists with an alphabetic
+  index.
 - When 'nrformats' includes "hex", Vim assumes numbers starting with '0x' or
   '0X' are hexadecimal.  The case of the rightmost letter in the number
   determines the case of the resulting hexadecimal number.  If there is no
@@ -397,11 +400,11 @@ you can use ">><<" to replace <Tab>s in the indent by spaces (or use
 ":retab!").
 
 To move a line several 'shiftwidth's, use Visual mode or the ":" commands.
-For example:
->	Vjj4>		move three lines 4 indents to the right
->	:<<<		move current line 3 indents to the left
->	:>> 5		move 5 lines 2 indents to the right
->	:5>>		move line 5 2 indents to the right
+For example: >
+	Vjj4>		move three lines 4 indents to the right
+	:<<<		move current line 3 indents to the left
+	:>> 5		move 5 lines 2 indents to the right
+	:5>>		move line 5 2 indents to the right
 
 ==============================================================================
 4. Complex changes					*complex-change*
@@ -459,23 +462,41 @@ not recognize a comment (starting with '"') after the ":!" command.
 
 
 						*:s* *:su* *:substitute*
-:[range]s[ubstitute]/{pattern}/{string}/[c][e][g][p][r][i][I] [count]
+:[range]s[ubstitute]/{pattern}/{string}/[&][c][e][g][p][r][i][I] [count]
 			For each line in [range] replace a match of {pattern}
-			with {string}.  See |:s_flags| for the flags.
+			with {string}.
+			If {string} starts with "\=" it is evaluated as an
+			expression.  The |submatch()| function can be used to
+			access sub-matches of the {pattern}.
+			When [range] and [count] are omitted, replace in the
+			current line only.
+			When [count] is given, replace in [count] lines,
+			starting with the last line in [range].  When [range]
+			is omitted start in the current line.
+			Also see |cmdline-ranges|.
+			See |:s_flags| for the flags.
 
-:[range]s[ubstitute] [c][e][g][r][i][I] [count]
-:[range]&[c][e][g][r][i][I] [count]			*:&*
+:[range]s[ubstitute] [&][c][e][g][r][i][I] [count]
+:[range]&[&][c][e][g][r][i][I] [count]			*:&*
 			Repeat last :substitute with same search pattern and
 			substitute string, but without the same flags.  You
 			may add extra flags (see |:s_flags|).
 
-:[range]~[c][e][g][r][i][I] [count]			*:~*
+:[range]~[&][c][e][g][r][i][I] [count]			*:~*
 			Repeat last substitute with same substitute string
 			but with last used search pattern.  This is like
 			"&r".  See |:s_flags| for the flags.
 
 						*&*
-&			Synonym for ":s//~/" (repeat last substitute).
+&			Synonym for ":s//~/" (repeat last substitute).  Note
+			that the flags are not remembered, thus it might
+			actually work differently.  To keep the flags use: >
+				:s&
+<
+						*g&*
+g&			Synonym for ":%s//~/&" (repeat last substitute on all
+			lines with the same flags).
+			Mnemonic: global substitute. {not in Vi}
 
 						*:snomagic*
 :[range]sno[magic] ...	Same as ":substitute", but always use 'nomagic'.
@@ -486,7 +507,11 @@ not recognize a comment (starting with '"') after the ":!" command.
 			{not in Vi}
 
 							*:s_flags*
-The arguments that you can use for the substitute commands:
+The flags that you can use for the substitute commands:
+[&]	Must be the first one: Keep the flags from the previous substitute
+	command.  Example: >
+		:s&
+<	Note that ":s" doesn't keep the flags.
 [c]	Confirm each substitution.  Vim positions the cursor on the matching
 	string.  You can type:				*:s_c*
 	    'y'	    to substitute this match
@@ -526,23 +551,20 @@ The arguments that you can use for the substitute commands:
 	was a substitute or ":global", there is no effect.  If the last
 	command was a search command such as "/", use the pattern from that
 	command.
-	For ":s" with an argument this already happens:
->		:s/blue/red/
->		/green
->		:s//red/   or  :~   or  :&r
-	The last commands will replace "green" with "red".
->		:s/blue/red/
->		/green
->		:&
-	The last command will replace "blue" with "red".
+	For ":s" with an argument this already happens: >
+		:s/blue/red/
+		/green
+		:s//red/   or  :~   or  :&r
+<	The last commands will replace "green" with "red". >
+		:s/blue/red/
+		/green
+		:&
+<	The last command will replace "blue" with "red".
 
 Note that there is no flag to change the "magicness" of the pattern.  A
 different command is used instead.  The reason is that the flags can only be
 found by skipping the pattern, and in order to skip the pattern the
 "magicness" must be known.  Catch 22!
-
-[count] Search [count] lines, starting with the last line number
-	in [range] (default is to search only the current line |cmdline-ranges|).
 
 If the {pattern} for the substitute command is empty, the command uses the
 pattern from the last substitute or ":global" command.  With the [r] flag, the
@@ -556,12 +578,23 @@ For compatibility with Vi these two exceptions are allowed:
 Instead of the '/' which surrounds the pattern and replacement string, you
 can use any other character, but not an alphanumeric character, '\', '"' or
 '|'.  This is useful if you want to include a '/' in the search pattern or
-replacement string.  Example:
->	:s+/+//+
+replacement string.  Example: >
+	:s+/+//+
 
 For the definition of a pattern, see |pattern|.
 
 						*sub-replace-special*
+When the {string} starts with "\=" it is evaluated as an expression.  The
+special meaning for characters as mentioned below does not apply then.
+The whole matched text can be accessed with "submatch(0)".  The text matched
+with the first pair of () with "submatch(1)".  Likewise for further
+sub-matches in ().
+Be careful: The separation character must not appear in the expression!
+Consider using a character like "@" or "|".
+Example: >
+	:s@\n@\="\r" . expand("$HOME") . "\r"@
+This replaces an end-of-line with a new line containing the value of $HOME.
+
 Some characters in {string} have a special meaning:
 
 magic	nomagic	  action    ~
@@ -582,37 +615,40 @@ magic	nomagic	  action    ~
       \E	  end of \u, \U, \l and \L
       <CR>	  split line in two at this point
       \r	  idem
-  CTRL-V <CR>	  insert a carriage-return (CTRL-M)
-      \n	  <NL> (does NOT break the line)
-      \b	  <BS>
-      \t	  <Tab>
+      \<CR>	  insert a carriage-return (CTRL-M)
+      \n	  insert a <NL> (<NUL> in the file) (does NOT break the line)
+      \b	  insert a <BS>
+      \t	  insert a <Tab>
+      \f	  'foldtext' only: number of folded lines
+      \d	  'foldtext' only: string of dashes, representing fold level
+      \\	  insert a single backslash
+      \x	  where x is any character not mentioned above: Reserved for
+		  future expansion
 
-Examples:
->  :s/a\|b/xxx\0xxx/g		 modifies "a b"	     to "xxxaxxx xxxbxxx"
->  :s/\([abc]\)\([efg]\)/\2\1/g  modifies "af fa bg" to "fa fa gb"
->  :s/abcde/abc^Mde/		 modifies "abcde"    to "abc", "de" (two lines)
->  :s/$/^V^M/			 modifies "abcde"    to "abcde^M"
+Examples: >
+  :s/a\|b/xxx\0xxx/g		 modifies "a b"	     to "xxxaxxx xxxbxxx"
+  :s/\([abc]\)\([efg]\)/\2\1/g 	 modifies "af fa bg" to "fa fa gb"
+  :s/abcde/abc^Mde/		 modifies "abcde"    to "abc", "de" (two lines)
+  :s/$/\^M/			 modifies "abcde"    to "abcde^M"
 
-Note: To insert a ^M you have to type CTRL-V <CR>.  To insert a ^V you have
-to type CTRL-V CTRL-V.  So to insert the ^V^M in the last example you have to
-type CTRL-V CTRL-V CTRL-V <CR>.
+Note: In previous versions CTRL-V was handled in a special way.  Since this is
+not Vi compatible, this was removed.  Use a backslash instead.
 
-Because CTRL-V <CR> inserts a <CR>, it is impossible to insert a CTRL-V just
-in front of a line break.  You will have to perform the substitution in two
-steps:
->  :s/foo/^Vxxxx/
->  :s/xxxx/^M/
+command		text	result
+:s/aa/a^Ma/	aa	a<line-break>a
+:s/aa/a\^Ma/	aa	a^Ma
+:s/aa/a\\^Ma/	aa	a\<line-break>a
 
 The numbering of "\1", "\2" etc. is done based on which "\(" comes first in
 the pattern (going left to right).  When a parentheses group matches several
-times, the last one will be used for "\1", "\2", etc.  Example:
->  :s/\(\(a[a-d] \)*\)/\2/      modifies "aa ab x" to "ab x"
+times, the last one will be used for "\1", "\2", etc.  Example: >
+  :s/\(\(a[a-d] \)*\)/\2/      modifies "aa ab x" to "ab x"
 
 When using parentheses in combination with '|', like in \([ab]\)\|\([cd]\),
 either the first or second pattern in parentheses did not match, so either
-\1 or \2 is empty.  Example:
->  :s/\([ab]\)\|\([cd]\)/\1x/g   modifies "a b c d"  to "ax bx x x"
-
+\1 or \2 is empty.  Example: >
+  :s/\([ab]\)\|\([cd]\)/\1x/g   modifies "a b c d"  to "ax bx x x"
+<
 						*:pro* *:promptfind*
 :promptf[ind] [string]
 			Win32 GUI only: Put up a Search dialog.  When [string]
@@ -651,12 +687,12 @@ either the first or second pattern in parentheses did not match, so either
 							*retab-example*
 Example for using autocommands and ":retab" to edit a file which is stored
 with tabstops at 8 but edited with tabstops set at 4.  Warning: white space
-inside of strings can change!  Also see 'softtabstop' option.
+inside of strings can change!  Also see 'softtabstop' option. >
 
->  auto BufReadPost	*.xx	retab! 4
->  auto BufWritePre	*.xx	retab! 8
->  auto BufWritePost	*.xx	retab! 4
->  auto BufNewFile	*.xx	set ts=4
+  :auto BufReadPost	*.xx	retab! 4
+  :auto BufWritePre	*.xx	retab! 8
+  :auto BufWritePost	*.xx	retab! 4
+  :auto BufNewFile	*.xx	set ts=4
 
 ==============================================================================
 5. Copying and moving text				*copy-move*
@@ -671,9 +707,9 @@ inside of strings can change!  Also see 'softtabstop' option.
 			registers.  {not in Vi}
 
 :reg[isters] {arg}	Display the contents of the numbered and named
-			registers that are mentioned in {arg}.  For example:
->				:dis 1a
-			to display registers '1' and 'a'.  Spaces are allowed
+			registers that are mentioned in {arg}.  For example: >
+				:dis 1a
+<			to display registers '1' and 'a'.  Spaces are allowed
 			in {arg}.  {not in Vi}
 
 							*:di* *:display*
@@ -733,9 +769,9 @@ inside of strings can change!  Also see 'softtabstop' option.
 			by an optional expression.  The expression continues
 			until the end of the command.  You need to escape the
 			'|' and '"' characters to prevent them from
-			terminating the command.  Example:
->  :put ='path' . \",/test\"
-			If there is no expression after '=', Vim uses the
+			terminating the command.  Example: >
+				:put ='path' . \",/test\"
+<			If there is no expression after '=', Vim uses the
 			previous expression.  You can see it with ":dis =".
 
 :[line]pu[t]! [x]	Put the text [from register x] before [line] (default
@@ -883,8 +919,8 @@ Contains the most recent search-pattern.  This is used for "n" and 'hlsearch'.
 It is read-only.  {not in Vi}
 
 							*@/*
-You can write to a register with a ":let" command |:let-@|.  Example:
->	:let @/ = "the"
+You can write to a register with a ":let" command |:let-@|.  Example: >
+	:let @/ = "the"
 
 If you use a put command without specifying a register, Vim uses the register
 that was last filled (this is also the contents of the unnamed register).  If
@@ -938,8 +974,8 @@ gq{motion}		Format the lines that {motion} moves over.  The
 			formatting |fo-table|.
 			NOTE: The "Q" command formerly performed this
 			function.  If you still want to use "Q" for
-			formatting, use this mapping:
->				:nnoremap Q gq
+			formatting, use this mapping: >
+				:nnoremap Q gq
 
 gqgq							*gqgq* *gqq*
 gqq			Format the current line.  {not in Vi}
@@ -948,8 +984,8 @@ gqq			Format the current line.  {not in Vi}
 {Visual}gq		Format the highlighted text.  (for {Visual} see
 			|Visual-mode|).  {not in Vi}
 
-Example: To format the current paragraph use
->	gqap
+Example: To format the current paragraph use: >
+	gqap
 
 The "gq" command leaves the cursor in the line where the motion command takes
 the cursor.  This allows you to repeat formatting repeated with ".".  This
@@ -1040,12 +1076,12 @@ Any blank space in the text before and after the {string} is part of the
 required part of the comment string.
 
 When one comment leader is part of another, specify the part after the whole.
-For example, to include both "-" and "->", use
->	:set comments=f:->,f:-
+For example, to include both "-" and "->", use >
+	:set comments=f:->,f:-
 
 A three-piece comment must always be given as start,middle,end, with no other
-parts in between.  An example of a three-piece comment is
->	sr:/*,mb:*,ex:*/
+parts in between.  An example of a three-piece comment is >
+	sr:/*,mb:*,ex:*/
 for C-comments.  To avoid recognizing "*ptr" as a comment, the middle string
 includes the 'b' flag.  For three-piece comments, Vim checks the text after
 the start and middle strings for the end string.  If Vim finds the end string,
@@ -1059,12 +1095,12 @@ before typing anything else on the new line.  This will replace the
 middle-comment leader with the end-comment leader, leaving just " */".  There
 is no need to hit BackSpace first.
 
-Examples:
->  "b:*"	Includes lines starting with "*", but not if the "*" is
->		followed by a non-blank.  This avoids a pointer dereference
->		like "*str" to be recognized as a comment.
->  "n:>"	Includes a line starting with ">", ">>", ">>>", etc.
->  "fb:-"	Format a list that starts with "- ".
+Examples: >
+   "b:*"	Includes lines starting with "*", but not if the "*" is
+		followed by a non-blank.  This avoids a pointer dereference
+		like "*str" to be recognized as a comment.
+   "n:>"	Includes a line starting with ">", ">>", ">>>", etc.
+   "fb:-"	Format a list that starts with "- ".
 
 By default, "b:#" is included.  This means that a line that starts with
 "#include" is not recognized as a comment line.  But a line that starts with
@@ -1072,14 +1108,14 @@ By default, "b:#" is included.  This means that a line that starts with
 
 Often the alignment can be changed from right alignment to a left alignment
 with an additional space.  For example, for Javadoc comments, this can be
-used (insert a backslash before the space when using ":set"):
->	s1:/*,mb:*,ex:*/
+used (insert a backslash before the space when using ":set"): >
+	s1:/*,mb:*,ex:*/
 Note that an offset is included with start, so that the middle part is left
 aligned with the start and then an offset of one character added.  This makes
-it possible to left align the start and middle for this construction:
->   /**
->    * comment
->    */
+it possible to left align the start and middle for this construction: >
+	/**
+	 * comment
+	 */
 
 {not available when compiled without the |+comments| feature}
 
@@ -1154,10 +1190,10 @@ All of this should be really cool, especially in conjunction with the new
 :autocmd command to prepare different settings for different types of file.
 
 Some examples:
-  for C code (only format comments):
->	fo=croq
-  for Mail/news	(format all, don't start comment with "o" command):
->	fo=tcrq
+  for C code (only format comments): >
+	:set fo=croq
+  for Mail/news	(format all, don't start comment with "o" command): >
+	:set fo=tcrq
 
 ==============================================================================
 7. Indenting C programs					*C-indenting*
@@ -1445,4 +1481,4 @@ Vim puts a line in column 1 if:
 - Any combination of indentations causes the line to have less than 0
   indentation.
 
- vim:tw=78:ts=8:sw=8:
+ vim:tw=78:

@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 5.7.  Last change: 2000 Jun 22
+*cmdline.txt*   For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -26,12 +26,12 @@ move around in the command-line with the left and right cursor keys.  With the
 
 Note that if your keyboard does not have working cursor keys or any of the
 other special keys, you can use ":cnoremap" to define another key for them.
-For example, to define tcsh style editing keys:		*tcsh-style*
->	:cnoremap <C-A> <Home>
->	:cnoremap <C-F> <Right>
->	:cnoremap <C-B> <Left>
->	:cnoremap <Esc>b <S-Left>
->	:cnoremap <Esc>f <S-Right>
+For example, to define tcsh style editing keys:		*tcsh-style*  >
+	:cnoremap <C-A> <Home>
+	:cnoremap <C-F> <Right>
+	:cnoremap <C-B> <Left>
+	:cnoremap <Esc>b <S-Left>
+	:cnoremap <Esc>f <S-Right>
 (<> notation |<>|; type all this literally)
 
 							*cmdline-too-long*
@@ -103,7 +103,11 @@ CTRL-H							*c_<BS>* *c_CTRL-H*
 							*c_CTRL-W*
 CTRL-W		delete the word before the cursor
 							*c_CTRL-U*
-CTRL-U		remove all characters
+CTRL-U		remove all characters between the cursor position and
+		the beginning of the line.  Previous versions of vim
+		deleted all characters on the line.  If that is the
+		preferred behavior, add the following to your .vimrc:
+>			:cnoremap <C-U> <C-E><C-U>
 
 		Note: if the command-line becomes empty with one of the
 		delete commands, Command-line mode is quit.
@@ -242,11 +246,11 @@ terminals)
 		counted from the newest entry (which has index -1) backwards.
 
 		Examples:
-			List entries 6 to 12 from the search history:
->			:history / 6,12
-
-			List the recent five entries from all histories:
->			:history all -5,
+		List entries 6 to 12 from the search history: >
+			:history / 6,12
+<
+		List the recent five entries from all histories: >
+			:history all -5,
 
 ==============================================================================
 2. Command-line completion				*cmdline-completion*
@@ -337,16 +341,18 @@ match stays the same.  You can get to the other matches by entering
 'wildchar', CTRL-N or CTRL-P.  All files are included, also the ones with
 extensions matching the 'suffixes' option.
 
+To completely ignore files with some extension use 'wildignore'.
+
 The old value of an option can be obtained by hitting 'wildchar' just after
 the '='.  For example, typing 'wildchar' after ":set dir=" will insert the
 current value of 'dir'.  This overrules file name completion for the options
 that take a file name.
 
 If you would like using <S-Tab> for CTRL-P in an xterm, put this command in
-your .cshrc:
->	xmodmap -e "keysym Tab = Tab Find"
-And this in your .vimrc:
->	cmap <Esc>[1~ <C-P>		(<C-P> is CTRL-P)
+your .cshrc: >
+	xmodmap -e "keysym Tab = Tab Find"
+And this in your .vimrc: >
+	:cmap <Esc>[1~ <C-P>
 
 ==============================================================================
 3. Ex command-lines					*cmdline-lines*
@@ -356,8 +362,8 @@ The Ex commands have a few specialties:
 							*:quote*
 '"' at the start of a line causes the whole line to be ignored.  '"'
 after a command causes the rest of the line to be ignored.  This can be used
-to add comments.  Example:
->	:set ai		"set 'autoindent' option
+to add comments.  Example: >
+	:set ai		"set 'autoindent' option
 It is not possible to add a comment to a shell command ":!cmd" or to the
 ":map" command and friends, because they see the '"' as part of their
 argument.
@@ -387,42 +393,42 @@ Note that this is confusing (inherited from Vi): With ":g" the '|' is included
 in the command, with ":s" it is not.
 
 To be able to use another command anyway, use the ":execute" command.
-Example (append the output of "ls" and jump to the first line):
->	:execute 'r !ls' | '[
+Example (append the output of "ls" and jump to the first line): >
+	:execute 'r !ls' | '[
 
 There is one exception: When the 'b' flag is present in 'cpoptions', with the
 ":map" and ":abbr" commands and friends CTRL-V needs to be used instead of
 '\'.  You can also use "<Bar>" instead.  See also |map_bar|.
 
-Examples:
->	:!ls | wc		view the output of two commands
->	:r !ls | wc		insert the same output in the text
->	:%g/foo/p|>		moves all matching lines one shiftwidth
->	:%s/foo/bar/|>		moves one line one shiftwidth
->	:map q 10^V|		map "q" to "10|"
->	:map q 10\| map \ l	map "q" to "10\" and map "\" to "l"
->					(when 'b' is present in 'cpoptions')
+Examples: >
+	:!ls | wc		view the output of two commands
+	:r !ls | wc		insert the same output in the text
+	:%g/foo/p|>		moves all matching lines one shiftwidth
+	:%s/foo/bar/|>		moves one line one shiftwidth
+	:map q 10^V|		map "q" to "10|"
+	:map q 10\| map \ l	map "q" to "10\" and map "\" to "l"
+					(when 'b' is present in 'cpoptions')
 
 You can also use <NL> to separate commands in the same way as with '|'.  To
 insert a <NL> use CTRL-V CTRL-J.  "^@" will be shown.  Using '|' is the
 preferred method.  But for external commands a <NL> must be used, because a
 '|' is included in the external command.  To avoid the special meaning of <NL>
-it must be preceded with a backslash.  Example:
->	:r !date<NL>-join
+it must be preceded with a backslash.  Example: >
+	:r !date<NL>-join
 This reads the current date into the file and joins it with the previous line.
 
 Note that when the command before the '|' generates an error, the following
 commands will not be executed.
 
 
-Because of Vi compatibility the following strange commands are supported:
->	:|			print current line (like ":p")
->	:3|			print line 3 (like ":3p")
->	:3			goto line 3
+Because of Vi compatibility the following strange commands are supported: >
+	:|			print current line (like ":p")
+	:3|			print line 3 (like ":3p")
+	:3			goto line 3
 
 A colon is allowed between the range and the command name.  It is ignored
-(this is Vi compatible).  For example:
->	:1,$:s/pat/string
+(this is Vi compatible).  For example: >
+	:1,$:s/pat/string
 
 When the character '%' or '#' is used where a file name is expected, they are
 expanded to the current and alternate file name (see the chapter "editing
@@ -431,8 +437,8 @@ files" |:_%| |:_#|).
 Embedded spaces in file names are allowed on the Amiga if one file name is
 expected as argument.  Trailing spaces will be ignored, unless escaped with a
 backslash or CTRL-V.  Note that the ":next" command uses spaces to separate
-file names.  Escape the spaces to include them in a file name.  Example:
->	:next foo\ bar goes\ to school\
+file names.  Escape the spaces to include them in a file name.  Example: >
+	:next foo\ bar goes\ to school\
 starts editing the three files "foo bar", "goes to" and "school ".
 
 When you want to use the special characters '"' or '|' in a command, or want
@@ -459,11 +465,11 @@ Some Ex commands accept a line range in front of them.  This is noted as
 						*:,* *:;*
 When separated with ';' the cursor position will be set to that line
 before interpreting the next line specifier.  This doesn't happen for ','.
-Examples:
->	4,/this line/		from line 4 till match with "this line" after
->				the cursor line.
->	5;/that line/		from line 5 till match with "that line" after
->				line 5.
+Examples: >
+   4,/this line/
+<   	from line 4 till match with "this line" after the cursor line. >
+   5;/that line/
+<	from line 5 till match with "that line" after line 5.
 
 The default line specifier for most commands is the cursor position, but the
 commands ":write" and ":global" have the whole file (1,$) as default.
@@ -495,20 +501,20 @@ anything that follows.
 
 The "/" and "?" may be preceded with another address.  The search starts from
 there.  The difference from using ';' is that the cursor isn't moved.
-Examples:
->	/pat1//pat2/	Find line containing "pat2" after line containing
->			"pat1", without moving the cursor.
->	7;/pat2/	Find line containing "pat2", after line 7, leaving
->			the cursor in line 7.
+Examples: >
+	/pat1//pat2/	Find line containing "pat2" after line containing
+			"pat1", without moving the cursor.
+	7;/pat2/	Find line containing "pat2", after line 7, leaving
+			the cursor in line 7.
 
 The {number} must be between 0 and the number of lines in the file.  A 0 is
 interpreted as a 1, except with the commands tag, pop and read.
 
-Examples:
->	.+3		three lines below the cursor
->	/that/+1	the line below the next line containing "that"
->	.,$		from current line until end of file
->	0;/that		the first line containing "that"
+Examples: >
+	.+3		three lines below the cursor
+	/that/+1	the line below the next line containing "that"
+	.,$		from current line until end of file
+	0;/that		the first line containing "that"
 
 Some commands allow for a count after the command.  This count is used as the
 number of lines to be used, starting with the line given in the last line
@@ -516,10 +522,10 @@ specifier (the default is the cursor line).  The commands that accept a count
 are the ones that use a range but do not have a file name argument (because
 a file name can also be a number).
 
-Examples:
->	:s/x/X/g 5	substitute 'x' by 'X' in the current line and four
->			following lines
->	:23d 4		delete lines 23, 24, 25 and 26
+Examples: >
+	:s/x/X/g 5	substitute 'x' by 'X' in the current line and four
+			following lines
+	:23d 4		delete lines 23, 24, 25 and 26
 
 A range should have the lower line number first.  If this is not the case, Vim
 will ask you if it should swap the line numbers.  This is not done within the
@@ -529,9 +535,9 @@ global command ":g".
 When giving a count before entering ":", this is translated into:
 		:.,.+(count - 1)
 In words: The 'count' lines at and after the cursor.  Example: To delete
-three lines:
->		3:d<CR>		is translated into: .,.+2d<CR>
-
+three lines: >
+		3:d<CR>		is translated into: .,.+2d<CR>
+<
 							*v_:*
 {Visual}:	Starts a command-line with the Visual selected lines as a
 		range.  The code ":'<,'>" is used for this range, which makes
@@ -631,50 +637,51 @@ These modifiers can be given, in this order:
 		Substitute all occurrences of "path" with "sub".  Otherwise
 		this works like ":s".
 
-Examples, when the file name is "src/version.c", current dir "/home/mool/vim":
->  :p			/home/mool/vim/src/version.c
->  :p:.				       src/version.c
->  :p:~				 ~/vim/src/version.c
->  :h				       src
->  :p:h			/home/mool/vim/src
->  :p:h:h		/home/mool/vim
->  :t					   version.c
->  :p:t					   version.c
->  :r				       src/version
->  :p:r			/home/mool/vim/src/version
->  :t:r					   version
->  :e						   c
->  :s?version?main?		       src/main.c
->  :s?version?main?:p	/home/mool/vim/src/main.c
->  :p:gs?/?\\?		\home\mool\vim\src\version.c
+Examples, when the file name is "src/version.c", current dir
+"/home/mool/vim": >
+  :p			/home/mool/vim/src/version.c
+  :p:.				       src/version.c
+  :p:~				 ~/vim/src/version.c
+  :h				       src
+  :p:h			/home/mool/vim/src
+  :p:h:h		/home/mool/vim
+  :t					   version.c
+  :p:t					   version.c
+  :r				       src/version
+  :p:r			/home/mool/vim/src/version
+  :t:r					   version
+  :e						   c
+  :s?version?main?		       src/main.c
+  :s?version?main?:p	/home/mool/vim/src/main.c
+  :p:gs?/?\\?		\home\mool\vim\src\version.c
 
-Examples, when the file name is "src/version.c.gz":
->  :p			/home/mool/vim/src/version.c.gz
->  :e						     gz
->  :e:e						   c.gz
->  :e:e:e					   c.gz
->  :e:e:r					   c
->  :r				       src/version.c
->  :r:e						   c
->  :r:r				       src/version
->  :r:r:r			       src/version
-
+Examples, when the file name is "src/version.c.gz": >
+  :p			/home/mool/vim/src/version.c.gz
+  :e						     gz
+  :e:e						   c.gz
+  :e:e:e					   c.gz
+  :e:e:r					   c
+  :r				       src/version.c
+  :r:e						   c
+  :r:r				       src/version
+  :r:r:r			       src/version
+<
 					*extension-removal* *:_%<*
 If a "<" is appended to "%", "#", "#n" or "CTRL-V p" the extension of the file
 name is removed (everything after and including the last '.' in the file
 name).  This is included for backwards compatibility with version 3.0, the
-":r" form is preferred.  Examples:
+":r" form is preferred.  Examples: >
 
->	%		current file name
->	%<		current file name without extension
->	#		alternate file name for current window
->	#<		idem, without extension
->	#31		alternate file number 31
->	#31<		idem, without extension
->	<cword>		word under the cursor
->	<cWORD>		WORD under the cursor (see |WORD|)
->	<cfile>		path name under the cursor
->	<cfile><	idem, without extension
+	%		current file name
+	%<		current file name without extension
+	#		alternate file name for current window
+	#<		idem, without extension
+	#31		alternate file number 31
+	#31<		idem, without extension
+	<cword>		word under the cursor
+	<cWORD>		WORD under the cursor (see |WORD|)
+	<cfile>		path name under the cursor
+	<cfile><	idem, without extension
 
 Note: Where a file name is expected wildcards expansion is done.  On Unix the
 shell is used for this.  Backticks also work, like in
@@ -709,4 +716,4 @@ for the file "$home" in the root directory.  A few examples:
 	/\$home		file "$home" in root directory
 	\\$home		file "\\", followed by expanded $home
 
- vim:tw=78:ts=8:sw=8:
+ vim:tw=78:

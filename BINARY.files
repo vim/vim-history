@@ -1,7 +1,12 @@
 ./Contents.info
+./README.txt.info
+./README_ami.txt.info
+./README_amibig.txt.info
+./README_amibin.txt.info
+./README_amisrc.txt.info
+./runtime.info
 ./OleVim/OpenWithVim.exe
 ./OleVim/SendToVim.exe
-./README.txt.info
 ./VisVim/Res/ToolbarL.bmp
 ./VisVim/Res/ToolbarM.bmp
 ./VisVim/VisVim.dll
@@ -15,6 +20,7 @@
 ./runtime/vim16x16.gif
 ./runtime/vim32x32.gif
 ./runtime/vim48x48.gif
+./runtime/vimlogo.gif
 ./runtime/icons/README.txt.info
 ./runtime/icons/Vim_4ColorsLace.info
 ./runtime/icons/Vim_8Colors.info
@@ -32,7 +38,6 @@
 ./runtime/macros/urm/README.txt.info
 ./runtime/tutor/README.txt.info
 ./runtime/tutor/tutor.info
-./runtime.info
 ./src/os_beos.rsrc
 ./src/tearoff.bmp
 ./src/tools.bmp
@@ -42,6 +47,15 @@
 ./src/vim_error.ico
 ./src/vim_info.ico
 ./src/vim_quest.ico
+./src/tools16.bmp
+./src/vimtbar.dll
+./Ctags.info
+./Vim.info
+./Xxd.info
+./vimdir.info
+./src.info
+./emx.dll
+./emxlibcs.dll
 ./farsi/fonts/DOS/far-a01.com
 ./farsi/fonts/SunOs/far-a01.fb
 ./farsi/fonts/UNIXs/far-a01.f16

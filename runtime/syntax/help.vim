@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Vim help file
 " Maintainer:	Bram Moolenaar (Bram@vim.org)
-" Last Change:	2000 Jun 06
+" Last Change:	2000 Jul 21
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -9,11 +9,16 @@ syn clear
 syn match helpHeadline		"^[A-Z ]\+[ ]\+\*"me=e-1
 syn match helpSectionDelim	"^=\{3,}.*==$"
 syn match helpSectionDelim	"^-\{3,}.*--$"
-syn match helpExampleStart	"^>" nextgroup=helpExample
-syn match helpExample		".*" contained
-syn match helpHyperTextJump	"|[#-)!+-~]\+|"
-syn match helpHyperTextEntry	"\*[#-)!+-~]\+\*\s"he=e-1
-syn match helpHyperTextEntry	"\*[#-)!+-~]\+\*$"
+syn region helpExample		matchgroup=helpIgnore start=" >$" start="^>$" end="^[^ \t]"me=e-1 end="^<"
+if has("ebcdic")
+  syn match helpHyperTextJump	"|[^"*|]\+|"
+  syn match helpHyperTextEntry	"\*[^"*|]\+\*\s"he=e-1
+  syn match helpHyperTextEntry	"\*[^"*|]\+\*$"
+else
+  syn match helpHyperTextJump	"|[#-)!+-~]\+|"
+  syn match helpHyperTextEntry	"\*[#-)!+-~]\+\*\s"he=e-1
+  syn match helpHyperTextEntry	"\*[#-)!+-~]\+\*$"
+endif
 syn match helpVim		"Vim version [0-9.a-z]\+"
 syn match helpVim		"VIM REFERENCE.*"
 syn match helpOption		"'[a-z]\{2,\}'"
@@ -44,12 +49,13 @@ syn match helpSpecial		"CTRL-."
 syn match helpSpecial		"CTRL-Break"
 syn match helpSpecial		"CTRL-{char}"
 syn region helpNotVi		start="{Vi[: ]" start="{not" start="{only" end="}" contains=helpLeadBlank,helpHyperTextJump
-syn match helpLeadBlank		"^\s\+"
+syn match helpLeadBlank		"^\s\+" contained
+
+syn sync minlines=30
 
 if !exists("did_help_syntax_inits")
   let did_help_syntax_inits = 1
 
-  hi link helpExampleStart	helpIgnore
   hi link helpIgnore		Ignore
   hi link helpHyperTextJump	Subtitle
   hi link helpHyperTextEntry	String

@@ -1,7 +1,7 @@
 /*****************************************************************************
 *   $Id$
 *
-*   Copyright (c) 1996-1999, Darren Hiebert
+*   Copyright (c) 1996-2000, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.
@@ -12,7 +12,7 @@
 /*============================================================================
 =   Include files
 ============================================================================*/
-#include "general.h"
+#include "general.h"	/* must always come first */
 
 #include <string.h>
 #include <ctype.h>	/* to define isspace() */
@@ -21,6 +21,9 @@
 #if defined(HAVE_SYS_TYPES_H)
 # include <sys/types.h>	    /* to declare off_t on some hosts */
 #endif
+#if defined(HAVE_TYPES_H)
+# include <types.h>	    /* to declare off_t on some hosts */
+#endif
 #if defined(HAVE_UNISTD_H)
 # include <unistd.h>	/* to declare close(), ftruncate(), truncate() */
 #endif
@@ -28,12 +31,15 @@
 /*  These header files provide for the functions necessary to do file
  *  truncation.
  */
-#include <fcntl.h>
+#ifdef HAVE_FCNTL_H
+# include <fcntl.h>
+#endif
 #ifdef HAVE_IO_H
 # include <io.h>
 #endif
 
 #include "debug.h"
+#include "ctags.h"
 #include "entry.h"
 #include "main.h"
 #include "options.h"
@@ -165,8 +171,7 @@ static void addPseudoTags()
 	writePseudoTag("TAG_PROGRAM_AUTHOR",	AUTHOR_NAME,  AUTHOR_EMAIL);
 	writePseudoTag("TAG_PROGRAM_NAME",	PROGRAM_NAME, "");
 	writePseudoTag("TAG_PROGRAM_URL",	PROGRAM_URL,  "official site");
-	writePseudoTag("TAG_PROGRAM_VERSION",	PROGRAM_VERSION,
-		       "with C, C++, Eiffel, Fortran, and Java  support");
+	writePseudoTag("TAG_PROGRAM_VERSION",	PROGRAM_VERSION, "");
     }
 }
 
@@ -561,8 +566,7 @@ extern void closeTagFile( resize )
 			TagFile.name, size, desiredSize); )
 	resizeTagFile(desiredSize);
     }
-    if (! Option.etags)
-	sortTagFile();
+    sortTagFile();
     eFree(TagFile.name);
     TagFile.name = NULL;
 }
@@ -754,34 +758,45 @@ static int addExtensionFlags( tag )
     const tagEntryInfo *const tag;
 {
     const char *const prefix = ";\"\t";
-    const char *const separator = "\t";
-    unsigned int i;
+    boolean haveFlags = FALSE;
     int length = 0;
 
     /*  Add an extension flag designating that the type of the tag.
      */
     if (Option.kindLong)
-	length += fprintf(TagFile.fp, "%s%s", prefix, tag->kindName);
-    else
-	length += fprintf(TagFile.fp, "%s%c", prefix, tag->kind);
-
-    /*  If this is a static tag, add the appropriate extension flag.
-     */
-    if (tag->isFileScope)
-	length += fprintf(TagFile.fp, "%sfile:", separator);
-
-    /*  Add any other extension flags.
-     */
-    for (i = 0  ;  i < tag->otherFields.count  ;  ++i)
     {
-	const char *const label = tag->otherFields.label[i];
-	const char *const value = tag->otherFields.value[i];
-
-	if (label != NULL)
-	    length += fprintf(TagFile.fp, "%s%s:%s", separator,
-			      label, value == NULL ? "" : value);
+	if (tag->kindName == NULL)
+	{
+	    length += fprintf(TagFile.fp, "%s%s", prefix, tag->kindName);
+	    haveFlags = TRUE;
+	}
     }
+    else
+    {
+	if (tag->kind != '\0')
+	{
+	    length += fprintf(TagFile.fp, "%s%c", prefix, tag->kind);
+	    haveFlags = TRUE;
+	}
+    }
+    if (haveFlags)
+    {
+	const char *const separator = "\t";
+	unsigned int i;
 
+	if (tag->isFileScope)
+	    length += fprintf(TagFile.fp, "%sfile:", separator);
+
+	for (i = 0  ;  i < tag->otherFields.count  ;  ++i)
+	{
+	    const char *const label = tag->otherFields.label[i];
+	    const char *const value = tag->otherFields.value[i];
+
+	    if (label != NULL)
+		length += fprintf(TagFile.fp, "%s%s:%s", separator,
+				  label, value == NULL ? "" : value);
+	}
+    }
     return length;
 }
 
@@ -832,22 +847,27 @@ static int writeCtagsEntry( tag )
 extern void makeTagEntry( tag )
     const tagEntryInfo *const tag;
 {
-    int length = 0;
-
-    DebugStatement( debugEntry(tag); )
-
-    if (Option.xref)
-    {
-	if (! tag->isFileEntry)
-	    length = writeXrefEntry(tag);
-    }
-    else if (Option.etags)
-	length = writeEtagsEntry(tag);
+    Assert(tag->name != NULL);
+    if (tag->name[0] == '\0')
+	error(WARNING, "ignoring null tag");
     else
-	length = writeCtagsEntry(tag);
+    {
+	int length = 0;
 
-    ++TagFile.numTags.added;
-    rememberMaxLengths(strlen(tag->name), (size_t)length);
+	DebugStatement( debugEntry(tag); )
+	if (Option.xref)
+	{
+	    if (! tag->isFileEntry)
+		length = writeXrefEntry(tag);
+	}
+	else if (Option.etags)
+	    length = writeEtagsEntry(tag);
+	else
+	    length = writeCtagsEntry(tag);
+
+	++TagFile.numTags.added;
+	rememberMaxLengths(strlen(tag->name), (size_t)length);
+    }
 }
 
 extern void initTagEntry( e, name )
@@ -862,8 +882,8 @@ extern void initTagEntry( e, name )
     e->truncateLine	= FALSE;
     e->sourceFileName	= getFileName();
     e->name		= name;
-    e->kindName		= "";
-    e->kind		= ' ';
+    e->kindName		= NULL;
+    e->kind		= '\0';
     e->otherFields.count = 0;
     e->otherFields.label = NULL;
     e->otherFields.value = NULL;

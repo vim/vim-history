@@ -1,0 +1,53 @@
+*workshop.txt*  For Vim version 6.0d.  Last change: 2000 Jul 07
+
+
+		  VIM REFERENCE MANUAL    by Gordon Prieur
+
+
+Sun Visual WorkShop Features				*workshop-support*
+
+1. Introduction					|workshop-intro|
+2. Commands					|workshop-commands|
+3. Compiling vim/gvim with glyphs		|workshop-compiling|
+4. Installing in a Visual WorkShop release tree	|workshop-install|
+
+{Vi does not have any of these features}
+
+==============================================================================
+1. Introduction						*workshop-intro*
+
+Sun's Visual WorkShop has an "Editor of Choice" feature designed to let users
+debug using their favorite editors. For the 6.0 release we have added support
+for gvim. A workshop debug session will have a debugging window and an editor
+window (possibly others as well). The user can do many debugging operations
+from the editor window, minimizing the need to switch from window to window.
+
+The version of vim shipped with Sun Visual WorkShop 6 (also called Forte
+Developer 6) is vim 5.3. The features in this release are much more reliable
+than the vim/gvim shipped with Visual WorkShop. VWS users wishing to use vim
+as their editor should compile these sources and install them in their
+workshop release tree.
+
+==============================================================================
+2. Commands						*workshop-commands*
+
+:ws[verb] verb			Pass the verb to the verb executor
+
+Pass the verb to an workshop function which gathers some arguments and
+sends the verb and data to workshop over an IPC connection.
+
+==============================================================================
+3. Compiling vim/gvim for Sun's Visual WorkShop		*workshop-compiling*
+
+Compiling vim with USE_SUN_WORKSHOP turns on all compile time flags necessary
+for building a vim to work with Visual WorkShop. The features required for VWS
+have been built and tested using the Sun compilers from the VWS release. They
+have not been built or tested using Gnu compilers. This does not mean the
+features won't build and run if compiled with gcc, just that nothing is
+guaranteed with gcc!
+
+==============================================================================
+4. Installing in a Visual WorkShop release tree		*workshop-install*
+
+
+ vim:tw=78:

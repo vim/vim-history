@@ -1,7 +1,7 @@
 /*****************************************************************************
 *   $Id$
 *
-*   Copyright (c) 1996-1999, Darren Hiebert
+*   Copyright (c) 1996-2000, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.
@@ -13,7 +13,7 @@
 /*============================================================================
 =   Include files
 ============================================================================*/
-#include "general.h"
+#include "general.h"	/* must always come first */
 
 #include <string.h>
 
@@ -387,6 +387,20 @@ static void directiveLine( c )
 	else
 	    setSourceFileName(fileName);
 	setSourceFileLine(lNum - 1);		/* applies to NEXT line */
+
+	if (Option.include.fileNames && lNum == 1)
+	{
+	    tagEntryInfo tag;
+	    initTagEntry(&tag, baseFilename(vStringValue (fileName)));
+
+	    tag.isFileEntry	= TRUE;
+	    tag.lineNumberEntry = TRUE;
+	    tag.lineNumber	= 1;
+	    tag.kindName	= "file";
+	    tag.kind		= 'F';
+
+	    makeTagEntry(&tag);
+	}
     }
     Cpp.directive.state = DRCTV_NONE;
 }

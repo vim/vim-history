@@ -1,0 +1,24 @@
+*usr_02.txt*	For Vim version 6.0d.  Last change: 2000 Jul 07
+
+		     VIM USER MANUAL - by Bram Moolenaar
+		
+			    The first steps in Vim
+
+
+|02.1|	Opening a file
+
+     Next chapter: |usr_03.txt|  Moving around
+ Previous chapter: |usr_01.txt|  About the manual
+Table of contents: |usr_toc.txt|
+
+==============================================================================
+*02.1*	Opening a file
+
+It all starts by typing this command in your shell: >
+	vim foobar
+Where "foobar" is the name of the file you want to edit.
+
+TODO
+
+==============================================================================
+ vim:tw=78:

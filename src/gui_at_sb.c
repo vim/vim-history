@@ -485,7 +485,7 @@ CreateGC(w)
 		&width, &height, &bw, &depth) == 0)
 	{
 	    XtAppError (XtWidgetToApplicationContext (w),
-		 "Scrollbar Widget: Could not get geometry of thumb pixmap.");
+		 _("Scrollbar Widget: Could not get geometry of thumb pixmap."));
 	}
     }
 

@@ -1,4 +1,4 @@
-*os_beos.txt*	For Vim version 5.7.  Last change: 1999 Sep 14
+*os_beos.txt*	For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -38,12 +38,12 @@ instance (r,g,b)=(168,168,168)) with black letters also works nicely.  If you
 use the default light background and dark letters, it may look better to
 simply reverse the notion of foreground and background color settings. To do
 this, add this to your .vimrc file (where <Esc> may need to be replaced with
-the escape character):
+the escape character): >
 
->  if &term == "beos-ansi"
->      set t_AB=<Esc>[3%dm
->      set t_AF=<Esc>[4%dm
->  endif
+  :if &term == "beos-ansi"
+  :    set t_AB=<Esc>[3%dm
+  :    set t_AF=<Esc>[4%dm
+  :endif
 
 Compiling Vim						*beos-compiling*
 
@@ -167,18 +167,18 @@ Stuff that does not work yet:
 The $VIM directory
 
 $VIM is the symbolic name for the place where Vims support files are stored.
-The default value for $VIM is set at compile time and can be determined with
+The default value for $VIM is set at compile time and can be determined with >
 
->  :version
+  :version
 
 The normal value is /boot/home/config/share/vim. If you don't like it you can
 set the VIM environment variable to override this, or set 'helpfile' in your
-.vimrc:
+.vimrc: >
 
->  if version >= 500
->      set helpfile=~/vim/vim54/doc/help.txt
->      syntax on
->  endif
+  :if version >= 500
+  :    set helpfile=~/vim/vim54/doc/help.txt
+  :    syntax on
+  :endif
 
 Drag & Drop						*beos-dragndrop*
 
@@ -205,9 +205,9 @@ This section does not apply to the GUI-less version, should you compile one.
 
 Fonts							*beos-fonts*
 
-Set fonts with
+Set fonts with >
 
->  :set guifont=Courier10_BT/Roman/10
+  :set guifont=Courier10_BT/Roman/10
 
 where the first part is the font family, the second part the style, and the
 third part the size. You can use underscores instead of spaces in family and
@@ -219,9 +219,9 @@ work for proportional fonts (despite what the BeBook says).
 
 Vim also tries to use the B_ISO8859_1 encoding, also known as ISO Latin 1.
 This also does not work for all fonts. It does work for Courier, but not for
-ProFontISOLatin1/Regular (strangely enough). You can verify this by giving the
+ProFontISOLatin1/Regular (strangely enough). You can verify this by giving the >
 
->  :digraphs
+  :digraphs
 
 command, which lists a bunch of characters with their ISO Latin 1 encoding.
 If, for instance, there are "box" characters among them, or the last character
@@ -286,9 +286,9 @@ Compiling with Perl support enabled is slightly tricky. The Metrowerks
 compiler has some strange ideas where to search for include files. Since
 several include files with Perl have the same names as some Vim header
 files, the wrong ones get included. To fix this, run the following Perl
-script while in the vim-5.0/src directory:
+script while in the vim-5.0/src directory: >
 
->   preproc.pl > perl.h
+   preproc.pl > perl.h
 
     #!/bin/env perl
     # Simple #include expander, just good enough for the Perl header files.
@@ -349,4 +349,4 @@ I don't think this is an unreasonable limitation.
 <rhialto@polder.ubc.kun.nl>
 http://polder.ubc.kun.nl/~rhialto/be
 
- vim:ts=8:sw=8:tw=78:fo=tcq2:isk=!-~,^*,^\|,^\":
+ vim:tw=78:fo=tcq2:isk=!-~,^*,^\|,^\":

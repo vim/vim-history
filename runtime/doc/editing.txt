@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 5.7.  Last change: 2000 May 05
+*editing.txt*   For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -82,12 +82,12 @@ with 'backupext' set to "~").
 When writing the buffer, the default is to use the current file name.  Thus
 when you give the "ZZ" or ":wq" command, the original file will be
 overwritten.  If you do not want this, the buffer can be written into another
-file by giving a file name argument to the ":write" command.  For example:
+file by giving a file name argument to the ":write" command.  For example: >
 
->	vim testfile
->	[change the buffer with editor commands]
->	:w newfile
->	:q
+	vim testfile
+	[change the buffer with editor commands]
+	:w newfile
+	:q
 
 This will create a file "newfile", that is a modified copy of "testfile".
 The file "testfile" will remain unchanged.  Anyway, if the 'backup' option is
@@ -157,13 +157,13 @@ If you want to keep the changed buffer without saving it, switch on the
 			":q", ":qa" and ":w" commands (the latter to over-ride
 			a read-only setting).
 
-Examples:
->  :confirm w foo
-	Will ask for confirmation when "foo" already exists.
->  :confirm q
-	Will ask for confirmation when there are changes.
->  :confirm qa
-	If any modified, unsaved buffers exist, you will be prompted to save
+Examples: >
+  :confirm w foo
+<	Will ask for confirmation when "foo" already exists. >
+  :confirm q
+<	Will ask for confirmation when there are changes. >
+  :confirm qa
+<	If any modified, unsaved buffers exist, you will be prompted to save
 	or abandon each one.  There are also choices to "save all" or "abandon
 	all".
 
@@ -175,19 +175,19 @@ If you want to always use ":confirm", set the 'confirm' option.
 			":r", ":sp", ":mkexrc", ":mkvimrc" and ":mksession".
 			{only in Win32, Motif and Athena GUI}
 
-The syntax is best shown via some examples:
->	:browse e $vim/foo
-		Open the browser in the $vim/foo directory, and edit the
-		file chosen.
->	:browse e
-		Open the browser in the directory of the current buffer,
-		and edit the file chosen.
->	:browse w
-		Open the browser in the directory of the current buffer,
+The syntax is best shown via some examples: >
+	:browse e $vim/foo
+<		Open the browser in the $vim/foo directory, and edit the
+		file chosen. >
+	:browse e
+<		Open the browser in the directory of the current buffer,
+		and edit the file chosen. >
+	:browse w
+<		Open the browser in the directory of the current buffer,
 		with the current buffer filename as default, and save the
-		buffer under the filename chosen.
->	:browse w C:/bar
-		Open the browser in the C:/bar directory, with the current
+		buffer under the filename chosen. >
+	:browse w C:/bar
+<		Open the browser in the C:/bar directory, with the current
 		buffer filename as default, and save the buffer under the
 		filename chosen.
 Also see the |'browsedir'| option.
@@ -198,49 +198,71 @@ unmodified.
 2. Editing a file					*edit-a-file*
 
 							*:e* *:edit*
-:e[dit] [+cmd]		Edit the current file.  This is useful to re-edit the
+:e[dit] [++opt] [+cmd]	Edit the current file.  This is useful to re-edit the
 			current file, when it has been changed outside of Vim.
 			This fails when changes have been made to the current
-			buffer.  Also see |+cmd|.
+			buffer.  Also see |++opt| and |+cmd|. {Vi: no ++opt}
 
 							*:edit!*
-:e[dit]! [+cmd]		Edit the current file always.  Discard any changes to
+:e[dit]! [++opt] [+cmd]
+			Edit the current file always.  Discard any changes to
 			the current buffer.  This is useful if you want to
-			start all over again.  Also see |+cmd|.
+			start all over again.  Also see |++opt| and |+cmd|.
+			{Vi: no ++opt}
 
 							*:edit_f*
-:e[dit] [+cmd] {file}	Edit {file}.  This fails when changes have been made
+:e[dit] [++opt] [+cmd] {file}
+			Edit {file}.  This fails when changes have been made
 			to the current buffer, unless 'hidden' is set.  Also
-			see |+cmd|.
+			see |++opt| and |+cmd|. {Vi: no ++opt}
 
 							*:edit!_f*
-:e[dit]! [+cmd] {file}	Edit {file} always.  Discard any changes to the
-			current buffer.  Also see |+cmd|.
+:e[dit]! [++opt] [+cmd] {file}
+			Edit {file} always.  Discard any changes to the
+			current buffer.  Also see |++opt| and |+cmd|. {Vi: no
+			++opt}
 
-:e[dit] [+cmd] #[count]	Edit the [count]th alternate file name (as shown by
+:e[dit] [++opt] [+cmd] #[count]
+			Edit the [count]th alternate file name (as shown by
 			:files).  This command does the same as
 			[count] CTRL-^.  But ":e #" doesn't work if the
 			alternate buffer doesn't have a file name, while
-			CTRL-^ still works then.  Also see |+cmd|.
+			CTRL-^ still works then.  Also see |++opt| and |+cmd|.
+			{Vi: no ++opt}
+
+							*:ene* *:enew*
+:ene[w]			Edit a new, unnamed buffer.  This fails when changes
+			have been made to the current buffer, unless 'hidden'
+			is set.
+			If 'fileformats' is not empty, the first format given
+			will be used for the new buffer.  If 'fileformats' is
+			empty, the 'fileformat' of the current buffer is used.
+
+							*:ene!* *:enew!*
+:ene[w]!		Edit a new, unnamed buffer.  Discard any changes to
+			the current buffer.
+			Set 'fileformat' like |:enew|.
 
 							*:fin* *:find*
-:fin[d][!] [+cmd] {file}
-			Find {file} in 'path' and then ":edit" it.
+:fin[d][!] [++opt] [+cmd] {file}
+			Find {file} in 'path' and then |:edit| it.
 			{not in Vi} {not available when the |+file_in_path|
 			feature was disabled at compile time}
 
 							*:ex*
-:ex [+cmd] [file]	Same as :edit, but also switch to "Ex" mode.  See
+:ex [++opt] [+cmd] [file]
+			Same as |:edit|, but also switch to "Ex" mode.  See
 			|Ex-mode|.
 
 							*:vi* *:visual*
-:vi[sual][!] [+cmd] [file]
+:vi[sual][!] [++opt] [+cmd] [file]
 			When entered in Ex mode: Leave Ex mode, go back to
-			Normal mode.  Otherwise same as :edit.
+			Normal mode.  Otherwise same as |:edit|.
 
 							*:vie* *:view*
-:vie[w] [+cmd] file	When entered in Ex mode: Leave Ex mode, go back to
-			Normal mode.  Otherwise same as :edit, but set
+:vie[w] [++opt] [+cmd] file
+			When entered in Ex mode: Leave Ex mode, go back to
+			Normal mode.  Otherwise same as |:edit|, but set
 			'readonly' option for this buffer.  {not in Vi}
 
 							*CTRL-^*
@@ -259,18 +281,20 @@ unmodified.
 			Mnemonic: "goto file".
 			Uses the 'isfname' option to find out which characters
 			are supposed to be in a file name.
-			Uses the 'path' variable as a list of directory names
+			Uses the 'path' option as a list of directory names
 			to look for the file.  Also looks for the file
 			relative to the current file.
+			Uses the 'suffixesadd' option to check for file names
+			with a suffix added.
 			If a [count] is given, the count'th file that is found
 			in the 'path' is edited.
 			This command fails if Vim refuses to |abandon| the
 			current file.
-			If you do want to edit a new file, use:
->				:e <cfile>
-			To make gf always work like that:
->				:map gf :e <cfile><CR>
-			If the name is a hypertext link, that looks like
+			If you do want to edit a new file, use: >
+				:e <cfile>
+<			To make gf always work like that: >
+				:map gf :e <cfile><CR>
+<			If the name is a hypertext link, that looks like
 			"type://machine/path", only "/path" is used.
 			For Unix the '~' character is expanded, like in
 			"~user/file".  Environment variables are expanded too
@@ -292,8 +316,8 @@ allow file names with embedded spaces (like the Amiga).  Example: The command
 command that accepts more than one file name (like ":next file1 file2")
 embedded spaces must be escaped with a backslash.
 
-On Unix you can also use backticks in the file name, for example:
->	:e `find . -name ver\\*.c -print`
+On Unix you can also use backticks in the file name, for example: >
+	:e `find . -name ver\\*.c -print`
 The backslashes before the star are required to prevent "ver*.c" to be
 expanded by the shell before executing the find program.
 This also works for most other systems, with the restriction that the
@@ -303,6 +327,30 @@ directly before the first or just after the last backtick.
 You can use the ":e!" command if you messed up the buffer and want to start
 all over again.  The ":e" command is only useful if you have changed the
 current file name.
+
+							*++opt* *[++opt]*
+The [++opt] argument can be used to force the value of 'fileformat' or
+'filecharcode' to a value for one command.  The form is: >
+	++{optname}={value}
+
+Where {optname} is one of:
+    ff  or  fileformat	    overrides 'fileformat'
+    cc  or  charcode	    overrides 'filecharcode'
+
+{value} cannot contain white space.  It can be any valid value for these
+options.  Examples: >
+	:e ++ff=unix
+This edits the same file again with 'fileformat' set to "unix". >
+
+	:w ++cc=latin-1 newfile
+This writes the current buffer to "newfile" in latin-1 format.
+
+Note that when reading, the 'fileformat' and 'filecharcode' options will be
+set to the used format.  When writing this doesn't happen, thus a next write
+will use the old value of the option.
+
+There may be several ++opt arguments, separated by white space.  They must all
+appear before any |+cmd| argument.
 
 							*+cmd* *[+cmd]*
 The [+cmd] argument can be used to position the cursor in the newly opened
@@ -334,16 +382,16 @@ When writing a file, the mentioned characters are used for <EOL>.  For DOS
 format <CR><NL> is used.  Also see |DOS-format-write|.
 
 You can read a file in DOS format and write it in Unix format.  This will
-replace all <CR><NL> pairs by <NL> (assuming 'fileformats' includes "dos"):
->  :e file
->  :set 'fileformat'=unix
->  :w
+replace all <CR><NL> pairs by <NL> (assuming 'fileformats' includes "dos"): >
+	:e file
+	:set 'fileformat'=unix
+	:w
 If you read a file in Unix format and write with DOS format, all <NL>
 characters will be replaced with <CR><NL> (assuming 'fileformats' includes
-"unix"):
->  :e file
->  :set 'fileformat'=dos
->  :w
+"unix"): >
+	:e file
+	:set 'fileformat'=dos
+	:w
 
 If you start editing a new file and the 'fileformats' option is not empty
 (which is the default), Vim will try to detect whether the lines in the file
@@ -377,32 +425,143 @@ single <NL> characters are unexpectedly replaced with <CR><NL>.
 You can encrypt files that are written by setting the 'key' option.  This
 provides some security against others reading your files. |encryption|
 
+
+File Searching						*file-searching*
+
+{not available when compiled without the |+path_extra| feature}
+
+The file searching is currently used for the 'path', 'cdpath' and 'tags'
+options.  There are three different types of searching:
+
+1) Downward search:
+   Downward search uses the wildcards '*', '**' and possibly others
+   supported by your operating system. '*' and '**' are handled inside Vim, so
+   they work on all operating systems.
+
+   The usage of '*' is quite simple: It matches 0 or more characters.
+
+   '**' is more sophisticated:
+      - It ONLY matches directories.
+      - It matches up to 30  directories deep, so you can use it to search an
+	entire directory tree
+      - The maximum number of levels matched can be given by appending a number
+	to '**'.
+	Thus '/usr/**2' can match: >
+		/usr
+		/usr/include
+		/usr/include/sys
+		/usr/include/g++
+		/usr/lib
+		/usr/lib/X11
+		....
+<	I does NOT match '/usr/include/g++/std' as this would be three levels.
+	The allowed number range is 0 ('**0' is removed) to 255.
+	If the given number is smaller than 0 it defaults to 30, if it's bigger
+	than 255 it defaults to 255.
+      - '**' can only be at the end of the path or be followed by a path
+	separator or by a number and a path separator.
+
+   You can combine '*' and '**' in any order: >
+	/usr/**/sys/*
+	/usr/*/sys/**
+	/usr/**2/sys/*
+
+2) Upward search:
+   Here you can give a directory and then search the directory tree upward for
+   a file. You could give stop-directories to limit the upward search. The
+   stop-directories are appended to the path (for the 'path' option) or to
+   the filename (for the 'tags' option) with a ';'. If you want several
+   stop-directories separate them with ';'. If you want no stop-directory
+   ("search upward till the root directory) just use ';'. >
+	/usr/include/sys;/usr
+<   will search in: >
+	   /usr/include/sys
+	   /usr/include
+	   /usr
+<
+   If you use a relative path the upward search is started in Vims current
+   directory or in the directory of the current file (if the relative path
+   starts with './' and 'd' is not included in 'cpoptions').
+
+   If Vims current path is /u/user_x/work/release and you do >
+	:set path=include;/u/user_x
+<  and then search for a file with |gf| the file is searched in: >
+	/u/user_x/work/release/include
+	/u/user_x/work/include
+	/u/user_x/include
+
+3) Combined up/downward search
+   If Vims current path is /u/user_x/work/release and you do >
+	set path=**;/u/user_x
+<  and then search for a file with |gf| the file is searched in: >
+	/u/user_x/work/release/**
+	/u/user_x/work/**
+	/u/user_x/**
+<
+   BE CAREFULL! This might consume a lot of time, as the search of
+   '/u/user_x/**' includes '/u/user_x/work/**' and
+   '/u/user_x/work/release/**'.  So '/u/user_x/work/release/**' is searched
+   three and '/u/user_x/work/**' is searched two times.
+
+   In the above example you might want to set path to: >
+	:set path=**,/u/user_x/**
+<   This searches: >
+	/u/user_x/work/release/**
+	/u/user_x/**
+<   This searches the same directories, but in a different order.
+
 ==============================================================================
 3. The current directory				*current-directory*
+
+You may use the |:cd| and |:lcd| commands to change to another directory, so
+you will not have to type that directory name in front of the file names.  It
+also makes a difference for executing external commands, e.g. ":!ls".
 
 							*:cd*
 :cd			On non-Unix systems: Print the current directory
 			name.  On Unix systems: Change the current directory
-			to the home directory.
+			to the home directory.  Use |:pwd| to print the
+			current directory on all systems.
 
-:cd {path}		Change the current directory to {path}.  Does not
-			change the meaning of an already entered file name,
-			because its full path name is remembered.  On MS-DOS
-			this also changes the active drive.
+:cd {path}		Change the current directory to {path}.
+			If {path} is relative, it is searched for in the
+			directories listed in |'cdpath'|.
+			Does not change the meaning of an already opened file,
+			because its full path name is remembered.  Files from
+			the |arglist| may change though!
+			On MS-DOS this also changes the active drive.
 
 							*:cd-*
 :cd -			Change to the previous current directory (before the
-			previous ":cd {path}" command).
+			previous ":cd {path}" command). {not in Vi}
 
 							*:chd* *:chdir*
-:chd[ir] [path]		Same as :cd.
+:chd[ir] [path]		Same as |:cd|.
+
+							*:lc* *:lcd*
+:lc[d] {path}		Like |:cd|, but only set the current directory for the
+			current window.  The current directory for other
+			windows is not changed. {not in Vi}
+
+							*:lch* *:lchdir*
+:lch[dir]		Same as |:lcd|. {not in Vi}
 
 							*:pw* *:pwd*
 :pw[d]			Print the current directory name.  {Vi: no pwd}
 			Also see |getcwd()|.
 
-You may use the |:cd| command to get to another directory, so you will not
-have to type that directory name in front of the file names.  One warning:
+So long as no |:lcd| command has been used, all windows share the same current
+directory.  Using a command to jump to another window doesn't change anything
+for the current directory.
+When a |:lcd| command has been used for a window, the specified directory
+becomes the current directory for that window.  Windows where the |:lcd|
+command has not been used stick to the global current directory.  When jumping
+to another window the current directory will become the last specified local
+current directory.  If none was specified, the global current directory is
+used.
+When a |:cd| command is used, the current window will lose his local current
+directory and will use the global current directory from now on.
+
 After using |:cd| the full path name will be used for reading and writing
 files.  On some networked file systems this may cause problems.  The result of
 using the full path name is that the file names currently in use will remain
@@ -429,89 +588,104 @@ expression functions |argc()| and |argv()|.
 :ar[gs]			Print the argument list, with the current file in
 			square brackets.
 
-							*:argu* *:argument*
-:[count]argu[ment] [count] [+cmd]
-			Edit file [count] in the argument list.  This fails
-			when changes have been made and Vim does not want to
-			|abandon| the current buffer.  Also see |+cmd|.  {Vi:
-			no such command}
-
-:[count]argu[ment]! [count] [+cmd]
-			Edit file [count] in the argument list, discard any
-			changes to the current buffer.  Also see |+cmd|.  {Vi:
-			no such command}
-
-							*:n* *:ne* *:next*
-:[count]n[ext] [+cmd]	Edit [count] next file.  This fails when changes have
-			been made and Vim does not want to |abandon| the
-			current buffer.  Also see |+cmd|.  {Vi: no count}.
-
-:[count]n[ext]! [+cmd]	Edit [count] next file, discard any changes to the
-			buffer.  Also see |+cmd|.  {Vi: no count}.
-
-:ar[gs] [+cmd] {arglist}
-:n[ext] [+cmd] {arglist}
+:ar[gs] [++opt] [+cmd] {arglist}			*:args_f*
 			Define {arglist} as the new argument list and edit
 			the first one.  This fails when changes have been made
 			and Vim does not want to |abandon| the current buffer.
-			Also see |+cmd|.
+			Also see |++opt| and |+cmd|. {Vi: no ++opt}
 
-:ar[gs]! [+cmd] {arglist}
-:n[ext]! [+cmd] {arglist}				*:next_f*
+:ar[gs]! [++opt] [+cmd] {arglist}			*:args_f!*
 			Define {arglist} as the new argument list and edit
-			the first one.  Discard any changes to the buffer.
-			Also see |+cmd|.
+			the first one.  Discard any changes to the current
+			buffer.  Also see |++opt| and |+cmd|. {Vi: no ++opt}
 
-:[count]N[ext] [count] [+cmd]				*:Next* *:N*
+							*:argu* *:argument*
+:[count]argu[ment] [count] [++opt] [+cmd]
+			Edit file [count] in the argument list.  This fails
+			when changes have been made and Vim does not want to
+			|abandon| the current buffer.  Also see |++opt| and
+			|+cmd|.  {Vi: no such command}
+
+:[count]argu[ment]! [count] [++opt] [+cmd]
+			Edit file [count] in the argument list, discard any
+			changes to the current buffer.  Also see |++opt| and
+			|+cmd|.  {Vi: no such command}
+
+							*:n* *:ne* *:next*
+:[count]n[ext] [++opt] [+cmd]	
+			Edit [count] next file.  This fails when changes have
+			been made and Vim does not want to |abandon| the
+			current buffer.  Also see |++opt| and |+cmd|.  {Vi: no
+			count or ++opt}.
+
+:[count]n[ext]! [++opt] [+cmd]
+			Edit [count] next file, discard any changes to the
+			buffer.  Also see |++opt| and |+cmd|.  {Vi: no count
+			or ++opt}.
+
+:n[ext] [++opt] [+cmd] {arglist}			*:next_f*
+			Same as |:args_f|.
+
+:n[ext]! [++opt] [+cmd] {arglist}
+			Same as |:args_f!|.
+
+:[count]N[ext] [count] [++opt] [+cmd]			*:Next* *:N*
 			Edit [count] previous file in argument list.  This
 			fails when changes have been made and Vim does not
 			want to |abandon| the current buffer.
-			Also see |+cmd|.  {Vi: no count}.
+			Also see |++opt| and |+cmd|.  {Vi: no count or ++opt}.
 
-:[count]N[ext]! [count] [+cmd]
+:[count]N[ext]! [count] [++opt] [+cmd]
 			Edit [count] previous file in argument list.  Discard
-			any changes to the buffer.  Also see |+cmd|.  {Vi: no
-			count}.
+			any changes to the buffer.  Also see |++opt| and
+			|+cmd|.  {Vi: no count or ++opt}.
 
-:[count]prev[ious] [count] [+cmd]			*:prev* *:previous*
-			Same as :Next.  Also see |+cmd|.  {Vi: only in some
-			versions}
+:[count]prev[ious] [count] [++opt] [+cmd]		*:prev* *:previous*
+			Same as :Next.  Also see |++opt| and |+cmd|.  {Vi:
+			only in some versions}
 
 							*:rew* *:rewind*
-:rew[ind] [+cmd]	Start editing the first file in the argument list.
+:rew[ind] [++opt] [+cmd]
+			Start editing the first file in the argument list.
 			This fails when changes have been made and Vim does
 			not want to |abandon| the current buffer.
-			Also see |+cmd|.
+			Also see |++opt| and |+cmd|. {Vi: no ++opt}
 
-:rew[ind]! [+cmd]	Start editing the first file in the argument list.
-			Discard any changes to the buffer.  Also see |+cmd|.
+:rew[ind]! [++opt] [+cmd]
+			Start editing the first file in the argument list.
+			Discard any changes to the buffer.  Also see |++opt|
+			and |+cmd|. {Vi: no ++opt}
 
 							*:la* *:last*
-:la[st] [+cmd]		Start editing the last file in the argument list.
+:la[st] [++opt] [+cmd]
+			Start editing the last file in the argument list.
 			This fails when changes have been made and Vim does
 			not want to |abandon| the current buffer.
-			Also see |+cmd|.  {not in Vi}
+			Also see |++opt| and |+cmd|.  {not in Vi}
 
-:la[st]! [+cmd]		Start editing the last file in the argument list.
-			Discard any changes to the buffer.  Also see |+cmd|.
-			{not in Vi}
+:la[st]! [++opt] [+cmd]
+			Start editing the last file in the argument list.
+			Discard any changes to the buffer.  Also see |++opt|
+			and |+cmd|.  {not in Vi}
 
 							*:wn* *:wnext*
-:[count]wn[ext] [+cmd]	Write current file and start editing the [count]
-			next file.  Also see |+cmd|.  {not in Vi}
+:[count]wn[ext] [++opt] [+cmd]
+			Write current file and start editing the [count]
+			next file.  Also see |++opt| and |+cmd|.  {not in Vi}
 
-:[count]wn[ext] [+cmd] {file}
+:[count]wn[ext] [++opt] [+cmd] {file}
 			Write current file to {file} and start editing the
 			[count] next file, unless {file} already exists and
-			the 'writeany' option is off.  Also see |+cmd|.  {not
+			the 'writeany' option is off.  Also see |++opt| and
+			|+cmd|.  {not in Vi}
+
+:[count]wn[ext]! [++opt] [+cmd] {file}
+			Write current file to {file} and start editing the
+			[count] next file.  Also see |++opt| and |+cmd|.  {not
 			in Vi}
 
-:[count]wn[ext]! [+cmd] {file}
-			Write current file to {file} and start editing the
-			[count] next file.  Also see |+cmd|.  {not in Vi}
-
-:[count]wN[ext][!] [+cmd] [file]			*:wN* *:wNext*
-:[count]wp[revous][!] [+cmd] [file]			*:wp* *:wprevious*
+:[count]wN[ext][!] [++opt] [+cmd] [file]		*:wN* *:wNext*
+:[count]wp[revous][!] [++opt] [+cmd] [file]		*:wp* *:wprevious*
 			Same as :wnext, but go to previous file instead of
 			next.  {not in Vi}
 
@@ -527,8 +701,8 @@ first line (the last line in Ex mode).
 The wildcards in the argument list are expanded and the file names are sorted.
 Thus you can use the command "vim *.c" to edit all the C files.  From within
 Vim the command ":n *.c" does the same.  On Unix you can also use backticks,
-for example:
->	:n `find . -name \\*.c -print`
+for example: >
+	:n `find . -name \\*.c -print`
 The backslashes before the star are required to prevent "*.c" to be expanded
 by the shell before executing the find program.
 
@@ -657,6 +831,10 @@ ask if you really want to overwrite the file:
 If you hit 'y' Vim will continue writing the file.  If you hit 'n' the write is
 aborted.  If you used ":wq" or "ZZ" Vim will not exit, you will get another
 chance to write the file.
+
+If you want to automatically reload a file when it has been changed outside of
+Vim, set the 'autoread' option.  This doesn't work at the moment you write the
+file though, only when the file wasn't changed inside of Vim.
 
 Alternatively, after a shell command is run (|:!cmd| |suspend| |:read!| |K|)
 ALL timestamps are compared.   Vim will run any associated |FileChangedShell|
@@ -798,8 +976,8 @@ is not empty, the written file will be encrypted, using the value as the
 encryption key.  A magic number is prepended, so that Vim can recognize that
 the file is encrypted.
 
-To disable the encryption, reset the 'key' option to an empty value:
->	:set key=
+To disable the encryption, reset the 'key' option to an empty value: >
+	:set key=
 
 When reading a file that has been encrypted and this option is not empty, it
 will be used for decryption.  If the value is empty, you will be prompted to
@@ -816,8 +994,8 @@ never be viewed.  You should not set this option in a vimrc file.
 
 An encrypted file can be recognized by the "file" command, if you add this
 line to "/etc/magic", "/usr/share/misc/magic" or wherever your system has the
-"magic" file:
->     0	string	VimCrypt~	Vim encrypted file
+"magic" file: >
+     0	string	VimCrypt~	Vim encrypted file
 
 Notes:
 - Text you copy or delete goes to the numbered registers.  The registers can
@@ -839,4 +1017,4 @@ Notes:
 - Vim originates from the Netherlands.  That is where the sources come from.
   Thus the encryption code is not exported from the USA.
 
- vim:tw=78:ts=8:sw=8:
+ vim:tw=78:

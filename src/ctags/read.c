@@ -1,7 +1,7 @@
 /*****************************************************************************
 *   $Id$
 *
-*   Copyright (c) 1996-1999, Darren Hiebert
+*   Copyright (c) 1996-2000, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.
@@ -13,34 +13,21 @@
 /*============================================================================
 =   Include files
 ============================================================================*/
-#include "general.h"
+#include "general.h"	/* must always come first */
 
 #include <string.h>
 
-#include "ctags.h"
 #define FILE_WRITE
 #include "read.h"
-
+#include "debug.h"
 #include "entry.h"
 #include "main.h"
 #include "options.h"
-#include "debug.h"
-
-/*============================================================================
-=   Data declarations
-============================================================================*/
-
-typedef struct sLangTab {
-    const char *extension;
-    langType language;
-} langTab;
 
 /*============================================================================
 =   Data definitions
 ============================================================================*/
-
 inputFile File;			/* globally read through macros */
-
 static fpos_t StartOfLine;	/* holds deferred position of start of line */
 
 /*============================================================================
@@ -181,7 +168,7 @@ extern boolean fileOpen( fileName, language )
     const char *const fileName;
     const langType language;
 {
-#ifdef __vms
+#ifdef VMS
     const char *const openMode = "r";
 #else
     const char *const openMode = "rb";
@@ -207,6 +194,7 @@ extern boolean fileOpen( fileName, language )
 	fgetpos(File.fp, &StartOfLine);
 	fgetpos(File.fp, &File.filePosition);
 	File.lineNumber   = 0L;
+	File.eof          = FALSE;
 	File.newLine      = TRUE;
 	File.language     = language;
 
@@ -223,6 +211,11 @@ extern boolean fileOpen( fileName, language )
 	}
     }
     return opened;
+}
+
+extern boolean fileEOF()
+{
+    return File.eof;
 }
 
 extern void fileClose()
@@ -278,7 +271,9 @@ extern int fileGetc()
     if (File.newLine  &&  c != EOF)
 	fileNewline();
 
-    if (c == NEWLINE)
+    if (c == EOF)
+	File.eof = TRUE;
+    else if (c == NEWLINE)
     {
 	File.newLine = TRUE;
 	fgetpos(File.fp, &StartOfLine);
@@ -306,6 +301,29 @@ extern void fileUngetc( c )
     int c;
 {
     File.ungetch = c;
+}
+
+/*  An alternative interface to fileGetc(). A NULL return value means that all
+ *  lines in the file have been read and we are at the end of file.
+ */
+extern char *fileReadLine( vLine )
+    vString *const vLine;
+{
+    char *line = NULL;
+    int c = fileGetc();
+    vStringClear(vLine);
+    if (c != EOF)
+    {
+	while (c != '\n' && c != EOF)
+	{
+	    vStringPut(vLine, c);
+	    c = fileGetc();
+	}
+	vStringTerminate(vLine);
+	line = vStringValue(vLine);
+    }
+    Assert(line != NULL  ||  File.eof);
+    return line;
 }
 
 /*  Places into the line buffer the contents of the line referenced by

@@ -1,4 +1,4 @@
-*version5.txt*  For Vim version 5.7.  Last change: 2000 Jun 24
+*version5.txt*  For Vim version 6.0d.  Last change: 2000 Jul 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -136,14 +136,14 @@ What does this mean?
 - If you prefer to run in 'nocompatible' mode and do have a vimrc file, you
   don't have to do anything.
 - If you prefer to run in 'compatible' mode and do have a vimrc file, you
-  should put this line first in your vimrc file:
->	:set compatible
+  should put this line first in your vimrc file: >
+	:set compatible
 - If you prefer to run in 'nocompatible' mode and don't have a vimrc file,
   you can do one of the following:
     - Create an empty vimrc file (e.g.: "~/.vimrc" for Unix).
-    - Put this command in your .exrc file or $EXINIT:
->		:set nocompatible
-    - Start Vim with the "-N" argument.
+    - Put this command in your .exrc file or $EXINIT: >
+		:set nocompatible
+<   - Start Vim with the "-N" argument.
 
 If you are new to Vi and Vim, using 'nocompatible' is strongly recommended,
 because Vi has a lot of unexpected side effects, which are avoided by this
@@ -163,22 +163,22 @@ specifies.  The command for this is now "gq" (see |gq| for more info).  The
 reason for this change is that "Q" is the standard Vi command to enter "Ex"
 mode, and Vim now does in fact have an "Ex" mode (see |Q| for more info).
 
-If you still want to use "Q" for formatting, use this mapping:
->	:noremap Q gq
-And if you also want to use the functionality of "Q":
->	:noremap gQ Q
+If you still want to use "Q" for formatting, use this mapping: >
+	:noremap Q gq
+And if you also want to use the functionality of "Q": >
+	:noremap gQ Q
 
 
 Command-line arguments changed				*cmdline-changed*
 ------------------------------
 
 Command-line file-arguments and option-arguments can now be mixed.  You can
-give options after the file names.  Example:
->  vim main.c -g
+give options after the file names.  Example: >
+   vim main.c -g
 
 This is not possible when editing a file that starts with a '-'.  Use the "--"
-argument then |---|:
->  vim -g -- -main.c
+argument then |---|: >
+   vim -g -- -main.c
 
 "-v" now means to start Ex in Vi mode, use "-R" for read-only mode.
 old: "vim -v file"	|-v|
@@ -215,22 +215,22 @@ file twice, the autocommands in it will be defined twice.  To avoid this, do
 one of these:
 
 - Remove any autocommands that might potentially defined twice before
-  defining them.  Example:
->	:au! * *.ext
->	:au BufEnter *.ext ...
+  defining them.  Example: >
+	:au! * *.ext
+	:au BufEnter *.ext ...
 
-- Put the autocommands inside an ":if" command.  Example:
->	if !exists("did_ext_autocmds")
->	  let did_ext_autocmds = 1
->	  autocmd BufEnter *.ext ...
->	endif
+- Put the autocommands inside an ":if" command.  Example: >
+	if !exists("did_ext_autocmds")
+	  let did_ext_autocmds = 1
+	  autocmd BufEnter *.ext ...
+	endif
 
 - Put your autocommands in a different autocommand group so you can remove
-  them before defining them |:augroup|:
->	augroup uncompress
->	  au!
->	  au BufReadPost *.gz ...
->	augroup END
+  them before defining them |:augroup|: >
+	augroup uncompress
+	  au!
+	  au BufReadPost *.gz ...
+	augroup END
 
 
 Use of 'hidden' changed					*hidden-changed*
@@ -316,8 +316,8 @@ Only Tabs are allowed to separate fields in a tags file.  This allows for
 spaces in a file name and is still Vi compatible.  In previous versions of
 Vim, any white space was allowed to separate the fields.  If you have a file
 which doesn't use a single Tab between fields, edit the tags file and execute
-this command:
->	:%s/\(\S*\)\s\+\(\S*\)\s\+\(.*\)/\1\t\2\t\3/
+this command: >
+	:%s/\(\S*\)\s\+\(\S*\)\s\+\(.*\)/\1\t\2\t\3/
 
 
 Options changed						*options-changed*
@@ -349,8 +349,8 @@ toggle the 'revins' option.  Unfortunately, some people hit the 'B' key
 accidentally when trying to type CTRL-V or CTRL-N and then didn't know how to
 undo this.  Since toggling the 'revins' option can easily be done with the
 mapping below, this use of the CTRL-B key is disabled.  You can still use the
-CTRL-_ key for this |i_CTRL-_|.
->  :imap <C-B> <C-O>:set revins!<CR>
+CTRL-_ key for this |i_CTRL-_|. >
+   :imap <C-B> <C-O>:set revins!<CR>
 
 ==============================================================================
 				 NEW FEATURES
@@ -359,8 +359,8 @@ Syntax highlighting					*new-highlighting*
 -------------------
 
 Vim now has a very flexible way to highlighting just about any type of file.
-See |syntax|.  Summary:
->  :syntax on
+See |syntax|.  Summary: >
+   :syntax on
 
 Colors and attributes can be set for the syntax highlighting, and also for
 other highlighted items with the ':' flag in the 'highlight' option.  All
@@ -445,8 +445,8 @@ Read input from stdin					*read-stdin*
 ---------------------
 
 When using the "-" command-line argument, Vim reads its text input from stdin.
-This can be used for putting Vim at the end of a pipe:
->  grep "^a.*" *.c | vim -
+This can be used for putting Vim at the end of a pipe: >
+   grep "^a.*" *.c | vim -
 See |--|.
 
 
@@ -3150,7 +3150,7 @@ Filetype introduced					*new-filetype-5.4*
 -------------------
 
 Syntax files are now loaded with the new FileType autocommand.  Old
-"mysyntaxfile" files will no longer work. |autocmd-filetypes|
+"mysyntaxfile" files will no longer work. |filetypes|
 
 The scripts for loading syntax highlighting have been changed to use the
 new Syntax autocommand event.
@@ -3184,13 +3184,13 @@ Vim script line continuation			*new-line-continuation*
 
 When an Ex line starts with a backslash, it is concatenated to the previous
 line.  This avoids the need for long lines. |line-continuation| (Roemer)
-Example:
->	if   has("dialog_con") ||
->	   \ has("dialog_gui")
->	    :let result = confirm("Enter your choice",
->				\ "&Yes\n&No\n&Maybe",
->				\ 2)
->	endif
+Example: >
+	if   has("dialog_con") ||
+	   \ has("dialog_gui")
+	    :let result = confirm("Enter your choice",
+				\ "&Yes\n&No\n&Maybe",
+				\ 2)
+	endif
 
 
 Improved session files				*improved-sessions*
@@ -7455,4 +7455,4 @@ Solution:   Only set the geometry hints when the window size really changed.
 	    Don't redraw in expose_event() when gui.starting is still set.
 Files:	    src/gui_gtk_x11.c
 
- vim:ts=8:sw=8:tw=78:
+ vim:tw=78:

@@ -1,0 +1,164 @@
+INSTALLvms.txt - Installation of Vim on OpenVMS
+
+This file contains instructions for compiling Vim. If you already have an
+executable version of Vim, you don't need this.
+
+The file "feature.h" can be edited to match your preferences. You can skip
+this, then you will get the default behavior as is documented, which should
+be fine for most people.
+
+More information and case analysis you can found in os_vms.txt
+([runtime.doc]os_vms.txt or :help vms from vim prompt)
+
+Contents:
+1. Download files 
+2. Configuration
+3. Compilation DECC
+4. Compilation VAXC
+5. CTAGS, XXD
+6. Deployment
+7. Authors
+
+----------------------------------------------------------------------------
+1. Download files
+
+1.1. Visit the Vim ftp site (see ftp://ftp.vim.org/pub/vim/MIRRORS)
+     and obtain the following three files:
+
+     unix/vim-X.X-src.tar.gz
+     unix/vim-X.X-rt.tar.gz
+     extra/vim-X.X-extra.tar.gz
+
+     where X.X is the version number.
+
+1.2. Expand the three archives.
+
+1.3. Apply patches if they exist.  (Patch files are found in the ftp
+     site in the "patches" directory.)
+
+1.4. You will need either the DECSET mms utility or the freely available clone 
+     of it called mmk (VMS has no make utility in the standard distribution). 
+     You can download mmk from http://www.openvms.digital.com/freeware/MMK/
+ 
+1.5. If you want to have Perl, Python or Tcl support in Vim you will need VMS
+     distributions for them as well.
+
+2.   Configuration
+
+2.1. Edit vim-X.X/src/feature.h for your preference.  (You can skip
+     this, then you will get the default behavior as is documented,
+     which should be fine for most people.)
+
+     For example, if you want to add the MULTI_BYTE feature, turn on
+     #define MULTI_BYTE
+
+2.2  Edit vim-X.X/src/Make_vms.mms to customize your Vim. Options are:
+     
+        Parameter name  : GUI        
+        Description     : GUI or terminal mode executable 
+        Options:        : YES - GUI executable
+                          Uncommented - char only
+        Default         : GUI = YES
+            
+        Parameter name  : DECC       
+        Description     : Compiler selection
+        Options:        : YES - DECC compiler
+                          Uncommented - VAXC compiler
+        Default         : DECC = YES
+
+        Parameter name  : CCVER      
+        Description     : Compiler version with :ver command      
+        Options:        : YES - Compiler version info will be added
+                          Uncommented - will not be added
+        Default         : CCVER = YES
+
+        Parameter name  : DEVELOPMENT
+        Description     : Used to fix dependencies problem during development.
+        Options:        : YES - Ignore some dependencies 
+                          Uncommented - normal building
+        Default         : Uncommented
+
+        Parameter name  : DEBUG
+        Description     : Building a debug version
+        Options:        : YES - debug version will be built
+                          Uncommented - building normal executable 
+        Default         : Uncommented
+
+        Parameter name  : VIM_TCL
+        Description     : Add Tcl support
+        Options:        : YES - Build with support
+                          Uncommented - build without support.
+        Default         : Uncommented
+
+        Parameter name  : VIM_PERL
+        Description     : Add Perl support
+        Options:        : YES - Build with support
+                          Uncommented - build without support.
+        Default         : Uncommented
+        
+        Parameter name  : VIM_PYTHON
+        Description     : Add Python support
+        Options:        : YES - Build with support
+                          Uncommented - build without support.
+        Default         : Uncommented
+
+     You can edit the *_INC_DIR and *_LIB_DIR qualifiers, but it is really
+     not recommended for beginners.
+
+3. Compilation DECC
+
+3.1. If you have MSS on your system, the command
+
+        mms /descrip=Make_vms.mms
+
+     will start building your own customized version of Vim.
+     The adequate command for mmk is:
+
+        mmk /descrip=Make_vms.mms
+
+4. Compilation VAXC
+
+4.1. VAXC compiler is not fully ANSI C compatible in pre-processor directives
+     semantics, therefore you have to use a converter program what will do the
+     lion part of the job.
+
+        @os_vms_fix.com *.c *.h <.proto>*.pro
+
+     more information can be found in os_vms_fix.com file itself.
+
+4.2. After the conversion you can continue building as it has been described
+     above.
+
+5. CTAGS, XXD
+
+5.1. MMS_VIM.EXE is building together with VIM.EXE, but for CTAGS.EXE and 
+     XXD.EXE you should change to subdirectory <.CTAGS> or <.XXD> and build 
+     them separately.
+
+5.2. In these directories you can found one make file for VMS as well.
+     Please read the detailed build instructions in the related *.MMS file.
+
+6.   Deployment
+
+6.1. Copy over all executables to the deployment directory.
+
+6.2. Vim uses a special directory structure to hold the document and runtime
+     files:
+
+   vim (or wherever)
+    |-- doc
+    |-- syntax
+    vimrc    (system rc files)
+    gvimrc
+
+6.3 Define logicals VIM
+
+        define/nolog device:[leading-path-here.vim]       vim
+
+     to get vim.exe to find its document, filetype, and syntax files.
+
+Now, if you are lucky you should have one own built, customized and working Vim.
+
+7.   Authors
+
+     Initial version, 2000 Jul 19, Zoltan Arpadffy <arpadffy@altavista.net> 

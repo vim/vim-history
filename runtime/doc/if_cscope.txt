@@ -1,4 +1,4 @@
-*if_cscope.txt* For Vim version 5.7.  Last change: 2000 May 06
+*if_cscope.txt* For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Andy Kahn
@@ -183,7 +183,7 @@ command, |:cscope|.  The available subcommands are:
 
 	    USAGE   :cs help
 
-    kill  : Kill a cscope connection.
+    kill  : Kill a cscope connection (or kill all cscope connections).
 
 	    USAGE   :cs kill {num|partial_name}
 
@@ -191,6 +191,9 @@ command, |:cscope|.  The available subcommands are:
 	    name must be specified.  The partial name is simply any part of
 	    the pathname of the cscope database.  Kill a cscope connection
 	    using the partial name with caution!
+
+	    If the specified connection number is -1, then _ALL_ cscope
+	    connections will be killed.
 
     reset : Reinit all cscope connections.
 
@@ -225,35 +228,35 @@ started will have no effect!
 
 							*cscopeprg* *csprg*
 'cscopeprg' specifies the command to execute cscope.  The default is
-"cscope".  For example:
->	:set csprg=/usr/local/bin/cscope
-
+"cscope".  For example: >
+	:set csprg=/usr/local/bin/cscope
+<
 							*cscopetag* *cst*
 If 'cscopetag' set, the commands ":tag" and CTRL-] as well as "vim -t" will
 always use |:cstag| instead of the default :tag behavior.  Effectively, by
 setting 'cst', you will always search your cscope databases as well as your
-tag files.  The default is off.  Examples:
->	:set cst
->	:set nocst
-
+tag files.  The default is off.  Examples: >
+	:set cst
+	:set nocst
+<
 							*cscopetagorder* *csto*
 The value of 'csto' determines the order in which |:cstag| performs a search.
 If 'csto' is set to zero, cscope database(s) are searched first, followed
 by tag file(s) if cscope did not return any matches.  If 'csto' is set to
 one, tag file(s) are searched before cscope database(s).  The default is zero.
-Examples:
->	:set csto=0
->	:set csto=1
-
+Examples: >
+	:set csto=0
+	:set csto=1
+<
 							*cscopeverbose* *csverb*
 If 'cscopeverbose' not set (the default), messages will not be printed
 indicating success or failure when adding a cscope database.  Ideally, you
 should reset this option in your |.vimrc| before adding any cscope databases,
 and after adding them, set it.  From then on, when you add more databases
 within Vim, you will get a (hopefully) useful message should the database fail
-to be added.  Examples:
->	:set csverb
->	:set nocsverb
+to be added.  Examples: >
+	:set csverb
+	:set nocsverb
 
 ==============================================================================
 4. How to use cscope in Vim				*cscope-howtouse*
@@ -381,4 +384,4 @@ bit of code) was adapted from the cscope interface in nvi.  Please report
 any problems, suggestions, patches, et al., you have for the usage of
 cscope within Vim to him.
 
- vim:tw=78:ts=8:sw=8:
+ vim:tw=78:

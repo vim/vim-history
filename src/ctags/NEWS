@@ -1,4 +1,38 @@
-Current Version: 3.5.1
+Current Version: 4.0
+
+ctags-4.0 (Thu Jun 22 2000)
+* Fixed infinite loop on certain syntactically invalid class constructs [C++].
+* Fixed problem of incorrect tags for some pure virtual functions [C++].
+* Fixed inability to clear all tag types when using --c-types= (all languages).
+* Fixed problem of arguments to parameterized class being reported as
+  ancestors in the "inherits" extension flag.
+* Fixed missed tags for typedef-ed function pointers having a PROTO((a,b))
+  style argument list.
+* Fixed missing file tags for referenced files when using --line-directives
+  option [C/C++].
+* Fixed failure to recognize drive-qualified file name as a file name when
+  supplied as argument to -I option [Win32].
+* Fixed problem with missing comma in "inherits" extension flag [Java].
+* Fixed problem with incorrect or redundant parents listed for "inherits"
+  extension flag [Java].
+* Added check to avoid recursive symbolic links to directories.
+* Added warning message for -i option, which is deprecated and being dropped.
+* Added support for Assembler, COBOL, LISP, PERL, and Scheme, taken from Gnu
+  etags.
+* Added support for AWK, Bourne Shell, Python, TCL, and Vim scripts.
+* Added support for the BETA language, submitted by Erik Corry.
+* Added ability to determine language from interpreter specified in first line
+  of executable files if they are not recognized by their extension.
+* Added --options option.
+* Added ability to specify files having no extension with -h and --langmap
+  options.
+* Added compile time option to separate path components with a unix-style path
+  separator for sharing tag file across platforms, enabled by defining the
+  label UNIX_PATH_SEPARATOR [Win32].
+* Fixed portability issues [VMS].
+
+ctags-3.5.2 (Mon Apr 24 2000)
+* Fixed problem preventing Emacs-style tags from being written to stdout.
 
 ctags-3.5.1 (Sun Apr 23 2000)
 * Fixed infinite loop in writing Emacs-style TAGS file on platforms using

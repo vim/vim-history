@@ -32,7 +32,7 @@ extern void	sync __ARGS((void));
 extern uid_t	getuid __ARGS((void));
 extern gid_t	getgid __ARGS((void));
 extern int	creat __ARGS((char *, int));
-extern int	qsort __ARGS((void *, size_t, size_t, int (*)(void *, void *)));
+extern void	qsort __ARGS((void *, size_t, size_t, int (*)(const void *, const void *)));
 
 extern int	isatty __ARGS((int));
 extern int	getpid __ARGS((void));

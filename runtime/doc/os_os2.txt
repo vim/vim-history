@@ -1,4 +1,4 @@
-*os_os2.txt*    For Vim version 5.7.  Last change: 1999 Sep 14
+*os_os2.txt*    For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Paul Slootman
@@ -70,9 +70,9 @@ without any settings.
 
 If you put the runtime files separately from the binary, the VIM environment
 variable is used to find the location of the help files and the system .vimrc.
-Place an entry such as this in CONFIG.SYS:
+Place an entry such as this in CONFIG.SYS: >
 
-> SET VIM=c:/local/lib/vim
+  SET VIM=c:/local/lib/vim
 
 Put your .vimrc and your other Vim files in this directory.  Copy the runtime
 directory to this directory.  Each version of Vim has its own runtime
@@ -165,15 +165,15 @@ in the default 25-line mode.  To get a more useful window size I make
 my external editor "vimbig.cmd" which in turn calls "vimbig2.cmd".
 Brute force and awkwardness, perhaps, but it works.
 
-vimbig.cmd:
->  @echo off
->  start "Vi Improved" /f vimbig2.cmd %1 %2 %3 %4
+vimbig.cmd: >
+   @echo off
+   start "Vi Improved" /f vimbig2.cmd %1 %2 %3 %4
 
-vimbig2.cmd:
->  @echo off
->  mode 80,43
->  vim.exe %1 %2 %3 %4
->  exit
+vimbig2.cmd: >
+   @echo off
+   mode 80,43
+   vim.exe %1 %2 %3 %4
+   exit
+<
 
-
- vim:ts=8:sw=8:tw=78:
+ vim:tw=78:

@@ -13,39 +13,45 @@
 
 #include "vim.h"
 
-#ifdef WANT_MENU
+#ifdef FEAT_MENU
 
 #define MENUDEPTH   10		/* maximum depth of menus */
 
-#ifdef USE_GUI_WIN32
+#ifdef FEAT_GUI_W32
 static int add_menu_path __ARGS((char_u *, int, int *, void (*)(), char_u *, int, int));
 #else
-# ifdef USE_GUI
+# ifdef FEAT_GUI
 static int add_menu_path __ARGS((char_u *, int, int *, void (*)(), char_u *, int));
 # else
 static int add_menu_path __ARGS((char_u *, int, int *, char_u *, int));
 # endif
 #endif
-static int remove_menu __ARGS((VimMenu **, char_u *, int, int silent));
-static void free_menu __ARGS((VimMenu **menup));
-static void free_menu_string __ARGS((VimMenu *, int));
+static int menu_nable_recurse __ARGS((vimmenu_t *menu, char_u *name, int modes, int enable));
+static int remove_menu __ARGS((vimmenu_t **, char_u *, int, int silent));
+static void free_menu __ARGS((vimmenu_t **menup));
+static void free_menu_string __ARGS((vimmenu_t *, int));
 static int show_menus __ARGS((char_u *, int));
-static void show_menus_recursive __ARGS((VimMenu *, int, int));
-static int menu_name_equal __ARGS((char_u *name, VimMenu *menu));
+static void show_menus_recursive __ARGS((vimmenu_t *, int, int));
+static int menu_name_equal __ARGS((char_u *name, vimmenu_t *menu));
 static int menu_namecmp __ARGS((char_u *name, char_u *mname));
 static int get_menu_cmd_modes __ARGS((char_u *, int, int *, int *));
 static char_u *popup_mode_name __ARGS((char_u *name, int idx));
 static char_u *menu_text __ARGS((char_u *text, int *mnemonic, char_u **actext));
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 static int get_menu_mode __ARGS((void));
-static void gui_update_menus_recurse __ARGS((VimMenu *, int));
+static void gui_update_menus_recurse __ARGS((vimmenu_t *, int));
 #endif
 
-#ifdef USE_GUI_WIN32
-static void gui_create_tearoffs_recurse __ARGS((VimMenu *menu, const char_u *pname, int *pri_tab, int pri_idx));
+#ifdef FEAT_GUI_W32
+static void gui_create_tearoffs_recurse __ARGS((vimmenu_t *menu, const char_u *pname, int *pri_tab, int pri_idx));
 static void gui_add_tearoff __ARGS((char_u *tearpath, int *pri_tab, int pri_idx));
-static void gui_destroy_tearoffs_recurse __ARGS((VimMenu *menu));
+static void gui_destroy_tearoffs_recurse __ARGS((vimmenu_t *menu));
 static int s_tearoffs = FALSE;
+#endif
+
+#ifdef FEAT_MULTI_LANG
+static char_u *menu_skip_part __ARGS((char_u *p));
+static char_u *menutrans_lookup __ARGS((char_u *name, int len));
 #endif
 
 /* The character for each menu mode */
@@ -55,8 +61,8 @@ static char_u	menu_mode_chars[] = {'n', 'v', 'o', 'i', 'c', 't'};
  * Do the :menu command and relatives.
  */
     void
-do_menu(eap)
-    EXARG	*eap;		    /* Ex command arguments */
+ex_menu(eap)
+    exarg_t	*eap;		    /* Ex command arguments */
 {
     char_u	*menu_path;
     int		modes;
@@ -67,15 +73,26 @@ do_menu(eap)
     char_u	*arg;
     char_u	*p;
     int		i;
-#if defined(USE_GUI) && !defined(USE_GUI_GTK)
+#if defined(FEAT_GUI) && !defined(FEAT_GUI_GTK)
     int		old_menu_height;
+# if defined(FEAT_TOOLBAR) && !defined(FEAT_GUI_W32) && !defined(FEAT_GUI_W16)
+    int		old_toolbar_height;
+# endif
 #endif
     int		pri_tab[MENUDEPTH + 1];
+    int		enable = MAYBE;	    /* TRUE for "menu enable", FALSE for "menu
+				     * disable */
+#ifdef FEAT_MULTI_LANG
+    char_u	*tofree = NULL;
+    char_u	*new_cmd;
+#endif
 
     modes = get_menu_cmd_modes(eap->cmd, eap->forceit, &noremap, &unmenu);
     arg = eap->arg;
 
-    /* fill in the priority table */
+    /*
+     * Fill in the priority table.
+     */
     for (p = arg; *p; ++p)
 	if (!isdigit(*p) && *p != '.')
 	    break;
@@ -102,17 +119,68 @@ do_menu(eap)
 	pri_tab[i++] = 500;
     pri_tab[MENUDEPTH] = -1;		/* mark end of the table */
 
-    menu_path = arg;
-    if (*menu_path == NUL)
+    /*
+     * Check for "disable" or "enable" argument.
+     */
+    if (STRNCMP(arg, "enable", 6) == 0 && vim_iswhite(arg[6]))
     {
-	show_menus(menu_path, modes);
+	enable = TRUE;
+	arg = skipwhite(arg + 6);
+    }
+    else if (STRNCMP(arg, "disable", 7) == 0 && vim_iswhite(arg[7]))
+    {
+	enable = FALSE;
+	arg = skipwhite(arg + 7);
+    }
+
+    /*
+     * If there is no argument, display all menus.
+     */
+    if (*arg == NUL)
+    {
+	show_menus(arg, modes);
 	return;
     }
 
-    /* skip the menu name, and translate <Tab> into a real TAB */
+#ifdef FEAT_MULTI_LANG
+    /*
+     * Translate menu names as specified with ":menutrans" commands.
+     */
+    menu_path = arg;
+    while (*menu_path)
+    {
+	/* find the end of one part and check if it should be translated */
+	p = menu_skip_part(menu_path);
+	map_to = menutrans_lookup(menu_path, (int)(p - menu_path));
+	if (map_to != NULL)
+	{
+	    /* found a match: replace with the translated part */
+	    i = STRLEN(map_to);
+	    new_cmd = alloc((unsigned)STRLEN(arg) + i + 1);
+	    if (new_cmd == NULL)
+		break;
+	    mch_memmove(new_cmd, arg, menu_path - arg);
+	    mch_memmove(new_cmd + (menu_path - arg), map_to, (size_t)i);
+	    STRCPY(new_cmd + (menu_path - arg) + i, p);
+	    p = new_cmd + (menu_path - arg) + i;
+	    vim_free(tofree);
+	    tofree = new_cmd;
+	    arg = new_cmd;
+	}
+	if (*p != '.')
+	    break;
+	menu_path = p + 1;
+    }
+#endif
+
+    /*
+     * Isolate the menu name.
+     * Skip the menu name, and translate <Tab> into a real TAB.
+     */
+    menu_path = arg;
     while (*arg && !vim_iswhite(*arg))
     {
-	if ((*arg == '\\' || *arg == Ctrl('V')) && arg[1] != NUL)
+	if ((*arg == '\\' || *arg == Ctrl_V) && arg[1] != NUL)
 	    arg++;
 	else if (STRNICMP(arg, "<TAB>", 5) == 0)
 	{
@@ -125,21 +193,42 @@ do_menu(eap)
 	*arg++ = NUL;
     arg = skipwhite(arg);
     map_to = arg;
-    if (*map_to == NUL && !unmenu)
+
+    /*
+     * If there is only a menu name, display menus with that name.
+     */
+    if (*map_to == NUL && !unmenu && enable == MAYBE)
     {
 	show_menus(menu_path, modes);
-	return;
+	goto theend;
     }
-    else if (*map_to != NUL && unmenu)
+    else if (*map_to != NUL && (unmenu || enable != MAYBE))
     {
-	EMSG("Trailing characters");
-	return;
+	EMSG(_("Trailing characters"));
+	goto theend;
     }
-#if defined(USE_GUI) && !defined(USE_GUI_GTK)
+#if defined(FEAT_GUI) && !defined(FEAT_GUI_GTK)
     old_menu_height = gui.menu_height;
+# if defined(FEAT_TOOLBAR) && !defined(FEAT_GUI_W32) && !defined(FEAT_GUI_W16)
+    old_toolbar_height = gui.toolbar_height;
+# endif
 #endif
-    if (unmenu)
+
+    if (enable != MAYBE)
     {
+	/*
+	 * Change sensitivity of the menu.
+	 * Careful: menu_nable_recurse() changes menu_path.
+	 */
+	if (STRCMP(menu_path, "*") == 0)	/* meaning: do all menus */
+	    menu_path = (char_u *)"";
+	menu_nable_recurse(root_menu, menu_path, modes, enable);
+    }
+    else if (unmenu)
+    {
+	/*
+	 * Delete menu(s).
+	 */
 	if (STRCMP(menu_path, "*") == 0)	/* meaning: remove all menus */
 	    menu_path = (char_u *)"";
 
@@ -165,14 +254,17 @@ do_menu(eap)
     }
     else
     {
-	/* Replace special key codes */
+	/*
+	 * Add menu(s).
+	 * Replace special key codes.
+	 */
 	map_to = replace_termcodes(map_to, &map_buf, FALSE, TRUE);
 	add_menu_path(menu_path, modes, pri_tab,
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 		gui_menu_cb,
 #endif
 		map_to, noremap
-#ifdef USE_GUI_WIN32
+#ifdef FEAT_GUI_W32
 		, TRUE
 #endif
 		);
@@ -190,11 +282,11 @@ do_menu(eap)
 		    {
 			/* Include all modes, to make ":amenu" work */
 			add_menu_path(p, modes, pri_tab,
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 				gui_menu_cb,
 #endif
 				map_to, noremap
-#ifdef USE_GUI_WIN32
+#ifdef FEAT_GUI_W32
 				, TRUE
 #endif
 					 );
@@ -206,10 +298,22 @@ do_menu(eap)
 	vim_free(map_buf);
     }
 
-#if defined(USE_GUI) && !defined(USE_GUI_GTK)
+#if defined(FEAT_GUI) && !defined(FEAT_GUI_GTK)
     /* If the menubar height changed, resize the window */
-    if (gui.menu_height != old_menu_height)
-	gui_set_winsize(FALSE);
+    if (gui.in_use
+	    && (gui.menu_height != old_menu_height
+# if defined(FEAT_TOOLBAR) && !defined(FEAT_GUI_W32) && !defined(FEAT_GUI_W16)
+		|| gui.toolbar_height != old_toolbar_height
+# endif
+	    ))
+	gui_set_shellsize(FALSE);
+#endif
+
+theend:
+#ifdef FEAT_MULTI_LANG
+    vim_free(tofree);
+#else
+    ;
 #endif
 }
 
@@ -218,38 +322,38 @@ do_menu(eap)
  */
     static int
 add_menu_path(menu_path, modes, pri_tab,
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 	call_back,
 #endif
 	call_data, noremap
-#ifdef USE_GUI_WIN32
+#ifdef FEAT_GUI_W32
 	, addtearoff
 #endif
 	)
     char_u	*menu_path;
     int		modes;
     int		*pri_tab;
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     void	(*call_back)();
 #endif
     char_u	*call_data;
     int		noremap;
-#ifdef USE_GUI_WIN32
+#ifdef FEAT_GUI_W32
     int		addtearoff;	/* may add tearoff item */
 #endif
 {
     char_u	*path_name;
-    VimMenu	**menup;
-    VimMenu	*menu = NULL;
-    VimMenu	*parent;
-    VimMenu	**lower_pri;
+    vimmenu_t	**menup;
+    vimmenu_t	*menu = NULL;
+    vimmenu_t	*parent;
+    vimmenu_t	**lower_pri;
     char_u	*p;
     char_u	*name;
     char_u	*dname;
     char_u	*next_name;
     int		i;
     int		c;
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     int		idx;
     int		new_idx;
 #endif
@@ -273,7 +377,7 @@ add_menu_path(menu_path, modes, pri_tab,
 
 	/* See if it's already there */
 	lower_pri = menup;
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 	idx = 0;
 	new_idx = 0;
 #endif
@@ -285,17 +389,17 @@ add_menu_path(menu_path, modes, pri_tab,
 		if (*next_name == NUL && menu->children != NULL)
 		{
 		    if (!sys_menu)
-			EMSG("Menu path must not lead to a sub-menu");
+			EMSG(_("Menu path must not lead to a sub-menu"));
 		    goto erret;
 		}
 		if (*next_name != NUL && menu->children == NULL
-#ifdef USE_GUI_WIN32
+#ifdef FEAT_GUI_W32
 			&& addtearoff
 #endif
 			)
 		{
 		    if (!sys_menu)
-			EMSG("Part of menu-item path is not sub-menu");
+			EMSG(_("Part of menu-item path is not sub-menu"));
 		    goto erret;
 		}
 		break;
@@ -306,13 +410,13 @@ add_menu_path(menu_path, modes, pri_tab,
 	     * Ignore menus that are not in the menubar (PopUp and Toolbar) */
 	    if (parent != NULL || menubar_menu(menu->name))
 	    {
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 		++idx;
 #endif
 		if (menu->priority <= pri_tab[pri_idx])
 		{
 		    lower_pri = menup;
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 		    new_idx = idx;
 #endif
 		}
@@ -324,26 +428,30 @@ add_menu_path(menu_path, modes, pri_tab,
 	{
 	    if (*next_name == NUL && parent == NULL)
 	    {
-		EMSG("Must not add menu items directly to menu bar");
+		EMSG(_("Must not add menu items directly to menu bar"));
 		goto erret;
 	    }
 
 	    if (is_menu_separator(dname) && *next_name != NUL)
 	    {
-		EMSG("Separator cannot be part of a menu path");
+		EMSG(_("Separator cannot be part of a menu path"));
 		goto erret;
 	    }
 
 	    /* Not already there, so lets add it */
-	    menu = (VimMenu *)alloc_clear((unsigned)sizeof(VimMenu));
+	    menu = (vimmenu_t *)alloc_clear((unsigned)sizeof(vimmenu_t));
 	    if (menu == NULL)
 		goto erret;
 
 	    menu->modes = modes;
+	    menu->enabled = MENU_ALL_MODES;
 	    menu->name = vim_strsave(name);
 	    /* separate mnemonic and accelerator text from actual menu name */
 	    menu->dname = menu_text(name, &menu->mnemonic, &menu->actext);
 	    menu->priority = pri_tab[pri_idx];
+#ifdef FEAT_GUI_MOTIF
+	    menu->sensitive = TRUE;	    /* the default */
+#endif
 
 	    /*
 	     * Add after menu that has lower priority.
@@ -351,7 +459,7 @@ add_menu_path(menu_path, modes, pri_tab,
 	    menu->next = *lower_pri;
 	    *lower_pri = menu;
 
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 	    if (gui.in_use)  /* Otherwise it will be added when GUI starts */
 	    {
 		if (*next_name == NUL)
@@ -370,7 +478,7 @@ add_menu_path(menu_path, modes, pri_tab,
 	    }
 #endif
 
-#ifdef USE_GUI_WIN32
+#ifdef FEAT_GUI_W32
 	    /* When adding a new submenu, may add a tearoff item */
 	    if (	addtearoff
 		    && *next_name
@@ -393,7 +501,7 @@ add_menu_path(menu_path, modes, pri_tab,
 		    STRCPY(tearpath, menu_path);
 		    idx = next_name - path_name - 1;
 		    for (s = tearpath; *s && s < tearpath + idx; ++s)
-			if ((*s == '\\' || *s == Ctrl('V')) && s[1])
+			if ((*s == '\\' || *s == Ctrl_V) && s[1])
 			{
 			    ++idx;
 			    ++s;
@@ -413,12 +521,16 @@ add_menu_path(menu_path, modes, pri_tab,
 	    /*
 	     * If this menu option was previously only available in other
 	     * modes, then make sure it's available for this one now
+	     * Also enable a menu when it's created or changed.
 	     */
-#ifdef USE_GUI_WIN32
+#ifdef FEAT_GUI_W32
 	    /* If adding a tearbar (addtearoff == FALSE) don't update modes */
 	    if (addtearoff)
 #endif
+	    {
 		menu->modes |= modes;
+		menu->enabled |= modes;
+	    }
 	}
 
 	menup = &menu->children;
@@ -441,7 +553,7 @@ add_menu_path(menu_path, modes, pri_tab,
 
     if (menu != NULL && modes)
     {
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 	menu->cb = call_back;
 #endif
 	p = (call_data == NULL) ? NULL : vim_strsave(call_data);
@@ -458,7 +570,7 @@ add_menu_path(menu_path, modes, pri_tab,
 		/* Don't do this if adding a tearbar (addtearoff == FALSE) */
 		c = 0;
 		if (amenu
-#ifdef USE_GUI_WIN32
+#ifdef FEAT_GUI_W32
 		       && addtearoff
 #endif
 				       )
@@ -468,10 +580,10 @@ add_menu_path(menu_path, modes, pri_tab,
 			case MENU_VISUAL_MODE:
 			case MENU_OP_PENDING_MODE:
 			case MENU_CMDLINE_MODE:
-			    c = Ctrl('C');
+			    c = Ctrl_C;
 			    break;
 			case MENU_INSERT_MODE:
-			    c = Ctrl('O');
+			    c = Ctrl_O;
 			    break;
 		    }
 		}
@@ -500,18 +612,74 @@ erret:
 }
 
 /*
+ * Set the (sub)menu with the given name to enabled or disabled.
+ * Called recursively.
+ */
+    static int
+menu_nable_recurse(menu, name, modes, enable)
+    vimmenu_t	*menu;
+    char_u	*name;
+    int		modes;
+    int		enable;
+{
+    char_u	*p;
+
+    if (menu == NULL)
+	return OK;		/* Got to bottom of hierarchy */
+
+    /* Get name of this element in the menu hierarchy */
+    p = menu_name_skip(name);
+
+    /* Find the menu */
+    while (menu != NULL)
+    {
+	if (*name == NUL || menu_name_equal(name, menu))
+	{
+	    if (*p != NUL && menu->children == NULL)
+	    {
+		EMSG(_("Part of menu-item path is not sub-menu"));
+		return FAIL;
+	    }
+	    if (menu_nable_recurse(menu->children, p, modes, enable)
+								      == FAIL)
+		return FAIL;
+	    if (enable)
+		menu->enabled |= modes;
+	    else
+		menu->enabled &= ~modes;
+
+	    /*
+	     * When name is empty, we are doing all menu items for the given
+	     * modes, so keep looping, otherwise we are just doing the named
+	     * menu item (which has been found) so break here.
+	     */
+	    if (*name != NUL)
+		break;
+	}
+	menu = menu->next;
+    }
+    if (*name != NUL && menu == NULL)
+    {
+	EMSG(_("No menu of that name"));
+	return FAIL;
+    }
+
+    return OK;
+}
+
+/*
  * Remove the (sub)menu with the given name from the menu hierarchy
  * Called recursively.
  */
     static int
 remove_menu(menup, name, modes, silent)
-    VimMenu	**menup;
+    vimmenu_t	**menup;
     char_u	*name;
     int		modes;
     int		silent;		/* don't give error messages */
 {
-    VimMenu	*menu;
-    VimMenu	*child;
+    vimmenu_t	*menu;
+    vimmenu_t	*child;
     char_u	*p;
 
     if (*menup == NULL)
@@ -528,12 +696,12 @@ remove_menu(menup, name, modes, silent)
 	    if (*p != NUL && menu->children == NULL)
 	    {
 		if (!silent)
-		    EMSG("Part of menu-item path is not sub-menu");
+		    EMSG(_("Part of menu-item path is not sub-menu"));
 		return FAIL;
 	    }
 	    if ((menu->modes & modes) != 0x0)
 	    {
-#ifdef USE_GUI_WIN32
+#ifdef FEAT_GUI_W32
 		/*
 		 * If we are removing all entries for this menu,MENU_ALL_MODES,
 		 * Then kill any tearoff before we start
@@ -550,7 +718,7 @@ remove_menu(menup, name, modes, silent)
 	    else if (*name != NUL)
 	    {
 		if (!silent)
-		    EMSG("Menu only exists in another mode");
+		    EMSG(_("Menu only exists in another mode"));
 		return FAIL;
 	    }
 
@@ -562,10 +730,10 @@ remove_menu(menup, name, modes, silent)
 	    if (*name != NUL)
 		break;
 
-#ifdef USE_GUI_ATHENA
+#ifdef FEAT_GUI_ATHENA
 	    if (((menu->modes & ~modes) & MENU_ALL_MODES) == 0)
 	    {
-		EMSG("Sorry, deleting a menu is not possible in the Athena version");
+		EMSG(_("Sorry, deleting a menu is not possible in the Athena version"));
 		return FAIL;
 	    }
 #endif
@@ -588,14 +756,14 @@ remove_menu(menup, name, modes, silent)
 	if (menu == NULL)
 	{
 	    if (!silent)
-		EMSG("No menu of that name");
+		EMSG(_("No menu of that name"));
 	    return FAIL;
 	}
 
 
 	/* Recalculate modes for menu based on the new updated children */
 	menu->modes &= ~modes;
-#ifdef USE_GUI_WIN32
+#ifdef FEAT_GUI_W32
 	if ((s_tearoffs) && (menu->children != NULL)) /* there's a tear bar.. */
 	    child = menu->children->next; /* don't count tearoff bar */
 	else
@@ -608,7 +776,7 @@ remove_menu(menup, name, modes, silent)
 	if ((menu->modes & MENU_ALL_MODES) == 0)
 	{
 	    /* The menu item is no longer valid in ANY mode, so delete it */
-#ifdef USE_GUI_WIN32
+#ifdef FEAT_GUI_W32
 	    if (s_tearoffs && menu->children != NULL) /* there's a tear bar.. */
 		free_menu(&menu->children);
 #endif
@@ -625,14 +793,14 @@ remove_menu(menup, name, modes, silent)
  */
     static void
 free_menu(menup)
-    VimMenu **menup;
+    vimmenu_t	**menup;
 {
-    int	    i;
-    VimMenu *menu;
+    int		i;
+    vimmenu_t	*menu;
 
     menu = *menup;
 
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     /* Free machine specific menu structures (only when already created) */
     /* Also may rebuild a tearoff'ed menu */
     if (gui.in_use)
@@ -649,7 +817,7 @@ free_menu(menup)
 	free_menu_string(menu, i);
     vim_free(menu);
 
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     /* Want to update menus now even if mode not changed */
     force_menu_update = TRUE;
 #endif
@@ -660,11 +828,11 @@ free_menu(menup)
  */
     static void
 free_menu_string(menu, idx)
-    VimMenu *menu;
-    int	    idx;
+    vimmenu_t	*menu;
+    int		idx;
 {
-    int	    count = 0;
-    int	    i;
+    int		count = 0;
+    int		i;
 
     for (i = 0; i < MENU_MODES; i++)
 	if (menu->strings[i] == menu->strings[idx])
@@ -682,10 +850,10 @@ show_menus(path_name, modes)
     char_u  *path_name;
     int	    modes;
 {
-    char_u  *p;
-    char_u  *name;
-    VimMenu *menu;
-    VimMenu *parent = NULL;
+    char_u	*p;
+    char_u	*name;
+    vimmenu_t	*menu;
+    vimmenu_t	*parent = NULL;
 
     menu = root_menu;
     name = path_name = vim_strsave(path_name);
@@ -703,13 +871,13 @@ show_menus(path_name, modes)
 		/* Found menu */
 		if (*p != NUL && menu->children == NULL)
 		{
-		    EMSG("Part of menu-item path is not sub-menu");
+		    EMSG(_("Part of menu-item path is not sub-menu"));
 		    vim_free(path_name);
 		    return FAIL;
 		}
 		else if ((menu->modes & modes) == 0x0)
 		{
-		    EMSG("Menu only exists in another mode");
+		    EMSG(_("Menu only exists in another mode"));
 		    vim_free(path_name);
 		    return FAIL;
 		}
@@ -719,7 +887,7 @@ show_menus(path_name, modes)
 	}
 	if (menu == NULL)
 	{
-	    EMSG("No menu of that name");
+	    EMSG(_("No menu of that name"));
 	    vim_free(path_name);
 	    return FAIL;
 	}
@@ -730,7 +898,7 @@ show_menus(path_name, modes)
 
     /* Now we have found the matching menu, and we list the mappings */
 						    /* Highlight title */
-    MSG_PUTS_TITLE("\n--- Menus ---");
+    MSG_PUTS_TITLE(_("\n--- Menus ---"));
 
     show_menus_recursive(parent, modes, 0);
     return OK;
@@ -741,12 +909,12 @@ show_menus(path_name, modes)
  */
     static void
 show_menus_recursive(menu, modes, depth)
-    VimMenu *menu;
-    int	    modes;
-    int	    depth;
+    vimmenu_t	*menu;
+    int		modes;
+    int		depth;
 {
-    int	    i;
-    int	    bit;
+    int		i;
+    int		bit;
 
     if (menu != NULL && (menu->modes & modes) == 0x0)
 	return;
@@ -782,7 +950,11 @@ show_menus_recursive(menu, modes, depth)
 		    msg_putchar('*');
 		else
 		    msg_putchar(' ');
-		MSG_PUTS("  ");
+		if ((menu->modes & menu->enabled & (1 << bit)) == 0)
+		    msg_putchar('-');
+		else
+		    msg_putchar(' ');
+		MSG_PUTS(" ");
 		msg_outtrans_special(menu->strings[bit], FALSE);
 	    }
     }
@@ -803,36 +975,36 @@ show_menus_recursive(menu, modes, depth)
     }
 }
 
-#ifdef CMDLINE_COMPL
+#ifdef FEAT_CMDL_COMPL
 
 /*
  * Used when expanding menu names.
  */
-static VimMenu	*expand_menu = NULL;
-static int	expand_modes = 0x0;
+static vimmenu_t	*expand_menu = NULL;
+static int		expand_modes = 0x0;
 
 /*
  * Work out what to complete when doing command line completion of menu names.
  */
     char_u *
 set_context_in_menu_cmd(cmd, arg, forceit)
-    char_u  *cmd;
-    char_u  *arg;
-    int	    forceit;
+    char_u	*cmd;
+    char_u	*arg;
+    int		forceit;
 {
-    char_u  *after_dot;
-    char_u  *p;
-    char_u  *path_name = NULL;
-    char_u  *name;
-    int	    unmenu;
-    VimMenu *menu;
+    char_u	*after_dot;
+    char_u	*p;
+    char_u	*path_name = NULL;
+    char_u	*name;
+    int		unmenu;
+    vimmenu_t	*menu;
 
     expand_context = EXPAND_UNSUCCESSFUL;
 
     after_dot = arg;
     for (p = arg; *p && !vim_iswhite(*p); ++p)
     {
-	if ((*p == '\\' || *p == Ctrl('V')) && p[1] != NUL)
+	if ((*p == '\\' || *p == Ctrl_V) && p[1] != NUL)
 	    p++;
 	else if (*p == '.')
 	    after_dot = p + 1;
@@ -908,9 +1080,9 @@ set_context_in_menu_cmd(cmd, arg, forceit)
 get_menu_name(idx)
     int	    idx;
 {
-    static VimMenu  *menu = NULL;
-    static int	    get_dname = FALSE;	/* return menu->dname next time */
-    char_u	    *str;
+    static vimmenu_t	*menu = NULL;
+    static int		get_dname = FALSE; /* return menu->dname next time */
+    char_u		*str;
 
     if (idx == 0)	    /* first call: start at first item */
     {
@@ -959,9 +1131,9 @@ get_menu_name(idx)
 get_menu_names(idx)
     int	    idx;
 {
-    static VimMenu  *menu = NULL;
-    static char_u   tbuffer[256]; /*hack*/
-    char_u	    *str;
+    static vimmenu_t	*menu = NULL;
+    static char_u	tbuffer[256]; /*hack*/
+    char_u		*str;
 
     if (idx == 0)	    /* first call: start at first item */
 	menu = expand_menu;
@@ -970,7 +1142,7 @@ get_menu_names(idx)
     while (menu != NULL
 	    && (   popup_menu(menu->dname)
 		|| is_menu_separator(menu->dname)
-#ifndef USE_BROWSE
+#ifndef FEAT_BROWSE
 		|| menu->dname[STRLEN(menu->dname) - 1] == '.'
 #endif
 	       ))
@@ -1000,7 +1172,7 @@ get_menu_names(idx)
 
     return str;
 }
-#endif /* CMDLINE_COMPL */
+#endif /* FEAT_CMDL_COMPL */
 
 /*
  * Skip over this element of the menu path and return the start of the next
@@ -1014,15 +1186,15 @@ menu_name_skip(name)
 
     for (p = name; *p && *p != '.'; p++)
     {
-	if (*p == '\\' || *p == Ctrl('V'))
+	if (*p == '\\' || *p == Ctrl_V)
 	{
 	    mch_memmove(p, p + 1, STRLEN(p));
 	    if (*p == NUL)
 		break;
 	}
-#ifdef MULTI_BYTE
-	if (is_dbcs && IsLeadByte(*p) && p[1] != NUL)
-	    ++p;	/* skip multibyte char */
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	    p += mb_ptr2len_check(p) - 1;	/* skip multibyte char */
 #endif
     }
     if (*p)
@@ -1037,7 +1209,7 @@ menu_name_skip(name)
     static int
 menu_name_equal(name, menu)
     char_u	*name;
-    VimMenu	*menu;
+    vimmenu_t	*menu;
 {
     return (menu_namecmp(name, menu->name) || menu_namecmp(name, menu->dname));
 }
@@ -1144,14 +1316,17 @@ popup_mode_name(name, idx)
  */
     int
 get_menu_index(menu, state)
-    VimMenu *menu;
-    int	    state;
+    vimmenu_t	*menu;
+    int		state;
 {
-    int	    idx;
+    int		idx;
 
+#ifdef FEAT_VISUAL
     if (VIsual_active)
 	idx = MENU_INDEX_VISUAL;
-    else if ((state & INSERT))
+    else
+#endif
+	if ((state & INSERT))
 	idx = MENU_INDEX_INSERT;
     else if ((state & CMDLINE))
 	idx = MENU_INDEX_CMDLINE;
@@ -1199,7 +1374,21 @@ menu_text(str, mnemonic, actext)
 	if (p != NULL)
 	{
 	    if (mnemonic != NULL)
+#if !defined(__MVS__) || defined(MOTIF390_MNEMONIC_FIXED)
 		*mnemonic = p[1];
+#else
+	    {
+		/*
+		 * Well there is a bug in the Motif libraries on OS390 Unix.
+		 * The mnemonic keys needs to be converted to ASCII values
+		 * first.
+		 * This behavior has been seen in 2.8 and 2.9.
+		 */
+		char c = p[1];
+		__etoa_l(&c, 1);
+		*mnemonic = c;
+	    }
+#endif
 	    mch_memmove(p, p + 1, STRLEN(p));
 	}
     }
@@ -1232,13 +1421,15 @@ toolbar_menu(name)
     return (STRNCMP(name, "ToolBar", 7) == 0);
 }
 
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 
     static int
 get_menu_mode()
 {
+#ifdef FEAT_VISUAL
     if (VIsual_active)
 	return MENU_INDEX_VISUAL;
+#endif
     if (State & INSERT)
 	return MENU_INDEX_INSERT;
     if (State & CMDLINE)
@@ -1259,8 +1450,8 @@ get_menu_mode()
  */
     void
 gui_create_initial_menus(menu, parent)
-    VimMenu	*menu;
-    VimMenu	*parent;
+    vimmenu_t	*menu;
+    vimmenu_t	*parent;
 {
     int		idx = 0;
 
@@ -1283,25 +1474,25 @@ gui_create_initial_menus(menu, parent)
  */
     static void
 gui_update_menus_recurse(menu, mode)
-    VimMenu *menu;
-    int	    mode;
+    vimmenu_t	*menu;
+    int		mode;
 {
-    int	    i;
+    int		grey;
 
     while (menu)
     {
-	if (menu->modes & mode)
-	    i = FALSE;
+	if (menu->modes & menu->enabled & mode)
+	    grey = FALSE;
 	else
-	    i = TRUE;
-#ifdef USE_GUI_ATHENA
+	    grey = TRUE;
+#ifdef FEAT_GUI_ATHENA
 	/* Hiding menus doesn't work for Athena, it can cause a crash. */
-       gui_mch_menu_grey(menu, i);
+       gui_mch_menu_grey(menu, grey);
 #else
 	if (vim_strchr(p_go, GO_GREY) != NULL)
-	    gui_mch_menu_grey(menu, i);
+	    gui_mch_menu_grey(menu, grey);
 	else
-	    gui_mch_menu_hidden(menu, i);
+	    gui_mch_menu_hidden(menu, grey);
 #endif
 	gui_update_menus_recurse(menu->children, mode);
 	menu = menu->next;
@@ -1337,7 +1528,7 @@ gui_update_menus(modes)
 	gui_mch_draw_menubar();
 	prev_mode = mode;
 	force_menu_update = FALSE;
-#ifdef USE_GUI_WIN32
+#ifdef FEAT_GUI_W32
 	/* This can leave a tearoff as active window - make sure we
 	 * have the focus <negri>*/
 	gui_mch_activate_window();
@@ -1345,7 +1536,7 @@ gui_update_menus(modes)
     }
 }
 
-#if defined(USE_GUI_MSWIN) || defined(USE_GUI_MOTIF) || defined(USE_GUI_GTK) \
+#if defined(FEAT_GUI_MSWIN) || defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_GTK) \
     || defined(PROTO)
 /*
  * Check if a key is used as a mnemonic for a toplevel menu.
@@ -1355,7 +1546,7 @@ gui_update_menus(modes)
 gui_is_menu_shortcut(key)
     int		key;
 {
-    VimMenu	*menu;
+    vimmenu_t	*menu;
 
     if (key < 256)
 	key = TO_LOWER(key);
@@ -1375,7 +1566,7 @@ gui_is_menu_shortcut(key)
     void
 gui_show_popupmenu()
 {
-    VimMenu	*menu;
+    vimmenu_t	*menu;
     int		mode;
 
     mode = get_menu_mode();
@@ -1391,9 +1582,9 @@ gui_show_popupmenu()
     if (menu != NULL && menu->children != NULL)
 	gui_mch_show_popupmenu(menu);
 }
-#endif /* USE_GUI */
+#endif /* FEAT_GUI */
 
-#if defined(USE_GUI_WIN32) || defined(PROTO)
+#if defined(FEAT_GUI_W32) || defined(PROTO)
 
 /*
  * Deal with tearoff items that are added like a menu item.
@@ -1423,7 +1614,7 @@ gui_mch_toggle_tearoffs(int enable)
  */
     static void
 gui_create_tearoffs_recurse(menu, pname, pri_tab, pri_idx)
-    VimMenu		*menu;
+    vimmenu_t		*menu;
     const char_u	*pname;
     int			*pri_tab;
     int			pri_idx;
@@ -1508,7 +1699,7 @@ gui_add_tearoff(tearpath, pri_tab, pri_idx)
 		gui_menu_cb, tbuf, TRUE, FALSE);
 
 	add_menu_path(tearpath, MENU_TIP_MODE, pri_tab,
-		gui_menu_cb, (char_u *)"Tear off this menu", TRUE, FALSE);
+		gui_menu_cb, (char_u *)_("Tear off this menu"), TRUE, FALSE);
 
 	pri_tab[pri_idx + 1] = t;
 	vim_free(tbuf);
@@ -1520,7 +1711,7 @@ gui_add_tearoff(tearpath, pri_tab, pri_idx)
  */
     static void
 gui_destroy_tearoffs_recurse(menu)
-    VimMenu *menu;
+    vimmenu_t	*menu;
 {
     while (menu)
     {
@@ -1539,23 +1730,23 @@ gui_destroy_tearoffs_recurse(menu)
     }
 }
 
-#endif /*USE_GUI_WIN32*/
+#endif /*FEAT_GUI_W32*/
 
 /*
  * Given a menu descriptor, e.g. "File.New", find it in the menu hierarchy and
  * execute it.
  */
     void
-execute_menu(path_name)
-    char_u	*path_name;
+execute_menu(eap)
+    exarg_t	*eap;
 {
-    VimMenu	*menu;
+    vimmenu_t	*menu;
     char_u	*name;
     char_u	*saved_name;
     char_u	*p;
     int		idx;
 
-    saved_name = vim_strsave(path_name);
+    saved_name = vim_strsave(eap->arg);
     if (saved_name == NULL)
 	return;
 
@@ -1572,12 +1763,12 @@ execute_menu(path_name)
 	    {
 		if (*p == NUL && menu->children != NULL)
 		{
-		    EMSG("Menu path must lead to a menu item");
+		    EMSG(_("Menu path must lead to a menu item"));
 		    menu = NULL;
 		}
 		else if (*p != NUL && menu->children == NULL)
 		{
-		    EMSG("Part of menu-item path is not sub-menu");
+		    EMSG(_("Part of menu-item path is not sub-menu"));
 		    menu = NULL;
 		}
 		break;
@@ -1592,7 +1783,7 @@ execute_menu(path_name)
     vim_free(saved_name);
     if (menu == NULL)
     {
-	EMSG("Menu not found - check menu names");
+	EMSG(_("Menu not found - check menu names"));
 	return;
     }
 
@@ -1601,7 +1792,7 @@ execute_menu(path_name)
     if (idx != MENU_INDEX_INVALID)
 	ins_typebuf(menu->strings[idx], menu->noremap[idx] ? -1 : 0, 0, TRUE);
     else
-	EMSG("Menu not defined for Normal mode");
+	EMSG(_("Menu not defined for Normal mode"));
 }
 
 /*
@@ -1615,4 +1806,115 @@ is_menu_separator(name)
     return (name[0] == '-' && name[STRLEN(name) - 1] == '-');
 }
 
-#endif /* WANT_MENU */
+#ifdef FEAT_MULTI_LANG
+/*
+ * Translation of menu names.  Just a simple lookup table.
+ */
+
+typedef struct
+{
+    char_u	*from;		/* English name */
+    char_u	*to;		/* translaged name */
+} menutrans_t;
+
+static garray_t menutrans_ga = {0, 0, 0, 0, NULL};
+#endif
+
+/*
+ * ":menutrans".
+ * This function is also defined without the +multi_lang feature, in which
+ * case the commands are ignored.
+ */
+    void
+ex_menutrans(eap)
+    exarg_t	*eap;
+{
+#ifdef FEAT_MULTI_LANG
+    char_u		*arg = eap->arg;
+    menutrans_t		*tp;
+    int			i;
+    char_u		*from, *to;
+
+    if (menutrans_ga.ga_itemsize == 0)
+	ga_init2(&menutrans_ga, (int)sizeof(menutrans_t), 5);
+
+    /*
+     * ":menutrans clear": clear all translations.
+     */
+    if (STRNCMP(arg, "clear", 5) == 0 && ends_excmd(*skipwhite(arg + 5)))
+    {
+	tp = (menutrans_t *)menutrans_ga.ga_data;
+	for (i = 0; i < menutrans_ga.ga_len; ++i)
+	{
+	    vim_free(tp[i].from);
+	    vim_free(tp[i].to);
+	}
+	ga_clear(&menutrans_ga);
+    }
+    else
+    {
+	/* ":menutrans from to": add translation */
+	from = arg;
+	arg = menu_skip_part(arg);
+	to = skipwhite(arg);
+	*arg = NUL;
+	arg = menu_skip_part(to);
+	if (arg == to)
+	    EMSG(_(e_invarg));
+	else
+	{
+	    if (ga_grow(&menutrans_ga, 1) == OK)
+	    {
+		tp = (menutrans_t *)menutrans_ga.ga_data;
+		from = vim_strsave(from);
+		to = vim_strnsave(to, (int)(arg - to));
+		if (from != NULL && to != NULL)
+		{
+		    tp[menutrans_ga.ga_len].from = from;
+		    tp[menutrans_ga.ga_len].to = to;
+		    ++menutrans_ga.ga_len;
+		    --menutrans_ga.ga_room;
+		}
+	    }
+	}
+    }
+#endif
+}
+
+#ifdef FEAT_MULTI_LANG
+/*
+ * Find the character just after one part of a menu name.
+ */
+    static char_u *
+menu_skip_part(p)
+    char_u	*p;
+{
+    while (*p && *p != '.' && !vim_iswhite(*p))
+    {
+	if ((*p == '\\' || *p == Ctrl_V) && p[1] != NUL)
+	    ++p;
+	++p;
+    }
+    return p;
+}
+
+/*
+ * Lookup part of a menu name in the translations.
+ * Return a pointer to the translation or NULL if not found.
+ */
+    static char_u *
+menutrans_lookup(name, len)
+    char_u	*name;
+    int		len;
+{
+    menutrans_t		*tp = (menutrans_t *)menutrans_ga.ga_data;
+    int			i;
+
+    for (i = 0; i < menutrans_ga.ga_len; ++i)
+	if (STRNCMP(name, tp[i].from, len) == 0 && tp[i].from[len] == NUL)
+	    return tp[i].to;
+    return NULL;
+}
+#endif /* FEAT_MULTI_LANG */
+
+#endif /* FEAT_MENU */

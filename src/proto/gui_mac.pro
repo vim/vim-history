@@ -32,7 +32,7 @@ void gui_mch_set_winpos __ARGS((int x, int y));
 void gui_mch_get_screen_dimensions __PARMS((int *screen_w, int *screen_h));
 void gui_mch_set_text_area_pos __PARMS((int x, int y, int w, int h));
 void gui_mch_enable_scrollbar __PARMS((GuiScrollbar *sb, int flag));
-void gui_mch_set_scrollbar_thumb __PARMS((GuiScrollbar *sb, int val, int size, int max));
+void gui_mch_set_scrollbar_thumb __PARMS((GuiScrollbar *sb, long val, long size, long max));
 void gui_mch_set_scrollbar_pos __PARMS((GuiScrollbar *sb, int x, int y, int w, int h));
 void gui_mch_create_scrollbar __PARMS((GuiScrollbar *sb, int orient));
 void gui_mch_destroy_scrollbar __PARMS((GuiScrollbar *sb));

@@ -1,4 +1,4 @@
-*recover.txt*   For Vim version 5.7.  Last change: 1999 May 05
+*recover.txt*   For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -115,10 +115,10 @@ You are to take one of four actions:
 If you really don't want to see this message, you can add the 'A' flag to the
 'shortmess' option.  But it's very unusual that you need this.
 
-If dialogs are supported you will be asked to select one of five choices:
+If dialogs are supported you will be asked to select one of five choices: >
 
-> Swap file already exists!
-> [O]pen Read-Only, (E)dit anyway, (R)ecover, (Q)uit, (D)elete it:
+  Swap file already exists!
+  [O]pen Read-Only, (E)dit anyway, (R)ecover, (Q)uit, (D)elete it:
 
 O  Open the file readonly.  Use this when you just want to view the file and
    don't need to recover it.
@@ -179,11 +179,11 @@ In most cases recovery is quite easy: Start Vim on the same file you were
 editing when the crash happened, with the "-r" option added.  Vim will read
 the ".swp" file and may read bits and pieces of the original file.
 
-Example:
->	vim -r help.txt
+Example: >
+	vim -r help.txt
 
-If you were editing without a file name, give an empty string as argument:
->	vim -r ""
+If you were editing without a file name, give an empty string as argument: >
+	vim -r ""
 
 If there are several swap files that look they may be the one you want to
 use, a list is given of these swap files and you are requested to enter the
@@ -195,8 +195,8 @@ If you know which swap file needs to be used, you can recover by giving the
 swap file name.  Vim will then find out the name of the original file from
 the swap file.
 
-Example:
->	Vim -r .help.txt.swo
+Example: >
+	Vim -r .help.txt.swo
 
 This is also handy when the swap file is in another directory than expected.
 If this still does not work, see what file names Vim reports and rename the
@@ -239,4 +239,4 @@ will continue to get warning messages that the ".swp" file already exists.
 
 {Vi: recovers in another way and sends mail if there is something to recover}
 
- vim:tw=78:ts=8:sw=8:
+ vim:tw=78:

@@ -1,4 +1,4 @@
-*index.txt*     For Vim version 5.7.  Last change: 2000 Apr 01
+*index.txt*     For Vim version 6.0d.  Last change: 2000 Jul 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -39,7 +39,10 @@ tag		char		action	~
 				line
 |i_CTRL-E|	CTRL-E		insert the character which is below the cursor
 		CTRL-F		not used
-		CTRL-G		reserved for future expansion
+|i_CTRL-G_j|	CTRL-G j	line down, to column where inserting started
+|i_CTRL-G_j|	CTRL-G <Down>	line down, to column where inserting started
+|i_CTRL-G_k|	CTRL-G k	line up, to column where inserting started
+|i_CTRL-G_k|	CTRL-G <Up>	line up, to column where inserting started
 |i_<BS>|	<BS>		delete character before the cursor
 |i_digraph|	{char1}<BS>{char2}
 				enter digraph (only when 'digraph' option set)
@@ -148,7 +151,7 @@ commands in CTRL-X submode
 2. Normal mode						*normal-index*
 
 CHAR	 any non-blank character
-WORD	 any sequences of non-blank characters
+WORD	 a sequence of non-blank characters
 N	 a number entered before the command
 {motion} a cursor movement command
 Nmove	 the text that is moved over with a {motion}
@@ -220,6 +223,10 @@ tag		char	      note action in Normal mode	~
 				   mark {a-zA-Z0-9}
 |''|		''		1  cursor to the first CHAR of the line where
 				   the cursor was before the latest jump.
+|'(|		'(		1  cursor to the first CHAR on the line of the
+				   start of the current sentence
+|')|		')		1  cursor to the first CHAR on the line of the
+				   end of the current sentence
 |'<|		'<		1  cursor to the first CHAR of the line where
 				   highlighted area starts/started in the
 				   current buffer.
@@ -232,6 +239,10 @@ tag		char	      note action in Normal mode	~
 |']|		']		1  cursor to the first CHAR on the line of the
 				   end of last operated text or end of putted
 				   text
+|'{|		'{		1  cursor to the first CHAR on the line of the
+				   start of the current paragraph
+|'}|		'}		1  cursor to the first CHAR on the line of the
+				   end of the current paragraph
 |(|		(		1  cursor N sentences backward
 |)|		)		1  cursor N sentences forward
 |star|		*		1  search forward for the Nth occurrence of
@@ -324,6 +335,8 @@ tag		char	      note action in Normal mode	~
 |^|		^		1  cursor to the first CHAR of the line
 |_|		_		1  cursor to the first CHAR N - 1 lines lower
 |`|		`{a-zA-Z0-9}	1  cursor to the mark {a-zA-Z0-9}
+|`(|		`(		1  cursor to the start of the current sentence
+|`)|		`)		1  cursor to the end of the current sentence
 |`<|		`<		1  cursor to the start of the highlighted area
 |`>|		`>		1  cursor to the end of the highlighted area
 |`[|		`[		1  cursor to the start of last operated text
@@ -331,6 +344,8 @@ tag		char	      note action in Normal mode	~
 |`]|		`]		1  cursor to the end of last operated text or
 				   end of putted text
 |``|		``		1  cursor to the position before latest jump
+|`{|		`{		1  cursor to the start of the current paragraph
+|`}|		`}		1  cursor to the end of the current paragraph
 |a|		a		2  append text after the cursor N times
 |b|		b		1  cursor N words backward
 |c|		["x]c{motion}	2  delete Nmove text [into buffer x] and start
@@ -557,8 +572,11 @@ tag		char	      note action in Normal mode	~
 				   current file
 |[#|		[#		1  cursor to N previous unmatched #if, #else
 				   or #ifdef
+|['|		['		1  cursor to previous lowercase mark, on first
+				   non-blank
 |[(|		[(		1  cursor N times back to unmatched '('
 |[star|		[*		1  same as "[/"
+|[`|		[`		1  cursor to previous lowercase mark
 |[/|		[/		1  cursor to N previous start of a C comment
 |[D|		[D		   list all defines found in current and
 				   included files matching the word under the
@@ -593,8 +611,11 @@ tag		char	      note action in Normal mode	~
 				   files that contains the word under the
 				   cursor, start searching at cursor position
 |]#|		]#		1  cursor to N next unmatched #endif or #else
+|]'|		]'		1  cursor to next lowercase mark, on first
+				   non-blank
 |])|		])		1  cursor N times forward to unmatched ')'
 |]star|		]*		1  same as "]/"
+|]`|		]`		1  cursor to next lowercase mark
 |]/|		]/		1  cursor to N next end of a C comment
 |]D|		]D		   list all #defines found in current and
 				   included files matching the word under the
@@ -636,11 +657,14 @@ tag		char	      note action in Normal mode	~
 				   the current line that is on the screen;
 				   when 'wrap' on go to the rightmost character
 				   of the current screen line
+|g&|		g&		2  repeat last ":s" on all lines
 |gstar|		g*		1  like "*", but without using "\<" and "\>"
 |g0|		g0		1  when 'wrap' off go to leftmost character of
 				   the current line that is on the screen;
 				   when 'wrap' on go to the leftmost character
 				   of the current screen line
+|g8|		g8		   print hex value of bytes used in UTF-8
+				   character under the cursor
 |g?|		g?		2  Rot13 encoding operator
 |g?g?|		g??		2  Rot13 encode current line
 |g?g?|		g?g?		2  Rot13 encode current line
@@ -919,6 +943,7 @@ The commands are sorted on the non-optional part of their name.
 |:bmodified|	:bm[odified]	go to next file in the buffer list that has
 				been modified
 |:bnext|	:bn[ext]	go to next file in the buffer list
+|:botright|	:bo[tright]	make split window appear at bottom or far right
 |:bprevious|	:bp[revious]	go to previous file in the buffer list
 |:brewind|	:br[ewind]	go to last file in the buffer list
 |:break|	:brea[k]	break out of while loop
@@ -963,6 +988,7 @@ The commands are sorted on the non-optional part of their name.
 |:cunmap|	:cu[nmap]	like ":unmap" but for Command-line mode
 |:cunabbrev|	:cuna[bbrev]	like ":unabbrev" but for Command-line mode
 |:cunmenu|	:cunme[nu]	remove menu for Command-line mode
+|:cwindow|	:cw[indow]	open quickfix window
 |:delete|	:d[elete]	delete lines
 |:delcommand|	:delc[ommand]	delete user-defined command
 |:delfunction|	:delf[unction]	delete a user function
@@ -984,6 +1010,7 @@ The commands are sorted on the non-optional part of their name.
 |:endif|	:en[dif]	end previous :if
 |:endfunction|	:endf[unction]	end of a user function
 |:endwhile|	:endw[hile]	end previous :while
+|:enew|		:ene[w]		edit a new, unnamed buffer
 |:ex|		:ex		same as ":edit"
 |:execute|	:exe[cute]	execute result of expressions
 |:exit|		:exi[t]		same as ":xit"
@@ -991,6 +1018,7 @@ The commands are sorted on the non-optional part of their name.
 |:files|	:files		list all files in the buffer list
 |:filetype|	:filet[ype]	switch file type detection on/off
 |:find|		:fin[d]		find file in 'path' and edit it
+|:finish|	:fini[sh]	quit sourcing a Vim script
 |:fixdel|	:fix[del]	set key code of <Del>
 |:function|	:fu[nction]	define a user function
 |:global|	:g[lobal]	execute commands for matching lines
@@ -1027,6 +1055,9 @@ The commands are sorted on the non-optional part of their name.
 |:k|		:k		set a mark
 |:list|		:l[ist]		print lines
 |:last|		:la[st]		go to the last file in the argument list
+|:language|	:lan[guage]	set the language (locale)
+|:lcd|		:lc[d]		change directory locally
+|:lchdir|	:lch[dir]	change directory locally
 |:left|		:le[ft]		left align lines
 |:let|		:let		assign a value to a variable or option
 |:ls|		:ls		list all buffers
@@ -1091,7 +1122,8 @@ The commands are sorted on the non-optional part of their name.
 |:pwd|		:pw[d]		print current directory
 |:python|	:py[thon]	execute Python command
 |:pyfile|	:pyf[ile]	execute Python script file
-|:quit|		:q[uit]		quit current window or Vim
+|:quit|		:q[uit]		quit current window (when one window quit Vim)
+|:quitall|	:quita[ll]	quit Vim
 |:qall|		:qa[ll]		quit Vim
 |:read|		:r[ead]		read file into the text
 |:recover|	:rec[over]	recover a file from a swap file
@@ -1103,6 +1135,7 @@ The commands are sorted on the non-optional part of their name.
 |:return|	:retu[rn]	return from a user function
 |:rewind|	:rew[ind]	go to the first file in the argument list
 |:right|	:ri[ght]	right align text
+|:runtime|	:ru[ntime]	source vim scripts in 'runtimepath'
 |:rviminfo|	:rv[iminfo]	read from viminfo file
 |:substitute|	:s[ubstitute]	find and replace text
 |:sNext|	:sN[ext]	split window and go to previous file in
@@ -1126,9 +1159,12 @@ The commands are sorted on the non-optional part of their name.
 |:sbrewind|	:sbr[ewind]	split window and go to first file in the
 				buffer list
 |:set|		:se[t]		show or set options
+|:setlocal|	:setl[ocal]	show or set options locally
+|:setglobal|	:setg[lobal]	show global values of options
 |:sfind|	:sf[ind]	split current window and edit file in 'path'
 |:shell|	:sh[ell]	escape to a shell
 |:simalt|	:si[malt]	Win32 GUI: simulate Windows ALT key
+|:silent|	:sil[ent]	Run a command silently
 |:sleep|	:sl[eep]	do nothing for a few seconds
 |:slast|	:sla[st]	split window and go to last file in the
 				argument list
@@ -1167,6 +1203,7 @@ The commands are sorted on the non-optional part of their name.
 |:tlast|	:tl[ast]	jump to last matching tag
 |:tmenu|	:tm[enu]	define menu tooltip
 |:tnext|	:tn[ext]	jump to next matching tag
+|:topleft|	:to[pleft]	make split window appear at top or far left
 |:tprevious|	:tp[revious]	jump to previous matching tag
 |:trewind|	:tr[ewind]	jump to first matching tag
 |:tselect|	:ts[elect]	list matching tags and select one
@@ -1181,13 +1218,16 @@ The commands are sorted on the non-optional part of their name.
 |:update|	:up[date]	write buffer if modified
 |:vglobal|	:v[global]	execute commands for not matching lines
 |:version|	:ve[rsion]	print version number and other info
+|:vertical|	:vert[ical]	make following command split vertically
 |:visual|	:vi[sual]	same as ":edit", but turns off "Ex" mode
 |:view|		:vie[w]		edit a file read-only
 |:vmap|		:vm[ap]		like ":map" but for Visual mode
 |:vmapclear|	:vmapc[lear]	remove all mappings for Visual mode
 |:vmenu|	:vme[nu]	add menu for Visual mode
 |:vnoremap|	:vn[oremap]	like ":noremap" but for Visual mode
+|:vnew|		:vne[w]		create a new empty window, vertically split
 |:vnoremenu|	:vnoreme[nu]	like ":noremenu" but for Visual mode
+|:vsplit|	:vs[plit]	split current window vertically
 |:vunmap|	:vu[nmap]	like ":unmap" but for Visual mode
 |:vunmenu|	:vunme[nu]	remove menu for Visual mode
 |:write|	:w[rite]	write to a file
@@ -1210,4 +1250,4 @@ The commands are sorted on the non-optional part of their name.
 |:z|		:z		print some lines
 |:~|		:~		repeat last ":substitute"
 
- vim:ts=8:sw=8:tw=78:
+ vim:tw=78:

@@ -8,18 +8,22 @@ AWK = awk
 
 # include the config.mk from the source directory.  It's only needed to set
 # AWK, used for "make html".  Comment this out if the include gives problems.
-include ../../src/config.mk
+include ../../src/auto/config.mk
 
 DOCS = \
 	autocmd.txt \
 	change.txt \
 	cmdline.txt \
+	debugger.txt \
 	develop.txt \
 	digraph.txt \
 	editing.txt \
 	eval.txt \
 	farsi.txt \
+	filetype.txt \
+	fold.txt \
 	gui.txt \
+	gui_w16.txt \
 	gui_w32.txt \
 	gui_x11.txt \
 	hangulin.txt \
@@ -38,7 +42,9 @@ DOCS = \
 	message.txt \
 	motion.txt \
 	multibyte.txt \
+	multilang.txt \
 	options.txt \
+	os_390.txt \
 	os_amiga.txt \
 	os_beos.txt \
 	os_dos.txt \
@@ -52,11 +58,13 @@ DOCS = \
 	os_win32.txt \
 	pattern.txt \
 	quickfix.txt \
+	quickref.txt \
 	quotes.txt \
 	recover.txt \
 	repeat.txt \
 	rightleft.txt \
 	scroll.txt \
+	sign.txt \
 	starting.txt \
 	syntax.txt \
 	tagsearch.txt \
@@ -65,23 +73,38 @@ DOCS = \
 	todo.txt \
 	uganda.txt \
 	undo.txt \
+	usr_01.txt \
+	usr_02.txt \
+	usr_03.txt \
+	usr_04.txt \
+	usr_07.txt \
+	usr_28.txt \
+	usr_43.txt \
+	usr_90.txt \
+	usr_toc.txt \
 	various.txt \
 	version4.txt \
 	version5.txt \
+	version6.txt \
 	vi_diff.txt \
 	visual.txt \
-	windows.txt
+	windows.txt \
+	workshop.txt
 
 HTMLS = \
 	autocmd.html \
 	change.html \
 	cmdline.html \
+	debugger.html \
 	develop.html \
 	digraph.html \
 	editing.html \
 	eval.html \
 	farsi.html \
+	filetype.html \
+	fold.html \
 	gui.html \
+	gui_w16.html \
 	gui_w32.html \
 	gui_x11.html \
 	hangulin.html \
@@ -100,7 +123,9 @@ HTMLS = \
 	message.html \
 	motion.html \
 	multibyte.html \
+	multilang.html \
 	options.html \
+	os_390.html \
 	os_amiga.html \
 	os_beos.html \
 	os_dos.html \
@@ -114,11 +139,13 @@ HTMLS = \
 	os_win32.html \
 	pattern.html \
 	quickfix.html \
+	quickref.html \
 	quotes.html \
 	recover.html \
 	repeat.html \
 	rightleft.html \
 	scroll.html \
+	sign.html \
 	starting.html \
 	syntax.html \
 	tags.html \
@@ -128,12 +155,23 @@ HTMLS = \
 	todo.html \
 	uganda.html \
 	undo.html \
+	usr_01.html \
+	usr_02.html \
+	usr_03.html \
+	usr_04.html \
+	usr_07.html \
+	usr_28.html \
+	usr_43.html \
+	usr_90.html \
+	usr_toc.html \
 	various.html \
 	version4.html \
 	version5.html \
+	version6.html \
 	vi_diff.html \
 	visual.html \
-	windows.html
+	windows.html \
+	workshop.html
 
 .SUFFIXES:
 .SUFFIXES: .c .o .txt .html
@@ -189,11 +227,17 @@ clean:
 farsi.txt:
 	touch farsi.txt
 
+gui_w16.txt:
+	touch gui_w16.txt
+
 gui_w32.txt:
 	touch gui_w32.txt
 
 if_ole.txt:
 	touch if_ole.txt
+
+os_390.txt:
+	touch os_390.txt
 
 os_amiga.txt:
 	touch os_amiga.txt

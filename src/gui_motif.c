@@ -19,10 +19,12 @@
 #if (XmVersion >= 1002)
 # include <Xm/RepType.h>
 #endif
+#include <Xm/Frame.h>
 
 #include <X11/keysym.h>
 #include <X11/Xatom.h>
 #include <X11/StringDefs.h>
+#include <X11/Intrinsic.h>
 
 #include "vim.h"
 
@@ -31,8 +33,17 @@
 extern Widget vimShell;
 
 static Widget vimForm;
-static Widget textArea;
-#ifdef WANT_MENU
+static Widget textAreaFrame;
+static Widget textAreaForm;
+Widget textArea;
+#ifdef FEAT_TOOLBAR
+static Widget toolBarFrame;
+static Widget toolBar;
+#endif
+#ifdef FEAT_FOOTER
+static Widget footer;
+#endif
+#ifdef FEAT_MENU
 # if (XmVersion >= 1002)
 /* remember the last set value for the tearoff item */
 static int tearoff_val = (int)XmTEAR_OFF_ENABLED;
@@ -41,6 +52,20 @@ static Widget menuBar;
 #endif
 
 static void scroll_cb __ARGS((Widget w, XtPointer client_data, XtPointer call_data));
+#ifdef FEAT_TOOLBAR
+static void get_pixmap __ARGS((char_u *menuname, Pixmap *, Pixmap *));
+static void toolbar_enter_cb __ARGS((Widget, XtPointer, XEvent *, Boolean *));
+static void toolbar_leave_cb __ARGS((Widget, XtPointer, XEvent *, Boolean *));
+static void toolbarbutton_enter_cb __ARGS((Widget, XtPointer, XEvent *, Boolean *));
+static void toolbarbutton_leave_cb __ARGS((Widget, XtPointer, XEvent *, Boolean *));
+#endif
+#ifdef FEAT_FOOTER
+static int gui_mch_compute_footer_height __ARGS((void));
+#endif
+
+#ifdef WSDEBUG
+static void attachDump(Widget, char *);
+#endif
 
 #if (XmVersion >= 1002)
 # define STRING_TAG  XmFONTLIST_DEFAULT_TAG
@@ -58,7 +83,7 @@ scroll_cb(w, client_data, call_data)
     Widget	w;
     XtPointer	client_data, call_data;
 {
-    GuiScrollbar *sb;
+    scrollbar_t *sb;
     long	value;
     int		dragging;
 
@@ -74,7 +99,7 @@ scroll_cb(w, client_data, call_data)
      * get their scrollbars updated also.
      */
     gui_drag_scrollbar(sb, value, dragging
-#ifdef SCROLLBIND
+#ifdef FEAT_SCROLLBIND
 		    && (!sb->wp || !sb->wp->w_p_scb || (sb->wp != curwin))
 #endif
 		    );
@@ -122,17 +147,104 @@ gui_x11_create_widgets()
 	XmNmarginWidth, 0,
 	XmNmarginHeight, 0,
 	XmNresizePolicy, XmRESIZE_ANY,
+#ifndef FEAT_CDE_COLORS
 	XmNforeground, gui.menu_fg_pixel,
 	XmNbackground, gui.menu_bg_pixel,
+#endif
+	NULL);
+
+#ifdef FEAT_MENU
+    menuBar = XtVaCreateManagedWidget("menuBar",
+	xmRowColumnWidgetClass, vimForm,
+	XmNrowColumnType, XmMENU_BAR,
+#ifndef FEAT_CDE_COLORS
+	XmNforeground, gui.menu_fg_pixel,
+	XmNbackground, gui.menu_bg_pixel,
+#endif
+#if (XmVersion >= 1002)
+	XmNtearOffModel, tearoff_val,
+#endif
+	XmNleftAttachment, XmATTACH_FORM,
+	XmNtopAttachment, XmATTACH_FORM,
+	XmNrightAttachment, XmATTACH_FORM,
+#ifndef FEAT_TOOLBAR
+	/* XmNbottomAttachment, XmATTACH_OPPOSITE_FORM, */
+	XmNrightOffset, 0,	/* Always stick to rigth hand side */
+#endif
+	NULL);
+#endif
+
+#ifdef FEAT_TOOLBAR
+    /*
+     * Create an empty ToolBar. We should get buttons defined from menu.vim.
+     */
+    toolBarFrame = XtVaCreateWidget("toolBarFrame",
+	xmFrameWidgetClass, vimForm,
+	XmNchildType, XmFRAME_WORKAREA_CHILD,
+	XmNshadowType, XmSHADOW_OUT,
+	XmNleftAttachment, XmATTACH_FORM,
+	XmNrightAttachment, XmATTACH_FORM,
+#ifndef FEAT_CDE_COLORS
+	XmNforeground, gui.menu_fg_pixel,
+	XmNbackground, gui.menu_bg_pixel,
+#endif
+	NULL);
+
+    toolBar = XtVaCreateManagedWidget("toolBar",
+	xmRowColumnWidgetClass, toolBarFrame,
+	XmNrowColumnType, XmWORK_AREA,
+	XmNorientation, XmHORIZONTAL,
+	XmNtraversalOn, False,
+	XmNisHomogeneous, False,
+	XmNpacking, XmPACK_TIGHT,
+	XmNspacing, 0,
+#ifndef FEAT_CDE_COLORS
+	XmNforeground, gui.menu_fg_pixel,
+	XmNbackground, gui.menu_bg_pixel,
+#endif
+	NULL);
+
+    XtAddEventHandler(toolBar, EnterWindowMask, False,
+	    toolbar_enter_cb, NULL);
+    XtAddEventHandler(toolBar, LeaveWindowMask, False,
+	    toolbar_leave_cb, NULL);
+#endif
+
+    textAreaFrame = XtVaCreateManagedWidget("textAreaFrame",
+	xmFrameWidgetClass, vimForm,
+	XmNchildType, XmFRAME_WORKAREA_CHILD,
+	XmNshadowType, XmSHADOW_OUT,
+	XmNleftAttachment, XmATTACH_FORM,
+	XmNtopAttachment, XmATTACH_FORM,
+	XmNrightAttachment, XmATTACH_FORM,
+	XmNbottomAttachment, XmATTACH_FORM,
+#ifndef FEAT_CDE_COLORS
+	XmNforeground, gui.menu_fg_pixel,
+	XmNbackground, gui.menu_bg_pixel,
+#endif
+	NULL);
+
+    textAreaForm = XtVaCreateManagedWidget("textAreaForm",
+	xmFormWidgetClass, textAreaFrame,
+	XmNborderWidth, 0,
+	XmNshadowThickness, 0,
+	XmNmarginWidth, 0,
+	XmNmarginHeight, 0,
+	XmNresizePolicy, XmRESIZE_ANY,
+#ifndef FEAT_CDE_COLORS
+	XmNforeground, gui.menu_fg_pixel,
+	XmNbackground, gui.menu_bg_pixel,
+#endif
 	NULL);
 
     textArea = XtVaCreateManagedWidget("textArea",
-	xmDrawingAreaWidgetClass, vimForm,
+	xmDrawingAreaWidgetClass, textAreaForm,
+	XmNforeground, gui.norm_pixel,
 	XmNbackground, gui.back_pixel,
 	XmNleftAttachment, XmATTACH_FORM,
 	XmNtopAttachment, XmATTACH_FORM,
-	XmNrightAttachment, XmATTACH_OPPOSITE_FORM,
-	XmNbottomAttachment, XmATTACH_OPPOSITE_FORM,
+	XmNrightAttachment, XmATTACH_FORM,
+	XmNbottomAttachment, XmATTACH_FORM,
 
 	/*
 	 * These take some control away from the user, but avoids making them
@@ -143,21 +255,23 @@ gui_x11_create_widgets()
 	XmNshadowThickness, 0,
 	NULL);
 
-#ifdef WANT_MENU
-    menuBar = XtVaCreateManagedWidget("menuBar",
-	xmRowColumnWidgetClass, vimForm,
-	XmNrowColumnType, XmMENU_BAR,
-	XmNforeground, gui.menu_fg_pixel,
-	XmNbackground, gui.menu_bg_pixel,
-#if (XmVersion >= 1002)
-	XmNtearOffModel, tearoff_val,
-#endif
+#ifdef FEAT_FOOTER
+    /*
+     * Create the Footer.
+     */
+    footer = XtVaCreateWidget("footer",
+	xmLabelWidgetClass, vimForm,
+	XmNalignment, XmALIGNMENT_BEGINNING,
+	XmNmarginHeight, 0,
+	XmNmarginWidth, 0,
+	XmNtraversalOn, False,
+	XmNrecomputeSize, False,
 	XmNleftAttachment, XmATTACH_FORM,
-	XmNtopAttachment, XmATTACH_FORM,
+	XmNleftOffset, 5,
 	XmNrightAttachment, XmATTACH_FORM,
-	XmNbottomAttachment, XmATTACH_OPPOSITE_FORM,
-	XmNrightOffset, 0,	/* Always stick to rigth hand side */
+	XmNbottomAttachment, XmATTACH_FORM,
 	NULL);
+    gui_mch_set_footer((char_u *) "");
 #endif
 
     /*
@@ -176,7 +290,7 @@ gui_x11_create_widgets()
 gui_x11_destroy_widgets()
 {
     textArea = NULL;
-#ifdef WANT_MENU
+#ifdef FEAT_MENU
     menuBar = NULL;
 #endif
 }
@@ -188,12 +302,10 @@ gui_mch_set_text_area_pos(x, y, w, h)
     int	    w;
     int	    h;
 {
-    XtVaSetValues(textArea,
-		  XmNleftOffset, x,
-		  XmNtopOffset, y,
-		  XmNrightOffset, -x - w,
-		  XmNbottomOffset, -y - h,
-		  NULL);
+#ifdef FEAT_TOOLBAR
+    /* Give keyboard focus to the textArea instead of the toolbar. */
+    gui_mch_reset_focus();
+#endif
 }
 
     void
@@ -209,43 +321,74 @@ gui_x11_set_back_color()
 #endif
 }
 
-#if defined(WANT_MENU) || defined(PROTO)
+#if defined(FEAT_MENU) || defined(PROTO)
 /*
  * Menu stuff.
  */
 
-static void gui_motif_add_actext __ARGS((VimMenu *menu));
+static void gui_motif_add_actext __ARGS((vimmenu_t *menu));
 #if (XmVersion >= 1002)
 static void toggle_tearoff __ARGS((Widget wid));
-static void gui_mch_recurse_tearoffs __ARGS((VimMenu *menu));
+static void gui_mch_recurse_tearoffs __ARGS((vimmenu_t *menu));
 #endif
 static void gui_mch_compute_menu_height __ARGS((Widget));
-static void gui_mch_submenu_colors __ARGS((VimMenu *mp));
+static void gui_mch_submenu_colors __ARGS((vimmenu_t *mp));
 
 static void do_set_mnemonics __ARGS((int enable));
-static int mnemonics_enabled = TRUE;
 static int menu_enabled = TRUE;
 
     void
 gui_mch_enable_menu(flag)
     int	    flag;
 {
-    menu_enabled = flag;
-
-    /*
-     * Must disable menu mnemonics when the menu bar is disabled, Lesstif
-     * crashes when using a mnemonic then.
-     */
     if (flag)
     {
 	XtManageChild(menuBar);
-	do_set_mnemonics(mnemonics_enabled);
+#ifdef FEAT_TOOLBAR
+	if (XtIsManaged(XtParent(toolBar)))
+	{
+	    /* toolBar is attached to top form */
+	    XtVaSetValues(XtParent(toolBar),
+		XmNtopAttachment, XmATTACH_WIDGET,
+		XmNtopWidget, menuBar,
+		NULL);
+	    XtVaSetValues(textAreaFrame,
+		XmNtopAttachment, XmATTACH_WIDGET,
+		XmNtopWidget, XtParent(toolBar),
+		NULL);
+	}
+	else
+#endif
+	{
+	    XtVaSetValues(textAreaFrame,
+		XmNtopAttachment, XmATTACH_WIDGET,
+		XmNtopWidget, menuBar,
+		NULL);
+	}
     }
     else
     {
 	XtUnmanageChild(menuBar);
-	do_set_mnemonics(FALSE);
+#ifdef FEAT_TOOLBAR
+	if (XtIsManaged(XtParent(toolBar)))
+	{
+	    XtVaSetValues(XtParent(toolBar),
+		XmNtopAttachment, XmATTACH_FORM,
+		NULL);
+	    XtVaSetValues(textAreaFrame,
+		XmNtopAttachment, XmATTACH_WIDGET,
+		XmNtopWidget, XtParent(toolBar),
+		NULL);
+	}
+	else
+#endif
+	{
+	    XtVaSetValues(textAreaFrame,
+		XmNtopAttachment, XmATTACH_FORM,
+		NULL);
+	}
     }
+
 }
 
 /* ARGSUSED */
@@ -256,11 +399,7 @@ gui_mch_set_menu_pos(x, y, w, h)
     int	    w;
     int	    h;
 {
-    XtVaSetValues(menuBar,
-		  XmNleftOffset, x,
-		  XmNtopOffset, y,
-		  XmNbottomOffset, -y - h,
-		  NULL);
+    /* menuBar is now using XmForm attachments to be positioned */
 }
 
 /*
@@ -270,7 +409,6 @@ gui_mch_set_menu_pos(x, y, w, h)
 gui_motif_set_mnemonics(enable)
     int		enable;
 {
-    mnemonics_enabled = enable;
     /*
      * Don't enable menu mnemonics when the menu bar is disabled, Lesstif
      * crashes when using a mnemonic then.
@@ -284,7 +422,7 @@ gui_motif_set_mnemonics(enable)
 do_set_mnemonics(enable)
     int		enable;
 {
-    VimMenu	*menu;
+    vimmenu_t	*menu;
 
     for (menu = root_menu; menu != NULL; menu = menu->next)
 	if (menu->id != (Widget)0)
@@ -295,8 +433,8 @@ do_set_mnemonics(enable)
 
     void
 gui_mch_add_menu(menu, parent, idx)
-    VimMenu	*menu;
-    VimMenu	*parent;
+    vimmenu_t	*menu;
+    vimmenu_t	*parent;
     int		idx;
 {
     XmString	label;
@@ -306,10 +444,13 @@ gui_mch_add_menu(menu, parent, idx)
     if (popup_menu(menu->name))
     {
 	Arg arg[2];
+	int n = 0;
 
-	XtSetArg(arg[0], XmNbackground, gui.menu_bg_pixel);
-	XtSetArg(arg[1], XmNforeground, gui.menu_fg_pixel);
-	menu->submenu_id = XmCreatePopupMenu(textArea, "contextMenu", arg, 2);
+#ifndef FEAT_CDE_COLORS
+	XtSetArg(arg[0], XmNbackground, gui.menu_bg_pixel); n++;
+	XtSetArg(arg[1], XmNforeground, gui.menu_fg_pixel); n++;
+#endif
+	menu->submenu_id = XmCreatePopupMenu(textArea, "contextMenu", arg, n);
 	menu->id = (Widget)0;
 	return;
     }
@@ -326,8 +467,10 @@ gui_mch_add_menu(menu, parent, idx)
 	    xmCascadeButtonWidgetClass,
 	    (parent == NULL) ? menuBar : parent->submenu_id,
 	    XmNlabelString, label,
+#ifndef FEAT_CDE_COLORS
 	    XmNforeground, gui.menu_fg_pixel,
 	    XmNbackground, gui.menu_bg_pixel,
+#endif
 	    XmNmnemonic, p_wak[0] == 'n' ? NUL : menu->mnemonic,
 #if (XmVersion >= 1002)
 	    /* submenu: count the tearoff item (needed for LessTif) */
@@ -370,13 +513,13 @@ gui_mch_add_menu(menu, parent, idx)
 	NULL);
 
     /*
-     * The "Help" menu is a special case, and should be placed at the far right
-     * hand side of the menu-bar.
+     * The "Help" menu is a special case, and should be placed at the far
+     * right hand side of the menu-bar.  It's recognized by its high priority.
      */
-    if (parent == NULL && STRCMP((char *)menu->dname, "Help") == 0)
+    if (parent == NULL && menu->priority >= 9999)
 	XtVaSetValues(menuBar,
-	    XmNmenuHelpWidget, menu->id,
-	    NULL);
+		XmNmenuHelpWidget, menu->id,
+		NULL);
 
     /*
      * When we add a top-level item to the menu bar, we can figure out how
@@ -391,7 +534,7 @@ gui_mch_add_menu(menu, parent, idx)
  */
     static void
 gui_motif_add_actext(menu)
-    VimMenu	*menu;
+    vimmenu_t	*menu;
 {
     XmString	label;
 
@@ -449,7 +592,7 @@ toggle_tearoff(wid)
 
     static void
 gui_mch_recurse_tearoffs(menu)
-    VimMenu	*menu;
+    vimmenu_t	*menu;
 {
     while (menu != NULL)
     {
@@ -464,6 +607,15 @@ gui_mch_recurse_tearoffs(menu)
 }
 #endif
 
+    int
+gui_mch_text_area_extra_height()
+{
+    Dimension	shadowHeight;
+
+    XtVaGetValues(textAreaFrame, XmNshadowThickness, &shadowHeight, NULL);
+    return shadowHeight;
+}
+
 /*
  * Compute the height of the menu bar.
  * We need to check all the items for their position an height, for the case
@@ -475,7 +627,7 @@ gui_mch_compute_menu_height(id)
 {
     Dimension	y, maxy;
     Dimension	margin, shadow;
-    VimMenu	*mp;
+    vimmenu_t	*mp;
     static Dimension	height = 21;	/* normal height of a menu item */
 
     /* Don't update the menu height when it was set at a fixed value */
@@ -538,14 +690,101 @@ gui_mch_compute_menu_height(id)
     gui.menu_height = maxy + height - 2 * shadow + 2 * margin + 4;
 }
 
-
     void
 gui_mch_add_menu_item(menu, parent, idx)
-    VimMenu	*menu;
-    VimMenu	*parent;
+    vimmenu_t	*menu;
+    vimmenu_t	*parent;
     int		idx;
 {
     XmString	label;
+
+# ifdef EBCDIC
+    menu->mnemonic = 0;
+# endif
+
+# ifdef FEAT_TOOLBAR
+    if (toolbar_menu(parent->name))
+    {
+	WidgetClass	type;
+        XmString	xms;	    /* fallback label if pixmap not found */
+	int		n;
+	Arg		args[15];
+
+	n = 0;
+	if (is_menu_separator(menu->name))
+	{
+	    char	*cp;
+	    Dimension	wid;
+
+	    /*
+	     * A separator has the format "-sep%d[:%d]-". The optional :%d is
+	     * a width specifier. If no width is specified then we choose one.
+	     */
+	    cp = (char *) vim_strchr(menu->name, ':');
+	    if (cp != NULL)
+		wid = (Dimension) atoi(++cp);
+	    else
+		wid = 5;
+
+	    type = xmDrawingAreaWidgetClass;
+	    XtSetArg(args[n], XmNwidth, wid); n++;
+	    XtSetArg(args[n], XmNmappedWhenManaged, False); n++;
+	}
+	else
+	{
+	    Pixmap pixmap;
+	    Pixmap insensitive;
+
+	    if (strstr((const char *)p_toolbar, "icons") != NULL)
+		get_pixmap(menu->name, &pixmap, &insensitive);
+	    if (pixmap == NULL)
+	    {
+		xms = XmStringCreate((char *) menu->dname, STRING_TAG);
+		XtSetArg(args[n], XmNlabelString, xms); n++;
+		XtSetArg(args[n], XmNlabelType, XmSTRING); n++;
+	    }
+	    else
+	    {
+		XtSetArg(args[n], XmNlabelPixmap, pixmap); n++;
+		XtSetArg(args[n], XmNlabelInsensitivePixmap, insensitive); n++;
+		XtSetArg(args[n], XmNlabelType, XmPIXMAP); n++;
+		XtSetArg(args[n], XmNshadowThickness, 0); n++;
+		XtSetArg(args[n], XmNmarginWidth, 0); n++;
+		XtSetArg(args[n], XmNmarginHeight, 0); n++;
+	    }
+	    type = xmPushButtonWidgetClass;
+	    XtSetArg(args[n], XmNwidth, 80); n++;
+	}
+
+	XtSetArg(args[n], XmNpositionIndex, idx); n++;
+	if (menu->id == NULL)
+	{
+	    menu->id = XtCreateManagedWidget((char *)menu->dname,
+			type, toolBar, args, n);
+	    if (menu->id != NULL && type == xmPushButtonWidgetClass)
+	    {
+		XtAddCallback(menu->id,
+			XmNactivateCallback, gui_x11_menu_cb, menu);
+
+		XtAddEventHandler(menu->id, EnterWindowMask, False,
+			toolbarbutton_enter_cb, menu);
+		XtAddEventHandler(menu->id, LeaveWindowMask, False,
+			toolbarbutton_leave_cb, menu);
+	    }
+	}
+	else
+	    XtSetValues(menu->id, args, n);
+
+	menu->parent = parent;
+	menu->submenu_id = NULL;
+	/* When adding first item to toolbar it might have to be enabled .*/
+	if (!XtIsManaged(XtParent(toolBar))
+		    && vim_strchr(p_go, GO_TOOLBAR) != NULL)
+	    gui_mch_show_toolbar(TRUE);
+	gui.toolbar_height = gui_mch_compute_toolbar_height();
+	return;
+    } /* toolbar menu item */
+# endif
 
     /* No parent, must be a non-menubar menu */
     if (parent->submenu_id == (Widget)0)
@@ -615,7 +854,7 @@ gui_mch_new_menu_colors()
 
     static void
 gui_mch_submenu_colors(mp)
-    VimMenu	*mp;
+    vimmenu_t	*mp;
 {
     while (mp != NULL)
     {
@@ -655,9 +894,11 @@ gui_mch_submenu_colors(mp)
  */
     void
 gui_mch_destroy_menu(menu)
-    VimMenu *menu;
+    vimmenu_t	*menu;
 {
-    Widget  parent;
+    Widget	parent;
+    int		num_children;
+
 
     if (menu->submenu_id != (Widget)0)
     {
@@ -673,10 +914,12 @@ gui_mch_destroy_menu(menu)
 	 * will delete it's children like all good widgets do.
 	 */
 	parent = XtParent(menu->id);
-	if (parent != menuBar)
+	if (parent != menuBar
+#ifdef FEAT_TOOLBAR
+		&& parent != toolBar
+#endif
+	   )
 	{
-	    int num_children;
-
 	    XtVaGetValues(parent, XtNnumChildren, &num_children, NULL);
 	    if (num_children > 1)
 		XtDestroyWidget(menu->id);
@@ -687,13 +930,24 @@ gui_mch_destroy_menu(menu)
 
 	if (parent == menuBar)
 	    gui_mch_compute_menu_height((Widget)0);
+#ifdef FEAT_TOOLBAR
+	else if (parent == toolBar)
+	{
+	    /* When removing last toolbar item, don't display the toolbar. */
+	    XtVaGetValues(toolBar, XmNnumChildren, &num_children, NULL);
+	    if (num_children == 0)
+		gui_mch_show_toolbar(FALSE);
+	    else
+		gui.toolbar_height = gui_mch_compute_toolbar_height();
+	}
+#endif
     }
 }
 
 /* ARGSUSED */
     void
 gui_mch_show_popupmenu(menu)
-    VimMenu *menu;
+    vimmenu_t *menu;
 {
 #ifdef MOTIF_POPUP
     XmMenuPosition(menu->submenu_id, gui_x11_get_last_mouse_event());
@@ -701,7 +955,7 @@ gui_mch_show_popupmenu(menu)
 #endif
 }
 
-#endif /* WANT_MENU */
+#endif /* FEAT_MENU */
 
 
 /*
@@ -710,10 +964,10 @@ gui_mch_show_popupmenu(menu)
 
     void
 gui_mch_set_scrollbar_thumb(sb, val, size, max)
-    GuiScrollbar    *sb;
-    int		    val;
-    int		    size;
-    int		    max;
+    scrollbar_t *sb;
+    long	val;
+    long	size;
+    long	max;
 {
     if (sb->id != (Widget)0)
 	XtVaSetValues(sb->id,
@@ -726,48 +980,126 @@ gui_mch_set_scrollbar_thumb(sb, val, size, max)
 
     void
 gui_mch_set_scrollbar_pos(sb, x, y, w, h)
-    GuiScrollbar    *sb;
-    int		    x;
-    int		    y;
-    int		    w;
-    int		    h;
+    scrollbar_t *sb;
+    int		x;
+    int		y;
+    int		w;
+    int		h;
 {
     if (sb->id != (Widget)0)
     {
-	XtVaSetValues(sb->id,
-		      XmNleftOffset, x,
-		      XmNtopOffset, y,
-		      XmNrightOffset, -x - w,
-		      XmNbottomOffset, -y - h,
-		      NULL);
+	if (sb->type == SBAR_LEFT || sb->type == SBAR_RIGHT)
+	    XtVaSetValues(sb->id,
+			  XmNtopOffset, y,
+			  XmNbottomOffset, -y - h,
+			  XmNwidth, w,
+			  NULL);
+	else
+	    XtVaSetValues(sb->id,
+			  XmNtopOffset, y,
+			  XmNleftOffset, x,
+			  XmNrightOffset, gui.scrollbar_width,
+			  XmNheight, h,
+			  NULL);
 	XtManageChild(sb->id);
     }
 }
 
     void
-gui_mch_create_scrollbar(sb, orient)
-    GuiScrollbar    *sb;
-    int		    orient;	/* SBAR_VERT or SBAR_HORIZ */
+gui_mch_enable_scrollbar(sb, flag)
+    scrollbar_t *sb;
+    int		flag;
 {
-    sb->id = XtVaCreateManagedWidget("scrollBar",
-	    xmScrollBarWidgetClass, vimForm,
-	    XmNshadowThickness, 1,
-	    XmNminimum, 0,
-	    XmNorientation, (orient == SBAR_VERT) ? XmVERTICAL
-						  : XmHORIZONTAL,
-	    XmNforeground, gui.scroll_fg_pixel,
-	    XmNbackground, gui.scroll_fg_pixel,
-	    XmNtroughColor, gui.scroll_bg_pixel,
-	    XmNleftAttachment, XmATTACH_FORM,
-	    XmNtopAttachment, XmATTACH_FORM,
-	    XmNrightAttachment, XmATTACH_OPPOSITE_FORM,
-	    XmNbottomAttachment, XmATTACH_OPPOSITE_FORM,
-	    /* Use dummy offsets to avoid a warning for Lesstif */
-	    XmNleftOffset, 2,
-	    XmNtopOffset, 2,
-	    XmNrightOffset, -4,
-	    XmNbottomOffset, -4,
-	    NULL);
+    Arg		args[16];
+    int		n;
+
+    if (sb->id != (Widget)0)
+    {
+	n = 0;
+	if (flag)
+	{
+	    switch (sb->type)
+	    {
+		case SBAR_LEFT:
+		    XtSetArg(args[n], XmNleftOffset, gui.scrollbar_width); n++;
+		    break;
+
+		case SBAR_RIGHT:
+		    XtSetArg(args[n], XmNrightOffset, gui.scrollbar_width); n++;
+		    break;
+
+		case SBAR_BOTTOM:
+		    XtSetArg(args[n], XmNbottomOffset, gui.scrollbar_height);n++;
+		    break;
+	    }
+	    XtSetValues(textArea, args, n);
+	    XtManageChild(sb->id);
+	}
+	else
+	{
+	    switch (sb->type)
+	    {
+		case SBAR_LEFT:
+		    XtSetArg(args[n], XmNleftOffset, 0); n++;
+		    break;
+
+		case SBAR_RIGHT:
+		    XtSetArg(args[n], XmNrightOffset, 0); n++;
+		    break;
+
+		case SBAR_BOTTOM:
+		    XtSetArg(args[n], XmNbottomOffset, 0);n++;
+		    break;
+	    }
+	    XtSetValues(textArea, args, n);
+	    XtUnmanageChild(sb->id);
+	}
+    }
+}
+
+    void
+gui_mch_create_scrollbar(sb, orient)
+    scrollbar_t *sb;
+    int		orient;	/* SBAR_VERT or SBAR_HORIZ */
+{
+    Arg		args[16];
+    int		n;
+
+    n = 0;
+    XtSetArg(args[n], XmNshadowThickness, 1); n++;
+    XtSetArg(args[n], XmNminimum, 0); n++;
+    XtSetArg(args[n], XmNorientation,
+	    (orient == SBAR_VERT) ? XmVERTICAL : XmHORIZONTAL); n++;
+#ifndef FEAT_CDE_COLORS
+    XtSetArg(args[n], XmNforeground, gui.scroll_fg_pixel); n++;
+    XtSetArg(args[n], XmNbackground, gui.scroll_fg_pixel); n++;
+    XtSetArg(args[n], XmNtroughColor, gui.scroll_bg_pixel); n++;
+#endif
+
+    switch (sb->type)
+    {
+	case SBAR_LEFT:
+	    XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
+	    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_OPPOSITE_FORM); n++;
+	    XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+	    break;
+
+	case SBAR_RIGHT:
+	    XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
+	    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_OPPOSITE_FORM); n++;
+	    XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+	    break;
+
+	case SBAR_BOTTOM:
+	    XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+	    XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+	    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
+	    break;
+    }
+
+    sb->id = XtCreateManagedWidget("scrollBar",
+	    xmScrollBarWidgetClass, textAreaForm, args, n);
+
     if (sb->id != (Widget)0)
     {
 	XtAddCallback(sb->id, XmNvalueChangedCallback,
@@ -778,18 +1110,22 @@ gui_mch_create_scrollbar(sb, orient)
 	    (XtPointer)0);
     }
 }
+
+#if defined(FEAT_WINDOWS) || defined(PROTO)
     void
 gui_mch_destroy_scrollbar(sb)
-    GuiScrollbar    *sb;
+    scrollbar_t *sb;
 {
     if (sb->id != (Widget)0)
 	XtDestroyWidget(sb->id);
 }
+#endif
 
     void
 gui_mch_set_scrollbar_colors(sb)
-    GuiScrollbar    *sb;
+    scrollbar_t *sb;
 {
+#ifndef FEAT_CDE_COLORS
     if (sb->id != NULL)
     {
 #if (XmVersion>=1002)
@@ -803,6 +1139,7 @@ gui_mch_set_scrollbar_colors(sb)
 #endif
 	    NULL);
     }
+#endif
 }
 
 /*
@@ -815,7 +1152,7 @@ gui_x11_get_wid()
     return(XtWindow(textArea));
 }
 
-#if defined(USE_BROWSE) || defined(PROTO)
+#if defined(FEAT_BROWSE) || defined(PROTO)
 
 /*
  * file selector related stuff
@@ -961,9 +1298,9 @@ DialogAcceptCB(w, client_data, call_data)
     XtUnmanageChild(dialog_wgt);
 }
 
-#endif /* USE_BROWSE */
+#endif /* FEAT_BROWSE */
 
-#if defined(GUI_DIALOG) || defined(PROTO)
+#if defined(FEAT_GUI_DIALOG) || defined(PROTO)
 
 static int	dialogStatus;
 
@@ -1000,7 +1337,7 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
     int			vertical;
 
     if (title == NULL)
-	title = (char_u *)"Vim dialog";
+	title = (char_u *)_("Vim dialog");
 
     /* if our pointer is currently hidden, then we should show it. */
     gui_mch_mousehide(FALSE);
@@ -1138,4 +1475,497 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
 
     return dialogStatus;
 }
-#endif /* GUI_DIALOG */
+#endif /* FEAT_GUI_DIALOG */
+
+#ifdef FEAT_FOOTER
+
+    static int
+gui_mch_compute_footer_height()
+{
+    Dimension	height;		    /* total Toolbar height */
+    Dimension	top;		    /* XmNmarginTop */
+    Dimension	bottom;		    /* XmNmarginBottom */
+    Dimension	shadow;		    /* XmNshadowThickness */
+
+    XtVaGetValues(footer,
+	    XmNheight, &height,
+	    XmNmarginTop, &top,
+	    XmNmarginBottom, &bottom,
+	    XmNshadowThickness, &shadow,
+	    NULL);
+
+    return (int) height + top + bottom + (shadow << 1);
+}
+
+
+    void
+gui_mch_set_footer_pos(h)
+    int	    h;			    /* textArea height */
+{
+    XtVaSetValues(footer,
+		  XmNtopOffset, h + 7,
+		  NULL);
+}
+
+    void
+gui_mch_enable_footer(showit)
+    int		showit;
+{
+    if (showit)
+    {
+	gui.footer_height = gui_mch_compute_footer_height();
+	XtManageChild(footer);
+    }
+    else
+    {
+	gui.footer_height = 0;
+	XtUnmanageChild(footer);
+    }
+    XtVaSetValues(textAreaFrame, XmNbottomOffset, gui.footer_height, NULL);
+}
+
+    void
+gui_mch_set_footer(char_u *msg)
+{
+    XmString	xms;
+
+    xms = XmStringCreate((char *) msg, STRING_TAG);
+    XtVaSetValues(footer, XmNlabelString, xms, NULL);
+    XmStringFree(xms);
+}
+
+#endif
+
+
+#if defined(FEAT_TOOLBAR) || defined(PROTO)
+    void
+gui_mch_show_toolbar(int showit)
+{
+    Cardinal	numChildren;	    /* how many children toolBar has */
+
+    XtVaGetValues(toolBar, XmNnumChildren, &numChildren, NULL);
+    if (showit && numChildren > 0)
+    {
+	gui.toolbar_height = gui_mch_compute_toolbar_height();
+	XtManageChild(XtParent(toolBar));
+	XtVaSetValues(textAreaFrame,
+		XmNtopAttachment, XmATTACH_WIDGET,
+		XmNtopWidget, XtParent(toolBar),
+		NULL);
+	if (XtIsManaged(menuBar))
+	    XtVaSetValues(XtParent(toolBar),
+		    XmNtopAttachment, XmATTACH_WIDGET,
+		    XmNtopWidget, menuBar,
+		    NULL);
+	else
+	    XtVaSetValues(XtParent(toolBar),
+		    XmNtopAttachment, XmATTACH_FORM,
+		    NULL);
+    }
+    else
+    {
+	gui.toolbar_height = 0;
+	if (XtIsManaged(menuBar))
+	    XtVaSetValues(textAreaFrame,
+		XmNtopAttachment, XmATTACH_WIDGET,
+		XmNtopWidget, menuBar,
+		NULL);
+	else
+	    XtVaSetValues(textAreaFrame,
+		XmNtopAttachment, XmATTACH_FORM,
+		NULL);
+
+	XtUnmanageChild(XtParent(toolBar));
+    }
+}
+
+    Widget
+gui_mch_get_toolbar()
+{
+    return toolBar;
+}
+
+/*
+ * A toolbar button has been pushed; now reset the input focus
+ * such that the user can type page up/down etc. and have the
+ * input go to the editor window, not the button
+ */
+    void
+gui_mch_reset_focus()
+{
+    if (textArea != NULL)
+	XmProcessTraversal(textArea, XmTRAVERSE_CURRENT);
+}
+
+    int
+gui_mch_compute_toolbar_height()
+{
+    Dimension	height;		    /* total Toolbar height */
+    Dimension	whgt;		    /* height of each widget */
+    Dimension	marginHeight;	    /* XmNmarginHeight of toolBar */
+    Dimension	shadowThickness;    /* thickness of Xtparent(toolBar) */
+    WidgetList	children;	    /* list of toolBar's children */
+    Cardinal	numChildren;	    /* how many children toolBar has */
+    int		i;
+
+    height = 0;
+    shadowThickness = 0;
+    marginHeight = 0;
+    if (toolBar != NULL && toolBarFrame != NULL)
+    {				    /* get height of XmFrame parent */
+	XtVaGetValues(toolBarFrame,
+		XmNshadowThickness, &shadowThickness,
+		NULL);
+	XtVaGetValues(toolBar,
+		XmNmarginHeight, &marginHeight,
+		NULL);
+	XtVaGetValues(toolBar,
+	    XmNchildren, &children,
+	    XmNnumChildren, &numChildren, NULL);
+	for (i = 0; i < numChildren; i++)
+	{
+	    whgt = 0;
+	    XtVaGetValues(children[i], XmNheight, &whgt, NULL);
+	    if (height < whgt)
+		height = whgt;
+	}
+    }
+
+    return (int)(height + (marginHeight << 1) + (shadowThickness << 1));
+}
+
+
+/*
+ * Icons used by the toolbar code.
+ */
+#include "../pixmaps/tb_new.xpm"
+#include "../pixmaps/tb_open.xpm"
+#include "../pixmaps/tb_close.xpm"
+#include "../pixmaps/tb_save.xpm"
+#include "../pixmaps/tb_print.xpm"
+#include "../pixmaps/tb_cut.xpm"
+#include "../pixmaps/tb_copy.xpm"
+#include "../pixmaps/tb_paste.xpm"
+#include "../pixmaps/tb_find.xpm"
+#include "../pixmaps/tb_find_next.xpm"
+#include "../pixmaps/tb_find_prev.xpm"
+#include "../pixmaps/tb_find_help.xpm"
+#include "../pixmaps/tb_exit.xpm"
+#include "../pixmaps/tb_undo.xpm"
+#include "../pixmaps/tb_redo.xpm"
+#include "../pixmaps/tb_help.xpm"
+#include "../pixmaps/tb_macro.xpm"
+#include "../pixmaps/tb_make.xpm"
+#include "../pixmaps/tb_save_all.xpm"
+#include "../pixmaps/tb_jump.xpm"
+#include "../pixmaps/tb_ctags.xpm"
+#include "../pixmaps/tb_load_session.xpm"
+#include "../pixmaps/tb_save_session.xpm"
+#include "../pixmaps/tb_new_session.xpm"
+#include "../pixmaps/tb_blank.xpm"
+#include "../pixmaps/tb_maximize.xpm"
+#include "../pixmaps/tb_split.xpm"
+#include "../pixmaps/tb_minimize.xpm"
+#include "../pixmaps/tb_shell.xpm"
+#include "../pixmaps/tb_replace.xpm"
+#include "../pixmaps/tb_vsplit.xpm"
+#include "../pixmaps/tb_maxwidth.xpm"
+#include "../pixmaps/tb_minwidth.xpm"
+
+/*
+ * Those are the pixmaps used for the default buttons.
+ */
+struct NameToPixmap
+{
+    char *name;
+    char **xpm;
+};
+
+static const struct NameToPixmap built_in_pixmaps[] =
+{
+    {"New", tb_new_xpm},
+    {"Open", tb_open_xpm},
+    {"Save", tb_save_xpm},
+    {"Undo", tb_undo_xpm},
+    {"Redo", tb_redo_xpm},
+    {"Cut", tb_cut_xpm},
+    {"Copy", tb_copy_xpm},
+    {"Paste", tb_paste_xpm},
+    {"Print", tb_print_xpm},
+    {"Help", tb_help_xpm},
+    {"Find", tb_find_xpm},
+    {"SaveAll",	tb_save_all_xpm},
+    {"SaveSesn", tb_save_session_xpm},
+    {"NewSesn", tb_new_session_xpm},
+    {"LoadSesn", tb_load_session_xpm},
+    {"RunScript", tb_macro_xpm},
+    {"Replace",	tb_replace_xpm},
+    {"WinClose", tb_close_xpm},
+    {"WinMax",	tb_maximize_xpm},
+    {"WinMin", tb_minimize_xpm},
+    {"WinSplit", tb_split_xpm},
+    {"Shell", tb_shell_xpm},
+    {"FindPrev", tb_find_prev_xpm},
+    {"FindNext", tb_find_next_xpm},
+    {"FindHelp", tb_find_help_xpm},
+    {"Make", tb_make_xpm},
+    {"TagJump", tb_jump_xpm},
+    {"RunCtags", tb_ctags_xpm},
+    {"Exit", tb_exit_xpm},
+    {"WinVSplit", tb_vsplit_xpm},
+    {"WinMaxWidth", tb_maxwidth_xpm},
+    {"WinMinWidth", tb_minwidth_xpm},
+    { NULL, NULL} /* end tag */
+};
+
+#ifdef FEAT_SUN_WORKSHOP
+static const struct NameToPixmap sunws_pixmaps[] =
+{
+    {"Build",	    "$SPRO_WSDIR/lib/locale/%L/graphics/build.xpm"},
+    {"Stop At",	    "$SPRO_WSDIR/lib/locale/%L/graphics/stopAt.xpm"},
+    {"Stop In",	    "$SPRO_WSDIR/lib/locale/%L/graphics/stopIn.xpm"},
+    {"Clear At",    "$SPRO_WSDIR/lib/locale/%L/graphics/clearAt.xpm"},
+    {"Start",	    "$SPRO_WSDIR/lib/locale/%L/graphics/start.xpm"},
+    {"Evaluate",    "$SPRO_WSDIR/lib/locale/%L/graphics/evaluate.xpm"},
+    {"Eval *",	    "$SPRO_WSDIR/lib/locale/%L/graphics/evaluate-star.xpm"},
+    {"Up",	    "$SPRO_WSDIR/lib/locale/%L/graphics/up.xpm"},
+    {"Down",	    "$SPRO_WSDIR/lib/locale/%L/graphics/down.xpm"},
+    {"Go",	    "$SPRO_WSDIR/lib/locale/%L/graphics/go.xpm"},
+    {"StepInto",    "$SPRO_WSDIR/lib/locale/%L/graphics/stepInto.xpm"},
+    {"StepOver",    "$SPRO_WSDIR/lib/locale/%L/graphics/stepOver.xpm"},
+    {"StepOut",	    "$SPRO_WSDIR/lib/locale/%L/graphics/stepOut.xpm"},
+    {"Fix",	    "$SPRO_WSDIR/lib/locale/%L/graphics/fix.xpm"},
+    {"Def",	    "$SPRO_WSDIR/lib/locale/%L/graphics/findDef.xpm"},
+    {"Refs",	    "$SPRO_WSDIR/lib/locale/%L/graphics/findRefs.xpm"},
+    {NULL,	    NULL}
+};
+#endif
+
+#ifdef FEAT_SUN_WORKSHOP
+static Boolean filePredicate __ARGS((String cp));
+
+    static Boolean
+filePredicate(cp)
+    String cp;
+{
+    return True;
+}
+#endif
+
+static void createXpmImages __ARGS((char_u *path, char **xpm, Pixmap *sen, Pixmap *insen));
+
+    static void
+get_pixmap(menuname, sen, insen)
+    char_u	*menuname;
+    Pixmap	*sen;
+    Pixmap	*insen;
+{
+    int		builtin_num;		/* index into builtin table */
+    int		num_pixmaps;		/* entries in builtin pixmap table */
+    char_u	buf[MAXPATHL];		/* buffer storing expanded pathname */
+    char	**xpm = NULL;		/* xpm array */
+    int		i;
+
+    buf[0] = NUL;			/* start with NULL path */
+    num_pixmaps = (sizeof(built_in_pixmaps) / sizeof(built_in_pixmaps[0])) - 1;
+    if (STRNCMP(menuname, "BuiltIn", (size_t)7) == 0)
+    {
+	if (isdigit((int)menuname[7]) && isdigit((int)menuname[8]))
+	{
+	    builtin_num = atoi((char *)menuname + 7);
+	    if (builtin_num >= 0 && builtin_num < num_pixmaps)
+		xpm = built_in_pixmaps[builtin_num].xpm;
+	    else
+		xpm = tb_blank_xpm;
+	}
+    }
+    else
+    {
+	for (i = 0; i < num_pixmaps; i++)
+	{
+	    if (STRCMP(menuname, built_in_pixmaps[i].name) == 0)
+	    {
+		xpm = built_in_pixmaps[i].xpm;
+		break;
+	    }
+	}
+#ifdef FEAT_SUN_WORKSHOP
+	if (xpm == NULL)
+	{
+	    char_u	*path;		/* path with %L resolved to locale */
+	    char	*lang = getenv("LANG");
+	    char	*lc_all = getenv("LC_ALL");
+
+	    num_pixmaps = (sizeof(sunws_pixmaps)/sizeof(sunws_pixmaps[0])) - 1;
+	    for (i = 0; i < num_pixmaps; i++)
+	    {
+		if (STRCMP(menuname, sunws_pixmaps[i].name) == 0)
+		{
+		    path = (char_u *) XtResolvePathname(gui.dpy, NULL,
+			NULL, ".xpm", sunws_pixmaps[i].xpm,
+			NULL, 0, filePredicate);
+		    expand_env(path, buf, MAXPATHL);
+		    XtFree(path);
+		    break;
+		}
+	    }
+	}
+#endif
+    }
+
+    if (xpm != NULL || buf[0] != NUL)
+	createXpmImages(buf, xpm, sen, insen);
+}
+
+#include <X11/xpm.h>
+
+/*
+ * Read an Xpm file, doing color substitutions for the foreground and
+ * background colors. If there is an error reading a color xpm file,
+ * drop back and read the monochrome file. If successfull, create the
+ * insensitive Pixmap too.
+ */
+    static void
+createXpmImages(path, xpm, sen, insen)
+    char_u	*path;
+    char	**xpm;
+    Pixmap	*sen;
+    Pixmap	*insen;
+{
+    Window	rootWindow;
+    XpmAttributes attrs;
+    int		screenNum;
+    int		status;
+    GC		mask_gc;
+    GC		back_gc;
+    XGCValues	gcvalues;
+    int		startX;
+    int		x, y;
+    Pixmap	mask;
+    Pixmap	map;
+
+    /* Setup the color subsititution table */
+    attrs.valuemask = XpmColorSymbols;
+    attrs.numsymbols = 2;
+    attrs.colorsymbols = (XpmColorSymbol *)
+			  XtMalloc(sizeof(XpmColorSymbol) * attrs.numsymbols);
+    attrs.colorsymbols[0].name = "BgColor";
+    attrs.colorsymbols[0].value = NULL;
+    attrs.colorsymbols[0].pixel = gui.menu_bg_pixel;
+    attrs.colorsymbols[1].name = "FgColor";
+    attrs.colorsymbols[1].value = NULL;
+    attrs.colorsymbols[1].pixel = gui.menu_fg_pixel;
+
+    screenNum = DefaultScreen(gui.dpy);
+    rootWindow = RootWindow(gui.dpy, screenNum);
+
+    /* Create the "sensitive" pixmap */
+    if (xpm != NULL)
+	status = XpmCreatePixmapFromData(gui.dpy, rootWindow, xpm,
+							 &map, &mask, &attrs);
+    else
+	status = XpmReadFileToPixmap(gui.dpy, rootWindow, (char *)path,
+							 &map, &mask, &attrs);
+    if (status == XpmSuccess && map != 0)
+    {
+	/* Need to create new Pixmaps with the mask applied. */
+	gcvalues.foreground = gui.menu_bg_pixel;
+	back_gc = XCreateGC(gui.dpy, map, GCForeground, &gcvalues);
+	mask_gc = XCreateGC(gui.dpy, map, GCForeground, &gcvalues);
+	XSetClipMask(gui.dpy, mask_gc, mask);
+
+	/* Create the "sensitive" pixmap. */
+	*sen = XCreatePixmap(gui.dpy, rootWindow,
+		 attrs.width, attrs.height, DefaultDepth(gui.dpy, screenNum));
+	XFillRectangle(gui.dpy, *sen, back_gc, 0, 0,
+						   attrs.width, attrs.height);
+	XCopyArea(gui.dpy, map, *sen, mask_gc, 0, 0,
+					     attrs.width, attrs.height, 0, 0);
+
+	/* Create the "insensitive" pixmap.  It's a copy of the "sensitive"
+	 * pixmap with half the pixels set to the background color. */
+	*insen = XCreatePixmap(gui.dpy, rootWindow,
+		 attrs.width, attrs.height, DefaultDepth(gui.dpy, screenNum));
+	XCopyArea(gui.dpy, *sen, *insen, back_gc, 0, 0,
+					     attrs.width, attrs.height, 0, 0);
+	for (y = 0; y < attrs.height; y++)
+	{
+	    if (y % 2 == 0)
+		startX = 0;
+	    else
+		startX = 1;
+	    for (x = startX; x < attrs.width; x += 2)
+		XDrawPoint(gui.dpy, *insen, back_gc, x, y);
+	}
+	XFreeGC(gui.dpy, back_gc);
+	XFreeGC(gui.dpy, mask_gc);
+	XFreePixmap(gui.dpy, map);
+	XFreePixmap(gui.dpy, mask);
+    }
+    else
+	*insen = *sen = 0;
+
+    XtFree((char *)attrs.colorsymbols);
+    XpmFreeAttributes(&attrs);
+}
+
+
+/*
+ * The next toolbar enter/leave callbacks make sure the text area gets the
+ * keyboard focus when the pointer is not in the toolbar.
+ */
+    static void
+toolbar_enter_cb(w, client_data, event, cont)
+    Widget	w;
+    XtPointer	client_data;
+    XEvent	*event;
+    Boolean	*cont;
+{
+    XmProcessTraversal(toolBar, XmTRAVERSE_CURRENT);
+}
+
+    static void
+toolbar_leave_cb(w, client_data, event, cont)
+    Widget	w;
+    XtPointer	client_data;
+    XEvent	*event;
+    Boolean	*cont;
+{
+    XmProcessTraversal(textArea, XmTRAVERSE_CURRENT);
+}
+
+/*
+ * The next toolbar enter/leave callbacks should really do balloon help.  But
+ * I have to use footer help for backwards compatability.  Hopefully both will
+ * get implemented and the user will have a choice.
+ */
+    static void
+toolbarbutton_enter_cb(w, client_data, event, cont)
+    Widget	w;
+    XtPointer	client_data;
+    XEvent	*event;
+    Boolean	*cont;
+{
+    vimmenu_t	*menu = (vimmenu_t *) client_data;
+
+    if (menu->strings[MENU_INDEX_TIP] != NULL)
+    {
+# ifdef FEAT_FOOTER
+	if (vim_strchr(p_go, GO_FOOTER) != NULL)
+	    gui_mch_set_footer(menu->strings[MENU_INDEX_TIP]);
+# endif
+    }
+}
+
+    static void
+toolbarbutton_leave_cb(w, client_data, event, cont)
+    Widget	w;
+    XtPointer	client_data;
+    XEvent	*event;
+    Boolean	*cont;
+{
+# ifdef FEAT_FOOTER
+    gui_mch_set_footer((char_u *) "");
+# endif
+}
+#endif

@@ -1,7 +1,8 @@
+# $Id$
+#
 # Makefile for Win32 using Microsoft Visual C++ compiler
 
-SOURCES	= args.c eiffel.c entry.c fortran.c get.c keyword.c main.c \
-	options.c parse.c read.c sort.c strlist.c vstring.c
+include source.mak
 
 ctags: ctags.exe
 

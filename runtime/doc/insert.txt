@@ -1,4 +1,4 @@
-*insert.txt*    For Vim version 5.7.  Last change: 2000 Jan 09
+*insert.txt*    For Vim version 6.0d.  Last change: 2000 Jul 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -20,6 +20,9 @@ commands for inserting text in other ways.
 8. Insert mode commands					|inserting|
 9. Ex insert commands					|inserting-ex|
 10. Inserting a file					|inserting-file|
+
+Also see 'virtualedit', for moving the cursor to positions where there is no
+character.  Useful for editing a table.
 
 ==============================================================================
 1. Special keys						*ins-special-keys*
@@ -121,10 +124,10 @@ CTRL-R CTRL-R {0-9a-z"%#/:.-=}		*i_CTRL-R_CTRL-R* *i_<C-R>_<C-R>*
 		Insert the contents of a register.  Works like using a single
 		CTRL-R, but the text is inserted literally, not as if typed.
 		This differs when the register contains characters like <BS>.
-		Example, where register a contains "ab^Hc":
->	CTRL-R a		results in "ac".
->	CTRL-R CTRL-R a		results in "ab^Hc".
-		Options 'textwidth', 'formatoptions', etc. still apply.  If
+		Example, where register a contains "ab^Hc": >
+	CTRL-R a		results in "ac".
+	CTRL-R CTRL-R a		results in "ab^Hc".
+<		Options 'textwidth', 'formatoptions', etc. still apply.  If
 		you also want to avoid these, use "<C-R><C-O>r", see below.
 		The '.' register (last inserted text) is still inserted as
 		typed.  {not in Vi}
@@ -163,9 +166,10 @@ CTRL-D		Delete one shiftwidth of indent at the start of the current
 
 						*i_CTRL-V*
 CTRL-V		Insert next non-digit literally.  For special keys, the
-		terminal code is inserted.  Up to three digits form the
-		decimal value of a single byte (see below |i_CTRL-V_digit|.
-		The non-digit and the three digits are not considered for
+		terminal code is inserted.  It's also possible to enter the
+		decimal, octal or hexadecimal value of a charcter
+		|i_CTRL-V_digit|.
+		The characters typed right after CTRL-V are not considered for
 		mapping.  {Vi: no decimal byte entry}
 		Note: Under Windows CTRL-V is often mapped to paste text.
 		Then use CTRL-Q instead.
@@ -232,17 +236,29 @@ previous line.  This effectively deletes the <EOL> in front of the cursor.
 {Vi: does not cross lines, does not delete past start position of insert}
 
 						*i_CTRL-V_digit*
-With CTRL-V followed by one, two, or three digits, you can enter the decimal
-value of any byte, except 10.  Normally CTRL-V is followed by three digits.
-The formed byte is inserted as soon as you type the third digit.  If you type
-only one or two digits and then a non-digit, the decimal value of those one
-or two digits form the byte.  After that the non-digit is dealt with in the
-normal way.  If you enter a value of 10, it will end up in the file as a 0.
-The 10 is a <NL>, which is used internally to represent the <Nul> character.
-When writing the buffer to a file, the <NL> character is translated into
-<Nul>.  The <NL> character is written at the end of each line.  Thus if you
-want to insert a <NL> character in a file you will have to make a line
-break.  The maximum value that can be entered is 255.
+With CTRL-V the decimal, octal or hexadicimal value of a character can be
+entered directly.  This way you can enter any character, except a line break
+(<NL>, value 10).  There are five ways to enter the character value:
+
+first char	mode	     max nr of chars   max value ~
+(none)		decimal		   3		255
+o or O		octal		   3		255
+x or X		hexadecimal	   2		255
+u		hexadecimal	   4		65535
+U		hexadecimal	   8		2147483647
+
+Normally you would type the maximum number of characters.  Thus to enter a
+space (value 32) you would type <C-V>032.  You can omit the leading zero, in
+which case the character typed after the number must be a non-digit.  This
+happens for the other modes as well: As soon as you type a character that is
+invalid for the mode, the value before it will be used and the "invalid"
+character is dealt with in the normal way.
+
+If you enter a value of 10, it will end up in the file as a 0.  The 10 is a
+<NL>, which is used internally to represent the <Nul> character.  When writing
+the buffer to a file, the <NL> character is translated into <Nul>.  The <NL>
+character is written at the end of each line.  Thus if you want to insert a
+<NL> character in a file you will have to make a line break.
 
 						*i_CTRL-X* *insert_expand*
 CTRL-X enters a sub-mode where several commands can be used.  Most of these
@@ -283,6 +299,10 @@ char		action	~
 -----------------------------------------------------------------------
 <Up>		cursor one line up			     *i_<Up>*
 <Down>		cursor one line down			     *i_<Down>*
+CTRL-G <Up>	cursor one line up, insert start column	     *i_CTRL-G_<Up>*
+CTRL-G k	cursor one line up, insert start column	     *i_CTRL-G_k*
+CTRL-G <Down>	cursor one line down, insert start column    *i_CTRL-G_<Down>*
+CTRL-G j	cursor one line down, insert start column    *i_CTRL-G_j*
 <Left>		cursor one character left		     *i_<Left>*
 <Right>		cursor one character right		     *i_<Right>*
 <S-Left>	cursor one word back (like "b" command)	     *i_<S-Left>*
@@ -315,6 +335,17 @@ The shifted cursor keys are not available on all terminals.
 When the 'whichwrap' option is set appropriately, the <Left> and <Right>
 keys on the first/last character in the line make the cursor wrap to the
 previous/next line.
+
+The CTRL-G j and CTRL-G k commands can be used to insert text in front of a
+column.  Example: >
+   int i;
+   int j;
+Position the cursor on the first "int", type "istatic<C-G>j       ".  The
+result is: >
+   static int i;
+          int j;
+When inserting the same text in front of the column in every line, use the
+Visual blockwise command "I" |v_b_I|.
 
 ==============================================================================
 3. 'textwidth' and 'wrapmargin' options			*ins-textwidth*
@@ -475,11 +506,12 @@ Completion can be done for:
 1. Whole lines						|i_CTRL-X_CTRL-L|
 2. keywords in the current file				|i_CTRL-X_CTRL-N|
 3. keywords in 'dictionary'				|i_CTRL-X_CTRL-K|
-4. keywords in the current and included files		|i_CTRL-X_CTRL-I|
-5. tags							|i_CTRL-X_CTRL-]|
-6. file names						|i_CTRL-X_CTRL-F|
-7. definitions or macros				|i_CTRL-X_CTRL-D|
-8. keywords in 'complete'				|i_CTRL-N|
+4. keywords in 'thesaurus', thesaurus-style		|i_CTRL-X_CTRL-T|
+5. keywords in the current and included files		|i_CTRL-X_CTRL-I|
+6. tags							|i_CTRL-X_CTRL-]|
+7. file names						|i_CTRL-X_CTRL-F|
+8. definitions or macros				|i_CTRL-X_CTRL-D|
+9. keywords in 'complete'				|i_CTRL-N|
 
 All these (except 2) are done in CTRL-X mode.  This is a sub-mode of Insert
 and Replace modes.  You enter CTRL-X mode by typing CTRL-X and one of the
@@ -609,6 +641,31 @@ CTRL-X CTRL-K		Search the files given with the 'dictionary' option
 			'dictionary' option.
 
 	CTRL-K	or
+	CTRL-N		Search forward for next matching keyword.  This
+			keyword replaces the previous matching keyword.
+
+	CTRL-P		Search backwards for next matching keyword.  This
+			keyword replaces the previous matching keyword.
+
+							*i_CTRL-X_CTRL-T*
+CTRL-X CTRL-T		Works as CTRL-X CTRL-K, but in a special way. It uses
+			the 'thesaurus' option instead of 'dictionary'.  If a
+			match is found in the thesaurus file, all the
+			remaining words on the same line are included as
+			matches, even though they don't complete the word.
+			Thus a word can be completely replaced.
+
+			For an example, imagine the 'thesaurus file has a line
+			like this: >
+				angry furious mad enraged
+<			Placing the cursor after the letters 'ang' and typing
+			CTRL-X CTRL-T would complete the word 'angry';
+			subsequent presses would change the word to 'furious',
+			'mad' etc.
+			Other uses include translation between two languages,
+			or grouping API functions by keyword.
+
+	CTRL-T	or
 	CTRL-N		Search forward for next matching keyword.  This
 			keyword replaces the previous matching keyword.
 
@@ -796,6 +853,8 @@ containing only a ".".  Watch out for lines starting with a backslash, see
 			script, the insertion only starts after the function
 			or script is finished.
 			{not in Vi}
+			{not available when compiled without the +ex_extra
+			feature}
 
 ==============================================================================
 10. Inserting a file					*inserting-file*
@@ -856,10 +915,10 @@ a file is read in Unix format.
 On non-Macintosh systems, the message "[Mac format]" is shown if a file is
 read in Mac format.
 
-An example on how to use ":r !":
->  :r !uuencode binfile binfile
+An example on how to use ":r !": >
+	:r !uuencode binfile binfile
 This command reads "binfile", uuencodes it and reads it into the current
 buffer.  Useful when you are editing e-mail and want to include a binary
 file.
 
- vim:tw=78:ts=8:sw=8:
+ vim:tw=78:

@@ -1,0 +1,326 @@
+*fold.txt*      For Vim version 6.0d.  Last change: 2000 Jul 26
+
+
+		  VIM REFERENCE MANUAL    by Bram Moolenaar
+
+
+Folding						*Folding* *folding*
+
+First read the User manual on folding: |usr_28.txt|
+
+1. Fold methods		|fold-methods|
+2. Fold commands	|fold-commands|
+3. Fold options		|fold-options|
+4. Behavior of folds	|fold-behavior|
+
+{Vi has no Folding}
+{not available when compiled without the +folding feature}
+
+==============================================================================
+1. Fold methods					*fold-methods*
+
+The folding method can be set with the 'foldmethod' option.
+
+When setting 'foldmethod' to a value other than "manual", all folds are
+deleted and new ones created.  Switching to the "manual" method doesn't remove
+the existing folds.  This can be used to first define the folds automatically
+and then change them manually.
+
+There are five methods to select folds:
+
+"manual":					*fold-manual*
+Use commands to manually define the fold regions.  This can also be used by a
+script that parses text to find folds.
+
+The level of a fold is only defined by its nesting.  To increase the fold
+level of a fold for a range of lines, define a fold inside it that has the
+same lines.
+
+
+"indent":					*fold-indent*
+The folds are automatically defined by the indent of the lines.
+
+The foldlevel is computed from the indent of the line, divided by the
+'shiftwidth' (rounded down).  A sequence of lines with the same or higher fold
+level form a fold, with the lines with a higher level forming a nested fold.
+
+Some lines are ignored and get the fold level of the line above or below it,
+whatever is the lowest.  These are empty or white lines and lines starting
+with a character in 'foldignore'.  White space is skipped before checking for
+characters in 'foldignore'.  For C use "#" to ignore preprocessor lines.
+
+When you want to ignore lines in another way, use the 'expr' method.  The
+|indent()| function can be used in 'foldexpr' to get the indent of a line.
+
+
+"expr":						*fold-expr*
+The folds are automatically defined by their foldlevel, like with the "indent"
+method.  The value of the 'foldexpr' option is evaluated to get the foldlevel
+of a line.  Examples:
+This will create a fold for all consecutive lines that start with a Tab: >
+	:set foldexpr=getline(v:lnum)[0]==\"\\t\"
+This will call a function to compute the fold level: >
+	:set foldexpr=MyFoldLevel(v:lnum)
+This will make a fold out of paragraphs separated by blank lines: >
+	:set foldexpr=getline(v:lnum)=~'^\\s*$'&&getline(v:lnum+1)=~'\\S'?'<1':1
+this does the same: >
+	:set foldexpr=getline(v:lnum-1)=~'^\\s*$'&&getline(v:lnum)=~'\\S'?'>1':1
+
+Note that backslashes must be used to escape characters that ":set" handles
+differently (space, backslash, double quote, etc., see |option-backslash|).
+Altenatively, use ":set foldexpr@{expression}" |:set@|.
+
+These are the conditions with which the expression is evaluated:
+- The current buffer and window are set for the line.
+- The variable "v:lnum" is set to the line number.
+- The result is used for the fold level in this way:
+  value			meaning ~
+  0  			the line is not in a fold
+  1, 2, ..		the line is in a fold with this level
+  -1			the fold level is undefined, use the fold level of a
+			line before or after this line, whichever is the
+			lowest.
+  "="			use fold level from previous line
+  "a1", "a2", ..	add one, two, .. to the fold level
+  "s1", "s2", ..	subtract one, two, .. from the fold level for the line
+  "<1", "<2", ..	a fold with this level ends at this line
+  ">1", ">2", ..	a fold with this level starts at this line
+
+It is not required to mark the start (end) of a fold with ">1" ("<1"), a fold
+will also start (end) when the fold level is higher (lower) than the fold
+level of the previous line.
+
+There must be no side effects from the expression.  The text in the buffer,
+cursor position, the search patterns, options etc. must not be changed.
+
+If there is some error in the expression, or the resulting value isn't
+recognized, there is no error message and the fold level will be zero.
+
+Note: Since the expression has to be evaluated for every line, this fold
+method can be very slow!
+
+
+"syntax":					*fold-syntax*
+A fold is defined by syntax items that have the "fold" argument. |:syn-fold|
+
+The fold level is defined by nesting folds.
+
+
+"marker":					*fold-marker*
+Markers in the text tell where folds start and end.  This allows you to
+precisely specify the folds.  This will allow deleting and putting a fold,
+without the risk of including the wrong lines.  The 'foldtext' option is
+normally set such that the text before the marker shows up in the folded line.
+This makes it possible to give a name to the fold.
+
+Markers can have a level included, or can use matching pairs.  Including a
+level is easier, you don't have to add end markers and avoid problems with
+non-matching marker pairs.  Example: >
+	/* global variables {{{1 */
+	int varA, varB;
+
+	/* functions {{{1 */
+	/* funcA() {{{2 */
+	void funcA() {}
+ 
+	/* funcB() {{{2 */
+	void funcB() {}
+
+A fold starts at a "{{{" marker.  The following number specifies the fold
+level.  What happens depends on the difference between the current fold level
+and the level given by the marker:
+1. If a marker with the same fold level is encountered, the previous fold
+   ends and another fold with the same level starts.
+2. If a marker with a higher fold level is found, a nested fold is started.
+3. if a marker with a lower fold level is found, all folds up to and including
+   this level end and a fold with the specified level starts.
+
+The number indicates the fold level.  A zero cannot be used.
+You can use "}}}" with a digit to indicate the level of the fold that
+ends.  The fold level of the following line will be one less than the
+indicated level.  Note that Vim doesn't look back to the level of the matching
+marker (that would take too much time).  Example: >
+
+	{{{1
+	fold level here is 1
+	{{{3
+	fold level here is 3
+	}}}3
+	fold level here is 2
+
+You can also use matching pairs of "{{{" and "}}}" markers to define folds.
+Each "{{{" increases the fold level by one, each "}}}" decreases the fold
+level by one.  Be careful to keep the markers matching!  Example: >
+
+	{{{
+	fold level here is 1
+	{{{
+	fold level here is 2
+	}}}
+	fold level here is 1
+
+You can mix using markers with a number and without a number.  A useful way of
+doing this is to use numbered markers for large folds, and unnumbered markers
+locally in a function.  For example use level one folds for the sections of
+your file like "structure definitions", "local variables" and "functions".
+Use level 2 markers for each definition and function,  Use unnumbered markers
+inside functions.  When you make changes in a function to split up folds, you
+don't have to renumber the markers.
+
+The markers can be set with the 'foldmarker' option.  It is recommended to
+keep this at the default value of "{{{,}}}", so that files can be exchanged
+between Vim users.  Only change it when it is required for the language of the
+file.
+
+==============================================================================
+2. Fold commands				*fold-commands*
+
+All folding commands start with "z".  Hint: the "z" looks like a folded piece
+of paper, seen from the side.
+
+							*zf*
+zf{motion}  or
+{Visual}zf	Operator to create a fold.
+		This only works when 'foldmethod' is "manual".
+		The new fold will be closed.
+		'folddisable' will be reset.
+
+							*:fold* *:fo*
+:{range}fo[ld]
+		Create a fold for the lines in {range}.  Works like "zf".
+
+							*zd*
+zd		Delete a fold at the cursor, and all nested folds in it.
+		When the cursor is on folded line, that fold is deleted.
+		This only works when 'foldmethod' is "manual".
+
+							*zD*
+zD		Delete all folds in the window.
+		This only works when 'foldmethod' is "manual".
+
+							*zo*
+zo		Open one fold under the cursor.
+		'folddisable' will be reset.
+
+							*zO*
+zO		Open all folds under the cursor recursively.
+		'folddisable' will be reset.
+
+							*zc*
+zc		Close one fold under the cursor.
+
+							*zC*
+zC		Close all folds under the cursor recursively.
+
+							*za*
+za		When on a closed fold: open it.  When on an open fold: close
+		it.
+
+							*zm*
+zm		Fold more: Subtract one from 'foldlevel'.  If 'foldlevel' was
+		already zero nothing happens.
+
+							*zM*
+zM		Close all folds: set 'foldlevel' to 0.
+
+							*zr*
+zr		Reduce folding: Add one to 'foldlevel'.
+		'folddisable' will be reset.
+
+							*zR*
+zR		Open all folds.  This sets 'foldlevel' to highest fold level.
+		'folddisable' will be reset.
+
+							*:foldo* *:foldopen*
+:{range}foldo[pen]
+		Open all folds in {range}.  Useful to see all the text in
+		{range}.
+
+							*zn*
+zn		Fold none: set 'folddisable'.  All folds will be open.
+
+							*zN*
+zN		Fold normal: reset 'folddisable'.  All folds will be as they
+		were before.
+
+							*zi*
+zi		Invert 'folddisable'.
+
+==============================================================================
+3. Fold options					*fold-options*
+
+						*fold-foldlevel*
+'foldlevel' is a number option: The higher the more folded regions are open. 
+When 'foldlevel' is 0, all folds are closed.
+When 'foldlevel' is positive, some folds closed.
+When 'foldlevel' is very high, all folds are open.
+'foldlevel' is applied when it it changed.  After that manually folds can be
+opened and closed.
+When increased, folds above the new level are opened.  No manually opened
+folds will be closed.
+When decreased, folds above the new level are closed.  No manually closed
+folds will be opened.
+
+						*fold-foldtext*
+'foldtext' is a string option of the form: /{pattern}/{replacement}
+It is used to set the text which is shown for a closed fold.
+
+The first character is used as a separator between the {pattern} and the
+{replacement}.  It can be any character, but it must not appear anywhere in
+the {pattern} or {replacement}.
+
+The {pattern} is matched on the first line of closed fold.  Items matched with
+it can be used in the {replacement} to give information about what the fold
+contains.  The {pattern} can contain a multi-line pattern, so that text from
+further down in the fold can be shown.  But be careful not to include lines
+from below the fold!
+
+Two special items in the {replacement} are recognized:
+\f  is replaced by the number of lines in the fold
+\d  is replaced by a string of dashes.  The number of dashes is the level of
+    the fold.
+
+The resulting line is truncated to fit in the window, it never wraps.
+When there is room after the text, it is filled with the character specified
+by 'fillchars'.
+
+Example: >
+	:set foldtext=/\\(\\S.*\\)/+\\d\ \\f\ lines:\ \\1/
+This will show a line like this:
+	+- 5 lines: foobar
+Note that backslashes need to be used for characters that the ":set" command
+handles differently: Space, backslash and double-quote. |option-backslash|
+
+
+Other options for folding:
+'foldcolumn' 'fdc': 	When set, show a small column on the left of the
+			window to indicate folds.
+'folddisable' 'fdd': 	Open all folds while set.
+'foldexpr' 'fde':	Expression used for "expr" folding.
+'foldignore' 'fdi': 	Characters used for "indent" folding.
+'foldmarker' 'fmr': 	Defined markers used for "marker" folding.
+'foldmethod' 'fd': 	Name of the current folding method.
+
+==============================================================================
+4. Behavior of folds					*fold-behavior*
+
+When moving the cursor downwards, it will move to the first line of a sequence
+of folded lines.  When the cursor is already on a folded line, it moves to the
+next unfolded line.
+
+When moving the cursor upwards, it will move to the last line of a seqyence of
+folded lines.  When the cursor is already on a folded line, it moves to the
+previous unfolded line.
+
+While the cursor is on a folded lines, the cursor is always displayed in the
+first column.  The ruler does show the actual cursor position, but since the
+line is folded, it cannot be displayed there.
+
+Movement commands handle a sequence of folded lines like an empty line.  For
+example, the "w" command stops once in the first column.
+
+When in Insert mode, the cursor line is never folded.  That allows you to see
+what you type!
+
+==============================================================================
+ vim:tw=78:

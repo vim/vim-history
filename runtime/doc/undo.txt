@@ -1,4 +1,4 @@
-*undo.txt*      For Vim version 5.7.  Last change: 1999 Dec 21
+*undo.txt*      For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -107,4 +107,4 @@ if it is not what you want do 'u.'.  This will remove the contents of the
 first put, and repeat the put command for the second register.  Repeat the
 'u.' until you got what you want.
 
- vim:tw=78:ts=8:sw=8:
+ vim:tw=78:

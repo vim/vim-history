@@ -2,7 +2,7 @@
 " The commands in this are executed when the GUI is started.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Mar 29
+" Last change:	2000 Jul 15
 "
 " To use it, copy it to
 "     for Unix and OS/2:  ~/.gvimrc
@@ -40,9 +40,6 @@ if version >= 500
   "  let winhelpfile='windows.hlp'
   "  map K :execute "!start winhlp32 -k <cword> " . winhelpfile <CR>
   "endif
-
-  " Hide the mouse pointer while typing
-  set mousehide
 
   " Set nice colors
   " background for normal text is light grey

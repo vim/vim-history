@@ -1,7 +1,7 @@
 " An example for a vimrc file.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Mar 29
+" Last change:	2000 Jul 15
 "
 " To use it, copy it to
 "     for Unix and OS/2:  ~/.vimrc
@@ -44,20 +44,12 @@ endif
 " Only do this part when compiled with support for autocommands.
 if has("autocmd")
 
- " In text files, always limit the width of text to 78 characters
- autocmd BufRead *.txt set tw=78
+ " Use the default filetype settings, so that mail gets 'tw' set to 72,
+ " 'cindent' is on in C files, etc.
+ filetype settings on
 
- augroup cprog
-  " Remove all cprog autocommands
-  au!
-
-  " When starting to edit a file:
-  "   For C and C++ files set formatting of comments and set C-indenting on.
-  "   For other files switch it off.
-  "   Don't change the order, it's important that the line with * comes first.
-  autocmd FileType *      set formatoptions=tcql nocindent comments&
-  autocmd FileType c,cpp  set formatoptions=croql cindent comments=sr:/*,mb:*,el:*/,://
- augroup END
+ " For all text files set 'textwidth' to 78 characters.
+ au BufReadPost *.txt setlocal tw=78
 
  augroup gzip
   " Remove all gzip autocommands

@@ -6,7 +6,7 @@
  * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
-#define USE_BROWSE
+#define FEAT_BROWSE
 
 #define TASK 0x4b534154
 

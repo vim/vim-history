@@ -106,6 +106,16 @@ extern RETSIGTYPE (*signal __ARGS((int, RETSIGTYPE (*func) SIGPROTOARG))) __ARGS
 extern RETSIGTYPE (*sigset __ARGS((int, RETSIGTYPE (*func) SIGPROTOARG))) __ARGS(SIGPROTOARG);
 #endif
 
+#if defined(HAVE_SETJMP_H) && (defined(HAVE_DLOPEN) || defined(HAVE_SHL_LOAD))
+# ifdef HAVE_SIGSETJMP
+extern int	sigsetjmp __ARGS((sigjmp_buf, int));
+extern void	siglongjmp __ARGS((sigjmp_buf, int));
+# else
+extern int	setjmp __ARGS((jmp_buf));
+extern void	longjmp __ARGS((jmp_buf, int));
+# endif
+#endif
+
 extern int	kill __ARGS((int, int));
 
 extern int	access __ARGS((char *, int));

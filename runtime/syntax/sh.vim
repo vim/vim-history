@@ -2,8 +2,8 @@
 " Language:		shell (sh) Korn shell (ksh) bash (sh)
 " Maintainer:		Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Previous Maintainer:	Lennart Schultz <Lennart.Schultz@ecmwf.int>
-" Last Change:	June 6, 2000
-" Version: 1.16
+" Last Change:	July 17, 2000
+" Version: 1.17
 "
 " Using the following VIM variables:
 " b:is_kornshell               if defined, enhance with kornshell syntax
@@ -11,6 +11,7 @@
 "
 " This file includes many ideas from Éric Brunet (eric.brunet@ens.fr)
 " Belated History:
+" v1.17 : Jul 17 2000 : echo $((..))  works
 " v1.14 : Mar 24 2000 : ksh did support but bash does too: ${#[#@]} constructs
 "         Apr 17 2000 : included $((...)) for ksh
 
@@ -21,8 +22,9 @@ syn case match
 
 " This one is needed INSIDE a CommandSub, so that
 " `echo bla` be correct
-syn region shEcho matchgroup=shStatement start="\<echo\>"  skip="\\$" matchgroup=shOperator end="$" matchgroup=NONE end="[<>;&|()]"me=e-1 end="\d[<>]"me=e-2 end="#"me=e-1 contains=shNumber,shCommandSub,shSinglequote,shDeref,shSpecialVar,shSpecial,shOperator,shDoubleQuote,shCharClass
-syn region shEcho matchgroup=shStatement start="\<print\>" skip="\\$" matchgroup=shOperator end="$" matchgroup=NONE end="[<>;&|()]"me=e-1 end="\d[<>]"me=e-2 end="#"me=e-1 contains=shNumber,shCommandSub,shSinglequote,shDeref,shSpecialVar,shSpecial,shOperator,shDoubleQuote,shCharClass
+syn cluster shEchoList	contains=shNumber,shArithmetic,shCommandSub,shSinglequote,shDeref,shSpecialVar,shSpecial,shOperator,shDoubleQuote,shCharClass
+syn region shEcho matchgroup=shStatement start="\<echo\>"  skip="\\$" matchgroup=shOperator end="$" matchgroup=NONE end="[<>;&|()]"me=e-1 end="\d[<>]"me=e-2 end="#"me=e-1 contains=@shEchoList
+syn region shEcho matchgroup=shStatement start="\<print\>" skip="\\$" matchgroup=shOperator end="$" matchgroup=NONE end="[<>;&|()]"me=e-1 end="\d[<>]"me=e-2 end="#"me=e-1 contains=@shEchoList
 
 " This must be after the strings, so that bla \" be correct
 syn region shEmbeddedEcho contained matchgroup=shStatement start="\<print\>" skip="\\$" matchgroup=shOperator end="$" matchgroup=NONE end="[<>;&|`)]"me=e-1 end="\d[<>]"me=e-2 end="#"me=e-1 contains=shNumber,shSinglequote,shDeref,shSpecialVar,shSpecial,shOperator,shDoubleQuote,shCharClass
@@ -92,8 +94,8 @@ syn region  shCase	contained skipwhite skipnl matchgroup=shConditional start="[^
 syn match   shCaseStart	contained skipwhite skipnl "("		nextgroup=shCase
 syn match   shCaseBar	contained "[^|)]\{-}|"hs=e			nextgroup=shCase,shCaseStart,shCaseBar
 
-syn region shExpr  transparent matchgroup=shOperator start="{" end="}"		contains=ALLBUT,@shExprList2
-syn region shSubSh transparent matchgroup=shOperator start="(" end=")"		contains=ALLBUT,@shSubShList
+syn region shExpr  transparent matchgroup=shExprRegion start="{" end="}"		contains=ALLBUT,@shExprList2
+syn region shSubSh transparent matchgroup=shSubShRegion start="(" end=")"		contains=ALLBUT,@shSubShList
 
 " Misc
 "=====
@@ -111,9 +113,9 @@ syn region  shCommandSub   start="`" skip="\\`" end="`" contains=ALLBUT,@shComma
 " systems too, however, so the following syntax will flag $(..) as
 " an Error under /bin/sh.  By consensus of vimdev'ers!
 if exists("b:is_kornshell") || exists("b:is_bash")
- syn region shCommandSub matchgroup=shDeref start="$(" end=")" contains=ALLBUT,@shCommandSubList2
- syn region shArithmetic matchgroup=shDeref start="$((" end="))" contains=ALLBUT,@shCommandSubList2
- syn match shSkipInitWS contained	"^\s\+"
+ syn region shCommandSub matchgroup=shCmdSubRegion start="\$(" end=")"  contains=ALLBUT,@shCommandSubList2
+ syn region shArithmetic matchgroup=shArithRegion start="\$((" end="))" contains=ALLBUT,@shCommandSubList2
+ syn match  shSkipInitWS contained	"^\s\+"
 else
  syn region shCommandSub matchgroup=Error start="$(" end=")" contains=ALLBUT,@shCommandSubList2
 endif
@@ -277,9 +279,11 @@ if !exists("did_sh_syntax_inits")
  " The default methods for highlighting. Can be overridden later
  let did_sh_syntax_inits = 1
 
+ hi link shArithRegion		shShellVariables
  hi link shCaseBar		shConditional
  hi link shCaseIn		shConditional
  hi link shCaseStart		shConditional
+ hi link shCmdSubRegion		shShellVariables
  hi link shColon		shStatement
  hi link shDeref		shShellVariables
  hi link shDerefOp		shOperator
@@ -287,6 +291,7 @@ if !exists("did_sh_syntax_inits")
  hi link shDoubleQuote		shString
  hi link shEcho		shString
  hi link shEmbeddedEcho		shString
+ hi link shExprRegion		shOperator
  hi link shHereDoc		shString
  hi link shOption		shCommandSub
  hi link shPattern		shString
@@ -295,6 +300,7 @@ if !exists("did_sh_syntax_inits")
  hi link shSinglequote		shString
  hi link shSource		shOperator
  hi link shStringSpecial		shSpecial
+ hi link shSubShRegion		shOperator
  hi link shTestOpr		shConditional
  hi link shVariable		shSetList
  hi link shWrapLineOperator		shOperator

@@ -24,11 +24,11 @@
  * viminfo).
  */
 #define EXTRA_MARKS 10					/* marks 0-9 */
-static struct filemark namedfm[NMARKS + EXTRA_MARKS];	/* marks with file nr */
+static fmark_t namedfm[NMARKS + EXTRA_MARKS];		/* marks with file nr */
 static char_u *namedfm_names[NMARKS + EXTRA_MARKS];	/* name for namedfm[] */
 
-static char_u *mark_line __ARGS((FPOS *mp, int lead_len));
-static void show_one_mark __ARGS((int, char_u *, FPOS *, char_u *, int current));
+static char_u *mark_line __ARGS((pos_t *mp, int lead_len));
+static void show_one_mark __ARGS((int, char_u *, pos_t *, char_u *, int current));
 static void cleanup_jumplist __ARGS((void));
 
 /*
@@ -42,6 +42,10 @@ setmark(c)
 {
     int		i;
 
+    /* Check for a special key (may cause islower() to crash). */
+    if (c < 0)
+	return FAIL;
+
     if (c == '\'' || c == '`')
     {
 	setpcmark();
@@ -50,19 +54,27 @@ setmark(c)
 	return OK;
     }
 
+#ifndef EBCDIC
     if (c > 'z')	    /* some islower() and isupper() cannot handle
 				characters above 127 */
 	return FAIL;
+#endif
     if (islower(c))
     {
 	i = c - 'a';
 	curbuf->b_namedm[i] = curwin->w_cursor;
+#ifdef FEAT_VIRTUALEDIT
+	curbuf->b_namedmc[i] = curwin->w_coladd;
+#endif
 	return OK;
     }
     if (isupper(c))
     {
 	i = c - 'A';
 	namedfm[i].mark = curwin->w_cursor;
+#ifdef FEAT_VIRTUALEDIT
+	namedfm[i].coladd = curwin->w_coladd;
+#endif
 	namedfm[i].fnum = curbuf->b_fnum;
 	return OK;
     }
@@ -78,7 +90,7 @@ setpcmark()
 {
     int i;
 #ifdef ROTATE
-    struct filemark tempmark;
+    fmark_t tempmark;
 #endif
 
     /* for :global the mark is set only once */
@@ -151,23 +163,23 @@ checkpcmark()
 /*
  * move "count" positions in the jump list (count may be negative)
  */
-    FPOS *
+    pos_t *
 movemark(count)
     int count;
 {
-    FPOS	*pos;
-    struct filemark *jmp;
+    pos_t	*pos;
+    fmark_t	*jmp;
 
     cleanup_jumplist();
 
     if (curwin->w_jumplistlen == 0)	    /* nothing to jump to */
-	return (FPOS *)NULL;
+	return (pos_t *)NULL;
 
     for (;;)
     {
 	if (curwin->w_jumplistidx + count < 0
 		|| curwin->w_jumplistidx + count >= curwin->w_jumplistlen)
-	    return (FPOS *)NULL;
+	    return (pos_t *)NULL;
 
 	/*
 	 * if first CTRL-O or CTRL-I command after a jump, add cursor position
@@ -179,7 +191,7 @@ movemark(count)
 	    setpcmark();
 	    --curwin->w_jumplistidx;	/* skip the new entry */
 	    if (curwin->w_jumplistidx + count < 0)
-		return (FPOS *)NULL;
+		return (pos_t *)NULL;
 	}
 
 	curwin->w_jumplistidx += count;
@@ -193,11 +205,14 @@ movemark(count)
 		continue;
 	    }
 	    if (buflist_getfile(jmp->fnum, jmp->mark.lnum, 0, FALSE) == FAIL)
-		return (FPOS *)NULL;
+		return (pos_t *)NULL;
 	    /* Set lnum again, autocommands my have changed it */
 	    curwin->w_cursor.lnum = jmp->mark.lnum;
 	    curwin->w_cursor.col = jmp->mark.col;
-	    pos = (FPOS *)-1;
+#ifdef FEAT_VIRTUALEDIT
+	    curwin->w_coladd = jmp->coladd;
+#endif
+	    pos = (pos_t *)-1;
 	}
 	else
 	    pos = &(jmp->mark);
@@ -205,27 +220,63 @@ movemark(count)
     }
 }
 
+#if defined(FEAT_VIRTUALEDIT) || defined(PROTO)
+static pos_t *getmark2 __ARGS((int c, int changefile, int fcoladd));
+
 /*
- * getmark(c) - find mark for char 'c'
- *
- * Return pointer to FPOS if found (caller needs to check lnum!)
+ * Call getmark() and set curwin->w_coladd.
+ */
+    pos_t *
+getmark_coladd(c, changefile)
+    int		c;
+    int		changefile;		/* allowed to edit another file */
+{
+    return getmark2(c, changefile, TRUE);
+}
+#endif
+
+/*
+ * Find mark "c".
+ * Return pointer to pos_t if found (caller needs to check lnum!)
  *	  NULL if there is no mark called 'c'.
  *	  -1 if mark is in other file (only if changefile is TRUE)
  */
-    FPOS *
+    pos_t *
 getmark(c, changefile)
     int		c;
     int		changefile;		/* allowed to edit another file */
 {
-    FPOS	    *posp;
-    FPOS	    *startp, *endp;
-    static  FPOS    pos_copy;
-    char_u	    *p;
+#ifdef FEAT_VIRTUALEDIT
+    return getmark2(c, changefile, FALSE);
+}
+
+    static pos_t *
+getmark2(c, changefile, fcoladd)
+    int		c;
+    int		changefile;		/* allowed to edit another file */
+    int		fcoladd;		/* advance column?? */
+{
+    int			coladd = 0;
+#endif
+    pos_t		*posp;
+#ifdef FEAT_VISUAL
+    pos_t		*startp, *endp;
+#endif
+    static  pos_t	pos_copy;
+    char_u		*p;
 
     posp = NULL;
+
+    /* Check for special key, can't be a mark name and might cause islower()
+     * to crash. */
+    if (c < 0)
+	return posp;
+#ifndef EBCDIC
     if (c > '~')			/* check for islower()/isupper() */
 	;
-    else if (c == '\'' || c == '`')	/* previous context mark */
+    else
+#endif
+        if (c == '\'' || c == '`')	/* previous context mark */
     {
 	pos_copy = curwin->w_pcmark;	/* need to make a copy because */
 	posp = &pos_copy;		/*   w_pcmark may be changed soon */
@@ -236,14 +287,51 @@ getmark(c, changefile)
 	posp = &(curbuf->b_op_start);
     else if (c == ']')			/* to end of previous operator */
 	posp = &(curbuf->b_op_end);
+    else if (c == '{' || c == '}')	/* to previous/next paragraph */
+    {
+	pos_t	pos;
+	oparg_t	oa;
+
+	pos = curwin->w_cursor;
+	if (findpar(&oa, c == '}' ? FORWARD : BACKWARD, 1L, NUL, FALSE))
+	{
+	    pos_copy = curwin->w_cursor;
+	    posp = &pos_copy;
+	}
+	curwin->w_cursor = pos;
+    }
+    else if (c == '(' || c == ')')	/* to previous/next sentence */
+    {
+	pos_t	pos;
+
+	pos = curwin->w_cursor;
+	if (findsent(c == ')' ? FORWARD : BACKWARD, 1L))
+	{
+	    pos_copy = curwin->w_cursor;
+	    posp = &pos_copy;
+	}
+	curwin->w_cursor = pos;
+    }
+#ifdef FEAT_VISUAL
     else if (c == '<' || c == '>')	/* start/end of visual area */
     {
 	startp = &curbuf->b_visual_start;
 	endp = &curbuf->b_visual_end;
-	if ((c == '<') == lt(*startp, *endp))
+	if ((c == '<') == lt_coladd(*startp, curbuf->b_visual_start_coladd,
+					  *endp, curbuf->b_visual_end_coladd))
+	{
 	    posp = startp;
+#ifdef FEAT_VIRTUALEDIT
+	    coladd = curbuf->b_visual_start_coladd;
+#endif
+	}
 	else
+	{
 	    posp = endp;
+#ifdef FEAT_VIRTUALEDIT
+	    coladd = curbuf->b_visual_end_coladd;
+#endif
+	}
 	/*
 	 * For Visual line mode, set mark at begin or end of line
 	 */
@@ -257,8 +345,14 @@ getmark(c, changefile)
 		pos_copy.col = MAXCOL;
 	}
     }
+#endif
     else if (islower(c))		/* normal named mark */
+    {
 	posp = &(curbuf->b_namedm[c - 'a']);
+#ifdef FEAT_VIRTUALEDIT
+	coladd = curbuf->b_namedmc[c - 'a'];
+#endif
+    }
     else if (isupper(c) || vim_isdigit(c))	/* named file mark */
     {
 	if (vim_isdigit(c))
@@ -266,6 +360,9 @@ getmark(c, changefile)
 	else
 	    c -= 'A';
 	posp = &(namedfm[c].mark);
+#ifdef FEAT_VIRTUALEDIT
+	coladd = namedfm[c].coladd;
+#endif
 
 	if (namedfm[c].fnum == 0 && namedfm_names[c] != NULL)
 	{
@@ -291,7 +388,13 @@ getmark(c, changefile)
 		    /* Set the lnum again, autocommands may have changed it */
 		    curwin->w_cursor.lnum = namedfm[c].mark.lnum;
 		    curwin->w_cursor.col = namedfm[c].mark.col;
-		    return (FPOS *)-1;
+#ifdef FEAT_VIRTUALEDIT
+		    if (fcoladd)
+			curwin->w_coladd = namedfm[c].coladd;
+		    else
+			curwin->w_coladd = 0;
+#endif
+		    return (pos_t *)-1;
 		}
 	    }
 	    posp = &pos_copy;		/* mark exists, but is not valid in
@@ -299,7 +402,61 @@ getmark(c, changefile)
 	    pos_copy.lnum = 0;
 	}
     }
+
+#ifdef FEAT_VIRTUALEDIT
+    if (fcoladd)
+	curwin->w_coladd = coladd;
+    else
+	curwin->w_coladd = 0;
+#endif
+
     return posp;
+}
+
+/*
+ * Search for the next named mark in the current file.
+ *
+ * Returns pointer to pos_t of the next mark or NULL if no mark is found.
+ */
+    pos_t *
+getnextmark(startpos, dir, beginline)
+    pos_t	*startpos;	/* where to start */
+    int		dir;	/* direction for search */
+    int		beginline;
+{
+    int		i;
+    pos_t	*result = NULL;
+    pos_t	pos = *startpos;
+
+    /* When searching backward and leaving the cursor on the first non-blank,
+     * position must be in a previous line.
+     * When searching forward and leaving the cursor on the first non-blank,
+     * position must be in a next line. */
+    if (dir == BACKWARD && beginline)
+	pos.col = 0;
+    else if (dir == FORWARD && beginline)
+	pos.col = MAXCOL;
+
+    for (i = 0; i < NMARKS; i++)
+    {
+	if (curbuf->b_namedm[i].lnum > 0)
+	{
+	    if (dir == FORWARD)
+	    {
+		if ((result == NULL || lt(curbuf->b_namedm[i], *result))
+			&& lt(pos, curbuf->b_namedm[i]))
+		    result = &curbuf->b_namedm[i];
+	    }
+	    else
+	    {
+		if ((result == NULL || lt(*result, curbuf->b_namedm[i]))
+			&& lt(curbuf->b_namedm[i], pos))
+		    result = &curbuf->b_namedm[i];
+	    }
+	}
+    }
+
+    return result;
 }
 
 /*
@@ -308,7 +465,7 @@ getmark(c, changefile)
  */
     void
 fmarks_check_names(buf)
-    BUF	    *buf;
+    buf_t	*buf;
 {
     char_u	*name;
     int		i;
@@ -339,21 +496,21 @@ fmarks_check_names(buf)
  */
     int
 check_mark(pos)
-    FPOS    *pos;
+    pos_t    *pos;
 {
     if (pos == NULL)
     {
-	emsg(e_umark);
+	EMSG(_(e_umark));
 	return FAIL;
     }
     if (pos->lnum == 0)
     {
-	emsg(e_marknotset);
+	EMSG(_(e_marknotset));
 	return FAIL;
     }
     if (pos->lnum > curbuf->b_ml.ml_line_count)
     {
-	emsg(e_markinval);
+	EMSG(_(e_markinval));
 	return FAIL;
     }
     return OK;
@@ -366,7 +523,7 @@ check_mark(pos)
  */
     void
 clrallmarks(buf)
-    BUF	    *buf;
+    buf_t	*buf;
 {
     static int		i = -1;
 
@@ -392,7 +549,7 @@ clrallmarks(buf)
  */
     char_u *
 fm_getname(fmark, lead_len)
-    struct filemark *fmark;
+    fmark_t	*fmark;
     int		lead_len;
 {
     if (fmark->fnum == curbuf->b_fnum)		    /* current buffer */
@@ -406,7 +563,7 @@ fm_getname(fmark, lead_len)
  */
     static char_u *
 mark_line(mp, lead_len)
-    FPOS	*mp;
+    pos_t	*mp;
     int		lead_len;
 {
     char_u	*s, *p;
@@ -421,9 +578,13 @@ mark_line(mp, lead_len)
     len = 0;
     for (p = s; *p != NUL; ++p)
     {
-	len += charsize(*p);
+	len += ptr2cells(p);
 	if (len >= Columns - lead_len)
 	    break;
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	    p += mb_ptr2len_check(p) - 1;
+#endif
     }
     *p = NUL;
     return s;
@@ -433,9 +594,10 @@ mark_line(mp, lead_len)
  * print the marks
  */
     void
-do_marks(arg)
-    char_u	*arg;
+do_marks(eap)
+    exarg_t	*eap;
 {
+    char_u	*arg = eap->arg;
     int		i;
     char_u	*name;
 
@@ -460,8 +622,10 @@ do_marks(arg)
     show_one_mark('"', arg, &curbuf->b_last_cursor, NULL, TRUE);
     show_one_mark('[', arg, &curbuf->b_op_start, NULL, TRUE);
     show_one_mark(']', arg, &curbuf->b_op_end, NULL, TRUE);
+#ifdef FEAT_VISUAL
     show_one_mark('<', arg, &curbuf->b_visual_start, NULL, TRUE);
     show_one_mark('>', arg, &curbuf->b_visual_end, NULL, TRUE);
+#endif
     show_one_mark(-1, arg, NULL, NULL, FALSE);
 }
 
@@ -469,7 +633,7 @@ do_marks(arg)
 show_one_mark(c, arg, p, name, current)
     int		c;
     char_u	*arg;
-    FPOS	*p;
+    pos_t	*p;
     char_u	*name;
     int		current;	/* in current file */
 {
@@ -483,9 +647,9 @@ show_one_mark(c, arg, p, name, current)
 	else
 	{
 	    if (arg == NULL)
-		MSG("No marks set");
+		MSG(_("No marks set"));
 	    else
-		EMSG2("No marks matching \"%s\"", arg);
+		EMSG2(_("No marks matching \"%s\""), arg);
 	}
     }
     /* don't output anything if 'q' typed at --more-- prompt */
@@ -496,7 +660,7 @@ show_one_mark(c, arg, p, name, current)
 	if (!did_title)
 	{
 	    /* Highlight title */
-	    MSG_PUTS_TITLE("\nmark line  col file/text");
+	    MSG_PUTS_TITLE(_("\nmark line  col file/text"));
 	    did_title = TRUE;
 	}
 	msg_putchar('\n');
@@ -523,15 +687,17 @@ show_one_mark(c, arg, p, name, current)
 /*
  * print the jumplist
  */
+/*ARGSUSED*/
     void
-do_jumps()
+ex_jumps(eap)
+    exarg_t	*eap;
 {
     int		i;
     char_u	*name;
 
     cleanup_jumplist();
     /* Highlight title */
-    MSG_PUTS_TITLE("\n jump line  col file/text");
+    MSG_PUTS_TITLE(_("\n jump line  col file/text"));
     for (i = 0; i < curwin->w_jumplistlen; ++i)
     {
 	if (curwin->w_jumplist[i].mark.lnum != 0)
@@ -558,12 +724,6 @@ do_jumps()
     if (curwin->w_jumplistidx == curwin->w_jumplistlen)
 	MSG_PUTS("\n>");
 }
-
-/*
- * adjust marks between line1 and line2 (inclusive) to move 'amount' lines
- * If 'amount' is MAXLNUM the mark is made invalid.
- * If 'amount_after' is non-zero adjust marks after line 2.
- */
 
 #define one_adjust(add) \
     { \
@@ -594,6 +754,16 @@ do_jumps()
 	    *lp += amount_after; \
     }
 
+/*
+ * Adjust marks between line1 and line2 (inclusive) to move 'amount' lines.
+ * Must be called before changed_*(), appended_lines() or deleted_lines().
+ * May be called before or after changing the text.
+ * When deleting lines line1 to line2, use an 'amount' of MAXLNUM: The marks
+ * within this range are made invalid.
+ * If 'amount_after' is non-zero adjust marks after line2.
+ * Example: Delete lines 34 and 35: mark_adjust(34, 35, MAXLNUM, -2);
+ * Example: Insert two lines below 55: mark_adjust(56, MAXLNUM, 2, 0);
+ */
     void
 mark_adjust(line1, line2, amount, amount_after)
     linenr_t	line1;
@@ -604,12 +774,12 @@ mark_adjust(line1, line2, amount, amount_after)
     int		i;
     int		fnum = curbuf->b_fnum;
     linenr_t	*lp;
-    WIN		*win;
+    win_t	*win;
 
     if (line2 < line1 && amount_after == 0L)	    /* nothing to do */
 	return;
 
-/* named marks, lower case and upper case */
+    /* named marks, lower case and upper case */
     for (i = 0; i < NMARKS; i++)
     {
 	one_adjust(&(curbuf->b_namedm[i].lnum));
@@ -622,73 +792,80 @@ mark_adjust(line1, line2, amount, amount_after)
 	    one_adjust(&(namedfm[i].mark.lnum));
     }
 
-/* previous context mark */
+    /* previous context mark */
     one_adjust(&(curwin->w_pcmark.lnum));
 
-/* previous pcmark */
+    /* previous pcmark */
     one_adjust(&(curwin->w_prev_pcmark.lnum));
 
-/* Visual area */
+#ifdef FEAT_VISUAL
+    /* Visual area */
     one_adjust_nodel(&(curbuf->b_visual_start.lnum));
     one_adjust_nodel(&(curbuf->b_visual_end.lnum));
+#endif
 
-/* marks in the tag stack */
+#ifdef FEAT_QUICKFIX
+    /* quickfix marks */
+    qf_mark_adjust(line1, line2, amount, amount_after);
+#endif
+
+    /*
+     * Adjust items in all windows related to the current buffer.
+     */
     for (win = firstwin; win != NULL; win = win->w_next)
+    {
+	/* Marks in the jumplist.  When deleting lines, this may create
+	 * duplicate marks in the jumplist, they will be removed later. */
+	for (i = 0; i < win->w_jumplistlen; ++i)
+	    if (win->w_jumplist[i].fnum == fnum)
+		one_adjust_nodel(&(win->w_jumplist[i].mark.lnum));
+
 	if (win->w_buffer == curbuf)
+	{
+	    /* marks in the tag stack */
 	    for (i = 0; i < win->w_tagstacklen; i++)
 		if (win->w_tagstack[i].fmark.fnum == fnum)
 		    one_adjust_nodel(&(win->w_tagstack[i].fmark.mark.lnum));
 
-#ifdef QUICKFIX
-/* quickfix marks */
-    qf_mark_adjust(line1, line2, amount, amount_after);
-#endif
+	    /* topline and cursor position for windows with the same buffer
+	     * other than the current window */
+	    if (win != curwin)
+	    {
+		if (win->w_topline >= line1 && win->w_topline <= line2)
+		{
+		    if (amount == MAXLNUM)	    /* topline is deleted */
+		    {
+			if (line1 <= 1)
+			    win->w_topline = 1;
+			else
+			    win->w_topline = line1 - 1;
+		    }
+		    else		/* keep topline on the same line */
+			win->w_topline += amount;
+		}
+		else if (amount_after && win->w_topline > line2)
+		    win->w_topline += amount_after;
+		if (win->w_cursor.lnum >= line1 && win->w_cursor.lnum <= line2)
+		{
+		    if (amount == MAXLNUM) /* line with cursor is deleted */
+		    {
+			if (line1 <= 1)
+			    win->w_cursor.lnum = 1;
+			else
+			    win->w_cursor.lnum = line1 - 1;
+			win->w_cursor.col = 0;
+		    }
+		    else		/* keep cursor on the same line */
+			win->w_cursor.lnum += amount;
+		}
+		else if (amount_after && win->w_cursor.lnum > line2)
+		    win->w_cursor.lnum += amount_after;
+	    }
 
-/* jumplist marks */
-    for (win = firstwin; win != NULL; win = win->w_next)
-    {
-	/*
-	 * When deleting lines, this may create duplicate marks in the
-	 * jumplist. They will be removed later.
-	 */
-	for (i = 0; i < win->w_jumplistlen; ++i)
-	    if (win->w_jumplist[i].fnum == fnum)
-		one_adjust_nodel(&(win->w_jumplist[i].mark.lnum));
-	/*
-	 * also adjust the line at the top of the window and the cursor
-	 * position for windows with the same buffer.
-	 */
-	if (win != curwin && win->w_buffer == curbuf)
-	{
-	    if (win->w_topline >= line1 && win->w_topline <= line2)
-	    {
-		if (amount == MAXLNUM)	    /* topline is deleted */
-		{
-		    if (line1 <= 1)
-			win->w_topline = 1;
-		    else
-			win->w_topline = line1 - 1;
-		}
-		else			/* keep topline on the same line */
-		    win->w_topline += amount;
-	    }
-	    else if (amount_after && win->w_topline > line2)
-		win->w_topline += amount_after;
-	    if (win->w_cursor.lnum >= line1 && win->w_cursor.lnum <= line2)
-	    {
-		if (amount == MAXLNUM)	    /* line with cursor is deleted */
-		{
-		    if (line1 <= 1)
-			win->w_cursor.lnum = 1;
-		    else
-			win->w_cursor.lnum = line1 - 1;
-		    win->w_cursor.col = 0;
-		}
-		else			/* keep cursor on the same line */
-		    win->w_cursor.lnum += amount;
-	    }
-	    else if (amount_after && win->w_cursor.lnum > line2)
-		win->w_cursor.lnum += amount_after;
+#ifdef FEAT_FOLDING
+	    /* adjust folds */
+	    foldMarkAdjust(win, line1, line2, amount, amount_after);
+#endif
 	}
     }
 }
@@ -723,12 +900,12 @@ cleanup_jumplist()
 
     void
 set_last_cursor(win)
-    WIN	    *win;
+    win_t	*win;
 {
     win->w_buffer->b_last_cursor = win->w_cursor;
 }
 
-#ifdef VIMINFO
+#ifdef FEAT_VIMINFO
     int
 read_viminfo_filemark(line, fp, force)
     char_u  *line;
@@ -740,9 +917,13 @@ read_viminfo_filemark(line, fp, force)
 
     /* We only get here (hopefully) if line[0] == '\'' */
     str = line + 1;
-    if (*str > 127 || (!isdigit(*str) && !isupper(*str)))
+    if (
+#ifndef EBCDIC
+            *str > 127 ||
+#endif
+            (!isdigit(*str) && !isupper(*str)))
     {
-	if (viminfo_error("Illegal file mark name", line))
+	if (viminfo_error(_("Illegal file mark name"), line))
 	    return TRUE;	/* Too many errors, pretend end-of-file */
     }
     else
@@ -774,7 +955,7 @@ write_viminfo_filemarks(fp)
     if (get_viminfo_parameter('\'') == 0)
 	return;
 
-    fprintf(fp, "\n# File marks:\n");
+    fprintf(fp, _("\n# File marks:\n"));
 
     /*
      * Find a mark that is the same file and position as the cursor.
@@ -801,6 +982,9 @@ write_viminfo_filemarks(fp)
 	    namedfm_names[i] = namedfm_names[i - 1];
 	}
 	namedfm[NMARKS].mark = curwin->w_cursor;
+#ifdef FEAT_VIRTUALEDIT
+	namedfm[NMARKS].coladd = curwin->w_coladd;
+#endif
 	namedfm[NMARKS].fnum = curbuf->b_fnum;
 	namedfm_names[NMARKS] = NULL;
     }
@@ -864,11 +1048,11 @@ removable(name)
 write_viminfo_marks(fp_out)
     FILE    *fp_out;
 {
-    int	    count;
-    BUF	    *buf;
-    WIN	    *win;
-    int	    is_mark_set;
-    int	    i;
+    int		count;
+    buf_t	*buf;
+    win_t	*win;
+    int		is_mark_set;
+    int		i;
 
     /*
      * Set b_last_cursor for the all buffers that have a window.
@@ -876,7 +1060,7 @@ write_viminfo_marks(fp_out)
     for (win = firstwin; win != NULL; win = win->w_next)
 	set_last_cursor(win);
 
-    fprintf(fp_out, "\n# History of marks within files (newest to oldest):\n");
+    fprintf(fp_out, _("\n# History of marks within files (newest to oldest):\n"));
     count = 0;
     for (buf = firstbuf; buf != NULL; buf = buf->b_next)
     {
@@ -932,7 +1116,7 @@ copy_viminfo_marks(line, fp_in, fp_out, count, eof)
     int		count;
     int		eof;
 {
-    BUF		*buf;
+    buf_t	*buf;
     int		num_marked_files;
     int		load_marks;
     int		copy_marks_out;
@@ -952,7 +1136,7 @@ copy_viminfo_marks(line, fp_in, fp_out, count, eof)
 	{
 	    if (line[0] != '\n' && line[0] != '\r' && line[0] != '#')
 	    {
-		if (viminfo_error("Missing '>'", line))
+		if (viminfo_error(_("Missing '>'"), line))
 		    break;	/* too many errors, return now */
 	    }
 	    eof = vim_fgets(line, LSIZE, fp_in);
@@ -1038,4 +1222,4 @@ copy_viminfo_marks(line, fp_in, fp_out, count, eof)
     }
     vim_free(name_buf);
 }
-#endif /* VIMINFO */
+#endif /* FEAT_VIMINFO */

@@ -27,7 +27,7 @@ extern Widget vimShell;
 
 static Widget vimForm = (Widget)0;
 static Widget textArea = (Widget)0;
-#ifdef WANT_MENU
+#ifdef FEAT_MENU
 static Widget menuBar = (Widget)0;
 static void gui_athena_pullright_action __ARGS((Widget, XEvent *, String *,
 						Cardinal *));
@@ -41,7 +41,7 @@ static XtActionsRec	pullAction[2] = {{ "menu-pullright",
 
 static void gui_athena_scroll_cb_jump	__ARGS((Widget, XtPointer, XtPointer));
 static void gui_athena_scroll_cb_scroll __ARGS((Widget, XtPointer, XtPointer));
-#ifdef WANT_MENU
+#ifdef FEAT_MENU
 static XtTranslations	popupTrans, parentTrans, menuTrans, supermenuTrans;
 static Pixmap		pullerBitmap;
 static char_u puller_bits[] =
@@ -63,7 +63,7 @@ gui_athena_scroll_cb_jump(w, client_data, call_data)
     Widget	w;
     XtPointer	client_data, call_data;
 {
-    GuiScrollbar *sb, *sb_info;
+    scrollbar_t *sb, *sb_info;
     long	value;
 
     sb = gui_find_scrollbar((long)client_data);
@@ -99,7 +99,7 @@ gui_athena_scroll_cb_scroll(w, client_data, call_data)
     Widget	w;
     XtPointer	client_data, call_data;
 {
-    GuiScrollbar *sb, *sb_info;
+    scrollbar_t *sb, *sb_info;
     long	value;
     int		data = (int)(long)call_data;
     int		page;
@@ -135,10 +135,10 @@ gui_athena_scroll_cb_scroll(w, client_data, call_data)
     else			/* Bottom scrollbar */
     {
 	sb_info = sb;
-	if (data < -1)
-	    data = -(Columns - 5);
-	else if (data > 1)
-	    data = (Columns - 5);
+	if (data < -1)		/* page-width left */
+	    data = -(W_WIDTH(sb->wp) - 5);
+	else if (data > 1)	/* page-width right */
+	    data = (W_WIDTH(sb->wp) - 5);
     }
 
     value = sb_info->value + data;
@@ -149,7 +149,7 @@ gui_athena_scroll_cb_scroll(w, client_data, call_data)
 
     /* Update the bottom scrollbar an extra time (why is this needed?? */
     if (sb->wp == NULL)		/* Bottom scrollbar */
-	gui_mch_set_scrollbar_thumb(sb, (int)value, sb->size, sb->max);
+	gui_mch_set_scrollbar_thumb(sb, value, sb->size, sb->max);
 
     gui_drag_scrollbar(sb, value, FALSE);
 }
@@ -169,7 +169,7 @@ gui_x11_create_widgets()
     XtInitializeWidgetClass(formWidgetClass);
     XtInitializeWidgetClass(boxWidgetClass);
     XtInitializeWidgetClass(coreWidgetClass);
-#ifdef WANT_MENU
+#ifdef FEAT_MENU
     XtInitializeWidgetClass(menuButtonWidgetClass);
 #endif
     XtInitializeWidgetClass(simpleMenuWidgetClass);
@@ -183,7 +183,7 @@ gui_x11_create_widgets()
 	XtNbackground,		gui.menu_bg_pixel,
 	NULL);
 
-#ifdef WANT_MENU
+#ifdef FEAT_MENU
     /* The top menu bar */
     menuBar = XtVaCreateManagedWidget("menuBar",
 	boxWidgetClass,		vimForm,
@@ -215,7 +215,7 @@ gui_x11_create_widgets()
      */
     gui_x11_callbacks(textArea, vimForm);
 
-#ifdef WANT_MENU
+#ifdef FEAT_MENU
     popupTrans = XtParseTranslationTable("<EnterWindow>: highlight()\n<LeaveWindow>: unhighlight()\n<BtnDown>: notify() unhighlight() MenuPopdown()\n<Motion>: highlight() menu-pullright()");
     parentTrans = XtParseTranslationTable("<EnterWindow>: highlight()\n<LeaveWindow>: unhighlight()\n<BtnUp>: notify() unhighlight() MenuPopdown()\n<BtnMotion>: highlight() menu-pullright()");
     menuTrans = XtParseTranslationTable("<EnterWindow>: highlight()\n<LeaveWindow>: unhighlight() MenuPopdown()\n<BtnUp>: notify() unhighlight() MenuPopdown()\n<BtnMotion>: highlight() menu-pullright()");
@@ -238,7 +238,7 @@ gui_x11_create_widgets()
 gui_x11_destroy_widgets()
 {
     textArea = NULL;
-#ifdef WANT_MENU
+#ifdef FEAT_MENU
     menuBar = NULL;
 #endif
 }
@@ -269,13 +269,13 @@ gui_x11_set_back_color()
 		  NULL);
 }
 
-#if defined(WANT_MENU) || defined(PROTO)
+#if defined(FEAT_MENU) || defined(PROTO)
 /*
  * Menu stuff.
  */
 
 static char_u *make_pull_name __ARGS((char_u * name));
-static void gui_mch_submenu_colors __ARGS((VimMenu *mp));
+static void gui_mch_submenu_colors __ARGS((vimmenu_t *mp));
 static void gui_athena_reorder_menus	__ARGS((void));
 static Widget get_popup_entry __ARGS((Widget w));
 
@@ -319,8 +319,8 @@ gui_mch_set_menu_pos(x, y, w, h)
 /* ARGSUSED */
     void
 gui_mch_add_menu(menu, parent, idx)
-    VimMenu	*menu;
-    VimMenu	*parent;
+    vimmenu_t	*menu;
+    vimmenu_t	*parent;
     int		idx;
 {
     char_u	*pullright_name;
@@ -424,8 +424,8 @@ make_pull_name(name)
 /* ARGSUSED */
     void
 gui_mch_add_menu_item(menu, parent, idx)
-    VimMenu	*menu;
-    VimMenu	*parent;
+    vimmenu_t	*menu;
+    vimmenu_t	*parent;
     int		idx;
 {
     /* Don't add menu separator */
@@ -471,7 +471,7 @@ gui_mch_new_menu_colors()
 
     static void
 gui_mch_submenu_colors(mp)
-    VimMenu	*mp;
+    vimmenu_t	*mp;
 {
     while (mp != NULL)
     {
@@ -511,7 +511,7 @@ static struct deadwid *first_deadwid = NULL;
  */
     void
 gui_mch_destroy_menu(menu)
-    VimMenu *menu;
+    vimmenu_t *menu;
 {
     if (menu->submenu_id != (Widget)0)
     {
@@ -575,7 +575,7 @@ gui_athena_reorder_menus()
     Widget	swap_widget;
     int		num_children;
     int		to, from;
-    VimMenu	*menu;
+    vimmenu_t	*menu;
     struct deadwid *p;
 
     XtVaGetValues(menuBar,
@@ -715,7 +715,7 @@ get_popup_entry(w)
 /* ARGSUSED */
     void
 gui_mch_show_popupmenu(menu)
-    VimMenu *menu;
+    vimmenu_t *menu;
 {
     int		rootx, rooty, winx, winy;
     Window	root, child;
@@ -744,7 +744,7 @@ gui_mch_show_popupmenu(menu)
     XtPopupSpringLoaded(menu->submenu_id);
 }
 
-#endif /* WANT_MENU */
+#endif /* FEAT_MENU */
 
 
 /*
@@ -753,12 +753,12 @@ gui_mch_show_popupmenu(menu)
 
     void
 gui_mch_set_scrollbar_thumb(sb, val, size, max)
-    GuiScrollbar    *sb;
-    int		    val;
-    int		    size;
-    int		    max;
+    scrollbar_t	*sb;
+    long	val;
+    long	size;
+    long	max;
 {
-    double	    v, s;
+    double	v, s;
 
     if (sb->id == (Widget)0)
 	return;
@@ -781,11 +781,11 @@ gui_mch_set_scrollbar_thumb(sb, val, size, max)
 
     void
 gui_mch_set_scrollbar_pos(sb, x, y, w, h)
-    GuiScrollbar    *sb;
-    int		    x;
-    int		    y;
-    int		    w;
-    int		    h;
+    scrollbar_t *sb;
+    int		x;
+    int		y;
+    int		w;
+    int		h;
 {
     if (sb->id == (Widget)0)
 	return;
@@ -801,9 +801,23 @@ gui_mch_set_scrollbar_pos(sb, x, y, w, h)
 }
 
     void
+gui_mch_enable_scrollbar(sb, flag)
+    scrollbar_t	*sb;
+    int		flag;
+{
+    if (sb->id != (Widget)0)
+    {
+	if (flag)
+	    XtManageChild(sb->id);
+	else
+	    XtUnmanageChild(sb->id);
+    }
+}
+
+    void
 gui_mch_create_scrollbar(sb, orient)
-    GuiScrollbar    *sb;
-    int		    orient;	/* SBAR_VERT or SBAR_HORIZ */
+    scrollbar_t *sb;
+    int		orient;	/* SBAR_VERT or SBAR_HORIZ */
 {
     sb->id = XtVaCreateWidget("scrollBar",
 	    vim_scrollbarWidgetClass, vimForm,
@@ -829,17 +843,19 @@ gui_mch_create_scrollbar(sb, orient)
     vim_XawScrollbarSetThumb(sb->id, 0.0, 1.0, 0.0);
 }
 
+#if defined(FEAT_WINDOWS) || defined(PROTO)
     void
 gui_mch_destroy_scrollbar(sb)
-    GuiScrollbar    *sb;
+    scrollbar_t *sb;
 {
     if (sb->id != (Widget)0)
 	XtDestroyWidget(sb->id);
 }
+#endif
 
     void
 gui_mch_set_scrollbar_colors(sb)
-    GuiScrollbar    *sb;
+    scrollbar_t *sb;
 {
     if (sb->id != (Widget)0)
 	XtVaSetValues(sb->id,
@@ -857,7 +873,7 @@ gui_x11_get_wid()
     return( XtWindow(textArea) );
 }
 
-#if defined(USE_BROWSE) || defined(PROTO)
+#if defined(FEAT_BROWSE) || defined(PROTO)
 /*
  * Put up a file requester.
  * Returns the selected name in allocated memory, or NULL for Cancel.
@@ -876,7 +892,7 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
 
     /* Position the file selector just below the menubar */
     XtTranslateCoords(vimShell, (Position)0, (Position)
-#ifdef WANT_MENU
+#ifdef FEAT_MENU
 	    gui.menu_height
 #else
 	    0
@@ -887,7 +903,7 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
 }
 #endif
 
-#if defined(GUI_DIALOG) || defined(PROTO)
+#if defined(FEAT_GUI_DIALOG) || defined(PROTO)
 
 int	dialogStatus;
 
@@ -928,7 +944,7 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
     int			vertical;
 
     if (title == NULL)
-	title = (char_u *)"Vim dialog";
+	title = (char_u *)_("Vim dialog");
     dialogStatus = -1;
 
     /* if our pointer is currently hidden, then we should show it. */

@@ -18,7 +18,6 @@
 /*
  * Avoid clashes between Perl and Vim namespace.
  */
-#undef MAGIC
 #undef NORMAL
 #undef STRLEN
 #undef FF
@@ -33,6 +32,10 @@
 #endif
 #ifdef MIN
 # undef MIN
+#endif
+/* We use _() for gettext(), Perl uses it for function prototypes... */
+#ifdef _
+# undef _
 #endif
 
 #include <EXTERN.h>
@@ -114,9 +117,10 @@ msg_split(s, attr)
 	msg_attr((char_u *)token, attr);
 }
 
-#ifndef WANT_EVAL
+#ifndef FEAT_EVAL
 /*
- * This stub is needed because an "#ifdef WANT_EVAL" around Eval() doesn't work properly.
+ * This stub is needed because an "#ifdef FEAT_EVAL" around Eval() doesn't
+ * work properly.
  */
     char_u *
 eval_to_string(arg, nextcmd)
@@ -137,9 +141,9 @@ eval_to_string(arg, nextcmd)
  * any subsequent use of any of those reference will produce
  * a warning. (see typemap)
  */
-#define newANYrv(TYPE)						\
+#define newANYrv(TYPE, TNAME)					\
 static SV *							\
-new ## TYPE ## rv(rv, ptr)					\
+new ## TNAME ## rv(rv, ptr)					\
     SV *rv;							\
     TYPE *ptr;							\
 {								\
@@ -153,11 +157,11 @@ new ## TYPE ## rv(rv, ptr)					\
 	SvREFCNT_inc(ptr->perl_private);			\
     SvRV(rv) = ptr->perl_private;				\
     SvROK_on(rv);						\
-    return sv_bless(rv, gv_stashpv("VI" #TYPE, TRUE));		\
+    return sv_bless(rv, gv_stashpv("VI" #TNAME, TRUE));		\
 }
 
-newANYrv(WIN)
-newANYrv(BUF)
+newANYrv(win_t, WIN)
+newANYrv(buf_t, BUF)
 
 /*
  * perl_win_free
@@ -165,7 +169,7 @@ newANYrv(BUF)
  */
     void
 perl_win_free(wp)
-    WIN *wp;
+    win_t *wp;
 {
     if (wp->perl_private)
 	sv_setiv((SV *)wp->perl_private, 0);
@@ -174,7 +178,7 @@ perl_win_free(wp)
 
     void
 perl_buf_free(bp)
-    BUF *bp;
+    buf_t *bp;
 {
     if (bp->perl_private)
 	sv_setiv((SV *)bp->perl_private, 0);
@@ -230,9 +234,12 @@ VIM_init()
     SvREADONLY_on(sv);
 }
 
-    int
-do_perl(eap)
-    EXARG	*eap;
+/*
+ * ":perl"
+ */
+    void
+ex_perl(eap)
+    exarg_t	*eap;
 {
     char	*err;
     STRLEN	length;
@@ -258,10 +265,10 @@ do_perl(eap)
     LEAVE;
 
     if (!length)
-	return OK;
+	return;
 
     msg_split((char_u *)err, highlight_attr[HLF_E]);
-    return FAIL;
+    return;
     }
 }
 
@@ -275,23 +282,24 @@ replace_line(line, end)
     {
 	str = SvPV(GvSV(PL_defgv), PL_na);
 	ml_replace(*line, (char_u *)str, 1);
-#ifdef SYNTAX_HL
-	syn_changed(*line); /* recompute syntax hl. for this line */
-#endif
+	changed_bytes(*line, 0);
     }
     else
     {
-	mark_adjust(*line, *line, MAXLNUM, -1);
-	ml_delete((*line)--, FALSE);
-	(*end)--;
+	ml_delete(*line, FALSE);
+	deleted_lines_mark(*line, 1L);
+	--(*end);
+	--(*line);
     }
-    changed();
     return OK;
 }
 
-    int
-do_perldo(eap)
-    EXARG	*eap;
+/*
+ * ":perldo".
+ */
+    void
+ex_perldo(eap)
+    exarg_t	*eap;
 {
     STRLEN	length;
     SV		*sv;
@@ -299,7 +307,7 @@ do_perldo(eap)
     linenr_t	i;
 
     if (bufempty())
-	return FAIL;
+	return;
 
     if (!perl_interp)
     {
@@ -319,7 +327,7 @@ do_perldo(eap)
 	goto err;
 
     if (u_save(eap->line1 - 1, eap->line2 + 1) != OK)
-	return FAIL;
+	return;
 
     ENTER;
     SAVETMPS;
@@ -347,11 +355,11 @@ do_perldo(eap)
     adjust_cursor();
     update_screen(NOT_VALID);
     if (!length)
-	return OK;
+	return;
 
 err:
     msg_split((char_u *)str, highlight_attr[HLF_E]);
-    return FAIL;
+    return;
     }
 }
 
@@ -375,8 +383,8 @@ xs_init()
     newXS("VIM::bootstrap", boot_VIM, file);
 }
 
-typedef WIN *	VIWIN;
-typedef BUF *	VIBUF;
+typedef win_t *	VIWIN;
+typedef buf_t *	VIBUF;
 
 MODULE = VIM	    PACKAGE = VIM
 
@@ -408,7 +416,7 @@ SetOption(line)
 
     PPCODE:
     if (line != NULL)
-	do_set((char_u *)line, FALSE);
+	do_set((char_u *)line, 0);
     update_screen(NOT_VALID);
 
 void
@@ -443,7 +451,7 @@ void
 Buffers(...)
 
     PREINIT:
-    BUF *vimbuf;
+    buf_t *vimbuf;
     int i, b;
 
     PPCODE:
@@ -494,8 +502,8 @@ void
 Windows(...)
 
     PREINIT:
-    WIN *vimwin;
-    int i, w;
+    win_t   *vimwin;
+    int	    i, w;
 
     PPCODE:
     if (items == 0)
@@ -546,7 +554,7 @@ SetHeight(win, height)
     int height;
 
     PREINIT:
-    WIN *savewin;
+    win_t *savewin;
 
     PPCODE:
     if (!win_valid(win))
@@ -654,7 +662,7 @@ Set(vimbuf, ...)
     int i;
     long lnum;
     char *line;
-    BUF *savebuf;
+    buf_t *savebuf;
     PPCODE:
     if (buf_valid(vimbuf))
     {
@@ -662,23 +670,19 @@ Set(vimbuf, ...)
 	    croak("Usage: VIBUF::Set(vimbuf, lnum, @lines)");
 
 	lnum = SvIV(ST(1));
-	for(i=2; i<items; i++, lnum++)
+	for(i = 2; i < items; i++, lnum++)
 	{
 	    line = SvPV(ST(i),PL_na);
-	    if(lnum > 0 && lnum <= vimbuf->b_ml.ml_line_count && line != NULL)
+	    if (lnum > 0 && lnum <= vimbuf->b_ml.ml_line_count && line != NULL)
 	    {
 		savebuf = curbuf;
 		curbuf = vimbuf;
 		if (u_savesub(lnum) == OK)
 		{
 		    ml_replace(lnum, (char_u *)line, TRUE);
-		    changed();
-#ifdef SYNTAX_HL
-		    syn_changed(lnum); /* recompute syntax hl. for this line */
-#endif
+		    changed_bytes(lnum, 0);
 		}
 		curbuf = savebuf;
-		update_curbuf(NOT_VALID);
 	    }
 	}
     }
@@ -689,7 +693,7 @@ Delete(vimbuf, ...)
 
     PREINIT:
     long i, lnum = 0, count = 0;
-    BUF *savebuf;
+    buf_t *savebuf;
     PPCODE:
     if (buf_valid(vimbuf))
     {
@@ -712,7 +716,7 @@ Delete(vimbuf, ...)
 	}
 	if (items >= 2)
 	{
-	    for (i=0; i<count; i++)
+	    for (i = 0; i < count; i++)
 	    {
 		if (lnum > 0 && lnum <= vimbuf->b_ml.ml_line_count)
 		{
@@ -720,12 +724,11 @@ Delete(vimbuf, ...)
 		    curbuf = vimbuf;
 		    if (u_savedel(lnum, 1) == OK)
 		    {
-			mark_adjust(lnum, lnum, MAXLNUM, -1);
 			ml_delete(lnum, 0);
-			changed();
+			deleted_lines_mark(lnum, 1L);
 		    }
 		    curbuf = savebuf;
-		    update_curbuf(NOT_VALID);
+		    update_curbuf(VALID);
 		}
 	    }
 	}
@@ -736,10 +739,10 @@ Append(vimbuf, ...)
     VIBUF vimbuf;
 
     PREINIT:
-    int i;
-    long lnum;
-    char *line;
-    BUF *savebuf;
+    int		i;
+    long	lnum;
+    char	*line;
+    buf_t	*savebuf;
     PPCODE:
     if (buf_valid(vimbuf))
     {
@@ -747,21 +750,20 @@ Append(vimbuf, ...)
 	    croak("Usage: VIBUF::Append(vimbuf, lnum, @lines)");
 
 	lnum = SvIV(ST(1));
-	for(i=2; i<items; i++, lnum++)
+	for (i = 2; i < items; i++, lnum++)
 	{
 	    line = SvPV(ST(i),PL_na);
-	    if(lnum >= 0 && lnum <= vimbuf->b_ml.ml_line_count && line != NULL)
+	    if (lnum >= 0 && lnum <= vimbuf->b_ml.ml_line_count && line != NULL)
 	    {
 		savebuf = curbuf;
 		curbuf = vimbuf;
 		if (u_inssub(lnum + 1) == OK)
 		{
-		    mark_adjust(lnum + 1, MAXLNUM, 1L, 0L);
 		    ml_append(lnum, (char_u *)line, (colnr_t)0, FALSE);
-		    changed();
+		    appended_lines_mark(lnum, 1L);
 		}
 		curbuf = savebuf;
-		update_curbuf(NOT_VALID);
+		update_curbuf(VALID);
 	    }
 	}
     }

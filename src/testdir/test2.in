@@ -12,7 +12,11 @@ gf
 /second
 /URL
 gf
-:set isf=@,48-57,/,.,-,_,+,,,$,:,~,\
+:if has("ebcdic")
+: set isf=@,240-249,/,.,-,_,+,,,$,:,~,\
+:else
+: set isf=@,48-57,/,.,-,_,+,,,$,:,~,\
+:endif
 :.,$w!\\tmp\\vimtest2c
 /third
 /name
