@@ -7711,7 +7711,8 @@ fillchar_vsep(attr)
     int
 redrawing()
 {
-    return (!RedrawingDisabled && !(p_lz && char_avail() && !KeyTyped));
+    return (!RedrawingDisabled
+		       && !(p_lz && char_avail() && !KeyTyped && !do_redraw));
 }
 
 /*
