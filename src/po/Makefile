@@ -1,11 +1,11 @@
 # Makefile for the Vim message translations.
 
 # TODO make this configurable
-# Note: ja.sjis, cs.cp1250 and zh_CN.cp936 are only for MS-Windows, they are
+# Note: ja.sjis, *.cp1250 and zh_CN.cp936 are only for MS-Windows, they are
 # not installed on Unix
 
-LANGUAGES = af cs de es fr it ja ko pl sk uk zh_TW zh_CN zh_CN.UTF-8
-MOFILES = af.mo cs.mo de.mo es.mo fr.mo it.mo ja.mo \
+LANGUAGES = af cs de en_gb es fr it ja ko pl sk uk zh_TW zh_CN zh_CN.UTF-8
+MOFILES = af.mo cs.mo de.mo en_gb.mo es.mo fr.mo it.mo ja.mo \
 		ko.mo pl.mo sk.mo uk.mo zh_TW.mo zh_CN.mo zh_CN.UTF-8.mo
 
 PACKAGE = vim
@@ -53,7 +53,7 @@ uninstall:
 	  rm -f $(LOCALEDIR)/$$lang/LC_MESSAGES/$(PACKAGE).mo; \
 	done
 
-converted: ja.sjis.mo cs.cp1250.mo sk.cp1250.mo zh_CN.cp936.mo
+converted: ja.sjis.mo cs.cp1250.mo pl.cp1250.mo sk.cp1250.mo zh_CN.cp936.mo
 
 # Convert ja.po to create ja.sjis.po.  Requires doubling backslashes in the
 # second byte.  Don't depend on sjiscorr, it should only be compiled when
@@ -69,6 +69,11 @@ sjiscorr: sjiscorr.c
 cs.cp1250.po: cs.po
 	iconv -f iso-8859-2 -t cp1250 cs.po | \
 		sed -e 's/charset=ISO-8859-2/charset=cp1250/' -e 's/# Original translations/# Generated from cs.po, DO NOT EDIT/' > cs.cp1250.po
+
+# Convert pl.po to create pl.cp1250.po.
+pl.cp1250.po: pl.po
+	iconv -f iso-8859-2 -t cp1250 pl.po | \
+		sed -e 's/charset=ISO-8859-2/charset=cp1250/' -e 's/# Original translations/# Generated from pl.po, DO NOT EDIT/' > pl.cp1250.po
 
 # Convert sk.po to create sk.cp1250.po.
 sk.cp1250.po: sk.po
