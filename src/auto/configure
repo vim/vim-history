@@ -6085,14 +6085,14 @@ cat > conftest.$ac_ext <<EOF
 # include <sys/access.h>
 #endif
 #define _ALL_SOURCE
-#ifdef HAVE_SYS_STAT_H
-# include <sys/stat.h>
-#endif
+
+#include <sys/stat.h>
+
 int aclsize;
 struct acl *aclent;
 int main() {
 aclsize = sizeof(struct acl);
-	aclent = malloc(aclsize);
+	aclent = (void *)malloc(aclsize);
 	statacl("foo", STX_NORMAL, aclent, aclsize);
 	
 ; return 0; }
