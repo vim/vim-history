@@ -15,45 +15,6 @@
 
 #include "vim.h"
 
-/*
- * Avoid clashes between Perl and Vim namespace.
- */
-#undef NORMAL
-#undef STRLEN
-#undef FF
-#undef OP_DELETE
-#undef OP_JOIN
-#ifdef __BORLANDC__
-# define NOPROTO 1
-#endif
-/* remove MAX and MIN, included by glib.h, redefined by sys/param.h */
-#ifdef MAX
-# undef MAX
-#endif
-#ifdef MIN
-# undef MIN
-#endif
-/* We use _() for gettext(), Perl uses it for function prototypes... */
-#ifdef _
-# undef _
-#endif
-#ifdef DEBUG
-# undef DEBUG
-#endif
-#ifdef _DEBUG
-# undef _DEBUG
-#endif
-
-#ifdef __BORLANDC__
-/* Borland has the structure stati64 but not _stati64 */
-# define _stati64 stati64
-#endif
-
-/* OK, nasty namespace hacking over... */
-
-#include <EXTERN.h>
-#include <perl.h>
-#include <XSUB.h>
 
 /*
  * Work around clashes between Perl and Vim namespace.	proto.h doesn't
@@ -110,7 +71,15 @@ EXTERN_C void boot_DynaLoader __ARGS((pTHX_ CV*));
 # define perl_free dll_perl_free
 # define Perl_get_context dll_Perl_get_context
 # define Perl_croak dll_Perl_croak
-# define Perl_croak_nocontext dll_Perl_croak_nocontext
+# ifndef PROTO
+#  define Perl_croak_nocontext dll_Perl_croak_nocontext
+#  define Perl_call_argv dll_Perl_call_argv
+#  define Perl_call_pv dll_Perl_call_pv
+#  define Perl_eval_sv dll_Perl_eval_sv
+#  define Perl_get_sv dll_Perl_get_sv
+#  define Perl_eval_pv dll_Perl_eval_pv
+#  define Perl_call_method dll_Perl_call_method
+# endif
 # define Perl_dowantarray dll_Perl_dowantarray
 # define Perl_free_tmps dll_Perl_free_tmps
 # define Perl_gv_stashpv dll_Perl_gv_stashpv
@@ -120,12 +89,6 @@ EXTERN_C void boot_DynaLoader __ARGS((pTHX_ CV*));
 # define Perl_newSV dll_Perl_newSV
 # define Perl_newSViv dll_Perl_newSViv
 # define Perl_newSVpv dll_Perl_newSVpv
-# define Perl_call_argv dll_Perl_call_argv
-# define Perl_call_pv dll_Perl_call_pv
-# define Perl_eval_sv dll_Perl_eval_sv
-# define Perl_get_sv dll_Perl_get_sv
-# define Perl_eval_pv dll_Perl_eval_pv
-# define Perl_call_method dll_Perl_call_method
 # define Perl_pop_scope dll_Perl_pop_scope
 # define Perl_push_scope dll_Perl_push_scope
 # define Perl_save_int dll_Perl_save_int
