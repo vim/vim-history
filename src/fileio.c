@@ -305,7 +305,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 	    && vim_strchr(p_cpo, CPO_FNAMER) != NULL
 	    && !(flags & READ_DUMMY))
     {
-	if (setfname(fname, sfname, FALSE) == OK)
+	if (setfname(curbuf, fname, sfname, FALSE) == OK)
 	    curbuf->b_flags |= BF_NOTEDITED;
     }
 
@@ -2659,7 +2659,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    return FAIL;
 #endif
 #endif
-	if (setfname(fname, sfname, FALSE) == OK)
+	if (setfname(curbuf, fname, sfname, FALSE) == OK)
 	    curbuf->b_flags |= BF_NOTEDITED;
 #ifdef FEAT_AUTOCMD
 	/* ....and a new named one is created */

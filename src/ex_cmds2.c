@@ -746,13 +746,11 @@ check_changed(buf, checkaw, mult_win, forceit, allbuf)
 
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG) || defined(PROTO)
 
-#ifdef FEAT_BROWSE
-static void	browse_save_fname __ARGS((buf_T *buf));
-
+#if defined(FEAT_BROWSE) || defined(PROTO)
 /*
  * When wanting to write a file without a file name, ask the user for a name.
  */
-    static void
+    void
 browse_save_fname(buf)
     buf_T	*buf;
 {
@@ -764,7 +762,8 @@ browse_save_fname(buf)
 								   NULL, buf);
 	if (fname != NULL)
 	{
-	    setfname(fname, NULL, TRUE);
+	    if (setfname(buf, fname, NULL, TRUE) == OK)
+		buf->b_flags |= BF_NOTEDITED;
 	    vim_free(fname);
 	}
     }
@@ -773,6 +772,7 @@ browse_save_fname(buf)
 
 /*
  * Ask the user what to do when abondoning a changed buffer.
+ * Must check 'write' option first!
  */
     void
 dialog_changed(buf, checkall)

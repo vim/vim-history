@@ -5151,7 +5151,7 @@ ex_window()
 
     /* Create the command-line buffer empty. */
     (void)do_ecmd(0, NULL, NULL, NULL, ECMD_ONE, ECMD_HIDE);
-    (void)setfname((char_u *)"command-line", NULL, TRUE);
+    (void)setfname(curbuf, (char_u *)"command-line", NULL, TRUE);
     set_option_value((char_u *)"bt", 0L, (char_u *)"nofile", OPT_LOCAL);
     set_option_value((char_u *)"swf", 0L, NULL, OPT_LOCAL);
     curbuf->b_p_ma = TRUE;

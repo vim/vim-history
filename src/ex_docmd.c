@@ -6306,7 +6306,8 @@ ex_recover(eap)
     /* Set recoverymode right away to avoid the ATTENTION prompt. */
     recoverymode = TRUE;
     if (!check_changed(curbuf, p_awa, TRUE, eap->forceit, FALSE)
-		&& (*eap->arg == NUL || setfname(eap->arg, NULL, TRUE) == OK))
+	    && (*eap->arg == NUL
+			     || setfname(curbuf, eap->arg, NULL, TRUE) == OK))
 	ml_recover();
     recoverymode = FALSE;
 }

@@ -354,11 +354,12 @@ error:
 }
 
 /*
- * ml_setname() is called when the file name has been changed.
+ * ml_setname() is called when the file name of "buf" has been changed.
  * It may rename the swap file.
  */
     void
-ml_setname()
+ml_setname(buf)
+    buf_T	*buf;
 {
     int		success = FALSE;
     memfile_T	*mfp;
@@ -368,7 +369,7 @@ ml_setname()
     char_u	*p;
 #endif
 
-    mfp = curbuf->b_ml.ml_mfp;
+    mfp = buf->b_ml.ml_mfp;
     if (mfp->mf_fd < 0)		    /* there is no swap file yet */
     {
 	/*
@@ -376,7 +377,7 @@ ml_setname()
 	 * For help files we will make a swap file now.
 	 */
 	if (p_uc != 0)
-	    ml_open_file(curbuf);	/* create a swap file */
+	    ml_open_file(buf);	    /* create a swap file */
 	return;
     }
 
@@ -388,7 +389,7 @@ ml_setname()
     {
 	if (*dirp == NUL)	    /* tried all directories, fail */
 	    break;
-	fname = findswapname(curbuf, &dirp, mfp->mf_fname); /* alloc's fname */
+	fname = findswapname(buf, &dirp, mfp->mf_fname); /* alloc's fname */
 	if (fname == NULL)	    /* no file name found for this dir */
 	    continue;
 
@@ -895,7 +896,7 @@ ml_recover()
     if (directly)
     {
 	expand_env(b0p->b0_fname, NameBuff, MAXPATHL);
-	if (setfname(NameBuff, NULL, TRUE) == FAIL)
+	if (setfname(curbuf, NameBuff, NULL, TRUE) == FAIL)
 	    goto theend;
     }
 

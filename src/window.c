@@ -2587,16 +2587,16 @@ close_others(message, forceit)
 	    if (!r)
 	    {
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
-		if (message && (p_confirm || cmdmod.confirm))
+		if (message && (p_confirm || cmdmod.confirm) && p_write)
 		{
 		    dialog_changed(wp->w_buffer, FALSE);
-#ifdef FEAT_AUTOCMD
+# ifdef FEAT_AUTOCMD
 		    if (!win_valid(wp))		/* autocommands messed wp up */
 		    {
 			nextwp = firstwin;
 			continue;
 		    }
-#endif
+# endif
 		}
 		if (bufIsChanged(wp->w_buffer))
 #endif
