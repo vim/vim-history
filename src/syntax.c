@@ -162,6 +162,7 @@ struct syn_pattern
 #define HL_SKIPWHITE	0x100	/* nextgroup can skip white space */
 #define HL_SKIPEMPTY	0x200	/* nextgroup can skip empty lines */
 #define HL_KEEPEND	0x400	/* end match always kept */
+#define HL_EXCLUDENL	0x800	/* exclude NL from match */
 
 #define SYN_ITEMS(buf)	((struct syn_pattern *)((buf)->b_syn_patterns.ga_data))
 
@@ -1701,14 +1702,18 @@ check_state_ends(line)
 		 * Only for a region the search for the end continues after
 		 * the end of the contained item.  If the contained match
 		 * included the end-of-line, break here, the region continues.
-		 * Don't do this when "keepend" is used.
+		 * Don't do this when:
+		 * - "keepend" is used for the contained item
+		 * - not at the end of the line (could be end="x$"me=e-1).
+		 * - "excludenl" is used (HL_HAS_EOL won't be set)
 		 */
 		if (SYN_ITEMS(syn_buf)[cur_si->si_idx].sp_type == SPTYPE_START
-			     && !(cur_si->si_flags & (HL_MATCH | HL_KEEPEND))
-			     && keepend_level < 0)
+			     && !(cur_si->si_flags & (HL_MATCH | HL_KEEPEND)))
 		{
 		    update_si_end(cur_si, line, (int)current_col);
-		    if (current_next_flags & HL_HAS_EOL)
+		    if ((current_next_flags & HL_HAS_EOL)
+			    && keepend_level < 0
+			    && line[current_col] == NUL)
 			break;
 		}
 	    }
@@ -2639,6 +2644,11 @@ syn_list_one(id, syncing, link_only)
 	    msg_puts_attr((char_u *)"keepend", attr);
 	    msg_putchar(' ');
 	}
+	if (spp->sp_flags & HL_EXCLUDENL)
+	{
+	    msg_puts_attr((char_u *)"excludenl", attr);
+	    msg_putchar(' ');
+	}
 	if (spp->sp_flags & HL_TRANSP)
 	{
 	    msg_puts_attr((char_u *)"transparent", attr);
@@ -3084,6 +3094,7 @@ get_syn_options(arg, flagsp, sync_idx, cont_list, next_list)
     } flagtab[] = { {"contained",   9,	HL_CONTAINED},
 		    {"oneline",	    7,	HL_ONELINE},
 		    {"keepend",	    7,	HL_KEEPEND},
+		    {"excludenl",   9,	HL_EXCLUDENL},
 		    {"transparent", 11, HL_TRANSP},
 		    {"skipnl",	    6,	HL_SKIPNL},
 		    {"skipwhite",   9,	HL_SKIPWHITE},
@@ -3385,7 +3396,7 @@ syn_cmd_match(eap, syncing)
     init_syn_patterns();
     vim_memset(&item, 0, sizeof(item));
     rest = get_syn_pattern(rest, &item);
-    if (vim_regcomp_had_eol())
+    if (vim_regcomp_had_eol() && !(flags & HL_EXCLUDENL))
 	flags |= HL_HAS_EOL;
 
     /* Get options after the pattern */
@@ -3586,7 +3597,8 @@ syn_cmd_region(eap, syncing)
 	     * Get the syntax pattern and the following offset(s).
 	     */
 	    rest = get_syn_pattern(rest, ppp->pp_synp);
-	    if (item == ITEM_END && vim_regcomp_had_eol())
+	    if (item == ITEM_END && vim_regcomp_had_eol()
+						   && !(flags & HL_EXCLUDENL))
 		ppp->pp_synp->sp_flags |= HL_HAS_EOL;
 	    ppp->pp_matchgroup_id = matchgroup_id;
 	    ++pat_count;

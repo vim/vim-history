@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	C
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Sep 18
+" Last change:	1999 Oct 19
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -25,12 +25,18 @@ if !exists("c_no_utf")
 endif
 if exists("c_no_cformat")
   syn region	cString		start=+L\="+ skip=+\\\\\|\\"+ end=+"+ contains=cSpecial
+  " cCppString: same as cString, but ends at end of line
+  syn region	cCppString	start=+L\="+ skip=+\\\\\|\\"\|\\$+ excludenl end=+"+ end='$' contains=cSpecial
 else
   syn match	cFormat		"%\(\d\+\$\)\=[-+' #0*]*\(\d*\|\*\|\*\d\+\$\)\(\.\(\d*\|\*\|\*\d\+\$\)\)\=\([hlL]\|ll\)\=\([diuoxXfeEgGcCsSpn]\|\[\^\=.[^]]*\]\)" contained
   syn match	cFormat		"%%" contained
   syn region	cString		start=+L\="+ skip=+\\\\\|\\"+ end=+"+ contains=cSpecial,cFormat
+  " cCppString: same as cString, but ends at end of line
+  syn region	cCppString	start=+L\="+ skip=+\\\\\|\\"\|\\$+ excludenl end=+"+ end='$' contains=cSpecial,cFormat
   hi link cFormat cSpecial
 endif
+hi link cCppString cString
+
 syn match	cCharacter	"L\='[^\\]'"
 syn match	cCharacter	"L'[^']*'" contains=cSpecial
 syn match	cSpecialError	"L\='\\[^'\"?\\abfnrtv]'"
@@ -42,7 +48,7 @@ syn match	cSpecialCharacter "L'\\x\x\+'"
 "when wanted, highlight trailing white space
 if exists("c_space_errors")
   if !exists("c_no_trail_space_error")
-    syn match	cSpaceError	"\s\+$"
+    syn match	cSpaceError	excludenl "\s\+$"
   endif
   if !exists("c_no_tab_space_error")
     syn match	cSpaceError	" \+\t"me=e-1
@@ -50,16 +56,22 @@ if exists("c_space_errors")
 endif
 
 "catch errors caused by wrong parenthesis and brackets
-syn cluster	cParenGroup	contains=cParenError,cIncluded,cSpecial,@cCommentGroup,cUserCont,cUserLabel,cBitField,cCommentSkip,cOctalZero,cCppOut,cCppOut2,cCppSkip,cFormat,cNumber,cFloat,cOctal,cOctalError,cNumbersCom
+syn cluster	cParenGroup	contains=cParenError,cIncluded,cSpecial,cCommentSkip,cCommentString,cComment2String,@cCommentGroup,cUserCont,cUserLabel,cBitField,cCommentSkip,cOctalZero,cCppOut,cCppOut2,cCppSkip,cFormat,cNumber,cFloat,cOctal,cOctalError,cNumbersCom
 if exists("c_no_bracket_error")
-  syn region	cParen		transparent start='(' end=')' contains=ALLBUT,@cParenGroup
+  syn region	cParen		transparent start='(' end=')' contains=ALLBUT,@cParenGroup,cCppParen,cCppString
+  " cCppParen: same as cParen but ends at end-of-line; used in cDefine
+  syn region	cCppParen	transparent start='(' skip='\\$' excludenl end=')' end='$' contained contains=ALLBUT,@cParenGroup,cParen,cString
   syn match	cParenError	")"
   syn match	cErrInParen	contained "[{}]"
 else
-  syn region	cParen		transparent start='(' end=')' contains=ALLBUT,@cParenGroup,cErrInBracket
+  syn region	cParen		transparent start='(' end=')' contains=ALLBUT,@cParenGroup,cCppParen,cErrInBracket,cCppBracket,cCppString
+  " cCppParen: same as cParen but ends at end-of-line; used in cDefine
+  syn region	cCppParen	transparent start='(' skip='\\$' excludenl end=')' end='$' contained contains=ALLBUT,@cParenGroup,cErrInBracket,cParen,cBracket,cString
   syn match	cParenError	"[\])]"
   syn match	cErrInParen	contained "[\]{}]"
-  syn region	cBracket	transparent start='\[' end=']' contains=ALLBUT,@cParenGroup,cErrInParen
+  syn region	cBracket	transparent start='\[' end=']' contains=ALLBUT,@cParenGroup,cErrInParen,cCppParen,cCppBracket,cCppString
+  " cCppBracket: same as cParen but ends at end-of-line; used in cDefine
+  syn region	cCppBracket	transparent start='\[' skip='\\$' excludenl end=']' end='$' contained contains=ALLBUT,@cParenGroup,cErrInParen,cParen,cBracket,cString
   syn match	cErrInBracket	contained "[);{}]"
 endif
 
@@ -145,7 +157,7 @@ if !exists("c_no_ansi") || exists("c_ansi_constants")
   syn keyword cConstant EXIT_FAILURE EXIT_SUCCESS RAND_MAX
 endif
 
-syn region	cPreCondit	start="^\s*#\s*\(if\|ifdef\|ifndef\|elif\|else\)\>" skip="\\$" end="$" end="//"me=s-1 contains=cComment,cString,cCharacter,cNumbers,cCommentError,cSpaceError
+syn region	cPreCondit	start="^\s*#\s*\(if\|ifdef\|ifndef\|elif\)\>" skip="\\$" end="$" end="//"me=s-1 contains=cComment,cCppString,cCharacter,cCppParen,cParenError,cNumbers,cCommentError,cSpaceError
 syn match	cPreCondit	"^\s*#\s*\(else\|endif\)\>"
 if !exists("c_no_if0")
   syn region	cCppOut		start="^\s*#\s*if\s\+0\>" end=".\|$" contains=cCppOut2
@@ -156,12 +168,12 @@ syn region	cIncluded	contained start=+"+ skip=+\\\\\|\\"+ end=+"+
 syn match	cIncluded	contained "<[^>]*>"
 syn match	cInclude	"^\s*#\s*include\>\s*["<]" contains=cIncluded
 "syn match cLineSkip	"\\$"
-syn cluster	cPreProcGroup	contains=cPreCondit,cIncluded,cInclude,cDefine,cErrInParen,cErrInBracket,cUserLabel,cSpecial,cOctalZero,cCppOut,cCppOut2,cCppSkip,cFormat,cNumber,cFloat,cOctal,cOctalError,cNumbersCom
+syn cluster	cPreProcGroup	contains=cPreCondit,cIncluded,cInclude,cDefine,cErrInParen,cErrInBracket,cUserLabel,cSpecial,cOctalZero,cCppOut,cCppOut2,cCppSkip,cFormat,cNumber,cFloat,cOctal,cOctalError,cNumbersCom,cString,cCommentSkip,cCommentString,cComment2String,@cCommentGroup,cParen,cBracket
 syn region	cDefine		start="^\s*#\s*\(define\|undef\)\>" skip="\\$" end="$" contains=ALLBUT,@cPreProcGroup
-syn region	cPreProc	start="^\s*#\s*\(pragma\>\|line\>\|warning\>\|warn\>\|error\>\)" skip="\\$" end="$" contains=ALLBUT,@cPreProcGroup
+syn region	cPreProc	start="^\s*#\s*\(pragma\>\|line\>\|warning\>\|warn\>\|error\>\)" skip="\\$" end="$" keepend contains=ALLBUT,@cPreProcGroup
 
 " Highlight User Labels
-syn cluster	cMultiGroup	contains=cIncluded,cSpecial,@cCommentGroup,cUserCont,cUserLabel,cBitField,cOctalZero,cCppOut,cCppOut2,cCppSkip,cFormat,cNumber,cFloat,cOctal,cOctalError,cNumbersCom
+syn cluster	cMultiGroup	contains=cIncluded,cSpecial,cCommentSkip,cCommentString,cComment2String,@cCommentGroup,cUserCont,cUserLabel,cBitField,cOctalZero,cCppOut,cCppOut2,cCppSkip,cFormat,cNumber,cFloat,cOctal,cOctalError,cNumbersCom,cCppParen,cCppBracket,cCppString
 syn region	cMulti		transparent start='?' skip='::' end=':' contains=ALLBUT,@cMultiGroup
 " Avoid matching foo::bar() in C++ by requiring that the next char is not ':'
 syn cluster	cLabelGroup	contains=cUserLabel
