@@ -1358,17 +1358,17 @@ cs_insert_filelist(fname, ppath, flags, sb)
  * find cscope command in command table
  */
     static cscmd_T *
-cs_lookup_cmd(exp)
-    exarg_T *exp;
+cs_lookup_cmd(eap)
+    exarg_T *eap;
 {
     cscmd_T *cmdp;
     char *stok;
     size_t len;
 
-    if (exp->arg == NULL)
+    if (eap->arg == NULL)
 	return NULL;
 
-    if ((stok = strtok((char *)(exp->arg), (const char *)" ")) == NULL)
+    if ((stok = strtok((char *)(eap->arg), (const char *)" ")) == NULL)
 	return NULL;
 
     len = strlen(stok);

@@ -147,8 +147,8 @@ aborted_in_try()
  * set to TRUE, if a later but severer message should be used instead.
  */
     int
-cause_errthrow(msg, severe, ignore)
-    char_u	*msg;
+cause_errthrow(mesg, severe, ignore)
+    char_u	*mesg;
     int		severe;
     int		*ignore;
 {
@@ -197,7 +197,7 @@ cause_errthrow(msg, severe, ignore)
      * interrupt exception is catchable by the innermost try conditional and
      * not replaced by an interrupt message error exception.
      */
-    if (msg == (char_u *)_(e_interr))
+    if (mesg == (char_u *)_(e_interr))
     {
 	*ignore = TRUE;
 	return TRUE;
@@ -265,7 +265,7 @@ cause_errthrow(msg, severe, ignore)
 	    }
 	    else
 	    {
-		elem->msg = vim_strsave(msg);
+		elem->msg = vim_strsave(mesg);
 		if (elem->msg == NULL)
 		{
 		    vim_free(elem);
@@ -420,7 +420,7 @@ throw_exception(value, type, cmdname)
     char_u	*cmdname;
 {
     except_T	*excp;
-    char_u	*p, *msg, *val;
+    char_u	*p, *mesg, *val;
     int		cmdlen;
 
     /*
@@ -448,12 +448,12 @@ throw_exception(value, type, cmdname)
 	/* Store the original message and prefix the exception value with
 	 * "Vim:" or, if a command name is given, "Vim(cmdname):". */
 	excp->messages = (struct msglist *)value;
-	msg = excp->messages->throw_msg;
+	mesg = excp->messages->throw_msg;
 	if (cmdname != NULL && *cmdname != NUL)
 	{
 	    cmdlen = STRLEN(cmdname);
 	    excp->value = vim_strnsave((char_u *)"Vim(",
-					   4 + cmdlen + 2 + (int)STRLEN(msg));
+					   4 + cmdlen + 2 + (int)STRLEN(mesg));
 	    if (excp->value == NULL)
 		goto nomem;
 	    STRCPY(&excp->value[4], cmdname);
@@ -462,7 +462,7 @@ throw_exception(value, type, cmdname)
 	}
 	else
 	{
-	    excp->value = vim_strnsave((char_u *)"Vim:", 4 + (int)STRLEN(msg));
+	    excp->value = vim_strnsave((char_u *)"Vim:", 4 + (int)STRLEN(mesg));
 	    if (excp->value == NULL)
 		goto nomem;
 	    val = excp->value + 4;
@@ -471,7 +471,7 @@ throw_exception(value, type, cmdname)
 	/* msg_add_fname may have been used to prefix the message with a file
 	 * name in quotes.  In the exception value, put the file name in
 	 * parentheses and move it to the end. */
-	for (p = msg; ; p++)
+	for (p = mesg; ; p++)
 	{
 	    if (*p == NUL || (*p == 'E' &&
 			isdigit(p[1]) &&
@@ -479,19 +479,19 @@ throw_exception(value, type, cmdname)
 					 (p[3] == ':' || (isdigit(p[3]) &&
 							  p[4] == ':'))))))
 	    {
-		if (*p == NUL || p == msg)  /* 'E123' missing or at beginning */
-		    STRCAT(val, msg);
+		if (*p == NUL || p == mesg)  /* 'E123' missing or at beginning */
+		    STRCAT(val, mesg);
 		else
 		{
 		    /* '"filename" E123: message text' */
-		    if (msg[0] != '"' || p-2 < &msg[1] ||
+		    if (mesg[0] != '"' || p-2 < &mesg[1] ||
 			    p[-2] != '"' || p[-1] != ' ')
 			/* "E123:" is part of the file name. */
 			continue;
 
 		    STRCAT(val, p);
 		    p[-2] = NUL;
-		    sprintf((char *)(val + STRLEN(p)), " (%s)", &msg[1]);
+		    sprintf((char *)(val + STRLEN(p)), " (%s)", &mesg[1]);
 		    p[-2] = '"';
 		}
 		break;
@@ -696,7 +696,7 @@ report_pending(action, pending, value)
     int		pending;
     void	*value;
 {
-    char_u	*msg;
+    char_u	*mesg;
     char	*s;
     int		save_msg_silent;
 
@@ -704,14 +704,14 @@ report_pending(action, pending, value)
     switch (action)
     {
 	case RP_MAKE:
-	    msg = (char_u *)_("%s made pending");
+	    mesg = (char_u *)_("%s made pending");
 	    break;
 	case RP_RESUME:
-	    msg = (char_u *)_("%s resumed");
+	    mesg = (char_u *)_("%s resumed");
 	    break;
 	/* case RP_DISCARD: */
 	default:
-	    msg = (char_u *)_("%s discarded");
+	    mesg = (char_u *)_("%s discarded");
 	    break;
     }
 
@@ -737,9 +737,9 @@ report_pending(action, pending, value)
 	default:
 	    if (pending & CSTP_THROW)
 	    {
-		sprintf((char *)IObuff, (char *)msg, _("Exception"));
-		msg = vim_strnsave(IObuff, (int)STRLEN(IObuff) + 4);
-		STRCAT(msg, ": %s");
+		sprintf((char *)IObuff, (char *)mesg, _("Exception"));
+		mesg = vim_strnsave(IObuff, (int)STRLEN(IObuff) + 4);
+		STRCAT(mesg, ": %s");
 		s = (char *)((except_T *)value)->value;
 	    }
 	    else if ((pending & CSTP_ERROR) && (pending & CSTP_INTERRUPT))
@@ -755,7 +755,7 @@ report_pending(action, pending, value)
 	msg_silent = FALSE;	/* display messages */
     ++no_wait_return;
     msg_scroll = TRUE;		/* always scroll up, don't overwrite */
-    msg_str(msg, (char_u *)s);
+    msg_str(mesg, (char_u *)s);
     msg_puts((char_u *)"\n");   /* don't overwrite this either */
     cmdline_row = msg_row;
     --no_wait_return;
@@ -765,7 +765,7 @@ report_pending(action, pending, value)
     if (pending == CSTP_RETURN)
 	vim_free(s);
     else if (pending & CSTP_THROW)
-	vim_free(msg);
+	vim_free(mesg);
 }
 
 /*

@@ -126,7 +126,7 @@ static int	getargopt __ARGS((exarg_T *eap));
 #endif
 
 static int	check_more __ARGS((int, int));
-static linenr_T get_address __ARGS((char_u **, int skip, int otherfile));
+static linenr_T get_address __ARGS((char_u **, int skip, int to_other_file));
 static char_u	*invalid_range __ARGS((exarg_T *eap));
 static void	correct_range __ARGS((exarg_T *eap));
 static char_u	*repl_cmdline __ARGS((exarg_T *eap, char_u *src, int srclen, char_u *repl, char_u **cmdlinep));
@@ -3588,10 +3588,10 @@ skip_range(cmd, ctx)
  * Return MAXLNUM when no Ex address was found.
  */
     static linenr_T
-get_address(ptr, skip, otherfile)
+get_address(ptr, skip, to_other_file)
     char_u	**ptr;
     int		skip;	    /* only skip the address, don't use it */
-    int		otherfile;  /* flag: may jump to other file */
+    int		to_other_file;  /* flag: may jump to other file */
 {
     int		c;
     int		i;
@@ -3629,7 +3629,7 @@ get_address(ptr, skip, otherfile)
 			{
 			    /* Only accept a mark in another file when it is
 			     * used by itself: ":'M". */
-			    fp = getmark(*cmd, otherfile && cmd[1] == NUL);
+			    fp = getmark(*cmd, to_other_file && cmd[1] == NUL);
 			    ++cmd;
 			    if (fp == (pos_T *)-1)
 				/* Jumped to another file. */

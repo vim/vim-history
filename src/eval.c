@@ -1149,9 +1149,6 @@ ex_let(eap)
 	     */
 	    else if (eval_isnamec(*arg) && !isdigit(*arg))
 	    {
-		char_u *expr_start;
-		char_u *expr_end;
-
 		/* Find the end of the name. */
 		p = find_name_end(arg, &expr_start, &expr_end);
 
@@ -7790,7 +7787,7 @@ find_name_end(arg, expr_start, expr_end)
 eval_isnamec(c)
     int	    c;
 {
-    return (ASCII_ISALPHA(c) || isdigit(c) || c == '_' || c == ':'
+    return (ASCII_ISALNUM(c) || c == '_' || c == ':'
 #ifdef FEAT_MAGIC_BRACES
 	    || c == '{' || c == '}'
 #endif
@@ -8878,7 +8875,7 @@ ex_function(eap)
 	else
 	{
 	    arg = p;
-	    while (ASCII_ISALPHA(*p) || isdigit(*p) || *p == '_')
+	    while (ASCII_ISALNUM(*p) || *p == '_')
 		++p;
 	    if (arg == p || isdigit(*arg)
 		    || (p - arg == 9 && STRNCMP(arg, "firstline", 9) == 0)

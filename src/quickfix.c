@@ -87,7 +87,7 @@ struct eformat
 };
 
 static void	qf_new_list __ARGS((void));
-static int	qf_add_entry __ARGS((struct qf_line **prevp, char_u *dir, char_u *fname, char_u *msg, long lnum, int col, int virt_col, int nr, int type, int valid));
+static int	qf_add_entry __ARGS((struct qf_line **prevp, char_u *dir, char_u *fname, char_u *mesg, long lnum, int col, int virt_col, int nr, int type, int valid));
 static void	qf_msg __ARGS((void));
 static void	qf_free __ARGS((int idx));
 static char_u	*qf_types __ARGS((int, int));
@@ -677,11 +677,11 @@ qf_new_list()
  * Returns OK or FAIL.
  */
     static int
-qf_add_entry(prevp, dir, fname, msg, lnum, col, virt_col, nr, type, valid)
+qf_add_entry(prevp, dir, fname, mesg, lnum, col, virt_col, nr, type, valid)
     struct qf_line **prevp;	/* pointer to previously added entry or NULL */
     char_u	*dir;		/* optional directory name */
     char_u	*fname;		/* file name or NULL */
-    char_u	*msg;		/* message */
+    char_u	*mesg;		/* message */
     long	lnum;		/* line number */
     int		col;		/* column */
     int		virt_col;	/* using virtual column */
@@ -695,7 +695,7 @@ qf_add_entry(prevp, dir, fname, msg, lnum, col, virt_col, nr, type, valid)
 								      == NULL)
 	return FAIL;
     qfp->qf_fnum = qf_get_fnum(dir, fname);
-    if ((qfp->qf_text = vim_strsave(msg)) == NULL)
+    if ((qfp->qf_text = vim_strsave(mesg)) == NULL)
     {
 	vim_free(qfp);
 	return FAIL;
@@ -2163,9 +2163,9 @@ ex_helpgrep(eap)
 	{
 	    copy_option_part(&p, NameBuff, MAXPATHL, ",");
 
-	    /* Find all "doc / *.txt" files in this directory. */
+	    /* Find all "*.txt" and "*.??x" files in the "doc" directory. */
 	    add_pathsep(NameBuff);
-	    STRCAT(NameBuff, "doc/*.txt");
+	    STRCAT(NameBuff, "doc/*.\\(txt\\|??x\\)");
 	    if (gen_expand_wildcards(1, &NameBuff, &fcount,
 					     &fnames, EW_FILE|EW_SILENT) == OK
 		    && fcount > 0)
