@@ -1220,9 +1220,8 @@ qf_jump(dir, errornr, forceit)
 	    update_topline_redraw();
 	    sprintf((char *)IObuff, _("(%d of %d)%s%s: "), qf_index,
 		    qf_lists[qf_curlist].qf_count,
-		    qf_ptr->qf_cleared ? (char_u *)_(" (line deleted)")
-							       : (char_u *)"",
-		    qf_types(qf_ptr->qf_type, qf_ptr->qf_nr));
+		    qf_ptr->qf_cleared ? _(" (line deleted)") : "",
+		    (char *)qf_types(qf_ptr->qf_type, qf_ptr->qf_nr));
 	    /* Add the message, skipping leading whitespace and newlines. */
 	    len = (int)STRLEN(IObuff);
 	    qf_fmt_text(qf_ptr->qf_text, IObuff + len, IOSIZE - len);
@@ -1335,7 +1334,7 @@ qf_list(eap)
 		if (fname == NULL)
 		    sprintf((char *)IObuff, "%2d", i);
 		else
-		    sprintf((char *)IObuff, "%2d %s", i, fname);
+		    sprintf((char *)IObuff, "%2d %s", i, (char *)fname);
 		msg_outtrans_attr(IObuff, i == qf_lists[qf_curlist].qf_index
 			? hl_attr(HLF_L) : hl_attr(HLF_D));
 		if (qfp->qf_lnum == 0)
@@ -1346,7 +1345,7 @@ qf_list(eap)
 		    sprintf((char *)IObuff, ":%ld col %d",
 						   qfp->qf_lnum, qfp->qf_col);
 		sprintf((char *)IObuff + STRLEN(IObuff), "%s: ",
-					  qf_types(qfp->qf_type, qfp->qf_nr));
+				  (char *)qf_types(qfp->qf_type, qfp->qf_nr));
 		msg_puts_attr(IObuff, hl_attr(HLF_N));
 		/* Remove newlines and leading whitespace from the text. */
 		qf_fmt_text(qfp->qf_text, IObuff, IOSIZE);
@@ -1551,7 +1550,7 @@ qf_types(c, nr)
     if (nr <= 0)
 	return p;
 
-    sprintf((char *)buf, "%s %3d", p, nr);
+    sprintf((char *)buf, "%s %3d", (char *)p, nr);
     return buf;
 }
 
@@ -1847,7 +1846,7 @@ qf_fill_buffer()
 		}
 
 		sprintf((char *)IObuff + len, "%s",
-			qf_types(qfp->qf_type, qfp->qf_nr));
+				  (char *)qf_types(qfp->qf_type, qfp->qf_nr));
 		len += (int)STRLEN(IObuff + len);
 	    }
 	    IObuff[len++] = '|';
@@ -1976,7 +1975,8 @@ ex_make(eap)
     cmd = alloc(len);
     if (cmd == NULL)
 	return;
-    sprintf((char *)cmd, "%s%s%s", p_shq, eap->arg, p_shq);
+    sprintf((char *)cmd, "%s%s%s", (char *)p_shq, (char *)eap->arg,
+							       (char *)p_shq);
     if (*p_sp != NUL)
 	append_redir(cmd, p_sp, name);
     /*
