@@ -2241,16 +2241,20 @@ SetBufferLine(buf_T *buf, int n, PyObject *line, int *len_change)
 	if (save == NULL)
 	    return FAIL;
 
-	/* We do not need to free save, as we pass responsibility for
-	 * it to vim, via the final parameter of ml_replace().
-	 */
+	/* We do not need to free "save" if ml_replace() consumes it. */
 	PyErr_Clear();
 	curbuf = buf;
 
 	if (u_savesub((linenr_T)n) == FAIL)
+	{
 	    PyErr_SetVim(_("cannot save undo information"));
-	else if (ml_replace((linenr_T)n, (char_u *)save, TRUE) == FAIL)
+	    vim_free(save);
+	}
+	else if (ml_replace((linenr_T)n, (char_u *)save, FALSE) == FAIL)
+	{
 	    PyErr_SetVim(_("cannot replace line"));
+	    vim_free(save);
+	}
 	else
 	    changed_bytes((linenr_T)n, 0);
 
@@ -2390,13 +2394,15 @@ SetBufferLineList(buf_T *buf, int lo, int hi, PyObject *list, int *len_change)
 	if (!PyErr_Occurred())
 	{
 	    for (i = 0; i < old_len && i < new_len; ++i)
-		if (ml_replace((linenr_T)(lo+i), (char_u *)array[i], TRUE)
+		if (ml_replace((linenr_T)(lo+i), (char_u *)array[i], FALSE)
 								      == FAIL)
 		{
 		    PyErr_SetVim(_("cannot replace line"));
 		    break;
 		}
 	}
+	else
+	    i = 0;
 
 	/* Now we may need to insert the remaining new old_len. If we do, we
 	 * must free the strings as we finish with them (we can't pass the
