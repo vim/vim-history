@@ -148,6 +148,7 @@ typedef int LOGFONT[];
 # define LPCTSTR	int
 # define OSVERSIONINFO	int
 # define HBRUSH		int
+# define HIMC		int
 #endif
 
 /* For the Intellimouse: */
@@ -2641,6 +2642,16 @@ gui_mch_init_font(char_u *font_name)
 	font_name = lf.lfFaceName;
 #ifdef MULTI_BYTE_IME
     norm_logfont = lf;
+    {
+	HIMC    hImc;
+
+	/* Initialize font for IME */
+	if ((hImc = ImmGetContext(s_hwnd)))
+	{
+	    ImmSetCompositionFont(hImc, &norm_logfont);
+	    ImmReleaseContext(s_hwnd, hImc);
+	}
+    }
 #endif
     gui_mch_free_font(gui.norm_font);
     gui.norm_font = font;
@@ -3025,6 +3036,36 @@ DisplayCompStringOpaque(char_u *s, int len)
     SetBkMode(s_hdc,OldBkMode);
 }
 
+/*
+ * Position IME composition window.
+ */
+    static void
+ImePositionWindow(HIMC hImc)
+{
+    COMPOSITIONFORM	cfs;
+
+    cfs.dwStyle = CFS_POINT;
+    cfs.ptCurrentPos.x = FILL_X(gui.col);
+    cfs.ptCurrentPos.y = FILL_Y(gui.row);
+    MapWindowPoints(s_textArea, s_hwnd, &cfs.ptCurrentPos, 1);
+    ImmSetCompositionWindow(hImc, &cfs);
+}
+
+/*
+ * Get context and position IME composition window.
+ */
+    void
+ImeSetCompositionWindow(void)
+{
+    HIMC hImc;
+
+    if ((hImc = ImmGetContext(s_hwnd)))
+    {
+	ImePositionWindow(hImc);
+	ImmReleaseContext(s_hwnd, hImc);
+    }
+}
+
 
 /*
  * When enter to insert mode, set IME to previous language mode
@@ -3033,16 +3074,14 @@ DisplayCompStringOpaque(char_u *s, int len)
 ImeSetOriginMode(void)
 {
     HIMC    hImc;
-    DWORD   dwConvMode, dwSentMode;
 
     if ((hImc = ImmGetContext(s_hwnd)))
     {
 	if (!ImmGetOpenStatus(hImc) && bImeOpenStatus == TRUE)
-	{
-		ImmSetOpenStatus(hImc, TRUE);
-	}
+	    ImmSetOpenStatus(hImc, TRUE);
 	else
 	    bImeOpenStatus = FALSE;
+	ImmReleaseContext(s_hwnd, hImc);
     }
     bCommandMode = FALSE;
 }
@@ -3065,6 +3104,7 @@ ImeSetEnglishMode(void)
 	}
 	else
 	    bImeOpenStatus = FALSE;
+	ImmReleaseContext(s_hwnd, hImc);
     }
     bCommandMode = TRUE;
 }
@@ -3191,6 +3231,7 @@ ImeGetTempComposition(void)
 	if ((hImc = ImmGetContext(s_hwnd)))
 	{
 	    ImmGetConversionStatus(hImc, &dwConvMode, &dwSentMode);
+	    ImmReleaseContext(s_hwnd, hImc);
 	    if ((dwConvMode & IME_CMODE_NATIVE))
 		return lpCompStr;
 	}
@@ -3203,37 +3244,22 @@ ImeNotify(WPARAM w, LPARAM l)
 {
     HIMC    hImc;
     DWORD   dwConvMode, dwSentMode;
-    COMPOSITIONFORM cf;
 
     if ((hImc = ImmGetContext(s_hwnd)))
     {
 	ImmGetConversionStatus(hImc, &dwConvMode, &dwSentMode);
 	if (dwConvMode & IME_CMODE_NATIVE)
 	{
-	    RECT t_rct;
-	    RECT w_rct;
-	    if (w = IMN_SETOPENSTATUS && GetWindowRect(s_textArea, &t_rct)
-		&& GetWindowRect(s_hwnd, &w_rct))
+	    if (w == IMN_SETOPENSTATUS)
 	    {
 		ImmSetCompositionFont(hImc, &norm_logfont);
-		cf.dwStyle = CFS_POINT;
-		cf.ptCurrentPos.x = TEXT_X(gui.col) + gui.border_offset;
-		cf.ptCurrentPos.y = TEXT_Y(gui.row) + gui.border_offset;
-#ifdef WANT_MENU
-		if (gui.menu_is_active)
-		    cf.ptCurrentPos.y += gui.menu_height;
-#endif
-#ifdef USE_TOOLBAR
-		if (vim_strchr(p_go, GO_TOOLBAR) != NULL)
-		    cf.ptCurrentPos.y +=
-			TOOLBAR_BUTTON_HEIGHT + TOOLBAR_BORDER_HEIGHT;
-#endif
-		ImmSetCompositionWindow(hImc, &cf);
+		ImePositionWindow(hImc);
 	    }
 	    bImeNative = TRUE;
 	}
 	else
 	    bImeNative = FALSE;
+	ImmReleaseContext(s_hwnd, hImc);
     }
 }
 

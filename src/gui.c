@@ -683,6 +683,10 @@ gui_update_cursor(force, clear_selection)
 	gui_undraw_cursor();
 	if (gui.row <0)
 	    return;
+#ifdef MULTI_BYTE_IME
+	if (gui.row != gui.cursor_row || gui.col != gui.cursor_col)
+	    ImeSetCompositionWindow();
+#endif
 	gui.cursor_row = gui.row;
 	gui.cursor_col = gui.col;
 	gui.cursor_is_valid = TRUE;
