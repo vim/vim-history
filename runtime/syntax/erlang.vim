@@ -1,11 +1,11 @@
 " Vim syntax file
 " Language:    erlang (ERicsson LANGuage)
-"              http://www.erlang.se
-"              http://www.erlang.org
+"	       http://www.erlang.se
+"	       http://www.erlang.org
 " Maintainer:  Kre¹imir Mar¾iæ (Kresimir Marzic) <kmarzic@fly.srk.fer.hr>
 " Last update: Fri, 15-Feb-2002
 " Filenames:   .erl
-" URL:         http://www.srk.fer.hr/~kmarzic/vim/syntax/erlang.vim
+" URL:	       http://www.srk.fer.hr/~kmarzic/vim/syntax/erlang.vim
 
 
 " There are three sets of highlighting in here:

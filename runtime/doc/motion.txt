@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.1a.  Last change: 2002 Feb 18
+*motion.txt*    For Vim version 6.1b.  Last change: 2002 Feb 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -434,7 +434,7 @@ end of a line, or by a space or tab.  Any number of closing ')', ']', '"'
 and ''' characters my appear after the '.', '!' or '?' before the spaces,
 tabs or end of line.  A paragraph and section boundary is also a sentence
 boundary.
-If the 'J' flag is present is 'cpoptions', at least two spaces have to
+If the 'J' flag is present in 'cpoptions', at least two spaces have to
 follow the punctuation mark; <Tab>s are not recognized as white space.
 The definition of a sentence cannot be changed.
 

@@ -213,7 +213,7 @@ syn match   sgmlAbbrRegion
 " compared to xmlRegion:
 "   - removed folding
 "   - added a single '/'in the start pattern
-" 
+"
 syn region   sgmlRegion
     \ start=+<\z([^ /!?>"']\+\)\(\(\_[^/>]*[^/!?]>\)\|>\)+
     \ end=+</\z1>+

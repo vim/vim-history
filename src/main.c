@@ -389,6 +389,16 @@ main
      */
     initstr = gettail((char_u *)argv[0]);
 
+#ifdef MACOS_X_UNIX
+    /* An issue has been seen when launching Vim in such a way that
+     * $PWD/$ARGV[0] or $ARGV[0] is not the absolute path to the
+     * executable or a symbolic link of it. Until this issue is resolved
+     * we prohibit the GUI from being used.
+     */
+    if (STRCMP(initstr, argv[0]) == 0)
+	disallow_gui = TRUE;
+#endif
+
 #ifdef FEAT_EVAL
     set_vim_var_string(VV_PROGNAME, initstr, -1);
 #endif
@@ -643,6 +653,7 @@ main
 		   or with the 'open' command */
 	    case 'p':
 		argv_idx = -1; /* bypass full -psn */
+		main_start_gui();
 		break;
 #endif
 	    case 'M':		/* "-M"  no changes or writing of files */
@@ -2249,6 +2260,9 @@ usage()
 
     mch_msg(_("\n\nArguments:\n"));
     main_msg(_("--\t\t\tOnly file names after this"));
+#if (!defined(UNIX) && !defined(__EMX__)) || defined(ARCHIE)
+    main_msg(_("--literal\t\tDon't expand wildcards"));
+#endif
 #ifdef FEAT_OLE
     main_msg(_("-register\t\tRegister this gvim for OLE"));
     main_msg(_("-unregister\t\tUnregister gvim for OLE"));

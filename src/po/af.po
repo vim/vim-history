@@ -2,9 +2,9 @@
 # Do ":help uganda"  in Vim to read copying and usage conditions.
 # Do ":help credits" in Vim to see a list of people who contributed.
 # Danie Roux <droux@tuks.co.za>, 2001
-# Edited: Jean Jordaan (njj) <jean@upfrontsystems.co.za>, 10/01/2001 
+# Edited: Jean Jordaan (njj) <jean@upfrontsystems.co.za>, 10/01/2001
 # Edited by Danie on 10/31/2001
-# 
+#
 # njj: Save == Stoor. Write == Skryf.
 # njj: "deleted" == "geskrap"; "remove" == "verwyder"
 # njj: "source" == "uitvoer", want "sourced" lêers word uitgevoer
@@ -2337,7 +2337,7 @@ msgstr "'writelines()' benodig 'n lys van stringe"
 msgid "E264: Python: Error initialising I/O objects"
 msgstr "E264: Python: Kon nie I/O objekte inwy nie"
 
-# njj: net 'n voorstel .. 
+# njj: net 'n voorstel ..
 #: if_python.c:955 if_tcl.c:1391
 msgid "invalid expression"
 msgstr "ongeldige uitdrukking"
@@ -5102,7 +5102,7 @@ msgstr "E423: Ongeldige parameter: %s"
 msgid "E424: Too many different highlighting attributes in use"
 msgstr "E424: Te veel verskillende uitlig-eienskappe in gebruik"
 
-# njj: 'inkleur' vir 'uitlig'? net 'n idee .. 
+# njj: 'inkleur' vir 'uitlig'? net 'n idee ..
 #: tag.c:90
 msgid "at bottom of tag stack"
 msgstr "onderaan etiketstapel"

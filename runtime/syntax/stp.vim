@@ -2,7 +2,7 @@
 "    Language: Stored Procedures (STP)
 "  Maintainer: Jeff Lanzarotta (jefflanzarotta@yahoo.com)
 "         URL: http://lanzarotta.tripod.com/vim/syntax/stp.vim.zip
-" Last Change: December 20, 2001
+" Last Change: March 05, 2002
 
 " For version 5.x, clear all syntax items.
 " For version 6.x, quit when a syntax file was already loaded.
@@ -68,16 +68,45 @@ syn keyword stpType smalldatetime smallint smallmoney text time tinyint
 syn keyword stpType timestamp varbinary varchar
 
 " Globals.
-syn keyword stpGlobals @@char_convert @@cient_csname @@client_csid
-syn keyword stpGlobals @@connections @@cpu_busy @@error @@identity
-syn keyword stpGlobals @@idle @@io_busy @@isolation @@langid @@language
-syn keyword stpGlobals @@maxcharlen @@max_connections @@ncharsize
-syn keyword stpGlobals @@nestlevel @@packet_errors @@pack_received
-syn keyword stpGlobals @@pack_sent @@procid @@rowcount @@servername
-syn keyword stpGlobals @@spid @@sqlstatus @@testts @@textcolid @@textdbid
-syn keyword stpGlobals @@textobjid @@textptr @@textsize @@thresh_hysteresis
-syn keyword stpGlobals @@timeticks @@total_error @@total_read @@total_write
-syn keyword stpGlobals @@tranchained @@trancount @@transtate @@version
+syn match stpGlobals '@@char_convert'
+syn match stpGlobals '@@cient_csname'
+syn match stpGlobals '@@client_csid'
+syn match stpGlobals '@@connections'
+syn match stpGlobals '@@cpu_busy'
+syn match stpGlobals '@@error'
+syn match stpGlobals '@@identity'
+syn match stpGlobals '@@idle'
+syn match stpGlobals '@@io_busy'
+syn match stpGlobals '@@isolation'
+syn match stpGlobals '@@langid'
+syn match stpGlobals '@@language'
+syn match stpGlobals '@@max_connections'
+syn match stpGlobals '@@maxcharlen'
+syn match stpGlobals '@@ncharsize'
+syn match stpGlobals '@@nestlevel'
+syn match stpGlobals '@@pack_received'
+syn match stpGlobals '@@pack_sent'
+syn match stpGlobals '@@packet_errors'
+syn match stpGlobals '@@procid'
+syn match stpGlobals '@@rowcount'
+syn match stpGlobals '@@servername'
+syn match stpGlobals '@@spid'
+syn match stpGlobals '@@sqlstatus'
+syn match stpGlobals '@@testts'
+syn match stpGlobals '@@textcolid'
+syn match stpGlobals '@@textdbid'
+syn match stpGlobals '@@textobjid'
+syn match stpGlobals '@@textptr'
+syn match stpGlobals '@@textsize'
+syn match stpGlobals '@@thresh_hysteresis'
+syn match stpGlobals '@@timeticks'
+syn match stpGlobals '@@total_error'
+syn match stpGlobals '@@total_read'
+syn match stpGlobals '@@total_write'
+syn match stpGlobals '@@tranchained'
+syn match stpGlobals '@@trancount'
+syn match stpGlobals '@@transtate'
+syn match stpGlobals '@@version'
 
 " Todos.
 syn keyword stpTodo TODO FIXME XXX DEBUG NOTE

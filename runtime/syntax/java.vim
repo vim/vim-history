@@ -2,7 +2,7 @@
 " Language:     Java
 " Maintainer:   Claudio Fleiner <claudio@fleiner.com>
 " URL:          http://www.fleiner.com/vim/syntax/java.vim
-" Last Change:  2001 Sept 11
+" Last Change:  2002 Mar 02
 
 " Please check :help java.vim for comments on some of the options available.
 
@@ -133,11 +133,11 @@ syn cluster javaTop add=javaExternal,javaError,javaError,javaBranch,javaLabelReg
 " Comments
 syn keyword javaTodo             contained TODO FIXME XXX
 if exists("java_comment_strings")
-syn region  javaCommentString    contained start=+"+ end=+"+ end=+$+ end=+\*/+me=s-1,he=s-1 contains=javaSpecial,javaCommentStar,javaSpecialChar,@Spell
-syn region  javaComment2String   contained start=+"+  end=+$\|"+  contains=javaSpecial,javaSpecialChar,@Spell
-syn match   javaCommentCharacter contained "'\\[^']\{1,6\}'" contains=javaSpecialChar
-syn match   javaCommentCharacter contained "'\\''" contains=javaSpecialChar
-syn match   javaCommentCharacter contained "'[^\\]'"
+  syn region  javaCommentString    contained start=+"+ end=+"+ end=+$+ end=+\*/+me=s-1,he=s-1 contains=javaSpecial,javaCommentStar,javaSpecialChar,@Spell
+  syn region  javaComment2String   contained start=+"+  end=+$\|"+  contains=javaSpecial,javaSpecialChar,@Spell
+  syn match   javaCommentCharacter contained "'\\[^']\{1,6\}'" contains=javaSpecialChar
+  syn match   javaCommentCharacter contained "'\\''" contains=javaSpecialChar
+  syn match   javaCommentCharacter contained "'[^\\]'"
   syn cluster javaCommentSpecial add=javaCommentString,javaCommentCharacter,javaNumber
   syn cluster javaCommentSpecial2 add=javaComment2String,javaCommentCharacter,javaNumber
 endif
@@ -226,7 +226,7 @@ if exists("java_highlight_debug")
   " to make this work you must define the highlighting for these groups
   syn match javaDebug "System\.\(out\|err\)\.print\(ln\)*\s*("me=e-1 contains=javaDebug.* nextgroup=javaDebugParen
   syn match javaDebug "[A-Za-z][a-zA-Z0-9_]*\.printStackTrace\s*("me=e-1 contains=javaDebug.* nextgroup=javaDebugParen
-  syn match javaDebug "trace[SL]\=\s*("me=e-1 contains=javaDebug.* nextgroup=javaDebugParen
+  syn match javaDebug "\<trace[SL]\=\s*("me=e-1 contains=javaDebug.* nextgroup=javaDebugParen
 
   syn cluster javaTop add=javaDebug
 
@@ -256,7 +256,9 @@ if exists("java_mark_braces_in_parens_as_errors")
 endif
 
 " catch errors caused by wrong parenthesis
-syn region  javaParen            transparent start="(" end=")" contains=@javaTop,javaParen
+syn region  javaParen  matchgroup=javaParen  transparent start="(" end=")" contains=@javaTop,javaParen1
+syn region  javaParen1 matchgroup=javaParen1 transparent start="(" end=")" contains=@javaTop,javaParen2 contained
+syn region  javaParen2 matchgroup=javaParen2 transparent start="(" end=")" contains=@javaTop,javaParen  contained
 syn match   javaParenError       ")"
 JavaHiLink javaParenError       javaError
 

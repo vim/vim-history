@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.1a.  Last change: 2002 Feb 24
+*options.txt*   For Vim version 6.1b.  Last change: 2002 Mar 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -2307,6 +2307,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 			feature}
 	Sets the minimum number of screen lines for a fold to be displayed
 	closed.  Also for manually closed folds.
+	Note that this only has an effect of what is displayed.  After using
+	"zc" to close a fold, which is displayed open because it's smaller
+	than 'foldminlines', a following "zc" may close a containing fold.
 
 						*'foldnestmax'* *'fdn'*
 'foldnestmax' 'fdn'	number (default: 20)
@@ -5365,7 +5368,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	without the |+path_extra| feature}
 	If Vim was compiled with the |+emacs_tags| feature, Emacs-style tag
 	files are also supported.  They are automatically recognized.  The
-	default value becomes "./tags,./TAGS,tags,TAGS".  |emacs-tags|
+	default value becomes "./tags,./TAGS,tags,TAGS", unless case
+	differences are ignored (MS-Windows).  |emacs-tags|
 	The use of |:set+=| and |:set-=| is preferred when adding or removing
 	file names from the list.  This avoids problems when a future version
 	uses another default.
@@ -5564,6 +5568,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 		=		indicates the file is read-only
 		=+		indicates the file is read-only and modified
 		(path)		is the path of the file being edited
+		- VIM		the server name |v:servername| or "VIM"
 	Only works if the terminal supports setting window titles
 	(currently Amiga console, Win32 console, all GUI versions and
 	terminals with a non- empty 't_ts' option - these are Unix xterm and

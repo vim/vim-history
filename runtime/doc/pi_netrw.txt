@@ -1,4 +1,4 @@
-*pi_netrw.txt*  For Vim version 6.1a.  Last change: 2002 Feb 24
+*pi_netrw.txt*  For Vim version 6.1b.  Last change: 2002 Mar 09
 
 
 		  VIM REFERENCE MANUAL    by Charles E. Campbell, Jr.
@@ -76,7 +76,7 @@ without additional prompting.
 	(***) if <.netrc> is present, it is assumed that it will
 	     work with your ftp client.  Otherwise the script will
 	     prompt for user-id and pasword.
-	
+
 Both the :Nread and the :Nwrite ex-commands can accept multiple filenames: >
 
 	:Nread rcp://machine/path1 rcp://machine/path2

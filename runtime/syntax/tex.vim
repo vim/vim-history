@@ -208,13 +208,13 @@ if !exists("tex_no_math")
  syn region texMathZoneS	start="\\begin\s*{\s*multline\*\s*}"	end="\\end\s*{\s*multline\*\s*}"	keepend fold	contains=@texMathZoneGroup
  syn region texMathZoneT	matchgroup=Delimiter start="\\("  matchgroup=Delimiter end="\\)\|%stopzone\>"	keepend fold	contains=@texMathZoneGroup
  syn region texMathZoneU	matchgroup=Delimiter start="\\\[" matchgroup=Delimiter end="\\]\|%stopzone\>"	keepend fold	contains=@texMathZoneGroup
- 
+
  syn region texMathZoneV	matchgroup=Delimiter start="\$"   skip="\\\\\|\\\$" matchgroup=Delimiter end="\$" end="%stopzone\>"	contains=@texMathZoneGroup
  syn region texMathZoneW	matchgroup=Delimiter start="\$\$" matchgroup=Delimiter end="\$\$" end="%stopzone\>"	keepend	contains=@texMathZoneGroup
  syn region texMathZoneX	matchgroup=texStatement start="\\ensuremath\s*{" matchgroup=texStatement end="}" end="%stopzone\>"	contains=@texMathZoneGroup
- 
+
  syn match texMathOper	"[_^=]" contained
- 
+
  " \left..something.. and \right..something.. support
  syn match   texMathDelimBad	contained	"\S"
  syn match   texMathDelim		"\\\(left\|right\)\>"	skipwhite nextgroup=texMathDelimSet1,texMathDelimSet2,texMathDelimBad
@@ -328,7 +328,7 @@ if !exists("tex_no_math")
  syn sync match texSyncMathZoneS	grouphere texMathZoneS	"\\begin\s*{\s*multline\*\s*}"
  syn sync match texSyncMathZoneT	grouphere texMathZoneT	"\\("
  syn sync match texSyncMathZoneU	grouphere texMathZoneU	"\\\["
- 
+
  syn sync match texSyncMathZoneA	groupthere NONE	"\\end\s*{\s*align\*\s*}"
  syn sync match texSyncMathZoneB	groupthere NONE	"\\end\s*{\s*alignat\*\s*}"
  syn sync match texSyncMathZoneC	groupthere NONE	"\\end\s*{\s*alignat\s*}"

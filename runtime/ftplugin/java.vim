@@ -1,8 +1,8 @@
 " Vim filetype plugin file
 " Language:	Java
-" Maintainer:	Dan Sharp <vimuser@crosswinds.net>
-" Last Change:	Wed, 19 Sep 2001 16:27:23 Eastern Daylight Time
-" Current version is at http://sites.netscape.net/sharppeople/vim/ftplugin
+" Maintainer:	Dan Sharp <dwsharp at hotmail dot com>
+" Last Change:	Sun, 07 Oct 2001 21:41:05 Eastern Daylight Time
+" Current version is at http://mywebpage.netscape.com/sharppeople/vim/ftplugin
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -19,7 +19,6 @@ setlocal cindent
 "---------------------
 " From Johannes Zellner <johannes@zellner.org>
 setlocal cinoptions+=j1		" Correctly indent anonymous classes
-setlocal cinoptions+=+0		" Align continuation lines with the previous line
 "---------------------
 
 " For filename completion, prefer the .java extension over the .class

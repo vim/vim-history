@@ -4,7 +4,7 @@
 " Original Maintainer: C. Laurence Gonsalves (clgonsal@kami.com)
 " URL: http://lanzarotta.tripod.com/vim/syntax/plsql.vim.zip
 " Last Change: February 05, 2001
-" 
+"
 " For version 5.x, clear all syntax items.
 " For version 6.x, quit when a syntax file was already loaded.
 if version < 600

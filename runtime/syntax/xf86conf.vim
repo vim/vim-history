@@ -43,7 +43,7 @@ syn keyword xf86confSection	contained Files ServerFlags Module InputDevice
 syn keyword xf86confSection	contained Device VideoAdapter Monitor Modes
 syn keyword xf86confSection	contained Screen ServerLayout DRI Vendor Display
 
-" other 
+" other
 syn keyword xf86confOption	Identifier Driver BusID Screen Chipset Ramdac Dacspeed Clocks ClockChip VideoRam BiosBase MemBase IOBase ChipID ChipRev
 syn keyword xf86confOption	TextClockFreq VendorName ModelName HorizSync VertRefresh DisplaySize Gamma UseModes Mode DotClock HTimings VTimings
 syn keyword xf86confOption	Flags HSkew VScan ModeLine Device Monitor VideoAdaptor DefaultDepth DefaultFbBpp Depth FbBpp Weight Virtual ViewPort
@@ -79,7 +79,7 @@ if version >= 508 || !exists("did_xf86conf_syn_inits")
     HiLink xf86confOctalError	Error
     HiLink xf86confKeyword	Keyword
     HiLink xf86confSection	Type
-    HiLink xf86confOption	Type	
+    HiLink xf86confOption	Type
     delcommand HiLink
 endif
 

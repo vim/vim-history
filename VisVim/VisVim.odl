@@ -10,7 +10,7 @@ library VisVim
 	importlib("stdole32.tlb");
 	importlib("devshl.dll");
 	importlib("ide\devdbg.pkg");
-	
+
 
 	//  Dual interface for CCommands
 	//
@@ -19,7 +19,7 @@ library VisVim
 	//   ClassView to add methods to this interface, which
 	//   will cause stub implementations of those methods to
 	//   appear in your CCommands class.
-	
+
 	[	uuid(AC726703-2977-11D1-B2F3-006008040780),
 		oleautomation,
 		dual

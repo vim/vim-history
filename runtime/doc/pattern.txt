@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.1a.  Last change: 2002 Feb 27
+*pattern.txt*   For Vim version 6.1b.  Last change: 2002 Feb 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

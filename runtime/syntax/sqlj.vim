@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	sqlj
 " Maintainer:	Andreas Fischbach <afisch@altavista.com>
-" 		This file is based on sql.vim && java.vim (thanx)
+"		This file is based on sql.vim && java.vim (thanx)
 "		with a handful of additional sql words and still
 "		a subset of whatever standard
 " Last change:	31th Dec 2001
@@ -93,7 +93,7 @@ if version >= 508 || !exists("did_sqlj_syn_inits")
   HiLink sqljStatement	Statement
   HiLink sqljString	String
   HiLink sqljType	Type
-  HiLink sqljPre 	PreProc
+  HiLink sqljPre	PreProc
 endif
 
 let b:current_syntax = "sqlj"

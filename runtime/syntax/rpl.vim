@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:            RPL/2
 " Version:             0.13.1 against RPL/2 version 4.00pre4e
-" Last Change:         2002 Feb 08
+" Last Change:         2002 Mar 03
 " Maintainer:          Joël BERTRAND <rpl2@free.fr>
 " For the latest version of this file, see <http://rpl2.free.fr>
 " Credits:
@@ -139,11 +139,11 @@ syntax match rplParenError ")"
 syntax region rplSub matchgroup=rplSubDelimitor start="\<<<\>" end="\<>>\>" contains=ALLBUT,rplSubError,rplIncluded
 syntax match rplSubError "\<>>\>"
 
-" Catch errors caused by too many right brackets 
+" Catch errors caused by too many right brackets
 syntax region rplArray start="\[" end="\]" contains=ALLBUT,rplArrayError
 syntax match rplArrayError "\]"
 
-" Catch errors caused by too many right '}' 
+" Catch errors caused by too many right '}'
 syntax region rplList start="{" end="}" contains=ALLBUT,rplListError,rplIncluded
 syntax match rplListError "}"
 

@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.1a.  Last change: 2002 Feb 24
+*eval.txt*      For Vim version 6.1b.  Last change: 2002 Mar 02
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -2308,6 +2308,8 @@ system({expr})	Get the output of the shell command {expr}.  Note: newlines
 
 		The resulting error code can be found in |v:shell_error|.
 		This function will fail in |restricted-mode|.
+		Unlike ":!cmd" there is no automatic check for changed files.
+		Use |:checktime| to force a check.
 
 tempname()					*tempname()* *temp-file-name*
 		The result is a String, which is the name of a file that
@@ -2879,9 +2881,10 @@ This would call the function "my_func_whizz(parameter)"
 				:if version >= 500
 				:  version-5-specific-commands
 				:endif
-<			Sometimes an older Vim has a problem a new command.
-			For example, ":silent" is recognized as a
-			":substitute" command.  In that case ":execute" can
+<			The commands still need to be parsed to find the
+			"endif".  Sometimes an older Vim has a problem with a
+			new command.  For example, ":silent" is recognized as
+			a ":substitute" command.  In that case ":execute" can
 			avoid problems: >
 				:if version >= 600
 				:  execute "silent 1,$delete"

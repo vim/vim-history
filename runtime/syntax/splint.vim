@@ -5,7 +5,7 @@
 " $Revision$
 
 " Note:		Splint annotated files are not detected by default.
-" 		If you want to use this file for highlighting C code,
+"		If you want to use this file for highlighting C code,
 "		please make sure splint.vim is sourced instead of c.vim,
 "		for example by putting
 "			/* vim: set filetype=splint : */
@@ -180,7 +180,7 @@ syn match   splintFlagExpr contained "[\+\-\=]" nextgroup=splintFlag,splintGloba
 " detect missing /*@ and wrong */
 syn match	splintAnnError	"@\*/"
 syn cluster	cCommentGroup	add=splintAnnError
-syn match 	splintAnnError2	"[^@]\*/"hs=s+1 contained
+syn match	splintAnnError2	"[^@]\*/"hs=s+1 contained
 syn region	splintAnnotation start="/\*@" end="@\*/" contains=@splintAnnotElem,cType keepend
 syn match	splintShortAnn	"/\*@\*/"
 syn cluster	splintAnnotElem	contains=splintStateAnnot,splintSpecTag,splintModifies,splintRequires,splintGlobals,splintGlobitem,splintGlobannot,splintWarning,splintModitem,splintIter,splintConst,splintAlt,splintType,splintGlobalType,splintMemMgm,splintAlias,splintExposure,splintDefState,splintGlobState,splintNullState,splintNullPred,splintExit,splintExec,splintSef,splintDecl,splintCase,splintBreak,splintUnreach,splintSpecFunc,splintErrSupp,splintTypeAcc,splintMacro,splintSpecType,splintAnnError2,splintFlagExpr

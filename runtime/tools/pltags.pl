@@ -5,7 +5,7 @@
 # Distributed with Vim <http://www.vim.org/>, latest version always available
 # at <http://www.mscha.com/mscha.html?pltags#tools>
 #
-# Version 2.21, 23 July 2001
+# Version 2.3, 28 February 2002
 #
 # Written by Michael Schaap <pltags@mscha.com>.  Suggestions for improvement
 # are very welcome!
@@ -22,6 +22,8 @@
 #                 (thanks to Serge Sivkov and Jason King)
 #                 Bug fix: reset package name for each file
 #  2.21 Jul 2001  Oops... bug in variable detection (/local../ -> /^local.../)
+#  2.3  Feb 2002  Support variables declared with "our"
+#                 (thanks to Lutz Mende)
 
 # Complain about undeclared variables
 use strict;
@@ -132,7 +134,7 @@ sub VarNames($)
     my ($stmt) = @_;
 
     # Remove my or local from statement, if present
-    $stmt =~ s/^(my|local)\s+//;
+    $stmt =~ s/^(my|our|local)\s+//;
 
     # Remove any assignment piece
     $stmt =~ s/\s*=.*//;
@@ -208,7 +210,8 @@ foreach $file (map { glob } @ARGV)
 
         # This is a variable declaration if one was started on the previous
         # line, or if this line starts with my or local
-        if ($var_continues or ($stmt =~/^my\b/) or ($stmt =~/^local\b/))
+        if ($var_continues or ($stmt =~/^my\b/)
+                            or ($stmt =~/^our\b/) or ($stmt =~/^local\b/))
         {
             # The declaration continues if the line does not end with ;
             $var_continues = ($stmt !~ /;$/);

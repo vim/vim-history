@@ -69,7 +69,7 @@ syn match   readlineInclude	"^\s*$include\>"
 syn region  readlineSet		display oneline transparent matchgroup=readlineKeyword start="^\s*set\>" end="$"me=e-1 contains=readlineNumber,readlineBoolean,readlineKeymaps,readlineBellStyles,readlineSettings
 
 syn keyword readlineSettings	contained bell-style comment-begin completion-ignore-case
-syn keyword readlineSettings	contained completion-query-items convert-meta disable-completion editing-mode enable-keypad 
+syn keyword readlineSettings	contained completion-query-items convert-meta disable-completion editing-mode enable-keypad
 syn keyword readlineSettings	contained expand-tilde horizontal-scroll-mode mark-directories keymap mark-modified-lines meta-flag
 syn keyword readlineSettings	contained input-meta output-meta print-completions-horizontally show-all-if-ambiguous visible-stats
 syn keyword readlineSettings	contained prefer-visible-bell blink-matching-paren

@@ -4,7 +4,7 @@ For instructions on installing this file, type
 	:help add-local-help
 inside Vim.
 
-For Vim version 6.0.  Last change:  2001 Jul 28
+For Vim version 6.1.  Last change:  2002 Mar 09
 
 
 		  VIM REFERENCE MANUAL    by Benji Fisher
@@ -64,6 +64,14 @@ option.  The matchit plugin extends this in several ways:
 See |matchit-details| for details on what the script does, and |b:match_words|
 for how to specify matching patterns.
 
+MODES:			*matchit-modes* *matchit-v_%* *matchit-o_%*
+
+Mostly, % and related motions (|g%| and |[%| and |]%|) work just like built-in
+|motion| commands in |Operator-pending| and |Visual| modes.  However, you
+cannot make these motions |linewise| or |characterwise|, since the |:omap|s
+that define them start with "v" in order to make the default behavior
+inclusive.  (See |o_v|.)  In other words, "dV%" will not work.  The
+work-around is to go through Visual mode:  "V%d" will work.
 
 LANGUAGES:					*matchit-languages*
 
@@ -102,7 +110,7 @@ script follows these rules:
 Examples:
 
 	Suppose you >
-		:let b:match_words = '<,>:<tag>,</tag>'
+		:let b:match_words = '<:>,<tag>:</tag>'
 <	and hit "%" with the cursor on or before the "<" in "a <tag> is born".
 	The pattern '<' comes first, so it is preferred over '<tag>', which
 	also matches.  If the cursor is on the "t", however, then '<tag>' is
@@ -111,7 +119,7 @@ Examples:
 	preferred.
 
 	Suppose you >
-		:let b:match_words = 'if,end if'
+		:let b:match_words = 'if:end if'
 <	(Note the space!) and hit "%" with the cursor at the end of "end if".
 	Then "if" matches, which is probably not what you want, but if the
 	cursor starts on the "end " then "end if" is chosen.  (You can avoid
@@ -142,7 +150,6 @@ You can use this script as a plugin, by copying it to your plugin directory.
 See |add-global-plugin| for instructions.  You can also add a line to your
 |vimrc| file, such as >
 	:source $VIMRUNTIME/macros/matchit.vim
-<
 Either way, the script should start working the next time you start up Vim.
 
 The script does nothing unless it finds a |buffer-variable| named
@@ -151,7 +158,6 @@ various file types:  see |matchit-languages| above.  For a new language, you
 can add autocommands to the script or to your vimrc file, but the recommended
 method is to add a line such as >
 	let b:match_words = '\<foo\>:\<bar\>'
-<
 to the |filetype-plugin| for your language.  See |b:match_words| below for how
 this variable is interpreted.
 
@@ -189,13 +195,11 @@ can do >
 						*b:match_ignorecase*
 If you >
 	:let b:match_ignorecase = 1
-<
 then matchit.vim acts as if 'ignorecase' is set: for example, "end" and "END"
 are equivalent.  If you >
 	:let b:match_ignorecase = 0
-<
 then matchit.vim treats "end" and "END" differently.  (There will be no
-b:match_infercase unless someone requests it.)
+b:match_infercase option unless someone requests it.)
 
 						*b:match_debug*
 Define b:match_debug if you want debugging information to be saved.  See
@@ -251,13 +255,18 @@ list of patterns (regular expressions).  It is OK to have only one group; the
 effect is undefined if a group has only one pattern.  A simple example is >
 	:let b:match_words = '\<if\>:\<endif\>,'
 		\ . '\<while\>:\<continue\>:\<break\>:\<endwhile\>'
-<
 (In Vim regular expressions, |\<| and |\>| denote word boundaries.  Thus "if"
 matches the end of "endif" but "\<if\>" does not.)  Then banging on the "%"
 key will bounce the cursor between "if" and the matching "endif"; and from
 "while" to any matching "continue" or "break", then to the matching "endwhile"
 and back to the "while".  It is almost always easier to use |literal-string|s
 (single quotes) as above:  '\<if\>' rather than "\\<if\\>" and so on.
+
+Exception:  If the ":" character does not appear in b:match_words, then it is
+treated as an expression to be evaluated.  For example, >
+	:let b:match_words = 'GetMatchWords()'
+allows you to define a function.  This can return a different string depending
+on the current syntax, for example.
 
 Once you have defined the appropriate value of |b:match_words|, you will
 probably want to have this set automatically each time you edit the
@@ -273,16 +282,15 @@ matches the whole string whereas "<.\{-}>" and "<[^>]*>" match "<tag>" and
 
 				*matchit-spaces* *matchit-s:notend*
 If "if" is to be paired with "end if" (Note the space!) then word boundaries
-are not enough.  Instead, define a regular expression notend that will match
+are not enough.  Instead, define a regular expression s:notend that will match
 anything but "end" and use it as follows: >
 	:let s:notend = '\%(\<end\s\+\)\@<!'
-	:let b:match_words = notend . '\<if\>,\<end\s\+if\>'
+	:let b:match_words = s:notend . '\<if\>:\<end\s\+if\>'
 <							*matchit-s:sol*
 This is a simplified version of what is done for Ada.  The s:notend is a
 |script-variable|.  Similarly, you may want to define a start-of-line regular
 expression >
 	:let s:sol = '\%(^\|;\)\s*'
-<
 if keywords are only recognized after the start of a line or after a
 semicolon (;), with optional white space.
 
@@ -290,8 +298,7 @@ semicolon (;), with optional white space.
 In any group, the expressions |\1|, |\2|, ..., |\9| refer to parts of the
 INITIAL pattern enclosed in |\(|escaped parentheses|\)|.  These are referred
 to as back references, or backrefs.  For example, >
-	:let b:match_words = '\<b\(o\+\)\>,\(h\)\1\>'
-<
+	:let b:match_words = '\<b\(o\+\)\>:\(h\)\1\>'
 means that "bo" pairs with "ho" and "boo" pairs with "hoo" and so on.  Note
 that "\1" does not refer to the "\(h\)" in this example.  If you have
 "\(nested \(parentheses\)\) then "\d" refers to the d-th "\(" and everything
@@ -304,11 +311,9 @@ defined by |\%(\)|.
 It should be possible to resolve back references from any pattern in the
 group.  For example, >
 	:let b:match_words = '\(foo\)\(bar\):more\1:and\2:end\1\2'
-<
 would not work because "\2" cannot be determined from "morefoo" and "\1"
 cannot be determined from "andbar".  On the other hand, >
 	:let b:match_words = '\(\(foo\)\(bar\)\):\3\2:end\1'
-<
 should work (and have the same effect as "foobar:barfoo:endfoobar"), although
 this has not been thoroughly tested.
 
@@ -318,8 +323,7 @@ must occur at the start of the line, with optional white space, you might use
 the pattern "\(^\s*\)\@<=if" so that the cursor will end on the "i" instead of
 at the start of the line.  For another example, if HTML had only one tag then
 one could >
-	:let b:match_words = '<,>:<\@<=tag>,<\@<=/tag>'
-<
+	:let b:match_words = '<:>,<\@<=tag>:<\@<=/tag>'
 so that "%" can bounce between matching "<" and ">" pairs or (starting on
 "tag" or "/tag") between matching tags.  Without the |\@<=|, the script would
 bounce from "tag" to the "<" in "</tag>", and another "%" would not take you

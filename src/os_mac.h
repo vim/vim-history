@@ -125,6 +125,9 @@
  * Generic Vim #define
  */
 
+#define FEAT_SOURCE_FFS
+#define FEAT_SOURCE_FF_MAC
+
 #define DONT_ADD_PATHSEP_TO_DIR
 #define USE_EXE_NAME		    /* to find  $VIM */
 #define CASE_INSENSITIVE_FILENAME   /* ignore case when comparing file names */
@@ -136,8 +139,10 @@
 #undef  USE_FNAME_CASE	    /* So that :e os_Mac.c, :w, save back the file as os_mac.c */
 #define BINARY_FILE_IO
 #define EOL_DEFAULT EOL_MAC
-#define USE_CR
-#define NO_CONSOLE		/* don't include console mode */
+#ifndef MACOS_X_UNIX	    /* I hope that switching these two lines */
+# define USE_CR		    /* does what I want -- BNF */
+# define NO_CONSOLE		/* don't include console mode */
+#endif
 #define HAVE_AVAIL_MEM
 
 /* #define SYNC_DUP_CLOSE	   sync() a file with dup() and close() */
@@ -297,7 +302,7 @@
 #ifdef COLON_AS_PATHSEP
 # define DFLT_RUNTIMEPATH	"$VIM:vimfiles,$VIMRUNTIME,$VIM:vimfiles:after"
 #else
-# define DFLT_RUNTIMEPATH	"~/vimfiles,$VIMRUNTIME,~/vimfiles/after"
+# define DFLT_RUNTIMEPATH	"~/.vim,$VIM/vimfiles,$VIMRUNTIME,$VIM/vimfiles/after,~/.vim/after"
 #endif
 
 /*

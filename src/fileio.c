@@ -3310,7 +3310,7 @@ restore_backup:
     write_info.bw_fd = fd;
 
 #ifdef FEAT_CRYPT
-    if (*buf->b_p_key)
+    if (*buf->b_p_key && !filtering)
     {
 	crypt_init_keys(buf->b_p_key);
 	/* Write magic number, so that Vim knows that this file is encrypted
@@ -4440,8 +4440,8 @@ shorten_fname(full_path, dir_name)
     char_u	*full_path;
     char_u	*dir_name;
 {
-    int		    len;
-    char_u	    *p;
+    int		len;
+    char_u	*p;
 
     if (full_path == NULL)
 	return NULL;

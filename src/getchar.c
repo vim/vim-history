@@ -4341,7 +4341,9 @@ static struct initmap
 	{(char_u *)"\316\122 \"-d\"*P", VISUAL},    /* SHIFT-Insert is "-d"*P */
 	{(char_u *)"\316\122 \022\017*", INSERT},  /* SHIFT-Insert is ^R^O* */
 	{(char_u *)"\316\222 \"*y", VISUAL},	    /* CTRL-Insert is "*y */
+#    if 0 /* Shift-Del produces the same code as Del */
 	{(char_u *)"\316\123 \"*d", VISUAL},	    /* SHIFT-Del is "*d */
+#    endif
 	{(char_u *)"\316\223 \"*d", VISUAL},	    /* CTRL-Del is "*d */
 	{(char_u *)"\030 \"-d", VISUAL},	    /* CTRL-X is "-d */
 #   else

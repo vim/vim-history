@@ -112,7 +112,7 @@ EOF
 			$inexample = 0;
 			$_ = $' if $1 eq "<";
 		}
-		
+
 		s/\s+$//g;
 
 		# Various vim highlights. note that < and > have already been escaped
@@ -122,14 +122,14 @@ EOF
 		#		print "Text: $_\n";
 		LOOP:
 		foreach my $token ( split /((?:\|[^\|]+\|)|(?:\*[^\*]+\*))/ ) {
-			if ( $token =~ /^\|([^\|]+)\|/ ) { 
+			if ( $token =~ /^\|([^\|]+)\|/ ) {
 				# link
 				push( @out, "|".maplink( $1 )."|" );
 				next LOOP;
 			}
-			elsif ( $token =~ /^\*([^\*]+)\*/ ) { 
+			elsif ( $token =~ /^\*([^\*]+)\*/ ) {
 				# target
-				push( @out, 
+				push( @out,
 					"<b class=\"vimtag\">\*<a name=\"".escurl($1)."\">".esctext($1)."<\/a>\*<\/b>");
 				next LOOP;
 			}
@@ -148,7 +148,7 @@ EOF
 			s/(Note:?)/<code class="note">$1<\/code>/gi;
 
 			# local heading
-			s/^(.*)\~$/<code class="section">$1<\/code>/g; 
+			s/^(.*)\~$/<code class="section">$1<\/code>/g;
 			push( @out, $_ );
 		}
 
@@ -159,7 +159,7 @@ EOF
 		} else {
 			print OUT $_,"\n";
 		}
-	
+
 		$inexample = 2 if $inexample == 1;
 	}
 	print OUT<<EOF;

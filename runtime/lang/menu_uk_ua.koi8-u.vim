@@ -1,6 +1,6 @@
 " Menu Translations:	Ukrainian
 " Maintainer:		Bohdan Vlasyuk <bohdan@vstu.edu.ua>
-" Last Change:		11 Oct 2001 	
+" Last Change:		11 Oct 2001
 
 "
 " Please, see readme at htpp://www.vstu.edu.ua/~bohdan/vim before any

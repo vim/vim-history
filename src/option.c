@@ -963,7 +963,7 @@ static struct vimoption
     {"guioptions",  "go",   P_STRING|P_VI_DEF|P_RALL|P_FLAGLIST,
 #if defined(FEAT_GUI)
 			    (char_u *)&p_go, PV_NONE,
-# ifdef UNIX
+# if defined(UNIX) && !defined(MACOS)
 			    {(char_u *)"agimrLtT", (char_u *)0L}
 # else
 			    {(char_u *)"gmrLtT", (char_u *)0L}

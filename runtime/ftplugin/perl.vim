@@ -2,7 +2,7 @@
 " Language:	Perl
 " Maintainer:	Dan Sharp <dwsharp at hotmail dot com>
 " Last Change:	Sun, 07 Oct 2001 21:39:27 Eastern Daylight Time
-" Current version is at http://sites.netscape.net/sharppeople/vim/ftplugin
+" Current version is at http://mywebpage.netscape.com/sharppeople/vim/ftplugin
 
 if exists("b:did_ftplugin") | finish | endif
 let b:did_ftplugin = 1

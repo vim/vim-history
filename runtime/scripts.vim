@@ -1,7 +1,7 @@
 " Vim support file to detect file types in scripts
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2002 Feb 07
+" Last change:	2002 Mar 09
 
 " This file is called by an autocommand for every file that has just been
 " loaded into a buffer.  It checks if the type of file can be recognized by
@@ -242,7 +242,7 @@ else
     set ft=dns
 
     " BAAN
-  elseif s:line1 =~ '|\*\{1,80}' && s:line2 =~ 'VRC ' 
+  elseif s:line1 =~ '|\*\{1,80}' && s:line2 =~ 'VRC '
 	\ || s:line2 =~ '|\*\{1,80}' && s:line3 =~ 'VRC '
     set ft=baan
   endif

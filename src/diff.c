@@ -1685,7 +1685,7 @@ nv_diffgetput(put)
 {
     exarg_T	ea;
 
-    ea.arg = "";
+    ea.arg = (char_u *)"";
     if (put)
 	ea.cmdidx = CMD_diffput;
     else

@@ -71,7 +71,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 1a
+MINOR = 1b
 
 # CHECKLIST for creating a new version:
 #
@@ -139,8 +139,8 @@ MINOR = 1a
 # Win32s GUI version:
 # - Set environment for Visual C++ 4.1 (requires a new console window)
 # - "vcvars32" (use the path for VC 4.1)
-# - "nmake -f Make_mvc.mak GUI=yes clean" (use the path for VC 4.1)
-# - "nmake -f Make_mvc.mak GUI=yes" (use the path for VC 4.1)
+# - "nmake -f Make_mvc.mak GUI=yes INTL=no clean" (use the path for VC 4.1)
+# - "nmake -f Make_mvc.mak GUI=yes INTL=no" (use the path for VC 4.1)
 # - Rename "gvim.exe" to "gvim_w32s.exe".
 # - Rename "install.exe" to "installw32.exe"
 # - Rename "uninstal.exe" to "uninstalw32.exe"
@@ -648,11 +648,11 @@ RT_UNIX =	\
 		runtime/vim32x32.xpm \
 		runtime/vim48x48.png \
 		runtime/vim48x48.xpm \
-		runtime/eviso.ps \
 		runtime/evebcdic.ps \
 
 # Unix and DOS runtime without CR-LF translation
 RT_UNIX_DOS_BIN =	\
+		runtime/eviso.ps \
 		runtime/vim16x16.gif \
 		runtime/vim32x32.gif \
 		runtime/vim48x48.gif \
@@ -1175,7 +1175,7 @@ doslang: dist prepare no_title.vim dist/$(COMMENT_LANG)
 	-rm -rf dist/vim
 	mkdir dist/vim
 	mkdir dist/vim/$(VIMRTDIR)
-	cd src && $(MAKE) languages
+	cd src && MAKEMO=yes $(MAKE) languages
 	tar cf - \
 		$(LANG_GEN) \
 		| (cd dist/vim/$(VIMRTDIR); tar xvf -)

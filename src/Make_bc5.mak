@@ -44,8 +44,11 @@
 # TCL		define to path to TCL dir to get TCL support (not defined)
 #   TCL_VER	define to version of TCL being used (83)
 #   DYNAMIC_TCL no or yes: use yes to load the TCL DLL dynamically (no)
-# RUBY		define to patch to Ruby dir to get Ruby support (not defined)
+# RUBY		define to path to Ruby dir to get Ruby support (not defined)
 #   RUBY_VER	define to version of Ruby being used (16)
+#		NOTE: compilation on WinNT/2K/XP requires
+#		at least version 1.6.5 of Ruby.  Earlier versions
+#		of Ruby will cause a compile error on these systems.
 #   DYNAMIC_RUBY no or yes: use yes to load the Ruby DLL dynamically (no)
 # MBYTE		no or yes: set to yes for multi-byte support (yes)
 # ICONV		no or yes: set to yes for dynamic iconv support (yes)
@@ -249,10 +252,6 @@ RUBY_VER_LONG = 1.6
 !ifndef RUBY_PLATFORM
 RUBY_PLATFORM = i586-mswin32
 !endif
-!if ("$(OS)" == "Windows_NT") && ("$(RUBY_VER)" == "16")
-!error Cannot build Ruby-enabled executable on NT/2K due to Ruby header file bug
-!undef RUBY
-!else
 INTERP_DEFINES = $(INTERP_DEFINES) -DFEAT_RUBY
 INCLUDE = $(RUBY)\lib\ruby\$(RUBY_VER_LONG)\$(RUBY_PLATFORM);$(INCLUDE)
 RUBY_INSTALL_NAME = mswin32-ruby$(RUBY_VER)
@@ -260,7 +259,6 @@ RUBY_INSTALL_NAME = mswin32-ruby$(RUBY_VER)
 !if "$(DYNAMIC_RUBY)" == "yes"
 INTERP_DEFINES = $(INTERP_DEFINES) -DDYNAMIC_RUBY -DDYNAMIC_RUBY_DLL=\"$(RUBY_INSTALL_NAME).dll\"
 RUBY_LIB_FLAG = /nodefaultlib:
-!endif
 !endif
 !endif
 #
@@ -819,11 +817,10 @@ tcl.lib: $(TCL_LIB)
 
 !if ("$(DYNAMIC_TCL)" == "yes")
 tclstub$(TCL_VER)-bor.lib:
-	-@IF NOT EXIST $@ ECHO You must download tclstub83-bor.lib separately and \
-	place it in the src directory in order to compile a dynamic TCL-enabled \
-	(g)vim with the Borland compiler.  You can get the tclstub83-bor.lib file \
-	at http://vim.sourceforge.net/bin_download/tclstub83-bor.lib \
-	or ftp://vim.sourceforge.net/pub/vim/upload_binaries/tclstub83-bor.lib
+	-@IF NOT EXIST $@ ECHO You must download tclstub83-bor.lib separately and\
+	place it in the src directory in order to compile a dynamic TCL-enabled\
+	(g)vim with the Borland compiler.  You can get the tclstub83-bor.lib file\
+	at http://mywebpage.netscape.com/sharppeople/vim/tclstub83-bor.lib
 !endif
 
 # vimrun.exe:

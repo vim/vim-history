@@ -3630,6 +3630,11 @@ insert_special(c, allow_modmask, ctrlv)
      * Only use mod_mask for special keys, to avoid things like <S-Space>,
      * unless 'allow_modmask' is TRUE.
      */
+#ifdef MACOS
+    /* Command-key never produces a normal key */
+    if (mod_mask & MOD_MASK_CMD)
+	allow_modmask = TRUE;
+#endif
     if (IS_SPECIAL(c) || (mod_mask && allow_modmask))
     {
 	p = get_special_key_name(c, mod_mask);

@@ -2,7 +2,7 @@
 " Language:	Perl
 " Author:	Rafael Garcia-Suarez <rgarciasuarez@free.fr>
 " URL:		http://rgarciasuarez.free.fr/vim/indent/perl.vim
-" Last Change:	2001 Oct 30
+" Last Change:	2002 Mar 09
 
 " Suggestions and improvements by :
 "   Aaron J. Sherman (use syntax for hints)
@@ -162,7 +162,7 @@ function GetPerlIndent()
   elseif line =~ '^\s*\(or\|and\)\>'
     let ind = ind - &sw
   endif
-  
+
   return ind
 
 endfunction

@@ -1842,7 +1842,7 @@ op_replace(oap, c)
      */
     if (oap->block_mode)
     {
-        bd.is_MAX = (curwin->w_curswant == MAXCOL);
+	bd.is_MAX = (curwin->w_curswant == MAXCOL);
 	for ( ; curwin->w_cursor.lnum <= oap->end.lnum; ++curwin->w_cursor.lnum)
 	{
 	    block_prep(oap, &bd, curwin->w_cursor.lnum, TRUE);

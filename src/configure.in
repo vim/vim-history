@@ -159,7 +159,7 @@ case `uname` in
 		  fi
 		fi
 		if test "$ccm" != "1"; then
-		  echo "" 
+		  echo ""
 		  echo "------------------------------------------"
 		  echo " On OS/390 Unix, the environment variable"
 		  echo " __CC_${ccn}MODE must be set to \"1\"!"
@@ -192,11 +192,11 @@ case "$features" in
   tiny)		AC_DEFINE(FEAT_TINY) ;;
   small)	AC_DEFINE(FEAT_SMALL) ;;
   normal)	AC_DEFINE(FEAT_NORMAL) dovimdiff="installvimdiff";
-  			dogvimdiff="installgvimdiff" ;;
+			dogvimdiff="installgvimdiff" ;;
   big)		AC_DEFINE(FEAT_BIG) dovimdiff="installvimdiff";
-  			dogvimdiff="installgvimdiff" ;;
+			dogvimdiff="installgvimdiff" ;;
   huge)		AC_DEFINE(FEAT_HUGE) dovimdiff="installvimdiff";
-  			dogvimdiff="installgvimdiff" ;;
+			dogvimdiff="installgvimdiff" ;;
   *)		AC_MSG_RESULT([Sorry, $features is not supported]) ;;
 esac
 

@@ -565,9 +565,11 @@ mch_chdir(char *path)
 
     if (isalpha(path[0]) && path[1] == ':')	/* has a drive name */
     {
-	if (_chdrive(TO_LOWER(path[0]) - 'a' + 1) != 0)
-	    return -1;		/* invalid drive name */
-	path += 2;
+	/* If we can change to the drive, skip that part of the path.  If we
+	 * can't then the current directory may be invalid, try using chdir()
+	 * with the whole path. */
+	if (_chdrive(TO_LOWER(path[0]) - 'a' + 1) == 0)
+	    path += 2;
     }
 
     if (*path == NUL)		/* drive name only */

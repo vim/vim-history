@@ -1081,6 +1081,15 @@ mch_isdir(name)
      */
     struct stat statb;
 
+    /* For some reason the name is sometimes empty,
+     * (such as for a not yet named file). An empty
+     * filename is interpreted by the MacOS version
+     * of stat (at least under Codewarrior) as the
+     * current directory.
+     */
+    if (name[0] == NULL)
+	return FALSE;
+
     if (stat((char *)name, &statb))
 	return FALSE;
 #if defined(__MRC__) || defined(__SC__)

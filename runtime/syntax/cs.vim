@@ -20,7 +20,7 @@ syn keyword csKeyword		static public protected internal private abstract sealed
 
 syn keyword csStatement		if else switch break continue return case
 syn keyword csStatement		for do while foreach
-syn keyword csStatement		this base super new 
+syn keyword csStatement		this base super new
 syn keyword csStatement		goto
 syn keyword csStatement		checked unchecked lock using
 syn keyword csStatement		get set
@@ -28,7 +28,7 @@ syn keyword csException		throw try catch finally
 syn keyword csNull		null
 syn keyword csBoolean		true false
 syn keyword csType		void sbyte byte short ushort int uint long ulong char float double bool decimal string
- 
+
 " Comments
 "
 " PROVIDES: @csCommentHook

@@ -1,4 +1,4 @@
-*usr_20.txt*	For Vim version 6.1a.  Last change: 2001 Sep 09
+*usr_20.txt*	For Vim version 6.1b.  Last change: 2002 Mar 04
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -100,7 +100,7 @@ You thought of executing a : or / command, but changed your mind.  To get rid
 of what you already typed, without executing it, press CTRL-C or <Esc>.
 
 	Note:
-	<Esc> is the univeral "get out" key.  Unfortunately, in the good old
+	<Esc> is the universal "get out" key.  Unfortunately, in the good old
 	Vi pressing <Esc> in a command line executed the command!  Since that
 	might be considered to be a bug, Vim uses <Esc> to cancel the command.
 	But with the 'cpoptions' option it can be made Vi compatible.  And

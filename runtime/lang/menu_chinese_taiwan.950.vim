@@ -190,7 +190,7 @@ menutrans &Buffers			緩衝區(&B)
 " ------------------------------------------------------------------------
 menutrans &Refresh\ menu		更新(&R)
 menutrans &Delete			刪除(&D)
-menutrans &Alternate	    		切換上次編輯緩衝區(&A)
+menutrans &Alternate			切換上次編輯緩衝區(&A)
 menutrans &Next				下一個(&N)
 menutrans &Previous			前一個(&P)
 " ------------------------------------------------------------------------

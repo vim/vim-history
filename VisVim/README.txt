@@ -64,7 +64,7 @@ Installation
 
 3a) If you didn't do this yet: Register the OLE gvim:
    > gvim -register
-	
+
 4) Start Visual Studio and go to:
       Tools
          Customize...
@@ -168,7 +168,7 @@ Troubleshooting
 		this won't work.
    Workaround:  Download and install the OLE-enable version of Vim and
                 execute "gvim -register".
-   
+
 2. Sometimes when clicking on a file, the file won't be opened by Vim but
    instead the Visual Studio editor comes up.
    Cause:       The file was already loaded by the DevStudio editor.
@@ -204,7 +204,7 @@ Troubleshooting
 		 set.
    Workaround:   Get used to press ESC before switching to DevStudio.
 
-6. I'm tired of VisVim but I can't get rid of it. I can't delete it in 
+6. I'm tired of VisVim but I can't get rid of it. I can't delete it in
    Tools-Customize-Add-Ins.
    Cause:        You can't delete an item you once added to the add-ins
                  list box.
@@ -237,7 +237,7 @@ Change history
   done to the source file's directory or it's parent directory.
 - Added some explanations to the error message for the CO_E_CLASSSTRING error
   ("Use OLE Vim and make sure to register...").
- 
+
 1.0 to 1.1a
 -----------
 

@@ -1,7 +1,7 @@
 " Menu Translations:	Hungarian (Magyar)
 " Original Translation:	Zoltán Árpádffy
 " Maintained By:	Kontra Gergely <kgergely@mcl.hu>
-" Last Change:		2002 Mar 06
+" Last Change:		2002 Mar 09
 " I'm working on defining (unaccented) hotkeys for everything.
 " I want to remove y and z hotkeys, because on the hungarian keymap they're at
 " a differrent place.
@@ -11,7 +11,7 @@
 " just one menupoint is selected), or you find any other undesired behaviour,
 " please report it to me.
 " All kind of feedback is welcome.
-" 
+"
 " Igyekeztem mindenhez gyorsbillentyût rendelni, lehetõleg nem ékezeteset.
 " További tennivaló az y és z gyorsbillentyûk kiirtása, ezenkívül a g, j
 " billentyûk irtása is, mivel ez utóbbiak aláhúzott változatát nem könnyû
@@ -98,7 +98,7 @@ menutrans Toggle\ &Bottom\ Scrollbar	&Vízszintes\ Görgetõsáv\ BE/KI
 menutrans Toggle\ &Left\ Scrollbar	&Bal\ görgetõsáv\ BE/KI
 menutrans Toggle\ &Right\ Scrollbar	&Jobb\ görgetõsáv\ BE/KI
 menutrans None				Nincs
-    
+
 " Edit.File Settings
 menutrans Toggle\ Line\ &Numbering<Tab>:set\ nu!	Sorszá&mozás\ BE/KI<Tab>:set\ nu!
 menutrans Toggle\ &List\ Mode<Tab>:set\ list!		&Lista\ mód\ BE/KI<Tab>:set\ list!
@@ -152,7 +152,7 @@ menutrans Create\ &Fold<Tab>zf		Ú&j\ behajtás<Tab>zf
 menutrans &Delete\ Fold<Tab>zd		Behajtás\ &törlése<Tab>zd
 menutrans Delete\ &All\ Folds<Tab>zD	Öss&zes\ behajtás\ törlése<Tab>zD
 menutrans Fold\ column\ &width		Behajtás\ j&elölése\ x\ oszlopban
- 
+
 " Tools.Diff
 menutrans &Update		&Frissítés
 menutrans &Get\ Block		Block\ &BE

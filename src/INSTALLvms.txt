@@ -1,5 +1,5 @@
 INSTALLvms.txt - Installation of Vim on OpenVMS
-Last change: 2001 Oct 12
+Last change: 2002 Mar 09
 
 This file contains instructions for compiling Vim. If you already have an
 executable version of Vim, you don't need this.
@@ -58,7 +58,7 @@ ftp://ftp.polarhome.com/pub/vim/source/vms/
      For example, if you want to add the MULTI_BYTE feature, turn on
      #define MULTI_BYTE
 
-2.2  Edit vim-X.X/src/Make_vms.mms to customise your Vim. Options are:
+2.2  Edit vim-X.X/src/Make_vms.mms to customize your Vim. Options are:
 
         Parameter name  : MODEL
         Description     : Build model selection
@@ -119,7 +119,7 @@ ftp://ftp.polarhome.com/pub/vim/source/vms/
         Options:        : YES - Build with support
                           Uncommented - build without support.
         Default         : Uncommented
-                                     
+
         Parameter name  : VIM_HANGULIN
         Description     : Internal Hangul input method. GUI only.
                           Please define just one: VIM_XIM or VIM_HANGULIN
@@ -143,7 +143,7 @@ ftp://ftp.polarhome.com/pub/vim/source/vms/
 
         mms /descrip=Make_vms.mms
 
-     will start building your own customised version of Vim.
+     will start building your own customized version of Vim.
      The adequate command for mmk is:
 
         mmk /descrip=Make_vms.mms
@@ -164,10 +164,10 @@ ftp://ftp.polarhome.com/pub/vim/source/vms/
         @os_vms_fix.com *.c *.h <.proto>*.pro
 
      more information can be found in os_vms_fix.com file itself.
-    
+
      NOTE: even if os_vms_fix.com will fix all pre-processor directives it will
      leave singe (long) line directives. You have to fix them manually.
-     Known problematic files are option.h and option.c 
+     Known problematic files are option.h and option.c
 
 4.2. After the conversion you can continue building as it has been described
      above.

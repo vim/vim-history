@@ -19,4 +19,4 @@ shellmenu.vim		menus for editing shell scripts in the GUI version
 swapmous.vim		swap left and right mouse buttons
 
 This one is only for Unix.  It can be found in the extra archive:
-file_select.vim	  	macros that make a handy file selector
+file_select.vim		macros that make a handy file selector

@@ -131,6 +131,22 @@ static    OSType	_ftype = 'TEXT';
 # define DisableMenuItem DisableItem
 #endif
 
+/* Carbon does not support the Get/SetControll functions,
+ * use Get/SetControl32Bit instead and rename for non-carbon
+ * systems.
+ */
+
+#ifndef USE_CARBONIZED
+# undef    SetControl32BitMaximum
+# define   SetControl32BitMaximum SetControlMaximum
+# undef    SetControl32BitMinimum
+# define   SetControl32BitMinimum SetControlMinimum
+# undef    SetControl32BitValue
+# define   SetControl32BitValue SetControlValue
+# undef    GetControl32BitValue
+# define   GetControl32BitValue GetControlValue
+#endif
+
 /*
  * ???
  */
@@ -374,7 +390,7 @@ char_u *C2Pascal_save_and_remove_backslash(char_u *Cstring)
 }
 
 /*
- * Convert the modifiers of an Event into vim's modifiers
+ * Convert the modifiers of an Event into vim's modifiers (mouse)
  */
 
     int_u
@@ -392,6 +408,28 @@ EventModifiers2VimMouseModifiers(EventModifiers macModifiers)
     /* Not yet supported */
     if (macModifiers & (cmdKey)) /* There's no rightCmdKey */
 	vimModifiers |= MOUSE_CMD;
+#endif
+    return (vimModifiers);
+}
+
+/*
+ * Convert the modifiers of an Event into vim's modifiers (keys)
+ */
+
+    int_u
+EventModifiers2VimModifiers(EventModifiers macModifiers)
+{
+    int_u vimModifiers = 0x00;
+
+    if (macModifiers & (shiftKey | rightShiftKey))
+	vimModifiers |= MOD_MASK_SHIFT;
+    if (macModifiers & (controlKey | rightControlKey))
+	vimModifiers |= MOD_MASK_CTRL;
+    if (macModifiers & (optionKey | rightOptionKey))
+	vimModifiers |= MOD_MASK_ALT;
+#ifdef USE_CMD_KEY
+    if (macModifiers & (cmdKey)) /* There's no rightCmdKey */
+	vimModifiers |= MOD_MASK_CMD;
 #endif
     return (vimModifiers);
 }
@@ -1192,7 +1230,8 @@ pascal OSErr Handle_aevt_quit_AE (const AppleEvent *theAEvent, AppleEvent *theRe
 	return(error);
     }
 
-    /* TODO: Need to fake a :confirm qa */
+    /* Need to fake a :confirm qa */
+    do_cmdline_cmd((char_u *)"confirm qa");
 
     return(error);
 }
@@ -1469,7 +1508,7 @@ gui_mac_drag_thumb (ControlHandle theControl, short partCode)
 	return;
 
     /* Need to find value by diff between Old Poss New Pos */
-    value = GetControlValue (theControlToUse);
+    value = GetControl32BitValue (theControlToUse);
     dragging = TRUE;
 
     gui_drag_scrollbar(sb, value, dragging);
@@ -1690,6 +1729,7 @@ gui_mac_doInGrowClick(where, whichWindow)
     unsigned short  newHeight;
     Rect	    resizeLimits;
     Rect	    *resizeLimitsPtr = &resizeLimits;
+    Rect	    NewContentRect;
 
 #ifdef USE_CARBONIZED
     resizeLimitsPtr = GetRegionBounds ( GetGrayRgn(), &resizeLimits );
@@ -1702,6 +1742,14 @@ gui_mac_doInGrowClick(where, whichWindow)
     resizeLimits.top = 100;
     resizeLimits.left = 100;
 
+#ifdef USE_CARBONIZED
+    newSize = ResizeWindow(whichWindow, where, &resizeLimits, &NewContentRect);
+    newWidth  = NewContentRect.right - NewContentRect.left;
+    newHeight = NewContentRect.bottom - NewContentRect.top;
+    gui_resize_shell(newWidth, newHeight);
+    gui_mch_set_bg_color(gui.back_pixel);
+    gui_set_shellsize(TRUE, FALSE);
+#else
     newSize = GrowWindow(whichWindow, where, &resizeLimits);
     if (newSize != 0)
     {
@@ -1734,6 +1782,8 @@ gui_mac_doInGrowClick(where, whichWindow)
 		CallToolWindowResizedProc(aWindow->toolRoutines.toolWindowResizedProc, wp);
 	}*/
     };
+#endif
+
 };
 
 /*
@@ -1936,37 +1986,40 @@ gui_mac_doKeyEvent(EventRecord *theEvent)
 {
     /* TODO: add support for COMMAND KEY */
     long		menu;
-    unsigned char	string[3], string2[3];
+    unsigned char	string[10];
     short		num, i;
+    short		len = 0;
     KeySym		key_sym;
+    int			key_char;
+    int			modifiers;
 
     /* Mask the mouse (as per user setting) */
     if (p_mh)
 	ObscureCursor();
 
-    /**/
+    /* Get the key code and it's ASCII representation */
     key_sym = ((theEvent->message & keyCodeMask) >> 8);
-    string[0] = theEvent->message & charCodeMask;
+    key_char = theEvent->message & charCodeMask;
     num = 1;
 
     /* Intercept CTRL-C */
     if (theEvent->modifiers & controlKey)
-	if (string[0] == Ctrl_C && ctrl_c_interrupts)
+	if (key_char == Ctrl_C && ctrl_c_interrupts)
 	    got_int = TRUE;
 
     /* Intercept CMD-. */
     if (theEvent->modifiers & cmdKey)
-	if (string[0] == '.')
+	if (key_char == '.')
 	    got_int = TRUE;
 
     /* Handle command key as per menu */
-    /* TODO: should override be allowed? Require YAO */
+    /* TODO: should override be allowed? Require YAO or could use 'winaltkey' */
     if (theEvent->modifiers & cmdKey)
 	/* Only accept CMD alone or with CAPLOCKS and the mouse button.
 	 * Why the mouse button? */
 	if ((theEvent->modifiers & (~(cmdKey | btnState | alphaLock))) == 0)
 	{
-	    menu = MenuKey(string[0]);
+	    menu = MenuKey(key_char);
 	    if (HiWord(menu))
 	    {
 		gui_mac_handle_menu(menu);
@@ -1974,62 +2027,72 @@ gui_mac_doKeyEvent(EventRecord *theEvent)
 	    }
 	}
 
+    /* Convert the modifiers */
+    modifiers = EventModifiers2VimModifiers(theEvent->modifiers);
+
+
+    /* Handle special keys. */
 #if 0
     /* Why have this been removed? */
     if	(!(theEvent->modifiers & (cmdKey | controlKey | rightControlKey)))
 #endif
     {
-	if  ((string[0] < 0x20) || (string[0] == 0x7f))
-	{
-	    /* num = 0; */
-
+	/* Find the special key (for non-printable keyt_char) */
+	if  ((key_char < 0x20) || (key_char == 0x7f))
 	    for (i = 0; special_keys[i].key_sym != (KeySym)0; i++)
-	    {
 		if (special_keys[i].key_sym == key_sym)
 		{
-		    string[0] = CSI;
-		    string[1] = special_keys[i].vim_code0;
-		    string[2] = special_keys[i].vim_code1;
-		    num = 3;
+# if 0
+		    /* We currently don't have not so special key */
+		    if (special_keys[i].vim_code1 == NUL)
+			key_char = special_keys[i].vim_code0;
+		    else
+# endif
+			key_char = TO_SPECIAL( special_keys[i].vim_code0,
+						special_keys[i].vim_code1 );
+		    key_char = simplify_key(key_char,&modifiers);
+		    break;
 		}
-	    }
+    }
+
+
+    /* Add the modifier to the input bu if needed */
+    /* Do not want SHIFT-A or CTRL-A with modifier */
+    if (!IS_SPECIAL(key_char))
+    {
+	if( modifiers & MOD_MASK_CTRL)
+	    modifiers = modifiers & ~MOD_MASK_CTRL;
+	if( modifiers & MOD_MASK_ALT)
+	    modifiers = modifiers & ~MOD_MASK_ALT;
+	if( modifiers & MOD_MASK_SHIFT)
+	    modifiers = modifiers & ~MOD_MASK_SHIFT;
+    }
+	if( modifiers )
+	{
+	    string[ len++ ] = CSI;
+	    string[ len++ ] = KS_MODIFIER;
+	    string[ len++ ] = modifiers;
 	}
-    }
 
-    /* Special keys (and a few others) may have modifiers */
-    if (num == 3 || key_sym == vk_Space || key_sym == vk_Tab
-	|| key_sym == vk_Return || key_sym == vk_Esc
-#ifdef USE_CMD_KEY
-	|| ((theEvent->modifiers & cmdKey) != 0)
-#endif
-	)
-    {
-	string2[0] = CSI;
-	string2[1] = KS_MODIFIER;
-	string2[2] = 0;
-	if (theEvent->modifiers & shiftKey)
-	    string2[2] |= MOD_MASK_SHIFT;
-	if (theEvent->modifiers & controlKey)
-	    string2[2] |= MOD_MASK_CTRL;
-	if (theEvent->modifiers & optionKey)
-	    string2[2] |= MOD_MASK_ALT;
-#ifdef USE_CMD_KEY
-	if (theEvent->modifiers & cmdKey)
-	    string2[2] |= MOD_MASK_CMD;
-#endif
-	if (string2[2] != 0)
-	    add_to_input_buf(string2, 3);
-    }
+	if( IS_SPECIAL( key_char ) )
+	{
+	    string[ len++ ] = CSI;
+	    string[ len++ ] = K_SECOND( key_char );
+	    string[ len++ ] = K_THIRD( key_char );
+	}
+	else
+	{
+	    string[ len++ ] = key_char;
+	}
 
-    if (num == 1 && string[0] == CSI)
-    {
-	/* Insert CSI as K_CSI.  Not tested! */
-	string[1] = KS_EXTRA;
-	string[2] = (int)KE_CSI;
-	num = 3;
-    }
+	if (len == 1 && string[0] == CSI)
+	{
+	    /* Turn CSI into K_CSI. */
+	    string[ len++ ] = KS_EXTRA;
+	    string[ len++ ] = KE_CSI;
+	}
 
-    add_to_input_buf(string, num);
+    add_to_input_buf(string, len);
 }
 
 /*
@@ -2388,17 +2451,16 @@ gui_mch_prepare(argc, argv)
     char	**argv;
 {
     /* TODO: Move most of this stuff toward gui_mch_init */
-    Rect	windRect;
-    MenuHandle	pomme;
 #ifdef USE_EXE_NAME
+    FSSpec	applDir;
+# ifndef USE_FIND_BUNDLE_PATH
     short	applVRefNum;
     long	applDirID;
     Str255	volName;
-//    char_u	temp[256];
-    FSSpec	applDir;
-#endif
-#ifdef USE_CTRLCLICKMENU
-    long	gestalt_rc;
+# else
+    ProcessSerialNumber psn;
+    FSRef	applFSRef;
+# endif
 #endif
 
 #ifndef USE_CARBONIZED
@@ -2416,6 +2478,166 @@ gui_mch_prepare(argc, argv)
     /* Why did I put that in? (Dany) */
     MoreMasterPointers (0x40 * 3); /* we love handles */
 #endif
+
+#if 0
+    InitCursor();
+
+#ifdef USE_CARBONIZED
+    RegisterAppearanceClient();
+#endif
+
+#ifdef USE_AEVENT
+    (void) InstallAEHandlers();
+#endif
+
+#ifdef USE_CTRLCLICKMENU
+    if (Gestalt(gestaltContextualMenuAttr, &gestalt_rc) == noErr)
+	gui.MacOSHaveCntxMenu = BitTst(&gestalt_rc, 31-gestaltContextualMenuTrapAvailable);
+    else
+	gui.MacOSHaveCntxMenu = false;
+
+    if (gui.MacOSHaveCntxMenu)
+	gui.MacOSHaveCntxMenu = (InitContextualMenus()==noErr);
+#endif
+
+#ifdef USE_SIOUX
+    SIOUXSettings.standalone = false;
+    SIOUXSettings.initializeTB = false;
+    SIOUXSettings.setupmenus = false;
+    SIOUXSettings.asktosaveonclose = false;
+    SIOUXSettings.showstatusline = true;
+    SIOUXSettings.toppixel = 300;
+    SIOUXSettings.leftpixel = 10;
+    InstallConsole (1); /* fileno(stdout) = 1, on page 430 of MSL C */
+    printf ("Debugging console enabled\n");
+    /*	SIOUXSetTitle ((char_u *) "Vim Stdout"); */
+#endif
+
+    pomme = NewMenu (256, "\p\024"); /* 0x14= = Apple Menu */
+
+    AppendMenu (pomme, "\pAbout VIM");
+#ifndef USE_CARBONIZED
+    AppendMenu (pomme, "\p-");
+    AppendResMenu (pomme, 'DRVR');
+#endif
+
+    InsertMenu (pomme, 0);
+
+    DrawMenuBar();
+
+
+#ifndef USE_OFFSETED_WINDOW
+    SetRect (&windRect, 10, 48, 10+80*7 + 16, 48+24*11);
+#else
+    SetRect (&windRect, 300, 40, 300+80*7 + 16, 40+24*11);
+#endif
+
+
+#ifdef USE_CARBONIZED
+    CreateNewWindow(kDocumentWindowClass,
+		kWindowResizableAttribute | kWindowCollapseBoxAttribute,
+		&windRect, &gui.VimWindow );
+    SetPortWindowPort ( gui.VimWindow );
+#else
+    gui.VimWindow = NewCWindow(nil, &windRect, "\pgVim on Macintosh", true, documentProc,
+			(WindowPtr) -1L, false, 0);
+    SetPort(gui.VimWindow);
+#endif
+
+    gui.char_width = 7;
+    gui.char_height = 11;
+    gui.char_ascent = 6;
+    gui.num_rows = 24;
+    gui.num_cols = 80;
+    gui.in_focus = TRUE; /* For the moment -> syn. of front application */
+
+#if TARGET_API_MAC_CARBON
+    gScrollAction = NewControlActionUPP (gui_mac_scroll_action);
+    gScrollDrag   = NewControlActionUPP (gui_mac_drag_thumb);
+#else
+    gScrollAction = NewControlActionProc (gui_mac_scroll_action);
+    gScrollDrag   = NewControlActionProc (gui_mac_drag_thumb);
+#endif
+
+    /* Getting a handle to the Help menu */
+#ifdef USE_HELPMENU
+# ifdef USE_CARBONIZED
+    HMGetHelpMenu(&gui.MacOSHelpMenu, NULL);
+# else
+    (void) HMGetHelpMenuHandle(&gui.MacOSHelpMenu);
+# endif
+
+    if (gui.MacOSHelpMenu != nil)
+	gui.MacOSHelpItems = CountMenuItems (gui.MacOSHelpMenu);
+    else
+	gui.MacOSHelpItems = 0;
+#endif
+
+    dragRectEnbl = FALSE;
+    dragRgn = NULL;
+    dragRectControl = kCreateEmpty;
+    cursorRgn = NewRgn();
+#endif
+#ifdef USE_EXE_NAME
+# ifndef USE_FIND_BUNDLE_PATH
+    HGetVol (volName, &applVRefNum, &applDirID);
+    /* TN2015: mention a possible bad VRefNum */
+    FSMakeFSSpec (applVRefNum, applDirID, "\p", &applDir);
+# else
+    /* OSErr GetApplicationBundleFSSpec(FSSpecPtr theFSSpecPtr)
+     * of TN2015
+     * This technic remove the ../Contents/MacOS/etc part
+     */
+    (void) GetCurrentProcess(&psn);
+    /* if (err != noErr) return err; */
+
+    (void) GetProcessBundleLocation(&psn, &applFSRef);
+    /* if (err != noErr) return err; */
+
+    (void) FSGetCatalogInfo(&applFSRef, kFSCatInfoNone, NULL, NULL, &applDir, NULL);
+
+    /* This technic return NIL when we disallow_gui */
+# endif
+    exe_name = FullPathFromFSSpec_save (applDir);
+#endif
+
+#ifdef USE_VIM_CREATOR_ID
+    _fcreator = 'VIM!';
+    _ftype = 'TEXT';
+#endif
+}
+
+#ifndef ALWAYS_USE_GUI
+/*
+ * Check if the GUI can be started.  Called before gvimrc is sourced.
+ * Return OK or FAIL.
+ */
+    int
+gui_mch_init_check(void)
+{
+    /* TODO: For MacOS X find a way to return FAIL, if the user logged in
+     * using the >console
+     */
+    if (disallow_gui) /* see main.c for reason to disallow */
+	return FAIL;
+    return OK;
+}
+#endif
+
+/*
+ * Initialise the GUI.  Create all the windows, set up all the call-backs
+ * etc.
+ */
+    int
+gui_mch_init()
+{
+    /* TODO: Move most of this stuff toward gui_mch_init */
+    Rect	windRect;
+    MenuHandle	pomme;
+#ifdef USE_CTRLCLICKMENU
+    long	gestalt_rc;
+#endif
+#if 1
     InitCursor();
 
 #ifdef USE_CARBONIZED
@@ -2509,25 +2731,7 @@ gui_mch_prepare(argc, argv)
     dragRgn = NULL;
     dragRectControl = kCreateEmpty;
     cursorRgn = NewRgn();
-#ifdef USE_EXE_NAME
-    HGetVol (volName, &applVRefNum, &applDirID);
-    FSMakeFSSpec (applVRefNum, applDirID, "\p", &applDir);
-    exe_name = FullPathFromFSSpec_save (applDir);
 #endif
-
-#ifdef USE_VIM_CREATOR_ID
-    _fcreator = 'VIM!';
-    _ftype = 'TEXT';
-#endif
-}
-
-/*
- * Initialise the GUI.  Create all the windows, set up all the call-backs
- * etc.
- */
-    int
-gui_mch_init()
-{
     /* Display any pending error messages */
     display_errors();
 
@@ -4007,9 +4211,9 @@ gui_mch_set_scrollbar_thumb(sb, val, size, max)
     long	size;
     long	max;
 {
-    SetControlMaximum (sb->id, max);
-    SetControlMinimum (sb->id, 0);
-    SetControlValue   (sb->id, val);
+    SetControl32BitMaximum (sb->id, max);
+    SetControl32BitMinimum (sb->id, 0);
+    SetControl32BitValue   (sb->id, val);
 #ifdef DEBUG_MAC_SB
     printf ("thumb_sb (%x) %x, %x,%x\n",sb->id, val, size, max);
 #endif
@@ -4294,6 +4498,102 @@ gui_mch_browse(
  * If stubbing out this fn, return 1.
  */
 
+typedef struct
+{
+    short   idx;
+    short   width;	/* Size of the text in pixel */
+    Rect    box;
+} vgmDlgItm; /* Vim Gui_Mac.c Dialog Item */
+
+#define MoveRectTo(r,x,y) OffsetRect(r,x-r->left,y-r->top)
+
+    void
+macMoveDialogItem(
+    DialogRef	theDialog,
+    short	itemNumber,
+    short	X,
+    short	Y,
+    Rect	*inBox)
+{
+#if 0 /* USE_CARBONIZED */
+    /* Untested */
+    MoveDialogItem (theDialog, itemNumber, X, Y);
+    if (inBox != nil)
+	GetDialogItem (theDialog, itemNumber, &itemType, &itemHandle, inBox);
+#else
+    short	itemType;
+    Handle	itemHandle;
+    Rect	localBox;
+    Rect	*itemBox = &localBox;
+
+    if (inBox != nil)
+	itemBox = inBox;
+
+    GetDialogItem (theDialog, itemNumber, &itemType, &itemHandle, itemBox);
+    OffsetRect (itemBox, -itemBox->left, -itemBox->top);
+    OffsetRect (itemBox, X, Y);
+    /* To move a control (like a button) we need to call both
+     * MoveControl and SetDialogItem. FAQ 6-18 */
+    if (1) /*(itemType & kControlDialogItem) */
+	MoveControl ((ControlRef) itemHandle, X, Y);
+    SetDialogItem (theDialog, itemNumber, itemType, itemHandle, itemBox);
+#endif
+}
+
+    void
+macSizeDialogItem(
+    DialogRef	theDialog,
+    short	itemNumber,
+    short	width,
+    short	height)
+{
+    short	itemType;
+    Handle	itemHandle;
+    Rect	itemBox;
+
+    GetDialogItem (theDialog, itemNumber, &itemType, &itemHandle, &itemBox);
+
+    /* When width or height is zero do not change it */
+    if (width  == 0)
+	width  = itemBox.right  - itemBox.left;
+    if (height == 0)
+	height = itemBox.bottom - itemBox.top;
+
+#if 0 /* USE_CARBONIZED */
+    SizeDialogItem (theDialog, itemNumber, width, height); /* Untested */
+#else
+    /* Resize the bounding box */
+    itemBox.right  = itemBox.left + width;
+    itemBox.bottom = itemBox.top  + height;
+
+    /* To resize a control (like a button) we need to call both
+     * SizeControl and SetDialogItem. (deducted from FAQ 6-18) */
+    if (itemType & kControlDialogItem)
+	SizeControl ((ControlRef) itemHandle, width, height);
+
+    /* Configure back the item */
+    SetDialogItem (theDialog, itemNumber, itemType, itemHandle, &itemBox);
+#endif
+}
+
+    void
+macSetDialogItemText(
+    DialogRef	theDialog,
+    short	itemNumber,
+    Str255	itemName)
+{
+    short	itemType;
+    Handle	itemHandle;
+    Rect	itemBox;
+
+    GetDialogItem (theDialog, itemNumber, &itemType, &itemHandle, &itemBox);
+
+    if (itemType & kControlDialogItem)
+	SetControlTitle ((ControlRef) itemHandle, itemName);
+    else
+	SetDialogItemText (itemHandle, itemName);
+}
+
     int
 gui_mch_dialog(
     int		type,
@@ -4305,11 +4605,13 @@ gui_mch_dialog(
 {
     Handle	buttonDITL;
     Handle	iconDITL;
+    Handle	inputDITL;
     Handle	messageDITL;
     Handle	itemHandle;
     Handle	iconHandle;
     DialogPtr	theDialog;
     char_u	len;
+    char_u	PascalTitle[256];	/* place holder for the title */
     char_u	name[256];
     GrafPtr	oldPort;
     short	itemHit;
@@ -4317,18 +4619,78 @@ gui_mch_dialog(
     char_u	*messageChar;
     Rect	box;
     short	button;
+    short	lastButton;
     short	itemType;
     short	useIcon;
+    short	lenght;
+    short	width;
+    short	height;
+    short	totalButtonWidth = 0;   /* the width of all button together incuding spacing */
+    short	widestButton = 0;
+    short	dfltButtonEdge     = 20;  /* gut feeling */
+    short	dfltElementSpacing = 13;  /* from IM:V.2-29 */
+    short       dfltIconSideSpace  = 23;  /* from IM:V.2-29 */
+    short	maximumWidth       = 400; /* gut feeling */
+    short	maxButtonWidth	   = 175; /* gut feeling */
 
+    short	vertical;
+    short	dialogHeight;
+    short	messageLines = 3;
+    FontInfo	textFontInfo;
+
+    vgmDlgItm   iconItm;
+    vgmDlgItm   messageItm;
+    vgmDlgItm   inputItm;
+    vgmDlgItm   buttonItm;
+
+    WindowRef	theWindow;
+
+    /* Check 'v' flag in 'guioptions': vertical button placement. */
+    vertical = (vim_strchr(p_go, GO_VERTICAL) != NULL);
+
+    /* Create a new Dialog Box from template. */
     theDialog = GetNewDialog (129, nil, (WindowRef) -1);
-    /*	SetTitle (title); */
 
+    /* Get the WindowRef */
+    theWindow = GetDialogWindow(theDialog);
+
+    /* Hide the window.
+     * 1. to avoid seeing slow drawing
+     * 2. to prevent a problem seen while moving dialog item
+     *    within a visible window. (non-Carbon MacOS 9)
+     * Could be avoided by changing the resource.
+     */
+    HideWindow (theWindow);
+
+    /* Change the graphical port to the dialog,
+     * so we can measure the text with the proper font */
+    GetPort (&oldPort);
+#ifdef USE_CARBONIZED
+    SetPortDialogPort (theDialog);
+#else
+    SetPort (theDialog);
+#endif
+
+    /* Get the info about the default text,
+     * used to calculate the height of the message
+     * and of the  text field */
+    GetFontInfo(&textFontInfo);
+
+    /*	Set the dialog title */
+    if (title != NULL)
+    {
+	(void) C2PascalString (title, &PascalTitle);
+	SetWTitle (theWindow, PascalTitle);
+    }
+
+    /* Creates the buttons and add them to the Dialog Box. */
     buttonDITL = GetResource ('DITL', 130);
     buttonChar = buttons;
     button = 0;
 
     for (;*buttonChar != 0;)
     {
+	/* Get the name of the button */
 	button++;
 	len = 0;
 	for (;((*buttonChar != DLG_BUTTON_SEP) && (*buttonChar != 0) && (len < 255)); buttonChar++)
@@ -4340,13 +4702,30 @@ gui_mch_dialog(
 	  buttonChar++;
 	name[0] = len;
 
-	AppendDITL (theDialog, buttonDITL, appendDITLRight);
-	GetDialogItem (theDialog, button, &itemType, &itemHandle, &box);
-	SetControlTitle ((ControlRef) itemHandle, name);
-	SetDialogItem (theDialog, button, itemType, itemHandle, &box);
+	/* Add the button */
+	AppendDITL (theDialog, buttonDITL, overlayDITL); /* appendDITLRight); */
+
+	/* Change the button's name */
+	macSetDialogItemText (theDialog, button, name);
+
+	/* Resize the button to fit its name */
+	width = StringWidth (name) + 2 * dfltButtonEdge;
+	/* Limite the size of any button to an acceptable value. */
+	/* TODO: Should be based on the message width */
+	if (width > maxButtonWidth)
+	    width = maxButtonWidth;
+	macSizeDialogItem (theDialog, button, width, 0);
+
+	totalButtonWidth += width;
+
+	if (width > widestButton)
+	    widestButton = width;
     }
     ReleaseResource (buttonDITL);
+    lastButton = button;
 
+    /* Add the icon to the Dialog Box. */
+    iconItm.idx = lastButton + 1;
     iconDITL = GetResource ('DITL', 131);
     switch (type)
     {
@@ -4359,45 +4738,160 @@ gui_mch_dialog(
     };
     AppendDITL (theDialog, iconDITL, overlayDITL);
     ReleaseResource (iconDITL);
-    GetDialogItem (theDialog, button + 1, &itemType, &itemHandle, &box);
-    /* Should the item be freed */
+    GetDialogItem (theDialog, iconItm.idx, &itemType, &itemHandle, &box);
+    /* TODO: Should the item be freed? */
     iconHandle = GetIcon (useIcon);
-    SetDialogItem (theDialog, button + 1, itemType, (Handle) iconHandle, &box);
+    SetDialogItem (theDialog, iconItm.idx, itemType, iconHandle, &box);
 
-
+    /* Add the message to the Dialog box. */
+    messageItm.idx = lastButton + 2;
     messageDITL = GetResource ('DITL', 132);
     AppendDITL (theDialog, messageDITL, overlayDITL);
     ReleaseResource (messageDITL);
-    GetDialogItem (theDialog, button + 2, &itemType, &itemHandle, &box);
-    messageChar = message;
-    len = 1;
-    for (; (*messageChar != 0) && (len <255); len++, messageChar++)
-    {
-	name[len] = *messageChar;
-    }
-    name[0] = len;
-
+    GetDialogItem (theDialog, messageItm.idx, &itemType, &itemHandle, &box);
+    (void) C2PascalString (message, &name);
     SetDialogItemText (itemHandle, name);
+    messageItm.width = StringWidth (name);
 
+    /* Add the input box if needed */
+    if (textfield != NULL)
+    {
+	/* Cheat for now reuse the message and convet to text edit */
+	inputItm.idx = lastButton + 3;
+	inputDITL = GetResource ('DITL', 132);
+	AppendDITL (theDialog, inputDITL, overlayDITL);
+	ReleaseResource (inputDITL);
+	GetDialogItem (theDialog, inputItm.idx, &itemType, &itemHandle, &box);
+/*	  SetDialogItem (theDialog, inputItm.idx, kEditTextDialogItem, itemHandle, &box);*/
+	(void) C2PascalString (textfield, &name);
+	SetDialogItemText (itemHandle, name);
+	inputItm.width = StringWidth (name);
+    }
+
+    /* Set the <ENTER> and <ESC> button. */
     SetDialogDefaultItem (theDialog, dfltbutton);
     SetDialogCancelItem (theDialog, 0);
 
+    /* Reposition element */
+
+    /* Check if we need to force vertical */
+    if (totalButtonWidth > maximumWidth)
+	vertical = TRUE;
+
+    /* Place icon */
+    macMoveDialogItem (theDialog, iconItm.idx, dfltIconSideSpace, dfltElementSpacing, &box);
+    iconItm.box.right = box.right;
+    iconItm.box.bottom = box.bottom;
+
+    /* Place Message */
+    messageItm.box.left = iconItm.box.right + dfltIconSideSpace;
+    macSizeDialogItem (theDialog, messageItm.idx, 0,  messageLines * (textFontInfo.ascent + textFontInfo.descent));
+    macMoveDialogItem (theDialog, messageItm.idx, messageItm.box.left, dfltElementSpacing, &messageItm.box);
+
+    /* Place Input */
+    if (textfield != NULL)
+    {
+	inputItm.box.left = messageItm.box.left;
+	inputItm.box.top  = messageItm.box.bottom + dfltElementSpacing;
+	macSizeDialogItem (theDialog, inputItm.idx, 0, textFontInfo.ascent + textFontInfo.descent);
+	macMoveDialogItem (theDialog, inputItm.idx, inputItm.box.left, inputItm.box.top, &inputItm.box);
+	/* Convert the static text into a text edit.
+	 * For some reason this change need to be done last (Dany) */
+	GetDialogItem (theDialog, inputItm.idx, &itemType, &itemHandle, &inputItm.box);
+	SetDialogItem (theDialog, inputItm.idx, kEditTextDialogItem, itemHandle, &inputItm.box);
+    }
+
+    /* Place Button */
+    if (textfield != NULL)
+    {
+	buttonItm.box.left = inputItm.box.left;
+	buttonItm.box.top  = inputItm.box.bottom + dfltElementSpacing;
+    }
+    else
+    {
+	buttonItm.box.left = messageItm.box.left;
+	buttonItm.box.top  = messageItm.box.bottom + dfltElementSpacing;
+    }
+
+    for (button=1; button <= lastButton; button++)
+    {
+
+	macMoveDialogItem (theDialog, button, buttonItm.box.left, buttonItm.box.top, &box);
+	/* With vertical, it's better to have all button the same lenght */
+	if (vertical)
+	{
+	    macSizeDialogItem (theDialog, button, widestButton, 0);
+	    GetDialogItem (theDialog, button, &itemType, &itemHandle, &box);
+	}
+	/* Calculate position of next button */
+	if (vertical)
+	    buttonItm.box.top  = box.bottom + dfltElementSpacing;
+	else
+	    buttonItm.box.left  = box.right + dfltElementSpacing;
+    }
+
+    /* Resize the dialog box */
+    dialogHeight = box.bottom + dfltElementSpacing;
+    SizeWindow(theWindow, maximumWidth, dialogHeight, TRUE);
+
+#ifdef USE_CARBONIZED
+    /* Magic resize */
+    AutoSizeDialog (theDialog);
+    /* Need a horizontal resize anyway so not that useful */
+#endif
+
+    /* Display it */
+    ShowWindow(theWindow);
+/*  BringToFront(theWindow); */
+    SelectWindow(theWindow);
+
+/*  DrawDialog (theDialog); */
+#if 0
     GetPort (&oldPort);
 #ifdef USE_CARBONIZED
     SetPortDialogPort (theDialog);
 #else
     SetPort (theDialog);
 #endif
+#endif
 
-    ModalDialog (nil, &itemHit);
+    /* Hang until one of the button is hit */
+    do
+    {
+	ModalDialog (nil, &itemHit);
+    } while ((itemHit < 1) || (itemHit > lastButton));
+
+    /* Copy back the text entered by the user into the param */
+    if (textfield != NULL)
+    {
+	GetDialogItem (theDialog, inputItm.idx, &itemType, &itemHandle, &box);
+	GetDialogItemText (itemHandle, (char_u *) &name);
+#if IOSIZE < 256
+	/* Truncate the name to IOSIZE if needed */
+	if (name[0] > IOSIZE)
+	    name[0] = IOSIZE - 1;
+#endif
+	STRNCPY(textfield, &name[1], name[0]);
+	textfield[name[0]] = NUL;
+    }
+
+    /* Restore the original graphical port */
     SetPort (oldPort);
+
+    /* Get ride of th edialog (free memory) */
     DisposeDialog (theDialog);
 
     return itemHit;
+/*
+ * Usefull thing which could be used
+ * SetDialogTimeout(): Auto click a button after timeout
+ * SetDialogTracksCursor() : Get the I-beam cursor over input box
+ * MoveDialogItem():	    Probably better than SetDialogItem
+ * SizeDialogItem():		(but is it Carbon Only?)
+ * AutoSizeDialog():	    Magic resize of dialog based on text lenght
+ */
 }
 #endif /* FEAT_DIALOG_GUI */
-
-
 
 /*
  * Display the saved error message(s).
