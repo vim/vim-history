@@ -589,7 +589,7 @@ static struct vimoption
 			    (char_u *)&p_cpo, PV_NONE,
 			    {(char_u *)CPO_ALL, (char_u *)CPO_DEFAULT}},
     {"cscopepathcomp", "cspc", P_NUM|P_VI_DEF|P_VIM,
-#ifdef USE_CSCOPE
+#ifdef FEAT_CSCOPE
 			    (char_u *)&p_cspc, PV_NONE,
 #else
 			    (char_u *)NULL, PV_NONE,
