@@ -77,6 +77,7 @@ DOCS = \
 	rileft.txt \
 	scroll.txt \
 	sign.txt \
+	sponsor.txt \
 	starting.txt \
 	syntax.txt \
 	tagsrch.txt \
@@ -193,6 +194,7 @@ HTMLS = \
 	rileft.html \
 	scroll.html \
 	sign.html \
+	sponsor.html \
 	starting.html \
 	syntax.html \
 	tagsrch.html \
