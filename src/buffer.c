@@ -1165,6 +1165,14 @@ enter_buffer(buf)
     diff_new_buffer();
 #endif
 
+    /* Cursor on first line by default. */
+    curwin->w_cursor.lnum = 1;
+    curwin->w_cursor.col = 0;
+#ifdef FEAT_VIRTUALEDIT
+    curwin->w_cursor.coladd = 0;
+#endif
+    curwin->w_set_curswant = TRUE;
+
     /* Make sure the buffer is loaded. */
     if (curbuf->b_ml.ml_mfp == NULL)	/* need to load the file */
 	open_buffer(FALSE, NULL);
@@ -1181,8 +1189,12 @@ enter_buffer(buf)
 	apply_autocmds(EVENT_BUFWINENTER, NULL, NULL, FALSE, curbuf);
 #endif
     }
-    buflist_getfpos();			/* restore curpos.lnum and possibly
-					 * curpos.col */
+
+    /* If autocommands did not change the cursor position, restore cursor lnum
+     * and possibly cursor col. */
+    if (curwin->w_cursor.lnum == 1 && curwin->w_cursor.col == 0)
+	buflist_getfpos();
+
     check_arg_idx(curwin);		/* check for valid arg_idx */
 #ifdef FEAT_TITLE
     maketitle();
