@@ -3199,6 +3199,11 @@ im_preedit_changed_cb(GtkIMContext *context, gpointer data)
 
     g_return_if_fail(preedit_string != NULL); /* just in case */
 
+    /* If at the start position (after typing backspace) preedit_start_col
+     * must be reset. */
+    if (cursor_index == 0)
+	preedit_start_col = MAXCOL;
+
     if (preedit_start_col == MAXCOL && preedit_string[0] != '\0')
     {
 	/* Urgh, this breaks if the input buffer isn't empty now */
