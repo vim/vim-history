@@ -6064,6 +6064,29 @@ vim_tempname(extra_char)
 #endif /* TEMPDIRNAMES */
 }
 
+#if defined(BACKSLASH_IN_FILENAME) || defined(PROTO)
+/*
+ * Convert all backslashes in fname to forward slashes in-place.
+ */
+    void
+forward_slash(fname)
+    char_u	*fname;
+{
+    char_u	*p;
+
+    for (p = fname; *p != NUL; ++p)
+# ifdef  FEAT_MBYTE
+	/* The Big5 encoding can have '\' in the trail byte. */
+	if (enc_dbcs != 0 && (*mb_ptr2len_check)(p) > 1)
+	    ++p;
+	else
+# endif
+	if (*p == '\\')
+	    *p = '/';
+}
+#endif
+
+
 /*
  * Code for automatic commands.
  *
@@ -6254,28 +6277,6 @@ static void auto_next_pat __ARGS((AutoPatCmd *apc, int stop_at_last));
 
 static EVENT_T	last_event;
 static int	last_group;
-
-#if defined(BACKSLASH_IN_FILENAME) || defined(PROTO)
-/*
- * Convert all backslashes in fname to forward slashes in-place.
- */
-    void
-forward_slash(fname)
-    char_u	*fname;
-{
-    char_u	*p;
-
-    for (p = fname; *p != NUL; ++p)
-# ifdef  FEAT_MBYTE
-	/* The Big5 encoding can have '\' in the trail byte. */
-	if (enc_dbcs != 0 && (*mb_ptr2len_check)(p) > 1)
-	    ++p;
-	else
-# endif
-	if (*p == '\\')
-	    *p = '/';
-}
-#endif
 
 /*
  * Show the autocommands for one AutoPat.

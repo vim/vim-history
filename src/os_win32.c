@@ -1396,7 +1396,9 @@ mch_inchar(
 
 	    if (c == Ctrl_C && ctrl_c_interrupts)
 	    {
+#if defined(FEAT_CLIENTSERVER)
 		trash_input_buf();
+#endif
 		got_int = TRUE;
 	    }
 
