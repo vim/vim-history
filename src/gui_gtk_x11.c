@@ -871,7 +871,6 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
  * Selection handlers:
  */
 
-
 /*ARGSUSED*/
     static gint
 selection_clear_event(GtkWidget * widget, GdkEventSelection * event)
@@ -3521,43 +3520,46 @@ clip_mch_request_selection(cbd)
     }
 }
 
+/*
+ * Disown the selection.
+ */
     void
 clip_mch_lose_selection(cbd)
     VimClipboard *cbd;
 {
-    gtk_selection_owner_set(gui.drawarea, cbd->gtk_sel_atom,
-			    (guint32)GDK_CURRENT_TIME);
+    /* WEIRD: when using NULL to actually disown the selection, we lose the
+     * selection the first time we own it. */
+    /*
+    gtk_selection_owner_set(NULL, cbd->gtk_sel_atom, (guint32)GDK_CURRENT_TIME);
     gui_mch_update();
+     */
 }
 
 /*
- * Check whatever we allready own the selection.
+ * Own the selection and return OK if it worked.
  */
     int
 clip_mch_own_selection(cbd)
     VimClipboard *cbd;
 {
-    if (cbd == &clip_star)
-    {
-	/* At this point we always already own the selection - apparently */
+    int r;
+
+    r = gtk_selection_owner_set(gui.drawarea, cbd->gtk_sel_atom,
+						   (guint32)GDK_CURRENT_TIME);
+    gui_mch_update();
+    if (r)
 	return OK;
-    }
-    else
-    {
-	return gdk_selection_owner_get(clip_plus.gtk_sel_atom) == gui.drawarea->window;
-    }
+    return FAIL;
 }
 
 /*
- * Send the current selection to the clipboard.
+ * Send the current selection to the clipboard.  Do nothing for X because we
+ * will fill in the selection only when requested by another app.
  */
     void
 clip_mch_set_selection(cbd)
     VimClipboard* cbd;
 {
-    gtk_selection_owner_set(gui.drawarea, cbd->gtk_sel_atom,
-				(guint32)GDK_CURRENT_TIME);
-    gui_mch_update();
 }
 
 
