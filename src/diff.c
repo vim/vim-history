@@ -1341,7 +1341,7 @@ diff_cmp(s1, s2)
     if ((diff_flags & DIFF_ICASE) && !(diff_flags & DIFF_IWHITE))
 	return MB_STRICMP(s1, s2);
 
-    /* Ignore case AND ignore white space changes. */
+    /* Ignore white space changes and possibly ignore case. */
     p1 = s1;
     p2 = s2;
     while (*p1 != NUL && *p2 != NUL)
@@ -1360,7 +1360,9 @@ diff_cmp(s1, s2)
 	    if (l > 1)
 	    {
 		if (STRNCMP(p1, p2, l) != 0
-			&& (!enc_utf8 || utf_fold(utf_ptr2char(p1))
+			&& (!enc_utf8
+			    || !(diff_flags & DIFF_ICASE)
+			    || utf_fold(utf_ptr2char(p1))
 					       != utf_fold(utf_ptr2char(p2))))
 		    break;
 		p1 += l;
@@ -1369,7 +1371,8 @@ diff_cmp(s1, s2)
 	    else
 #endif
 	    {
-		if (*p1 != *p2 && TO_LOWER(*p1) != TO_LOWER(*p2))
+		if (*p1 != *p2 && (!(diff_flags & DIFF_ICASE)
+					   || TO_LOWER(*p1) != TO_LOWER(*p2)))
 		    break;
 		++p1;
 		++p2;
