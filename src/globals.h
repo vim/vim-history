@@ -576,9 +576,8 @@ EXTERN int	enc_dbcs INIT(= 0);		/* One of DBCS_xxx values if
 						   DBCS encoding */
 EXTERN int	enc_unicode INIT(= 0);	/* 2: UCS-2 or UTF-16, 4: UCS-4 */
 EXTERN int	enc_utf8 INIT(= FALSE);		/* UTF-8 encoded Unicode */
-# ifdef FEAT_GUI_W32
-EXTERN int	is_funky_dbcs INIT(= FALSE);	/* if DBCS encoding, but not
-						   current codepage */
+# ifdef WIN3264
+EXTERN int	enc_codepage INIT(= 0);		/* codepage nr of 'encoding' */
 # endif
 EXTERN int	has_mbyte INIT(= 0);		/* any multi-byte encoding */
 
@@ -593,10 +592,6 @@ EXTERN char	mb_bytelen_tab[256];
 EXTERN vimconv_T input_conv;			/* type of input conversion */
 EXTERN vimconv_T output_conv;			/* type of output conversion */
 
-#ifdef FEAT_MBYTE_IME
-EXTERN vimconv_T ime_conv;			/* ucs-2 -> encoding */
-EXTERN vimconv_T ime_conv_cp;			/* codepage -> ucs-2 */
-#endif
 /*
  * Function pointers, used to quickly get to the right function.  Each has
  * three possible values: latin_ (8-bit), utfc_ or utf_ (utf-8) and dbcs_

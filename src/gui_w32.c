@@ -228,7 +228,7 @@ static int get_toolbar_bitmap(vimmenu_T *menu);
 
 #ifdef FEAT_MBYTE_IME
 static LRESULT _OnImeComposition(HWND hwnd, WPARAM dbcs, LPARAM param);
-static char_u *GetResultStr(HWND hwnd, int GCS);
+static char_u *GetResultStr(HWND hwnd, int GCS, int *lenp);
 #endif
 #if defined(FEAT_MBYTE_IME) && defined(DYNAMIC_IME)
 # ifdef NOIME
@@ -1216,7 +1216,8 @@ DisplayCompStringOpaque(char_u *s, int len)
     int OldBkMode = GetBkMode(s_hdc);
 
     SetBkMode(s_hdc, OPAQUE);
-    gui_outstr_nowrap(s, len, GUI_MON_TRS_CURSOR, (guicolor_T)0, (guicolor_T)0, 0);
+    gui_outstr_nowrap(s, len, GUI_MON_TRS_CURSOR,
+					     (guicolor_T)0, (guicolor_T)0, 0);
     SetBkMode(s_hdc, OldBkMode);
 }
 
@@ -1276,13 +1277,14 @@ _OnImeNotify(HWND hWnd, DWORD dwCommand, DWORD dwData)
 _OnImeComposition(HWND hwnd, WPARAM dbcs, LPARAM param)
 {
     char_u	*ret;
+    int		len;
 
     if ((param & GCS_RESULTSTR) == 0) /* Composition unfinished. */
 	return 0;
 
-    if (ret = GetResultStr(hwnd, GCS_RESULTSTR))
+    if (ret = GetResultStr(hwnd, GCS_RESULTSTR, &len))
     {
-	add_to_input_buf_csi(ret, strlen(ret));
+	add_to_input_buf_csi(ret, len);
 	vim_free(ret);
 	return 1;
     }
@@ -1292,15 +1294,14 @@ _OnImeComposition(HWND hwnd, WPARAM dbcs, LPARAM param)
 
 /*
  * get the current composition string, in UCS-2; *lenp is the number of
- * Unicode characters
+ * *lenp is the number of Unicode characters.
  */
-    static unsigned short *
+    static short_u *
 GetCompositionString_inUCS2(HIMC hIMC, DWORD GCS, int *lenp)
 {
     LONG	    ret;
-    unsigned short  *wbuf = NULL;
+    LPWSTR	    wbuf = NULL;
     char_u	    *buf;
-    int		    len;
 
     if (!pImmGetContext)
 	return NULL; /* no imm32.dll */
@@ -1312,11 +1313,13 @@ GetCompositionString_inUCS2(HIMC hIMC, DWORD GCS, int *lenp)
 
     if (ret > 0)
     {
-	wbuf = (unsigned short *) alloc(ret * sizeof(unsigned short));
-	if(!wbuf) return NULL;
-	pImmGetCompositionStringW(hIMC, GCS, wbuf, ret);
-	*lenp = ret / sizeof(unsigned short); /* char -> wchar */
-	return wbuf;
+	wbuf = (LPWSTR)alloc(ret * sizeof(WCHAR));
+	if (wbuf != NULL)
+	{
+	    pImmGetCompositionStringW(hIMC, GCS, wbuf, ret);
+	    *lenp = ret;
+	}
+	return (short_u *)wbuf;
     }
 
     /* ret < 0; we got an error, so try the ANSI version.  This'll work
@@ -1332,12 +1335,10 @@ GetCompositionString_inUCS2(HIMC hIMC, DWORD GCS, int *lenp)
     pImmGetCompositionStringA(hIMC, GCS, buf, ret);
 
     /* convert from codepage to UCS-2 */
-    len = ret;
-    wbuf = (unsigned short *)string_convert(&ime_conv_cp, buf, &len);
+    MultiByteToWideChar_alloc(GetACP(), 0, buf, ret, &wbuf, lenp);
     vim_free(buf);
-    *lenp = len / sizeof(unsigned short); /* char_u -> wchar */
 
-    return wbuf;
+    return (short_u *)wbuf;
 }
 
 /*
@@ -1347,24 +1348,21 @@ GetCompositionString_inUCS2(HIMC hIMC, DWORD GCS, int *lenp)
  * get complete composition string
  */
     static char_u *
-GetResultStr(HWND hwnd, int GCS)
+GetResultStr(HWND hwnd, int GCS, int *lenp)
 {
-    DWORD	dwBufLen;	/* Storage for len. of composition str. */
-    int		buflen;
     HIMC	hIMC;		/* Input context handle. */
-    unsigned short *buf = NULL;
-    char *convbuf = NULL;
+    short_u	*buf = NULL;
+    char_u	*convbuf = NULL;
 
     if (!pImmGetContext || !(hIMC = pImmGetContext(hwnd)))
 	return NULL;
 
     /* Reads in the composition string. */
-    buf = GetCompositionString_inUCS2(hIMC, GCS, &dwBufLen);
+    buf = GetCompositionString_inUCS2(hIMC, GCS, lenp);
     if (buf == NULL)
 	return NULL;
 
-    buflen = dwBufLen * 2;	/* length in words -> length in bytes */
-    convbuf = string_convert(&ime_conv, (unsigned char *)buf, &buflen);
+    convbuf = ucs2_to_enc(buf, lenp);
     pImmReleaseContext(hwnd, hIMC);
     vim_free(buf);
     return convbuf;
@@ -1700,7 +1698,8 @@ gui_mch_draw_string(
     /* Check if the Unicode buffer exists and is big enough.  Create it
      * with the same lengt as the multi-byte string, the number of wide
      * characters is always equal or smaller. */
-    if ((enc_utf8 || is_funky_dbcs) && (unicodebuf == NULL || len > unibuflen))
+    if ((enc_utf8 || (enc_codepage != 0 && (int)GetACP() != enc_codepage))
+	    && (unicodebuf == NULL || len > unibuflen))
     {
 	vim_free(unicodebuf);
 	unicodebuf = (WCHAR *)alloc(len * sizeof(WCHAR));
@@ -1742,13 +1741,13 @@ gui_mch_draw_string(
 			     foptions, pcliprect, unicodebuf, clen, unicodepdy);
 	len = cells;	/* used for underlining */
     }
-    else if (is_funky_dbcs)
+    else if (enc_codepage != 0 && (int)GetACP() != enc_codepage)
     {
-	/* If we want to display DBCS, and the current CP is not the DBCS
+	/* If we want to display codepage data, and the current CP is not the ANSI
 	 * one, we need to go via Unicode. */
 	if (unicodebuf != NULL)
 	{
-	    if ((len = MultiByteToWideChar(enc_dbcs,
+	    if ((len = MultiByteToWideChar(enc_codepage,
 			MB_PRECOMPOSED,
 			(char *)text, len,
 			(LPWSTR)unicodebuf, unibuflen)))
