@@ -4584,7 +4584,6 @@ status_redraw_all()
 	}
 }
 
-# if defined(FEAT_KEYMAP) || defined(PROTO)
 /*
  * mark all status lines of the current buffer for redraw
  */
@@ -4600,7 +4599,6 @@ status_redraw_curbuf()
 	    redraw_later(VALID);
 	}
 }
-# endif
 
 /*
  * Redraw all status lines that need to be redrawn.

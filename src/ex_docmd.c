@@ -269,6 +269,7 @@ static void	ex_undo __ARGS((exarg_T *eap));
 static void	ex_redo __ARGS((exarg_T *eap));
 static void	ex_redir __ARGS((exarg_T *eap));
 static void	ex_redraw __ARGS((exarg_T *eap));
+static void	ex_redrawstatus __ARGS((exarg_T *eap));
 static void	close_redir __ARGS((void));
 static void	ex_mkrc __ARGS((exarg_T *eap));
 static void	ex_mark __ARGS((exarg_T *eap));
@@ -7178,6 +7179,35 @@ ex_redraw(eap)
     RedrawingDisabled = r;
     p_lz = p;
     out_flush();
+}
+
+/*
+ * ":redrawstatus": force redraw of status line(s)
+ */
+/*ARGSUSED*/
+    static void
+ex_redrawstatus(eap)
+    exarg_T	*eap;
+{
+#if defined(FEAT_WINDOWS)
+    int		r = RedrawingDisabled;
+    int		p = p_lz;
+
+    RedrawingDisabled = 0;
+    p_lz = FALSE;
+    if (eap->forceit)
+	status_redraw_all();
+    else
+	status_redraw_curbuf();
+    update_screen(
+# ifdef FEAT_VISUAL
+	    VIsual_active ? INVERTED :
+# endif
+	    0);
+    RedrawingDisabled = r;
+    p_lz = p;
+    out_flush();
+#endif
 }
 
     static void
