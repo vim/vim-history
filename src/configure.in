@@ -1,7 +1,7 @@
 dnl configure.in: autoconf script for Vim
 
 dnl Process this file with autoconf 2.12 or 2.13 to produce "configure".
-dnl Might also work with autoconf 2.57 or later.
+dnl Should also work with autoconf 2.54 and later.
 
 AC_INIT(vim.h)
 AC_CONFIG_HEADER(auto/config.h:config.h.in)
@@ -228,18 +228,22 @@ AC_SUBST(compiledby)
 AC_MSG_CHECKING(--disable-xsmp argument)
 AC_ARG_ENABLE(xsmp,
 	[  --disable-xsmp          Disable XSMP session management],
-	disable_xsmp="yes", disable_xsmp="no")
-AC_MSG_RESULT($disable_xsmp)
+	, enable_xsmp="yes")
 
-if test "x$disable_xsmp" = "xno"; then
+if test "$enable_xsmp" = "yes"; then
+  AC_MSG_RESULT(no)
   AC_MSG_CHECKING(--disable-xsmp-interact argument)
   AC_ARG_ENABLE(xsmp-interact,
 	  [  --disable-xsmp-interact Disable XSMP interaction],
-	  disable_xsmp_interact="yes", disable_xsmp_interact="no")
-  AC_MSG_RESULT($disable_xsmp_interact)
-  if test "$disable_xsmp_interact" = "no"; then
+	  , enable_xsmp_interact="yes")
+  if test "$enable_xsmp_interact" = "yes"; then
+    AC_MSG_RESULT(no)
     AC_DEFINE(USE_XSMP_INTERACT)
+  else
+    AC_MSG_RESULT(yes)
   fi
+else
+  AC_MSG_RESULT(yes)
 fi
 
 AC_MSG_CHECKING(--enable-perlinterp argument)
@@ -623,9 +627,9 @@ fi
 AC_MSG_CHECKING(--disable-netbeans argument)
 AC_ARG_ENABLE(netbeans,
 	[  --disable-netbeans      Disable NetBeans integration support.],
-	[disable_netbeans="yes"], [disable_netbeans="no"])
-AC_MSG_RESULT($disable_netbeans)
-if test "$disable_netbeans" = "no"; then
+	, [enable_netbeans="yes"])
+if test "$enable_netbeans" = "yes"; then
+  AC_MSG_RESULT(no)
   AC_MSG_CHECKING(whether compiling netbeans integration is possible)
   AC_TRY_LINK([
 #include <stdio.h>
@@ -661,9 +665,11 @@ if test "$disable_netbeans" = "no"; then
 		  (void)connect(1, (struct sockaddr *)&server, sizeof(server));
 	    ],
 	AC_MSG_RESULT(yes),
-	AC_MSG_RESULT(no); disable_netbeans="yes")
+	AC_MSG_RESULT(no); enable_netbeans="no")
+else
+  AC_MSG_RESULT(yes)
 fi
-if test "$disable_netbeans" = "no"; then
+if test "$enable_netbeans" = "yes"; then
   AC_DEFINE(FEAT_NETBEANS_INTG)
   NETBEANS_SRC="netbeans.c"
   AC_SUBST(NETBEANS_SRC)
@@ -1481,7 +1487,7 @@ fi
 
 dnl Look for XSMP support - but don't necessarily restrict it to X11 GUIs
 dnl use the X11 include path
-if test "x$disable_xsmp" = "xno"; then
+if test "$enable_xsmp" = "yes"; then
   cppflags_save=$CPPFLAGS
   CPPFLAGS="$CPPFLAGS $X_CFLAGS"
   AC_CHECK_HEADERS(X11/SM/SMlib.h)
@@ -2049,10 +2055,9 @@ dnl when -lacl works, also try to use -lattr (required for Debian).
 AC_MSG_CHECKING(--disable-acl argument)
 AC_ARG_ENABLE(acl,
 	[  --disable-acl           Don't check for ACL support.],
-	AC_MSG_RESULT(yes),
-	[enable_acl="yes"; AC_MSG_RESULT(no)])
+	, [enable_acl="yes"])
 if test "$enable_acl" = "yes"; then
-
+AC_MSG_RESULT(no)
 AC_CHECK_LIB(posix1e, acl_get_file, [LIBS="$LIBS -lposix1e"],
 	AC_CHECK_LIB(acl, acl_get_file, [LIBS="$LIBS -lacl"
 		  AC_CHECK_LIB(attr, fgetxattr, LIBS="$LIBS -lattr",,)],,),)
@@ -2097,6 +2102,8 @@ struct acl *aclent;], [aclsize = sizeof(struct acl);
 	],
 	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_AIX_ACL),
 	AC_MSG_RESULT(no))
+else
+  AC_MSG_RESULT(yes)
 fi
 
 AC_MSG_CHECKING(--disable-gpm argument)
