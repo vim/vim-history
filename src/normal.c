@@ -4530,9 +4530,29 @@ dozet:
     }
 
 #ifdef FEAT_FOLDING
-    /* Redraw when 'foldenable' or 'foldlevel' changed */
+    /* Redraw when 'foldenable' changed */
     if (old_fen != curwin->w_p_fen)
+    {
+# ifdef FEAT_DIFF
+	win_T	    *wp;
+
+	if (foldmethodIsDiff(curwin) && curwin->w_p_scb)
+	{
+	    /* Adjust 'foldenable' in diff-synced windows. */
+	    FOR_ALL_WINDOWS(wp)
+	    {
+		if (wp != curwin && foldmethodIsDiff(wp) && wp->w_p_scb)
+		{
+		    wp->w_p_fen = curwin->w_p_fen;
+		    changed_window_setting_win(wp);
+		}
+	    }
+	}
+# endif
 	changed_window_setting();
+    }
+
+    /* Redraw when 'foldlevel' changed. */
     if (old_fdl != curwin->w_p_fdl)
 	newFoldLevel();
 #endif
