@@ -3105,21 +3105,25 @@ server_to_input_buf(str)
     str = replace_termcodes((char_u *)str, &ptr, FALSE, TRUE);
     p_cpo = cpo_save;
 
-    /*
-     * Add the string to the input stream.
-     * Can't use add_to_input_buf() here, we now have K_SPECIAL bytes.
-     *
-     * First clear typed characters from the typeahead buffer, there could be
-     * half a mapping there.  Then append to the existing string, so that
-     * multiple commands from a client are concatenated.
-     */
-    if (typebuf.tb_maplen < typebuf.tb_len)
-	del_typebuf(typebuf.tb_len - typebuf.tb_maplen, typebuf.tb_maplen);
-    (void)ins_typebuf(str, REMAP_NONE, typebuf.tb_len, TRUE, FALSE);
-    vim_free((char_u *)ptr);
+    if (*ptr != NUL)	/* trailing CTRL-V results in nothing */
+    {
+	/*
+	 * Add the string to the input stream.
+	 * Can't use add_to_input_buf() here, we now have K_SPECIAL bytes.
+	 *
+	 * First clear typed characters from the typeahead buffer, there could
+	 * be half a mapping there.  Then append to the existing string, so
+	 * that multiple commands from a client are concatenated.
+	 */
+	if (typebuf.tb_maplen < typebuf.tb_len)
+	    del_typebuf(typebuf.tb_len - typebuf.tb_maplen, typebuf.tb_maplen);
+	(void)ins_typebuf(str, REMAP_NONE, typebuf.tb_len, TRUE, FALSE);
 
-    /* Let input_available() know we inserted text in the typeahead buffer. */
-    received_from_client = TRUE;
+	/* Let input_available() know we inserted text in the typeahead
+	 * buffer. */
+	received_from_client = TRUE;
+    }
+    vim_free((char_u *)ptr);
 }
 
 /*
