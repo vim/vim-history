@@ -1740,7 +1740,7 @@ static char_u modifier_keys_table[] =
     MOD_MASK_SHIFT, KS_EXTRA, (int)KE_S_F37,	'F', 'R',
 
 							    /* TAB pseudo code*/
-    MOD_MASK_SHIFT, KS_EXTRA, (int)KE_S_TAB,	KS_EXTRA, (int)KE_TAB,
+    MOD_MASK_SHIFT, 'k', 'B',			KS_EXTRA, (int)KE_TAB,
 
     NUL
 };
