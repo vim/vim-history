@@ -1324,9 +1324,6 @@ open_line(dir, flags, old_indent)
      * May do indenting after opening a new line.
      */
     if (!p_paste
-# ifdef FEAT_COMMENTS
-	    && (leader == NULL || !curbuf->b_p_ai)
-# endif
 	    && (curbuf->b_p_cin
 #  ifdef FEAT_EVAL
 		    || *curbuf->b_p_inde != NUL
