@@ -994,7 +994,14 @@ scripterror:
      * Don't know about other systems, stay on the safe side and don't check.
      */
     if (gui.starting && gui_init_check() == FAIL)
+    {
 	gui.starting = FALSE;
+
+	/* When running "evim" or "gvim -y" we need the menus, exit if we
+	 * don't have them. */
+	if (evim_mode)
+	    mch_exit(1);
+    }
 # endif
 #endif
 
@@ -1373,6 +1380,11 @@ scripterror:
 
 	gui_start();		/* will set full_screen to TRUE */
 	TIME_MSG("starting GUI");
+
+	/* When running "evim" or "gvim -y" we need the menus, exit if we
+	 * don't have them. */
+	if (!gui.in_use && evim_mode)
+	    mch_exit(1);
     }
 #endif
 
