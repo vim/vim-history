@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Perl
 " Maintainer:	Nick Hibma <n_hibma@van-laarhoven.org>
-" Last Change:	2004 May 16
+" Last Change:	2004 Aug 29
 " Location:	http://www.van-laarhoven.org/vim/syntax/perl.vim
 "
 " Please download most recent version first before mailing
@@ -397,8 +397,8 @@ if exists("perl_fold")
   syn region perlBEGINENDFold start="^\z(\s*\)\<\(BEGIN\|END\)\>.*[^};]$" end="^\z1}\s*$" transparent fold keepend
 
   if exists("perl_fold_blocks")
-    syn region perlIfFold start="^\z(\s*\)\(if\|unless\|for\|while\|until\)\s*(.*)\s*{\s*$" start="^\z(\s*\)foreach\s*\(\(my\|our\)\=\s*\S\+\s*\)\=(.*)\s*{\s*$" end="^\z1}\s*;\=$" transparent fold keepend
-    syn region perlIfFold start="^\z(\s*\)do\s*{\s*$" end="^\z1}\s*while" end="^\z1}\s*;\=$" transparent fold keepend
+    syn region perlIfFold start="^\z(\s*\)\(if\|unless\|for\|while\|until\)\s*(.*)\(\s*{\)\=\s*$" start="^\z(\s*\)foreach\s*\(\(my\|our\)\=\s*\S\+\s*\)\=(.*)\(\s*{\)\=\s*$" end="^\z1}\s*;\=$" transparent fold keepend
+    syn region perlIfFold start="^\z(\s*\)do\(\s*{\)\=\s*$" end="^\z1}\s*while" end="^\z1}\s*;\=$" transparent fold keepend
   endif
 
   setlocal foldmethod=syntax

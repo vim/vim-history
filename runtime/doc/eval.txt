@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.3.  Last change: 2004 Jun 18
+*eval.txt*      For Vim version 6.3.  Last change: 2004 Sep 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1076,7 +1076,7 @@ cindent({lnum})						*cindent()*
 		feature, -1 is returned.
 
 							*col()*
-col({expr})	The result is a Number, which is the column of the file
+col({expr})	The result is a Number, which is the byte index of the column
 		position given with {expr}.  The accepted positions are:
 		    .	    the cursor position
 		    $	    the end of the cursor line (the result is the

@@ -1,4 +1,4 @@
-*syntax.txt*	For Vim version 6.3.  Last change: 2004 Jun 16
+*syntax.txt*	For Vim version 6.3.  Last change: 2004 Sep 12
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -1805,6 +1805,10 @@ its attempts in syntax highlighting. >
 If you want to use folding with perl, set perl_fold: >
 
        :let perl_fold = 1
+
+If you want to fold blocks in if statements, etc. as well set the following: >
+
+   :let perl_fold_blocks = 1
 
 
 PHP3 and PHP4		*php.vim* *php3.vim* *php-syntax* *php3-syntax*
@@ -3961,6 +3965,9 @@ For Unix you can use the file ~/.vim/after/syntax/syncolor.vim.  Example: >
 	else
 	  highlight comment ctermfg=green guifg=green
 	endif
+
+Do make sure this syncolor.vim script does not use a "syntax on" or
+"colorscheme" command, because it results in an endless loop.
 
 Note that when a color scheme is used, there might be some confusion whether
 your defined colors are to be used or the colors from the scheme.  This

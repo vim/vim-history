@@ -1,6 +1,6 @@
 " Script to define the syntax menu in synmenu.vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2004 May 22
+" Last Change:	2004 Sep 11
 
 " This is used by "make menu" in the src directory.
 edit <sfile>:p:h/synmenu.vim
@@ -55,6 +55,7 @@ SynMenu AB.ABEL:abel
 SynMenu AB.AceDB\ model:acedb
 SynMenu AB.Ada:ada
 SynMenu AB.AfLex:aflex
+SynMenu AB.ALSA\ config:alsaconf
 SynMenu AB.Altera\ AHDL:ahdl
 SynMenu AB.Amiga\ DOS:amiga
 SynMenu AB.AMPL:ampl
