@@ -316,6 +316,7 @@ toggle_Magic(x)
 #define EMSG_RET_NULL(m) { EMSG(_(m)); rc_did_emsg = TRUE; return NULL; }
 #define EMSG_M_RET_NULL(m, c) { EMSG2(_(m), c ? "" : "\\"); rc_did_emsg = TRUE; return NULL; }
 #define EMSG_RET_FAIL(m) { EMSG(_(m)); rc_did_emsg = TRUE; return FAIL; }
+#define EMSG_ONE_RET_NULL EMSG_M_RET_NULL("E369: invalid item in %s%%[]", reg_magic == MAGIC_ALL)
 
 #define MAX_LIMIT	(32767L << 16L)
 
@@ -1444,6 +1445,8 @@ regatom(flagp)
 	break;
 
       case Magic('('):
+	if (one_exactly)
+	    EMSG_ONE_RET_NULL;
 	ret = reg(REG_PAREN, &flags);
 	if (ret == NULL)
 	    return NULL;
@@ -1526,6 +1529,8 @@ regatom(flagp)
 	    {
 		case '(': if (reg_do_extmatch != REX_SET)
 			      EMSG_RET_NULL("E66: \\z( not allowed here");
+			  if (one_exactly)
+			      EMSG_ONE_RET_NULL;
 			  ret = reg(REG_ZPAREN, &flags);
 			  if (ret == NULL)
 			      return NULL;
@@ -1565,6 +1570,8 @@ regatom(flagp)
 	    {
 		/* () without a back reference */
 		case '(':
+		    if (one_exactly)
+			EMSG_ONE_RET_NULL;
 		    ret = reg(REG_NPAREN, &flags);
 		    if (ret == NULL)
 			return NULL;
@@ -1588,6 +1595,8 @@ regatom(flagp)
 		/* \%[abc]: Emit as a list of branches, all ending at the last
 		 * branch which matches nothing. */
 		case '[':
+			  if (one_exactly)	/* doesn't nest */
+			      EMSG_ONE_RET_NULL;
 			  {
 			      char_u	*lastbranch;
 			      char_u	*lastnode = NULL;
