@@ -96,6 +96,7 @@ static void block_insert __ARGS((oparg_T *oap, char_u *s, int b_insert, struct b
 #endif
 static void	get_yank_register __ARGS((int regname, int writing));
 static int	stuff_yank __ARGS((int, char_u *));
+static void	put_reedit_in_typebuf __ARGS((void));
 static int	put_in_typebuf __ARGS((char_u *s, int colon));
 static void	stuffescaped __ARGS((char_u *arg, int literally));
 static int	get_spec_reg __ARGS((int regname, char_u **argp, int *allocated, int errmsg));
@@ -1154,6 +1155,7 @@ do_execreg(regname, colon, addcr)
 	/*
 	 * Insert lines into typeahead buffer, from last one to first one.
 	 */
+	put_reedit_in_typebuf();
 	for (i = y_current->y_size; --i >= 0; )
 	{
 	    /* insert NL between lines and after last line if type is MLINE */
@@ -1175,6 +1177,33 @@ do_execreg(regname, colon, addcr)
     return retval;
 }
 
+/*
+ * If "restart_edit" is not zero, put it in the typeahead buffer, so that it's
+ * used only after other typeahead has been processed.
+ */
+    static void
+put_reedit_in_typebuf()
+{
+    char_u	buf[3];
+
+    if (restart_edit != NUL)
+    {
+	if (restart_edit == 'V')
+	{
+	    buf[0] = 'g';
+	    buf[1] = 'R';
+	    buf[2] = NUL;
+	}
+	else
+	{
+	    buf[0] = restart_edit == 'I' ? 'i' : restart_edit;
+	    buf[1] = NUL;
+	}
+	if (ins_typebuf(buf, REMAP_NONE, 0, TRUE, FALSE) == OK)
+	    restart_edit = NUL;
+    }
+}
+
     static int
 put_in_typebuf(s, colon)
     char_u	*s;
@@ -1182,6 +1211,7 @@ put_in_typebuf(s, colon)
 {
     int		retval = OK;
 
+    put_reedit_in_typebuf();
     if (colon)
 	retval = ins_typebuf((char_u *)"\n", REMAP_YES, 0, TRUE, FALSE);
     if (retval == OK)
