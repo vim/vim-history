@@ -1,7 +1,7 @@
 " Set options and add mapping such that Vim behaves a lot like MS-Windows
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2003 May 17
+" Last change:	2004 May 26
 
 " set the 'cpoptions' to its Vim default
 if 1	" only do this when compiled with expression evaluation
@@ -36,12 +36,21 @@ cmap <S-Insert>		<C-R>+
 " Pasting blockwise and linewise selections is not possible in Insert and
 " Visual mode without the +virtualedit feature.  They are pasted as if they
 " were characterwise instead.
+" Note: the same stuff appears in menu.vim.
 if has("virtualedit")
   nnoremap <silent> <SID>Paste :call <SID>Paste()<CR>
   func! <SID>Paste()
     let ove = &ve
     set ve=all
-    normal `^"+gPi
+    normal `^
+    if @+ != ''
+      normal "+gP
+    endif
+    let c = col(".")
+    normal i
+    if col(".") < c	" compensate for i<ESC> moving the cursor left
+      normal l
+    endif
     let &ve = ove
   endfunc
   inoremap <script> <C-V>	x<BS><Esc><SID>Pastegi
