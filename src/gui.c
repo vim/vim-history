@@ -538,6 +538,11 @@ gui_init()
 	    /* Tell the client that it can start sending commands. */
 	    netbeans_startup_done();
 #endif
+#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
+	if (!im_xim_isvalid_imactivate())
+	    EMSG(_("E599: Value of 'imactivatekey' is invalid"));
+#endif
+
 	return;
     }
 
