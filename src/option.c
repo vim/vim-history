@@ -4920,6 +4920,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     /* When 'filetype' is set, trigger the FileType autocommands of that name */
     else if (varp == &(curbuf->b_p_ft))
     {
+	did_filetype = TRUE;
 	apply_autocmds(EVENT_FILETYPE, curbuf->b_p_ft,
 					     curbuf->b_fname, TRUE, curbuf);
     }
