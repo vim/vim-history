@@ -3184,12 +3184,13 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 		getvcol(wp, &wp->w_cursor, NULL, &virtcol, NULL);
 		wp->w_p_list = TRUE;
 	    }
+	    ++virtcol;
 	    /* Don't display %V if it's the same as %c. */
 	    if (opt == STL_VIRTCOL_ALT
 		    && (virtcol == (colnr_T)(!(State & INSERT) && empty_line
-			    ? 0 : (int)wp->w_cursor.col)))
+			    ? 0 : (int)wp->w_cursor.col + 1)))
 		break;
-	    num = (long)virtcol + 1;
+	    num = (long)virtcol;
 	    break;
 
 	case STL_PERCENTAGE:
