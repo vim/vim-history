@@ -2325,7 +2325,7 @@ mch_exit(r)
 	 * A newline is only required after a message in the alternate screen.
 	 * This is set to TRUE by wait_return().
 	 */
-	if (!swapping_screen())
+	if (!swapping_screen() || newline_on_exit)
 	{
 	    if (newline_on_exit || msg_didout)
 		out_char('\n');
