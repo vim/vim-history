@@ -2786,7 +2786,12 @@ set_init_2()
 	 */
 	idx4 = findoption((char_u *)"bg");
 	if (!(options[idx4].flags & P_WAS_SET) && STRCMP(T_NAME, "linux") == 0)
+	{
 	    set_string_option_direct(NULL, idx4, (char_u *)"dark", OPT_FREE);
+	    /* don't mark it as set, when starting the GUI it may be changed
+	     * again */
+	    options[idx4].flags &= ~P_WAS_SET;
+	}
     }
 #endif
 }
@@ -2941,6 +2946,16 @@ set_init_3()
 }
 
 #ifdef FEAT_GUI
+static char_u *gui_bg_default __ARGS((void));
+
+    static char_u *
+gui_bg_default()
+{
+    if (gui_get_lightness(gui.back_pixel) < 127)
+	return (char_u *)"dark";
+    return (char_u *)"light";
+}
+
 /*
  * Option initializations that can only be done after opening the GUI window.
  */
@@ -2948,11 +2963,10 @@ set_init_3()
 init_gui_options()
 {
     /* Set the 'background' option according to the lightness of the
-     * background color. */
-    if (!option_was_set((char_u *)"bg")
-				   && gui_get_lightness(gui.back_pixel) < 127)
+     * background color, unless the user has set it already. */
+    if (!option_was_set((char_u *)"bg") && STRCMP(p_bg, gui_bg_default()) != 0)
     {
-	set_option_value((char_u *)"bg", 0L, (char_u *)"dark", 0);
+	set_option_value((char_u *)"bg", 0L, gui_bg_default(), 0);
 	highlight_changed();
     }
 }
@@ -3443,15 +3457,10 @@ do_set(arg, opt_flags)
 						 ?  VI_DEFAULT : VIM_DEFAULT];
 			    if ((char_u **)varp == &p_bg)
 			    {
+				/* guess the value of 'background' */
 #ifdef FEAT_GUI
 				if (gui.in_use)
-				{
-				    /* guess the value of 'background' */
-				    if (gui_get_lightness(gui.back_pixel) < 127)
-					newval = (char_u *)"dark";
-				    else
-					newval = (char_u *)"light";
-				}
+				    newval = gui_bg_default();
 				else
 #endif
 				    if (STRCMP(T_NAME, "linux") == 0)
