@@ -436,6 +436,11 @@ STDMETHODIMP CShellExt::InvokeGvim(HWND hParent,
 	    {
 		MessageBox(hParent, "Error creating process: Check if gvim.exe is in your path!", "gvimext.dll error", MB_OK);
 	    }
+            else
+            {
+                CloseHandle( pi.hProcess );
+                CloseHandle( pi.hThread );
+            }
 	}
 	else
 	{
@@ -453,10 +458,14 @@ STDMETHODIMP CShellExt::InvokeSingleGvim(HWND hParent,
 				   LPCSTR pszParam,
 				   int iShowCmd)
 {
-    char m_szFileUserClickedOn[MAX_PATH];
-    char cmdStr[MAX_PATH];
+    char	m_szFileUserClickedOn[MAX_PATH];
+    char	*cmdStr;
+    size_t	cmdlen;
+    size_t	len;
     UINT i;
 
+    cmdlen = MAX_PATH;
+    cmdStr = (char *)malloc(cmdlen);
     getGvimName(cmdStr);
     for (i = 0; i < cbFiles; i++)
     {
@@ -465,18 +474,15 @@ STDMETHODIMP CShellExt::InvokeSingleGvim(HWND hParent,
 		m_szFileUserClickedOn,
 		sizeof(m_szFileUserClickedOn));
 
-	if ((strlen(cmdStr) + strlen(m_szFileUserClickedOn) + 4) < MAX_PATH)
+	len = strlen(cmdStr) + strlen(m_szFileUserClickedOn) + 4;
+	if (len > cmdlen)
 	{
-	    strcat(cmdStr, " \"");
-	    strcat(cmdStr, m_szFileUserClickedOn);
-	    strcat(cmdStr, "\"");
+	    cmdlen = len + MAX_PATH;
+	    cmdStr = (char *)realloc(cmdStr, cmdlen);
 	}
-	else
-	{
-	    MessageBox(hParent, "Path length too long or too many files selected!", "gvimext.dll error", MB_OK);
-
-	    return NOERROR;
-	}
+	strcat(cmdStr, " \"");
+	strcat(cmdStr, m_szFileUserClickedOn);
+	strcat(cmdStr, "\"");
     }
 
     STARTUPINFO si;
@@ -498,8 +504,15 @@ STDMETHODIMP CShellExt::InvokeSingleGvim(HWND hParent,
 		&pi)		// Pointer to PROCESS_INFORMATION structure.
        )
     {
-	MessageBox(hParent, "Error creating process: Check if gvim.exe is in your path!", "gvimext.dll error", MB_OK);
+	MessageBox(hParent, "Error creating process: Check if gvim is in your path!", "gvimext.dll error", MB_OK);
     }
+    else
+    {
+        CloseHandle( pi.hProcess );
+        CloseHandle( pi.hThread );
+    }
+
+    free(cmdStr);
 
     return NOERROR;
 }

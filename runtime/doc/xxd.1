@@ -34,12 +34,12 @@ is given, standard input is read.
 If
 .I infile
 is specified as a
-.RB \` \- \'
+.RB \` \- '
 character, then input is taken from standard input.
 If no
 .I outfile
 is given (or a
-.RB \` \- \'
+.RB \` \- '
 character is in its place), results are sent to standard output.
 .PP
 Note that a "lazy" parser is used which does not check for more than the first
@@ -47,7 +47,8 @@ option letter, unless the option is followed by a parameter.
 Spaces between a single option letter and its parameter are optional.
 Parameters to options can be specified in decimal, hexadecimal or octal
 notation.
-.RB Thus \-c8 ,
+Thus
+.BR \-c8 ,
 .BR "\-c 8" ,
 .B \-c 010
 and
@@ -275,7 +276,7 @@ Patch the date in the file xxd.1
 Create a 65537 byte file with all bytes 0x00,
 except for the last one which is 'A' (hex 0x41).
 .br
-\fI% echo \'010000: 41\' | xxd \-r \> file\fR
+\fI% echo '010000: 41' | xxd \-r \> file\fR
 .PP
 .br
 Hexdump this file with autoskip.

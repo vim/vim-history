@@ -1,4 +1,4 @@
-*version5.txt*  For Vim version 6.0d.  Last change: 2000 Jul 16
+*version5.txt*  For Vim version 5.8.  Last change: 2001 May 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -110,6 +110,11 @@ Changed					|changed-5.7|
 Added					|added-5.7|
 Fixed					|fixed-5.7|
 
+VERSION 5.8			|version-5.8|
+Changed					|changed-5.8|
+Added					|added-5.8|
+Fixed					|fixed-5.8|
+
 ==============================================================================
 				 INCOMPATIBLE
 
@@ -136,14 +141,14 @@ What does this mean?
 - If you prefer to run in 'nocompatible' mode and do have a vimrc file, you
   don't have to do anything.
 - If you prefer to run in 'compatible' mode and do have a vimrc file, you
-  should put this line first in your vimrc file: >
-	:set compatible
+  should put this line first in your vimrc file:
+>	:set compatible
 - If you prefer to run in 'nocompatible' mode and don't have a vimrc file,
   you can do one of the following:
     - Create an empty vimrc file (e.g.: "~/.vimrc" for Unix).
-    - Put this command in your .exrc file or $EXINIT: >
-		:set nocompatible
-<   - Start Vim with the "-N" argument.
+    - Put this command in your .exrc file or $EXINIT:
+>		:set nocompatible
+    - Start Vim with the "-N" argument.
 
 If you are new to Vi and Vim, using 'nocompatible' is strongly recommended,
 because Vi has a lot of unexpected side effects, which are avoided by this
@@ -163,22 +168,22 @@ specifies.  The command for this is now "gq" (see |gq| for more info).  The
 reason for this change is that "Q" is the standard Vi command to enter "Ex"
 mode, and Vim now does in fact have an "Ex" mode (see |Q| for more info).
 
-If you still want to use "Q" for formatting, use this mapping: >
-	:noremap Q gq
-And if you also want to use the functionality of "Q": >
-	:noremap gQ Q
+If you still want to use "Q" for formatting, use this mapping:
+>	:noremap Q gq
+And if you also want to use the functionality of "Q":
+>	:noremap gQ Q
 
 
 Command-line arguments changed				*cmdline-changed*
 ------------------------------
 
 Command-line file-arguments and option-arguments can now be mixed.  You can
-give options after the file names.  Example: >
-   vim main.c -g
+give options after the file names.  Example:
+>  vim main.c -g
 
 This is not possible when editing a file that starts with a '-'.  Use the "--"
-argument then |---|: >
-   vim -g -- -main.c
+argument then |---|:
+>  vim -g -- -main.c
 
 "-v" now means to start Ex in Vi mode, use "-R" for read-only mode.
 old: "vim -v file"	|-v|
@@ -215,22 +220,22 @@ file twice, the autocommands in it will be defined twice.  To avoid this, do
 one of these:
 
 - Remove any autocommands that might potentially defined twice before
-  defining them.  Example: >
-	:au! * *.ext
-	:au BufEnter *.ext ...
+  defining them.  Example:
+>	:au! * *.ext
+>	:au BufEnter *.ext ...
 
-- Put the autocommands inside an ":if" command.  Example: >
-	if !exists("did_ext_autocmds")
-	  let did_ext_autocmds = 1
-	  autocmd BufEnter *.ext ...
-	endif
+- Put the autocommands inside an ":if" command.  Example:
+>	if !exists("did_ext_autocmds")
+>	  let did_ext_autocmds = 1
+>	  autocmd BufEnter *.ext ...
+>	endif
 
 - Put your autocommands in a different autocommand group so you can remove
-  them before defining them |:augroup|: >
-	augroup uncompress
-	  au!
-	  au BufReadPost *.gz ...
-	augroup END
+  them before defining them |:augroup|:
+>	augroup uncompress
+>	  au!
+>	  au BufReadPost *.gz ...
+>	augroup END
 
 
 Use of 'hidden' changed					*hidden-changed*
@@ -316,8 +321,8 @@ Only Tabs are allowed to separate fields in a tags file.  This allows for
 spaces in a file name and is still Vi compatible.  In previous versions of
 Vim, any white space was allowed to separate the fields.  If you have a file
 which doesn't use a single Tab between fields, edit the tags file and execute
-this command: >
-	:%s/\(\S*\)\s\+\(\S*\)\s\+\(.*\)/\1\t\2\t\3/
+this command:
+>	:%s/\(\S*\)\s\+\(\S*\)\s\+\(.*\)/\1\t\2\t\3/
 
 
 Options changed						*options-changed*
@@ -349,8 +354,8 @@ toggle the 'revins' option.  Unfortunately, some people hit the 'B' key
 accidentally when trying to type CTRL-V or CTRL-N and then didn't know how to
 undo this.  Since toggling the 'revins' option can easily be done with the
 mapping below, this use of the CTRL-B key is disabled.  You can still use the
-CTRL-_ key for this |i_CTRL-_|. >
-   :imap <C-B> <C-O>:set revins!<CR>
+CTRL-_ key for this |i_CTRL-_|.
+>  :imap <C-B> <C-O>:set revins!<CR>
 
 ==============================================================================
 				 NEW FEATURES
@@ -359,8 +364,8 @@ Syntax highlighting					*new-highlighting*
 -------------------
 
 Vim now has a very flexible way to highlighting just about any type of file.
-See |syntax|.  Summary: >
-   :syntax on
+See |syntax|.  Summary:
+>  :syntax on
 
 Colors and attributes can be set for the syntax highlighting, and also for
 other highlighted items with the ':' flag in the 'highlight' option.  All
@@ -445,8 +450,8 @@ Read input from stdin					*read-stdin*
 ---------------------
 
 When using the "-" command-line argument, Vim reads its text input from stdin.
-This can be used for putting Vim at the end of a pipe: >
-   grep "^a.*" *.c | vim -
+This can be used for putting Vim at the end of a pipe:
+>  grep "^a.*" *.c | vim -
 See |--|.
 
 
@@ -3150,7 +3155,7 @@ Filetype introduced					*new-filetype-5.4*
 -------------------
 
 Syntax files are now loaded with the new FileType autocommand.  Old
-"mysyntaxfile" files will no longer work. |filetypes|
+"mysyntaxfile" files will no longer work. |autocmd-filetypes|
 
 The scripts for loading syntax highlighting have been changed to use the
 new Syntax autocommand event.
@@ -3184,13 +3189,13 @@ Vim script line continuation			*new-line-continuation*
 
 When an Ex line starts with a backslash, it is concatenated to the previous
 line.  This avoids the need for long lines. |line-continuation| (Roemer)
-Example: >
-	if   has("dialog_con") ||
-	   \ has("dialog_gui")
-	    :let result = confirm("Enter your choice",
-				\ "&Yes\n&No\n&Maybe",
-				\ 2)
-	endif
+Example:
+>	if   has("dialog_con") ||
+>	   \ has("dialog_gui")
+>	    :let result = confirm("Enter your choice",
+>				\ "&Yes\n&No\n&Maybe",
+>				\ 2)
+>	endif
 
 
 Improved session files				*improved-sessions*
@@ -6665,6 +6670,7 @@ cvs		CVS commit (Matt Dunford)
 aspperl		ASP Perl (Aaron Hope)
 bc		BC calculator (Vladimir Scholtz)
 latte		Latte (Nick Moffitt)
+wml 		WML (Gerfried Fuchs)
 
 Included Exuberant ctags 3.5.1. (Darren Hiebert)
 
@@ -7455,4 +7461,351 @@ Solution:   Only set the geometry hints when the window size really changed.
 	    Don't redraw in expose_event() when gui.starting is still set.
 Files:	    src/gui_gtk_x11.c
 
- vim:tw=78:
+
+==============================================================================
+VERSION 5.8						*version-5.8*
+
+Version 5.8 is a bug-fix version of 5.7.
+
+
+Changed							*changed-5.8*
+-------
+
+Ctags is no longer included with Vim.  It has grown into a project of its own.
+You can find it here:  http://ctags.sf.net.  It is highly recommended as a Vim
+companion when you are writing programs.
+
+
+Added							*added-5.8*
+-----
+
+New syntax files:
+acedb		AceDB (Stewart Morris)
+aflex		Aflex (Mathieu Clabaut)
+antlr		Antlr (Mathieu Clabaut)
+asm68k		68000 Assembly (Steve Wall)
+automake	Automake (John Williams)
+ayacc		Ayacc (Mathieu Clabaut)
+b		B (Mathieu Clabaut)
+bindzone	BIND zone (glory hump)
+blank		Blank (Rafal Sulejman)
+cfg		Configure files (Igor Prischepoff)
+changelog	ChangeLog (Gediminas Paulauskas)
+cl		Clever (Phil Uren)
+crontab		Crontab (John Hoelzel)
+csc		Essbase script (Raul Segura Acevedo)
+cynlib		Cynlib(C++) (Phil Derrick)
+cynpp		Cyn++ (Phil Derrick)
+debchangelog	Debian Changelog (Wichert Akkerman)
+debcontrol	Debian Control (Wichert Akkerman)
+dns		DNS zone file (Jehsom)
+dtml		Zope's DTML (Jean Jordaan)
+dylan		Dylan, Dylan-intr and Dylan-lid (Brent Fulgham)
+ecd		Embedix Component Description (John Beppu)
+fgl		Informix 4GL (Rafal Sulejman)
+foxpro		FoxPro (Powing Tse)
+gsp		GNU Server Pages (Nathaniel Harward)
+gtkrc		GTK rc (David Necas)
+hercules	Hercules (Avant! Corporation) (Dana Edwards)
+htmlos		HTML/OS by Aestiva (Jason Rust)
+inittab		SysV process control (David Necas)
+iss		Inno Setup (Dominique Stephan)
+jam		Jam (Ralf Lemke)
+jess		Jess (Paul Baleme)
+lprolog		LambdaProlog (Markus Mottl)
+ia64		Intel Itanium (parth malwankar)
+kix		Kixtart (Nigel Gibbs)
+mgp		MaGic Point (Gerfried Fuchs)
+mason		Mason (HTML with Perl) (Andrew Smith)
+mma		Mathematica (Wolfgang Waltenberger)
+nqc		Not Quite C (Stefan Scherer)
+omnimark	Omnimark (Paul Terray)
+openroad	OpenROAD (Luis Moreno Serrano)
+named		BIND configuration (glory hump)
+papp		PApp (Marc Lehmann)
+pfmain		Postfix main config (Peter Kelemen)
+pic		PIC assembly (Aleksandar Veselinovic)
+ppwiz		PPWizard (Stefan Schwarzer)
+progress	Progress (Phil Uren)
+psf		Product Specification File (Rex Barzee)
+r		R (Tom Payne)
+registry	MS-Windows registry (Dominique Stephan)
+robots		Robots.txt (Dominique Stephan)
+rtf		Rich Text Format (Dominique Stephan)
+setl		SETL (Alex Poylisher)
+sgmldecl	SGML Declarations (Daniel A. Molina W.)
+sinda		Sinda input (Adrian Nagle)
+sindacmp	Sinda compare (Adrian Nagle)
+sindaout	Sinda output (Adrian Nagle)
+smith		SMITH (Rafal Sulejman)
+snobol4		Snobol 4 (Rafal Sulejman)
+strace		Strace (David Necas)
+tak		TAK input (Adrian Nagle)
+takcmp		TAK compare (Adrian Nagle)
+takout		TAK output (Adrian Nagle)
+tasm		Turbo assembly (FooLman)
+texmf		TeX configuration (David Necas)
+trasys		Trasys input (Adrian Nagle)
+tssgm		TSS Geometry (Adrian Nagle)
+tssop		TSS Optics (Adrian Nagle)
+tsscl		TSS Command line (Adrian Nagle)
+virata		Virata Configuration Script (Manuel M.H. Stol)
+vsejcl		VSE JCL (David Ondrejko)
+wdiff		Wordwise diff (Gerfried Fuchs)
+wsh		Windows Scripting Host (Paul Moore)
+xkb		X Keyboard Extension (David Necas)
+
+Renamed php3 to php, it now also supports php4 (Lutz Eymers)
+
+Patch 5.7.015
+Problem:    Syntax files for Vim 6.0 can't be used with 5.x.
+Solution:   Add the "default" argument to the ":highlight" command: Ignore the
+	    command if highlighting was already specified.  
+Files:	    src/syntax.c
+
+Generate the Syntax menu with makemenu.vim, so that it doesn't have to be done
+when Vim is starting up.  Reduces the startup time of the GUI.
+
+
+Fixed							*fixed-5.8*
+-----
+
+Conversion of docs to HTML didn't convert "|tag|s" to a hyperlink.
+
+Fixed compiling under NeXT. (Jeroen C.M. Goudswaard)
+
+optwin.vim gave an error when used in Vi compatible mode ('cpo' contains 'C').
+
+Tcl interpreter: "buffer" command didn't check for precense of an argument.
+(Dave Bodenstab)
+
+dosinst.c: Added checks for too long file name.
+
+Amiga: a file name starting with a colon was considered absolute but it isn't.
+Amiga: ":pwd" added a slash when in the root of a drive.
+
+Macintosh: Warnings for unused variables. (Bernhard Pruemmer)
+
+Unix: When catching a deadly signal, handle it in such a way that it's
+unlikely that Vim will hang.  Call _exit() instead of exit() in case of a
+severe problem.
+
+Setting the window title from nothing to something didn't work after patch 29.
+
+Check for ownership of .exrc and .vimrc was done with stat().  Use lstat() as
+well for extra security.
+
+Win32 GUI: Printing a file with 'fileformat' "unix" didn't work.  Set
+'fileformat' to "dos" before writing the temp file.
+
+Unix: Could start waiting for a character when checking for a CTRL-C typed
+when an X event is received.
+
+Could not use Perl and Python at the same time on FreeBSD, because Perl used
+"-lc" and Python used the threaded C library.
+
+Win32: The Mingw compiler gave a few warning messages.
+
+When using "ZZ" and an autocommand for writing uses an abbreviation it didn't
+work.  Don't stuff the ":x" command but execute it directly. (Mikael Berthe)
+
+VMS doesn't always have lstat(), added an #ifdef around it.
+
+Added a few corrections for the Macintosh. (Axel Kielhorn)
+
+Win32: Gvimext could not edit more than a few files at once, the length of the
+argument was fixed.
+
+
+Previosly released patches for Vim 5.7:
+
+Patch 5.7.001
+Problem:    When the current buffer is crypted, and another modified buffer
+	    isn't, ":wall" will encrypt the other buffer.
+Solution:   In buf_write() use "buf" instead of "curbuf" to check for the
+	    crypt key.
+Files:	    src/fileio.c
+
+Patch 5.7.002
+Problem:    When 'showmode' is set, using "CTRL-O :r file" waits three seconds
+	    before displaying the read text. (Wichert Akkerman)
+Solution:   Set "keep_msg" to the file message so that the screen is redrawn
+	    before the three seconds wait for displaying the mode message.
+Files:	    src/fileio.c
+
+Patch 5.7.003
+Problem:    Searching for "[[:cntrl:]]" doesn't work.
+Solution:   Exclude NUL from the matching characters, it terminates the list.
+Files:	    src/regexp.c
+
+Patch 5.7.004
+Problem:    GTK: When selecting a new font, Vim can crash.
+Solution:   In gui_mch_init_font() unreference the old font, not the new one.
+Files:	    src/gui_gtk_x11.c
+
+Patch 5.7.005
+Problem:    Multibyte: Inserting a wrapped line corrupts kterm screen.
+	    Pasting TEXT/COMPOUND_TEXT into Vim does not work.
+	    On Motif no XIM status line is displayed even though it is
+	    available.
+Solution:   Don't use xterm trick for wrapping lines for multibyte mode.
+	    Correct a missing "break", added TEXT/COMPOUND_TEXT selection
+	    request.
+	    Add XIMStatusArea fallback code.
+	    (Katsuhito Nagano)
+Files:	    src/gui_gtk_x11.c, src/multbyte.c, src/screen.c, src/ui.c
+
+Patch 5.7.006
+Problem:    GUI: redrawing the non-Visual selection is wrong when the window
+	    is unobscured. (Jean-Pierre Etienne)
+Solution:   Redraw the selection properly and don't clear it.  Added "len"
+	    argument to clip_may_redraw_selection().
+Files:	    src/gui.c, src/ui.c, src/proto/ui.pro
+
+Patch 5.7.007
+Problem:    Python: Crash when using the current buffer twice.
+Solution:   Increase the reference count for buffer and window objects.
+	    (Johannes Zellner)
+Files:	    src/if_python.c
+
+Patch 5.7.008
+Problem:    In Ex mode, backspacing over the first TAB doesn't work properly.
+	    (Wichert Akkerman)
+Solution:   Switch the cursor on before printing the newline.
+Files:	    src/ex_getln.c
+
+Patch 5.7.009 (extra)
+Problem:    Mac: Crash when using a long file.
+Solution:   Don't redefine malloc() and free(), because it will break using
+	    realloc().
+Files:	    src/os_mac.h
+
+Patch 5.7.010
+Problem:    When using CTRL-A on a very long number Vim can crash.  (Michael
+	    Naumann)
+Solution:   Truncate the length of the new number to avoid a buffer overflow.
+Files:	    src/ops.c
+
+Patch 5.7.011 (extra)
+Problem:    Win32 GUI on NT 5 and Win98: Displaying Hebrew is reversed.
+Solution:   Output each character separately, to avoid that Windows reverses
+	    the text for some fonts. (Ron Aaron)
+Files:	    src/gui_w32.c
+
+Patch 5.7.012
+Problem:    When using "-complete=buffer" for ":command" the user command
+	    fails.
+Solution:   In a user command don't replace the buffer name with a count for
+	    the  buffer number.
+Files:	    src/ex_docmd.c
+
+Patch 5.7.013
+Problem:    "gD" didn't always find a match in the first line, depending on
+	    the column the search started at.
+Solution:   Reset the column to zero before starting to search.
+Files:	    src/normal.c
+
+Patch 5.7.014
+Problem:    Rot13 encoding was done on characters with accents, which is
+	    wrong. (Sven Gottwald)
+Solution:   Only do rot13 encoding on ASCII characters.
+Files:	    src/ops.c
+
+Patch 5.7.016
+Problem:    When hitting 'n' for a ":s///c" command, the ignore-case flag was
+	    not restored, some matches were skipped. (Daniel Blaustein)
+Solution:   Restore the reg_ic variable when 'n' was hit.
+Files:	    src/ex_cmds.c
+
+Patch 5.7.017
+Problem:    When using a Vim script for Vim 6.0 with <SID> before a function
+	    name, it produces an error message even when inside an "if version
+	    >= 600".  (Charles Campbell)
+Solution:   Ignore errors in the function name when the function is not going
+	    to be defined.
+Files:	    src/eval.c
+
+Patch 5.7.018
+Problem:    When running "rvim" or "vim -Z" it was still possible to execute a
+	    shell command with system() and backtick-expansion. (Antonios A.
+	    Kavarnos)
+Solution:   Disallow executing a shell command in get_cmd_output() and
+	    mch_expand_wildcards().
+Files:	    src/misc1.c, src/os_unix.c
+
+Patch 5.7.019
+Problem:    Multibyte: In a substitute string, a multi-byte character isn't
+	    skipped properly, can be a problem when the second byte is a
+	    backslash.
+Solution:   Skip an extra byte for a double-byte character. (Muraoka Taro)
+Files:	    src/ex_cmds.c
+
+Patch 5.7.020
+Problem:    Compilation doesn't work on MacOS-X.
+Solution:   Add a couple of #ifdefs. (Jamie Curmi)
+Files:	    src/regexp.c, src/ctags/general.h
+
+Patch 5.7.021
+Problem:    Vim sometimes produces a beep when started in an xterm.  Only
+	    happens when compiled without mouse support.
+Solution:   Requesting the xterm version results in a K_IGNORE.  This wasn't
+	    handled when mouse support is disabled.  Accept K_IGNORE always.
+Files:	    src/normal.c
+
+Patch 5.7.022
+Problem:    %v in 'statusline' is not displayed when it's equal to %c.
+Solution:   Check if %V or %v is used and handle them differently.
+Files:	    src/screen.c
+
+Patch 5.7.023
+Problem:    Crash when a WinLeave autocommand deletes the buffer in the other
+	    window.
+Solution:   Check that after executing the WinLeave autocommands there still
+	    is a window to be closed.  Also update the test that was supposed
+	    to check for this problem.
+Files:	    src/window.c, testdir/test13.in, testdir/test13.ok
+
+Patch 5.7.024
+Problem:    Evaluating an expression for 'statusline' can have side effects.
+Solution:   Evaluate the expression in a sandbox.
+Files:	    src/edit.c, src/eval.c, src/proto/eval.pro, src/ex_cmds.c,
+	    src/ex_cmds.h, src/ex_docmd.c, src/globals.h, src/option.c,
+	    src/screen.c, src/undo.c
+
+Patch 5.7.025 (fixed)
+Problem:    Creating a temp file has a race condition.
+Solution:   Create a private directory to write the temp files in.
+Files:	    src/fileio.c, src/misc1.c, src/proto/misc1.pro,
+	    src/proto/fileio.pro, src/memline.c, src/os_unix.h
+
+Patch 5.7.026 (extra)
+Problem:    Creating a temp file has a race condition.
+Solution:   Create a private directory to write the temp files in.
+	    This is the extra part of patch 5.7.025.
+Files:	    src/os_msdos.h
+
+Patch 5.7.027
+Problem:    Starting to edit a file can cause a crash.  For example when in
+	    Insert mode, using CTRL-O :help abbr<Tab> to scroll the screen and
+	    then <CR>, which edits a help file. (Robert Bogomip)
+Solution:   Check if keep_msg is NULL before copying it.
+Files:	    src/fileio.c
+
+Patch 5.7.028
+Problem:    Creating a backup or swap file could fail in rare situations.
+Solution:   Use O_EXCL for open().
+Files:	    src/fileio.c, src/memfile.c
+
+Patch 5.7.029
+Problem:    Editing a file with an extremely long name crashed Vim.
+Solution:   Check for length of the name when setting the window title.
+Files:	    src/buffer.c
+
+Patch 5.7.030
+Problem:    A ":make" or ":grep" command with a very long argument could cause
+	    a crash.
+Solution:   Allocate the buffer for the shell command.
+Files:	    src/ex_docmd.c
+
+
+ vim:ts=8:sw=8:tw=78:

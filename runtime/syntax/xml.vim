@@ -21,7 +21,13 @@
 "   http://www.w3.org/XML/1998/06/xmlspec-report-19980910.htm
 "
 
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " Following items are case-sensitive
 " Case-insensitive rules can be specified by 'syn case ignore' later
@@ -70,31 +76,39 @@ syn sync match xmlHighlight groupthere NONE "<[/a-zA-Z]"
 syn sync match xmlHighlightSkip "^.*['\"].*$"
 syn sync minlines=10
 
-if !exists("did_xml_syntax_inits")
-  let did_xml_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  "
-  hi link xmlTodo                      Todo
-  hi link xmlTag                       Function
-  hi link xmlEndTag                    Identifier
-  hi link xmlSpecial                   Special
-  hi link xmlSpecialChar               Special
-  hi link xmlString                    String
-  hi link xmlComment                   Comment
-  hi link xmlCommentPart               Comment
-  hi link xmlCommentError              xmlError
-  hi link xmlTagError                  xmlError
-  hi link xmlError                     Error
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_xml_syntax_inits")
+  if version < 508
+    let did_xml_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-  hi link xmlProcessingDelim           Comment
-  hi link xmlProcessing                Type
-  hi link xmlCdata                     Normal
-  hi link xmlCdataDecl                 String
-  hi link xmlDocType                   Normal
-  hi link xmlDocTypeDecl               Function
-  hi link xmlDocTypeKeyword            Statement
-  hi link xmlInlineDTD                 Function
+  HiLink xmlTodo                      Todo
+  HiLink xmlTag                       Function
+  HiLink xmlEndTag                    Identifier
+  HiLink xmlSpecial                   Special
+  HiLink xmlSpecialChar               Special
+  HiLink xmlString                    String
+  HiLink xmlComment                   Comment
+  HiLink xmlCommentPart               Comment
+  HiLink xmlCommentError              xmlError
+  HiLink xmlTagError                  xmlError
+  HiLink xmlError                     Error
 
+  HiLink xmlProcessingDelim           Comment
+  HiLink xmlProcessing                Type
+  HiLink xmlCdata                     Normal
+  HiLink xmlCdataDecl                 String
+  HiLink xmlDocType                   Normal
+  HiLink xmlDocTypeDecl               Function
+  HiLink xmlDocTypeKeyword            Statement
+  HiLink xmlInlineDTD                 Function
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "xml"

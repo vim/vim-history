@@ -1,24 +1,41 @@
 " Vim syntax file
 " Language:	Yacc
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	July 6, 1999
+" Last Change:	March 1, 2001
+" Option:
+"   yacc_uses_cpp : if this variable exists, then C++ is loaded rather than C
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " Read the C syntax to start with
-source <sfile>:p:h/c.vim
+if version >= 600
+  if exists("yacc_uses_cpp")
+    runtime! syntax/cpp.vim
+  else
+    runtime! syntax/c.vim
+  endif
+elseif exists("yacc_uses_cpp")
+  so <sfile>:p:h/cpp.vim
+else
+  so <sfile>:p:h/c.vim
+endif
 
 " Clusters
 syn cluster	yaccActionGroup	contains=yaccDelim,cInParen,cTodo,cIncluded,yaccDelim,yaccCurlyError,yaccUnionCurly,yaccUnion,cUserLabel,cOctalZero,cCppOut2,cCppSkip,cErrInBracket,cErrInParen,cOctalError,cCommentStartError,cParenError
 syn cluster	yaccUnionGroup	contains=yaccKey,cComment,yaccCurly,cType,cStructure,cStorageClass,yaccUnionCurly
 
 " Yacc stuff
-syn match	yaccDelim	"^[ \t]*[:|;]"
+syn match	yaccDelim	"^\s*[:|;]"
 syn match	yaccOper	"@\d\+"
 
-syn match	yaccKey	"^[ \t]*%\(token\|type\|left\|right\|start\|ident\)\>"
-syn match	yaccKey	"[ \t]%\(prec\|expect\|nonassoc\)\>"
+syn match	yaccKey	"^\s*%\(token\|type\|left\|right\|start\|ident\|nonassoc\)\>"
+syn match	yaccKey	"\s%\(prec\|expect\)\>"
 syn match	yaccKey	"\$\(<[a-zA-Z_][a-zA-Z_0-9]*>\)\=[\$0-9]\+"
 syn keyword	yaccKeyActn	yyerrok yyclearin
 
@@ -38,29 +55,39 @@ syn match	yaccSep	"^[ \t]*%}"
 syn match	yaccCurlyError	"[{}]"
 syn region	yaccAction	matchgroup=yaccCurly start="{" end="}" contains=ALLBUT,@yaccActionGroup
 
-if !exists("did_yacc_syntax_inits")
-  " The default methods for highlighting.  Can be overridden later
-  let did_yacc_syntax_inits = 1
+
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_yacc_syn_inits")
+  if version < 508
+    let did_yacchdl_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
   " Internal yacc highlighting links
-  hi link yaccBrkt	yaccStmt
-  hi link yaccKey	yaccStmt
-  hi link yaccOper	yaccStmt
-  hi link yaccUnionStart	yaccKey
+  HiLink yaccBrkt	yaccStmt
+  HiLink yaccKey	yaccStmt
+  HiLink yaccOper	yaccStmt
+  HiLink yaccUnionStart	yaccKey
 
   " External yacc highlighting links
-  hi link yaccCurly	Delimiter
-  hi link yaccCurlyError	Error
-  hi link yaccDefinition	Function
-  hi link yaccDelim	Function
-  hi link yaccKeyActn	Special
-  hi link yaccSectionSep	Todo
-  hi link yaccSep	Delimiter
-  hi link yaccStmt	Statement
-  hi link yaccType	Type
+  HiLink yaccCurly	Delimiter
+  HiLink yaccCurlyError	Error
+  HiLink yaccDefinition	Function
+  HiLink yaccDelim	Function
+  HiLink yaccKeyActn	Special
+  HiLink yaccSectionSep	Todo
+  HiLink yaccSep	Delimiter
+  HiLink yaccStmt	Statement
+  HiLink yaccType	Type
 
   " since Bram doesn't like my Delimiter :|
-  hi link Delimiter	Type
+  HiLink Delimiter	Type
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "yacc"

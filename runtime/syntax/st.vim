@@ -1,10 +1,15 @@
 " Vim syntax file
 " Language:	Smalltalk
 " Maintainer:	Arndt Hesse <hesse@self.de>
-" Last Change:	1997 Dec 24
+" Last Change:	2001 May 09
 
-" remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " some Smalltalk keywords and standard methods
 syn keyword	stKeyword	super self class true false new not
@@ -68,19 +73,30 @@ hi link stBlockError stError
 " synchronization for syntax analysis
 syn sync minlines=50
 
-if !exists("did_st_syntax_inits")
-  let did_st_syntax_inits = 1
-  hi link stKeyword		Statement
-  hi link stMethod		Statement
-  hi link stComment		Comment
-  hi link stCharacter		Constant
-  hi link stString		Constant
-  hi link stSymbol		Special
-  hi link stNumber		Type
-  hi link stFloat		Type
-  hi link stError		Error
-  hi link stLocalVariables	Identifier
-  hi link stBlockVariable	Identifier
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_st_syntax_inits")
+  if version < 508
+    let did_st_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink stKeyword		Statement
+  HiLink stMethod		Statement
+  HiLink stComment		Comment
+  HiLink stCharacter		Constant
+  HiLink stString		Constant
+  HiLink stSymbol		Special
+  HiLink stNumber		Type
+  HiLink stFloat		Type
+  HiLink stError		Error
+  HiLink stLocalVariables	Identifier
+  HiLink stBlockVariable	Identifier
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "st"

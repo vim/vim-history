@@ -1,12 +1,16 @@
 " Vim syntax file
 " Language:	abc music notation language
 " Maintainer:	James Allwright <J.R.Allwright@westminster.ac.uk>
-" URL:		http://perun.hscs.wmin.ac.uk/vim/syntax/abc.vim
-" Last Change:	26th May 1999
+" URL:		http://perun.hscs.wmin.ac.uk/~jra/vim/syntax/abc.vim
+" Last Change:	27th April 2001
 
-" Remove any old syntax stuff hanging around
-syn clear
-
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " tags
 syn region abcGuitarChord start=+"[A-G]+ end=+"+ contained
@@ -30,18 +34,29 @@ syn region abcHeader start="^X:" end="^K:.*$" contained contains=abcHeadField,ab
 syn region abcTune start="^X:" end="^ *$" contains=abcHeader,abcComment,abcBar,abcNote,abcBodyField,abcGuitarChord,abcTuple,abcBroken,abcTie
 syn match abcComment "%.*$"
 
-if !exists("did_abc_syntax_inits")
-  let did_abc_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link abcComment		Comment
-  hi link abcHeadField		Type
-  hi link abcBodyField		Special
-  hi link abcBar			Statement
-  hi link abcTuple			Statement
-  hi link abcBroken			Statement
-  hi link abcTie			Statement
-  hi link abcGuitarChord	Identifier
-  hi link abcNote			Constant
+
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_abc_syn_inits")
+  if version < 508
+    let did_abc_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink abcComment		Comment
+  HiLink abcHeadField		Type
+  HiLink abcBodyField		Special
+  HiLink abcBar			Statement
+  HiLink abcTuple			Statement
+  HiLink abcBroken			Statement
+  HiLink abcTie			Statement
+  HiLink abcGuitarChord	Identifier
+  HiLink abcNote			Constant
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "abc"

@@ -1,12 +1,17 @@
 " Vim syntax file
 " Language:	M$ Resource files (*.rc)
 " Maintainer:	Heiko Erhardt <Heiko.Erhardt@munich.netsurf.de>
-" Last Change:	1998 Feb 16
+" Last Change:	2001 May 09
 
 " This file is based on the c.vim
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " Common RC keywords
 syn keyword rcLanguage LANGUAGE
@@ -139,45 +144,55 @@ syn region rcPreProc		start="^\s*#\s*\(pragma\>\|line\>\|warning\>\|warn\>\|erro
 
 syn sync ccomment rcComment minlines=10
 
-if !exists("did_rc_syntax_inits")
-  let did_rc_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link rcCharacter	Character
-  hi link rcSpecialCharacter rcSpecial
-  hi link rcNumber	Number
-  hi link rcFloat	Float
-  hi link rcOctalError	rcError
-  hi link rcParenError	rcError
-  hi link rcInParen	rcError
-  hi link rcCommentError	rcError
-  hi link rcInclude	Include
-  hi link rcPreProc	PreProc
-  hi link rcDefine	Macro
-  hi link rcIncluded	rcString
-  hi link rcError	Error
-  hi link rcPreCondit	PreCondit
-  hi link rcCommentString rcString
-  hi link rcComment2String rcString
-  hi link rcCommentSkip	rcComment
-  hi link rcString	String
-  hi link rcComment	Comment
-  hi link rcSpecial	SpecialChar
-  hi link rcTodo	Todo
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_rc_syntax_inits")
+  if version < 508
+    let did_rc_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-  hi link rcAttribute	rcCommonAttribute
-  hi link rcStdId	rcStatement
-  hi link rcStatement	Statement
+  HiLink rcCharacter	Character
+  HiLink rcSpecialCharacter rcSpecial
+  HiLink rcNumber	Number
+  HiLink rcFloat	Float
+  HiLink rcOctalError	rcError
+  HiLink rcParenError	rcError
+  HiLink rcInParen	rcError
+  HiLink rcCommentError	rcError
+  HiLink rcInclude	Include
+  HiLink rcPreProc	PreProc
+  HiLink rcDefine	Macro
+  HiLink rcIncluded	rcString
+  HiLink rcError	Error
+  HiLink rcPreCondit	PreCondit
+  HiLink rcCommentString rcString
+  HiLink rcComment2String rcString
+  HiLink rcCommentSkip	rcComment
+  HiLink rcString	String
+  HiLink rcComment	Comment
+  HiLink rcSpecial	SpecialChar
+  HiLink rcTodo	Todo
+
+  HiLink rcAttribute	rcCommonAttribute
+  HiLink rcStdId	rcStatement
+  HiLink rcStatement	Statement
 
   " Default color overrides
-  hi rcLanguage		term=reverse ctermbg=Red ctermfg=Yellow guibg=Red guifg=Yellow
-  hi rcMainObject	term=underline ctermfg=Blue guifg=Blue
-  hi rcSubObject	ctermfg=Green guifg=Green
-  hi rcCaptionParam	term=underline ctermfg=DarkGreen guifg=Green
-  hi rcParam		ctermfg=DarkGreen guifg=DarkGreen
-  hi rcStatement	ctermfg=DarkGreen guifg=DarkGreen
-  hi rcCommonAttribute	ctermfg=Brown guifg=Brown
+  hi def rcLanguage	term=reverse ctermbg=Red ctermfg=Yellow guibg=Red guifg=Yellow
+  hi def rcMainObject	term=underline ctermfg=Blue guifg=Blue
+  hi def rcSubObject	ctermfg=Green guifg=Green
+  hi def rcCaptionParam	term=underline ctermfg=DarkGreen guifg=Green
+  hi def rcParam	ctermfg=DarkGreen guifg=DarkGreen
+  hi def rcStatement	ctermfg=DarkGreen guifg=DarkGreen
+  hi def rcCommonAttribute	ctermfg=Brown guifg=Brown
 
-  "hi link rcIdentifier	Identifier
+  "HiLink rcIdentifier	Identifier
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "rc"

@@ -4,8 +4,13 @@
 " Last Change:	May 18, 1998
 " Notes:		This file includes both SysV and BSD 'isms
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " Options: -word
 syn keyword exportsKeyOptions contained	alldirs	nohide	ro	wsync
@@ -31,21 +36,32 @@ syn match exportsSeparator	"[,:]"
 " comments
 syn match exportsComment	"^\s*#.*$"
 
-if !exists("did_exports_syntax_inits")
-  let did_exports_syntax_inits = 1
-  hi link exportsKeyOptSet	exportsKeySettings
-  hi link exportsOptSet	exportsSettings
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_exports_syntax_inits")
+  if version < 508
+    let did_exports_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-  hi link exportsComment	Comment
-  hi link exportsKeyOptions	Type
-  hi link exportsKeySettings	Keyword
-  hi link exportsOptions	Constant
-  hi link exportsSeparator	Constant
-  hi link exportsSettings	Constant
+  HiLink exportsKeyOptSet	exportsKeySettings
+  HiLink exportsOptSet	exportsSettings
 
-  hi link exportsOptError	Error
-  hi link exportsOptSetError	Error
-  hi link exportsSetError	Error
+  HiLink exportsComment	Comment
+  HiLink exportsKeyOptions	Type
+  HiLink exportsKeySettings	Keyword
+  HiLink exportsOptions	Constant
+  HiLink exportsSeparator	Constant
+  HiLink exportsSettings	Constant
+
+  HiLink exportsOptError	Error
+  HiLink exportsOptSetError	Error
+  HiLink exportsSetError	Error
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "exports"

@@ -2,10 +2,15 @@
 " Language:	ASN.1
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/asn.vim
-" Last Change:	1998 Mar 7
+" Last Change:	2001 Apr 26
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " keyword definitions
 syn keyword asnExternal		DEFINITIONS BEGIN END IMPORTS EXPORTS FROM
@@ -41,26 +46,34 @@ syn match asnBraces     "[{}]"
 
 syn sync ccomment asnComment
 
-if !exists("did_asn_syntax_inits")
-  let did_asn_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link asnDefinition		Function
-  hi link asnBraces		Function
-  hi link asnStructure		Statement
-  hi link asnBoolValue		Boolean
-  hi link asnSpecial		Special
-  hi link asnString		String
-  hi link asnCharacter		Character
-  hi link asnSpecialCharacter	asnSpecial
-  hi link asnNumber		asnValue
-  hi link asnComment		Comment
-  hi link asnLineComment	asnComment
-  hi link asnType		Type
-  hi link asnTypeInfo		PreProc
-  hi link asnValue		Number
-  hi link asnExternal		Include
-  hi link asnTagModifier	Function
-  hi link asnFieldOption	Type
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_asn_syn_inits")
+  if version < 508
+    let did_asn_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+  HiLink asnDefinition	Function
+  HiLink asnBraces		Function
+  HiLink asnStructure	Statement
+  HiLink asnBoolValue	Boolean
+  HiLink asnSpecial		Special
+  HiLink asnString		String
+  HiLink asnCharacter	Character
+  HiLink asnSpecialCharacter	asnSpecial
+  HiLink asnNumber		asnValue
+  HiLink asnComment		Comment
+  HiLink asnLineComment	asnComment
+  HiLink asnType		Type
+  HiLink asnTypeInfo		PreProc
+  HiLink asnValue		Number
+  HiLink asnExternal		Include
+  HiLink asnTagModifier	Function
+  HiLink asnFieldOption	Type
+  delcommand HiLink
 endif
 
 let b:current_syntax = "asn"

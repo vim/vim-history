@@ -4,11 +4,20 @@
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Last Change:	April 23, 1999
 
-" Removes any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " Read the C syntax to start with
-source <sfile>:p:h/c.vim
+if version < 600
+  source <sfile>:p:h/c.vim
+else
+  runtime! syntax/c.vim
+endif
 
 syn keyword rpcProgram	program				skipnl skipwhite nextgroup=rpcProgName
 syn match   rpcProgName	contained	"\<\i\I*\>"	skipnl skipwhite nextgroup=rpcProgZone
@@ -21,20 +30,31 @@ syn match   rpcProcNmbr	contained	"=\s*\d\+;"me=e-1
 syn match   rpcProgNmbrErr contained	"=\s*0x[^23]\x*"ms=s+1
 syn match   rpcPassThru			"^\s*%.*$"
 
-if !exists("did_rpcgen_syntax_inits")
- let did_rpcgen_syntax_inits = 1
- hi link rpcProgName	rpcName
- hi link rpcProgram	rpcStatement
- hi link rpcVersName	rpcName
- hi link rpcVersion	rpcStatement
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_rpcgen_syntax_inits")
+  if version < 508
+    let did_rpcgen_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
- hi link rpcDecl	cType
- hi link rpcPassThru	cComment
+  HiLink rpcProgName	rpcName
+  HiLink rpcProgram	rpcStatement
+  HiLink rpcVersName	rpcName
+  HiLink rpcVersion	rpcStatement
 
- hi link rpcName	Special
- hi link rpcProcNmbr	Delimiter
- hi link rpcProgNmbrErr	Error
- hi link rpcStatement	Statement
+  HiLink rpcDecl	cType
+  HiLink rpcPassThru	cComment
+
+  HiLink rpcName	Special
+  HiLink rpcProcNmbr	Delimiter
+  HiLink rpcProgNmbrErr	Error
+  HiLink rpcStatement	Statement
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "rpcgen"

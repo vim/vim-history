@@ -1,10 +1,15 @@
 " Vim syntax file
 " Language:	Metafont
 " Maintainer:	Andreas Scherer <andreas.scherer@pobox.com>
-" Last Change:	April 26, 1998
+" Last Change:	April 25, 2001
 
-" Removes any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syn clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " Metafont 'primitives' as defined in chapter 25 of 'The METAFONTbook'
 " Page 210: 'boolean expressions'
@@ -151,30 +156,40 @@ syn match mfComment	"%.*$"
 " synchronizing
 syn sync maxlines=50
 
-if !exists("did_mf_syntax_inits")
-  let did_mf_syntax_inits = 1
-  " The default methods for highlighting. Can be overridden later
-  hi link mfBoolExp	Statement
-  hi link mfNumExp	Statement
-  hi link mfInternal	Identifier
-  hi link mfPairExp	Statement
-  hi link mfPathExp	Statement
-  hi link mfPenExp	Statement
-  hi link mfPicExp	Statement
-  hi link mfStringExp	Statement
-  hi link mfCommand	Statement
-  hi link mfType	Type
-  hi link mfStatement	Statement
-  hi link mfDefinition	Statement
-  hi link mfCondition	Conditional
-  hi link mfPrimitive	Statement
-  hi link mfMacro	Macro
-  hi link mfCoord	Identifier
-  hi link mfPoint	Identifier
-  hi link mfNumeric	Number
-  hi link mfLength	Number
-  hi link mfComment	Comment
-  hi link mfString	String
+" Define the default highlighting
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_mf_syntax_inits")
+  if version < 508
+    let did_mf_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink mfBoolExp	Statement
+  HiLink mfNumExp	Statement
+  HiLink mfInternal	Identifier
+  HiLink mfPairExp	Statement
+  HiLink mfPathExp	Statement
+  HiLink mfPenExp	Statement
+  HiLink mfPicExp	Statement
+  HiLink mfStringExp	Statement
+  HiLink mfCommand	Statement
+  HiLink mfType	Type
+  HiLink mfStatement	Statement
+  HiLink mfDefinition	Statement
+  HiLink mfCondition	Conditional
+  HiLink mfPrimitive	Statement
+  HiLink mfMacro	Macro
+  HiLink mfCoord	Identifier
+  HiLink mfPoint	Identifier
+  HiLink mfNumeric	Number
+  HiLink mfLength	Number
+  HiLink mfComment	Comment
+  HiLink mfString	String
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "mf"

@@ -1,27 +1,32 @@
 " Vim syntax file
 " Language:	CHILL
 " Maintainer:	YoungSang Yoon <image@lgic.co.kr>
-" Last change:	2000 May 7
+" Last change:	2001 May 10
 "
 
-" first created by image@lgic.co.kr & modified by paris@lgic.co.kr 
+" first created by image@lgic.co.kr & modified by paris@lgic.co.kr
 
-" CHILL (CCITT High Level Programming Language) is used for 
+" CHILL (CCITT High Level Programming Language) is used for
 " developing software of ATM switch at LGIC (LG Information
 " & Communications LTd.)
 
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " A bunch of useful CHILL keywords
 syn keyword	chStatement	goto GOTO return RETURN returns RETURNS
-syn keyword	chLabel		CASE case ESAC esac 
+syn keyword	chLabel		CASE case ESAC esac
 syn keyword	chConditional	if IF else ELSE elsif ELSIF switch SWITCH THEN then FI fi
 syn keyword	chLogical	NOT not
 syn keyword	chRepeat	while WHILE for FOR do DO od OD TO to
-syn keyword 	chProcess	START start STACKSIZE stacksize PRIORITY priority THIS this STOP stop 
-syn keyword 	chBlock		PROC proc PROCESS process
+syn keyword	chProcess	START start STACKSIZE stacksize PRIORITY priority THIS this STOP stop
+syn keyword	chBlock		PROC proc PROCESS process
 syn keyword	chSignal	RECEIVE receive SEND send NONPERSISTENT nonpersistent PERSISTENT peristent SET set EVER ever
 
 syn keyword	chTodo		contained TODO FIXME XXX
@@ -82,11 +87,11 @@ syntax match	chCommentError	"\*/"
 syn keyword	chOperator	SIZE size
 syn keyword	chType		dcl DCL int INT char CHAR bool BOOL REF ref LOC loc INSTANCE instance
 syn keyword	chStructure	struct STRUCT enum ENUM newmode NEWMODE synmode SYNMODE
-"syn keyword	chStorageClass	
+"syn keyword	chStorageClass
 syn keyword	chBlock		PROC proc END end
-syn keyword 	chScope		GRANT grant SEIZE seize
-syn keyword 	chEDML		select SELECT delete DELETE update UPDATE in IN seq SEQ WHERE where INSERT insert include INCLUDE exclude EXCLUDE
-syn keyword 	chBoolConst	true TRUE false FALSE
+syn keyword	chScope		GRANT grant SEIZE seize
+syn keyword	chEDML		select SELECT delete DELETE update UPDATE in IN seq SEQ WHERE where INSERT insert include INCLUDE exclude EXCLUDE
+syn keyword	chBoolConst	true TRUE false FALSE
 
 syn region	chPreCondit	start="^\s*#\s*\(if\>\|ifdef\>\|ifndef\>\|elif\>\|else\>\|endif\>\)" skip="\\$" end="$" contains=chComment,chString,chCharacter,chNumber,chCommentError,chSpaceError
 syn region	chIncluded	contained start=+"+ skip=+\\\\\|\\"+ end=+"+
@@ -118,57 +123,67 @@ if !exists("ch_minlines")
 endif
 exec "syn sync ccomment chComment minlines=" . ch_minlines
 
-if !exists("did_ch_syntax_inits")
-  let did_ch_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link chLabel	Label
-  hi link chUserLabel	Label
-  hi link chConditional	Conditional
-"  hi chConditional	term=bold ctermfg=red guifg=red gui=bold
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_ch_syntax_inits")
+  if version < 508
+    let did_ch_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-  hi link chRepeat	Repeat
-  hi link chProcess	Repeat
-  hi link chSignal	Repeat
-  hi link chCharacter	Character
-  hi link chSpecialCharacter chSpecial
-  hi link chNumber	Number
-  hi link chFloat	Float
-  hi link chOctalError	chError
-  hi link chParenError	chError
-  hi link chInParen	chError
-  hi link chCommentError	chError
-  hi link chSpaceError	chError
-  hi link chOperator	Operator
-  hi link chStructure	Structure
-  hi link chBlock 	Operator
-  hi link chScope 	Operator
+  HiLink chLabel	Label
+  HiLink chUserLabel	Label
+  HiLink chConditional	Conditional
+  " hi chConditional	term=bold ctermfg=red guifg=red gui=bold
+
+  HiLink chRepeat	Repeat
+  HiLink chProcess	Repeat
+  HiLink chSignal	Repeat
+  HiLink chCharacter	Character
+  HiLink chSpecialCharacter chSpecial
+  HiLink chNumber	Number
+  HiLink chFloat	Float
+  HiLink chOctalError	chError
+  HiLink chParenError	chError
+  HiLink chInParen	chError
+  HiLink chCommentError	chError
+  HiLink chSpaceError	chError
+  HiLink chOperator	Operator
+  HiLink chStructure	Structure
+  HiLink chBlock	Operator
+  HiLink chScope	Operator
   "hi chEDML     term=underline ctermfg=DarkRed guifg=Red
-  hi link chEDML	PreProc
+  HiLink chEDML	PreProc
   "hi chBoolConst	term=bold ctermfg=brown guifg=brown
-  hi link chBoolConst	Constant
+  HiLink chBoolConst	Constant
   "hi chLogical	term=bold ctermfg=brown guifg=brown
-  hi link chLogical	Constant
-  hi link chStorageClass	StorageClass
-  hi link chInclude	Include
-  hi link chPreProc	PreProc
-  hi link chDefine	Macro
-  hi link chIncluded	chString
-  hi link chError	Error
-  hi link chStatement	Statement
-  hi link chPreCondit	PreCondit
-  hi link chType	Type
-  hi link chCommentError	chError
-  hi link chCommentString chString
-  hi link chComment2String chString
-  hi link chCommentSkip	chComment
-  hi link chString	String
-  hi link chComment	Comment
-"  hi chComment	term=None ctermfg=lightblue guifg=lightblue
-  hi link chSpecial	SpecialChar
-  hi link chTodo	Todo
-  hi link chBlock	Statement
-  "hi link chIdentifier	Identifier
-  hi link chBracket 	Delimiter
+  HiLink chLogical	Constant
+  HiLink chStorageClass	StorageClass
+  HiLink chInclude	Include
+  HiLink chPreProc	PreProc
+  HiLink chDefine	Macro
+  HiLink chIncluded	chString
+  HiLink chError	Error
+  HiLink chStatement	Statement
+  HiLink chPreCondit	PreCondit
+  HiLink chType	Type
+  HiLink chCommentError	chError
+  HiLink chCommentString chString
+  HiLink chComment2String chString
+  HiLink chCommentSkip	chComment
+  HiLink chString	String
+  HiLink chComment	Comment
+  " hi chComment	term=None ctermfg=lightblue guifg=lightblue
+  HiLink chSpecial	SpecialChar
+  HiLink chTodo	Todo
+  HiLink chBlock	Statement
+  "HiLink chIdentifier	Identifier
+  HiLink chBracket	Delimiter
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "ch"

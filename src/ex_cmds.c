@@ -3094,6 +3094,11 @@ do_sub(eap)
 		    cmd[0] = Ctrl('V');
 		++cmd;
 	    }
+#ifdef MULTI_BYTE
+	    /* skip an extra byte for a double-byte character */
+	    if (is_dbcs && cmd[1] != NUL && IsLeadByte(cmd[0]))
+		++cmd;
+#endif
 	    ++cmd;
 	}
 

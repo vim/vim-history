@@ -1,13 +1,22 @@
 " Vim syntax file
 " Language:	ESQL-C
 " Maintainer:	Jonathan A. George <jageorge@tel.gte.com>
-" Last Change:	1998 Aug 12
+" Last Change:	2001 May 09
 
-" Remove any old syntax stuff hanging around
-syntax clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " Read the C++ syntax to start with
-source <sfile>:p:h/cpp.vim
+if version < 600
+  source <sfile>:p:h/cpp.vim
+else
+  runtime! syntax/cpp.vim
+endif
 
 " ESQL-C extentions
 
@@ -42,13 +51,24 @@ syntax keyword esqlcStatement	delete drop explain grant insert lock noaudit
 syntax keyword esqlcStatement	rename revoke rollback savepoint select set
 syntax keyword esqlcStatement	truncate update
 
-if !exists("did_esqlc_syntax_inits")
-  let did_esqlc_syntax_inits = 1
-  highlight link esqlcOperator	Operator
-  highlight link esqlcStatement	Statement
-  highlight link esqlcKeyword	esqlcSpecial
-  highlight link esqlcSpecial	Special
-  highlight link esqlcPreProc	PreProc
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_esqlc_syntax_inits")
+  if version < 508
+    let did_esqlc_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink esqlcOperator	Operator
+  HiLink esqlcStatement	Statement
+  HiLink esqlcKeyword	esqlcSpecial
+  HiLink esqlcSpecial	Special
+  HiLink esqlcPreProc	PreProc
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "esqlc"

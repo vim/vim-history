@@ -1,11 +1,16 @@
 " Vim syntax file:
-" Language:	Clipper 5.2
-" Maintainer:	Claudio R Zamana <zamana@zip.net>
+" Language:	Clipper 5.2 & FlagShip
+" Maintainer:	C R Zamana <zamana@zip.net>
 " Some things based on c.vim by Bram Moolenaar and pascal.vim by Mario Eusebio
-" Last Change:	1999 Aug 16
+" Last Change:	Sat Sep 09 2000
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " Exceptions for my "Very Own" (TM) user variables naming style.
 " If you don't like this, comment it
@@ -46,7 +51,7 @@ syn keyword clipperStatement	DBSORTITEM DBTRANSINFO DBTRANSITEM WORKAREA
 
 " Conditionals
 syn keyword clipperConditional	CASE OTHERWISE ENDCASE
-syn keyword clipperConditional	IF ELSE ENDIF IIF
+syn keyword clipperConditional	IF ELSE ENDIF IIF IFDEF IFNDEF
 
 " Loops
 syn keyword clipperRepeat	DO WHILE ENDDO
@@ -93,7 +98,7 @@ if exists("c_comment_strings")
   syntax match clipperCommentSkip	contained "^\s*\*\($\|\s\+\)"
   syntax region clipperCommentString	contained start=+"+ skip=+\\\\\|\\"+ end=+"+ end=+\*/+me=s-1 contains=clipperCommentSkip
   syntax region clipperComment2String	contained start=+"+ skip=+\\\\\|\\"+ end=+"+ end="$"
-  syntax region clipperComment		start="/\*" end="\*/" contains=clipperCommentString,clipperCharacter,clipperNumber
+  syntax region clipperComment		start="/\*" end="\*/" contains=clipperCommentString,clipperCharacter,clipperNumber,clipperString
   syntax match  clipperComment		"//.*" contains=clipperComment2String,clipperCharacter,clipperNumber
 else
   syn region clipperComment		start="/\*" end="\*/"
@@ -101,25 +106,38 @@ else
 endif
 syntax match clipperCommentError	"\*/"
 
+" Lines beggining with an "*" are comments too
+syntax match clipperComment		"^\*.*"
 
-if !exists("did_clipper_syntax_inits")
-  let did_clipper_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link clipperConditional		Conditional
-  hi link clipperRepeat			Repeat
-  hi link clipperNumber			Number
-  hi link clipperInclude		Include
-  hi link clipperComment		Comment
-  hi link clipperOperator		Operator
-  hi link clipperStorageClass		StorageClass
-  hi link clipperStatement		Statement
-  hi link clipperString			String
-  hi link clipperFunction		Function
-  hi link clipperLineContinuation	Special
-  hi link clipperDelimiters		Delimiter
-  hi link clipperUserVariable		Identifier
+
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_clipper_syntax_inits")
+  if version < 508
+    let did_clipper_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink clipperConditional		Conditional
+  HiLink clipperRepeat			Repeat
+  HiLink clipperNumber			Number
+  HiLink clipperInclude		Include
+  HiLink clipperComment		Comment
+  HiLink clipperOperator		Operator
+  HiLink clipperStorageClass		StorageClass
+  HiLink clipperStatement		Statement
+  HiLink clipperString			String
+  HiLink clipperFunction		Function
+  HiLink clipperLineContinuation	Special
+  HiLink clipperDelimiters		Delimiter
+  HiLink clipperUserVariable		Identifier
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "clipper"
 
-" vim: ts=8
+" vim: ts=4

@@ -1,10 +1,15 @@
 " Vim syntax file
 " Language:	GNU Assembler
 " Maintainer:	Kevin Dahlhausen <ap096@po.cwru.edu>
-" Last Change:	2000 Feb 09
+" Last Change:	2001 May 09
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 syn case ignore
 
@@ -55,33 +60,42 @@ syn match asmDirective		"\.[a-z][a-z]\+"
 
 syn case match
 
-if !exists("did_asm_syntax_inits")
-  let did_asm_syntax_inits = 1
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_asm_syntax_inits")
+  if version < 508
+    let did_asm_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
   " The default methods for highlighting.  Can be overridden later
-  hi link asmSection	Special
-  hi link asmLabel	Label
-  hi link asmComment	Comment
-  hi link asmDirective	Statement
+  HiLink asmSection	Special
+  HiLink asmLabel	Label
+  HiLink asmComment	Comment
+  HiLink asmDirective	Statement
 
-  hi link asmInclude	Include
-  hi link asmCond	PreCondit
-  hi link asmMacro	Macro
+  HiLink asmInclude	Include
+  HiLink asmCond	PreCondit
+  HiLink asmMacro	Macro
 
-  hi link hexNumber	Number
-  hi link decNumber	Number
-  hi link octNumber	Number
-  hi link binNumber	Number
+  HiLink hexNumber	Number
+  HiLink decNumber	Number
+  HiLink octNumber	Number
+  HiLink binNumber	Number
 
-  hi link asmSpecialComment Comment
-  hi link asmIdentifier Identifier
-  hi link asmType	Type
+  HiLink asmSpecialComment Comment
+  HiLink asmIdentifier Identifier
+  HiLink asmType	Type
 
   " My default color overrides:
   " hi asmSpecialComment ctermfg=red
   " hi asmIdentifier ctermfg=lightcyan
   " hi asmType ctermbg=black ctermfg=brown
 
+  delcommand HiLink
 endif
 
 let b:current_syntax = "asm"

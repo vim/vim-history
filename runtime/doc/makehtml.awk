@@ -3,7 +3,6 @@ BEGIN   {
 	asciiart="no";
 	wasset="no";
 	lineset=0;
-	sample="no";
 	while ( getline ti <"tags.ref" > 0 ) {
 		nf=split(ti,tag,"	");
 		tagkey[tag[1]]="yes";tagref[tag[1]]=tag[2];
@@ -35,19 +34,9 @@ BEGIN   {
 #
 /[><&]/ {gsub(/&/,"\\&amp;");gsub(/>/,"\\&gt;");gsub(/</,"\\&lt;")}
 #
-# end of sample lines by non-blank in first column
-#
-sample == "yes" && substr($0,1,4) == "&lt;" { sample = "no"; gsub(/^&lt;/, " "); }
-sample == "yes" && substr($0,1,1) != " " && substr($0,1,1) != "	" && length($0) > 0 { sample = "no" }
-#
 # sample lines printed bold
 #
-sample == "yes" { print "<B>" $0 "</B>"; next; }
-#
-# start of sample lines in next line
-#
-$0 == "&gt;" { sample = "yes"; print ""; next; }
-substr($0,length($0)-4,5) == " &gt;" { sample = "yes"; gsub(/ &gt;$/, ""); }
+substr($0,1,4) == "&gt;" { print "<B>" substr($0,5,length($0)-4) "</B>"; next; }
 #
 # header lines printed bold, colored
 #
@@ -105,7 +94,7 @@ substr($0,length($0),1) == "~" { print "<B><FONT COLOR=\"PURPLE\">" substr($0,1,
 # pipe end
 #
 /[^ 	]\|$/ && asciiart == "no" {gsub(/\|$/,"YXXY");}
-/[^ 	]\|[ ,.);	]/ && asciiart == "no" {gsub(/\|/,"YXXY");}
+/[^ 	]\|[s ,.);	]/ && asciiart == "no" {gsub(/\|/,"YXXY");}
 /[^ 	]\|]/ && asciiart == "no" {gsub(/\|/,"YXXY");}
 #
 # various

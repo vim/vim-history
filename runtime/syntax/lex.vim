@@ -1,13 +1,33 @@
 " Vim syntax file
 " Language:	Lex
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	July 6, 2000
+" Last Change:	February 1, 2001
+" Option:
+"   lex_uses_cpp : if this variable exists, then C++ is loaded rather than C
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " Read the C syntax to start with
-so <sfile>:p:h/c.vim
+if version >= 600
+  if exists("lex_uses_cpp")
+    runtime! syntax/cpp.vim
+  else
+    runtime! syntax/c.vim
+  endif
+  unlet b:current_syntax
+else
+  if exists("lex_uses_cpp")
+    so <sfile>:p:h/cpp.vim
+  else
+    so <sfile>:p:h/c.vim
+  endif
+endif
 
 " --- Lex stuff ---
 
@@ -53,22 +73,20 @@ syn sync match lexSyncPat	grouphere  lexPatBlock	"^%[a-zA-Z]"
 syn sync match lexSyncPat	groupthere lexPatBlock	"^<$"
 syn sync match lexSyncPat	groupthere lexPatBlock	"^%%$"
 
-if !exists("did_lex_syntax_inits")
-  let did_lex_synax_inits = 1
-  hi link	lexSlashQuote	lexPat
-  hi link	lexBrace		lexPat
-  hi link lexAbbrvComment	lexPatComment
+" The default highlighting.
+hi def link lexSlashQuote	lexPat
+hi def link lexBrace	lexPat
+hi def link lexAbbrvComment	lexPatComment
 
-  hi link	lexAbbrv		SpecialChar
-  hi link	lexAbbrvRegExp	Macro
-  hi link	lexCFunctions	Function
-  hi link	lexMorePat	SpecialChar
-  hi link	lexPat		Function
-  hi link	lexPatComment	Comment
-  hi link	lexPatString	Function
-  hi link	lexPatTag		Special
-  hi link	lexSep		Delimiter
-endif
+hi def link lexAbbrv	SpecialChar
+hi def link lexAbbrvRegExp	Macro
+hi def link lexCFunctions	Function
+hi def link lexMorePat	SpecialChar
+hi def link lexPat		Function
+hi def link lexPatComment	Comment
+hi def link lexPatString	Function
+hi def link lexPatTag	Special
+hi def link lexSep		Delimiter
 
 let b:current_syntax = "lex"
 

@@ -1,16 +1,20 @@
 " Vim syntax file
 " Language:	Texinfo (macro package for TeX)
-" Maintainer:	Sandor Kopanyi <sandor.kopanyi@altavista.net>
+" Maintainer:	Sandor Kopanyi <sandor.kopanyi@mailbox.hu>
 " URL:		<->
-" Last Change:	2000 Jun 14
+" Last Change:	2001 Apr 30
 "
 " the file follows the Texinfo manual structure; this file is based
 " on manual for Texinfo version 4.0, 28 September 1999
 " since @ can have special meanings, everything is 'match'-ed and 'region'-ed
 " (including @ in 'iskeyword' option has unexpected effects)
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Remove any old syntax stuff hanging around, if needed
+if version < 600
+  syn clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 if !exists("main_syntax")
   let main_syntax = 'texinfo'
@@ -352,39 +356,49 @@ syn cluster texinfoReducedAll contains=texinfoSpecialChar,texinfoBrcPrmAtCmd
 "==============================================================================
 " highlighting
 
-if !exists("did_texinfo_syntax_inits")
-  let did_texinfo_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_texinfo_syn_inits")
 
-  hi link texinfoSpecialChar	Special
-  hi link texinfoHFSpecialChar	Special
+  if version < 508
+    let did_texinfo_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-  hi link texinfoError		Error
-  hi link texinfoIdent		Identifier
-  hi link texinfoAssignment	Identifier
-  hi link texinfoSinglePar	Identifier
-  hi link texinfoIndexPar	Identifier
-  hi link texinfoSIPar		Identifier
-  hi link texinfoDIEPar		Identifier
-  hi link texCommand		PreProc
+  HiLink texinfoSpecialChar	Special
+  HiLink texinfoHFSpecialChar	Special
+
+  HiLink texinfoError		Error
+  HiLink texinfoIdent		Identifier
+  HiLink texinfoAssignment	Identifier
+  HiLink texinfoSinglePar	Identifier
+  HiLink texinfoIndexPar	Identifier
+  HiLink texinfoSIPar		Identifier
+  HiLink texinfoDIEPar		Identifier
+  HiLink texCommand		PreProc
 
 
-  hi link texinfoAtCmd		Statement	"@-command
-  hi link texinfoPrmAtCmd	String		"@-command in one line with unknown nr. of parameters
+  HiLink texinfoAtCmd		Statement	"@-command
+  HiLink texinfoPrmAtCmd	String		"@-command in one line with unknown nr. of parameters
 						"is String because is found as a region and is 'matchgroup'-ed
 						"to texinfoAtCmd
-  hi link texinfoBrcPrmAtCmd	String		"@-command with parameter(s) in braces ({})
+  HiLink texinfoBrcPrmAtCmd	String		"@-command with parameter(s) in braces ({})
 						"is String because is found as a region and is 'matchgroup'-ed to texinfoAtCmd
-  hi link texinfoMltlnAtCmdFLine  texinfoAtCmd	"repeated embedded First lines in @-commands
-  hi link texinfoMltlnAtCmd	String		"@-command in multiple lines
+  HiLink texinfoMltlnAtCmdFLine  texinfoAtCmd	"repeated embedded First lines in @-commands
+  HiLink texinfoMltlnAtCmd	String		"@-command in multiple lines
 						"is String because is found as a region and is 'matchgroup'-ed to texinfoAtCmd
-  hi link texinfoMltln2AtCmd	PreProc		"@-command in multiple lines (same as texinfoMltlnAtCmd, just with other colors)
-  hi link texinfoMltlnDMAtCmd	PreProc		"@-command in multiple lines (same as texinfoMltlnAtCmd, just with other colors; used for @detailmenu, which can be included in @menu)
-  hi link texinfoMltlnNAtCmd	Normal		"@-command in multiple lines (same as texinfoMltlnAtCmd, just with other colors)
-  hi link texinfoThisAtCmd	Statement	"@-command used in headers and footers (@this... series)
+  HiLink texinfoMltln2AtCmd	PreProc		"@-command in multiple lines (same as texinfoMltlnAtCmd, just with other colors)
+  HiLink texinfoMltlnDMAtCmd	PreProc		"@-command in multiple lines (same as texinfoMltlnAtCmd, just with other colors; used for @detailmenu, which can be included in @menu)
+  HiLink texinfoMltlnNAtCmd	Normal		"@-command in multiple lines (same as texinfoMltlnAtCmd, just with other colors)
+  HiLink texinfoThisAtCmd	Statement	"@-command used in headers and footers (@this... series)
 
-  hi link texinfoComment	Comment
+  HiLink texinfoComment	Comment
+
+  delcommand HiLink
 endif
+
 
 let b:current_syntax = "texinfo"
 

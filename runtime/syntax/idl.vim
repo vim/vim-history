@@ -1,14 +1,19 @@
 " Vim syntax file
 " Language:	IDL (Interface Description Language)
-" Maintainer:	Jody Goldberg <jodyg@idt.net>
-" Last Change:	1997 Nov 20
+" Maintainer:	Jody Goldberg <jgoldberg@home.com>
+" Last Change:	2001 May 09
 
 " This is an experiment.  IDL's structure is simple enough to permit a full
 " grammar based approach to rather than using a few heuristics.  The result
 " is large and somewhat repetative but seems to work.
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " Misc basic
 syn match	idlId		contained "[a-zA-Z][a-zA-Z0-9_]*"
@@ -30,7 +35,7 @@ syn match  idlCommentError	"\*/"
 " C style Preprocessor
 syn region idlIncluded contained start=+"+  skip=+\\\(\\\\\)*"+  end=+"+
 syn match  idlIncluded contained "<[^>]*>"
-syn match  idlInclude		"^[ \t]*#[ \t]*include\>[ \t]*["<]" contains=idlIncluded, idlString
+syn match  idlInclude		"^[ \t]*#[ \t]*include\>[ \t]*["<]" contains=idlIncluded,idlString
 syn region idlPreCondit	start="^[ \t]*#[ \t]*\(if\>\|ifdef\>\|ifndef\>\|elif\>\|else\>\|endif\>\)"  skip="\\$"  end="$" contains=idlComment,idlCommentError
 syn region idlDefine	start="^[ \t]*#[ \t]*\(define\>\|undef\>\)" skip="\\$" end="$" contains=idlLiteral, idlString
 
@@ -74,7 +79,7 @@ syn keyword idlContext	contained context	skipempty skipwhite nextgroup=idlRaises
 " Operation
 syn match   idlParmList	contained "," skipempty skipwhite nextgroup=idlOpParms
 syn region  idlArraySize contained start="\[" end="\]"	skipempty skipwhite nextgroup=idlArraySize,idlParmList contains=idlArraySize,idlLiteral
-syn match   idlParmName contained "[a-zA-Z0-9_]\+"	skipempty skipwhite nextgroup=idlParmList, idlArraySize
+syn match   idlParmName contained "[a-zA-Z0-9_]\+"	skipempty skipwhite nextgroup=idlParmList,idlArraySize
 syn keyword idlParmInt	contained short long		skipempty skipwhite nextgroup=idlParmName
 syn keyword idlParmType	contained unsigned		skipempty skipwhite nextgroup=idlParmInt
 syn region  idlD3	contained start="<" end=">"	skipempty skipwhite nextgroup=idlParmName	contains=idlString,idlLiteral
@@ -95,7 +100,7 @@ syn keyword idlOp	contained void			skipempty skipwhite nextgroup=idlOpName
 syn keyword idlOneWayOp	contained oneway		skipempty skipwhite nextgroup=idOp
 
 " Enum
-syn region  idlEnumContents contained start="{" end="}"		skipempty skipwhite nextgroup=idlSemiColon, idlSimpDecl contains=idlId
+syn region  idlEnumContents contained start="{" end="}"		skipempty skipwhite nextgroup=idlSemiColon, idlSimpDecl contains=idlId,idlComment
 syn match   idlEnumName contained	"[a-zA-Z0-9_]\+"	skipempty skipwhite nextgroup=idlEnumContents
 syn keyword idlEnum			enum			skipempty skipwhite nextgroup=idlEnumName
 
@@ -111,7 +116,7 @@ syn keyword idlStruct			struct		 skipempty skipwhite nextgroup=idlStructName
 syn keyword idlException exception skipempty skipwhite nextgroup=idlStructName
 
 " Union
-syn match   idlColon contained ":"	skipempty skipwhite nextgroup=idlCase, idlSeqType,idlBaseType,idlBaseTypeInt
+syn match   idlColon contained ":"	skipempty skipwhite nextgroup=idlCase,idlSeqType,idlBaseType,idlBaseTypeInt
 syn region  idlCaseLabel contained start="" skip="::" end=":"me=e-1	skipempty skipwhite nextgroup=idlColon contains=idlLiteral,idlString
 syn keyword idlCase		contained case				skipempty skipwhite nextgroup=idlCaseLabel
 syn keyword idlCase		contained default			skipempty skipwhite nextgroup=idlColon
@@ -123,64 +128,74 @@ syn keyword idlUnion		union				skipempty skipwhite nextgroup=idlUnionName
 
 syn sync lines=200
 
-if !exists("did_idl_syntax_inits")
-  let did_idl_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link idlInclude	Include
-  hi link idlPreProc	PreProc
-  hi link idlPreCondit	PreCondit
-  hi link idlDefine	Macro
-  hi link idlIncluded	String
-  hi link idlString	String
-  hi link idlComment	Comment
-  hi link idlTodo	Todo
-  hi link idlLiteral	Number
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_idl_syntax_inits")
+  if version < 508
+    let did_idl_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-  hi link idlModule	Keyword
-  hi link idlInterface	Keyword
-  hi link idlEnum	Keyword
-  hi link idlStruct	Keyword
-  hi link idlUnion	Keyword
-  hi link idlTypedef	Keyword
-  hi link idlException	Keyword
+  HiLink idlInclude		Include
+  HiLink idlPreProc		PreProc
+  HiLink idlPreCondit		PreCondit
+  HiLink idlDefine		Macro
+  HiLink idlIncluded		String
+  HiLink idlString		String
+  HiLink idlComment		Comment
+  HiLink idlTodo		Todo
+  HiLink idlLiteral		Number
 
-  hi link idlModuleName		Typedef
-  hi link idlInterfaceName	Typedef
-  hi link idlEnumName		Typedef
-  hi link idlStructName		Typedef
-  hi link idlUnionName		Typedef
+  HiLink idlModule		Keyword
+  HiLink idlInterface		Keyword
+  HiLink idlEnum		Keyword
+  HiLink idlStruct		Keyword
+  HiLink idlUnion		Keyword
+  HiLink idlTypedef		Keyword
+  HiLink idlException		Keyword
 
-  hi link idlBaseTypeInt	idlType
-  hi link idlBaseType		idlType
-  hi link idlSeqType		idlType
-  hi link idlD1			Paren
-  hi link idlD2			Paren
-  hi link idlD3			Paren
-  hi link idlD4			Paren
-  "hi link idlArraySize		Paren
-  "hi link idlArraySize1	Paren
-  hi link idlModuleContent	Paren
-  hi link idlUnionContent	Paren
-  hi link idlStructContent	Paren
-  hi link idlEnumContents	Paren
-  hi link idlInterfaceContent	Paren
+  HiLink idlModuleName		Typedef
+  HiLink idlInterfaceName	Typedef
+  HiLink idlEnumName		Typedef
+  HiLink idlStructName		Typedef
+  HiLink idlUnionName		Typedef
 
-  hi link idlSimpDecl		Identifier
-  hi link idlROAttr		StorageClass
-  hi link idlAttr		Keyword
-  hi link idlConst		StorageClass
+  HiLink idlBaseTypeInt		idlType
+  HiLink idlBaseType		idlType
+  HiLink idlSeqType		idlType
+  HiLink idlD1			Paren
+  HiLink idlD2			Paren
+  HiLink idlD3			Paren
+  HiLink idlD4			Paren
+  "HiLink idlArraySize		Paren
+  "HiLink idlArraySize1		Paren
+  HiLink idlModuleContent	Paren
+  HiLink idlUnionContent	Paren
+  HiLink idlStructContent	Paren
+  HiLink idlEnumContents	Paren
+  HiLink idlInterfaceContent	Paren
 
-  hi link idlOneWayOp	StorageClass
-  hi link idlOp		idlType
-  hi link idlParmType	idlType
-  hi link idlOpName	Function
-  hi link idlOpParms	StorageClass
-  hi link idlParmName	Identifier
-  hi link idlInheritFrom	Identifier
+  HiLink idlSimpDecl		Identifier
+  HiLink idlROAttr		StorageClass
+  HiLink idlAttr		Keyword
+  HiLink idlConst		StorageClass
 
-  hi link idlId		Constant
-  "hi link idlCase	Keyword
-  hi link idlCaseLabel	Constant
+  HiLink idlOneWayOp		StorageClass
+  HiLink idlOp			idlType
+  HiLink idlParmType		idlType
+  HiLink idlOpName		Function
+  HiLink idlOpParms		StorageClass
+  HiLink idlParmName		Identifier
+  HiLink idlInheritFrom		Identifier
+
+  HiLink idlId			Constant
+  "HiLink idlCase		Keyword
+  HiLink idlCaseLabel		Constant
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "idl"

@@ -1,13 +1,17 @@
 " Vim syntax file
 " Language:	Icon
-" Maintainer:	Wendell Turner <wturner@halcyon.com>
+" Maintainer:	Wendell Turner <wendell@adsi-m4.com>
 " URL:          ftp://ftp.halcyon.com/pub/users/wturner/icon.vim
-" Last Change:	2000 Jan 9
+" Last Change:	2001 May 4
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
-" Builtin Functions
 syn keyword  iconFunction   abs acos any args asin atan bal
 syn keyword  iconFunction   callout center char chdir close collect copy
 syn keyword  iconFunction   cos cset delay delete detab display dtor
@@ -81,6 +85,7 @@ syn keyword	iconTodo	contained TODO FIXME XXX BUG
 " Highlight special characters (those which have a backslash) differently
 syn match iconSpecial contained "\\x\x\{2}\|\\\o\{3\}\|\\[bdeflnrtv\"\'\\]\|\\^c[a-zA-Z0-9]\|\\$"
 syn region	iconString	start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=iconSpecial
+syn region	iconCset	start=+'+ skip=+\\\\\|\\'+ end=+'+ contains=iconSpecial
 syn match	iconCharacter	"'[^\\]'"
 
 " not sure about these
@@ -150,45 +155,58 @@ if !exists("icon_minlines")
 endif
 exec "syn sync ccomment iconComment minlines=" . icon_minlines
 
-if !exists("did_icon_syntax_inits")
-  let did_icon_syntax_inits = 1
+" Define the default highlighting.
+
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting
+if version >= 508 || !exists("did_icon_syn_inits")
+  if version < 508
+    let did_icon_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
   " The default methods for highlighting.  Can be overridden later
 
-  " hi link iconSpecialCharacter	iconSpecial
+  " HiLink iconSpecialCharacter	iconSpecial
 
-  hi link iconOctalError	iconError
-  hi link iconParenError	iconError
-  hi link iconInParen		iconError
-  hi link iconCommentError	iconError
-  hi link iconSpaceError	iconError
-  hi link iconCommentError	iconError
-  hi link iconIncluded		iconString
-  hi link iconCommentString	iconString
-  hi link iconComment2String	iconString
-  hi link iconCommentSkip	iconComment
+  HiLink iconOctalError		iconError
+  HiLink iconParenError		iconError
+  HiLink iconInParen		iconError
+  HiLink iconCommentError	iconError
+  HiLink iconSpaceError		iconError
+  HiLink iconCommentError	iconError
+  HiLink iconIncluded		iconString
+  HiLink iconCommentString	iconString
+  HiLink iconComment2String	iconString
+  HiLink iconCommentSkip	iconComment
 
-  hi link iconUserLabel		Label
-  hi link iconCharacter		Character
-  hi link iconNumber		Number
-  hi link iconRadix		Number
-  hi link iconFloat		Float
-  hi link iconInclude		Include
-  hi link iconPreProc		PreProc
-  hi link iconDefine		Macro
-  hi link iconError		Error
-  hi link iconStatement		Statement
-  hi link iconPreCondit		PreCondit
-  hi link iconString		String
-  hi link iconComment		Comment
-  hi link iconSpecial		SpecialChar
-  hi link iconTodo		Todo
-  hi link iconStorageClass	StorageClass
-  hi link iconFunction		Statement
-  hi link iconReserved		Label
-  hi link iconKeyword		Operator
+  HiLink iconUserLabel		Label
+  HiLink iconCharacter		Character
+  HiLink iconNumber			Number
+  HiLink iconRadix			Number
+  HiLink iconFloat			Float
+  HiLink iconInclude		Include
+  HiLink iconPreProc		PreProc
+  HiLink iconDefine			Macro
+  HiLink iconError			Error
+  HiLink iconStatement		Statement
+  HiLink iconPreCondit		PreCondit
+  HiLink iconString			String
+  HiLink iconCset			String
+  HiLink iconComment		Comment
+  HiLink iconSpecial		SpecialChar
+  HiLink iconTodo			Todo
+  HiLink iconStorageClass	StorageClass
+  HiLink iconFunction		Statement
+  HiLink iconReserved		Label
+  HiLink iconKeyword		Operator
 
-  "hi link iconIdentifier	Identifier
+  "HiLink iconIdentifier	Identifier
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "icon"
+

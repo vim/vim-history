@@ -1,6 +1,6 @@
 This is another proof that Vim is perfectly compatible with Vi.
 The URM macro package was written by Rudolf Koenig ("Rudi")
-(rfkoenig@immd4.uni-erlangen.de) for hpux-vi in August 1991.
+(rudolf@koeniglich.de) for hpux-vi in August 1991.
 
 Getting started:
 

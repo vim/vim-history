@@ -5,8 +5,13 @@
 " Last Change:	14th May 1999
 " Web Page:	N/A
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " DOS bat files are case insensitive but case preserving!
 syn case ignore
@@ -87,39 +92,49 @@ syn keyword dosbatchImplicit    ren rename replace restore rmdir set setlocal sh
 syn keyword dosbatchImplicit    sort start subst time title tree type ver verify
 syn keyword dosbatchImplicit    vol xcopy
 
-if !exists("did_dosbatch_syntax_inits")
-  let did_dosbatch_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link dosbatchTodo			Todo
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_dosbatch_syntax_inits")
+  if version < 508
+    let did_dosbatch_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-  hi link dosbatchStatement		Statement
-  hi link dosbatchCommands		dosbatchStatement
-  hi link dosbatchLabel			Label
-  hi link dosbatchConditional		Conditional
-  hi link dosbatchRepeat		Repeat
+  HiLink dosbatchTodo		Todo
 
-  hi link dosbatchOperator              Operator
-  hi link dosbatchEchoOperator          dosbatchOperator
-  hi link dosbatchIfOperator            dosbatchOperator
+  HiLink dosbatchStatement	Statement
+  HiLink dosbatchCommands	dosbatchStatement
+  HiLink dosbatchLabel		Label
+  HiLink dosbatchConditional	Conditional
+  HiLink dosbatchRepeat		Repeat
 
-  hi link dosbatchArgument		Identifier
-  hi link dosbatchIdentifier            Identifier
-  hi link dosbatchVariable		dosbatchIdentifier
+  HiLink dosbatchOperator       Operator
+  HiLink dosbatchEchoOperator   dosbatchOperator
+  HiLink dosbatchIfOperator     dosbatchOperator
 
-  hi link dosbatchSpecialChar		SpecialChar
-  hi link dosbatchString		String
-  hi link dosbatchNumber		Number
-  hi link dosbatchInteger		dosbatchNumber
-  hi link dosbatchHex			dosbatchNumber
-  hi link dosbatchBinary		dosbatchNumber
-  hi link dosbatchOctal			dosbatchNumber
+  HiLink dosbatchArgument	Identifier
+  HiLink dosbatchIdentifier     Identifier
+  HiLink dosbatchVariable	dosbatchIdentifier
 
-  hi link dosbatchComment		Comment
-  hi link dosbatchImplicit		Function
+  HiLink dosbatchSpecialChar	SpecialChar
+  HiLink dosbatchString		String
+  HiLink dosbatchNumber		Number
+  HiLink dosbatchInteger	dosbatchNumber
+  HiLink dosbatchHex		dosbatchNumber
+  HiLink dosbatchBinary		dosbatchNumber
+  HiLink dosbatchOctal		dosbatchNumber
 
-  hi link dosbatchSwitch                Special
+  HiLink dosbatchComment	Comment
+  HiLink dosbatchImplicit	Function
 
-  hi link dosbatchCmd                   PreProc
+  HiLink dosbatchSwitch         Special
+
+  HiLink dosbatchCmd            PreProc
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "dosbatch"

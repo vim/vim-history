@@ -5,8 +5,13 @@
 " URL: http://www.datatone.com/~robb/vim/syntax/masm.vim
 " $Revision$
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 syn case ignore
 
@@ -106,22 +111,32 @@ syn keyword masmOpFloat		FUCOMPP FWAIT FXAM FXCH FXTRACT FYL2X FYL2XP1
 syn match   masmOpFloat		"FSTSW[ \t]\+AX"
 syn match   masmOpFloat		"FNSTSW[ \t]\+AX"
 
-if !exists("did_masm_syntax_inits")
-  let did_masm_syntax_inits = 1
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_masm_syntax_inits")
+  if version < 508
+    let did_masm_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
   " The default methods for highlighting.  Can be overridden later
-  hi link masmLabel	Label
-  hi link masmComment	Comment
-  hi link masmDirective	Statement
-  hi link masmOperator	Statement
-  hi link masmString	String
+  HiLink masmLabel	Label
+  HiLink masmComment	Comment
+  HiLink masmDirective	Statement
+  HiLink masmOperator	Statement
+  HiLink masmString	String
 
-  hi link masmHexadecimal Number
-  hi link masmDecimal	Number
-  hi link masmBinary	Number
-  hi link masmFloat	Number
+  HiLink masmHexadecimal Number
+  HiLink masmDecimal	Number
+  HiLink masmBinary	Number
+  HiLink masmFloat	Number
 
-  hi link masmIdentifier Identifier
+  HiLink masmIdentifier Identifier
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "masm"

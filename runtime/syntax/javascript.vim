@@ -2,18 +2,21 @@
 " Language:	JavaScript
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/javascript.vim
-" Last Change:	1999 Apr 20
+" Last Change:	2001 Apr 26
 
-
-" Remove any old syntax stuff hanging around
-syn clear
-syn case ignore
-
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
 if !exists("main_syntax")
+  if version < 600
+    syntax clear
+  elseif exists("b:current_syntax")
+  finish
+endif
   let main_syntax = 'javascript'
 endif
 
-let b:current_syntax = "javascript"
+syn case ignore
+
 
 syn match   javaScriptLineComment      "\/\/.*$"
 syn match   javaScriptCommentSkip      "^[ \t]*\*\($\|[ \t]\+\)"
@@ -44,28 +47,37 @@ if main_syntax == "javascript"
   syn sync ccomment javaScriptComment
 endif
 
-if !exists("did_javascript_syntax_inits")
-  let did_javascript_syntax_inits = 1
-  hi link javaScriptComment           Comment
-  hi link javaScriptLineComment       Comment
-  hi link javaScriptSpecial           Special
-  hi link javaScriptStringS           String
-  hi link javaScriptStringD           String
-  hi link javaScriptCharacter         Character
-  hi link javaScriptSpecialCharacter  javaScriptSpecial
-  hi link javaScriptNumber            javaScriptValue
-  hi link javaScriptConditional       Conditional
-  hi link javaScriptRepeat            Repeat
-  hi link javaScriptBranch            Conditional
-  hi link javaScriptOperator          Operator
-  hi link javaScriptType              Type
-  hi link javaScriptStatement         Statement
-  hi link javaScriptFunction          Function
-  hi link javaScriptBraces            Function
-  hi link javaScriptError             Error
-  hi link javaScrParenError           javaScriptError
-  hi link javaScriptInParen           javaScriptError
-  hi link javaScriptBoolean           Boolean
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_javascript_syn_inits")
+  if version < 508
+    let did_javascript_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+  HiLink javaScriptComment           Comment
+  HiLink javaScriptLineComment       Comment
+  HiLink javaScriptSpecial           Special
+  HiLink javaScriptStringS           String
+  HiLink javaScriptStringD           String
+  HiLink javaScriptCharacter         Character
+  HiLink javaScriptSpecialCharacter  javaScriptSpecial
+  HiLink javaScriptNumber            javaScriptValue
+  HiLink javaScriptConditional       Conditional
+  HiLink javaScriptRepeat            Repeat
+  HiLink javaScriptBranch            Conditional
+  HiLink javaScriptOperator          Operator
+  HiLink javaScriptType              Type
+  HiLink javaScriptStatement         Statement
+  HiLink javaScriptFunction          Function
+  HiLink javaScriptBraces            Function
+  HiLink javaScriptError             Error
+  HiLink javaScrParenError           javaScriptError
+  HiLink javaScriptInParen           javaScriptError
+  HiLink javaScriptBoolean           Boolean
+  delcommand HiLink
 endif
 
 let b:current_syntax = "javascript"

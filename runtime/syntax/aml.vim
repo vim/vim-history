@@ -1,20 +1,25 @@
 " Vim syntax file
-" Language:	AML (ARC/INFO Arc Macro Language)	
+" Language:	AML (ARC/INFO Arc Macro Language)
 " Written By:	Nikki Knuit <Nikki.Knuit@gems3.gov.bc.ca>
 " Maintainer:	Todd Glover <todd.glover@gems9.gov.bc.ca>
-" Last Change:	1999-November-04 
+" Last Change:	2001 May 10
 
 " FUTURE CODING:  Bold application commands after &sys, &tty
 "		  Only highlight aml Functions at the beginning
-"		    of [], in order to avoid -read highlighted, 
+"		    of [], in order to avoid -read highlighted,
 "		    or [quote] strings highlighted
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
-syn case ignore 
+syn case ignore
 
-" ARC, ARCEDIT, ARCPLOT, LIBRARIAN, GRID, SCHEMAEDIT reserved words, 
+" ARC, ARCEDIT, ARCPLOT, LIBRARIAN, GRID, SCHEMAEDIT reserved words,
 " defined as keywords.
 
 syn keyword amlArcCmd contained  2button abb abb[reviations] abs ac acos acosh add addc[ogoatt] addcogoatt addf[eatureclass] addh[istory] addi addim[age] addindexatt addit[em] additem addressb[uild] addressc[reate] addresse[rrors] addressedit addressm[atch] addressp[arse] addresst[est] addro[utemeasure] addroutemeasure addte[xt] addto[stack] addw[orktable] addx[y] adj[ust] adm[inlicense] adr[ggrid] ads adsa[rc] ae af ag[gregate] ai ai[request] airequest al alia[s] alig[n] alt[erarchive] am[sarc] and annoa[lignment] annoadd annocapture annocl[ip] annoco[verage] annocurve annoe[dit] annoedit annof annofeature annofit annoitem annola[yer] annole[vel] annolevel annoline annooffset annop[osition] annoplace annos[ize] annoselectfeatur annoset annosum annosymbol annot annot[ext] annotext annotype ao ap apm[ode] app[end] arc arcad[s] arcar[rows] arcc[ogo] arcdf[ad] arcdi[me] arcdl[g] arcdx[f] arced[it] arcedit arcen[dtext] arcf[ont] arcigd[s] arcige[s] arcla[bel] arcli[nes] arcma[rkers] arcmo[ss]
@@ -59,7 +64,7 @@ syn keyword amlDir contained  abbreviations above all aml amlpath append arc arg
 syn keyword amlDir2 contained  delvar dv s set setvar sv
 
 syn keyword amlOutput contained  inform warning error pause stop tty ty type
- 
+
 
 " AML Directives:
 syn match amlDirSym "&"
@@ -76,7 +81,7 @@ syn match amlFunc2 "\[.*\[.*\].*\]" contains=amlFunction,amlVar
 syn region amlQuote start=+"+ skip=+\\"+ end=+"+ contains=amlVar
 syn region amlQuote start=+'+ skip=+\\'+ end=+'+
 
-" ARC Application Commands only selected at the beginning of the line, 
+" ARC Application Commands only selected at the beginning of the line,
 " or after a one line &if &then statement
 syn match amlAppCmd "^ *[a-zA-Z]*" contains=amlArcCmd,amlInfoCmd,amlTabCmd,amlVtrCmd,amlFormedCmd
 syn region amlAppCmd start="&then" end="$" contains=amlArcCmd,amlFormedCmd,amlInfoCmd,amlTabCmd,amlVtrCmd,amlFunction,amlDirective,amlVar2,amlSkip,amlVar,amlComment
@@ -86,10 +91,10 @@ syn region amlVar start="%" end="%"
 syn region amlVar start="%" end="%" contained
 syn match amlVar2 "&s [a-zA-Z_.0-9]*" contains=amlDir2,amlDirSym
 syn match amlVar2 "&sv [a-zA-Z_.0-9]*" contains=amlDir2,amlDirSym
-syn match amlVar2 "&set [a-zA-Z_.0-9]*" contains=amlDir2,amlDirSym 
-syn match amlVar2 "&setvar [a-zA-Z_.0-9]*" contains=amlDir2,amlDirSym 
+syn match amlVar2 "&set [a-zA-Z_.0-9]*" contains=amlDir2,amlDirSym
+syn match amlVar2 "&setvar [a-zA-Z_.0-9]*" contains=amlDir2,amlDirSym
 syn match amlVar2 "&dv [a-zA-Z_.0-9]*" contains=amlDir2,amlDirSym
-syn match amlVar2 "&delvar [a-zA-Z_.0-9]*" contains=amlDir2,amlDirSym 
+syn match amlVar2 "&delvar [a-zA-Z_.0-9]*" contains=amlDir2,amlDirSym
 
 " Formedit 2 word commands
 syn match amlFormed "^ *check box"
@@ -101,7 +106,7 @@ syn match amlTab "^ *q stop"
 syn match amlTab "^ *quit stop"
 
 " Comments:
-syn match amlComment "/\*.*" 
+syn match amlComment "/\*.*"
 
 " Regions for skipping over (not highlighting) program output strings:
 syn region amlSkip matchgroup=amlOutput start="&call" end="$" contains=amlVar
@@ -117,26 +122,36 @@ syn region amlSkip matchgroup=amlOutput start="&ty" end="$" contains=amlVar
 syn region amlSkip matchgroup=amlOutput start="&typ" end="$" contains=amlVar
 syn region amlSkip matchgroup=amlOutput start="&type" end="$" contains=amlVar
 
-if !exists("did_aml_syntax_inits")
-  let did_aml_syntax_inits = 1
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_aml_syntax_inits")
+  if version < 508
+    let did_aml_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-" The default methods for highlighting. Can be overridden later.
-  hi link amlComment	 Comment
-  hi link amlNumber	 Number
-  hi link amlQuote       String
-  hi link amlVar         Identifier
-  hi link amlVar2        Identifier
-  hi link amlFunction    PreProc
-  hi link amlDir         Statement 
-  hi link amlDir2        Statement 
-  hi link amlDirSym      Statement 
-  hi link amlOutput      Statement 
-  hi link amlArcCmd      ModeMsg
-  hi link amlFormedCmd  amlArcCmd
-  hi link amlTabCmd     amlArcCmd
-  hi link amlInfoCmd    amlArcCmd
-  hi link amlVtrCmd     amlArcCmd 
-  hi link amlFormed      amlArcCmd
-  hi link amlTab         amlArcCmd
+  HiLink amlComment	Comment
+  HiLink amlNumber	Number
+  HiLink amlQuote	String
+  HiLink amlVar	Identifier
+  HiLink amlVar2	Identifier
+  HiLink amlFunction	PreProc
+  HiLink amlDir	Statement
+  HiLink amlDir2	Statement
+  HiLink amlDirSym	Statement
+  HiLink amlOutput	Statement
+  HiLink amlArcCmd	ModeMsg
+  HiLink amlFormedCmd	amlArcCmd
+  HiLink amlTabCmd	amlArcCmd
+  HiLink amlInfoCmd	amlArcCmd
+  HiLink amlVtrCmd	amlArcCmd
+  HiLink amlFormed	amlArcCmd
+  HiLink amlTab	amlArcCmd
 
+  delcommand HiLink
 endif
+
+let b:current_syntax = "aml"

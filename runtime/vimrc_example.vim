@@ -1,7 +1,7 @@
 " An example for a vimrc file.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Jul 15
+" Last change:	2000 Oct 14
 "
 " To use it, copy it to
 "     for Unix and OS/2:  ~/.vimrc
@@ -44,12 +44,20 @@ endif
 " Only do this part when compiled with support for autocommands.
 if has("autocmd")
 
- " Use the default filetype settings, so that mail gets 'tw' set to 72,
- " 'cindent' is on in C files, etc.
- filetype settings on
+ " In text files, always limit the width of text to 78 characters
+ autocmd BufRead *.txt set tw=78
 
- " For all text files set 'textwidth' to 78 characters.
- au BufReadPost *.txt setlocal tw=78
+ augroup cprog
+  " Remove all cprog autocommands
+  au!
+
+  " When starting to edit a file:
+  "   For C and C++ files set formatting of comments and set C-indenting on.
+  "   For other files switch it off.
+  "   Don't change the order, it's important that the line with * comes first.
+  autocmd FileType *      set formatoptions=tcql nocindent comments&
+  autocmd FileType c,cpp  set formatoptions=croql cindent comments=sr:/*,mb:*,el:*/,://
+ augroup END
 
  augroup gzip
   " Remove all gzip autocommands
@@ -57,13 +65,14 @@ if has("autocmd")
 
   " Enable editing of gzipped files
   " set binary mode before reading the file
+  " use "gzip -d", gunzip isn't always available
   autocmd BufReadPre,FileReadPre	*.gz,*.bz2 set bin
-  autocmd BufReadPost,FileReadPost	*.gz call GZIP_read("gunzip")
-  autocmd BufReadPost,FileReadPost	*.bz2 call GZIP_read("bunzip2")
+  autocmd BufReadPost,FileReadPost	*.gz call GZIP_read("gzip -d")
+  autocmd BufReadPost,FileReadPost	*.bz2 call GZIP_read("bzip2 -d")
   autocmd BufWritePost,FileWritePost	*.gz call GZIP_write("gzip")
   autocmd BufWritePost,FileWritePost	*.bz2 call GZIP_write("bzip2")
-  autocmd FileAppendPre			*.gz call GZIP_appre("gunzip")
-  autocmd FileAppendPre			*.bz2 call GZIP_appre("bunzip2")
+  autocmd FileAppendPre			*.gz call GZIP_appre("gzip -d")
+  autocmd FileAppendPre			*.bz2 call GZIP_appre("bzip2 -d")
   autocmd FileAppendPost		*.gz call GZIP_write("gzip")
   autocmd FileAppendPost		*.bz2 call GZIP_write("bzip2")
 
@@ -78,8 +87,8 @@ if has("autocmd")
     let tmpe = tmp . "." . expand("<afile>:e")
     " write the just read lines to a temp file "'[,']w tmp.gz"
     execute "'[,']w " . tmpe
-    " uncompress the temp file "!gunzip tmp.gz"
-    execute "!" . a:cmd . " " . tmpe
+    " uncompress the temp file: call system("gzip -d tmp.gz")
+    call system(a:cmd . " " . tmpe)
     " delete the compressed lines
     '[,']d
     " read in the uncompressed lines "'[-1r tmp"
@@ -101,13 +110,13 @@ if has("autocmd")
   " After writing compressed file: Compress written file with "cmd"
   fun! GZIP_write(cmd)
     if rename(expand("<afile>"), expand("<afile>:r")) == 0
-      execute "!" . a:cmd . " <afile>:r"
+      call system(a:cmd . " " . expand("<afile>:r"))
     endif
   endfun
 
   " Before appending to compressed file: Uncompress file with "cmd"
   fun! GZIP_appre(cmd)
-    execute "!" . a:cmd . " <afile>"
+    call system(a:cmd . " " . expand("<afile>"))
     call rename(expand("<afile>:r"), expand("<afile>"))
   endfun
 

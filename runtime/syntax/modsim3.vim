@@ -1,15 +1,24 @@
 " Vim syntax file
-" Language:	Modsim III, by CACI Products Co. (www.caci.com)
+" Language:	Modsim III, by compuware corporation (www.compuware.com)
 " Maintainer:	Philipp Jocham <flip@sbox.tu-graz.ac.at>
 " Extension:	*.mod
-" Last Change:	1999 Jun 14
-
+" Last Change:	2001 May 10
+"
+" 2001 March 24:
+"  - Modsim III is a registered trademark from compuware corporation
+"  - made compatible with Vim 6.0
+"
 " 1999 Apr 22 : Changed modsim3Literal from region to match
-
+"
 " very basic things only (based on the modula2 and c files).
 
-" Remove any old syntax stuff hanging around
-syn clear
+if version < 600
+  " Remove any old syntax stuff hanging around
+  syn clear
+elseif exists("b:current_syntax")
+  finish
+endif
+
 
 " syn case match " case sensitiv match is default
 
@@ -67,21 +76,34 @@ syn region modsim3String start=+"+ end=+"+
 "syn region modsim3Literal start=+'+ end=+'+
 syn match modsim3Literal "'[^']'\|''''"
 
-if !exists("did_modsim3_syntax_inits")
-  let did_modsim3_syntax_inits = 1
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_modsim3_syntax_inits")
+  if version < 508
+    let did_modsim3_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
   " The default methods for highlighting.  Can be overridden later
-  hi link modsim3Keyword	Statement
-  hi link modsim3Block		Statement
-  hi link modsim3Comment1	Comment
-  hi link modsim3Comment2	Comment
-  hi link modsim3String		String
-  hi link modsim3Literal	Character
-  hi link modsim3Include	Statement
-  hi link modsim3Type		Type
-  hi link modsim3ParenError	Error
-  hi link modsim3Builtin	Function
-  hi link modsim3BuiltinNoParen	Function
+  HiLink modsim3Keyword	Statement
+  HiLink modsim3Block		Statement
+  HiLink modsim3Comment1	Comment
+  HiLink modsim3Comment2	Comment
+  HiLink modsim3String		String
+  HiLink modsim3Literal	Character
+  HiLink modsim3Include	Statement
+  HiLink modsim3Type		Type
+  HiLink modsim3ParenError	Error
+  HiLink modsim3Builtin	Function
+  HiLink modsim3BuiltinNoParen	Function
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "modsim3"
+
+" vim: ts=8 sw=2
 

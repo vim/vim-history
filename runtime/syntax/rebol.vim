@@ -2,19 +2,28 @@
 " Language:	Rebol
 " Maintainer:	Mike Williams <mrw@netcomuk.co.uk>
 " Filenames:	*.r
-" Last Change:	20th October 1998
+" Last Change:	2001 May 09
 " URL:		N/A
 "
 " Change history
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " Rebol is case insensitive
 syn case ignore
 
 " As per current users documentation
-set isk=@,48-57,?,!,.,',+,-,*,&,\|,=,_,~
+if version < 600
+  set isk=@,48-57,?,!,.,',+,-,*,&,\|,=,_,~
+else
+  setlocal isk=@,48-57,?,!,.,',+,-,*,&,\|,=,_,~
+endif
 
 " Yer TODO highlighter
 syn keyword	rebolTodo	contained TODO
@@ -136,56 +145,65 @@ syn keyword     rebolStatement  func function free
 syn keyword     rebolConstant   none
 
 
-if !exists("did_rebol_syntax_inits")
-  let did_rebol_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link rebolTodo     Todo
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_rebol_syntax_inits")
+  if version < 508
+    let did_rebol_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-  hi link rebolStatement Statement
-  hi link rebolLabel	Label
-  hi link rebolConditional Conditional
-  hi link rebolRepeat	Repeat
+  HiLink rebolTodo     Todo
 
-  hi link rebolOperator	Operator
-  hi link rebolLogicOperator rebolOperator
-  hi link rebolLogicFunction rebolLogicOperator
-  hi link rebolMathOperator rebolOperator
-  hi link rebolMathFunction rebolMathOperator
-  hi link rebolBinaryOperator rebolOperator
-  hi link rebolBinaryFunction rebolBinaryOperator
+  HiLink rebolStatement Statement
+  HiLink rebolLabel	Label
+  HiLink rebolConditional Conditional
+  HiLink rebolRepeat	Repeat
 
-  hi link rebolType     Type
-  hi link rebolTypeFunction rebolOperator
+  HiLink rebolOperator	Operator
+  HiLink rebolLogicOperator rebolOperator
+  HiLink rebolLogicFunction rebolLogicOperator
+  HiLink rebolMathOperator rebolOperator
+  HiLink rebolMathFunction rebolMathOperator
+  HiLink rebolBinaryOperator rebolOperator
+  HiLink rebolBinaryFunction rebolBinaryOperator
 
-  hi link rebolWord     Identifier
-  hi link rebolWordPath rebolWord
-  hi link rebolFunction	Function
+  HiLink rebolType     Type
+  HiLink rebolTypeFunction rebolOperator
 
-  hi link rebolCharacter Character
-  hi link rebolSpecialCharacter SpecialChar
-  hi link rebolString	String
+  HiLink rebolWord     Identifier
+  HiLink rebolWordPath rebolWord
+  HiLink rebolFunction	Function
 
-  hi link rebolNumber   Number
-  hi link rebolInteger  rebolNumber
-  hi link rebolDecimal  rebolNumber
-  hi link rebolTime     rebolNumber
-  hi link rebolDate     rebolNumber
-  hi link rebolMoney    rebolNumber
-  hi link rebolBinary   rebolNumber
-  hi link rebolEmail    rebolString
-  hi link rebolFile     rebolString
-  hi link rebolURL      rebolString
-  hi link rebolIssue    rebolNumber
-  hi link rebolTuple    rebolNumber
-  hi link rebolFloat    Float
-  hi link rebolBoolean  Boolean
+  HiLink rebolCharacter Character
+  HiLink rebolSpecialCharacter SpecialChar
+  HiLink rebolString	String
 
-  hi link rebolConstant Constant
+  HiLink rebolNumber   Number
+  HiLink rebolInteger  rebolNumber
+  HiLink rebolDecimal  rebolNumber
+  HiLink rebolTime     rebolNumber
+  HiLink rebolDate     rebolNumber
+  HiLink rebolMoney    rebolNumber
+  HiLink rebolBinary   rebolNumber
+  HiLink rebolEmail    rebolString
+  HiLink rebolFile     rebolString
+  HiLink rebolURL      rebolString
+  HiLink rebolIssue    rebolNumber
+  HiLink rebolTuple    rebolNumber
+  HiLink rebolFloat    Float
+  HiLink rebolBoolean  Boolean
 
-  hi link rebolComment	Comment
+  HiLink rebolConstant Constant
 
-  hi link rebolError	Error
+  HiLink rebolComment	Comment
 
+  HiLink rebolError	Error
+
+  delcommand HiLink
 endif
 
 if exists("my_rebol_file")

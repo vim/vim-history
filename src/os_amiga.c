@@ -43,7 +43,7 @@
 #include <dos/dostags.h>	    /* for 2.0 functions */
 #include <dos/dosasl.h>
 
-#if defined(LATTICE) && !defined(SASC) && defined(FEAT_ARP)
+#if defined(LATTICE) && !defined(SASC) && !defined(NO_ARP)
 # include <libraries/arp_pragmas.h>
 #endif
 
@@ -68,14 +68,14 @@ static BPTR		raw_out = (BPTR)NULL;
 static int		close_win = FALSE;  /* set if Vim opened the window */
 
 struct IntuitionBase	*IntuitionBase = NULL;
-#ifdef FEAT_ARP
+#ifndef NO_ARP
 struct ArpBase		*ArpBase = NULL;
 #endif
 
 static struct Window	*wb_window;
 static char_u		*oldwindowtitle = NULL;
 
-#ifdef FEAT_ARP
+#ifndef NO_ARP
 int			dos2 = FALSE;	    /* Amiga DOS 2.0x or higher */
 #endif
 int			size_set = FALSE;   /* set to TRUE if window size was set */
@@ -117,7 +117,7 @@ mch_inchar(buf, maxlen, time)
 {
     int	    len;
     long    utime;
-#ifdef FEAT_AUTOCMD
+#ifdef AUTOCMD
     static int	once_already = 0;
 #endif
 
@@ -129,7 +129,7 @@ mch_inchar(buf, maxlen, time)
 	    utime = time * 1000L;   /* convert from milli to micro secs */
 	if (WaitForChar(raw_in, utime) == 0)	/* no character available */
 	{
-#ifdef FEAT_AUTOCMD
+#ifdef AUTOCMD
 	    once_already = 0;
 #endif
 	    return 0;
@@ -137,7 +137,7 @@ mch_inchar(buf, maxlen, time)
     }
     else    /* time == -1 */
     {
-#ifdef FEAT_AUTOCMD
+#ifdef AUTOCMD
 	if (once_already == 2)
 	    updatescript(0);
 	else if (once_already == 1)
@@ -154,7 +154,7 @@ mch_inchar(buf, maxlen, time)
 	 */
 	    if (WaitForChar(raw_in, p_ut * 1000L) == 0)
 	{
-#ifdef FEAT_AUTOCMD
+#ifdef AUTOCMD
             if (has_cursorhold() && get_real_state() == NORMAL_BUSY)
             {
                 apply_autocmds(EVENT_CURSORHOLD, NULL, NULL, FALSE, curbuf);
@@ -173,7 +173,7 @@ mch_inchar(buf, maxlen, time)
 	len = Read(raw_in, (char *)buf, (long)maxlen);
 	if (len > 0)
 	{
-#ifdef FEAT_AUTOCMD
+#ifdef AUTOCMD
             once_already = 0;
 #endif
 	    return len;
@@ -190,9 +190,6 @@ mch_char_avail()
     return (WaitForChar(raw_in, 100L) != 0);
 }
 
-/*
- * Return amount of memory still available.
- */
     long_u
 mch_avail_mem(special)
     int	    special;
@@ -230,7 +227,7 @@ mch_suspend()
 #define DOS_LIBRARY	((UBYTE *) "dos.library")
 
     void
-mch_shellinit()
+mch_windinit()
 {
     static char	    intlibname[] = "intuition.library";
 
@@ -264,7 +261,7 @@ mch_shellinit()
     if ((IntuitionBase = (struct IntuitionBase *)
 				OpenLibrary((UBYTE *)intlibname, 0L)) == NULL)
     {
-	mch_errmsg(_("cannot open "));
+	mch_errmsg("cannot open ");
 	mch_errmsg(intlibname);
 	mch_errmsg("!?\n");
 	mch_windexit(3);
@@ -298,7 +295,7 @@ mch_check_win(argc, argv)
     static char_u   *(constrings[3]) = {(char_u *)"con:0/0/662/210/",
 					(char_u *)"con:0/0/640/200/",
 					(char_u *)"con:0/0/320/200/"};
-    static char_u   winerr[] = _("VIM: Can't open window!\n");
+    static char_u   winerr[] = "VIM: Can't open window!\n";
     struct WBArg    *argp;
     int		    ac;
     char	    *av;
@@ -313,20 +310,20 @@ mch_check_win(argc, argv)
     if (DosBase = OpenLibrary(DOS_LIBRARY, 37L))
     {
 	CloseLibrary(DosBase);
-#ifdef FEAT_ARP
+#ifndef NO_ARP
 	dos2 = TRUE;
 #endif
     }
     else	    /* without arp functions we NEED 2.0 */
     {
-#ifndef FEAT_ARP
-	mch_errmsg(_("Need Amigados version 2.04 or later\n"));
+#ifdef NO_ARP
+	mch_errmsg("Need Amigados version 2.04 or later\n");
 	exit(3);
 #else
 		    /* need arp functions for dos 1.x */
 	if (!(ArpBase = (struct ArpBase *) OpenLibrary((UBYTE *)ArpName, ArpVersion)))
 	{
-	    fprintf(stderr, _("Need %s version %ld\n"), ArpName, ArpVersion);
+	    fprintf(stderr, "Need %s version %ld\n", ArpName, ArpVersion);
 	    exit(3);
 	}
 #endif
@@ -391,7 +388,7 @@ mch_check_win(argc, argv)
 
     if ((nilfh = Open((UBYTE *)"NIL:", (long)MODE_NEWFILE)) == (BPTR)NULL)
     {
-	mch_errmsg(_("Cannot open NIL:\n"));
+	mch_errmsg("Cannot open NIL:\n");
 	goto exit;
     }
 
@@ -402,7 +399,7 @@ mch_check_win(argc, argv)
     sprintf((char *)buf1, "t:nc%ld", (char *)buf1);
     if ((fh = Open((UBYTE *)buf1, (long)MODE_NEWFILE)) == (BPTR)NULL)
     {
-	mch_errmsg(_("Cannot create "));
+	mch_errmsg("Cannot create ");
 	mch_errmsg((char *)buf1);
 	mch_errmsg("\n");
 	goto exit;
@@ -423,11 +420,11 @@ mch_check_win(argc, argv)
 	    argp = &(((struct WBStartup *)argv)->sm_ArgList[i]);
 	    if (argp->wa_Lock)
 		(void)lock2name(argp->wa_Lock, buf2, (long)(BUF2SIZE - 1));
-#ifdef FEAT_ARP
+#ifndef NO_ARP
 	    if (dos2)	    /* use 2.0 function */
 #endif
 		AddPart((UBYTE *)buf2, (UBYTE *)argp->wa_Name, (long)(BUF2SIZE - 1));
-#ifdef FEAT_ARP
+#ifndef NO_ARP
 	    else	    /* use arp function */
 		TackOn((char *)buf2, argp->wa_Name);
 #endif
@@ -463,13 +460,13 @@ mch_check_win(argc, argv)
 	else if (device == NULL)
 	    continue;
 	sprintf((char *)buf2, "newcli <nil: >nil: %s from %s", (char *)device, (char *)buf1);
-#ifdef FEAT_ARP
+#ifndef NO_ARP
 	if (dos2)
 	{
 #endif
 	    if (!SystemTags((UBYTE *)buf2, SYS_UserShell, TRUE, TAG_DONE))
 		break;
-#ifdef FEAT_ARP
+#ifndef NO_ARP
 	}
 	else
 	{
@@ -487,7 +484,7 @@ mch_check_win(argc, argv)
     exitval = 0;    /* The Execute succeeded: exit this program */
 
 exit:
-#ifdef FEAT_ARP
+#ifndef NO_ARP
     if (ArpBase)
 	CloseLibrary((struct Library *) ArpBase);
 #endif
@@ -556,7 +553,7 @@ get_fib(fname)
     return fib;
 }
 
-#ifdef FEAT_TITLE
+#ifdef WANT_TITLE
 /*
  * set the title of our window
  * icon name is not set
@@ -667,7 +664,7 @@ mch_FullName(fname, buf, len, force)
 	retval = lock2name(l, buf, (long)len - 1);
 	UnLock(l);
 	if (mch_isdir(fname))
-	    STRCAT(buf, "/");
+	    add_pathsep(buf);
     }
     else if (force || !mch_isFullName(fname))	    /* not a full path yet */
     {
@@ -700,7 +697,7 @@ mch_FullName(fname, buf, len, force)
 mch_isFullName(fname)
     char_u	*fname;
 {
-    return (vim_strchr(fname, ':') != NULL);
+    return (vim_strchr(fname, ':') != NULL && *fname != ':');
 }
 
 /*
@@ -715,11 +712,11 @@ lock2name(lock, buf, len)
     char_u  *buf;
     long    len;
 {
-#ifdef FEAT_ARP
+#ifndef NO_ARP
     if (dos2)		    /* use 2.0 function */
 #endif
 	return ((int)NameFromLock(lock, (UBYTE *)buf, len) ? OK : FAIL);
-#ifdef FEAT_ARP
+#ifndef NO_ARP
     else		/* use arp function */
 	return ((int)PathName(lock, (char *)buf, (long)(len/32)) ? OK : FAIL);
 #endif
@@ -791,7 +788,7 @@ mch_isdir(name)
 }
 
 /*
- * Careful: mch_windexit() may be called before mch_shellinit()!
+ * Careful: mch_windexit() may be called before mch_windinit()!
  */
     void
 mch_windexit(r)
@@ -814,20 +811,20 @@ mch_windexit(r)
 	out_flush();
     }
 
-#ifdef FEAT_TITLE
+#ifdef WANT_TITLE
     mch_restore_title(3);	    /* restore window title */
 #endif
 
     ml_close_all(TRUE);		    /* remove all memfiles */
 
-#ifdef FEAT_ARP
+#ifndef NO_ARP
     if (ArpBase)
 	CloseLibrary((struct Library *) ArpBase);
 #endif
     if (close_win)
 	Close(raw_in);
     if (r)
-	printf(_("Vim exiting with %d\n"), r); /* somehow this makes :cq work!? */
+	printf("Vim exiting with %d\n", r); /* somehow this makes :cq work!? */
     exit(r);
 }
 
@@ -859,7 +856,7 @@ mch_settmode(tmode)
 {
     if (dos_packet(MP(raw_in), (long)ACTION_SCREEN_MODE,
 					  tmode == TMODE_RAW ? -1L : 0L) == 0)
-	mch_errmsg(_("cannot change console mode ?!\n"));
+	mch_errmsg("cannot change console mode ?!\n");
 }
 
 /*
@@ -867,9 +864,9 @@ mch_settmode(tmode)
  */
     int
 mch_screenmode(arg)
-    char_u	*arg;
+    char_u   *arg;
 {
-    EMSG(_("Screen mode setting not supported"));
+    EMSG("Screen mode setting not supported");
     return FAIL;
 }
 
@@ -892,7 +889,7 @@ mch_screenmode(arg)
  * return FAIL for failure, OK otherwise
  */
     int
-mch_get_shellsize()
+mch_get_winsize()
 {
     struct ConUnit  *conUnit;
     char	    id_a[sizeof(struct InfoData) + 3];
@@ -925,7 +922,7 @@ mch_get_shellsize()
 	oldwindowtitle = (char_u *)wb_window->Title;
     if (id->id_InUse == (BPTR)NULL)
     {
-	mch_errmsg(_("mch_get_shellsize: not a console??\n"));
+	mch_errmsg("mch_get_winsize: not a console??\n");
 	return FAIL;
     }
     conUnit = (struct ConUnit *) ((struct IOStdReq *) id->id_InUse)->io_Unit;
@@ -940,15 +937,16 @@ mch_get_shellsize()
 	term_console = FALSE;
 	return FAIL;
     }
+    check_winsize();
 
     return OK;
 }
 
 /*
- * Try to set the real window size to Rows and Columns.
+ * try to set the real window size
  */
     void
-mch_set_shellsize()
+mch_set_winsize()
 {
     if (term_console)
     {
@@ -961,15 +959,6 @@ mch_set_shellsize()
 	out_char('u');
 	out_flush();
     }
-}
-
-/*
- * Rows and/or Columns has changed.
- */
-    void
-mch_new_shellsize()
-{
-    /* Nothing to do. */
 }
 
 /*
@@ -1010,7 +999,7 @@ dos_packet(pid, action, arg)
     long	    action, /* packet type ... (what you want handler to do)   */
 		    arg;    /* single argument */
 {
-# ifdef FEAT_ARP
+# ifndef NO_ARP
     struct MsgPort	    *replyport;
     struct StandardPacket   *packet;
     long		    res1;
@@ -1018,7 +1007,7 @@ dos_packet(pid, action, arg)
     if (dos2)
 # endif
 	return DoPkt(pid, action, arg, 0L, 0L, 0L, 0L);	/* use 2.0 function */
-# ifdef FEAT_ARP
+# ifndef NO_ARP
 
     replyport = (struct MsgPort *) CreatePort(NULL, 0);	/* use arp function */
     if (!replyport)
@@ -1073,7 +1062,7 @@ mch_call_shell(cmd, options)
     if (close_win)
     {
 	/* if Vim opened a window: Executing a shell may cause crashes */
-	EMSG(_("Cannot execute shell with -f option"));
+	EMSG("Cannot execute shell with -f option");
 	return -1;
     }
 
@@ -1088,36 +1077,36 @@ mch_call_shell(cmd, options)
 #if !defined(AZTEC_C)		    /* not tested very much */
     if (cmd == NULL)
     {
-# ifdef FEAT_ARP
+# ifndef NO_ARP
 	if (dos2)
 # endif
 	    x = SystemTags(p_sh, SYS_UserShell, TRUE, TAG_DONE);
-# ifdef FEAT_ARP
+# ifndef NO_ARP
 	else
 	    x = Execute(p_sh, raw_in, raw_out);
 # endif
     }
     else
     {
-# ifdef FEAT_ARP
+# ifndef NO_ARP
 	if (dos2)
 # endif
 	    x = SystemTags((char *)cmd, SYS_UserShell, TRUE, TAG_DONE);
-# ifdef FEAT_ARP
+# ifndef NO_ARP
 	else
 	    x = Execute((char *)cmd, 0L, raw_out);
 # endif
     }
-# ifdef FEAT_ARP
-    if ((dos2 && x < 0) || (!dos2 && !x))
-# else
+# ifdef NO_ARP
     if (x < 0)
+# else
+    if ((dos2 && x < 0) || (!dos2 && !x))
 # endif
     {
-	MSG_PUTS(_("Cannot execute "));
+	MSG_PUTS("Cannot execute ");
 	if (cmd == NULL)
 	{
-	    MSG_PUTS(_("shell "));
+	    MSG_PUTS("shell ");
 	    msg_outtrans(p_sh);
 	}
 	else
@@ -1125,10 +1114,10 @@ mch_call_shell(cmd, options)
 	msg_putchar('\n');
 	retval = -1;
     }
-# ifdef FEAT_ARP
-    else if (!dos2 || x)
-# else
+# ifdef NO_ARP
     else if (x)
+# else
+    else if (!dos2 || x)
 # endif
     {
 	if (x = IoErr())
@@ -1137,7 +1126,7 @@ mch_call_shell(cmd, options)
 	    {
 		msg_putchar('\n');
 		msg_outnum((long)x);
-		MSG_PUTS(_(" returned\n"));
+		MSG_PUTS(" returned\n");
 	    }
 	    retval = x;
 	}
@@ -1169,11 +1158,11 @@ mch_call_shell(cmd, options)
     {
 	if (use_execute)
 	{
-# ifdef FEAT_ARP
+# ifndef NO_ARP
 	    if (dos2)
 # endif
 		x = SystemTags((UBYTE *)p_sh, SYS_UserShell, TRUE, TAG_DONE);
-# ifdef FEAT_ARP
+# ifndef NO_ARP
 	    else
 		x = !Execute((UBYTE *)p_sh, raw_in, raw_out);
 # endif
@@ -1183,11 +1172,11 @@ mch_call_shell(cmd, options)
     }
     else if (use_execute)
     {
-# ifdef FEAT_ARP
+# ifndef NO_ARP
 	if (dos2)
 # endif
 	    x = SystemTags((UBYTE *)cmd, SYS_UserShell, TRUE, TAG_DONE);
-# ifdef FEAT_ARP
+# ifndef NO_ARP
 	else
 	    x = !Execute((UBYTE *)cmd, 0L, raw_out);
 # endif
@@ -1198,13 +1187,13 @@ mch_call_shell(cmd, options)
     else
 	x = fexecl((char *)shellcmd, (char *)shellcmd, (char *)shellarg,
 					   (char *)p_shcf, (char *)cmd, NULL);
-# ifdef FEAT_ARP
-    if ((dos2 && x < 0) || (!dos2 && x))
-# else
+# ifdef NO_ARP
     if (x < 0)
+# else
+    if ((dos2 && x < 0) || (!dos2 && x))
 # endif
     {
-	MSG_PUTS(_("Cannot execute "));
+	MSG_PUTS("Cannot execute ");
 	if (use_execute)
 	{
 	    if (cmd == NULL)
@@ -1214,7 +1203,7 @@ mch_call_shell(cmd, options)
 	}
 	else
 	{
-	    MSG_PUTS(_("shell "));
+	    MSG_PUTS("shell ");
 	    msg_outtrans(shellcmd);
 	}
 	msg_putchar('\n');
@@ -1224,10 +1213,10 @@ mch_call_shell(cmd, options)
     {
 	if (use_execute)
 	{
-# ifdef FEAT_ARP
-	    if (!dos2 || x)
-# else
+# ifdef NO_ARP
 	    if (x)
+# else
+	    if (!dos2 || x)
 # endif
 		x = IoErr();
 	}
@@ -1239,7 +1228,7 @@ mch_call_shell(cmd, options)
 	    {
 		msg_putchar('\n');
 		msg_outnum((long)x);
-		MSG_PUTS(_(" returned\n"));
+		MSG_PUTS(" returned\n");
 	    }
 	    retval = x;
 	}
@@ -1250,7 +1239,7 @@ mch_call_shell(cmd, options)
     if (mydir = CurrentDir(mydir))	/* make sure we stay in the same directory */
 	UnLock(mydir);
     settmode(TMODE_RAW);		/* set to raw mode */
-#ifdef FEAT_TITLE
+#ifdef WANT_TITLE
     resettitle();
 #endif
     if (term_console)
@@ -1310,9 +1299,9 @@ Chk_Abort(void)
 
     int
 mch_expandpath(gap, pat, flags)
-    garray_t	*gap;
-    char_u	*pat;
-    int		flags;		/* EW_* flags */
+    struct growarray	*gap;
+    char_u		*pat;
+    int			flags;		/* EW_* flags */
 {
     struct AnchorPath	*Anchor;
     LONG		Result;
@@ -1326,7 +1315,7 @@ mch_expandpath(gap, pat, flags)
     Anchor = (struct AnchorPath *)alloc_clear((unsigned)ANCHOR_SIZE);
     if (Anchor == NULL)
     {
-	EMSG(_("Out of memory"));
+	EMSG("Out of memory");
 	return 0;
     }
 
@@ -1337,7 +1326,7 @@ mch_expandpath(gap, pat, flags)
     Anchor->ap_Flags = APF_DoDot | APF_DoWild;	/* allow '.' for current dir */
 #endif
 
-#ifdef FEAT_ARP
+#ifndef NO_ARP
     if (dos2)
     {
 #endif
@@ -1358,7 +1347,7 @@ mch_expandpath(gap, pat, flags)
 	*dp = NUL;
 	Result = MatchFirst((UBYTE *)starbuf, Anchor);
 	vim_free(starbuf);
-#ifdef FEAT_ARP
+#ifndef NO_ARP
     }
     else
 	Result = FindFirst((char *)pat, Anchor);
@@ -1370,11 +1359,11 @@ mch_expandpath(gap, pat, flags)
     while (Result == 0)
     {
 	addfile(gap, (char_u *)Anchor->ap_Buf, flags);
-#ifdef FEAT_ARP
+#ifndef NO_ARP
 	if (dos2)
 #endif
 	    Result = MatchNext(Anchor);
-#ifdef FEAT_ARP
+#ifndef NO_ARP
 	else
 	    Result = FindNext(Anchor);
 #endif
@@ -1382,10 +1371,10 @@ mch_expandpath(gap, pat, flags)
     matches = gap->ga_len - start_len;
 
     if (Result == ERROR_BUFFER_OVERFLOW)
-	EMSG(_("ANCHOR_BUF_SIZE too small."));
+	EMSG("ANCHOR_BUF_SIZE too small.");
     else if (matches == 0 && Result != ERROR_OBJECT_NOT_FOUND
 			  && Result != ERROR_NO_MORE_ENTRIES)
-	EMSG(_("I/O ERROR"));
+	EMSG("I/O ERROR");
 
     /*
      * Sort the files for this pattern.
@@ -1395,11 +1384,11 @@ mch_expandpath(gap, pat, flags)
 				  (size_t)matches, sizeof(char_u *), sortcmp);
 
     /* Free the wildcard stuff */
-#ifdef FEAT_ARP
+#ifndef NO_ARP
     if (dos2)
 #endif
 	MatchEnd(Anchor);
-#ifdef FEAT_ARP
+#ifndef NO_ARP
     else
 	FreeAnchorChain(Anchor);
 #endif
@@ -1444,7 +1433,7 @@ mch_getenv(var)
     char_u	    *retval;		/* return value */
     static char_u   *alloced = NULL;	/* allocated memory */
 
-#ifdef FEAT_ARP
+#ifndef NO_ARP
     if (!dos2)
 	retval = (char_u *)getenv((char *)var);
     else
@@ -1485,7 +1474,7 @@ mch_setenv(var, value, x)
     char *value;
     int	 x;
 {
-#ifdef FEAT_ARP
+#ifndef NO_ARP
     if (!dos2)
 	return setenv(var, value);
 #endif

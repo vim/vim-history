@@ -1,11 +1,16 @@
 " Vim syntax file
 " Language:	C-shell (csh)
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Version:	1.01
-" Last Change:	March 16, 2000
+" Version:	1.02
+" Last Change:	September 19, 2000
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " clusters:
 syn cluster cshQuoteList	contains=cshDblQuote,cshSnglQuote,cshBckQuote
@@ -16,7 +21,9 @@ syn match cshSetVariables	contained "cdpath\|history\|mail\|nonomatch\|savehist\
 syn match cshSetVariables	contained "cwd\|home\|noclobber\|path\|shell\|verbose"
 syn match cshSetVariables	contained "echo"
 
-syn keyword cshTodo	contained TODO
+syn case ignore
+syn keyword cshTodo	contained todo
+syn case match
 
 " Variable Name Expansion Modifiers
 syn match cshModifier	contained ":\(h\|t\|r\|q\|x\|gh\|gt\|gr\)"
@@ -32,7 +39,8 @@ syn region  cshBckQuote	start=+[^\\]`+lc=1 skip=+\\\\\|\\`+ end=+`+	contains=csh
 syn region  cshDblQuote	start=+^"+ skip=+\\\\\|\\"+ end=+"+		contains=cshSpecial,cshExtVar,cshSelector,cshQtyWord,cshArgv,cshSubst,cshNoEndlineDQ
 syn region  cshSnglQuote	start=+^'+ skip=+\\\\\|\\'+ end=+'+		contains=cshNoEndlineSQ
 syn region  cshBckQuote	start=+^`+ skip=+\\\\\|\\`+ end=+`+		contains=cshNoEndlineBQ
-syn match   cshComment	"#.*$" contains=cshTodo
+syn cluster cshCommentGroup	contains=cshTodo
+syn match   cshComment	"#.*$" contains=@cshCommentGroup
 
 " A bunch of useful csh keywords
 syn keyword cshStatement	alias	end	history	onintr	setenv	unalias
@@ -92,46 +100,60 @@ syn match cshNumber	"-\=\<\d\+\>"
 "syn match cshIdentifier	"\<[a-zA-Z._][a-zA-Z0-9._]*\>"
 
 " Shell Input Redirection (Here Documents)
-syn region cshHereDoc matchgroup=cshRedir start="<<-\=\s*\**END[a-zA-Z_0-9]*\**" matchgroup=cshRedir end="^END[a-zA-Z_0-9]*$"
-syn region cshHereDoc matchgroup=cshRedir start="<<-\=\s*\**EOF\**" matchgroup=cshRedir end="^EOF$"
+if version < 600
+  syn region cshHereDoc matchgroup=cshRedir start="<<-\=\s*\**END[a-zA-Z_0-9]*\**" matchgroup=cshRedir end="^END[a-zA-Z_0-9]*$"
+  syn region cshHereDoc matchgroup=cshRedir start="<<-\=\s*\**EOF\**" matchgroup=cshRedir end="^EOF$"
+else
+  syn region cshHereDoc matchgroup=cshRedir start="<<-\=\s*\**\z(\h\w*\)\**" matchgroup=cshRedir end="^\z1$"
+endif
 
-if !exists("did_csh_syntax_inits")
-  let did_csh_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link cshArgv		cshVariables
-  hi link cshBckQuote	cshCommand
-  hi link cshDblQuote	cshString
-  hi link cshExprUsing	cshStatement
-  hi link cshExtVar	cshVariables
-  hi link cshHereDoc	cshString
-  hi link cshNoEndlineBQ	cshNoEndline
-  hi link cshNoEndlineDQ	cshNoEndline
-  hi link cshNoEndlineSQ	cshNoEndline
-  hi link cshQtyWord	cshVariables
-  hi link cshRedir	cshOperator
-  hi link cshSelector	cshVariables
-  hi link cshSetStmt	cshStatement
-  hi link cshSetVariables	cshVariables
-  hi link cshSnglQuote	cshString
-  hi link cshSubst	cshVariables
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_csh_syntax_inits")
+  if version < 508
+    let did_csh_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-  hi link cshCommand	Statement
-  hi link cshComment	Comment
-  hi link cshConditional	Conditional
-  hi link cshIdentifier	Error
-  hi link cshModifier	Special
-  hi link cshNoEndline	Error
-  hi link cshNumber	Number
-  hi link cshOperator	Operator
-  hi link cshRedir	Statement
-  hi link cshRepeat	Repeat
-  hi link cshShellVariables	Special
-  hi link cshSpecial	Special
-  hi link cshStatement	Statement
-  hi link cshString	String
-  hi link cshSubstError	Error
-  hi link cshTodo		Todo
-  hi link cshVariables	Type
+  HiLink cshArgv		cshVariables
+  HiLink cshBckQuote	cshCommand
+  HiLink cshDblQuote	cshString
+  HiLink cshExprUsing	cshStatement
+  HiLink cshExtVar	cshVariables
+  HiLink cshHereDoc	cshString
+  HiLink cshNoEndlineBQ	cshNoEndline
+  HiLink cshNoEndlineDQ	cshNoEndline
+  HiLink cshNoEndlineSQ	cshNoEndline
+  HiLink cshQtyWord	cshVariables
+  HiLink cshRedir		cshOperator
+  HiLink cshSelector	cshVariables
+  HiLink cshSetStmt	cshStatement
+  HiLink cshSetVariables	cshVariables
+  HiLink cshSnglQuote	cshString
+  HiLink cshSubst		cshVariables
+
+  HiLink cshCommand	Statement
+  HiLink cshComment	Comment
+  HiLink cshConditional	Conditional
+  HiLink cshIdentifier	Error
+  HiLink cshModifier	Special
+  HiLink cshNoEndline	Error
+  HiLink cshNumber	Number
+  HiLink cshOperator	Operator
+  HiLink cshRedir		Statement
+  HiLink cshRepeat	Repeat
+  HiLink cshShellVariables	Special
+  HiLink cshSpecial	Special
+  HiLink cshStatement	Statement
+  HiLink cshString	String
+  HiLink cshSubstError	Error
+  HiLink cshTodo		Todo
+  HiLink cshVariables	Type
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "csh"

@@ -134,12 +134,16 @@ char osver[] = "";
 # endif
 #endif
 
-#if defined(MSDOS) || defined(WIN32) || defined(OS2)
+#if defined(MSDOS) || defined(WIN32) || defined(OS2) || defined(CYGWIN) || defined(CYGWIN32)
 # define BIN_READ(yes)  ((yes) ? "rb" : "rt")
 # define BIN_WRITE(yes) ((yes) ? "wb" : "wt")
 # define BIN_CREAT(yes) ((yes) ? (O_CREAT|O_BINARY) : O_CREAT)
 # define BIN_ASSIGN(fp, yes) setmode(fileno(fp), (yes) ? O_BINARY : O_TEXT)
-# define PATH_SEP '\\'
+# if defined(CYGWIN) || defined(CYGWIN32)
+#  define PATH_SEP '/'
+# else
+#  define PATH_SEP '\\'
+# endif
 #else
 # ifdef VMS
 #  define BIN_READ(dummy)  "r"
@@ -718,13 +722,7 @@ char *argv[];
 	}
       if (ebcdic)
         e = (e < 64) ? '.' : etoa64[e-64];
-      l[11 + (grplen * cols - 1)/octspergrp + p] =
-#ifdef __MVS__
-	  (e >= 64)
-#else
-	  (e > 31 && e < 127)
-#endif
-	  ? e : '.';
+      l[11 + (grplen * cols - 1)/octspergrp + p] = (e > 31 && e < 127) ? e : '.';
       if (e)
         nonzero++;
       n++;

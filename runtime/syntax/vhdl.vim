@@ -7,8 +7,13 @@
 " VHSIC Hardware Description Language
 " Very High Scale Integrated Circuit
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " This is not VHDL. I use the C-Preprocessor cpp to generate different binaries
 " from one VHDL source file. Unfortunately there is no preprocessor for VHDL
@@ -145,23 +150,33 @@ syn match vhdlTime "\<\d\+\.\d\+\s\+\(\([fpnum]s\)\|\(sec\)\|\(min\)\|\(hr\)\)\>
 syn match vhdlComment "--.*$"
 " syn match vhdlGlobal "[\'$#~!%@?\^\[\]{}\\]"
 
-if !exists("did_vhdl_syntax_inits")
-  let did_vhdl_syntax_inits = 1
-  " The default methods for highlighting. Can be overridden later
-  hi link cDefine       PreProc
-  hi link vhdlSpecial   Special
-  hi link vhdlStatement Statement
-  hi link vhdlCharacter String
-  hi link vhdlString    String
-  hi link vhdlVector    String
-  hi link vhdlBoolean   String
-  hi link vhdlComment   Comment
-  hi link vhdlNumber    String
-  hi link vhdlTime      String
-  hi link vhdlType      Type
-  hi link vhdlOperator  Type
-  hi link vhdlGlobal    Error
-  hi link vhdlAttribute Type
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_vhdl_syntax_inits")
+  if version < 508
+    let did_vhdl_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink cDefine       PreProc
+  HiLink vhdlSpecial   Special
+  HiLink vhdlStatement Statement
+  HiLink vhdlCharacter String
+  HiLink vhdlString    String
+  HiLink vhdlVector    String
+  HiLink vhdlBoolean   String
+  HiLink vhdlComment   Comment
+  HiLink vhdlNumber    String
+  HiLink vhdlTime      String
+  HiLink vhdlType      Type
+  HiLink vhdlOperator  Type
+  HiLink vhdlGlobal    Error
+  HiLink vhdlAttribute Type
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "vhdl"

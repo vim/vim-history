@@ -1,18 +1,26 @@
 " Vim syntax file
-" Language:     samba configuration files (smb.conf)
-" Maintainer:   Rafael Garcia-Suarez <garcia_suarez@hotmail.com>
-" URL:          http://altern.org/rgs/vim/syntax/samba.vim
-" Last change:  2000-04-26
+" Language:	samba configuration files (smb.conf)
+" Maintainer:	Rafael Garcia-Suarez <rgarciasuarez@free.fr>
+" URL:		http://rgarciasuarez.free.fr/vim/syntax/samba.vim
+" Last change:	2001 Apr 27
 
 " Don't forget to run your config file through testparm(1)!
 
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
+
 syn case ignore
 
 syn match sambaParameter /^[a-zA-Z \t]\+=/ contains=sambaKeyword
 syn match sambaSection /^\s*\[[a-zA-Z0-9_\-. ]\+\]/
 syn match sambaMacro /%[SPugUGHvhmLMNpRdaIT]/
-syn match sambaComment /^[;#].*/
+syn match sambaMacro /%$([a-zA-Z0-9_]\+)/
+syn match sambaComment /^\s*[;#].*/
 syn match sambaContinue /\\$/
 syn keyword sambaBoolean true false yes no
 
@@ -59,7 +67,7 @@ syn keyword sambaKeyword contained symlinks sync syslog system time timeout
 syn keyword sambaKeyword contained times timestamp to trusted ttl unix update
 syn keyword sambaKeyword contained use user username users valid version veto
 syn keyword sambaKeyword contained volume wait wide wins workgroup writable
-syn keyword sambaKeyword contained write writeable xmit 
+syn keyword sambaKeyword contained write writeable xmit
 
 " New keywords for Samba 2.0.6
 syn keyword sambaKeyword contained hook hires pid uid close rootpreexec
@@ -68,15 +76,31 @@ syn keyword sambaKeyword contained hook hires pid uid close rootpreexec
 syn keyword sambaKeyword contained utmp wtmp hostname consolidate
 syn keyword sambaKeyword contained inherit source environment
 
-if !exists("did_samba_syntax_inits")
-  let did_samba_syntax_inits=1
-  hi link sambaParameter Normal
-  hi link sambaKeyword Type
-  hi link sambaSection Statement
-  hi link sambaMacro PreProc
-  hi link sambaComment Comment
-  hi link sambaContinue Operator
-  hi link sambaBoolean Constant
+" New keywords for Samba 2.2.0
+syn keyword sambaKeyword contained addprinter auth browsing deleteprinter
+syn keyword sambaKeyword contained enhanced enumports filemode gid host jobs
+syn keyword sambaKeyword contained lanman msdfs object os2 posix processes
+syn keyword sambaKeyword contained scope separator shell show smbd template
+syn keyword sambaKeyword contained total vfs winbind wizard
+
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_samba_syn_inits")
+  if version < 508
+    let did_samba_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+  HiLink sambaParameter Normal
+  HiLink sambaKeyword   Type
+  HiLink sambaSection   Statement
+  HiLink sambaMacro     PreProc
+  HiLink sambaComment   Comment
+  HiLink sambaContinue  Operator
+  HiLink sambaBoolean   Constant
+  delcommand HiLink
 endif
 
 let b:current_syntax = "samba"

@@ -17,9 +17,24 @@
  * 4. Utility functions for handling the interface between Vim and Python.
  */
 
+#include "vim.h"
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <limits.h>
+
+/* Python.h defines _POSIX_THREADS itself (if needed) */
+#ifdef _POSIX_THREADS
+# undef _POSIX_THREADS
+#endif
+
+#if defined(_WIN32) && defined (HAVE_FCNTL_H)
+# undef HAVE_FCNTL_H
+#endif
+
+#ifdef _DEBUG
+# undef _DEBUG
+#endif
 
 #include <Python.h>
 #ifdef macintosh
@@ -33,8 +48,6 @@
 #define single_input	256
 #define file_input	257
 #define eval_input	258
-
-#include "vim.h"
 
 /******************************************************
  * Internal function prototypes.

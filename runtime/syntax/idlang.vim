@@ -1,10 +1,22 @@
 " Interactive Data Language syntax file (IDL, too :-)
-" Maintainer:	Hermann.Rochholz@faidor.com
-" Last Change:	1999 Jun 14
+" located at http://www.creaso.com
+" Maintainer:	Hermann.Rochholz@gmx.de
+" Last Change:	2001 May 10
+" Cleaned a little bit up  April 2001
+" Update to vim V6.xx 2001 May
 " Preliminary, because I do not use higher language elements of IDL until now.
 
 " Remove any old syntax stuff hanging around
-syntax clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+
+" change 6.xx -----------------------------------------------------------------
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
+" change 6.xx -----------------------------------------------------------------
 
 syntax case ignore
 
@@ -336,7 +348,6 @@ syn keyword idlangRoutine	ULONG ULONG64
 syn keyword idlangRoutine	WRITE_PNG
 syn keyword idlangRoutine	BYTEORDER L64SWAP
 
-
 " overwrite LongName
 syn match  idlangContinueLine	"nomessage"
 syn match  idlangContinueLine	"insertcol"
@@ -344,55 +355,70 @@ syn match  idlangContinueLine	"insertcol"
 syn match idlangReadWrite	"\ *pro\ "
 syn match idlangReadWrite	"\ *function\ "
 
-if !exists("did_idlang_syntax_inits")
-  let did_idlang_syntax_inits = 1
-" The default methods for highlighting.  Can be overridden later
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+" change 6.xx -----------------------------------------------------------------
+if version >= 508 || !exists("did_idlang_syn_inits")
+  if version < 508
+    let did_idlang_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+" change 6.xx -----------------------------------------------------------------
 
-  hi link idlangConditional	Conditional
-  hi link idlangConditionll	Conditional
-  hi link idlangRepeat	Repeat
-  hi link idlangColor	idlangType
-  hi link idlangCommand	idlangType
-  hi link idlangRoutine	idlangType
-  hi link idlangDiagram	idlangType
-  hi link idlangIO	idlangType
-  hi link idlangStatement	Statement
-  hi link idlangType	Type
-  hi link idlangContinueLine	Todo
-  hi link idlangRealNumber	Float
-  hi link idlangNumber	Number
-  hi link idlangCommentError	Error
-  hi link idlangString	String
-  hi link idlangOperator	Operator
-  hi link idlangLogicalConstant	Constant
-  hi link idlangComment	Comment
-  hi link idlangTodo	Todo
-  hi link idlangUnitHeader	idlangPreCondit
-  hi link idlangFormat	idlangImplicit
-  hi link idlangReadWrite	Statement
-  hi link idlangImplicit	Identifier
-  hi link idlangUnixCmd	Statement
-  hi link idlangPreProc	PreProc
-"  hi link idlangExtended	idlangImplicit
-  hi link idlangPreCondit	PreCondit
+" OLD  if !exists("did_idlang_syntax_inits")
+" OLD    let did_idlang_syntax_inits = 1
+
+  HiLink idlangConditional	Conditional
+  HiLink idlangConditionll	Conditional
+  HiLink idlangRepeat	Repeat
+  HiLink idlangColor	idlangType
+  HiLink idlangCommand	idlangType
+  HiLink idlangRoutine	idlangType
+  HiLink idlangDiagram	idlangType
+  HiLink idlangIO	idlangType
+  HiLink idlangStatement	Statement
+  HiLink idlangType	Type
+  HiLink idlangContinueLine	Todo
+  HiLink idlangRealNumber	Float
+  HiLink idlangNumber	Number
+  HiLink idlangCommentError	Error
+  HiLink idlangString	String
+  HiLink idlangOperator	Operator
+  HiLink idlangLogicalConstant	Constant
+  HiLink idlangComment	Comment
+  HiLink idlangTodo	Todo
+  HiLink idlangUnitHeader	idlangPreCondit
+  HiLink idlangFormat	idlangImplicit
+  HiLink idlangReadWrite	Statement
+  HiLink idlangImplicit	Identifier
+  HiLink idlangUnixCmd	Statement
+  HiLink idlangPreProc	PreProc
+"  HiLink idlangExtended	idlangImplicit
+  HiLink idlangPreCondit	PreCondit
 
   " optional hiing
-  "hi link idlangContinueError		Error
-  "hi link idlangSpecial		Special
-  "hi link idlangPointRealNumber	idlangNumber
-  "hi link idlangPointDoubleNumber	idlangNumber
-"  hi link idlangLongName	Error
-  hi link idlangDblCommaError	Error
-  hi link idlangStop	Error
-  "hi link idlangDelimiter		Identifier
-  hi link idlangStructure	idlangType
-  hi link idlangStrucvar	idlangPreProc
-  hi link idlangSystem	Identifier
-  hi link idlangKeyword	Special
+  "HiLink idlangContinueError		Error
+  "HiLink idlangSpecial		Special
+  "HiLink idlangPointRealNumber	idlangNumber
+  "HiLink idlangPointDoubleNumber	idlangNumber
+"  HiLink idlangLongName	Error
+  HiLink idlangDblCommaError	Error
+  HiLink idlangStop	Error
+  "HiLink idlangDelimiter		Identifier
+  HiLink idlangStructure	idlangType
+  HiLink idlangStrucvar	idlangPreProc
+  HiLink idlangSystem	Identifier
+  HiLink idlangKeyword	Special
 
-  "hi link idlangIdentifier	Identifier
+  "HiLink idlangIdentifier	Identifier
+
+  delcommand HiLink
 endif
 
-let current_syntax = "idlang"
+let b:current_syntax = "idlang"
 
 " vim: ts=18
+

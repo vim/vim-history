@@ -1,17 +1,26 @@
 " Vim syntax file
 " Language:	Microsoft VBScript Web Content (ASP)
 " Maintainer:	Devin Weaver <ktohg@tritarget.com>
-" URL:		http://www.tritarget.com/vim/syntax
-" Last Change:	2000 May 01
+" URL:		http://tritarget.com/pub/vim/syntax/aspvbs.vim
+" Last Change:	2001 May 10
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if version < 600
+  syn clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 if !exists("main_syntax")
   let main_syntax = 'aspvbs'
 endif
 
-so <sfile>:p:h/html.vim
+if version < 600
+  source <sfile>:p:h/html.vim
+else
+  runtime! syntax/html.vim
+endif
+unlet b:current_syntax
 
 syn cluster htmlPreProc add=AspVBScriptInsideHtmlTags
 
@@ -122,21 +131,31 @@ syn sync match AspVBSSyncGroup grouphere AspVBScriptInsideHtmlTags "<%"
 " This is a kludge so the HTML will sync properly
 syn sync match htmlHighlight groupthere htmlTag "%>"
 
-if !exists("did_asp_syntax_inits")
-  let did_asp_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  "hi link AspVBScript		Special
-  hi link AspVBSLineNumber	Comment
-  hi link AspVBSNumber		Number
-  hi link AspVBSError		Error
-  hi link AspVBSStatement	Statement
-  hi link AspVBSString		String
-  hi link AspVBSComment		Comment
-  hi link AspVBSTodo		Todo
-  hi link AspVBSFunction	Identifier
-  hi link AspVBSMethods		PreProc
-  hi link AspVBSEvents		Special
-  hi link AspVBSTypeSpecifier	Type
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_aspvbs_syn_inits")
+  if version < 508
+    let did_aspvbs_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  "HiLink AspVBScript	Special
+  HiLink AspVBSLineNumber	Comment
+  HiLink AspVBSNumber	Number
+  HiLink AspVBSError		Error
+  HiLink AspVBSStatement	Statement
+  HiLink AspVBSString	String
+  HiLink AspVBSComment	Comment
+  HiLink AspVBSTodo		Todo
+  HiLink AspVBSFunction	Identifier
+  HiLink AspVBSMethods	PreProc
+  HiLink AspVBSEvents	Special
+  HiLink AspVBSTypeSpecifier	Type
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "aspvbs"

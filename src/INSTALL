@@ -12,9 +12,9 @@ Contents:
 6. Atari MiNT
 
 For BeBox see doc/os_bebox.txt.
-For Amiga see INSTALLami.txt
-For PC (MS-DOS, Windows NT, Windows 95) see INSTALLpc.txt
-For Macintosh see INSTALLmac.txt
+For Amiga see INSTALL_ami.txt
+For PC (MS-DOS, Windows NT, Windows 95) see INSTALL_pc.txt
+For Macintosh see INSTALL_mac.txt
 
 
 1. Generic
@@ -105,16 +105,14 @@ is the preferred choice), try selecting another one in the Makefile.
 If you are sure you have GTK installed, but for some reason configure says you
 do not, you may have left-over header files and/or library files from an older
 (and incompatible) version of GTK.  if this is the case, please check
-auto/config.log for any error messages that may give you a hint as to what's
+config.log for any error messages that may give you a hint as to what's
 happening.
 
 Unix: COMPILING WITH MULTI-BYTE
 
 When you want to compile with the multi-byte features enabled, make sure you
 compile on a machine where the locale settings actually work.  otherwise the
-configure tests may fail.  You need to compile with "big" features:
-
-    ./configure --with-features=big
+configure tests may fail.
 
 Unix: COMPILING ON LINUX
 
@@ -128,6 +126,13 @@ Some Linux distributions prefer to put the global vimrc file in /etc, and the
 Vim runtime files in /usr.  This can be done with:
 	./configure --prefix=/usr
 	make VIMRCLOC=/etc VIMRUNTIMEDIR=/usr/share/vim MAKE="make -e"
+
+Unix: COMPILING ON NeXT
+
+Add the "-posix" argument to the compiler by using one of these commands:
+	setenv CC 'cc -posix' (csh)
+	export CC='cc -posix' (sh)
+And run configure with "--disable-motif-check".
 
 
 3. RISC OS

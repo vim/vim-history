@@ -3,7 +3,7 @@
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
 "		Author and previous maintainer:
 "		Daniel Amyot <damyot@site.uottawa.ca>
-" Last Change:	Dec 09 1999
+" Last Change:	Mon, 21 May 2001 13:13:43 +0200
 " Filenames:	*.dtd
 " URL:		http://www.zellner.org/vim/syntax/dtd.vim
 " $Id$
@@ -26,7 +26,13 @@
 " TODO:
 "   - improve synchronizing.
 
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
+let s:dtd_cpo_save = &cpo
+set cpo&vim
 
 if !exists("dtd_ignore_case")
     " I prefer having the case takes into consideration.
@@ -38,7 +44,9 @@ endif
 
 " the following line makes the opening <! and
 " closing > highlighted using 'dtdFunction'.
-syn region dtdTag matchgroup=dtdFunction start=+<!+ end=+>+ matchgroup=NONE contains=dtdTag,dtdTagName,dtdError,dtdComment,dtdString,dtdAttrType,dtdAttrDef,dtdEnum,dtdParamEntityInst,dtdParamEntityDecl,dtdCard
+syn region dtdTag matchgroup=dtdFunction
+    \ start=+<!+ end=+>+ matchgroup=NONE
+    \ contains=dtdTag,dtdTagName,dtdError,dtdComment,dtdString,dtdAttrType,dtdAttrDef,dtdEnum,dtdParamEntityInst,dtdParamEntityDecl,dtdCard
 
 if !exists("dtd_no_tag_errors")
     " mark everything as an error which starts with a <!
@@ -63,42 +71,50 @@ syn region dtdComment contained start=+--+ end=+--+ contains=dtdTodo
 syn match dtdTagName contained +<!\(ATTLIST\|DOCTYPE\|ELEMENT\|ENTITY\|NOTATION\|SHORTREF\|USEMAP\|\[\)+lc=2,hs=s+2
 
 
-if !exists("dtd_no_param_entities")
-
-  " highlight parameter entity declarations
-  " and instances. Note that the closing `;'
-  " is optional.
-
-  " instances
-  syn region dtdParamEntityInst oneline matchgroup=dtdParamEntityPunct start="%[-_a-zA-Z0-9.]\+"he=s+1,rs=s+1 skip=+[-_a-zA-Z0-9.]+ end=";\|\>" matchgroup=NONE contains=dtdParamEntityPunct
-  syn match  dtdParamEntityPunct contained "\."
-
-  " declarations
-  " syn region dtdParamEntityDecl oneline matchgroup=dtdParamEntityDPunct start=+<!ENTITY % +lc=8 skip=+[-_a-zA-Z0-9.]+ matchgroup=NONE end="\>" contains=dtdParamEntityDPunct
-  syn match dtdParamEntityDecl +<!ENTITY % [-_a-zA-Z0-9.]*+lc=8 contains=dtdParamEntityDPunct
-  syn match  dtdParamEntityDPunct contained "%\|\."
-
-endif
-
-
-" Strings are between quotes
-syn region dtdString    start=+"+ skip=+\\\\\|\\"+  end=+"+ contains=dtdAttrDef,dtdAttrType,dtdEnum,dtdParamEntityInst,dtdCard
-syn region dtdString    start=+'+ skip=+\\\\\|\\'+  end=+'+ contains=dtdAttrDef,dtdAttrType,dtdEnum,dtdParamEntityInst,dtdCard
-
-" Enumeration of elements or data between parenthesis
-syn region dtdEnum matchgroup=dtdType start="(" end=")" matchgroup=NONE contains=dtdEnum,dtdParamEntityInst,dtdCard
-
 " wildcards and operators
 syn match  dtdCard contained "|"
 syn match  dtdCard contained ","
+" evenutally overridden by dtdEntity
 syn match  dtdCard contained "&"
-syn match  dtdCard contained "\?"
+syn match  dtdCard contained "?"
 syn match  dtdCard contained "\*"
 syn match  dtdCard contained "+"
 
 " ...and finally, special cases.
 syn match  dtdCard      "ANY"
 syn match  dtdCard      "EMPTY"
+
+if !exists("dtd_no_param_entities")
+
+    " highlight parameter entity declarations
+    " and instances. Note that the closing `;'
+    " is optional.
+
+    " instances
+    syn region dtdParamEntityInst oneline matchgroup=dtdParamEntityPunct
+	\ start="%[-_a-zA-Z0-9.]\+"he=s+1,rs=s+1
+	\ skip=+[-_a-zA-Z0-9.]+
+	\ end=";\|\>"
+	\ matchgroup=NONE contains=dtdParamEntityPunct
+    syn match  dtdParamEntityPunct contained "\."
+
+    " declarations
+    " syn region dtdParamEntityDecl oneline matchgroup=dtdParamEntityDPunct start=+<!ENTITY % +lc=8 skip=+[-_a-zA-Z0-9.]+ matchgroup=NONE end="\>" contains=dtdParamEntityDPunct
+    syn match dtdParamEntityDecl +<!ENTITY % [-_a-zA-Z0-9.]*+lc=8 contains=dtdParamEntityDPunct
+    syn match  dtdParamEntityDPunct contained "%\|\."
+
+endif
+
+" &entities; compare with xml
+syn match   dtdEntity                 "&[^; \t]*;" contains=dtdEntityPunct
+syn match   dtdEntityPunct  contained "[&.;]"
+
+" Strings are between quotes
+syn region dtdString    start=+"+ skip=+\\\\\|\\"+  end=+"+ contains=dtdAttrDef,dtdAttrType,dtdEnum,dtdParamEntityInst,dtdEntity,dtdCard
+syn region dtdString    start=+'+ skip=+\\\\\|\\'+  end=+'+ contains=dtdAttrDef,dtdAttrType,dtdEnum,dtdParamEntityInst,dtdEntity,dtdCard
+
+" Enumeration of elements or data between parenthesis
+syn region dtdEnum matchgroup=dtdType start="(" end=")" matchgroup=NONE contains=dtdEnum,dtdParamEntityInst,dtdCard
 
 "Attribute types
 syn keyword dtdAttrType NMTOKEN  ENTITIES  NMTOKENS  ID  CDATA
@@ -118,30 +134,32 @@ syn keyword dtdTodo contained TODO FIXME XXX
 
 syn sync lines=250
 
-if !exists("did_dtd_syntax_inits")
-  let did_dtd_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link dtdFunction		Function
-  hi link dtdTag		Normal
-  hi link dtdType		Type
-  hi link dtdAttrType		dtdType
-  hi link dtdAttrDef		dtdType
-  hi link dtdConstant		Constant
-  hi link dtdString		dtdConstant
-  hi link dtdEnum		dtdConstant
-  hi link dtdCard		dtdFunction
+" The default highlighting.
+hi def link dtdFunction		Function
+hi def link dtdTag		Normal
+hi def link dtdType		Type
+hi def link dtdAttrType		dtdType
+hi def link dtdAttrDef		dtdType
+hi def link dtdConstant		Constant
+hi def link dtdString		dtdConstant
+hi def link dtdEnum		dtdConstant
+hi def link dtdCard		dtdFunction
 
-  hi link dtdParamEntityInst	dtdConstant
-  hi link dtdParamEntityPunct	dtdType
-  hi link dtdParamEntityDecl	dtdType
-  hi link dtdParamEntityDPunct	dtdComment
+hi def link dtdEntity		Statement
+hi def link dtdEntityPunct	dtdType
+hi def link dtdParamEntityInst	dtdConstant
+hi def link dtdParamEntityPunct	dtdType
+hi def link dtdParamEntityDecl	dtdType
+hi def link dtdParamEntityDPunct dtdComment
 
-  hi link dtdComment		Comment
-  hi link dtdTagName		Statement
-  hi link dtdError		Error
-  hi link dtdTodo		Todo
-endif
+hi def link dtdComment		Comment
+hi def link dtdTagName		Statement
+hi def link dtdError		Error
+hi def link dtdTodo		Todo
 
 let b:current_syntax = "dtd"
+
+let &cpo = s:dtd_cpo_save
+unlet s:dtd_cpo_save
 
 " vim: ts=8

@@ -1913,6 +1913,7 @@ do_one_cmd(cmdlinep, sourcing,
 		    msg_outtrans(ea.cmd);
 		    msg_putchar('\n');
 		}
+		/*FALLTHROUGH*/
 	case CMD_unmap:
 	case CMD_nunmap:
 	case CMD_vunmap:
@@ -2032,6 +2033,7 @@ do_one_cmd(cmdlinep, sourcing,
 	case CMD_global:
 		if (ea.forceit)
 		    *ea.cmd = 'v';
+		/*FALLTHROUGH*/
 	case CMD_vglobal:
 		do_glob(&ea);
 		break;
@@ -3080,6 +3082,7 @@ set_one_cmd_context(buff)
 	case CMD_bunload:
 	    while ((expand_pattern = vim_strchr(arg, ' ')) != NULL)
 		arg = expand_pattern + 1;
+	    /*FALLTHROUGH*/
 	case CMD_buffer:
 	case CMD_sbuffer:
 	    expand_context = EXPAND_BUFFERS;

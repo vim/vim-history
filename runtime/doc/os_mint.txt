@@ -1,4 +1,4 @@
-*os_mint.txt*   For Vim version 6.0d.  Last change: 2000 Jul 07
+*os_mint.txt*   For Vim version 5.8.  Last change: 1999 Sep 14
 
 
 		  VIM REFERENCE MANUAL    by Jens M. Felderhoff
@@ -36,4 +36,4 @@ Send bug reports to
 
 	Jens M. Felderhoff, e-mail: <jmf@infko.uni-koblenz.de>
 
- vim:tw=78:
+ vim:ts=8:sw=8:tw=78:

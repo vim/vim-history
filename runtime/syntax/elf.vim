@@ -1,14 +1,19 @@
 " Vim syntax file
-" Language:		ELF
-" Maintainer:	Christian V. J. Bruessow <cvjb@bigfoot.de>
-" Last Change:	Fre 18 Jun 1999 13:34:50 MEST
+" Language   : ELF
+" Maintainer : Christian V. J. Brüssow <cvjb@bigfoot.de>
+" Last change: Son 06 Mai 2001 20:16:23 CEST
 
 " ELF: Extensible Language Facility
 "      This is the Applix Inc., Macro and Builder programming language.
 "      It has nothing in common with the binary format called ELF.
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+	syntax clear
+elseif exists("b:current_syntax")
+	finish
+endif
 
 " Case does not matter
 syn case ignore
@@ -54,23 +59,34 @@ syn match elfParens "[\[\]()]"
 " Punctuation
 syn match elfPunct "[,;]"
 
-if !exists("did_elf_syntax_inits")
-  let did_elf_syntax_inits = 1
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_elf_syn_inits")
+	if version < 508
+		let did_elf_syn_inits = 1
+		command -nargs=+ HiLink hi link <args>
+	else
+		command -nargs=+ HiLink hi def link <args>
+	endif
+
   " The default methods for highlighting. Can be overridden later.
-  hi link elfComment Comment
-  hi link elfPPCom Include
-  hi link elfKeyword Keyword
-  hi link elfSpecial Special
-  hi link elfEnvironment Special
-  hi link elfBraceError Error
-  hi link elfConditional Conditional
-  hi link elfMacro Function
-  hi link elfNumber Number
-  hi link elfString String
-  hi link elfParens Delimiter
-  hi link elfPunct Delimiter
+  HiLink elfComment Comment
+  HiLink elfPPCom Include
+  HiLink elfKeyword Keyword
+  HiLink elfSpecial Special
+  HiLink elfEnvironment Special
+  HiLink elfBraceError Error
+  HiLink elfConditional Conditional
+  HiLink elfMacro Function
+  HiLink elfNumber Number
+  HiLink elfString String
+  HiLink elfParens Delimiter
+  HiLink elfPunct Delimiter
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "elf"
 
-" vim: set ts=3 sw=3:
+" vim:ts=3:sw=3:

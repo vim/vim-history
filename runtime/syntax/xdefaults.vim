@@ -3,7 +3,7 @@
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
 "		Author and previous maintainer:
 "		Gautam H. Mudunuri <gmudunur@informatica.com>
-" Last Change:	Sat, 08 Apr 2000 11:26:31 +0200
+" Last Change:	Don, 03 Mai 2001 09:57:15 +0200
 " URL:		http://www.zellner.org/vim/syntax/xdefaults.vim
 " $Id$
 "
@@ -11,8 +11,13 @@
 "   xrdb manual page
 "   xrdb source: ftp://ftp.x.org/pub/R6.4/xc/programs/xrdb/xrdb.c
 
-
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " turn case on
 syn case match
@@ -29,7 +34,7 @@ endif
 
 
 " syn region  xdefaultsLabel   start=+^[^:]\{-}:+he=e-1 skip=+\\+ end="$"
-syn match   xdefaultsLabel   +^[^:]\{-}:+he=e-1                      contains=xdefaultsPunct
+syn match   xdefaultsLabel   +[^:]\{-}:+he=e-1                       contains=xdefaultsPunct,xdefaultsSpecial,xdefaultsLineEnd
 syn region  xdefaultsValue   keepend start=+:+lc=1 skip=+\\+ end=+$+ contains=xdefaultsSpecial,xdefaultsLabel,xdefaultsLineEnd
 
 syn match   xdefaultsSpecial	contained +#override+
@@ -56,7 +61,7 @@ syn region  xdefaultsComment start="/\*" end="\*/"       contains=xdefaultsTodo
 
 syntax match xdefaultsCommentError	"\*/"
 
-syn keyword xdefaultsTodo contained TODO FIXME XXX
+syn keyword xdefaultsTodo contained TODO FIXME XXX display
 
 
 
@@ -104,26 +109,35 @@ syn keyword xdefaultsSymbol contained PLANES
 syn keyword xdefaultsSymbol contained X_RESOLUTION
 syn keyword xdefaultsSymbol contained Y_RESOLUTION
 
-if !exists("did_xdefaults_syntax_inits")
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_xdefaults_syntax_inits")
+  if version < 508
     let did_xdefaults_syntax_inits = 1
-    " The default methods for highlighting.  Can be overridden later
-    hi link xdefaultsLabel		Type
-    hi link xdefaultsValue		Constant
-    hi link xdefaultsComment		Comment
-    hi link xdefaultsCommentH		xdefaultsComment
-    hi link xdefaultsPreProc		PreProc
-    hi link xdefaultsInclude		xdefaultsPreProc
-    hi link xdefaultsCppSkip		xdefaultsCppOut
-    hi link xdefaultsCppOut2		xdefaultsCppOut
-    hi link xdefaultsCppOut		Comment
-    hi link xdefaultsIncluded		String
-    hi link xdefaultsDefine		Macro
-    hi link xdefaultsSymbol		Statement
-    hi link xdefaultsSpecial		Statement
-    hi link xdefaultsErrorLine		Error
-    hi link xdefaultsCommentError	Error
-    hi link xdefaultsPunct		Normal
-    hi link xdefaultsLineEnd		Special
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+  HiLink xdefaultsLabel		Type
+  HiLink xdefaultsValue		Constant
+  HiLink xdefaultsComment	Comment
+  HiLink xdefaultsCommentH	xdefaultsComment
+  HiLink xdefaultsPreProc	PreProc
+  HiLink xdefaultsInclude	xdefaultsPreProc
+  HiLink xdefaultsCppSkip	xdefaultsCppOut
+  HiLink xdefaultsCppOut2	xdefaultsCppOut
+  HiLink xdefaultsCppOut	Comment
+  HiLink xdefaultsIncluded	String
+  HiLink xdefaultsDefine	Macro
+  HiLink xdefaultsSymbol	Statement
+  HiLink xdefaultsSpecial	Statement
+  HiLink xdefaultsErrorLine	Error
+  HiLink xdefaultsCommentError	Error
+  HiLink xdefaultsPunct		Normal
+  HiLink xdefaultsLineEnd	Special
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "xdefaults"

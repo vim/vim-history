@@ -1,12 +1,22 @@
 " Vim syntax file
 " Language:	Verilog
-" Maintainer:	Mun Johl <mj@core.rose.hp.com>
-" Last Update:	Tue Feb  1 14:39:57 PST 2000
+" Maintainer:	Mun Johl <mun_johl@agilent.com>
+" Last Update:  Thu May  3 09:47:51 PDT 2001
 
-" Remove any old syntax stuff hanging around
-syn clear
-set iskeyword=@,48-57,_,192-255,+,-,?
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+   syntax clear
+elseif exists("b:current_syntax")
+   finish
+endif
 
+" Set the local value of the 'iskeyword' option
+if version >= 600
+   setlocal iskeyword=@,48-57,_,192-255,+,-,?
+else
+   set iskeyword=@,48-57,_,192-255,+,-,?
+endif
 
 " A bunch of useful Verilog keywords
 syn keyword verilogStatement   disable assign deassign force release
@@ -59,23 +69,33 @@ syn region  verilogDirective   start="//\s*\$s dc_script_begin\>" end="//\s*\$s 
 "functionality.
 syn sync lines=50
 
-if !exists("did_verilog_syntax_inits")
-  let did_verilog_syntax_inits = 1
- " The default methods for highlighting.  Can be overridden later
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_verilog_syn_inits")
+   if version < 508
+      let did_verilog_syn_inits = 1
+      command -nargs=+ HiLink hi link <args>
+   else
+      command -nargs=+ HiLink hi def link <args>
+   endif
 
-  hi link verilogCharacter       Character
-  hi link verilogConditional     Conditional
-  hi link verilogRepeat          Repeat
-  hi link verilogString          String
-  hi link verilogTodo            Todo
-  hi link verilogComment         Comment
-  hi link verilogConstant        Constant
-  hi link verilogLabel           Label
-  hi link verilogNumber          Number
-  hi link verilogOperator        Special
-  hi link verilogStatement       Statement
-  hi link verilogGlobal          Define
-  hi link verilogDirective       SpecialComment
+   " The default highlighting.
+   HiLink verilogCharacter       Character
+   HiLink verilogConditional     Conditional
+   HiLink verilogRepeat          Repeat
+   HiLink verilogString          String
+   HiLink verilogTodo            Todo
+   HiLink verilogComment         Comment
+   HiLink verilogConstant        Constant
+   HiLink verilogLabel           Label
+   HiLink verilogNumber          Number
+   HiLink verilogOperator        Special
+   HiLink verilogStatement       Statement
+   HiLink verilogGlobal          Define
+   HiLink verilogDirective       SpecialComment
+
+   delcommand HiLink
 endif
 
 let b:current_syntax = "verilog"

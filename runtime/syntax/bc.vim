@@ -1,11 +1,17 @@
 " Vim syntax file
 " Language:	bc - An arbitrary precision calculator language
 " Maintainer:	Vladimir Scholtz <vlado@gjh.sk>
-" Last change:	2000 June 6
+" Last change:	2001 May 09
 " Available on:	www.gjh.sk/~vlado/bc.vim
 
-" Remove any old syntax
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
+
 syn case ignore
 
 " Keywords
@@ -45,19 +51,27 @@ syn match bcParenError                  ")"
 
 syn case match
 
-if !exists("did_bc_syntax_inits")
-  let did_bc_syntax_inits = 1
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_bc_syntax_inits")
+  if version < 508
+    let did_bc_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-  " The default methods for highlighting
-  hi link bcKeyword		Statement
-  hi link bcType		Type
-  hi link bcConstant		Constant
-  hi link bcNumber		Number
-  hi link bcComment		Comment
-  hi link bcString		String
-  hi link bcSpecialChar		SpecialChar
-  hi link bcParenError		Error
+  HiLink bcKeyword		Statement
+  HiLink bcType		Type
+  HiLink bcConstant		Constant
+  HiLink bcNumber		Number
+  HiLink bcComment		Comment
+  HiLink bcString		String
+  HiLink bcSpecialChar		SpecialChar
+  HiLink bcParenError		Error
 
+  delcommand HiLink
 endif
 
 let b:current_syntax = "bc"

@@ -1,10 +1,15 @@
 " Vim syntax file
 " Language:	Pike
 " Maintainer:	Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>
-" Last Change:	1998 Feb 16
+" Last Change:	2001 May 10
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " A bunch of useful C keywords
 syn keyword pikeStatement	goto break return continue
@@ -98,41 +103,51 @@ syn match	pikeBitField	";\s*\I\i*\s*:\s*[1-9]"me=e-1
 
 syn sync ccomment pikeComment minlines=10
 
-if !exists("did_pike_syntax_inits")
-  let did_pike_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link pikeLabel	Label
-  hi link pikeUserLabel	Label
-  hi link pikeConditional	Conditional
-  hi link pikeRepeat	Repeat
-  hi link pikeCharacter	Character
-  hi link pikeSpecialCharacter pikeSpecial
-  hi link pikeNumber	Number
-  hi link pikeFloat	Float
-  hi link pikeOctalError	pikeError
-  hi link pikeParenError	pikeError
-  hi link pikeInParen	pikeError
-  hi link pikeCommentError	pikeError
-  hi link pikeOperator	Operator
-  hi link pikeInclude	Include
-  hi link pikePreProc	PreProc
-  hi link pikeDefine	Macro
-  hi link pikeIncluded	pikeString
-  hi link pikeError	Error
-  hi link pikeStatement	Statement
-  hi link pikePreCondit	PreCondit
-  hi link pikeType		Type
-  hi link pikeCommentError	pikeError
-  hi link pikeCommentString pikeString
-  hi link pikeComment2String pikeString
-  hi link pikeCommentSkip	pikeComment
-  hi link pikeString	String
-  hi link pikeComment	Comment
-  hi link pikeSpecial	SpecialChar
-  hi link pikeTodo		Todo
-  hi link pikeException	pikeStatement
-  hi link pikeCompoundType	Constant
-  "hi link pikeIdentifier	Identifier
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_pike_syntax_inits")
+  if version < 508
+    let did_pike_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink pikeLabel		Label
+  HiLink pikeUserLabel		Label
+  HiLink pikeConditional	Conditional
+  HiLink pikeRepeat		Repeat
+  HiLink pikeCharacter		Character
+  HiLink pikeSpecialCharacter pikeSpecial
+  HiLink pikeNumber		Number
+  HiLink pikeFloat		Float
+  HiLink pikeOctalError		pikeError
+  HiLink pikeParenError		pikeError
+  HiLink pikeInParen		pikeError
+  HiLink pikeCommentError	pikeError
+  HiLink pikeOperator		Operator
+  HiLink pikeInclude		Include
+  HiLink pikePreProc		PreProc
+  HiLink pikeDefine		Macro
+  HiLink pikeIncluded		pikeString
+  HiLink pikeError		Error
+  HiLink pikeStatement		Statement
+  HiLink pikePreCondit		PreCondit
+  HiLink pikeType		Type
+  HiLink pikeCommentError	pikeError
+  HiLink pikeCommentString	pikeString
+  HiLink pikeComment2String	pikeString
+  HiLink pikeCommentSkip	pikeComment
+  HiLink pikeString		String
+  HiLink pikeComment		Comment
+  HiLink pikeSpecial		SpecialChar
+  HiLink pikeTodo		Todo
+  HiLink pikeException		pikeStatement
+  HiLink pikeCompoundType	Constant
+  "HiLink pikeIdentifier	Identifier
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "pike"

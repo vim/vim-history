@@ -2,10 +2,15 @@
 " Language:	Z shell (zsh)
 " Maintainer:	Felix von Leitner <leitner@math.fu-berlin.de>
 " Heavily based on sh.vim by Lennart Schultz
-" Last Change:	1999 Jun 14
+" Last Change:	2001 May 09
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 syn region	zshSinglequote	start=+'+ skip=+\\'+ end=+'+
 " A bunch of useful zsh keywords
@@ -71,31 +76,41 @@ syn match zshTestOpr	"-\<[oeaznlg][tfqet]\=\>\|!\==\|-\<[b-gkLprsStuwjxOG]\>"
 "syn region zshTest           start="\[" skip="\\$" end="\]" contains=zshString,zshTestOpr,zshDerefIdentifier,zshDerefOpr
 syn region  zshString	start=+"+  skip=+\\"+  end=+"+  contains=zshSpecial,zshOperator,zshDerefIdentifier,zshDerefOpr,zshSpecialShellVar,zshSinglequote,zshCommandSub
 
-if !exists("did_zsh_syntax_inits")
-  let did_zsh_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link zshSinglequote		zshString
-  hi link zshConditional		zshStatement
-  hi link zshRepeat		zshStatement
-  hi link zshFunctionName	zshFunction
-  hi link zshCommandSub		zshOperator
-  hi link zshRedir		zshOperator
-  hi link zshSetVariables	zshShellVariables
-  hi link zshSpecialShellVar	zshShellVariables
-  hi link zshTestOpr		zshOperator
-  hi link zshDerefOpr		zshSpecial
-  hi link zshDerefIdentifier	zshShellVariables
-  hi link zshOperator		Operator
-  hi link zshStatement		Statement
-  hi link zshNumber		Number
-  hi link zshString		String
-  hi link zshComment		Comment
-  hi link zshSpecial		Special
-  hi link zshTodo		Todo
-  hi link zshShellVariables	Special
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_zsh_syntax_inits")
+  if version < 508
+    let did_zsh_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink zshSinglequote		zshString
+  HiLink zshConditional		zshStatement
+  HiLink zshRepeat		zshStatement
+  HiLink zshFunctionName	zshFunction
+  HiLink zshCommandSub		zshOperator
+  HiLink zshRedir		zshOperator
+  HiLink zshSetVariables	zshShellVariables
+  HiLink zshSpecialShellVar	zshShellVariables
+  HiLink zshTestOpr		zshOperator
+  HiLink zshDerefOpr		zshSpecial
+  HiLink zshDerefIdentifier	zshShellVariables
+  HiLink zshOperator		Operator
+  HiLink zshStatement		Statement
+  HiLink zshNumber		Number
+  HiLink zshString		String
+  HiLink zshComment		Comment
+  HiLink zshSpecial		Special
+  HiLink zshTodo		Todo
+  HiLink zshShellVariables	Special
 "  hi zshOperator		term=underline ctermfg=6 guifg=Purple gui=bold
 "  hi zshShellVariables	term=underline ctermfg=2 guifg=SeaGreen gui=bold
 "  hi zshFunction		term=bold ctermbg=1 guifg=Red
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "zsh"

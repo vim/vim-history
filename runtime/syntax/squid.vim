@@ -1,12 +1,18 @@
 " Vim syntax file
 " Language:	Squid config file
 " Maintainer:	Klaus Muth <muth@hagos.de>
-" Last Change:	1999 Jun 14
+" Last Change:	2001 May 09
 " URL:		http://unitopia.uni-stuttgart.de/~monty/vim/syntax/squid.vim
 
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
+
 " squid.conf syntax seems to be case insensitive
 syn case ignore
 
@@ -83,18 +89,28 @@ syn match	squidIP		"\<\d\{1,3}\.\d\{1,3}\.\d\{1,3}\.\d\{1,3}\>"
 " Make it fast like hell :)
 syn sync minlines=3
 
-if !exists("did_squid_syntax_inits")
-  let did_squid_syntax_inits = 1
-" The default methods for highlighting.  Can be overridden later
-  hi link squidTodo	Todo
-  hi link squidComment	Comment
-  hi link squidTag	Special
-  hi link squidConf	Keyword
-  hi link squidOpt	Constant
-  hi link squidAction	String
-  hi link squidNumber	Number
-  hi link squidIP	Number
-  hi link squidAcl	Keyword
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_squid_syntax_inits")
+  if version < 508
+    let did_squid_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink squidTodo	Todo
+  HiLink squidComment	Comment
+  HiLink squidTag	Special
+  HiLink squidConf	Keyword
+  HiLink squidOpt	Constant
+  HiLink squidAction	String
+  HiLink squidNumber	Number
+  HiLink squidIP	Number
+  HiLink squidAcl	Keyword
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "squid"

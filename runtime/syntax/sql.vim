@@ -1,10 +1,15 @@
 " Vim syntax file
 " Language:	SQL, PL/SQL (Oracle 8i)
 " Maintainer:	Paul Moore <gustav@morpheus.demon.co.uk>
-" Last Change:	2000 Jan 04
+" Last Change:	2001 Apr 30
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 syn case ignore
 
@@ -41,7 +46,7 @@ syn keyword sqlType	mlslabel number raw rowid varchar varchar2 varray
 
 " Strings and characters:
 syn region sqlString		start=+"+  skip=+\\\\\|\\"+  end=+"+
-syn region sqlString		start=+'+  skip=+\\\\\|\\"+  end=+'+
+syn region sqlString		start=+'+  skip=+\\\\\|\\'+  end=+'+
 
 " Numbers:
 syn match sqlNumber		"-\=\<\d*\.\=[0-9_]\>"
@@ -52,17 +57,27 @@ syn match sqlComment	"--.*"
 
 syn sync ccomment sqlComment
 
-if !exists("did_sql_syntax_inits")
-  let did_sql_syntax_inits = 1
-  " The default methods for highlighting. Can be overridden later.
-  hi link sqlComment	Comment
-  hi link sqlKeyword	sqlSpecial
-  hi link sqlNumber	Number
-  hi link sqlOperator	sqlStatement
-  hi link sqlSpecial	Special
-  hi link sqlStatement	Statement
-  hi link sqlString	String
-  hi link sqlType	Type
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_sql_syn_inits")
+  if version < 508
+    let did_sql_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink sqlComment	Comment
+  HiLink sqlKeyword	sqlSpecial
+  HiLink sqlNumber	Number
+  HiLink sqlOperator	sqlStatement
+  HiLink sqlSpecial	Special
+  HiLink sqlStatement	Statement
+  HiLink sqlString	String
+  HiLink sqlType	Type
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "sql"

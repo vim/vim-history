@@ -1,10 +1,15 @@
 " Vim syntax file
 " Language:	Lynx 2.7.1 style file
 " Maintainer:	Scott Bigham <dsb@cs.duke.edu>
-" Last Change:	1997 Nov 23
+" Last Change:	2001 May 09
 
-" clear any unwanted syntax defs
-syntax clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " This setup is probably atypical for a syntax highlighting file, because
 " most of it is not really intended to be overrideable.  Instead, the
@@ -64,58 +69,63 @@ syn case match
 
 syn match lssComment "#.*$"
 
-if !exists("did_lss_syntax_inits")
-  let did_lss_syntax_inits = 1
-
-  hi link lssComment Comment
-  hi link lssElement Identifier
-
-  hi	lssBold		term=bold cterm=bold
-  hi	lssReverse	term=reverse cterm=reverse
-  hi	lssUnderline	term=underline cterm=underline
-  hi	lssStandout	term=standout cterm=standout
-
-  hi	lssRedFg		ctermfg=red
-  hi	lssBlueFg		ctermfg=blue
-  hi	lssGreenFg		ctermfg=green
-  hi	lssBrownFg		ctermfg=brown
-  hi	lssMagentaFg		ctermfg=magenta
-  hi	lssCyanFg		ctermfg=cyan
-  hi	lssGrayFg		ctermfg=gray
-  if $COLORTERM == "rxvt"
-    " On rxvt's, bright colors are activated by setting the bold attribute.
-    hi	lssLightgrayFg		ctermfg=gray cterm=bold
-    hi	lssBrightredFg		ctermfg=red cterm=bold
-    hi	lssBrightgreenFg	ctermfg=green cterm=bold
-    hi	lssYellowFg		ctermfg=yellow cterm=bold
-    hi	lssBrightblueFg		ctermfg=blue cterm=bold
-    hi	lssBrightmagentaFg	ctermfg=magenta cterm=bold
-    hi	lssBrightcyanFg		ctermfg=cyan cterm=bold
-  else
-    hi	lssLightgrayFg		ctermfg=lightgray
-    hi	lssBrightredFg		ctermfg=lightred
-    hi	lssBrightgreenFg	ctermfg=lightgreen
-    hi	lssYellowFg		ctermfg=yellow
-    hi	lssBrightblueFg		ctermfg=lightblue
-    hi	lssBrightmagentaFg	ctermfg=lightmagenta
-    hi	lssBrightcyanFg		ctermfg=lightcyan
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_lss_syntax_inits")
+  if version < 508
+    let did_lss_syntax_inits = 1
   endif
 
-  hi	lssRedBg		ctermbg=red
-  hi	lssBlueBg		ctermbg=blue
-  hi	lssGreenBg		ctermbg=green
-  hi	lssBrownBg		ctermbg=brown
-  hi	lssMagentaBg		ctermbg=magenta
-  hi	lssCyanBg		ctermbg=cyan
-  hi	lssLightgrayBg		ctermbg=lightgray
-  hi	lssGrayBg		ctermbg=gray
-  hi	lssBrightredBg		ctermbg=lightred
-  hi	lssBrightgreenBg	ctermbg=lightgreen
-  hi	lssYellowBg		ctermbg=yellow
-  hi	lssBrightblueBg		ctermbg=lightblue
-  hi	lssBrightmagentaBg	ctermbg=lightmagenta
-  hi	lssBrightcyanBg		ctermbg=lightcyan
-  hi	lssWhiteBg		ctermbg=white ctermfg=black
+  hi def link lssComment Comment
+  hi def link lssElement Identifier
+
+  hi def lssBold		term=bold cterm=bold
+  hi def lssReverse		term=reverse cterm=reverse
+  hi def lssUnderline		term=underline cterm=underline
+  hi def lssStandout		term=standout cterm=standout
+
+  hi def lssRedFg		ctermfg=red
+  hi def lssBlueFg		ctermfg=blue
+  hi def lssGreenFg		ctermfg=green
+  hi def lssBrownFg		ctermfg=brown
+  hi def lssMagentaFg		ctermfg=magenta
+  hi def lssCyanFg		ctermfg=cyan
+  hi def lssGrayFg		ctermfg=gray
+  if $COLORTERM == "rxvt"
+    " On rxvt's, bright colors are activated by setting the bold attribute.
+    hi def lssLightgrayFg	ctermfg=gray cterm=bold
+    hi def lssBrightredFg	ctermfg=red cterm=bold
+    hi def lssBrightgreenFg	ctermfg=green cterm=bold
+    hi def lssYellowFg		ctermfg=yellow cterm=bold
+    hi def lssBrightblueFg	ctermfg=blue cterm=bold
+    hi def lssBrightmagentaFg	ctermfg=magenta cterm=bold
+    hi def lssBrightcyanFg	ctermfg=cyan cterm=bold
+  else
+    hi def lssLightgrayFg	ctermfg=lightgray
+    hi def lssBrightredFg	ctermfg=lightred
+    hi def lssBrightgreenFg	ctermfg=lightgreen
+    hi def lssYellowFg		ctermfg=yellow
+    hi def lssBrightblueFg	ctermfg=lightblue
+    hi def lssBrightmagentaFg	ctermfg=lightmagenta
+    hi def lssBrightcyanFg	ctermfg=lightcyan
+  endif
+
+  hi def lssRedBg		ctermbg=red
+  hi def lssBlueBg		ctermbg=blue
+  hi def lssGreenBg		ctermbg=green
+  hi def lssBrownBg		ctermbg=brown
+  hi def lssMagentaBg		ctermbg=magenta
+  hi def lssCyanBg		ctermbg=cyan
+  hi def lssLightgrayBg		ctermbg=lightgray
+  hi def lssGrayBg		ctermbg=gray
+  hi def lssBrightredBg		ctermbg=lightred
+  hi def lssBrightgreenBg	ctermbg=lightgreen
+  hi def lssYellowBg		ctermbg=yellow
+  hi def lssBrightblueBg	ctermbg=lightblue
+  hi def lssBrightmagentaBg	ctermbg=lightmagenta
+  hi def lssBrightcyanBg	ctermbg=lightcyan
+  hi def lssWhiteBg		ctermbg=white ctermfg=black
 endif
 
 let b:current_syntax = "lss"

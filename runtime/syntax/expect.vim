@@ -1,10 +1,15 @@
 " Vim syntax file
 " Language:	Expect
 " Maintainer:	Ralph Jennings <knowbudy@oro.net>
-" Last Change:	1999 Jun 16
+" Last Change:	2001 May 09
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " Reserved Expect variable prefixes.
 syn match   expectVariables "\$exp[a-zA-Z0-9_]*\|\$inter[a-zA-Z0-9_]*"
@@ -73,24 +78,34 @@ syn region  expectString	start=+"+  end=+"+  contains=expectVariables,expectSpec
 syn keyword expectTodo		contained TODO
 syn match   expectComment		"#.*$" contains=expectTodo
 
-if !exists("did_expect_syntax_inits")
-  let did_expect_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link expectVariables	Special
-  hi link expectCommand		Function
-  hi link expectStatement	Statement
-  hi link expectConditional	Conditional
-  hi link expectRepeat		Repeat
-  hi link expectExpectOpts	Keyword
-  hi link expectOutVar		Special
-  hi link expectSpecial		Special
-  hi link expectNumber		Number
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_expect_syntax_inits")
+  if version < 508
+    let did_expect_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-  hi link expectString		String
+  HiLink expectVariables	Special
+  HiLink expectCommand		Function
+  HiLink expectStatement	Statement
+  HiLink expectConditional	Conditional
+  HiLink expectRepeat		Repeat
+  HiLink expectExpectOpts	Keyword
+  HiLink expectOutVar		Special
+  HiLink expectSpecial		Special
+  HiLink expectNumber		Number
 
-  hi link expectComment		Comment
-  hi link expectTodo		Todo
-  "hi link expectIdentifier	Identifier
+  HiLink expectString		String
+
+  HiLink expectComment		Comment
+  HiLink expectTodo		Todo
+  "HiLink expectIdentifier	Identifier
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "expect"

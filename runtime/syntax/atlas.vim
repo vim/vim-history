@@ -1,9 +1,15 @@
 " Vim syntax file
 " Language:	ATLAS
 " Maintainer:	Inaki Saez <jisaez@sfe.indra.es>
-" Last Change:	1998-03-31
+" Last Change:	2001 May 09
 
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 syn case ignore
 
@@ -54,27 +60,37 @@ syn sync match atlasTerminator	groupthere NONE "\$"
 syn sync maxlines=100
 
 
-if !exists("did_atlas_syntax_inits")
-  let did_atlas_syntax_inits = 1
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_atlas_syntax_inits")
+  if version < 508
+    let did_atlas_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-  hi link atlasConditional	Conditional
-  hi link atlasRepeat		Repeat
-  hi link atlasStatement	Statement
-  hi link atlasNumber		Number
-  hi link atlasHexNumber	Number
-  hi link atlasOctalNumber	Number
-  hi link atlasBinNumber	Number
-  hi link atlasDecimalNumber	Float
-  hi link atlasFormatString	String
-  hi link atlasString		String
-  hi link atlasComment		Comment
-  hi link atlasComment2		Comment
-  hi link atlasInclude		Include
-  hi link atlasDefine		Macro
-  hi link atlasReserved		PreCondit
-  hi link atlasStorageClass	StorageClass
-  hi link atlasIdentifier	NONE
-  hi link atlasSpecial		Special
+  HiLink atlasConditional	Conditional
+  HiLink atlasRepeat		Repeat
+  HiLink atlasStatement	Statement
+  HiLink atlasNumber		Number
+  HiLink atlasHexNumber	Number
+  HiLink atlasOctalNumber	Number
+  HiLink atlasBinNumber	Number
+  HiLink atlasDecimalNumber	Float
+  HiLink atlasFormatString	String
+  HiLink atlasString		String
+  HiLink atlasComment		Comment
+  HiLink atlasComment2		Comment
+  HiLink atlasInclude		Include
+  HiLink atlasDefine		Macro
+  HiLink atlasReserved		PreCondit
+  HiLink atlasStorageClass	StorageClass
+  HiLink atlasIdentifier	NONE
+  HiLink atlasSpecial		Special
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "atlas"

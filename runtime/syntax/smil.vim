@@ -2,12 +2,19 @@
 " Language:	SMIL (Synchronized Multimedia Integration Language)
 " Maintainer:	Herve Foucher <Herve.Foucher@helio.org>
 " URL:		http://www.helio.org/vim/syntax/smil.vim
-" Last Change:	1999 Sep 02
+" Last Change:	2001 May 09
 
 " To learn more about SMIL, please refer to http://www.w3.org/AudioVideo/
 " and to http://www.helio.org/products/smil/tutorial/
 
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
+
 " SMIL is case sensitive
 syn case match
 
@@ -104,28 +111,38 @@ else
 endif
 syn region smilComment                start=+<!DOCTYPE+ keepend end=+>+
 
-if !exists("did_smil_syntax_inits")
-  let did_smil_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link smilTag			Function
-  hi link smilEndTag			Identifier
-  hi link smilArg			Type
-  hi link smilTagName			smilStatement
-  hi link smilSpecialTagName		Exception
-  hi link smilValue			Value
-  hi link smilSpecialChar		Special
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_smil_syntax_inits")
+  if version < 508
+    let did_smil_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-  hi link smilSpecial			Special
-  hi link smilSpecialChar		Special
-  hi link smilString			String
-  hi link smilStatement			Statement
-  hi link smilComment			Comment
-  hi link smilCommentPart		Comment
-  hi link smilPreProc			PreProc
-  hi link smilValue			String
-  hi link smilCommentError		smilError
-  hi link smilTagError			smilError
-  hi link smilError			Error
+  HiLink smilTag			Function
+  HiLink smilEndTag			Identifier
+  HiLink smilArg			Type
+  HiLink smilTagName			smilStatement
+  HiLink smilSpecialTagName		Exception
+  HiLink smilValue			Value
+  HiLink smilSpecialChar		Special
+
+  HiLink smilSpecial			Special
+  HiLink smilSpecialChar		Special
+  HiLink smilString			String
+  HiLink smilStatement			Statement
+  HiLink smilComment			Comment
+  HiLink smilCommentPart		Comment
+  HiLink smilPreProc			PreProc
+  HiLink smilValue			String
+  HiLink smilCommentError		smilError
+  HiLink smilTagError			smilError
+  HiLink smilError			Error
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "smil"

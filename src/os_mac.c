@@ -23,11 +23,11 @@
  */
     int
 mac_expandpath(
-    garray_t	*gap,
-    char_u	*path,
-    int		flags,		/* EW_* flags */
-    short	start_at,
-    short	as_full)
+    struct growarray	*gap,
+    char_u		*path,
+    int			flags,		/* EW_* flags */
+    short		start_at,
+    short		as_full)
 {
     /*
      * TODO:
@@ -48,10 +48,8 @@ mac_expandpath(
     char_u	*buf;
     char_u	*p, *s, *e, dany;
     int		start_len, c;
-    char	dummy;
     char_u	*pat;
-    regmatch_t	regmatch;
-    int		matches;
+    vim_regexp	*prog;
 
     start_len = gap->ga_len;
     buf = alloc(STRLEN(path) + BASENAMELEN + 5);/* make room for file name */
@@ -108,10 +106,10 @@ mac_expandpath(
 
     /* compile the regexp into a program */
     reg_ic = FALSE;				/* Don't ever ignore case */
-    regmatch.regprog = vim_regcomp(pat, TRUE);
+    prog = vim_regcomp(pat, TRUE);
     vim_free(pat);
 
-    if (regmatch.regprog == NULL)
+    if (prog == NULL)
     {
 	vim_free(buf);
 	return 0;
@@ -170,7 +168,7 @@ mac_expandpath(
 	{
 	    STRNCPY (cfilename, &dirname[1], dirname[0]);
 	    cfilename[dirname[0]] = 0;
-	    if (vim_regexec(&regmatch, cfilename, (colnr_t)0))
+	    if (vim_regexec(prog, cfilename, TRUE))
 	    {
 		if (s[-1] != ':')
 		{
@@ -220,7 +218,7 @@ mac_expandpath(
 	    {
 		STRNCPY (cfilename, &dirname[1], dirname[0]);
 		cfilename[dirname[0]] = 0;
-		if (vim_regexec(&regmatch, cfilename, (colnr_t)0))
+		if (vim_regexec(prog, cfilename, TRUE))
 		{
 		    STRCPY(s, cfilename);
 		    STRCAT(buf, path);
@@ -228,10 +226,10 @@ mac_expandpath(
 			(void)mac_expandpath(gap, s, flags, 0, FALSE);
 		    else
 		    {
-#ifdef DONT_ADD_PATHSEP_TO_DIR
+    #ifdef DONT_ADD_PATHSEP_TO_DIR
 /*			if ((gMyCPB.hFileInfo.ioFlAttrib & ioDirMask) !=0 )
 */			    STRCAT(buf, PATHSEPSTR);
-#endif
+    #endif
 			addfile(gap, s, flags);
 		    }
 #if 0
@@ -245,7 +243,7 @@ mac_expandpath(
 	while (gErr == noErr);
     }
 
-    vim_free(regmatch.regprog);
+    vim_free(prog);
 
     return gap->ga_len - start_len;
 }
@@ -257,9 +255,9 @@ mac_expandpath(
  */
     int
 mch_expandpath(
-    garray_t	*gap,
-    char_u	*path,
-    int		flags)		/* EW_* flags */
+    struct growarray	*gap,
+    char_u		*path,
+    int			flags)		/* EW_* flags */
 {
 
     char_u first = *path;
@@ -300,7 +298,7 @@ mch_breakcheck()
     EventRecord theEvent;
 
     if (EventAvail (keyDownMask, &theEvent))
-	if ((theEvent.message & charCodeMask) == Ctrl_C)
+	if ((theEvent.message & charCodeMask) == Ctrl('C'))
 	    got_int = TRUE;
 #if 0
     short	i = 0;
@@ -316,7 +314,7 @@ mch_breakcheck()
 	    found = false;
 	  if ((theEvent.what == keyDown))
 	    found = false;
-	  if ((theEvent.message & charCodeMask) == Ctrl_C)
+	  if ((theEvent.message & charCodeMask) == Ctrl('C'))
 	    {
 		found = false;
 		got_int = TRUE;
@@ -328,9 +326,6 @@ mch_breakcheck()
 
 }
 
-/*
- * Return amount of memory currently available.
- */
     long_u
 mch_avail_mem(special)
     int     special;
@@ -365,7 +360,7 @@ mch_delay(msec, ignoreinput)
 }
 
     void
-mch_shellinit()
+mch_windinit()
 {
     /*
      *  TODO: Verify if needed, or override later.
@@ -400,7 +395,7 @@ mch_input_isatty()
     return OK;
 }
 
-#ifdef FEAT_TITLE
+#ifdef WANT_TITLE
 /*
  * Set the window title and icon.
  * (The icon is not taken care of).
@@ -524,9 +519,6 @@ slash_n_colon_adjust (buf)
      */
 
     char_u  temp[MAXPATHL];
-    char_u  *dot;
-    char_u  *slash;
-    char_u  *searching;
     char_u  *first_colon = vim_strchr(buf, ':');
     char_u  *first_slash = vim_strchr(buf, '/');
     int     full = TRUE;
@@ -856,7 +848,7 @@ mch_settmode(tmode)
      */
 }
 
-#ifdef FEAT_MOUSE
+#ifdef USE_MOUSE
 /*
  * set mouse clicks on or off (only works for xterms)
  */
@@ -877,7 +869,7 @@ mch_setmouse(on)
 mch_screenmode(arg)
     char_u	 *arg;
 {
-    EMSG(_("Screen mode setting not supported"));
+    EMSG("Screen mode setting not supported");
     return FAIL;
 }
 

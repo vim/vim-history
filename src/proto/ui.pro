@@ -18,7 +18,6 @@ void clip_auto_select __ARGS((void));
 int clip_isautosel __ARGS((void));
 void clip_start_selection __ARGS((int button, int x, int y, int repeated_click, int_u modifiers));
 void clip_process_selection __ARGS((int button, int x, int y, int repeated_click, int_u modifiers));
-void clip_redraw_selection __ARGS((int x, int y, int w, int h));
 void clip_may_redraw_selection __ARGS((int row, int col, int len));
 void clip_clear_selection __ARGS((void));
 void clip_may_clear_selection __ARGS((int row1, int row2));

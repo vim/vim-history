@@ -1,16 +1,26 @@
 " Vim syntax file
-" Language:	CF (Cold Fusion)
-" Maintainer:	Jeff Lanzarotta
-" URL:		http://web.qx.net/lanzarotta/vim/syntax/cf.vim
-" Last Change:	2000 January 10
-" Note:		Since Cold Fusion has its' own version of html comments, make sure
-"		that you put 'let html_wrong_comments=1' in your _vimrc file.
+"    Language: Cold Fusion
+"  Maintainer: Jeff Lanzarotta (frizbeefanatic@yahoo.com)
+"         URL: http://lanzarotta.tripod.com/vim/syntax/plsql.vim.zip
+" Last Change: April 30, 2001
+"       Usage: Since Cold Fusion has its own version of html comments,
+"              make sure that you put
+"              'let html_wrong_comments=1' in your _vimrc file.
 
-" Please check :help html.vim for some comments and a description of the options
-syntax clear
+" For version 5.x, clear all syntax items.
+" For version 6.x, quit when a syntax file was already loaded.
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " Use all the stuff from the original html syntax file.
-source <sfile>:p:h/html.vim
+if version < 600
+  source <sfile>:p:h/html.vim
+else
+  runtime! syntax/html.vim
+endif
 
 " Tag names.
 syn keyword cfTagName contained cfabort cfapplet cfapplication cfassociate
@@ -118,14 +128,24 @@ syn cluster htmlArgCluster add=cfArg,cfFunctionName
 
 syn region cfFunctionRegion start='#' end='#' contains=cfFunctionName
 
-if !exists("did_cf_syntax_inits")
-  let did_cf_syntax_inits = 1
-  " The default methods for highlighting. Can be overridden later.
-  hi link cfTagName Statement 
-  hi link cfArg Type
-  hi link cfFunctionName Function
+" Define the default highlighting.
+" For version 5.x and earlier, only when not done already.
+" For version 5.8 and later, only when and item doesn't have highlighting yet.
+if version >= 508 || !exists("did_cf_syn_inits")
+  if version < 508
+    let did_cf_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink cfTagName Statement
+  HiLink cfArg Type
+  HiLink cfFunctionName Function
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "cf"
 
-" vim: ts=8
+" vim: ts=8 sw=2

@@ -1,13 +1,23 @@
 " Vim syntax file
 " Language:	CUPL simulation
 " Maintainer:	John Cook <john.cook@kla-tencor.com>
-" Last Change:	1999 Sep 21
+" Last Change:	2001 Apr 25
 
-" Remove any old syn stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " Read the CUPL syntax to start with
-source <sfile>:p:h/cupl.vim
+if version < 600
+  source <sfile>:p:h/cupl.vim
+else
+  runtime! syntax/cupl.vim
+  unlet b:current_syntax
+endif
 
 " omit definition-specific stuff
 syn clear cuplStatement
@@ -42,17 +52,28 @@ syn match cuplsimOutput +"\x\+"+
 
 syn sync minlines=1
 
-" append to the highlighting links in cupl.vim
-if !exists("did_cuplsim_syn_inits")
-  let did_cuplsim_syn_inits = 1
-  " The default methods for hiing.  Can be overridden later
-  hi link cuplsimOrder	  cuplStatement
-  hi link cuplsimBase	  cuplStatement
-  hi link cuplsimBaseType cuplStatement
-  hi link cuplsimVectors  cuplStatement
-  hi link cuplsimStimulus    cuplNumber
-  hi link cuplsimOutput      cuplNumber
-  hi link cuplsimOrderFormat cuplNumber
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_cuplsim_syn_inits")
+  if version < 508
+    let did_cuplsim_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  " append to the highlighting links in cupl.vim
+  " The default highlighting.
+  HiLink cuplsimOrder		cuplStatement
+  HiLink cuplsimBase		cuplStatement
+  HiLink cuplsimBaseType	cuplStatement
+  HiLink cuplsimVectors		cuplStatement
+  HiLink cuplsimStimulus	cuplNumber
+  HiLink cuplsimOutput		cuplNumber
+  HiLink cuplsimOrderFormat	cuplNumber
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "cuplsim"

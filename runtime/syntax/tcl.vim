@@ -1,13 +1,19 @@
 " Vim syntax file
 " Language:	TCL/TK
-" Maintainer:	Allan Kelly <Allan.Kelly@ed.ac.uk>
+" Maintainer:	Matt Neumann <mattneu@purpleturtle.com>
+"		(previously Allan Kelly <allan@fruitloaf.co.uk>)
 " Original:	Robin Becker <robin@jessikat.demon.co.uk>
 " Version:	5.1(synched), 1998 June 29
 "
 " Keywords TODO: format clock click anchor
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " A bunch of useful keywords
 syn keyword tclStatement	proc global return lindex
@@ -178,36 +184,46 @@ syn region  tclComment		start=/;\s*\#/hs=s+1 end="$" contains=tclTodo
 
 "syn sync ccomment tclComment
 
-if !exists("did_tcl_syntax_inits")
-  let did_tcl_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link tcltkSwitch		Special
-  hi link tclLabel		Label
-  hi link tclConditional	Conditional
-  hi link tclRepeat		Repeat
-  hi link tclNumber		Number
-  hi link tclError		Error
-  hi link tclStatement		Statement
-  " hi link tclStatementColor	Statement
-  hi link tclString		String
-  hi link tclComment		Comment
-  hi link tclSpecial		Special
-  hi link tclTodo		Todo
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_tcl_syntax_inits")
+  if version < 508
+    let did_tcl_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink tcltkSwitch		Special
+  HiLink tclLabel		Label
+  HiLink tclConditional		Conditional
+  HiLink tclRepeat		Repeat
+  HiLink tclNumber		Number
+  HiLink tclError		Error
+  HiLink tclStatement		Statement
+  "HiLink tclStatementColor	Statement
+  HiLink tclString		String
+  HiLink tclComment		Comment
+  HiLink tclSpecial		Special
+  HiLink tclTodo		Todo
   " Below here are the commands and their options.
-  hi link tcltkCommandColor	Statement
-  hi link tcltkWidgetColor      Structure
-  hi link tclLineContinue       WarningMsg
-  hi link tcltkStringSwitch	Special
-  hi link tcltkArraySwitch	Special
-  hi link tcltkLsortSwitch	Special
-  hi link tcltkPackSwitch	Special
-  hi link tcltkPackConfSwitch	Special
-  hi link tcltkMaths		Special
-  hi link tcltkNamespaceSwitch	Special
-  hi link tcltkWidgetSwitch	Special
-  hi link tcltkPackConfColor	Identifier
-  "hi link tcltkLsort		Statement
-  hi link tclVarRef             Identifier
+  HiLink tcltkCommandColor	Statement
+  HiLink tcltkWidgetColor      Structure
+  HiLink tclLineContinue       WarningMsg
+  HiLink tcltkStringSwitch	Special
+  HiLink tcltkArraySwitch	Special
+  HiLink tcltkLsortSwitch	Special
+  HiLink tcltkPackSwitch	Special
+  HiLink tcltkPackConfSwitch	Special
+  HiLink tcltkMaths		Special
+  HiLink tcltkNamespaceSwitch	Special
+  HiLink tcltkWidgetSwitch	Special
+  HiLink tcltkPackConfColor	Identifier
+  "HiLink tcltkLsort		Statement
+  HiLink tclVarRef             Identifier
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "tcl"

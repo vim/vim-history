@@ -6,10 +6,19 @@
 " Maintainer:	Sung-Hyun Nam <namsh@kldp.org>
 "		If you want to enhance and maintain, You can remove my name
 "		and insert yours.
-" Last Change:	1999/12/10
+" Last Change:	2001 May 10
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
+
+let sgml_cpo_save = &cpo
+set cpo=
+
 syn case ignore
 
 " tags
@@ -100,23 +109,36 @@ syn keyword sgmlTagName contained abbrev abstract accel acronym action address
 				\ varname videodata videoobject void volumenum
 				\ warning wordasword xref year
 
-if !exists("did_sgml_syntax_inits")
-  let did_sgml_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link sgmlTag	Special
-  hi link sgmlEndTag	Special
-  hi link sgmlEntity	Type
-  hi link sgmlDocEnt    Type
-  hi link sgmlTagName	Statement
-  hi link sgmlComment	Comment
-  hi link sgmlSpecial	Special
-  hi link sgmlDocType   PreProc
-  hi link sgmlStr	String
-  hi link sgmlAssign	String
-  hi link sgmlTagError	Error
-  hi link sgmlErrInTag	Error
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_sgml_syntax_inits")
+  if version < 508
+    let did_sgml_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink sgmlTag	Special
+  HiLink sgmlEndTag	Special
+  HiLink sgmlEntity	Type
+  HiLink sgmlDocEnt    Type
+  HiLink sgmlTagName	Statement
+  HiLink sgmlComment	Comment
+  HiLink sgmlSpecial	Special
+  HiLink sgmlDocType   PreProc
+  HiLink sgmlStr	String
+  HiLink sgmlAssign	String
+  HiLink sgmlTagError	Error
+  HiLink sgmlErrInTag	Error
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "sgml"
+
+let &cpo = sgml_cpo_save
+unlet sgml_cpo_save
 
 " vim:set tw=78 ts=8 sts=2 sw=2 noet com=nb\:":

@@ -30,7 +30,8 @@ And please stick to the rules below.
 
 
 Rules for making a syntax file:
-- Use the same layout as the other syntax files.
+- Use the same layout as the other syntax files.  You can use the viminfo.vim
+  file as an example.
 - The name of the file must be the same as the head of the group names in the
   file.  This avoids using the same group name as another syntax file.  Use
   the same name for the string that b:current_syntax is set to.  Always use
@@ -38,7 +39,8 @@ Rules for making a syntax file:
 - Start with a "syntax clear".
 - Do not include anything that is a user preference.
 - Do not include mappings or abbreviations.  Only include setting 'iskeyword'
-  if it is really necessary for recognizing keywords.
+  if it is really necessary for recognizing keywords.  Use "setlocal" for Vim
+  6.0, with an "if" statement.
 - Avoid using specific colors.  Use the standard highlight groups whenever
   possible.  Don't forget that some people use a different background color,
   or have only eight colors available.

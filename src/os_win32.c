@@ -10,13 +10,13 @@
  * os_win32.c
  *
  * Used for both the console version and the Win32 GUI.  A lot of code is for
- * the console version only, so there is a lot of "#ifndef FEAT_GUI_W32".
+ * the console version only, so there is a lot of "#ifndef USE_GUI_WIN32".
  *
  * Win32 (Windows NT and Windows 95) system-dependent routines.
  * Portions lifted from the Win32 SDK samples, the MSDOS-dependent code,
  * NetHack 3.1.3, GNU Emacs 19.30, and Vile 5.5.
  *
- * George V. Reilly <georgere@microsoft.com> wrote most of this.
+ * George V. Reilly <george@reilly.org> wrote most of this.
  * Roger Knobbe <rogerk@wonderware.com> did the initial port of Vim 3.0.
  */
 
@@ -108,7 +108,7 @@ FILE* fdDump = NULL;
 # define INPUT_RECORD int
 #endif
 
-#ifndef FEAT_GUI_W32
+#ifndef USE_GUI_WIN32
 /* Undocumented API in kernel32.dll needed to work around dead key bug in
  * console-mode applications in NT 4.0.  If you switch keyboard layouts
  * in a console app to a layout that includes dead keys and then hit a
@@ -155,8 +155,8 @@ int _chdrive(int drive)
 }
 #else
 #ifdef __BORLANDC__
-/* being a more ANSI compliant compiler, BorlandC doesn't define _stricoll:
- * but it does in BC 5.02! */
+// being a more ANSI compliant compiler, BorlandC doesn't define _stricoll:
+// but it does in BC 5.02!
 #if __BORLANDC__ < 0x502
 int _stricoll(char *a, char *b)
 {
@@ -175,9 +175,9 @@ int _stricoll(char *a, char *b)
 #endif
 #endif
 
-#ifndef FEAT_GUI_W32
+#ifndef USE_GUI_WIN32
 /* Win32 Console handles for input and output */
-# ifndef FEAT_SNIFF	/* used in if_sniff.c */
+# ifndef USE_SNIFF  /* used in if_sniff.c */
 static
 # endif
        HANDLE g_hConIn	= INVALID_HANDLE_VALUE;
@@ -236,9 +236,9 @@ static char *vimrun_path = "vimrun ";
 static void mch_open_console(void);
 static void mch_close_console(int wait_key, DWORD ret);
 #endif
-garray_t error_ga = {0, 0, 0, 0, NULL};
+struct growarray error_ga = {0, 0, 0, 0, NULL};
 
-#ifndef FEAT_GUI_W32
+#ifndef USE_GUI_WIN32
 static int suppress_winsize = 1;	/* don't fiddle with console */
 #endif
 
@@ -274,7 +274,7 @@ PlatformId(void)
 
 /*
  * Return TRUE when running on Windows 95.  Only to be used after
- * mch_shellinit().
+ * mch_windinit().
  */
     int
 mch_windows95(void)
@@ -282,7 +282,7 @@ mch_windows95(void)
     return g_PlatformId == VER_PLATFORM_WIN32_WINDOWS;
 }
 
-#ifdef FEAT_GUI_W32
+#ifdef USE_GUI_WIN32
 /*
  * Used to work around the "can't do synchronous spawn"
  * problem on Win32s, without resorting to Universal Thunk.
@@ -298,7 +298,7 @@ win32ssynch_cb(HWND hwnd, LPARAM lparam)
 }
 #endif
 
-#ifndef FEAT_GUI_W32
+#ifndef USE_GUI_WIN32
 
 #define SHIFT  (SHIFT_PRESSED)
 #define CTRL   (RIGHT_CTRL_PRESSED | LEFT_CTRL_PRESSED)
@@ -354,7 +354,6 @@ const static struct
 
     { VK_SNAPSHOT,TRUE,	0,	0,	0,	    'r', }, /*PrtScrn*/
 
-#if 0
     /* Most people don't have F13-F20, but what the hell... */
     { VK_F13,	TRUE,	'\332',	'\333',	'\334',	    '\335', },
     { VK_F14,	TRUE,	'\336',	'\337',	'\340',	    '\341', },
@@ -364,23 +363,10 @@ const static struct
     { VK_F18,	TRUE,	'\356',	'\357',	'\360',	    '\361', },
     { VK_F19,	TRUE,	'\362',	'\363',	'\364',	    '\365', },
     { VK_F20,	TRUE,	'\366',	'\367',	'\370',	    '\371', },
-#endif
     { VK_ADD,	TRUE,   'N',    'N',    'N',	'N',	}, /* keyp '+' */
     { VK_SUBTRACT, TRUE,'J',	'J',    'J',	'J',	}, /* keyp '-' */
  /* { VK_DIVIDE,   TRUE,'N',	'N',    'N',	'N',	},    keyp '/' */
     { VK_MULTIPLY, TRUE,'7',	'7',    '7',	'7',	}, /* keyp '*' */
-
-    { VK_NUMPAD0,TRUE,  '\332',	'\333',	'\334',	    '\335', },
-    { VK_NUMPAD1,TRUE,  '\336',	'\337',	'\340',	    '\341', },
-    { VK_NUMPAD2,TRUE,  '\342',	'\343',	'\344',	    '\345', },
-    { VK_NUMPAD3,TRUE,  '\346',	'\347',	'\350',	    '\351', },
-    { VK_NUMPAD4,TRUE,  '\352',	'\353',	'\354',	    '\355', },
-    { VK_NUMPAD5,TRUE,  '\356',	'\357',	'\360',	    '\361', },
-    { VK_NUMPAD6,TRUE,  '\362',	'\363',	'\364',	    '\365', },
-    { VK_NUMPAD7,TRUE,  '\366',	'\367',	'\370',	    '\371', },
-    { VK_NUMPAD8,TRUE,  '\372',	'\373',	'\374',	    '\375', },
-    /* Sorry, out of number space! <negri>*/
-    { VK_NUMPAD9,TRUE,  '\376',	'\377',	'\377',	    '\367', },
 
 };
 
@@ -507,7 +493,7 @@ decode_key_event(
 	/* Ctrl-6 is Ctrl-^ */
 	if (pker->wVirtualKeyCode == '6')
 	{
-	    *pch = Ctrl_HAT;
+	    *pch = Ctrl('^');
 	    return TRUE;
 	}
 	/* Ctrl-2 is Ctrl-@ */
@@ -519,7 +505,7 @@ decode_key_event(
 	/* Ctrl-- is Ctrl-_ */
 	else if (pker->wVirtualKeyCode == 0xBD)
 	{
-	    *pch = Ctrl__;
+	    *pch = Ctrl('_');
 	    return TRUE;
 	}
     }
@@ -574,15 +560,15 @@ decode_key_event(
     return (*pch != NUL);
 }
 #pragma optimize("", on)
-#endif /* FEAT_GUI_W32 */
+#endif /* USE_GUI_WIN32 */
 
 
-#ifdef FEAT_MOUSE
+#ifdef USE_MOUSE
 
 /*
  * For the GUI the mouse handling is in gui_w32.c.
  */
-# ifdef FEAT_GUI_W32
+# ifdef USE_GUI_WIN32
     void
 mch_setmouse(
     int on)
@@ -863,8 +849,8 @@ decode_mouse_event(
     return TRUE;
 }
 
-# endif /* FEAT_GUI_W32 */
-#endif /* FEAT_MOUSE */
+# endif /* USE_GUI_WIN32 */
+#endif /* USE_MOUSE */
 
 
 #ifdef MCH_CURSOR_SHAPE
@@ -891,17 +877,17 @@ mch_update_cursor(void)
     /*
      * How the cursor is drawn depends on the current mode.
      */
-    idx = get_shape_idx(FALSE);
+    idx = get_cursor_idx();
 
-    if (shape_table[idx].shape == SHAPE_BLOCK)
+    if (cursor_table[idx].shape == SHAPE_BLOCK)
 	thickness = 99;	/* 100 doesn't work on W95 */
     else
-	thickness = shape_table[idx].percentage;
+	thickness = cursor_table[idx].percentage;
     mch_set_cursor_shape(thickness);
 }
 #endif
 
-#ifndef FEAT_GUI_W32	    /* this isn't used for the GUI */
+#ifndef USE_GUI_WIN32	    /* this isn't used for the GUI */
 /*
  * Handle FOCUS_EVENT.
  */
@@ -911,7 +897,7 @@ handle_focus_event(INPUT_RECORD ir)
     g_fJustGotFocus = ir.Event.FocusEvent.bSetFocus;
     if (g_fJustGotFocus)
 	check_timestamps(FALSE);
-#ifdef FEAT_AUTOCMD
+#ifdef AUTOCMD
     apply_autocmds(g_fJustGotFocus ? EVENT_FOCUSGAINED
 				: EVENT_FOCUSLOST, NULL, NULL, FALSE, curbuf);
 #endif
@@ -940,7 +926,7 @@ WaitForChar(long msec)
     for (;;)
     {
 	if (g_chPending != NUL
-#ifdef FEAT_MOUSE
+#ifdef USE_MOUSE
 				|| g_nMouseClick != -1
 #endif
 							    )
@@ -961,7 +947,7 @@ WaitForChar(long msec)
 
 	if (cRecords > 0)
 	{
-#ifdef FEAT_MBYTE_IME
+#ifdef MULTI_BYTE_IME
 	    /* Windows IME sends two '\n's with only one 'ENTER'.
 	       first, wVirtualKeyCode == 13. second, wVirtualKeyCode == 0 */
 	    if (ir.EventType == KEY_EVENT && ir.Event.KeyEvent.bKeyDown)
@@ -985,8 +971,8 @@ WaitForChar(long msec)
 	    if (ir.EventType == FOCUS_EVENT)
 		handle_focus_event(ir);
 	    else if (ir.EventType == WINDOW_BUFFER_SIZE_EVENT)
-		shell_resized();
-#ifdef FEAT_MOUSE
+		set_winsize(Rows, Columns, FALSE);
+#ifdef USE_MOUSE
 	    else if (ir.EventType == MOUSE_EVENT
 		    && decode_mouse_event(&ir.Event.MouseEvent))
 		return TRUE;
@@ -1049,9 +1035,9 @@ tgetch(void)
 	    handle_focus_event(ir);
 	else if (ir.EventType == WINDOW_BUFFER_SIZE_EVENT)
 	{
-	    shell_resized();
+	    set_winsize(Rows, Columns, FALSE);
 	}
-#ifdef FEAT_MOUSE
+#ifdef USE_MOUSE
 	else if (ir.EventType == MOUSE_EVENT)
 	{
 	    if (decode_mouse_event(&ir.Event.MouseEvent))
@@ -1060,7 +1046,7 @@ tgetch(void)
 #endif
     }
 }
-#endif /* !FEAT_GUI_W32 */
+#endif /* !USE_GUI_WIN32 */
 
 
 /*
@@ -1077,16 +1063,16 @@ mch_inchar(
     int		maxlen,
     long	time)
 {
-#ifndef FEAT_GUI_W32	    /* this isn't used for the GUI */
+#ifndef USE_GUI_WIN32	    /* this isn't used for the GUI */
 
     int		len = 0;
     int		c;
-#ifdef FEAT_AUTOCMD
+#ifdef AUTOCMD
     static int	once_already = 0;
 #endif
 
 
-#ifdef FEAT_SNIFF
+#ifdef USE_SNIFF
     if (sniff_request_waiting)
     {
 	/* return K_SNIFF */
@@ -1107,7 +1093,7 @@ mch_inchar(
     {
 	if (!WaitForChar(time))     /* no character available */
 	{
-#ifdef FEAT_AUTOCMD
+#ifdef AUTOCMD
 	    once_already = 0;
 #endif
 	    return 0;
@@ -1115,7 +1101,7 @@ mch_inchar(
     }
     else    /* time == -1, wait forever */
     {
-#ifdef FEAT_AUTOCMD
+#ifdef AUTOCMD
 	/* If there is no character available within 2 seconds (default),
 	 * write the autoscript file to disk */
 	if (once_already == 2)
@@ -1130,11 +1116,12 @@ mch_inchar(
 #endif
 	    if (!WaitForChar(p_ut))
 	{
-#ifdef FEAT_AUTOCMD
+#ifdef AUTOCMD
 	    if (has_cursorhold() && get_real_state() == NORMAL_BUSY)
 	    {
 		apply_autocmds(EVENT_CURSORHOLD, NULL, NULL, FALSE, curbuf);
 		update_screen(VALID);
+
 		once_already = 1;
 		return 0;
 	    }
@@ -1158,7 +1145,7 @@ mch_inchar(
 
     while ((len == 0 || WaitForChar(0)) && len < maxlen)
     {
-#ifdef FEAT_MOUSE
+#ifdef USE_MOUSE
 	if (g_nMouseClick != -1 && maxlen - len >= 5)
 	{
 # ifdef MCH_WRITE_DUMP
@@ -1177,12 +1164,12 @@ mch_inchar(
 
 	}
 	else
-#endif /* FEAT_MOUSE */
+#endif /* USE_MOUSE */
 	{
-	    if ((c = tgetch()) == Ctrl_C)
+	    if ((c = tgetch()) == Ctrl('C'))
 		g_fCBrkPressed = TRUE;
 
-#ifdef FEAT_MOUSE
+#ifdef USE_MOUSE
 	    if (g_nMouseClick == -1)
 #endif
 	    {
@@ -1205,16 +1192,16 @@ mch_inchar(
     }
 #endif
 
-#ifdef FEAT_AUTOCMD
+#ifdef AUTOCMD
     once_already = 0;
 #endif
     return len;
-#else /* FEAT_GUI_W32 */
+#else /* USE_GUI_WIN32 */
     return 0;
-#endif /* FEAT_GUI_W32 */
+#endif /* USE_GUI_WIN32 */
 }
 
-#ifdef FEAT_GUI_W32
+#ifdef USE_GUI_WIN32
 
 #ifndef __MINGW32__
 # include <shellapi.h>	/* required for FindExecutable() */
@@ -1246,10 +1233,10 @@ executable_exists(char *name)
 }
 
 /*
- * GUI version of mch_shellinit().
+ * GUI version of mch_windinit().
  */
     void
-mch_shellinit()
+mch_windinit()
 {
 #ifndef __MINGW32__
     extern int _fmode;
@@ -1286,10 +1273,10 @@ mch_shellinit()
 
 	if (s_dont_use_vimrun)
 	    MessageBox(NULL,
-			_("VIMRUN.EXE not found in your $PATH.\n"
+			"VIMRUN.EXE not found in your $PATH.\n"
 			"External commands will not pause after completion.\n"
-			"See  :help win32-vimrun  for more information."),
-			_("Vim Warning"),
+			"See  :help win32-vimrun  for more information.",
+			"Vim Warning",
 			MB_ICONWARNING);
     }
 
@@ -1298,9 +1285,9 @@ mch_shellinit()
      * Otherwise the default "findstr /n" is used.
      */
     if (!executable_exists("findstr.exe"))
-	set_option_value((char_u *)"grepprg", 0, (char_u *)"grep -n", FALSE);
+	set_option_value((char_u *)"grepprg", 0, (char_u *)"grep -n");
 
-#ifdef FEAT_CLIPBOARD
+#ifdef USE_CLIPBOARD
     clip_init(TRUE);
 
     /*
@@ -1314,7 +1301,7 @@ mch_shellinit()
 /*
  * GUI version of mch_windexit().
  * Shut down and exit with status `r'
- * Careful: mch_windexit() may be called before mch_shellinit()!
+ * Careful: mch_windexit() may be called before mch_windinit()!
  */
     void
 mch_windexit(
@@ -1324,7 +1311,7 @@ mch_windexit(
 
     ml_close_all(TRUE);		/* remove all memfiles */
 
-# ifdef FEAT_OLE
+# ifdef HAVE_OLE
     UninitOLE();
 # endif
 
@@ -1333,7 +1320,7 @@ mch_windexit(
     exit(r);
 }
 
-#else /* FEAT_GUI_W32 */
+#else /* USE_GUI_WIN32 */
 
 static char g_szOrigTitle[256];
 static int  g_fWindInitCalled = FALSE;
@@ -1349,10 +1336,10 @@ static int g_nOldRows = 0;
 static int g_nOldColumns = 0;
 
 /*
- * non-GUI version of mch_shellinit().
+ * non-GUI version of mch_windinit().
  */
     void
-mch_shellinit()
+mch_windinit()
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
 #ifndef __MINGW32__
@@ -1392,7 +1379,7 @@ mch_shellinit()
     GetConsoleMode(g_hSavOut, &g_cmodeout);
 
     GetConsoleTitle(g_szOrigTitle, sizeof(g_szOrigTitle));
-    ui_get_shellsize();
+    ui_get_winsize();
 
     g_nOldRows = Rows;
     g_nOldColumns = Columns;
@@ -1412,11 +1399,11 @@ mch_shellinit()
 
     g_fWindInitCalled = TRUE;
 
-#ifdef FEAT_MOUSE
+#ifdef USE_MOUSE
     g_fMouseAvail = GetSystemMetrics(SM_MOUSEPRESENT);
 #endif
 
-#ifdef FEAT_CLIPBOARD
+#ifdef USE_CLIPBOARD
     clip_init(TRUE);
 
     /*
@@ -1442,7 +1429,7 @@ mch_shellinit()
 /*
  * non-GUI version of mch_windexit().
  * Shut down and exit with status `r'
- * Careful: mch_windexit() may be called before mch_shellinit()!
+ * Careful: mch_windexit() may be called before mch_windinit()!
  */
     void
 mch_windexit(
@@ -1474,7 +1461,7 @@ mch_windexit(
 
     if (g_fWindInitCalled)
     {
-#ifdef FEAT_TITLE
+#ifdef WANT_TITLE
 	mch_restore_title(3);
 #endif
 
@@ -1493,7 +1480,7 @@ mch_windexit(
 
     exit(r);
 }
-#endif /* FEAT_GUI_W32 */
+#endif /* USE_GUI_WIN32 */
 
 
 /*
@@ -1511,7 +1498,7 @@ mch_check_win(
     if (*temp != NUL)
 	exe_name = FullName_save((char_u *)temp, FALSE);
 
-#ifdef FEAT_GUI_W32
+#ifdef USE_GUI_WIN32
     return OK;	    /* GUI always has a tty */
 #else
     if (isatty(1))
@@ -1541,7 +1528,7 @@ win32_init(void)
     int
 mch_input_isatty()
 {
-#ifdef FEAT_GUI_W32
+#ifdef USE_GUI_WIN32
     return OK;	    /* GUI always has a tty */
 #else
     if (isatty(read_cmd_fd))
@@ -1620,7 +1607,7 @@ fname_case(
 }
 
 
-#ifdef FEAT_TITLE
+#ifdef WANT_TITLE
 /*
  * mch_settitle(): set titlebar of our window
  * Can the icon also be set?
@@ -1630,7 +1617,7 @@ mch_settitle(
     char_u *title,
     char_u *icon)
 {
-#ifdef FEAT_GUI_W32
+#ifdef USE_GUI_WIN32
     gui_mch_settitle(title, icon);
 #else
     if (title != NULL)
@@ -1650,7 +1637,7 @@ mch_settitle(
 mch_restore_title(
     int which)
 {
-#ifndef FEAT_GUI_W32
+#ifndef USE_GUI_WIN32
     mch_settitle((which & 1) ? g_szOrigTitle : NULL, NULL);
 #endif
 }
@@ -1674,7 +1661,7 @@ mch_can_restore_icon()
 {
     return FALSE;
 }
-#endif /* FEAT_TITLE */
+#endif /* WANT_TITLE */
 
 
 /*
@@ -1881,7 +1868,7 @@ mch_isdir(char_u *name)
 }
 
 
-#ifdef FEAT_GUI_W32
+#ifdef USE_GUI_WIN32
     void
 mch_settmode(int tmode)
 {
@@ -1889,23 +1876,14 @@ mch_settmode(int tmode)
 }
 
     int
-mch_get_shellsize(void)
+mch_get_winsize()
 {
     /* never used */
     return OK;
 }
 
     void
-mch_set_shellsize(void)
-{
-    /* never used */
-}
-
-/*
- * Rows and/or Columns has changed.
- */
-    void
-mch_new_shellsize(void)
+mch_set_winsize()
 {
     /* never used */
 }
@@ -1933,12 +1911,9 @@ handler_routine(
     case CTRL_LOGOFF_EVENT:
     case CTRL_SHUTDOWN_EVENT:
 	windgoto((int)Rows - 1, 0);
-	sprintf((char *)IObuff, _("Vim: Caught %s event\n"),
-		(dwCtrlType == CTRL_CLOSE_EVENT
-		     ? _("close")
-		     : dwCtrlType == CTRL_LOGOFF_EVENT
-			 ? _("logoff")
-			 : _("shutdown")));
+	sprintf((char *)IObuff, "Vim: Caught %s event\n",
+		(dwCtrlType == CTRL_CLOSE_EVENT ? "close"
+		 : dwCtrlType == CTRL_LOGOFF_EVENT ? "logoff" : "shutdown"));
 
 #ifdef DEBUG
 	OutputDebugString(IObuff);
@@ -1972,7 +1947,7 @@ mch_settmode(
 	cmodein &= ~(ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT |
 		     ENABLE_ECHO_INPUT);
 	cmodein |= (
-#ifdef FEAT_MOUSE
+#ifdef USE_MOUSE
 	    (g_fMouseActive ? ENABLE_MOUSE_INPUT : 0) |
 #endif
 	    ENABLE_WINDOW_INPUT);
@@ -2012,7 +1987,7 @@ mch_settmode(
  * Return OK when size could be determined, FAIL otherwise.
  */
     int
-mch_get_shellsize()
+mch_get_winsize()
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
 
@@ -2026,8 +2001,20 @@ mch_get_shellsize()
 	Rows = 25;
 	Columns = 80;
     }
+
+    if (Columns < MIN_COLUMNS || Rows < MIN_LINES)
+    {
+	/* these values are overwritten by termcap size or default */
+	Rows = 25;
+	Columns = 80;
+    }
+
+    check_winsize();
+    set_scroll_region(0, 0, Columns - 1, Rows - 1);
+
     return OK;
 }
+
 
 /*
  * Set a console window to `xSize' * `ySize'
@@ -2131,7 +2118,7 @@ ResizeConBufAndWindow(
  * Set the console window to `Rows' * `Columns'
  */
     void
-mch_set_shellsize()
+mch_set_winsize()
 {
     COORD coordScreen;
 
@@ -2151,17 +2138,8 @@ mch_set_shellsize()
 	Columns = coordScreen.X;
 
     ResizeConBufAndWindow(g_hCurOut, Columns, Rows);
-}
-
-/*
- * Rows and/or Columns has changed.
- */
-    void
-mch_new_shellsize()
-{
     set_scroll_region(0, 0, Columns - 1, Rows - 1);
 }
-
 
 /*
  * Called when started up, to set the winsize that was delayed.
@@ -2172,12 +2150,12 @@ mch_set_winsize_now()
     if (suppress_winsize == 2)
     {
 	suppress_winsize = 0;
-	mch_set_shellsize();
-	shell_resized();
+	mch_set_winsize();
+	check_winsize();	    /* in case 'columns' changed */
     }
     suppress_winsize = 0;
 }
-#endif /* FEAT_GUI_W32 */
+#endif /* USE_GUI_WIN32 */
 
 
 /*
@@ -2189,7 +2167,7 @@ mch_suspend()
     suspend_shell();
 }
 
-#if defined(FEAT_GUI_W32) || defined(PROTO)
+#if defined(USE_GUI_WIN32) || defined(PROTO)
 
 #ifdef OLD_CONSOLE_STUFF
 /*
@@ -2246,17 +2224,17 @@ mch_close_console(int wait_key, DWORD ret)
 	HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
 	HANDLE hStderr = GetStdHandle(STD_ERROR_HANDLE);
 	DWORD number;
-	static char message[] = N_("\nPress any key to close this window...");
+	static char message[] = "\nPress any key to close this window...";
 	static char err_buf[80];
 	char buffer[1];
 
 	if (ret)
 	{
-	    sprintf(err_buf, _("\n%ld returned."), ret);
+	    sprintf(err_buf, "\n%ld returned.", ret);
 	    WriteConsole(hStderr, err_buf, strlen(err_buf), &number, NULL);
 	}
 	/* Write a message to the user */
-	WriteConsole(hStderr, _(message), sizeof(_(message))-1, &number, NULL);
+	WriteConsole(hStderr, message, sizeof(message)-1, &number, NULL);
 
 	/* Clear the console input buffer, and set the input to "raw" mode */
 	FlushConsoleInputBuffer(hStdin);
@@ -2467,13 +2445,13 @@ mch_call_shell(
     int options)	/* SHELL_*, see vim.h */
 {
     int	    x = 0;
-#ifndef FEAT_GUI_W32
+#ifndef USE_GUI_WIN32
     int	    stopped_termcap_mode = FALSE;
 #endif
 
     out_flush();
 
-#ifndef FEAT_GUI_W32
+#ifndef USE_GUI_WIN32
     /*
      * Switch to non-termcap mode, otherwise ":r !ls" may crash.
      * The only exception is "!start".
@@ -2523,15 +2501,13 @@ mch_call_shell(
 	char_u *newcmd;
 
 	newcmd = lalloc(
-#ifdef FEAT_GUI_W32
+#ifdef USE_GUI_WIN32
 		STRLEN(vimrun_path) +
 #endif
 		STRLEN(p_sh) + STRLEN(p_shcf) + STRLEN(cmd) + 10, TRUE);
 	if (newcmd != NULL)
 	{
-	    char_u *cmdbase = (*cmd == '"' ? cmd + 1 : cmd);
-
-	    if ((STRNICMP(cmdbase, "start", 5) == 0) && vim_iswhite(cmdbase[5]))
+	    if (STRNICMP(*cmd == '"' ? cmd + 1 : cmd, "start ", 6) == 0)
 	    {
 		STARTUPINFO		si;
 		PROCESS_INFORMATION	pi;
@@ -2543,20 +2519,9 @@ mch_call_shell(
 		si.dwFlags = 0;
 		si.cbReserved2 = 0;
 		si.lpReserved2 = NULL;
-
-		cmdbase = skipwhite(cmdbase + 5);
-		if ((STRNICMP(cmdbase, "/min", 4) == 0)
-			&& vim_iswhite(cmdbase[4]))
-		{
-		    cmdbase = skipwhite(cmdbase + 4);
-		    si.dwFlags = STARTF_USESHOWWINDOW;
-		    si.wShowWindow = SW_SHOWMINNOACTIVE;
-		}
-
+		STRCPY(newcmd, cmd + 6);
 		if (*cmd == '"')
 		    *newcmd = '"';
-		STRCPY(newcmd + ((*cmd == '"') ? 1 : 0), cmdbase);
-
 		/*
 		 * Now, start the command as a process, so that it doesn't
 		 * inherit our handles which causes unpleasant dangling swap
@@ -2576,8 +2541,8 @@ mch_call_shell(
 		else
 		{
 		    x = -1;
-#ifdef FEAT_GUI_W32
-		    EMSG(_("Command not found"));
+#ifdef USE_GUI_WIN32
+		    EMSG("Command not found");
 #endif
 		}
 		/* Close the handles to the subprocess, so that it goes away */
@@ -2587,7 +2552,7 @@ mch_call_shell(
 	    else
 	    {
 		sprintf((char *)newcmd, "%s%s %s %s",
-#if defined(OLD_CONSOLE_STUFF) || !defined(FEAT_GUI_W32)
+#if defined(OLD_CONSOLE_STUFF) || !defined(USE_GUI_WIN32)
 			"",
 #else
 			/*
@@ -2608,15 +2573,15 @@ mch_call_shell(
     settmode(TMODE_RAW);	    /* set to raw mode */
 
     if (x && !(options & SHELL_SILENT)
-#ifdef FEAT_GUI_W32
+#ifdef USE_GUI_WIN32
 	    && !fUseConsole
 #endif
        )
     {
-	smsg(_("%d returned"), x);
+	smsg("%d returned", x);
 	msg_putchar('\n');
     }
-#ifdef FEAT_TITLE
+#ifdef WANT_TITLE
     resettitle();
 #endif
 
@@ -2632,7 +2597,7 @@ mch_call_shell(
     signal(SIGTERM, SIG_DFL);
     signal(SIGABRT, SIG_DFL);
 
-#ifndef FEAT_GUI_W32
+#ifndef USE_GUI_WIN32
     if (stopped_termcap_mode)
 	termcap_mode_start();
 #endif
@@ -2677,10 +2642,10 @@ pstrcmp(
  */
     static int
 win32_expandpath(
-    garray_t	*gap,
-    char_u	*path,
-    char_u	*wildc,
-    int		flags)		/* EW_* flags */
+    struct growarray	*gap,
+    char_u		*path,
+    char_u		*wildc,
+    int			flags)		/* EW_* flags */
 {
     char		*buf;
     char		*p, *s, *e;
@@ -2725,7 +2690,7 @@ win32_expandpath(
     *e = NUL;
     /* now we have one wildcard component between `s' and `e' */
 
-#ifdef FEAT_GUI_W32
+#ifdef USE_GUI_WIN32
     if (gui_is_win32s())
     {
 	/* It appears the Win32s FindFirstFile() call doesn't like a pattern
@@ -2796,9 +2761,9 @@ win32_expandpath(
 
     int
 mch_expandpath(
-    garray_t	*gap,
-    char_u	*path,
-    int		flags)		/* EW_* flags */
+    struct growarray	*gap,
+    char_u		*path,
+    int			flags)		/* EW_* flags */
 {
     return win32_expandpath(gap, path, path, flags);
 }
@@ -2827,7 +2792,7 @@ mch_chdir(char *path)
 }
 
 
-#ifndef FEAT_GUI_W32
+#ifndef USE_GUI_WIN32
 /*
  * Copy the contents of screen buffer hSrc to the bottom-left corner
  * of screen buffer hDst.
@@ -2940,11 +2905,11 @@ termcap_mode_start(void)
     g_hCurOut = g_hConOut;
     SetConsoleActiveScreenBuffer(g_hCurOut);
 
-    check_shellsize();
     ResizeConBufAndWindow(g_hCurOut, Columns, Rows);
     set_scroll_region(0, 0, Columns - 1, Rows - 1);
+    check_winsize();
 
-#ifdef FEAT_TITLE
+#ifdef WANT_TITLE
     resettitle();
 #endif
 
@@ -2967,7 +2932,7 @@ termcap_mode_end(void)
      * the following screenbuffer switch to go wrong */
     Sleep(0);
 
-    check_shellsize();
+    check_winsize();
 
     g_hCurOut = g_hSavOut;
     SetConsoleActiveScreenBuffer(g_hCurOut);
@@ -2986,14 +2951,14 @@ termcap_mode_end(void)
     clear_chars(g_coordOrig,
 		g_srOrigWindowRect.Right - g_srOrigWindowRect.Left + 1);
 
-#ifdef FEAT_TITLE
+#ifdef WANT_TITLE
     mch_restore_title(3);
 #endif
 
     SetConsoleMode(g_hConIn,  g_cmodein);
     SetConsoleMode(g_hSavOut, g_cmodeout);
 }
-#endif /* FEAT_GUI_W32 */
+#endif /* USE_GUI_WIN32 */
 
 /*
  * Switching off termcap mode is only allowed when Columns is 80, otherwise a
@@ -3003,18 +2968,18 @@ termcap_mode_end(void)
 can_end_termcap_mode(
     int give_msg)
 {
-#ifdef FEAT_GUI_W32
+#ifdef USE_GUI_WIN32
     return TRUE;	/* GUI starts a new console anyway */
 #else
     if (g_PlatformId == VER_PLATFORM_WIN32_NT || Columns == 80)
 	return TRUE;
     if (give_msg)
-	msg(_("'columns' is not 80, cannot execute external commands"));
+	msg("'columns' is not 80, cannot execute external commands");
     return FALSE;
 #endif
 }
 
-#ifdef FEAT_GUI_W32
+#ifdef USE_GUI_WIN32
     void
 mch_write(
     char_u  *s,
@@ -3057,8 +3022,7 @@ clear_screen(void)
     static void
 clear_to_end_of_display(void)
 {
-    clear_chars(g_coord, (Rows - g_coord.Y - 1)
-					   * Columns + (Columns - g_coord.X));
+    clear_chars(g_coord, (Rows-g_coord.Y-1) * Columns + (Columns-g_coord.X));
 }
 
 
@@ -3208,7 +3172,7 @@ gotoxy(
 {
     COORD coord2;
 
-    if (x < 1 || x > (unsigned)Columns || y < 1 || y > (unsigned)Rows)
+    if (x < 1 || x > (unsigned) Columns || y < 1 || y > (unsigned) Rows)
 	return;
 
     /* Should we check against g_srScrollRegion? */
@@ -3698,7 +3662,7 @@ mch_write(
 #endif
 }
 
-#endif /* FEAT_GUI_W32 */
+#endif /* USE_GUI_WIN32 */
 
 
 /*
@@ -3709,7 +3673,7 @@ mch_delay(
     long    msec,
     int	    ignoreinput)
 {
-#ifdef FEAT_GUI_W32
+#ifdef USE_GUI_WIN32
     Sleep((int)msec);	    /* never wait for input */
 #else
     if (ignoreinput)
@@ -3737,7 +3701,7 @@ mch_remove(char_u *name)
     void
 mch_breakcheck()
 {
-#ifndef FEAT_GUI_W32	    /* never used */
+#ifndef USE_GUI_WIN32	    /* never used */
     if (g_fCtrlCPressed || g_fCBrkPressed)
     {
 	g_fCtrlCPressed = g_fCBrkPressed = FALSE;
@@ -3769,7 +3733,7 @@ mch_avail_mem(
     int
 mch_char_avail()
 {
-#ifdef FEAT_GUI_W32
+#ifdef USE_GUI_WIN32
     /* never used */
     return TRUE;
 #else
@@ -3785,37 +3749,31 @@ mch_char_avail()
 mch_screenmode(
     char_u *arg)
 {
-    EMSG(_("Screen mode setting not supported"));
+    EMSG("Screen mode setting not supported");
     return FAIL;
 }
 
-#ifdef FEAT_EVAL
+#ifdef WANT_EVAL
 /*
  * Call a DLL routine which takes either a string or int param
  * and returns an allocated string.
- * Return OK if it worked, FAIL if not.
  */
-typedef LPTSTR (*MYSTRPROCSTR)(LPTSTR);
-typedef LPTSTR (*MYINTPROCSTR)(int);
-typedef int (*MYSTRPROCINT)(LPTSTR);
-typedef int (*MYINTPROCINT)(int);
+typedef LPTSTR (*MYSTRPROC)(LPTSTR);
+typedef LPTSTR (*MYINTPROC)(int);
 
-    int
+    char_u *
 mch_libcall(
-    char_u	*libname,
-    char_u	*funcname,
-    char_u	*argstring,	/* NULL when using a argint */
-    int		argint,
-    char_u	**string_result,/* NULL when using number_result */
-    int		*number_result)
+    char_u  *libname,
+    char_u  *funcname,
+    char_u  *argstring,
+    int	    argint)
 {
-    HINSTANCE		hinstLib;
-    MYSTRPROCSTR	ProcAdd;
-    MYINTPROCSTR	ProcAddI;
-    char_u		*retval_str = NULL;
-    int			retval_int = 0;
+    HINSTANCE hinstLib;
+    MYSTRPROC ProcAdd;
+    MYINTPROC ProcAddI;
+    char_u  *retval = NULL;
 
-    BOOL fRunTimeLinkSuccess = FALSE;
+    BOOL fFreeResult, fRunTimeLinkSuccess = FALSE;
 
     // Get a handle to the DLL module.
     hinstLib = LoadLibrary(libname);
@@ -3825,50 +3783,36 @@ mch_libcall(
     {
 	if (argstring != NULL)
 	{
-	    /* Call with string argument */
-	    ProcAdd = (MYSTRPROCSTR) GetProcAddress(hinstLib, funcname);
+	    ProcAdd = (MYSTRPROC) GetProcAddress(hinstLib, funcname);
 	    if ((fRunTimeLinkSuccess = (ProcAdd != NULL)))
-	    {
-		if (string_result == NULL)
-		    retval_int = ((MYSTRPROCINT)ProcAdd)(argstring);
-		else
-		    retval_str = (ProcAdd)(argstring);
-	    }
+		retval = (ProcAdd) (argstring);
 	}
 	else
 	{
-	    /* Call with number argument */
-	    ProcAddI = (MYINTPROCSTR) GetProcAddress(hinstLib, funcname);
+	    ProcAddI = (MYINTPROC) GetProcAddress(hinstLib, funcname);
 	    if ((fRunTimeLinkSuccess = (ProcAddI != NULL)))
-	    {
-		if (string_result == NULL)
-		    retval_int = ((MYINTPROCINT)ProcAddI)(argint);
-		else
-		    retval_str = (ProcAddI)(argint);
-	    }
+		retval = (ProcAddI) (argint);
 	}
 
-	// Save the string before we free the library.
-	// Assume that a "1" result is an illegal pointer.
-	if (string_result == NULL)
-	    *number_result = retval_int;
-	else if (retval_str != NULL
-		&& retval_str != (char_u *)1
-		&& retval_str != (char_u *)-1
-		&& !IsBadStringPtr(retval_str, INT_MAX))
-	    *string_result = vim_strsave(retval_str);
+	// save the string before we free the library
+	if (retval != NULL)
+	{
+	    /* Check if the return value is a valid string pointer.  Otherwise
+	     * we may crash when the function returns a number! */
+	    if (retval == (char_u *)1 || IsBadStringPtr(retval, INT_MAX))
+		retval = NULL;
+	    else
+		retval = vim_strsave(retval);
+	}
 
 	// Free the DLL module.
-	(void)FreeLibrary(hinstLib);
+	fFreeResult = FreeLibrary(hinstLib);
     }
 
     if (!fRunTimeLinkSuccess)
-    {
-	EMSG2(_("Library call failed for \"%s\"()"), funcname);
-	return FAIL;
-    }
+	EMSG("Library call failed");
 
-    return OK;
+    return retval;
 }
 #endif
 
@@ -3975,7 +3919,7 @@ default_shell()
 }
 
 
-#ifdef FEAT_CLIPBOARD
+#ifdef USE_CLIPBOARD
 /*
  * Clipboard stuff, for cutting and pasting text to other windows.
  */
@@ -4162,7 +4106,7 @@ clip_mch_set_selection()
     vim_free(str);
 }
 
-#endif /* FEAT_CLIPBOARD */
+#endif /* USE_CLIPBOARD */
 
 
 /*

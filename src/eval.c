@@ -16,6 +16,10 @@
 # include <time.h>	/* for strftime() */
 #endif
 
+#ifdef macintosh
+# include <time.h>       /* for time_t */
+#endif
+
 #if defined(WANT_EVAL) || defined(PROTO)
 
 #if SIZEOF_INT <= 3		/* use long if int is smaller than 32 bits */
@@ -4893,7 +4897,9 @@ do_function(eap, getline, cookie)
 	    EMSG2("Missing '(': %s", name);
 	    return;
 	}
-	p = vim_strchr(p, '(');
+	/* attempt to continue by skipping some text */
+	if (vim_strchr(p, '(') != NULL)
+		p = vim_strchr(p, '(');
     }
     p = skipwhite(p + 1);
 

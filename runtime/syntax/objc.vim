@@ -1,10 +1,22 @@
 " Vim syntax file
 " Language:	Objective C
 " Maintainer:	Valentino Kyriakides <1kyriaki@informatik.uni-hamburg.de>
-" Last Change:	1999 Jun 14
+" Last Change:	2001 May 09
+
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " Read the C syntax to start with
-source <sfile>:p:h/c.vim
+if version < 600
+  source <sfile>:p:h/c.vim
+else
+  runtime! syntax/c.vim
+endif
 
 " Objective C extentions follow below
 "
@@ -39,16 +51,27 @@ syn match objcInstMethod  "^[\t\s]*-[\s]*"
 syn match objcFactMethod  "^[\t\s]*+[\s]*"
 
 
-if !exists("did_objc_syntax_inits")
-  let did_objc_syntax_inits = 1
-  hi link objcImport	Include
-  hi link objcImported	cString
-  hi link objcType	Type
-  hi link objcScopeDecl	Statement
-  hi link objcInstMethod	Function
-  hi link objcFactMethod	Function
-  hi link objcStatement	Statement
-  hi link objcDirective	Statement
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_objc_syntax_inits")
+  if version < 508
+    let did_objc_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink objcImport	Include
+  HiLink objcImported	cString
+  HiLink objcType	Type
+  HiLink objcScopeDecl	Statement
+  HiLink objcInstMethod	Function
+  HiLink objcFactMethod	Function
+  HiLink objcStatement	Statement
+  HiLink objcDirective	Statement
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "objc"

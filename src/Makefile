@@ -36,8 +36,9 @@
 #	  quite a bit bigger.
 #	- Uncomment the line with --enable-cscope to enable the Cscope
 #	  interface.
-#	- Uncomment one of the lines with --with-features= to enable a set of
+#	- Uncomment the line with --enable-max-features to enable many
 #	  features (but not the interfaces just mentioned).
+#	- Uncomment the line with --enable-min-features to exclude features.
 #	- Uncomment the line with --disable-gpm to disable gpm support
 #	  even though you have gpm libraries and includes
 #	- Uncomment one of the lines with CFLAGS and/or CC if you have
@@ -61,11 +62,10 @@
 #	this in two steps with:
 #		make config
 #		make
-#	The configuration phase creates/overwrites auto/config.h and
-#	auto/config.mk.
-#	The configure script is created with autoconf.  It can detect
-#	different features of your system and act accordingly.  However, it is
-#	not correct for all systems.  Check this:
+#	The configuration phase creates/overwrites config.h and config.mk.
+#	Configure is created with autoconf.  It can detect different features
+#	of your system and act accordingly.  However, it is not correct for
+#	all systems.  Check this:
 #	- If you have X windows, but configure could not find it or reported
 #	  another include/library directory then you wanted to use, you have
 #	  to set CONF_OPT_X below.  You might also check the installation of
@@ -79,14 +79,14 @@
 #		make
 #
 #	- If you do not trust the automatic configuration code, then inspect
-#	  auto/config.h and auto/config.mk, before starting the actual build
-#	  phase. If possible edit this Makefile, rather than auto/config.mk --
-#	  especially look at the definition of VIMLOC below. Note that the
-#	  configure phase overwrites auto/config.mk and auto/config.h again.
+#	  config.h and config.mk, before starting the actual build phase. If
+#	  possible edit this Makefile, rather than config.mk -- especially
+#	  look at the definition of VIMLOC below. Note that the configure
+#	  phase overwrites config.mk and config.h again.
 #	- If you get error messages, find out what is wrong and try to correct
 #	  it in this Makefile. You may need to do "make distclean" when you
 #	  change anything that configure uses (e.g. switching from an old C
-#	  compiler to an ANSI C compiler). Only when auto/configure does
+#	  compiler to an ANSI C compiler). Only when ./configure does
 #	  something wrong you may need to change one of the other files. If
 #	  you find a clean way to fix the problem, consider sending a note to
 #	  the author of autoconf (bug-gnu-utils@prep.ai.mit.edu) or Vim
@@ -103,8 +103,8 @@
 #	If the new Vim seems to be working OK you can install it and the
 #	documentation in the appropriate location. The default is
 #	"/usr/local".  Change "prefix" below to change the location.
-#	"auto/pathdef.c" will be compiled again after changing this to make
-#	the executable know where the help files are located.
+#	"pathdef.c" will be compiled again after changing this to make the
+#	executable know where the help files are located.
 #	Note that any existing executable is removed or overwritten.  If you
 #	want to keep it you will have to make a backup copy first.
 #	The runtime files are in a different directory for each version.  You
@@ -117,7 +117,7 @@
 #		make installhelplinks	only installs the Vim manpage links
 #		make installmacros	only installs the Vim macros
 #		make installtutor	only installs the Vim tutor
-#		make installtools	only installs the tools ctags and xxd
+#		make installtools	only installs the Vim tools and xxd
 #
 # 6. Use Vim until a new version comes out.
 #
@@ -175,9 +175,9 @@
 #FreeBSD 2.1.6	      gcc-2.6.3      +X11 -GUI Athena	5.0c	 Bram Moolenaar
 #FreeBSD 2.2.5	      gcc-2.7.2.1    X11R6 Moo-Tiff	5.4d	 Bram Moolenaar
 #FreeBSD 2.2.5	      gcc-2.7.2.1    +X11 -GUI Athena	5.4d	 Bram Moolenaar
-#FreeBSD 3.3	      gcc-2.7.2.1    +X11 GTK 1.2.5	5.7	 Bram Moolenaar
-#FreeBSD 3.3	      gcc-2.7.2.1    +X11 Athena	5.7	 Bram Moolenaar
-#FreeBSD 3.3	      gcc-2.7.2.1    +X11 Lesstif0.89.4 5.7	 Bram Moolenaar
+#FreeBSD 4.2	      gcc-2.7.2.1    +X11 GTK 1.2.8	5.8	 Bram Moolenaar
+#FreeBSD 4.2	      gcc-2.7.2.1    +X11 Athena	5.8	 Bram Moolenaar
+#FreeBSD 4.2	      gcc-2.7.2.1    +X11 Lesstif0.89.4 5.8	 Bram Moolenaar
 #Linux 2.0	      gcc-2.7.2      Infomagic Motif	4.3  (3) Ronald Rietman
 #Linux 2.0.31	      gcc	     +X11 +GUI Athena	5.0w (U) Darren Hiebert
 #Linux 2.0.33	      gcc-2.7.2.1    X11R6, Lesstif	5.0s	 Tony Nugent
@@ -205,7 +205,6 @@
 #Solaris 2.5	      cc	     +X11 +GUI Athena	4.2  (9) Sonia Heimann
 #Solaris 2.5	      gcc 2.5.6      +X11 Motif		5.0m (R) Ant. Colombo
 #Solaris 2.5 (Sparc)  gcc-2.7.2.3    +X11 +GUI Motif	5.5	 Ant. Colombo
-#Solaris 2.5 (Sparc)  gcc-2.7.2.3    +X11 +GUI Motif    6.0c     Ant. Colombo
 #Solaris 2.6 (sun4u)  gcc 2.7.2.3    +X11 +GUI_Motif	5.2	 D. Rothkamp
 #Solaris 2.6 (sun4u)  cc (SC4.2)     +X11R6 +GUI (CDE)	5.0v	 Andrew Large
 #Solaris 2.6	      gcc 2.8.1      ncursus		5.3  (G) Larry W. Virden
@@ -241,7 +240,7 @@
 # (I)  SINIX-N 5.42 and 5.43 need some EXTRA_LIBS.  Also for Reliant-Unix.
 # (J)  If you get undefined symbols, see below for a solution.
 # (K)  See lines to uncomment below for machines with 64 bit pointers.
-# (L)  For Silicon Graphics O2 workstations remove "-lnsl" from auto/config.mk
+# (L)  For Silicon Graphics O2 workstations remove "-lnsl" from config.mk
 # (M)  gcc version cygnus-2.0.1 does NOT work (symptom: "dl" deletes two
 #      characters instead of one).
 # (N)  SCO with decmouse.
@@ -255,7 +254,7 @@
 #      detection, since the configure script runs into an error when it
 #      detects Python (probably because of the bash shell).
 # (V)  See lines to uncomment below.
-# (X)  Need to use the .include "auto/config.mk" line below
+# (X)  Need to use the .include "config.mk" line below
 # (Y)  See line with c89 below
 # (Z)  See lines with cc or c89 below
 
@@ -277,20 +276,20 @@ CC=
 #GUI_INC_LOC = /usr/X11R6/include
 #GUI_LIB_LOC = /usr/X11R6/lib
 
-######################## auto/config.mk ########################
-# At this position auto/config.mk is included. When starting from the
-# distribution it is almost empty. After running auto/configure it contains
+######################## config.mk ########################
+# At this position config.mk is included. When starting from the
+# distribution it is almost empty. After running ./configure it contains
 # settings that have been discovered for your system. Settings below this
-# include override settings in auto/config.mk!
+# include override settings in config.mk!
 
-# Note: if auto/config.mk is lost somehow (e.g., because configure was
-# interrupted), create an empty auto/config.mk file and do "make config".
+# Note: if config.mk is lost somehow (e.g., because configure was
+# interrupted), create an empty config.mk file and do "make config".
 
-# (X) How to include auto/config.mk depends on the version of "make" you have,
-#     if the current choice doesn't work, try the other one.
+# (X) How to include config.mk depends on the version of "make" you have, if
+#     the current choice doesn't work, try the other one.
 
-include auto/config.mk
-#.include "auto/config.mk"
+include config.mk
+#.include "config.mk"
 
 # Include the configuration choices first, so we can override everything
 # below. As shipped, this file contains a target that causes to run
@@ -320,17 +319,10 @@ include auto/config.mk
 # Uncomment one of these lines to select a specific GUI to use.
 # When using "yes" or nothing, configure will use the first one found: GTK+,
 # Motif or Athena.
-#
 # Use "--disable-gtktest" to allow an older GTK version.
-#
-# GNOME means GTK with Gnome support.  If using GTK, then GNOME will
-# automatically be used if it is found.  If you have GNOME, but do not want to
-# use it (e.g., want a GTK-only version), then use --enable-gui=gtk.
-#
 # If the selected GUI isn't found, the GUI is disabled automatically
 #CONF_OPT_GUI = --enable-gui=gtk
 #CONF_OPT_GUI = --enable-gui=gtk --disable-gtktest
-#CONF_OPT_GUI = --enable-gui=gnome
 #CONF_OPT_GUI = --enable-gui=motif
 #CONF_OPT_GUI = --enable-gui=motif --with-motif-lib="-static -lXm -shared"
 #CONF_OPT_GUI = --enable-gui=athena
@@ -339,13 +331,10 @@ include auto/config.mk
 # Uncomment this when you want to include the Perl interface.
 # The Perl option sometimes causes problems, because it adds extra flags
 # to the command line.	If you see strange flags during compilation, check in
-# auto/config.mk where they come from.  If it's PERL_CFLAGS, try commenting
-# the next line.
+# config.mk where they come from.  If it's PERL_CFLAGS, try commenting the
+# next line.
 # When you get an error for a missing "perl.exp" file, try creating an emtpy
 # one: "touch perl.exp".
-# This requires at least "small" features, "tiny" doesn't work.
-# NOTE: May not work in combination with "-pthread" linker argument, sometimes
-# needed for Python.
 #CONF_OPT_PERL = --enable-perlinterp
 
 # PYTHON - For creating Vim with Python interface
@@ -359,9 +348,6 @@ include auto/config.mk
 # CSCOPE - For creating Vim with Cscope interface
 # Uncomment this when you want to include the Cscope interface.
 #CONF_OPT_CSCOPE = --enable-cscope
-
-# WORKShOP - Sun Visual Workshop interface
-#CONF_OPT_WORKSHOP = --enable-workshop
 
 # MULTIBYTE - To edit multi-byte characters.  Well, actually only two-byte
 # characters at the moment.
@@ -386,14 +372,13 @@ include auto/config.mk
 # though you have gpm libraries and includes
 #CONF_OPT_GPM = --disable-gpm
 
-# FEATURES - For creating Vim with more or less features
-# Uncomment one of these lines when you want to include few to many features.
-# The default is "normal".
-#CONF_OPT_FEAT = --with-features=tiny
-#CONF_OPT_FEAT = --with-features=small
-#CONF_OPT_FEAT = --with-features=normal
-#CONF_OPT_FEAT = --with-features=big
-#CONF_OPT_FEAT = --with-features=huge
+# MAXIMAL FEATURES - For creating Vim with many features
+# Uncomment this when you want to include many features
+#CONF_OPT_MAX = --enable-max-features
+
+# MINIMAL FEATURES - For creating Vim with less features
+# Uncomment this when you want to include less features
+#CONF_OPT_MIN = --enable-min-features
 
 # X WINDOWS DISABLE - For creating a plain Vim without any X11 related fancies
 # (otherwise Vim configure will try to include xterm titlebar access)
@@ -444,15 +429,9 @@ include auto/config.mk
 # Used for debugging memory allocation
 #CFLAGS = -g -O2 -DMEM_PROFILE -Wall -Wshadow -Wmissing-prototypes
 
-# Used to check /usr/local/ for header files and/or libraries
-#CPPFLAGS = -I/usr/local/include
-#LDFLAGS = -L/usr/local/lib
-
 # EFENCE - Electric-Fence malloc debugging: catches memory accesses beyond
 # allocated memory (and makes every malloc()/free() very slow).
 # Electric Fence is free (search ftp sites).
-# On FreeBSD you might need to enlarge the number of mmaps allowed.  Do this
-# as root: sysctl -w vm.max_proc_mmap=30000
 #EXTRA_LIBS = /usr/local/lib/libefence.a
 
 # PURIFY - remove the # to use the "purify" program (hoi Nia++!)
@@ -470,8 +449,9 @@ LINT_OPTIONS = -beprxzF
 #LIBS = -ltermcap_p
 
 # SNIFF - Include support for SNiFF+.
+#SNIFF_INCL = if_sniff.h
 #SNIFF_SRC  = if_sniff.c
-#SNIFF_OBJ  = objects/if_sniff.o
+#SNIFF_OBJ  = if_sniff.o
 #SNIFF_DEFS = -DUSE_SNIFF
 
 #####################################################
@@ -596,12 +576,12 @@ LINT_OPTIONS = -beprxzF
 # 1. If you don't have an X server: Comment out CONF_OPT_GUI and uncomment
 #    CONF_OPT_X = --without-x.
 # 2. make config
-# 3. edit auto/config.mk and remove -ldir and -ltermcap from LIBS.  It doesn't
+# 3. edit config.mk and remove -ldir and -ltermcap from LIBS.  It doesn't
 #	have -ldir (does config find it somewhere?) and -ltermcap has at
 #	least one problem so I use termlib.o instead.  The problem with
 #	termcap is that it segfaults if you call it with the name of
 #	a non-existent terminal type.
-# 4. edit auto/config.h and add #define USE_TMPNAM
+# 4. edit config.h and add #define USE_TMPNAM
 # 5. add termlib.o to OBJ
 # 6. make
 
@@ -670,7 +650,7 @@ LINT_OPTIONS = -beprxzF
 #GUI_LIB_LOC = /usr/lib64
 # then
 # 1) make config
-# 2) edit auto/config.mk and delete the -lelf entry in the LIBS line
+# 2) edit config.mk and delete the -lelf entry in the LIBS line
 # 3) make
 #
 # or (for 32bit pointers) uncomment the following line
@@ -678,7 +658,7 @@ LINT_OPTIONS = -beprxzF
 #GUI_LIB_LOC = /usr/lib32
 # then
 # 1) make config
-# 2) edit auto/config.mk, add -n32 to LDFLAGS
+# 2) edit config.mk, add -n32 to LDFLAGS
 # 3) make
 ###
 
@@ -737,7 +717,7 @@ RGVIEWNAME	= r$(GVIEWNAME)
 RGVIEWTARGET	= $(RGVIEWNAME)$(SUFFIX)
 
 ### Names of the tools that are also made
-TOOLS = ctags/ctags$(SUFFIX) xxd/xxd$(SUFFIX)
+TOOLS = xxd/xxd$(SUFFIX)
 
 ### Installation directories.  The defaults come from configure.
 #
@@ -771,14 +751,12 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and some things
 ### might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60d
+VIMRTDIR = /vim58
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
-LANGSUBDIR = /lang
 MACROSUBDIR = /macros
 TOOLSSUBDIR = /tools
 TUTORSUBDIR = /tutor
-PODIR = po
 
 ### VIMLOC	common root of the Vim files (all versions)
 ### VIMRTLOC	common root of the runtime Vim files (this version)
@@ -786,7 +764,6 @@ PODIR = po
 ### VIMRUNTIMEDIR  compiled-in location for runtime files (optional)
 ### HELPSUBLOC	location for help files
 ### SYNSUBLOC	location for syntax files
-### LANGSUBLOC	location for syntax files
 ### MACROSUBLOC	location for macro files
 ### TOOLSSUBLOC	location for tools files
 ### TUTORSUBLOC	location for tutor files
@@ -798,7 +775,6 @@ VIMRTLOC	= $(DATADIR)$(VIMDIR)$(VIMRTDIR)
 VIMRCLOC	= $(VIMLOC)
 HELPSUBLOC	= $(VIMRTLOC)$(HELPSUBDIR)
 SYNSUBLOC	= $(VIMRTLOC)$(SYNSUBDIR)
-LANGSUBLOC	= $(VIMRTLOC)$(LANGSUBDIR)
 MACROSUBLOC	= $(VIMRTLOC)$(MACROSUBDIR)
 TOOLSSUBLOC	= $(VIMRTLOC)$(TOOLSSUBDIR)
 TUTORSUBLOC	= $(VIMRTLOC)$(TUTORSUBDIR)
@@ -818,8 +794,6 @@ HELPENDLOC = $(HELPSUBLOC)
 #HELPENDLOC = /usr/doc/vim
 SYNTAXENDLOC = $(SYNSUBLOC)
 #SYNTAXENDLOC = /usr/lib/vim/syntax
-LANGENDLOC = $(LANGSUBLOC)
-#LANGENDLOC = /usr/share/locale/vim
 SCRIPTENDLOC = $(SCRIPTLOC)
 #SCRIPTENDLOC = /etc
 TUTORENDLOC = $(TUTORSUBLOC)
@@ -892,9 +866,6 @@ TOOLSSOURCE = ../runtime/tools
 # Where to copy the tutor files from
 TUTORSOURCE = ../runtime/tutor
 
-# Where to look for language specific files
-LANGSOURCE = ../runtime/lang
-
 # If you are using Linux, you might want to use this to make vim the
 # default vi editor, it will create a link from vi to Vim when doing
 # "make install".  An existing file will be overwritten!
@@ -909,6 +880,7 @@ LINKIT = @echo >/dev/null
 ### Override configures choice by uncommenting all the following lines.
 ### As they are, the GUI is disabled.  Replace "NONE" with "ATHENA" or "MOTIF"
 ### for enabling the Athena or Motif GUI.
+#GUI_INCL	= $(NONE_INCL)
 #GUI_SRC	= $(NONE_SRC)
 #GUI_OBJ	= $(NONE_OBJ)
 #GUI_DEFS	= $(NONE_DEFS)
@@ -921,10 +893,10 @@ LINKIT = @echo >/dev/null
 #GUI_TESTTARGET = $(NONE_TESTTARGET)
 
 ### GTK GUI interface.
+GTK_INCL	= gui.h gui_gtk_f.h
 GTK_SRC		= gui.c gui_gtk.c gui_gtk_x11.c pty.c gui_gtk_f.c
-GTK_OBJ		= objects/gui.o objects/gui_gtk.o objects/gui_gtk_x11.o \
-			objects/pty.o objects/gui_gtk_f.o
-GTK_DEFS	= -DFEAT_GUI_GTK $(NARROW_PROTO)
+GTK_OBJ		= gui.o gui_gtk.o gui_gtk_x11.o pty.o gui_gtk_f.o
+GTK_DEFS	= -DUSE_GUI_GTK $(NARROW_PROTO)
 GTK_IPATH	= $(GUI_INC_LOC)
 GTK_LIBS_DIR	= $(GUI_LIB_LOC)
 GTK_LIBS1	=
@@ -940,10 +912,10 @@ GTK_MAN_TARGETS = $(MANSUBDIR)/$(GVIMNAME).1 \
 GTK_TESTTARGET = gui
 
 ### Motif GUI interface.
+MOTIF_INCL	= gui.h
 MOTIF_SRC	= gui.c gui_motif.c gui_x11.c pty.c
-MOTIF_OBJ	= objects/gui.o objects/gui_motif.o objects/gui_x11.o \
-			objects/pty.o
-MOTIF_DEFS	= -DFEAT_GUI_MOTIF $(NARROW_PROTO)
+MOTIF_OBJ	= gui.o gui_motif.o gui_x11.o pty.o
+MOTIF_DEFS	= -DUSE_GUI_MOTIF $(NARROW_PROTO)
 MOTIF_IPATH	= -I$(GUI_INC_LOC)
 MOTIF_LIBS_DIR	= -L$(GUI_LIB_LOC)
 MOTIF_LIBS1	=
@@ -969,16 +941,15 @@ XAW_LIB = -lXaw
 ### When using Xaw3d, uncomment/comment the following lines to also get the
 ### scrollbars from Xaw3d.
 #ATHENA_SRC	= gui.c gui_athena.c gui_x11.c pty.c gui_at_fs.c
-#ATHENA_OBJ	= objects/gui.o objects/gui_athena.o objects/gui_x11.o \
-#			objects/pty.o objects/gui_at_fs.o
-#ATHENA_DEFS	= -DFEAT_GUI_ATHENA $(NARROW_PROTO) \
+#ATHENA_OBJ	= gui.o gui_athena.o gui_x11.o pty.o gui_at_fs.o
+#ATHENA_DEFS	= -DUSE_GUI_ATHENA $(NARROW_PROTO) \
 #		    -Dvim_scrollbarWidgetClass=scrollbarWidgetClass \
 #		    -Dvim_XawScrollbarSetThumb=XawScrollbarSetThumb
 ATHENA_SRC	= gui.c gui_athena.c gui_x11.c pty.c gui_at_sb.c gui_at_fs.c
-ATHENA_OBJ	= objects/gui.o objects/gui_athena.o objects/gui_x11.o \
-			objects/pty.o objects/gui_at_sb.o objects/gui_at_fs.o
-ATHENA_DEFS	= -DFEAT_GUI_ATHENA $(NARROW_PROTO)
+ATHENA_OBJ	= gui.o gui_athena.o gui_x11.o pty.o gui_at_sb.o gui_at_fs.o
+ATHENA_DEFS	= -DUSE_GUI_ATHENA $(NARROW_PROTO)
 
+ATHENA_INCL	= gui.h
 ATHENA_IPATH	= -I$(GUI_INC_LOC)
 ATHENA_LIBS_DIR = -L$(GUI_LIB_LOC)
 ATHENA_LIBS1	= $(XAW_LIB)
@@ -1005,9 +976,10 @@ ATHENA_TESTTARGET = gui
 #EXTRA_LIBS = /usr/openwin/lib/libXmu.sa -lm
 
 ### BeOS GUI interface.
+BEOSGUI_INCL	= gui.h
 BEOSGUI_SRC	= gui.c gui_beos.cc pty.c
-BEOSGUI_OBJ	= objects/gui.o objects/gui_beos.o  objects/pty.o
-BEOSGUI_DEFS	= -DFEAT_GUI_BEOS
+BEOSGUI_OBJ	= gui.o gui_beos.o  pty.o
+BEOSGUI_DEFS	= -DUSE_GUI_BEOS
 BEOSGUI_IPATH	=
 BEOSGUI_LIBS_DIR =
 BEOSGUI_LIBS1	= -lbe -lroot
@@ -1022,7 +994,8 @@ BEOSGUI_MAN_TARGETS = $(MANSUBDIR)/$(GVIMNAME).1 \
 			$(MANSUBDIR)/$(RGVIEWNAME).1
 BEOSGUI_TESTTARGET = gui
 
-# GUI files used for making ctags
+# GUI files used for making the tags file
+ALL_GUI_INCL = gui.h gui_at_sb.h gui_gtk_f.h
 ALL_GUI_SRC  = gui.c gui_gtk.c gui_gtk_f.c gui_motif.c gui_athena.c gui_gtk_x11.c gui_x11.c gui_at_sb.c gui_at_fs.c pty.c
 ALL_GUI_PRO  = gui.pro gui_gtk.pro gui_motif.pro gui_athena.pro gui_gtk_x11.pro gui_x11.pro gui_w32.pro gui_amiga.pro
 
@@ -1034,14 +1007,14 @@ VIMVERSION = `eval "basename \`cd ../; pwd\`"`
 ### prototype headers are ignored due to -DPROTO, system
 ### headers #include <...> are ignored if we use the -MM option, as
 ### e.g. provided by gcc-cpp.
-### Include FEAT_GUI to get gependency on gui.h
-CPP_DEPEND = $(CC) -I$(srcdir) -M$(CPP_MM) $(DEPEND_CFLAGS)
+### Include USE_GUI to get gependency on gui.h
+CPP_DEPEND = $(CC) -M$(CPP_MM) $(DEPEND_CFLAGS)
 
 # flags for cproto
-#     __inline and __attribute__ are not recognized by cproto
+#     __inline, __attribute__ and __extension__ are not recognized by cproto
 #     maybe the "/usr/bin/cc -E" has to be adjusted for some systems
 
-NO_ATTR = -D__inline= -D"__attribute__\\(x\\)="
+NO_ATTR = -D__inline= -D"__attribute__\\(x\\)=" -D__extension__=
 
 # This is for cproto 3.5 patchlevel 3:
 # PROTO_FLAGS = -f4 -m__ARGS -d -E"$(CPP)" $(NO_ATTR)
@@ -1067,23 +1040,30 @@ POST_DEFS = $(X_CFLAGS) $(PERL_CFLAGS) $(PYTHON_CFLAGS) $(TCL_CFLAGS) $(EXTRA_DE
 
 ALL_CFLAGS = $(PRE_DEFS) $(CFLAGS) $(POST_DEFS)
 
-LINT_CFLAGS = -DLINT -I. $(PRE_DEFS) $(POST_DEFS) -Dinline= -D__extension__=
+# Glib has an include file in a very unusual place...
+LINT_CFLAGS = -DLINT $(PRE_DEFS) $(POST_DEFS) -I/usr/X11R6/include -I/usr/local/lib/glib/include -Dinline=
 
-DEPEND_CFLAGS = -DPROTO -DDEPEND -DFEAT_GUI $(LINT_CFLAGS)
+DEPEND_CFLAGS = -DPROTO -DDEPEND -DUSE_GUI $(LINT_CFLAGS)
 
 PFLAGS = $(PROTO_FLAGS) -DPROTO $(LINT_CFLAGS)
 
-ALL_LIB_DIRS = $(GUI_LIBS_DIR) $(X_LIBS_DIR)
-ALL_LIBS = $(GUI_LIBS1) $(GUI_X_LIBS) $(GUI_LIBS2) $(X_PRE_LIBS) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS) $(EXTRA_LIBS) $(PERL_LIBS) $(PYTHON_LIBS) $(TCL_LIBS)
+ALL_LIBS = $(GUI_LIBS_DIR) $(X_LIBS_DIR) $(GUI_LIBS1) $(GUI_X_LIBS) $(GUI_LIBS2) $(X_PRE_LIBS) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS) $(EXTRA_LIBS) $(PERL_LIBS) $(PYTHON_LIBS) $(TCL_LIBS)
 
-#	     BASIC_SRC: files that are always used
-#	       GUI_SRC: extra GUI files for current configuration
-#	   ALL_GUI_SRC: all GUI files for Unix
+#     BASIC_INCL and BASIC_SRC: files that are always used
+#	  GUI_INCL and GUI_SRC: extra GUI files for current configuration
+# ALL_GUI_INCL and ALL_GUI_SRC: all GUI files for Unix
 #
-#		   SRC: files used for current configuration
-#	      TAGS_SRC: source files used for make tags
-#	     TAGS_INCL: include files used for make tags
-#	       ALL_SRC: source files used for make depend and make lint
+#		  INCL and SRC: files used for current configuration
+#		      TAGS_SRC: source files used for make tags
+#		     TAGS_INCL: include files used for make tags
+#		       ALL_SRC: source files used for make depend and make lint
+
+BASIC_INCL = ascii.h ex_cmds.h config.h feature.h globals.h \
+		keymap.h macros.h option.h osdef.h proto.h regexp.h \
+		structs.h term.h os_unix.h os_unixx.h version.h vim.h \
+		$(SNIFF_INCL)
+
+INCL = $(BASIC_INCL) $(GUI_INCL)
 
 TAGS_INCL = *.h
 
@@ -1097,7 +1077,6 @@ BASIC_SRC = \
 	ex_docmd.c \
 	ex_getln.c \
 	fileio.c \
-	fold.c \
 	getchar.c \
 	if_cscope.c \
 	main.c \
@@ -1108,12 +1087,12 @@ BASIC_SRC = \
 	message.c \
 	misc1.c \
 	misc2.c \
-	multibyte.c \
+	multbyte.c \
 	normal.c \
 	ops.c \
 	option.c \
 	os_unix.c \
-	auto/pathdef.c \
+	pathdef.c \
 	quickfix.c \
 	regexp.c \
 	screen.c \
@@ -1127,13 +1106,11 @@ BASIC_SRC = \
 	window.c \
 	$(OS_EXTRA_SRC)
 
-SRC =	$(BASIC_SRC) $(GUI_SRC) $(HANGULIN_SRC) $(PERL_SRC) $(PYTHON_SRC) \
-	$(TCL_SRC) $(SNIFF_SRC) $(WORKSHOP_SRC)
+SRC =	$(BASIC_SRC) $(GUI_SRC) $(HANGULIN_SRC) $(PERL_SRC) $(PYTHON_SRC) $(TCL_SRC) $(SNIFF_SRC)
 
 TAGS_SRC = *.c *.cpp if_perl.xs
 
-EXTRA_SRC = hangulin.c auto/if_perl.c if_perlsfio.c if_python.c if_tcl.c \
-		if_sniff.c gui_beval.c workshop.c integration.c
+EXTRA_SRC = hangulin.c if_perl.c if_perlsfio.c if_python.c if_tcl.c if_sniff.c
 
 # All sources, also the ones that are not configured
 ALL_SRC = $(BASIC_SRC) $(ALL_GUI_SRC) $(EXTRA_SRC)
@@ -1141,56 +1118,53 @@ ALL_SRC = $(BASIC_SRC) $(ALL_GUI_SRC) $(EXTRA_SRC)
 # Which files to check with lint.  Select one of these three lines.  ALL_SRC
 # checks more, but may not work well for checking a GUI that wasn't configured.
 # The perl sources also don't work well with lint.
-LINT_SRC = $(BASIC_SRC) $(GUI_SRC) $(HANGULIN_SRC) $(PYTHON_SRC) $(TCL_SRC) \
-	$(SNIFF_SRC) $(WORKSHOP_SRC)
+LINT_SRC = $(BASIC_SRC) $(GUI_SRC) $(HANGULIN_SRC) $(PYTHON_SRC) $(TCL_SRC) $(SNIFF_SRC)
 #LINT_SRC = $(SRC)
 #LINT_SRC = $(ALL_SRC)
 
 OBJ = \
-	objects/buffer.o \
-	objects/charset.o \
-	objects/digraph.o \
-	objects/edit.o \
-	objects/eval.o \
-	objects/ex_cmds.o \
-	objects/ex_docmd.o \
-	objects/ex_getln.o \
-	objects/fileio.o \
-	objects/fold.o \
-	objects/getchar.o \
+	buffer.o \
+	charset.o \
+	digraph.o \
+	edit.o \
+	eval.o \
+	ex_cmds.o \
+	ex_docmd.o \
+	ex_getln.o \
+	fileio.o \
+	getchar.o \
 	$(HANGULIN_OBJ) \
-	objects/if_cscope.o \
-	objects/main.o \
-	objects/mark.o \
-	objects/memfile.o \
-	objects/memline.o \
-	objects/menu.o \
-	objects/message.o \
-	objects/misc1.o \
-	objects/misc2.o \
-	objects/multibyte.o \
-	objects/normal.o \
-	objects/ops.o \
-	objects/option.o \
-	objects/os_unix.o \
-	objects/pathdef.o \
-	objects/quickfix.o \
-	objects/regexp.o \
-	objects/screen.o \
-	objects/search.o \
-	objects/syntax.o \
+	if_cscope.o \
+	main.o \
+	mark.o \
+	memfile.o \
+	memline.o \
+	menu.o \
+	message.o \
+	misc1.o \
+	misc2.o \
+	multbyte.o \
+	normal.o \
+	ops.o \
+	option.o \
+	os_unix.o \
+	pathdef.o \
+	quickfix.o \
+	regexp.o \
+	screen.o \
+	search.o \
+	syntax.o \
 	$(SNIFF_OBJ) \
-	objects/tag.o \
-	objects/term.o \
-	objects/ui.o \
-	objects/undo.o \
-	objects/window.o \
+	tag.o \
+	term.o \
+	ui.o \
+	undo.o \
+	window.o \
 	$(GUI_OBJ) \
 	$(PERL_OBJ) \
 	$(PYTHON_OBJ) \
 	$(TCL_OBJ) \
-	$(OS_EXTRA_OBJ) \
-	$(WORKSHOP_OBJ)
+	$(OS_EXTRA_OBJ)
 
 PRO_AUTO = \
 	buffer.pro \
@@ -1202,11 +1176,9 @@ PRO_AUTO = \
 	ex_docmd.pro \
 	ex_getln.pro \
 	fileio.pro \
-	fold.pro \
 	getchar.pro \
 	hangulin.pro \
 	if_cscope.pro \
-	if_python.pro \
 	main.pro \
 	mark.pro \
 	memfile.pro \
@@ -1215,7 +1187,7 @@ PRO_AUTO = \
 	message.pro \
 	misc1.pro \
 	misc2.pro \
-	multibyte.pro \
+	multbyte.pro \
 	normal.pro \
 	ops.pro \
 	option.pro \
@@ -1232,101 +1204,60 @@ PRO_AUTO = \
 	undo.pro \
 	version.pro \
 	window.pro \
-	gui_beval.pro \
-	workshop.pro \
 	$(ALL_GUI_PRO) \
-	$(TCL_PRO)
+	$(TCL_PRO) \
+	$(PERL_PRO)
 
 PRO_MANUAL = os_amiga.pro os_msdos.pro os_win32.pro os_beos.pro os_vms.pro \
-	os_riscos.pro $(PERL_PRO)
+	os_riscos.pro
 
 # Default target is making the executable and tools
-all: $(VIMTARGET) $(TOOLS) languages
+all: $(VIMTARGET) $(TOOLS)
 
 tools: $(TOOLS)
 
-# Run configure with all the setting from above.
+# Run ./configure with all the setting from above.
 #
-# Note: auto/config.h doesn't depend on configure, because running configure
-# doesn't always update auto/config.h.  The timestamp isn't changed if the
-# file contents didn't change (to avoid recompiling everything).  Including a
-# dependency on auto/config.h would cause running configure each time when
-# auto/config.h isn't updated.  The dependency on auto/config.mk should make
-# sure configure is run when it's needed.
+# Note: config.h doesn't depend on configure, because running configure
+# doesn't always update config.h.  The timestamp isn't changed if the file
+# contents didn't change (to avoid recompiling everything).  Including a
+# dependency on config.h would cause running configure each time when config.h
+# isn't updated.  The dependency on config.mk should make sure configure is
+# run when it's needed.
 #
-config auto/config.mk: auto/configure
+config config.mk: configure
 	GUI_INC_LOC="$(GUI_INC_LOC)" GUI_LIB_LOC="$(GUI_LIB_LOC)" \
 		CC="$(CC)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" \
-		LDFLAGS="$(LDFLAGS)" $(CONF_SHELL) srcdir="$(srcdir)" \
+		LDFLAGS="$(LDFLAGS)" $(CONF_SHELL) \
 		./configure $(CONF_OPT_GUI) $(CONF_OPT_X) \
 		$(CONF_OPT_PERL) $(CONF_OPT_PYTHON) $(CONF_OPT_TCL) \
 		$(CONF_OPT_CSCOPE) $(CONF_OPT_MULTIBYTE) $(CONF_OPT_INPUT) \
-		$(CONF_OPT_OUTPUT) $(CONF_OPT_GPM) $(CONF_OPT_WORKSHOP) \
-		$(CONF_OPT_FEAT) $(CONF_TERM_LIB) $(CONF_ARGS)
+		$(CONF_OPT_OUTPUT) $(CONF_OPT_GPM) \
+		$(CONF_OPT_MAX) $(CONF_OPT_MIN) $(CONF_TERM_LIB) $(CONF_ARGS)
 
-# When configure.in has changed, run autoconf to produce configure.
-# If you don't have autoconf, use the existing configure script.
-#
-# Two tricks are required to make autoconf put its output in the "auto" dir:
-# - Temporarily move the ./configure script to ./configure.save.  Don't
-#   overwrite it, it's probably the result of an aborted autoconf.
-# - Use sed to change ./config.log to auto/config.log in the configure script.
-auto/configure: configure.in
-	if test ! -f configure.save; then mv configure configure.save; fi
+# When configure.in has changed, run autoconf to produce configure
+# If you don't have autoconf, use the configure that's there
+configure: configure.in
 	autoconf
-	sed -e 's+\./config.log+auto/config.log+' configure > auto/configure
-	chmod 755 auto/configure
-	mv -f configure.save configure
+	chmod 755 configure
 
-# Re-execute this Makefile to include the new auto/config.mk produced by
-# configure Only used when typing "make" with a fresh auto/config.mk.
+# Re-execute this Makefile to include the new config.mk produced by configure
+# Only used when typing "make" with a fresh config.mk.
 myself:
 	$(MAKE) -f Makefile all
 
 
-# The normal command to compile a .c file to its .o file.
-CCC = $(CC) -c -I$(srcdir) $(ALL_CFLAGS)
-
-
 # Link the target for normal use or debugging.
 # A shell script is used to try linking without unneccesary libraries.
-$(VIMTARGET): auto/config.mk objects $(OBJ) version.c version.h
-	$(CCC) version.c -o objects/version.o
-	@LINK="$(PURIFY) $(SHRPENV) $(CC) $(LDFLAGS) $(ALL_LIB_DIRS) \
-		-o $(VIMTARGET) $(OBJ) objects/version.o $(ALL_LIBS)" \
-		MAKE="$(MAKE)" sh $(srcdir)/link.sh
-
-CTAGSFILES =	ctags/args.c ctags/args.h ctags/config.h ctags/ctags.h \
-		ctags/debug.c ctags/debug.h ctags/eiffel.c ctags/entry.c \
-		ctags/entry.h ctags/fortran.c ctags/general.h ctags/get.c \
-		ctags/get.h ctags/keyword.c ctags/keyword.h ctags/main.c \
-		ctags/main.h ctags/options.c ctags/options.h ctags/parse.c \
-		ctags/parse.h ctags/read.c ctags/read.h ctags/sort.c \
-		ctags/sort.h ctags/strlist.c ctags/strlist.h \
-		ctags/strstr.c ctags/vstring.c ctags/vstring.h
-
-ctags/ctags$(SUFFIX): ctags/Makefile $(CTAGSFILES)
-	cd ctags; CC="$(CC)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" \
-		$(MAKE) -f Makefile SUFFIX="$(SUFFIX)"
-
-ctags/Makefile ctags/config.h: ctags/Makefile.in
-	cd ctags; SUFFIX="$(SUFFIX)" CC="$(CC)" CPPFLAGS="$(CPPFLAGS)" \
-		CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" \
-		./configure --mandir="$(MANDIR)" --exec_prefix="$(exec_prefix)"
+$(VIMTARGET): config.mk $(OBJ) version.c version.h
+	$(CC) -c $(ALL_CFLAGS) version.c
+	@LINK="$(PURIFY) $(SHRPENV) $(CC) $(LDFLAGS) -o $(VIMTARGET) \
+		$(OBJ) version.o $(ALL_LIBS)" MAKE="$(MAKE)" \
+		sh $(srcdir)/link.sh
 
 xxd/xxd$(SUFFIX): xxd/xxd.c
 	cd xxd; CC="$(CC)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" \
-		$(MAKE) -f Makefile
-
-# build the language specific files if they were unpacked
-languages:
-	if test -n "$(MAKEMO)"; then \
-		cd $(PODIR); $(MAKE) prefix=$(prefix); \
-	fi
-
-# Update the *.po files for changes in the sources.  Only run manually.
-update-po:
-	cd $(PODIR); $(MAKE) prefix=$(prefix) update-po
+		$(MAKE) -f Makefile.unix
 
 # Generate function prototypes.  This is not needed to compile vim, but if
 # you want to use it, cproto is out there on the net somewhere -- Webb
@@ -1339,12 +1270,12 @@ proto: $(PRO_AUTO) $(PRO_MANUAL)
 ### Would be nice if this would work for "normal" make.
 ### Currently it only works for (Free)BSD make.
 #$(PRO_AUTO): $$(*F).c
-#	cproto $(PFLAGS) -DFEAT_GUI $(*F).c > $@
+#	cproto $(PFLAGS) -DUSE_GUI $(*F).c > $@
 
-# Always define FEAT_GUI.  This will generate a few warnings if it's also
-# defined in auto/config.h, you can ignore that.
+# Always define USE_GUI.  This will generate a few warnings if it's also
+# defined in config.h, you can ignore that.
 .c.pro:
-	cproto $(PFLAGS) -DFEAT_GUI $< > proto/$@
+	cproto $(PFLAGS) -DUSE_GUI $< > proto/$@
 
 os_amiga.pro: os_amiga.c
 	cproto $(PFLAGS) -DAMIGA -UHAVE_CONFIG_H -DBPTR=char* os_amiga.c > proto/os_amiga.pro
@@ -1359,15 +1290,13 @@ os_beos.pro: os_beos.c
 	cproto $(PFLAGS) -D__BEOS__ -UHAVE_CONFIG_H os_beos.c > proto/os_beos.pro
 
 os_vms.pro: os_vms.c
-# must use os_vms_conf.h for auto/config.h
-	mv auto/config.h auto/config.h.save
-	cp os_vms_conf.h auto/config.h
-	cproto $(PFLAGS) -DVMS -UFEAT_GUI_ATHENA -UFEAT_GUI_MOTIF -UFEAT_GUI_GTK os_vms.c > proto/os_vms.pro
-	rm auto/config.h
-	mv auto/config.h.save auto/config.h
+# must use os_vms_conf.h for config.h
+	mv config.h config.h.save
+	cp os_vms_conf.h config.h
+	cproto $(PFLAGS) -DVMS -UUSE_GUI_ATHENA -UUSE_GUI_MOTIF -UUSE_GUI_GTK os_vms.c > proto/os_vms.pro
+	rm config.h
+	mv config.h.save config.h
 
-if_perl.pro: auto/if_perl.c
-	cproto $(PFLAGS) -DFEAT_GUI auto/if_perl.c > proto/$@
 
 notags:
 	-rm -f tags
@@ -1375,7 +1304,7 @@ notags:
 # Note: tags is made for the currently configured version, can't include both
 #	Motif and Athena GUI
 # You can ignore error messages for missing files.
-tags TAGS: notags
+ctags tags TAGS: notags
 	$(TAGPRG) $(TAGS_SRC) $(TAGS_INCL)
 
 # Make a highlight file for types.  Requires Exuberant ctags and awk
@@ -1408,7 +1337,7 @@ testclean:
 # If you want to keep an older version, rename it before running "make
 # install".
 #
-install: installvim installtools install-languages
+install: installvim installtools
 
 installvim: installvimbin installvimhelp installlinks installhelplinks installmacros installtutor
 
@@ -1485,12 +1414,9 @@ installtutor: $(TUTORSOURCE) $(VIMLOC) $(VIMRTLOC) $(TUTORSUBLOC)
 	-$(INSTALL_DATA) $(TUTORSOURCE)/* $(TUTORSUBLOC)
 	chmod $(HELPMOD) $(TUTORSUBLOC)/*
 
-# install helper programs ctags and xxd
+# install the runtime tools and xxd
 installtools: $(TOOLS) $(exec_prefix) $(BINDIR) $(MANSUBDIR) \
 		$(TOOLSSOURCE) $(VIMLOC) $(VIMRTLOC) $(TOOLSSUBLOC)
-	cd ctags; mandir="$(MANDIR)" \
-		exec_prefix="$(exec_prefix)" bindir="$(BINDIR)" \
-		$(MAKE) -e -f Makefile	SUFFIX="$(SUFFIX)" install
 	if test -f $(BINDIR)/xxd$(SUFFIX); then \
 	  mv -f $(BINDIR)/xxd$(SUFFIX) $(BINDIR)/xxd.rm; \
 	  rm -f $(BINDIR)/xxd.rm; \
@@ -1505,27 +1431,14 @@ installtools: $(TOOLS) $(exec_prefix) $(BINDIR) $(MANSUBDIR) \
 	-chmod $(FILEMOD) $(TOOLSSUBLOC)/*
 	-chmod $(SCRIPTMOD) `grep -l "^#!" $(TOOLSSUBLOC)/*`
 
-# install the language specific files, if they were unpacked
-install-languages: languages $(LANGSUBLOC)
-	if test -n "$(MAKEMO)"; then \
-	   cd $(PODIR); $(MAKE) prefix=$(prefix) LOCALEDIR=$(LANGSUBLOC) \
-	   INSTALL_DATA=$(INSTALL_DATA) FILEMOD=$(FILEMOD) install; \
-	fi
-	if test -d $(LANGSOURCE); then \
-	   $(INSTALL_DATA) $(LANGSOURCE)/*.vim $(LANGSUBLOC); \
-	   chmod $(FILEMOD) $(LANGSUBLOC)/*.vim; \
-	fi
-
-
 $(HELPSOURCE)/vim.1 $(MACROSOURCE) $(TOOLSSOURCE):
 	@echo Runtime files not found.
 	@echo You need to unpack the runtime archive before running "make install".
 	test -f error
 
 $(exec_prefix) $(BINDIR) $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) $(HELPSUBLOC) \
-		$(SYNSUBLOC) $(LANGSUBLOC) $(MACROSUBLOC) $(TOOLSSUBLOC) \
-		$(TUTORSUBLOC):
-	-$(SHELL) ctags/mkinstalldirs $@
+		$(SYNSUBLOC) $(MACROSUBLOC) $(TOOLSSUBLOC) $(TUTORSUBLOC):
+	-$(SHELL) mkinstalldirs $@
 	-chmod $(DIRMOD) $@
 
 # create links from various names to vim.  This is only done when the links
@@ -1588,7 +1501,6 @@ uninstall: uninstall_runtime
 	-rm -f $(BINDIR)/$(VIMTARGET)
 	-rm -f $(MANSUBDIR)/$(VIMNAME).1 $(MANSUBDIR)/$(VIMNAME)tutor.1
 	-rm -f $(BINDIR)/vimtutor
-	-rm -f $(BINDIR)/ctags$(SUFFIX) $(MANSUBDIR)/ctags.1
 	-rm -f $(BINDIR)/xxd$(SUFFIX) $(MANSUBDIR)/xxd.1
 	-rm -f $(BINDIR)/$(EXTARGET) $(BINDIR)/$(VIEWTARGET)
 	-rm -f $(BINDIR)/$(GVIMTARGET) $(BINDIR)/$(GVIEWTARGET)
@@ -1599,7 +1511,6 @@ uninstall: uninstall_runtime
 	-rm -f $(MANSUBDIR)/$(RVIMNAME).1 $(MANSUBDIR)/$(RVIEWNAME).1
 	-rm -f $(MANSUBDIR)/$(RGVIMNAME).1 $(MANSUBDIR)/$(RGVIEWNAME).1
 
-# Note: the "rmdir" will fail if any files were added after "make install"
 uninstall_runtime:
 	-rm -f $(HELPSUBLOC)/*.txt $(HELPSUBLOC)/tags $(HELPSUBLOC)/*.pl
 	-rm -f $(SYS_MENU_FILE) $(SYS_BUGR_FILE)
@@ -1609,36 +1520,21 @@ uninstall_runtime:
 	-rm -rf $(MACROSUBLOC)
 	-rm -rf $(TUTORSUBLOC)
 	-rm -rf $(TOOLSSUBLOC)
-	-rm -rf $(LANGSUBLOC)
 	-rmdir $(HELPSUBLOC) $(SYNSUBLOC) $(VIMRTLOC)
 
 # Clean up all the files that have been produced, except configure's.
 # We support common typing mistakes for Juergen! :-)
 clean celan: testclean
-	-rm -f *.o objects/* core $(VIMTARGET).core $(VIMTARGET) xxd/*.o
-	-rm -f $(TOOLS) auto/osdef.h auto/pathdef.c auto/if_perl.c
-	-rm -f conftest* *~ auto/link.sed
-	if test -f ctags/Makefile; then \
-		cd ctags; $(MAKE) -f Makefile SUFFIX="$(SUFFIX)" clean; \
-	fi
-	if test -d $(PODIR); then \
-		cd $(PODIR); $(MAKE) prefix=$(prefix) clean; \
-	fi
+	-rm -f *.o core $(VIMTARGET).core $(VIMTARGET) xxd/*.o
+	-rm -f $(TOOLS) osdef.h pathdef.c if_perl.c
+	-rm -f conftest* *~ link.sed
 
 shadow:	runtime pixmaps
 	mkdir shadow
-	cd shadow; ln -s ../*.[ch] ../*.in ../*.sh ../*.xs ../*.xbm ../toolcheck ../proto ../vimtutor .
-	mkdir shadow/auto
-	cd shadow/auto ln -s ../../auto/configure .
-	cd shadow; rm -f auto/link.sed
+	cd shadow; ln -s ../*.[ch] ../*.in ../*.sh ../*.xs ../*.xbm ../toolcheck ../proto ../configure ../vimtutor ../mkinstalldirs .
+	cd shadow; rm -f osdef.h config.h pathdef.c link.sed
 	cp Makefile shadow
-	echo "the first targets to make vim are: scratch config myself" > shadow/auto/config.mk
-	echo "srcdir = ." >> shadow/auto/config.mk
-	mkdir shadow/ctags
-	cd shadow/ctags; ln -s ../../ctags/*.[ch1] \
-				../../ctags/*.in \
-				../../ctags/mkinstalldirs \
-				../../ctags/configure .
+	echo "the first targets to make vim are: scratch config myself" > shadow/config.mk
 	mkdir shadow/xxd
 	cd shadow/xxd; ln -s ../../xxd/*.[ch] ../../xxd/Make* .
 	mkdir shadow/testdir
@@ -1655,17 +1551,24 @@ runtime:
 pixmaps:
 	-ln -s ../pixmaps .
 
+# Update the menu.vim file with the latest Syntax menu.
+# This is only needed when runtime/makemenu.vim was changed.
+# Does not work with "--enable-min-features".
+menu: ./vim ../runtime/makemenu.vim
+	./vim -u ../runtime/makemenu.vim
+
 # Start configure from scratch
 scrub scratch:
-	-rm -f auto/config.status auto/config.cache auto/config.log auto/config.h
-	touch auto/config.h
-	-if test -f ctags/Makefile; then \
-		cd ctags; $(MAKE) -f Makefile SUFFIX="$(SUFFIX)" distclean; \
-	fi
+	-rm -f config.status config.cache config.h config.log
 
 distclean: clean scratch
-	echo "the first targets to make vim are: scratch config myself" > auto/config.mk
-	echo "srcdir = ." >> auto/config.mk
+	echo "the first targets to make vim are: scratch config myself" > config.mk
+
+tar: clean
+	echo packing $(VIMVERSION) ...
+	VIMVERSION=$(VIMVERSION); cd ../..; set -x; \
+	  tar cvf $$VIMVERSION.tar $$VIMVERSION; \
+	  gzip -nf $$VIMVERSION.tar || gzip -f $$VIMVERSION.tar
 
 dist: distclean tar
 
@@ -1675,7 +1578,7 @@ mdepend:
 	sed -e '/\#\#\# Dependencies/q' < Makefile > tmp_make
 	@for i in $(ALL_SRC) ; do \
 	  echo "$$i" ; \
-	  echo `echo "$$i" | sed -e 's/[^ ]*\.c$$/objects\/\1.o/'`": $$i" `\
+	  echo `echo "$$i" | sed -e 's/.c$$/.o/'`": $$i" `\
 	    $(CPP) $$i |\
 	    grep '^# .*"\./.*\.h"' |\
 	    sort -t'"' -u +1 -2 |\
@@ -1689,8 +1592,7 @@ depend:
 	cp Makefile Makefile~
 	sed -e '/\#\#\# Dependencies/q' < Makefile > tmp_make
 	-for i in $(ALL_SRC); do echo $$i; \
-		$(CPP_DEPEND) $$i | \
-		sed -e 's+^\([^ ]*\.o\)+objects/\1+' >> tmp_make; done
+			$(CPP_DEPEND) $$i >> tmp_make; done
 	mv tmp_make Makefile
 
 lint:
@@ -1698,222 +1600,55 @@ lint:
 
 ###########################################################################
 
+# Used when .o files are in src directory
 .c.o:
-	$(CCC) $<
+	$(CC) -c -I$(srcdir) $(ALL_CFLAGS) $<
 
 .cc.o:
-	$(CCC) $<
+	$(CC) -c -I$(srcdir) $(ALL_CFLAGS) $<
 
-auto/if_perl.c: if_perl.xs
-	$(PERL) -e 'unless ( $$] >= 5.005 ) { for (qw(na defgv errgv)) { print "#define PL_$$_ $$_\n" }}' > $@
+# Used when .o files are in src/objects directory
+#$(OBJ): $$(*F).c
+#	$(CC) -c -I$(srcdir) $(ALL_CFLAGS) $(*F).c -o $@
+
+if_perl.c: if_perl.xs
+	$(PERL) -e 'unless ( $$] >= 5.005 ) \
+	    { for (qw(na defgv errgv)) { print "#define PL_$$_ $$_\n" }}' > $@
 	$(PERL) $(PERLLIB)/ExtUtils/xsubpp -prototypes -typemap \
 	    $(PERLLIB)/ExtUtils/typemap if_perl.xs >> $@
 
-auto/osdef.h: auto/config.h osdef.sh osdef1.h.in osdef2.h.in
-	CC="$(CC) $(ALL_CFLAGS)" srcdir=$(srcdir) sh $(srcdir)/osdef.sh
-
-auto/pathdef.c: Makefile auto/config.mk
-	-@echo creating $@
-	-@echo '/* pathdef.c */' > $@
-	-@echo '/* This file is automatically created by Makefile' >> $@
-	-@echo ' * DO NOT EDIT!  Change Makefile only. */' >> $@
-	-@echo '#include "vim.h"' >> $@
-	-@echo 'char_u *default_vim_dir = (char_u *)"$(VIMRCLOC)";' >> $@
-	-@echo 'char_u *default_vimruntime_dir = (char_u *)"$(VIMRUNTIMEDIR)";' >> $@
-	-@echo 'char_u *all_cflags = (char_u *)"$(CC) -c -I$(srcdir) $(ALL_CFLAGS)";' >>  $@
-	-@echo 'char_u *all_lflags = (char_u *)"$(CC) $(LDFLAGS) $(ALL_LIB_DIRS) -o $(VIMTARGET) $(ALL_LIBS) ";' >>  $@
-	-@echo 'char_u *compiled_user = (char_u *)"' | tr -d $(NL) >> $@
-	-@whoami | tr -d $(NL) >> $@
-	-@echo '";' >> $@
-	-@echo 'char_u *compiled_sys = (char_u *)"' | tr -d $(NL) >> $@
-	-@hostname | tr -d $(NL) >> $@
-	-@echo '";' >> $@
-	-@sh $(srcdir)/pathdef.sh
-
-# All the object files are put in the "objects" directory.  Since not all make
-# commands understand putting object files in another directory, it must be
-# specified for each file separately.
-
-objects:
-	mkdir objects
-
-objects/buffer.o: buffer.c
-	$(CCC) -o $@ buffer.c
-
-objects/charset.o: charset.c
-	$(CCC) -o $@ charset.c
-
-objects/digraph.o: digraph.c
-	$(CCC) -o $@ digraph.c
-
-objects/edit.o: edit.c
-	$(CCC) -o $@ edit.c
-
-objects/eval.o: eval.c
-	$(CCC) -o $@ eval.c
-
-objects/ex_cmds.o: ex_cmds.c
-	$(CCC) -o $@ ex_cmds.c
-
-objects/ex_docmd.o: ex_docmd.c
-	$(CCC) -o $@ ex_docmd.c
-
-objects/ex_getln.o: ex_getln.c
-	$(CCC) -o $@ ex_getln.c
-
-objects/fileio.o: fileio.c
-	$(CCC) -o $@ fileio.c
-
-objects/fold.o: fold.c
-	$(CCC) -o $@ fold.c
-
-objects/getchar.o: getchar.c
-	$(CCC) -o $@ getchar.c
-
-objects/gui.o: gui.c
-	$(CCC) -o $@ gui.c
-
-objects/gui_at_fs.o: gui_at_fs.c
-	$(CCC) -o $@ gui_at_fs.c
-
-objects/gui_at_sb.o: gui_at_sb.c
-	$(CCC) -o $@ gui_at_sb.c
-
-objects/gui_athena.o: gui_athena.c
-	$(CCC) -o $@ gui_athena.c
-
-objects/gui_beval.o: gui_beval.c
-	$(CCC) -o $@ gui_beval.c
-
-objects/gui_gtk.o: gui_gtk.c
-	$(CCC) -o $@ gui_gtk.c
-
-objects/gui_gtk_f.o: gui_gtk_f.c
-	$(CCC) -o $@ gui_gtk_f.c
-
-objects/gui_gtk_x11.o: gui_gtk_x11.c
-	$(CCC) -o $@ gui_gtk_x11.c
-
-objects/gui_motif.o: gui_motif.c
-	$(CCC) -o $@ gui_motif.c
-
-objects/gui_x11.o: gui_x11.c
-	$(CCC) -o $@ gui_x11.c
-
-objects/hangulin.o: hangulin.c
-	$(CCC) -o $@ hangulin.c
-
-objects/if_cscope.o: if_cscope.c
-	$(CCC) -o $@ if_cscope.c
-
-objects/if_perl.o: auto/if_perl.c
-	$(CCC) -o $@ auto/if_perl.c
-
-objects/if_perlsfio.o: if_perlsfio.c
-	$(CCC) -o $@ if_perlsfio.c
-
-objects/if_python.o: if_python.c
-	$(CCC) -o $@ if_python.c
-
-objects/if_sniff.o: if_sniff.c
-	$(CCC) -o $@ if_sniff.c
-
-objects/if_tcl.o: if_tcl.c
-	$(CCC) -o $@ if_tcl.c
-
-objects/integration.o: integration.c
-	$(CCC) -o $@ integration.c
-
-objects/main.o: main.c
-	$(CCC) -o $@ main.c
-
-objects/mark.o: mark.c
-	$(CCC) -o $@ mark.c
-
-objects/memfile.o: memfile.c
-	$(CCC) -o $@ memfile.c
-
-objects/memline.o: memline.c
-	$(CCC) -o $@ memline.c
-
-objects/menu.o: menu.c
-	$(CCC) -o $@ menu.c
-
-objects/message.o: message.c
-	$(CCC) -o $@ message.c
-
-objects/misc1.o: misc1.c
-	$(CCC) -o $@ misc1.c
-
-objects/misc2.o: misc2.c
-	$(CCC) -o $@ misc2.c
-
-objects/multibyte.o: multibyte.c
-	$(CCC) -o $@ multibyte.c
-
-objects/normal.o: normal.c
-	$(CCC) -o $@ normal.c
-
-objects/ops.o: ops.c
-	$(CCC) -o $@ ops.c
-
-objects/option.o: option.c
-	$(CCC) -o $@ option.c
-
-objects/os_beos.o: os_beos.c
-	$(CCC) -o $@ os_beos.c
-
-objects/os_unix.o: os_unix.c
-	$(CCC) -o $@ os_unix.c
-
-objects/pathdef.o: auto/pathdef.c
-	$(CCC) -o $@ auto/pathdef.c
-
-objects/py_config.o: $(PYTHON_CONFDIR)/config.c
-	$(CCC) -o $@ $(PYTHON_CONFDIR)/config.c \
-		-I$(PYTHON_CONFDIR) -DHAVE_CONFIG_H -DNO_MAIN
-
-objects/py_getpath.o: $(PYTHON_CONFDIR)/getpath.c
-	$(CCC) -o $@ $(PYTHON_CONFDIR)/getpath.c \
+# used when python is being built
+py_getpath.o: $(PYTHON_CONFDIR)/getpath.c
+	$(CC) -c -o $@ $(PYTHON_CONFDIR)/getpath.c \
 		-I$(PYTHON_CONFDIR) -DHAVE_CONFIG_H -DNO_MAIN \
+		$(ALL_CFLAGS) \
 		$(PYTHON_GETPATH_CFLAGS)
 
-objects/pty.o: pty.c
-	$(CCC) -o $@ pty.c
+py_config.o: $(PYTHON_CONFDIR)/config.c
+	$(CC) -c -o $@ $(PYTHON_CONFDIR)/config.c \
+		-I$(PYTHON_CONFDIR) -DHAVE_CONFIG_H -DNO_MAIN \
+		$(ALL_CFLAGS)
 
-objects/quickfix.o: quickfix.c
-	$(CCC) -o $@ quickfix.c
+osdef.h: osdef.sh config.h osdef1.h.in osdef2.h.in
+	CC="$(CC) $(ALL_CFLAGS)" srcdir=$(srcdir) sh $(srcdir)/osdef.sh
 
-objects/regexp.o: regexp.c
-	$(CCC) -o $@ regexp.c
-
-objects/screen.o: screen.c
-	$(CCC) -o $@ screen.c
-
-objects/search.o: search.c
-	$(CCC) -o $@ search.c
-
-objects/syntax.o: syntax.c
-	$(CCC) -o $@ syntax.c
-
-objects/tag.o: tag.c
-	$(CCC) -o $@ tag.c
-
-objects/term.o: term.c
-	$(CCC) -o $@ term.c
-
-objects/ui.o: ui.c
-	$(CCC) -o $@ ui.c
-
-objects/undo.o: undo.c
-	$(CCC) -o $@ undo.c
-
-objects/window.o: window.c
-	$(CCC) -o $@ window.c
-
-objects/workshop.o: workshop.c
-	$(CCC) -o $@ workshop.c
-
+pathdef.c: Makefile config.mk
+	-@echo creating pathdef.c
+	-@echo '/* pathdef.c */' > pathdef.c
+	-@echo '/* This file is automatically created by Makefile' >> pathdef.c
+	-@echo ' * DO NOT EDIT!  Change Makefile only. */' >> pathdef.c
+	-@echo '#include "vim.h"' >> pathdef.c
+	-@echo 'char_u *default_vim_dir = (char_u *)"$(VIMRCLOC)";' >> pathdef.c
+	-@echo 'char_u *default_vimruntime_dir = (char_u *)"$(VIMRUNTIMEDIR)";' >> pathdef.c
+	-@echo 'char_u *all_cflags = (char_u *)"$(CC) -c -I$(srcdir) $(ALL_CFLAGS)";' >> pathdef.c
+	-@echo 'char_u *all_lflags = (char_u *)"$(CC) $(LDFLAGS) -o $(VIMTARGET) $(ALL_LIBS)";' >> pathdef.c
+	-@echo 'char_u *compiled_user = (char_u *)"' | tr -d \\012 >>pathdef.c
+	-@whoami | tr -d \\012 >>pathdef.c
+	-@echo '";' >>pathdef.c
+	-@echo 'char_u *compiled_sys = (char_u *)"' | tr -d \\012 >>pathdef.c
+	-@hostname | tr -d \\012 >>pathdef.c
+	-@echo '";' >>pathdef.c
+	-@sh $(srcdir)/pathdef.sh
 
 Makefile:
 	@echo The name of the makefile MUST be "Makefile" (with capital M)!!!!
@@ -1921,126 +1656,125 @@ Makefile:
 ###############################################################################
 ### (automatically generated by 'make depend')
 ### Dependencies:
-objects/buffer.o: buffer.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/charset.o: charset.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/digraph.o: digraph.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/edit.o: edit.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
+buffer.o: buffer.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
+charset.o: charset.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
  farsi.h option.h ex_cmds.h proto.h
-objects/eval.o: eval.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
+digraph.o: digraph.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h
+edit.o: edit.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
+eval.o: eval.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h version.h
+ex_cmds.o: ex_cmds.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h
+ex_docmd.o: ex_docmd.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h
+ex_getln.o: ex_getln.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h
+fileio.o: fileio.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
+getchar.o: getchar.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h
+if_cscope.o: if_cscope.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h if_cscope.h
+main.o: main.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h farsi.c
+mark.o: mark.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
+memfile.o: memfile.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h
+memline.o: memline.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h
+menu.o: menu.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
+message.o: message.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h
+misc1.o: misc1.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h version.h
+misc2.o: misc2.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
+multbyte.o: multbyte.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h
+normal.o: normal.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
+ops.o: ops.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
+option.o: option.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
+os_unix.o: os_unix.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h os_unixx.h
+pathdef.o: pathdef.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h
+quickfix.o: quickfix.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h
+regexp.o: regexp.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
+screen.o: screen.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
+search.o: search.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
+syntax.o: syntax.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
+tag.o: tag.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
+term.o: term.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
+ui.o: ui.c vim.h config.h feature.h os_unix.h osdef.h ascii.h keymap.h \
+ term.h macros.h regexp.h structs.h gui.h globals.h farsi.h option.h \
+ ex_cmds.h proto.h
+undo.o: undo.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
+version.o: version.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
  farsi.h option.h ex_cmds.h proto.h version.h
-objects/ex_cmds.o: ex_cmds.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/ex_docmd.o: ex_docmd.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/ex_getln.o: ex_getln.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/fileio.o: fileio.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/fold.o: fold.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h
-objects/getchar.o: getchar.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/if_cscope.o: if_cscope.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h if_cscope.h
-objects/main.o: main.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h farsi.c
-objects/mark.o: mark.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h
-objects/memfile.o: memfile.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/memline.o: memline.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/menu.o: menu.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h
-objects/message.o: message.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/misc1.o: misc1.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h version.h
-objects/misc2.o: misc2.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h
-objects/multibyte.o: multibyte.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/normal.o: normal.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/ops.o: ops.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h
-objects/option.o: option.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/os_unix.o: os_unix.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h os_unixx.h
-objects/pathdef.o: auto/pathdef.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/quickfix.o: quickfix.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/regexp.o: regexp.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/screen.o: screen.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/search.o: search.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/syntax.o: syntax.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/tag.o: tag.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h
-objects/term.o: term.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h
-objects/ui.o: ui.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h
-objects/undo.o: undo.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h
-objects/version.o: version.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h version.h
-objects/window.o: window.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/gui.o: gui.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h
-objects/gui_gtk.o: gui_gtk.c gui_gtk_f.h vim.h auto/config.h feature.h \
- os_unix.h auto/osdef.h ascii.h keymap.h term.h macros.h structs.h \
- regexp.h gui.h globals.h farsi.h option.h ex_cmds.h proto.h \
- ../pixmaps/tb_new.xpm ../pixmaps/tb_open.xpm ../pixmaps/tb_close.xpm \
- ../pixmaps/tb_save.xpm ../pixmaps/tb_print.xpm ../pixmaps/tb_cut.xpm \
- ../pixmaps/tb_copy.xpm ../pixmaps/tb_paste.xpm ../pixmaps/tb_find.xpm \
+window.o: window.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
+gui.o: gui.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
+gui_gtk.o: gui_gtk.c gui_gtk_f.h vim.h config.h feature.h os_unix.h \
+ osdef.h ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h \
+ globals.h farsi.h option.h ex_cmds.h proto.h ../pixmaps/alert.xpm \
+ ../pixmaps/error.xpm ../pixmaps/generic.xpm ../pixmaps/info.xpm \
+ ../pixmaps/quest.xpm ../pixmaps/tb_new.xpm ../pixmaps/tb_open.xpm \
+ ../pixmaps/tb_close.xpm ../pixmaps/tb_save.xpm \
+ ../pixmaps/tb_print.xpm ../pixmaps/tb_cut.xpm ../pixmaps/tb_copy.xpm \
+ ../pixmaps/tb_paste.xpm ../pixmaps/tb_find.xpm \
  ../pixmaps/tb_find_next.xpm ../pixmaps/tb_find_prev.xpm \
  ../pixmaps/tb_find_help.xpm ../pixmaps/tb_exit.xpm \
  ../pixmaps/tb_undo.xpm ../pixmaps/tb_redo.xpm ../pixmaps/tb_help.xpm \
@@ -2050,75 +1784,47 @@ objects/gui_gtk.o: gui_gtk.c gui_gtk_f.h vim.h auto/config.h feature.h \
  ../pixmaps/tb_save_session.xpm ../pixmaps/tb_new_session.xpm \
  ../pixmaps/tb_blank.xpm ../pixmaps/tb_maximize.xpm \
  ../pixmaps/tb_split.xpm ../pixmaps/tb_minimize.xpm \
- ../pixmaps/tb_shell.xpm ../pixmaps/tb_replace.xpm \
- ../pixmaps/tb_vsplit.xpm ../pixmaps/tb_maxwidth.xpm \
- ../pixmaps/tb_minwidth.xpm
-objects/gui_gtk_f.o: gui_gtk_f.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h gui_gtk_f.h
-objects/gui_motif.o: gui_motif.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h \
- ../pixmaps/tb_new.xpm ../pixmaps/tb_open.xpm ../pixmaps/tb_close.xpm \
- ../pixmaps/tb_save.xpm ../pixmaps/tb_print.xpm ../pixmaps/tb_cut.xpm \
- ../pixmaps/tb_copy.xpm ../pixmaps/tb_paste.xpm ../pixmaps/tb_find.xpm \
- ../pixmaps/tb_find_next.xpm ../pixmaps/tb_find_prev.xpm \
- ../pixmaps/tb_find_help.xpm ../pixmaps/tb_exit.xpm \
- ../pixmaps/tb_undo.xpm ../pixmaps/tb_redo.xpm ../pixmaps/tb_help.xpm \
- ../pixmaps/tb_macro.xpm ../pixmaps/tb_make.xpm \
- ../pixmaps/tb_save_all.xpm ../pixmaps/tb_jump.xpm \
- ../pixmaps/tb_ctags.xpm ../pixmaps/tb_load_session.xpm \
- ../pixmaps/tb_save_session.xpm ../pixmaps/tb_new_session.xpm \
- ../pixmaps/tb_blank.xpm ../pixmaps/tb_maximize.xpm \
- ../pixmaps/tb_split.xpm ../pixmaps/tb_minimize.xpm \
- ../pixmaps/tb_shell.xpm ../pixmaps/tb_replace.xpm \
- ../pixmaps/tb_vsplit.xpm ../pixmaps/tb_maxwidth.xpm \
- ../pixmaps/tb_minwidth.xpm
-objects/gui_athena.o: gui_athena.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h gui_at_sb.h
-objects/gui_gtk_x11.o: gui_gtk_x11.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h version.h \
- gui_gtk_f.h ../runtime/vim32x32.xpm ../runtime/vim16x16.xpm \
- ../runtime/vim48x48.xpm
-objects/gui_x11.o: gui_x11.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h vim_icon.xbm \
- vim_mask.xbm
-objects/gui_at_sb.o: gui_at_sb.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h gui_at_sb.h
-objects/gui_at_fs.o: gui_at_fs.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h gui_at_sb.h
-objects/pty.o: pty.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
+ ../pixmaps/tb_shell.xpm ../pixmaps/tb_replace.xpm
+gui_gtk_f.o: gui_gtk_f.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h gui_gtk_f.h
+gui_motif.o: gui_motif.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
  farsi.h option.h ex_cmds.h proto.h
-objects/hangulin.o: hangulin.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/if_perl.o: auto/if_perl.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/if_perlsfio.o: if_perlsfio.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/if_python.o: if_python.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/if_tcl.o: if_tcl.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
-objects/if_sniff.o: if_sniff.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h os_unixx.h
-objects/gui_beval.o: gui_beval.c feature.h vim.h auto/config.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h gui_beval.h \
- proto/gui_beval.pro
-objects/workshop.o: workshop.c integration.h vim.h auto/config.h feature.h \
- os_unix.h auto/osdef.h ascii.h keymap.h term.h macros.h structs.h \
- regexp.h gui.h globals.h farsi.h option.h ex_cmds.h proto.h \
- gui_beval.h proto/gui_beval.pro workshop.h
-objects/integration.o: integration.c integration.h
+gui_athena.o: gui_athena.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h gui_at_sb.h
+gui_gtk_x11.o: gui_gtk_x11.c vim.h config.h feature.h os_unix.h \
+ osdef.h ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h \
+ globals.h farsi.h option.h ex_cmds.h proto.h gui_gtk_f.h \
+ ../runtime/vim32x32.xpm
+gui_x11.o: gui_x11.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h vim_icon.xbm vim_mask.xbm
+gui_at_sb.o: gui_at_sb.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h gui_at_sb.h
+gui_at_fs.o: gui_at_fs.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h gui_at_sb.h
+pty.o: pty.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
+hangulin.o: hangulin.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h
+if_perl.o: if_perl.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h
+if_perlsfio.o: if_perlsfio.c vim.h config.h feature.h os_unix.h \
+ osdef.h ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h \
+ globals.h farsi.h option.h ex_cmds.h proto.h
+if_python.o: if_python.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h
+if_tcl.o: if_tcl.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
+if_sniff.o: if_sniff.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h os_unixx.h

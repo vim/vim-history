@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:		SKILL for Diva
 " Maintainer:	Toby Schaffer <jtschaff@eos.ncsu.edu>
-" Last Change:	1999 Jun 14
+" Last Change:	2001 May 09
 " Comments:		SKILL is a Lisp-like programming language for use in EDA
 "				tools from Cadence Design Systems. It allows you to have
 "				a programming environment within the Cadence environment
@@ -11,7 +11,11 @@
 " Don't remove any old syntax stuff hanging around! We need stuff
 " from skill.vim.
 if !exists("did_skill_syntax_inits")
+  if version < 600
 	so <sfile>:p:h/skill.vim
+  else
+    runtime! syntax/skill.vim
+  endif
 endif
 
 syn keyword divaDRCKeywords		area enc notch ovlp sep width
@@ -76,19 +80,29 @@ syn match divaLVSFunctions		"\<\(permute\|prune\|remove\)Device("he=e-1
 syn match divaGeomFunctions		"(geom\u\a\+\(45\|90\)\=\>"hs=s+1
 syn match divaGeomFunctions		"\<geom\u\a\+\(45\|90\)\=("he=e-1
 
-if !exists("did_diva_syntax_inits")
-	let did_diva_syntax_inits = 1
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_diva_syntax_inits")
+	if version < 508
+		let did_diva_syntax_inits = 1
+		command -nargs=+ HiLink hi link <args>
+	else
+		command -nargs=+ HiLink hi def link <args>
+	endif
 
-	hi link divaDRCKeywords		Statement
-	hi link divaMeasKeywords	Statement
-	hi link divaCtrlFunctions	Conditional
-	hi link divaExtFunctions	Function
-	hi link divaDRCFunctions	Function
-	hi link divaFunctions		Function
-	hi link divaLayerFunctions	Function
-	hi link divaChkFunctions	Function
-	hi link divaLVSFunctions	Function
-	hi link divaGeomFunctions	Function
+	HiLink divaDRCKeywords		Statement
+	HiLink divaMeasKeywords		Statement
+	HiLink divaCtrlFunctions	Conditional
+	HiLink divaExtFunctions		Function
+	HiLink divaDRCFunctions		Function
+	HiLink divaFunctions		Function
+	HiLink divaLayerFunctions	Function
+	HiLink divaChkFunctions		Function
+	HiLink divaLVSFunctions		Function
+	HiLink divaGeomFunctions	Function
+
+	delcommand HiLink
 endif
 
 let b:current_syntax = "diva"

@@ -4,8 +4,13 @@
 " Last Change:	May 27 1999
 " Based on:	Bram Moolenaar <Bram@vim.org> C syntax file
 
-" Remove any old syntax stuff hanging around
-sy clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " when wanted, highlight trailing white space and spaces before tabs
 if exists("mel_space_errors")
@@ -71,36 +76,46 @@ if !exists("mel_minlines")
 endif
 exec "sy sync ccomment melComment minlines=" . mel_minlines
 
-if !exists("did_mel_syntax_inits")
-  let did_mel_syntax_inits=1
-  hi link melBoolean	Boolean
-  hi link melFunction	Function
-  hi link melIdentifier	Identifier
-  hi link melStatement	Statement
-  hi link melConditional Conditional
-  hi link melRepeat	Repeat
-  hi link melLabel	Label
-  hi link melOperator	Operator
-  hi link melKeyword	Keyword
-  hi link melException	Exception
-  hi link melInclude	Include
-  hi link melType	Type
-  hi link melStorageClass StorageClass
-  hi link melDebug	Debug
-  hi link melTodo	Todo
-  hi link melCharSpecial SpecialChar
-  hi link melString	String
-  hi link melInteger	Number
-  hi link melFloat	Float
-  hi link melMatrixVector Float
-  hi link melComment	Comment
-  hi link melError	Error
-  hi link melSpaceError	melError
-  hi link melCharError	melError
-  hi link melParenError	melError
-  hi link melInParen	melError
-  hi link melCommentError melError
-  hi melCommaSemi	NONE
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_mel_syntax_inits")
+  if version < 508
+    let did_mel_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink melBoolean	Boolean
+  HiLink melFunction	Function
+  HiLink melIdentifier	Identifier
+  HiLink melStatement	Statement
+  HiLink melConditional Conditional
+  HiLink melRepeat	Repeat
+  HiLink melLabel	Label
+  HiLink melOperator	Operator
+  HiLink melKeyword	Keyword
+  HiLink melException	Exception
+  HiLink melInclude	Include
+  HiLink melType	Type
+  HiLink melStorageClass StorageClass
+  HiLink melDebug	Debug
+  HiLink melTodo	Todo
+  HiLink melCharSpecial SpecialChar
+  HiLink melString	String
+  HiLink melInteger	Number
+  HiLink melFloat	Float
+  HiLink melMatrixVector Float
+  HiLink melComment	Comment
+  HiLink melError	Error
+  HiLink melSpaceError	melError
+  HiLink melCharError	melError
+  HiLink melParenError	melError
+  HiLink melInParen	melError
+  HiLink melCommentError melError
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "mel"

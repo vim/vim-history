@@ -3058,6 +3058,7 @@ vim_deltempdir()
  * The returned pointer is to allocated memory.
  * The returned pointer is NULL if no valid name was found.
  */
+/*ARGSUSED*/
     char_u  *
 vim_tempname(extra_char)
     int	    extra_char;	    /* character to use in the name instead of '?' */

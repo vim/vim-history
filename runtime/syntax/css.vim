@@ -2,15 +2,21 @@
 " Language:	Cascading Style Sheets
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/css.vim
-" Last Change:	1999 Jul 1
+" Last Change:	2001 Apr 26
 
-" Remove any old syntax stuff hanging around
-syn clear
-syn case ignore
-
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
 if !exists("main_syntax")
+  if version < 600
+    syntax clear
+  elseif exists("b:current_syntax")
+  finish
+endif
   let main_syntax = 'css'
 endif
+
+syn case ignore
+
 
 syn keyword cssTagName address applet area a base basefont
 syn keyword cssTagName big blockquote body br b caption center
@@ -60,7 +66,7 @@ syn keyword cssBoxProperties contained width height float clear
 syn keyword cssBoxAttr contained auto thin medium thick left right none both
 syn keyword cssBoxAttr contained none dotted dashed solid double groove ridge inset outset
 
-syn keyword cssClassificationProperties contained
+syn keyword cssClassificationProperties contained display
 syn match cssClassificationProperties contained "\<white-space\>"
 syn match cssClassificationProperties contained "\<list-\(item\|style\(-\(type\|image\|position\)\)\=\)\>"
 syn keyword cssClassificationAttr contained block inline none normal pre nowrap
@@ -87,30 +93,41 @@ if main_syntax == "css"
   syn sync minlines=10
 endif
 
-if !exists("did_css_syntax_inits")
-  hi link cssComment Comment
-  hi link cssTagName Statement
-  hi link cssFontProperties StorageClass
-  hi link cssColorProperties StorageClass
-  hi link cssTextProperties StorageClass
-  hi link cssBoxProperties StorageClass
-  hi link cssClassificationProperties StorageClass
-  hi link cssFontAttr Type
-  hi link cssColorAttr Type
-  hi link cssTextAttr Type
-  hi link cssBoxAttr Type
-  hi link cssClassificationAttr Type
-  hi link cssPseudoClassId PreProc
-  hi link cssLength Number
-  hi link cssColor Constant
-  hi link cssURL String
-  hi link cssIdentifier Function
-  hi link cssInclude Include
-  hi link cssImportant Special
-  hi link cssBraces Function
-  hi link cssError Error
-  hi link cssInclude Include
-  hi link cssString String
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_css_syn_inits")
+  if version < 508
+    let did_css_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink cssComment Comment
+  HiLink cssTagName Statement
+  HiLink cssFontProperties StorageClass
+  HiLink cssColorProperties StorageClass
+  HiLink cssTextProperties StorageClass
+  HiLink cssBoxProperties StorageClass
+  HiLink cssClassificationProperties StorageClass
+  HiLink cssFontAttr Type
+  HiLink cssColorAttr Type
+  HiLink cssTextAttr Type
+  HiLink cssBoxAttr Type
+  HiLink cssClassificationAttr Type
+  HiLink cssPseudoClassId PreProc
+  HiLink cssLength Number
+  HiLink cssColor Constant
+  HiLink cssURL String
+  HiLink cssIdentifier Function
+  HiLink cssInclude Include
+  HiLink cssImportant Special
+  HiLink cssBraces Function
+  HiLink cssError Error
+  HiLink cssInclude Include
+  HiLink cssString String
+  delcommand HiLink
 endif
 
 let b:current_syntax = "css"

@@ -1,10 +1,17 @@
 " Vim syntax file
 " Language:	AmigaDos
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	May 18, 1998
+" Last Change:	September 26, 2000
+" Version:     1.01
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
+
 syn case ignore
 
 " Amiga Devices
@@ -54,23 +61,38 @@ syn keyword	amiKey	colors	execute	install	palette	set	which
 syn keyword	amiKey	conclip	failat	iprefs	path	setclock	why
 
 " comments
-syn match	amiComment	";.*$" oneline
+syn cluster	amiCommentGroup contains=amiTodo
+syn case ignore
+syn keyword	amiTodo	contained	todo
+syn case match
+syn match	amiComment	";.*$" contains=amiCommentGroup
 
 " sync
 syn sync lines=50
 
-if !exists("did_amiga_syntax_inits")
-  let did_amiga_synax_inits = 1
-  hi link amiAlias	Type
-  hi link amiComment	Comment
-  hi link amiDev	Type
-  hi link amiEcho	String
-  hi link amiElse	Statement
-  hi link amiError	Error
-  hi link amiKey	Statement
-  hi link amiNumber	Number
-  hi link amiString	String
-  hi link amiTest	Special
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_amiga_syn_inits")
+  if version < 508
+    let did_amiga_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink amiAlias	Type
+  HiLink amiComment	Comment
+  HiLink amiDev	Type
+  HiLink amiEcho	String
+  HiLink amiElse	Statement
+  HiLink amiError	Error
+  HiLink amiKey	Statement
+  HiLink amiNumber	Number
+  HiLink amiString	String
+  HiLink amiTest	Special
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "amiga"

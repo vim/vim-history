@@ -2,13 +2,25 @@
 " Language:	JavaCC, a Java Compiler Compiler written by JavaSoft
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/javacc.vim
-" Last Change:	1998 Jul 22
+" Last Change:	2001 May 10
 
 " Uses java.vim, and adds a few special things for JavaCC Parser files.
 " Those files usually have the extension  *.jj
 
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
+
 " source the java.vim file
-source <sfile>:p:h/java.vim
+if version < 600
+  source <sfile>:p:h/java.vim
+else
+  runtime! syntax/java.vim
+endif
 
 "remove catching errors caused by wrong parenthesis (does not work in javacc
 "files) (first define them in case they have not been defined in java)
@@ -41,11 +53,23 @@ syn match javaccToken "<[^> \t]*>"
 syn keyword javaccActionToken TOKEN SKIP MORE SPECIAL_TOKEN
 syn keyword javaccError DEBUG IGNORE_IN_BNF
 
-hi link javaccSpecToken Statement
-hi link javaccActionToken Type
-hi link javaccPackages javaScopeDecl
-hi link javaccToken String
-hi link javaccError Error
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_css_syn_inits")
+  if version < 508
+    let did_css_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+  HiLink javaccSpecToken Statement
+  HiLink javaccActionToken Type
+  HiLink javaccPackages javaScopeDecl
+  HiLink javaccToken String
+  HiLink javaccError Error
+  delcommand HiLink
+endif
 
 let b:current_syntax = "javacc"
 

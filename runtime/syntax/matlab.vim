@@ -4,8 +4,13 @@
 "		Original author: Mario Eusebio
 " Last Change:	Tue Jul 28 17:44:06 1998
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 syn keyword matlabStatement		return
 syn keyword matlabLabel			case switch
@@ -58,35 +63,45 @@ syn keyword matlabImplicit		log10 max min sign sin sqrt tan reshape
 syn match matlabError	"-\=\<\d\+\.\d\+\.[^*/\\^]"
 syn match matlabError	"-\=\<\d\+\.\d\+[eEdD][-+]\=\d\+\.\([^*/\\^]\)"
 
-if !exists("did_matlab_syntax_inits")
-  let did_matlab_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link matlabTransposeOperator	matlabOperator
-  hi link matlabOperator		Operator
-  hi link matlabLineContinuation	Special
-  hi link matlabLabel			Label
-  hi link matlabConditional		Conditional
-  hi link matlabRepeat			Repeat
-  hi link matlabTodo			Todo
-  hi link matlabString			String
-  hi link matlabDelimiter		Identifier
-  hi link matlabTransposeOther		Identifier
-  hi link matlabNumber			Number
-  hi link matlabFloat			Float
-  hi link matlabFunction		Function
-  hi link matlabError			Error
-  hi link matlabImplicit		matlabStatement
-  hi link matlabStatement		Statement
-  hi link matlabSemicolon		SpecialChar
-  hi link matlabComment			Comment
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_matlab_syntax_inits")
+  if version < 508
+    let did_matlab_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-  hi link matlabArithmeticOperator	matlabOperator
-  hi link matlabRelationalOperator	matlabOperator
-  hi link matlabLogicalOperator		matlabOperator
+  HiLink matlabTransposeOperator	matlabOperator
+  HiLink matlabOperator		Operator
+  HiLink matlabLineContinuation	Special
+  HiLink matlabLabel			Label
+  HiLink matlabConditional		Conditional
+  HiLink matlabRepeat			Repeat
+  HiLink matlabTodo			Todo
+  HiLink matlabString			String
+  HiLink matlabDelimiter		Identifier
+  HiLink matlabTransposeOther		Identifier
+  HiLink matlabNumber			Number
+  HiLink matlabFloat			Float
+  HiLink matlabFunction		Function
+  HiLink matlabError			Error
+  HiLink matlabImplicit		matlabStatement
+  HiLink matlabStatement		Statement
+  HiLink matlabSemicolon		SpecialChar
+  HiLink matlabComment			Comment
+
+  HiLink matlabArithmeticOperator	matlabOperator
+  HiLink matlabRelationalOperator	matlabOperator
+  HiLink matlabLogicalOperator		matlabOperator
 
 "optional highlighting
-  "hi link matlabIdentifier		Identifier
-  "hi link matlabTab			Error
+  "HiLink matlabIdentifier		Identifier
+  "HiLink matlabTab			Error
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "matlab"

@@ -1,10 +1,15 @@
 " Vim syntax file
 " Language:	Simula
-" Maintainer:	Haakon Riiser <hakonrk@fys.uio.no>
-" Last Change:	1999 Mar 10
+" Maintainer:	Haakon Riiser <haakon@riiser.net>
+" Last Change:	2001 Apr 25
 
-" Clear old syntax defs
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+    syn clear
+elseif exists("b:current_syntax")
+    finish
+endif
 
 " No case sensitivity in Simula
 syn case	ignore
@@ -52,33 +57,41 @@ syn match	simulaReal		"-\=\<\d\+\(\.\d\+\)\=\(&&\=[+-]\=\d\+\)\=\>"
 " Real starting with a `.', optional exponent
 syn match	simulaReal		"-\=\.\d\+\(&&\=[+-]\=\d\+\)\=\>"
 
-if !exists("did_simula_syntax_inits")
-    let did_simula_syntax_inits = 1
-    hi link simulaAssigned		Identifier
-    hi link simulaBoolean		Boolean
-    hi link simulaCharacter		Character
-    hi link simulaCharError		Error
-    hi link simulaComment		Comment
-    hi link simulaCompound		Statement
-    hi link simulaConditional		Conditional
-    hi link simulaConstant		Constant
-    hi link simulaFunction		Function
-    hi link simulaNumber		Number
-    hi link simulaOperator		Operator
-    hi link simulaReal			Float
-    hi link simulaReferenceType		Type
-    hi link simulaRepeat		Repeat
-    hi link simulaReserved		Error
-    hi link simulaSemicolon		Statement
-    hi link simulaSpecial		Special
-    hi link simulaSpecialChar		SpecialChar
-    hi link simulaSpecialCharErr	Error
-    hi link simulaStatement		Statement
-    hi link simulaStorageClass		StorageClass
-    hi link simulaString		String
-    hi link simulaStructure		Structure
-    hi link simulaTodo			Todo
-    hi link simulaType			Type
+if version >= 508 || !exists("did_simula_syntax_inits")
+    if version < 508
+	let did_simula_syntax_inits = 1
+	command -nargs=+ HiLink hi link <args>
+    else
+	command -nargs=+ HiLink hi def link <args>
+    endif
+
+    HiLink simulaAssigned		Identifier
+    HiLink simulaBoolean		Boolean
+    HiLink simulaCharacter		Character
+    HiLink simulaCharError		Error
+    HiLink simulaComment		Comment
+    HiLink simulaCompound		Statement
+    HiLink simulaConditional		Conditional
+    HiLink simulaConstant		Constant
+    HiLink simulaFunction		Function
+    HiLink simulaNumber			Number
+    HiLink simulaOperator		Operator
+    HiLink simulaReal			Float
+    HiLink simulaReferenceType		Type
+    HiLink simulaRepeat			Repeat
+    HiLink simulaReserved		Error
+    HiLink simulaSemicolon		Statement
+    HiLink simulaSpecial		Special
+    HiLink simulaSpecialChar		SpecialChar
+    HiLink simulaSpecialCharErr		Error
+    HiLink simulaStatement		Statement
+    HiLink simulaStorageClass		StorageClass
+    HiLink simulaString			String
+    HiLink simulaStructure		Structure
+    HiLink simulaTodo			Todo
+    HiLink simulaType			Type
+
+    delcommand HiLink
 endif
 
 let b:current_syntax = "simula"

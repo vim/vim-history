@@ -164,6 +164,9 @@ struct syn_pattern
 #define HL_SKIPEMPTY	0x200	/* nextgroup can skip empty lines */
 #define HL_KEEPEND	0x400	/* end match always kept */
 #define HL_EXCLUDENL	0x800	/* exclude NL from match */
+#define HL_DISPLAY	0x1000	/* dummy, for Vim 6.0 compatibility */
+#define HL_EXTEND	0x2000	/* dummy, for Vim 6.0 compatibility */
+#define HL_FOLD		0x4000	/* dummy, for Vim 6.0 compatibility */
 
 #define SYN_ITEMS(buf)	((struct syn_pattern *)((buf)->b_syn_patterns.ga_data))
 
@@ -365,7 +368,7 @@ static void syn_clear_keyword __ARGS((int id, struct keyentry **ktabp));
 static void free_keywtab __ARGS((struct keyentry **ktabp));
 static void add_keyword __ARGS((char_u *name, int id, int flags, short *next_list));
 static char_u *get_group_name __ARGS((char_u *arg, char_u **name_end));
-static char_u *get_syn_options __ARGS((char_u *arg, int *flagsp, int *sync_idx,
+static char_u *get_syn_options __ARGS((char_u *arg, int *flagsp, int keyword, int *sync_idx,
 				    short **cont_list, short **next_list));
 static void syn_cmd_include __ARGS((EXARG *eap, int syncing));
 static void syn_cmd_keyword __ARGS((EXARG *eap, int syncing));
@@ -3078,9 +3081,10 @@ get_group_name(arg, name_end)
  * Return NULL for any error;
  */
     static char_u *
-get_syn_options(arg, flagsp, sync_idx, cont_list, next_list)
+get_syn_options(arg, flagsp, keyword, sync_idx, cont_list, next_list)
     char_u	*arg;		/* next argument */
     int		*flagsp;	/* flags for contained and transpartent */
+    int		keyword;	/* TRUE for ":syn keyword" */
     int		*sync_idx;	/* syntax item for "grouphere" argument, NULL
 				   if not allowed */
     short	**cont_list;	/* group IDs for "contains" argument, NULL if
@@ -3108,8 +3112,9 @@ get_syn_options(arg, flagsp, sync_idx, cont_list, next_list)
 		    {"skipempty",   9,	HL_SKIPEMPTY},
 		    {"grouphere",   9,	HL_SYNC_HERE},
 		    {"groupthere",  10,	HL_SYNC_THERE},
-		    {"display",	    7,	0},
-		    {"fold",	    4,	0},
+		    {"display",	    7,	HL_DISPLAY},
+		    {"extend",	    6,	HL_EXTEND},
+		    {"fold",	    4,	HL_FOLD},
 		};
 
     if (arg == NULL)		/* already detected error */
@@ -3124,6 +3129,16 @@ get_syn_options(arg, flagsp, sync_idx, cont_list, next_list)
 	    if (STRNICMP(arg, flagtab[fidx].name, len) == 0
 		    && (ends_excmd(arg[len]) || vim_iswhite(arg[len])))
 	    {
+		if (keyword
+			&& (flagtab[fidx].val == HL_DISPLAY
+			    || flagtab[fidx].val == HL_FOLD
+			    || flagtab[fidx].val == HL_EXTEND))
+		{
+		    /* treat "display", "fold" and "extend" as a keyword */
+		    fidx = -1;
+		    break;
+		}
+
 		flags |= flagtab[fidx].val;
 		arg = skipwhite(arg + len);
 
@@ -3334,7 +3349,7 @@ syn_cmd_keyword(eap, syncing)
 		for (rest = first_arg; rest != NULL && !ends_excmd(*rest);
 						       rest = skipwhite(rest))
 		{
-		    rest = get_syn_options(rest, &flags, NULL,
+		    rest = get_syn_options(rest, &flags, TRUE, NULL,
 							    NULL, &next_list);
 		    if (rest == NULL || ends_excmd(*rest))
 			break;
@@ -3400,7 +3415,7 @@ syn_cmd_match(eap, syncing)
     rest = get_group_name(arg, &group_name_end);
 
     /* Get options before the pattern */
-    rest = get_syn_options(rest, &flags, syncing ? &sync_idx : NULL,
+    rest = get_syn_options(rest, &flags, FALSE, syncing ? &sync_idx : NULL,
 						      &cont_list, &next_list);
 
     /* get the pattern. */
@@ -3411,7 +3426,7 @@ syn_cmd_match(eap, syncing)
 	flags |= HL_HAS_EOL;
 
     /* Get options after the pattern */
-    rest = get_syn_options(rest, &flags, syncing ? &sync_idx : NULL,
+    rest = get_syn_options(rest, &flags, FALSE, syncing ? &sync_idx : NULL,
 						      &cont_list, &next_list);
 
     if (rest != NULL)		/* all arguments are valid */
@@ -3519,7 +3534,7 @@ syn_cmd_region(eap, syncing)
     while (rest != NULL && !ends_excmd(*rest))
     {
 	/* Check for option arguments */
-	rest = get_syn_options(rest, &flags, NULL, &cont_list, &next_list);
+	rest = get_syn_options(rest, &flags, FALSE, NULL, &cont_list, &next_list);
 	if (rest == NULL || ends_excmd(*rest))
 	    break;
 

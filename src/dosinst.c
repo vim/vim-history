@@ -9,7 +9,7 @@
 /*
  * install.c: Minimalistic install program for Vim on MS-DOS/Windows
  *
- * Compile with Makefile.mvc, Makefile.bc3, Makefile.bc5 or Makefile.djg.
+ * Compile with Makefile.w32, Makefile.bcc or Makefile.djg.
  */
 
 #include <io.h>
@@ -244,6 +244,11 @@ my_fullpath(char *buf, char *fname, int len)
      * Concatenate the file name to the path.
      */
     l = strlen(buf);
+    if (l + strlen(fname) >= len - 1)
+    {
+	printf("ERROR: File name too long!\n");
+	exit(1);
+    }
     if (l && buf[l - 1] != '/' && buf[l - 1] != '\\')
 	strcat(buf, "/");
     if (p)
@@ -327,7 +332,7 @@ searchpath(char *name)
 move_file(char *fname, char *dir)
 {
     struct stat	st;
-    char	new_name[256];
+    char	new_name[1024];
 #define COPYBUFSIZE 4096
     char	*buf;
     long	len = 0;
@@ -350,6 +355,11 @@ move_file(char *fname, char *dir)
     _fmode = O_BINARY;	    /* Use binary I/O */
 
     /* make the destination file name: "dir\fname" */
+    if (strlen(dir) + strlen(fname) >= 1020)
+    {
+	printf("ERROR: File name too long!\n");
+	return;
+    }
     strcpy(new_name, dir);
     if (dir[strlen(dir) - 1] != '\\' && dir[strlen(dir) - 1] != '/')
 	strcat(new_name, "\\");
@@ -448,7 +458,6 @@ move_to_path(char *exedir)
 	move_file("vim.exe", names[idx]);
 	move_file("gvim.exe", names[idx]);
 	move_file("xxd.exe", names[idx]);
-	move_file("ctags.exe", names[idx]);
 	move_file("vimrun.exe", names[idx]);
 	exedir = "";	/* exe is now in path, don't need a dir */
     }

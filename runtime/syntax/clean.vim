@@ -2,9 +2,15 @@
 " Language:		Clean
 " Author:		Pieter van Engelen <pietere@sci.kun.nl>
 " Co-Author:	Arthur van Leeuwen <arthurvl@sci.kun.nl>
-" Last Change:	Fri Feb  6 15:02:40 CET 1998
+" Last Change:	Fri Sep 29 11:35:34 CEST 2000
 
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " Some Clean-keywords
 syn keyword cleanConditional if case
@@ -21,7 +27,7 @@ syn keyword cleanTypeClass class instance export
 syn keyword cleanBoolDenot True False
 syn region  cleanStringDenot start=+"+ end=+"+
 syn match cleanCharDenot "'.'"
-syn match cleanCharsDenot "'.*'" contained
+syn match cleanCharsDenot "'[^'\\]*\(\\.[^'\\]\)*'" contained
 syn match cleanIntegerDenot "[+-~]\=\<\(\d\+\|0[0-7]\+\|0x[0-9A-Fa-f]\+\)\>"
 syn match cleanRealDenot "[+-~]\=\<\d\+\.\d+\(E[+-~]\=\d+\)\="
 
@@ -32,44 +38,55 @@ syn region cleanArray start="{:" end=":}" contains=ALL
 syn match cleanTuple "([^=]*,[^=]*)" contains=ALL
 
 " To do some Comment Highlighting
-syn region cleanComment start="/\*"  end="\*/"
+syn region cleanComment start="/\*"  end="\*/" contains=cleanComment
 syn match cleanComment "//.*"
 
 " Now for some useful typedefinitionrecognition
-syn match cleanFuncTypeDef "\([a-zA-Z].*\|(\=[-~@#$%^?!+*<>\/|&=:]\+)\=\)[ \t]*\(infix[lr]\=\)\=[ \t]*\d\=[ \t]*::.*->.*" oneline contains=cleanSpecial
+syn match cleanFuncTypeDef "\([a-zA-Z].*\|(\=[-~@#$%^?!+*<>\/|&=:]\+)\=\)[ \t]*\(infix[lr]\=\)\=[ \t]*\d\=[ \t]*::.*->.*" contains=cleanSpecial
 
-if !exists("did_clean_syntax_init")
-   let did_clean_syntax_init = 1
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_clean_syntax_init")
+  if version < 508
+    let did_clean_syntax_init = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
    " Comments
-   hi link cleanComment      Comment
+   HiLink cleanComment      Comment
    " Constants and denotations
-   hi link cleanCharsDenot   String
-   hi link cleanStringDenot  String
-   hi link cleanCharDenot    Character
-   hi link cleanIntegerDenot Number
-   hi link cleanBoolDenot    Boolean
-   hi link cleanRealDenot    Float
+   HiLink cleanCharsDenot   String
+   HiLink cleanStringDenot  String
+   HiLink cleanCharDenot    Character
+   HiLink cleanIntegerDenot Number
+   HiLink cleanBoolDenot    Boolean
+   HiLink cleanRealDenot    Float
    " Identifiers
    " Statements
-   hi link cleanTypeClass    Keyword
-   hi link cleanConditional  Conditional
-   hi link cleanLabel        Label
-   hi link cleanKeyword      Keyword
+   HiLink cleanTypeClass    Keyword
+   HiLink cleanConditional  Conditional
+   HiLink cleanLabel        Label
+   HiLink cleanKeyword      Keyword
    " Generic Preprocessing
-   hi link cleanInclude      Include
-   hi link cleanModuleSystem PreProc
+   HiLink cleanInclude      Include
+   HiLink cleanModuleSystem PreProc
    " Type
-   hi link cleanBasicType    Type
-   hi link cleanSpecialType  Type
-   hi link cleanFuncTypeDef  Typedef
+   HiLink cleanBasicType    Type
+   HiLink cleanSpecialType  Type
+   HiLink cleanFuncTypeDef  Typedef
    " Special
-   hi link cleanSpecial      Special
-   hi link cleanList         Special
-   hi link cleanArray        Special
-   hi link cleanRecord       Special
-   hi link cleanTuple        Special
+   HiLink cleanSpecial      Special
+   HiLink cleanList         Special
+   HiLink cleanArray        Special
+   HiLink cleanRecord       Special
+   HiLink cleanTuple        Special
    " Error
    " Todo
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "clean"

@@ -2,21 +2,49 @@
 " Language:		shell (sh) Korn shell (ksh) bash (sh)
 " Maintainer:		Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Previous Maintainer:	Lennart Schultz <Lennart.Schultz@ecmwf.int>
-" Last Change:	July 17, 2000
-" Version: 1.17
+" Last Change:	May 1, 2001
+" Version: 22
 "
 " Using the following VIM variables:
 " b:is_kornshell               if defined, enhance with kornshell syntax
 " b:is_bash                    if defined, enhance with bash syntax
+"   is_kornshell               if neither b:is_kornshell or b:is_bash is
+"                                 defined, then if is_kornshell is set
+"                                 b:is_kornshell is default
+"   is_bash                    if none of the previous three variables are
+"                                 defined, then if is_bash is set b:is_bash is default
 "
 " This file includes many ideas from Éric Brunet (eric.brunet@ens.fr)
-" Belated History:
-" v1.17 : Jul 17 2000 : echo $((..))  works
-" v1.14 : Mar 24 2000 : ksh did support but bash does too: ${#[#@]} constructs
-"         Apr 17 2000 : included $((...)) for ksh
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
+
+" b:is_sh is set when "#! /bin/sh" is found;
+" However, it often is just a masquerade by bash or kornshell.
+" So, when the user to set "is_bash" or "is_kornshell",
+" a b:is_sh is converted into b:is_bash/b:is_kornshell,
+" respectively.
+if !exists("b:is_kornshell") && !exists("b:is_bash")
+  if exists("is_kornshell")
+    let b:is_kornshell= 1
+    if exists("b:is_sh")
+      unlet b:is_sh
+    endif
+  elseif exists("is_bash")
+    let b:is_bash= 1
+    if exists("b:is_sh")
+      unlet b:is_sh
+    endif
+  else
+    let b:is_sh= 1
+  endif
+endif
+
 " sh syntax is case sensitive
 syn case match
 
@@ -44,6 +72,7 @@ syn match     shTestError "]"
 
 " Options interceptor
 syn match   shOption  "\s[\-+][a-zA-Z0-9]\+\>"ms=s+1
+syn match   shOption  "\s--\S\+"ms=s+1
 
 " error clusters:
 "================
@@ -62,11 +91,11 @@ syn cluster shDblQuoteList	contains=shCommandSub,shDeref,shSpecial,shPosnParm
 
 " clusters: contains=ALLBUT,@... clusters
 "=========================================
-syn cluster shCaseList	contains=shFunction,shCase,shCaseStart,shCaseBar,shDblBrace,shDerefOp,shDerefText,@shErrorCaseList,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shIdWhiteSpace,shDerefTextError,shPattern,shSetIdentifier
+syn cluster shCaseList	contains=shCase,shCaseStart,shCaseBar,shDblBrace,shDerefOp,shDerefText,@shErrorCaseList,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shIdWhiteSpace,shDerefTextError,shPattern,shSetIdentifier
 syn cluster shColonList	contains=shCase,shCaseStart,shCaseBar,shDblBrace,shDerefOp,shDerefText,shFunction,shTestOpr,@shErrorColonList,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shIdWhiteSpace,shDerefTextError,shPattern,shSetIdentifier
 syn cluster shCommandSubList1	contains=shCase,shCaseStart,shCaseBar,shDblBrace,shCommandSub,shDerefOp,shDerefText,shEcho,shFunction,shTestOpr,@shErrorList,shDerefVar,shDerefOpError,shStringSpecial,shIdWhiteSpace,shDerefTextError,shPattern,shSetIdentifier
 syn cluster shCommandSubList2	contains=shCase,shCaseStart,shCaseBar,shDblBrace,shDerefOp,shDerefText,shEcho,shFunction,shTestOpr,@shErrorList,shDerefVar,shDerefOpError,shStringSpecial,shIdWhiteSpace,shDerefTextError,shPattern,shSetIdentifier
-syn cluster shLoopList	contains=shFunction,@shErrorLoopList,shCase,shCaseStart,shInEsac,shCaseBar,shDerefOp,shDerefText,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shIdWhiteSpace,shDerefTextError,shPattern,shSetIdentifier
+syn cluster shLoopList	contains=@shErrorLoopList,shCase,shCaseStart,shInEsac,shCaseBar,shDerefOp,shDerefText,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shIdWhiteSpace,shDerefTextError,shPattern,shSetIdentifier
 syn cluster shExprList1	contains=shCase,shCaseStart,shCaseBar,shDblBrace,shDerefOp,shDerefText,shFunction,shSetList,@shErrorNoneList,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shIdWhiteSpace,shDerefTextError,shPattern,shSetIdentifier
 syn cluster shExprList2	contains=shCase,shCaseStart,shCaseBar,shDblBrace,shDerefOp,shDerefText,@shErrorNoneList,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shIdWhiteSpace,shDerefTextError,shPattern,shSetIdentifier
 syn cluster shSubShList	contains=shCase,shCaseStart,shCaseBar,shDblBrace,shDerefOp,shDerefText,shParenError,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shDerefError,shIdWhiteSpace,shDerefTextError,shPattern,shSetIdentifier
@@ -137,7 +166,7 @@ if exists("b:is_bash")
  syn keyword bashStatement		clear	find	less	rmdir	strip
  syn keyword bashStatement		du	gnufind	ls	rpm	tail
  syn keyword bashStatement		egrep	gnugrep	mkdir	sed	touch
- syn keyword bashStatement		expr	grep	mv	sleep
+ syn keyword bashStatement		expr	grep	mv	sleep	complete
  syn keyword bashAdminStatement	daemon	killproc	reload	start	stop
  syn keyword bashAdminStatement	killall	nice	restart	status
 endif
@@ -164,8 +193,9 @@ syn region  shColon	start="^\s*:" end="$\|" end="#"me=e-1 contains=ALLBUT,@shCol
 
 " Comments
 "=========
-syn keyword	shTodo    contained	TODO
-syn match	shComment		"#.*$" contains=shTodo
+syn keyword	shTodo	contained	TODO
+syn cluster	shCommentGroup	contains=shTodo
+syn match	shComment		"#.*$" contains=@shCommentGroup
 
 " String and Character constants
 "===============================
@@ -184,12 +214,17 @@ syn match	shRedir	"\d\=<\(&[-0-9]\)\="
 syn match	shRedir	"\d<<-\="
 
 " Shell Input Redirection (Here Documents)
-syn region shHereDoc matchgroup=shRedir start="<<\s*\**END[a-zA-Z_0-9]*\**"  matchgroup=shRedir end="^END[a-zA-Z_0-9]*$"
-syn region shHereDoc matchgroup=shRedir start="<<-\s*\**END[a-zA-Z_0-9]*\**" matchgroup=shRedir end="^\t*END[a-zA-Z_0-9]*$"
-syn region shHereDoc matchgroup=shRedir start="<<\s*\**EOF\**"  matchgroup=shRedir end="^EOF$"
-syn region shHereDoc matchgroup=shRedir start="<<-\s*\**EOF\**" matchgroup=shRedir end="^\t*EOF$"
-syn region shHereDoc matchgroup=shRedir start="<<\s*\**\.\**"  matchgroup=shRedir end="^\.$"
-syn region shHereDoc matchgroup=shRedir start="<<-\s*\**\.\**" matchgroup=shRedir end="^\t*\.$"
+if version < 600
+ syn region shHereDoc matchgroup=shRedir start="<<\s*\**END[a-zA-Z_0-9]*\**"  matchgroup=shRedir end="^END[a-zA-Z_0-9]*$"
+ syn region shHereDoc matchgroup=shRedir start="<<-\s*\**END[a-zA-Z_0-9]*\**" matchgroup=shRedir end="^\t*END[a-zA-Z_0-9]*$"
+ syn region shHereDoc matchgroup=shRedir start="<<\s*\**EOF\**"  matchgroup=shRedir end="^EOF$"
+ syn region shHereDoc matchgroup=shRedir start="<<-\s*\**EOF\**" matchgroup=shRedir end="^\t*EOF$"
+ syn region shHereDoc matchgroup=shRedir start="<<\s*\**\.\**"  matchgroup=shRedir end="^\.$"
+ syn region shHereDoc matchgroup=shRedir start="<<-\s*\**\.\**" matchgroup=shRedir end="^\t*\.$"
+else
+ syn region shHereDoc matchgroup=shRedir start="<<\s*\**\z(\h\w*\)\**"  matchgroup=shRedir end="^\z1$"
+ syn region shHereDoc matchgroup=shRedir start="<<-\s*\**\z(\h\w*\)\**" matchgroup=shRedir end="^\t*\z1$"
+endif
 
 " Identifiers
 "============
@@ -273,80 +308,74 @@ syn sync match shForSync      groupthere shFor      "\<in\>"
 syn sync match shCaseEsacSync grouphere  shCaseEsac "\<case\>"
 syn sync match shCaseEsacSync groupthere shCaseEsac "\<esac\>"
 
-" Highlighting
-" ============
-if !exists("did_sh_syntax_inits")
- " The default methods for highlighting. Can be overridden later
- let did_sh_syntax_inits = 1
+" The default highlighting.
+hi def link shArithRegion		shShellVariables
+hi def link shCaseBar		shConditional
+hi def link shCaseIn		shConditional
+hi def link shCaseStart		shConditional
+hi def link shCmdSubRegion		shShellVariables
+hi def link shColon		shStatement
+hi def link shDeref		shShellVariables
+hi def link shDerefOp		shOperator
+hi def link shDerefVar		shShellVariables
+hi def link shDoubleQuote		shString
+hi def link shEcho		shString
+hi def link shEmbeddedEcho		shString
+hi def link shHereDoc		shString
+hi def link shOption		shCommandSub
+hi def link shPattern		shString
+hi def link shPosnParm		shShellVariables
+hi def link shRedir		shOperator
+hi def link shSinglequote		shString
+hi def link shSource		shOperator
+hi def link shStringSpecial		shSpecial
+hi def link shSubShRegion		shOperator
+hi def link shTestOpr		shConditional
+hi def link shVariable		shSetList
+hi def link shWrapLineOperator	shOperator
 
- hi link shArithRegion		shShellVariables
- hi link shCaseBar		shConditional
- hi link shCaseIn		shConditional
- hi link shCaseStart		shConditional
- hi link shCmdSubRegion		shShellVariables
- hi link shColon		shStatement
- hi link shDeref		shShellVariables
- hi link shDerefOp		shOperator
- hi link shDerefVar		shShellVariables
- hi link shDoubleQuote		shString
- hi link shEcho		shString
- hi link shEmbeddedEcho		shString
- hi link shExprRegion		shOperator
- hi link shHereDoc		shString
- hi link shOption		shCommandSub
- hi link shPattern		shString
- hi link shPosnParm		shShellVariables
- hi link shRedir		shOperator
- hi link shSinglequote		shString
- hi link shSource		shOperator
- hi link shStringSpecial		shSpecial
- hi link shSubShRegion		shOperator
- hi link shTestOpr		shConditional
- hi link shVariable		shSetList
- hi link shWrapLineOperator		shOperator
-
- if exists("b:is_bash")
-  hi link bashAdminStatement		shStatement
-  hi link bashSpecialVariables	shShellVariables
-  hi link bashStatement		shStatement
- endif
- if exists("b:is_kornshell")
-  hi link kshSpecialVariables		shShellVariables
-  hi link kshStatement		shStatement
- endif
-
- hi link shCaseError		Error
- hi link shCurlyError		Error
- hi link shDerefError		Error
- hi link shDerefOpError		Error
- hi link shDerefTextError		Error
- hi link shDoError		Error
- hi link shEsacError		Error
- hi link shIfError		Error
- hi link shInError		Error
- hi link shParenError		Error
- hi link shTestError		Error
- if exists("b:is_kornshell")
-  hi link shDTestError		Error
- endif
-
- hi link shArithmetic		Special
- hi link shCharClass		Identifier
- hi link shCommandSub		Special
- hi link shComment		Comment
- hi link shConditional		Conditional
- hi link shFunction		Function
- hi link shFunctionName		Function
- hi link shNumber		Number
- hi link shOperator		Operator
- hi link shRepeat		Repeat
- hi link shSetList		Identifier
- hi link shShellVariables		PreProc
- hi link shSpecial		Special
- hi link shStatement		Statement
- hi link shString		String
- hi link shTodo		Todo
+if exists("b:is_bash")
+  hi def link bashAdminStatement	shStatement
+  hi def link bashSpecialVariables	shShellVariables
+  hi def link bashStatement		shStatement
 endif
+if exists("b:is_kornshell")
+  hi def link kshSpecialVariables	shShellVariables
+  hi def link kshStatement		shStatement
+endif
+
+hi def link shCaseError		Error
+hi def link shCurlyError		Error
+hi def link shDerefError		Error
+hi def link shDerefOpError		Error
+hi def link shDerefTextError		Error
+hi def link shDoError		Error
+hi def link shEsacError		Error
+hi def link shIfError		Error
+hi def link shInError		Error
+hi def link shParenError		Error
+hi def link shTestError		Error
+if exists("b:is_kornshell")
+  hi def link shDTestError		Error
+endif
+
+hi def link shArithmetic		Special
+hi def link shCharClass		Identifier
+hi def link shCommandSub		Special
+hi def link shComment		Comment
+hi def link shConditional		Conditional
+hi def link shExprRegion		Delimiter
+hi def link shFunction		Function
+hi def link shFunctionName		Function
+hi def link shNumber		Number
+hi def link shOperator		Operator
+hi def link shRepeat		Repeat
+hi def link shSetList		Identifier
+hi def link shShellVariables		PreProc
+hi def link shSpecial		Special
+hi def link shStatement		Statement
+hi def link shString		String
+hi def link shTodo		Todo
 
 " Current Syntax
 " ==============

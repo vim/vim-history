@@ -1,11 +1,16 @@
 " Vim syntax file
 " Language:	Telix (Modem Comm Program) SALT Script
 " Maintainer:	Sean M. McKee <mckee@misslink.net>
-" Last Change:	1997/12/16
+" Last Change:	2001 May 09
 " Version Info: @(#)tsalt.vim	1.5	97/12/16 08:11:15
 
-" Remove any old syn stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " turn case matching off
 syn case ignore
@@ -162,37 +167,46 @@ syn region tsaltMulti	transparent start='?' end=':' contains=ALLBUT,tsaltInclude
 syn sync ccomment tsaltComment
 
 
-if !exists("did_tsalt_syntax_inits")
-	let did_tsalt_syntax_inits = 1
-	" The default methods for highlighting.  Can be overridden later
-	hi link tsaltFunction		Statement
-	hi link tsaltSysVar		Type
-	"hi link tsaltLibFunc		UserDefFunc
-	"hi link tsaltConstants		Type
-	"hi link tsaltFuncArg		Type
-	"hi link tsaltOperator		Operator
-	"hi link tsaltLabel		Label
-	"hi link tsaltUserLabel		Label
-	hi link tsaltConditional	Conditional
-	hi link tsaltRepeat		Repeat
-	hi link tsaltCharacter		SpecialChar
-	hi link tsaltSpecialCharacter	SpecialChar
-	hi link tsaltNumber		Number
-	hi link tsaltFloat		Float
-	hi link tsaltCommentError	tsaltError
-	hi link tsaltInclude		Include
-	hi link tsaltPreProc		PreProc
-	hi link tsaltDefine		Macro
-	hi link tsaltIncluded		tsaltString
-	hi link tsaltError		Error
-	hi link tsaltStatement		Statement
-	hi link tsaltPreCondit		PreCondit
-	hi link tsaltType		Type
-	hi link tsaltString		String
-	hi link tsaltComment		Comment
-	hi link tsaltSpecial		Special
-	hi link tsaltTodo		Todo
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_tsalt_syntax_inits")
+  if version < 508
+    let did_tsalt_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
+	HiLink tsaltFunction		Statement
+	HiLink tsaltSysVar		Type
+	"HiLink tsaltLibFunc		UserDefFunc
+	"HiLink tsaltConstants		Type
+	"HiLink tsaltFuncArg		Type
+	"HiLink tsaltOperator		Operator
+	"HiLink tsaltLabel		Label
+	"HiLink tsaltUserLabel		Label
+	HiLink tsaltConditional		Conditional
+	HiLink tsaltRepeat		Repeat
+	HiLink tsaltCharacter		SpecialChar
+	HiLink tsaltSpecialCharacter	SpecialChar
+	HiLink tsaltNumber		Number
+	HiLink tsaltFloat		Float
+	HiLink tsaltCommentError	tsaltError
+	HiLink tsaltInclude		Include
+	HiLink tsaltPreProc		PreProc
+	HiLink tsaltDefine		Macro
+	HiLink tsaltIncluded		tsaltString
+	HiLink tsaltError		Error
+	HiLink tsaltStatement		Statement
+	HiLink tsaltPreCondit		PreCondit
+	HiLink tsaltType		Type
+	HiLink tsaltString		String
+	HiLink tsaltComment		Comment
+	HiLink tsaltSpecial		Special
+	HiLink tsaltTodo		Todo
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "tsalt"

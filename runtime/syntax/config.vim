@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:		configure.in script: M4 with sh
 " Maintainer:	Christian Hammesr <ch@lathspell.westend.com>
-" Last Change:	2000 Apr 15
+" Last Change:	2001 May 09
 
 " Well, I actually even do not know much about m4. This explains why there
 " is probably very much missing here, yet !
@@ -9,8 +9,13 @@
 " script, so I wrote this quick and dirty patch.
 
 
-" remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " define the config syntax
 syn match   configdelimiter "[()\[\];,]"
@@ -24,17 +29,27 @@ syn region  configstring    start=+"+ skip=+\\"+ end=+"+
 syn region  configstring    start=+`+ skip=+\\'+ end=+'+
 syn region  configstring    start=+`+ skip=+\\'+ end=+`+
 
-if !exists("did_config_syntax_inits")
-  let did_config_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link configdelimiter Delimiter
-  hi link configoperator  Operator
-  hi link configcomment   Comment
-  hi link configfunction  Function
-  hi link confignumber    Number
-  hi link configkeyword   Keyword
-  hi link configspecial   Special
-  hi link configstring    String
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_config_syntax_inits")
+  if version < 508
+    let did_config_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink configdelimiter Delimiter
+  HiLink configoperator  Operator
+  HiLink configcomment   Comment
+  HiLink configfunction  Function
+  HiLink confignumber    Number
+  HiLink configkeyword   Keyword
+  HiLink configspecial   Special
+  HiLink configstring    String
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "config"

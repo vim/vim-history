@@ -2,10 +2,15 @@
 " Language:	GDB command files
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/gdb.vim
-" Last Change:	1999 Oct 21 
+" Last Change:	2001 May 10
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 syn keyword gdbInfo contained address architecture args breakpoints catch common copying dcache
 syn keyword gdbInfo contained display files float frame functions handle line
@@ -17,18 +22,18 @@ syn match gdbInfo contained "all-registers"
 
 syn keyword gdbStatement contained actions apply attach awatch backtrace break bt call catch cd clear collect commands
 syn keyword gdbStatement contained complete condition continue delete detach directory disable disassemble display down
-syn keyword gdbStatement contained echo else enable end file finish frame handle hbreak help if ignore 
+syn keyword gdbStatement contained echo else enable end file finish frame handle hbreak help if ignore
 syn keyword gdbStatement contained inspect jump kill list load maintenance make next nexti ni output overlay
 syn keyword gdbStatement contained passcount path print printf ptype pwd quit rbreak remote return run rwatch
 syn keyword gdbStatement contained search section set sharedlibrary shell show si signal source step stepi stepping
 syn keyword gdbStatement contained stop target tbreak tdump tfind thbreak thread tp trace tstart tstatus tstop
-syn keyword gdbStatement contained tty undisplay unset until up watch whatis where while ws x 
+syn keyword gdbStatement contained tty undisplay unset until up watch whatis where while ws x
 syn match gdbFuncDef "\<define\>.*"
-syn match gdbStatmentContainer "^\s*\S\+" contains=gdbStatement
+syn match gdbStatmentContainer "^\s*\S\+" contains=gdbStatement,gdbFuncDef
 syn match gdbStatement "^\s*info" nextgroup=gdbInfo skipwhite skipempty
 
 " some commonly used abreviations
-syn keyword gdbStatement c disp undisp disas p 
+syn keyword gdbStatement c disp undisp disas p
 
 syn region gdbDocument matchgroup=gdbFuncDef start="\<document\>.*$" matchgroup=gdbFuncDef end="^end$"
 
@@ -78,19 +83,27 @@ if !exists("gdb_minlines")
 endif
 exec "syn sync ccomment gdbComment minlines=" . gdb_minlines
 
-if !exists("did_gdb_syntax_inits")
-  let did_gdb_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link gdbFuncDef                       Function
-  hi link gdbComment                       Comment
-  hi link gdbStatement                     Statement
-  hi link gdbString                        String
-  hi link gdbCharacter                     Character
-  hi link gdbVariable                      Identifier
-  hi link gdbSet                           Constant
-  hi link gdbInfo                          Type
-  hi link gdbDocument                      Special
-  hi link gdbNumber                        Number
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_gdb_syn_inits")
+  if version < 508
+    let did_gdb_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+  HiLink gdbFuncDef        Function
+  HiLink gdbComment        Comment
+  HiLink gdbStatement      Statement
+  HiLink gdbString         String
+  HiLink gdbCharacter      Character
+  HiLink gdbVariable       Identifier
+  HiLink gdbSet            Constant
+  HiLink gdbInfo           Type
+  HiLink gdbDocument       Special
+  HiLink gdbNumber         Number
+  delcommand HiLink
 endif
 
 let b:current_syntax = "gdb"

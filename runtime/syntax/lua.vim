@@ -6,8 +6,14 @@
 " Still has some syncing problems...
 
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
+
 syn case match
 
 "Comments
@@ -95,26 +101,36 @@ syn keyword luaStdLibFunc    strfind gsub
 "syncing method
 syn sync minlines=100
 
-if !exists("did_lua_syntax_inits")
-  let did_lua_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link luaStatement		Statement
-  hi link luaRepeat		Repeat
-  hi link luaString		String
-  hi link luaNumber		Number
-  hi link luaFloat		Float
-  hi link luaOperator		Operator
-  hi link luaConstant		Constant
-  hi link luaCond	        Conditional
-  hi link luaFunction		Function
-  hi link luaComment		Comment
-  hi link luaTodo		Todo
-  hi link luaTable		Structure
-  hi link luaError		Error
-  hi link luaSpecial		SpecialChar
-  hi link luaPreProc		PreProc
-  hi link luaInternalFunc	Identifier
-  hi link luaStdLibFunc		Identifier
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_lua_syntax_inits")
+  if version < 508
+    let did_lua_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink luaStatement		Statement
+  HiLink luaRepeat		Repeat
+  HiLink luaString		String
+  HiLink luaNumber		Number
+  HiLink luaFloat		Float
+  HiLink luaOperator		Operator
+  HiLink luaConstant		Constant
+  HiLink luaCond	        Conditional
+  HiLink luaFunction		Function
+  HiLink luaComment		Comment
+  HiLink luaTodo		Todo
+  HiLink luaTable		Structure
+  HiLink luaError		Error
+  HiLink luaSpecial		SpecialChar
+  HiLink luaPreProc		PreProc
+  HiLink luaInternalFunc	Identifier
+  HiLink luaStdLibFunc		Identifier
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "lua"

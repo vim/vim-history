@@ -1,15 +1,24 @@
 " Vim syntax file
 " Language:	Fvwm{1,2} configuration file
-" Maintainer:	Haakon Riiser <hakonrk@fys.uio.no>
-" Last Change:	2000 Mar 29
+" Maintainer:	Haakon Riiser <haakon@riiser.net>
+" Last Change:	2001 Apr 25
 
-" Clear old syntax defs
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+    syn clear
+elseif exists("b:current_syntax")
+    finish
+endif
 
 " Fvwm configuration files are case insensitive
 syn case ignore
 
-set iskeyword=_,-,+,.,a-z,A-Z,48-57
+if version >= 600
+    setlocal iskeyword=_,-,+,.,a-z,A-Z,48-57
+else
+    set iskeyword=_,-,+,.,a-z,A-Z,48-57
+endif
 
 " Read system colors from the color database (rgb.txt)
 if exists("rgb_file")
@@ -66,8 +75,7 @@ syn match   fvwmKey		"\<Key\s\+\w\+"he=s+3
 syn keyword fvwmExec		Exec
 syn match   fvwmComment		"^#.*$"
 
-if (exists("b:fvwm_version") && b:fvwm_version == 1)
-    \ || (exists("use_fvwm_1") && use_fvwm_1)
+if (exists("b:fvwm_version") && b:fvwm_version == 1) || (exists("use_fvwm_1") && use_fvwm_1)
     syn match  fvwmEnvVar	"\$(\w\+)"
     syn region fvwmStyle	matchgroup=fvwmFunction start="^\s*Style\>"hs=e-5 end="$" oneline keepend contains=fvwmString,fvwmKeyword,fvwmWhiteSpace
 
@@ -114,8 +122,7 @@ if (exists("b:fvwm_version") && b:fvwm_version == 1)
     syn keyword fvwmKeyword	StartsAnyWhere StartsOnDesk StaysOnTop contained
     syn keyword fvwmKeyword	StaysPut Sticky Title WindowListHit contained
     syn keyword fvwmKeyword	WindowListSkip contained
-elseif (exists("b:fvwm_version") && b:fvwm_version == 2)
-    \ || (exists("use_fvwm_2") && use_fvwm_2)
+elseif (exists("b:fvwm_version") && b:fvwm_version == 2) || (exists("use_fvwm_2") && use_fvwm_2)
     syn match   fvwmEnvVar	"\${\w\+}"
     syn match   fvwmDef		'^\s*+\s*".\{-}"' contains=fvwmMenuString,fvwmWhitespace
     syn match   fvwmIcon	'%.\{-}%' contained
@@ -217,25 +224,33 @@ elseif (exists("b:fvwm_version") && b:fvwm_version == 2)
     syn keyword fvwmKeyword	WIN WindowListHit WindowListSkip Windows
 endif
 
-if !exists("did_fvwm_syntax_inits")
-    let did_fvwm_syntax_inits = 1
-    hi link fvwmComment		Comment
-    hi link fvwmEnvVar		Macro
-    hi link fvwmExec		Function
-    hi link fvwmFunction	Function
-    hi link fvwmIcon		Comment
-    hi link fvwmKey		Function
-    hi link fvwmKeyword		Keyword
-    hi link fvwmMenuString	String
-    hi link fvwmModConf		Macro
-    hi link fvwmModule		Function
-    hi link fvwmRGBValue	Type
-    hi link fvwmShortcutKey	SpecialChar
-    hi link fvwmString		String
+if version >= 508 || !exists("did_fvwm_syntax_inits")
+    if version < 508
+	let did_fvwm_syntax_inits = 1
+	command -nargs=+ HiLink hi link <args>
+    else
+	command -nargs=+ HiLink hi def link <args>
+    endif
+
+    HiLink fvwmComment		Comment
+    HiLink fvwmEnvVar		Macro
+    HiLink fvwmExec		Function
+    HiLink fvwmFunction		Function
+    HiLink fvwmIcon		Comment
+    HiLink fvwmKey		Function
+    HiLink fvwmKeyword		Keyword
+    HiLink fvwmMenuString	String
+    HiLink fvwmModConf		Macro
+    HiLink fvwmModule		Function
+    HiLink fvwmRGBValue		Type
+    HiLink fvwmShortcutKey	SpecialChar
+    HiLink fvwmString		String
 
     if exists("rgb_file")
-	hi link fvwmColors	Type
+	HiLink fvwmColors	Type
     endif
+
+    delcommand HiLink
 endif
 
 let b:current_syntax = "fvwm"

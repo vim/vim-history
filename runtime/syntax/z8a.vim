@@ -1,10 +1,16 @@
 " Vim syntax file
 " Language:	Z80 assembler asz80
 " Maintainer:	Milan Pikula <www@fornax.elf.stuba.sk>
-" Last Change:	1999 January 7
+" Last Change:	2001 May 09
 
-" Remove any old syntax
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
+
 syn case ignore
 
 " Common Z80 Assembly instructions
@@ -78,22 +84,30 @@ syn match z8aComment		";.*"
 
 syn case match
 
-if !exists("did_z8a_syntax_inits")
-  let did_z8a_syntax_inits = 1
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_z8a_syntax_inits")
+  if version < 508
+    let did_z8a_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-  " The default methods for highlighting
-  hi link z8aSection		Special
-  hi link z8aLabel		Label
-  hi link z8aSpecialLabel	Label
-  hi link z8aComment		Comment
-  hi link z8aInstruction	Statement
-  hi link z8aSpecInst		Statement
-  hi link z8aInclude		Include
-  hi link z8aPreCondit		PreCondit
-  hi link z8aPreProc		PreProc
-  hi link z8aNumber		Number
-  hi link z8aString		String
+  HiLink z8aSection		Special
+  HiLink z8aLabel		Label
+  HiLink z8aSpecialLabel	Label
+  HiLink z8aComment		Comment
+  HiLink z8aInstruction	Statement
+  HiLink z8aSpecInst		Statement
+  HiLink z8aInclude		Include
+  HiLink z8aPreCondit		PreCondit
+  HiLink z8aPreProc		PreProc
+  HiLink z8aNumber		Number
+  HiLink z8aString		String
 
+  delcommand HiLink
 endif
 
 let b:current_syntax = "z8a"

@@ -3172,6 +3172,7 @@ nv_gd(oap, nchar)
 	while (curwin->w_cursor.lnum > 1 && *skipwhite(ml_get_curline()) != NUL)
 	    --curwin->w_cursor.lnum;
     }
+    curwin->w_cursor.col = 0;
 
     /* Search forward for the identifier, ignore comment lines. */
     while ((t = searchit(curbuf, &curwin->w_cursor, FORWARD, pat, 1L, 0,
@@ -3605,9 +3606,9 @@ nv_zzet(cap)
     if (!checkclearopq(cap->oap))
     {
 	if (cap->nchar == 'Z')
-	    stuffReadbuff((char_u *)":x\n");
+	    do_cmdline((char_u *)"x", NULL, NULL, DOCMD_VERBOSE|DOCMD_NOWAIT);
 	else if (cap->nchar == 'Q')
-	    stuffReadbuff((char_u *)":q!\n");
+	    do_cmdline((char_u *)"q!", NULL, NULL, DOCMD_VERBOSE|DOCMD_NOWAIT);
 	else
 	    clearopbeep(cap->oap);
     }

@@ -529,10 +529,15 @@ sig_alarm SIGDEFARG(sigarg)
     static RETSIGTYPE
 deathtrap SIGDEFARG(sigarg)
 {
-    static int	    entered = 0;
+    static int	entered = 0;
 #ifdef SIGHASARG
-    int	    i;
+    int		i;
+#endif
 
+    /* Remember how often we have been called. */
+    ++entered;
+
+#ifdef SIGHASARG
     /* try to find the name of this signal */
     for (i = 0; signal_info[i].sig != -1; i++)
 	if (sigarg == signal_info[i].sig)
@@ -548,18 +553,21 @@ deathtrap SIGDEFARG(sigarg)
      * terminal mode, etc.)
      * When this happens twice, just exit, don't even try to give a message,
      * stack may be corrupt or something weird.
+     * When this still happens again (or memory was corrupted in such a way
+     * that "entered" was clobbered) use _exit(), don't try freeing resources.
      */
-    if (entered >= 2)
+    if (entered >= 3)
     {
 	reset_signals();	/* don't catch any signals anymore */
 	may_core_dump();
+	if (entered >= 4)
+	    _exit(8);
 	exit(7);
     }
-    if (entered++)
+    if (entered == 2)
     {
 	OUT_STR("Vim: Double signal, exiting\n");
 	out_flush();
-	reset_signals();	/* don't catch any signals anymore */
 	getout(1);
     }
 
@@ -2996,9 +3004,10 @@ RealWaitForChar(fd, msec, check_for_gpm)
 		&& FD_ISSET(ConnectionNumber(xterm_dpy), &rfds))
 	{
 	    xterm_update();	      /* Maybe we should hand out clipboard */
-	    if (vim_is_input_buf_empty())
-		ret--;
-	    if (msec < 0 && !ret)
+
+	    /* If the input buffer is empty and waiting for an infinite time,
+	     * continue looping. */
+	    if (--ret == 0 && vim_is_input_buf_empty() && msec < 0)
 		continue;
 	}
 # endif
@@ -3913,14 +3922,16 @@ setup_xterm_clip()
     open_app_context();
     if (app_context != NULL && xterm_Shell == (Widget)0)
     {
+	int (*oldhandler)();
+
 	/* Ignore X errors while opening the display */
-	XSetErrorHandler(x_error_check);
+	oldhandler = XSetErrorHandler(x_error_check);
 
 	xterm_dpy = XtOpenDisplay(app_context, xterm_display,
 		"vim_xterm", "Vim_xterm", NULL, 0, &z, &strp);
 
 	/* Now handle X errors normally. */
-	XSetErrorHandler(x_error_handler);
+	(void)XSetErrorHandler(oldhandler);
 
 	if (xterm_dpy == NULL)
 	    return;

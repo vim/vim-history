@@ -3,8 +3,13 @@
 " Maintainer:	Preben "Peppe" Guldberg (c928400@student.dtu.dk)
 " Last Change:	Fri Apr  3 11:09:41 1998
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 syn keyword slrnrcTodo		contained Todo
 
@@ -151,36 +156,46 @@ syn match   slrnrcUnsetkey	'^\s*unsetkey\s\+\("\)\=\(article\|group\|readline\)\
 "syn keyword slrnrcObsolete	ccfollowup_string decode_directory editor_command followup
 "syn keyword slrnrcObsolete	organization quote_string realname replyto signature username
 
-if !exists("did_slrnrc_syntax_inits")
-  let did_slrnrc_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link slrnrcTodo		Todo
-  hi link slrnrcSpaceError	Error
-  hi link slrnrcNumber		Number
-  hi link slrnrcSpecKey		SpecialChar
-  hi link slrnrcKey		String
-  hi link slrnrcSpecChar	SpecialChar
-  hi link slrnrcString		String
-  hi link slangPreCondit	Special
-  hi link slrnrcComment		Comment
-  hi link slrnrcVarInt		Identifier
-  hi link slrnrcVarStr		Identifier
-  hi link slrnrcCmd		slrnrcSet
-  hi link slrnrcSet		Operator
-  hi link slrnrcColor		Keyword
-  hi link slrnrcColorObj	Identifier
-  hi link slrnrcColorVal	String
-  hi link slrnrcMono		Keyword
-  hi link slrnrcMonoObj		Identifier
-  hi link slrnrcMonoVal		String
-  hi link slrnrcFunArt		Macro
-  hi link slrnrcFunGroup	Macro
-  hi link slrnrcFunRead		Macro
-  hi link slrnrcSetkeyObj	Identifier
-  hi link slrnrcSetkey		Keyword
-  hi link slrnrcUnsetkey	slrnrcSetkey
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_slrnrc_syntax_inits")
+  if version < 508
+    let did_slrnrc_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-  "hi link slrnrcObsolete	Special
+  HiLink slrnrcTodo		Todo
+  HiLink slrnrcSpaceError	Error
+  HiLink slrnrcNumber		Number
+  HiLink slrnrcSpecKey		SpecialChar
+  HiLink slrnrcKey		String
+  HiLink slrnrcSpecChar	SpecialChar
+  HiLink slrnrcString		String
+  HiLink slangPreCondit	Special
+  HiLink slrnrcComment		Comment
+  HiLink slrnrcVarInt		Identifier
+  HiLink slrnrcVarStr		Identifier
+  HiLink slrnrcCmd		slrnrcSet
+  HiLink slrnrcSet		Operator
+  HiLink slrnrcColor		Keyword
+  HiLink slrnrcColorObj	Identifier
+  HiLink slrnrcColorVal	String
+  HiLink slrnrcMono		Keyword
+  HiLink slrnrcMonoObj		Identifier
+  HiLink slrnrcMonoVal		String
+  HiLink slrnrcFunArt		Macro
+  HiLink slrnrcFunGroup	Macro
+  HiLink slrnrcFunRead		Macro
+  HiLink slrnrcSetkeyObj	Identifier
+  HiLink slrnrcSetkey		Keyword
+  HiLink slrnrcUnsetkey	slrnrcSetkey
+
+  "HiLink slrnrcObsolete	Special
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "slrnrc"

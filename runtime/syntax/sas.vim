@@ -1,9 +1,16 @@
 " Vim syntax file
 " Language:	SAS
-" Maintainer:	Phil Hanna <pehanna@yahoo.com>
-" Last Change:	18 May 1999 (modified 2000 Jul 10 by Bram)
-
-syn clear
+" Maintainer:	James Kidd <james.kidd@covance.com>
+" Last Change:	02 May 2001
+"               Added keywords for use in SAS log files and region definition
+"               for SAS macro variable hi-lighting
+"  For version 5.x: Clear all syntax items
+"  For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+   syntax clear
+elseif exists("b:current_syntax")
+   finish
+endif
 
 syn case ignore
 
@@ -15,6 +22,12 @@ syn match sasNumber  "-\=\<\d*\.\=[0-9_]\>"
 syn region sasComment    start="/\*"  end="\*/"
 syn match sasComment  "^\s*\*.*;"
 
+" This line defines macro variables in code.  HiLink at end of file
+" defines the color scheme. Begin region with ampersand and end with
+" any non-word character offset by -1; put ampersand in the skip list
+" just in case it is used to concatenate macro variable values.
+syn region sasMacroVar   start="\&" skip="[_&]" end="\W"he=e-1
+
 syn keyword sasStep           RUN QUIT
 syn match   sasStep        "^\s*DATA\s"
 syn match   sasStep        "^\s*PROC\s"
@@ -22,7 +35,7 @@ syn match   sasStep        "^\s*PROC\s"
 syn keyword sasConditional    DO ELSE END IF THEN UNTIL WHILE
 
 syn keyword sasStatement      ABORT ARRAY ATTRIB BY CALL CARDS CARDS4 CATNAME
-syn keyword sasStatement      CONTINUE DATALINES DATALINES4 DELETE
+syn keyword sasStatement      CONTINUE DATALINES DATALINES4 DELETE DISPLAY
 syn keyword sasStatement      DM DROP ENDSAS ERROR FILE FILENAME FOOTNOTE
 syn keyword sasStatement      FORMAT GOTO INFILE INFORMAT INPUT KEEP
 syn keyword sasStatement      LABEL LEAVE LENGTH LIBNAME LINK LIST LOSTCARD
@@ -30,22 +43,69 @@ syn keyword sasStatement      MERGE MISSING MODIFY OPTIONS OUTPUT PAGE
 syn keyword sasStatement      PUT REDIRECT REMOVE RENAME REPLACE RETAIN
 syn keyword sasStatement      RETURN SELECT SET SKIP STARTSAS STOP TITLE
 syn keyword sasStatement      UPDATE WAITSAS WHERE WINDOW X
-syn match sasStatement      "DISPLAY"
 
 syn match   sasStatement      "FOOTNOTE\d"
 syn match   sasStatement      "TITLE\d"
 
-syn match   sasMacro      "\%do"
-syn match   sasMacro      "\%else"
-syn match   sasMacro      "\%end"
-syn match   sasMacro      "\%if"
-syn match   sasMacro      "\%let"
-syn match   sasMacro      "\%macro"
-syn match   sasMacro      "\%mend"
-syn match   sasMacro      "\%put"
-syn match   sasMacro      "\%then"
-syn match   sasMacro      "\%to"
-syn match   sasMacro      "\%while"
+syn match   sasMacro      "%BQUOTE"
+syn match   sasMacro      "%NRBQUOTE"
+syn match   sasMacro      "%CMPRES"
+syn match   sasMacro      "%QCMPRES"
+syn match   sasMacro      "%COMPSTOR"
+syn match   sasMacro      "%DATATYP"
+syn match   sasMacro      "%DISPLAY"
+syn match   sasMacro      "%DO"
+syn match   sasMacro      "%ELSE"
+syn match   sasMacro      "%END"
+syn match   sasMacro      "%EVAL"
+syn match   sasMacro      "%GLOBAL"
+syn match   sasMacro      "%GOTO"
+syn match   sasMacro      "%IF"
+syn match   sasMacro      "%INDEX"
+syn match   sasMacro      "%INPUT"
+syn match   sasMacro      "%KEYDEF"
+syn match   sasMacro      "%LABEL"
+syn match   sasMacro      "%LEFT"
+syn match   sasMacro      "%LENGTH"
+syn match   sasMacro      "%LET"
+syn match   sasMacro      "%LOCAL"
+syn match   sasMacro      "%LOWCASE"
+syn match   sasMacro      "%MACRO"
+syn match   sasMacro      "%MEND"
+syn match   sasMacro      "%NRBQUOTE"
+syn match   sasMacro      "%NRQUOTE"
+syn match   sasMacro      "%NRSTR"
+syn match   sasMacro      "%PUT"
+syn match   sasMacro      "%QCMPRES"
+syn match   sasMacro      "%QLEFT"
+syn match   sasMacro      "%QLOWCASE"
+syn match   sasMacro      "%QSCAN"
+syn match   sasMacro      "%QSUBSTR"
+syn match   sasMacro      "%QSYSFUNC"
+syn match   sasMacro      "%QTRIM"
+syn match   sasMacro      "%QUOTE"
+syn match   sasMacro      "%QUPCASE"
+syn match   sasMacro      "%SCAN"
+syn match   sasMacro      "%STR"
+syn match   sasMacro      "%SUBSTR"
+syn match   sasMacro      "%SUPERQ"
+syn match   sasMacro      "%SYSCALL"
+syn match   sasMacro      "%SYSEVALF"
+syn match   sasMacro      "%SYSEXEC"
+syn match   sasMacro      "%SYSFUNC"
+syn match   sasMacro      "%SYSGET"
+syn match   sasMacro      "%SYSLPUT"
+syn match   sasMacro      "%SYSPROD"
+syn match   sasMacro      "%SYSRC"
+syn match   sasMacro      "%SYSRPUT"
+syn match   sasMacro      "%THEN"
+syn match   sasMacro      "%TRIM"
+syn match   sasMacro      "%UNQUOTE"
+syn match   sasMacro      "%UNTIL"
+syn match   sasMacro      "%UPCASE"
+syn match   sasMacro      "%VERIFY"
+syn match   sasMacro      "%WHILE"
+syn match   sasMacro      "%WINDOW"
 
 " SAS Functions
 
@@ -94,18 +154,38 @@ syn keyword sasFunction VLABELX VLENGTH VLENGTHX VNAME VNAMEX VTYPE
 syn keyword sasFunction VTYPEX WEEKDAY YEAR YYQ ZIPFIPS ZIPNAME ZIPNAMEL
 syn keyword sasFunction ZIPSTATE
 
+" Handy settings for using vim with log files
+syn keyword sasErrMsg         ERROR
+syn keyword sasWarnMsg        WARNING
+syn keyword sasLogMsg         NOTE
+
 " End of SAS Functions
 
-if !exists("did_sas_syntax_inits")
-  let did_sas_syntax_inits = 1
-  hi link sasComment            Comment
-  hi link sasConditional        Statement
-  hi link sasStep               Statement
-  hi link sasFunction           Function
-  hi link sasMacro              PreProc
-  hi link sasNumber             Number
-  hi link sasStatement          Statement
-  hi link sasString             String
+"  Define the default highlighting.
+"  For version 5.7 and earlier: only when not done already
+"  For version 5.8 and later: only when an item doesn't have highlighting yet
+
+if version >= 508 || !exists("did_sas_syntax_inits")
+   if version < 508
+      let did_sas_syntax_inits = 1
+      command -nargs=+ HiLink hi link <args>
+   else
+      command -nargs=+ HiLink hi def link <args>
+   endif
+
+   HiLink sasComment            Comment
+   HiLink sasConditional        Statement
+   HiLink sasStep               Statement
+   HiLink sasFunction           Function
+   HiLink sasMacro              PreProc
+   HiLink sasMacroVar           NonText
+   HiLink sasNumber             Number
+   HiLink sasStatement          Statement
+   HiLink sasString             String
+   HiLink sasErrMsg		ErrorMsg
+   HiLink sasWarnMsg		WarningMsg
+   HiLink sasLogMsg		MoreMsg
+  delcommand HiLink
 endif
 
 let b:current_syntax = "sas"

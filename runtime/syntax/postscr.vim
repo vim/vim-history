@@ -10,18 +10,27 @@
 " postscr_display		- include display PS operators
 " postscr_ghostscript		- include GS extensions
 " postscr_fonts			- highlight standard font names (a lot for PS 3)
-" postscr_encoding		- highlight encoding names (there are a lot)
+" postscr_encodings		- highlight encoding names (there are a lot)
 " postscr_andornot_binary	- highlight and, or, and not as binary operators (not logical)
 "
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " PostScript is case sensitive
 syn case match
 
 " Keyword characters - all 7-bit ASCII bar PS delimiters and ws
-set iskeyword=33-127,^(,^),^<,^>,^[,^],^{,^},^/,^%
+if version < 600
+  set iskeyword=33-127,^(,^),^<,^>,^[,^],^{,^},^/,^%
+else
+  setlocal iskeyword=33-127,^(,^),^<,^>,^[,^],^{,^},^/,^%
+endif
 
 " Yer trusty old TODO highlghter!
 syn keyword postscrTodo contained  TODO
@@ -707,44 +716,54 @@ if exists("postscr_ghostscript")
 endif " GhostScript highlighting
 
 
-if !exists("did_postscr_syntax_inits")
-  let did_postscr_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link postscrComment        Comment
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_postscr_syntax_inits")
+  if version < 508
+    let did_postscr_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-  hi link postscrConstant       Constant
-  hi link postscrString         String
-  hi link postscrASCIIString    postscrString
-  hi link postscrHexString      postscrString
-  hi link postscrASCII85String  postscrString
-  hi link postscrNumber         Number
-  hi link postscrInteger        postscrNumber
-  hi link postscrHex            postscrNumber
-  hi link postscrRadix          postscrNumber
-  hi link postscrFloat          Float
-  hi link postscrBoolean        Boolean
+  HiLink postscrComment        Comment
 
-  hi link postscrIdentifier     Identifier
-  hi link postscrProcedure      Function
+  HiLink postscrConstant       Constant
+  HiLink postscrString         String
+  HiLink postscrASCIIString    postscrString
+  HiLink postscrHexString      postscrString
+  HiLink postscrASCII85String  postscrString
+  HiLink postscrNumber         Number
+  HiLink postscrInteger        postscrNumber
+  HiLink postscrHex            postscrNumber
+  HiLink postscrRadix          postscrNumber
+  HiLink postscrFloat          Float
+  HiLink postscrBoolean        Boolean
 
-  hi link postscrName           Statement
-  hi link postscrConditional    Conditional
-  hi link postscrRepeat         Repeat
-  hi link postscrOperator       Operator
-  hi link postscrMathOperator  postscrOperator
-  hi link postscrLogicalOperator  postscrOperator
-  hi link postscrBinaryOperator postscrOperator
+  HiLink postscrIdentifier     Identifier
+  HiLink postscrProcedure      Function
 
-  hi link postscrDSCComment     SpecialComment
-  hi link postscrSpecialChar    SpecialChar
+  HiLink postscrName           Statement
+  HiLink postscrConditional    Conditional
+  HiLink postscrRepeat         Repeat
+  HiLink postscrOperator       Operator
+  HiLink postscrMathOperator  postscrOperator
+  HiLink postscrLogicalOperator  postscrOperator
+  HiLink postscrBinaryOperator postscrOperator
 
-  hi link postscrTodo           Todo
+  HiLink postscrDSCComment     SpecialComment
+  HiLink postscrSpecialChar    SpecialChar
 
-  hi link postscrError          Error
-  hi link postscrSpecialCharError postscrError
-  hi link postscrASCII85CharError postscrError
-  hi link postscrHexCharError   postscrError
-  hi link postscrIdentifierError postscrError
+  HiLink postscrTodo           Todo
+
+  HiLink postscrError          Error
+  HiLink postscrSpecialCharError postscrError
+  HiLink postscrASCII85CharError postscrError
+  HiLink postscrHexCharError   postscrError
+  HiLink postscrIdentifierError postscrError
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "postscr"

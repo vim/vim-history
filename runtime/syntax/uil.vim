@@ -1,9 +1,14 @@
 " Vim syntax file
 " Language:	Motif UIL (User Interface Language)
 " Maintainer:	Thomas Koehler <jean-luc@picard.franken.de>
-" Last Change:	1998 February 17
+" Last Change:	2001 Jan 15
 
-syn clear
+" Quit when a syntax file was already loaded
+if version < 600
+   syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " A bunch of useful keywords
 syn keyword uilType	arguments	callbacks	color
@@ -40,27 +45,39 @@ syn region uilDefine		start="^#\s*\(define\>\|undef\>\)" end="$" contains=uilLin
 
 syn sync ccomment uilComment
 
-if !exists("did_uil_syntax_inits")
-  let did_uil_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link uilCharacter		uilString
-  hi link uilSpecialCharacter	uilSpecial
-  hi link uilNumber		uilString
-  hi link uilCommentError	uilError
-  hi link uilInclude		uilPreCondit
-  hi link uilDefine		uilPreCondit
-  hi link uilIncluded		uilString
-  hi link uilSpecialFunction	uilRessource
-  hi link uilRessource		Identifier
-  hi link uilSpecialStatement	Keyword
-  hi link uilError		Error
-  hi link uilPreCondit		PreCondit
-  hi link uilType		Type
-  hi link uilString		String
-  hi link uilComment		Comment
-  hi link uilSpecial		Special
-  hi link uilTodo		Todo
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_uil_syn_inits")
+  if version < 508
+    let did_uil_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  " The default highlighting.
+  HiLink uilCharacter		uilString
+  HiLink uilSpecialCharacter	uilSpecial
+  HiLink uilNumber		uilString
+  HiLink uilCommentError	uilError
+  HiLink uilInclude		uilPreCondit
+  HiLink uilDefine		uilPreCondit
+  HiLink uilIncluded		uilString
+  HiLink uilSpecialFunction	uilRessource
+  HiLink uilRessource		Identifier
+  HiLink uilSpecialStatement	Keyword
+  HiLink uilError		Error
+  HiLink uilPreCondit		PreCondit
+  HiLink uilType		Type
+  HiLink uilString		String
+  HiLink uilComment		Comment
+  HiLink uilSpecial		Special
+  HiLink uilTodo		Todo
+
+  delcommand HiLink
 endif
+
 
 let b:current_syntax = "uil"
 

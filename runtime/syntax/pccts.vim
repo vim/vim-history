@@ -3,11 +3,20 @@
 " Maintainer:	Scott Bigham <dsb@cs.duke.edu>
 " Last Change:	10 Aug 1999
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " Read the C++ syntax to start with
-syn include @cppTopLevel <sfile>:p:h/cpp.vim
+if version < 600
+  syn include @cppTopLevel <sfile>:p:h/cpp.vim
+else
+  syn include @cppTopLevel syntax/cpp.vim
+endif
 
 syn region pcctsAction matchgroup=pcctsDelim start="<<" end=">>?\=" contains=@cppTopLevel,pcctsRuleRef
 
@@ -62,24 +71,34 @@ syn sync match pcctsSyncAction "<<\([^>]\|>[^>]\)*>>"
 syn sync match pcctsSyncRule grouphere pcctsRule "\<[a-z][A-Za-z0-9_]*\>\s*\[[^]]*\]\s*:"
 syn sync match pcctsSyncRule grouphere pcctsRule "\<[a-z][A-Za-z0-9_]*\>\(\s*\[[^]]*\]\)\=\s*>\s*\[[^]]*\]\s*:"
 
-if !exists("did_pccts_syntax_inits")
-  let did_pccts_syntax_inits = 1
-  " The default methods for highlighting. Can be overriden later.
-  hi link pcctsDelim		Special
-  hi link pcctsTokenName	Identifier
-  hi link pcctsRuleName		Statement
-  hi link pcctsLabelHack	Label
-  hi link pcctsDirective	PreProc
-  hi link pcctsString		String
-  hi link pcctsComment		Comment
-  hi link pcctsClass		Statement
-  hi link pcctsClassName	Identifier
-  hi link pcctsException	Statement
-  hi link pcctsExceptionHandler	Keyword
-  hi link pcctsExceptionRuleRef	pcctsDelim
-  hi link pcctsExceptionID	Identifier
-  hi link pcctsRuleRef		Identifier
-  hi link pcctsSpecialChar	SpecialChar
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_pccts_syntax_inits")
+  if version < 508
+    let did_pccts_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink pcctsDelim		Special
+  HiLink pcctsTokenName		Identifier
+  HiLink pcctsRuleName		Statement
+  HiLink pcctsLabelHack		Label
+  HiLink pcctsDirective		PreProc
+  HiLink pcctsString		String
+  HiLink pcctsComment		Comment
+  HiLink pcctsClass		Statement
+  HiLink pcctsClassName		Identifier
+  HiLink pcctsException		Statement
+  HiLink pcctsExceptionHandler	Keyword
+  HiLink pcctsExceptionRuleRef	pcctsDelim
+  HiLink pcctsExceptionID	Identifier
+  HiLink pcctsRuleRef		Identifier
+  HiLink pcctsSpecialChar	SpecialChar
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "pccts"

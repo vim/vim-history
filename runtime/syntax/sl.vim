@@ -1,10 +1,15 @@
 " Vim syntax file
 " Language:	Renderman shader language
 " Maintainer:	Dan Piponi <dan@tanelorn.demon.co.uk>
-" Last Change:	1999 Jun 16
+" Last Change:	2001 May 09
 
-" Reset
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " A bunch of useful Renderman keywords including special
 " RenderMan control structures
@@ -69,35 +74,45 @@ syn keyword slVariable dtime dPdtime
 
 syn sync ccomment slComment minlines=10
 
-if !exists("did_sl_syntax_inits")
-  let did_sl_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link slLabel	Label
-  hi link slUserLabel	Label
-  hi link slConditional	Conditional
-  hi link slRepeat	Repeat
-  hi link slCharacter	Character
-  hi link slSpecialCharacter slSpecial
-  hi link slNumber	Number
-  hi link slFloat	Float
-  hi link slParenError	slError
-  hi link slInParen	slError
-  hi link slCommentError	slError
-  hi link slOperator	Operator
-  hi link slStorageClass	StorageClass
-  hi link slError	Error
-  hi link slStatement	Statement
-  hi link slType		Type
-  hi link slCommentError	slError
-  hi link slCommentString slString
-  hi link slComment2String slString
-  hi link slCommentSkip	slComment
-  hi link slString	String
-  hi link slComment	Comment
-  hi link slSpecial	SpecialChar
-  hi link slTodo	Todo
-  hi link slVariable	Identifier
-  "hi link slIdentifier	Identifier
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_sl_syntax_inits")
+  if version < 508
+    let did_sl_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink slLabel	Label
+  HiLink slUserLabel	Label
+  HiLink slConditional	Conditional
+  HiLink slRepeat	Repeat
+  HiLink slCharacter	Character
+  HiLink slSpecialCharacter slSpecial
+  HiLink slNumber	Number
+  HiLink slFloat	Float
+  HiLink slParenError	slError
+  HiLink slInParen	slError
+  HiLink slCommentError	slError
+  HiLink slOperator	Operator
+  HiLink slStorageClass	StorageClass
+  HiLink slError	Error
+  HiLink slStatement	Statement
+  HiLink slType		Type
+  HiLink slCommentError	slError
+  HiLink slCommentString slString
+  HiLink slComment2String slString
+  HiLink slCommentSkip	slComment
+  HiLink slString	String
+  HiLink slComment	Comment
+  HiLink slSpecial	SpecialChar
+  HiLink slTodo	Todo
+  HiLink slVariable	Identifier
+  "HiLink slIdentifier	Identifier
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "sl"

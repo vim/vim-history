@@ -184,12 +184,14 @@
 # define HDC		void *
 # define HMENU		void *
 # define UINT		int
+# define INT		int
 # define WPARAM		int
 # define LPARAM		int
 typedef int LOGFONT[];
 # define ENUMLOGFONT	int
 # define NEWTEXTMETRIC	int
 # define VOID		void
+# define CONST
 # define CALLBACK
 # define WORD		int
 # define DWORD		int
@@ -4825,7 +4827,7 @@ gui_mch_dialog(
     int		nchar, i;
     DWORD	lStyle;
     int		dlgwidth = 0;
-    int		horizWidth;
+    int		horizWidth = 0;
     int		msgheight;
     char_u	*pstart;
     char_u	*pend;

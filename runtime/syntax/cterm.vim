@@ -1,10 +1,16 @@
 " Vim syntax file
 " Language:	Century Term Command Script
 " Maintainer:	Sean M. McKee <mckee@misslink.net>
-" Last Change:	1997/12/15
+" Last Change:	2001 May 09
 " Version Info: @(#)cterm.vim	1.7	97/12/15 09:23:14
 
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 syn case ignore
 
@@ -135,39 +141,48 @@ syn region  ctermString			start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=ctermSp
 syn match   ctermCharacter		"'[^\\]'"
 syn match   ctermSpecialCharacter	"'\\.'"
 
-if !exists("did_cterm_syntax_inits")
-	let did_cterm_syntax_inits = 1
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_cterm_syntax_inits")
+  if version < 508
+    let did_cterm_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-	hi link ctermStatement		Statement
-	hi link ctermFunction		Statement
-	hi link ctermStrFunction	Statement
-	hi link ctermIntFunction	Statement
-	hi link ctermLabel		Statement
-	hi link ctermConditional	Statement
-	hi link ctermRepeat		Statement
-	hi link ctermLibFunc		UserDefFunc
-	hi link ctermType		Type
-	hi link ctermFuncArg		PreCondit
+	HiLink ctermStatement		Statement
+	HiLink ctermFunction		Statement
+	HiLink ctermStrFunction	Statement
+	HiLink ctermIntFunction	Statement
+	HiLink ctermLabel		Statement
+	HiLink ctermConditional	Statement
+	HiLink ctermRepeat		Statement
+	HiLink ctermLibFunc		UserDefFunc
+	HiLink ctermType		Type
+	HiLink ctermFuncArg		PreCondit
 
-	hi link ctermPreVarRO		PreCondit
-	hi link ctermPreVarRW		PreConditBold
-	hi link ctermVar		Type
+	HiLink ctermPreVarRO		PreCondit
+	HiLink ctermPreVarRW		PreConditBold
+	HiLink ctermVar		Type
 
-	hi link ctermComment		Comment
+	HiLink ctermComment		Comment
 
-	hi link ctermCharacter		SpecialChar
-	hi link ctermSpecial		Special
-	hi link ctermSpecialCharacter	SpecialChar
-	hi link ctermSymbols		Special
-	hi link ctermString		String
-	hi link ctermTodo		Todo
-	hi link ctermOperator		Statement
-	hi link ctermNumber		Number
+	HiLink ctermCharacter		SpecialChar
+	HiLink ctermSpecial		Special
+	HiLink ctermSpecialCharacter	SpecialChar
+	HiLink ctermSymbols		Special
+	HiLink ctermString		String
+	HiLink ctermTodo		Todo
+	HiLink ctermOperator		Statement
+	HiLink ctermNumber		Number
 
 	" redefine the colors
 	"hi PreConditBold	term=bold ctermfg=1 cterm=bold guifg=Purple gui=bold
 	"hi Special	term=bold ctermfg=6 guifg=SlateBlue gui=underline
 
+	delcommand HiLink
 endif
 
 let b:current_syntax = "cterm"

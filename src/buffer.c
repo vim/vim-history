@@ -1989,6 +1989,7 @@ maketitle()
     char_u	*t_str = NULL;
     char_u	*i_name;
     char_u	*i_str = NULL;
+    char_u	*p;
     int		maxlen = 0;
     int		len;
     int         mustset;
@@ -2035,12 +2036,9 @@ maketitle()
 		    }
 		}
 	    }
-	    while (*t_name && t_str < buf + IOSIZE - 5)
-	    {
-		STRCPY(t_str, transchar(*t_name++));
-		t_str += STRLEN(t_str);
-	    }
-	    *t_str = NUL;
+	    for (p = buf; *t_name && p < buf + IOSIZE - 5; p += STRLEN(p))
+		STRCPY(p, transchar(*t_name++));
+	    *p = NUL;
 	}
     }
     mustset = ti_change(t_str, &lasttitle);
@@ -2063,12 +2061,9 @@ maketitle()
 		i_name = (char_u *)"No File";
 	    else		    /* use file name only in icon */
 		i_name = gettail(curbuf->b_ffname);
-	    while (*i_name && i_str < buf + IOSIZE - 5)
-	    {
-		STRCPY(i_str, transchar(*i_name++));
-		i_str += STRLEN(i_str);
-	    }
-	    *i_str = NUL;
+	    for (p = buf; *i_name && p < buf + IOSIZE - 5; p += STRLEN(p))
+		STRCPY(p, transchar(*i_name++));
+	    *p = NUL;
 	}
     }
 

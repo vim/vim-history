@@ -1,4 +1,4 @@
-*recover.txt*   For Vim version 6.0d.  Last change: 2000 Jul 07
+*recover.txt*   For Vim version 5.8.  Last change: 2000 Dec 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -81,6 +81,8 @@ the amount of memory used to be higher than given with 'maxmem' or
 'maxmemtot'.  And when making a change to a read-only file, the swap file is
 created anyway.
 
+The 'swapfile' option can be reset to avoid creating a swapfile.
+
 
 Detecting an existing swap file ~
 							*ATTENTION*
@@ -115,10 +117,10 @@ You are to take one of four actions:
 If you really don't want to see this message, you can add the 'A' flag to the
 'shortmess' option.  But it's very unusual that you need this.
 
-If dialogs are supported you will be asked to select one of five choices: >
+If dialogs are supported you will be asked to select one of five choices:
 
-  Swap file already exists!
-  [O]pen Read-Only, (E)dit anyway, (R)ecover, (Q)uit, (D)elete it:
+> Swap file already exists!
+> [O]pen Read-Only, (E)dit anyway, (R)ecover, (Q)uit, (D)elete it:
 
 O  Open the file readonly.  Use this when you just want to view the file and
    don't need to recover it.
@@ -149,7 +151,7 @@ change the 200 character count with the 'updatecount' option.  You can set
 the time with the 'updatetime' option.  The time is given in milliseconds.
 After writing to the swap file Vim syncs the file to disk.  This takes some
 time, especially on busy Unix systems.  If you don't want this you can set the
-'swapsync' option to an empty string.  The risk of loosing work becomes bigger
+'swapsync' option to an empty string.  The risk of losing work becomes bigger
 though.  On some non-Unix systems (MS-DOS, Amiga) the swap file won't be
 written at all.
 
@@ -179,11 +181,11 @@ In most cases recovery is quite easy: Start Vim on the same file you were
 editing when the crash happened, with the "-r" option added.  Vim will read
 the ".swp" file and may read bits and pieces of the original file.
 
-Example: >
-	vim -r help.txt
+Example:
+>	vim -r help.txt
 
-If you were editing without a file name, give an empty string as argument: >
-	vim -r ""
+If you were editing without a file name, give an empty string as argument:
+>	vim -r ""
 
 If there are several swap files that look they may be the one you want to
 use, a list is given of these swap files and you are requested to enter the
@@ -195,8 +197,8 @@ If you know which swap file needs to be used, you can recover by giving the
 swap file name.  Vim will then find out the name of the original file from
 the swap file.
 
-Example: >
-	Vim -r .help.txt.swo
+Example:
+>	Vim -r .help.txt.swo
 
 This is also handy when the swap file is in another directory than expected.
 If this still does not work, see what file names Vim reports and rename the
@@ -239,4 +241,4 @@ will continue to get warning messages that the ".swp" file already exists.
 
 {Vi: recovers in another way and sends mail if there is something to recover}
 
- vim:tw=78:
+ vim:tw=78:ts=8:sw=8:

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	CWEB
 " Maintainer:	Andreas Scherer <andreas.scherer@pobox.com>
-" Last Change:	August 23, 1999
+" Last Change:	April 30, 2001
 
 " Details of the CWEB language can be found in the article by Donald E. Knuth
 " and Silvio Levy, "The CWEB System of Structured Documentation", included as
@@ -13,14 +13,24 @@
 " TODO: names, and leaves C/C++ comments as such. (On the other hand,
 " TODO: switching to TeX mode in C/C++ comments might be colour overkill.)
 
-" Remove any old syntax stuff hanging around
-syntax clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " For starters, read the TeX syntax; TeX syntax items are allowed at the top
 " level in the CWEB syntax, e.g., in the preamble.  In general, a CWEB source
 " code can be seen as a normal TeX document with some C/C++ material
 " interspersed in certain defined regions.
-source <sfile>:p:h/tex.vim
+if version < 600
+  source <sfile>:p:h/tex.vim
+else
+  runtime! syntax/tex.vim
+  unlet b:current_syntax
+endif
 
 " Read the C/C++ syntax too; C/C++ syntax items are treated as such in the
 " C/C++ section of a CWEB chunk or in inner C/C++ context in "|...|" groups.
@@ -49,10 +59,20 @@ syntax region webRestrictedTeX start="@[\^\.:t=q]" end="@>" oneline
 " address <someone@@fsf.org> without going into C/C++ mode.)
 syntax match webIgnoredStuff "@@"
 
-if !exists("did_cweb_syntax_inits")
-  let did_cweb_syntax_inits = 1
-  " The default method for highlighting. Can be overridden later.
-  hi link webRestrictedTeX String
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_cweb_syntax_inits")
+  if version < 508
+    let did_cweb_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink webRestrictedTeX String
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "cweb"

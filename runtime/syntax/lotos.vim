@@ -7,7 +7,13 @@
 " I'm not sure I understand all of the syntax highlight language,
 " but this file seems to do the job for standard LOTOS.
 
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 syn case ignore
 
@@ -49,16 +55,26 @@ syn keyword lotosType   using
 
 syn sync lines=250
 
-if !exists("did_lotos_syntax_inits")
-  let did_lotos_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link lotosStatement		Statement
-  hi link lotosProcess			Label
-  hi link lotosOperator			Operator
-  hi link lotosSort			Function
-  hi link lotosType			Type
-  hi link lotosComment			Comment
-  hi link lotosDelimiter                String
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_lotos_syntax_inits")
+  if version < 508
+    let did_lotos_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink lotosStatement		Statement
+  HiLink lotosProcess		Label
+  HiLink lotosOperator		Operator
+  HiLink lotosSort		Function
+  HiLink lotosType		Type
+  HiLink lotosComment		Comment
+  HiLink lotosDelimiter		String
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "lotos"

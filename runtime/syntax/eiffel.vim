@@ -3,11 +3,15 @@
 " Maintainer:	Reimer Behrends <behrends@cse.msu.edu>
 "		With much input from Jocelyn Fiat <fiat@eiffel.com>
 " See http://www.cse.msu.edu/~behrends/vim/ for the most current version.
-" Last Change:	1999 Sep 19
+" Last Change:	2001 May 09
 
-" Remove any old syntax stuff hanging around
-
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " Option handling
 
@@ -125,56 +129,66 @@ syn region eiffelParen		transparent start="(" end=")" contains=ALLBUT,eiffelPare
 " Should suffice for even very long strings and expressions
 syn sync lines=40
 
-if !exists("did_eiffel_syntax_inits")
-  let did_eiffel_syntax_inits = 1
-  " The default methods for hilighting.  Can be overridden later
-  hi link eiffelKeyword		Statement
-  hi link eiffelProperty	Statement
-  hi link eiffelInheritClause	Statement
-  hi link eiffelStatement	Statement
-  hi link eiffelDeclaration	Statement
-  hi link eiffelAssertion	Statement
-  hi link eiffelDebug		Statement
-  hi link eiffelException	Statement
-  hi link eiffelGenericCreate	Statement
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_eiffel_syntax_inits")
+  if version < 508
+    let did_eiffel_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink eiffelKeyword		Statement
+  HiLink eiffelProperty		Statement
+  HiLink eiffelInheritClause	Statement
+  HiLink eiffelStatement	Statement
+  HiLink eiffelDeclaration	Statement
+  HiLink eiffelAssertion	Statement
+  HiLink eiffelDebug		Statement
+  HiLink eiffelException	Statement
+  HiLink eiffelGenericCreate	Statement
 
 
-  hi link eiffelTopStruct	PreProc
+  HiLink eiffelTopStruct	PreProc
 
-  hi link eiffelAll		Special
-  hi link eiffelAnchored	Special
-  hi link eiffelBitType		Special
+  HiLink eiffelAll		Special
+  HiLink eiffelAnchored		Special
+  HiLink eiffelBitType		Special
 
 
-  hi link eiffelBool		Boolean
-  hi link eiffelString		String
-  hi link eiffelCharacter	Character
-  hi link eiffelClassName	Type
-  hi link eiffelNumber		Number
+  HiLink eiffelBool		Boolean
+  HiLink eiffelString		String
+  HiLink eiffelCharacter	Character
+  HiLink eiffelClassName	Type
+  HiLink eiffelNumber		Number
 
-  hi link eiffelStringEscape	Special
+  HiLink eiffelStringEscape	Special
 
-  hi link eiffelOperator	Special
-  hi link eiffelArray		Special
-  hi link eiffelExport		Special
-  hi link eiffelCreation	Special
-  hi link eiffelBrackets	Special
-  hi link eiffelGeneric		Special
-  hi link eiffelGenericDecl	Special
-  hi link eiffelConstraint	Special
-  hi link eiffelCreate		Special
+  HiLink eiffelOperator		Special
+  HiLink eiffelArray		Special
+  HiLink eiffelExport		Special
+  HiLink eiffelCreation		Special
+  HiLink eiffelBrackets		Special
+  HiLink eiffelGeneric		Special
+  HiLink eiffelGenericDecl	Special
+  HiLink eiffelConstraint	Special
+  HiLink eiffelCreate		Special
 
-  hi link eiffelPredefined	Constant
+  HiLink eiffelPredefined	Constant
 
-  hi link eiffelComment		Comment
+  HiLink eiffelComment		Comment
 
-  hi link eiffelError		Error
-  hi link eiffelBadConstant	Error
-  hi link eiffelStringError	Error
-  hi link eiffelParenError	Error
-  hi link eiffelBracketError	Error
+  HiLink eiffelError		Error
+  HiLink eiffelBadConstant	Error
+  HiLink eiffelStringError	Error
+  HiLink eiffelParenError	Error
+  HiLink eiffelBracketError	Error
 
-  hi link eiffelTodo		Todo
+  HiLink eiffelTodo		Todo
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "eiffel"

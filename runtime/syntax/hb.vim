@@ -2,10 +2,15 @@
 " Language:	Hyper Builder
 " Maintainer:	Alejandro Forero Cuervo
 " URL:		http://bachue.com/hb/vim/syntax/hb.vim
-" Last Change:	2000 Apr 2
+" Last Change:	2001 May 09
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " Read the HTML syntax to start with
 "syn include @HTMLStuff <sfile>:p:h/htmlhb.vim
@@ -54,21 +59,31 @@ syn region HBText matchgroup=HBDirectiveKeyword start=/^:\(set\|out\)\s*\S\+.*$/
 
 syn match HBComment "^#.*$"
 
-if !exists("did_hb_syntax_inits")
-  let did_hb_syntax_inits = 1
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_hb_syntax_inits")
+  if version < 508
+    let did_hb_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-  hi link HBhtmlString                    String
-  hi link HBhtmlTagN                      Function
-  hi link htmlSpecialChar                 String
+  HiLink HBhtmlString                    String
+  HiLink HBhtmlTagN                      Function
+  HiLink htmlSpecialChar                 String
 
-  hi link HBInvalidLine Error
-  hi link HBFoobar Comment
+  HiLink HBInvalidLine Error
+  HiLink HBFoobar Comment
   hi HBFileName guibg=lightgray guifg=black
-  hi link HBDirectiveError Error
-  hi link HBDirectiveBlockEnd HBDirectiveKeyword
+  HiLink HBDirectiveError Error
+  HiLink HBDirectiveBlockEnd HBDirectiveKeyword
   hi HBDirectiveKeyword guibg=lightgray guifg=darkgreen
-  hi link HBComment Comment
-  hi link HBhtmlTagSk Statement
+  HiLink HBComment Comment
+  HiLink HBhtmlTagSk Statement
+
+  delcommand HiLink
 endif
 
 syn sync match Normal grouphere NONE "^:\s*$"

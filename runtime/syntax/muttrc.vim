@@ -9,11 +9,20 @@
 " To get a syntax file for your specific version, see
 "	http://www.student.dtu.dk/~c928400/vim
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " Set the keyword characters
-set isk=@,48-57,_,-
+if version < 600
+  set isk=@,48-57,_,-
+else
+  setlocal isk=@,48-57,_,-
+endif
 
 syn match muttrcComment		"^#.*$"
 syn match muttrcComment		"[^\\]#.*$"lc=1
@@ -198,38 +207,48 @@ syn keyword muttrcVarStr	contained pgp_v3_secring sendmail_bounce
 syn keyword muttrcMenu		contained url
 syn keyword muttrcCommand	alternates localsite unlocalsite
 
-if !exists("did_muttrc_syntax_inits")
-  let did_muttrc_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link muttrcComment		Comment
-  hi link muttrcEscape		SpecialChar
-  hi link muttrcString		String
-  hi link muttrcSpecial		Special
-  hi link muttrcNumber		Number
-  hi link muttrcQuadopt		Boolean
-  hi link muttrcEmail		Special
-  hi link muttrcHeader		Type
-  hi link muttrcKeySpecial	SpecialChar
-  hi link muttrcKey		Type
-  hi link muttrcKeyName		Macro
-  hi link muttrcVarBool		Identifier
-  hi link muttrcVarQuad		Identifier
-  hi link muttrcVarNum		Identifier
-  hi link muttrcVarStr		Identifier
-  hi link muttrcMenu		Identifier
-  hi link muttrcCommand		Keyword
-  hi link muttrcSet		muttrcCommand
-  hi link muttrcUnset		muttrcCommand
-  hi link muttrcBind		muttrcCommand
-  hi link muttrcMacro		muttrcCommand
-  hi link muttrcAlias		muttrcCommand
-  hi link muttrcAliasLine	Identifier
-  hi link muttrcColorField	Identifier
-  hi link muttrcColorFG		String
-  hi link muttrcColorBG		muttrcColorFG
-  hi link muttrcColor		muttrcCommand
-  hi link muttrcMonoAttrib	muttrcColorFG
-  hi link muttrcMono		muttrcCommand
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_muttrc_syntax_inits")
+  if version < 508
+    let did_muttrc_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink muttrcComment		Comment
+  HiLink muttrcEscape		SpecialChar
+  HiLink muttrcString		String
+  HiLink muttrcSpecial		Special
+  HiLink muttrcNumber		Number
+  HiLink muttrcQuadopt		Boolean
+  HiLink muttrcEmail		Special
+  HiLink muttrcHeader		Type
+  HiLink muttrcKeySpecial	SpecialChar
+  HiLink muttrcKey		Type
+  HiLink muttrcKeyName		Macro
+  HiLink muttrcVarBool		Identifier
+  HiLink muttrcVarQuad		Identifier
+  HiLink muttrcVarNum		Identifier
+  HiLink muttrcVarStr		Identifier
+  HiLink muttrcMenu		Identifier
+  HiLink muttrcCommand		Keyword
+  HiLink muttrcSet		muttrcCommand
+  HiLink muttrcUnset		muttrcCommand
+  HiLink muttrcBind		muttrcCommand
+  HiLink muttrcMacro		muttrcCommand
+  HiLink muttrcAlias		muttrcCommand
+  HiLink muttrcAliasLine	Identifier
+  HiLink muttrcColorField	Identifier
+  HiLink muttrcColorFG		String
+  HiLink muttrcColorBG		muttrcColorFG
+  HiLink muttrcColor		muttrcCommand
+  HiLink muttrcMonoAttrib	muttrcColorFG
+  HiLink muttrcMono		muttrcCommand
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "muttrc"

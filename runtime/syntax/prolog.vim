@@ -2,14 +2,18 @@
 " Language:    PROLOG
 " Maintainers: Ralph Becket <rwab1@cam.sri.co.uk>,
 "              Thomas Koehler <jean-luc@picard.franken.de>
-" Last Change: 1997 December 28
+" Last Change: 2001 May 10
 
 " There are two sets of highlighting in here:
 " If the "prolog_highlighting_clean" variable exists, it is rather sparse.
 " Otherwise you get more highlighting.
 
-" Remove any old syntax stuff hanging around.
-syn clear
+" Quit when a syntax file was already loaded
+if version < 600
+   syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " Prolog is case sensitive.
 syn case match
@@ -70,36 +74,44 @@ endif
 
 syn sync ccomment maxlines=50
 
-if !exists("did_prolog_syntax_inits")
 
-  let did_prolog_syntax_inits = 1
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_prolog_syn_inits")
+  if version < 508
+    let did_prolog_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-  " The default methods for highlighting.  Can be overridden later
-
-  hi link prologComment    Comment
-  hi link prologCComment   Comment
-  hi link prologCharCode   Special
+  " The default highlighting.
+  HiLink prologComment            Comment
+  HiLink prologCComment           Comment
+  HiLink prologCharCode           Special
 
   if exists ("prolog_highlighting_clean")
 
-    hi link prologKeyword      Statement
-    hi link prologClauseHead   Statement
+    HiLink prologKeyword          Statement
+    HiLink prologClauseHead       Statement
 
   else
 
-    hi link prologKeyword          Keyword
-    hi link prologClauseHead       Constant
-    hi link prologQuestion         PreProc
-    hi link prologSpecialCharacter Special
-    hi link prologNumber           Number
-    hi link prologAsIs             Normal
-    hi link prologCommentError     Error
-    hi link prologAtom             String
-    hi link prologString           String
-    hi link prologOperator         Operator
+    HiLink prologKeyword          Keyword
+    HiLink prologClauseHead       Constant
+    HiLink prologQuestion         PreProc
+    HiLink prologSpecialCharacter Special
+    HiLink prologNumber           Number
+    HiLink prologAsIs             Normal
+    HiLink prologCommentError     Error
+    HiLink prologAtom             String
+    HiLink prologString           String
+    HiLink prologOperator         Operator
 
   endif
 
+  delcommand HiLink
 endif
 
 let b:current_syntax = "prolog"

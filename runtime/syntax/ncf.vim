@@ -4,14 +4,19 @@
 " Last Change:  Friday 21 January 2000 09:25 Central Standard Time
 " $Id$
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 syn case ignore
 
-syn keyword ncfCommands 	mount load unload
+syn keyword ncfCommands		mount load unload
 syn keyword ncfBoolean		on off
-syn keyword ncfCommands 	set nextgroup=ncfSetCommands
+syn keyword ncfCommands		set nextgroup=ncfSetCommands
 syn keyword ncfTimeTypes	Reference Primary Secondary Single
 syn match ncfLoad	"\(unl\|l\)oad .*"lc=4 contains=ALLBUT,Error
 syn match ncfMount	"mount .*"lc=5 contains=ALLBUT,Error
@@ -213,34 +218,43 @@ if exists("ncf_highlight_unknowns")
     syn match Error "[^ \t]*" contains=ALL
 endif
 
-if !exists("did_ncf_syntax_inits")
-	let did_ncf_syntax_inits = 1
-	" The default methods for highlighting.  Can be overridden later
-	hi link ncfCommands	Statement
-	hi link ncfSetCommands	ncfCommands
-	hi link ncfLogins	ncfCommands
-	hi link ncfString	String
-	hi link ncfContString	ncfString
-	hi link ncfComment	Comment
-	hi link ncfImplicit	Type
-	hi link ncfBoolean	Boolean
-	hi link ncfScript	Identifier
-	hi link ncfNumber	Number
-	hi link ncfIPAddr	ncfNumber
-	hi link ncfHexNumber	ncfNumber
-	hi link ncfTime		ncfNumber
-	hi link ncfDSTTime	ncfNumber
-	hi link ncfPath		Constant
-	hi link ncfServerName	Special
-	hi link ncfIPXNet	ncfServerName
-	hi link ncfTimeTypes	Constant
-	hi link ncfSetCommandsNum	ncfSetCommands
-	hi link ncfSetCommandsBool	ncfSetCommands
-	hi link ncfSetCommandsStr	ncfSetCommands
-	hi link ncfSetCommandsTime	ncfSetCommands
-	hi link ncfSetCommandsTimeDate	ncfSetCommands
-	hi link ncfSetCommandsBindCon	ncfSetCommands
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_ncf_syntax_inits")
+  if version < 508
+    let did_ncf_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
+	HiLink ncfCommands	Statement
+	HiLink ncfSetCommands	ncfCommands
+	HiLink ncfLogins	ncfCommands
+	HiLink ncfString	String
+	HiLink ncfContString	ncfString
+	HiLink ncfComment	Comment
+	HiLink ncfImplicit	Type
+	HiLink ncfBoolean	Boolean
+	HiLink ncfScript	Identifier
+	HiLink ncfNumber	Number
+	HiLink ncfIPAddr	ncfNumber
+	HiLink ncfHexNumber	ncfNumber
+	HiLink ncfTime		ncfNumber
+	HiLink ncfDSTTime	ncfNumber
+	HiLink ncfPath		Constant
+	HiLink ncfServerName	Special
+	HiLink ncfIPXNet	ncfServerName
+	HiLink ncfTimeTypes	Constant
+	HiLink ncfSetCommandsNum	ncfSetCommands
+	HiLink ncfSetCommandsBool	ncfSetCommands
+	HiLink ncfSetCommandsStr	ncfSetCommands
+	HiLink ncfSetCommandsTime	ncfSetCommands
+	HiLink ncfSetCommandsTimeDate	ncfSetCommands
+	HiLink ncfSetCommandsBindCon	ncfSetCommands
+
+	delcommand HiLink
 endif
 
 let b:current_syntax = "ncf"

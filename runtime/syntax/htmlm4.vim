@@ -2,20 +2,35 @@
 " Language:	HTML and M4
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/htmlm4.vim
-" Last Change:	1999 May 20
+" Last Change:	2001 Apr 30
 
-" Remove any old syntax stuff hanging around
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " we define it here so that included files can test for it
 if !exists("main_syntax")
-  syn clear
   let main_syntax='htmlm4'
 endif
 
-so <sfile>:p:h/html.vim
+if version < 600
+  so <sfile>:p:h/html.vim
+else
+  runtime! syntax/html.vim
+endif
+unlet b:current_syntax
 syn case match
 
-so <sfile>:p:h/m4.vim
+if version < 600
+  so <sfile>:p:h/m4.vim
+else
+  runtime! syntax/m4.vim
+endif
+unlet b:current_syntax
 syn cluster htmlPreproc add=@m4Top
 syn cluster m4StringContents add=htmlTag,htmlEndTag
 

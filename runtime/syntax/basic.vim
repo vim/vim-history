@@ -1,6 +1,6 @@
 " Vim syntax file
 " Language:	BASIC
-" Maintainer:	Allan Kelly <Allan.Kelly@ed.ac.uk>
+" Maintainer:	Allan Kelly <allan@fruitloaf.co.uk>
 " Last Change:	Tue Sep 14 14:24:23 BST 1999
 
 " First version based on Micro$soft QBASIC circa 1989, as documented in
@@ -8,8 +8,14 @@
 " This syntax file not a complete implementation yet.  Send suggestions to the
 " maintainer.
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
+
 " A bunch of useful BASIC keywords
 syn keyword basicStatement	BEEP beep Beep BLOAD bload Bload BSAVE bsave Bsave
 syn keyword basicStatement	CALL call Call ABSOLUTE absolute Absolute
@@ -133,24 +139,34 @@ syn match   basicFilenumber  "#\d\+"
 " syn match   basicMathsOperator "[<>+\*^/\\=-]"
 syn match   basicMathsOperator   "-\|=\|[:<>+\*^/\\]\|AND\|OR"
 
-if !exists("did_basic_syntax_inits")
-  let did_basic_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link basicLabel		Label
-  hi link basicConditional	Conditional
-  hi link basicRepeat		Repeat
-  hi link basicLineNumber	Comment
-  hi link basicNumber		Number
-  hi link basicError		Error
-  hi link basicStatement	Statement
-  hi link basicString		String
-  hi link basicComment		Comment
-  hi link basicSpecial		Special
-  hi link basicTodo		Todo
-  hi link basicFunction		Identifier
-  hi link basicTypeSpecifier Type
-  hi link basicFilenumber basicTypeSpecifier
-  hi basicMathsOperator term=bold cterm=bold gui=bold
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_basic_syntax_inits")
+  if version < 508
+    let did_basic_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink basicLabel		Label
+  HiLink basicConditional	Conditional
+  HiLink basicRepeat		Repeat
+  HiLink basicLineNumber	Comment
+  HiLink basicNumber		Number
+  HiLink basicError		Error
+  HiLink basicStatement	Statement
+  HiLink basicString		String
+  HiLink basicComment		Comment
+  HiLink basicSpecial		Special
+  HiLink basicTodo		Todo
+  HiLink basicFunction		Identifier
+  HiLink basicTypeSpecifier Type
+  HiLink basicFilenumber basicTypeSpecifier
+  "hi basicMathsOperator term=bold cterm=bold gui=bold
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "basic"

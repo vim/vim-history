@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	4Dos batch file
 " Maintainer:	John Leo Spetz <jls11@po.cwru.edu>
-" Last Change:	1999 Jul 02
+" Last Change:	2001 May 09
 
 "//Issues to resolve:
 "//- Boolean operators surrounded by period are recognized but the
@@ -11,8 +11,13 @@
 "//- After unary operators like "defined" can assume token type.
 "//  Should there be more of these?
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 syn case ignore
 
@@ -178,36 +183,45 @@ syn keyword btmCommand	type unalias undelete unformat
 syn keyword btmCommand	unlock unset ver verify vol
 syn keyword btmCommand	vscrput y
 
-if !exists("did_btm_syntax_inits")
-  let did_btm_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link btmLabel		Special
-  hi link btmLabelMark		Special
-  hi link btmCmdDivider		Special
-  hi link btmConditional	btmStatement
-  hi link btmDotBoolOp          btmStatement
-  hi link btmRepeat		btmStatement
-  hi link btmEchoCommand	btmStatement
-  hi link btmEchoParam          btmStatement
-  hi link btmStatement		Statement
-  hi link btmTodo		Todo
-  hi link btmString		String
-  hi link btmNumber             Number
-  hi link btmComment		Comment
-  hi link btmArgument		Identifier
-  hi link btmVariable		Identifier
-  hi link btmEcho		String
-  hi link btmBIFMatch           btmStatement
-  hi link btmBuiltInFunc        btmStatement
-  hi link btmBuiltInVar         btmStatement
-  hi link btmSpecialVar         btmStatement
-  hi link btmCommand		btmStatement
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_btm_syntax_inits")
+  if version < 508
+    let did_btm_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-"optional highlighting
-  "hi link btmShowTab		Error
-  "hi link btmShowTabc		Error
+  HiLink btmLabel		Special
+  HiLink btmLabelMark		Special
+  HiLink btmCmdDivider		Special
+  HiLink btmConditional		btmStatement
+  HiLink btmDotBoolOp		btmStatement
+  HiLink btmRepeat		btmStatement
+  HiLink btmEchoCommand	btmStatement
+  HiLink btmEchoParam		btmStatement
+  HiLink btmStatement		Statement
+  HiLink btmTodo		Todo
+  HiLink btmString		String
+  HiLink btmNumber		Number
+  HiLink btmComment		Comment
+  HiLink btmArgument		Identifier
+  HiLink btmVariable		Identifier
+  HiLink btmEcho		String
+  HiLink btmBIFMatch		btmStatement
+  HiLink btmBuiltInFunc		btmStatement
+  HiLink btmBuiltInVar		btmStatement
+  HiLink btmSpecialVar		btmStatement
+  HiLink btmCommand		btmStatement
 
-  "hi link btmIdentifier		Identifier
+  "optional highlighting
+  "HiLink btmShowTab		Error
+  "HiLink btmShowTabc		Error
+  "hiLink btmIdentifier		Identifier
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "btm"

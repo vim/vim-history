@@ -43,8 +43,13 @@ endif
 
 " =============================================================================
 
-" clear any unwanted syntax definitions
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " switch case sensitivity off
 syn case ignore
@@ -114,19 +119,28 @@ syn match   jpropertiesSpecial		"\\$" contained
 syn match   jpropertiesComment		"^\s*[#!].*$" contains=jpropertiesTODO
 syn keyword jpropertiesTodo		TODO FIXME XXX contained
 
-" link highlighting for properties files
-if !exists("did_jproperties_syntax_inits")
-	let did_jproperties_syntax_inits = 1
-	" The default methods for highlighting.  Can be overridden later
-	hi link jpropertiesComment	Comment
-	hi link jpropertiesTodo		Todo
-	hi link jpropertiesIdentifier	Identifier
-	hi link jpropertiesString	String
-	hi link jpropertiesExtendString	String
-	hi link jpropertiesCharacter	Character
-	hi link jpropertiesSpecial	Special
-	hi link jpropertiesSpecialChar	SpecialChar
-	hi link jpropertiesError	Error
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_jproperties_syntax_inits")
+  if version < 508
+    let did_jproperties_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+	HiLink jpropertiesComment	Comment
+	HiLink jpropertiesTodo		Todo
+	HiLink jpropertiesIdentifier	Identifier
+	HiLink jpropertiesString	String
+	HiLink jpropertiesExtendString	String
+	HiLink jpropertiesCharacter	Character
+	HiLink jpropertiesSpecial	Special
+	HiLink jpropertiesSpecialChar	SpecialChar
+	HiLink jpropertiesError	Error
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "jproperties"

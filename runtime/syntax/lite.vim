@@ -1,15 +1,20 @@
 " Vim syntax file
 " Language:	lite
 " Maintainer:	Lutz Eymers <ixtab@polzin.com>
-" URL:		http://www-public.rz.uni-duesseldorf.de/~eymers/vim/syntax
+" URL:		http://www.isp.de/data/lite.vim
 " Email:	Subject: send syntax_vim.tgz
-" Last Change:	2000 Jan 05
+" Last Change:	2001 Mai 01
 "
 " Options	lite_sql_query = 1 for SQL syntax highligthing inside strings
 "		lite_minlines = x     to sync at least x lines backwards
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 if !exists("main_syntax")
   let main_syntax = 'lite'
@@ -19,14 +24,16 @@ if main_syntax == 'lite'
   if exists("lite_sql_query")
     if lite_sql_query == 1
       syn include @liteSql <sfile>:p:h/sql.vim
+      unlet b:current_syntax
     endif
   endif
 endif
 
-if (main_syntax == 'msql')
+if main_syntax == 'msql'
   if exists("msql_sql_query")
     if msql_sql_query == 1
       syn include @liteSql <sfile>:p:h/sql.vim
+      unlet b:current_syntax
     endif
   endif
 endif
@@ -130,29 +137,39 @@ if main_syntax == 'lite'
   endif
 endif
 
-if !exists("did_lite_syntax_inits")
-  let did_lite_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link liteComment		Comment
-  hi link liteString		String
-  hi link liteNumber		Number
-  hi link liteFloat		Float
-  hi link liteIdentifier	Identifier
-  hi link liteGlobalIdentifier	Identifier
-  hi link liteIntVar		Identifier
-  hi link liteFunctions		Function
-  hi link liteRepeat		Repeat
-  hi link liteConditional	Conditional
-  hi link liteStatement		Statement
-  hi link liteType		Type
-  hi link liteInclude		Include
-  hi link liteDefine		Define
-  hi link liteSpecialChar	SpecialChar
-  hi link liteParentError	liteError
-  hi link liteError		Error
-  hi link liteTodo		Todo
-  hi link liteOperator		Operator
-  hi link liteRelation		Operator
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_lite_syn_inits")
+  if version < 508
+    let did_lite_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink liteComment		Comment
+  HiLink liteString		String
+  HiLink liteNumber		Number
+  HiLink liteFloat		Float
+  HiLink liteIdentifier	Identifier
+  HiLink liteGlobalIdentifier	Identifier
+  HiLink liteIntVar		Identifier
+  HiLink liteFunctions		Function
+  HiLink liteRepeat		Repeat
+  HiLink liteConditional	Conditional
+  HiLink liteStatement		Statement
+  HiLink liteType		Type
+  HiLink liteInclude		Include
+  HiLink liteDefine		Define
+  HiLink liteSpecialChar	SpecialChar
+  HiLink liteParentError	liteError
+  HiLink liteError		Error
+  HiLink liteTodo		Todo
+  HiLink liteOperator		Operator
+  HiLink liteRelation		Operator
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "lite"

@@ -3,8 +3,13 @@
 " Maintainer:	Jan Hlavacek <lahvak@math.ohio-state.edu>
 " Last Change:	980216
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 syn keyword slangStatement	break return continue EXECUTE_ERROR_BLOCK
 syn match slangStatement	"\<X_USER_BLOCK[0-4]\>"
@@ -49,38 +54,47 @@ syn keyword slangOperator	sizeof
 
 syn region slangPreCondit start="^\s*#\s*\(ifdef\>\|ifndef\>\|iftrue\>\|ifnfalse\>\|iffalse\>\|ifntrue\>\|if\$\|ifn\$\|\|elif\>\|else\>\|endif\>\)" skip="\\$" end="$" contains=cComment,slangString,slangCharacter,slangNumber
 
-" Default links
-if !exists("did_slang_syntax_inits")
-  let did_slang_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link slangDefinition	Type
-  hi link slangBlock		slangDefinition
-  hi link slangLabel		Label
-  hi link slangConditional	Conditional
-  hi link slangRepeat		Repeat
-  hi link slangCharacter	Character
-  hi link slangFloat		Float
-  hi link slangImaginary	Float
-  hi link slangDecimal		slangNumber
-  hi link slangOctal		slangNumber
-  hi link slangHex		slangNumber
-  hi link slangNumber		Number
-  hi link slangParenError	Error
-  hi link slangOctalError	Error
-  hi link slangOperator		Operator
-  hi link slangStructure	Structure
-  hi link slangInclude		Include
-  hi link slangPreCondit	PreCondit
-  hi link slangError		Error
-  hi link slangStatement	Statement
-  hi link slangType		Type
-  hi link slangString		String
-  hi link slangConstant		Constant
-  hi link slangRangeArray	slangConstant
-  hi link slangComment		Comment
-  hi link slangSpecial		SpecialChar
-  hi link slangTodo		Todo
-  hi link slangDelim		Delimiter
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_slang_syntax_inits")
+  if version < 508
+    let did_slang_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink slangDefinition	Type
+  HiLink slangBlock		slangDefinition
+  HiLink slangLabel		Label
+  HiLink slangConditional	Conditional
+  HiLink slangRepeat		Repeat
+  HiLink slangCharacter	Character
+  HiLink slangFloat		Float
+  HiLink slangImaginary	Float
+  HiLink slangDecimal		slangNumber
+  HiLink slangOctal		slangNumber
+  HiLink slangHex		slangNumber
+  HiLink slangNumber		Number
+  HiLink slangParenError	Error
+  HiLink slangOctalError	Error
+  HiLink slangOperator		Operator
+  HiLink slangStructure	Structure
+  HiLink slangInclude		Include
+  HiLink slangPreCondit	PreCondit
+  HiLink slangError		Error
+  HiLink slangStatement	Statement
+  HiLink slangType		Type
+  HiLink slangString		String
+  HiLink slangConstant		Constant
+  HiLink slangRangeArray	slangConstant
+  HiLink slangComment		Comment
+  HiLink slangSpecial		SpecialChar
+  HiLink slangTodo		Todo
+  HiLink slangDelim		Delimiter
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "slang"

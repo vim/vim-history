@@ -685,6 +685,7 @@ clip_process_selection(button, x, y, repeated_click, modifiers)
 #endif
 }
 
+#if 0 /* not used */
 /*
  * Called after an Expose event to redraw the selection
  */
@@ -740,6 +741,7 @@ clip_redraw_selection(x, y, w, h)
 	    gui_mch_invert_rectangle(row, start, 1, end - start);
     }
 }
+#endif
 
 /*
  * Redraw part of the selection if character at "row,col" is inside of it.

@@ -1,10 +1,16 @@
 " Vim syntax file
 " Language:	WinBatch/Webbatch (*.wbt, *.web)
-" Maintainer:	stephan@a2f-services.fr
-" Last Change:	08/19/1999
+" Maintainer:	dominique@mggen.com
+" URL:		http://www.mggen.com/vim/syntax/winbatch.zip
+" Last change:	2001 May 10
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 syn case ignore
 
@@ -151,20 +157,29 @@ syn keyword winbatchImplicit xbaseconvert xcursorset xdisklabelget xdriveready x
 syn keyword winbatchImplicit xgetchildhwnd xgetelapsed xhex xmemcompact xmessagebox
 syn keyword winbatchImplicit xsendmessage xverifyccard yield
 
-if !exists("did_winbatch_syntax_inits")
-  let did_winbatch_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link winbatchLabel			PreProc
-  hi link winbatchCtl			Operator
-  hi link winbatchStatement		Statement
-  hi link winbatchTodo			Todo
-  hi link winbatchString		String
-  hi link winbatchVar			Type
-  hi link winbatchComment		Comment
-  hi link winbatchImplicit		Special
-  hi link winbatchNumber		Number
-  hi link winbatchConstant		StorageClass
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_winbatch_syntax_inits")
+  if version < 508
+    let did_winbatch_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
+  HiLink winbatchLabel		PreProc
+  HiLink winbatchCtl		Operator
+  HiLink winbatchStatement	Statement
+  HiLink winbatchTodo		Todo
+  HiLink winbatchString		String
+  HiLink winbatchVar		Type
+  HiLink winbatchComment	Comment
+  HiLink winbatchImplicit	Special
+  HiLink winbatchNumber		Number
+  HiLink winbatchConstant	StorageClass
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "winbatch"

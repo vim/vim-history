@@ -1,4 +1,4 @@
-*vi_diff.txt*   For Vim version 6.0d.  Last change: 2000 Jul 07
+*vi_diff.txt*   For Vim version 5.8.  Last change: 2000 Aug 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -66,7 +66,7 @@ Maximum line length	   On machines with 16-bit ints (Amiga and MS-DOS real
 Maximum number of lines	   2147483647 lines.
 Maximum file size	   2147483647 bytes (2 Gbyte) when a long integer is
 			   32 bits.  Much more for 64 bit longs.  Also limited
-			   by available disk space for the swap file.
+			   by available disk space for the |swap-file|.
 Length of a file path	   Unix and Win32: 1024 characters, otherwise 256
 			   characters (or as much as the system supports).
 Length of an expanded string option
@@ -124,9 +124,7 @@ Support for different systems.
 	- Atari MiNT
 	- VMS
 	- BeOS
-	- Macintosh
-	- Risc OS
-	- IBM OS/390
+	- Macintosh (although there is no binary available, needs some work)
 
 Multi level undo.					|undo|
 	'u' goes backward in time, 'ctrl-R' goes forward again.  Set option
@@ -159,12 +157,6 @@ Syntax highlighting.					|:syntax|
 	Java, Pascal, Makefiles, shell scripts, etc.  The colors used for
 	highlighting can be defined for ordinary terminals, color terminals
 	and the GUI with the ":highlight" command.
-
-Folding							|folding|
-	A range of lines can be shown as one "folded" line.  This allows
-	overviewing a file and moving blocks of text around quickly.
-	Folds can be created manually, from the syntax of the file, by indent,
-	etc.
 
 Repeat a series of commands.				|q|
 	'q'{c} starts recording typed characters into named register {c}
@@ -280,12 +272,6 @@ Text formatting.					|formatting|
 	(for example, "gqap" formats the current paragraph).  Commands for
 	text alignment: ":center", ":left" and ":right".
 
-Extended search patterns				|pattern|
-	There are many extra items to match various text items.  Examples:
-	A "\n" can be used in a search pattern to match a line break.
-	"x\{2,4}" matches "x" 2 to 4 times.
-	"\s" matches a white space character.
-
 Edit-compile-edit speedup.				|quickfix|
 	The ":make" command can be used to run the compilation and jump to
 	the first error.  Alternatively Vim can be started with the "-q"
@@ -369,12 +355,6 @@ Editing binary files					|edit-binary|
 	|-b|		command-line argument to start editing a binary file
 	|'binary'|	Option set by "-b".  Prevents adding an <EOL> for the
 			last line in the file.
-
-Multi-language support					|multi-lang|
-	Files in double-byte or multi-byte encodings can be edited.  There is
-	UTF-8 support to be able various languages at the same time, without
-	switching fonts. |UTF-8|
-	Messages and menus are available in different languages.
 
 ==============================================================================
 5. Other vim features					*other-features*
@@ -808,4 +788,4 @@ Only Vim is able to accept options in between and after the file names.
 
 @{cmdfile}	Vile: use {cmdfile} as startup file.
 
- vim:tw=78:
+ vim:ts=8:sw=8:tw=78:

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Haskell
 " Maintainer:	John Williams <jrw@pobox.com>
-" Last Change:	1999 May 8
+" Last Change:	2001 May 10
 " Thanks to Ryan Crumley for suggestions and John Meacham for
 " pointing out bugs.
 "
@@ -16,7 +16,11 @@
 " hs_highlight_debug - Highlight names of debugging functions.
 
 " Remove any old syntax stuff hanging around
-syn clear
+if version < 600
+  syn clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " (Qualified) identifiers (no default highlighting)
 syn match ConId "\(\<[A-Z][a-zA-Z0-9_']*\.\)\=\<[A-Z][a-zA-Z0-9_']*\>"
@@ -92,8 +96,14 @@ if !exists("hs_minlines")
 endif
 exec "syn sync lines=" . hs_minlines
 
-if !exists("did_hs_syntax_inits")
-  let did_hs_syntax_inits = 1
+if version >= 508 || !exists("did_hs_syntax_inits")
+  if version < 508
+    let did_hs_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
   hi link hsModule                        hsStructure
   hi link hsImport                        Include
   hi link hsImportMod                     hsImport
@@ -127,8 +137,10 @@ if !exists("did_hs_syntax_inits")
   hi link hsOrdering                      hsEnumConst
   hi link hsEnumConst                     Constant
   hi link hsDebug                         Debug
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "haskell"
 
-" vim: ts=8
+" Options for vi: ts=8 sw=2 sts=2 nowrap noexpandtab ft=vim
