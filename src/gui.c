@@ -807,7 +807,6 @@ gui_update_cursor(force, clear_selection)
 #endif
 	gui.cursor_row = gui.row;
 	gui.cursor_col = gui.col;
-	gui.cursor_is_valid = TRUE;
 
 	/* Only write to the screen after ScreenLines[] has been initialized */
 	if (!screen_cleared || ScreenLines == NULL)
@@ -820,6 +819,8 @@ gui_update_cursor(force, clear_selection)
 	 * it invalid) */
 	if (gui.row >= screen_Rows || gui.col >= screen_Columns)
 	    return;
+
+	gui.cursor_is_valid = TRUE;
 
 	/*
 	 * How the cursor is drawn depends on the current mode.
@@ -927,9 +928,9 @@ gui_update_cursor(force, clear_selection)
 	old_hl_mask = gui.highlight_mask;
 	if (shape_table[idx].shape == SHAPE_BLOCK
 #ifdef FEAT_HANGULIN
-	    || composing_hangul
+		|| composing_hangul
 #endif
-	    )
+	   )
 	{
 	    /*
 	     * Draw the text character with the cursor colors.	Use the
@@ -1723,6 +1724,8 @@ gui_screenchar(off, flags, fg, bg, back)
  * actually draw (an inverted) cursor.
  * GUI_MON_TRS_CURSOR is used to draw the cursor text with a transparant
  * background.
+ * GUI_MON_NOCLEAR is used to avoid clearing the selection when drawing over
+ * it.
  * Returns OK, unless "back" is non-zero and using the bold trick, then return
  * FAIL (the caller should start drawing "back" chars back).
  */
@@ -2079,6 +2082,9 @@ gui_undraw_cursor()
 			gui.cursor_row, gui.cursor_col + 1, GUI_MON_NOCLEAR);
 	}
 #endif
+	/* Cursor_is_valid is reset when the cursor is undrawn, also reset it
+	 * here in case it wasn't needed to undraw it. */
+	gui.cursor_is_valid = FALSE;
     }
 }
 
