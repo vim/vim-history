@@ -3628,7 +3628,7 @@ f_confirm(argvars, retvar)
     char_u	*buttons = NULL;
     char_u	buf[NUMBUFLEN];
     char_u	buf2[NUMBUFLEN];
-    int		def = 0;
+    int		def = 1;
     int		type = VIM_GENERIC;
     int		c;
 
