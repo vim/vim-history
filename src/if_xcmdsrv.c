@@ -392,7 +392,7 @@ serverSendToVim(dpy, name, cmd,  result, server, asExpr, localLoop, silent)
 	    if (result != NULL)
 	    {
 		if (ret == NULL)
-		    *result = vim_strsave(_(e_invexprmsg));
+		    *result = vim_strsave((char_u *)_(e_invexprmsg));
 		else
 		    *result = ret;
 	    }
@@ -1238,9 +1238,9 @@ serverEventProc(dpy, eventPtr)
 		    ga_concat(&reply, res);
 		else if (asKeys == 0)
 		{
-		    ga_concat(&reply, _(e_invexprmsg));
+		    ga_concat(&reply, (char_u *)_(e_invexprmsg));
 		    ga_append(&reply, 0);
-		    ga_concat(&reply, "-c 1");
+		    ga_concat(&reply, (char_u *)"-c 1");
 		}
 		ga_append(&reply, 0);
 		(void)AppendPropCarefully(dpy, resWindow, commProperty,
