@@ -25,7 +25,7 @@ static void frame_setwidth __ARGS((frame_T *curfrp, int width));
 static void win_exchange __ARGS((long));
 static void win_rotate __ARGS((int, int));
 static void win_totop __ARGS((int size, int flags));
-static void win_equal_rec __ARGS((win_T *next_curwin, frame_T *topfr, int dir, int col, int row, int width, int height));
+static void win_equal_rec __ARGS((win_T *next_curwin, int current, frame_T *topfr, int dir, int col, int row, int width, int height));
 static win_T *winframe_remove __ARGS((win_T *win, int *dirp));
 static frame_T *win_altframe __ARGS((win_T *win));
 static win_T *frame2win __ARGS((frame_T *frp));
@@ -367,7 +367,7 @@ do_window(nchar, Prenum)
 #ifdef FEAT_GUI
 		need_mouse_correct = TRUE;
 #endif
-		win_equal(NULL, 0);
+		win_equal(NULL, FALSE, 0);
 		break;
 
 /* increase current window height */
@@ -1015,7 +1015,7 @@ win_split_ins(size, flags, newwin, dir)
      * make the new window the current window and redraw
      */
     if (do_equal || dir != 0)
-	win_equal(wp,
+	win_equal(wp, TRUE,
 #ifdef FEAT_VERTSPLIT
 		(flags & WSP_VERT) ? (dir == 'v' ? 'b' : 'h')
 		: dir == 'h' ? 'b' :
@@ -1485,8 +1485,9 @@ win_move_after(win1, win2)
  * rows.
  */
     void
-win_equal(next_curwin, dir)
+win_equal(next_curwin, current, dir)
     win_T	*next_curwin;	/* pointer to current window to be or NULL */
+    int		current;	/* do only frame with current window */
     int		dir;		/* 'v' for vertically, 'h' for horizontally,
 				   'b' for both, 0 for using p_ead */
 {
@@ -1496,8 +1497,8 @@ win_equal(next_curwin, dir)
 #else
 	dir = 'b';
 #endif
-    win_equal_rec(next_curwin == NULL ? curwin : next_curwin, topframe, dir,
-				     0, 0, (int)Columns, topframe->fr_height);
+    win_equal_rec(next_curwin == NULL ? curwin : next_curwin, current,
+		      topframe, dir, 0, 0, (int)Columns, topframe->fr_height);
 }
 
 /*
@@ -1507,8 +1508,9 @@ win_equal(next_curwin, dir)
  * 'winheight' and 'winwidth' if possible.
  */
     static void
-win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
+win_equal_rec(next_curwin, current, topfr, dir, col, row, width, height)
     win_T	*next_curwin;	/* pointer to current window to be or NULL */
+    int		current;	/* do only frame with current window */
     frame_T	*topfr;		/* frame to set size off */
     int		dir;		/* 'v', 'h' or 'b', see win_equal() */
     int		col;		/* horizontal position for frame */
@@ -1616,7 +1618,14 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
 		    new_size += next_curwin_size;
 		}
 	    }
-	    win_equal_rec(next_curwin, fr, dir, col, row, new_size + n, height);
+
+	    /* Skip frame that is full height when splitting or closing a
+	     * window, unless equalizing all frames. */
+	    if (!current || dir != 'v' || topfr->fr_parent != NULL
+		    || (new_size != fr->fr_width)
+		    || frame_has_win(fr, next_curwin))
+		win_equal_rec(next_curwin, current, fr, dir, col, row,
+							new_size + n, height);
 	    col += new_size + n;
 	    width -= new_size + n;
 	    if (n != m)	    /* contains curwin */
@@ -1766,7 +1775,13 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
 		    room -= new_size;
 		new_size += n;
 	    }
-	    win_equal_rec(next_curwin, fr, dir, col, row, width, new_size);
+	    /* Skip frame that is full width when splitting or closing a
+	     * window, unless equalizing all frames. */
+	    if (!current || dir != 'h' || topfr->fr_parent != NULL
+		    || (new_size != fr->fr_height)
+		    || frame_has_win(fr, next_curwin))
+		win_equal_rec(next_curwin, current, fr, dir, col, row,
+							     width, new_size);
 	    row += new_size;
 	    height -= new_size;
 	    totwincount -= wincount;
@@ -1906,7 +1921,7 @@ win_close(win, free_buf)
 	close_curwin = TRUE;
     }
     if (p_ea)
-	win_equal(curwin,
+	win_equal(curwin, TRUE,
 #ifdef FEAT_VERTSPLIT
 		dir
 #else
@@ -3199,7 +3214,7 @@ shell_new_rows()
 #if 0
     /* Disabled: don't want making the screen smaller make a window larger. */
     if (p_ea)
-	win_equal(curwin, 'v');
+	win_equal(curwin, FALSE, 'v');
 #endif
 }
 
@@ -3217,7 +3232,7 @@ shell_new_columns()
 #if 0
     /* Disabled: don't want making the screen smaller make a window larger. */
     if (p_ea)
-	win_equal(curwin, 'h');
+	win_equal(curwin, FALSE, 'h');
 #endif
 }
 #endif

@@ -1716,7 +1716,7 @@ scripterror:
 # endif
     TIME_MSG("editing files in windows");
     if (window_count > 1)
-	win_equal(curwin, 'b');		/* adjust heights */
+	win_equal(curwin, FALSE, 'b');	/* adjust heights */
 #endif /* FEAT_WINDOWS */
 
 #ifdef FEAT_DIFF
