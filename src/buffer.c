@@ -1143,12 +1143,12 @@ do_buffer(action, start, dir, count, forceit)
      */
     if (action == DOBUF_SPLIT)	    /* split window first */
     {
-#ifdef FEAT_WINDOWS
+# ifdef FEAT_WINDOWS
 	/* jump to first window containing buf if one exists ("useopen") */
 	if (vim_strchr(p_swb, 'u') && buf_jump_open_win(buf))
 	    return OK;
 	if (win_split(0, 0) == FAIL)
-#endif
+# endif
 	    return FAIL;
     }
 #endif
@@ -1168,6 +1168,12 @@ do_buffer(action, start, dir, count, forceit)
 
     /* Go to the other buffer. */
     set_curbuf(buf, action);
+
+#if defined(FEAT_LISTCMDS) && defined(FEAT_SCROLLBIND)
+    if (action == DOBUF_SPLIT)
+	curwin->w_p_scb = FALSE;	/* reset 'scrollbind' */
+#endif
+
 #if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
     if (aborting())	    /* autocmds may abort script processing */
 	return FAIL;
@@ -1580,6 +1586,7 @@ free_buf_options(buf, free_p_ff)
 #ifdef FEAT_CRYPT
     clear_string_option(&buf->b_p_key);
 #endif
+    clear_string_option(&buf->b_p_kp);
     clear_string_option(&buf->b_p_mps);
     clear_string_option(&buf->b_p_fo);
     clear_string_option(&buf->b_p_isk);
@@ -1691,9 +1698,14 @@ buflist_getfile(n, lnum, options, forceit)
 	if (vim_strchr(p_swb, 'u'))     /* useopen */
 	    wp = buf_jump_open_win(buf);
 	/* split window if wanted ("split") */
-	if (wp == NULL && vim_strchr(p_swb, 't') && !bufempty()
-		&& win_split(0, 0) == FAIL)
-	    return FAIL;
+	if (wp == NULL && vim_strchr(p_swb, 't') && !bufempty())
+	{
+	    if (win_split(0, 0) == FAIL)
+		return FAIL;
+# ifdef FEAT_SCROLLBIND
+	    curwin->w_p_scb = FALSE;
+# endif
+	}
     }
 #endif
 

@@ -467,8 +467,13 @@ do_window(nchar, Prenum, xchar)
 #endif
 		    setpcmark();
 		    if (win_split(0, 0) == OK)
+		    {
+# ifdef FEAT_SCROLLBIND
+			curwin->w_p_scb = FALSE;
+# endif
 			(void)do_ecmd(0, ptr, NULL, NULL, ECMD_LASTL,
 								   ECMD_HIDE);
+		    }
 		    vim_free(ptr);
 		}
 		break;

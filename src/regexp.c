@@ -3029,6 +3029,9 @@ regtry(prog, col)
 		reg_endpos[0].lnum = reglnum;
 		reg_endpos[0].col = (int)(reginput - regline);
 	    }
+	    else
+		/* Use line number of "\ze". */
+		reglnum = reg_endpos[0].lnum;
 	}
 	else
 	{

@@ -3871,11 +3871,14 @@ do_sub(eap)
 		    if (i == 'n')
 		    {
 			/* For a multi-line match, put matchcol at the NUL at
-			 * the end of the line, so that we continue looking
-			 * for a match on the next line.  Avoids that
-			 * ":s/\n//gc" get stuck. */
+			 * the end of the line and set nmatch to one, so that
+			 * we continue looking for a match on the next line.
+			 * Avoids that ":s/\nB\@=//gc" get stuck. */
 			if (nmatch > 1)
+			{
 			    matchcol = STRLEN(sub_firstline);
+			    nmatch = 1;
+			}
 			goto skip;
 		    }
 		    if (got_quit)
@@ -4028,8 +4031,12 @@ skip:
 		lastone = ((sub_firstline[matchcol] == NUL && nmatch <= 1)
 			     || got_int || got_quit || !(do_all || do_again));
 		nmatch = -1;
+		/* The check for nmatch_tl is needed for when multi-line
+		 * matching must replace the lines before trying to do another
+		 * match, otherwise "\@<=" won't work. */
 		if (lastone
 			|| do_ask
+			|| nmatch_tl > 0
 			|| (nmatch = vim_regexec_multi(&regmatch, curwin,
 				       curbuf, sub_firstlnum, matchcol)) == 0)
 		{
@@ -4414,9 +4421,9 @@ prepare_tagpreview()
 {
     win_T	*wp;
 
-#ifdef FEAT_GUI
+# ifdef FEAT_GUI
     need_mouse_correct = TRUE;
-#endif
+# endif
 
     /*
      * If there is already a preview window open, use that one.
@@ -4438,6 +4445,15 @@ prepare_tagpreview()
 		return;
 	    curwin->w_p_pvw = TRUE;
 	    curwin->w_p_wfh = TRUE;
+# ifdef FEAT_SCROLLBIND
+	    curwin->w_p_scb = FALSE;	    /* don't take over 'scrollbind' */
+# endif
+# ifdef FEAT_DIFF
+	    curwin->w_p_diff = FALSE;	    /* no 'diff' */
+# endif
+# ifdef FEAT_FOLDING
+	    curwin->w_p_fdc = 0;	    /* no 'foldcolumn' */
+# endif
 	}
     }
 }

@@ -188,7 +188,7 @@ ui_char_avail()
     if (gui.in_use)
     {
 	gui_mch_update();
-	return !vim_is_input_buf_empty();
+	return input_available();
     }
 #endif
 #ifndef NO_CONSOLE

@@ -111,7 +111,7 @@ distclean: clean
 $(PACKAGE).pot: ../*.c ../if_perl.xs ../GvimExt/gvimext.cpp ../globals.h
 	cd ..; $(XGETTEXT) --default-domain=$(PACKAGE) \
 		--add-comments --keyword=_ --keyword=N_ \
-		*.c ../if_perl.xs GvimExt/gvimext.cpp globals.h
+		*.c if_perl.xs GvimExt/gvimext.cpp globals.h
 	mv -f ../$(PACKAGE).po $(PACKAGE).pot
 
 # Don't add a dependency here, we only want to update the .po files manually

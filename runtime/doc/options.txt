@@ -1,4 +1,4 @@
-*options.txt*	For Vim version 6.2d.  Last change: 2003 May 11
+*options.txt*	For Vim version 6.2e.  Last change: 2003 May 18
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -633,7 +633,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			global
 			{not in Vi}
 			{only available when compiled with the
-			|+netbeans_intg| feature}
+			|+netbeans_intg| or |+sun_workshop| feature}
 	When on, vim will change its value for the current working directory
 	whenever you open a file, switch buffers, delete a buffer or
 	open/close a window. It will change to the directory containing the
@@ -1531,12 +1531,15 @@ A jump table for the options with a short description can be found at |Q_op|.
 	set and to the Vim default value when 'compatible' is reset.
 
 	    contains	behavior	~
+								*cpo-a*
 		a	When included, a ":read" command with a file name
 			argument will set the alternate file name for the
 			current window.
+								*cpo-A*
 		A	When included, a ":write" command with a file name
 			argument will set the alternate file name for the
 			current window.
+								*cpo-b*
 		b	"\|" in a ":map" command is recognized as the end of
 			the map command.  The '\' is included in the mapping,
 			the text after the '|' is interpreted as the next
@@ -1544,6 +1547,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			include the '|' in the mapping.  Applies to all
 			mapping, abbreviation, menu and autocmd commands.
 			See also |map_bar|.
+								*cpo-B*
 		B	A backslash has no special meaning in mappings,
 			abbreviations and the "to" part of the menu commands.
 			Remove this flag to be able to use a backslash like a
@@ -1558,39 +1562,51 @@ A jump table for the options with a short description can be found at |Q_op|.
 			one character from the cursor position.  With 'c'
 			"abababababab" only gets three matches when repeating
 			"/abab", without 'c' there are five matches.
+								*cpo-C*
 		C	Do not concatenate sourced lines that start with a
 			backslash.  See |line-continuation|.
+								*cpo-d*
 		d	Using "./" in the 'tags' option doesn't mean to use
 			the tags file relative to the current file, but the
 			tags file in the current directory.
+								*cpo-D*
 		D	Can't use CTRL-K to enter a digraph after Normal mode
 			commands with a character argument, like |r|, |f| and
 			|t|.
+								*cpo-e*
 		e	When executing a register with ":@r", always add a
 			<CR> to the last line, also when the register is not
 			linewise.  If this flag is not present, the register
 			is not linewise and the last line does not end in a
 			<CR>, then the last line is put on the command-line
 			and can be edited before hitting <CR>.
+								*cpo-E*
 		E	It is an error when using "y", "d", "c", "g~", "gu" or
 			"gU" on an Empty region.  The operators only work when
 			at least one character is to be operate on.  Example:
 			This makes "y0" fail in the first column.
+								*cpo-f*
 		f	When included, a ":read" command with a file name
 			argument will set the file name for the current buffer,
 			if the current buffer doesn't have a file name yet.
+								*cpo-F*
 		F	When included, a ":write" command with a file name
 			argument will set the file name for the current
 			buffer, if the current buffer doesn't have a file name
 			yet.
+								*cpo-g*
 		g	Goto line 1 when using ":edit" without argument.
+								*cpo-i*
 		i	When included, interrupting the reading of a file will
 			leave it modified.
+								*cpo-j*
 		j	When joining lines, only add two spaces after a '.',
 			not after '!' or '?'.  Also see 'joinspaces'.
+								*cpo-J*
 		J	A |sentence| has to be followed by two spaces after
 			the '.', '!' or '?'. A <Tab> is not recognized as
 			white space.
+								*cpo-k*
 		k	Disable the recognition of raw key codes in
 			mappings, abbreviations, and the "to" part of menu
 			commands.  For example, if <Key> sends ^[OA (where ^[
@@ -1599,37 +1615,53 @@ A jump table for the options with a short description can be found at |Q_op|.
 				'k' included:	"^[OA"	 (3 characters)
 				'k' excluded:	"<Key>"  (one key code)
 			Also see the '<' flag below.
+								*cpo-K*
 		K	Don't wait for a key code to complete when it is
 			halfway a mapping.  This breaks mapping <F1><F1> when
 			only part of the second <F1> has been read.  It
 			enables cancelling the mapping by typing <F1><Esc>.
+								*cpo-l*
 		l	Backslash in a [] range in a search pattern is taken
 			literally, only "\]" is special  See |/[]|
 			   'l' included: "/[ \t]"  finds <Space>, '\' and 't'
 			   'l' excluded: "/[ \t]"  finds <Space> and <Tab>
+								*cpo-L*
 		L	When the 'list' option is set, 'wrapmargin',
 			'textwidth' and Virtual Replace mode (see |gR|) count
 			a <Tab> as two characters, instead of the normal
 			behavior of a <Tab>.
+								*cpo-m*
 		m	When included, a showmatch will always wait half a
 			second.  When not included, a showmatch will wait half
 			a second or until a character is typed.  |'showmatch'|
+								*cpo-M*
+		M	When excluded, "%" matching will take backslashes into
+			account.  Thus in "( \( )" and "\( ( \)" the outer
+			parenthesis match.  When included "%" ignores
+			backslashes, which is Vi compatible.
+								*cpo-n*
 		n	When included, the column used for 'number' will also
 			be used for text of wrapped lines.
+								*cpo-o*
 		o	Line offset to search command is not remembered for
 			next search.
+								*cpo-O*
 		O	Don't complain if a file is being overwritten, even
 			when it didn't exist when editing it.  This is a
 			protection against a file unexpectedly created by
 			someone else.  Vi didn't complain about this.
+								*cpo-p*
 		p	Vi compatible Lisp indenting.  When not present, a
 			slightly better algorithm is used.
+								*cpo-r*
 		r	Redo ("." command) uses "/" to repeat a search
 			command, instead of the actually used search string.
+								*cpo-s*
 		s	Set buffer options when entering the buffer for the
 			first time.  This is like it is in Vim version 3.0.
 			And it is the default.	If not present the options are
 			set when the buffer is created.
+								*cpo-S*
 		S	Set buffer options always when entering a buffer
 			(except 'readonly', 'fileformat', 'filetype' and
 			'syntax').  This is the (most) Vi compatible setting.
@@ -1642,35 +1674,44 @@ A jump table for the options with a short description can be found at |Q_op|.
 			no     no      when buffer created
 			yes    no      when buffer first entered (default)
 			 X     yes     each time when buffer entered (vi comp.)
-
+								*cpo-t*
 		t	Search pattern for the tag command is remembered for
 			"n" command.  Otherwise Vim only puts the pattern in
 			the history for search pattern, but doesn't change the
 			last used search pattern.
+								*cpo-u*
 		u	Undo is Vi compatible.	See |undo-two-ways|.
+								*cpo-v*
 		v	Backspaced characters remain visible on the screen in
 			Insert mode.  Without this flag the characters are
 			erased from the screen right away.  With this flag the
 			screen newly typed text overwrites backspaced
 			characters.
+								*cpo-w*
 		w	When using "cw" on a blank character, only change one
 			character and not all blanks until the start of the
 			next word.
+								*cpo-W*
 		W	Don't overwrite a readonly file.  When omitted, ":w!"
 			overwrites a readonly file, if possible.
+								*cpo-x*
 		x	<Esc> on the command-line executes the command-line.
 			The default in Vim is to abandon the command-line,
 			because <Esc> normally aborts a command.  |c_<Esc>|
+								*cpo-y*
 		y	A yank command can be redone with ".".
+								*cpo-!*
 		!	When redoing a filter command, use the last used
 			external command, whatever it was.  Otherwise the last
 			used -filter- command is used.
+								*cpo-$*
 		$	When making a change to one line, don't redisplay the
 			line, but put a '$' at the end of the changed text.
 			The changed text will be overwritten when you type the
 			new text.  The line is redisplayed if you type any
 			command that moves the cursor from the insertion
 			point.
+								*cpo-%*
 		%	Vi-compatible matching is done for the "%" command.
 			Does not recognize "#if", "#endif", etc.
 			Does not recognize "/*" and "*/".
@@ -1684,8 +1725,10 @@ A jump table for the options with a short description can be found at |Q_op|.
 			everything inside quotes is ignored.  When matching a
 			paren inside quotes, it will find the matching one (if
 			there is one).	This works very well for C programs.
+								*cpo-star*
 		*	Use ":*" in the same way as ":@".  When not included,
 			":*" is an alias for ":'<,'>", select the Visual area.
+								*cpo-<*
 		<	Disable the recognition of special key codes in |<>|
 			form in mappings, abbreviations, and the "to" part of
 			menu commands.	For example, the command
@@ -1711,6 +1754,15 @@ A jump table for the options with a short description can be found at |Q_op|.
 			{not in Vi}
 	Specifies the command to execute cscope.  See |cscopeprg|.
 	This option cannot be set from a |modeline|, for security reasons.
+
+						*'cscopequickfix'* *'csqf'*
+'cscopequickfix' 'csqf' string	(default "")
+			global
+			{not available when compiled without the |+cscope|
+			or |+quickfix| features}
+			{not in Vi}
+	Specifies whether to use quickfix window to show cscope results.
+	See |cscopequickfix|.
 
 				*'cscopetag'* *'cst'* *'nocscopetag'* *'nocst'*
 'cscopetag' 'cst'	boolean (default off)
@@ -3481,12 +3533,14 @@ A jump table for the options with a short description can be found at |Q_op|.
 	The 'keymodel' option is set by the |:behave| command.
 
 					*'keywordprg'* *'kp'*
-'keywordprg' 'kp'	string	(default "man" or "man -s",  DOS: "",
+'keywordprg' 'kp'	string	(default "man" or "man -s",  DOS: ":help",
 						OS/2: "view /", VMS: "help")
-			global
+			global or local to buffer |global-local|
 			{not in Vi}
 	Program to use for the |K| command.  Environment variables are
-	expanded |:set_env|.  When empty ":help" is used.
+	expanded |:set_env|.  ":help" may be used to access the Vim internal
+	help.  (Note that previously setting the global option to the empty
+	value did this, which is now deprecated.)
 	When "man" is used, Vim will automatically translate a count for the
 	"K" command to a section number.  Also for "man -s", in which case the
 	"-s" is removed when there is no count.
@@ -4243,8 +4297,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 	for indenting, and only add additional tabs or spaces as required.
 	NOTE: 'preserveindent' is reset when 'compatible' is set.
 	Also see 'copyindent'.
+	Use |:retab| to clean up white space.
 
-				    *'previewheight'* *'pvh'*
+					*'previewheight'* *'pvh'*
 'previewheight' 'pvh'	number (default 12)
 			global
 			{not in Vi}
@@ -4710,6 +4765,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 	differences between two versions of a file, see 'diff'.
 	See |'scrollopt'| for options that determine how this option should be
 	interpreted.
+	This option is mostly reset when splitting a window to edit another
+	file.  This means that ":split | edit file" results in two windows
+	with scroll-binding, but ":split file" does not.
 
 						*'scrolljump'* *'sj'*
 'scrolljump' 'sj'	number	(default 1)

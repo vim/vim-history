@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.2d.  Last change: 2003 May 05
+*pattern.txt*   For Vim version 6.2e.  Last change: 2003 May 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -278,7 +278,9 @@ For starters, read chapter 27 of the user manual |usr_27.txt|.
 						*/branch* */\&*
 2. A branch is one or more concats, separated by "\&".  It matches the last
    concat, but only if all the preceding concats also match at the same
-   position.  Example: "foobeep\&..." matches "foo" in "foobeep".
+   position.  Examples:
+   	"foobeep\&..." matches "foo" in "foobeep".
+	".*Peter\&.*Bob" matches in a line containing both "Peter" and "Bob"
 
    branch ::=	    concat
 		or  concat \& concat

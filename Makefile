@@ -71,7 +71,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 2d
+MINOR = 2e
 
 # Uncomment this line if the Win32s version is to be included.
 #DOSBIN_S =  dosbin_s
@@ -111,10 +111,9 @@ MINOR = 2d
 # - "make dossrc" and "make dosrt".  Unpack the archives on a PC.
 # 16 bit DOS version:
 # - Set environment for compiling with Borland C++ 3.1.
-# - Copy "Make_bc3.mak" to "Makefile"
-# - "make BOR=E:\borlandc" (compiling xxd might fail, in that case set
-#   environment for compiling with Borland C++ 4.0 and do
-#   "make -f make_bc3.mak #   xxd/xxd.exe").
+# - "make -f Make_bc3.mak BOR=E:\borlandc" (compiling xxd might fail, in that
+#   case set environment for compiling with Borland C++ 4.0 and do
+#   "make -f make_bc3.mak BOR=E:\BC4 xxd/xxd.exe").
 # - "make test" and check the output.
 # - Rename the executables to "vimd16.exe", "xxdd16.exe", "installd16.exe" and
 #   "uninstald16.exe".
@@ -153,7 +152,7 @@ MINOR = 2d
 # Create the archives:
 # - Copy all the "*.exe" files to where this Makefile is.
 # - "make dosbin".
-# - Run make on Unix to update the ".mo" files, then "make doslang".
+# - Run make on Unix to update the ".mo" files.
 # - "make doslang".
 # NSIS self installing exe:
 # - Unpack the doslang archive on the PC.
@@ -396,7 +395,6 @@ SRC_DOS =	\
 		src/Make_dvc.mak \
 		src/Make_ming.mak \
 		src/Make_mvc.mak \
-		src/Make_tcc.mak \
 		src/Make_w16.mak \
 		src/bigvim.bat \
 		src/dimm.idl \

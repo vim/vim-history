@@ -750,8 +750,13 @@ qf_get_fnum(directory, fname)
 # ifdef VMS
 	vms_remove_version(fname);
 # endif
+# ifdef BACKSLASH_IN_FILENAME
+	if (directory != NULL)
+	    slash_adjust(directory);
+	slash_adjust(fname);
+# endif
 	if (directory != NULL && !vim_isAbsName(fname)
-	    && (ptr = concat_fnames(directory, fname, TRUE)) != NULL)
+		&& (ptr = concat_fnames(directory, fname, TRUE)) != NULL)
 	{
 	    /*
 	     * Here we check if the file really exists.
@@ -1106,6 +1111,9 @@ qf_jump(dir, errornr, forceit)
 		goto failed;		/* not enough room for window */
 	    opened_window = TRUE;	/* close it when fail */
 	    p_swb = empty_option;	/* don't split again */
+# ifdef FEAT_SCROLLBIND
+	    curwin->w_p_scb = FALSE;
+# endif
 	}
 	else
 	{
@@ -1640,6 +1648,9 @@ ex_copen(eap)
 	win_goto(lastwin);
 	if (win_split(height, WSP_BELOW) == FAIL)
 	    return;		/* not enough room for window */
+#ifdef FEAT_SCROLLBIND
+	curwin->w_p_scb = FALSE;
+#endif
 
 	/*
 	 * Find existing quickfix buffer, or create a new one.

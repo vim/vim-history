@@ -1,4 +1,4 @@
-*if_cscop.txt*  For Vim version 6.2d.  Last change: 2003 May 04
+*if_cscop.txt*  For Vim version 6.2e.  Last change: 2003 May 17
 
 
 		  VIM REFERENCE MANUAL    by Andy Kahn
@@ -98,6 +98,7 @@ command does the same and also splits the window (short: "scs").
 The available subcommands are:
 
 			*E563* *E564* *E566* *E568* *E569* *E622* *E623*
+			*E625* *E626*
     add   : Add a new cscope database/connection.
 
 	USAGE	:cs add {file|dir} [pre-path] [flags]
@@ -111,6 +112,7 @@ The available subcommands are:
 	    :cscope add /projects/vim/cscope.out /usr/local/vim
 	    :cscope add cscope.out /usr/local/vim -C
 <
+				      *cscope-find* *cs-find*
 						*E565* *E567*
     find  : Query cscope.  All cscope query options are available
 	    except option #5 ("Change this grep pattern").
@@ -234,6 +236,17 @@ started will have no effect!
 "cscope".  For example: >
 	:set csprg=/usr/local/bin/cscope
 <
+					    *cscopequickfix* *csqf* *E469*
+{not available when compiled without the |+quickfix| feature}
+'cscopequickfix' specifies whether to use quickfix window to show cscope
+results. This is a list of comma-separated values. Each item consists of
+|cscope-find| command (s, g, d, c, t, e, f or i) and flag (+, - or 0).
+'+' indicates that results must be appended to quickfix window,
+'-' implies previous results clearance, '0' or command absence - don't use
+quickfix. Search is performed from start until first command occurence.
+The default value is "" (don't use quickfix anyway). The following value
+seems to be useful: "s-,c-,d-,i-,t-,e-".
+
 							*cscopetag* *cst*
 If 'cscopetag' set, the commands ":tag" and CTRL-] as well as "vim -t" will
 always use |:cstag| instead of the default :tag behavior.  Effectively, by
@@ -291,7 +304,7 @@ produce output which looks like this:
  0 28806  cscope.out			      <none>
 
 Note:
-Because of the Microsoft RTL limitations, Win32 version shows -1 instead
+Because of the Microsoft RTL limitations, Win32 version shows 0 instead
 of the real pid.
 
 Once a cscope connection is established, you can make queries to cscope and

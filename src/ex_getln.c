@@ -4847,6 +4847,9 @@ ex_window()
 # ifdef FEAT_RIGHTLEFT
     curwin->w_p_rl = FALSE;
 # endif
+# ifdef FEAT_SCROLLBIND
+    curwin->w_p_scb = FALSE;
+# endif
 
 # ifdef FEAT_AUTOCMD
     /* Do execute autocommands for setting the filetype (load syntax). */

@@ -83,34 +83,35 @@ an 50.20.170 &Syntax.CD.Cascading\ Style\ Sheets :cal SetSyn("css")<CR>
 an 50.20.180 &Syntax.CD.Century\ Term :cal SetSyn("cterm")<CR>
 an 50.20.190 &Syntax.CD.CHILL :cal SetSyn("ch")<CR>
 an 50.20.200 &Syntax.CD.ChangeLog :cal SetSyn("changelog")<CR>
-an 50.20.210 &Syntax.CD.Clean :cal SetSyn("clean")<CR>
-an 50.20.220 &Syntax.CD.Clever :cal SetSyn("cl")<CR>
-an 50.20.230 &Syntax.CD.Clipper :cal SetSyn("clipper")<CR>
-an 50.20.240 &Syntax.CD.Cold\ Fusion :cal SetSyn("cf")<CR>
-an 50.20.250 &Syntax.CD.Config.Cfg\ Config\ file :cal SetSyn("cfg")<CR>
-an 50.20.260 &Syntax.CD.Config.Generic\ Config\ file :cal SetSyn("conf")<CR>
-an 50.20.270 &Syntax.CD.Config.Configure\.in :cal SetSyn("config")<CR>
-an 50.20.280 &Syntax.CD.Ctrl-H :cal SetSyn("ctrlh")<CR>
-an 50.20.290 &Syntax.CD.Cobol :cal SetSyn("cobol")<CR>
-an 50.20.300 &Syntax.CD.CSP :cal SetSyn("csp")<CR>
-an 50.20.310 &Syntax.CD.CUPL.CUPL :cal SetSyn("cupl")<CR>
-an 50.20.320 &Syntax.CD.CUPL.Simulation :cal SetSyn("cuplsim")<CR>
-an 50.20.330 &Syntax.CD.CVS.commit\ file :cal SetSyn("cvs")<CR>
-an 50.20.340 &Syntax.CD.CVS.cvsrc :cal SetSyn("cvsrc")<CR>
-an 50.20.360 &Syntax.CD.Debian.Debian\ ChangeLog :cal SetSyn("debchangelog")<CR>
-an 50.20.370 &Syntax.CD.Debian.Debian\ Control :cal SetSyn("debcontrol")<CR>
-an 50.20.380 &Syntax.CD.Diff :cal SetSyn("diff")<CR>
-an 50.20.390 &Syntax.CD.Digital\ Command\ Lang :cal SetSyn("dcl")<CR>
-an 50.20.400 &Syntax.CD.DNS/BIND\ zone :cal SetSyn("dns")<CR>
-an 50.20.410 &Syntax.CD.DocBook :cal SetSyn("docbk")<CR>
-an 50.20.420 &Syntax.CD.Dot :cal SetSyn("dot")<CR>
-an 50.20.430 &Syntax.CD.Dracula :cal SetSyn("dracula")<CR>
-an 50.20.440 &Syntax.CD.DSSSL :cal SetSyn("dsl")<CR>
-an 50.20.450 &Syntax.CD.DTD :cal SetSyn("dtd")<CR>
-an 50.20.460 &Syntax.CD.DTML\ (Zope) :cal SetSyn("dtml")<CR>
-an 50.20.470 &Syntax.CD.Dylan.Dylan :cal SetSyn("dylan")<CR>
-an 50.20.480 &Syntax.CD.Dylan.Dylan\ interface :cal SetSyn("dylanintr")<CR>
-an 50.20.490 &Syntax.CD.Dylan.Dylan\ lid :cal SetSyn("dylanlid")<CR>
+an 50.20.210 &Syntax.CD.Cheetah\ template :cal SetSyn("cheetah")<CR>
+an 50.20.220 &Syntax.CD.Clean :cal SetSyn("clean")<CR>
+an 50.20.230 &Syntax.CD.Clever :cal SetSyn("cl")<CR>
+an 50.20.240 &Syntax.CD.Clipper :cal SetSyn("clipper")<CR>
+an 50.20.250 &Syntax.CD.Cold\ Fusion :cal SetSyn("cf")<CR>
+an 50.20.260 &Syntax.CD.Config.Cfg\ Config\ file :cal SetSyn("cfg")<CR>
+an 50.20.270 &Syntax.CD.Config.Generic\ Config\ file :cal SetSyn("conf")<CR>
+an 50.20.280 &Syntax.CD.Config.Configure\.in :cal SetSyn("config")<CR>
+an 50.20.290 &Syntax.CD.Ctrl-H :cal SetSyn("ctrlh")<CR>
+an 50.20.300 &Syntax.CD.Cobol :cal SetSyn("cobol")<CR>
+an 50.20.310 &Syntax.CD.CSP :cal SetSyn("csp")<CR>
+an 50.20.320 &Syntax.CD.CUPL.CUPL :cal SetSyn("cupl")<CR>
+an 50.20.330 &Syntax.CD.CUPL.Simulation :cal SetSyn("cuplsim")<CR>
+an 50.20.340 &Syntax.CD.CVS.commit\ file :cal SetSyn("cvs")<CR>
+an 50.20.350 &Syntax.CD.CVS.cvsrc :cal SetSyn("cvsrc")<CR>
+an 50.20.370 &Syntax.CD.Debian.Debian\ ChangeLog :cal SetSyn("debchangelog")<CR>
+an 50.20.380 &Syntax.CD.Debian.Debian\ Control :cal SetSyn("debcontrol")<CR>
+an 50.20.390 &Syntax.CD.Diff :cal SetSyn("diff")<CR>
+an 50.20.400 &Syntax.CD.Digital\ Command\ Lang :cal SetSyn("dcl")<CR>
+an 50.20.410 &Syntax.CD.DNS/BIND\ zone :cal SetSyn("dns")<CR>
+an 50.20.420 &Syntax.CD.DocBook :cal SetSyn("docbk")<CR>
+an 50.20.430 &Syntax.CD.Dot :cal SetSyn("dot")<CR>
+an 50.20.440 &Syntax.CD.Dracula :cal SetSyn("dracula")<CR>
+an 50.20.450 &Syntax.CD.DSSSL :cal SetSyn("dsl")<CR>
+an 50.20.460 &Syntax.CD.DTD :cal SetSyn("dtd")<CR>
+an 50.20.470 &Syntax.CD.DTML\ (Zope) :cal SetSyn("dtml")<CR>
+an 50.20.480 &Syntax.CD.Dylan.Dylan :cal SetSyn("dylan")<CR>
+an 50.20.490 &Syntax.CD.Dylan.Dylan\ interface :cal SetSyn("dylanintr")<CR>
+an 50.20.500 &Syntax.CD.Dylan.Dylan\ lid :cal SetSyn("dylanlid")<CR>
 an 50.30.100 &Syntax.EFG.EDIF :cal SetSyn("edif")<CR>
 an 50.30.110 &Syntax.EFG.Eiffel :cal SetSyn("eiffel")<CR>
 an 50.30.120 &Syntax.EFG.Elm\ filter\ rules :cal SetSyn("elmfilt")<CR>
@@ -148,34 +149,35 @@ an 50.40.100 &Syntax.HIJK.Haskell.Haskell :cal SetSyn("haskell")<CR>
 an 50.40.110 &Syntax.HIJK.Haskell.Haskell-c2hs :cal SetSyn("chaskell")<CR>
 an 50.40.120 &Syntax.HIJK.Haskell.Haskell-literate :cal SetSyn("lhaskell")<CR>
 an 50.40.130 &Syntax.HIJK.Hercules :cal SetSyn("hercules")<CR>
-an 50.40.140 &Syntax.HIJK.HTML :cal SetSyn("html")<CR>
-an 50.40.150 &Syntax.HIJK.HTML\ with\ M4 :cal SetSyn("htmlm4")<CR>
-an 50.40.160 &Syntax.HIJK.HTML/OS :cal SetSyn("htmlos")<CR>
-an 50.40.170 &Syntax.HIJK.Hyper\ Builder :cal SetSyn("hb")<CR>
-an 50.40.190 &Syntax.HIJK.Icon :cal SetSyn("icon")<CR>
-an 50.40.200 &Syntax.HIJK.IDL\Generic\ IDL :cal SetSyn("idl")<CR>
-an 50.40.210 &Syntax.HIJK.IDL\Microsoft\ IDL :cal SetSyn("msidl")<CR>
-an 50.40.220 &Syntax.HIJK.Indent\ profile :cal SetSyn("indent")<CR>
-an 50.40.230 &Syntax.HIJK.Inform :cal SetSyn("inform")<CR>
-an 50.40.240 &Syntax.HIJK.Informix\ 4GL :cal SetSyn("fgl")<CR>
-an 50.40.250 &Syntax.HIJK.Inittab :cal SetSyn("inittab")<CR>
-an 50.40.260 &Syntax.HIJK.Inno\ setup :cal SetSyn("iss")<CR>
-an 50.40.270 &Syntax.HIJK.InstallShield\ script :cal SetSyn("ishd")<CR>
-an 50.40.280 &Syntax.HIJK.Interactive\ Data\ Lang :cal SetSyn("idlang")<CR>
-an 50.40.290 &Syntax.HIJK.IPfilter :cal SetSyn("ipfilter")<CR>
-an 50.40.310 &Syntax.HIJK.JAL :cal SetSyn("jal")<CR>
-an 50.40.320 &Syntax.HIJK.JAM :cal SetSyn("jam")<CR>
-an 50.40.330 &Syntax.HIJK.Jargon :cal SetSyn("jargon")<CR>
-an 50.40.340 &Syntax.HIJK.Java.Java :cal SetSyn("java")<CR>
-an 50.40.350 &Syntax.HIJK.Java.JavaCC :cal SetSyn("javacc")<CR>
-an 50.40.360 &Syntax.HIJK.Java.Java\ Server\ Pages :cal SetSyn("jsp")<CR>
-an 50.40.370 &Syntax.HIJK.Java.Java\ Properties :cal SetSyn("jproperties")<CR>
-an 50.40.380 &Syntax.HIJK.JavaScript :cal SetSyn("javascript")<CR>
-an 50.40.390 &Syntax.HIJK.Jess :cal SetSyn("jess")<CR>
-an 50.40.400 &Syntax.HIJK.Jgraph :cal SetSyn("jgraph")<CR>
-an 50.40.420 &Syntax.HIJK.KDE\ script :cal SetSyn("kscript")<CR>
-an 50.40.430 &Syntax.HIJK.Kimwitu++ :cal SetSyn("kwt")<CR>
-an 50.40.440 &Syntax.HIJK.KixTart :cal SetSyn("kix")<CR>
+an 50.40.140 &Syntax.HIJK.HTML.HTML :cal SetSyn("html")<CR>
+an 50.40.150 &Syntax.HIJK.HTML.HTML\ with\ M4 :cal SetSyn("htmlm4")<CR>
+an 50.40.160 &Syntax.HIJK.HTML.Cheetah\ HTML\ template :cal SetSyn("htmlcheetah")<CR>
+an 50.40.170 &Syntax.HIJK.HTML.HTML/OS :cal SetSyn("htmlos")<CR>
+an 50.40.180 &Syntax.HIJK.Hyper\ Builder :cal SetSyn("hb")<CR>
+an 50.40.200 &Syntax.HIJK.Icon :cal SetSyn("icon")<CR>
+an 50.40.210 &Syntax.HIJK.IDL\Generic\ IDL :cal SetSyn("idl")<CR>
+an 50.40.220 &Syntax.HIJK.IDL\Microsoft\ IDL :cal SetSyn("msidl")<CR>
+an 50.40.230 &Syntax.HIJK.Indent\ profile :cal SetSyn("indent")<CR>
+an 50.40.240 &Syntax.HIJK.Inform :cal SetSyn("inform")<CR>
+an 50.40.250 &Syntax.HIJK.Informix\ 4GL :cal SetSyn("fgl")<CR>
+an 50.40.260 &Syntax.HIJK.Inittab :cal SetSyn("inittab")<CR>
+an 50.40.270 &Syntax.HIJK.Inno\ setup :cal SetSyn("iss")<CR>
+an 50.40.280 &Syntax.HIJK.InstallShield\ script :cal SetSyn("ishd")<CR>
+an 50.40.290 &Syntax.HIJK.Interactive\ Data\ Lang :cal SetSyn("idlang")<CR>
+an 50.40.300 &Syntax.HIJK.IPfilter :cal SetSyn("ipfilter")<CR>
+an 50.40.320 &Syntax.HIJK.JAL :cal SetSyn("jal")<CR>
+an 50.40.330 &Syntax.HIJK.JAM :cal SetSyn("jam")<CR>
+an 50.40.340 &Syntax.HIJK.Jargon :cal SetSyn("jargon")<CR>
+an 50.40.350 &Syntax.HIJK.Java.Java :cal SetSyn("java")<CR>
+an 50.40.360 &Syntax.HIJK.Java.JavaCC :cal SetSyn("javacc")<CR>
+an 50.40.370 &Syntax.HIJK.Java.Java\ Server\ Pages :cal SetSyn("jsp")<CR>
+an 50.40.380 &Syntax.HIJK.Java.Java\ Properties :cal SetSyn("jproperties")<CR>
+an 50.40.390 &Syntax.HIJK.JavaScript :cal SetSyn("javascript")<CR>
+an 50.40.400 &Syntax.HIJK.Jess :cal SetSyn("jess")<CR>
+an 50.40.410 &Syntax.HIJK.Jgraph :cal SetSyn("jgraph")<CR>
+an 50.40.430 &Syntax.HIJK.KDE\ script :cal SetSyn("kscript")<CR>
+an 50.40.440 &Syntax.HIJK.Kimwitu++ :cal SetSyn("kwt")<CR>
+an 50.40.450 &Syntax.HIJK.KixTart :cal SetSyn("kix")<CR>
 an 50.50.100 &Syntax.L-Ma.Lace :cal SetSyn("lace")<CR>
 an 50.50.110 &Syntax.L-Ma.LamdaProlog :cal SetSyn("lprolog")<CR>
 an 50.50.120 &Syntax.L-Ma.Latte :cal SetSyn("latte")<CR>

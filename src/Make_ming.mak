@@ -189,7 +189,8 @@ endif # RUBY
 # See feature.h for a list of options.
 # Any other defines can be included here.
 DEF_GUI=-DFEAT_GUI_W32 -DFEAT_CLIPBOARD
-DEFINES=-DWIN32 -DPC -DWINVER=$(WINVER) -D_WIN32_WINNT=$(WINVER)
+DEFINES=-DWIN32 -DPC -DWINVER=$(WINVER) -D_WIN32_WINNT=$(WINVER) \
+	-DHAVE_PATHDEF -DFEAT_$(FEATURES)
 ifeq ($(CROSS),yes)
 # cross-compiler:
 CC = i586-pc-mingw32msvc-gcc
@@ -200,8 +201,10 @@ else
 CC = gcc
 ifneq (sh.exe, $(SHELL))
 DEL = rm
+DIRSLASH = /
 else
 DEL = del
+DIRSLASH = \\
 endif
 WINDRES = windres
 endif
@@ -209,8 +212,7 @@ endif
 #>>>>> end of choices
 ###########################################################################
 
-CFLAGS = -Iproto $(DEFINES) -pipe -w
-CFLAGS += -march=$(ARCH) -mcpu=$(CPUNR) -Wall -DFEAT_$(FEATURES)
+CFLAGS = -Iproto $(DEFINES) -pipe -w -march=$(ARCH) -mcpu=$(CPUNR) -Wall
 
 ifdef GETTEXT
 DEFINES +=-DHAVE_GETTEXT -DHAVE_LOCALE_H
@@ -257,7 +259,7 @@ endif
 endif
 
 ifeq ($(POSTSCRIPT),yes)
-CFLAGS += -DMSWINPS
+DEFINES += -DMSWINPS
 endif
 
 ifeq (yes, $(OLE))
@@ -265,11 +267,12 @@ DEFINES += -DFEAT_OLE
 endif
 
 ifeq ($(CSCOPE),yes)
-CFLAGS += -DFEAT_CSCOPE
+DEFINES += -DFEAT_CSCOPE
 endif
 
 ifeq ($(DEBUG),yes)
 CFLAGS += -g -fstack-check
+DEBUG_SUFFIX=d
 else
 ifeq ($(OPTIMIZE), SIZE)
 CFLAGS += -Os
@@ -283,39 +286,79 @@ endif
 endif
 endif
 
-ifeq ($(GUI),yes)
-TARGET := gvim.exe
-else
-TARGET := vim.exe
-endif
+GUIOBJ =  $(OUTDIR)/gui.o $(OUTDIR)/gui_w32.o $(OUTDIR)/os_w32exe.o
+OBJ = \
+	$(OUTDIR)/buffer.o \
+	$(OUTDIR)/charset.o \
+	$(OUTDIR)/diff.o \
+	$(OUTDIR)/digraph.o \
+	$(OUTDIR)/edit.o \
+	$(OUTDIR)/eval.o \
+	$(OUTDIR)/ex_cmds.o \
+	$(OUTDIR)/ex_cmds2.o \
+	$(OUTDIR)/ex_docmd.o \
+	$(OUTDIR)/ex_eval.o \
+	$(OUTDIR)/ex_getln.o \
+	$(OUTDIR)/fileio.o \
+	$(OUTDIR)/fold.o \
+	$(OUTDIR)/getchar.o \
+	$(OUTDIR)/main.o \
+	$(OUTDIR)/mark.o \
+	$(OUTDIR)/memfile.o \
+	$(OUTDIR)/memline.o \
+	$(OUTDIR)/menu.o \
+	$(OUTDIR)/message.o \
+	$(OUTDIR)/misc1.o \
+	$(OUTDIR)/misc2.o \
+	$(OUTDIR)/move.o \
+	$(OUTDIR)/mbyte.o \
+	$(OUTDIR)/normal.o \
+	$(OUTDIR)/ops.o \
+	$(OUTDIR)/option.o \
+	$(OUTDIR)/os_win32.o \
+	$(OUTDIR)/os_mswin.o \
+	$(OUTDIR)/pathdef.o \
+	$(OUTDIR)/quickfix.o \
+	$(OUTDIR)/regexp.o \
+	$(OUTDIR)/screen.o \
+	$(OUTDIR)/search.o \
+	$(OUTDIR)/syntax.o \
+	$(OUTDIR)/tag.o \
+	$(OUTDIR)/term.o \
+	$(OUTDIR)/ui.o \
+	$(OUTDIR)/undo.o \
+	$(OUTDIR)/version.o \
+	$(OUTDIR)/vimrc.o \
+	$(OUTDIR)/window.o
 
-GUISRC =  vimres.c gui.c gui_w32.c
-SRC    =  os_w32exe.c buffer.c charset.c diff.c digraph.c edit.c eval.c ex_cmds.c \
-	  ex_cmds2.c ex_docmd.c ex_eval.c ex_getln.c fileio.c fold.c getchar.c main.c \
-	  mark.c memfile.c memline.c menu.c message.c misc1.c misc2.c move.c \
-	  mbyte.c normal.c ops.c option.c os_win32.c os_mswin.c \
-	  quickfix.c regexp.c screen.c search.c syntax.c tag.c term.c ui.c \
-	  undo.c window.c version.c
 ifdef PERL
-SRC += if_perl.c
+OBJ += $(OUTDIR)/if_perl.o
 endif
 ifdef PYTHON
-SRC += if_python.c
+OBJ += $(OUTDIR)/if_python.o
 endif
 ifdef RUBY
-SRC += if_ruby.c
+OBJ += $(OUTDIR)/if_ruby.o
 endif
 ifdef TCL
-SRC += if_tcl.c
+OBJ += $(OUTDIR)/if_tcl.o
 endif
 ifeq ($(CSCOPE),yes)
-SRC += if_cscope.c
+OBJ += $(OUTDIR)/if_cscope.o
 endif
 
 
-GUIOBJ = $(GUISRC:.c=.o)
-OBJ    = $(SRC:.c=.o)
-LIB = -lkernel32 -luser32 -lgdi32 -ladvapi32 -lcomdlg32 -lcomctl32 -lole32 -luuid
+ifeq ($(GUI),yes)
+TARGET := gvim$(DEBUG_SUFFIX).exe
+DEFINES += $(DEF_GUI)
+OBJ += $(GUIOBJ)
+LIB += -mwindows -lcomctl32
+OUTDIR = gobj$(DEBUG_SUFFIX)
+else
+TARGET := vim$(DEBUG_SUFFIX).exe
+LIB = -lkernel32 -luser32 -lgdi32 -ladvapi32 -lcomdlg32 -lcomctl32
+OUTDIR = obj$(DEBUG_SUFFIX)
+endif
 
 ifdef GETTEXT
 ifneq (yes, $(GETTEXT))
@@ -372,7 +415,7 @@ endif
 DEFINES+=-DDYNAMIC_ICONV
 endif
 
-all: $(TARGET) vimrun.exe xxd/xxd.exe install.exe uninstal.exe GvimExt/gvimext.dll
+all: $(OUTDIR) $(TARGET) vimrun.exe xxd/xxd.exe install.exe uninstal.exe GvimExt/gvimext.dll
 
 vimrun.exe: vimrun.c
 	$(CC) $(CFLAGS) -s -o vimrun.exe vimrun.c $(LIB)
@@ -383,62 +426,77 @@ install.exe: dosinst.c
 uninstal.exe: uninstal.c
 	$(CC) $(CFLAGS) -s -o uninstal.exe uninstal.c $(LIB)
 
-vim.exe: $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $^ $(LIB)
-
-gvim.exe: DEFINES+=$(DEF_GUI)
-gvim.exe: $(OBJ) $(GUIOBJ)
-	$(CC) $(DEF_GUI) $(CFLAGS) -o $@ $^ -mwindows $(LIB) $(PYTHONLIB) $(RUBYLIB)
-
-exes:
-	-$(DEL) *.o
-	$(MAKE) -f Make_ming.mak gvim.exe
-	-$(DEL) *.o
-	$(MAKE) -f Make_ming.mak vim.exe
-	-$(DEL) *.o
+$(TARGET): $(OBJ)
+	$(CC) $(CFLAGS) -s -o $@ $^ $(LIB) -lole32 -luuid $(PYTHONLIB) $(RUBYLIB)
 
 upx: exes
 	upx gvim.exe
 	upx vim.exe
 
 xxd/xxd.exe: xxd/xxd.c
-	$(CC) $(CFLAGS) -o xxd/xxd.exe -s -DWIN32 xxd/xxd.c $(LIB)
+	$(MAKE) -C xxd -f Make_cyg.mak
 
 GvimExt/gvimext.dll: GvimExt/gvimext.cpp GvimExt/gvimext.rc GvimExt/gvimext.h
 	$(MAKE) -C GvimExt -f Make_ming.mak
 
 clean:
-	-$(DEL) *.o
-	-$(DEL) *.res
+	-$(DEL) $(OUTDIR)$(DIRSLASH)*.o
+	-$(DEL) $(OUTDIR)$(DIRSLASH)*.res
+	-rmdir $(OUTDIR)
 	-$(DEL) *.exe
-ifneq (sh.exe, $(SHELL))
-	-$(DEL) xxd/*.exe
-else
-	-$(DEL) xxd\*.exe
-endif
+	-$(DEL) pathdef.c
 ifdef PERL
 	-$(DEL) if_perl.c
 endif
 	$(MAKE) -C GvimExt -f Make_ming.mak clean
+	$(MAKE) -C xxd -f Make_cyg.mak clean
 
 ###########################################################################
-vimres.res: vim.rc
-	$(WINDRES) $(DEFINES) --define MING vim.rc vimres.res
+$(OUTDIR)/%.o : %.c $(INCL)
+	$(CC) -c $(CFLAGS) $< -o $@
 
-vimres.o: vimres.res
-	$(WINDRES) vimres.res vimres.o
+$(OUTDIR)/vimres.res: vim.rc
+	$(WINDRES) $(DEFINES) vim.rc $(OUTDIR)/vimres.res
+
+$(OUTDIR)/vimrc.o: $(OUTDIR)/vimres.res
+	$(WINDRES) $(OUTDIR)/vimres.res $(OUTDIR)/vimrc.o
 
 INCL = vim.h feature.h os_win32.h os_dos.h ascii.h keymap.h term.h macros.h \
 	structs.h regexp.h option.h ex_cmds.h proto.h globals.h farsi.h \
 	gui.h
 
-$(OBJ) $(GUIOBJ): $(INCL)
+$(OUTDIR):
+	mkdir $(OUTDIR)
 
-if_ole.o: if_ole.cpp
-	$(CC) $(CFLAGS) -D__IID_DEFINED__ -c -o if_ole.o if_ole.cpp
+$(OUTDIR)/if_ole.o: if_ole.cpp
+	$(CC) $(CFLAGS) -D__IID_DEFINED__ -c -o $(OUTDIR)/if_ole.o if_ole.cpp
 
-if_ruby.o: if_ruby.c
-	$(CC) $(CFLAGS) -U_WIN32 -c -o if_ruby.o if_ruby.c
+$(OUTDIR)/if_ruby.o: if_ruby.c
+	$(CC) $(CFLAGS) -U_WIN32 -c -o $(OUTDIR)/if_ruby.o if_ruby.c
 
 if_perl.c: if_perl.xs typemap
-	perl $(PERLLIB)/ExtUtils/xsubpp -prototypes -typemap $(PERLLIB)/ExtUtils/typemap if_perl.xs > $@
+	perl $(PERLLIB)/ExtUtils/xsubpp -prototypes -typemap \
+	     $(PERLLIB)/ExtUtils/typemap if_perl.xs > $@
+
+pathdef.c:
+ifneq (sh.exe, $(SHELL))
+	@echo creating pathdef.c
+	@echo '/* pathdef.c */' > pathdef.c
+	@echo '#include "vim.h"' >> pathdef.c
+	@echo 'char_u *default_vim_dir = (char_u *)"$(VIMRCLOC)";' >> pathdef.c
+	@echo 'char_u *default_vimruntime_dir = (char_u *)"$(VIMRUNTIMEDIR)";' >> pathdef.c
+	@echo 'char_u *all_cflags = (char_u *)"$(CC) $(CFLAGS)";' >> pathdef.c
+	@echo 'char_u *all_lflags = (char_u *)"$(CC) -s -o $(TARGET) $(LIB) -luuid -lole32 $(PYTHONLIB) $(RUBYLIB)";' >> pathdef.c
+	@echo 'char_u *compiled_user = (char_u *)"$(USERNAME)";' >> pathdef.c
+	@echo 'char_u *compiled_sys = (char_u *)"$(USERDOMAIN)";' >> pathdef.c
+else
+	@echo creating pathdef.c
+	@echo /* pathdef.c */ > pathdef.c
+	@echo #include "vim.h" >> pathdef.c
+	@echo char_u *default_vim_dir = (char_u *)"$(VIMRCLOC)"; >> pathdef.c
+	@echo char_u *default_vimruntime_dir = (char_u *)"$(VIMRUNTIMEDIR)"; >> pathdef.c
+	@echo char_u *all_cflags = (char_u *)"$(CC) $(CFLAGS)"; >> pathdef.c
+	@echo char_u *all_lflags = (char_u *)"$(CC) -s -o $(TARGET) $(LIB) -luuid -lole32 $(PYTHONLIB) $(RUBYLIB)"; >> pathdef.c
+	@echo char_u *compiled_user = (char_u *)"$(USERNAME)"; >> pathdef.c
+	@echo char_u *compiled_sys = (char_u *)"$(USERDOMAIN)"; >> pathdef.c
+endif

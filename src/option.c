@@ -94,6 +94,7 @@ typedef enum
     , PV_ISK
     , PV_KEY
     , PV_KMAP
+    , PV_KP
     , PV_LBR
     , PV_LISP
     , PV_LIST
@@ -649,6 +650,14 @@ static struct vimoption
 			    {(char_u *)0L, (char_u *)0L}
 #endif
 			    },
+    {"cscopequickfix", "csqf", P_STRING|P_VI_DEF|P_COMMA|P_NODUP,
+#if defined(FEAT_CSCOPE) && defined(FEAT_QUICKFIX)
+			    (char_u *)&p_csqf, PV_NONE,
+			    {(char_u *)"", (char_u *)0L}},
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)0L, (char_u *)0L}},
+#endif
     {"cscopetag",   "cst",  P_BOOL|P_VI_DEF|P_VIM,
 #ifdef FEAT_CSCOPE
 			    (char_u *)&p_cst, PV_NONE,
@@ -1272,10 +1281,10 @@ static struct vimoption
 #endif
 			    {(char_u *)"", (char_u *)0L}},
     {"keywordprg",  "kp",   P_STRING|P_EXPAND|P_VI_DEF|P_SECURE,
-			    (char_u *)&p_kp, PV_NONE,
+			    (char_u *)&p_kp, OPT_BOTH(PV_KP),
 			    {
 #if defined(MSDOS) || defined(MSWIN)
-			    (char_u *)"",
+			    (char_u *)":help",
 #else
 #ifdef VMS
 			    (char_u *)"help",
@@ -3644,11 +3653,23 @@ do_set(arg, opt_flags)
 			    ++arg;	/* jump to after the '=' or ':' */
 
 			    /*
+			     * Set 'keywordprg' to ":help" if an empty
+			     * value was passed to :set by the user.
+			     * Misuse errbuf[] for the resulting string.
+			     */
+			    if (varp == (char_u *)&p_kp
+					      && (*arg == NUL || *arg == ' '))
+			    {
+				STRCPY(errbuf, ":help");
+				save_arg = arg;
+				arg = errbuf;
+			    }
+			    /*
 			     * Convert 'whichwrap' number to string, for
 			     * backwards compatibility with Vim 3.0.
 			     * Misuse errbuf[] for the resulting string.
 			     */
-			    if (varp == (char_u *)&p_ww && isdigit(*arg))
+			    else if (varp == (char_u *)&p_ww && isdigit(*arg))
 			    {
 				*errbuf = NUL;
 				i = getdigits(&arg);
@@ -4244,6 +4265,7 @@ check_buf_options(buf)
 #ifdef FEAT_CRYPT
     check_string_option(&buf->b_p_key);
 #endif
+    check_string_option(&buf->b_p_kp);
     check_string_option(&buf->b_p_mps);
     check_string_option(&buf->b_p_fo);
     check_string_option(&buf->b_p_isk);
@@ -5458,10 +5480,36 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     {
 	if (opt_strings_flags(p_ve, p_ve_values, &ve_flags, TRUE) != OK)
 	    errmsg = e_invarg;
-	else
+	else if (STRCMP(p_ve, oldval) != 0)
 	    /* Recompute cursor position in case the new ve setting
 	     * changes something. */
 	    coladvance(curwin->w_virtcol);
+    }
+#endif
+
+#if defined(FEAT_CSCOPE) && defined(FEAT_QUICKFIX)
+    else if (varp == &p_csqf)
+    {
+	if (p_csqf != NULL)
+	{
+	    char_u *p = p_csqf;
+
+	    while (*p != NUL)
+	    {
+		if (vim_strchr((char_u *)CSQF_CMDS, *p) == NULL
+			|| p[1] == NUL
+			|| vim_strchr((char_u *)CSQF_FLAGS, p[1]) == NULL
+			|| (p[2] != NUL && p[2] != ','))
+		{
+		    errmsg = e_invarg;
+		    break;
+		}
+		else if (p[2] == NUL)
+		    break;
+		else
+		    p += 3;
+	    }
+	}
     }
 #endif
 
@@ -6055,6 +6103,9 @@ set_bool_option(opt_idx, varp, value, opt_flags)
 	/* need to adjust the file name arguments and buffer names. */
 	buflist_slash_adjust();
 	alist_slash_adjust();
+# ifdef FEAT_EVAL
+	scriptnames_slash_adjust();
+# endif
     }
 #endif
 
@@ -7484,6 +7535,7 @@ get_varp_scope(p, opt_flags)
 	    case OPT_BOTH(PV_EFM):  return (char_u *)&(curbuf->b_p_efm);
 #endif
 	    case OPT_BOTH(PV_EP):   return (char_u *)&(curbuf->b_p_ep);
+	    case OPT_BOTH(PV_KP):   return (char_u *)&(curbuf->b_p_kp);
 	    case OPT_BOTH(PV_PATH): return (char_u *)&(curbuf->b_p_path);
 	    case OPT_BOTH(PV_AR):   return (char_u *)&(curbuf->b_p_ar);
 	    case OPT_BOTH(PV_TAGS): return (char_u *)&(curbuf->b_p_tags);
@@ -7519,6 +7571,8 @@ get_varp(p)
 	/* global option with local value: use local value if it's been set */
 	case OPT_BOTH(PV_EP):	return *curbuf->b_p_ep != NUL
 				    ? (char_u *)&curbuf->b_p_ep : p->var;
+	case OPT_BOTH(PV_KP):	return *curbuf->b_p_kp != NUL
+				    ? (char_u *)&curbuf->b_p_kp : p->var;
 	case OPT_BOTH(PV_PATH):	return *curbuf->b_p_path != NUL
 				    ? (char_u *)&(curbuf->b_p_path) : p->var;
 	case OPT_BOTH(PV_AR):	return curbuf->b_p_ar >= 0
@@ -7986,6 +8040,7 @@ buf_copy_options(buf, flags)
 	    buf->b_p_efm = empty_option;
 #endif
 	    buf->b_p_ep = empty_option;
+	    buf->b_p_kp = empty_option;
 	    buf->b_p_path = empty_option;
 	    buf->b_p_tags = empty_option;
 #ifdef FEAT_FIND_ID

@@ -4738,6 +4738,8 @@ nv_ident(cap)
     char_u	*ptr = NULL;
     char_u	*buf;
     char_u	*p;
+    char_u	*kp;		/* value of 'keywordprg' */
+    int		kp_help;	/* 'keywordprg' is ":help" */
     int		n = 0;		/* init for GCC */
     int		cmdchar;
     int		g_cmd;		/* "g" command */
@@ -4781,8 +4783,12 @@ nv_ident(cap)
     }
 
     /* Allocate buffer to put the command in.  Inserting backslashes can
-     * double the length of the word.  p_kp could be added and some numbers. */
-    buf = alloc((unsigned)(n * 2 + 30 + STRLEN(p_kp)));
+     * double the length of the word.  p_kp / curbuf->b_p_kp could be added
+     * and some numbers. */
+    kp = (*curbuf->b_p_kp == NUL ? p_kp : curbuf->b_p_kp);
+    kp_help = (*kp == NUL || STRCMP(kp, ":he") == 0
+						 || STRCMP(kp, ":help") == 0);
+    buf = alloc((unsigned)(n * 2 + 30 + STRLEN(kp)));
     if (buf == NULL)
 	return;
     buf[0] = NUL;
@@ -4806,14 +4812,14 @@ nv_ident(cap)
 	    break;
 
 	case 'K':
-	    if (*p_kp == NUL)
+	    if (kp_help)
 		STRCPY(buf, ":he ");
 	    else
 	    {
 		/* When a count is given, turn it into a range.  Is this
 		 * really what we want? */
-		isman = (STRCMP(p_kp, "man") == 0);
-		isman_s = (STRCMP(p_kp, "man -s") == 0);
+		isman = (STRCMP(kp, "man") == 0);
+		isman_s = (STRCMP(kp, "man -s") == 0);
 		if (cap->count0 != 0 && !(isman || isman_s))
 		    sprintf((char *)buf, ".,.+%ld", cap->count0 - 1);
 
@@ -4821,7 +4827,7 @@ nv_ident(cap)
 		if (cap->count0 == 0 && isman_s)
 		    STRCAT(buf, "man");
 		else
-		    STRCAT(buf, p_kp);
+		    STRCAT(buf, kp);
 		STRCAT(buf, " ");
 		if (cap->count0 != 0 && (isman || isman_s))
 		{
@@ -4856,11 +4862,12 @@ nv_ident(cap)
 	aux_ptr = (char_u *)(p_magic ? "/.*~[^$\\" : "/^$\\");
     else if (cmdchar == '#')
 	aux_ptr = (char_u *)(p_magic ? "/?.*~[^$\\" : "/?^$\\");
-    else if (cmdchar == 'K' && *p_kp != NUL)
+    else if (cmdchar == 'K' && !kp_help)
 	aux_ptr = (char_u *)" \t\\\"|!";
     else
 	/* Don't escape spaces and Tabs in a tag with a backslash */
 	aux_ptr = (char_u *)"\\|\"";
+
     p = buf + STRLEN(buf);
     while (n-- > 0)
     {

@@ -28,6 +28,7 @@ void MultiByteToWideChar_alloc __ARGS((UINT cp, DWORD flags, LPCSTR in, int inle
 void WideCharToMultiByte_alloc __ARGS((UINT cp, DWORD flags, LPCWSTR in, int inlen, LPSTR *out, int *outlen, LPCSTR def, LPBOOL useddef));
 int clip_mch_own_selection __ARGS((VimClipboard *cbd));
 void clip_mch_lose_selection __ARGS((VimClipboard *cbd));
+WCHAR *enc_to_ucs2 __ARGS((char_u *str, int *lenp));
 char_u *ucs2_to_enc __ARGS((short_u *str, int *lenp));
 void clip_mch_request_selection __ARGS((VimClipboard *cbd));
 void clip_mch_set_selection __ARGS((VimClipboard *cbd));

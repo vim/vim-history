@@ -9,7 +9,7 @@
 //   Icon and version information for the Win32 version of Vim
 //   Must be in DOS format <CR><NL>!
 
-#ifdef MING
+#ifdef __MINGW32__
 # include <windows.h>
 # ifndef VS_FFI_FILEFLAGSMASK
 #  define VS_FFI_FILEFLAGSMASK    0x0000003FL

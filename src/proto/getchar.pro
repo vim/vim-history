@@ -41,6 +41,7 @@ int char_avail __ARGS((void));
 void vungetc __ARGS((int c));
 int inchar __ARGS((char_u *buf, int maxlen, long wait_time));
 int fix_input_buffer __ARGS((char_u *buf, int len, int script));
+int input_available __ARGS((void));
 int do_map __ARGS((int maptype, char_u *arg, int mode, int abbrev));
 int get_map_mode __ARGS((char_u **cmdp, int forceit));
 void map_clear __ARGS((char_u *cmdp, char_u *arg, int forceit, int abbr));

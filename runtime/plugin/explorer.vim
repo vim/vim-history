@@ -1,7 +1,7 @@
 "=============================================================================
 " File: explorer.vim
 " Author: M A Aziz Ahmed (aziz@acorn-networks.com)
-" Last Change:	2003 May 11
+" Last Change:	2003 May 16
 " Version: 2.5 + changes
 " Additions by Mark Waggoner (waggoner@aracnet.com) et al.
 "-----------------------------------------------------------------------------
@@ -759,7 +759,7 @@ function! s:ExtractFileSize(line)
   if (w:longlist==0)
     return getfsize(s:ExtractFileName(a:line))
   else
-    return strpart(a:line,b:maxFileLen+2,b:maxFileSizeLen);
+    return strpart(a:line,b:maxFileLen+2,b:maxFileSizeLen)
   endif
 endfunction
 

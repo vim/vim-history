@@ -1563,7 +1563,8 @@ line_read_in:
 		     * Compare the current tag with the searched tag.
 		     */
 		    if (sortic)
-			tagcmp = tag_strnicmp(tagp.tagname, pathead, cmplen);
+			tagcmp = tag_strnicmp(tagp.tagname, pathead,
+							      (size_t)cmplen);
 		    else
 			tagcmp = STRNCMP(tagp.tagname, pathead, cmplen);
 
@@ -2546,7 +2547,12 @@ jumpto_tag(lbuf, forceit)
 
     /* if it was a CTRL-W CTRL-] command split window now */
     if (postponed_split)
+    {
 	win_split(postponed_split > 0 ? postponed_split : 0, 0);
+# ifdef FEAT_SCROLLBIND
+	curwin->w_p_scb = FALSE;
+# endif
+    }
 #endif
 
     /* A :ta from a help file will keep the b_help flag set.  For ":ptag" we

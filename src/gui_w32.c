@@ -1736,8 +1736,8 @@ gui_mch_draw_string(
     }
     else if (enc_codepage != 0 && (int)GetACP() != enc_codepage)
     {
-	/* If we want to display codepage data, and the current CP is not the ANSI
-	 * one, we need to go via Unicode. */
+	/* If we want to display codepage data, and the current CP is not the
+	 * ANSI one, we need to go via Unicode. */
 	if (unicodebuf != NULL)
 	{
 	    len = MultiByteToWideChar(enc_codepage,

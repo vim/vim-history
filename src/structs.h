@@ -1061,6 +1061,7 @@ struct file_buffer
 #ifdef FEAT_CRYPT
     char_u	*b_p_key;	/* 'key' */
 #endif
+    char_u	*b_p_kp;	/* 'keywordprg' */
 #ifdef FEAT_LISP
     int		b_p_lisp;	/* 'lisp' */
 #endif

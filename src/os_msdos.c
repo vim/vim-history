@@ -2236,6 +2236,12 @@ djgpp_setlocale(void)
 #define CF_OEMTEXT  0x07    /* Windows clipboard format: OEM (DOS) text */
 #define CF_VIMCLIP  0x04    /* trick: SYLK clipboard format for VimClipboard */
 
+static int Win16OpenClipboard(void);
+static int Win16CloseClipboard(void);
+static int Win16EmptyClipboard(void);
+static char_u *Win16GetClipboardData(int clip_data_format);
+static int Win16SetClipboardData(int clip_data_format, char_u *clip_data, int clip_data_size, int clip_data_type);
+
 /*
  * Make vim the owner of the current selection.  Return OK upon success.
  */
@@ -2269,23 +2275,23 @@ clip_mch_request_selection(VimClipboard *cbd)
     char_u	*pClipText = NULL;
     int		clip_data_format = 0;
 
-    if (OpenClipboard())
+    if (Win16OpenClipboard())
     {
 	/* Check for Vim's own clipboard format first.  The CF_VIMCLIP format
 	 * is just ordinary text (like CF_TEXT) except prepended by the
 	 * selection type (as a single character).  Note that under DOS we
 	 * actually cannot define a custom CF_VIMCLIP clipboard format; we
 	 * use instead one of the existing Windows-defined formats, usually
-	 * "DIF" or "SYLK".  See GetClipboardData() for details.
+	 * "DIF" or "SYLK".  See Win16GetClipboardData() for details.
 	 *
-	 * Note that GetClipboardData() returns the address of the memory
+	 * Note that Win16GetClipboardData() returns the address of the memory
 	 * block it allocated.  This is not necessary the start of the
 	 * clipboard text data: there may be other bytes ahead of the
 	 * text (particularly for CF_VIMCLIP) which are used for data
 	 * management.  So pClipText is not necessarily == pAllocated.
 	 */
 
-	if ((pAllocated = GetClipboardData(CF_VIMCLIP)) != NULL)
+	if ((pAllocated = Win16GetClipboardData(CF_VIMCLIP)) != NULL)
 	{
 	    clip_data_format = CF_VIMCLIP;
 	    pClipText = pAllocated;
@@ -2308,14 +2314,14 @@ clip_mch_request_selection(VimClipboard *cbd)
 	 * automatically creates a CF_OEMTEXT format as well.
 	 */
 
-	else if ((pAllocated = GetClipboardData(CF_TEXT)) != NULL)
+	else if ((pAllocated = Win16GetClipboardData(CF_TEXT)) != NULL)
 	{
 	    clip_data_format = CF_TEXT;
 	    pClipText = pAllocated;
 	    type = (vim_strchr((char*)pClipText, '\r') != NULL) ? MLINE : MCHAR;
 	}
 
-	else if ((pAllocated = GetClipboardData(CF_OEMTEXT)) != NULL)
+	else if ((pAllocated = Win16GetClipboardData(CF_OEMTEXT)) != NULL)
 	{
 	    clip_data_format = CF_OEMTEXT;
 	    pClipText = pAllocated;
@@ -2337,7 +2343,8 @@ clip_mch_request_selection(VimClipboard *cbd)
 	     * into <NL>.  Also, watch for possible null bytes at the end of
 	     * pClipText.  These are padding added by "get_clipboard_data"
 	     * (int 0x2f, AX= 0x1705) in order to round the data size up to the
-	     * next multiple of 32 bytes.  See GetClipboardData() for details.
+	     * next multiple of 32 bytes.  See Win16GetClipboardData() for
+	     * details.
 	     */
 
 	    pDest = strstr( pClipText, "\r\n" );    /* find first <CR><NL> */
@@ -2379,13 +2386,13 @@ clip_mch_request_selection(VimClipboard *cbd)
 	    /* Copy the cleaned-up data over to Vim's clipboard "*" register. */
 	    clip_yank_selection(type, pClipText, clip_data_size, cbd);
 
-	    /* Free the memory that GetClipboardData() allocated. */
+	    /* Free the memory that Win16GetClipboardData() allocated. */
 	    vim_free(pAllocated);
 	}
 
-	CloseClipboard();
+	Win16CloseClipboard();
 
-    }  // end if (OpenClipboard())
+    }  // end if (Win16OpenClipboard())
 }
 
 /*
@@ -2415,32 +2422,34 @@ clip_mch_set_selection( VimClipboard *cbd )
     if (clip_data_type < 0)	    /* could not convert? */
 	return;			    /* early exit */
 
-    if (OpenClipboard())
+    if (Win16OpenClipboard())
     {
-	if (EmptyClipboard())
+	if (Win16EmptyClipboard())
 	{
 	    int sentOK;
 
-	    sentOK = SetClipboardData(CF_TEXT, pClipData,
+	    sentOK = Win16SetClipboardData(CF_TEXT, pClipData,
 					      clip_data_size, clip_data_type);
-	    sentOK = SetClipboardData(CF_VIMCLIP,
+	    sentOK = Win16SetClipboardData(CF_VIMCLIP,
 			 pClipData, clip_data_size, clip_data_type) && sentOK;
 
 	    if (!sentOK)
 	    {
-		/* one or both of SetClipboardData() failed. */
-		/* Technically we don't know why SetClipboardData() failed, but
-		 * almost always it will be because there wasn't enough DOS
-		 * memory to bufer the data, so report that as the problem.
+		/* one or both of Win16SetClipboardData() failed. */
+		/* Technically we don't know why Win16SetClipboardData()
+		 * failed, but almost always it will be because there wasn't
+		 * enough DOS memory to bufer the data, so report that as the
+		 * problem.
 		 *
-		 * We report the error here (instead of in SetClipboardData())
-		 * because we don't want the error reported twice.
+		 * We report the error here (instead of in
+		 * Win16SetClipboardData()) because we don't want the error
+		 * reported twice.
 		 */
 		EMSG("E450: Selection too large, cannot allocate DOS buffer");
 	    }
 	}
 
-	CloseClipboard();
+	Win16CloseClipboard();
     }
 
     /* release memory allocated by clip_convert_selection() */
@@ -2450,12 +2459,12 @@ clip_mch_set_selection( VimClipboard *cbd )
 }
 
 /*
- * OpenClipboard: open the Windows clipboard.  The clipboard must be open
+ * Win16OpenClipboard: open the Windows clipboard.  The clipboard must be open
  * before it can be communicated with at all.  Return TRUE on success,
  * FALSE on failure.
  */
-    int
-OpenClipboard()
+    static int
+Win16OpenClipboard(void)
 {
     __dpmi_regs  dpmi_regs;
 
@@ -2525,12 +2534,12 @@ OpenClipboard()
 }
 
 /*
- * CloseClipboard: close the Windows clipboard.  Return TRUE on
+ * Win16CloseClipboard: close the Windows clipboard.  Return TRUE on
  * success, FALSE on failure.  This function can always be called,
  * whether the clipboard is open or not.
  */
-    int
-CloseClipboard()
+    static int
+Win16CloseClipboard(void)
 {
     __dpmi_regs  dpmi_regs;
 
@@ -2549,11 +2558,11 @@ CloseClipboard()
 }
 
 /*
- * EmptyClipboard: empty the (previously opened) Windows clipboard.
+ * Win16EmptyClipboard: empty the (previously opened) Windows clipboard.
  * Return TRUE on success, FALSE on failure.
  */
-    int
-EmptyClipboard()
+    static int
+Win16EmptyClipboard(void)
 {
     __dpmi_regs  dpmi_regs;
 
@@ -2579,7 +2588,7 @@ EmptyClipboard()
  * FreeDOSMemory: a helper function to free memory previously
  * allocated by a call to __dpmi_allocate_dos_memory().
  */
-    void
+    static void
 FreeDOSMemory(int protected_mode_selector)
 {
     /* Free the DOS buffer and release the DPMI prot-mode selector.
@@ -2594,7 +2603,7 @@ FreeDOSMemory(int protected_mode_selector)
 }
 
 /*
- * GetClipboardData: query the Windows clipboard as to whether data
+ * Win16GetClipboardData: query the Windows clipboard as to whether data
  * is available in a particular clipboard format.  If data is
  * available, allocate a buffer for it and read the data from the
  * clipboard into the buffer.  Return a pointer to the buffer.  If
@@ -2605,8 +2614,8 @@ FreeDOSMemory(int protected_mode_selector)
  * once it's finished using it.  The memory should be freed by
  * calling vim_free().
  */
-    char_u*
-GetClipboardData(int clip_data_format)
+    static char_u *
+Win16GetClipboardData(int clip_data_format)
 {
     __dpmi_regs  dpmi_regs;
 
@@ -2751,13 +2760,13 @@ GetClipboardData(int clip_data_format)
 }
 
 /*
- * SetClipboardData: send 'clip_data_size' bytes of data from the buffer
+ * Win16SetClipboardData: send 'clip_data_size' bytes of data from the buffer
  * pointed to by 'clip_data', to the Windows clipboard.  The data is
  * registered with the clipboard as being in the 'clip_data_format'
  * format.
  */
-    int
-SetClipboardData(
+    static int
+Win16SetClipboardData(
 	int	clip_data_format,
 	char_u	*clip_data,
 	int	clip_data_size,
@@ -2897,8 +2906,9 @@ vim_chmod(char_u *name)
     }
     else
 	p = NULL;
-#if defined(__BORLANDC__) && (__BORLANDC__ >= 0x500)
-    /* this also sets the archive bit */
+#if defined(__BORLANDC__) && (__BORLANDC__ > 0x410)
+    /* this also sets the archive bit, supported by Borland C 4.0 and later,
+     * where __BORLANDC__ is 0x450 (3.1 is 0x410) */
     f = _rtl_chmod((char *)name, 0, 0);
 #else
     f = _chmod((char *)name, 0, 0);
@@ -2930,7 +2940,7 @@ mch_setperm(
     long	perm)
 {
     perm |= FA_ARCH;	    /* file has changed, set archive bit */
-#if defined(__BORLANDC__) && (__BORLANDC__ >= 0x500)
+#if defined(__BORLANDC__) && (__BORLANDC__ > 0x410)
     return (_rtl_chmod((char *)name, 1, (int)perm) == -1 ? FAIL : OK);
 #else
     return (_chmod((char *)name, 1, (int)perm) == -1 ? FAIL : OK);

@@ -40,8 +40,8 @@ confirm(void)
 popup_gvim_path(char *buf)
 {
     HKEY	key_handle;
-    long	value_type;
-    long	bufsize = BUFSIZE;
+    DWORD	value_type;
+    DWORD	bufsize = BUFSIZE;
     int		r;
 
     /* Open the key where the path to gvim.exe is stored. */
@@ -171,7 +171,7 @@ remove_if_exists(char *path, char *filename)
 }
 
     static void
-remove_icons()
+remove_icons(void)
 {
     char	path[BUFSIZE];
     int		i;
@@ -182,7 +182,7 @@ remove_icons()
 }
 
     static void
-remove_start_menu()
+remove_start_menu(void)
 {
     char	path[BUFSIZE];
     int		i;

@@ -1078,6 +1078,8 @@ EXTERN int	echo_wid_arg INIT(= FALSE);	/* --echo-wid argument */
 
 #ifdef FEAT_CLIENTSERVER
 EXTERN char_u	*serverName INIT(= NULL);	/* name of the server */
+EXTERN int	received_from_client INIT(= FALSE);	/* received text from
+							   client */
 # ifdef FEAT_X11
 EXTERN Window	commWindow INIT(= None);
 EXTERN Window	clientWindow INIT(= None);

@@ -2865,7 +2865,7 @@ gui_mch_wait_for_chars(
 	 */
 	st = gui_beos_process_event(timeout);
 
-	if (!vim_is_input_buf_empty())
+	if (input_available())
 	    return OK;
 	if (st < B_OK)		    /* includes B_TIMED_OUT */
 	    return FAIL;

@@ -1,4 +1,4 @@
-*if_ruby.txt*   For Vim version 6.2d.  Last change: 2001 Oct 25
+*if_ruby.txt*   For Vim version 6.2e.  Last change: 2001 Oct 25
 
 
 		  VIM REFERENCE MANUAL    by Shugo Maeda

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	A-A-P recipe
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2003 May 05
+" Last Change:	2003 May 16
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")
@@ -65,6 +65,7 @@ syn match	aapCommand '^\s*:publishall\>'
 syn match	aapCommand '^\s*:pushdir\>'
 syn match	aapCommand '^\s*:quit\>'
 syn match	aapCommand '^\s*:recipe\>'
+syn match	aapCommand '^\s*:refresh\>'
 syn match	aapCommand '^\s*:remove\>'
 syn match	aapCommand '^\s*:removeall\>'
 syn match	aapCommand '^\s*:require\>'
@@ -73,6 +74,7 @@ syn match	aapCommand '^\s*:reviseall\>'
 syn match	aapCommand '^\s*:route\>'
 syn match	aapCommand '^\s*:rule\>'
 syn match	aapCommand '^\s*:start\>'
+syn match	aapCommand '^\s*:symlink\>'
 syn match	aapCommand '^\s*:sys\>'
 syn match	aapCommand '^\s*:syspath\>'
 syn match	aapCommand '^\s*:system\>'

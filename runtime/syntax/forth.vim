@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:    FORTH
 " Maintainer:  Christian V. J. Brüssow <cvjb@cvjb.de>
-" Last Change: Don 19 Sep 2002 10:05:36 CEST
+" Last Change: Fre 04 Apr 2003 17:15:27 CEST
 " Filenames:   *.fs,*.ft
 " URL:	       http://www.cvjb.de/comp/vim/forth.vim
 
@@ -12,6 +12,10 @@
 " the patches.
 
 " Many Thanks to...
+" 
+" 2003-04-03:
+" Ron Aaron <ronaaron@exchange.microsoft.com> made updates for an
+" improved Win32Forth support.
 "
 " 2002-04-22:
 " Charles Shattuck <charley@forth.org> helped me to settle up with the
@@ -99,8 +103,8 @@ syn keyword forthLoop ?DO LOOP I J K +DO U+DO -DO U-DO DO +LOOP -LOOP
 syn keyword forthLoop UNLOOP LEAVE ?LEAVE EXIT DONE FOR NEXT
 
 " new words
-syn match forthColonDef '\<:\s*[^ \t]\+\>'
-syn keyword forthEndOfColonDef ;
+syn match forthColonDef '\<:m\?\s*[^ \t]\+\>'
+syn keyword forthEndOfColonDef ; ;M ;m
 syn keyword forthDefine CONSTANT 2CONSTANT FCONSTANT VARIABLE 2VARIABLE CREATE
 syn keyword forthDefine USER VALUE TO DEFER IS DOES> IMMEDIATE COMPILE-ONLY
 syn keyword forthDefine COMPILE RESTRICT INTERPRET POSTPONE EXECUTE LITERAL
@@ -113,6 +117,10 @@ syn match forthDefine "'"
 syn match forthDefine '\<\[\>'
 syn match forthDefine "\[']"
 syn match forthDefine '\[COMPILE]'
+syn match forthClassDef '\<:class\s*[^ \t]\+\>'
+syn match forthObjectDef '\<:object\s*[^ \t]\+\>'
+syn keyword forthEndOfClassDef ';class'
+syn keyword forthEndOfObjectDef ';object'
 
 " debugging
 syn keyword forthDebug PRINTDEBUGDATA PRINTDEBUGLINE
@@ -122,7 +130,7 @@ syn match forthDebug "\<\~\~\>"
 syn keyword forthAssembler ASSEMBLER CODE END-CODE ;CODE FLUSH-ICACHE C,
 
 " basic character operations
-syn keyword forthCharOps (.) EXPECT FIND WORD TYPE -TRAILING EMIT KEY
+syn keyword forthCharOps (.) CHAR EXPECT FIND WORD TYPE -TRAILING EMIT KEY
 syn keyword forthCharOps KEY? TIB CR
 " recognize 'char (' or '[char] (' correctly, so it doesn't
 " highlight everything after the paren as a comment till a closing ')'
@@ -147,7 +155,6 @@ syn keyword forthVocs VOCABULARY DEFINITIONS
 " numbers
 syn keyword forthMath DECIMAL HEX BASE
 syn match forthInteger '\<-\=[0-9.]*[0-9.]\+\>'
-" XXX
 " recognize hex and binary numbers, the '$' and '%' notation is for gforth
 syn match forthInteger '\<\$\x*\x\+\>' " *1* --- dont't mess
 syn match forthInteger '\<\x*\d\x*\>'  " *2* --- this order!
@@ -165,10 +172,13 @@ syn match forthComment '\\\s.*$' contains=forthTodo
 syn region forthComment start='\\S\s' end='.*' contains=forthTodo
 syn match forthComment '\.(\s[^)]*)' contains=forthTodo
 syn region forthComment start='(\s' skip='\\)' end=')' contains=forthTodo
+syn region forthComment start='/\*' end='\*/' contains=forthTodo
 "syn match forthComment '(\s[^\-]*\-\-[^\-]*)' contains=forthTodo
 
 " Include files
 syn match forthInclude '^INCLUDE\s\+\k\+'
+syn match forthInclude '^fload\s\+'
+syn match forthInclude '^needs\s\+'
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
@@ -207,6 +217,11 @@ if version >= 508 || !exists("did_forth_syn_inits")
     HiLink forthVocs Statement
     HiLink forthString String
     HiLink forthComment Comment
+    HiLink forthClassDef Define
+    HiLink forthEndOfClassDef Define
+    HiLink forthObjectDef Define
+    HiLink forthEndOfObjectDef Define
+    HiLink forthInclude Include
 
     delcommand HiLink
 endif

@@ -5691,6 +5691,9 @@ handle_drop(filec, filev, split)
     {
 	if (win_split(0, 0) == FAIL)
 	    return;
+# ifdef FEAT_SCROLLBIND
+	curwin->w_p_scb = FALSE;
+# endif
 
 	/* When splitting the window, create a new alist.  Otherwise the
 	 * existing one is overwritten. */
@@ -6007,7 +6010,21 @@ ex_splitview(eap)
 #endif
     if (win_split(eap->addr_count > 0 ? (int)eap->line2 : 0,
 				     *eap->cmd == 'v' ? WSP_VERT : 0) != FAIL)
+    {
+#ifdef FEAT_SCROLLBIND
+	/* Reset 'scrollbind' when editing another file, but keep it when
+	 * doing ":split" without arguments. */
+	if (*eap->arg != NUL
+#ifdef FEAT_BROWSE
+		|| cmdmod.browse
+#endif
+	   )
+	    curwin->w_p_scb = FALSE;
+	else
+	    do_check_scrollbind(FALSE);
+#endif
 	do_exedit(eap, old_curwin);
+    }
 
 #if defined(FEAT_SEARCHPATH) || defined(FEAT_BROWSE)
 theend:

@@ -3671,7 +3671,7 @@ check_termcode(max_offset, buf, buflen)
     int		idx = 0;
 #ifdef FEAT_MOUSE
 # if !defined(UNIX) || defined(FEAT_MOUSE_XTERM) || defined(FEAT_GUI)
-    char_u	bytes[4];
+    char_u	bytes[6];
     int		num_bytes;
 # endif
     int		mouse_code = 0;	    /* init for GCC */
@@ -3982,12 +3982,29 @@ check_termcode(max_offset, buf, buflen)
 		 */
 		for (;;)
 		{
-		    num_bytes = get_bytes_from_buf(tp + slen, bytes, 3);
-		    if (num_bytes == -1)	/* not enough coordinates */
-			return -1;
-		    mouse_code = bytes[0];
-		    mouse_col = bytes[1] - ' ' - 1;
-		    mouse_row = bytes[2] - ' ' - 1;
+#ifdef FEAT_GUI
+		    if (gui.in_use)
+		    {
+			/* GUI uses more bits for columns > 223 */
+			num_bytes = get_bytes_from_buf(tp + slen, bytes, 5);
+			if (num_bytes == -1)	/* not enough coordinates */
+			    return -1;
+			mouse_code = bytes[0];
+			mouse_col = 128 * (bytes[1] - ' ' - 1)
+							 + bytes[2] - ' ' - 1;
+			mouse_row = 128 * (bytes[3] - ' ' - 1)
+							 + bytes[4] - ' ' - 1;
+		    }
+		    else
+#endif
+		    {
+			num_bytes = get_bytes_from_buf(tp + slen, bytes, 3);
+			if (num_bytes == -1)	/* not enough coordinates */
+			    return -1;
+			mouse_code = bytes[0];
+			mouse_col = bytes[1] - ' ' - 1;
+			mouse_row = bytes[2] - ' ' - 1;
+		    }
 		    slen += num_bytes;
 
 		    /* If the following bytes is also a mouse code and it has
@@ -4002,7 +4019,13 @@ check_termcode(max_offset, buf, buflen)
 		    if (STRNCMP(tp, tp + slen, (size_t)j) == 0
 			    && tp[slen + j] == mouse_code
 			    && tp[slen + j + 1] != NUL
-			    && tp[slen + j + 2] != NUL)
+			    && tp[slen + j + 2] != NUL
+#ifdef FEAT_GUI
+			    && (!gui.in_use
+				|| (tp[slen + j + 3] != NUL
+					&& tp[slen + j + 4] != NUL))
+#endif
+			    )
 			slen += j;
 		    else
 			break;
@@ -4028,6 +4051,15 @@ check_termcode(max_offset, buf, buflen)
 		     * remember that it was a mouse wheel click. */
 		    wheel_code = mouse_code;
 		}
+#   ifdef FEAT_MOUSE_XTERM
+		else if (held_button == MOUSE_RELEASE
+			&& (mouse_code == 0x23 || mouse_code == 0x24))
+		{
+		    /* Apparently used by rxvt scroll wheel. */
+		    wheel_code = mouse_code - 0x23 + MOUSEWHEEL_LOW;
+		}
+#   endif
+
 #   if defined(UNIX) && defined(FEAT_MOUSE_TTY)
 		else if (use_xterm_mouse() > 1)
 		{
@@ -4389,7 +4421,11 @@ check_termcode(max_offset, buf, buflen)
 
 	    /* Interpret the mouse code */
 	    current_button = (mouse_code & MOUSE_CLICK_MASK);
-	    if (current_button == MOUSE_RELEASE)
+	    if (current_button == MOUSE_RELEASE
+# ifdef FEAT_MOUSE_XTERM
+		    && wheel_code == 0
+# endif
+		    )
 	    {
 		/*
 		 * If we get a mouse drag or release event when

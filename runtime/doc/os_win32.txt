@@ -1,4 +1,4 @@
-*os_win32.txt*  For Vim version 6.2d.  Last change: 2002 Mar 07
+*os_win32.txt*  For Vim version 6.2e.  Last change: 2002 Mar 07
 
 
 		  VIM REFERENCE MANUAL    by George Reilly

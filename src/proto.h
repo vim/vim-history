@@ -38,7 +38,7 @@
 # if defined(UNIX) || defined(__EMX__) || defined(VMS)
 #  include "os_unix.pro"
 # endif
-# ifdef MSDOS
+# if defined(MSDOS) || defined(WIN16)
 #  include "os_msdos.pro"
 # endif
 # ifdef WIN16

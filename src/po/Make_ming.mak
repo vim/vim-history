@@ -42,11 +42,11 @@ all: $(MOFILES)
 
 first_time:
 	$(XGETTEXT) --default-domain=$(LANGUAGE) \
-		--add-comments --keyword=_ --keyword=N_ $(wildcard ../*.c) $(wildcard ../globals.h)
+		--add-comments --keyword=_ --keyword=N_ $(wildcard ../*.c) ../if_perl.xs $(wildcard ../globals.h)
 
 $(LANGUAGES):
 	$(XGETTEXT) --default-domain=$(PACKAGE) \
-		--add-comments --keyword=_ --keyword=N_ $(wildcard ../*.c) $(wildcard ../globals.h)
+		--add-comments --keyword=_ --keyword=N_ $(wildcard ../*.c) ../if_perl.xs $(wildcard ../globals.h)
 	$(MV) $(PACKAGE).po $(PACKAGE).pot
 	$(CP) $@.po $@.po.orig
 	$(MV) $@.po $@.po.old
