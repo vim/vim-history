@@ -481,19 +481,19 @@ block_insert(oap, s, b_insert, bdp)
     int		count = 0;	/* extra spaces to replace a cut TAB */
     int		spaces = 0;	/* non-zero if cutting a TAB */
     colnr_t	offset;		/* pointer along new line */
-    int		s_len;		/* STRLEN(s) */
+    unsigned	s_len;		/* STRLEN(s) */
     char_u	*newp, *oldp;	/* new, old lines */
     linenr_t	lnum;		/* loop var */
     int		oldstate = State;
 
     State = INSERT;		/* don't want REPLACE for State */
+    s_len = STRLEN(s);
+
     for (lnum = oap->start.lnum + 1; lnum <= oap->end.lnum; lnum++)
     {
 	block_prep(oap, bdp, lnum, TRUE);
 	if (bdp->is_short && b_insert)
 	    continue;	/* OP_INSERT, line ends before block start */
-
-	s_len = STRLEN(s);
 
 	oldp = ml_get(lnum);
 
@@ -1818,8 +1818,9 @@ swapchar(op_type, pos)
  * op_insert - Insert and append operators for Visual mode.
  */
     void
-op_insert(oap)
+op_insert(oap, count1)
     OPARG	*oap;
+    long	count1;
 {
     long		ins_len, pre_textlen = 0;
     char_u		*firstline, *ins_text;
@@ -1865,7 +1866,7 @@ op_insert(oap)
 	    inc_cursor();
     }
 
-    edit(NUL, FALSE, (linenr_t)1);
+    edit(NUL, FALSE, (linenr_t)count1);
 
     /* if user has moved off this line, we don't know what to do, so do
      * nothing */

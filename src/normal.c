@@ -1868,7 +1868,8 @@ do_pending_operator(cap, searchbuff,
 		/* This is a new edit command, not a restart.  We don't edit
 		 * recursively. */
 		restart_edit = 0;
-		op_insert(oap);	/* handles insert & append; will call edit() */
+		op_insert(oap, cap->count1);/* handles insert & append
+					     * will call edit() */
 	    }
 #endif
 	    break;

@@ -18,7 +18,7 @@ int op_delete __ARGS((OPARG *oap));
 int op_replace __ARGS((OPARG *oap, int c));
 void op_tilde __ARGS((OPARG *oap));
 void swapchar __ARGS((int op_type, FPOS *pos));
-void op_insert __ARGS((OPARG *oap));
+void op_insert __ARGS((OPARG *oap, long count1));
 int op_change __ARGS((OPARG *oap));
 void init_yank __ARGS((void));
 int op_yank __ARGS((OPARG *oap, int deleting, int mess));
