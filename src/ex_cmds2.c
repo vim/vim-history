@@ -85,7 +85,7 @@ do_debug(cmd)
 #ifdef FEAT_SNIFF
 	ProcessSniffRequests();
 #endif
-	cmdline = getcmdline('>', 0L, 0);
+	cmdline = getcmdline_prompt('>', NULL, 0);
 	cmdline_row = msg_row;
 	if (cmdline != NULL)
 	{
