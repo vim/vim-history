@@ -3263,13 +3263,25 @@ win_line(wp, lnum, startrow, endrow)
 			mb_l = 1;
 		    else if (mb_l > 1)
 		    {
-			if (ptr[1] != NUL)
+			/* We assume a second byte below 32 is illegal.
+			 * Hopefully this is OK for all double-byte encodings!
+			 */
+			if (ptr[1] < 32)
 			    mb_c = (c << 8) + ptr[1];
 			else
 			{
-			    /* head byte at end of line */
-			    mb_l = 1;
-			    transchar_nonprint(extra, c);
+			    if (ptr[1] == NUL)
+			    {
+				/* head byte at end of line */
+				mb_l = 1;
+				transchar_nonprint(extra, c);
+			    }
+			    else
+			    {
+				/* illegal tail byte */
+				mb_l = 2;
+				STRCPY(extra, "XX");
+			    }
 			    p_extra = extra;
 			    n_extra = (int)STRLEN(extra) - 1;
 			    c_extra = NUL;
