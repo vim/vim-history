@@ -9,6 +9,7 @@ void putcmdline __ARGS((int c, int shift));
 void unputcmdline __ARGS((void));
 int put_on_cmdline __ARGS((char_u *str, int len, int redraw));
 void redrawcmdline __ARGS((void));
+void redrawcmd __ARGS((void));
 void compute_cmdrow __ARGS((void));
 void gotocmdline __ARGS((int clr));
 char_u *ExpandOne __ARGS((expand_T *xp, char_u *str, char_u *orig, int options, int mode));

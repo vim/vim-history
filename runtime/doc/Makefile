@@ -69,6 +69,7 @@ DOCS = \
 	quickref.txt \
 	quotes.txt \
 	recover.txt \
+	remote.txt \
 	repeat.txt \
 	rightleft.txt \
 	scroll.txt \
@@ -181,6 +182,7 @@ HTMLS = \
 	quickref.html \
 	quotes.html \
 	recover.html \
+	remote.html \
 	repeat.html \
 	rightleft.html \
 	scroll.html \
@@ -238,7 +240,7 @@ HTMLS = \
 .SUFFIXES:
 .SUFFIXES: .c .o .txt .html
 
-all: tags vim.man vimdiff.man vimtutor.man xxd.man uganda.nsis.txt
+all: tags vim.man vimdiff.man vimtutor.man xxd.man
 
 # We should use Vim to generate the tags file:
 #	vim -c "helptags ." -c quit

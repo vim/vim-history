@@ -123,7 +123,7 @@ gui_mswin_get_menu_height(
     }
 
     if (fix_window && menu_height != old_menu_height)
-	gui_set_shellsize(FALSE);
+	gui_set_shellsize(FALSE, FALSE);
 
     old_menu_height = menu_height;
     return menu_height;
@@ -691,17 +691,16 @@ gui_mch_init(void)
 }
 
 
-
 /*
  * Set the size of the window to the given width and height in pixels.
  */
     void
-gui_mch_set_shellsize(int width, int height, int min_width, int min_height,
-		    int base_width, int base_height)
+gui_mch_set_shellsize(int width, int height,
+	int min_width, int min_height, int base_width, int base_height)
 {
-    RECT    workarea_rect;
-    int     win_width, win_height;
-    int	    win_xpos, win_ypos;
+    RECT	workarea_rect;
+    int		win_width, win_height;
+    int		win_xpos, win_ypos;
     WINDOWPLACEMENT wndpl;
 
     /* try to keep window completely on screen */

@@ -35,8 +35,14 @@ Disable a warning about lack of polymorphic type support for the following reaso
 - the dimm.tlb is not used at all
 - on top of it, there is no plans to port the app using dimm.idl to 64b platform.
 */
+/*
+ * midl_pragma is unsupported in midl version 3.01 shipped with VC5.0.
+ * It is supported in midl version 5.01 shipped with VC6.0
+ * I could not produce message 2395. Is this needed? W.Briscoe 2001-08-14
+ */
+#if (__midl >= 501)
 midl_pragma warning( disable: 2395) // polymorphic types not supported in the TLB
-
+#endif
 
 #ifndef DO_NO_IMPORTS
 import "unknwn.idl";

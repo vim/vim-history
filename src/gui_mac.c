@@ -77,7 +77,7 @@ static    OSType	_ftype = 'TEXT';
 
 /* CARBON version only tested with Project Builder under MacOS X */
 #undef USE_CARBONIZED
-#if defined(__APPLE_CC__) && defined(TARGET_API_MAC_CARBON)
+#if (defined(__APPLE_CC__) || defined(__MRC__)) && defined(TARGET_API_MAC_CARBON)
 # if TARGET_API_MAC_CARBON
 #  define USE_CARBONIZED
 # endif
@@ -1242,7 +1242,7 @@ pascal OSErr Handle_unknown_AE (const AppleEvent *theAEvent, AppleEvent *theRepl
 
 
 
-#ifdef __APPLE_CC__
+#if TARGET_API_MAC_CARBON
 # define NewAEEventHandlerProc(x) NewAEEventHandlerUPP(x)
 #endif
 
@@ -1680,7 +1680,7 @@ gui_mac_doInDragClick (where, whichWindow)
  * Handle the click in the grow box
  */
     void
-gui_mac_doInGrowClick (where, whichWindow)
+gui_mac_doInGrowClick(where, whichWindow)
     Point	where;
     WindowPtr	whichWindow;
 {
@@ -1718,7 +1718,7 @@ gui_mac_doInGrowClick (where, whichWindow)
 	 * by the user. This cause some overhead
 	 * TODO: add a check inside gui_resize_shell?
          */
-	gui_set_shellsize(FALSE);
+	gui_set_shellsize(TRUE, FALSE);
 
 	/*
          * Origin of the code below is unknown.
@@ -1753,7 +1753,9 @@ gui_mac_doUpdateEvent(event)
     WindowPtr	whichWindow;
     GrafPtr	savePort;
     RgnHandle	updateRgn;
+#ifdef USE_CARBONIZED
     Rect	updateRect;
+#endif
     Rect	*updateRectPtr;
     Rect	rc;
     Rect	growRect;
@@ -2311,7 +2313,9 @@ gui_mac_find_font (font_name)
     short	font_id;
     short	size=9;
     GuiFont	font;
+#if 0 
     char_u      *fontNamePtr;
+#endif
 
     for (p = font_name; ((*p != 0) && (*p != ':')); p++)
 	;
@@ -2482,7 +2486,7 @@ gui_mch_prepare(argc, argv)
     gui.rev_video = FALSE;
     gui.in_focus = TRUE; /* For the moment -> syn. of front application */
 
-#ifdef __APPLE_CC__
+#if TARGET_API_MAC_CARBON
     gScrollAction = NewControlActionUPP (gui_mac_scroll_action);
     gScrollDrag   = NewControlActionUPP (gui_mac_drag_thumb);
 #else
@@ -2635,14 +2639,13 @@ gui_mch_set_winpos(int x, int y)
 }
 
     void
-gui_mch_set_shellsize(width, height, min_width, min_height,
-		base_width, base_height)
-    int		width;
-    int		height;
-    int		min_width;
-    int		min_height;
-    int		base_width;
-    int		base_height;
+gui_mch_set_shellsize(
+    int		width,
+    int		height,
+    int		min_width,
+    int		min_height,
+    int		base_width,
+    int		base_height)
 {
 #ifdef USE_CARBONIZED
     CGrafPtr	VimPort;
@@ -3123,6 +3126,17 @@ gui_mch_iconify()
      *	     -hide application?
      */
 }
+
+#if defined(FEAT_EVAL) || defined(PROTO)
+/*
+ * Bring the Vim window to the foreground.
+ */
+    void
+gui_mch_set_foreground()
+{
+    /* TODO */
+}
+#endif
 
 /*
  * Draw a cursor without focus.
@@ -4185,7 +4199,6 @@ gui_mch_browse(
     Str255		Prompt;
     Str255		DefaultName;
     Str255		Directory;
-    char_u		fname[256];
 
     /* TODO: split dflt in path and filename */
 
@@ -4621,8 +4634,8 @@ char_u *FullPathFromFSSpec_save (FSSpec file)
     char_u      *filenamePtr = fname;
     OSErr       error;
     int		folder = 1;
-    char        *p;
 #ifdef USE_UNIXFILENAME
+    char        *p;
     SInt16	dfltVol_vRefNum;
     SInt32      dfltVol_dirID;
     FSRef	refFile;

@@ -11,15 +11,15 @@
 # comment the next line if you do not want to add Native Language Support
 !define HAVE_NLS
 
-Name "Vim 6.0ar"
-OutFile gVim60ar.exe
+Name "Vim 6.0as"
+OutFile gVim60as.exe
 CRCCheck on
-ComponentText "This will install Vim 6.0ar on your computer."
+ComponentText "This will install Vim 6.0as on your computer."
 DirText "Choose a directory to install Vim (should end in 'vim')"
 SetDatablockOptimize on
 Icon icons\vim_16c.ico
-UninstallText "This will uninstall Vim 6.0ar from your system."
-UninstallExeName vim60ar\uninstall-gui.exe
+UninstallText "This will uninstall Vim 6.0as from your system."
+UninstallExeName vim60as\uninstall-gui.exe
 UninstallIcon icons\vim_uninst_16c.ico
 BGGradient 004000 008200 ffffff
 LicenseText "You should read the following before installing:"
@@ -41,7 +41,7 @@ SilentInstall normal
 
 Function .onInit
   MessageBox MB_YESNO|MB_ICONQUESTION \
-	"This will install Vim 6.0ar on your computer.$\n Continue?" IDYES NoAbort
+	"This will install Vim 6.0as on your computer.$\n Continue?" IDYES NoAbort
 
   Abort ; causes installer to quit.
   NoAbort:
@@ -77,7 +77,7 @@ Function .onInit
 # $1 - holds the parameters to be passed to install.exe.  Starts with OLE
 #      registration (since a non-OLE gvim will not complain, and we want to
 #      always register an OLE gvim).
-  StrCpy $0 "$INSTDIR\vim60ar"
+  StrCpy $0 "$INSTDIR\vim60as"
   StrCpy $1 "-register-OLE"
 
 FunctionEnd
@@ -121,7 +121,7 @@ Function .onInstFailed
 FunctionEnd
 
 Function un.onUnInstSuccess
-  MessageBox MB_OK|MB_ICONINFORMATION "Vim 6.0ar has been (partly) removed from your system"
+  MessageBox MB_OK|MB_ICONINFORMATION "Vim 6.0as has been (partly) removed from your system"
 FunctionEnd
 
 ##########################################################
@@ -129,7 +129,7 @@ Section "Vim executables and runtime files"
 SectionIn 1,2,3
 
 # we need also this here if the user changes the instdir
-StrCpy $0 "$INSTDIR\vim60ar"
+StrCpy $0 "$INSTDIR\vim60as"
 
 SetOutPath $0
 File ..\src\gvim.exe
@@ -274,7 +274,7 @@ SectionEnd
 Section Uninstall
 
 # Apparently $INSTDIR is set to the directory where the uninstaller is created.
-# Thus the "vim60ar" directory is included in it.
+# Thus the "vim60as" directory is included in it.
 StrCpy $0 "$INSTDIR"
 
 ; If VisVim was installed, unregister the DLL

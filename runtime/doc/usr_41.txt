@@ -1,4 +1,4 @@
-*usr_41.txt*	For Vim version 6.0ar.  Last change: 2001 Aug 07
+*usr_41.txt*	For Vim version 6.0as.  Last change: 2001 Aug 19
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -633,6 +633,15 @@ Interactive:
 	input()			get a line from the user
 	inputsecret()		get a line from the user without showing it
 	inputdialog()		get a line from the user in a dialog
+
+Vim server:
+	serverlist()		return the list of server names
+	remote_send()		send command characters to a Vim server
+	remote_expr()		evaluate an expression in a Vim server
+	server2client()		send a reply to a client of a Vim server
+	remote_peek()		check if there is a reply from a Vim server
+	remote_read()		read a reply from a Vim server
+	foreground()		move the Vim window to the foreground
 
 Various:
 	mode()			get current editing mode

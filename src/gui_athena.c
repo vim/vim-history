@@ -832,14 +832,13 @@ gui_mch_new_menu_font()
 #endif
 		     );
     }
-    gui_set_shellsize(TRUE);
+    gui_set_shellsize(FALSE, TRUE);
     ui_new_shellsize();
     if (oldpuller != None)
 	XFreePixmap(gui.dpy, oldpuller);
 }
 
 #if defined(FEAT_BEVAL) || defined(PROTO)
-# if defined(FEAT_XFONTSET) || defined(PROTO)
     void
 gui_mch_new_tooltip_font()
 {
@@ -854,7 +853,6 @@ gui_mch_new_tooltip_font()
 	gui_mch_submenu_change(menu, FALSE);
 #  endif
 }
-# endif
 
     void
 gui_mch_new_tooltip_colors()
@@ -925,7 +923,7 @@ gui_mch_submenu_change(menu, colors)
 		    Arg args[1];
 
 		    args[0].name = XtNfontSet;
-		    args[0].value = (XtArgVal)gui.balloonEval_fontList;
+		    args[0].value = (XtArgVal)gui.balloonEval_fontset;
 		    XtSetValues(mp->tip->balloonLabel,
 				&args[0], XtNumber(args));
 		}
@@ -1212,7 +1210,7 @@ gui_mch_show_toolbar(int showit)
 
 	XtUnmanageChild(toolBar);
     }
-    gui_set_shellsize(FALSE);
+    gui_set_shellsize(FALSE, FALSE);
 }
 
 

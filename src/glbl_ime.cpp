@@ -124,7 +124,7 @@ global_ime_end()
 }
 
 /*
- * Replace with DefWindowProc().
+ * Replacement for DefWindowProc().
  */
     LRESULT WINAPI
 global_ime_DefWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)

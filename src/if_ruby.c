@@ -67,10 +67,6 @@ static void ruby_io_init(void);
 static void ruby_vim_init(void);
 
 #if defined(DYNAMIC_RUBY) || defined(PROTO)
-/* Console Vim doesn't include this, but we need it for dynamic loading */
-# define WIN32_LEAN_AND_MEAN
-# include <windows.h>
-
 #ifdef PROTO
 # define HINSTANCE int		/* for generating prototypes */
 #endif

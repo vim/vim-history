@@ -32,6 +32,7 @@ void gui_mch_beep __ARGS((void));
 void gui_mch_flash __ARGS((int msec));
 void gui_mch_invert_rectangle __ARGS((int r, int c, int nr, int nc));
 void gui_mch_iconify __ARGS((void));
+void gui_mch_set_foreground __ARGS((void));
 void gui_mch_draw_hollow_cursor __ARGS((guicolor_T color));
 void gui_mch_draw_part_cursor __ARGS((int w, int h, guicolor_T color));
 void gui_mch_update __ARGS((void));

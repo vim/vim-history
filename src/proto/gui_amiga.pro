@@ -35,6 +35,7 @@ void gui_mch_beep __ARGS((void));
 void gui_mch_flash __ARGS((int msec));
 void gui_mch_invert_rectangle __ARGS((int r, int c, int nr, int nc));
 void gui_mch_iconify __ARGS((void));
+void gui_mch_set_foreground __ARGS((void));
 void gui_mch_settitle __ARGS((char_u *title, char_u *icon));
 void gui_mch_stop_blink __ARGS((void));
 void gui_mch_start_blink __ARGS((void));

@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0ar.  Last change: 2001 Aug 12
+*version6.txt*  For Vim version 6.0as.  Last change: 2001 Aug 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -923,25 +923,24 @@ Communication between Vims				*new-vim-server*
 --------------------------
 
 Added communication between two Vims.  Makes it possible to send commands from
-one Vim to another.  Works for X-Windows and MS-Windows (requires the OLE
-feature).  For the X-Windows implementation |x11-command-server|.
+one Vim to another.  Works for X-Windows and MS-Windows |clientserver|.
 
 Use "--remote" to have files be edited in an already running Vim.
-Use "--remote-wait" to do the same and wait for the editing to finish. (X
-only)
-Use "--serversend" or "serversend()" to send commands from one Vim to another.
-Use "--serverexpr" to have an expression evaluated in another Vim.
+Use "--remote-wait" to do the same and wait for the editing to finish.
+Use "--remote-send" to send commands from one Vim to another.
+Use "--remote-expr" to have an expression evaluated in another Vim.
 Use "--serverlist" to list the currently available Vim servers. (X only)
-Added functions to communicate betweeen the server and the client.
+There are also functions to communicate betweeen the server and the client.
+|remote_send()| |remote_expr()|
 
-(X-windows version implemented by Flemming Madsen, basic work for the
-MS-Windows version by Walter Briscoe)
+(X-windows version implemented by Flemming Madsen, MS-Windows version by Paul
+Moore)
 
-Added the command server name to the window title.  Now you can see which
-server name belongs to which Vim.
+Added the command server name to the window title, so you can see which server
+name belongs to which Vim.
 
 Removed the OleVim directory and SendToVim.exe and EditWithVim.exe from the
-distribution.  Can now use "gvim --remote" and "gvim --serversend", which is
+distribution.  Can now use "gvim --remote" and "gvim --remote-send", which is
 portable.
 
 GTK: Support running Vim inside another window.  Uses the --socketid argument
@@ -980,7 +979,7 @@ Added options to tune the way printing works: (Vince Negri)
 - 'printoptions' defines various things.
 - 'printheader' specifies the header format.  Added "N" field to 'statusline'
   for the page number.
-- 'printfont' specifies the font name.
+- 'printfont' specifies the font name and attributes.
 - 'printdevice' defines the default printer for ":hardcopy!".
 
 
@@ -1298,6 +1297,7 @@ filewritable()	Checks if a file can be written. (Ron Aaron)
 foldclosed()	Find out if there is a closed fold. (Johannes Zellner).
 foldcloseend()	Find the end of a closed fold.
 foldlevel()	Find out the foldlevel. (Johannes Zellner)
+foreground()	Move the GUI window to the foreground.
 getchar()	Get one character from the user.  Can be used to define a
 		mapping that takes an argument.
 getcharmod()	Get last used key modifier.
@@ -2123,6 +2123,11 @@ ActivePython 2.1.1 and ActiveTCL 8.3.3
 
 Added AC_EXEEXT to configure.in, to check if the executable needs ".exe" for
 Cygwin or MingW.  Renamed SUFFIX to EXEEXT in Makefile.
+
+Win32: Load comdlg32.dll delayed for faster startup.  Only when using VC 6.
+(Vipin Aravind)
+
+Win32: When compiling with Borland, allow using IME. (Yasuhiro Matsumoto)
 
 ==============================================================================
 BUG FIXES						*bug-fixes-6*
@@ -3119,5 +3124,48 @@ would be truncated to MAXPATHL. (Anduin Withers)
 
 When 'selection' is "exclusive", using "Fx" in Visual mode only moved until
 just after the character.
+
+When using IME on the console to enter a file name, the screen may scroll up.
+Redraw the screen then. (Yasuhiro Matsumoto)
+
+Motif: In the find/replace dialog the "Replace" button didn't work first time,
+second time it replaced all matches.  Removed the use of ":s///c".
+GTK: Similar problems with the find/replace dialog, moved the code to a common
+function.
+
+X11: Use shared GC's for text. (Martin Dalecki)
+
+"]i" found the match under the cursor, instead of the first one below it.
+Same for "]I", "] CTRL-I", "]d", "]D" and "] CTRL-D".
+
+Win16: When maximized and the font is changed, don't change the window size.
+(Vince Negri)
+
+When 'lbr' is set, deleting a block of text could leave the cursor in the
+wrong position.
+
+Win32: When opening a file with the "Edit with Vim" popup menu entry,
+wildcards would cause trouble.  Added the "--literal" argument to avoid
+expanding file names.
+
+When using "gv", it didn't restore that "$" was used in Visual block mode.
+
+Win32 GUI: While waiting for a shell command to finish, the window wasn't
+redrawn at all. (Yasuhiro Matsumoto)
+
+Syntax highlighting: A match that continues on a next line because of a
+contained region didn't end when that region ended.
+
+The ":s" command didn't allow flags like 'e' and 'i' right after it.
+
+When using ":s" to split a line, marks were moved to the next line.  Vi keeps
+them in the first line.
+
+When using ":n" ":rew", the previous context mark was at the top of the file,
+while Vi puts it in the same place as the cursor.  Made it Vi compatible.
+
+Fixed Vi incompatibility: Text was not put in register 1 when using "c" and
+"d" with a motion character, when deleting within one line with one of the
+commands: % ( ) `<character> / ? N n { }
 
  vim:tw=78:

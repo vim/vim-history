@@ -24,48 +24,8 @@
 " See :help file-explorer for more details
 "
 "-----------------------------------------------------------------------------
-"Updates in version 2.5 by Doug Potts
-" - Added explStartBelow and explStartRight, so that a different set of
-"   split options, from the file/dir options, may be used for that first
-"   explorer window.
-"Updates in version 2.4 by Mark Waggoner, Bram Moolenaar, & Thomas Köhler
-" - Respect the g:explVertical when running :Sexplore
-" - Doubleclick on filename to 'O' the file
-" - Added mapping for 'O' to open file in previous window
-" - Added mapping for 'p' to preview a file
-" - Used 'wincmd' instead of normal in a few places
-" Updates in version 2.4 by Mark Waggoner
-" - Added mapping for 'O' to open file in previous window
-" - Added mapping for 'p' to preview a file
-" - Used 'wincmd' instead of normal in a few places
-" Updates in version 2.3 by Mark Waggoner
-" - Change backslashes to slashes where needed when running on windows
-" - Fix incorrect display when insert mode abbreviations exist
-" - Add explSplitBelow and explSplitRight options and change method of
-"   opening new windows so that it takes space away from ajoining
-"   window if possible
-" - Make work better if open two windows on same explorer buffer
-" Updates in version 2.2 by Mark Waggoner
-" - Allow files matching 'suffixes' option to be grouped separately
-"   from other files.  Highlight them.
-" - Sort and information settings are sticky
-" - Delete now 'D', rename now 'R'
-" - Many cosmetic changes
-" Updates in version 2.1 by Mark Waggoner
-" - Allow to sort or reverse sort by name, size, or modification date.
-"   Many thanks for Robert Webb's sort example
-"   - As a side effect, the file 'time' is appended to end of line,
-"     though if syntax highlighting is on it will be invisible
-" - Allow to choose whether you want directories segregated from files
-"   or mixed in with the files
-" - Use the nomodifiable setting to prevent users from accidentally
-"   modifying the list
-"
-" Updates from last version (1.1) :
-" 1. No corruption of registers (either named or unnamed)
-" 2. Possible to edit a file in a new window.
-" 3. The help is only one line with an option for detailed help
-" 4. Works as a plugin for Vim6.0+
+" Update history removed, it's not very interesting.
+" Contributors were: Doug Potts, Bram Moolenaar, Thomas Köhler
 "=============================================================================
 
 " Has this already been loaded?
@@ -598,44 +558,28 @@ function! s:ShowDirectory()
 
   " Display the files
 
-  " save f register
-  let save_f=@f
-
   " Get a list of all the files
-  let @f=s:Path(glob(b:completePath."*"))
-  if @f != "" && @f !~ '\n$'
-    let @f=@f."\n"
+  let files = s:Path(glob(b:completePath."*"))
+  if files != "" && files !~ '\n$'
+    let files = files . "\n"
   endif
-
-  " Removing dot files if they are a part of @f. In Unix for example, dot files
-  " are not included, but in Windows they are!
-  " NOT any more as of vim60r
-  " let @f=substitute(@f, "[^\n]*[\\\\/]\\.[^\\\\/\n]*\n", '', 'g')
 
   " Add the dot files now, making sure "." is not included!
-  let @f=@f.substitute(s:Path(glob(b:completePath.".*")), "[^\n]*/./\\=\n", '' , '')
-  if @f != "" && @f !~ '\n$'
-    let @f=@f."\n"
+  let files = files . substitute(s:Path(glob(b:completePath.".*")), "[^\n]*/./\\=\n", '' , '')
+  if files != "" && files !~ '\n$'
+    let files = files . "\n"
   endif
 
-  " Add ".." if it isn't in the list
-" if @f !~ (escape(b:completePath,s:escregexp) . '\.\.')
-"   let @f=@f . "\n" . b:completePath . ".."
-" endif
-
   " Are there any files left after filtering?
-  if @f!=""
+  if files != ""
     normal! mt
-    put f
-    let b:maxFileLen=0
+    put =files
+    let b:maxFileLen = 0
     0
     /^"=/+1,$g/^/call s:MarkDirs()
     normal! `t
     call s:AddFileInfo()
   endif
-
-  " restore f register
-  let @f=save_f
 
   normal! zz
 
@@ -814,7 +758,7 @@ function! s:AddFileInfo()
     " add file modification date
     0
     /^"=/+1,$g/^/let fn=s:GetFullFileName() |
-                   \exec "normal! A \<esc>$b".(b:maxFileLen+b:maxFileSizeLen-strlen(getline("."))+3)."i \<esc>"_x" |
+                   \exec "normal! A \<esc>$b".(b:maxFileLen+b:maxFileSizeLen-strlen(getline("."))+3)."i \<esc>\"_x" |
                    \exec 's/$/ '.escape(s:FileModDate(fn), '/').'/'
     setlocal nomodified
   endif

@@ -60,7 +60,7 @@ static void make_snapshot __ARGS((void));
 static void make_snapshot_rec __ARGS((frame_T *fr, frame_T **frp));
 static void clear_snapshot __ARGS((void));
 static void clear_snapshot_rec __ARGS((frame_T *fr));
-static void restore_snapshot __ARGS((void));
+static void restore_snapshot __ARGS((int close_curwin));
 static int check_snapshot_rec __ARGS((frame_T *sn, frame_T *fr));
 static win_T *restore_snapshot_rec __ARGS((frame_T *sn, frame_T *fr));
 
@@ -1922,7 +1922,7 @@ win_close(win, free_buf)
     /* After closing the help window, try restoring the window layout from
      * before it was opened. */
     if (help_window)
-	restore_snapshot();
+	restore_snapshot(close_curwin);
 
 #if defined(FEAT_GUI) && defined(FEAT_VERTSPLIT)
     /* When 'guioptions' includes 'L' or 'R' may have to remove scrollbars. */
@@ -4699,7 +4699,8 @@ clear_snapshot_rec(fr)
  * still the same.
  */
     static void
-restore_snapshot()
+restore_snapshot(close_curwin)
+    int		close_curwin;	    /* closing current window */
 {
     win_T	*wp;
 
@@ -4712,7 +4713,7 @@ restore_snapshot()
     {
 	wp = restore_snapshot_rec(snapshot, topframe);
 	win_comp_pos();
-	if (wp != NULL)
+	if (wp != NULL && close_curwin)
 	    win_goto(wp);
 	redraw_all_later(CLEAR);
     }

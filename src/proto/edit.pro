@@ -12,7 +12,7 @@ char_u *find_word_start __ARGS((char_u *ptr));
 char_u *find_word_end __ARGS((char_u *ptr));
 void ins_compl_check_keys __ARGS((void));
 int get_literal __ARGS((void));
-void insertchar __ARGS((int c, int force_formatting, int second_indent, int ctrlv));
+void insertchar __ARGS((int c, int flags, int second_indent));
 int comp_textwidth __ARGS((int ff));
 int stop_arrow __ARGS((void));
 void set_last_insert __ARGS((int c));

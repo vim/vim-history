@@ -3318,7 +3318,7 @@ do_sub(eap)
 
 				/* new pattern and substitution */
     if (eap->cmd[0] == 's' && *cmd != NUL && !vim_iswhite(*cmd)
-		    && vim_strchr((char_u *)"0123456789gcr|\"", *cmd) == NULL)
+		&& vim_strchr((char_u *)"0123456789cegriIp|\"", *cmd) == NULL)
     {
 				/* don't accept alphanumeric for separator */
 	if (isalpha(*cmd))
@@ -3847,7 +3847,7 @@ do_sub(eap)
 			    *p1 = NUL;		    /* truncate up to the CR */
 			    ml_append(lnum - 1, new_start,
 					(colnr_T)(p1 - new_start + 1), FALSE);
-			    mark_adjust(lnum, (linenr_T)MAXLNUM, 1L, 0L);
+			    mark_adjust(lnum + 1, (linenr_T)MAXLNUM, 1L, 0L);
 			    if (do_ask)
 				appended_lines(lnum - 1, 1L);
 			    else
@@ -5520,7 +5520,7 @@ sign_typenr2name(typenr)
 
 #endif
 
-#if defined(FEAT_GUI) || defined(FEAT_XCMDSRV) || defined(PROTO)
+#if defined(FEAT_GUI) || defined(FEAT_CLIENTSERVER) || defined(PROTO)
 /*
  * ":drop"
  */

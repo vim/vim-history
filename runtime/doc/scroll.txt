@@ -1,4 +1,4 @@
-*scroll.txt*    For Vim version 6.0ar.  Last change: 2001 Jul 28
+*scroll.txt*    For Vim version 6.0as.  Last change: 2001 Aug 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -240,6 +240,9 @@ presses <MouseDown> and <MouseUp>.  The default action for these keys are:
     <S-MouseUp>		scroll a full page up.		*<S-MouseUp>*
     <C-MouseUp>		scroll a full page up.		*<C-MouseUp>*
 This should work in all modes, except when editing the command line.
+
+Note that <MouseDown> is used for scrolling the text down, this happens when
+you turn the mouse wheel up!
 
 You can modify this behavior by mapping the keys.  For example, to make the
 scroll wheel move one line or half a page in Normal mode: >

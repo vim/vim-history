@@ -276,12 +276,14 @@ ui_get_shellsize()
  * The gui_set_shellsize() or mch_set_shellsize() function will try to set the
  * new size.  If this is not possible, it will adjust Rows and Columns.
  */
+/*ARGSUSED*/
     void
-ui_set_shellsize()
+ui_set_shellsize(mustset)
+    int		mustset;	/* set by the user */
 {
 #ifdef FEAT_GUI
     if (gui.in_use)
-	gui_set_shellsize(
+	gui_set_shellsize(mustset,
 # ifdef WIN3264
 		TRUE
 # else
@@ -1440,11 +1442,12 @@ clip_gen_request_selection(cbd)
 #ifdef VMS
 # define INBUFLEN 10000 /* for proper cut/paste between X windows in ch. mode */
 #else
-# if defined(FEAT_SUN_WORKSHOP) || defined(FEAT_XCMDSRV)
+# if defined(FEAT_SUN_WORKSHOP) || defined(FEAT_CLIENTSERVER)
    /*
     * Sun WorkShop stuffs debugger commands into the input buffer. This requires
     * a larger buffer...
     * (Madsen) Go with this for remote input as well ...
+    * (Moore) Win32 does remote input, so use it here too ...
     */
 #  define INBUFLEN 4096
 # else

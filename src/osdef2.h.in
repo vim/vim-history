@@ -20,13 +20,13 @@ extern unsigned int	alarm __ARGS((unsigned int));
 extern int	chdir __ARGS((char *));
 extern int	fchdir __ARGS((int));
 #ifndef stat	/* could be redefined to stat64() */
-extern int	stat __ARGS((char *, struct stat *));
+extern int	stat __ARGS((const char *, struct stat *));
 #endif
 #ifndef lstat	/* could be redefined to lstat64() */
-extern int	lstat __ARGS((char *, struct stat *));
+extern int	lstat __ARGS((const char *, struct stat *));
 #endif
 extern int	fstat __ARGS((int, struct stat *));
-extern int	open __ARGS((char *, int, ...));
+extern int	open __ARGS((const char *, int, ...));
 extern int	close __ARGS((int));
 extern int	read __ARGS((int, char *, size_t));
 extern int	write __ARGS((int, char *, size_t));

@@ -14,6 +14,7 @@ void gui_mch_set_winpos __ARGS((int x, int y));
 void gui_mch_set_shellsize __ARGS((int width, int height, int min_width, int min_height, int base_width, int base_height));
 void gui_mch_get_screen_dimensions __ARGS((int *screen_w, int *screen_h));
 void gui_mch_iconify __ARGS((void));
+void gui_mch_set_foreground __ARGS((void));
 void gui_mch_settitle __ARGS((char_u *title, char_u *icon));
 void gui_mch_set_scrollbar_thumb __ARGS((scrollbar_T *sb, int val, int size, int max));
 void gui_mch_set_scrollbar_pos __ARGS((scrollbar_T *sb, int x, int y, int w, int h));

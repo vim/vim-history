@@ -2738,6 +2738,17 @@ gui_mch_iconify()
     }
 }
 
+#if defined(FEAT_EVAL) || defined(PROTO)
+/*
+ * Bring the Vim window to the foreground.
+ */
+    void
+gui_mch_set_foreground()
+{
+    /* TODO */
+}
+#endif
+
 /*
  * Set the window title
  */

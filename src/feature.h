@@ -954,10 +954,10 @@
 #  define FEAT_CLIPBOARD
 # endif
 #endif
-#ifdef FEAT_XCLIPBOARD
-/* +xcmdsrv		Remote control via the :serversend command
+#if defined(WIN32) || defined(FEAT_XCLIPBOARD)
+/* +clientserver	Remote control via the remote_send() function
                         and the --remote argument */
-# define FEAT_XCMDSRV
+# define FEAT_CLIENTSERVER
 #endif
 #if defined(FEAT_NORMAL) && defined(HAVE_GPM)
 # define FEAT_MOUSE_GPM

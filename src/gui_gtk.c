@@ -112,16 +112,6 @@ typedef int GtkWidget;
 # define CancelData int
 #endif
 
-/*
- * Flags used to distinguish the different contexts in which the
- * find/replace callback may be called.
- */
-#define FR_DIALOGTERM	1
-#define FR_FINDNEXT	2
-#define FR_R_FINDNEXT	3
-#define FR_REPLACE	4
-#define FR_REPLACEALL	5
-
 static void entry_activate_cb(GtkWidget *widget, GtkWidget *with);
 static void entry_changed_cb(GtkWidget *entry, GtkWidget *dialog);
 static void find_direction_cb(GtkWidget *widget, gpointer data);
@@ -873,6 +863,9 @@ gui_mch_browse(int saving,
     else
 	gtk_window_set_title(GTK_WINDOW(gui.filedlg), (const gchar *)title);
 
+    /* if our pointer is currently hidden, then we should show it. */
+    gui_mch_mousehide(FALSE);
+
     if (dflt == NULL)
 	dflt = (char_u *)"";
     if (initdir == NULL || *initdir == NUL)
@@ -900,6 +893,9 @@ gui_mch_browse(int saving,
 
 #ifdef FEAT_GUI_DIALOG
 
+static char_u *dialog_textfield = NULL;
+static GtkWidget *dialog_textentry;
+
 # ifdef FEAT_GUI_GNOME
 /* ARGSUSED */
     static int
@@ -907,7 +903,8 @@ gui_gnome_dialog( int	type,
 		char_u	*title,
 		char_u	*message,
 		char_u	*buttons,
-		int	dfltbutton)
+		int	dfltbutton,
+		char_u  *textfield)
 {
     GtkWidget	*dlg;
     char	*gdtype;
@@ -1008,8 +1005,25 @@ gui_gnome_dialog( int	type,
     for (cur = 0; cur < butcount; ++cur)
 	g_free(buttons_list[cur]);
     g_free(buttons_list);
+
+    if (textfield != NULL)
+    {
+	/* Add text entry field */
+	dialog_textentry = gtk_entry_new();
+	gtk_box_pack_start(GTK_BOX(GNOME_DIALOG(dlg)->vbox), dialog_textentry,
+			   TRUE, TRUE, 0);
+	gtk_entry_set_text(GTK_ENTRY(dialog_textentry),
+			   (const gchar *)textfield);
+	gtk_entry_select_region(GTK_ENTRY(dialog_textentry), 0,
+				STRLEN(textfield));
+	gtk_entry_set_max_length(GTK_ENTRY(dialog_textentry), IOSIZE - 1);
+	gtk_entry_set_position(GTK_ENTRY(dialog_textentry), STRLEN(textfield));
+	gtk_widget_show(dialog_textentry);
+    }
+
     gnome_dialog_set_default(GNOME_DIALOG(dlg), dfltbutton + 1);
-    gtk_window_set_modal(GTK_WINDOW(dlg), TRUE);
+    gui_gtk_position_in_parent(GTK_WIDGET(gui.mainwin),
+			       GTK_WIDGET(dlg), VW_POS_MOUSE);
 
     return (1 + gnome_dialog_run_and_close(GNOME_DIALOG(dlg)));
 } /* gui_mch_dialog */
@@ -1028,9 +1042,6 @@ typedef struct _CancelData
     int		*status;
     GtkWidget	*dialog;
 } CancelData;
-
-static char_u *dialog_textfield = NULL;
-static GtkWidget *dialog_textentry;
 
     static void
 dlg_destroy(GtkWidget *dlg)
@@ -1110,10 +1121,14 @@ gui_mch_dialog(	int	type,		/* type of dialog */
     ButtonData		*data;
     CancelData		cancel_data;
 
+    /* if our pointer is currently hidden, then we should show it. */
+    gui_mch_mousehide(FALSE);
+
 # ifdef FEAT_GUI_GNOME
     /* If Gnome is available, use it for the simple button dialog. */
-    if (gtk_socket_id == 0 && textfield == NULL)
-	return gui_gnome_dialog(type, title, message, buttons, def_but);
+    if (gtk_socket_id == 0)
+	return gui_gnome_dialog(type, title, message, buttons, def_but,
+				textfield);
 # endif
 
     if (title == NULL)
@@ -1124,9 +1139,6 @@ gui_mch_dialog(	int	type,		/* type of dialog */
 
     /* Check 'v' flag in 'guioptions': vertical button placement. */
     vertical = (vim_strchr(p_go, GO_VERTICAL) != NULL);
-
-    /* if our pointer is currently hidden, then we should show it. */
-    gui_mch_mousehide(FALSE);
 
     dialog = gtk_window_new(GTK_WINDOW_DIALOG);
     gtk_window_set_title(GTK_WINDOW(dialog), (const gchar *)title);
@@ -1423,7 +1435,6 @@ find_key_press_event(
     /* the scape key synthesizes a cancellation action */
     if (event->keyval == GDK_Escape)
     {
-	find_replace_cb(widget, FR_DIALOGTERM);
 	gtk_widget_hide(frdp->dialog);
 
 	return TRUE;
@@ -1453,35 +1464,13 @@ find_replace_dialog_create(char_u *arg, int do_replace)
     GtkWidget	*vbox;
     gboolean	sensitive;
     SharedFindReplace *frdp;
-    char_u	*entry_text = arg;
-    gboolean	exact_word = FALSE;
+    char_u	*entry_text;
+    int		exact_word = FALSE;
 
     frdp = (do_replace) ? (&repl_widgets) : (&find_widgets);
 
-    /*
-     * If the argument is emtpy, get the last used search pattern.  If it is
-     * surrounded by "\<..\>" remove that and set the "exact_word" toggle
-     * button.
-     */
-    if (*entry_text == NUL)
-	entry_text = last_search_pat();
-    if (entry_text != NULL)
-    {
-	entry_text = vim_strsave(entry_text);
-	if (entry_text != NULL)
-	{
-	    int len = STRLEN(entry_text);
-
-	    if (len >= 4
-		    && STRNCMP(entry_text, "\\<", 2) == 0
-		    && STRNCMP(entry_text + len - 2, "\\>", 2) == 0)
-	    {
-		exact_word = TRUE;
-		mch_memmove(entry_text, entry_text + 2, (size_t)(len - 4));
-		entry_text[len - 4] = NUL;
-	    }
-	}
-    }
+    /* Get the search string to use. */
+    entry_text = get_find_dialog_text(arg, &exact_word);
 
     /*
      * If the dialog already exists, just raise it.
@@ -1504,7 +1493,7 @@ find_replace_dialog_create(char_u *arg, int do_replace)
 	{
 	    gtk_entry_set_text(GTK_ENTRY(frdp->what), (char *)entry_text);
 	    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(frdp->exact),
-								  exact_word);
+							(gboolean)exact_word);
 	}
 	gdk_window_raise(frdp->dialog->window);
 
@@ -1595,7 +1584,8 @@ find_replace_dialog_create(char_u *arg, int do_replace)
 
     /* exact match only button */
     frdp->exact = gtk_check_button_new_with_label(_("Match exact word only"));
-    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(frdp->exact), exact_word);
+    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(frdp->exact),
+							(gboolean)exact_word);
     gtk_signal_connect(GTK_OBJECT(frdp->exact), "clicked",
 		       GTK_SIGNAL_FUNC(exact_match_cb), NULL);
     if (do_replace)
@@ -1682,12 +1672,6 @@ find_replace_dialog_create(char_u *arg, int do_replace)
     tmp = gtk_button_new_with_label(_("Cancel"));
     GTK_WIDGET_SET_FLAGS(tmp, GTK_CAN_DEFAULT);
     gtk_box_pack_end(GTK_BOX(actionarea), tmp, FALSE, FALSE, 0);
-    gtk_signal_connect(GTK_OBJECT(tmp), "clicked",
-		       GTK_SIGNAL_FUNC(find_replace_cb),
-		       (gpointer) FR_DIALOGTERM);
-    gtk_signal_connect(GTK_OBJECT(tmp), "delete_event",
-		       GTK_SIGNAL_FUNC(find_replace_cb),
-		       (gpointer) FR_DIALOGTERM);
     gtk_signal_connect_object(GTK_OBJECT(tmp),
 			      "clicked", GTK_SIGNAL_FUNC(gtk_widget_hide),
 			      GTK_OBJECT(frdp->dialog));
@@ -1785,138 +1769,32 @@ gui_gtk_synch_fonts(void)
  */
 /*ARGSUSED*/
     static void
-find_replace_cb(GtkWidget * widget, unsigned int flags)
+find_replace_cb(GtkWidget *widget, unsigned int flags)
 {
-    char	*find_text, *repl_text, *cmd;
+    char	*find_text, *repl_text;
     gboolean	direction_down = TRUE;
     gboolean	exact_match = FALSE;
-    int		len;
-
-    if (flags == FR_DIALOGTERM)
-    {
-	if (State == CONFIRM)
-	{
-	    add_to_input_buf((char_u *)"q", 1);
-	    return;
-	}
-    }
+    SharedFindReplace *sfr;
 
     /* Get the search/replace strings from the dialog */
     if (flags == FR_FINDNEXT)
     {
-	find_text = gtk_entry_get_text(GTK_ENTRY(find_widgets.what));
 	repl_text = NULL;
-	direction_down = GTK_TOGGLE_BUTTON(find_widgets.down)->active;
-	exact_match = GTK_TOGGLE_BUTTON(find_widgets.exact)->active;
+	sfr = &find_widgets;
     }
-    else if (flags == FR_R_FINDNEXT || flags == FR_REPLACE ||
-	       flags == FR_REPLACEALL)
+    else
     {
-	find_text = gtk_entry_get_text(GTK_ENTRY(repl_widgets.what));
 	repl_text = gtk_entry_get_text(GTK_ENTRY(repl_widgets.with));
-	direction_down = GTK_TOGGLE_BUTTON(repl_widgets.down)->active;
-	exact_match = GTK_TOGGLE_BUTTON(repl_widgets.exact)->active;
+	sfr = &repl_widgets;
     }
-    else
-    {
-	find_text = NULL;
-	repl_text = NULL;
-    }
+    find_text = gtk_entry_get_text(GTK_ENTRY(sfr->what));
+    direction_down = GTK_TOGGLE_BUTTON(sfr->down)->active;
+    exact_match = GTK_TOGGLE_BUTTON(sfr->exact)->active;
 
-    /* calculate exact length of cmd buffer.  see below to count characters */
-    len = 2;
-    if (flags == FR_FINDNEXT || flags == FR_R_FINDNEXT)
-    {
-	len += (strlen(find_text) + 1);
-	if (State != CONFIRM && exact_match)
-	    len += 4;   /* \< and \>*/
-    }
-    else if (flags == FR_REPLACE || flags == FR_REPLACEALL)
-    {
-	if (State == CONFIRM)
-	    len++;
-	else
-	    len += (strlen(find_text) + strlen(repl_text) + 11);
-    }
-
-    cmd = g_new(char, len);
-
-    /* start stuffing in the command text */
-    if (State & INSERT)
-	cmd[0] = Ctrl_O;
-    else if ((State | NORMAL) == 0 && State != CONFIRM)
-	cmd[0] = ESC;
-    else
-	cmd[0] = NUL;
-    cmd[1] = NUL;
-
-    /* Synthesize the input corresponding to the particular actions. */
-    if (flags == FR_FINDNEXT || flags == FR_R_FINDNEXT)
-    {
-	if (State == CONFIRM)
-	{
-	    STRCAT(cmd, "n");
-	}
-	else
-	{
-	    if (direction_down)
-		STRCAT(cmd, "/");
-	    else
-		STRCAT(cmd, "?");
-
-	    if (exact_match)
-		STRCAT(cmd, "\\<");
-	    STRCAT(cmd, find_text);
-	    if (exact_match)
-		STRCAT(cmd, "\\>");
-
-	    STRCAT(cmd, "\r");
-	}
-    }
-    else if (flags == FR_REPLACE)
-    {
-	if (State == CONFIRM)
-	{
-	    STRCAT(cmd, "y");
-	}
-	else
-	{
-	    STRCAT(cmd, ":%sno/");
-	    STRCAT(cmd, find_text);
-	    STRCAT(cmd, "/");
-	    STRCAT(cmd, repl_text);
-	    STRCAT(cmd, "/gc\r");
-	}
-	/*
-	 * Give main window the focus back: this is to allow
-	 * handling of the confirmation y/n/a/q stuff.
-	 */
-	/*(void)SetFocus(s_hwnd); */
-    }
-    else if (flags == FR_REPLACEALL)
-    {
-	if (State == CONFIRM)
-	{
-	    STRCAT(cmd, "a");
-	}
-	else
-	{
-	    STRCAT(cmd, ":%sno/");
-	    STRCAT(cmd, find_text);
-	    STRCAT(cmd, "/");
-	    STRCAT(cmd, repl_text);
-	    STRCAT(cmd, "/g\r");
-	}
-    }
-
-    if (*cmd)
-    {
-	add_to_input_buf((char_u *)cmd, STRLEN(cmd));
+    if (gui_do_findrepl((int)flags, (char_u *)find_text, (char_u *)repl_text,
+				       (int)direction_down, (int)exact_match))
 	if (gtk_main_level() > 0)
-	    gtk_main_quit();	/* make sure if will be handled immediately */
-    }
-
-    g_free(cmd);
+	    gtk_main_quit();	/* make sure cmd will be handled immediately */
 }
 
 /* our usual callback function */

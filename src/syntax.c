@@ -173,6 +173,7 @@ typedef struct syn_pattern
 #define HL_DISPLAY	0x1000	/* only used for displaying, not syncing */
 #define HL_FOLD		0x2000	/* define fold */
 #define HL_EXTEND	0x4000	/* ignore a keepend */
+#define HL_MATCHCONT	0x8000	/* match continued from previous line */
 
 #define SYN_ITEMS(buf)	((synpat_T *)((buf)->b_syn_patterns.ga_data))
 
@@ -332,7 +333,7 @@ static int	current_line_id = 0;	/* unique number for current line */
 static void syn_sync __ARGS((win_T *wp, linenr_T lnum, synstate_T *last_valid));
 static int syn_match_linecont __ARGS((linenr_T lnum));
 static void syn_start_line __ARGS((void));
-static void syn_update_ends __ARGS((int dolast));
+static void syn_update_ends __ARGS((int startofline));
 static void syn_stack_alloc __ARGS((void));
 static int syn_stack_cleanup __ARGS((void));
 static void syn_stack_free_entry __ARGS((buf_T *buf, synstate_T *p));
@@ -927,15 +928,33 @@ syn_start_line()
 
 /*
  * Check for items in the stack that need their end updated.
- * When "dolast" is TRUE the last item is always updated.
- * When "dolast" is FALSE the item with "keepend" is forcefully updated.
+ * When "startofline" is TRUE the last item is always updated.
+ * When "startofline" is FALSE the item with "keepend" is forcefully updated.
  */
     static void
-syn_update_ends(dolast)
-    int		dolast;
+syn_update_ends(startofline)
+    int		startofline;
 {
     stateitem_T	*cur_si;
     int		i;
+
+    if (startofline)
+    {
+	/* A match carried over from a previous line must have a contained
+	 * region.  The match ends as soon as the region ends. */
+	for (i = 0; i < current_state.ga_len; ++i)
+	{
+	    cur_si = &CUR_STATE(i);
+	    if ((SYN_ITEMS(syn_buf)[cur_si->si_idx]).sp_type == SPTYPE_MATCH)
+	    {
+		cur_si->si_flags |= HL_MATCHCONT;
+		cur_si->si_m_endpos.lnum = 0;
+		cur_si->si_m_endpos.col = 0;
+		cur_si->si_h_endpos = cur_si->si_m_endpos;
+		cur_si->si_ends = TRUE;
+	    }
+	}
+    }
 
     /*
      * Need to update the end of a start/skip/end that continues from the
@@ -952,11 +971,13 @@ syn_update_ends(dolast)
     {
 	cur_si = &CUR_STATE(i);
 	if ((cur_si->si_flags & HL_KEEPEND)
-				 || (i == current_state.ga_len - 1 && dolast))
+			    || (i == current_state.ga_len - 1 && startofline))
 	{
 	    cur_si->si_h_startpos.col = 0;	/* start highl. in col 0 */
 	    cur_si->si_h_startpos.lnum = current_lnum;
-	    update_si_end(cur_si, (int)current_col, !dolast);
+
+	    if (!(cur_si->si_flags & HL_MATCHCONT))
+		update_si_end(cur_si, (int)current_col, !startofline);
 	}
     }
     check_keepend();
@@ -1404,8 +1425,7 @@ load_current_state(from)
 	    CUR_STATE(i).si_extmatch = ref_extmatch(bp[i].bs_extmatch);
 	    if (keepend_level < 0 && (CUR_STATE(i).si_flags & HL_KEEPEND))
 		keepend_level = i;
-	    CUR_STATE(i).si_m_endpos.lnum = 0;
-	    CUR_STATE(i).si_m_startcol = 0;
+	    CUR_STATE(i).si_ends = FALSE;
 	    CUR_STATE(i).si_m_lnum = 0;
 	    CUR_STATE(i).si_next_list =
 		       (SYN_ITEMS(syn_buf)[CUR_STATE(i).si_idx]).sp_next_list;
@@ -2245,8 +2265,9 @@ check_state_ends()
     for (;;)
     {
 	if (cur_si->si_ends
-		&& cur_si->si_m_endpos.lnum == current_lnum
-		&& cur_si->si_m_endpos.col <= (int)current_col)
+		&& (cur_si->si_m_endpos.lnum < current_lnum
+		    || (cur_si->si_m_endpos.lnum == current_lnum
+			&& cur_si->si_m_endpos.col <= (int)current_col)))
 	{
 	    /*
 	     * If there is an end pattern group ID, highlight the end pattern
@@ -6082,7 +6103,12 @@ do_highlight(line, forceit, init)
 	    init_highlight(TRUE, TRUE);
 #ifdef FEAT_GUI
 	    if (gui.in_use)
+	    {
+# ifdef FEAT_BEVAL
+		gui_init_tooltip_font();
+# endif
 		highlight_gui_started();
+	    }
 #endif
 #ifdef FEAT_GUI_X11
 	    gui_mch_def_colors();
@@ -6090,7 +6116,12 @@ do_highlight(line, forceit, init)
 	    gui_mch_new_menu_colors();
 # endif
 	    if (gui.in_use)
+	    {
 		gui_new_scrollbar_colors();
+# ifdef FEAT_BEVAL
+		gui_mch_new_tooltip_colors();
+# endif
+	    }
 #endif
 	    highlight_changed();
 	    redraw_later_clear();
@@ -6529,7 +6560,7 @@ do_highlight(line, forceit, init)
 		    gui.menu_fg_pixel = i - 1;
 		if (is_scrollbar_group)
 		    gui.scroll_fg_pixel = i - 1;
-#  if (defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MOTIF)) && defined(FEAT_BEVAL)
+#  ifdef FEAT_BEVAL
 		if (is_tooltip_group)
 		    gui.balloonEval_fg_pixel = i - 1;
 #  endif
@@ -6562,7 +6593,7 @@ do_highlight(line, forceit, init)
 		    gui.menu_bg_pixel = i - 1;
 		if (is_scrollbar_group)
 		    gui.scroll_bg_pixel = i - 1;
-#  if (defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MOTIF)) && defined(FEAT_BEVAL)
+#  ifdef FEAT_BEVAL
 		if (is_tooltip_group)
 		    gui.balloonEval_bg_pixel = i - 1;
 #  endif
@@ -7024,11 +7055,11 @@ hl_do_font(idx, arg, do_normal, do_menu, do_tooltip)
     /* If 'guifontset' is not empty, first try using the name as a
      * fontset.  If that doesn't work, use it as a font name. */
     if (*p_guifontset != NUL
-#   ifdef FONTSET_ALWAYS
+#  ifdef FONTSET_ALWAYS
 	|| do_menu
-#   endif
-#  if defined(FEAT_BEVAL) && defined(FEAT_GUI_ATHENA)
-	/* In Athena, the Tooltip highlight group is always a fontset */
+#  endif
+#  ifdef FEAT_BEVAL
+	/* In Athena & Motif, the Tooltip highlight group is always a fontset */
 	|| do_tooltip
 #  endif
 	    )
@@ -7059,12 +7090,7 @@ hl_do_font(idx, arg, do_normal, do_menu, do_tooltip)
 	     * creation, then a fontset is always used, othwise an
 	     * XFontStruct is used.
 	     */
-#     ifdef FEAT_GUI_MOTIF
-	    gui.balloonEval_fontList = gui_motif_fontset2fontlist(
-				    (XFontSet *)&HL_TABLE()[idx].sg_fontset);
-#     else
-	    gui.balloonEval_fontList = (XFontSet)HL_TABLE()[idx].sg_fontset;
-#     endif
+	    gui.balloonEval_fontset = (XFontSet)HL_TABLE()[idx].sg_fontset;
 	    gui_mch_new_tooltip_font();
 	}
 #    endif
@@ -7089,19 +7115,6 @@ hl_do_font(idx, arg, do_normal, do_menu, do_tooltip)
 	    }
 # endif
 #endif
-# if defined(FEAT_BEVAL) && !defined(FEAT_GUI_ATHENA)
-	    /* The Athena widget set cannot currently handle switching between
-	     * displaying a single font and a fontset.
-	     */
-	    if (do_tooltip)
-	    {
-#  ifdef FEAT_GUI_MOTIF
-		gui.balloonEval_fontList = gui_motif_create_fontlist(
-			(XFontStruct *)HL_TABLE()[idx].sg_font);
-#  endif
-		gui_mch_new_tooltip_font();
-	    }
-# endif
 	}
     }
 }

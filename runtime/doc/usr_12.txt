@@ -1,4 +1,4 @@
-*usr_12.txt*	For Vim version 6.0ar.  Last change: 2001 Jul 28
+*usr_12.txt*	For Vim version 6.0as.  Last change: 2001 Aug 12
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -24,7 +24,7 @@ Table of contents: |usr_toc.txt|
 ==============================================================================
 *12.1*	Replace a word
 
-The substitute command can be used to replace all occurences of a word with
+The substitute command can be used to replace all occurrences of a word with
 another word: >
 
 	:%s/four/4/g
@@ -119,9 +119,9 @@ pattern contains:
 	    any character					     .
 	    any number of times					      *
 
-In the "to" part we have "\2" and "\1".  These are called backreferences.  The
-refer to the text matched by the \( \) parts in the pattern.  "\2" refers to
-the text matched by the second "\( \)", which is the "First" name.  "\1"
+In the "to" part we have "\2" and "\1".  These are called backreferences.
+They refer to the text matched by the \( \) parts in the pattern.  "\2" refers
+to the text matched by the second "\( \)", which is the "First" name.  "\1"
 refers to the first \( \), which is the "Last" name.
    You can use up to nine backreferences in the "to" part of a substitute
 command.  "\0" stands for the whole matched pattern.  There are a few more

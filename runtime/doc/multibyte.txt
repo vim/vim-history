@@ -1,4 +1,4 @@
-*multibyte.txt* For Vim version 6.0ar.  Last change: 2001 Jul 12
+*multibyte.txt* For Vim version 6.0as.  Last change: 2001 Jul 12
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.

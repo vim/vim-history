@@ -39,14 +39,6 @@
 #include <limits.h>
 #include <process.h>
 
-#ifndef STRICT
-# define STRICT
-#endif
-#ifndef COBJMACROS
-# define COBJMACROS /* Enable "friendlier" access to objects */
-#endif
-#include <windows.h>
-
 #undef chdir
 #ifdef __GNUC__
 # ifndef __MINGW32__
@@ -124,6 +116,7 @@ extern char g_szOrigTitle[];
 # define BOOL int
 # define UINT int
 # define CALLBACK
+# define LRESULT int
 # define LPSTR int
 # define LPTSTR int
 # define WPARAM int
@@ -146,7 +139,10 @@ extern char g_szOrigTitle[];
 # define PRINTDLG int
 # define TEXTMETRIC int
 # define COLORREF int
-# define HDC int
+typedef int HDC;
+typedef int LOGFONT;
+# define ENUMLOGFONT int
+# define NEWTEXTMETRIC int
 #endif
 
 
@@ -911,6 +907,9 @@ Trace(
 #endif //_DEBUG
 
 #ifdef FEAT_PRINTER
+# ifdef WIN16
+#  define TEXT(a) a
+# endif
 /*=================================================================
  * Win32 printer stuff
  */
@@ -1218,7 +1217,9 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
     int			pifBold;
     int			pifUnderline;
 
-    LPVOID		mem = NULL;
+#ifdef WIN3264
+    DEVMODE		*mem;
+#endif
     int			i;
 
     bUserAbort = &(psettings->user_abort);
@@ -1288,37 +1289,38 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
     stored_nFlags = prt_dlg.Flags;
     stored_nCopies = prt_dlg.nCopies;
 
+    /* Not all printer drivers report the support of color (or grey) in the
+     * same way.  Let's set has_color if there appears to be some way to print
+     * more than B&W. */
+    i = GetDeviceCaps(prt_dlg.hDC, NUMCOLORS);
+    psettings->has_color = (GetDeviceCaps(prt_dlg.hDC, BITSPIXEL) > 1
+				   || GetDeviceCaps(prt_dlg.hDC, PLANES) > 1
+				   || i > 2 || i == -1);
 #ifdef WIN3264
     /*
      * On some windows systems the nCopies parameter is not
      * passed back correctly. It must be retrieved from the
      * hDevMode struct.
      */
-    psettings->duplex = FALSE;
-    mem = GlobalLock(prt_dlg.hDevMode);
+    mem = (DEVMODE *)GlobalLock(prt_dlg.hDevMode);
     if (mem != NULL)
     {
-	if (((DEVMODE *)mem)->dmCopies != 1)
-	    stored_nCopies = ((DEVMODE *)mem)->dmCopies;
-	if ((((DEVMODE *)mem)->dmFields & DM_DUPLEX)
-		&& (((DEVMODE *)mem)->dmDuplex & ~DMDUP_SIMPLEX))
+	if (mem->dmCopies != 1)
+	    stored_nCopies = mem->dmCopies;
+	if ((mem->dmFields & DM_DUPLEX) && (mem->dmDuplex & ~DMDUP_SIMPLEX))
 	    psettings->duplex = TRUE;
+	if ((mem->dmFields & DM_COLOR) && (mem->dmColor & DMCOLOR_COLOR))
+	    psettings->has_color = TRUE;
     }
     GlobalUnlock(prt_dlg.hDevMode);
 #endif
 
     /*
-     * Initialise the font according to 'printerfont'
+     * Initialise the font according to 'printfont'
      */
     memset(&fLogFont, 0, sizeof(fLogFont));
-#ifdef FEAT_GUI
     if (!get_logfont(&fLogFont, p_pfn, prt_dlg.hDC))
 	return FALSE;
-#else
-    /*<VN> need to rearrange win32 code so we can call get_logfont*/
-    /* Should use p_pfn here, but only the font name. */
-    STRCPY(fLogFont.lfFaceName, "Courier New");
-#endif
 
     for (pifBold = 0; pifBold <= 1; pifBold++)
 	for (pifItalic = 0; pifItalic <= 1; pifItalic++)
@@ -1344,10 +1346,6 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
 							? prt_dlg.nCopies : 1;
     psettings->n_uncollated_copies = (prt_dlg.Flags & PD_COLLATE)
 							? 1 : prt_dlg.nCopies;
-    i = GetDeviceCaps(prt_dlg.hDC, NUMCOLORS);
-    psettings->has_color = (GetDeviceCaps(prt_dlg.hDC, BITSPIXEL) > 1
-				   || GetDeviceCaps(prt_dlg.hDC, PLANES) > 1
-				   || i > 2 || i == -1);
 
     if (psettings->n_collated_copies == 0)
 	psettings->n_collated_copies = 1;
@@ -1489,7 +1487,16 @@ mch_print_set_font(int iBold, int iItalic, int iUnderline)
 mch_print_set_bg(unsigned long bgcol)
 {
     SetBkColor(prt_dlg.hDC, GetNearestColor(prt_dlg.hDC, swap_me(bgcol)));
+    /*
+     * With a white background we can draw characters transparent, which is
+     * good for italic characters that overlap to the next char cell.
+     */
+    if (bgcol == 0xffffff)
+	SetBkMode(prt_dlg.hDC, TRANSPARENT);
+    else
+	SetBkMode(prt_dlg.hDC, OPAQUE);
 }
+
     void
 mch_print_set_fg(unsigned long fgcol)
 {
@@ -1572,200 +1579,881 @@ shortcut_error:
 }
 #endif
 
-#if defined(FEAT_OLE) || defined(PROTO)
+#if defined(FEAT_CLIENTSERVER) || defined(PROTO)
 /*
- * Client code for the Vim OLE functionality.
+ * Client-server code for Vim
  *
- * Initially written by Walter Briscoe.
+ * Originally written by Paul Moore
  */
-#ifdef PROTO
-# define IDispatch int
-# define BSTR int
+
+/* In order to handle inter-process messages, we need to have a window. But
+ * the functions in this module can be called before the main GUI window is
+ * created (and may also be called in the console version, where there is no
+ * GUI window at all).
+ *
+ * So we create a hidden window, and arrange to destroy it on exit.
+ */
+HWND message_window = 0;
+
+/* We also use a broadcast message to locate servers
+ */
+static unsigned int vim_broadcast = 0;
+
+/* Communication is via WM_COPYDATA messages. The message type is send in
+ * the dwData parameter. Types are defined here.
+ */
+#define COPYDATA_KEYS	0
+#define COPYDATA_EXPR	1
+#define COPYDATA_REPLY	2
+#define COPYDATA_GETHWND 3
+#define COPYDATA_LIST	4
+#define BROADCAST_WAKEUP 5
+
+/* This is a structure containing a server HWND and its name
+ */
+struct server_id
+{
+    HWND hwnd;
+    char_u *name;
+};
+
+/* Clean up on exit. This destroys the hidden message window.
+ */
+    static void
+CleanUpMessaging(void)
+{
+    if (message_window != 0)
+    {
+	DestroyWindow(message_window);
+	message_window = 0;
+    }
+}
+
+static int save_reply(char_u *id, char_u *reply);
+
+/* The window procedure for the hidden message window.
+ * It handles callback messages and notifications from servers.
+ * In order to process these messages, it is necessary to run a
+ * message loop. Code which may run before the main message loop
+ * is started (in the GUI) is careful to pump messages when it needs
+ * to. Features which require message delivery during normal use will
+ * not work in the console version - this basically means those
+ * features which allow Vim to act as a server, rather than a client.
+ */
+    static LRESULT CALLBACK
+Messaging_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    if (msg == vim_broadcast)
+    {
+	/* wParam is the sender's HWND,
+	 * lParam is the notification type to return.
+	 * This is simply passed back in the WM_COPYDATA reply.
+	 */
+	HWND requester = (HWND)wParam;
+	DWORD type = (DWORD)lParam;
+	COPYDATASTRUCT reply;
+
+	/* If the type is BROADCAST_WAKEUP, we don't need to reply - it's just
+	 * a notification */
+	if (type == BROADCAST_WAKEUP)
+	    return 1;
+
+	/* Don't respond if we don't have a name to reply with */
+	if (serverName == NULL)
+	    return 0;
+
+	reply.dwData = type;
+	reply.cbData = STRLEN(serverName) + 1;
+	reply.lpData = serverName;
+	SendMessage(requester, WM_COPYDATA, (WPARAM)message_window,
+							    (LPARAM)(&reply));
+
+	/* Don't bother if the sender ignores us */
+	return 1;
+    }
+    else if (msg == WM_COPYDATA)
+    {
+	/* This is a message from another Vim. The dwData member of the
+	 * COPYDATASTRUCT determines the type of message:
+	 *    0 = A key sequence. We are a server, and a client wants
+	 *        these keys adding to the input queue.
+	 *    1 = An expression. We are a server, and a client wants us
+	 *        to evaluate this expression.
+	 *    2 = A reply. We are a client, and a server has sent this
+	 *        message in response to a request. (serverreply_send)
+	 *    3 = A response to a VimBroadcast message.
+	 *        The broadcast requested a HWND for a server name.
+	 *        The window user data contains a pointer to a
+	 *        struct server_id with the requested name in it.
+	 *        The window procedure should fill in the HWND.
+	 *    4 = A response to a VimBroadcast message.
+	 *        The broadcast requested a list of server names.
+	 *        The window user data contains a pointer to a
+	 *        growarray. Each server name is added to the growarray,
+	 *        separated by newlines.
+	 */
+	COPYDATASTRUCT *data = (COPYDATASTRUCT*)lParam;
+	HWND sender = (HWND)wParam;
+	COPYDATASTRUCT reply;
+	char_u *cpo_save;
+	char_u *res;
+	char_u winstr[30];
+	garray_T *ga;
+	struct server_id *id;
+
+	switch (data->dwData)
+	{
+	case COPYDATA_KEYS:
+	    /* Set 'cpoptions' the way we want it.
+	     *    B set - backslashes are *not* treated specially
+	     *    k set - keycodes are *not* reverse-engineered
+	     *    < unset - <Key> sequenecs *are* interpreted
+	     *  last parameter of replace_termcodes() is TRUE so that
+	     *  the <lt> sequence is recognised - needed as backslash
+	     *  is not special...
+	     */
+	    cpo_save = p_cpo;
+	    p_cpo = (char_u *)"Bk";
+	    res = replace_termcodes((char_u *)(data->lpData), &res,
+								 FALSE, TRUE);
+	    p_cpo = cpo_save;
+#ifdef FEAT_GUI
+	    add_to_input_buf(res, STRLEN(res));
+#else
+	    ins_typebuf(res, REMAP_NONE, 0, TRUE, TRUE);
 #endif
+	    vim_free((char_u *)res);
 
-static IDispatch *m_pDisp = NULL;
+	    /* Remember who sent this, for <client> */
+	    clientWindow = sender;
 
-/*
- * Make a copy of multi-byte string in a WideChar string -- new string
- * allocated using SysAllocString().
- */
-    static BSTR
-DuplicateAsSysBstr(const char *sStr)
-{
-    int nLen = (int)strlen(sStr);
-    int nCnt = MultiByteToWideChar(CP_ACP, 0, sStr, nLen, NULL, 0);
-    BSTR bstrRet = SysAllocStringLen(NULL, (unsigned)(nCnt + 1));
+	    return 1;
+	case COPYDATA_EXPR:
+	    res = eval_to_string(data->lpData, NULL);
+	    reply.dwData = COPYDATA_REPLY;
+	    reply.lpData = res;
+	    reply.cbData = STRLEN(res) + 1;
 
-    MultiByteToWideChar(CP_ACP, 0, sStr, nLen, bstrRet, nCnt);
-    bstrRet[nCnt] = 0;
-    return bstrRet;
+	    /* Remember who sent this, for <client> */
+	    clientWindow = sender;
+
+	    return SendMessage(sender, WM_COPYDATA, (WPARAM)message_window,
+			      (LPARAM)(&reply));
+	case COPYDATA_REPLY:
+	    sprintf((char *)winstr, "0x%x", (unsigned int)sender);
+	    save_reply(winstr, data->lpData);
+#ifdef FEAT_AUTOCMD
+	    apply_autocmds(EVENT_REMOTEREPLY, winstr, data->lpData,
+								TRUE, curbuf);
+#endif
+	    return 1;
+	case COPYDATA_GETHWND:
+	    id = (struct server_id *)GetWindowLong(message_window,
+								GWL_USERDATA);
+	    if (STRICMP(id->name, data->lpData) == 0)
+		id->hwnd = sender;
+	    return 1;
+	case COPYDATA_LIST:
+	    ga = (garray_T *)GetWindowLong(message_window, GWL_USERDATA);
+	    ga_concat(ga, data->lpData);
+	    ga_concat(ga, "\n");
+	    return 1;
+	}
+
+	return 0;
+    }
+    else if (msg == WM_DESTROY)
+    {
+	/* We're dying - wake up any clients waiting for us */
+	SendMessage(HWND_BROADCAST, vim_broadcast, 0, BROADCAST_WAKEUP);
+	return 0;
+    }
+    else
+	return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
-/*
- * Make a copy of a WideChar string in a multi-byte string.
- */
-    static char *
-DuplicateAsStr(const BSTR bstr)
-{
-    int nLen = WideCharToMultiByte(CP_ACP, 0, bstr, -1, NULL, 0, NULL, NULL);
-    char *sRet = alloc((unsigned)nLen);
-
-    if (sRet != NULL)
-	WideCharToMultiByte(CP_ACP, 0, bstr, -1, sRet, nLen, NULL, NULL);
-    return sRet;
-}
-
-/*
- * Send keys to the Vim server.
- * return OK or FAIL.
+/* Initialise the message handling process. This involves creating a window
+ * to handle messages - the window will not be visible.
  */
     int
-ole_SendKeys(const char_u *sKeys)
+serverInitMessaging(void)
 {
-    OLECHAR *szMember = (OLECHAR*)L"SendKeys";
-    DISPID dispid;
-    VARIANTARG varg;
-    DISPPARAMS params = {NULL, NULL, 1, 0};
+    WNDCLASS wndclass;
+    HINSTANCE s_hinst = (HINSTANCE)GetModuleHandle(0);
 
-    params.rgvarg = &varg;
+    /* Clean up on exit */
+    atexit(CleanUpMessaging);
 
-    if (m_pDisp != NULL
-	    && !FAILED(IDispatch_GetIDsOfNames(m_pDisp,
-		    &IID_NULL, &szMember, 1, LOCALE_SYSTEM_DEFAULT, &dispid)))
-    {
-	varg.vt = VT_BSTR;
-	varg.bstrVal = DuplicateAsSysBstr(sKeys);
-	IDispatch_Invoke(m_pDisp, dispid, &IID_NULL,
-		LOCALE_SYSTEM_DEFAULT,
-		DISPATCH_METHOD, &params, NULL, NULL, NULL);
-	SysFreeString(varg.bstrVal);
-	return OK;
-    }
-    return FAIL;
+    /* Register a broadcast message */
+    vim_broadcast = RegisterWindowMessage("VimBroadcast");
+
+    /* Register a window class - we only really care
+     * about the window procedure
+     */
+    wndclass.style = 0;
+    wndclass.lpfnWndProc = Messaging_WndProc;
+    wndclass.cbClsExtra = 0;
+    wndclass.cbWndExtra = 0;
+    wndclass.hInstance = s_hinst;
+    wndclass.hIcon = NULL;
+    wndclass.hCursor = NULL;
+    wndclass.hbrBackground = NULL;
+    wndclass.lpszMenuName = NULL;
+    wndclass.lpszClassName = "VIM_MESSAGES";
+    RegisterClass(&wndclass);
+
+    /* Create the message window. It will be hidden,
+     * so the details don't matter.
+     */
+    message_window = CreateWindow("VIM_MESSAGES", "Vim Message Window",
+			 WS_OVERLAPPEDWINDOW,
+			 CW_USEDEFAULT, CW_USEDEFAULT,
+			 100, 100, NULL, NULL,
+			 s_hinst, NULL);
+
+    return 1;
 }
 
-/*
- * Evaluate an expression in the Vim server.
- */
-    char_u *
-ole_Eval(const char_u *sExpr)
+    static HWND
+findServer(char_u *name)
 {
-    OLECHAR *szMember = (OLECHAR*)L"Eval";
-    DISPID dispid;
-    VARIANTARG varg;
-    VARIANTARG vret;
-    char *sRet = NULL;
-    DISPPARAMS params = {NULL, NULL, 1, 0};
+    struct server_id id;
 
-    params.rgvarg = &varg;
+    id.name = name;
+    id.hwnd = 0;
 
-    if (m_pDisp != NULL
-	    && !FAILED(IDispatch_GetIDsOfNames(m_pDisp,
-		    &IID_NULL, &szMember, 1, LOCALE_SYSTEM_DEFAULT, &dispid)))
+    SetWindowLong(message_window, GWL_USERDATA, (unsigned long)&id);
+    SendMessage(HWND_BROADCAST, vim_broadcast, (WPARAM)message_window,
+							    COPYDATA_GETHWND);
+    SetWindowLong(message_window, GWL_USERDATA, 0);
+
+    return id.hwnd;
+}
+
+    void
+serverSetName(char_u *name)
+{
+    char_u	*ok_name;
+    HWND	hwnd = 0;
+    int		i = 0;
+    char_u	*p;
+
+    /* Leave enough space for a 9-digit suffix to ensure uniqueness! */
+    ok_name = alloc(STRLEN(name) + 10);
+
+    STRCPY(ok_name, name);
+    p = ok_name + STRLEN(name);
+
+    for (;;)
     {
-	HRESULT res;
+	hwnd = findServer(ok_name);
+	if (hwnd == 0)
+	    break;
 
-	varg.vt = VT_BSTR;
-	varg.bstrVal = DuplicateAsSysBstr(sExpr);
-	VariantInit(&vret);
+	++i;
+	if (i >= 1000)
+	    break;
 
-	res = IDispatch_Invoke(m_pDisp, dispid, &IID_NULL,
-		LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD,
-						  &params, &vret, NULL, NULL);
+	sprintf((char *)p, "%d", i);
+    }
 
-	SysFreeString(varg.bstrVal);
+    if (hwnd != 0)
+	vim_free(ok_name);
+    else
+    {
+	serverName = ok_name;
+#ifdef FEAT_EVAL
+	set_vim_var_string(VV_SEND_SERVER, serverName, -1);
+#endif
+    }
+}
 
-	if (SUCCEEDED(res))
+    char_u *
+serverGetVimNames(void)
+{
+    garray_T ga;
+
+    ga_init2(&ga, 1, 100);
+
+    /* Get all the server names */
+    SetWindowLong(message_window, GWL_USERDATA, (unsigned long)&ga);
+    SendMessage(HWND_BROADCAST, vim_broadcast, (WPARAM)message_window,
+							       COPYDATA_LIST);
+    SetWindowLong(message_window, GWL_USERDATA, 0);
+
+    return ga.ga_data;
+}
+
+    int
+serverSendReply(name, reply)
+    char_u	 *name;			/* Where to send. */
+    char_u	 *reply;		/* What to send. */
+{
+    HWND target;
+    COPYDATASTRUCT data;
+    int n = 0;
+
+    /* The "name" argument is a magic cookie obtained from expand("<client>").
+     * It should be of the form 0xXXXXX - i.e. a C hex literal, which is the
+     * value of the client's message window HWND.
+     */
+    sscanf((char *)name, "%x", &n);
+    if (n == 0)
+	return -1;
+
+    target = (HWND)n;
+    if (!IsWindow(target))
+	return -1;
+
+    data.dwData = COPYDATA_REPLY;
+    data.cbData = STRLEN(reply) + 1;
+    data.lpData = reply;
+
+    if (SendMessage(target, WM_COPYDATA, (WPARAM)message_window,
+							     (LPARAM)(&data)))
+	return 0;
+
+    return -1;
+}
+
+    int
+serverSendToVim(name, cmd, result, ptarget, asExpr)
+    char_u	 *name;			/* Where to send. */
+    char_u	 *cmd;			/* What to send. */
+    char_u	 **result;		/* Result of eval'ed expression */
+    void	 *ptarget;		/* HWND of server */
+    int		 asExpr;                /* Expression or keys? */
+{
+    HWND target = findServer(name);
+    COPYDATASTRUCT data;
+    char_u *retval = 0;
+
+    if (ptarget)
+	*(HWND *)ptarget = target;
+
+    data.dwData = asExpr ? COPYDATA_EXPR : COPYDATA_KEYS;
+    data.cbData = STRLEN(cmd) + 1;
+    data.lpData = cmd;
+
+    if (SendMessage(target, WM_COPYDATA, (WPARAM)message_window,
+							(LPARAM)(&data)) == 0)
+	return -1;
+
+    if (asExpr)
+    {
+	retval = (char_u *)GetWindowLong(message_window, GWL_USERDATA);
+	SetWindowLong(message_window, GWL_USERDATA, 0);
+    }
+
+    if (result == NULL)
+	vim_free(retval);
+    else
+	*result = retval; /* Caller assumes responsibility for freeing */
+
+    return 0;
+}
+
+/* Replies from server need to be stored until the client picks them up via
+ * serverreply_read(). So we maintain a list of server-id/reply pairs.
+ * Note that there could be multiple replies from one server pending if the
+ * client is slow picking them up.
+ * We just store the replies in a simple list. When we remove an entry, we
+ * move list entries down to fill the gap.
+ * The server ID is simply the HWND, stored as a string (formatted in %x
+ * format).
+ */
+typedef struct
+{
+    char_u *id;
+    char_u *reply;
+}
+reply_T;
+
+static garray_T reply_list = {0, 0, sizeof(reply_T), 5, 0};
+
+#define REPLY_ITEM(i) ((reply_T *)(reply_list.ga_data) + (i))
+#define REPLY_COUNT (reply_list.ga_len)
+
+/* Flag which is used to wait for a reply */
+static int reply_received = 0;
+
+    static int
+save_reply(char_u *id, char_u *reply)
+{
+    reply_T *rep;
+
+    if (ga_grow(&reply_list, 1) == FAIL)
+	return FAIL;
+
+    rep = REPLY_ITEM(REPLY_COUNT);
+    rep->id = vim_strsave(id);
+    rep->reply = vim_strsave(reply);
+    if (rep->id == 0 || rep->reply == 0)
+    {
+	vim_free(rep->id);
+	vim_free(rep->reply);
+	return FAIL;
+    }
+
+    ++REPLY_COUNT;
+    reply_received = 1;
+    return OK;
+}
+
+    char_u *
+serverGetReply(char_u *id, int remove, int wait)
+{
+    int i;
+    char_u *p;
+    char_u *reply;
+    reply_T *rep;
+
+    for (i = 0; i < REPLY_COUNT; ++i)
+    {
+	rep = REPLY_ITEM(i);
+	if (STRCMP(rep->id, id) == 0)
 	{
-	    sRet = DuplicateAsStr(vret.bstrVal);
-	    SysFreeString(vret.bstrVal);
-	    return (char_u *)sRet;
+	    size_t bytes;
+
+	    /* If we aren't going to remove the reply from the list,
+	     * just return the value we've found
+	     */
+	    if (!remove)
+		return rep->reply;
+
+	    /* Save the values we've found for later */
+	    p = rep->id;
+	    reply = rep->reply;
+
+	    /* Move the rest of the list down to fill the gap */
+	    bytes = (REPLY_COUNT - i - 1) * sizeof(reply_T);
+	    mch_memmove(rep, rep + 1, bytes);
+	    --REPLY_COUNT;
+
+	    /* Free the ID, which was allocated when it was stored. Return the
+	     * reply to the caller, who takes on responsibility for freeing
+	     * it.
+	     */
+	    vim_free(p);
+	    return reply;
 	}
     }
 
-    return NULL;
-}
-
-/*
- * Get the window ID of the Vim server.
- */
-    unsigned
-ole_GetHwnd(void)
-{
-    OLECHAR *szMember = (OLECHAR*)L"GetHwnd";
-    DISPID dispid;
-    VARIANTARG vret = {0};
-    DISPPARAMS params = {NULL, NULL, 0, 0};
-
-    if (m_pDisp == NULL
-	    || FAILED(IDispatch_GetIDsOfNames(m_pDisp, &IID_NULL, &szMember, 1,
-		    LOCALE_SYSTEM_DEFAULT, &dispid))
-	    || FAILED(IDispatch_Invoke(m_pDisp, dispid, &IID_NULL,
-		    LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD, &params, &vret,
-								  NULL, NULL))
-	    || vret.vt != VT_UI4)
+    /* If we got here, we didn't find a reply. Return immediately unless the
+     * "wait" parameter is set.
+     */
+    if (!wait)
 	return 0;
-    return (unsigned)vret.lVal;
+
+    /* We need to wait for a reply. Enter a message loop until the
+     * "reply_received" flag gets set, then check if this is for us.
+     */
+    for (;;)
+    {
+	MSG msg;
+	HWND server;
+	int n = 0;
+
+	/* The server's HWND is encoded in the 'id' parameter */
+	sscanf((char *)id, "%x", &n);
+	server = (HWND)n;
+
+	/* Nothing found so far... */
+	reply_received = 0;
+
+	/* Loop until we receive a reply */
+	while (reply_received == 0)
+	{
+	    /* Wait for a SendMessage() call to us.  This could be the reply we
+	     * are waiting for.  */
+	    MsgWaitForMultipleObjects(0, NULL, TRUE, INFINITE, QS_SENDMESSAGE);
+
+	    /* If the server has died, give up */
+	    if (!IsWindow(server))
+		return 0;
+
+	    if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+	    {
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	    }
+	}
+
+	/* Check the one we just received */
+	rep = REPLY_ITEM(REPLY_COUNT - 1);
+	if (STRCMP(rep->id, id) == 0)
+	    break;
+    }
+
+    /* We got a reply. Return it. */
+    reply = rep->reply;
+
+    if (remove)
+    {
+	vim_free(rep->id);
+	--REPLY_COUNT;
+    }
+
+    return reply;
 }
 
+#if !defined(FEAT_GUI) || defined(PROTO)
 /*
- * Make the Vim server jump to the foreground.
+ * Process any messages in the Windows message queue. This is only required
+ * for the console version, as the GUI version has a message loop anyway.
  */
     void
-ole_SetForeground(void)
+serverProcessPendingMessages(void)
 {
-    OLECHAR *szMember = (OLECHAR*)L"SetForeground";
-    DISPID dispid;
-    DISPPARAMS params = {NULL, NULL, 0, 0};
+    MSG msg;
 
-    if (m_pDisp != NULL && !FAILED(IDispatch_GetIDsOfNames(m_pDisp,
-		    &IID_NULL, &szMember, 1, LOCALE_SYSTEM_DEFAULT, &dispid)))
-	IDispatch_Invoke(m_pDisp, dispid, &IID_NULL, LOCALE_SYSTEM_DEFAULT,
-		DISPATCH_METHOD, &params, NULL, NULL, NULL);
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+    {
+	TranslateMessage(&msg);
+	DispatchMessage(&msg);
+    }
 }
+#endif
+
+#endif /* FEAT_CLIENTSERVER */
+
+#if defined(FEAT_GUI) || defined(FEAT_PRINTER) || defined(PROTO)
+
+struct charset_pair
+{
+    char	*name;
+    BYTE	charset;
+};
+
+static struct charset_pair
+charset_pairs[] =
+{
+    {"ANSI",		ANSI_CHARSET},
+    {"CHINESEBIG5",	CHINESEBIG5_CHARSET},
+    {"DEFAULT",		DEFAULT_CHARSET},
+    {"HANGEUL",		HANGEUL_CHARSET},
+    {"OEM",		OEM_CHARSET},
+    {"SHIFTJIS",	SHIFTJIS_CHARSET},
+    {"SYMBOL",		SYMBOL_CHARSET},
+#ifdef WIN3264
+    {"ARABIC",		ARABIC_CHARSET},
+    {"BALTIC",		BALTIC_CHARSET},
+    {"EASTEUROPE",	EASTEUROPE_CHARSET},
+    {"GB2312",		GB2312_CHARSET},
+    {"GREEK",		GREEK_CHARSET},
+    {"HEBREW",		HEBREW_CHARSET},
+    {"JOHAB",		JOHAB_CHARSET},
+    {"MAC",		MAC_CHARSET},
+    {"RUSSIAN",		RUSSIAN_CHARSET},
+    {"THAI",		THAI_CHARSET},
+    {"TURKISH",		TURKISH_CHARSET},
+# if !defined(_MSC_VER) || (_MSC_VER > 1010)
+    {"VIETNAMESE",	VIETNAMESE_CHARSET},
+# endif
+#endif
+    {NULL,		0}
+};
 
 /*
- * Open a connection to a Vim server.
- * Returns FAIL or OK.
+ * Convert a charset ID to a name.
+ * Return NULL when not recognized.
  */
+    char *
+charset_id2name(int id)
+{
+    struct charset_pair *cp;
+
+    for (cp = charset_pairs; cp->name != NULL; ++cp)
+	if ((BYTE)id == cp->charset)
+	    break;
+    return cp->name;
+}
+
+static const LOGFONT s_lfDefault =
+{
+    -12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+    OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+    PROOF_QUALITY, FIXED_PITCH | FF_DONTCARE,
+    "Fixedsys"	/* see _ReadVimIni */
+};
+
+/* Initialise the "current height" to -12 (same as s_lfDefault) just
+ * in case the user specifies a font in "guifont" with no size before a font
+ * with an explicit size has been set. This defaults the size to this value
+ * (-12 equates to roughly 9pt).
+ */
+int current_font_height = -12;		/* also used in gui_w48.c */
+
+/* Convert a string representing a point size into pixels. The string should
+ * be a positive decimal number, with an optional decimal point (eg, "12", or
+ * "10.5"). The pixel value is returned, and a pointer to the next unconverted
+ * character is stored in *end. The flag "vertical" says whether this
+ * calculation is for a vertical (height) size or a horizontal (width) one.
+ */
+    static int
+points_to_pixels(char_u *str, char_u **end, int vertical, int pprinter_dc)
+{
+    int		pixels;
+    int		points = 0;
+    int		divisor = 0;
+    HWND	hwnd;
+    HDC		hdc;
+    HDC		printer_dc = (HDC)pprinter_dc;
+
+    while (*str != NUL)
+    {
+	if (*str == '.' && divisor == 0)
+	{
+	    /* Start keeping a divisor, for later */
+	    divisor = 1;
+	}
+	else
+	{
+	    if (!isdigit(*str))
+		break;
+
+	    points *= 10;
+	    points += *str - '0';
+	    divisor *= 10;
+	}
+	++str;
+    }
+
+    if (divisor == 0)
+	divisor = 1;
+
+    if (printer_dc == NULL)
+    {
+	hwnd = GetDesktopWindow();
+	hdc = GetWindowDC(hwnd);
+    }
+    else
+	hdc = printer_dc;
+
+    pixels = MulDiv(points,
+		    GetDeviceCaps(hdc, vertical ? LOGPIXELSY : LOGPIXELSX),
+		    72 * divisor);
+
+    if (printer_dc == NULL)
+	ReleaseDC(hwnd, hdc);
+
+    *end = str;
+    return pixels;
+}
+
+    static int CALLBACK
+font_enumproc(
+    ENUMLOGFONT	    *elf,
+    NEWTEXTMETRIC   *ntm,
+    int		    type,
+    LPARAM	    lparam)
+{
+    /* Return value:
+     *	  0 = terminate now (monospace & ANSI)
+     *	  1 = continue, still no luck...
+     *	  2 = continue, but we have an acceptable LOGFONT
+     *	      (monospace, not ANSI)
+     * We use these values, as EnumFontFamilies returns 1 if the
+     * callback function is never called. So, we check the return as
+     * 0 = perfect, 2 = OK, 1 = no good...
+     * It's not pretty, but it works!
+     */
+
+    LOGFONT *lf = (LOGFONT *)(lparam);
+
+#ifndef FEAT_PROPORTIONAL_FONTS
+    /* Ignore non-monospace fonts without further ado */
+    if ((ntm->tmPitchAndFamily & 1) != 0)
+	return 1;
+#endif
+
+    /* Remember this LOGFONT as a "possible" */
+    *lf = elf->elfLogFont;
+
+    /* Terminate the scan as soon as we find an ANSI font */
+    if (lf->lfCharSet == ANSI_CHARSET
+	    || lf->lfCharSet == OEM_CHARSET
+	    || lf->lfCharSet == DEFAULT_CHARSET)
+	return 0;
+
+    /* Continue the scan - we have a non-ANSI font */
+    return 2;
+}
+
+    static int
+init_logfont(LOGFONT *lf)
+{
+    int		n;
+    HWND	hwnd = GetDesktopWindow();
+    HDC		hdc = GetWindowDC(hwnd);
+
+    n = EnumFontFamilies(hdc,
+			 (LPCSTR)lf->lfFaceName,
+			 (FONTENUMPROC)font_enumproc,
+			 (LPARAM)lf);
+
+    ReleaseDC(hwnd, hdc);
+
+    /* If we couldn't find a useable font, return failure */
+    if (n == 1)
+	return FAIL;
+
+    /* Tidy up the rest of the LOGFONT structure. We set to a basic
+     * font - get_logfont() sets bold, italic, etc based on the user's
+     * input.
+     */
+    lf->lfHeight = current_font_height;
+    lf->lfWidth = 0;
+    lf->lfItalic = FALSE;
+    lf->lfUnderline = FALSE;
+    lf->lfStrikeOut = FALSE;
+    lf->lfWeight = FW_NORMAL;
+
+    /* Return success */
+    return OK;
+}
+
     int
-ole_client_init(void)
+get_logfont(
+    LOGFONT *lf,
+    char_u  *name,
+    HDC printer_dc)
 {
-    CLSID m_CLSID_Vim;
+    char_u	*p;
+    int		i;
+    static LOGFONT *lastlf = NULL;
 
-    /* Check if already connected. */
-    if (m_pDisp != NULL)
-	return OK;
+    *lf = s_lfDefault;
+    if (name == NULL)
+	return 1;
 
-    if (FAILED(CoInitialize(NULL))
-	    || FAILED(CLSIDFromProgID((OLECHAR*)L"Vim.Application",
-								&m_CLSID_Vim))
-	    || FAILED(CoCreateInstance(&m_CLSID_Vim, NULL, CLSCTX_LOCAL_SERVER,
-		    &IID_IDispatch, (void**)&m_pDisp)))
+    if (STRCMP(name, "*") == 0)
+#if defined(FEAT_GUI_W32)
     {
-	(void)MessageBox(NULL,
-			 "Failed to obtain a connection to a Vim server.\n"
-			 "Please run Vim to register it !",
-			 "Vim OLE client",
-			 MB_OK | MB_ICONEXCLAMATION);
+	CHOOSEFONT	cf;
+	/* if name is "*", bring up std font dialog: */
+	memset(&cf, 0, sizeof(cf));
+	cf.lStructSize = sizeof(cf);
+	cf.hwndOwner = s_hwnd;
+	cf.Flags = CF_SCREENFONTS | CF_FIXEDPITCHONLY | CF_INITTOLOGFONTSTRUCT;
+	if (lastlf != NULL)
+	    *lf = *lastlf;
+	cf.lpLogFont = lf;
+	cf.nFontType = 0 ; //REGULAR_FONTTYPE;
+	if (ChooseFont(&cf))
+	    goto theend;
+    }
+#else
+	return 0;
+#endif
+
+    /*
+     * Split name up, it could be <name>:h<height>:w<width> etc.
+     */
+    for (p = name; *p && *p != ':'; p++)
+    {
+	if (p - name + 1 > LF_FACESIZE)
+	    return 0;			/* Name too long */
+	lf->lfFaceName[p - name] = *p;
+    }
+    if (p != name)
+	lf->lfFaceName[p - name] = NUL;
+
+    /* First set defaults */
+    lf->lfHeight = -12;
+    lf->lfWidth = 0;
+    lf->lfWeight = FW_NORMAL;
+    lf->lfItalic = FALSE;
+    lf->lfUnderline = FALSE;
+    lf->lfStrikeOut = FALSE;
+
+    /*
+     * If the font can't be found, try replacing '_' by ' '.
+     */
+    if (init_logfont(lf) == FAIL)
+    {
+	int	did_replace = FALSE;
+
+	for (i = 0; lf->lfFaceName[i]; ++i)
+	    if (lf->lfFaceName[i] == '_')
+	    {
+		lf->lfFaceName[i] = ' ';
+		did_replace = TRUE;
+	    }
+	if (!did_replace || init_logfont(lf) == FAIL)
+	    return 0;
     }
 
-    return m_pDisp == NULL ? FAIL : OK;
-}
+    while (*p == ':')
+	p++;
 
-/*
- * Close the connection to the Vim server.
- */
-    void
-ole_client_close(void)
-{
-    if (m_pDisp != NULL)
+    /* Set the values found after ':' */
+    while (*p)
     {
-	IDispatch_Release(m_pDisp);
-	m_pDisp = NULL;
+	switch (*p++)
+	{
+	    case 'h':
+		lf->lfHeight = - points_to_pixels(p, &p, TRUE, (int)printer_dc);
+		break;
+	    case 'w':
+		lf->lfWidth = points_to_pixels(p, &p, FALSE, (int)printer_dc);
+		break;
+	    case 'b':
+#ifndef MSWIN16_FASTTEXT
+		lf->lfWeight = FW_BOLD;
+#endif
+		break;
+	    case 'i':
+#ifndef MSWIN16_FASTTEXT
+		lf->lfItalic = TRUE;
+#endif
+		break;
+	    case 'u':
+		lf->lfUnderline = TRUE;
+		break;
+	    case 's':
+		lf->lfStrikeOut = TRUE;
+		break;
+	    case 'c':
+		{
+		    struct charset_pair *cp;
+
+		    for (cp = charset_pairs; cp->name != NULL; ++cp)
+			if (STRNCMP(p, cp->name, strlen(cp->name)) == 0)
+			{
+			    lf->lfCharSet = cp->charset;
+			    p += strlen(cp->name);
+			    break;
+			}
+		    if (cp->name == NULL)
+		    {
+			sprintf((char *)IObuff, _("E244: Illegal charset name \"%s\" in font name \"%s\""), p, name);
+			EMSG(IObuff);
+			break;
+		    }
+		    break;
+		}
+	    default:
+		sprintf((char *)IObuff,
+			_("E245: Illegal char '%c' in font name \"%s\""),
+			p[-1], name);
+		EMSG(IObuff);
+		break;
+	}
+	while (*p == ':')
+	    p++;
     }
 
-    CoUninitialize();
+#if defined(FEAT_GUI_W32)
+theend:
+#endif
+    /* ron: init lastlf */
+    vim_free(lastlf);
+    lastlf = (LOGFONT *)alloc(sizeof(LOGFONT));
+    if (lastlf != NULL)
+	mch_memmove(lastlf, lf, sizeof(LOGFONT));
+
+    return 1;
 }
 
-#endif /* FEAT_OLE */
+#endif /* defined(FEAT_GUI) || defined(FEAT_PRINTER) */

@@ -71,7 +71,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0ar
+MINOR = 0as
 
 # CHECKLIST for creating a new version:
 #
@@ -148,7 +148,7 @@ MINOR = 0ar
 # Create the archives:
 # - Copy all the "*.exe" files to where this Makefile is.
 # - "make dosbin".
-# - Run make to update the ".mo" files, then "make doslang".
+# - Run make on Unix to update the ".mo" files, then "make doslang".
 # - "make doslang".
 # NSIS self installing exe:
 # - Unpack the doslang archive on the PC.
@@ -158,6 +158,8 @@ MINOR = 0ar
 # - rename xxdw32.exe to xxd/xxd.exe
 # - put gvimext.dll in GvimExt and VisVim.dll in VisVim (get them from a binary
 #   archive or build them)
+# - do "make uganda.nsis.txt" in runtime/doc (requires sed; when producing it
+#   on Unix don't forget to make it dos fileformat).
 # - go to ../nsis and do "makensis gvim.nsi".
 # - Copy gvim##.exe to the dist directory.
 #
@@ -790,6 +792,11 @@ LANG_DOS = \
 dist:
 	mkdir dist
 
+# Clean up some files to avoid they are included.
+prepare:
+	if test -f runtime/doc/uganda.nsis.txt; then \
+		rm runtime/doc/uganda.nsis.txt; fi
+
 # For the zip files we need to create a file with the comment line
 dist/comment:
 	mkdir dist/comment
@@ -843,7 +850,7 @@ dist/$(COMMENT_FARSI): dist/comment
 dist/$(COMMENT_LANG): dist/comment
 	echo "Vim - Vi IMproved - v$(VDOT) MS-Windows language files" > dist/$(COMMENT_LANG)
 
-unixrt: dist
+unixrt: dist prepare
 	-rm -f dist/$(VIMVER)-rt1.tar.gz
 	-rm -f dist/$(VIMVER)-rt2.tar.gz
 # first runtime file
@@ -865,7 +872,7 @@ unixrt: dist
 	cd dist && tar cf $(VIMVER)-rt2.tar $(VIMRTDIR)
 	gzip -9 dist/$(VIMVER)-rt2.tar
 
-unixsrc: dist
+unixsrc: dist prepare
 	-rm -f dist/$(VIMVER)-src1.tar.gz
 	-rm -f dist/$(VIMVER)-src2.tar.gz
 # first source file
@@ -908,7 +915,7 @@ unixall: dist unixsrc unixrt
 	cd dist && tar cf $(VIMVER).tar $(VIMRTDIR)
 	bzip2 dist/$(VIMVER).tar
 
-extra: dist
+extra: dist prepare
 	-rm -f dist/$(VIMVER)-extra.tar.gz
 	-rm -rf dist/$(VIMRTDIR)
 	mkdir dist/$(VIMRTDIR)
@@ -918,7 +925,7 @@ extra: dist
 	cd dist && tar cvf $(VIMVER)-extra.tar $(VIMRTDIR)
 	gzip -9 dist/$(VIMVER)-extra.tar
 
-lang: dist
+lang: dist prepare
 	-rm -f dist/$(VIMVER)-lang.tar.gz
 	-rm -rf dist/$(VIMRTDIR)
 	mkdir dist/$(VIMRTDIR)
@@ -931,7 +938,7 @@ lang: dist
 	cd dist && tar cvf $(VIMVER)-lang.tar $(VIMRTDIR)
 	gzip -9 dist/$(VIMVER)-lang.tar
 
-amirt: dist
+amirt: dist prepare
 	-rm -f dist/vim$(VERSION)rt.tar.gz
 	-rm -rf dist/Vim
 	mkdir dist/Vim
@@ -952,7 +959,7 @@ amirt: dist
 	gzip -9 dist/vim$(VERSION)rt.tar
 	mv dist/vim$(VERSION)rt.tar.gz dist/vim$(VERSION)rt.tgz
 
-amibin: dist
+amibin: dist prepare
 	-rm -f dist/vim$(VERSION)bin.tar.gz
 	-rm -rf dist/Vim
 	mkdir dist/Vim
@@ -969,7 +976,7 @@ amibin: dist
 	gzip -9 dist/vim$(VERSION)bin.tar
 	mv dist/vim$(VERSION)bin.tar.gz dist/vim$(VERSION)bin.tgz
 
-amisrc: dist
+amisrc: dist prepare
 	-rm -f dist/vim$(VERSION)src.tar.gz
 	-rm -rf dist/Vim
 	mkdir dist/Vim

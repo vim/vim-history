@@ -13,7 +13,7 @@
 
 #include "vim.h"
 
-#if defined(FEAT_XCMDSRV) || defined(PROTO)
+#if defined(FEAT_CLIENTSERVER) || defined(PROTO)
 
 # ifdef FEAT_X11
 #  include <X11/Intrinsic.h>
@@ -295,9 +295,8 @@ DoRegisterName(dpy, name)
 
 #if defined(FEAT_GUI) || defined(PROTO)
 /*
- * serverChangeRegisteredWindow --
- *	Clean out new ID from registry and set it as comm win.
- *	Change any registered window ID.
+ * Clean out new ID from registry and set it as comm win.
+ * Change any registered window ID.
  */
     void
 serverChangeRegisteredWindow(dpy, newwin)
@@ -329,11 +328,8 @@ serverChangeRegisteredWindow(dpy, newwin)
 #endif
 
 /*
- * serverSendToVim --
- *	Send to an instance of Vim via the X display.
- *
- * Results:
- *	An interger return code. 0 is OK. Negative is error.
+ * Send to an instance of Vim via the X display.
+ * Returns 0 for OK, negative for an error.
  */
     int
 serverSendToVim(dpy, name, cmd,  result, server, asExpr, localLoop)
@@ -516,8 +512,7 @@ WindowValid(dpy, w)
 }
 
 /*
- * ServerWait --
- *	Enter a loop processing X events & pooling chars until we see a result
+ * Enter a loop processing X events & polling chars until we see a result
  */
     static void
 ServerWait(dpy, w, endCond, endData, localLoop, seconds)
@@ -577,7 +572,7 @@ ServerWait(dpy, w, endCond, endData, localLoop, seconds)
 	}
 	else
 	{
-	    if(got_int)
+	    if (got_int)
 		break;
 	    ui_delay((long)SEND_MSEC_POLL, TRUE);
 	    ui_breakcheck();
@@ -587,11 +582,10 @@ ServerWait(dpy, w, endCond, endData, localLoop, seconds)
 
 
 /*
- * GetInterpNames --
- *	This procedure is invoked to fetch a list of all the
- *	Vim instance names currently registered for the display.
+ * Fetch a list of all the Vim instance names currently registered for the
+ * display.
  *
- *	The result is a newline separated list. Caller must free list.
+ * Returns a newline separated list in allocated memory or NULL.
  */
     char_u *
 serverGetVimNames(dpy)
@@ -715,9 +709,8 @@ ServerReplyFind(w, op)
 }
 
 /*
- * serverStrToWin --
- *	Convert string to windowid.
- *	Issue an error if the id is invalid.
+ * Convert string to windowid.
+ * Issue an error if the id is invalid.
  */
     Window
 serverStrToWin(str)
@@ -733,19 +726,19 @@ serverStrToWin(str)
 }
 
 /*
- * serverSendReply --
- *	Send a reply string to id (win)
- *	Return -1 if the window is invalid.
+ * Send a reply string to client with id "name".
+ * Return -1 if the window is invalid.
  */
     int
-serverSendReply(dpy, win, str)
-    Display *dpy;
-    Window win;
-    char_u *str;
+serverSendReply(name, str)
+    char_u	*name;
+    char_u	*str;
 {
-    char_u	    *property;
-    int		    length;
-    int             res;
+    char_u	*property;
+    int		length;
+    int         res;
+    Display	*dpy = X_DISPLAY;
+    Window	win = serverStrToWin(name);
 
     if (commProperty == None)
     {
@@ -777,10 +770,9 @@ WaitForReply(p)
 }
 
 /*
- * serverReadReply --
- *	Wait for replies from id (win)
- *	Return 0 and the malloc'ed string when a reply is available.
- *	Return -1 if the window becomes invalid while waiting.
+ * Wait for replies from id (win)
+ * Return 0 and the malloc'ed string when a reply is available.
+ * Return -1 if the window becomes invalid while waiting.
  */
     int
 serverReadReply(dpy, win, str, localLoop)
@@ -818,10 +810,8 @@ serverReadReply(dpy, win, str, localLoop)
 }
 
 /*
- * serverPeekReply --
- *	Check for replies from id (win)
- *	Return TRUE and a non-malloc'ed string if there is.
- *	Else rtyurn FALSE.
+ * Check for replies from id (win).
+ * Return TRUE and a non-malloc'ed string if there is.  Else return FALSE.
  */
     int
 serverPeekReply(dpy, win, str)
@@ -844,10 +834,8 @@ serverPeekReply(dpy, win, str)
 
 
 /*
- * SendInit --
- *	This procedure is called to initialize the
- *	communication channels for sending commands and
- *	receiving results.
+ * Initialize the communication channels for sending commands and receiving
+ * results.
  */
     static int
 SendInit(dpy)
@@ -886,14 +874,11 @@ SendInit(dpy)
 }
 
 /*
- * LookupName --
- *	Given an interpreter name, see if the name exists in
- *	the interpreter registry for a particular display.
+ * Given an interpreter name, see if the name exists in the interpreter
+ * registry for a particular display.
  *
- * Results:
- *	If the given name is registered, return the ID of
- *	the window associated with the name.  If the name
- *	isn't registered, then return 0.
+ * If the given name is registered, return the ID of the window associated
+ * with the name.  If the name isn't registered, then return 0.
  *
  * Side effects:
  *	If the registry property is improperly formed, then
@@ -1086,15 +1071,9 @@ DeleteAnyLingerer(dpy, win)
 }
 
 /*
- * serverEventProc --
- *	This procedure is invoked by the varous X event loops
- *	throughout Vims when a property changes on the communication
- *	window.  This procedure reads the property and handles
- *	command requests and responses.
- *
- * Results:
- *	None.
- *
+ * This procedure is invoked by the varous X event loops throughout Vims when
+ * a property changes on the communication window.  This procedure reads the
+ * property and handles command requests and responses.
  */
     void
 serverEventProc(dpy, eventPtr)
@@ -1338,7 +1317,7 @@ serverEventProc(dpy, eventPtr)
 	    }
 #ifdef FEAT_AUTOCMD
 	    sprintf((char *)winstr, "0x%x", (unsigned int)win);
-	    apply_autocmds(EVENT_SERVERREPLYRECV, winstr, str, TRUE, curbuf);
+	    apply_autocmds(EVENT_REMOTEREPLY, winstr, str, TRUE, curbuf);
 #endif
 
 	}
@@ -1359,14 +1338,10 @@ serverEventProc(dpy, eventPtr)
 }
 
 /*
- * AppendPropCarefully --
- *	Append a given property to a given window, but set up
- *	an X error handler so that if the append fails this
- *	procedure can return an error code rather than having
- *	Xlib panic.
- *
- *  Return:
- *	0 on OK - -1 on error
+ * Append a given property to a given window, but set up an X error handler so
+ * that if the append fails this procedure can return an error code rather
+ * than having Xlib panic.
+ * Return: 0 for OK, -1 for error
  */
     static int
 AppendPropCarefully(dpy, window, property, value, length)
@@ -1423,4 +1398,4 @@ IsSerialName(str)
 
     return TRUE;
 }
-#endif	/* FEAT_XCMDSRV */
+#endif	/* FEAT_CLIENTSERVER */

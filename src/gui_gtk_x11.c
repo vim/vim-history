@@ -480,7 +480,7 @@ expose_event(GtkWidget * widget, GdkEventExpose * event)
     return FALSE;
 }
 
-#ifdef FEAT_XCMDSRV
+#ifdef FEAT_CLIENTSERVER
 /*
  * Handle changes to the "Comm" property
  */
@@ -1645,7 +1645,7 @@ mainwin_realize(GtkWidget *widget)
     setup_save_yourself();
 #endif
 
-#ifdef FEAT_XCMDSRV
+#ifdef FEAT_CLIENTSERVER
     if (serverName == NULL && serverDelayedStartName != NULL)
     {
 	/* This is a :gui command in a plain vim with no previous server */
@@ -2222,8 +2222,7 @@ gui_mch_set_winpos(int x, int y)
 /*ARGSUSED*/
     void
 gui_mch_set_shellsize(int width, int height,
-		    int min_width, int min_height,
-		    int base_width, int base_height)
+	int min_width, int min_height, int base_width, int base_height)
 {
     gtk_form_set_size(GTK_FORM(gui.formwin), width, height);
 
@@ -3100,6 +3099,17 @@ gui_mch_iconify()
 		   GDK_WINDOW_XWINDOW(gui.mainwin->window),
 		   DefaultScreen(GDK_DISPLAY()));
 }
+
+#if defined(FEAT_EVAL) || defined(PROTO)
+/*
+ * Bring the Vim window to the foreground.
+ */
+    void
+gui_mch_set_foreground()
+{
+    gdk_window_raise(gui.mainwin->window);
+}
+#endif
 
 /*
  * Draw a cursor without focus.

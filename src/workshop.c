@@ -1727,13 +1727,7 @@ coloncmd(
     ALT_INPUT_LOCK_OFF;
 
     if (force)
-    {
-	update_screen(0);	/* may need to update the screen */
-	setcursor();
-	out_flush();		/* make sure output has been written */
-	gui_update_cursor(TRUE, FALSE);
-	gui_mch_flush();
-    }
+	gui_update_screen();
 }
 
 /*

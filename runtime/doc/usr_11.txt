@@ -1,4 +1,4 @@
-*usr_11.txt*	For Vim version 6.0ar.  Last change: 2001 Jul 28
+*usr_11.txt*	For Vim version 6.0as.  Last change: 2001 Aug 12
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -81,12 +81,10 @@ doesn't search the directory tree.
 	Swap files found: ~
 	   In current directory: ~
 	1.    .main.c.swp ~
-		     dated: Tue May 29 21:00:25 2001 ~
-		  owned by: mool ~
+		  owned by: mool   dated: Tue May 29 21:00:25 2001 ~
 		 file name: ~mool/vim/vim6/src/main.c ~
 		  modified: YES ~
-		 host name: masaka.moolenaar.net ~
-		 user name: mool ~
+		 user name: mool   host name: masaka.moolenaar.net ~
 		process ID: 12525 ~
 	   In directory ~/tmp: ~
 	      -- none -- ~
@@ -134,12 +132,10 @@ Vim produces a very long message:
 
 		E325: ATTENTION ~
 	Found a swap file by the name ".main.c.swp" ~
-		     dated: Tue May 29 21:09:28 2001 ~
-		  owned by: mool ~
+		  owned by: mool   dated: Tue May 29 21:09:28 2001 ~
 		 file name: ~mool/vim/vim6/src/main.c ~
 		  modified: no ~
-		 host name: masaka.moolenaar.net ~
-		 user name: mool ~
+		 user name: mool   host name: masaka.moolenaar.net ~
 		process ID: 12559 (still running) ~
 	While opening file "main.c" ~
 		     dated: Tue May 29 19:46:12 2001 ~

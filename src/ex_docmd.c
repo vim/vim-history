@@ -184,7 +184,7 @@ static void	ex_topleft __ARGS((exarg_T *eap));
 static void	ex_botright __ARGS((exarg_T *eap));
 static void	ex_find __ARGS((exarg_T *eap));
 static void	ex_edit __ARGS((exarg_T *eap));
-#if !defined(FEAT_GUI) && !defined(FEAT_XCMDSRV)
+#if !defined(FEAT_GUI) && !defined(FEAT_CLIENTSERVER)
 # define ex_drop		ex_ni
 #endif
 #ifndef FEAT_GUI
@@ -419,11 +419,6 @@ static void	ex_folddo __ARGS((exarg_T *eap));
 #endif
 #ifndef FEAT_JUMPLIST
 # define ex_jumps		ex_ni
-#endif
-
-#ifndef FEAT_XCMDSRV
-# define ex_serversend		ex_ni
-# define ex_serverlist		ex_ni
 #endif
 
 /*
@@ -7433,14 +7428,14 @@ eval_vars(src, usedlen, lnump, errormsg, srcstart)
 		    "<amatch>",		/* autocommand match name */
 # define SPEC_AMATCH 8
 #endif
-#ifdef FEAT_XCMDSRV
+#ifdef FEAT_CLIENTSERVER
 		    "<client>"
 # define SPEC_CLIENT 9
 #endif
 		};
 #define SPEC_COUNT  (sizeof(spec_str) / sizeof(char *))
 
-#if defined(FEAT_AUTOCMD) || defined(FEAT_XCMDSRV)
+#if defined(FEAT_AUTOCMD) || defined(FEAT_CLIENTSERVER)
     char_u	strbuf[30];
 #endif
 
@@ -7596,7 +7591,7 @@ eval_vars(src, usedlen, lnump, errormsg, srcstart)
 		    return NULL;
 		}
 		break;
-#ifdef FEAT_XCMDSRV
+#if defined(FEAT_CLIENTSERVER)
 	case SPEC_CLIENT:	/* Source of last submitted input */
 		sprintf((char *)strbuf, "0x%x", (unsigned int)clientWindow);
 		result = strbuf;

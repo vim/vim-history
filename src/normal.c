@@ -1098,6 +1098,8 @@ getcount:
 	    keep_msg = NULL;
 	    /* showmode() will clear keep_msg, but we want to use it anyway */
 	    update_screen(0);
+	    /* now reset it, otherwise it's put in the history again */
+	    keep_msg = kmsg;
 	    msg_attr(kmsg, keep_msg_attr);
 	    vim_free(kmsg);
 	}
@@ -1336,6 +1338,7 @@ do_pending_operator(cap, old_col, gui_yank)
 	    curbuf->b_visual_start = VIsual;
 	    curbuf->b_visual_end = curwin->w_cursor;
 	    curbuf->b_visual_mode = VIsual_mode;
+	    curbuf->b_visual_curswant = curwin->w_curswant;
 
 	    /* In Select mode, a linewise selection is operated upon like a
 	     * characterwise selection. */
@@ -2819,6 +2822,7 @@ end_visual_mode()
     curbuf->b_visual_mode = VIsual_mode;
     curbuf->b_visual_start = VIsual;
     curbuf->b_visual_end = curwin->w_cursor;
+    curbuf->b_visual_curswant = curwin->w_curswant;
 #ifdef FEAT_VIRTUALEDIT
     if (!virtual_active())
 	curwin->w_cursor.coladd = 0;
@@ -3100,6 +3104,7 @@ clearop(oap)
     oap->op_type = OP_NOP;
     oap->regname = 0;
     oap->motion_force = NUL;
+    oap->use_reg_one = FALSE;
 }
 
     static void
@@ -5134,7 +5139,8 @@ nv_search(cap)
 	return;
     }
 
-    normal_search(cap, cap->cmdchar, cap->searchbuf, (cap->arg ? 0 : SEARCH_MARK));
+    normal_search(cap, cap->cmdchar, cap->searchbuf,
+						(cap->arg ? 0 : SEARCH_MARK));
 }
 
 /*
@@ -5163,6 +5169,7 @@ normal_search(cap, dir, pat, opt)
 
     cap->oap->motion_type = MCHAR;
     cap->oap->inclusive = FALSE;
+    cap->oap->use_reg_one = TRUE;
     curwin->w_set_curswant = TRUE;
 
     i = do_search(cap->oap, dir, pat, cap->count1,
@@ -5291,7 +5298,7 @@ nv_brackets(cap)
 		cap->count1,
 		isupper(cap->nchar) ? ACTION_SHOW_ALL :
 			    islower(cap->nchar) ? ACTION_SHOW : ACTION_GOTO,
-		cap->cmdchar == ']' ? curwin->w_cursor.lnum : (linenr_T)1,
+		cap->cmdchar == ']' ? curwin->w_cursor.lnum + 1 : (linenr_T)1,
 		(linenr_T)MAXLNUM);
 	    curwin->w_set_curswant = TRUE;
 	}
@@ -5551,6 +5558,7 @@ nv_percent(cap)
     else		    /* "%" : go to matching paren */
     {
 	cap->oap->motion_type = MCHAR;
+	cap->oap->use_reg_one = TRUE;
 	if ((pos = findmatch(cap->oap, NUL)) == NULL)
 	    clearopbeep(cap->oap);
 	else
@@ -5584,6 +5592,7 @@ nv_brace(cap)
     cmdarg_T	*cap;
 {
     cap->oap->motion_type = MCHAR;
+    cap->oap->use_reg_one = TRUE;
     if (cap->cmdchar == ')')
 	cap->oap->inclusive = FALSE;
     else
@@ -5628,6 +5637,7 @@ nv_findpar(cap)
 {
     cap->oap->motion_type = MCHAR;
     cap->oap->inclusive = FALSE;
+    cap->oap->use_reg_one = TRUE;
     curwin->w_set_curswant = TRUE;
     if (!findpar(cap->oap, cap->arg, cap->count1, NUL, FALSE))
 	clearopbeep(cap->oap);
@@ -6072,6 +6082,8 @@ nv_cursormark(cap, flag, pos)
 	    check_cursor();
     }
     cap->oap->motion_type = flag ? MLINE : MCHAR;
+    if (cap->cmdchar == '`')
+	cap->oap->use_reg_one = TRUE;
     cap->oap->inclusive = FALSE;		/* ignored if not MCHAR */
     curwin->w_set_curswant = TRUE;
 }
@@ -6531,6 +6543,9 @@ nv_g_cmd(cap)
 		i = VIsual_mode;
 		VIsual_mode = curbuf->b_visual_mode;
 		curbuf->b_visual_mode = i;
+		i = curwin->w_curswant;
+		curwin->w_curswant = curbuf->b_visual_curswant;
+		curbuf->b_visual_curswant = i;
 
 		tpos = curbuf->b_visual_end;
 		curbuf->b_visual_end = curwin->w_cursor;
@@ -6544,6 +6559,7 @@ nv_g_cmd(cap)
 	    else
 	    {
 		VIsual_mode = curbuf->b_visual_mode;
+		curwin->w_curswant = curbuf->b_visual_curswant;
 		tpos = curbuf->b_visual_end;
 		curwin->w_cursor = curbuf->b_visual_start;
 #ifdef FEAT_VIRTUALEDIT
@@ -6976,10 +6992,6 @@ n_opencmd(cap)
 {
     if (!checkclearopq(cap->oap))
     {
-#ifdef FEAT_COMMENTS
-	if (has_format_option(FO_OPEN_COMS))
-	    fo_do_comments = TRUE;
-#endif
 #ifdef FEAT_FOLDING
 	if (cap->cmdchar == 'O')
 	    /* Open above the first line of a folded sequence of lines */
@@ -6996,7 +7008,10 @@ n_opencmd(cap)
 					       (cap->cmdchar == 'o' ? 1 : 0))
 		       ) == OK
 		&& open_line(cap->cmdchar == 'O' ? BACKWARD : FORWARD,
-								    FALSE, 0))
+#ifdef FEAT_COMMENTS
+		    has_format_option(FO_OPEN_COMS) ? OPENLINE_DO_COM :
+#endif
+		    0, 0))
 	{
 	    /* This is a new edit command, not a restart.  We don't edit
 	     * recursively. */
@@ -7004,9 +7019,6 @@ n_opencmd(cap)
 	    if (edit(cap->cmdchar, TRUE, cap->count1))
 		cap->retval |= CA_COMMAND_BUSY;
 	}
-#ifdef FEAT_COMMENTS
-	fo_do_comments = FALSE;
-#endif
     }
 }
 

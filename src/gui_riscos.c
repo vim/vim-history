@@ -1376,6 +1376,17 @@ gui_mch_iconify(void)
 {
 }
 
+#if defined(FEAT_EVAL) || defined(PROTO)
+/*
+ * Bring the Vim window to the foreground.
+ */
+    void
+gui_mch_set_foreground()
+{
+    /* TODO */
+}
+#endif
+
 /* Draw a hollow rectangle relative to the current
  * graphics cursor position, with the given width
  * and height. Start position is top-left.

@@ -96,12 +96,12 @@ A.2: Compiling with MPW.
  2. Create a new folder called "obj" in the vim folder. (At the same level
     as the src folder.)
 
- 3. Double click on CreateVimMake, the MPW will now open in the correct
-    folder and load the CreateVimMake script. Move the cursor to the only
+ 3. Double click on os_mac.mpw, the MPW will now open in the correct
+    folder and load the os_mac.mpw script. Move the cursor to the only
     line in that file and hit enter (not return!). This will create a file
     Vim.make.
 
-    For a carbon version use CreateVimMake.carbon instead.
+    For a carbon version use os_mac.carbon instead.
     
  4. Select "Build" from the menu (or type command-B). Type the program name
     into the dialog box.
@@ -109,6 +109,7 @@ A.2: Compiling with MPW.
  5. Open vim with ResEdit and copy the contents of gui_mac.rsrc into vim.
     
     TODO: Debug the resulting program.
+
 
 A.3: Compiling with Project Builder.
 

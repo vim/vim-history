@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Aug 04
+" Last change:	2001 Aug 13
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -459,11 +459,11 @@ au BufNewFile,BufRead *.icn			setf icon
 " IDL (Interface Description Language)
 au BufNewFile,BufRead *.idl			setf idl
 
-" IDL (Interactive Data Language)
-au BufNewFile,BufRead *.pro			setf idlang
-
 " Inform
 au BufNewFile,BufRead .indent.pro		setf indent
+
+" IDL (Interactive Data Language)
+au BufNewFile,BufRead *.pro			setf idlang
 
 " Inform
 au BufNewFile,BufRead *.inf,*.INF		setf inform

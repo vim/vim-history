@@ -1,4 +1,5 @@
 Tests for :right on text with embedded TAB.
+Also test formatting a paragraph.
 
 STARTTEST
 :so small.vim
@@ -6,8 +7,10 @@ STARTTEST
 
 :/test for :left/,/test for :center/ left
 :/test for :center/,/test for :right/ center
-:/test for :right/,$ right
-:.,$w! test.out
+:/test for :right/,/^xxx/-1 right
+:set fo+=tcroql tw=72
+Ggq6kk
+:?test for :left?,$w! test.out
 :qa!
 ENDTEST
 
@@ -111,3 +114,11 @@ asxxdfa		a
 	asxxdfa		axxxoikey
 	asxa;ofa		axxxoikey
 	asdfaqwer		axxxoikey
+
+xxxxx xx xxxxxx 
+xxxxxxx xxxxxxxxx xxx xxxx xxxxx xxxxx xxx xx
+xxxxxxxxxxxxxxxxxx xxxxx xxxx, xxxx xxxx xxxx xxxx xxx xx xx
+xx xxxxxxx. xxxx xxxx.
+
+> xx xx, xxxx xxxx xxx xxxx xxx xxxxx xxx xxx xxxxxxx xxx xxxxx
+> xxxxxx xxxxxxx: xxxx xxxxxxx, xx xxxxxx xxxx xxxxxxxxxx

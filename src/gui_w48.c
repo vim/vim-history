@@ -168,6 +168,7 @@ static char_u		*s_textfield; /* Used by dialogs to pass back strings */
 static int		s_need_activate = FALSE;
 
 #ifdef GLOBAL_IME
+# undef DefWindowProc
 # define DefWindowProc(a, b, c, d) global_ime_DefWindowProc(a, b, c, d)
 # define MyTranslateMessage(x) global_ime_TranslateMessage(x)
 #else
@@ -179,55 +180,7 @@ static int sysfixed_width = 0;
 static int sysfixed_height = 0;
 #endif
 
-struct charset_pair
-{
-    char	*name;
-    BYTE	charset;
-};
-
-static struct charset_pair
-charset_pairs[] =
-{
-    {"ANSI",		ANSI_CHARSET},
-    {"CHINESEBIG5",	CHINESEBIG5_CHARSET},
-    {"DEFAULT",		DEFAULT_CHARSET},
-    {"HANGEUL",		HANGEUL_CHARSET},
-    {"OEM",		OEM_CHARSET},
-    {"SHIFTJIS",	SHIFTJIS_CHARSET},
-    {"SYMBOL",		SYMBOL_CHARSET},
-#ifdef WIN3264
-    {"ARABIC",		ARABIC_CHARSET},
-    {"BALTIC",		BALTIC_CHARSET},
-    {"EASTEUROPE",	EASTEUROPE_CHARSET},
-    {"GB2312",		GB2312_CHARSET},
-    {"GREEK",		GREEK_CHARSET},
-    {"HEBREW",		HEBREW_CHARSET},
-    {"JOHAB",		JOHAB_CHARSET},
-    {"MAC",		MAC_CHARSET},
-    {"RUSSIAN",		RUSSIAN_CHARSET},
-    {"THAI",		THAI_CHARSET},
-    {"TURKISH",		TURKISH_CHARSET},
-# if !defined(_MSC_VER) || (_MSC_VER > 1010)
-    {"VIETNAMESE",	VIETNAMESE_CHARSET},
-# endif
-#endif
-    {NULL,		0}
-};
-
-static const LOGFONT s_lfDefault =
-{
-    -12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-    OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-    PROOF_QUALITY, FIXED_PITCH | FF_DONTCARE,
-    "Fixedsys"	/* see _ReadVimIni */
-};
-
-/* Initialise the "current height" to -12 (same as s_lfDefault) just
- * in case the user specifies a font in "guifont" with no size before a font
- * with an explicit size has been set. This defaults the size to this value
- * (-12 equates to roughly 9pt).
- */
-static int current_font_height = -12;
+extern int current_font_height;	    /* this is in os_mswin.c */
 
 static struct
 {
@@ -1200,62 +1153,6 @@ get_font_handle(LOGFONT *lf)
     return (GuiFont)font;
 }
 
-/* Convert a string representing a point size into pixels. The string should
- * be a positive decimal number, with an optional decimal point (eg, "12", or
- * "10.5"). The pixel value is returned, and a pointer to the next unconverted
- * character is stored in *end. The flag "vertical" says whether this
- * calculation is for a vertical (height) size or a horizontal (width) one.
- */
-    static int
-points_to_pixels(char_u *str, char_u **end, int vertical, HDC printer_dc)
-{
-    int		pixels;
-    int		points = 0;
-    int		divisor = 0;
-    HWND	hwnd;
-    HDC		hdc;
-
-    while (*str != NUL)
-    {
-	if (*str == '.' && divisor == 0)
-	{
-	    /* Start keeping a divisor, for later */
-	    divisor = 1;
-	}
-	else
-	{
-	    if (!isdigit(*str))
-		break;
-
-	    points *= 10;
-	    points += *str - '0';
-	    divisor *= 10;
-	}
-	++str;
-    }
-
-    if (divisor == 0)
-	divisor = 1;
-
-    if (printer_dc == NULL)
-    {
-	hwnd = GetDesktopWindow();
-	hdc = GetWindowDC(hwnd);
-    }
-    else
-	hdc = printer_dc;
-
-    pixels = MulDiv(points,
-		    GetDeviceCaps(hdc, vertical ? LOGPIXELSY : LOGPIXELSX),
-		    72 * divisor);
-
-    if (printer_dc == NULL)
-	ReleaseDC(hwnd, hdc);
-
-    *end = str;
-    return pixels;
-}
-
     static int
 pixels_to_points(int pixels, int vertical)
 {
@@ -1274,213 +1171,6 @@ pixels_to_points(int pixels, int vertical)
     return points;
 }
 
-    static int CALLBACK
-font_enumproc(
-    ENUMLOGFONT	    *elf,
-    NEWTEXTMETRIC   *ntm,
-    int		    type,
-    LPARAM	    lparam)
-{
-    /* Return value:
-     *	  0 = terminate now (monospace & ANSI)
-     *	  1 = continue, still no luck...
-     *	  2 = continue, but we have an acceptable LOGFONT
-     *	      (monospace, not ANSI)
-     * We use these values, as EnumFontFamilies returns 1 if the
-     * callback function is never called. So, we check the return as
-     * 0 = perfect, 2 = OK, 1 = no good...
-     * It's not pretty, but it works!
-     */
-
-    LOGFONT *lf = (LOGFONT *)(lparam);
-
-#ifndef FEAT_PROPORTIONAL_FONTS
-    /* Ignore non-monospace fonts without further ado */
-    if ((ntm->tmPitchAndFamily & 1) != 0)
-	return 1;
-#endif
-
-    /* Remember this LOGFONT as a "possible" */
-    *lf = elf->elfLogFont;
-
-    /* Terminate the scan as soon as we find an ANSI font */
-    if (lf->lfCharSet == ANSI_CHARSET
-	    || lf->lfCharSet == OEM_CHARSET
-	    || lf->lfCharSet == DEFAULT_CHARSET)
-	return 0;
-
-    /* Continue the scan - we have a non-ANSI font */
-    return 2;
-}
-    static int
-init_logfont(LOGFONT *lf)
-{
-    int		n;
-    HWND	hwnd = GetDesktopWindow();
-    HDC		hdc = GetWindowDC(hwnd);
-
-    n = EnumFontFamilies(hdc,
-			 (LPCSTR)lf->lfFaceName,
-			 (FONTENUMPROC)font_enumproc,
-			 (LPARAM)lf);
-
-    ReleaseDC(hwnd, hdc);
-
-    /* If we couldn't find a useable font, return failure */
-    if (n == 1)
-	return FAIL;
-
-    /* Tidy up the rest of the LOGFONT structure. We set to a basic
-     * font - get_logfont() sets bold, italic, etc based on the user's
-     * input.
-     */
-    lf->lfHeight = current_font_height;
-    lf->lfWidth = 0;
-    lf->lfItalic = FALSE;
-    lf->lfUnderline = FALSE;
-    lf->lfStrikeOut = FALSE;
-    lf->lfWeight = FW_NORMAL;
-
-    /* Return success */
-    return OK;
-}
-
-    int
-get_logfont(
-    LOGFONT *lf,
-    char_u  *name,
-    HDC printer_dc)
-{
-    char_u	*p;
-    CHOOSEFONT	cf;
-    int		i;
-    static LOGFONT *lastlf = NULL;
-
-    *lf = s_lfDefault;
-    if (name == NULL)
-	return 1;
-
-    if (STRCMP(name, "*") == 0)
-    {
-	/* if name is "*", bring up std font dialog: */
-	memset(&cf, 0, sizeof(cf));
-	cf.lStructSize = sizeof(cf);
-	cf.hwndOwner = s_hwnd;
-	cf.Flags = CF_SCREENFONTS | CF_FIXEDPITCHONLY | CF_INITTOLOGFONTSTRUCT;
-	if (lastlf != NULL)
-	    *lf = *lastlf;
-	cf.lpLogFont = lf;
-	cf.nFontType = 0 ; //REGULAR_FONTTYPE;
-	if (ChooseFont(&cf))
-	    goto theend;
-    }
-
-    /*
-     * Split name up, it could be <name>:h<height>:w<width> etc.
-     */
-    for (p = name; *p && *p != ':'; p++)
-    {
-	if (p - name + 1 > LF_FACESIZE)
-	    return 0;			/* Name too long */
-	lf->lfFaceName[p - name] = *p;
-    }
-    if (p != name)
-	lf->lfFaceName[p - name] = NUL;
-
-    /* First set defaults */
-    lf->lfHeight = -12;
-    lf->lfWidth = 0;
-    lf->lfWeight = FW_NORMAL;
-    lf->lfItalic = FALSE;
-    lf->lfUnderline = FALSE;
-    lf->lfStrikeOut = FALSE;
-
-    /*
-     * If the font can't be found, try replacing '_' by ' '.
-     */
-    if (init_logfont(lf) == FAIL)
-    {
-	int	did_replace = FALSE;
-
-	for (i = 0; lf->lfFaceName[i]; ++i)
-	    if (lf->lfFaceName[i] == '_')
-	    {
-		lf->lfFaceName[i] = ' ';
-		did_replace = TRUE;
-	    }
-	if (!did_replace || init_logfont(lf) == FAIL)
-	    return 0;
-    }
-
-    while (*p == ':')
-	p++;
-
-    /* Set the values found after ':' */
-    while (*p)
-    {
-	switch (*p++)
-	{
-	    case 'h':
-		lf->lfHeight = - points_to_pixels(p, &p, TRUE, printer_dc);
-		break;
-	    case 'w':
-		lf->lfWidth = points_to_pixels(p, &p, FALSE, printer_dc);
-		break;
-	    case 'b':
-#ifndef MSWIN16_FASTTEXT
-		lf->lfWeight = FW_BOLD;
-#endif
-		break;
-	    case 'i':
-#ifndef MSWIN16_FASTTEXT
-		lf->lfItalic = TRUE;
-#endif
-		break;
-	    case 'u':
-		lf->lfUnderline = TRUE;
-		break;
-	    case 's':
-		lf->lfStrikeOut = TRUE;
-		break;
-	    case 'c':
-		{
-		    struct charset_pair *cp;
-
-		    for (cp = charset_pairs; cp->name != NULL; ++cp)
-			if (STRNCMP(p, cp->name, strlen(cp->name)) == 0)
-			{
-			    lf->lfCharSet = cp->charset;
-			    p += strlen(cp->name);
-			    break;
-			}
-		    if (cp->name == NULL)
-		    {
-			sprintf((char *)IObuff, _("E244: Illegal charset name \"%s\" in font name \"%s\""), p, name);
-			EMSG(IObuff);
-			break;
-		    }
-		    break;
-		}
-	    default:
-		sprintf((char *)IObuff,
-			_("E245: Illegal char '%c' in font name \"%s\""),
-			p[-1], name);
-		EMSG(IObuff);
-		break;
-	}
-	while (*p == ':')
-	    p++;
-    }
-
-theend:
-    /* ron: init lastlf */
-    vim_free(lastlf);
-    lastlf = (LOGFONT *)alloc(sizeof(LOGFONT));
-    if (lastlf != NULL)
-	mch_memmove(lastlf, lf, sizeof(LOGFONT));
-
-    return 1;
-}
     GuiFont
 gui_mch_get_font(
     char_u	*name,
@@ -1734,6 +1424,7 @@ gui_mch_iconify(void)
 {
     ShowWindow(s_hwnd, SW_MINIMIZE);
 }
+
 /*
  * Draw a cursor without focus.
  */
@@ -1819,7 +1510,7 @@ process_message(void)
     if (sniff_request_waiting && want_sniff_request)
     {
 	static char_u bytes[3] = {CSI, (char_u)KS_EXTRA, (char_u)KE_SNIFF};
-	add_to_input_buf(bytes,3); /* K_SNIFF */
+	add_to_input_buf(bytes, 3); /* K_SNIFF */
 	sniff_request_waiting = 0;
 	want_sniff_request = 0;
 	/* request is handled in normal.c */
@@ -1975,6 +1666,9 @@ process_message(void)
 #ifdef FEAT_MBYTE_IME
     else if (msg.message == WM_IME_NOTIFY)
 	_OnImeNotify(msg.hwnd, (DWORD)msg.wParam, (DWORD)msg.lParam);
+    else if (msg.message == WM_KEYUP && im_get_status())
+	/* added for non-MS IME (Yasuhiro Matsumoto) */
+	MyTranslateMessage(&msg);
 #endif
 #if !defined(FEAT_MBYTE_IME) && defined(GLOBAL_IME)
 /* GIME_TEST */
@@ -1989,6 +1683,7 @@ process_message(void)
 	global_ime_set_position(&point);
     }
 #endif
+
 #ifdef FEAT_MENU
     /* Check for <F10>: Windows selects the menu.  Don't let Windows handle it
      * when 'winaltkeys' is "no" */
@@ -2036,7 +1731,8 @@ gui_mch_wait_for_chars(int wtime)
 	/* Don't do anything while processing a (scroll) message. */
 	if (s_busy_processing)
 	    return FAIL;
-	s_wait_timer = (UINT)SetTimer(NULL, 0, (UINT)wtime, (TIMERPROC)_OnTimer);
+	s_wait_timer = (UINT)SetTimer(NULL, 0, (UINT)wtime,
+							 (TIMERPROC)_OnTimer);
     }
 
     focus = gui.in_focus;
@@ -2070,7 +1766,6 @@ gui_mch_wait_for_chars(int wtime)
 	 */
 	process_message();
 
-
 	if (!vim_is_input_buf_empty())
 	{
 	    if (s_wait_timer != 0 && !s_timed_out)
@@ -2078,8 +1773,8 @@ gui_mch_wait_for_chars(int wtime)
 		KillTimer(NULL, s_wait_timer);
 
 		/* Eat spurious WM_TIMER messages */
-		while (PeekMessage(&msg, s_hwnd,
-					      WM_TIMER, WM_TIMER, PM_REMOVE));
+		while (PeekMessage(&msg, s_hwnd, WM_TIMER, WM_TIMER, PM_REMOVE))
+		    ;
 		s_wait_timer = 0;
 	    }
 	    return OK;
@@ -2819,15 +2514,11 @@ gui_mch_init_font(char_u *font_name, int fontset)
     hl_set_font_name(lf.lfFaceName);
     if (STRCMP(font_name, "*") == 0)
     {
-	struct charset_pair *cp;
+	char	    *charset_name;
 
-	/* Try to find a charset we recognize. */
-	for (cp = charset_pairs; cp->name != NULL; ++cp)
-	    if (lf.lfCharSet == cp->charset)
-		break;
-
+	charset_name = charset_id2name((int)lf.lfCharSet);
 	p = alloc((unsigned)(strlen(lf.lfFaceName) + 14
-		    + (cp->name == NULL ? 0 : strlen(cp->name) + 2)));
+		    + (charset_name == NULL ? 0 : strlen(charset_name) + 2)));
 	if (p != NULL)
 	{
 	    /* make a normal font string out of the lf thing:*/
@@ -2851,10 +2542,10 @@ gui_mch_init_font(char_u *font_name, int fontset)
 		strcat(p, ":u");
 	    if (lf.lfStrikeOut)
 		strcat(p, ":s");
-	    if (cp->name != NULL)
+	    if (charset_name != NULL)
 	    {
 		strcat(p, ":c");
-		strcat(p, cp->name);
+		strcat(p, charset_name);
 	    }
 	}
     }
@@ -2891,7 +2582,7 @@ gui_mch_maximized()
 
 /*
  * Called when the font changed while the window is maximized.  Compute the
- * new Rows and Columsn.
+ * new Rows and Columns.  This is like resizing the window.
  */
     void
 gui_mch_newfont()

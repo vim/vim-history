@@ -78,7 +78,6 @@ static int	realloc_cmdbuff __ARGS((int len));
 static void	cmdline_del __ARGS((int from));
 #endif
 static void	redrawcmdprompt __ARGS((void));
-static void	redrawcmd __ARGS((void));
 static void	cursorcmd __ARGS((void));
 static int	ccheck_abbr __ARGS((int));
 static int	nextwild __ARGS((expand_T *xp, int type, int options));
@@ -2124,7 +2123,7 @@ redrawcmdprompt()
 /*
  * Redraw what is currently on the command line.
  */
-    static void
+    void
 redrawcmd()
 {
 #if defined(FEAT_CRYPT) || defined(FEAT_EVAL)

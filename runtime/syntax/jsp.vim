@@ -2,7 +2,8 @@
 " Language:	JSP (Java Server Pages)
 " Maintainer:	Rafael Garcia-Suarez <rgarciasuarez@free.fr>
 " URL:		http://rgarciasuarez.free.fr/vim/syntax/jsp.vim
-" Last change:	2001 Apr 29
+" Last change:	2001 Aug 13
+" Credits : Patch by Darren Greaves (recognizes <jsp:...> tags)
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -39,6 +40,11 @@ syn region jspDirective                   start=/<%@/         end=/%>/ contains=
 syn keyword jspDirName contained include page taglib
 syn keyword jspDirArg contained file uri prefix language extends import session buffer autoFlush
 syn keyword jspDirArg contained isThreadSafe info errorPage contentType isErrorPage
+syn region jspCommand                     start=/<jsp:/ start=/<\/jsp:/ keepend end=/>/ end=/\/>/ contains=htmlString,jspCommandName,jspCommandArg
+syn keyword jspCommandName contained include forward getProperty plugin setProperty useBean param params fallback
+syn keyword jspCommandArg contained id scope class type beanName page flush name value property
+syn keyword jspCommandArg contained code codebase name archive align height
+syn keyword jspCommandArg contained width hspace vspace jreversion nspluginurl iepluginurl
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
@@ -59,6 +65,9 @@ if version >= 508 || !exists("did_jsp_syn_inits")
   HiLink jspDirective    jspTag
   HiLink jspDirName      htmlTagName
   HiLink jspDirArg       htmlArg
+  HiLink jspCommand      jspTag
+  HiLink jspCommandName  htmlTagName
+  HiLink jspCommandArg   htmlArg
   delcommand HiLink
 endif
 

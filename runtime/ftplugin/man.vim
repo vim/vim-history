@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	man
 " Maintainer:	Nam SungHyun <namsh@kldp.org>
-" Last Change:	2001 Jul 03
+" Last Change:	2001 Aug 15
 
 " To make the ":Man" command available before editing a manual page, source
 " this script from your startup vimrc file.
@@ -136,17 +136,17 @@ func <SID>GetPage(...)
       endwhile
     endif
   endif
-  exec "edit $HOME/".page.".".sect."~"
+  silent exec "edit $HOME/".page.".".sect."~"
 
-  exec "norm 1GdG"
+  silent exec "norm 1GdG"
   let $MANWIDTH = winwidth(0)
-  exec "r!/usr/bin/man ".s:GetCmdArg(sect, page)." | col -b"
+  silent exec "r!/usr/bin/man ".s:GetCmdArg(sect, page)." | col -b"
   " Is it OK?  It's for remove blank or message line.
   if getline(1) =~ "^\s*$"
-    exec "norm 2G/^[^\s]\<cr>kd1G"
+    silent exec "norm 2G/^[^\s]\<cr>kd1G"
   endif
   if getline('$') == ''
-    exec "norm G?^\s*[^\s]\<cr>2jdG"
+    silent exec "norm G?^\s*[^\s]\<cr>2jdG"
   endif
   1
   setl ft=man nomod
