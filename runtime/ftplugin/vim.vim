@@ -1,7 +1,7 @@
 " Vim filetype plugin
 " Language:	Vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Sep 17
+" Last Change:	2002 Mar 14
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -25,12 +25,15 @@ set cpo-=C
 
 " Let the matchit plugin know what items can be matched.
 if exists("loaded_matchit")
-  let b:match_ignorecase=0
-  let b:match_words=
+  let b:match_ignorecase = 0
+  let b:match_words =
 	\ '\<fun\%[ction]\>:\<retu\%[rn]\>:\<endf\%[unction]\>,' .
 	\ '\<while\>:\<break\>:\<con\%[tinue]\>:\<endw\%[hile]\>,' .
 	\ '\<if\>:\<el\%[seif]\>:\<en\%[dif]\>,' .
 	\ '\<aug\%[roup]\s\+\%(END\>\)\@!\S:\<aug\%[roup]\s\+END\>,' .
 	\ '(:)'
+  " Ignore ":syntax region" commands, the 'end' argument clobbers if-endif
+  let b:match_skip = 'getline(".") =~ "^\\s*sy\\%[ntax]\\s\\+region" ||
+  	\ synIDattr(synID(line("."),col("."),1),"name") =~? "comment\\|string"'
 endif
 
