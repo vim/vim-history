@@ -3806,7 +3806,7 @@ check_termcode(max_offset, buf, buflen)
 		     * key code.
 		     */
 		    if (termcodes[idx].name[0] == 'K'
-					   && isdigit(termcodes[idx].name[1]))
+				       && VIM_ISDIGIT(termcodes[idx].name[1]))
 		    {
 			for (j = idx + 1; j < tc_len; ++j)
 			    if (termcodes[j].len == slen &&
@@ -3838,7 +3838,7 @@ check_termcode(max_offset, buf, buflen)
 		j = 0;
 		extra = 0;
 		for (i = 2 + (tp[0] != CSI);
-			i < len && (isdigit(tp[i])
+			i < len && (VIM_ISDIGIT(tp[i])
 			    || tp[i] == ';' || tp[i] == '.'); ++i)
 		    if (tp[i] == ';' && ++j == 1)
 			extra = atoi((char *)tp + i + 1);
@@ -4724,7 +4724,7 @@ replace_termcodes(from, bufp, from_part, do_lt)
     /*
      * Check for #n at start only: function key n
      */
-    if (from_part && src[0] == '#' && isdigit(src[1]))	    /* function key */
+    if (from_part && src[0] == '#' && VIM_ISDIGIT(src[1]))  /* function key */
     {
 	result[dlen++] = K_SPECIAL;
 	result[dlen++] = 'k';

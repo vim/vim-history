@@ -164,7 +164,7 @@ ex_menu(eap)
      * Fill in the priority table.
      */
     for (p = arg; *p; ++p)
-	if (!isdigit(*p) && *p != '.')
+	if (!VIM_ISDIGIT(*p) && *p != '.')
 	    break;
     if (vim_iswhite(*p))
     {
@@ -1212,7 +1212,7 @@ set_context_in_menu_cmd(xp, cmd, arg, forceit)
 
     /* Check for priority numbers, enable and disable */
     for (p = arg; *p; ++p)
-	if (!isdigit(*p) && *p != '.')
+	if (!VIM_ISDIGIT(*p) && *p != '.')
 	    break;
 
     if (!vim_iswhite(*p))

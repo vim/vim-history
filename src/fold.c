@@ -1874,7 +1874,7 @@ foldDelMarker(lnum, marker, markerlen)
 	{
 	    /* Found the marker, include a digit if it's there. */
 	    len = markerlen;
-	    if (isdigit(p[len]))
+	    if (VIM_ISDIGIT(p[len]))
 		++len;
 	    if (*cms != NUL)
 	    {
@@ -1950,13 +1950,13 @@ foldtext_cleanup(str)
 	if (STRNCMP(s, curwin->w_p_fmr, foldstartmarkerlen) == 0)
 	{
 	    len = foldstartmarkerlen;
-	    if (isdigit(s[len]))
+	    if (VIM_ISDIGIT(s[len]))
 		++len;
 	}
 	else if (STRNCMP(s, foldendmarker, foldendmarkerlen) == 0)
 	{
 	    len = foldendmarkerlen;
-	    if (isdigit(s[len]))
+	    if (VIM_ISDIGIT(s[len]))
 		++len;
 	}
 	else if (cms_end != NULL)
@@ -3064,7 +3064,7 @@ foldlevelMarker(flp)
 	{
 	    /* found startmarker: set flp->lvl */
 	    s += foldstartmarkerlen;
-	    if (isdigit(*s))
+	    if (VIM_ISDIGIT(*s))
 	    {
 		n = atoi((char *)s);
 		if (n > 0)
@@ -3089,7 +3089,7 @@ foldlevelMarker(flp)
 	{
 	    /* found endmarker: set flp->lvl_next */
 	    s += foldendmarkerlen;
-	    if (isdigit(*s))
+	    if (VIM_ISDIGIT(*s))
 	    {
 		n = atoi((char *)s);
 		if (n > 0)

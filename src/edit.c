@@ -3713,20 +3713,19 @@ get_literal()
 #endif
 		    )
 	    {
-		/* Careful: isxdigit() on Win32 can handle only 0-255 */
-		if (nc < 0 || nc > 255 || (!vim_isdigit(nc) && !isxdigit(nc)))
+		if (!vim_isxdigit(nc))
 		    break;
 		cc = cc * 16 + hex2nr(nc);
 	    }
 	    else if (octal)
 	    {
-		if (!vim_isdigit(nc) || (nc > '7'))
+		if (nc < '0' || nc > '7')
 		    break;
 		cc = cc * 8 + nc - '0';
 	    }
 	    else
 	    {
-		if (!vim_isdigit(nc))
+		if (!VIM_ISDIGIT(nc))
 		    break;
 		cc = cc * 10 + nc - '0';
 	    }
@@ -4566,7 +4565,7 @@ redo_literal(c)
 
     /* Only digits need special treatment.  Translate them into a string of
      * three digits. */
-    if (vim_isdigit(c))
+    if (VIM_ISDIGIT(c))
     {
 	sprintf((char *)buf, "%03d", c);
 	AppendToRedobuff(buf);

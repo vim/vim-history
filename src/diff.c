@@ -1539,7 +1539,7 @@ diffopt_changed()
 	    p += 6;
 	    diff_flags_new |= DIFF_FILLER;
 	}
-	else if (STRNCMP(p, "context:", 8) == 0 && isdigit(p[8]))
+	else if (STRNCMP(p, "context:", 8) == 0 && VIM_ISDIGIT(p[8]))
 	{
 	    p += 8;
 	    diff_context_new = getdigits(&p);
@@ -1791,7 +1791,7 @@ ex_diffgetput(eap)
 	p = eap->arg + STRLEN(eap->arg);
 	while (p > eap->arg && vim_iswhite(p[-1]))
 	    --p;
-	for (i = 0; isdigit(eap->arg[i]) && eap->arg + i < p; ++i)
+	for (i = 0; vim_isdigit(eap->arg[i]) && eap->arg + i < p; ++i)
 	    ;
 	if (eap->arg + i == p)	    /* digits only */
 	    i = atol((char *)eap->arg);

@@ -2414,7 +2414,7 @@ parse_tag_line(lbuf,
 	else
 	    ++p;
 
-	if (!isdigit(*p))	    /* check for start of line number */
+	if (!VIM_ISDIGIT(*p))	    /* check for start of line number */
 	    return FAIL;
 	tagp->command = p;
 
@@ -3347,7 +3347,7 @@ find_extra(pp)
     /* Repeat for addresses separated with ';' */
     for (;;)
     {
-	if (isdigit(*str))
+	if (VIM_ISDIGIT(*str))
 	    str = skipdigits(str);
 	else if (*str == '/' || *str == '?')
 	{
@@ -3360,7 +3360,7 @@ find_extra(pp)
 	else
 	    str = NULL;
 	if (str == NULL || *str != ';'
-		      || !(isdigit(str[1]) || str[1] == '/' || str[1] == '?'))
+		  || !(VIM_ISDIGIT(str[1]) || str[1] == '/' || str[1] == '?'))
 	    break;
 	++str;	/* skip ';' */
     }

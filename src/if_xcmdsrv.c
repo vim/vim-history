@@ -1198,7 +1198,7 @@ serverEventProc(dpy, eventPtr)
 		    case 'r':
 			end = skipwhite(p + 2);
 			resWindow = 0;
-			while (isxdigit(*end))
+			while (vim_isxdigit(*end))
 			{
 			    resWindow = 16 * resWindow + (long_u)hex2nr(*end);
 			    ++end;
@@ -1436,6 +1436,6 @@ IsSerialName(str)
 {
     int len = STRLEN(str);
 
-    return (len > 1 && isdigit(str[len - 1]));
+    return (len > 1 && vim_isdigit(str[len - 1]));
 }
 #endif	/* FEAT_CLIENTSERVER */

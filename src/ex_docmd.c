@@ -1625,7 +1625,7 @@ do_one_cmd(cmdlinep, sourcing,
  * 2. handle command modifiers.
  */
 	p = ea.cmd;
-	if (isdigit(*ea.cmd))
+	if (VIM_ISDIGIT(*ea.cmd))
 	    p = skipwhite(skipdigits(ea.cmd));
 	switch (*p)
 	{
@@ -2253,7 +2253,7 @@ do_one_cmd(cmdlinep, sourcing,
 #else
 	    && valid_yank_reg(*ea.arg, ea.cmdidx != CMD_put)
 #endif
-	    && !((ea.argt & COUNT) && isdigit(*ea.arg)))
+	    && !((ea.argt & COUNT) && VIM_ISDIGIT(*ea.arg)))
     {
 	ea.regname = *ea.arg++;
 #ifdef FEAT_EVAL
@@ -2271,7 +2271,7 @@ do_one_cmd(cmdlinep, sourcing,
      * Check for a count.  When accepting a BUFNAME, don't use "123foo" as a
      * count, it's a buffer name.
      */
-    if ((ea.argt & COUNT) && isdigit(*ea.arg)
+    if ((ea.argt & COUNT) && VIM_ISDIGIT(*ea.arg)
 	    && (!(ea.argt & BUFNAME) || *(p = skipdigits(ea.arg)) == NUL
 							  || vim_iswhite(*p)))
     {
@@ -2669,7 +2669,7 @@ find_command(eap, full)
 		    k = 0;
 		    while (k < len && *np != NUL && *cp++ == *np++)
 			k++;
-		    if (k == len || (*np == NUL && isdigit(eap->cmd[k])))
+		    if (k == len || (*np == NUL && vim_isdigit(eap->cmd[k])))
 		    {
 			/* If finding a second match, the command is
 			 * ambiguous.  But not if a buffer-local command
@@ -2941,7 +2941,7 @@ set_one_cmd_context(xp, buff)
 		    k = 0;
 		    while (k < i && *np != NUL && *cp++ == *np++)
 			k++;
-		    if (k == i || (*np == NUL && isdigit(cmd[k])))
+		    if (k == i || (*np == NUL && VIM_ISDIGIT(cmd[k])))
 		    {
 			if (k == i && found)
 			{
@@ -3564,7 +3564,7 @@ skip_range(cmd, ctx)
 {
     int		delim;
 
-    while (*cmd != NUL && (vim_isspace(*cmd) || isdigit(*cmd) ||
+    while (*cmd != NUL && (vim_isspace(*cmd) || VIM_ISDIGIT(*cmd) ||
 			    vim_strchr((char_u *)".$%'/?-+,;", *cmd) != NULL))
     {
 	if (*cmd == '\'')
@@ -3745,23 +3745,23 @@ get_address(ptr, skip, to_other_file)
 			break;
 
 	    default:
-			if (isdigit(*cmd))	/* absolute line number */
+			if (VIM_ISDIGIT(*cmd))	/* absolute line number */
 			    lnum = getdigits(&cmd);
 	}
 
 	for (;;)
 	{
 	    cmd = skipwhite(cmd);
-	    if (*cmd != '-' && *cmd != '+' && !isdigit(*cmd))
+	    if (*cmd != '-' && *cmd != '+' && !VIM_ISDIGIT(*cmd))
 		break;
 
 	    if (lnum == MAXLNUM)
 		lnum = curwin->w_cursor.lnum;	/* "+1" is same as ".+1" */
-	    if (isdigit(*cmd))
+	    if (VIM_ISDIGIT(*cmd))
 		i = '+';		/* "number" is same as "+number" */
 	    else
 		i = *cmd++;
-	    if (!isdigit(*cmd))		/* '+' is '+1', but '+0' is not '+1' */
+	    if (!VIM_ISDIGIT(*cmd))	/* '+' is '+1', but '+0' is not '+1' */
 		n = 1;
 	    else
 		n = getdigits(&cmd);
@@ -7525,7 +7525,7 @@ ex_mkrc(eap)
     /* ":mkview" or ":mkview 9": generate file name with 'viewdir' */
     if (eap->cmdidx == CMD_mkview
 	    && (*eap->arg == NUL
-		|| (isdigit(*eap->arg) && eap->arg[1] == NUL)))
+		|| (vim_isdigit(*eap->arg) && eap->arg[1] == NUL)))
     {
 	eap->forceit = TRUE;
 	fname = get_view_file(*eap->arg);
@@ -8002,7 +8002,7 @@ ex_findpat(eap)
     }
 
     n = 1;
-    if (isdigit(*eap->arg))	/* get count */
+    if (vim_isdigit(*eap->arg))	/* get count */
     {
 	n = getdigits(&eap->arg);
 	eap->arg = skipwhite(eap->arg);

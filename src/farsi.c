@@ -762,7 +762,7 @@ fkmap(c)
     if (IS_SPECIAL(c))
 	return c;
 
-    if (vim_isdigit(c) || ((c == '.' || c == '+' || c == '-' ||
+    if (VIM_ISDIGIT(c) || ((c == '.' || c == '+' || c == '-' ||
 	c == '^' || c == '%' || c == '#' || c == '=')  && revins))
     {
 	if (!revins)

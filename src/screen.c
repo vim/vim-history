@@ -5253,7 +5253,7 @@ win_redr_custom(wp, Ruler)
 	    if (*++p == '-')
 		p++;
 	    if (atoi((char *) p))
-		while (isdigit(*p))
+		while (VIM_ISDIGIT(*p))
 		    p++;
 	    if (*p++ != '(')
 		p = p_ruf;
