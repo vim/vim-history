@@ -139,8 +139,11 @@ mygotoxy(int x, int y)
     static void
 set_sys_cursor(void)
 {
-    myflush();
-    gotoxy(S_iCurrentColumn + 1, S_iCurrentRow + 1);
+    if (term_console && full_screen)
+    {
+	myflush();
+	gotoxy(S_iCurrentColumn + 1, S_iCurrentRow + 1);
+    }
 }
 
     static void
