@@ -1,6 +1,6 @@
 " Vim script language tests
 " Author:	Servatius Brandt <Servatius.Brandt@fujitsu-siemens.com>
-" Last Change:	2003 Jul 30
+" Last Change:	2004 Apr 03
 
 "-------------------------------------------------------------------------------
 " Test environment							    {{{1
@@ -458,11 +458,12 @@ function! ExtraVim(...)
     " resultfile in ExtraVimResult.  Redirect messages to the file specified as
     " argument if any.  Use ":debuggreedy" so that the commands provided on the
     " pipe are consumed at the debug prompt.  Use "-N" to enable command-line
-    " contiunation ("C" in 'cpo').
+    " contiunation ("C" in 'cpo').  Add "nviminfo" to 'viminfo' to avoid
+    " messing up the user's viminfo file.
     let redirect = a:0 ?
 	\ " -c 'au VimLeave * redir END' -c 'redir\\! >" . a:1 . "'" : ""
-    exec "!echo '" . debug_quits . "q' | ../vim -u NONE -N -e -s" . redirect .
-	\ " -c 'debuggreedy'" .
+    exec "!echo '" . debug_quits . "q' | ../vim -u NONE -N -Xes" . redirect .
+	\ " -c 'debuggreedy|set viminfo+=nviminfo'" .
 	\ " -c 'let ExtraVimBegin = " . extra_begin . "'" .
 	\ " -c 'let ExtraVimResult = \"" . resultfile . "\"'" . breakpoints .
 	\ " -S " . extra_script
