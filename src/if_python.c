@@ -1239,8 +1239,10 @@ BufferGetattr(PyObject *self, char *name)
 
     if (strcmp(name, "name") == 0)
 	return Py_BuildValue("s",this->buf->b_ffname);
+    else if (strcmp(name, "number") == 0)
+	return Py_BuildValue("i",this->buf->b_fnum);
     else if (strcmp(name,"__members__") == 0)
-	return Py_BuildValue("[s]", "name");
+	return Py_BuildValue("[ss]", "name", "number");
     else
 	return Py_FindMethod(BufferMethods, self, name);
 }
