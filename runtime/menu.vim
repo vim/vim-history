@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Dec 18
+" Last change:	1999 Dec 22
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -426,7 +426,7 @@ fun! SetSyn(name)
     let use_fvwm_1 = 1
     let use_fvwm_2 = 0
     let name = "fvwm"
-  else if a:name == "fvwm2"
+  elseif a:name == "fvwm2"
     let use_fvwm_2 = 1
     let use_fvwm_1 = 0
     let name = "fvwm"
