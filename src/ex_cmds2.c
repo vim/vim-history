@@ -4628,6 +4628,11 @@ ex_language(eap)
     char_u	*name;
     int		what = LC_ALL;
     char	*whatstr = "";
+#ifdef LC_MESSAGES
+# define VIM_LC_MESSAGES LC_MESSAGES
+#else
+# define VIM_LC_MESSAGES 6789
+#endif
 
     name = eap->arg;
 
@@ -4639,11 +4644,7 @@ ex_language(eap)
     {
 	if (STRNICMP(eap->arg, "messages", p - eap->arg) == 0)
 	{
-#ifdef LC_MESSAGES
-	    what = LC_MESSAGES;
-#else
-	    what = LC_CTYPE;
-#endif
+	    what = VIM_LC_MESSAGES;
 	    name = skipwhite(p);
 	    whatstr = "messages ";
 	}
@@ -4663,12 +4664,32 @@ ex_language(eap)
 
     if (*name == NUL)
     {
-	smsg((char_u *)_("Current %slanguage: \"%s\""),
-		whatstr, setlocale(what, NULL));
+#ifndef LC_MESSAGES
+	if (what == VIM_LC_MESSAGES)
+	{
+	    p = vim_getenv("LC_ALL");
+	    if (p == NULL || *p == NUL)
+	    {
+		p = vim_getenv("LC_MESSAGES");
+		if (p == NULL || *p == NUL)
+		    p = vim_getenv("LANG");
+	    }
+	}
+	else
+#endif
+	    p = setlocale(what, NULL);
+	if (p == NULL || *p == NUL)
+	    p = "Unknown";
+	smsg((char_u *)_("Current %slanguage: \"%s\""), whatstr, p);
     }
     else
     {
-	loc = setlocale(what, (char *)name);
+#ifndef LC_MESSAGES
+	if (what == VIM_LC_MESSAGES)
+	    loc = "";
+	else
+#endif
+	    loc = setlocale(what, (char *)name);
 	if (loc == NULL)
 	    EMSG2(_("E197: Cannot set language to \"%s\""), name);
 	else
@@ -4697,9 +4718,7 @@ ex_language(eap)
 		/* Set $LC_CTYPE, because it overrules $LANG, and
 		 * gtk_set_locale() calls setlocale() again.  gnome_init()
 		 * sets $LC_CTYPE to "en_US" (that's a bug!). */
-#ifdef LC_MESSAGES
-		if (what != LC_MESSAGES)
-#endif
+		if (what != VIM_LC_MESSAGES)
 		    vim_setenv((char_u *)"LC_CTYPE", name);
 # ifdef FEAT_GUI_GTK
 		/* Let GTK know what locale we're using.  Not sure this is
