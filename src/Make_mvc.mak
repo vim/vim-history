@@ -403,7 +403,7 @@ PYTHON_LIB = $(PYTHON)\libs\python$(PYTHON_VER).lib
 !ifdef PERL
 !message Perl requested (version $(PERL_VER)) - root dir is "$(PERL)"
 !if "$(DYNAMIC_PERL)" == "yes"
-!if "$(PERL_VER)" == "56"
+!if "$(PERL_VER)" >= "56"
 !message Perl DLL will be loaded dynamically
 !else
 !message Dynamic loading is not supported for Perl versions earlier than 5.6.0

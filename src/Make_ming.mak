@@ -16,7 +16,7 @@
 #
 # "make upx" makes *compressed* versions of the GUI and console EXEs, using the
 # excellent UPX compressor:
-#     http://upx.tsx.org/
+#     http://upx.sourceforge.net/
 #
 # Maintained by Ron Aaron <ron@mossbayeng.com>
 # updated 2003 Jan 20
@@ -72,7 +72,12 @@ INTLLIB=gnu_gettext
 
 # uncomment 'PERL' if you want a perl-enabled version
 #PERL=perl
-DYNAMIC_PERL=perl56.dll
+ifdef PERL
+ifndef PERL_VER
+PERL_VER=56
+endif
+endif
+DYNAMIC_PERL=perl$(PERL_VER).dll
 # on Linux, for cross-compile, it's here:
 #PERLLIB=/home/ron/ActivePerl/lib
 # on NT, it's here:

@@ -81,7 +81,7 @@ ifeq (yes, $(DYNAMIC_PERL))
 DEFINES += -DDYNAMIC_PERL -DDYNAMIC_PERL_DLL=\"perl$(PERL_VER).dll\"
 endif
 INCLUDES += -I$(PERL)/lib/CORE
-EXTRA_LIBS += $(PERL)/lib/CORE/perl56.lib
+EXTRA_LIBS += $(PERL)/lib/CORE/perl$(PERL_VER).lib
 endif
 
 ##############################
@@ -348,8 +348,8 @@ $(OUTDIR)/if_ole.o:	if_ole.cpp $(INCL)
 	$(CC) -c $(CFLAGS) -D__IID_DEFINED__ if_ole.cpp -o $(OUTDIR)/if_ole.o
 
 if_perl.c: if_perl.xs typemap
-	perl /usr/lib/perl5/5.6.1/ExtUtils/xsubpp -prototypes -typemap \
-	     /usr/lib/perl5/5.6.1/ExtUtils/typemap if_perl.xs > $@
+	perl $(PERL)/lib/ExtUtils/xsubpp -prototypes -typemap \
+	     $(PERL)/lib/ExtUtils/typemap if_perl.xs > $@
 
 $(OUTDIR)/if_perl.o:	if_perl.c $(INCL) dyn-ming.h
 ifeq (no, $(USEDLL))
