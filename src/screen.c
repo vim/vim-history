@@ -372,7 +372,9 @@ update_screen(type)
 		if (W_WINROW(wp) < msg_scrolled)
 		{
 		    if (W_WINROW(wp) + wp->w_height > msg_scrolled
-			    && wp->w_redr_type < REDRAW_TOP)
+			    && wp->w_redr_type < REDRAW_TOP
+			    && wp->w_lines_valid > 0
+			    && wp->w_topline == wp->w_lines[0].wl_lnum)
 		    {
 			wp->w_upd_rows = msg_scrolled - W_WINROW(wp);
 			wp->w_redr_type = REDRAW_TOP;
