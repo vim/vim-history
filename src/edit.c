@@ -6705,11 +6705,11 @@ ins_bs(c, mode, inserted_space_p)
      *		     was there remains visible
      * Vim behaviour: the cursor moves backward and the character that
      *		      was there is erased from the screen.
-     * We can emulate the vi bahaviour by pretending there is a dollar
+     * We can emulate the vi behaviour by pretending there is a dollar
      * displayed even when there isn't.
      *  --pkv Sun Jan 19 01:56:40 EST 2003 */
     if (vim_strchr(p_cpo, CPO_BACKSPACE) != NULL && dollar_vcol == 0)
-	dollar_vcol = curwin->w_virtcol + 1;
+	dollar_vcol = curwin->w_virtcol;
 
     return did_backspace;
 }
