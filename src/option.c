@@ -121,6 +121,7 @@ typedef enum
     , PV_TSR
     , PV_TW
     , PV_TX
+    , PV_WFH
     , PV_WM
     , PV_WRAP
 } idopt_T;
@@ -2150,6 +2151,13 @@ static struct vimoption
 			    (char_u *)NULL, PV_NONE,
 #endif
 			    {(char_u *)1L, (char_u *)0L}},
+    {"winfixheight", "wfh", P_BOOL|P_VI_DEF|P_RSTAT,
+#if defined(FEAT_WINDOWS)
+			    (char_u *)VAR_WIN, PV_WFH,
+#else
+			    (char_u *)NULL, PV_NONE,
+#endif
+			    {(char_u *)FALSE, (char_u *)0L}},
     {"winminheight", "wmh", P_NUM|P_VI_DEF,
 #ifdef FEAT_WINDOWS
 			    (char_u *)&p_wmh, PV_NONE,
@@ -7198,6 +7206,9 @@ get_varp(p)
 	case PV_FMR:	return (char_u *)&(curwin->w_p_fmr);
 #endif
 	case PV_NU:	return (char_u *)&(curwin->w_p_nu);
+#if defined(FEAT_WINDOWS)
+	case PV_WFH:	return (char_u *)&(curwin->w_p_wfh);
+#endif
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 	case PV_PVW:	return (char_u *)&(curwin->w_p_pvw);
 #endif

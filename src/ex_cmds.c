@@ -4365,6 +4365,7 @@ prepare_tagpreview()
 								      == FAIL)
 		return;
 	    curwin->w_p_pvw = TRUE;
+	    curwin->w_p_wfh = TRUE;
 	}
     }
 }
