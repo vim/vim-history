@@ -619,7 +619,10 @@ xim_real_init(x11_window, x11_display)
 #ifdef USE_FONTSET
     if (!gui.fontset)
     {
-	EMSG("XIM requires guifontset setting");
+	/* This message is annoying when Vim was compiled with XIM support but
+	 * it's not being used.
+	 * EMSG("XIM requires guifontset setting");
+	 */
 	return FALSE;
     }
 #else
