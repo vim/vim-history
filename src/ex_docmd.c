@@ -8544,6 +8544,7 @@ expand_sfile(arg)
 #endif
 
 #ifdef FEAT_SESSION
+static int ses_winsizes __ARGS((FILE *fd, int restore_size));
 static int ses_win_rec __ARGS((FILE *fd, frame_T *fr));
 static frame_T *ses_skipframe __ARGS((frame_T *fr));
 static int ses_do_frame __ARGS((frame_T *fr));
@@ -8714,8 +8715,12 @@ makeopens(fd, dirnow)
      * If more than one window, see if sizes can be restored.
      * First set 'winheight' and 'winwidth' to 1 to avoid the windows being
      * resized when moving between windows.
+     * Do this before restoring the view, so that the topline and the cursor
+     * can be set.  This is done again below.
      */
     if (put_line(fd, "set winheight=1 winwidth=1") == FAIL)
+	return FAIL;
+    if (nr > 1 && ses_winsizes(fd, restore_size) == FAIL)
 	return FAIL;
 
     /*
@@ -8738,44 +8743,11 @@ makeopens(fd, dirnow)
 	return FAIL;
 
     /*
-     * Restore window sizes.  Do this after jumping around in windows, because
-     * the current window has a minimum size while others may not.
+     * Restore window sizes again after jumping around in windows, because the
+     * current window has a minimum size while others may not.
      */
-    if (nr > 1)
-    {
-	if (restore_size && (ssop_flags & SSOP_WINSIZE))
-	{
-	    int	    n = 0;
-
-	    for (wp = firstwin; wp != NULL; wp = wp->w_next)
-	    {
-		if (!ses_do_win(wp))
-		    continue;
-		++n;
-
-		/* restore height when not full height */
-		if (wp->w_height + wp->w_status_height < topframe->fr_height
-			&& (fprintf(fd,
-			      "exe '%dresize ' . ((&lines * %ld + %ld) / %ld)",
-				n, (long)wp->w_height, Rows / 2, Rows) < 0
-						      || put_eol(fd) == FAIL))
-		    return FAIL;
-
-		/* restore width when not full width */
-		if (wp->w_width < Columns && (fprintf(fd,
-		       "exe 'vert %dresize ' . ((&columns * %ld + %ld) / %ld)",
-				n, (long)wp->w_width, Columns / 2, Columns) < 0
-						      || put_eol(fd) == FAIL))
-		    return FAIL;
-	    }
-	}
-	else
-	{
-	    /* Just equalise window sizes */
-	    if (put_line(fd, "wincmd =") == FAIL)
-		return FAIL;
-	}
-    }
+    if (nr > 1 && ses_winsizes(fd, restore_size) == FAIL)
+	return FAIL;
 
     /* Re-apply 'winheight', 'winwidth' and 'shortmess'. */
     if (fprintf(fd, "set winheight=%ld winwidth=%ld shortmess=%s",
@@ -8791,6 +8763,47 @@ makeopens(fd, dirnow)
 	    || put_line(fd, "endif") == FAIL)
 	return FAIL;
 
+    return OK;
+}
+
+    static int
+ses_winsizes(fd, restore_size)
+    FILE	*fd;
+    int		restore_size;
+{
+    int		n = 0;
+    win_T	*wp;
+
+    if (restore_size && (ssop_flags & SSOP_WINSIZE))
+    {
+	for (wp = firstwin; wp != NULL; wp = wp->w_next)
+	{
+	    if (!ses_do_win(wp))
+		continue;
+	    ++n;
+
+	    /* restore height when not full height */
+	    if (wp->w_height + wp->w_status_height < topframe->fr_height
+		    && (fprintf(fd,
+			  "exe '%dresize ' . ((&lines * %ld + %ld) / %ld)",
+			    n, (long)wp->w_height, Rows / 2, Rows) < 0
+						  || put_eol(fd) == FAIL))
+		return FAIL;
+
+	    /* restore width when not full width */
+	    if (wp->w_width < Columns && (fprintf(fd,
+		   "exe 'vert %dresize ' . ((&columns * %ld + %ld) / %ld)",
+			    n, (long)wp->w_width, Columns / 2, Columns) < 0
+						  || put_eol(fd) == FAIL))
+		return FAIL;
+	}
+    }
+    else
+    {
+	/* Just equalise window sizes */
+	if (put_line(fd, "wincmd =") == FAIL)
+	    return FAIL;
+    }
     return OK;
 }
 
