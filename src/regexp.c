@@ -5338,6 +5338,12 @@ regtilde(source, magic)
 
 #ifdef FEAT_EVAL
 static int can_f_submatch = FALSE;	/* TRUE when submatch() can be used */
+
+/* These pointers are used instead of reg_match and reg_mmatch for
+ * reg_submatch().  Needed for when the substitution string is an expression
+ * that contains a call to substitute() and submatch(). */
+static regmatch_T	*submatch_match;
+static regmmatch_T	*submatch_mmatch;
 #endif
 
 #if defined(FEAT_MODIFY_FNAME) || defined(FEAT_EVAL) || defined(PROTO)
@@ -5431,7 +5437,11 @@ vim_regsub_both(source, dest, copy, magic, backslash)
     /*
      * When the substitute part starts with "\=" evaluate it as an expression.
      */
-    if (source[0] == '\\' && source[1] == '=')
+    if (source[0] == '\\' && source[1] == '='
+#ifdef FEAT_EVAL
+	    && !can_f_submatch	    /* can't do this recursively */
+#endif
+	    )
     {
 #ifdef FEAT_EVAL
 	/* To make sure that the length doesn't change between checking the
@@ -5450,12 +5460,34 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 	}
 	else
 	{
+	    linenr_T	save_reg_maxline;
+	    win_T	*save_reg_win;
+	    int		save_ireg_ic;
+
 	    vim_free(eval_result);
+
+	    /* The expression may contain substitute(), which calls us
+	     * recursively.  Make sure submatch() gets the text from the first
+	     * level.  Don't need to save "reg_buf", because
+	     * vim_regexec_multi() can't be called recursively. */
+	    submatch_match = reg_match;
+	    submatch_mmatch = reg_mmatch;
+	    save_reg_maxline = reg_maxline;
+	    save_reg_win = reg_win;
+	    save_ireg_ic = ireg_ic;
 	    can_f_submatch = TRUE;
+
 	    eval_result = eval_to_string(source + 2, NULL);
-	    can_f_submatch = FALSE;
 	    if (eval_result != NULL)
 		dst += STRLEN(eval_result);
+
+	    reg_match = submatch_match;
+	    reg_mmatch = submatch_mmatch;
+	    reg_maxline = save_reg_maxline;
+	    reg_win = save_reg_win;
+	    ireg_ic = save_ireg_ic;
+	    can_f_submatch = FALSE;
+
 	}
 #endif
     }
@@ -5672,7 +5704,7 @@ reg_submatch(no)
     if (!can_f_submatch)
 	return NULL;
 
-    if (REG_MULTI)
+    if (submatch_match == NULL)
     {
 	/*
 	 * First round: compute the length and allocate memory.
@@ -5680,15 +5712,18 @@ reg_submatch(no)
 	 */
 	for (round = 1; round <= 2; ++round)
 	{
-	    lnum = reg_mmatch->startpos[no].lnum;
-	    if (lnum < 0 || reg_mmatch->endpos[no].lnum < 0)
+	    lnum = submatch_mmatch->startpos[no].lnum;
+	    if (lnum < 0 || submatch_mmatch->endpos[no].lnum < 0)
 		return NULL;
 
-	    s = reg_getline(lnum) + reg_mmatch->startpos[no].col;
-	    if (reg_mmatch->endpos[no].lnum == lnum)
+	    s = reg_getline(lnum) + submatch_mmatch->startpos[no].col;
+	    if (s == NULL)  /* anti-crash check, cannot happen? */
+		break;
+	    if (submatch_mmatch->endpos[no].lnum == lnum)
 	    {
 		/* Within one line: take form start to end col. */
-		len = reg_mmatch->endpos[no].col - reg_mmatch->startpos[no].col;
+		len = submatch_mmatch->endpos[no].col
+					  - submatch_mmatch->startpos[no].col;
 		if (round == 2)
 		{
 		    STRNCPY(retval, s, len);
@@ -5708,7 +5743,7 @@ reg_submatch(no)
 		}
 		++len;
 		++lnum;
-		while (lnum < reg_mmatch->endpos[no].lnum)
+		while (lnum < submatch_mmatch->endpos[no].lnum)
 		{
 		    s = reg_getline(lnum++);
 		    if (round == 2)
@@ -5720,8 +5755,8 @@ reg_submatch(no)
 		}
 		if (round == 2)
 		    STRNCPY(retval + len, reg_getline(lnum),
-						  reg_mmatch->endpos[no].col);
-		len += reg_mmatch->endpos[no].col;
+					     submatch_mmatch->endpos[no].col);
+		len += submatch_mmatch->endpos[no].col;
 		if (round == 2)
 		    retval[len] = NUL;
 		++len;
@@ -5737,12 +5772,12 @@ reg_submatch(no)
     }
     else
     {
-	if (reg_match->endp[no] == NULL)
+	if (submatch_match->endp[no] == NULL)
 	    retval = NULL;
 	else
 	{
-	    s = reg_match->startp[no];
-	    retval = vim_strnsave(s, (int)(reg_match->endp[no] - s));
+	    s = submatch_match->startp[no];
+	    retval = vim_strnsave(s, (int)(submatch_match->endp[no] - s));
 	}
     }
 
