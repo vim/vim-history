@@ -817,7 +817,7 @@ eval_foldexpr(arg, cp)
 	    /* If the result is a string, check if there is a non-digit before
 	     * the number. */
 	    s = retvar.var_val.var_string;
-	    if (!isdigit(*s) && *s != '-')
+	    if (!VIM_ISDIGIT(*s) && *s != '-')
 		*cp = *s++;
 	    retval = atol((char *)s);
 	}
@@ -1148,7 +1148,7 @@ ex_let(eap)
 	    /*
 	     * ":let var = expr": Set internal variable.
 	     */
-	    else if (eval_isnamec(*arg) && !isdigit(*arg))
+	    else if (eval_isnamec(*arg) && !VIM_ISDIGIT(*arg))
 	    {
 		/* Find the end of the name. */
 		p = find_name_end(arg, &expr_start, &expr_end);
@@ -2589,7 +2589,7 @@ get_string_var(arg, retvar, evaluate)
 		case 'x':
 		case 'u': /* Unicode: "\u0023" */
 		case 'U':
-			  if (isxdigit(p[1]))
+			  if (vim_isxdigit(p[1]))
 			  {
 			      int	n, nr;
 			      int	c = toupper(*p);
@@ -2599,7 +2599,7 @@ get_string_var(arg, retvar, evaluate)
 			      else
 				  n = 4;
 			      nr = 0;
-			      while (--n >= 0 && isxdigit(p[1]))
+			      while (--n >= 0 && vim_isxdigit(p[1]))
 			      {
 				  ++p;
 				  nr = (nr << 4) + hex2nr(*p);
@@ -6463,19 +6463,19 @@ f_setreg(argvars, retvar)
 	for (stropt = get_var_string(&argvars[2]); *stropt != NUL; ++stropt)
 	    switch (*stropt)
 	    {
-		case 'a': case 'A': /* append */
+		case 'a': case 'A':	/* append */
 		    append = TRUE;
 		    break;
-		case 'v': case 'c': /* character-wise selection */
+		case 'v': case 'c':	/* character-wise selection */
 		    yank_type = MCHAR;
 		    break;
-		case 'V': case 'l': /*line-wise selection */
+		case 'V': case 'l':	/* line-wise selection */
 		    yank_type = MLINE;
 		    break;
 #ifdef FEAT_VISUAL
-		case 'b': case Ctrl_V: /*block-wise selection*/
+		case 'b': case Ctrl_V:	/* block-wise selection */
 		    yank_type = MBLOCK;
-		    if (isdigit(stropt[1]))
+		    if (VIM_ISDIGIT(stropt[1]))
 		    {
 			++stropt;
 			block_len = getdigits(&stropt) - 1;
@@ -8243,7 +8243,7 @@ find_var(name, writing)
 	name += 2;
 	if (current_funccal == NULL)
 	    return NULL;
-	if (isdigit(*name))
+	if (VIM_ISDIGIT(*name))
 	{
 	    i = atol((char *)name);
 	    if (i == 0)					/* a:0 */
