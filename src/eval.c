@@ -9552,8 +9552,8 @@ get_return_cmd(retvar)
 	sprintf((char *)IObuff, ":return \"%s\"",
 		((VAR)retvar)->var_val.var_string);
     else
-	sprintf((char *)IObuff, ":return %d",
-		((VAR)retvar)->var_val.var_number);
+	sprintf((char *)IObuff, ":return %ld",
+		(long)(((VAR)retvar)->var_val.var_number));
     return vim_strsave(s);
 }
 
