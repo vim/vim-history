@@ -810,6 +810,7 @@ ex_diffpatch(eap)
 #endif
 #ifdef FEAT_BROWSE
     char_u	*browseFile = NULL;
+    int		browse_flag = cmdmod.browse;
 #endif
 
 #ifdef FEAT_BROWSE
@@ -820,6 +821,7 @@ ex_diffpatch(eap)
 	if (browseFile == NULL)
 	    return;		/* operation cancelled */
 	eap->arg = browseFile;
+	cmdmod.browse = FALSE;	/* don't let do_ecmd() browse again */
     }
 #endif
 
@@ -960,6 +962,7 @@ theend:
 #endif
 #ifdef FEAT_BROWSE
     vim_free(browseFile);
+    cmdmod.browse = browse_flag;
 #endif
 }
 
