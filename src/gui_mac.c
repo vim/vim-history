@@ -3756,6 +3756,7 @@ gui_mch_add_menu_item(menu, idx)
 {
     char_u	*name;
     vimmenu_T	*parent = menu->parent;
+    int		menu_inserted;
 
     /* Cannot add item, if the menu have not been created */
     if (parent->submenu_id == 0)
@@ -3777,10 +3778,79 @@ gui_mch_add_menu_item(menu, idx)
 	idx += gui.MacOSHelpItems;
 #endif
 
+    menu_inserted = 0;
+    if (menu->actext)
+    {
+	/* If the accelerator text for the menu item looks like it describes
+	 * a command key (e.g., "<D-S-t>" or "<C-7>"), display it as the
+	 * item's command equivalent.
+	 */
+	int	    key = 0;
+	int	    modifiers = 0;
+	char_u	    *p_actext;
+	p_actext = menu->actext;
+	key = find_special_key(&p_actext, &modifiers, /*keycode=*/0);
+	if (*p_actext != 0)
+	    key = 0; /* error: trailing text */
+	/* find_special_key() returns a keycode with as many of the
+	 * specified modifiers as appropriate already applied (e.g., for
+	 * "<D-C-x>" it returns Ctrl-X as the keycode and MOD_MASK_CMD
+	 * as the only modifier).  Since we want to display all of the
+	 * modifiers, we need to convert the keycode back to a printable
+	 * character plus modifiers.
+	 * TODO: Write an alternative find_special_key() that doesn't
+	 * apply modifiers.
+	 */
+	if (key > 0 && key < 32)
+	{
+	    /* Convert a control key to an uppercase letter.  Note that
+	     * by this point it is no longer possible to distinguish
+	     * between, e.g., Ctrl-S and Ctrl-Shift-S.
+	     */
+	    modifiers |= MOD_MASK_CTRL;
+	    key += '@';
+	}
+	/* If the keycode is an uppercase letter, set the Shift modifier.
+	 * If it is a lowercase letter, don't set the modifier, but convert
+	 * the letter to uppercase for display in the menu.
+	 */
+	else if (key >= 'A' && key <= 'Z')
+	    modifiers |= MOD_MASK_SHIFT;
+	else if (key >= 'a' && key <= 'z')
+	    key += 'A' - 'a';
+	/* Note: keycodes below 0x22 are reserved by Apple. */
+	if (key >= 0x22 && vim_isprintc_strict(key))
+	{
+	    int		valid = 1;
+	    char_u      mac_mods = kMenuNoModifiers;
+	    /* Convert Vim modifier codes to Menu Manager equivalents. */
+	    if (modifiers & MOD_MASK_SHIFT)
+		mac_mods |= kMenuShiftModifier;
+	    if (modifiers & MOD_MASK_CTRL)
+		mac_mods |= kMenuControlModifier;
+	    if (!(modifiers & MOD_MASK_CMD))
+		mac_mods |= kMenuNoCommandModifier;
+	    if (modifiers & MOD_MASK_ALT || modifiers & MOD_MASK_MULTI_CLICK)
+		valid = 0; /* TODO: will Alt someday map to Option? */
+	    if (valid)
+	    {
+		char_u	    item_txt[10];
+		/* Insert the menu item after idx, with its command key. */
+		item_txt[0] = 3; item_txt[1] = ' '; item_txt[2] = '/';
+		item_txt[3] = key;
+		InsertMenuItem(parent->submenu_handle, item_txt, idx);
+		/* Set the modifier keys. */
+		SetMenuItemModifiers(parent->submenu_handle, idx+1, mac_mods);
+		menu_inserted = 1;
+	    }
+	}
+    }
     /* Call InsertMenuItem followed by SetMenuItemText
      * to avoid special character recognition by InsertMenuItem
      */
-    InsertMenuItem(parent->submenu_handle, "\p ", idx); /* afterItem */
+    if (!menu_inserted)
+	InsertMenuItem(parent->submenu_handle, "\p ", idx); /* afterItem */
+    /* Set the menu item name. */
     SetMenuItemText(parent->submenu_handle, idx+1, name);
 
 #if 0
