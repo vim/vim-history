@@ -1,6 +1,6 @@
 " Vim plugin for editing compressed files.
 " Maintainer: Bram Moolenaar <Bram@vim.org>
-" Last Change: 2001 Sep 20
+" Last Change: 2002 May 06
 
 " Exit quickly when:
 " - this plugin was already loaded
@@ -86,7 +86,11 @@ fun s:read(cmd)
   let &l:ma = ma_save
   " When uncompressed the whole buffer, do autocommands
   if empty
-    execute ":silent! doau BufReadPost " . expand("%:r")
+    if &verbose >= 8
+      execute "doau BufReadPost " . expand("%:r")
+    else
+      execute "silent! doau BufReadPost " . expand("%:r")
+    endif
   endif
 endfun
 
