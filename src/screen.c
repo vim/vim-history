@@ -43,6 +43,7 @@ static int win_line __ARGS((WIN *, linenr_t, int, int));
 static void screen_char __ARGS((char_u *, int, int));
 static void screenalloc __ARGS((int));
 static void screenclear2 __ARGS((void));
+static int screen_ins_lines __ARGS((int, int, int, int));
 
 /*
  * updateline() - like updateScreen() but only for cursor line
@@ -71,6 +72,7 @@ updateline()
 	screen_start();			/* init cursor position of screen_char() */
 	cursor_off();
 
+	(void)set_highlight('v');
 	row = win_line(curwin, curwin->w_cursor.lnum, Cline_row, curwin->w_height);
 
 	if (row == curwin->w_height + 1)			/* line too long for window */
@@ -138,7 +140,7 @@ updateScreen(type)
 			type = CLEAR;
 		else if (type != CLEAR)
 		{
-			if (screen_ins_lines(0, msg_scrolled) == FAIL)
+			if (screen_ins_lines(0, 0, msg_scrolled, (int)Rows) == FAIL)
 				type = CLEAR;
 			win_rest_invalid(firstwin);		/* should do only first/last few */
 		}
@@ -371,6 +373,8 @@ win_update(wp)
 		}
 	}
 
+	(void)set_highlight('v');
+
 	/*
 	 * Update the screen rows from "row" to "endrow".
 	 * Start at line "lnum" which is at wp->w_lsize_lnum[idx].
@@ -504,16 +508,13 @@ win_redr_status(wp)
 
 	if (wp->w_status_height)					/* if there is a status line */
 	{
-		if (T_TI != NULL && *T_TI != NUL)		/* can use inversion */
+		if (set_highlight('s') == OK)			/* can highlight */
 		{
 			fillchar = ' ';
-			invert = INVERTCODE;
-			outstr(T_TI);
+			start_highlight();
 		}
-		else
-		{
+		else									/* can't highlight, use '=' */
 			fillchar = '=';
-		}
 
 		screen_start();			/* init cursor position */
 		row = wp->w_winpos + wp->w_height;
@@ -521,7 +522,14 @@ win_redr_status(wp)
 		p = wp->w_buffer->b_xfilename;
 		if (p == NULL)
 			p = (char_u *)"[No File]";
+		else
+		{
+			home_replace(p, NameBuff, MAXPATHL);
+			p = NameBuff;
+		}
 		len = STRLEN(p);
+		if (wp->w_buffer->b_changed)
+			len += 4;
 		if (len > ru_col - 1)
 		{
 			screen_outchar('<', row, 0);
@@ -530,13 +538,11 @@ win_redr_status(wp)
 			col = 1;
 		}
 		screen_msg(p, row, col);
+		if (wp->w_buffer->b_changed)
+			screen_msg((char_u *)" [+]", row, len - 4);
 		screen_fill(row, row + 1, len, ru_col, fillchar, fillchar);
 
-		if (invert)
-		{
-			invert = 0;
-			outstr(T_TP);
-		}
+		stop_highlight();
 		win_redr_ruler(wp, TRUE);
 	}
 	else	/* no status line, can only be last window */
@@ -578,11 +584,10 @@ win_line(wp, lnum, startrow, endrow)
 	screen_row = row + wp->w_winpos;
 	col = 0;
 	vcol = 0;
-	invert = 0;
 	fromcol = -10;
 	tocol = MAXCOL;
 	canopt = TRUE;
-	if (VIsual.lnum)					/* visual active */
+	if (VIsual.lnum && wp == curwin)			/* visual active in this window */
 	{
 		if (ltoreq(wp->w_cursor, VIsual))		/* Visual is after wp->w_cursor */
 		{
@@ -674,17 +679,10 @@ win_line(wp, lnum, startrow, endrow)
 		{
 			if (((vcol == fromcol && !(noinvcur && vcol == wp->w_virtcol)) ||
 					(noinvcur && vcol == wp->w_virtcol + 1 && vcol >= fromcol)) &&
-					vcol < tocol)	/* start inverting */
-			{
-				invert = INVERTCODE;
-				outstr(T_TI);
-			}
+					vcol < tocol)
+				start_highlight();		/* start highlighting */
 			else if (invert && (vcol == tocol || (noinvcur && vcol == wp->w_virtcol)))
-									/* stop inverting */
-			{
-				invert = 0;
-				outstr(T_TP);
-			}
+				stop_highlight();		/* stop highlighting */
 		}
 
 		/* Get the next character to put on the screen. */
@@ -746,8 +744,7 @@ win_line(wp, lnum, startrow, endrow)
 					++screenp;
 					++col;
 				}
-				outstr(T_TP);
-				invert = 0;
+				stop_highlight();
 			}
 			/* 
 			 * blank out the rest of this row, if necessary
@@ -797,10 +794,7 @@ win_line(wp, lnum, startrow, endrow)
 	}
 
 	if (invert)
-	{
-		outstr(T_TP);
-		invert = 0;
-	}
+		stop_highlight();
 	return (row);
 }
 
@@ -865,16 +859,68 @@ screen_start()
 }
 
 /*
- * set inversion for screen_outchar and screen_msg on/off
+ * set_highlight - set highlight depending on 'highlight' option and context.
+ *
+ * return FAIL if highlighting is not possible, OK otherwise
  */
-	void
-screen_invert(f)
-	int		f;
+	int
+set_highlight(context)
+	int		context;
 {
-	if (f)
-		invert = INVERTCODE;
+	int		len;
+	int		i;
+	int		mode;
+
+	len = STRLEN(p_hl);
+	for (i = 0; i < len; i += 3)
+		if (p_hl[i] == context)
+			break;
+	if (i < len)
+		mode = p_hl[i + 1];
 	else
+		mode = 'i';
+	switch (mode)
+	{
+		case 'b':	highlight = T_TB;		/* bold */
+					unhighlight = T_TP;
+					break;
+		case 's':	highlight = T_SO;		/* standout */
+					unhighlight = T_SE;
+					break;
+		case 'n':	highlight = NULL;		/* no highlighting */
+					unhighlight = NULL;
+					break;
+		default:	highlight = T_TI;		/* invert/reverse */
+					unhighlight = T_TP;
+					break;
+	}
+	if (highlight == NULL || *highlight == NUL ||
+						unhighlight == NULL || *unhighlight == NUL)
+	{
+		highlight = NULL;
+		return FAIL;
+	}
+	return OK;
+}
+
+	void
+start_highlight()
+{
+	if (highlight != NULL)
+	{
+		outstr(highlight);
+		invert = INVERTCODE;
+	}
+}
+
+	void
+stop_highlight()
+{
+	if (invert)
+	{
+		outstr(unhighlight);
 		invert = 0;
+	}
 }
 
 /*
@@ -898,7 +944,7 @@ screen_char(p, row, col)
 	if (oldcol != col || oldrow != row)
 	{
 		/* check if no cursor movement is allowed in standout mode */
-		if (invert && !p_iw && (T_MS == NULL || *T_MS == NUL))
+		if (invert && !p_wi && (T_MS == NULL || *T_MS == NUL))
 			noinvcurs = 7;
 		else
 			noinvcurs = 0;
@@ -926,7 +972,7 @@ screen_char(p, row, col)
 			else
 			{
 				if (noinvcurs)
-					outstr(T_TP);
+					stop_highlight();
 			
 				if (T_CRI && *T_CRI)	/* use tgoto interface! jw */
 					OUTSTR(tgoto((char *)T_CRI, 0, i));
@@ -934,29 +980,29 @@ screen_char(p, row, col)
 					windgoto(row, col);
 			
 				if (noinvcurs)
-					outstr(T_TI);
+					start_highlight();
 			}
 			oldcol = col;
 		}
 		else
 		{
 			if (noinvcurs)
-				outstr(T_TP);
+				stop_highlight();
 			windgoto(oldrow = row, oldcol = col);
 			if (noinvcurs)
-				outstr(T_TI);
+				start_highlight();
 		}
 	}
 	/*
-	 * For weird invert mechanism: output T_TI or T_TP before every char
+	 * For weird invert mechanism: output (un)highlight before every char
 	 * Lots of extra output, but works.
 	 */
-	if (p_iw)
+	if (p_wi)
 	{
 		if (invert)                                      
-			outstr(T_TI);                            
+			outstr(highlight);                            
 		else                                             
-			outstr(T_TP);
+			outstr(unhighlight);
 	}
 	outchar(*p ^ invert);
 	oldcol++;
@@ -1076,6 +1122,7 @@ screenalloc(clear)
 
 	/*
 	 * Allocation of the screen buffers is done only when the size changes
+	 * and when Rows and Columns have been set.
 	 */
 	if ((Nextscreen != NULL && Rows == old_Rows && Columns == old_Columns) || Rows == 0 || Columns == 0)
 		return;
@@ -1139,6 +1186,8 @@ screenclear2()
 
 	win_rest_invalid(firstwin);
 	clear_cmdline = FALSE;
+	if (must_redraw == CLEAR)		/* no need to clear again */
+		must_redraw = NOT_VALID;
 }
 
 /*
@@ -1408,6 +1457,9 @@ scrolldown(nlines)
 		curwin->w_row += plines(curwin->w_cursor.lnum) - 1 - curwin->w_virtcol / Columns;
 	while (curwin->w_row >= curwin->w_height && curwin->w_cursor.lnum > 1)
 		curwin->w_row -= plines(curwin->w_cursor.lnum--);
+
+	/* We may have moved to another line -- webb */
+	coladvance(curwin->w_curswant);
 }
 
 	void
@@ -1434,6 +1486,9 @@ scrollup(nlines)
 		curwin->w_topline = curbuf->b_ml.ml_line_count;
 	if (curwin->w_cursor.lnum < curwin->w_topline)
 		curwin->w_cursor.lnum = curwin->w_topline;
+
+	/* We may have moved to another line -- webb */
+	coladvance(curwin->w_curswant);
 }
 
 /*
@@ -1453,6 +1508,7 @@ win_ins_lines(wp, row, nlines, invalid, mayclear)
 	int		did_delete;
 	int		nextrow;
 	int		lastrow;
+	int		retval;
 
 	if (invalid)
 		wp->w_lsize_valid = 0;
@@ -1472,17 +1528,36 @@ win_ins_lines(wp, row, nlines, invalid, mayclear)
 	if (nlines == wp->w_height)	/* will delete all lines */
 		return FAIL;
 
+	/*
+	 * when scrolling, the message on the command line should be cleared,
+	 * otherwise it will stay there forever.
+	 */
+	clear_cmdline = TRUE;
+
+	/*
+	 * if the terminal can set a scroll region, use that
+	 */
+	if (scroll_region)
+	{
+		scroll_region_set(wp);
+		retval = screen_ins_lines(wp->w_winpos, row, nlines, wp->w_height);
+		scroll_region_reset();
+		return retval;
+	}
+
 	if (wp->w_next && p_tf)		/* don't delete/insert on fast terminal */
 		return FAIL;
 
 	/*
 	 * If there is a next window or a status line, we first try to delete the
 	 * lines at the bottom to avoid messing what is after the window.
+	 * If this fails and there are following windows, don't do anything to avoid
+	 * messing up those windows, better just redraw.
 	 */
 	did_delete = FALSE;
 	if (wp->w_next || wp->w_status_height)
 	{
-		if (screen_del_lines(wp->w_winpos + wp->w_height - nlines, nlines) == OK)
+		if (screen_del_lines(0, wp->w_winpos + wp->w_height - nlines, nlines, (int)Rows) == OK)
 			did_delete = TRUE;
 		else if (wp->w_next)
 			return FAIL;
@@ -1501,7 +1576,7 @@ win_ins_lines(wp, row, nlines, invalid, mayclear)
 		screen_fill(nextrow - nlines, lastrow - nlines, 0, (int)Columns, ' ', ' ');
 	}
 
-	if (screen_ins_lines(wp->w_winpos + row, nlines) == FAIL)
+	if (screen_ins_lines(0, wp->w_winpos + row, nlines, (int)Rows) == FAIL)
 	{
 			/* deletion will have messed up other windows */
 		if (did_delete)
@@ -1529,6 +1604,8 @@ win_del_lines(wp, row, nlines, invalid, mayclear)
 	int				invalid;
 	int				mayclear;
 {
+	int			retval;
+
 	if (invalid)
 		wp->w_lsize_valid = 0;
 
@@ -1547,10 +1624,27 @@ win_del_lines(wp, row, nlines, invalid, mayclear)
 	if (nlines == wp->w_height)	/* will delete all lines */
 		return FAIL;
 
+	/*
+	 * when scrolling, the message on the command line should be cleared,
+	 * otherwise it will stay there forever.
+	 */
+	clear_cmdline = TRUE;
+
+	/*
+	 * if the terminal can set a scroll region, use that
+	 */
+	if (scroll_region)
+	{
+		scroll_region_set(wp);
+		retval = screen_del_lines(wp->w_winpos, row, nlines, wp->w_height);
+		scroll_region_reset();
+		return retval;
+	}
+
 	if (wp->w_next && p_tf)		/* don't delete/insert on fast terminal */
 		return FAIL;
 
-	if (screen_del_lines(wp->w_winpos + row, nlines) == FAIL)
+	if (screen_del_lines(0, wp->w_winpos + row, nlines, (int)Rows) == FAIL)
 		return FAIL;
 
 	/*
@@ -1559,7 +1653,7 @@ win_del_lines(wp, row, nlines, invalid, mayclear)
 	 */
 	if (wp->w_next || wp->w_status_height || cmdline_row < Rows - 1)
 	{
-		if (screen_ins_lines(wp->w_winpos + wp->w_height - nlines, nlines) == FAIL)
+		if (screen_ins_lines(0, wp->w_winpos + wp->w_height - nlines, nlines, (int)Rows) == FAIL)
 		{
 			wp->w_redr_status = TRUE;
 			win_rest_invalid(wp->w_next);
@@ -1603,16 +1697,28 @@ win_rest_invalid(wp)
 
 /*
  * insert lines on the screen and update Nextscreen
+ * 'end' is the line after the scrolled part. Normally it is Rows.
+ * When scrolling region used 'off' is the offset from the top for the region.
+ * 'row' and 'end' are relative to the start of the region.
+ *
  * return FAIL for failure, OK for success.
  */
-	int
-screen_ins_lines(row, nlines)
+	static int
+screen_ins_lines(off, row, nlines, end)
+	int			off;
 	int 		row;
 	int 		nlines;
+	int			end;
 {
 	int 		i;
 	int 		j;
 	char_u		*temp;
+	int			cursor_row;
+
+	if (T_CSC != NULL && *T_CSC != NUL)		/* cursor relative to region */
+		cursor_row = row;
+	else
+		cursor_row = row + off;
 
 	screenalloc(TRUE);		/* allocate screen buffers if size changed */
 	if (Nextscreen == NULL)
@@ -1628,7 +1734,7 @@ screen_ins_lines(row, nlines)
 	 */
     if (T_CIL && *T_CIL) 
     {
-        windgoto(row, 0);
+        windgoto(cursor_row, 0);
 		if (nlines == 1 && T_IL && *T_IL)
 			outstr(T_IL);
 		else
@@ -1638,8 +1744,8 @@ screen_ins_lines(row, nlines)
     {
         for (i = 0; i < nlines; i++) 
         {
-            if (i == 0 || row != 0)
-				windgoto(row, 0);
+            if (i == 0 || cursor_row != 0)
+				windgoto(cursor_row, 0);
 			if (T_IL && *T_IL)
 				outstr(T_IL);
 			else
@@ -1650,9 +1756,11 @@ screen_ins_lines(row, nlines)
 	 * Now shift LinePointers nlines down to reflect the inserted lines.
 	 * Clear the inserted lines.
 	 */
+	row += off;
+	end += off;
 	for (i = 0; i < nlines; ++i)
 	{
-		j = Rows - 1 - i;
+		j = end - 1 - i;
 		temp = LinePointers[j];
 		while ((j -= nlines) >= row)
 				LinePointers[j + nlines] = LinePointers[j];
@@ -1664,16 +1772,35 @@ screen_ins_lines(row, nlines)
 
 /*
  * delete lines on the screen and update Nextscreen
+ * 'end' is the line after the scrolled part. Normally it is Rows.
+ * When scrolling region used 'off' is the offset from the top for the region.
+ * 'row' and 'end' are relative to the start of the region.
+ *
  * Return OK for success, FAIL if the lines are not deleted.
  */
 	int
-screen_del_lines(row, nlines)
+screen_del_lines(off, row, nlines, end)
+	int				off;
 	int 			row;
 	int 			nlines;
+	int				end;
 {
-	int 			j;
-	int 			i;
+	int 		j;
+	int 		i;
 	char_u		*temp;
+	int			cursor_row;
+	int			cursor_end;
+
+	if (T_CSC != NULL && *T_CSC != NUL)		/* cursor relative to region */
+	{
+		cursor_row = row;
+		cursor_end = end;
+	}
+	else
+	{
+		cursor_row = row + off;
+		cursor_end = end + off;
+	}
 
 	screenalloc(TRUE);		/* allocate screen buffers if size changed */
 	if (Nextscreen == NULL)
@@ -1687,7 +1814,7 @@ screen_del_lines(row, nlines)
 	/* delete the lines */
 	if (T_CDL && *T_CDL) 
 	{
-		windgoto(row, 0);
+		windgoto(cursor_row, 0);
 		if (nlines == 1 && T_DL && *T_DL)
 			outstr(T_DL);
 		else
@@ -1697,7 +1824,7 @@ screen_del_lines(row, nlines)
 	{
 		if (row == 0)
 		{
-			windgoto((int)Rows - 1, 0);
+			windgoto(cursor_end - 1, 0);
 			for (i = 0; i < nlines; i++) 
 				outchar('\n');
 		}
@@ -1705,7 +1832,7 @@ screen_del_lines(row, nlines)
 		{
 			for (i = 0; i < nlines; i++) 
 			{
-				windgoto(row, 0);
+				windgoto(cursor_row, 0);
 				outstr(T_DL);           /* delete a line */
 			}
 		}
@@ -1715,11 +1842,13 @@ screen_del_lines(row, nlines)
 	 * Now shift LinePointers nlines up to reflect the deleted lines.
 	 * Clear the deleted lines.
 	 */
+	row += off;
+	end += off;
 	for (i = 0; i < nlines; ++i)
 	{
 		j = row + i;
 		temp = LinePointers[j];
-		while ((j += nlines) <= Rows - 1)
+		while ((j += nlines) <= end - 1)
 			LinePointers[j - nlines] = LinePointers[j];
 		LinePointers[j - nlines] = temp;
 		memset((char *)temp, ' ', (size_t)Columns);
@@ -1809,11 +1938,10 @@ win_redr_ruler(wp, always)
 		if (wp->w_status_height)
 		{
 			row = wp->w_winpos + wp->w_height;
-			if (T_TI != NULL && *T_TI != NUL)		/* can use inversion */
+			if (set_highlight('s') == OK)		/* can use highlighting */
 			{
 				fillchar = ' ';
-				invert = INVERTCODE;
-				outstr(T_TI);
+				start_highlight();
 			}
 			else
 				fillchar = '=';
@@ -1836,10 +1964,18 @@ win_redr_ruler(wp, always)
 		screen_fill(row, row + 1, ru_col + (int)STRLEN(buffer), (int)Columns, fillchar, fillchar);
 		oldlnum = wp->w_cursor.lnum;
 		oldcol = wp->w_virtcol;
-		if (invert)
-		{
-			outstr(T_TP);
-			invert = 0;
-		}
+		stop_highlight();
 	}
+}
+
+/*
+ * screen_valid: Returns TRUE if there is a valid screen to write to.
+ * 				 Returns FALSE when starting up and screen not initialized yet.
+ * Used by msg() to decide to use either screen_msg() or printf().
+ */
+	int
+screen_valid()
+{
+	screenalloc(FALSE);		/* allocate screen buffers if size changed */
+	return (Nextscreen != NULL);
 }

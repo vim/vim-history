@@ -55,16 +55,21 @@ doshift(op, curs_top, amount)
 	int				curs_top;
 	int				amount;
 {
-	register long i;
+	register long	i;
+	int				first_char;
 
 	if (!u_save((linenr_t)(curwin->w_cursor.lnum - 1), (linenr_t)(curwin->w_cursor.lnum + nlines)))
 		return;
 
 	for (i = nlines; --i >= 0; )
 	{
-		if (lineempty(curwin->w_cursor.lnum))
+		first_char = *ml_get(curwin->w_cursor.lnum);
+		if (first_char == NUL)							/* empty line */
 			curwin->w_cursor.col = 0;
-		else
+		/*
+		 * Don't move the line right if it starts with # and p_si is set.
+		 */
+		else if (!curbuf->b_p_si || first_char != '#')
 		{
 			/* if (Visual_block)
 					shift the block, not the whole line
@@ -330,6 +335,15 @@ insertbuf(c)
 {
 	long i;
 
+	/*
+	 * It is possible to get into an endless loop by having CTRL-R a in
+	 * register a and then, in insert mode, doing CTRL-R a.
+	 * If you hit CTRL-C, the loop will be broken here.
+	 */
+	breakcheck();
+	if (got_int)
+		return FAIL;
+
 	if (!is_yank_buffer(c, FALSE))		/* check for valid buffer */
 		return FAIL;
 
@@ -497,8 +511,15 @@ dodelete()
 			dellines((long)(nlines - 1), TRUE, TRUE);
 			if (!u_save_cursor())
 				return;
-			while (delchar(TRUE) == OK)		/* slow but simple */
+			if (curbuf->b_p_ai)				/* don't delete indent */
+			{
+				beginline(TRUE);			/* put cursor on first non-white */
+				did_ai = TRUE;				/* delete the indent when ESC hit */
+			}
+			while (delchar(FALSE) == OK)	/* slow but simple */
 				;
+			if (curwin->w_cursor.col > 0)
+				--curwin->w_cursor.col;		/* put cursor on last char in line */
 		}
 		else
 		{
@@ -879,10 +900,14 @@ success:
 	return OK;
 }
 
+/*
+ * put contents of register into the text
+ */
 	void
-doput(dir, count)
-	int dir;
-	long count;
+doput(dir, count, fix_indent)
+	int		dir;				/* BACKWARD for 'P', FORWARD for 'p' */
+	long	count;
+	int		fix_indent;			/* make indent look nice */
 {
 	char_u		*ptr;
 	char_u		*new, *old;
@@ -903,6 +928,13 @@ doput(dir, count)
 	FPOS		new_cursor;
 	int			commandchar;
 	char_u		temp[2];
+	int			indent;
+	int			orig_indent = 0;			/* init for gcc */
+	int			indent_diff = 0;			/* init for gcc */
+	int			first_indent = TRUE;
+
+	if (fix_indent)
+		orig_indent = get_indent();
 
 	curbuf->b_startop = curwin->w_cursor;			/* default for "'[" command */
 	if (dir == FORWARD)
@@ -1146,6 +1178,21 @@ doput(dir, count)
 				{
 					if (ml_append(lnum++, y_array[i++], (colnr_t)0, FALSE) == FAIL)
 						goto error;
+					if (fix_indent)
+					{
+						curwin->w_cursor.lnum = lnum;
+						if (curbuf->b_p_si && *ml_get(lnum) == '#')
+							indent = 0;		/* Leave # lines at start */
+						else if (first_indent)
+						{
+							indent_diff = orig_indent - get_indent();
+							indent = orig_indent;
+							first_indent = FALSE;
+						}
+						else if ((indent = get_indent() + indent_diff) < 0)
+							indent = 0;
+						set_indent(indent, TRUE);
+					}
 					++nlines;
 				}
 				if (y_type == MCHAR)
@@ -1203,7 +1250,6 @@ dodis()
 
 	gotocmdline(TRUE, NUL);
 
-	mch_start_listing();	/* may set cooked mode, so output can be halted */
 	msg_outstr((char_u *)"--- Registers ---");
 	for (i = -1; i < 36; ++i)
 	{
@@ -1273,7 +1319,6 @@ dodis()
 		dis_msg(curbuf->b_xfilename, FALSE);
 	}
 
-	mch_stop_listing();
 	msg_end();
 }
 
@@ -1605,20 +1650,19 @@ doaddsub(command, Prenum1)
 
 	if (isdigit(ptr[col]) && u_save_cursor())
 	{
-		ptr = ml_get(curwin->w_cursor.lnum);	/* get it again */
+		ptr = ml_get(curwin->w_cursor.lnum);	/* get it again, because of undo */
 		curwin->w_set_curswant = TRUE;
 
-		if (ptr[col] != '0')
-			hex = 0;				/* decimal */
-		else
+		hex = 0;								/* default is decimal */
+		if (ptr[col] == '0')					/* could be hex or octal */
 		{
 			hex = TO_UPPER(ptr[col + 1]);		/* assume hexadecimal */
 			if (hex != 'X' || !isxdigit(ptr[col + 2]))
 			{
 				if (isdigit(hex))
-					hex = '0';		/* octal */
+					hex = '0';					/* octal */
 				else
-					hex = 0;		/* 0 by itself is decimal */
+					hex = 0;					/* 0 by itself is decimal */
 			}
 		}
 
@@ -1650,7 +1694,7 @@ doaddsub(command, Prenum1)
 		if (hex == 'X')					/* skip the '0x' */
 			col += 2;
 		curwin->w_cursor.col = col;
-		c = ' ';
+		c = gchar_cursor();
 		do								/* delete the old number */
 		{
 			if (isalpha(c))
@@ -1667,7 +1711,7 @@ doaddsub(command, Prenum1)
 
 		if (hex == '0')
 			sprintf((char *)buf, "0%lo", n);
-		else if (hexupper)
+		else if (hex && hexupper)
 			sprintf((char *)buf, "%lX", n);
 		else if (hex)
 			sprintf((char *)buf, "%lx", n);

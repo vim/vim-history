@@ -219,6 +219,7 @@ typedef unsigned long	long_u;
 #define REPLACE 				0x24	/* replace mode */
 #define HELP					0x30	/* displaying help */
 #define NOMAPPING 				0x40	/* no :mapping mode for vgetc() */
+#define ONLYKEY 				0x70	/* like NOMAPPING, but keys allowed */
 #define HITRETURN				0x51	/* waiting for a return */
 #define SETWSIZE				0x60	/* window size has changed */
 #define ABBREV					0x80	/* abbreviation instead of mapping */
@@ -238,6 +239,20 @@ typedef unsigned long	long_u;
 
 #define VISUALLINE			MAXCOL	/* Visual is linewise */
 
+#ifdef WEBB_COMPLETE
+/*
+ * values for command line completion
+ */
+#define CONTEXT_UNKNOWN			-2
+#define EXPAND_UNSUCCESSFUL		-1
+#define EXPAND_NOTHING			0
+#define EXPAND_COMMANDS			1
+#define EXPAND_FILES			2
+#define EXPAND_DIRECTORIES		3
+#define EXPAND_SETTINGS			4
+#define EXPAND_BOOL_SETTINGS	5
+#define EXPAND_TAGS				6
+#endif /* WEBB_COMPLETE */
 /*
  * Boolean constants
  */
@@ -298,8 +313,8 @@ typedef unsigned long	long_u;
 # define APPENDBIN	"a"
 #endif
 
-#define CHANGED   set_Changed()
-#define UNCHANGED curbuf->b_changed = 0
+#define CHANGED   		set_Changed()
+#define UNCHANGED(buf)	unset_Changed(buf)
 
 /*
  * defines to avoid typecasts from (char_u *) to (char *) and back
@@ -313,11 +328,11 @@ typedef unsigned long	long_u;
 #define STRNCMP(d, s, n)	strncmp((char *)(d), (char *)(s), n)
 #define STRCAT(d, s)		strcat((char *)(d), (char *)(s))
 
-#define MSG(s)				msg((char_u *)s)
-#define EMSG(s)				emsg((char_u *)s)
-#define EMSG2(s, p)			emsg2((char_u *)s, (char_u *)p)
-#define OUTSTR(s)			outstr((char_u *)s)
-#define OUTSTRN(s)			outstrn((char_u *)s)
+#define MSG(s)				msg((char_u *)(s))
+#define EMSG(s)				emsg((char_u *)(s))
+#define EMSG2(s, p)			emsg2((char_u *)(s), (char_u *)(p))
+#define OUTSTR(s)			outstr((char_u *)(s))
+#define OUTSTRN(s)			outstrn((char_u *)(s))
 
 typedef long			linenr_t;	/* line number type */
 typedef unsigned		colnr_t;	/* column number type */

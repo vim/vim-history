@@ -192,7 +192,7 @@ qf_init()
 		if (namebuf[0] == NUL)			/* no file name */
 			qfp->qf_fnum = 0;
 		else
-			qfp->qf_fnum = filelist_add(namebuf);
+			qfp->qf_fnum = buflist_add(namebuf);
 		if ((qfp->qf_text = strsave(errmsg)) == NULL)
 			goto error1;
 		qfp->qf_lnum = lnum;
@@ -310,7 +310,7 @@ qf_jump(dir, errornr)
 	 * If there is a file name, 
 	 * read the wanted file if needed, and check autowrite etc.
 	 */
-	if (qf_ptr->qf_fnum == 0 || filelist_getfile(qf_ptr->qf_fnum, (linenr_t)1, TRUE) == OK)
+	if (qf_ptr->qf_fnum == 0 || buflist_getfile(qf_ptr->qf_fnum, (linenr_t)1, TRUE) == OK)
 	{
 		/*
 		 * Go to line with error, unless qf_lnum is 0.
@@ -347,7 +347,6 @@ qf_list()
 	}
 	qfp = qf_start;
 	gotocmdline(TRUE, NUL);
-	mch_start_listing();	/* may set cooked mode, so output can be halted */
 	for (i = 1; !got_int && i <= qf_count; ++i)
 	{
 		sprintf((char *)IObuff, "%2d line %3ld col %2d %s: %s",
@@ -362,7 +361,6 @@ qf_list()
 		flushbuf();					/* show one line at a time */
 		breakcheck();
 	}
-	mch_stop_listing();
 	wait_return(FALSE);
 }
 

@@ -17,7 +17,11 @@
 ###				(use only without -DNO_BUILTIN_TCAPS)
 ### -DALL_BUILTIN_TCAPS	include all builtin termcap entries
 ###				(use only without -DNO_BUILTIN_TCAPS)
-DEFINES = -DTERMCAP -DDIGRAPHS -DSOME_BUILTIN_TCAPS
+### -DWEBB_COMPLETE	include Webb's code for command line completion
+### -DWEBB_KEYWORD_COMPL include Webb's code for keyword completion
+### -DNOTITLE		'title' option off by default
+DEFINES = -DTERMCAP -DDIGRAPHS -DSOME_BUILTIN_TCAPS \
+		-DWEBB_COMPLETE -DWEBB_KEYWORD_COMPL
 
 #>>>>> if TERMCAP is defined obj/termlib.o has to be used
 TERMLIB = obj/termlib.o
@@ -38,7 +42,7 @@ LD = dcc
 	${CC} ${PRE} ${CFLAGS} $*.c -o $@
 
 OBJ =	obj/alloc.o obj/amiga.o obj/buffer.o obj/charset.o obj/cmdcmds.o obj/cmdline.o \
-	obj/csearch.o obj/digraph.o obj/edit.o obj/fileio.o obj/filelist.o obj/getchar.o obj/help.o \
+	obj/csearch.o obj/digraph.o obj/edit.o obj/fileio.o obj/getchar.o obj/help.o \
 	obj/linefunc.o obj/main.o obj/mark.o obj/memfile.o obj/memline.o obj/message.o obj/misccmds.o \
 	obj/normal.o obj/ops.o obj/param.o obj/quickfix.o obj/regexp.o \
 	obj/regsub.o obj/screen.o obj/search.o \
@@ -83,8 +87,6 @@ obj/digraph.o: digraph.c	$(INCL)
 obj/edit.o: edit.c	$(INCL)
 
 obj/fileio.o:	fileio.c  $(INCL)
-
-obj/filelist.o:	filelist.c  $(INCL)
 
 obj/getchar.o: getchar.c	$(INCL)
 

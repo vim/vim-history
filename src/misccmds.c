@@ -15,6 +15,8 @@
 #include "proto.h"
 #include "param.h"
 
+static void check_status __ARGS((BUF *));
+
 static char_u *(si_tab[]) = {(char_u *)"if", (char_u *)"else", (char_u *)"while", (char_u *)"for", (char_u *)"do"};
 
 /*
@@ -47,13 +49,14 @@ set_indent(size, delete)
 	register int size;
 	int delete;
 {
-	int		oldstate = State;
+	int				oldstate = State;
+	register int	c;
 
 	State = INSERT;		/* don't want REPLACE for State */
 	curwin->w_cursor.col = 0;
-	if (delete)
+	if (delete)							/* delete old indent */
 	{
-		while (iswhite(gchar_cursor()))	/* delete old indent */
+		while ((c = gchar_cursor()), iswhite(c))
 			(void)delchar(FALSE);
 	}
 	if (!curbuf->b_p_et)			/* if 'expandtab' is set, don't use TABs */
@@ -217,7 +220,10 @@ Opencmd(dir, redraw, delspaces)
 
 		if (redraw)
 		{
-			cursupdate();
+			n = RedrawingDisabled;
+			RedrawingDisabled = TRUE;
+			cursupdate();				/* don't want it to update srceen */
+			RedrawingDisabled = n;
 
 			/*
 			 * If we're doing an open on the last logical line, then go ahead and
@@ -370,7 +376,7 @@ inschar(c)
 	{
 		FPOS		   *lpos, csave;
 
-		if ((lpos = showmatch()) == NULL)		/* no match, so beep */
+		if ((lpos = showmatch(NUL)) == NULL)		/* no match, so beep */
 			beep();
 		else if (lpos->lnum >= curwin->w_topline)
 		{
@@ -380,6 +386,7 @@ inschar(c)
 			cursupdate();
 			showruler(0);
 			setcursor();
+			cursor_on();		/* make sure that the cursor is shown */
 			flushbuf();
 			vim_delay();		/* brief pause */
 			curwin->w_cursor = csave; 	/* restore cursor position */
@@ -648,13 +655,53 @@ plural(n)
 }
 
 /*
- * set_Changed is called whenever something in the file is changed
+ * set_Changed is called when something in the current buffer is changed
  */
 	void
 set_Changed()
 {
-	change_warning();
-	curbuf->b_changed = TRUE;
+	if (!curbuf->b_changed)
+	{
+		change_warning();
+		curbuf->b_changed = TRUE;
+		check_status(curbuf);
+	}
+}
+
+/*
+ * unset_Changed is called when the changed flag must be reset for buffer 'buf'
+ */
+	void
+unset_Changed(buf)
+	BUF		*buf;
+{
+	if (buf->b_changed)
+	{
+		buf->b_changed = 0;
+		check_status(buf);
+	}
+}
+
+/*
+ * check_status: called when the status bars for the buffer 'buf'
+ *				 need to be updated
+ */
+	static void
+check_status(buf)
+	BUF		*buf;
+{
+	WIN		*wp;
+	int		i;
+
+	i = 0;
+	for (wp = firstwin; wp != NULL; wp = wp->w_next)
+		if (wp->w_buffer == buf && wp->w_status_height)
+		{
+			wp->w_redr_status = TRUE;
+			++i;
+		}
+	if (i && must_redraw < NOT_VALID)		/* redraw later */
+		must_redraw = NOT_VALID;
 }
 
 /*
@@ -689,7 +736,9 @@ ask_yesno(str)
 
 	while (r != 'y' && r != 'n')
 	{
-		smsg((char_u *)"%s (y/n)? ", str);
+		(void)set_highlight('r');		/* same highlighting as for wait_return */
+		msg_highlight = TRUE;
+		smsg((char_u *)"%s (y/n)?", str);
 		r = vgetc();
 		if (r == Ctrl('C'))
 			r = 'n';
@@ -704,6 +753,9 @@ msgmore(n)
 	long n;
 {
 	long pn;
+
+	if (global_busy)		/* no messages now, wait until global is finished */
+		return;
 
 	if (n > 0)
 		pn = n;
@@ -742,6 +794,7 @@ beep()
 
 /* 
  * Expand environment variable with path name.
+ * "~/" is also expanded, like $HOME.
  * If anything fails no expansion is done and dst equals src.
  */
 	void
@@ -754,24 +807,32 @@ expand_env(src, dst, dstlen)
 	int		c;
 	char_u	*var;
 
-	if (*src == '$')
+	if (*src == '$' || (*src == '~' && STRCHR("/ \t\n", src[1]) != NULL))
 	{
 /*
  * The variable name is copied into dst temporarily, because it may be
  * a string in read-only memory.
  */
-		tail = src + 1;
-		var = dst;
-		c = dstlen - 1;
-		while (c-- > 0 && *tail && isidchar(*tail))
-			*var++ = *tail++;
-		*var = NUL;
+		if (*src == '$')
+		{
+			tail = src + 1;
+			var = dst;
+			c = dstlen - 1;
+			while (c-- > 0 && *tail && isidchar(*tail))
+				*var++ = *tail++;
+			*var = NUL;
 /*
  * It is possible that vimgetenv() uses IObuff for the expansion, and that the
  * 'dst' is also IObuff. This works, as long as 'var' is the first to be copied
  * to 'dst'!
  */
-		var = vimgetenv(dst);
+			var = vimgetenv(dst);
+		}
+		else
+		{
+			var = vimgetenv((char_u *)"HOME");
+			tail = src + 1;
+		}
 		if (var && (STRLEN(var) + STRLEN(tail) + 1 < (unsigned)dstlen))
 		{
 			STRCPY(dst, var);
@@ -780,6 +841,45 @@ expand_env(src, dst, dstlen)
 		}
 	}
 	STRNCPY(dst, src, (size_t)dstlen);
+}
+
+/* 
+ * Replace home directory by "~/"
+ * If anything fails dst equals src.
+ */
+	void
+home_replace(src, dst, dstlen)
+	char_u	*src;			/* input file name */
+	char_u	*dst;			/* where to put the result */
+	int		dstlen;			/* maximum length of the result */
+{
+	char_u	*home;
+	size_t	len;
+
+	/*
+	 * If there is no "HOME" environment variable, or when it
+	 * is very short, don't replace anything.
+	 */
+	if ((home = vimgetenv((char_u *)"HOME")) == NULL || (len = STRLEN(home)) <= 1)
+		STRNCPY(dst, src, (size_t)dstlen);
+	else
+	{
+		skipspace(&src);
+		while (*src && dstlen > 0)
+		{
+			if (STRNCMP(src, home, len) == 0)
+			{
+				src += len;
+				if (--dstlen > 0)
+					*dst++ = '~';
+			}
+			while (*src && *src != ' ' && --dstlen > 0)
+				*dst++ = *src++;
+			while (*src == ' ' && --dstlen > 0)
+				*dst++ = *src++;
+		}
+		*dst = NUL;
+	}
 }
 
 /*

@@ -28,6 +28,7 @@ struct param
 
 /*
  * Flags
+ * Note: Don't use P_STRING and P_IND at the same time
  */
 #define P_BOOL			0x01	/* the parameter is boolean */
 #define P_NUM			0x02	/* the parameter is numeric */
@@ -74,7 +75,6 @@ static struct param params[] =
 		{"autoprint",	"ap",	P_BOOL,				(char_u *)NULL},
 		{"autowrite",	"aw",	P_BOOL,				(char_u *)&p_aw},
 		{"backspace",	"bs",	P_NUM,				(char_u *)&p_bs},
-		{"bswrap",		"bw",	P_BOOL,				(char_u *)&p_bw},
 		{"backup",		"bk",	P_BOOL,				(char_u *)&p_bk},
 #ifdef UNIX
  		{"backupdir",	"bdir",	P_STRING|P_EXPAND,	(char_u *)&p_bdir},
@@ -93,6 +93,7 @@ static struct param params[] =
  		{"directory",	"dir",	P_STRING|P_EXPAND,	(char_u *)&p_dir},
 		{"edcompatible",NULL,	P_BOOL,				(char_u *)&p_ed},
 		{"endofline",	"eol",	P_BOOL|P_IND,		(char_u *)PV_EOL},
+		{"equalalways",	"ea",  	P_BOOL,				(char_u *)&p_ea},
 		{"equalprg",	"ep",  	P_STRING|P_EXPAND,	(char_u *)&p_ep},
 		{"errorbells",	"eb",	P_BOOL,				(char_u *)&p_eb},
 		{"errorfile",	"ef",  	P_STRING|P_EXPAND,	(char_u *)&p_ef},
@@ -101,19 +102,19 @@ static struct param params[] =
 		{"expandtab",	"et",	P_BOOL|P_IND,		(char_u *)PV_ET},
 		{"exrc",		NULL,	P_BOOL,				(char_u *)&p_exrc},
 		{"formatprg",	"fp",  	P_STRING|P_EXPAND,	(char_u *)&p_fp},
-		{"graphic",		"gr",	P_BOOL,				(char_u *)&p_gr},
 		{"gdefault",	"gd",	P_BOOL,				(char_u *)&p_gd},
+		{"graphic",		"gr",	P_BOOL,				(char_u *)&p_gr},
 		{"hardtabs",	"ht",	P_NUM,				(char_u *)NULL},
 		{"helpfile",	"hf",  	P_STRING|P_EXPAND,	(char_u *)&p_hf},
 		{"hidden",		"hid",	P_BOOL,				(char_u *)&p_hid},
+		{"highlight",	"hl",	P_STRING,			(char_u *)&p_hl},
 		{"history", 	"hi", 	P_NUM,				(char_u *)&p_hi},
 		{"icon",	 	NULL,	P_BOOL,				(char_u *)&p_icon},
 		{"ignorecase",	"ic",	P_BOOL,				(char_u *)&p_ic},
 		{"insertmode",	"im",	P_BOOL,				(char_u *)&p_im},
-		{"invertweird",	"iw",	P_BOOL,				(char_u *)&p_iw},
 		{"joinspaces", 	"js",	P_BOOL,				(char_u *)&p_js},
 		{"keywordprg",	"kp",  	P_STRING|P_EXPAND,	(char_u *)&p_kp},
-		{"laststatus",	"ls", 	P_BOOL,				(char_u *)&p_ls},
+		{"laststatus",	"ls", 	P_NUM,				(char_u *)&p_ls},
 		{"lines",		NULL, 	P_NUM,				(char_u *)&Rows},
 		{"lisp",		NULL,	P_BOOL,				(char_u *)NULL},
 		{"list",		NULL,	P_BOOL|P_IND,		(char_u *)PV_LIST},
@@ -125,13 +126,14 @@ static struct param params[] =
 		{"modeline",	"ml",	P_BOOL|P_IND,		(char_u *)PV_ML},
 		{"modelines",	"mls",	P_NUM,				(char_u *)&p_mls},
 		{"more",		NULL,	P_BOOL,				(char_u *)&p_more},
-		{"number",		"nu",	P_BOOL|P_IND,		(char_u *)PV_NU},
 		{"nobuf",		"nb",	P_BOOL,				(char_u *)&p_nb},
+		{"number",		"nu",	P_BOOL|P_IND,		(char_u *)PV_NU},
 		{"open",		NULL,	P_BOOL,				(char_u *)NULL},
 		{"optimize",	"opt",	P_BOOL,				(char_u *)NULL},
 		{"paragraphs",	"para",	P_STRING,			(char_u *)&p_para},
 		{"paste",		NULL,	P_BOOL,				(char_u *)&p_paste},
 		{"patchmode",   "pm",   P_STRING,			(char_u *)&p_pm},
+		{"path",		"pa",  	P_STRING|P_EXPAND,	(char_u *)&p_path},
 		{"prompt",		NULL,	P_BOOL,				(char_u *)NULL},
 		{"readonly",	"ro",	P_BOOL|P_IND,		(char_u *)PV_RO},
 		{"redraw",		NULL,	P_BOOL,				(char_u *)NULL},
@@ -139,10 +141,10 @@ static struct param params[] =
 		{"report",		NULL,	P_NUM,				(char_u *)&p_report},
 		{"revins",		"ri",	P_BOOL,				(char_u *)&p_ri},
 		{"ruler",		"ru",	P_BOOL,				(char_u *)&p_ru},
-		{"secure",		NULL,	P_BOOL,				(char_u *)&p_secure},
 		{"scroll",		NULL, 	P_NUM|P_IND,		(char_u *)PV_SCROLL},
 		{"scrolljump",	"sj", 	P_NUM,				(char_u *)&p_sj},
 		{"sections",	"sect",	P_STRING,			(char_u *)&p_sections},
+		{"secure",		NULL,	P_BOOL,				(char_u *)&p_secure},
 		{"shell",		"sh",	P_STRING|P_EXPAND,	(char_u *)&p_sh},
 		{"shellpipe",	"sp",	P_STRING,			(char_u *)&p_sp},
 		{"shelltype",	"st",	P_NUM,				(char_u *)&p_st},
@@ -158,10 +160,12 @@ static struct param params[] =
 		{"slowopen",	"slow",	P_BOOL,				(char_u *)NULL},
 		{"smartindent", "si",	P_BOOL|P_IND,		(char_u *)PV_SI},
 		{"smarttab",	"sta",	P_BOOL,				(char_u *)&p_sta},
-		{"sourceany", NULL,	P_BOOL,					(char_u *)NULL},
+		{"sourceany",	NULL,	P_BOOL,				(char_u *)NULL},
+		{"splitbelow",	"sb",	P_BOOL,				(char_u *)&p_sb},
 		{"suffixes",	"su",	P_STRING,			(char_u *)&p_su},
 		{"tabstop", 	"ts",	P_NUM|P_IND,		(char_u *)PV_TS},
 		{"taglength",	"tl",	P_NUM,				(char_u *)&p_tl},
+		{"tagrelative",	"tr",	P_BOOL,				(char_u *)&p_tr},
 		{"tags",		NULL,	P_STRING|P_EXPAND,	(char_u *)&p_tags},
 		{"term",		NULL,	P_STRING|P_EXPAND,	(char_u *)&term_strings.t_name},
 		{"terse",		NULL,	P_BOOL,				(char_u *)&p_terse},
@@ -173,22 +177,24 @@ static struct param params[] =
 		{"timeoutlen",	"tm",	P_NUM,				(char_u *)&p_tm},
 		{"title",	 	NULL,	P_BOOL,				(char_u *)&p_title},
 		{"ttimeout", 	NULL,	P_BOOL,				(char_u *)&p_ttimeout},
-		{"ttytype",		NULL,	P_STRING,			(char_u *)NULL},
 		{"ttyfast", 	"tf",	P_BOOL,				(char_u *)&p_tf},
+		{"ttytype",		NULL,	P_STRING,			(char_u *)NULL},
 		{"undolevels",	"ul",	P_NUM,				(char_u *)&p_ul},
 		{"updatecount",	"uc",	P_NUM,				(char_u *)&p_uc},
 		{"updatetime",	"ut",	P_NUM,				(char_u *)&p_ut},
 		{"visualbell",	"vb",	P_BOOL,				(char_u *)&p_vb},
-		{"warn",		NULL,	P_BOOL,				(char_u *)&p_warn},
-		{"wildchar",	"wc", 	P_NUM,				(char_u *)&p_wc},
-		{"window",		NULL, 	P_NUM,				(char_u *)NULL},
-		{"winheight",	"wh",	P_NUM,				(char_u *)&p_wh},
 		{"w300",		NULL, 	P_NUM,				(char_u *)NULL},
 		{"w1200",		NULL, 	P_NUM,				(char_u *)NULL},
 		{"w9600",		NULL, 	P_NUM,				(char_u *)NULL},
+		{"warn",		NULL,	P_BOOL,				(char_u *)&p_warn},
+		{"weirdinvert",	"wi",	P_BOOL,				(char_u *)&p_wi},
+		{"whichwrap",	"ww",	P_NUM,				(char_u *)&p_ww},
+		{"wildchar",	"wc", 	P_NUM,				(char_u *)&p_wc},
+		{"window",		NULL, 	P_NUM,				(char_u *)NULL},
+		{"winheight",	"wh",	P_NUM,				(char_u *)&p_wh},
 		{"wrap",		NULL,	P_BOOL|P_IND,		(char_u *)PV_WRAP},
-		{"wrapscan",	"ws",	P_BOOL,				(char_u *)&p_ws},
 		{"wrapmargin",	"wm",	P_NUM|P_IND,		(char_u *)PV_WM},
+		{"wrapscan",	"ws",	P_BOOL,				(char_u *)&p_ws},
 		{"writeany",	"wa",	P_BOOL,				(char_u *)&p_wa},
 		{"writebackup",	"wb",	P_BOOL,				(char_u *)&p_wb},
 		{"yankendofline", "ye",	P_BOOL,				(char_u *)&p_ye},
@@ -200,7 +206,9 @@ static struct param params[] =
 		{"t_cm",		NULL,	P_STRING,	(char_u *)&term_strings.t_cm},
 		{"t_cri",		NULL,	P_STRING,	(char_u *)&term_strings.t_cri},
 		{"t_cv",		NULL,	P_STRING,	(char_u *)&term_strings.t_cv},
+		{"t_cvv",		NULL,	P_STRING,	(char_u *)&term_strings.t_cvv},
 		{"t_dl",		NULL,	P_STRING,	(char_u *)&term_strings.t_dl},
+		{"t_cs",		NULL,	P_STRING,	(char_u *)&term_strings.t_cs},
 		{"t_ed",		NULL,	P_STRING,	(char_u *)&term_strings.t_ed},
 		{"t_el",		NULL,	P_STRING,	(char_u *)&term_strings.t_el},
 		{"t_il",		NULL,	P_STRING,	(char_u *)&term_strings.t_il},
@@ -209,10 +217,11 @@ static struct param params[] =
 		{"t_ms",		NULL,	P_STRING,	(char_u *)&term_strings.t_ms},
 		{"t_se",		NULL,	P_STRING,	(char_u *)&term_strings.t_se},
 		{"t_so",		NULL,	P_STRING,	(char_u *)&term_strings.t_so},
+		{"t_ti",		NULL,	P_STRING,	(char_u *)&term_strings.t_ti},
+		{"t_tb",		NULL,	P_STRING,	(char_u *)&term_strings.t_tb},
+		{"t_tp",		NULL,	P_STRING,	(char_u *)&term_strings.t_tp},
 		{"t_sr",		NULL,	P_STRING,	(char_u *)&term_strings.t_sr},
 		{"t_te",		NULL,	P_STRING,	(char_u *)&term_strings.t_te},
-		{"t_ti",		NULL,	P_STRING,	(char_u *)&term_strings.t_ti},
-		{"t_tp",		NULL,	P_STRING,	(char_u *)&term_strings.t_tp},
 		{"t_ts",		NULL,	P_STRING,	(char_u *)&term_strings.t_ts},
 		{"t_vb",		NULL,	P_STRING,	(char_u *)&term_strings.t_vb},
 
@@ -247,6 +256,7 @@ static struct param params[] =
 		{"t_sf10",		NULL,	P_STRING,	(char_u *)&term_strings.t_sf10},
 		{"t_help",		NULL,	P_STRING,	(char_u *)&term_strings.t_help},
 		{"t_undo",		NULL,	P_STRING,	(char_u *)&term_strings.t_undo},
+		{"t_csc",		NULL,	P_STRING,	(char_u *)&term_strings.t_csc},
 		{NULL, NULL, 0, NULL}			/* end marker */
 };
 
@@ -328,7 +338,8 @@ set_init()
 
 /*
  * parse 'arg' for option settings
- * 'arg' may be IObuff, but only when no errors can be present.
+ * 'arg' may be IObuff, but only when no errors can be present and parameter
+ * does not need to be expanded with param_expand().
  *
  * return FAIL if errors are detected, OK otherwise
  */
@@ -350,10 +361,8 @@ doset(arg)
 	long		oldRows = Rows;		/* remember old Rows */
 	int			oldpaste = p_paste;	/* remember old paste option */
 	long		oldch = p_ch;		/* remember old command line height */
-	static long	save_tw = 0;		/* saved options for 'paste' */
-	static int	save_ai = 0;
-	static int	save_si = 0;
-	static int	save_sm = 0;
+	int			oldea = p_ea;		/* remember old 'equalalways' */
+	static int	save_sm = 0;		/* saved options for 'paste' */
 	static int	save_ru = 0;
 	static int	save_ri = 0;
 	int			did_show = FALSE;	/* already showed one value */
@@ -457,7 +466,7 @@ doset(arg)
 				if ((int *)varp == &p_cp && p_cp)
 				{
 					p_bs = 0;		/* normal backspace */
-					p_bw = 0;		/* backspace and space do not wrap */
+					p_ww = 0;		/* backspace and space do not wrap */
 					p_bk = 0;		/* no backup file */
 #ifdef DIGRAPHS
 					p_dg = 0;		/* no digraphs */
@@ -482,6 +491,7 @@ doset(arg)
 					curbuf->b_p_tw = 0;		/* no automatic line wrap */
 					p_to = 0;		/* no tilde operator */
 					p_ttimeout = 0;	/* no terminal timeout */
+					p_tr = 0;		/* tag file names not relative */
 					p_ul = 0;		/* no multilevel undo */
 					p_uc = 0;		/* no autoscript file */
 					p_wb = 0;		/* no backup file */
@@ -499,33 +509,51 @@ doset(arg)
 				}
 				if ((int *)varp == &p_paste)	/* handle paste here */
 				{
+					BUF		*buf;
+
 					if (p_paste && !oldpaste)	/* paste switched on */
 					{
-						save_tw = curbuf->b_p_tw;	/* save current values */
-						save_ai = curbuf->b_p_ai;
-						save_si = curbuf->b_p_si;
+							/* save and set options for all buffers */
+						for (buf = firstbuf; buf != NULL; buf = buf->b_next)
+						{
+							buf->b_p_tw_save = buf->b_p_tw;
+							buf->b_p_ai_save = buf->b_p_ai;
+							buf->b_p_si_save = buf->b_p_si;
+							buf->b_p_tw = 0;		/* textwidth is 0 */
+							buf->b_p_ai = 0;		/* no auto-indent */
+							buf->b_p_si = 0;		/* no smart-indent */
+						}
+							/* save and set global options */
 						save_sm = p_sm;
 						save_ru = p_ru;
 						save_ri = p_ri;
-						curbuf->b_p_tw = 0;		/* textwidth is 0 */
-						curbuf->b_p_ai = 0;		/* no auto-indent */
-						curbuf->b_p_si = 0;		/* no smart-indent */
 						p_sm = 0;				/* no showmatch */
 						p_ru = 0;				/* no ruler */
 						p_ri = 0;				/* no reverse insert */
 					}
 					else if (!p_paste && oldpaste)	/* paste switched off */
 					{
-						curbuf->b_p_tw = save_tw;		/* restore old values */
-						curbuf->b_p_ai = save_ai;
-						curbuf->b_p_si = save_si;
+							/* restore options for all buffers */
+						for (buf = firstbuf; buf != NULL; buf = buf->b_next)
+						{
+							buf->b_p_tw = buf->b_p_tw_save;
+							buf->b_p_ai = buf->b_p_ai_save;
+							buf->b_p_si = buf->b_p_si_save;
+						}
+							/* restore global options */
 						p_sm = save_sm;
 						p_ru = save_ru;
 						p_ri = save_ri;
 					}
 				}
-				if ((int *)varp == &p_ls)
-					last_status();		/* (re)set last window status line */
+				if (!starting && ((int *)varp == &p_title ||
+										(int *)varp == &p_icon))
+				{
+					if (*(int *)varp)			/* Set window title NOW */
+						maketitle();
+					else						/* Reset window title NOW */
+						mch_restore_title((int *)varp == &p_title ? 1 : 2);
+				}
 			}
 			else								/* numeric or string */
 			{
@@ -550,11 +578,24 @@ doset(arg)
 						}
 					}
 					*(long *)(varp) = value;
+
+					if ((long *)varp == &p_wh)
+					{
+						if (p_wh < 0)
+						{
+							errmsg = e_positive;
+							p_wh = 0;
+						}
+							/* Change window height NOW */
+						if (p_wh && lastwin != firstwin && curwin->w_height < p_wh)
+							win_setheight((int)p_wh);
+					}
+					if ((long *)varp == &p_ls)
+						last_status();		/* (re)set last window status line */
 				}
 				else							/* string */
 				{
 					arg += len + 1;		/* jump to after the '=' */
-					prefix = *arg;		/* remember first char of arg */
 					s = alloc((unsigned)(STRLEN(arg) + 1)); /* get a bit too much */
 					if (s == NULL)
 						break;
@@ -569,8 +610,7 @@ doset(arg)
 						*s++ = *arg++;
 					}
 					*s = NUL;
-					if (prefix == '$')
-						param_expand(i, TRUE);	/* expand environment variables */
+					param_expand(i, TRUE);	/* expand environment variables and ~ */
 					/*
 					 * options that need some action
 					 * to perform when changed (jw)
@@ -606,6 +646,7 @@ skip:
 		 */
 		if (oldRows != Rows)
 		{
+			screen_new_rows();
 #ifdef MSDOS
 			set_window();		/* active window may have changed */
 #endif
@@ -689,6 +730,8 @@ skip:
 	 */
 	for (wp = firstwin; wp; wp = wp->w_next)
 		wp->w_redr_status = TRUE;		/* mark all status lines dirty */
+	if (p_ea && !oldea)
+		win_equal(curwin, FALSE);
 	if (did_show && msg_check())
 	{
 		msg_outchar('\n');
@@ -709,7 +752,9 @@ param_expand(i, dofree)
 {
 	char_u *p;
 
-	if ((params[i].flags & P_EXPAND) && (p = *(char_u **)(params[i].var)) != NULL && *p == '$')
+	if ((params[i].flags & P_EXPAND) &&
+				(p = *(char_u **)(params[i].var)) != NULL &&
+				(*p == '$' || *p == '~'))
 	{
 		expand_env(*(char_u **)(params[i].var), IObuff, IOSIZE);
 		p = strsave(IObuff);
@@ -793,7 +838,6 @@ showparams(all)
 	gotocmdline(TRUE, NUL);
 	msg_outstr((char_u *)"--- Parameters ---\n");
 
-	mch_start_listing();	/* may set cooked mode, so output can be halted */
 	/*
 	 * do the loop two times:
 	 * 1. display the short items (non-strings and short strings)
@@ -850,7 +894,6 @@ showparams(all)
 		}
 	}
 
-	mch_stop_listing();
 	wait_return(FALSE);
 }
 
@@ -881,7 +924,15 @@ showonep(p)
 			msg_outstr(buf);
 		}
 		else if (*(char_u **)(varp) != NULL)
-			msg_outtrans(*(char_u **)(varp), -1);
+		{
+			if (p->flags & P_EXPAND)
+			{
+				home_replace(*(char_u **)(varp), NameBuff, MAXPATHL);
+				msg_outtrans(NameBuff, -1);
+			}
+			else
+				msg_outtrans(*(char_u **)(varp), -1);
+		}
 	}
 }
 
@@ -961,6 +1012,8 @@ istermparam(p)
 /*
  * Compute columns for ruler and shown command. 'sc_col' is also used to
  * decide what the maximum length of a message on the status line can be.
+ * If there is a status line for the last window, 'sc_col' is independent
+ * of 'ru_col'.
  */
 
 #define COL_SHOWCMD 10		/* columns needed by shown command */
@@ -969,19 +1022,26 @@ istermparam(p)
 	void
 comp_col()
 {
+	int last_status = (p_ls == 2 || (p_ls == 1 && firstwin != lastwin));
+
 	sc_col = 0;
 	ru_col = 0;
 	if (p_ru)
-		ru_col = sc_col = COL_RULER + 1;
+	{
+		ru_col = COL_RULER + 1;
+							/* no last status line, adjust sc_col */
+		if (!last_status)
+			sc_col = ru_col;
+	}
 	if (p_sc)
 	{
 		sc_col += COL_SHOWCMD;
-		if (!p_ru)
+		if (!p_ru || last_status)		/* no need for separating space */
 			++sc_col;
 	}
 	sc_col = Columns - sc_col;
 	ru_col = Columns - ru_col;
-	if (sc_col <= 0)		/* screen too narrow, will become a mess */
+	if (sc_col <= 0)			/* screen too narrow, will become a mess */
 		sc_col = 1;
 	if (ru_col <= 0)
 		ru_col = 1;
@@ -1057,3 +1117,177 @@ buf_copy_options(bp_from, bp_to)
 	bp_to->b_p_sn = bp_from->b_p_sn;
 	bp_to->b_p_tx = bp_from->b_p_tx;
 }
+
+#ifdef WEBB_COMPLETE
+	void
+set_context_in_set_cmd(arg)
+	char_u *arg;
+{
+	int 		nextchar;
+	int 		flags;
+	int			i;
+	char_u		*p;
+	char_u		*after_blank = NULL;
+
+	expand_context = EXPAND_SETTINGS;
+	if (*arg == NUL)
+	{
+		expand_pattern = arg;
+		return;
+	}
+	p = arg + STRLEN(arg) - 1;
+	if (*p == ' ' && *(p - 1) != '\\')
+	{
+		expand_pattern = p + 1;
+		return;
+	}
+	while (p != arg && (*p != ' ' || *(p - 1) == '\\'))
+	{
+		if (*p == ' ' && after_blank == NULL)
+			after_blank = p + 1;
+		p--;
+	}
+	if (p != arg)
+		p++;
+	if (STRNCMP(p, "no", (size_t) 2) == 0)
+	{
+		expand_context = EXPAND_BOOL_SETTINGS;
+		p += 2;
+	}
+	if (STRNCMP(p, "inv", (size_t) 3) == 0)
+	{
+		expand_context = EXPAND_BOOL_SETTINGS;
+		p += 3;
+	}
+	expand_pattern = arg = p;
+	while (isalnum(*p) || *p == '_' || *p == '*')	/* Allow * as wildcard */
+		p++;
+	if (*p == NUL)
+		return;
+	nextchar = *p;
+	*p = NUL;
+	i = findparam(arg);
+	*p = nextchar;
+	if (i == -1 || params[i].var == NULL)
+	{
+		expand_context = EXPAND_NOTHING;
+		return;
+	}
+	flags = params[i].flags;
+	if (flags & P_BOOL)
+	{
+		expand_context = EXPAND_NOTHING;
+		return;
+	}
+	if ((nextchar != '=' && nextchar != ':')
+	  || expand_context == EXPAND_BOOL_SETTINGS)
+	{
+		expand_context = EXPAND_UNSUCCESSFUL;
+		return;
+	}
+	expand_context = EXPAND_NOTHING;
+	if (flags & P_NUM)
+		return;
+	if (after_blank != NULL)
+		expand_pattern = after_blank;
+	else
+		expand_pattern = p + 1;
+	if (flags & P_EXPAND)
+	{
+		p = params[i].var;
+		if (
+#ifdef UNIX
+			p == (char_u *)&p_bdir ||
+#endif
+			p == (char_u *)&p_dir || p == (char_u *)&p_path)
+			expand_context = EXPAND_DIRECTORIES;
+		else
+			expand_context = EXPAND_FILES;
+	}
+	return;
+}
+
+	int
+ExpandSettings(prog, num_file, file)
+	regexp *prog;
+	int *num_file;
+	char_u ***file;
+{
+	int num_normal = 0;		/* Number of matching non-term-code settings */
+	int num_term = 0;		/* Number of matching terminal code settings */
+	int i;
+	int match;
+	int count;
+	char_u *str;
+
+	if (expand_context != EXPAND_BOOL_SETTINGS)
+	{
+		if (regexec(prog, (char_u *)"all", TRUE))
+			num_normal++;
+		if (regexec(prog, (char_u *)"termcap", TRUE))
+			num_normal++;
+	}
+	for (i = 0; (str = (char_u *)params[i].fullname) != NULL; i++)
+	{
+		if (params[i].var == NULL)
+			continue;
+		if (expand_context == EXPAND_BOOL_SETTINGS
+		  && !(params[i].flags & P_BOOL))
+			continue;
+		if (istermparam(&params[i]) && num_normal > 0)
+			continue;
+		match = FALSE;
+		if (regexec(prog, str, TRUE))
+			match = TRUE;
+		else if (params[i].shortname != NULL
+		  && regexec(prog, (char_u *)params[i].shortname, TRUE))
+			match = TRUE;
+		if (match)
+		{
+			if (istermparam(&params[i]))
+				num_term++;
+			else
+				num_normal++;
+		}
+	}
+	if (num_normal > 0)
+		*num_file = num_normal;
+	else if (num_term > 0)
+		*num_file = num_term;
+	else
+		return OK;
+	*file = (char_u **) alloc((unsigned)(*num_file * sizeof(char_u *)));
+	if (*file == NULL)
+	{
+		*file = (char_u **)"";
+		return FAIL;
+	}
+	count = 0;
+	if (expand_context != EXPAND_BOOL_SETTINGS)
+	{
+		if (regexec(prog, (char_u *)"all", TRUE))
+			(*file)[count++] = strsave((char_u *)"all");
+		if (regexec(prog, (char_u *)"termcap", TRUE))
+			(*file)[count++] = strsave((char_u *)"termcap");
+	}
+	for (i = 0; (str = (char_u *)params[i].fullname) != NULL; i++)
+	{
+		if (params[i].var == NULL)
+			continue;
+		if (expand_context == EXPAND_BOOL_SETTINGS
+		  && !(params[i].flags & P_BOOL))
+			continue;
+		if (istermparam(&params[i]) && num_normal > 0)
+			continue;
+		match = FALSE;
+		if (regexec(prog, str, TRUE))
+			match = TRUE;
+		else if (params[i].shortname != NULL
+		  && regexec(prog, (char_u *)params[i].shortname, TRUE))
+			match = TRUE;
+		if (match)
+			(*file)[count++] = strsave(str);
+	}
+	return OK;
+}
+#endif /* WEBB_COMPLETE */

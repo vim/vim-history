@@ -42,6 +42,15 @@ EXTERN int		cmdline_row;
 EXTERN int		redraw_cmdline INIT(= FALSE);	/* cmdline must be redrawn */
 EXTERN int		clear_cmdline INIT(= FALSE);	/* cmdline must be cleared */
 
+#ifdef WEBB_COMPLETE
+/*
+ * used for completion on the command line
+ */
+EXTERN int		expand_context INIT(= CONTEXT_UNKNOWN);
+EXTERN char_u	*expand_pattern INIT(= NULL);
+EXTERN int		expand_interactively INIT(= FALSE);
+#endif /* WEBB_COMPLETE */
+
 /*
  * Functions for putting characters in the command line,
  * while keeping NextScreen updated.
@@ -49,7 +58,11 @@ EXTERN int		clear_cmdline INIT(= FALSE);	/* cmdline must be cleared */
 EXTERN int		msg_col;
 EXTERN int		msg_row;
 EXTERN int		msg_scrolled; 
-EXTERN char_u	*keep_msg;		/* message to be shown after redraw */
+EXTERN char_u	*keep_msg;					/* message to be shown after redraw */
+EXTERN int		msg_highlight INIT(= FALSE);/* message should be highlighted */
+EXTERN char_u	*highlight INIT(= NULL);	/* string for start of highlighting */
+EXTERN char_u	*unhighlight INIT(= NULL);	/* string for end of highlighting */
+EXTERN int		scroll_region INIT(= FALSE);/* terminal supports scroll region */
 
 /*
  * All windows are linked in a list. firstwin points to the first entry, lastwin
@@ -61,18 +74,18 @@ EXTERN WIN		*lastwin;		/* last window */
 EXTERN WIN		*curwin;		/* currently active window */
 
 /*
- * All buffers are linked in a list. firstbuf points to the first entry and
- * curbuf to the currently active buffer.
+ * All buffers are linked in a list. 'firstbuf' points to the first entry,
+ * 'lastbuf' to the last entry and 'curbuf' to the currently active buffer.
  */
 EXTERN BUF		*firstbuf INIT(= NULL);	/* first buffer */
-EXTERN BUF		*curbuf;		/* currently active buffer */
+EXTERN BUF		*lastbuf INIT(= NULL);	/* last buffer */
+EXTERN BUF		*curbuf INIT(= NULL);	/* currently active buffer */
 
 /*
  * list of files being edited (argument list)
  */
 EXTERN char_u	**arg_files;	/* list of files */
 EXTERN int		arg_count;	 	/* number of files */
-EXTERN int		arg_current;	/* number of the current file */
 EXTERN int		arg_exp;		/* when TRUE arg_files must be freed */
 
 EXTERN int		ru_col;			/* column for ruler */
@@ -138,7 +151,8 @@ EXTERN int		did_cd INIT(= FALSE);	/* TRUE when :cd dir used */
 EXTERN int		no_abbr INIT(= TRUE);	/* TRUE when no abbreviations loaded */
 
 
-EXTERN char_u 	*IObuff;				/* sprintf's are done into this buffer */
+EXTERN char_u 	*IObuff;				/* sprintf's are done in this buffer */
+EXTERN char_u	*NameBuff;				/* file names are expanded in this buffer */
 
 EXTERN int		RedrawingDisabled INIT(= FALSE);
 										/* Set to TRUE if doing :g */
@@ -172,6 +186,7 @@ EXTERN int		no_wait_return INIT(= 0);	/* don't wait for return now */
 EXTERN int		need_wait_return INIT(= 0);	/* need to wait for return later */
 EXTERN char_u	*last_cmdline INIT(= NULL);	/* last command line (for ':' register) */
 EXTERN int		postponed_split INIT(= FALSE);	/* for CTRL-W CTRL-] command */
+EXTERN int		keep_old_search_pattern INIT(= FALSE);	/* for myregcomp() */
 
 #ifdef DEBUG
 EXTERN FILE *debugfp INIT(=NULL);

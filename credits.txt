@@ -16,12 +16,14 @@ worked on by:
 	Steve Kirkendall	Elvis
 	Juergen Weigert		Lattice version, AUX improvements, UNIX and 
 				MSDOS ports
+	Robert Webb		Command line completion and other patches
 	Olaf Seibert		DICE version and regexp improvements
 	Peter da Silva		termlib
 	Chris & John Downey     xvi (ideas for multi windows version)
         Loic Grenie             xvim (ideas for multi windows version)
         Keith Bostic            nvi
 	Berkeley DB(3)		ideas for swap file
+	Ralf Brown		SPAWNO library for MSDOS
 
 I must thank all the people that sent me bug reports and suggestions. The
 list is too long to mention them all here. And mentioning only a few of them

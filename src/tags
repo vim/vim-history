@@ -5,11 +5,14 @@ CHECK	memfile.c	/^#define CHECK(c, s)	if (c) printf(s)$/
 Chk_Abort	amiga.c	/^Chk_Abort()$/
 Ctrl	ascii.h	/^#define Ctrl(x) ((x) & 0x1f)$/
 DoOneCmd	cmdline.c	/^DoOneCmd(buff)$/
-EMSG	vim.h	/^#define EMSG(s)				emsg((char_u *)s)$/
-EMSG2	vim.h	/^#define EMSG2(s, p)			emsg2((char_u *)s, (char_u */
+EMSG	vim.h	/^#define EMSG(s)				emsg((char_u *)(s))$/
+EMSG2	vim.h	/^#define EMSG2(s, p)			emsg2((char_u *)(s), (char_u/
 EMSG_RETURN	regexp.c	/^#define EMSG_RETURN(m) { emsg(m); return NULL; }$/
 EXTERN	param.h	/^EXTERN char_u *p_ep	INIT(= (char_u *)"indent");	\/*/
+ExpandFromContext	cmdline.c	/^ExpandFromContext(pat, num_file, file, files_only,/
 ExpandOne	cmdline.c	/^ExpandOne(str, list_notfound, mode)$/
+ExpandSettings	param.c	/^ExpandSettings(prog, num_file, file)$/
+ExpandTags	tag.c	/^ExpandTags(prog, num_file, file)$/
 ExpandWildCards	amiga.c	/^ExpandWildCards(num_pat, pat, num_file, file, file/
 FreeWild	amiga.c	/^FreeWild(num, file)$/
 FullName	amiga.c	/^FullName(fname, buf, len)$/
@@ -19,7 +22,7 @@ ISSPECIAL	edit.c	/^#define ISSPECIAL(c)	((c) < ' ' || (c) >= DEL)$/
 MEMHASH	structs.h	/^#define MEMHASH(nr)		((nr) & (MEMHASHSIZE - 1))$/
 ML_SIMPLE	memline.c	/^#define ML_SIMPLE(x)	(x & 0x10)	\/* DEL, INS or FIN/
 MP	amiga.c	/^#define MP(xx)	((struct MsgPort *)((struct FileHan/
-MSG	vim.h	/^#define MSG(s)				msg((char_u *)s)$/
+MSG	vim.h	/^#define MSG(s)				msg((char_u *)(s))$/
 Maddcr	addcr.c	/^main(argc, argv)$/
 Magic	regexp.c	/^#define Magic(x)	((x)|('\\\\'<<8))$/
 Meta	ascii.h	/^#define Meta(x) ((x) | 0x80)$/
@@ -28,8 +31,8 @@ Mmkcmdtab	mkcmdtab.c	/^main(argc, argv)$/
 NEXT	regexp.c	/^#define NEXT(p) (((*((p)+1)&0377)<<8) + (*((p)+2)&/
 OP	regexp.c	/^#define OP(p)	(*(p))$/
 OPERAND	regexp.c	/^#define OPERAND(p)		((p) + 3)$/
-OUTSTR	vim.h	/^#define OUTSTR(s)			outstr((char_u *)s)$/
-OUTSTRN	vim.h	/^#define OUTSTRN(s)			outstrn((char_u *)s)$/
+OUTSTR	vim.h	/^#define OUTSTR(s)			outstr((char_u *)(s))$/
+OUTSTRN	vim.h	/^#define OUTSTRN(s)			outstrn((char_u *)(s))$/
 Opencmd	misccmds.c	/^Opencmd(dir, redraw, delspaces)$/
 PERR	winnt.c	/^#define PERR(bSuccess, api) {if (!(bSuccess)) perr/
 PeekChr	regexp.c	/^#define PeekChr() curchr	\/* shortcut only when las/
@@ -48,6 +51,7 @@ TGETSTR	term.c	/^# define TGETSTR(s, p)	(char_u *)tgetstr((s), (cha/
 TO_LOWER	macros.h	/^# define TO_LOWER(c)	(isupper(c) ? tolower(c) : (c/
 TO_UPPER	macros.h	/^# define TO_UPPER(c)	(islower(c) ? toupper(c) : (c/
 UCHARAT	regexp.c	/^#define UCHARAT(p)		((int)*(unsigned char *)(p))$/
+UNCHANGED	vim.h	/^#define UNCHANGED(buf)	unset_Changed(buf)$/
 WaitForChar	msdos.c	/^WaitForChar(msec)$/
 __ARGS	regsub.c	/^# define __ARGS(a)	a$/
 __PARMS	vim.h	/^# define __PARMS(x)	x$/
@@ -70,14 +74,25 @@ beginline	edit.c	/^beginline(flag)$/
 block_prep	ops.c	/^block_prep(lnum, delete)$/
 breakcheck	amiga.c	/^breakcheck()$/
 bsdmemset	alloc.c	/^bsdmemset(ptr, c, size)$/
-buf_alloc	buffer.c	/^buf_alloc()$/
+buf_clear	buffer.c	/^buf_clear(buf)$/
 buf_copy_options	param.c	/^buf_copy_options(bp_from, bp_to)$/
 buf_freeall	buffer.c	/^buf_freeall(buf)$/
-buf_init	buffer.c	/^buf_init(buf)$/
 buf_modname	fileio.c	/^buf_modname(buf, fname, ext)$/
 buf_write	fileio.c	/^buf_write(buf, fname, sfname, start, end, append, /
 buf_write_all	cmdline.c	/^buf_write_all(buf)$/
 bufempty	macros.h	/^#define bufempty() (curbuf->b_ml.ml_flags & ML_EMP/
+buflist_add	buffer.c	/^buflist_add(fname)$/
+buflist_altlnum	buffer.c	/^buflist_altlnum()$/
+buflist_findlnum	buffer.c	/^buflist_findlnum(buf)$/
+buflist_findname	buffer.c	/^buflist_findname(fname)$/
+buflist_findnr	buffer.c	/^buflist_findnr(nr)$/
+buflist_getfile	buffer.c	/^buflist_getfile(n, lnum, setpm)$/
+buflist_getlnum	buffer.c	/^buflist_getlnum()$/
+buflist_list	buffer.c	/^buflist_list()$/
+buflist_name_nr	buffer.c	/^buflist_name_nr(fnum, fname, lnum)$/
+buflist_new	buffer.c	/^buflist_new(fname, sfname, lnum, use_curbuf)$/
+buflist_nr2name	buffer.c	/^buflist_nr2name(n)$/
+buflist_setlnum	buffer.c	/^buflist_setlnum(buf, lnum)$/
 bzero	unix.c	/^#  define bzero(a, b)	memset((a), 0, (b))$/
 call_shell	amiga.c	/^call_shell(cmd, filter, cooked)$/
 catch_cbrk	msdos.c	/^catch_cbrk()$/
@@ -95,16 +110,19 @@ check_cursor	screen.c	/^check_cursor()$/
 check_fname	cmdline.c	/^check_fname()$/
 check_more	cmdline.c	/^check_more(message)$/
 check_readonly	cmdline.c	/^check_readonly()$/
+check_status	misccmds.c	/^check_status(buf)$/
 check_termcode	term.c	/^check_termcode(buf)$/
 check_win	amiga.c	/^check_win(argc, argv)$/
 check_winsize	term.c	/^check_winsize()$/
 checkclearop	normal.c	/^checkclearop()$/
 checkclearopq	normal.c	/^checkclearopq()$/
 checknextcomm	cmdline.c	/^checknextcomm(arg)$/
+checkpcmark	mark.c	/^checkpcmark()$/
 chk_mline	fileio.c	/^chk_mline(lnum)$/
 clear_termparam	param.c	/^clear_termparam()$/
 clearopbeep	normal.c	/^clearopbeep()$/
-close_buffer	buffer.c	/^close_buffer(buf, free_buf)$/
+close_buffer	buffer.c	/^close_buffer(buf, free_buf, remove)$/
+close_others	window.c	/^close_others(message)$/
 close_window	window.c	/^close_window(free_buf)$/
 clrallmarks	mark.c	/^clrallmarks(buf)$/
 clreol	winnt.c	/^clreol()$/
@@ -136,13 +154,14 @@ delchar	misccmds.c	/^delchar(fixpos)$/
 delline	winnt.c	/^delline(int count)$/
 dellines	misccmds.c	/^dellines(nlines, dowindow, undo)$/
 delmode	screen.c	/^delmode()$/
-dirname	amiga.c	/^dirname(buf, len)$/
 dis_msg	ops.c	/^dis_msg(p, skip_esc)$/
 do_Copy	regsub.c	/^do_Copy(d, c)$/
 do_Lower	regsub.c	/^do_Lower(d, c)$/
 do_Upper	regsub.c	/^do_Upper(d, c)$/
 do_align	cmdcmds.c	/^do_align(start, end, width, type)$/
-do_buffers	buffer.c	/^do_buffers()$/
+do_arg_all	buffer.c	/^do_arg_all()$/
+do_buffer	buffer.c	/^do_buffer(action, start, dir, count, forceit)$/
+do_buffer_all	buffer.c	/^do_buffer_all(all)$/
 do_copy	cmdcmds.c	/^do_copy(line1, line2, n)$/
 do_lower	regsub.c	/^do_lower(d, c)$/
 do_mlines	fileio.c	/^do_mlines()$/
@@ -158,7 +177,7 @@ dodelete	ops.c	/^dodelete()$/
 dodigraph	digraph.c	/^dodigraph(c)$/
 dodis	ops.c	/^dodis()$/
 dodojoin	ops.c	/^dodojoin(count, insert_space, redraw)$/
-doecmd	cmdline.c	/^doecmd(fname, sfname, command, hide)$/
+doecmd	cmdline.c	/^doecmd(fname, sfname, command, hide, newlnum)$/
 doexecbuf	ops.c	/^doexecbuf(c)$/
 dofilter	cmdcmds.c	/^dofilter(line1, line2, buff, do_in, do_out)$/
 doformat	ops.c	/^doformat()$/
@@ -168,10 +187,10 @@ dojumps	mark.c	/^dojumps()$/
 domake	cmdline.c	/^domake(arg)$/
 domap	getchar.c	/^domap(maptype, keys, mode)$/
 domarks	mark.c	/^domarks()$/
-doput	ops.c	/^doput(dir, count)$/
+doput	ops.c	/^doput(dir, count, fix_indent)$/
 dorecord	ops.c	/^dorecord(c)$/
 dos_packet	amiga.c	/^dos_packet(pid, action, arg)$/
-dosearch	search.c	/^dosearch(dirc, str, reverse, count, echo)$/
+dosearch	search.c	/^dosearch(dirc, str, reverse, count, echo, message)/
 doset	param.c	/^doset(arg)$/
 doshell	cmdcmds.c	/^doshell(cmd)$/
 doshift	ops.c	/^doshift(op, curs_top, amount)$/
@@ -187,22 +206,12 @@ edit	edit.c	/^edit(count)$/
 emsg	message.c	/^emsg(s)$/
 emsg2	message.c	/^emsg2(s, a1)$/
 end_word	search.c	/^end_word(count, type, stop)$/
+enter_buffer	buffer.c	/^enter_buffer(buf)$/
 equal	macros.h	/^#define equal(a, b) (((a).lnum == (b).lnum) && ((a/
 expand_env	misccmds.c	/^expand_env(src, dst, dstlen)$/
 expandpath	msdos.c	/^expandpath(fl, path, fonly, donly, notf)$/
-fileinfo	filelist.c	/^fileinfo(fullname)$/
-filelist_add	filelist.c	/^filelist_add(fname)$/
-filelist_altlnum	filelist.c	/^filelist_altlnum()$/
-filelist_findlnum	filelist.c	/^filelist_findlnum(fp)$/
-filelist_findname	filelist.c	/^filelist_findname(fname)$/
-filelist_findnr	filelist.c	/^filelist_findnr(nr)$/
-filelist_getfile	filelist.c	/^filelist_getfile(n, lnum, setpm)$/
-filelist_getlnum	filelist.c	/^filelist_getlnum()$/
-filelist_list	filelist.c	/^filelist_list()$/
-filelist_name_nr	filelist.c	/^filelist_name_nr(fnum, fname, lnum)$/
-filelist_new	filelist.c	/^filelist_new(fname, sfname, lnum)$/
-filelist_nr2name	filelist.c	/^filelist_nr2name(n)$/
-filelist_setlnum	filelist.c	/^filelist_setlnum(fp, lnum)$/
+file_name_at_cursor	window.c	/^file_name_at_cursor()$/
+fileinfo	buffer.c	/^fileinfo(fullname)$/
 filemess	fileio.c	/^filemess(name, s)$/
 fill_inbuf	unix.c	/^fill_inbuf()$/
 findfunc	search.c	/^findfunc(dir, what, count)$/
@@ -211,11 +220,12 @@ findparam	param.c	/^findparam(arg)$/
 findsent	search.c	/^findsent(dir, count)$/
 findswapname	memline.c	/^findswapname(second_try)$/
 findtag	tag.c	/^findtag(tag)$/
-fix_fname	filelist.c	/^fix_fname(fname)$/
+fix_fname	buffer.c	/^fix_fname(fname)$/
 flush_buffers	getchar.c	/^flush_buffers(typeahead)$/
 flushbuf	term.c	/^flushbuf()$/
 fm_getname	mark.c	/^fm_getname(fmark)$/
 fname_case	amiga.c	/^fname_case(name)$/
+fname_expand	buffer.c	/^fname_expand(fname, sfname)$/
 fnamecmp	vim.h	/^# define fnamecmp(x, y) stricmp((char *)(x), (char/
 free	vim.h	/^# define free(x)	nofreeNULL(x)$/
 free_buff	getchar.c	/^free_buff(buf)$/
@@ -236,15 +246,17 @@ get_last_insert	edit.c	/^get_last_insert()$/
 get_literal	edit.c	/^get_literal(nextc)$/
 get_recorded	getchar.c	/^get_recorded()$/
 get_varp	param.c	/^get_varp(p)$/
-get_xterm_title	unix.c	/^get_xterm_title()$/
+get_x11_icon	unix.c	/^get_x11_icon()$/
+get_x11_title	unix.c	/^get_x11_title()$/
+get_x11_windis	unix.c	/^get_x11_windis()$/
 get_yank_buffer	ops.c	/^get_yank_buffer(writing)$/
 getargcmd	cmdline.c	/^getargcmd(argp)$/
 getchr	regexp.c	/^getchr()$/
 getcmdline	cmdline.c	/^getcmdline(firstc, buff)$/
 getdigits	misccmds.c	/^getdigits(pp)$/
-getdigraph	digraph.c	/^getdigraph(char1, char2)$/
+getdigraph	digraph.c	/^getdigraph(char1, char2, meta)$/
 getent	termlib.c	/^getent(tbuf, term, termcap, buflen)$/
-getfile	cmdline.c	/^getfile(fname, sfname, setpm)$/
+getfile	cmdline.c	/^getfile(fname, sfname, setpm, lnum)$/
 getlinecol	term.c	/^getlinecol()$/
 getmark	mark.c	/^getmark(c, changefile)$/
 getout	main.c	/^getout(r)$/
@@ -259,6 +271,7 @@ handler_routine	winnt.c	/^BOOL WINAPI     handler_routine(DWORD dwCtrlType)$/
 has_wildcard	amiga.c	/^has_wildcard(p)$/
 have_wildcard	unix.c	/^have_wildcard(num, file)$/
 help	help.c	/^help()$/
+home_replace	misccmds.c	/^home_replace(src, dst, dstlen)$/
 inc	linefunc.c	/^inc(lp)$/
 inc_cursor	linefunc.c	/^inc_cursor()$/
 inchar	term.c	/^inchar(buf, maxlen, time)$/
@@ -275,6 +288,7 @@ insertchar	edit.c	/^insertchar(c)$/
 insfile	amiga.c	/^insfile(name, isdir)$/
 insline	winnt.c	/^insline(int count)$/
 insstr	misccmds.c	/^insstr(s)$/
+isFullName	amiga.c	/^isFullName(fname)$/
 is_yank_buffer	ops.c	/^is_yank_buffer(c, write)$/
 isdir	amiga.c	/^isdir(name)$/
 isidchar	charset.c	/^isidchar(c)$/
@@ -292,20 +306,20 @@ listdigraphs	digraph.c	/^listdigraphs()$/
 lock2name	amiga.c	/^lock2name(lock, buf, len)$/
 lt	macros.h	/^#define lt(a, b) (((a).lnum != (b).lnum) \\$/
 ltoreq	macros.h	/^#define ltoreq(a, b) (((a).lnum != (b).lnum) \\$/
+make_windows	window.c	/^make_windows(count)$/
 makemap	getchar.c	/^makemap(fd)$/
 makeset	param.c	/^makeset(fd)$/
 makeswapname	memline.c	/^makeswapname(second_try)$/
-maketitle	filelist.c	/^maketitle()$/
+maketitle	buffer.c	/^maketitle()$/
 mark_adjust	mark.c	/^mark_adjust(line1, line2, inc)$/
 mch_avail_mem	amiga.c	/^mch_avail_mem(special)$/
 mch_char_avail	amiga.c	/^mch_char_avail()$/
 mch_get_winsize	amiga.c	/^mch_get_winsize()$/
+mch_restore_title	amiga.c	/^mch_restore_title(which)$/
 mch_screenmode	amiga.c	/^mch_screenmode(arg)$/
 mch_set_winsize	amiga.c	/^mch_set_winsize()$/
 mch_settitle	amiga.c	/^mch_settitle(title, icon)$/
 mch_settmode	amiga.c	/^mch_settmode(raw)$/
-mch_start_listing	amiga.c	/^mch_start_listing()$/
-mch_stop_listing	amiga.c	/^mch_stop_listing()$/
 mch_suspend	amiga.c	/^mch_suspend()$/
 mch_windexit	amiga.c	/^mch_windexit(r)$/
 mch_windinit	amiga.c	/^mch_windinit()$/
@@ -364,11 +378,13 @@ ml_recover	memline.c	/^ml_recover()$/
 ml_replace	memline.c	/^ml_replace(lnum, line, copy)$/
 ml_setmarked	memline.c	/^ml_setmarked(lnum)$/
 ml_sync_all	memline.c	/^ml_sync_all(check_file)$/
+ml_timestamp	memline.c	/^ml_timestamp(buf)$/
 modname	fileio.c	/^modname(fname, ext)$/
 movemark	mark.c	/^movemark(count)$/
 msg	message.c	/^msg(s)$/
 msg_ceol	message.c	/^msg_ceol()$/
 msg_check	message.c	/^msg_check()$/
+msg_check_screen	message.c	/^msg_check_screen()$/
 msg_end	message.c	/^msg_end()$/
 msg_outchar	message.c	/^msg_outchar(c)$/
 msg_outnum	message.c	/^msg_outnum(n)$/
@@ -389,9 +405,9 @@ oneleft	edit.c	/^oneleft()$/
 onepage	edit.c	/^onepage(dir, count)$/
 oneright	edit.c	/^oneright()$/
 oneup	edit.c	/^oneup(n)$/
-open_buffer	buffer.c	/^open_buffer(fname, oldbuf, free_buf)$/
+open_buffer	buffer.c	/^open_buffer()$/
 openscript	getchar.c	/^openscript(name)$/
-otherfile	filelist.c	/^otherfile(fname)$/
+otherfile	buffer.c	/^otherfile(fname)$/
 outchar	term.c	/^outchar(c)$/
 outnum	term.c	/^outnum(n)$/
 outstr	term.c	/^outstr(s)$/
@@ -449,44 +465,52 @@ regtilde	regsub.c	/^regtilde(source, magic)$/
 regtry	regexp.c	/^regtry(prog, string)$/
 remove	unix.c	/^remove(buf)$/
 rename	unix.c	/^rename(src, dest)$/
-resettitle	filelist.c	/^resettitle()$/
+resettitle	buffer.c	/^resettitle()$/
 resizeConBufAndWindow	winnt.c	/^void            resizeConBufAndWindow(HANDLE hCons/
 screen_char	screen.c	/^screen_char(p, row, col)$/
-screen_del_lines	screen.c	/^screen_del_lines(row, nlines)$/
+screen_del_lines	screen.c	/^screen_del_lines(off, row, nlines, end)$/
 screen_fill	screen.c	/^screen_fill(start_row, end_row, start_col, end_col/
-screen_ins_lines	screen.c	/^screen_ins_lines(row, nlines)$/
-screen_invert	screen.c	/^screen_invert(f)$/
+screen_ins_lines	screen.c	/^screen_ins_lines(off, row, nlines, end)$/
 screen_msg	screen.c	/^screen_msg(msg, row, col)$/
 screen_new_rows	window.c	/^screen_new_rows()$/
 screen_outchar	screen.c	/^screen_outchar(c, row, col)$/
 screen_start	screen.c	/^screen_start()$/
+screen_valid	screen.c	/^screen_valid()$/
 screenalloc	screen.c	/^screenalloc(clear)$/
 screenclear	screen.c	/^screenclear()$/
 screenclear2	screen.c	/^screenclear2()$/
 scroll	winnt.c	/^scroll()$/
+scroll_region_reset	term.c	/^scroll_region_reset()$/
+scroll_region_set	term.c	/^scroll_region_set(wp)$/
 scrolldown	screen.c	/^scrolldown(nlines)$/
 scrollup	screen.c	/^scrollup(nlines)$/
 searchc	search.c	/^searchc(c, dir, type, count)$/
-searchit	search.c	/^searchit(pos, dir, str, count, end)$/
+searchit	search.c	/^searchit(pos, dir, str, count, end, message)$/
 set_Changed	misccmds.c	/^set_Changed()$/
+set_context_in_set_cmd	param.c	/^set_context_in_set_cmd(arg)$/
+set_expand_context	cmdline.c	/^set_expand_context(firstc, buff)$/
+set_highlight	screen.c	/^set_highlight(context)$/
 set_indent	misccmds.c	/^set_indent(size, delete)$/
 set_init	param.c	/^set_init()$/
 set_keymap	amiga.c	/^set_keymap(name)$/
+set_one_cmd_context	cmdline.c	/^set_one_cmd_context(firstc, buff)$/
 set_redo_ins	getchar.c	/^set_redo_ins()$/
 set_term	term.c	/^set_term(term)$/
 set_window	msdos.c	/^set_window()$/
 set_winsize	term.c	/^set_winsize(width, height, mustset)$/
-setaltfname	filelist.c	/^setaltfname(fname, sfname, lnum)$/
+set_x11_icon	unix.c	/^set_x11_icon(icon)$/
+set_x11_title	unix.c	/^set_x11_title(title)$/
+setaltfname	buffer.c	/^setaltfname(fname, sfname, lnum)$/
 setcursor	term.c	/^setcursor()$/
-setfname	filelist.c	/^setfname(s, ss)$/
+setfname	buffer.c	/^setfname(fname, sfname, message)$/
 setmark	mark.c	/^setmark(c)$/
 setpcmark	mark.c	/^setpcmark()$/
 setperm	amiga.c	/^setperm(name, perm)$/
 settmode	term.c	/^settmode(raw)$/
 shift_line	ops.c	/^shift_line(left, round, amount)$/
 showmap	getchar.c	/^showmap(mp)$/
-showmatch	search.c	/^showmatch()$/
-showmatches	cmdline.c	/^showmatches(file, len)$/
+showmatch	search.c	/^showmatch(initc)$/
+showmatches	cmdline.c	/^showmatches(buff)$/
 showmode	screen.c	/^showmode()$/
 showonep	param.c	/^showonep(p)$/
 showparams	param.c	/^showparams(all)$/
@@ -503,6 +527,7 @@ smsg	message.c	/^smsg(s, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)$/
 sortcmp	amiga.c	/^sortcmp(a, b)$/
 startPS	search.c	/^startPS(lnum, para, both)$/
 start_arrow	edit.c	/^start_arrow()$/
+start_highlight	screen.c	/^start_highlight()$/
 start_redo	getchar.c	/^start_redo(count)$/
 start_redo_ins	getchar.c	/^start_redo_ins()$/
 start_stuff	getchar.c	/^start_stuff()$/
@@ -510,6 +535,7 @@ startinsert	ops.c	/^startinsert(initstr, startln, count)$/
 starttermcap	term.c	/^starttermcap()$/
 status_redraw_all	screen.c	/^status_redraw_all()$/
 stop_arrow	edit.c	/^stop_arrow()$/
+stop_highlight	screen.c	/^stop_highlight()$/
 stop_insert	edit.c	/^stop_insert()$/
 stop_redo_ins	getchar.c	/^stop_redo_ins()$/
 stoptermcap	term.c	/^stoptermcap()$/
@@ -567,6 +593,7 @@ u_undoline	undo.c	/^u_undoline()$/
 u_undoredo	undo.c	/^u_undoredo()$/
 ungetchr	regexp.c	/^ungetchr()$/
 unregc	regexp.c	/^unregc()$/
+unset_Changed	misccmds.c	/^unset_Changed(buf)$/
 updateScreen	screen.c	/^updateScreen(type)$/
 updateline	screen.c	/^updateline()$/
 updatescript	getchar.c	/^updatescript(c)$/
@@ -576,18 +603,24 @@ vgetc	getchar.c	/^vgetc()$/
 vgetorpeek	getchar.c	/^vgetorpeek(advance)$/
 vim_chdir	msdos.c	/^vim_chdir(path)$/
 vim_delay	amiga.c	/^vim_delay()$/
+vim_dirname	amiga.c	/^vim_dirname(buf, len)$/
+vim_fgets	fileio.c	/^vim_fgets(buf, size, fp, lnum)$/
 vim_remove	msdos.c	/^vim_remove(name)$/
+vim_strncpy	cmdline.c	/^vim_strncpy(to, from, len)$/
 vim_strnicmp	alloc.c	/^vim_strnicmp(s1, s2, len)$/
 vimgetenv	amiga.c	/^vimgetenv(var)$/
 vpeekc	getchar.c	/^vpeekc()$/
 wait_return	message.c	/^wait_return(redraw)$/
-win_alloc	window.c	/^win_alloc(prev, next)$/
+win_alloc	window.c	/^win_alloc(after)$/
 win_alloc_lsize	window.c	/^win_alloc_lsize(wp)$/
+win_append	window.c	/^win_append(after, wp)$/
+win_comp_pos	window.c	/^win_comp_pos()$/
 win_comp_scroll	window.c	/^win_comp_scroll(wp)$/
 win_copy_options	param.c	/^win_copy_options(wp_from, wp_to)$/
 win_del_lines	screen.c	/^win_del_lines(wp, row, nlines, invalid, mayclear)$/
 win_enter	window.c	/^win_enter(wp, undo_sync)$/
-win_equal	window.c	/^win_equal()$/
+win_equal	window.c	/^win_equal(next_curwin, redraw)$/
+win_exchange	window.c	/^win_exchange(Prenum)$/
 win_free	window.c	/^win_free(wp)$/
 win_free_lsize	window.c	/^win_free_lsize(wp)$/
 win_init	window.c	/^win_init(wp)$/
@@ -595,9 +628,11 @@ win_ins_lines	screen.c	/^win_ins_lines(wp, row, nlines, invalid, mayclear)$/
 win_line	screen.c	/^win_line(wp, lnum, startrow, endrow)$/
 win_redr_ruler	screen.c	/^win_redr_ruler(wp, always)$/
 win_redr_status	screen.c	/^win_redr_status(wp)$/
+win_remove	window.c	/^win_remove(wp)$/
 win_resize_off	amiga.c	/^win_resize_off()$/
 win_resize_on	amiga.c	/^win_resize_on()$/
 win_rest_invalid	screen.c	/^win_rest_invalid(wp)$/
+win_rotate	window.c	/^win_rotate(upwards, count)$/
 win_setheight	window.c	/^win_setheight(height)$/
 win_split	window.c	/^win_split(new_height, redraw)$/
 win_update	screen.c	/^win_update(wp)$/

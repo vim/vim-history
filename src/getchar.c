@@ -1147,10 +1147,7 @@ domap(maptype, keys, mode)
 															no abbreviations */
 
 	if (!haskey || (maptype != 1 && !hasarg))
-	{
-		mch_start_listing();			/* may set cooked mode so output can be halted */
 		msg_start();
-	}
 /*
  * Find an entry in the maplist that matches.
  * For :unmap we may loop two times: once to try to unmap an entry with a
@@ -1245,7 +1242,6 @@ domap(maptype, keys, mode)
 
 	if (!haskey || !hasarg)					/* print entries */
 	{
-		mch_stop_listing();
 		if (did_it)
 			msg_end();
 		else if (abbrev)

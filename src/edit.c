@@ -51,6 +51,24 @@ edit(count)
 	colnr_t		 mincol;
 	static linenr_t o_lnum = 0;
 	static int	 o_eol = FALSE;
+#ifdef WEBB_KEYWORD_COMPL
+	FPOS		 complete_pos;
+	FPOS		 first_match;
+	char_u		 *complete_pat = NULL;
+	char_u		 *completion_str = NULL;
+	char_u		 *last_completion_str = NULL;
+	char_u		 *tmp_ptr;
+	int			 previous_c = 0;
+	int			 complete_col = 0;			/* init for gcc */
+	int			 complete_direction;
+	int			 complete_any_word = 0;		/* true -> ^N/^P hit with no prefix
+											 * init for gcc */
+	int			 done;
+	int			 found_error = FALSE;
+	char_u		 backup_char = 0;			/* init for gcc */
+
+	c = NUL;
+#endif /* WEBB_KEYWORD_COMPL */
 
 	if (restart_edit)
 	{
@@ -97,6 +115,9 @@ edit(count)
 		cursupdate();		/* Figure out where the cursor is based on curwin->w_cursor. */
 		showruler(0);
 		setcursor();
+#ifdef WEBB_KEYWORD_COMPL
+		previous_c = c;
+#endif /* WEBB_KEYWORD_COMPL */
 		if (nextc)			/* character remaining from CTRL-V */
 		{
 			c = nextc;
@@ -108,6 +129,31 @@ edit(count)
 			if (c == Ctrl('C'))
 				got_int = FALSE;
 		}
+#ifdef WEBB_KEYWORD_COMPL
+		if (found_error)
+		{
+			/* Show error message from attempted keyword completion (probably
+			 * 'Pattern not found') until another key is hit, then go back to
+			 * showing what mode we are in.
+			 */
+			showmode();
+			found_error = FALSE;
+		}
+		if ((previous_c == Ctrl('N') || previous_c == Ctrl('P')) &&
+										c != Ctrl('N') && c != Ctrl('P'))
+		{
+			/* Get here when we have finished typing a sequence of ^N & ^P's.
+			 * Free up memory that was used, and make sure we can redo the
+			 * insert.
+			 */
+			if (completion_str != NULL)
+				AppendToRedobuff(completion_str);
+			free(complete_pat);
+			free(completion_str);
+			free(last_completion_str);
+			complete_pat = completion_str = last_completion_str = NULL;
+		}
+#endif /* WEBB_KEYWORD_COMPL */
 		if (c != Ctrl('D'))			/* remember to detect ^^D and 0^D */
 			lastc = c;
 
@@ -132,21 +178,13 @@ edit(count)
 
 		if (c == Ctrl('V'))
 		{
-			/*
-			 * Note: for a moment NextScreen is not correct, this is fixed below
-			 */
-			outchar('^');
+			screen_start();
+			screen_outchar('^', curwin->w_row, curwin->w_col);
 			AppendToRedobuff((char_u *)"\026");	/* CTRL-V */
 			cursupdate();
 			setcursor();
 
 			c = get_literal(&nextc);
-
-		/* erase the '^', fixes NextScreen */
-			if ((cc = gchar_cursor()) == NUL || (cc == TAB && !curwin->w_p_list))
-				outchar(' ');
-			else
-				outstrn(transchar(cc));
 
 			insertchar(c);
 			continue;
@@ -226,7 +264,7 @@ doESCkey:
 					beep();
 				break;
 
-			  case Ctrl('P'):			/* toggle reverse insert mode */
+			  case Ctrl('B'):			/* toggle reverse insert mode */
 			  	p_ri = !p_ri;
 				showmode();
 				break;
@@ -442,8 +480,19 @@ redraw:
 			  	goto dodel;
 
 			  case K_LARROW:
-			  	if (oneleft())
+			  	if (oneleft() == OK)
+				{
 					start_arrow();
+				}
+					/* if 'whichwrap' set for cursor in insert mode may go
+					 * to previous line */
+				else if ((p_ww & 16) && curwin->w_cursor.lnum > 1)
+				{
+					start_arrow();
+					--(curwin->w_cursor.lnum);
+					coladvance(MAXCOL);
+					curwin->w_curswant = MAXCOL;	/* so we stay at the end */
+				}
 				else
 					beep();
 				break;
@@ -464,6 +513,15 @@ redraw:
 					curwin->w_set_curswant = TRUE;
 					start_arrow();
 					++curwin->w_cursor.col;
+				}
+					/* if 'whichwrap' set for cursor in insert mode may go
+					 * to next line */
+				else if ((p_ww & 16) && curwin->w_cursor.lnum < curbuf->b_ml.ml_line_count)
+				{
+					curwin->w_set_curswant = TRUE;
+					start_arrow();
+					++curwin->w_cursor.lnum;
+					curwin->w_cursor.col = 0;
 				}
 				else
 					beep();
@@ -543,6 +601,15 @@ redraw:
 					saved_char = gchar_cursor();
 					(void)delchar(FALSE);
 				}
+				/*
+				 * When 'autoindent' set delete white space after the cursor.
+				 * Vi does this, although it probably does it implicitly due
+				 * to the way it does auto-indent -- webb.
+				 */
+				if (curbuf->b_p_ai || curbuf->b_p_si)
+					while ((c = gchar_cursor()) == ' ' || c == TAB)
+						(void)delchar(FALSE);
+
 				AppendToRedobuff(NL_STR);
 				if (!Opencmd(FORWARD, TRUE, State == INSERT))
 					goto doESCkey;		/* out of memory */
@@ -556,18 +623,151 @@ redraw:
 
 #ifdef DIGRAPHS
 			  case Ctrl('K'):
-				/*
-				 * Note: for a moment NextScreen is not valid
-				 */
-				outchar('?');
-				AppendToRedobuff((char_u *)"\026");	/* CTRL-V */
+				screen_start();
+				screen_outchar('?', curwin->w_row, curwin->w_col);
 				setcursor();
 			  	c = vgetc();
-				outstrn(transchar(c));
-				setcursor();
-				c = getdigraph(c, vgetc());
-				goto normalchar;
+				if (c != ESC)
+				{
+					if (charsize(c) == 1)
+					{
+						screen_start();
+						screen_outchar(c, curwin->w_row, curwin->w_col);
+					}
+					setcursor();
+					cc = vgetc();
+					if (cc != ESC)
+					{
+						AppendToRedobuff((char_u *)"\026");	/* CTRL-V */
+						c = getdigraph(c, cc, TRUE);
+						goto normalchar;
+					}
+				}
+				updateline();
+				goto doESCkey;
 #endif /* DIGRAPHS */
+
+#ifdef WEBB_KEYWORD_COMPL
+			  case Ctrl('P'):			/* Do previous pattern completion */
+			  case Ctrl('N'):			/* Do next pattern completion */
+				if (c == Ctrl('P'))
+					complete_direction = BACKWARD;
+				else
+					complete_direction = FORWARD;
+				if (previous_c != Ctrl('N') && previous_c != Ctrl('P'))
+				{
+					/* First time we hit ^N or ^P (in a row, I mean) */
+					complete_pos = curwin->w_cursor;
+					ptr = ml_get(complete_pos.lnum);
+					complete_col = complete_pos.col;
+					temp = complete_col - 1;
+					if (temp < 0 || !isidchar(ptr[temp]))
+					{
+						complete_pat = strsave((char_u *)"\\<[a-zA-Z_]");
+						complete_any_word = TRUE;
+					}
+					else
+					{
+						while (temp >= 0 && isidchar(ptr[temp]))
+							temp--;
+						temp++;
+						complete_pat = alloc(curwin->w_cursor.col - temp + 3);
+						if (complete_pat != NULL)
+							sprintf((char *)complete_pat, "\\<%.*s",
+								(int)(curwin->w_cursor.col - temp), ptr + temp);
+						complete_any_word = FALSE;
+					}
+					last_completion_str = strsave((char_u *)" ");
+				}
+				else
+				{
+					/* This is not the first ^N or ^P we have hit in a row */
+					while (curwin->w_cursor.col != complete_col)
+					{
+						curwin->w_cursor.col--;
+						delchar(FALSE);
+					}
+					if (completion_str != NULL)
+					{
+						free(last_completion_str);
+						last_completion_str = strsave(completion_str);
+					}
+				}
+				if (complete_pat == NULL || last_completion_str == NULL)
+				{
+					found_error = TRUE;
+					break;
+				}
+				if (!complete_any_word)
+				{
+					ptr = ml_get(curwin->w_cursor.lnum);
+					backup_char = ptr[complete_col - 1];
+					ptr[complete_col - 1] = ' ';
+				}
+				done = FALSE;
+				found_error = FALSE;
+				first_match.lnum = 0;
+				keep_old_search_pattern = TRUE;
+				while (!done)
+				{
+					if (complete_direction == BACKWARD)
+					{
+						ptr = ml_get(complete_pos.lnum);
+						while (isidchar(ptr[complete_pos.col]))
+							complete_pos.col--;
+						complete_pos.col++;
+					}
+					if (!searchit(&complete_pos, complete_direction,
+						complete_pat, 1L, TRUE, TRUE))
+					{
+						found_error = TRUE;
+						break;
+					}
+					if (complete_any_word)
+						ptr = ml_get_pos(&complete_pos);
+					else
+						ptr = ml_get_pos(&complete_pos) + 1;
+					tmp_ptr = ptr;
+					temp = 1;
+					while (*tmp_ptr != NUL && isidchar(*tmp_ptr++))
+						temp++;
+					free (completion_str);
+					tmp_ptr = completion_str = alloc(temp);
+					if (completion_str == NULL)
+					{
+						found_error = TRUE;
+						break;
+					}
+					while (*ptr != NUL && isidchar(*ptr))
+						*(tmp_ptr++) = *(ptr++);
+					*tmp_ptr = NUL;
+					if (STRCMP(completion_str, last_completion_str) != 0)
+						done = TRUE;
+					else if (first_match.lnum == 0)
+					{
+						first_match.lnum = complete_pos.lnum;
+						first_match.col = complete_pos.col;
+					}
+					else if (complete_pos.lnum == first_match.lnum
+						 && complete_pos.col == first_match.col)
+					{
+						EMSG("No other matches");
+						found_error = TRUE;		/* So that we showmode again */
+						insstr(completion_str);
+						done = TRUE;
+					}
+				}
+				if (!found_error)
+					insstr(completion_str);
+				if (!complete_any_word)
+				{
+					ptr = ml_get(curwin->w_cursor.lnum);
+					ptr[complete_col - 1] = backup_char;
+				}
+				keep_old_search_pattern = FALSE;
+				updateline();
+				break;
+#endif /* WEBB_KEYWORD_COMPL */
 
 			  case Ctrl('Y'):				/* copy from previous line */
 				lnum = curwin->w_cursor.lnum - 1;
@@ -599,8 +799,33 @@ copychar:
 				/*FALLTHROUGH*/
 			  default:
 normalchar:
+				/*
+				 * do some very smart indenting when entering '{' or '}' or '#'
+				 */
 				if (curwin->w_cursor.col > 0 && ((can_si && c == '}') || (did_si && c == '{')))
-					shift_line(TRUE, TRUE, 1);
+				{
+					FPOS	*pos, old_pos;
+					int		i;
+
+						/* for '}' set indent equal to matching '{' */
+					if (c == '}' && (pos = showmatch('{')) != NULL)
+					{
+						old_pos = curwin->w_cursor;
+						curwin->w_cursor = *pos;
+						i = get_indent();
+						curwin->w_cursor = old_pos;
+						set_indent(i, TRUE);
+					}
+					else
+						shift_line(TRUE, TRUE, 1);
+				}
+					/* set indent of '#' always to 0 */
+				if (curwin->w_cursor.col > 0 && can_si && c == '#')
+				{
+								/* remember current indent for next line */
+					old_indent = get_indent();
+					set_indent(0, TRUE);
+				}
 
 				if (isidchar(c) || !echeck_abbr(c))
 					insertchar(c);
@@ -876,10 +1101,9 @@ oneright()
 	char_u *ptr;
 
 	ptr = ml_get_cursor();
-	curwin->w_set_curswant = TRUE;
-
 	if (*ptr++ == NUL || *ptr == NUL)
 		return FAIL;
+	curwin->w_set_curswant = TRUE;
 	++curwin->w_cursor.col;
 	return OK;
 }
@@ -887,10 +1111,9 @@ oneright()
 	int
 oneleft()
 {
-	curwin->w_set_curswant = TRUE;
-
 	if (curwin->w_cursor.col == 0)
 		return FAIL;
+	curwin->w_set_curswant = TRUE;
 	--curwin->w_cursor.col;
 	return OK;
 }

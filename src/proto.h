@@ -37,7 +37,6 @@
 #include "proto/digraph.pro"
 #include "proto/edit.pro"
 #include "proto/fileio.pro"
-#include "proto/filelist.pro"
 #include "proto/getchar.pro"
 #include "proto/help.pro"
 #include "proto/linefunc.pro"

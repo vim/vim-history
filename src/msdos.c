@@ -123,9 +123,12 @@ got3:						s += 3;
 								col = getdigits(&p);	/* no check for length! */
 								if (p > s + len)
 									break;
-								if (*p == 'H')
+								if (*p == 'H' || *p == 'r')
 								{
-									gotoxy(col, row);
+									if (*p == 'H')		/* set cursor position */
+										gotoxy(col, row);
+									else				/* set scroll region  */
+										window(1, row, Columns, col);
 									len -= p - s;
 									s = p + 1;
 									continue;
@@ -349,11 +352,20 @@ mch_settitle(title, icon)
 }
 
 /*
+ * Restore the window/icon title. (which we don't have)
+ */
+	void
+mch_restore_title(which)
+	int which;
+{
+}
+
+/*
  * Get name of current directory into buffer 'buf' of length 'len' bytes.
  * Return OK for success, FAIL for failure.
  */
 	int
-dirname(buf, len)
+vim_dirname(buf, len)
 	char_u	*buf;
 	int		len;
 {
@@ -397,7 +409,7 @@ FullName(fname, buf, len)
 		return FAIL;
 	}
 
-	if (STRCHR(fname, ':') != NULL)		/* allready expanded */
+	if (isFullName(fname))		/* allready expanded */
 	{
 		STRNCPY(buf, fname, len);
 		return OK;
@@ -470,6 +482,16 @@ FullName(fname, buf, len)
 }
 
 /*
+ * return TRUE is fname is an absolute path name
+ */
+	int
+isFullName(fname)
+	char_u		*fname;
+{
+	return (STRCHR(fname, ':') != NULL);
+}
+
+/*
  * get file permissions for 'name'
  * -1 : error
  * else FA_attributes defined in dos.h
@@ -527,19 +549,6 @@ isdir(name)
 	if ((f & FA_DIREC) == 0)
 		return FALSE;				/* not a directory */
 	return TRUE;
-}
-
-/*
- * start listing: does nothing for msdos, PAUSE can be used
- */
-	void
-mch_start_listing()
-{
-}
-
-	void
-mch_stop_listing()
-{
 }
 
 /*
@@ -753,7 +762,11 @@ call_shell(cmd, filter, cooked)
 	if (cooked)
 		settmode(1);		/* set to raw mode */
 
+#ifdef WEBB_COMPLETE
+	if (x && !expand_interactively)
+#else
 	if (x)
+#endif
 	{
 		outnum((long)x);
 		outstrn((char_u *)" returned\n");
@@ -884,6 +897,12 @@ expandpath(fl, path, fonly, donly, notf)
 	else
 		s = buf;
 
+	/* if the file name ends in "*" and does not contain a ".", addd ".*" */
+	if (e[-1] == '*' && STRCHR(s, '.') == NULL)
+	{
+		*e++ = '.';
+		*e++ = '*';
+	}
 	/* now we have one wildcard component between s and e */
 	*e = '\0';
 	r = 0;
@@ -899,6 +918,7 @@ expandpath(fl, path, fonly, donly, notf)
 	while (!c)
 	{
 		strlowcpy(s, fb.ff_name);
+			/* ignore "." and ".." */
 		if (*s != '.' || (s[1] != '\0' && (s[1] != '.' || s[2] != '\0')))
 		{
 			strcat(buf, path);

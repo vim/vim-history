@@ -16,9 +16,14 @@ TLIB = tlib
 TLINK = tlink
 #
 # Adjust the paths for your environment
+# use the first two if you don't have the spawno library
+#	then also remove the SPAWNO define further down and the line
+#	with spawnl.lib
 #
-LIBPATH = C:\BC4\LIB
-INCLUDEPATH = C:\BC4\INCLUDE
+#LIBPATH = C:\BORLANDC\LIB
+#INCLUDEPATH = C:\BORLANDC\INCLUDE
+LIBPATH = C:\BORLANDC\LIB;C:\CC\SPAWN
+INCLUDEPATH = C:\BORLANDC\INCLUDE;C:\CC\SPAWN
  
  
 #		*Implicit Rules*
@@ -42,7 +47,6 @@ EXE_dependencies =  \
  digraph.obj \
  edit.obj \
  fileio.obj \
- filelist.obj \
  getchar.obj \
  help.obj \
  linefunc.obj \
@@ -82,7 +86,6 @@ csearch.obj+
 digraph.obj+
 edit.obj+
 fileio.obj+
-filelist.obj+
 getchar.obj+
 help.obj+
 linefunc.obj+
@@ -110,6 +113,7 @@ vim
 		# no map file
 fp87.lib+
 mathl.lib+
+spawnl.lib+
 cl.lib
 |
  
@@ -142,8 +146,6 @@ edit.obj: edit.c
  
 fileio.obj: fileio.c 
 
-filelist.obj: filelist.c 
- 
 getchar.obj: getchar.c 
 
 help.obj: help.c 
@@ -215,7 +217,7 @@ vim.cfg: makefile
 -wpre
 -I$(INCLUDEPATH)
 -L$(LIBPATH)
--DPC;MSDOS;DIGRAPHS
+-DPC;MSDOS;SPAWNO;DIGRAPHS;WEBB_COMPLETE;WEBB_KEYWORD_COMPL
 | vim.cfg
 
 #
@@ -238,3 +240,6 @@ vim.cfg: makefile
 ### -DSYSEXRC_FILE	name of the global .exrc file
 ### -DDEFVIMRC_FILE	name of the system-wide .vimrc file
 ### -DVIM_HLP		name of the help file
+### -DWEBB_COMPLETE	include Webb's code for command line completion
+### -DWEBB_KEYWORD_COMPL include Webb's code for keyword completion
+### -DNOTITLE		'title' option off by default

@@ -38,11 +38,43 @@ struct fpos
 
 #define NMARKS			26			/* max. # of named marks */
 #define JUMPLISTSIZE	30			/* max. # of marks in jump list */
+#define TAGSTACKSIZE	20			/* max. # of tags in tag stack */
 
 struct filemark
 {
 	FPOS			mark;			/* cursor position */
 	int				fnum;			/* file number */
+};
+
+/*
+ * the taggy struct is used to store the information about a :tag command:
+ *	the tag name and the cursor position BEFORE the :tag command
+ */
+struct taggy
+{
+	char_u			*tagname;			/* tag name */
+	struct filemark fmark;				/* cursor position */
+};
+
+/*
+ * line number list
+ */
+
+/*
+ * Each window can have a different line number associated with a buffer.
+ * The window-pointer/line-number pairs are kept in the line number list.
+ * The list of line numbers is kept in most-recently-used order.
+ */
+
+typedef struct window		WIN;
+typedef struct winlnum		WINLNUM;
+
+struct winlnum
+{
+	WINLNUM		*wl_next;			/* next entry or NULL for last entry */
+	WINLNUM		*wl_prev;			/* previous entry or NULL for first entry */
+	WIN			*wl_win;			/* pointer to window that did set wl_lnum */
+	linenr_t	 wl_lnum;			/* last cursor line in the file */
 };
 
 /*
@@ -211,8 +243,9 @@ typedef struct memline MEMLINE;
  */
 struct memline
 {
-	MEMFILE		*ml_mfp;		/* pointer to associated memfile */
 	linenr_t	ml_line_count;	/* number of lines in the buffer */
+
+	MEMFILE		*ml_mfp;		/* pointer to associated memfile */
 
 #define ML_EMPTY		1		/* empty buffer (one empty line */
 #define ML_LINE_DIRTY	2		/* cached line was changed and allocated */
@@ -234,93 +267,104 @@ struct memline
 };
 
 /*
- * buffer: structure that holds information about one active file
+ * buffer: structure that holds information about one file
  *
  * Several windows can share a single Buffer
+ * A buffer is unallocated if there is no memfile for it.
+ * A buffer is new if the associated file has never been loaded yet.
  */
 
 typedef struct buffer BUF;
 
 struct buffer
 {
-	BUF					*b_next;		/* links in list of buffers */
-	BUF					*b_prev;
-
-	MEMLINE				 b_ml;			/* associated memline (also contains
+	MEMLINE			 b_ml;				/* associated memline (also contains
 										 * line count) */
 
-	int					 b_changed;		/* Set to 1 if something in the file has
+	BUF				*b_next;			/* links in list of buffers */
+	BUF				*b_prev;
+
+	int				 b_changed;			/* Set to 1 if something in the file has
 								 		 * been changed and not written out. */
 
-	int					 b_notedited;	/* Set to TRUE with ":file xxx" command,
+	int				 b_notedited;		/* Set to TRUE when file name is
+										 * changed after starting to edit, 
 								 		 * reset when file is written out. */
 
-	int                  b_nwindows;	/* no of windows open on this buffer */
+	int              b_nwindows;		/* nr of windows open on this buffer */
+
+	int				 b_neverloaded;		/* file has never been loaded into
+										 * buffer, many variables still need
+										 * to be set */
 
 	/*
-	 * The filenames are pointers into to file list entries.
 	 * b_filename has the full path of the file.
 	 * b_sfilename is the name as the user typed it.
 	 * b_xfilename is the same as b_sfilename, unless did_cd is set, then it
 	 *    		   is the same as b_filename.
 	 */
-	char_u				*b_filename;
-	char_u				*b_sfilename;
-	char_u				*b_xfilename;
+	char_u			*b_filename;
+	char_u			*b_sfilename;
+	char_u			*b_xfilename;
 
-	int					b_fnum;		/* file number in file list for this file. */
-	long				b_mtime;	/* last change time of original file */
+	int				 b_fnum;			/* file number for this file. */
+	WINLNUM			*b_winlnum;			/* list of last used lnum for
+										 * each window */
+
+	long			 b_mtime;			/* last change time of original file */
 
 	/*
 	 * The following only used in mark.c.
 	 */
-	FPOS          		b_namedm[NMARKS];	/* current marks */
-	FPOS          		b_pcmark;			/* previous context mark */
+	FPOS          	 b_namedm[NMARKS];	/* current marks */
 
 	/*
 	 * start and end of an operator, also used for '[ and ']
 	 */
-	FPOS				b_startop;
-	FPOS				b_endop;
+	FPOS			 b_startop;
+	FPOS			 b_endop;
 
 	/*
 	 * The following only used in undo.c.
 	 */
-	struct u_header		*b_u_oldhead;	/* pointer to oldest header */
-	struct u_header		*b_u_newhead;	/* pointer to newest header */
-	struct u_header		*b_u_curhead;	/* pointer to current header */
-	int					 b_u_numhead;	/* current number of headers */
-	int					 b_u_synced;	/* entry lists are synced */
+	struct u_header	*b_u_oldhead;		/* pointer to oldest header */
+	struct u_header	*b_u_newhead;		/* pointer to newest header */
+	struct u_header	*b_u_curhead;		/* pointer to current header */
+	int				 b_u_numhead;		/* current number of headers */
+	int				 b_u_synced;		/* entry lists are synced */
 
 	/*
 	 * variables for "U" command in undo.c
 	 */
-	char_u				*b_u_line_ptr;		/* saved line for "U" command */
-	linenr_t			b_u_line_lnum;		/* line number of line in u_line */
-	colnr_t				b_u_line_colnr;		/* optional column number */
+	char_u			*b_u_line_ptr;		/* saved line for "U" command */
+	linenr_t		 b_u_line_lnum;		/* line number of line in u_line */
+	colnr_t			 b_u_line_colnr;	/* optional column number */
 
 	/*
 	 * The following only used in undo.c
 	 */
-	struct m_block		b_block_head;		/* head of allocated memory block list */
-	info_t				*b_m_search;	 	/* pointer to chunk before previously
-									   		 * allocated/freed chunk */
-	struct m_block		*b_mb_current;		/* block where m_search points in */
+	struct m_block	 b_block_head;		/* head of allocated memory block list */
+	info_t			*b_m_search;	 	/* pointer to chunk before previously
+									   	 * allocated/freed chunk */
+	struct m_block	*b_mb_current;		/* block where m_search points in */
 
 	/*
 	 * Variables "local" to a buffer.
 	 * They are here because their value depends on the type of file
 	 * or contents of the file being edited.
+	 * The "save" options are for when the paste option is set.
 	 */
-	int				b_p_ai, b_p_si, b_p_ro;
-	int				b_p_bin, b_p_eol, b_p_et, b_p_ml, b_p_sn, b_p_tx;
-	long			b_p_sw, b_p_ts, b_p_tw, b_p_wm;
+	int				 b_p_ai, b_p_si, b_p_ro;
+	int				 b_p_bin, b_p_eol, b_p_et, b_p_ml, b_p_sn, b_p_tx;
+	long			 b_p_sw, b_p_ts, b_p_tw, b_p_wm;
+	int				 b_p_ai_save, b_p_si_save;
+	long			 b_p_tw_save;
 
-	char			b_did_warn;			/* Set to 1 if user has been warned on
+	char			 b_did_warn;		/* Set to 1 if user has been warned on
 										 * first change of a read-only file */
 
 #ifndef MSDOS
-	int				b_shortname;		/* this file has an 8.3 filename */
+	int				 b_shortname;		/* this file has an 8.3 filename */
 #endif
 };
 
@@ -329,8 +373,6 @@ struct buffer
  *
  * All row numbers are relative to the start of the window, except w_winpos.
  */
-
-typedef struct window WIN;
 
 struct window
 {
@@ -389,6 +431,8 @@ struct window
 
 	int			w_alt_fnum;			/* alternate file (for # and CTRL-^) */
 
+	int			w_arg_idx;			/* current index in argument list */
+
 	/*
 	 * Variables "local" to a window.
 	 * They are here because they influence the layout of the window or
@@ -400,10 +444,28 @@ struct window
 	long		w_p_scroll;
 
 	/*
+	 * The w_prev_pcmark field is used to check whether we really did jump to
+	 * a new line after setting the w_pcmark.  If not, then we revert to
+	 * using the previous w_pcmark.
+	 */
+	FPOS		w_pcmark;			/* previous context mark */
+	FPOS		w_prev_pcmark;		/* previous w_pcmark */
+
+	/*
 	 * the jumplist contains old cursor positions
 	 */
 	struct filemark w_jumplist[JUMPLISTSIZE];
 	int 			w_jumplistlen;	/* number of active entries */
 	int				w_jumplistidx;	/* current position */
-};
 
+	/*
+	 * the tagstack grows from 0 upwards:
+	 * entry 0: older
+	 * entry 1: newer
+	 * entry 2: newest
+	 */
+	struct taggy	w_tagstack[TAGSTACKSIZE];	/* the tag stack */
+	int				w_tagstackidx;				/* index just below active entry */
+	int				w_tagstacklen;				/* number of tags on the stack */
+
+};

@@ -257,8 +257,13 @@ dosub(lp, up, cmd, nextcommand, use_old)
 				{
 					temp = RedrawingDisabled;
 					RedrawingDisabled = FALSE;
+					comp_Botline(curwin);
 					updateScreen(CURSUPD);
-					smsg((char_u *)"replace by %s (y/n/q)? ", sub);
+									/* same highlighting as for wait_return */
+					(void)set_highlight('r');
+					msg_highlight = TRUE;
+					smsg((char_u *)"replace by %s (y/n/q)?", sub);
+					showruler(TRUE);
 					setcursor();
 					RedrawingDisabled = temp;
 					if ((i = vgetc()) == 'q' || i == ESC || i == Ctrl('C'))

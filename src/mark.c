@@ -59,7 +59,8 @@ setpcmark()
 	struct filemark tempmark;
 #endif
 
-	curbuf->b_pcmark = curwin->w_cursor;
+	curwin->w_prev_pcmark = curwin->w_pcmark;
+	curwin->w_pcmark = curwin->w_cursor;
 
 #ifndef ROTATE
 	/*
@@ -87,7 +88,7 @@ setpcmark()
 		/* only add new entry if it differs from the last one */
 	if (curwin->w_jumplistlen == 0 ||
 				curwin->w_jumplist[curwin->w_jumplistidx - 1].mark.lnum !=
-														curbuf->b_pcmark.lnum ||
+														curwin->w_pcmark.lnum ||
 				curwin->w_jumplist[curwin->w_jumplistidx - 1].fnum !=
 														curbuf->b_fnum)
 	{
@@ -100,9 +101,28 @@ setpcmark()
 			--curwin->w_jumplistidx;
 		}
 
-		curwin->w_jumplist[curwin->w_jumplistidx].mark = curbuf->b_pcmark;
+		curwin->w_jumplist[curwin->w_jumplistidx].mark = curwin->w_pcmark;
 		curwin->w_jumplist[curwin->w_jumplistidx].fnum = curbuf->b_fnum;
 		++curwin->w_jumplistidx;
+	}
+}
+
+/*
+ * checkpcmark() - To change context, call setpcmark(), then move the current
+ *				   position to where ever, then call checkpcmark().  This
+ *				   ensures that the previous context will only be changed if
+ *				   the cursor moved to a different line. -- webb.
+ *				   If pcmark was deleted (with "dG") the previous mark is restored.
+ */
+	void
+checkpcmark()
+{
+	if (curwin->w_prev_pcmark.lnum != 0 &&
+			(curwin->w_pcmark.lnum == curwin->w_cursor.lnum ||
+			curwin->w_pcmark.lnum == 0))
+	{
+		curwin->w_pcmark = curwin->w_prev_pcmark;
+		curwin->w_prev_pcmark.lnum = 0;			/* Show it has been checked */
 	}
 }
 
@@ -135,7 +155,7 @@ movemark(count)
 												/* jump to other file */
 	if (curwin->w_jumplist[curwin->w_jumplistidx].fnum != curbuf->b_fnum)
 	{
-		if (filelist_getfile(curwin->w_jumplist[curwin->w_jumplistidx].fnum,
+		if (buflist_getfile(curwin->w_jumplist[curwin->w_jumplistidx].fnum,
 					curwin->w_jumplist[curwin->w_jumplistidx].mark.lnum, FALSE) == FAIL)
 			return (FPOS *)NULL;
 		curwin->w_cursor.col = curwin->w_jumplist[curwin->w_jumplistidx].mark.col;
@@ -164,7 +184,7 @@ getmark(c, changefile)
 	posp = NULL;
 	if (c == '\'' || c == '`')			/* previous context mark */
 	{
-		pos_copy = curbuf->b_pcmark;	/* need to make a copy because b_pcmark */
+		pos_copy = curwin->w_pcmark;	/* need to make a copy because b_pcmark */
 		posp = &pos_copy;				/*   may be changed soon */
 	}
 	else if (c == '[')					/* to start of previous operator */
@@ -188,7 +208,7 @@ getmark(c, changefile)
 		if (namedfm[c].fnum != curbuf->b_fnum &&
 									namedfm[c].mark.lnum != 0 && changefile)
 		{
-			if (filelist_getfile(namedfm[c].fnum, namedfm[c].mark.lnum, TRUE) == OK)
+			if (buflist_getfile(namedfm[c].fnum, namedfm[c].mark.lnum, TRUE) == OK)
 			{
 				curwin->w_cursor.col = namedfm[c].mark.col;
 				posp = (FPOS *)-1;
@@ -215,8 +235,6 @@ clrallmarks(buf)
 
 	for (i = 0; i < NMARKS; i++)
 		buf->b_namedm[i].lnum = 0;
-	buf->b_pcmark.lnum = 1;		/* pcmark not cleared but set to line 1 */
-	buf->b_pcmark.col = 0;
 	buf->b_startop.lnum = 0;		/* start/end op mark cleared */
 	buf->b_endop.lnum = 0;
 }
@@ -232,7 +250,7 @@ fm_getname(fmark)
 
 	if (fmark->fnum != curbuf->b_fnum)				/* not current file */
 	{
-		name = filelist_nr2name(fmark->fnum);
+		name = buflist_nr2name(fmark->fnum);
 		if (name == NULL)
 			return (char_u *)"-unknown-";
 		return name;
@@ -249,7 +267,6 @@ domarks()
 	int			i;
 	char_u		*name;
 
-	mch_start_listing();	/* may set cooked mode, so output can be halted */
 	gotocmdline(TRUE, NUL);
 	msg_outstr((char_u *)"\nmark line  file\n");
 	for (i = 0; i < NMARKS; ++i)
@@ -278,7 +295,6 @@ domarks()
 		}
 		flushbuf();				/* show one line at a time */
 	}
-	mch_stop_listing();
 	msg_end();
 }
 
@@ -291,7 +307,6 @@ dojumps()
 	int			i;
 	char_u		*name;
 
-	mch_start_listing();	/* may set cooked mode, so output can be halted */
 	gotocmdline(TRUE, NUL);
 	msg_outstr((char_u *)"\n jump line  file\n");
 	for (i = 0; i < curwin->w_jumplistlen; ++i)
@@ -313,7 +328,6 @@ dojumps()
 	}
 	if (curwin->w_jumplistidx == curwin->w_jumplistlen)
 		msg_outstr((char_u *)">\n");
-	mch_stop_listing();
 	msg_end();
 }
 
@@ -357,7 +371,17 @@ mark_adjust(line1, line2, inc)
 	}
 
 /* previous context mark */
-	lp = &(curbuf->b_pcmark.lnum);
+	lp = &(curwin->w_pcmark.lnum);
+	if (*lp >= line1 && *lp <= line2)
+	{
+		if (inc == MAXLNUM)
+			*lp = 0;
+		else
+			*lp += inc;
+	}
+
+/* previous pcmark */
+	lp = &(curwin->w_prev_pcmark.lnum);
 	if (*lp >= line1 && *lp <= line2)
 	{
 		if (inc == MAXLNUM)

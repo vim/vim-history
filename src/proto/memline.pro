@@ -2,6 +2,7 @@
 int ml_open __PARMS((struct buffer *buf));
 void ml_close __PARMS((struct buffer *buf));
 void ml_close_all __PARMS((void));
+void ml_timestamp __PARMS((struct buffer *buf));
 void ml_recover __PARMS((void));
 void ml_sync_all __PARMS((int check_file));
 void ml_preserve __PARMS((struct buffer *buf, int message));

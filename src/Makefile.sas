@@ -27,7 +27,11 @@
 ###				(use only without -DNO_BUILTIN_TCAPS)
 ### DEF=ALL_BUILTIN_TCAPS	include all builtin termcap entries
 ###				(use only without -DNO_BUILTIN_TCAPS)
-DEFINES = DEF=DIGRAPHS DEF=SOME_BUILTIN_TCAPS
+### DEF=WEBB_COMPLETE		include Webb's code for command line completion
+### DEF=WEBB_KEYWORD_COMPL	include Webb's code for keyword completion
+### DEF=NOTITLE			'title' option off by default
+DEFINES = DEF=DIGRAPHS DEF=SOME_BUILTIN_TCAPS \
+		DEF=WEBB_COMPLETE DEF=WEBB_KEYWORD_COMPL
 
 #>>>>> if TERMCAP is defined obj/termlib.o has to be used
 #TERMLIB = obj/termlib.o
@@ -56,14 +60,14 @@ CFLAGS = NOLINK $(OPTIMIZE) $(COPTS) DEF=AMIGA DEF=SASC $(DBG) $(DEFINES) GST=$(
 PROPT = DEF=PROTO GPROTO GPPARM
 
 OBJ =	obj/alloc.o obj/amiga.o obj/buffer.o obj/charset.o obj/cmdcmds.o obj/cmdline.o \
-	obj/csearch.o obj/digraph.o obj/edit.o obj/fileio.o obj/filelist.o obj/getchar.o obj/help.o \
+	obj/csearch.o obj/digraph.o obj/edit.o obj/fileio.o obj/getchar.o obj/help.o \
 	obj/linefunc.o obj/main.o obj/mark.o obj/memfile.o obj/memline.o obj/message.o obj/misccmds.o \
 	obj/normal.o obj/ops.o obj/param.o obj/quickfix.o obj/regexp.o \
 	obj/regsub.o obj/screen.o obj/search.o \
 	obj/tag.o obj/term.o obj/undo.o obj/window.o $(TERMLIB)
 
 PRO =	proto/alloc.pro proto/buffer.pro proto/charset.pro proto/cmdcmds.pro proto/cmdline.pro \
-	proto/csearch.pro proto/digraph.pro proto/edit.pro proto/fileio.pro proto/filelist.pro \
+	proto/csearch.pro proto/digraph.pro proto/edit.pro proto/fileio.pro \
 	proto/getchar.pro proto/help.pro proto/linefunc.pro proto/main.pro proto/mark.pro \
 	proto/memfile.pro proto/memline.pro proto/message.pro proto/misccmds.pro proto/normal.pro proto/ops.pro \
 	proto/param.pro proto/quickfix.pro proto/regexp.pro proto/regsub.pro \
@@ -152,12 +156,6 @@ obj/fileio.o:	fileio.c  $(GST)
 
 proto/fileio.pro:	fileio.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/fileio.pro $(PROPT) fileio.c
-
-obj/filelist.o:	filelist.c  $(GST)
-	$(CC) $(CFLAGS) filelist.c OBJNAME=obj/
-
-proto/filelist.pro:	filelist.c $(GST)
-	$(CC) $(CFLAGS) GPFILE=proto/filelist.pro $(PROPT) filelist.c
 
 obj/getchar.o:	getchar.c  $(GST)
 	$(CC) $(CFLAGS) getchar.c OBJNAME=obj/

@@ -1,4 +1,3 @@
-
 /* vi:ts=4:sw=4
  *
  * VIM - Vi IMproved		by Bram Moolenaar

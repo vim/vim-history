@@ -18,7 +18,6 @@
 /* modified Henry Spencer's regular expression routines */
 #include "regexp.h"
 
-static int searchit __ARGS((FPOS *, int, char_u *, long, int));
 static int inmacro __ARGS((char_u *, char_u *));
 static int cls __ARGS((void));
 
@@ -37,7 +36,7 @@ static char_u *bot_top_msg = (char_u *)"search hit BOTTOM, continuing at TOP";
  * String searches
  *
  * The string search functions are divided into two levels:
- * lowest:	searchit(); called by dosearch() and docmdline().
+ * lowest:	searchit(); called by dosearch() and edit().
  * Highest: dosearch(); changes curwin->w_cursor, called by normal().
  *
  * The last search pattern is remembered for repeating the same search.
@@ -110,26 +109,30 @@ myregcomp(pat, sub_cmd, which_pat)
 	}
 
 	/*
-	 * save the currently used pattern in the appropriate place
+	 * save the currently used pattern in the appropriate place,
+	 * unless the pattern should not be remembered
 	 */
-	if (sub_cmd == 0 || sub_cmd == 2)	/* search or global command */
+	if (!keep_old_search_pattern)
 	{
-		if (search_pattern != pat)
+		if (sub_cmd == 0 || sub_cmd == 2)	/* search or global command */
 		{
-			free(search_pattern);
-			search_pattern = strsave(pat);
-			last_pattern = search_pattern;
-			reg_magic = p_magic;		/* Magic sticks with the r.e. */
+			if (search_pattern != pat)
+			{
+				free(search_pattern);
+				search_pattern = strsave(pat);
+				last_pattern = search_pattern;
+				reg_magic = p_magic;		/* Magic sticks with the r.e. */
+			}
 		}
-	}
-	if (sub_cmd == 1 || sub_cmd == 2)	/* substitute or global command */
-	{
-		if (subst_pattern != pat)
+		if (sub_cmd == 1 || sub_cmd == 2)	/* substitute or global command */
 		{
-			free(subst_pattern);
-			subst_pattern = strsave(pat);
-			last_pattern = subst_pattern;
-			reg_magic = p_magic;		/* Magic sticks with the r.e. */
+			if (subst_pattern != pat)
+			{
+				free(subst_pattern);
+				subst_pattern = strsave(pat);
+				last_pattern = subst_pattern;
+				reg_magic = p_magic;		/* Magic sticks with the r.e. */
+			}
 		}
 	}
 
@@ -145,27 +148,29 @@ myregcomp(pat, sub_cmd, which_pat)
  * Start at position 'pos' and return the found position in 'pos'.
  * Return OK for success, FAIL for failure.
  */
-	static int
-searchit(pos, dir, str, count, end)
+	int
+searchit(pos, dir, str, count, end, message)
 	FPOS	*pos;
 	int 	dir;
 	char_u	*str;
 	long	count;
 	int		end;
+	int		message;
 {
-	int 			found;
-	linenr_t		lnum = 0;			/* init to shut up gcc */
-	linenr_t		startlnum;
-	regexp		   *prog;
-	register char_u  *s;
-	char_u		   *ptr;
-	register int	i;
-	register char_u  *match, *matchend;
-	int 			loop;
+	int 				found;
+	linenr_t			lnum = 0;			/* init to shut up gcc */
+	linenr_t			startlnum;
+	regexp				*prog;
+	register char_u		*s;
+	char_u				*ptr;
+	register int		i;
+	register char_u		*match, *matchend;
+	int 				loop;
 
 	if ((prog = myregcomp(str, 0, 2)) == NULL)
 	{
-		emsg(e_invstring);
+		if (message)
+			emsg(e_invstring);
 		return FAIL;
 	}
 /*
@@ -249,7 +254,7 @@ searchit(pos, dir, str, count, end)
 			if (dir == BACKWARD)    /* start second loop at the other end */
 			{
 				lnum = curbuf->b_ml.ml_line_count;
-				if (!p_terse)
+				if (!p_terse && message)
 				{
 					msg(top_bot_msg);
 					keep_msg = top_bot_msg;
@@ -258,7 +263,7 @@ searchit(pos, dir, str, count, end)
 			else
 			{
 				lnum = 1;
-				if (!p_terse)
+				if (!p_terse && message)
 				{
 					msg(bot_top_msg);
 					keep_msg = bot_top_msg;
@@ -275,7 +280,7 @@ searchit(pos, dir, str, count, end)
 	{
 		if (got_int)
 			emsg(e_interr);
-		else
+		else if (message)
 		{
 			if (p_ws)
 				emsg(e_patnotf);
@@ -297,16 +302,18 @@ searchit(pos, dir, str, count, end)
  * If 'str' is 0 or 'str' is empty: use previous string.
  *			  If 'reverse' is TRUE: go in reverse of previous dir.
  *				 If 'echo' is TRUE: echo the search command and handle options
+ *			  If 'message' is TRUE: may give error message
  *
  * return 0 for failure, 1 for found, 2 for found and line offset added
  */
 	int
-dosearch(dirc, str, reverse, count, echo)
+dosearch(dirc, str, reverse, count, echo, message)
 	int				dirc;
 	char_u		   *str;
 	int				reverse;
 	long			count;
 	int				echo;
+	int				message;
 {
 	FPOS			pos;		/* position of the last match */
 	char_u			*searchstr;
@@ -314,9 +321,23 @@ dosearch(dirc, str, reverse, count, echo)
 	static int		lastoffline;/* previous/current search has line offset */
 	static int		lastend;	/* previous/current search set cursor at end */
 	static long 	lastoff;	/* previous/current line or char offset */
+	int				old_lastsdir;
+	int				old_lastoffline;
+	int				old_lastend;
+	long			old_lastoff;
+	int				ret;		/* Return value */
 	register char_u	*p;
 	register long	c;
 	char_u			*dircp = NULL;
+
+	/*
+	 * save the values for when keep_old_search_pattern is set
+	 * (no if around this because gcc wants them initialized)
+	 */
+	old_lastsdir = lastsdir;
+	old_lastoffline = lastoffline;
+	old_lastend = lastend;
+	old_lastoff = lastoff;
 
 	if (dirc == 0)
 		dirc = lastsdir;
@@ -336,7 +357,8 @@ dosearch(dirc, str, reverse, count, echo)
 		if (search_pattern == NULL)
 		{
 			emsg(e_noprevre);
-			return 0;
+			ret = 0;
+			goto end_dosearch;
 		}
 		searchstr = (char_u *)"";	/* will use search_pattern in myregcomp() */
 	}
@@ -416,11 +438,14 @@ dosearch(dirc, str, reverse, count, echo)
 
 	pos = curwin->w_cursor;
 
-	c = searchit(&pos, dirc == '/' ? FORWARD : BACKWARD, searchstr, count, lastend);
+	c = searchit(&pos, dirc == '/' ? FORWARD : BACKWARD, searchstr, count, lastend, message);
 	if (dircp)
 		*dircp = dirc;			/* put second '/' or '?' back for normal() */
 	if (c == FAIL)
-		return 0;
+	{
+		ret = 0;
+		goto end_dosearch;
+	}
 	if (lastend)
 		mincl = TRUE;			/* 'e' includes last character */
 
@@ -447,7 +472,10 @@ dosearch(dirc, str, reverse, count, echo)
 	curwin->w_set_curswant = TRUE;
 
 	if (!lastoffline)
-		return 1;
+	{
+		ret = 1;
+		goto end_dosearch;
+	}
 
 /*
  * add the offset to the line number.
@@ -461,7 +489,17 @@ dosearch(dirc, str, reverse, count, echo)
 		curwin->w_cursor.lnum = c;
 	curwin->w_cursor.col = 0;
 
-	return 2;
+	ret = 2;
+
+end_dosearch:
+	if (keep_old_search_pattern)
+	{
+		lastsdir = old_lastsdir;
+		lastoffline = old_lastoffline;
+		lastend = old_lastend;
+		lastoff = old_lastoff;
+	}
+	return ret;
 }
 
 
@@ -544,38 +582,172 @@ searchc(c, dir, type, count)
  * Improvement over vi: Braces inside quotes are ignored.
  */
 	FPOS		   *
-showmatch()
+showmatch(initc)
+	int		initc;
 {
-	static FPOS		pos;			/* current search position */
-	int				initc;			/* brace under or after the cursor */
-	int				findc;			/* matching brace */
+	static FPOS		pos;				/* current search position */
+	int				findc;				/* matching brace */
 	int				c;
-	int 			count = 0;		/* cumulative number of braces */
-	int 			idx;
+	int 			count = 0;			/* cumulative number of braces */
+	int 			idx = 0;			/* init for gcc */
 	static char_u 	table[6] = {'(', ')', '[', ']', '{', '}'};
-	int 			inquote = 0;	/* non-zero when inside quotes */
-	register char_u	*linep;			/* pointer to current line */
+	int 			inquote = 0;		/* non-zero when inside quotes */
+	register char_u	*linep;				/* pointer to current line */
 	register char_u	*ptr;
-	int				do_quotes;		/* check for quotes in current line */
+	int				do_quotes;			/* check for quotes in current line */
+	int				hash_dir = 0;		/* Direction searched for # things */
+	int				comment_dir = 0;	/* Direction searched for comments */
 
 	pos = curwin->w_cursor;
+	linep = ml_get(pos.lnum); 
 
 	/*
-	 * find the brace under or after the cursor
+	 * if initc given, look in the table for the matching character
 	 */
-	linep = ml_get(pos.lnum); 
-	for (;;)
+	if (initc != NUL)
 	{
-		initc = linep[pos.col];
-		if (initc == NUL)
-			return (FPOS *) NULL;
-
 		for (idx = 0; idx < 6; ++idx)
 			if (table[idx] == initc)
+			{
+				initc = table[idx = idx ^ 1];
 				break;
-		if (idx != 6)
-			break;
-		++pos.col;
+			}
+		if (idx == 6)			/* invalid initc! */
+			return NULL;
+	}
+	/*
+	 * no initc given, look under the cursor
+	 */
+	else
+	{
+		if (linep[0] == '#' && pos.col == 0)
+			hash_dir = 1;
+
+		/*
+		 * Are we on a comment?
+		 */
+		if (linep[pos.col] == '/')
+		{
+			if (linep[pos.col + 1] == '*')
+			{
+				comment_dir = 1;
+				idx = 0;
+			}
+			else if (pos.col > 0 && linep[pos.col - 1] == '*')
+			{
+				comment_dir = -1;
+				idx = 1;
+			}
+		}
+		if (linep[pos.col] == '*')
+		{
+			if (linep[pos.col + 1] == '/')
+			{
+				comment_dir = -1;
+				idx = 1;
+			}
+			else if (pos.col > 0 && linep[pos.col - 1] == '/')
+			{
+				comment_dir = 1;
+				idx = 0;
+			}
+		}
+
+		/*
+		 * If we are not on a comment or the # at the start of a line, then
+		 * look for brace anywhere on this line after the cursor.
+		 */
+		if (!hash_dir && !comment_dir)
+		{
+			/*
+			 * find the brace under or after the cursor
+			 */
+			linep = ml_get(pos.lnum); 
+			for (;;)
+			{
+				initc = linep[pos.col];
+				if (initc == NUL)
+					break;
+
+				for (idx = 0; idx < 6; ++idx)
+					if (table[idx] == initc)
+						break;
+				if (idx != 6)
+					break;
+				++pos.col;
+			}
+			if (idx == 6)
+			{
+				if (linep[0] == '#')
+					hash_dir = 1;
+				else
+					return NULL;
+			}
+		}
+		if (hash_dir)
+		{
+			/*
+			 * Look for matching #if, #else, #elif, or #endif
+			 */
+			mtype = MLINE;		/* Linewise for this case only */
+			ptr = linep + 1;
+			while (*ptr == ' ' || *ptr == TAB)
+				ptr++;
+			if (STRNCMP(ptr, "if", (size_t)2) == 0 || STRNCMP(ptr, "el", (size_t)2) == 0)
+				hash_dir = 1;
+			else if (STRNCMP(ptr, "endif", (size_t)5) == 0)
+				hash_dir = -1;
+			else
+				return NULL;
+			pos.col = 0;
+			while (!got_int)
+			{
+				if (hash_dir > 0)
+				{
+					if (pos.lnum == curbuf->b_ml.ml_line_count)
+						break;
+				}
+				else if (pos.lnum == 1)
+					break;
+				pos.lnum += hash_dir;
+				linep = ml_get(pos.lnum);
+				if ((pos.lnum & 15) == 0)
+					breakcheck();
+				if (linep[0] != '#')
+					continue;
+				ptr = linep + 1;
+				while (*ptr == ' ' || *ptr == TAB)
+					ptr++;
+				if (hash_dir > 0)
+				{
+					if (STRNCMP(ptr, "if", (size_t)2) == 0)
+						count++;
+					else if (STRNCMP(ptr, "el", (size_t)2) == 0)
+					{
+						if (count == 0)
+							return &pos;
+					}
+					else if (STRNCMP(ptr, "endif", (size_t)5) == 0)
+					{
+						if (count == 0)
+							return &pos;
+						count--;
+					}
+				}
+				else
+				{
+					if (STRNCMP(ptr, "if", (size_t)2) == 0)
+					{
+						if (count == 0)
+							return &pos;
+						count--;
+					}
+					else if (STRNCMP(ptr, "endif", (size_t)5) == 0)
+						count++;
+				}
+			}
+			return NULL;
+		}
 	}
 
 	findc = table[idx ^ 1];		/* get matching brace */
@@ -598,6 +770,9 @@ showmatch()
 				linep = ml_get(pos.lnum);
 				pos.col = STRLEN(linep);	/* put pos.col on trailing NUL */
 				do_quotes = -1;
+					/* we only do a breakcheck() once for every 16 lines */
+				if ((pos.lnum & 15) == 0)
+					breakcheck();
 			}
 			else
 				--pos.col;
@@ -612,17 +787,26 @@ showmatch()
 				linep = ml_get(pos.lnum);
 				pos.col = 0;
 				do_quotes = -1;
+					/* we only do a breakcheck() once for every 16 lines */
+				if ((pos.lnum & 15) == 0)
+					breakcheck();
 			}
 			else
 				++pos.col;
 		}
 
+		if (comment_dir)
+		{
+			/* Note: comments do not nest, and we ignore quotes in them */
+			if (linep[pos.col] != '/' ||
+							(comment_dir == 1 && pos.col == 0) ||
+							linep[pos.col - comment_dir] != '*')
+				continue;
+			return &pos;
+		}
+
 		if (do_quotes == -1)		/* count number of quotes in this line */
 		{
-				/* we only do a breakcheck() once for every 16 lines */
-			if ((pos.lnum & 15) == 0)
-				breakcheck();
-
 			/*
 			 * count the number of quotes in the line, skipping \" and '"'
 			 */

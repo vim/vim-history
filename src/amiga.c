@@ -504,11 +504,25 @@ mch_settitle(title, icon)
 }
 
 /*
+ * Restore the window/icon title.
+ * which is one of:
+ *	1  Just restore title
+ *  2  Just restore icon (which we don't have)
+ *	3  Restore title and icon (which we don't have)
+ */
+	void
+mch_restore_title(which)
+	int which;
+{
+	mch_settitle((which & 1) ? oldwindowtitle : NULL, NULL);
+}
+
+/*
  * Get name of current directory into buffer 'buf' of length 'len' bytes.
  * Return OK for success, FAIL for failure.
  */
 	int
-dirname(buf, len)
+vim_dirname(buf, len)
 	char_u		*buf;
 	int			len;
 {
@@ -538,7 +552,7 @@ FullName(fname, buf, len)
 		retval = lock2name(l, buf, (long)len);
 		UnLock(l);
 	}
-	else if (STRCHR(fname, ':') == NULL)		/* not a full path yet */
+	else if (!isFullName(fname))		/* not a full path yet */
 	{
 		/*
 		 * if cannot lock the file, try to lock the current directory and then
@@ -560,6 +574,16 @@ FullName(fname, buf, len)
 	if (retval == FAIL || *buf == 0 || *buf == ':')
 		STRCPY(buf, fname);	/* something failed; use the filename */
 	return retval;
+}
+
+/*
+ * return TRUE is fname is an absolute path name
+ */
+	int
+isFullName(fname)
+	char_u		*fname;
+{
+	return (STRCHR(fname, ':') != NULL);
 }
 
 /*
@@ -639,22 +663,6 @@ isdir(name)
 }
 
 /*
- * start listing: set terminal mode to cooked, so output can be halted by
- * typing a character
- */
-	void
-mch_start_listing()
-{
-	/* settmode(0); */
-}
-
-	void
-mch_stop_listing()
-{
-	/* settmode(1); */
-}
-
-/*
  * Careful: mch_windexit() may be called before mch_windinit()!
  */
 	void
@@ -677,8 +685,7 @@ mch_windexit(r)
 		flushbuf();
 	}
 
-	if (wb_window != NULL)			/* disable window title */
-		SetWindowTitles(wb_window, (UBYTE *)oldwindowtitle, (UBYTE *)-1L);
+	mch_restore_title(3);			/* restore window title */
 
 	ml_close_all(); 				/* remove all memfiles */
 
@@ -1083,9 +1090,14 @@ call_shell(cmd, filter, cooked)
 	{
 		if (x = IoErr())
 		{
-			outchar('\n');
-			outnum(x);
-			outstr((char_u *)" returned\n");
+#ifdef WEBB_COMPLETE
+			if (!expand_interactively)
+#endif
+			{
+				outchar('\n');
+				outnum(x);
+				outstr((char_u *)" returned\n");
+			}
 			retval = FAIL;
 		}
 	}
@@ -1181,9 +1193,14 @@ call_shell(cmd, filter, cooked)
 			x = wait();
 		if (x)
 		{
-			outchar('\n');
-			outnum((long)x);
-			outstrn((char_u *)" returned\n");
+#ifdef WEBB_COMPLETE
+			if (!expand_interactively)
+#endif
+			{
+				outchar('\n');
+				outnum((long)x);
+				outstrn((char_u *)" returned\n");
+			}
 			retval = FAIL;
 		}
 	}
@@ -1489,6 +1506,7 @@ has_wildcard(p)
 
 /*
  * With 2.0 support for reading local environment variables
+ * Careful: uses IObuff!
  */
 
 	char_u *

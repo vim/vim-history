@@ -197,7 +197,7 @@ ismult(c)
  * per the ed(1) manual.
  */
 /* #define EMPTY_RE */			/* this is done outside of regexp */
-#ifdef EMTY_RE
+#ifdef EMPTY_RE
 char_u		   *reg_prev_re;
 #endif
 
@@ -408,7 +408,11 @@ regcomp(exp)
 		 * strengthens checking.  Not a strong reason, but sufficient in the
 		 * absence of others.
 		 */
-		if (flags & SPSTART) {
+		/*
+		 * When the r.e. starts with BOW, it is faster to look for a regmust
+		 * first. Used a lot for "#" and "*" commands. (Added by mool).
+		 */
+		if (flags & SPSTART || OP(scan) == BOW) {
 			longest = NULL;
 			len = 0;
 			for (; scan != NULL; scan = regnext(scan))
@@ -1649,12 +1653,15 @@ cstrncmp(s1, s2, n)
 	return vim_strnicmp(s1, s2, (size_t)n);
 }
 
+/*
+ * cstrchr: This function is used a lot for simple searches, keep it fast!
+ */
 	char_u *
 cstrchr(s, c)
 	char_u		   *s;
-	int				c;
+	register int	c;
 {
-	char_u		   *p;
+	register char_u		   *p;
 
 	if (!reg_ic)
 		return STRCHR(s, c);

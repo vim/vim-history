@@ -20,7 +20,10 @@
 ### -DSYSEXRC_FILE	name of the global .exrc file
 ### -DDEFVIMRC_FILE	name of the system-wide .vimrc file
 ### -DVIM_HLP		name of the help file
-DEFINES = -DDIGRAPHS
+### -DWEBB_COMPLETE	include Webb's code for command line completion
+### -DWEBB_KEYWORD_COMPL include Webb's code for keyword completion
+### -DNOTITLE		'title' option off by default
+DEFINES = -DDIGRAPHS -DWEBB_COMPLETE -DWEBB_KEYWORD_COMPL
 
 #>>>>> name of the compiler and linker, name of lib directory
 CC = tcc
@@ -34,7 +37,7 @@ INCL = vim.h globals.h param.h keymap.h macros.h ascii.h term.h msdos.h structs.
 CFLAGS = -c -ml -DMSDOS $(DEFINES)
 
 OBJ =	obj/alloc.obj obj/msdos.obj obj/buffer.obj obj/charset.obj obj/cmdcmds.obj obj/cmdline.obj \
-	obj/csearch.obj obj/digraph.obj obj/edit.obj obj/fileio.obj obj/filelist.obj obj/getchar.obj obj/help.obj \
+	obj/csearch.obj obj/digraph.obj obj/edit.obj obj/fileio.obj obj/getchar.obj obj/help.obj \
 	obj/linefunc.obj obj/main.obj obj/mark.obj obj/memfile.obj obj/memline.obj obj/message.obj obj/misccmds.obj \
 	obj/normal.obj obj/ops.obj obj/param.obj obj/quickfix.obj obj/regexp.obj \
 	obj/regsub.obj obj/screen.obj obj/search.obj \
@@ -85,9 +88,6 @@ obj/edit.obj:	edit.c  $(INCL)
 
 obj/fileio.obj:	fileio.c  $(INCL)
 	$(CC) $(CFLAGS) fileio.c -o obj/fileio.obj
-
-obj/filelist.obj:	filelist.c  $(INCL)
-	$(CC) $(CFLAGS) filelist.c -o obj/filelist.obj
 
 obj/getchar.obj:	getchar.c  $(INCL)
 	$(CC) $(CFLAGS) getchar.c -o obj/getchar.obj

@@ -12,11 +12,12 @@
 
 #include "vim.h"
 #include "globals.h"
-#define MESSAGE
+#define MESSAGE			/* don't include prototype for smsg() */
 #include "proto.h"
 #include "param.h"
 
-static int msg_invert = FALSE;		/* message should be inverted */
+static int msg_check_screen __ARGS((void));
+
 static int lines_left = -1;			/* lines left for listing */
 
 /*
@@ -27,7 +28,7 @@ static int lines_left = -1;			/* lines left for listing */
 msg(s)
 	char_u		   *s;
 {
-	if (Columns == 0)	/* terminal not initialized */
+	if (!screen_valid())			/* terminal not initialized */
 	{
 		fprintf(stderr, (char *)s);
 		fflush(stderr);
@@ -35,17 +36,13 @@ msg(s)
 	}
 
 	msg_start();
-	if (msg_invert && T_TI)
-	{
-		outstr(T_TI);
-		screen_invert(TRUE);
-	}
+	if (msg_highlight)			/* actually it is highlighting instead of invert */
+		start_highlight();
 	msg_outtrans(s, -1);
-	if (msg_invert && T_TI)
+	if (msg_highlight)
 	{
-		outstr(T_TP);
-		msg_invert = FALSE;
-		screen_invert(FALSE);
+		stop_highlight();
+		msg_highlight = FALSE;		/* clear for next call */
 	}
 	msg_ceol();
 	return msg_end();
@@ -78,7 +75,8 @@ emsg(s)
 		beep();					/* also includes flush_buffers() */
 	else
 		flush_buffers(FALSE);	/* flush internal buffers */
-	msg_invert = TRUE;
+	(void)set_highlight('e');	/* set highlight mode for error messages */
+	msg_highlight = TRUE;
 /*
  * Msg returns TRUE if wait_return() was not called.
  * In that case may call sleep() to give the user a chance to read the message.
@@ -129,7 +127,8 @@ wait_return(redraw)
 	{
 		need_wait_return = TRUE;
 		cmdline_row = msg_row;
-		starttermcap();
+		if (!termcap_active)
+			starttermcap();
 		return;
 	}
 	need_wait_return = FALSE;
@@ -139,8 +138,11 @@ wait_return(redraw)
 	if (got_int)
 		msg_outstr((char_u *)"Interrupt: ");
 
+	(void)set_highlight('r');
+	start_highlight();
 #ifdef ORG_HITRETURN
 	msg_outstr("Press RETURN to continue");
+	stop_highlight();
 	do {
 		c = vgetc();
 	} while (strchr("\r\n: ", c) == NULL);
@@ -148,6 +150,7 @@ wait_return(redraw)
 		stuffcharReadbuff(c);
 #else
 	msg_outstr((char_u *)"Press RETURN or enter command to continue");
+	stop_highlight();
 	do
 	{
 		c = vgetc();
@@ -331,6 +334,15 @@ msg_outstr(s)
 {
 	int		c;
 
+	/*
+	 * if there is no valid screen, use fprintf so we can see error messages
+	 */
+	if (!msg_check_screen())
+	{
+		fprintf(stderr, (char *)s);
+		return;
+	}
+
 	while (*s)
 	{
 		/*
@@ -342,7 +354,7 @@ msg_outstr(s)
 		 */
 		if (msg_row >= Rows - 1 && (*s == '\n' || msg_col >= Columns - 1))
 		{
-			screen_del_lines(0, 1);		/* always works */
+			screen_del_lines(0, 0, 1, (int)Rows);		/* always works */
 			msg_row = Rows - 2;
 			if (msg_col >= Columns)		/* can happen after screen resize */
 				msg_col = Columns - 1;
@@ -386,6 +398,23 @@ msg_outstr(s)
 }
 
 /*
+ * msg_check_screen - check if the screen is initialized.
+ * Also check msg_row and msg_col, if they are too big it may cause a crash.
+ */
+	static int
+msg_check_screen()
+{
+	if (!screen_valid())
+		return FALSE;
+	
+	if (msg_row >= Rows)
+		msg_row = Rows - 1;
+	if (msg_col >= Columns)
+		msg_col = Columns - 1;
+	return TRUE;
+}
+
+/*
  * clear from current message position to end of screen
  * Note: msg_col is not updated, so we remember the end of the message
  * for msg_check().
@@ -393,6 +422,8 @@ msg_outstr(s)
 	void
 msg_ceol()
 {
+	if (!msg_check_screen())
+		return;
 	screen_fill(msg_row, msg_row + 1, msg_col, (int)Columns, ' ', ' ');
 	screen_fill(msg_row + 1, (int)Rows, 0, (int)Columns, ' ', ' ');
 }

@@ -25,7 +25,12 @@
 ### -DSYSEXRC_FILE	name of the global .exrc file
 ### -DDEFVIMRC_FILE	name of the system-wide .vimrc file
 ### -DVIM_HLP		name of the help file
-DEFINES = -DDIGRAPHS -DSOME_BUILTIN_TCAPS -DVIM_ISSPACE
+### -DNOTITLE		'title' option off by default
+### -DWEBB_COMPLETE	include Webb's code for command line completion
+### -DWEBB_KEYWORD_COMPL include Webb's code for keyword completion
+
+DEFINES = -DDIGRAPHS -DSOME_BUILTIN_TCAPS -DVIM_ISSPACE \
+		-DWEBB_COMPLETE -DWEBB_KEYWORD_COMPL
 
 #>>>>> if TERMCAP is defined obj/termlib.o has to be used
 #TERMLIB = obj/termlib.o
@@ -44,14 +49,14 @@ LIBS = -lc16
 SYMS = vim.syms
 
 OBJ =	obj/alloc.o obj/amiga.o obj/buffer.o obj/charset.o obj/cmdcmds.o obj/cmdline.o \
-	obj/csearch.o obj/digraph.o obj/edit.o obj/fileio.o obj/filelist.o obj/getchar.o obj/help.o \
+	obj/csearch.o obj/digraph.o obj/edit.o obj/fileio.o obj/getchar.o obj/help.o \
 	obj/linefunc.o obj/main.o obj/mark.o obj/memfile.o obj/memline.o obj/message.o obj/misccmds.o \
 	obj/normal.o obj/ops.o obj/param.o obj/quickfix.o obj/regexp.o \
 	obj/regsub.o obj/screen.o obj/search.o \
 	obj/tag.o obj/term.o obj/undo.o obj/window.o $(TERMLIB)
 
 PRO =	proto/alloc.pro proto/buffer.pro proto/charset.pro proto/cmdcmds.pro proto/cmdline.pro \
-	proto/csearch.pro proto/digraph.pro proto/edit.pro proto/fileio.pro proto/filelist.pro \
+	proto/csearch.pro proto/digraph.pro proto/edit.pro proto/fileio.pro \
 	proto/getchar.pro proto/help.pro proto/linefunc.pro proto/main.pro proto/mark.pro \
 	proto/memfile.pro proto/memline.pro proto/message.pro proto/misccmds.pro proto/normal.pro proto/ops.pro \
 	proto/param.pro proto/quickfix.pro proto/regexp.pro proto/regsub.pro \
@@ -150,13 +155,6 @@ obj/fileio.o:	fileio.c  $(SYMS)
 proto/fileio.pro:	fileio.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) fileio.c
 	csh -c mv -f fileio.pro proto
-
-obj/filelist.o:	filelist.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) filelist.c -o obj/filelist.o
-
-proto/filelist.pro:	filelist.c $(SYMS)
-	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) filelist.c
-	csh -c mv -f filelist.pro proto
 
 obj/getchar.o:	getchar.c  $(SYMS)
 	cc $(CFLAGS) -hi$(SYMS) getchar.c -o obj/getchar.o

@@ -30,16 +30,16 @@
 
 #ifndef USE_SYSTEM		/* use fork/exec to start the shell */
 # include <sys/wait.h>
-# if !defined(SCO) && !defined(SOLARIS) && !defined(hpux) && !defined(__NetBSD__) &&!defined(_SEQUENT_)	/* SCO returns pid_t */
+# if !defined(SCO) && !defined(SOLARIS) && !defined(hpux) && !defined(__NetBSD__) && !defined(__FreeBSD__) && !defined(_SEQUENT_) && !defined(UNISYS)	/* SCO returns pid_t */
 extern int fork();
 # endif
-# if !defined(linux) && !defined(SOLARIS) && !defined(USL) && !defined(sun) && !(defined(hpux) && defined(__STDC__)) && !defined(__NetBSD__) && !defined(USL)
+# if !defined(linux) && !defined(SOLARIS) && !defined(USL) && !defined(sun) && !(defined(hpux) && defined(__STDC__)) && !defined(__NetBSD__) && !defined(__FreeBSD__) && !defined(USL) && !defined(UNISYS)
 extern int execvp __ARGS((const char *, const char **));
 # endif
 #endif
 
 #if defined(SYSV_UNIX) || defined(USL)
-# if defined(__sgi) || defined(UTS2) || defined(UTS4) || defined(MIPS)
+# if defined(__sgi) || defined(UTS2) || defined(UTS4) || defined(MIPS) || defined (MIPSEB) || defined(__osf__)
 #  include <sys/time.h>
 # endif
 # if defined(M_XENIX) || defined(SCO)
@@ -88,8 +88,24 @@ extern int execvp __ARGS((const char *, const char **));
 # endif
 #endif
 
-static void get_xterm_title __ARGS((void));
-static void get_xterm_icon __ARGS((void));
+#ifdef USE_X11
+
+# include <X11/Xlib.h>
+# include <X11/Xutil.h>
+
+Window		x11_window = 0;
+Display		*x11_display = NULL;
+
+static int	get_x11_windis __ARGS((void));
+#ifdef BUGGY
+static void set_x11_title __ARGS((char_u *));
+static void set_x11_icon __ARGS((char_u *));
+#endif
+#endif
+
+static void get_x11_title __ARGS((void));
+static void get_x11_icon __ARGS((void));
+
 static int	Read __ARGS((char_u *, long));
 static int	WaitForChar __ARGS((int));
 static int	RealWaitForChar __ARGS((int));
@@ -105,6 +121,8 @@ static void sig_winch __ARGS((int, int, struct sigcontext *));
 static int do_resize = FALSE;
 static char_u *oldtitle = NULL;
 static char_u *oldicon = NULL;
+static char_u *extra_shell_arg = NULL;
+static int show_shell_mess = TRUE;
 
 /*
  * At this point TRUE and FALSE are defined as 1L and 0L, but we want 1 and 0.
@@ -139,14 +157,20 @@ GetChars(buf, maxlen, wtime)
 
 	if (wtime >= 0)
 	{
-		if (WaitForChar(wtime) == 0)		/* no character available */
-			return 0;
+		while (WaitForChar(wtime) == 0)		/* no character available */
+		{
+			if (!do_resize)			/* return if not interrupted by resize */
+				return 0;
+			set_winsize(0, 0, FALSE);
+			do_resize = FALSE;
+		}
 	}
 	else		/* wtime == -1 */
 	{
 	/*
-	 * If there is no character available within 2 seconds (default)
-	 * write the autoscript file to disk
+	 * If there is no character available within 'updatetime' seconds
+	 * flush all the swap files to disk
+	 * Also done when interrupted by SIGWINCH.
 	 */
 		if (WaitForChar((int)p_ut) == 0)
 			updatescript(0);
@@ -154,16 +178,17 @@ GetChars(buf, maxlen, wtime)
 
 	for (;;)	/* repeat until we got a character */
 	{
+		if (do_resize)		/* window changed size */
+		{
+			set_winsize(0, 0, FALSE);
+			do_resize = FALSE;
+		}
 		/* 
 		 * we want to be interrupted by the winch signal
 		 */
 		WaitForChar(-1);
-		if (do_resize)
-		{
-			set_winsize(0, 0, FALSE);
-			do_resize = FALSE;
+		if (do_resize)		/* interrupted by SIGWINCHsignal */
 			continue;
-		}
 		len = Read(buf, (long)maxlen);
 		if (len > 0)
 			return len;
@@ -193,7 +218,7 @@ vim_delay()
 	poll(0, 0, 500);
 }
 #else
-# if defined(__STDC__) && !defined(hpux)
+# if (defined(__STDC__) && !defined(hpux)) || defined(ultrix)
 extern int select __ARGS((int, fd_set *, fd_set *, fd_set *, struct timeval *));
 # endif
 
@@ -229,7 +254,8 @@ sig_winch(sig, code, scp)
 # endif
 #endif
 {
-#if defined(SIGWINCH) && (defined(SYSV_UNIX) || defined(linux) || defined(hpux) || defined(USL))
+#if defined(SIGWINCH)
+		/* this is not required on all systems, but it doesn't hurt anybody */
 	signal(SIGWINCH, (void (*)())sig_winch);
 #endif
 	do_resize = TRUE;
@@ -301,35 +327,47 @@ fname_case(name)
 }
 
 #ifdef USE_X11
-
-# include <X11/Xlib.h>
-# include <X11/Xutil.h>
-
 /*
- * Determine original xterm Window Title
+ * try to get x11 window and display
+ *
+ * return FAIL for failure, OK otherwise
  */
-
-	static void
-get_xterm_title()
+	static int
+get_x11_windis()
 {
-	Window		window;
-	Display		*display;
-	XTextProperty text_prop;
 	char		*winid;
 
-	if ((winid = getenv("WINDOWID")) != NULL) 
+	/*
+	 * If WINDOWID not set, should try another method to find out
+	 * what the current window number is. The only code I know for
+	 * this is very complicated.
+	 * We assume that zero is invalid for WINDOWID.
+	 */
+	if (x11_window == 0 && (winid = getenv("WINDOWID")) != NULL) 
+		x11_window = (Window)atol(winid);
+	if (x11_display == NULL)
+		x11_display = XOpenDisplay(NULL);
+	if (x11_window == 0 || x11_display == NULL)
+		return FAIL;
+	return OK;
+}
+
+/*
+ * Determine original x11 Window Title
+ */
+	static void
+get_x11_title()
+{
+	XTextProperty	text_prop;
+
+	if (get_x11_windis() == OK)
 	{
-		window = (Window)atol(winid);
-
-		/* Determine DISPLAY */
-		display = XOpenDisplay(NULL);
-
 			/* Get window name if any */
-		if (XGetWMName(display, window, &text_prop))
+		if (XGetWMName(x11_display, x11_window, &text_prop))
 		{
 			if (text_prop.value != NULL)
 				oldtitle = strsave((char_u *)text_prop.value);
-			XFree(text_prop);
+			XFree((void *)text_prop.value);
 		}
 	}
 	if (oldtitle == NULL)		/* could not get old title */
@@ -337,48 +375,95 @@ get_xterm_title()
 }
 
 /*
- * Determine original xterm Window icon
+ * Determine original x11 Window icon
  */
 
 	static void
-get_xterm_icon()
+get_x11_icon()
 {
-	Window		window;
-	Display		*display;
 	XTextProperty text_prop;
-	char		*winid;
 
-	if ((winid = getenv("WINDOWID")) != NULL) 
+	if (get_x11_windis() == OK)
 	{
-		window = (Window)atol(winid);
-
-		/* Determine DISPLAY */
-		display = XOpenDisplay(NULL);
-
 			/* Get icon name if any */
-		if (XGetWMIconName(display, window, &text_prop))
+		if (XGetWMIconName(x11_display, x11_window, &text_prop))
 		{
 			if (text_prop.value != NULL)
 				oldicon = strsave((char_u *)text_prop.value);
-			XFree(text_prop);
+			XFree((void *)text_prop.value);
 		}
 	}
-	if (oldicon == NULL)		/* could not get old icon */
-		oldicon = (char_u *)"xterm";
+
+		/* could not get old icon, use terminal name */
+	if (oldicon == NULL)
+	{
+		if (STRNCMP(term_strings.t_name, "builtin_", 8) == 0)
+			oldicon = term_strings.t_name + 8;
+		else
+			oldicon = term_strings.t_name;
+	}
 }
+
+#if BUGGY
+
+This is not included, because it probably does not work at all.
+On my FreeBSD/Xfree86 in a shelltool I get all kinds of error messages and
+Vim is stopped in an uncontrolled way.
+
+/*
+ * Set x11 Window Title
+ *
+ * get_x11_windis() must be called before this and have returned OK
+ */
+	static void
+set_x11_title(title)
+	char_u		*title;
+{
+	XTextProperty text_prop;
+
+		/* Get icon name if any */
+	text_prop.value = title;
+	text_prop.nitems = STRLEN(title);
+	XSetWMName(x11_display, x11_window, &text_prop);
+	if (XGetWMName(x11_display, x11_window, &text_prop)) 	/* required? */
+		XFree((void *)text_prop.value);
+}
+
+/*
+ * Set x11 Window icon
+ *
+ * get_x11_windis() must be called before this and have returned OK
+ */
+	static void
+set_x11_icon(icon)
+	char_u		*icon;
+{
+	XTextProperty text_prop;
+
+		/* Get icon name if any */
+	text_prop.value = icon;
+	text_prop.nitems = STRLEN(icon);
+	XSetWMIconName(x11_display, x11_window, &text_prop);
+	if (XGetWMIconName(x11_display, x11_window, &text_prop)) /* required? */
+		XFree((void *)text_prop.value);
+}
+#endif
 
 #else	/* USE_X11 */
 
 	static void
-get_xterm_title()
+get_x11_title()
 {
 	oldtitle = (char_u *)"Thanks for flying Vim";
 }
 
 	static void
-get_xterm_icon()
+get_x11_icon()
 {
-	oldicon = (char_u *)"xterm";
+	if (STRNCMP(term_strings.t_name, "builtin_", 8) == 0)
+		oldicon = term_strings.t_name + 8;
+	else
+		oldicon = term_strings.t_name;
 }
 
 #endif	/* USE_X11 */
@@ -386,36 +471,109 @@ get_xterm_icon()
 
 /*
  * set the window title and icon
- * Currently only works for xterm.
+ * Currently only works for x11.
  */
 	void
 mch_settitle(title, icon)
 	char_u *title;
 	char_u *icon;
 {
-	if (term_strings.t_name != NULL &&
-			(STRCMP(term_strings.t_name, "xterm") == 0 ||
-			(STRCMP(term_strings.t_name, "builtin_xterm") == 0)))
+	int			type = 0;
+
+	if (term_strings.t_name == NULL)		/* no terminal name (yet) */
+		return;
+
+/*
+ * if the window ID and the display is known, we may use X11 calls
+ */
+#ifdef USE_X11
+	if (get_x11_windis() == OK)
+		type = 1;
+#endif
+
+	/*
+	 * note: if terminal is xterm, title is set with escape sequence rather
+	 * 		 than x11 calls, because the x11 calls don't always work
+	 */
+	if (	STRCMP(term_strings.t_name, "xterm") == 0 ||
+			STRCMP(term_strings.t_name, "builtin_xterm") == 0)
+		type = 2;
+
+		/*
+		 * Note: getting the old window title for iris-ansi will only
+		 * currently work if you set WINDOWID by hand, it is not
+		 * done automatically like an xterm.
+		 */
+	if (STRCMP(term_strings.t_name, "iris-ansi") == 0 ||
+			 STRCMP(term_strings.t_name, "iris-ansi-net") == 0)
+		type = 3;
+
+	if (type)
 	{
 		if (title != NULL)
 		{
 			if (oldtitle == NULL)				/* first call, save title */
-				get_xterm_title();
+				get_x11_title();
 
-			outstrn((char_u *)"\033]2;");		/* set window title */
-			outstrn(title);
-			outchar(Ctrl('G'));
+			switch(type)
+			{
+#ifdef USE_X11
+#ifdef BUGGY
+			case 1:	set_x11_title(title);				/* x11 */
+					break;
+#endif
+#endif
+			case 2: outstrn((char_u *)"\033]2;");		/* xterm */
+					outstrn(title);
+					outchar(Ctrl('G'));
+					break;
+
+			case 3: outstrn((char_u *)"\033P1.y");		/* iris-ansi */
+					outstrn(title);
+					outstrn((char_u *)"\234");
+					break;
+			}
 		}
 
 		if (icon != NULL)
 		{
-			if (oldicon == NULL)
-				get_xterm_icon();
-			outstrn((char_u *)"\033]1;");	/* set icon title */
-			outstrn(icon);
-			outchar(Ctrl('G'));
+			if (oldicon == NULL)				/* first call, save icon */
+				get_x11_icon();
+
+			switch(type)
+			{
+#ifdef USE_X11
+#ifdef BUGGY
+			case 1:	set_x11_icon(icon);					/* x11 */
+					break;
+#endif
+#endif
+			case 2: outstrn((char_u *)"\033]1;");		/* xterm */
+					outstrn(icon);
+					outchar(Ctrl('G'));
+					break;
+
+			case 3: outstrn((char_u *)"\033P3.y");		/* iris-ansi */
+					outstrn(icon);
+					outstrn((char_u *)"\234");
+					break;
+			}
 		}
 	}
+}
+
+/*
+ * Restore the window/icon title.
+ * which is one of:
+ *	1  Just restore title
+ *  2  Just restore icon
+ *	3  Restore title and icon
+ */
+	void
+mch_restore_title(which)
+	int which;
+{
+	mch_settitle((which & 1) ? oldtitle : NULL, (which & 2) ? oldicon : NULL);
 }
 
 /*
@@ -423,7 +581,7 @@ mch_settitle(title, icon)
  * Return OK for success, FAIL for failure.
  */
 	int 
-dirname(buf, len)
+vim_dirname(buf, len)
 	char_u *buf;
 	int len;
 {
@@ -465,7 +623,7 @@ FullName(fname, buf, len)
 	}
 
 	*buf = 0;
-	if (*fname != '/')			/* if not an absolute path */
+	if (!isFullName(fname))			/* if not an absolute path */
 	{
 		/*
 		 * If the file name has a path, change to that directory for a moment,
@@ -511,6 +669,16 @@ FullName(fname, buf, len)
 	}
 	STRCAT(buf, fname);
 	return retval;
+}
+
+/*
+ * return TRUE is fname is an absolute path name
+ */
+	int
+isFullName(fname)
+	char_u		*fname;
+{
+	return (*fname == '/');
 }
 
 /*
@@ -562,19 +730,6 @@ isdir(name)
 #else
 	return ((statb.st_mode & S_IFMT) == S_IFDIR ? TRUE : FALSE);
 #endif
-}
-
-/*
- * start listing: does nothing for unix
- */
-	void
-mch_start_listing()
-{
-}
-
-	void
-mch_stop_listing()
-{
 }
 
 	void
@@ -775,14 +930,19 @@ call_shell(cmd, dummy, cooked)
 		x = system(p_sh);
 	else
 	{
-		sprintf(newcmd, "%s -c \"%s\"", p_sh, cmd);
+		sprintf(newcmd, "%s %s -c \"%s\"", p_sh,
+						extra_shell_arg == NULL ? "" : extra_shell_arg, cmd);
 		x = system(newcmd);
 	}
 	if (x == 127)
 	{
 		outstrn((char_u *)"\nCannot execute shell sh\n");
 	}
+#ifdef WEBB_COMPLETE
+	else if (x && !expand_interactively)
+#else
 	else if (x)
+#endif
 	{
 		outchar('\n');
 		outnum((long)x);
@@ -839,13 +999,15 @@ call_shell(cmd, dummy, cooked)
 		}
 		if (i == 0)
 		{
-			argv = (char **)alloc((unsigned)((argc + 3) * sizeof(char *)));
+			argv = (char **)alloc((unsigned)((argc + 4) * sizeof(char *)));
 			if (argv == NULL)		/* out of memory */
 				goto error;
 		}
 	}
 	if (cmd != NULL)
 	{
+		if (extra_shell_arg != NULL)
+			argv[argc++] = (char *)extra_shell_arg;
 		argv[argc++] = "-c";
 		argv[argc++] = (char *)cmd;
 	}
@@ -858,6 +1020,11 @@ call_shell(cmd, dummy, cooked)
 	else if (pid == 0)		/* child */
 	{
 		signal(SIGINT, SIG_DFL);
+		if (!show_shell_mess)
+		{
+			fclose(stdout);
+			fclose(stderr);
+		}
 		execvp(argv[0], (char **)argv);
 		exit(127);			/* exec failed, return failure code */
 	}
@@ -867,6 +1034,20 @@ call_shell(cmd, dummy, cooked)
 		status = (status >> 8) & 255;
 		if (status)
 		{
+#ifdef WEBB_COMPLETE
+			if (status == 127)
+			{
+				outstrn((char_u *)"\nCannot execute shell ");
+				outstrn(p_sh);
+				outchar('\n');
+			}
+			else if (!expand_interactively)
+			{
+				outchar('\n');
+				outnum((long)status);
+				outstrn((char_u *)" returned\n");
+			}
+#else
 			outchar('\n');
 			if (status == 127)
 			{
@@ -879,6 +1060,7 @@ call_shell(cmd, dummy, cooked)
 				outstrn((char_u *)" returned");
 			}
 			outchar('\n');
+#endif /* WEBB_COMPLETE */
 		}
 	}
 	free(argv);
@@ -1093,16 +1275,16 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	if ((len = STRLEN(p_sh)) >= 3 && STRCMP(p_sh + len - 3, "csh") == 0)
 		use_glob = TRUE;
 
-	len = TMPNAMELEN + 10;
+	len = TMPNAMELEN + 11;
 	for (i = 0; i < num_pat; ++i)		/* count the length of the patterns */
 		len += STRLEN(pat[i]) + 3;
 	command = alloc(len);
 	if (command == NULL)
 		return FAIL;
 	if (use_glob)
-		STRCPY(command, "glob >");			/* built the shell command */
+		STRCPY(command, "glob >");		/* built the shell command */
 	else
-		STRCPY(command, "echo >");			/* built the shell command */
+		STRCPY(command, "echo >");		/* built the shell command */
 	STRCAT(command, tmpname);
 	for (i = 0; i < num_pat; ++i)
 	{
@@ -1115,14 +1297,28 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 		STRCAT(command, pat[i]);
 #endif
 	}
+#ifdef WEBB_COMPLETE
+	if (expand_interactively)
+		show_shell_mess = FALSE;
+#endif /* WEBB_COMPLETE */
+	if (use_glob)							/* Use csh fast option */
+		extra_shell_arg = (char_u *)"-f";
 	i = call_shell(command, 0, FALSE);		/* execute it */
+	extra_shell_arg = NULL;
+	show_shell_mess = TRUE;
 	free(command);
 	if (i == FAIL)							/* call_shell failed */
 	{
 		remove((char *)tmpname);
-		must_redraw = CLEAR;				/* probably messed up screen */
-		msg_outchar('\n');					/* clear bottom line quickly */
-		cmdline_row = Rows - 1;				/* continue on last line */
+#ifdef WEBB_COMPLETE
+		/* With interactive completion, the error message is not printed */
+		if (!expand_interactively)
+#endif /* WEBB_COMPLETE */
+		{
+			must_redraw = CLEAR;			/* probably messed up screen */
+			msg_outchar('\n');				/* clear bottom line quickly */
+			cmdline_row = Rows - 1;			/* continue on last line */
+		}
 		return FAIL;
 	}
 

@@ -12,6 +12,10 @@
 #include "proto.h"
 #include "param.h"
 
+#ifdef SPAWNO
+# include <spawno.h>			/* special MSDOS swapping library */
+#endif
+
 static void usage __PARMS((int));
 
 	static void
@@ -46,6 +50,7 @@ usage(n)
 	fprintf(stderr, "\t\t-d device\tuse device for I/O\n");
 #endif
 	fprintf(stderr, "\t\t-T terminal\tset terminal type\n");
+	fprintf(stderr, "\t\t-o[N]\t\topen N windows (def: one for each file)\n");
 	fprintf(stderr, "\t\t+\t\tstart at end of file\n");
 	fprintf(stderr, "\t\t+lnum\t\tstart at line lnum\n");
 	fprintf(stderr, "\t\t-c command\texecute command first\n");
@@ -72,6 +77,7 @@ main(argc, argv)
 	int				doqf = 0;
 	int				i;
 	int				bin_mode = FALSE;	/* -b option used */
+	int				win_count = 1;		/* number of windows to use */
 
 #ifdef USE_LOCALE
 	setlocale(LC_ALL, "");		/* for ctype() and the like */
@@ -87,8 +93,8 @@ main(argc, argv)
 /*
  * allocate the first window and buffer. Can't to anything without it
  */
-	if ((curwin = win_alloc(NULL, NULL)) == NULL ||
-			(curbuf = buf_alloc()) == NULL)
+	if ((curwin = win_alloc(NULL)) == NULL ||
+			(curbuf = buflist_new(NULL, NULL, 1L, FALSE)) == NULL)
 		mch_windexit(0);
 	curwin->w_buffer = curbuf;
 
@@ -114,10 +120,11 @@ main(argc, argv)
 	 *		'-n'			no .vim file
 	 *		'-r'			recovery mode
 	 *		'-x'			open window directly, not with newcli
+	 *		'-o[N]'			open N windows (default: number of files)
 	 *		'-T terminal'	terminal name
 	 */
 	while (argc > 1 && ((c = argv[0][0]) == '+' || (c == '-' &&
-			strchr("vnbrxcswTd", c = argv[0][1]) != NULL && c != NUL)))
+			strchr("vnbrxocswTd", c = argv[0][1]) != NULL && c != NUL)))
 	{
 		--argc;
 		switch (c)
@@ -149,6 +156,16 @@ main(argc, argv)
 		
 		case 'x':
 			break;	/* This is ignored as it is handled in check_win() */
+
+		case 'o':
+			c = argv[0][2];
+			if (c != NUL && !isdigit(c))
+			{
+				fprintf(stderr, "-o option needs numeric argument (or none)\n");
+				mch_windexit(2);
+			}
+			win_count = atoi(&(argv[0][2]));		/* 0 means: number of files */
+			break;
 
 		default:	/* options with argument */
 			++argv;
@@ -193,9 +210,9 @@ main(argc, argv)
 	}
 
 	/*
-	 * Allocate space for the generic buffer
+	 * Allocate space for the generic buffers
 	 */
-	if ((IObuff = alloc(IOSIZE)) == NULL)
+	if ((IObuff = alloc(IOSIZE)) == NULL || (NameBuff = alloc(MAXPATHL)) == NULL)
 		mch_windexit(0);
 
 	/* note that we may use mch_windexit() before mch_windinit()! */
@@ -282,7 +299,6 @@ main(argc, argv)
 
 	RedrawingDisabled = TRUE;
 
-	buf_init(curbuf);			/* init curbuf as empty file */
 	curbuf->b_nwindows = 1;		/* there is one window */
 	win_init(curwin);			/* init cursor position */
 	init_yank();				/* init yank buffers */
@@ -391,6 +407,9 @@ main(argc, argv)
 			(void)dosource((char_u *)EXRC_FILE);
 	}
 
+#ifdef SPAWNO			/* special MSDOS swapping library */
+	init_SPAWNO("", SWAP_ANY);
+#endif
 /*
  * Call settmode and starttermcap here, so the T_KS and T_TS may be defined
  * by termcapinit and redifined in .exrc.
@@ -414,34 +433,70 @@ main(argc, argv)
 		curbuf->b_p_et = 0;			/* no expand tab */
 	}
 
-#ifdef AMIGA
-	fname_case(fname);			/* set correct case for file name */
-#endif
-	setfname(fname, NULL);
+	(void)setfname(fname, NULL, TRUE);
 	maketitle();
 
-	if (ml_open(curbuf) == FAIL)	/* Initialize storage structure */
-		getout(1);
+	if (win_count == 0)
+		win_count = arg_count;
+	if (win_count > 1)
+		win_count = make_windows(win_count);
+	else
+		win_count = 1;
 
 /*
  * Start putting things on the screen.
- * Clear screen first, so file message will not be cleared.
+ * Scroll screen down before drawing over it
+ * Clear screen now, so file message will not be cleared.
  */
 	starting = FALSE;
-	screenclear();					/* clear screen */
+	if (T_CVV != NULL && *T_CVV)
+	{
+		outstr(T_CVV);
+		outstr(T_CV);
+	}
+	screenclear();						/* clear screen */
 
-	if (recoverymode)				/* do recover */
+	if (recoverymode)					/* do recover */
+	{
+		if (ml_open(curbuf) == FAIL)	/* Initialize storage structure */
+			getout(1);
 		ml_recover();
-	else if (curbuf->b_filename != NULL)
-		(void)readfile(curbuf->b_filename, curbuf->b_sfilename, (linenr_t)0, TRUE, (linenr_t)0, MAXLNUM);
+	}
 	else
-		MSG("Empty Buffer");
-	UNCHANGED;
+		(void)open_buffer();			/* create memfile and read file */
 
 	setpcmark();
 
 	if (doqf && qf_init() == FAIL)		/* if reading error file fails: exit */
 		mch_windexit(3);
+
+	/*
+	 * If opened more than one window, start editing files in the other windows.
+	 * Make_windows() has already opened the windows.
+	 * This is all done by putting commands in the stuff buffer.
+	 */
+	if (win_count > 1)
+	{
+		for (i = 1; i < win_count; ++i)
+		{
+			stuffReadbuff((char_u *)"\027\027:");	/* CTRL-W CTRL-W */
+			if (i < arg_count)
+			{
+				stuffnumReadbuff((long)i);
+				stuffReadbuff((char_u *)"next\n");	/* edit Nth file */
+			}
+			else
+				stuffReadbuff((char_u *)"buf\n");	/* edit empty buffer */
+		}
+		stuffReadbuff((char_u *)"100\027k");		/* back to first window */
+	}
+
+	/*
+	 * If there are more file names in the argument list than windows,
+	 * put the rest of the names in the buffer list.
+	 */
+	for (i = win_count; i < arg_count; ++i)
+		(void)buflist_add(arg_files[i]);
 
 	if (command)
 		docmdline(command);

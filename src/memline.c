@@ -231,6 +231,7 @@ ml_open(buf)
 	if (mfp == NULL)
 		goto error;
 	buf->b_ml.ml_mfp = mfp;
+	buf->b_neverloaded = FALSE;
 	if (p_uc != 0 && mfp->mf_fname == NULL)
 	{
 				/* call wait_return if not done by emsg() */
@@ -321,6 +322,37 @@ ml_close_all()
 
 	for (buf = firstbuf; buf != NULL; buf = buf->b_next)
 		ml_close(buf);
+}
+
+/*
+ * Update the timestamp in the .swp file.
+ * Used when the file has been written.
+ */
+	void
+ml_timestamp(buf)
+	BUF			*buf;
+{
+	MEMFILE		*mfp = NULL;
+	BHDR		*hp = NULL;
+	ZERO_BL		*b0p;
+	struct stat	st;
+
+	mfp = buf->b_ml.ml_mfp;
+
+	if (mfp == NULL || (hp = mf_get(mfp, (blocknr_t)0, 1)) == NULL)
+		return;
+	b0p = (ZERO_BL *)(hp->bh_data);
+	if (b0p->b0_id != BLOCK0_ID)
+	{
+		EMSG("ml_timestamp: Didn't get block 0??");
+		goto error;
+	}
+		/* copy filename again, it may have been changed */
+	STRNCPY(b0p->b0_fname, buf->b_filename, (size_t)1000);
+	if (stat((char *)buf->b_filename, &st) != -1)
+		b0p->b0_mtime = st.st_mtime;
+error:
+	mf_put(mfp, hp, TRUE, FALSE);
 }
 
 /*
@@ -415,7 +447,11 @@ ml_recover()
 
 	if (mfp->mf_infile_count == 0)
 	{
-		EMSG2("%s is too short for a .swp file", fname);
+		msg_start();
+		msg_outstr(fname);
+		msg_outstr((char_u *)" is too short for a .swp file; maybe no changes were\n");
+		msg_outstr((char_u *)"made or Vim did not update the .swp file");
+		msg_end();
 		goto theend;
 	}
 
@@ -438,8 +474,8 @@ ml_recover()
 /*
  * If .swp file name given directly, use name from swap file for buffer
  */
-	if (directly)
-		setfname(b0p->b0_fname, NULL);
+	if (directly && setfname(b0p->b0_fname, NULL, TRUE) == FAIL)
+		goto theend;
 
 	smsg((char_u *)"Using swap file \"%s\", original file \"%s\"", fname,
 				curbuf->b_filename == NULL ? "No File" : (char *)curbuf->b_filename);
@@ -453,7 +489,7 @@ ml_recover()
 			org_stat.st_mtime > swp_stat.st_mtime) ||
 			org_stat.st_mtime != b0p->b0_mtime))
 	{
-		MSG("Warning: Original file has been changed");
+		MSG("Warning: Original file may have been changed");
 	}
 	mf_put(mfp, hp, FALSE, FALSE);		/* release block 0 */
 	hp = NULL;
@@ -726,7 +762,8 @@ ml_preserve(buf, message)
 
 	if (mfp == NULL || mfp->mf_fname == NULL)
 	{
-		EMSG("Cannot preserve, there is no swap file");
+		if (message)
+			EMSG("Cannot preserve, there is no swap file");
 		return;
 	}
 
@@ -831,35 +868,35 @@ errorret:
  * See if it is the same line as requested last time.
  * Otherwise may need to flush last used line.
  */
-	if (buf->b_ml.ml_line_lnum == lnum)
-		return buf->b_ml.ml_line_ptr;
-
-	ml_flush_line(buf);
-
-	if (buf->b_ml.ml_flags & ML_EMPTY)					/* empty buffer */
-		return (char_u *)"";
-
-	/*
-	 * find the data block containing the line
-	 * This also fills the stack with the blocks from the root to the data block
-	 * This also releases any locked block.
-	 */
-	if ((hp = ml_find_line(buf, lnum, ML_FIND)) == NULL)
+	if (buf->b_ml.ml_line_lnum != lnum)
 	{
-		emsg2((char_u *)"ml_get: cannot find line %ld", (char_u *)lnum);
-		goto errorret;
-	}
+		ml_flush_line(buf);
 
-	dp = (DATA_BL *)(hp->bh_data);
+		if (buf->b_ml.ml_flags & ML_EMPTY)					/* empty buffer */
+			return (char_u *)"";
+
+		/*
+		 * find the data block containing the line
+		 * This also fills the stack with the blocks from the root to the data block
+		 * This also releases any locked block.
+		 */
+		if ((hp = ml_find_line(buf, lnum, ML_FIND)) == NULL)
+		{
+			emsg2((char_u *)"ml_get: cannot find line %ld", (char_u *)lnum);
+			goto errorret;
+		}
+
+		dp = (DATA_BL *)(hp->bh_data);
+
+		ptr = (char_u *)dp + ((dp->db_index[lnum - buf->b_ml.ml_locked_low]) & DB_INDEX_MASK);
+		buf->b_ml.ml_line_ptr = ptr;
+		buf->b_ml.ml_line_lnum = lnum;
+		buf->b_ml.ml_flags &= ~ML_LINE_DIRTY;
+	}
 	if (will_change)
 		buf->b_ml.ml_flags |= (ML_LOCKED_DIRTY | ML_LOCKED_POS);
 
-	ptr = (char_u *)dp + ((dp->db_index[lnum - buf->b_ml.ml_locked_low]) & DB_INDEX_MASK);
-	buf->b_ml.ml_line_ptr = ptr;
-	buf->b_ml.ml_line_lnum = lnum;
-	buf->b_ml.ml_flags &= ~ML_LINE_DIRTY;
-
-	return ptr;
+	return buf->b_ml.ml_line_ptr;
 }
 
 /*

@@ -133,13 +133,14 @@ redrawhelp()
 
 	fseek(helpfd, helpfilepos, 0);
 	outstr(T_ED);
+	(void)set_highlight('h');
 	windgoto(0,0);
 	while ((nextc = getc(helpfd)) != -1 && (nextc != '\f' || line < Rows - 24))
 	{
-		if (nextc == Ctrl('B'))			/* begin of invert */
-			outstr(T_TI);
-		else if (nextc == Ctrl('E'))	/* end of invert */
-			outstr(T_TP);
+		if (nextc == Ctrl('B'))			/* begin of standout */
+			start_highlight();
+		else if (nextc == Ctrl('E'))	/* end of standout */
+			stop_highlight();
 		else if (nextc == '\f')			/* start of next screen */
 		{
 			++screens;

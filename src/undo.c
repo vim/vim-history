@@ -320,7 +320,7 @@ u_undoredo()
 	if (curbuf->b_u_curhead->uh_changed)
 		CHANGED;
 	else
-		UNCHANGED;
+		UNCHANGED(curbuf);
 	/*
 	 * save marks before undo/redo
 	 */
@@ -453,7 +453,8 @@ u_sync()
 }
 
 /*
- * Called after setting b_changed to FALSE. Every undo modifies the buffer.
+ * Called after writing the file and setting b_changed to FALSE.
+ * Now an undo means that the buffer is modified.
  */
 	void
 u_unchanged(buf)

@@ -34,11 +34,14 @@ typedef struct _tcarr
   char_u *t_cil;	/* il       AL	add number of blank lines */
   char_u *t_dl;		/* dl1      dl	delete line */
   char_u *t_cdl;	/* dl       DL	delete number of lines */
+  char_u *t_cs;		/*          cs	scroll region */
   char_u *t_ed;		/* clear    cl	clear screen */
   char_u *t_ci;		/* civis    vi	cursur invisible */
   char_u *t_cv;		/* cnorm    ve	cursur visible */
+  char_u *t_cvv;	/* cvvis    vs  cursor very visible */
   char_u *t_tp;		/* sgr0     me	normal mode */
   char_u *t_ti;		/* rev      mr	reverse mode */
+  char_u *t_tb;		/* bold     md	bold mode */
   char_u *t_se;		/* rmso     se	normal mode */
   char_u *t_so;		/* smso     so	standout mode */
   char_u *t_ms;		/* msgr     ms	save to move cursor in reverse mode */
@@ -82,7 +85,9 @@ typedef struct _tcarr
   char_u *t_sf10;	/* kf20     FA	shifted function key 10 */
   char_u *t_help;	/* khlp     %1	help key */
   char_u *t_undo;	/* kund     &8	undo key */
-  /* adjust inchar() for last entry! */
+  /* adjust inchar() for last key entry! */
+
+  char_u *t_csc;	/* -		-	cursor relative to scrolling region */
 } Tcarr;
 
 extern Tcarr term_strings;	/* currently used terminal strings */
@@ -95,11 +100,14 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 #define T_CIL	(term_strings.t_cil)
 #define T_DL	(term_strings.t_dl)
 #define T_CDL	(term_strings.t_cdl)
+#define T_CS	(term_strings.t_cs)
 #define T_ED	(term_strings.t_ed)
 #define T_CI	(term_strings.t_ci)
 #define T_CV	(term_strings.t_cv)
+#define T_CVV	(term_strings.t_cvv)
 #define T_TP	(term_strings.t_tp)
 #define T_TI	(term_strings.t_ti)
+#define T_TB	(term_strings.t_tb)
 #define T_SE	(term_strings.t_se)
 #define T_SO	(term_strings.t_so)
 #define T_MS	(term_strings.t_ms)
@@ -111,6 +119,7 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 #define T_KE	(term_strings.t_ke)
 #define T_TS	(term_strings.t_ts)
 #define T_TE	(term_strings.t_te)
+#define T_CSC	(term_strings.t_csc)
 
 
 #ifndef TERMINFO
@@ -130,11 +139,12 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0\033[%dL\0\
 \0\033[M\0\
 \0\033[%dM\0\
-\0\014\0\
+\1\014\0\
 \0\033[0 p\0\
 \0\033[1 p\0\
-\0\033[0m\0\
+\1\033[0m\0\
 \0\033[7m\0\
+\0\033[1m\0\
 \0\033[0m\0\
 \0\033[33m\0\
 \0\001\0\
@@ -175,7 +185,7 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0\033l\0\
 \0\033L\0\
 \1\033M\0\
-\1\033E\0\
+\2\033E\0\
 \0\033f\0\
 \0\033e\0\
 \0\0"
@@ -186,10 +196,10 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0\033[%dL\0\
 \0\033[M\0\
 \0\033[%dM\0\
-\0\033[2J\0\
-\2\033[0m\0\
+\1\033[2J\0\
+\3\033[0m\0\
 \0\033[7m\0\
-\2\001\0\
+\3\001\0\
 \0\033[%i%d;%dH\0\
 \1\033[%dC\0\
 \0\0"
@@ -204,10 +214,10 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0\033[K\0\
 \0\033[L\0\
 \1\033[M\0\
-\1\033[2J\0\
-\2\033[0m\0\
+\2\033[2J\0\
+\3\033[0m\0\
 \0\033[7m\0\
-\2\001\0\
+\3\001\0\
 \0\033[%i%d;%dH\0\
 \1\033[%dC\0\
 \5\316H\0\
@@ -246,11 +256,13 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0\033|K\0\
 \0\033|L\0\
 \1\033|M\0\
-\1\033|J\0\
-\2\033|0m\0\
-\0\033|79m\0\
+\1\033|%i%d;%dr\0\
+\0\033|J\0\
+\3\033|0m\0\
+\0\033|112m\0\
+\0\033|63m\0\
 \0\033|0m\0\
-\0\033|20m\0\
+\0\033|31m\0\
 \0\001\0\
 \0\033|%i%d;%dH\0\
 \7\316H\0\
@@ -292,13 +304,14 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0\033|%dL\0\
 \0\033|M\0\
 \0\033|%dM\0\
-\0\033|J\0\
+\1\033|J\0\
 \0\033|v\0\
 \0\033|V\0\
+\1\033|0m\0\
+\0\033|112m\0\
+\0\033|63m\0\
 \0\033|0m\0\
-\0\033|79m\0\
-\0\033|0m\0\
-\0\033|20m\0\
+\0\033|31m\0\
 \0\001\0\
 \0\033|%i%d;%dH\0\
 \7\316H\0\
@@ -334,10 +347,10 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0\033K\0\
 \0\033T\0\
 \1\033U\0\
-\1\014\0\
-\2\033SO\0\
+\2\014\0\
+\3\033SO\0\
 \0\033S2\0\
-\2\001\0\
+\3\001\0\
 \0\033Y%+ %+ \0\
 \0\0"
 
@@ -351,9 +364,11 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0\033[%dL\0\
 \0\033[M\0\
 \0\033[%dM\0\
+\0\033[%i%d;%dr\0\
 \0\033[H\033[2J\0\
-\2\033[m\0\
+\3\033[m\0\
 \0\033[7m\0\
+\0\033[1m\0\
 \2\001\0\
 \0\033[%i%d;%dH\0\
 \0\033M\0\
@@ -398,11 +413,14 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0[CIL%d]\0\
 \0[DL]\0\
 \0[CDL%d]\0\
+\0[%dCS%d]\0\
 \0[ED]\0\
 \0[CI]\0\
 \0[CV]\0\
+\0[CVV]\0\
 \0[TP]\0\
 \0[TI]\0\
+\0[TB]\0\
 \0[SE]\0\
 \0[SO]\0\
 \0[MS]\0\
@@ -468,8 +486,8 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 
 # else /* NO_BUILTIN_TCAPS */
 #  define DUMB_TCAP "dumb\0\
-\5\014\0\
-\7\033[%i%d;%dH\0\
+\6\014\0\
+\9\033[%i%d;%dH\0\
 \0\0"
 # endif /* NO_BUILTIN_TCAPS */
 
@@ -490,11 +508,12 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0\033[%p1%dL\0\
 \0\033[M\0\
 \0\033[%p1%dM\0\
-\0\014\0\
+\1\014\0\
 \0\033[0 p\0\
 \0\033[1 p\0\
-\0\033[0m\0\
+\1\033[0m\0\
 \0\033[7m\0\
+\0\033[1m\0\
 \0\033[0m\0\
 \0\033[33m\0\
 \0\001\0\
@@ -535,7 +554,7 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0\033l\0\
 \0\033L\0\
 \1\033M\0\
-\1\033E\0\
+\2\033E\0\
 \0\033f\0\
 \0\033e\0\
 \0\0"
@@ -546,10 +565,10 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0\033[%p1%dL\0\
 \0\033[M\0\
 \0\033[%p1%dM\0\
-\0\033[2J\0\
-\2\033[0m\0\
+\1\033[2J\0\
+\3\033[0m\0\
 \0\033[7m\0\
-\2\001\0\
+\3\001\0\
 \0\033[%i%p1%d;%p2%dH\0\
 \1\033[%p1%dC\0\
 \0\0"
@@ -564,10 +583,10 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0\033[K\0\
 \0\033[L\0\
 \1\033[M\0\
-\1\033[2J\0\
-\2\033[0m\0\
+\2\033[2J\0\
+\3\033[0m\0\
 \0\033[7m\0\
-\2\001\0\
+\3\001\0\
 \0\033[%i%p1%d;%p2%dH\0\
 \1\033[%p1%dC\0\
 \5\316H\0\
@@ -606,11 +625,13 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0\033|K\0\
 \0\033|L\0\
 \1\033|M\0\
-\1\033|J\0\
-\2\033|0m\0\
-\0\033|79m\0\
+\1\033|%i%p1%d;%p2%dr\0\
+\0\033|J\0\
+\3\033|0m\0\
+\0\033|112m\0\
+\0\033|63m\0\
 \0\033|0m\0\
-\0\033|20m\0\
+\0\033|31m\0\
 \0\001\0\
 \0\033|%i%p1%d;%p2%dH\0\
 \7\316H\0\
@@ -652,13 +673,14 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0\033|%dL\0\
 \0\033|M\0\
 \0\033|%dM\0\
-\0\033|J\0\
+\1\033|J\0\
 \0\033|v\0\
 \0\033|V\0\
+\1\033|0m\0\
+\0\033|112m\0\
+\0\033|63m\0\
 \0\033|0m\0\
-\0\033|79m\0\
-\0\033|0m\0\
-\0\033|20m\0\
+\0\033|31m\0\
 \0\001\0\
 \0\033|%i%p1%d;%p2%dH\0\
 \7\316H\0\
@@ -694,10 +716,10 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0\033K\0\
 \0\033T\0\
 \1\033U\0\
-\1\014\0\
-\2\033SO\0\
+\2\014\0\
+\3\033SO\0\
 \0\033S2\0\
-\2\001\0\
+\3\001\0\
 \0\033Y%+ %+ \0\
 \0\0"
 
@@ -711,10 +733,11 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0\033[%p1%dL\0\
 \0\033[M\0\
 \0\033[%p1%dM\0\
+\0\033[%i%p1%d;%p2%dr\0\
 \0\033[H\033[2J\0\
-\2\033[m\0\
+\3\033[m\0\
 \0\033[7m\0\
-\2\001\0\
+\3\001\0\
 \0\033[%i%p1%d;%p2%dH\0\
 \0\033M\0\
 \0\033[%p1%dC\0\
@@ -758,11 +781,14 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0[CIL%p1%d]\0\
 \0[DL]\0\
 \0[CDL%p1%d]\0\
+\0[%p1%dCS%p2%d]\0\
 \0[ED]\0\
 \0[CI]\0\
 \0[CV]\0\
+\0[CVV]\0\
 \0[TP]\0\
 \0[TI]\0\
+\0[TB]\0\
 \0[SE]\0\
 \0[SO]\0\
 \0[MS]\0\
@@ -831,8 +857,8 @@ extern Tcarr term_strings;	/* currently used terminal strings */
  * The most minimal terminal: only clear screen and cursor positioning
  */
 #  define DUMB_TCAP "dumb\0\
-\5\014\0\
-\7\033[%i%p1%d;%p2%dH\0\
+\6\014\0\
+\9\033[%i%p1%d;%p2%dH\0\
 \0\0"
 # endif /* NO_BUILTIN_TCAPS */
 

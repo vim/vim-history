@@ -1,6 +1,7 @@
 /* mark.c */
 int setmark __PARMS((int c));
 void setpcmark __PARMS((void));
+void checkpcmark __PARMS((void));
 struct fpos *movemark __PARMS((int count));
 struct fpos *getmark __PARMS((int c, int changefile));
 void clrallmarks __PARMS((struct buffer *buf));

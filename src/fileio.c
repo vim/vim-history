@@ -30,8 +30,8 @@
 # include <proto/dos.h>		/* for Lock() and UnLock() */
 #endif
 
-#define BUFSIZE 4096				/* size of normal write buffer */
-#define SBUFSIZE 256				/* size of emergency write buffer */
+#define BUFSIZE		8192			/* size of normal write buffer */
+#define SBUFSIZE	256				/* size of emergency write buffer */
 
 static int  write_buf __ARGS((int, char_u *, int));
 static void do_mlines __ARGS((void));
@@ -41,7 +41,18 @@ filemess(name, s)
 	char_u		*name;
 	char_u		*s;
 {
-	smsg((char_u *)"\"%s\" %s", ((name == NULL) ? "" : (char *)name), s);
+		/* careful: home_replace calls vimgetenv(), which also uses IObuff! */
+	home_replace(name, IObuff + 1, IOSIZE - 1);
+	IObuff[0] = '"';
+	STRCAT(IObuff, "\" ");
+	STRCAT(IObuff, s);
+	/*
+	 * don't use msg(), because it sometimes outputs a newline
+	 */
+	msg_start();
+	msg_outstr(IObuff);
+	msg_ceol();
+	flushbuf();
 }
 
 /*
@@ -102,8 +113,8 @@ readfile(fname, sfname, from, newfile, skip_lnum, nlines)
 	 */
 	if (curbuf->b_filename == NULL)
 	{
-		setfname(fname, sfname);
-		curbuf->b_notedited = TRUE;
+		if (setfname(fname, sfname, FALSE) == OK)
+			curbuf->b_notedited = TRUE;
 	}
 
 	if (sfname == NULL)
@@ -370,9 +381,11 @@ readfile(fname, sfname, from, newfile, skip_lnum, nlines)
 		return OK;			/* an interrupt isn't really an error */
 	}
 
-		/* careful: check number of arugments smsg() can handle */
-	smsg((char_u *)"\"%s\" %s%s%s%s%s%ld line%s, %ld character%s",
-			fname,
+		/* careful: home_replace calls vimgetenv(), which also uses IObuff! */
+	home_replace(fname, IObuff + 1, IOSIZE - 1);
+	IObuff[0] = '"';
+	sprintf((char *)IObuff + STRLEN(IObuff),
+					"\" %s%s%s%s%s%ld line%s, %ld character%s",
 			curbuf->b_p_ro ? "[readonly] " : "",
 			incomplete ? "[Incomplete last line] " : "",
 			split ? "[long lines split] " : "",
@@ -384,6 +397,7 @@ readfile(fname, sfname, from, newfile, skip_lnum, nlines)
 #endif
 			(long)linecnt, plural((long)linecnt),
 			filesize, plural(filesize));
+	msg(IObuff);
 
 	if (error && newfile)	/* with errors we should not write the file */
 	{
@@ -412,19 +426,20 @@ readfile(fname, sfname, from, newfile, skip_lnum, nlines)
  * If forceit is true, we don't care for errors when attempting backups (jw).
  * In case of an error everything possible is done to restore the original file.
  * But when forceit is TRUE, we risk loosing it.
- * When whole is TRUE and start == 1 and end == curbuf->b_ml.ml_line_count, reset curbuf->b_changed.
+ * When reset_changed is TRUE and start == 1 and end ==
+ * curbuf->b_ml.ml_line_count, reset curbuf->b_changed.
  *
  * return FAIL for failure, OK otherwise
  */
 	int
-buf_write(buf, fname, sfname, start, end, append, forceit, whole)
+buf_write(buf, fname, sfname, start, end, append, forceit, reset_changed)
 	BUF				*buf;
 	char_u			*fname;
 	char_u			*sfname;
 	linenr_t		start, end;
 	int				append;
 	int				forceit;
-	int				whole;
+	int				reset_changed;
 {
 	int 				fd;
 	char_u			   *backup = NULL;
@@ -449,9 +464,22 @@ buf_write(buf, fname, sfname, start, end, append, forceit, whole)
 #ifdef AMIGA
 	BPTR				flock;
 #endif
+											/* writing everything */
+	int					whole = (start == 1 && end == buf->b_ml.ml_line_count);
 
 	if (fname == NULL || *fname == NUL)		/* safety check */
 		return FAIL;
+
+	/*
+	 * If there is no file name yet, use the one for the written file.
+	 * b_notedited is set to reflect this (in case the write fails).
+	 */
+	if (reset_changed && whole && buf == curbuf && curbuf->b_filename == NULL)
+	{
+		if (setfname(fname, sfname, FALSE) == OK)
+			curbuf->b_notedited = TRUE;
+	}
+
 	if (sfname == NULL)
 		sfname = fname;
 	/*
@@ -521,7 +549,7 @@ buf_write(buf, fname, sfname, start, end, append, forceit, whole)
 					(fd = open((char *)fname, O_RDONLY)) >= 0)
 	{
 		int				bfd, buflen;
-		char_u			buf[BUFSIZE + 1], *wp;
+		char_u			copybuf[BUFSIZE + 1], *wp;
 		int				some_error = FALSE;
 		struct stat		new;
 
@@ -572,8 +600,8 @@ buf_write(buf, fname, sfname, start, end, append, forceit, whole)
 			 */
 			free(backup);
 			wp = gettail(fname);
-			sprintf((char *)buf, "%s/%s", *p_bdir == '>' ? p_bdir + 1 : p_bdir, wp);
-			if ((backup = buf_modname(buf, buf, (char_u *)".bak")) == NULL)
+			sprintf((char *)copybuf, "%s/%s", *p_bdir == '>' ? p_bdir + 1 : p_bdir, wp);
+			if ((backup = buf_modname(buf, copybuf, (char_u *)".bak")) == NULL)
 			{
 				some_error = TRUE;			/* out of memory */
 				goto nobackup;
@@ -599,9 +627,9 @@ buf_write(buf, fname, sfname, start, end, append, forceit, whole)
 		(void)setperm(backup, perm & 0777);
 
 		/* copy the file. */
-		while ((buflen = read(fd, (char *)buf, BUFSIZE)) > 0)
+		while ((buflen = read(fd, (char *)copybuf, BUFSIZE)) > 0)
 		{
-			if (write_buf(bfd, buf, buflen) == FAIL)
+			if (write_buf(bfd, copybuf, buflen) == FAIL)
 			{
 				errmsg = (char_u *)"Can't write to backup file (use ! to override)";
 				goto writeerr;
@@ -711,7 +739,7 @@ nobackup:
 	 * the original file.
 	 * Don't do this if there is a backup file and we are exiting.
 	 */
-	if (whole && !newfile && !otherfile(ffname) && !(exiting && backup != NULL))
+	if (reset_changed && !newfile && !otherfile(ffname) && !(exiting && backup != NULL))
 		ml_preserve(buf, FALSE);
 
 	/* 
@@ -871,8 +899,12 @@ nobackup:
 
 	lnum -= start;			/* compute number of written lines */
 	--no_wait_return;		/* may wait for return now */
-	smsg((char_u *)"\"%s\"%s%s %ld line%s, %ld character%s",
-			fname,
+
+		/* careful: home_replace calls vimgetenv(), which also uses IObuff! */
+	home_replace(fname, IObuff + 1, IOSIZE - 1);
+	IObuff[0] = '"';
+	sprintf((char *)IObuff + STRLEN(IObuff),
+					"\"%s%s %ld line%s, %ld character%s",
 			newfile ? " [New File]" : " ",
 #ifdef MSDOS
 			buf->b_p_tx ? "" : "[notextmode]",
@@ -881,11 +913,22 @@ nobackup:
 #endif
 			(long)lnum, plural((long)lnum),
 			nchars, plural(nchars));
-	if (whole && start == 1 && end == buf->b_ml.ml_line_count)	/* when written everything */
+	msg(IObuff);
+
+	if (reset_changed && whole)			/* when written everything */
 	{
-		buf->b_changed = 0;
+		UNCHANGED(buf);
 		u_unchanged(buf);
-		buf->b_notedited = FALSE;
+		/*
+		 * If written to the current file, update the timestamp of the swap file
+		 * and reset the 'notedited' flag.
+		 */
+		if (!exiting && buf->b_filename != NULL &&
+							fnamecmp(ffname, buf->b_filename) == 0)
+		{
+			ml_timestamp(buf);
+			buf->b_notedited = FALSE;
+		}
 	}
 
 	/*
@@ -1096,7 +1139,7 @@ buf_modname(buf, fname, ext)
 	 */
 	if (fname == NULL || *fname == NUL)
 	{
-		if (dirname(currentdir, 510) == FAIL || (fnamelen = STRLEN(currentdir)) == 0)
+		if (vim_dirname(currentdir, 510) == FAIL || (fnamelen = STRLEN(currentdir)) == 0)
 			return NULL;
 		if (!ispathsep(currentdir[fnamelen - 1]))
 		{
@@ -1170,3 +1213,40 @@ buf_modname(buf, fname, ext)
 	}
 	return retval;
 }
+
+#ifdef WEBB_COMPLETE
+/* vim_fgets();
+ *
+ * Like fgets(), but if the file line is too long, it is truncated and the
+ * rest of the line is thrown away.  Returns TRUE or FALSE for end-of-file or
+ * not.  The integer pointed to by lnum is incremented.  Note: do not pass
+ * IObuff as the buffer since this is used to read and discard the extra part
+ * of any long lines.
+ */
+	int
+vim_fgets(buf, size, fp, lnum)
+	char_u *buf;
+	int size;
+	FILE *fp;
+	int *lnum;
+{
+	char *eof;
+
+	buf[size - 2] = NUL;
+	eof = fgets((char *)buf, size, fp);
+	if (buf[size - 2] != NUL && buf[size - 2] != '\n')
+	{
+		buf[size - 1] = NUL;		/* Truncate the line */
+
+		/* Now throw away the rest of the line: */
+		do
+		{
+			IObuff[IOSIZE - 2] = NUL;
+			eof = fgets((char *)IObuff, IOSIZE, fp);
+		} while (IObuff[IOSIZE - 2] != NUL && IObuff[IOSIZE - 2] != '\n');
+		return FALSE;
+	}
+	++*lnum;
+	return (eof == NULL);
+}
+#endif /* WEBB_COMPLETE */

@@ -119,6 +119,7 @@ parse_builtin_tcap(tc, s)
 int				tgetent();
 int				tgetnum();
 char			*tgetstr();
+int				tgetflag();
 int				tputs();
 #  endif /* AMIGA */
 #  ifndef hpux
@@ -182,14 +183,16 @@ set_term(term)
 			T_CIL = TGETSTR("AL", &tp);
 			T_DL = TGETSTR("dl", &tp);
 			T_CDL = TGETSTR("DL", &tp);
+			T_CS = TGETSTR("cs", &tp);
 			T_ED = TGETSTR("cl", &tp);
 			T_CI = TGETSTR("vi", &tp);
 			T_CV = TGETSTR("ve", &tp);
+			T_CVV = TGETSTR("vs", &tp);
 			T_TP = TGETSTR("me", &tp);
 			T_TI = TGETSTR("mr", &tp);
+			T_TB = TGETSTR("md", &tp);
 			T_SE = TGETSTR("se", &tp);
 			T_SO = TGETSTR("so", &tp);
-			T_MS = TGETSTR("ms", &tp);
 			T_CM = TGETSTR("cm", &tp);
 			T_SR = TGETSTR("sr", &tp);
 			T_CRI = TGETSTR("RI", &tp);
@@ -239,6 +242,8 @@ set_term(term)
 			height = tgetnum("li");
 			width = tgetnum("co");
 
+			T_MS = tgetflag("ms") ? (char_u *)"yes" : (char_u *)NULL;
+
 # ifndef hpux
 			BC = (char *)TGETSTR("bc", &tp);
 			UP = (char *)TGETSTR("up", &tp);
@@ -278,6 +283,16 @@ set_term(term)
 		clear_termparam();		/* clear old parameters */
 		parse_builtin_tcap(&term_strings, *p);
 	}
+/*
+ * special: There is no info in the termcap about whether the cursor positioning
+ * is relative to the start of the screen or to the start of the scrolling region.
+ * We just guess here. Only msdos pcterm is known to do it relative.
+ */
+	if (STRCMP(term, "pcterm") == 0)
+		T_CSC = (char_u *)"yes";
+	else
+		T_CSC = NULL;
+
 #if defined(AMIGA) || defined(MSDOS)
 		/* DFLT_TCAP indicates that it is the machine console. */
 	if (STRCMP(term, *builtin_tcaps))
@@ -542,26 +557,40 @@ ttest(pairs)
     	EMSG(buf);
     }
 
+/*
+ * if "cs" defined, use a scroll region, it's faster.
+ */
+	if (T_CS && *T_CS != NUL)
+		scroll_region = TRUE;
+	else
+		scroll_region = FALSE;
+
 	if (pairs)
 	{
 	  /* optional pairs */
-		if ((!T_TP || !*T_TP) ^ (!T_TI || !*T_TI))
-			T_TP = T_TI = NULL;
+			/* TP goes to normal mode for TI (invert) and TB (bold) */
+		if ((!T_TP || !*T_TP))
+			T_TP = T_TI = T_TB = NULL;
 		if ((!T_SO || !*T_SO) ^ (!T_SE || !*T_SE))
 			T_SO = T_SE = NULL;
-		if ((!T_CI || !*T_CI) ^ (!T_CV || !*T_CV))
-			T_CI = T_CV = NULL;
+			/* T_CV is needed even though T_CI is not defined */
+		if ((!T_CV || !*T_CV))
+			T_CI = NULL;
 			/* if 'mr' or 'me' is not defined use 'so' and 'se' */
 		if (T_TP == NULL || *T_TP == NUL)
 		{
 			T_TP = T_SE;
 			T_TI = T_SO;
+			T_TB = T_SO;
 		}
 			/* if 'so' or 'se' is not defined use 'mr' and 'me' */
 		if (T_SO == NULL || *T_SO == NUL)
 		{
 			T_SE = T_TP;
-			T_SO = T_TI;
+			if (T_TI == NULL)
+				T_SO = T_TB;
+			else
+				T_SO = T_TI;
 		}
 	}
 }
@@ -774,8 +803,8 @@ settmode(raw)
 	void
 starttermcap()
 {
-	outstr(T_KS);	/* start "keypad transmit" mode */
 	outstr(T_TS);	/* start termcap mode */
+	outstr(T_KS);	/* start "keypad transmit" mode */
 	flushbuf();
 	termcap_active = TRUE;
 }
@@ -784,10 +813,10 @@ starttermcap()
 stoptermcap()
 {
 	outstr(T_KE);	/* stop "keypad transmit" mode */
-	outstr(T_TE);	/* stop termcap mode */
 	flushbuf();
 	termcap_active = FALSE;
 	cursor_on();	/* just in case it is still off */
+	outstr(T_TE);	/* stop termcap mode */
 }
 
 /*
@@ -798,7 +827,7 @@ static int cursor_is_off = FALSE;
 	void
 cursor_on()
 {
-	if (cursor_is_off && (!VIsual.lnum || T_TI == NULL || *T_TI == NUL))
+	if (cursor_is_off && (!VIsual.lnum || highlight == NULL))
 	{
 		outstr(T_CV);
 		cursor_is_off = FALSE;
@@ -811,4 +840,23 @@ cursor_off()
 	if (!cursor_is_off)
 		outstr(T_CI);			/* disable cursor */
 	cursor_is_off = TRUE;
+}
+
+/*
+ * set scrolling region for window 'wp'
+ */
+	void
+scroll_region_set(wp)
+	WIN		*wp;
+{
+	OUTSTR(tgoto((char *)T_CS, wp->w_winpos + wp->w_height - 1, wp->w_winpos));
+}
+
+/*
+ * reset scrolling region to the whole screen
+ */
+	void
+scroll_region_reset()
+{
+	OUTSTR(tgoto((char *)T_CS, (int)Rows - 1, 0));
 }

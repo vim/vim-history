@@ -47,7 +47,7 @@
 /* 
  * Some systems have the page size in statfs, some in stat
  */
-#if defined(SCO) || defined(_SEQUENT_) || defined(__sgi) || defined(MIPS) || defined(m88k)
+#if defined(SCO) || defined(_SEQUENT_) || defined(__sgi) || defined(MIPS) || defined(MIPSEB) || defined(m88k)
 # include <sys/types.h>
 # include <sys/statfs.h>
 # define STATFS statfs
@@ -125,7 +125,6 @@ mf_open(fname, new, fail_nofile)
 	MEMFILE			*mfp;
 	int				i;
 	long			size;
-	char_u			*p;
 #ifdef UNIX
 	struct STATFS 	stf;
 #endif
@@ -148,14 +147,13 @@ mf_open(fname, new, fail_nofile)
 		/*
 		 * get the full path name before the open, because this is
 		 * not possible after the open on the Amiga.
-		 * If fname == IObuff it has already been expanded, mf_xfname does not
+		 * If fname == NameBuff it has already been expanded, mf_xfname does not
 		 * have to be set.
 		 */
-		if (fname == IObuff || FullName(fname, IObuff, IOSIZE) == FAIL ||
-										(p = strsave(IObuff)) == NULL)
+		if (fname == NameBuff || FullName(fname, NameBuff, MAXPATHL) == FAIL)
 			mfp->mf_xfname = NULL;
 		else
-			mfp->mf_xfname = p;
+			mfp->mf_xfname = strsave(NameBuff);
 
 		/*
 		 * try to open the file
@@ -272,6 +270,7 @@ mf_close(mfp, delete)
 			free(tp);
 		}
 	free(mfp->mf_fname);
+	free(mfp->mf_xfname);
 	free(mfp);
 }
 
@@ -526,7 +525,7 @@ mf_sync(mfp, all, check_char)
 		mfp->mf_dirty = FALSE;
 
 #if defined(UNIX) && !defined(SCO)
-# if !defined(SVR4) && (defined(MIPS) || defined(m88k))         
+# if !defined(SVR4) && (defined(MIPS) || defined(MIPSEB) || defined(m88k))         
      sync();         /* Do we really need to sync()?? (jw) */   
 # else
 	/*
@@ -1030,7 +1029,7 @@ mf_trans_del(mfp, old)
 mf_fullname(mfp)
 	MEMFILE		*mfp;
 {
-	if (mfp->mf_fname != NULL && mfp->mf_xfname != NULL)
+	if (mfp != NULL && mfp->mf_fname != NULL && mfp->mf_xfname != NULL)
 	{
 		free(mfp->mf_fname);
 		mfp->mf_fname = mfp->mf_xfname;

@@ -197,14 +197,14 @@ dodigraph(c)
 	static int	backspaced;		/* character before BS */
 	static int	lastchar;		/* last typed character */
 
-	if (c == -1)		/* init values */
+	if (c == -1)				/* init values */
 	{
 		backspaced = -1;
 	}
 	else if (p_dg)
 	{
 		if (backspaced >= 0)
-			c = getdigraph(backspaced, c);
+			c = getdigraph(backspaced, c, FALSE);
 		backspaced = -1;
 		if (c == BS && lastchar >= 0)
 			backspaced = lastchar;
@@ -218,9 +218,10 @@ dodigraph(c)
  * if no match, return char2
  */
 	int
-getdigraph(char1, char2)
+getdigraph(char1, char2, meta)
 	int	char1;
 	int	char2;
+	int	meta;
 {
 	int		i;
 	int		retval;
@@ -247,7 +248,7 @@ getdigraph(char1, char2)
 
 	if (retval == 0)			/* digraph deleted or not found */
 	{
-		if (char1 == ' ')		/* <space> <char> --> meta-char */
+		if (char1 == ' ' && meta)		/* <space> <char> --> meta-char */
 			return (char2 | 0x80);
 		return char2;
 	}
@@ -269,10 +270,13 @@ putdigraph(str)
 	while (*str)
 	{
 		skipspace(&str);
-		char1 = *str++;
-		char2 = *str++;
-		if (char1 == 0 || char2 == 0)
+		if ((char1 = *str++) == 0 || (char2 = *str++) == 0)
 			return;
+		if (char1 == ESC || char2 == ESC)
+		{
+			EMSG("Escape not allowed in digraph");
+			return;
+		}
 		skipspace(&str);
 		if (!isdigit(*str))
 		{
@@ -311,11 +315,19 @@ listdigraphs()
 	int		i;
 
 	printdigraph(NULL);
-	for (i = 0; digraphdefault[i][0]; ++i)
-		if (getdigraph(digraphdefault[i][0], digraphdefault[i][1]) == digraphdefault[i][2])
+	msg_start();
+	msg_outchar('\n');
+	for (i = 0; digraphdefault[i][0] && !got_int; ++i)
+	{
+		if (getdigraph(digraphdefault[i][0], digraphdefault[i][1], FALSE) == digraphdefault[i][2])
 			printdigraph(digraphdefault[i]);
-	for (i = 0; i < digraphcount; ++i)
+		breakcheck();
+	}
+	for (i = 0; i < digraphcount && !got_int; ++i)
+	{
 		printdigraph(digraphnew[i]);
+		breakcheck();
+	}
 	msg_outchar('\n');
 	wait_return(TRUE);		/* clear screen, because some digraphs may be wrong,
 							 * in which case we messed up NextScreen */

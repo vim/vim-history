@@ -456,15 +456,28 @@ void         mch_settitle(title, icon)
     char           *icon;
 {
     if (title != NULL)
-        SetConsoleTitle(lasttitle);
+        SetConsoleTitle(title);
 }
 
+/*
+ * Restore the window/icon title.
+ * which is one of:
+ *	1  Just restore title
+ *  2  Just restore icon (which we don't have)
+ *	3  Restore title and icon (which we don't have)
+ */
+	void
+mch_restore_title(which)
+	int which;
+{
+	mch_settitle((which & 1) ? OrigTitle : NULL, NULL);
+}
 
 /*
  * Get name of current directory into buffer 'buf' of length 'len' bytes.
  * Return non-zero for success.
  */
-int             dirname(buf, len)
+int             vim_dirname(buf, len)
     char           *buf;
     int             len;
 {
@@ -487,6 +500,16 @@ int             FullName(fname, buf, len)
         return FAIL;
     }
     return OK;
+}
+
+/*
+ * return TRUE is fname is an absolute path name
+ */
+	int
+isFullName(fname)
+	char_u		*fname;
+{
+	return (STRCHR(fname, ':') != NULL);
 }
 
 /*
@@ -544,6 +567,7 @@ void            mch_windexit(r)
     stoptermcap();
     flushbuf();
 	ml_close_all(); 				/* remove all memfiles */
+	mch_restore_title(3);
     exit(r);
 }
 
@@ -755,7 +779,12 @@ int             call_shell(cmd, filter, cooked)
     if (cooked)
         settmode(1);            /* set to raw mode */
 
-    if (x) {
+#ifdef WEBB_COMPLETE
+	if (x && !expand_interactively)
+#else
+    if (x)
+#endif
+	{
         smsg("%d returned", x);
         outchar('\n');
     }
@@ -1155,24 +1184,6 @@ mch_char_avail()
 {
 	return WaitForChar(0);
 }
-
-
-/*
- * start listing: set terminal mode to cooked, so output can be halted by
- * typing a character
- */
-	void
-mch_start_listing()
-{
-	settmode(0);
-}
-
-	void
-mch_stop_listing()
-{
-	settmode(1);
-}
-
 
 /*
  * set screen mode, always fails.

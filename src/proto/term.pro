@@ -19,3 +19,5 @@ void starttermcap __PARMS((void));
 void stoptermcap __PARMS((void));
 void cursor_on __PARMS((void));
 void cursor_off __PARMS((void));
+void scroll_region_set __PARMS((struct window *wp));
+void scroll_region_reset __PARMS((void));

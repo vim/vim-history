@@ -27,7 +27,7 @@
 #endif
 
 #ifndef DEFVIMRC_FILE
-# define DEFVIMRC_FILE	"/etc/vimrc"
+# define DEFVIMRC_FILE	"/usr/local/etc/vimrc"
 #endif
 
 #ifndef VIM_HLP
@@ -80,7 +80,7 @@ int		rename __ARGS((const char *, const char *));
 int		stricmp __ARGS((char *, char *));
 
 /* memmove is not present on all systems, use our own version or bcopy */
-#if !defined(SCO) && !defined(SOLARIS) && !defined(AIX) && !defined(UTS4) && !defined(USL) && !defined(MIPS) && !defined(__NetBSD__) && !defined(linux)
+#if !defined(SCO) && !defined(SOLARIS) && !defined(AIX) && !defined(UTS4) && !defined(USL) && !defined(MIPS) && !defined(__NetBSD__) && !defined(__FreeBSD__) && !defined(linux) && !defined(UNISYS)
 # ifdef SYSV_UNIX
 #   define MEMMOVE
 void *memmove __ARGS((void *, void *, int));
@@ -110,16 +110,18 @@ char *bsdmemset __ARGS((char *, int, long));
  * Most unixes don't have these in include files.
  * If you get a "redefined" error, delete the offending line.
  */
-#if !defined(__NetBSD__)
+#if !defined(__NetBSD__) && !defined(__FreeBSD__)
   extern int	ioctl __ARGS((int, int, ...));
 #endif
 extern int	fsync __ARGS((int));
 extern char *getwd __ARGS((char *));
-#if !defined(__NetBSD__)
+#if !defined(__NetBSD__) && !defined(__FreeBSD__)
 # ifdef linux
    extern void bzero __ARGS((void *, int));
 # else
    extern void bzero __ARGS((char *, int));
 # endif
 #endif
+#if defined(system_that_does_not_have_access_in_an_include_file)
 extern int access __ARGS((char *, int));
+#endif

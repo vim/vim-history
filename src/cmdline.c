@@ -18,9 +18,6 @@
 #include "ops.h"			/* included because we call functions in ops.c */
 #include "fcntl.h"			/* for chdir() */
 
-	/* TODO: remove this ugly global variable */
-static linenr_t doecmdlnum = 0;			/* line # in new file for doecmd() */
-
 /*
  * variables shared between getcmdline() and redrawcmdline()
  */
@@ -46,10 +43,8 @@ static void		putcmdline __ARGS((int, char_u *));
 static void		cursorcmd __ARGS((void));
 static int		ccheck_abbr __ARGS((int));
 static char_u	*DoOneCmd __ARGS((char_u *));
-static int		autowrite __ARGS((BUF *));
 static int		buf_write_all __ARGS((BUF *));
 static int		dowrite __ARGS((char_u *, int));
-static int		doecmd __ARGS((char_u *, char_u *, char_u *, int));
 static char_u	*getargcmd __ARGS((char_u **));
 static char_u	*checknextcomm __ARGS((char_u *));
 static void		domake __ARGS((char_u *));
@@ -58,8 +53,17 @@ static int		check_readonly __ARGS((void));
 static int		check_changed __ARGS((BUF *, int, int));
 static int		check_changed_any __ARGS((int));
 static int		check_more __ARGS((int));
+#ifdef WEBB_COMPLETE
+static void		vim_strncpy __ARGS((char_u *, char_u *, int));
+static int		nextwild __ARGS((char_u *, int));
+static int		showmatches __ARGS((char_u *));
+static void		set_expand_context __ARGS((int, char_u *));
+static char_u	*set_one_cmd_context __ARGS((int, char_u *));
+static int		ExpandFromContext __ARGS((char_u *, int *, char_u ***, int, int));
+#else
 static void		nextwild __ARGS((char_u *, int));
 static void		showmatches __ARGS((char_u *, int));
+#endif /* WEBB_COMPLETE */
 static char_u	*addstar __ARGS((char_u *, int));
 static linenr_t get_address __ARGS((char_u **));
 
@@ -77,6 +81,7 @@ getcmdline(firstc, buff)
 	char_u		*buff;	 	/* buffer for command string */
 {
 	register char_u 	c;
+			 int		cc;
 			 int		nextc = 0;
 	register int		i;
 			 int		retval;
@@ -172,7 +177,7 @@ getcmdline(firstc, buff)
 			lookfor = NULL;
 		}
 
-		if (cmd_numfiles > 0 && !(c == p_wc && KeyTyped) && c != Ctrl('N') &&
+		if (cmd_numfiles != -1 && !(c == p_wc && KeyTyped) && c != Ctrl('N') &&
 						c != Ctrl('P') && c != Ctrl('A') && c != Ctrl('L'))
 			(void)ExpandOne(NULL, FALSE, -2);	/* may free expanded file names */
 
@@ -194,6 +199,16 @@ getcmdline(firstc, buff)
 			   when it comes from a macro */
 		if (c == p_wc && !gotesc && KeyTyped)
 		{
+#ifdef WEBB_COMPLETE
+			if (cmd_numfiles > 0)	/* typed p_wc twice */
+				i = nextwild(buff, 3);
+			else					/* typed p_wc first time */
+				i = nextwild(buff, 0);
+			if (c == ESC)
+				gotesc = TRUE;
+			if (i)
+				continue;
+#else
 			if (cmd_numfiles > 0)	/* typed p_wc twice */
 				nextwild(buff, 3);
 			else					/* typed p_wc first time */
@@ -201,6 +216,7 @@ getcmdline(firstc, buff)
 			if (c == ESC)
 				gotesc = TRUE;
 			continue;
+#endif /* WEBB_COMPLETE */
 		}
 		gotesc = FALSE;
 
@@ -258,15 +274,24 @@ clearline:
 
 		case ESC:			/* get here if p_wc != ESC or when ESC typed twice */
 		case Ctrl('C'):
+do_esc:
 				retval = FAIL;
 				MSG("");
 				goto returncmd; 	/* back to cmd mode */
 
 		case Ctrl('D'):
 			{
+#ifdef WEBB_COMPLETE
+				/* set_expand_context() now finds start of the pattern, so
+				 * don't do it here -- webb
+				 */
+				if (showmatches(buff) == FAIL)
+					break;		/* Use ^D as normal char instead */
+#else
 				for (i = cmdpos; i > 0 && buff[i - 1] != ' '; --i)
 						;
 				showmatches(&buff[i], cmdpos - i);
+#endif /* WEBB_COMPLETE */
 
 				redrawcmd();
 				continue;
@@ -308,18 +333,33 @@ clearline:
 				continue;
 
 		case Ctrl('A'):		/* all matches */
+#ifdef WEBB_COMPLETE
+				if (!nextwild(buff, 4))
+					break;
+#else
 				nextwild(buff, 4);
+#endif /* WEBB_COMPLETE */
 				continue;
 
 		case Ctrl('L'):		/* longest common part */
+#ifdef WEBB_COMPLETE
+				if (!nextwild(buff, 5))
+					break;
+#else
 				nextwild(buff, 5);
+#endif /* WEBB_COMPLETE */
 				continue;
 
 		case Ctrl('N'):		/* next match */
 		case Ctrl('P'):		/* previous match */
 				if (cmd_numfiles > 0)
 				{
+#ifdef WEBB_COMPLETE
+					if (!nextwild(buff, (c == Ctrl('P')) ? 2 : 1))
+						break;
+#else
 					nextwild(buff, (c == Ctrl('P')) ? 2 : 1);
+#endif /* WEBB_COMPLETE */
 					continue;
 				}
 
@@ -397,8 +437,14 @@ clearline:
 		case Ctrl('K'):
 				putcmdline('?', buff);
 			  	c = vgetc();
-				putcmdline(c, buff);
-				c = getdigraph(c, vgetc());
+				if (c == ESC)
+					goto do_esc;
+				if (charsize(c) == 1)
+					putcmdline(c, buff);
+				cc = vgetc();
+				if (cc == ESC)
+					goto do_esc;
+				c = getdigraph(c, cc, TRUE);
 				break;
 #endif /* DIGRAPHS */
 		}
@@ -600,7 +646,8 @@ DoOneCmd(buff)
 	register char_u		*p;
 	char_u				*q;
 	char_u				*cmd, *arg;
-	char_u				*editcmd = NULL;		/* +command argument for doecmd */
+	char_u				*editcmd = NULL;		/* +command arg. for doecmd() */
+	linenr_t 			doecmdlnum = 0;			/* lnum in new file for doecmd() */
 	int 				i = 0;					/* init to shut up gcc */
 	int					cmdidx;
 	int					argt;
@@ -773,8 +820,25 @@ DoOneCmd(buff)
 		goto doend;
 	}
 
-	if (line1 > line2 || line1 < 0 || line2 < 0  ||
-					(!(argt & NOTADR) && line2 > curbuf->b_ml.ml_line_count))
+/*
+ * If the range is backwards, ask for confirmation and, if given, swap
+ * line1 & line2 so it's forwards again.
+ * When global command is busy, don't ask, will fail below.
+ */
+	if (!global_busy && line1 > line2)
+	{
+		if (ask_yesno((char_u *)"Backwards range given, OK to swap") != 'y')
+			goto doend;
+		lnum = line1;
+		line1 = line2;
+		line2 = lnum;
+	}
+	/*
+	 * don't complain about the range if it is not used
+	 * (could happen if line_count is accidently set to 0)
+	 */
+	if (line1 < 0 || line2 < 0  || line1 > line2 || ((argt & RANGE) &&
+					!(argt & NOTADR) && line2 > curbuf->b_ml.ml_line_count))
 	{
 		emsg(e_invrange);
 		goto doend;
@@ -920,8 +984,18 @@ DoOneCmd(buff)
 			emsg(e_zerocount);
 			goto doend;
 		}
-		line1 = line2;
-		line2 += n - 1;
+		if (argt & NOTADR)		/* e.g. :buffer 2, :sleep 3 */
+		{
+			line2 = n;
+			if (addr_count == 0)
+				addr_count = 1;
+		}
+		else
+		{
+			line1 = line2;
+			line2 += n - 1;
+			++addr_count;
+		}
 	}
 
 	if (!(argt & EXTRA) && strchr("|\"", *arg) == NULL)	/* no arguments allowed */
@@ -960,7 +1034,7 @@ DoOneCmd(buff)
 				i = (int)getdigits(&q);
 				n = q - p;				/* length of what we expand */
 
-				if (filelist_name_nr(i, &q, &doecmdlnum) == FAIL)
+				if (buflist_name_nr(i, &q, &doecmdlnum) == FAIL)
 				{
 					emsg(e_noalt);
 					goto doend;
@@ -1061,12 +1135,14 @@ cmdswitch:
 		 * close current window, unless it is the last one
 		 */
 		case CMD_close:
-				if (firstwin == lastwin)
-				{
-					beep();
-					break;
-				}
 				close_window(FALSE);		/* don't free buffer */
+				break;
+
+		/*
+		 * close all but current window, unless it is the last one
+		 */
+		case CMD_only:
+				close_others(TRUE);
 				break;
 
 		case CMD_stop:
@@ -1076,8 +1152,16 @@ cmdswitch:
 				gotocmdend();
 				flushbuf();
 				stoptermcap();
-				mch_suspend();		/* call machine specific function */
+				mch_restore_title(3);	/* restore window titles */
+				mch_suspend();			/* call machine specific function */
+				maketitle();
 				starttermcap();
+				if (T_CVV != NULL && *T_CVV)
+				{
+					/* Scroll screen down before drawing over it */
+					outstr(T_CVV);
+					outstr(T_CV);
+				}
 				must_redraw = CLEAR;
 				break;
 
@@ -1103,6 +1187,7 @@ cmdswitch:
 				break;
 
 		case CMD_xall:		/* write all changed files and exit */
+		case CMD_wqall:		/* write all changed files and quit */
 				exiting = TRUE;
 				/* FALLTHROUGH */
 
@@ -1129,7 +1214,7 @@ cmdswitch:
 								++error;
 						}
 					}
-					if (cmdidx == CMD_xall)
+					if (exiting)
 					{
 						if (!error)
 							getout(0);			/* exit Vim */
@@ -1143,7 +1228,14 @@ cmdswitch:
 				ml_preserve(curbuf, TRUE);
 				break;
 
-		case CMD_args:
+		case CMD_args:		
+					/*
+					 * ":args file": handle like :next
+					 */
+				if (*arg != NUL && *arg != '|' && *arg != '\n')
+					goto do_next;
+
+				nextcomm = checknextcomm(arg);	/* check for trailing command */
 				if (arg_count == 0)			/* no file name list */
 				{
 					if (check_fname() == OK)		/* check for no file name at all */
@@ -1153,10 +1245,10 @@ cmdswitch:
 				gotocmdline(TRUE, NUL);
 				for (i = 0; i < arg_count; ++i)
 				{
-					if (i == arg_current)
+					if (i == curwin->w_arg_idx)
 						msg_outchar('[');
 					msg_outstr(arg_files[i]);
-					if (i == arg_current)
+					if (i == curwin->w_arg_idx)
 						msg_outchar(']');
 					msg_outchar(' ');
 				}
@@ -1168,20 +1260,29 @@ cmdswitch:
 				break;
 
 		case CMD_wnext:
-				n = line2;
+		case CMD_wNext:
+		case CMD_wprevious:
+				if (cmd[1] == 'n')
+					i = curwin->w_arg_idx + (int)line2;
+				else
+					i = curwin->w_arg_idx - (int)line2;
 				line1 = 1;
 				line2 = curbuf->b_ml.ml_line_count;
-				(void)dowrite(arg, FALSE);
-				line2 = n;
-				arg = (char_u *)"";		/* no file list */
-				/*FALLTHROUGH*/
+				if (dowrite(arg, FALSE) == FAIL)
+					break;
+				goto donextfile;
 
 		case CMD_next:
-				if (check_changed(curbuf, TRUE, FALSE))
-					break;
-				/*FALLTHROUGH*/
-
 		case CMD_snext:
+do_next:
+					/*
+					 * check for changed buffer now, if this fails the
+					 * argument list is not redefined.
+					 */
+				if (!(p_hid || cmdidx == CMD_snext) &&
+								check_changed(curbuf, TRUE, FALSE))
+					break;
+
 				editcmd = getargcmd(&arg);		/* get +command argument */
 				nextcomm = checknextcomm(arg);	/* check for trailing command */
 				if (*arg != NUL)				/* redefine file list */
@@ -1191,16 +1292,16 @@ cmdswitch:
 					i = 0;
 				}
 				else
-					i = arg_current + (int)line2;
+					i = curwin->w_arg_idx + (int)line2;
 
-donextfile:		if (i < 0)
+donextfile:		if (i < 0 || i >= arg_count)
 				{
-					EMSG("Cannot go before first file");
-					break;
-				}
-				if (i >= arg_count)
-				{
-					EMSG2("No more than %d files to edit", arg_count);
+					if (arg_count == 1)
+						EMSG("There is only one file to edit");
+					else if (i < 0)
+						EMSG("Cannot go before first file");
+					else
+						EMSG2("No more than %ld files to edit", (char_u *)(long)arg_count);
 					break;
 				}
 				if (*cmd == 's')		/* split window first */
@@ -1208,153 +1309,149 @@ donextfile:		if (i < 0)
 					if (win_split(0L, FALSE) == FAIL)
 						break;
 				}
-				else if (check_changed(curbuf, TRUE, FALSE))
+				else
+				{
+					register int other = FALSE;
+
+					/*
+					 * if 'hidden' set, only check for changed file when re-editing
+					 * the same buffer
+					 */
+					other = TRUE;
+					if (p_hid)
+						other = otherfile(fix_fname(arg_files[i]));
+					if ((!p_hid || !other) && check_changed(curbuf, TRUE, !other))
 					break;
-				arg_current = i;
-				(void)doecmd(arg_files[arg_current], NULL, editcmd, p_hid);
+				}
+				curwin->w_arg_idx = i;
+				(void)doecmd(arg_files[curwin->w_arg_idx], NULL, editcmd, p_hid, (linenr_t)0);
 				break;
 
 		case CMD_previous:
 		case CMD_sprevious:
 		case CMD_Next:
 		case CMD_sNext:
-				if (addr_count == 0)
-					i = arg_current - 1;
-				else
-					i = arg_current - (int)line2;
-				/*FALLTHROUGH*/
+				i = curwin->w_arg_idx - (int)line2;
+				goto doargument;
 
 		case CMD_rewind:
 		case CMD_srewind:
-				if (cmdidx == CMD_rewind || cmdidx == CMD_srewind)
-					i = 0;
+				i = 0;
+				goto doargument;
+
+		case CMD_last:
+		case CMD_slast:
+				i = arg_count - 1;
+				goto doargument;
+
+		case CMD_argument:
+		case CMD_sargument:
+				if (addr_count)
+					i = line2 - 1;
+				else
+					i = curwin->w_arg_idx;
+doargument:
 				editcmd = getargcmd(&arg);		/* get +command argument */
 				nextcomm = checknextcomm(arg);	/* check for trailing command */
 				goto donextfile;
 
-			/*
-			 * :[N]buffer [[+command] fname]
-			 */
-		case CMD_buffer:
-				if (*arg || addr_count == 0)	/* file name argument */
-					goto do_edit;
+		case CMD_all:
+		case CMD_sall:
+				do_arg_all();		/* open a window for each argument */
+				break;
 
-				/*FALLTHROUGH*/
+		case CMD_buffer:			/* :[N]buffer [N]	 to buffer N */
+		case CMD_sbuffer:			/* :[N]sbuffer [N]	 to buffer N */
+				if (addr_count == 0)		/* default is current buffer */
+					(void)do_buffer(*cmd == 's', 0, FORWARD, 0, 0);
+				else
+					(void)do_buffer(*cmd == 's', 1, FORWARD, (int)line2, 0);
+				break;
 
-		case CMD_bmod:				/* :bmod         go to next modified buffer */
-		case CMD_bnext:				/* :[N]bnext     go to next buffer */
-		case CMD_bNext:				/* :[N]bNext     go to previous buffer */
-		case CMD_bprevious:			/* :[N]bprevious go to previous buffer */
-		case CMD_brewind:			/* :brewind      go to first buffer */
-		case CMD_bdelete:			/* :[N]bdelete   delete buffer */
+		case CMD_bmodified:			/* :[N]bmod	[N]		 to next modified buffer */
+		case CMD_sbmodified:		/* :[N]sbmod [N]	  to next modified buffer */
+				(void)do_buffer(*cmd == 's', 3, FORWARD, (int)line2, 0);
+				break;
+
+		case CMD_bnext:				/* :[N]bnext [N]	 to next buffer */
+		case CMD_sbnext:			/* :[N]sbnext [N]	  to next buffer */
+				(void)do_buffer(*cmd == 's', 0, FORWARD, (int)line2, 0);
+				break;
+
+		case CMD_bNext:				/* :[N]bNext [N]	 to previous buffer */
+		case CMD_bprevious:			/* :[N]bprevious [N] to previous buffer */
+		case CMD_sbNext:			/* :[N]sbNext [N]	  to previous buffer */
+		case CMD_sbprevious:		/* :[N]sbprevious [N] to previous buffer */
+				(void)do_buffer(*cmd == 's', 0, BACKWARD, (int)line2, 0);
+				break;
+
+		case CMD_brewind:			/* :brewind			 to first buffer */
+		case CMD_sbrewind:			/* :sbrewind		 to first buffer */
+				(void)do_buffer(*cmd == 's', 1, FORWARD, 0, 0);
+				break;
+
+		case CMD_blast:				/* :blast        	 to last buffer */
+		case CMD_sblast:			/* :sblast        	 to last buffer */
+				(void)do_buffer(*cmd == 's', 2, FORWARD, 0, 0);
+				break;
+
+		case CMD_bunload:			/* :[N]bunload[!] [N] unload buffer */
+				i = 2;
+		case CMD_bdelete:			/* :[N]bdelete[!] [N] delete buffer */
+				if (cmdidx == CMD_bdelete)
+					i = 3;
+				/*
+				 * addr_count == 0: ":bdel" - delete current buffer
+				 * addr_count == 1: ":N bdel" or ":bdel N [N ..] - first delete
+				 *					buffer 'line2', then any other arguments.
+				 * addr_count == 2: ":N,N bdel" - delete buffers in range
+				 */
+				if (addr_count == 0)
+					(void)do_buffer(i, 0, FORWARD, 0, forceit);
+				else
 				{
-					BUF		*buf;
-
-					n = line2;
-					if (cmdidx == CMD_bmod)		/* find next modified buffer */
+					if (addr_count == 2)
+						n = line1;
+					else
+						n = line2;
+					for (;;)
 					{
-						buf = curbuf;
-						while (n-- > 0)
-						{
-							do
-							{
-								buf = buf->b_next;
-								if (buf == NULL)
-									buf = firstbuf;
-							}
-							while (buf != curbuf && !buf->b_changed);
-						}
-						if (!buf->b_changed)
-						{
-							EMSG("No modified buffer found");
+						if (do_buffer(i, 1, FORWARD, (int)n, forceit) == FAIL)
 							break;
-						}
-					}
-					else if (cmdidx == CMD_brewind)
-						buf = firstbuf;
-					else if (cmdidx == CMD_bdelete && addr_count == 0)
-						buf = curbuf;
-					else
-					{
-						if (cmdidx == CMD_buffer)	/* find buffer N */
-							buf = firstbuf;
-						else
-							buf = curbuf;
-						while (buf != NULL && n-- > 0)
+						if (addr_count == 2)
 						{
-							if (cmdidx == CMD_bnext || cmdidx == CMD_buffer)
-								buf = buf->b_next;
-							else
-								buf = buf->b_prev;
+							if (++n > line2)
+								break;
 						}
-					}
-					if (buf == NULL)		/* could not find it */
-					{
-						if (cmdidx == CMD_bnext)
-							EMSG("Cannot go beyond last buffer");
-						else if (cmdidx == CMD_buffer || cmdidx == CMD_bdelete)
-							EMSG2("Cannot go to buffer %ld", (char_u *)line2);
 						else
-							EMSG("Cannot go before first buffer");
-					}
-					else
-					{
-					/*
-					 * delete buffer buf from the list
-					 */
-						if (cmdidx == CMD_bdelete)
 						{
-							if (buf->b_nwindows > 1)
+							skipspace(&arg);
+							if (*arg == NUL)
+								break;
+							if (!isdigit(*arg))
 							{
-								EMSG("Other window editing this buffer");
+								emsg(e_trailing);
 								break;
 							}
-							if (!forceit && buf->b_changed)
-							{
-								emsg(e_nowrtmsg);
-								break;
-							}
-							/*
-							 * if deleting last buffer, make it empty
-							 */
-							if (firstbuf->b_next == NULL)
-							{
-								doecmd(NULL, NULL, NULL, FALSE);
-								break;
-							}
-							/*
-							 * If deleted buffer is not current one, delete it here.
-							 * Otherwise find buffer to go to and delete it below.
-							 */
-							{
-								if (buf != curbuf)
-								{
-									close_buffer(buf, TRUE);
-									break;
-								}
-								if (buf->b_next != NULL)
-									buf = buf->b_next;
-								else
-									buf = buf->b_prev;
-							}
+							n = getdigits(&arg);
 						}
-					/*
-					 * make buf current buffer
-					 */
-						filelist_altlnum();		/* remember curpos.lnum */
-						close_buffer(curbuf, cmdidx == CMD_bdelete);
-						curwin->w_buffer = buf;
-						curbuf = buf;
-						++curbuf->b_nwindows;
-						filelist_getlnum();		/* restore curpos.lnum */
-						maketitle();
-						updateScreen(NOT_VALID);
 					}
-					break;
 				}
+				break;
+
+		case CMD_unhide:
+		case CMD_sunhide:
+				(void)do_buffer_all(FALSE);	/* open a window for loaded buffers */
+				break;
+
+		case CMD_ball:
+		case CMD_sball:
+				(void)do_buffer_all(TRUE);	/* open a window for every buffer */
+				break;
 
 		case CMD_buffers:
-				do_buffers();
+		case CMD_files:
+				buflist_list();
 				break;
 
 		case CMD_write:
@@ -1398,16 +1495,15 @@ donextfile:		if (i < 0)
 					break;
 				/*FALLTHROUGH*/
 
-do_edit:
 		case CMD_edit:
 		case CMD_ex:
 		case CMD_visual:
 				editcmd = getargcmd(&arg);		/* get +command argument */
 				nextcomm = checknextcomm(arg);	/* check for trailing command */
-				if ((cmdidx == CMD_new || cmdidx == CMD_buffer) && *arg == NUL)
-					(void)doecmd(NULL, NULL, editcmd, TRUE);
+				if ((cmdidx == CMD_new) && *arg == NUL)
+					(void)doecmd(NULL, NULL, editcmd, TRUE, doecmdlnum);
 				else if (cmdidx != CMD_split || *arg != NUL)
-					(void)doecmd(arg, NULL, editcmd, cmdidx == CMD_buffer || p_hid);
+					(void)doecmd(arg, NULL, editcmd, p_hid, doecmdlnum);
 				else
 					updateScreen(NOT_VALID);
 				break;
@@ -1415,7 +1511,8 @@ do_edit:
 		case CMD_file:
 				if (*arg != NUL)
 				{
-					setfname(arg, NULL);
+					if (setfname(arg, NULL, TRUE) == FAIL)
+						break;
 					curbuf->b_notedited = TRUE;
 					maketitle();
 				}
@@ -1432,10 +1529,6 @@ do_edit:
 
 		case CMD_mfstat:		/* print memfile statistics, for debugging */
 				mf_statistics();
-				break;
-
-		case CMD_files:
-				filelist_list();
 				break;
 
 		case CMD_read:
@@ -1497,8 +1590,8 @@ do_edit:
 				/*FALLTHROUGH*/
 
 		case CMD_pwd:
-				if (dirname(IObuff, IOSIZE) == OK)
-					msg(IObuff);
+				if (vim_dirname(NameBuff, MAXPATHL) == OK)
+					msg(NameBuff);
 				else
 					emsg(e_unknown);
 				break;
@@ -1513,7 +1606,6 @@ do_edit:
 		case CMD_number:				/* :nu */
 		case CMD_pound:					/* :# */
 		case CMD_print:					/* :p */
-				mch_start_listing();		/* may set cooked mode, so output can be halted */
 				gotocmdline(TRUE, NUL);
 				cursor_off();
 				for ( ;!got_int; breakcheck())
@@ -1529,7 +1621,6 @@ do_edit:
 					msg_outchar('\n');
 					flushbuf();			/* show one line at a time */
 				}
-				mch_stop_listing();
 
 				if (cmdidx == CMD_list)
 					curwin->w_p_list = i;
@@ -1698,7 +1789,7 @@ doabbr:
 		case CMD_put:
 				yankbuffer = regname;
 				curwin->w_cursor.lnum = line2;
-				doput(forceit ? BACKWARD : FORWARD, -1L);
+				doput(forceit ? BACKWARD : FORWARD, -1L, FALSE);
 				break;
 
 		case CMD_t:
@@ -1738,6 +1829,8 @@ doabbr:
 				curwin->w_cursor.lnum = line1;
 				if (line1 == line2)
 				{
+					if (addr_count >= 2)	/* :2,2join does nothing */
+						break;
 					if (line2 == curbuf->b_ml.ml_line_count)
 					{
 						beep();
@@ -1903,7 +1996,7 @@ doend:
  *
  * return FAIL for failure, OK otherwise
  */
-	static int
+	int
 autowrite(buf)
 	BUF		*buf;
 {
@@ -1962,11 +2055,7 @@ dowrite(fname, append)
 	else
 	{
 		sfname = fname;
-		if (fname != IObuff)		/* if not already expanded */
-		{
-			(void)FullName(fname, IObuff, IOSIZE);
-			fname = IObuff;
-		}
+		fname = fix_fname(fname);
 		other = otherfile(fname);
 	}
 
@@ -1983,6 +2072,12 @@ dowrite(fname, append)
 	if (!other && (check_readonly() || check_fname() == FAIL))
 		return FAIL;
 
+	if (!other)
+	{
+		fname = curbuf->b_filename;
+		sfname = curbuf->b_sfilename;
+	}
+
 	/*
 	 * write to other file or b_notedited set: overwriting only allowed with '!'
 	 */
@@ -1997,11 +2092,6 @@ dowrite(fname, append)
 #endif
 			emsg(e_exists);
 		return FAIL;
-	}
-	if (!other)
-	{
-		fname = curbuf->b_filename;
-		sfname = curbuf->b_sfilename;
 	}
 	return (buf_write(curbuf, fname, sfname, line1, line2, append, forceit, TRUE));
 }
@@ -2018,22 +2108,21 @@ dowrite(fname, append)
  *   sfname: the short file name (or NULL)
  *  command: the command to be executed after loading the file
  *     hide: if TRUE don't free the current buffer
+ *  newlnum: put cursor on this line number (if possible)
  *
  * return FAIL for failure, OK otherwise
  */
-	static int
-doecmd(fname, sfname, command, hide)
+	int
+doecmd(fname, sfname, command, hide, newlnum)
 	char_u		*fname;
 	char_u		*sfname;
 	char_u		*command;
 	int			hide;
+	linenr_t	newlnum;
 {
 	int			other_file;				/* TRUE if editing another file */
-	linenr_t	newlnum;
 	int			oldbuf = FALSE;			/* TRUE if using existing buffer */
-
-	newlnum = doecmdlnum;
-	doecmdlnum = 0;						/* reset it for next time */
+	BUF			*buf;
 
 		/* if no short name given, use fname for short name */
 	if (sfname == NULL)
@@ -2059,7 +2148,7 @@ doecmd(fname, sfname, command, hide)
  * - or if we are the only window on this file and if hide is FALSE
  */
 	if ((!other_file || (curbuf->b_nwindows == 1 && !hide)) &&
-						check_changed(curbuf, FALSE, FALSE))
+						check_changed(curbuf, FALSE, !other_file))
 	{
 		if (other_file && fname != NULL)
 			setaltfname(fname, sfname, (linenr_t)1);
@@ -2072,11 +2161,36 @@ doecmd(fname, sfname, command, hide)
 	if (other_file)
 	{
 		curwin->w_alt_fnum = curbuf->b_fnum;
-		filelist_altlnum();
-		if (open_buffer(fname, &oldbuf, !hide) == FAIL)
+		buflist_altlnum();
+
+		buf = buflist_new(fname, sfname, 1L, TRUE);
+		if (buf == NULL)
 			return FAIL;
-		curbuf->b_pcmark.lnum = 1;
-		curbuf->b_pcmark.col = 0;
+		if (buf->b_ml.ml_mfp == NULL)		/* no memfile yet */
+		{
+			oldbuf = FALSE;
+			buf->b_nwindows = 1;
+		}
+		else								/* existing memfile */
+		{
+			oldbuf = TRUE;
+			++buf->b_nwindows;
+		}
+		/*
+		 * make the (new) buffer the one used by the current window
+		 * if the old buffer becomes unused, free it if hide is FALSE
+		 * If the current buffer was empty and has no file name, curbuf
+		 * is returned by buflist_new().
+		 */
+		if (buf != curbuf)
+		{
+			close_buffer(curbuf, !hide, FALSE);
+			curwin->w_buffer = buf;
+			curbuf = buf;
+		}
+
+		curwin->w_pcmark.lnum = 1;
+		curwin->w_pcmark.col = 0;
 	}
 	else if (check_fname() == FAIL)
 		return FAIL;
@@ -2099,36 +2213,29 @@ doecmd(fname, sfname, command, hide)
 		if (newlnum == 0)
 			newlnum = curwin->w_cursor.lnum;
 		buf_freeall(curbuf);			/* free all things for buffer */
-		buf_init(curbuf);
+		buf_clear(curbuf);
 		curbuf->b_startop.lnum = 0;		/* clear '[ and '] marks */
 		curbuf->b_endop.lnum = 0;
 	}
-	else
-		setfname(fname, sfname);
 
 	if (!oldbuf)						/* need to read the file */
-	{
-		if (readonlymode && fname != NULL)
-			curbuf->b_p_ro = TRUE;
-		ml_open(curbuf);
-		if (fname != NULL)
-			(void)readfile(curbuf->b_filename, curbuf->b_sfilename, (linenr_t)0, TRUE, (linenr_t)0, MAXLNUM);
-		UNCHANGED;
-	}
-	else
-		fileinfo(did_cd);				/* message about the file */
+		(void)open_buffer();
 	win_init(curwin);
 	maketitle();
 
 	if (newlnum && command == NULL)
 	{
-		if (newlnum != MAXLNUM)
-			curwin->w_cursor.lnum = newlnum;
-		else
-			curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
+		curwin->w_cursor.lnum = newlnum;
 		curwin->w_cursor.col = 0;
 	}
 	check_cursor();
+
+	/*
+	 * Did not read the file, need to show some info about the file.
+	 * Do this after setting the cursor.
+	 */
+	if (oldbuf)
+		fileinfo(did_cd);
 
 	if (command != NULL)
 		docmdline(command);
@@ -2266,9 +2373,9 @@ doarglist(str)
 			 * Only skip ", space and tab.
 			 */
 #ifdef MSDOS
-			if (*str == '\\' && strchr("\" \t", *(str + 1)) != NULL)
+			if (*str == '\\' && (str[1] == '"' || str[1] == ' ' || str[1] == '\t'))
 #else
-			if (*str == '\\' && *(str + 1) != NUL)
+			if (*str == '\\' && str[1] != NUL)
 #endif
 				*p++ = *++str;
 			else
@@ -2300,6 +2407,12 @@ doarglist(str)
 		arg_exp = TRUE;
 	arg_files = exp_files;
 	arg_count = exp_count;
+
+	/*
+	 * put all file names in the buffer list
+	 */
+	for (i = 0; i < arg_count; ++i)
+		(void)buflist_add(arg_files[i]);
 
 	return OK;
 }
@@ -2346,7 +2459,6 @@ check_changed(buf, checkaw, mult_win)
 {
 	if (	!forceit &&
 			buf->b_changed && (mult_win || buf->b_nwindows <= 1) &&
-			!p_hid &&
 			(!checkaw || autowrite(buf) == FAIL))
 	{
 		emsg(e_nowrtmsg);
@@ -2406,7 +2518,7 @@ check_fname()
 check_more(message)
 	int message;			/* when FALSE check only, no messages */
 {
-	if (!forceit && firstwin == lastwin && arg_current + 1 < arg_count &&
+	if (!forceit && firstwin == lastwin && curwin->w_arg_idx + 1 < arg_count &&
 									quitmore == 0)
 	{
 		if (message)
@@ -2423,26 +2535,22 @@ check_more(message)
  * try to abandon current file and edit "fname"
  * return 1 for "normal" error, 2 for "not written" error, 0 for success
  * -1 for succesfully opening another file
+ * 'lnum' is the line number for the cursor in the new file (if non-zero).
  */
 	int
-getfile(fname, sfname, setpm)
-	char_u	*fname;
-	char_u	*sfname;
-	int		setpm;
+getfile(fname, sfname, setpm, lnum)
+	char_u		*fname;
+	char_u		*sfname;
+	int			setpm;
+	linenr_t	lnum;
 {
 	int other;
 
-	if (sfname == NULL)
-		sfname = fname;
-	
-	if (fname != IObuff)		/* if not expanded already */
-	{
-		(void)FullName(fname, IObuff, IOSIZE);
-		fname = IObuff;
-	}
+	fname_expand(&fname, &sfname);	/* make fname full path and set sfname */
 	other = otherfile(fname);
-	if (other && !forceit && curbuf->b_nwindows == 1 && curbuf->b_changed &&
-										autowrite(curbuf) == FAIL)
+
+	if (other && !forceit && curbuf->b_nwindows == 1 &&
+			!p_hid && curbuf->b_changed && autowrite(curbuf) == FAIL)
 	{
 		emsg(e_nowrtmsg);
 		return 2;		/* file has been changed */
@@ -2450,27 +2558,104 @@ getfile(fname, sfname, setpm)
 	if (setpm)
 		setpcmark();
 	if (!other)
+	{
+		if (lnum != 0)
+			curwin->w_cursor.lnum = lnum;
+		check_cursor();
+		curwin->w_cursor.col = 0;
+
 		return 0;		/* it's in the same file */
-	if (doecmd(fname, sfname, NULL, p_hid) == OK)
+	}
+	if (doecmd(fname, sfname, NULL, p_hid, lnum) == OK)
 		return -1;		/* opened another file */
 	return 1;			/* error encountered */
 }
 
+#ifdef WEBB_COMPLETE
+/*
+ * vim_strncpy()
+ *
+ * This is here because strncpy() does not guarantee successful results when
+ * the to and from strings overlap.  It is only currently called from nextwild()
+ * which copies part of the command line to another part of the command line.
+ * This produced garbage when expanding files etc in the middle of the command
+ * line (on my terminal, anyway) -- webb.
+ */
 	static void
+vim_strncpy(to, from, len)
+	char_u *to;
+	char_u *from;
+	int len;
+{
+	int i;
+
+	if (to <= from)
+	{
+		while (len-- && *from)
+			*to++ = *from++;
+		if (len >= 0)
+			*to = *from;	/* Copy NUL */
+	}
+	else
+	{
+		for (i = 0; i < len; i++)
+		{
+			to++;
+			if (*from++ == NUL)
+			{
+				i++;
+				break;
+			}
+		}
+		for (; i > 0; i--)
+			*--to = *--from;
+	}
+}
+
+/* Return FALSE if this is not an appropriate context in which to do
+ * completion of anything, & TRUE if it is (even if there are no matches).  For
+ * the caller, this means that the character is just passed through like a
+ * normal character (instead of being expanded).  This allows :s/^I^D etc.
+ */
+	static int
+#else
+	static void
+#endif /* WEBB_COMPLETE */
 nextwild(buff, type)
 	char_u *buff;
 	int		type;
 {
 	int		i;
-	char_u	*p1, *p2;
+	char_u	*p1;
+	char_u	*p2 = NULL;
 	int		oldlen;
 	int		difflen;
 
+#ifdef WEBB_COMPLETE
+	if (cmd_numfiles == -1)
+		set_expand_context(cmdfirstc, cmdbuff);
+	if (expand_context == EXPAND_UNSUCCESSFUL)
+	{
+		beep();
+		return OK;	/* Something illegal on command line */
+	}
+	if (expand_context == EXPAND_NOTHING)
+	{
+		/* Caller can use the character as a normal char instead */
+		return FAIL;
+	}
+	expand_interactively = TRUE;
+
+#endif /* WEBB_COMPLETE */
 	msg_outstr((char_u *)"...");		/* show that we are busy */
 	flushbuf();
 
+#ifdef WEBB_COMPLETE
+	i = expand_pattern - buff;
+#else
 	for (i = cmdpos; i > 0 && buff[i - 1] != ' '; --i)
 		;
+#endif /* WEBB_COMPLETE */
 	oldlen = cmdpos - i;
 
 		/* add a "*" to the file name and expand it */
@@ -2482,7 +2667,11 @@ nextwild(buff, type)
 				emsg(e_toolong);
 			else
 			{
+#ifdef WEBB_COMPLETE
+				vim_strncpy(&buff[cmdpos + difflen], &buff[cmdpos], cmdlen - cmdpos);
+#else
 				STRNCPY(&buff[cmdpos + difflen], &buff[cmdpos], (size_t)(cmdlen - cmdpos));
+#endif /* WEBB_COMPLETE */
 				STRNCPY(&buff[i], p2, STRLEN(p2));
 				cmdlen += difflen;
 				cmdpos += difflen;
@@ -2492,6 +2681,17 @@ nextwild(buff, type)
 		free(p1);
 	}
 	redrawcmd();
+#ifdef WEBB_COMPLETE
+	if (cmd_numfiles <= 0 && p2 == NULL)
+		beep();
+	else if (cmd_numfiles == 1)
+	{
+		(void)ExpandOne(NULL, FALSE, -2);	/* free expanded "file" names */
+		cmd_numfiles = -1;
+	}
+	expand_interactively = FALSE;
+	return OK;
+#endif /* WEBB_COMPLETE */
 }
 
 /*
@@ -2562,10 +2762,21 @@ ExpandOne(str, list_notfound, mode)
 
 	if (cmd_numfiles == -1)
 	{
+#ifdef WEBB_COMPLETE
+		if (ExpandFromContext((char_u *)str, &cmd_numfiles, &cmd_files, FALSE,
+														list_notfound) == FAIL)
+			/* error: do nothing */;
+		else if (cmd_numfiles == 0)
+		{
+			if (!expand_interactively)
+				emsg(e_nomatch);
+		}
+#else
 		if (ExpandWildCards(1, (char_u **)&str, &cmd_numfiles, &cmd_files, FALSE, list_notfound) == FAIL)
 			/* error: do nothing */;
 		else if (cmd_numfiles == 0)
 			emsg(e_nomatch);
+#endif /* WEBB_COMPLETE */
 		else if (mode < 4)
 		{
 			if (cmd_numfiles > 1)		/* more than one match; check suffixes */
@@ -2598,7 +2809,15 @@ ExpandOne(str, list_notfound, mode)
 			}
 			if (multmatch || found < 0)
 			{
-				emsg(e_toomany);
+#ifdef WEBB_COMPLETE
+				/* Can we ever get here unless it's while expanding
+				 * interactively?  If not, we can get rid of this all together.
+				 * Don't really want to wait for this message (and possibly
+				 * have to hit return to continue!).
+				 */
+				if (!expand_interactively)
+#endif /* WEBB_COMPLETE */
+					emsg(e_toomany);
 				found = 0;				/* return first one */
 				multmatch = TRUE;		/* for found < 0 */
 			}
@@ -2651,7 +2870,11 @@ ExpandOne(str, list_notfound, mode)
 		}
 	}
 
+#ifdef WEBB_COMPLETE
+	if (mode == -1 || mode == 4)
+#else
 	if (!multmatch || mode == -1 || mode == 4)
+#endif /* WEBB_COMPLETE */
 	{
 		FreeWild(cmd_numfiles, cmd_files);
 		cmd_numfiles = -1;
@@ -2662,10 +2885,16 @@ ExpandOne(str, list_notfound, mode)
 /*
  * show all filenames that match the string "file" with length "len"
  */
+#ifdef WEBB_COMPLETE
+	static int
+showmatches(buff)
+	char_u *buff;
+#else
 	static void
 showmatches(file, len)
 	char_u *file;
 	int	len;
+#endif /* WEBB_COMPLETE */
 {
 	char_u *file_str;
 	int num_files;
@@ -2675,16 +2904,47 @@ showmatches(file, len)
 	int lines;
 	int columns;
 
+#ifdef WEBB_COMPLETE
+	set_expand_context(cmdfirstc, cmdbuff);
+	if (expand_context == EXPAND_UNSUCCESSFUL)
+	{
+		beep();
+		return OK;	/* Something illegal on command line */
+	}
+	if (expand_context == EXPAND_NOTHING)
+	{
+		/* Caller can use the character as a normal char instead */
+		return FAIL;
+	}
+	expand_interactively = TRUE;
+
+	/* add star to file name, or convert to regexp if not expanding files! */
+	file_str = addstar(expand_pattern, (int)(buff + cmdpos - expand_pattern));
+	if (file_str == NULL)
+	{
+		expand_interactively = FALSE;
+		return OK;
+	}
+#else
 	file_str = addstar(file, len);		/* add star to file name */
 	if (file_str == NULL)
 		return;
+#endif /* WEBB_COMPLETE */
 
 	msg_outchar('\n');
 	flushbuf();
 
 	/* find all files that match the description */
+#ifdef WEBB_COMPLETE
+	if (ExpandFromContext(file_str, &num_files, &files_found, FALSE, FALSE) == FAIL)
+	{
+		num_files = 0;
+		files_found = (char_u **)"";
+	}
+#else
 	if (ExpandWildCards(1, &file_str, &num_files, &files_found, FALSE, FALSE) == FAIL)
 		return;
+#endif /* WEBB_COMPLETE */
 
 	/* find the maximum length of the file names */
 	maxlen = 0;
@@ -2702,8 +2962,9 @@ showmatches(file, len)
 		columns = 1;
 	lines = (num_files + columns - 1) / columns;
 
+	(void)set_highlight('d');	/* find out highlight mode for directories */
+
 	/* list the files line by line */
-	mch_start_listing();		/* allow output to be halted */
 	for (i = 0; i < lines; ++i)
 	{
 		for (k = i; k < num_files; k += lines)
@@ -2711,28 +2972,39 @@ showmatches(file, len)
 			if (k > i)
 				for (j = maxlen - STRLEN(files_found[k - lines]); --j >= 0; )
 					msg_outchar(' ');
+#ifdef WEBB_COMPLETE
+			if (expand_context == EXPAND_FILES)
+				j = isdir(files_found[k]);	/* highlight directories */
+			else
+				j = FALSE;
+#else
 			j = isdir(files_found[k]);	/* highlight directories */
-			if (j == TRUE)
+#endif /* WEBB_COMPLETE */
+			if (j)
 			{
-				outstr(T_SO);
+				start_highlight();
 				screen_start();		/* don't output spaces to position cursor */
 			}
 			msg_outstr(files_found[k]);
-			if (j == TRUE)
-				outstr(T_SE);
+			if (j)
+				stop_highlight();
 		}
 		msg_outchar('\n');
 		flushbuf();					/* show one line at a time */
 	}
 	free(file_str);
 	FreeWild(num_files, files_found);
-	mch_stop_listing();
 
 /*
-* we redraw the command below the lines that we have just listed
-* This is a bit tricky, but it saves a lot of screen updating.
-*/
+ * we redraw the command below the lines that we have just listed
+ * This is a bit tricky, but it saves a lot of screen updating.
+ */
 	cmdline_row = msg_row;		/* will put it back later */
+#ifdef WEBB_COMPLETE
+
+	expand_interactively = FALSE;
+	return OK;
+#endif /* WEBB_COMPLETE */
 }
 
 /*
@@ -2744,6 +3016,72 @@ addstar(fname, len)
 	int		len;
 {
 	char_u	*retval;
+#ifdef WEBB_COMPLETE
+	int		i, j;
+	int		new_len;
+	char_u	save_char;
+
+	if (expand_interactively && expand_context != EXPAND_FILES &&
+		expand_context != EXPAND_DIRECTORIES)
+	{
+		/* Matching will be done internally (on something other than files).
+		 * So we convert the file-matching-type wildcards into our kind for
+		 * use with regcomp().  First work out how long it will be:
+		 */
+		new_len = len + 2;				/* +2 for '^' at start, NUL at end */
+		for (i = 0; i < len; i++)
+			if (fname[i] == '*')
+				new_len++;				/* '*' needs to be replaced by '.*' */
+		retval = alloc(new_len);
+		if (retval != NULL)
+		{
+			retval[0] = '^';
+			for (i = 0, j = 1; i < len; i++, j++)
+				if (fname[i] == '*')
+				{
+					retval[j++] = '.';
+					retval[j] = '*';
+				}
+				else if (fname[i] == '?')
+					retval[j] = '.';
+				else
+					retval[j] = fname[i];
+			retval[j] = NUL;
+		}
+	}
+	else
+	{
+		retval = alloc(len + 4);
+		if (retval != NULL)
+		{
+			STRNCPY(retval, fname, (size_t)len);
+			/*
+			 * Don't add a star to ~ or ~user
+			 */
+			save_char = fname[j = len];
+			fname[j] = NUL;
+			if (gettail(fname)[0] != '~')
+			{
+#ifdef MSDOS
+			/*
+			 * if there is no dot in the file name, add "*.*" instead of "*".
+			 */
+				for (i = len - 1; i >= 0; --i)
+					if (strchr(".\\/:", retval[i]))
+						break;
+				if (i < 0 || retval[i] != '.')
+				{
+					retval[len++] = '*';
+					retval[len++] = '.';
+				}
+#endif
+				retval[len++] = '*';
+			}
+			retval[len] = NUL;
+			fname[j] = save_char;
+		}
+	}
+#else /* WEBB_COMPLETE */
 #ifdef MSDOS
 	int		i;
 #endif
@@ -2768,6 +3106,7 @@ addstar(fname, len)
 		retval[len] = '*';
 		retval[len + 1] = 0;
 	}
+#endif /* WEBB_COMPLETE */
 	return retval;
 }
 
@@ -2788,8 +3127,8 @@ dosource(fname)
 	int				error = FALSE;
 #endif
 
-	expand_env(fname, IObuff, IOSIZE);		/* use IObuff for expanded name */
-	if ((fp = fopen((char *)IObuff, READBIN)) == NULL)
+	expand_env(fname, NameBuff, MAXPATHL);		/* use NameBuff for expanded name */
+	if ((fp = fopen((char *)NameBuff, READBIN)) == NULL)
 		return FAIL;
 
 	++dont_sleep;			/* don't call sleep() in emsg() */
@@ -2883,7 +3222,7 @@ get_address(ptr)
 								++curwin->w_cursor.lnum;
 						}
 						searchcmdlen = 0;
-						if (dosearch(c, cmd, FALSE, (long)1, FALSE))
+						if (dosearch(c, cmd, FALSE, (long)1, FALSE, TRUE))
 							lnum = curwin->w_cursor.lnum;
 						curwin->w_cursor = pos;
 				
@@ -2917,3 +3256,438 @@ error:
 	*ptr = cmd;
 	return lnum;
 }
+
+
+#ifdef WEBB_COMPLETE
+/*
+ * Must parse the command line so far to work out what context we are in.
+ * Completion can then be done based on that context.
+ * This routine sets two global variables:
+ *	char_u *expand_pattern --- The start of the pattern to be expanded within
+ *								the command line (ends at the cursor).
+ *	int expand_context --- The type of thing to expand.  Will be one of:
+ *	  EXPAND_UNSUCCESSFUL --- Used somtimes when there is something illegal on
+ *			the command line, like an unknown command.  Caller should beep.
+ *	  EXPAND_NOTHING --- Unrecognised context for completion, use char like a
+ *			normal char, rather than for completion.  eg :s/^I/
+ *	  EXPAND_COMMANDS --- Cursor is still touching the command, so complete it.
+ *	  EXPAND_FILES --- After command with XFILE set, or after setting with
+ *			P_EXPAND set.  eg :e ^I, :w>>^I
+ *	  EXPAND_DIRECTORIES --- In some cases this is used instead of the latter
+ *			when we know only directories are of interest.  eg :set dir=^I
+ *	  EXPAND_SETTINGS --- Complete variable names.  eg :set d^I
+ *	  EXPAND_BOOL_SETTINGS --- Complete bollean variables only,  eg :set no^I
+ *	  EXPAND_TAGS --- Complete tags from the files in p_tags.  eg :ta a^I
+ *
+ * -- webb.
+ */
+	static void
+set_expand_context(firstc, buff)
+	int			firstc; 	/* either ':', '/', or '?' */
+	char_u		*buff;	 	/* buffer for command string */
+{
+	char_u		*nextcomm;
+	char_u		old_char;
+
+	old_char = cmdbuff[cmdpos];
+	cmdbuff[cmdpos] = NUL;
+	nextcomm = buff;
+	while (nextcomm != NULL)
+		nextcomm = set_one_cmd_context(firstc, nextcomm);
+	cmdbuff[cmdpos] = old_char;
+}
+
+/*
+ * This is all pretty much copied from DoOneCmd(), with all the extra stuff we
+ * don't need/want deleted.  Maybe this could be done better if we didn't
+ * repeat all this stuff.  The only problem is that they may not stay perfectly
+ * compatible with each other, but then the command line syntax probably won't
+ * change that much -- webb.
+ */
+	static char_u *
+set_one_cmd_context(firstc, buff)
+	int			firstc; 	/* either ':', '/', or '?' */
+	char_u		*buff;	 	/* buffer for command string */
+{
+	register char_u		*p;
+	char_u				*cmd, *arg;
+	int 				i;
+	int					cmdidx;
+	int					argt;
+	char_u				delim;
+	int					forced = FALSE;
+	int					usefilter = FALSE;	/* filter instead of file name */
+
+	expand_pattern = buff;
+	if (firstc != ':')
+	{
+		expand_context = EXPAND_NOTHING;
+		return NULL;
+	}
+	expand_context = EXPAND_COMMANDS;	/* Default until we get past command */
+
+/*
+ * 2. skip comment lines and leading space, colons or bars
+ */
+	for (cmd = buff; *cmd && strchr(" \t:|", *cmd) != NULL; cmd++)
+		;
+	expand_pattern = cmd;
+
+	if (*cmd == NUL)
+		return NULL;
+	if (*cmd == '"')		/* ignore comment lines */
+	{
+		expand_context = EXPAND_NOTHING;
+		return NULL;
+	}
+
+/*
+ * 3. parse a range specifier of the form: addr [,addr] [;addr] ..
+ */
+
+	--cmd;
+	do
+	{
+		++cmd;							/* skip ',' or ';' */
+		skipspace(&cmd);
+		do
+		{
+			switch (*cmd)
+			{
+				case '.': 						/* '.' - Cursor position */
+				case '$': 						/* '$' - last line */
+				case '%': 						/* '%' - all lines */
+					++cmd;
+					break;
+
+				case '\'': 						/* ''' - mark */
+					if (*++cmd != NUL)
+						++cmd;
+					break;
+
+				case '/':
+				case '?':						/* '/' or '?' - search */
+					delim = *cmd++;
+					while (*cmd != NUL && *cmd != delim)
+						cmd++;
+					if (*cmd == delim)
+						cmd++;
+					break;
+
+				default:
+					while (isdigit((char)*cmd))
+						++cmd;
+					break;
+			}
+			
+			while (*cmd == '-' || *cmd == '+')
+			{
+				cmd++;
+				while (isdigit(*cmd))
+					cmd++;
+			}
+		} while (*cmd == '/' || *cmd == '?');
+	} while (*cmd == ',' || *cmd == ';');
+
+/*
+ * 4. parse command
+ */
+
+	skipspace(&cmd);
+	expand_pattern = cmd;
+	if (*cmd == NUL)
+		return NULL;
+	if (*cmd == '"')
+	{
+		expand_context = EXPAND_NOTHING;
+		return NULL;
+	}
+
+	if (*cmd == '|' || *cmd == '\n')
+		return cmd + 1;					/* There's another command */
+
+	/*
+	 * Isolate the command and search for it in the command table.
+	 * Exeptions:
+	 * - the 'k' command can directly be followed by any character.
+	 * - the 's' command can be followed directly by 'c', 'g' or 'r'
+	 */
+	if (*cmd == 'k')
+	{
+		cmdidx = CMD_k;
+		p = cmd + 1;
+	}
+	if (*cmd == 's' && strchr("cgr", cmd[1]) != NULL)
+	{
+		cmdidx = CMD_substitute;
+		p = cmd + 1;
+	}
+	else
+	{
+		p = cmd;
+		while (isalpha(*p) || *p == '*')	/* Allow * wild card */
+			++p;
+		if (p == cmd && strchr("@!=><&~#", *p) != NULL)	/* non-alpha command */
+			++p;
+		i = (int)(p - cmd);
+
+		for (cmdidx = 0; cmdidx < CMD_SIZE; ++cmdidx)
+			if (STRNCMP(cmdnames[cmdidx].cmd_name, cmd, (size_t)i) == 0)
+				break;
+		if (i == 0)
+		{
+			expand_context = EXPAND_UNSUCCESSFUL;
+			return NULL;
+		}
+		if (p == cmdbuff + cmdpos)		/* We are still touching the command */
+			return NULL;				/* So complete it */
+
+		if (cmdidx == CMD_SIZE)
+		{
+			/* Not still touching the command and it was an illegal command */
+			expand_context = EXPAND_UNSUCCESSFUL;
+			return NULL;
+		}
+	}
+
+	expand_context = EXPAND_NOTHING; /* Default now that we're past command */
+
+	if (*p == '!')					/* forced commands */
+	{
+		forced = TRUE;
+		++p;
+	}
+
+/*
+ * 5. parse arguments
+ */
+	argt = cmdnames[cmdidx].cmd_argt;
+
+	arg = p;						/* remember start of argument */
+	skipspace(&arg);
+
+	if (cmdidx == CMD_write)
+	{
+		if (*arg == '>')						/* append */
+		{
+			if (*++arg == '>')				/* It should be */
+				++arg;
+			skipspace(&arg);
+		}
+		else if (*arg == '!')					/* :w !filter */
+		{
+			++arg;
+			usefilter = TRUE;
+		}
+	}
+
+	if (cmdidx == CMD_read)
+	{
+		usefilter = forced;					/* :r! filter if forced */
+		if (*arg == '!')						/* :r !filter */
+		{
+			++arg;
+			usefilter = TRUE;
+		}
+	}
+
+	if (cmdidx == CMD_lshift || cmdidx == CMD_rshift)
+	{
+		while (*arg == *cmd)		/* allow any number of '>' or '<' */
+			++arg;
+		skipspace(&arg);
+	}
+
+	/*
+	 * Check for '|' to separate commands and '"' to start comments.
+	 * Don't do this for ":read !cmd" and ":write !cmd".
+	 */
+	if ((argt & TRLBAR) && !usefilter)
+	{
+		p = arg;
+		while (*p)
+		{
+			if (*p == Ctrl('V'))
+			{
+				if (p[1] != NUL)
+					++p;
+			}
+			else if ((*p == '"' && !(argt & NOTRLCOM)) || *p == '|' || *p == '\n')
+			{
+				if (*(p - 1) != '\\')
+				{
+					if (*p == '|' || *p == '\n')
+						return p + 1;
+					return NULL;	/* It's a comment */
+				}
+			}
+			++p;
+		}
+	}
+
+	if (!(argt & EXTRA) && strchr("|\"", *arg) == NULL)	/* no arguments allowed */
+		return NULL;
+
+	/* Find start of last argument (argument just before cursor): */
+	p = cmdbuff + cmdpos;
+	while (p != arg && *p != ' ' && *p != TAB)
+		p--;
+	if (*p == ' ' || *p == TAB)
+		p++;
+	expand_pattern = p;
+
+	if (argt & XFILE)
+		expand_context = EXPAND_FILES;
+
+/*
+ * 6. switch on command name
+ */
+	switch (cmdidx)
+	{
+		case CMD_cd:
+		case CMD_chdir:
+			expand_context = EXPAND_DIRECTORIES;
+			break;
+		case CMD_buffer:
+		case CMD_wnext:
+		case CMD_args:			/* args now takes arguments like :next */
+		case CMD_next:
+		case CMD_snext:
+		case CMD_split:
+		case CMD_new:
+		case CMD_edit:
+		case CMD_ex:
+		case CMD_visual:
+			for (p = arg; *p; ++p)
+			{
+				if (*p == '\\' && p[1])
+					++p;
+				else if (*p == '|' || *p == '\n')
+					return p + 1;
+			}
+			break;
+		case CMD_global:
+		case CMD_vglobal:
+			delim = *arg; 			/* get the delimiter */
+			if (delim)
+				++arg;				/* skip delimiter if there is one */
+
+			while (arg[0] != NUL && arg[0] != delim)
+			{
+				if (arg[0] == '\\' && arg[1] != NUL)
+					++arg;
+				++arg;
+			}
+			if (arg[0] != NUL)
+				return arg + 1;
+			break;
+		case CMD_and:
+		case CMD_substitute:
+			delim = *arg;
+			if (delim)
+				++arg;
+			for (i = 0; i < 2; i++, arg++)
+				while (arg[0] != NUL && arg[0] != delim)
+				{
+					if (arg[0] == '\\' && arg[1] != NUL)
+						++arg;
+					++arg;
+				}
+			while (arg[0] != NUL && strchr("|\"#", arg[0]) == NULL)
+				++arg;
+			if (arg[0] != NUL)
+				return arg;
+			break;
+		case CMD_set:
+			set_context_in_set_cmd(arg);
+			break;
+		case CMD_tag:
+			expand_context = EXPAND_TAGS;
+			expand_pattern = arg;
+			break;
+		default:
+			break;
+	}
+	return NULL;
+}
+
+/*
+ * Do the expansion based on the global variables expand_context and
+ * expand_pattern -- webb.
+ */
+	static int
+ExpandFromContext(pat, num_file, file, files_only, list_notfound)
+	char_u *pat;
+	int *num_file;
+	char_u ***file;
+	int files_only;
+	int list_notfound;
+{
+	regexp	*prog;
+	int		cmdidx;
+	int		count;
+	int		ret;
+	int		i;
+
+	if (!expand_interactively || expand_context == EXPAND_FILES)
+		return ExpandWildCards(1, &pat, num_file, file, files_only, list_notfound);
+	else if (expand_context == EXPAND_DIRECTORIES)
+	{
+		if (ExpandWildCards(1, &pat, num_file, file, files_only, list_notfound)
+																	== FAIL)
+			return FAIL;
+		count = 0;
+		for (i = 0; i < *num_file; i++)
+			if (isdir((*file)[i]))
+				(*file)[count++] = (*file)[i];
+			else
+				free((*file)[i]);
+		if (count == 0)
+		{
+			free(*file);
+			*file = (char_u **)"";
+			*num_file = -1;
+			return FAIL;
+		}
+		*num_file = count;
+		return OK;
+	}
+	*file = (char_u **)"";
+	*num_file = 0;
+	ret = OK;
+	reg_ic = FALSE;
+	reg_magic = p_magic;
+	prog = regcomp(pat);
+	if (prog == NULL)
+		return FAIL;
+	if (expand_context == EXPAND_COMMANDS)
+	{
+		/* Count the matches: */
+		count = 0;
+		for (cmdidx = 0; cmdidx < CMD_SIZE; cmdidx++)
+			if (regexec(prog, cmdnames[cmdidx].cmd_name, TRUE))
+				count++;
+		if (count == 0
+		  || (*file = (char_u **) alloc((int)(count * sizeof(char_u *)))) == NULL)
+			ret = FAIL;
+		else
+		{
+			*num_file = count;
+			count = 0;
+			for (cmdidx = 0; cmdidx < CMD_SIZE; cmdidx++)
+				if (regexec(prog, cmdnames[cmdidx].cmd_name, TRUE))
+					(*file)[count++] = strsave(cmdnames[cmdidx].cmd_name);
+		}
+	}
+	else if (expand_context == EXPAND_SETTINGS
+	  || expand_context == EXPAND_BOOL_SETTINGS)
+		ret = ExpandSettings(prog, num_file, file);
+	else if (expand_context == EXPAND_TAGS)
+		ret = ExpandTags(prog, num_file, file);
+	else
+		ret = FAIL;
+	
+	free(prog);
+	return ret;
+}
+#endif /* WEBB_COMPLETE */
