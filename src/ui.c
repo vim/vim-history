@@ -1669,6 +1669,11 @@ fill_input_buf(exit_on_error)
     int		len;
     int		try;
     static int	did_read_something = FALSE;
+# ifdef FEAT_MBYTE
+    static char_u *rest = NULL;	    /* unconverted rest of previous read */
+    static int	restlen = 0;
+    int		unconverted;
+# endif
 #endif
 
 #ifdef FEAT_GUI
@@ -1707,6 +1712,32 @@ fill_input_buf(exit_on_error)
 	return;
     }
 #  endif
+
+# ifdef FEAT_MBYTE
+    if (rest != NULL)
+    {
+	/* Use remainder of previous call, starts with an invalid character
+	 * that may become valid when reading more. */
+	if (restlen > INBUFLEN - inbufcount)
+	    unconverted = INBUFLEN - inbufcount;
+	else
+	    unconverted = restlen;
+	mch_memmove(inbuf + inbufcount, rest, unconverted);
+	if (unconverted == restlen)
+	{
+	    vim_free(rest);
+	    rest = NULL;
+	}
+	else
+	{
+	    restlen -= unconverted;
+	    mch_memmove(rest, rest + unconverted, restlen);
+	}
+	inbufcount += unconverted;
+    }
+    else
+	unconverted = 0;
+#endif
 
     len = 0;	/* to avoid gcc warning */
     for (try = 0; try < 100; ++try)
@@ -1757,15 +1788,28 @@ fill_input_buf(exit_on_error)
 	did_read_something = TRUE;
     if (got_int)
     {
-	inbuf[inbufcount] = 3;
+	/* Interrupted, pretend a CTRL-C was typed. */
+	inbuf[0] = 3;
 	inbufcount = 1;
     }
     else
     {
 # ifdef FEAT_MBYTE
-	/* May perform conversion on the input characters. */
+	/*
+	 * May perform conversion on the input characters.
+	 * Include the unconverted rest of the previous call.
+	 * If there is an incomplete char at the end it is kept for the next
+	 * time, reading more bytes should make conversion possible.
+	 * Don't do this in the unlikely event that the input buffer is too
+	 * small ("rest" still contains more bytes).
+	 */
 	if (input_conv.vc_type != CONV_NONE)
-	    len = convert_input(inbuf + inbufcount, len, INBUFLEN - inbufcount);
+	{
+	    inbufcount -= unconverted;
+	    len = convert_input_safe(inbuf + inbufcount,
+				     len + unconverted, INBUFLEN - inbufcount,
+				       rest == NULL ? &rest : NULL, &restlen);
+	}
 # endif
 	while (len-- > 0)
 	{

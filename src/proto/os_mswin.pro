@@ -22,7 +22,7 @@ int mch_chdir __ARGS((char *path));
 int can_end_termcap_mode __ARGS((int give_msg));
 int mch_screenmode __ARGS((char_u *arg));
 int mch_libcall __ARGS((char_u *libname, char_u *funcname, char_u *argstring, int argint, char_u **string_result, int *number_result));
-int utf8_to_ucs2 __ARGS((char_u *instr, int inlen, short_u *outstr));
+int utf8_to_ucs2 __ARGS((char_u *instr, int inlen, short_u *outstr, int *unconvlenp));
 int ucs2_to_utf8 __ARGS((short_u *instr, int inlen, char_u *outstr));
 void MultiByteToWideChar_alloc __ARGS((UINT cp, DWORD flags, LPCSTR in, int inlen, LPWSTR *out, int *outlen));
 void WideCharToMultiByte_alloc __ARGS((UINT cp, DWORD flags, LPCWSTR in, int inlen, LPSTR *out, int *outlen, LPCSTR def, LPBOOL useddef));
