@@ -174,6 +174,7 @@ typedef struct syn_pattern
 #define HL_FOLD		0x2000	/* define fold */
 #define HL_EXTEND	0x4000	/* ignore a keepend */
 #define HL_MATCHCONT	0x8000	/* match continued from previous line */
+#define HL_TRANS_CONT	0x10000 /* transparent item without contains arg */
 
 #define SYN_ITEMS(buf)	((synpat_T *)((buf)->b_syn_patterns.ga_data))
 
@@ -1772,13 +1773,16 @@ syn_current_attr(syncing, displaying)
 	 * 1. Check for a current state.
 	 *    Only when there is no current state, or if the current state may
 	 *    contain other things, we need to check for keywords and patterns.
+	 *    Always need to check for contained items if some item has the
+	 *    "containedin" argument (takes extra time!).
 	 */
 	if (current_state.ga_len)
 	    cur_si = &CUR_STATE(current_state.ga_len - 1);
 	else
 	    cur_si = NULL;
 
-	if (cur_si == NULL || cur_si->si_cont_list != NULL)
+	if (curbuf->b_syn_containedin || cur_si == NULL
+					      || cur_si->si_cont_list != NULL)
 	{
 	    /*
 	     * 2. Check for keywords, if on a keyword char after a non-keyword
@@ -2387,7 +2391,10 @@ update_si_attr(idx)
 	    sip->si_attr = CUR_STATE(idx - 1).si_attr;
 	    sip->si_trans_id = CUR_STATE(idx - 1).si_trans_id;
 	    if (sip->si_cont_list == NULL)
+	    {
+		sip->si_flags |= HL_TRANS_CONT;
 		sip->si_cont_list = CUR_STATE(idx - 1).si_cont_list;
+	    }
 	}
     }
 }
@@ -3001,6 +3008,7 @@ syntax_clear(buf)
     int i;
 
     curbuf->b_syn_ic = FALSE;	    /* Use case, by default */
+    curbuf->b_syn_containedin = FALSE;
 
     /* free the keywords */
     free_keywtab(buf->b_keywtab);
@@ -3884,6 +3892,8 @@ add_keyword(name, id, flags, cont_in_list, next_list)
     ktab->k_syn.inc_tag = current_syn_inc_tag;
     ktab->flags = flags;
     ktab->k_syn.cont_in_list = copy_id_list(cont_in_list);
+    if (cont_in_list != NULL)
+	curbuf->b_syn_containedin = TRUE;
     ktab->next_list = copy_id_list(next_list);
 
     if (curbuf->b_syn_ic)
@@ -4397,6 +4407,8 @@ syn_cmd_match(eap, syncing)
 	    SYN_ITEMS(curbuf)[idx].sp_sync_idx = sync_idx;
 	    SYN_ITEMS(curbuf)[idx].sp_cont_list = cont_list;
 	    SYN_ITEMS(curbuf)[idx].sp_syn.cont_in_list = cont_in_list;
+	    if (cont_in_list != NULL)
+		curbuf->b_syn_containedin = TRUE;
 	    SYN_ITEMS(curbuf)[idx].sp_next_list = next_list;
 	    ++curbuf->b_syn_patterns.ga_len;
 	    --curbuf->b_syn_patterns.ga_room;
@@ -4637,6 +4649,8 @@ syn_cmd_region(eap, syncing)
 			SYN_ITEMS(curbuf)[idx].sp_cont_list = cont_list;
 			SYN_ITEMS(curbuf)[idx].sp_syn.cont_in_list =
 								 cont_in_list;
+			if (cont_in_list != NULL)
+			    curbuf->b_syn_containedin = TRUE;
 			SYN_ITEMS(curbuf)[idx].sp_next_list = next_list;
 		    }
 		    ++curbuf->b_syn_patterns.ga_len;
@@ -5516,12 +5530,19 @@ in_id_list(cur_si, list, ssp, contained)
     int		r;
 
     /* If spp has a "containedin" list and "cur_si" is in it, return TRUE. */
-    if (cur_si != NULL
-	    && ssp->cont_in_list != NULL
-	    && in_id_list(NULL, ssp->cont_in_list,
+    if (cur_si != NULL && ssp->cont_in_list != NULL)
+    {
+	/* Ignore transparent items without a contains argument. */
+	while (cur_si->si_flags & HL_TRANS_CONT)
+	    --cur_si;
+	if (in_id_list(NULL, ssp->cont_in_list,
 		&(SYN_ITEMS(syn_buf)[cur_si->si_idx].sp_syn),
 		  SYN_ITEMS(syn_buf)[cur_si->si_idx].sp_flags & HL_CONTAINED))
 	return TRUE;
+    }
+
+    if (list == NULL)
+	return FALSE;
 
     /*
      * If list is ID_LIST_ALL, we are in a transparent item that isn't
