@@ -348,7 +348,7 @@ ex_breakadd(eap)
 	pat = file_pat_to_reg_pat(bp->dbg_name, NULL, NULL, FALSE);
 	if (pat != NULL)
 	{
-	    bp->dbg_prog = vim_regcomp(pat, TRUE);
+	    bp->dbg_prog = vim_regcomp(pat, RE_MAGIC + RE_STRING);
 	    vim_free(pat);
 	}
 	if (pat == NULL || bp->dbg_prog == NULL)
@@ -992,7 +992,7 @@ do_arglist(str, what, after)
 	    p = file_pat_to_reg_pat(p, NULL, NULL, FALSE);
 	    if (p == NULL)
 		break;
-	    regmatch.regprog = vim_regcomp(p, (int)p_magic);
+	    regmatch.regprog = vim_regcomp(p, p_magic ? RE_MAGIC : 0);
 	    if (regmatch.regprog == NULL)
 	    {
 		vim_free(p);

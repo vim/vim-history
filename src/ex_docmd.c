@@ -8976,7 +8976,7 @@ ex_match(eap)
 
 	    c = *end;
 	    *end = NUL;
-	    curwin->w_match.regprog = vim_regcomp(p + 1, TRUE);
+	    curwin->w_match.regprog = vim_regcomp(p + 1, RE_MAGIC);
 	    *end = c;
 	    if (curwin->w_match.regprog == NULL)
 	    {

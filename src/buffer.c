@@ -1720,7 +1720,7 @@ buflist_findpat(pattern, pattern_end, unlisted, diffmode)
 		p = pat;
 		if (*p == '^' && !(attempt & 1))	 /* add/remove '^' */
 		    ++p;
-		prog = vim_regcomp(p, (int)p_magic);
+		prog = vim_regcomp(p, p_magic ? RE_MAGIC : 0);
 		if (prog == NULL)
 		{
 		    vim_free(pat);
@@ -1801,7 +1801,7 @@ ExpandBufnames(pat, num_file, file, options)
 		break;
 	    ++pat;		    /* skip the '^' */
 	}
-	prog = vim_regcomp(pat, (int)p_magic);
+	prog = vim_regcomp(pat, p_magic ? RE_MAGIC : 0);
 	if (prog == NULL)
 	    return FAIL;
 

@@ -2062,7 +2062,7 @@ ins_compl_dictionaries(dict, pat, dir, flags, thesaurus)
     save_p_scs = p_scs;
     if (curbuf->b_p_inf)
 	p_scs = FALSE;
-    regmatch.regprog = vim_regcomp(pat, (int)p_magic);
+    regmatch.regprog = vim_regcomp(pat, p_magic ? RE_MAGIC : 0);
     /* ignore case depends on 'ignorecase', 'smartcase' and "pat" */
     regmatch.rm_ic = ignorecase(pat);
     while (buf != NULL && regmatch.regprog != NULL && *dict != NUL

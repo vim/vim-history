@@ -6651,7 +6651,7 @@ dos_expandpath(
 
     /* compile the regexp into a program */
     regmatch.rm_ic = TRUE;		/* Always ignore case */
-    regmatch.regprog = vim_regcomp(pat, TRUE);
+    regmatch.regprog = vim_regcomp(pat, RE_MAGIC);
     vim_free(pat);
 
     if (regmatch.regprog == NULL)

@@ -1057,7 +1057,7 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
     help_save = curbuf->b_help;
 
     if (has_re)
-	regmatch.regprog = vim_regcomp(pat, p_magic);
+	regmatch.regprog = vim_regcomp(pat, p_magic ? RE_MAGIC : 0);
     else
 	regmatch.regprog = NULL;
 

@@ -3234,7 +3234,7 @@ ExpandFromContext(xp, pat, num_file, file, options)
     if (xp->xp_context == EXPAND_COMPILER)
 	return ExpandRTDir(pat, num_file, file, "compiler");
 
-    regmatch.regprog = vim_regcomp(pat, (int)p_magic);
+    regmatch.regprog = vim_regcomp(pat, p_magic ? RE_MAGIC : 0);
     if (regmatch.regprog == NULL)
 	return FAIL;
 
@@ -3889,7 +3889,8 @@ del_history_entry(histype, str)
 	    && histype < HIST_COUNT
 	    && *str != NUL
 	    && (idx = hisidx[histype]) >= 0
-	    && (regmatch.regprog = vim_regcomp(str, TRUE)) != NULL)
+	    && (regmatch.regprog = vim_regcomp(str, RE_MAGIC + RE_STRING))
+								      != NULL)
     {
 	i = last = idx;
 	do
