@@ -472,7 +472,7 @@ focus_in_event(GtkWidget *widget, GdkEventFocus *focus, gpointer data)
     gtk_widget_grab_focus(gui.drawarea);
 
 #ifdef USE_XIM
-    xim_set_focus(!(State & NORMAL));
+    xim_set_focus(TRUE);
 #endif
 
     return TRUE;
