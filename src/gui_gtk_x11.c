@@ -102,7 +102,8 @@ enum
     TARGET_TEXT,
     TARGET_TEXT_URI_LIST,
     TARGET_TEXT_PLAIN,
-    TARGET_VIM
+    TARGET_VIM,
+    TARGET_VIMENC
 };
 
 /*
@@ -111,6 +112,7 @@ enum
  */
 static const GtkTargetEntry selection_targets[] =
 {
+    {VIMENC_ATOM_NAME,	0, TARGET_VIMENC},
     {VIM_ATOM_NAME,	0, TARGET_VIM},
 #ifdef FEAT_MBYTE
     {"UTF8_STRING",	0, TARGET_UTF8_STRING},
@@ -175,6 +177,9 @@ static GdkAtom compound_text_atom = GDK_NONE;
 static GdkAtom text_atom = GDK_NONE;
 #endif
 static GdkAtom vim_atom = GDK_NONE;	/* Vim's own special selection format */
+#ifdef FEAT_MBYTE
+static GdkAtom vimenc_atom = GDK_NONE;	/* Vim's extended selection format */
+#endif
 
 /*
  * Keycodes recognized by vim.
@@ -1244,6 +1249,34 @@ selection_received_cb(GtkWidget		*widget,
 	motion_type = *text++;
 	--len;
     }
+
+#ifdef FEAT_MBYTE
+    else if (data->type == vimenc_atom)
+    {
+	char_u		*enc;
+	vimconv_T	conv;
+
+	motion_type = *text++;
+	--len;
+
+	enc = text;
+	text += STRLEN(text) + 1;
+	len -= text - enc;
+
+	/* If the encoding of the text is different from 'encoding', attempt
+	 * converting it. */
+	conv.vc_type = CONV_NONE;
+	convert_setup(&conv, enc, p_enc);
+	if (conv.vc_type != CONV_NONE)
+	{
+	    tmpbuf = string_convert(&conv, text, &len);
+	    if (tmpbuf != NULL)
+		text = tmpbuf;
+	    convert_setup(&conv, NULL, NULL);
+	}
+    }
+#endif
+
 #ifdef HAVE_GTK2
     /* gtk_selection_data_get_text() handles all the nasty details
      * and targets and encodings etc.  This rocks so hard. */
@@ -1351,6 +1384,7 @@ selection_get_cb(GtkWidget	    *widget,
     if (info != (guint)TARGET_STRING
 #ifdef FEAT_MBYTE
 	    && info != (guint)TARGET_UTF8_STRING
+	    && info != (guint)TARGET_VIMENC
 #endif
 	    && info != (guint)TARGET_VIM
 	    && info != (guint)TARGET_COMPOUND_TEXT
@@ -1382,6 +1416,27 @@ selection_get_cb(GtkWidget	    *widget,
 	string = tmpbuf;
 	type = vim_atom;
     }
+
+#ifdef FEAT_MBYTE
+    else if (info == (guint)TARGET_VIMENC)
+    {
+	int l = STRLEN(p_enc);
+
+	/* contents: motion_type 'encoding' NUL text */
+	tmpbuf = alloc((unsigned)length + l + 2);
+	if (tmpbuf != NULL)
+	{
+	    tmpbuf[0] = motion_type;
+	    STRCPY(tmpbuf + 1, p_enc);
+	    mch_memmove(tmpbuf + l + 2, string, (size_t)length);
+	}
+	length += l + 2;
+	vim_free(string);
+	string = tmpbuf;
+	type = vimenc_atom;
+    }
+#endif
+
 #ifdef HAVE_GTK2
     /* gtk_selection_data_set_text() handles everything for us.  This is
      * so easy and simple and cool, it'd be insane not to use it. */
@@ -3180,6 +3235,9 @@ gui_mch_init(void)
      * Set clipboard specific atoms
      */
     vim_atom = gdk_atom_intern(VIM_ATOM_NAME, FALSE);
+#ifdef FEAT_MBYTE
+    vimenc_atom = gdk_atom_intern(VIMENC_ATOM_NAME, FALSE);
+#endif
     clip_star.gtk_sel_atom = GDK_SELECTION_PRIMARY;
     clip_plus.gtk_sel_atom = gdk_atom_intern("CLIPBOARD", FALSE);
 
@@ -5128,7 +5186,8 @@ gui_gtk2_draw_string(int row, int col, char_u *s, int len, int flags)
 	char_u *p;
 
 	for (p = s; p < s + len; ++p)
-	    if (*p & 0x80) goto not_ascii;
+	    if (*p & 0x80)
+		goto not_ascii;
 
 	pango_glyph_string_set_size(glyphs, len);
 

@@ -1913,6 +1913,9 @@ open_app_context()
 }
 
 static Atom	vim_atom;	/* Vim's own special selection format */
+#ifdef FEAT_MBYTE
+static Atom	vimenc_atom;	/* Vim's extended selection format */
+#endif
 static Atom	compound_text_atom;
 static Atom	text_atom;
 static Atom	targets_atom;
@@ -1922,6 +1925,9 @@ x11_setup_atoms(dpy)
     Display	*dpy;
 {
     vim_atom	       = XInternAtom(dpy, VIM_ATOM_NAME,   False);
+#ifdef FEAT_MBYTE
+    vimenc_atom	       = XInternAtom(dpy, VIMENC_ATOM_NAME,False);
+#endif
     compound_text_atom = XInternAtom(dpy, "COMPOUND_TEXT", False);
     text_atom	       = XInternAtom(dpy, "TEXT",	   False);
     targets_atom       = XInternAtom(dpy, "TARGETS",       False);
@@ -1952,6 +1958,9 @@ clip_x11_request_selection_cb(w, success, sel_atom, type, value, length,
     char_u	*p;
     char	**text_list = NULL;
     VimClipboard	*cbd;
+#ifdef FEAT_MBYTE
+    char_u	*tmpbuf = NULL;
+#endif
 
     if (*sel_atom == clip_plus.sel_atom)
 	cbd = &clip_plus;
@@ -1972,6 +1981,37 @@ clip_x11_request_selection_cb(w, success, sel_atom, type, value, length,
 	motion_type = *p++;
 	len--;
     }
+
+#ifdef FEAT_MBYTE
+    else if (*type == vimenc_atom)
+    {
+	char_u		*enc;
+	vimconv_T	conv;
+	int		convlen;
+
+	motion_type = *p++;
+	--len;
+
+	enc = p;
+	p += STRLEN(p) + 1;
+	len -= p - enc;
+
+	/* If the encoding of the text is different from 'encoding', attempt
+	 * converting it. */
+	conv.vc_type = CONV_NONE;
+	convert_setup(&conv, enc, p_enc);
+	if (conv.vc_type != CONV_NONE)
+	{
+	    convlen = len;	/* Need to use an int here. */
+	    tmpbuf = string_convert(&conv, p, &convlen);
+	    len = convlen;
+	    if (tmpbuf != NULL)
+		p = tmpbuf;
+	    convert_setup(&conv, NULL, NULL);
+	}
+    }
+#endif
+
     else if (*type == compound_text_atom || (
 #ifdef FEAT_MBYTE
 		enc_dbcs != 0 &&
@@ -2000,7 +2040,9 @@ clip_x11_request_selection_cb(w, success, sel_atom, type, value, length,
 
     if (text_list != NULL)
 	XFreeStringList(text_list);
-
+#ifdef FEAT_MBYTE
+    vim_free(tmpbuf);
+#endif
     XtFree((char *)value);
     *(int *)success = TRUE;
 }
@@ -2018,13 +2060,22 @@ clip_x11_request_selection(myShell, dpy, cbd)
     int		nbytes = 0;
     char_u	*buffer;
 
-    for (i = 0; i < 4; i++)
+    for (i =
+#ifdef FEAT_MBYTE
+	    0
+#else
+	    1
+#endif
+	    ; i < 5; i++)
     {
 	switch (i)
 	{
-	    case 0:  type = vim_atom;	break;
-	    case 1:  type = compound_text_atom; break;
-	    case 2:  type = text_atom;	break;
+#ifdef FEAT_MBYTE
+	    case 0:  type = vimenc_atom;	break;
+#endif
+	    case 1:  type = vim_atom;		break;
+	    case 2:  type = compound_text_atom; break;
+	    case 3:  type = text_atom;		break;
 	    default: type = XA_STRING;
 	}
 	XtGetSelectionValue(myShell, cbd->sel_atom, type,
@@ -2084,6 +2135,7 @@ clip_x11_convert_selection_cb(w, sel_atom, target, type, value, length, format)
     char_u	*result;
     int		motion_type;
     VimClipboard	*cbd;
+    int		i;
 
     if (*sel_atom == clip_plus.sel_atom)
 	cbd = &clip_plus;
@@ -2098,23 +2150,30 @@ clip_x11_convert_selection_cb(w, sel_atom, target, type, value, length, format)
     {
 	Atom *array;
 
-	if ((array = (Atom *)XtMalloc((unsigned)(sizeof(Atom) * 5))) == NULL)
+	if ((array = (Atom *)XtMalloc((unsigned)(sizeof(Atom) * 6))) == NULL)
 	    return False;
 	*value = (XtPointer)array;
-	array[0] = XA_STRING;
-	array[1] = targets_atom;
-	array[2] = vim_atom;
-	array[3] = text_atom;
-	array[4] = compound_text_atom;
+	i = 0;
+	array[i++] = XA_STRING;
+	array[i++] = targets_atom;
+#ifdef FEAT_MBYTE
+	array[i++] = vimenc_atom;
+#endif
+	array[i++] = vim_atom;
+	array[i++] = text_atom;
+	array[i++] = compound_text_atom;
 	*type = XA_ATOM;
 	/* This used to be: *format = sizeof(Atom) * 8; but that caused
 	 * crashes on 64 bit machines. (Peter Derr) */
 	*format = 32;
-	*length = 5;
+	*length = i;
 	return True;
     }
 
     if (       *target != XA_STRING
+#ifdef FEAT_MBYTE
+	    && *target != vimenc_atom
+#endif
 	    && *target != vim_atom
 	    && *target != text_atom
 	    && *target != compound_text_atom)
@@ -2128,6 +2187,12 @@ clip_x11_convert_selection_cb(w, sel_atom, target, type, value, length, format)
     /* For our own format, the first byte contains the motion type */
     if (*target == vim_atom)
 	(*length)++;
+
+#ifdef FEAT_MBYTE
+    /* Our own format with encoding: motion 'encoding' NUL text */
+    if (*target == vimenc_atom)
+	*length += STRLEN(p_enc) + 2;
+#endif
 
     *value = XtMalloc((Cardinal)*length);
     result = (char_u *)*value;
@@ -2159,6 +2224,19 @@ clip_x11_convert_selection_cb(w, sel_atom, target, type, value, length, format)
 	*length = text_prop.nitems;
 	*type = compound_text_atom;
     }
+
+#ifdef FEAT_MBYTE
+    else if (*target == vimenc_atom)
+    {
+	int l = STRLEN(p_enc);
+
+	result[0] = motion_type;
+	STRCPY(result + 1, p_enc);
+	mch_memmove(result + l + 2, string, (size_t)(*length - l - 2));
+	*type = vimenc_atom;
+    }
+#endif
+
     else
     {
 	result[0] = motion_type;
