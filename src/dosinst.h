@@ -227,14 +227,22 @@ get_shell_folder_path(
     if (strcmp(shell_folder_name, "desktop") == 0)
     {
 	pcsidl = &desktop_csidl;
+#ifdef CSIDL_COMMON_DESKTOPDIRECTORY
 	csidl = CSIDL_COMMON_DESKTOPDIRECTORY;
 	alt_csidl = CSIDL_DESKTOP;
+#else
+	csidl = CSIDL_DESKTOP;
+#endif
     }
     else if (strncmp(shell_folder_name, "Programs", 8) == 0)
     {
 	pcsidl = &programs_csidl;
+#ifdef CSIDL_COMMON_PROGRAMS
 	csidl = CSIDL_COMMON_PROGRAMS;
 	alt_csidl = CSIDL_PROGRAMS;
+#else
+	csidl = CSIDL_PROGRAMS;
+#endif
     }
     else
     {

@@ -1357,29 +1357,31 @@ retry:
 		int	needed;
 		char_u	*p;
 		int	u8c;
-		int	l, len;
 
 		/*
 		 * 1. find out how many ucs-2 characters there are.
 		 */
+#  ifdef CP_UTF8	/* VC 4.1 doesn't define CP_UTF8 */
 		if (FIO_GET_CP(fio_flags) == CP_UTF8)
 		{
+		    int		l, flen;
+
 		    /* Handle CP_UTF8 ourselves to be able to handle trailing
 		     * bytes properly.  First find out the number of
 		     * characters and check for trailing bytes. */
 		    needed = 0;
 		    p = ptr;
-		    for (len = from_size; len > 0; len -= l)
+		    for (flen = from_size; flen > 0; flen -= l)
 		    {
-			l = utf_ptr2len_check_len(p, len);
-			if (l > len)			/* incomplete char */
+			l = utf_ptr2len_check_len(p, flen);
+			if (l > flen)			/* incomplete char */
 			{
 			    if (l > CONV_RESTLEN)
 				/* weird overlong byte sequence */
 				goto rewind_retry;
-			    mch_memmove(conv_rest, p, len);
-			    conv_restlen = len;
-			    from_size -= len;
+			    mch_memmove(conv_rest, p, flen);
+			    conv_restlen = flen;
+			    from_size -= flen;
 			    break;
 			}
 			if (l == 1 && *p >= 0x80)	/* illegal byte */
@@ -1389,6 +1391,7 @@ retry:
 		    }
 		}
 		else
+#  endif
 		{
 		    /* We can't tell if the last byte of an MBCS string is
 		     * valid and MultiByteToWideChar() returns zero if it
@@ -1425,14 +1428,17 @@ retry:
 		if (ucsp < ptr + size)
 		    goto rewind_retry;
 
+#  ifdef CP_UTF8	/* VC 4.1 doesn't define CP_UTF8 */
 		if (FIO_GET_CP(fio_flags) == CP_UTF8)
 		{
+		    int		l, flen;
+
 		    /* Convert from utf-8 to ucs-2. */
 		    needed = 0;
 		    p = ptr;
-		    for (len = from_size; len > 0; len -= l)
+		    for (flen = from_size; flen > 0; flen -= l)
 		    {
-			l = utf_ptr2len_check_len(p, len);
+			l = utf_ptr2len_check_len(p, flen);
 			u8c = utf_ptr2char(p);
 			ucsp[needed * 2] = (u8c & 0xff);
 			ucsp[needed * 2 + 1] = (u8c >> 8);
@@ -1441,6 +1447,7 @@ retry:
 		    }
 		}
 		else
+#  endif
 		    needed = MultiByteToWideChar(FIO_GET_CP(fio_flags),
 					    MB_ERR_INVALID_CHARS, (LPCSTR)ptr,
 					     from_size, (LPWSTR)ucsp, needed);
@@ -4705,6 +4712,7 @@ buf_write_bytes(ip)
 
 	    fromlen = to - ip->bw_conv_buf;
 	    buf = to;
+#  ifdef CP_UTF8	/* VC 4.1 doesn't define CP_UTF8 */
 	    if (FIO_GET_CP(flags) == CP_UTF8)
 	    {
 		/* Convert from UCS-2 to UTF-8, using the remainder of the
@@ -4723,6 +4731,7 @@ buf_write_bytes(ip)
 		len = to - buf;
 	    }
 	    else
+#endif
 	    {
 		/* Convert from UCS-2 to the codepage, using the remainder of
 		 * the conversion buffer.  If the conversion uses the default
@@ -5064,9 +5073,11 @@ get_win_fio_flags(ptr)
     cp = encname2codepage(ptr);
     if (cp == 0)
     {
+#  ifdef CP_UTF8	/* VC 4.1 doesn't define CP_UTF8 */
 	if (STRCMP(ptr, "utf-8") == 0)
 	    cp = CP_UTF8;
 	else
+#  endif
 	    return 0;
     }
     return FIO_PUT_CP(cp) | FIO_CODEPAGE;
