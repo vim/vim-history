@@ -1761,12 +1761,12 @@ msg_puts_attr_len(str, maxlen, attr)
     if (msg_use_printf())
     {
 #ifdef WIN3264
-	if (!silent_mode)
+	if (!(silent_mode && p_verbose == 0))
 	    mch_settmode(TMODE_COOK);	/* handle '\r' and '\n' correctly */
 #endif
 	while (*s != NUL && (maxlen < 0 || (int)(s - str) < maxlen))
 	{
-	    if (!silent_mode)
+	    if (!(silent_mode && p_verbose == 0))
 	    {
 		p = &buf[0];
 		/* NL --> CR NL translation (for Unix, not for "--version") */
@@ -1806,7 +1806,7 @@ msg_puts_attr_len(str, maxlen, attr)
 	msg_didout = TRUE;	    /* assume that line is not empty */
 
 #ifdef WIN3264
-	if (!silent_mode)
+	if (!(silent_mode && p_verbose == 0))
 	    mch_settmode(TMODE_RAW);
 #endif
 	return;
