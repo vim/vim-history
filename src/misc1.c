@@ -2806,7 +2806,11 @@ init_homedir()
 	{
 	    sprintf((char *)NameBuff, "%s%s", homedrive, homepath);
 	    if (NameBuff[0] != NUL)
+	    {
 		var = NameBuff;
+		/* Also set $HOME, it's needed for _viminfo. */
+		vim_setenv((char_u *)"HOME", NameBuff);
+	    }
 	}
     }
 #endif
