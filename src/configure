@@ -999,87 +999,16 @@ if test "$cross_compiling" = yes; then
   { echo "configure: error: cannot compile a simple program, check CC and CFLAGS" 1>&2; exit 1; }
 fi
 
-
-if test "$GCC" != yes; then
-  save_cflags=$CFLAGS
-  echo $ac_n "checking if compiler accepts -OPT:Olimit""... $ac_c" 1>&6
-echo "configure:1007: checking if compiler accepts -OPT:Olimit" >&5
-  CFLAGS="$CFLAGS -OPT:Olimit=2600"
-  cat > conftest.$ac_ext <<EOF
-#line 1010 "configure"
-#include "confdefs.h"
-
-int main() {
-
-; return 0; }
-EOF
-if { (eval echo configure:1017: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  echo "$ac_t""no" 1>&6; CFLAGS="$save_cflags"
-      echo $ac_n "checking if compiler accepts -Olimit""... $ac_c" 1>&6
-echo "configure:1026: checking if compiler accepts -Olimit" >&5
-      CFLAGS="$CFLAGS -Olimit 2000"
-      cat > conftest.$ac_ext <<EOF
-#line 1029 "configure"
-#include "confdefs.h"
-
-int main() {
-
-; return 0; }
-EOF
-if { (eval echo configure:1036: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  echo "$ac_t""no" 1>&6; CFLAGS="$save_cflags"
-	  echo $ac_n "checking if compiler accepts -FOlimit""... $ac_c" 1>&6
-echo "configure:1045: checking if compiler accepts -FOlimit" >&5
-	  CFLAGS="$CFLAGS -FOlimit,2000"
-  	  cat > conftest.$ac_ext <<EOF
-#line 1048 "configure"
-#include "confdefs.h"
-
-int main() {
-
-; return 0; }
-EOF
-if { (eval echo configure:1055: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  echo "$ac_t""no" 1>&6; CFLAGS="$save_cflags"
-	    
-fi
-rm -f conftest*
-	
-fi
-rm -f conftest*
-    
-fi
-rm -f conftest*
-fi
-
 test "$GCC" = yes && CPP_MM=M; 
 
 if test -f ./toolcheck; then
   echo "checking for buggy tools" 1>&6
-echo "configure:1078: checking for buggy tools" >&5
+echo "configure:1007: checking for buggy tools" >&5
   sh ./toolcheck 1>&6
 fi
 
 echo $ac_n "checking for BeOS""... $ac_c" 1>&6
-echo "configure:1083: checking for BeOS" >&5
+echo "configure:1012: checking for BeOS" >&5
 case `uname` in
     BeOS)	OS_EXTRA_SRC=os_beos.c; OS_EXTRA_OBJ=os_beos.o
 		BEOS=yes; echo "$ac_t""yes" 1>&6;;

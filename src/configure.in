@@ -35,33 +35,6 @@ if test "$cross_compiling" = yes; then
   AC_MSG_ERROR([cannot compile a simple program, check CC and CFLAGS])
 fi
 
-dnl Check if the compiler accepts "-OPT:Olimit=2600", "-Olimit 2000" or
-dnl "-FOlimit,2000".  Needed for some systems, because Vim uses very big case
-dnl statements.  The order is significant, because "-FOlimit,2000 and
-dnl "-Olimit 2000" may only generate a warning.
-
-if test "$GCC" != yes; then
-  save_cflags=$CFLAGS
-  AC_MSG_CHECKING(if compiler accepts -OPT:Olimit)
-  CFLAGS="$CFLAGS -OPT:Olimit=2600"
-  AC_TRY_LINK(, ,
-    AC_MSG_RESULT(yes),
-    [AC_MSG_RESULT(no); CFLAGS="$save_cflags"
-      AC_MSG_CHECKING(if compiler accepts -Olimit)
-      CFLAGS="$CFLAGS -Olimit 2000"
-      AC_TRY_LINK(, ,
-	AC_MSG_RESULT(yes),
-	[AC_MSG_RESULT(no); CFLAGS="$save_cflags"
-	  AC_MSG_CHECKING(if compiler accepts -FOlimit)
-	  CFLAGS="$CFLAGS -FOlimit,2000"
-  	  AC_TRY_LINK(, ,
-	    AC_MSG_RESULT(yes),
-            [AC_MSG_RESULT(no); CFLAGS="$save_cflags"
-	    ])
-	])
-    ])
-fi
-
 dnl gcc-cpp has the wonderful -MM option to produce nicer dependencies
 test "$GCC" = yes && CPP_MM=M; AC_SUBST(CPP_MM)
 
