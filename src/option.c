@@ -2435,7 +2435,9 @@ do_set(arg, modeline)
 			    /*
 			     * Copy the string, skip over escaped chars.
 			     * For MS-DOS and WIN32 backslashes before normal
-			     * file name characters are not removed.
+			     * file name characters are not removed, and keep
+			     * backslash at start, for "\\machine\path", but
+			     * do remove it for "\\\\machine\\path".
 			     */
 			    while (*arg && !vim_iswhite(*arg))
 			    {
@@ -2443,7 +2445,9 @@ do_set(arg, modeline)
 #ifdef BACKSLASH_IN_FILENAME
 					&& !((flags & P_EXPAND)
 						&& vim_isfilec(arg[1])
-						&& arg[1] != '\\')
+						&& (arg[1] != '\\'
+						    || (s == newval
+							&& arg[2] != '\\')))
 #endif
 								    )
 				    ++arg;
