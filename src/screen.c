@@ -1980,6 +1980,28 @@ fold_line(wp, fold_count, foldinfo, lnum, row)
     /* Set all attributes of the 'number' column and the text */
     RL_MEMSET(col, hl_attr(HLF_FL), (size_t)(W_WIDTH(wp) - col));
 
+#ifdef FEAT_SIGNS
+    /* If signs are being displayed, add two spaces. */
+    if (wp->w_buffer->b_signlist != NULL)
+    {
+	len = W_WIDTH(wp) - col;
+	if (len > 0)
+	{
+	    if (len > 2)
+		len = 2;
+# ifdef FEAT_RIGHTLEFT
+	    if (wp->w_p_rl)
+		/* the line number isn't reversed */
+		copy_text_attr(off + W_WIDTH(wp) - len - col, "  ", len,
+							     hl_attr(HLF_FL));
+	    else
+# endif
+		copy_text_attr(off + col, "  ", len, hl_attr(HLF_FL));
+	    col += len;
+	}
+    }
+#endif
+
     /*
      * 3. Add the 'number' column
      */
