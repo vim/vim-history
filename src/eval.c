@@ -7878,12 +7878,13 @@ ex_function(eap)
 	    arg = p;
 	    while (ASCII_ISALPHA(*p) || isdigit(*p) || *p == '_')
 		++p;
-	    if (arg == p || isdigit(*arg))
+	    if (arg == p || isdigit(*arg)
+		    || (p - arg == 9 && STRNCMP(arg, "firstline", 9) == 0)
+		    || (p - arg == 8 && STRNCMP(arg, "lastline", 8) == 0))
 	    {
-		if (eap->skip)
-		    break;
-		EMSG2(_("E125: Illegal argument: %s"), arg);
-		goto erret;
+		if (!eap->skip)
+		    EMSG2(_("E125: Illegal argument: %s"), arg);
+		break;
 	    }
 	    if (ga_grow(&newargs, 1) == FAIL)
 		goto erret;
@@ -7904,10 +7905,9 @@ ex_function(eap)
 	p = skipwhite(p);
 	if (mustend && *p != ')')
 	{
-	    if (eap->skip)
-		break;
-	    EMSG2(_(e_invarg2), eap->arg);
-	    goto erret;
+	    if (!eap->skip)
+		EMSG2(_(e_invarg2), eap->arg);
+	    break;
 	}
     }
     ++p;	/* skip the ')' */
@@ -7930,11 +7930,8 @@ ex_function(eap)
 	    break;
     }
 
-    if (*p != NUL && *p != '"' && *p != '\n' && !eap->skip)
-    {
+    if (*p != NUL && *p != '"' && *p != '\n' && !eap->skip && !did_emsg)
 	EMSG(_(e_trailing));
-	goto erret;
-    }
 
     /*
      * Read the body of the function, until ":endfunction" is found.
@@ -7945,10 +7942,7 @@ ex_function(eap)
 	 * whole function before telling him it doesn't work!  For a script we
 	 * need to skip the body to be able to find what follows. */
 	if (!eap->skip && !eap->forceit && find_func(name) != NULL)
-	{
 	    EMSG2(_(e_funcexts), name);
-	    goto erret;
-	}
 
 	msg_putchar('\n');	    /* don't overwrite the function name */
 	cmdline_row = msg_row;
@@ -8031,7 +8025,9 @@ ex_function(eap)
 	newlines.ga_room--;
     }
 
-    if (eap->skip)
+    /* Don't define the function when skipping commands or when an error was
+     * detected. */
+    if (eap->skip || did_emsg)
 	goto erret;
 
     /*
