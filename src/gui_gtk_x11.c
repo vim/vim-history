@@ -43,6 +43,8 @@
 enum {
     SELECTION_TYPE_NONE,
     SELECTION_STRING,
+    SELECTION_TEXT,
+    SELECTION_COMPOUND_TEXT,
     SELECTION_CLIPBOARD
 };
 
@@ -670,9 +672,10 @@ static int received_selection;
 static void
 selection_received_event(GtkWidget * widget, GtkSelectionData * data)
 {
-    int motion_type;
-    long_u len;
-    char_u *p;
+    int		motion_type;
+    long_u	len;
+    char_u	*p;
+    int		free_p = FALSE;
 
     if ((!data->data) || (data->length <= 0)) {
 	received_selection = RS_FAIL;
@@ -684,8 +687,30 @@ selection_received_event(GtkWidget * widget, GtkSelectionData * data)
     }
 
     motion_type = MCHAR;
-    p = (char_u *) data->data;
-    len = data->length;
+    if (data->type == gdk_atom_intern("COMPOUND_TEXT", FALSE)
+	    || data->type == gdk_atom_intern("TEXT", FALSE))
+    {
+	int	count, i;
+	char	**list;
+	GString *str = g_string_new(NULL);
+
+	count = gdk_text_property_to_text_list(data->type, data->format,
+					     data->data, data->length, &list);
+	len = 0;
+	for (i = 0; i < count; i++)
+	    g_string_append(str, list[i]);
+
+	p = str->str;
+	len = str->len;
+	g_string_free(str, FALSE);
+	gdk_free_text_list(list);
+	free_p = TRUE;
+    }
+    else
+    {
+	p = (char_u *)data->data;
+	len = data->length;
+    }
 
     if (data->type == clipboard.atom) {
 	motion_type = *p++;
@@ -695,6 +720,9 @@ selection_received_event(GtkWidget * widget, GtkSelectionData * data)
 	received_selection = RS_OK;
     if (gtk_main_level() > 0)
 	gtk_main_quit();
+
+    if (free_p)
+	g_free(p);
 }
 
 #ifdef GTK_HAVE_FEATURES_1_1_4
@@ -719,7 +747,8 @@ selection_get_event(GtkWidget *widget,
     if (!clipboard.owned)
 	return;			/* Shouldn't ever happen */
 
-    if (info != SELECTION_STRING && info != SELECTION_CLIPBOARD)
+    if (info != SELECTION_STRING && info != SELECTION_CLIPBOARD
+	    && info != SELECTION_COMPOUND_TEXT && info != SELECTION_TEXT)
 	return;
 
     clip_get_selection();
@@ -745,6 +774,24 @@ selection_get_event(GtkWidget *widget,
 	result[0] = motion_type;
 	mch_memmove(result + 1, string, (size_t)(length - 1));
 	type = clipboard.atom;
+    }
+    else if (info == SELECTION_COMPOUND_TEXT || info == SELECTION_TEXT)
+    {
+	char *str;
+	gint format, new_len;
+
+	vim_free(result);
+	str = g_new(char, length + 1);
+	mch_memmove(str, string, (size_t) length);
+	vim_free(string);
+	str[length] = '\0';
+	gdk_string_to_compound_text(str, &type, &format, &result, &new_len);
+	g_free(str);
+	selection_data->type = type;
+	selection_data->format = format;
+	gtk_selection_data_set(selection_data, type, format, result, new_len);
+	gdk_free_compound_text(result);
+	return;
     }
     else
     {
@@ -1327,6 +1374,14 @@ delete_event_cb(GtkWidget *wgt, gpointer cbdata)
     return TRUE;
 }
 
+#define VIM_ATOM_NAME "_VIM_TEXT"
+static const GtkTargetEntry primary_targets[] = {
+    {VIM_ATOM_NAME, 0, SELECTION_CLIPBOARD},
+    {"STRING", 0, SELECTION_STRING},
+    {"TEXT", 0, SELECTION_TEXT},
+    {"COMPOUND_TEXT", 0, SELECTION_COMPOUND_TEXT}
+};
+
 /*
  * Initialise the X GUI.  Create all the windows, set up all the call-backs etc.
  * Returns OK for success, FAIL when the GUI can't be started.
@@ -1443,7 +1498,7 @@ gui_mch_init()
 	gui.def_back_pixel = gui.back_pixel;
     }
     gui.visibility = GDK_VISIBILITY_UNOBSCURED;
-    clipboard.atom = gdk_atom_intern("_VIM_TEXT", FALSE);
+    clipboard.atom = gdk_atom_intern(VIM_ATOM_NAME, FALSE);
     save_yourself_atom = gdk_atom_intern("WM_SAVE_YOURSELF", FALSE);
     reread_rcfiles_atom = gdk_atom_intern("_GTK_READ_RCFILES", FALSE);
 
@@ -1492,10 +1547,9 @@ gui_mch_init()
 
     /* gtk_selection_add_target() is not in GTK 1.1.2 */
 #ifdef GTK_HAVE_FEATURES_1_1_4
-    gtk_selection_add_target(gui.drawarea, GDK_SELECTION_PRIMARY,
-			    GDK_TARGET_STRING, SELECTION_STRING);
-    gtk_selection_add_target(gui.drawarea, GDK_SELECTION_PRIMARY,
-			    clipboard.atom, SELECTION_CLIPBOARD);
+    gtk_selection_add_targets(gui.drawarea, GDK_SELECTION_PRIMARY,
+			      primary_targets,
+			      sizeof(primary_targets)/sizeof(primary_targets[0]));
     gtk_signal_connect(GTK_OBJECT(gui.drawarea), "selection_get",
 		       GTK_SIGNAL_FUNC(selection_get_event), NULL);
 #else
@@ -2097,7 +2151,7 @@ gui_mch_init_font(char_u * font_name)
 	if ((sdup = g_strdup((const char *)font_name)) == NULL)
 	    return FAIL;
 
-	/* slipt up the whole */
+	/* split up the whole */
 	i = 0;
 	for (tmp = sdup; *tmp != '\0'; ++tmp)
 	    if (*tmp == '-')
