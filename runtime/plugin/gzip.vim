@@ -1,6 +1,6 @@
 " Vim plugin for editing compressed files.
 " Maintainer: Bram Moolenaar <Bram@vim.org>
-" Last Change: 2001 Aug 23
+" Last Change: 2001 Sep 11
 
 " Exit quickly when:
 " - this plugin was already loaded
@@ -94,8 +94,12 @@ endfun
 fun s:write(cmd)
   " don't do anything if the cmd is not supported
   if s:check(a:cmd)
-    if rename(expand("<afile>"), expand("<afile>:r")) == 0
-      call system(a:cmd . " " . expand("<afile>:r"))
+    " Rename to a weird name to avoid the risk of overwriting another file
+    let nm = expand("<afile>")
+    let nmt = expand("<afile>:p:h") . "/X~=@l9q5"
+    if rename(nm, nmt) == 0
+      call system(a:cmd . " " . nmt)
+      call rename(nmt . "." . expand("<afile>:e"), nm)
     endif
   endif
 endfun
@@ -104,8 +108,14 @@ endfun
 fun s:appre(cmd)
   " don't do anything if the cmd is not supported
   if s:check(a:cmd)
-    call system(a:cmd . " " . expand("<afile>"))
-    call rename(expand("<afile>:r"), expand("<afile>"))
+    " Rename to a weird name to avoid the risk of overwriting another file
+    let nm = expand("<afile>")
+    let nmt = expand("<afile>:p:h") . "/X~=@l9q5"
+    let nmte = nmt . "." . expand("<afile>:e")
+    if rename(nm, nmte) == 0
+      call system(a:cmd . " " . nmte)
+      call rename(nmt, nm)
+    endif
   endif
 endfun
 

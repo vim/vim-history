@@ -1726,8 +1726,9 @@ AC_TRY_LINK([
 	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_NL_LANGINFO_CODESET),
 	AC_MSG_RESULT(no))
 
-dnl Link with posix1e for ACL stuff
-AC_CHECK_LIB(posix1e, acl_get_file, [LIBS="$LIBS -lposix1e"],,)
+dnl Link with -lposix1e for ACL stuff; if not found, try -lacl for SGI
+AC_CHECK_LIB(posix1e, acl_get_file, [LIBS="$LIBS -lposix1e"],
+	AC_CHECK_LIB(acl, acl_get_file, [LIBS="$LIBS -lacl"],,),)
 
 AC_MSG_CHECKING(for POSIX ACL support)
 AC_TRY_LINK([

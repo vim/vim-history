@@ -528,19 +528,21 @@ mch_input_isatty()
  * fname_case(): Set the case of the file name, if it already exists.
  *		 This will cause the file name to remain exactly the same.
  */
+/*ARGSUSED*/
     void
-fname_case(name)
-    char_u  *name;
+fname_case(name, len)
+    char_u	*name;
+    int		len;		/* buffer size, ignored here */
 {
     struct FileInfoBlock    *fib;
-    size_t		    len;
+    size_t		    flen;
 
     fib = get_fib(name);
     if (fib != NULL)
     {
-	len = STRLEN(name);
-	if (len == strlen(fib->fib_FileName))	/* safety check */
-	    mch_memmove(name, fib->fib_FileName, len);
+	flen = STRLEN(name);
+	if (flen == strlen(fib->fib_FileName))	/* safety check */
+	    mch_memmove(name, fib->fib_FileName, flen);
 	vim_free(fib);
     }
 }

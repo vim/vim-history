@@ -1500,7 +1500,7 @@ drag_data_received(GtkWidget *widget, GdkDragContext *context,
 	if (current_modifiers & GDK_SHIFT_MASK)
 	{
 	    /* Shift held down, change to first file's directory */
-	    if (fnames[0] != NULL && vim_chdirfile(fnames[0]) == 0)
+	    if (fnames[0] != NULL && vim_chdirfile(fnames[0]) == OK)
 		redo_dirs = TRUE;
 	}
 	else

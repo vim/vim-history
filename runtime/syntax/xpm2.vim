@@ -1,6 +1,6 @@
 " Vim syntax file
 " Language:	X Pixmap v2
-" Maintainer:	Steve Wall (steve_wall@redcom.com)
+" Maintainer:	Steve Wall (hitched97@velnet.com)
 " Last Change:	2001 Apr 25
 " Version:	5.8
 "

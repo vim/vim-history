@@ -771,7 +771,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60av
+VIMRTDIR = /vim60aw
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
 SYNSUBDIR = /syntax
@@ -1352,6 +1352,7 @@ auto/configure: configure.in
 	sed -e 's+\./config.log+auto/config.log+' configure > auto/configure
 	chmod 755 auto/configure
 	mv -f configure.save configure
+	-rm -f auto/config.status auto/config.cache
 
 # Re-execute this Makefile to include the new auto/config.mk produced by
 # configure Only used when typing "make" with a fresh auto/config.mk.

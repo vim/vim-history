@@ -2052,7 +2052,7 @@ get_tagfname(first, buf)
 		search_ctx = vim_findfile_init(buf, filename, r_ptr, 100,
 			FALSE, /* don't free visited list */
 			FALSE, /* we search for a file */
-			search_ctx, TRUE);
+			search_ctx, TRUE, curbuf->b_ffname);
 		if (search_ctx != NULL)
 		    did_filefind_init = TRUE;
 	    }

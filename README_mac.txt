@@ -1,4 +1,4 @@
-README_mac.txt for version 6.0av of Vim: Vi IMproved.
+README_mac.txt for version 6.0aw of Vim: Vi IMproved.
 
 This file explains the installation of Vim on Macintosh systems.
 See "README.txt" for general information about Vim.

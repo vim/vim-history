@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.0av.  Last change: 2001 Sep 03
+*repeat.txt*    For Vim version 6.0aw.  Last change: 2001 Sep 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -52,12 +52,13 @@ the same SIZE of area is used, see |visual-repeat|.
 			Same as :g!.
 
 The global commands work by first scanning through the [range] lines and
-marking each line where a match occurs.  In a second scan the [cmd] is
-executed for each marked line with its line number prepended.  If a line is
-changed or deleted its mark disappears.  The default for [range] is the whole
-buffer (1,$).  Use "CTRL-C" to interrupt the command.  If an error message is
-given for a line, the command for that line is aborted and the global command
-continues with the next matching line.
+marking each line where a match occurs (for a multi-line pattern, only the
+start of the match matters).
+In a second scan the [cmd] is executed for each marked line with its line
+number prepended.  If a line is changed or deleted its mark disappears.
+The default for [range] is the whole buffer (1,$).  Use "CTRL-C" to interrupt
+the command.  If an error message is given for a line, the command for that
+line is aborted and the global command continues with the next matching line.
 
 To repeat a non-Ex command, you can use the ":normal" command: >
 	:g/pat/normal {commands}

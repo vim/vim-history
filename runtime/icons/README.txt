@@ -1,4 +1,5 @@
 Choose your preferred icon and replace the standard Vim icon with it.
+[This is for the Amiga]
 
 When started from Workbench, Vim opens a window of standard terminal size
 (80 x 25). Trying to change this by adding a tool type results in a window

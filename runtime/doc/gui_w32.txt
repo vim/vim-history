@@ -1,4 +1,4 @@
-*gui_w32.txt*   For Vim version 6.0av.  Last change: 2001 Sep 03
+*gui_w32.txt*   For Vim version 6.0aw.  Last change: 2001 Sep 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -101,11 +101,9 @@ form.  This is a limitation of the Windows "Send To" mechanism.
 
 						*notepad*
 You could replace notepad.exe with gvim.exe, but that has a few side effects.
-For example, some programs rely on notepad arguments, which are not recognized
-by Vim.  And Vim uses notepad for printing.  You could fix that by adjusting
-the File/Print menu item, but if other applications also use notepad for
-printing, that will fail.  It's better to leave notepad where it is and use
-another way to start Vim.
+Some programs rely on notepad arguments, which are not recognized by Vim.  For
+example "notepad -p" is used by some applications to print a file.  It's
+better to leave notepad where it is and use another way to start Vim.
 
 						*win32-popup-menu*
 A more drastic approach is to install an "Edit with Vim" entry in the popup

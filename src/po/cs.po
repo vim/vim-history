@@ -1985,7 +1985,7 @@ msgstr "Zpìt"
 #: gui_riscos.c:951
 #, c-format
 msgid "E235: Can't load Zap font '%s'"
-msgstr"E235: Nelze naèíst Zap font '%s'"
+msgstr "E235: Nelze naèíst Zap font '%s'"
 
 #: gui_riscos.c:1047
 #, c-format
@@ -2370,7 +2370,7 @@ msgstr ""
 #: if_ruby.c:457
 #, c-format
 msgid "E273: unknown longjmp status %d"
-msgstr"E273: neznámý longjmp stav %d"
+msgstr "E273: neznámý longjmp stav %d"
 
 #: if_sniff.c:67
 msgid "Toggle implementation/definition"
@@ -3060,8 +3060,8 @@ msgid "--help\t\tShow Gnome arguments"
 msgstr "--help\t\tVypí¹e Gnome pøepínaèe"
 
 #: main.c:2494
-msgid "Send failed. Trying to execute locally\n"
-msgstr "Pøedání selhalo. Zkou¹ím provést lokálnì\n"
+msgid "\nSend failed. Trying to execute locally\n"
+msgstr "\nPøedání selhalo. Zkou¹ím provést lokálnì\n"
 
 #: main.c:2563
 msgid "Send expression failed.\n"

@@ -4311,7 +4311,7 @@ file_name_at_cursor(options, count)
     long    count;
 {
     return file_name_in_line(ml_get_curline(),
-					curwin->w_cursor.col, options, count);
+		      curwin->w_cursor.col, options, count, curbuf->b_ffname);
 }
 
 /*
@@ -4319,11 +4319,12 @@ file_name_at_cursor(options, count)
  * Otherwise like file_name_at_cursor().
  */
     char_u *
-file_name_in_line(line, col, options, count)
+file_name_in_line(line, col, options, count, rel_fname)
     char_u	*line;
     int		col;
     int		options;
     long	count;
+    char_u	*rel_fname;	/* file we are searching relative to */
 {
     char_u	*ptr;
     int		len;
@@ -4381,7 +4382,7 @@ file_name_in_line(line, col, options, count)
 						       && ptr[len - 2] != '.')
 	--len;
 
-    return find_file_name_in_path(ptr, len, options, count);
+    return find_file_name_in_path(ptr, len, options, count, rel_fname);
 }
 
 # if defined(FEAT_FIND_ID) && defined(FEAT_EVAL)
@@ -4406,11 +4407,12 @@ eval_includeexpr(ptr, len)
  * Otherwise like file_name_at_cursor().
  */
     char_u *
-find_file_name_in_path(ptr, len, options, count)
+find_file_name_in_path(ptr, len, options, count, rel_fname)
     char_u	*ptr;
     int		len;
     int		options;
     long	count;
+    char_u	*rel_fname;	/* file we are searching relative to */
 {
     char_u	*file_name;
     int		c;
@@ -4430,7 +4432,8 @@ find_file_name_in_path(ptr, len, options, count)
 
     if (options & FNAME_EXP)
     {
-	file_name = find_file_in_path(ptr, len, options & ~FNAME_MESS, TRUE);
+	file_name = find_file_in_path(ptr, len, options & ~FNAME_MESS,
+							     TRUE, rel_fname);
 
 # if defined(FEAT_FIND_ID) && defined(FEAT_EVAL)
 	/*
@@ -4446,7 +4449,7 @@ find_file_name_in_path(ptr, len, options, count)
 		ptr = tofree;
 		len = (int)STRLEN(ptr);
 		file_name = find_file_in_path(ptr, len, options & ~FNAME_MESS,
-									TRUE);
+							     TRUE, rel_fname);
 	    }
 	}
 # endif
@@ -4463,7 +4466,7 @@ find_file_name_in_path(ptr, len, options, count)
 	while (file_name != NULL && --count > 0)
 	{
 	    vim_free(file_name);
-	    file_name = find_file_in_path(ptr, len, options, FALSE);
+	    file_name = find_file_in_path(ptr, len, options, FALSE, rel_fname);
 	}
     }
     else

@@ -1,4 +1,4 @@
-*remote.txt*    For Vim version 6.0av.  Last change: 2001 Sep 09
+*remote.txt*    For Vim version 6.0aw.  Last change: 2001 Sep 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -52,14 +52,16 @@ X-server.  The resulting name is available in the servername builtin variable
 |v:servername|.  The case of the server name is ignored, thus "gvim" and
 "GVIM" are considered equal.
 
-When Vim is invoked with --remote-send it will try to locate the server name
-determined by the invocation name and --servername argument as described
-above.  If an exact match is not available, the first server with the number
-postfix will be used.  If no server can be located, Vim will start up
-according to the rest of the command line and execute the kestrokes by itself.
-This way it is not necessary to know whether gvim is already started when
-sending command to it.  If a name with the number postfix is specified with
-the --servername argument, it must match exactly.
+When Vim is invoked with --remote, --remote-wait or --remote-send it will try
+to locate the server name determined by the invocation name and --servername
+argument as described above.  If an exact match is not available, the first
+server with the number postfix will be used.  If a name with the number
+postfix is specified with the --servername argument, it must match exactly.
+
+If no server can be located and --remote or --remote-wait was used, Vim will
+start up according to the rest of the command line and do the editing by
+itself.  This way it is not necessary to know whether gvim is already started
+when sending command to it.
 
 The --serverlist argument will cause Vim to print a list of registered command
 servers on the standard output (stdout) and exit.

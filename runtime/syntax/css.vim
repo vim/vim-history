@@ -2,7 +2,7 @@
 " Language:	Cascading Style Sheets
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/css.vim
-" Last Change:	2001 Jul 21
+" Last Change:	2001 Sept 11
 " CSS2 by Nikolai Weibull
 
 " For version 5.x: Clear all syntax items
@@ -99,7 +99,6 @@ syn keyword cssPseudoClassId contained link visited active hover
 syn match cssPseudoClassId contained "\<first-\(line\|letter\)\>"
 
 syn region cssComment start="/\*" end="\*/"
-syn match cssComment "//.*$"
 
 syn region cssString start=+"+ skip=+\\\\\|\\"+ end=+"+
 syn region cssString start=+'+ skip=+\\\\\|\\'+ end=+'+

@@ -1,4 +1,4 @@
-*uganda.txt*    For Vim version 6.0av.  Last change: 2001 Sep 03
+*uganda.txt*    For Vim version 6.0aw.  Last change: 2001 Sep 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -138,6 +138,11 @@ USA and Canada: Contact Kibaale Children's Fund (KCF) in Surrey, Canada.  They
 			Surrey, B.C. V4N 1Z4
 			Canada
 			Phone: 604-581-5353
+		If you make a donation to Kibaale Children's Fund (KCF) you
+		will receive a tax receipt which can be submitted with your
+		tax return (under the Free Trade Agreement tax receipts issued
+		by an organization registered in Canada are fully accepted by
+		the IRS in the USA).
 
 Holland:	Transfer to the account of "Stichting ICCF Holland" in Venlo.
 		This will allow for tax deduction (if you live in Holland)!
@@ -148,10 +153,12 @@ World:		Use a postal money order.  That should be possible from any
 		in my passport): "Abraham Moolenaar".  Use Euro for the
 		currency if possible.
 
-Europe:		To avoid banking costs the best thing is to send me a
-		Eurocheque, written out to "Bram Moolenaar" in Dutch Guilders
-		(DFL).  Send it to the address below.
-		NOTE: Eurocheques cannot be used after December 2001.
+Europe:		Use a bank transfer if possible.  Your bank should have a form
+		that you can use for this.  See "Others" below for the swift
+		code and IBAN number.
+		Until December 2001 a eurocheque can still be used, which is
+		preferred, because it has no costs for us.  You must write the
+		amount in Dutch Guilders (DFL).  Send it to the address below.
 		Any other method should work.  Ask for information about
 		sponsorship.
 

@@ -2,7 +2,7 @@
 " Language:	Makefile
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/make.vim
-" Last Change:	2001 Jul 21
+" Last Change:	2001 Sept 11
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -18,15 +18,17 @@ syn match makeNextLine	"\\$"
 
 " some directives
 syn match makePreCondit	"^\s*\(ifeq\>\|else\>\|endif\>\|define\>\|endef\>\|ifneq\>\|ifdef\>\|ifndef\>\)"
-syn match makeInclude	"^\s*-\=include"
+syn match makeInclude	"^\s*-\=s\=include"
 syn match makeStatement	"^\s*vpath"
+syn match makeExport   "^\s*\(export\|unexport\)\>"
 syn match makeOverride	"^\s*override"
 hi link makeOverride makeStatement
+hi link makeExport makeStatement
 
 " Microsoft Makefile specials
 syn case ignore
 syn match makeInclude	"^!\s*include"
-syn match makePreCondit "!\s*\(cmdswitches\>\|error\>\|message\>\|include\>\|if\>\|ifdef\>\|ifndef\>\|else\>\|elseif\>\|else if\>\|else\s*ifdef\>\|else\s*ifndef\>\|endif\>\|undef\>\)"
+syn match makePreCondit "!\s*\(cmdswitches\|error\|message\|include\|if\|ifdef\|ifndef\|else\|elseif\|else if\|else\s*ifdef\|else\s*ifndef\|endif\|undef\)\>"
 syn case match
 
 " identifiers
@@ -40,16 +42,7 @@ syn match makeIdent	"%"
 
 
 " make targets
-syn match makeSpecTarget	"^\.SUFFIXES"
-syn match makeSpecTarget	"^\.PHONY"
-syn match makeSpecTarget	"^\.DEFAULT"
-syn match makeSpecTarget	"^\.PRECIOUS"
-syn match makeSpecTarget	"^\.IGNORE"
-syn match makeSpecTarget	"^\.SILENT"
-syn match makeSpecTarget	"^\.EXPORT_ALL_VARIABLES"
-syn match makeSpecTarget	"^\.KEEP_STATE"
-syn match makeSpecTarget	"^\.LIBPATTERNS"
-syn match makeSpecTarget	"^\.NOTPARALLEL"
+syn match makeSpecTarget	"^\.\(SUFFIXES\|PHONY\|DEFAULT\|PRECIOUS\|IGNORE\|SILENT\|EXPORT_ALL_VARIABLES\|KEEP_STATE\|LIBPATTERNS\|NOTPARALLEL\|DELETE_ON_ERROR\|INTERMEDIATE\|POSIX\|SECONDARY\)\>"
 syn match makeImplicit		"^\.[A-Za-z0-9_./\t -]\+\s*:[^=]"me=e-2
 syn match makeImplicit		"^\.[A-Za-z0-9_./\t -]\+\s*:$"me=e-1
 syn match makeTarget		"^[A-Za-z0-9_./$()%-][A-Za-z0-9_./\t $()%-]*:[^=]"me=e-2 contains=makeIdent,makeSpecTarget

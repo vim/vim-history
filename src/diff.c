@@ -947,6 +947,7 @@ diff_win_options(wp, addbuf)
 	wp->w_p_fen = TRUE;
 	wp->w_p_fdl = 0;
 	foldUpdateAll(wp);
+	changed_window_setting(); /* make sure topline is not halfway a fold */
     }
 # endif
     if (addbuf)
@@ -1989,12 +1990,12 @@ diff_move_to(dir, count)
     {
 	/* Check if already before first diff. */
 	if (dir == BACKWARD && lnum <= first_diff->df_lnum[idx])
-	    return FAIL;
+	    break;
 
 	for (dp = first_diff; ; dp = dp->df_next)
 	{
 	    if (dp == NULL)
-		return FAIL;
+		break;
 	    if ((dir == FORWARD && lnum < dp->df_lnum[idx])
 		    || (dir == BACKWARD
 			&& (dp->df_next == NULL
@@ -2005,6 +2006,14 @@ diff_move_to(dir, count)
 	    }
 	}
     }
+
+    /* don't end up past the end of the file */
+    if (lnum > curbuf->b_ml.ml_line_count)
+	lnum = curbuf->b_ml.ml_line_count;
+
+    /* When the cursor didn't move at all we fail. */
+    if (lnum == curwin->w_cursor.lnum)
+	return FAIL;
 
     setpcmark();
     curwin->w_cursor.lnum = lnum;

@@ -64,8 +64,6 @@ static char	*lookupVerb(char *, int);
 static int	 computeIndex(int, char_u *, int);
 static void	 coloncmd(char *, Boolean);
 
-void		 workshop_get_current_file(); /* for No Hands */
-
 extern Widget	 vimShell;
 extern Widget	 textArea;
 extern XtAppContext app_context;
@@ -868,7 +866,7 @@ workshop_toolbar_button(
     p = vim_strsave_escaped((char_u *)label, (char_u *)"\\. ");
     sprintf(namebuf, "ToolBar.%s", p);
     vim_free(p);
-    STRCPY(cbuf, "amenu ");
+    STRCPY(cbuf, "amenu <silent> ");
     if (file != NULL && *file != NUL)
     {
 	p = vim_strsave_escaped((char_u *)file, (char_u *)" ");
@@ -1596,29 +1594,31 @@ bevalCB(
 	     * line to 0 because thats what dbx expects.
 	     */
 	    idx = computeIndex(col, text, beval->ts);
-	    line = 0;
-
-	    /*
-	     * If successful, it will respond with a balloon cmd.
-	     */
-	    if (state & ControlMask)
-		/* Evaluate *(expression) */
-		type = (int)GPLineEval_INDIRECT;
-	    else if (state & ShiftMask)
-		/* Evaluate type(expression) */
-		type = (int)GPLineEval_TYPE;
-	    else
-		/* Evaluate value(expression) */
-		type = (int)GPLineEval_EVALUATE;
-
-	    /* Send request to dbx */
-	    sprintf(buf, "toolVerb debug.balloonEval "
-		    "%s %d,0 %d,0 %d,%d %d %s\n", (char *) filename,
-		    line, idx, type, serialNo++,
-		    strlen((char *) text), (char *) text);
-	    balloonEval = beval;
 	    if (idx > 0)
+	    {
+		line = 0;
+
+		/*
+		 * If successful, it will respond with a balloon cmd.
+		 */
+		if (state & ControlMask)
+		    /* Evaluate *(expression) */
+		    type = (int)GPLineEval_INDIRECT;
+		else if (state & ShiftMask)
+		    /* Evaluate type(expression) */
+		    type = (int)GPLineEval_TYPE;
+		else
+		    /* Evaluate value(expression) */
+		    type = (int)GPLineEval_EVALUATE;
+
+		/* Send request to dbx */
+		sprintf(buf, "toolVerb debug.balloonEval "
+			"%s %d,0 %d,0 %d,%d %d %s\n", (char *) filename,
+			line, idx, type, serialNo++,
+			strlen((char *) text), (char *) text);
+		balloonEval = beval;
 		workshop_send_message(buf);
+	    }
 	}
     }
 }
@@ -1640,7 +1640,7 @@ computeIndex(
 	else
 	    col++;
 	if (col == wantedCol)
-	    return idx;
+	    return idx + 1;
 	idx++;
     }
 

@@ -10,7 +10,7 @@ void mch_suspend __ARGS((void));
 void mch_init __ARGS((void));
 int mch_check_win __ARGS((int argc, char **argv));
 int mch_input_isatty __ARGS((void));
-void fname_case __ARGS((char_u *name));
+void fname_case __ARGS((char_u *name, int len));
 void mch_settitle __ARGS((char_u *title, char_u *icon));
 void mch_restore_title __ARGS((int which));
 int mch_can_restore_title __ARGS((void));

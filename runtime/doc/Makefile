@@ -76,7 +76,7 @@ DOCS = \
 	sign.txt \
 	starting.txt \
 	syntax.txt \
-	tags.txt \
+	tagsrch.txt \
 	term.txt \
 	tips.txt \
 	todo.txt \
@@ -189,7 +189,7 @@ HTMLS = \
 	sign.html \
 	starting.html \
 	syntax.html \
-	tags.html \
+	tagsrch.html \
 	tags.html \
 	term.html \
 	tips.html \

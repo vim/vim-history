@@ -1,4 +1,4 @@
-README.txt for version 6.0av of Vim: Vi IMproved.
+README.txt for version 6.0aw of Vim: Vi IMproved.
 
 
 WHAT IS VIM
@@ -6,7 +6,8 @@ WHAT IS VIM
 Vim is an almost compatible version of the UNIX editor Vi.  Many new features
 have been added: multi-level undo, syntax highlighting, command line history,
 on-line help, filename completion, block operations, etc.  There is also a
-Graphical User Interface (GUI) available.  See "runtime/doc/vi_diff.txt".
+Graphical User Interface (GUI) available.  See "runtime/doc/vi_diff.txt" for
+differences with Vi.
 
 This editor is very useful for editing programs and other plain ASCII files.
 All commands are given with normal keyboard characters, so those who can type
@@ -131,7 +132,7 @@ NOTE:
   from (to avoid spam mail).
 - Maximum message size is 40000 characters.
 
-If you want to join, send a message to
+If you want to join a maillist, send a message to
 	<vim-help@vim.org>
 Make sure that your "From:" address is correct.  Then the list server will
 send you a help message.

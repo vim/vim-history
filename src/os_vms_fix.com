@@ -38,7 +38,7 @@ $!   file takes quite a bit of time...
 $! - Error handling isn't great.  Come up with something better....
 $!
 $! E-mail addresses:
-$! Steve Wall           steve_wall@usa.net
+$! Steve Wall           hitched97@velnet.com
 $! Zoltan Arpadffy      arpadffy@altavista.net
 $! John W. Hamill       jhamill3@ford.com
 $!

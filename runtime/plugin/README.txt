@@ -6,3 +6,4 @@ Standard plugins:
 explorer.vim	file browser
 gzip.vim	edit compressed files
 netrw.vim	edit files over a network
+rrhelper.vim	used for --remote-wait editing

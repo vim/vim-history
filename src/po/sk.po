@@ -2575,8 +2575,8 @@ msgstr ""
 "Odoslanie zlyhalo. Je prítomný nejaký príkazový server ?\n"
 
 #: if_xcmdsrv.c:1511
-msgid "Send failed. Trying to execute locally"
-msgstr "Odoslanie zlyhalo. Pokú¹am sa spusti» lokálne"
+msgid "\nSend failed. Trying to execute locally\n"
+msgstr "\nOdoslanie zlyhalo. Pokú¹am sa spusti» lokálne\n"
 
 #: if_xcmdsrv.c:1543
 msgid "Send expression failed.\n"

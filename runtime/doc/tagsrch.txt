@@ -1,4 +1,4 @@
-*tags.txt*     For Vim version 6.0av.  Last change: 2001 Sep 05
+*tagsrch.txt*     For Vim version 6.0aw.  Last change: 2001 Sep 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

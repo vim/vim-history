@@ -2078,7 +2078,6 @@ clip_x11_set_selection(cbd)
 #endif
 
 #if defined(FEAT_MOUSE) || defined(PROTO)
-static int mouse_comp_pos __ARGS((int *rowp, int *colp, linenr_T *lnump));
 
 /*
  * Move the cursor to the specified row and column on the screen.
@@ -2440,7 +2439,7 @@ retnomove:
 #endif
 
     /* compute the position in the buffer line from the posn on the screen */
-    if (mouse_comp_pos(&row, &col, &curwin->w_cursor.lnum))
+    if (mouse_comp_pos(curwin, &row, &col, &curwin->w_cursor.lnum))
 	mouse_past_bottom = TRUE;
 
 #ifdef FEAT_VISUAL
@@ -2486,12 +2485,13 @@ retnomove:
 }
 
 /*
- * Compute the position in the buffer line from the posn on the screen.
- * Only works for current window.
+ * Compute the position in the buffer line from the posn on the screen in
+ * window "win".
  * Returns TRUE if the position is below the last line.
  */
-    static int
-mouse_comp_pos(rowp, colp, lnump)
+    int
+mouse_comp_pos(win, rowp, colp, lnump)
+    win_T	*win;
     int		*rowp;
     int		*colp;
     linenr_T	*lnump;
@@ -2504,43 +2504,43 @@ mouse_comp_pos(rowp, colp, lnump)
     int		count;
 
 #ifdef FEAT_RIGHTLEFT
-    if (curwin->w_p_rl)
-	col = W_WIDTH(curwin) - 1 - col;
+    if (win->w_p_rl)
+	col = W_WIDTH(win) - 1 - col;
 #endif
 
-    lnum = curwin->w_topline;
+    lnum = win->w_topline;
 
     while (row > 0)
     {
 #ifdef FEAT_DIFF
 	/* Don't include filler lines in "count" */
-	if (curwin->w_p_diff && !hasFolding(lnum, NULL, NULL))
+	if (win->w_p_diff && !hasFoldingWin(win, lnum, NULL, NULL, TRUE, NULL))
 	{
-	    if (lnum == curwin->w_topline)
-		row -= curwin->w_topfill;
+	    if (lnum == win->w_topline)
+		row -= win->w_topfill;
 	    else
-		row -= diff_check_fill(curwin, lnum);
-	    count = plines_nofill(lnum);
+		row -= diff_check_fill(win, lnum);
+	    count = plines_win_nofill(win, lnum, TRUE);
 	}
 	else
 #endif
-	    count = plines(lnum);
+	    count = plines_win(win, lnum, TRUE);
 	if (count > row)
 	{
 	    /* Position is in this buffer line.  Compute the column
 	     * without wrapping. */
-	    off = curwin_col_off() - curwin_col_off2();
+	    off = win_col_off(win) - win_col_off2(win);
 	    if (col < off)
 		col = off;
-	    col += row * (W_WIDTH(curwin) - off);
+	    col += row * (W_WIDTH(win) - off);
 	    /* add skip column (for long wrapping line) */
-	    col += curwin->w_skipcol;
+	    col += win->w_skipcol;
 	    break;
 	}
 #ifdef FEAT_FOLDING
-	(void)hasFolding(lnum, NULL, &lnum);
+	(void)hasFoldingWin(win, lnum, NULL, &lnum, TRUE, NULL);
 #endif
-	if (lnum == curbuf->b_ml.ml_line_count)
+	if (lnum == win->w_buffer->b_ml.ml_line_count)
 	{
 	    retval = TRUE;
 	    break;		/* past end of file */
@@ -2549,11 +2549,11 @@ mouse_comp_pos(rowp, colp, lnump)
 	++lnum;
     }
 
-    if (!curwin->w_p_wrap)
-	col += curwin->w_leftcol;
+    if (!win->w_p_wrap)
+	col += win->w_leftcol;
 
     /* skip line number and fold column in front of the line */
-    col -= curwin_col_off();
+    col -= win_col_off(win);
     if (col < 0)
 	col = 0;
 
@@ -2645,7 +2645,7 @@ get_fpos_of_mouse(mpos)
 	return IN_UNKNOWN;
 
     /* compute the position in the buffer line from the posn on the screen */
-    if (mouse_comp_pos(&row, &col, &mpos->lnum))
+    if (mouse_comp_pos(curwin, &row, &col, &mpos->lnum))
 	return IN_STATUS_LINE; /* past bottom */
 
     /* try to advance to the specified column */

@@ -2308,10 +2308,11 @@ check_state_ends()
 
 		if (current_state.ga_len == 0)
 		    break;
-		cur_si = &CUR_STATE(current_state.ga_len - 1);
 
 		if (had_extend)
 		    syn_update_ends(FALSE);
+
+		cur_si = &CUR_STATE(current_state.ga_len - 1);
 
 		/*
 		 * Only for a region the search for the end continues after
@@ -6536,9 +6537,15 @@ do_highlight(line, forceit, init)
 		{
 		    cterm_normal_fg_color = color + 1;
 		    cterm_normal_fg_bold = (HL_TABLE()[idx].sg_cterm & HL_BOLD);
-		    must_redraw = CLEAR;
-		    if (termcap_active)
-			term_fg_color(color);
+#ifdef FEAT_GUI
+		    /* Don't do this if the GUI is used. */
+		    if (!gui.in_use && !gui.starting)
+#endif
+		    {
+			must_redraw = CLEAR;
+			if (termcap_active)
+			    term_fg_color(color);
+		    }
 		}
 	    }
 	    else
@@ -6547,17 +6554,23 @@ do_highlight(line, forceit, init)
 		if (is_normal_group)
 		{
 		    cterm_normal_bg_color = color + 1;
-		    must_redraw = CLEAR;
-		    if (termcap_active)
-			term_bg_color(color);
-		    if (t_colors < 16)
-			i = (color == 0 || color == 4);
-		    else
-			i = (color < 7 || color == 8);
-		    /* Set the 'background' option if it has a wrong value. */
-		    if (i != (*p_bg == 'd'))
-			set_option_value((char_u *)"bg", 0L,
+#ifdef FEAT_GUI
+		    /* Don't mess with 'background' if the GUI is used. */
+		    if (!gui.in_use && !gui.starting)
+#endif
+		    {
+			must_redraw = CLEAR;
+			if (termcap_active)
+			    term_bg_color(color);
+			if (t_colors < 16)
+			    i = (color == 0 || color == 4);
+			else
+			    i = (color < 7 || color == 8);
+			/* Set the 'background' option if the value is wrong. */
+			if (i != (*p_bg == 'd'))
+			    set_option_value((char_u *)"bg", 0L,
 				 i ? (char_u *)"dark" : (char_u *)"light", 0);
+		    }
 		}
 	    }
 	  }

@@ -1,6 +1,6 @@
 " Vim syntax file
 " Language   : ELF
-" Maintainer : Christian V. J. Brüssow <cvjb@bigfoot.de>
+" Maintainer : Christian V. J. Brüssow <cvjb@epost.de>
 " Last change: Son 06 Mai 2001 20:16:23 CEST
 
 " ELF: Extensible Language Facility

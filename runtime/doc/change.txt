@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0av.  Last change: 2001 Sep 09
+*change.txt*    For Vim version 6.0aw.  Last change: 2001 Sep 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -829,11 +829,14 @@ inside of strings can change!  Also see 'softtabstop' option. >
 
 							*:pu* *:put*
 :[line]pu[t] [x]	Put the text [from register x] after [line] (default
-			current line).  The register can also be '=' followed
-			by an optional expression.  The expression continues
-			until the end of the command.  You need to escape the
-			'|' and '"' characters to prevent them from
-			terminating the command.  Example: >
+			current line).  This always works linewise, thus this
+			command can be used to put a yanked block as new
+			lines.
+			The register can also be '=' followed by an optional
+			expression.  The expression continues until the end of
+			the command.  You need to escape the '|' and '"'
+			characters to prevent them from terminating the
+			command.  Example: >
 				:put ='path' . \",/test\"
 <			If there is no expression after '=', Vim uses the
 			previous expression.  You can see it with ":dis =".

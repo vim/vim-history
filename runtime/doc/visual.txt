@@ -1,4 +1,4 @@
-*visual.txt*    For Vim version 6.0av.  Last change: 2001 Sep 03
+*visual.txt*    For Vim version 6.0aw.  Last change: 2001 Sep 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -256,10 +256,14 @@ with {motion}, which is only ONE movement command.
 
 {not available when compiled without the |+visualextra| feature}
 
+Reminder: Use 'virtualedit' to be able to select blocks that start or end
+after the end of a line or halfway a tab.
+
 Visual-block Insert						*v_b_I*
 With a blockwise selection, I{string}<ESC> will insert {string} at the start
 of block on every line of the block, provided that the line extends into the
-block.  TABs are split to retain visual columns.
+block.  Thus lines that are short will remain unmodified.  TABs are split to
+retain visual columns.
 See |v_b_I_example|.
 
 Visual-block Append						*v_b_A*
@@ -270,10 +274,12 @@ block RHS is not straight, due to different line lengths:
 1. Block was created with <C-v>$
     In this case the string is appended to the end of each line.
 2. Block was created with <C-v>{move-around}
-    In this case the string is appended to the end of the block on each
-    line which extends into the block, and whitespace is inserted to pad to
-    the end-of-block column.
+    In this case the string is appended to the end of the block on each line,
+    and whitespace is inserted to pad to the end-of-block column.
 See |v_b_A_example|.
+Note: "I" and "A" behave differently for lines that don't extend into the
+selected block.  This was done intentionally, so that you can do it the way
+you want.
 
 Visual-block change						*v_b_c*
 All selected text in the block will be replaced by the same text string.  When

@@ -36,6 +36,9 @@ Some attributes (e.g., bold) might be set in the defaults that you want
 removed in your color scheme.  Use something like "gui=NONE" to remove the
 attributes.
 
+To see which highlight group is used where, find the help for
+"highlight-groups" and "group-name".
+
 You can use ":highlight" to find out the current colors.  Exception: the
 ctermfg and ctermbg values are numbers, which are only valid for the current
 terminal.  Use the color names instead.  See ":help cterm-colors".

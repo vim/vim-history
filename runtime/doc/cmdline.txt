@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.0av.  Last change: 2001 Sep 06
+*cmdline.txt*   For Vim version 6.0aw.  Last change: 2001 Sep 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -236,15 +236,24 @@ CTRL-_		a - switch between Hebrew and English keyboard mode, which is
 		See |farsi.txt|.
 
 							*c_CTRL-^*
-CTRL-^		Toggle the use of language |:lmap| mappings.  Changes the
-		value of the 'imsearch' option, or 'iminsert' if 'imsearch' is
-		-1.
-		If the value is 1 (langmap mappings used) it becomes 0 (no
-		langmap mappings used).  If the values was not 1 it becomes 1,
-		thus langmap mappings are enabled.
-		These mappings are normally used to type characters that are
-		different from what the keyboard produces.  The 'keymap'
-		option can be used to install a whole number of them.
+CTRL-^		Toggle the use of language |:lmap| mappings and/or Input
+		Method.
+		When typing a pattern for a search command and 'imsearch' is
+		not -1, VAL is the value of 'imsearch', otherwise VAL is the
+		value of 'iminsert'.
+		When language mappings are defined:
+		- If VAL is 1 (langmap mappings used) it becomes 0 (no langmap
+		  mappings used).
+		- If VAL was not 1 it becomes 1, thus langmap mappings are
+		  enabled.
+		When no language mappings are defined:
+		- If VAL is 2 (Input Method is used) it becomes 0 (no input
+		  method used)
+		- If VAL has another value it becomes 2, thus the Input Method
+		  is enabled.
+		These language mappings are normally used to type characters
+		that are different from what the keyboard produces.  The
+		'keymap' option can be used to install a whole number of them.
 		When entering a command line, langmap mappings are switched
 		off, since you are expected to type a command.  After
 		switching it on with CTRL-^, the new state is not used again

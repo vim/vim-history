@@ -9,7 +9,8 @@ To install the "Edit with Vim" popup menu entry, it is recommended to use the
 "install.exe" program.  It will ask you a few questions and install the needed
 registry entries.
 
-In special situations you might want to make changes by hand.
+In special situations you might want to make changes by hand.  Check these
+items:
 - The gvimext.dll, gvim.exe and uninstal.exe either need to be in the search
   path, or you have to set the full path in the registry entries.  You could
   move the gvimext.dll to the "windows\system" or "windows\system32"
@@ -24,13 +25,16 @@ In special situations you might want to make changes by hand.
   can be used to set the language, for example "de" for German.  If "lang" is
   omitted, the language set for Windows will be used.
 
+It is the preferred method to keep gvim.exe with the runtime files, so that
+Vim will find them (also the translated menu items are there).
+
 
 UNINSTALLATION
 
 To uninstall the "Edit with Vim" popup menu entry, it is recommended to use
 the "uninstal.exe" program.
 
-In special situations you might want to uninstall by hand.
+In special situations you might want to uninstall by hand:
 - Open the registry by running regedit.exe.
 - Delete all the keys listed in GvimExt.reg, except this one:
   [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved]

@@ -3,7 +3,7 @@
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
 "		Author and previous maintainer:
 "		Paul Siegmann <pauls@euronet.nl>
-" Last Change:	Sun, 09 Sep 2001 12:51:24 +0200
+" Last Change:	Don, 13 Sep 2001 01:33:20 +0200
 " Filenames:	*.xml
 " URL:		http://www.zellner.org/vim/syntax/xml.vim
 " $Id$
@@ -55,7 +55,7 @@ syn region  xmlString contained start=+'+ skip=+\\\\\|\\'+ end=+'+ contains=xmlE
 
 
 " punctuation (within attributes) e.g. <tag xml:foo.attribute ...>
-"					       ^   ^
+"                                              ^   ^
 " syn match   xmlAttribPunct +[-:._]+ contained display
 syn match   xmlAttribPunct +[:.]+ contained display
 
@@ -125,9 +125,10 @@ syn match   xmlEndTag
 "   <empty.tag/>
 "   some data
 " </tag>
-"
+" 
 syn region   xmlRegion
     \ start=+<\z([^ /!?<>"']\+\)+
+    \ skip=+<!--\_.\{-}-->+
     \ end=+</\z1\_\s\{-}>+
     \ matchgroup=xmlEndTag end=+/>+
     \ fold
@@ -143,7 +144,7 @@ syn match   xmlEntityPunct  contained "[&.;]"
 
 " The real comments (this implements the comments as defined by xml,
 " but not all xml pages actually conform to it. Errors are flagged.
-syn region  xmlComment                start=+<!+        end=+>+ contains=xmlCommentPart,xmlString,xmlCommentError,xmlTodo,@xmlCommentHook
+syn region  xmlComment                start=+<!+        end=+>+ contains=xmlCommentPart,xmlString,xmlCommentError,xmlTodo,@xmlCommentHook extend
 syn keyword xmlTodo         contained TODO FIXME XXX display
 syn match   xmlCommentError contained "[^><!]"
 syn region  xmlCommentPart  contained start=+--+        end=+--+

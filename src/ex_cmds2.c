@@ -29,6 +29,7 @@ do_debug(cmd)
     int		save_msg_scroll = msg_scroll;
     int		save_State = State;
     int		save_did_emsg = did_emsg;
+    int		save_cmd_silent = cmd_silent;
     int		n;
     char_u	*cmdline = NULL;
     char_u	*p;
@@ -58,6 +59,7 @@ do_debug(cmd)
     ++RedrawingDisabled;	    /* don't redisplay the window */
     ++no_wait_return;		    /* don't wait for return */
     did_emsg = FALSE;		    /* don't use error from debugged stuff */
+    cmd_silent = FALSE;		    /* display commands */
 
     State = NORMAL;
 #ifdef FEAT_SNIFF
@@ -172,6 +174,7 @@ do_debug(cmd)
     lines_left = Rows - 1;
     State = save_State;
     did_emsg = save_did_emsg;
+    cmd_silent = save_cmd_silent;
 
     /* Only print the message again when typing a command before coming back
      * here. */
@@ -1456,14 +1459,26 @@ ex_listdo(eap)
 
 	    if (eap->cmdidx == CMD_bufdo)
 	    {
-		/* go to the next buffer */
-		buf = curbuf->b_next;
-		if (!buf_valid(buf))
+		/* Go to the next listed buffer.  Check that we really get
+		 * there (no autocommands confused us). */
+		for (buf = curbuf->b_next; buf != NULL; buf = buf->b_next)
+		    if (buf->b_p_bl)
+			break;
+		if (buf == NULL)
 		    break;
 		goto_buffer(eap, DOBUF_CURRENT, FORWARD, 1);
 		if (curbuf != buf)
 		    break;
 	    }
+
+#ifdef FEAT_SCROLLBIND
+	    if (eap->cmdidx == CMD_windo && curwin->w_p_scb)
+	    {
+		/* required when 'scrollbind' has been set */
+		validate_cursor();	/* may need to update w_leftcol */
+		do_check_scrollbind(TRUE);
+	    }
+#endif
 	}
     }
 #if defined(FEAT_AUTOCMD) && defined(FEAT_SYN_HL)
@@ -3235,8 +3250,9 @@ static void prt_write_string __ARGS((char *s));
 static void prt_write_int __ARGS((int i));
 static void prt_write_boolean __ARGS((int b));
 static void prt_def_font __ARGS((char *new_name, int height, char *font));
-static void prt_real_int __ARGS((double val, int prec));
-static void prt_def_var __ARGS((char *n, double v, int prec));
+static void prt_real_bits __ARGS((double real, int precision, int *pinteger, int *pfraction));
+static void prt_write_real __ARGS((double val, int prec));
+static void prt_def_var __ARGS((char *name, double value, int prec));
 static void prt_flush_buffer __ARGS((void));
 static void prt_dsc_start __ARGS((void));
 static void prt_dsc_noarg __ARGS((char *comment));
@@ -3398,40 +3414,79 @@ prt_def_font(new_name, height, font)
 }
 
 /*
- * Write a real and a space.
- * Save 4 bytes if real value has no fractional part!
+ * Convert a real value into an integer and fractional part as integers, with
+ * the fractional part being in the range [0,10^precision).  The fractional part
+ * is also rounded based on the precision + 1'th fractional digit.
  */
     static void
-prt_real_int(val, prec)
-    double	val;
-    int		prec;
+prt_real_bits(real, precision, pinteger, pfraction)
+    double      real;
+    int         precision;
+    int         *pinteger;
+    int         *pfraction;
 {
-    float	t = (float)(val);
+    int     i;
+    int     integer;
+    float   fraction;
 
-    if ((t - (int)t) != 0.0)
-    {
-	sprintf((char *)prt_line_buffer, "%.*f ", prec, t);
-	prt_write_file(prt_line_buffer);
-    }
-    else
-	prt_write_int((int)t);
+    integer = (int)real;
+    fraction = (float)(real - integer);
+    if (real < (double)integer)
+        fraction = -fraction;
+    for (i = 0; i < precision; i++)
+        fraction *= 10.0f;
+
+    *pinteger = integer;
+    *pfraction = (int)(fraction + 0.5f);
 }
 
 /*
- * Write a line to define a variable.
+ * Write a real and a space.  Save bytes if real value has no fractional part!
+ * We use prt_real_bits() as %f in sprintf uses the locale setting to decide
+ * what decimal point character to use, but PS always requires a '.'.
  */
     static void
-prt_def_var(n, v, prec)
-    char	*n;
-    double	v;
+prt_write_real(val, prec)
+    double	val;
     int		prec;
 {
-    float	t = (float)(v);
+    int     integer;
+    int     fraction;
 
-    if ((t - (int)t) != 0.0)
-	sprintf((char *)prt_line_buffer, "/%s %.*f d\n", n, prec, t);
-    else
-	sprintf((char *)prt_line_buffer, "/%s %d d\n", n, (int)t);
+    prt_real_bits(val, prec, &integer, &fraction);
+    /* Emit integer part */
+    sprintf((char *)prt_line_buffer, "%d", integer);
+    prt_write_file(prt_line_buffer);
+    /* Only emit fraction if necessary */
+    if (fraction != 0)
+    {
+        /* Remove any trailing zeros */
+        while ((fraction % 10) == 0)
+        {
+            prec--;
+            fraction /= 10;
+        }
+        /* Emit fraction left padded with zeros */
+        sprintf((char *)prt_line_buffer, ".%0*d", prec, fraction);
+        prt_write_file(prt_line_buffer);
+    }
+    sprintf((char *)prt_line_buffer, " ");
+    prt_write_file(prt_line_buffer);
+}
+
+/*
+ * Write a line to define a numeric variable.
+ */
+    static void
+prt_def_var(name, value, prec)
+    char	*name;
+    double	value;
+    int		prec;
+{
+    sprintf((char *)prt_line_buffer, "/%s ", name);
+    prt_write_file(prt_line_buffer);
+    prt_write_real(value, prec);
+    sprintf((char *)prt_line_buffer, "d\n");
     prt_write_file(prt_line_buffer);
 }
 
@@ -3450,23 +3505,23 @@ prt_flush_buffer()
 
 	    if (prt_do_moveto)
 	    {
-		prt_real_int(prt_pos_x_moveto, 2);
-		prt_real_int(prt_pos_y_moveto, 2);
+		prt_write_real(prt_pos_x_moveto, 2);
+		prt_write_real(prt_pos_y_moveto, 2);
 		prt_write_string("m\n");
 		prt_do_moveto = FALSE;
 	    }
 
 	    /* Size of rect of background color on which text is printed */
-	    prt_real_int(prt_text_count * prt_char_width, 2);
-	    prt_real_int(prt_line_height, 2);
+	    prt_write_real(prt_text_count * prt_char_width, 2);
+	    prt_write_real(prt_line_height, 2);
 
 	    /* Lastly add the color of the background */
 	    r = ((unsigned)prt_new_bgcol & 0xff0000) >> 16;
 	    g = ((unsigned)prt_new_bgcol & 0xff00) >> 8;
 	    b = prt_new_bgcol & 0xff;
-	    prt_real_int(r / 255.0, 3);
-	    prt_real_int(g / 255.0, 3);
-	    prt_real_int(b / 255.0, 3);
+	    prt_write_real(r / 255.0, 3);
+	    prt_write_real(g / 255.0, 3);
+	    prt_write_real(b / 255.0, 3);
 	    prt_write_string("bg\n");
 	}
 	/* Draw underlines before the text as it makes it slightly easier to
@@ -3476,15 +3531,15 @@ prt_flush_buffer()
 	{
 	    if (prt_do_moveto)
 	    {
-		prt_real_int(prt_pos_x_moveto, 2);
-		prt_real_int(prt_pos_y_moveto, 2);
+		prt_write_real(prt_pos_x_moveto, 2);
+		prt_write_real(prt_pos_y_moveto, 2);
 		prt_write_string("m\n");
 		prt_do_moveto = FALSE;
 	    }
 
 	    /* Underlining is easy - just need the number of characters to
 	     * print. */
-	    prt_real_int(prt_text_count * prt_char_width, 2);
+	    prt_write_real(prt_text_count * prt_char_width, 2);
 	    prt_write_string("ul\n");
 	}
 	/* Draw the text
@@ -3496,8 +3551,8 @@ prt_flush_buffer()
 	/* Add a moveto if need be and use the appropriate show procedure */
 	if (prt_do_moveto)
 	{
-	    prt_real_int(prt_pos_x_moveto, 2);
-	    prt_real_int(prt_pos_y_moveto, 2);
+	    prt_write_real(prt_pos_x_moveto, 2);
+	    prt_write_real(prt_pos_y_moveto, 2);
 	    /* moveto and a show */
 	    prt_write_string("ms\n");
 	    prt_do_moveto = FALSE;
@@ -3638,9 +3693,9 @@ prt_dsc_docmedia(paper_name, width, height, weight, colour, type)
 {
     sprintf((char *)prt_line_buffer, "%%%%DocumentMedia: %s ", paper_name);
     prt_write_file(prt_line_buffer);
-    prt_real_int(width, 2);
-    prt_real_int(height, 2);
-    prt_real_int(weight, 2);
+    prt_write_real(width, 2);
+    prt_write_real(height, 2);
+    prt_write_real(weight, 2);
     if (colour == NULL)
 	prt_write_string("()");
     else
@@ -4329,15 +4384,15 @@ mch_print_text_out(p, len)
 	    g = ((unsigned)prt_fgcol & 0xff00) >> 8;
 	    b = prt_fgcol & 0xff;
 
-	    prt_real_int(r / 255.0, 3);
+	    prt_write_real(r / 255.0, 3);
 	    if (r == g && g == b)
 	    {
 		prt_write_string("g\n");
 	    }
 	    else
 	    {
-		prt_real_int(g / 255.0, 3);
-		prt_real_int(b / 255.0, 3);
+		prt_write_real(g / 255.0, 3);
+		prt_write_real(b / 255.0, 3);
 		prt_write_string("r\n");
 	    }
 	    prt_need_fgcol = FALSE;

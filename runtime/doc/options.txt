@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0av.  Last change: 2001 Sep 09
+*options.txt*   For Vim version 6.0aw.  Last change: 2001 Sep 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1613,9 +1613,10 @@ A jump table for the options with a short description can be found at |Q_op|.
 	Pattern to be used to find a macro definition.  It is a search
 	pattern, just like for the "/" command.  This option is used for the
 	commands like "[i" and "[d" |include-search|.  The 'isident' option is
-	used to recognize the identifier name after the match.  See
-	|option-backslash| about inserting backslashes to include a space or
-	backslash.
+	used to recognize the defined name after the match:
+		{match with 'define'}{non-ID chars}{defined name}{non-ID char}
+	See |option-backslash| about inserting backslashes to include a space
+	or backslash.
 	The default value is for C programs.  For C++ this value would be
 	useful, to include const type declarations: >
 		^\(#\s*define\|[a-z]*\s*const\s*[a-z]*\)
@@ -2285,6 +2286,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	|fold-expr|	expr	    'foldexpr' gives the fold level of a line.
 	|fold-marker|	marker	    Markers are used to specify folds.
 	|fold-syntax|	syntax	    Syntax highlighting items specify folds.
+	|fold-diff|	diff	    Fold text that is not changed.
 
 						*'foldminlines'* *'fml'*
 'foldminlines' 'fml'	number (default: 1)
@@ -2901,9 +2903,11 @@ A jump table for the options with a short description can be found at |Q_op|.
 			{not in Vi}
 			{only available when compiled with |+xim| and
 			|+GUI_GTK|}
-	Specifies the key that activates your Input Method in X-Windows.  When
-	this is specified correctly, vim can fully control IM with
-	'imcmdline', 'iminsert' and 'imsearch'.
+	Specifies the key that your Input Method in X-Windows uses for
+	activation.  When this is specified correctly, vim can fully control
+	IM with 'imcmdline', 'iminsert' and 'imsearch'.
+	You can't use this option to change the activation key, the option
+	tells Vim what the key is.
 	Format:
 		[MODIFIER_FLAG-]KEY_STRING
 
@@ -2936,6 +2940,17 @@ A jump table for the options with a short description can be found at |Q_op|.
 	Setting this option is useful when your input method allows entering
 	English characters directly, e.g., when it's used to type accented
 	characters with dead keys.
+
+				*'imdisable'* *'imd'* *'nodisable'* *'noimd'*
+'imdisable' 'imd'	boolean (default off, on for some systems (SGI))
+			global
+			{not in Vi}
+			{only available when compiled with the |+xim|
+			|+multi_byte_ime| or |global-ime| feature}
+	When set the Input Method is never used.  This is useful to disable
+	the IM when it doesn't work properly.
+	Currently this option is on by default for SGI/IRIX machines.  This
+	may change in later releases.
 
 						*'iminsert'* *'imi'*
 'iminsert' 'imi'	number (default 0, 2 when an input method is supported)
@@ -4046,8 +4061,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	The expression must take care of deleting the file after printing it.
 	When there is an error, the expression must return a non-zero number.
 	If there is no error, return zero or an empty string.
-	The default for non MS-Windows machines is to simply use "lpr" to
-	print the file: >
+	The default for non MS-Windows or VMS systems is to simply use "lpr"
+	to print the file: >
 
 	    system('lpr' . (&printdevice == '' ? '' : ' -P' . &printdevice)
 		. ' ' . v:fname_in) . delete(v:fname_in) + v:shell_error
@@ -4058,16 +4073,27 @@ A jump table for the options with a short description can be found at |Q_op|.
 	    system('copy' . ' ' . v:fname_in . ' ' &printdevice)
 			. delete(v:fname_in)
 <
+	On VMS machines the default is to send the file to either the default
+	or currently specified printdevice: >
+
+	    system('print' . (&printdevice == '' ? '' : ' /queue=' . 
+                        &printdevice) . ' ' . v:fname_in) . delete(v:fname_in)
+<
 	If you change this option, using a function is an easy way to avoid
 	having to escape all the spaces.  Example: >
 
 		:set printexpr=PrintFile(v:fname_in)
 		:function PrintFile(fname)
-		:  system("ghostview " . a:fname)
-		:  delete(a:fname)
+		:  call system("ghostview " . a:fname)
+		:  call delete(a:fname)
 		:  return v:shell_error
 		:endfunc
-<								*E365*
+
+<	Be aware that some print programs return control before they have read
+	the file.  If you delete the file too soon it will not be printed.
+	These programs usually offer an option to have them remove the file
+	when printing is done.
+								*E365*
 	If evaluating the expression fails or it results in a non-zero number,
 	you get an error message.  In that case Vim will delete the
 	file.  In the default value for non-MS-Windows a trick is used: Adding

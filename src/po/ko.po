@@ -2601,8 +2601,8 @@ msgstr ""
 "보내기 실패. 명령 서버가 없나요?\n"
 
 #: if_xcmdsrv.c:1511
-msgid "Send failed. Trying to execute locally"
-msgstr "보내기 실패. 로컬에서 실행됩니다"
+msgid "\nSend failed. Trying to execute locally\n"
+msgstr "\n보내기 실패. 로컬에서 실행됩니다\n"
 
 #: if_xcmdsrv.c:1543
 msgid "Send expression failed.\n"

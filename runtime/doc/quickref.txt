@@ -1,4 +1,4 @@
-*quickref.txt*  For Vim version 6.0av.  Last change: 2001 Sep 04
+*quickref.txt*  For Vim version 6.0aw.  Last change: 2001 Sep 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -94,10 +94,12 @@ N is used to indicate an optional count that can be given before the command.
 |[]|	N  []		N sections backward, at end of section
 |[(|	N  [(		N times back to unclosed '('
 |[{|	N  [{		N times back to unclosed '{'
-|[m|	N  [m		N times back to start method (for Java)
+|[m|	N  [m		N times back to start of method (for Java)
+|[M|	N  [M		N times back to end of method (for Java)
 |])|	N  ])		N times forward to unclosed ')'
 |]}|	N  ]}		N times forward to unclosed '}'
-|]m|	N  ]m		N times forward to end method (for Java)
+|]m|	N  ]m		N times forward to start of method (for Java)
+|]M|	N  ]M		N times forward to end of method (for Java)
 |[#|	N  [#		N times back to unclosed "#if" or "#else"
 |]#|	N  ]#		N times forward to unclosed "#else" or "#endif"
 |[star|	N  [*		N times back to start of comment "/*"

@@ -1447,7 +1447,7 @@ scripterror:
 # ifdef FEAT_GUI
 		gui.in_use ||
 # endif
-		serverName_arg != NULL ))
+		serverName_arg != NULL))
     {
 	(void)serverRegisterName(X_DISPLAY, servername);
 	vim_free(servername);
@@ -2491,12 +2491,12 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 #define ARGTYPE_EDIT		1
 #define ARGTYPE_EDIT_WAIT	2
 #define ARGTYPE_SEND		3
-# ifdef FEAT_X11
+# ifndef FEAT_X11
+    HWND	srv;
+# else
     Window	srv;
 
     setup_term_clip();
-# else
-    HWND	srv;
 # endif
 
     sname = serverMakeName(serverName_arg, argv[0]);
@@ -2555,8 +2555,16 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 # endif
 		if (ret < 0)
 		{
-		    mch_errmsg(_("Send failed. Trying to execute locally\n"));
-		    break;      /* Break out to let vim start normally.  */
+		    if (argtype == ARGTYPE_SEND)
+		    {
+			/* Failed to send, abort. */
+			mch_errmsg(_("\nSend failed.\n"));
+			didone = TRUE;
+		    }
+		    else
+			/* Let vim start normally.  */
+			mch_errmsg(_("\nSend failed. Trying to execute locally\n"));
+		    break;
 		}
 
 # ifdef FEAT_GUI_W32

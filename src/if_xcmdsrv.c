@@ -176,8 +176,8 @@ static int	x_error_check __ARGS((Display *dpy, XErrorEvent *error_event));
 static int	IsSerialName __ARGS((char_u *name));
 
 /* Private variables for the "server" functionality */
-static Atom	registryProperty;
-static Atom	vimProperty;
+static Atom	registryProperty = None;
+static Atom	vimProperty = None;
 static int	got_x_error = FALSE;
 
 /*
@@ -242,6 +242,8 @@ DoRegisterName(dpy, name)
      * Make sure the name is unique, and append info about it to
      * the registry property.  It's important to lock the server
      * here to prevent conflicting changes to the registry property.
+     * WARNING: Do not step through this while debugging, it will hangup the X
+     * server!
      */
     XGrabServer(dpy);
     w = LookupName(dpy, name, FALSE, NULL);
@@ -308,11 +310,14 @@ serverChangeRegisteredWindow(dpy, newwin)
     char_u	propInfo[MAX_NAME_LENGTH + 20];
 
     commWindow = newwin;
-    if (registryProperty == None)
-    {
-	if (SendInit(dpy) < 0)
-	    return;
-    }
+
+    /* Always call SendInit() here, to make sure commWindow is marked as a Vim
+     * window. */
+    if (SendInit(dpy) < 0)
+	return;
+
+    /* WARNING: Do not step through this while debugging, it will hangup the X
+     * server! */
     XGrabServer(dpy);
     DeleteAnyLingerer(dpy, newwin);
     if (serverName != NULL)
@@ -831,11 +836,12 @@ SendInit(dpy)
     old_handler = XSetErrorHandler(x_error_check);
     got_x_error = FALSE;
 
-    commProperty = XInternAtom(dpy, "Comm", False);
-    vimProperty = XInternAtom(dpy, "Vim", False);
-
-    /* Change this back to "InterpRegistry" to talk to tk processes */
-    registryProperty = XInternAtom(dpy, "VimRegistry", False);
+    if (commProperty == None)
+	commProperty = XInternAtom(dpy, "Comm", False);
+    if (vimProperty == None)
+	vimProperty = XInternAtom(dpy, "Vim", False);
+    if (registryProperty == None)
+	registryProperty = XInternAtom(dpy, "VimRegistry", False);
 
     if (commWindow == None)
     {
@@ -844,6 +850,8 @@ SendInit(dpy)
 				WhitePixel(dpy, DefaultScreen(dpy)),
 				WhitePixel(dpy, DefaultScreen(dpy)));
 	XSelectInput(dpy, commWindow, PropertyChangeMask);
+	/* WARNING: Do not step through this while debugging, it will hangup
+	 * the X server! */
 	XGrabServer(dpy);
 	DeleteAnyLingerer(dpy, commWindow);
 	XUngrabServer(dpy);

@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0av.  Last change: 2001 Sep 08
+*eval.txt*      For Vim version 6.0aw.  Last change: 2001 Sep 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -758,6 +758,7 @@ fnamemodify( {fname}, {mods})	String	modify file name
 foldclosed( {lnum})		Number  >0 if fold at {lnum} is closed
 foldlevel( {lnum})		Number	fold level at {lnum}
 foldtext( )			String  line displayed for closed fold
+foreground( )			Number	bring the Vim window to the foreground
 getchar( [expr])		Number  get one character from the user
 getcharmod( )			Number  modifiers for the last typed character
 getbufvar( {expr}, {varname})		variable {varname} in buffer {expr}
@@ -804,6 +805,7 @@ nr2char( {expr})		String	single char with ASCII value {expr}
 prevnonblank( {lnum})		Number	line nr of non-blank line <= {lnum}
 remote_expr( {server}, {string} [, {idvar}])
 				String	send expression
+remote_foreground( {server})	Number	bring Vim server to the foreground
 remote_peek( {serverid} [, {retvar}])
 				Number	check for reply string
 remote_read( {serverid})	String	read reply string
@@ -1299,7 +1301,11 @@ foldtext()	Returns a String, to be displayed for a closed fold.  This is
 							*foreground()*
 foreground()	Move the Vim window to the foreground.  Useful when sent from
 		a client to a Vim server. |remote_send()|
-		{only in the Win32, Athena, Motif and GTK GUI versions}
+		On Win32 systems this might not work, the OS does not always
+		allow a window to bring itself to the foreground.  Use
+		|remote_foreground()| instead.
+		{only in the Win32, Athena, Motif and GTK GUI versions and the
+		Win32 console version}
 
 getchar([expr])						*getchar()*
 		Get a single character from the user.  If it is an 8-bit
@@ -1870,8 +1876,19 @@ remote_expr({server}, {string} [, {idvar}])
 		Note: Any errors will be reported in the server and may mess
 		up the display.
 		Examples: >
-		:echo remote_expr("gvim", "2+2")
-		:echo remote_expr("gvim-001", "b:current_syntax")
+			:echo remote_expr("gvim", "2+2")
+			:echo remote_expr("gvim-001", "b:current_syntax")
+<
+
+remote_foreground({server})				*remote_foreground()*
+		Move the Vim server with the name {server} to the foreground.
+		This works like: >
+			remote_expr({server}, "foreground()")
+<		Except that on Win32 systems the client does the work, to work
+		around the problem that the OS doesn't always allow the server
+		to bring itself to the foreground.
+		{only in the Win32, Athena, Motif and GTK GUI versions and the
+		Win32 console version}
 
 
 remote_peek({serverid} [, {retvar}])		*remote_peek()*

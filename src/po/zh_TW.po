@@ -6,10 +6,10 @@
 # FIRST AUTHOR  Francis S.Lin <piaip@csie.ntu.edu.tw>, 2000
 # FIRST RELEASE Thu Jun 14 14:24:17 CST 2001
 #
-# Last update: Wed Aug  1 15:47:57 CST 2001
+# Last update: Mon Sep 10 16:45:07 CST 2001
 #
 # !! This version seems complete? thank God !!!
-#  This is a BETA version for VIM-6.0ap
+#  This is a GOLDEN BETA version tested on VIM-6.0av
 # for update, search pattern:		/fuzzy\|^msgstr ""\(\n"\)\@!
 #
 # DO NOT USE WORDS WITH BACKSLASH ('\') AS SECOND BYTE OF BIG5 CHARS
@@ -20,7 +20,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Vim(Traditional Chinese)\n"
-"POT-Creation-Date: 2001-08-01 15:47+0800\n"
+"POT-Creation-Date: 2001-09-10 16:41+0800\n"
 "PO-Revision-Date: Mon Feb 19 22:49:21 CST 2001\n"
 "Last-Translator: Francis S.Lin <piaip@csie.ntu.edu.tw>\n"
 "Language-Team: Francis S.Lin <piaip@csie.ntu.edu.tw>, Cecil Sheng "
@@ -29,174 +29,174 @@ msgstr ""
 "Content-Type: text/plain; charset=big5\n"
 "Content-Transfer-Encoding: 8-bit\n"
 
-#: buffer.c:98
+#: buffer.c:97
 msgid "E82: Cannot allocate any buffer, exiting..."
 msgstr "E82: 無法配置任何緩衝區，離開程式..."
 
-#: buffer.c:101
+#: buffer.c:100
 msgid "E83: Cannot allocate buffer, using other one..."
 msgstr "E83: 無法配置緩衝區，使用另一個緩衝區...."
 
-#: buffer.c:697
+#: buffer.c:698
 msgid "No buffers were unloaded"
 msgstr "沒有釋放任何緩衝區"
 
-#: buffer.c:699
+#: buffer.c:700
 msgid "No buffers were deleted"
 msgstr "沒有刪除任何緩衝區"
 
-#: buffer.c:701
+#: buffer.c:702
 msgid "No buffers were wiped out"
 msgstr "沒有刪除任何緩衝區"
 
-#: buffer.c:709
+#: buffer.c:710
 msgid "1 buffer unloaded"
 msgstr "已釋放一個緩衝區"
 
-#: buffer.c:711
+#: buffer.c:712
 #, c-format
 msgid "%d buffers unloaded"
 msgstr "已釋放 %d 個緩衝區"
 
-#: buffer.c:716
+#: buffer.c:717
 msgid "1 buffer deleted"
 msgstr "已刪除一個緩衝區"
 
-#: buffer.c:718
+#: buffer.c:719
 #, c-format
 msgid "%d buffers deleted"
 msgstr "已刪除 %d 個緩衝區"
 
-#: buffer.c:723
+#: buffer.c:724
 msgid "1 buffer wiped out"
 msgstr "已刪除一個緩衝區"
 
-#: buffer.c:725
+#: buffer.c:726
 #, c-format
 msgid "%d buffers wiped out"
 msgstr "已刪除 %d 個緩衝區"
 
-#: buffer.c:782
+#: buffer.c:783
 msgid "E84: No modified buffer found"
 msgstr "E84: 沒有修改過的緩衝區"
 
 #. back where we started, didn't find anything.
-#: buffer.c:821
+#: buffer.c:822
 msgid "E85: There is no listed buffer"
 msgstr "E85: 沒有列出的緩衝區"
 
-#: buffer.c:833
+#: buffer.c:834
 #, c-format
 msgid "E86: Cannot go to buffer %ld"
 msgstr "E86: 無法切換到第 %ld 個緩衝區"
 
-#: buffer.c:836
+#: buffer.c:837
 msgid "E87: Cannot go beyond last buffer"
 msgstr "E87: 無法切換到更後面的緩衝區"
 
-#: buffer.c:838
+#: buffer.c:839
 msgid "E88: Cannot go before first buffer"
 msgstr "E88: 無法切換到更前面的緩衝區"
 
-#: buffer.c:862
+#: buffer.c:863
 #, c-format
 msgid "E89: No write since last change for buffer %ld (use ! to override)"
 msgstr "E89: 已更改過緩衝區 %ld 但尚未存檔 (可用 ! 強制執行)"
 
-#: buffer.c:878
+#: buffer.c:879
 msgid "E90: Cannot unload last buffer"
 msgstr "E90: 無法釋放最後一個緩衝區"
 
-#: buffer.c:1313
+#: buffer.c:1314
 msgid "W14: Warning: List of file names overflow"
 msgstr "W14: 警告: 檔名過多"
 
-#: buffer.c:1479
+#: buffer.c:1480
 #, c-format
 msgid "E92: Buffer %ld not found"
 msgstr "E92: 找不到第 %ld 個緩衝區"
 
-#: buffer.c:1691
+#: buffer.c:1692
 #, c-format
 msgid "E93: More than one match for %s"
 msgstr "E93: 找到一個以上的 %s"
 
-#: buffer.c:1693
+#: buffer.c:1694
 #, c-format
 msgid "E94: No matching buffer for %s"
 msgstr "E94: 找不到 %s"
 
-#: buffer.c:2095 ex_docmd.c:6010
+#: buffer.c:2097 ex_docmd.c:6064
 #, c-format
 msgid "line %ld"
 msgstr "行 %ld"
 
-#: buffer.c:2178
+#: buffer.c:2180
 msgid "E95: Buffer with this name already exists"
 msgstr "E95: 已有緩衝區使用這個名字"
 
-#: buffer.c:2470
+#: buffer.c:2473
 msgid " [Modified]"
 msgstr " [已修改]"
 
-#: buffer.c:2475
+#: buffer.c:2478
 msgid "[Not edited]"
 msgstr "[未編輯]"
 
-#: buffer.c:2480
+#: buffer.c:2483
 msgid "[New file]"
 msgstr "[新檔案]"
 
-#: buffer.c:2481
+#: buffer.c:2484
 msgid "[Read errors]"
 msgstr "[讀取錯誤]"
 
-#: buffer.c:2483 fileio.c:1756
+#: buffer.c:2486 fileio.c:1754
 msgid "[readonly]"
 msgstr "[唯讀]"
 
-#: buffer.c:2499
+#: buffer.c:2502
 msgid "1 line --%d%%--"
 msgstr "行數 1 --%d%%--"
 
-#: buffer.c:2499
+#: buffer.c:2502
 msgid "%ld lines --%d%%--"
 msgstr "行數 %ld --%d%%--"
 
-#: buffer.c:2507
+#: buffer.c:2510
 msgid "line %ld of %ld --%d%%-- col "
 msgstr "行 %ld/%ld --%d%%-- 欄 "
 
-#: buffer.c:2593
+#: buffer.c:2598
 msgid "[No file]"
 msgstr "[未命名]"
 
 #. must be a help buffer
-#: buffer.c:2633
+#: buffer.c:2638
 msgid "help"
 msgstr "[輔助說明]"
 
-#: buffer.c:3129 screen.c:4597
+#: buffer.c:3142 screen.c:4646
 msgid "[help]"
 msgstr "[輔助說明]"
 
-#: buffer.c:3161 screen.c:4603
+#: buffer.c:3174 screen.c:4652
 msgid "[Preview]"
 msgstr "[預覽]"
 
-#: buffer.c:3367
+#: buffer.c:3380
 msgid "All"
 msgstr "全部"
 
-#: buffer.c:3367
+#: buffer.c:3380
 msgid "Bot"
 msgstr "底端"
 
-#: buffer.c:3369
+#: buffer.c:3382
 msgid "Top"
 msgstr "頂端"
 
-#: buffer.c:4097
+#: buffer.c:4113
 msgid ""
 "\n"
 "# Buffer list:\n"
@@ -204,15 +204,15 @@ msgstr ""
 "\n"
 "# 緩衝區列表:\n"
 
-#: buffer.c:4130
+#: buffer.c:4146
 msgid "[Error List]"
 msgstr "[錯誤列表]"
 
-#: buffer.c:4143 memline.c:1511
+#: buffer.c:4159 memline.c:1513
 msgid "[No File]"
 msgstr "[未命名]"
 
-#: buffer.c:4363
+#: buffer.c:4379
 msgid ""
 "\n"
 "--- Signs ---"
@@ -220,51 +220,51 @@ msgstr ""
 "\n"
 "--- 符號 ---"
 
-#: buffer.c:4373
+#: buffer.c:4389
 #, c-format
 msgid "Signs for %s:"
 msgstr "%s 的符號:"
 
-#: buffer.c:4379
+#: buffer.c:4395
 #, c-format
 msgid "    line=%ld  id=%d  name=%s"
 msgstr "    行=%ld  id=%d  名稱=%s"
 
-#: diff.c:132
+#: diff.c:133
 #, c-format
 msgid "E96: Can not diff more than %ld buffers"
 msgstr "E96: 無法比較(diff) %ld個以上的緩衝區"
 
-#: diff.c:619
+#: diff.c:641
 msgid "E97: Cannot create diffs"
 msgstr "E97: 不能建立 "
 
-#: diff.c:717
+#: diff.c:740
 msgid "Patch file"
 msgstr "Patch 檔案"
 
-#: diff.c:942
+#: diff.c:983
 msgid "E98: Cannot read diff output"
 msgstr "E98: 無法讀取 diff 的輸出"
 
-#: diff.c:1644
+#: diff.c:1696
 msgid "E99: Current buffer is not in diff mode"
 msgstr "E99: 目前的緩衝區不是在 diff 模式"
 
-#: diff.c:1656
+#: diff.c:1708
 msgid "E100: No other buffer in diff mode"
 msgstr "E100: 沒有緩衝區在 diff 模式"
 
-#: diff.c:1664
+#: diff.c:1716
 msgid "E101: More than two buffers in diff mode, don't know which one to use"
 msgstr "E101: 有兩個以上的緩衝區在 diff 模式，無法決定要用哪一個"
 
-#: diff.c:1687
+#: diff.c:1739
 #, c-format
 msgid "E102: Can't find buffer \"%s\""
 msgstr "E102: 找不到緩衝區: \"%s\""
 
-#: diff.c:1693
+#: diff.c:1745
 #, c-format
 msgid "E103: Buffer \"%s\" is not in diff mode"
 msgstr "E103: 緩衝區 \"%s\" 不是在 diff 模式"
@@ -336,33 +336,33 @@ msgstr "已到段落結尾"
 msgid "'thesaurus' option is empty"
 msgstr "選項 'thesaurus' 未設定"
 
-#: edit.c:1076
+#: edit.c:1070
 msgid "'dictionary' option is empty"
 msgstr "選項 'dictionary' 未設定"
 
-#: edit.c:1988
+#: edit.c:1992
 #, c-format
 msgid "Scanning dictionary: %s"
 msgstr "掃瞄字典: %s"
 
-#: edit.c:2179
+#: edit.c:2183
 msgid " (insert) Scroll (^E/^Y)"
 msgstr " (插入) Scroll (^E/^Y)"
 
-#: edit.c:2181
+#: edit.c:2185
 msgid " (replace) Scroll (^E/^Y)"
 msgstr " (取代) Scroll (^E/^Y)"
 
-#: edit.c:2491
+#: edit.c:2496
 #, c-format
 msgid "Scanning: %s"
 msgstr "掃瞄中: %s"
 
-#: edit.c:2526
+#: edit.c:2531
 msgid "Scanning tags."
 msgstr "掃瞄標籤."
 
-#: edit.c:3184
+#: edit.c:3189
 msgid " Adding"
 msgstr " 增加"
 
@@ -370,110 +370,110 @@ msgstr " 增加"
 #. * be called before line = ml_get(), or when this address is no
 #. * longer needed.  -- Acevedo.
 #.
-#: edit.c:3233
+#: edit.c:3238
 msgid "-- Searching..."
 msgstr "-- 搜尋中..."
 
-#: edit.c:3289
+#: edit.c:3294
 msgid "Back at original"
 msgstr "回到起點"
 
-#: edit.c:3294
+#: edit.c:3299
 msgid "Word from other line"
 msgstr "從別行開始的字 (?)"
 
-#: edit.c:3299
+#: edit.c:3304
 msgid "The only match"
 msgstr "只有此項符合"
 
-#: edit.c:3358
+#: edit.c:3363
 #, c-format
 msgid "match %d of %d"
 msgstr "找到 %d / %d"
 
-#: edit.c:3361
+#: edit.c:3366
 #, c-format
 msgid "match %d"
 msgstr "符合 %d"
 
-#: eval.c:691
+#: eval.c:695
 #, c-format
 msgid "E106: Unknown variable: \"%s\""
 msgstr "E106: 未定義的變數: \"%s\""
 
-#: eval.c:970
+#: eval.c:974
 #, c-format
 msgid "E107: Missing braces: %s"
 msgstr "E107: 缺少對應的括號: %s"
 
-#: eval.c:1038
+#: eval.c:1042
 #, c-format
 msgid "E108: No such variable: \"%s\""
 msgstr "E108: 無此變數: \"%s\""
 
-#: eval.c:1279
+#: eval.c:1283
 msgid "E109: Missing ':' after '?'"
 msgstr "E109: '?' 後缺少 ':'"
 
-#: eval.c:1893
+#: eval.c:1897
 msgid "E110: Missing ')'"
 msgstr "E110: 缺少對應的 \")\""
 
-#: eval.c:1943
+#: eval.c:1947
 msgid "E111: Missing ']'"
 msgstr "E111: 缺少對應的 \"]\""
 
-#: eval.c:2018
+#: eval.c:2022
 #, c-format
 msgid "E112: Option name missing: %s"
 msgstr "E112: 缺少選項名稱: %s"
 
-#: eval.c:2036
+#: eval.c:2040
 #, c-format
 msgid "E113: Unknown option: %s"
 msgstr "E113: 不正確的選項: %s"
 
-#: eval.c:2098
+#: eval.c:2102
 #, c-format
 msgid "E114: Missing quote: %s"
 msgstr "E114: 缺少引號: %s"
 
-#: eval.c:2215
+#: eval.c:2219
 #, c-format
 msgid "E115: Missing quote: %s"
 msgstr "E115: 缺少引號: %s"
 
-#: eval.c:2527
+#: eval.c:2535
 #, c-format
 msgid "E116: Invalid arguments for function %s"
 msgstr "E116: 函式 %s 的引數不正確"
 
-#: eval.c:2528
+#: eval.c:2536
 #, c-format
 msgid "E117: Unknown function: %s"
 msgstr "E117: 未定義的函式: %s"
 
-#: eval.c:2529
+#: eval.c:2537
 #, c-format
 msgid "E118: Too many arguments for function: %s"
 msgstr "E118: 函式 %s 的引數過多"
 
-#: eval.c:2530
+#: eval.c:2538
 #, c-format
 msgid "E119: Not enough arguments for function: %s"
 msgstr "E119: 函式 %s 的引數太少"
 
-#: eval.c:2531
+#: eval.c:2539
 #, c-format
 msgid "E120: Using <SID> not in a script context: %s"
 msgstr "E120: <SID> 不能在 script 本文外使用: %s"
 
-#: eval.c:3540
+#: eval.c:3572
 #, c-format
 msgid "+-%s%3ld lines: "
 msgstr "+-%s%3ld 行: "
 
-#: eval.c:4630
+#: eval.c:4683
 msgid ""
 "&OK\n"
 "&Cancel"
@@ -481,115 +481,115 @@ msgstr ""
 "確定(&O)\n"
 "取消(&C)"
 
-#: eval.c:5428
+#: eval.c:5505
 msgid "E240: No connection to Vim server"
 msgstr "E240: 沒有與 Vim Server 建立連線"
 
-#: eval.c:5496
-msgid "Unable to read a server reply"
-msgstr "無法讀取伺服器的回應"
+#: eval.c:5595
+msgid "E277: Unable to read a server reply"
+msgstr "E277: 無法讀取伺服器的回應"
 
-#: eval.c:5518
-msgid "Unable to send reply"
-msgstr "無法傳送回應訊息"
+#: eval.c:5620
+msgid "E258: Unable to send to client"
+msgstr "E258: 無法傳送到 client"
 
-#: eval.c:5550
+#: eval.c:5661
 #, c-format
 msgid "E241: Unable to send to %s"
 msgstr "E241: 無法傳送到 %s"
 
-#: eval.c:5590
+#: eval.c:5728
 msgid "(Invalid)"
 msgstr "(不正確)"
 
-#: eval.c:6593
+#: eval.c:6731
 #, c-format
 msgid "E121: Undefined variable: %s"
 msgstr "E121: 變數 %s 尚未定義"
 
-#: eval.c:7291
+#: eval.c:7429
 #, c-format
 msgid "E122: Function %s already exists, use ! to replace"
 msgstr "E122: 函式 %s 已經存在, 請使用 ! 強制取代"
 
-#: eval.c:7333
+#: eval.c:7471
 #, c-format
 msgid "E123: Undefined function: %s"
 msgstr "E123: 函式 %s 尚未定義"
 
-#: eval.c:7346
+#: eval.c:7484
 #, c-format
 msgid "E124: Missing '(': %s"
 msgstr "E124: 缺少 \"(\": %s"
 
-#: eval.c:7378
+#: eval.c:7516
 #, c-format
 msgid "E125: Illegal argument: %s"
 msgstr "E125: 參數不正確: %s"
 
-#: eval.c:7464
+#: eval.c:7602
 msgid "E126: Missing :endfunction"
 msgstr "E126: 缺少 :endfunction"
 
-#: eval.c:7543
+#: eval.c:7681
 #, c-format
 msgid "E127: Cannot redefine function %s: It is in use"
 msgstr "E127: 函式 %s 正在使用中，無法重新定義"
 
-#: eval.c:7600
+#: eval.c:7738
 #, c-format
 msgid "E128: Function name must start with a capital: %s"
 msgstr "E128: 函式名稱第一個字母必須大寫: %s"
 
-#: eval.c:7606
+#: eval.c:7744
 msgid "E129: Function name required"
 msgstr "E129: 需要函式名稱"
 
-#: eval.c:7699
+#: eval.c:7837
 msgid "function "
 msgstr "函式 "
 
-#: eval.c:7814
+#: eval.c:7952
 #, c-format
 msgid "E130: Undefined function: %s"
 msgstr "E130: 函式 %s 尚未定義"
 
-#: eval.c:7819
+#: eval.c:7957
 #, c-format
 msgid "E131: Cannot delete function %s: It is in use"
 msgstr "E131: 函式 %s 正在使用中，無法刪除"
 
-#: eval.c:7866
+#: eval.c:8004
 msgid "E132: Function call depth is higher than 'maxfuncdepth'"
 msgstr "E132: 函式遞迴呼叫層數超過 'maxfuncdepth'"
 
 #. always scroll up, don't overwrite
-#: eval.c:7917
+#: eval.c:8055
 #, c-format
 msgid "calling %s"
 msgstr "呼叫 %s"
 
 #. always scroll up, don't overwrite
-#: eval.c:7942 ex_cmds2.c:1946
+#: eval.c:8080 ex_cmds2.c:1958
 #, c-format
 msgid "continuing in %s"
 msgstr "繼續: %s"
 
-#: eval.c:7996
+#: eval.c:8134
 msgid "E133: :return not inside a function"
 msgstr "E133: :return 必須在函式裡使用"
 
-#: eval.c:8074
+#: eval.c:8212
 #, c-format
 msgid "%s returning #%ld"
 msgstr "%s 傳回值 #%ld "
 
-#: eval.c:8077
+#: eval.c:8215
 #, c-format
 msgid "%s returning \"%s\""
 msgstr "%s 傳回值 \"%s\""
 
-#: eval.c:8218
+#: eval.c:8356
 msgid ""
 "\n"
 "# global variables:\n"
@@ -597,84 +597,85 @@ msgstr ""
 "\n"
 "# 全域變數:\n"
 
-#: ex_cmds.c:91
+#: ex_cmds.c:92
 #, c-format
 msgid "<%s>%s%s  %d,  Hex %02x,  Octal %03o"
 msgstr "<%s>%s%s  %d,  十六進位 %02x,  八進位 %03o"
 
-#: ex_cmds.c:427
+#: ex_cmds.c:428
 msgid "E134: Move lines into themselves"
 msgstr "E134: 無法把行移到它自已內"
 
-#: ex_cmds.c:496
+#: ex_cmds.c:497
 msgid "1 line moved"
 msgstr "已搬移 1 行"
 
-#: ex_cmds.c:498
+#: ex_cmds.c:499
 #, c-format
 msgid "%ld lines moved"
 msgstr "已搬移 %ld 行"
 
-#: ex_cmds.c:888
+#: ex_cmds.c:890
 #, c-format
 msgid "%ld lines filtered"
 msgstr "已處理 %ld 行"
 
-#: ex_cmds.c:916
+#: ex_cmds.c:918
 msgid "E135: *Filter* Autocommands must not change current buffer"
 msgstr "E135: *Filter* Autocommand 不可以更改緩衝區的內容"
 
-#: ex_cmds.c:1001
+#: ex_cmds.c:1003
 msgid "[No write since last change]\n"
 msgstr "[更新後尚未儲存]\n"
 
-#: ex_cmds.c:1237
+#: ex_cmds.c:1248
 #, c-format
 msgid "viminfo: %s in line: "
 msgstr "viminfo: %s 在行中: "
 
-#: ex_cmds.c:1242
+#: ex_cmds.c:1253
 msgid "E136: viminfo: Too many errors, skipping rest of file"
 msgstr "E136: viminfo: 過多錯誤, 忽略檔案其餘部分"
 
-#: ex_cmds.c:1271
+#: ex_cmds.c:1282
 #, c-format
 msgid "Reading viminfo file \"%s\"%s%s%s"
 msgstr "讀取 viminfo 檔案 \"%s\"%s%s%s"
 
-#: ex_cmds.c:1272
+#: ex_cmds.c:1283
 msgid " info"
 msgstr " 訊息"
 
-#: ex_cmds.c:1273
+#: ex_cmds.c:1284
 msgid " marks"
 msgstr " 標記"
 
-#: ex_cmds.c:1274
+#: ex_cmds.c:1285
 msgid " FAILED"
 msgstr " 失敗"
 
-#: ex_cmds.c:1365
+#: ex_cmds.c:1376
 #, c-format
 msgid "E137: Viminfo file is not writable: %s"
 msgstr "E137: Viminfo 檔案無法寫入: %s"
 
-#: ex_cmds.c:1490
+#: ex_cmds.c:1501
 #, c-format
 msgid "E138: Can't write viminfo file %s!"
 msgstr "E138: 無法寫入 viminfo 檔案 %s !"
 
-#: ex_cmds.c:1498
+#: ex_cmds.c:1509
 #, c-format
 msgid "Writing viminfo file \"%s\""
 msgstr "寫入 viminfo 檔案 \"%s\" 中"
 
 #. Write the info:
-#: ex_cmds.c:1599
+#: ex_cmds.c:1610
+#, c-format
 msgid "# This viminfo file was generated by Vim %s.\n"
-msgstr "# 本 viminfo 檔案是由 vim 所產生 %s\n"
+msgstr "# 本 viminfo 檔案是由 Vim %s 所產生.\n"
 
-#: ex_cmds.c:1600
+#: ex_cmds.c:1612
 msgid ""
 "# You may edit it if you're careful!\n"
 "\n"
@@ -682,47 +683,47 @@ msgstr ""
 "# 如果想要自行修改請特別小心！\n"
 "\n"
 
-#: ex_cmds.c:1602
+#: ex_cmds.c:1614
 msgid "# Value of 'encoding' when this file was written\n"
 msgstr "# 'encoding' 在此檔建立時的值\n"
 
-#: ex_cmds.c:1701
+#: ex_cmds.c:1713
 msgid "Illegal starting char"
 msgstr "無效的起始字元"
 
-#: ex_cmds.c:2041 ex_cmds.c:2270 ex_cmds2.c:590
+#: ex_cmds.c:2053 ex_cmds.c:2289 ex_cmds2.c:599
 msgid "Save As"
 msgstr "另存新檔"
 
 #. Overwriting a file that is loaded in another buffer is not a
 #. * good idea.
-#: ex_cmds.c:2084
+#: ex_cmds.c:2096
 msgid "E139: File is loaded in another buffer"
 msgstr "E139: 您在另一個緩衝區也載入了這個檔案"
 
-#: ex_cmds.c:2118
+#: ex_cmds.c:2130
 msgid "Write partial file?"
 msgstr "要寫入部分檔案嗎？"
 
-#: ex_cmds.c:2125
+#: ex_cmds.c:2137
 msgid "E140: Use ! to write partial buffer"
 msgstr "E140: 請使用 ! 以寫入部分緩衝區"
 
-#: ex_cmds.c:2204
+#: ex_cmds.c:2223
 #, c-format
 msgid "Overwrite existing file \"%.*s\"?"
 msgstr "要覆寫已存在的檔案 \"%.*s\"？"
 
-#: ex_cmds.c:2275
+#: ex_cmds.c:2294
 #, c-format
 msgid "E141: No file name for buffer %ld"
 msgstr "E141: 緩衝區 %ld 沒有檔案名稱"
 
-#: ex_cmds.c:2313
+#: ex_cmds.c:2332
 msgid "E142: File not written: Writing is disabled by 'write' option"
 msgstr "E142: 檔案未寫入，因為 'write' 選項被關閉"
 
-#: ex_cmds.c:2333
+#: ex_cmds.c:2352
 #, c-format
 msgid ""
 "'readonly' option is set for \"%.*s\".\n"
@@ -731,68 +732,68 @@ msgstr ""
 "\"%.*s\" 已設定 'readonly' 選項.\n"
 "確定要覆寫嗎？"
 
-#: ex_cmds.c:2498
+#: ex_cmds.c:2517
 msgid "Edit File"
 msgstr "編輯檔案"
 
-#: ex_cmds.c:2996
+#: ex_cmds.c:3019
 #, c-format
 msgid "E143: Autocommands unexpectedly deleted new buffer %s"
 msgstr "E143: Autocommands 意外地刪除新緩衝區 %s"
 
-#: ex_cmds.c:3126
+#: ex_cmds.c:3149
 msgid "E144: non-numeric argument to :z"
 msgstr "E144: :z 不接受非數字的參數"
 
-#: ex_cmds.c:3211
+#: ex_cmds.c:3234
 msgid "E145: Shell commands not allowed in rvim"
 msgstr "E145: rvim 中禁止使用 shell 命令"
 
-#: ex_cmds.c:3318
+#: ex_cmds.c:3341
 msgid "E146: Regular expressions can't be delimited by letters"
 msgstr "E146: Regular expression 無法用字母分隔 (?)"
 
-#: ex_cmds.c:3656
+#: ex_cmds.c:3679
 #, c-format
 msgid "replace with %s (y/n/a/q/l/^E/^Y)?"
 msgstr "取代為 %s (y/n/a/q/^E/^Y)?"
 
-#: ex_cmds.c:4020
+#: ex_cmds.c:4043
 msgid "(Interrupted) "
 msgstr "(已中斷) "
 
-#: ex_cmds.c:4024
+#: ex_cmds.c:4047
 msgid "1 substitution"
 msgstr "取代一組"
 
-#: ex_cmds.c:4026
+#: ex_cmds.c:4049
 #, c-format
 msgid "%ld substitutions"
 msgstr "取代 %ld 組"
 
-#: ex_cmds.c:4029
+#: ex_cmds.c:4052
 msgid " on 1 line"
 msgstr " 一行中"
 
-#: ex_cmds.c:4031
+#: ex_cmds.c:4054
 #, c-format
 msgid " on %ld lines"
 msgstr " %ld 行中"
 
-#: ex_cmds.c:4082
+#: ex_cmds.c:4105
 msgid "E147: Cannot do :global recursive"
 msgstr "E147: :global 無法遞迴執行"
 
-#: ex_cmds.c:4117
+#: ex_cmds.c:4140
 msgid "E148: Regular expression missing from global"
 msgstr "E148: 沒有使用過 Regular expression (?)"
 
-#: ex_cmds.c:4166
+#: ex_cmds.c:4189
 #, c-format
 msgid "Pattern found in every line: %s"
 msgstr "每一行都找不到: %s"
 
-#: ex_cmds.c:4247
+#: ex_cmds.c:4270
 msgid ""
 "\n"
 "# Last Substitute String:\n"
@@ -802,309 +803,339 @@ msgstr ""
 "# 前一組替代字串:\n"
 "$"
 
-#: ex_cmds.c:4346
+#: ex_cmds.c:4369
 #, c-format
 msgid "E149: Sorry, no help for %s"
 msgstr "E149: 抱歉, 沒有 %s 的說明"
 
-#: ex_cmds.c:4380
+#: ex_cmds.c:4403
 #, c-format
 msgid "Sorry, help file \"%s\" not found"
 msgstr "抱歉, 找不到說明檔 \"%s\""
 
-#: ex_cmds.c:4826
+#: ex_cmds.c:4849
 #, c-format
 msgid "E150: Not a directory: %s"
 msgstr "E150: %s 不是目錄"
 
-#: ex_cmds.c:4854
+#: ex_cmds.c:4877
 #, c-format
 msgid "E152: Cannot open %s for writing"
 msgstr "E152: 無法以寫入模式開啟 \"%s\""
 
-#: ex_cmds.c:4868
+#: ex_cmds.c:4891
 #, c-format
 msgid "E153: Unable to open %s for reading"
 msgstr "E153: 無法讀取檔案: %s"
 
-#: ex_cmds.c:4947
+#: ex_cmds.c:4970
 #, c-format
 msgid "E154: Duplicate tag \"%s\" in file %s"
 msgstr "E154: 標籤(tag) \"%s\" 在檔案 %s 裡重複出現多次"
 
-#: ex_cmds.c:5048
+#: ex_cmds.c:5071
 #, c-format
 msgid "E160: Unknown sign command: %s"
 msgstr "E160: 未定義的 sign command: %s"
 
-#: ex_cmds.c:5068
+#: ex_cmds.c:5091
 msgid "E156: Missing sign name"
 msgstr "E156: 缺少 sign 名稱"
 
-#: ex_cmds.c:5114
+#: ex_cmds.c:5137
 msgid "E255: Too many signs defined"
 msgstr "E326: 找到太多 signs"
 
-#: ex_cmds.c:5156
+#: ex_cmds.c:5179
 #, c-format
 msgid "E239: Invalid sign text: %s"
 msgstr "E239: 不正確的 sign 文字: %s"
 
-#: ex_cmds.c:5180 ex_cmds.c:5360
+#: ex_cmds.c:5203 ex_cmds.c:5389
 #, c-format
 msgid "E155: Unknown sign: %s"
 msgstr "E155: 不正確的 sign: %s"
 
-#: ex_cmds.c:5226
+#: ex_cmds.c:5249
 msgid "E159: Missing sign number"
 msgstr "E159: 缺少 sign number"
 
-#: ex_cmds.c:5300
+#: ex_cmds.c:5329
 #, c-format
 msgid "E158: Invalid buffer name: %s"
 msgstr "E158: 緩衝區名稱錯誤: %s"
 
-#: ex_cmds.c:5339
+#: ex_cmds.c:5368
 #, c-format
 msgid "E157: Invalid sign ID: %ld"
 msgstr "E157: Sign ID 錯誤: %ld"
 
-#: ex_cmds.c:5510
+#: ex_cmds.c:5539
 msgid "[Deleted]"
 msgstr "[已刪除]"
 
-#: ex_cmds2.c:66
+#: ex_cmds2.c:68
 msgid "Entering Debug mode.  Type \"cont\" to leave."
 msgstr "進入除錯模式. 輸入 \"cont\" 以回到正常模式."
 
-#: ex_cmds2.c:70 ex_docmd.c:791
+#: ex_cmds2.c:72 ex_docmd.c:771
 #, c-format
 msgid "line %ld: %s"
 msgstr "行 %ld: %s"
 
-#: ex_cmds2.c:72
+#: ex_cmds2.c:74
 #, c-format
 msgid "cmd: %s"
 msgstr "cmd: %s"
 
-#: ex_cmds2.c:212
+#: ex_cmds2.c:221
 #, c-format
 msgid "Breakpoint in \"%s%s\" line %ld"
 msgstr "\"%s%s\" 中斷點: 第 %ld 行"
 
-#: ex_cmds2.c:376
+#: ex_cmds2.c:385
 #, c-format
 msgid "E161: Breakpoint not found: %s"
 msgstr "E161: 找不到中斷點: %s"
 
-#: ex_cmds2.c:402
+#: ex_cmds2.c:411
 msgid "No breakpoints defined"
 msgstr "沒有定義中斷點"
 
-#: ex_cmds2.c:407
+#: ex_cmds2.c:416
 #, c-format
 msgid "%3d  %s %s  line %ld"
 msgstr "%3d  %s %s  第 %ld 行"
 
-#: ex_cmds2.c:613
+#: ex_cmds2.c:622
 #, c-format
 msgid "Save changes to \"%.*s\"?"
 msgstr "將變動存儲至 \"%.*s\"?"
 
-#: ex_cmds2.c:615 ex_docmd.c:8545
+#: ex_cmds2.c:624 ex_docmd.c:8611
 msgid "Untitled"
 msgstr "未命名"
 
-#: ex_cmds2.c:751
+#: ex_cmds2.c:760
 #, c-format
 msgid "E162: No write since last change for buffer \"%s\""
 msgstr "E162: 已更改過緩衝區 \"%s\" 但尚未存檔 (可用 ! 強制執行)"
 
-#: ex_cmds2.c:820
+#: ex_cmds2.c:829
 msgid "Warning: Entered other buffer unexpectedly (check autocommands)"
 msgstr "注意: 已切換到其它緩衝區 (請檢查 Autocommands 有無錯誤)"
 
-#: ex_cmds2.c:1196
+#: ex_cmds2.c:1205
 msgid "E163: There is only one file to edit"
 msgstr "E163: 只有一個檔案可編輯"
 
-#: ex_cmds2.c:1198
+#: ex_cmds2.c:1207
 msgid "E164: Cannot go before first file"
 msgstr "E164: 已經在第一個檔案了"
 
-#: ex_cmds2.c:1200
+#: ex_cmds2.c:1209
 msgid "E165: Cannot go beyond last file"
 msgstr "E165: 已經在最後一個檔案了"
 
-#: ex_cmds2.c:1605
+#: ex_cmds2.c:1617
 #, c-format
 msgid "Searching for \"%s\" in \"%s\""
 msgstr "搜尋中: \"%s\" -- \"%s\""
 
-#: ex_cmds2.c:1627
+#: ex_cmds2.c:1639
 #, c-format
 msgid "Searching for \"%s\""
 msgstr "搜尋中: \"%s\""
 
-#: ex_cmds2.c:1651
+#: ex_cmds2.c:1663
 #, c-format
 msgid "not found in 'runtimepath': \"%s\""
 msgstr "在 'runtimepath' 裡找不到 \"%s\""
 
-#: ex_cmds2.c:1685
+#: ex_cmds2.c:1697
 msgid "Run Macro"
 msgstr "執行巨集"
 
-#: ex_cmds2.c:1790
+#: ex_cmds2.c:1802
 #, c-format
 msgid "Cannot source a directory: \"%s\""
 msgstr "無法執行目錄： \"%s\""
 
-#: ex_cmds2.c:1820
+#: ex_cmds2.c:1832
 #, c-format
 msgid "could not source \"%s\""
 msgstr "無法執行 \"%s\""
 
-#: ex_cmds2.c:1822
+#: ex_cmds2.c:1834
 #, c-format
 msgid "line %ld: could not source \"%s\""
 msgstr "第 %ld 行: 無法執行 \"%s\""
 
-#: ex_cmds2.c:1836
+#: ex_cmds2.c:1848
 #, c-format
 msgid "sourcing \"%s\""
 msgstr "執行 \"%s\" 中"
 
-#: ex_cmds2.c:1838
+#: ex_cmds2.c:1850
 #, c-format
 msgid "line %ld: sourcing \"%s\""
 msgstr "第 %ld 行: 結束執行 %s"
 
-#: ex_cmds2.c:1944
+#: ex_cmds2.c:1956
 #, c-format
 msgid "finished sourcing %s"
 msgstr "結束執行 %s"
 
-#: ex_cmds2.c:2245
+#: ex_cmds2.c:2257
 msgid "W15: Warning: Wrong line separator, ^M may be missing"
 msgstr "W15: 注意: 錯誤的行分隔字元，可能是少了 ^M"
 
-#: ex_cmds2.c:2294
+#: ex_cmds2.c:2306
 msgid "E167: :scriptencoding used outside of a sourced file"
 msgstr "E167: 在執行 script 檔案外不可使用 :scriptencoding"
 
-#: ex_cmds2.c:2327
+#: ex_cmds2.c:2339
 msgid "E168: :finish used outside of a sourced file"
 msgstr "E168: 在執行 script 檔案外不可使用 :finish"
 
-#: ex_cmds2.c:2677
+#: ex_cmds2.c:2805
 msgid "No text to be printed"
 msgstr "沒有要列印的文字"
 
-#: ex_cmds2.c:2752
+#: ex_cmds2.c:2883
 msgid "Printing page %d (%d%%)"
 msgstr "列印中: 第 %d 頁 (%d%%)"
 
-#: ex_cmds2.c:2757
+#: ex_cmds2.c:2892
 #, c-format
 msgid " Copy %d of %d"
 msgstr "複製 %d / %d"
 
-#: ex_cmds2.c:2816
+#: ex_cmds2.c:2944
 #, c-format
 msgid "Printed: %s"
 msgstr "已列印: %s"
 
-#: ex_cmds2.c:3161
+#: ex_cmds2.c:2951
+msgid "Printing aborted"
+msgstr "已取消列印"
+
+#: ex_cmds2.c:3328
+msgid "E455: Error writing to PostScript output file"
+msgstr "E455: 無法寫入 PostScript 輸出檔"
+
+#: ex_cmds2.c:3964
 msgid "E324: Can't open PostScript output file"
 msgstr "E324: 無法開啟 PostScript 輸出檔"
 
-#: ex_cmds2.c:3409
+#: ex_cmds2.c:4002
+#, c-format
+msgid "E456: Can't open file \"%s\""
+msgstr "E456: 無法開啟檔案 \"%s\""
+
+#: ex_cmds2.c:4013
+#, c-format
+msgid "E457: Can't read PostScript resource file \"%s\""
+msgstr "E457: 無法讀取 PostScript resource 檔 \"%s\""
+
+#: ex_cmds2.c:4211
+msgid "Sending to printer..."
+msgstr "傳送資料到印表機..."
+
+#: ex_cmds2.c:4215
+msgid "E365: Failed to print PostScript file"
+msgstr "E365: 無法列印 PostScript 檔案"
+
+#: ex_cmds2.c:4217
+msgid "Print job sent."
+msgstr "已送出列印工作。"
+
+#: ex_cmds2.c:4591
 #, c-format
 msgid "Current %slanguage: \"%s\""
 msgstr "目前的 %s語言: \"%s\""
 
-#: ex_cmds2.c:3416
+#: ex_cmds2.c:4598
 #, c-format
 msgid "E197: Cannot set language to \"%s\""
 msgstr "E197: 不能設定語言成 \"%s\""
 
-#: ex_docmd.c:503
+#: ex_docmd.c:491
 msgid "Entering Ex mode.  Type \"visual\" to go to Normal mode."
 msgstr "進入 Ex 模式. 輸入 \"visua\" 以回到正常模式."
 
 #. must be at EOF
-#: ex_docmd.c:539
+#: ex_docmd.c:527
 msgid "At end-of-file"
 msgstr "已到檔案結尾"
 
-#: ex_docmd.c:615
+#: ex_docmd.c:602
 msgid "E169: Command too recursive"
 msgstr "E169: 命令遞迴層數過多"
 
-#: ex_docmd.c:931
+#: ex_docmd.c:911
 msgid "E170: Missing :endwhile"
 msgstr "E170: 缺少 :endwhile"
 
-#: ex_docmd.c:933
+#: ex_docmd.c:913
 msgid "E171: Missing :endif"
 msgstr "E171: 缺少 :endif"
 
-#: ex_docmd.c:943
+#: ex_docmd.c:923
 msgid "End of sourced file"
 msgstr "命令檔結束"
 
-#: ex_docmd.c:944
+#: ex_docmd.c:924
 msgid "End of function"
 msgstr "函式結尾"
 
-#: ex_docmd.c:1240
+#: ex_docmd.c:1344
 msgid "Ambiguous use of user-defined command"
 msgstr "使用者定義的命令會混淆"
 
-#: ex_docmd.c:1254
+#: ex_docmd.c:1358
 msgid "Not an editor command"
 msgstr "不是編輯器的命令"
 
-#: ex_docmd.c:1337
+#: ex_docmd.c:1441
 msgid "Don't panic!"
 msgstr "不要驚慌!"
 
-#: ex_docmd.c:1356
+#: ex_docmd.c:1460
 msgid "Backwards range given"
 msgstr "指定了向前參考的範圍"
 
-#: ex_docmd.c:1360
+#: ex_docmd.c:1469
 msgid "Backwards range given, OK to swap"
 msgstr "指定了向前參考的範圍，OK to swap"
 
-#: ex_docmd.c:1469
+#: ex_docmd.c:1580
 msgid "Use w or w>>"
 msgstr "請使用 w 或 w>>"
 
-#: ex_docmd.c:2909
+#: ex_docmd.c:3086
 msgid "E319: Sorry, the command is not available in this version"
 msgstr "E319: 抱歉, 本命令在此版本中沒有實作"
 
-#: ex_docmd.c:3079
+#: ex_docmd.c:3256
 msgid "E172: Only one file name allowed"
 msgstr "E172: 只能有一個檔"
 
-#: ex_docmd.c:3633
+#: ex_docmd.c:3810
 #, c-format
 msgid "%d more files to edit.  Quit anyway?"
 msgstr "還有 %d 個檔案未編輯. 確定要離開？"
 
-#: ex_docmd.c:3640
+#: ex_docmd.c:3817
 #, c-format
 msgid "E173: %ld more files to edit"
 msgstr "E173: 還有 %ld 個檔案未編輯"
 
-#: ex_docmd.c:3734
+#: ex_docmd.c:3911
 msgid "E174: Command already exists: use ! to redefine"
 msgstr "E174: 命令已經存在, 請使用 ! 強制重新定義"
 
-#: ex_docmd.c:3839
+#: ex_docmd.c:4016
 msgid ""
 "\n"
 "    Name        Args Range Complete  Definition"
@@ -1112,212 +1143,212 @@ msgstr ""
 "\n"
 "    名稱        參數 範圍  完整      定義      "
 
-#: ex_docmd.c:3928
+#: ex_docmd.c:4105
 msgid "No user-defined commands found"
 msgstr "找不到使用者定義的命令"
 
-#: ex_docmd.c:3959
+#: ex_docmd.c:4136
 msgid "E175: No attribute specified"
 msgstr "E175: 沒有指定的屬性"
 
-#: ex_docmd.c:4011
+#: ex_docmd.c:4188
 msgid "E176: Invalid number of arguments"
 msgstr "E176: 不正確的參數數目"
 
-#: ex_docmd.c:4026
+#: ex_docmd.c:4203
 msgid "E177: Count cannot be specified twice"
 msgstr "E177: 不能指定兩次數目"
 
-#: ex_docmd.c:4036
+#: ex_docmd.c:4213
 msgid "E178: Invalid default value for count"
 msgstr "E178: 數目的預設參數不正確"
 
-#: ex_docmd.c:4064
+#: ex_docmd.c:4241
 msgid "E179: argument required for complete"
 msgstr "E179: 指令需要參數才能完成"
 
-#: ex_docmd.c:4083
+#: ex_docmd.c:4260
 #, c-format
 msgid "E180: Invalid complete value: %s"
 msgstr "E180: 不完整的值: '%s'"
 
-#: ex_docmd.c:4091
+#: ex_docmd.c:4268
 #, c-format
 msgid "E181: Invalid attribute: %s"
 msgstr "E181: 不正確的屬性: %s"
 
-#: ex_docmd.c:4132
+#: ex_docmd.c:4309
 msgid "E182: Invalid command name"
 msgstr "E182: 指令名稱不正確"
 
-#: ex_docmd.c:4147
+#: ex_docmd.c:4324
 msgid "E183: User defined commands must start with an uppercase letter"
 msgstr "E183: 使用者自定指令必須以大寫字母開始"
 
-#: ex_docmd.c:4216
+#: ex_docmd.c:4393
 #, c-format
 msgid "E184: No such user-defined command: %s"
 msgstr "E184: 沒有使用者自定的命令： %s"
 
-#: ex_docmd.c:4667
+#: ex_docmd.c:4844
 #, c-format
 msgid "E185: Cannot find color scheme %s"
 msgstr "E185: 找不到顏色樣式 %s"
 
-#: ex_docmd.c:4675
+#: ex_docmd.c:4852
 msgid "Greetings, Vim user!"
 msgstr "嗨, Vim 使用者！"
 
-#: ex_docmd.c:5497
+#: ex_docmd.c:5549
 msgid "Edit File in new window"
 msgstr "在新視窗編輯檔案"
 
-#: ex_docmd.c:5760
+#: ex_docmd.c:5814
 msgid "No swap file"
 msgstr "無暫存檔"
 
-#: ex_docmd.c:5864
+#: ex_docmd.c:5918
 msgid "Append File"
 msgstr "附加檔案"
 
-#: ex_docmd.c:5923
+#: ex_docmd.c:5977
 msgid "E186: No previous directory"
 msgstr "E186: 沒有前一個目錄"
 
-#: ex_docmd.c:6000
+#: ex_docmd.c:6054
 msgid "E187: Unknown"
 msgstr "E187: 無法辦識的標記"
 
-#: ex_docmd.c:6118
+#: ex_docmd.c:6172
 #, c-format
 msgid "Window position: X %d, Y %d"
 msgstr "視窗位置: X %d, Y %d"
 
-#: ex_docmd.c:6123
+#: ex_docmd.c:6177
 msgid "E188: Obtaining window position not implemented for this platform"
 msgstr "E188: 在您的平台上無法獲得視窗位置"
 
-#: ex_docmd.c:6383
+#: ex_docmd.c:6443
 msgid "Save Redirection"
 msgstr "儲存 Redirection"
 
-#: ex_docmd.c:6532
+#: ex_docmd.c:6592
 msgid "Save View"
 msgstr "儲存 View"
 
-#: ex_docmd.c:6533
+#: ex_docmd.c:6593
 msgid "Save Session"
 msgstr "儲存 Session"
 
-#: ex_docmd.c:6535
+#: ex_docmd.c:6595
 msgid "Save Setup"
 msgstr "儲存設定"
 
-#: ex_docmd.c:6684
+#: ex_docmd.c:6744
 #, c-format
 msgid "E189: \"%s\" exists (use ! to override)"
 msgstr "E189: \"%s\" 已存在 (請用 ! 強制執行)"
 
-#: ex_docmd.c:6689
+#: ex_docmd.c:6749
 #, c-format
 msgid "E190: Cannot open \"%s\" for writing"
 msgstr "E190: 無法以寫入模式開啟 \"%s\""
 
 #. set mark
-#: ex_docmd.c:6713
+#: ex_docmd.c:6773
 msgid "E191: Argument must be a letter or forward/backward quote"
 msgstr "E191: 參數必須是英文字母或向前/後的引號"
 
-#: ex_docmd.c:6741
+#: ex_docmd.c:6802
 msgid "E192: Recursive use of :normal too deep"
 msgstr "E192: :normal 遞迴層數過深"
 
-#: ex_docmd.c:7106
+#: ex_docmd.c:7170
 msgid ":if nesting too deep"
 msgstr ":if 層數過深"
 
-#: ex_docmd.c:7141
+#: ex_docmd.c:7205
 msgid ":endif without :if"
 msgstr ":endif 缺少對應的 :if"
 
-#: ex_docmd.c:7161
+#: ex_docmd.c:7225
 msgid ":else without :if"
 msgstr ":else 缺少對應的 :if"
 
-#: ex_docmd.c:7163
+#: ex_docmd.c:7227
 msgid ":elseif without :if"
 msgstr ":elseif 缺少對應的 :if"
 
-#: ex_docmd.c:7215
+#: ex_docmd.c:7279
 msgid ":while nesting too deep"
 msgstr ":while 層數過深"
 
-#: ex_docmd.c:7261
+#: ex_docmd.c:7325
 msgid ":continue without :while"
 msgstr ":continue 缺少對應的 :while"
 
-#: ex_docmd.c:7288
+#: ex_docmd.c:7352
 msgid ":break without :while"
 msgstr ":break 缺少對應的 :while"
 
-#: ex_docmd.c:7311 ex_docmd.c:7316
+#: ex_docmd.c:7375 ex_docmd.c:7380
 msgid ":endwhile without :while"
 msgstr ":endwhile 缺少對應的 :while"
 
-#: ex_docmd.c:7337
+#: ex_docmd.c:7401
 msgid "E193: :endfunction not inside a function"
 msgstr "E193: :endfunction 必須在函式內部使用"
 
-#: ex_docmd.c:7517
+#: ex_docmd.c:7581
 msgid "E194: No alternate file name to substitute for '#'"
 msgstr "E194: 沒有 '#' 可替代的檔名的檔名"
 
-#: ex_docmd.c:7548
+#: ex_docmd.c:7612
 msgid "no autocommand file name to substitute for \"<afile>\""
 msgstr "沒有 Autocommand 檔名以取代 \"<afile>\""
 
-#: ex_docmd.c:7556
+#: ex_docmd.c:7620
 msgid "no autocommand buffer number to substitute for \"<abuf>\""
 msgstr "沒有 Autocommand 緩衝區名稱以取代 \"<abuf>\""
 
-#: ex_docmd.c:7567
+#: ex_docmd.c:7631
 msgid "no autocommand match name to substitute for \"<amatch>\""
 msgstr "沒有 Autocommand Match name 以取代 \"<amatch>\""
 
-#: ex_docmd.c:7577
+#: ex_docmd.c:7641
 msgid "no :source file name to substitute for \"<sfile>\""
 msgstr "沒有 :source 檔名以取代 \"<sfile>\""
 
-#: ex_docmd.c:7618
+#: ex_docmd.c:7682
 #, no-c-format
 msgid "Empty file name for '%' or '#', only works with \":p:h\""
 msgstr "'%' 或 '#' 指向空檔名，只能用於 \":p:h\""
 
-#: ex_docmd.c:7620
+#: ex_docmd.c:7684
 msgid "Evaluates to an empty string"
 msgstr "輸入為空字串"
 
-#: ex_docmd.c:8527
+#: ex_docmd.c:8593
 msgid "E195: Cannot open viminfo file for reading"
 msgstr "E195: 無法讀取 viminfo"
 
-#: ex_docmd.c:8700
+#: ex_docmd.c:8766
 msgid "E196: No digraphs in this version"
 msgstr "E196: 本版本無複合字元(digraph)"
 
-#: ex_getln.c:2786
+#: ex_getln.c:2782
 msgid "tagname"
 msgstr "標籤名稱"
 
-#: ex_getln.c:2789
+#: ex_getln.c:2785
 msgid " kind file\n"
 msgstr "類檔案\n"
 
-#: ex_getln.c:3991
+#: ex_getln.c:3989
 msgid "'history' option is zero"
 msgstr "選項 'history' 是零"
 
-#: ex_getln.c:4231
+#: ex_getln.c:4229
 #, c-format
 msgid ""
 "\n"
@@ -1326,240 +1357,240 @@ msgstr ""
 "\n"
 "# %s 歷史記錄 (新到舊):\n"
 
-#: ex_getln.c:4232
+#: ex_getln.c:4230
 msgid "Command Line"
 msgstr "命令列"
 
-#: ex_getln.c:4233
+#: ex_getln.c:4231
 msgid "Search String"
 msgstr "搜尋字串"
 
-#: ex_getln.c:4234
+#: ex_getln.c:4232
 msgid "Expression"
 msgstr "運算式"
 
-#: ex_getln.c:4235
+#: ex_getln.c:4233
 msgid "Input Line"
 msgstr "輸入行"
 
-#: ex_getln.c:4265
+#: ex_getln.c:4263
 msgid "E198: cmd_pchar beyond the command length"
 msgstr "E198: cmd_pchar 超過命令長度"
 
-#: ex_getln.c:4429
+#: ex_getln.c:4427
 msgid "E199: Active window or buffer deleted"
 msgstr "E199: 已刪除掉作用中的視窗或暫存區"
 
-#: fileio.c:351
+#: fileio.c:347
 msgid "Illegal file name"
 msgstr "不正確的檔名"
 
-#: fileio.c:375 fileio.c:497 fileio.c:2492 fileio.c:2530
+#: fileio.c:371 fileio.c:495 fileio.c:2491 fileio.c:2529
 msgid "is a directory"
 msgstr "是目錄"
 
-#: fileio.c:377
+#: fileio.c:373
 msgid "is not a file"
 msgstr "不是檔案"
 
-#: fileio.c:517 fileio.c:3535
+#: fileio.c:515 fileio.c:3581
 msgid "[New File]"
 msgstr "[未命名]"
 
-#: fileio.c:534
+#: fileio.c:532
 msgid "[Permission Denied]"
 msgstr "[權限不足]"
 
-#: fileio.c:626
+#: fileio.c:624
 msgid "E200: *ReadPre autocommands made the file unreadable"
 msgstr "E200: *ReadPre Autocommand 使程式無法讀取此檔"
 
-#: fileio.c:628
+#: fileio.c:626
 msgid "E201: *ReadPre autocommands must not change current buffer"
 msgstr "E201: *Filter* Autocommand 不可以更改緩衝區的內容"
 
-#: fileio.c:648
+#: fileio.c:646
 msgid "Vim: Reading from stdin...\n"
 msgstr "Vim: 從標準輸入讀取...\n"
 
-#: fileio.c:654
+#: fileio.c:652
 msgid "Reading from stdin..."
 msgstr "從標準輸入讀取..."
 
 #. Re-opening the original file failed!
-#: fileio.c:878
+#: fileio.c:876
 msgid "E202: Conversion made file unreadable!"
 msgstr "E202: 轉換錯誤"
 
-#: fileio.c:1734
+#: fileio.c:1732
 msgid "[fifo/socket]"
 msgstr "[fifo/socket]"
 
-#: fileio.c:1741
+#: fileio.c:1739
 msgid "[fifo]"
 msgstr "[fifo]"
 
-#: fileio.c:1748
+#: fileio.c:1746
 msgid "[socket]"
 msgstr "[socket]"
 
-#: fileio.c:1756
+#: fileio.c:1754
 msgid "[RO]"
 msgstr "[唯讀]"
 
-#: fileio.c:1766
+#: fileio.c:1764
 msgid "[CR missing]"
 msgstr "[缺少CR]'"
 
-#: fileio.c:1771
+#: fileio.c:1769
 msgid "[NL found]"
 msgstr "[找到NL]"
 
-#: fileio.c:1776
+#: fileio.c:1774
 msgid "[long lines split]"
 msgstr "[分割過長行]"
 
-#: fileio.c:1782 fileio.c:3519
+#: fileio.c:1780 fileio.c:3565
 msgid "[NOT converted]"
 msgstr "[未轉換]"
 
-#: fileio.c:1787 fileio.c:3524
+#: fileio.c:1785 fileio.c:3570
 msgid "[converted]"
 msgstr "[已轉換]"
 
-#: fileio.c:1794 fileio.c:3549
+#: fileio.c:1792 fileio.c:3595
 msgid "[crypted]"
 msgstr "[已加密]"
 
-#: fileio.c:1801
+#: fileio.c:1799
 msgid "[CONVERSION ERROR]"
 msgstr "轉換錯誤"
 
-#: fileio.c:1808
+#: fileio.c:1806
 msgid "[READ ERRORS]"
 msgstr "[讀取錯誤]"
 
-#: fileio.c:2015
+#: fileio.c:2013
 msgid "Can't find temp file for conversion"
 msgstr "找不到轉換用的暫存檔"
 
-#: fileio.c:2022
+#: fileio.c:2020
 msgid "Conversion with 'charconvert' failed"
 msgstr "字元集轉換錯誤"
 
-#: fileio.c:2025
+#: fileio.c:2023
 msgid "can't read output of 'charconvert'"
 msgstr "無法讀取 'charconvert' 的輸出"
 
-#: fileio.c:2408
+#: fileio.c:2407
 msgid "E203: Autocommands deleted or unloaded buffer to be written"
 msgstr "E203: Autocommand 刪除或釋放了要寫入的緩衝區"
 
-#: fileio.c:2431
+#: fileio.c:2430
 msgid "E204: Autocommand changed number of lines in unexpected way"
 msgstr "E204: Autocommand 意外地改變了行號"
 
-#: fileio.c:2497 fileio.c:2514
+#: fileio.c:2496 fileio.c:2513
 msgid "is not a file or writable device"
 msgstr "不是檔案或可寫入的裝置"
 
-#: fileio.c:2556
+#: fileio.c:2555
 msgid "is read-only (use ! to override)"
 msgstr "是唯讀檔 (請使用 ! 強制執行)"
 
-#: fileio.c:2842
+#: fileio.c:2851
 msgid "Can't write to backup file (use ! to override)"
 msgstr "無法寫入備份檔 (請使用 ! 強制執行)"
 
-#: fileio.c:2848
+#: fileio.c:2863
 msgid "Close error for backup file (use ! to override)"
 msgstr "無法關閉備份檔 (請使用 ! 強制執行)"
 
-#: fileio.c:2850
+#: fileio.c:2865
 msgid "Can't read file for backup (use ! to override)"
 msgstr "無法讀取檔案以供備份 (請使用 ! 強制執行)"
 
-#: fileio.c:2866
+#: fileio.c:2881
 msgid "Cannot create backup file (use ! to override)"
 msgstr "無法建立備份檔 (請使用 ! 強制執行)"
 
-#: fileio.c:2955
+#: fileio.c:2970
 msgid "Can't make backup file (use ! to override)"
 msgstr "無法製作備份檔 (請使用 ! 強制執行)"
 
-#: fileio.c:3010
+#: fileio.c:3032
 msgid "The resource fork will be lost (use ! to override)"
 msgstr "Resource fork 會消失 (請使用 ! 強制執行)"
 
-#: fileio.c:3099
+#: fileio.c:3121
 msgid "E214: Can't find temp file for writing"
 msgstr "E214: 找不到寫入用的暫存檔"
 
-#: fileio.c:3117
+#: fileio.c:3139
 msgid "E213: Cannot convert (use ! to write without conversion)"
 msgstr "E213: 無法轉換 (請使用 ! 強制不轉換寫入)"
 
-#: fileio.c:3152
+#: fileio.c:3176
 msgid "E166: Can't open linked file for writing"
 msgstr "E166: 無法以寫入模式開啟連結檔案"
 
-#: fileio.c:3156
+#: fileio.c:3180
 msgid "E212: Can't open file for writing"
 msgstr "E212: 無法以寫入模式開啟"
 
-#: fileio.c:3390
+#: fileio.c:3423
 msgid "Close failed"
 msgstr "關閉失敗"
 
-#: fileio.c:3445
+#: fileio.c:3481
 msgid "write error, conversion failed"
 msgstr "無法寫入 -- 轉換失敗"
 
-#: fileio.c:3448
+#: fileio.c:3487
 msgid "write error (file system full?)"
 msgstr "寫入錯誤 (檔案系統已滿？)"
 
-#: fileio.c:3514
+#: fileio.c:3560
 msgid " CONVERSION ERROR"
 msgstr "轉換錯誤"
 
-#: fileio.c:3530
+#: fileio.c:3576
 msgid "[Device]"
 msgstr "[裝置]"
 
-#: fileio.c:3535
+#: fileio.c:3581
 msgid "[New]"
 msgstr "[新]"
 
-#: fileio.c:3557
+#: fileio.c:3603
 msgid " [a]"
 msgstr "[a]"
 
-#: fileio.c:3557
+#: fileio.c:3603
 msgid " appended"
 msgstr " 已附加"
 
-#: fileio.c:3559
+#: fileio.c:3605
 msgid " [w]"
 msgstr "[w]"
 
-#: fileio.c:3559
+#: fileio.c:3605
 msgid " written"
 msgstr " 已寫入"
 
-#: fileio.c:3609
+#: fileio.c:3655
 msgid "E205: Patchmode: can't save original file"
 msgstr "E205: Patch 模式: 無法儲存原始檔案"
 
-#: fileio.c:3631
+#: fileio.c:3677
 msgid "E206: patchmode: can't touch empty original file"
 msgstr "E206: Patch 模式: 無法變更空的原始檔案"
 
-#: fileio.c:3646
+#: fileio.c:3692
 msgid "E207: Can't delete backup file"
 msgstr "E207: 無法刪除備份檔"
 
-#: fileio.c:3698
+#: fileio.c:3744
 msgid ""
 "\n"
 "WARNING: Original file may be lost or damaged\n"
@@ -1567,116 +1598,123 @@ msgstr ""
 "\n"
 "警告: 原始檔案流失或損壞\n"
 
-#: fileio.c:3700
+#: fileio.c:3746
 msgid "don't quit the editor until the file is successfully written!"
 msgstr "在檔案正確寫入前請勿離開編輯器!"
 
-#: fileio.c:3768
+#: fileio.c:3826
 msgid "[dos]"
 msgstr "[dos]"
 
-#: fileio.c:3768
+#: fileio.c:3826
 msgid "[dos format]"
 msgstr "[dos 格式]"
 
-#: fileio.c:3775
+#: fileio.c:3833
 msgid "[mac]"
 msgstr "[mac]"
 
-#: fileio.c:3775
+#: fileio.c:3833
 msgid "[mac format]"
 msgstr "[mac 格式]"
 
-#: fileio.c:3782
+#: fileio.c:3840
 msgid "[unix]"
 msgstr "[unix]"
 
-#: fileio.c:3782
+#: fileio.c:3840
 msgid "[unix format]"
 msgstr "[unix 格式]"
 
-#: fileio.c:3809
+#: fileio.c:3867
 msgid "1 line, "
 msgstr "1 行, "
 
-#: fileio.c:3811
+#: fileio.c:3869
 #, c-format
 msgid "%ld lines, "
 msgstr "%ld 行, "
 
-#: fileio.c:3814
+#: fileio.c:3872
 msgid "1 character"
 msgstr "一個字元"
 
-#: fileio.c:3816
+#: fileio.c:3874
 #, c-format
 msgid "%ld characters"
 msgstr "%ld個字元"
 
-#: fileio.c:3826
+#: fileio.c:3884
 msgid "[noeol]"
 msgstr "[noeol]"
 
-#: fileio.c:3826
+#: fileio.c:3884
 msgid "[Incomplete last line]"
 msgstr "[結尾行不完整]"
 
 #. don't overwrite messages here
+#. must give this prompt
 #. don't use emsg() here, don't want to flush the buffers
-#: fileio.c:3844
+#: fileio.c:3903
 msgid "WARNING: The file has been changed since reading it!!!"
 msgstr "警告: 本檔案自上次讀入後已變動!!!"
 
-#: fileio.c:3846
+#: fileio.c:3905
 msgid "Do you really want to write to it"
 msgstr "確定要寫入嗎"
 
-#: fileio.c:4802
+#: fileio.c:4861
 #, c-format
 msgid "E208: Error writing to \"%s\""
 msgstr "E208: 寫入檔案 \"%s\" 錯誤"
 
-#: fileio.c:4809
+#: fileio.c:4868
 #, c-format
 msgid "E209: Error closing \"%s\""
 msgstr "E209: 關閉檔案 \"%s\" 錯誤"
 
-#: fileio.c:4812
+#: fileio.c:4871
 #, c-format
 msgid "E210: Error reading \"%s\""
 msgstr "E210: 讀取檔案 \"%s\" 錯誤"
 
-#: fileio.c:4961
+#: fileio.c:5025
 msgid "E246: FileChangedShell autocommand deleted buffer"
 msgstr "E246: FileChangedShell autocommand 刪除緩衝區"
 
-#: fileio.c:4969
+#: fileio.c:5033
 #, c-format
 msgid "E211: Warning: File \"%s\" no longer available"
 msgstr "E211: 警告: 檔案 \"%s\" 已經不存在"
 
-#: fileio.c:4982
+#: fileio.c:5046
 #, c-format
 msgid ""
 "W12: Warning: File \"%s\" has changed and the buffer was changed in Vim as "
 "well"
 msgstr "W12: 警告: 檔案 \"%s\" 自上次讀入後已變動, 而且編輯中的緩衝區也更動了"
 
-#: fileio.c:4985
+#: fileio.c:5049
 #, c-format
 msgid "W11: Warning: File \"%s\" has changed since editing started"
 msgstr "W11: 警告: 檔案 \"%s\" 自上次讀入後已變動"
 
-#: fileio.c:4995
+#: fileio.c:5051
+#, c-format
+msgid "W16: Warning: Mode of file \"%s\" has changed since editing started"
+msgstr "W16: 警告: 檔案 \"%s\" 的權限與上次讀入時不一樣 (有變動過)"
+
+# 'mode' seems better as translated to 'permission'?
+#: fileio.c:5061
 #, c-format
 msgid "W13: Warning: File \"%s\" has been created after editing started"
 msgstr "W13: 警告: 檔案 \"%s\" 在開始編輯後又被建立了"
 
-#: fileio.c:5012
+#: fileio.c:5078
 msgid "Warning"
 msgstr "警告"
 
-#: fileio.c:5013
+#: fileio.c:5079
 msgid ""
 "&OK\n"
 "&Load File"
@@ -1684,22 +1722,33 @@ msgstr ""
 "確定(&O)\n"
 "載入檔案(&L)"
 
-#: fileio.c:5083
+#: fileio.c:5155
+#, c-format
 msgid "E321: Could not reload \"%s\""
 msgstr "E321: 無法重新載入 \"%s\""
 
-#: fileio.c:5813
+#: fileio.c:5660
+msgid "--Deleted--"
+msgstr "--已刪除--"
+
+#. the group doesn't exist
+#: fileio.c:5820
+#, c-format
+msgid "E367: No such group: \"%s\""
+msgstr "E367: 無此群組: \"%s\""
+
+#: fileio.c:5945
 #, c-format
 msgid "E215: Illegal character after *: %s"
 msgstr "E215: * 後面有不正確的字元: %s"
 
-#: fileio.c:5824
+#: fileio.c:5956
 #, c-format
 msgid "E216: No such event: %s"
 msgstr "E216: 無此事件: %s"
 
 #. Highlight title
-#: fileio.c:5973
+#: fileio.c:6105
 msgid ""
 "\n"
 "--- Auto-Commands ---"
@@ -1707,39 +1756,39 @@ msgstr ""
 "\n"
 "--- Auto-Commands ---"
 
-#: fileio.c:6244
+#: fileio.c:6376
 msgid "E217: Can't execute autocommands for ALL events"
 msgstr "E217: 無法對所有事件執行 autocommand"
 
-#: fileio.c:6267
+#: fileio.c:6399
 msgid "No matching autocommands"
 msgstr "找不到對應的 autocommand"
 
-#: fileio.c:6539
+#: fileio.c:6671
 msgid "E218: autocommand nesting too deep"
 msgstr "E218: autocommand 層數過深"
 
-#: fileio.c:6820
+#: fileio.c:6958
 #, c-format
 msgid "%s Auto commands for \"%s\""
 msgstr "%s Auto commands: \"%s\""
 
-#: fileio.c:6828
+#: fileio.c:6966
 #, c-format
 msgid "Executing %s"
 msgstr "執行 %s"
 
 #. always scroll up, don't overwrite
-#: fileio.c:6896
+#: fileio.c:7034
 #, c-format
 msgid "autocommand %s"
 msgstr "autocommand %s"
 
-#: fileio.c:7418
+#: fileio.c:7556
 msgid "E219: Missing {."
 msgstr "E219: 缺少 {."
 
-#: fileio.c:7420
+#: fileio.c:7558
 msgid "E220: Missing }."
 msgstr "E220: 缺少 }."
 
@@ -1747,68 +1796,76 @@ msgstr "E220: 缺少 }."
 msgid "No fold found"
 msgstr "找不到任何 fold"
 
-#: fold.c:1681
+#: fold.c:554
+msgid "E350: Cannot create fold with current 'foldmethod'"
+msgstr "E350: 無法在目前的 'foldmethod' 下建立 fold"
+
+#: fold.c:556
+msgid "E351: Cannot delete fold with current 'foldmethod'"
+msgstr "E351: 無法在目前的 'foldmethod' 下刪除 fold"
+
+#: fold.c:1700
 msgid "E221: 'commentstring' is empty"
 msgstr "E221: 選項 'commentstring' 未設定"
 
-#: getchar.c:265
+#: getchar.c:268
 msgid "E222: Add to read buffer"
 msgstr "E222: 加入讀取緩衝區中"
 
-#: getchar.c:2074
+#: getchar.c:2114
 msgid "E223: recursive mapping"
 msgstr "E223: 遞迴 mapping"
 
-#: getchar.c:2918
+#: getchar.c:2966
 #, c-format
 msgid "E224: global abbreviation already exists for %s"
 msgstr "E224: %s 已經有全域 abbreviation 了"
 
-#: getchar.c:2921
+#: getchar.c:2969
 #, c-format
 msgid "E225: global mapping already exists for %s"
 msgstr "E225: %s 已經有全域 mapping 了"
 
-#: getchar.c:3048
+#: getchar.c:3096
 #, c-format
 msgid "E226: abbreviation already exists for %s"
 msgstr "E226: %s 已經有 abbreviation 了"
 
-#: getchar.c:3051
+#: getchar.c:3099
 #, c-format
 msgid "E227: mapping already exists for %s"
 msgstr "E227: %s 的 mapping 已經存在"
 
-#: getchar.c:3115
+#: getchar.c:3163
 msgid "No abbreviation found"
 msgstr "找不到 abbreviation"
 
-#: getchar.c:3117
+#: getchar.c:3165
 msgid "No mapping found"
 msgstr "沒有這個 mapping 對應"
 
-#: getchar.c:3942
+#: getchar.c:3990
 msgid "E228: makemap: Illegal mode"
 msgstr "E228: makemap: 不正確的模式"
 
-#: gui.c:179
+#: gui.c:181
 msgid "E229: Cannot start the GUI"
 msgstr "E229: 無法啟動圖型界面"
 
-#: gui.c:297
+#: gui.c:306
 #, c-format
 msgid "E230: Cannot read from \"%s\""
 msgstr "E230: 無法讀取檔案 \"%s\""
 
-#: gui.c:422
+#: gui.c:431
 msgid "E231: 'guifontwide' invalid"
 msgstr "E231: 不正確的 'guifontwide'"
 
-#: gui.c:3889
+#: gui.c:3919
 msgid "Error"
 msgstr "錯誤"
 
-#: gui.c:3890
+#: gui.c:3920
 msgid "&Ok"
 msgstr "確定(&O)"
 
@@ -1833,12 +1890,12 @@ msgstr "路徑:"
 msgid "vim_SelFile: can't get current directory"
 msgstr "vim_SelFile: 無法取得目前目錄"
 
-#: gui_at_fs.c:2567 gui_motif.c:1614
+#: gui_at_fs.c:2567 gui_motif.c:1607
 msgid "OK"
 msgstr "確定"
 
 #. 'Cancel' button
-#: gui_at_fs.c:2567 gui_gtk.c:1682 gui_motif.c:1609 gui_motif.c:2917
+#: gui_at_fs.c:2567 gui_gtk.c:1679 gui_motif.c:1602 gui_motif.c:2823
 msgid "Cancel"
 msgstr "取消"
 
@@ -1846,135 +1903,139 @@ msgstr "取消"
 msgid "Scrollbar Widget: Could not get geometry of thumb pixmap."
 msgstr "捲動軸: 不能設定 thumb pixmap 的位置"
 
-#: gui_athena.c:1898 gui_motif.c:1860
+#: gui_athena.c:1928 gui_motif.c:1855
 msgid "Vim dialog"
 msgstr "Vim 對話盒"
 
-#: gui_beval.c:69
+#: gui_beval.c:68
 msgid "E232: Cannot create BalloonEval with both message and callback"
 msgstr "E232: 不能對訊息與 callback 建立 BallonEval"
 
-#: gui_gtk.c:1120
+#: gui_gtk.c:1140
 msgid "Vim dialog..."
 msgstr "Vim 對話盒..."
 
-#: gui_gtk.c:1519 gui_motif.c:2845
+#: gui_gtk.c:1515 gui_motif.c:2742
 msgid "VIM - Search and Replace..."
 msgstr "VIM - 尋找與取代..."
 
-#: gui_gtk.c:1524 gui_motif.c:2847
+#: gui_gtk.c:1520 gui_motif.c:2744
 msgid "VIM - Search..."
 msgstr "VIM - 尋找..."
 
-#: gui_gtk.c:1547 gui_motif.c:2957
+#: gui_gtk.c:1543 gui_motif.c:2862
 msgid "Find what:"
 msgstr "搜尋:"
 
-#: gui_gtk.c:1565 gui_motif.c:2991
+#: gui_gtk.c:1561 gui_motif.c:2894
 msgid "Replace with:"
 msgstr "取代為:"
 
 #. exact match only button
-#: gui_gtk.c:1597 gui_motif.c:3077
+#: gui_gtk.c:1593 gui_motif.c:2996
 msgid "Match exact word only"
 msgstr "只搜尋完全相同的字"
 
-#: gui_gtk.c:1608 gui_motif.c:3045
+#: gui_gtk.c:1605 gui_motif.c:2964
 msgid "Direction"
 msgstr "方向"
 
 #. 'Up' and 'Down' buttons
-#: gui_gtk.c:1620 gui_motif.c:3057
+#: gui_gtk.c:1617 gui_motif.c:2976
 msgid "Up"
 msgstr "向上"
 
-#: gui_gtk.c:1624 gui_motif.c:3065
+#: gui_gtk.c:1621 gui_motif.c:2984
 msgid "Down"
 msgstr "向下"
 
 #. 'Find Next' button
-#: gui_gtk.c:1646 gui_motif.c:2871
+#: gui_gtk.c:1643 gui_motif.c:2766
 msgid "Find Next"
 msgstr "找下一個"
 
 #. 'Replace' button
-#: gui_gtk.c:1663 gui_motif.c:2888
+#: gui_gtk.c:1660 gui_motif.c:2783
 msgid "Replace"
 msgstr "取代"
 
 #. 'Replace All' button
-#: gui_gtk.c:1672 gui_motif.c:2902
+#: gui_gtk.c:1669 gui_motif.c:2796
 msgid "Replace All"
 msgstr "取代全部"
 
-#: gui_gtk_x11.c:1064 gui_x11.c:1207
+#: gui_gtk_x11.c:1062 gui_x11.c:1194
 msgid "E233: cannot open display"
 msgstr "E233: <不能開啟 X Server DISPLAY>"
 
-#: gui_gtk_x11.c:2407 gui_x11.c:1941
+#: gui_gtk_x11.c:2395 gui_x11.c:1997
 #, c-format
 msgid "E234: Unknown fontset: %s"
 msgstr "E234: 不正確的字元集 (Fontset): %s"
 
-#: gui_gtk_x11.c:2433
+#: gui_gtk_x11.c:2422
 msgid "Font Selection"
 msgstr "字型選擇"
 
-#: gui_gtk_x11.c:2675 gui_mac.c:2775 gui_w48.c:1496 gui_x11.c:1778
+#: gui_gtk_x11.c:2664 gui_mac.c:2780 gui_w48.c:1185 gui_x11.c:1833
 #, c-format
 msgid "E235: Unknown font: %s"
 msgstr "不正確的字型名稱: %s"
 
-#: gui_gtk_x11.c:2686 gui_x11.c:1802
+#: gui_gtk_x11.c:2675 gui_x11.c:1857
 #, c-format
 msgid "E236: Font \"%s\" is not fixed-width"
 msgstr "E236: \"%s\" 不是固定寬度字型"
 
-#: gui_gtk_x11.c:2816
+#: gui_gtk_x11.c:2805
 #, c-format
 msgid "E242: Color name not recognized: %s"
 msgstr "E242: %s 為無法識別的顏色名稱"
 
-#: gui_gtk_x11.c:3481 ui.c:1918
+#: gui_gtk_x11.c:3481 ui.c:1929
 msgid "Used CUT_BUFFER0 instead of empty selection"
 msgstr "使用 CUT_BUFFER0 來取代空選擇"
 
-#: gui_motif.c:1608 gui_motif.c:1611
+#: gui_motif.c:1601 gui_motif.c:1604
 msgid "Filter"
 msgstr "過濾器"
 
-#: gui_motif.c:1610
+#: gui_motif.c:1603
 msgid "Directories"
 msgstr "目錄"
 
-#: gui_motif.c:1612
+#: gui_motif.c:1605
 msgid "Help"
 msgstr "輔助說明"
 
-#: gui_motif.c:1613
+#: gui_motif.c:1606
 msgid "Files"
 msgstr "檔案"
 
-#: gui_motif.c:1615
+#: gui_motif.c:1608
 msgid "Selection"
 msgstr "選擇"
 
-#: gui_riscos.c:948
+#: gui_motif.c:2809
+msgid "Undo"
+msgstr "復原"
+
+#: gui_riscos.c:951
 #, c-format
 msgid "E235: Can't load Zap font '%s'"
 msgstr "E235: 無法開啟 Zap 字型 '%s'"
 
-#: gui_riscos.c:1044
+#: gui_riscos.c:1047
 #, c-format
 msgid "E235: Can't use font %s"
 msgstr "E235: 無法使用字型 %s"
 
-#: gui_riscos.c:1164
+#: gui_riscos.c:1167
 #, c-format
 msgid "E242: Missing color: %s"
 msgstr "E242: 找不到顏色: %s"
 
-#: gui_riscos.c:3274
+#: gui_riscos.c:3269
 msgid ""
 "\n"
 "Sending message to terminate child process.\n"
@@ -1982,74 +2043,64 @@ msgstr ""
 "\n"
 "送出中斷子程式的訊息中.\n"
 
-#: gui_w32.c:914
+#: gui_w32.c:915
 #, c-format
 msgid "E243: Argument not supported: \"-%s\"; Use the OLE version."
 msgstr "E243: 不支援參數 \"-%s\"。請用 OLE 版本。"
 
-#: gui_w48.c:1459
-#, c-format
-msgid "E244: Illegal charset name \"%s\" in font name \"%s\""
-msgstr "E244: 字元集 \"%s\" 無法對應字型\"%s\""
-
-#: gui_w48.c:1467
-#, c-format
-msgid "E245: Illegal char '%c' in font name \"%s\""
-msgstr "E245: 不正確的字元 '%c' 出現在字型名稱 \"%s\" 內"
-
-#: gui_w48.c:2392
+#: gui_w48.c:2056
 msgid "Find string (use '\\\\' to find  a '\\')"
 msgstr "搜尋字串 (使用 '\\\\' 來表示 '\\')"
 
-#: gui_w48.c:2417
+#: gui_w48.c:2081
 msgid "Find & Replace (use '\\\\' to find  a '\\')"
 msgstr "搜尋及取代字串 (使用 '\\\\' 來表示 '\\')"
 
-#: gui_x11.c:1420
+#: gui_x11.c:1414
 msgid "Vim: (ec1) Cannot allocate colormap entry, some colors may be incorrect"
 msgstr "Vim: (ec1) 無法配置 color map 項目，有些顏色看起來會怪怪的"
 
-#: gui_x11.c:1931
+#: gui_x11.c:1987
 #, c-format
 msgid "E250: Fonts for the following charsets are missing in fontset %s:"
 msgstr "E250: Fontset %s 沒有設定正確的字型以供顯示這些字元集:"
 
-#: gui_x11.c:1971
+#: gui_x11.c:2030
 #, c-format
 msgid "E252: Fontset name: %s"
 msgstr "E252: 字型集(Fontset)名稱: %s"
 
-#: gui_x11.c:1972
+#: gui_x11.c:2031
 #, c-format
 msgid "Font '%s' is not fixed-width"
 msgstr "'%s' 不是固定寬度字型"
 
-#: gui_x11.c:1991
+#: gui_x11.c:2050
 #, c-format
 msgid "E253: Fontset name: %s\n"
 msgstr "E253: 字型集(Fontset)名稱: %s\n"
 
-#: gui_x11.c:1992
+#: gui_x11.c:2051
 #, c-format
 msgid "Font0: %s\n"
 msgstr "Font0: %s\n"
 
-#: gui_x11.c:1993
+#: gui_x11.c:2052
 #, c-format
 msgid "Font1: %s\n"
 msgstr "Font1: %s\n"
 
-#: gui_x11.c:1994
+#: gui_x11.c:2053
 #, c-format
 msgid "Font%d width is not twice that of font0\n"
 msgstr "字型%d寬度不是字型0的兩倍\n"
 
-#: gui_x11.c:1995
+#: gui_x11.c:2054
 #, c-format
 msgid "Font0 width: %ld\n"
 msgstr "字型0的寬度：%ld\n"
 
-#: gui_x11.c:1996
+#: gui_x11.c:2055
 #, c-format
 msgid ""
 "Font1 width: %ld\n"
@@ -2058,12 +2109,12 @@ msgstr ""
 "字型1寬度: %ld\n"
 "\n"
 
-#: gui_x11.c:2125
+#: gui_x11.c:2201
 #, c-format
 msgid "E254: Cannot allocate color %s"
 msgstr "E254: 不能配置顏色 %s"
 
-#: gui_x11.c:3225
+#: gui_x11.c:3250
 msgid "E255: Couldn't read in sign data!"
 msgstr "E255: 無法讀取 sign data!"
 
@@ -2235,421 +2286,415 @@ msgstr " # pid    資料庫名稱                          prepend path\n"
 msgid "%2d %-5ld  %-34s  <none>\n"
 msgstr "%2d %-5ld  %-34s  <無>\n"
 
-#: if_python.c:380
+#: if_python.c:376
 msgid ""
 "E263: Sorry, this command is disabled, the Python library could not be "
 "loaded."
 msgstr "E263: 抱歉，這個命令無法使用，Python 程式庫沒有載入。"
 
-#: if_python.c:580
+#: if_python.c:576
 msgid "can't delete OutputObject attributes"
 msgstr "無法刪除 OutputObject 屬性"
 
-#: if_python.c:587
+#: if_python.c:583
 msgid "softspace must be an integer"
 msgstr "softspace 必需是整數"
 
-#: if_python.c:595
+#: if_python.c:591
 msgid "invalid attribute"
 msgstr "不正確的屬性"
 
-#: if_python.c:634 if_python.c:648
+#: if_python.c:630 if_python.c:644
 msgid "writelines() requires list of strings"
 msgstr "writelines() 需要 string list 當參數"
 
-#: if_python.c:774
+#: if_python.c:770
 msgid "E264: Python: Error initialising I/O objects"
 msgstr "E264: Python: 無法初始 I/O 物件"
 
-#: if_python.c:959 if_tcl.c:1393
+#: if_python.c:955 if_tcl.c:1391
 msgid "invalid expression"
 msgstr "不正確的運算式"
 
-#: if_python.c:973 if_tcl.c:1398
+#: if_python.c:969 if_tcl.c:1396
 msgid "expressions disabled at compile time"
 msgstr "因為編譯時沒有加入運算式(expression)的程式碼，所以無法使用運算式"
 
-#: if_python.c:986
+#: if_python.c:982
 msgid "attempt to refer to deleted buffer"
 msgstr "試圖使用已被刪除的 buffer"
 
-#: if_python.c:1001 if_python.c:1042 if_python.c:1106 if_tcl.c:1205
+#: if_python.c:997 if_python.c:1038 if_python.c:1102 if_tcl.c:1203
 msgid "line number out of range"
 msgstr "行號超出範圍"
 
-#: if_python.c:1239
+#: if_python.c:1235
 #, c-format
 msgid "<buffer object (deleted) at %8lX>"
 msgstr "<buffer 物件 (已刪除): %8lX>"
 
-#: if_python.c:1330 if_tcl.c:827
+#: if_python.c:1326 if_tcl.c:825
 msgid "invalid mark name"
 msgstr "標記名稱不正確"
 
-#: if_python.c:1605
+#: if_python.c:1601
 msgid "no such buffer"
 msgstr "無此 buffer"
 
-#: if_python.c:1693
+#: if_python.c:1689
 msgid "attempt to refer to deleted window"
 msgstr "試圖使用已被刪除的視窗"
 
-#: if_python.c:1738
+#: if_python.c:1734
 msgid "readonly attribute"
 msgstr "唯讀屬性"
 
-#: if_python.c:1751
+#: if_python.c:1747
 msgid "cursor position outside buffer"
 msgstr "游標定位在緩衝區之外"
 
-#: if_python.c:1828
+#: if_python.c:1824
 #, c-format
 msgid "<window object (deleted) at %.8lX>"
 msgstr "<視窗物件(已刪除): %.8lX>"
 
-#: if_python.c:1840
+#: if_python.c:1836
 #, c-format
 msgid "<window object (unknown) at %.8lX>"
 msgstr "<視窗物件(未知): %.8lX>"
 
-#: if_python.c:1842
+#: if_python.c:1838
 #, c-format
 msgid "<window %d>"
 msgstr "<視窗 %d>"
 
-#: if_python.c:1918
+#: if_python.c:1914
 msgid "no such window"
 msgstr "無此視窗"
 
-#: if_python.c:2148 if_python.c:2179 if_python.c:2229 if_python.c:2289
-#: if_python.c:2406 if_python.c:2458 if_tcl.c:675 if_tcl.c:720 if_tcl.c:794
-#: if_tcl.c:864 if_tcl.c:1989
+#: if_python.c:2144 if_python.c:2175 if_python.c:2225 if_python.c:2285
+#: if_python.c:2402 if_python.c:2454 if_tcl.c:673 if_tcl.c:718 if_tcl.c:792
+#: if_tcl.c:862 if_tcl.c:1987
 msgid "cannot save undo information"
 msgstr "無法儲存復原資訊"
 
-#: if_python.c:2150 if_python.c:2236 if_python.c:2300
+#: if_python.c:2146 if_python.c:2232 if_python.c:2296
 msgid "cannot delete line"
 msgstr "不能刪除此行"
 
-#: if_python.c:2181 if_python.c:2316 if_tcl.c:681 if_tcl.c:2011
+#: if_python.c:2177 if_python.c:2312 if_tcl.c:679 if_tcl.c:2009
 msgid "cannot replace line"
 msgstr "不能替代此行"
 
-#: if_python.c:2332 if_python.c:2408 if_python.c:2466
+#: if_python.c:2328 if_python.c:2404 if_python.c:2462
 msgid "cannot insert line"
 msgstr "不能替代插入此行"
 
-#: if_python.c:2570
+#: if_python.c:2566
 msgid "string cannot contain newlines"
 msgstr "字串無法包含新行"
 
-#: if_ruby.c:398
+#: if_ruby.c:394
 msgid ""
 "E266: Sorry, this command is disabled, the Ruby library could not be loaded."
 msgstr "E266: 此命令無法使用，無法載入 Ruby 程式庫(Library)"
 
-#: if_sniff.c:68
+#: if_ruby.c:457
+#, c-format
+msgid "E273: unknown longjmp status %d"
+msgstr "E273: 未知的 longjmp status %d"
+
+#: if_sniff.c:67
 msgid "Toggle implementation/definition"
 msgstr "切換實作/定義"
 
-#: if_sniff.c:69
+#: if_sniff.c:68
 msgid "Show base class of"
 msgstr "顯示 base class of:"
 
-#: if_sniff.c:70
+#: if_sniff.c:69
 msgid "Show overridden member function"
 msgstr "顯示被 override 的 member function"
 
-#: if_sniff.c:71
+#: if_sniff.c:70
 msgid "Retrieve from file"
 msgstr "讀取: 從檔案"
 
-#: if_sniff.c:72
+#: if_sniff.c:71
 msgid "Retrieve from project"
 msgstr "讀取: 從物件"
 
-#: if_sniff.c:74
+#: if_sniff.c:73
 msgid "Retrieve from all projects"
 msgstr "讀取: 從所有 project"
 
-#: if_sniff.c:75
+#: if_sniff.c:74
 msgid "Retrieve"
 msgstr "讀取"
 
-#: if_sniff.c:76
+#: if_sniff.c:75
 msgid "Show source of"
 msgstr "顯示原始碼: "
 
-#: if_sniff.c:77
+#: if_sniff.c:76
 msgid "Find symbol"
 msgstr "搜尋 symbol"
 
-#: if_sniff.c:78
+#: if_sniff.c:77
 msgid "Browse class"
 msgstr "瀏覽 class"
 
-#: if_sniff.c:79
+#: if_sniff.c:78
 msgid "Show class in hierarchy"
 msgstr "顯示階層式的 class"
 
-#: if_sniff.c:80
+#: if_sniff.c:79
 msgid "Show class in restricted hierarchy"
 msgstr "顯示 restricted 階層式的 class"
 
-#: if_sniff.c:81
+#: if_sniff.c:80
 msgid "Xref refers to"
 msgstr "Xref 參考到"
 
-#: if_sniff.c:82
+#: if_sniff.c:81
 msgid "Xref referred by"
 msgstr "Xref 被誰參考:"
 
-#: if_sniff.c:83
+#: if_sniff.c:82
 msgid "Xref has a"
 msgstr "Xref 有"
 
-#: if_sniff.c:84
+#: if_sniff.c:83
 msgid "Xref used by"
 msgstr "Xref 被誰使用:"
 
-#: if_sniff.c:85
+#: if_sniff.c:84
 msgid "Show docu of"
 msgstr "顯示文件: "
 
-#: if_sniff.c:86
+#: if_sniff.c:85
 msgid "Generate docu for"
 msgstr "產生文件: "
 
-#: if_sniff.c:98
+#: if_sniff.c:97
 msgid ""
 "Cannot connect to SNiFF+. Check environment (sniffemacs must be found in "
 "$PATH).\n"
 msgstr "無法連線到 SNiFF+。請檢查環境變數 ($PATH 裡必需可以找到 sniffemacs)\n"
 
-#: if_sniff.c:426
+#: if_sniff.c:425
 msgid "E274: Sniff: Error during read. Disconnected"
 msgstr "E274: Sniff: 讀取錯誤. 取消連線"
 
-#: if_sniff.c:554
+#: if_sniff.c:553
 msgid "SNiFF+ is currently "
 msgstr "SNiFF+ 目前"
 
-#: if_sniff.c:556
+#: if_sniff.c:555
 msgid "not "
 msgstr "未"
 
-#: if_sniff.c:557
+#: if_sniff.c:556
 msgid "connected"
 msgstr "連線中"
 
-#: if_sniff.c:593
+#: if_sniff.c:592
 #, c-format
 msgid "E275: Unknown SNiFF+ request: %s"
 msgstr "E275: 不正確的 SNiff+ 呼叫: %s"
 
-#: if_sniff.c:606
+#: if_sniff.c:605
 msgid "E276: Error connecting to SNiFF+"
 msgstr "E276: 連線到 SNiFF+ 失敗"
 
-#: if_sniff.c:1011
+#: if_sniff.c:1010
 msgid "E278: SNiFF+ not connected"
 msgstr "E278: 未連線到 SNiFF+"
 
-#: if_sniff.c:1020
+#: if_sniff.c:1019
 msgid "E279: Not a SNiFF+ buffer"
 msgstr "E279: 不是 SNiFF+ 的緩衝區"
 
-#: if_sniff.c:1085
+#: if_sniff.c:1084
 msgid "Sniff: Error during write. Disconnected"
 msgstr "Sniff: 寫入錯誤。結束連線"
 
-#: if_tcl.c:409
+#: if_tcl.c:407
 msgid "invalid buffer number"
 msgstr "緩衝區號碼錯誤"
 
-#: if_tcl.c:455 if_tcl.c:922 if_tcl.c:1101
+#: if_tcl.c:453 if_tcl.c:920 if_tcl.c:1099
 msgid "not implemented yet"
 msgstr "尚未實作"
 
-#: if_tcl.c:492
+#: if_tcl.c:490
 msgid "unknown option"
 msgstr "不正確的選項"
 
 #. ???
-#: if_tcl.c:765
+#: if_tcl.c:763
 msgid "cannot set line(s)"
 msgstr "不能設定行"
 
-#: if_tcl.c:836
+#: if_tcl.c:834
 msgid "mark not set"
 msgstr "沒有設定標記"
 
-#: if_tcl.c:842 if_tcl.c:1057
+#: if_tcl.c:840 if_tcl.c:1055
 #, c-format
 msgid "row %d column %d"
 msgstr "列 %d 行 %d"
 
-#: if_tcl.c:872
+#: if_tcl.c:870
 msgid "cannot insert/append line"
 msgstr "不能插入或附加此行"
 
-#: if_tcl.c:1259
+#: if_tcl.c:1257
 msgid "unknown flag: "
 msgstr "錯誤的旗標: "
 
-#: if_tcl.c:1329
+#: if_tcl.c:1327
 msgid "unknown vimOption"
 msgstr "不正確的 VIM 選項"
 
-#: if_tcl.c:1414
+#: if_tcl.c:1412
 msgid "keyboard interrupt"
 msgstr "鍵盤中斷"
 
-#: if_tcl.c:1419
+#: if_tcl.c:1417
 msgid "vim error"
 msgstr "vim 錯誤"
 
-#: if_tcl.c:1462
+#: if_tcl.c:1460
 msgid "cannot create buffer/window command: object is being deleted"
 msgstr "無法建立緩衝區/視窗命令: 物件將會被刪除"
 
-#: if_tcl.c:1536
+#: if_tcl.c:1534
 msgid ""
 "cannot register callback command: buffer/window is already being deleted"
 msgstr "無法註冊 callback 命令: 緩衝區/視窗已經被刪除了"
 
 #. This should never happen.  Famous last word?
-#: if_tcl.c:1553
+#: if_tcl.c:1551
 msgid ""
 "E280: TCL FATAL ERROR: reflist corrupt!? Please report this to vim-dev@vim."
 "org"
 msgstr "E280: TCL 嚴重錯誤: reflist 爛掉了!? 請報告給 to vim-dev@vim.org"
 
-#: if_tcl.c:1554
+#: if_tcl.c:1552
 msgid "cannot register callback command: buffer/window reference not found"
 msgstr "無法註冊 callback 命令: 找不到緩衝區/視窗"
 
-#: if_tcl.c:1715
+#: if_tcl.c:1713
 msgid "Sorry, this command is disabled: the Tcl library could not be loaded."
 msgstr "此命令無法使用, 因為無法載入 Tcl 程式庫(Library)"
 
-#: if_tcl.c:1877
+#: if_tcl.c:1875
 msgid ""
 "E281: TCL ERROR: exit code is not int!? Please report this to vim-dev@vim.org"
 msgstr "E281: TCL 錯誤: 結束碼不是整數!? 請報告給 to vim-dev@vim.org"
 
-#: if_tcl.c:1997
+#: if_tcl.c:1995
 msgid "cannot get line"
 msgstr "不能取得此行"
 
-#: if_xcmdsrv.c:215
+#: if_xcmdsrv.c:204
 msgid "Unable to register a command server name"
 msgstr "無法註冊命令伺服器名稱"
 
-#: if_xcmdsrv.c:420
+#: if_xcmdsrv.c:412
 #, c-format
 msgid "E247: no registered server named \"%s\""
 msgstr "E247: 沒有註冊為 \"%s\" 的伺服器"
 
-#: if_xcmdsrv.c:449
+#: if_xcmdsrv.c:441
 msgid "E248: Failed to send command to the destination program"
 msgstr "E248: 無法送出命令到目的地程式"
 
-#: if_xcmdsrv.c:637
-msgid "E249: couldn't read VIM instance registry property"
-msgstr "E249: 無法讀取 VIM 的 registry 設定項"
-
-#: if_xcmdsrv.c:650
-msgid "E251: VIM instance registry property is badly formed.  Deleted!"
-msgstr "E251: VIM 的 registry 設定項有誤。已刪除。"
-
-#: if_xcmdsrv.c:739
+#: if_xcmdsrv.c:704
 #, c-format
 msgid "Invalid server id used: %s"
 msgstr "不正確的伺服器 id : %s"
 
-#: if_xcmdsrv.c:1506
-msgid ""
-"\n"
-"Send failed. No command server present ?\n"
-msgstr ""
-"\n"
-"傳送失敗。沒有命令伺服器存在 ?\n"
+#: if_xcmdsrv.c:1048
+msgid "E249: couldn't read VIM instance registry property"
+msgstr "E249: 無法讀取 VIM 的 registry 設定項"
 
-#: if_xcmdsrv.c:1511
-msgid "Send failed. Trying to execute locally"
-msgstr "送出失敗。試圖在本地執行"
+#: if_xcmdsrv.c:1059
+msgid "E251: VIM instance registry property is badly formed.  Deleted!"
+msgstr "E251: VIM 的 registry 設定項有誤。已刪除。"
 
-#: if_xcmdsrv.c:1543
-msgid "Send expression failed.\n"
-msgstr "無法傳送運算式。\n"
-
-#: main.c:48 option.c:3062 option.c:3169
+#: main.c:53 option.c:3148 option.c:3255
 msgid "Unknown option"
 msgstr "不正確的選項"
 
-#: main.c:50
+#: main.c:55
 msgid "Too many edit arguments"
 msgstr "太多編輯參數"
 
-#: main.c:52
+#: main.c:57
 msgid "Argument missing after"
 msgstr "缺少必要的參數:"
 
-#: main.c:54
+#: main.c:59
 msgid "Garbage after option"
 msgstr "無法辨認此選項後的命令: "
 
-#: main.c:56
+#: main.c:61
 msgid "Too many \"+command\" or \"-c command\" arguments"
 msgstr "太多 \"+command\" 或 \"-c command\" 參數"
 
-#: main.c:58
+#: main.c:63
 msgid "Invalid argument for"
 msgstr "不正確的參數: "
 
-#: main.c:386
+#: main.c:436
 msgid "This Vim was not compiled with the diff feature."
 msgstr "您的 Vim 編譯時沒有加入 diff 的能力"
 
-#: main.c:795
+#: main.c:858
 msgid "Attempt to open script file again: \""
 msgstr "試圖再次開啟 script 檔: \""
 
-#: main.c:799 main.c:806 main.c:850 memline.c:3639 memline.c:3643
-#: version.c:777 version.c:782 version.c:787 version.c:792 version.c:797
-#: version.c:802 version.c:808 version.c:812 version.c:816 version.c:821
-#: version.c:828 version.c:836 version.c:842
+#: main.c:862 main.c:869 main.c:913 memline.c:3673 memline.c:3677
+#: version.c:816 version.c:821 version.c:826 version.c:831 version.c:836
+#: version.c:841 version.c:847 version.c:851 version.c:855 version.c:860
+#: version.c:867 version.c:875 version.c:881
 msgid "\"\n"
 msgstr "\"\n"
 
-#: main.c:804
+#: main.c:867
 msgid "Cannot open for reading: \""
 msgstr "無法開啟以讀取: \""
 
-#: main.c:848
+#: main.c:911
 msgid "Cannot open for script output: \""
 msgstr "無法開啟為 script 輸出: \""
 
-#: main.c:942
+#: main.c:1020
 #, c-format
 msgid "%d files to edit\n"
 msgstr "還有 %d 個檔案等待編輯\n"
 
-#: main.c:1016
+#: main.c:1094
 msgid "Vim: Warning: Output is not to a terminal\n"
 msgstr "Vim: 注意: 輸出不是終端機(螢幕)\n"
 
-#: main.c:1018
+#: main.c:1096
 msgid "Vim: Warning: Input is not from a terminal\n"
 msgstr "Vim: 注意: 輸入不是終端機(鍵盤)\n"
 
-#: main.c:1128
+#. just in case..
+#: main.c:1171
+msgid "pre-vimrc command line"
+msgstr "vimrc 前命令列"
+
+#: main.c:1206
 #, c-format
 msgid "E282: Cannot read from \"%s\""
 msgstr "E282: 無法讀取檔案 \"%s\""
 
-#: main.c:2069
+#: main.c:2152
 msgid ""
 "\n"
 "More info with: \"vim -h\"\n"
@@ -2657,23 +2702,23 @@ msgstr ""
 "\n"
 "查詢更多資訊請執行: \"vim -h\"\n"
 
-#: main.c:2102
+#: main.c:2185
 msgid "[file ..]       edit specified file(s)"
 msgstr "[檔案 ..]       編輯指定的檔案"
 
-#: main.c:2103
+#: main.c:2186
 msgid "-               read text from stdin"
 msgstr "-               從標準輸入(stdin)讀取檔案"
 
-#: main.c:2104
+#: main.c:2187
 msgid "-t tag          edit file where tag is defined"
 msgstr "-t tag          編輯時使用指定的 tag"
 
-#: main.c:2106
+#: main.c:2189
 msgid "-q [errorfile]  edit file with first error"
 msgstr "-q [errorfile]  編輯時載入第一個錯誤"
 
-#: main.c:2115
+#: main.c:2198
 msgid ""
 "\n"
 "\n"
@@ -2683,11 +2728,11 @@ msgstr ""
 "\n"
 " 用法:"
 
-#: main.c:2118
+#: main.c:2201
 msgid " vim [arguments] "
 msgstr "vim [參數] "
 
-#: main.c:2122
+#: main.c:2205
 msgid ""
 "\n"
 "   or:"
@@ -2695,7 +2740,7 @@ msgstr ""
 "\n"
 "   或:"
 
-#: main.c:2125
+#: main.c:2208
 msgid ""
 "\n"
 "\n"
@@ -2705,223 +2750,229 @@ msgstr ""
 "\n"
 "參數:\n"
 
-#: main.c:2126
+#: main.c:2209
 msgid "--\t\t\tOnly file names after this"
 msgstr "--\t\t\t只有在這之後的檔案"
 
-#: main.c:2128
+#: main.c:2211
 msgid "-register\t\tRegister this gvim for OLE"
 msgstr "-register\t\t註冊 gvim 到 OLE"
 
-#: main.c:2129
+#: main.c:2212
 msgid "-unregister\t\tUnregister gvim for OLE"
 msgstr "-unregister\t\t取消 OLE 中的 gvim 註冊"
 
-#: main.c:2132
+#: main.c:2215
 msgid "-g\t\t\tRun using GUI (like \"gvim\")"
 msgstr "-g\t\t\t使用圖形界面 (同 \"gvim\")"
 
-#: main.c:2133
+#: main.c:2216
 msgid "-f\t\t\tForeground: Don't fork when starting GUI"
 msgstr "-f\t\t\t前景: 起始圖形界面時不 fork"
 
-#: main.c:2135
+#: main.c:2218
 msgid "-v\t\t\tVi mode (like \"vi\")"
 msgstr "-v\t\t\tVi 模式 (同 \"vi\")"
 
-#: main.c:2136
+#: main.c:2219
 msgid "-e\t\t\tEx mode (like \"ex\")"
 msgstr "-e\t\t\tEx 模式 (同 \"ex\")"
 
-#: main.c:2137
+#: main.c:2220
 msgid "-s\t\t\tSilent (batch) mode (only for \"ex\")"
 msgstr "-s\t\t\t安靜 (batch) 模式 (只能與 \"ex\" 一起使用)"
 
-#: main.c:2138
+#: main.c:2222
 msgid "-d\t\t\tDiff mode (like \"vimdiff\")"
 msgstr "-d\t\t\tDiff 模式 (同 \"vimdiff\", 可迅速比較兩檔案不同處)"
 
-#: main.c:2139
+#: main.c:2224
 msgid "-y\t\t\tEasy mode (like \"evim\", modeless)"
 msgstr "-y\t\t\t簡易模式 (同 \"evim\", modeless)"
 
-#: main.c:2140
+#: main.c:2225
 msgid "-R\t\t\tReadonly mode (like \"view\")"
 msgstr "-R\t\t\t唯讀模式 (同 \"view\")"
 
-#: main.c:2141
+#: main.c:2226
 msgid "-Z\t\t\tRestricted mode (like \"rvim\")"
 msgstr "-Z\t\t\t限制模式 (同 \"rvim\")"
 
-#: main.c:2142
+#: main.c:2227
 msgid "-m\t\t\tModifications (writing files) not allowed"
 msgstr "-m\t\t\t不可修改 (寫入檔案)"
 
-#: main.c:2143
+#: main.c:2228
+msgid "-M\t\t\tModifications in text not allowed"
+msgstr "-M\t\t\t不可修改文字"
+
+#: main.c:2229
 msgid "-b\t\t\tBinary mode"
 msgstr "-b\t\t\t二進位模式"
 
-#: main.c:2145
+#: main.c:2231
 msgid "-l\t\t\tLisp mode"
 msgstr "-l\t\t\tLisp 模式"
 
-#: main.c:2147
+#: main.c:2233
 msgid "-C\t\t\tCompatible with Vi: 'compatible'"
 msgstr "-C\t\t\t'compatible' 傳統 Vi 相容模式"
 
-#: main.c:2148
+#: main.c:2234
 msgid "-N\t\t\tNot fully Vi compatible: 'nocompatible'"
 msgstr "-N\t\t\t'nocompatible' 不完全與傳統 Vi 相容，可使用 Vim 加強能力"
 
-#: main.c:2149
+#: main.c:2235
 msgid "-V[N]\t\tVerbose level"
 msgstr "-V[N]\t\tVerbose 等級"
 
-#: main.c:2150
+#: main.c:2236
 msgid "-D\t\t\tDebugging mode"
 msgstr "-D\t\t\t除錯模式"
 
-#: main.c:2151
+#: main.c:2237
 msgid "-n\t\t\tNo swap file, use memory only"
 msgstr "-n\t\t\t不使用暫存檔, 只使用記憶體"
 
-#: main.c:2152
+#: main.c:2238
 msgid "-r\t\t\tList swap files and exit"
 msgstr "-r\t\t\t列出暫存檔後離開"
 
-#: main.c:2153
+#: main.c:2239
 msgid "-r (with file name)\tRecover crashed session"
 msgstr "-r (加檔名)       \t修復上次損毀的資料(Recover crashed session)"
 
-#: main.c:2154
+#: main.c:2240
 msgid "-L\t\t\tSame as -r"
 msgstr "-L\t\t\t同 -r"
 
-#: main.c:2156
+#: main.c:2242
 msgid "-f\t\t\tDon't use newcli to open window"
 msgstr "-f\t\t\t不使用 newcli 來開啟視窗"
 
-#: main.c:2157
-msgid "-d <device>\t\tUse <device> for I/O"
-msgstr "-d <device>\t\t使用 <device> 做輸出入"
+#: main.c:2243
+msgid "-dev <device>\t\tUse <device> for I/O"
+msgstr "-dev <device>\t\t使用 <device> 做輸出入"
 
-#: main.c:2160
+#: main.c:2246
 msgid "-H\t\t\tstart in Hebrew mode"
 msgstr "-H\t\t\t啟動為 Hebrew 模式"
 
-#: main.c:2163
+#: main.c:2249
 msgid "-F\t\t\tstart in Farsi mode"
 msgstr "-F\t\t\t啟動為 Farsi 模式"
 
-#: main.c:2165
+#: main.c:2251
 msgid "-T <terminal>\tSet terminal type to <terminal>"
 msgstr "-T <terminal>\t設定終端機為 <terminal>"
 
-#: main.c:2166
+#: main.c:2252
 msgid "-u <vimrc>\t\tUse <vimrc> instead of any .vimrc"
 msgstr "-u <vimrc>\t\t使用 <vimrc> 取代任何 .vimrc"
 
-#: main.c:2168
+#: main.c:2254
 msgid "-U <gvimrc>\t\tUse <gvimrc> instead of any .gvimrc"
 msgstr "-U <gvimrc>\t\t使用 <gvimrc> 取代任何 .gvimrc"
 
-#: main.c:2170
+#: main.c:2256
 msgid "--noplugin\t\tDon't load plugin scripts"
 msgstr "--noplugin\t\t不載入任何 plugin"
 
-#: main.c:2171
+#: main.c:2257
 msgid "-o[N]\t\tOpen N windows (default: one for each file)"
 msgstr "-o[N]\t\t開啟 N 個視窗 (預設是每個檔案一個)"
 
-#: main.c:2172
+#: main.c:2258
 msgid "-O[N]\t\tlike -o but split vertically"
 msgstr "-O[N]\t\t同 -o 但使用垂直分割"
 
-#: main.c:2173
+#: main.c:2259
 msgid "+\t\t\tStart at end of file"
 msgstr "+\t\t\t啟動後跳到檔案結尾"
 
-#: main.c:2174
+#: main.c:2260
 msgid "+<lnum>\t\tStart at line <lnum>"
 msgstr "+<lnum>\t\t啟動後跳到第 <lnum> 行"
 
-#: main.c:2176
+#: main.c:2262
 msgid "--cmd <command>\tExecute <command> before loading any vimrc file"
 msgstr "--cmd <command>\t載入任何 vimrc 前執行 <command>"
 
-#: main.c:2178
+#: main.c:2264
 msgid "-c <command>\t\tExecute <command> after loading the first file"
 msgstr "-c <command>\t\t載入第一個檔案後執行 <command>"
 
-#: main.c:2179
+#: main.c:2265
 msgid "-S <session>\t\tSource file <session> after loading the first file"
 msgstr "-S <session>\t\t載入第一個檔案後載入 Session 檔 <session>"
 
-#: main.c:2180
+#: main.c:2266
 msgid "-s <scriptin>\tRead Normal mode commands from file <scriptin>"
 msgstr "-s <scriptin>\t從 <scriptin> 讀入一般模式命令"
 
-#: main.c:2181
+#: main.c:2267
 msgid "-w <scriptout>\tAppend all typed commands to file <scriptout>"
 msgstr "-w <scriptout>\t對檔案 <scriptout> 附加(append)所有輸入的命令"
 
-#: main.c:2182
+#: main.c:2268
 msgid "-W <scriptout>\tWrite all typed commands to file <scriptout>"
 msgstr "-W <scriptout>\t對檔案 <scriptout> 寫入所有輸入的命令"
 
-#: main.c:2184
+#: main.c:2270
 msgid "-x\t\t\tEdit encrypted files"
 msgstr "-x\t\t\t編輯編碼過的檔案"
 
-#: main.c:2188
+#: main.c:2274
 msgid "-display <display>\tConnect vim to this particular X-server"
 msgstr "-display <display>\t將 vim 與指定的 X-server 連線"
 
-#: main.c:2190
+#: main.c:2276
 msgid "-X\t\t\tDo not connect to X server"
 msgstr "-X\t\t\t不要連線到 X Server"
 
-#: main.c:2192
-msgid "--serverlist\t\tList available Vim server names and exit"
-msgstr "--serverlist\t\t列出可用的 Vim 伺服器名稱並離開"
-
-#: main.c:2193
-msgid "--serversend <keys>\tSend <keys> to a Vim server and exit"
-msgstr "--serversend <keys>\t送出 <keys> 到 Vim 伺服器並離開"
-
-#: main.c:2194
-msgid "--serverexpr <expr>\tExecute <expr> in server and print result"
-msgstr "--serverexpr <expr>\t在伺服器上執行 <expr> 並印出結果"
-
-#: main.c:2195
-msgid "--servername <name>\tSend to/become the Vim server <name>"
-msgstr "--servername <name>\t送至/成為 Vim 伺服器 <name>"
-
-#: main.c:2196
-msgid "--remote <files>\tEdit <files> in a Vim server"
-msgstr "--remote <files>\t編輯 Vim 伺服器上的檔案"
-
-#: main.c:2197
-msgid "--remote-wait <files>\tAs --remote but wait for files to end edit"
-msgstr "--remote-wait <files>\t同 --remote, 但會等候檔案完成編輯"
-
-#: main.c:2200
+#: main.c:2278
 msgid "--socketid <xid>\tOpen Vim inside another GTK widget"
 msgstr "--socketid <xid>\t在另一個 GTK widget 內開啟 Vim"
 
-#: main.c:2204
+#: main.c:2282
+msgid "--remote <files>\tEdit <files> in a Vim server and exit"
+msgstr "--remote <files>\t編輯 Vim 伺服器上的 <files> 後離開"
+
+#: main.c:2283
+msgid ""
+"--remote-wait <files>  As --remote but wait for files to have been edited"
+msgstr ""
+"--remote-wait <files>  同 --remote, 但會等候檔案完成編輯"
+
+#: main.c:2284
+msgid  "--remote-send <keys>\tSend <keys> to a Vim server and exit"
+msgstr "--remote-send <keys>\t送出 <keys> 到 Vim 伺服器並離開"
+
+#: main.c:2285
+msgid "--remote-expr <expr>\tEvaluate <expr> in a Vim server and print result"
+msgstr "--remote-expr <expr>\t在伺服器上執行 <expr> 並印出結果"
+
+#: main.c:2286
+msgid "--serverlist\t\tList available Vim server names and exit"
+msgstr "--serverlist\t\t列出可用的 Vim 伺服器名稱並離開"
+
+#: main.c:2287
+msgid "--servername <name>\tSend to/become the Vim server <name>"
+msgstr "--servername <name>\t送至/成為 Vim 伺服器 <name>"
+
+#: main.c:2290
 msgid "-i <viminfo>\t\tUse <viminfo> instead of .viminfo"
 msgstr "-i <viminfo>\t\t使用 <viminfo> 而非 .viminfo"
 
-#: main.c:2206
+#: main.c:2292
 msgid "-h\t\t\tprint Help (this message) and exit"
 msgstr "-h\t\t\t印出說明(也就是本訊息)後離開"
 
-#: main.c:2207
+#: main.c:2293
 msgid "--version\t\tprint version information and exit"
 msgstr "--version\t\t印出版本資訊後離開"
 
-#: main.c:2211
+#: main.c:2297
 msgid ""
 "\n"
 "Arguments recognised by gvim (Motif version):\n"
@@ -2929,7 +2980,7 @@ msgstr ""
 "\n"
 "gvim 認得的參數 (Motif 版):\n"
 
-#: main.c:2214
+#: main.c:2300
 msgid ""
 "\n"
 "Arguments recognised by gvim (Athena version):\n"
@@ -2937,71 +2988,71 @@ msgstr ""
 "\n"
 "gvim 認得的參數 (Athena 版):\n"
 
-#: main.c:2217
+#: main.c:2303
 msgid "-display <display>\tRun vim on <display>"
 msgstr "-display <display>\t在視窗 <display> 執行 vim"
 
-#: main.c:2218
+#: main.c:2304
 msgid "-iconic\t\tStart vim iconified"
 msgstr "-iconic\t\t啟動後圖示化(iconified)"
 
-#: main.c:2220
+#: main.c:2306
 msgid "-name <name>\t\tUse resource as if vim was <name>"
 msgstr "-name <name>\t\t讀取 Resource 時把 vim 的名稱視為 <name>"
 
-#: main.c:2221
+#: main.c:2307
 msgid "\t\t\t  (Unimplemented)\n"
 msgstr "\t\t\t  (尚未實作)\n"
 
-#: main.c:2223
+#: main.c:2309
 msgid "-background <color>\tUse <color> for the background (also: -bg)"
 msgstr "-background <color>\t設定 <color> 為背景色 (也可用 -bg)"
 
-#: main.c:2224
+#: main.c:2310
 msgid "-foreground <color>\tUse <color> for normal text (also: -fg)"
 msgstr "-foreground <color>\t設定 <color> 為一般文字顏色 (也可用 -fg)"
 
-#: main.c:2225 main.c:2243
+#: main.c:2311 main.c:2331
 msgid "-font <font>\t\tUse <font> for normal text (also: -fn)"
 msgstr "-font <font>\t使用 <font> 為一般字型 (也可用 -fn)"
 
-#: main.c:2226
+#: main.c:2312
 msgid "-boldfont <font>\tUse <font> for bold text"
 msgstr "-boldfont <font>\t使用 <font> 為粗體字型"
 
-#: main.c:2227
+#: main.c:2313
 msgid "-italicfont <font>\tUse <font> for italic text"
 msgstr "-italicfont <font>\t使用 <font> 為斜體字型"
 
-#: main.c:2228 main.c:2244
+#: main.c:2314 main.c:2332
 msgid "-geometry <geom>\tUse <geom> for initial geometry (also: -geom)"
 msgstr "-geometry <geom>\t使用<geom>為起始位置 (也可用 -geom)"
 
-#: main.c:2229
+#: main.c:2315
 msgid "-borderwidth <width>\tUse a border width of <width> (also: -bw)"
 msgstr "-borderwidth <width>\t使用寬度為 <width> 的邊框 (也可用 -bw)"
 
-#: main.c:2230
+#: main.c:2316
 msgid "-scrollbarwidth <width>  Use a scrollbar width of <width> (also: -sw)"
 msgstr "-scrollbarwidth <width>  設定捲動軸寬度為 <width> (也可用 -sw)"
 
-#: main.c:2231
+#: main.c:2318
 msgid "-menuheight <height>\tUse a menu bar height of <height> (also: -mh)"
 msgstr "-menuheight <height>\t設定選單列的高度為 <height> (也可用 -mh)"
 
-#: main.c:2232 main.c:2245
+#: main.c:2320 main.c:2333
 msgid "-reverse\t\tUse reverse video (also: -rv)"
 msgstr "-reverse\t\t使用反相顯示 (也可用 -rv)"
 
-#: main.c:2233
+#: main.c:2321
 msgid "+reverse\t\tDon't use reverse video (also: +rv)"
 msgstr "+reverse\t\t不使用反相顯示 (也可用 +rv)"
 
-#: main.c:2234
+#: main.c:2322
 msgid "-xrm <resource>\tSet the specified resource"
 msgstr "-xrm <resource>\t設定指定的 resource"
 
-#: main.c:2237
+#: main.c:2325
 msgid ""
 "\n"
 "Arguments recognised by gvim (RISC OS version):\n"
@@ -3009,15 +3060,15 @@ msgstr ""
 "\n"
 "gvim 認得的參數 (RISC OS 版):\n"
 
-#: main.c:2238
+#: main.c:2326
 msgid "--columns <number>\tInitial width of window in columns"
 msgstr "--columns <number>\t視窗初始化寬度"
 
-#: main.c:2239
+#: main.c:2327
 msgid "--rows <number>\tInitial height of window in rows"
 msgstr "--rows <number>\t視窗初始化高度"
 
-#: main.c:2242
+#: main.c:2330
 msgid ""
 "\n"
 "Arguments recognised by gvim (GTK+ version):\n"
@@ -3025,13 +3076,26 @@ msgstr ""
 "\n"
 "gvim 認得的參數 (GTK+ 版):\n"
 
-#: main.c:2246
+#: main.c:2334
 msgid "-display <display>\tRun vim on <display> (also: --display)"
 msgstr "-display <display>\t在 <display> 執行 vim (也可用 --display)"
 
-#: main.c:2248
+#: main.c:2336
 msgid "--help\t\tShow Gnome arguments"
 msgstr "--help\t\t顯示 Gnome 相關參數"
+
+#: main.c:2558
+msgid "\nSend failed. Trying to execute locally\n"
+msgstr "\n送出失敗。試圖在本地執行\n"
+
+#: main.c:2591 main.c:2612
+#, c-format
+msgid "%d of %d edited"
+msgstr "已編輯 %d/%d 個檔案"
+
+#: main.c:2635
+msgid "Send expression failed.\n"
+msgstr "無法傳送運算式。\n"
 
 #: mark.c:711
 msgid "No marks set"
@@ -3089,43 +3153,43 @@ msgstr ""
 msgid "Missing '>'"
 msgstr "缺少對應的 '>'"
 
-#: mbyte.c:386
+#: mbyte.c:395
 msgid "Not a valid codepage"
 msgstr "不正確的 codepage"
 
-#: mbyte.c:2986
+#: mbyte.c:3005
 msgid "E284: Cannot set IC values"
 msgstr "E284: 不能設定 IC 數值"
 
-#: mbyte.c:3138
+#: mbyte.c:3157
 msgid "E285: Failed to create input context"
 msgstr "E285: 無法建立 input context"
 
-#: mbyte.c:3285
+#: mbyte.c:3306
 msgid "E286: Failed to open input method"
 msgstr "E286: 無法開啟輸入法"
 
-#: mbyte.c:3296
+#: mbyte.c:3317
 msgid "E287: Warning: Could not set destroy callback to IM"
 msgstr "E287: 警告: 無法移除 IM 的 callback"
 
-#: mbyte.c:3302
+#: mbyte.c:3323
 msgid "E288: input method doesn't support any style"
 msgstr "E288: 輸入法不支援任何 style"
 
-#: mbyte.c:3359
+#: mbyte.c:3380
 msgid "E289: input method doesn't support my preedit type"
 msgstr "E289: 輸入法不支援任何 style"
 
-#: mbyte.c:3433
+#: mbyte.c:3454
 msgid "E290: over-the-spot style requires fontset"
 msgstr "E290: over-the-spot 需要字型集(Fontset)"
 
-#: mbyte.c:3461
+#: mbyte.c:3482
 msgid "E291: Your GTK+ is older than 1.2.3. Status area disabled"
 msgstr "E291: 你的 GTK+ 比 1.2.3 還舊。無法使用狀態區。"
 
-#: mbyte.c:3698
+#: mbyte.c:3719
 msgid "E292: Input Method Server is not running"
 msgstr "E292: 沒有執行中的輸入法管理程式(Input Method Server)"
 
@@ -3133,23 +3197,23 @@ msgstr "E292: 沒有執行中的輸入法管理程式(Input Method Server)"
 msgid "E293: block was not locked"
 msgstr "E293: 區塊未被鎖定"
 
-#: memfile.c:958
+#: memfile.c:972
 msgid "E294: Seek error in swap file read"
 msgstr "E294: 暫存檔讀取錯誤"
 
-#: memfile.c:963
+#: memfile.c:977
 msgid "E295: Read error in swap file"
 msgstr "E295: 暫存檔讀取錯誤"
 
-#: memfile.c:1015
+#: memfile.c:1029
 msgid "E296: Seek error in swap file write"
 msgstr "E296: 暫存檔寫入錯誤"
 
-#: memfile.c:1033
+#: memfile.c:1047
 msgid "E297: Write error in swap file"
 msgstr "E297: 暫存檔寫入錯誤"
 
-#: memfile.c:1230
+#: memfile.c:1244
 msgid "E300: Swap file already exists (symlink attack?)"
 msgstr "E3000: 暫存檔已經存在! (小心符號連結的安全漏洞!?)"
 
@@ -3183,25 +3247,25 @@ msgstr "E303: 無法開啟暫存檔 \"%s\", 不可能修復了"
 msgid "E304: ml_timestamp: Didn't get block 0??"
 msgstr "E304: ml_timestamp: 找不到區塊 0??"
 
-#: memline.c:756
+#: memline.c:757
 #, c-format
 msgid "E305: No swap file found for %s"
 msgstr "E305: 找不到 %s 的暫存檔"
 
-#: memline.c:766
+#: memline.c:767
 msgid "Enter number of swap file to use (0 to quit): "
 msgstr "請選擇你要使用的暫存檔 (按0 離開): "
 
-#: memline.c:811
+#: memline.c:812
 #, c-format
 msgid "E306: Cannot open %s"
 msgstr "E306: 無法開啟 %s"
 
-#: memline.c:833
+#: memline.c:834
 msgid "Unable to read block 0 from "
 msgstr "無法讀取區塊 0:"
 
-#: memline.c:836
+#: memline.c:837
 msgid ""
 "\n"
 "Maybe no changes were made or Vim did not update the swap file."
@@ -3209,28 +3273,28 @@ msgstr ""
 "\n"
 "可能是你沒做過任何修改或是 Vim 還來不及更新暫存檔."
 
-#: memline.c:846 memline.c:862
+#: memline.c:847 memline.c:864
 msgid " cannot be used with this version of Vim.\n"
 msgstr " 無法在本版本的 Vim 中使用.\n"
 
-#: memline.c:847
+#: memline.c:849
 msgid "Use Vim version 3.0.\n"
 msgstr "使用 Vim 3.0。\n"
 
-#: memline.c:853
+#: memline.c:855
 #, c-format
 msgid "E307: %s does not look like a Vim swap file"
 msgstr "E307: %s 看起來不像是 Vim 暫存檔"
 
-#: memline.c:866
+#: memline.c:868
 msgid " cannot be used on this computer.\n"
 msgstr " 無法在這臺電腦上使用.\n"
 
-#: memline.c:868
+#: memline.c:870
 msgid "The file was created on "
 msgstr "本檔案建立於 "
 
-#: memline.c:872
+#: memline.c:874
 msgid ""
 ",\n"
 "or the file has been damaged."
@@ -3238,77 +3302,77 @@ msgstr ""
 ",\n"
 "或是這檔案已經損毀。"
 
-#: memline.c:901
+#: memline.c:903
 #, c-format
 msgid "Using swap file \"%s\""
 msgstr "使用暫存檔 \"%s\""
 
-#: memline.c:913
+#: memline.c:915
 #, c-format
 msgid "Original file \"%s\""
 msgstr "原始檔 \"%s\""
 
-#: memline.c:932
+#: memline.c:934
 msgid "E308: Warning: Original file may have been changed"
 msgstr "E308: 警告: 原始檔案可能已經修改過了"
 
-#: memline.c:973
+#: memline.c:975
 #, c-format
 msgid "E309: Unable to read block 1 from %s"
 msgstr "E309: 無法從 %s 讀取區塊 1"
 
-#: memline.c:977
+#: memline.c:979
 msgid "???MANY LINES MISSING"
 msgstr "???缺少太多行"
 
-#: memline.c:993
+#: memline.c:995
 msgid "???LINE COUNT WRONG"
 msgstr "???行號錯誤"
 
-#: memline.c:1000
+#: memline.c:1002
 msgid "???EMPTY BLOCK"
 msgstr "???空的 BLOCK"
 
-#: memline.c:1026
+#: memline.c:1028
 msgid "???LINES MISSING"
 msgstr "???找不到一些行"
 
-#: memline.c:1058
+#: memline.c:1060
 #, c-format
 msgid "E310: Block 1 ID wrong (%s not a .swp file?)"
 msgstr "E310: 區塊 1 ID 錯誤 (%s 不是暫存檔?)"
 
-#: memline.c:1063
+#: memline.c:1065
 msgid "???BLOCK MISSING"
 msgstr "???找不到BLOCK"
 
-#: memline.c:1079
+#: memline.c:1081
 msgid "??? from here until ???END lines may be messed up"
 msgstr "??? 從這裡到 ???END 的內容可能有問題"
 
-#: memline.c:1095
+#: memline.c:1097
 msgid "??? from here until ???END lines may have been inserted/deleted"
 msgstr "??? 從這裡到 ???END 的內容可能被刪除/插入過"
 
 # do not translate
-#: memline.c:1115
+#: memline.c:1117
 msgid "???END"
 msgstr "???END"
 
-#: memline.c:1141
+#: memline.c:1143
 msgid "E311: Recovery Interrupted"
 msgstr "E311: 修復已中斷"
 
-#: memline.c:1143
+#: memline.c:1145
 msgid ""
 "E312: Errors detected while recovering; look for lines starting with ???"
 msgstr "E312: 修復時發生錯誤; 請注意開頭為 ??? 的行"
 
-#: memline.c:1146
+#: memline.c:1148
 msgid "Recovery completed. You should check if everything is OK."
 msgstr "復原完成. 請確定一切正常."
 
-#: memline.c:1147
+#: memline.c:1149
 msgid ""
 "\n"
 "(You might want to write out this file under another name\n"
@@ -3316,11 +3380,11 @@ msgstr ""
 "\n"
 "(你可能會想要把這個檔案另存別的檔名，\n"
 
-#: memline.c:1148
+#: memline.c:1150
 msgid "and run diff with the original file to check for changes)\n"
 msgstr "再執行 diff 與原檔案比較以檢查是否有改變)\n"
 
-#: memline.c:1149
+#: memline.c:1151
 msgid ""
 "Delete the .swp file afterwards.\n"
 "\n"
@@ -3329,51 +3393,51 @@ msgstr ""
 "\n"
 
 #. use msg() to start the scrolling properly
-#: memline.c:1205
+#: memline.c:1207
 msgid "Swap files found:"
 msgstr "找到以下的暫存檔:"
 
-#: memline.c:1383
+#: memline.c:1385
 msgid "   In current directory:\n"
 msgstr "   在目前的目錄:\n"
 
-#: memline.c:1385
+#: memline.c:1387
 msgid "   Using specified name:\n"
 msgstr "   Using specified name:\n"
 
-#: memline.c:1389
+#: memline.c:1391
 msgid "   In directory "
 msgstr "   在目錄 "
 
-#: memline.c:1407
+#: memline.c:1409
 msgid "      -- none --\n"
 msgstr "      -- 無 --\n"
 
-#: memline.c:1479
+#: memline.c:1481
 msgid "          owned by: "
 msgstr "            擁有者: "
 
-#: memline.c:1481
+#: memline.c:1483
 msgid "   dated: "
 msgstr "    日期: "
 
-#: memline.c:1485 memline.c:3646
+#: memline.c:1487 memline.c:3680
 msgid "             dated: "
 msgstr "              日期: "
 
-#: memline.c:1501
+#: memline.c:1503
 msgid "         [from Vim version 3.0]"
 msgstr "              [從 Vim 版本 3.0]"
 
-#: memline.c:1505
+#: memline.c:1507
 msgid "         [does not look like a Vim swap file]"
 msgstr "                          [不像 Vim 的暫存檔]"
 
-#: memline.c:1509
+#: memline.c:1511
 msgid "         file name: "
 msgstr "              檔名: "
 
-#: memline.c:1521
+#: memline.c:1523
 msgid ""
 "\n"
 "          modified: "
@@ -3381,15 +3445,15 @@ msgstr ""
 "\n"
 "            修改過: "
 
-#: memline.c:1522
+#: memline.c:1524
 msgid "YES"
 msgstr "是"
 
-#: memline.c:1522
+#: memline.c:1524
 msgid "no"
 msgstr "否"
 
-#: memline.c:1526
+#: memline.c:1528
 msgid ""
 "\n"
 "         user name: "
@@ -3397,11 +3461,11 @@ msgstr ""
 "\n"
 "            使用者: "
 
-#: memline.c:1533
+#: memline.c:1535
 msgid "   host name: "
 msgstr "    主機名稱: "
 
-#: memline.c:1535
+#: memline.c:1537
 msgid ""
 "\n"
 "         host name: "
@@ -3409,7 +3473,7 @@ msgstr ""
 "\n"
 "          主機名稱: "
 
-#: memline.c:1541
+#: memline.c:1543
 msgid ""
 "\n"
 "        process ID: "
@@ -3417,11 +3481,11 @@ msgstr ""
 "\n"
 "        process ID: "
 
-#: memline.c:1547
+#: memline.c:1549
 msgid " (still running)"
 msgstr " (執行中)"
 
-#: memline.c:1559
+#: memline.c:1561
 msgid ""
 "\n"
 "         [not usable with this version of Vim]"
@@ -3429,7 +3493,7 @@ msgstr ""
 "\n"
 "         [無法在本版本的 Vim 上使用]"
 
-#: memline.c:1562
+#: memline.c:1564
 msgid ""
 "\n"
 "         [not usable on this computer]"
@@ -3437,92 +3501,92 @@ msgstr ""
 "\n"
 "         [無法在本電腦上使用]"
 
-#: memline.c:1567
+#: memline.c:1569
 msgid "         [cannot be read]"
 msgstr "         [無法讀取]"
 
-#: memline.c:1571
+#: memline.c:1573
 msgid "         [cannot be opened]"
 msgstr "         [無法開啟]"
 
-#: memline.c:1759
+#: memline.c:1763
 msgid "E313: Cannot preserve, there is no swap file"
 msgstr "E313: 無法保留, 不使用暫存檔"
 
-#: memline.c:1806
+#: memline.c:1816
 msgid "File preserved"
 msgstr "檔案已保留"
 
-#: memline.c:1808
+#: memline.c:1818
 msgid "E314: Preserve failed"
 msgstr "E314: 保留失敗"
 
-#: memline.c:1879
+#: memline.c:1889
 #, c-format
 msgid "E315: ml_get: invalid lnum: %ld"
 msgstr "E315: ml_get: 錯誤的 lnum: %ld"
 
-#: memline.c:1905
+#: memline.c:1915
 #, c-format
 msgid "E316: ml_get: cannot find line %ld"
 msgstr "E316: ml_get: 找不到第 %ld 行"
 
-#: memline.c:2293
+#: memline.c:2303
 msgid "E317: pointer block id wrong 3"
 msgstr "E317: 指標區塊 id 錯誤 3"
 
-#: memline.c:2373
+#: memline.c:2383
 msgid "stack_idx should be 0"
 msgstr "stack_idx 應該是 0"
 
-#: memline.c:2435
+#: memline.c:2445
 msgid "E318: Updated too many blocks?"
 msgstr "E318: 更新太多區塊?"
 
-#: memline.c:2592
+#: memline.c:2602
 msgid "E317: pointer block id wrong 4"
 msgstr "E317: 指標區塊 id 錯誤 4"
 
-#: memline.c:2619
+#: memline.c:2629
 msgid "deleted block 1?"
 msgstr "刪除區塊 1?"
 
-#: memline.c:2819
+#: memline.c:2829
 #, c-format
 msgid "E320: Cannot find line %ld"
 msgstr "E320: 找不到第 %ld 行"
 
-#: memline.c:3062
+#: memline.c:3072
 msgid "E317: pointer block id wrong"
 msgstr "E317: 指標區塊 id 錯誤"
 
-#: memline.c:3078
+#: memline.c:3088
 msgid "pe_line_count is zero"
 msgstr "pe_line_count 為零"
 
-#: memline.c:3107
+#: memline.c:3117
 #, c-format
 msgid "E322: line number out of range: %ld past the end"
 msgstr "E322: 行號超出範圍: %ld 超過結尾"
 
-#: memline.c:3111
+#: memline.c:3121
 #, c-format
 msgid "E323: line count wrong in block %ld"
 msgstr "E323: 區塊 %ld 行數錯誤"
 
-#: memline.c:3160
+#: memline.c:3170
 msgid "Stack size increases"
 msgstr "堆疊大小增加"
 
-#: memline.c:3206
+#: memline.c:3216
 msgid "E317: pointer block id wrong 2"
 msgstr "E317: 指標區塊 id 錯 2"
 
-#: memline.c:3636
+#: memline.c:3670
 msgid "E325: ATTENTION"
 msgstr "E325: 注意"
 
-#: memline.c:3637
+#: memline.c:3671
 msgid ""
 "\n"
 "Found a swap file by the name \""
@@ -3530,17 +3594,17 @@ msgstr ""
 "\n"
 "找到暫存檔 \""
 
-#: memline.c:3641
+#: memline.c:3675
 msgid "While opening file \""
 msgstr "在開啟檔案 \""
 
-#: memline.c:3650
+#: memline.c:3684
 msgid "      NEWER than swap file!\n"
 msgstr "      比暫存檔更新!\n"
 
 #. Some of these messages are long to allow translation to
 #. * other languages.
-#: memline.c:3654
+#: memline.c:3688
 msgid ""
 "\n"
 "(1) Another program may be editing the same file.\n"
@@ -3551,11 +3615,11 @@ msgstr ""
 "(1) 可能有另一個程式也在編輯同一個檔案.\n"
 "    如果是這樣，請小心不要兩邊一起寫入，不然你的努力都會負諸流水。\n"
 
-#: memline.c:3655
+#: memline.c:3689
 msgid "    Quit, or continue with caution.\n"
 msgstr "    離開，或是繼續編輯。\n"
 
-#: memline.c:3656
+#: memline.c:3690
 msgid ""
 "\n"
 "(2) An edit session for this file crashed.\n"
@@ -3563,11 +3627,11 @@ msgstr ""
 "\n"
 "(2) 前次編輯此檔時當機\n"
 
-#: memline.c:3657
+#: memline.c:3691
 msgid "    If this is the case, use \":recover\" or \"vim -r "
 msgstr "    如果是這樣, 請用 \":recover\" 或 \"vim -r"
 
-#: memline.c:3659
+#: memline.c:3693
 msgid ""
 "\"\n"
 "    to recover the changes (see \":help recovery\").\n"
@@ -3575,11 +3639,11 @@ msgstr ""
 "\"\n"
 "    來救回修改資料 (進一步說明請看 \":help recovery\").\n"
 
-#: memline.c:3660
+#: memline.c:3694
 msgid "    If you did this already, delete the swap file \""
 msgstr "    如果該救的都已經救了, 請直接刪除此暫存檔 \""
 
-#: memline.c:3662
+#: memline.c:3696
 msgid ""
 "\"\n"
 "    to avoid this message.\n"
@@ -3587,23 +3651,23 @@ msgstr ""
 "\"\n"
 "    以避免再看到此訊息.\n"
 
-#: memline.c:3676 memline.c:3680
+#: memline.c:3710 memline.c:3714
 msgid "Swap file \""
 msgstr "暫存檔 \""
 
-#: memline.c:3677 memline.c:3683
+#: memline.c:3711 memline.c:3717
 msgid "\" already exists!"
 msgstr "\" 已經存在了!"
 
-#: memline.c:3686
+#: memline.c:3720
 msgid "VIM - ATTENTION"
 msgstr "VIM - 注意"
 
-#: memline.c:3688
+#: memline.c:3722
 msgid "Swap file already exists!"
 msgstr "暫存檔已經存在!"
 
-#: memline.c:3692
+#: memline.c:3726
 msgid ""
 "&Open Read-Only\n"
 "&Edit anyway\n"
@@ -3615,7 +3679,7 @@ msgstr ""
 "修復(&R)\n"
 "離開(&Q)"
 
-#: memline.c:3694
+#: memline.c:3728
 msgid ""
 "&Open Read-Only\n"
 "&Edit anyway\n"
@@ -3629,7 +3693,7 @@ msgstr ""
 "離開(&Q)\n"
 "刪除暫存檔(&D)"
 
-#: memline.c:3741
+#: memline.c:3781
 msgid "E326: Too many swap files found"
 msgstr "E326: 找到太多暫存檔"
 
@@ -3659,7 +3723,7 @@ msgstr "E332: 分隔線不能是選單路徑的一部份"
 
 #. Now we have found the matching menu, and we list the mappings
 #. Highlight title
-#: menu.c:1058
+#: menu.c:1063
 msgid ""
 "\n"
 "--- Menus ---"
@@ -3667,79 +3731,79 @@ msgstr ""
 "\n"
 "--- 選單 ---"
 
-#: menu.c:1973
+#: menu.c:1989
 msgid "Tear off this menu"
 msgstr "切下此選單"
 
-#: menu.c:2038
+#: menu.c:2054
 msgid "E333: Menu path must lead to a menu item"
 msgstr "E333: 選單路徑必需指向一個選項"
 
-#: menu.c:2058
+#: menu.c:2074
 #, c-format
 msgid "E334: Menu not found: %s"
 msgstr "E334: [選單] 找不到 %s"
 
-#: menu.c:2132
+#: menu.c:2143
 #, c-format
 msgid "E335: Menu not defined for %s mode"
 msgstr "E335: %s 模式未定義選單"
 
-#: menu.c:2170
+#: menu.c:2181
 msgid "E336: Menu path must lead to a sub-menu"
 msgstr "E336: 選單路徑必需指向子選單"
 
-#: menu.c:2191
+#: menu.c:2202
 msgid "E337: Menu not found - check menu names"
 msgstr "E337: 找不到選單 - 請檢查選單名稱"
 
-#: message.c:463
+#: message.c:467
 #, c-format
 msgid "Error detected while processing %s:"
 msgstr "處理 %s 時發生錯誤:"
 
-#: message.c:479
+#: message.c:483
 #, c-format
 msgid "line %4ld:"
 msgstr "行 %4ld:"
 
-#: message.c:519
+#: message.c:523
 msgid "[string too long]"
 msgstr "[此行過長]"
 
-#: message.c:665
+#: message.c:669
 msgid "Messages maintainer: Bram Moolenaar <Bram@vim.org>"
 msgstr "正體中文訊息維護者: Francis S.Lin <piaip@csie.ntu.edu.tw>,                                 Cecil Sheng   <b7506022@csie.ntu.edu.tw>"
 
-#: message.c:877
+#: message.c:881
 msgid "Interrupt: "
 msgstr "已中斷: "
 
-#: message.c:880
+#: message.c:884
 msgid "Hit ENTER to continue"
 msgstr "請按 ENTER 繼續"
 
-#: message.c:882
+#: message.c:886
 msgid "Hit ENTER or type command to continue"
 msgstr "請按 ENTER 或其它命令以繼續"
 
-#: message.c:1932
+#: message.c:1940
 msgid "-- More --"
 msgstr "-- 尚有 --"
 
-#: message.c:1935
+#: message.c:1943
 msgid " (RET/BS: line, SPACE/b: page, d/u: half page, q: quit)"
 msgstr " (RET/BS: 向下/向上一行, 空白鍵/b: 一頁, d/u: 半頁, q: 離開)"
 
-#: message.c:1936
+#: message.c:1944
 msgid " (RET: line, SPACE: page, d: half page, q: quit)"
 msgstr " (RET: 向下一行, 空白鍵: 一頁, d: 半頁, q: 離開)"
 
-#: message.c:2411 message.c:2426
+#: message.c:2419 message.c:2434
 msgid "Question"
 msgstr "問題"
 
-#: message.c:2413
+#: message.c:2421
 msgid ""
 "&Yes\n"
 "&No"
@@ -3747,7 +3811,7 @@ msgstr ""
 "&Y是\n"
 "&N否"
 
-#: message.c:2428
+#: message.c:2436
 msgid ""
 "&Yes\n"
 "&No\n"
@@ -3757,7 +3821,7 @@ msgstr ""
 "&N否\n"
 "&C取消"
 
-#: message.c:2446
+#: message.c:2454
 msgid ""
 "&Yes\n"
 "&No\n"
@@ -3771,59 +3835,59 @@ msgstr ""
 "&D全部不存\n"
 "&C取消"
 
-#: message.c:2486
+#: message.c:2494
 msgid "Save File dialog"
 msgstr "存檔"
 
-#: message.c:2488
+#: message.c:2496
 msgid "Open File dialog"
 msgstr "開檔"
 
 #. TODO: non-GUI file selector here
-#: message.c:2538
+#: message.c:2547
 msgid "E338: Sorry, no file browser in console mode"
 msgstr "E338: 主控台(Console)模式時沒有檔案瀏覽器(file browser)"
 
-#: misc1.c:2433
+#: misc1.c:2449
 msgid "W10: Warning: Changing a readonly file"
 msgstr "W10: 注意: 你正在修改一個唯讀檔"
 
-#: misc1.c:2658
+#: misc1.c:2678
 msgid "1 more line"
 msgstr "還有一行"
 
-#: misc1.c:2660
+#: misc1.c:2680
 msgid "1 line less"
 msgstr "少於一行"
 
-#: misc1.c:2665
+#: misc1.c:2685
 #, c-format
 msgid "%ld more lines"
 msgstr " 還有 %ld 行"
 
-#: misc1.c:2667
+#: misc1.c:2687
 #, c-format
 msgid "%ld fewer lines"
 msgstr "只剩 %ld 行"
 
-#: misc1.c:2670
+#: misc1.c:2690
 msgid " (Interrupted)"
 msgstr " (已中斷)"
 
-#: misc1.c:6213
+#: misc1.c:6244
 msgid "Vim: preserving files...\n"
 msgstr "Vim: 保留檔案中...\n"
 
 #. close all memfiles, without deleting
-#: misc1.c:6223
+#: misc1.c:6254
 msgid "Vim: Finished.\n"
 msgstr "Vim: 結束.\n"
 
-#: misc2.c:643 misc2.c:659
+#: misc2.c:644 misc2.c:660
 msgid "ERROR: "
 msgstr "錯誤: "
 
-#: misc2.c:663
+#: misc2.c:664
 #, c-format
 msgid ""
 "\n"
@@ -3832,7 +3896,7 @@ msgstr ""
 "\n"
 "[bytes] 全部 alloc-freed %lu-%lu, 使用中 %lu, peak 使用 %lu\n"
 
-#: misc2.c:665
+#: misc2.c:666
 #, c-format
 msgid ""
 "[calls] total re/malloc()'s %lu, total free()'s %lu\n"
@@ -3841,109 +3905,101 @@ msgstr ""
 "[呼叫] 全部 re/malloc(): %lu, 全部 free()': %lu\n"
 "\n"
 
-#: misc2.c:720
+#: misc2.c:721
 msgid "E340: Line is becoming too long"
 msgstr "E340: 此行過長"
 
-#: misc2.c:764
+#: misc2.c:765
 #, c-format
 msgid "E341: Internal error: lalloc(%ld, )"
 msgstr "E341: 內部錯誤: lalloc(%ld, )"
 
-#: misc2.c:872
+#: misc2.c:873
 #, c-format
 msgid "E342: Out of memory!  (allocating %lu bytes)"
 msgstr "E342: 記憶體不足! (嘗試配置 %lu 位元組)"
 
-#: misc2.c:2506
+#: misc2.c:2508
 #, c-format
 msgid "Calling shell to execute: \"%s\""
 msgstr "呼叫 shell 執行: \"%s\""
 
-#: misc2.c:2699 misc2.c:5100 option.c:4480
+#: misc2.c:2701 misc2.c:5103 option.c:4570
 msgid "Missing colon"
 msgstr "缺少 colon"
 
-#: misc2.c:2726
+#: misc2.c:2703 misc2.c:2730
 msgid "Illegal mode"
 msgstr "不正確的模式"
 
-#: misc2.c:2765
+#: misc2.c:2769
 msgid "Illegal mouseshape"
 msgstr "不正確的滑鼠形狀"
 
-#: misc2.c:2805 misc2.c:5120
+#: misc2.c:2809 misc2.c:5123
 msgid "digit expected"
 msgstr "應該要有數字"
 
-#: misc2.c:2810
+#: misc2.c:2814
 msgid "Illegal percentage"
 msgstr "不正確的百分比"
 
-#: misc2.c:3114
+#: misc2.c:3118
 msgid "Enter encryption key: "
 msgstr "輸入密碼: "
 
-#: misc2.c:3115
+#: misc2.c:3119
 msgid "Enter same key again: "
 msgstr "請再輸入一次: "
 
-#: misc2.c:3125
+#: misc2.c:3129
 msgid "Keys don't match!"
 msgstr "兩次輸入密碼不相同!"
 
-#: misc2.c:3631
+#: misc2.c:3635
 #, c-format
 msgid ""
 "E343: Invalid path: '**[number]' must be at the end of the path or be "
 "followed by '%s'."
 msgstr "E343: 不正確的路徑: '**[number]' 必需要在路徑結尾或要接著 '%s'"
 
-#: misc2.c:4857
+#: misc2.c:4860
 #, c-format
 msgid "E344: Can't find directory \"%s\" in cdpath"
 msgstr "E344: cdpath 中沒有目錄 \"%s\""
 
-#: misc2.c:4860
+#: misc2.c:4863
 #, c-format
 msgid "E345: Can't find file \"%s\" in path"
 msgstr "E345: 在路徑中找不到檔案 \"%s\""
 
-#: misc2.c:4866
+#: misc2.c:4869
 #, c-format
 msgid "E346: No more directory \"%s\" found in cdpath"
 msgstr "E346: 在路徑中找不到更多的檔案 \"%s\""
 
-#: misc2.c:4869
+#: misc2.c:4872
 #, c-format
 msgid "E347: No more file \"%s\" found in path"
 msgstr "E347: 在路徑中找不到更多的檔案 \"%s\""
 
-#: misc2.c:5112
+#: misc2.c:5115
 msgid "Illegal component"
 msgstr "不正確的模式"
 
-#: normal.c:2791
+#: normal.c:2798
 msgid "Warning: terminal cannot highlight"
 msgstr "注意: 你的終端機無法顯示高亮度"
 
-#: normal.c:2985
+#: normal.c:2993
 msgid "E348: No string under cursor"
 msgstr "E348: 游標處沒有字串"
 
-#: normal.c:2987
+#: normal.c:2995
 msgid "E349: No identifier under cursor"
 msgstr "E349: 游標處沒有識別字"
 
-#: normal.c:4138
-msgid "E350: Cannot create fold with current 'foldmethod'"
-msgstr "E350: 無法在目前的 'foldmethod' 下建立 fold"
-
-#: normal.c:4156
-msgid "E351: Cannot delete fold with current 'foldmethod'"
-msgstr "E351: 無法在目前的 'foldmethod' 下刪除 fold"
-
-#: normal.c:4169
+#: normal.c:4160
 msgid "E352: Cannot erase folds with current 'foldmethod'"
 msgstr "E352: 無法在目前的 'foldmethod' 下刪除 fold"
 
@@ -3972,49 +4028,50 @@ msgstr "%ld 行 %s 過 %d 次"
 msgid "%ld lines to indent... "
 msgstr "縮排 %ld 行..."
 
-#: ops.c:683
+#: ops.c:689
 msgid "1 line indented "
 msgstr "一行已縮排"
 
-#: ops.c:685
+#: ops.c:691
 #, c-format
 msgid "%ld lines indented "
 msgstr "已縮排 %ld 行"
 
-#: ops.c:1504
+#. must display the prompt
+#: ops.c:1529
 msgid "cannot yank; delete anyway"
 msgstr "無法剪下; 直接刪除"
 
-#: ops.c:1991
+#: ops.c:2019
 msgid "1 line ~ed"
 msgstr " 1 行 ~ed"
 
-#: ops.c:1993
+#: ops.c:2021
 #, c-format
 msgid "%ld lines ~ed"
 msgstr " %ld 行 ~ed"
 
-#: ops.c:2339
+#: ops.c:2381
 #, c-format
 msgid "freeing %ld lines"
 msgstr "釋放 %ld 行中"
 
-#: ops.c:2616
+#: ops.c:2658
 msgid "1 line yanked"
 msgstr "已複製 1 行"
 
-#: ops.c:2618
+#: ops.c:2660
 #, c-format
 msgid "%ld lines yanked"
 msgstr "已複製 %ld 行"
 
-#: ops.c:2874
+#: ops.c:2916
 #, c-format
 msgid "E353: Nothing in register %s"
 msgstr "E353: 暫存器 %s 裡沒有東西"
 
 #. Highlight title
-#: ops.c:3414
+#: ops.c:3456
 msgid ""
 "\n"
 "--- Registers ---"
@@ -4022,11 +4079,11 @@ msgstr ""
 "\n"
 "--- 暫存器 ---"
 
-#: ops.c:4518
+#: ops.c:4564
 msgid "Illegal register name"
 msgstr "不正確的暫存器名稱"
 
-#: ops.c:4598
+#: ops.c:4644
 msgid ""
 "\n"
 "# Registers:\n"
@@ -4034,50 +4091,50 @@ msgstr ""
 "\n"
 "# 暫存器:\n"
 
-#: ops.c:4624
+#: ops.c:4670
 #, c-format
 msgid "Unknown register type %d"
 msgstr "未知的註冊型態: %d"
 
-#: ops.c:5005
+#: ops.c:5051
 #, c-format
 msgid "E354: Invalid register name: '%s'"
 msgstr "E354: 暫存器名稱錯誤: '%s'"
 
-#: ops.c:5346
+#: ops.c:5392
 #, c-format
 msgid "%ld Cols; "
 msgstr "%ld 欄; "
 
-#: ops.c:5353
+#: ops.c:5399
 #, c-format
 msgid "Selected %s%ld of %ld Lines; %ld of %ld Words; %ld of %ld Bytes"
 msgstr "選擇了 %s%ld/%ld 行; %ld/%ld 字(Word); %ld/%ld 字元(Bytes)"
 
-#: ops.c:5369
+#: ops.c:5415
 #, c-format
 msgid "Col %s of %s; Line %ld of %ld; Word %ld of %ld; Byte %ld of %ld"
 msgstr "欄 %s/%s; 行 %ld/%ld; 字(Word) %ld/%ld; 字元(Byte) %ld/%ld"
 
-#: ops.c:5380
+#: ops.c:5426
 #, c-format
 msgid "(+%ld for BOM)"
 msgstr "(+%ld for BOM)"
 
 # ? what's this for?
-#: option.c:1971
+#: option.c:1978
 msgid "Thanks for flying Vim"
 msgstr "感謝您愛用 Vim"
 
-#: option.c:3075
+#: option.c:3161
 msgid "Option not supported"
 msgstr "不支援該選項"
 
-#: option.c:3100
+#: option.c:3186
 msgid "Not allowed in a modeline"
 msgstr "不能在 Modeline 裡出現"
 
-#: option.c:3156
+#: option.c:3242
 msgid ""
 "\n"
 "\tLast set from "
@@ -4085,138 +4142,138 @@ msgstr ""
 "\n"
 "\t上次設定: "
 
-#: option.c:3295
+#: option.c:3381
 msgid "Number required after ="
 msgstr "= 後需要有數字"
 
-#: option.c:3603 option.c:4205
+#: option.c:3688 option.c:4295
 msgid "Not found in termcap"
 msgstr "Termcap 裡面找不到"
 
-#: option.c:3669
+#: option.c:3754
 #, c-format
 msgid "Illegal character <%s>"
 msgstr "不正確的字元 <%s>"
 
-#: option.c:4190 option.c:5370
+#: option.c:4280 option.c:5483
 msgid "Not allowed here"
 msgstr "這裡不可使用"
 
-#: option.c:4197
+#: option.c:4287
 msgid "Cannot set 'term' to empty string"
 msgstr "無法設定 'term' 為空字串"
 
-#: option.c:4200
+#: option.c:4290
 msgid "Cannot change term in GUI"
 msgstr "在圖型界面中無法切換 term"
 
-#: option.c:4202
+#: option.c:4292
 msgid "Use \":gui\" to start the GUI"
 msgstr "輸入 \":gui\" 來啟動圖形界面"
 
-#: option.c:4223
+#: option.c:4313
 msgid "'backupext' and 'patchmode' are equal"
 msgstr "'backupext' 跟 'patchmode' 是一樣的"
 
-#: option.c:4482
+#: option.c:4572
 msgid "Zero length string"
 msgstr "零長度字串"
 
-#: option.c:4550
+#: option.c:4640
 #, c-format
 msgid "Missing number after <%s>"
 msgstr "<%s> 後缺少數字"
 
-#: option.c:4564
+#: option.c:4654
 msgid "Missing comma"
 msgstr "缺少逗號"
 
-#: option.c:4571
+#: option.c:4661
 msgid "Must specify a ' value"
 msgstr "必需指定一個 ' 值"
 
-#: option.c:4611
+#: option.c:4701
 msgid "contains unprintable character"
 msgstr "內含無法顯示的字元"
 
-#: option.c:4624
+#: option.c:4714
 msgid "Invalid font(s)"
 msgstr "不正確的字型"
 
-#: option.c:4630
+#: option.c:4720
 msgid "can't select fontset"
 msgstr "無法使用字型集(Fontset)"
 
-#: option.c:4632
+#: option.c:4722
 msgid "Invalid fontset"
 msgstr "不正確的字型集(Fontset)"
 
-#: option.c:4639
+#: option.c:4729
 msgid "can't select wide font"
 msgstr "無法使用設定的中文字型(Widefont)"
 
-#: option.c:4641
+#: option.c:4731
 msgid "Invalid wide font"
 msgstr "不正確的字型(Widefont)"
 
-#: option.c:4951
+#: option.c:5000
 #, c-format
 msgid "Illegal character after <%c>"
 msgstr "<%c> 後有不正確的字元"
 
-#: option.c:5034
+#: option.c:5083
 msgid "comma required"
 msgstr "需要逗號"
 
-#: option.c:5043
+#: option.c:5092
 #, c-format
 msgid "'commentstring' must be empty or contain %s"
 msgstr "'commentstring' 必需是空白或包含 %s"
 
-#: option.c:5090
+#: option.c:5139
 msgid "No mouse support"
 msgstr "不支援滑鼠"
 
-#: option.c:5336
+#: option.c:5385
 msgid "Unclosed expression sequence"
 msgstr "沒有結束的運算式: "
 
-#: option.c:5340
+#: option.c:5389
 msgid "too many items"
 msgstr "太多項目"
 
-#: option.c:5342
+#: option.c:5391
 msgid "unbalanced groups"
 msgstr "不對稱的 group"
 
-#: option.c:5493
+#: option.c:5606
 msgid "A preview window already exists"
 msgstr "預視的視窗已經存在了"
 
-#: option.c:5744 option.c:5773
+#: option.c:5857 option.c:5886
 msgid "'winheight' cannot be smaller than 'winminheight'"
 msgstr "'winheight' 不能比 'winminheight' 更少"
 
-#: option.c:5789 option.c:5808
+#: option.c:5902 option.c:5921
 msgid "'winwidth' cannot be smaller than 'winminwidth'"
 msgstr "'winwidth' 不能比 'winminwidth' 更少"
 
-#: option.c:5948
+#: option.c:6061
 #, c-format
 msgid "Need at least %d lines"
 msgstr "至少需要 %d 行"
 
-#: option.c:5957
+#: option.c:6070
 #, c-format
 msgid "Need at least %d columns"
 msgstr "至少需要 %d 欄"
 
-#: option.c:6239
+#: option.c:6367
 #, c-format
 msgid "E355: Unknown option: %s"
 msgstr "E355: 不正確的選項: %s"
 
-#: option.c:6348
+#: option.c:6476
 msgid ""
 "\n"
 "--- Terminal codes ---"
@@ -4224,7 +4281,7 @@ msgstr ""
 "\n"
 "--- 終端機碼 ---"
 
-#: option.c:6350
+#: option.c:6478
 msgid ""
 "\n"
 "--- Global option values ---"
@@ -4232,7 +4289,7 @@ msgstr ""
 "\n"
 "--- Global 選項值 ---"
 
-#: option.c:6352
+#: option.c:6480
 msgid ""
 "\n"
 "--- Local option values ---"
@@ -4240,7 +4297,7 @@ msgstr ""
 "\n"
 "--- Local 選項值 ---"
 
-#: option.c:6354
+#: option.c:6482
 msgid ""
 "\n"
 "--- Options ---"
@@ -4248,16 +4305,16 @@ msgstr ""
 "\n"
 "--- 選項 ---"
 
-#: option.c:7032
+#: option.c:7171
 msgid "E356: get_varp ERROR"
 msgstr "E356: get_varp 錯誤"
 
-#: option.c:7944
+#: option.c:8087
 #, c-format
 msgid "E357: 'langmap': Matching character missing for %s"
 msgstr "E357: 'langmap': 找不到 %s 對應的字元"
 
-#: option.c:7978
+#: option.c:8121
 #, c-format
 msgid "E358: 'langmap': Extra characters after semicolon: %s"
 msgstr "E358: 'langmap': 分號後有多餘的字元: %s"
@@ -4279,99 +4336,103 @@ msgstr "需要 Amigados 版本 2.04 以上\n"
 msgid "Need %s version %ld\n"
 msgstr "需要 %s 版本 %ld\n"
 
-#: os_amiga.c:405
+#: os_amiga.c:407
 msgid "Cannot open NIL:\n"
 msgstr "無法開啟 NIL:\n"
 
-#: os_amiga.c:416
+#: os_amiga.c:418
 msgid "Cannot create "
 msgstr "不能建立 "
 
-#: os_amiga.c:889
+#: os_amiga.c:894
 #, c-format
 msgid "Vim exiting with %d\n"
 msgstr "Vim 結束傳回值: %d\n"
 
-#: os_amiga.c:921
+#: os_amiga.c:926
 msgid "cannot change console mode ?!\n"
 msgstr "無法切換主控台(console)模式 !?\n"
 
-#: os_amiga.c:931 os_mac.c:1167 os_mswin.c:588 os_riscos.c:728 os_unix.c:2722
+#: os_amiga.c:936 os_mac.c:1167 os_mswin.c:614 os_riscos.c:728 os_unix.c:2726
 msgid "E359: Screen mode setting not supported"
 msgstr "E359: 不支援設定螢幕模式"
 
-#: os_amiga.c:987
+#: os_amiga.c:992
 msgid "mch_get_shellsize: not a console??\n"
 msgstr "mch_get_shellsize: 不是主控台(console)??\n"
 
 #. if Vim opened a window: Executing a shell may cause crashes
-#: os_amiga.c:1135
+#: os_amiga.c:1140
 msgid "E360: Cannot execute shell with -f option"
 msgstr "E360: 不能用 -f 選項執行 shell"
 
-#: os_amiga.c:1176 os_amiga.c:1266
+#: os_amiga.c:1181 os_amiga.c:1271
 msgid "Cannot execute "
 msgstr "不能執行 "
 
-#: os_amiga.c:1179 os_amiga.c:1276
+#: os_amiga.c:1184 os_amiga.c:1281
 msgid "shell "
 msgstr "shell "
 
-#: os_amiga.c:1199 os_amiga.c:1301
+#: os_amiga.c:1204 os_amiga.c:1306
 msgid " returned\n"
 msgstr " 已返回\n"
 
-#: os_amiga.c:1441
+#: os_amiga.c:1446
 msgid "ANCHOR_BUF_SIZE too small."
 msgstr "ANCHOR_BUF_SIZE 太小"
 
-#: os_amiga.c:1445
+#: os_amiga.c:1450
 msgid "I/O ERROR"
 msgstr "I/O 錯誤"
 
-#: os_msdos.c:1460
-msgid "PC (32 bits Vim)"
-msgstr "PC (32 位元 Vim)"
+#: os_mswin.c:498
+msgid "...(truncated)"
+msgstr "...(已切掉)"
 
-#: os_msdos.c:1462
-msgid "PC (16 bits Vim)"
-msgstr "PC (16 位元 Vim)"
-
-#: os_msdos.c:1865
-msgid "E362: Unsupported screen mode"
-msgstr "E362: 螢幕模式不支援"
-
-#: os_msdos.c:2059 os_unix.c:2942 os_unix.c:3483
-msgid ""
-"\n"
-"shell returned "
-msgstr ""
-"\n"
-"Shell 已返回"
-
-#: os_mswin.c:563
+#: os_mswin.c:589
 msgid "'columns' is not 80, cannot execute external commands"
 msgstr "'columns' 不是 80, 無法執行外部命令"
 
-#: os_mswin.c:675 os_unix.c:4908
+#: os_mswin.c:701 os_unix.c:4945
 #, c-format
 msgid "E364: Library call failed for \"%s()\""
 msgstr "E364: 呼叫函式庫 \"%s\"() 失敗"
 
-#: os_mswin.c:1212
+#: os_mswin.c:1330
 msgid "E237: Printer selection failed"
 msgstr "E237: 無法選擇此印表機"
 
-#: os_mswin.c:1302 os_mswin.c:1312
+#: os_mswin.c:1374
+#, c-format
+msgid "to %s on %s"
+msgstr "到 %s on %s"
+
+#: os_mswin.c:1435 os_mswin.c:1445
 #, c-format
 msgid "E238: Print error: %s"
 msgstr "E238: 列印錯誤: %s"
 
-#: os_mswin.c:1312
+#: os_mswin.c:1445
 msgid "Unknown"
 msgstr "未知"
 
-#: os_riscos.c:1213
+#: os_mswin.c:1472
+#, c-format
+msgid "Printing '%s'"
+msgstr "列印中: '%s'"
+
+#: os_mswin.c:2487
+#, c-format
+msgid "E244: Illegal charset name \"%s\" in font name \"%s\""
+msgstr "E244: 字元集 \"%s\" 無法對應字型\"%s\""
+
+#: os_mswin.c:2495
+#, c-format
+msgid "E245: Illegal char '%c' in font name \"%s\""
+msgstr "E245: 不正確的字元 '%c' 出現在字型名稱 \"%s\" 內"
+
+#: os_riscos.c:1227
 msgid "E366: Invalid 'osfiletype' option - using Text"
 msgstr "E366: 不正確的 'filetype' 選項 - 使用純文字模式"
 
@@ -4388,12 +4449,12 @@ msgstr "Vim: CVim: 攔截到信號(signal) %s\n"
 msgid "Vim: Caught deadly signal\n"
 msgstr "Vim: 攔截到致命的信號(deadly signale)\n"
 
-#: os_unix.c:1062
+#: os_unix.c:1063
 #, c-format
 msgid "Opening the X display took %ld msec"
 msgstr "開啟 X Window 耗時 %ld msec"
 
-#: os_unix.c:1089
+#: os_unix.c:1090
 msgid ""
 "\n"
 "Vim: Got X error\n"
@@ -4401,15 +4462,15 @@ msgstr ""
 "\n"
 "Vim: X 錯誤\n"
 
-#: os_unix.c:1156
+#: os_unix.c:1157
 msgid "Testing the X display failed"
 msgstr "測試 X Window 失敗"
 
-#: os_unix.c:1300
+#: os_unix.c:1301
 msgid "Opening the X display timed out"
 msgstr "開啟 X Window 逾時"
 
-#: os_unix.c:2895 os_unix.c:3477
+#: os_unix.c:2899 os_unix.c:3483
 msgid ""
 "\n"
 "Cannot execute shell "
@@ -4417,7 +4478,7 @@ msgstr ""
 "\n"
 "不能執行 shell"
 
-#: os_unix.c:2938
+#: os_unix.c:2944
 msgid ""
 "\n"
 "Cannot execute shell sh\n"
@@ -4425,7 +4486,15 @@ msgstr ""
 "\n"
 "不能執行 shell sh\n"
 
-#: os_unix.c:3076
+#: os_unix.c:2948 os_unix.c:3489
+msgid ""
+"\n"
+"shell returned "
+msgstr ""
+"\n"
+"Shell 已返回"
+
+#: os_unix.c:3082
 msgid ""
 "\n"
 "Cannot create pipes\n"
@@ -4433,7 +4502,7 @@ msgstr ""
 "\n"
 "不能建立 pipe 管線\n"
 
-#: os_unix.c:3091
+#: os_unix.c:3097
 msgid ""
 "\n"
 "Cannot fork\n"
@@ -4441,7 +4510,7 @@ msgstr ""
 "\n"
 "不能 fork\n"
 
-#: os_unix.c:3490
+#: os_unix.c:3496
 msgid ""
 "\n"
 "Command terminated\n"
@@ -4449,7 +4518,7 @@ msgstr ""
 "\n"
 "命令已終結\n"
 
-#: os_unix.c:4956
+#: os_unix.c:4993
 msgid "Opening the X display failed"
 msgstr "開啟 X Window 失敗"
 
@@ -4457,24 +4526,24 @@ msgstr "開啟 X Window 失敗"
 msgid "At line"
 msgstr "在行號 "
 
-#: os_w32exe.c:171
+#: os_w32exe.c:169
 msgid "Could not load vim32.dll!"
 msgstr "無法載入 vim32.dll！"
 
-#: os_w32exe.c:171 os_w32exe.c:181
+#: os_w32exe.c:169 os_w32exe.c:179
 msgid "VIM Error"
 msgstr "VIM 錯誤"
 
-#: os_w32exe.c:181
+#: os_w32exe.c:179
 msgid "Could not fix up function pointers to the DLL!"
 msgstr "不能修正函式指標到 DLL!"
 
-#: os_win16.c:583 os_win32.c:2888
+#: os_win16.c:578 os_win32.c:2977
 #, c-format
 msgid "shell returned %d"
 msgstr "Shell 傳回值 %d"
 
-#: os_win32.c:1403
+#: os_win32.c:1473
 msgid ""
 "VIMRUN.EXE not found in your $PATH.\n"
 "External commands will not pause after completion.\n"
@@ -4484,28 +4553,28 @@ msgstr ""
 "外部命令執行完畢後將不會暫停.\n"
 "進一步說明請執行 :help win32-vimrun "
 
-#: os_win32.c:1406
+#: os_win32.c:1476
 msgid "Vim Warning"
 msgstr "Vim 警告"
 
-#: os_win32.c:2383
+#: os_win32.c:2457
 #, c-format
 msgid "Vim: Caught %s event\n"
 msgstr "Vim: 攔截到 %s \n"
 
-#: os_win32.c:2385
+#: os_win32.c:2459
 msgid "close"
 msgstr "關閉"
 
-#: os_win32.c:2387
+#: os_win32.c:2461
 msgid "logoff"
 msgstr "登出"
 
-#: os_win32.c:2388
+#: os_win32.c:2462
 msgid "shutdown"
 msgstr "關機"
 
-#: os_win32.c:2854
+#: os_win32.c:2943
 msgid "E371: Command not found"
 msgstr "E371: 找不到命令"
 
@@ -4571,104 +4640,104 @@ msgstr "錯誤列表 %d/%d; 共有 %d 項錯誤"
 msgid "E382: Cannot write, 'buftype' option is set"
 msgstr "E382: 無法寫入，'buftype' 選項已設定"
 
-#: regexp.c:800
+#: regexp.c:801
 msgid "E339: Pattern too long"
 msgstr "E339: 名字太長"
 
-#: regexp.c:1311
+#: regexp.c:1315
 #, c-format
 msgid "E61: Nested %s*"
 msgstr "E61: 巢狀 %s*"
 
-#: regexp.c:1314
+#: regexp.c:1318
 #, c-format
 msgid "E62: Nested %s%c"
 msgstr "E62: 巢狀 %s%c"
 
-#: regexp.c:1463
+#: regexp.c:1467
 #, c-format
 msgid "E64: %s%c follows nothing"
 msgstr "E64: %s%c 沒有接東西"
 
-#: regexp.c:2457
+#: regexp.c:2469
 #, c-format
 msgid "Syntax error in %s{...}"
 msgstr "語法錯誤: %s{...}"
 
-#: regexp.c:2702
+#: regexp.c:2716
 msgid "E361: Crash intercepted; regexp too complex?"
 msgstr "E361: 無法執行; regular expression 太複雜?"
 
-#: regexp.c:2837
+#: regexp.c:2851
 msgid "E363: pattern caused out-of-stack error"
 msgstr "E363: regular expression 造成堆疊用光的錯誤"
 
-#: regexp.c:3073
+#: regexp.c:3087
 msgid "External submatches:\n"
 msgstr "外部符合:\n"
 
-#: screen.c:2041
+#: screen.c:2047
 #, c-format
 msgid "+--%3ld lines folded "
 msgstr "+--已 fold %3ld 行"
 
-#: screen.c:7319
+#: screen.c:7386
 msgid " VREPLACE"
 msgstr " V-取代"
 
-#: screen.c:7323
+#: screen.c:7390
 msgid " REPLACE"
 msgstr " 取代"
 
-#: screen.c:7328
+#: screen.c:7395
 msgid " REVERSE"
 msgstr " 反轉"
 
-#: screen.c:7330
+#: screen.c:7397
 msgid " INSERT"
 msgstr " 插入"
 
-#: screen.c:7333
+#: screen.c:7400
 msgid " (insert)"
 msgstr " (插入)"
 
-#: screen.c:7335
+#: screen.c:7402
 msgid " (replace)"
 msgstr " (取代)"
 
-#: screen.c:7337
+#: screen.c:7404
 msgid " (vreplace)"
 msgstr " (v-取代)"
 
-#: screen.c:7340
+#: screen.c:7407
 msgid " Hebrew"
 msgstr " Hebrew"
 
-#: screen.c:7348
+#: screen.c:7415
 msgid " (lang)"
 msgstr " (語言)"
 
-#: screen.c:7351
+#: screen.c:7418
 msgid " (paste)"
 msgstr " (貼上)"
 
-#: screen.c:7357
+#: screen.c:7424
 msgid " SELECT"
 msgstr " 選取"
 
-#: screen.c:7359
+#: screen.c:7426
 msgid " VISUAL"
 msgstr " 選取"
 
-#: screen.c:7361
+#: screen.c:7428
 msgid " BLOCK"
 msgstr " 區塊"
 
-#: screen.c:7363
+#: screen.c:7430
 msgid " LINE"
 msgstr " 行選取"
 
-#: screen.c:7372 screen.c:7426
+#: screen.c:7439 screen.c:7493
 msgid "recording"
 msgstr "記錄中"
 
@@ -4699,87 +4768,87 @@ msgstr "E385: 已搜尋到檔案結尾仍找不到 %s"
 msgid "E386: Expected '?' or '/'  after ';'"
 msgstr "E386: 在 ';' 後面應該有 '?' 或 '/'"
 
-#: search.c:3450
+#: search.c:3469
 msgid " (includes previously listed match)"
 msgstr " (包括前次列出符合項)"
 
 #. cursor at status line
-#: search.c:3470
+#: search.c:3489
 msgid "--- Included files "
 msgstr "--- 引入檔案 "
 
-#: search.c:3472
+#: search.c:3491
 msgid "not found "
 msgstr "找不到 "
 
-#: search.c:3473
+#: search.c:3492
 msgid "in path ---\n"
 msgstr "---\n"
 
-#: search.c:3512
+#: search.c:3531
 msgid "  (Already listed)"
 msgstr "  (已列出)"
 
-#: search.c:3514
+#: search.c:3533
 msgid "  NOT FOUND"
 msgstr "  找不到"
 
-#: search.c:3566
+#: search.c:3585
 #, c-format
 msgid "Scanning included file: %s"
 msgstr "搜尋引入檔案: %s"
 
-#: search.c:3784
+#: search.c:3803
 msgid "E387: Match is on current line"
 msgstr "E387: 目前所在行中有一匹配"
 
-#: search.c:3924
+#: search.c:3943
 msgid "All included files were found"
 msgstr "所有引入檔案都已找到"
 
-#: search.c:3926
+#: search.c:3945
 msgid "No included files"
 msgstr "沒有引入檔案"
 
-#: search.c:3942
+#: search.c:3961
 msgid "E388: Couldn't find definition"
 msgstr "E388: 找不到定義"
 
-#: search.c:3944
+#: search.c:3963
 msgid "E389: Couldn't find pattern"
 msgstr "E389: 找不到 pattern"
 
-#: syntax.c:2963
+#: syntax.c:2985
 #, c-format
 msgid "E390: Illegal argument: %s"
 msgstr "E390: 參數不正確: %s"
 
-#: syntax.c:3140
+#: syntax.c:3162
 #, c-format
 msgid "E391: No such syntax cluster: %s"
 msgstr "E391: 無此 syntax cluster: \"%s\""
 
-#: syntax.c:3304
+#: syntax.c:3326
 msgid "No Syntax items defined for this buffer"
 msgstr "這個緩衝區沒有定義任何語法"
 
-#: syntax.c:3312
+#: syntax.c:3334
 msgid "syncing on C-style comments"
 msgstr "C語言式註解同步化中"
 
-#: syntax.c:3320
+#: syntax.c:3342
 msgid "no syncing"
 msgstr "沒有同步化"
 
-#: syntax.c:3323
+#: syntax.c:3345
 msgid "syncing starts "
 msgstr "同步化開始"
 
-#: syntax.c:3325 syntax.c:3394
+#: syntax.c:3347 syntax.c:3416
 msgid " lines before top line"
 msgstr "行號超出範圍"
 
-#: syntax.c:3329
+#: syntax.c:3351
 msgid ""
 "\n"
 "--- Syntax sync items ---"
@@ -4787,7 +4856,7 @@ msgstr ""
 "\n"
 "--- 語法同步物件 (Syntax sync items) ---"
 
-#: syntax.c:3332
+#: syntax.c:3354
 msgid ""
 "\n"
 "syncing on items"
@@ -4795,7 +4864,7 @@ msgstr ""
 "\n"
 "同步化中:"
 
-#: syntax.c:3337
+#: syntax.c:3359
 msgid ""
 "\n"
 "--- Syntax items ---"
@@ -4803,166 +4872,166 @@ msgstr ""
 "\n"
 "--- 語法項目 ---"
 
-#: syntax.c:3360
+#: syntax.c:3382
 #, c-format
 msgid "E392: No such syntax cluster: %s"
 msgstr "E392: 無此 syntax cluster: \"%s\""
 
-#: syntax.c:3384
+#: syntax.c:3406
 msgid "minimal "
 msgstr "最小"
 
-#: syntax.c:3391
+#: syntax.c:3413
 msgid "maximal "
 msgstr "最大"
 
-#: syntax.c:4019
+#: syntax.c:4041
 msgid "E393: group[t]here not accepted here"
 msgstr "E393: 使用了不正確的參數"
 
-#: syntax.c:4043
+#: syntax.c:4065
 #, c-format
 msgid "E394: Didn't find region item for %s"
 msgstr "E394: 找不到 %s 的 region item"
 
-#: syntax.c:4071
+#: syntax.c:4093
 msgid "E395: contains argument not accepted here"
 msgstr "E395: 使用了不正確的參數"
 
-#: syntax.c:4082
+#: syntax.c:4104
 msgid "E396: containedin argument not accepted here"
 msgstr "E396: 使用了不正確的參數"
 
-#: syntax.c:4160
+#: syntax.c:4182
 msgid "E397: Filename required"
 msgstr "E397: 需要檔案名稱"
 
-#: syntax.c:4496
+#: syntax.c:4518
 #, c-format
 msgid "E398: Missing '=': %s"
 msgstr "E398: 缺少 \"=\": %s"
 
-#: syntax.c:4652
+#: syntax.c:4674
 #, c-format
 msgid "E399: Not enough arguments: syntax region %s"
 msgstr "E399: syntax region %s 的引數太少"
 
-#: syntax.c:4983
+#: syntax.c:5005
 msgid "E400: No cluster specified"
 msgstr "E400: 沒有指定的屬性"
 
-#: syntax.c:5020
+#: syntax.c:5042
 #, c-format
 msgid "E401: Pattern delimiter not found: %s"
 msgstr "E401: 找不到分隔符號: %s"
 
-#: syntax.c:5095
+#: syntax.c:5117
 #, c-format
 msgid "E402: Garbage after pattern: %s"
 msgstr "E402: '%s' 後面的東西無法辨識"
 
-#: syntax.c:5177
+#: syntax.c:5199
 msgid "E403: syntax sync: line continuations pattern specified twice"
 msgstr "E403: 語法同步: 連接行符號被指定了兩次"
 
-#: syntax.c:5234
+#: syntax.c:5256
 #, c-format
 msgid "E404: Illegal arguments: %s"
 msgstr "E404: 參數不正確: %s"
 
-#: syntax.c:5284
+#: syntax.c:5306
 #, c-format
 msgid "E405: Missing equal sign: %s"
 msgstr "E405: 缺少相等符號: %s"
 
-#: syntax.c:5290
+#: syntax.c:5312
 #, c-format
 msgid "E406: Empty argument: %s"
 msgstr "E406: 空白參數: %s"
 
-#: syntax.c:5317
+#: syntax.c:5339
 #, c-format
 msgid "E407: %s not allowed here"
 msgstr "E407: %s 不能在此出現"
 
-#: syntax.c:5324
+#: syntax.c:5346
 #, c-format
 msgid "E408: %s must be first in contains list"
 msgstr "E408: %s 必須是列表裡的第一個"
 
-#: syntax.c:5394
+#: syntax.c:5416
 #, c-format
 msgid "E409: Unknown group name: %s"
 msgstr "E409: 不正確的群組名稱: %s"
 
-#: syntax.c:5617
+#: syntax.c:5639
 #, c-format
 msgid "E410: Invalid :syntax subcommand: %s"
 msgstr "E410: 不正確的 :syntax 子命令: %s"
 
-#: syntax.c:5996
+#: syntax.c:6018
 #, c-format
 msgid "E411: highlight group not found: %s"
 msgstr "E411: 找不到 highlight group: %s"
 
-#: syntax.c:6020
+#: syntax.c:6042
 #, c-format
 msgid "E412: Not enough arguments: \":highlight link %s\""
 msgstr "E412: 參數太少: \":highlight link %s\""
 
-#: syntax.c:6027
+#: syntax.c:6049
 #, c-format
 msgid "E413: Too many arguments: \":highlight link %s\""
 msgstr "E413: 參數過多: \":highlight link %s\""
 
-#: syntax.c:6047
+#: syntax.c:6069
 msgid "E414: group has settings, highlight link ignored"
 msgstr "E414: 已設定群組, 忽略 highlight link"
 
-#: syntax.c:6140
+#: syntax.c:6196
 #, c-format
 msgid "E415: unexpected equal sign: %s"
 msgstr "E415: 不該有的等號: %s"
 
-#: syntax.c:6176
+#: syntax.c:6232
 #, c-format
 msgid "E416: missing equal sign: %s"
 msgstr "E416: 缺少相等符號: %s"
 
-#: syntax.c:6198
+#: syntax.c:6254
 #, c-format
 msgid "E417: missing argument: %s"
 msgstr "E417: 缺少參數: %s"
 
-#: syntax.c:6235
+#: syntax.c:6291
 #, c-format
 msgid "E418: Illegal value: %s"
 msgstr "E418: 不合法的值: %s"
 
-#: syntax.c:6354
+#: syntax.c:6410
 msgid "E419: FG color unknown"
 msgstr "E419: 錯誤的前景顏色"
 
-#: syntax.c:6365
+#: syntax.c:6421
 msgid "E420: BG color unknown"
 msgstr "E420: 錯誤的背景顏色"
 
-#: syntax.c:6420
+#: syntax.c:6476
 #, c-format
 msgid "E421: Color name or number not recognized: %s"
 msgstr "E421: 錯誤的顏色名稱或數值: %s"
 
-#: syntax.c:6612
+#: syntax.c:6668
 #, c-format
 msgid "E422: terminal code too long: %s"
 msgstr "E422: 終端機碼太長: %s"
 
-#: syntax.c:6659
+#: syntax.c:6715
 #, c-format
 msgid "E423: Illegal argument: %s"
 msgstr "E423: 參數不正確: %s"
 
-#: syntax.c:7188
+#: syntax.c:7244
 msgid "E424: Too many different highlighting attributes in use"
 msgstr "E424: 使用了過多相異的高亮度屬性"
 
@@ -4993,45 +5062,46 @@ msgstr "檔案\n"
 
 #.
 #. * Ask to select a tag from the list.
+#. * When using ":silent" assume that <CR> was entered.
 #.
-#: tag.c:705
+#: tag.c:706
 msgid "Enter nr of choice (<CR> to abort): "
 msgstr "輸入 nr 或選擇 (<CR> 離開): "
 
-#: tag.c:745
+#: tag.c:746
 msgid "E427: There is only one matching tag"
 msgstr "E427: 只有此項符合"
 
-#: tag.c:747
+#: tag.c:748
 msgid "E428: Cannot go beyond last matching tag"
 msgstr "E428: 己經在最後一個符合的 tag 了"
 
-#: tag.c:767
+#: tag.c:768
 #, c-format
 msgid "File \"%s\" does not exist"
 msgstr "檔案 \"%s\" 不存在"
 
 #. Give an indication of the number of matching tags
-#: tag.c:779
+#: tag.c:780
 #, c-format
 msgid "tag %d of %d%s"
 msgstr "找到 tag: %d/%d%s"
 
-#: tag.c:782
+#: tag.c:783
 msgid " or more"
 msgstr " 或更多"
 
-#: tag.c:784
+#: tag.c:785
 msgid "  Using tag with different case!"
 msgstr "  以不同大小寫來使用 tag!"
 
-#: tag.c:827
+#: tag.c:828
 #, c-format
 msgid "E429: File \"%s\" does not exist"
 msgstr "E429: 檔案 \"%s\" 不存在"
 
 #. Highlight title
-#: tag.c:896
+#: tag.c:897
 msgid ""
 "\n"
 "  # TO tag         FROM line  in file/text"
@@ -5039,83 +5109,83 @@ msgstr ""
 "\n"
 "  # 到 tag         從   行    在 檔案/文字"
 
-#: tag.c:1143
+#: tag.c:1144
 msgid "Linear tag search"
 msgstr "線性搜尋標籤 (Tags)"
 
-#: tag.c:1145
+#: tag.c:1146
 msgid "Binary tag search"
 msgstr "二分搜尋(Binary search) 標籤(Tags)"
 
-#: tag.c:1171
+#: tag.c:1172
 #, c-format
 msgid "Searching tags file %s"
 msgstr "搜尋 tag 檔案 \"%s\""
 
-#: tag.c:1355
+#: tag.c:1356
 #, c-format
 msgid "E430: Tag file path truncated for %s\n"
 msgstr "E430: Tag 檔案路徑被截斷為 %s\n"
 
-#: tag.c:1846
+#: tag.c:1847
 #, c-format
 msgid "E431: Format error in tags file \"%s\""
 msgstr "E431: Tag 檔 \"%s\" 格式錯誤"
 
-#: tag.c:1850
+#: tag.c:1851
 #, c-format
 msgid "Before byte %ld"
 msgstr "在 %ld 位元之前"
 
-#: tag.c:1871
+#: tag.c:1872
 #, c-format
 msgid "E432: Tags file not sorted: %s"
 msgstr "E432: Tag 檔案未排序: %s"
 
 #. never opened any tags file
-#: tag.c:1910
+#: tag.c:1911
 msgid "E433: No tags file"
 msgstr "E433: 沒有 tag 檔"
 
-#: tag.c:2581
+#: tag.c:2583
 msgid "E434: Can't find tag pattern"
 msgstr "E434: 找不到 tag"
 
-#: tag.c:2592
+#: tag.c:2594
 msgid "E435: Couldn't find tag, just guessing!"
 msgstr "E435: 找不到 tag, 用猜的!"
 
-#: term.c:1717
+#: term.c:1723
 msgid "' not known. Available builtin terminals are:"
 msgstr "' 無法載入。可用的內建終端機形式有:"
 
-#: term.c:1741
+#: term.c:1747
 msgid "defaulting to '"
 msgstr "預設: '"
 
-#: term.c:2094
+#: term.c:2100
 msgid "Cannot open termcap file"
 msgstr "無法開啟 termcap 檔案"
 
-#: term.c:2097
+#: term.c:2103
 msgid "Terminal entry not found in terminfo"
 msgstr "terminfo 中沒有終端機資料項"
 
-#: term.c:2099
+#: term.c:2105
 msgid "Terminal entry not found in termcap"
 msgstr "termcap 中沒有終端機資料項"
 
-#: term.c:2258
+#: term.c:2264
 #, c-format
 msgid "E436: No \"%s\" entry in termcap"
 msgstr "E436: termcap 沒有 \"%s\" entry"
 
-#: term.c:2732
+#: term.c:2738
 msgid "E437: terminal capability \"cm\" required"
 msgstr "E437: 終端機需要 \"cm\" 的能力"
 
 #. Highlight title
-#: term.c:4866
+#: term.c:4872
 msgid ""
 "\n"
 "--- Terminal keys ---"
@@ -5127,36 +5197,38 @@ msgstr ""
 msgid "new shell started\n"
 msgstr "起動新 shell\n"
 
-#: ui.c:1694
+#: ui.c:1705
 msgid "Vim: Error reading input, exiting...\n"
 msgstr "Vim: 讀取輸入錯誤，離開中...\n"
 
-#: undo.c:350
+#. must display the prompt
+#: undo.c:351
 msgid "No undo possible; continue anyway"
 msgstr "無法還原；請繼續努力"
 
-#: undo.c:505
+#: undo.c:506
 msgid "E438: u_undo: line numbers wrong"
 msgstr "E438: u_undo: 行號錯誤"
 
-#: undo.c:674
+#: undo.c:675
 msgid "1 change"
 msgstr "一項改變"
 
-#: undo.c:676
+#: undo.c:677
 #, c-format
 msgid "%ld changes"
 msgstr "%ld 項改變"
 
-#: undo.c:720
+#: undo.c:721
 msgid "E439: undo list corrupt"
 msgstr "E439: 復原列表損壞"
 
-#: undo.c:750
+#: undo.c:751
 msgid "E440: undo line missing"
 msgstr "E440: 找不到要 undo 的行"
 
-#: version.c:616
+#. Only MS VC 4.1 and earlier can do Win32s
+#: version.c:655
 msgid ""
 "\n"
 "MS-Windows 16/32 bit GUI version"
@@ -5164,7 +5236,7 @@ msgstr ""
 "\n"
 "MS-Windows 16/32 Bit 圖型界面版本"
 
-#: version.c:618
+#: version.c:657
 msgid ""
 "\n"
 "MS-Windows 32 bit GUI version"
@@ -5172,15 +5244,15 @@ msgstr ""
 "\n"
 "MS-Windows 32 Bit 圖型界面版本"
 
-#: version.c:621
+#: version.c:660
 msgid " in Win32s mode"
 msgstr "Win32s 模式"
 
-#: version.c:623
+#: version.c:662
 msgid " with OLE support"
 msgstr "支援 OLE"
 
-#: version.c:626
+#: version.c:665
 msgid ""
 "\n"
 "MS-Windows 32 bit console version"
@@ -5188,7 +5260,7 @@ msgstr ""
 "\n"
 "MS-Windows 32 Bit console 版本"
 
-#: version.c:630
+#: version.c:669
 msgid ""
 "\n"
 "MS-Windows 16 bit version"
@@ -5196,7 +5268,7 @@ msgstr ""
 "\n"
 "MS-Windows 32 Bit console 版本"
 
-#: version.c:634
+#: version.c:673
 msgid ""
 "\n"
 "32 bit MS-DOS version"
@@ -5204,7 +5276,7 @@ msgstr ""
 "\n"
 "32 Bit MS-DOS 版本"
 
-#: version.c:636
+#: version.c:675
 msgid ""
 "\n"
 "16 bit MS-DOS version"
@@ -5212,7 +5284,7 @@ msgstr ""
 "\n"
 "16 Bit MS-DOS 版本"
 
-#: version.c:642
+#: version.c:681
 msgid ""
 "\n"
 "MacOS X (unix) version"
@@ -5220,7 +5292,7 @@ msgstr ""
 "\n"
 "MacOS X (unix) 版本"
 
-#: version.c:644
+#: version.c:683
 msgid ""
 "\n"
 "MacOS X version"
@@ -5228,7 +5300,7 @@ msgstr ""
 "\n"
 "MacOS X 版本"
 
-#: version.c:647
+#: version.c:686
 msgid ""
 "\n"
 "MacOS version"
@@ -5236,7 +5308,7 @@ msgstr ""
 "\n"
 "MacOS 版本"
 
-#: version.c:652
+#: version.c:691
 msgid ""
 "\n"
 "RISC OS version"
@@ -5244,7 +5316,7 @@ msgstr ""
 "\n"
 "RISC OS 版本"
 
-#: version.c:662
+#: version.c:701
 msgid ""
 "\n"
 "Included patches: "
@@ -5252,7 +5324,7 @@ msgstr ""
 "\n"
 "引入修正: "
 
-#: version.c:689
+#: version.c:728
 msgid ""
 "\n"
 "Compiled "
@@ -5260,11 +5332,11 @@ msgstr ""
 "\n"
 "編譯"
 
-#: version.c:692
+#: version.c:731
 msgid "by "
 msgstr "者:"
 
-#: version.c:704
+#: version.c:743
 msgid ""
 "\n"
 "Huge version "
@@ -5272,7 +5344,7 @@ msgstr ""
 "\n"
 "超強版本 "
 
-#: version.c:707
+#: version.c:746
 msgid ""
 "\n"
 "Big version "
@@ -5280,7 +5352,7 @@ msgstr ""
 "\n"
 "大型版本 "
 
-#: version.c:710
+#: version.c:749
 msgid ""
 "\n"
 "Normal version "
@@ -5288,7 +5360,7 @@ msgstr ""
 "\n"
 "一般版本 "
 
-#: version.c:713
+#: version.c:752
 msgid ""
 "\n"
 "Small version "
@@ -5296,7 +5368,7 @@ msgstr ""
 "\n"
 "簡易版本 "
 
-#: version.c:715
+#: version.c:754
 msgid ""
 "\n"
 "Tiny version "
@@ -5304,175 +5376,175 @@ msgstr ""
 "\n"
 "精簡版本 "
 
-#: version.c:721
+#: version.c:760
 msgid "without GUI."
 msgstr "不使用圖型界面。"
 
-#: version.c:725
+#: version.c:764
 msgid "with GTK-GNOME GUI."
 msgstr "使用 GTK-GNOME 圖型界面。"
 
-#: version.c:727
+#: version.c:766
 msgid "with GTK GUI."
 msgstr "使用 GTK 圖型界面。"
 
-#: version.c:731
+#: version.c:770
 msgid "with X11-Motif GUI."
 msgstr "使用 X11-Motif 圖型界面。"
 
-#: version.c:734
+#: version.c:773
 msgid "with X11-Athena GUI."
 msgstr "使用 X11-Athena 圖型界面。"
 
-#: version.c:737
+#: version.c:776
 msgid "with BeOS GUI."
 msgstr "使用 BeOS 圖型界面。"
 
-#: version.c:740
+#: version.c:779
 msgid "with Photon GUI."
 msgstr "使用Photon圖型界面。"
 
-#: version.c:743
+#: version.c:782
 msgid "with GUI."
 msgstr "使用圖型界面。"
 
-#: version.c:746
+#: version.c:785
 msgid "with Carbon GUI."
 msgstr "使用 Carbon 圖型界面。"
 
-#: version.c:749
+#: version.c:788
 msgid "with Cocoa GUI."
 msgstr "使用 Cocoa 圖型界面。"
 
-#: version.c:752
+#: version.c:791
 msgid "with (classic) GUI."
 msgstr "使用 (傳統) 圖型界面。"
 
-#: version.c:763
+#: version.c:802
 msgid "  Features included (+) or not (-):\n"
 msgstr " 目前可使用(+)與不可使用(-)的模組列表:\n"
 
-#: version.c:775
+#: version.c:814
 msgid "   system vimrc file: \""
 msgstr "        系統 vimrc 設定檔: \""
 
-#: version.c:780
+#: version.c:819
 msgid "     user vimrc file: \""
 msgstr "  使用者個人 vimrc 設定檔: \""
 
-#: version.c:785
+#: version.c:824
 msgid " 2nd user vimrc file: \""
 msgstr "    第二組個人 vimrc 檔案: \""
 
-#: version.c:790
+#: version.c:829
 msgid " 3rd user vimrc file: \""
 msgstr "    第三組個人 vimrc 檔案: \""
 
-#: version.c:795
+#: version.c:834
 msgid "      user exrc file: \""
 msgstr "   使用者個人 exrc 設定檔: \""
 
-#: version.c:800
+#: version.c:839
 msgid "  2nd user exrc file: \""
 msgstr "   第二組使用者 exrc 檔案: \""
 
-#: version.c:806
+#: version.c:845
 msgid "  system gvimrc file: \""
 msgstr "         系統 gvimrc 檔案: \""
 
-#: version.c:810
+#: version.c:849
 msgid "    user gvimrc file: \""
 msgstr "     使用者個人 gvimrc 檔: \""
 
-#: version.c:814
+#: version.c:853
 msgid "2nd user gvimrc file: \""
 msgstr "   第二組個人 gvimrc 檔案: \""
 
-#: version.c:819
+#: version.c:858
 msgid "3rd user gvimrc file: \""
 msgstr "   第三組個人 gvimrc 檔案: \""
 
-#: version.c:826
+#: version.c:865
 msgid "    system menu file: \""
 msgstr "           系統選單設定檔: \""
 
-#: version.c:834
+#: version.c:873
 msgid "  fall-back for $VIM: \""
 msgstr "              $VIM 預設值: \""
 
-#: version.c:840
+#: version.c:879
 msgid " f-b for $VIMRUNTIME: \""
 msgstr "       $VIMRUNTIME 預設值: \""
 
-#: version.c:844
+#: version.c:883
 msgid "Compilation: "
 msgstr "編譯方式: "
 
-#: version.c:850
+#: version.c:889
 msgid "Compiler: "
 msgstr "編譯器: "
 
-#: version.c:855
+#: version.c:894
 msgid "Linking: "
 msgstr "鏈結方式: "
 
-#: version.c:860
+#: version.c:899
 msgid "  DEBUG BUILD"
 msgstr "  除錯版本"
 
-#: version.c:895
+#: version.c:934
 msgid "VIM - Vi IMproved"
 msgstr "VIM - Vi IMproved"
 
-#: version.c:897
+#: version.c:936
 msgid "version "
 msgstr "版本   "
 
-#: version.c:898
+#: version.c:937
 msgid "by Bram Moolenaar et al."
 msgstr "維護者: Bram Moolenaar et al."
 
-#: version.c:899
+#: version.c:938
 msgid "Vim is open source and freely distributable"
 msgstr "Vim 為可自由散佈的開放原始碼軟體"
 
-#: version.c:901
+#: version.c:940
 msgid "Help poor children in Uganda!"
-msgstr "幫助烏干達的可憐孩童!"
+msgstr "請幫助烏干達的可憐孩童!"
 
-#: version.c:902
+#: version.c:941
 msgid "type  :help iccf<Enter>       for information "
 msgstr "進一步說明請輸入          :help iccf<Enter>"
 
-#: version.c:904
+#: version.c:943
 msgid "type  :q<Enter>               to exit         "
 msgstr "要離開請輸入                  :q<Enter>            "
 
-#: version.c:905
+#: version.c:944
 msgid "type  :help<Enter>  or  <F1>  for on-line help"
 msgstr "線上說明請輸入                :help<Enter>         "
 
-#: version.c:906
+#: version.c:945
 msgid "type  :help version6<Enter>   for version info"
 msgstr "新版本資訊請輸入              :help version6<Enter>"
 
-#: version.c:909
+#: version.c:948
 msgid "Running in Vi compatible mode"
 msgstr "Vi 相容模式"
 
-#: version.c:910
+#: version.c:949
 msgid "type  :set nocp<Enter>        for Vim defaults"
 msgstr "如果要完全模擬傳統 Vi 請輸入 :set nocp<Enter>"
 
-#: version.c:911
+#: version.c:950
 msgid "type  :help cp-default<Enter> for info on this"
 msgstr "如果需要對 Vi 相容模式的進一步說明請輸入 :help cp-default<Enter>"
 
-#: version.c:951
+#: version.c:990
 msgid "WARNING: Windows 95/98/ME detected"
 msgstr "注意: 偵測到 Windows 95/98/ME"
 
-#: version.c:954
+#: version.c:993
 msgid "type  :help windows95<Enter>  for info on this"
 msgstr "如果需要對 Windows 95 支援的更多資訊請輸入 :help windows95<Enter>"
 
@@ -5500,16 +5572,49 @@ msgstr "已經只剩一個視窗了"
 msgid "E445: Other window contains changes"
 msgstr "E445: 其它視窗有更動資料"
 
-#: window.c:4336
+#: window.c:4340
 msgid "E446: No file name under cursor"
 msgstr "E446: 游標處沒有檔名"
 
-#: window.c:4453
+#: window.c:4457
 #, c-format
 msgid "E447: Can't find file \"%s\" in path"
 msgstr "E447: 在路徑中找不到檔案 \"%s\""
 
-#: globals.h:869
+#: ../GvimExt/gvimext.cpp:568
+msgid "Edit with &multiple Vims"
+msgstr "使用多個 Vim session 編輯(&M)"
+
+#: ../GvimExt/gvimext.cpp:574
+msgid "Edit with single &Vim"
+msgstr "只使用同一個 Vim session 編輯(&V)"
+
+#: ../GvimExt/gvimext.cpp:586
+msgid "Edit with &Vim"
+msgstr "使用 Vim 編輯此檔(&V)"
+
+#: ../GvimExt/gvimext.cpp:610
+msgid "Edit with existing Vim - &"
+msgstr "使用執行中的 Vim session 編輯 - &"
+
+#: ../GvimExt/gvimext.cpp:734
+msgid "Edits the selected file(s) with Vim"
+msgstr "使用 Vim 編輯已選取的檔案"
+
+#: ../GvimExt/gvimext.cpp:873 ../GvimExt/gvimext.cpp:951
+msgid "Error creating process: Check if gvim is in your path!"
+msgstr "無法執行程式: 請檢查 gvim 有沒有在你的 PATH 變數裡!"
+
+#: ../GvimExt/gvimext.cpp:874 ../GvimExt/gvimext.cpp:888
+#: ../GvimExt/gvimext.cpp:952
+msgid "gvimext.dll error"
+msgstr "gvimext.dll 錯誤"
+
+#: ../GvimExt/gvimext.cpp:887
+msgid "Path length too long!"
+msgstr "路徑長度太長!"
+
+#: globals.h:878
 msgid "--No lines in buffer--"
 msgstr "--緩衝區無資料--"
 
@@ -5517,304 +5622,326 @@ msgstr "--緩衝區無資料--"
 #. * The error messages that can be shared are included here.
 #. * Excluded are errors that are only used once and debugging messages.
 #.
-#: globals.h:961
+#: globals.h:1019
 msgid "Command aborted"
 msgstr "命令被強制中斷執行"
 
-#: globals.h:962
+#: globals.h:1020
 msgid "Argument required"
 msgstr "需要指令參數"
 
-#: globals.h:963
+#: globals.h:1021
 msgid "E10: \\ should be followed by /, ? or &"
 msgstr "E10: \\ 後面應該有 / ? 或 &"
 
-#: globals.h:965
+#: globals.h:1023
 msgid "E11: Invalid in command-line window; <CR> executes, CTRL-C quits"
 msgstr "E11: 不能在命令列視窗中使用。<CR>執行，CTRL-C 離開"
 
-#: globals.h:967
+#: globals.h:1025
 msgid "E12: Command not allowed from exrc/vimrc in current dir or tag search"
 msgstr "E12: exrc/vimrc 裡的指令無法執行"
 
-#: globals.h:968
+#: globals.h:1026
 msgid "E13: File exists (use ! to override)"
 msgstr "E13: 檔案已經存在 (可用 ! 強制取代)"
 
-#: globals.h:969
+#: globals.h:1027
 msgid "Command failed"
 msgstr "命令執行失敗"
 
-#: globals.h:970
+#: globals.h:1028
 msgid "Internal error"
 msgstr "內部錯誤"
 
-#: globals.h:971
+#: globals.h:1029
 msgid "Interrupted"
 msgstr "已中斷"
 
-#: globals.h:972
+#: globals.h:1030
 msgid "E14: Invalid address"
 msgstr "E14: 不正確的位址"
 
-#: globals.h:973
+#: globals.h:1031
 msgid "Invalid argument"
 msgstr "不正確的參數"
 
-#: globals.h:974
+#: globals.h:1032
 #, c-format
 msgid "Invalid argument: %s"
 msgstr "不正確的參數: %s"
 
-#: globals.h:976
+#: globals.h:1034
 #, c-format
 msgid "E15: Invalid expression: %s"
 msgstr "E15: 不正確的運算式: %s"
 
-#: globals.h:978
+#: globals.h:1036
 msgid "E16: Invalid range"
 msgstr "E16: 不正確的範圍"
 
-#: globals.h:979
+#: globals.h:1037
 msgid "Invalid command"
 msgstr "不正確的命令"
 
-#: globals.h:981
+#: globals.h:1039
 #, c-format
 msgid "E17: \"%s\" is a directory"
 msgstr "E17: \"%s\" 是目錄"
 
-#: globals.h:984
+#: globals.h:1042
 msgid "E18: Unexpected characters before '='"
 msgstr "E18: '=' 前面出現了錯誤的字元"
 
-#: globals.h:986
+#: globals.h:1044
 msgid "E19: Mark has invalid line number"
 msgstr "E19: 標記的行號錯誤"
 
-#: globals.h:987
+#: globals.h:1045
 msgid "E20: Mark not set"
 msgstr "E20: 沒有設定標記"
 
-#: globals.h:988
+#: globals.h:1046
 msgid "E21: Cannot make changes, 'modifiable' is off"
 msgstr "E21: 因為 'modifiable' 選項是關閉的，所以不能修改"
 
-#: globals.h:989
+#: globals.h:1047
 msgid "E22: Scripts nested too deep"
 msgstr "E22: 巢狀遞迴呼叫太多層"
 
-#: globals.h:990
+#: globals.h:1048
 msgid "E23: No alternate file"
 msgstr "E23: 沒有替代的檔案"
 
-#: globals.h:991
+#: globals.h:1049
 msgid "E24: No such abbreviation"
 msgstr "E24: 沒有這個 abbreviation 對應"
 
-#: globals.h:992
+#: globals.h:1050
 msgid "No ! allowed"
 msgstr "不可使用 '!'"
 
-#: globals.h:994
+#: globals.h:1052
 msgid "E25: GUI cannot be used: Not enabled at compile time"
 msgstr "E25: 因為編譯時沒有加入圖型界面的程式碼，所以無法使用圖型界面"
 
-#: globals.h:997
+#: globals.h:1055
 msgid "E26: Hebrew cannot be used: Not enabled at compile time\n"
 msgstr "E26: 因為編譯時沒有加入 Hebrew 的程式碼，所以無法使用 Hebrew\n"
 
-#: globals.h:1000
+#: globals.h:1058
 msgid "E27: Farsi cannot be used: Not enabled at compile time\n"
 msgstr "E27: 因為編譯時沒有加入 Farsi 的程式碼，所以無法使用 Farsi\n"
 
-#: globals.h:1003
+#: globals.h:1061
 #, c-format
 msgid "E28: No such highlight group name: %s"
 msgstr "E28: 沒有名為 '%s' 的 highlight group"
 
-#: globals.h:1005
+#: globals.h:1063
 msgid "E29: No inserted text yet"
 msgstr "E29: 還沒有插入文字過"
 
-#: globals.h:1006
+#: globals.h:1064
 msgid "E30: No previous command line"
 msgstr "E30: 沒有前一項命令"
 
-#: globals.h:1007
+#: globals.h:1065
 msgid "E31: No such mapping"
 msgstr "E31: 沒有這個 mapping 對應"
 
-#: globals.h:1008
+#: globals.h:1066
 msgid "No match"
 msgstr "找不到"
 
-#: globals.h:1009
+#: globals.h:1067
 #, c-format
 msgid "No match: %s"
 msgstr "找不到: %s"
 
-#: globals.h:1010
+#: globals.h:1068
 msgid "E32: No file name"
 msgstr "E32: 沒有檔名"
 
-#: globals.h:1011
+#: globals.h:1069
 msgid "E33: No previous substitute regular expression"
 msgstr "E33: 沒有前一個搜尋/取代的命令"
 
-#: globals.h:1012
+#: globals.h:1070
 msgid "E34: No previous command"
 msgstr "E34: 沒有前一個命令"
 
-#: globals.h:1013
+#: globals.h:1071
 msgid "E35: No previous regular expression"
 msgstr "E35: 沒有前一個搜尋指令"
 
-#: globals.h:1014
+#: globals.h:1072
 msgid "No range allowed"
 msgstr "不可使用範圍指令"
 
-#: globals.h:1016
+#: globals.h:1074
 msgid "E36: Not enough room"
 msgstr "E36: 沒有足夠的空間"
 
-#: globals.h:1018
+#: globals.h:1076
 #, c-format
 msgid "Can't create file %s"
 msgstr "不能建立檔案 %s"
 
-#: globals.h:1019
+#: globals.h:1077
 msgid "Can't get temp file name"
 msgstr "無法得知暫存檔名"
 
-#: globals.h:1020
+#: globals.h:1078
 #, c-format
 msgid "Can't open file %s"
 msgstr "無法開啟檔案 %s"
 
-#: globals.h:1021
+#: globals.h:1079
 #, c-format
 msgid "Can't read file %s"
 msgstr "無法讀取檔案 %s"
 
-#: globals.h:1022
+#: globals.h:1080
 msgid "E37: No write since last change (use ! to override)"
 msgstr "E37: 已更改過檔案但尚未存檔 (可用 ! 強制執行)"
 
-#: globals.h:1023
+#: globals.h:1081
 msgid "E38: Null argument"
 msgstr "E38: 空的 (Null) 參數"
 
-#: globals.h:1025
+#: globals.h:1083
 msgid "E39: Number expected"
 msgstr "E39: 應該要有數字"
 
-#: globals.h:1028
+#: globals.h:1086
 #, c-format
 msgid "E40: Can't open errorfile %s"
 msgstr "E40: 無法開啟錯誤檔案 %s"
 
-#: globals.h:1031
+#: globals.h:1089
 msgid "E41: Out of memory!"
 msgstr "E41: 記憶體不足!"
 
-#: globals.h:1034
+#: globals.h:1092
 msgid "Pattern not found"
 msgstr "找不到"
 
-#: globals.h:1036
+#: globals.h:1094
 #, c-format
 msgid "Pattern not found: %s"
 msgstr "找不到 %s"
 
-#: globals.h:1037
+#: globals.h:1095
 msgid "Argument must be positive"
 msgstr "參數應該是正數"
 
-#: globals.h:1039
+#: globals.h:1097
 msgid "E42: No Errors"
 msgstr "E42: 沒有錯誤"
 
-#: globals.h:1041
+#: globals.h:1099
 msgid "E43: Damaged match string"
 msgstr "E43: 符合字串有問題"
 
-#: globals.h:1042
+#: globals.h:1100
 msgid "E44: Corrupted regexp program"
 msgstr "E44: regexp 有問題"
 
-#: globals.h:1043
+#: globals.h:1101
 msgid "E45: 'readonly' option is set (use ! to override)"
 msgstr "E45: 有設定 'readonly' 選項(唯讀) (可用 ! 強制執行)"
 
-#: globals.h:1045
+#: globals.h:1103
 #, c-format
 msgid "E46: Cannot set read-only variable \"%s\""
 msgstr "E46: 無法設定唯讀變數 \"%s\""
 
-#: globals.h:1048
+#: globals.h:1106
 msgid "E47: Error while reading errorfile"
 msgstr "E47: 讀取錯誤檔案失敗"
 
-#: globals.h:1051
+#: globals.h:1109
 msgid "E48: Not allowed in sandbox"
 msgstr "E48: 不能在 sandbox 裡出現"
 
-#: globals.h:1053
+#: globals.h:1111
 msgid "E49: Invalid scroll size"
 msgstr "E49: 錯誤的捲動大小"
 
-#: globals.h:1054
+#: globals.h:1112
 msgid "E91: 'shell' option is empty"
 msgstr "E91: 'E71: 選項 'shell' 未設定"
 
-#: globals.h:1055
+#: globals.h:1113
 msgid "E72: Close error on swap file"
 msgstr "E72: 暫存檔關閉錯誤"
 
-#: globals.h:1056
+#: globals.h:1114
 msgid "E73: tag stack empty"
 msgstr "E73: 標籤堆疊已空"
 
-#: globals.h:1057
+#: globals.h:1115
 msgid "E74: Command too complex"
 msgstr "E74: 命令太複雜"
 
-#: globals.h:1058
+#: globals.h:1116
 msgid "E75: Name too long"
 msgstr "E75: 名字太長"
 
-#: globals.h:1059
+#: globals.h:1117
 msgid "E76: Too many ["
 msgstr "E76: 太多 ["
 
-#: globals.h:1060
+#: globals.h:1118
 msgid "E77: Too many file names"
 msgstr "E77: 太多檔名"
 
-#: globals.h:1061
+#: globals.h:1119
 msgid "Trailing characters"
 msgstr "你輸入了多餘的字元"
 
-#: globals.h:1062
+#: globals.h:1120
 msgid "E78: Unknown mark"
 msgstr "E78: 無法辦識的標記"
 
-#: globals.h:1063
+#: globals.h:1121
 msgid "E79: Cannot expand wildcards"
 msgstr "E79: 無法展開萬用字元"
 
-#: globals.h:1064
+#: globals.h:1122
 msgid "E80: Error while writing"
 msgstr "E80: 寫入錯誤"
 
-#: globals.h:1065
+#: globals.h:1123
 msgid "Zero count"
 msgstr "數到零 (?)"
 
-#: globals.h:1067
+#: globals.h:1125
 msgid "E81: Using <SID> not in a script context"
 msgstr "E81: <SID> 不能在 script 本文外使用."
+
+#~ msgid "Unable to send reply"
+#~ msgstr "無法傳送回應訊息"
+
+#~ msgid "E241: Unable to send to Vim server"
+#~ msgstr "E241: 無法傳送到 Vim 伺服器"
+
+#~ msgid ""
+#~ "\n"
+#~ "Send failed. No command server present ?\n"
+#~ msgstr ""
+#~ "\n"
+#~ "傳送失敗。沒有命令伺服器存在 ?\n"
+
+#~ msgid "PC (32 bits Vim)"
+#~ msgstr "PC (32 位元 Vim)"
+
+#~ msgid "PC (16 bits Vim)"
+#~ msgstr "PC (16 位元 Vim)"
+
+#~ msgid "E362: Unsupported screen mode"
+#~ msgstr "E362: 螢幕模式不支援"
 
 #~ msgid "No servers found for this display"
 #~ msgstr "此Display沒有伺服器(Servers)"

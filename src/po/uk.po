@@ -3154,8 +3154,8 @@ msgid "--help\t\tShow Gnome arguments"
 msgstr "--help\t\tПоказати аргументи Gnome"
 
 #: main.c:2512
-msgid "Send failed. Trying to execute locally\n"
-msgstr "Не вдалося в╕д╕слати дан╕. Спробу╓мо виконати на м╕сц╕\n"
+msgid "\nSend failed. Trying to execute locally\n"
+msgstr "\nНе вдалося в╕д╕слати дан╕. Спробу╓мо виконати на м╕сц╕\n"
 
 #: main.c:2533 main.c:2554
 #, c-format

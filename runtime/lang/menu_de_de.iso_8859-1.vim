@@ -1,7 +1,7 @@
-" Menu Translations:	German
+" Menu Translations:	German / Deutsch
 " Maintainer:		Johannes Zellner <johannes@zellner.org>
 " Originally By:	Marcin Dalecki <dalecki@cs.net.pl>
-" Last Change:	Son, 09 Sep 2001 15:43:32 +0200
+" Last Change:	Sat, 15 Sep 2001 18:17:41 +0200
 " vim:set foldmethod=marker:
 
 " Quit when menu translations have already been done.
@@ -263,3 +263,11 @@ if has("toolbar")
 endif
 " }}} TOOLBAR
 
+" {{{ DIALOG TEXTS
+let g:menutrans_no_file = "[Keine Datei]"
+let g:menutrans_help_dialog = "Geben Sie einen Befehl oder ein Wort ein, für das Sie Hilfe benötigen:\n\nVerwenden Sie i_ für Eingabe ('input') Befehle (z.B.: i_CTRL-X)\nVerwenden Sie c_ für Befehls-Zeilen ('command-line') Befehle (z.B.: c_<Del>)\nVerwenden Sie ' für Options-Namen (z.B.: 'shiftwidth')"
+let g:menutrans_path_dialog = "Geben Sie Such-Pfade für Dateien ein.\nTrennen Sie die Verzeichnis-Namen durch Kommata."
+let g:menutrans_tags_dialog = "Geben Sie die Namen der 'tag'-Dateien ein.\nTrennen Sie die Namen durch Kommata."
+let g:menutrans_textwidth_dialog = "Geben Sie eine neue Text-Breite ein (oder 0, um die Formatierung abzuschalten)"
+let g:menutrans_fileformat_dialog = "Wählen Sie ein Datei-Format aus"
+" }}}

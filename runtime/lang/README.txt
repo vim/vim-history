@@ -6,7 +6,7 @@ Translated menus
 The contents of each menu file is a sequence of lines with "menutrans"
 commands.  Read one of the existing files to get an idea of how this works.
 
-In the on-line help:
+More information in the on-line help:
 
 	:help multilang-menus
 	:help :menutrans
@@ -49,4 +49,4 @@ Translated messages
 
 This requires doing "make install" in the "src" directory.  It will compile
 the portable files "src/po/*.po" into binary ".mo" files and place them in the
-right place.
+right directory.

@@ -1,4 +1,4 @@
-README_dos.txt for version 6.0av of Vim: Vi IMproved.
+README_dos.txt for version 6.0aw of Vim: Vi IMproved.
 
 This file explains the installation of Vim on MS-DOS and MS-Windows systems.
 See "README.txt" for general information about Vim.
@@ -16,7 +16,7 @@ selections.  A few things to watch out for:
 
 - When an existing installation is detected, you are offered to first remove
   this.  The uninstall program is then started while the install program waits
-  for it to complete.  Sometimes the windows overlap eachother, which can be
+  for it to complete.  Sometimes the windows overlap each other, which can be
   confusing.  Be sure the complete the uninstalling before continuing the
   installation.  Watch the taskbar for uninstall windows.
 
@@ -32,7 +32,7 @@ selections.  A few things to watch out for:
 B. Using .zip files
 -------------------
 
-These are the normal steps to install Vim:
+These are the normal steps to install Vim from the .zip archives:
 
 1. Go to the directory where you want to put the Vim files.  Examples:
 	cd C:\
@@ -45,7 +45,7 @@ These are the normal steps to install Vim:
    do
 	cd C:\
    Binary and runtime Vim archives are normally unpacked in the same location,
-   on top of eachother.
+   on top of each other.
 
 2. Unpack the zip archives.  This will create a new directory "vim\vim60",
    in which all the distributed Vim files are placed.  Since the directory
@@ -57,8 +57,8 @@ These are the normal steps to install Vim:
 
    You need to unpack the runtime archive and at least one of the binary
    archives.  When using more than one binary version, be careful not to
-   overwrite one version with the other, the names of the executables are the
-   same.
+   overwrite one version with the other, the names of the executables
+   "vim.exe" and "gvim.exe" are the same.
 
    After you unpacked the files, you can still move the whole directory tree
    to another location.  That is where they will stay, the install program
@@ -98,7 +98,7 @@ Remarks:
 
 - To avoid confusion between distributed files of different versions and your
   own modified vim scripts, it is recommended to use this directory layout:
-  ("C:\vim" is used here as the root, replace with the path you use)
+  ("C:\vim" is used here as the root, replace it with the path you use)
   Your own files:
 	C:\vim\_vimrc			Your personal vimrc.
 	C:\vim\_viminfo			Dynamic info for 'viminfo'.
@@ -119,15 +119,14 @@ Remarks:
   to your autoexec.bat.  Examples:
 	set VIM=c:\vim
 	set VIM=d:\editors\vim
-  The install.exe program can move the Vim executable or set $VIM for you.
 
 - If you have told the "install.exe" program to add the "Edit with Vim" menu
   entry, you can remove it by running the "uninstal.exe".  See
   ":help win32-popup-menu".
 
 - In Windows 95/98/NT you can create a shortcut to Vim.  This works for all
-  DOS and Win32 console versions.  This gives you the opportunity to set
-  defaults for the Console where Vim runs in.
+  DOS and Win32 console versions.  For the console version this gives you the
+  opportunity to set defaults for the Console where Vim runs in.
 
   1. On the desktop, click right to get a menu.  Select New/Shortcut.
   2. In the dialog, enter Command line: "C:\command.com".  Click "Next".

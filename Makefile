@@ -71,7 +71,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0av
+MINOR = 0aw
 
 # CHECKLIST for creating a new version:
 #
@@ -615,6 +615,9 @@ RT_ALL =	\
 		runtime/tutor/tutor \
 		runtime/tutor/tutor.vim \
 		runtime/vimrc_example.vim \
+
+# runtime files for all distributions without CR-NL translation
+RT_ALL_BIN =	\
 		runtime/procset.ps \
 
 # runtime script files
@@ -668,8 +671,11 @@ RT_AMI_DOS =	\
 RT_DOS =	\
 		README_dos.txt \
 		runtime/rgb.txt \
-		runtime/evwin.ps \
 		vimtutor.bat \
+
+# DOS runtime without CR-LF translation (also in the extra archive)
+RT_DOS_BIN =	\
+		runtime/evwin.ps \
 
 # Amiga runtime (also in the extra archive)
 RT_AMI =	\
@@ -696,6 +702,7 @@ RT_EXTRA =	\
 		$(RT_AMI) \
 		$(RT_AMI_DOS) \
 		$(RT_DOS) \
+		$(RT_DOS_BIN) \
 		runtime/evmac.ps \
 		runtime/evvms.ps \
 		README_mac.txt \
@@ -862,6 +869,7 @@ unixrt: dist prepare
 	mkdir dist/$(VIMRTDIR)
 	tar cf - \
 		$(RT_ALL) \
+		$(RT_ALL_BIN) \
 		$(RT_UNIX) \
 		$(RT_UNIX_DOS_BIN) \
 		| (cd dist/$(VIMRTDIR); tar xf -)
@@ -952,6 +960,7 @@ amirt: dist prepare
 	tar cf - \
 		$(ROOT_AMI) \
 		$(RT_ALL) \
+		$(RT_ALL_BIN) \
 		$(RT_SCRIPTS) \
 		$(RT_AMI) \
 		$(RT_NO_UNIX) \
@@ -1019,6 +1028,8 @@ dosrt: dist no_title.vim dist/$(COMMENT_RT)
 	rmdir dist/vim/$(VIMRTDIR)/runtime
 	find dist/vim/$(VIMRTDIR) -type f -exec $(VIM) -u no_title.vim -c ":set tx|wq" {} \;
 	cp $(RT_UNIX_DOS_BIN) dist/vim/$(VIMRTDIR)
+	cp $(RT_ALL_BIN) dist/vim/$(VIMRTDIR)
+	cp $(RT_DOS_BIN) dist/vim/$(VIMRTDIR)
 	cd dist && zip -9 -rD -z vim$(VERSION)rt.zip vim <$(COMMENT_RT)
 
 dosbin: dosbin_gvim dosbin_w32 dosbin_d32 dosbin_d16 dosbin_ole dosbin_s
@@ -1144,7 +1155,7 @@ doslang: dist no_title.vim dist/$(COMMENT_LANG)
 # Same for cs.mo and cs.cp1250.mo.
 	for i in $(LANG_DOS); do \
 	      if test "$$i" != "src/po/ja.mo" -a "$$i" != "src/po/cs.mo"; then \
-		n=`echo $$i | sed -e "s+src/po/\([a-zA-Z_]*\)\(.sjis\)*\(.cp1250\)*.mo+\1+"`; \
+		n=`echo $$i | sed -e "s+src/po/\([-a-zA-Z0-9_]*\(.UTF-8\)*\)\(.sjis\)*\(.cp1250\)*.mo+\1+"`; \
 		mkdir dist/vim/$(VIMRTDIR)/lang/$$n; \
 		mkdir dist/vim/$(VIMRTDIR)/lang/$$n/LC_MESSAGES; \
 		cp $$i dist/vim/$(VIMRTDIR)/lang/$$n/LC_MESSAGES/vim.mo; \

@@ -2528,7 +2528,7 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 # ifdef USE_LONG_FNAME
 	if (USE_LONG_FNAME)
 # endif
-	    fname_case(sfname);	    /* set correct case for short file name */
+	    fname_case(sfname, 0);   /* set correct case for short file name */
 #endif
 
 #ifdef FEAT_LISTCMDS
@@ -2860,8 +2860,9 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 #endif
 
 #ifdef FEAT_SUN_WORKSHOP
-	if (usingSunWorkShop && curbuf->b_ffname != NULL)
-	    vim_chdirfile(curbuf->b_ffname);
+	if (usingSunWorkShop && curbuf->b_ffname != NULL
+				     && vim_chdirfile(curbuf->b_ffname) == OK)
+	    shorten_fnames(TRUE);
 #endif
 	/*
 	 * Careful: open_buffer() and apply_autocmds() may change the current
@@ -2996,8 +2997,9 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 	need_start_insertmode = TRUE;
 
 #ifdef FEAT_SUN_WORKSHOP
-    if (usingSunWorkShop && curbuf->b_ffname != NULL)
-	vim_chdirfile(curbuf->b_ffname);
+    if (usingSunWorkShop && curbuf->b_ffname != NULL
+				     && vim_chdirfile(curbuf->b_ffname) == OK)
+	shorten_fnames(TRUE);
 
     if (gui.in_use && curbuf != NULL && curbuf->b_fname != NULL)
 	workshop_file_opened((char *)curbuf->b_ffname, curbuf->b_p_ro);
@@ -3078,6 +3080,8 @@ ex_append(eap)
      * it is the same than "start"  -- Acevedo */
     curbuf->b_op_start.lnum = (eap->line2 < curbuf->b_ml.ml_line_count) ?
 	eap->line2 + 1 : curbuf->b_ml.ml_line_count;
+    if (eap->cmdidx != CMD_append)
+	--curbuf->b_op_start.lnum;
     curbuf->b_op_end.lnum = (eap->line2 < lnum)
 					     ? lnum : curbuf->b_op_start.lnum;
     curbuf->b_op_start.col = curbuf->b_op_end.col = 0;

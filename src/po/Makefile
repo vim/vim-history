@@ -3,9 +3,9 @@
 # TODO make this configurable
 # Note: ja.sjis is only for MS-Windows, it's not installed on Unix
 # cs.cp1250 also is only for MS-Windows
-LANGUAGES = af cs de es fr it ja ko pl sk tr uk zh_TW
+LANGUAGES = af cs de es fr it ja ko pl sk tr uk zh_TW zh_CN zh_CN.UTF-8
 MOFILES = af.mo cs.mo de.mo es.mo fr.mo it.mo ja.mo \
-		ko.mo pl.mo sk.mo tr.mo uk.mo zh_TW.mo
+		ko.mo pl.mo sk.mo tr.mo uk.mo zh_TW.mo zh_CN.mo zh_CN.UTF-8.mo
 
 PACKAGE = vim
 SHELL = /bin/sh
@@ -55,8 +55,10 @@ uninstall:
 converted: ja.sjis.mo cs.cp1250.mo
 
 # Convert ja.po to create ja.sjis.po.  Requires doubling backslashes in the
-# second byte.
-ja.sjis.po: ja.po sjiscorr
+# second byte.  Don't depend on sjiscorr, it should only be compiled when
+# ja.sjis.po is outdated.
+ja.sjis.po: ja.po
+	@$(MAKE) sjiscorr
 	iconv -f euc-jp -t cp932 ja.po | ./sjiscorr > ja.sjis.po
 
 sjiscorr: sjiscorr.c

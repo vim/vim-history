@@ -4875,7 +4875,7 @@ ex_quit(eap)
 #ifdef FEAT_CMDWIN
     if (cmdwin_type != 0)
     {
-	cmdwin_result = ESC;
+	cmdwin_result = Ctrl_C;
 	return;
     }
 #endif
@@ -5111,7 +5111,7 @@ ex_exit(eap)
 #ifdef FEAT_CMDWIN
     if (cmdwin_type != 0)
     {
-	cmdwin_result = ESC;
+	cmdwin_result = Ctrl_C;
 	return;
     }
 #endif
@@ -5530,7 +5530,7 @@ ex_splitview(eap)
     if (eap->cmdidx == CMD_sfind)
     {
 	fname = find_file_in_path(eap->arg, (int)STRLEN(eap->arg),
-							    FNAME_MESS, TRUE);
+					  FNAME_MESS, TRUE, curbuf->b_ffname);
 	if (fname == NULL)
 	    goto theend;
 	eap->arg = fname;
@@ -5626,7 +5626,7 @@ ex_find(eap)
     int		count;
 
     fname = find_file_in_path(eap->arg, (int)STRLEN(eap->arg), FNAME_MESS,
-									TRUE);
+						      TRUE, curbuf->b_ffname);
     if (eap->addr_count > 0)
     {
 	/* Repeat finding the file "count" times.  This matters when it
@@ -5635,7 +5635,8 @@ ex_find(eap)
 	while (fname != NULL && --count > 0)
 	{
 	    vim_free(fname);
-	    fname = find_file_in_path(NULL, 0, FNAME_MESS, FALSE);
+	    fname = find_file_in_path(NULL, 0, FNAME_MESS,
+						     FALSE, curbuf->b_ffname);
 	}
     }
 
@@ -6662,8 +6663,8 @@ ex_mkrc(eap)
 		    *dirnow = NUL;
 		if (*dirnow != NUL && (ssop_flags & SSOP_SESDIR))
 		{
-		    (void)vim_chdirfile(fname);
-		    shorten_fnames(TRUE);
+		    if (vim_chdirfile(fname) == OK)
+			shorten_fnames(TRUE);
 		}
 		else if (*dirnow != NUL
 			&& (ssop_flags & SSOP_CURDIR) && globaldir != NULL)
