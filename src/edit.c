@@ -2033,7 +2033,7 @@ ins_compl_prep(c)
 	    {
 #ifdef CINDENT
 		/* re-indent the current line */
-		if (curbuf->b_p_cin)
+		if (can_cindent && curbuf->b_p_cin)
 		    fixthisline(get_c_indent);
 #endif
 	    }
