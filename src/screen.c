@@ -1864,6 +1864,24 @@ win_update(wp)
 #endif
 }
 
+#ifdef FEAT_SIGNS
+static int draw_signcolumn __ARGS((win_T *wp));
+
+/*
+ * Return TRUE when window "wp" has a column to draw signs in.
+ */
+    static int
+draw_signcolumn(wp)
+    win_T *wp;
+{
+    return (wp->w_buffer->b_signlist != NULL
+# ifdef FEAT_NETBEANS_INTG
+			    || usingNetbeans
+# endif
+		    );
+}
+#endif
+
 /*
  * Clear the rest of the window and mark the unused lines with "c1".  use "c2"
  * as the filler character.
@@ -1877,7 +1895,7 @@ win_draw_end(wp, c1, c2, row, endrow, hl)
     int		endrow;
     enum hlf_value hl;
 {
-#if defined(FEAT_FOLDING) || defined(FEAT_CMDWIN)
+#if defined(FEAT_FOLDING) || defined(FEAT_SIGNS) || defined(FEAT_CMDWIN)
     int		n = 0;
 # define FDC_OFF n
 #else
@@ -1899,6 +1917,20 @@ win_draw_end(wp, c1, c2, row, endrow, hl)
 	    screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + endrow,
 		    W_ENDCOL(wp) - n, (int)W_ENDCOL(wp),
 		    ' ', ' ', hl_attr(HLF_FC));
+	}
+# endif
+# ifdef FEAT_SIGNS
+	if (draw_signcolumn(wp))
+	{
+	    int nn = n + 2;
+
+	    /* draw the sign column left of the fold column */
+	    if (nn > wp->w_width)
+		nn = wp->w_width;
+	    screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + endrow,
+		    W_ENDCOL(wp) - nn, (int)W_ENDCOL(wp) - n,
+		    ' ', ' ', hl_attr(HLF_SC));
+	    n = nn;
 	}
 # endif
 	screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + endrow,
@@ -1934,6 +1966,20 @@ win_draw_end(wp, c1, c2, row, endrow, hl)
 	    screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + endrow,
 		    W_WINCOL(wp) + n, (int)W_WINCOL(wp) + nn,
 		    ' ', ' ', hl_attr(HLF_FC));
+	    n = nn;
+	}
+#endif
+#ifdef FEAT_SIGNS
+	if (draw_signcolumn(wp))
+	{
+	    int	    nn = n + 2;
+
+	    /* draw the sign column after the fold column */
+	    if (nn > W_WIDTH(wp))
+		nn = W_WIDTH(wp);
+	    screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + endrow,
+		    W_WINCOL(wp) + n, (int)W_WINCOL(wp) + nn,
+		    ' ', ' ', hl_attr(HLF_SC));
 	    n = nn;
 	}
 #endif
@@ -2032,7 +2078,7 @@ fold_line(wp, fold_count, foldinfo, lnum, row)
 
 #ifdef FEAT_SIGNS
     /* If signs are being displayed, add two spaces. */
-    if (wp->w_buffer->b_signlist != NULL)
+    if (draw_signcolumn(wp))
     {
 	len = W_WIDTH(wp) - col;
 	if (len > 0)
@@ -2963,11 +3009,7 @@ win_line(wp, lnum, startrow, endrow)
 		draw_state = WL_SIGN;
 		/* Show the sign column when there are any signs in this
 		 * buffer or when using Netbeans. */
-		if ((wp->w_buffer->b_signlist != NULL
-# ifdef FEAT_NETBEANS_INTG
-			    || usingNetbeans
-# endif
-		    )
+		if (draw_signcolumn(wp)
 # ifdef FEAT_DIFF
 			&& filler_todo <= 0
 # endif
@@ -2980,7 +3022,7 @@ win_line(wp, lnum, startrow, endrow)
 
 		    /* Draw two cells with the sign value or blank. */
 		    c_extra = ' ';
-		    char_attr = 0;
+		    char_attr = hl_attr(HLF_SC);
 		    n_extra = 2;
 
 		    if (row == startrow)

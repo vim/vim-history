@@ -1,4 +1,4 @@
-*sign.txt*      For Vim version 6.2.  Last change: 2003 Apr 19
+*sign.txt*      For Vim version 6.2.  Last change: 2004 Apr 29
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -14,7 +14,7 @@ Sign Support Features				*sign-support*
 {only available when compiled with the |+signs| feature}
 
 ==============================================================================
-1. Introduction					*sign-intro*
+1. Introduction					*sign-intro* *signs*
 
 When a debugger or other IPE tool is driving an editor it needs to be able
 to give specific highlights which quickly tell the user useful information
@@ -45,7 +45,10 @@ There are two steps in using signs:
 
 When signs are defined for a file, Vim will automatically add a column of two
 characters to display them in.  When the last sign is unplaced the column
-disappears again.
+disappears again.  The color of the column is set with the SignColumn group
+|hl-SignColumn|.  Example to set the color: >
+
+	:highlight SignColumn guibg=darkgrey
 
 ==============================================================================
 2. Commands					*sign-commands* *:sig* *:sign*
