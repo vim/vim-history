@@ -681,7 +681,7 @@ gui_mch_submenu_change(menu, colors)
 		if (mp->image != (Pixmap)0)
 		{
 		    XFreePixmap(gui.dpy, mp->image);
-		    get_pixmap(mp->name, &mp->image, NULL);
+		    get_pixmap(mp->name, mp->iconfile, &mp->image, NULL);
 		    if (mp->image != (Pixmap)0)
 			XtVaSetValues(mp->id, XtNbitmap, mp->image, NULL);
 		}
@@ -752,7 +752,7 @@ gui_mch_add_menu_item(menu, idx)
 	}
 	else
 	{
-	    get_pixmap(menu->name, &menu->image, NULL);
+	    get_pixmap(menu->name, menu->iconfile, &menu->image, NULL);
 	    XtSetArg(args[n], XtNlabel, menu->dname); n++;
 	    XtSetArg(args[n], XtNinternalHeight, 1); n++;
 	    XtSetArg(args[n], XtNinternalWidth, 1); n++;

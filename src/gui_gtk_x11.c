@@ -3529,9 +3529,6 @@ gui_mch_get_lightness(guicolor_T pixel)
 
 /*
  * Return the RGB value of a pixel as "#RRGGBB".
- *
- * Unfortunately there appears to be no way to accomplish this entierly
- * without resorting to native X11 functions.
  */
     char_u *
 gui_mch_get_rgb(guicolor_T pixel)
@@ -3553,10 +3550,32 @@ gui_mch_get_rgb(guicolor_T pixel)
 	    (unsigned)c.red >> 8,
 	    (unsigned)c.green >> 8,
 	    (unsigned)c.blue >> 8);
-
-    /* WOAH!!! Returning pointer to static string!  Could be overwritten when
-     * this function is called recursively (e.g., when some event occurs). */
     return retval;
+}
+#endif
+
+#if (defined(FEAT_SYN_HL) && defined(FEAT_PRINTER)) || defined(PROTO)
+/*
+ * Return the RGB value of a pixel as long.
+ */
+    unsigned long
+gui_mch_get_rgb_long(guicolor_T pixel)
+{
+    GdkVisual		*visual;
+    GdkColormap		*cmap;
+    GdkColorContext	*cc;
+    GdkColor		c;
+
+    visual = gtk_widget_get_visual(gui.mainwin);
+    cmap = gtk_widget_get_colormap(gui.mainwin);
+    cc = gdk_color_context_new(visual, cmap);
+
+    c.pixel = pixel;
+    gdk_color_context_query_color(cc, &c);
+
+    return ((c.red & 0xff00) << 8)
+	+ (c.green & 0xff00)
+	+ ((unsigned)c.blue >> 8);
 }
 #endif
 

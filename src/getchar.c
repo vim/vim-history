@@ -2802,8 +2802,11 @@ do_map(maptype, arg, mode, abbrev)
     /* When definding a ":lmap" switch on using them. */
     if (hasarg && maptype != 1 && mode == LANGMAP)
     {
-	curbuf->b_lmap |= B_LMAP_INSERT | B_LMAP_SEARCH;
-	b_lmap_def = curbuf->b_lmap;
+	curbuf->b_im_insert = B_IMODE_LMAP;
+	if (curbuf->b_im_search != B_IMODE_USE_INSERT)
+	    curbuf->b_im_search = B_IMODE_LMAP;
+	b_im_insert_def = B_IMODE_LMAP;
+	b_im_search_def = B_IMODE_LMAP;
 #ifdef FEAT_WINDOWS
 	status_redraw_curbuf();
 #endif

@@ -6356,42 +6356,53 @@ static int vim_backtick __ARGS((char_u *p));
 static int expand_backtick __ARGS((garray_T *gap, char_u *pat, int flags));
 # endif
 
-# if defined(MSDOS) || defined(FEAT_GUI_W16)
+# if defined(MSDOS) || defined(FEAT_GUI_W16) || defined(WIN32)
 /*
- * File name expansion code for MS-DOS and Win16.  It's here because it's
- * shared between those two systems.
+ * File name expansion code for MS-DOS, Win16 and Win32.  It's here because
+ * it's shared between these systems.
  */
+#ifdef WIN32
+# include <windows.h>
+#endif
+
 # if defined(DJGPP) || defined(PROTO)
 #  define _cdecl	    /* DJGPP doesn't have this */
+# else
+#  ifdef __BORLANDC__
+#   define _cdecl _RTLENTRYF
+#  endif
 # endif
-static int _cdecl pstrcmp();  /* BCC does not like the types */
 
+/*
+ * comparison function for qsort in dos_expandpath()
+ */
     static int _cdecl
-pstrcmp(a, b)
-    char_u **a, **b;
+pstrcmp(const void *a, const void *b)
 {
-    return (pathcmp((char *)*a, (char *)*b));
+    return (pathcmp(*(char **)a, *(char **)b));
 }
 
+# ifndef WIN32
     static void
 namelowcpy(
     char_u *d,
     char_u *s)
 {
-#ifdef DJGPP
+#  ifdef DJGPP
     if (USE_LONG_FNAME)	    /* don't lower case on Windows 95/NT systems */
 	while (*s)
 	    *d++ = *s++;
     else
-#endif
+#  endif
 	while (*s)
 	    *d++ = TO_LOWER(*s++);
     *d = NUL;
 }
+# endif
 
 /*
- * Recursive function to expand one path section with wildcards.
- * This only expands '?' and '*'.
+ * Recursively build up a list of files in "gap" matching the first wildcard
+ * in `path'.  Called by expand_wildcards().
  * Return the number of matches found.
  * "path" has backslashes before chars that are not to be expanded, starting
  * at "wildc".
@@ -6405,14 +6416,21 @@ dos_expandpath(
 {
     char_u		*buf;
     char_u		*p, *s, *e;
-    int			start_len, c;
+    int			start_len = gap->ga_len;
+    int			ok;
+#ifdef WIN32
+    WIN32_FIND_DATA	fb;
+    HANDLE		hFind;
+#else
     struct ffblk	fb;
+#endif
     int			matches;
+    int			starts_with_dot;
     int			len;
-    int			dot_at_start;
-    int			tilde_at_end;
+    char_u		*pat;
+    regmatch_T		regmatch;
+    char		saved[4];
 
-    start_len = gap->ga_len;
     /* make room for file name */
     buf = alloc(STRLEN(path) + BASENAMELEN + 5);
     if (buf == NULL)
@@ -6425,7 +6443,7 @@ dos_expandpath(
     p = buf;
     s = buf;
     e = NULL;
-    while (*path)
+    while (*path != NUL)
     {
 	if (path >= wildc && rem_backslash(path))	/* remove a backslash */
 	    ++path;
@@ -6451,40 +6469,58 @@ dos_expandpath(
 	    *p++ = *path++;
     }
     e = p;
-
-    /* if the file name ends in "*" and does not contain a ".", add ".*" */
-    if (e[-1] == '*' && vim_strchr(s, '.') == NULL)
-    {
-	*e++ = '.';
-	*e++ = '*';
-    }
-
-    /* now we have one wildcard component between s and e */
     *e = NUL;
-    dot_at_start = (*s == '.');
+    /* now we have one wildcard component between s and e */
 
-    /* findfirst()/findnext() finds names ending in '~' even when we didn't
-     * ask for them */
-    tilde_at_end = (e[-1] == '*' || e[-1] == '?' || e[-1] == '~');
-
-    /* If we are expanding wildcards we try both files and directories */
-    if ((c = findfirst((char *)buf, &fb,
-			    (*path || (flags & EW_DIR)) ? FA_DIREC : 0)) != 0)
+    starts_with_dot = (*s == '.');
+    pat = file_pat_to_reg_pat(s, e, NULL, FALSE);
+    if (pat == NULL)
     {
-	/* not found */
 	vim_free(buf);
-	return 0; /* unexpanded or empty */
+	return 0;
     }
 
-    while (!c)
+    /* compile the regexp into a program */
+    regmatch.rm_ic = TRUE;		/* Always ignore case */
+    regmatch.regprog = vim_regcomp(pat, TRUE);
+    vim_free(pat);
+
+    if (regmatch.regprog == NULL)
     {
-	namelowcpy((char *)s, fb.ff_name);
-	len = STRLEN(buf);
-	/* ignore names starting with "." unless asked for */
-	/* ignore names ending in "~" unless pat ends in '*', '?' or '~' */
-	if ((*s != '.' || dot_at_start)
-		&& (buf[len - 1] != '~' || tilde_at_end))
+	vim_free(buf);
+	return 0;
+    }
+
+    /* Scan all files in the directory with "dir/ *.*" */
+    mch_memmove(saved, s, 4);
+    STRCPY(s, "*.*");
+#ifdef WIN32
+    hFind = FindFirstFile(buf, &fb);
+    ok = (hFind != INVALID_HANDLE_VALUE);
+#else
+    /* If we are expanding wildcards we try both files and directories */
+    ok =  (findfirst((char *)buf, &fb,
+			    (*path || (flags & EW_DIR)) ? FA_DIREC : 0) == 0);
+#endif
+    mch_memmove(s, saved, 4);
+
+    while (ok)
+    {
+#ifdef WIN32
+	p = (char_u *)fb.cFileName;
+#else
+	p = (char_u *)fb.ff_name;
+#endif
+	/* Ignore entries starting with a dot, unless when asked for. */
+	if ((p[0] != '.' || starts_with_dot)
+		&& vim_regexec(&regmatch, p, (colnr_T)0))
 	{
+#ifdef WIN32
+	    STRCPY(s, p);
+#else
+	    namelowcpy(s, p);
+#endif
+	    len = STRLEN(buf);
 	    STRCPY(buf + len, path);
 	    if (mch_has_wildcard(path))
 	    {
@@ -6502,8 +6538,16 @@ dos_expandpath(
 		    addfile(gap, buf, flags);
 	    }
 	}
-	c = findnext(&fb);
+#ifdef WIN32
+	ok = FindNextFile(hFind, &fb);
+#else
+	ok = (findnext(&fb) == 0);
+#endif
     }
+
+#ifdef WIN32
+    FindClose(hFind);
+#endif
     vim_free(buf);
 
     matches = gap->ga_len - start_len;

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	sendmail
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	October 27, 2000	NOT RELEASED
+" Last Change:	October 27, 2000
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded

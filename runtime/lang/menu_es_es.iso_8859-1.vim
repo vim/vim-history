@@ -1,6 +1,6 @@
 " Menu Translations:	Español
 " Maintainer:		Eduardo F. Amatria <eferna1@platea.pntic.mec.es>
-" Last Change:		2001 May 02
+" Last Change:		2001 May 20
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -53,58 +53,58 @@ menutrans Find\ and\ Rep&lace\.\.\.     Buscar\ y\ R&eemplazar\.\.\.
 menutrans Settings\ &Window		&Ventana\ de\ opciones
 
 " Edit/Global Settings
-menutrans Global\ Settings		Opciones\ globales
+menutrans &Global\ Settings		Opciones\ &globales
 
-menutrans Toggle\ Pattern\ Highlight<Tab>:set\ hls!	Activar/Desactivar\ realzado\ de\ patrones<Tab>:set\ hls!
-menutrans Toggle\ ignore-case<Tab>:set\ ic!		Activar/Desactivar\ ignorar\ la\ caja<Tab>:set\ ic!
-menutrans Toggle\ showmatch<Tab>:set\ sm!		Activar/Desactivar\ mostrar\ coincidencias<Tab>:set\ sm!
+menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls!	Activar/Desactivar\ &realzado\ de\ patrones<Tab>:set\ hls!
+menutrans Toggle\ &Ignore-case<Tab>:set\ ic!		Activar/Desactivar\ &ignorar\ la\ caja<Tab>:set\ ic!
+menutrans Toggle\ &Showmatch<Tab>:set\ sm!		Activar/Desactivar\ &mostrar\ coincidencias<Tab>:set\ sm!
 
-menutrans Context\ lines		Líneas\ de\ contexto
+menutrans &Context\ lines		Líneas\ de\ &contexto
 
-menutrans Virtual\ Edit			Edición\ virtual
+menutrans &Virtual\ Edit			Edición\ &virtual
 menutrans Never				Nunca
 menutrans Block\ Selection		Selección\ de\ bloque
 menutrans Insert\ mode			Modo\ insertar
 menutrans Block\ and\ Insert		Bloque\ e\ insertar
 menutrans Always			Siempre
 
-menutrans Toggle\ Insert\ mode<Tab>:set\ im!	Activar/Desactivar\ modo\ de\ inserción<Tab>:set\ im!
+menutrans Toggle\ Insert\ &Mode<Tab>:set\ im!	Activar/Desactivar\ modo\ de\ in&serción<Tab>:set\ im!
 
-menutrans Search\ Path\.\.\.		Ruta\ de\ búsqueda\.\.\.
+menutrans Search\ &Path\.\.\.		Ruta\ de\ &búsqueda\.\.\.
 
-menutrans Tag\ Files\.\.\.		Ficheros\ de\ «tags»\.\.\.
+menutrans Ta&g\ Files\.\.\.		Ficheros\ de\ «ta&gs»\.\.\.
 
 " GUI options
-menutrans Toggle\ Toolbar		Ocultar/Mostrar\ barra\ de\ herramientas
-menutrans Toggle\ Bottom\ Scrollbar	Ocultar/Mostrar\ barra\ de\ desplazamiento\ inferior
-menutrans Toggle\ Left\ Scrollbar	Ocultar/Mostrar\ barra\ de\ desplazamiento\ izquierda
-menutrans Toggle\ Right\ Scrolbar	Ocultar/Mostrar\ barra\ de\ desplazamiento\ derecha
+menutrans Toggle\ &Toolbar		Ocultar/Mostrar\ barra\ de\ &herramientas
+menutrans Toggle\ &Bottom\ Scrollbar	Ocultar/Mostrar\ barra\ de\ desp&lazamiento\ inferior
+menutrans Toggle\ &Left\ Scrollbar	Ocultar/Mostrar\ barra\ de\ desp&lazamiento\ i&zquierda
+menutrans Toggle\ &Right\ Scrollbar	Ocultar/Mostrar\ barra\ de\ desplazamiento\ &derecha
 
 " Edit/File Settings
-menutrans File\ Settings		Opciones\ del\ fichero
+menutrans F&ile\ Settings		Opciones\ del\ &fichero
 
 " Boolean options
-menutrans Toggle\ Line\ Numbering<Tab>:set\ nu!		Activar/Desactivar\ numeración\ de\ líneas<Tab>:set\ nu!
-menutrans Toggle\ List\ Mode<Tab>:set\ list!		Activar/Desactivar\ modo\ «list»<Tab>:set\ list!
-menutrans Toggle\ Line\ Wrap<Tab>:set\ wrap!		Activar/Desactivar\ doblado\ de\ líneas<Tab>:set\ wrap!	
-menutrans Toggle\ Wrap\ at\ word<Tab>:set\ lbr!		Activar/Desactivar\ doblado\ en\ palabra<Tab>:set\ lbr!
-menutrans Toggle\ expand-tab<Tab>:set\ et!		Activar/Desactivar\ expansión\ de\ tabs<Tab>:set\ et!	
-menutrans Toggle\ auto-indent<Tab>:set\ ai!		Activar/Desactivar\ auto-sangrado<Tab>:set\ ai!
-menutrans Toggle\ C-indenting<Tab>:set\ cin!		Activar/Desactivar\ sangrado\ C<Tab>:set\ cin!
+menutrans Toggle\ Line\ &Numbering<Tab>:set\ nu!		Activar/Desactivar\ &numeración\ de\ líneas<Tab>:set\ nu!
+menutrans Toggle\ &List\ Mode<Tab>:set\ list!		Activar/Desactivar\ modo\ «&list»<Tab>:set\ list!
+menutrans Toggle\ Line\ &Wrap<Tab>:set\ wrap!		Activar/Desactivar\ &doblado\ de\ líneas<Tab>:set\ wrap!	
+menutrans Toggle\ W&rap\ at\ word<Tab>:set\ lbr!		Activar/Desactivar\ doblado\ en\ &palabra<Tab>:set\ lbr!
+menutrans Toggle\ &expand-tab<Tab>:set\ et!		Activar/Desactivar\ &expansión\ de\ tabs<Tab>:set\ et!	
+menutrans Toggle\ &auto-indent<Tab>:set\ ai!		Activar/Desactivar\ &auto-sangrado<Tab>:set\ ai!
+menutrans Toggle\ &C-indenting<Tab>:set\ cin!		Activar/Desactivar\ sangrado\ &C<Tab>:set\ cin!
 
 " other options
-menutrans Shiftwidth	 		Anchura\ del\ sangrado
+menutrans &Shiftwidth	 		Anchura\ del\ &sangrado
 
-menutrans Soft\ Tabstop			Tabulado\ suave
+menutrans Soft\ &Tabstop		&Tabulado\ suave
 
-menutrans Text\ Width\.\.\. 		Anchura\ del\ texto\.\.\.
+menutrans Te&xt\ Width\.\.\. 		Anchura\ del\ te&xto\.\.\.
 
-menutrans File\ Format\.\.\.		Formato\ del\ fichero\.\.\.
+menutrans &File\ Format\.\.\.		&Formato\ del\ fichero\.\.\.
 let g:menutrans_fileformat_dialog = "Seleccione el formato para escribir el fichero"
 
-menutrans Color\ Scheme			Esquema\ de\ colores
+menutrans C&olor\ Scheme			Esquema\ de\ c&olores
 
-menutrans Keymap	Asociación\ de\ teclas
+menutrans &Keymap	Asociación\ de\ teclas
 menutrans None		Ninguna
 
 " Programming menu
@@ -121,8 +121,8 @@ menutrans &Previous\ Error<Tab>:cp	Error\ p&revio<Tab>:cp
 menutrans &Older\ List<Tab>:cold	Lista\ de\ &viejos\ a\ nuevos<Tab>:cold
 menutrans N&ewer\ List<Tab>:cnew	Lista\ de\ &nuevos\ a\ viejos<Tab>:cnew
 menutrans Error\ &Window<Tab>:cwin	Ven&tana\ de\ errores<Tab>:cwin
-menutrans Convert\ to\ HEX<Tab>:%!xxd	Convertir\ a\ &HEX<Tab>:%!xxd
-menutrans Convert\ back<Tab>:%!xxd\ -r	&Convertir\ al\ anterior<Tab>:%!xxd\ -r
+menutrans &Convert\ to\ HEX<Tab>:%!xxd	Convertir\ a\ &HEX<Tab>:%!xxd
+menutrans Conve&rt\ back<Tab>:%!xxd\ -r	&Convertir\ al\ anterior<Tab>:%!xxd\ -r
 
 " Tools.Fold Menu
 menutrans &Enable/Disable\ folds<Tab>zi		&Activar/Desactivar\ pliegues<Tab>zi
@@ -149,7 +149,7 @@ menutrans &Put\ Block	&Poner\ bloque
 menutrans &Buffers		&Buffers
 menutrans &Refresh\ menu	&Refrescar\ menú
 menutrans &Delete		&Suprimir
-menutrans A&lternate		&Alternar
+menutrans &Alternate		&Alternar
 menutrans &Next			Si&guiente
 menutrans &Previous		&Previo 
 let g:menutrans_no_file = "[Sin fichero]"
@@ -173,9 +173,9 @@ menutrans Rotate\ &Down<Tab>^Wr		Rotar\ hacia\ a&bajo<Tab>^Wr
 menutrans &Equal\ Size<Tab>^W=		Mismo\ &tamaño<Tab>^W=
 menutrans &Max\ Height<Tab>^W_		Altura\ &máxima<Tab>^W_
 menutrans M&in\ Height<Tab>^W1_		Altura\ mí&nima<Tab>^W1_
-menutrans Max\ Width<Tab>^W\|		Anchura\ máxima<Tab>^W\|
-menutrans Min\ Width<Tab>^W1\|		Anchura\ mínima<Tab>^W1\|
-menutrans Select\ &Font\.\.\.		Seleccionar\ &fuente\.\.\.
+menutrans Max\ &Width<Tab>^W\|		Anchura\ má&xima<Tab>^W\|
+menutrans Min\ Widt&h<Tab>^W1\|	Anc&hura\ mínima<Tab>^W1\|
+menutrans Select\ Fo&nt\.\.\.		Seleccionar\ &fuente\.\.\.
 
 " The popup menu
 menutrans &Undo		        &Deshacer
@@ -222,13 +222,12 @@ endif
 
 " Syntax menu
 menutrans &Syntax		&Sintaxis
-menutrans Set\ 'syntax'\ only	Activar\ sólo\ «sintaxis»
-menutrans Set\ 'filetype'\ too	Activar\ también\ «tipo\ de\ fichero»
+menutrans Set\ '&syntax'\ only	Activar\ sólo\ «sintaxis»
+menutrans Set\ '&filetype'\ too	Activar\ también\ «tipo\ de\ fichero»
 menutrans &Off			&Desactivar
 menutrans &Manual		&Manual
 menutrans A&utomatic		A&utomática
-menutrans o&n\ (this\ file)	&Activar\ (en\ este\ fichero)
-menutrans o&ff\ (this\ file)	D&esactivar (en\ este\ fichero)
+menutrans on/off\ for\ &This\ file	Activar/Desactivar\ en\ es&te\ fichero
 menutrans Co&lor\ test		&Prueba\ del\ color
 menutrans &Highlight\ test	Prueba\ del\ &realzado
 menutrans &Convert\ to\ HTML	&Convertir\ en\ HTML

@@ -1,6 +1,6 @@
 " Menu Translations:	Afrikaas
 " Maintainer:	        Danie Roux <droux@tuks.co.za>
-" Last Change:	        2001 apr 26
+" Last Change:	        2001 May 18
 
 menutrans clear
 let did_menu_trans = 1
@@ -83,7 +83,7 @@ menutrans Max\ Width<Tab>^W\|		Maksimale\ breedte<Tab>^W\|
 menutrans Min\ Width<Tab>^W1\|		Minimale\ breedte<Tab>^W1\|
 menutrans Rotate\ &Up<Tab>^WR		Roteer\ na\ &bo<Tab>^WR
 menutrans Rotate\ &Down<Tab>^Wr		Roteer\ na\ &onder<Tab>^Wr
-menutrans Select\ &Font\.\.\.		Kies\ font\.\.\.
+menutrans Select\ Fo&nt\.\.\.		Kies\ font\.\.\.
 
 " The popup menu
 menutrans &Undo			&Terug

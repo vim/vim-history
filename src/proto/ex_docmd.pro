@@ -37,4 +37,14 @@ int do_in_runtimepath __ARGS((char_u *name, int all, void (*callback)(char_u *fn
 void dialog_msg __ARGS((char_u *buff, char *format, char_u *fname));
 void set_lang_var __ARGS((void));
 char_u *get_lang_arg __ARGS((expand_T *xp, int idx));
+void mch_print_cleanup __ARGS((void));
+int mch_print_init __ARGS((prt_settings_T *psettings, char_u *jobname, int forceit));
+int mch_print_begin __ARGS((prt_settings_T *psettings));
+void mch_print_end __ARGS((void));
+int mch_print_end_page __ARGS((void));
+int mch_print_begin_page __ARGS((void));
+int mch_print_text_out __ARGS((int x, int y, char_u *p, int len, int *must_break));
+void mch_print_setfont __ARGS((int iBold, int iItalic, int iUnderline));
+void mch_print_set_bg __ARGS((unsigned long bgcol));
+void mch_print_set_fg __ARGS((unsigned long fgcol));
 /* vim: set ft=c : */

@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0af.  Last change: 2001 May 13
+*version6.txt*  For Vim version 6.0ag.  Last change: 2001 May 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -340,6 +340,9 @@ would sell copies of the manual to contribute to Uganda.
 After  "ayy  don't let  ""yy  or  :let @" = val overwrite the "a register.
 Use the unnamed register instead. 
 
+MSDOS: A pattern *.* previously also matched a file name without a dot.  This
+was inconsistent with other versions.
+
 ==============================================================================
 NEW FEATURES
 
@@ -605,6 +608,8 @@ Added Language mapping and 'keymap' to be able to type multi-byte characters:
 - Added 'k' flag in 'statusline': Value of "b:keymap_name" or 'keymap' when
   it's being used.  Uses "<lang>" when no keymap is loaded and ":lmap"s are
   active.  Show this text in the default statusline too.
+- Added the 'iminsert' and 'imsearch' options: Specify use of langmap mappings
+  and Input Method with an option. (Muraoka Taro)
 - When typing a mapping that's not finished yet, display the last character
   under the cursor in Insert mode and Command-line mode.  Looks good for dead
   characters.
@@ -781,12 +786,17 @@ Debugger interface					*new-debug-itf*
 ------------------
 
 This was originally made to work with Sun Visual Workshop. (Gordon Prieur)
-- ":glyph", ":unglyph", ":glyphdef" and ":glyphs" commands: Add a small image
-  in front of a line.
-- ":sense" set menu sensitive on/off
-- ":wsverb"
-- Documentation: |debugger.txt|, |sign.txt|, |workshop.txt|
-- Balloon stuff: 'balloondelay' and 'ballooneval' options.
+See |debugger.txt|, |sign.txt| and |workshop.txt|.
+
+Added the ":sign" command to define and place signs.  They can be displayed
+with two ASCII characters or an icon.  The line after it can be highlighted.
+
+Added the |:wsverb| command to execute debugger commands.
+
+Added balloon stuff: 'balloondelay' and 'ballooneval' options.
+
+Added "icon=" argument for ":menu".  Allows defining a specific icon for a
+ToolBar item.
 
 
 Buffer types						*new-buftype*
@@ -804,8 +814,12 @@ have different kinds of buffers.  For example:
 Printing						*new-printing*
 --------
 
-Win32: Included first implementation of the ":hardcopy" command for printing
-to paper. (Vince Negri, vipin aravind)
+Included first implementation of the ":hardcopy" command for printing
+to paper.  Works for Win32 and Win16. (Vince Negri, vipin aravind)
+Print on other systems by producing PostScript. (Vince Negri)
+
+Made ":harcopy" work with multi-byte characters. (Muraoka Taro, Yasuhiro
+Matsumoto)
 
 
 Ports							*ports-6*
@@ -971,6 +985,12 @@ Normal mode commands: ~
 		g`" to jump to the last known position in a file without side
 		effects.  Also useful in mappings.
 
+[', [`, ]' and ]`
+		move the cursor to the next/previous lowercase mark.
+
+g_		Go to last non-blank in line. (Steve Wall)
+
+
 Options: ~
 
 'autoread'	When detected that a file changed outside of Vim,
@@ -1050,12 +1070,9 @@ Ex commands: ~
 
 :emenu		in Visual mode to execute a ":vmenu" entry.
 
-:popup		pop up a popup menu.
+:popup		Pop up a popup menu.
 
-[', [`, ]' and ]`
-		move the cursor to the next/previous lowercase mark.
-
-g_		Go to last non-blank in line. (Steve Wall)
+:redraw		Redraw the screen even when busy with a script or function.
 
 New marks: ~
 
@@ -1144,15 +1161,19 @@ system. (Charles Campbell)
 
 
 New Syntax files: ~
-Debian Control file and Debian Changelog syntax files. (Wichert Akkerman)
-catalog.vim (Johannes Zellner)
-DSSSL syntax (Johannes Zellner)
+	Debian Control and Debian Changelog syntax files. (Wichert Akkerman)
+	catalog.vim (Johannes Zellner)
+	DSSSL syntax (Johannes Zellner)
 Updated many syntax files to work both with Vim 5.7 and 6.0.
 
 Support for loading a color scheme.  Added the ":colorscheme" command.
 Automatically add menu entries for available schemes.
 Should now properly reset the colors when 'background' or 't_Co' is changed.
 ":highlight clear" deletes all highlighting and sets the default colors.
+For ":set bg&" guess the value.  This allows a color scheme to switch back to
+the default colors.
+When syntax highlighting is switched on and a color scheme was defined, reload
+the color scheme to define the colors.
 
 The ":command" command now accepts a "-bar" argument.  This allows the user
 command to be followed by "| command".
@@ -1730,6 +1751,9 @@ type to int. (Steve Wall)
 "make doslang" in the top directory makes an archive with the menu and .mo
 files for Windows.  This uses the files generated on Unix, these should work
 on MS-Windows as well (needs to be tested). 
+
+Merged a large part of os_vms.c with os_unix.c.  The code was duplicated in
+the past which made maintenance more work.  (Zoltan Arpadffy)
 
 ==============================================================================
 BUG FIXES						*bug-fixes-6*
@@ -2492,5 +2516,18 @@ nextgroup in the second column.
 
 GUI: When 'lazyredraw' is set, 'showmatch' didn't work.  Required flushing
 the output.
+
+Don't define the <NetMouse> termcode in an xterm, reduces the problem when
+someone types <Esc> } in Insert mode.
+
+Made slash_adjust() work correctly for multi-byte characters. (Yasuhiro
+Matsumoto)
+
+DOS and Windows: Expanding *.vim also matched file.vimfoo.  Expand path like
+Unix to avoid problems with Windows dir functions.  Merged the DOS and Win32
+functions.
+
+Win32: Gvimext could not edit more than a few files at once, the length of the
+argument was fixed.
 
  vim:tw=78:

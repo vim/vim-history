@@ -16,7 +16,7 @@
 #include <X11/cursorfont.h>
 
 #include "vim.h"
-#ifdef FEAT_SIGNS
+#ifdef FEAT_SIGN_ICONS
 # include <X11/xpm.h>
 #endif
 
@@ -936,9 +936,7 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 	gui_mch_mousehide(TRUE);
 
 theend:
-#ifdef VMS
-    {}	    /* compiler needs some statement */
-#endif
+    {}	    /* some compilers need a statement here */
 #ifdef FEAT_XIM
     if (string_alloced)
 	XtFree((char *)string);
@@ -1311,6 +1309,9 @@ gui_mch_init()
 #ifdef FEAT_SUN_WORKSHOP
     if (usingSunWorkShop)
 	workshop_connect(app_context);
+#endif
+#ifdef FEAT_SIGN_ICONS
+    sign_gui_started();
 #endif
 
     return OK;
@@ -2832,6 +2833,28 @@ gui_mch_get_rgb(pixel)
 }
 #endif
 
+#if (defined(FEAT_SYN_HL) && defined(FEAT_PRINTER)) || defined(PROTO)
+/*
+ * Return the RGB value of a pixel as long.
+ */
+    unsigned long
+gui_mch_get_rgb_long(
+    guicolor_T	pixel)
+{
+    XColor	xc;
+    Colormap	colormap;
+
+    colormap = DefaultColormap(gui.dpy, XDefaultScreen(gui.dpy));
+
+    xc.pixel = pixel;
+    XQueryColor(gui.dpy, colormap, &xc);
+
+    return ((xc.red & 0xff00) << 8)
+	+ (xc.green & 0xff00)
+	+ ((unsigned)xc.blue >> 8);
+}
+#endif
+
 /*
  * Add the callback functions.
  */
@@ -2941,7 +2964,7 @@ gui_x11_get_last_mouse_event()
 }
 #endif
 
-#if defined(FEAT_SIGNS) || defined(PROTO)
+#if defined(FEAT_SIGN_ICONS) || defined(PROTO)
 
 /* Signs are currently always 2 chars wide.  Hopefully the font is big enough
  * to provide room for the bitmap! */
@@ -2959,18 +2982,19 @@ gui_mch_clearsign(row)
 #endif
 
     void
-gui_mch_drawsign(row, sign_idx)
+gui_mch_drawsign(row, col, typenr)
     int		row;
-    int		sign_idx;		/* index into the highlight table */
+    int		col;
+    int		typenr;
 {
     XImage	*sign;
 
-    if (gui.in_use && (sign = get_debug_sign(sign_idx)) != NULL)
+    if (gui.in_use && (sign = (XImage *)sign_get_image(typenr)) != NULL)
     {
-	XClearArea(gui.dpy, gui.wid, 0, TEXT_Y(row) - sign->height,
+	XClearArea(gui.dpy, gui.wid, TEXT_X(col), TEXT_Y(row) - sign->height,
 		SIGN_WIDTH, gui.char_height, FALSE);
 	XPutImage(gui.dpy, gui.wid, gui.text_gc, sign, 0, 0,
-		(SIGN_WIDTH - sign->width) / 2,
+		TEXT_X(col) + (SIGN_WIDTH - sign->width) / 2,
 		TEXT_Y(row) - sign->height,
 		sign->width, sign->height);
     }
@@ -2978,7 +3002,7 @@ gui_mch_drawsign(row, sign_idx)
 
     XImage *
 gui_mch_register_sign(signfile)
-    char	    *signfile;
+    char_u	    *signfile;
 {
     XpmAttributes   attrs;
     XImage	    *sign;
@@ -2988,7 +3012,7 @@ gui_mch_register_sign(signfile)
      * Setup the color substitution table.
      */
     sign = NULL;
-    if ((signfile[0] != 0) && (signfile[0] != '-'))
+    if (signfile[0] != NUL && signfile[0] != '-')
     {
 	sign = (XImage *)alloc(sizeof(XImage));
 	if (sign != NULL)
@@ -2996,14 +3020,15 @@ gui_mch_register_sign(signfile)
 	    attrs.valuemask = XpmColorSymbols;
 	    attrs.numsymbols = 2;
 	    attrs.colorsymbols = (XpmColorSymbol *)
-		alloc(sizeof(XpmColorSymbol) * attrs.numsymbols);
+			     alloc(sizeof(XpmColorSymbol) * attrs.numsymbols);
 	    attrs.colorsymbols[0].name = "BgColor";
 	    attrs.colorsymbols[0].value = NULL;
 	    attrs.colorsymbols[0].pixel = gui.back_pixel;
 	    attrs.colorsymbols[1].name = "FgColor";
 	    attrs.colorsymbols[1].value = NULL;
 	    attrs.colorsymbols[1].pixel = gui.norm_pixel;
-	    status = XpmReadFileToImage(gui.dpy, signfile, &sign, NULL, &attrs);
+	    status = XpmReadFileToImage(gui.dpy, (char *)signfile,
+							 &sign, NULL, &attrs);
 
 	    if (status == 0)
 	    {
@@ -3017,11 +3042,19 @@ gui_mch_register_sign(signfile)
 		sign = NULL;
 		EMSG(_("E255: Couldn't read in sign data!"));
 	    }
-	    vim_free((char *) attrs.colorsymbols);
+	    vim_free(attrs.colorsymbols);
 	}
     }
 
     return sign;
+}
+
+    void
+gui_mch_destroy_sign(sign)
+    XImage *sign;
+{
+    XFree(sign->data);
+    vim_free(sign);
 }
 #endif
 
@@ -3193,38 +3226,6 @@ static const struct NameToPixmap built_in_pixmaps[] =
     { NULL, NULL} /* end tag */
 };
 
-#ifdef FEAT_SUN_WORKSHOP
-static const char *(sunws_pixmaps[]) =
-{
-    "Build",	"$SPRO_WSDIR/lib/locale/%L/graphics/build.xpm",
-    "Stop At",	"$SPRO_WSDIR/lib/locale/%L/graphics/stopAt.xpm",
-    "Stop In",	"$SPRO_WSDIR/lib/locale/%L/graphics/stopIn.xpm",
-    "Clear At",	"$SPRO_WSDIR/lib/locale/%L/graphics/clearAt.xpm",
-    "Start",	"$SPRO_WSDIR/lib/locale/%L/graphics/start.xpm",
-    "Evaluate",	"$SPRO_WSDIR/lib/locale/%L/graphics/evaluate.xpm",
-    "Eval *",	"$SPRO_WSDIR/lib/locale/%L/graphics/evaluate-star.xpm",
-    "Up",	"$SPRO_WSDIR/lib/locale/%L/graphics/up.xpm",
-    "Down",	"$SPRO_WSDIR/lib/locale/%L/graphics/down.xpm",
-    "Go",	"$SPRO_WSDIR/lib/locale/%L/graphics/go.xpm",
-    "StepInto",	"$SPRO_WSDIR/lib/locale/%L/graphics/stepInto.xpm",
-    "StepOver",	"$SPRO_WSDIR/lib/locale/%L/graphics/stepOver.xpm",
-    "StepOut",	"$SPRO_WSDIR/lib/locale/%L/graphics/stepOut.xpm",
-    "Fix",	"$SPRO_WSDIR/lib/locale/%L/graphics/fix.xpm",
-    "Def",	"$SPRO_WSDIR/lib/locale/%L/graphics/findDef.xpm",
-    "Refs",	"$SPRO_WSDIR/lib/locale/%L/graphics/findRefs.xpm",
-    NULL,	NULL
-};
-
-static Boolean filePredicate __ARGS((String cp));
-
-    static Boolean
-filePredicate(cp)
-    String cp;
-{
-    return True;
-}
-#endif
-
 static void createXpmImages __ARGS((char_u *path, char **xpm, Pixmap *sen, Pixmap *insen));
 
 /*
@@ -3232,21 +3233,33 @@ static void createXpmImages __ARGS((char_u *path, char **xpm, Pixmap *sen, Pixma
  * be NULL.
  */
     void
-get_pixmap(name, sen, insen)
+get_pixmap(name, file, sen, insen)
     char_u	*name;
+    char_u	*file;
     Pixmap	*sen;
     Pixmap	*insen;
 {
     int		builtin_num;		/* index into builtin table */
     int		num_pixmaps;		/* entries in builtin pixmap table */
     char_u	buf[MAXPATHL];		/* buffer storing expanded pathname */
-#ifdef FEAT_SUN_WORKSHOP
-    char	locbuf[MAXPATHL];	/* generate locale pathname */
-#endif
     char	**xpm = NULL;		/* xpm array */
     int		i;
 
     buf[0] = NUL;			/* start with NULL path */
+
+    if (file != NULL)
+    {
+	/* Use the file argument: first as an absolute path (with extension),
+	 * then as a file name (without extension). */
+	createXpmImages(file, NULL, sen, insen);
+	if (*sen == (Pixmap)0
+		&& gui_find_bitmap(name, buf, "xpm") == OK
+		&& buf[0] != NUL)
+	    createXpmImages(buf, NULL, sen, insen);
+	if (*sen != (Pixmap)0)
+	    return;
+    }
+
     num_pixmaps = (sizeof(built_in_pixmaps) / sizeof(built_in_pixmaps[0])) - 1;
     if (STRNCMP(name, "BuiltIn", (size_t)7) == 0)
     {
@@ -3271,40 +3284,6 @@ get_pixmap(name, sen, insen)
 		    break;
 		}
 	    }
-#ifdef FEAT_SUN_WORKSHOP
-	    if (xpm == NULL)
-	    {
-		char_u	*path;		/* path with %L resolved to locale */
-
-		for (i = 0; sunws_pixmaps[i] != NULL; i += 2)
-		{
-		    if (STRCMP(name, sunws_pixmaps[i]) == 0)
-		    {
-			path = (char_u *)XtResolvePathname(gui.dpy, NULL,
-				NULL, ".xpm", sunws_pixmaps[i + 1],
-				NULL, 0, filePredicate);
-			if (path == NULL)  /* neither LANG nor LC_ALL is set */
-			{
-			    char *p = strcpy(locbuf, sunws_pixmaps[i + 1]);
-
-			    while ((p = strstr(p, "%L")) != NULL)
-			    {
-				*p++ = 'C';
-				strcpy(p, &p[1]);
-			    }
-			    path = (char_u *)locbuf;
-			    expand_env(path, buf, MAXPATHL);
-			}
-			else
-			{
-			    expand_env(path, buf, MAXPATHL);
-			    XtFree(path);
-			}
-			break;
-		    }
-		}
-	    }
-#endif
 	}
     }
 

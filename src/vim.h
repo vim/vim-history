@@ -307,6 +307,13 @@ typedef unsigned short u8char_T;
 /* ================ end of the header file puzzle =============== */
 
 /*
+ * Check input method control.
+ */
+#if defined(FEAT_MBYTE_IME) || defined(GLOBAL_IME) || defined(FEAT_XIM)
+# define USE_IM_CONTROL
+#endif
+
+/*
  * For dynamically loaded gettext library.  Currently, only for Win32.
  */
 #ifdef DYNAMIC_GETTEXT
@@ -1504,5 +1511,8 @@ typedef int VimClipboard;	/* This is required for the prototypes. */
 #  define ISSYMLINK(mode) S_ISLNK(mode)
 # endif
 #endif
+
+#define SIGN_BYTE 1	    /* byte value used where sign is displayed;
+			       attribute value is sign type */
 
 #endif /* VIM__H */

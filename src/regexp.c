@@ -275,9 +275,6 @@ toggle_Magic(x)
  *		BRANCH structures using BACK.  Simple cases (one character
  *		per match) are implemented with STAR and PLUS for speed
  *		and to minimize recursive plunges.
- *		Note: We would like to use "\?" instead of "\=", but a "\?"
- *		can be part of a pattern to escape the special meaning of '?'
- *		at the end of the pattern in "?pattern?e".
  *
  * BRACE_LIMITS	This is always followed by a BRACE_SIMPLE or BRACE_COMPLEX
  *		node, and defines the min and max limits to be used for that
@@ -637,7 +634,7 @@ static int	reg_magic;	/* magicness of the pattern: */
  * META contains all characters that may be magic, except '^' and '$'.
  */
 
-static char_u META[] = "%&()*+.123456789<=>@ACDFHIKLMOPSUVWX[_acdfhiklmnopsuvwxz{|~";
+static char_u META[] = "%&()*+.123456789<=>?@ACDFHIKLMOPSUVWX[_acdfhiklmnopsuvwxz{|~";
 
 static int	curchr;
 
@@ -780,7 +777,7 @@ vim_regcomp(expr, magic)
     /* Small enough for pointer-storage convention? */
 #ifdef SMALL_MALLOC		/* 16 bit storage allocation */
     if (regsize >= 65536L - 256L)
-	EMSG_RET_NULL(N_("(ep5) Pattern too long"));
+	EMSG_RET_NULL(N_("E339: Pattern too long"));
 #endif
 
     /* Allocate space. */
@@ -2670,7 +2667,7 @@ vim_regexec_both(line, col)
 #ifdef SIGHASARG
 	if (lc_signal != SIGINT)
 #endif
-	    EMSG(_("(ey8) Crash intercepted; regexp too complex?"));
+	    EMSG(_("E361: Crash intercepted; regexp too complex?"));
 	retval = 0L;
 	goto theend;
     }
@@ -2804,7 +2801,7 @@ vim_regexec_both(line, col)
     }
 
     if (out_of_stack)
-	EMSG(_("(ey9) pattern caused out-of-stack error"));
+	EMSG(_("E363: pattern caused out-of-stack error"));
 
 theend:
     /* Didn't find a match. */

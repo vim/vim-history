@@ -2,7 +2,7 @@
 "
 " Menu Translations:	Japanese (UTF-8)
 " Translated By: 	Muraoka Taro  <koron@tka.att.ne.jp>
-" Last Change:		21:36:27 30-Apr-2001.
+" Last Change:		14-May-2001.
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -29,8 +29,8 @@ menutrans &New<Tab>:enew		新規作成(&N)<Tab>:enew
 menutrans &Close<Tab>:q			閉じる(&C)<Tab>:q
 menutrans &Save<Tab>:w			保存(&S)<Tab>:w
 menutrans Save\ &As\.\.\.<Tab>:sav	名前を付けて保存(&A)\.\.\.<Tab>:sav
-menutrans Show\ &Diff\ with\.\.\.	差分表示(&D)\.\.\.
-menutrans Show\ &Patched\ by\.\.\.	パッチ結果を表示(&P)\.\.\.
+menutrans Split\ &Diff\ with\.\.\.	差分表示(&D)\.\.\.
+menutrans Split\ Patched\ &By\.\.\.	パッチ結果を表示(&P)\.\.\.
 menutrans &Print			印刷(&P)
 menutrans Sa&ve-Exit<Tab>:wqa		保存して終了(&V)<Tab>:wqa
 menutrans E&xit<Tab>:qa			終了(&X)<Tab>:qa
@@ -53,58 +53,57 @@ menutrans Find\ and\ Rep&lace\.\.\.	置換(&E)\.\.\.
 menutrans Settings\ &Window		設定ウィンドウ(&W)
 
 " Edit/Global Settings
-menutrans Global\ Settings		全体設定
-menutrans Toggle\ Pattern\ Highlight<Tab>:set\ hls!
-	\	パターン強調切替<Tab>:set\ hls!
-menutrans Toggle\ ignore-case<Tab>:set\ ic!
-	\	大小文字区別切替<Tab>:set\ ic!
-menutrans Toggle\ showmatch<Tab>:set\ sm!
-	\	マッチ表示切替<Tab>:set\ sm!
-menutrans Context\ lines		カーソル周辺行数
-menutrans Virtual\ Edit			仮想編集
+menutrans &Global\ Settings		全体設定(&G)
+menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls!
+	\	パターン強調切替(&H)<Tab>:set\ hls!
+menutrans Toggle\ &Ignore-case<Tab>:set\ ic!
+	\	大小文字区別切替(&I)<Tab>:set\ ic!
+menutrans Toggle\ &Showmatch<Tab>:set\ sm!
+	\	マッチ表示切替(&S)<Tab>:set\ sm!
+menutrans &Context\ lines		カーソル周辺行数(&C)
+menutrans &Virtual\ Edit		仮想編集(&V)
 menutrans Never				無効
 menutrans Block\ Selection		ブロック選択時
 menutrans Insert\ mode			挿入モード時
 menutrans Block\ and\ Insert		ブロック/挿入モード時
 menutrans Always			常時
-menutrans Toggle\ Insert\ mode<Tab>:set\ im!
-	\	挿入(初心者)モード切替<Tab>:set\ im!
-menutrans Search\ Path\.\.\.		検索パス\.\.\.
-menutrans Tag\ Files\.\.\.		タグファイル\.\.\.
-
+menutrans Toggle\ Insert\ &Mode<Tab>:set\ im!
+	\	挿入(初心者)モード切替(&M)<Tab>:set\ im!
+menutrans Search\ &Path\.\.\.		検索パス(&P)\.\.\.
+menutrans Ta&g\ Files\.\.\.		タグファイル(&G)\.\.\.
+"
 " GUI options
-menutrans Toggle\ Toolbar		ツールバー表示切替
-menutrans Toggle\ Bottom\ Scrollbar	スクロールバー(下)表示切替
-menutrans Toggle\ Left\ Scrollbar	スクロールバー(左)表示切替
-menutrans Toggle\ Right\ Scrolbar	スクロールバー(右)表示切替
+menutrans Toggle\ &Toolbar		ツールバー表示切替(&T)
+menutrans Toggle\ &Bottom\ Scrollbar	スクロールバー(下)表示切替(&B)
+menutrans Toggle\ &Left\ Scrollbar	スクロールバー(左)表示切替(&L)
+menutrans Toggle\ &Right\ Scrollbar	スクロールバー(右)表示切替(&R)
 
 " Edit/File Settings
 
 " Boolean options
-menutrans File\ Settings		ファイル設定
-menutrans Toggle\ Line\ Numbering<Tab>:set\ nu!
-	\	行番号表示切替<Tab>:set\ nu!
-menutrans Toggle\ List\ Mode<Tab>:set\ list!
-	\ リストモード切替<Tab>:set\ list!
-menutrans Toggle\ Line\ Wrap<Tab>:set\ wrap!		
-	\	行折返し切替<Tab>:set\ wrap!
-menutrans Toggle\ Wrap\ at\ word<Tab>:set\ lbr!
-	\	単語折返し切替<Tab>:set\ lbr!
-menutrans Toggle\ Search\ Patn\ Highl<Tab>:set\ hls!
-	\	強調検索切替<Tab>:set\ hls!
-menutrans Toggle\ expand-tab<Tab>:set\ et!
-	\	タブ展開切替<Tab>:set\ et!
-menutrans Toggle\ auto-indent<Tab>:set\ ai!
-	\	自動字下げ切替<Tab>:set\ ai!
-menutrans Toggle\ C-indenting<Tab>:set\ cin!
-	\	C言語字下げ切替<Tab>:set\ cin!
+menutrans F&ile\ Settings		ファイル設定(&I)
+menutrans Toggle\ Line\ &Numbering<Tab>:set\ nu!
+	\	行番号表示切替(&N)<Tab>:set\ nu!
+menutrans Toggle\ &List\ Mode<Tab>:set\ list!
+	\ リストモード切替(&L)<Tab>:set\ list!
+menutrans Toggle\ Line\ &Wrap<Tab>:set\ wrap!		
+	\	行折返し切替(&W)<Tab>:set\ wrap!
+menutrans Toggle\ W&rap\ at\ word<Tab>:set\ lbr!
+	\	単語折返し切替(&R)<Tab>:set\ lbr!
+menutrans Toggle\ &expand-tab<Tab>:set\ et!
+	\	タブ展開切替(&E)<Tab>:set\ et!
+menutrans Toggle\ &auto-indent<Tab>:set\ ai!
+	\	自動字下げ切替(&A)<Tab>:set\ ai!
+menutrans Toggle\ &C-indenting<Tab>:set\ cin!
+	\	C言語字下げ切替(&C)<Tab>:set\ cin!
 
 " other options
-menutrans Shiftwidth			シフト幅
-menutrans Soft\ Tabstop			ソフトウェアタブ幅
-menutrans Text\ Width\.\.\.		テキスト幅\.\.\.
-menutrans File\ Format\.\.\.		改行記号選択\.\.\.
-menutrans Keymap			キーマップ
+menutrans &Shiftwidth			シフト幅(&S)
+menutrans Soft\ &Tabstop		ソフトウェアタブ幅(&T)
+menutrans Te&xt\ Width\.\.\.		テキスト幅(&X)\.\.\.
+menutrans &File\ Format\.\.\.		改行記号選択(&F)\.\.\.
+menutrans C&olor\ Scheme		色テーマ選択(&O)
+menutrans &Keymap			キーマップ(&K)
 menutrans None				なし
 
 " Programming menu
@@ -120,8 +119,8 @@ menutrans &Previous\ Error<Tab>:cp	前のエラーへ(&P)<Tab>:cp
 menutrans &Older\ List<Tab>:cold	古いリスト(&O)<Tab>:cold
 menutrans N&ewer\ List<Tab>:cnew	新しいリスト(&E)<Tab>:cnew
 menutrans Error\ &Window<Tab>:cwin	エラーウィンドウ表示(&W)<Tab>:cwin	
-menutrans Convert\ to\ HEX<Tab>:%!xxd	HEXへ変換<Tab>:%!xxd
-menutrans Convert\ back<Tab>:%!xxd\ -r	HEXから逆変換<Tab>%!xxd\ -r
+menutrans &Convert\ to\ HEX<Tab>:%!xxd	HEXへ変換(&C)<Tab>:%!xxd
+menutrans Conve&rt\ back<Tab>:%!xxd\ -r	HEXから逆変換(&R)<Tab>%!xxd\ -r
 
 " Tools.Fold Menu
 menutrans &Folding			折畳み(&F)
@@ -156,7 +155,7 @@ menutrans &Put\ Block		ブロック適用(&P)
 menutrans &Buffers		バッファ(&B)
 menutrans &Refresh\ menu	メニュー再読込(&R)
 menutrans &Delete		削除(&D)
-menutrans A&lternate		裏へ切替(&L)
+menutrans &Alternate		裏へ切替(&A)
 menutrans &Next			次のバッファ(&N)
 menutrans &Previous		前のバッファ(&P)
 menutrans [No\ File]		[新規ファイル]
@@ -167,8 +166,7 @@ menutrans &New<Tab>^Wn			新規作成(&N)<Tab>^Wn
 menutrans S&plit<Tab>^Ws		分割(&P)<Tab>^Ws
 menutrans Sp&lit\ To\ #<Tab>^W^^	裏バッファへ分割(&L)<Tab>^W^^
 menutrans Split\ &Vertically<Tab>^Wv	垂直分割(&P)<Tab>^Wv
-menutrans Split\ File\ E&xplorer	ファイルエクスプローラ(&x)
-"menutrans File\ E&xplorer		ファイルエクスプローラ(&x)
+menutrans Split\ File\ E&xplorer	ファイルエクスプローラ(&X)
 menutrans &Close<Tab>^Wc		閉じる(&C)<Tab>^Wc
 menutrans Move\ &To			移動(&T)
 menutrans &Top<Tab>^WK			先頭(&T)
@@ -181,11 +179,11 @@ menutrans P&revious<Tab>^WW		前へ(&R)<Tab>^WW
 menutrans &Equal\ Size<Tab>^W=	同じ高さに(&E)<Tab>^W=
 menutrans &Max\ Height<Tab>^W_		最大高に(&M)<Tab>^W
 menutrans M&in\ Height<Tab>^W1_		最小高に(&i)<Tab>^W1_
-menutrans Max\ Width<Tab>^W\|		最大幅に<Tab>^W\|
-menutrans Min\ Width<Tab>^W1\|		最小幅に<Tab>^W1\|
+menutrans Max\ &Width<Tab>^W\|		最大幅に(&W)<Tab>^W\|
+menutrans Min\ Widt&h<Tab>^W1\|		最小幅に(&H)<Tab>^W1\|
 menutrans Rotate\ &Up<Tab>^WR		上にローテーション(&U)<Tab>^WR
 menutrans Rotate\ &Down<Tab>^Wr		下にローテーション(&D)<Tab>^Wr
-menutrans Select\ &Font\.\.\.		フォント設定(&F)\.\.\.
+menutrans Select\ Fo&nt\.\.\.		フォント設定(&F)\.\.\.
 
 " The popup menu
 menutrans &Undo			取り消す(&U)
@@ -199,7 +197,7 @@ menutrans Select\ &Line		行選択(&L)
 menutrans Select\ &Block	ブロック選択
 menutrans Select\ &All		すべて選択
  
-" The GUI toolbar
+" The GUI toolbar (for Win32 or GTK)
 if has("toolbar")
   if exists("*Do_toolbar_tmenu")
     delfun Do_toolbar_tmenu
@@ -239,13 +237,13 @@ endif
 
 " Syntax menu
 menutrans &Syntax		シンタックス(&S)
-menutrans Set\ 'syntax'\ only	'syntax'だけ設定
-menutrans Set\ 'filetype'\ too	'filetype'も設定
+menutrans Set\ '&syntax'\ only	'syntax'だけ設定(&S)
+menutrans Set\ '&filetype'\ too	'filetype'も設定(&F)
 menutrans &Off			無効化(&O)
 menutrans &Manual		手動設定(&M)
 menutrans A&utomatic		自動設定(&U)
-menutrans o&n\ (this\ file)	オン(&O)\ (このファイル)
-menutrans o&ff\ (this\ file)	オフ(&F)\ (このファイル)
+menutrans on/off\ for\ &This\ file
+	\	オン/オフ切替(&T)
 menutrans Co&lor\ test		カラーテスト(&L)
 menutrans &Highlight\ test	ハイライトテスト(&H)
 menutrans &Convert\ to\ HTML	HTMLへコンバート(&C)

@@ -1,6 +1,6 @@
 " Menu Translations:	Nederlands
 " Maintainer:		Bram Moolenaar
-" Last Change:	2001 mei 04
+" Last Change:	2001 May 18
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -104,7 +104,7 @@ menutrans &Left\ side<Tab>^WH		Linkerkant<Tab>^WH
 menutrans &Right\ side<Tab>^WL		Rechterkant<Tab>^WL
 menutrans Rotate\ &Up<Tab>^WR		Roteren\ naar\ &boven<Tab>^WR
 menutrans Rotate\ &Down<Tab>^Wr		Roteren\ naar\ &onder<Tab>^Wr
-menutrans Select\ &Font\.\.\.		Selecteer\ font\.\.\.
+menutrans Select\ Fo&nt\.\.\.		Selecteer\ font\.\.\.
 
 " The popup menu
 menutrans &Undo			&Terug

@@ -2385,6 +2385,7 @@ close_others(message, forceit)
 {
     win_T	*wp;
     win_T	*nextwp;
+    int		r;
 
     if (lastwin == firstwin)
     {
@@ -2405,11 +2406,28 @@ close_others(message, forceit)
 	{
 
 	    /* Check if it's allowed to abandon this window */
-	    if (!can_abandon(wp->w_buffer, forceit))
+	    r = can_abandon(wp->w_buffer, forceit);
+#ifdef FEAT_AUTOCMD
+	    if (!win_valid(wp))		/* autocommands messed wp up */
+	    {
+		nextwp = firstwin;
+		continue;
+	    }
+#endif
+	    if (!r)
 	    {
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
 		if (message && (p_confirm || cmdmod.confirm))
+		{
 		    dialog_changed(wp->w_buffer, FALSE);
+#ifdef FEAT_AUTOCMD
+		    if (!win_valid(wp))		/* autocommands messed wp up */
+		    {
+			nextwp = firstwin;
+			continue;
+		    }
+#endif
+		}
 		if (bufIsChanged(wp->w_buffer))
 #endif
 		    continue;
@@ -2807,7 +2825,7 @@ win_enter_ext(wp, undo_sync, curwin_invalid)
 buf_jump_open_win(buf)
     buf_T	*buf;
 {
-#ifdef FEAT_WINDOWS
+# ifdef FEAT_WINDOWS
     win_T	*wp;
 
     for (wp = firstwin; wp; wp = wp->w_next)
@@ -2816,11 +2834,11 @@ buf_jump_open_win(buf)
     if (wp != NULL)
 	win_enter(wp, FALSE);
     return wp;
-#else
+# else
     if (curwin->w_buffer == buf)
 	return curwin;
     return NULL;
-#endif
+# endif
 }
 #endif
 

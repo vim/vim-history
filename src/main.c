@@ -915,7 +915,10 @@ scripterror:
     /* Set the 'diff' option now, so that it can be checked for in a .vimrc
      * file.  There is no buffer yet though. */
     if (diff_mode)
+    {
 	diff_win_options(firstwin, FALSE);
+	p_sbo = (char_u *)"ver,hor,jump";
+    }
 #endif
 
     cmdline_row = Rows - p_ch;
@@ -1868,8 +1871,11 @@ file_owned(fname)
     uid_t	uid = ((getgid() << 16) | getuid());
 # endif
 
-    return !(mch_lstat(fname, &s) != 0 || s.st_uid != uid
-	    || mch_stat(fname, &s) != 0 || s.st_uid != uid);
+    return !(mch_stat(fname, &s) != 0 || s.st_uid != uid
+# ifdef HAVE_LSTAT
+	    || mch_lstat(fname, &s) != 0 || s.st_uid != uid
+# endif
+	    );
 }
 #endif
 

@@ -964,6 +964,10 @@ mark_adjust(line1, line2, amount, amount_after)
     /* adjust diffs */
     diff_mark_adjust(line1, line2, amount, amount_after);
 #endif
+
+#ifdef FEAT_SIGNS
+    sign_mark_adjust(line1, line2, amount, amount_after);
+#endif
 }
 
 #ifdef FEAT_JUMPLIST

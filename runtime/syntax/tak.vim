@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:     TAK2, TAK3, TAK2000 thermal modeling input file
 " Maintainer:   Adrian Nagle, anagle@ball.com
-" Last Change:  2001 May 10
+" Last Change:  2001 May 15
 " Filenames:    *.tak
 " URL:          http://www.naglenet.org/vim/syntax/tak.vim
 " MAIN URL:     http://www.naglenet.org/vim/
@@ -28,6 +28,9 @@ syn case ignore
 " Begin syntax definitions for tak input file.
 "
 
+" Force free-form fortran format
+let fortran_free_source=1
+
 " Load FORTRAN syntax file
 if version < 600
   source <sfile>:p:h/fortran.vim
@@ -35,9 +38,6 @@ else
   runtime! syntax/fortran.vim
 endif
 unlet b:current_syntax
-
-" Delete fortran syntax definition for line error format.
-"syn clear fortranCommentError
 
 
 
@@ -52,6 +52,11 @@ syn keyword takControl  ABSZRO BACKUP DAMP DTIMEI DTIMEL DTIMEH IFC
 syn keyword takControl  MAXTEMP NLOOPS NLOOPT NODELIST OUTPUT PLOT
 syn keyword takControl  SCALE SIGMA SSCRIT TIMEND TIMEN TIMEO TRCRIT
 syn keyword takControl  PLOT
+
+syn keyword takSolids   PLATE CYL
+syn keyword takSolidsArg   ID MATNAM NTYPE TEMP XL YL ZL ISTRN ISTRG NNX
+syn keyword takSolidsArg   NNY NNZ INCX INCY INCZ IAK IAC DIFF ARITH BOUN 
+syn keyword takSolidsArg   RMIN RMAX AXMAX NNR NNTHETA INCR INCTHETA END
 
 syn case ignore
 
@@ -104,6 +109,8 @@ if version >= 508 || !exists("did_tak_syntax_inits")
   HiLink takOptions             Special
   HiLink takRoutine             Type
   HiLink takControl             Special
+  HiLink takSolids              Special
+  HiLink takSolidsArg           Statement
   HiLink takIdentifier          Identifier
 
   HiLink takFortran             PreProc

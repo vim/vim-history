@@ -9,6 +9,12 @@
  */
 
 /*
+ * Integration with Sun Workshop.
+ *
+ * This file should not change much, it's also used by other editors that
+ * connect to Workshop.  Consider changing workshop.c instead.
+ */
+/*
 -> consider using MakeSelectionVisible instead of gotoLine hacks
    to show the line properly
      -> consider using glue instead of our own message wrapping functions
@@ -151,7 +157,7 @@ getCommand(void)
 
 }
 
-
+/*ARGSUSED*/
 void
 messageFromEserve(XtPointer clientData, int *NOTUSED1, XtInputId *NOTUSED2)
 {
@@ -372,11 +378,13 @@ messageFromEserve(XtPointer clientData, int *NOTUSED1, XtInputId *NOTUSED2)
 
 	case 'p':
 		if (strcmp(cmd, NOCATGETS("ping")) == 0) {
+#if 0
 			int pingNum;
 
 			pingNum = atoi(&cmd[5]);
-			/* workshop_send_ack(ackNum);
-			 * WHAT DO I DO HERE? */
+			workshop_send_ack(ackNum);
+			WHAT DO I DO HERE?
+#endif
 		}
 		HANDLE_ERRORS(cmd);
 		break;
@@ -746,7 +754,6 @@ workshop_set_icon(Display *display, Widget shell, char **xpmdata,
 	Window		iconWindow;
 	int             depth;
 	int		screenNum;
-	int		status;
 	Pixmap		pixmap;
 
 	/* Create the pixmap/icon window which is shown when you
@@ -765,12 +772,13 @@ workshop_set_icon(Display *display, Widget shell, char **xpmdata,
 	xpmAttributes.colorsymbols[0].name = NOCATGETS("BgColor");
 	xpmAttributes.colorsymbols[0].value = NULL;
 	xpmAttributes.colorsymbols[0].pixel = bgPixel;
-	if ((status = XpmCreatePixmapFromData(display,
+	if (XpmCreatePixmapFromData(display,
 	    RootWindow(display, screenNum), xpmdata, &pixmap,
-	    NULL, &xpmAttributes)) >= 0) {
+	    NULL, &xpmAttributes) >= 0) {
 		attr.background_pixmap = pixmap;
 		iconWindow = XCreateWindow(display, RootWindow(display,
-		    screenNum), 0, 0, width, height, 0, depth, CopyFromParent,
+		    screenNum), 0, 0, width, height, 0, depth,
+				(unsigned int)CopyFromParent,
 		    CopyFromParent, CWBackPixmap, &attr);
 
 		XtVaSetValues(shell,
@@ -828,7 +836,7 @@ widgetIsIconified(
 
         wm_state = XmInternAtom(XtDisplay(w), NOCATGETS("WM_STATE"), False);
         if (XtWindow(w) != 0) {                 /* only check if window exists! */
-                XGetWindowProperty(XtDisplay(w), XtWindow(w), wm_state, 0, 2,
+                XGetWindowProperty(XtDisplay(w), XtWindow(w), wm_state, 0L, 2L,
                     False, AnyPropertyType, &act_type, &act_fmt, &nitems_ret,
                     &bytes_after, (u_char **) &property);
                 if (nitems_ret == 2 && property[0] == IconicState) {

@@ -1,6 +1,6 @@
 " Menu Translations:	Français
 " Maintainer:		François Thunus (thunus@systran.fr)
-" Last Change:	2001 apr 26
+" Last Change:	2001 May 18
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -88,7 +88,7 @@ menutrans Max\ Width<Tab>^W\|		largeur\ maximale<Tab>^W\|
 menutrans Min\ Width<Tab>^W1\|		largeur\ minimale<Tab>^W1\|
 menutrans Rotate\ &Up<Tab>^WR		Rotation\ vers\ le\ &haut<Tab>^WR
 menutrans Rotate\ &Down<Tab>^Wr		Rotation\ vers\ le\ &bas<Tab>^Wr
-menutrans Select\ &Font\.\.\.		Choisir\ police\.\.\.
+menutrans Select\ Fo&nt\.\.\.		Choisir\ police\.\.\.
 
 " The popup menu
 menutrans &Undo		        &Défaire

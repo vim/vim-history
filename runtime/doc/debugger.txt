@@ -1,4 +1,4 @@
-*debugger.txt*  For Vim version 6.0af.  Last change: 2001 Apr 18
+*debugger.txt*  For Vim version 6.0ag.  Last change: 2001 May 20
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -31,6 +31,7 @@ both vim and gvim. Some of the other features could be used in the non-GUI
 vim with slight modifications. However, I did not do this nor did I test the
 reliability of building for vim or non Motif GUI versions.
 
+
 1.1 Alternate Command Input				*alt-input*
 
 For Vim to work with a debugger there must be at least an input connection
@@ -43,6 +44,7 @@ enough control to display the current debug environment and state.
 
 The current implementation is based on the X Toolkit dispatch loop and the
 XtAddInput() function call.
+
 
 1.2 Debug Signs						*debug-signs*
 
@@ -59,8 +61,8 @@ to highlight build errors, searched text, or other things. The sign feature
 can also work together with the |debug-highlight| to ensure the mark is
 highly visible.
 
-Debug signs are set using the |:sign| command and removed using the |:unsign|
-command.
+Debug signs are defined and placed using the |:sign| command.
+
 
 1.3 Debug Source Highlight				*debug-highlight*
 
@@ -70,6 +72,7 @@ work for both vim and gvim, whereas the debug sign is, in most cases, limited
 to gvim. The one exception to this is Sun Microsystem's dtterm. The dtterm
 from Sun has a "sign gutter" for showing signs.
 
+
 1.4 Message Footer					*gui-footer*
 
 The message footer can be used to display messages from a debugger or IPE. It
@@ -77,6 +80,7 @@ can also be used to display menu and toolbar tips. The footer area is at the
 bottom of the GUI window, below the line used to display colon commands.
 
 The display of the footer is controlled by the 'guioptions' letter 'F'.
+
 
 1.5 Balloon Evaluation					*balloon-eval*
 

@@ -760,9 +760,9 @@ gui_update_cursor(force, clear_selection)
 	gui_undraw_cursor();
 	if (gui.row < 0)
 	    return;
-#ifdef FEAT_MBYTE_IME
+#ifdef USE_IM_CONTROL
 	if (gui.row != gui.cursor_row || gui.col != gui.cursor_col)
-	    ImeSetCompositionWindow();
+	    im_set_position(gui.row, gui.col);
 #endif
 	gui.cursor_row = gui.row;
 	gui.cursor_col = gui.col;
@@ -799,12 +799,12 @@ gui_update_cursor(force, clear_selection)
 	if (id > 0)
 	{
 	    cattr = syn_id2colors(id, &cfg, &cbg);
-#if (defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)) || defined(FEAT_XIM)
+#ifdef USE_IM_CONTROL
 	    {
 		static int id;
 		guicolor_T fg, bg;
 
-		if (input_method_active())
+		if (im_get_status())
 		{
 		    id = syn_name2id((char_u *)"CursorIM");
 		    if (id > 0)
@@ -937,11 +937,6 @@ gui_update_cursor(force, clear_selection)
 	}
 	gui.highlight_mask = old_hl_mask;
     }
-
-#ifdef FEAT_XIM
-    /* Set the position of the XIM. */
-    xim_set_preedit();
-#endif
 }
 
 #if defined(FEAT_MENU) || defined(PROTO)
@@ -1068,7 +1063,7 @@ gui_get_base_height()
 # endif
 # ifdef FEAT_FOOTER
     if (vim_strchr(p_go, GO_FOOTER) != NULL)
-	base_height +=  gui.footer_height;
+	base_height += gui.footer_height;
 # endif
 # if defined(FEAT_GUI_MOTIF) && defined(FEAT_MENU)
     base_height += gui_mch_text_area_extra_height();
@@ -1455,11 +1450,16 @@ gui_write(s, len)
 	    len -= ++p - s;
 	    s = p;
 	}
+	else if (
 #ifdef EBCDIC
-	else if (CtrlChar(s[0]) != 0)	/* Ctrl character */
+		CtrlChar(s[0]) != 0	/* Ctrl character */
 #else
-	else if (s[0] < 0x20)		/* Ctrl character */
+		s[0] < 0x20		/* Ctrl character */
 #endif
+#ifdef FEAT_SIGN_ICONS
+		&& s[0] != SIGN_BYTE
+#endif
+		)
 	{
 	    if (s[0] == '\n')		/* NL */
 	    {
@@ -1494,13 +1494,16 @@ gui_write(s, len)
 	else
 	{
 	    p = s;
-	    while (len
+	    while (len > 0 && (
 #ifdef EBCDIC
-		    && CtrlChar(*p) == 0
+			CtrlChar(*p) == 0
 #else
-		    && *p >= 0x20
+			*p >= 0x20
 #endif
-		    )
+#ifdef FEAT_SIGN_ICONS
+			|| *p == SIGN_BYTE
+#endif
+			))
 	    {
 		len--;
 		p++;
@@ -1675,12 +1678,28 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
     attrentry_T	*aep = NULL;
     int		draw_flags;
     int		col = gui.col;
+#ifdef FEAT_SIGN_ICONS
+    int		draw_sign = FALSE;
+#endif
 
     if (len < 0)
 	len = STRLEN(s);
     if (len == 0)
 	return;
 
+#ifdef FEAT_SIGN_ICONS
+    if (*s == SIGN_BYTE)
+    {
+	/* draw spaces instead */
+	s = (char_u *)"  ";
+	if (len == 1 && col > 0)
+	    --col;
+	len = 2;
+	draw_sign = TRUE;
+	highlight_mask = 0;
+    }
+    else
+#endif
     if (gui.highlight_mask > HL_ALL)
     {
 	aep = syn_gui_attr2entry(gui.highlight_mask);
@@ -1937,15 +1956,6 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 #endif
     }
 
-#ifdef FEAT_SIGNS
-    /*
-     * If there is a sign (indicated by the highlighting) draw it on top of
-     * the text (should be spaces).
-     */
-    if (aep != NULL && aep->ae_u.gui.sign != 0)
-	gui_mch_drawsign(gui.row, aep->ae_u.gui.sign);
-#endif
-
     if (!(flags & (GUI_MON_IS_CURSOR | GUI_MON_TRS_CURSOR)))
 	gui.col = col + len;
 
@@ -1961,6 +1971,12 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 		&& gui.cursor_col < col + len)
 	    gui.cursor_is_valid = FALSE;
     }
+
+#ifdef FEAT_SIGN_ICONS
+    if (draw_sign)
+	/* Draw the sign on top of the spaces. */
+	gui_mch_drawsign(gui.row, col, gui.highlight_mask);
+#endif
 }
 
 /*
@@ -2652,15 +2668,10 @@ gui_xy2colrow(x, y, colp)
     int		row = check_row(Y_2_ROW(y));
 
 #ifdef FEAT_MBYTE
-    if (ScreenLines != NULL
-	    && col > 0
-	    && ((enc_dbcs
-		    && dbcs_screen_head_off(ScreenLines + LineOffset[row],
-					 ScreenLines + LineOffset[row] + col))
-		|| (enc_utf8 && ScreenLines[LineOffset[row] + col] == 0)))
-	--col;
-#endif
+    *colp = mb_fix_col(col, row);
+#else
     *colp = col;
+#endif
     return row;
 }
 

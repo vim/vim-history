@@ -1634,7 +1634,12 @@ slash_adjust(char_u *p)
 	{
 	    if (*p == '\\')
 		*p = '/';
-	    ++p;
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		p += (*mb_ptr2len_check)(p);
+	    else
+#endif
+		++p;
 	}
     else
 #endif
@@ -1642,7 +1647,12 @@ slash_adjust(char_u *p)
     {
 	if (*p == psepcN)
 	    *p = psepc;
-	++p;
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	    p += (*mb_ptr2len_check)(p);
+	else
+#endif
+	    ++p;
     }
 }
 

@@ -1,7 +1,7 @@
 "=============================================================================
 " File: explorer.vim
 " Author: M A Aziz Ahmed (aziz@123india.com)
-" Last Change: 2001 Apr 12
+" Last Change: 2001 May 16
 " Version: 2.3
 " Additions by Mark Waggoner (waggoner@aracnet.com) et al.
 "-----------------------------------------------------------------------------
@@ -301,18 +301,15 @@ function! s:EditDir()
     syn match browseFiletime    "«\d\+$"
     exec('syn match browseSuffixes    "' . b:suffixesHighlight . '"')
 
-    if !exists("g:did_browse_syntax_inits")
-      let g:did_browse_syntax_inits = 1
-      "hi link browseSynopsis    PreProc
-      hi link browseSynopsis    Special
-      hi link browseDirectory   Directory
-      hi link browseCurDir      Statement
-      hi link browseSortBy      String
-      hi link browseSuffixInfo  Type
-      hi link browseFilter      String
-      hi link browseFiletime    Ignore
-      hi link browseSuffixes    Type
-    endif
+    "hi def link browseSynopsis    PreProc
+    hi def link browseSynopsis    Special
+    hi def link browseDirectory   Directory
+    hi def link browseCurDir      Statement
+    hi def link browseSortBy      String
+    hi def link browseSuffixInfo  Type
+    hi def link browseFilter      String
+    hi def link browseFiletime    Ignore
+    hi def link browseSuffixes    Type
   endif
 
   " Set filter for hiding files

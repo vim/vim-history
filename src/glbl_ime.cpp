@@ -229,4 +229,30 @@ global_ime_status_restore()
     }
 }
 
+    void WINAPI
+global_ime_set_status(int status)
+{
+    HIMC    hImc;
+
+    if (pIApp && SUCCEEDED(pIApp->GetContext(s_hWnd, &hImc)))
+    {
+	pIApp->GetOpenStatus(hImc, status ? TRUE : FALSE);
+	pIApp->ReleaseContext(s_hWnd, hImc);
+    }
+}
+
+    int WINAPI
+global_ime_get_status()
+{
+    int status = 0;
+    HIMC    hImc;
+
+    if (pIApp && SUCCEEDED(pIApp->GetContext(s_hWnd, &hImc)))
+    {
+	status = pIApp->GetOpenStatus(hImc) ? 1 : 0;
+	pIApp->ReleaseContext(s_hWnd, hImc);
+    }
+    return status;
+}
+
 #endif /* GLOBAL_IME */

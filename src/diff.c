@@ -72,7 +72,7 @@ static diff_T *diff_alloc_new __ARGS((diff_T *dprev, diff_T *dp));
 /*
  * Call this when a new buffer is being edited in the current window.  curbuf
  * must already have been set.
- * Marks the current buffer as being part of the diff and requiring updating.
+ * Marks the current buffer as being part of the diff and requireing updating.
  * This must be done before any autocmd, because a command the uses info
  * about the screen contents.
  */

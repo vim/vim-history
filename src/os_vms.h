@@ -39,6 +39,9 @@
 # endif
 #endif
 
+#define USE_GETCWD
+#define USE_SYSTEM
+
 /* use delete() to remove files */
 #define mch_remove(x) delete((char *)(x))
 

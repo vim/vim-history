@@ -25,6 +25,7 @@ do_debug(cmd)
 {
     int		save_msg_scroll = msg_scroll;
     int		save_State = State;
+    int		save_did_emsg = did_emsg;
     int		n;
     char_u	*cmdline = NULL;
     char_u	*p;
@@ -52,6 +53,7 @@ do_debug(cmd)
 
     ++RedrawingDisabled;	    /* don't redisplay the window */
     ++no_wait_return;		    /* don't wait for return */
+    did_emsg = FALSE;		    /* don't use error from debugged stuff */
 
     State = NORMAL;
 #ifdef FEAT_SNIFF
@@ -158,6 +160,7 @@ do_debug(cmd)
     msg_scroll = save_msg_scroll;
     lines_left = Rows - 1;
     State = save_State;
+    did_emsg = save_did_emsg;
 
     /* Only print the message again when typing a command before coming back
      * here. */
@@ -548,12 +551,15 @@ check_changed(buf, checkaw, mult_win, forceit, allbuf)
 			++count;
 #ifdef FEAT_AUTOCMD
 	    if (!buf_valid(buf))
-	    {
-		/* Autocommand deleted buffer, off!  It's not changed now. */
+		/* Autocommand deleted buffer, oops!  It's not changed now. */
 		return FALSE;
-	    }
 #endif
 	    dialog_changed(buf, count > 1);
+#ifdef FEAT_AUTOCMD
+	    if (!buf_valid(buf))
+		/* Autocommand deleted buffer, oops!  It's not changed now. */
+		return FALSE;
+#endif
 	    return bufIsChanged(buf);
 	}
 #endif
@@ -714,7 +720,7 @@ check_changed_any(hidden)
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
 	if (p_confirm || cmdmod.confirm)
 	{
-	    if (check_changed(buf, p_awa, TRUE, FALSE, TRUE))
+	    if (check_changed(buf, p_awa, TRUE, FALSE, TRUE) && buf_valid(buf))
 		break;	    /* didn't save - still changes */
 	}
 	else

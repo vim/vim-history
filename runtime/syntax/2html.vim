@@ -1,87 +1,138 @@
 " Vim syntax support file
-" Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 May 10
+" Maintainer: Bram Moolenaar <Bram@vim.org>
+" Last Change: 2001-05-19
+"              (modified by David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>)
 
 " Transform a file into HTML, using the current syntax highlighting.
 
-" function to produce text with HTML codes for attributes and colors
-"
-" a:attr  contains 'U' for underline, 'I' for italic and 'B' for bold
-" a:fg	  foregound color name
-" a:bg    background color name
-" a:txt   text
-"
-" the big return statement concatenates:
-" - the code to start underline/italic/bold, substituting each 'U', 'I' or 'B'
-"   by the same character inside <>
-" - the code to start the background color
-" - the code to start the foreground color
-" - the text, where each '&', '<', '>' and '"' is translated for their special
-"   meaning.  A CTRL-L is translated into a page break
-" - the code to end the foreground color
-" - the code to end the background color
-" - the code to end underline/italic/bold, substituting each 'U', 'I' or 'B'
-"   by the same character inside </>, in reverse order
-function! HTMLPutText(attr, bg, fg, txt)
-	let bgs = ""	" code for background color start
-	let bge = ""	" code for background color end
-	if a:bg != ""
-	  let bgs = '<SPAN style="background-color: ' . a:bg . '">'
-	  let bge = '</SPAN>'
-	endif
-	let fgs = ""	" code for foreground color start
-	let fge = ""	" code for foreground color end
-	if a:fg != ""
-	  let fgs = '<FONT color=' . a:fg . ">"
-	  let fge = '</FONT>'
-	endif
-        return substitute(a:attr, '.', '<&>', 'g') . bgs . fgs . substitute(substitute(substitute(substitute(substitute(a:txt, '&', '\&amp;', 'g'), '<', '\&lt;', 'g'), '>', '\&gt;', 'g'), '"', '\&quot;', 'g'), "\x0c", '<HR class=PAGE-BREAK>', 'g') . fge . bge . substitute(a:attr[2] . a:attr[1] . a:attr[0], '.', '</&>', 'g')
-endfun
-
-
-if &t_Co == 8
-  let cterm_color0  = "#808080"
-  let cterm_color1  = "#ff6060"
-  let cterm_color2  = "#00ff00"
-  let cterm_color3  = "#ffff00"
-  let cterm_color4  = "#8080ff"
-  let cterm_color5  = "#ff40ff"
-  let cterm_color6  = "#00ffff"
-  let cterm_color7  = "#ffffff"
+" Number lines when explicitely requested or when `number' is set
+if exists("html_number_lines")
+  let s:numblines = html_number_lines
 else
-  let cterm_color0  = "#000000"
-  let cterm_color1  = "#c00000"
-  let cterm_color2  = "#008000"
-  let cterm_color3  = "#804000"
-  let cterm_color4  = "#0000c0"
-  let cterm_color5  = "#c000c0"
-  let cterm_color6  = "#008080"
-  let cterm_color7  = "#c0c0c0"
-  let cterm_color8  = "#808080"
-  let cterm_color9  = "#ff6060"
-  let cterm_color10 = "#00ff00"
-  let cterm_color11 = "#ffff00"
-  let cterm_color12 = "#8080ff"
-  let cterm_color13 = "#ff40ff"
-  let cterm_color14 = "#00ffff"
-  let cterm_color15 = "#ffffff"
+  let s:numblines = &number
 endif
 
-function! HTMLColor(c)
-  if exists("g:cterm_color" . a:c)
-    execute "return g:cterm_color" . a:c
+" When not in gui we can only guess the colors.
+if has("gui_running")
+  let s:whatterm = "gui"
+else
+  let s:whatterm = "cterm"
+  if &t_Co == 8
+    let s:cterm_color0  = "#808080"
+    let s:cterm_color1  = "#ff6060"
+    let s:cterm_color2  = "#00ff00"
+    let s:cterm_color3  = "#ffff00"
+    let s:cterm_color4  = "#8080ff"
+    let s:cterm_color5  = "#ff40ff"
+    let s:cterm_color6  = "#00ffff"
+    let s:cterm_color7  = "#ffffff"
   else
-    return ""
+    let s:cterm_color0  = "#000000"
+    let s:cterm_color1  = "#c00000"
+    let s:cterm_color2  = "#008000"
+    let s:cterm_color3  = "#804000"
+    let s:cterm_color4  = "#0000c0"
+    let s:cterm_color5  = "#c000c0"
+    let s:cterm_color6  = "#008080"
+    let s:cterm_color7  = "#c0c0c0"
+    let s:cterm_color8  = "#808080"
+    let s:cterm_color9  = "#ff6060"
+    let s:cterm_color10 = "#00ff00"
+    let s:cterm_color11 = "#ffff00"
+    let s:cterm_color12 = "#8080ff"
+    let s:cterm_color13 = "#ff40ff"
+    let s:cterm_color14 = "#00ffff"
+    let s:cterm_color15 = "#ffffff"
   endif
+endif
+
+" Return good color specification: in GUI no transformation is done, in
+" terminal return RGB values of known colors and empty string on unknown
+if s:whatterm == "gui"
+  function! s:HtmlColor(color)
+    return a:color
+  endfun
+else
+  function! s:HtmlColor(color)
+    if exists("s:cterm_color" . a:color)
+      execute "return s:cterm_color" . a:color
+    else
+      return ""
+    endif
+  endfun
+endif
+
+if !exists("html_use_css")
+  " Return opening HTML tag for given highlight id
+  function! s:HtmlOpening(id)
+    let a = ""
+    if synIDattr(a:id, "inverse")
+      " For inverse, we always must set both colors (and exchange them)
+      let x = s:HtmlColor(synIDattr(a:id, "fg#", s:whatterm))
+      let a = a . '<span style="background-color: ' . ( x != "" ? x : s:fgc ) . '">'
+      let x = s:HtmlColor(synIDattr(a:id, "bg#", s:whatterm))
+      let a = a . '<font color="' . ( if x != "" ? x : s:bgc ) . '">'
+    else
+      let x = s:HtmlColor(synIDattr(a:id, "bg#", s:whatterm))
+      if x != "" | let a = a . '<span style="background-color: ' . x . '">' | endif
+      let x = s:HtmlColor(synIDattr(a:id, "fg#", s:whatterm))
+      if x != "" | let a = a . '<font color="' . x . '">' | endif
+    endif
+    if synIDattr(a:id, "bold") | let a = a . "<b>" | endif
+    if synIDattr(a:id, "italic") | let a = a . "<i>" | endif
+    if synIDattr(a:id, "underline") | let a = a . "<u>" | endif
+    return a
+  endfun
+
+  " Return closing HTML tag for given highlight id
+  function s:HtmlClosing(id)
+    let a = ""
+    if synIDattr(a:id, "underline") | let a = a . "</u>" | endif
+    if synIDattr(a:id, "italic") | let a = a . "</i>" | endif
+    if synIDattr(a:id, "bold") | let a = a . "</b>" | endif
+    if synIDattr(a:id, "inverse")
+      let a = a . '</font></span>'
+    else
+      let x = s:HtmlColor(synIDattr(a:id, "fg#", s:whatterm))
+      if x != "" | let a = a . '</font>' | endif
+      let x = s:HtmlColor(synIDattr(a:id, "bg#", s:whatterm))
+      if x != "" | let a = a . '</span>' | endif
+    endif
+    return a
+  endfun
+endif
+
+" Return CSS style describing given highlight id (can be empty)
+function! s:CSS1(id)
+  let a = ""
+  if synIDattr(a:id, "inverse")
+    " For inverse, we always must set both colors (and exchange them)
+    let x = s:HtmlColor(synIDattr(a:id, "bg#", s:whatterm))
+    let a = a . "color: " . ( x != "" ? x : s:bgc ) . "; "
+    let x = s:HtmlColor(synIDattr(a:id, "fg#", s:whatterm))
+    let a = a . "background-color: " . ( x != "" ? x : s:fgc ) . "; "
+  else
+    let x = s:HtmlColor(synIDattr(a:id, "fg#", s:whatterm))
+    if x != "" | let a = a . "color: " . x . "; " | endif
+    let x = s:HtmlColor(synIDattr(a:id, "bg#", s:whatterm))
+    if x != "" | let a = a . "background-color: " . x . "; " | endif
+  endif
+  if synIDattr(a:id, "bold") | let a = a . "font-weight: bold; " | endif
+  if synIDattr(a:id, "italic") | let a = a . "font-style: italic; " | endif
+  if synIDattr(a:id, "underline") | let a = a . "text-decoration: underline; " | endif
+  return a
 endfun
 
 " Set some options to make it work faster.
 " Expand tabs in original buffer to get 'tabstop' correctly used.
-let old_title = &title
-let old_icon = &icon
-let old_paste = &paste
-let old_et = &et
-set notitle noicon paste et
+" Don't report changes for :substitute, there will be many of them.
+let s:old_title = &title
+let s:old_icon = &icon
+let s:old_et = &l:et
+let s:old_report = &report
+set notitle noicon
+setlocal et
+set report=1000000
 
 " Split window to create a buffer with the HTML file.
 if expand("%") == ""
@@ -89,118 +140,165 @@ if expand("%") == ""
 else
   new %.html
 endif
-1,$d
-set noet
-" Find out the background and foreground color.
-if has("gui_running")
-  let bg = synIDattr(highlightID("Normal"), "bg#", "gui")
-  let fg = synIDattr(highlightID("Normal"), "fg#", "gui")
-else
-  let bg = HTMLColor(synIDattr(highlightID("Normal"), "bg", "cterm"))
-  let fg = HTMLColor(synIDattr(highlightID("Normal"), "fg", "cterm"))
-endif
-if bg == ""
-   if &background == "dark"
-     let bg = "#000000"
-     if fg == ""
-       let fg = "#FFFFFF"
-     endif
-   else
-     let bg = "#FFFFFF"
-     if fg == ""
-       let fg = "#000000"
-     endif
-   endif
+%d
+let s:old_paste = &paste
+set paste
+
+" The DTD
+if exists("html_use_css")
+  exe "normal a<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\"\n    \"http://www.w3.org/TR/html4/strict.dtd\">\n\e"
 endif
 
-" Insert HTML header, with the title and background color.  Add the foreground
-" color only when it is defined.
-exe "normal a<HTML>\n<HEAD>\n<TITLE>\e"
-exe "normal a" . substitute(substitute(substitute(substitute(expand("%:p:~"), '&', '\&amp;', 'g'), '<', '\&lt;', 'g'), '>', '\&gt;', 'g'), '"', '\&quot;', 'g') . "\e"
-exe "normal a</TITLE>\n</HEAD>\n<BODY BGcolor=".bg."\e"
-if fg != ""
-  exe "normal a TEXT=".fg."\e"
+" HTML header, with the title and generator ;-). Left free space for the CSS,
+" to be filled at the end.
+exe "normal a<html>\n<head>\n<title>\e"
+exe "normal a" . expand("%:p:~") . "</title>\n\e"
+exe "normal a<meta name=\"Generator\" content=\"Vim/" . version/100 . "." . version %100 . "\">\n\e"
+if exists("html_use_css")
+  exe "normal a<style type=\"text/css\">\n<!--\n-->\n</style>\n\e"
 endif
-exe "normal a>\n<PRE>\n\e"
+exe "normal a</head>\n<body>\n<pre>\n\e"
 
 exe "normal \<C-W>p"
 
-" Some 'constants' for ease of addressing with []
-let uline = "U"
-let bld = "B"
-let itl = "I"
+" List of all id's
+let s:idlist = ","
 
 " Loop over all lines in the original text
-let end = line("$")
-let lnum = 1
-while lnum <= end
+let s:end = line("$")
+let s:lnum = 1
+while s:lnum <= s:end
 
   " Get the current line, with tabs expanded to spaces when needed
-  let line = getline(lnum)
-  if match(line, "\t") >= 0
-    exe lnum . "retab!"
-    let did_retab = 1
-    let line = getline(lnum)
+  " FIXME: What if it changes syntax highlighting?
+  let s:line = getline(s:lnum)
+  if stridx(s:line, "\t") >= 0
+    exe s:lnum . "retab!"
+    let s:did_retab = 1
+    let s:line = getline(s:lnum)
   else
-    let did_retab = 0
+    let s:did_retab = 0
   endif
-  let len = strlen(line)
-  let new = ""
+  let s:len = strlen(s:line)
+  let s:new = ""
 
-  if exists("html_number_color")
-    let new = '<FONT COLOR=' . html_number_color . '>' . strpart('        ', 0, strlen(line("$")) - strlen(lnum)) . lnum . '</FONT>  '
+  if s:numblines
+    let s:new = '<span class=lnr>' . strpart('        ', 0, strlen(line("$")) - strlen(s:lnum)) . s:lnum . '</span>  '
   endif
 
   " Loop over each character in the line
-  let col = 1
-  while col <= len
-    let startcol = col " The start column for processing text
-    let id = synID(lnum, col, 1)
-    let col = col + 1
+  let s:col = 1
+  while s:col <= s:len
+    let s:startcol = s:col " The start column for processing text
+    let s:id = synID(s:lnum, s:col, 1)
+    let s:col = s:col + 1
     " Speed loop (it's small - that's the trick)
     " Go along till we find a change in synID
-    while col <= len && id == synID(lnum, col, 1) | let col = col + 1 | endwhile
+    while s:col <= s:len && s:id == synID(s:lnum, s:col, 1) | let s:col = s:col + 1 | endwhile
 
-    " output the text with the same synID, with all its attributes
-    " The first part turns attributes into  [U][I][B]
-    let id = synIDtrans(id)
-    if has("gui_running")
-      let new = new . HTMLPutText(uline[synIDattr(id, "underline", "gui") - 1] . itl[synIDattr(id, "italic", "gui") - 1] . bld[synIDattr(id, "bold", "gui") - 1], synIDattr(id, "bg#", "gui"), synIDattr(id, "fg#", "gui"), strpart(line, startcol - 1, col - startcol))
-    else
-      let new = new . HTMLPutText(uline[synIDattr(id, "underline", "cterm") - 1] . itl[synIDattr(id, "italic", "cterm") - 1] . bld[synIDattr(id, "bold", "cterm") - 1], HTMLColor(synIDattr(id, "bg", "cterm")), HTMLColor(synIDattr(id, "fg", "cterm")), strpart(line, startcol - 1, col - startcol))
+    " Output the text with the same synID, with class set to c{s:id}
+    let s:id = synIDtrans(s:id)
+    let s:new = s:new . '<span class=c' . s:id . '>' . substitute(substitute(substitute(substitute(substitute(strpart(s:line, s:startcol - 1, s:col - s:startcol), '&', '\&amp;', 'g'), '<', '\&lt;', 'g'), '>', '\&gt;', 'g'), '"', '\&quot;', 'g'), "\x0c", '<hr class="PAGE-BREAK">', 'g') . '</span>'
+    " Add the class to class list if it's not there yet
+    if stridx(s:idlist, "," . s:id . ",") == -1
+      let s:idlist = s:idlist . s:id . ","
     endif
-    if col > len
+
+    if s:col > s:len
       break
     endif
   endwhile
-  if did_retab
+  if s:did_retab
     undo
   endif
 
-  exe "normal \<C-W>pa" . strtrans(new) . "\n\e\<C-W>p"
-  let lnum = lnum + 1
+  exe "normal \<C-W>pa" . strtrans(s:new) . "\n\e\<C-W>p"
+  let s:lnum = s:lnum + 1
   +
 endwhile
 " Finish with the last line
-exe "normal \<C-W>pa</PRE>\n</BODY>\n</HTML>\e"
+exe "normal \<C-W>pa</pre>\n</body>\n</html>\e"
 
-let &title = old_title
-let &icon = old_icon
-let &paste = old_paste
-exe "normal \<C-W>p"
-let &et = old_et
-exe "normal \<C-W>p"
-
-" In case they didn't get used
-let startcol = 0
-let id = 0
-unlet uline bld itl lnum end col startcol line len new id
-unlet old_title old_icon old_paste old_et did_retab bg fg
-unlet cterm_color0 cterm_color1 cterm_color2 cterm_color3
-unlet cterm_color4 cterm_color5 cterm_color6 cterm_color7
-if &t_Co != 8
-  unlet cterm_color8 cterm_color9 cterm_color10 cterm_color11
-  unlet cterm_color12 cterm_color13 cterm_color14 cterm_color15
+" Now, when we finally know which, we define the colors and styles
+if exists("html_use_css")
+  8
 endif
-delfunc HTMLPutText
-delfunc HTMLColor
+
+" Find out the background and foreground color.
+let s:fgc = s:HtmlColor(synIDattr(highlightID("Normal"), "fg#", s:whatterm))
+let s:bgc = s:HtmlColor(synIDattr(highlightID("Normal"), "bg#", s:whatterm))
+if s:fgc == ""
+  let s:fgc = ( &background == "dark" ? "#ffffff" : "#000000" )
+endif
+if s:bgc == ""
+  let s:bgc = ( &background == "dark" ? "#000000" : "#ffffff" )
+endif
+
+" Normal/global attributes
+" For Netscape 4, set <body> attributes too, though, strictly speaking, it's
+" incorrect.
+if exists("html_use_css")
+  execute "normal A\npre { color: " . s:fgc . "; background-color: " . s:bgc . "; }\e"
+  yank
+  put
+  execute "normal ^cwbody\e"
+else
+  execute '%s:<body>:<body ' . 'bgcolor="' . s:bgc . '" text="' . s:fgc . '">'
+endif
+
+" Line numbering attributes
+if s:numblines
+  if exists("html_use_css")
+    execute "normal A\n.lnr { " . s:CSS1(highlightID("LineNr")) . "}\e"
+  else
+    execute '%s+<span class=lnr>\([^<]*\)</span>+' . s:HtmlOpening(highlightID("LineNr")) . '\1' . s:HtmlClosing(highlightID("LineNr")) . '+g'
+  endif
+endif
+
+" Gather attributes for all other classes
+let s:idlist = strpart(s:idlist, 1)
+while s:idlist != ""
+  let s:attr = ""
+  let s:col = stridx(s:idlist, ",")
+  let s:id = strpart(s:idlist, 0, s:col)
+  let s:idlist = strpart(s:idlist, s:col + 1)
+  let s:attr = s:CSS1(s:id)
+  " If the class has some attributes, export the style, otherwise DELETE all
+  " its occurences to make the HTML shorter
+  if s:attr != ""
+    if exists("html_use_css")
+      execute "normal A\n.c" . s:id . " { " . s:attr . "}"
+    else
+      execute '%s+<span class=c' . s:id . '>\([^<]*\)</span>+' . s:HtmlOpening(s:id) . '\1' . s:HtmlClosing(s:id) . '+g'
+    endif
+  else
+    execute '%s+<span class=c' . s:id . '>\([^<]*\)</span>+\1+g'
+    8
+  endif
+endwhile
+
+" Cleanup (we've already lost last user's pattern match highlighting)
+%s:\s\+$::e
+if has("extra_search")
+  nohlsearch
+endif
+
+" Restore old settings
+let &report = s:old_report
+let &title = s:old_title
+let &icon = s:old_icon
+let &paste = s:old_paste
+exe "normal \<C-W>p"
+let &l:et = s:old_et
+exe "normal \<C-W>p"
+
+" Save a little bit of memory (worths doing?)
+unlet s:old_et s:old_paste s:old_icon s:old_report s:old_title
+unlet s:whatterm s:idlist s:lnum s:end s:fgc s:bgc
+unlet! s:col s:id s:attr s:len s:line s:new s:did_retab s:numblines
+delfunc s:HtmlColor
+delfunc s:CSS1
+if !exists("html_use_css")
+  delfunc s:HtmlOpening
+  delfunc s:HtmlClosing
+endif

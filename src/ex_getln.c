@@ -156,6 +156,7 @@ getcmdline(firstc, count, indent)
     int		break_ctrl_c = FALSE;
 #endif
     expand_T	xpc;
+    long	*b_im_ptr = NULL;
 
 #ifdef FEAT_SNIFF
     want_sniff_request = 0;
@@ -216,10 +217,14 @@ getcmdline(firstc, count, indent)
     if (firstc == '/' || firstc == '?' || firstc == '@')
     {
 	/* Use ":lmap" mappings for search pattern and input(). */
-	if (curbuf->b_lmap & B_LMAP_SEARCH)
+	if (curbuf->b_im_search == B_IMODE_USE_INSERT)
+	    b_im_ptr = &curbuf->b_im_insert;
+	else
+	    b_im_ptr = &curbuf->b_im_search;
+	if (*b_im_ptr == B_IMODE_LMAP)
 	    State |= LANGMAP;
-#if defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)
-	ImeSetOriginMode();
+#ifdef USE_IM_CONTROL
+	im_set_active(*b_im_ptr == B_IMODE_IM);
 #endif
     }
 
@@ -788,13 +793,19 @@ getcmdline(firstc, count, indent)
 	case Ctrl_HAT:
 		/* Switch using ":lmap"s on/off. */
 		State ^= LANGMAP;
+#ifdef USE_IM_CONTROL
+		im_set_active(FALSE);	/* Disable input method */
+#endif
 #ifdef CURSOR_SHAPE
 		ui_cursor_shape();	/* may show different cursor shape */
 #endif
-		if (firstc == '/' || firstc == '?' || firstc == '@')
+		if (b_im_ptr != NULL)
 		{
-		    curbuf->b_lmap ^= B_LMAP_SEARCH;
-		    b_lmap_def = curbuf->b_lmap;
+		    if (State & LANGMAP)
+			*b_im_ptr = B_IMODE_LMAP;
+		    else
+			*b_im_ptr = B_IMODE_NONE;
+		    b_im_search_def = *b_im_ptr;
 		}
 		goto cmdline_not_changed;
 
@@ -1416,8 +1427,10 @@ returncmd:
 	need_wait_return = FALSE;
 
     State = save_State;
-#if defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)
-    ImeSetEnglishMode();
+#ifdef USE_IM_CONTROL
+    if (b_im_ptr != NULL)
+	im_save_status(b_im_ptr);
+    im_set_active(FALSE);
 #endif
 #ifdef FEAT_MOUSE
     setmouse();
@@ -2848,23 +2861,7 @@ addstar(fname, len, context)
 	    if ((*retval != '~' || tail != retval)
 		    && vim_strchr(tail, '$') == NULL
 		    && vim_strchr(retval, '`') == NULL)
-	    {
-#ifdef MSDOS
-		/*
-		 * if there is no dot in the file name, add "*.*" instead of
-		 * "*".
-		 */
-		for (i = len - 1; i >= 0; --i)
-		    if (vim_strchr((char_u *)".\\/:", retval[i]) != NULL)
-			break;
-		if (i < 0 || retval[i] != '.')
-		{
-		    retval[len++] = '*';
-		    retval[len++] = '.';
-		}
-#endif
 		retval[len++] = '*';
-	    }
 	    retval[len] = NUL;
 	}
     }

@@ -2,7 +2,7 @@
 " Language:     DNS/BIND Zone File
 " Maintainer:   jehsom@jehsom.com
 " URL:          http://scripts.jehsom.com
-" Last Change:  2001 May 10
+" Last Change:  2001 May 17
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -14,12 +14,12 @@ endif
 
 " Last match is taken!
 syn match	dnsKeyword          "\<\(IN\|A\|SOA\|NS\|CNAME\|MX\|PTR\|SOA\|MB\|MG\|MR\|NULL\|WKS\|HINFO\|TXT\|CS\|CH\|CPU\|OS\)\>"
+syn match   dnsRecordName       "^[^ 	]*"
+syn match   dnsPreProc          "^\$[^ ]*"
+syn match   dnsComment          ";.*$"
 syn match   dnsDataFQDN         "\<[^ 	]*\.[ 	]*$"
-syn match   dnsPreProc          "^\$.*"
 syn match   dnsConstant			"\<\([0-9][0-9.]*\|[0-9.]*[0-9]\)\>"
 syn match   dnsIPaddr           "\<\(\([0-2]\)\{0,1}\([0-9]\)\{1,2}\.\)\{3}\([0-2]\)\{0,1}\([0-9]\)\{1,2}\>[ 	]*$"
-syn match   dnsComment          ";.*$"
-syn match   dnsRecordName       "^[^;$ 	]*"
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already

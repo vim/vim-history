@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.0af.  Last change: 2001 May 12
+*motion.txt*    For Vim version 6.0ag.  Last change: 2001 May 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -303,9 +303,9 @@ gg			Goto line [count], default first line, on the first
 							*N%*
 {count}%		Go to {count} percentage in the file, on the first
 			non-blank in the line (linewise).  To compute the new
-			line number this formula is used: {count} *
-			number-of-lines / 100.  See also 'startofline'
-			option.  {not in Vi}
+			line number this formula is used:
+			    ({count} * number-of-lines + 99) / 100
+			See also 'startofline' option.  {not in Vi}
 
 :[range]go[to] [count]					*:go* *:goto* *go*
 [count]go		Go to {count} byte in the buffer.  Default [count] is
@@ -881,7 +881,7 @@ stored in the viminfo file and restored when starting Vim.
 			quotes).  Note that this works fine for C, but not for
 			Perl, where single quotes are used for strings.
 			No count is allowed ({count}% jumps to a line {count}
-			percentage down the file).  Using '%' on
+			percentage down the file |N%|).  Using '%' on
 			#if/#else/#endif makes the movement linewise.
 
 						*[(*

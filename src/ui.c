@@ -594,8 +594,14 @@ clip_start_selection(col, row, repeated_click)
     if (cb->state == SELECT_DONE)
 	clip_clear_selection();
 
-    cb->start.lnum  = check_row(row);
-    cb->start.col   = check_col(col);
+    row = check_row(row);
+    col = check_col(col);
+#ifdef FEAT_MBYTE
+    col = mb_fix_col(col, row);
+#endif
+
+    cb->start.lnum  = row;
+    cb->start.col   = col;
     cb->end	    = cb->start;
     cb->origin_row  = (short_u)cb->start.lnum;
     cb->state	    = SELECT_IN_PROGRESS;
@@ -659,6 +665,7 @@ clip_process_selection(button, col, row, repeated_click)
 {
     VimClipboard	*cb = &clip_star;
     int			diff;
+    int			slen = 1;	/* cursor shape width */
 
     if (button == MOUSE_RELEASE)
     {
@@ -690,6 +697,9 @@ clip_process_selection(button, col, row, repeated_click)
 
     row = check_row(row);
     col = check_col(col);
+#ifdef FEAT_MBYTE
+    col = mb_fix_col(col, row);
+#endif
 
     if (col == (int)cb->prev.col && row == cb->prev.lnum && !repeated_click)
 	return;
@@ -754,17 +764,28 @@ clip_process_selection(button, col, row, repeated_click)
 		    clip_update_modeless_selection(cb, cb->origin_row,
 			    cb->origin_start_col, row, (int)Columns);
 		else
+		{
+#ifdef FEAT_MBYTE
+		    if (has_mbyte && mb_lefthalve(row, col))
+			slen = 2;
+#endif
 		    clip_update_modeless_selection(cb, cb->origin_row,
-			    cb->origin_start_col, row, col + 1);
+			    cb->origin_start_col, row, col + slen);
+		}
 	    }
 	    else
 	    {
+#ifdef FEAT_MBYTE
+		if (has_mbyte
+			&& mb_lefthalve(cb->origin_row, cb->origin_start_col))
+		    slen = 2;
+#endif
 		if (col >= (int)cb->word_end_col)
 		    clip_update_modeless_selection(cb, row, cb->word_end_col,
-			    cb->origin_row, cb->origin_start_col + 1);
+			    cb->origin_row, cb->origin_start_col + slen);
 		else
 		    clip_update_modeless_selection(cb, row, col,
-			    cb->origin_row, cb->origin_start_col + 1);
+			    cb->origin_row, cb->origin_start_col + slen);
 	    }
 	    break;
 
@@ -1231,21 +1252,31 @@ clip_get_word_boundaries(cb, row, col)
     int		start_class;
     int		temp_col;
     char_u	*p;
+#ifdef FEAT_MBYTE
+    int		mboff;
+#endif
 
     if (row >= screen_Rows || col >= screen_Columns)
 	return;
 
     p = ScreenLines + LineOffset[row];
 #ifdef FEAT_MBYTE
-    /* With UTF-8 there are zero bytes in the right halve of a double-wide
-     * character. */
-    if (enc_utf8 && p[col] == 0)
+    /* Correct for starting in the right halve of a double-wide char */
+    if (enc_dbcs != 0)
+	col -= dbcs_screen_head_off(p, p + col);
+    else if (enc_utf8 && p[col] == 0)
 	--col;
 #endif
     start_class = CHAR_CLASS(p[col]);
 
     temp_col = col;
     for ( ; temp_col > 0; temp_col--)
+#ifdef FEAT_MBYTE
+	if (enc_dbcs != 0
+		   && (mboff = dbcs_screen_head_off(p, p + temp_col - 1)) > 0)
+	    temp_col -= mboff;
+	else
+#endif
 	if (CHAR_CLASS(p[temp_col - 1]) != start_class
 #ifdef FEAT_MBYTE
 		&& !(enc_utf8 && p[temp_col - 1] == 0)
@@ -1256,6 +1287,11 @@ clip_get_word_boundaries(cb, row, col)
 
     temp_col = col;
     for ( ; temp_col < screen_Columns; temp_col++)
+#ifdef FEAT_MBYTE
+	if (enc_dbcs != 0 && dbcs_ptr2cells(p + temp_col) == 2)
+	    ++temp_col;
+	else
+#endif
 	if (CHAR_CLASS(p[temp_col]) != start_class
 #ifdef FEAT_MBYTE
 		&& !(enc_utf8 && p[temp_col] == 0)
@@ -1564,7 +1600,7 @@ fill_input_buf(exit_on_error)
 	return;
     }
 #  endif
-#  ifdef VMS
+#  ifdef VMS_OLD_STUFF
     while (!vim_is_input_buf_full() && RealWaitForChar(0, 0L))
     {
 	add_to_input_buf((char_u *)ibuf, 1);
@@ -2668,5 +2704,21 @@ ui_focus_change(in_focus)
 	cursor_on();	    /* redrawing may have switched it off */
 	out_flush();
     }
+}
+#endif
+
+#if defined(USE_IM_CONTROL) || defined(PROTO)
+/*
+ * Save current Input Method status to specified place.
+ */
+    void
+im_save_status(psave)
+    long *psave;
+{
+    /* Do save when IM is on, or IM is off and saved status is on */
+    if (im_get_status())
+	*psave = B_IMODE_IM;
+    else if (*psave == B_IMODE_IM)
+	*psave = B_IMODE_NONE;
 }
 #endif

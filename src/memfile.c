@@ -1225,14 +1225,11 @@ mf_do_open(mfp, fname, flags)
 	    (char *)mfp->mf_fname,
 #endif
 	    flags | O_EXTRA
-#if defined(UNIX) || defined(RISCOS)		 /* open in rw------- mode */
-		    , (mode_t)0600
+#if defined(UNIX) || defined(RISCOS) || defined(VMS)
+		    , (mode_t)0600		/* open in rw------- mode */
 #endif
 #if defined(MSDOS) || defined(MSWIN) || defined(__EMX__)
-		    , S_IREAD | S_IWRITE	 /* open read/write */
-#endif
-#ifdef VMS		    /* open in rw------- mode */
-		    , 0600
+		    , S_IREAD | S_IWRITE	/* open read/write */
 #endif
 		    );
 

@@ -662,10 +662,11 @@ EXTERN int	dont_scroll INIT(= FALSE);/* don't use scrollbars when TRUE */
 EXTERN int	mapped_ctrl_c INIT(= FALSE); /* CTRL-C is mapped */
 EXTERN int	ctrl_c_interrupts INIT(= TRUE);	/* CTRL-C sets got_int */
 
-EXTERN int	b_lmap_def INIT(= 0);	/* default for b_lmap, used when
-					   entering a new buffer; it's global
-					   because the new buffer may already
-					   be freed by then */
+/* default for b_im_insert and b_im_search, used when entering entering a
+ * new buffer; it's global because the new buffer may already be freed by
+ * then */
+EXTERN int	b_im_insert_def INIT(= B_IMODE_NONE);
+EXTERN int	b_im_search_def INIT(= B_IMODE_NONE);
 
 EXTERN cmdmod_T	cmdmod;			/* Ex command modifiers */
 

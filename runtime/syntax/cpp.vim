@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	C++
 " Maintainer:	Ken Shan <ccshan@post.harvard.edu>
-" Last change:	2001 Apr 29
+" Last change:	2001 May 14
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -13,7 +13,7 @@ endif
 
 " Read the C syntax to start with
 if version < 600
-  source <sfile>:p:h/c.vim
+  so <sfile>:p:h/c.vim
 else
   runtime! syntax/c.vim
   unlet b:current_syntax

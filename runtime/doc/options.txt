@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0af.  Last change: 2001 May 12
+*options.txt*   For Vim version 6.0ag.  Last change: 2001 May 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -635,6 +635,21 @@ A jump table for the options with a short description can be found at |Q_op|.
 	Setting this option does not change the background color, it tells Vim
 	what the background color looks like.  For changing the background
 	color, see |:hi-normal|.
+
+	When 'background' is set Vim will adjust the default color groups for
+	the new value.  But the colors used for syntax highlighting will not
+	change.
+	When a color scheme is loaded (the "colors_name" variable is set)
+	setting 'background' will cause the color scheme to be reloaded.  If
+	the color scheme adjusts to the value of 'background' this will work.
+	However, if the color scheme sets 'background' itself the effect may
+	be undone.  First delete the "colors_name" variable when needed.
+
+	When setting 'background' to the default value with: >
+		:set background&
+<	Vim will guess the value.  In the GUI this should work correctly,
+	in other cases Vim might not be able to guess the right value.
+
 	When starting the GUI, the default value for 'background' will be
 	"light".  When the value is not set in the .gvimrc, and Vim detects
 	that the background is actually quite dark, 'background' is set to
@@ -823,7 +838,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			global
 			{not in Vi}
 			{only available when compiled with the |+balloon_eval|
-			feature}
+			and |+sun_workshop| features}
 	Switch on the |balloon-eval| functionality.
 
 				     *'binary'* *'bin'* *'nobinary'* *'nobin'*
@@ -1053,7 +1068,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	 When 'encoding' is set to a Unicode encoding, and 'fileencodings' was
 	 not set yet, the default for 'fileencodings' is changed.
 
-					*'charconvert'* *'ccv'* *E202*
+					*'charconvert'* *'ccv'* *E202* *E214*
 'charconvert' 'ccv'	string (default "")
 			global
 			{only available when compiled with the |+multi_byte|
@@ -1940,7 +1955,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	also see |.vimrc| and |gui-init|.
 	This option cannot be set from a |modeline|, for security reasons.
 
-					*'fileencoding'* *'fenc'*
+				*'fileencoding'* *'fenc'* *E213*
 'fileencoding' 'fenc'	string (default: "")
 			local to buffer
 			{only available when compiled with the |+multi_byte|
@@ -2639,6 +2654,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 		the right moment, try adding this flag.  This must be done
 		before starting the GUI.  Set it in your gvimrc.  Adding or
 		removing it after the GUI has started has no effect.
+	  'F'	Add a footer.  Only for Motif.  See |gui-footer|.
 
 						*'guipty'* *'noguipty'*
 'guipty'		boolean	(default on)
@@ -2843,6 +2859,38 @@ A jump table for the options with a short description can be found at |Q_op|.
 	Also see 'smartcase'.
 	Can be overruled by using "\c" or "\C" in the pattern, see
 	|/ignorecase|.
+
+						*'iminsert'* *'imi'*
+'iminsert' 'imi'	number (default 0)
+			local to buffer
+			{not in Vi}
+	Specifies wither langmap or an Input Method (IM) is to be used in
+	Insert mode.  Valid values:
+		0	langmap is off and IM is off
+		1	langmap is on and IM is off
+		2	IM is on and langmap is off
+	2 is available when compiled with the |+multi_byte_ime| or |+xim| or
+	|global-ime|.
+	To always reset the option to zero when leaving Insert mode with <Esc>
+	this can be used: >
+		:inoremap <ESC> <ESC>:set iminsert=0<CR>
+<	This make langmap and IM turn off automatically when leaving Insert
+	mode.
+	Note that this option changes when using CTRL-^. |i_CTRL-^|
+	The value is set to 1 when defining a new |:lmap| mapping.
+	It is also used for the argument of commands like "r" and "f".
+
+						*'imsearch'* *'ims'*
+'imsearch' 'ims'	number (default 0)
+			local to buffer
+			{not in Vi}
+	Specifies wither langmap or an Input Method (IM) is to be used when
+	entering a search pattern.
+	The value has the same meaning as 'iminsert'.  Additionally -1 can be
+	used.  This means that the value of 'iminsert' is used.  This makes it
+	look like 'iminsert' is also used when typing a search pattern.
+	Note that this option changes when using CTRL-^. |c_CTRL-^|
+	The value is set to 1 when defining a new |:lmap| mapping.
 
 						*'include'* *'inc'*
 'include' 'inc'		string	(default "^#\s*include")
@@ -3227,7 +3275,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			{not in Vi}
 	When this option is set, the screen will not be redrawn while
 	executing macros, registers and other commands that have not been
-	typed.
+	typed.  To force an update use |:redraw|.
 
 			*'linebreak'* *'lbr'* *'nolinebreak'* *'nolbr'*
 'linebreak' 'lbr'	boolean	(default off)
@@ -3883,8 +3931,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	except that only one font may be named, and the special "guifont=*"
 	syntax is not available.
 
-						*'printersettings'* *'pst'*
-'printersettings' 'pst'	string (default "left:10pc,right:5pc,
+						*'printersettings'* *'pset'*
+'printersettings' 'pset' string (default "left:10pc,right:5pc,
 						 top:5pc,bottom:5pc,header:2")
 			global
 			{not in Vi}
@@ -4668,7 +4716,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 'startofline' 'sol'	boolean	(default on)
 			global
 			{not in Vi}
-	When on the commands listed below move the cursor to the first
+	When "on" the commands listed below move the cursor to the first
 	blank of the line.  When off the cursor is kept in the same column
 	(if possible).  This applies to the commands: CTRL-D, CTRL-U, CTRL-B,
 	CTRL-F, "G", "H", "M", "L", , and to the commands "d", "<<" and ">>"

@@ -58,7 +58,6 @@ static void	 load_buffer_by_number(int, int);
 static void	 load_window(char *, int lnum);
 static void	 warp_to_pc(int);
 static void	 bevalCB(BalloonEval *, int);
-static char	*fixlabel(char *);
 static char	*fixAccelText(char *);
 static void	 addMenu(char *, char *, char *);
 static char	*lookupVerb(char *, int);
@@ -120,23 +119,23 @@ workshop_init()
      * Turn on MenuBar, ToolBar, and Footer.
      */
     STRCPY(buf, p_go);
-    if (vim_strchr(p_go, 'm') == NULL)
+    if (vim_strchr(p_go, GO_MENUS) == NULL)
     {
 	STRCAT(buf, "m");
 	is_dirty = TRUE;
     }
-    if (vim_strchr(p_go, 'T') == NULL)
+    if (vim_strchr(p_go, GO_TOOLBAR) == NULL)
     {
 	STRCAT(buf, "T");
 	is_dirty = TRUE;
     }
-    if (vim_strchr(p_go, 'F') == NULL)
+    if (vim_strchr(p_go, GO_FOOTER) == NULL)
     {
 	STRCAT(buf, "F");
 	is_dirty = TRUE;
     }
     if (is_dirty)
-	set_option_value((char_u *) "go", 0, buf, 0);
+	set_option_value((char_u *)"go", 0L, buf, 0);
 
     /*
      * Set size from workshop_get_width_height().
@@ -155,7 +154,7 @@ workshop_init()
      */
     while ((mask = XtAppPending(app_context))
 	    && (mask & XtIMAlternateInput) && !workshopInitDone)
-	XtAppProcessEvent(app_context, XtIMAlternateInput);
+	XtAppProcessEvent(app_context, (XtInputMask)XtIMAlternateInput);
 }
 
     void
@@ -183,7 +182,7 @@ ex_wsverb(exarg_T *eap)
     char *
 workshop_get_editor_name()
 {
-	return "gvim";
+    return "gvim";
 }
 
 /*
@@ -208,6 +207,7 @@ workshop_get_editor_version()
  * Function:
  *	Load a given file into the WorkShop buffer.
  */
+/*ARGSUSED*/
     void
 workshop_load_file(
 	char	*filename,		/* the file to load */
@@ -243,9 +243,7 @@ workshop_reload_file(
 {
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_reload_file(%s, %d)\n", filename, line);
-    }
 #endif
     load_window(filename, line);
 }
@@ -256,9 +254,7 @@ workshop_show_file(
 {
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_show_file(%s)\n", filename);
-    }
 #endif
 
     load_window(filename, 0);
@@ -271,33 +267,27 @@ workshop_goto_line(
 {
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
-	wstrace("workshop_goto_line(%s, %d)\n",
-		filename, lineno);
-    }
+	wstrace("workshop_goto_line(%s, %d)\n", filename, lineno);
 #endif
 
     load_window(filename, lineno);
 }
 
+/*ARGSUSED*/
     void
 workshop_front_file(
 	char	*filename)
 {
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_front_file()\n");
-    }
 #endif
     /*
      * Assumption: This function will always be called after a call to
      * workshop_show_file(), so the file is always showing.
      */
     if (vimShell != NULL)
-    {
 	XRaiseWindow(gui.dpy, XtWindow(vimShell));
-    }
 }
 
     void
@@ -308,14 +298,12 @@ workshop_save_file(
 
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_save_file(%s)\n", filename);
-    }
 #endif
 
     /* Save the given file */
     sprintf(cbuf, "w %s", filename);
-    coloncmd(cbuf, True);
+    coloncmd(cbuf, TRUE);
 }
 
     void
@@ -324,9 +312,7 @@ workshop_save_files()
     /* Save the given file */
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_save_files()\n");
-    }
 #endif
 
     add_to_input_buf((char_u *) ":wall\n", 6);
@@ -337,9 +323,7 @@ workshop_quit()
 {
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_quit()\n");
-    }
 #endif
 
     add_to_input_buf((char_u *) ":qall\n", 6);
@@ -350,9 +334,7 @@ workshop_minimize()
 {
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_minimize()\n");
-    }
 #endif
     workshop_minimize_shell(vimShell);
 }
@@ -361,9 +343,7 @@ workshop_maximize()
 {
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_maximize()\n");
-    }
 #endif
 
     workshop_maximize_shell(vimShell);
@@ -387,13 +367,9 @@ workshop_add_mark_type(
 
 	cp = strrchr(sign, '/');
 	if (cp == NULL)
-	{
 	    cp = sign;
-	}
 	else
-	{
 	    cp++;		/* skip '/' character */
-	}
 	wstrace("workshop_add_mark_type(%d, \"%s\", \"%s\")\n", index,
 		colorspec && *colorspec ? colorspec : "<None>", cp);
     }
@@ -403,35 +379,24 @@ workshop_add_mark_type(
      * Isolate the basename of sign in gbuf. We will use this for the
      * GroupName in the highlight command sent to vim.
      */
-    bp = strrchr(sign, '/');
-    if (bp == NULL)
-    {
-	bp = sign;
-    }
-    else
-    {
-	bp++;
-    }
-    strcpy(gbuf, bp);
+    STRCPY(gbuf, gettail((char_u *)sign));
     bp = strrchr(gbuf, '.');
     if (bp != NULL)
-    {
-	*bp = NULL;
-    }
+	*bp = NUL;
 
-    if (colorspec && *colorspec)
+    if (gbuf[0] != '-' && gbuf[1] != NUL)
     {
-	sprintf(cibuf, "guibg=%s", colorspec);
-    }
-    else
-    {
-	cibuf[0] = NULL;
-    }
-    if (gbuf[0] != '-' && gbuf[1] != NULL)
-    {
-	sprintf(cbuf, "highlight %s %s sign=%s,%d",
-		gbuf, cibuf, sign, index);
-	coloncmd(cbuf, True);
+	if (colorspec != NULL && *colorspec)
+	{
+	    sprintf(cbuf, "highlight WS%s guibg=%s", gbuf, colorspec);
+	    coloncmd(cbuf, FALSE);
+	    sprintf(cibuf, "linehl=WS%s", gbuf);
+	}
+	else
+	    cibuf[0] = NULL;
+
+	sprintf(cbuf, "sign define %d %s icon=%s", index, cibuf, sign);
+	coloncmd(cbuf, TRUE);
     }
 }
 
@@ -447,14 +412,13 @@ workshop_set_mark(
     /* Set mark in a given file */
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_set_mark(%s, %d (ln), %d (id), %d (idx))\n",
 		filename, lineno, markId, idx);
-    }
 #endif
 
-    sprintf(cbuf, "sign %d %d %d %s", markId, lineno, idx, filename);
-    coloncmd(cbuf, True);
+    sprintf(cbuf, "sign place %d line=%d name=%d file=%s",
+					       markId, lineno, idx, filename);
+    coloncmd(cbuf, TRUE);
 }
 
     void
@@ -468,14 +432,12 @@ workshop_change_mark_type(
     /* Change mark type */
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_change_mark_type(%s, %d, %d)\n",
 		filename, markId, idx);
-    }
 #endif
 
-    sprintf(cbuf, "sign %d %d %s", markId, idx, filename);
-    coloncmd(cbuf, True);
+    sprintf(cbuf, "sign place %d name=%d file=%s", markId, idx, filename);
+    coloncmd(cbuf, TRUE);
 }
 
 /*
@@ -488,25 +450,21 @@ workshop_goto_mark(
 	int		 markId,
 	char		*message)
 {
-    char		 cbuf[BUFSIZ];	/* command buffer */
+    char	cbuf[BUFSIZ];	/* command buffer */
 
     /* Goto mark */
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_goto_mark(%s, %d (id), %s)\n",
 		filename, markId, message && *message &&
 		!(*message == ' ' && message[1] == NULL) ?
 		message : "<None>");
-    }
 #endif
 
-    sprintf(cbuf, "sign %d %s", markId, filename);
-    coloncmd(cbuf, False);
-    if (message != NULL && *message != NULL)
-    {
-	gui_mch_set_footer((char_u *) message);
-    }
+    sprintf(cbuf, "sign jump %d file=%s", markId, filename);
+    coloncmd(cbuf, TRUE);
+    if (message != NULL && *message != NUL)
+	gui_mch_set_footer((char_u *)message);
 }
 
     void
@@ -514,21 +472,20 @@ workshop_delete_mark(
 	char		*filename,
 	int		 markId)
 {
-    char		 cbuf[BUFSIZ];	/* command buffer */
+    char	cbuf[BUFSIZ];	/* command buffer */
 
     /* Delete mark */
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_delete_mark(%s, %d (id))\n",
 		filename, markId);
-    }
 #endif
 
-    sprintf(cbuf, "unsign %d %s", markId, filename);
-    coloncmd(cbuf, True);
+    sprintf(cbuf, "sign unplace %d file=%s", markId, filename);
+    coloncmd(cbuf, TRUE);
 }
 
+#if 0	/* not used */
     void
 workshop_delete_all_marks(
     void	*window,
@@ -536,14 +493,13 @@ workshop_delete_all_marks(
 {
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_delete_all_marks(%#x, %s)\n",
 		window, doRefresh ? "True" : "False");
-    }
 #endif
 
-    coloncmd("unsign *", True);
+    coloncmd("sign unplace *", TRUE);
 }
+#endif
 
     int
 workshop_get_mark_lineno(
@@ -556,35 +512,31 @@ workshop_get_mark_lineno(
     /* Get mark line number */
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_get_mark_lineno(%s, %d)\n",
 		filename, markId);
-    }
 #endif
 
     lineno = 0;
-    buf = buflist_findname((char_u *) filename);
+    buf = buflist_findname((char_u *)filename);
     if (buf != NULL)
-    {
 	lineno = buf_findsign(buf, markId);
-    }
 
     return lineno;
 }
 
 
+#if 0	/* not used */
     void
 workshop_adjust_marks(Widget *window, int pos,
 			int inserted, int deleted)
 {
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("XXXworkshop_adjust_marks(%s, %d, %d, %d)\n",
 		window ? XtName(window) : "<None>", pos, inserted, deleted);
-    }
 #endif
 }
+#endif
 
 /*
  * Are there any moved marks? If so, call workshop_move_mark on
@@ -592,6 +544,7 @@ workshop_adjust_marks(Widget *window, int pos,
  * breakpoints have moved when a program has been recompiled and
  * reloaded into dbx.
  */
+/*ARGSUSED*/
     void
 workshop_moved_marks(char *filename)
 {
@@ -611,9 +564,7 @@ workshop_get_font_height()
 
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_get_font_height()\n");
-    }
 #endif
 
     /* Pick the proper signs for this font size */
@@ -630,6 +581,7 @@ workshop_get_font_height()
     return (int)h;
 }
 
+/*ARGSUSED*/
     void
 workshop_footer_message(
 	char		*message,
@@ -644,8 +596,8 @@ workshop_footer_message(
 }
 
 /*
- * workshop_menu_begin() is passed the menu name. We determine its mnemonic here
- * and store its name and priority.
+ * workshop_menu_begin() is passed the menu name. We determine its mnemonic
+ * here and store its name and priority.
  */
     void
 workshop_menu_begin(
@@ -660,9 +612,7 @@ workshop_menu_begin(
 
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_menu_begin()\n");
-    }
 #endif
 
     /*
@@ -705,9 +655,7 @@ workshop_submenu_begin(
 #ifdef WSDEBUG_TRACE
     if (ws_debug  && ws_dlevel & WS_TRACE
 	    && strncmp(curMenuName, "ToolBar", 7) != 0)
-    {
 	wstrace("workshop_submenu_begin(%s)\n", label);
-    }
 #endif
 
     strcat(curMenuName, ".");
@@ -728,9 +676,7 @@ workshop_submenu_end()
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE)
 	    && strncmp(curMenuName, "ToolBar", 7) != 0)
-    {
 	wstrace("workshop_submenu_end()\n");
-    }
 #endif
 
     p = strrchr(curMenuPriority, '.');
@@ -747,7 +693,7 @@ workshop_submenu_end()
  * command. The globals curMenuName and curMenuPriority contain the name and
  * priority of the parent menu tree.
  */
-
+/*ARGSUSED*/
     void
 workshop_menu_item(
 	char		*label,
@@ -767,7 +713,6 @@ workshop_menu_item(
 	    && strncmp(curMenuName, "ToolBar", 7) != 0)
     {
 	if (ws_dlevel & WS_TRACE_VERBOSE)
-	{
 	    wsdebug("workshop_menu_item(\n"
 		    "\tlabel = \"%s\",\n"
 		    "\tverb = %s,\n"
@@ -785,44 +730,34 @@ workshop_menu_item(
 		    name && *name ? name : "<None>",
 		    filepos && *filepos ? filepos : "<None>",
 		    sensitive);
-	}
 	else if (ws_dlevel & WS_TRACE)
-	{
 	    wstrace("workshop_menu_item(\"%s\", %s)\n",
 		    label && *label ? label : "<None>",
 		    verb && *verb ? verb : "<None>", sensitive);
-	}
-
     }
 #endif
 #ifdef WSDEBUG_SENSE
     if (ws_debug)
-    {
 	wstrace("menu:   %-21.20s%-21.20s(%s)\n", label, verb,
 		*sensitive == '1' ? "Sensitive" : "Insensitive");
-    }
 #endif
 
     if (acceleratorText != NULL)
-    {
 	sprintf(accText, "<Tab>%s", acceleratorText);
-    }
     else
-    {
 	accText[0] = NULL;
-    }
     updatePriority(False);
     sprintf(namebuf, "%s.%s", curMenuName, fixup(label));
     sprintf(cbuf, "amenu %s %s%s\t:wsverb %s<CR>",
 	    curMenuPriority, namebuf, accText, verb);
 
-    coloncmd(cbuf, True);
+    coloncmd(cbuf, TRUE);
     addMenu(namebuf, fixAccelText(acceleratorText), verb);
 
     if (*sensitive == '0')
     {
 	sprintf(cbuf, "amenu disable %s", namebuf);
-	coloncmd(cbuf, True);
+	coloncmd(cbuf, TRUE);
     }
 }
 
@@ -838,9 +773,7 @@ workshop_menu_end()
 
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_menu_end()\n");
-    }
 #endif
 
     using_tearoff = vim_strchr(p_go, GO_TEAROFF) != NULL;
@@ -852,9 +785,7 @@ workshop_toolbar_begin()
 {
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_toolbar_begin()\n");
-    }
 #endif
 
     coloncmd("aunmenu ToolBar", True);
@@ -868,7 +799,6 @@ workshop_toolbar_end()
 
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_toolbar_end()\n");
     }
 #endif
@@ -880,11 +810,12 @@ workshop_toolbar_end()
     if (vim_strchr(p_go, 'T') == NULL)
     {
 	STRCAT(buf, "T");
-	set_option_value((char_u *)"go", 0, buf, 0);
+	set_option_value((char_u *)"go", 0L, buf, 0);
     }
     workshopInitDone = True;
 }
 
+/*ARGSUSED*/
     void
 workshop_toolbar_button(
 	char	*label,
@@ -896,13 +827,13 @@ workshop_toolbar_button(
 	char	*file,
 	char	*left)
 {
-    char	cbuf[BUFSIZ];
+    char	cbuf[BUFSIZ + MAXPATHLEN];
     char	namebuf[BUFSIZ];
     static int	tbid = 1;
+    char_u	*p;
 
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE))
-    {
 	wsdebug("workshop_toolbar_button(\"%s\", %s, %s,\n"
 		"\t%s, \"%s\", %s,\n\t\"%s\",\n\t<%s>)\n",
 		label   && *label   ? label   : "<None>",
@@ -913,20 +844,15 @@ workshop_toolbar_button(
 		sense   && *sense   ? sense   : "<None>",
 		file    && *file    ? file    : "<None>",
 		left    && *left    ? left    : "<None>");
-    }
     else if (WSDLEVEL(WS_TRACE))
-    {
 	wstrace("workshop_toolbar_button(\"%s\", %s)\n",
 		label   && *label   ? label   : "<None>",
 		verb    && *verb    ? verb    : "<None>");
-    }
 #endif
 #ifdef WSDEBUG_SENSE
     if (ws_debug)
-    {
 	wsdebug("button: %-21.20s%-21.20s(%s)\n", label, verb,
 		*sense == '1' ? "Sensitive" : "Insensitive");
-    }
 #endif
 
     if (left && *left && atoi(left) > 0)
@@ -938,8 +864,18 @@ workshop_toolbar_button(
 	coloncmd(cbuf, True);
     }
 
-    sprintf(namebuf, "ToolBar.%s", fixlabel(label));
-    sprintf(cbuf, "amenu 1.%d %s :wsverb %s<CR>", tbpri, namebuf, verb);
+    p = vim_strsave_escaped((char_u *)label, (char_u *)"\\. ");
+    sprintf(namebuf, "ToolBar.%s", p);
+    vim_free(p);
+    STRCPY(cbuf, "amenu ");
+    if (file != NULL && *file != NUL)
+    {
+	p = vim_strsave_escaped((char_u *)file, (char_u *)" ");
+	sprintf(cbuf + STRLEN(cbuf), "icon=%s ", p);
+	vim_free(p);
+    }
+    sprintf(cbuf + STRLEN(cbuf), "1.%d %s :wsverb %s<CR>",
+							tbpri, namebuf, verb);
 
     /* Define the menu item */
     coloncmd(cbuf, True);
@@ -968,7 +904,6 @@ workshop_frame_sensitivities(
 {
     VerbSense	*vp;		/* iterate through vs */
     char	*menu_name;	/* used in menu lookup */
-    char	*sense;		/* to move ?: out of loop */
     int		 cnt;		/* count of verbs to skip */
     int		 len;		/* length of nonvariant part of command */
     char	 cbuf[4096];
@@ -978,26 +913,18 @@ workshop_frame_sensitivities(
     {
 	wsdebug("workshop_frame_sensitivities(\n");
 	for (vp = vs; vp->verb != NULL; vp++)
-	{
 	    wsdebug("\t%-25s%d\n", vp->verb, vp->sense);
-	}
 	wsdebug(")\n");
     }
     else if (WSDLEVEL(WS_TRACE))
-    {
 	wstrace("workshop_frame_sensitivities()\n");
-    }
 #endif
 #ifdef WSDEBUG_SENSE
     if (ws_debug)
-    {
 	for (vp = vs; vp->verb != NULL; vp++)
-	{
 	    wsdebug("change: %-21.20s%-21.20s(%s)\n",
 		    "", vp->verb, vp->sense == 1 ?
 		    "Sensitive" : "Insensitive");
-	}
-    }
 #endif
 
     /*
@@ -1007,18 +934,19 @@ workshop_frame_sensitivities(
     for (vp = vs; vp->verb != NULL; vp++)
     {
 	cnt = 0;
-	sense = vp->sense ? "enable" : "disable";
 	strcpy(cbuf, "amenu");
 	strcat(cbuf, " ");
-	strcat(cbuf, sense);
+	strcat(cbuf, vp->sense ? "enable" : "disable");
 	strcat(cbuf, " ");
 	len = strlen(cbuf);
 	while ((menu_name = lookupVerb(vp->verb, cnt++)) != NULL)
 	{
 	    strcpy(&cbuf[len], menu_name);
-	    coloncmd(cbuf, True);
+	    coloncmd(cbuf, FALSE);
 	}
     }
+    gui_update_menus(0);
+    gui_mch_flush();
 }
 
     void
@@ -1040,29 +968,21 @@ workshop_set_option(
     {
 	case 's':
 	    if (strcmp(option, "syntax") == 0)
-	    {
 		sprintf(cbuf, "syntax %s", value);
-	    }
 	    else if (strcmp(option, "savefiles") == 0)
-	    {
-		/* XXX - Not yet implemented */
-	    }
+		; /* XXX - Not yet implemented */
 	    break;
 
 	case 'l':
 	    if (strcmp(option, "lineno") == 0)
-	    {
 		sprintf(cbuf, "set %snu",
 			(strcmp(value, "on") == 0) ? "" : "no");
-	    }
 	    break;
 
 	case 'p':
 	    if (strcmp(option, "parentheses") == 0)
-	    {
 		sprintf(cbuf, "set %ssm",
 			(strcmp(value, "on") == 0) ? "" : "no");
-	    }
 	    break;
 
 	case 'w':
@@ -1093,9 +1013,7 @@ workshop_set_option(
 	    break;
     }
     if (cbuf[0] != NULL)
-    {
-	coloncmd(cbuf, True);
-    }
+	coloncmd(cbuf, TRUE);
 }
 
 
@@ -1107,13 +1025,11 @@ workshop_balloon_mode(
 
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_balloon_mode(%s)\n", on ? "True" : "False");
-    }
 #endif
 
     sprintf(cbuf, "set %sbeval", on ? "" : "no");
-    coloncmd(cbuf, True);
+    coloncmd(cbuf, TRUE);
 }
 
 
@@ -1125,13 +1041,11 @@ workshop_balloon_delay(
 
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_balloon_delay(%d)\n", delay);
-    }
 #endif
 
     sprintf(cbuf, "set bdlay=%d", delay);
-    coloncmd(cbuf, True);
+    coloncmd(cbuf, TRUE);
 }
 
 
@@ -1158,40 +1072,34 @@ workshop_hotkeys(
 
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_hotkeys(%s)\n", on ? "True" : "False");
-    }
 #endif
 
     workshopHotKeysEnabled = on;
     if (workshopHotKeysEnabled)
-    {
 	for (mp = menuMap; mp < &menuMap[menuMapSize]; mp++)
 	{
 	    if (mp->accel != NULL)
 	    {
-		sprintf(cbuf, "map %s :wsverb %s<CR>",
-			mp->accel, mp->verb);
-		coloncmd(cbuf, True);
+		sprintf(cbuf, "map %s :wsverb %s<CR>", mp->accel, mp->verb);
+		coloncmd(cbuf, TRUE);
 	    }
 	}
-    }
     else
-    {
 	for (mp = menuMap; mp < &menuMap[menuMapSize]; mp++)
 	{
 	    if (mp->accel != NULL)
 	    {
 		sprintf(cbuf, "unmap %s", mp->accel);
-		coloncmd(cbuf, True);
+		coloncmd(cbuf, TRUE);
 	    }
 	}
-    }
 }
 
 /*
  * A button in the toolbar has been pushed.
  */
+/*ARGSUSED*/
     int
 workshop_get_positions(
 	void		*clientData,	/* unused */
@@ -1209,11 +1117,9 @@ workshop_get_positions(
 
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_get_positions(%#x, \"%s\", ...)\n",
 		clientData, (curbuf && curbuf->b_sfname != NULL)
 				      ? (char *)curbuf->b_sfname : "<None>");
-    }
 #endif
 
     strcpy(ffname, (char *) curbuf->b_ffname);
@@ -1230,13 +1136,9 @@ workshop_get_positions(
 	*selEndCol = curbuf->b_visual_end.col;
 	*selection = get_selection(curbuf);
 	if (*selection)
-	{
 	    *selLength = strlen(*selection);
-	}
 	else
-	{
 	    *selLength = 0;
-	}
     }
     else
     {
@@ -1300,10 +1202,7 @@ get_selection(
 
 		lnum = start->lnum + 1;
 		while (lnum < end->lnum)
-		{
-		    sp = append_selection(lnum++,
-			    sp, &size, &slen);
-		}
+		    sp = append_selection(lnum++, sp, &size, &slen);
 
 		lp = (char *) ml_get(end->lnum);
 		llen = end->col + 1;
@@ -1327,9 +1226,7 @@ get_selection(
 	}
     }
     else
-    {
 	sp = NULL;
-    }
 
     return sp;
 }
@@ -1345,7 +1242,7 @@ append_selection(
     int		 llen;		/* strlen of lp */
     char	*new_sp;	/* temp pointer to new sp */
 
-    lp = (char *) ml_get(lnum);
+    lp = (char *)ml_get((linenr_T)lnum);
     llen = strlen(lp);
 
     if ((*slen + llen) <= *size)
@@ -1437,17 +1334,11 @@ warp_to_pc(
     if (lnum > 0)
     {
 	if (State & INSERT)
-	{
 	    add_to_input_buf((char_u *) "\033", 1);
-	}
 	if (isShowing(lnum))
-	{
 	    sprintf(lbuf, "%dG", lnum);
-	}
 	else
-	{
 	    sprintf(lbuf, "%dz.", lnum);
-	}
 	add_to_input_buf((char_u *) lbuf, strlen(lbuf));
     }
 }
@@ -1524,15 +1415,9 @@ addUniqueMnemonic(
 
     found = NULL;
     for (p = label; *p != NULL; p++)
-    {
 	if (strchr(mnemonics, *p) == 0)
-	{
 	    if (found == NULL || (isupper(*p) && islower(*found)))
-	    {
 		found = p;
-	    }
-	}
-    }
 
     if (found != NULL)
     {
@@ -1541,9 +1426,7 @@ addUniqueMnemonic(
 	strcat(name, found);
     }
     else
-    {
 	strcpy(name, label);
-    }
 
     return name;
 }
@@ -1565,9 +1448,7 @@ fixup(
     while (*lp != NULL)
     {
 	if (*lp == ' ' || *lp == '.')
-	{
 	    *bp++ = '\\';
-	}
 	*bp++ = *lp++;
     }
     *bp = NULL;
@@ -1591,13 +1472,9 @@ workshop_test_getcurrentfile()
 		NULL, &filename, &curLine, &curCol, &selStartLine,
 		&selStartCol, &selEndLine, &selEndCol, &selLength,
 		&selection))
-    {
 	return filename;
-    }
     else
-    {
 	return NULL;
-    }
 }
 
     int
@@ -1617,13 +1494,9 @@ workshop_test_getcursorcol()
 		NULL, &filename, &curLine, &curCol, &selStartLine,
 		&selStartCol, &selEndLine, &selEndCol, &selLength,
 		&selection))
-    {
 	return curCol;
-    }
     else
-    {
 	return -1;
-    }
 }
 
     char *
@@ -1643,15 +1516,12 @@ workshop_test_getselectedtext()
 		NULL, &filename, &curLine, &curCol, &selStartLine,
 		&selStartCol, &selEndLine, &selEndCol, &selLength,
 		&selection))
-    {
 	return selection;
-    }
     else
-    {
 	return NULL;
-    }
 }
 
+/*ARGSUSED*/
     void
 workshop_save_sensitivity(char *filename)
 {
@@ -1660,43 +1530,14 @@ workshop_save_sensitivity(char *filename)
 #endif
 
     static char *
-fixlabel(
-	char		*lp)		/* pointer to original label */
-{
-    char	*bp;		/* pointer into label buffer */
-    int		 len;		/* number of bytes left in lbuf */
-    static char	 lbuf[BUFSIZ];	/* static buffer to store fixed label */
-
-    bp = lbuf;
-    len = BUFSIZ - 1;
-    while (len > 0 && *lp != NULL)
-    {
-	if (isspace(*lp))
-	{
-	    *bp++ = '\\';
-	    len--;
-	}
-	*bp++ = *lp++;
-	len--;
-    }
-    *bp = NULL;			/* NULL terminate the label */
-
-    return lbuf;
-}
-
-
-
-    static char *
 fixAccelText(
 	char		*ap)		/* original acceleratorText */
 {
-    char		 buf[256];	/* build in temp buffer */
-    char		*shift;		/* shift string of "" */
+    char	buf[256];	/* build in temp buffer */
+    char	*shift;		/* shift string of "" */
 
     if (ap == NULL)
-    {
 	return NULL;
-    }
 
     /* If the accelerator is shifted use the vim form */
     if (strncmp("Shift+", ap, 6) == NULL)
@@ -1705,9 +1546,7 @@ fixAccelText(
 	ap += 6;
     }
     else
-    {
 	shift = "";
-    }
 
     if (*ap == 'F' && atoi(&ap[1]) > 0)
     {
@@ -1715,9 +1554,7 @@ fixAccelText(
 	return strdup(buf);
     }
     else
-    {
 	return NULL;
-    }
 }
 
     static void
@@ -1764,20 +1601,14 @@ bevalCB(
 	     * If successful, it will respond with a balloon cmd.
 	     */
 	    if (state & ControlMask)
-	    {
 		/* Evaluate *(expression) */
-		type = GPLineEval_INDIRECT;
-	    }
+		type = (int)GPLineEval_INDIRECT;
 	    else if (state & ShiftMask)
-	    {
 		/* Evaluate type(expression) */
-		type = GPLineEval_TYPE;
-	    }
+		type = (int)GPLineEval_TYPE;
 	    else
-	    {
 		/* Evaluate value(expression) */
-		type = GPLineEval_EVALUATE;
-	    }
+		type = (int)GPLineEval_EVALUATE;
 
 	    /* Send request to dbx */
 	    sprintf(buf, "toolVerb debug.balloonEval "
@@ -1786,9 +1617,7 @@ bevalCB(
 		    strlen((char *) text), (char *) text);
 	    balloonEval = beval;
 	    if (index > 0)
-	    {
 		workshop_send_message(buf);
-	    }
 	}
     }
 }
@@ -1806,17 +1635,11 @@ computeIndex(
     while (line[idx])
     {
 	if (line[idx] == '\t')
-	{
 	    col += ts - (col % ts);
-	}
 	else
-	{
 	    col++;
-	}
 	if (col == wantedCol)
-	{
 	    return idx;
-	}
 	idx++;
     }
 
@@ -1851,7 +1674,7 @@ addMenu(
 	if (accel && workshopHotKeysEnabled)
 	{
 	    sprintf(cbuf, "map %s :wsverb %s<CR>", accel, verb);
-	    coloncmd(cbuf, True);
+	    coloncmd(cbuf, TRUE);
 	}
     }
 }
@@ -1860,7 +1683,7 @@ addMenu(
 nameStrip(
 	char		*raw)		/* menu name, possibly with & chars */
 {
-    static char		 buf[BUFSIZ];	/* build stripped name here */
+    static char		buf[BUFSIZ];	/* build stripped name here */
     char		*bp = buf;
 
     while (*raw)
@@ -1876,18 +1699,14 @@ nameStrip(
 
     static char *
 lookupVerb(
-	char		*verb,
-	int		 skip)		/* number of matches to skip */
+	char	*verb,
+	int	skip)		/* number of matches to skip */
 {
-    int		 i;		/* loop iterator */
+    int		i;		/* loop iterator */
 
     for (i = 0; i < menuMapSize; i++)
-    {
 	if (strcmp(menuMap[i].verb, verb) == NULL && skip-- == 0)
-	{
 	    return nameStrip(menuMap[i].name);
-	}
-    }
 
     return NULL;
 }
@@ -1895,20 +1714,13 @@ lookupVerb(
 
     static void
 coloncmd(
-	char		*cmd,		/* the command to print */
-	Boolean		 force)		/* force cursor update */
+	char	*cmd,		/* the command to print */
+	Boolean	force)		/* force cursor update */
 {
-    int		 row;		/* save pre-command row position */
-    int		 col;		/* save pre-command column position */
-
 #ifdef WSDEBUG
     if (WSDLEVEL(WS_TRACE_COLONCMD))
-    {
 	wsdebug("Cmd: %s\n", cmd);
-    }
 #endif
-    row = gui.cursor_row;
-    col = gui.cursor_col;
 
     ALT_INPUT_LOCK_ON;
     do_cmdline_cmd((char_u *)cmd);
@@ -1916,10 +1728,11 @@ coloncmd(
 
     if (force)
     {
+	update_screen(0);	/* may need to update the screen */
+	setcursor();
 	out_flush();		/* make sure output has been written */
-	gui_set_cursor(row, col);
 	gui_update_cursor(TRUE, FALSE);
-	XFlush(gui.dpy);
+	gui_mch_flush();
     }
 }
 
@@ -1933,26 +1746,24 @@ coloncmd(
  */
     static void
 setDollarVim(
-	char		*rundir)
+	char	*rundir)
 {
-    char		 buf[MAXPATHLEN];
-    char		*cp;
+    char	 buf[MAXPATHLEN];
+    char	*cp;
 
     /*
      * First case: Running from <install-dir>/SUNWspro/bin
      */
     strcpy(buf, rundir);
     strcat(buf, "/../contrib/contrib6/vim" VIM_VERSION_SHORT "/share/vim/"
-        VIM_VERSION_NODOT "/syntax/syntax.vim");
+	    VIM_VERSION_NODOT "/syntax/syntax.vim");
     if (access(buf, R_OK) == 0)
     {
 	strcpy(buf, "SPRO_WSDIR=");
 	strcat(buf, rundir);
 	cp = strrchr(buf, '/');
 	if (cp != NULL)
-	{
 	    strcpy(cp, "/WS6U2");
-	}
 	putenv(strdup(buf));
 
 	strcpy(buf, "VIM=");
@@ -1969,22 +1780,20 @@ setDollarVim(
      */
     strcpy(buf, rundir);
     strcat(buf, "/../../../contrib/contrib6/vim" VIM_VERSION_SHORT
-        "/share/vim/" VIM_VERSION_NODOT "/syntax/syntax.vim");
+	    "/share/vim/" VIM_VERSION_NODOT "/syntax/syntax.vim");
     if (access(buf, R_OK) == 0)
     {
 	strcpy(buf, "SPRO_WSDIR=");
 	strcat(buf, rundir);
 	cp = strrchr(buf, '/');
 	if (cp != NULL)
-	{
 	    strcpy(cp, "../../../../WS6U2");
-	}
 	putenv(strdup(buf));
 
 	strcpy(buf, "VIM=");
 	strcat(buf, rundir);
 	strcat(buf, "/../../../contrib/contrib6/vim" VIM_VERSION_SHORT
-	    "/share/vim/" VIM_VERSION_NODOT);
+		"/share/vim/" VIM_VERSION_NODOT);
 	putenv(strdup(buf));
 	return;
     }
@@ -2003,16 +1812,14 @@ setDollarVim(
  */
     void
 findYourself(
-	char		*argv0)
+    char	*argv0)
 {
-    char		*runpath = NULL;
-    char		*path;
-    char		*pathbuf;
+    char	*runpath = NULL;
+    char	*path;
+    char	*pathbuf;
 
     if (*argv0 == '/')
-    {
 	runpath = strdup(argv0);
-    }
     else if (*argv0 == '.' || strchr(argv0, '/'))
     {
 	runpath = (char *) malloc(MAXPATHLEN);
@@ -2034,9 +1841,7 @@ findYourself(
 		strcat(runpath, "/");
 		strcat(runpath, argv0);
 		if (access(runpath, X_OK) == 0)
-		{
 		    break;
-		}
 	    } while ((path = strtok(NULL, ":")) != NULL);
 	    free(pathbuf);
 	}

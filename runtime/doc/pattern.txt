@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.0af.  Last change: 2001 May 12
+*pattern.txt*   For Vim version 6.0ag.  Last change: 2001 May 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -247,7 +247,7 @@ the "*" is under your right hand middle finger (search to the right and down).
 ==============================================================================
 2. The definition of a pattern		*search-pattern* *pattern* *[pattern]*
 					*regular-expression* *regexp* *Pattern*
-						*ep2* *E76* *ey8* *ey9* *E383*
+					*E76* *E361* *E363* *E383*
 						*/bar* */\bar* */pattern*
 1. A pattern is one or more branches, separated by "\|".  It matches anything
    that matches one of the branches.  Example: "foo\|beep" matches "foo" and

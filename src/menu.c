@@ -19,10 +19,10 @@
 #define MENUDEPTH   10		/* maximum depth of menus */
 
 #ifdef FEAT_GUI_W32
-static int add_menu_path __ARGS((char_u *, int, int *, void (*)(), char_u *, int, int));
+static int add_menu_path __ARGS((char_u *, int, int *, void (*)(), char_u *, int, int, char_u *));
 #else
 # ifdef FEAT_GUI
-static int add_menu_path __ARGS((char_u *, int, int *, void (*)(), char_u *, int));
+static int add_menu_path __ARGS((char_u *, int, int *, void (*)(), char_u *, int, char_u *));
 # else
 static int add_menu_path __ARGS((char_u *, int, int *, char_u *, int));
 # endif
@@ -96,17 +96,43 @@ ex_menu(eap)
     char_u	*tofree = NULL;
     char_u	*new_cmd;
 #endif
+#ifdef FEAT_GUI
+    char_u	*icon = NULL;
+#endif
 
     modes = get_menu_cmd_modes(eap->cmd, eap->forceit, &noremap, &unmenu);
     arg = eap->arg;
 
-#ifdef FEAT_EVAL
     if (STRNCMP(arg, "<script>", 8) == 0)
     {
 	noremap = REMAP_SCRIPT;
 	arg = skipwhite(arg + 8);
     }
+
+    /* Locate an optional "icon=filename" argument. */
+    if (STRNCMP(arg, "icon=", 5) == 0)
+    {
+	arg += 5;
+#ifdef FEAT_GUI
+	icon = arg;
 #endif
+	while (*arg != NUL && *arg != ' ')
+	{
+	    if (*arg == '\\')
+		mch_memmove(arg, arg + 1, STRLEN(arg));
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		arg += (*mb_ptr2len_check)(arg);
+	    else
+#endif
+		++arg;
+	}
+	if (*arg != NUL)
+	{
+	    *arg++ = NUL;
+	    arg = skipwhite(arg);
+	}
+    }
 
     /*
      * Fill in the priority table.
@@ -285,6 +311,9 @@ ex_menu(eap)
 #ifdef FEAT_GUI_W32
 		, TRUE
 #endif
+#ifdef FEAT_GUI
+		, icon
+#endif
 		);
 
 	/*
@@ -306,6 +335,9 @@ ex_menu(eap)
 				map_to, noremap
 #ifdef FEAT_GUI_W32
 				, TRUE
+#endif
+#ifdef FEAT_GUI
+				, NULL
 #endif
 					 );
 			vim_free(p);
@@ -347,6 +379,9 @@ add_menu_path(menu_path, modes, pri_tab,
 #ifdef FEAT_GUI_W32
 	, addtearoff
 #endif
+#ifdef FEAT_GUI
+	, icon
+#endif
 	)
     char_u	*menu_path;
     int		modes;
@@ -358,6 +393,9 @@ add_menu_path(menu_path, modes, pri_tab,
     int		noremap;
 #ifdef FEAT_GUI_W32
     int		addtearoff;	/* may add tearoff item */
+#endif
+#ifdef FEAT_GUI
+    char_u	*icon;		/* name of icon file or NULL */
 #endif
 {
     char_u	*path_name;
@@ -490,6 +528,9 @@ add_menu_path(menu_path, modes, pri_tab,
 		if (*next_name == NUL)
 		{
 		    /* Real menu item, not sub-menu */
+		    vim_free(menu->iconfile);
+		    if (icon != NULL)
+			menu->iconfile = vim_strsave(icon);
 		    gui_mch_add_menu_item(menu, new_idx);
 
 		    /* Want to update menus now even if mode not changed */
@@ -850,6 +891,9 @@ free_menu(menup)
     vim_free(menu->name);
     vim_free(menu->dname);
     vim_free(menu->actext);
+#ifdef FEAT_GUI
+    vim_free(menu->iconfile);
+#endif
     for (i = 0; i < MENU_MODES; i++)
 	free_menu_string(menu, i);
     vim_free(menu);
@@ -1833,10 +1877,18 @@ gui_add_tearoff(tearpath, pri_tab, pri_idx)
 	pri_tab[pri_idx + 1] = 1;
 
 	add_menu_path(tearpath, MENU_ALL_MODES, pri_tab,
-		gui_menu_cb, tbuf, TRUE, FALSE);
+		gui_menu_cb, tbuf, TRUE, FALSE
+#ifdef FEAT_GUI
+		, NULL
+#endif
+		);
 
 	add_menu_path(tearpath, MENU_TIP_MODE, pri_tab,
-		gui_menu_cb, (char_u *)_("Tear off this menu"), TRUE, FALSE);
+		gui_menu_cb, (char_u *)_("Tear off this menu"), TRUE, FALSE
+#ifdef FEAT_GUI
+		, NULL
+#endif
+		);
 
 	pri_tab[pri_idx + 1] = t;
 	vim_free(tbuf);

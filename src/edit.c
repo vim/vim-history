@@ -321,19 +321,13 @@ edit(cmdchar, startln, count)
     }
     else
 	State = INSERT;
-    if (curbuf->b_lmap & B_LMAP_INSERT)
+
+    if (curbuf->b_im_insert == B_IMODE_LMAP)
 	State |= LANGMAP;
-#if defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)
-    ImeSetOriginMode();
+#ifdef USE_IM_CONTROL
+    im_set_active(curbuf->b_im_insert == B_IMODE_IM);
 #endif
-#if !defined(FEAT_MBYTE_IME) && defined(GLOBAL_IME)
-/* GIME_TEST */
-    ImeSetOriginMode();
-#endif
-#ifdef FEAT_XIM
-    /* Enable XIM to allow typing language characters directly. */
-    xim_set_focus(TRUE);
-#endif
+
 #if defined(FEAT_MBYTE) && defined(macintosh)
     KeyScript(previous_script);
 #endif
@@ -816,9 +810,20 @@ doESCkey:
 
 	case Ctrl_HAT:
 	    /* Toggle use of ":lmap" mappings. */
-	    curbuf->b_lmap ^= B_LMAP_INSERT;
-	    b_lmap_def = curbuf->b_lmap;
-	    State ^= LANGMAP;
+	    if (curbuf->b_im_insert == B_IMODE_LMAP)
+	    {
+		curbuf->b_im_insert = B_IMODE_NONE;
+		State &= ~LANGMAP;
+	    }
+	    else
+	    {
+		curbuf->b_im_insert = B_IMODE_LMAP;
+		State |= LANGMAP;
+#ifdef USE_IM_CONTROL
+		im_set_active(FALSE);
+#endif
+	    }
+	    b_im_insert_def = curbuf->b_im_insert;
 	    showmode();
 #if defined(FEAT_WINDOWS) && defined(FEAT_KEYMAP)
 	    /* Show/unshow value of 'keymap' in status lines. */
@@ -5479,16 +5484,10 @@ ins_esc(count, cmdchar)
     ui_cursor_shape();		/* may show different cursor shape */
 #endif
 
-#if defined(FEAT_MBYTE_IME) && defined(FEAT_GUI_W32)
-    ImeSetEnglishMode();
-#endif
-#if !defined(FEAT_MBYTE_IME) && defined(GLOBAL_IME)
-/* GIME_TEST */
-    ImeSetEnglishMode();
-#endif
-#ifdef FEAT_XIM
-    /* Disable XIM to allow typing English directly for Normal mode commands. */
-    xim_set_focus(FALSE);
+#ifdef USE_IM_CONTROL
+    /* Disable IM to allow typing English directly for Normal mode commands. */
+    im_save_status(&curbuf->b_im_insert);
+    im_set_active(FALSE);
 #endif
 
     /*
@@ -5719,7 +5718,7 @@ ins_bs(c, mode, inserted_space_p)
 #ifdef FEAT_RIGHTLEFT
 		!revins_on &&
 #endif
-		((curwin->w_cursor.lnum == 1 && curwin->w_cursor.col <= 0)
+		((curwin->w_cursor.lnum == 1 && curwin->w_cursor.col == 0)
 		    || (!can_bs(BS_START)
 			&& (arrow_used
 			    || (curwin->w_cursor.lnum == Insstart.lnum
@@ -5772,7 +5771,7 @@ ins_bs(c, mode, inserted_space_p)
     /*
      * delete newline!
      */
-    if (curwin->w_cursor.col <= 0)
+    if (curwin->w_cursor.col == 0)
     {
 	lnum = Insstart.lnum;
 	if (curwin->w_cursor.lnum == Insstart.lnum

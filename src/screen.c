@@ -556,28 +556,6 @@ update_screen(type)
 }
 
 #if defined(FEAT_SIGNS) || defined(PROTO)
-    static int
-lnum2row(wp, lnum)
-    win_T	*wp;
-    linenr_T	lnum;
-{
-    int		row = 0;
-    int		j;
-    linenr_T	i;
-
-    for (i = wp->w_topline, j = 0;
-			      i < wp->w_botline && j < wp->w_lines_valid; i++)
-    {
-	row += wp->w_lines[j++].wl_size;
-#ifdef FEAT_FOLDING
-	(void)hasFolding(i, NULL, &i);
-#endif
-	if (i >= lnum)
-	    break;
-    }
-    return row - 1;
-}
-
     void
 update_debug_sign(buf, lnum)
     buf_T	*buf;
@@ -585,6 +563,7 @@ update_debug_sign(buf, lnum)
 {
     win_T	*wp;
     int		row;
+    int		j;
 
 #ifdef FEAT_FOLDING
     win_foldinfo.fi_level = 0;
@@ -600,20 +579,28 @@ update_debug_sign(buf, lnum)
     {					/* update/delete a specific mark */
 	FOR_ALL_WINDOWS(wp)
 	{
-	    if (wp->w_buffer == buf && lnum < wp->w_botline)
+	    if (wp->w_buffer == buf && lnum >= wp->w_topline
+						      && lnum < wp->w_botline)
 	    {
-		/* update mark */
-		row = lnum2row(wp, lnum);
-		if (row > 0)
+		row = 0;
+		for (j = 0; j < wp->w_lines_valid; ++j)
 		{
-		    screen_start();	/* not sure of screen cursor */
-		    win_line(wp, lnum, row, row + 1);
+		    /* Ignore folding, a closed fold with a sign doesn't need
+		     * updating. */
+		    if (lnum == wp->w_lines[j].wl_lnum)
+		    {
+			screen_start();	/* not sure of screen cursor */
+			win_line(wp, lnum, row, row + wp->w_lines[j].wl_size);
+			break;
+		    }
+		    row += wp->w_lines[j].wl_size;
 		}
 	    }
 	}
     }
     else
-    {					/* delete all marks */
+    {
+	/* update all windows (signs deleted) */
 #ifdef FEAT_WINDOWS
 	for (wp = firstwin; wp; wp = wp->w_next)
 	    win_update(wp);
@@ -2365,7 +2352,7 @@ win_line(wp, lnum, startrow, endrow)
     int		need_showbreak = FALSE;
 #endif
 #ifdef FEAT_SIGNS
-    int_u	type;			/* sign type (if signs are used) */
+    int_u	sign_typenr;		/* sign type (if signs are used) */
 #endif
 #if defined(FEAT_SIGNS) || (defined(FEAT_QUICKFIX) && defined(FEAT_WINDOWS))
 # define LINE_ATTR
@@ -2567,9 +2554,9 @@ win_line(wp, lnum, startrow, endrow)
 #ifdef LINE_ATTR
 # ifdef FEAT_SIGNS
     /* Draw a sign at the start of the line and/or highlight the line. */
-    type = buf_getsigntype(wp->w_buffer, lnum);
-    if (type != 0)
-	line_attr = get_debug_highlight(type);
+    sign_typenr = buf_getsigntype(wp->w_buffer, lnum);
+    if (sign_typenr != 0)
+	line_attr = sign_get_attr(sign_typenr, TRUE);
 # endif
 # if defined(FEAT_QUICKFIX) && defined(FEAT_WINDOWS)
     /* Highlight the current line in the quickfix window. */
@@ -2766,10 +2753,33 @@ win_line(wp, lnum, startrow, endrow)
 # endif
 			)
 		{
-		    /* Draw two spaces to put the sign in. */
-		    c_extra = ' ';
+		    /* Draw two bytes with the sign value or blank. */
+		    if (sign_typenr == 0 || row > startrow)
+		    {
+			c_extra = ' ';
+			char_attr = 0;
+		    }
+		    else
+		    {
+# ifdef FEAT_SIGN_ICONS
+			if (gui.in_use && sign_get_image(sign_typenr) != NULL)
+			{
+			    /* Use the image in this position. */
+			    c_extra = SIGN_BYTE;
+			    char_attr = sign_typenr;
+			}
+			else
+# endif
+			{
+			    p_extra = sign_get_text(sign_typenr);
+			    if (p_extra == NULL)
+				c_extra = ' ';
+			    else
+				c_extra = NUL;
+			    char_attr = sign_get_attr(sign_typenr, FALSE);
+			}
+		    }
 		    n_extra = 2;
-		    char_attr = 0;
 		}
 	    }
 #endif
@@ -3298,10 +3308,20 @@ win_line(wp, lnum, startrow, endrow)
 		}
 		else if (c == NUL && wp->w_p_list && lcs_eol_one != NUL)
 		{
-#ifdef FEAT_DIFF
+#if defined(FEAT_DIFF) || defined(LINE_ATTR)
 		    /* For a diff line the highlighting continues after the
 		     * "$". */
-		    if (diff_attr == 0)
+		    if (
+# ifdef FEAT_DIFF
+			    diff_attr == 0
+#  ifdef LINE_ATTR
+			    &&
+#  endif
+# endif
+# ifdef LINE_ATTR
+			    line_attr == 0
+# endif
+		       )
 #endif
 		    {
 			p_extra = at_end_str;
@@ -3352,18 +3372,30 @@ win_line(wp, lnum, startrow, endrow)
 		    --ptr;	    /* put it back at the NUL */
 		}
 #endif
-#ifdef FEAT_DIFF
-		else if (diff_attr != 0 && col < W_WIDTH(wp))
+#if defined(FEAT_DIFF) || defined(LINE_ATTR)
+		else if ((
+# ifdef FEAT_DIFF
+			    diff_attr != 0
+#  ifdef LINE_ATTR
+			    ||
+#  endif
+# endif
+# ifdef LINE_ATTR
+			    line_attr != 0
+# endif
+			) && col < W_WIDTH(wp))
 		{
 		    /* Highlight until the right side of the window */
 		    c = ' ';
 		    --ptr;	    /* put it back at the NUL */
+# ifdef FEAT_DIFF
 		    if (diff_attr == hl_attr(HLF_TXD))
 		    {
 			diff_attr = hl_attr(HLF_CHD);
 			if (attr == 0 || char_attr != attr)
 			    char_attr = diff_attr;
 		    }
+# endif
 		}
 #endif
 	    }
@@ -4657,7 +4689,7 @@ get_keymap_str(wp, buf, len)
 {
     char_u	*p;
 
-    if (!(wp->w_buffer->b_lmap & B_LMAP_INSERT))
+    if (wp->w_buffer->b_im_insert != B_IMODE_LMAP)
 	return FALSE;
 
     {

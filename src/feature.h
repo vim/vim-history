@@ -148,8 +148,11 @@
 /*
  * +printer		":harcopy" command
  */
-#if defined(FEAT_NORMAL) && defined(WIN32)
+#if defined(FEAT_NORMAL)
 # define FEAT_PRINTER
+# if !defined(MSWIN)
+#  define FEAT_POSTSCRIPT
+# endif
 #endif
 
 /*
@@ -1003,15 +1006,22 @@
  */
 
 /*
- * +signs		Allow signs to be displayed to the left of text lines.
- *			The signs can represent breakpoints, PC, etc.
- *			Also allow full-line highlight for debugger support.
- *			Used for showing the PC, Breakponts, etc.
+ * The Sun Workshop features currently only work with Motif.
  */
-#if (defined(FEAT_BIG) || defined(FEAT_SUN_WORKSHOP)) \
-	&& (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)) \
-	&& defined(HAVE_X11_XPM_H)
+#if !defined(FEAT_GUI_MOTIF) && defined(FEAT_SUN_WORKSHOP)
+# undef FEAT_SUN_WORKSHOP
+#endif
+
+/*
+ * +signs		Allow signs to be displayed to the left of text lines.
+ *			Adds the ":sign" command.
+ */
+#if defined(FEAT_BIG) || defined(FEAT_SUN_WORKSHOP)
 # define FEAT_SIGNS
+# if (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)) \
+	&& defined(HAVE_X11_XPM_H)
+#  define FEAT_SIGN_ICONS
+# endif
 #endif
 
 /*

@@ -1,4 +1,4 @@
-*message.txt*   For Vim version 6.0af.  Last change: 2001 May 12
+*message.txt*   For Vim version 6.0ag.  Last change: 2001 May 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -23,6 +23,15 @@ The number of remembered messages is fixed at 20.
 
 The first printed line tells who maintains the messages or the translations.
 You can use this to contact the maintainer when you spot a mistake.
+
+If you want to find help on a specific (error) message, use the ID at the
+start of the message.  For example, to get help on the message: >
+
+	E72: Close error on swap file
+
+Use: >
+
+	:help E72
 
 ==============================================================================
 2. Error messages					*error-messages*
@@ -126,12 +135,25 @@ A filename contains a strange combination of characters, which causes Vim to
 attempt expanding wildcards but this fails.  This does NOT mean that no
 matching file names could be found, but that the pattern was illegal.
 
-							*E190*  >
+							*E190* *E212*  >
   Cannot open "{filename}" for writing
+  Can't open file for writing
 
 For some reason the file you are writing to cannot be be created or
 overwritten.  The reason could be that you do not have permission to write in
 the directory or the file name is not valid.
+
+							*E166*  >
+  Can't open linked file for writing
+
+You are trying to write to a file which can't be overwritten, and the file is
+a link (either a hard link or a symbolic link).  Writing might still be
+possible if the directory that contains the link or the file is writable, but
+Vim now doesn't know if you want to delete the link and write the file in its
+place, or if you want to delete the file itself and write the new file in its
+place.  If you really want to write the file under this name, you have to
+manually delete the link or the file, or change the permissions so that Vim
+can overwrite.
 
 							*E46*  >
   Cannot set read-only variable "{name}"
@@ -383,7 +405,7 @@ out-of-memory situation.  First make sure that any changes are saved.  Then
 try to solve the memory shortage.  To stay on the safe side, exit Vim and
 start again.  Also see |msdos-limitations|.
 
-							*ep5*  >
+							*E339*  >
   Pattern too long
 
 This only happens on systems with 16 bit ints: The compiled regexp pattern is

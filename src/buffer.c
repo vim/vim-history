@@ -372,7 +372,7 @@ close_buffer(win, buf, action)
 #ifdef FEAT_SUN_WORKSHOP
 	if (usingSunWorkShop)
 	    workshop_file_closed_lineno((char *)buf->b_ffname,
-			buf->b_last_cursor.lnum);
+			(int)buf->b_last_cursor.lnum);
 #endif
 	vim_free(buf->b_ffname);
 	vim_free(buf->b_sfname);
@@ -470,9 +470,6 @@ buf_freeall(buf, del_buf)
 #ifdef FEAT_SYN_HL
     syntax_clear(buf);		    /* reset syntax info */
 #endif
-#ifdef FEAT_USR_CMDS
-    uc_clear(&buf->b_ucmds);	    /* clear local user commands */
-#endif
 }
 
 /*
@@ -506,6 +503,9 @@ free_buffer_stuff(buf)
     clear_wininfo(buf);
 #ifdef FEAT_EVAL
     var_clear(&buf->b_vars);	    /* free all internal variables */
+#endif
+#ifdef FEAT_USR_CMDS
+    uc_clear(&buf->b_ucmds);	    /* clear local user commands */
 #endif
     free_buf_options(buf, TRUE);
 #ifdef FEAT_MBYTE
@@ -3529,7 +3529,7 @@ do_arg_all(count, forceit)
 		    (void)autowrite(buf, FALSE);
 #ifdef FEAT_AUTOCMD
 		    /* check if autocommands removed the window */
-		    if (!win_valid(wp))
+		    if (!win_valid(wp) || !buf_valid(buf))
 		    {
 			wpnext = firstwin;	/* start all over... */
 			continue;
@@ -4103,19 +4103,19 @@ buf_spname(buf)
 
 #if defined(FEAT_SIGNS) || defined(PROTO)
 
-static void insert_image __ARGS((buf_T *buf, signlist_T *prev, signlist_T *next, int id, linenr_T lineno, int type));
+static void insert_sign __ARGS((buf_T *buf, signlist_T *prev, signlist_T *next, int id, linenr_T lnum, int typenr));
 
 /*
  * Insert the sign into the signlist.
  */
     static void
-insert_image(buf, prev, next, id, lineno, type)
+insert_sign(buf, prev, next, id, lnum, typenr)
     buf_T	*buf;		/* buffer to store sign in */
     signlist_T	*prev;		/* previous sign entry */
     signlist_T	*next;		/* next sign entry */
     int		id;		/* sign ID */
-    linenr_T	lineno;		/* line number which gets the mark */
-    int		type;		/* type of sign we are adding */
+    linenr_T	lnum;		/* line number which gets the mark */
+    int		typenr;		/* typenr of sign we are adding */
 {
     signlist_T	*newsign;
 
@@ -4123,25 +4123,25 @@ insert_image(buf, prev, next, id, lineno, type)
     if (newsign != NULL)
     {
 	newsign->id = id;
-	newsign->lineno = lineno;
-	newsign->type = type;
+	newsign->lnum = lnum;
+	newsign->typenr = typenr;
+	newsign->next = next;
 
 	if (prev == NULL)
 	{
 	    /* When adding first sign need to redraw the windows to create the
 	     * column for signs. */
 	    if (buf->b_signlist == NULL)
+	    {
 		redraw_buf_later(buf, NOT_VALID);
+		changed_cline_bef_curs();
+	    }
 
 	    /* first sign in signlist */
-	    newsign->next = next;
 	    buf->b_signlist = newsign;
 	}
 	else
-	{
 	    prev->next = newsign;
-	    newsign->next = next;
-	}
     }
 }
 
@@ -4149,11 +4149,11 @@ insert_image(buf, prev, next, id, lineno, type)
  * Add the sign into the signlist. Find the right spot to do it though.
  */
     int
-buf_addsign(buf, id, lineno, type)
+buf_addsign(buf, id, lnum, typenr)
     buf_T	*buf;		/* buffer to store sign in */
     int		id;		/* sign ID */
-    linenr_T	lineno;		/* line number which gets the mark */
-    int		type;		/* type of sign we are adding */
+    linenr_T	lnum;		/* line number which gets the mark */
+    int		typenr;		/* typenr of sign we are adding */
 {
     signlist_T	*sign;		/* a sign in the signlist */
     signlist_T	*prev;		/* the previous sign */
@@ -4161,28 +4161,28 @@ buf_addsign(buf, id, lineno, type)
     prev = NULL;
     for (sign = buf->b_signlist; sign != NULL; sign = sign->next)
     {
-	if (lineno == sign->lineno && id == sign->id)
+	if (lnum == sign->lnum && id == sign->id)
 	{
-	    sign->type = type;
-	    return sign->lineno;
+	    sign->typenr = typenr;
+	    return sign->lnum;
 	}
-	else if (id < 0 && lineno < sign->lineno)
+	else if (id < 0 && lnum < sign->lnum)
 	{
-	    insert_image(buf, prev, sign, id, lineno, type);
-	    return lineno;
+	    insert_sign(buf, prev, sign, id, lnum, typenr);
+	    return lnum;
 	}
 	prev = sign;
     }
-    insert_image(buf, prev, NULL, id, lineno, type);
+    insert_sign(buf, prev, NULL, id, lnum, typenr);
 
-    return lineno;
+    return lnum;
 }
 
     int
-buf_change_sign_type(buf, markId, newType)
+buf_change_sign_type(buf, markId, typenr)
     buf_T	*buf;		/* buffer to store sign in */
     int		markId;		/* sign ID */
-    int		newType;	/* type of sign we are adding */
+    int		typenr;		/* typenr of sign we are adding */
 {
     signlist_T	*sign;		/* a sign in the signlist */
 
@@ -4190,8 +4190,8 @@ buf_change_sign_type(buf, markId, newType)
     {
 	if (sign->id == markId)
 	{
-	    sign->type = newType;
-	    return sign->lineno;
+	    sign->typenr = typenr;
+	    return sign->lnum;
 	}
     }
 
@@ -4206,9 +4206,8 @@ buf_getsigntype(buf, lnum)
     signlist_T	*sign;		/* a sign in a b_signlist */
 
     for (sign = buf->b_signlist; sign != NULL; sign = sign->next)
-	if (sign->lineno == lnum && get_debug_highlight(sign->type) > 0)
-	    return sign->type;
-
+	if (sign->lnum == lnum)
+	    return sign->typenr;
     return 0;
 }
 
@@ -4231,7 +4230,7 @@ buf_delsign(buf, id)
 	if (sign->id == id)
 	{
 	    *lastp = next;
-	    lnum = sign->lineno;
+	    lnum = sign->lnum;
 	    vim_free(sign);
 	    break;
 	}
@@ -4242,7 +4241,10 @@ buf_delsign(buf, id)
     /* When deleted the last sign need to redraw the windows to remove the
      * sign column. */
     if (buf->b_signlist == NULL)
+    {
 	redraw_buf_later(buf, NOT_VALID);
+	changed_cline_bef_curs();
+    }
 
     return lnum;
 }
@@ -4262,7 +4264,7 @@ buf_findsign(buf, id)
 
     for (sign = buf->b_signlist; sign != NULL; sign = sign->next)
 	if (sign->id == id)
-	    return sign->lineno;
+	    return sign->lnum;
 
     return 0;
 }
@@ -4275,7 +4277,7 @@ buf_findsign_id(buf, lnum)
     signlist_T	*sign;		/* a sign in the signlist */
 
     for (sign = buf->b_signlist; sign != NULL; sign = sign->next)
-	if (sign->lineno == lnum)
+	if (sign->lnum == lnum)
 	    return sign->id;
 
     return 0;
@@ -4290,20 +4292,82 @@ buf_delete_all_signs()
     signlist_T	*next;		/* the next sign in a b_signlist */
 
     for (buf = firstbuf; buf != NULL; buf = buf->b_next)
-    {
-	for (sign = buf->b_signlist; sign != NULL; sign = next)
+	if (buf->b_signlist != NULL)
 	{
-	    next = sign->next;
-	    vim_free(sign);
+	    /* Need to redraw the windows to remove the sign column. */
+	    redraw_buf_later(buf, NOT_VALID);
+	    for (sign = buf->b_signlist; sign != NULL; sign = next)
+	    {
+		next = sign->next;
+		vim_free(sign);
+	    }
+	    buf->b_signlist = NULL;
 	}
-    }
-
-    /* When deleted the last sign need to redraw the windows to remove the
-     * sign column. */
-    if (buf->b_signlist == NULL)
-	redraw_buf_later(buf, NOT_VALID);
 }
 
+/*
+ * List placed signs for "rbuf".  If "rbuf" is NULL do it for all buffers.
+ */
+    void
+sign_list_placed(rbuf)
+    buf_T	*rbuf;
+{
+    buf_T	*buf;
+    signlist_T	*p;
+    char	lbuf[BUFSIZ];
+
+    MSG_PUTS_TITLE(_("\n--- Signs ---"));
+    msg_putchar('\n');
+    if (rbuf == NULL)
+	buf = firstbuf;
+    else
+	buf = rbuf;
+    while (buf != NULL)
+    {
+	if (buf->b_signlist != NULL)
+	{
+	    sprintf(lbuf, _("Signs for %s:"), buf->b_fname);
+	    MSG_PUTS_ATTR(lbuf, hl_attr(HLF_D));
+	    msg_putchar('\n');
+	}
+	for (p = buf->b_signlist; p != NULL; p = p->next)
+	{
+	    sprintf(lbuf, _("    line=%ld  id=%d  name=%s"),
+			   (long)p->lnum, p->id, sign_typenr2name(p->typenr));
+	    MSG_PUTS(lbuf);
+	    msg_putchar('\n');
+	}
+	if (rbuf != NULL)
+	    break;
+	buf = buf->b_next;
+    }
+}
+
+/*
+ * Adjust a placed sign for inserted/deleted lines.
+ */
+    void
+sign_mark_adjust(line1, line2, amount, amount_after)
+    linenr_T	line1;
+    linenr_T	line2;
+    long	amount;
+    long	amount_after;
+{
+    signlist_T	*sign;		/* a sign in a b_signlist */
+
+    for (sign = curbuf->b_signlist; sign != NULL; sign = sign->next)
+    {
+	if (sign->lnum >= line1 && sign->lnum <= line2)
+	{
+	    if (amount == MAXLNUM)
+		sign->lnum = line1;
+	    else
+		sign->lnum += amount;
+	}
+	else if (sign->lnum > line2)
+	    sign->lnum += amount_after;
+    }
+}
 #endif /* FEAT_SIGNS */
 
 /*

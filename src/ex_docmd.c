@@ -267,6 +267,7 @@ static void	ex_bang __ARGS((exarg_T *eap));
 static void	ex_undo __ARGS((exarg_T *eap));
 static void	ex_redo __ARGS((exarg_T *eap));
 static void	ex_redir __ARGS((exarg_T *eap));
+static void	ex_redraw __ARGS((exarg_T *eap));
 static void	close_redir __ARGS((void));
 static void	ex_mkrc __ARGS((exarg_T *eap));
 static FILE	*open_exfile __ARGS((char_u *fname, int forceit, char *mode));
@@ -400,7 +401,6 @@ static void	ex_language __ARGS((exarg_T *eap));
 #endif
 #ifndef FEAT_SIGNS
 # define ex_sign		ex_ni
-# define ex_unsign		ex_ni
 #endif
 #ifndef FEAT_SUN_WORKSHOP
 # define ex_wsverb		ex_ni
@@ -1303,7 +1303,11 @@ do_one_cmd(cmdlinep, sourcing,
 	goto doend;
     }
 #ifdef FEAT_CMDWIN
-    if (cmdwin_type != 0 && !(ea.argt & CMDWIN))
+    if (cmdwin_type != 0 && !(ea.argt & CMDWIN)
+# ifdef FEAT_USR_CMDS
+	    && !USER_CMDIDX(ea.cmdidx)
+# endif
+       )
     {
 	/* Command not allowed in cmdline window. */
 	errormsg = (char_u *)_(e_cmdwin);
@@ -4768,7 +4772,7 @@ ex_win_close(eap, win)
 	if ((p_confirm || cmdmod.confirm) && p_write)
 	{
 	    dialog_changed(buf, FALSE);
-	    if (bufIsChanged(buf))
+	    if (buf_valid(buf) && bufIsChanged(buf))
 		return;
 	    need_hide = FALSE;
 	}
@@ -6358,6 +6362,24 @@ ex_redir(eap)
 	else
 	    EMSG(_(e_invarg));
     }
+}
+
+/*
+ * ":redraw": force redraw
+ */
+    static void
+ex_redraw(eap)
+    exarg_T	*eap;
+{
+    int		r = RedrawingDisabled;
+    int		p = p_lz;
+
+    RedrawingDisabled = 0;
+    p_lz = FALSE;
+    update_screen(eap->forceit ? CLEAR : 0);
+    RedrawingDisabled = r;
+    p_lz = p;
+    out_flush();
 }
 
     static void
@@ -9094,7 +9116,7 @@ get_lang_arg(xp, idx)
  * To implement printing on a platform, the following functions must be
  * defined:
  *
- * int mch_print_init(prt_settings_T *settings)
+ * int mch_print_init(prt_settings_T *settings, char_u *jobname, int forceit)
  * Called once. Code should display printer dialogue (if appropriate) and
  * determine printer font and margin settings.
  * Return FALSE to abort.
@@ -9131,7 +9153,7 @@ get_lang_arg(xp, idx)
  * value.
  *
  * int mch_print_text_out(int x, int y, char_u *p, int len, int *must_break);
- * Output text 'p' of length 'len' at position x,y in device units.
+ * Output text 'p' of 'len' characters at position x,y in device units.
  * set 'must_break' to TRUE if there is not room for another character after
  * the string printed. Return the width of the string 'p' printed in device
  * units.
@@ -9144,41 +9166,46 @@ get_lang_arg(xp, idx)
 
 #ifdef FEAT_SYN_HL
 static const unsigned long  cterm_color[2][16] = {
-    0x808080,
-    0xff6060,
-    0x00ff00,
-    0xffff00,
-    0x8080ff,
-    0xff40ff,
-    0x00ffff,
-    0xffffff,
-    0, 0, 0, 0, 0, 0, 0, 0,
+    {0x808080UL,
+    0xff6060UL,
+    0x00ff00UL,
+    0xffff00UL,
+    0x8080ffUL,
+    0xff40ffUL,
+    0x00ffffUL,
+    0xffffffUL,
+    0, 0, 0, 0, 0, 0, 0, 0},
 
-    0x000000,
-    0xc00000,
-    0x008000,
-    0x804000,
-    0x0000c0,
-    0xc000c0,
-    0x008080,
-    0xc0c0c0,
-    0x808080,
-    0xff6060,
-    0x00ff00,
-    0xffff00,
-    0x8080ff,
-    0xff40ff,
-    0x00ffff,
-    0xffffff,
+    {0x000000UL,
+    0xc00000UL,
+    0x008000UL,
+    0x804000UL,
+    0x0000c0UL,
+    0xc000c0UL,
+    0x008080UL,
+    0xc0c0c0UL,
+    0x808080UL,
+    0xff6060UL,
+    0x00ff00UL,
+    0xffff00UL,
+    0x8080ffUL,
+    0xff40ffUL,
+    0x00ffffUL,
+    0xffffffUL}
 };
 
+# ifdef FEAT_GUI
 static int		curr_italic;
 static int		curr_bold;
 static int		curr_underline;
+# endif
 static unsigned long	current_bg;
 static unsigned long	current_fg;
 static int		current_id;
 #endif
+
+static unsigned long darken_rgb __ARGS((unsigned long rgb));
+static void ex_print_number __ARGS((int offset, int y_pos, linenr_T line_num, int format));
 
     static unsigned long
 darken_rgb(rgb)
@@ -9191,10 +9218,10 @@ darken_rgb(rgb)
 
     static void
 ex_print_number(offset, y_pos, line_num, format)
-    int	    offset;
-    int	    y_pos;
-    int	    line_num;
-    int	    format;
+    int		offset;
+    int		y_pos;
+    linenr_T	line_num;
+    int		format;
 {
     /*
      * A simple header for demos
@@ -9203,7 +9230,7 @@ ex_print_number(offset, y_pos, line_num, format)
     char_u tbuf[8];
     int needbreak;
 
-    sprintf(tbuf, "%6.ld", line_num);
+    sprintf((char *)tbuf, "%6ld", (long)line_num);
 
 #ifdef FEAT_SYN_HL
     if (format)
@@ -9231,26 +9258,30 @@ ex_print_number(offset, y_pos, line_num, format)
 
     static void
 ex_print_header(offset, headertext, pagenum, format)
-    int	    offset;
-    char_u  *headertext;
-    int	    pagenum;
-    int	    format;
+    int		offset;
+    char_u	*headertext;
+    int		pagenum;
+    int		format;
 {
     /*
      * A simple header for demos
      */
-    int	needbreak;
-    int	x_pos = 0;
-    int	y_pos = 0 - (offset * printer_opts[OPT_PRINT_HEADERHEIGHT].number);
-    char_u *tbuf;
-    char_u *p;
+    int		needbreak;
+    int		x_pos = 0;
+    int		y_pos = 0 - (offset * printer_opts[OPT_PRINT_HEADERHEIGHT].number);
+    char_u	*tbuf;
+    char_u	*p;
+#ifdef FEAT_MBYTE
+    int		l;
+#endif
+
     /* Assumes %ld won't format to > 8 chars */
     p = tbuf = alloc(STRLEN(headertext) + 8 + 8 + 1);
 
     if (p == NULL)
 	return;
 
-    sprintf(tbuf, "Page %ld - %s", pagenum, headertext);
+    sprintf((char *)tbuf, "Page %d - %s", pagenum, headertext);
 
 #ifdef FEAT_SYN_HL
     if (format)
@@ -9275,13 +9306,17 @@ ex_print_header(offset, headertext, pagenum, format)
      * has been moved down 2 lines from the printable area
      * extent
      */
-    while(*p)
+    while (*p != NUL)
     {
 	x_pos += mch_print_text_out(x_pos, y_pos,
 		p,
+#ifdef FEAT_MBYTE
+		(l = (*mb_ptr2len_check)(p)),
+#else
 		1,
+#endif
 		&needbreak);
-	if(needbreak)
+	if (needbreak)
 	{
 	    y_pos += offset;
 	    x_pos = 0;
@@ -9289,7 +9324,11 @@ ex_print_header(offset, headertext, pagenum, format)
 	    if (y_pos >= 0) /* out of room in header */
 		break;
 	}
+#ifdef FEAT_MBYTE
+	p += l;
+#else
 	p++;
+#endif
     }
 
     vim_free(tbuf);
@@ -9301,17 +9340,17 @@ ex_print_header(offset, headertext, pagenum, format)
 ex_hardcopy(eap)
     exarg_T	*eap;
 {
-    int			no_lines;
+    linenr_T		no_lines;
 #ifdef COMPUTE_NUM_PAGES
     int			num_lines = 0;
     int			num_pages;
 #endif
     int			page_count;
     int			collated_copies, uncollated_copies;
-    char_u		*start_line;
+    char_u		*start_line = NULL; /* for gcc */
     prt_settings_T	settings;
 #ifdef FEAT_SYN_HL
-    char		modec;
+    char		modec = NUL;
     int			darken_colours = FALSE;
     unsigned long	this_colour;
     int			mono = FALSE;
@@ -9323,6 +9362,9 @@ ex_hardcopy(eap)
     int			tab_spaces = 0;
     int			ts = curbuf->b_p_ts;
     int			need_break = FALSE;
+#if 0
+    int			no_wrapping = FALSE;
+#endif
 
 #ifdef FEAT_SYN_HL
 # ifdef  FEAT_GUI
@@ -9345,9 +9387,13 @@ ex_hardcopy(eap)
 
     if (    printer_opts[OPT_PRINT_MONO].present
 	&&  printer_opts[OPT_PRINT_MONO].string[0] == 'y')
-    {
 	mono = TRUE;
-    }
+
+#if 0
+    if (    printer_opts[OPT_PRINT_WRAP].present
+	&&  printer_opts[OPT_PRINT_WRAP].string[0] == 'n')
+	no_wrapping = TRUE;
+#endif
 
 #endif
 
@@ -9358,17 +9404,17 @@ ex_hardcopy(eap)
      */
     if (!mch_print_init(&settings,
 			curbuf->b_fname == NULL
-			    ? buf_spname(curbuf)
+			    ? (char_u *)buf_spname(curbuf)
 			    : curbuf->b_sfname == NULL
-				? (char *)curbuf->b_fname
-				: (char *)curbuf->b_sfname,
+				? curbuf->b_fname
+				: curbuf->b_sfname,
 			eap->forceit))
 	return;
 
     /*
      * Estimate the total lines to be printed
      */
-    for(no_lines = eap->line1; no_lines <= eap->line2; no_lines++)
+    for (no_lines = eap->line1; no_lines <= eap->line2; no_lines++)
     {
 	no_filechars += STRLEN(ml_get(no_lines));
 #ifdef COMPUTE_NUM_PAGES
@@ -9394,9 +9440,11 @@ ex_hardcopy(eap)
 #endif
 
 #ifdef FEAT_SYN_HL
+# ifdef FEAT_GUI
     curr_italic = FALSE;
     curr_bold = FALSE;
     curr_underline = FALSE;
+# endif
     current_bg = 0xffffffffUL;
     current_fg = 0xffffffffUL;
     current_id = -1;
@@ -9412,12 +9460,11 @@ ex_hardcopy(eap)
 	    collated_copies < settings.n_collated_copies;
 	    collated_copies++)
     {
-	char_u *p1 = NULL;
 	char_u *p = NULL;
 	char_u *prevp = p;
-	int file_line = eap->line1;
-	int prev_line = file_line;
-	int prev_charcount = 0;
+	linenr_T file_line = eap->line1;
+	linenr_T prev_line = file_line;
+	unsigned long prev_charcount = 0;
 	total_charcount = 0;
 	for (page_count = 0 ; total_charcount < no_filechars ; page_count++)
 	{
@@ -9438,10 +9485,10 @@ ex_hardcopy(eap)
 		if (got_int || !mch_print_begin_page())
 		    goto print_fail;
 
-		sprintf((char *)IObuff, _("Printing: %s page %ld (%ld%%)"),
+		sprintf((char *)IObuff, _("Printing: %s page %d (%d%%)"),
 			settings.jobname,
 			page_count + 1,
-			(total_charcount * 100) / no_filechars);
+			(int)((total_charcount * 100) / no_filechars));
 
 		/*
 		 * <VN> Is there a cleaner way of doing this? The
@@ -9474,7 +9521,6 @@ ex_hardcopy(eap)
 			if(!p)
 			{
 			    start_line = p = ml_get(file_line);
-			    p1 = p;
 			    file_line++;
 			    print_pos = 0;
 			}
@@ -9501,6 +9547,12 @@ ex_hardcopy(eap)
 			 */
 			for(; *p && !need_break; p++)
 			{
+			    int outputlen = 1;
+#ifdef FEAT_MBYTE
+			    if (has_mbyte
+				    && (outputlen = (*mb_ptr2len_check)(p)) < 1)
+				outputlen = 1;
+#endif
 #ifdef FEAT_SYN_HL
 			    if (!mono)
 			    {
@@ -9509,7 +9561,8 @@ ex_hardcopy(eap)
 			    char *color;
 
 
-			    int id = syn_get_id(file_line - 1 , p - start_line, 1);
+			    int id = syn_get_id(file_line - 1,
+						   (long)(p - start_line), 1);
 			    if (id > 0)
 				id = syn_get_final_id(id);
 			    else
@@ -9521,20 +9574,26 @@ ex_hardcopy(eap)
 #ifdef	FEAT_GUI
 			    if (gui.in_use)
 			    {
-				int ifItalic = (highlight_has_attr(id, HL_ITALIC, 'g')) ? 1 : 0;
-				int ifBold = (highlight_has_attr(id, HL_BOLD, 'g')) ? 1 : 0;
-				int ifUnderline = (highlight_has_attr(id, HL_UNDERLINE, 'g')) ? 1 : 0;
-				if (curr_underline != ifUnderline || curr_bold != ifBold || curr_italic != ifItalic)
+				int ifItalic = (highlight_has_attr(id,
+						     HL_ITALIC, 'g')) ? 1 : 0;
+				int ifBold = (highlight_has_attr(id,
+						       HL_BOLD, 'g')) ? 1 : 0;
+				int ifUnderline = (highlight_has_attr(id,
+						  HL_UNDERLINE, 'g')) ? 1 : 0;
+				if (curr_underline != ifUnderline
+					|| curr_bold != ifBold
+					|| curr_italic != ifItalic)
 				{
 				    curr_underline = ifUnderline;
 				    curr_italic = ifItalic;
 				    curr_bold = ifBold;
-				    mch_print_setfont(curr_bold, curr_italic, curr_underline);
+				    mch_print_setfont(curr_bold, curr_italic,
+							      curr_underline);
 				}
 
 				this_colour = highlight_gui_color_rgb(id, FALSE);
 				if (this_colour == 0)
-				    this_colour = 0xffffff;
+				    this_colour = 0xffffffUL;
 
 				if (this_colour != current_bg)
 				{
@@ -9543,7 +9602,7 @@ ex_hardcopy(eap)
 				}
 
 				this_colour = highlight_gui_color_rgb(id, TRUE);
-				if (this_colour == 0xffffff)
+				if (this_colour == 0xffffffUL)
 				    this_colour = 0;
 				else if (darken_colours)
 				    this_colour = darken_rgb(this_colour);
@@ -9556,9 +9615,10 @@ ex_hardcopy(eap)
 
 			    }
 			    else
-#endif /*FEAT_GUI*/
+#endif /* FEAT_GUI */
 			    {
-				color = highlight_color(id, "fg", modec);
+				color = (char *)highlight_color(id,
+						       (char_u *)"fg", modec);
 
 				if (color == NULL)
 				    colourindex = 0;
@@ -9567,8 +9627,10 @@ ex_hardcopy(eap)
 
 				if (colourindex >= 0 && colourindex < t_colors)
 				{
-				    this_colour = cterm_color[(t_colors - 1) >> 3][colourindex];
-				    if (this_colour == 0xffffff)
+				    this_colour = cterm_color[
+						(unsigned)(t_colors - 1) >> 3]
+								[colourindex];
+				    if (this_colour == 0xffffffUL)
 					this_colour = 0;
 				    else if (darken_colours)
 					this_colour = darken_rgb(this_colour);
@@ -9583,7 +9645,7 @@ ex_hardcopy(eap)
 
 			    }
 			    }
-#endif /*FEAT_SYN_HL*/
+#endif /* FEAT_SYN_HL */
 			    /*
 			     * Appropriately expand any tabs to spaces.
 			     */
@@ -9595,8 +9657,8 @@ ex_hardcopy(eap)
 				while (tab_spaces)
 				{
 				    x_position += mch_print_text_out(x_position,
-							settings.line_height * page_line,
-							" ",
+					     settings.line_height * page_line,
+							(char_u *)" ",
 							1,
 							&need_break);
 				    print_pos++;
@@ -9610,12 +9672,12 @@ ex_hardcopy(eap)
 				x_position += mch_print_text_out(x_position,
 						settings.line_height * page_line,
 						p,
-						1,
+						outputlen,
 						&need_break);
-
 				print_pos++;
 			    }
-			    total_charcount++;
+			    total_charcount += outputlen;
+			    p += outputlen - 1;
 			}
 
 			/*
@@ -9658,4 +9720,245 @@ print_fail_no_begin:
     mch_print_cleanup();
 }
 
+#if defined(FEAT_POSTSCRIPT) || defined(PROTO)
+
+/*
+ * PS printer stuff
+ */
+
+#define CHAR_HEIGHT_IN_POINTS	(12)
+#define CHAR_WIDTH_IN_POINTS	(7) /*<VN> */
+
+static FILE *s_ps_file;
+
+static int s_left_margin;
+static int s_right_margin;
+static int s_top_margin;
+
+    void
+mch_print_cleanup()
+{
+    if (s_ps_file != NULL)
+	fclose(s_ps_file);
+}
+
+
+    static int
+to_device_units(idx, dpi, physsize, offset)
+    int idx;
+    int dpi;
+    int physsize;
+    int offset;
+{
+    int ret;
+
+    if (printer_opts[idx].string[0] == 'i')
+	ret = (printer_opts[idx].number * dpi);
+    else if (printer_opts[idx].string[0] == 'm')
+	ret = (printer_opts[idx].number * 10 * dpi) / 254;
+    else
+	ret = (physsize * printer_opts[idx].number) / 100;
+
+    if (ret < offset)
+	return 0;
+    else
+	return ret - offset;
+}
+
+    static int
+mch_print_get_cpl(yChar_out, number_width_out)
+    int *yChar_out;
+    int *number_width_out;
+{
+    int cpl;
+    int hr;
+    int phyw;
+    int dvoff;
+    int rev_offset;
+    int dpi = 72;
+
+    *yChar_out = CHAR_HEIGHT_IN_POINTS;
+
+    hr	    = 595;
+    phyw    = 595;
+    dvoff   = 0;
+
+    rev_offset = phyw - (dvoff + hr);
+
+    s_left_margin = to_device_units(OPT_PRINT_LEFT, dpi, phyw, dvoff);
+    if (printer_opts[OPT_PRINT_NUMBER].present)
+		*number_width_out = 8 * CHAR_WIDTH_IN_POINTS;
+
+    s_right_margin = hr - to_device_units(OPT_PRINT_RIGHT, dpi, phyw, rev_offset);
+
+    cpl	= (s_right_margin - s_left_margin) / CHAR_WIDTH_IN_POINTS;
+
+    return cpl;
+}
+
+    static int
+mch_print_get_lpp(yCharsize)
+    int yCharsize;
+{
+    int vr;
+    int phyw;
+    int dvoff;
+    int rev_offset;
+    int	bottom_margin;
+    int	dpi;
+
+    vr	    = 842;
+    phyw    = 842;
+    dvoff   = 0;
+    dpi	    = 72;
+
+    rev_offset = phyw - (dvoff + vr);
+
+    s_top_margin = to_device_units(OPT_PRINT_TOP, dpi, phyw, dvoff);
+
+
+    /* adjust top margin if there is a header */
+    if (printer_opts[OPT_PRINT_HEADERHEIGHT].present)
+	s_top_margin += (yCharsize * printer_opts[OPT_PRINT_HEADERHEIGHT].number);
+
+    bottom_margin = vr - to_device_units(OPT_PRINT_BOT, dpi, phyw, rev_offset);
+
+
+    return (bottom_margin - s_top_margin) / yCharsize ;
+}
+
+    int
+mch_print_init(psettings, jobname, forceit)
+    prt_settings_T *psettings;
+    char_u	*jobname;
+    int		forceit;
+{
+#if 0
+    /*
+     * If bang present, return default printer setup with no dialogue
+     */
+    if (forceit)
+	s_pd.Flags |= PD_RETURNDEFAULT;
+#endif
+
+    s_ps_file = open_exfile((char_u *)"test.ps", forceit, WRITEBIN);
+    if (s_ps_file == NULL) /*<VN> can't print ps for some reason */
+    {
+	EMSG(_("E999: Can't open PostScript output file"));
+	mch_print_cleanup();
+	return FALSE;
+    }
+
+    (void)put_line(s_ps_file, "%!");
+    (void)put_line(s_ps_file, "/Courier findfont");
+    (void)put_line(s_ps_file, "12 scalefont");
+    (void)put_line(s_ps_file, "setfont");
+
+    /*<VN> macros?*/
+
+/*    if (!get_logfont(&fLogFont, p_prtfont, s_pd.hDC)) */
+
+
+    /*
+     * Fill in the settings struct
+     */
+    psettings->chars_per_line = mch_print_get_cpl(&psettings->line_height, &psettings->number_width);
+    psettings->lines_per_page = mch_print_get_lpp(psettings->line_height);
+    psettings->n_collated_copies = 1;
+    psettings->n_uncollated_copies = 1;
+
+    psettings->jobname = jobname;
+
+    return TRUE;
+}
+
+/* ARGSUSED */
+    int
+mch_print_begin(psettings)
+    prt_settings_T *psettings;
+{
+    return TRUE;
+}
+
+    void
+mch_print_end()
+{
+    fclose(s_ps_file);
+}
+
+    int
+mch_print_end_page()
+{
+    (void)put_line(s_ps_file, "showpage");
+    return TRUE;
+}
+
+    int
+mch_print_begin_page()
+{
+    return TRUE;
+}
+
+/*ARGSUSED*/
+    int
+mch_print_text_out(x, y, p, len, must_break)
+    int		x;
+    int		y;
+    char_u	*p;
+    int		len;
+    int		*must_break;
+{
+    int		sz;
+
+    (void)fprintf(s_ps_file, "%d %d moveto\n",
+			    x + s_left_margin,
+			    842 - (y + s_top_margin));
+
+    if (*p == '(' || *p == ')' || *p == '\\')
+	(void)fprintf(s_ps_file, "(\\%c) show\n", *p);
+    else
+	(void)fprintf(s_ps_file, "(%c) show\n", *p);
+
+#ifndef FEAT_PROPORTIONAL_FONTS
+	sz = CHAR_WIDTH_IN_POINTS;
+#else
+	sz = CHAR_WIDTH_IN_POINTS;
+#endif
+    *must_break = ((x + s_left_margin + sz) > s_right_margin);
+
+    return sz;
+}
+
+#if defined(FEAT_GUI) || defined(PROTO)
+/* ARGSUSED */
+    void
+mch_print_setfont(iBold, iItalic, iUnderline)
+    int iBold;
+    int iItalic;
+    int iUnderline;
+{
+    /*<VN> write 'findfont', 'scalefont', 'setfont'*/
+}
+#endif
+
+/* ARGSUSED */
+    void
+mch_print_set_bg(bgcol)
+    unsigned long bgcol;
+{
+    /*<VN> write ?????*/
+}
+    void
+mch_print_set_fg(fgcol)
+    unsigned long fgcol;
+{
+    (void)fprintf(s_ps_file, "%1.2f %1.2f %1.2f setrgbcolor\n",
+		  (float) ((fgcol & 0xff0000) >> 16) / 255,
+		  (float) ((fgcol & 0xff00) >> 8) / 255,
+		  (float) (fgcol & 0xff) / 255
+		  );
+}
+
+
+#endif /*FEAT_POSTSCRIPT*/
 #endif /*FEAT_PRINTER*/

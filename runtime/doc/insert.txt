@@ -1,4 +1,4 @@
-*insert.txt*    For Vim version 6.0af.  Last change: 2001 May 06
+*insert.txt*    For Vim version 6.0ag.  Last change: 2001 May 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -206,16 +206,15 @@ CTRL-_		Switch between languages, as follows:
 		Only if compiled with the |+rightleft| feature (which is not
 		the default).
 						*i_CTRL-^*
-CTRL-^		Toggle the use of language |:lmap| mappings.  When switched
-		on, the value of the "b:keymap_name" variable, the 'keymap'
-		option or "<lang>" appears in the status line.
+CTRL-^		Toggle the use of language |:lmap| mappings.  If 'iminsert'
+		is 1 (langmap mappings used) it becomes 0 (no langmap mappings
+		used).  If 'iminsert' has another value it becomes 1, thus
+		langmap mappings are enabled.
+		When switched on, the value of the "b:keymap_name" variable,
+		the 'keymap' option or "<lang>" appears in the status line.
 		These mappings are normally used to type characters that are
 		different from what the keyboard produces.  The 'keymap'
 		option can be used to install a whole number of them.
-		The use is switched on when defining a new |:lmap| mapping.
-		It is remembered for the next time Insert mode is used in the
-		same buffer.  It is also used for the argument of commands
-		like "r" and "f".
 		{not in Vi}
 
 						*i_CTRL-]*

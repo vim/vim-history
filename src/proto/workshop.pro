@@ -19,9 +19,7 @@ void workshop_set_mark __ARGS((char *filename, int lineno, int markId, int idx))
 void workshop_change_mark_type __ARGS((char *filename, int markId, int idx));
 void workshop_goto_mark __ARGS((char *filename, int markId, char *message));
 void workshop_delete_mark __ARGS((char *filename, int markId));
-void workshop_delete_all_marks __ARGS((void *window, Boolean doRefresh));
 int workshop_get_mark_lineno __ARGS((char *filename, int markId));
-void workshop_adjust_marks __ARGS((Widget *window, int pos, int inserted, int deleted));
 void workshop_moved_marks __ARGS((char *filename));
 int workshop_get_font_height __ARGS((void));
 void workshop_footer_message __ARGS((char *message, int severity));

@@ -1,6 +1,6 @@
 " Menu Translations:	Czech
 " Translated By: 	Jiøí Pavlovský <pavlovsk@ff.cuni.cz>
-" Last Change:		2001 apr 26
+" Last Change:		2001 May 18
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -88,7 +88,7 @@ menutrans Max\ Width<Tab>^W\| Maximální\ ¹íøka<Tab>^W\|
 menutrans Min\ Width<Tab>^W1\|  Minimální\ ¹íøka<Tab>^W1\|
 menutrans Rotate\ &Up<Tab>^WR		R&otovat\ nahoru<Tab>^WR
 menutrans Rotate\ &Down<Tab>^Wr		Rotovat\ &dolù<Tab>^Wr
-menutrans Select\ &Font\.\.\.		Vy&brat\ písmo\.\.\.
+menutrans Select\ Fo&nt\.\.\.		Vy&brat\ písmo\.\.\.
 
 " The popup menu
 menutrans &Undo			&Zpìt

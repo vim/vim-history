@@ -1,7 +1,8 @@
 /* vi:set ts=8 sts=4 sw=4:
  *
  * VIM - Vi IMproved	by Bram Moolenaar
- *		  OS/2 port by Paul Slootman
+ *	      OS/2 port by Paul Slootman
+ *            VMS merge by Zoltan Arpadffy
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
@@ -122,7 +123,7 @@ static int	did_set_icon = FALSE;
 static void may_core_dump __ARGS((void));
 
 static int  WaitForChar __ARGS((long));
-#ifdef __BEOS__
+#if defined(__BEOS__) || defined(VMS)
 int  RealWaitForChar __ARGS((int, long, int *));
 #else
 static int  RealWaitForChar __ARGS((int, long, int *));
@@ -276,6 +277,8 @@ mch_write(s, len)
 	RealWaitForChar(read_cmd_fd, p_wd, NULL);
 }
 
+#ifndef VMS
+
 /*
  * mch_inchar(): low level input funcion.
  * Get a characters from the keyboard.
@@ -383,6 +386,8 @@ mch_inchar(buf, maxlen, wtime)
 	}
     }
 }
+
+#endif /* VMS */
 
     static void
 handle_resize()
@@ -1662,6 +1667,18 @@ vim_is_iris(name)
 	    || STRCMP(name, "builtin_iris-ansi") == 0);
 }
 
+    int
+vim_is_vt300(name)
+    char_u  *name;
+{
+    if (name == NULL)
+        return FALSE;          /* actually all ANSI comp. terminals should be here  */
+    return (STRNICMP(name, "vt3", 3) == 0     /* it will cover all from VT100-VT300 */
+            || STRNICMP(name, "vt2", 3) == 0  /* TODO: from VT340 can hanle colors  */
+            || STRNICMP(name, "vt1", 3) == 0
+            || STRCMP(name, "builtin_vt320") == 0);
+}
+
 /*
  * Return TRUE if "name" is a terminal for which 'ttyfast' should be set.
  * This should include all windowed terminal emulators.
@@ -1672,7 +1689,7 @@ vim_is_fastterm(name)
 {
     if (name == NULL)
 	return FALSE;
-    if (vim_is_xterm(name) || vim_is_iris(name))
+    if (vim_is_xterm(name) || vim_is_vt300(name) || vim_is_iris(name))
 	return TRUE;
     return (   STRNICMP(name, "hpterm", 6) == 0
 	    || STRNICMP(name, "sun-cmd", 7) == 0
@@ -1690,7 +1707,12 @@ mch_get_user_name(s, len)
     char_u  *s;
     int	    len;
 {
+#ifdef VMS
+    STRNCPY((char *)s, cuserid(NULL), len);
+    return OK;
+#else
     return mch_get_uname(getuid(), s, len);
+#endif
 }
 
 /*
@@ -1808,7 +1830,12 @@ slash_adjust(p)
     {
 	if (*p == psepcN)
 	    *p = psepc;
-	++p;
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	    p += (*mb_ptr2len_check)(p);
+	else
+#endif
+	    ++p;
     }
 }
 #endif
@@ -1936,17 +1963,24 @@ mch_FullName(fname, buf, len, force)
 	l = STRLEN(buf);
 	if (l >= len)
 	    retval = FAIL;
+#ifndef VMS
 	else
 	{
 	    if (l > 0 && buf[l - 1] != '/' && *fname != NUL)
 		STRCAT(buf, "/");
 	}
+#endif
     }
     /* Catch file names which are too long. */
     if (retval == FAIL || STRLEN(buf) + STRLEN(fname) >= len)
 	return FAIL;
 
+#ifdef VMS
+    STRCAT(buf, vms_fixfilename(fname));
+#else
     STRCAT(buf, fname);
+#endif
+
     return OK;
 }
 
@@ -1960,7 +1994,13 @@ mch_isFullName(fname)
 #ifdef __EMX__
     return _fnisabs(fname);
 #else
+# ifdef VMS
+    return ( fname[0] == '/' || fname[0] == '.' || strchr((char *)fname, ':') ||
+             strchr((char *)fname,'[') || strchr((char *)fname,']') ||
+             strchr((char *)fname,'<') || strchr((char *)fname,'>')      );
+# else
     return (*fname == '/' || *fname == '~');
+# endif
 #endif
 }
 
@@ -2159,6 +2199,11 @@ mch_can_exe(name)
     char_u	*p;
     int		retval;
 
+#ifdef VMS
+    /* TODO */
+    return -1;
+#endif
+
     buf = alloc((unsigned)STRLEN(name) + 7);
     if (buf == NULL)
 	return -1;
@@ -2293,6 +2338,8 @@ may_core_dump()
 	kill(getpid(), deadly_signal);	/* Die using the signal we caught */
     }
 }
+
+#ifndef VMS
 
     void
 mch_settmode(tmode)
@@ -2436,6 +2483,8 @@ get_stty()
     }	    /* to keep cindent happy */
 #endif
 }
+
+#endif /* VMS  */
 
 #if defined(FEAT_MOUSE) || defined(PROTO)
 /*
@@ -2594,15 +2643,17 @@ check_mouse_termcode()
 # endif
 
 # ifdef FEAT_MOUSE_NET
-    /* can be added always, there is no conflict; don't do it in the GUI
-     * though */
+    /* There is no conflict, but one may type ESC } from Insert mode.  Don't
+     * define it in the GUI or when using an xterm. */
+    if (!use_xterm_mouse()
 #  ifdef FEAT_GUI
-    if (gui.in_use)
-	del_mouse_termcode(KS_NETTERM_MOUSE);
-    else
+	    && !gui.in_use
 #  endif
+	    )
 	set_mouse_termcode(KS_NETTERM_MOUSE,
 				       (char_u *)IF_EB("\033}", ESC_STR "}"));
+    else
+	del_mouse_termcode(KS_NETTERM_MOUSE);
 # endif
 
 # ifdef FEAT_MOUSE_DEC
@@ -2612,15 +2663,20 @@ check_mouse_termcode()
 	    && !gui.in_use
 #  endif
 	    )
-	set_mouse_termcode(KS_DEC_MOUSE, (char_u *)IF_EB("\033[", ESC_STR "["));
+	set_mouse_termcode(KS_DEC_MOUSE,
+				       (char_u *)IF_EB("\033[", ESC_STR "["));
     else
 	del_mouse_termcode(KS_DEC_MOUSE);
 # endif
 # ifdef FEAT_MOUSE_PTERM
     /* same as the dec mouse */
-    if (!use_xterm_mouse())
+    if (!use_xterm_mouse()
+#  ifdef FEAT_GUI
+	    && !gui.in_use
+#  endif
+	    )
 	set_mouse_termcode(KS_PTERM_MOUSE,
-		(char_u *) IF_EB("\033[", ESC_STR "["));
+				      (char_u *) IF_EB("\033[", ESC_STR "["));
     else
 	del_mouse_termcode(KS_PTERM_MOUSE);
 # endif
@@ -2638,6 +2694,8 @@ mch_screenmode(arg)
     EMSG(_("E359: Screen mode setting not supported"));
     return FAIL;
 }
+
+#ifndef VMS
 
 /*
  * Try to get the current window size:
@@ -2746,6 +2804,8 @@ mch_set_shellsize()
     }
 }
 
+#endif /* VMS */
+
 /*
  * Rows and/or Columns has changed.
  */
@@ -2760,6 +2820,10 @@ mch_call_shell(cmd, options)
     char_u	*cmd;
     int		options;	/* SHELL_*, see vim.h */
 {
+#ifdef VMS
+    char        *ifn = NULL;
+    char        *ofn = NULL;
+#endif
 #ifdef USE_SYSTEM	/* use system() to start the shell: simple but slow */
     int	    x;
 #ifndef __EMX__
@@ -2809,6 +2873,21 @@ mch_call_shell(cmd, options)
 	x = system((char *)p_sh);
     else
     {
+# ifdef VMS
+        if (ofn = strchr((char *)cmd, '>'))
+            *ofn++ = '\0';
+        if (ifn = strchr((char *)cmd, '<')) {
+           char *p;
+            *ifn++ = '\0';
+            p = strchr(ifn,' '); /* chop off any trailing spaces */
+            if (p)
+                *p = '\0';
+        }
+        if (ofn)
+            x = vms_sys((char *)cmd, ofn, ifn);
+        else
+            x = system((char *)cmd);
+# else
 	newcmd = lalloc(STRLEN(p_sh)
 		+ (extra_shell_arg == NULL ? 0 : STRLEN(extra_shell_arg))
 		+ STRLEN(p_shcf) + STRLEN(cmd) + 4, TRUE);
@@ -2823,6 +2902,7 @@ mch_call_shell(cmd, options)
 	    x = system((char *)newcmd);
 	    vim_free(newcmd);
 	}
+# endif
     }
     if (emsg_silent)
 	;
@@ -3498,7 +3578,7 @@ WaitForChar(msec)
  * Or when a Linux GPM mouse event is waiting.
  */
 /* ARGSUSED */
-#ifdef __BEOS__
+#if defined(__BEOS__) || defined(VMS)
     int
 #else
     static  int
@@ -3732,6 +3812,8 @@ RealWaitForChar(fd, msec, check_for_gpm)
     return (ret > 0);
 }
 
+#ifndef VMS
+
 #ifndef NO_EXPANDPATH
     static int
 pstrcmp(a, b)
@@ -3797,8 +3879,7 @@ unix_expandpath(gap, path, wildoff, flags)
 	{
 	    if (e != NULL)
 		break;
-	    else
-		s = p + 1;
+	    s = p + 1;
 	}
 	else if (vim_strchr((char_u *)"*?[{~$", *path_end) != NULL)
 	    e = p;
@@ -4422,6 +4503,8 @@ notfound:
 #endif /* __EMX__ */
 }
 
+#endif /* VMS */
+
 #ifndef __EMX__
     static int
 save_patterns(num_pat, pat, num_file, file)
@@ -4458,7 +4541,13 @@ mch_has_wildcard(p)
     {
 	if (*p == '\\' && p[1] != NUL)
 	    ++p;
-	else if (vim_strchr((char_u *)"*?[{`'~$", *p) != NULL)
+        else if (vim_strchr((char_u *)
+#ifdef VMS
+                                    "*?%$~"
+#else
+                                    "*?[{`'~$"
+#endif
+                                                , *p) != NULL)
 	    return TRUE;
     }
     return FALSE;

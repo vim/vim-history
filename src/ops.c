@@ -1654,6 +1654,9 @@ op_delete(oap)
 		n++;
 		curwin->w_cursor.coladd = 0;
 	    }
+	    /* Delete at least one character (e.g, when on a control char). */
+	    if (n == 0 && oap->start.coladd != oap->end.coladd)
+		n = 1;
 	}
 #endif
 	(void)del_chars((long)n, restart_edit == NUL);

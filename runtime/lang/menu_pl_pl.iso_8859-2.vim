@@ -1,7 +1,7 @@
 " Menu Translations:	Polish
 " Maintainer:  		Rafal M. Sulejman <rms@poczta.onet.pl>
 " Initial Translation: 	Marcin Dalecki <dalecki@cs.net.pl>
-" Last Change:      	2001 apr 26
+" Last Change:      	2001 May 18
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -88,7 +88,7 @@ menutrans Min\ Width<Tab>^W1\|		Minimalna\ szeroko¶æ<Tab>^W1\|
 menutrans Rotate\ &Up<Tab>^WR		Obróæ\ w\ &górê<Tab>^WR
 menutrans Rotate\ &Down<Tab>^Wr		Obróæ\ w\ &dó³<Tab>^Wr
 menutrans Split\ &Vertically<Tab>^Wv	&Podziel\ w\ poziomie<Tab>^Wv
-menutrans Select\ &Font\.\.\.		Wybierz\ &czcionkê\.\.\.
+menutrans Select\ Fo&nt\.\.\.		Wybierz\ &czcionkê\.\.\.
 
 " The popup menu
 menutrans &Undo			&Cofnij
