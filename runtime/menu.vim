@@ -429,7 +429,8 @@ func! s:XxdConv()
   if has("vms")
     %!mc vim:xxd
   else
-    %!xxd
+    call s:XxdFind()
+    exe "%!" . g:xxdprogram
   endif
   set ft=xxd
   let &mod = mod
@@ -440,10 +441,23 @@ func! s:XxdBack()
   if has("vms")
     %!mc vim:xxd -r
   else
-    %!xxd -r
+    call s:XxdFind()
+    exe "%!" . g:xxdprogram . " -r"
   endif
+  set ft=
   doautocmd filetypedetect BufReadPost
   let &mod = mod
+endfun
+
+func! s:XxdFind()
+  if !exists("g:xxdprogram")
+    " On the PC xxd may not be in the path but in the install directory
+    if (has("win32") || has("dos32")) && !executable("xxd")
+      let g:xxdprogram = $VIMRUNTIME . (&shellslash ? '/' : '\') . "xxd.exe"
+    else
+      let g:xxdprogram = "xxd"
+    endif
+  endif
 endfun
 
 " Setup the Tools.Compiler submenu
