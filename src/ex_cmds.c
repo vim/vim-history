@@ -2294,6 +2294,8 @@ do_ecmd(fnum, ffname, sfname, command, newlnum, flags)
     linenr_t	lnum;
     linenr_t	topline = 0;
     int		newcol = -1;
+    int		solcol = -1;
+    FPOS	*pos;
 
     if (fnum != 0)
     {
@@ -2417,7 +2419,11 @@ do_ecmd(fnum, ffname, sfname, command, newlnum, flags)
 	/* May jump to last used line number for a loaded buffer or when asked
 	 * for explicitly */
 	if ((oldbuf && newlnum == ECMD_LASTL) || newlnum == ECMD_LAST)
-	    newlnum = buflist_findlnum(buf);
+	{
+	    pos = buflist_findfpos(buf);
+	    newlnum = pos->lnum;
+	    solcol = pos->col;
+	}
 
 	/*
 	 * Make the (new) buffer the one used by the current window.
@@ -2514,7 +2520,10 @@ do_ecmd(fnum, ffname, sfname, command, newlnum, flags)
     {
 	set_last_cursor(curwin);	/* may set b_last_cursor */
 	if (newlnum == ECMD_LAST || newlnum == ECMD_LASTL)
+	{
 	    newlnum = curwin->w_cursor.lnum;
+	    solcol = curwin->w_cursor.col;
+	}
 #ifdef AUTOCMD
 	buf = curbuf;
 	if (buf->b_fname != NULL)
@@ -2651,7 +2660,14 @@ do_ecmd(fnum, ffname, sfname, command, newlnum, flags)
 	{
 	    curwin->w_cursor.lnum = newlnum;
 	    check_cursor_lnum();
-	    beginline(BL_SOL | BL_FIX);
+	    if (solcol >= 0 && !p_sol)
+	    {
+		/* 'sol' is off: Use last known column. */
+		curwin->w_cursor.col = solcol;
+		check_cursor_col();
+	    }
+	    else
+		beginline(BL_SOL | BL_FIX);
 	}
 	else			/* no line number, go to last line in Ex mode */
 	{
