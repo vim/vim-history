@@ -69,7 +69,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0t
+MINOR = 0u
 
 # CHECKLIST for creating a new version:
 #
@@ -451,6 +451,7 @@ SRC_AMI =	\
 # source files for the Mac (also in the extra archive)
 SRC_MAC =	\
 		src/INSTALLmac.txt \
+		src/Make_mpw.mak \
 		src/gui_mac.c \
 		src/gui_mac.r \
 		src/os_mac* \

@@ -61,10 +61,10 @@ get_indent_buf(buf, lnum)
  */
     static int
 get_indent_str(ptr, ts)
-    char_u  *ptr;
-    int	    ts;
+    char_u	*ptr;
+    int		ts;
 {
-    int	    count = 0;
+    int		count = 0;
 
     for ( ; *ptr; ++ptr)
     {
@@ -172,6 +172,37 @@ set_indent(size, flags)
     return TRUE;
 }
 
+/*
+ * Return the indent of the current line after a number.  Return -1 if no
+ * number was found.  Used for '1' in 'formatoptions': numbered list.
+ */
+    int
+get_number_indent(lnum)
+    linenr_t	lnum;
+{
+    char_u	*line;
+    char_u	*p;
+    colnr_t	col;
+    pos_t	pos;
+
+    if (lnum > curbuf->b_ml.ml_line_count)
+	return -1;
+    line = ml_get(lnum);
+    p = skipwhite(line);
+    if (!isdigit(*p))
+	return -1;
+    p = skipdigits(p);
+    if (vim_strchr((char_u *)":.)]}\t ", *p) == NULL)
+	return -1;
+    p = skipwhite(p + 1);
+    if (*p == NUL)
+	return -1;
+    pos.lnum = lnum;
+    pos.col = p - line;
+    getvcol(curwin, &pos, &col, NULL, NULL);
+    return (int)col;
+}
+
 #if defined(FEAT_CINDENT) || defined(FEAT_SMARTINDENT)
 
 static int cin_is_cinword __ARGS((char_u *line));
@@ -183,11 +214,11 @@ static int cin_is_cinword __ARGS((char_u *line));
 cin_is_cinword(line)
     char_u	*line;
 {
-    char_u  *cinw;
-    char_u  *cinw_buf;
-    int	    cinw_len;
-    int	    retval = FALSE;
-    int	    len;
+    char_u	*cinw;
+    char_u	*cinw_buf;
+    int		cinw_len;
+    int		retval = FALSE;
+    int		len;
 
     cinw_len = STRLEN(curbuf->b_p_cinw) + 1;
     cinw_buf = alloc((unsigned)cinw_len);
@@ -1228,10 +1259,7 @@ plines_win(wp, lnum, winheight)
     linenr_t	lnum;
     int		winheight;	/* when TRUE limit to window height */
 {
-    long	col;
-    char_u	*s;
     int		lines;
-    int		width;
 
     if (!wp->w_p_wrap)
 	return 1;
@@ -1248,10 +1276,28 @@ plines_win(wp, lnum, winheight)
 	return 1;
 #endif
 
+    lines = plines_win_nofold(wp, lnum);
+    if (winheight && lines > wp->w_height)
+	return (int)wp->w_height;
+    return lines;
+}
+
+/*
+ * Return number of window lines physical line "lnum" will occupy in window
+ * "wp".  Does not care about folding.
+ */
+    int
+plines_win_nofold(wp, lnum)
+    win_t	*wp;
+    linenr_t	lnum;
+{
+    char_u	*s;
+    long	col;
+    int		width;
+
     s = ml_get_buf(wp->w_buffer, lnum, FALSE);
     if (*s == NUL)		/* empty line */
 	return 1;
-
     col = win_linetabsize(wp, s);
 
     /*
@@ -1266,21 +1312,12 @@ plines_win(wp, lnum, winheight)
      */
     width = W_WIDTH(wp) - win_col_off(wp);
     if (width <= 0)
-	lines = 32000;
-    else
-    {
-	if (col <= width)
-	    return 1;
-	col -= width;
-	width += win_col_off2(wp);
-	lines = (col + (width - 1)) / width + 1;
-	if (lines <= wp->w_height)
-	    return lines;
-    }
-    /* window is too small, line does not fit */
-    if (winheight)
-	return (int)(wp->w_height);
-    return lines;
+	return 32000;
+    if (col <= width)
+	return 1;
+    col -= width;
+    width += win_col_off2(wp);
+    return (col + (width - 1)) / width + 1;
 }
 
 /*
@@ -1741,6 +1778,10 @@ del_chars(count, fixpos)
     colnr_t	col = curwin->w_cursor.col;
     int		was_alloced;
     long	movelen;
+#ifdef FEAT_MBYTE
+    int		p0, p1, p2;
+    int		p0len, p1len, p2len;
+#endif
 
     oldp = ml_get(lnum);
     oldlen = STRLEN(oldp);
@@ -1750,6 +1791,35 @@ del_chars(count, fixpos)
      */
     if (col >= oldlen)
 	return FAIL;
+
+#ifdef FEAT_MBYTE
+    if (p_deco)
+    {
+	p1 = p2 = 0;
+	/* see if there are any combining characters: */
+	p0 = utfc_ptr2char(oldp + col, &p1, &p2);
+	p0len = utf_char2len(p0);
+	p1len = p1 != 0 ? utf_char2len(p1) : 0;
+	p2len = p2 != 0 ? utf_char2len(p2) : 0;
+
+	/* don't try anything if trying to del more than one 'char' */
+	if ((count <= (p0len + p1len + p2len)) && p1 != 0)
+	{
+	    if (p2 != 0)
+	    {
+		col += p0len + p1len;
+		count -= p2len;
+	    }
+	    else /* only p1 */
+	    {
+		col += p0len;
+		count -= p1len;
+	    }
+	    if (col > 0)
+		fixpos = 0;
+	}
+    }
+#endif
 
     /*
      * When count is too big, reduce it.
@@ -1762,7 +1832,14 @@ del_chars(count, fixpos)
 	 * fixpos is TRUE, we don't want to end up positioned at the NUL.
 	 */
 	if (col > 0 && fixpos)
+	{
 	    --curwin->w_cursor.col;
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		curwin->w_cursor.col -=
+			       mb_head_off(oldp, oldp + curwin->w_cursor.col);
+#endif
+	}
 	count = oldlen - col;
 	movelen = 1;
     }
@@ -2214,7 +2291,7 @@ changed_common(lnum, col, lnume, xtra)
 			    /* line included in change */
 			    wp->w_lines[i].wl_valid = FALSE;
 			}
-			else if (xtra)
+			else if (xtra != 0)
 			{
 			    /* line below change */
 			    wp->w_lines[i].wl_lnum += xtra;
@@ -2826,9 +2903,13 @@ expand_env(src, dst, dstlen)
 		STRCPY(dst, var);
 		dstlen -= STRLEN(var);
 		dst += STRLEN(var);
-		    /* if var[] ends in a path separator and tail[] starts
-		     * with it, skip a character */
-		if (*var && vim_ispathsep(*(dst-1)) && vim_ispathsep(*tail))
+		/* if var[] ends in a path separator and tail[] starts
+		 * with it, skip a character */
+		if (*var != NUL && vim_ispathsep(dst[-1])
+#if defined(BACKSLASH_IN_FILENAME) || defined(AMIGA)
+			&& dst[-1] != ':'
+#endif
+			&& vim_ispathsep(*tail))
 		    ++tail;
 		src = tail;
 		copy_char = FALSE;
@@ -4356,6 +4437,11 @@ get_c_indent()
      */
     int ind_maxcomment = 30;
 
+    /*
+     * handle braces for java code
+     */
+    int	ind_java = 0;
+
     pos_t	cur_curpos;
     int		amount;
     int		scope_amount;
@@ -4364,6 +4450,7 @@ get_c_indent()
     char_u	*theline;
     char_u	*linecopy;
     pos_t	*trypos;
+    pos_t	*tryposBrace = NULL;
     pos_t	our_paren_pos;
     char_u	*start;
     int		start_brace;
@@ -4445,6 +4532,7 @@ get_c_indent()
 	    case '*': ind_maxcomment = n; break;
 	    case 'g': ind_scopedecl = n; break;
 	    case 'h': ind_scopedecl_code = n; break;
+	    case 'j': ind_java = n; break;
 	}
     }
 
@@ -4633,10 +4721,27 @@ get_c_indent()
     }
 
     /*
-     * Are we inside parentheses?
+     * Are we inside parentheses or braces?
      */						    /* XXX */
-    else if ((trypos = find_match_paren(ind_maxparen, ind_maxcomment)) != NULL)
+    else if (((trypos = find_match_paren(ind_maxparen, ind_maxcomment)) != NULL
+		&& ind_java == 0)
+	    || (tryposBrace = find_start_brace(ind_maxcomment)) != NULL
+	    || trypos != NULL)
     {
+      if (trypos != NULL && tryposBrace != NULL)
+      {
+	  /* Both an unmatched '(' and '{' is found.  Use the one which is
+	   * closer to the current cursor position, set the other to NULL. */
+	  if (trypos->lnum != tryposBrace->lnum
+		  ? trypos->lnum < tryposBrace->lnum
+		  : trypos->col < tryposBrace->col)
+	      trypos = NULL;
+	  else
+	      tryposBrace = NULL;
+      }
+
+      if (trypos != NULL)
+      {
 	/*
 	 * If the matching paren is more than one line away, use the indent of
 	 * a previous non-empty line that matches the same paren.
@@ -4681,8 +4786,9 @@ get_c_indent()
 	if (amount == -1)
 	{
 	    amount = skip_label(our_paren_pos.lnum, &look, ind_maxcomment);
-	    if (theline[0] == ')' || ind_unclosed == 0 ||
-							*skipwhite(look) == '(')
+	    cur_amount = MAXCOL;
+	    if (theline[0] == ')' || ind_unclosed == 0
+						   || *skipwhite(look) == '(')
 	    {
 		/*
 		 * If we're looking at a close paren, line up right there;
@@ -4701,12 +4807,15 @@ get_c_indent()
 		}
 
 		/*
-		 * Find how indented the paren is, or the character after it if
-		 * we did the above "if".
+		 * Find how indented the paren is, or the character after it
+		 * if we did the above "if".
 		 */
 		getvcol(curwin, &our_paren_pos, &col, NULL, NULL);
-		amount = col;
+		cur_amount = col;
 	    }
+
+	    if (ind_unclosed == 0 || *skipwhite(look) == '(')
+		amount = cur_amount;
 	    else
 	    {
 		/* add ind_unclosed2 for each '(' before our matching one */
@@ -4739,15 +4848,27 @@ get_c_indent()
 		    else
 			amount += ind_unclosed;
 		}
+		/*
+		 * For a line starting with ')' use the minimum of the two
+		 * positions, to avoid giving it more indent than the previous
+		 * lines:
+		 *  func_long_name(		    if (x
+		 *	arg				    && yy
+		 *	)         ^ not here	       )    ^ not here
+		 */
+		if (cur_amount < amount)
+		    amount = cur_amount;
 	    }
 	}
-    }
+      }
 
-    /*
-     * Are we at least inside braces, then?
-     */
-    else if ((trypos = find_start_brace(ind_maxcomment)) != NULL) /* XXX */
-    {
+      /*
+       * Are we at least inside braces, then?
+       */
+      else
+      {
+	trypos = tryposBrace;
+
 	ourscope = trypos->lnum;
 	start = ml_get(ourscope);
 
@@ -5355,6 +5476,7 @@ term_again:
 		}
 	    }
 	}
+      }
     }
 
     /*
@@ -6036,8 +6158,176 @@ match_suffix(fname)
 #if !defined(NO_EXPANDPATH) || defined(PROTO)
 
 # ifdef VIM_BACKTICK
+static int vim_backtick __ARGS((char_u *p));
 static int expand_backtick __ARGS((garray_t *gap, char_u *pat, int flags));
 # endif
+
+# if defined(MSDOS) || defined(FEAT_GUI_W16)
+/*
+ * File name expansion code for MS-DOS and Win16.  It's here because it's
+ * shared between those two systems.
+ */
+# if defined(DJGPP) || defined(PROTO)
+#  define _cdecl	    /* DJGPP doesn't have this */
+# endif
+static int _cdecl pstrcmp();  /* BCC does not like the types */
+
+    static int _cdecl
+pstrcmp(a, b)
+    char_u **a, **b;
+{
+    return (pathcmp((char *)*a, (char *)*b));
+}
+
+    static void
+namelowcpy(
+    char_u *d,
+    char_u *s)
+{
+#ifdef DJGPP
+    if (USE_LONG_FNAME)	    /* don't lower case on Windows 95/NT systems */
+	while (*s)
+	    *d++ = *s++;
+    else
+#endif
+	while (*s)
+	    *d++ = TO_LOWER(*s++);
+    *d = NUL;
+}
+
+/*
+ * Recursive function to expand one path section with wildcards.
+ * This only expands '?' and '*'.
+ * Return the number of matches found.
+ * "path" has backslashes before chars that are not to be expanded, starting
+ * at "wildc".
+ */
+    static int
+dos_expandpath(
+    garray_t	*gap,
+    char_u	*path,
+    char_u	*wildc,
+    int		flags)		/* EW_* flags */
+{
+    char_u		*buf;
+    char_u		*p, *s, *e;
+    int			start_len, c;
+    struct ffblk	fb;
+    int			matches;
+    int			len;
+    int			dot_at_start;
+    int			tilde_at_end;
+
+    start_len = gap->ga_len;
+    /* make room for file name */
+    buf = alloc(STRLEN(path) + BASENAMELEN + 5);
+    if (buf == NULL)
+	return 0;
+
+    /*
+     * Find the first part in the path name that contains a wildcard.
+     * Copy it into buf, including the preceding characters.
+     */
+    p = buf;
+    s = buf;
+    e = NULL;
+    while (*path)
+    {
+	if (path >= wildc && rem_backslash(path))	/* remove a backslash */
+	    ++path;
+	else if (*path == '\\' || *path == ':' || *path == '/')
+	{
+	    if (e != NULL)
+		break;
+	    else
+		s = p + 1;
+	}
+	else if (*path == '*' || *path == '?')
+	    e = p;
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	{
+	    len = mb_ptr2len_check(path);
+	    STRNCPY(p, path, len);
+	    p += len;
+	    path += len;
+	}
+	else
+#endif
+	    *p++ = *path++;
+    }
+    e = p;
+
+    /* if the file name ends in "*" and does not contain a ".", add ".*" */
+    if (e[-1] == '*' && vim_strchr(s, '.') == NULL)
+    {
+	*e++ = '.';
+	*e++ = '*';
+    }
+
+    /* now we have one wildcard component between s and e */
+    *e = NUL;
+    dot_at_start = (*s == '.');
+
+    /* findfirst()/findnext() finds names ending in '~' even when we didn't
+     * ask for them */
+    tilde_at_end = (e[-1] == '*' || e[-1] == '?' || e[-1] == '~');
+
+    /* If we are expanding wildcards we try both files and directories */
+    if ((c = findfirst((char *)buf, &fb,
+			    (*path || (flags & EW_DIR)) ? FA_DIREC : 0)) != 0)
+    {
+	/* not found */
+	vim_free(buf);
+	return 0; /* unexpanded or empty */
+    }
+
+    while (!c)
+    {
+	namelowcpy((char *)s, fb.ff_name);
+	len = STRLEN(buf);
+	/* ignore names starting with "." unless asked for */
+	/* ignore names ending in "~" unless pat ends in '*', '?' or '~' */
+	if ((*s != '.' || dot_at_start)
+		&& (buf[len - 1] != '~' || tilde_at_end))
+	{
+	    STRCPY(buf + len, path);
+	    if (mch_has_wildcard(path))
+	    {
+		/* need to expand another component of the path */
+		/* remove backslashes for the remaining components only */
+		(void)dos_expandpath(gap, buf, buf + len + 1, flags);
+	    }
+	    else
+	    {
+		/* no more wildcards, check if there is a match */
+		/* remove backslashes for the remaining components only */
+		if (*path)
+		    backslash_halve(buf + len + 1);
+		if (mch_getperm(buf) >= 0)	/* add existing file */
+		    addfile(gap, buf, flags);
+	    }
+	}
+	c = findnext(&fb);
+    }
+    vim_free(buf);
+
+    matches = gap->ga_len - start_len;
+    if (matches)
+	qsort(((char_u **)gap->ga_data) + start_len, (size_t)matches,
+						   sizeof(char_u *), pstrcmp);
+    return matches;
+}
+
+    int
+mch_expandpath(
+    garray_t	*gap,
+    char_u	*path,
+    int		flags)		/* EW_* flags */
+{
+    return dos_expandpath(gap, path, path, flags);
+}
+# endif /* MSDOS || FEAT_GUI_W16 */
 
 /*
  * Generic wildcard expansion code.
@@ -6082,10 +6372,15 @@ gen_expand_wildcards(num_pat, pat, num_file, file, flags)
      * If there are any special wildcard characters which we cannot handle
      * here, call machine specific function for all the expansion.  This
      * avoids starting the shell for each argument separately.
+     * For `=expr` do use the internal function.
      */
     for (i = 0; i < num_pat; i++)
     {
-	if (vim_strpbrk(pat[i], (char_u *)SPECIAL_WILDCHAR) != NULL)
+	if (vim_strpbrk(pat[i], (char_u *)SPECIAL_WILDCHAR) != NULL
+# ifdef VIM_BACKTICK
+		&& !(vim_backtick(pat[i]) && pat[i][1] == '=')
+# endif
+	   )
 	    return mch_expand_wildcards(num_pat, pat, num_file, file, flags);
     }
 #endif
@@ -6103,7 +6398,7 @@ gen_expand_wildcards(num_pat, pat, num_file, file, flags)
 	p = pat[i];
 
 #ifdef VIM_BACKTICK
-	if (*p == '`' && *(p + 1) != NUL && *(p + STRLEN(p) - 1) == '`')
+	if (vim_backtick(p))
 	    add_pat = expand_backtick(&ga, p, flags);
 	else
 #endif
@@ -6149,16 +6444,6 @@ gen_expand_wildcards(num_pat, pat, num_file, file, flags)
 	{
 	    char_u	*t = backslash_halve_save(p);
 
-#ifdef DJGPP
-	    /* DJGPP doesn't like a trailing slash or backslash. */
-	    int		len;
-
-	    len = STRLEN(t) - 1;
-	    if (len > 0
-		    && (t[len] == '/' || t[len] == '\\')
-		    && t[len - 1] != ':')
-		t[len] = NUL;
-#endif
 	    if ((flags & EW_NOTFOUND) || mch_getperm(t) >= 0)
 		addfile(&ga, t, flags);
 	    vim_free(t);
@@ -6177,6 +6462,16 @@ gen_expand_wildcards(num_pat, pat, num_file, file, flags)
 }
 
 # ifdef VIM_BACKTICK
+
+/*
+ * Return TRUE if we can expand this backtick thing here.
+ */
+    static int
+vim_backtick(p)
+    char_u	*p;
+{
+    return (*p == '`' && *(p + 1) != NUL && *(p + STRLEN(p) - 1) == '`');
+}
 
 /*
  * Expand an item in `backticks` by executing it as a command.
@@ -6200,7 +6495,12 @@ expand_backtick(gap, pat, flags)
     if (cmd == NULL)
 	return 0;
 
-    buffer = get_cmd_output(cmd, (flags & EW_SILENT) ? SHELL_SILENT : 0);
+#ifdef FEAT_EVAL
+    if (*cmd == '=')	    /* `={expr}`: Expand expression */
+	buffer = eval_to_string(cmd + 1, &p);
+    else
+#endif
+	buffer = get_cmd_output(cmd, (flags & EW_SILENT) ? SHELL_SILENT : 0);
     vim_free(cmd);
     if (buffer == NULL)
 	return 0;

@@ -61,6 +61,8 @@
  * KS_NAME, which separates the entries.  See parse_builtin_tcap() for all
  * details.
  * bt_entry is either a KS_xxx code (>= 0), or a K_xxx code.
+ *
+ * Entries marked with "guessed" may be wrong.
  */
 struct builtin_term
 {
@@ -142,7 +144,7 @@ struct builtin_term builtin_termcaps[] =
 
 #if defined(FEAT_GUI)
 /*
- * Motif/Athena pseudo term-cap.
+ * GUI pseudo term-cap.
  */
     {(int)KS_NAME,	"gui"},
     {(int)KS_CE,	IF_EB("\033|$", ESC_STR "|$")},
@@ -173,6 +175,7 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_CZH,	IF_EB("\033|4h", ESC_STR "|4h")},   /* HL_ITALIC */
     {(int)KS_VB,	IF_EB("\033|f", ESC_STR "|f")},
     {(int)KS_MS,	"y"},
+    {(int)KS_UT,	"y"},
     {(int)KS_LE,	"\010"},	/* cursor-left = BS */
     {(int)KS_ND,	"\014"},	/* cursor-right = CTRL-L */
 # ifdef TERMINFO
@@ -283,6 +286,7 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_CZH,	"\033[3m"},
     {(int)KS_CZR,	"\033[0m"},
     {(int)KS_MS,	"y"},
+    {(int)KS_UT,	"y"},		/* guessed */
     {(int)KS_LE,	"\010"},
 #  ifdef TERMINFO
     {(int)KS_CM,	"\033[%i%p1%d;%p2%dH"},
@@ -386,6 +390,7 @@ struct builtin_term builtin_termcaps[] =
 #  endif
     {(int)KS_OP,	"\033[m"},	/* reset colors */
     {(int)KS_MS,	"y"},		/* safe to move cur in reverse mode */
+    {(int)KS_UT,	"y"},		/* guessed */
     {(int)KS_LE,	"\010"},
 #  ifdef TERMINFO
     {(int)KS_CM,	"\033[%i%p1%d;%p2%dH"},
@@ -430,6 +435,7 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_ME,	IF_EB("\033[0m", ESC_STR "[0m")},
     {(int)KS_MR,	IF_EB("\033[7m", ESC_STR "[7m")},
     {(int)KS_MS,	"y"},
+    {(int)KS_UT,	"y"},		/* guessed */
     {(int)KS_LE,	"\010"},
 #  ifdef TERMINFO
     {(int)KS_CM,	IF_EB("\033[%i%p1%d;%p2%dH", ESC_STR "[%i%p1%d;%p2%dH")},
@@ -478,6 +484,7 @@ struct builtin_term builtin_termcaps[] =
 #  endif
     {(int)KS_OP,	"\033[0m"},	/* reset colors */
     {(int)KS_MS,	"y"},
+    {(int)KS_UT,	"y"},		/* guessed */
     {(int)KS_LE,	"\010"},
 #  ifdef TERMINFO
     {(int)KS_CM,	"\033[%i%p1%d;%p2%dH"},
@@ -560,6 +567,7 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_CAF,	"\033|%df"},	/* set foreground color */
 #  endif
     {(int)KS_MS,	"y"},
+    {(int)KS_UT,	"y"},
     {(int)KS_LE,	"\010"},
 #  ifdef TERMINFO
     {(int)KS_CM,	"\033|%i%p1%d;%p2%dH"},
@@ -670,6 +678,7 @@ struct builtin_term builtin_termcaps[] =
 #  endif
 
     {(int)KS_MS,	"y"},		/* save to move cur in reverse mode */
+    {(int)KS_UT,	"y"},
     {(int)KS_LE,	"\010"},
 #  ifdef TERMINFO
     {(int)KS_CM,	"\033|%i%p1%d;%p2%dH"},/* cursor motion */
@@ -765,6 +774,7 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_ME,	IF_EB("\033[0m", ESC_STR "[0m")},
     {(int)KS_MR,	IF_EB("\033[7m", ESC_STR "[7m")},
     {(int)KS_MS,	"y"},
+    {(int)KS_UT,	"y"},
     {(int)KS_LE,	"\010"},
 #  ifdef TERMINFO
     {(int)KS_CM,	IF_EB("\033[%i%p1%d;%p2%dH",
@@ -904,6 +914,7 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_UE,	IF_EB("\033[m", ESC_STR "[m")},
     {(int)KS_US,	IF_EB("\033[4m", ESC_STR "[4m")},
     {(int)KS_MS,	"y"},
+    {(int)KS_UT,	"y"},
     {(int)KS_LE,	"\010"},
 #  ifdef TERMINFO
     {(int)KS_CM,	IF_EB("\033[%i%p1%d;%p2%dH",
@@ -1055,7 +1066,8 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_CAF,	"\033[3%dm"},		/* set foreground color */
 #  endif
     {(int)KS_US,	"\033[4m"},
-    {(int)KS_MS,	"y"},	/* does this really work? */
+    {(int)KS_MS,	"y"},		/* guessed */
+    {(int)KS_UT,	"y"},		/* guessed */
     {(int)KS_LE,	"\010"},
 #  ifdef TERMINFO
     {(int)KS_CM,	"\033[%i%p1%d;%p2%dH"},
@@ -1166,6 +1178,7 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_UE,	"[UE]"},
     {(int)KS_US,	"[US]"},
     {(int)KS_MS,	"[MS]"},
+    {(int)KS_UT,	"[UT]"},
 #  ifdef TERMINFO
     {(int)KS_CM,	"[%p1%dCM%p2%d]"},
 #  else
@@ -1586,6 +1599,8 @@ set_termname(term)
 		    T_DB = (char_u *)"y";
 		if ((T_DA == NULL || T_DA == empty_option) && tgetflag("da"))
 		    T_DA = (char_u *)"y";
+		if ((T_UT == NULL || T_UT == empty_option) && tgetflag("ut"))
+		    T_UT = (char_u *)"y";
 
 
 		/*
@@ -1804,7 +1819,7 @@ set_termname(term)
 	}
 #  endif
 	if (p != NULL)
-	    set_option_value((char_u *)"ttym", 0L, p, FALSE);
+	    set_option_value((char_u *)"ttym", 0L, p, 0);
 	else
 	    check_mouse_termcode();	/* set mouse termcode anyway */
     }
@@ -2641,22 +2656,17 @@ term_settitle(title)
 ttest(pairs)
     int	pairs;
 {
-    char    *t = NULL;
-
     check_options();		    /* make sure no options are NULL */
 
-  /* hard requirements */
-    if (*T_CL == NUL)		    /* erase display */
-	t = "cl";
-    if (*T_CM == NUL)		    /* cursor motion */
-	t = "cm";
+    /*
+     * MUST have "cm": cursor motion.
+     */
+    if (*T_CM == NUL)
+	EMSG(_("terminal capability \"cm\" required"));
 
-    if (t != NULL)
-	EMSG2(_("terminal capability %s required"), t);
-
-/*
- * if "cs" defined, use a scroll region, it's faster.
- */
+    /*
+     * if "cs" defined, use a scroll region, it's faster.
+     */
     if (*T_CS != NUL)
 	scroll_region = TRUE;
     else
@@ -3706,7 +3716,7 @@ check_termcode(max_offset, buf, buflen)
 			/* if xterm version >= 95 use mouse dragging */
 			if (extra >= 95)
 			    set_option_value((char_u *)"ttym", 0L,
-						   (char_u *)"xterm2", FALSE);
+						       (char_u *)"xterm2", 0);
 			/* if xterm version >= 141 try to get termcap codes */
 			if (extra >= 141)
 			{

@@ -482,7 +482,7 @@ fname2fnum(fm)
 	p = shorten_fname(NameBuff, IObuff);
 
 	/* buflist_new() will call fmarks_check_names() */
-	(void)buflist_new(NameBuff, p, (linenr_t)1, FALSE, TRUE);
+	(void)buflist_new(NameBuff, p, (linenr_t)1, FALSE, FALSE);
     }
 }
 

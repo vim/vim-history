@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.0t.  Last change: 2000 Nov 20
+*map.txt*       For Vim version 6.0u.  Last change: 2000 Nov 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -687,8 +687,8 @@ is executed, it is transformed into a normal ex command and then executed.
 
 All user defined commands must start with an uppercase letter, to avoid
 confusion with builtin commands. (There are a few builtin commands, notably
-:Next and :Print, which do start with an uppercase letter.  The builtin will
-always take precedence in these cases).  The other characters of the user
+:Next, :Print and :X, which do start with an uppercase letter.  The builtin
+will always take precedence in these cases).  The other characters of the user
 command can be uppercase letters, lowercase letters or digits.  When using
 digits, note that other commands that take a numeric argument may become
 ambiguous.  For example, the command ":Cc2" could be the user command ":Cc2"

@@ -3931,8 +3931,8 @@ ex_window()
     /* Create the command-line buffer empty. */
     (void)do_ecmd(0, NULL, NULL, NULL, ECMD_ONE, ECMD_HIDE);
     (void)setfname((char_u *)"command-line", NULL, TRUE);
-    set_option_value((char_u *)"bt", 0L, (char_u *)"nofile", TRUE);
-    set_option_value((char_u *)"swf", 0L, NULL, TRUE);
+    set_option_value((char_u *)"bt", 0L, (char_u *)"nofile", OPT_LOCAL);
+    set_option_value((char_u *)"swf", 0L, NULL, OPT_LOCAL);
     curbuf->b_p_ma = TRUE;
 # ifdef FEAT_RIGHTLEFT
     curwin->w_p_rl = FALSE;
@@ -3951,7 +3951,7 @@ ex_window()
 	    add_map((char_u *)"<buffer> <Tab> <C-X><C-V>", INSERT);
 	    add_map((char_u *)"<buffer> <Tab> a<C-X><C-V>", NORMAL);
 	}
-	set_option_value((char_u *)"ft", 0L, (char_u *)"vim", TRUE);
+	set_option_value((char_u *)"ft", 0L, (char_u *)"vim", OPT_LOCAL);
     }
 
     /* Fill the buffer with the history. */
@@ -3987,7 +3987,6 @@ ex_window()
     ccline.cmdbuff = NULL;
     ccline.cmdprompt = NULL;
 
-    /* Call the main loop until <CR> or CTRL-C is typed. */
     State = NORMAL;
 # ifdef FEAT_MOUSE
     setmouse();
@@ -4003,6 +4002,9 @@ ex_window()
     i = RedrawingDisabled;
     RedrawingDisabled = 0;
 
+    /*
+     * Call the main loop until <CR> or CTRL-C is typed.
+     */
     cmdwin_result = 0;
     main_loop(TRUE);
 
@@ -4053,7 +4055,7 @@ ex_window()
 	    {
 		set_cmdspos_cursor();
 		redrawcmd();
-		/* CTRL-C closes the window but doesn't the cmdline */
+		/* CTRL-C closes the window but doesn't exe the cmdline */
 		got_int = FALSE;
 	    }
 	}

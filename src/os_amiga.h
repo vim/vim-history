@@ -34,10 +34,6 @@
 #  define HAVE_DATE_TIME
 # endif
 
-#ifdef FEAT_NORMAL
-# define VIM_BACKTICK		/* internal backtick expansion */
-#endif
-
 #define DFLT_ERRORFILE		"AztecC.Err"
 #define DFLT_MAKEEF		"t:vim##.Err"
 #define DFLT_RUNTIMEPATH "home:vimfiles,$VIM/vimfiles,$VIMRUNTIME,$VIM/vimfiles/after,home:vimfiles/after"

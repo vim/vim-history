@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 6.0t.  Last change: 2001 Jan 21
+*autocmd.txt*   For Vim version 6.0u.  Last change: 2001 Jan 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -164,11 +164,6 @@ BufRead or BufReadPost		When starting to edit a new buffer, after
 				for ":r file".  Not used when the file doesn't
 				exist.  Also used after successfully recovering
 				a file.
-							*BufReadAfter*
-BufReadAfter			Like BufReadPost, but after executing the
-				modelines.  Not used if the file doesn't
-				exist.  Also used after successfully
-				recovering a file.
 							*BufReadCmd*
 BufReadCmd			Before starting to edit a new buffer.  Should
 				read the file into the buffer. |Cmd-event|
@@ -226,7 +221,9 @@ BufWritePost			After writing the whole buffer to a file
 				(should undo the commands for BufWritePre).
 							*BufWriteCmd*
 BufWriteCmd			Before writing the whole buffer to a file.
-				Should do the writing of the file. |Cmd-event|
+				Should do the writing of the file and reset
+				'modified' if successful.  The buffer contents
+				should not be changed.  |Cmd-event|
 							*FileWritePre*
 FileWritePre			Before writing to a file, when not writing the
 				whole buffer.
@@ -236,7 +233,8 @@ FileWritePost			After writing to a file, when not writing the
 							*FileWriteCmd*
 FileWriteCmd			Before writing to a file, when not writing the
 				whole buffer.  Should do the writing to the
-				file. |Cmd-event|
+				file.  Should not change the buffer.
+				|Cmd-event|
 							*FileAppendPre*
 FileAppendPre			Before appending to a file.
 							*FileAppendPost*
@@ -301,7 +299,10 @@ CursorHold			When the user doesn't press a key for the time
 				cannot be used for this event.
 				Note: In the future there will probably be
 				another option to set the time.
-				{only on Amiga, Unix, Win32, MSDOS and all GUI
+				Hint: to force an update of the status lines
+				use: >
+					:let &ro = &ro
+<				{only on Amiga, Unix, Win32, MSDOS and all GUI
 				versions}
 							*BufEnter*
 BufEnter			After entering a buffer.  Useful for setting
@@ -313,6 +314,13 @@ BufLeave			Before leaving to another buffer.  Also when
 				leaving or closing the current window and the
 				new current window is not for the same buffer.
 				Not used for ":qa" or ":q" when exiting Vim.
+							*BufWinEnter*
+BufWinEnter			After a buffer is displayed in a window.  This
+				can be when the buffer is loaded (after
+				processing the modelines), when a hidden
+				buffer is displayed in a window (and is no
+				longer hidden) or a buffer already visible in
+				a window is also displayed in another window.
 							*BufWinLeave*
 BufWinLeave			Before a buffer is removed from a window.
 				Not when it's still visible in another window.
@@ -339,36 +347,40 @@ BufHidden			Just after a buffer has become hidden.  That
 				NOTE: When this autocommand is executed, the
 				current buffer "%" may be different from the
 				buffer being unloaded "<afile>".
-							*BufSecret*
-BufSecret			Just after creating a new buffer.  Also used
+							*BufNew*
+BufNew				Just after creating a new buffer.  Also used
 				just after a buffer has been renamed.  When
-				the buffer is not secret BufCreate will be
-				triggered too.
+				the buffer is added to the buffer list BufAdd
+				will be triggered too.
 				NOTE: When this autocommand is executed, the
 				current buffer "%" may be different from the
 				buffer being created "<afile>".
-							*BufCreate*
-BufCreate			Just after creating a new buffer which is not
-				secret, or making a secret buffer not secret.
-				Also used just after a non-secret buffer has
-				been renamed.
+							*BufCreate* *BufAdd*
+BufAdd or BufCreate		Just after creating a new buffer which is
+				added to the buffer list, or adding a buffer
+				to the buffer list.
+				Also used just after a buffer in the buffer
+				list has been renamed.
+				The BufCreate event is for historic reasons.
 				NOTE: When this autocommand is executed, the
 				current buffer "%" may be different from the
 				buffer being created "<afile>".
 							*BufDelete*
-BufDelete			Before deleting a buffer from the buffer list,
-				making it a secret buffer.  The BufUnload may
-				be called first (if the buffer was loaded).
-				Also used just before a buffer is renamed.
+BufDelete			Before deleting a buffer from the buffer list.
+				The BufUnload may be called first (if the
+				buffer was loaded).
+				Also used just before a buffer in the buffer
+				list is renamed.
 				NOTE: When this autocommand is executed, the
 				current buffer "%" may be different from the
 				buffer being deleted "<afile>".
 							*BufWipeout*
-BufWipeout			Before really deleting a buffer from the
-				buffer list.  The BufUnload and BufDelete
-				events may be called first (if the buffer was
-				loaded and was not secret).  Also used just
-				before a buffer is renamed.
+BufWipeout			Before completely deleting a buffer.  The
+				BufUnload and BufDelete events may be called
+				first (if the buffer was loaded and was in the
+				buffer list).  Also used just before a buffer
+				is renamed (also when it's not in the buffer
+				list).
 				NOTE: When this autocommand is executed, the
 				current buffer "%" may be different from the
 				buffer being deleted "<afile>".
@@ -525,6 +537,7 @@ The pattern is interpreted like mostly used in file names:
 	{ }	like \( \) in a |pattern|
 	,	inside { }: like \| in a |pattern|
 	\	special meaning like in a |pattern|
+	[ch]	matches 'c' or 'h'
 
 Note that for all systems the '/' character is used for path separator (even
 MS-DOS and OS/2).  This was done because the backslash is difficult to use

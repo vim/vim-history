@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0t.  Last change: 2001 Jan 21
+*version6.txt*  For Vim version 6.0u.  Last change: 2001 Feb 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -24,7 +24,7 @@ global option values used		|new-global-values|
 'fileencoding' obsolete			|fileencoding-obsolete|
 Digraphs changed			|digraphs-changed|
 Filetype detection changed		|filetypedetect-changed|
-Secret buffers introduced		|new-secret-buffers|
+Unlisted buffers introduced		|new-unlisted-buffers|
 CTRL-U in Command-line mode		|CTRL-U-changed|
 Ctags gone				|ctags-gone|
 Documentation				|documentation-6|
@@ -148,32 +148,33 @@ The distributed syntax files no longer contain "syntax clear".  That makes it
 possible to include one in the other without tricks.
 
 
-Secret buffers introduced			*new-secret-buffers*
--------------------------
+Unlisted buffers introduced			*new-unlisted-buffers*
+---------------------------
 
-Introduction of secret buffers: Make a difference between buffers which don't
-appear in the buffer list and buffers which are really not in the buffer list.
-Commands like ":ls", ":bnext", ":blast" and the Buffers menu will skip secret
-buffers now. |secret-buffer|
-The 'bufsecret' option can be used to make a buffer secret or not.
-Several commands that previously added a buffer now add a secret buffer.  This
-means that a ":bnext" or ":ball" will not find these files until they have
-actually been edited.  For example, buffers used for the alternative file by
-":w file" and ":r file".
-Other commands previously completely removed a buffer and now only make the
-buffer secret.  Commands relying on a buffer not to be present might fail.
-For example A ":bdelete" command in an autocommand that relied on something
-following to fail (was used in the automatic tests).  Also, option values are
-not reset when ":bdel" is used.  |:bwipeout| can be used for the old meaning
-of ":bdel".
-The BufDelete autocommand event is now triggered when a buffer becomes
-secret.  The BufCreate event is only triggered when a non-secret buffer is
-created, or when a secret buffer is no longer secret.  The new BufSecret and
-BufWipeout events take over the meaning of really adding a buffer or really
-deleting it.
-When doing Insert mode completion only non-secret buffers are scanned.  Added
-the 'S' flag to 'complete' to do completion from secret buffers.
-Secret buffers are not stored in a viminfo file.
+Introduction of unlisted buffers: Make a difference between buffers which
+don't appear in the buffer list and buffers which are really not in the buffer
+list.  Commands like ":ls", ":bnext", ":blast" and the Buffers menu will skip
+buffers not in the buffer list. |unlisted-buffer|
+The 'buflisted' option can be used to make a buffer appear in the buffer list
+or not.
+Several commands that previously added a buffer to the buffer list now create
+an unlisted buffer.  This means that a ":bnext" or ":ball" will not find these
+files until they have actually been edited.  For example, buffers used for the
+alternative file by ":w file" and ":r file".
+Other commands previously completely deleted a buffer and now only remove the
+buffer from the buffer list.  Commands relying on a buffer not to be present
+might fail.  For example A ":bdelete" command in an autocommand that relied on
+something following to fail (was used in the automatic tests).
+|:bwipeout| can be used for the old meaning of ":bdelete".
+The BufDelete autocommand event is now triggered when a buffer is removed from
+the buffer list.  The BufCreate event is only triggered when a buffer is
+created that is added to the buffer list, or when an existing buffer is added
+to the buffer list.  BufAdd is a new name for BufCreate.
+The new BufNew event is for creating any buffer and BufWipeout for really
+deleting a buffer.
+When doing Insert mode completion only buffers in the buffer list are scanned.
+Added the 'U' flag to 'complete' to do completion from unlisted buffers.
+Unlisted buffers are not stored in a viminfo file.
 
 
 CTRL-U in Command-line mode			*CTRL-U-changed*
@@ -221,6 +222,11 @@ tag.  It's faster and avoids an extra message.
 
 Small incompatibilities				*incomp-small-6*
 -----------------------
+
+'backupdir', 'cdpath', 'directory', 'equalprg', 'errorfile', 'formatprg',
+'grepprg', 'helpfile', 'makeef', 'makeprg', 'keywordprg', 'cscopeprg',
+'viminfo' and 'runtimepath' can no longer be set from a modeline, for better
+security.
 
 Removed '_' from the 'breakat' default: It's commonly used in keywords.
 
@@ -356,6 +362,8 @@ and right of the cursor.  The 'listchars' option has been extended with the
 "precedes" item, to show a "<" for example, when there is text left off the
 screen. (Utz-Uwe Haus)
 
+"-O" command line argument: open windows vertically. (Scott Urban)
+
 
 Flexible indenting					*new-indent-flex*
 ------------------
@@ -372,11 +380,13 @@ be created and maintained by many people.
 Extended search patterns				*new-searchpat*
 ------------------------
 
-Multi-line patterns: (Loic Grenie)
+Multi-line patterns: (partly by Loic Grenie)
 \n		match end-of-line, also in []
 \_[]		match characters in range and end-of-line
 \_x		match character class and end-of-line
 \_.		match any character or end-of-line
+\_^		match start-of-line, can be used anywhere in the regexp
+\_$		match end-of-line, can be used anywhere in the regexp
 
 \c		ignore case for the whole pattern
 \C		match case for the whole pattern
@@ -443,6 +453,8 @@ Many new items for Multi-byte support:
 - Win32: Typing multi-byte characters without IME. (Alexander Smishlajev)
 - Win32 with Mingw: compile with iconv library. (Ron Aaron)
 - Win32 with MSVC: dynamically load iconv.dll library. (Muraoka Taro)
+- Added 'delcombing' option: Delete combining character separately. (Ron
+  Aaron)
 
 Allow defining digraphs for multi-byte characters.
 Added RFC1345 digraphs for Unicode.
@@ -532,9 +544,10 @@ To be able to make this work, several features were added:
   ":setlocal" sets the local option value only.
   ":setglobal" displays the global value for a local option.  Setting only
   the global value isn't implemented yet.
-- Added the buffer-local value for some global options: 'equalprg', 'makeprg'
-  and 'grepprg'.  This allows setting a local value for these global options,
-  without making it incompatible.
+- Added the buffer-local value for some global options: 'equalprg', 'makeprg',
+  'grepprg', 'path', 'dictionary', 'thesaurus' and 'define'.  This allows
+  setting a local value for these global options, without making it
+  incompatible.
 - Added mappings and abbreviations local to a buffer: ":map <buffer>".
 - In a mapping "<Leader>" can be used to get the value of the "mapleader"
   variable.  This simplifies mappings that use "mapleader".  "<Leader>"
@@ -775,9 +788,11 @@ Options: ~
 		'foldexpr'.
 'fold...'	Many new options for folding.
 'modifiable'	When off, it is impossible to make changes to a buffer.
+		The %m and %M items in 'statusline' show a '-'.
+
 'previewwindow' Set in the preview window.  Used in a session file to mark a
 		window as the preview window.
-'secret'	Makes a buffer skipped for ":bnext" and ":ls".
+'buflisted'	Makes a buffer appear in the buffer list or not.
 
 Use "vim{version}:" for modelines, only to be executed when the version is
 >= {version}.  Also "vim>{version}", "vim<{version}" and "vim={version}".
@@ -878,8 +893,8 @@ winwidth()	Width of a window. (Johannes Zellner)
 
 
 New autocommand events: ~
-BufReadAfter	Triggered after using the modelines.  Can be used to load a
-		view.
+BufWinEnter	Triggered when a buffer is displayed in a window, after using
+		the modelines.  Can be used to load a view.
 BufWinLeave	Triggered when a buffer is no longer in a window.  Also
 		triggered when exiting Vim.  Can be used to save views.
 FileChangedRO	Triggered before making the first change to a read-only file.
@@ -901,7 +916,7 @@ system. (Charles Campbell)
 
 New Syntax files: ~
 Debian Control file and Debian Changelog syntax files. (Wichert Akkerman)
-
+catalog.vim (Johannes Zellner)
 
 The ":command" command now accepts a "-bar" argument.  This allows the user
 command to be followed by "| command".
@@ -935,6 +950,9 @@ Macintosh.
 "gf" works in Visual mode: Use the selected text as the file name. (Chase
 Tingley)
 
+Encryption: Ask the key to be typed twice when crypting the first time.
+Otherwise a typo might cause the text to be lost forever. (Chase Tingley)
+
 The DOS/Windows install program has been enhanced.  The Vim executable is
 never moved or $PATH changed.  A small batch file is created in a directory in
 $PATH.  Less choices to be made.
@@ -943,7 +961,7 @@ The window title now has "VIM" on the end.  The file name comes first, useful
 in the taskbar.  A "+" is added when the file is modified.  "=" is added for
 a read-only file.  "-" is added for a file with 'modifiable' off.
 
-When 'modifiable' is off, the %m and %M items in 'statusline' show a '-'.
+In Visual mode, mention size of the selected area in 'showcmd'.
 
 Added "b:changedtick" variable.  Incremented at each change, also for undo.
 Can be used to take action only if the buffer has been changed.
@@ -1003,6 +1021,7 @@ Security:
   temp files.  Used for Unix, MS-DOS and OS/2.
 - 'makeef' can be empty, which means that an internally generated file name is
   used.  The old default was "/tmp/file", which is a security risk.
+- The command from a tags file is executed in the sandbox for better security.
 
 Reduced the amount of stack space used by regmatch() to allow it to handle
 complicated patterns on a longer text.
@@ -1022,7 +1041,10 @@ Syntax highlighting:
 - Syntax items can have the "extend" argument to undo the effect of a
   "keepend" argument of an item it is contained in.  Makes it possible to have
   some contained items extend a region while others don't.
-- Added catalog.vim syntax file (Johannes Zellner)
+- ":syn clear" now deletes the b:current_syntax variable.  That's logical,
+  since no syntax is defined after this command.
+- Added the "contains=TOP" and "contains=CONTAINED" arguments.  Makes it
+  possible to define a transparent item that doesn't contain itself.
 
 Win32 console version:
 - Includes the user and system name in the ":version" message, when available.
@@ -1037,11 +1059,16 @@ too.  Also check for the Unix shell names.
 Win32: When $HOMEDRIVE and $HOMEPATH are defined, use them to define $HOME.
 (Craig Barkhouse)
 
+'isfname' now includes '%' and '#'.  Makes "vim dir\#file" work for MS-DOS.
+
 Added keypad special keys <kEnter>, <k0> - <k9>.  When not mapped they behave
 like the ASCII equivalent. (Ivan Wellesz and Vince Negri)
 
 Also trigger the BufUnload event when Vim is going to exit.  Perhaps some
 cleaning up is required.
+
+Expand expression in backticks: `={expr}`.  Can be used where backtick
+expansion is done. (Vince Negri)
 
 GUI:
 - X11: When a color can't be allocated, use the nearest match from the
@@ -1105,7 +1132,7 @@ Cscope: (kahn)
 cscope_connection() function.
 ":cscope kill -1" kills all cscope connections.
 
-exists() can also be used to check for Ex commands and define autocommands.
+exists() can also be used to check for Ex commands and defined autocommands.
 
 
 VMS:
@@ -1141,6 +1168,8 @@ Internal changes:
   global.  Pass them to ExpandOne() and all functions called by it.
 - No longer use the global reg_ic flag.  It caused trouble and in a few places
   it was not set.
+- Removed the use of the stuff buffer for "*", "K", CTRL-], etc.  Avoids
+  problem with autocommands.
 
 Support for xterm with 88 or 256 colors.  The right color numbers will be used
 for the name used in a ":highlight" command. (Steve Wall)
@@ -1176,6 +1205,9 @@ Added "=word" and "=~word" to 'cinkeys' (also used in 'indentkeys').
 When doing Insert mode completion, when completion is finished check for a
 match with words from 'cinkeys' or 'indentkeys'.
 
+Added "j1" argument in 'cinoptions': indent {} inside () for Java. (Johannes
+Zellner)
+
 When doing ":wall" or ":wqall" and a modified buffer doesn't have a name,
 mention its buffer number in the error message.
 
@@ -1200,6 +1232,7 @@ Previously this was only possible when getting to that file with ":next" or
 ":last".
 
 Added the '1' flag to 'formatoptions'. (Vit Stradal)
+Added 'n' flag in 'formatoptions': format a numbered list.
 
 In the verbose message about returning from a function, also show the return
 value.
@@ -1215,6 +1248,9 @@ All generated files have been moved out of the "src" directory.  This makes it
 easy to see which files are not edited by hand.  The files generated by
 configure are now in the "src/auto" directory.  For Unix, compiled object
 files go in the objects directory.
+
+Added the possibility for a maintainer of a binary version to include his
+e-mail address with the --with-compiledby configure argument.
 
 Included features are now grouped in "tiny", "small", "normal", "big" and
 "huge".  This replaces "min-features" and "max-features".  Using "tiny"
@@ -1594,5 +1630,64 @@ when 'shell' contains "sh".
 
 Completing a file name that has a tail that starts with a "~" didn't work:
 ":e view/~<Tab>".
+
+Using a ":command" argument that contains < and > but not for a special
+argument was not skipped properly.
+
+The DOS install program: On Win2000 the check for a vim.exe or gvim.exe in
+$PATH didn't work, it always found it in the current directory.
+Rename the vim.exe in the current dir to avoid this. (Walter Briscoe)
+
+Mac: mch_FullName() changed the "fname" argument and didn't always initialize
+the buffer.
+
+MS-DOS: mch_FullName() didn't fix forward/backward slashes in an absolute file
+name.
+
+"echo expand("%:p:h")" with an empty file name removed one directory name on
+MS-DOS.  For Unix, when the file name is a directory, the directory name was
+removed.  Now make it consistent: "%:p" adds a path separator for all systems,
+but no path separator is added in other situations.
+
+Unix: When checking for a CTRL-C (could happen any time) and there is an X
+event (e.g., clipboard updated) and there is typeahead, Vim would hang until a
+character was typed.
+
+MS-DOS, MS-Windows and Amiga: expanding "$ENV/foo" when $ENV ends in a colon,
+had the slash removed.
+
+":he \^=" gave an error for using \_.  ":he ^=" didn't find tag :set^=.  Even
+"he :set^=" didn't find it.
+
+A tags file name "D:/tags" was used as file "tags" in "D:".  That doesn't work
+when the current path for D: isn't the root of the drive.
+
+Removed calls to XtInitializeWidgetClass(), they shouldn't be necessary.
+
+When using a dtterm or various other color terminals, and the Normal group has
+been set to use a different background color, the background wouldn't always
+be displayed with that color.  Added check for "ut" termcap entry: If it's
+missing, clearing the screen won't give us the current background color.  Need
+to draw each character instead.  Vim now also works when the "cl" (clear
+screen) termcap entry is missing.
+
+When repeating a "/" search command with a line offset, the "n" did use the
+offset but didn't make the motion linewise.  Made "d/pat/+2" and "dn" do the
+same.
+
+Win32: Trying to use ":tearoff" for a menu that doesn't exist caused a crash.
+
+OpenPTY() didn't work on Sequent.  Add a configure check for getpseudotty().
+
+C-indenting: Indented a line starting with ")" with the matching "(", but not
+a line starting with "x)" looks strange.  Also compute the indent for aligning
+with items inside the () and use the lowest indent.
+
+MS-DOS and Windows: ":n *.vim" also matched files ending in "~".
+Moved mch_expandpath() from os_win16.c and os_msdos.c to misc1.c, they are
+equal.
+
+Mac: In Vi-compatible mode didn't read files with CR line separators. (Dany
+St-Amant)
 
  vim:tw=78:

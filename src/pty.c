@@ -193,7 +193,8 @@ OpenPTY(ttyn)
 }
 #endif
 
-#if (defined(sequent) || defined(_SEQUENT_)) && !defined(PTY_DONE)
+#if (defined(sequent) || defined(_SEQUENT_)) && defined(HAVE_GETPSEUDOTTY) \
+	&& !defined(PTY_DONE)
 #define PTY_DONE
     int
 OpenPTY(ttyn)

@@ -1,7 +1,7 @@
 " Vim support file to detect file types in scripts
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Dec 10
+" Last change:	2001 Feb 04
 
 " This file is called by an autocommand for every file that has just been
 " loaded into a buffer.  It checks if the type of file can be recognized by
@@ -170,6 +170,16 @@ elseif s:line1 =~ '^execve('
 " VSE JCL
 elseif s:line1 =~ '^\* $$ JOB\>' || s:line1 =~ '^// *JOB\>'
   set ft=vsejcl
+
+" TAK and SINDA
+elseif getline(4) =~ 'K & K  Associates' || getline(2) =~ 'TAK 2000'
+  set ft=takout
+elseif getline(3) =~ 'S Y S T E M S   I M P R O V E D '
+  set ft=sindaout
+elseif getline(6) =~ 'Run Date: '
+  set filetype=takcmp
+elseif getline(9) =~ 'Node    File  1'
+  set filetype=sindacmp
 
 " Generic configuration file (check this last, it's just guessing!)
 elseif s:line1 =~ '^#' || getline(2) =~ '^#' || getline(3) =~ '^#'

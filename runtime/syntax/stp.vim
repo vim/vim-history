@@ -1,8 +1,8 @@
 " Vim syntax file
 "    Language: Stored Procedures (STP)
 "  Maintainer: Jeff Lanzarotta (frizbeefanatic@yahoo.com)
-" Last Change: January 11, 2001
-"     Version: 6.0-2
+" Last Change: January 16, 2001
+"     Version: 5.7-4
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")

@@ -1855,7 +1855,7 @@ ex_file(eap)
 	    return;
 	}
 	curbuf->b_flags |= BF_NOTEDITED;
-	buf = buflist_new(fname, xfname, curwin->w_cursor.lnum, FALSE, FALSE);
+	buf = buflist_new(fname, xfname, curwin->w_cursor.lnum, FALSE, TRUE);
 	if (buf != NULL)
 	    curwin->w_alt_fnum = buf->b_fnum;
 	vim_free(fname);
@@ -2437,11 +2437,12 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 		    if (tlnum <= 0)
 			tlnum = 1L;
 		}
-		(void)buflist_new(ffname, sfname, tlnum, FALSE, FALSE);
+		(void)buflist_new(ffname, sfname, tlnum, FALSE, TRUE);
 		goto theend;
 	    }
 #endif
-	    buf = buflist_new(ffname, sfname, 0L, TRUE, flags & ECMD_SET_HELP);
+	    buf = buflist_new(ffname, sfname, 0L, TRUE,
+						    !(flags & ECMD_SET_HELP));
 	}
 	if (buf == NULL)
 	    goto theend;
@@ -2523,13 +2524,13 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 		    ++curbuf->b_nwindows;
 		    /* set 'fileformat' */
 		    if (*p_ffs && !oldbuf)
-			set_fileformat(default_fileformat(), TRUE);
+			set_fileformat(default_fileformat(), OPT_LOCAL);
 		}
 
 		/* May get the window options from the last time this buffer
 		 * was in this window (or another window).  If not used
 		 * before, reset the local window options to the global
-		 * values. */
+		 * values.  */
 		get_winopts(buf);
 
 #ifdef FEAT_AUTOCMD
@@ -2560,10 +2561,18 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 	curbuf->b_help = TRUE;
 	curbuf->b_p_ma = FALSE;
 	curbuf->b_p_bin = FALSE;	/* reset 'bin' before reading file */
+	curwin->w_p_nu = 0;		/* no line numbers */
+#ifdef FEAT_RIGHTLEFT
+	curwin->w_p_rl = 0;		/* help window is left-to-right */
+#endif
+#ifdef FEAT_FOLDING
+	curwin->w_p_fen = FALSE;	/* No folding in the help window */
+#endif
+
 #ifdef FEAT_AUTOCMD
 	buf = curbuf;
 #endif
-	set_bufsecret(TRUE);
+	set_buflisted(FALSE);
 #ifdef FEAT_AUTOCMD
 	/* If autocommands change buffers under our fingers, forget about
 	 * editing the file. */
@@ -2576,7 +2585,7 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 #ifdef FEAT_AUTOCMD
 	buf = curbuf;
 #endif
-	set_bufsecret(FALSE);
+	set_buflisted(TRUE);
 #ifdef FEAT_AUTOCMD
 	/* If autocommands change buffers under our fingers, forget about
 	 * editing the file. */
@@ -2619,12 +2628,12 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 	vim_free(new_name);
 
 	/* If autocommands change buffers under our fingers, forget about
-	 * re-editing the file.  Should do the buf_clear(), but perhaps the
-	 * autocommands changed the buffer... */
+	 * re-editing the file.  Should do the buf_clear_file(), but perhaps
+	 * the autocommands changed the buffer... */
 	if (buf != curbuf)
 	    goto theend;
 #endif
-	buf_clear(curbuf);
+	buf_clear_file(curbuf);
 	curbuf->b_op_start.lnum = 0;	/* clear '[ and '] marks */
 	curbuf->b_op_end.lnum = 0;
     }
@@ -2697,7 +2706,10 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 	}
 #ifdef FEAT_AUTOCMD
 	else
+	{
 	    apply_autocmds(EVENT_BUFENTER, NULL, NULL, FALSE, curbuf);
+	    apply_autocmds(EVENT_BUFWINENTER, NULL, NULL, FALSE, curbuf);
+	}
 	check_arg_idx(curwin);
 #endif
 
@@ -3853,7 +3865,6 @@ ex_global(eap)
     exarg_t	*eap;
 {
     linenr_t	lnum;		/* line number according to old situation */
-    linenr_t	old_lcount;	/* b_ml.ml_line_count before the command */
     int		ndone;
     int		type;		/* first char of cmd: 'v' or 'g' */
     char_u	*cmd;		/* command argument */
@@ -3926,9 +3937,9 @@ ex_global(eap)
 	return;
     }
 
-/*
- * pass 1: set marks for each (not) matching line
- */
+    /*
+     * pass 1: set marks for each (not) matching line
+     */
     ndone = 0;
     for (lnum = eap->line1; lnum <= eap->line2 && !got_int; ++lnum)
     {
@@ -3945,58 +3956,69 @@ ex_global(eap)
 	line_breakcheck();
     }
 
-/*
- * pass 2: execute the command for each line that has been marked
- */
+    /*
+     * pass 2: execute the command for each line that has been marked
+     */
     if (got_int)
 	MSG(_(e_interr));
     else if (ndone == 0)
 	smsg((char_u *)_(e_patnotf2), pat);
     else
-    {
-	/*
-	 * Set current position only once for a global command.
-	 * If global_busy is set, setpcmark() will not do anything.
-	 * If there is an error, global_busy will be incremented.
-	 */
-	setpcmark();
-
-	/* When the command writes a message, don't overwrite the command. */
-	msg_didout = TRUE;
-
-	global_need_beginline = FALSE;
-	global_busy = 1;
-	old_lcount = curbuf->b_ml.ml_line_count;
-	while (!got_int && (lnum = ml_firstmarked()) != 0 && global_busy == 1)
-	{
-	    curwin->w_cursor.lnum = lnum;
-	    curwin->w_cursor.col = 0;
-	    if (*cmd == NUL || *cmd == '\n')
-		do_cmdline((char_u *)"p", NULL, NULL, DOCMD_NOWAIT);
-	    else
-		do_cmdline(cmd, NULL, NULL, DOCMD_NOWAIT);
-	    ui_breakcheck();
-	}
-
-	global_busy = 0;
-	if (global_need_beginline)
-	    beginline(BL_WHITE | BL_FIX);
-	else
-	    check_cursor();	/* cursor may be beyond the end of the line */
-
-	/* If it looks like no message was written, allow overwriting the
-	 * command with the report for number of changes. */
-	if (msg_col == 0 && msg_scrolled == 0)
-	    msg_didout = FALSE;
-
-	/* If subsitutes done, report number of substitues, otherwise report
-	 * number of extra or deleted lines. */
-	if (!do_sub_msg())
-	    msgmore(curbuf->b_ml.ml_line_count - old_lcount);
-    }
+	global_exe(cmd);
 
     ml_clearmarked();	   /* clear rest of the marks */
     vim_free(regmatch.regprog);
+}
+
+/*
+ * Execute "cmd" on lines marked with ml_setmarked().
+ */
+    void
+global_exe(cmd)
+    char_u	*cmd;
+{
+    linenr_t	old_lcount;	/* b_ml.ml_line_count before the command */
+    linenr_t	lnum;		/* line number according to old situation */
+
+    /*
+     * Set current position only once for a global command.
+     * If global_busy is set, setpcmark() will not do anything.
+     * If there is an error, global_busy will be incremented.
+     */
+    setpcmark();
+
+    /* When the command writes a message, don't overwrite the command. */
+    msg_didout = TRUE;
+
+    global_need_beginline = FALSE;
+    global_busy = 1;
+    old_lcount = curbuf->b_ml.ml_line_count;
+    while (!got_int && (lnum = ml_firstmarked()) != 0 && global_busy == 1)
+    {
+	curwin->w_cursor.lnum = lnum;
+	curwin->w_cursor.col = 0;
+	if (*cmd == NUL || *cmd == '\n')
+	    do_cmdline((char_u *)"p", NULL, NULL, DOCMD_NOWAIT);
+	else
+	    do_cmdline(cmd, NULL, NULL, DOCMD_NOWAIT);
+	ui_breakcheck();
+    }
+
+    global_busy = 0;
+    if (global_need_beginline)
+	beginline(BL_WHITE | BL_FIX);
+    else
+	check_cursor();	/* cursor may be beyond the end of the line */
+
+    /* If it looks like no message was written, allow overwriting the
+     * command with the report for number of changes. */
+    if (msg_col == 0 && msg_scrolled == 0)
+	msg_didout = FALSE;
+
+    /* If subsitutes done, report number of substitues, otherwise report
+     * number of extra or deleted lines. */
+    if (!do_sub_msg())
+	msgmore(curbuf->b_ml.ml_line_count - old_lcount);
 }
 
 #ifdef FEAT_VIMINFO
@@ -4171,18 +4193,6 @@ ex_help(eap)
 		win_setheight((int)p_hh);
 #endif
 
-#ifdef FEAT_RIGHTLEFT
-	    curwin->w_p_rl = 0;		    /* help window is left-to-right */
-#endif
-	    curwin->w_p_nu = 0;		    /* no line numbers */
-
-#ifdef FEAT_FOLDING
-	    /* Disable folding in the help window */
-	    curwin->w_p_fdl = 0;
-	    curwin->w_p_fen = FALSE;
-	    curwin->w_allbuf_opt.wo_fen = FALSE;
-#endif
-
 	    /*
 	     * open help file (do_ecmd() will set b_help flag, readfile() will
 	     * set b_p_ro flag)
@@ -4216,7 +4226,7 @@ ex_help(eap)
 #endif
     if (STRCMP(curbuf->b_p_isk, p) != 0)
     {
-	set_string_option_direct((char_u *)"isk", -1, p, OPT_FREE);
+	set_string_option_direct((char_u *)"isk", -1, p, OPT_FREE|OPT_LOCAL);
 	check_buf_options(curbuf);
 	(void)buf_init_chartab(curbuf, FALSE);
     }
@@ -4243,12 +4253,12 @@ erret:
  */
     int
 help_heuristic(matched_string, offset, wrong_case)
-    char_u  *matched_string;
-    int	    offset;		/* offset for match */
-    int	    wrong_case;		/* no matching case */
+    char_u	*matched_string;
+    int		offset;			/* offset for match */
+    int		wrong_case;		/* no matching case */
 {
-    int	    num_letters;
-    char_u  *p;
+    int		num_letters;
+    char_u	*p;
 
     num_letters = 0;
     for (p = matched_string; *p; p++)
@@ -4383,7 +4393,8 @@ find_help_tags(arg, num_matches, matches)
 	     * Replace "^x" by "CTRL-X". Don't do this for "^_" to make
 	     * ":help i_^_CTRL-D" work.
 	     */
-	    if (*s < ' ' || (*s == '^' && s[1] && s[1] != '_'))	/* ^x */
+	    if (*s < ' ' || (*s == '^' && s[1] && (isalpha(s[1])
+			   || vim_strchr((char_u *)"?@[\\]^", s[1]) != NULL)))
 	    {
 		if (d > IObuff && d[-1] != '_')
 		    *d++ = '_';		/* prepend a '_' */
@@ -4455,7 +4466,7 @@ fix_help_buffer()
     int		mustfree;
 
     /* set filetype to "help". */
-    set_option_value((char_u *)"ft", 0L, (char_u *)"help", TRUE);
+    set_option_value((char_u *)"ft", 0L, (char_u *)"help", OPT_LOCAL);
 
 #ifdef FEAT_SYN_HL
     if (!syntax_present(curbuf))
@@ -4863,7 +4874,7 @@ ex_sign(eap)
 	    else
 	    {				/* ... not currently in a window */
 		sprintf((char *)cmd, "e +%ld %s", (long)lnum, buf->b_fname);
-		do_cmdline(cmd, NULL, NULL, DOCMD_NOWAIT);
+		do_cmdline_cmd(cmd);
 	    }
 	}
 	else

@@ -441,7 +441,7 @@ docd(BPath &path)
 {
     mch_chdir(path.Path());
     /* Do this to get the side effects of a :cd command */
-    do_cmdline((char_u *)"cd .", NULL, 0, DOCMD_NOWAIT);
+    do_cmdline_cmd((char_u *)"cd .");
 }
 
 /*
@@ -469,7 +469,7 @@ RefsReceived(BMessage *m, bool changedir)
 	    char *dirname;
 	    if (m->FindString("cwd", (const char **) &dirname) == B_OK) {
 		chdir(dirname);
-		do_cmdline((char_u *)"cd .", NULL, 0, DOCMD_NOWAIT);
+		do_cmdline_cmd((char_u *)"cd .");
 	    }
 	}
 	break;

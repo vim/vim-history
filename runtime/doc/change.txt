@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0t.  Last change: 2001 Jan 17
+*change.txt*    For Vim version 6.0u.  Last change: 2001 Feb 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -107,12 +107,14 @@ gJ			Join [count] lines, with a minimum of two lines.
 			If a [range] has equal start and end values, this
 			command does nothing.  The default behavior is to
 			join the current line with the line below it.
+			{not in Vi: !}
 
 :[range]j[oin][!] {count}
 			Join {count} lines, starting with [range] (default:
 			current line |cmdline-ranges|).  Same as "J", except
 			with [!] the join does not insert or delete any
 			spaces.
+			{not in Vi: !}
 
 These commands delete the <EOL> between lines.  This has the effect of joining
 multiple lines into one line.  You can repeat these commands (except ":j") and
@@ -1152,11 +1154,22 @@ q	Allow formatting of comments with "gq".
 	Note that formatting will not change blank lines or lines containing
 	only the comment leader.  A new paragraph starts after such a line,
 	or when the comment leader changes.
+n	When formatting text, recognize numbered lists.  The indent of the
+	text after the number is used for the next line.  The number may
+	optionally be followed by '.', ':', ')', ']' or '}'.  Note that
+	'autoindent' must be set too.
+	Example: >
+		1. the first item
+		   wraps
+		2. the second item
 2	When formatting text, use the indent of the second line of a paragraph
 	for the rest of the paragraph, instead of the indent of the first
 	line.  This supports paragraphs in which the first line has a
 	different indent than the rest.  Note that 'autoindent' must be set
-	too.
+	too.  Example: >
+			first line of a paragraph
+		second line of the same paragraph
+		third line.
 v	Vi-compatible auto-wrapping in insert mode: Only break a line at a
 	blank that you have entered during the current insert command.  (Note:
 	this is not 100% Vi compatible.  Vi has some "unexpected features" or
@@ -1330,19 +1343,19 @@ assume a 'shiftwidth' of 4.
 	      increase the indent (lines starting with "if", an opening brace,
 	      etc.).  (default 'shiftwidth').
 
-		cino=		    cino=>2		cino=>2s
+		cino=		    cino=>2		cino=>2s >
 		  if (cond)	      if (cond)		  if (cond)
 		  {		      {			  {
 		      foo;		foo;			  foo;
 		  }		      }			  }
-
+<
 	eN    Add N to the prevailing indent inside a set of braces if the
 	      opening brace at the End of the line (more precise: is not the
 	      first character in a line).  This is useful if you want a
 	      different indent when the '{' is at the start of the line from
 	      when '{' is at the end of the line.  (default 0).
 
-		cino=		    cino=e2		cino=e-2
+		cino=		    cino=e2		cino=e-2 >
 		  if (cond) {	      if (cond) {	  if (cond) {
 		      foo;		    foo;	    foo;
 		  }		      }			  }
@@ -1350,55 +1363,55 @@ assume a 'shiftwidth' of 4.
 		  {		      {			  {
 		      bar;		  bar;		      bar;
 		  }		      }			  }
-
+<
 	nN    Add N to the prevailing indent for a statement after an "if",
 	      "while", etc., if it is NOT inside a set of braces.  This is
 	      useful if you want a different indent when there is no '{'
 	      before the statement from when there is a '{' before it.
 	      (default 0).
 
-		cino=		    cino=n2		cino=n-2
+		cino=		    cino=n2		cino=n-2 >
 		  if (cond)	      if (cond)		  if (cond)
 		      foo;		    foo;	    foo;
 		  else		      else		  else
 		  {		      {			  {
 		      bar;		  bar;		      bar;
 		  }		      }			  }
-
+<
 	fN    Place the first opening brace of a function or other block in
 	      column N.  This applies only for an opening brace that is not
 	      inside other braces and is at the start of the line.  What comes
 	      after the brace is put relative to this brace.  (default 0).
 
-		cino=		    cino=f.5s		cino=f1s
+		cino=		    cino=f.5s		cino=f1s >
 		  func()	      func()		  func()
 		  {			{		      {
 		      int foo;		    int foo;		  int foo;
-
+<
 	{N    Place opening braces N characters from the prevailing indent.
 	      This applies only for opening braces that are inside other
 	      braces.  (default 0).
 
-		cino=		    cino={.5s		cino={1s
+		cino=		    cino={.5s		cino={1s >
 		  if (cond)	      if (cond)		  if (cond)
 		  {			{		      {
 		      foo;		  foo;		      foo;
-
+<
 	}N    Place closing braces N characters from the matching opening
 	      brace.  (default 0).
 
-		cino=		    cino={2,}-0.5s	cino=}2
+		cino=		    cino={2,}-0.5s	cino=}2 >
 		  if (cond)	      if (cond)		  if (cond)
 		  {			{		  {
 		      foo;		  foo;		      foo;
 		  }		      }			    }
-
+<
 	^N    Add N to the prevailing indent inside a set of braces if the
 	      opening brace is in column 0.  This can specify a different
 	      indent for whole of a function (some may like to set it to a
 	      negative number).  (default 0).
 
-		cino=		    cino=^-2		cino=^-s
+		cino=		    cino=^-2		cino=^-s >
 		  func()	      func()		  func()
 		  {		      {			  {
 		      if (cond)		if (cond)	  if (cond)
@@ -1406,96 +1419,107 @@ assume a 'shiftwidth' of 4.
 			  a = b;	    a = b;	      a = b;
 		      }			}		  }
 		  }		      }			  }
-
+<
 	:N    Place case labels N characters from the indent of the switch().
 	      (default 'shiftwidth').
 
-		cino=		    cino=:0
+		cino=		    cino=:0 >
 		  switch (x)	      switch(x)
 		  {		      {
 		      case 1:	      case 1:
 			  a = b;	  a = b;
 		      default:	      default:
 		  }		      }
-
+<
 	=N    Place statements occurring after a case label N characters from
 	      the indent of the label.  (default 'shiftwidth').
 
-		cino=		    cino==10
+		cino=		    cino==10 >
 		   case 11:		case 11:  a = a + 1;
 		       a = a + 1;		  b = b + 1;
-
+<
 	gN    Place C++ scope declarations N characters from the indent of the
 	      block they are in.  (default 'shiftwidth').  A scope declaration
 	      can be "public:", "protected:" or "private:".
 
-		cino=		    cino=g0
+		cino=		    cino=g0 >
 		  {		      {
 		      public:	      public:
 			  a = b;	  a = b;
 		      private:	      private:
 		  }		      }
-
+<
 	hN    Place statements occurring after a C++ scope declaration N
 	      characters from the indent of the label.  (default
 	      'shiftwidth').
 
-		cino=		    cino=h10
+		cino=		    cino=h10 >
 		   public:		public:   a = a + 1;
 		       a = a + 1;		  b = b + 1;
-
+<
 	pN    Parameter declarations for K&R-style function declarations will
 	      be indented N characters from the margin.  (default
 	      'shiftwidth').
 
-		cino=		    cino=p0		cino=p2s
+		cino=		    cino=p0		cino=p2s >
 		  func(a, b)	      func(a, b)	  func(a, b)
 		      int a;	      int a;			  int a;
 		      char b;	      char b;			  char b;
-
+<
 	tN    Indent a function return type declaration N characters from the
 	      margin.  (default 'shiftwidth').
 
-		cino=		    cino=t0		cino=t7
+		cino=		    cino=t0		cino=t7 >
 		      int	      int			 int
 		  func()	      func()		  func()
-
+<
 	+N    Indent a continuation line (a line that spills onto the next) N
 	      additional characters.  (default 'shiftwidth').
 
-		cino=			  cino=+10
+		cino=			  cino=+10 >
 		  a = b + 9 *		    a = b + 9 *
 		      c;			      c;
-
+<
 	cN    Indent comment lines after the comment opener, when there is no
 	      other text with which to align, N characters from the comment
 	      opener.  (default 3).  See also |format-comments|.
 
-		cino=			  cino=c5
+		cino=			  cino=c5 >
 		  /*			    /*
 		     text.			 text.
 		   */			     */
-
+<
 	(N    When in unclosed parentheses, indent N characters from the line
 	      with the unclosed parentheses.  When N is 0 or the line starts
 	      with '(', line up with the unclosed parentheses.  (default
 	      'shiftwidth' * 2).
 
-		cino=			  cino=(0
+		cino=			  cino=(0 >
 		  if (c1 && (c2 ||	    if (c1 && (c2 ||
 			      c3))		       c3))
 		      foo;			foo;
 		  if (c1 &&		    if (c1 &&
 			  (c2 || c3))		(c2 || c3))
 		     {			       {
-
+<
 	uN    Same as (N, but for one level deeper.  (default 'shiftwidth').
 
-		cino=			  cino=u2
+		cino=			  cino=u2 >
 		  if (c123456789	    if (c123456789
 			  && (c22345		    && (c22345
 			      || c3))		      || c3))
+<
+					*java-cinoptions* *java-indenting*
+	jN    indent java anonymous classes correctly.  The value 'N' is
+	      currently unused but must be non-zero (e.g. 'j1'). 'j1' will
+	      indent for example the following code snippet correctly: >
 
+		object.add(new ChangeListener() {
+		    public void stateChanged(ChangeEvent e) {
+			do_something();
+		    }
+		});
+<
 	)N    Vim searches for unclosed parentheses at most N lines away.
 	      This limits the time needed to search for parentheses.  (default
 	      20 lines).
@@ -1503,6 +1527,7 @@ assume a 'shiftwidth' of 4.
 	*N    Vim searches for unclosed comments at most N lines away.  This
 	      limits the time needed to search for the start of a comment.
 	      (default 30 lines).
+
 
 The defaults, spelled out in full, are:
 	cinoptions=>s,e0,n0,f0,{0,}0,^0,:s,=s,ps,ts,c3,+s,(2s,us,)20,*30,gs,hs

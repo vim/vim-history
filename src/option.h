@@ -60,12 +60,14 @@
 # ifdef USE_CR
 #  define DFLT_FF	"mac"
 #  define DFLT_FFS_VIM	"mac,unix,dos"
+#  define DFLT_FFS_VI	"mac,unix,dos"
+#  define DFLT_TEXTAUTO	TRUE
 # else
 #  define DFLT_FF	"unix"
 #  define DFLT_FFS_VIM	"unix,dos"
+#  define DFLT_FFS_VI	""
+#  define DFLT_TEXTAUTO	FALSE
 # endif
-# define DFLT_FFS_VI	""
-# define DFLT_TEXTAUTO	FALSE
 #endif
 
 #ifdef FEAT_KEYMAP
@@ -110,6 +112,7 @@
 #define FO_RET_COMS	'r'
 #define FO_OPEN_COMS	'o'
 #define FO_Q_COMS	'q'
+#define FO_Q_NUMBER	'n'
 #define FO_Q_SECOND	'2'
 #define FO_INS_VI	'v'
 #define FO_INS_LONG	'l'
@@ -118,7 +121,7 @@
 
 #define DFLT_FO_VI	"vt"
 #define DFLT_FO_VIM	"tcq"
-#define FO_ALL		"tcroq2vlb1,"	/* for do_set() */
+#define FO_ALL		"tcroq2vlb1n,"	/* for do_set() */
 
 /* characters for the p_cpo option: */
 #define CPO_ALTREAD	'a'	/* ":read" sets alternate file name */
@@ -303,6 +306,7 @@ EXTERN char_u	*p_breakat;	/* 'breakat' */
 #endif
 #ifdef FEAT_MBYTE
 EXTERN char_u	*p_cc;		/* 'charcode' */
+EXTERN int	p_deco;		/* 'delcombine' */
 # ifdef FEAT_EVAL
 EXTERN char_u	*p_ccv;		/* 'charconvert' */
 # endif
@@ -360,6 +364,24 @@ EXTERN int	p_exrc;		/* 'exrc' */
 EXTERN char_u	*p_fccs;	/* 'filecharcodes' */
 #endif
 EXTERN char_u	*p_ffs;		/* 'fileformats' */
+#ifdef FEAT_FOLDING
+EXTERN char_u	*p_fcl;		/* 'foldclose' */
+EXTERN long	p_fdls;		/* 'foldlevelstart' */
+EXTERN char_u	*p_fdo;		/* 'foldopen' */
+EXTERN unsigned	fdo_flags;
+# ifdef IN_OPTION_C
+static char *(p_fdo_values[]) = {"all", "block", "hor", "mark", "percent",
+					   "quickfix", "search", "tag", NULL};
+# endif
+# define FDO_ALL		0x001
+# define FDO_BLOCK		0x002
+# define FDO_HOR		0x004
+# define FDO_MARK		0x008
+# define FDO_PERCENT		0x010
+# define FDO_QUICKFIX		0x020
+# define FDO_SEARCH		0x040
+# define FDO_TAG		0x080
+#endif
 EXTERN char_u	*p_fp;		/* 'formatprg' */
 EXTERN int	p_gd;		/* 'gdefault' */
 #ifdef FEAT_GUI
@@ -506,23 +528,24 @@ EXTERN unsigned	ssop_flags;
 # ifdef IN_OPTION_C
 /* Also used for 'viewoptions'! */
 static char *(p_ssop_values[]) = {"buffers", "winpos", "resize", "winsize",
-    "options", "help", "blank", "globals", "slash", "unix", "sesdir",
-    "curdir", "folds", "cursor", NULL};
+    "localoptions", "options", "help", "blank", "globals", "slash", "unix",
+    "sesdir", "curdir", "folds", "cursor", NULL};
 # endif
-# define SSOP_BUFFERS	0x001
-# define SSOP_WINPOS	0x002
-# define SSOP_RESIZE	0x004
-# define SSOP_WINSIZE	0x008
-# define SSOP_OPTIONS	0x010
-# define SSOP_HELP	0x020
-# define SSOP_BLANK	0x040
-# define SSOP_GLOBALS	0x080
-# define SSOP_SLASH	0x100
-# define SSOP_UNIX	0x200
-# define SSOP_SESDIR	0x400
-# define SSOP_CURDIR	0x800
-# define SSOP_FOLDS	0x1000
-# define SSOP_CURSOR	0x2000
+# define SSOP_BUFFERS		0x001
+# define SSOP_WINPOS		0x002
+# define SSOP_RESIZE		0x004
+# define SSOP_WINSIZE		0x008
+# define SSOP_LOCALOPTIONS	0x010
+# define SSOP_OPTIONS		0x020
+# define SSOP_HELP		0x040
+# define SSOP_BLANK		0x080
+# define SSOP_GLOBALS		0x100
+# define SSOP_SLASH		0x200
+# define SSOP_UNIX		0x400
+# define SSOP_SESDIR		0x800
+# define SSOP_CURDIR		0x1000
+# define SSOP_FOLDS		0x2000
+# define SSOP_CURSOR		0x4000
 #endif
 EXTERN char_u	*p_sh;		/* 'shell' */
 EXTERN char_u	*p_shcf;	/* 'shellcmdflag' */
@@ -617,7 +640,7 @@ EXTERN char_u	*p_viminfo;	/* 'viminfo' */
 #ifdef FEAT_SESSION
 EXTERN char_u	*p_vdir;	/* 'viewdir' */
 EXTERN char_u	*p_vop;		/* 'viewoptions' */
-EXTERN unsigned	vop_flags;
+EXTERN unsigned	vop_flags;	/* uses SSOP_ flags */
 #endif
 EXTERN int	p_vb;		/* 'visualbell' */
 #ifdef FEAT_VIRTUALEDIT

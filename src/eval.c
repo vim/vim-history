@@ -258,7 +258,7 @@ static void f_setwinvar __ARGS((VAR argvars, VAR retvar));
 static void f_rename __ARGS((VAR argvars, VAR retvar));
 static void f_search __ARGS((VAR argvars, VAR retvar));
 static void f_searchpair __ARGS((VAR argvars, VAR retvar));
-static int get_search_arg __ARGS((VAR varp));
+static int get_search_arg __ARGS((VAR varp, int *flagsp));
 static void f_setline __ARGS((VAR argvars, VAR retvar));
 static void find_some_match __ARGS((VAR argvars, VAR retvar, int start));
 static void f_strftime __ARGS((VAR argvars, VAR retvar));
@@ -686,7 +686,7 @@ ex_let(eap)
 		    c1 = *p;
 		    *p = NUL;
 		    set_option_value(arg, get_var_number(&retvar),
-					       get_var_string(&retvar), TRUE);
+					  get_var_string(&retvar), OPT_LOCAL);
 		    *p = c1;		    /* put back for error messages */
 		}
 	    }
@@ -1630,6 +1630,7 @@ eval6(arg, retvar, evaluate)
  *  Also handle:
  *  ! in front		logical NOT
  *  - in front		unary minus
+ *  + in front		unary plus (ignored)
  *  trailing []		subscript in String
  *
  * "arg" must point to the first non-white of the expression.
@@ -1661,7 +1662,7 @@ eval7(arg, retvar, evaluate)
      * Skip '!' and '-' characters.  They are handled later.
      */
     start_leader = *arg;
-    while (**arg == '!' || **arg == '-')
+    while (**arg == '!' || **arg == '-' || **arg == '+')
 	*arg = skipwhite(*arg + 1);
     end_leader = *arg;
 
@@ -1805,7 +1806,7 @@ eval7(arg, retvar, evaluate)
     }
 
     /*
-     * Apply logical NOT and unary '-', from right to left.
+     * Apply logical NOT and unary '-', from right to left, ignore '+'.
      */
     if (ret == OK && evaluate && end_leader > start_leader)
     {
@@ -3039,9 +3040,7 @@ f_exists(argvars, retvar)
     else if (*p == '*')			/* internal or user defined function */
     {
 	++p;
-	if (islower(*p))
-	    n = (find_internal_func(p) >= 0);
-	else if (isupper(*p) || *p == '<')
+	if (isupper(*p) || *p == '<' || (*p == 's' && p[1] == ':'))
 	{
 	    p = trans_function_name(&p);
 	    if (p != NULL)
@@ -3050,6 +3049,8 @@ f_exists(argvars, retvar)
 		vim_free(p);
 	    }
 	}
+	else if (islower(*p))
+	    n = (find_internal_func(p) >= 0);
     }
     else if (*p == ':')
     {
@@ -4553,18 +4554,22 @@ f_search(argvars, retvar)
     int		dir;
 
     pat = get_var_string(&argvars[0]);
-    dir = get_search_arg(&argvars[1]);
+    dir = get_search_arg(&argvars[1], NULL);	/* may set p_ws */
 
     pos = curwin->w_cursor;
     if (searchit(curbuf, &pos, dir, pat, 1L, SEARCH_KEEP, RE_SEARCH) != FAIL)
     {
-	retvar->var_val.var_number = 0;
+	retvar->var_val.var_number = pos.lnum;
 	curwin->w_cursor = pos;
     }
     else
-	retvar->var_val.var_number = 1;
+	retvar->var_val.var_number = 0;
     p_ws = save_p_ws;
 }
+
+#define SP_NOMOVE	1	/* don't move cursor */
+#define SP_REPEAT	2	/* repeat to find outer pair */
+#define SP_RETCOUNT	4	/* return matchcount */
 
 /*
  * "searchpair()" function
@@ -4576,13 +4581,14 @@ f_searchpair(argvars, retvar)
 {
     char_u	*spat, *mpat, *epat;
     char_u	*skip;
-    char_u	*pat;
+    char_u	*pat, *pat2, *pat3;
     pos_t	pos;
     pos_t	firstpos;
     pos_t	save_cursor;
     int		save_p_ws = p_ws;
     char_u	*save_cpo;
     int		dir;
+    int		flags = 0;
     char_u	nbuf1[NUMBUFLEN];
     char_u	nbuf2[NUMBUFLEN];
     char_u	nbuf3[NUMBUFLEN];
@@ -4590,23 +4596,32 @@ f_searchpair(argvars, retvar)
     int		nest = 1;
     int		err;
 
-    retvar->var_val.var_number = 1;	/* default: FAIL */
+    retvar->var_val.var_number = 0;	/* default: FAIL */
+
+    /* Make 'cpoptions' empty, the 'l' flag should not be used here. */
+    save_cpo = p_cpo;
+    p_cpo = (char_u *)"";
 
     /* Get the three pattern arguments: start, middle, end. */
     spat = get_var_string(&argvars[0]);
     mpat = get_var_string_buf(&argvars[1], nbuf1);
     epat = get_var_string_buf(&argvars[2], nbuf2);
-    pat = alloc((unsigned)(STRLEN(spat) + STRLEN(mpat) + STRLEN(epat) + 17));
-    if (pat == NULL)
-	return;
+
+    /* Make two search patterns: start/end (pat2, for in nested pairs) and
+     * start/middle/end (pat3, for the top pair). */
+    pat2 = alloc((unsigned)(STRLEN(spat) + STRLEN(epat) + 17));
+    pat3 = alloc((unsigned)(STRLEN(spat) + STRLEN(mpat) + STRLEN(epat) + 17));
+    if (pat2 == NULL || pat3 == NULL)
+	goto theend;
+    sprintf((char *)pat2, "\\(%s\\)\\|\\(%s\\)", spat, epat);
     if (*mpat == NUL)
-	sprintf((char *)pat, "\\(%s\\)\\|\\(%s\\)", spat, epat);
+	STRCPY(pat3, pat2);
     else
-	sprintf((char *)pat, "\\(%s\\)\\|\\(%s\\)\\|\\(%s\\)",
-							    spat, mpat, epat);
+	sprintf((char *)pat3, "\\(%s\\)\\|\\(%s\\)\\|\\(%s\\)",
+							    spat, epat, mpat);
 
     /* Handle the optional fourth argument: flags */
-    dir = get_search_arg(&argvars[3]);
+    dir = get_search_arg(&argvars[3], &flags); /* may set p_ws */
 
     /* Optional fifth argument: skip expresion */
     if (argvars[4].var_type == VAR_UNKNOWN)
@@ -4614,22 +4629,17 @@ f_searchpair(argvars, retvar)
     else
 	skip = get_var_string_buf(&argvars[4], nbuf3);
 
-    /* Make 'cpoptions' empty, the 'l' flag should not be used here. */
-    save_cpo = p_cpo;
-    p_cpo = (char_u *)"";
-
     save_cursor = curwin->w_cursor;
     pos = curwin->w_cursor;
     firstpos.lnum = 0;
+    pat = pat3;
     for (;;)
     {
 	n = searchit(curbuf, &pos, dir, pat, 1L, SEARCH_KEEP, RE_SEARCH);
 	if (n == FAIL || (firstpos.lnum != 0 && equal(pos, firstpos)))
-	{
 	    /* didn't find it or found the first match again: FAIL */
-	    curwin->w_cursor = save_cursor;
 	    break;
-	}
+
 	if (firstpos.lnum == 0)
 	    firstpos = pos;
 
@@ -4647,34 +4657,50 @@ f_searchpair(argvars, retvar)
 	    continue;
 	}
 
-	/* If there is no middle pat the end pat counts as 3, make that 4. */
-	if (*mpat == NUL && n == 3)
-	    ++n;
-
-	/* If the start/end pattern matches increase/decrease the nesting.
-	 * Depends on the direction. */
-	if ((dir == BACKWARD && n == 2) || (dir == FORWARD && n == 4))
-	    --nest;
-	else if ((dir == BACKWARD && n == 4) || (dir == FORWARD && n == 2))
-	    ++nest;
-
-	if (nest == 0 || (nest == 1 && n == 3))
+	if ((dir == BACKWARD && n == 3) || (dir == FORWARD && n == 2))
 	{
-	    /* Found the match: return this position. */
-	    retvar->var_val.var_number = 0;
+	    /* Found end when searching backwards or start when searching
+	     * forward: nested pair. */
+	    ++nest;
+	    pat = pat2;		/* nested, don't search for middle */
+	}
+	else
+	{
+	    /* Found end when searching forward or start when searching
+	     * backward: end of (nested) pair; or found middle in outer pair. */
+	    if (--nest == 1)
+		pat = pat3;	/* outer level, search for middle */
+	}
+
+	if (nest == 0)
+	{
+	    /* Found the match: return matchcount or line number. */
+	    if (flags & SP_RETCOUNT)
+		++retvar->var_val.var_number;
+	    else
+		retvar->var_val.var_number = pos.lnum;
 	    curwin->w_cursor = pos;
-	    break;
+	    if (!(flags & SP_REPEAT))
+		break;
+	    nest = 1;	    /* search for next unmatched */
 	}
     }
 
-    vim_free(pat);
+    /* If 'n' flag is used or search failed: restore cursor position. */
+    if ((flags & SP_NOMOVE) || retvar->var_val.var_number == 0)
+	curwin->w_cursor = save_cursor;
+
+theend:
+    vim_free(pat2);
+    vim_free(pat3);
     p_ws = save_p_ws;
     p_cpo = save_cpo;
 }
 
     static int
-get_search_arg(varp)
+get_search_arg(varp, flagsp)
     VAR		varp;
+    int		*flagsp;
 {
     int		dir = FORWARD;
     char_u	*flags;
@@ -4683,12 +4709,21 @@ get_search_arg(varp)
     if (varp->var_type != VAR_UNKNOWN)
     {
 	flags = get_var_string_buf(varp, nbuf);
-	if (vim_strchr(flags, 'b'))
+	if (vim_strchr(flags, 'b') != NULL)
 	    dir = BACKWARD;
-	if (vim_strchr(flags, 'w'))
+	if (vim_strchr(flags, 'w') != NULL)
 	    p_ws = TRUE;
-	if (vim_strchr(flags, 'W'))
+	if (vim_strchr(flags, 'W') != NULL)
 	    p_ws = FALSE;
+	if (flagsp != NULL)
+	{
+	    if (vim_strchr(flags, 'n') != NULL)
+		*flagsp |= SP_NOMOVE;
+	    if (vim_strchr(flags, 'r') != NULL)
+		*flagsp |= SP_REPEAT;
+	    if (vim_strchr(flags, 'm') != NULL)
+		*flagsp |= SP_RETCOUNT;
+	}
     }
     return dir;
 }
@@ -4731,7 +4766,7 @@ f_setbufvar(argvars, retvar)
 	{
 	    ++varname;
 	    set_option_value(varname, get_var_number(varp),
-					get_var_string_buf(varp, nbuf), TRUE);
+				   get_var_string_buf(varp, nbuf), OPT_LOCAL);
 	}
 	else
 	{
@@ -4816,7 +4851,7 @@ f_setwinvar(argvars, retvar)
 	{
 	    ++varname;
 	    set_option_value(varname, get_var_number(varp),
-					get_var_string_buf(varp, nbuf), TRUE);
+				   get_var_string_buf(varp, nbuf), OPT_LOCAL);
 	}
 	else
 	{
@@ -6408,7 +6443,7 @@ ex_execute(eap)
 
     static char_u *
 find_option_end(p)
-    char_u  *p;
+    char_u	*p;
 {
     while (isalnum(*p) || *p == '_')
 	++p;
@@ -7450,6 +7485,17 @@ repeat:
 	    *bufp = *fnamep;
 	    if (*fnamep == NULL)
 		return -1;
+	}
+	/* Append a path separator to a directory. */
+	if (mch_isdir(*fnamep))
+	{
+	    /* Make room for one or two extra characters. */
+	    *fnamep = vim_strnsave(*fnamep, (int)STRLEN(*fnamep) + 2);
+	    vim_free(*bufp);	/* free any allocated file name */
+	    *bufp = *fnamep;
+	    if (*fnamep == NULL)
+		return -1;
+	    add_pathsep(*fnamep);
 	}
     }
 

@@ -331,7 +331,13 @@ mch_FullName(
     else
 #endif
 	if (_fullpath(buf, fname, len - 1) == NULL)
+    {
 	STRNCPY(buf, fname, len);   /* failed, use the relative path name */
+	buf[len - 1] = NUL;
+#ifndef USE_FNAME_CASE
+	slash_adjust(buf);
+#endif
+    }
     else
 	nResult = OK;
 

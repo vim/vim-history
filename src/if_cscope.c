@@ -1090,15 +1090,18 @@ cs_kill(eap)
 	}
     }
 
-    if ((i >= CSCOPE_MAX_CONNECTIONS || i < -1 || csinfo[i].fname == NULL) &&
-	i != -1 && p_csverbose)
+    if ((i >= CSCOPE_MAX_CONNECTIONS || i < -1 || csinfo[i].fname == NULL)
+	    && i != -1)
     {
-	if (printbuf == NULL)
-	    (void)EMSG(_("cscope connection not found"));
-	else
+	if (p_csverbose)
 	{
-	    sprintf(printbuf, _("cscope connection %s not found"), stok);
-	    (void)EMSG(printbuf);
+	    if (printbuf == NULL)
+		(void)EMSG(_("cscope connection not found"));
+	    else
+	    {
+		sprintf(printbuf, _("cscope connection %s not found"), stok);
+		(void)EMSG(printbuf);
+	    }
 	}
     }
     else
@@ -1612,8 +1615,15 @@ cs_release_csp(i, freefnpp)
     if (csinfo[i].to_fp != NULL)
 	(void)fclose(csinfo[i].to_fp);
 
-    kill(csinfo[i].pid, SIGTERM);
-    (void)waitpid(csinfo[i].pid, &pstat, 0);
+    /*
+     * Safety check: If the PID would be zero here, the entire X session would
+     * be killed...
+     */
+    if (csinfo[i].pid != 0)
+    {
+	kill(csinfo[i].pid, SIGTERM);
+	(void)waitpid(csinfo[i].pid, &pstat, 0);
+    }
 
     if (freefnpp)
     {

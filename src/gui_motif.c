@@ -128,6 +128,7 @@ gui_x11_create_widgets()
     XmRepTypeInstallTearOffModelConverter();
 #endif
 
+#if 0 /* not needed? */
     XtInitializeWidgetClass(xmFormWidgetClass);
     XtInitializeWidgetClass(xmRowColumnWidgetClass);
     XtInitializeWidgetClass(xmDrawingAreaWidgetClass);
@@ -135,6 +136,7 @@ gui_x11_create_widgets()
     XtInitializeWidgetClass(xmMenuShellWidgetClass);
     XtInitializeWidgetClass(xmPushButtonWidgetClass);
     XtInitializeWidgetClass(xmScrollBarWidgetClass);
+#endif
 
     /* Make sure the "Quit" menu entry of the window manager is ignored */
     XtVaSetValues(vimShell, XmNdeleteResponse, XmDO_NOTHING, NULL);

@@ -31,6 +31,7 @@ int check_restricted __ARGS((void));
 int check_secure __ARGS((void));
 void do_sub __ARGS((exarg_t *eap));
 void ex_global __ARGS((exarg_t *eap));
+void global_exe __ARGS((char_u *cmd));
 int read_viminfo_sub_string __ARGS((char_u *line, FILE *fp, int force));
 void write_viminfo_sub_string __ARGS((FILE *fp));
 void prepare_tagpreview __ARGS((void));

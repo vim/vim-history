@@ -280,6 +280,7 @@ main
 #ifdef FEAT_WINDOWS
     int		    window_count = 1;	    /* number of windows to use */
     int		    arg_idx;		    /* index in argument list */
+    int		    vert_windows = FALSE;   /* "-O" used instead of "-o" */
 #endif
     int		    had_minmin = FALSE;	    /* found "--" option */
     int		    argv_idx;		    /* index in argv[n][] */
@@ -316,7 +317,7 @@ main
 #endif
 
 #ifdef FEAT_GUI_MAC
-    /* Macinthosh needs this before any memory is allocated. */
+    /* Macintosh needs this before any memory is allocated. */
     gui_prepare(&argc, argv);	/* Prepare for possibly starting GUI sometime */
 #endif
 
@@ -365,9 +366,9 @@ main
     for (i = 1; i < argc; i++)
     {
 	if (STRICMP(argv[i], "-display") == 0
-#ifdef FEAT_GUI_GTK
+# ifdef FEAT_GUI_GTK
 		|| STRICMP(argv[i], "--display") == 0
-#endif
+# endif
 		)
 	{
 	    if (i == argc - 1)
@@ -618,10 +619,19 @@ main
 		no_swap_file = TRUE;
 		break;
 
-	    case 'o':		/* "-o[N]" open N windows */
+	    case 'o':		/* "-o[N]" open N horizontal split windows */
 #ifdef FEAT_WINDOWS
 		/* default is 0: open window for each file */
 		window_count = get_number_arg((char_u *)argv[0], &argv_idx, 0);
+		vert_windows = FALSE;
+#endif
+		break;
+
+		case 'O':	/* "-O[N]" open N vertical split windows */
+#if defined(FEAT_VERTSPLIT) && defined(FEAT_WINDOWS)
+		/* default is 0: open window for each file */
+		window_count = get_number_arg((char_u *)argv[0], &argv_idx, 0);
+		vert_windows = TRUE;
 #endif
 		break;
 
@@ -1221,7 +1231,7 @@ main
 
     if (bin_mode)		    /* "-b" argument used */
     {
-	set_options_bin(curbuf->b_p_bin, 1, TRUE);
+	set_options_bin(curbuf->b_p_bin, 1, 0);
 	curbuf->b_p_bin = 1;	    /* binary file I/O */
     }
 
@@ -1297,7 +1307,7 @@ main
 #endif
 	no_wait_return = TRUE;
 	i = msg_didany;
-	set_bufsecret(FALSE);
+	set_buflisted(TRUE);
 	(void)open_buffer(TRUE, NULL);	/* create memfile and read file */
 	no_wait_return = FALSE;
 	msg_didany = i;
@@ -1350,7 +1360,7 @@ main
 
 #ifdef FEAT_CRYPT
     if (ask_for_key)
-	(void)get_crypt_key(TRUE);
+	(void)get_crypt_key(TRUE, TRUE);
 #endif
 
     no_wait_return = TRUE;
@@ -1366,7 +1376,7 @@ main
 	/* Don't change the windows if there was a command in .vimrc that
 	 * already split some windows */
 	if (firstwin->w_next == NULL)
-	    window_count = make_windows(window_count);
+	    window_count = make_windows(window_count, vert_windows);
 	else
 	    window_count = win_count();
     }
@@ -1408,7 +1418,7 @@ main
 		/* When getting the ATTENTION prompt here, use a dialog */
 		swap_exists_action = SEA_DIALOG;
 #endif
-		set_bufsecret(FALSE);
+		set_buflisted(TRUE);
 		(void)open_buffer(FALSE, NULL); /* create memfile, read file */
 
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
@@ -1518,7 +1528,7 @@ main
 	STRCPY(IObuff, "ta ");
 
 	STRCAT(IObuff, tagname);
-	do_cmdline(IObuff, NULL, NULL, DOCMD_NOWAIT|DOCMD_VERBOSE);
+	do_cmdline_cmd(IObuff);
     }
 
     if (n_commands > 0)
@@ -1530,7 +1540,7 @@ main
 	curwin->w_cursor.lnum = 0;
 	sourcing_name = (char_u *)"command line";
 	for (i = 0; i < n_commands; ++i)
-	    do_cmdline(commands[i], NULL, NULL, DOCMD_NOWAIT|DOCMD_VERBOSE);
+	    do_cmdline_cmd(commands[i]);
 	sourcing_name = NULL;
 	if (curwin->w_cursor.lnum == 0)
 	    curwin->w_cursor.lnum = 1;
@@ -1629,6 +1639,21 @@ main_loop(cmdwin)
 	    /* Include a closed fold completely in the Visual area. */
 	    foldAdjustVisual();
 #endif
+#ifdef FEAT_FOLDING
+	    /*
+	     * When 'foldclose' is set, apply 'foldlevel' to folds that don't
+	     * contain the cursor.
+	     * When 'foldopen' is "all", open the fold(s) under the cursor.
+	     * This may mark the window for redrawing.
+	     */
+	    if (!char_avail())
+	    {
+		foldCheckClose();
+		if (fdo_flags & FDO_ALL)
+		    foldOpenCursor();
+	    }
+#endif
+
 	    /*
 	     * Before redrawing, make sure w_topline is correct, and w_leftcol
 	     * if lines don't wrap, and w_skipcol if lines wrap.
@@ -1662,6 +1687,7 @@ main_loop(cmdwin)
 	    }
 
 	    emsg_on_display = FALSE;	/* can delete error message now */
+	    did_emsg = FALSE;
 	    msg_didany = FALSE;		/* reset lines_left in msg_start() */
 	    do_redraw = FALSE;
 	    showruler(FALSE);
@@ -1730,7 +1756,7 @@ process_env(env, is_viminit)
 	save_sourcing_lnum = sourcing_lnum;
 	sourcing_name = env;
 	sourcing_lnum = 0;
-	do_cmdline(initstr, NULL, NULL, DOCMD_NOWAIT|DOCMD_VERBOSE);
+	do_cmdline_cmd(initstr);
 	sourcing_name = save_sourcing_name;
 	sourcing_lnum = save_sourcing_lnum;
 	return OK;
@@ -1739,8 +1765,8 @@ process_env(env, is_viminit)
 }
 
     void
-getout(r)
-    int		r;
+getout(exitval)
+    int		exitval;
 {
 #ifdef FEAT_AUTOCMD
     buf_t	*buf;
@@ -1816,7 +1842,7 @@ getout(r)
     iconv_end();
 #endif
 
-    mch_windexit(r);
+    mch_windexit(exitval);
 }
 
 /*

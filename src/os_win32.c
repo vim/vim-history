@@ -1301,7 +1301,7 @@ mch_shellinit()
      * Otherwise the default "findstr /n" is used.
      */
     if (!executable_exists("findstr.exe"))
-	set_option_value((char_u *)"grepprg", 0, (char_u *)"grep -n", FALSE);
+	set_option_value((char_u *)"grepprg", 0, (char_u *)"grep -n", 0);
 
 #ifdef FEAT_CLIPBOARD
     clip_init(TRUE);
@@ -2812,6 +2812,7 @@ win32_expandpath(
     HANDLE		hFind;
     int			matches;
     int			start_dot_ok;
+    int			tilde_at_end;
     int			len;
 
     start_len = gap->ga_len;
@@ -2877,19 +2878,25 @@ win32_expandpath(
 
     start_dot_ok = (*s == '.');
 
+    /* findfirst()/findnext() finds names ending in '~' even when we didn't
+     * ask for them */
+    tilde_at_end = (e[-1] == '*' || e[-1] == '?' || e[-1] == '~');
+
     /* If we are expanding wildcards, we try both files and directories */
     if ((hFind = FindFirstFile(buf, &fb)) != INVALID_HANDLE_VALUE)
 	while (c)
 	{
 	    STRCPY(s, fb.cFileName);
+	    len = STRLEN(buf);
 
 	    /*
 	     * Ignore entries starting with a dot, unless when asked for.
+	     * ignore names ending in "~" unless pat ends in '*', '?' or '~'
 	     */
 	    if ((s[0] != '.' || start_dot_ok)
+		    && (buf[len - 1] != '~' || tilde_at_end)
 		    && (*path == NUL || mch_isdir(buf)))
 	    {
-		len = STRLEN(buf);
 		STRCPY(buf + len, path);
 		if (mch_has_wildcard(path))	    /* handle more wildcards */
 		{

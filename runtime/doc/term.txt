@@ -1,4 +1,4 @@
-*term.txt*      For Vim version 6.0t.  Last change: 2000 Dec 10
+*term.txt*      For Vim version 6.0u.  Last change: 2001 Jan 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -209,8 +209,8 @@ appropriate option.  For example: >
 try again}
 
 The options are listed below.  The associated termcap code is always equal to
-the last two characters of the option name.  Two termcap codes are required:
-Cursor positioning and clear screen.
+the last two characters of the option name.  Only one termcap codes is
+required: Cursor positioning.
 
 The options 't_da', 't_db', 't_ms', 't_xs' represent flags in the termcap.
 When the termcap flag is present, the option will be set to "y".  But any
@@ -227,7 +227,7 @@ OUTPUT CODES
 	t_bc	backspace character				*t_bc* *'t_bc'*
 	t_cd	clear to end of screen				*t_cd* *'t_cd'*
 	t_ce	clear to end of line				*t_ce* *'t_ce'*
-	t_cl	clear screen (required!)			*t_cl* *'t_cl'*
+	t_cl	clear screen					*t_cl* *'t_cl'*
 	t_cm	cursor motion (required!)			*t_cm* *'t_cm'*
 	t_Co	number of colors				*t_Co* *'t_Co'*
 	t_CS	if non-empty, cursor relative to scroll region	*t_CS* *'t_CS'*
@@ -259,6 +259,7 @@ OUTPUT CODES
 	t_ts	set window title start (to status line)		*t_ts* *'t_ts'*
 	t_ue	underline end					*t_ue* *'t_ue'*
 	t_us	underline mode					*t_us* *'t_us'*
+	t_ut	clearing uses the current background color	*t_ut* *'t_ut'*
 	t_vb	visual bell					*t_vb* *'t_vb'*
 	t_ve	cursor visible					*t_ve* *'t_ve'*
 	t_vi	cursor invisible				*t_vi* *'t_vi'*

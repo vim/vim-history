@@ -740,7 +740,7 @@ DoCommand(line)
 
     PPCODE:
     if (line != NULL)
-	do_cmdline((char_u *)line, NULL, NULL, DOCMD_VERBOSE + DOCMD_NOWAIT);
+	do_cmdline_cmd((char_u *)line);
 
 void
 Eval(str)

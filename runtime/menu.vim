@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jan 17
+" Last Change:	2001 Feb 04
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -636,10 +636,13 @@ SynMenu AB.B:b
 SynMenu AB.BASIC:basic
 SynMenu AB.BC\ calculator:bc
 SynMenu AB.BibFile:bib
+SynMenu AB.BIND\ configuration:named
+SynMenu AB.BIND\ zone:bindzone
 SynMenu AB.Blank:blank
 
 SynMenu CD.C:c
 SynMenu CD.C++:cpp
+SynMenu CD.C#:cs
 SynMenu CD.Crontab:crontab
 SynMenu CD.Cyn++:cynpp
 SynMenu CD.Cynlib:cynlib
@@ -649,6 +652,7 @@ SynMenu CD.CHILL:ch
 SynMenu CD.Change:change
 SynMenu CD.ChangeLog:changelog
 SynMenu CD.Clean:clean
+SynMenu CD.Clever:cl
 SynMenu CD.Clipper:clipper
 SynMenu CD.Cold\ Fusion:cf
 SynMenu CD.Configure\ script:config
@@ -736,9 +740,10 @@ SynMenu L-Ma.MakeIndex:ist
 SynMenu L-Ma.Man\ page:man
 SynMenu L-Ma.Maple:maple
 SynMenu L-Ma.Mason:mason
+SynMenu L-Ma.Mathematica:mma
 SynMenu L-Ma.Matlab:matlab
-SynMenu L-Ma.Maya\ Ext\.\ Lang\.:mel
 
+SynMenu Me-NO.MEL\ (for\ Maya):mel
 SynMenu Me-NO.Metafont:mf
 SynMenu Me-NO.MetaPost:mp
 SynMenu Me-NO.MS\ Module\ Definition:def
@@ -780,6 +785,7 @@ SynMenu PQ.Povray:pov
 SynMenu PQ.Printcap:pcap
 SynMenu PQ.Procmail:procmail
 SynMenu PQ.Product\ Spec\ File:psf
+SynMenu PQ.Progress:progress
 SynMenu PQ.Prolog:prolog
 SynMenu PQ.Purify\ log:purifylog
 SynMenu PQ.Python:python
@@ -806,11 +812,15 @@ SynMenu R-Sg.Sed:sed
 SynMenu R-Sg.Sendmail\.cf:sm
 SynMenu R-Sg.SGML.SGML\ catalog:catalog
 SynMenu R-Sg.SGML.SGML\ DTD:sgml
+SynMenu R-Sg.SGML.SGML\ Declarations:sgmldecl
 SynMenu R-Sg.SGML.SGML\ linuxdoc:sgmllnx
 
 SynMenu Sh-S.Sh\ shell\ script:sh
 SynMenu Sh-S.SiCAD:sicad
 SynMenu Sh-S.Simula:simula
+SynMenu Sh-S.Sinda.Sinda\ compare:sindacmp
+SynMenu Sh-S.Sinda.Sinda\ input:sinda
+SynMenu Sh-S.Sinda.Sinda\ output:sindaout
 SynMenu Sh-S.SKILL:skill
 SynMenu Sh-S.SLRN.SLRN\ rc:slrnrc
 SynMenu Sh-S.SLRN.SLRN\ score:slrnsc
@@ -834,14 +844,20 @@ SynMenu Sh-S.Strace:strace
 
 SynMenu TUV.Tads:tads
 SynMenu TUV.Tags:tags
+SynMenu TUV.TAK.TAK\ compare:tak
+SynMenu TUV.TAK.TAK\ input:tak
+SynMenu TUV.TAK.TAK\ output:takout
 SynMenu TUV.Tcl/Tk:tcl
 SynMenu TUV.TealInfo:tli
 SynMenu TUV.Telix\ Salt:tsalt
 SynMenu TUV.Termcap:ptcap
 SynMenu TUV.TeX:tex
+SynMenu TUV.TeX\ configuration:texmf
 SynMenu TUV.Texinfo:texinfo
 SynMenu TUV.TF\ mud\ client:tf
+SynMenu TUV.Trasys\ input:trasys
 SynMenu TUV.UIT/UIL:uil
+SynMenu TUV.UnrealScript:uc
 SynMenu TUV.Verilog\ HDL:verilog
 SynMenu TUV.Vgrindefs:vgrindefs
 SynMenu TUV.VHDL:vhdl

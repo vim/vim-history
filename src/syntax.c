@@ -226,12 +226,16 @@ struct syn_cluster
 
 /*
  * Syntax group IDs have different types:
- * 0 - 9999	  normal syntax groups
+ *     0 -  9999  normal syntax groups
  * 10000 - 14999  ALLBUT indicator (current_syn_inc_tag added)
- * >= 15000	  cluster IDs (subtract SYNID_CLUSTER for the cluster ID)
+ * 15000 - 19999  TOP indicator (current_syn_inc_tag added)
+ * 20000 - 24999  CONTAINED indicator (current_syn_inc_tag added)
+ * >= 25000	  cluster IDs (subtract SYNID_CLUSTER for the cluster ID)
  */
-#define SYNID_CLUSTER	15000	    /* first syntax group ID for clusters */
-#define SYNID_ALLBUT	10000	    /* syntax group ID for contains ALLBUT */
+#define SYNID_ALLBUT	10000	    /* syntax group ID for contains=ALLBUT */
+#define SYNID_TOP	15000	    /* syntax group ID for contains=TOP */
+#define SYNID_CONTAINED	20000	    /* syntax group ID for contains=CONTAINED */
+#define SYNID_CLUSTER	25000	    /* first syntax group ID for clusters */
 
 /*
  * Annoying Hack(TM):  ":syn include" needs this pointer to pass to
@@ -1851,7 +1855,7 @@ syn_current_attr(syncing, displaying)
 			     * there isn't a match before next_match_col, skip
 			     * this item. */
 			    if (spp->sp_line_id == current_line_id
-					&& spp->sp_startcol >= next_match_col)
+				    && spp->sp_startcol >= next_match_col)
 				continue;
 			    spp->sp_line_id = current_line_id;
 
@@ -3079,6 +3083,8 @@ syn_cmd_clear(eap, syncing)
     /*
      * We have to disable this within ":syn include @group filename",
      * because otherwise @group would get deleted.
+     * Only required for Vim 5.x syntax files, 6.0 ones don't contain ":syn
+     * clear".
      */
     if (curbuf->b_syn_topgrp != 0)
 	return;
@@ -3091,7 +3097,10 @@ syn_cmd_clear(eap, syncing)
 	if (syncing)
 	    syntax_sync_clear();
 	else
+	{
 	    syntax_clear(curbuf);
+	    do_unlet((char_u *)"b:current_syntax");
+	}
     }
     else
     {
@@ -3216,7 +3225,7 @@ syn_cmd_onoff(eap, name)
     {
 	STRCPY(buf, "so ");
 	sprintf((char *)buf + 3, SYNTAX_FNAME, name);
-	do_cmdline(buf, NULL, NULL, DOCMD_VERBOSE);
+	do_cmdline_cmd(buf);
     }
 }
 
@@ -3506,12 +3515,20 @@ put_id_list(name, list, attr)
     msg_putchar('=');
     for (p = list; *p; ++p)
     {
-	if (*p >= SYNID_ALLBUT && *p < SYNID_CLUSTER)
+	if (*p >= SYNID_ALLBUT && *p < SYNID_TOP)
 	{
 	    if (p[1])
 		MSG_PUTS("ALLBUT");
 	    else
 		MSG_PUTS("ALL");
+	}
+	else if (*p >= SYNID_TOP && *p < SYNID_CONTAINED)
+	{
+	    MSG_PUTS("TOP");
+	}
+	else if (*p >= SYNID_CONTAINED && *p < SYNID_CLUSTER)
+	{
+	    MSG_PUTS("CONTAINED");
 	}
 	else if (*p >= SYNID_CLUSTER)
 	{
@@ -5160,7 +5177,9 @@ get_id_list(arg, keylen, list)
 	    STRNCPY(name + 1, p, end - p);
 	    name[end - p + 1] = NUL;
 	    if (       STRCMP(name + 1, "ALLBUT") == 0
-		    || STRCMP(name + 1, "ALL") == 0)
+		    || STRCMP(name + 1, "ALL") == 0
+		    || STRCMP(name + 1, "TOP") == 0
+		    || STRCMP(name + 1, "CONTAINED") == 0)
 	    {
 		if (TO_UPPER(**arg) != 'C')
 		{
@@ -5176,7 +5195,13 @@ get_id_list(arg, keylen, list)
 		    vim_free(name);
 		    break;
 		}
-		id = SYNID_ALLBUT + current_syn_inc_tag;
+		if (name[1] == 'A')
+		    id = SYNID_ALLBUT;
+		else if (name[1] == 'T')
+		    id = SYNID_TOP;
+		else
+		    id = SYNID_CONTAINED;
+		id += current_syn_inc_tag;
 	    }
 	    else if (name[1] == '@')
 	    {
@@ -5342,8 +5367,24 @@ in_id_list(list, ssp, contained)
     item = *list;
     if (item >= SYNID_ALLBUT && item < SYNID_CLUSTER)
     {
-	if (item - SYNID_ALLBUT != ssp->inc_tag)
-	    return FALSE;
+	if (item < SYNID_TOP)
+	{
+	    /* ALL or ALLBUT: accept all groups in the same file */
+	    if (item - SYNID_ALLBUT != ssp->inc_tag)
+		return FALSE;
+	}
+	else if (item < SYNID_CONTAINED)
+	{
+	    /* TOP: accept all not-contained groups in the same file */
+	    if (item - SYNID_TOP != ssp->inc_tag || contained)
+		return FALSE;
+	}
+	else
+	{
+	    /* CONTAINED: accept all contained groups in the same file */
+	    if (item - SYNID_CONTAINED != ssp->inc_tag || !contained)
+		return FALSE;
+	}
 	item = *++list;
 	retval = FALSE;
     }
@@ -6153,7 +6194,7 @@ do_highlight(line, forceit, init)
 		    else
 			i = (color < 7 || color == 8);
 		    set_option_value((char_u *)"bg", 0L,
-			     i ? (char_u *)"dark" : (char_u *)"light", FALSE);
+				 i ? (char_u *)"dark" : (char_u *)"light", 0);
 		}
 	    }
 	  }

@@ -116,11 +116,6 @@ static int  quote_meta __ARGS((char_u *dest, char_u *str, int len));
 #define BACKSPACE_WORD_NOT_SPACE    3
 #define BACKSPACE_LINE		    4
 
-#ifdef FEAT_FOLDING
-static void check_start_insert __ARGS((void));
-static void check_stop_insert __ARGS((void));
-static void ins_before_move __ARGS((void));
-#endif
 static void ins_redraw __ARGS((void));
 static void ins_ctrl_v __ARGS((void));
 static void edit_putchar __ARGS((int c, int highlight));
@@ -300,11 +295,6 @@ edit(cmdchar, startln, count)
 	}
     }
 
-#ifdef FEAT_FOLDING
-    /* Starting Insert mode may unfold a line */
-    check_start_insert();
-#endif
-
     if (cmdchar == 'R')
     {
 #ifdef FEAT_FKMAP
@@ -473,6 +463,14 @@ edit(cmdchar, startln, count)
 	 * When emsg() was called msg_scroll will have been set.
 	 */
 	msg_scroll = FALSE;
+
+#ifdef FEAT_FOLDING
+	/* The cursor line must never be in a closed fold. */
+	foldOpenCursor();
+	/* Close folds where the cursor isn't, according to 'foldclose' */
+	if (!char_avail())
+	    foldCheckClose();
+#endif
 
 	/*
 	 * If we inserted a character at the last position of the last line in
@@ -805,7 +803,7 @@ doESCkey:
 # ifdef FEAT_INS_EXPAND
 	    if (c == Ctrl_T && ctrl_x_mode == CTRL_X_THESAURUS)
 	    {
-		if (*p_tsr == NUL)
+		if (*curbuf->b_p_tsr == NUL && *p_tsr == NUL)
 		{
 		    ctrl_x_mode = 0;
 		    msg_attr((char_u *)_("'thesaurus' option is empty"),
@@ -980,7 +978,7 @@ doESCkey:
 # ifdef FEAT_INS_EXPAND
 	    if (ctrl_x_mode == CTRL_X_DICTIONARY)
 	    {
-		if (*p_dict == NUL)
+		if (*curbuf->b_p_dict == NUL && *p_dict == NUL)
 		{
 		    ctrl_x_mode = 0;
 		    msg_attr((char_u *)_("'dictionary' option is empty"),
@@ -1203,59 +1201,6 @@ ins_ctrl_v()
     revins_legal++;
 #endif
 }
-
-#ifdef FEAT_FOLDING
-/*
- * If the cursor line is folded, it will be unfolded to be able to edit it.
- * Need to redraw this line.  The cursor may move to another window line.
- */
-    static void
-check_start_insert()
-{
-    if (hasFolding(curwin->w_cursor.lnum, NULL, NULL))
-    {
-	redrawWinline(curwin->w_cursor.lnum, TRUE);
-	changed_line_abv_curs();
-    }
-}
-
-/*
- * The cursor line may become folded by leaving Insert mode.
- * If the line above the cursor line is folded, it will be joined with this
- * line, thus changes too.  Same for the line below the cursor line.
- */
-    static void
-check_stop_insert()
-{
-    if (hasAnyFolding(curwin) && lineFolded(curwin, curwin->w_cursor.lnum))
-    {
-	linenr_t	lnum;
-
-	if (curwin->w_cursor.lnum > 1
-		&& hasFolding(curwin->w_cursor.lnum - 1, &lnum, NULL))
-	    redrawWinline(lnum, TRUE);
-	if (curwin->w_cursor.lnum < curbuf->b_ml.ml_line_count
-		&& hasFolding(curwin->w_cursor.lnum + 1, NULL, &lnum))
-	    redrawWinline(lnum, TRUE);
-	redrawWinline(curwin->w_cursor.lnum, TRUE);
-	changed_line_abv_curs();    /* cursor may move */
-    }
-}
-
-/*
- * Check if moving the cursor to another line will make the current line
- * folded again.
- */
-    static void
-ins_before_move()
-{
-    int	save_State = State;
-
-    State = NORMAL;
-    check_stop_insert();
-    State = save_State;
-}
-#endif
 
 /*
  * Put a character directly onto the screen.  It's not stored in a buffer.
@@ -1915,8 +1860,12 @@ ins_compl_dictionaries(dict, pat, dir, flags, thesaurus)
 	}
 	else
 	{
+	    /* Expand wildcards in the dictionary name, but do not allow
+	     * backticks (for security, the 'dict' option may have been set in
+	     * a modeline). */
 	    copy_option_part(&dict, buf, LSIZE, ",");
-	    if (expand_wildcards(1, &buf, &count, &files,
+	    if (vim_strchr(buf, '`') != NULL
+		    || expand_wildcards(1, &buf, &count, &files,
 						     EW_FILE|EW_SILENT) != OK)
 		count = 0;
 	}
@@ -2299,12 +2248,12 @@ ins_compl_next_buf(buf, flag)
 #endif
     }
     else
-	/* 'b' (just loaded buffers), 'u' (just non-loaded buffers) or 'S'
-	 * (secret buffers) */
+	/* 'b' (just loaded buffers), 'u' (just non-loaded buffers) or 'U'
+	 * (unlisted buffers) */
 	while ((buf = buf->b_next != NULL ? buf->b_next : firstbuf) != curbuf
-		&& ((flag == 'S'
-			? !buf->b_p_bst
-			: (buf->b_p_bst || buf->b_ml.ml_mfp == NULL)
+		&& ((flag == 'U'
+			? buf->b_p_bl
+			: (!buf->b_p_bl || buf->b_ml.ml_mfp == NULL)
 							     != (flag == 'u'))
 		    || buf->b_scanned))
 	    ;
@@ -2463,8 +2412,16 @@ ins_compl_get_exp(ini, dir)
 
 	case CTRL_X_DICTIONARY:
 	case CTRL_X_THESAURUS:
-	    ins_compl_dictionaries(dict ? dict : type == CTRL_X_THESAURUS
-					  ? p_tsr : p_dict, complete_pat, dir,
+	    ins_compl_dictionaries(
+		    dict ? dict
+			 : (type == CTRL_X_THESAURUS
+			     ? (*curbuf->b_p_tsr == NUL
+				 ? p_tsr
+				 : curbuf->b_p_tsr)
+			     : (*curbuf->b_p_dict == NUL
+				 ? p_dict
+				 : curbuf->b_p_dict)),
+			    complete_pat, dir,
 				 dict ? dict_f : 0, type == CTRL_X_THESAURUS);
 	    dict = NULL;
 	    break;
@@ -2498,7 +2455,8 @@ ins_compl_get_exp(ini, dir)
 	    break;
 
 	case CTRL_X_CMDLINE:
-	    if (expand_cmdline(&complete_xp, complete_pat, STRLEN(complete_pat),
+	    if (expand_cmdline(&complete_xp, complete_pat,
+			(int)STRLEN(complete_pat),
 					 &num_matches, &matches) == EXPAND_OK)
 		ins_compl_add_matches(num_matches, matches, dir);
 	    break;
@@ -3028,8 +2986,8 @@ ins_complete(c)
 	    complete_pat = vim_strnsave(line, complete_col);
 	    if (complete_pat == NULL)
 		return FAIL;
-	    set_cmd_context(&complete_xp, complete_pat, STRLEN(complete_pat),
-								complete_col);
+	    set_cmd_context(&complete_xp, complete_pat,
+				     (int)STRLEN(complete_pat), complete_col);
 	    if (complete_xp.xp_context == EXPAND_UNSUCCESSFUL
 		    || complete_xp.xp_context == EXPAND_NOTHING)
 		return FAIL;
@@ -3689,14 +3647,19 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 	    old_indent = 0;
 
 	    replace_offset = 0;
-	    if (second_indent >= 0 && first_line)
+	    if (first_line)
 	    {
-		if (State == VREPLACE)
-		    change_indent(INDENT_SET, second_indent, FALSE, NUL);
-		else
-		    (void)set_indent(second_indent, SIN_CHANGED);
+		if (second_indent < 0 && has_format_option(FO_Q_NUMBER))
+		    second_indent = get_number_indent(curwin->w_cursor.lnum -1);
+		if (second_indent >= 0)
+		{
+		    if (State == VREPLACE)
+			change_indent(INDENT_SET, second_indent, FALSE, NUL);
+		    else
+			(void)set_indent(second_indent, SIN_CHANGED);
+		}
+		first_line = FALSE;
 	    }
-	    first_line = FALSE;
 
 	    if (State == VREPLACE)
 	    {
@@ -4217,8 +4180,10 @@ cursor_up(n, upd_topline)
 		--lnum;
 		if (lnum <= 1)
 		    break;
-		/* if we entered a fold, move to the beginning */
-		(void)hasFolding(lnum, &lnum, NULL);
+		/* If we entered a fold, move to the beginning, unless in
+		 * Insert mode: it will open in a moment. */
+		if (n > 0 || !(State & INSERT))
+		    (void)hasFolding(lnum, &lnum, NULL);
 	    }
 	    if (lnum < 1)
 		lnum = 1;
@@ -5264,9 +5229,6 @@ ins_esc(count, cmdchar)
     /* need to position cursor again (e.g. when on a TAB ) */
     changed_cline_bef_curs();
 
-#ifdef FEAT_FOLDING
-    check_stop_insert();
-#endif
 #ifdef FEAT_MOUSE
     setmouse();
 #endif
@@ -5486,6 +5448,9 @@ ins_bs(c, mode, inserted_space_p)
     int		did_backspace = FALSE;
     int		in_indent;
     int		oldState;
+#ifdef FEAT_MBYTE
+    int		p1, p2;
+#endif
 
     /*
      * can't delete anything in an empty file
@@ -5750,7 +5715,20 @@ ins_bs(c, mode, inserted_space_p)
 		replace_do_bs();
 	    else  /* State != REPLACE && State != VREPLACE */
 	    {
+#ifdef FEAT_MBYTE
+		if (p_deco)
+		    utfc_ptr2char(ml_get_cursor(), &p1, &p2);
+#endif
 		(void)del_char(FALSE);
+#ifdef FEAT_MBYTE
+		/*
+		 * If p1 or p2 is non-zero, there are combining characters we
+		 * need to take account of.  Don't back up before the base
+		 * character.
+		 */
+		if (p_deco && (p1 != NUL || p2 != NUL))
+		    inc_cursor();
+#endif
 #ifdef FEAT_RIGHTLEFT
 		if (revins_chars)
 		{
@@ -5887,16 +5865,9 @@ ins_left()
     pos_t	tpos;
 
     undisplay_dollar();
-#ifdef FEAT_FOLDING
-    if (curwin->w_cursor.col == 0)
-	ins_before_move();
-#endif
     tpos = curwin->w_cursor;
     if (oneleft() == OK)
     {
-#ifdef FEAT_FOLDING
-	check_start_insert();
-#endif
 	start_arrow(&tpos);
 #ifdef FEAT_RIGHTLEFT
 	/* If exit reversed string, position is fixed */
@@ -5929,15 +5900,7 @@ ins_home()
     undisplay_dollar();
     tpos = curwin->w_cursor;
     if ((mod_mask & MOD_MASK_CTRL))
-    {
-#ifdef FEAT_FOLDING
-	ins_before_move();
-#endif
 	curwin->w_cursor.lnum = 1;
-#ifdef FEAT_FOLDING
-	check_start_insert();
-#endif
-    }
     curwin->w_cursor.col = 0;
 #ifdef FEAT_VIRTUALEDIT
     curwin->w_coladd = 0;
@@ -5954,15 +5917,7 @@ ins_end()
     undisplay_dollar();
     tpos = curwin->w_cursor;
     if ((mod_mask & MOD_MASK_CTRL))
-    {
-#ifdef FEAT_FOLDING
-	ins_before_move();
-#endif
 	curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
-#ifdef FEAT_FOLDING
-	check_start_insert();
-#endif
-    }
     coladvance((colnr_t)MAXCOL);
     curwin->w_curswant = MAXCOL;
 
@@ -6020,16 +5975,10 @@ ins_right()
     else if (vim_strchr(p_ww, ']') != NULL
 	    && curwin->w_cursor.lnum < curbuf->b_ml.ml_line_count)
     {
-#ifdef FEAT_FOLDING
-	ins_before_move();
-#endif
 	start_arrow(&curwin->w_cursor);
 	curwin->w_set_curswant = TRUE;
 	++curwin->w_cursor.lnum;
 	curwin->w_cursor.col = 0;
-#ifdef FEAT_FOLDING
-	check_start_insert();
-#endif
     }
     else
 	vim_beep();
@@ -6060,18 +6009,12 @@ ins_up(startcol)
     undisplay_dollar();
     tpos = curwin->w_cursor;
     old_topline = curwin->w_topline;
-#ifdef FEAT_FOLDING
-    ins_before_move();
-#endif
     if (cursor_up(1L, TRUE) == OK)
     {
 	if (startcol)
 	    coladvance(getvcol_nolist(&Insstart));
 	if (old_topline != curwin->w_topline)
 	    redraw_later(VALID);
-#ifdef FEAT_FOLDING
-	check_start_insert();
-#endif
 	start_arrow(&tpos);
 #ifdef FEAT_CINDENT
 	can_cindent = TRUE;
@@ -6108,16 +6051,10 @@ ins_down(startcol)
 
     undisplay_dollar();
     tpos = curwin->w_cursor;
-#ifdef FEAT_FOLDING
-    ins_before_move();
-#endif
     if (cursor_down(1L, TRUE) == OK)
     {
 	if (startcol)
 	    coladvance(getvcol_nolist(&Insstart));
-#ifdef FEAT_FOLDING
-	check_start_insert();
-#endif
 	if (old_topline != curwin->w_topline)
 	    redraw_later(VALID);
 	start_arrow(&tpos);
@@ -6491,7 +6428,11 @@ ins_copychar(lnum)
 
     if ((colnr_t)temp > curwin->w_virtcol)
 	--ptr;
+#ifdef FEAT_MBYTE
+    if ((c = mb_ptr2char(ptr)) == NUL)
+#else
     if ((c = *ptr) == NUL)
+#endif
 	vim_beep();
     return c;
 }

@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0t.  Last change: 2001 Jan 20
+*various.txt*   For Vim version 6.0u.  Last change: 2001 Jan 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -129,7 +129,7 @@ g8			Print the hex values of the bytes used in the
 <			Hint: If the {commands} ends in an <Esc>, Vim may
 			think it's the start of a function key, and 'ttimeout'
 			will apply, which makes things very slow, or even wait
-			indefenitely for anything to be typed.  Include the
+			indefinitely for anything to be typed.  Include the
 			[!] in this case.
 			{not in Vi, of course}
 			Not available when |+ex_extra| feature was disabled at

@@ -13,11 +13,11 @@
 #include "vim.h"
 #include "globals.h"
 #include "option.h"
-#ifdef WIN32
+#if defined(WIN32) || defined(WIN32UNIX)
 # include <windows.h>
-#ifndef __MINGW32__
-# include <winnls.h>
-#endif
+# ifndef __MINGW32__
+#  include <winnls.h>
+# endif
 #endif
 #ifdef FEAT_GUI_X11
 # include <X11/Intrinsic.h>
@@ -31,6 +31,8 @@
 /*
  * Code specifically for handling multi-byte characters.
  *
+ * The encoding used in the core is set with 'charcode'.  When 'charcode' is
+ * changed, the following four variables are set (for speed).
  * Currently these types of character encodings are supported:
  *
  * "cc_dbcs"	    When non-zero it tells the type of double byte character
@@ -57,11 +59,41 @@
  *
  * "has_mbyte" is set when "cc_dbcs" or "cc_utf8" is non-zero.
  *
- * If none of these is TRUE 8-bit bytes are used for a character.
+ * If none of these is TRUE, 8-bit bytes are used for a character.  The
+ * encoding isn't currently specified (TODO).
+ *
+ * 'charcode' specifies the encoding used in the core.  This is in registers,
+ * text manipulation, buffers, etc.  Conversion has to be done when characters
+ * in another encoding are received or send:
+ *
+ *		       clipboard
+ *			   ^
+ *			   | (2)
+ *			   V
+ *		   +---------------+
+ *	      (1)  |		   | (3)
+ *  keyboard ----->|	 core	   |-----> display
+ *		   |		   |
+ *		   +---------------+
+ *			   ^
+ *			   | (4)
+ *			   V
+ *			 file
+ *
+ * (1) Typed characters arrive in the current locale.  Conversion is to be
+ *     done when 'charcode' is different from the locale.
+ * (2) Text will be made available with the encoding specified with
+ *     'charcode'.  If this is not sufficient, system-specific conversion
+ *     might be required.
+ * (3) For the GUI the correct font must be selected, no conversion done.
+ *     Otherwise, conversion is to be done when 'charcode' differs from the
+ *     locale.
+ * (4) The encoding of the file is specified with 'filecharcode'.  Conversion
+ *     is to be done when it's different from 'charcode'.
  */
 
 /* Lookup table to quickly get the length in bytes of a UTF-8 character from
- * the first byte of an UTF-8 string.  Byte which are illegal when used as the
+ * the first byte of a UTF-8 string.  Bytes which are illegal when used as the
  * first byte have a one, because these will be used separately. */
 static char utf8len_tab[256] =
 {
@@ -173,7 +205,7 @@ mb_init()
 #endif
 	else
 	{
-#ifdef WIN32
+#if defined(WIN32) || defined(WIN32UNIX)
 	    /* cc_dbcs is set by setting 'filecharcode'.  It becomes a Windows
 	     * CodePage identifier, which we can pass directly in to Windows
 	     * API */
@@ -305,7 +337,7 @@ mb_class(lead, trail)
 		unsigned char tb = trail;
 
 		/* convert process code to JIS */
-# if defined(WIN32) || defined(macintosh)
+# if defined(WIN32) || defined(WIN32UNIX) || defined(macintosh)
 		/* process code is SJIS */
 		if (lb <= 0x9f)
 		    lb = (lb - 0x81) * 2 + 0x21;
@@ -393,7 +425,7 @@ mb_class(lead, trail)
 		if (c1 >= 0xB0 && c1 <= 0xC8)
 		    /* Hangul */
 		    return 20;
-#ifdef WIN32
+#if defined(WIN32) || defined(WIN32UNIX)
 		else if (c1 <= 0xA0 || c2 <= 0xA0)
 		    /* Extended Hangul Region : MS UHC(Unified Hangul Code) */
 		    /* c1: 0x81-0xA0 with c2: 0x41-0x5A, 0x61-0x7A, 0x81-0xFE
@@ -538,7 +570,8 @@ utf_char2cells(c)
 						   Ideographs */
 		|| (c >= 0xfe30 && c <= 0xfe6f)	/* CJK Compatibility Forms */
 		|| (c >= 0xff00 && c <= 0xff5f)	/* Fullwidth Forms */
-		|| (c >= 0xffe0 && c <= 0xffe6)))
+		|| (c >= 0xffe0 && c <= 0xffe6)
+		|| (c >= 0x20000 && c <= 0x2ffff)))
 	return 2;
     return 1;
 }
@@ -1153,14 +1186,11 @@ mb_adjustpos(lp)
     pos_t	*lp;
 {
     char_u	*p;
-    int		o;
 
     if (lp->col > 0)
     {
 	p = ml_get(lp->lnum);
-	o = mb_head_off(p, p + lp->col);
-	if (o > 0)
-	    lp->col -= o;
+	lp->col -= mb_head_off(p, p + lp->col);
     }
 }
 
@@ -2044,11 +2074,14 @@ preedit_callback_setup(GdkIC *ic)
     XFree(preedit_attr);
 }
 
+/*ARGSUSED*/
     static void
 reset_state_setup(GdkIC *ic)
 {
+#ifdef USE_X11R6_XIM
     /* don't change the input context when we call reset */
     XSetICValues(((GdkICPrivate*)ic)->xic, XNResetState, XIMPreserveState, 0);
+#endif
 }
 
     void

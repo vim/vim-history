@@ -188,7 +188,7 @@ endif
 syn region	cPreCondit	start="^\s*#\s*\(if\|ifdef\|ifndef\|elif\)\>" skip="\\$" end="$" end="//"me=s-1 contains=cComment,cCppString,cCharacter,cCppParen,cParenError,cNumbers,cCommentError,cSpaceError
 syn match	cPreCondit	display "^\s*#\s*\(else\|endif\)\>"
 if !exists("c_no_if0")
-  syn region	cCppOut		start="^\s*#\s*if\s\+0\>" end=".\|$" contains=cCppOut2
+  syn region	cCppOut		start="^\s*#\s*if\s\+0\+\>" end=".\|$" contains=cCppOut2
   syn region	cCppOut2	contained start="0" end="^\s*#\s*\(endif\>\|else\>\|elif\>\)" contains=cSpaceError,cCppSkip
   syn region	cCppSkip	contained start="^\s*#\s*\(if\>\|ifdef\>\|ifndef\>\)" skip="\\$" end="^\s*#\s*endif\>" contains=cSpaceError,cCppSkip
 endif

@@ -39,7 +39,7 @@ char_u *set_context_in_map_cmd __ARGS((expand_t *xp, char_u *cmd, char_u *arg, i
 int ExpandMappings __ARGS((regmatch_t *regmatch, int *num_file, char_u ***file));
 int check_abbr __ARGS((int c, char_u *ptr, int col, int mincol));
 int makemap __ARGS((FILE *fd, buf_t *buf));
-int put_escstr __ARGS((FILE *fd, char_u *str, int set));
+int put_escstr __ARGS((FILE *fd, char_u *str, int what));
 void check_map_keycodes __ARGS((void));
 char_u *check_map __ARGS((char_u *keys, int mode, int exact));
 void init_mappings __ARGS((void));

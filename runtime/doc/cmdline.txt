@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.0t.  Last change: 2001 Jan 19
+*cmdline.txt*   For Vim version 6.0u.  Last change: 2001 Jan 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -609,7 +609,8 @@ The file name modifiers can be used after "%", "#", "#n", "<cfile>", "<sfile>",
 These are not available when Vim has been compiled without the |+modify_fname|
 feature.
 These modifiers can be given, in this order:
-	:p	Make file name a full path.  Must be the first modifier.
+	:p	Make file name a full path.  Must be the first modifier.  If
+		the name is a directory a path separator is added at the end.
 	:~	Reduce file name to be relative to the home directory, if
 		possible.  File name is unmodified if it is not below the home
 		directory.
@@ -620,6 +621,9 @@ These modifiers can be given, in this order:
 	:h	Head of the file name (the last component and any separators
 		removed).  Cannot be used with :e, :r or :t.
 		Can be repeated to remove several components at the end.
+		When the file name ends in a path separator, only the path
+		separator is removed.  Thus ":p:h" on a directory name results
+		on the directory name itself (without trailing slash).
 		When the file name is an absolute path (starts with "/" for
 		Unix; "x:\" for MS-DOS, WIN32, OS/2; "drive:" for Amiga), that
 		part is not removed.  When there is no head (path is relative

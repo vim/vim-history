@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0t.  Last change: 2001 Jan 21
+*options.txt*   For Vim version 6.0u.  Last change: 2001 Feb 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -277,7 +277,7 @@ Global options with a local value			*global-local*
 Options are global when you use mostly one value for all buffers.  For some
 global options it's useful to sometimes have a different local value.  You can
 set the local value with ":setlocal".  That buffer will then use the local
-value, while all other buffers use the global value.
+value, while other buffers continue using the global value.
 
 For example, you have two windows, both on C source code.  They use the global
 'makeprg' option.  If you do this in one of the two windows: >
@@ -611,6 +611,9 @@ A jump table for the options with a short description can be found at |X_op|.
 	look good on a light background.  Any other value is illegal.
 	Vim tries to set the default value according to the terminal used.
 	This will not always be correct.
+	Setting this option does not change the background color, it tells Vim
+	what the backround color looks like.  For changing the background
+	color, see |:hi-normal|.
 	When starting the GUI, the default value for 'background' will be
 	"light".  When the value is not set in the .gvimrc, and Vim detects
 	that the background is actually quite dark, 'background' is set to
@@ -761,6 +764,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	The use of |:set+=| and |:set-=| is preferred when adding or removing
 	directories from the list.  This avoids problems when a future version
 	uses another default.
+	This option cannot be set from a |modeline|, for security reasons.
 
 						*'backupext'* *'bex'*
 'backupext' 'bex'	string	(default "~", for VMS: "_")
@@ -773,7 +777,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	".bak" that you want to keep.
 
 						*'backupskip'* *'bsk'*
-'backupskip' 'bsk'	string  (default: "/tmp/*")
+'backupskip' 'bsk'	string  (default: "$TMPDIR/*,/tmp/*")
 			global
 			{not in Vi}
 			{not available when compiled without the |+wildignore|
@@ -783,6 +787,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	the specified file name and the full path name of the file are used.
 	The pattern is used like with |:autocmd|, see |autocmd-patterns|.
 	Watch out for special characters, see |option-backslash|.
+	When $TMPDIR is not defined, it is not used for the default value.
 
 						*'balloondelay'* *'bdlay'*
 'balloondelay' 'bdlay'	number	(default: 600)
@@ -890,21 +895,22 @@ A jump table for the options with a short description can be found at |X_op|.
 			is not set
 	  unload	unload the buffer, also when 'hidden' is set or using
 			|:hide|
-	  delete	delete the buffer, also when 'hidden' is set or using
-			|:hide| (this makes the buffer secret)
+	  delete	delete the buffer from the buffer list, also when
+			'hidden' is set or using |:hide|, like using
+			|:bdelete|
 
 	This option is used together with 'buftype' and 'swapfile' to specify
 	special kinds of buffers.   See |special-buffers|.
 
-						*'bufsecret'* *'bst'*
-'bufsecret' 'bst'	boolean (default: off)
+						*'buflisted'* *'bl'*
+'buflisted' 'bl'	boolean (default: on)
 			local to buffer
 			{not in Vi}
-	When this option is set, the buffer is not used for ":bnext", "ls",
-	the Buffers menu, etc.  This option is set by Vim for buffers that are
-	only used to remember a file name or marks.  Vim resets it when
-	starting to edit a buffer.  But not when moving to a buffer with
-	":bnext", ":blast", etc.
+	When this option is set, the buffer shows up in the buffer list.  If
+	it is reset it is not used for ":bnext", "ls", the Buffers menu, etc.
+	This option is reset by Vim for buffers that are only used to remember
+	a file name or marks.  Vim sets it when starting to edit a buffer.
+	But not when moving to a buffer with ":buffer".
 
 						*'buftype'* *'bt'*
 'buftype' 'bt'		string (default: "")
@@ -957,7 +963,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	a modified version of the following command in your vimrc file to
 	override it: >
 	  :let &cdpath = ',' . substitute(substitute($CDPATH, '[, ]', '\\\0', 'g'), ':', ',', 'g')
-<
+<	This option cannot be set from a |modeline|, for security reasons.
+
 						*'cedit'*
 'cedit'			string	(Vi default: "", Vim default: CTRL-F)
 			global
@@ -1004,7 +1011,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	    ucs-4bl	like ucs-4, big-little endian
 	    unicode	same as ucs-2
 	    utf-8	32 bit UTF-8 encoded Unicode (ISO/IEC 10646-1)
-	    japan	set to use shift-JIS (Windows CP 932) encoding
+	    japan	set to use Japanese DBCS encoding; on Unix: "euc-jp",
+			on Windows: shift-JIS (Windows CP 932)
 	    korea	set to use Korean DBCS
 	    prc		use simplified Chinese encoding
 	    taiwan	use traditional Chinese encoding
@@ -1085,7 +1093,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	Encryption is not done by Vim when using 'charconvert'.  If you want
 	to encrypt the file after conversion, 'charconvert' should take care
 	of this.
-	This option cannot be set from a |modeline|.
+	This option cannot be set from a |modeline|, for security reasons.
 
 				   *'cindent'* *'cin'* *'nocindent'* *'nocin'*
 'cindent' 'cin'		boolean	(default off)
@@ -1206,6 +1214,16 @@ A jump table for the options with a short description can be found at |X_op|.
 	|format-comments|.  See |option-backslash| about using backslashes to
 	insert a space.
 
+						*'commentstring'* *'cms'*
+'commentstring' 'cms'	string	(default "/*%s*/")
+			local to buffer
+			{not in Vi}
+			{not available when compiled without the |+folding|
+			feature}
+	A template for a comment.  The "%s" in the value is replaced with the
+	comment text.  Currently only used to add markers for folding, see
+	|fold-marker|.
+
 			*'compatible'* *'cp'* *'nocompatible'* *'nocp'*
 'compatible' 'cp'	boolean	(default on, off when a .vimrc file is found)
 			global
@@ -1296,16 +1314,16 @@ A jump table for the options with a short description can be found at |X_op|.
 
 						*'complete'* *'cpt'*
 'complete' 'cpt'	string	(default: ".,w,b,u,t,i")
-			global
+			local to buffer
 			{not in Vi}
 	This option specifies how keyword completion |ins-completion| works
 	when CTRL-P or CTRL-N are used.  It indicates the type of completion
 	and the places to scan.  It is a comma separated list of flags:
 	.	scan the current buffer ('wrapscan' is ignored)
 	w	scan buffers from other windows
-	b	scan other loaded buffers, but not secret ones
-	u	scan the unloaded buffers, but not secret ones
-	S	scan the secret buffers only
+	b	scan other loaded buffers that are in the buffer list
+	u	scan the unloaded buffers that are in the buffer list
+	U	scan the buffers that are not in the buffer list
 	k	scan the files given with the 'dictionary' option
 	k{dict}	scan the file {dict}.  Several "k" flags can be given,
 		patterns are valid too.  For example: >
@@ -1355,7 +1373,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	When on direct console I/O is used to obtain a keyboard character.
 	This should work in most cases.  Also see |'bioskey'|.  Together,
 	three methods of console input are available:
-	'conskey'   'bioskey'	    action
+	'conskey'   'bioskey'	    action ~
 	   on	     on or off	    direct console input
 	   off		on	    BIOS
 	   off		off	    STDIN
@@ -1537,8 +1555,7 @@ A jump table for the options with a short description can be found at |X_op|.
 			feature}
 			{not in Vi}
 	Specifies the command to execute cscope.  See |cscopeprg|.
-	When this option is set from a |modeline|, while the 'secure' option
-	is set, you will get a warning message.
+	This option cannot be set from a |modeline|, for security reasons.
 
 				*'cscopetag'* *'cst'* *'nocscopetag'* *'nocst'*
 'cscopetag' 'cst'	boolean (default off)
@@ -1579,7 +1596,7 @@ A jump table for the options with a short description can be found at |X_op|.
 
 						*'define'* *'def'*
 'define' 'def'		string	(default "^#\s*define")
-			global
+			global or local to buffer |global-local|
 			{not in Vi}
 	Pattern to be used to find a macro definition.  It is a search
 	pattern, just like for the "/" command.  This option is used for the
@@ -1592,9 +1609,24 @@ A jump table for the options with a short description can be found at |X_op|.
 		^\(#\s*define\|[a-z]*\s*const\s*[a-z]*\)
 <	When using the ":set" command, you need to double the backslashes!
 
+						*'delcombine'* *'deco'*
+'delcombine' 'deco'	boolean (default off)
+			global
+			{not in Vi}
+			{only available when compiled with the |+multi_byte|
+			feature}
+	If editing Unicode and this option is set, backspace and Normal mode
+	"x" delete each combining character on its own.  When it is off (the
+	default) the character along with its combining characters are
+	deleted.
+
+	This is useful for Hebrew or other languages where one may have
+	combining characters overtop of base characters, and want to remove
+	only the combining ones.
+	
 						*'dictionary'* *'dict'*
 'dictionary' 'dict'	string	(default "")
-			global
+			global or local to buffer |global-local|
 			{not in Vi}
 	List of file names, separated by commas, that are used to lookup words
 	for keyword completion commands |i_CTRL-X_CTRL-K|.  Each file should
@@ -1611,6 +1643,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	The use of |:set+=| and |:set-=| is preferred when adding or removing
 	directories from the list.  This avoids problems when a future version
 	uses another default.
+	Backticks cannot be used in this option for security reasons.
 
 				     *'digraph'* *'dg'* *'nodigraph'* *'nodg'*
 'digraph' 'dg'		boolean	(default off)
@@ -1663,6 +1696,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	The use of |:set+=| and |:set-=| is preferred when adding or removing
 	directories from the list.  This avoids problems when a future version
 	uses another default.
+	This option cannot be set from a |modeline|, for security reasons.
 	{Vi: directory to put temp file in, defaults to "/tmp"}
 
 					*'display'* *'dy'*
@@ -1731,8 +1765,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	'indentexpr').
 	Environment variables are expanded |:set_env|.  See |option-backslash|
 	about including spaces and backslashes.
-	When this option is set from a |modeline|, while the 'secure' option
-	is set, you will get a warning message.
+	This option cannot be set from a |modeline|, for security reasons.
 
 			*'errorbells'* *'eb'* *'noerrorbells'* *'noeb'*
 'errorbells' 'eb'	boolean	(default off)
@@ -1756,6 +1789,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	NOT used for the ":make" command.  See 'makeef' for that.
 	Environment variables are expanded |:set_env|.
 	See |option-backslash| about including spaces and backslashes.
+	This option cannot be set from a |modeline|, for security reasons.
 
 						*'errorformat'* *'efm'*
 'errorformat' 'efm'	string	(default is very long)
@@ -1812,7 +1846,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	setting the 'secure' option (see |initialization|).  Using a local
 	.exrc, .vimrc or .gvimrc is a potential security leak, use with care!
 	also see |.vimrc| and |gui-init|.
-	This option cannot be set from a |modeline|.
+	This option cannot be set from a |modeline|, for security reasons.
 
 					*'filecharcode'* *'fcc'*
 'filecharcode' 'fcc'	string (default: "")
@@ -2011,6 +2045,16 @@ A jump table for the options with a short description can be found at |X_op|.
 	Normally you would set 'allowrevins' and use CTRL-_ in insert mode to
 	toggle this option |i_CTRL-_|.  See |farsi.txt|.
 
+			*'foldclose'* *'fcl'* *'nofoldclose'* *'nofcl'*
+'foldclose' 'fcl'	string (default "")
+			global
+			{not in Vi}
+			{not available when compiled without the |+folding|
+			feature}
+	When set to "all", a fold is closed when the cursor isn't in it and
+	its level is higher than 'foldlevel'.  Useful if you wants folds to
+	automatically close when moving out of them.
+
 						*'foldcolumn'* *'fdc'*
 'foldcolumn' 'fdc'	number (default 0)
 			local to window
@@ -2031,7 +2075,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	When off, all folds are open.  This option can be used to quickly
 	switch between showing all text unfolded and viewing the text with
 	folds (including manually opened or closed folds).  It can be toggled
-	with the |zi| command.
+	with the |zi| command.  The 'foldcolumn' will remain blank when
+	'foldenable' is off.
 	This option is set by commands that create a new fold or close a fold.
 	See |folding|.
 
@@ -2068,6 +2113,21 @@ A jump table for the options with a short description can be found at |X_op|.
 	This option is set by commands like |zm|, |zM| and |zR|.
 	See |fold-foldlevel|.
 
+						*'foldlevelstart'* *'fdls'*
+'foldlevelstart' 'fdls'	number (default: -1)
+			global
+			{not in Vi}
+			{not available when compiled without the |+folding|
+			feature}
+	Sets 'foldlevel' when starting to edit another buffer in a window.
+	Useful to always start editing with all folds closed (value zero),
+	some folds closed (one) or no folds closed (99).
+	This is done before reading any modeline, thus a setting in a modeline
+	overrules this option.
+	It is also done before BufReadPre autocommands, to allow an autocmd to
+	overrule the 'foldlevel' value for specific files.
+	When the value is negative, it is not used.
+
 						*'foldmarker'* *'fmr'*
 'foldmarker' 'fmr'	string (default: "{{{,}}}")
 			local to window
@@ -2092,6 +2152,15 @@ A jump table for the options with a short description can be found at |X_op|.
 	|fold-marker|	marker	    Markers are used to specify folds.
 	|fold-syntax|	syntax	    Syntax highlighting items specify folds.
 
+						*'foldminlines'* *'fml'*
+'foldminlines' 'fml'	number (default: 1)
+			local to window
+			{not in Vi}
+			{not available when compiled without the |+folding|
+			feature}
+	Sets the minimum number of screen lines for a fold to be displayed
+	closed.  Also for manually closed folds.
+
 						*'foldnestmax'* *'fdn'*
 'foldnestmax' 'fdn'	number (default: 20)
 			local to window
@@ -2099,7 +2168,37 @@ A jump table for the options with a short description can be found at |X_op|.
 			{not available when compiled without the |+folding|
 			feature}
 	Sets the maximum nesting of folds for the "indent" and "syntax"
-	methods.  This avoids that too many folds will be created.
+	methods.  This avoids that too many folds will be created.  Using more
+	than 20 doesn't work, because the internal limit is 20.
+
+						*'foldopen'* *'fdo'*
+'foldopen' 'fdo'	string (default: "block,hor,mark,percent,quickfix,
+								  search,tag")
+			global
+			{not in Vi}
+			{not available when compiled without the |+folding|
+			feature}
+	Specifies for which type of commands folds will be opened to show the
+	line with the cursor.  It is a comma separated list of items.
+		item		commands ~
+		all		any
+		block		"(", "{", "[[", "[{", etc.
+		hor		horizontal movements: "l", "w", "fx", etc.
+		mark		jumping to a mark: "'m", CTRL-O, etc.
+		percent		"%"
+		quickfix	":cn", ":crew", ":make", etc.
+		search		search for a pattern: "/", "n", "*", "gd", etc.
+		tag		jumping to a tag: ":ta", CTRL-T, etc.
+	When the command is part of a mapping this option is not used.  Add
+	the |zv| command to the mapping to get the same effect.
+	When a movement command is used for an operator (e.g., "dl" or "y%")
+	this option is not used.  This means the operator will include the
+	whole closed fold. 
+	Note that vertical movements are not here, because it would make it
+	very difficult to move onto a closed fold.
+	In insert mode the folds containing the cursor will always be open.
+	To close folds you can re-apply 'foldlevel' with the |zx| command or
+	set the 'foldclose' option to "all".
 
 						*'foldtext'* *'fdt'*
 'foldtext' 'fdt'	string (default: "foldtext()")
@@ -2134,8 +2233,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	format function will be used |C-indenting|.  Environment variables are
 	expanded |:set_env|.  See |option-backslash| about including spaces
 	and backslashes.
-	When this option is set from a |modeline|, while the 'secure' option
-	is set, you will get a warning message.
+	This option cannot be set from a |modeline|, for security reasons.
 
 				   *'gdefault'* *'gd'* *'nogdefault'* *'nogd'*
 'gdefault' 'gd'		boolean	(default off)
@@ -2176,8 +2274,7 @@ A jump table for the options with a short description can be found at |X_op|.
 		:set grepprg=grep\ -nH
 <	See also the section |:make_makeprg|, since most of the comments there
 	apply equally to 'grepprg'.
-	When this option is set from a |modeline|, while the 'secure' option
-	is set, you will get a warning message.
+	This option cannot be set from a |modeline|, for security reasons.
 
 						*'guicursor'* *'gcr'*
 'guicursor' 'gcr'	string	(default "n-v-c:block-Cursor,ve:ver35-Cursor,
@@ -2332,7 +2429,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	for double-width characters.  The first font that can be loaded is
 	used.
 	Note: The size of these fonts must be exactly twice as wide as the one
-	specified with 'guifont' and the ame height.
+	specified with 'guifont' and the same height.
 	Only used when 'charcode' is set to "utf-8" and 'guifontset' is empty
 	or invalid.
 	When 'guifont' is set and a valid font is found in it and
@@ -2439,6 +2536,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	example: "$VIMRUNTIME/doc/help.txt".  If $VIMRUNTIME is not set, $VIM
 	is also tried.  Also see |$VIMRUNTIME| and |option-backslash|
 	about including spaces and backslashes.
+	This option cannot be set from a |modeline|, for security reasons.
 
 						*'helpheight'* *'hh'*
 'helpheight' 'hh'	number	(default 20)
@@ -2473,7 +2571,8 @@ A jump table for the options with a short description can be found at |X_op|.
 				     e:ErrorMsg,i:IncSearch,l:Search,m:MoreMsg,
 				     M:ModeMsg,n:LineNr,r:Question,
 				     s:StatusLine,S:StatusLineNC,c:VerticalSep,
-				     t:Title,v:Visual,w:WarningMsg")
+				     t:Title,v:Visual,w:WarningMsg,W:WildMenu,
+				     f:Folded,F:FoldColumn")
 			global
 			{not in Vi}
 	This option can be used to set highlighting mode for various
@@ -2502,7 +2601,9 @@ A jump table for the options with a short description can be found at |X_op|.
 			    Selection" Only X11 Gui's |gui-x11| and
 			    |xterm-clipboard|.
 	|hl-WarningMsg|	 w  warning messages
+	|hl-WildMenu|	 W  wildcard matches displayed for 'wildmenu'
 	|hl-Folded|	 f  line used for closed folds
+	|hl-FoldColumn|	 F  'foldcolumn'
 
 	The display modes are:
 		r	reverse		(termcap entry "mr" and "me")
@@ -2740,9 +2841,9 @@ A jump table for the options with a short description can be found at |X_op|.
 
 						*'isfname'* *'isf'*
 'isfname' 'isf'		string	(default for MS-DOS, Win32 and OS/2:
-					    "@,48-57,/,.,-,_,+,,,$,:,!,\"
-				 for AMIGA: "@,48-57,/,.,-,_,+,,,$,:"
-				 otherwise: "@,48-57,/,.,-,_,+,,,$,~")
+					   "@,48-57,/,\,.,-,_,+,,,#,$,%,:,@-@,!"
+				for AMIGA: "@,48-57,/,.,-,_,+,,,$,:"
+				otherwise: "@,48-57,/,.,-,_,+,,,#,$,%,~")
 			global
 			{not in Vi}
 	The characters specified by this option are included in file names and
@@ -2901,8 +3002,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	See |option-backslash| about including spaces and backslashes.
 	Example: >
 		:set keywordprg=man\ -s
-<	When this option is set from a |modeline|, while the 'secure' option
-	is set, you will get a warning message.
+<	This option cannot be set from a |modeline|, for security reasons.
 
 					*'langmap'* *'lmap'*
 'langmap' 'lmap'	string	(default "")
@@ -3113,6 +3213,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	NOT used for the ":cf" command.  See 'errorfile' for that.
 	Environment variables are expanded |:set_env|.
 	See |option-backslash| about including spaces and backslashes.
+	This option cannot be set from a |modeline|, for security reasons.
 
 						*'makeprg'* *'mp'*
 'makeprg' 'mp'		string	(default "make", VMS: "MMS")
@@ -3129,8 +3230,7 @@ A jump table for the options with a short description can be found at |X_op|.
 <	The placeholder "$*" can be given (even multiple times) to specify
 	where the arguments will be included, for example: >
 	    :set makeprg=latex\ \\\\nonstopmode\ \\\\input\\{$*}
-<	When this option is set from a |modeline|, while the 'secure' option
-	is set, you will get a warning message.
+<	This option cannot be set from a |modeline|, for security reasons.
 
 						*'matchpairs'* *'mps'*
 'matchpairs' 'mps'	string	(default "(:),{:},[:]")
@@ -3228,10 +3328,10 @@ A jump table for the options with a short description can be found at |X_op|.
 'modified' 'mod'	boolean	(default off)
 			local to buffer
 			{not in Vi}
-	When on the buffer is considered to be modified.  This option is set
+	When on, the buffer is considered to be modified.  This option is set
 	by every command that makes a change to the buffer.  The undo command
 	will reset it when all changes have been undone.  When 'buftype' is
-	"nowrite" or "nofile" this option will be set, but will be ignored.
+	"nowrite" or "nofile" this option may be set, but will be ignored.
 
 						*'more'* *'nomore'*
 'more'			boolean	(Vim default: on, Vi default: off)
@@ -3408,15 +3508,14 @@ A jump table for the options with a short description can be found at |X_op|.
 	This defines what bases Vim will consider for numbers when using the
 	CTRL-A and CTRL-X commands for adding to and subtracting from a number
 	respectively; see |CTRL-A| for more info on these commands.
-	If "alpha" is included, single alphabetical characters will be
-	incremented or decremented.  This is useful for a list with a letter
-	index a), b), etc.
-	If "octal" is included, numbers that start with a zero will be
-	considered to be octal.  Example: Using CTRL-A on "007" results in
-	"010".
-	If "hex" is included, numbers starting with "0x" or "0X" will be
-	considered to be hexadecimal.  Example: Using CTRL-X on "0x100"
-	results in "0x0ff".
+	alpha	if included, single alphabetical characters will be
+		incremented or decremented.  This is useful for a list with a
+		letter index a), b), etc.
+	octal	if included, numbers that start with a zero will be considered
+		to be octal.  Example: Using CTRL-A on "007" results in "010".
+	hex	if included, numbers starting with "0x" or "0X" will be
+		considered to be hexadecimal.  Example: Using CTRL-X on
+		"0x100" results in "0x0ff".
 	Numbers which simply begin with a digit in the range 1-9 are always
 	considered decimal.  This also happens for numbers that are not
 	recognized as octal or hex.
@@ -3429,6 +3528,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	line numbers (this is the default when 'compatible' isn't set).
 	When a long, wrapped line doesn't start with the first character, '-'
 	characters are put before the number.
+	See |hl-LineNr| for the highlighting used for the number.
 
 					*'osfiletype'* *'oft'*
 'osfiletype' 'oft'	string (RISC-OS default: "Text",
@@ -3534,7 +3634,7 @@ A jump table for the options with a short description can be found at |X_op|.
 'path' 'pa'		string	(default on Unix: ".,/usr/include,,"
 				   on OS/2:       ".,/emx/include,,"
 				   other systems: ".,,")
-			global
+			global or local to buffer |global-local|
 			{not in Vi}
 	This is a list of directories which will be searched when using the
 	|gf|, [f, ]f, ^Wf, |:find| and other commands, provided that the file
@@ -3594,6 +3694,7 @@ A jump table for the options with a short description can be found at |X_op|.
 		:let &path = &path . "," . substitute($INCL, ';', ',', 'g')
 <	Replace the ';' with a ':' or whatever separator is used.  Note that
 	this doesn't work when $INCL contains a comma or white space.
+	This option cannot be set from a |modeline|, for security reasons.
 
 				    *'previewheight'* *'pvh'*
 'previewheight' 'pvh'	number (default 12)
@@ -3788,6 +3889,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	to find files which replace a distributed runtime files.  You can put
 	a directory after $VIMRUNTIME to find files which add to distributed
 	runtime files.
+	This option cannot be set from a |modeline|, for security reasons.
 
 						*'scroll'* *'scr'*
 'scroll' 'scr'		number	(default 'lines' / 2)
@@ -3861,9 +3963,10 @@ A jump table for the options with a short description can be found at |X_op|.
 			   scrolled to keep the same relative offset.  When
 			   going back to the other window, it still uses the
 			   same relative offset.
+	Also see |scroll-binding|.
 
 						*'sections'* *'sect'*
-'sections' 'sect'		string	(default "SHNHH HUnhsh")
+'sections' 'sect'	string	(default "SHNHH HUnhsh")
 			global
 	Specifies the nroff macros that separate sections.  These are pairs of
 	two letters (See |object-motions|).  The default makes a section start
@@ -3880,7 +3983,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	only used if the ".vimrc" or ".exrc" is not owned by you.  This can be
 	dangerous if the systems allows users to do a "chown".  You better set
 	'secure' at the end of your ~/.vimrc then.
-	This option cannot be set from a |modeline|.
+	This option cannot be set from a |modeline|, for security reasons.
 
 						*'selection'* *'sel'*
 'selection' 'sel'	string	(default "inclusive")
@@ -3928,11 +4031,15 @@ A jump table for the options with a short description can be found at |X_op|.
 	   blank	empty windows
 	   buffers	hidden and unloaded buffers, not just those in windows
 	   curdir	the current directory
-	   folds	manually created folds
+	   folds	manually created folds, opened/closed folds and local
+	   		fold options
 	   globals	global variables that start with an uppercase letter
 			and contain at least one lowercase letter.
 	   help		the help window
-	   options	options and mappings
+	   localoptions	options and mappings local to a window or buffer (not
+			global values for local options)
+	   options	all options and mappings (also global values for local
+			options)
 	   resize	size of the Vim window: 'lines' and 'columns'
 	   sesdir	the directory in which the session file is located
 			will become the current directory (useful with
@@ -3979,7 +4086,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	For unknown reasons, when using "4dos.com" the current directory is
 	changed to "C:\".  To avoid this set 'shell' like this: >
 		:set shell=command.com\ /c\ 4dos
-<	The 'shell' option cannot be set from a |modeline|.
+<	This option cannot be set from a |modeline|, for security reasons.
 
 						*'shellcmdflag'* *'shcf'*
 'shellcmdflag' 'shcf'	string	(default: "-c", MS-DOS and Win32, when 'shell'
@@ -3992,7 +4099,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	reduce the need to set this option by the user.  It's not used for
 	OS/2 (EMX figures this out itself).  See |option-backslash| about
 	including spaces and backslashes.  See |dos-shell|.
-	This option cannot be set from a |modeline|.
+	This option cannot be set from a |modeline|, for security reasons.
 
 						*'shellpipe'* *'sp'*
 'shellpipe' 'sp'	string	(default ">", "| tee", "|& tee" or "2>&1| tee")
@@ -4021,7 +4128,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	Don't forget to precede the space with a backslash: ":set sp=\ ".
 	In the future pipes may be used for filtering and this option will
 	become obsolete (at least for Unix).
-	This option cannot be set from a |modeline|.
+	This option cannot be set from a |modeline|, for security reasons.
 
 						*'shellquote'* *'shq'*
 'shellquote' 'shq'	string	(default: ""; MS-DOS and Win32, when 'shell'
@@ -4037,7 +4144,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	or bash, where it should be "\"".  The default is adjusted according
 	the value of 'shell', to reduce the need to set this option by the
 	user.  See |dos-shell|.
-	This option cannot be set from a |modeline|.
+	This option cannot be set from a |modeline|, for security reasons.
 
 						*'shellredir'* *'srr'*
 'shellredir' 'srr'	string	(default ">", ">&" or ">%s 2>&1")
@@ -4062,7 +4169,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	explicitly set before.
 	In the future pipes may be used for filtering and this option will
 	become obsolete (at least for Unix).
-	This option cannot be set from a |modeline|.
+	This option cannot be set from a |modeline|, for security reasons.
 
 			*'shellslash'* *'ssl'* *'noshellslash'* *'nossl'*
 'shellslash' 'ssl'	boolean	(default off)
@@ -4106,7 +4213,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	Shell or bash, where it should be "\"".  The default is adjusted
 	according the value of 'shell', to reduce the need to set this option
 	by the user.  See |dos-shell|.
-	This option cannot be set from a |modeline|.
+	This option cannot be set from a |modeline|, for security reasons.
 
 			*'shiftround'* *'sr'* *'noshiftround'* *'nosr'*
 'shiftround' 'sr'	boolean	(default off)
@@ -4207,6 +4314,10 @@ A jump table for the options with a short description can be found at |X_op|.
 			|+cmdline_info| feature}
 	Show (partial) command in status line.  Set this option off if your
 	terminal is slow.
+	In Visual mode the size of the selected area is shown:
+	- When selecting characters within a line, the number of characters.
+	- When selecting more than one line, the number of lines.
+	- When selecting a block, the size in screen characters: linesxcolumns.
 	NOTE: This option is set to the Vi default value when 'compatible' is
 	set and to the Vim default value when 'compatible' is reset.
 
@@ -4478,9 +4589,14 @@ A jump table for the options with a short description can be found at |X_op|.
 	temporarily to that of the window (and buffer) whose statusline is
 	currently being drawn. The expression will evaluate in this context.
 	The variable "actual_curbuf" is set to the 'bufnr()' number of the
-	real current buffer.
+	real current buffer.  The expression is evaluated in the |sandbox|.
 
-	A result of all digits is regarded a number for display purposes.
+	If the statusline is not updated when you want it (e.g., after setting
+	a variable that's used in an expression), you can force an update by
+	setting an option without changing its value.  Example: >
+		:let &ro = &ro
+
+<	A result of all digits is regarded a number for display purposes.
 	Otherwise the result is taken as flag text and applied to the rules
 	described above.
 
@@ -4514,9 +4630,9 @@ A jump table for the options with a short description can be found at |X_op|.
 	Files with these suffixes get a lower priority when multiple files
 	match a wildcard.  See |suffixes|.  Commas can be used to separate the
 	suffixes.  Spaces after the comma are ignored.  A dot is also seen as
-	the start of a suffix.  To include a dot or comma in a suffix, precede
-	it with a backslash (see |option-backslash| about including spaces and
-	backslashes).
+	the start of a suffix.  To avoid a dot or comma being recognized as a
+	separator, precede it with a backslash (see |option-backslash| about
+	including spaces and backslashes).
 	See 'wildignore' for completely ignoring files.
 	The use of |:set+=| and |:set-=| is preferred when adding or removing
 	suffixes from the list.  This avoids problems when a future version
@@ -4780,7 +4896,7 @@ A jump table for the options with a short description can be found at |X_op|.
 
 						*'thesaurus'* *'tsr'*
 'thesaurus' 'tsr'	string	(default "")
-			global
+			global or local to buffer |global-local|
 			{not in Vi}
 	List of file names, separated by commas, that are used to lookup words
 	for thesesaurus completion commands |i_CTRL-X_CTRL-T|.  Each line in
@@ -4794,6 +4910,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	The use of |:set+=| and |:set-=| is preferred when adding or removing
 	directories from the list.  This avoids problems when a future version
 	uses another default.
+	Backticks cannot be used in this option for security reasons.
 
 			     *'tildeop'* *'top'* *'notildeop'* *'notop'*
 'tildeop' 'top'		boolean	(default off)
@@ -5025,6 +5142,7 @@ A jump table for the options with a short description can be found at |X_op|.
 							*dec-mouse*
 	   dec		DEC terminal mouse handling.  The mouse generates a
 			rather complex sequence, starting with "<Esc>[".
+
 	The mouse handling must be enabled at compile time |+mouse_xterm|
 	|+mouse_dec| |+mouse_netterm|.
 	Only "xterm"(2) is really recognized.  NetTerm mouse codes are always
@@ -5053,12 +5171,12 @@ A jump table for the options with a short description can be found at |X_op|.
 	e.g., 3, to speed up displaying.
 
 						*'ttytype'* *'tty'*
-'ttytype'	'tty'		string	(default from $TERM)
+'ttytype' 'tty'		string	(default from $TERM)
 			global
 	Alias for 'term', see above.
 
 						*'undolevels'* *'ul'*
-'undolevels' 'ul'		number	(default 100, 1000 for Unix, VMS,
+'undolevels' 'ul'	number	(default 100, 1000 for Unix, VMS,
 						Win32 and OS/2)
 			global
 			{not in Vi}
@@ -5091,7 +5209,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	is set to zero, existing swap files are not deleted.
 	Also see |'swapsync'|.
 	This option has no meaning in buffers where |'buftype'| is "nofile"
-	or "scratch".
+	or "nowrite".
 
 						*'updatetime'* *'ut'*
 'updatetime' 'ut'	number	(default 4000)
@@ -5130,6 +5248,7 @@ A jump table for the options with a short description can be found at |X_op|.
 			{not available when compiled without the +mksession
 			feature}
 	Name of the directory where to store files for |:mkview|.
+	This option cannot be set from a |modeline|, for security reasons.
 
 						*'viewoptions'* *'vop'*
 'viewoptions' 'vop'	string	(default: "folds,options,cursor")
@@ -5141,8 +5260,10 @@ A jump table for the options with a short description can be found at |X_op|.
 	list of words.  Each word enables saving and restoring something:
 	   word		save and restore ~
 	   cursor	cursor position in file and in window
-	   folds	manually created folds
-	   options	options and mappings
+	   folds	manually created folds, opened/closed folds and local
+	   		fold options
+	   options	options and mappings local to a window or buffer (not
+			global values for local options)
 	   unix		with Unix end-of-line format (single <NL>), even when
 			on Windows or DOS
 
@@ -5229,6 +5350,8 @@ A jump table for the options with a short description can be found at |X_op|.
 			previous search and substitute patterns.
 	no %		The buffer list will not be saved nor read back.
 	no h		'hlsearch' highlighting will be restored.
+
+	This option cannot be set from a |modeline|, for security reasons.
 
 					    *'virtualedit'* *'ve'*
 'virtualedit' 've'	string  (default "")

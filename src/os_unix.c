@@ -1779,14 +1779,6 @@ mch_FullName(fname, buf, len, force)
 	    retval = FAIL;
 	    *buf = NUL;
 	}
-	l = STRLEN(buf);
-	if (l >= len)
-	    retval = FAIL;
-	else
-	{
-	    if (l && buf[l - 1] != '/')
-		STRCAT(buf, "/");
-	}
 	if (p != NULL)
 	{
 #ifdef HAVE_FCHDIR
@@ -1798,6 +1790,15 @@ mch_FullName(fname, buf, len, force)
 	    else
 #endif
 		mch_chdir((char *)olddir);
+	}
+
+	l = STRLEN(buf);
+	if (l >= len)
+	    retval = FAIL;
+	else
+	{
+	    if (l > 0 && buf[l - 1] != '/' && *fname != NUL)
+		STRCAT(buf, "/");
 	}
     }
     /* Catch file names which are too long. */
@@ -3385,9 +3386,10 @@ RealWaitForChar(fd, msec, check_for_gpm)
 		&& FD_ISSET(ConnectionNumber(xterm_dpy), &rfds))
 	{
 	    xterm_update();	      /* Maybe we should hand out clipboard */
-	    if (vim_is_input_buf_empty())
-		ret--;
-	    if (msec < 0 && !ret)
+	    --ret;
+	    /* continue looping when we only got the X event and the input
+	     * buffer is empty */
+	    if (msec < 0 && ret == 0 && vim_is_input_buf_empty())
 		continue;
 	}
 # endif
@@ -3618,7 +3620,7 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
     *num_file = 0;	/* default: no files found */
     files_alloced = EXPL_ALLOC_INC; /* how much space is allocated */
     files_free = EXPL_ALLOC_INC;    /* how much space is not used  */
-    *file = (char_u **) alloc(sizeof(char_u **) * files_alloced);
+    *file = (char_u **)alloc(sizeof(char_u **) * files_alloced);
     if (*file == NULL)
 	return FAIL;
 

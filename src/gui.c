@@ -389,7 +389,7 @@ gui_init()
      * Set up the fonts.  First use a font specified with "-fn" or "-font".
      */
     if (font_argument != NULL)
-	set_option_value((char_u *)"gfn", 0L, (char_u *)font_argument, FALSE);
+	set_option_value((char_u *)"gfn", 0L, (char_u *)font_argument, 0);
     if (
 #ifdef FEAT_XFONTSET
 	    (*p_guifontset == NUL

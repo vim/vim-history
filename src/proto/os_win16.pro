@@ -13,7 +13,6 @@ int mch_isdir __ARGS((char_u *name));
 int mch_can_exe __ARGS((char_u *name));
 int mch_nodetype __ARGS((char_u *name));
 int mch_call_shell __ARGS((char_u *cmd, int options));
-int mch_expandpath __ARGS((garray_t *gap, char_u *path, int flags));
 void mch_delay __ARGS((long msec, int ignoreinput));
 int mch_remove __ARGS((char_u *name));
 void mch_breakcheck __ARGS((void));

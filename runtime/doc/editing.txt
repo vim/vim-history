@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0t.  Last change: 2001 Jan 10
+*editing.txt*   For Vim version 6.0u.  Last change: 2001 Feb 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -337,6 +337,7 @@ allow file names with embedded spaces (like the Amiga).  Example: The command
 command that accepts more than one file name (like ":next file1 file2")
 embedded spaces must be escaped with a backslash.
 
+						*backtick-expansion*
 On Unix you can also use backticks in the file name, for example: >
 	:e `find . -name ver\\*.c -print`
 The backslashes before the star are required to prevent "ver*.c" to be
@@ -344,6 +345,12 @@ expanded by the shell before executing the find program.
 This also works for most other systems, with the restriction that the
 backticks must be around the whole item.  It is not possible to have text
 directly before the first or just after the last backtick.
+
+You can have the backicks expanded as a Vim expression, instead of
+an external command, by using the syntax `={expr}` e.g. >
+ 	:let foo='bar'
+ 	:e `=foo . '.c' `
+edits "bar.c".  Note that the expression cannot contain a backtick.
 
 You can use the ":e!" command if you messed up the buffer and want to start
 all over again.  The ":e" command is only useful if you have changed the
@@ -405,13 +412,13 @@ format <CR><NL> is used.  Also see |DOS-format-write|.
 You can read a file in DOS format and write it in Unix format.  This will
 replace all <CR><NL> pairs by <NL> (assuming 'fileformats' includes "dos"): >
 	:e file
-	:set 'fileformat'=unix
+	:set fileformat=unix
 	:w
 If you read a file in Unix format and write with DOS format, all <NL>
 characters will be replaced with <CR><NL> (assuming 'fileformats' includes
 "unix"): >
 	:e file
-	:set 'fileformat'=dos
+	:set fileformat=dos
 	:w
 
 If you start editing a new file and the 'fileformats' option is not empty

@@ -1,7 +1,7 @@
 /* main.c */
 void main_loop __ARGS((int cmdwin));
 int process_env __ARGS((char_u *env, int is_viminit));
-void getout __ARGS((int r));
+void getout __ARGS((int exitval));
 int toF_TyA __ARGS((int c));
 int fkmap __ARGS((int c));
 void conv_to_pvim __ARGS((void));

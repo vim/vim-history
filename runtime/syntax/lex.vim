@@ -1,7 +1,9 @@
 " Vim syntax file
 " Language:	Lex
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	December 13, 2000
+" Last Change:	February 1, 2001
+" Option:
+"   lex_uses_cpp : if this variable exists, then C++ is loaded rather than C
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")
@@ -10,10 +12,18 @@ endif
 
 " Read the C syntax to start with
 if version >= 600
-  runtime! syntax/c.vim
+  if exists("lex_uses_cpp")
+    runtime! syntax/cpp.vim
+  else
+    runtime! syntax/c.vim
+  endif
   unlet b:current_syntax
 else
-  so <sfile>:p:h/c.vim
+  if exists("lex_uses_cpp")
+    so <sfile>:p:h/cpp.vim
+  else
+    so <sfile>:p:h/c.vim
+  endif
 endif
 
 " --- Lex stuff ---

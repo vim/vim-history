@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.0t.  Last change: 2001 Jan 14
+*repeat.txt*    For Vim version 6.0u.  Last change: 2001 Jan 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -375,10 +375,12 @@ About the additional commands in debug mode:
 DEFINING BREAKPOINTS
 							*:breaka* *:breakadd*
 :breaka[dd] func [lnum] {name}
-		Set a breakpoint in a function.
+		Set a breakpoint in a function.  Example: >
+			:breakadd func Explore
 
 :breaka[dd] file [lnum] {name}
-		Set a breakpoint in a sourced file.
+		Set a breakpoint in a sourced file.  Example: >
+			:breakadd file 43 .vimrc
 
 The [lnum] is the line number of the breakpoint.  Vim will stop at or after
 this line.  When omitted line 1 is used.
@@ -387,7 +389,7 @@ this line.  When omitted line 1 is used.
 pattern is like what is used for autocommands.  There must be a full match (as
 if the pattern starts with "^" and ends in "$").  A "*" matches any sequence
 of characters.  'ignorecase' is not used, but "\c" can be used in the pattern
-to ignore case |/\c|.
+to ignore case |/\c|.  Don't include the () for the function name!
 
 The match for sourced scripts is done against the full file name.  Examples: >
 	breakadd file explorer

@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	man
 " Maintainer:	Sung-Hyun Nam <namsh@kldp.org>
-" Last Change:	2001 Jan 19
+" Last Change:	2001 Jan 26
 
 " To make the ":Man" command available before editing a manual page, source
 " this script from your startup vimrc file.
@@ -32,7 +32,7 @@ if &filetype == "man"
 endif
 
 if !exists(":Man")
-  com -nargs=1 Man call <SID>GetPage(<f-args>)
+  com -nargs=1 Man call s:GetPage(<f-args>)
 endif
 
 " Define functions only once.
@@ -66,7 +66,25 @@ func <SID>PreGetPage(cnt)
     let sect = a:cnt
     let page = expand("<cword>")
   endif
-  call <SID>GetPage(sect, page)
+  call s:GetPage(sect, page)
+endfunc
+
+func <SID>GetCmdArg(sect, page)
+  if a:sect == ''
+    return a:page
+  endif
+  return s:man_sect_arg.' '.a:sect.' '.a:page
+endfunc
+
+func <SID>FindPage(sect, page)
+  let where = system("/usr/bin/man ".s:man_find_arg.' '
+	      \ .s:GetCmdArg(a:sect, a:page))
+  if where !~ "^/"
+    if substitute(where, ".* \\(.*$\\)", "\\1", "") !~ "^/"
+      return 0
+    endif
+  endif
+  return 1
 endfunc
 
 func <SID>GetPage(...)
@@ -79,14 +97,10 @@ func <SID>GetPage(...)
   else
     return
   endif
-  if sect != ""
-    let where = system("/usr/bin/man ".s:man_find_arg." ".sect." ".page)
-    if where !~ "^/"
-      let sect = ""
-    endif
+  if sect != "" && s:FindPage(sect, page) == 0
+    let sect = ""
   endif
-  let where = system("/usr/bin/man ".s:man_find_arg." ".sect." ".page)
-  if where !~ "^/"
+  if s:FindPage(sect, page) == 0
     echo "\nCannot find a '".page."'."
     return
   endif
@@ -119,14 +133,18 @@ func <SID>GetPage(...)
 
   exec "norm 1GdG"
   let $MANWIDTH = winwidth(0)
-  exec "r!/usr/bin/man ".s:man_sect_arg." ".sect." ".page." | col -b"
+  exec "r!/usr/bin/man ".s:GetCmdArg(sect, page)." | col -b"
   " Is it OK?  It's for remove blank or message line.
   if getline(1) =~ "^\s*$"
     exec "norm 2G/^[^\s]\<cr>kd1G"
   endif
+  if getline('$') == ''
+    exec "norm G?^\s*[^\s]\<cr>2jdG"
+  endif
+  1
   setl ft=man nomod
   setl bufhidden=hide
-  setl bufsecret
+  setl nobuflisted
 endfunc
 
 func <SID>PopPage()

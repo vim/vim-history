@@ -12,6 +12,9 @@
 #include "vim.h"
 
 static void save_re_pat __ARGS((int idx, char_u *pat, int magic));
+#ifdef FEAT_EVAL
+static int first_submatch __ARGS((regmmatch_t *rp));
+#endif
 static int inmacro __ARGS((char_u *, char_u *));
 static int check_linecomment __ARGS((char_u *line));
 static int cls __ARGS((void));
@@ -489,19 +492,8 @@ searchit(buf, pos, dir, str, count, options, pat_use)
 		    ptr = ml_get_buf(buf, lnum, FALSE);
 		    startcol = regmatch.startpos[0].col;
 		    endpos = regmatch.endpos[0];
-
 # ifdef FEAT_EVAL
-		    /* find the first subpat that matched */
-		    for (submatch = 1; ; ++submatch)
-		    {
-			if (regmatch.startpos[submatch].lnum >= 0)
-			    break;
-			if (submatch == 9)
-			{
-			    submatch = 0;
-			    break;
-			}
-		    }
+		    submatch = first_submatch(&regmatch);
 # endif
 
 		    /*
@@ -561,6 +553,9 @@ searchit(buf, pos, dir, str, count, options, pat_use)
 			    }
 			    startcol = regmatch.startpos[0].col;
 			    endpos = regmatch.endpos[0];
+# ifdef FEAT_EVAL
+			    submatch = first_submatch(&regmatch);
+# endif
 
 			    /* Need to get the line pointer again, a
 			     * multi-line search may have made it invalid. */
@@ -596,6 +591,9 @@ searchit(buf, pos, dir, str, count, options, pat_use)
 				match_ok = TRUE;
 				startcol = regmatch.startpos[0].col;
 				endpos = regmatch.endpos[0];
+# ifdef FEAT_EVAL
+				submatch = first_submatch(&regmatch);
+# endif
 			    }
 			    else
 				break;
@@ -722,6 +720,30 @@ searchit(buf, pos, dir, str, count, options, pat_use)
 
     return submatch + 1;
 }
+
+#ifdef FEAT_EVAL
+/*
+ * Return the number of the first subpat that matched.
+ */
+    static int
+first_submatch(rp)
+    regmmatch_t	*rp;
+{
+    int		submatch;
+
+    for (submatch = 1; ; ++submatch)
+    {
+	if (rp->startpos[submatch].lnum >= 0)
+	    break;
+	if (submatch == 9)
+	{
+	    submatch = 0;
+	    break;
+	}
+    }
+    return submatch;
+}
+#endif
 
 /*
  * Highest level string search function.
@@ -3339,9 +3361,10 @@ find_pattern_in_path(ptr, dir, len, whole, skip_comments,
 	    goto fpip_end;
 	incl_regmatch.rm_ic = FALSE;	/* don't ignore case in incl. pat. */
     }
-    if (type == FIND_DEFINE && *p_def != NUL)
+    if (type == FIND_DEFINE && (*curbuf->b_p_def != NUL || *p_def != NUL))
     {
-	def_regmatch.regprog = vim_regcomp(p_def, (int)p_magic);
+	def_regmatch.regprog = vim_regcomp(*curbuf->b_p_def == NUL
+				     ? p_def : curbuf->b_p_def, (int)p_magic);
 	if (def_regmatch.regprog == NULL)
 	    goto fpip_end;
 	def_regmatch.rm_ic = FALSE;	/* don't ignore case in define pat. */

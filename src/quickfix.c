@@ -669,11 +669,11 @@ qf_get_fnum(directory, fname)
 		    ptr = vim_strsave(fname);
 	    }
 	    /* Use concatenated directory name and file name */
-	    fnum = buflist_add(ptr, FALSE, TRUE);
+	    fnum = buflist_add(ptr, FALSE, FALSE);
 	    vim_free(ptr);
 	    return fnum;
 	}
-	return buflist_add(fname, FALSE, TRUE);
+	return buflist_add(fname, FALSE, FALSE);
 #endif
     }
 }
@@ -887,6 +887,9 @@ qf_jump(dir, errornr, forceit)
 #endif
     int		    print_message = TRUE;
     int		    len;
+#ifdef FEAT_FOLDING
+    int		    old_KeyTyped = KeyTyped;	/* getting file may reset it */
+#endif
 
     if (qf_curlist >= qf_listcount || qf_lists[qf_curlist].qf_count == 0)
     {
@@ -1066,6 +1069,12 @@ qf_jump(dir, errornr, forceit)
 	else
 	    beginline(BL_WHITE | BL_FIX);
 
+#ifdef FEAT_FOLDING
+	if ((fdo_flags & FDO_QUICKFIX)
+		&& old_KeyTyped
+		&& (old_curbuf != curbuf || old_lnum != curwin->w_cursor.lnum))
+	    foldOpenCursor();
+#endif
 	if (print_message)
 	{
 	    /* Update the screen before showing the message */
@@ -1453,9 +1462,10 @@ ex_cwindow(eap)
 	{
 	    (void)do_ecmd(0, NULL, NULL, NULL, ECMD_ONE, ECMD_HIDE);
 	    /* switch off 'swapfile' */
-	    set_option_value((char_u *)"swf", 0L, NULL, TRUE);
-	    set_option_value((char_u *)"bt", 0L, (char_u *)"quickfix", TRUE);
-	    set_option_value((char_u *)"bh", 0L, (char_u *)"delete", TRUE);
+	    set_option_value((char_u *)"swf", 0L, NULL, OPT_LOCAL);
+	    set_option_value((char_u *)"bt", 0L, (char_u *)"quickfix",
+								   OPT_LOCAL);
+	    set_option_value((char_u *)"bh", 0L, (char_u *)"delete", OPT_LOCAL);
 	}
 	else if (buf != curbuf)
 	    set_curbuf(buf, DOBUF_GOTO);
@@ -1586,12 +1596,12 @@ qf_fill_buffer()
     /* Set the 'filetype' to "qf" each time after filling the buffer.  This
      * resembles reading a file into a buffer, it's more logical when using
      * autocommands. */
-    set_option_value((char_u *)"ft", 0L, (char_u *)"qf", TRUE);
+    set_option_value((char_u *)"ft", 0L, (char_u *)"qf", OPT_LOCAL);
 
 #ifdef FEAT_AUTOCMD
     apply_autocmds(EVENT_BUFREADPOST, (char_u *)"quickfix", NULL,
 							       FALSE, curbuf);
-    apply_autocmds(EVENT_BUFREADAFTER, (char_u *)"quickfix", NULL,
+    apply_autocmds(EVENT_BUFWINENTER, (char_u *)"quickfix", NULL,
 							       FALSE, curbuf);
 #endif
 

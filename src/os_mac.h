@@ -93,9 +93,6 @@ struct stat
 #endif
 #define BREAKCHECK_SKIP	    1	    /* call mch_breakcheck() each time, it's
 				       quite fast */
-#ifdef FEAT_NORMAL
-# define VIM_BACKTICK		    /* internal backtick expansion */
-#endif
 #define HAVE_STRFTIME
 
 #ifndef __POWERPC__

@@ -1,4 +1,4 @@
-*tagsearch.txt* For Vim version 6.0t.  Last change: 2001 Jan 20
+*tagsearch.txt* For Vim version 6.0u.  Last change: 2001 Jan 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -374,7 +374,7 @@ current file  changed	!   option	  action	~
 							*tag-security*
 Note that Vim forbids some commands, for security reasons.  This works like
 using the 'secure' option for exrc/vimrc files in the current directory.  See
-|trojan-horse|.
+|trojan-horse| and |sandbox|.
 When the {tagaddress} changes a buffer, you will get a warning message:
 	"WARNING: tag command changed a buffer!!!"
 In a future version changing the buffer will be impossible.  All this for

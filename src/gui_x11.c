@@ -1082,11 +1082,13 @@ gui_mch_init()
     /* Uncomment this to enable synchronous mode for debugging */
     /* XSynchronize(gui.dpy, True); */
 
+#if 0 /* not needed? */
     /*
      * So converters work.
      */
     XtInitializeWidgetClass(applicationShellWidgetClass);
     XtInitializeWidgetClass(topLevelShellWidgetClass);
+#endif
 
     /*
      * The applicationShell is created as an unrealized

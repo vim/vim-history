@@ -437,7 +437,8 @@ static int my_isesc(c) int c; { return c == ESC; }
  * If not: NULL is returned; If so, a function of the sort is* is returned and
  * the name is skipped.
  */
-#if defined(macintosh) || defined(__BEOS__) || defined(__NeXT__)
+#if defined(macintosh) || defined(__BEOS__) || defined(__NeXT__) \
+	|| defined(__APPLE_CC__)
 /* the compiler doesn't understand the other one */
     static int (*
 skip_class_name(char_u **pp))__ARGS((int))
@@ -1342,17 +1343,32 @@ regatom(flagp)
 	ret = regnode(EOW);
 	break;
 
-	/*
-	 * Character classes.
-	 */
-      case Magic('_'):	    /* "\_x" is character class plus newline */
+      case Magic('_'):
+	c = getchr();
+	if (c == '^' || c == Magic('^'))	/* "\_^" is start-of-line */
+	{
+	    ret = regnode(BOL);
+	    break;
+	}
+	if (c == '$' || c == Magic('$'))	/* "\_$" is end-of-line */
+	{
+	    ret = regnode(EOL);
+#if defined(FEAT_SYN_HL) || defined(PROTO)
+	    had_eol = TRUE;
+#endif
+	    break;
+	}
+
+	/* "\_x" is character class plus newline */
 	extra = ADD_NL;
 	*flagp |= HASNL;
-	c = getchr();
 	if (c == '[' || c == Magic('['))
 	    goto collection;
 	/*FALLTHROUGH*/
 
+	/*
+	 * Character classes.
+	 */
       case Magic('.'):
       case Magic('i'):
       case Magic('I'):
@@ -2071,7 +2087,7 @@ peekchr()
 	    break;
 	case '$':
 	    /* '$' is only magic as the very last char and if it's in front of
-	     * either "\|" or "\)" */
+	     * either "\|", "\)", "\&", or "\n" */
 	    {
 		char_u *p = regparse + 1;
 
@@ -2081,7 +2097,8 @@ peekchr()
 		    p += 2;
 		if (p[0] == NUL
 			|| (p[0] == '\\'
-			    && (p[1] == '|' || p[1] == '&' || p[1] == ')')))
+			    && (p[1] == '|' || p[1] == '&' || p[1] == ')'
+				|| p[1] == 'n')))
 		    curchr = Magic('$');
 	    }
 	    break;
@@ -4220,8 +4237,13 @@ reg_restore(save)
 {
     if (REG_MULTI)
     {
-	reglnum = save->rs_u.pos.lnum;
-	regline = myreg_getline(reglnum);
+	if (reglnum != save->rs_u.pos.lnum)
+	{
+	    /* only call myreg_getline() when the line number changed to save
+	     * a bit of time */
+	    reglnum = save->rs_u.pos.lnum;
+	    regline = myreg_getline(reglnum);
+	}
 	reginput = regline + save->rs_u.pos.col;
     }
     else
@@ -4695,6 +4717,9 @@ regprop(op)
 	p = "MULTIBYTECODE";
 	break;
 #endif
+      case NEWL:
+	p = "NEWL";
+	break;
       default:
 	sprintf(buf + STRLEN(buf), "corrupt %d", OP(op));
 	p = NULL;

@@ -65,6 +65,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'bioskey'	options.txt	/*'bioskey'*
 'bk'	options.txt	/*'bk'*
 'bkc'	options.txt	/*'bkc'*
+'bl'	options.txt	/*'bl'*
 'bomb'	options.txt	/*'bomb'*
 'breakat'	options.txt	/*'breakat'*
 'brk'	options.txt	/*'brk'*
@@ -72,10 +73,9 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'bs'	options.txt	/*'bs'*
 'bsdir'	options.txt	/*'bsdir'*
 'bsk'	options.txt	/*'bsk'*
-'bst'	options.txt	/*'bst'*
 'bt'	options.txt	/*'bt'*
 'bufhidden'	options.txt	/*'bufhidden'*
-'bufsecret'	options.txt	/*'bufsecret'*
+'buflisted'	options.txt	/*'buflisted'*
 'buftype'	options.txt	/*'buftype'*
 'cb'	options.txt	/*'cb'*
 'cc'	options.txt	/*'cc'*
@@ -99,10 +99,12 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'clipboard'	options.txt	/*'clipboard'*
 'cmdheight'	options.txt	/*'cmdheight'*
 'cmdwinheight'	options.txt	/*'cmdwinheight'*
+'cms'	options.txt	/*'cms'*
 'co'	options.txt	/*'co'*
 'columns'	options.txt	/*'columns'*
 'com'	options.txt	/*'com'*
 'comments'	options.txt	/*'comments'*
+'commentstring'	options.txt	/*'commentstring'*
 'compatible'	options.txt	/*'compatible'*
 'complete'	options.txt	/*'complete'*
 'confirm'	options.txt	/*'confirm'*
@@ -122,8 +124,10 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'csverb'	options.txt	/*'csverb'*
 'cwh'	options.txt	/*'cwh'*
 'debug'	options.txt	/*'debug'*
+'deco'	options.txt	/*'deco'*
 'def'	options.txt	/*'def'*
 'define'	options.txt	/*'define'*
+'delcombine'	options.txt	/*'delcombine'*
 'dg'	options.txt	/*'dg'*
 'dict'	options.txt	/*'dict'*
 'dictionary'	options.txt	/*'dictionary'*
@@ -158,13 +162,16 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'exrc'	options.txt	/*'exrc'*
 'fcc'	options.txt	/*'fcc'*
 'fccs'	options.txt	/*'fccs'*
+'fcl'	options.txt	/*'fcl'*
 'fcs'	options.txt	/*'fcs'*
 'fdc'	options.txt	/*'fdc'*
 'fde'	options.txt	/*'fde'*
 'fdi'	options.txt	/*'fdi'*
 'fdl'	options.txt	/*'fdl'*
+'fdls'	options.txt	/*'fdls'*
 'fdm'	options.txt	/*'fdm'*
 'fdn'	options.txt	/*'fdn'*
+'fdo'	options.txt	/*'fdo'*
 'fdt'	options.txt	/*'fdt'*
 'fe'	options.txt	/*'fe'*
 'fen'	options.txt	/*'fen'*
@@ -181,16 +188,21 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'fkmap'	options.txt	/*'fkmap'*
 'fl'	vi_diff.txt	/*'fl'*
 'flash'	vi_diff.txt	/*'flash'*
+'fml'	options.txt	/*'fml'*
 'fmr'	options.txt	/*'fmr'*
 'fo'	options.txt	/*'fo'*
+'foldclose'	options.txt	/*'foldclose'*
 'foldcolumn'	options.txt	/*'foldcolumn'*
 'foldenable'	options.txt	/*'foldenable'*
 'foldexpr'	options.txt	/*'foldexpr'*
 'foldignore'	options.txt	/*'foldignore'*
 'foldlevel'	options.txt	/*'foldlevel'*
+'foldlevelstart'	options.txt	/*'foldlevelstart'*
 'foldmarker'	options.txt	/*'foldmarker'*
 'foldmethod'	options.txt	/*'foldmethod'*
+'foldminlines'	options.txt	/*'foldminlines'*
 'foldnestmax'	options.txt	/*'foldnestmax'*
+'foldopen'	options.txt	/*'foldopen'*
 'foldtext'	options.txt	/*'foldtext'*
 'formatoptions'	options.txt	/*'formatoptions'*
 'formatprg'	options.txt	/*'formatprg'*
@@ -381,9 +393,11 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'noex'	options.txt	/*'noex'*
 'noexpandtab'	options.txt	/*'noexpandtab'*
 'noexrc'	options.txt	/*'noexrc'*
+'nofcl'	options.txt	/*'nofcl'*
 'nofen'	options.txt	/*'nofen'*
 'nofk'	options.txt	/*'nofk'*
 'nofkmap'	options.txt	/*'nofkmap'*
+'nofoldclose'	options.txt	/*'nofoldclose'*
 'nofoldenable'	options.txt	/*'nofoldenable'*
 'nogd'	options.txt	/*'nogd'*
 'nogdefault'	options.txt	/*'nogdefault'*
@@ -741,6 +755,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 't_ts'	term.txt	/*'t_ts'*
 't_ue'	term.txt	/*'t_ue'*
 't_us'	term.txt	/*'t_us'*
+'t_ut'	term.txt	/*'t_ut'*
 't_vb'	term.txt	/*'t_vb'*
 't_ve'	term.txt	/*'t_ve'*
 't_vi'	term.txt	/*'t_vi'*
@@ -970,6 +985,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 -H	starting.txt	/*-H*
 -L	starting.txt	/*-L*
 -N	starting.txt	/*-N*
+-O	starting.txt	/*-O*
 -R	starting.txt	/*-R*
 -S	starting.txt	/*-S*
 -T	starting.txt	/*-T*
@@ -1083,8 +1099,10 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 /\]	pattern.txt	/*\/\\]*
 /\^	pattern.txt	/*\/\\^*
 /\_	pattern.txt	/*\/\\_*
+/\_$	pattern.txt	/*\/\\_$*
 /\_.	pattern.txt	/*\/\\_.*
 /\_[]	pattern.txt	/*\/\\_[]*
+/\_^	pattern.txt	/*\/\\_^*
 /\a	pattern.txt	/*\/\\a*
 /\b	pattern.txt	/*\/\\b*
 /\bar	pattern.txt	/*\/\\bar*
@@ -1470,6 +1488,12 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :fixdel	options.txt	/*:fixdel*
 :fo	fold.txt	/*:fo*
 :fold	fold.txt	/*:fold*
+:foldc	fold.txt	/*:foldc*
+:foldclose	fold.txt	/*:foldclose*
+:foldd	fold.txt	/*:foldd*
+:folddoc	fold.txt	/*:folddoc*
+:folddoclosed	fold.txt	/*:folddoclosed*
+:folddoopen	fold.txt	/*:folddoopen*
 :foldo	fold.txt	/*:foldo*
 :foldopen	fold.txt	/*:foldopen*
 :fu	eval.txt	/*:fu*
@@ -1491,6 +1515,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :helpt	various.txt	/*:helpt*
 :helptags	various.txt	/*:helptags*
 :hi	syntax.txt	/*:hi*
+:hi-normal	syntax.txt	/*:hi-normal*
+:hi-normal-cterm	syntax.txt	/*:hi-normal-cterm*
 :hide	windows.txt	/*:hide*
 :highlight	syntax.txt	/*:highlight*
 :highlight-default	syntax.txt	/*:highlight-default*
@@ -2211,6 +2237,7 @@ Athena	gui_x11.txt	/*Athena*
 B	motion.txt	/*B*
 BeBox	os_beos.txt	/*BeBox*
 BeOS	os_beos.txt	/*BeOS*
+BufAdd	autocmd.txt	/*BufAdd*
 BufCreate	autocmd.txt	/*BufCreate*
 BufDelete	autocmd.txt	/*BufDelete*
 BufEnter	autocmd.txt	/*BufEnter*
@@ -2218,14 +2245,14 @@ BufFilePost	autocmd.txt	/*BufFilePost*
 BufFilePre	autocmd.txt	/*BufFilePre*
 BufHidden	autocmd.txt	/*BufHidden*
 BufLeave	autocmd.txt	/*BufLeave*
+BufNew	autocmd.txt	/*BufNew*
 BufNewFile	autocmd.txt	/*BufNewFile*
 BufRead	autocmd.txt	/*BufRead*
-BufReadAfter	autocmd.txt	/*BufReadAfter*
 BufReadCmd	autocmd.txt	/*BufReadCmd*
 BufReadPost	autocmd.txt	/*BufReadPost*
 BufReadPre	autocmd.txt	/*BufReadPre*
-BufSecret	autocmd.txt	/*BufSecret*
 BufUnload	autocmd.txt	/*BufUnload*
+BufWinEnter	autocmd.txt	/*BufWinEnter*
 BufWinLeave	autocmd.txt	/*BufWinLeave*
 BufWipeout	autocmd.txt	/*BufWipeout*
 BufWrite	autocmd.txt	/*BufWrite*
@@ -2399,7 +2426,6 @@ Insert	insert.txt	/*Insert*
 Insert-mode	insert.txt	/*Insert-mode*
 Internationalization	multibyte.txt	/*Internationalization*
 J	change.txt	/*J*
-James-Bond	windows.txt	/*James-Bond*
 Japanese	multibyte.txt	/*Japanese*
 K	various.txt	/*K*
 Korean	multibyte.txt	/*Korean*
@@ -2474,6 +2500,7 @@ Syntax	autocmd.txt	/*Syntax*
 T	motion.txt	/*T*
 TCL	if_tcl.txt	/*TCL*
 TERM	starting.txt	/*TERM*
+TTpro-telnet	syntax.txt	/*TTpro-telnet*
 Tab	intro.txt	/*Tab*
 Tcl	if_tcl.txt	/*Tcl*
 TermChanged	autocmd.txt	/*TermChanged*
@@ -2598,6 +2625,7 @@ ZZ	editing.txt	/*ZZ*
 [quotex]	intro.txt	/*[quotex]*
 [range]	cmdline.txt	/*[range]*
 [star	motion.txt	/*[star*
+[z	fold.txt	/*[z*
 [{	motion.txt	/*[{*
 \z9	syntax.txt	/*\\z9*
 ]	index.txt	/*]*
@@ -2621,6 +2649,7 @@ ZZ	editing.txt	/*ZZ*
 ]m	motion.txt	/*]m*
 ]p	change.txt	/*]p*
 ]star	motion.txt	/*]star*
+]z	fold.txt	/*]z*
 ]}	motion.txt	/*]}*
 ^	motion.txt	/*^*
 _	motion.txt	/*_*
@@ -2730,6 +2759,7 @@ b:var	eval.txt	/*b:var*
 backslash	intro.txt	/*backslash*
 backspace	intro.txt	/*backspace*
 backspace-delete	version4.txt	/*backspace-delete*
+backtick-expansion	editing.txt	/*backtick-expansion*
 backup	editing.txt	/*backup*
 backup-changed	version4.txt	/*backup-changed*
 backup-extension	version4.txt	/*backup-extension*
@@ -3130,6 +3160,7 @@ expr-quote	eval.txt	/*expr-quote*
 expr-register	eval.txt	/*expr-register*
 expr-star	eval.txt	/*expr-star*
 expr-string	eval.txt	/*expr-string*
+expr-unary-+	eval.txt	/*expr-unary-+*
 expr-unary--	eval.txt	/*expr-unary--*
 expr-variable	eval.txt	/*expr-variable*
 expr1	eval.txt	/*expr1*
@@ -3185,6 +3216,8 @@ fnamemodify()	eval.txt	/*fnamemodify()*
 fo-table	change.txt	/*fo-table*
 fold-behavior	fold.txt	/*fold-behavior*
 fold-commands	fold.txt	/*fold-commands*
+fold-create-marker	fold.txt	/*fold-create-marker*
+fold-delete-marker	fold.txt	/*fold-delete-marker*
 fold-expr	fold.txt	/*fold-expr*
 fold-foldcolumn	fold.txt	/*fold-foldcolumn*
 fold-foldlevel	fold.txt	/*fold-foldlevel*
@@ -3317,6 +3350,7 @@ greek	options.txt	/*greek*
 grep	tagsearch.txt	/*grep*
 group-name	syntax.txt	/*group-name*
 gs	various.txt	/*gs*
+gsp.vim	syntax.txt	/*gsp.vim*
 gstar	pattern.txt	/*gstar*
 gtk-tooltip-colors	gui_x11.txt	/*gtk-tooltip-colors*
 gu	change.txt	/*gu*
@@ -3421,12 +3455,14 @@ histget()	eval.txt	/*histget()*
 histnr()	eval.txt	/*histnr()*
 history	cmdline.txt	/*history*
 hit-enter	message.txt	/*hit-enter*
+hit-return	message.txt	/*hit-return*
 hitest.vim	syntax.txt	/*hitest.vim*
 hl-Cursor	syntax.txt	/*hl-Cursor*
 hl-CursorIM	syntax.txt	/*hl-CursorIM*
 hl-Directory	syntax.txt	/*hl-Directory*
 hl-ErrorMsg	syntax.txt	/*hl-ErrorMsg*
 hl-FillColumn	syntax.txt	/*hl-FillColumn*
+hl-FoldColumn	syntax.txt	/*hl-FoldColumn*
 hl-Folded	syntax.txt	/*hl-Folded*
 hl-IncSearch	syntax.txt	/*hl-IncSearch*
 hl-LineNr	syntax.txt	/*hl-LineNr*
@@ -3623,6 +3659,8 @@ iw	motion.txt	/*iw*
 i{	motion.txt	/*i{*
 i}	motion.txt	/*i}*
 j	motion.txt	/*j*
+java-cinoptions	change.txt	/*java-cinoptions*
+java-indenting	change.txt	/*java-indenting*
 java-syntax	syntax.txt	/*java-syntax*
 java.vim	syntax.txt	/*java.vim*
 jtags	tagsearch.txt	/*jtags*
@@ -3851,8 +3889,8 @@ new-script	version5.txt	/*new-script*
 new-script-5.4	version5.txt	/*new-script-5.4*
 new-search-path	version6.txt	/*new-search-path*
 new-searchpat	version6.txt	/*new-searchpat*
-new-secret-buffers	version6.txt	/*new-secret-buffers*
 new-session-files	version5.txt	/*new-session-files*
+new-unlisted-buffers	version6.txt	/*new-unlisted-buffers*
 new-user-defined	version5.txt	/*new-user-defined*
 new-utf-8	version6.txt	/*new-utf-8*
 new-vertsplit	version6.txt	/*new-vertsplit*
@@ -3964,6 +4002,8 @@ postscr-syntax	syntax.txt	/*postscr-syntax*
 postscr.vim	syntax.txt	/*postscr.vim*
 ppwiz-syntax	syntax.txt	/*ppwiz-syntax*
 ppwiz.vim	syntax.txt	/*ppwiz.vim*
+press-enter	message.txt	/*press-enter*
+press-return	message.txt	/*press-return*
 prevcount-variable	eval.txt	/*prevcount-variable*
 preview-window	windows.txt	/*preview-window*
 prevnonblank()	eval.txt	/*prevnonblank()*
@@ -4119,7 +4159,6 @@ search-offset	pattern.txt	/*search-offset*
 search-pattern	pattern.txt	/*search-pattern*
 search-range	pattern.txt	/*search-range*
 searchpair()	eval.txt	/*searchpair()*
-secret-buffer	windows.txt	/*secret-buffer*
 section	motion.txt	/*section*
 sed-syntax	syntax.txt	/*sed-syntax*
 sed.vim	syntax.txt	/*sed.vim*
@@ -4360,6 +4399,7 @@ t_ts_old	version4.txt	/*t_ts_old*
 t_ue	term.txt	/*t_ue*
 t_undo	version4.txt	/*t_undo*
 t_us	term.txt	/*t_us*
+t_ut	term.txt	/*t_ut*
 t_vb	term.txt	/*t_vb*
 t_ve	term.txt	/*t_ve*
 t_vi	term.txt	/*t_vi*
@@ -4481,6 +4521,7 @@ undo-remarks	undo.txt	/*undo-remarks*
 undo-two-ways	undo.txt	/*undo-two-ways*
 undo.txt	undo.txt	/*undo.txt*
 unix	os_unix.txt	/*unix*
+unlisted-buffer	windows.txt	/*unlisted-buffer*
 up-down-motions	motion.txt	/*up-down-motions*
 uppercase	change.txt	/*uppercase*
 use-visual-cmds	version4.txt	/*use-visual-cmds*
@@ -4801,6 +4842,8 @@ z<Right>	scroll.txt	/*z<Right>*
 zA	fold.txt	/*zA*
 zC	fold.txt	/*zC*
 zD	fold.txt	/*zD*
+zE	fold.txt	/*zE*
+zF	fold.txt	/*zF*
 zH	scroll.txt	/*zH*
 zL	scroll.txt	/*zL*
 zM	fold.txt	/*zM*
@@ -4808,6 +4851,7 @@ zN	fold.txt	/*zN*
 zN<CR>	scroll.txt	/*zN<CR>*
 zO	fold.txt	/*zO*
 zR	fold.txt	/*zR*
+zX	fold.txt	/*zX*
 z^	scroll.txt	/*z^*
 za	fold.txt	/*za*
 zb	scroll.txt	/*zb*
@@ -4817,6 +4861,8 @@ ze	scroll.txt	/*ze*
 zf	fold.txt	/*zf*
 zh	scroll.txt	/*zh*
 zi	fold.txt	/*zi*
+zj	fold.txt	/*zj*
+zk	fold.txt	/*zk*
 zl	scroll.txt	/*zl*
 zm	fold.txt	/*zm*
 zn	fold.txt	/*zn*
@@ -4824,6 +4870,8 @@ zo	fold.txt	/*zo*
 zr	fold.txt	/*zr*
 zs	scroll.txt	/*zs*
 zt	scroll.txt	/*zt*
+zv	fold.txt	/*zv*
+zx	fold.txt	/*zx*
 zz	scroll.txt	/*zz*
 {	motion.txt	/*{*
 {Visual}	intro.txt	/*{Visual}*

@@ -904,7 +904,7 @@ VimCommand(PyObject *self, PyObject *args)
     Py_BEGIN_ALLOW_THREADS
     Python_Lock_Vim();
 
-    do_cmdline((char_u *)cmd, NULL, NULL, DOCMD_NOWAIT|DOCMD_VERBOSE);
+    do_cmdline_cmd((char_u *)cmd);
     update_screen(VALID);
 
     Python_Release_Vim();

@@ -308,6 +308,10 @@ do_tag(tag, type, count, forceit, verbose)
 		curwin->w_cursor.col = saved_fmark.mark.col;
 		curwin->w_set_curswant = TRUE;
 		check_cursor();
+#ifdef FEAT_FOLDING
+		if ((fdo_flags & FDO_TAG) && KeyTyped)
+		    foldOpenCursor();
+#endif
 
 		/* remove the old list of matches */
 		FreeWild(num_matches, matches);
@@ -1990,7 +1994,6 @@ get_tagfname(first, buf)
 	    }
 	    else
 	    {
-		char_u  *filepath = NULL;
 		char_u  *filename = NULL;
 
 		/* Stop when used all parts of 'tags'. */
@@ -2005,25 +2008,20 @@ get_tagfname(first, buf)
 		 * Copy next file name into buf.
 		 */
 		buf[0] = NUL;
-		(void)copy_option_part(&np, buf, MAXPATHL, " ,");
+		(void)copy_option_part(&np, buf, MAXPATHL - 1, " ,");
 
 #ifdef FEAT_PATH_EXTRA
 		r_ptr = vim_findfile_stopdir(buf);
 #else
 		r_ptr = NULL;
 #endif
+		/* move the filename one char forward and truncate the
+		 * filepath with a NUL */
 		filename = gettail(buf);
-		if (filename == buf)
-		{
-		    filepath = (char_u *)"";
-		}
-		else
-		{
-		    filepath = buf;
-		    *(filename - 1) = 0;
-		}
+		mch_memmove(filename + 1, filename, STRLEN(filename) + 1);
+		*filename++ = NUL;
 
-		search_ctx = vim_findfile_init(filepath, filename, r_ptr, 100,
+		search_ctx = vim_findfile_init(buf, filename, r_ptr, 100,
 			FALSE, /* don't free visited list */
 			FALSE, /* we search for a file */
 			search_ctx);
@@ -2348,7 +2346,9 @@ jumpto_tag(lbuf, forceit)
     win_t	*curwin_save = NULL;
 #endif
     char_u	*full_fname = NULL;
-    int		previous_changedtick;
+#ifdef FEAT_FOLDING
+    int		old_KeyTyped = KeyTyped;    /* getting the file may reset it */
+#endif
 
     pbuf = alloc(LSIZE);
 
@@ -2469,16 +2469,15 @@ jumpto_tag(lbuf, forceit)
 
 	save_secure = secure;
 	secure = 1;
+#ifdef HAVE_SANDBOX
+	++sandbox;
+#endif
 	save_magic = p_magic;
 	p_magic = FALSE;	/* always execute with 'nomagic' */
 #ifdef FEAT_SEARCH_EXTRA
 	/* Save value of no_hlsearch, jumping to a tag is not a real search */
 	save_no_hlsearch = no_hlsearch;
 #endif
-
-	/* remember current changedtick, so that we know if any changes are
-	 * being made by the command from the tags file */
-	previous_changedtick = global_changedtick;
 
 	/*
 	 * If 'cpoptions' contains 't', store the search pattern for the "n"
@@ -2582,23 +2581,21 @@ jumpto_tag(lbuf, forceit)
 	else
 	{
 	    curwin->w_cursor.lnum = 1;		/* start command in line 1 */
-	    do_cmdline(pbuf, NULL, NULL, DOCMD_NOWAIT|DOCMD_VERBOSE);
+	    do_cmdline_cmd(pbuf);
 	    retval = OK;
 	}
 
 	/*
-	 * When the command has set the b_changed flag, give a warning to the
-	 * user about this.
+	 * When the command has done something that is not allowed make sure
+	 * the error message can be seen.
 	 */
-	if (global_changedtick != previous_changedtick)
-	{
-	    secure = 2;
-	    EMSG(_("WARNING: tag command changed a buffer!!!"));
-	}
-	if (secure == 2)	    /* done something that is not allowed */
+	if (secure == 2)
 	    wait_return(TRUE);
 	secure = save_secure;
 	p_magic = save_magic;
+#ifdef HAVE_SANDBOX
+	--sandbox;
+#endif
 #ifdef FEAT_SEARCH_EXTRA
 	/* restore no_hlsearch when keeping the old search pattern */
 	if (search_options)
@@ -2609,12 +2606,19 @@ jumpto_tag(lbuf, forceit)
 	if (getfile_result == -1)
 	    retval = OK;
 
-	/*
-	 * For a help buffer: Put the cursor line at the top of the window,
-	 * the help subject will be below it.
-	 */
-	if (curbuf->b_help)
-	    set_topline(curwin, curwin->w_cursor.lnum);
+	if (retval == OK)
+	{
+	    /*
+	     * For a help buffer: Put the cursor line at the top of the window,
+	     * the help subject will be below it.
+	     */
+	    if (curbuf->b_help)
+		set_topline(curwin, curwin->w_cursor.lnum);
+#ifdef FEAT_FOLDING
+	    if ((fdo_flags & FDO_TAG) && old_KeyTyped)
+		foldOpenCursor();
+#endif
+	}
 
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 	if (g_do_tagpreview && curwin != curwin_save && win_valid(curwin_save))
