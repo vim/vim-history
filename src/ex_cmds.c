@@ -5064,7 +5064,7 @@ struct sign
     char_u	*sn_name;	/* name of sign */
     char_u	*sn_icon;	/* name of pixmap */
 #ifdef FEAT_SIGN_ICONS
-    XImage	*sn_image;	/* icon image */
+    void	*sn_image;	/* icon image */
 #endif
     char_u	*sn_text;	/* text used instead of pixmap */
     int		sn_line_hl;	/* highlight ID for line */
@@ -5565,7 +5565,7 @@ sign_get_image(typenr)
 
     for (sp = first_sign; sp != NULL; sp = sp->sn_next)
 	if (sp->sn_typenr == typenr)
-	    return (void *)sp->sn_image;
+	    return sp->sn_image;
     return NULL;
 }
 #endif

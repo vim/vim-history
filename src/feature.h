@@ -1064,8 +1064,9 @@
  */
 #if defined(FEAT_BIG) || defined(FEAT_SUN_WORKSHOP)
 # define FEAT_SIGNS
-# if (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)) \
-	&& defined(HAVE_X11_XPM_H)
+# if ((defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)) \
+	&& defined(HAVE_X11_XPM_H)) \
+	|| (defined(WIN32) && defined(FEAT_GUI))
 #  define FEAT_SIGN_ICONS
 # endif
 #endif
