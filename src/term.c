@@ -1394,7 +1394,7 @@ struct builtin_term builtin_termcaps[] =
 # define DEFAULT_TERM	(char_u *)"beos-ansi"
 #endif
 
-#if defined(MACOS)
+#ifndef DEFAULT_TERM
 # define DEFAULT_TERM	(char_u *)"dumb"
 #endif
 
