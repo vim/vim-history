@@ -900,12 +900,6 @@ if test "$enable_fontset" = "yes"; then
 fi
 
 dnl Checks for libraries.
-AC_MSG_CHECKING(for sequent/ptx)
-AC_EGREP_CPP(yes,
-[#ifdef _SEQUENT_
-  yes;
-#endif
-], LIBS="$LIBS -linet" AC_MSG_RESULT(yes), AC_MSG_RESULT(no))
 
 AC_MSG_CHECKING(quality of toupper)
 AC_TRY_RUN([#include <ctype.h>
