@@ -81,37 +81,39 @@ an 50.20.150 &Syntax.CD.Cyn++ :cal SetSyn("cynpp")<CR>
 an 50.20.160 &Syntax.CD.Cynlib :cal SetSyn("cynlib")<CR>
 an 50.20.170 &Syntax.CD.Cascading\ Style\ Sheets :cal SetSyn("css")<CR>
 an 50.20.180 &Syntax.CD.Century\ Term :cal SetSyn("cterm")<CR>
-an 50.20.190 &Syntax.CD.CHILL :cal SetSyn("ch")<CR>
+an 50.20.190 &Syntax.CD.CH\ script :cal SetSyn("ch")<CR>
 an 50.20.200 &Syntax.CD.ChangeLog :cal SetSyn("changelog")<CR>
 an 50.20.210 &Syntax.CD.Cheetah\ template :cal SetSyn("cheetah")<CR>
-an 50.20.220 &Syntax.CD.Clean :cal SetSyn("clean")<CR>
-an 50.20.230 &Syntax.CD.Clever :cal SetSyn("cl")<CR>
-an 50.20.240 &Syntax.CD.Clipper :cal SetSyn("clipper")<CR>
-an 50.20.250 &Syntax.CD.Cold\ Fusion :cal SetSyn("cf")<CR>
-an 50.20.260 &Syntax.CD.Config.Cfg\ Config\ file :cal SetSyn("cfg")<CR>
-an 50.20.270 &Syntax.CD.Config.Generic\ Config\ file :cal SetSyn("conf")<CR>
-an 50.20.280 &Syntax.CD.Config.Configure\.in :cal SetSyn("config")<CR>
-an 50.20.290 &Syntax.CD.Ctrl-H :cal SetSyn("ctrlh")<CR>
-an 50.20.300 &Syntax.CD.Cobol :cal SetSyn("cobol")<CR>
-an 50.20.310 &Syntax.CD.CSP :cal SetSyn("csp")<CR>
-an 50.20.320 &Syntax.CD.CUPL.CUPL :cal SetSyn("cupl")<CR>
-an 50.20.330 &Syntax.CD.CUPL.Simulation :cal SetSyn("cuplsim")<CR>
-an 50.20.340 &Syntax.CD.CVS.commit\ file :cal SetSyn("cvs")<CR>
-an 50.20.350 &Syntax.CD.CVS.cvsrc :cal SetSyn("cvsrc")<CR>
-an 50.20.370 &Syntax.CD.Debian.Debian\ ChangeLog :cal SetSyn("debchangelog")<CR>
-an 50.20.380 &Syntax.CD.Debian.Debian\ Control :cal SetSyn("debcontrol")<CR>
-an 50.20.390 &Syntax.CD.Diff :cal SetSyn("diff")<CR>
-an 50.20.400 &Syntax.CD.Digital\ Command\ Lang :cal SetSyn("dcl")<CR>
-an 50.20.410 &Syntax.CD.DNS/BIND\ zone :cal SetSyn("dns")<CR>
-an 50.20.420 &Syntax.CD.DocBook :cal SetSyn("docbk")<CR>
-an 50.20.430 &Syntax.CD.Dot :cal SetSyn("dot")<CR>
-an 50.20.440 &Syntax.CD.Dracula :cal SetSyn("dracula")<CR>
-an 50.20.450 &Syntax.CD.DSSSL :cal SetSyn("dsl")<CR>
-an 50.20.460 &Syntax.CD.DTD :cal SetSyn("dtd")<CR>
-an 50.20.470 &Syntax.CD.DTML\ (Zope) :cal SetSyn("dtml")<CR>
-an 50.20.480 &Syntax.CD.Dylan.Dylan :cal SetSyn("dylan")<CR>
-an 50.20.490 &Syntax.CD.Dylan.Dylan\ interface :cal SetSyn("dylanintr")<CR>
-an 50.20.500 &Syntax.CD.Dylan.Dylan\ lid :cal SetSyn("dylanlid")<CR>
+an 50.20.220 &Syntax.CD.CHILL :cal SetSyn("chill")<CR>
+an 50.20.230 &Syntax.CD.Clean :cal SetSyn("clean")<CR>
+an 50.20.240 &Syntax.CD.Clever :cal SetSyn("cl")<CR>
+an 50.20.250 &Syntax.CD.Clipper :cal SetSyn("clipper")<CR>
+an 50.20.260 &Syntax.CD.Cold\ Fusion :cal SetSyn("cf")<CR>
+an 50.20.270 &Syntax.CD.Config.Cfg\ Config\ file :cal SetSyn("cfg")<CR>
+an 50.20.280 &Syntax.CD.Config.Generic\ Config\ file :cal SetSyn("conf")<CR>
+an 50.20.290 &Syntax.CD.Config.Configure\.in :cal SetSyn("config")<CR>
+an 50.20.300 &Syntax.CD.Ctrl-H :cal SetSyn("ctrlh")<CR>
+an 50.20.310 &Syntax.CD.Cobol :cal SetSyn("cobol")<CR>
+an 50.20.320 &Syntax.CD.CSP :cal SetSyn("csp")<CR>
+an 50.20.330 &Syntax.CD.CUPL.CUPL :cal SetSyn("cupl")<CR>
+an 50.20.340 &Syntax.CD.CUPL.Simulation :cal SetSyn("cuplsim")<CR>
+an 50.20.350 &Syntax.CD.CVS.commit\ file :cal SetSyn("cvs")<CR>
+an 50.20.360 &Syntax.CD.CVS.cvsrc :cal SetSyn("cvsrc")<CR>
+an 50.20.380 &Syntax.CD.Debian.Debian\ ChangeLog :cal SetSyn("debchangelog")<CR>
+an 50.20.390 &Syntax.CD.Debian.Debian\ Control :cal SetSyn("debcontrol")<CR>
+an 50.20.400 &Syntax.CD.Diff :cal SetSyn("diff")<CR>
+an 50.20.410 &Syntax.CD.Digital\ Command\ Lang :cal SetSyn("dcl")<CR>
+an 50.20.420 &Syntax.CD.Dircolors :cal SetSyn("dircolors")<CR>
+an 50.20.430 &Syntax.CD.DNS/BIND\ zone :cal SetSyn("dns")<CR>
+an 50.20.440 &Syntax.CD.DocBook :cal SetSyn("docbk")<CR>
+an 50.20.450 &Syntax.CD.Dot :cal SetSyn("dot")<CR>
+an 50.20.460 &Syntax.CD.Dracula :cal SetSyn("dracula")<CR>
+an 50.20.470 &Syntax.CD.DSSSL :cal SetSyn("dsl")<CR>
+an 50.20.480 &Syntax.CD.DTD :cal SetSyn("dtd")<CR>
+an 50.20.490 &Syntax.CD.DTML\ (Zope) :cal SetSyn("dtml")<CR>
+an 50.20.500 &Syntax.CD.Dylan.Dylan :cal SetSyn("dylan")<CR>
+an 50.20.510 &Syntax.CD.Dylan.Dylan\ interface :cal SetSyn("dylanintr")<CR>
+an 50.20.520 &Syntax.CD.Dylan.Dylan\ lid :cal SetSyn("dylanlid")<CR>
 an 50.30.100 &Syntax.EFG.EDIF :cal SetSyn("edif")<CR>
 an 50.30.110 &Syntax.EFG.Eiffel :cal SetSyn("eiffel")<CR>
 an 50.30.120 &Syntax.EFG.Elm\ filter\ rules :cal SetSyn("elmfilt")<CR>
