@@ -7058,7 +7058,7 @@ get_cmd_output(cmd, flags)
     /*
      * read the names from the file into memory
      */
-    fd = mch_fopen((char *)tempname, "r");
+    fd = mch_fopen((char *)tempname, READBIN);
     if (fd == NULL)
     {
 	EMSG2(_(e_notopen), tempname);
