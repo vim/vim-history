@@ -748,6 +748,8 @@ RGVIMNAME	= r$(GVIMNAME)
 RGVIMTARGET	= $(RGVIMNAME)$(SUFFIX)
 RGVIEWNAME	= r$(GVIEWNAME)
 RGVIEWTARGET	= $(RGVIEWNAME)$(SUFFIX)
+VIMDIFFTARGET	= vimdiff
+GVIMDIFFTARGET	= gvimdiff
 
 ### Names of the tools that are also made  {{{1
 TOOLS = xxd/xxd$(SUFFIX)
@@ -784,7 +786,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60z
+VIMRTDIR = /vim60aa
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 INDSUBDIR = /indent
@@ -1076,9 +1078,27 @@ BEOSGUI_MAN_TARGETS = $(MANSUBDIR)/$(GVIMNAME).1 \
 			$(MANSUBDIR)/$(RGVIEWNAME).1
 BEOSGUI_TESTTARGET = gui
 
+# PHOTON GUI interface
+PHOTONGUI_SRC	= gui.c gui_photon.c pty.c
+PHOTONGUI_OBJ	= objects/gui.o objects/gui_photon.o objects/pty.o
+PHOTONGUI_DEFS	= -DFEAT_GUI_PHOTON
+PHOTONGUI_IPATH	=
+PHOTONGUI_LIBS_DIR =
+PHOTONGUI_LIBS1	= -lph -lphexlib
+PHOTONGUI_LIBS2	=
+PHOTONGUI_TARGETS	= $(BINDIR)/$(GVIMTARGET) \
+			$(BINDIR)/$(GVIEWTARGET) \
+			$(BINDIR)/$(RGVIMTARGET) \
+			$(BINDIR)/$(RGVIEWTARGET)
+PHOTONGUI_MAN_TARGETS = $(MANSUBDIR)/$(GVIMNAME).1 \
+			$(MANSUBDIR)/$(GVIEWNAME).1 \
+			$(MANSUBDIR)/$(RGVIMNAME).1 \
+			$(MANSUBDIR)/$(RGVIEWNAME).1
+PHOTONGUI_TESTTARGET = gui
+
 # GUI files used for making Vim
 ALL_GUI_SRC  = gui.c gui_gtk.c gui_gtk_f.c gui_motif.c gui_athena.c gui_gtk_x11.c gui_x11.c gui_at_sb.c gui_at_fs.c pty.c
-ALL_GUI_PRO  = gui.pro gui_gtk.pro gui_motif.pro gui_athena.pro gui_gtk_x11.pro gui_x11.pro gui_w16.pro gui_w32.pro gui_amiga.pro
+ALL_GUI_PRO  = gui.pro gui_gtk.pro gui_motif.pro gui_athena.pro gui_gtk_x11.pro gui_x11.pro gui_w16.pro gui_w32.pro gui_amiga.pro gui_photon.pro
 
 # }}}
 
@@ -1148,6 +1168,7 @@ TAGS_INCL = *.h
 BASIC_SRC = \
 	buffer.c \
 	charset.c \
+	diff.c \
 	digraph.c \
 	edit.c \
 	eval.c \
@@ -1210,6 +1231,7 @@ LINT_SRC = $(BASIC_SRC) $(GUI_SRC) $(HANGULIN_SRC) $(PYTHON_SRC) $(TCL_SRC) \
 OBJ = \
 	objects/buffer.o \
 	objects/charset.o \
+	objects/diff.o \
 	objects/digraph.o \
 	objects/edit.o \
 	objects/eval.o \
@@ -1260,6 +1282,7 @@ OBJ = \
 PRO_AUTO = \
 	buffer.pro \
 	charset.pro \
+	diff.pro \
 	digraph.pro \
 	edit.pro \
 	eval.pro \
@@ -1322,7 +1345,7 @@ tools: $(TOOLS)
 # auto/config.h isn't updated.  The dependency on auto/config.mk should make
 # sure configure is run when it's needed.
 #
-config auto/config.mk: auto/configure
+config auto/config.mk: auto/configure config.mk.in
 	GUI_INC_LOC="$(GUI_INC_LOC)" GUI_LIB_LOC="$(GUI_LIB_LOC)" \
 		CC="$(CC)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" \
 		LDFLAGS="$(LDFLAGS)" $(CONF_SHELL) srcdir="$(srcdir)" \
@@ -1484,7 +1507,7 @@ testclean:
 #
 install: installvim installtools install-languages
 
-installvim: installvimbin installruntime installlinks installhelplinks installmacros installtutor
+installvim: installvimbin installruntime installlinks installhelplinks installmacros installtutor $(INSTALLVIMDIFF)
 
 installvimbin: $(VIMTARGET) $(exec_prefix) $(BINDIR)
 	-if test -f $(BINDIR)/$(VIMTARGET); then \
@@ -1521,6 +1544,8 @@ installruntime: $(HELPSOURCE)/vim.1 $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) \
 		-e s+$(VIMLOC)/tutor+$(TUTORENDLOC)+ \
 		$(HELPSOURCE)/vimtutor.1 > $(MANSUBDIR)/$(VIMNAME)tutor.1
 	chmod $(MANMOD) $(MANSUBDIR)/$(VIMNAME)tutor.1
+	$(INSTALL_DATA)  $(HELPSOURCE)/vimdiff.1 $(MANSUBDIR)
+	chmod $(MANMOD) $(MANSUBDIR)/vimdiff.1
 	cd $(HELPSOURCE); $(INSTALL_DATA) *.txt tags $(HELPSUBLOC)
 	cd $(HELPSUBLOC); chmod $(HELPMOD) *.txt tags
 	$(INSTALL_DATA)  $(HELPSOURCE)/*.pl $(HELPSUBLOC)
@@ -1627,6 +1652,8 @@ $(exec_prefix) $(BINDIR) $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) $(HELPSUBLOC) \
 # (or executables with the same name) don't exist yet.
 installlinks: $(GUI_TARGETS) $(BINDIR)/$(EXTARGET) $(BINDIR)/$(VIEWTARGET) $(BINDIR)/$(RVIMTARGET) $(BINDIR)/$(RVIEWTARGET)
 
+installvimdiff: $(BINDIR)/$(VIMDIFFTARGET) $(BINDIR)/$(GVIMDIFFTARGET)
+
 $(BINDIR)/$(EXTARGET):
 	cd $(BINDIR); ln -s $(VIMTARGET) $(EXTARGET)
 
@@ -1650,6 +1677,12 @@ $(BINDIR)/$(RGVIMTARGET):
 
 $(BINDIR)/$(RGVIEWTARGET):
 	cd $(BINDIR); ln -s $(VIMTARGET) $(RGVIEWTARGET)
+
+$(BINDIR)/$(VIMDIFFTARGET):
+	cd $(BINDIR); ln -s $(VIMTARGET) $(VIMDIFFTARGET)
+
+$(BINDIR)/$(GVIMDIFFTARGET):
+	cd $(BINDIR); ln -s $(VIMTARGET) $(GVIMDIFFTARGET)
 
 # create links for the manual pages with various names to vim.	This is only
 # done when the links (or manpages with the same name) don't exist yet.
@@ -1688,6 +1721,7 @@ uninstall: uninstall_runtime
 	-rm -f $(BINDIR)/$(GVIMTARGET) $(BINDIR)/$(GVIEWTARGET)
 	-rm -f $(BINDIR)/$(RVIMTARGET) $(BINDIR)/$(RVIEWTARGET)
 	-rm -f $(BINDIR)/$(RGVIMTARGET) $(BINDIR)/$(RGVIEWTARGET)
+	-rm -f $(BINDIR)/$(VIMDIFFTARGET) $(BINDIR)/$(GVIMDIFFTARGET)
 	-rm -f $(MANSUBDIR)/$(EXNAME).1 $(MANSUBDIR)/$(VIEWNAME).1
 	-rm -f $(MANSUBDIR)/$(GVIMNAME).1 $(MANSUBDIR)/$(GVIEWNAME).1
 	-rm -f $(MANSUBDIR)/$(RVIMNAME).1 $(MANSUBDIR)/$(RVIEWNAME).1
@@ -1842,6 +1876,9 @@ objects/buffer.o: buffer.c
 objects/charset.o: charset.c
 	$(CCC) -o $@ charset.c
 
+objects/diff.o: diff.c
+	$(CCC) -o $@ diff.c
+
 objects/digraph.o: digraph.c
 	$(CCC) -o $@ digraph.c
 
@@ -1901,6 +1938,9 @@ objects/gui_motif.o: gui_motif.c
 
 objects/gui_x11.o: gui_x11.c
 	$(CCC) -o $@ gui_x11.c
+
+objects/gui_photon.o: gui_photon.c
+	$(CCC) -o $@ gui_photon.c
 
 objects/hangulin.o: hangulin.c
 	$(CCC) -o $@ hangulin.c
@@ -1971,6 +2011,9 @@ objects/option.o: option.c
 objects/os_beos.o: os_beos.c
 	$(CCC) -o $@ os_beos.c
 
+objects/os_qnx.o: os_qnx.c
+	$(CCC) -o $@ os_qnx.c
+
 objects/os_unix.o: os_unix.c
 	$(CCC) -o $@ os_unix.c
 
@@ -2038,6 +2081,9 @@ objects/buffer.o: buffer.c vim.h auto/config.h feature.h os_unix.h \
 objects/charset.o: charset.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h option.h ex_cmds.h proto.h globals.h farsi.h
+objects/diff.o: diff.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
+ ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h option.h \
+ ex_cmds.h proto.h globals.h farsi.h
 objects/digraph.o: digraph.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h option.h ex_cmds.h proto.h globals.h farsi.h
@@ -2175,10 +2221,22 @@ objects/gui_gtk_f.o: gui_gtk_f.c vim.h auto/config.h feature.h os_unix.h \
  gui.h option.h ex_cmds.h proto.h globals.h farsi.h gui_gtk_f.h
 objects/gui_motif.o: gui_motif.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h option.h ex_cmds.h proto.h globals.h farsi.h \
- ../pixmaps/tb_new.xpm ../pixmaps/tb_open.xpm ../pixmaps/tb_close.xpm \
- ../pixmaps/tb_save.xpm ../pixmaps/tb_print.xpm ../pixmaps/tb_cut.xpm \
- ../pixmaps/tb_copy.xpm ../pixmaps/tb_paste.xpm ../pixmaps/tb_find.xpm \
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
+objects/gui_athena.o: gui_athena.c vim.h auto/config.h feature.h os_unix.h \
+ auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h gui_at_sb.h
+objects/gui_gtk_x11.o: gui_gtk_x11.c vim.h auto/config.h feature.h os_unix.h \
+ auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h version.h \
+ gui_gtk_f.h ../runtime/vim32x32.xpm ../runtime/vim16x16.xpm \
+ ../runtime/vim48x48.xpm
+objects/gui_x11.o: gui_x11.c vim.h auto/config.h feature.h os_unix.h \
+ auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h vim_icon.xbm \
+ vim_mask.xbm ../pixmaps/tb_new.xpm ../pixmaps/tb_open.xpm \
+ ../pixmaps/tb_close.xpm ../pixmaps/tb_save.xpm \
+ ../pixmaps/tb_print.xpm ../pixmaps/tb_cut.xpm ../pixmaps/tb_copy.xpm \
+ ../pixmaps/tb_paste.xpm ../pixmaps/tb_find.xpm \
  ../pixmaps/tb_find_next.xpm ../pixmaps/tb_find_prev.xpm \
  ../pixmaps/tb_find_help.xpm ../pixmaps/tb_exit.xpm \
  ../pixmaps/tb_undo.xpm ../pixmaps/tb_redo.xpm ../pixmaps/tb_help.xpm \
@@ -2191,18 +2249,6 @@ objects/gui_motif.o: gui_motif.c vim.h auto/config.h feature.h os_unix.h \
  ../pixmaps/tb_shell.xpm ../pixmaps/tb_replace.xpm \
  ../pixmaps/tb_vsplit.xpm ../pixmaps/tb_maxwidth.xpm \
  ../pixmaps/tb_minwidth.xpm
-objects/gui_athena.o: gui_athena.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h option.h ex_cmds.h proto.h globals.h farsi.h gui_at_sb.h
-objects/gui_gtk_x11.o: gui_gtk_x11.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h option.h ex_cmds.h proto.h globals.h farsi.h version.h \
- gui_gtk_f.h ../runtime/vim32x32.xpm ../runtime/vim16x16.xpm \
- ../runtime/vim48x48.xpm
-objects/gui_x11.o: gui_x11.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h option.h ex_cmds.h proto.h globals.h farsi.h vim_icon.xbm \
- vim_mask.xbm
 objects/gui_at_sb.o: gui_at_sb.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h option.h ex_cmds.h proto.h globals.h farsi.h gui_at_sb.h

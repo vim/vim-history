@@ -2279,3 +2279,185 @@ printdigraph(dp)
 }
 
 #endif /* FEAT_DIGRAPHS */
+
+#if defined(FEAT_KEYMAP) || defined(PROTO)
+
+/* structure used for b_kmap_ga.ga_data */
+typedef struct
+{
+    char_u	*from;
+    char_u	*to;
+} kmap_t;
+
+#define KMAP_MAXLEN 20	    /* maximum length of "from" or "to" */
+
+static void keymap_unload __ARGS((void));
+
+/*
+ * Set up key mapping tables for the 'keymap' option
+ */
+    char_u *
+keymap_init()
+{
+    curbuf->b_kmap_state &= ~KEYMAP_INIT;
+
+    if (*curbuf->b_p_keymap == NUL)
+    {
+	/* Stop any active keymap and clear the table. */
+	keymap_unload();
+    }
+    else
+    {
+	char_u	*buf;
+
+	/* Source the keymap file.  It will contain a ":loadkeymap" command
+	 * which will call ex_loadkeymap() below. */
+	buf = alloc((unsigned)(STRLEN(curbuf->b_p_keymap)
+# ifdef FEAT_MBYTE
+						       + STRLEN(p_enc)
+# endif
+						       + 14));
+	if (buf == NULL)
+	    return e_outofmem;
+
+# ifdef FEAT_MBYTE
+	/* try finding "keymap/'keymap'_'encoding'.vim"  in 'runtimepath' */
+	sprintf((char *)buf, "keymap/%s_%s.vim", curbuf->b_p_keymap, p_enc);
+	if (cmd_runtime(buf, FALSE) == FAIL)
+# endif
+	{
+	    /* try finding "keymap/'keymap'.vim" in 'runtimepath'  */
+	    sprintf((char *)buf, "keymap/%s.vim", curbuf->b_p_keymap);
+	    if (cmd_runtime(buf, FALSE) == FAIL)
+	    {
+		vim_free(buf);
+		return (char_u *)N_("Keymap file not found");
+	    }
+	}
+	vim_free(buf);
+    }
+
+    return NULL;
+}
+
+/*
+ * ":loadkeymap" command: load the following lines as the keymap.
+ */
+    void
+ex_loadkeymap(eap)
+    exarg_t	*eap;
+{
+    char_u	*line;
+    char_u	*p;
+    char_u	*s;
+    kmap_t	*kp;
+#define KMAP_LLEN   200	    /* max length of "to" and "from" together */
+    char_u	buf[KMAP_LLEN + 11];
+    int		i;
+    char_u	*save_cpo = p_cpo;
+
+    if (eap->getline != getsourceline)
+    {
+	EMSG(_("Using :loadkeymap not in a sourced file"));
+	return;
+    }
+
+    /*
+     * Stop any active keymap and clear the table.
+     */
+    keymap_unload();
+
+    curbuf->b_kmap_state = 0;
+    ga_init2(&curbuf->b_kmap_ga, sizeof(kmap_t), 20);
+
+    /* Set 'cpoptions' to "C" to avoid line continuation. */
+    p_cpo = (char_u *)"C";
+
+    /*
+     * Get each line of the sourced file, break at the end.
+     */
+    for (;;)
+    {
+	line = getsourceline(0, eap->cookie, 0);
+	if (line == NULL)
+	    break;
+
+	p = skipwhite(line);
+	if (*p != '"' && *p != NUL && ga_grow(&curbuf->b_kmap_ga, 1) == OK)
+	{
+	    kp = (kmap_t *)curbuf->b_kmap_ga.ga_data + curbuf->b_kmap_ga.ga_len;
+	    s = skiptowhite(p);
+	    kp->from = vim_strnsave(p, (int)(s - p));
+	    p = skipwhite(s);
+	    s = skiptowhite(p);
+	    kp->to = vim_strnsave(p, (int)(s - p));
+
+	    if (kp->from == NULL || kp->to == NULL
+		    || STRLEN(kp->from) + STRLEN(kp->to) >= KMAP_LLEN)
+	    {
+		vim_free(kp->from);
+		vim_free(kp->to);
+	    }
+	    else
+	    {
+		++curbuf->b_kmap_ga.ga_len;
+		--curbuf->b_kmap_ga.ga_room;
+	    }
+	}
+	vim_free(line);
+    }
+
+    /*
+     * setup ":lnoremap" to map the keys
+     */
+    for (i = 0; i < curbuf->b_kmap_ga.ga_len; ++i)
+    {
+	sprintf((char *)buf, "<buffer> %s %s",
+				((kmap_t *)curbuf->b_kmap_ga.ga_data)[i].from,
+				 ((kmap_t *)curbuf->b_kmap_ga.ga_data)[i].to);
+	(void)do_map(2, buf, LANGMAP, FALSE);
+    }
+
+    p_cpo = save_cpo;
+
+    curbuf->b_kmap_state |= KEYMAP_LOADED;
+#ifdef FEAT_WINDOWS
+    status_redraw_curbuf();
+#endif
+}
+
+/*
+ * Stop using 'keymap'.
+ */
+    static void
+keymap_unload()
+{
+    char_u	buf[KMAP_MAXLEN + 10];
+    int		i;
+    char_u	*save_cpo = p_cpo;
+
+    if (!(curbuf->b_kmap_state & KEYMAP_LOADED))
+	return;
+
+    /* Set 'cpoptions' to "C" to avoid line continuation. */
+    p_cpo = (char_u *)"C";
+
+    /* clear the ":lmap"s */
+    for (i = 0; i < curbuf->b_kmap_ga.ga_len; ++i)
+    {
+	sprintf((char *)buf, "<buffer> %s",
+		((kmap_t *)curbuf->b_kmap_ga.ga_data)[i].from);
+	(void)do_map(1, buf, LANGMAP, FALSE);
+    }
+
+    p_cpo = save_cpo;
+
+    ga_clear(&curbuf->b_kmap_ga);
+    curbuf->b_kmap_state &= ~KEYMAP_LOADED;
+#ifdef FEAT_WINDOWS
+    status_redraw_curbuf();
+#endif
+}
+
+#endif /* FEAT_KEYMAP */
+

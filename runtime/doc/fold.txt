@@ -1,4 +1,4 @@
-*fold.txt*      For Vim version 6.0z.  Last change: 2001 Feb 24
+*fold.txt*      For Vim version 6.0aa.  Last change: 2001 Mar 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -26,9 +26,17 @@ deleted and new ones created.  Switching to the "manual" method doesn't remove
 the existing folds.  This can be used to first define the folds automatically
 and then change them manually.
 
-There are five methods to select folds:
+There are six methods to select folds:
+	manual		manually define folds
+	indent		more indent means a higher fold level 
+	expr		specify an expression to define folds
+	syntax		folds defined by syntax highlighting
+	diff		folds for unchanged text
+	marker		folds defined by markers in the text
 
-"manual":					*fold-manual*
+
+MANUAL						*fold-manual*
+
 Use commands to manually define the fold regions.  This can also be used by a
 script that parses text to find folds.
 
@@ -40,7 +48,8 @@ The manual folds are lost when you abandon the file.  To save the folds use
 the |:mkview| command.  The view can be restored later with |:loadview|.
 
 
-"indent":					*fold-indent*
+INDENT						*fold-indent*
+
 The folds are automatically defined by the indent of the lines.
 
 The foldlevel is computed from the indent of the line, divided by the
@@ -58,7 +67,8 @@ When you want to ignore lines in another way, use the 'expr' method.  The
 |indent()| function can be used in 'foldexpr' to get the indent of a line.
 
 
-"expr":						*fold-expr*
+EXPR						*fold-expr*
+
 The folds are automatically defined by their foldlevel, like with the "indent"
 method.  The value of the 'foldexpr' option is evaluated to get the foldlevel
 of a line.  Examples:
@@ -118,14 +128,32 @@ can help here.  Example: >
 	" return "=", "a" or "s"
 
 
-"syntax":					*fold-syntax*
+SYNTAX						*fold-syntax*
+
 A fold is defined by syntax items that have the "fold" argument. |:syn-fold|
 
 The fold level is defined by nesting folds.  The nesting of folds is limited
 with 'foldnestmax'.
 
 
-"marker":					*fold-marker*
+DIFF						*fold-diff*
+
+The folds are automatically defined for text that is not part of a change or
+close to a change.
+
+This method only works properly when the 'diff' option is set for the current
+window and changes are being displayed.  Otherwise the whole buffer will be
+one big fold.
+
+The 'diffopt' option can be used to specify the context.  That is, the number
+of lines between the fold and a change that are not included in the fold.  For
+example, to use a context of 8 lines: >
+	:set diffopt=filler,context:8
+The default context is six lines.
+
+
+MARKER						*fold-marker*
+
 Markers in the text tell where folds start and end.  This allows you to
 precisely specify the folds.  This will allow deleting and putting a fold,
 without the risk of including the wrong lines.  The 'foldtext' option is

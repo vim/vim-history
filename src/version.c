@@ -137,6 +137,11 @@ static char *(features[]) =
 #  endif
 # endif
 #endif
+#ifdef FEAT_DIFF
+	"+diff",
+#else
+	"-diff",
+#endif
 #ifdef FEAT_DIGRAPHS
 	"+digraphs",
 #else
@@ -311,6 +316,13 @@ static char *(features[]) =
 	"+mouse_xterm",
 # else
 	"-mouse_xterm",
+# endif
+#endif
+#ifdef __QNX__
+# ifdef FEAT_MOUSE_PTERM
+	"+mouse_pterm",
+# else
+	"-mouse_pterm",
 # endif
 #endif
 #ifdef FEAT_MBYTE_IME
@@ -700,8 +712,12 @@ list_version()
 #    ifdef FEAT_GUI_BEOS
     MSG_PUTS(_("with BeOS GUI."));
 #    else
-#     if defined(MSWIN) || defined(macintosh)
+#     ifdef FEAT_GUI_PHOTON
+    MSG_PUTS(_("with Photon GUI."));
+#     else
+#      if defined(MSWIN) || defined(macintosh)
     MSG_PUTS(_("with GUI."));
+#      endif
 #     endif
 #    endif
 #   endif

@@ -16,7 +16,7 @@
 /* IF_EB(ASCII_constant, EBCDIC_constant) */
 #define IF_EB(a, b)	a
 
-#define CharOrd(x)	(isupper(x) ? (x) - 'A' : (x) - 'a')
+#define CharOrd(x)	((x) < 'a' ? (x) - 'A' : (x) - 'a')
 #define CharOrdLow(x)	((x) - 'a')
 #define CharOrdUp(x)	((x) - 'A')
 #define ROT13(c, a)	(((((c) - (a)) + 13) % 26) + (a))

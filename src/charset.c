@@ -192,7 +192,8 @@ buf_init_chartab(buf, global)
 		/*
 		 * A single '@' (not "@-@"):
 		 * Decide on letters being ID/printable/keyword chars with
-		 * standard function isalpha(). This takes care of locale.
+		 * standard function isalpha(). This takes care of locale for
+		 * single-byte characters).
 		 */
 		if (c == '@')
 		{
@@ -351,6 +352,29 @@ transstr(s)
 }
 #endif
 
+#if defined(FEAT_SYN_HL) || defined(PROTO)
+/*
+ * Convert the string "p" to lower case in-place.
+ */
+    void
+str_tolower(p)
+    char_u	*p;
+{
+    while (*p != NUL)
+    {
+#ifdef FEAT_MBYTE
+	if (has_mbyte && MB_BYTE2LEN(*p) > 1)
+	    p += (*mb_ptr2len_check)(p);	/* skip multi-byte char */
+	else
+#endif
+	{
+	    *p = TO_LOWER(*p);
+	    ++p;
+	}
+    }
+}
+#endif
+
 /*
  * Catch 22: chartab[] can't be initialized before the options are
  * initialized, and initializing options may cause transchar() to be called!
@@ -382,7 +406,7 @@ transchar(c)
 #ifdef FEAT_FKMAP
 			|| F_ischar(c)
 #endif
-		)) || (c < 256 && (chartab[c] & CT_PRINT_CHAR)))
+		)) || (c < 256 && vim_isprintc_strict(c)))
     {
 	/* printable character */
 	buf[i] = c;
@@ -706,11 +730,15 @@ vim_iswordp(p)
 
 #if defined(FEAT_SYN_HL) || defined(PROTO)
     int
-vim_iswordc_buf(c, buf)
-    int		c;
+vim_iswordc_buf(p, buf)
+    char_u	*p;
     buf_t	*buf;
 {
-    return (c > 0 && c < 0x100 && GET_CHARTAB(buf, c) != 0);
+# ifdef FEAT_MBYTE
+    if (has_mbyte && MB_BYTE2LEN(*p) > 1)
+	return mb_get_class(p) >= 2;
+# endif
+    return (GET_CHARTAB(buf, *p) != 0);
 }
 #endif
 
@@ -737,16 +765,18 @@ vim_isprintc(c)
 }
 
 /*
- * return TRUE if 'c' is a printable character
- *
- * No check for (c < 0x100) to make it a bit faster.
- * This is the most often used function, keep it fast!
+ * Strict version of vim_isprintc(c), don't return TRUE if "c" is the head
+ * byte of a double-byte character.
  */
     int
-safe_vim_isprintc(c)
-    int c;
+vim_isprintc_strict(c)
+    int	c;
 {
-    return (chartab[c] & CT_PRINT_CHAR);
+#ifdef FEAT_MBYTE
+    if (enc_dbcs != 0 && c < 0x100 && MB_BYTE2LEN(c) > 1)
+	return FALSE;
+#endif
+    return (c >= 0x100 || (c > 0 && (chartab[c] & CT_PRINT_CHAR)));
 }
 
 /*
@@ -1145,19 +1175,23 @@ getvvcol(wp, pos, start, cursor, end)
     colnr_t	*cursor;
     colnr_t	*end;
 {
-    int		add = 0;
+    colnr_t	col;
 
-    getvcol(wp, pos, start, cursor, end);
-
-    if (virtual_active() && start != NULL)
+    if (virtual_active())
     {
-	add = pos -> coladd;
-	*start += add;
+	/* For virtual mode, only want one value */
+	getvcol(wp, pos, &col, NULL, NULL);
+
+	col += pos->coladd;
+	if (start != NULL)
+	    *start = col;
 	if (cursor != NULL)
-	    *cursor = *start;
+	    *cursor = col;
 	if (end != NULL)
-	    *end = *start;
+	    *end = col;
     }
+    else
+	getvcol(wp, pos, start, cursor, end);
 }
 #endif
 

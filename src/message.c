@@ -1487,6 +1487,12 @@ msg_puts_attr(s, attr)
 	    /* When no more prompt an no more room, truncate here */
 	    if (msg_no_more && lines_left == 0)
 		break;
+#ifdef FEAT_GUI
+	    /* Remove the cursor before scrolling, ScreenLines[] is going to
+	     * become invalid. */
+	    if (gui.in_use)
+		gui_undraw_cursor();
+#endif
 	    /* scrolling up always works */
 	    screen_del_lines(0, 0, 1, (int)Rows, TRUE, NULL);
 

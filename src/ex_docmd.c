@@ -175,13 +175,12 @@ static void	ex_topleft __ARGS((exarg_t *eap));
 static void	ex_botright __ARGS((exarg_t *eap));
 static void	ex_find __ARGS((exarg_t *eap));
 static void	ex_edit __ARGS((exarg_t *eap));
-static void	do_exedit __ARGS((exarg_t *eap, win_t *old_curwin));
 #ifndef FEAT_GUI
 # define ex_gui			ex_nogui
 # define ex_drop		ex_ni
 static void	ex_nogui __ARGS((exarg_t *eap));
 #endif
-#if defined(FEAT_GUI_W32) && defined(FEAT_MENU)
+#if defined(FEAT_GUI_W32) && defined(FEAT_MENU) && defined(FEAT_TEAROFF)
 static void	ex_tearoff __ARGS((exarg_t *eap));
 #else
 # define ex_tearoff		ex_ni
@@ -348,6 +347,11 @@ static void	ex_setfiletype  __ARGS((exarg_t *eap));
 #else
 # define ex_filetype		ex_ni
 # define ex_setfiletype		ex_ni
+#endif
+#ifndef FEAT_DIFF
+# define ex_diffupdate		ex_ni
+# define ex_diffpatch		ex_ni
+# define ex_diffsplit		ex_ni
 #endif
 static void	ex_digraphs __ARGS((exarg_t *eap));
 static void	ex_set __ARGS((exarg_t *eap));
@@ -1782,14 +1786,14 @@ find_command(eap, full)
     }
     else
     {
-	while (isalpha(*p))
+	while (ASCII_ISALPHA(*p))
 	    ++p;
 	/* check for non-alpha command */
 	if (p == eap->cmd && vim_strchr((char_u *)"@*!=><&~#", *p) != NULL)
 	    ++p;
 	len = (int)(p - eap->cmd);
 
-	if (islower(*eap->cmd))
+	if (ASCII_ISLOWER(*eap->cmd))
 	    eap->cmdidx = cmdidxs[CharOrdLow(*eap->cmd)];
 	else
 	    eap->cmdidx = cmdidxs[26];
@@ -1818,7 +1822,7 @@ find_command(eap, full)
 	    garray_t	*gap;
 
 	    /* User defined commands may contain numbers */
-	    while (isalnum(*p))
+	    while (ASCII_ISALNUM(*p))
 		++p;
 	    len = (int)(p - eap->cmd);
 
@@ -1997,9 +2001,9 @@ set_one_cmd_context(xp, buff)
     else
     {
 	p = cmd;
-	while (isalpha(*p) || *p == '*')    /* Allow * wild card */
+	while (ASCII_ISALPHA(*p) || *p == '*')    /* Allow * wild card */
 	    ++p;
-	    /* check for non-alpha command */
+	/* check for non-alpha command */
 	if (p == cmd && vim_strchr((char_u *)"@*!=><&~#", *p) != NULL)
 	    ++p;
 	i = (int)(p - cmd);
@@ -2017,7 +2021,7 @@ set_one_cmd_context(xp, buff)
 
 	if (cmd[0] >= 'A' && cmd[0] <= 'Z')
 	{
-	    while (isalnum(*p) || *p == '*')	/* Allow * wild card */
+	    while (ASCII_ISALNUM(*p) || *p == '*')	/* Allow * wild card */
 		++p;
 	    i = (int)(p - cmd);
 	}
@@ -2028,7 +2032,7 @@ set_one_cmd_context(xp, buff)
      * If the cursor is touching the command, and it ends in an alpha-numeric
      * character, complete the command name.
      */
-    if (*p == NUL && isalnum(p[-1]))
+    if (*p == NUL && ASCII_ISALNUM(p[-1]))
 	return NULL;
 
     if (cmdidx == CMD_SIZE)
@@ -4044,8 +4048,8 @@ ex_command(eap)
 
     /* Get the name (if any) and skip to the following argument */
     name = p;
-    if (isalpha(*p))
-	while (isalnum(*p))
+    if (ASCII_ISALPHA(*p))
+	while (ASCII_ISALNUM(*p))
 	    ++p;
     if (!ends_excmd(*p) && !vim_iswhite(*p))
     {
@@ -4062,7 +4066,7 @@ ex_command(eap)
     {
 	uc_list(name, end - name);
     }
-    else if (!isupper(*name))
+    else if (!ASCII_ISUPPER(*name))
     {
 	EMSG(_("User defined commands must start with an uppercase letter"));
 	return;
@@ -5478,7 +5482,7 @@ ex_edit(eap)
  * ":edit <file>" command and alikes.
  */
 /*ARGSUSED*/
-    static void
+    void
 do_exedit(eap, old_curwin)
     exarg_t	*eap;
     win_t	*old_curwin;
@@ -5604,7 +5608,7 @@ ex_nogui(eap)
 }
 #endif
 
-#if defined(FEAT_GUI_W32) && defined(FEAT_MENU)
+#if defined(FEAT_GUI_W32) && defined(FEAT_MENU) && defined(FEAT_TEAROFF)
     static void
 ex_tearoff(eap)
     exarg_t	*eap;
@@ -6267,7 +6271,7 @@ ex_redir(eap)
 	{
 	    /* redirect to a register a-z (resp. A-Z for appending) */
 	    close_redir();
-	    if (isalpha(*++eap->arg)
+	    if (ASCII_ISALPHA(*++eap->arg)
 # ifdef FEAT_CLIPBOARD
 		    || *eap->arg == '*'
 # endif
@@ -8803,7 +8807,8 @@ ex_folddo(eap)
 set_lang_var()
 {
     char_u	*loc;
-# if defined(LC_MESSAGES) || defined(HAVE_LOCALE_H) || defined(X_LOCALE)
+# if defined(LC_MESSAGES) \
+	|| ((defined(HAVE_LOCALE_H) || defined(X_LOCALE)) && !defined(DJGPP))
     int		what = LC_CTYPE;
 # endif
 
@@ -8811,7 +8816,8 @@ set_lang_var()
     for (;;)
     {
 # if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
-	/* obtain the locale value from the libraries */
+	/* Obtain the locale value from the libraries.  For DJGPP this is
+	 * redefined and it doesn't use the arguments. */
 	loc = (char_u *)setlocale(what, NULL);
 #  if defined(__BORLANDC__)
 	if (loc != NULL)

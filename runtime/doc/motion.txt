@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.0z.  Last change: 2001 Mar 20
+*motion.txt*    For Vim version 6.0aa.  Last change: 2001 Apr 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -216,6 +216,8 @@ g$ or g<End>		When lines wrap ('wrap' on): To the last character of
 f{char}			To [count]'th occurrence of {char} to the right.  The
 			cursor is placed on {char} (inclusive).
 			{char} can be entered as a digraph |digraph-arg|.
+			When 'encoding' is set to Unicode, composing
+			characters may be used, see |utf-8-char-arg|.
 			|:lmap| mappings apply to {char}.  The CTRL-^ command
 			in Insert mode can be used to switch this on/off
 			|i_CTRL-^|.

@@ -1838,9 +1838,6 @@ set_termname(term)
 		p = NULL;	/* keep existing value, might be "xterm2" */
 	    else
 		p = (char_u *)"xterm";
-#    ifdef FEAT_XCLIPBOARD
-	    setup_xterm_clip();
-#    endif
 	}
 #  endif
 	if (p != NULL)
@@ -1972,10 +1969,12 @@ set_termname(term)
 #define HMT_NETTERM	2
 #define HMT_DEC		4
 #define HMT_JSBTERM	8
+#define HMT_PTERM	16
 static int has_mouse_termcode = 0;
 
 # if (!defined(UNIX) || defined(FEAT_MOUSE_XTERM) || defined(FEAT_MOUSE_NET) \
-	|| defined(FEAT_MOUSE_DEC)) || defined(FEAT_MOUSE_JSB) || defined(PROTO)
+	|| defined(FEAT_MOUSE_DEC)) || defined(FEAT_MOUSE_JSB) \
+	|| defined(FEAT_MOUSE_PTERM) || defined(PROTO)
     void
 set_mouse_termcode(n, s)
     int		n;	/* KS_MOUSE, KS_NETTERM_MOUSE or KS_DEC_MOUSE */
@@ -1997,17 +1996,23 @@ set_mouse_termcode(n, s)
     else
 #  endif
 #  ifdef FEAT_MOUSE_DEC
-	if (n == KS_DEC_MOUSE)
-	    has_mouse_termcode |= HMT_DEC;
-	else
+    if (n == KS_DEC_MOUSE)
+	has_mouse_termcode |= HMT_DEC;
+    else
 #  endif
-	    has_mouse_termcode |= HMT_NORMAL;
+#  ifdef FEAT_MOUSE_PTERM
+    if (n == KS_PTERM_MOUSE)
+	has_mouse_termcode |= HMT_PTERM;
+    else
+#  endif
+	has_mouse_termcode |= HMT_NORMAL;
 }
 # endif
 
 # if ((defined(UNIX) || defined(VMS) || defined(OS2)) \
 	&& (defined(FEAT_MOUSE_XTERM) || defined(FEAT_MOUSE_DEC) \
-	    || defined(FEAT_MOUSE_GPM))) || defined(PROTO)
+	    || defined(FEAT_MOUSE_GPM) || defined(FEAT_MOUSE_PTERM))) \
+	    || defined(PROTO)
     void
 del_mouse_termcode(n)
     int		n;	/* KS_MOUSE, KS_NETTERM_MOUSE or KS_DEC_MOUSE */
@@ -2028,11 +2033,16 @@ del_mouse_termcode(n)
     else
 #  endif
 #  ifdef FEAT_MOUSE_DEC
-	if (n == KS_DEC_MOUSE)
-	    has_mouse_termcode &= ~HMT_DEC;
-	else
+    if (n == KS_DEC_MOUSE)
+	has_mouse_termcode &= ~HMT_DEC;
+    else
 #  endif
-	    has_mouse_termcode &= ~HMT_NORMAL;
+#  ifdef FEAT_MOUSE_PTERM
+    if (n == KS_PTERM_MOUSE)
+	has_mouse_termcode &= ~HMT_PTERM;
+    else
+#  endif
+	has_mouse_termcode &= ~HMT_NORMAL;
 }
 # endif
 #endif
@@ -2401,12 +2411,14 @@ termcapinit(name)
 /*
  * the number of calls to ui_write is reduced by using the buffer "out_buf"
  */
-#if defined(DOS16)
+#ifdef DOS16
 # define OUT_SIZE	255		/* only have 640K total... */
-#elif defined(FEAT_GUI_W16)
-# define OUT_SIZE	1023		/* Save precious 1K near data */
 #else
-# define OUT_SIZE	2047
+# ifdef FEAT_GUI_W16
+#  define OUT_SIZE	1023		/* Save precious 1K near data */
+# else
+#  define OUT_SIZE	2047
+# endif
 #endif
 	    /* Add one to allow mch_write() in os_win32.c to append a NUL */
 static char_u		out_buf[OUT_SIZE + 1];
@@ -3522,6 +3534,9 @@ switch_to_8bit()
 
 #ifdef CHECK_DOUBLE_CLICK
 static linenr_t orig_topline = 0;
+# ifdef FEAT_DIFF
+static int orig_topfill = 0;
+# endif
 #endif
 #if (defined(FEAT_WINDOWS) && defined(CHECK_DOUBLE_CLICK)) || defined(PROTO)
 /*
@@ -3534,10 +3549,13 @@ static linenr_t orig_topline = 0;
  * click still works.
  */
     void
-set_mouse_topline(lnum)
-    linenr_t	lnum;
+set_mouse_topline(wp)
+    win_t	*wp;
 {
-    orig_topline = lnum;
+    orig_topline = wp->w_topline;
+# ifdef FEAT_DIFF
+    orig_topfill = wp->w_topfill;
+# endif
 }
 #endif
 
@@ -3824,6 +3842,9 @@ check_termcode(max_offset, buf, buflen)
 # endif
 # ifdef FEAT_MOUSE_DEC
 		|| key_name[0] == (int)KS_DEC_MOUSE
+# endif
+# ifdef FEAT_MOUSE_PTERM
+		|| key_name[0] == (int)KS_PTERM_MOUSE
 # endif
 		)
 	{
@@ -4200,6 +4221,63 @@ check_termcode(max_offset, buf, buflen)
 		slen += (p - (tp + slen));
 	    }
 # endif /* FEAT_MOUSE_DEC */
+# ifdef FEAT_MOUSE_PTERM
+	    if (key_name[0] == (int)KS_PTERM_MOUSE)
+	    {
+		int button, num_clicks, action, mc, mr;
+
+		p = tp + slen;
+
+		action = getdigits(&p);
+		if (*p++ != ';')
+		    return -1;
+
+		mouse_row = getdigits(&p);
+		if (*p++ != ';')
+		    return -1;
+		mouse_col = getdigits(&p);
+		if (*p++ != ';')
+		    return -1;
+
+		button = getdigits(&p);
+		mouse_code = 0;
+
+		switch( button )
+		{
+		    case 4: mouse_code = MOUSE_LEFT; break;
+		    case 1: mouse_code = MOUSE_RIGHT; break;
+		    case 2: mouse_code = MOUSE_MIDDLE; break;
+		    default: return -1;
+		}
+
+		switch( action )
+		{
+		    case 31: /* Initial press */
+			if (*p++ != ';')
+			    return -1;
+
+			num_clicks = getdigits(&p); /* Not used */
+			break;
+
+		    case 32: /* Release */
+			mouse_code |= MOUSE_RELEASE;
+			break;
+
+		    case 33: /* Drag */
+			held_button = mouse_code;
+			mouse_code |= MOUSE_DRAG;
+			break;
+
+		    default:
+			return -1;
+		}
+
+		if (*p++ != 't')
+		    return -1;
+
+		slen += (p - (tp + slen));
+	    }
+# endif /* FEAT_MOUSE_PTERM */
 
 	    /* Interpret the mouse code */
 	    current_button = (mouse_code & MOUSE_CLICK_MASK);
@@ -4253,6 +4331,9 @@ check_termcode(max_offset, buf, buflen)
 			    && orig_num_clicks != 4
 			    && orig_mouse_col == mouse_col
 			    && orig_mouse_row == mouse_row
+#ifdef FEAT_DIFF
+			    && orig_topfill == curwin->w_topfill
+#endif
 			    && orig_topline == curwin->w_topline)
 			++orig_num_clicks;
 		    else
@@ -4260,6 +4341,9 @@ check_termcode(max_offset, buf, buflen)
 		    orig_mouse_col = mouse_col;
 		    orig_mouse_row = mouse_row;
 		    orig_topline = curwin->w_topline;
+#ifdef FEAT_DIFF
+		    orig_topfill = curwin->w_topfill;
+#endif
 		}
 #  if defined(FEAT_GUI) || defined(FEAT_MOUSE_GPM)
 		else
@@ -4924,8 +5008,10 @@ got_code_from_term(code, len)
 		i = atoi((char *)str);
 		if (i != t_colors)
 		{
-		    /* Nr of colors changed, must redraw everything. */
+		    /* Nr of colors changed, initialize highlighting and
+		     * redraw everything. */
 		    set_color_count(i);
+		    init_highlight(TRUE);
 		    redraw_later(CLEAR);
 		}
 	    }

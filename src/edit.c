@@ -235,6 +235,9 @@ edit(cmdchar, startln, count)
     int		line_is_white = FALSE;	    /* line is empty before insert */
 #endif
     linenr_t	old_topline = 0;	    /* topline before insertion */
+#ifdef FEAT_DIFF
+    int		old_topfill = -1;
+#endif
     int		inserted_space = FALSE;     /* just inserted a space */
     int		replaceState = REPLACE;
     int		did_restart_edit = restart_edit;
@@ -490,7 +493,11 @@ edit(cmdchar, startln, count)
 	if (curbuf->b_mod_set
 		&& curwin->w_p_wrap
 		&& !did_backspace
-		&& curwin->w_topline == old_topline)
+		&& curwin->w_topline == old_topline
+#ifdef FEAT_DIFF
+		&& curwin->w_topfill == old_topfill
+#endif
+		)
 	{
 	    mincol = curwin->w_wcol;
 	    validate_cursor_col();
@@ -498,8 +505,17 @@ edit(cmdchar, startln, count)
 	    if ((int)curwin->w_wcol < (int)mincol - curbuf->b_p_ts
 		    && curwin->w_wrow == W_WINROW(curwin)
 						 + curwin->w_height - 1 - p_so
-		    && curwin->w_cursor.lnum != curwin->w_topline)
+		    && (curwin->w_cursor.lnum != curwin->w_topline
+#ifdef FEAT_DIFF
+			|| curwin->w_topfill > 0
+#endif
+		    ))
 	    {
+#ifdef FEAT_DIFF
+		if (curwin->w_topfill > 0)
+		    --curwin->w_topfill;
+		else
+#endif
 #ifdef FEAT_FOLDING
 		if (hasFolding(curwin->w_topline, NULL, &old_topline))
 		    set_topline(curwin, old_topline + 1);
@@ -529,6 +545,9 @@ edit(cmdchar, startln, count)
 
 	update_curswant();
 	old_topline = curwin->w_topline;
+#ifdef FEAT_DIFF
+	old_topfill = curwin->w_topfill;
+#endif
 
 #ifdef USE_ON_FLY_SCROLL
 	dont_scroll = FALSE;		/* allow scrolling here */
@@ -791,7 +810,9 @@ doESCkey:
 	case Ctrl_HAT:
 	    /* Toggle use of ":lmap" mappings. */
 	    curbuf->b_lmap ^= B_LMAP_INSERT;
+	    b_lmap_def = curbuf->b_lmap;
 	    State ^= LANGMAP;
+	    showmode();
 #if defined(FEAT_WINDOWS) && defined(FEAT_KEYMAP)
 	    /* Show/unshow value of 'keymap' in status lines. */
 	    status_redraw_curbuf();
@@ -2287,13 +2308,16 @@ ins_compl_next_buf(buf, flag)
     }
     else
 	/* 'b' (just loaded buffers), 'u' (just non-loaded buffers) or 'U'
-	 * (unlisted buffers) */
+	 * (unlisted buffers)
+	 * When completing whole lines skip unloaded buffers. */
 	while ((buf = buf->b_next != NULL ? buf->b_next : firstbuf) != curbuf
 		&& ((flag == 'U'
 			? buf->b_p_bl
 			: (!buf->b_p_bl
 			    || (buf->b_ml.ml_mfp == NULL) != (flag == 'u')))
-		    || buf->b_scanned))
+		    || buf->b_scanned
+		    || (buf->b_ml.ml_mfp == NULL
+			&& ctrl_x_mode == CTRL_X_WHOLE_LINE)))
 	    ;
     return buf;
 }
@@ -2346,9 +2370,12 @@ ins_compl_get_exp(ini, dir)
     for (;;)
     {
 	found_new_match = FAIL;
-	/* in mode 0 pick a new entry from e_cpt if started_completion is off,
-	 * or if found_all says this entry is done  -- Acevedo */
-	if (!ctrl_x_mode && (!started_completion || found_all))
+
+	/* For ^N/^P pick a new entry from e_cpt if started_completion is off,
+	 * or if found_all says this entry is done.  For ^X^L only use the
+	 * entries from 'complete' that look in loaded buffers. */
+	if ((ctrl_x_mode == 0 || ctrl_x_mode == CTRL_X_WHOLE_LINE)
+		&& (!started_completion || found_all))
 	{
 	    found_all = FALSE;
 	    while (*e_cpt == ',' || *e_cpt == ' ')
@@ -2396,7 +2423,9 @@ ins_compl_get_exp(ini, dir)
 		break;
 	    else
 	    {
-		if (*e_cpt == 'k' || *e_cpt == 's')
+		if (ctrl_x_mode == CTRL_X_WHOLE_LINE)
+		    type = -1;
+		else if (*e_cpt == 'k' || *e_cpt == 's')
 		{
 		    if (*e_cpt == 'k')
 			type = CTRL_X_DICTIONARY;
@@ -2644,7 +2673,8 @@ ins_compl_get_exp(ini, dir)
 
 	/* break the loop for specialized modes (use 'complete' just for the
 	 * generic ctrl_x_mode == 0) or when we've found a new match */
-	if (ctrl_x_mode || found_new_match != FAIL)
+	if ((ctrl_x_mode != 0 && ctrl_x_mode != CTRL_X_WHOLE_LINE)
+		|| found_new_match != FAIL)
 	    break;
 
 	/* Mark a buffer scanned when it has been scanned completely */
@@ -2655,7 +2685,8 @@ ins_compl_get_exp(ini, dir)
     }
     started_completion = TRUE;
 
-    if (!ctrl_x_mode && *e_cpt == NUL)	/* Got to end of 'complete' */
+    if ((ctrl_x_mode == 0 || ctrl_x_mode == CTRL_X_WHOLE_LINE)
+	    && *e_cpt == NUL)		/* Got to end of 'complete' */
 	found_new_match = FAIL;
 
     i = -1;		/* total of matches, unknown */
@@ -5341,18 +5372,6 @@ ins_esc(count, cmdchar)
     int		temp;
     static int	disabled_redraw = FALSE;
 
-#if defined(FEAT_MBYTE_IME) && defined(FEAT_GUI_W32)
-    ImeSetEnglishMode();
-#endif
-#if !defined(FEAT_MBYTE_IME) && defined(GLOBAL_IME)
-/* GIME_TEST */
-    ImeSetEnglishMode();
-#endif
-#ifdef FEAT_XIM
-    /* Disable XIM to allow typing English directly for Normal mode commands. */
-    xim_set_focus(FALSE);
-#endif
-
 #if defined(FEAT_HANGULIN)
 # if defined(ESC_CHG_TO_ENG_MODE)
     hangul_input_state_set(0);
@@ -5437,6 +5456,18 @@ ins_esc(count, cmdchar)
 #endif
 #ifdef CURSOR_SHAPE
     ui_cursor_shape();		/* may show different cursor shape */
+#endif
+
+#if defined(FEAT_MBYTE_IME) && defined(FEAT_GUI_W32)
+    ImeSetEnglishMode();
+#endif
+#if !defined(FEAT_MBYTE_IME) && defined(GLOBAL_IME)
+/* GIME_TEST */
+    ImeSetEnglishMode();
+#endif
+#ifdef FEAT_XIM
+    /* Disable XIM to allow typing English directly for Normal mode commands. */
+    xim_set_focus(FALSE);
 #endif
 
     /*
@@ -5594,7 +5625,8 @@ ins_shift(c, lastc)
     else
 	change_indent(c == Ctrl_D ? INDENT_DEC : INDENT_INC, 0, TRUE, 0);
 
-    did_ai = FALSE;
+    if (did_ai && *skipwhite(ml_get_curline()) != NUL)
+	did_ai = FALSE;
 #ifdef FEAT_SMARTINDENT
     did_si = FALSE;
     can_si = FALSE;
@@ -6206,16 +6238,22 @@ ins_up(startcol)
     int		startcol;	/* when TRUE move to Insstart.col */
 {
     pos_t	tpos;
-    linenr_t	old_topline;
+    linenr_t	old_topline = curwin->w_topline;
+#ifdef FEAT_DIFF
+    int		old_topfill = curwin->w_topfill;
+#endif
 
     undisplay_dollar();
     tpos = curwin->w_cursor;
-    old_topline = curwin->w_topline;
     if (cursor_up(1L, TRUE) == OK)
     {
 	if (startcol)
 	    coladvance(getvcol_nolist(&Insstart));
-	if (old_topline != curwin->w_topline)
+	if (old_topline != curwin->w_topline
+#ifdef FEAT_DIFF
+		|| old_topfill != curwin->w_topfill
+#endif
+		)
 	    redraw_later(VALID);
 	start_arrow(&tpos);
 #ifdef FEAT_CINDENT
@@ -6250,6 +6288,9 @@ ins_down(startcol)
 {
     pos_t	tpos;
     linenr_t	old_topline = curwin->w_topline;
+#ifdef FEAT_DIFF
+    int		old_topfill = curwin->w_topfill;
+#endif
 
     undisplay_dollar();
     tpos = curwin->w_cursor;
@@ -6257,7 +6298,11 @@ ins_down(startcol)
     {
 	if (startcol)
 	    coladvance(getvcol_nolist(&Insstart));
-	if (old_topline != curwin->w_topline)
+	if (old_topline != curwin->w_topline
+#ifdef FEAT_DIFF
+		|| old_topfill != curwin->w_topfill
+#endif
+		)
 	    redraw_later(VALID);
 	start_arrow(&tpos);
 #ifdef FEAT_CINDENT

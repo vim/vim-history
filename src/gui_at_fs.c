@@ -2620,5 +2620,4 @@ vim_SelFile(toplevel, prompt, init_path, show_entry, x, y, fg, bg)
 	}
     }
 }
-
 #endif /* FEAT_BROWSE */

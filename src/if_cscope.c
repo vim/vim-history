@@ -51,6 +51,7 @@ static char *	    cs_make_vim_style_matches __ARGS((char *, char *,
 static char *	    cs_manage_matches __ARGS((char **, char **, int, mcmd_e));
 static void	    cs_parse_results __ARGS((char *, int , int *, char ***,
 			char ***, int *));
+static char *	    cs_pathcomponents __ARGS((char *path));
 static void	    cs_print_tags_priv __ARGS((char **, char **, int));
 static int	    cs_read_prompt __ARGS((int ));
 static void	    cs_release_csp __ARGS((int, int freefnpp));
@@ -482,7 +483,7 @@ cs_add_common(arg1, arg2, flags)
 	if (p_csverbose)
 	{
 	    msg_clr_eos();
-	    MSG_PUTS_ATTR(buf, highlight_attr[HLF_R]);
+	    MSG_PUTS_ATTR(buf, hl_attr(HLF_R));
 	}
     }
 
@@ -1138,7 +1139,7 @@ cs_kill_execute(i, printbuf, cname)
 {
     if (printbuf == NULL && p_csverbose)
 	MSG_PUTS_ATTR(_("cscope connection closed"),
-		      highlight_attr[HLF_R] | MSG_HIST);
+		      hl_attr(HLF_R) | MSG_HIST);
     else
     {
 	cs_release_csp(i, TRUE);
@@ -1146,7 +1147,7 @@ cs_kill_execute(i, printbuf, cname)
 	{
 	    msg_clr_eos();
 	    sprintf(printbuf, _("cscope connection %s closed\n"), cname);
-	    MSG_PUTS_ATTR(printbuf, highlight_attr[HLF_R] | MSG_HIST);
+	    MSG_PUTS_ATTR(printbuf, hl_attr(HLF_R) | MSG_HIST);
 	}
     }
 } /* cs_kill_execute */
@@ -1405,6 +1406,26 @@ parse_out:
 } /* cs_parse_results */
 
 
+/* get the requested path components */
+    static char *
+cs_pathcomponents(path)
+    char	*path;
+{
+    int		i;
+    char	*s;
+
+    if (p_cspc == 0)
+	return path;
+
+    s = path + strlen(path) - 1;
+    for (i = 0; i < p_cspc; ++i)
+	while (s > path && *--s != '/')
+	    ;
+    if (s > path && *s == '/')
+	++s;
+    return s;
+}
+
 /*
  * PRIVATE: cs_print_tags_priv
  *
@@ -1425,18 +1446,18 @@ cs_print_tags_priv(matches, cntxts, num_matches)
 
     if ((tbuf = (char *)alloc(strlen(matches[0]) + 1)) == NULL)
     {
-	MSG_PUTS_ATTR(_("couldn't malloc\n"), highlight_attr[HLF_T] | MSG_HIST);
+	MSG_PUTS_ATTR(_("couldn't malloc\n"), hl_attr(HLF_T) | MSG_HIST);
 	return;
     }
 
     strcpy(tbuf, matches[0]);
     (void)sprintf(buf, _("Cscope tag: %s\n"), strtok(tbuf, "\t"));
     vim_free(tbuf);
-    MSG_PUTS_ATTR(buf, highlight_attr[HLF_T]);
+    MSG_PUTS_ATTR(buf, hl_attr(HLF_T));
 
-    MSG_PUTS_ATTR(_("   #   line"), highlight_attr[HLF_T]);    /* strlen is 7 */
+    MSG_PUTS_ATTR(_("   #   line"), hl_attr(HLF_T));    /* strlen is 7 */
     msg_advance(msg_col + 2);
-    MSG_PUTS_ATTR(_("filename / context / line\n"), highlight_attr[HLF_T]);
+    MSG_PUTS_ATTR(_("filename / context / line\n"), hl_attr(HLF_T));
 
     /*
      * for normal tags (non-cscope tags), vim sorts the tags before printing.
@@ -1519,8 +1540,8 @@ cs_print_tags_priv(matches, cntxts, num_matches)
 	    lno[strlen(lno)-2] = '\0';  /* ignore ;" at the end */
 
 	    (void)sprintf(buf, "%4d %6s  ", num, lno);
-	    MSG_PUTS_ATTR(buf, highlight_attr[HLF_CM]);
-	    MSG_PUTS_LONG_ATTR(fname, highlight_attr[HLF_CM]);
+	    MSG_PUTS_ATTR(buf, hl_attr(HLF_CM));
+	    MSG_PUTS_LONG_ATTR(cs_pathcomponents(fname), hl_attr(HLF_CM));
 
 	    (void)sprintf(buf, " <<%s>>",
 			  (cntxts[idx] == NULL) ? "GLOBAL" : cntxts[idx]);
@@ -1682,7 +1703,7 @@ cs_reset(eap)
 	    if (p_csverbose)
 	    {
 		(void)sprintf(buf, " (#%d)\n", i);
-		MSG_PUTS_ATTR(buf, highlight_attr[HLF_R]);
+		MSG_PUTS_ATTR(buf, hl_attr(HLF_R));
 	    }
 	}
 	vim_free(dblist[i]);
@@ -1695,7 +1716,7 @@ cs_reset(eap)
 
     if (p_csverbose)
 	MSG_PUTS_ATTR(_("All cscope databases reset"),
-					    highlight_attr[HLF_R] | MSG_HIST);
+						   hl_attr(HLF_R) | MSG_HIST);
     return CSCOPE_SUCCESS;
 } /* cs_reset */
 
@@ -1766,7 +1787,7 @@ cs_show(eap)
     {
 	MSG_PUTS_ATTR(
 	    _(" # pid    database name                       prepend path\n"),
-	    highlight_attr[HLF_T]);
+	    hl_attr(HLF_T));
 	for (i = 0; i < CSCOPE_MAX_CONNECTIONS; i++)
 	{
 	    if (csinfo[i].fname == NULL)

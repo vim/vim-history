@@ -22,12 +22,11 @@ static void gui_outstr __ARGS((char_u *, int));
 static void gui_screenchar __ARGS((int off, int flags, guicolor_t fg, guicolor_t bg, int back));
 static void gui_delete_lines __ARGS((int row, int count));
 static void gui_insert_lines __ARGS((int row, int count));
-static void gui_update_scrollbars __ARGS((int));
 static void gui_do_scrollbar __ARGS((win_t *wp, int which, int enable));
 static void gui_update_horiz_scrollbar __ARGS((int));
 static win_t *xy2win __ARGS((int x, int y));
 
-static int do_update_cursor = TRUE; /* always update the cursor position */
+static int can_update_cursor = TRUE; /* can display the cursor */
 
 /*
  * The Athena scrollbars can move the thumb to after the end of the scrollbar,
@@ -213,7 +212,7 @@ gui_init_check()
     gui.menu_width = 0;
 # endif
 #endif
-#if defined(FEAT_TOOLBAR) && defined(FEAT_GUI_MOTIF)
+#if defined(FEAT_TOOLBAR) && (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA))
     gui.toolbar_height = 0;
 #endif
 #if defined(FEAT_FOOTER) && defined(FEAT_GUI_MOTIF)
@@ -494,7 +493,7 @@ gui_exit(rc)
 }
 
 #if defined(FEAT_GUI_GTK) || defined(FEAT_GUI_X11) || defined(FEAT_GUI_MSWIN) \
-	|| defined(PROTO)
+	|| defined(FEAT_GUI_PHOTON) || defined(PROTO)
 /*
  * Called when the GUI shell is closed by the user.  If there are no changed
  * files Vim exits, otherwise there will be a dialog to ask the user what to
@@ -738,9 +737,9 @@ gui_update_cursor(force, clear_selection)
     int		attr;
     attrentry_t *aep = NULL;
 
-    /* Don't update the cursor when halfway busy scrolling, ScreenLines[]
-     * isn't valid then. */
-    if (!do_update_cursor)
+    /* Don't update the cursor when halfway busy scrolling.
+     * ScreenLines[] isn't valid then. */
+    if (!can_update_cursor)
 	return;
 
     gui_check_pos();
@@ -748,7 +747,7 @@ gui_update_cursor(force, clear_selection)
 		    || gui.row != gui.cursor_row || gui.col != gui.cursor_col)
     {
 	gui_undraw_cursor();
-	if (gui.row <0)
+	if (gui.row < 0)
 	    return;
 #ifdef FEAT_MBYTE_IME
 	if (gui.row != gui.cursor_row || gui.col != gui.cursor_col)
@@ -774,7 +773,10 @@ gui_update_cursor(force, clear_selection)
 	 * How the cursor is drawn depends on the current mode.
 	 */
 	idx = get_shape_idx(FALSE);
-	id = shape_table[idx].id;
+	if (State & LANGMAP)
+	    id = shape_table[idx].id_lm;
+	else
+	    id = shape_table[idx].id;
 
 	/* get the colors and attributes for the cursor.  Default is inverted */
 	cfg = (guicolor_t)-1;
@@ -914,7 +916,9 @@ gui_update_cursor(force, clear_selection)
 	}
 	gui.highlight_mask = old_hl_mask;
     }
+
 #ifdef FEAT_XIM
+    /* Set the position of the XIM. */
     xim_set_preedit();
 #endif
 }
@@ -952,7 +956,7 @@ gui_position_components(total_width)
 	text_area_x += gui.scrollbar_width;
 
     text_area_y = 0;
-#if defined(FEAT_MENU) && !defined(FEAT_GUI_GTK)
+#if defined(FEAT_MENU) && !(defined(FEAT_GUI_GTK) || defined(FEAT_GUI_PHOTON))
     gui.menu_width = total_width;
     if (gui.menu_is_active)
 	text_area_y += gui.menu_height;
@@ -961,9 +965,16 @@ gui_position_components(total_width)
     if (vim_strchr(p_go, GO_TOOLBAR) != NULL)
 	text_area_y = TOOLBAR_BUTTON_HEIGHT + TOOLBAR_BORDER_HEIGHT;
 #endif
-#if defined(FEAT_TOOLBAR) && defined(FEAT_GUI_MOTIF)
+
+#if defined(FEAT_TOOLBAR) && (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA))
     if (vim_strchr(p_go, GO_TOOLBAR) != NULL)
+    {
+# ifdef FEAT_GUI_ATHENA
+	gui_mch_set_toolbar_pos(text_area_x, text_area_y,
+				gui.menu_width, gui.toolbar_height);
+# endif
 	text_area_y += gui.toolbar_height;
+    }
 #endif
 
     text_area_width = gui.num_cols * gui.char_width + gui.border_offset * 2;
@@ -1082,7 +1093,10 @@ again:
 
     gui.num_cols = (pixel_width - gui_get_base_width()) / gui.char_width;
     gui.num_rows = (pixel_height - gui_get_base_height()
-				   + (gui.char_height / 2)) / gui.char_height;
+#ifndef FEAT_GUI_PHOTON
+				    + (gui.char_height / 2)
+#endif
+					) / gui.char_height;
 
     gui_position_components(pixel_width);
 
@@ -1293,11 +1307,13 @@ gui_write(s, len)
 {
     char_u	*p;
     int		arg1 = 0, arg2 = 0;
-#if defined(RISCOS) || defined(WIN16)
-    int		force = TRUE;	/* JK230798, stop Vim being smart or our
-				   redraw speed will suffer */
+    /* this doesn't make sense, disabled until someone can explain why it
+     * would be needed */
+#if 0 && (defined(RISCOS) || defined(WIN16))
+    int		force_cursor = TRUE;	/* JK230798, stop Vim being smart or
+					   our redraw speed will suffer */
 #else
-    int		force = FALSE;	/* force cursor update */
+    int		force_cursor = FALSE;	/* force cursor update */
 #endif
     int		force_scrollbar = FALSE;
 
@@ -1356,7 +1372,7 @@ gui_write(s, len)
 		    gui_set_cursor(arg1, arg2);
 		    break;
 		case 's':	/* force cursor (shape) update */
-		    force = TRUE;
+		    force_cursor = TRUE;
 		    break;
 		case 'R':	/* Set scroll region */
 		    if (arg1 < arg2)
@@ -1471,13 +1487,11 @@ gui_write(s, len)
 	}
     }
 
-    /* Don't update the cursor when ScreenLines[] is invalid (busy scrolling).
-     * Updating the scrollbar also doesn't make sense then. */
-    if (do_update_cursor)
-    {
-	gui_update_cursor(force, TRUE);
+    /* Don't update cursor when ScreenLines[] is invalid (busy scrolling). */
+    if (can_update_cursor && force_cursor)
+	gui_update_cursor(force_cursor, TRUE);
+    if (force_scrollbar)
 	gui_update_scrollbars(force_scrollbar);
-    }
 
     /*
      * We need to make sure this is cleared since Athena doesn't tell us when
@@ -1498,13 +1512,13 @@ gui_write(s, len)
     void
 gui_dont_update_cursor()
 {
-    do_update_cursor = FALSE;
+    can_update_cursor = FALSE;
 }
 
     void
 gui_can_update_cursor()
 {
-    do_update_cursor = TRUE;
+    can_update_cursor = TRUE;
     /* No need to update the cursor right now, there is always more output
      * after scrolling. */
 }
@@ -1968,12 +1982,12 @@ gui_undraw_cursor()
 
     void
 gui_redraw(x, y, w, h)
-    int	    x;
-    int	    y;
-    int	    w;
-    int	    h;
+    int		x;
+    int		y;
+    int		w;
+    int		h;
 {
-    int	    row1, col1, row2, col2;
+    int		row1, col1, row2, col2;
 
     row1 = Y_2_ROW(y);
     col1 = X_2_COL(x);
@@ -2155,7 +2169,21 @@ gui_delete_lines(row, count)
 	gui_clear_block(row, gui.scroll_region_left,
 			      gui.scroll_region_bot, gui.scroll_region_right);
     else
+    {
 	gui_mch_delete_lines(row, count);
+
+	/* If the cursor was in the deleted lines it's now gone.  If the
+	 * cursor was in the scrolled lines adjust its position. */
+	if (gui.cursor_row >= row
+		&& gui.cursor_col >= gui.scroll_region_left
+		&& gui.cursor_col <= gui.scroll_region_right)
+	{
+	    if (gui.cursor_row < row + count)
+		gui.cursor_is_valid = FALSE;
+	    else if (gui.cursor_row <= gui.scroll_region_bot)
+		gui.cursor_row -= count;
+	}
+    }
 }
 
     static void
@@ -2174,7 +2202,19 @@ gui_insert_lines(row, count)
 	gui_clear_block(row, gui.scroll_region_left,
 			      gui.scroll_region_bot, gui.scroll_region_right);
     else
+    {
 	gui_mch_insert_lines(row, count);
+
+	if (gui.cursor_row >= gui.row
+		&& gui.cursor_col >= gui.scroll_region_left
+		&& gui.cursor_col <= gui.scroll_region_right)
+	{
+	    if (gui.cursor_row <= gui.scroll_region_bot - count)
+		gui.cursor_row += count;
+	    else if (gui.cursor_row <= gui.scroll_region_bot)
+		gui.cursor_is_valid = FALSE;
+	}
+    }
 }
 
 /*
@@ -2527,7 +2567,11 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
      * repeated_click, because we don't want starting Visual mode when
      * clicking on a different character in the text.
      */
-    if (curwin->w_topline != gui_prev_topline)
+    if (curwin->w_topline != gui_prev_topline
+#ifdef FEAT_DIFF
+	    || curwin->w_topfill != gui_prev_topfill
+#endif
+	    )
 	repeated_click = FALSE;
 
     string[0] = CSI;	/* this sequence is recognized by check_termcode() */
@@ -2550,6 +2594,9 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
 	    num_clicks = 1;
 	prev_button = button;
 	gui_prev_topline = curwin->w_topline;
+#ifdef FEAT_DIFF
+	gui_prev_topfill = curwin->w_topfill;
+#endif
 
 	string[3] = (char_u)(button | 0x20);
 	SET_NUM_MOUSE_CLICKS(string[3], num_clicks);
@@ -2595,7 +2642,9 @@ gui_xy2colrow(x, y, colp)
 #ifdef FEAT_MBYTE
     if (ScreenLines != NULL
 	    && col > 0
-	    && ((enc_dbcs && dbcs_isbyte1(ScreenLines + LineOffset[row], col))
+	    && ((enc_dbcs
+		    && dbcs_screen_head_off(ScreenLines + LineOffset[row],
+					 ScreenLines + LineOffset[row] + col))
 		|| (enc_utf8 && ScreenLines[LineOffset[row] + col] == 0)))
 	--col;
 #endif
@@ -2770,7 +2819,7 @@ gui_init_which_components(oldval)
 	    need_set_size = TRUE;
 	}
 #endif
-#if defined(FEAT_MENU) && !defined(WIN16)
+#if defined(FEAT_MENU) && !defined(WIN16) && !(defined(WIN32) && !defined(FEAT_TEAROFF))
 	if (using_tearoff != prev_tearoff)
 	{
 	    gui_mch_toggle_tearoffs(using_tearoff);
@@ -2864,6 +2913,9 @@ gui_drag_scrollbar(sb, value, still_dragging)
 #ifdef USE_ON_FLY_SCROLL
     colnr_t	old_leftcol = curwin->w_leftcol;
     linenr_t	old_topline = curwin->w_topline;
+# ifdef FEAT_DIFF
+    int		old_topfill = curwin->w_topfill;
+# endif
 #else
     char_u	bytes[4 + sizeof(long_u)];
     int		byte_count;
@@ -3011,7 +3063,11 @@ gui_drag_scrollbar(sb, value, still_dragging)
      */
     if (curwin->w_p_scb
 	    && ((sb->wp == NULL && curwin->w_leftcol != old_leftcol)
-		|| (sb->wp == curwin && curwin->w_topline != old_topline)))
+		|| (sb->wp == curwin && (curwin->w_topline != old_topline
+#  ifdef FEAT_DIFF
+					   || curwin->w_topfill != old_topfill
+#  endif
+			))))
     {
 	do_check_scrollbind(TRUE);
 	if (sb->wp == NULL)
@@ -3029,7 +3085,7 @@ gui_drag_scrollbar(sb, value, still_dragging)
  * Scrollbar stuff:
  */
 
-    static void
+    void
 gui_update_scrollbars(force)
     int		force;	    /* Force all scrollbars to get updated */
 {
@@ -3154,14 +3210,20 @@ gui_update_scrollbars(force)
 	    /* Calculate height and position in pixels */
 	    h = (sb->height + sb->status_height) * gui.char_height;
 	    y = sb->top * gui.char_height + gui.border_offset;
-#if defined(FEAT_MENU) && !defined(FEAT_GUI_GTK) && !defined(FEAT_GUI_MOTIF)
+#if defined(FEAT_MENU) && !defined(FEAT_GUI_GTK) && !defined(FEAT_GUI_MOTIF) && !defined(FEAT_GUI_PHOTON)
 	    if (gui.menu_is_active)
 		y += gui.menu_height;
 #endif
 
-#if defined(FEAT_GUI_MSWIN) && defined(FEAT_TOOLBAR)
+#if defined(FEAT_TOOLBAR) && (defined(FEAT_GUI_MSWIN) || defined(FEAT_GUI_ATHENA))
 	    if (vim_strchr(p_go, GO_TOOLBAR) != NULL)
+# ifdef FEAT_GUI_ATHENA
+		y += gui.toolbar_height;
+# else
+#  ifdef FEAT_GUI_MSWIN
 		y += TOOLBAR_BUTTON_HEIGHT + TOOLBAR_BORDER_HEIGHT;
+#  endif
+# endif
 #endif
 
 	    if (wp == firstwin)
@@ -3278,6 +3340,9 @@ gui_do_scroll()
     long	nlines;
     pos_t	old_cursor;
     linenr_t	old_topline;
+#ifdef FEAT_DIFF
+    int		old_topfill;
+#endif
 
     for (wp = firstwin, i = 0; i < current_scrollbar; wp = W_NEXT(wp), i++)
 	if (wp == NULL)
@@ -3295,6 +3360,9 @@ gui_do_scroll()
 
     save_wp = curwin;
     old_topline = wp->w_topline;
+#ifdef FEAT_DIFF
+    old_topfill = wp->w_topfill;
+#endif
     old_cursor = wp->w_cursor;
     curwin = wp;
     curbuf = wp->w_buffer;
@@ -3308,7 +3376,11 @@ gui_do_scroll()
     if (gui.dragged_sb == SBAR_NONE)
 	gui.dragged_wp = NULL;
 
-    if (old_topline != wp->w_topline)
+    if (old_topline != wp->w_topline
+#ifdef FEAT_DIFF
+	    || old_topfill != wp->w_topfill
+#endif
+	    )
     {
 	if (p_so != 0)
 	{
@@ -3329,7 +3401,11 @@ gui_do_scroll()
      * Don't call updateWindow() when nothing has changed (it will overwrite
      * the status line!).
      */
-    if (old_topline != wp->w_topline)
+    if (old_topline != wp->w_topline
+#ifdef FEAT_DIFF
+	    || old_topfill != wp->w_topfill
+#endif
+	    )
     {
 	redraw_win_later(wp, VALID);
 	updateWindow(wp);   /* update window, status line, and cmdline */
@@ -3664,13 +3740,14 @@ xy2win(x, y)
 	update_mouseshape(SHAPE_IDX_MORE);
     else if (wp == NULL)
 	update_mouseshape(SHAPE_IDX_CLINE);
+#  ifdef FEAT_VERTSPLIT
+    else if (!(State & CMDLINE) && W_VSEP_WIDTH(wp) > 0 && col == wp->w_width
+	    && (row != wp->w_height || !stl_connected(wp)))
+	update_mouseshape(SHAPE_IDX_VSEP);
+#  endif
     else if (!(State & CMDLINE) && W_STATUS_HEIGHT(wp) > 0
 						       && row == wp->w_height)
 	update_mouseshape(SHAPE_IDX_STATUS);
-#  ifdef FEAT_VERTSPLIT
-    else if (!(State & CMDLINE) && W_VSEP_WIDTH(wp) > 0 && col == wp->w_width)
-	update_mouseshape(SHAPE_IDX_VSEP);
-#  endif
     else
 	update_mouseshape(-2);
 # endif

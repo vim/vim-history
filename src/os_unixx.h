@@ -122,7 +122,9 @@
 
 /* shared library access */
 #if defined(HAVE_DLFCN_H) && defined(USE_DLOPEN)
-#  include <dlfcn.h>
-#elif defined(HAVE_DL_H) && defined(HAVE_SHL_LOAD)
+# include <dlfcn.h>
+#else
+# if defined(HAVE_DL_H) && defined(HAVE_SHL_LOAD)
 #  include <dl.h>
+# endif
 #endif

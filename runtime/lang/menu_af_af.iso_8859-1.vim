@@ -1,6 +1,6 @@
 " Menu Translations:	Afrikaas
 " Maintainer:	        Danie Roux <droux@tuks.co.za>
-" Last Change:	        2001 Jan 17
+" Last Change:	        2001 Apr 01
 
 menutrans clear
 let did_menu_trans = 1
@@ -33,9 +33,9 @@ menutrans &Edit				&Wysig
 menutrans &Undo<Tab>u			Terug<Tab>u
 menutrans &Redo<Tab>^R			Voo&ruit<Tab>^R
 menutrans Rep&eat<Tab>\.			&Herhaal<Tab>\.
-menutrans Cu&t<Tab>"*x			&Knip<Tab>"*x
-menutrans &Copy<Tab>"*y			&Kopiëer<Tab>"*y
-menutrans &Paste<Tab>"*p		Plak<Tab>"*p
+menutrans Cu&t<Tab>"+x			&Knip<Tab>"+x
+menutrans &Copy<Tab>"+y			&Kopiëer<Tab>"+y
+menutrans &Paste<Tab>"+p		Plak<Tab>"+p
 menutrans Put\ &Before<Tab>[p		Voeg\ &Voor\ in<Tab>[p
 menutrans Put\ &After<Tab>]p		Voeg\ A&gter\ in<Tab>]p
 menutrans &Select\ all<Tab>ggVG		Kies\ &Alles<Tab>ggVG

@@ -54,7 +54,7 @@ int mch_expandpath __ARGS((garray_t *gap, char_u *path, int flags));
 int mch_expand_wildcards __ARGS((int num_pat, char_u **pat, int *num_file, char_u ***file, int flags));
 int mch_has_wildcard __ARGS((char_u *p));
 int mch_libcall __ARGS((char_u *libname, char_u *funcname, char_u *argstring, int argint, char_u **string_result, int *number_result));
-void setup_xterm_clip __ARGS((void));
+void setup_term_clip __ARGS((void));
 void start_xterm_trace __ARGS((int button));
 void stop_xterm_trace __ARGS((void));
 void clear_xterm_clip __ARGS((void));

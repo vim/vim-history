@@ -1,6 +1,6 @@
 " Menu Translations:	Español
 " Maintainer:		Eduardo F. Amatria <eferna1@platea.pntic.mec.es>
-" Last Change:	2001 Mar 04
+" Last Change:	2001 Apr 01
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -38,9 +38,9 @@ menutrans &Edit				&Editar
 menutrans &Undo<Tab>u			&Deshacer<Tab>u
 menutrans &Redo<Tab>^R			&Rehacer<Tab>^R
 menutrans Rep&eat<Tab>\.                Repe&tir<Tab>\.
-menutrans Cu&t<Tab>"*x			Cor&tar<Tab>"*x
-menutrans &Copy<Tab>"*y			&Copiar<Tab>"*y
-menutrans &Paste<Tab>"*p		&Pegar<Tab>"*p
+menutrans Cu&t<Tab>"+x			Cor&tar<Tab>"+x
+menutrans &Copy<Tab>"+y			&Copiar<Tab>"+y
+menutrans &Paste<Tab>"+p		&Pegar<Tab>"+p
 menutrans Put\ &Before<Tab>[p		Poner\ &antes<Tab>[p
 menutrans Put\ &After<Tab>]p		Poner\ &después<Tab>]p
 menutrans &Select\ all<Tab>ggVG		&Seleccionar\ todo<Tab>ggVG

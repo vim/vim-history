@@ -1,6 +1,6 @@
 " Menu Translations:	Nederlands
 " Maintainer:		Bram Moolenaar
-" Last Change:	2001 Mar 06
+" Last Change:	2001 Apr 01
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -38,9 +38,9 @@ menutrans &Edit				Be&werken
 menutrans &Undo<Tab>u			Terug<Tab>u
 menutrans &Redo<Tab>^R			Voo&ruit<Tab>^R
 menutrans Rep&eat<Tab>\.		&Herhalen<Tab>\.
-menutrans Cu&t<Tab>"*x			&Knippen<Tab>"*x
-menutrans &Copy<Tab>"*y			K&opiëeren<Tab>"*y
-menutrans &Paste<Tab>"*p		Plakken<Tab>"*p
+menutrans Cu&t<Tab>"+x			&Knippen<Tab>"+x
+menutrans &Copy<Tab>"+y			K&opiëeren<Tab>"+y
+menutrans &Paste<Tab>"+p		Plakken<Tab>"+p
 menutrans Put\ &Before<Tab>[p		Ervoor\ invoegen<Tab>[p
 menutrans Put\ &After<Tab>]p		Erachter\ invoegen<Tab>]p
 menutrans &Select\ all<Tab>ggVG		Alles\ &Markeren<Tab>ggVG

@@ -2,7 +2,7 @@
 " Language:     Java
 " Maintainer:   Claudio Fleiner <claudio@fleiner.com>
 " URL:          http://www.fleiner.com/vim/syntax/java.vim
-" Last Change:  2001 Jan 15
+" Last Change:  2001 April 03
 
 " Please check :help java.vim for comments on some of the options available.
 
@@ -207,11 +207,12 @@ if exists("java_highlight_debug")
   syn match   javaDebugNumber           contained "\<\d\+\([eE][-+]\=\d\+\)\=[fFdD]\>"
   syn keyword javaDebugBoolean          contained true false
   syn keyword javaDebugType             contained null this super
+  syn region javaDebugParen  start=+(+ end=+)+ contained contains=javaDebug.* 
 
   " to make this work you must define the highlighting for these groups
-  syn region javaDebug start="System\.\(out\|err\)\.print\(ln\)*\s*" end=";" contains=javaDebug.*
-  syn match javaDebug "[A-Za-z][a-zA-Z0-9_]*\.printStackTrace\s*(\s*)" contains=javaDebug.*
-  syn region javaDebug  start="trace[SL]\=[ \t]*(" end=";" contains=javaDebug.*
+  syn match javaDebug "System\.\(out\|err\)\.print\(ln\)*\s*("me=e-1 contains=javaDebug.* nextgroup=javaDebugParen
+  syn match javaDebug "[A-Za-z][a-zA-Z0-9_]*\.printStackTrace\s*("me=e-1 contains=javaDebug.* nextgroup=javaDebugParen
+  syn match javaDebug "trace[SL]\=\s*("me=e-1 contains=javaDebug.* nextgroup=javaDebugParen
 
   syn cluster javaTop add=javaDebug
 
@@ -224,6 +225,7 @@ if exists("java_highlight_debug")
   hi link javaDebugSpecial          DebugSpecial
   hi link javaDebugSpecialCharacter DebugSpecial
   hi link javaDebugCharacter        DebugString
+  hi link javaDebugParen            Debug
 
   hi link DebugString               String
   hi link DebugSpecial              Special

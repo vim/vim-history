@@ -542,9 +542,6 @@ normal_cmd(oap, toplevel)
     ca.oap = oap;
     ca.opcount = opcount;
 
-#ifdef FEAT_SCROLLBIND
-    do_check_scrollbind(FALSE);
-#endif
 #ifdef FEAT_SNIFF
     want_sniff_request = sniff_connected;
 #endif
@@ -829,6 +826,8 @@ getcount:
 	int	*cp;
 	int	repl = FALSE;	/* get character for replace mode */
 	int	lit = FALSE;	/* get extra character literally */
+	int	langmap = FALSE;    /* using :lmap mappings */
+	int	lang;		/* getting a text character */
 
 	++no_mapping;
 	++allow_keys;		/* no mapping for nchar, but allow key codes */
@@ -859,6 +858,7 @@ getcount:
 		repl = TRUE;
 	    cp = &ca.nchar;
 	}
+	lang = (repl || (nv_cmds[idx].cmd_flags & NV_LANG));
 
 	/*
 	 * Get a second or third character.
@@ -872,13 +872,15 @@ getcount:
 		ui_cursor_shape();	/* show different cursor shape */
 	    }
 #endif
-	    if ((repl || (nv_cmds[idx].cmd_flags & NV_LANG))
-		    && (curbuf->b_lmap & B_LMAP_INSERT))
+	    if (lang && (curbuf->b_lmap & B_LMAP_INSERT))
 	    {
 		/* Allow mappings defined with ":lmap". */
 		--no_mapping;
 		--allow_keys;
-		State = LANGMAP;
+		if (State == REPLACE)
+		    State = LREPLACE;
+		else
+		    State = LANGMAP;
 #if defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)
 		ImeSetOriginMode();
 #endif
@@ -886,10 +888,14 @@ getcount:
 		/* Enable XIM to allow typing language character directly */
 		xim_set_focus(TRUE);
 #endif
+		langmap = TRUE;
 	    }
+
 	    *cp = safe_vgetc();
-	    if (State == LANGMAP)
+
+	    if (langmap)
 	    {
+		/* Undo the decrement done above */
 		++no_mapping;
 		++allow_keys;
 		State = NORMAL_BUSY;
@@ -933,24 +939,39 @@ getcount:
 
 #ifdef FEAT_LANGMAP
 		/* adjust chars > 127, except after "tTfFr" commands */
-		LANGMAP_ADJUST(*cp, !((nv_cmds[idx].cmd_flags & NV_LANG)
-								    || repl));
+		LANGMAP_ADJUST(*cp, !lang);
 #endif
 #ifdef FEAT_RIGHTLEFT
 		/* adjust Hebrew mapped char */
-		if (p_hkmap
-			&& ((nv_cmds[idx].cmd_flags & NV_LANG) || repl)
-			&& KeyTyped)
+		if (p_hkmap && lang && KeyTyped)
 		    *cp = hkmap(*cp);
 # ifdef FEAT_FKMAP
 		/* adjust Farsi mapped char */
-		if (p_fkmap
-			&& ((nv_cmds[idx].cmd_flags & NV_LANG) || repl)
-			&& KeyTyped)
+		if (p_fkmap && lang && KeyTyped)
 		    *cp = fkmap(*cp);
 # endif
 #endif
 	    }
+
+#ifdef FEAT_MBYTE
+	    /* When getting a text character and the next character is a
+	     * multi-byte character, it could be a composing character.
+	     * However, don't wait for it to arrive. */
+	    while (enc_utf8 && lang && (c = vpeekc()) > 0
+				 && (c >= 0x100 || MB_BYTE2LEN(vpeekc()) > 1))
+	    {
+		c = safe_vgetc();
+		if (!utf_iscomposing(c))
+		{
+		    vungetc(c);		/* it wasn't, put it back */
+		    break;
+		}
+		else if (ca.ncharC1 == 0)
+		    ca.ncharC1 = c;
+		else
+		    ca.ncharC2 = c;
+	    }
+#endif
 	}
 	--no_mapping;
 	--allow_keys;
@@ -1120,7 +1141,7 @@ normal_end:
     vim_free(ca.searchbuf);
 
 #ifdef FEAT_SCROLLBIND
-    if (curwin->w_p_scb)
+    if (curwin->w_p_scb && toplevel)
     {
 	validate_cursor();	/* may need to update w_leftcol */
 	do_check_scrollbind(TRUE);
@@ -1421,11 +1442,15 @@ do_pending_operator(cap, old_col, gui_yank)
 # ifdef FEAT_VIRTUALEDIT
 		    if (virtual_active())
 		    {
-			start += curbuf->b_visual_end.coladd;
+			/* Add "coladd" to the virtual columns.  But watch out
+			 * for a double-wide character! */
 			oap->start_vcol += curbuf->b_visual_start.coladd;
+			if (oap->end_vcol < oap->start_vcol)
+			    oap->end_vcol = oap->start_vcol;
 
-			end = start;
-			oap->end_vcol = oap->start_vcol;
+			start += curbuf->b_visual_end.coladd;
+			if (end < start)
+			    end = start;
 		    }
 # endif
 
@@ -1573,12 +1598,14 @@ do_pending_operator(cap, old_col, gui_yank)
 #endif
 
 #ifdef FEAT_MBYTE
-	/* Include the trailing byte of a multi-byte char. */
-	if (has_mbyte && (oap->inclusive
+	/* Include the trailing byte of a multi-byte char.  Don't do it when
+	 * VIsual_active is TRUE and 'sel' is "exclusive", the position has
+	 * already been moved to the trailing byte by adjust_for_sel() then. */
+	if (has_mbyte && ((oap->inclusive
 # ifdef FEAT_VISUAL
-		    || (VIsual_active && *p_sel != 'e')
+		    && !oap->is_VIsual) || ((oap->is_VIsual && *p_sel != 'e')
 # endif
-		    ))
+		    )))
 	{
 	    int		l;
 
@@ -2179,7 +2206,7 @@ do_mouse(oap, c, dir, count, fix_indent)
 	     * NOTE: Ignore right button down and drag mouse events.
 	     * Windows only shows the popup menu on the button up event.
 	     */
-#if defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_GTK)
+#if defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_GTK) || defined(FEAT_GUI_PHOTON)
 	    if (!is_click)
 		return FALSE;
 #endif
@@ -2189,7 +2216,7 @@ do_mouse(oap, c, dir, count, fix_indent)
 #endif
 #if defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_GTK) \
 	    || defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MSWIN) \
-	    || defined(FEAT_GUI_MAC)
+	    || defined(FEAT_GUI_MAC) || defined(FEAT_GUI_PHOTON)
 	    if (gui.in_use)
 	    {
 		jump_flags = 0;
@@ -3305,21 +3332,34 @@ do_check_scrollbind(check)
 {
     static win_t	*old_curwin = NULL;
     static linenr_t	old_topline = 0;
+#ifdef FEAT_DIFF
+    static int		old_topfill = 0;
+#endif
     static buf_t	*old_buf = NULL;
     static colnr_t	old_leftcol = 0;
 
     if (check && curwin->w_p_scb)
     {
+	/* If a ":syncbind" command was just used, don't scroll, only reset
+	 * the values. */
 	if (did_syncbind)
 	    did_syncbind = FALSE;
 	else if (curwin == old_curwin)
 	{
 	    /*
-	     * synchronize other windows, as necessary according to
-	     * 'scrollbind'
+	     * Synchronize other windows, as necessary according to
+	     * 'scrollbind'.  Don't do this after an ":edit" command, except
+	     * when 'diff' is set.
 	     */
-	    if (curwin->w_buffer == old_buf
-		    && (curwin->w_topline != old_topline
+	    if ((curwin->w_buffer == old_buf
+#ifdef FEAT_DIFF
+			|| curwin->w_p_diff
+#endif
+		)
+		&& (curwin->w_topline != old_topline
+#ifdef FEAT_DIFF
+			|| curwin->w_topfill != old_topfill
+#endif
 			|| curwin->w_leftcol != old_leftcol))
 	    {
 		check_scrollbind(curwin->w_topline - old_topline,
@@ -3345,6 +3385,9 @@ do_check_scrollbind(check)
 
     old_curwin = curwin;
     old_topline = curwin->w_topline;
+#ifdef FEAT_DIFF
+    old_topfill = curwin->w_topfill;
+#endif
     old_buf = curwin->w_buffer;
     old_leftcol = curwin->w_leftcol;
 }
@@ -3374,8 +3417,11 @@ check_scrollbind(topline_diff, leftcol_diff)
     /*
      * check 'scrollopt' string for vertical and horizontal scroll options
      */
-    want_ver = (vim_strchr(p_sbo, 'v') && topline_diff);
-    want_hor = (vim_strchr(p_sbo, 'h') && (leftcol_diff || topline_diff));
+    want_ver = (vim_strchr(p_sbo, 'v') && topline_diff != 0);
+#ifdef FEAT_DIFF
+    want_ver |= old_curwin->w_p_diff;
+#endif
+    want_hor = (vim_strchr(p_sbo, 'h') && (leftcol_diff || topline_diff != 0));
 
     /*
      * loop through the scrollbound windows and scroll accordingly
@@ -3386,26 +3432,35 @@ check_scrollbind(topline_diff, leftcol_diff)
     for (curwin = firstwin; curwin; curwin = curwin->w_next)
     {
 	curbuf = curwin->w_buffer;
-	if (curwin != old_curwin  /* don't scroll in original window */
-		&& curwin->w_p_scb)
+	/* skip original window  and windows with 'noscrollbind' */
+	if (curwin != old_curwin && curwin->w_p_scb)
 	{
 	    /*
 	     * do the vertical scroll
 	     */
 	    if (want_ver)
 	    {
-		curwin->w_scbind_pos += topline_diff;
-		topline = curwin->w_scbind_pos;
-		if (topline > curbuf->b_ml.ml_line_count - p_so)
-		    topline = curbuf->b_ml.ml_line_count - p_so;
-		if (topline < 1)
-		    topline = 1;
-
-		y = topline - curwin->w_topline;
-		if (y > 0)
-		    scrollup(y, FALSE);
+#ifdef FEAT_DIFF
+		if (old_curwin->w_p_diff && curwin->w_p_diff)
+		{
+		    diff_set_topline(old_curwin, curwin);
+		}
 		else
-		    scrolldown(-y, FALSE);
+#endif
+		{
+		    curwin->w_scbind_pos += topline_diff;
+		    topline = curwin->w_scbind_pos;
+		    if (topline > curbuf->b_ml.ml_line_count - p_so)
+			topline = curbuf->b_ml.ml_line_count - p_so;
+		    if (topline < 1)
+			topline = 1;
+
+		    y = topline - curwin->w_topline;
+		    if (y > 0)
+			scrollup(y, FALSE);
+		    else
+			scrolldown(-y, FALSE);
+		}
 
 		redraw_later(VALID);
 		cursor_correct();
@@ -3775,6 +3830,9 @@ scroll_redraw(up, count)
     long	count;
 {
     linenr_t	prev_topline = curwin->w_topline;
+#ifdef FEAT_DIFF
+    int		prev_topfill = curwin->w_topfill;
+#endif
     linenr_t	prev_lnum = curwin->w_cursor.lnum;
 
     if (up)
@@ -3783,12 +3841,20 @@ scroll_redraw(up, count)
 	scrolldown(count, TRUE);
     if (p_so)
     {
+	/* Adjust the cursor position for 'scrolloff'.  Mark w_topline as
+	 * valid, otherwise the screen jumps back at the end of the file. */
 	cursor_correct();
-	update_topline();
+	check_cursor_moved(curwin);
+	curwin->w_valid |= VALID_TOPLINE;
+
 	/* If moved back to where we were, at least move the cursor, otherwise
 	 * we get stuck at one position.  Don't move the cursor up if the
 	 * first line of the buffer is already on the screen */
-	while (curwin->w_topline == prev_topline)
+	while (curwin->w_topline == prev_topline
+#ifdef FEAT_DIFF
+		&& curwin->w_topfill == prev_topfill
+#endif
+		)
 	{
 	    if (up)
 	    {
@@ -3803,9 +3869,10 @@ scroll_redraw(up, count)
 			|| cursor_up(1L, FALSE) == FAIL)
 		    break;
 	    }
-	    /* Now recompute the topline, otherwise the cursor will be moved
-	     * back again. */
-	    update_topline();
+	    /* Mark w_topline as valid, otherwise the screen jumps back at the
+	     * end of the file. */
+	    check_cursor_moved(curwin);
+	    curwin->w_valid |= VALID_TOPLINE;
 	}
     }
     if (curwin->w_cursor.lnum != prev_lnum)
@@ -4666,6 +4733,7 @@ nv_scroll(cap)
 #ifdef FEAT_FOLDING
     linenr_t	lnum;
 #endif
+    int		half;
 
     cap->oap->motion_type = MLINE;
     setpcmark();
@@ -4683,18 +4751,34 @@ nv_scroll(cap)
     {
 	if (cap->cmdchar == 'M')
 	{
+#ifdef FEAT_DIFF
+	    /* Don't count filler lines above the window. */
+	    used -= diff_check_fill(curwin, curwin->w_topline)
+							  - curwin->w_topfill;
+#endif
 	    validate_botline();	    /* make sure w_empty_rows is valid */
+	    half = (curwin->w_height - curwin->w_empty_rows + 1) / 2;
 	    for (n = 0; curwin->w_topline + n < curbuf->b_ml.ml_line_count; ++n)
 	    {
-		if ((used += plines(curwin->w_topline + n)) >=
-			    (curwin->w_height - curwin->w_empty_rows + 1) / 2)
+#ifdef FEAT_DIFF
+		/* Count half he number of filler lines to be "below this
+		 * line" and half to be "above the next line". */
+		if (n > 0 && used + diff_check_fill(curwin, curwin->w_topline
+							     + n) / 2 >= half)
+		{
+		    --n;
+		    break;
+		}
+#endif
+		used += plines(curwin->w_topline + n);
+		if (used >= half)
 		    break;
 #ifdef FEAT_FOLDING
 		if (hasFolding(curwin->w_topline + n, NULL, &lnum))
 		    n = lnum - curwin->w_topline;
 #endif
 	    }
-	    if (n && used > curwin->w_height)
+	    if (n > 0 && used > curwin->w_height)
 		--n;
 	}
 	else
@@ -5059,30 +5143,15 @@ nv_search(cap)
 	return;
     }
 
-#if defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)
-    ImeSetOriginMode();
-#endif
-#ifdef FEAT_XIM
-    /* Enable XIM to allow typing language characters directly. */
-    xim_set_focus(TRUE);
-#endif
     cap->searchbuf = getcmdline(cap->cmdchar, cap->count1, 0);
-#if defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)
-    ImeSetEnglishMode();
-#endif
-#ifdef FEAT_XIM
-    /* Disable XIM to allow typing English directly for Normal
-     * mode commands. */
-    xim_set_focus(FALSE);
-#endif
+
     if (cap->searchbuf == NULL)
     {
 	clearop(oap);
 	return;
     }
 
-    normal_search(cap, cap->cmdchar, cap->searchbuf,
-						(cap->arg ? 0 : SEARCH_MARK));
+    normal_search(cap, cap->cmdchar, cap->searchbuf, (cap->arg ? 0 : SEARCH_MARK));
 }
 
 /*
@@ -5157,8 +5226,7 @@ nv_csearch(cap)
 	cap->oap->inclusive = FALSE;
     else
 	cap->oap->inclusive = TRUE;
-    if (IS_SPECIAL(cap->nchar)
-	    || !searchc(cap->nchar, cap->arg, type, cap->count1))
+    if (IS_SPECIAL(cap->nchar) || !searchc(cap, type))
 	clearopbeep(cap->oap);
     else
     {
@@ -5737,11 +5805,18 @@ nv_replace(cap)
 	    int		old_State = State;
 
 	    /* This is slow, but it handles replacing a single-byte with a
-	     * multi-byte and the other way around. */
-	    State = REPLACE;
+	     * multi-byte and the other way around.  Also handles adding
+	     * composing characters for utf-8. */
 	    for (n = cap->count1; n > 0; --n)
+	    {
+		State = REPLACE;
 		ins_char(cap->nchar);
-	    State = old_State;
+		State = old_State;
+		if (cap->ncharC1 != 0)
+		    ins_char(cap->ncharC1);
+		if (cap->ncharC2 != 0)
+		    ins_char(cap->ncharC2);
+	    }
 	}
 	else
 #endif

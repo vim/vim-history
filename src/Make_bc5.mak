@@ -287,6 +287,7 @@ vimwinmain = \
 vimobj = $(vimwinmain) \
 	$(OBJDIR)\buffer.obj \
 	$(OBJDIR)\charset.obj \
+	$(OBJDIR)\diff.obj \
 	$(OBJDIR)\digraph.obj \
 	$(OBJDIR)\edit.obj \
 	$(OBJDIR)\eval.obj \
@@ -501,6 +502,8 @@ $(TARGET): $(OBJDIR) $(vimobj) $(RESFILE)
 $(OBJDIR)\buffer.obj:  buffer.c
 
 $(OBJDIR)\charset.obj:	charset.c
+
+$(OBJDIR)\diff.obj:	diff.c
 
 $(OBJDIR)\digraph.obj:	digraph.c
 

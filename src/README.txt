@@ -31,6 +31,7 @@ Most code can be found in a file with an obvious name (incomplete list):
 	ops.c		handling operators ("d", "y", "p")
 	option.c	options
 	quickfix.c	quickfix commands (":make", ":cn")
+	screen.c	updating the windows
 	search.c	pattern searching
 	tag.c		tags
 	term.c		terminal handling, termcap codes
@@ -64,6 +65,7 @@ this.  It also handles mapping.
 Updating the screen is mostly postponed until a command or a sequence of
 commands has finished.  The work is done by update_screen(), which calls
 win_update() for every window, which calls win_line() for every line.
+See the start of screen.c for more explanations.
 
 
 COMMAND-LINE MODE

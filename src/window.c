@@ -756,6 +756,9 @@ win_split_ins(size, flags, newwin, dir)
 	wp->w_curswant = curwin->w_curswant;
 	wp->w_set_curswant = curwin->w_set_curswant;
 	wp->w_topline = curwin->w_topline;
+#ifdef FEAT_DIFF
+	wp->w_topfill = curwin->w_topfill;
+#endif
 	wp->w_leftcol = curwin->w_leftcol;
 	wp->w_pcmark = curwin->w_pcmark;
 	wp->w_prev_pcmark = curwin->w_prev_pcmark;
@@ -1423,7 +1426,7 @@ win_move_after(win1, win2)
  */
     void
 win_equal(next_curwin, dir)
-    win_t	*next_curwin;	/* pointer to current window to be */
+    win_t	*next_curwin;	/* pointer to current window to be or NULL */
     int		dir;		/* 'v' for vertically, 'h' for horizontally,
 				   'b' for both, 0 for using p_ead */
 {
@@ -1445,7 +1448,7 @@ win_equal(next_curwin, dir)
  */
     static void
 win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
-    win_t	*next_curwin;	/* pointer to current window to be */
+    win_t	*next_curwin;	/* pointer to current window to be or NULL */
     frame_t	*topfr;		/* frame to set size off */
     int		dir;		/* 'v', 'h' or 'b', see win_equal() */
     int		col;		/* horizontal position for frame */
@@ -1514,7 +1517,7 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
 		next_curwin_size = 0;
 	    else if ((room + (totwincount - 2)) / (totwincount - 1) > p_wiw)
 	    {
-		next_curwin_size = (room + p_wiw + totwincount * p_wmw +
+		next_curwin_size = (room + p_wiw + (totwincount - 1) * p_wmw +
 					     (totwincount - 1)) / totwincount;
 		room -= next_curwin_size - p_wiw;
 	    }
@@ -2417,6 +2420,9 @@ win_init(wp)
     wp->w_prev_pcmark.lnum = 0;
     wp->w_prev_pcmark.col = 0;
     wp->w_topline = 1;
+#ifdef FEAT_DIFF
+    wp->w_topfill = 0;
+#endif
     wp->w_botline = 2;
 #ifdef FEAT_FKMAP
     if (curwin->w_p_rl)
@@ -2822,6 +2828,9 @@ win_alloc(after)
 
 	/* position the display and the cursor at the top of the file. */
 	newwin->w_topline = 1;
+#ifdef FEAT_DIFF
+	newwin->w_topfill = 0;
+#endif
 	newwin->w_botline = 2;
 	newwin->w_cursor.lnum = 1;
 #ifdef FEAT_SCROLLBIND
@@ -3862,48 +3871,64 @@ win_new_height(wp, height)
     wp->w_height = height;
     wp->w_skipcol = 0;
 
-    lnum = wp->w_cursor.lnum;
-    if (lnum < 1)		/* can happen when starting up */
-	lnum = 1;
-    wp->w_wrow = ((long)wp->w_fraction * (long)height - 1L) / FRACTION_MULT;
-    line_size = plines_win_col(wp, lnum, (long)(wp->w_cursor.col)) - 1;
-    sline = wp->w_wrow - line_size;
-    if (sline < 0)
-    {
-	/*
-	 * Cursor line would go off top of screen if w_wrow was this high.
-	 */
-	wp->w_wrow = line_size;
-    }
-    else
-    {
-	while (sline > 0 && lnum > 1)
-	{
-#ifdef FEAT_FOLDING
-	    hasFoldingWin(wp, lnum, &lnum, NULL, TRUE, NULL);
+#ifdef FEAT_SCROLLBIND
+    /* Don't set w_topline when 'scrollbind' is set and this isn't the current
+     * window. */
+    if (!wp->w_p_scb || wp == curwin)
 #endif
-	    sline -= (line_size = plines_win(wp, --lnum, TRUE));
-	}
+    {
+	lnum = wp->w_cursor.lnum;
+	if (lnum < 1)		/* can happen when starting up */
+	    lnum = 1;
+	wp->w_wrow = ((long)wp->w_fraction * (long)height - 1L) / FRACTION_MULT;
+	line_size = plines_win_col(wp, lnum, (long)(wp->w_cursor.col)) - 1;
+	sline = wp->w_wrow - line_size;
 	if (sline < 0)
 	{
 	    /*
-	     * Line we want at top would go off top of screen.	Use next line
-	     * instead.
+	     * Cursor line would go off top of screen if w_wrow was this high.
 	     */
-#ifdef FEAT_FOLDING
-	    hasFoldingWin(wp, lnum, NULL, &lnum, TRUE, NULL);
-#endif
-	    lnum++;
-	    wp->w_wrow -= line_size + sline;
+	    wp->w_wrow = line_size;
 	}
-	else if (sline > 0)
+	else
 	{
-	    /* First line of file reached, use that as topline. */
-	    lnum = 1;
-	    wp->w_wrow -= sline;
+	    while (sline > 0 && lnum > 1)
+	    {
+#ifdef FEAT_FOLDING
+		hasFoldingWin(wp, lnum, &lnum, NULL, TRUE, NULL);
+#endif
+		--lnum;
+#ifdef FEAT_DIFF
+		if (lnum == wp->w_topline)
+		    line_size = plines_win_nofill(wp, lnum, TRUE)
+							      + wp->w_topfill;
+		else
+#endif
+		    line_size = plines_win(wp, lnum, TRUE);
+		sline -= line_size;
+	    }
+	    if (sline < 0)
+	    {
+		/*
+		 * Line we want at top would go off top of screen.  Use next
+		 * line instead.
+		 */
+#ifdef FEAT_FOLDING
+		hasFoldingWin(wp, lnum, NULL, &lnum, TRUE, NULL);
+#endif
+		lnum++;
+		wp->w_wrow -= line_size + sline;
+	    }
+	    else if (sline > 0)
+	    {
+		/* First line of file reached, use that as topline. */
+		lnum = 1;
+		wp->w_wrow -= sline;
+	    }
 	}
+	set_topline(wp, lnum);
     }
-    set_topline(wp, lnum);
+
     if (wp == curwin)
     {
 	if (p_so)

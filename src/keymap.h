@@ -95,6 +95,9 @@
 /* used a termcap entry that produces a normal character */
 #define KS_KEY			242
 
+/* Used for the qnx pterm mouse */
+#define KS_PTERM_MOUSE		241
+
 /*
  * Filler used after KS_SPECIAL and others
  */
@@ -387,6 +390,7 @@ enum key_extra
 #define K_NETTERM_MOUSE	TERMCAP2KEY(KS_NETTERM_MOUSE, KE_FILLER)
 #define K_DEC_MOUSE	TERMCAP2KEY(KS_DEC_MOUSE, KE_FILLER)
 #define K_JSBTERM_MOUSE	TERMCAP2KEY(KS_JSBTERM_MOUSE, KE_FILLER)
+#define K_PTERM_MOUSE	TERMCAP2KEY(KS_PTERM_MOUSE, KE_FILLER)
 
 #define K_SELECT	TERMCAP2KEY(KS_SELECT, KE_FILLER)
 #define K_TEAROFF	TERMCAP2KEY(KS_TEAROFF, KE_FILLER)

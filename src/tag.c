@@ -2265,7 +2265,7 @@ parse_match(lbuf, tagp)
 	{
 	    tagp->command_end = p;
 	    p += 3;	/* skip ";\"\t" */
-	    while (isalpha(*p))
+	    while (ASCII_ISALPHA(*p))
 	    {
 		if (STRNCMP(p, "kind:", 5) == 0)
 		{

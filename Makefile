@@ -69,7 +69,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0z
+MINOR = 0aa
 
 # CHECKLIST for creating a new version:
 #
@@ -156,6 +156,7 @@ SRC_ALL =	\
 		src/ascii.h \
 		src/buffer.c \
 		src/charset.c \
+		src/diff.c \
 		src/digraph.c \
 		src/edit.c \
 		src/eval.c \
@@ -192,6 +193,7 @@ SRC_ALL =	\
 		src/proto.h \
 		src/proto/buffer.pro \
 		src/proto/charset.pro \
+		src/proto/diff.pro \
 		src/proto/digraph.pro \
 		src/proto/edit.pro \
 		src/proto/eval.pro \
@@ -489,6 +491,15 @@ SRC_OS2 =	\
 		src/testdir/os2.vim \
 		src/xxd/Make_os2.mak \
 
+# source files for QNX (also in the extra archive)
+SRC_QNX =	\
+		src/os_qnx.c \
+		src/os_qnx.h \
+		src/gui_photon.c \
+		src/proto/gui_photon.pro \
+		src/proto/os_qnx.pro \
+
+
 # source files for the extra archive (all sources that are not for Unix)
 SRC_EXTRA =	\
 		$(SRC_AMI) \
@@ -497,6 +508,7 @@ SRC_EXTRA =	\
 		$(SRC_DOS_BIN) \
 		$(SRC_MAC) \
 		$(SRC_OS2) \
+		$(SRC_QNX) \
 		$(SRC_VMS) \
 		README_os390.txt \
 		src/Make_mint.mak \
@@ -531,6 +543,7 @@ RT_ALL =	\
 		runtime/doc/doctags.c \
 		runtime/doc/tags \
 		runtime/doc/vim.1 \
+		runtime/doc/vimdiff.1 \
 		runtime/doc/vimtutor.1 \
 		runtime/doc/xxd.1 \
 		runtime/filetype.vim \
@@ -602,6 +615,7 @@ RT_NO_UNIX =	\
 # runtime for Amiga (also in the extra archive)
 RT_AMI_DOS =	\
 		runtime/doc/vim.man \
+		runtime/doc/vimdiff.man \
 		runtime/doc/vimtutor.man \
 		runtime/doc/xxd.man \
 
@@ -776,6 +790,7 @@ dist/$(COMMENT_FARSI): dist/comment
 
 unixrt: dist
 	rm -f dist/$(VIM)-rt.tar.gz
+	rm -f dist/$(VIM)-rt.tar.bz2
 	rm -rf dist/$(VIMRTDIR)
 	mkdir dist/$(VIMRTDIR)
 	tar cf - \
@@ -784,10 +799,14 @@ unixrt: dist
 		$(RT_UNIX_DOS_BIN) \
 		| (cd dist/$(VIMRTDIR); tar xvf -)
 	cd dist && tar cvf $(VIM)-rt.tar $(VIMRTDIR)
+	cp -f dist/$(VIM)-rt.tar dist/tt
 	gzip -9 dist/$(VIM)-rt.tar
+	mv -f dist/tt dist/$(VIM)-rt.tar
+	bzip2 dist/$(VIM)-rt.tar
 
 unixsrc: dist
 	-rm -f dist/$(VIM)-src.tar.gz
+	-rm -f dist/$(VIM)-src.tar.bz2
 	-rm -rf dist/$(VIMRTDIR)
 	mkdir dist/$(VIMRTDIR)
 	tar cf - \
@@ -802,7 +821,10 @@ unixsrc: dist
 # Make sure configure is newer than config.mk to force it to be generated
 	touch dist/$(VIMRTDIR)/src/configure
 	cd dist && tar cvf $(VIM)-src.tar $(VIMRTDIR)
+	cp -f dist/$(VIM)-src.tar dist/tt
 	gzip -9 dist/$(VIM)-src.tar
+	mv -f dist/tt dist/$(VIM)-src.tar
+	bzip2 dist/$(VIM)-src.tar
 
 extra: dist
 	-rm -f dist/$(VIM)-extra.tar.gz

@@ -526,7 +526,7 @@ EventHandler(void)
 		   gui.in_focus = FALSE;
 	    case IDCMP_ACTIVEWINDOW:
 		   gui.in_focus = TRUE;
-		   gui_update_cursor(TRUE);
+		   gui_update_cursor(TRUE, FALSE);
 		   break;
 	    default:
 		   break;
@@ -1128,7 +1128,7 @@ gui_mch_stop_blink(void)
     void
 gui_mch_start_blink(void)
 {
-    gui_update_cursor(FALSE);
+    gui_update_cursor(FALSE, FALSE);
     D("gui_mch_start_blink");
 }
 
@@ -1199,16 +1199,6 @@ gui_mch_delete_lines(int row, int num_lines)
 	    posHeightCharToPoint(row - 1) + 2,
 	    posWidthCharToPoint(gui.scroll_region_right + 1),
 	    posHeightCharToPoint(gui.scroll_region_bot) + 3);
-
-    if (gui.cursor_row >= row
-		&& gui.cursor_col >= gui.scroll_region_left
-		&& gui.cursor_col <= gui.scroll_region_right)
-    {
-	if (gui.cursor_row < row+num_lines)
-	    gui.cursor_is_valid = FALSE;
-	else if (gui.cursor_row <= gui.scroll_region_bot)
-	    gui.cursor_row -= num_lines;
-    }
 }
 
     void
@@ -1224,15 +1214,6 @@ gui_mch_insert_lines(int row, int num_lines)
 	    posWidthCharToPoint(gui.scroll_region_right + 1),
 	    posHeightCharToPoint(gui.scroll_region_bot-num_lines+1)+1);
 
-    if (gui.cursor_row >= gui.row
-		&& gui.cursor_col >= gui.scroll_region_left
-		&& gui.cursor_col <= gui.scroll_region_right)
-    {
-	if (gui.cursor_row <= gui.scroll_region_bot - num_lines)
-	    gui.cursor_row += num_lines+1;
-	else if (gui.cursor_row <= gui.scroll_region_bot)
-	    gui.cursor_is_valid=FALSE;
-    }
     gui_clear_block(row, gui.scroll_region_left,
 				    row + num_lines, gui.scroll_region_right);
 }

@@ -1,9 +1,9 @@
-.TH VIMTUTOR 1 "1998 December 28"
+.TH VIMTUTOR 1 "2001 April 2"
 .SH NAME
 vimtutor \- the Vim tutor
 .SH SYNOPSIS
 .br
-.B vimtutor
+.B vimtutor [language]
 .SH DESCRIPTION
 .B Vimtutor
 starts the
@@ -18,13 +18,24 @@ is useful for people that want to learn their first
 .B Vim
 commands.
 .PP
-There are no options or arguments.
+The optional [language] argument is the two-letter name of a language, like
+"it" or "es".
+If the [language] argument is missing, the language of the current locale will
+be used.
+If a tutor in this language is available, it will be used.
+Otherwise the English version will be used.
+.PP
 .B Vim
 is always started in Vi compatible mode.
 .SH FILES
 .TP 15
-/usr/local/lib/vim/tutor/tutor
+/usr/local/lib/vim/tutor/tutor[.language]
 The
+.B Vimtutor
+text file(s).
+.TP 15
+/usr/local/lib/vim/tutor/tutor.vim
+The Vim script used to copy the
 .B Vimtutor
 text file.
 .SH AUTHOR
@@ -38,5 +49,6 @@ E-mail: bware@mines.colorado.edu.
 It was modified for
 .B Vim
 by Bram Moolenaar.
+For the names of the translators see the tutor files.
 .SH SEE ALSO
 vim(1)

@@ -785,7 +785,17 @@ open_line(dir, del_spaces, old_indent)
 			 * remain the same. */
 			for (p += lead_repl_len; p < leader + lead_len; ++p)
 			    if (!vim_iswhite(*p))
-				*p = ' ';
+			    {
+				/* Don't put a space before a TAB. */
+				if (p + 1 < leader + lead_len && p[1] == TAB)
+				{
+				    --lead_len;
+				    mch_memmove(p, p + 1,
+						     (leader + lead_len) - p);
+				}
+				else
+				    *p = ' ';
+			    }
 			*p = NUL;
 		    }
 
@@ -811,6 +821,9 @@ open_line(dir, del_spaces, old_indent)
 		    while (off > 0 && lead_len > 0
 					       && leader[lead_len - 1] == ' ')
 		    {
+			/* Don't do it when there is a tab before the space */
+			if (vim_strchr(skipwhite(leader), '\t') != NULL)
+			    break;
 			--lead_len;
 			--off;
 		    }
@@ -1240,24 +1253,32 @@ plines(lnum)
     return plines_win(curwin, lnum, TRUE);
 }
 
-/*
- * Like plines(), but return MAXCOL for invalid lnum.
- */
-    int
-plines_check(lnum)
-    linenr_t	lnum;
-{
-    if (lnum < 1 || lnum > curbuf->b_ml.ml_line_count)
-	return MAXCOL;
-    return plines_win(curwin, lnum, TRUE);
-}
-
     int
 plines_win(wp, lnum, winheight)
     win_t	*wp;
     linenr_t	lnum;
     int		winheight;	/* when TRUE limit to window height */
 {
+#if defined(FEAT_DIFF) || defined(PROTO)
+    /* Check for filler lines above this buffer line.  When folded the result
+     * is one line anyway. */
+    return plines_win_nofill(wp, lnum, winheight) + diff_check_fill(wp, lnum);
+}
+
+    int
+plines_nofill(lnum)
+    linenr_t	lnum;
+{
+    return plines_win_nofill(curwin, lnum, TRUE);
+}
+
+    int
+plines_win_nofill(wp, lnum, winheight)
+    win_t	*wp;
+    linenr_t	lnum;
+    int		winheight;	/* when TRUE limit to window height */
+{
+#endif
     int		lines;
 
     if (!wp->w_p_wrap)
@@ -1276,14 +1297,14 @@ plines_win(wp, lnum, winheight)
 #endif
 
     lines = plines_win_nofold(wp, lnum);
-    if (winheight && lines > wp->w_height)
+    if (winheight > 0 && lines > wp->w_height)
 	return (int)wp->w_height;
     return lines;
 }
 
 /*
  * Return number of window lines physical line "lnum" will occupy in window
- * "wp".  Does not care about folding.
+ * "wp".  Does not care about folding, 'wrap' or 'diff'.
  */
     int
 plines_win_nofold(wp, lnum)
@@ -1331,15 +1352,21 @@ plines_win_col(wp, lnum, column)
 {
     long	col;
     char_u	*s;
-    int		lines;
+    int		lines = 0;
     int		width;
 
+#ifdef FEAT_DIFF
+    /* Check for filler lines above this buffer line.  When folded the result
+     * is one line anyway. */
+    lines = diff_check_fill(wp, lnum);
+#endif
+
     if (!wp->w_p_wrap)
-	return 1;
+	return lines + 1;
 
 #ifdef FEAT_VERTSPLIT
     if (wp->w_width == 0)
-	return 1;
+	return lines + 1;
 #endif
 
     s = ml_get_buf(wp->w_buffer, lnum, FALSE);
@@ -1372,7 +1399,7 @@ plines_win_col(wp, lnum, column)
     width = W_WIDTH(wp) - win_col_off(wp);
     if (width > 0)
     {
-	lines = 1;
+	lines += 1;
 	if (col >= width)
 	    lines += (col - width) / (width + win_col_off2(wp));
 	if (lines <= wp->w_height)
@@ -1380,18 +1407,6 @@ plines_win_col(wp, lnum, column)
     }
     return (int)(wp->w_height);	    /* maximum length */
 }
-
-#if 0 /* never used */
-/*
- * Count the window lines for the buffer lines "first" to "last" inclusive.
- */
-    int
-plines_m(first, last)
-    linenr_t	    first, last;
-{
-    return plines_m_win(curwin, first, last);
-}
-#endif
 
     int
 plines_m_win(wp, first, last)
@@ -1408,14 +1423,23 @@ plines_m_win(wp, first, last)
 	/* Check if there are any really folded lines, but also included lines
 	 * that are maybe folded. */
 	x = foldedCount(wp, first, NULL);
-	if (x)
+	if (x > 0)
 	{
 	    ++count;	    /* count 1 for "+-- folded" line */
 	    first += x;
 	}
 	else
 #endif
-	    count += plines_win(wp, first++, TRUE);
+	{
+#ifdef FEAT_DIFF
+	    if (first == wp->w_topline)
+		count += plines_win_nofill(wp, first, TRUE) + wp->w_topfill;
+	    else
+
+#endif
+		count += plines_win(wp, first, TRUE);
+	    ++first;
+	}
     }
     return (count);
 }
@@ -2276,6 +2300,7 @@ changed_common(lnum, col, lnume, xtra)
 		    changed_line_abv_curs_win(wp);
 	    }
 #endif
+
 	    if (wp->w_cursor.lnum > lnum)
 		changed_line_abv_curs_win(wp);
 	    else if (wp->w_cursor.lnum == lnum && wp->w_cursor.col >= col)

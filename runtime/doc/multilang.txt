@@ -1,4 +1,4 @@
-*multilang.txt* For Vim version 6.0z.  Last change: 2001 Mar 22
+*multilang.txt* For Vim version 6.0aa.  Last change: 2001 Apr 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -19,6 +19,9 @@ The default menus are in English.  To be able to use your local language, they
 must be translated.  Normally this is automatically done for you if the $LANG
 environment variable has been set and translations for the specified language
 are available.  You don't need to do anything extra for this.
+
+If you want to overrule the language used for the menus, set the 'langmenu'
+option to the name of the language you want to use.
 
 Note that if changes have been made to the menus after the translation was
 done, some of the menus may be shown in English.  Please try contacting the
@@ -140,10 +143,10 @@ In most situations your keyboard will produce the characters that you want to
 use.  Then you don't need to do any specific settings.
 
 When the keyboard doesn't produce the characters you want to enter in your
-text, you can use the 'keymap' option.  This will translate one (English)
-character to another (non-English) character.  This only happens when typing
-text, not when typing Vim commands.  This avoids having to switch between two
-keyboard settings.
+text, you can use the 'keymap' option.  This will translate one or more
+(English) characters to another (non-English) character.  This only happens
+when typing text, not when typing Vim commands.  This avoids having to switch
+between two keyboard settings.
 
 The value of the 'keymap' option specifies a keymap file to use.  The name of
 this file is one of these two:
@@ -160,7 +163,19 @@ available keymap files, use this: >
 
 In Insert and Command-line mode you can use CTRL-^ to toggle between using the
 keyboard map or not. |i_CTRL-^| |c_CTRL-^|
+This flag is remembered for Insert mode.  When leaving and entering Insert
+mode the previous value is used.  The same value is also used for commands
+that take a single character argument, like |f| and |r|.
+For Command-line mode the flag is NOT remembered.  You are expected to type an
+Ex command first, which is ASCII.
 
+It is possible to give the GUI cursor another color when the language mappings
+are being used.  This is disabled by default, to avoid that the cursor becomes
+invisible when you use a non-standard background color.  Here is an example to
+use a brightly colored cursor: >
+	:highlight Cursor guifg=NONE guibg=Green
+	:highlight lCursor guifg=NONE guibg=Cyan
+<
 				*keymap-file-format* *:loadk* *:loadkeymap*
 The keymap file looks something like this: >
 

@@ -1,4 +1,4 @@
-*filetype.txt*   For Vim version 6.0z.  Last change: 2001 Mar 19
+*filetype.txt*   For Vim version 6.0aa.  Last change: 2001 Mar 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

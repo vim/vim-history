@@ -1,7 +1,7 @@
 " Menu Translations:	Polish
 " Maintainer:  		Rafal M. Sulejman <rms@poczta.onet.pl>
 " Initial Translation: 	Marcin Dalecki <dalecki@cs.net.pl>
-" Last Change:      	2001 Feb 11
+" Last Change:      	2001 Apr 01
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -38,9 +38,9 @@ menutrans &Undo<Tab>u			&Cofnij<Tab>u
 menutrans &Redo<Tab>^R			&Ponów<Tab>^R
 " menutrans Repea&t<Tab>\.		P&owtórz<Tab>\.
 menutrans Rep&eat<Tab>\.		P&owtórz<Tab>\.
-menutrans Cu&t<Tab>"*x			W&ytnij<Tab>"*x
-menutrans &Copy<Tab>"*y			&Kopiuj<Tab>"*y
-menutrans &Paste<Tab>"*p		&Wklej<Tab>"*p
+menutrans Cu&t<Tab>"+x			W&ytnij<Tab>"+x
+menutrans &Copy<Tab>"+y			&Kopiuj<Tab>"+y
+menutrans &Paste<Tab>"+p		&Wklej<Tab>"+p
 menutrans Put\ &Before<Tab>[p		Wstaw\ p&rzed<Tab>[p
 menutrans Put\ &After<Tab>]p		Wstaw\ p&o<Tab>]p
 menutrans &Select\ all<Tab>ggVG		Z&aznacz\ ca³o¶æ<Tab>ggVG

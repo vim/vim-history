@@ -1929,7 +1929,7 @@ coloncmd(
     {
 	out_flush();		/* make sure output has been written */
 	gui_set_cursor(row, col);
-	gui_update_cursor(True, False);
+	gui_update_cursor(TRUE, FALSE);
 	XFlush(gui.dpy);
     }
 }

@@ -415,7 +415,11 @@ static VALUE window_s_aref(VALUE self, VALUE num)
     win_t *w;
     int n = NUM2INT(num);
 
-    for (w = firstwin; w != NULL; w = W_NEXT(w), --n)
+#ifndef FEAT_WINDOWS
+    w = curwin;
+#else
+    for (w = firstwin; w != NULL; w = w->w_next, --n)
+#endif
 	if (n == 0)
 	    return window_new(w);
     return Qnil;

@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.0z.  Last change: 2001 Mar 24
+*windows.txt*   For Vim version 6.0aa.  Last change: 2001 Mar 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -367,6 +367,10 @@ CTRL-W CTRL-X	Without count: Exchange current window with next one.  If there
 		When vertical and horizontal window splits are mixed, the
 		exchange is only done in the row or column of windows that the
 		current window is in.
+
+The following commands can be used to change the window layout.  For example,
+when there are two vertically split windows, CTRL-W K will change that in
+horizontally split windows.  CTRL-W H does it the other way around.
 
 						*CTRL-W_K*
 CTRL-W K	Move the current window to be at the very top, using the full

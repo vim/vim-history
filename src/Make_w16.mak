@@ -18,7 +18,7 @@
 # Borland C++ tools
 #
 IMPLIB  = Implib
-BCC     = Bcc +BccW16.cfg 
+BCC     = Bcc +BccW16.cfg
 TLINK   = TLink
 TLIB    = TLib
 BRC     = Brc
@@ -31,10 +31,10 @@ TASM    = Tasm
 #
 # Options
 #
-IDE_ResFLAGS = 
+IDE_ResFLAGS =
 LinkerLocalOptsAtW16_gvim16dexe = /Twe/x/l/c/C/k/Orcai /P=65535 /V3.10 /LD:\BC5\LIB
 ResLocalOptsAtW16_gvim16dexe =  -k-
-BLocalOptsAtW16_gvim16dexe = 
+BLocalOptsAtW16_gvim16dexe =
 CompInheritOptsAt_gvim16dexe = -ID:\BC5\INCLUDE;PROTO;. -DFEAT_GUI;FEAT_GUI_MSWIN;FEAT_GUI_W16;MSWIN;WIN16;MSWIN16_FASTTEXT;FEAT_TOOLBAR;WIN16_3DLOOK
 LinkerInheritOptsAt_gvim16dexe = -x
 LinkerOptsAt_gvim16dexe = $(LinkerLocalOptsAtW16_gvim16dexe)
@@ -61,6 +61,7 @@ Dep_gvim16dexe = \
    gui_w16.obj\
    main.obj\
    mark.obj\
+   mbyte.obj\
    memfile.obj\
    memline.obj\
    menu.obj\
@@ -86,6 +87,7 @@ Dep_gvim16dexe = \
    window.obj\
    buffer.obj\
    charset.obj\
+   diff.obj\
    digraph.obj\
    edit.obj\
    eval.obj\
@@ -105,6 +107,7 @@ gui.obj+
 gui_w16.obj+
 main.obj+
 mark.obj+
+mbyte.obj+
 memfile.obj+
 memline.obj+
 menu.obj+
@@ -130,6 +133,7 @@ version.obj+
 window.obj+
 buffer.obj+
 charset.obj+
+diff.obj+
 digraph.obj+
 edit.obj+
 eval.obj+
@@ -181,6 +185,11 @@ main.obj :  main.c
 mark.obj :  mark.c
   $(BCC)   -P- -c @&&|
  $(CompOptsAt_gvim16dexe) $(CompInheritOptsAt_gvim16dexe) -o$@ mark.c
+|
+
+mbyte.obj :  mbyte.c
+  $(BCC)   -P- -c @&&|
+ $(CompOptsAt_gvim16dexe) $(CompInheritOptsAt_gvim16dexe) -o$@ mbyte.c
 |
 
 memfile.obj :  memfile.c
@@ -308,6 +317,11 @@ charset.obj :  charset.c
  $(CompOptsAt_gvim16dexe) $(CompInheritOptsAt_gvim16dexe) -o$@ charset.c
 |
 
+diff.obj :  diff.c
+  $(BCC)   -P- -c @&&|
+ $(CompOptsAt_gvim16dexe) $(CompInheritOptsAt_gvim16dexe) -o$@ diff.c
+|
+
 digraph.obj :  digraph.c
   $(BCC)   -P- -c @&&|
  $(CompOptsAt_gvim16dexe) $(CompInheritOptsAt_gvim16dexe) -o$@ digraph.c
@@ -349,7 +363,7 @@ fileio.obj :  fileio.c
 |
 
 # Compiler configuration file
-BccW16.cfg : 
+BccW16.cfg :
    Copy &&|
 -w
 -R

@@ -2,7 +2,7 @@
 " The commands in this are executed when the GUI is started.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Nov 16
+" Last change:	2001 Apr 03
 "
 " To use it, copy it to
 "     for Unix and OS/2:  ~/.gvimrc
@@ -47,10 +47,11 @@ if version >= 500
   " Set nice colors
   " background for normal text is light grey
   " Text below the last line is darker grey
-  " Cursor is green
+  " Cursor is green, Cyan when ":lmap" mappings are active
   " Constants are not underlined but have a slightly lighter background
   highlight Normal guibg=grey90
   highlight Cursor guibg=Green guifg=NONE
+  highlight lCursor guibg=Cyan guifg=NONE
   highlight NonText guibg=grey80
   highlight Constant gui=NONE guibg=grey95
   highlight Special gui=NONE guibg=grey95

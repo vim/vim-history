@@ -39,7 +39,6 @@ char_u *mb_prevptr __ARGS((char_u *line, char_u *p));
 int mb_charlen __ARGS((char_u *str));
 int mb_dec __ARGS((pos_t *lp));
 char_u *mb_unescape __ARGS((char_u **pp));
-int dbcs_isbyte1 __ARGS((char_u *buf, int x));
 int mb_lefthalve __ARGS((int row, int col));
 char_u *enc_skip __ARGS((char_u *p));
 char_u *enc_canonize __ARGS((char_u *enc));
@@ -59,6 +58,4 @@ int xim_get_status_area_height __ARGS((void));
 void convert_setup __ARGS((vimconv_t *vcp, char_u *from, char_u *to));
 int convert_input __ARGS((char_u *ptr, int len, int maxlen));
 char_u *string_convert __ARGS((vimconv_t *vcp, char_u *ptr, int *lenp));
-char_u *keymap_init __ARGS((void));
-void ex_loadkeymap __ARGS((exarg_t *eap));
 /* vim: set ft=c : */

@@ -2008,7 +2008,7 @@ gui_mch_open()
     int x = -1, y = -1;
 
     /* Determine user specified geometry, if present. */
-    if (gui.geom)
+    if (gui.geom != NULL)
     {
 	int mask;
 	unsigned w, h;
@@ -3296,16 +3296,6 @@ gui_mch_delete_lines(int row, int num_lines)
 					    - gui.scroll_region_left + 1) + 1,
 	    gui.char_height * (gui.scroll_region_bot - row - num_lines + 1));
 
-    /* Update gui.cursor_row if the cursor scrolled or copied over */
-    if (gui.cursor_row >= row
-	    && gui.cursor_col >= gui.scroll_region_left
-	    && gui.cursor_col <= gui.scroll_region_right)
-    {
-	if (gui.cursor_row < row + num_lines)
-	    gui.cursor_is_valid = FALSE;
-	else if (gui.cursor_row <= gui.scroll_region_bot)
-	    gui.cursor_row -= num_lines;
-    }
     gui_clear_block(gui.scroll_region_bot - num_lines + 1,
 						       gui.scroll_region_left,
 		    gui.scroll_region_bot, gui.scroll_region_right);
@@ -3336,16 +3326,6 @@ gui_mch_insert_lines(int row, int num_lines)
 					    - gui.scroll_region_left + 1) + 1,
 	    gui.char_height * (gui.scroll_region_bot - row - num_lines + 1));
 
-    /* Update gui.cursor_row if the cursor scrolled or copied over */
-    if (gui.cursor_row >= gui.row
-	    && gui.cursor_col >= gui.scroll_region_left
-	    && gui.cursor_col <= gui.scroll_region_right)
-    {
-	if (gui.cursor_row <= gui.scroll_region_bot - num_lines)
-	    gui.cursor_row += num_lines;
-	else if (gui.cursor_row <= gui.scroll_region_bot)
-	    gui.cursor_is_valid = FALSE;
-    }
     gui_clear_block(row, gui.scroll_region_left,
 				row + num_lines - 1, gui.scroll_region_right);
     check_copy_area();

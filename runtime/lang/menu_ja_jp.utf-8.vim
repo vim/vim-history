@@ -1,7 +1,6 @@
-" Menu Translations:	Japanese (for UNIX)
-" Translated By: 	Taro Muraoka  <koron@tka.att.ne.jp>
-" Last Change:		11:15:35 16-Oct-2000.
-" Converted to utf-8
+" Menu Translations:	Japanese (UTF-8)
+" Translated By: 	Muraoka Taro  <koron@tka.att.ne.jp>
+" Last Change:		08:50:30 25-Mar-2001.
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -37,9 +36,9 @@ menutrans &Edit				編集(&E)
 menutrans &Undo<Tab>u			取り消す(&U)<Tab>u
 menutrans &Redo<Tab>^R			もう一度やる(&R)<Tab>^R
 menutrans Rep&eat<Tab>\.		繰り返す(&T)<Tab>\.
-menutrans Cu&t<Tab>"*x			切り取り(&T)<Tab>"*x
-menutrans &Copy<Tab>"*y			コピー(&C)<Tab>"*y
-menutrans &Paste<Tab>"*p		貼り付け(&P)<Tab>"*p
+menutrans Cu&t<Tab>"+x			切り取り(&T)<Tab>"+x
+menutrans &Copy<Tab>"+y			コピー(&C)<Tab>"+y
+menutrans &Paste<Tab>"+p		貼り付け(&P)<Tab>"+p
 menutrans Put\ &Before<Tab>[p		前に貼る(&B)<Tab>[p
 menutrans Put\ &After<Tab>]p		後に貼る(&A)<Tab>]p
 menutrans &Delete<Tab>x			消す(&D)<Tab>x
@@ -77,6 +76,7 @@ menutrans &New<Tab>^Wn			新規作成(&N)<Tab>^Wn
 menutrans S&plit<Tab>^Ws		分割(&P)<Tab>^Ws
 menutrans Sp&lit\ To\ #<Tab>^W^^	裏バッファへ分割(&L)<Tab>^W^^
 menutrans Split\ &Vertically<Tab>^Wv	垂直分割(&P)<Tab>^Wv
+menutrans File\ E&xplorer		ファイルエクスプローラ(&x)
 menutrans &Close<Tab>^Wc		閉じる(&C)<Tab>^Wc
 menutrans Close\ &Other(s)<Tab>^Wo	他を閉じる(&O)<Tab>^Wo
 menutrans Ne&xt<Tab>^Ww			次へ(&X)<Tab>^Ww

@@ -43,7 +43,7 @@ static int get_menu_mode __ARGS((void));
 static void gui_update_menus_recurse __ARGS((vimmenu_t *, int));
 #endif
 
-#ifdef FEAT_GUI_W32
+#if defined(FEAT_GUI_W32) & defined(FEAT_TEAROFF)
 static void gui_create_tearoffs_recurse __ARGS((vimmenu_t *menu, const char_u *pname, int *pri_tab, int pri_idx));
 static void gui_add_tearoff __ARGS((char_u *tearpath, int *pri_tab, int pri_idx));
 static void gui_destroy_tearoffs_recurse __ARGS((vimmenu_t *menu));
@@ -221,7 +221,7 @@ ex_menu(eap)
 	EMSG(_("Trailing characters"));
 	goto theend;
     }
-#if defined(FEAT_GUI) && !defined(FEAT_GUI_GTK)
+#if defined(FEAT_GUI) && !(defined(FEAT_GUI_GTK) || defined(FEAT_GUI_PHOTON))
     old_menu_height = gui.menu_height;
 # if defined(FEAT_TOOLBAR) && !defined(FEAT_GUI_W32) && !defined(FEAT_GUI_W16)
     old_toolbar_height = gui.toolbar_height;
@@ -496,7 +496,7 @@ add_menu_path(menu_path, modes, pri_tab,
 	    }
 #endif
 
-#ifdef FEAT_GUI_W32
+#if defined(FEAT_GUI_W32) & defined(FEAT_TEAROFF)
 	    /* When adding a new submenu, may add a tearoff item */
 	    if (	addtearoff
 		    && *next_name
@@ -728,7 +728,7 @@ remove_menu(menup, name, modes, silent)
 	    }
 	    if ((menu->modes & modes) != 0x0)
 	    {
-#ifdef FEAT_GUI_W32
+#if defined(FEAT_GUI_W32) & defined(FEAT_TEAROFF)
 		/*
 		 * If we are removing all entries for this menu,MENU_ALL_MODES,
 		 * Then kill any tearoff before we start
@@ -790,7 +790,7 @@ remove_menu(menup, name, modes, silent)
 
 	/* Recalculate modes for menu based on the new updated children */
 	menu->modes &= ~modes;
-#ifdef FEAT_GUI_W32
+#if defined(FEAT_GUI_W32) & defined(FEAT_TEAROFF)
 	if ((s_tearoffs) && (menu->children != NULL)) /* there's a tear bar.. */
 	    child = menu->children->next; /* don't count tearoff bar */
 	else
@@ -803,7 +803,7 @@ remove_menu(menup, name, modes, silent)
 	if ((menu->modes & MENU_ALL_MODES) == 0)
 	{
 	    /* The menu item is no longer valid in ANY mode, so delete it */
-#ifdef FEAT_GUI_W32
+#if defined(FEAT_GUI_W32) & defined(FEAT_TEAROFF)
 	    if (s_tearoffs && menu->children != NULL) /* there's a tear bar.. */
 		free_menu(&menu->children);
 #endif
@@ -1664,7 +1664,7 @@ gui_update_menus(modes)
 }
 
 #if defined(FEAT_GUI_MSWIN) || defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_GTK) \
-    || defined(PROTO)
+    || defined(FEAT_GUI_PHOTON) || defined(PROTO)
 /*
  * Check if a key is used as a mnemonic for a toplevel menu.
  * Case of the key is ignored.
@@ -1711,7 +1711,7 @@ gui_show_popupmenu()
 }
 #endif /* FEAT_GUI */
 
-#if defined(FEAT_GUI_W32) || defined(PROTO)
+#if (defined(FEAT_GUI_W32) && defined(FEAT_TEAROFF))  || defined(PROTO)
 
 /*
  * Deal with tearoff items that are added like a menu item.
@@ -1857,7 +1857,7 @@ gui_destroy_tearoffs_recurse(menu)
     }
 }
 
-#endif /*FEAT_GUI_W32*/
+#endif /* FEAT_GUI_W32 && FEAT_TEAROFF */
 
 /*
  * Given a menu descriptor, e.g. "File.New", find it in the menu hierarchy and

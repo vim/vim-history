@@ -37,6 +37,8 @@ int read_viminfo_varlist __ARGS((vir_t *virp, int writing));
 void write_viminfo_varlist __ARGS((FILE *fp));
 int store_session_globals __ARGS((FILE *fd));
 int eval_charconvert __ARGS((char_u *enc_from, char_u *enc_to, char_u *fname_from, char_u *fname_to));
+void eval_diff __ARGS((char_u *origfile, char_u *newfile, char_u *outfile));
+void eval_patch __ARGS((char_u *origfile, char_u *difffile, char_u *outfile));
 int modify_fname __ARGS((char_u *src, int *usedlen, char_u **fnamep, char_u **bufp, int *fnamelen));
 char_u *do_string_sub __ARGS((char_u *str, char_u *pat, char_u *sub, char_u *flags));
 /* vim: set ft=c : */

@@ -1,4 +1,4 @@
-*insert.txt*    For Vim version 6.0z.  Last change: 2001 Feb 20
+*insert.txt*    For Vim version 6.0aa.  Last change: 2001 Apr 02
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -57,12 +57,12 @@ CTRL-@		Insert previously inserted text and stop insert.  {Vi: only
 						*i_CTRL-A*
 CTRL-A		Insert previously inserted text.  {not in Vi}
 
-						*i_CTRL-H* *i_<BS>*
+						*i_CTRL-H* *i_<BS>* *i_BS*
 <BS> or CTRL-H	Delete the character before the cursor (see |i_backspacing|
 		about joining lines).
 		See |:fixdel| if your <BS> key does not do what you want.
 		{Vi: does not delete autoindents}
-						*i_<Del>*
+						*i_<Del>* *i_DEL*
 <Del>		Delete the character under the cursor.  If the cursor is at
 		the end of the line, and the 'backspace' option includes
 		"eol", delete the <EOL>; the next line is appended after the
@@ -77,7 +77,7 @@ CTRL-W		Delete the word before the cursor (see |i_backspacing| about
 CTRL-U		Delete all entered characters in the current line (see
 		|i_backspacing| about joining lines).
 
-						*i_CTRL-I* *i_<Tab>*
+						*i_CTRL-I* *i_<Tab>* *i_Tab*
 <Tab> or CTRL-I Insert a tab.  If the 'expandtab' option is on, the
 		equivalent number of spaces is inserted (use CTRL-V <Tab> to
 		avoid the expansion).  See also the 'smarttab' option and
@@ -555,6 +555,9 @@ CTRL-X CTRL-L		Search backwards for a line that starts with the
 			same characters as in the current line before the
 			cursor.  Indent is ignored.  The found line is
 			inserted in front of the cursor.
+			The 'complete' option is used to decide in which
+			buffers a match is searched for.  But only loaded
+			buffers are used.
 	CTRL-L	or
 	CTRL-P		Search backwards for next matching line.  This line
 			replaces the previous matching line.

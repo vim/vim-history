@@ -2,7 +2,7 @@
 # Makefile for Vim on OpenVMS
 #
 # Maintainer:   Zoltan Arpadffy <arpadffy@altavista.net>
-# Last change:  2001 Mar 14
+# Last change:  2001 Mar 25
 #
 # This has been tested on VMS 6.2 to 7.1 on DEC Alpha and VAX.
 # The following will be built:
@@ -192,14 +192,14 @@ INCL =  vim.h globals.h option.h keymap.h macros.h ascii.h term.h os_unix.h \
 	unixunix.h structs.h proto.h [.auto]osdef.h [.auto]config.h \
 	$(GUI_INC)
 
-SRC =	buffer.c charset.c digraph.c edit.c eval.c ex_cmds.c ex_cmds2.c ex_docmd.c \
+SRC =	buffer.c charset.c diff.c digraph.c edit.c eval.c ex_cmds.c ex_cmds2.c ex_docmd.c \
 	ex_getln.c fileio.c fold.c getchar.c main.c mark.c menu.c mbyte.c \
 	memfile.c memline.c message.c misc1.c misc2.c move.c normal.c ops.c option.c \
 	pty.c quickfix.c regexp.c search.c syntax.c tag.c term.c termlib.c \
 	ui.c undo.c version.c screen.c window.c os_vms.c pathdef.c \
 	$(GUI_SRC) $(PERL_SRC) $(PYTHON_SRC) $(TCL_SRC) $(SNIFF_SRC) $(RUBY_SRC) $(HANGULIN_SRC)
 
-OBJ =	buffer.obj charset.obj digraph.obj edit.obj eval.obj ex_cmds.obj ex_cmds2.obj \
+OBJ =	buffer.obj charset.obj diff.obj digraph.obj edit.obj eval.obj ex_cmds.obj ex_cmds2.obj \
 	ex_docmd.obj ex_getln.obj fileio.obj fold.obj getchar.obj \
 	main.obj mark.obj menu.obj memfile.obj memline.obj message.obj misc1.obj \
 	misc2.obj move.obj mbyte.obj normal.obj ops.obj option.obj pty.obj quickfix.obj \
@@ -307,6 +307,9 @@ cmdline.obj : cmdline.c vim.h [.auto]config.h feature.h os_unix.h osdef.h ascii.
 	term.h macros.h structs.h gui.h globals.h proto.h regexp.h option.h cmdtab.h
 	$(CC_DEF) $(ALL_CFLAGS) $<
 csearch.obj : csearch.c vim.h [.auto]config.h feature.h os_unix.h osdef.h ascii.h keymap.h \
+	term.h macros.h structs.h gui.h globals.h proto.h regexp.h option.h
+	$(CC_DEF) $(ALL_CFLAGS) $<
+diff.obj : diff.c vim.h [.auto]config.h feature.h os_unix.h osdef.h ascii.h keymap.h \
 	term.h macros.h structs.h gui.h globals.h proto.h regexp.h option.h
 	$(CC_DEF) $(ALL_CFLAGS) $<
 digraph.obj : digraph.c vim.h [.auto]config.h feature.h os_unix.h osdef.h ascii.h keymap.h \

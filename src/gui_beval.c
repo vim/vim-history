@@ -174,7 +174,7 @@ gui_mch_get_beval_info(beval, filename, line, text, index)
 	if (wp->w_p_nu)
 	    col -= 8;
 
-	if (wp->w_p_wrap == 0)
+	if (!wp->w_p_wrap)
 	    col += wp->w_leftcol;
 
 	row += wp->w_topline - 1;

@@ -175,9 +175,9 @@ function! s:StartExplorer(split)
   endif
 
   " Create a variable to use if splitting vertically
-  let s:splitMode = ""
+  let splitMode = ""
   if g:explVertical == 1
-    let s:splitMode = "vertical"
+    let splitMode = "vertical"
   endif
 
   " Save the user's settings for splitbelow and splitright
@@ -185,7 +185,7 @@ function! s:StartExplorer(split)
   let savesplitright = &splitright
 
   if a:split || &modified 
-    let startcmd = s:splitMode . " " . g:explWinSize . "new " . fname
+    let startcmd = splitMode . " " . g:explWinSize . "new " . fname
     let &splitbelow = g:explSplitBelow
     let &splitright = g:explSplitRight
   else
@@ -466,6 +466,12 @@ function! s:OpenEntry()
     let &splitbelow=!below
   endif
 
+  " Create a variable to use if splitting vertically
+  let splitMode = ""
+  if g:explVertical == 1
+    let splitMode = "vertical"
+  endif
+
   " Is it a directory?  If so, get a real path to it instead of
   " relative path
   if isdirectory(fn)
@@ -476,12 +482,12 @@ function! s:OpenEntry()
   endif
 
   " Open the new window
-  exec("silent " . s:splitMode." sp " . fn)
+  exec("silent " . splitMode." sp " . fn)
 
   " resize the explorer window if it is larger than the requested size
   exec(there)
   if g:explWinSize =~ '[0-9]\+' && winheight("") > g:explWinSize
-    exec("silent ".s:splitMode." resize ".g:explWinSize)
+    exec("silent ".splitMode." resize ".g:explWinSize)
   endif
   exec(back)
 

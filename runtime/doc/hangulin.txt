@@ -1,4 +1,4 @@
-*hangulin.txt*  For Vim version 6.0z.  Last change: 2000 Jul 07
+*hangulin.txt*  For Vim version 6.0aa.  Last change: 2001 Mar 30
 
 
 		  VIM REFERENCE MANUAL    by Chi-Deok Hwang and Sung-Hyun Nam
@@ -96,6 +96,6 @@ Bug or Comment
 Send comments, patches and suggestions to:
 
 				    Chi-Deok Hwang <hwang@mizi.co.kr>
-				    Sung-Hyun Nam <namsh@lgic.co.kr>
+				    Nam SungHyun <namsh@lge.com>
 
  vim:tw=78:

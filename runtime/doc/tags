@@ -112,10 +112,12 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'cpo'	options.txt	/*'cpo'*
 'cpoptions'	options.txt	/*'cpoptions'*
 'cpt'	options.txt	/*'cpt'*
+'cscopepathcomp'	options.txt	/*'cscopepathcomp'*
 'cscopeprg'	options.txt	/*'cscopeprg'*
 'cscopetag'	options.txt	/*'cscopetag'*
 'cscopetagorder'	options.txt	/*'cscopetagorder'*
 'cscopeverbose'	options.txt	/*'cscopeverbose'*
+'cspc'	options.txt	/*'cspc'*
 'csprg'	options.txt	/*'csprg'*
 'cst'	options.txt	/*'cst'*
 'csto'	options.txt	/*'csto'*
@@ -126,10 +128,15 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'def'	options.txt	/*'def'*
 'define'	options.txt	/*'define'*
 'delcombine'	options.txt	/*'delcombine'*
+'dex'	options.txt	/*'dex'*
 'dg'	options.txt	/*'dg'*
 'dict'	options.txt	/*'dict'*
 'dictionary'	options.txt	/*'dictionary'*
+'diff'	options.txt	/*'diff'*
+'diffexpr'	options.txt	/*'diffexpr'*
+'diffopt'	options.txt	/*'diffopt'*
 'digraph'	options.txt	/*'digraph'*
+'dip'	options.txt	/*'dip'*
 'dir'	options.txt	/*'dir'*
 'directory'	options.txt	/*'directory'*
 'display'	options.txt	/*'display'*
@@ -377,6 +384,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'nocst'	options.txt	/*'nocst'*
 'nocsverb'	options.txt	/*'nocsverb'*
 'nodg'	options.txt	/*'nodg'*
+'nodiff'	options.txt	/*'nodiff'*
 'nodigraph'	options.txt	/*'nodigraph'*
 'noea'	options.txt	/*'noea'*
 'noeb'	options.txt	/*'noeb'*
@@ -536,8 +544,10 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'paragraphs'	options.txt	/*'paragraphs'*
 'paste'	options.txt	/*'paste'*
 'pastetoggle'	options.txt	/*'pastetoggle'*
+'patchexpr'	options.txt	/*'patchexpr'*
 'patchmode'	options.txt	/*'patchmode'*
 'path'	options.txt	/*'path'*
+'pex'	options.txt	/*'pex'*
 'pm'	options.txt	/*'pm'*
 'previewheight'	options.txt	/*'previewheight'*
 'previewwindow'	options.txt	/*'previewwindow'*
@@ -882,6 +892,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 +GUI_BeOS	various.txt	/*+GUI_BeOS*
 +GUI_GTK	various.txt	/*+GUI_GTK*
 +GUI_Motif	various.txt	/*+GUI_Motif*
++GUI_Photon	various.txt	/*+GUI_Photon*
 +X11	various.txt	/*+X11*
 +autocmd	various.txt	/*+autocmd*
 +balloon_eval	various.txt	/*+balloon_eval*
@@ -899,6 +910,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 +dialog_con	various.txt	/*+dialog_con*
 +dialog_con_gui	various.txt	/*+dialog_con_gui*
 +dialog_gui	various.txt	/*+dialog_gui*
++diff	various.txt	/*+diff*
 +digraphs	various.txt	/*+digraphs*
 +emacs_tags	various.txt	/*+emacs_tags*
 +eval	various.txt	/*+eval*
@@ -929,6 +941,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 +mouse_dec	various.txt	/*+mouse_dec*
 +mouse_gpm	various.txt	/*+mouse_gpm*
 +mouse_netterm	various.txt	/*+mouse_netterm*
++mouse_pterm	various.txt	/*+mouse_pterm*
 +mouse_xterm	various.txt	/*+mouse_xterm*
 +mouseshape	various.txt	/*+mouseshape*
 +multi_byte	various.txt	/*+multi_byte*
@@ -1191,6 +1204,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 07.6	usr_07.txt	/*07.6*
 2/sys/	editing.txt	/*2\/sys\/*
 28.1	usr_28.txt	/*28.1*
+28.10	usr_28.txt	/*28.10*
 28.2	usr_28.txt	/*28.2*
 28.3	usr_28.txt	/*28.3*
 28.4	usr_28.txt	/*28.4*
@@ -1435,6 +1449,12 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :delf	eval.txt	/*:delf*
 :delfunction	eval.txt	/*:delfunction*
 :di	change.txt	/*:di*
+:diffp	diff.txt	/*:diffp*
+:diffpatch	diff.txt	/*:diffpatch*
+:diffs	diff.txt	/*:diffs*
+:diffsplit	diff.txt	/*:diffsplit*
+:diffu	diff.txt	/*:diffu*
+:diffupdate	diff.txt	/*:diffupdate*
 :dig	digraph.txt	/*:dig*
 :digraphs	digraph.txt	/*:digraphs*
 :display	change.txt	/*:display*
@@ -2538,6 +2558,7 @@ Posix	intro.txt	/*Posix*
 Python	if_python.txt	/*Python*
 Q	intro.txt	/*Q*
 Q-command-changed	version5.txt	/*Q-command-changed*
+QNX	os_qnx.txt	/*QNX*
 Q_ab	quickref.txt	/*Q_ab*
 Q_ac	quickref.txt	/*Q_ac*
 Q_ai	quickref.txt	/*Q_ai*
@@ -2956,8 +2977,6 @@ characterwise	motion.txt	/*characterwise*
 characterwise-register	change.txt	/*characterwise-register*
 characterwise-visual	visual.txt	/*characterwise-visual*
 charconvert_from-variable	eval.txt	/*charconvert_from-variable*
-charconvert_in-variable	eval.txt	/*charconvert_in-variable*
-charconvert_out-variable	eval.txt	/*charconvert_out-variable*
 charconvert_to-variable	eval.txt	/*charconvert_to-variable*
 charset	multibyte.txt	/*charset*
 charset-conversion	multibyte.txt	/*charset-conversion*
@@ -3031,10 +3050,12 @@ cscope-limitations	if_cscope.txt	/*cscope-limitations*
 cscope-options	if_cscope.txt	/*cscope-options*
 cscope-suggestions	if_cscope.txt	/*cscope-suggestions*
 cscope_connection()	eval.txt	/*cscope_connection()*
+cscopepathcomp	if_cscope.txt	/*cscopepathcomp*
 cscopeprg	if_cscope.txt	/*cscopeprg*
 cscopetag	if_cscope.txt	/*cscopetag*
 cscopetagorder	if_cscope.txt	/*cscopetagorder*
 cscopeverbose	if_cscope.txt	/*cscopeverbose*
+cspc	if_cscope.txt	/*cspc*
 csprg	if_cscope.txt	/*csprg*
 cst	if_cscope.txt	/*cst*
 csto	if_cscope.txt	/*csto*
@@ -3110,6 +3131,11 @@ dialog	gui_w32.txt	/*dialog*
 dialogs-added	version5.txt	/*dialogs-added*
 dib	motion.txt	/*dib*
 did_filetype()	eval.txt	/*did_filetype()*
+diff	diff.txt	/*diff*
+diff-diffexpr	diff.txt	/*diff-diffexpr*
+diff-options	diff.txt	/*diff-options*
+diff-patchexpr	diff.txt	/*diff-patchexpr*
+diff.txt	diff.txt	/*diff.txt*
 digraph-arg	change.txt	/*digraph-arg*
 digraph-table	digraph.txt	/*digraph-table*
 digraph.txt	digraph.txt	/*digraph.txt*
@@ -3293,12 +3319,17 @@ fixed-5.4	version5.txt	/*fixed-5.4*
 fixed-5.5	version5.txt	/*fixed-5.5*
 fixed-5.6	version5.txt	/*fixed-5.6*
 fixed-5.7	version5.txt	/*fixed-5.7*
+fname_diff-variable	eval.txt	/*fname_diff-variable*
+fname_in-variable	eval.txt	/*fname_in-variable*
+fname_new-variable	eval.txt	/*fname_new-variable*
+fname_out-variable	eval.txt	/*fname_out-variable*
 fnamemodify()	eval.txt	/*fnamemodify()*
 fo-table	change.txt	/*fo-table*
 fold-behavior	fold.txt	/*fold-behavior*
 fold-commands	fold.txt	/*fold-commands*
 fold-create-marker	fold.txt	/*fold-create-marker*
 fold-delete-marker	fold.txt	/*fold-delete-marker*
+fold-diff	fold.txt	/*fold-diff*
 fold-expr	fold.txt	/*fold-expr*
 fold-foldcolumn	fold.txt	/*fold-foldcolumn*
 fold-foldlevel	fold.txt	/*fold-foldlevel*
@@ -3492,6 +3523,7 @@ guu	change.txt	/*guu*
 gv	visual.txt	/*gv*
 gview	starting.txt	/*gview*
 gvim	starting.txt	/*gvim*
+gvimdiff	diff.txt	/*gvimdiff*
 gvimrc	gui.txt	/*gvimrc*
 gzip	pi_gzip.txt	/*gzip*
 gzip-autocmd	pi_gzip.txt	/*gzip-autocmd*
@@ -3542,6 +3574,10 @@ hit-return	message.txt	/*hit-return*
 hitest.vim	syntax.txt	/*hitest.vim*
 hl-Cursor	syntax.txt	/*hl-Cursor*
 hl-CursorIM	syntax.txt	/*hl-CursorIM*
+hl-DiffAdd	syntax.txt	/*hl-DiffAdd*
+hl-DiffChange	syntax.txt	/*hl-DiffChange*
+hl-DiffDelete	syntax.txt	/*hl-DiffDelete*
+hl-DiffText	syntax.txt	/*hl-DiffText*
 hl-Directory	syntax.txt	/*hl-Directory*
 hl-ErrorMsg	syntax.txt	/*hl-ErrorMsg*
 hl-FoldColumn	syntax.txt	/*hl-FoldColumn*
@@ -3627,6 +3663,7 @@ i_<S-Right>	insert.txt	/*i_<S-Right>*
 i_<S-Up>	insert.txt	/*i_<S-Up>*
 i_<Tab>	insert.txt	/*i_<Tab>*
 i_<Up>	insert.txt	/*i_<Up>*
+i_BS	insert.txt	/*i_BS*
 i_CTRL-@	insert.txt	/*i_CTRL-@*
 i_CTRL-A	insert.txt	/*i_CTRL-A*
 i_CTRL-B-gone	version5.txt	/*i_CTRL-B-gone*
@@ -3678,6 +3715,8 @@ i_CTRL-\_CTRL-N	intro.txt	/*i_CTRL-\\_CTRL-N*
 i_CTRL-]	insert.txt	/*i_CTRL-]*
 i_CTRL-^	insert.txt	/*i_CTRL-^*
 i_CTRL-_	insert.txt	/*i_CTRL-_*
+i_DEL	insert.txt	/*i_DEL*
+i_Tab	insert.txt	/*i_Tab*
 i_^_CTRL-D	insert.txt	/*i_^_CTRL-D*
 i_backspacing	insert.txt	/*i_backspacing*
 i_digraph	digraph.txt	/*i_digraph*
@@ -3955,6 +3994,7 @@ new-commands	version5.txt	/*new-commands*
 new-commands-5.4	version5.txt	/*new-commands-5.4*
 new-debug-itf	version6.txt	/*new-debug-itf*
 new-debug-mode	version6.txt	/*new-debug-mode*
+new-diff-mode	version6.txt	/*new-diff-mode*
 new-encryption	version5.txt	/*new-encryption*
 new-ex-commands-5.2	version5.txt	/*new-ex-commands-5.2*
 new-file-writing	version6.txt	/*new-file-writing*
@@ -4035,6 +4075,7 @@ os_mac.txt	os_mac.txt	/*os_mac.txt*
 os_mint.txt	os_mint.txt	/*os_mint.txt*
 os_msdos.txt	os_msdos.txt	/*os_msdos.txt*
 os_os2.txt	os_os2.txt	/*os_os2.txt*
+os_qnx.txt	os_qnx.txt	/*os_qnx.txt*
 os_riscos.txt	os_riscos.txt	/*os_riscos.txt*
 os_unix.txt	os_unix.txt	/*os_unix.txt*
 os_vms.txt	os_vms.txt	/*os_vms.txt*
@@ -4076,6 +4117,8 @@ perl-overview	if_perl.txt	/*perl-overview*
 perl-syntax	syntax.txt	/*perl-syntax*
 perl-using	if_perl.txt	/*perl-using*
 perl.vim	syntax.txt	/*perl.vim*
+photon-fonts	os_qnx.txt	/*photon-fonts*
+photon-gui	os_qnx.txt	/*photon-gui*
 php-syntax	syntax.txt	/*php-syntax*
 php.vim	syntax.txt	/*php.vim*
 php3-syntax	syntax.txt	/*php3-syntax*
@@ -4128,6 +4171,10 @@ q	repeat.txt	/*q*
 q/	cmdline.txt	/*q\/*
 q:	cmdline.txt	/*q:*
 q?	cmdline.txt	/*q?*
+qnx	os_qnx.txt	/*qnx*
+qnx-compiling	os_qnx.txt	/*qnx-compiling*
+qnx-general	os_qnx.txt	/*qnx-general*
+qnx-terminal	os_qnx.txt	/*qnx-terminal*
 quickfix	quickfix.txt	/*quickfix*
 quickfix-6	version6.txt	/*quickfix-6*
 quickfix-directory-stack	quickfix.txt	/*quickfix-directory-stack*
@@ -4251,6 +4298,8 @@ scroll.txt	scroll.txt	/*scroll.txt*
 scrollbind-quickadj	scroll.txt	/*scrollbind-quickadj*
 scrollbind-relative	scroll.txt	/*scrollbind-relative*
 scrolling	scroll.txt	/*scrolling*
+sdl-syntax	syntax.txt	/*sdl-syntax*
+sdl.vim	syntax.txt	/*sdl.vim*
 search()	eval.txt	/*search()*
 search-commands	pattern.txt	/*search-commands*
 search-offset	pattern.txt	/*search-offset*
@@ -4646,6 +4695,7 @@ usr_43.txt	usr_43.txt	/*usr_43.txt*
 usr_90.txt	usr_90.txt	/*usr_90.txt*
 usr_toc.txt	usr_toc.txt	/*usr_toc.txt*
 utf-8	multibyte.txt	/*utf-8*
+utf-8-char-arg	multibyte.txt	/*utf-8-char-arg*
 utf-8-in-mswindows	multibyte.txt	/*utf-8-in-mswindows*
 utf-8-in-others	multibyte.txt	/*utf-8-in-others*
 utf-8-in-xterm	multibyte.txt	/*utf-8-in-xterm*
@@ -4653,14 +4703,16 @@ utf-8-in-xwindows	multibyte.txt	/*utf-8-in-xwindows*
 utf-8-typing	multibyte.txt	/*utf-8-typing*
 v	visual.txt	/*v*
 v:charconvert_from	eval.txt	/*v:charconvert_from*
-v:charconvert_in	eval.txt	/*v:charconvert_in*
-v:charconvert_out	eval.txt	/*v:charconvert_out*
 v:charconvert_to	eval.txt	/*v:charconvert_to*
 v:cmdarg	eval.txt	/*v:cmdarg*
 v:count	eval.txt	/*v:count*
 v:count1	eval.txt	/*v:count1*
 v:ctype	eval.txt	/*v:ctype*
 v:errmsg	eval.txt	/*v:errmsg*
+v:fname_diff	eval.txt	/*v:fname_diff*
+v:fname_in	eval.txt	/*v:fname_in*
+v:fname_new	eval.txt	/*v:fname_new*
+v:fname_out	eval.txt	/*v:fname_out*
 v:folddashes	eval.txt	/*v:folddashes*
 v:foldend	eval.txt	/*v:foldend*
 v:foldstart	eval.txt	/*v:foldstart*
@@ -4786,6 +4838,7 @@ vi-differences	vi_diff.txt	/*vi-differences*
 vi:	options.txt	/*vi:*
 vi_diff.txt	vi_diff.txt	/*vi_diff.txt*
 view	starting.txt	/*view*
+view-diffs	diff.txt	/*view-diffs*
 view-file	starting.txt	/*view-file*
 views-sessions	starting.txt	/*views-sessions*
 vim-additions	vi_diff.txt	/*vim-additions*
@@ -4801,6 +4854,7 @@ vim-script-intro	starting.txt	/*vim-script-intro*
 vim-variable	eval.txt	/*vim-variable*
 vim:	options.txt	/*vim:*
 vimdev	intro.txt	/*vimdev*
+vimdiff	diff.txt	/*vimdiff*
 viminfo	starting.txt	/*viminfo*
 viminfo-encoding	starting.txt	/*viminfo-encoding*
 viminfo-errors	starting.txt	/*viminfo-errors*

@@ -357,14 +357,14 @@ getmark2(c, changefile, fcoladd)
 	}
     }
 #endif
-    else if (islower(c))		/* normal named mark */
+    else if (ASCII_ISLOWER(c))		/* normal named mark */
     {
 	posp = &(curbuf->b_namedm[c - 'a']);
 #ifdef FEAT_VIRTUALEDIT
 	coladd = curbuf->b_namedm[c - 'a'].coladd;
 #endif
     }
-    else if (isupper(c) || vim_isdigit(c))	/* named file mark */
+    else if (ASCII_ISUPPER(c) || vim_isdigit(c))	/* named file mark */
     {
 	if (vim_isdigit(c))
 	    c = c - '0' + NMARKS;
@@ -918,9 +918,17 @@ mark_adjust(line1, line2, amount, amount_after)
 		    }
 		    else		/* keep topline on the same line */
 			win->w_topline += amount;
+#ifdef FEAT_DIFF
+		    win->w_topfill = 0;
+#endif
 		}
 		else if (amount_after && win->w_topline > line2)
+		{
 		    win->w_topline += amount_after;
+#ifdef FEAT_DIFF
+		    win->w_topfill = 0;
+#endif
+		}
 		if (win->w_cursor.lnum >= line1 && win->w_cursor.lnum <= line2)
 		{
 		    if (amount == MAXLNUM) /* line with cursor is deleted */
@@ -944,6 +952,11 @@ mark_adjust(line1, line2, amount, amount_after)
 #endif
 	}
     }
+
+#ifdef FEAT_DIFF
+    /* adjust diffs */
+    diff_mark_adjust(line1, line2, amount, amount_after);
+#endif
 }
 
 #ifdef FEAT_JUMPLIST

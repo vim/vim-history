@@ -47,7 +47,7 @@ void add_termcode __ARGS((char_u *name, char_u *string, int use_8bit));
 char_u *find_termcode __ARGS((char_u *name));
 char_u *get_termcode __ARGS((int i));
 void del_termcode __ARGS((char_u *name));
-void set_mouse_topline __ARGS((linenr_t lnum));
+void set_mouse_topline __ARGS((win_t *wp));
 int check_termcode __ARGS((int max_offset, char_u *buf, int buflen));
 char_u *replace_termcodes __ARGS((char_u *from, char_u **bufp, int from_part, int do_lt));
 int find_term_bykeys __ARGS((char_u *src));

@@ -26,9 +26,6 @@
  */
 #include "gui_w48.c"
 
-#ifdef WIN16_3DLOOK
-# include <ctl3d.h>
-#endif
 #include "guiw16rc.h"
 
 /* Undocumented Windows Message - not even defined in some SDK headers */
@@ -46,11 +43,9 @@
 
 /* Local variables: */
 
-static HBRUSH	s_brush = NULL;
 #ifdef FEAT_MENU
 static UINT	s_menu_id = 100;
 #endif
-static int	destroying = FALSE;	/* call DestroyWindow() ourselves */
 
 
 #define VIM_NAME	"vim"
@@ -93,7 +88,7 @@ static int get_toolbar_bitmap(char_u *name);
  * Figure out how high the menu bar is at the moment.
  */
     static int
-gui_w16_get_menu_height(
+gui_mswin_get_menu_height(
     int	    fix_window)	    /* If TRUE, resize window if menu height changed */
 {
     static int	old_menu_height = -1;
@@ -136,33 +131,6 @@ gui_w16_get_menu_height(
 }
 #endif /*FEAT_MENU*/
 
-
-
-/*
- * Get a message when the window is being destroyed.
- */
-    static void
-_OnDestroy(
-    HWND hwnd)
-{
-#ifdef WIN16_3DLOOK
-    Ctl3dUnregister(s_hinst);
-#endif
-    if (!destroying)
-	_OnClose(hwnd);
-}
-
-/*
- * Got a message when the system will go down.
- */
-    static void
-_OnEndSession(void)
-{
-    ml_close_notmod();		    /* close all not-modified buffers */
-    ml_sync_all(FALSE, FALSE);	    /* preserve all swap files */
-    ml_close_all(FALSE);	    /* close all memfiles, without deleting */
-    getout(1);			    /* exit Vim properly */
-}
 
 
     static void
@@ -256,74 +224,6 @@ _OnDropFiles(
 }
 
 
-    static void
-_OnPaint(
-    HWND hwnd)
-{
-    if (!IsMinimized(hwnd))
-    {
-	PAINTSTRUCT ps;
-
-	out_flush();	    /* make sure all output has been processed */
-	(void)BeginPaint(hwnd, &ps);
-
-#ifdef FEAT_MBYTE
-	/* prevent multi-byte characters from misprinting on an invalid
-	 * rectangle */
-	if (has_mbyte)
-	{
-	    RECT rect;
-
-	    GetClientRect(hwnd, &rect);
-	    ps.rcPaint.left = rect.left;
-	    ps.rcPaint.right = rect.right;
-	}
-#endif
-
-	if (!IsRectEmpty(&ps.rcPaint))
-	    gui_redraw(ps.rcPaint.left, ps.rcPaint.top,
-		    ps.rcPaint.right - ps.rcPaint.left + 1,
-		    ps.rcPaint.bottom - ps.rcPaint.top + 1);
-	EndPaint(hwnd, &ps);
-    }
-}
-
-    static void
-_OnSize(
-    HWND hwnd,
-    UINT state,
-    int cx,
-    int cy)
-{
-    if (!IsMinimized(hwnd))
-    {
-	gui_resize_shell(cx, cy);
-
-#ifdef FEAT_MENU
-	/* Menu bar may wrap differently now */
-	gui_w16_get_menu_height(TRUE);
-#endif
-    }
-}
-
-    static void
-_OnSetFocus(
-    HWND hwnd,
-    HWND hwndOldFocus)
-{
-    gui_focus_change(TRUE);
-    (void)DefWindowProc(hwnd, WM_SETFOCUS, (WPARAM)hwndOldFocus, 0);
-}
-
-    static void
-_OnKillFocus(
-    HWND hwnd,
-    HWND hwndNewFocus)
-{
-    gui_focus_change(FALSE);
-    (void)DefWindowProc(hwnd, WM_KILLFOCUS, (WPARAM)hwndNewFocus, 0);
-}
-
 
     static int
 _OnScroll(
@@ -335,7 +235,11 @@ _OnScroll(
     scrollbar_t *sb, *sb_info;
     long	val;
     int		dragging = FALSE;
+#ifdef WIN32
+    SCROLLINFO	si;
+#else
     int		nPos;
+#endif
     static UINT	prev_code = 0;   /* code of previous call */
 
     sb = gui_mswin_find_scrollbar(hwndCtl);
@@ -435,76 +339,6 @@ _OnScroll(
 
 
 /*
- * Get current x mouse coordinate in text window.
- * Return -1 when unknown.
- */
-    int
-gui_mch_get_mouse_x(void)
-{
-    RECT rct;
-    POINT mp;
-
-    GetWindowRect(s_textArea, &rct);
-
-    GetCursorPos((LPPOINT)&mp);
-    return (int)(mp.x - rct.left);
-
-}
-
-/*
- * Get current y mouse coordinate in text window.
- * Return -1 when unknown.
- */
-    int
-gui_mch_get_mouse_y(void)
-{
-    RECT rct;
-    POINT mp;
-
-    GetWindowRect(s_textArea, &rct);
-
-	GetCursorPos((LPPOINT)&mp);
-	    return (int)(mp.y - rct.top);
-}
-
-/*
- * Move mouse pointer to character at (x, y).
- */
-    void
-gui_mch_setmouse(int x, int y)
-{
-    RECT rct;
-
-    GetWindowRect(s_textArea, &rct);
-	(void)SetCursorPos(x + gui.border_offset + rct.left,
-			   y + gui.border_offset + rct.top);
-}
-
-    static void
-gui_w16_get_valid_dimensions(
-    int w,
-    int h,
-    int *valid_w,
-    int *valid_h)
-{
-    int	    base_width, base_height;
-
-    base_width = gui_get_base_width()
-	+ GetSystemMetrics(SM_CXFRAME) * 2;
-    base_height = gui_get_base_height()
-	+ GetSystemMetrics(SM_CYFRAME) * 2
-	+ GetSystemMetrics(SM_CYCAPTION)
-#ifdef FEAT_MENU
-	+ gui_w16_get_menu_height(FALSE)
-#endif
-	;
-    *valid_w = base_width +
-		    ((w - base_width) / gui.char_width) * gui.char_width;
-    *valid_h = base_height +
-		    ((h - base_height) / gui.char_height) * gui.char_height;
-}
-
-/*
  * Even though we have _DuringSizing() which makes the rubber band a valid
  * size, we need this for when the user maximises the window.
  * TODO: Doesn't seem to adjust the width though for some reason.
@@ -517,7 +351,7 @@ _OnWindowPosChanging(
 
     if (!IsIconic(hwnd) && !(lpwpos->flags & SWP_NOSIZE))
     {
-	gui_w16_get_valid_dimensions(lpwpos->cx, lpwpos->cy,
+	gui_mswin_get_valid_dimensions(lpwpos->cx, lpwpos->cy,
 				     &lpwpos->cx, &lpwpos->cy);
     }
     return 0;
@@ -857,24 +691,6 @@ gui_mch_init(void)
 }
 
 
-    void
-gui_mch_exit(int rc)
-{
-    ReleaseDC(s_textArea, s_hdc);
-    DeleteObject(s_brush);
-
-    /* Destroy our window (if we have one). */
-    if (s_hwnd != NULL)
-    {
-	destroying = TRUE;	/* ignore WM_DESTROY message now */
-	DestroyWindow(s_hwnd);
-    }
-
-#ifdef GLOBAL_IME
-    global_ime_end();
-#endif
-}
-
 
 /*
  * Set the size of the window to the given width and height in pixels.
@@ -916,7 +732,7 @@ gui_mch_set_shellsize(int width, int height, int min_width, int min_height,
     win_height = height + GetSystemMetrics(SM_CYFRAME) * 2
 			+ GetSystemMetrics(SM_CYCAPTION)
 #ifdef FEAT_MENU
-			+ gui_w16_get_menu_height(FALSE)
+			+ gui_mswin_get_menu_height(FALSE)
 #endif
 			;
 
@@ -939,25 +755,9 @@ gui_mch_set_shellsize(int width, int height, int min_width, int min_height,
 
 #ifdef FEAT_MENU
     /* Menu may wrap differently now */
-    gui_w16_get_menu_height(!gui.starting);
+    gui_mswin_get_menu_height(!gui.starting);
 #endif
 }
-
-    void
-gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
-{
-
-    *screen_w = GetSystemMetrics(SM_CXSCREEN)
-	      - GetSystemMetrics(SM_CXFRAME) * 2;
-    *screen_h = GetSystemMetrics(SM_CYSCREEN)
-	      - GetSystemMetrics(SM_CYFRAME) * 2
-	      - GetSystemMetrics(SM_CYCAPTION)
-#ifdef FEAT_MENU
-	      - gui_w16_get_menu_height(FALSE)
-#endif
-	      ;
-}
-
 
     void
 gui_mch_set_scrollbar_thumb(
@@ -981,8 +781,6 @@ gui_mch_set_scrollbar_thumb(
     SetScrollRange(sb->id, SB_CTL, 0, (int) max, FALSE);
     SetScrollPos(sb->id, SB_CTL, (int) val, TRUE);
 }
-
-
 
 
 /*
@@ -1055,7 +853,9 @@ gui_mch_draw_string(
      */
     HBRUSH	hbr;
     RECT	rc;
-
+#ifdef FEAT_MBYTE_IME
+    char	*szComp;
+#endif
 
     if (!(flags & DRAW_TRANSP))
     {
@@ -1065,13 +865,35 @@ gui_mch_draw_string(
 	 */
 	rc.left = FILL_X(col);
 	rc.top = FILL_Y(row);
-	rc.right = FILL_X(col + len);	    /* Add +1 to erase fake bold? */
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	{
+	    int cell_len = 0;
+
+	    /* Compute the length in display cells. */
+	    for (n = 0; n < len; n += MB_BYTE2LEN(text[n]))
+		cell_len += (*mb_ptr2cells)(text + n);
+	    rc.right = FILL_X(col + cell_len);
+	}
+	else
+#endif
+	    rc.right = FILL_X(col + len);
 	rc.bottom = FILL_Y(row + 1);
 	hbr = CreateSolidBrush(gui.currBgColor);
 	FillRect(s_hdc, &rc, hbr);
 	DeleteBrush(hbr);
 
 	SetBkMode(s_hdc, TRANSPARENT);
+
+	/*
+	 * When drawing block cursor, prevent inverted character spilling
+	 * over character cell (can happen with bold/italic)
+	 */
+	if (flags & DRAW_CURSOR)
+	{
+	    pcliprect = &rc;
+	    foptions = ETO_CLIPPED;
+	}
     }
 #else
     /*
@@ -1128,26 +950,6 @@ gui_mch_draw_string(
 }
 
 
-    void
-gui_mch_flash(int msec)
-{
-    RECT    rc;
-
-    /*
-     * Note: InvertRect() excludes right and bottom of rectangle.
-     */
-    rc.left = 0;
-    rc.top = 0;
-    rc.right = gui.num_cols * gui.char_width;
-    rc.bottom = gui.num_rows * gui.char_height;
-    InvertRect(s_hdc, &rc);
-
-    ui_delay((long) msec, TRUE);	/* wait for a few msec */
-
-    InvertRect(s_hdc, &rc);
-}
-
-
 
 
 
@@ -1171,90 +973,6 @@ clear_rect(RECT *rcp)
     ExtTextOut(s_hdc, 0, 0, ETO_CLIPPED | ETO_OPAQUE, rcp, NULL, 0, NULL);
 }
 
-
-/*
- * Delete the given number of lines from the given row, scrolling up any
- * text further down within the scroll region.
- */
-    void
-gui_mch_delete_lines(
-    int	    row,
-    int	    num_lines)
-{
-    RECT	rc;
-
-    #pragma warn -eff
-    rc.left = FILL_X(gui.scroll_region_left);
-    #pragma warn +eff
-    rc.right = FILL_X(gui.scroll_region_right + 1);
-    rc.top = FILL_Y(row);
-    rc.bottom = FILL_Y(gui.scroll_region_bot + 1);
-    /* The SW_INVALIDATE is required when part of the window is covered or
-     * off-screen.	How do we avoid it when it's not needed? */
-    ScrollWindowEx(s_textArea, 0, -num_lines * gui.char_height,
-	    &rc, &rc, NULL, NULL, SW_INVALIDATE);
-
-    /* Update gui.cursor_row if the cursor scrolled or copied over */
-    if (gui.cursor_row >= row
-	    && gui.cursor_col >= gui.scroll_region_left
-	    && gui.cursor_col <= gui.scroll_region_right)
-    {
-	if (gui.cursor_row < row + num_lines)
-	    gui.cursor_is_valid = FALSE;
-	else if (gui.cursor_row <= gui.scroll_region_bot)
-	    gui.cursor_row -= num_lines;
-    }
-    gui_undraw_cursor();
-    UpdateWindow(s_textArea);
-    /* This seems to be required to avoid the cursor disappearing when
-     * scrolling such that the cursor ends up in the top-left character on
-     * the screen...   But why?  (Webb) */
-    gui.cursor_is_valid = FALSE;
-
-    gui_clear_block(gui.scroll_region_bot - num_lines + 1,
-						       gui.scroll_region_left,
-	gui.scroll_region_bot, gui.scroll_region_right);
-}
-
-/*
- * Insert the given number of lines before the given row, scrolling down any
- * following text within the scroll region.
- */
-    void
-gui_mch_insert_lines(
-    int		row,
-    int		num_lines)
-{
-    RECT	rc;
-
-    #pragma warn -eff
-    rc.left = FILL_X(gui.scroll_region_left);
-    #pragma warn +eff
-    rc.right = FILL_X(gui.scroll_region_right + 1);
-    rc.top = FILL_Y(row);
-    rc.bottom = FILL_Y(gui.scroll_region_bot + 1);
-    /* The SW_INVALIDATE is required when part of the window is covered or
-     * off-screen.	How do we avoid it when it's not needed? */
-    ScrollWindowEx(s_textArea, 0, num_lines * gui.char_height,
-	    &rc, &rc, NULL, NULL, SW_INVALIDATE);
-
-    /* Update gui.cursor_row if the cursor scrolled or copied over */
-    if (gui.cursor_row >= gui.row
-	    && gui.cursor_col >= gui.scroll_region_left
-	    && gui.cursor_col <= gui.scroll_region_right)
-    {
-	if (gui.cursor_row <= gui.scroll_region_bot - num_lines)
-	    gui.cursor_row += num_lines;
-	else if (gui.cursor_row <= gui.scroll_region_bot)
-	    gui.cursor_is_valid = FALSE;
-    }
-
-    gui_undraw_cursor();
-    UpdateWindow(s_textArea);
-
-    gui_clear_block(row, gui.scroll_region_left,
-				row + num_lines - 1, gui.scroll_region_right);
-}
 
 
 
@@ -1281,7 +999,7 @@ gui_mch_add_menu(
 
     /* Fix window size if menu may have wrapped */
     if (parent == NULL)
-	gui_w16_get_menu_height(!gui.starting);
+	gui_mswin_get_menu_height(!gui.starting);
 }
 
     void
@@ -1289,7 +1007,7 @@ gui_mch_show_popupmenu(vimmenu_t *menu)
 {
     POINT mp;
 
-    GetCursorPos((LPPOINT)&mp);
+    (void)GetCursorPos((LPPOINT)&mp);
     gui_mch_show_popupmenu_at(menu, (int)mp.x, (int)mp.y);
 }
 
@@ -1353,10 +1071,12 @@ gui_mch_add_menu_item(
     }
     else
 #endif
-    InsertMenu(parent->submenu_id, (UINT)idx,
+    {
+	InsertMenu(parent->submenu_id, (UINT)idx,
 		(menu_is_separator(menu->name) ? MF_SEPARATOR : MF_STRING)
 							      | MF_BYPOSITION,
 		(UINT)menu->id, menu->name);
+    }
 }
 
 /*
@@ -1552,8 +1272,6 @@ gui_mch_browse(
 
 #endif /* FEAT_BROWSE */
 
-
-
 /* define some macros used to make the dialogue creation more readable */
 
 #define add_string(s) strcpy((LPSTR)p, s); (LPSTR)p += (strlen((LPSTR)p) + 1)
@@ -1567,7 +1285,7 @@ gui_mch_browse(
  */
 
 /*
- * The callback routine used by all the dialogs.  Very simple.	First,
+ * The callback routine used by all the dialogs.  Very simple.  First,
  * acknowledges the INITDIALOG message so that Windows knows to do standard
  * dialog stuff (Return = default, Esc = cancel....) Second, if a button is
  * pressed, return that button's ID - IDCANCEL (2), which is the button's
@@ -1830,9 +1548,9 @@ gui_mch_dialog(
 
     add_long(lStyle);
     pnumitems = p;	/*save where the number of items must be stored*/
-    add_byte(0);// NumberOfItems(will change later)
-    add_word(10);
-    add_word(10);
+    add_byte(0);	// NumberOfItems(will change later)
+    add_word(10);	// x
+    add_word(10);	// y
     add_word(PixelToDialogX(dlgwidth));
 
     // Dialog height.
@@ -1842,8 +1560,8 @@ gui_mch_dialog(
     else
 	add_word(PixelToDialogY(msgheight + 3 * dlgPaddingY + 2 * fontHeight));
 
-    add_byte(0);//menu
-    add_byte(0);//class
+    add_byte(0);	//menu
+    add_byte(0);	//class
 
     /* copy the title of the dialog */
     add_string(title ? title : ("Vim"VIM_VERSION_MEDIUM));

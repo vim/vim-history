@@ -59,7 +59,10 @@ static long mouse_click_time = 0;	/* biostime() of last click */
 static int mouse_click_count = 0;	/* count for multi-clicks */
 static int mouse_click_x = 0;		/* x of previous mouse click */
 static int mouse_click_y = 0;		/* y of previous mouse click */
-static linenr_t mouse_topline = 0;	/* topline at previous mouse click */
+static linenr_t mouse_topline = 0;	/* w_topline at previous mouse click */
+#ifdef FEAT_DIFF
+static int mouse_topfill = 0;		/* w_topfill at previous mouse click */
+#endif
 static int mouse_x_div = 8;		/* column = x coord / mouse_x_div */
 static int mouse_y_div = 8;		/* line   = y coord / mouse_y_div */
 #endif
@@ -717,11 +720,15 @@ WaitForChar(long msec)
 		     * Find out if this is a multi-click
 		     */
 		    clicktime = biostime(0, 0L);
-		    if (mouse_click_x == x && mouse_click_y == y &&
-			    mouse_topline == curwin->w_topline &&
-			    mouse_click_count != 4 &&
-			    mouse_click == mouse_last_click &&
-			    clicktime < mouse_click_time + p_mouset / BIOSTICK)
+		    if (mouse_click_x == x && mouse_click_y == y
+			    && mouse_topline == curwin->w_topline
+#ifdef FEAT_DIFF
+			    && mouse_topfill == curwin->w_topfill
+#endif
+			    && mouse_click_count != 4
+			    && mouse_click == mouse_last_click
+			    && clicktime < mouse_click_time
+							+ p_mouset / BIOSTICK)
 			++mouse_click_count;
 		    else
 			mouse_click_count = 1;
@@ -730,6 +737,9 @@ WaitForChar(long msec)
 		    mouse_click_x = x;
 		    mouse_click_y = y;
 		    mouse_topline = curwin->w_topline;
+#ifdef FEAT_DIFF
+		    mouse_topfill = curwin->w_topfill;
+#endif
 		    SET_NUM_MOUSE_CLICKS(mouse_click, mouse_click_count);
 		}
 	    }

@@ -1,6 +1,6 @@
 " Menu Translations:	Czech
 " Translated By: 	Jiøí Pavlovskı <pavlovsk@ff.cuni.cz>
-" Last Change:		2001 Feb 11
+" Last Change:		2001 Apr 01
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -38,9 +38,9 @@ menutrans &Edit				&Úpravy
 menutrans &Undo<Tab>u			&Zpìt<Tab>u
 menutrans &Redo<Tab>^R			Z&ru¹it\ vrácení<Tab>^R
 menutrans Rep&eat<Tab>\.		&Opakovat<Tab>\.
-menutrans Cu&t<Tab>"*x			&Vyøíznout<Tab>"*x
-menutrans &Copy<Tab>"*y			&Kopírovat<Tab>"*y
-menutrans &Paste<Tab>"*p		V&lo¾it<Tab>"*p
+menutrans Cu&t<Tab>"+x			&Vyøíznout<Tab>"+x
+menutrans &Copy<Tab>"+y			&Kopírovat<Tab>"+y
+menutrans &Paste<Tab>"+p		V&lo¾it<Tab>"+p
 menutrans Put\ &Before<Tab>[p		Vlo¾it\ &pøed<Tab>[p
 menutrans Put\ &After<Tab>]p		Vlo¾i&t\ za<Tab>]p
 menutrans &Select\ all<Tab>ggVG		Vy&brat\ v¹e<Tab>ggVG

@@ -11,6 +11,7 @@ int foldmethodIsIndent __ARGS((win_t *wp));
 int foldmethodIsExpr __ARGS((win_t *wp));
 int foldmethodIsMarker __ARGS((win_t *wp));
 int foldmethodIsSyntax __ARGS((win_t *wp));
+int foldmethodIsDiff __ARGS((win_t *wp));
 void closeFold __ARGS((linenr_t lnum, long count));
 void closeFoldRecurse __ARGS((linenr_t lnum));
 void opFoldRange __ARGS((linenr_t first, linenr_t last, int opening, int recurse, int had_visual));

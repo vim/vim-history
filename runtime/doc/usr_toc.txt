@@ -1,4 +1,4 @@
-*usr_toc.txt*	For Vim version 6.0z.  Last change: 2001 Mar 23
+*usr_toc.txt*	For Vim version 6.0aa.  Last change: 2001 Mar 31
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -144,7 +144,8 @@ Subjects that can be read independently.
 		|28.6|  Folding with markers
 		|28.7|  Folding by syntax
 		|28.8|  Folding by expression
-		|28.9|  Which fold method to use?
+		|28.9|  Folding unchanged lines
+		|28.10| Which fold method to use?
 
 |usr_29.txt|  Editing programs
 		('cindent', 'patchmode', 'sts', "[I", "K", tag preview, :grep,

@@ -54,7 +54,6 @@ static Widget menuBar;
 
 static void scroll_cb __ARGS((Widget w, XtPointer client_data, XtPointer call_data));
 #ifdef FEAT_TOOLBAR
-static void get_pixmap __ARGS((char_u *menuname, Pixmap *, Pixmap *));
 static void toolbar_enter_cb __ARGS((Widget, XtPointer, XEvent *, Boolean *));
 static void toolbar_leave_cb __ARGS((Widget, XtPointer, XEvent *, Boolean *));
 static void toolbarbutton_enter_cb __ARGS((Widget, XtPointer, XEvent *, Boolean *));
@@ -340,7 +339,8 @@ gui_motif_create_fontlist(font)
     /* Motif 1.2 method */
     XmFontListEntry font_list_entry;
 
-    font_list_entry = XmFontListEntryCreate(STRING_TAG, XmFONT_IS_FONT,
+    font_list_entry = XmFontListEntryCreate(STRING_TAG,
+	    gui.fontset == NOFONTSET ? XmFONT_IS_FONT : XmFONT_IS_FONTSET,
 							     (XtPointer)font);
     font_list = XmFontListAppendEntry(NULL, font_list_entry);
     XmFontListEntryFree(&font_list_entry);
@@ -775,7 +775,7 @@ gui_mch_add_menu_item(menu, idx)
 		get_pixmap(menu->name, &pixmap, &insensitive);
 	    if (pixmap == 0)
 	    {
-		xms = XmStringCreate((char *) menu->dname, STRING_TAG);
+		xms = XmStringCreate((char *)menu->dname, STRING_TAG);
 		XtSetArg(args[n], XmNlabelString, xms); n++;
 		XtSetArg(args[n], XmNlabelType, XmSTRING); n++;
 	    }
@@ -949,6 +949,25 @@ gui_mch_new_menu_font()
     if (menuBar == (Widget)0)
 	return;
     gui_mch_submenu_change(root_menu, FALSE);
+    if (!gui.menu_height_fixed)
+    {
+	Dimension   height;
+
+	XtVaGetValues(menuBar, XmNheight, &height, NULL);
+	gui.menu_height = height;
+    }
+    {
+	Position w, h;
+
+	XtVaGetValues(vimShell, XtNwidth, &w, XtNheight, &h, NULL);
+	gui_resize_shell(w, h
+#ifdef FEAT_XIM
+		- xim_get_status_area_height()
+#endif
+		     );
+    }
+    gui_set_shellsize(TRUE);
+    ui_new_shellsize();
 }
 
     static void
@@ -1654,7 +1673,7 @@ gui_mch_set_footer(char_u *msg)
 {
     XmString	xms;
 
-    xms = XmStringCreate((char *) msg, STRING_TAG);
+    xms = XmStringCreate((char *)msg, STRING_TAG);
     XtVaSetValues(footer, XmNlabelString, xms, NULL);
     XmStringFree(xms);
 }
@@ -1753,300 +1772,6 @@ gui_mch_compute_toolbar_height()
 
 
 /*
- * Icons used by the toolbar code.
- */
-#include "../pixmaps/tb_new.xpm"
-#include "../pixmaps/tb_open.xpm"
-#include "../pixmaps/tb_close.xpm"
-#include "../pixmaps/tb_save.xpm"
-#include "../pixmaps/tb_print.xpm"
-#include "../pixmaps/tb_cut.xpm"
-#include "../pixmaps/tb_copy.xpm"
-#include "../pixmaps/tb_paste.xpm"
-#include "../pixmaps/tb_find.xpm"
-#include "../pixmaps/tb_find_next.xpm"
-#include "../pixmaps/tb_find_prev.xpm"
-#include "../pixmaps/tb_find_help.xpm"
-#include "../pixmaps/tb_exit.xpm"
-#include "../pixmaps/tb_undo.xpm"
-#include "../pixmaps/tb_redo.xpm"
-#include "../pixmaps/tb_help.xpm"
-#include "../pixmaps/tb_macro.xpm"
-#include "../pixmaps/tb_make.xpm"
-#include "../pixmaps/tb_save_all.xpm"
-#include "../pixmaps/tb_jump.xpm"
-#include "../pixmaps/tb_ctags.xpm"
-#include "../pixmaps/tb_load_session.xpm"
-#include "../pixmaps/tb_save_session.xpm"
-#include "../pixmaps/tb_new_session.xpm"
-#include "../pixmaps/tb_blank.xpm"
-#include "../pixmaps/tb_maximize.xpm"
-#include "../pixmaps/tb_split.xpm"
-#include "../pixmaps/tb_minimize.xpm"
-#include "../pixmaps/tb_shell.xpm"
-#include "../pixmaps/tb_replace.xpm"
-#include "../pixmaps/tb_vsplit.xpm"
-#include "../pixmaps/tb_maxwidth.xpm"
-#include "../pixmaps/tb_minwidth.xpm"
-
-/*
- * Those are the pixmaps used for the default buttons.
- */
-struct NameToPixmap
-{
-    char *name;
-    char **xpm;
-};
-
-static const struct NameToPixmap built_in_pixmaps[] =
-{
-    {"New", tb_new_xpm},
-    {"Open", tb_open_xpm},
-    {"Save", tb_save_xpm},
-    {"Undo", tb_undo_xpm},
-    {"Redo", tb_redo_xpm},
-    {"Cut", tb_cut_xpm},
-    {"Copy", tb_copy_xpm},
-    {"Paste", tb_paste_xpm},
-    {"Print", tb_print_xpm},
-    {"Help", tb_help_xpm},
-    {"Find", tb_find_xpm},
-    {"SaveAll",	tb_save_all_xpm},
-    {"SaveSesn", tb_save_session_xpm},
-    {"NewSesn", tb_new_session_xpm},
-    {"LoadSesn", tb_load_session_xpm},
-    {"RunScript", tb_macro_xpm},
-    {"Replace",	tb_replace_xpm},
-    {"WinClose", tb_close_xpm},
-    {"WinMax",	tb_maximize_xpm},
-    {"WinMin", tb_minimize_xpm},
-    {"WinSplit", tb_split_xpm},
-    {"Shell", tb_shell_xpm},
-    {"FindPrev", tb_find_prev_xpm},
-    {"FindNext", tb_find_next_xpm},
-    {"FindHelp", tb_find_help_xpm},
-    {"Make", tb_make_xpm},
-    {"TagJump", tb_jump_xpm},
-    {"RunCtags", tb_ctags_xpm},
-    {"Exit", tb_exit_xpm},
-    {"WinVSplit", tb_vsplit_xpm},
-    {"WinMaxWidth", tb_maxwidth_xpm},
-    {"WinMinWidth", tb_minwidth_xpm},
-    { NULL, NULL} /* end tag */
-};
-
-#ifdef FEAT_SUN_WORKSHOP
-static const char *(sunws_pixmaps[]) =
-{
-    "Build",	"$SPRO_WSDIR/lib/locale/%L/graphics/build.xpm",
-    "Stop At",	"$SPRO_WSDIR/lib/locale/%L/graphics/stopAt.xpm",
-    "Stop In",	"$SPRO_WSDIR/lib/locale/%L/graphics/stopIn.xpm",
-    "Clear At",	"$SPRO_WSDIR/lib/locale/%L/graphics/clearAt.xpm",
-    "Start",	"$SPRO_WSDIR/lib/locale/%L/graphics/start.xpm",
-    "Evaluate",	"$SPRO_WSDIR/lib/locale/%L/graphics/evaluate.xpm",
-    "Eval *",	"$SPRO_WSDIR/lib/locale/%L/graphics/evaluate-star.xpm",
-    "Up",	"$SPRO_WSDIR/lib/locale/%L/graphics/up.xpm",
-    "Down",	"$SPRO_WSDIR/lib/locale/%L/graphics/down.xpm",
-    "Go",	"$SPRO_WSDIR/lib/locale/%L/graphics/go.xpm",
-    "StepInto",	"$SPRO_WSDIR/lib/locale/%L/graphics/stepInto.xpm",
-    "StepOver",	"$SPRO_WSDIR/lib/locale/%L/graphics/stepOver.xpm",
-    "StepOut",	"$SPRO_WSDIR/lib/locale/%L/graphics/stepOut.xpm",
-    "Fix",	"$SPRO_WSDIR/lib/locale/%L/graphics/fix.xpm",
-    "Def",	"$SPRO_WSDIR/lib/locale/%L/graphics/findDef.xpm",
-    "Refs",	"$SPRO_WSDIR/lib/locale/%L/graphics/findRefs.xpm",
-    NULL,	NULL
-};
-
-static Boolean filePredicate __ARGS((String cp));
-
-    static Boolean
-filePredicate(cp)
-    String cp;
-{
-    return True;
-}
-#endif
-
-static void createXpmImages __ARGS((char_u *path, char **xpm, Pixmap *sen, Pixmap *insen));
-
-    static void
-get_pixmap(menuname, sen, insen)
-    char_u	*menuname;
-    Pixmap	*sen;
-    Pixmap	*insen;
-{
-    int		builtin_num;		/* index into builtin table */
-    int		num_pixmaps;		/* entries in builtin pixmap table */
-    char_u	buf[MAXPATHL];		/* buffer storing expanded pathname */
-#ifdef FEAT_SUN_WORKSHOP
-    char	locbuf[MAXPATHL];	/* generate locale pathname */
-#endif
-    char	**xpm = NULL;		/* xpm array */
-    int		i;
-
-    buf[0] = NUL;			/* start with NULL path */
-    num_pixmaps = (sizeof(built_in_pixmaps) / sizeof(built_in_pixmaps[0])) - 1;
-    if (STRNCMP(menuname, "BuiltIn", (size_t)7) == 0)
-    {
-	if (isdigit((int)menuname[7]) && isdigit((int)menuname[8]))
-	{
-	    builtin_num = atoi((char *)menuname + 7);
-	    if (builtin_num >= 0 && builtin_num < num_pixmaps)
-		xpm = built_in_pixmaps[builtin_num].xpm;
-	    else
-		xpm = tb_blank_xpm;
-	}
-    }
-    else
-    {
-	for (i = 0; i < num_pixmaps; i++)
-	{
-	    if (STRCMP(menuname, built_in_pixmaps[i].name) == 0)
-	    {
-		xpm = built_in_pixmaps[i].xpm;
-		break;
-	    }
-	}
-#ifdef FEAT_SUN_WORKSHOP
-	if (xpm == NULL)
-	{
-	    char_u	*path;		/* path with %L resolved to locale */
-
-	    for (i = 0; sunws_pixmaps[i] != NULL; i += 2)
-	    {
-		if (STRCMP(menuname, sunws_pixmaps[i]) == 0)
-		{
-		    path = (char_u *)XtResolvePathname(gui.dpy, NULL,
-			    NULL, ".xpm", sunws_pixmaps[i + 1],
-			    NULL, 0, filePredicate);
-		    if (path == NULL)	/* neither LANG nor LC_ALL is set */
-		    {
-			char *p = strcpy(locbuf, sunws_pixmaps[i + 1]);
-
-			while ((p = strstr(p, "%L")) != NULL)
-			{
-			    *p++ = 'C';
-			    strcpy(p, &p[1]);
-			}
-			path = (char_u *)locbuf;
-			expand_env(path, buf, MAXPATHL);
-		    }
-		    else
-		    {
-			expand_env(path, buf, MAXPATHL);
-			XtFree(path);
-		    }
-		    break;
-		}
-	    }
-	}
-#endif
-    }
-
-    if (xpm != NULL || buf[0] != NUL)
-	createXpmImages(buf, xpm, sen, insen);
-}
-
-#include <X11/xpm.h>
-
-/*
- * Read an Xpm file, doing color substitutions for the foreground and
- * background colors. If there is an error reading a color xpm file,
- * drop back and read the monochrome file. If successfull, create the
- * insensitive Pixmap too.
- */
-    static void
-createXpmImages(path, xpm, sen, insen)
-    char_u	*path;
-    char	**xpm;
-    Pixmap	*sen;
-    Pixmap	*insen;
-{
-    Window	rootWindow;
-    XpmAttributes attrs;
-    int		screenNum;
-    int		status;
-    GC		mask_gc;
-    GC		back_gc;
-    XGCValues	gcvalues;
-    int		startX;
-    int		x, y;
-    Pixmap	mask;
-    Pixmap	map;
-    Pixel	bg_pixel;
-    Pixel	fg_pixel;
-
-    XtVaGetValues(toolBar, XmNbackground, &bg_pixel,
-	    XmNforeground, &fg_pixel, NULL);
-
-    /* Setup the color subsititution table */
-    attrs.valuemask = XpmColorSymbols;
-    attrs.numsymbols = 2;
-    attrs.colorsymbols = (XpmColorSymbol *)
-			  XtMalloc(sizeof(XpmColorSymbol) * attrs.numsymbols);
-    attrs.colorsymbols[0].name = "BgColor";
-    attrs.colorsymbols[0].value = NULL;
-    attrs.colorsymbols[0].pixel = bg_pixel;
-    attrs.colorsymbols[1].name = "FgColor";
-    attrs.colorsymbols[1].value = NULL;
-    attrs.colorsymbols[1].pixel = fg_pixel;
-
-    screenNum = DefaultScreen(gui.dpy);
-    rootWindow = RootWindow(gui.dpy, screenNum);
-
-    /* Create the "sensitive" pixmap */
-    if (xpm != NULL)
-	status = XpmCreatePixmapFromData(gui.dpy, rootWindow, xpm,
-							 &map, &mask, &attrs);
-    else
-	status = XpmReadFileToPixmap(gui.dpy, rootWindow, (char *)path,
-							 &map, &mask, &attrs);
-    if (status == XpmSuccess && map != 0)
-    {
-	/* Need to create new Pixmaps with the mask applied. */
-	gcvalues.foreground = bg_pixel;
-	back_gc = XCreateGC(gui.dpy, map, GCForeground, &gcvalues);
-	mask_gc = XCreateGC(gui.dpy, map, GCForeground, &gcvalues);
-	XSetClipMask(gui.dpy, mask_gc, mask);
-
-	/* Create the "sensitive" pixmap. */
-	*sen = XCreatePixmap(gui.dpy, rootWindow,
-		 attrs.width, attrs.height, DefaultDepth(gui.dpy, screenNum));
-	XFillRectangle(gui.dpy, *sen, back_gc, 0, 0,
-						   attrs.width, attrs.height);
-	XCopyArea(gui.dpy, map, *sen, mask_gc, 0, 0,
-					     attrs.width, attrs.height, 0, 0);
-
-	/* Create the "insensitive" pixmap.  It's a copy of the "sensitive"
-	 * pixmap with half the pixels set to the background color. */
-	*insen = XCreatePixmap(gui.dpy, rootWindow,
-		 attrs.width, attrs.height, DefaultDepth(gui.dpy, screenNum));
-	XCopyArea(gui.dpy, *sen, *insen, back_gc, 0, 0,
-					     attrs.width, attrs.height, 0, 0);
-	for (y = 0; y < attrs.height; y++)
-	{
-	    if (y % 2 == 0)
-		startX = 0;
-	    else
-		startX = 1;
-	    for (x = startX; x < attrs.width; x += 2)
-		XDrawPoint(gui.dpy, *insen, back_gc, x, y);
-	}
-	XFreeGC(gui.dpy, back_gc);
-	XFreeGC(gui.dpy, mask_gc);
-	XFreePixmap(gui.dpy, map);
-	/* XFreePixmap(gui.dpy, mask); causes a crash, probably XFreeGC
-	 * already freed it. */
-    }
-    else
-	*insen = *sen = 0;
-
-    XtFree((char *)attrs.colorsymbols);
-    XpmFreeAttributes(&attrs);
-}
-
-
-/*
  * The next toolbar enter/leave callbacks make sure the text area gets the
  * keyboard focus when the pointer is not in the toolbar.
  */
@@ -2108,6 +1833,14 @@ toolbarbutton_leave_cb(w, client_data, event, cont)
     gui_mch_set_footer((char_u *) "");
 # endif
 }
+
+    void
+gui_mch_get_toolbar_colors(bgp, fgp)
+    Pixel	*bgp;
+    Pixel	*fgp;
+{
+    XtVaGetValues(toolBar, XmNbackground, bgp, XmNforeground, fgp, NULL);
+}
 #endif
 
 /*
@@ -2145,6 +1878,9 @@ gui_motif_scroll_colors(id)
 }
 
 #ifdef FEAT_MENU
+/*
+ * Set the fontlist for Widget "id" to use gui.menu_font.
+ */
     static void
 gui_motif_menu_fontlist(id)
     Widget  id;

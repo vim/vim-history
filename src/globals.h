@@ -257,6 +257,9 @@ EXTERN int	need_mouse_correct INIT(= FALSE);
 
 /* When double clicking, topline must be the same */
 EXTERN linenr_t gui_prev_topline INIT(= 0);
+#  ifdef FEAT_DIFF
+EXTERN int	gui_prev_topfill INIT(= 0);
+#  endif
 # endif
 
 # ifdef FEAT_MOUSESHAPE
@@ -365,6 +368,10 @@ EXTERN int	ru_col;		/* column for ruler */
 EXTERN int	ru_wid;		/* 'rulerfmt' width of ruler when non-zero */
 #endif
 EXTERN int	sc_col;		/* column for shown command */
+
+#ifdef TEMPDIRNAMES
+EXTERN char_u	*vim_tempdir INIT(= NULL); /* Name of Vim's own temp dir. */
+#endif
 
 /*
  * When starting or exiting some things are done differently (e.g. screen
@@ -644,6 +651,11 @@ EXTERN int	dont_scroll INIT(= FALSE);/* don't use scrollbars when TRUE */
 EXTERN int	mapped_ctrl_c INIT(= FALSE); /* CTRL-C is mapped */
 #endif
 
+EXTERN int	b_lmap_def INIT(= 0);	/* default for b_lmap, used when
+					   entering a new buffer; it's global
+					   because the new buffer may already
+					   be freed by then */
+
 EXTERN cmdmod_t	cmdmod;			/* Ex command modifiers */
 
 EXTERN int	msg_silent INIT(= 0);	/* don't print messages */
@@ -825,6 +837,7 @@ EXTERN int	fill_stlnc INIT(= ' ');
 #if defined(FEAT_WINDOWS) || defined(FEAT_FOLDING)
 EXTERN int	fill_vert INIT(= ' ');
 EXTERN int	fill_fold INIT(= '-');
+EXTERN int	fill_diff INIT(= 'x');
 #endif
 
 #ifdef FEAT_VISUAL

@@ -1651,6 +1651,12 @@ failed:
 	else if (linecnt)		/* appended at least one line */
 	    appended_lines_mark(from, linecnt);
 
+#ifdef FEAT_DIFF
+	/* After reading the text into the buffer the diff info needs to be
+	 * updated. */
+	if ((newfile || read_buffer))
+	    diff_invalidate();
+#endif
 #ifndef ALWAYS_USE_GUI
 	/*
 	 * If we were reading from the same terminal as where messages go,
@@ -1779,7 +1785,8 @@ failed:
 #endif
 		keep_msg = msg_trunc_attr(IObuff, FALSE, 0);
 	    keep_msg_attr = 0;
-	    if (read_stdin || read_buffer || restart_edit != 0)
+	    if ((read_stdin || read_buffer || restart_edit != 0)
+		    && keep_msg != NULL)
 	    {
 		/* When reading from stdin, the screen will be cleared next;
 		 * keep the message to repeat it later.
@@ -3704,14 +3711,14 @@ msg_add_lines(insert_space, lnum, nchars)
     else
     {
 	if (lnum == 1)
-	    STRCPY(p, "1 line, ");
+	    STRCPY(p, _("1 line, "));
 	else
-	    sprintf((char *)p, "%ld lines, ", lnum);
+	    sprintf((char *)p, _("%ld lines, "), lnum);
 	p += STRLEN(p);
 	if (nchars == 1)
-	    STRCPY(p, "1 character");
+	    STRCPY(p, _("1 character"));
 	else
-	    sprintf((char *)p, "%ld characters", nchars);
+	    sprintf((char *)p, _("%ld characters"), nchars);
     }
 }
 
@@ -4898,7 +4905,6 @@ write_lnum_adjust(offset)
 }
 
 #if defined(TEMPDIRNAMES) || defined(PROTO)
-static char_u	*vim_tempdir = NULL;	/* Name of Vim's own temp dir. */
 static long	temp_count = 0;		/* Temp filename counter. */
 
 /*
@@ -6125,6 +6131,10 @@ aucmd_prepbuf(aco, buf)
 	curwin->w_cursor.col = 0;
 	aco->save_topline = curwin->w_topline;
 	curwin->w_topline = 1;
+#ifdef FEAT_DIFF
+	aco->save_topfill = curwin->w_topfill;
+	curwin->w_topfill = 0;
+#endif
     }
 
     curbuf = buf;
@@ -6174,9 +6184,19 @@ aucmd_restbuf(aco)
 	    check_cursor();
 	    /* check topline < line_count, in case lines got deleted */
 	    if (aco->save_topline <= curbuf->b_ml.ml_line_count)
+	    {
 		curwin->w_topline = aco->save_topline;
+#ifdef FEAT_DIFF
+		curwin->w_topfill = aco->save_topfill;
+#endif
+	    }
 	    else
+	    {
 		curwin->w_topline = curbuf->b_ml.ml_line_count;
+#ifdef FEAT_DIFF
+		curwin->w_topfill = 0;
+#endif
+	    }
 	}
     }
 }

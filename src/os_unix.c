@@ -145,6 +145,7 @@ static RETSIGTYPE catch_sigint __ARGS(SIGPROTOARG);
 	&& defined(FEAT_TITLE) && !defined(FEAT_GUI_GTK)
 # define SET_SIG_ALARM
 static RETSIGTYPE sig_alarm __ARGS(SIGPROTOARG);
+static int sig_alarm_called;
 #endif
 static RETSIGTYPE deathtrap __ARGS(SIGPROTOARG);
 
@@ -628,6 +629,7 @@ catch_sigint SIGDEFARG(sigarg)
 sig_alarm SIGDEFARG(sigarg)
 {
     /* doesn't do anything, just to break a system call */
+    sig_alarm_called = TRUE;
     SIGRETURN;
 }
 #endif
@@ -972,6 +974,31 @@ mch_input_isatty()
     return FALSE;
 }
 
+#ifdef FEAT_X11
+
+# if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H) \
+	&& (defined(FEAT_XCLIPBOARD) || defined(FEAT_TITLE))
+
+static void xopen_message __ARGS((struct timeval *tvp));
+
+/*
+ * Give a message about the elapsed time for opening the X window.
+ */
+    static void
+xopen_message(tvp)
+    struct timeval *tvp;	/* must contain start time */
+{
+    struct timeval  end_tv;
+
+    /* Compute elapsed time. */
+    gettimeofday(&end_tv, NULL);
+    smsg((char_u *)_("Opening the X display took %ld msec"),
+	    (end_tv.tv_sec - tvp->tv_sec) * 1000L
+	    + (end_tv.tv_usec - tvp->tv_usec) / 1000L);
+}
+# endif
+#endif
+
 #if defined(FEAT_X11) && (defined(FEAT_TITLE) || defined(FEAT_XCLIPBOARD))
 /*
  * A few functions shared by X11 title and clipboard code.
@@ -1034,6 +1061,9 @@ test_x11_window(dpy)
 	XFree((void *)text_prop.value);
     XSync(dpy, False);
     (void)XSetErrorHandler(old_handler);
+
+    if (p_verbose > 0 && got_x_error)
+	MSG(_("Testing the X display failed"));
 
     return (got_x_error ? FAIL : OK);
 }
@@ -1148,11 +1178,20 @@ get_x11_windis()
     {
 #ifdef SET_SIG_ALARM
 	RETSIGTYPE (*sig_save)();
+#endif
+#if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
+	struct timeval  start_tv;
 
+	if (p_verbose > 0)
+	    gettimeofday(&start_tv, NULL);
+#endif
+
+#ifdef SET_SIG_ALARM
 	/*
 	 * Opening the Display may hang if the DISPLAY setting is wrong, or
 	 * the network connection is bad.  Set an alarm timer to get out.
 	 */
+	sig_alarm_called = FALSE;
 	sig_save = (RETSIGTYPE (*)())signal(SIGALRM,
 						 (RETSIGTYPE (*)())sig_alarm);
 	alarm(2);
@@ -1162,9 +1201,15 @@ get_x11_windis()
 #ifdef SET_SIG_ALARM
 	alarm(0);
 	signal(SIGALRM, (RETSIGTYPE (*)())sig_save);
+	if (p_verbose > 0 && sig_alarm_called)
+	    MSG(_("Opening the X display timed out"));
 #endif
 	if (x11_display != NULL)
 	{
+# if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
+	    if (p_verbose > 0)
+		xopen_message(&start_tv);
+# endif
 	    if (test_x11_window(x11_display) == FAIL)
 	    {
 		/* Maybe window id is bad */
@@ -1429,6 +1474,10 @@ mch_settitle(title, icon)
     if (get_x11_windis() == OK)
 	type = 1;
 #else
+# ifdef FEAT_GUI_PHOTON
+    if (gui.in_use)
+	type = 1;
+# endif
 # ifdef FEAT_GUI_BEOS
     /* we always have a 'window' */
     type = 1;
@@ -1451,7 +1500,7 @@ mch_settitle(title, icon)
 	else
 	    set_x11_title(title);		/* x11 */
 #else
-# ifdef FEAT_GUI_BEOS
+# if defined(FEAT_GUI_BEOS) || defined(FEAT_GUI_PHOTON)
 	else
 	    gui_mch_settitle(title, icon);
 # endif
@@ -2079,6 +2128,13 @@ mch_windexit(r)
 # endif
 	gui_exit(r);
 #endif
+#ifdef __QNX__
+    /* A core dump won't be created if the signal handler
+     * doesn't return, so we can't call exit() */
+    if (deadly_signal != 0)
+	return;
+#endif
+
     exit(r);
 }
 
@@ -2329,6 +2385,17 @@ mch_setmouse(on)
 	}
     }
 # endif
+# ifdef FEAT_MOUSE_PTERM
+    else
+    {
+	/* 1 = button press, 6 = release, 7 = drag, 1h...9l = right button */
+	if (on)
+	    out_str_nf("\033[>1h\033[>6h\033[>7h\033[>1h\033[>9l");
+	else
+	    out_str_nf("\033[>1l\033[>6l\033[>7l\033[>1l\033[>9h");
+	ison = on;
+    }
+# endif
 }
 
 /*
@@ -2402,6 +2469,14 @@ check_mouse_termcode()
 	set_mouse_termcode(KS_DEC_MOUSE, (char_u *)IF_EB("\033[", ESC_STR "["));
     else
 	del_mouse_termcode(KS_DEC_MOUSE);
+# endif
+# ifdef FEAT_MOUSE_PTERM
+    /* same as the dec mouse */
+    if (!use_xterm_mouse())
+	set_mouse_termcode(KS_PTERM_MOUSE,
+		(char_u *) IF_EB("\033[", ESC_STR "["));
+    else
+	del_mouse_termcode(KS_PTERM_MOUSE);
 # endif
 }
 #endif
@@ -2894,9 +2969,11 @@ mch_call_shell(cmd, options)
 	     * There is no type cast for the argv, because the type may be
 	     * different on different machines. This may cause a warning
 	     * message with strict compilers, don't worry about it.
+	     * Call _exit() instead of exit() to avoid closing the connection
+	     * to the X server (esp. with GTK, which uses atexit()).
 	     */
 	    execvp(argv[0], argv);
-	    exit(EXEC_FAILED);	    /* exec failed, return failure code */
+	    _exit(EXEC_FAILED);	    /* exec failed, return failure code */
 	}
 	else			/* parent */
 	{
@@ -4566,11 +4643,10 @@ static int	    xterm_trace = -1;	/* default: disabled */
 static int	    xterm_button;
 
 /*
- * Setup a dummy window for selections in an xterm.
- * Currently only works for x11.
+ * Setup a dummy window for X selections in a terminal.
  */
     void
-setup_xterm_clip()
+setup_term_clip()
 {
     int		z = 0;
     char	*strp = "";
@@ -4583,6 +4659,12 @@ setup_xterm_clip()
     if (app_context != NULL && xterm_Shell == (Widget)0)
     {
 	int (*oldhandler)();
+# if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
+	struct timeval  start_tv;
+
+	if (p_verbose > 0)
+	    gettimeofday(&start_tv, NULL);
+# endif
 
 	/* Ignore X errors while opening the display */
 	oldhandler = XSetErrorHandler(x_error_check);
@@ -4594,7 +4676,16 @@ setup_xterm_clip()
 	(void)XSetErrorHandler(oldhandler);
 
 	if (xterm_dpy == NULL)
+	{
+	    if (p_verbose > 0)
+		MSG(_("Opening the X display failed"));
 	    return;
+	}
+
+# if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
+	if (p_verbose > 0)
+	    xopen_message(&start_tv);
+# endif
 
 	/* Create a Shell to make converters work. */
 	AppShell = XtVaAppCreateShell("vim_xterm", "Vim_xterm",

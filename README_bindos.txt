@@ -1,4 +1,4 @@
-README_bindos.txt for version 6.0z of Vim: Vi IMproved.
+README_bindos.txt for version 6.0aa of Vim: Vi IMproved.
 
 See "README.txt" for general information about Vim.
 See "README_dos.txt" for installation instructions for MS-DOS and MS-Windows.

@@ -26,6 +26,7 @@ void alist_expand __ARGS((void));
 void alist_set __ARGS((alist_t *al, int count, char_u **files, int use_curbuf));
 void alist_add __ARGS((alist_t *al, char_u *fname, int set_fnum));
 void alist_slash_adjust __ARGS((void));
+void do_exedit __ARGS((exarg_t *eap, win_t *old_curwin));
 void do_sleep __ARGS((long msec));
 char_u *eval_vars __ARGS((char_u *src, int *usedlen, linenr_t *lnump, char_u **errormsg, char_u *srcstart));
 char_u *expand_sfile __ARGS((char_u *arg));

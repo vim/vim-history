@@ -2,7 +2,7 @@
 " Language:	HTML
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/html.vim
-" Last Change:  2001 Jan 15
+" Last Change:  2001 April 03
 
 " Please check :help html.vim for some comments and a description of the options
 
@@ -21,8 +21,8 @@ if !exists("main_syntax")
 endif
 
 " tags
-syn region  htmlString   contained start=+"+ end=+"+ keepend contains=htmlSpecialChar,javaScriptExpression,@htmlPreproc
-syn region  htmlString   contained start=+'+ end=+'+ keepend contains=htmlSpecialChar,javaScriptExpression,@htmlPreproc
+syn region  htmlString   contained start=+"+ end=+"+ contains=htmlSpecialChar,javaScriptExpression,@htmlPreproc
+syn region  htmlString   contained start=+'+ end=+'+ contains=htmlSpecialChar,javaScriptExpression,@htmlPreproc
 syn match   htmlValue    contained "=[\t ]*[^'" \t>][^ \t>]*"hs=s+1   contains=javaScriptExpression,@htmlPreproc
 syn region  htmlEndTag             start=+</+      end=+>+ contains=htmlTagN,htmlTagError
 syn region  htmlTag                start=+<[^/]+   end=+>+ contains=htmlTagN,htmlString,htmlArg,htmlValue,htmlTagError,htmlEvent,htmlCssDefinition,@htmlPreproc,@htmlArgCluster
@@ -82,7 +82,7 @@ syn keyword htmlArg contained rules scheme scope span standby style
 syn keyword htmlArg contained summary tabindex valuetype version
 
 " special characters
-syn match htmlSpecialChar "&[^;]\{1,6};"
+syn match htmlSpecialChar "&#\=[0-9A-Za-z]\{1,8};"
 
 " Comments (the real ones or the old netscape ones)
 if exists("html_wrong_comments")
@@ -209,7 +209,7 @@ hi def link htmlEndTag                  Identifier
 hi def link htmlArg                     Type
 hi def link htmlTagName                 htmlStatement
 hi def link htmlSpecialTagName          Exception
-hi def link htmlValue                   Value
+hi def link htmlValue                     String
 hi def link htmlSpecialChar             Special
 
 if !exists("html_no_rendering")

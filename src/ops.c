@@ -741,7 +741,7 @@ valid_yank_reg(regname, writing)
     int	    regname;
     int	    writing;	    /* if TRUE check for writable registers */
 {
-    if (       IS_ALNUM(regname)
+    if (       (regname > 0 && ASCII_ISALNUM(regname))
 	    || (!writing && vim_strchr((char_u *)
 #ifdef FEAT_EVAL
 				    "/.%#:="
@@ -784,9 +784,9 @@ get_yank_register(regname, writing)
     i = regname;
     if (isdigit(i))
 	i -= '0';
-    else if (islower(i))
+    else if (ASCII_ISLOWER(i))
 	i = CharOrdLow(i) + 10;
-    else if (isupper(i))
+    else if (ASCII_ISUPPER(i))
     {
 	i = CharOrdUp(i) + 10;
 	y_append = TRUE;
@@ -842,7 +842,7 @@ do_record(c)
     if (Recording == FALSE)	    /* start recording */
     {
 			/* registers 0-9, a-z and " are allowed */
-	if (!IS_ALNUM(c) && c != '"')
+	if (c < 0 || (!ASCII_ISALNUM(c) && c != '"'))
 	    retval = FAIL;
 	else
 	{
@@ -1934,14 +1934,14 @@ swapchar(op_type, pos)
 	return FALSE;
 
     nc = c;
-    if (islower(c))
+    if (ASCII_ISLOWER(c))
     {
 	if (op_type == OP_ROT13)
 	    nc = ROT13(c, 'a');
 	else if (op_type != OP_LOWER)
 	    nc = TO_UPPER(c);
     }
-    else if (isupper(c))
+    else if (ASCII_ISUPPER(c))
     {
 	if (op_type == OP_ROT13)
 	    nc = ROT13(c, 'A');
@@ -4119,12 +4119,12 @@ do_addsub(command, Prenum1)
 
 	while (ptr[col] != NUL
 		&& !isdigit(ptr[col])
-		&& !(doalp && isalpha(ptr[col])))
+		&& !(doalp && ASCII_ISALPHA(ptr[col])))
 	    ++col;
 
 	while (col > 0
 		&& isdigit(ptr[col - 1])
-		&& !(doalp && isalpha(ptr[col])))
+		&& !(doalp && ASCII_ISALPHA(ptr[col])))
 	    --col;
     }
 
@@ -4137,7 +4137,7 @@ do_addsub(command, Prenum1)
      */
     firstdigit = ptr[col];
     RLADDSUBFIX(ptr);
-    if ((!isdigit(firstdigit) && !(doalp && isalpha(firstdigit)))
+    if ((!isdigit(firstdigit) && !(doalp && ASCII_ISALPHA(firstdigit)))
 	    || u_save_cursor() != OK)
     {
 	beep_flush();
@@ -4148,7 +4148,7 @@ do_addsub(command, Prenum1)
     ptr = ml_get_curline();
     RLADDSUBFIX(ptr);
 
-    if (doalp && isalpha(firstdigit))
+    if (doalp && ASCII_ISALPHA(firstdigit))
     {
 	/* decrement or increment alphabetic character */
 	if (command == Ctrl_X)
@@ -4343,7 +4343,7 @@ read_viminfo_register(virp, force)
 	set_prev = TRUE;
 	str++;
     }
-    if (!isalnum(*str) && *str != '-')
+    if (!ASCII_ISALNUM(*str) && *str != '-')
     {
 	if (viminfo_error(_("Illegal register name"), virp->vir_line))
 	    return TRUE;	/* too many errors, pretend end-of-file */

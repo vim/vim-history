@@ -456,12 +456,11 @@ ex_sniff(eap)
     {				/* no request: print available commands */
 	print_cmds = TRUE;
 	msg_start();
-	msg_outtrans_attr((char_u *)_("-- SNiFF+ commands --"),
-		highlight_attr[HLF_T]);
+	msg_outtrans_attr((char_u *)_("-- SNiFF+ commands --"), hl_attr(HLF_T));
     }
     else	/* extract command name and symbol if present */
     {
-	for (symbol = (char *)arg; isalpha(*symbol); symbol++)
+	for (symbol = (char *)arg; ASCII_ISALPHA(*symbol); symbol++)
 	    ;
 	symbol = (char *)skiptowhite(arg);
 	len_cmd = (int)(symbol-(char *)arg);
