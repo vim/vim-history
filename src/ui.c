@@ -482,6 +482,10 @@ clip_lose_selection(cbd)
 	    setcursor();
 	    cursor_on();
 	    out_flush();
+# ifdef FEAT_GUI
+	    if (gui.in_use)
+		gui_update_cursor(TRUE, FALSE);
+# endif
 	}
     }
 #endif
