@@ -16,6 +16,7 @@ static void save_re_pat __ARGS((int idx, char_u *pat, int magic));
 #ifdef FEAT_EVAL
 static int first_submatch __ARGS((regmmatch_T *rp));
 #endif
+static int check_prevcol __ARGS((char_u *linep, int col, int ch, int *prevcol));
 static int inmacro __ARGS((char_u *, char_u *));
 static int check_linecomment __ARGS((char_u *line));
 static int cls __ARGS((void));
@@ -1491,6 +1492,30 @@ findmatch(oap, initc)
 }
 
 /*
+ * Return TRUE if the character before "linep[col]" equals "ch".
+ * Return FALSE if "col" is zero.
+ * Update "*prevcol" to the column of the previous character, unless "prevcol"
+ * is NULL.
+ * Handles multibyte string correctly.
+ */
+    static int
+check_prevcol(linep, col, ch, prevcol)
+    char_u	*linep;
+    int		col;
+    int		ch;
+    int		*prevcol;
+{
+    --col;
+#ifdef FEAT_MBYTE
+    if (col > 0 && has_mbyte)
+	col -= (*mb_head_off)(linep, linep + col);
+#endif
+    if (prevcol)
+	*prevcol = col;
+    return (col >= 0 && linep[col] == ch) ? TRUE : FALSE;
+}
+
+/*
  * findmatchlimit -- find the matching paren or brace, if it exists within
  * maxtravel lines of here.  A maxtravel of 0 means search until falling off
  * the edge of the file.
@@ -1708,8 +1733,7 @@ findmatchlimit(oap, initc, flags, maxtravel)
 
 		    /* Set "match_escaped" if there are an odd number of
 		     * backslashes. */
-		    for (col = pos.col - 1; col >= 0 && linep[col] == '\\';
-									col--)
+		    for (col = pos.col; check_prevcol(linep, col, '\\', &col);)
 			bslcnt++;
 		    match_escaped = (bslcnt & 1);
 		}
@@ -2073,7 +2097,7 @@ findmatchlimit(oap, initc, flags, maxtravel)
 	    if (curbuf->b_p_lisp
 		    && vim_strchr((char_u *)"(){}[]", c) != NULL
 		    && pos.col > 0
-		    && linep[pos.col - 1] == '\\')
+		    && check_prevcol(linep, pos.col, '\\', NULL))
 		break;
 #endif
 
@@ -2086,8 +2110,7 @@ findmatchlimit(oap, initc, flags, maxtravel)
 
 		if (!cpo_bsl)
 		{
-		    for (col = pos.col - 1; col >= 0 && linep[col] == '\\';
-									col--)
+		    for (col = pos.col; check_prevcol(linep, col, '\\', &col);)
 			bslcnt++;
 		}
 		/* Only accept a match when 'M' is in 'cpo' or when ecaping is
