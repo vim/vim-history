@@ -378,7 +378,7 @@ mygetdigits(pp)
     p = *pp;
     if (*p == '-')		/* skip negative sign */
 	++p;
-    while(isdigit(*p))
+    while (VIM_ISDIGIT(*p))
     {
 	retval = (retval * 10) + (*p - '0');
 	++p;
@@ -1794,7 +1794,7 @@ mch_screenmode(char_u *arg)
     static int	    modes[]   = { BW40,	  C40,	 BW80,	 C80,	MONO,	C4350};
 
     mode = -1;
-    if (isdigit(*arg))		    /* mode number given */
+    if (VIM_ISDIGIT(*arg))		    /* mode number given */
 	mode = atoi((char *)arg);
     else
     {
@@ -3007,7 +3007,7 @@ mch_nodetype(char_u *name)
 	    || STRICMP(name, "PRN") == 0
 	    || ((STRNICMP(name, "COM", 3) == 0
 		    || STRNICMP(name, "LPT", 3) == 0)
-		&& isdigit(name[3])
+		&& VIM_ISDIGIT(name[3])
 		&& name[4] == NUL))
 	return NODE_WRITABLE;
     /* TODO: NODE_OTHER? */
