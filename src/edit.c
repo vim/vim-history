@@ -411,6 +411,9 @@ edit(cmdchar, startln, count)
 	o_eol = FALSE;
     }
 
+    /* we are in insert mode now, don't need to start it anymore */
+    need_start_insertmode = FALSE;
+
     /* Need to save the line for undo before inserting the first char. */
     ins_need_undo = TRUE;
 
