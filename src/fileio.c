@@ -2247,10 +2247,15 @@ readfile_charconvert(fname, fenc, fdp)
 #endif
 
 #ifdef FEAT_VIMINFO
+/*
+ * Read marks for the current buffer from the viminfo file, when we support
+ * buffer marks and the buffer has a name.
+ */
     static void
 check_marks_read()
 {
-    if (!curbuf->b_marks_read && get_viminfo_parameter('\'') > 0)
+    if (!curbuf->b_marks_read && get_viminfo_parameter('\'') > 0
+						  && curbuf->b_ffname != NULL)
 	read_viminfo(NULL, FALSE, TRUE, FALSE);
 
     /* Always set b_marks_read; needed when 'viminfo' is changed to include
