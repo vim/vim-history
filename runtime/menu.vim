@@ -2,7 +2,7 @@
 " You can also use this as a start for your own set of menus.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2002 Jul 09
+" Last Change:	2002 Jul 13
 
 " Note that ":an" (short for ":anoremenu") is often used to make a menu work
 " in all modes and avoid side effects from mappings defined by the user.
@@ -928,9 +928,9 @@ if (exists("did_load_filetypes") || exists("syntax_on"))
 " Skip setting up the individual syntax selection menus unless
 " do_syntax_sel_menu is defined (it takes quite a bit of time).
 if exists("do_syntax_sel_menu")
-  so $VIMRUNTIME/synmenu.vim
+  runtime! synmenu.vim
 else
-  an 50.10 &Syntax.Show\ individual\ choices	:let do_syntax_sel_menu = 1<Bar>so $VIMRUNTIME/synmenu.vim<Bar>aunmenu Syntax.Show\ individual\ choices<CR>
+  an 50.10 &Syntax.&Show\ individual\ choices	:let do_syntax_sel_menu = 1<Bar>runtime! synmenu.vim<Bar>aunmenu &Syntax.&Show\ individual\ choices<CR>
   an 50.195 &Syntax.-SEP1-		<Nop>
 endif
 
