@@ -5378,8 +5378,11 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 			      &toolbar_flags, TRUE) != OK)
 	    errmsg = e_invarg;
 	else
+	{
+	    out_flush();
 	    gui_mch_show_toolbar((toolbar_flags &
 				  (TOOLBAR_TEXT | TOOLBAR_ICONS)) != 0);
+	}
     }
 #endif
 
@@ -5390,8 +5393,11 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	if (opt_strings_flags(p_tbis, p_tbis_values, &tbis_flags, FALSE) != OK)
 	    errmsg = e_invarg;
 	else
+	{
+	    out_flush();
 	    gui_mch_show_toolbar((toolbar_flags &
 				  (TOOLBAR_TEXT | TOOLBAR_ICONS)) != 0);
+	}
     }
 #endif
 
