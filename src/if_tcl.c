@@ -228,6 +228,9 @@ tcl_init(arg)
 }
 
 #if defined(DYNAMIC_TCL) || defined(PROTO)
+
+static int stubs_initialized = FALSE;
+
 /*
  * Return TRUE if the TCL interface can be used.
  */
@@ -235,8 +238,6 @@ tcl_init(arg)
 tcl_enabled(verbose)
     int		verbose;
 {
-    static int stubs_initialized = FALSE;
-
     if (!stubs_initialized && find_executable_arg != NULL
 	    && tcl_runtime_link_init(DYNAMIC_TCL_DLL, verbose) == OK)
     {
@@ -2079,7 +2080,7 @@ tcl_buffer_free(buf)
     struct ref *reflist;
 
 #ifdef DYNAMIC_TCL
-    if (!tcl_enabled(TRUE))
+    if (!stubs_initialized)	/* Not using Tcl, nothing to do. */
 	return;
 #endif
 
@@ -2100,7 +2101,7 @@ tcl_window_free(win)
     struct ref *reflist;
 
 #ifdef DYNAMIC_TCL
-    if (!tcl_enabled(TRUE))
+    if (!stubs_initialized)	/* Not using Tcl, nothing to do. */
 	return;
 #endif
 
