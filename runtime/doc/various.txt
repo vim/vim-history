@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.1.  Last change: 2003 Feb 15
+*various.txt*   For Vim version 6.1.  Last change: 2003 Mar 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -534,9 +534,28 @@ g CTRL-A		Only when Vim was compiled with MEM_PROFILING defined
 				:help so<C-V><CR>only
 <			{not in Vi}
 
-When no argument is given the file given with the 'helpfile' option will be
-opened.  Otherwise the specified tag is searched for in all "doc/tags" files
-in the directories specified in the 'runtimepath' option.
+							*:helpg* *:helpgrep*
+:helpg[rep] {pattern}	
+			Search all help text files and make a list of lines
+			in which {pattern} matches.  Jumps to the first match.
+			You can navigate through the matches with the
+			|quickfix| commands, e.g., |:cnext| to jump to the
+			next one.  Or use |:cwindow| to get the list of
+			matches in the quickfix window.
+			{pattern} is used as a Vim regexp |pattern|.
+			'ignorecase' is not used, add "\c" to ignore case.
+			Example for case sensitive search: >
+				:helpgrep Uganda
+<			Example for case ignoring search: >
+				:helpgrep uganda\c
+<			Cannot be followed by another command, everything is
+			used as part of the pattern.  But you can use
+			|:execute| when needed.
+
+
+When no argument is given to |:help| the file given with the 'helpfile' option
+will be opened.  Otherwise the specified tag is searched for in all "doc/tags"
+files in the directories specified in the 'runtimepath' option.
 
 The initial height of the help window can be set with the 'helpheight' option
 (default 20).
