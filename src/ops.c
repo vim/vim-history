@@ -214,14 +214,16 @@ op_shift(oap, curs_top, amount)
 	    shift_block(oap, amount);
 #endif
 	else
-	    /* Don't move the line right if it starts with # and p_si is set. */
+	    /* Move the line right if it doesn't start with '#', 'smartindent'
+	     * isn't set or 'cindent' isn't set or '#' isn't in 'cino'. */
 #if defined(SMARTINDENT) || defined(CINDENT)
 	    if (first_char != '#' || (
 # ifdef SMARTINDENT
+#  ifdef CINDENT
+			 (!curbuf->b_p_si || curbuf->b_p_cin) &&
+#  else
 			 !curbuf->b_p_si
-# endif
-# if defined(SMARTINDENT) && defined(CINDENT)
-			    &&
+#  endif
 # endif
 # ifdef CINDENT
 			 (!curbuf->b_p_cin || !in_cinkeys('#', ' ', TRUE))
@@ -1956,7 +1958,11 @@ op_change(oap)
     {
 	l = 0;
 #ifdef SMARTINDENT
-	if (curbuf->b_p_si)
+	if (curbuf->b_p_si
+# ifdef CINDENT
+		&& !curbuf->b_p_cin
+# endif
+		)
 	    can_si = TRUE;	/* It's like opening a new line, do si */
 #endif
     }
@@ -2787,14 +2793,18 @@ do_put(regname, dir, count, flags)
 			if (count == 0 && i == y_size - 1)
 			    lendiff = STRLEN(ptr);
 #if defined(SMARTINDENT) || defined(CINDENT)
-			if (*ptr == '#'
+			if (*ptr == '#' && (
 # ifdef SMARTINDENT
-			   && curbuf->b_p_si
+#  ifdef CINDENT
+			   (curbuf->b_p_si && !curbuf->b_p_cin) ||
+#  else
+			   curbuf->b_p_si
+#  endif
 # endif
 # ifdef CINDENT
-			   && curbuf->b_p_cin && in_cinkeys('#', ' ', TRUE)
+			   (curbuf->b_p_cin && in_cinkeys('#', ' ', TRUE))
 # endif
-					    )
+					    ))
 			    indent = 0;     /* Leave # lines at start */
 			else
 #endif

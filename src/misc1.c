@@ -187,6 +187,11 @@ open_line(dir, redraw, del_spaces, old_indent)
     int		new_plines = 0;		/* init for GCC */
     int		extra_plines = 0;
 #ifdef SMARTINDENT
+    int		do_si = (curbuf->b_p_si
+# ifdef CINDENT
+					&& !curbuf->b_p_cin
+# endif
+			);
     int		no_si = FALSE;		/* reset did_si afterwards */
     int		first_char = NUL;	/* init for GCC */
 #endif
@@ -238,7 +243,7 @@ open_line(dir, redraw, del_spaces, old_indent)
     {
 	p_extra = saved_line + curwin->w_cursor.col;
 #ifdef SMARTINDENT
-	if (curbuf->b_p_si)	    /* need first char after new line break */
+	if (do_si)		/* need first char after new line break */
 	{
 	    p = skipwhite(p_extra);
 	    first_char = *p;
@@ -271,7 +276,7 @@ open_line(dir, redraw, del_spaces, old_indent)
      */
     if (curbuf->b_p_ai
 #ifdef SMARTINDENT
-			|| curbuf->b_p_si
+			|| do_si
 #endif
 					    )
     {
@@ -290,7 +295,7 @@ open_line(dir, redraw, del_spaces, old_indent)
 	 * don't add an indent. Fixes inserting a NL before '{' in line
 	 *	"if (condition) {"
 	 */
-	if (!trunc_line && curbuf->b_p_si && *saved_line != NUL
+	if (!trunc_line && do_si && *saved_line != NUL
 				    && (p_extra == NULL || first_char != '{'))
 	{
 	    char_u  *ptr;
@@ -445,7 +450,7 @@ open_line(dir, redraw, del_spaces, old_indent)
 	    }
 	    curwin->w_cursor = old_cursor;
 	}
-	if (curbuf->b_p_si)
+	if (do_si)
 	    can_si = TRUE;
 #endif /* SMARTINDENT */
 
@@ -692,7 +697,7 @@ open_line(dir, redraw, del_spaces, old_indent)
 		    /* Recompute the indent, it may have changed. */
 		    if (curbuf->b_p_ai
 #ifdef SMARTINDENT
-					|| curbuf->b_p_si
+					|| do_si
 #endif
 							   )
 			newindent = get_indent_str(leader);
@@ -764,7 +769,7 @@ open_line(dir, redraw, del_spaces, old_indent)
 	    if (comment_end[0] == '*' && comment_end[1] == '/' &&
 			(curbuf->b_p_ai
 #ifdef SMARTINDENT
-					|| curbuf->b_p_si
+					|| do_si
 #endif
 							   ))
 	    {
