@@ -4620,7 +4620,7 @@ two_count:
 		*def = getdigits(&p);
 		*argt |= (ZEROR | NOTADR);
 
-		if (p != val + vallen)
+		if (p != val + vallen || vallen == 0)
 		{
 invalid_count:
 		    EMSG(_("E178: Invalid default value for count"));
