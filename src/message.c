@@ -859,7 +859,7 @@ msg_outtrans_len_attr(str, len, attr)
     {
 #ifdef MULTI_BYTE
 	/* check multibyte */
-	if (is_dbcs && *(str + 1) != NUL && IsLeadByte(*str))
+	if (is_dbcs && len > 0 && IsLeadByte(*str))
 	{
 	    char_u buf[3];
 
