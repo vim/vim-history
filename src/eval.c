@@ -1157,7 +1157,8 @@ ex_let(eap)
 
 		if (*skipwhite(p) != '=')
 		    EMSG(_(e_letunexp));
-		else if (STRNCMP(arg, "b:changedtick", p - arg) == 0)
+		else if (p - arg == 13
+				    && STRNCMP(arg, "b:changedtick", 13) == 0)
 		    EMSG2(_(e_readonlyvar), arg);
 #ifdef FEAT_MAGIC_BRACES
 		else if (expr_start != NULL)
