@@ -5176,8 +5176,11 @@ screen_puts(text, row, col, attr)
 		/* When at the end of the text and overwriting a two-cell
 		 * character with a one-cell character, need to clear the next
 		 * cell.  Also when overwriting the left halve of a two-cell
-		 * char with the right halve of a two-cell char. */
-		if (has_mbyte && ptr[mbyte_blen] == NUL
+		 * char with the right halve of a two-cell char.  Do this only
+		 * once (mb_off2cells() may return 2 on the right halve). */
+		if (clear_next_cell)
+		    clear_next_cell = FALSE;
+		else if (has_mbyte && ptr[mbyte_blen] == NUL
 			&& ((mbyte_cells == 1 && (*mb_off2cells)(off) > 1)
 			    || (mbyte_cells == 2
 				&& (*mb_off2cells)(off) == 1
@@ -5226,10 +5229,7 @@ screen_puts(text, row, col, attr)
 		col += mbyte_cells;
 		ptr += mbyte_blen;
 		if (clear_next_cell)
-		{
 		    ptr = (char_u *)" ";
-		    clear_next_cell = FALSE;
-		}
 	    }
 	    else
 #endif
