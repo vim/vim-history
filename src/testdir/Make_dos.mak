@@ -56,6 +56,7 @@ clean:
 	copy $*.ok test.ok
 	$(VIMPROG) -u dos.vim -U NONE --noplugin -s dotest.in $*.in
 	diff test.out $*.ok
+	-del $*.out
 	rename test.out $*.out
 	-del X*
 	-del test.ok
