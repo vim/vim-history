@@ -570,7 +570,7 @@ getcmdline(firstc, count, indent)
 #endif	/* FEAT_WILDMENU */
 
 	/* CTRL-\ CTRL-N goes to Normal mode, CTRL-\ CTRL-G goes to Insert
-	 * mode when 'insertmode' is set. */
+	 * mode when 'insertmode' is set, CTRL-\ e prompts for an expression. */
 	if (c == Ctrl_BSL)
 	{
 	    ++no_mapping;
@@ -578,7 +578,9 @@ getcmdline(firstc, count, indent)
 	    c = safe_vgetc();
 	    --no_mapping;
 	    --allow_keys;
-	    if (c != Ctrl_N && c != Ctrl_G && c != 'e')
+	    /* CTRL-\ e doesn't work when obtaining an expression. */
+	    if (c != Ctrl_N && c != Ctrl_G
+				     && (c != 'e' || ccline.cmdfirstc == '='))
 	    {
 		vungetc(c);
 		c = Ctrl_BSL;
@@ -586,46 +588,43 @@ getcmdline(firstc, count, indent)
 #ifdef FEAT_EVAL
 	    else if (c == 'e')
 	    {
+		struct cmdline_info	    save_ccline;
+		char_u		    *p;
+
 		/*
 		 * Replace the command line with the result of an expression.
 		 * Need to save the current command line, to be able to enter
 		 * a new one...
 		 */
-		if (ccline.cmdfirstc != '=')	/* can't do this recursively */
+		if (ccline.cmdpos == ccline.cmdlen)
+		    new_cmdpos = 99999;	/* keep it at the end */
+		else
+		    new_cmdpos = ccline.cmdpos;
+		save_ccline = ccline;
+		ccline.cmdbuff = NULL;
+		ccline.cmdprompt = NULL;
+		c = get_expr_register();
+		ccline = save_ccline;
+		if (c == '=')
 		{
-		    struct cmdline_info	    save_ccline;
-		    char_u		    *p;
-
-		    if (ccline.cmdpos == ccline.cmdlen)
-			new_cmdpos = 99999;	/* keep it at the end */
-		    else
-			new_cmdpos = ccline.cmdpos;
-		    save_ccline = ccline;
-		    ccline.cmdbuff = NULL;
-		    ccline.cmdprompt = NULL;
-		    c = get_expr_register();
-		    ccline = save_ccline;
-		    if (c == '=')
+		    p = get_expr_line();
+		    if (p != NULL
+			     && realloc_cmdbuff((int)STRLEN(p) + 1) == OK)
 		    {
-			p = get_expr_line();
-			if (p != NULL
-				 && realloc_cmdbuff((int)STRLEN(p) + 1) == OK)
-			{
-			    ccline.cmdlen = STRLEN(p);
-			    STRCPY(ccline.cmdbuff, p);
-			    vim_free(p);
+			ccline.cmdlen = STRLEN(p);
+			STRCPY(ccline.cmdbuff, p);
+			vim_free(p);
 
-			    /* Restore the cursor or use the position set with
-			     * set_cmdline_pos(). */
-			    if (new_cmdpos > ccline.cmdlen)
-				ccline.cmdpos = ccline.cmdlen;
-			    else
-				ccline.cmdpos = new_cmdpos;
+			/* Restore the cursor or use the position set with
+			 * set_cmdline_pos(). */
+			if (new_cmdpos > ccline.cmdlen)
+			    ccline.cmdpos = ccline.cmdlen;
+			else
+			    ccline.cmdpos = new_cmdpos;
 
-			    KeyTyped = FALSE;	/* Don't do p_wc completion. */
-			    redrawcmd();
-			    goto cmdline_changed;
-			}
+			KeyTyped = FALSE;	/* Don't do p_wc completion. */
+			redrawcmd();
+			goto cmdline_changed;
 		    }
 		}
 		beep_flush();
