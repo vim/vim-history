@@ -5409,6 +5409,7 @@ ex_sign(eap)
 #ifdef FEAT_SIGN_ICONS
 			if (gui.in_use)
 			{
+			    out_flush();
 			    if (sp->sn_image != NULL)
 				gui_mch_destroy_sign(sp->sn_image);
 			    sp->sn_image = gui_mch_register_sign(sp->sn_icon);
@@ -5488,7 +5489,10 @@ ex_sign(eap)
 		vim_free(sp->sn_icon);
 #ifdef FEAT_SIGN_ICONS
 		if (sp->sn_image != NULL)
+		{
+		    out_flush();
 		    gui_mch_destroy_sign(sp->sn_image);
+		}
 #endif
 		vim_free(sp->sn_text);
 		if (sp_prev == NULL)

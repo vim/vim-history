@@ -1434,6 +1434,7 @@ win_totop(size, flags)
      * scrollbars.  Have to update them anyway. */
     if (gui.in_use)
     {
+	out_flush();
 	gui_init_which_components(NULL);
 	gui_update_scrollbars(TRUE);
     }
@@ -3076,6 +3077,7 @@ win_alloc(after)
 #ifdef FEAT_GUI
 	if (gui.in_use)
 	{
+	    out_flush();
 	    gui_create_scrollbar(&newwin->w_scrollbars[SBAR_LEFT],
 		    SBAR_LEFT, newwin);
 	    gui_create_scrollbar(&newwin->w_scrollbars[SBAR_RIGHT],
@@ -3144,6 +3146,7 @@ win_free(wp)
 #ifdef FEAT_GUI
     if (gui.in_use)
     {
+	out_flush();
 	gui_mch_destroy_scrollbar(&wp->w_scrollbars[SBAR_LEFT]);
 	gui_mch_destroy_scrollbar(&wp->w_scrollbars[SBAR_RIGHT]);
     }
