@@ -947,6 +947,7 @@ gui_mch_dialog(int type,		/* type of dialog */
 {
     char_u *names;
     char_u *p;
+    int i;
     int butcount;
     int dialog_status = -1;
 
@@ -959,6 +960,7 @@ gui_mch_dialog(int type,		/* type of dialog */
     GtkWidget *action_area;
     GtkWidget *sub_area;
     GtkWidget *separator;
+    GtkAccelGroup *accel_group;
 
     GdkPixmap *icon = NULL;
     GdkBitmap *mask = NULL;
@@ -1057,30 +1059,77 @@ gui_mch_dialog(int type,		/* type of dialog */
     gtk_box_pack_start(GTK_BOX(action_area), sub_area, FALSE, TRUE, 0);
     gtk_widget_show(sub_area);
 
-    /* make a copy, so that we can insert NULs */
-    names = vim_strsave(buttons);
-    if (names == NULL)
-	return -1;
-
     /*
      * Create the buttons.
      */
+
+    /*
+     * Translate the Vim accelerator character into an underscore for GTK+.
+     * Double underscores to keep them in the label.
+     */
+    /* count the number of underscores */
+    i = 1;
+    for (p = buttons; *p; ++p)
+	if (*p == '_')
+	    ++i;
+
+    /* make a copy of "buttons" with the translated characters */
+    names = alloc(STRLEN(buttons) + i);
+    if (names == NULL)
+	return -1;
+
+    p = names;
+    for (i = 0; buttons[i]; ++i)
+    {
+	if (buttons[i] == DLG_HOTKEY_CHAR)
+	    *p++ = '_';
+	else
+	{
+	    if (buttons[i] == '_')
+		*p++ = '_';
+	    *p++ = buttons[i];
+	}
+    }
+    *p = NUL;
+
+    /* Attach the new accelerator group to the window. */
+    accel_group = gtk_accel_group_new();
+    gtk_accel_group_attach(accel_group, GTK_OBJECT(dialog));
+
     p = names;
     for (butcount = 0; butcount < MAXBUT; ++butcount) {
 	char_u *next;
+	GtkWidget *label;
+	guint accel_key;
 
+	/* Chunk out this single button. */
 	for (next = p; *next; ++next) {
-	    if (*next == DLG_HOTKEY_CHAR)
-		mch_memmove(next, next + 1, STRLEN(next));
 	    if (*next == DLG_BUTTON_SEP) {
 		*next++ = NUL;
 		break;
 	    }
 	}
 
-	button[butcount] = gtk_button_new_with_label((const gchar *)p);
+	button[butcount] = gtk_button_new();
 	GTK_WIDGET_SET_FLAGS(button[butcount], GTK_CAN_DEFAULT);
-	gtk_widget_show(button[butcount]);
+
+	label = gtk_accel_label_new("");
+        gtk_accel_label_set_accel_widget(GTK_ACCEL_LABEL(label), dialog);
+
+	accel_key = gtk_label_parse_uline(GTK_LABEL(label), p);
+# ifdef GTK_USE_ACCEL
+	/* Don't add accelator if 'winaltkeys' is "no". */
+	if (accel_key != GDK_VoidSymbol) {
+	    gtk_widget_add_accelerator(button[butcount],
+		    "clicked",
+		    accel_group,
+		    accel_key, 0,
+		    0);
+	}
+# endif
+
+	gtk_container_add(GTK_CONTAINER(button[butcount]), label);
+	gtk_widget_show_all(button[butcount]);
 
 	data[butcount].status = &dialog_status;
 	data[butcount].index = butcount;
@@ -1100,6 +1149,7 @@ gui_mch_dialog(int type,		/* type of dialog */
 	}
 	p = next;
     }
+
     vim_free(names);
 
     --def_but;	    /* 1 is first button */
@@ -1124,6 +1174,10 @@ gui_mch_dialog(int type,		/* type of dialog */
 
     if (dialog_status < 0)
 	dialog_status = 0;
+
+    /* let the garbage collector know that we don't need it anylonger */
+    gtk_accel_group_unref(accel_group);
+
     return dialog_status;
 }
 
