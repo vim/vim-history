@@ -310,9 +310,13 @@
  */
 #define CMDBUFFSIZE 1024	/* size of the command processing buffer */
 
-#define MAXPATHL    256		/* Limited by the Pascal Strings */
-
-#define BASENAMELEN	(32-5-1)	/* length of base of filename */
+#if defined(MACOS_X_UNIX)
+# define MAXPATHL	1024
+# define BASENAMELEN	(MAXNAMLEN - 5)	/* length of base of filename */
+#else
+# define MAXPATHL	256		/* Limited by the Pascal Strings */
+# define BASENAMELEN	(32-5-1)	/* length of base of filename */
+#endif
 
 #ifndef DFLT_MAXMEM
 # define DFLT_MAXMEM	512	/* use up to  512 Kbyte for buffer */
