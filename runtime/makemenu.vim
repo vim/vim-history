@@ -1,6 +1,6 @@
 " Script to define the syntax menu in menu.vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Sep 24
+" Last Change:	2002 Jan 15
 
 " This is used by "make menu" in the src directory.
 edit <sfile>:p:h/menu.vim
@@ -38,12 +38,12 @@ fun! <SID>Syn(arg)
     " When starting a new letter, insert a menu separator.
     let c = submenu_name[0]
     if c != s:cur_menu_char
-      exe 'am 50.' . s:cur_menu_nr . '.' . s:cur_menu_item . ' &Syntax.' . menu_name . ".-" . c . '- <nul>'
+      exe 'an 50.' . s:cur_menu_nr . '.' . s:cur_menu_item . ' &Syntax.' . menu_name . ".-" . c . '- <nul>'
       let s:cur_menu_item = s:cur_menu_item + 10
       let s:cur_menu_char = c
     endif
   endif
-  call append(s:lnum, 'am 50.' . s:cur_menu_nr . '.' . s:cur_menu_item . ' &Syntax.' . menu_name . "." . submenu_name . ' :cal SetSyn("' . syntax_name . '")<CR>')
+  call append(s:lnum, 'an 50.' . s:cur_menu_nr . '.' . s:cur_menu_item . ' &Syntax.' . menu_name . "." . submenu_name . ' :cal SetSyn("' . syntax_name . '")<CR>')
   let s:cur_menu_item = s:cur_menu_item + 10
   let s:lnum = s:lnum + 1
 endfun
@@ -55,6 +55,7 @@ SynMenu AB.Ada:ada
 SynMenu AB.Aflex:aflex
 SynMenu AB.AHDL:ahdl
 SynMenu AB.Amiga\ DOS:amiga
+SynMenu AB.Ant:ant
 SynMenu AB.Antlr:antlr
 SynMenu AB.Apache\ config:apache
 SynMenu AB.Apache-style\ config:apachestyle
@@ -78,6 +79,7 @@ SynMenu AB.Avenue:ave
 SynMenu AB.Awk:awk
 SynMenu AB.Ayacc:ayacc
 SynMenu AB.B:b
+SynMenu AB.Baan:baan
 SynMenu AB.BASIC:basic
 SynMenu AB.BC\ calculator:bc
 SynMenu AB.BDF\ font:bdf
@@ -149,8 +151,9 @@ SynMenu EFG.GNU\ Server\ Pages:gsp
 SynMenu EFG.GNUplot:gnuplot
 SynMenu EFG.GTKrc:gtkrc
 
-SynMenu HIJK.Haskell:haskell
-SynMenu HIJK.Haskell-literate:lhaskell
+SynMenu HIJK.Haskell.Haskell:haskell
+SynMenu HIJK.Haskell.Haskell-c2hs:chaskell
+SynMenu HIJK.Haskell.Haskell-literate:lhaskell
 SynMenu HIJK.Hercules:hercules
 SynMenu HIJK.HTML:html
 SynMenu HIJK.HTML\ with\ M4:htmlm4
@@ -187,6 +190,7 @@ SynMenu L-Ma.Lilo:lilo
 SynMenu L-Ma.Lisp:lisp
 SynMenu L-Ma.Lite:lite
 SynMenu L-Ma.LOTOS:lotos
+SynMenu L-Ma.LotusScript:lscript
 SynMenu L-Ma.Lout:lout
 SynMenu L-Ma.Lua:lua
 SynMenu L-Ma.Lynx\ Style:lss
@@ -210,6 +214,7 @@ SynMenu Me-NO.Model:model
 SynMenu Me-NO.Modsim\ III:modsim3
 SynMenu Me-NO.Modula\ 2:modula2
 SynMenu Me-NO.Modula\ 3:modula3
+SynMenu Me-NO.MOO:moo
 SynMenu Me-NO.Msql:msql
 SynMenu Me-NO.MS-DOS.MS-DOS\ \.bat\ file:dosbatch
 SynMenu Me-NO.MS-DOS.4DOS\ \.bat\ file:btm
@@ -246,6 +251,7 @@ SynMenu PQ.PL/SQL:plsql
 SynMenu PQ.PO\ (GNU\ gettext):po
 SynMenu PQ.Postfix\ main\ config:pfmain
 SynMenu PQ.PostScript:postscr
+SynMenu PQ.PostScript\ Printer\ Description:ppd
 SynMenu PQ.Povray:pov
 SynMenu PQ.Povray\ configuration:povini
 SynMenu PQ.Printcap:pcap
@@ -306,6 +312,7 @@ SynMenu Sh-S.SPEC\ (Linux\ RPM):spec
 SynMenu Sh-S.Specman:specman
 SynMenu Sh-S.Spice:spice
 SynMenu Sh-S.Speedup:spup
+SynMenu Sh-S.Splint:splint
 SynMenu Sh-S.Squid:squid
 SynMenu Sh-S.SQL:sql
 SynMenu Sh-S.SQL\ Forms:sqlforms
@@ -354,12 +361,14 @@ SynMenu WXYZ.Wget\ config:wget
 SynMenu WXYZ.Whitespace\ (add):whitespace
 SynMenu WXYZ.WinBatch/Webbatch:winbatch
 SynMenu WXYZ.Windows\ Scripting\ Host:wsh
+SynMenu WXYZ.WvDial:wvdial
 SynMenu WXYZ.X\ Keyboard\ Extension:xkb
 SynMenu WXYZ.X\ Pixmap:xpm
 SynMenu WXYZ.X\ Pixmap\ (2):xpm2
 SynMenu WXYZ.X\ resources:xdefaults
 SynMenu WXYZ.Xmath:xmath
 SynMenu WXYZ.XML:xml
+SynMenu WXYZ.Xslt:xslt
 SynMenu WXYZ.XXD\ hex\ dump:xxd
 SynMenu WXYZ.Yacc:yacc
 SynMenu WXYZ.Zsh\ shell\ script:zsh

@@ -2917,7 +2917,9 @@ ins_compl_check_keys()
 	return;
     count = 0;
 
+    ++no_mapping;
     c = vpeekc_any();
+    --no_mapping;
     if (c != NUL)
     {
 	if (vim_is_ctrl_x_key(c) && c != Ctrl_X && c != Ctrl_R)
