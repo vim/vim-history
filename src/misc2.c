@@ -2648,6 +2648,26 @@ vim_chdirfile(fname)
 }
 #endif
 
+#if defined(STAT_IGNORES_SLASH) || defined(PROTO)
+/*
+ * Check if "name" ends in a slash and is not a directory.
+ * Used for systems where stat() ignores a trailing slash on a file name.
+ * The Vim code assumes a trailing slash is only ignored for a directory.
+ */
+    int
+illegal_slash(name)
+    char *name;
+{
+    if (name[0] == NUL)
+	return FALSE;	    /* no file name is not illegal */
+    if (name[strlen(name) - 1] != '/')
+	return FALSE;	    /* no trailing slash */
+    if (mch_isdir(name))
+	return FALSE;	    /* trailing slash for a directory */
+    return TRUE;
+}
+#endif
+
 #if defined(CURSOR_SHAPE) || defined(PROTO)
 
 /*

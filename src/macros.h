@@ -145,7 +145,13 @@
 # ifdef MSWIN	/* has it's own mch_stat() function */
 #  define mch_stat(n, p)	vim_stat((n), (p))
 # else
-#  define mch_stat(n, p)	stat((n), (p))
+#  ifdef STAT_IGNORES_SLASH
+    /* On Solaris stat() accepts "file/" as if it was "file".  Return -1 if
+     * the name ends in "/" and it's not a directory. */
+#   define mch_stat(n, p)	(illegal_slash(n) ? -1 : stat((n), (p)))
+#  else
+#   define mch_stat(n, p)	stat((n), (p))
+#  endif
 # endif
 #endif
 
