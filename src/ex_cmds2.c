@@ -4112,7 +4112,11 @@ prt_add_resource(type, name, file)
     char	*resource_name[1];
     size_t	bytes_read;
 
+#ifdef COLON_AS_PATHSEP
+    sprintf((char *)resource_buffer, "$VIMRUNTIME:%s", file); /* ak */
+#else
     sprintf((char *)resource_buffer, "$VIMRUNTIME/%s", file);
+#endif
     expand_env(resource_buffer, resource_filename, MAXPATHL);
     fd_resource = mch_fopen((char *)resource_filename, READBIN);
     if (fd_resource == NULL)
