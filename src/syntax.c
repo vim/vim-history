@@ -4288,7 +4288,7 @@ get_id_list(arg, keylen, list)
     short	**list;		/* where to store the resulting list, if not
 				   NULL, the list is silently skipped! */
 {
-    char_u	*p;
+    char_u	*p = NULL;
     char_u	*end;
     int		round;
     int		count;

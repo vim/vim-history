@@ -723,7 +723,7 @@ do_shell(cmd, flags)
     int	    save_nwr;
 #endif
 #ifdef MSWIN
-    int	    winstart;
+    int	    winstart = FALSE;
 #endif
 #ifdef RISCOS
     int	    silent = FALSE;

@@ -50,17 +50,31 @@
 #endif
 
 #ifdef __MINGW32__
-# define FROM_LEFT_1ST_BUTTON_PRESSED    0x0001
-# define RIGHTMOST_BUTTON_PRESSED        0x0002
-# define FROM_LEFT_2ND_BUTTON_PRESSED    0x0004
-# define FROM_LEFT_3RD_BUTTON_PRESSED    0x0008
-# define FROM_LEFT_4TH_BUTTON_PRESSED    0x0010
+# ifndef FROM_LEFT_1ST_BUTTON_PRESSED
+#  define FROM_LEFT_1ST_BUTTON_PRESSED    0x0001
+# endif
+# ifndef RIGHTMOST_BUTTON_PRESSED
+#  define RIGHTMOST_BUTTON_PRESSED        0x0002
+# endif
+# ifndef FROM_LEFT_2ND_BUTTON_PRESSED
+#  define FROM_LEFT_2ND_BUTTON_PRESSED    0x0004
+# endif
+# ifndef FROM_LEFT_3RD_BUTTON_PRESSED
+#  define FROM_LEFT_3RD_BUTTON_PRESSED    0x0008
+# endif
+# ifndef FROM_LEFT_4TH_BUTTON_PRESSED
+#  define FROM_LEFT_4TH_BUTTON_PRESSED    0x0010
+# endif
 
 /*
  * EventFlags
  */
-# define MOUSE_MOVED   0x0001
-# define DOUBLE_CLICK  0x0002
+# ifndef MOUSE_MOVED
+#  define MOUSE_MOVED   0x0001
+# endif
+# ifndef DOUBLE_CLICK
+#  define DOUBLE_CLICK  0x0002
+# endif
 #endif
 
 /* Record all output and all keyboard & mouse input */
@@ -2430,7 +2444,7 @@ mch_call_shell(
     char_u *cmd,
     int options)	/* SHELL_*, see vim.h */
 {
-    int	    x;
+    int	    x = 0;
 #ifndef USE_GUI_WIN32
     int	    stopped_termcap_mode = FALSE;
 #endif
@@ -2505,7 +2519,7 @@ mch_call_shell(
 		si.dwFlags = 0;
 		si.cbReserved2 = 0;
 		si.lpReserved2 = NULL;
-		sprintf((char *)newcmd, "%s\0", cmd+6);
+		STRCPY(newcmd, cmd + 6);
 		if (*cmd == '"')
 		    *newcmd = '"';
 		/*
@@ -3770,13 +3784,13 @@ mch_libcall(
 	if (argstring != NULL)
 	{
 	    ProcAdd = (MYSTRPROC) GetProcAddress(hinstLib, funcname);
-	    if (fRunTimeLinkSuccess = (ProcAdd != NULL))
+	    if ((fRunTimeLinkSuccess = (ProcAdd != NULL)))
 		retval = (ProcAdd) (argstring);
 	}
 	else
 	{
 	    ProcAddI = (MYINTPROC) GetProcAddress(hinstLib, funcname);
-	    if (fRunTimeLinkSuccess = (ProcAddI != NULL))
+	    if ((fRunTimeLinkSuccess = (ProcAddI != NULL)))
 		retval = (ProcAddI) (argint);
 	}
 
@@ -3917,7 +3931,7 @@ default_shell()
     void
 clip_mch_request_selection()
 {
-    int	    type;
+    int	    type = 0;
     HGLOBAL hMem;
     char_u  *str = NULL;
 
