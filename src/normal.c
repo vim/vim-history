@@ -7890,22 +7890,34 @@ nv_put(cap)
 	{
 	    /* Putting in Visual mode: The put text replaces the selected
 	     * text.  First put the register at the end of the Visual
-	     * selection, then delete the selected text. */
+	     * selection, then delete the selected text.  In some cases the
+	     * register is put before the Visual selection. */
+	    if (lt(VIsual, curwin->w_cursor))
+	    {
+		curbuf->b_visual_start = VIsual;
+		curbuf->b_visual_end = curwin->w_cursor;
+	    }
+	    else
+	    {
+		curbuf->b_visual_start = curwin->w_cursor;
+		curbuf->b_visual_end = VIsual;
+	    }
 	    curpos = curwin->w_cursor;
 	    if (VIsual_mode == Ctrl_V)
 	    {
 		getvcols(curwin, &curwin->w_cursor, &VIsual, &left, &right);
-		if (lt(VIsual, curwin->w_cursor))
-		    curwin->w_cursor = VIsual;
+		curwin->w_cursor = curbuf->b_visual_start;
 		coladvance(right);
 	    }
-	    else if (lt(curwin->w_cursor, VIsual))
-		curwin->w_cursor = VIsual;
+	    else
+		curwin->w_cursor = curbuf->b_visual_end;
 	    if (VIsual_mode == 'v' && *p_sel == 'e')
 		dir = BACKWARD;
 	    else
 	    {
-		if (dir == BACKWARD)
+		/* Put linewise text above a characterwise or blockwise
+		 * selected Visual area; handled in do_put(). */
+		if (dir == BACKWARD && VIsual_mode != 'V')
 		    flags |= PUT_LINE_BACKWARD;
 		dir = FORWARD;
 	    }
@@ -7923,6 +7935,18 @@ nv_put(cap)
 #ifdef FEAT_VISUAL
 	if (VIsual_active)
 	{
+	    /* If linewise text was put above the Visual area, need to correct
+	     * the line numbers to shift the Visual area down. */
+	    if ((flags & PUT_LINE_BACKWARD)
+		    && curbuf->b_visual_start.lnum > curbuf->b_op_end.lnum)
+	    {
+		linenr_T l;
+
+		l = curbuf->b_op_end.lnum - curbuf->b_op_start.lnum + 1;
+		curpos.lnum += l;
+		VIsual.lnum += l;
+	    }
+
 	    /* Now delete the selected text. */
 	    cap->cmdchar = 'd';
 	    cap->nchar = NUL;

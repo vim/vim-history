@@ -2985,8 +2985,28 @@ do_put(regname, dir, count, flags)
 	y_array = y_current->y_array;
     }
 
-    if ((flags & PUT_LINE_BACKWARD) && y_type == MLINE)
-	dir = BACKWARD;
+#ifdef FEAT_VISUAL
+    if (y_type == MLINE)
+    {
+	if (flags & PUT_LINE_BACKWARD)
+	{
+	    /* "P" in Visual mode: Put before the Visual area instead of after
+	     * it.  It's OK to change the cursor position here (special
+	     * case!). */
+	    dir = BACKWARD;
+	    curwin->w_cursor = curbuf->b_visual_start;
+	}
+	else if (VIsual_active && VIsual_mode == Ctrl_V)
+	{
+	    /* "p" in Visual block mode with linewise text: put below the
+	     * block. */
+	    curwin->w_cursor = curbuf->b_visual_end;
+	}
+	curbuf->b_op_start = curwin->w_cursor;	/* default for '[ mark */
+	curbuf->b_op_end = curwin->w_cursor;	/* default for '] mark */
+    }
+#endif
+
     if (flags & PUT_LINE)	    /* :put command */
 	y_type = MLINE;
 
