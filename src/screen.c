@@ -2418,6 +2418,10 @@ win_line(wp, lnum, startrow, endrow)
 #endif
 #define WL_LINE		WL_SBR + 1	/* text in the line */
     int		draw_state = WL_START;	/* what to draw next */
+#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
+    int		feedback_col = 0;
+    int		feedback_old_attr = -1;
+#endif
 
 
     if (startrow > endrow)		/* past the end already! */
@@ -3500,40 +3504,39 @@ win_line(wp, lnum, startrow, endrow)
 		&& State == INSERT
 		&& im_get_status()
 		&& !p_imdisable
-		&& preedit_start_col != MAXCOL)
+		&& preedit_start_col != MAXCOL
+		&& draw_state == WL_LINE)
 	{
 	    colnr_T tcol;
-	    static int  bcol = 0;
-	    static int	old_attr = -1;
 
 	    getvcol(curwin, &(curwin->w_cursor), &tcol, NULL, NULL);
 	    if ((long)preedit_start_col <= vcol && vcol < (long)tcol)
 	    {
-		if (old_attr == -1)
+		if (feedback_old_attr == -1)
 		{
-		    bcol = 0;
-		    old_attr = char_attr;
+		    feedback_col = 0;
+		    feedback_old_attr = char_attr;
 		}
 		if (draw_feedback != NULL)
 		{
-		    if (draw_feedback[bcol] & XIMReverse)
+		    if (draw_feedback[feedback_col] & XIMReverse)
 			char_attr = HL_INVERSE;
-		    else if (draw_feedback[bcol] & XIMUnderline)
+		    else if (draw_feedback[feedback_col] & XIMUnderline)
 			char_attr = HL_UNDERLINE;
 		    else
 			char_attr = hl_attr(HLF_V);
 		}
 		else
-		    char_attr = old_attr;
-		bcol++;
+		    char_attr = feedback_old_attr;
+		feedback_col++;
 	    }
 	    else
 	    {
-		if (old_attr >= 0)
+		if (feedback_old_attr >= 0)
 		{
-		    char_attr = old_attr;
-		    old_attr = -1;
-		    bcol = 0;
+		    char_attr = feedback_old_attr;
+		    feedback_old_attr = -1;
+		    feedback_col = 0;
 		}
 	    }
 	}
