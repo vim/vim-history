@@ -5649,6 +5649,45 @@ ex_drop(eap)
 	++emsg_off;
 	split = check_changed(curbuf, TRUE, FALSE, FALSE, FALSE);
 	--emsg_off;
+
+	/*
+	 * When dropping a single file that is equal to the currently edited
+	 * file, no splitting is to be done.  This happens when controlling
+	 * Vim remotely to jump to a position in a file.
+	 */
+	if (split)
+	{
+	    char_u	*arg = vim_strsave(eap->arg);
+	    char_u	*nxt;
+	    char_u	*f;
+
+	    if (arg != NULL)
+	    {
+		/* get the first argument, removing quotes. */
+		nxt = do_one_arg(arg);
+		f = fix_fname(arg);
+		if (f != NULL)
+		{
+		    /* if it's equal to the current file, don't split */
+		    if (!otherfile(f))
+			split = FALSE;
+		    vim_free(f);
+		}
+		vim_free(arg);
+
+		if (!split)
+		{
+		    /* If already editing the file and it's the only one:
+		     * return.  Otherwise remove the file from the list and
+		     * split anyway to edit the others. */
+		    if (*nxt == NUL)
+			return;
+		    f = eap->arg + (nxt - arg);
+		    mch_memmove(eap->arg, f, STRLEN(f) + 1);
+		    split = TRUE;
+		}
+	    }
+	}
     }
 
     /* Fake a ":snext" or ":next" command. */

@@ -837,6 +837,53 @@ buf_write_all(buf, forceit)
 /*
  * Code to handle the argument list.
  */
+
+/*
+ * Isolate one argument, taking quotes and backticks.
+ * Changes the argument in-place, puts a NUL after it.
+ * Quotes are removed, backticks remain.
+ * Return a pointer to the start of the next argument.
+ */
+    char_u *
+do_one_arg(str)
+    char_u *str;
+{
+    char_u	*p;
+    int		inquote;
+    int		inbacktick;
+
+    inquote = FALSE;
+    inbacktick = FALSE;
+    for (p = str; *str; ++str)
+    {
+	/*
+	 * for MSDOS et.al. a backslash is part of a file name.
+	 * Only skip ", space and tab.
+	 */
+	if (rem_backslash(str))
+	{
+	    *p++ = *str++;
+	    *p++ = *str;
+	}
+	else
+	{
+	    /* An item ends at a space not in quotes or backticks */
+	    if (!inquote && !inbacktick && vim_isspace(*str))
+		break;
+	    if (!inquote && *str == '`')
+		inbacktick ^= TRUE;
+	    if (!inbacktick && *str == '"')
+		inquote ^= TRUE;
+	    else
+		*p++ = *str;
+	}
+    }
+    str = skipwhite(str);
+    *p = NUL;
+
+    return str;
+}
+
 static int do_arglist __ARGS((char_u *str, int what, int after));
 static void alist_check_arg_idx __ARGS((void));
 #ifdef FEAT_LISTCMDS
@@ -864,8 +911,6 @@ do_arglist(str, what, after)
     int		exp_count;
     char_u	**exp_files;
     char_u	*p;
-    int		inquote;
-    int		inbacktick;
     int		i;
 #ifdef FEAT_LISTCMDS
     int		match;
@@ -885,38 +930,8 @@ do_arglist(str, what, after)
 	((char_u **)new_ga.ga_data)[new_ga.ga_len++] = str;
 	--new_ga.ga_room;
 
-	/*
-	 * Isolate one argument, taking quotes and backticks.
-	 * Quotes are removed, backticks remain.
-	 */
-	inquote = FALSE;
-	inbacktick = FALSE;
-	for (p = str; *str; ++str)
-	{
-	    /*
-	     * for MSDOS et.al. a backslash is part of a file name.
-	     * Only skip ", space and tab.
-	     */
-	    if (rem_backslash(str))
-	    {
-		*p++ = *str++;
-		*p++ = *str;
-	    }
-	    else
-	    {
-		/* An item ends at a space not in quotes or backticks */
-		if (!inquote && !inbacktick && vim_isspace(*str))
-		    break;
-		if (!inquote && *str == '`')
-		    inbacktick ^= TRUE;
-		if (!inbacktick && *str == '"')
-		    inquote ^= TRUE;
-		else
-		    *p++ = *str;
-	    }
-	}
-	str = skipwhite(str);
-	*p = NUL;
+	/* Isolate one argument, change it in-place, put a NUL after it. */
+	str = do_one_arg(str);
     }
 
 #ifdef FEAT_LISTCMDS
