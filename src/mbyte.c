@@ -94,9 +94,6 @@
 #ifdef X_LOCALE
 #include <X11/Xlocale.h>
 #endif
-#ifndef EILSEQ
-# define EILSEQ 123
-#endif
 
 #if defined(FEAT_MBYTE) || defined(PROTO)
 
@@ -2551,7 +2548,7 @@ iconv_string(fd, str, slen)
     fromlen = slen;
     for (;;)
     {
-	if (len == 0 || ICONV_ERRNO == E2BIG)
+	if (len == 0 || ICONV_ERRNO == ICONV_E2BIG)
 	{
 	    /* Allocate enough room for most conversions.  When re-allocating
 	     * increase the buffer size. */
@@ -2573,7 +2570,9 @@ iconv_string(fd, str, slen)
 	    *to = NUL;
 	    break;
 	}
-	if (ICONV_ERRNO == EILSEQ)
+	/* Check both ICONV_EILSEQ and EILSEQ, because the dynamically loaded
+	 * iconv library may use one of them. */
+	if (ICONV_ERRNO == ICONV_EILSEQ || ICONV_ERRNO == EILSEQ)
 	{
 	    /* Can't convert: insert a '?' and skip a character.  This assumes
 	     * conversion from 'encoding' to something else.  In other
@@ -2585,7 +2584,7 @@ iconv_string(fd, str, slen)
 	    from += l;
 	    fromlen -= l;
 	}
-	else if (ICONV_ERRNO != E2BIG)
+	else if (ICONV_ERRNO != ICONV_E2BIG)
 	{
 	    /* conversion failed */
 	    vim_free(result);

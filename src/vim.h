@@ -1613,11 +1613,20 @@ typedef int VimClipboard;	/* This is required for the prototypes. */
 # define ENC_LATIN1	0x200	    /* Latin1 */
 
 # ifdef USE_ICONV
-/* On Win32 iconv.dll is dynamically loaded. */
+#  ifndef EILSEQ
+#   define EILSEQ 123
+#  endif
 #  ifdef DYNAMIC_ICONV
+/* On Win32 iconv.dll is dynamically loaded. */
 #   define ICONV_ERRNO (*iconv_errno())
+#   define ICONV_E2BIG  7
+#   define ICONV_EINVAL 22
+#   define ICONV_EILSEQ 42
 #  else
 #   define ICONV_ERRNO errno
+#   define ICONV_E2BIG  E2BIG
+#   define ICONV_EINVAL EINVAL
+#   define ICONV_EILSEQ EILSEQ
 #  endif
 # endif
 
