@@ -4488,7 +4488,10 @@ dialog_callback(
     if (message == WM_INITDIALOG)
     {
 	CenterWindow(hwnd, GetWindow(hwnd, GW_OWNER));
-	SetFocus(GetDlgItem(hwnd, dialog_default_button + IDCANCEL));
+	/* Set focus to the dialog.  Set the default button, if specified. */
+	(void)SetFocus(hwnd);
+	if (dialog_default_button > 0)
+	    (void)SetFocus(GetDlgItem(hwnd, dialog_default_button + IDCANCEL));
 	return FALSE;
     }
 
