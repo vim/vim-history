@@ -2995,6 +2995,10 @@ foldlevelMarker(flp)
 	else
 	    ++s;
     }
+
+    /* The level can't go negative, must be missing a start marker. */
+    if (flp->lvl_next < 0)
+	flp->lvl_next = 0;
 }
 
 /* foldlevelSyntax() {{{2 */
