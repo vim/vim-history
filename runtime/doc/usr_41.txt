@@ -1,4 +1,4 @@
-*usr_41.txt*	For Vim version 6.2.  Last change: 2003 Jun 01
+*usr_41.txt*	For Vim version 6.2.  Last change: 2003 Jun 03
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -819,7 +819,7 @@ functions: >
 
 	:function
 <	function Show(start, ...) ~
-	function GetVimIndent()~
+	function GetVimIndent() ~
 	function SetSyn(name) ~
 
 To see what a function does, use its name as an argument for ":function": >
@@ -863,10 +863,10 @@ generating an error message, this code catches the error and gives the user a
 nice message instead.
 
 For the commands in between ":try" and ":endtry" errors are turned into
-exceptions.  An exception is a string.  In the case of an error the string is
-the error message.  And every error message has a number.  In this case, the
-error we catch contains "E484:".  This number is guaranteed to stay the same
-(the text may change, e.g., it may be translated).
+exceptions.  An exception is a string.  In the case of an error the string
+contains the error message.  And every error message has a number.  In this
+case, the error we catch contains "E484:".  This number is guaranteed to stay
+the same (the text may change, e.g., it may be translated).
 
 When the ":read" command causes another error, the pattern "E484:" will not
 match in it.  Thus this exception will not be caught and result in the usual
@@ -881,7 +881,7 @@ You might be tempted to do this: >
 	:endtry
 
 This means all errors are caught.  But then you will not see errors that are
-useful, such as an invalid modeline.
+useful, such as "E21: Cannot make changes, 'modifiable' is off".
 
 Another useful mechanism is the ":finally" command: >
 
@@ -897,9 +897,9 @@ Another useful mechanism is the ":finally" command: >
 
 This filters the lines from the cursor until the end of the file through the
 "filter" command, which takes a file name argument.  No matter if the
-filtering works or something goes wrong in between ":try" and ":finally", the
-"call delete(tmp)" is always executed.  This makes sure you don't leave the
-temporary file behind.
+filtering works, something goes wrong in between ":try" and ":finally" or the
+user cancels the filtering by pressing CTRL-C, the "call delete(tmp)" is
+always executed.  This makes sure you don't leave the temporary file behind.
 
 More information about exception handling can be found in the reference
 manual: |exception-handling|.
