@@ -299,7 +299,6 @@ vms_sys_status(int status)
     int
 vms_read(char *inbuf, size_t nbytes)
 {
-    char    ibuf[nbytes];
     int     status, function, len;
     float   wait = 0.05;
     TT_MODE tt_mode;
@@ -309,17 +308,14 @@ vms_read(char *inbuf, size_t nbytes)
        tt_mode = get_tty();
 
     function = (IO$_READLBLK | IO$M_NOECHO | IO$M_TIMED | IO$M_ESCAPE);
-    memset(ibuf, 0, sizeof(ibuf));
+    memset(inbuf, 0, nbytes);
 
     while (1)
     {
-	status = sys$qiow(0,iochan,function,&iosb,0,0,&ibuf,nbytes,0,0,0,0);
-	len = strlen(ibuf);
+	status = sys$qiow(0,iochan,function,&iosb,0,0,inbuf,nbytes-1,0,0,0,0);
+	len = strlen(inbuf);
 	if (len > 0)
-	{
-	    mch_memmove(inbuf, ibuf, len);
 	    break;
-	}
 	lib$wait(&wait);
     }
     return len;
