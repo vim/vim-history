@@ -4485,7 +4485,6 @@ oneleft()
     if (virtual_active())
     {
 	int width;
-	char_u *ptr;
 	int v = getviscol();
 
 	if (v == 0)
@@ -4497,18 +4496,28 @@ oneleft()
 	for (;;)
 	{
 	    coladvance(v - width);
-	    if (*p_sbr == NUL || getviscol() < v)
+	    /* getviscol() is slow, skip it when 'showbreak' is empty and
+	     * there are no multi-byte characters */
+	    if ((*p_sbr == NUL
+#  ifdef FEAT_MBYTE
+			&& !has_mbyte
+#  endif
+			) || getviscol() < v)
 		break;
 	    ++width;
 	}
 # else
 	coladvance(v - 1);
-# endif
 
-	/* Adjust for multi-wide char (not include TAB) */
-	ptr = ml_get_cursor();
-	if (*ptr != TAB && *ptr != NUL && (width = ptr2cells(ptr)) > 1)
-	    coladvance(v - width);
+	{
+	    char_u *ptr;
+
+	    /* Adjust for multi-wide char (not a TAB) */
+	    ptr = ml_get_cursor();
+	    if (*ptr != TAB && *ptr != NUL && (width = ptr2cells(ptr)) > 1)
+		coladvance(v - width);
+	}
+# endif
 
 	curwin->w_set_curswant = TRUE;
 	return OK;
