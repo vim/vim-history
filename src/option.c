@@ -4795,9 +4795,17 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     /* 'showbreak' */
     else if (varp == &p_sbr)
     {
-	for (s = p_sbr; *s; ++s)
-	    if (byte2cells(*s) != 1)
-		errmsg = (char_u *)N_("contains unprintable character");
+	for (s = p_sbr; *s; )
+	{
+	    if (ptr2cells(s) != 1)
+		errmsg = (char_u *)N_("contains unprintable or wide character");
+# ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		s += (*mb_ptr2len_check)(s);
+	    else
+# endif
+		++s;
+	}
     }
 #endif
 
