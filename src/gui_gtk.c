@@ -262,7 +262,7 @@ gui_mch_add_menu(vimmenu_T *menu, int idx)
 {
     vimmenu_T	*parent = menu->parent;
 
-    if (menu_is_popup(menu->name))
+    if (menu->name[0] == ']' || menu_is_popup(menu->name))
     {
 	menu->submenu_id = gtk_menu_new();
 	return;
@@ -310,9 +310,14 @@ gui_mch_add_menu(vimmenu_T *menu, int idx)
 
 /*ARGSUSED*/
     static void
-menu_item_activate(GtkWidget * widget, gpointer data)
+menu_item_activate(GtkWidget *widget, gpointer data)
 {
-    gui_menu_cb((vimmenu_T *) data);
+    gui_menu_cb((vimmenu_T *)data);
+
+    /* Work around a bug in GTK+ 1: we don't seem to get a focus-in
+     * event after clicking a menu item shown via :popup. */
+    if (!gui.in_focus)
+	gui_focus_change(TRUE);
 
     /* make sure the menu action is taken immediately */
     if (gtk_main_level() > 0)
@@ -592,7 +597,7 @@ recurse_tearoffs(vimmenu_T *menu, int val)
 {
     while (menu != NULL)
     {
-	if (!menu_is_popup(menu->name))
+	if (menu->name[0] != ']' && !menu_is_popup(menu->name))
 	{
 	    if (menu->submenu_id != 0)
 	    {
@@ -1486,7 +1491,43 @@ gui_mch_show_popupmenu(vimmenu_T *menu)
     gtk_menu_popup(GTK_MENU(menu->submenu_id), NULL, NULL,
 	       (GtkMenuPositionFunc)NULL, NULL, 3, (guint32)GDK_CURRENT_TIME);
 }
-#endif
+
+/*
+ * Menu position callback; used by gui_make_popup() to place the menu
+ * at the current text cursor position.
+ */
+/*ARGSUSED0*/
+    static void
+popup_menu_position_func(GtkMenu *menu,
+			 gint *x, gint *y,
+			 gpointer user_data)
+{
+    if (curwin != NULL && gui.drawarea != NULL && gui.drawarea->window != NULL)
+    {
+	gdk_window_get_origin(gui.drawarea->window, x, y);
+
+	/* Find the cursor position in the current window */
+	*x += FILL_X(W_WINCOL(curwin) + curwin->w_wcol + 1) + 1;
+	*y += FILL_Y(W_WINROW(curwin) + curwin->w_wrow + 1) + 1;
+    }
+}
+
+    void
+gui_make_popup(char_u *path_name)
+{
+    vimmenu_T *menu;
+
+    menu = gui_find_menu(path_name);
+
+    if (menu != NULL && menu->submenu_id != NULL)
+    {
+	gtk_menu_popup(GTK_MENU(menu->submenu_id),
+		       NULL, NULL,
+		       &popup_menu_position_func, NULL,
+		       0U, (guint32)GDK_CURRENT_TIME);
+    }
+}
+#endif /* FEAT_MENU */
 
 
 /*

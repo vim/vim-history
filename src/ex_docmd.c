@@ -191,7 +191,7 @@ static void	ex_tearoff __ARGS((exarg_T *eap));
 #else
 # define ex_tearoff		ex_ni
 #endif
-#if defined(FEAT_GUI_MSWIN) && defined(FEAT_MENU)
+#if (defined(FEAT_GUI_MSWIN) || defined(FEAT_GUI_GTK)) && defined(FEAT_MENU)
 static void	ex_popup __ARGS((exarg_T *eap));
 #else
 # define ex_popup		ex_ni
@@ -5896,7 +5896,7 @@ ex_tearoff(eap)
 }
 #endif
 
-#if defined(FEAT_GUI_MSWIN) && defined(FEAT_MENU)
+#if (defined(FEAT_GUI_MSWIN) || defined(FEAT_GUI_GTK)) && defined(FEAT_MENU)
     static void
 ex_popup(eap)
     exarg_T	*eap;
