@@ -143,8 +143,7 @@ struct data_block
  * NOTE: DEFINITION OF BLOCK 0 SHOULD NOT CHANGE! It would make all existing
  * swap files unusable!
  *
- * If size of block0 changes anyway, adjust minimal block size
- * in mf_open()!!
+ * If size of block0 changes anyway, adjust MIN_SWAP_PAGE_SIZE in vim.h!!
  *
  * This block is built up of single bytes, to make it portable accros
  * different machines. b0_magic_* is used to check the byte order and size of
@@ -801,6 +800,14 @@ ml_recover()
     }
     vim_free(p);
     buf->b_ml.ml_mfp = mfp;
+
+    /*
+     * The page size set in mf_open() might be different from the page size
+     * used in the swap file, we must get it from block 0.  But to read block
+     * 0 we need a page size.  Use the minimal size for block 0 here, it will
+     * be set to the real value below.
+     */
+    mfp->mf_page_size = MIN_SWAP_PAGE_SIZE;
 
 /*
  * try to read block 0
