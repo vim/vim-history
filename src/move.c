@@ -2281,6 +2281,7 @@ onepage(dir, count)
     long	n;
     int		retval = OK;
     lineoff_T	loff;
+    linenr_T	old_topline = curwin->w_topline;
 
     if (curbuf->b_ml.ml_line_count == 1)    /* nothing to do */
     {
@@ -2461,9 +2462,16 @@ onepage(dir, count)
 
     /*
      * Avoid the screen jumping up and down when 'scrolloff' is non-zero.
+     * But make sure we scroll at least one line (happens with mix of long
+     * wrapping lines and non-wrapping line).
      */
     if (dir == FORWARD && check_top_offset())
+    {
 	scroll_cursor_top(1, FALSE);
+	if (curwin->w_topline <= old_topline
+				  && old_topline < curbuf->b_ml.ml_line_count)
+	    curwin->w_topline = old_topline + 1;
+    }
 
     redraw_later(VALID);
     return retval;
