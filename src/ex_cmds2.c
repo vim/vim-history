@@ -293,6 +293,7 @@ dbg_parsearg(arg)
     char_u	*arg;
 {
     char_u	*p = arg;
+    char_u	*q;
     struct debuggy *bp;
 
     if (ga_grow(&dbg_breakp, 1) == FAIL)
@@ -327,7 +328,38 @@ dbg_parsearg(arg)
 	EMSG2(_(e_invarg2), arg);
 	return FAIL;
     }
-    if ((bp->dbg_name = FullName_save(p, FALSE)) == NULL)
+
+    if (bp->dbg_type == DBG_FUNC)
+	bp->dbg_name = vim_strsave(p);
+    else
+    {
+	/* Expand the file name in the same way as do_source().  This means
+	 * doing it twice, so that $DIR/file gets expanded when $DIR is
+	 * "~/dir". */
+#ifdef RISCOS
+	q = mch_munge_fname(p);
+#else
+	q = expand_env_save(p);
+#endif
+	if (q == NULL)
+	    return FAIL;
+#ifdef RISCOS
+	p = mch_munge_fname(q);
+#else
+	p = expand_env_save(q);
+#endif
+	vim_free(q);
+	if (p == NULL)
+	    return FAIL;
+	bp->dbg_name = fix_fname(p);
+	vim_free(p);
+#ifdef MACOS_CLASSIC
+	if (bp->dbg_name != NULL)
+	    slash_n_colon_adjust(bp->dbg_name);
+#endif
+    }
+
+    if (bp->dbg_name == NULL)
 	return FAIL;
     return OK;
 }
