@@ -2028,10 +2028,10 @@ echo "configure:2022: checking Ruby version" >&5
 	RUBY_LIBS="$rubylibs"
       fi
       librubyarg=`$vi_cv_path_ruby -r rbconfig -e 'print Config.expand(Config::CONFIG["LIBRUBYARG"])'`
-      if test "`$vi_cv_path_ruby -r rbconfig -e 'print Config::CONFIG[\"ENABLE_SHARED\"]'`" = "yes"; then
-	librubyarg=`$vi_cv_path_ruby -r rbconfig -e "print '$librubyarg'.gsub(/-L\./, %'-L#{Config.expand(Config::CONFIG[\"libdir\"])}')"`
-      else
+      if test -f "$rubyhdrdir/$librubyarg"; then
 	librubyarg="$rubyhdrdir/$librubyarg"
+      else
+	librubyarg=`$vi_cv_path_ruby -r rbconfig -e "print '$librubyarg'.gsub(/-L\./, %'-L#{Config.expand(Config::CONFIG[\"libdir\"])}')"`
       fi
 
       if test "X$librubyarg" != "X"; then
