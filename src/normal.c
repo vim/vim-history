@@ -7836,7 +7836,10 @@ nv_esc(cap)
 		&& no_reason)
 	    MSG(_("Type  :quit<Enter>  to exit Vim"));
 
-	restart_edit = 0;
+	/* Don't reset "restart_edit" when 'insertmode' is set, it won't be
+	 * set again below when halfway a mapping. */
+	if (!p_im)
+	    restart_edit = 0;
 #ifdef FEAT_CMDWIN
 	if (cmdwin_type != 0)
 	{
