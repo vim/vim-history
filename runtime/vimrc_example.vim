@@ -1,7 +1,7 @@
 " An example for a vimrc file.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Jul 18
+" Last change:	2002 May 28
 "
 " To use it, copy it to
 "     for Unix and OS/2:  ~/.vimrc
@@ -37,9 +37,6 @@ set incsearch		" do incremental searching
 
 " Don't use Ex mode, use Q for formatting
 map Q gq
-
-" Make p in Visual mode replace the selected text with the "" register.
-vnoremap p <Esc>:let current_reg = @"<CR>gvs<C-R>=current_reg<CR><Esc>
 
 " This is an alternative that also works in block mode, but the deleted
 " text is lost and it only works for putting the current register.
