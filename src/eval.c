@@ -2476,7 +2476,7 @@ get_option_var(arg, retvar, evaluate)
     c = *option_end;
     *option_end = NUL;
     opt_type = get_option_value(*arg, &numval,
-			       retvar == NULL ? NULL : &stringval, 0);
+			       retvar == NULL ? NULL : &stringval, opt_flags);
 
     if (opt_type == -3)			/* invalid name */
     {
