@@ -2150,10 +2150,15 @@ mch_errmsg(str)
 
 #if (defined(UNIX) || defined(FEAT_GUI)) && !defined(ALWAYS_USE_GUI)
     /* On Unix use stderr if it's a tty.
-     * When not going to start the GUI also use stderr. */
+     * When not going to start the GUI also use stderr.
+     * On Mac, when started from Finder, stderr is the console. */
     if (
 # ifdef UNIX
+#  ifdef MACOS_X_UNIX
+	    (isatty(2) && strcmp("/dev/console", ttyname(2)) != 0)
+#  else
 	    isatty(2)
+#  endif
 #  ifdef FEAT_GUI
 	    ||
 #  endif
@@ -2214,10 +2219,15 @@ mch_msg(str)
 #if (defined(UNIX) || defined(FEAT_GUI)) && !defined(ALWAYS_USE_GUI)
     /* On Unix use stdout if we have a tty.  This allows "vim -h | more" and
      * uses mch_errmsg() when started from the desktop.
-     * When not going to start the GUI also use stdout. */
+     * When not going to start the GUI also use stdout.
+     * On Mac, when started from Finder, stderr is the console. */
     if (
 #  ifdef UNIX
+#   ifdef MACOS_X_UNIX
+	    (isatty(2) && strcmp("/dev/console", ttyname(2)) != 0)
+#   else
 	    isatty(2)
+#    endif
 #   ifdef FEAT_GUI
 	    ||
 #   endif
