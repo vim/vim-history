@@ -2704,6 +2704,8 @@ gui_mch_browse(
 {
     OPENFILENAME	fileStruct;
     char_u		fileBuf[MAXPATHL], *p;
+    char_u		dirbuf[MAXPATHL + 1];
+    int			i;
 
     if (dflt == NULL)
 	fileBuf[0] = '\0';
@@ -2726,7 +2728,18 @@ gui_mch_browse(
     fileStruct.hwndOwner = s_hwnd;		/* main Vim window is owner*/
     /* has an initial dir been specified? */
     if (initdir != NULL && *initdir != NUL)
-	fileStruct.lpstrInitialDir = initdir;
+    {
+	/* Must have backslashes here, no matter what 'shellslash' says */
+	for (i = 0; i < MAXPATHL && initdir[i] != NUL; ++i)
+	{
+	    if (initdir[i] == '/')
+		dirbuf[i] = '\\';
+	    else
+		dirbuf[i] = initdir[i];
+	}
+	dirbuf[i] = NUL;
+	fileStruct.lpstrInitialDir = dirbuf;
+    }
 
     /*
      * TODO: Allow selection of multiple files.  Needs another arg to this
