@@ -28,10 +28,8 @@
 #  include <tchar.h>	/* for _T definition for TRACEn macros */
 # endif
 # include <io.h>
-# include <winsock2.h>
-/* WinSock API is separated from C API
- * So we can't use read, write, errno...
- */
+/* WinSock API is separated from C API, thus we can't use read(), write(),
+ * errno... */
 # define sock_errno WSAGetLastError()
 # define ECONNREFUSED WSAECONNREFUSED
 # define sock_write(sd, buf, len) send(sd, buf, len, 0)
