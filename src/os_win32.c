@@ -2118,6 +2118,7 @@ fname_case(
 	/* copy leading drive letter */
 	*ptrue++ = *porig++;
 	*ptrue++ = *porig++;
+	*ptrue = NUL;	    /* in case nothing follows */
     }
 
     while (*porig != NUL)
