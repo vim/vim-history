@@ -1229,9 +1229,10 @@ gui_mch_set_bg_color(guicolor_T color)
     gui.currBgColor = color;
 }
 
-#if (defined(FEAT_MBYTE) && defined(FEAT_MBYTE_IME)) || defined(PROTO)
+#if defined(FEAT_MBYTE) && defined(FEAT_MBYTE_IME)
 /*
  * Multi-byte handling, by Sung-Hoon Baek
+ * First static functions (no prototypes generated).
  */
 
     static void
@@ -1395,10 +1396,10 @@ _OnImeComposition(HWND hwnd, WPARAM dbcs, LPARAM param)
 }
 
 /*
- * get the currnet composition string, in UCS-2; len is the number of
+ * get the current composition string, in UCS-2; len is the number of
  * Unicode characters
  */
-    unsigned short *
+    static unsigned short *
 GetCompositionString_inUCS2(HIMC hIMC, DWORD GCS, int *len)
 {
     LONG ret;
@@ -1491,6 +1492,10 @@ ImeGetTempComposition(void)
     }
     return NULL;
 }
+
+#endif
+/* For global functions we need prototypes. */
+#if (defined(FEAT_MBYTE) && defined(FEAT_MBYTE_IME)) || defined(PROTO)
 
 /*
  * set font to IM.
