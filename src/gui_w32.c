@@ -834,6 +834,11 @@ FindWindowTitle(HWND hwnd, LPARAM lParam)
 gui_mch_set_parent(char *title)
 {
     EnumWindows(FindWindowTitle, (LPARAM)title);
+    if (vim_parent_hwnd == NULL)
+    {
+	EMSG2(_("E671: Cannot find window title \"%s\""), title);
+	mch_exit(2);
+    }
 }
 
     static void
@@ -1065,17 +1070,37 @@ gui_mch_init(void)
     }
 
     if (vim_parent_hwnd != NULL)
-	/* Open inside the specified parent window. */
-	s_hwnd = CreateWindowEx(
-	    WS_EX_MDICHILD,
-	    szVimWndClass, "Vim MSWindows GUI",
-	    WS_OVERLAPPEDWINDOW | WS_CHILD | WS_CLIPSIBLINGS | 0xC000,
-	    gui_win_x == -1 ? CW_USEDEFAULT : gui_win_x,
-	    gui_win_y == -1 ? CW_USEDEFAULT : gui_win_y,
-	    100,				/* Any value will do */
-	    100,				/* Any value will do */
-	    vim_parent_hwnd, NULL,
-	    s_hinst, NULL);
+    {
+#ifdef HAVE_TRY_EXCEPT
+	__try
+	{
+#endif
+	    /* Open inside the specified parent window.
+	     * TODO: last argument should point to a CLIENTCREATESTRUCT
+	     * structure. */
+	    s_hwnd = CreateWindowEx(
+		WS_EX_MDICHILD,
+		szVimWndClass, "Vim MSWindows GUI",
+		WS_OVERLAPPEDWINDOW | WS_CHILD | WS_CLIPSIBLINGS | 0xC000,
+		gui_win_x == -1 ? CW_USEDEFAULT : gui_win_x,
+		gui_win_y == -1 ? CW_USEDEFAULT : gui_win_y,
+		100,				/* Any value will do */
+		100,				/* Any value will do */
+		vim_parent_hwnd, NULL,
+		s_hinst, NULL);
+#ifdef HAVE_TRY_EXCEPT
+	}
+	__except(EXCEPTION_EXECUTE_HANDLER)
+	{
+	    /* NOP */
+	}
+#endif
+	if (s_hwnd == NULL)
+	{
+	    EMSG(_("E672: Unable to open window inside MDI application"));
+	    mch_exit(2);
+	}
+    }
     else
 	/* Open toplevel window. */
 	s_hwnd = CreateWindow(
