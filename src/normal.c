@@ -4162,6 +4162,10 @@ dozet:
 		    else
 #endif
 		    getvcol(curwin, &curwin->w_cursor, &col, NULL, NULL);
+		    if (col > p_siso)
+			col -= p_siso;
+		    else
+			col = 0;
 		    if (curwin->w_leftcol != col)
 		    {
 			curwin->w_leftcol = col;
@@ -4180,10 +4184,10 @@ dozet:
 #endif
 		    getvcol(curwin, &curwin->w_cursor, NULL, NULL, &col);
 		    n = W_WIDTH(curwin) - curwin_col_off();
-		    if ((long)col < n)
+		    if ((long)col + p_siso < n)
 			col = 0;
 		    else
-			col = col - n + 1;
+			col = col + p_siso - n + 1;
 		    if (curwin->w_leftcol != col)
 		    {
 			curwin->w_leftcol = col;
