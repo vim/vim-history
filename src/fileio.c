@@ -1091,7 +1091,7 @@ retry:
 			size = 0;
 		    else
 		    {
-			int	n;
+			int	n, ni;
 			long	tlen;
 
 			tlen = 0;
@@ -1101,17 +1101,31 @@ retry:
 			    n = (int)STRLEN(p);
 			    if ((int)tlen + n + 1 > size)
 			    {
-				/* Filled up to "size", append partial line. */
+				/* Filled up to "size", append partial line.
+				 * Change NL to NUL to reverse the effect done
+				 * below. */
 				n = size - tlen;
-				mch_memmove(ptr + tlen, p, (size_t)n);
+				for (ni = 0; ni < n; ++ni)
+				{
+				    if (p[ni] == NL)
+					ptr[tlen++] = NUL;
+				    else
+					ptr[tlen++] = p[ni];
+				}
 				read_buf_col += n;
 				break;
 			    }
 			    else
 			    {
-				/* Append whole line and new-line. */
-				mch_memmove(ptr + tlen, p, (size_t)n);
-				tlen += n;
+				/* Append whole line and new-line.  Change NL
+				 * to NUL to reverse the effect done below. */
+				for (ni = 0; ni < n; ++ni)
+				{
+				    if (p[ni] == NL)
+					ptr[tlen++] = NUL;
+				    else
+					ptr[tlen++] = p[ni];
+				}
 				ptr[tlen++] = NL;
 				read_buf_col = 0;
 				if (++read_buf_lnum > from)
