@@ -6083,7 +6083,12 @@ ex_pwd(eap)
     exarg_T	*eap;
 {
     if (mch_dirname(NameBuff, MAXPATHL) == OK)
+    {
+#ifdef BACKSLASH_IN_FILENAME
+	slash_adjust(NameBuff);
+#endif
 	msg(NameBuff);
+    }
     else
 	EMSG(_("E187: Unknown"));
 }
