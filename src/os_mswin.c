@@ -661,6 +661,46 @@ typedef int (*MYSTRPROCINT)(LPSTR);
 typedef int (*MYINTPROCINT)(int);
 #endif
 
+/*
+ * Check if a pointer points to a valid NUL terminated string.
+ * Return the length of the string, including terminating NUL.
+ * Returns 0 for an invalid pointer, 1 for an empty string.
+ */
+    static size_t
+check_str_len(char_u *str)
+{
+    SYSTEM_INFO			si;
+    MEMORY_BASIC_INFORMATION	mbi;
+    size_t			length = 0;
+    size_t			i;
+    const char			*p;
+
+    /* get page size */
+    GetSystemInfo(&si);
+
+    /* get memory information */
+    if (VirtualQuery(str, &mbi, sizeof(mbi)))
+    {
+	/* pre cast these (typing savers) */
+	DWORD dwStr = (DWORD)str;
+	DWORD dwBaseAddress = (DWORD)mbi.BaseAddress;
+
+	/* get start address of page that str is on */
+	DWORD strPage = dwStr - (dwStr - dwBaseAddress) % si.dwPageSize;
+
+	/* get length from str to end of page */
+	DWORD pageLength = si.dwPageSize - (dwStr - strPage);
+
+	for (p = str; !IsBadReadPtr(p, pageLength);
+				  p += pageLength, pageLength = si.dwPageSize)
+	    for (i = 0; i < pageLength; ++i, ++length)
+		if (p[i] == NUL)
+		    return length + 1;
+    }
+
+    return 0;
+}
+
     int
 mch_libcall(
     char_u	*libname,
@@ -675,6 +715,7 @@ mch_libcall(
     MYINTPROCSTR	ProcAddI;
     char_u		*retval_str = NULL;
     int			retval_int = 0;
+    size_t		len;
 
     BOOL fRunTimeLinkSuccess = FALSE;
 
@@ -713,11 +754,12 @@ mch_libcall(
 	// Assume that a "1" result is an illegal pointer.
 	if (string_result == NULL)
 	    *number_result = retval_int;
-	else if (retval_str != NULL
-		&& retval_str != (char_u *)1
-		&& retval_str != (char_u *)-1
-		&& !IsBadStringPtr(retval_str, INT_MAX))
-	    *string_result = vim_strsave(retval_str);
+	else if (retval_str != NULL && (len = check_str_len(retval_str)) > 0)
+	{
+	    *string_result = lalloc((long_u)len, TRUE);
+	    if (*string_result != NULL)
+		mch_memmove(*string_result, retval_str, len);
+	}
 
 	// Free the DLL module.
 	(void)FreeLibrary(hinstLib);
