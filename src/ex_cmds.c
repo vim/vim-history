@@ -4984,9 +4984,30 @@ ex_helptags(eap)
     }
 
     /*
-     * Go over all the files and extract the tags.
+     * If generating tags for "$VIMRUNTIME/doc" add the "help-tags" tag.
      */
     ga_init2(&ga, (int)sizeof(char_u *), 100);
+    if (fullpathcmp((char_u *)"$VIMRUNTIME/doc", eap->arg, FALSE) == FPC_SAME)
+    {
+	if (ga_grow(&ga, 1) == FAIL)
+	    got_int = TRUE;
+	else
+	{
+	    s = vim_strsave((char_u *)"help-tags\ttags\t1\n");
+	    if (s == NULL)
+		got_int = TRUE;
+	    else
+	    {
+		((char_u **)ga.ga_data)[ga.ga_len] = s;
+		++ga.ga_len;
+		--ga.ga_room;
+	    }
+	}
+    }
+
+    /*
+     * Go over all the files and extract the tags.
+     */
     for (fi = 0; fi < filecount && !got_int; ++fi)
     {
 	fd = fopen((char *)files[fi], "r");
@@ -5088,15 +5109,21 @@ ex_helptags(eap)
 	for (i = 0; i < ga.ga_len; ++i)
 	{
 	    s = ((char_u **)ga.ga_data)[i];
-	    fprintf(fd_tags, "%s\t/*", s);
-	    for (p1 = s; *p1 != '\t'; ++p1)
+	    if (STRNCMP(s, "help-tags\t", 10) == 0)
+		/* help-tags entry was added in formatted form */
+		fprintf(fd_tags, s);
+	    else
 	    {
-		/* insert backslash before '\\' and '/' */
-		if (*p1 == '\\' || *p1 == '/')
-		    putc('\\', fd_tags);
-		putc(*p1, fd_tags);
+		fprintf(fd_tags, "%s\t/*", s);
+		for (p1 = s; *p1 != '\t'; ++p1)
+		{
+		    /* insert backslash before '\\' and '/' */
+		    if (*p1 == '\\' || *p1 == '/')
+			putc('\\', fd_tags);
+		    putc(*p1, fd_tags);
+		}
+		fprintf(fd_tags, "*\n");
 	    }
-	    fprintf(fd_tags, "*\n");
 	}
     }
 
