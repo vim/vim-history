@@ -2351,8 +2351,10 @@ do_one_cmd(cmdlinep, sourcing,
 	    case CMD_ilist:
 	    case CMD_isearch:
 	    case CMD_isplit:
+	    case CMD_keepmarks:
 	    case CMD_leftabove:
 	    case CMD_let:
+	    case CMD_lockmarks:
 	    case CMD_match:
 	    case CMD_psearch:
 	    case CMD_return:
@@ -2844,10 +2846,11 @@ set_one_cmd_context(xp, buff)
     /*
      * Isolate the command and search for it in the command table.
      * Exceptions:
-     * - the 'k' command can directly be followed by any character.
+     * - the 'k' command can directly be followed by any character, but
+     *   do accept "keepmarks".
      * - the 's' command can be followed directly by 'c', 'g', 'i', 'I' or 'r'
      */
-    if (*cmd == 'k')
+    if (*cmd == 'k' && cmd[1] != 'e')
     {
 	cmdidx = CMD_k;
 	p = cmd + 1;
@@ -3184,7 +3187,9 @@ set_one_cmd_context(xp, buff)
 	case CMD_folddoclosed:
 	case CMD_folddoopen:
 	case CMD_hide:
+	case CMD_keepmarks:
 	case CMD_leftabove:
+	case CMD_lockmarks:
 	case CMD_rightbelow:
 	case CMD_silent:
 	case CMD_topleft:
