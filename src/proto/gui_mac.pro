@@ -21,6 +21,7 @@ int gui_mch_get_mouse_x __ARGS((void));
 int gui_mch_get_mouse_y __ARGS((void));
 void gui_mch_setmouse __ARGS((int x, int y));
 void gui_mch_prepare __ARGS((int *argc, char **argv));
+int gui_mch_init_check __ARGS((void));
 int gui_mch_init __ARGS((void));
 void gui_mch_new_colors __ARGS((void));
 int gui_mch_open __ARGS((void));
