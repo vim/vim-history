@@ -1086,7 +1086,8 @@ Delete(vimbuf, ...)
 		    {
 			ml_delete(lnum, 0);
 			deleted_lines_mark(lnum, 1L);
-			check_cursor();
+			if (savebuf == curbuf)
+			    check_cursor();
 		    }
 		    curbuf = savebuf;
 		    update_curbuf(VALID);
