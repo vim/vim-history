@@ -2632,7 +2632,6 @@ gui_mch_init_font(char_u *font_name)
     GuiFont	font = (GuiFont)0;
     char	*p;
 
-
     /* Load the font */
     if (get_logfont(&lf, font_name))
 	font = get_font_handle(&lf);
@@ -2641,7 +2640,7 @@ gui_mch_init_font(char_u *font_name)
     if (font_name == NULL)
 	font_name = lf.lfFaceName;
 #ifdef MULTI_BYTE_IME
-    get_logfont(&norm_logfont, font_name);
+    norm_logfont = lf;
 #endif
     gui_mch_free_font(gui.norm_font);
     gui.norm_font = font;
