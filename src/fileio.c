@@ -2665,9 +2665,11 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		else
 		{
 		    chown((char *)IObuff, st_old.st_uid, st_old.st_gid);
+		    (void)mch_setperm((char *)IObuff, perm);
 		    if (mch_stat((char *)IObuff, &st) < 0
 			    || st.st_uid != st_old.st_uid
-			    || st.st_gid != st_old.st_gid)
+			    || st.st_gid != st_old.st_gid
+			    || st.st_mode != perm)
 			backup_copy = TRUE;
 		    mch_remove(IObuff);
 		}
@@ -3474,6 +3476,8 @@ restore_backup:
 	mch_set_filetype(wfname, buf->b_p_oft);
 #endif
 #ifdef HAVE_ACL
+    /* Probably need to set the ACL before changing the user (can't set the
+     * ACL on a file the user doesn't own). */
     if (!backup_copy)
 	mch_set_acl(wfname, acl);
 #endif
@@ -3483,7 +3487,18 @@ restore_backup:
      * file.  Get the new device and inode number. */
     if (backup != NULL && !backup_copy)
     {
-	chown((char *)wfname, st_old.st_uid, st_old.st_gid);
+	struct stat	st;
+
+	/* don't change the owner when it's already OK, some systems remove
+	 * permission or ACL stuff */
+	if (mch_stat((char *)wfname, &st) < 0
+		|| st.st_uid != st_old.st_uid
+		|| st.st_gid != st_old.st_gid)
+	{
+	    chown((char *)wfname, st_old.st_uid, st_old.st_gid);
+	    if (perm >= 0)	/* set permission again, may have changed */
+		(void)mch_setperm(wfname, perm);
+	}
 	buf_setino(buf);
     }
 #endif
