@@ -79,3 +79,9 @@ extern char	*tmpnam __ARGS((char *));
 #else
 extern char	*mktemp __ARGS((char *));
 #endif
+
+#ifdef ISC
+extern int	_Xmblen __ARGS((char const *, size_t));
+#else
+extern int	_Xmblen __ARGS((char *, size_t));
+#endif
