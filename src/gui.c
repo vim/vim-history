@@ -2374,6 +2374,8 @@ gui_wait_for_chars(wtime)
 	{
 	    apply_autocmds(EVENT_CURSORHOLD, NULL, NULL, FALSE, curbuf);
 	    update_screen(VALID);
+	    showruler(FALSE);
+	    setcursor();
 
 	    once_already = 1;
 	    retval = 0;
