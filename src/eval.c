@@ -4663,7 +4663,18 @@ do_echo(eap, echo)
 		    msg_putchar_attr(*p, echo_attr);
 		}
 		else
-		    (void)msg_outtrans_len_attr(p, 1, echo_attr);
+		{
+#ifdef MULTI_BYTE
+		    /* check multibyte */
+		    if (is_dbcs && p[1] != NUL && IsLeadByte(*p))
+		    {
+			(void)msg_outtrans_len_attr(p, 2, echo_attr);
+			++p;
+		    }
+		    else
+#endif
+			(void)msg_outtrans_len_attr(p, 1, echo_attr);
+		}
 	}
 	clear_var(&retvar);
 	arg = skipwhite(arg);
