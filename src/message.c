@@ -820,6 +820,10 @@ wait_return(redraw)
     }
     else
     {
+	/* Make sure the hit-return prompt is on screen when 'guioptions' was
+	 * just changed. */
+	screenalloc(FALSE);
+
 	State = HITRETURN;
 #ifdef FEAT_MOUSE
 	setmouse();
