@@ -1456,18 +1456,22 @@ ins_char(c)
     ml_replace(lnum, newp, FALSE);
 
     /*
-     * If we're in insert or replace mode and 'showmatch' is set, then check for
-     * right parens and braces. If there isn't a match, then beep. If there
-     * is a match AND it's on the screen, then flash to it briefly. If it
-     * isn't on the screen, don't do anything.
+     * If we're in Insert or Replace mode and 'showmatch' is set, then briefly
+     * show the match for right parens and braces.
      */
+    if (p_sm && (State & INSERT)
 #ifdef RIGHTLEFT
-    if (p_sm && (State & INSERT) &&
-	((!(curwin->w_p_rl ^ p_ri) && (c == ')' || c == '}' || c == ']')) ||
-	 ((curwin->w_p_rl ^ p_ri) && (c == '(' || c == '{' || c == '['))))
+	    && ((!(curwin->w_p_rl ^ p_ri)
+		    && (c == ')' || c == '}' || c == ']'))
+		|| ((curwin->w_p_rl ^ p_ri)
+		    && (c == '(' || c == '{' || c == '[')))
 #else
-    if (p_sm && (State & INSERT) && (c == ')' || c == '}' || c == ']'))
+	    && (c == ')' || c == '}' || c == ']')
 #endif
+#ifdef MULTI_BYTE
+	    && !(is_dbcs && IsTrailByte(newp, p))
+#endif
+       )
 	showmatch();
 
 #ifdef RIGHTLEFT
