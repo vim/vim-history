@@ -2268,7 +2268,7 @@ do_source(fname, check_other, is_vimrc)
 	    convert_setup(&cookie.conv, (char_u *)"utf-8", p_enc);
 	else
 	    /* No BOM found, rewind. */
-	    fseek(cookie.fp, (off_t)0L, SEEK_SET);
+	    fseek(cookie.fp, 0L, SEEK_SET);
     }
 #endif
 
