@@ -1135,7 +1135,7 @@ write_one_filemark(fp, fm, c1, c2)
 	name = buflist_nr2name(fm->fmark.fnum, TRUE, FALSE);
     else
 	name = fm->fname;		/* use name from .viminfo */
-    if (name == NULL)
+    if (name == NULL || *name == NUL)
 	return;
 
     fprintf(fp, "%c%c  %ld  %ld  ", c1, c2, (long)fm->fmark.mark.lnum,
