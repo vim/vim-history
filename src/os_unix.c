@@ -1295,6 +1295,8 @@ x_connect_to_server()
 {
     regmatch_T	regmatch;
 
+    if (x_force_connect)
+	return TRUE;
     if (x_no_connect)
 	return FALSE;
 
