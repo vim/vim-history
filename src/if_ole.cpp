@@ -124,18 +124,39 @@ CVim *CVim::Create(int* pbDoRestart)
 
     // Load the type library from the registry
     hr = LoadRegTypeLib(MYLIBID, 1, 0, 0x00, &typelib);
-
     if (FAILED(hr))
     {
-	delete me;
-	if (MessageBox(0, "Cannot load registered type library.\nDo you want to register Vim now?",
-		    "Vim Initialisation", MB_YESNO | MB_ICONQUESTION) == IDYES)
+	HKEY hKey;
+
+	// Check we can write to the registry.
+	// RegCreateKeyEx succeeds even if key exists. W.Briscoe W2K 20021011
+	if (RegCreateKeyEx(HKEY_CLASSES_ROOT, MYVIPROGID, 0, NULL,
+		  REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey, NULL))
 	{
-	    RegisterMe(FALSE);
-	    MessageBox(0, "You must restart Vim in order for the registration to take effect.", "Vim Initialisation", 0);
-	    *pbDoRestart = TRUE;
+	    delete me;
+	    return NULL; // Unable to write to registry. Quietly fail.
 	}
-	return NULL;
+	RegCloseKey(hKey);
+
+	if (MessageBox(0, "Cannot load registered type library.\nDo you want to register Vim now?",
+		    "Vim Initialisation", MB_YESNO | MB_ICONQUESTION) != IDYES)
+	{
+	    delete me;
+	    return NULL;
+	}
+
+	RegisterMe(FALSE);
+
+	// Load the type library from the registry
+	hr = LoadRegTypeLib(MYLIBID, 1, 0, 0x00, &typelib);
+	if (FAILED(hr))
+	{
+	    MessageBox(0, "You must restart Vim in order for the registration to take effect.",
+						     "Vim Initialisation", 0);
+	    *pbDoRestart = TRUE;
+	    delete me;
+	    return NULL;
+	}
     }
 
     // Get the type info of the vtable interface
@@ -144,7 +165,8 @@ CVim *CVim::Create(int* pbDoRestart)
 
     if (FAILED(hr))
     {
-	MessageBox(0, "Cannot get interface type information", "Vim Initialisation", 0);
+	MessageBox(0, "Cannot get interface type information",
+						     "Vim Initialisation", 0);
 	delete me;
 	return NULL;
     }
