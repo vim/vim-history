@@ -709,7 +709,7 @@ getcount:
 	break;
 
 /*
- * Cursor motions
+ * 3. Cursor motions
  */
     case 'G':
 	nv_goto(oap, ca.count0 == 0 ? (long)curbuf->b_ml.ml_line_count
@@ -3411,22 +3411,53 @@ dozet:
 
     switch (nchar)
     {
-    case NL:		    /* put curwin->w_cursor at top of screen */
+	/* put cursor at top of screen */
+    case '+':
+    case K_KPLUS:
+	if (cap->count0 == 0)
+	{
+	    /* No count given: put cursor at the line below screen */
+	    validate_botline();	/* using w_botline, make sure it's valid */
+	    if (curwin->w_botline > curbuf->b_ml.ml_line_count)
+		curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
+	    else
+		curwin->w_cursor.lnum = curwin->w_botline;
+	}
+	/* FALLTHROUGH */
+    case NL:
     case CR:
+    case K_KENTER:
 	beginline(BL_WHITE | BL_FIX);
 	/* FALLTHROUGH */
     case 't':
 	scroll_cursor_top(0, TRUE);
 	break;
 
-    case '.':		/* put curwin->w_cursor in middle of screen */
+	/* put cursor in middle of screen */
+    case '.':
 	beginline(BL_WHITE | BL_FIX);
 	/* FALLTHROUGH */
     case 'z':
 	scroll_cursor_halfway(TRUE);
 	break;
 
-    case '-':		/* put curwin->w_cursor at bottom of screen */
+	/* put cursor at bottom of screen */
+    case '^':
+	/* Strange Vi behavior: <count>z^ finds line at top of window when
+	 * <count> is at bottom of window, and puts that one at bottom of
+	 * window. */
+	if (cap->count0 != 0)
+	{
+	    scroll_cursor_bot(0, TRUE);
+	    curwin->w_cursor.lnum = curwin->w_topline;
+	}
+	else if (curwin->w_topline == 1)
+	    curwin->w_cursor.lnum = 1;
+	else
+	    curwin->w_cursor.lnum = curwin->w_topline - 1;
+	/* FALLTHROUGH */
+    case '-':
+    case K_KMINUS:
 	beginline(BL_WHITE | BL_FIX);
 	/* FALLTHROUGH */
     case 'b':
