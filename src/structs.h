@@ -1487,8 +1487,9 @@ typedef struct cmdarg
 #define SHAPE_IDX_VSEP	12	/* A vertical separator line */
 #define SHAPE_IDX_VDRAG 13	/* dragging a vertical separator line */
 #define SHAPE_IDX_MORE	14	/* Hit-return or More */
-#define SHAPE_IDX_SM	15	/* showing matching paren */
-#define SHAPE_IDX_COUNT	16
+#define SHAPE_IDX_MOREL	15	/* Hit-return or More in last line */
+#define SHAPE_IDX_SM	16	/* showing matching paren */
+#define SHAPE_IDX_COUNT	17
 
 #define SHAPE_BLOCK	0	/* block cursor */
 #define SHAPE_HOR	1	/* horizontal bar cursor */

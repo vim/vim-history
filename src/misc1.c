@@ -2531,7 +2531,8 @@ ask_yesno(str, direct)
 
 /*
  * Get a key stroke directly from the user.
- * Ignores mouse clicks and scrollbar events.
+ * Ignores mouse clicks and scrollbar events, except a click for the left
+ * button (used at the more prompt).
  * Doesn't use vgetc(), because it syncs undo and eats mapped characters.
  * Disadvantage: typeahead is ignored.
  * Translates the interrupt character for unix to ESC.
@@ -2579,19 +2580,18 @@ get_keystroke()
 	    if (buf[1] == KS_MODIFIER
 		    || n == K_IGNORE
 #ifdef FEAT_MOUSE
-		    || n == K_LEFTMOUSE
 		    || n == K_LEFTMOUSE_NM
 		    || n == K_LEFTDRAG
-		    || n ==  K_LEFTRELEASE
-		    || n ==  K_LEFTRELEASE_NM
-		    || n ==  K_MIDDLEMOUSE
-		    || n ==  K_MIDDLEDRAG
-		    || n ==  K_MIDDLERELEASE
-		    || n ==  K_RIGHTMOUSE
-		    || n ==  K_RIGHTDRAG
-		    || n ==  K_RIGHTRELEASE
-		    || n ==  K_MOUSEDOWN
-		    || n ==  K_MOUSEUP
+		    || n == K_LEFTRELEASE
+		    || n == K_LEFTRELEASE_NM
+		    || n == K_MIDDLEMOUSE
+		    || n == K_MIDDLEDRAG
+		    || n == K_MIDDLERELEASE
+		    || n == K_RIGHTMOUSE
+		    || n == K_RIGHTDRAG
+		    || n == K_RIGHTRELEASE
+		    || n == K_MOUSEDOWN
+		    || n == K_MOUSEUP
 # ifdef FEAT_GUI
 		    || n == K_VER_SCROLLBAR
 		    || n == K_HOR_SCROLLBAR

@@ -792,6 +792,7 @@ wait_return(redraw)
 				|| c == K_RIGHTDRAG  || c == K_RIGHTRELEASE
 				|| c == K_MOUSEDOWN  || c == K_MOUSEUP
 				|| (!mouse_has(MOUSE_RETURN)
+				    && mouse_row != Rows - 1
 				    && (c == K_LEFTMOUSE
 					|| c == K_MIDDLEMOUSE
 					|| c == K_RIGHTMOUSE))
@@ -1748,6 +1749,7 @@ msg_puts_attr(s, attr)
 			/*FALLTHROUGH*/
 		    case ' ':		/* one extra page */
 		    case K_PAGEDOWN:
+		    case K_LEFTMOUSE:
 			lines_left = Rows - 1;
 			break;
 
