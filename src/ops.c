@@ -2809,20 +2809,6 @@ do_put(regname, dir, count, flags)
 	orig_indent = get_indent();
 
     curbuf->b_op_start = curwin->w_cursor;	/* default for '[ mark */
-    if (dir == FORWARD)
-    {
-	/* move to the start of the next (multi-byte) character */
-#ifdef FEAT_MBYTE
-	if (has_mbyte)
-	{
-	    bytelen = (*mb_ptr2len_check)(ml_get_cursor());
-	    curbuf->b_op_start.col += bytelen;
-	}
-	else
-#endif
-	    curbuf->b_op_start.col++;
-    }
-
     curbuf->b_op_end = curwin->w_cursor;	/* default for '] mark */
 
     /*
@@ -2834,7 +2820,7 @@ do_put(regname, dir, count, flags)
 	(void)stuff_inserted((dir == FORWARD ? (count == -1 ? 'o' : 'a') :
 				    (count == -1 ? 'O' : 'i')), count, FALSE);
 	/* Putting the text is done later, so can't really move the cursor to
-	 * the nex character.  Use "l" to simulate it. */
+	 * the next character.  Use "l" to simulate it. */
 	if ((flags & PUT_CURSEND) && gchar_cursor() != NUL)
 	    stuffcharReadbuff('l');
 	return;
@@ -3130,6 +3116,10 @@ do_put(regname, dir, count, flags)
 
 	changed_lines(lnum, 0, curwin->w_cursor.lnum, nr_lines);
 
+	/* Set '[ mark. */
+	curbuf->b_op_start = curwin->w_cursor;
+	curbuf->b_op_start.lnum = lnum;
+
 	/* adjust '] mark */
 	curbuf->b_op_end.lnum = curwin->w_cursor.lnum - 1;
 	curbuf->b_op_end.col = bd.textcol + totlen - 1;
@@ -3178,6 +3168,7 @@ do_put(regname, dir, count, flags)
 		}
 	    }
 	    new_cursor = curwin->w_cursor;
+	    curbuf->b_op_start = curwin->w_cursor;
 	}
 	/*
 	 * Line mode: BACKWARD is the same as FORWARD on the previous line
