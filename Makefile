@@ -505,6 +505,7 @@ SRC_AMI =	\
 SRC_MAC =	\
 		src/INSTALLmac.txt \
 		src/Make_mpw.mak \
+		src/dehqx.py \
 		src/gui_mac.c \
 		src/gui_mac.icns \
 		src/gui_mac.r \

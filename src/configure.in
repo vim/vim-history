@@ -82,18 +82,38 @@ DEFAULT_VIMNAME=vim
 AC_MSG_CHECKING([for Darwin (Mac OS X)])
 if test "`(uname) 2>/dev/null`" = Darwin; then
   AC_MSG_RESULT(yes)
-  MACOSX=yes
-  OS_EXTRA_SCR="os_macosx.c"; 
-  OS_EXTRA_OBJ="objects/os_macosx.o"
-  CFLAGS="$CFLAGS -DMACOS_X_UNIX -no-cpp-precomp"
 
-  dnl If Carbon is found, assume we don't want X11
-  dnl unless it was specifically asked for (--with-x)
-  AC_CHECK_HEADER(Carbon/Carbon.h, CARBON=yes)         
-  if test "x$CARBON" = "xyes"; then
-    if test -z "$with_x"; then
-      with_x=no
-      DEFAULT_VIMNAME=Vim
+  AC_MSG_CHECKING(--disable-darwin argument)
+  AC_ARG_ENABLE(darwin,
+	  [  --disable-darwin        Disable Darwin (Mac OS X) support.],
+	  , [enable_darwin="yes"])
+  if test "$enable_darwin" = "yes"; then
+    AC_MSG_RESULT(no)
+    AC_MSG_CHECKING(if Darwin files are there)
+    if test -f os_macosx.c; then
+      AC_MSG_RESULT(yes)
+    else
+      AC_MSG_RESULT([no, Darwin support disabled])
+      enable_darwin=no
+    fi
+  else
+    AC_MSG_RESULT([yes, Darwin support excluded])
+  fi
+
+  if test "$enable_darwin" = "yes"; then
+    MACOSX=yes
+    OS_EXTRA_SCR="os_macosx.c"; 
+    OS_EXTRA_OBJ="objects/os_macosx.o"
+    CPPFLAGS="$CPPFLAGS -DMACOS_X_UNIX -I/Developer/Headers/FlatCarbon -no-cpp-precomp"
+
+    dnl If Carbon is found, assume we don't want X11
+    dnl unless it was specifically asked for (--with-x)
+    AC_CHECK_HEADER(Carbon/Carbon.h, CARBON=yes)         
+    if test "x$CARBON" = "xyes"; then
+      if test -z "$with_x"; then
+	with_x=no
+	DEFAULT_VIMNAME=Vim
+      fi
     fi
   fi
 else

@@ -76,9 +76,6 @@
 #endif
 
 
-#if defined(MACOS)
-# define FEAT_GUI_MAC
-#endif
 #if defined(FEAT_GUI_MOTIF) \
     || defined(FEAT_GUI_GTK) \
     || defined(FEAT_GUI_ATHENA) \
