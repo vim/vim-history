@@ -24,6 +24,7 @@
 
 #ifdef __CYGWIN__
 # include <sys/cygwin.h>
+# include <limits.h>
 #endif
 
 #if defined(UNIX) || defined(VMS)
