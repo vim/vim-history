@@ -26,6 +26,7 @@ void check_for_delay __ARGS((int check_msg_scroll));
 int screen_valid __ARGS((int clear));
 void screenalloc __ARGS((int clear));
 void screenclear __ARGS((void));
+int can_clear __ARGS((char_u *p));
 void update_topline_redraw __ARGS((void));
 void update_topline __ARGS((void));
 void update_curswant __ARGS((void));

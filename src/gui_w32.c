@@ -4616,12 +4616,13 @@ gui_make_popup(char_u *path_name)
 {
     vimmenu_t	*menu = gui_find_menu(path_name);
 
-    if (menu!=NULL)
+    if (menu != NULL)
     {
-	/* Find the position of the current cursor */
 	POINT	p;
+
+	/* Find the position of the current cursor */
 	GetDCOrgEx(s_hdc,&p);
-	if (curwin!=NULL)
+	if (curwin != NULL)
 	{
 	    p.x+= TEXT_X(W_WINCOL(curwin) + curwin->w_wcol +1);
 	    p.y+= TEXT_Y(W_WINROW(curwin) + curwin->w_wrow +1);
@@ -4641,7 +4642,7 @@ gui_make_tearoff(char_u *path_name)
     vimmenu_t	*menu = gui_find_menu(path_name);
 
     /* Found the menu, so tear it off. */
-    if (menu!=NULL)
+    if (menu != NULL)
 	gui_mch_tearoff(menu->dname, menu, 0xffffL, 0xffffL);
 }
 

@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0t.  Last change: 2001 Jan 21
+*eval.txt*      For Vim version 6.0u.  Last change: 2001 Feb 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -106,6 +106,7 @@ expr7 %	 expr7 ..	number modulo
 
 |expr7|	! expr7			logical NOT
 - expr7			unary minus
++ expr7			unary plus
 expr8
 
 |expr8|	expr9[expr1]		index in String
@@ -267,13 +268,15 @@ expr7							*expr7*
 -----
 ! expr7			logical NOT		*expr-!*
 - expr7			unary minus		*expr-unary--*
++ expr7			unary plus		*expr-unary-+*
 
 For '!' non-zero becomes zero, zero becomes one.
 For '-' the sign of the number is changed.
+For '+' the number is unchanged.
 
 A String will be converted to a Number first.
 
-These two can be repeated and mixed.  Examples:
+These three can be repeated and mixed.  Examples:
 !-1	    == 0
 !!8	    == 1
 --9	    == 9
@@ -995,9 +998,9 @@ executable({expr})					*executable()*
 			-1	not implemented on this system
 
 							*exists()*
-exists({expr})	The result is a Number, which is 1 if {var} is defined, zero
-		otherwise.  The {expr} argument is a string, which contains
-		one of these:
+exists({expr})	The result is a Number, which is non-zero if {var} is defined,
+		zero otherwise.  The {expr} argument is a string, which
+		contains one of these:
 			&option-name	Vim option
 			$ENVNAME	environment variable (could also be
 					done by comparing with an empty
@@ -1009,6 +1012,10 @@ exists({expr})	The result is a Number, which is 1 if {var} is defined, zero
 					|internal-variables|).
 			:cmdname	Ex command, both built-in and user
 					commands |:command|
+					returns:
+					1  for match with start of a command
+					2  full match with a command
+					3  matches several user commands
 			#event		autocommand defined for this event
 			#event#pattern	autocommand defined for this event and
 					pattern (the pattern is taken
@@ -1137,6 +1144,9 @@ foldlevel({lnum})					*foldlevel()*
 		in the current buffer.  For nested folds the deepest level is
 		returned.  If there is no fold at line {lnum}, zero is
 		returned.  It doesn't matter if the folds are open or closed.
+		When used while updating folds (from 'foldexpr') -1 is
+		returned for lines where folds are still to be updated and the
+		foldlevel is unknown.
 
 							*foldtext()*
 foldtext()	Returns a String, to be displayed for a closed fold.  This is
@@ -1649,10 +1659,10 @@ search({pattern} [, {flags}])				*search()*
 		'W'	don't wrap around the end of the file
 		If neither 'w' or 'W' is given, the 'wrapscan' option applies.
 
-		A zero value is returned when a match has been found, and the
-		cursor will be positioned at the match.  If there is no match
-		a 1 is returned and the cursor doesn't move.  No error message
-		is given.
+		When a match has been found its line number is returned, and
+		the cursor will be positioned at the match.  If there is no
+		match a 0 is returned and the cursor doesn't move.  No error
+		message is given.
 
 		Example (goes over all files in the argument list): >
 		    :let n = 1
@@ -1662,7 +1672,7 @@ search({pattern} [, {flags}])				*search()*
 		    :  " first search to find match at start of file
 		    :  normal G$
 		    :  let flags = "w"
-		    :  while search("foo", flags) == 0
+		    :  while search("foo", flags) > 0
 		    :    s/foo/bar/g
 		    :	 let flags = "W"
 		    :  endwhile
@@ -1676,9 +1686,9 @@ searchpair({start}, {middle}, {end} [, {flags} [, {skip}]])
 		used to find the "endif" that matches an "if", while other
 		if/endif pairs in between are ignored.
 		The search starts at the cursor.  If a match is found, the
-		cursor is positioned at it and zero is returned.  If no match
-		is found 1 is returned and the cursor doesn't move.  No error
-		message is given.
+		cursor is positioned at it and the line number is returned.
+		If no match is found 0 or -1 is returned and the cursor
+		doesn't move.  No error message is given.
 
 		{start}, {middle} and {end} are patterns, see |pattern|.  They
 		must not contain \( \) pairs.  Use of \%( \) is allowed.  When
@@ -1688,7 +1698,12 @@ searchpair({start}, {middle}, {end} [, {flags} [, {skip}]])
 			searchpair("if", "else", "endif")
 <		By leaving {middle} empty the "else" is skipped.
 
-		{flags} are used like with |search()|.
+		{flags} are used like with |search()|.  Additionally:
+		'n'	do Not move the cursor
+		'r'	repeat until no more matches found; will find the
+			outer pair
+		'm'	return number of matches instead of line number with
+			the match; will only be > 1 when 'r' is used.
 
 		When a match for {start}, {middle} or {end} is found, the
 		{skip} expression is evaluated with the cursor positioned on
@@ -1701,6 +1716,20 @@ searchpair({start}, {middle}, {end} [, {flags} [, {skip}]])
 
 		The value of 'ignorecase' is used.  'magic' is ignored, the
 		patterns are used like it's on.
+
+		The search starts exactly at the cursor.  A match with
+		{start}, {middle} or {end} at the next character, in the
+		direction of searching, is the first one found.  Example: >
+			if 1
+			  if 2
+			  endif 2
+			endif 1
+<		When starting at the "if 2", with the cursor on the "i", and
+		searching forwards, the "endif 2" is found.  When starting on
+		the character just before the "if 2", the "endif 1" will be
+		found.  That's because the "if 2" will be found first, and
+		then this is considered to be a nested if/endif from "if 2" to
+		"endif 2".
 
 		Example, to find the "endif" command in a Vim script: >
 
@@ -2622,10 +2651,12 @@ missing: >
 ==============================================================================
 9. The sandbox					*eval-sandbox* *sandbox*
 
-The 'foldexpr', 'indentexpr', 'statusline' and 'indentexpr' options are
-evaluated in a sandbox.  This means that you are protected from these
-expression having nasty side effects.  This gives some safety for when these
-options are set from a modeline.  This is not 100% secure though!
+The 'foldexpr', 'includeexpr', 'indentexpr', 'statusline' and 'foldtext'
+options are evaluated in a sandbox.  This means that you are protected from
+these expression having nasty side effects.  This gives some safety for when
+these options are set from a modeline.  It is also used when the command from
+a tags file is executed.
+This is not guaranteed 100% secure, but it should block most attacks.
 
 These items are not allowed in the sandbox:
 	- changing the buffer text
@@ -2633,6 +2664,6 @@ These items are not allowed in the sandbox:
 	- setting an option with ":set"
 	- executing a shell command
 	- reading or writing a file
-	- jumping to another buffer or edit another file
+	- jumping to another buffer or editing a file
 
  vim:tw=78:

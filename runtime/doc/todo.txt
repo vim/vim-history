@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0t.  Last change: 2001 Jan 21
+*todo.txt*      For Vim version 6.0u.  Last change: 2001 Feb 04
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,26 +29,18 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-When a buffer becomes secret, reset its option values?  Otherwise ":bdel x"
-":edit x" is not backwards compatible.
-
-Using a ":command" argument that contains < and > but not for a special
-argument, they are not skipped properly. (Ron Aaron)
+ex_docmd.c is getting too large, can't compile it on the Amiga.  Split it.
 
 Backtick expansion in expressions and ":let"?  Or use {}, because it's hard to
-see the differece between a backtick and a single quote. (Vince Negri)
-
-Add expression expansion where backtick expansion is done: `=expr`. (Negri)
+see the difference between a backtick and a single quote. (Vince Negri)
 
 
 Main items for 6.0:
 A.  Folding
-	Defining and displaying folds works properly.
-	Need to check all commands if they work well with closed folds.
-	Need to automatically open/close folds when jumping around.
-	Need to store and retrieve view automatically.
+	Works.
 B.  UTF-8 support
 	Mostly works.  Many small items still to be fixed.
+	Allow working with UTF-8 while locale is different.
 	Make regexp patterns multi-byte aware.
 C.  Multi-line regexp patterns
 	Works.
@@ -69,97 +61,51 @@ I.  Multi-language support
 	Message translation works.
 	":menutrans" works, but how to handle different encodings?
 J.  User Friendlier
+	Write user manual.
 	Enhance Windows install program.
-
-
-A. Folding:
--   "zo" should accept a count: number of folds to open.
--   Add command to open enough folds to have the cursor line in an open fold.
-    "zv" "view".
--   Docs for "zo", "zO", "zc" and "zC" in Visual mode.
-    Make "zO" not close folds before the Visual are (except one?).
-    Make "zo" and "zc" work properly (open/close only one level).
-    "zc" in Visual mode doesn't redraw properly.
-    "za" should toggle fold open/closed?
-    Add new command to re-apply 'foldlevel' to the folds at the cursor line.
-    "zu"
-    (also available: "zg" "zj", "zk" "zp" "zq" "zv" "zw" "zx" "zy")
--   Make "zc", "zC", "zo" and "zO" work in Visual mode to work on all selected
-    lines.
--   Also use 'number' for closed fold.
--   Make all operations that end or start in a closed fold work on the whole
-    fold?  Thus "dw" closes the whole fold.
--   Add commands to go to next/previous fold boundary. "zj", "zk"?
--   Command to delete one fold only ("zd" also deletes nested folds).
-    Or change it: "zd" normally deletes only one fold (the top level fold
-    under the cursor), in Visual mode it also deletes nested folds.
--   Allow one-line manual folds.
--   'foldminlines': Only close folds more than this number of window lines.
-    Implement this in win_update().  Still keep the fold defined, just don't
-    show it closed.
--   When creating a new fold automatically (e.g. with "indent" method) let the
-    open/close of the fold depend on whether it's inside an open/closed fold.
-    Otherwise closed folds appear when inserting lines in a fold that was
-    opened with "zO".
-    OR: always create new folds open.  Add a command to re-apply 'foldlevel'.
--   When moving over a fold, always put the cursor on the first line.
-    Are there still other commands where this applies?
--   In Insert mode, not only show the line the cursor is in but the whole
-    fold.
--   When moving into a closed fold with <Up> or <Down> in Insert mode the line
-    isn't displayed.
--   In Insert mode, only unfold the line/fold of the current window.  Not
-    other windows with the same buffer.  Need to add some code for the cursor
-    being in a closed fold when jumping to another window.
--   Add ":foldclose": close folds in a range of lines.
--   When using syntax folding, a "transparent fold" region is always nested.
-    How to avoid the nesting?
--   Folding doesn't work together with 'scrollbind'.
--   Add movement commands to the start/end of a fold: "[z" and "]z".
-    (Marinichev)
-    Make a difference for open/closed folds?  How about nested folds?
--   Add option to open fold when the cursor moves into it with certain
-    commands.
-	search: "/", "n", etc.
-	quickfix: ":cc", ":cn" etc.
-	tags: ":ta", ":ts", ":pop", etc.
-	mouse: click on folded line (not dragging) or a double-click?  Or only
-	from the popup menu?
-    Also: open fold when moving horizontally: "h", "l", etc.
-    Add option to apply 'foldlevel' when the cursor moves out of a fold.
--   When 'foldmethod' is "marker", Use "zf" command to add markers?  Works
-    like manually defining a fold region.  Need to define a template.
--   'foldstart': specifies initial folding state when entering a file:
-	- value of 'foldlevel'
-	- all folds closed, all open or from view
--   'foldmethod' "textobject": fold on sections and paragraph text objects.
--   Add commands to jump to start/end of fold.  Use "[|" and "]|"?
--   Ex range which stands for folded lines and non-folded lines.
-	:=d cmd	    displayed (not folded) lines
-	:=f cmd	    folded lines
-    Or: Add ":onfold cmd" and ":onfold! cmd": execute cmd on all (not) folded
-    lines.
--   Add 'hidecomment' option: don't display comments in /* */ and after //.
--   'foldmethod' "syntax": "fold=3": set fold level for a region.
--   Can set 'foldtext' to empty string: don't display any line.  How to
-    implement this?
 
 
 B. UTF-8 support:
 -   When reading stdin, it's not possible to rewind and try another
     conversion.  Read the file with a one-to-one conversion (binary) and use
     the current buffer contents to convert from?
--   Support ++cc=name for ":w".
--   Big change: Support editing UTF-8 text while the terminal only supports
-    Latin-1.  Show the chars up to 0xff correctly, others with 0xa4 (twice for
-    wide characters).  Use 'displaycode' option?
--   GUI: Cursor is sometimes not removed.
--   show other non-printable as <xx>.
--   Check mbyte with 'fontset'.
+-   make 'charcode' accept "euc-jp" and "shift_jis" directly.
+    'charcode' option should be changed to be able to specify locale or
+    machine dependent encoding information such as SJIS, EUC, etc. (Nagano)
+    Use MIME names, like Emacs and Java.
+    See ASCII graphics in multibyte.c.
 -   Setting 'charcode' to "latin-1" is used for all 8bit encodings.  Allow
     setting to another value and assume it's an 8-bit encoding?  Would at
     least handle conversions much better.  But how to give a warning for a
     multi-byte encoding name that's not recognized?
+    IDEA: use "8bit-name" for any 8-bit encoding.  "name" is passed to
+    iconv().  Use "dbcs-name" for double byte encodings.
+-   Init 'charcode' from $LANG for non-UTF-8?
+-   Use nl_langinfo(), when it's available, to get the encoding from the
+    current locale. (Kubota)
+    libiconv 1.5.1 has "libcharset.h" which can be used for this. (Haible)
+-   Support a 'inputcharcode' option: convert from this to 'charcode' when
+    obtaining characters from the user.  Useful for Japan: XIM only supports
+    euc-jp, needs to be converted to utf-8 with iconv().
+    See patch from Takuhiro Nishioka for using iconv() from euc-jp to UTF-8.
+    However, XIM should produce characters in the charset of the current
+    locale (Kubota).  Perhaps always translate from locale to 'charcode'?
+    How does yudit get characters from the keyboard?
+-   Support ++cc=name for ":w".
+-   Big change: Support editing UTF-8 text while the terminal only supports
+    Latin-1.  Show the chars up to 0xff correctly, others with 0xa4 (twice for
+    wide characters).  Use 'displaycode' option?
+-   When using strings in a Vim script, they are assumed to be encoded like
+    'charcode'.
+    - Let the Vim script tell what encoding is used and convert strings to
+      'charcode' when necessary.
+    - Supply a function like iconv() to have the user do the conversion.
+-   GUI: Cursor is sometimes not removed.
+-   show other non-printable as <xx>.
+-   Check mbyte with 'fontset'.
+-   Shouldn't the choice between "cp932" and "euc-jp" in alt_charset() be done
+    at runtime instead of compile time?  Consider using telnet from a Unix
+    machine to a MS-Windows machine.
 -   When deleting characters with "x", only delete the last composing
     character or both the base character and the composing characters?  Add
     an option to chose.  Also for <BS> in Insert mode.
@@ -181,7 +127,6 @@ B. UTF-8 support:
 -   Handle mbyte in win_line().  When double-cell char doesn't fit at end of
     line, move it to next line, fill gap with '>' with HLF_AT attributes.
 -   Also support UTF-16 and convert it to UTF-8? (like mined)
--   Init 'charcode' from $LANG for non-UTF-8?
 -   readfile(): When reading UCS-2 or UCS-4 and the number of bytes returned
     by read() isn't a multiple of 2 or 4, what to do?
 -   When 'charcode' is "ucs-2" or "ucs-4", do we need to convert when sending
@@ -200,19 +145,24 @@ B. UTF-8 support:
 -   Put MB_DEBUG in feature.h in comments!
 -   GTK GUI: Should allow the user to disble XIM input style which don't work
     for him.  (Nam)
-
-
-C.  Multi-line regexp patterns
--   "$\n" doesn't match.
--   "\(\s*\S.*\n\)*^{$" doesn't match (should find start of a function,
-    including non-empty lines before it).
+-   Substitute doesn't work well on multibyte characters:
+    ":s/\(.\)/\1\1/g" replaces each byte instead of each multi-byte.
+    Requires regexp code that sees a multibyte character as one char.
+9   Check "gR" for proper working of backspacing.
+9   With Athena and Motif the status line overwrites a bottom scrollbar?
+-   When wrapping words, allow splitting at each multibyte character, not only
+    at a space (with an option). (Nishioka)
+-   Support "overstrike" characters.  E.g., vowel points for Hebrew. (Aaron)
+-   Check "yudit" for its Unicode handling.  But its keyboard translation
+    files are not powerful enough.
+-   Use OTP files from Omega. http://www/ens.fr/omega/  (Vidal)
+    Or use input software like xkinput.
 
 
 D. Vertical window split:
 -   ":vertical resize" for width.
 -   Make window-rotate commands also work with vertically split windows.  Be
     able to move the preview window to a vertically split window.
--   "-O" command line argument, like "-o" but split vertically?
 -   When there is not enough room, remove the ruler from the status line of
     windows which are not the current one, so that there is more room for the
     file name.
@@ -238,19 +188,19 @@ E. Virtual edit:
     See patches in ~/Mail/oldmail/waggoner/in.00132.
     "P" leaves a space at the end of the line.
 
-    4. Start a rectangular visual select with Ctrl-V, move down a few
-       lines and then use $ to select to the end of the line. It will
-       behave differently with virtualedit on than with it off.  With
-       virtualedit on, The selection will not include intervening lines
-       that are longer than the current line.
+    4. Start a rectangular visual select with Ctrl-V, move down a few lines
+       and then use $ to select to the end of the line. It will behave
+       differently with virtualedit on than with it off.  With virtualedit on,
+       The selection will not include intervening lines that are longer than
+       the current line.
 
-    5. 'v' selection is kind of strange.  When in virtual space, pressing
-	'v' will select the last character on the line, though the cursor
-	remains in virtual space.
+    5. 'v' selection is kind of strange.  When in virtual space, pressing 'v'
+       will select the last character on the line, though the cursor remains
+       in virtual space.
 	Should set the start of the Visual area in virtual space.
 
     6.  yank a word, move to virtual space and do "p": word is appended to the
-        end of the line instead of put at the cursor position.
+	end of the line instead of put at the cursor position.
 
     8.  Using "R" in virtual space moves back one character before starting
 	the replacement.
@@ -280,6 +230,7 @@ F. Sun Visual Workshop patch from Gordon Prieur:
     like ">>" for an arrow, "!!" for a breakpoint).
 -   sign mixed in with highlighting, is that what we want?
 -   Check that rename from "glyph" to "sign" is correct.
+-   Add ASCII signs, see patch from Mirian Lennox.
 -   remove ":signs", use ":sign" without arguments to show signs
 -   docs for 'balloon*' options.
 -   docs for 'F' flag in 'guioptions'.
@@ -359,9 +310,6 @@ J. User Friendlier
     - Allow adding a "edit with Vim" entry even when Vim already is in $PATH.
     - Create $VIM/vimfiles/[plugin|ftplugin|doc] directories, so that plugins
       can really be dropped-in.
-    - On Win2000 the check for a vim.exe or gvim.exe in $PATH doesn't work, it
-      always finds it in the current directory. (Briscoe)  Rename the vim.exe
-      in the current dir to avoid this.
     - Delete the vim.bat and gvim.bat files.
     - Delete a whole tree of Vim files.
 -   Add mappings local to a window: ":map <window> ..."?
@@ -371,6 +319,7 @@ Messages:
 -   In the message history, add a help tag for each message and number the
     messages.  ":msghelp <nr>" could then be used to jump to help for the
     message. (Charles Campbell)
+    Add the ID to each error message, like: "a7: No match found"?
 -   Need to hit return after selecting entry for ":ts".
 -   Remember message line for redraw.  Use instead of keep_msg.  Integrate the
     command line in update_screen().
@@ -383,6 +332,10 @@ Various recent:
 	syn match   javaStringError      +"\([^"\\]\|\\.\)*$+
     A long line with a " in it can cause a crash when it runs out of stack
     space (on non-Unix systems)
+8   'cindent' problem: (FooLman)
+		int x;	    <- extra indent, ";" ignored.
+	    void func()
+	    {
 9   Number output of ":function <name>", so that the line of an error message
     can be located?
 8   For a "/*" "**" "*/" comment the end isn't aligned properly.
@@ -413,6 +366,8 @@ Various recent:
 -   update $VIMRUNTIME/optwin for new options.
 -   When using the file browser in GTK the absolute file name is used.  Should
     try to simplify it. (Lohner)
+-   Make it possible to set 'browsedir' to a directory name, which is always
+    used.
 -   When dragging the Visual selection with the mouse and 'scrolloff' is zero,
     behave like 'scrolloff' is one, so that the text scrolls when the pointer
     is in the top line.
@@ -496,8 +451,6 @@ Various recent:
     becoming invalid because of autocommands.  Also callers of
     buf_check_timestamp().
 -   Add "gG": like what "gj" is to "j": go to the N'th window line.
-9   :he \^= gives an error for using \_
-9   :he ^= doesn't find tag :set^=.  Even "he :set^=" doesn't find it.
 -   xterm sends <Esc>O5F for <C-End>
 -   Support ":browse edit" in console, using explorer.vim?
 -   When displaying a space with only foreground highlighting, it's the same
@@ -533,14 +486,10 @@ Considered for release 6.0:
 8   Make clipboard work for Dos32 version. (Negri)
 8   Adjust colortest.vim: Include colors on normal background (Szalai).
     Reduce the size by using a while loop.
-8   Add the possibility for a maintainer of a binary version to include his
-    e-mail address.  In the ":version" or ":intro" message?
 8   ">>" with 'softtabstop' set should work like 'tabstop' is set to
     'softtabstop'. (Zivkov)  But what about when there is a string?
 9   Install vim32x32.xpm in /usr/local/share/icons/ or ~/.kde/share/icons/ for
     using it with KDE.
-7   Add command line argument to load a session file.  Useful to restart Vim
-    and get the same files and windows as when exiting.
 7   Add ModeMsgVisual, ModeMsgInsert, etc. so that each mode message can be
     highlighted differently.
 -   For files found with 'include': handle "*" in included name, for Java.
@@ -549,7 +498,7 @@ Considered for release 6.0:
     ~/ftp/vim/unreleased/patches/vim-5.6-dalecki-4.gz .  It has already
     changed quite a bit, merge changes.
 
-- Include patches from 5.x after ~/vim/patches/vim-5.7y-*.tar.gz
+- Include patches from 5.x after ~/vim/patches/vim-5.7e-*.tar.gz
 
 ---------------------- bugs ---------------------------
 
@@ -826,6 +775,7 @@ GUI:
 
 
 MSDOS/DJGPP:
+8   Win32: Opening a file dir\&file doesn't work.  Also \^.  Do we care?
 8   DJGPP: "cd c:" doesn't work.  Works OK in 16-bit version.  mch_getperm()
     returns -1 for "c:".
 9   DOS: Make CTRL-Fx and ALT-Fx work.
@@ -894,7 +844,7 @@ Windows 95:
 
 Win32 console:
 9   When editing a file by its short file name, it should be expanded into its
-    long file name, to avoid proplems like these: (Mccollister)
+    long file name, to avoid problems like these: (Mccollister)
      1) Create a file called ".bashrc" using some other editor.
      2) Drag that file onto a shortcut or the actual executable.
      3) Note that the file name is something like BASHRC~1
@@ -928,6 +878,7 @@ Amiga:
 
 
 Macintosh:
+9   Explorer.vim isn't working properly.
 9   When DiskLock is running, using a swap file causes a crash.  Appears to be
     a problem with writing a file that starts with a dot. (Giacalone)
 9   On G3 Mac, OS version 8, control strip causes characters messed up when
@@ -1249,6 +1200,20 @@ Help:
     also for e.g. the Perl interface.
 
 
+Folding:
+    (commands still available: zg zG zI zJ zK zp zP zq zQ zV zw zW zy zY;
+    secondary: zB zS zT zZ)
+-   'foldmethod' "textobject": fold on sections and paragraph text objects.
+-   Add 'hidecomment' option: don't display comments in /* */ and after //.
+-   "zu": undo change in manual fold. "zU" redo change in manual fold.  How to
+    implement this?
+-   "zJ" command: add the line or fold below the fold in the fold under the
+    cursor.
+-   'foldmethod' "syntax": "fold=3": set fold level for a region.
+-   Can set 'foldtext' to empty string: don't display any line.  How to
+    implement this?
+
+
 Syntax highlighting:
 8   Allow the user to add items to the Syntax menu sorted, without having to
     change this for each release.
@@ -1429,7 +1394,6 @@ Built-in script language:
 	setwinvar()
 	getwinvar()
 	search()		Add optional offset argument.
-	searchback()		Like search() but backwards.
 	libcall()		Allow more than one argument.
 	libcallnr()		Like libcall(), but function returns a number.
 	fnamemod({fname}, {mod})    {mod} can be ":p:h" etc., to be applied to
@@ -1678,6 +1642,7 @@ Shared libraries:
 
 
 Tags:
+7   Count before CTRL-]: jump to N'th match
 8   Scope arguments for ":tag", e.g.: ":tag class:cPage open", like Elvis.
 8   When output of ":tselect" is long, getting the more-prompt, should be able
     to type the tag number directly.
@@ -1711,13 +1676,7 @@ Tags:
 
 
 Security:
-8   Add 'security' option.  When "paranoid", disallow many things, like
-    setting 'grepprg' and 'makeprg' from a modeline.  When "trusted" allow
-    these things.  When "warn" give a warning message.
-    Perhaps disallow setting these from a modeline: errorfile, backupdir,
-    directory, makeef and viminfo.  And maybe backup and writebackup?
-7   Disallow changing the buffer for commands from a tags file.  Also for
-    commands from a local .vimrc?  Sort of strict secure mode.
+-   nothing at the moment
 
 
 Win32 GUI:
@@ -2027,6 +1986,16 @@ Insert mode:
 	/*
 	** formatted with comments=sr:/*,mb:**,ex:*/
 	*/
+9   Indent follows "if" instead of "do": (Robert Webb)
+	do
+	{
+		switch (blah)
+		{
+			case 1: if (thing)
+					blah;
+		}
+	} while (blah);
+				here;
 9   One indent to much when doing "o" below this "while": (Rouben Rostamian)
 	{
 	    do
@@ -2419,10 +2388,6 @@ Buffer list:
     Also for other windows: ":inwin {winnr} {cmd}".  How to make sure that
     this works properly for all commands, and still be able to return to the
     current buffer/window?  E.g.: ":inbuf xxx only".
-8   Share things between buffers with the same 'filetype': syntax, mappings,
-    autocommands, buffer-specific options, etc..  Avoids that syntax is
-    reloaded when jumping from *.c to *.c file and reduces the need for
-    BufEnter autocommands.
 8   Add File.{recent_files} menu entries: Recently edited files.
 8   Unix: Check all uses of fnamecmp() and fnamencmp() if they should check
     inode too.
@@ -2612,24 +2577,6 @@ Digraphs:
     least Latin-1/Unicode, Latin-2, MS-DOS (esp. for Win32).
 
 
-Multibyte support:
--   Substitute doesn't work well on multibyte characters:
-    ":s/\(.\)/\1\1/g" replaces each byte instead of each multi-byte.
-    Requires regexp code that sees a multibyte character as one char.
-9   Check "gR" for proper working of backspacing.
-9   With Athena and Motif the status line overwrites a bottom scrollbar?
--   When wrapping words, allow splitting at each multibyte character, not only
-    at a space (with an option). (Nishioka)
--   Support "overstrike" characters.  E.g., vowel points for Hebrew. (Aaron)
--   Check "yudit" for its Unicode handling.  But its keyboard translation
-    files are not powerful enough.
--   Use OTP files from Omega. http://www/ens.fr/omega/  (Vidal)
-    Or use input software like xkinput.
--   'charcode' option should be changed to be able to specify locale or
-    machine dependent encoding information such as SJIS, EUC, etc. (Nagano)
-    Use MIME names, like Emacs and Java.
-
-
 Writing files:
 -   In vim_rename(), should lock "from" file when deleting "to" file for
     systems other than Amiga.  Avoids problems with unexpected longname to
@@ -2687,8 +2634,6 @@ Mouse support:
 Crypt:
 8   Also crypt the swapfile, each block separately.  Change mf_write() and
     mf_read().  How to get b_p_key to these functions?
-8   Ask the key to be typed twice when crypting the first time.  Otherwise a
-    typo might cause the text to be lost forever.
 
 
 Argument list:
@@ -3255,4 +3200,4 @@ portion of the total which were negative points.
 -117 (-122) remove functionality, there is too much of it
 
 vim:tw=78:sw=4:sts=4:
-vim:comments=fb\:9,fb\:8,fb\:7,fb\:6,fb\:5,fb\:4,fb\:3,fb\:2,fb\:1,fb\:-,fb\:9q,fb\:8q,fb\:7q,fb\:6q,fb\:5q,fb\:4q,fb\:3q,fb\:2q,fb\:1q,fb\:9s,fb\:8s,fb\:7s,fb\:6s,fb\:5s,fb\:4s,fb\:3s,fb\:2s,fb\:1s,fb\:9l,fb\:8l,fb\:7l,fb\:6l,fb\:5l,fb\:4l,fb\:3l,fb\:2l,fb\:1l,fb\:9w,fb\:8w,fb\:7w,fb\:6w,fb\:5w,fb\:4w,fb\:3w,fb\:2w,fb\:1w,fb\:9b,fb\:8b,fb\:7b,fb\:6b,fb\:5b,fb\:4b,fb\:3b,fb\:2b,fb\:1b,fb\:9m,fb\:8m,fb\:7m,fb\:6m,fb\:5m,fb\:4m,fb\:3m,fb\:2m,fb\:1m,fb\:9?,fb\:8?,fb\:7?,fb\:6?,fb\:5?,fb\:4?,fb\:3?,fb\:2?,fb\:1?
+vim: set fo+=n :

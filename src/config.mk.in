@@ -79,6 +79,8 @@ AWK		= @AWK@
 
 STRIP		= @STRIP@
 
+COMPILEDBY	= @compiledby@
+
 ### Line break character as octal number for "tr"
 NL   		= @line_break@
 

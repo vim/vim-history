@@ -1,19 +1,9 @@
 " Vim syntax file
 " Language:	GSP - GNU Server Pages (v. 0.86)
-" Maintainer:	Nathaniel Harward nharward@yahoo.com
-" Last Changed: Dec. 7, 2000
+" Created By:	Nathaniel Harward nharward@yahoo.com
+" Last Changed: Dec. 12, 2000
 " Filenames:    *.gsp
 " URL:          http://www.constructicon.com/~nharward/vim/syntax/gsp.vim
-"
-" Notes:      * This is a hack of jsp.vim and is not quite complete; if you do
-"               wierd stuff and put in-line java in HTML tags or tag args it
-"               may not look very good, but otherwise it should be fine
-"
-"             * By default the backticks around in-line java blocks are
-"               highlighted as HTML errors so that they are not so hard to
-"               find -- if you don't like this take out the
-"               'matchgroup=htmlError' part on the gspInLine line or change it
-"               to something else
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")
@@ -28,7 +18,6 @@ endif
 runtime! syntax/html.vim
 unlet b:current_syntax
 
-" Next syntax items are case-sensitive
 syn case match
 
 " Include Java syntax
@@ -49,7 +38,7 @@ syn region htmlTag              start=+<[^/]+ end=+>+ contains=htmlTagN,htmlStri
 syn match  htmlTagN   contained +<\s*[-a-zA-Z0-9]\++hs=s+1 contains=htmlTagName,htmlSpecialTagName,@htmlTagNameCluster,gspInLine
 syn match  htmlTagN   contained +</\s*[-a-zA-Z0-9]\++hs=s+2 contains=htmlTagName,htmlSpecialTagName,@htmlTagNameCluster,gspInLine
 
-" Define the java code blocks
+" Define the GSP java code blocks
 syn region  gspJavaBlock start="<java\>[^>]*\>" end="</java>"me=e-7 contains=@gspJava,htmlTag
 syn region  gspInLine    matchgroup=htmlError start="`" end="`" contains=@gspJava
 

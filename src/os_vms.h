@@ -31,10 +31,6 @@
 
 #include <socket.h>
 
-#ifdef FEAT_NORMAL
-# define VIM_BACKTICK		/* internal backtick expansion */
-#endif
-
 #ifndef __ARGS
 # if defined(__STDC__) || defined(__GNUC__)
 #  define __ARGS(x) x

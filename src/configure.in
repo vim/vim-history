@@ -55,11 +55,11 @@ esac
 AC_SUBST(OS_EXTRA_SRC)
 AC_SUBST(OS_EXTRA_OBJ)
 
-dnl Add /usr/local/lib to $LIBS and /usr/local/include to CFLAGS.
+dnl Add /usr/local/lib to $LDFLAGS and /usr/local/include to CFLAGS.
 dnl Only when the directory exists and add it only once.
 if test -d /usr/local/lib; then
-  LIBS=`echo "$LIBS" | sed -e 's+-L/usr/local/lib ++g' -e 's+-L/usr/local/lib$++g'`
-  LIBS="$LIBS -L/usr/local/lib"
+  LDFLAGS=`echo "$LDFLAGS" | sed -e 's+-L/usr/local/lib ++g' -e 's+-L/usr/local/lib$++g'`
+  LDFLAGS="$LDFLAGS -L/usr/local/lib"
 fi
 if test -d /usr/local/include; then
   CPPFLAGS=`echo "$CPPFLAGS" | sed -e 's+-I/usr/local/include ++g' -e 's+-I/usr/local/include$++g'`
@@ -137,6 +137,12 @@ case "$features" in
   huge)		AC_DEFINE(FEAT_HUGE) ;;
   *)		AC_MSG_RESULT(Sorry, $features is not supported) ;;
 esac
+
+AC_MSG_CHECKING(--with-compiledby argument)
+AC_ARG_WITH(compiledby, [  --with-compiledby=NAME  name to show in :version message],
+	compiledby="$withval"; AC_MSG_RESULT($withval),
+	compiledby=""; AC_MSG_RESULT(no))
+AC_SUBST(compiledby)
 
 AC_MSG_CHECKING(--enable-perlinterp argument)
 AC_ARG_ENABLE(perlinterp,
@@ -1132,11 +1138,19 @@ if test -z "$SKIP_ATHENA" -o -z "$SKIP_MOTIF" -o -z "$SKIP_GTK"; then
   cppflags_save=$CPPFLAGS
   CPPFLAGS="$CPPFLAGS $X_CFLAGS"
   AC_CHECK_HEADERS(X11/xpm.h X11/Sunkeysym.h)
+
+  dnl automatically disable XIM when XIMtext isn't in X11/Xlib.h
+  if test ! "$enable_xim" = "no"; then
+    AC_MSG_CHECKING(for XIMText in X11/Xlib.h)
+    AC_EGREP_CPP(XIMText, [#include <X11/Xlib.h>],
+		  AC_MSG_RESULT(yes),
+		  AC_MSG_RESULT(no; xim has been disabled); enable_xim = "no")
+  fi
   CPPFLAGS=$cppflags_save
 
   dnl automatically enable XIM when hangul input isn't enabled
   if test "$enable_xim" = "auto" -a ! "$enable_hangulinput" = "yes" \
-		-a ! "x$GUITYPE" = "xNONE"; then
+		-a ! "x$GUITYPE" = "xNONE" ; then
     AC_MSG_RESULT(X GUI selected; xim has been enabled)
     enable_xim="yes"
   fi
@@ -1516,9 +1530,9 @@ main()
 	AC_MSG_ERROR(failed to compile test program))
 
 dnl Check for functions in one big call, to reduce the size of configure
-AC_CHECK_FUNCS(bcmp fchdir fchown fseeko fsync ftello getcwd getpwnam getpwuid \
-	getrlimit gettimeofday getwd lstat memcmp memset \
-	nanosleep opendir putenv qsort select setenv setpgid setsid \
+AC_CHECK_FUNCS(bcmp fchdir fchown fseeko fsync ftello getcwd getpseudotty \
+	getpwnam getpwuid getrlimit gettimeofday getwd lstat memcmp \
+	memset nanosleep opendir putenv qsort select setenv setpgid setsid \
 	sigaltstack sigstack sigset sigsetjmp sigaction sigvec \
 	strcasecmp strerror strftime stricmp strncasecmp strnicmp \
 	strpbrk strtol tgetent usleep utime utimes)
@@ -1536,8 +1550,24 @@ AC_TRY_COMPILE(
 	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_ST_BLKSIZE),
 	AC_MSG_RESULT(no))
 
-dnl Link with iconv for charset translation.
-AC_CHECK_LIB(iconv, iconv, [LIBS="$LIBS -liconv"],,)
+dnl Link with iconv for charset translation, if not found without library.
+dnl check for iconv() requires including iconv.h
+AC_MSG_CHECKING(for iconv_open())
+AC_TRY_LINK([
+#ifdef HAVE_ICONV_H
+# include <iconv.h>
+#endif
+], [iconv_open("fr", "to");],
+	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_ICONV),
+	save_LIBS="$LIBS"
+	LIBS="$LIBS -liconv"
+	AC_TRY_LINK([
+#ifdef HAVE_ICONV_H
+# include <iconv.h>
+#endif
+	], [iconv_open("fr", "to");],
+	AC_MSG_RESULT(yes; with -liconv); AC_DEFINE(HAVE_ICONV),
+	LIBS="$save_LIBS"; AC_MSG_RESULT(no)))
 
 dnl Link with posix1e for ACL stuff
 AC_CHECK_LIB(posix1e, acl_get_file, [LIBS="$LIBS -lposix1e"],,)

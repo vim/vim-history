@@ -26,7 +26,7 @@ int in_win_border __ARGS((win_t *wp, colnr_t vcol));
 void getvcol __ARGS((win_t *wp, pos_t *pos, colnr_t *start, colnr_t *cursor, colnr_t *end));
 colnr_t getvcol_nolist __ARGS((pos_t *posp));
 void getvvcol __ARGS((win_t *wp, pos_t *pos, colnr_t *start, colnr_t *cursor, colnr_t *end));
-void getvcols __ARGS((pos_t *pos1, pos_t *pos2, colnr_t *left, colnr_t *right));
+void getvcols __ARGS((win_t *wp, pos_t *pos1, pos_t *pos2, colnr_t *left, colnr_t *right));
 char_u *skipwhite __ARGS((char_u *p));
 char_u *skipdigits __ARGS((char_u *p));
 int vim_isdigit __ARGS((int c));

@@ -330,7 +330,8 @@ typedef unsigned short u8char_t;
  */
 #define VALID			10  /* buffer not changed, or changes marked
 				       with b_mod_* */
-#define INVERTED		20  /* redisplay inverted part */
+#define INVERTED		20  /* redisplay inverted part that changed */
+#define INVERTED_ALL		25  /* redisplay whole inverted part */
 #define REDRAW_TOP		30  /* display first w_upd_rows screen lines */
 #define NOT_VALID		40  /* buffer needs complete redraw */
 #define CLEAR			50  /* screen messed up, clear it */
@@ -595,7 +596,7 @@ typedef unsigned short u8char_t;
 #define DOBUF_GOTO	0	/* go to specified buffer */
 #define DOBUF_SPLIT	1	/* split window and go to specified buffer */
 #define DOBUF_UNLOAD	2	/* unload specified buffer(s) */
-#define DOBUF_DEL	3	/* delete specified buffer(s) (make secret) */
+#define DOBUF_DEL	3	/* delete specified buffer(s) from buflist */
 #define DOBUF_WIPE	4	/* delete specified buffer(s) really */
 
 /* Values for start argument for do_buffer() */
@@ -642,6 +643,7 @@ typedef unsigned short u8char_t;
 #define DOCMD_VERBOSE	0x01	/* included command in error message */
 #define DOCMD_NOWAIT	0x02	/* don't call wait_return() and friends */
 #define DOCMD_REPEAT	0x04	/* repeat exec. until getline() returns NULL */
+#define DOCMD_KEYTYPED	0x08	/* don't reset KeyTyped */
 
 /* flags for beginline() */
 #define BL_WHITE	1	/* cursor on first non-white in the line */
@@ -745,10 +747,12 @@ typedef unsigned short u8char_t;
 
 /*
  * "flags" values for option-setting functions.
+ * When OPT_GLOBAL and OPT_LOCAL are both missing, set both local and global
+ * values, get local value.
  */
 #define OPT_FREE	1	/* free old value if it was allocated */
-#define OPT_GLOBAL	2	/* also set global value for local option */
-#define OPT_LOCAL	4	/* only set local value */
+#define OPT_GLOBAL	2	/* use global value */
+#define OPT_LOCAL	4	/* use local value */
 #define OPT_MODELINE	8	/* option in modeline */
 
 /* Magic chars used in confirm dialog strings */
@@ -782,22 +786,21 @@ typedef unsigned short u8char_t;
  */
 enum auto_event
 {
-    EVENT_BUFCREATE = 0,	/* just after creating a non-secret buffer */
-    EVENT_BUFSECRET,		/* just after creating any buffer */
-    EVENT_BUFDELETE,		/* just before deleting a buffer or after
-				   making it secret */
+    EVENT_BUFADD = 0,		/* after adding a buffer to the buffer list */
+    EVENT_BUFNEW,		/* after creating any buffer */
+    EVENT_BUFDELETE,		/* deleting a buffer from the buffer list */
     EVENT_BUFWIPEOUT,		/* just before really deleting a buffer */
     EVENT_BUFENTER,		/* after entering a buffer */
     EVENT_BUFFILEPOST,		/* after renaming a buffer */
     EVENT_BUFFILEPRE,		/* before renaming a buffer */
     EVENT_BUFLEAVE,		/* before leaving a buffer */
     EVENT_BUFNEWFILE,		/* when creating a buffer for a new file */
-    EVENT_BUFREADAFTER,		/* after reading a buffer and modelines */
     EVENT_BUFREADPOST,		/* after reading a buffer */
     EVENT_BUFREADPRE,		/* before reading a buffer */
     EVENT_BUFREADCMD,		/* read buffer using command */
     EVENT_BUFUNLOAD,		/* just before unloading a buffer */
     EVENT_BUFHIDDEN,		/* just after buffer becomes hidden */
+    EVENT_BUFWINENTER,		/* after showing a buffer in a window */
     EVENT_BUFWINLEAVE,		/* just after buffer removed from window */
     EVENT_BUFWRITEPOST,		/* after writing a buffer */
     EVENT_BUFWRITEPRE,		/* before writing a buffer */
@@ -916,6 +919,8 @@ enum hlf_value
 #define OP_FOLDOPENREC	21	/* "zO" open folds recursively */
 #define OP_FOLDCLOSE	22	/* "zc" close folds */
 #define OP_FOLDCLOSEREC	23	/* "zC" close folds recursively */
+#define OP_FOLDDEL	24	/* "zd" delete folds */
+#define OP_FOLDDELREC	25	/* "zD" delete folds recursively */
 
 /*
  * Motion types, used for operators and for yank/delete registers.

@@ -208,7 +208,7 @@ obj/ex_cmds.o:	ex_cmds.c ex_cmds.h
 
 # Don't use $(SYMS) here, because ex_docmd.c defines DO_DECLARE_EXCMD
 obj/ex_docmd.o:	ex_docmd.c ex_cmds.h
-	$(CCNOSYM) $@ ex_docmd.c
+	$(CCNOSYM) $@ -mc ex_docmd.c
 
 obj/ex_getln.o:	ex_getln.c
 	$(CCSYM) $@ ex_getln.c
@@ -257,8 +257,9 @@ obj/normal.o:	normal.c
 obj/ops.o:	ops.c
 	$(CCSYM) $@ ops.c
 
+# Don't use $(SYMS) here, because option.h defines variables here
 obj/option.o:	option.c
-	$(CCSYM) $@ option.c
+	$(CCNOSYM) $@ option.c
 
 obj/os_amiga.o:	os_amiga.c
 	$(CCSYM) $@ os_amiga.c
@@ -270,7 +271,7 @@ obj/regexp.o:	regexp.c
 	$(CCSYM) $@ regexp.c
 
 obj/screen.o:	screen.c
-	$(CCSYM) $@ screen.c
+	$(CCSYM) $@ -mc screen.c
 
 obj/search.o:	search.c
 	$(CCSYM) $@ search.c

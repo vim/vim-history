@@ -1982,13 +1982,12 @@ ex_emenu(eap)
 gui_find_menu(path_name)
     char_u *path_name;
 {
-    vimmenu_t	**menup;
     vimmenu_t	*menu = NULL;
     char_u	*name;
     char_u	*saved_name;
     char_u	*p;
 
-    menup = &root_menu;
+    menu = root_menu;
 
     saved_name = vim_strsave(path_name);
     if (saved_name == NULL)
@@ -1997,42 +1996,41 @@ gui_find_menu(path_name)
     name = saved_name;
     while (*name)
     {
-	/* Find in the menu hierarchy */
+	/* find the end of one dot-separated name and put a NUL at the dot */
 	p = menu_name_skip(name);
 
-	menu = *menup;
 	while (menu != NULL)
 	{
 	    if (STRCMP(name, menu->name) == 0 || STRCMP(name, menu->dname) == 0)
 	    {
-		if (*p == NUL && menu->children == NULL)
+		if (menu->children == NULL)
 		{
-		    /* not allowed to tear off one item*/
-		    EMSG(_("Menu path must lead to a sub-menu"));
-		    vim_free(saved_name);
-		    return NULL;
+		    /* found a menu item instead of a sub-menu */
+		    if (*p == NUL)
+			EMSG(_("Menu path must lead to a sub-menu"));
+		    else
+			EMSG(_("Part of menu-item path is not sub-menu"));
+		    menu = NULL;
+		    goto theend;
 		}
-		else if (*p != NUL && menu->children == NULL)
-		{
-		    EMSG(_("Part of menu-item path is not sub-menu"));
-		    vim_free(saved_name);
-		    return NULL;
-		}
+		if (*p == NUL)	    /* found a full match */
+		    goto theend;
 		break;
 	    }
-	    menup = &menu->next;
 	    menu = menu->next;
 	}
+	if (menu == NULL)	/* didn't find it */
+	    break;
 
-	menup = &menu->children;
+	/* Found a match, search the sub-menu. */
+	menu = menu->children;
 	name = p;
     }
-    vim_free(saved_name);
+
     if (menu == NULL)
-    {
 	EMSG(_("Menu not found - check menu names"));
-	return NULL;
-    }
+theend:
+    vim_free(saved_name);
     return menu;
 }
 #endif

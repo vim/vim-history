@@ -110,6 +110,8 @@ typedef struct
 #define w_p_fdl w_onebuf_opt.wo_fdl	/* 'foldlevel' */
     char_u	*wo_fdm;
 #define w_p_fdm w_onebuf_opt.wo_fdm	/* 'foldmethod' */
+    long	wo_fml;
+#define w_p_fml w_onebuf_opt.wo_fml	/* 'foldminlines' */
     long	wo_fdn;
 #define w_p_fdn w_onebuf_opt.wo_fdn	/* 'foldnextmax' */
     char_u	*wo_fdt;
@@ -752,7 +754,7 @@ struct file_buffer
     char_u	*b_p_bh;	/* 'bufhidden' */
     char_u	*b_p_bt;	/* 'buftype' */
 #endif
-    int		b_p_bst;	/* 'bufsecret' */
+    int		b_p_bl;		/* 'buflisted' */
 #ifdef FEAT_CINDENT
     int		b_p_cin;	/* 'cindent' */
     char_u	*b_p_cino;	/* 'cinoptions' */
@@ -763,6 +765,9 @@ struct file_buffer
 #endif
 #ifdef FEAT_COMMENTS
     char_u	*b_p_com;	/* 'comments' */
+#endif
+#ifdef FEAT_FOLDING
+    char_u	*b_p_cms;	/* 'commentstring' */
 #endif
 #ifdef FEAT_INS_EXPAND
     char_u	*b_p_cpt;	/* 'complete' */
@@ -839,12 +844,20 @@ struct file_buffer
     char_u	*b_p_mp;	/* 'makeprg' */
 #endif
     char_u	*b_p_ep;	/* 'equalprg' */
+    char_u	*b_p_path;	/* 'path' */
+#ifdef FEAT_FIND_ID
+    char_u	*b_p_def;	/* 'define' */
+#endif
+#ifdef FEAT_INS_EXPAND
+    char_u	*b_p_dict;	/* 'dictionary' */
+    char_u	*b_p_tsr;	/* 'thesaurus' */
+#endif
 
     /* end of buffer options */
 
     int		b_start_ffc;	/* first char of 'ff' when edit started */
 #ifdef FEAT_MBYTE
-    char_u	*b_start_fcc;	/* value of 'filecharcode' when edit started */
+    char_u	*b_start_fcc;	/* 'filecharcode' when edit started or NULL */
 #endif
 
 #ifdef FEAT_EVAL

@@ -1,4 +1,4 @@
-*recover.txt*   For Vim version 6.0t.  Last change: 2000 Jul 07
+*recover.txt*   For Vim version 6.0u.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -151,7 +151,7 @@ change the 200 character count with the 'updatecount' option.  You can set
 the time with the 'updatetime' option.  The time is given in milliseconds.
 After writing to the swap file Vim syncs the file to disk.  This takes some
 time, especially on busy Unix systems.  If you don't want this you can set the
-'swapsync' option to an empty string.  The risk of loosing work becomes bigger
+'swapsync' option to an empty string.  The risk of losing work becomes bigger
 though.  On some non-Unix systems (MS-DOS, Amiga) the swap file won't be
 written at all.
 

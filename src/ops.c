@@ -135,6 +135,8 @@ static char opchars[][3] =
     {'z', 'O', TRUE},	/* OP_FOLDOPENREC */
     {'z', 'c', TRUE},	/* OP_FOLDCLOSE */
     {'z', 'C', TRUE},	/* OP_FOLDCLOSEREC */
+    {'z', 'd', TRUE},	/* OP_FOLDDEL */
+    {'z', 'D', TRUE},	/* OP_FOLDDELREC */
 };
 
 /*
@@ -727,11 +729,7 @@ valid_yank_reg(regname, writing)
     int	    regname;
     int	    writing;	    /* if TRUE check for writable registers */
 {
-#ifndef EBCDIC
-    if (regname > '~')
-	return FALSE;
-#endif
-    if (       isalnum(regname)
+    if (       IS_ALNUM(regname)
 	    || (!writing && vim_strchr((char_u *)
 #ifdef FEAT_EVAL
 				    "/.%#:="
@@ -828,7 +826,7 @@ do_record(c)
     if (Recording == FALSE)	    /* start recording */
     {
 			/* registers 0-9, a-z and " are allowed */
-	if (c > '~' || (!isalnum(c) && c != '"'))
+	if (!IS_ALNUM(c) && c != '"')
 	    retval = FAIL;
 	else
 	{
@@ -3421,6 +3419,7 @@ op_format(oap)
     int		next_is_not_par;	/* next line not part of paragraph */
     int		is_end_par;		/* at end of paragraph */
     int		prev_is_end_par = FALSE;/* prev. line not part of parag. */
+    int		next_is_start_par = FALSE;
 #ifdef FEAT_COMMENTS
     int		leader_len = 0;		/* leader len of current line */
     int		next_leader_len;	/* leader len of next line */
@@ -3430,6 +3429,7 @@ op_format(oap)
     int		advance = TRUE;
     int		second_indent = -1;
     int		do_second_indent;
+    int		do_number_indent;
     int		first_par_line = TRUE;
     int		smd_save;
     long	count;
@@ -3447,11 +3447,12 @@ op_format(oap)
     /* Set '[ mark at the start of the formatted area */
     curbuf->b_op_start = oap->start;
 
-    /* check for 'q' and '2' in 'formatoptions' */
+    /* check for 'q', '2' and '1' in 'formatoptions' */
 #ifdef FEAT_COMMENTS
     fo_do_comments = has_format_option(FO_Q_COMS);
 #endif
     do_second_indent = has_format_option(FO_Q_SECOND);
+    do_number_indent = has_format_option(FO_Q_NUMBER);
 
     /*
      * Get info about the previous and current line.
@@ -3459,16 +3460,16 @@ op_format(oap)
     if (curwin->w_cursor.lnum > 1)
 	is_not_par = fmt_check_par(curwin->w_cursor.lnum - 1
 #ifdef FEAT_COMMENTS
-				   , &leader_len, &leader_flags
+				, &leader_len, &leader_flags
 #endif
-				  );
+				);
     else
 	is_not_par = TRUE;
     next_is_not_par = fmt_check_par(curwin->w_cursor.lnum
 #ifdef FEAT_COMMENTS
-					, &next_leader_len, &next_leader_flags
+				, &next_leader_len, &next_leader_flags
 #endif
-					);
+				);
     is_end_par = (is_not_par || next_is_not_par);
 
     curwin->w_cursor.lnum--;
@@ -3500,13 +3501,18 @@ op_format(oap)
 #endif
 	}
 	else
+	{
 	    next_is_not_par = fmt_check_par(curwin->w_cursor.lnum + 1
 #ifdef FEAT_COMMENTS
 					, &next_leader_len, &next_leader_flags
 #endif
 					);
+	    if (do_number_indent)
+		next_is_start_par =
+			   (get_number_indent(curwin->w_cursor.lnum + 1) > 0);
+	}
 	advance = TRUE;
-	is_end_par = (is_not_par || next_is_not_par);
+	is_end_par = (is_not_par || next_is_not_par || next_is_start_par);
 
 	/*
 	 * Skip lines that are not in a paragraph.
@@ -3518,15 +3524,21 @@ op_format(oap)
 	     * Don't do this for comments and empty lines.
 	     */
 	    if (first_par_line
-		    && do_second_indent
+		    && (do_second_indent || do_number_indent)
 		    && prev_is_end_par
 		    && curwin->w_cursor.lnum < curbuf->b_ml.ml_line_count
 #ifdef FEAT_COMMENTS
 		    && leader_len == 0
 		    && next_leader_len == 0
 #endif
-		    && !lineempty(curwin->w_cursor.lnum + 1))
-		second_indent = get_indent_lnum(curwin->w_cursor.lnum + 1);
+		    )
+	    {
+		if (do_second_indent
+			&& !lineempty(curwin->w_cursor.lnum + 1))
+		    second_indent = get_indent_lnum(curwin->w_cursor.lnum + 1);
+		else if (do_number_indent)
+		    second_indent = get_number_indent(curwin->w_cursor.lnum);
+	    }
 
 	    /*
 	     * When the comment leader changes, it's the end of the paragraph.

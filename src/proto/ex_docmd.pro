@@ -1,5 +1,6 @@
 /* ex_docmd.c */
 void do_exmode __ARGS((int improved));
+int do_cmdline_cmd __ARGS((char_u *cmd));
 int do_cmdline __ARGS((char_u *cmdline, char_u *(*getline)(int, void *, int), void *cookie, int flags));
 int cmd_exists __ARGS((char_u *name));
 void handle_swap_exists __ARGS((buf_t *old_curbuf));

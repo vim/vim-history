@@ -1,4 +1,4 @@
-*uganda.txt*    For Vim version 6.0t.  Last change: 2000 Nov 12
+*uganda.txt*    For Vim version 6.0u.  Last change: 2000 Nov 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -30,7 +30,7 @@ available to the maintainer.
 The current maintainer is Bram Moolenaar <Bram@vim.org>.  If this changes, it
 will be announced in appropriate places (most likely www.vim.org and
 comp.editors).  When it is completely impossible to contact the maintainer,
-the obligation to send him modified source code is dropped.
+the obligation to send him modified source code ceases.
 
 It is not allowed to remove these restrictions from the distribution of the
 Vim sources or parts of it.  These restrictions may also be used for previous
@@ -144,6 +144,7 @@ World:		Use a postal money order.  That should be possible from any
 Europe:		To avoid banking costs the best thing is to send me a
 		Eurocheque, written out to "Bram Moolenaar" in Dutch Guilders
 		(DFL).  Send it to the address below.
+		NOTE: Eurocheques cannot be used after December 2001.
 		Any other method should work.  Ask for information about
 		sponsorship.
 

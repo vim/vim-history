@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Jan 19
+" Last change:	2001 Feb 04
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -26,9 +26,28 @@ au BufNewFile,BufRead *.in
 	\ endif
 
 
-" Abaqus
-au BufNewFile,BufRead *.inp
-	\ if getline(1) =~ '^\*' | setf abaqus | endif
+" Abaqus or Trasys
+au BufNewFile,BufRead *.inp			call FTCheck_inp()
+
+fun! FTCheck_inp()
+  if getline(1) =~ '^\*'
+    setf abaqus
+  else
+    let n = 1
+    if line("$") > 500
+      let nmax = 500
+    else
+      let nmax = line("$")
+    endif
+    while n <= nmax
+      if getline(n) =~? "^header surface data"
+	setf trasys
+	break
+      endif
+      let n = n + 1
+    endwhile
+  endif
+endfun
 
 " ABC music notation
 au BufNewFile,BufRead *.abc			setf abc
@@ -38,6 +57,9 @@ au BufNewFile,BufRead *.abl			setf abel
 
 " ABEL
 au BufNewFile,BufRead *.abl			setf abel
+
+" AceDB
+au BufNewFile,BufRead *.wrm			setf acedb
 
 " Ada (83, 9X, 95)
 au BufNewFile,BufRead *.adb,*.ads		setf ada
@@ -149,11 +171,20 @@ au BufNewFile,BufRead *.bc			setf bc
 " BibTeX bibliography database file
 au BufNewFile,BufRead *.bib			setf bib
 
+" BIND configuration
+au BufNewFile,BufRead named.conf		setf named
+
+" BIND zone
+au BufNewFile,BufRead named.root		setf bindzone
+
 " Blank
 au BufNewFile,BufRead *.bl			setf blank
 
 " C
 au BufNewFile,BufRead *.c			setf c
+
+" C#
+au BufNewFile,BufRead *.cs			setf cs
 
 " Cyn++
 au BufNewFile,BufRead *.cyn			setf cynpp
@@ -167,9 +198,9 @@ au BufNewFile,BufRead *.cpp
 
 " C++
 if has("fname_case")
-  au BufNewFile,BufRead *.cxx,*.c++,*.C,*.H,*.hh,*.hxx,*.hpp,*.tcc,*.inl,named.conf setf cpp
+  au BufNewFile,BufRead *.cxx,*.c++,*.C,*.H,*.hh,*.hxx,*.hpp,*.tcc,*.inl setf cpp
 else
-  au BufNewFile,BufRead *.cxx,*.c++,*.hh,*.hxx,*.hpp,*.tcc,*.inl,named.conf setf cpp
+  au BufNewFile,BufRead *.cxx,*.c++,*.hh,*.hxx,*.hpp,*.tcc,*.inl setf cpp
 endif
 
 " .h files can be C or C++, set c_syntax_for_h if you want C
@@ -209,6 +240,9 @@ endfun
 
 " Clean
 au BufNewFile,BufRead *.dcl,*.icl		setf clean
+
+" Clever (also: *.ent)
+au BufNewFile,BufRead *.eni			setf clever
 
 " Clipper
 au BufNewFile,BufRead *.prg			setf clipper
@@ -453,7 +487,23 @@ au BufNewFile,BufRead *.mv,*.mpl,*.mws		setf maple
 au BufNewFile,BufRead *.mason			setf mason
 
 " Matlab
-au BufNewFile,BufRead *.m			setf matlab
+au BufNewFile,BufRead *.m			call FTCheck_m()
+
+fun! FTCheck_m()
+  let n = 1
+  while n < 10
+    if getline(n) =~ '^\s*%'
+      setf matlab
+      return
+    endif
+    if getline(n) =~ '^\s*(\*'
+      setf mma
+      return
+    endif
+    let n = n + 1
+  endwhile
+  setf matlab
+endfun
 
 " Maya Extension Language
 au BufNewFile,BufRead *.mel			setf mel
@@ -575,8 +625,14 @@ au BufNewFile,BufRead *.po			setf po
 " PostScript
 au BufNewFile,BufRead *.ps,*.eps		setf postscr
 
-" Povray
-au BufNewFile,BufRead *.pov,*.inc		setf pov
+" Povray (or PHP)
+au BufNewFile,BufRead *.pov			setf pov
+au BufNewFile,BufRead *.inc
+	\ if getline(1).getline(2).getline(3) =~ "<?" |
+	\   setf php |
+	\ else |
+	\   setf pov |
+	\ endif
 
 " Printcap and Termcap
 au BufNewFile,BufRead *printcap
@@ -669,6 +725,12 @@ au BufNewFile,BufRead *.sgm,*.sgml
 	\ endif
 au BufNewFile,BufRead *.ent			setf sgml
 
+" SGMLDECL
+au BufNewFile,BufRead *.decl,*.dcl,*.dec
+	\ if getline(1).getline(2).getline(3) =~? '^<!SGML' |
+	\    setf sgmldecl |
+	\ endif
+
 " SGML catalog file
 au BufNewFile,BufRead sgml.catalog*,catalog	setf catalog
 
@@ -701,6 +763,9 @@ au BufNewFile,BufRead *.scm			setf scheme
 
 " Simula
 au BufNewFile,BufRead *.sim			setf simula
+
+" SINDA
+au BufNewFile,BufRead *.sin,*.s85		setf sinda
 
 " SKILL
 au BufNewFile,BufRead *.il			setf skill
@@ -767,6 +832,9 @@ au BufNewFile,BufRead *.t			setf tads
 " Tags
 au BufNewFile,BufRead tags			setf tags
 
+" TAK
+au BufNewFile,BufRead *.tak			setf tak
+
 " Tcl
 au BufNewFile,BufRead *.tcl,*.tk,*.itcl,*.itk	setf tcl
 
@@ -782,11 +850,17 @@ au BufNewFile,BufRead *.tex,*.latex,*.sty,*.dtx,*.ltx	setf tex
 " Texinfo
 au BufNewFile,BufRead *.texinfo,*.texi,*.txi	setf texinfo
 
+" TeX configuration
+au BufNewFile,BufRead texmf.cnf			setf texmf
+
 " TF mud client
 au BufNewFile,BufRead *.tf			setf tf
 
 " Motif UIT/UIL files
 au BufNewFile,BufRead *.uit,*.uil		setf uil
+
+" UnrealScript
+au BufNewFile,BufRead *.uc			setf uc
 
 " Verilog HDL
 au BufNewFile,BufRead *.v			setf verilog
@@ -852,7 +926,7 @@ au BufEnter *.xpm2				setf xpm2
 au BufEnter *.xs				setf xs
 
 " X resources file
-au BufNewFile,BufRead .Xdefaults,.Xresources,xdm-config setf xdefaults
+au BufNewFile,BufRead .Xdefaults,.Xresources,xdm-config,*.ad setf xdefaults
 
 " Xmath
 au BufNewFile,BufRead *.msc,*.msf		setf xmath
@@ -895,6 +969,9 @@ au BufNewFile,BufRead,StdinReadPost *
 " Extra checks for when no filetype has been detected now.  Mostly used for
 " patterns that end in "*".  E.g., "zsh*" matches "zsh.vim", but that's a Vim
 " script file.
+
+" BIND zone
+au BufNewFile,BufRead /var/named/*		setf bindzone
 
 " Crontab
 au BufNewFile,BufRead crontab.*			setf crontab

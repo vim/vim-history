@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.0t.  Last change: 2001 Jan 21
+*pattern.txt*   For Vim version 6.0u.  Last change: 2001 Feb 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -259,7 +259,7 @@ the "*" is under your right hand middle finger (search to the right and down).
 
 						*/branch* */\&*
 2. A branch is one or more concats, separated by "\&".  It matches the last
-   concat, but only if all the preceding contats also match at the same
+   concat, but only if all the preceding concats also match at the same
    position.  Example: "foobeep\&..." matches "foo" in "foobeep".
 
    branch ::=	    concat
@@ -272,7 +272,7 @@ the "*" is under your right hand middle finger (search to the right and down).
    first piece, followed by a match for the second piece, etc.  Example:
    "f[0-9]b", first matches "f", then a digit and then "b".
 
-   concate  ::=	    piece
+   concat  ::=	    piece
 		or  piece piece
 		or  piece piece piece
 		etc.
@@ -332,10 +332,12 @@ More explanation and examples below, follow the links.
 
       ordinary atom ~
       magic   nomagic	matches ~
-|/^|	^	^	start-of-line |/zero-width|
+|/^|	^	^	start-of-line (at start of pattern) |/zero-width|
 |/\^|	\^	\^	literal '^'
-|/$|	$	$	end-of-line |/zero-width|
+|/\_^|	\_^	\_^	start-of-line (used anywhere) |/zero-width|
+|/$|	$	$	end-of-line (at end of pattern) |/zero-width|
 |/\$|	\$	\$	literal '$'
+|/\_$|	\_$	\_$	end-of-line (used anywhere) |/zero-width|
 |/.|	.	\.	any single character (not an end-of-line)
 |/\_.|	\_.	\_.	any single character or end-of-line
 |/\<|	\<	\<	beginning of a word |/zero-width|
@@ -544,21 +546,21 @@ endless loop.  If you try it, you will get this error message: >
 							*/\@<=*
 \@<=	Matches with zero width if the preceding atom matches just before what
 	follows. |/zero-width| {not in Vi}
-	Like '(?>=pattern)" in Perl, but Vim allows non-fixed-width patterns.
+	Like '(?<=pattern)" in Perl, but Vim allows non-fixed-width patterns.
 	Example			matches ~
-	\(an\_\s\+\)\@<=file	"file" after "an" and white space or a
+	\(an\_s\+\)\@<=file	"file" after "an" and white space or a
 				end-of-line
 
 	"\@<=" and "\@<!" check for matches just before what follows.
 	Theoretically these matches could start anywhere before this position.
-	But to limit the time needed only the line where what follows matches
+	But to limit the time needed, only the line where what follows matches
 	is searched, and one line before that (if there is one).  This should
 	be sufficient to match most things and not be too slow.
 
 							*/\@<!*
 \@<!	Matches with zero width if the preceding atom does NOT match just
 	before what follows. |/zero-width| {not in Vi}
-	Like '(?>!pattern)" in Perl, but Vim allows non-fixed-width patterns.
+	Like '(?<!pattern)" in Perl, but Vim allows non-fixed-width patterns.
 	Example			matches ~
 	\(foo\)\@<!bar		any "bar" that's not in "foobar"
 
@@ -581,13 +583,19 @@ endless loop.  If you try it, you will get this error message: >
 An ordinary atom can be:
 
 							*/^*
-^	At beginning of pattern or after "\|", "\(", or "\n": matches start of
-	line; at other positions, matches literal '^'. |/zero-width|
+^	At beginning of pattern or after "\|", "\(", or "\n": matches
+	start-of-line; at other positions, matches literal '^'. |/zero-width|
 	Example		matches ~
 	^beep(		Probably the start of the C function "beep".
 
 							*/\^*
 \^	At any position, matches literal '^'.
+
+							*/\_^*
+\_^	At any position, matches start-of-line. |/zero-width|
+	Example		matches ~
+	\_s*\_^lbl	white space and blank lines and then "lbl" at
+			start-of-line
 
 							*/$*
 $	At end of pattern or in front of "\|" or "\)", matches end-of-line
@@ -595,6 +603,12 @@ $	At end of pattern or in front of "\|" or "\)", matches end-of-line
 
 							*/\$*
 \$	At any position, matches literal '$'.
+
+							*/\_$*
+\_$	At any position, matches end-of-line. |/zero-width|
+	Example		matches ~
+	lbl\_$\_s*	"lbl" at end-of-line and following white space and
+			blank lines
 
 .	(with 'nomagic': \.)				*/.* */\.*
 	Matches any single character, but not an end-of-line.

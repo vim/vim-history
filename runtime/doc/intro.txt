@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 6.0t.  Last change: 2001 Jan 11
+*intro.txt*     For Vim version 6.0u.  Last change: 2001 Jan 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -545,12 +545,14 @@ Insert Normal mode	Entered when CTRL-O given in Insert mode.  This is
 			shown at the bottom of the window.
 
 Insert Visual mode	Entered when starting a Visual selection from Insert
-			mode.  When the Visual selection ends, Vim returns to
-			Insert mode.
+			mode, e.g., by using CTRL-O and then "v", "V" or
+			CTRL-V.  When the Visual selection ends, Vim returns
+			to Insert mode.
 			If the 'showmode' option is on "-- (insert) VISUAL --"
 			is shown at the bottom of the window.
 
 Insert Select mode	Entered when starting Select mode from Insert mode.
+			E.g., by dragging the mouse or <S-Right>.
 			When the Select mode ends, Vim returns to Insert mode.
 			If the 'showmode' option is on "-- (insert) SELECT --"
 			is shown at the bottom of the window.
@@ -569,7 +571,7 @@ Normal mode when you see the screen flash or hear the bell after you type
 FROM mode								 ~
 Normal			v V ^V	  *4	 *1	    R	    : / ? !   Q
 Visual		 *2		  ^G	 c C	    --	      :       --
-Select		 *5	^O ^G		 *6	    --	      :       --
+Select		 *5	^O ^G		 *6	    --	      --      --
 Insert		 <Esc>	  --	  --		  <Insert>    --      --
 Replace		 <Esc>	  --	  --	<Insert>	      --      --
 Command-line	 *3	  --	  --	 :start	    --		      --
@@ -600,6 +602,7 @@ Ex		 :vi	  --	  --	 --	    --	      --
    - use a non-printable command to move the cursor while keeping the Shift
      key pressed, and the 'selectmode' option contains "key"
    - use "v", "V" or "CTRL-V" while 'selectmode' contains "cmd"
+   - use "gh", "gH" or "g CTRL-H"  |g_CTRL-H|
 *5 Go from Select mode to Normal mode by using a non-printable command to move
    the cursor, without keeping the Shift key pressed.
 *6 Go from Select mode to Insert mode by typing a printable character.  The

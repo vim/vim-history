@@ -158,15 +158,14 @@ workshop_init()
 	    is_dirty = TRUE;
 	}
 	if (is_dirty)
-	    set_option_value((char_u *) "go", 0, buf, FALSE);
+	    set_option_value((char_u *) "go", 0, buf, 0);
     }
 }
 
     void
 workshop_postinit()
 {
-    do_cmdline((char_u *) initialFileCmd,
-	    NULL, NULL, DOCMD_NOWAIT | DOCMD_VERBOSE);
+    do_cmdline_cmd((char_u *)initialFileCmd);
     ALT_INPUT_LOCK_OFF;
     free(initialFileCmd);
     initialFileCmd = NULL;
@@ -905,7 +904,7 @@ workshop_toolbar_end()
 	    is_dirty = TRUE;
 	}
 	if (is_dirty)
-	    set_option_value((char_u *) "go", 0, buf, FALSE);
+	    set_option_value((char_u *) "go", 0, buf, 0);
     }
     workshopInitDone = True;
 }
@@ -1936,7 +1935,7 @@ coloncmd(
     col = gui.cursor_col;
 
     ALT_INPUT_LOCK_ON;
-    do_cmdline((char_u *) cmd, NULL, NULL, DOCMD_NOWAIT);
+    do_cmdline_cmd((char_u *)cmd);
     ALT_INPUT_LOCK_OFF;
 
     if (force)

@@ -46,6 +46,7 @@ static int	otherfile_buf __ARGS((buf_t *buf, char_u *ffname));
 static int	ti_change __ARGS((char_u *str, char_u **last));
 #endif
 static void	free_buffer __ARGS((buf_t *));
+static void	free_buffer_stuff __ARGS((buf_t *));
 static void	clear_wininfo __ARGS((buf_t *buf));
 
 /*
@@ -163,8 +164,7 @@ open_buffer(read_stdin, eap)
 	    curbuf->b_flags &= ~(BF_CHECK_RO | BF_NEVERLOADED);
 
 #ifdef FEAT_AUTOCMD
-	    if (curbuf->b_ffname != NULL)
-		apply_autocmds(EVENT_BUFREADAFTER, NULL, NULL, FALSE, curbuf);
+	    apply_autocmds(EVENT_BUFWINENTER, NULL, NULL, FALSE, curbuf);
 
 	    /* restore curwin/curbuf and a few other things */
 	    aucmd_restbuf(&aco);
@@ -196,7 +196,7 @@ buf_valid(buf)
  * It can be:
  * 0			buffer becomes hidden
  * DOBUF_UNLOAD		buffer is unloaded
- * DOBUF_DELETE		buffer is unloaded and becomes secret
+ * DOBUF_DELETE		buffer is unloaded and removed from buffer list
  * DOBUF_WIPE		buffer is unloaded and really deleted
  * When doing all but the first one on the current buffer, the caller should
  * get a new buffer very soon!
@@ -330,17 +330,27 @@ close_buffer(win, buf, action)
     }
     else
     {
-	buf_clear(buf);
 	if (del_buf)
-	    buf->b_p_bst = TRUE;
+	{
+	    /* Free all internal variables and reset option values, to make
+	     * ":bdel" compatible with Vim 5.7. */
+	    free_buffer_stuff(buf);
+
+	    /* Init the options when loaded again. */
+	    buf->b_flags |= BF_NOTEDITED;
+	    buf->b_p_initialized = FALSE;
+	}
+	buf_clear_file(buf);
+	if (del_buf)
+	    buf->b_p_bl = FALSE;
     }
 }
 
 /*
- * buf_clear() - make buffer empty
+ * Make buffer not contain a file.
  */
     void
-buf_clear(buf)
+buf_clear_file(buf)
     buf_t	*buf;
 {
     buf->b_ml.ml_line_count = 1;
@@ -372,7 +382,7 @@ buf_freeall(buf, del_buf)
     apply_autocmds(EVENT_BUFUNLOAD, buf->b_fname, buf->b_fname, FALSE, buf);
     if (!buf_valid(buf))	    /* autocommands may delete the buffer */
 	return;
-    if (del_buf && !buf->b_p_bst)
+    if (del_buf && buf->b_p_bl)
     {
 	apply_autocmds(EVENT_BUFDELETE, buf->b_fname, buf->b_fname, FALSE, buf);
 	if (!buf_valid(buf))	    /* autocommands may delete the buffer */
@@ -404,13 +414,13 @@ buf_freeall(buf, del_buf)
 
 /*
  * Free a buffer structure and the things it contains related to the buffer
- * itself (not the file).
+ * itself (not the file, that must have been done already).
  */
     static void
 free_buffer(buf)
     buf_t	*buf;
 {
-    clear_wininfo(buf);
+    free_buffer_stuff(buf);
 #ifdef FEAT_PERL
     perl_buf_free(buf);
 #endif
@@ -420,14 +430,25 @@ free_buffer(buf)
 #ifdef FEAT_RUBY
     ruby_buffer_free(buf);
 #endif
+    vim_free(buf);
+}
+
+/*
+ * Free stuff in the buffer for ":bdel" and when wiping out the buffer.
+ */
+    static void
+free_buffer_stuff(buf)
+    buf_t	*buf;
+{
+    clear_wininfo(buf);
 #ifdef FEAT_EVAL
     var_clear(&buf->b_vars);	    /* free all internal variables */
 #endif
     free_buf_options(buf, TRUE);
 #ifdef FEAT_MBYTE
-    free_string_option(buf->b_start_fcc);
+    vim_free(buf->b_start_fcc);
+    buf->b_start_fcc = NULL;
 #endif
-    vim_free(buf);
 }
 
 /*
@@ -581,7 +602,7 @@ do_bufdel(command, arg, addr_count, start_bnr, end_bnr, forceit)
  * action == DOBUF_GOTO	    go to specified buffer
  * action == DOBUF_SPLIT    split window and go to specified buffer
  * action == DOBUF_UNLOAD   unload specified buffer(s)
- * action == DOBUF_DEL	    delete specified buffer(s) (make secret)
+ * action == DOBUF_DEL	    delete specified buffer(s) from buffer list
  * action == DOBUF_WIPE	    delete specified buffer(s) really
  *
  * start == DOBUF_CURRENT   go to "count" buffer from current buffer
@@ -636,10 +657,10 @@ do_buffer(action, start, dir, count, forceit)
     else
     {
 	bp = NULL;
-	while (count > 0 || (!unload && buf->b_p_bst && bp != buf))
+	while (count > 0 || (!unload && !buf->b_p_bl && bp != buf))
 	{
 	    /* remember the buffer where we start, we come back there when all
-	     * buffers are secret. */
+	     * buffers are unlisted. */
 	    if (bp == NULL)
 		bp = buf;
 	    if (dir == FORWARD)
@@ -654,8 +675,8 @@ do_buffer(action, start, dir, count, forceit)
 		if (buf == NULL)
 		    buf = lastbuf;
 	    }
-	    /* don't count secret buffers */
-	    if (unload || !buf->b_p_bst)
+	    /* don't count unlisted buffers */
+	    if (unload || buf->b_p_bl)
 	    {
 		 --count;
 		 bp = NULL;	/* use this buffer as new starting point */
@@ -699,10 +720,13 @@ do_buffer(action, start, dir, count, forceit)
 	}
 
 	/*
-	 * If deleting last buffer, make it empty.
-	 * The last buffer cannot be unloaded.
+	 * If deleting the last (listed) buffer, make it empty.
+	 * The last (listed) buffer cannot be unloaded.
 	 */
-	if (firstbuf->b_next == NULL)
+	for (bp = firstbuf; bp != NULL; bp = bp->b_next)
+	    if (bp->b_p_bl && bp != buf)
+		break;
+	if (bp == NULL && buf == curbuf)
 	{
 	    if (action == DOBUF_UNLOAD)
 	    {
@@ -710,11 +734,10 @@ do_buffer(action, start, dir, count, forceit)
 		return FAIL;
 	    }
 
-#ifdef FEAT_WINDOWS
 	    /* Close any other windows on this buffer, then make it empty. */
+#ifdef FEAT_WINDOWS
 	    close_others(FALSE, TRUE);
 #endif
-	    buf = curbuf;
 	    setpcmark();
 	    retval = do_ecmd(0, NULL, NULL, NULL, ECMD_ONE,
 						  forceit ? ECMD_FORCEIT : 0);
@@ -724,7 +747,7 @@ do_buffer(action, start, dir, count, forceit)
 	     * the old one.  But do_ecmd() may have done that already, check
 	     * if the buffer still exists.
 	     */
-	    if (buf != curbuf && buf_valid(buf))
+	    if (buf != curbuf && buf_valid(buf) && buf->b_nwindows == 0)
 		close_buffer(NULL, buf, action);
 	    return retval;
 	}
@@ -746,7 +769,7 @@ do_buffer(action, start, dir, count, forceit)
 #ifdef FEAT_WINDOWS
 	    close_windows(buf);
 #endif
-	    if (buf_valid(buf) && buf->b_nwindows == 0)
+	    if (buf != curbuf && buf_valid(buf) && buf->b_nwindows == 0)
 		close_buffer(NULL, buf, action);
 	    return OK;
 	}
@@ -778,8 +801,10 @@ do_buffer(action, start, dir, count, forceit)
 	    while (jumpidx != curwin->w_jumplistidx)
 	    {
 		buf = buflist_findnr(curwin->w_jumplist[jumpidx].fmark.fnum);
-		if (buf == curbuf || (buf != NULL && buf->b_ml.ml_mfp == NULL))
-		    buf = NULL;	/* Must be open and not current */
+		if (buf == curbuf
+			|| (buf != NULL
+			    && (buf->b_ml.ml_mfp == NULL || !buf->b_p_bl)))
+		    buf = NULL;	/* Must be open, listed and not current */
 		/* found a valid buffer: stop searching */
 		if (buf != NULL)
 		    break;
@@ -808,7 +833,9 @@ do_buffer(action, start, dir, count, forceit)
 		    continue;
 		}
 		/* in non-help buffer, try to skip help buffers, and vv */
-		if (buf->b_ml.ml_mfp != NULL && buf->b_help == curbuf->b_help)
+		if (buf->b_ml.ml_mfp != NULL
+			&& buf->b_help == curbuf->b_help
+			&& buf->b_p_bl)
 		    break;
 		if (forward)
 		    buf = buf->b_next;
@@ -816,7 +843,13 @@ do_buffer(action, start, dir, count, forceit)
 		    buf = buf->b_prev;
 	    }
 	}
-	if (buf == NULL)	/* Still no loaded buffers, just take one */
+	if (buf == NULL)	/* No loaded buffer, find listed one */
+	{
+	    for (buf = firstbuf; buf != NULL; buf = buf->b_next)
+		if (buf->b_p_bl && buf != curbuf)
+		    break;
+	}
+	if (buf == NULL)	/* Still no buffer, just take one */
 	{
 	    if (curbuf->b_next != NULL)
 		buf = curbuf->b_next;
@@ -915,13 +948,23 @@ set_curbuf(buf, action)
 enter_buffer(buf)
     buf_t	*buf;
 {
-    /* copy buffer and window local option values */
+    /* Copy buffer and window local option values.  Not for a help buffer. */
     buf_copy_options(buf, BCO_ENTER | BCO_NOHELP);
-    get_winopts(buf);
+    if (!buf->b_help)
+	get_winopts(buf);
 
+    /* Get the buffer in the current window. */
     curwin->w_buffer = buf;
     curbuf = buf;
     ++curbuf->b_nwindows;
+
+#ifdef FEAT_FOLDING
+    /* Remove all folds in the window and update folds (later). */
+    clearFolding(curwin);
+    foldUpdateAll(curwin);
+#endif
+
+    /* Make sure the buffer is loaded. */
     if (curbuf->b_ml.ml_mfp == NULL)	/* need to load the file */
 	open_buffer(FALSE, NULL);
     else
@@ -931,6 +974,7 @@ enter_buffer(buf)
 #ifdef FEAT_AUTOCMD
 	curwin->w_topline = 1;
 	apply_autocmds(EVENT_BUFENTER, NULL, NULL, FALSE, curbuf);
+	apply_autocmds(EVENT_BUFWINENTER, NULL, NULL, FALSE, curbuf);
 #endif
     }
     buflist_getfpos();			/* restore curpos.lnum and possibly
@@ -964,12 +1008,12 @@ enter_buffer(buf)
 static int  top_file_num = 1;		/* highest file number */
 
     buf_t *
-buflist_new(ffname, sfname, lnum, use_curbuf, secret)
+buflist_new(ffname, sfname, lnum, use_curbuf, listed)
     char_u	*ffname;	/* full path of fname or relative */
     char_u	*sfname;	/* short fname or NULL */
     linenr_t	lnum;		/* preferred cursor line */
     int		use_curbuf;	/* re-use curbuf if it's empty and unnamed */
-    int		secret;		/* when the buffer is new, create it secret */
+    int		listed;		/* when the buffer is new, add to buffer list */
 {
     buf_t	*buf;
 #ifdef UNIX
@@ -1019,7 +1063,7 @@ buflist_new(ffname, sfname, lnum, use_curbuf, secret)
 	buf = curbuf;
 #ifdef FEAT_AUTOCMD
 	/* It's like this buffer is deleted. */
-	if (!curbuf->b_p_bst)
+	if (curbuf->b_p_bl)
 	    apply_autocmds(EVENT_BUFDELETE, NULL, NULL, FALSE, curbuf);
 	apply_autocmds(EVENT_BUFWIPEOUT, NULL, NULL, FALSE, curbuf);
 #endif
@@ -1122,14 +1166,14 @@ buflist_new(ffname, sfname, lnum, use_curbuf, secret)
 #endif
     buf->b_u_synced = TRUE;
     buf->b_flags = BF_CHECK_RO | BF_NEVERLOADED;
-    buf_clear(buf);
+    buf_clear_file(buf);
     clrallmarks(buf);			/* clear marks */
     fmarks_check_names(buf);		/* check file marks for this file */
-    buf->b_p_bst = secret;		/* init 'bufsecret' */
+    buf->b_p_bl = listed;		/* init 'buflisted' */
 #ifdef FEAT_AUTOCMD
-    apply_autocmds(EVENT_BUFSECRET, NULL, NULL, FALSE, buf);
-    if (!secret)
-	apply_autocmds(EVENT_BUFCREATE, NULL, NULL, FALSE, buf);
+    apply_autocmds(EVENT_BUFNEW, NULL, NULL, FALSE, buf);
+    if (listed)
+	apply_autocmds(EVENT_BUFADD, NULL, NULL, FALSE, buf);
 #endif
 
     return buf;
@@ -1148,64 +1192,75 @@ free_buf_options(buf, free_p_ff)
     if (free_p_ff)
     {
 #ifdef FEAT_MBYTE
-	free_string_option(buf->b_p_fcc);
+	clear_string_option(&buf->b_p_fcc);
 #endif
-	free_string_option(buf->b_p_ff);
+	clear_string_option(&buf->b_p_ff);
 #ifdef FEAT_QUICKFIX
-	free_string_option(buf->b_p_bh);
-	free_string_option(buf->b_p_bt);
+	clear_string_option(&buf->b_p_bh);
+	clear_string_option(&buf->b_p_bt);
 #endif
     }
 #ifdef FEAT_FIND_ID
-    free_string_option(buf->b_p_inc);
+    clear_string_option(&buf->b_p_inc);
 # ifdef FEAT_EVAL
-    free_string_option(buf->b_p_inex);
+    clear_string_option(&buf->b_p_inex);
 # endif
 #endif
 #if defined(FEAT_CINDENT) && defined(FEAT_EVAL)
-    free_string_option(buf->b_p_inde);
-    free_string_option(buf->b_p_indk);
+    clear_string_option(&buf->b_p_inde);
+    clear_string_option(&buf->b_p_indk);
 #endif
 #ifdef FEAT_CRYPT
-    free_string_option(buf->b_p_key);
+    clear_string_option(&buf->b_p_key);
 #endif
-    free_string_option(buf->b_p_mps);
-    free_string_option(buf->b_p_fo);
-    free_string_option(buf->b_p_isk);
+    clear_string_option(&buf->b_p_mps);
+    clear_string_option(&buf->b_p_fo);
+    clear_string_option(&buf->b_p_isk);
 #ifdef FEAT_KEYMAP
-    free_string_option(buf->b_p_keymap);
+    clear_string_option(&buf->b_p_keymap);
 #endif
 #ifdef FEAT_COMMENTS
-    free_string_option(buf->b_p_com);
+    clear_string_option(&buf->b_p_com);
 #endif
-    free_string_option(buf->b_p_nf);
+#ifdef FEAT_FOLDING
+    clear_string_option(&buf->b_p_cms);
+#endif
+    clear_string_option(&buf->b_p_nf);
 #ifdef FEAT_SYN_HL
-    free_string_option(buf->b_p_syn);
+    clear_string_option(&buf->b_p_syn);
 #endif
 #ifdef FEAT_SEARCHPATH
-    free_string_option(buf->b_p_sua);
+    clear_string_option(&buf->b_p_sua);
 #endif
 #ifdef FEAT_AUTOCMD
-    free_string_option(buf->b_p_ft);
+    clear_string_option(&buf->b_p_ft);
 #endif
 #ifdef FEAT_OSFILETYPE
-    free_string_option(buf->b_p_oft);
+    clear_string_option(&buf->b_p_oft);
 #endif
 #ifdef FEAT_CINDENT
-    free_string_option(buf->b_p_cink);
-    free_string_option(buf->b_p_cino);
+    clear_string_option(&buf->b_p_cink);
+    clear_string_option(&buf->b_p_cino);
 #endif
 #if defined(FEAT_CINDENT) || defined(FEAT_SMARTINDENT)
-    free_string_option(buf->b_p_cinw);
+    clear_string_option(&buf->b_p_cinw);
 #endif
 #ifdef FEAT_INS_EXPAND
-    free_string_option(buf->b_p_cpt);
+    clear_string_option(&buf->b_p_cpt);
 #endif
 #ifdef FEAT_QUICKFIX
-    free_string_option(buf->b_p_gp);
-    free_string_option(buf->b_p_mp);
+    clear_string_option(&buf->b_p_gp);
+    clear_string_option(&buf->b_p_mp);
 #endif
-    free_string_option(buf->b_p_ep);
+    clear_string_option(&buf->b_p_ep);
+    clear_string_option(&buf->b_p_path);
+#ifdef FEAT_FIND_ID
+    clear_string_option(&buf->b_p_def);
+#endif
+#ifdef FEAT_INS_EXPAND
+    clear_string_option(&buf->b_p_dict);
+    clear_string_option(&buf->b_p_tsr);
+#endif
 }
 
 /*
@@ -1714,6 +1769,11 @@ get_winopts(buf)
 	copy_winopt(&wip->wi_opt, &curwin->w_onebuf_opt);
     else
 	copy_winopt(&curwin->w_allbuf_opt, &curwin->w_onebuf_opt);
+#ifdef FEAT_FOLDING
+    /* Set 'foldlevel' to 'foldlevelstart' if it's not negative. */
+    if (p_fdls >= 0)
+	curwin->w_p_fdl = p_fdls;
+#endif
 }
 
 /*
@@ -1760,8 +1820,8 @@ buflist_list(eap)
 
     for (buf = firstbuf; buf != NULL && !got_int; buf = buf->b_next)
     {
-	/* skip secret buffers, unless ! was used */
-	if (buf->b_p_bst && !eap->forceit)
+	/* skip unlisted buffers, unless ! was used */
+	if (!buf->b_p_bl && !eap->forceit)
 	    continue;
 	msg_putchar('\n');
 	if (buf_spname(buf) != NULL)
@@ -1771,7 +1831,7 @@ buflist_list(eap)
 
 	sprintf((char *)IObuff, "%3d%c%c%c%c \"",
 		buf->b_fnum,
-		buf->b_p_bst ? 's' : ' ',
+		buf->b_p_bl ? ' ' : 'u',
 		buf == curbuf ? '%' :
 			(curwin->w_alt_fnum == buf->b_fnum ? '#' : ' '),
 		buf->b_ml.ml_mfp == NULL ? '-' :
@@ -1943,8 +2003,8 @@ setaltfname(ffname, sfname, lnum)
 {
     buf_t	*buf;
 
-    /* Create a buffer.  'bufsecret' is set if it's a new buffer */
-    buf = buflist_new(ffname, sfname, lnum, FALSE, TRUE);
+    /* Create a buffer.  'buflisted' is not set if it's a new buffer */
+    buf = buflist_new(ffname, sfname, lnum, FALSE, FALSE);
     if (buf != NULL)
 	curwin->w_alt_fnum = buf->b_fnum;
 }
@@ -1971,19 +2031,19 @@ getaltfname(errmsg)
 
 /*
  * Add a file name to the buflist and return its number.
- * If it's a new buffer, 'bufsecret' will be set.
+ * If it's a new buffer, 'buflisted' will be set to "listed".
  *
  * used by qf_init(), main() and doarglist()
  */
     int
-buflist_add(fname, use_curbuf, secret)
+buflist_add(fname, use_curbuf, listed)
     char_u	*fname;
     int		use_curbuf;	/* re-use curbuf if it's empty and unnamed */
-    int		secret;		/* value for 'bufsecret' of new buffer */
+    int		listed;		/* value for 'buflisted' of new buffer */
 {
     buf_t	*buf;
 
-    buf = buflist_new(fname, NULL, (linenr_t)0, use_curbuf, secret);
+    buf = buflist_new(fname, NULL, (linenr_t)0, use_curbuf, listed);
     if (buf != NULL)
 	return buf->b_fnum;
     return 0;
@@ -2861,7 +2921,7 @@ do_buffer_all(eap)
     for (buf = firstbuf; buf != NULL && open_wins < count; buf = buf->b_next)
     {
 	/* Check if this buffer needs a window */
-	if ((!all && buf->b_ml.ml_mfp == NULL) || buf->b_p_bst)
+	if ((!all && buf->b_ml.ml_mfp == NULL) || !buf->b_p_bl)
 	    continue;
 
 	/* Check if this buffer already has a window */
@@ -3159,7 +3219,7 @@ read_viminfo_bufferlist(line, fp, writing)
 	if (sfname == NULL)
 	    sfname = NameBuff;
 
-	buf = buflist_new(NameBuff, sfname, (linenr_t)0, FALSE, FALSE);
+	buf = buflist_new(NameBuff, sfname, (linenr_t)0, FALSE, TRUE);
 	if (buf != NULL)	/* just in case... */
 	{
 	    buf->b_last_cursor.lnum = lnum;
@@ -3201,7 +3261,7 @@ write_viminfo_bufferlist(fp)
     for (buf = firstbuf; buf != NULL ; buf = buf->b_next)
     {
 	if (buf->b_fname == NULL
-		|| buf->b_p_bst
+		|| !buf->b_p_bl
 #ifdef FEAT_QUICKFIX
 		|| bt_quickfix(buf)
 #endif
@@ -3454,24 +3514,20 @@ buf_delete_all_signs()
 #endif /* FEAT_SIGNS */
 
 /*
- * Set 'bufsecret' for curbuf to "on" and trigger autocommands if it changed.
+ * Set 'buflisted' for curbuf to "on" and trigger autocommands if it changed.
  */
     void
-set_bufsecret(on)
+set_buflisted(on)
     int		on;
 {
-    if (on && !curbuf->b_p_bst)
+    if (on != curbuf->b_p_bl)
     {
-	curbuf->b_p_bst = TRUE;	/* set 'bufsecret' */
+	curbuf->b_p_bl = on;
 #ifdef FEAT_AUTOCMD
-	apply_autocmds(EVENT_BUFDELETE, NULL, NULL, FALSE, curbuf);
-#endif
-    }
-    else if (!on && curbuf->b_p_bst)
-    {
-	curbuf->b_p_bst = FALSE;	/* reset 'bufsecret' */
-#ifdef FEAT_AUTOCMD
-	apply_autocmds(EVENT_BUFCREATE, NULL, NULL, FALSE, curbuf);
+	if (on)
+	    apply_autocmds(EVENT_BUFADD, NULL, NULL, FALSE, curbuf);
+	else
+	    apply_autocmds(EVENT_BUFDELETE, NULL, NULL, FALSE, curbuf);
 #endif
     }
 }

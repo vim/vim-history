@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0t.  Last change: 2001 Jan 21
+*syntax.txt*    For Vim version 6.0u.  Last change: 2001 Feb 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -17,7 +17,7 @@ Vim supports syntax highlighting on all terminals.  But since most ordinary
 terminals have very limited highlighting possibilities, it works best in the
 GUI version, gvim.
 
-|usr_10.txt| of the User Manual explains syntax highlighting.
+|usr_07.txt| of the User Manual explains syntax highlighting.
 
 1.  Quick start			|:syn-qstart|
 2.  Syntax files		|:syn-files|
@@ -57,9 +57,11 @@ are in the "/usr/vim/vim50/syntax" directory, set $VIMRUNTIME to
 "/usr/vim/vim50".  You must do this in the shell, before starting Vim.
 
 
+							*:hi-normal*
 If you are running in the GUI, you can get white text on a black background
 with: >
    :highlight Normal guibg=Black guifg=White
+For a color terminal see |:hi-normal-cterm|.
 
 NOTE: The syntax files on MS-DOS and Windows have lines that end in <CR><NL>.
 The files for Unix end in <NL>.  This means you should use the right type of
@@ -722,6 +724,29 @@ in /usr/X11/lib/X11/, you should add the line >
 to your .vimrc file.
 
 
+GSP							*gsp.vim*
+
+The default coloring style for GSP pages is defined by |html.vim|, and
+the coloring for java code (within java tags or inline between backticks)
+is defined by |java.vim|.  The following HTML groups defined in |html.vim|
+are redefined to incorporate and highlight inline java code:
+
+    htmlString
+    htmlValue
+    htmlEndTag
+    htmlTag
+    htmlTagN
+
+Highlighting should look fine most of the places where you'd see inline
+java code, but in some special cases it may not.  To add another HTML
+group where you will have inline java code where it does not highlight
+correctly, just copy the line you want from |html.vim| and add gspJava
+to the contains clause.
+
+The backticks for inline java are highlighted according to the htmlError
+group to make them easier to see.
+
+
 HTML						*html.vim* *html-syntax*
 
 The coloring scheme for tags in the HTML file works as follows.
@@ -774,7 +799,7 @@ vimrc file: >
 HTML comments are rather special (see an HTML reference document for the
 details), and the syntax coloring scheme will highlight all errors.
 However, if you prefer to use the wrong style (starts with <!-- and
-ends with -->) you can define >
+ends with --!>) you can define >
 	:let html_wrong_comments=1
 
 JavaScript and Visual Basic embedded inside HTML documents are highlighted as
@@ -1095,6 +1120,10 @@ For highligthing the Baselib methods: >
 
   let php_baselib = 1
 
+Enable HTML syntax highligthing inside strings: >
+
+  let php_htmlInStrings = 1
+
 For syncing minlines is being set default to 100. If you
 prefer another value, please make use of something like: >
 
@@ -1107,6 +1136,14 @@ Using the old colorstyle: >
 Enable parent error highlighting: >
 
   let_parentError = 1
+
+Enable highlighting ASP-style short tags: >
+
+  let php_asp_tags = 1
+
+Disable short tags: >
+
+  let php_noShortTags = 1
 
 
 PPWIZARD (preprocessor for HTML and OS/2 INF files) *ppwiz.vim* *ppwiz-syntax* 
@@ -1905,6 +1942,22 @@ contains=ALLBUT,{group-name},..
 		are listed.  Example: >
   :syntax region Block start="{" end="}" ... contains=ALLBUT,Function
 
+contains=TOP
+		If the first item in the contains list is "TOP", then all
+		groups will be accepted that don't have the "contained"
+		argument.
+contains=TOP,{group-name},..
+		Like "TOP", but excluding the the groups that are listed.
+
+contains=CONTAINED
+		If the first item in the contains list is "CONTAINED", then
+		all groups will be accepted that have the "contained"
+		argument.
+contains=CONTAINED,{group-name},..
+		Like "CONTAINED", but excluding the the groups that are
+		listed.
+
+
 The {group-name} in the "contains" list can be a pattern.  All group names
 that match the pattern will be included (or excluded, if "ALLBUT" is used).
 The pattern cannot contain white space or a ','.  Example: >
@@ -1913,7 +1966,7 @@ The matching will be done at moment the syntax command is executed.  Groups
 that are defined later will not be matched.  Also, if the current syntax
 command defines a new group, it is not matched.  Be careful: When putting
 syntax commands in a file you can't rely on groups NOT being defined, because
-the file may have been sourced before, and "syn clear" doesn't remove the
+the file may have been sourced before, and ":syn clear" doesn't remove the
 group names.
 
 The contained groups will also match in the start and end patterns of a
@@ -2213,7 +2266,7 @@ two different ways:
   " In cpp.vim:
   :source <sfile>:p:h/c.vim
 
-	- If top-level syntax items in the included syntax file are to be
+<	- If top-level syntax items in the included syntax file are to be
 	  contained within a region in the including syntax, you can use the
 	  ":syntax include" command:
 
@@ -2419,9 +2472,9 @@ To show the syntax items for one syntax group:
 
     :sy[ntax] list {group-name}
 
-To list the syntax groups in one group list:
+To list the syntax groups in one cluster:
 
-    :sy[ntax] list @{grouplist-name}
+    :sy[ntax] list @{cluster-name}
 
 See above for other arguments for the ":syntax" command.
 
@@ -2600,9 +2653,12 @@ ctermbg={color-nr}					*highlight-ctermbg*
 	Note that for some color terminals these names may result in the wrong
 	colors!
 
+							*:hi-normal-cterm*
 	When setting the "ctermfg" or "ctermbg" colors for the Normal group,
 	these will become the colors used for the non-highlighted text.
-	When setting the "ctermbg" color for the Normal group, the
+	Example: >
+		:highlight Normal ctermfg=grey ctermbg=darkblue
+<	When setting the "ctermbg" color for the Normal group, the
 	'background' option will be adjusted automatically.  This causes the
 	highlight groups that depend on 'background' to change!  This means
 	you should set the colors for Normal first, before setting other
@@ -2698,6 +2754,8 @@ ErrorMsg	error messages on the command line
 FillColumn	column separating vertically split windows
 							*hl-Folded*
 Folded		line used for closed folds
+							*hl-FoldColumn*
+FoldColumn	'foldcolumn'
 							*hl-IncSearch*
 IncSearch	'incsearch' highlighting
 							*hl-ModeMsg*
@@ -2791,8 +2849,11 @@ command: >
   :syntax clear
 
 This command should be used when you want to switch off syntax highlighting,
-or when you want to switch to using another syntax.  It's a good idea to
-include this command at the beginning of a syntax file.
+or when you want to switch to using another syntax.  It's normally not needed
+in a syntax file itself, because syntax is cleared by the autocommands that
+load the syntax file.
+The command also deletes the "b:current_syntax" variable, since no syntax is
+loaded after this command.
 
 If you want to disable syntax highlighting for all buffers, you need to remove
 the autocommands that load the syntax files: >
@@ -2969,4 +3030,14 @@ bold attribute to get bright colors.  Add an ":if" like above when needed. >
        :set t_AF=^[[%?%p1%{8}%<%t3%p1%d%e%p1%{22}%+%d;1%;m
        :set t_AB=^[[%?%p1%{8}%<%t4%p1%d%e%p1%{32}%+%d;1%;m
 <
+ 						*TTpro-telnet*
+These settings should work for TTpro telnet.  Tera Term Pro is a freeware /
+open-source program for MS-Windows. >
+	set t_Co=16
+	set t_AB=^[[%?%p1%{8}%<%t%p1%{40}%+%e%p1%{32}%+5;%;%dm
+	set t_AF=^[[%?%p1%{8}%<%t%p1%{30}%+%e%p1%{22}%+1;%;%dm
+Also make sure TTpro's Setup / Window / Full Color is enabled, and make sure
+that Setup / Font / Enable Bold is NOT enabled.
+(info provided by John Love-Jensen <eljay@Adobe.COM>)
+
  vim:tw=78:sw=4

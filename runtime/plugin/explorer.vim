@@ -1139,7 +1139,7 @@ function! s:SortListing(msg)
 
     " Return to the position we started on
     0
-    if search('\m^'.escape(startline,s:escregexp),'W')
+    if search('\m^'.escape(startline,s:escregexp),'W') <= 0
       execute lin
     endif
     execute "normal!" col . "|"

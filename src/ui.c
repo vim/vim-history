@@ -377,7 +377,7 @@ clip_own_selection()
 		&& get_real_state() == VISUAL
 		&& clip_isautosel()
 		&& hl_attr(HLF_V) != hl_attr(HLF_VNC))
-	    redraw_curbuf_later(NOT_VALID);
+	    redraw_curbuf_later(INVERTED_ALL);
 #endif
     }
 }
@@ -402,7 +402,7 @@ clip_lose_selection()
 	    && clip_isautosel()
 	    && hl_attr(HLF_V) != hl_attr(HLF_VNC))
     {
-	update_curbuf(NOT_VALID);
+	update_curbuf(INVERTED_ALL);
 	setcursor();
 	cursor_on();
 	out_flush();

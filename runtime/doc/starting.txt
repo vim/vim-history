@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0t.  Last change: 2001 Jan 21
+*starting.txt*  For Vim version 6.0u.  Last change: 2001 Jan 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -287,11 +287,18 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		for crash recovery.
 
 							*-o*
--o[N]		Open N windows.  If [N] is not given, one window is opened
-		for every file given as argument.  If there is not enough
-		room, only the first few files get a window.  If there are
-		more windows than arguments, the last few windows will be
-		editing an empty file.  {not in Vi}
+-o[N]		Open N windows, split horizontally.  If [N] is not given,
+		one window is opened for every file given as argument.  If
+		there is not enough room, only the first few files get a
+		window.  If there are more windows than arguments, the last
+		few windows will be editing an empty file.
+		{not in Vi}
+
+							*-O*
+-O[N]		Open N windows, split vertically.  Otherwise it's like -o.
+		If both the -o and the -O option are given, the last one one
+		the command line determines how the windows will be split.
+		{not in Vi}
 
 							*-T*
 -T {terminal}	Set the terminal type to "terminal".  This influences the
@@ -1243,7 +1250,7 @@ The output of ":mksession" is like ":mkvimrc", but additional commands are
 added to the file.  Which ones depends on the 'sessionoptions' option.  The
 resulting file, when executed with a ":source" command:
 1. Restores global mappings and options, if 'sessionoptions' contains
-   "options".
+   "options".  Script-local mappings will not be written.
 2. Restores global variables that start with an uppercase letter and contain
    at least one lowercase letter, if 'sessionoptions' contains "globals".
 3. Unloads all currently loaded buffers.
@@ -1262,7 +1269,8 @@ resulting file, when executed with a ":source" command:
    If 'sessionoptions' contains "winsize" and no (help/blank) windows were
    left out, the window sizes are restored (relative to the screen size).
    Otherwise, the windows are just given sensible sizes.
-9. Restores the Views for all the windows, as with |:mkview|.
+9. Restores the Views for all the windows, as with |:mkview|.  But
+   'sessionoptions' is used instead of 'viewoptions'.
 10. If a file exists with the same name as the Session file, but ending in
    "x.vim" (for eXtra), executes that as well.  You can use *x.vim files to
    specify additional settings and actions associated with a given Session,
@@ -1293,9 +1301,11 @@ The output of ":mkview" contains these items:
 2. The file being edited in the window.  If there is no file, the window is
    made empty.
 3. Restore mappings, abbreviations and options local to the window if
-   'viewoptions' contains "options".  For the options it restores local to
-   the current buffer, options local to the window, and global values for
-   window-local options
+   'viewoptions' contains "options" or "localoptions".  For the options it
+   restores only values that local to the current buffer and values local to
+   the window.
+   When storing the view as part of a session and "options" is in
+   'sessionoptions', global values for local options will be stored too.
 4. Restore folds when using manual folding and 'viewoptions' contains
    "folds".  Restore manually opened and closed folds.
 5. The scroll position and the cursor position in the file.  Doesn't work very
@@ -1333,8 +1343,8 @@ found.
 You might want to clean up your 'viewdir' directory now and then.
 
 To automatically save and restore views for *.c files: >
-	au BufUnload,BufHidden *.c mkview
-	au BufReadAfter *.c silent loadview
+	au BufWinLeave *.c mkview
+	au BufWinEnter *.c silent loadview
 
 ==============================================================================
 10. The viminfo file				*viminfo* *viminfo-file*

@@ -1486,6 +1486,23 @@ msg_puts_attr(s, attr)
 	    if (msg_no_more && lines_left == 0)
 		break;
 	    screen_del_lines(0, 0, 1, (int)Rows, TRUE);	/* always works */
+
+	    if (!can_clear((char_u *)" "))
+	    {
+		/* Scrolling up doesn't result in the right background.  Set
+		 * the background here.  It's not efficient, but avoids that
+		 * we have to do it all over the code. */
+		screen_fill((int)Rows - 1, (int)Rows, 0,
+						   (int)Columns, ' ', ' ', 0);
+
+		/* Also clear the last char of the last but one line if it was
+		 * not cleared before to avoid a scroll-up. */
+		if (ScreenAttrs[LineOffset[Rows - 2] + Columns - 1]
+							       == (sattr_t)-1)
+		    screen_fill((int)Rows - 2, (int)Rows - 1,
+				 (int)Columns - 1, (int)Columns, ' ', ' ', 0);
+	    }
+
 	    msg_row = Rows - 2;
 	    if (msg_col >= Columns)	/* can happen after screen resize */
 		msg_col = Columns - 1;

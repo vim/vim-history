@@ -458,8 +458,6 @@ gui_mac_scroll_action (ControlHandle theControl, short partCode)
     long	value;
     int		page;
     int		dragging = FALSE;
-/*    win_t	*wp;
-    int		sb_num; */
 
     sb = gui_find_scrollbar((long) GetControlReference (theControl));
 
@@ -508,6 +506,9 @@ gui_mac_scroll_action (ControlHandle theControl, short partCode)
 
 /*  if (sb_info->wp != NULL)
     {
+	win_t	*wp;
+	int	sb_num;
+
 	sb_num = 0;
 	for (wp = firstwin; wp != sb->wp && wp != NULL; wp = W_NEXT(wp))
 	sb_num++;
@@ -1960,7 +1961,7 @@ gui_mch_insert_lines(row, num_lines)
 clip_mch_request_selection()
 {
 
-    Handle textOfClip;
+    Handle	textOfClip;
     long	scrapOffset;
     long	scrapSize;
     int		type;

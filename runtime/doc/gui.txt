@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0t.  Last change: 2001 Jan 04
+*gui.txt*       For Vim version 6.0u.  Last change: 2001 Feb 02
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -656,9 +656,9 @@ be used to complete the name of the menu item.
 
 							*:em*  *:emenu*
 :[range]em[eenu] {menu}		Execute {menu} from the command line.
-				The default is to exectue the normal mode menu.
-				If a range is specified, it execute the visual
-				mode menu.
+				The default is to execute the Normal mode
+				menu.  If a range is specified, it executes
+				the Visual mode menu.
 				If used from <c-o>, it executes the
 				insert-mode menu Eg: >
 	:emenu File.Exit

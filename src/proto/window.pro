@@ -3,7 +3,7 @@ void do_window __ARGS((int nchar, long Prenum));
 int win_split __ARGS((int size, int flags));
 int win_valid __ARGS((win_t *win));
 int win_count __ARGS((void));
-int make_windows __ARGS((int count));
+int make_windows __ARGS((int count, int vertical));
 void win_move_after __ARGS((win_t *win1, win_t *win2));
 void win_equal __ARGS((win_t *next_curwin, int dir));
 void close_windows __ARGS((buf_t *buf));

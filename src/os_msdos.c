@@ -1493,8 +1493,7 @@ change_drive(int drive)
 /*
  * Get absolute file name into buffer 'buf' of length 'len' bytes.
  * All slashes are replaced with backslashes, to avoid trouble when comparing
- * file names.
- * When 'shellslash' set do it the other way around.
+ * file names.  When 'shellslash' set do it the other way around.
  *
  * return FAIL for failure, OK otherwise
  */
@@ -1508,6 +1507,8 @@ mch_FullName(
     if (!force && mch_isFullName(fname))	/* allready expanded */
     {
 	STRNCPY(buf, fname, len);
+	buf[len - 1] = NUL;
+	slash_adjust(buf);
 	return OK;
     }
 
@@ -1576,15 +1577,18 @@ mch_FullName(
 	    retval = FAIL;
 	    *buf = NUL;
 	}
+	if (p != NULL)
+	    mch_chdir(olddir);
 	/*
 	 * Concatenate the file name to the path.
 	 */
-	l = STRLEN(buf);
-	if (l && buf[l - 1] != '/' && buf[l - 1] != '\\')
-	    strcat(buf, pseps);
-	if (p)
-	    mch_chdir(olddir);
-	strcat(buf, fname);
+	if (*fname != NUL)
+	{
+	    l = STRLEN(buf);
+	    if (l > 0 && buf[l - 1] != '/' && buf[l - 1] != '\\')
+		strcat(buf, pseps);
+	    strcat(buf, fname);
+	}
 	return retval;
     }
 #endif
@@ -1665,8 +1669,8 @@ vim_chmod(char_u *name)
 
 /*
  * get file permissions for 'name'
- * -1 : error
- * else FA_attributes defined in dos.h
+ * Returns -1 for error.
+ * Returns FA_attributes defined in dos.h
  */
     long
 mch_getperm(char_u *name)
@@ -2043,15 +2047,6 @@ mch_breakcheck(void)
     }
 }
 
-static int _cdecl pstrcmp();  /* BCC does not like the types */
-
-    static int _cdecl
-pstrcmp(a, b)
-    char_u **a, **b;
-{
-    return (pathcmp((char *)*a, (char *)*b));
-}
-
     int
 mch_has_wildcard(char_u *s)
 {
@@ -2060,148 +2055,6 @@ mch_has_wildcard(char_u *s)
 #else
     return (vim_strpbrk(s, (char_u *)"?*$~") != NULL);
 #endif
-}
-
-    static void
-namelowcpy(
-    char_u *d,
-    char_u *s)
-{
-#ifdef DJGPP
-    if (USE_LONG_FNAME)	    /* don't lower case on Windows 95/NT systems */
-	while (*s)
-	    *d++ = *s++;
-    else
-#endif
-	while (*s)
-	    *d++ = TO_LOWER(*s++);
-    *d = NUL;
-}
-
-/*
- * Recursive function to expand one path section with wildcards.
- * This only expands '?' and '*'.
- * Return the number of matches found.
- * "path" has backslashes before chars that are not to be expanded, starting
- * at "wildc".
- */
-    static int
-dos_expandpath(
-    garray_t	*gap,
-    char_u	*path,
-    char_u	*wildc,
-    int		flags)		/* EW_* flags */
-{
-    char_u		*buf;
-    char_u		*p, *s, *e;
-    int			start_len, c;
-    struct ffblk	fb;
-    int			matches;
-    int			len;
-    int			dot_at_start;
-
-    start_len = gap->ga_len;
-    /* make room for file name */
-    buf = alloc(STRLEN(path) + BASENAMELEN + 5);
-    if (buf == NULL)
-	return 0;
-
-    /*
-     * Find the first part in the path name that contains a wildcard.
-     * Copy it into buf, including the preceding characters.
-     */
-    p = buf;
-    s = buf;
-    e = NULL;
-    while (*path)
-    {
-	if (path >= wildc && rem_backslash(path))	/* remove a backslash */
-	    ++path;
-	else if (*path == '\\' || *path == ':' || *path == '/')
-	{
-	    if (e != NULL)
-		break;
-	    else
-		s = p + 1;
-	}
-	else if (*path == '*' || *path == '?')
-	    e = p;
-#ifdef FEAT_MBYTE
-	if (has_mbyte)
-	{
-	    len = mb_ptr2len_check(path);
-	    STRNCPY(p, path, len);
-	    p += len;
-	    path += len;
-	}
-	else
-#endif
-	    *p++ = *path++;
-    }
-    e = p;
-    *e = NUL;
-    /* now we have one wildcard component between s and e */
-
-    /* if the file name ends in "*" and does not contain a ".", add ".*" */
-    if (e[-1] == '*' && vim_strchr(s, '.') == NULL)
-    {
-	*e++ = '.';
-	*e++ = '*';
-	*e = NUL;
-    }
-    dot_at_start = (*s == '.');
-
-    /* If we are expanding wildcards we try both files and directories */
-    if ((c = findfirst((char *)buf, &fb,
-			    (*path || (flags & EW_DIR)) ? FA_DIREC : 0)) != 0)
-    {
-	/* not found */
-	vim_free(buf);
-	return 0; /* unexpanded or empty */
-    }
-
-    while (!c)
-    {
-	namelowcpy((char *)s, fb.ff_name);
-	/* ignore names starting with "." unless asked for */
-	if (*s != '.' || dot_at_start)
-	{
-	    len = STRLEN(buf);
-	    STRCPY(buf + len, path);
-	    if (mch_has_wildcard(path))
-	    {
-		/* need to expand another component of the path */
-		/* remove backslashes for the remaining components only */
-		(void)dos_expandpath(gap, buf, buf + len + 1, flags);
-	    }
-	    else
-	    {
-		/* no more wildcards, check if there is a match */
-		/* remove backslashes for the remaining components only */
-		if (*path)
-		    backslash_halve(buf + len + 1);
-		if (mch_getperm(buf) >= 0)	/* add existing file */
-		    addfile(gap, buf, flags);
-	    }
-	}
-	c = findnext(&fb);
-    }
-    vim_free(buf);
-
-    matches = gap->ga_len - start_len;
-    if (matches)
-	qsort(((char_u **)gap->ga_data) + start_len, (size_t)matches,
-						   sizeof(char_u *), pstrcmp);
-    return matches;
-}
-
-    int
-mch_expandpath(
-    garray_t	*gap,
-    char_u	*path,
-    int		flags)		/* EW_* flags */
-{
-    return dos_expandpath(gap, path, path, flags);
 }
 
 /*

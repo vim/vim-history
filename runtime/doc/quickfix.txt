@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0t.  Last change: 2001 Jan 09
+*quickfix.txt*  For Vim version 6.0u.  Last change: 2001 Jan 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -426,6 +426,27 @@ additionally to the default. >
 	\%C%*\\s%tarning:%m,
 	\%C%m
 <
+						*errorformat-javac*
+This 'errorformat' has been reported to work well for javac, which outputs a
+line with "^" to indicate the column of the error: >
+  :set efm=%A%f:%l:\ %m,%-Z%p^,%-C%.%#
+<
+						*errorformat-ant*
+For ant (http://jakarta.apache.org/) the above errorformat has to be modified
+to honour the leading [javac] in front of each javac output line: >
+  :set efm=%A\ %#[javac]\ %f:%l:\ %m,%-Z\ %#[javac]\ %p^,%-C%.%#
+
+The 'errorformat' can also be configured to handle ant together with either
+javac or jikes.  If you're using jikes, you should tell ant to use jikes' +E
+command line switch which forces jikes to generate one-line error messages.
+This is what the second line (of a build.xml file) below does: >
+  <property name = "build.compiler"       value = "jikes"/>
+  <property name = "build.compiler.emacs" value = "true"/>
+
+The 'errorformat' which handles ant with both javac and jikes is: >
+  :set efm=\ %#[javac]\ %#%f:%l:%c:%*\\d:%*\\d:\ %t%[%^:]%#:%m,
+           \%A\ %#[javac]\ %f:%l:\ %m,%-Z\ %#[javac]\ %p^,%-C%.%#
+<
 						*errorformat-LaTeX*
 The following is an example how an 'errorformat' string can be specified
 for the (La)TeX type setting system which displays error messages over
@@ -511,16 +532,7 @@ However, to properly parse such a complex file, an external filter should
 be used.  See the description further above how to make such a filter known
 by Vim.
 
-						*errorformat-javac*
-This 'errorformat' has been reported to work well for javac, which outputs a
-line with "^" to indicate the column of the error: >
-  :set efm=%A%f:%l:\ %m,%-Z%p^,%-C%.%#
-<
-						*errorformat-ant*
-For ant (http://jakarta.apache.org/) the above errorformat has to be modified
-to honour the leading [javac] in front of each javac output line: >
-  :set efm=%A\ %#[javac]\ %f:%l:\ %m,%-Z\ %#[javac]\ %p^,%-C%.%#
-<
+
 						*quickfix-error-lists*
 So far has been assumed that there is only one list of errors.  Actually the
 ten last used lists are remembered.  When starting a new list, the previous

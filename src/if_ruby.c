@@ -186,14 +186,14 @@ static VALUE vim_message(VALUE self, VALUE str)
 
 static VALUE vim_set_option(VALUE self, VALUE str)
 {
-    do_set((char_u *) STR2CSTR(str), FALSE);
+    do_set((char_u *)STR2CSTR(str), 0);
     update_screen(NOT_VALID);
     return Qnil;
 }
 
 static VALUE vim_command(VALUE self, VALUE str)
 {
-    do_cmdline((char_u *) STR2CSTR(str), NULL, NULL, DOCMD_VERBOSE + DOCMD_NOWAIT);
+    do_cmdline_cmd((char_u *)STR2CSTR(str));
     return Qnil;
 }
 

@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 6.0t.  Last change: 2000 Dec 18
+*help.txt*	For Vim version 6.0u.  Last change: 2001 Feb 04
 
 			VIM - main help file
 									 k
@@ -167,9 +167,6 @@ Standard plugins	*standard-plugin-list* ~
 |pi_expl.txt|	File explorer
 
 LOCAL ADDITIONS:
-|example.txt|	Example for a locally added help file
-|test.txt|	Testing the help command now
-|typecorr.txt|	Plugin for correcting typing mistakes
 
 ------------------------------------------------------------------------------
 *bars*		Bars example

@@ -166,6 +166,7 @@ gui_x11_create_widgets()
      */
     gui.border_offset = gui.border_width;
 
+#if 0 /* not needed? */
     XtInitializeWidgetClass(formWidgetClass);
     XtInitializeWidgetClass(boxWidgetClass);
     XtInitializeWidgetClass(coreWidgetClass);
@@ -174,6 +175,7 @@ gui_x11_create_widgets()
 #endif
     XtInitializeWidgetClass(simpleMenuWidgetClass);
     XtInitializeWidgetClass(vim_scrollbarWidgetClass);
+#endif
 
     /* The form containing all the other widgets */
     vimForm = XtVaCreateManagedWidget("vimForm",

@@ -1826,8 +1826,8 @@ conv_to_pvim()
      * Following lines contains Farsi encoded character.
      */
 
-    do_cmdline((char_u *)"%s/\202\231/\232/g", NULL, NULL, DOCMD_NOWAIT | DOCMD_VERBOSE);
-    do_cmdline((char_u *)"%s/\201\231/\370\334/g", NULL, NULL, DOCMD_NOWAIT | DOCMD_VERBOSE);
+    do_cmdline_cmd((char_u *)"%s/\202\231/\232/g");
+    do_cmdline_cmd((char_u *)"%s/\201\231/\370\334/g");
 
     /* Assume the screen has been messed up: clear it and redraw. */
     redraw_later(CLEAR);
@@ -1847,7 +1847,7 @@ conv_to_pstd()
      * Following line contains Farsi encoded character.
      */
 
-    do_cmdline((char_u *)"%s/\232/\202\231/g", NULL, NULL, DOCMD_NOWAIT | DOCMD_VERBOSE);
+    do_cmdline_cmd((char_u *)"%s/\232/\202\231/g");
 
     for (lnum = 1; lnum <= curbuf->b_ml.ml_line_count; ++lnum)
     {
@@ -2279,13 +2279,13 @@ farsi_fkey(cap)
 	    if (curwin->w_farsi & W_R_L)
 	    {
 		p_fkmap = 0;
-		do_cmdline((char_u *)"set norl", NULL, NULL, DOCMD_NOWAIT);
+		do_cmdline_cmd((char_u *)"set norl");
 		MSG("");
 	    }
 	    else
 	    {
 		p_fkmap = 1;
-		do_cmdline((char_u *)"set rl", NULL, NULL, DOCMD_NOWAIT);
+		do_cmdline_cmd((char_u *)"set rl");
 		MSG("");
 	    }
 

@@ -413,9 +413,9 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
     if (newfile)
     {
 	if (eap != NULL && eap->force_ff != 0)
-	    set_fileformat(get_fileformat_force(curbuf, eap), TRUE);
+	    set_fileformat(get_fileformat_force(curbuf, eap), OPT_LOCAL);
 	else if (*p_ffs != NUL)
-	    set_fileformat(default_fileformat(), TRUE);
+	    set_fileformat(default_fileformat(), OPT_LOCAL);
     }
 
     /*
@@ -1370,7 +1370,7 @@ rewind_retry:
 
 		/* if editing a new file: may set p_tx and p_ff */
 		if (newfile)
-		    set_fileformat(fileformat, TRUE);
+		    set_fileformat(fileformat, OPT_LOCAL);
 	    }
 	}
 
@@ -1451,7 +1451,7 @@ rewind_retry:
 				{
 				    fileformat = EOL_UNIX;
 				    if (newfile)
-					set_fileformat(EOL_UNIX, TRUE);
+					set_fileformat(EOL_UNIX, OPT_LOCAL);
 				    file_rewind = TRUE;
 				    keep_fileformat = TRUE;
 				    goto retry;
@@ -1521,7 +1521,7 @@ failed:
 #ifdef FEAT_MBYTE
     /* If editing a new file: set 'fcc' for the current buffer. */
     if (newfile)
-	set_string_option_direct((char_u *)"fcc", -1, fcc, OPT_FREE);
+	set_string_option_direct((char_u *)"fcc", -1, fcc, OPT_FREE|OPT_LOCAL);
     if (fcc_next != NULL)
 	vim_free(fcc);
 # ifdef USE_ICONV
@@ -1920,7 +1920,7 @@ check_for_cryptkey(cryptkey, ptr, sizep, filesizep, newfile)
 	    {
 		/* When newfile is TRUE, store the typed key
 		 * in the 'key' option and don't free it. */
-		cryptkey = get_crypt_key(newfile);
+		cryptkey = get_crypt_key(newfile, FALSE);
 		/* check if empty key entered */
 		if (cryptkey != NULL && *cryptkey == NUL)
 		{
@@ -1945,7 +1945,7 @@ check_for_cryptkey(cryptkey, ptr, sizep, filesizep, newfile)
      * encryption, clear the 'key' option, except when
      * starting up (called with -x argument) */
     else if (newfile && *curbuf->b_p_key && !starting)
-	set_option_value((char_u *)"key", 0L, (char_u *)"", TRUE);
+	set_option_value((char_u *)"key", 0L, (char_u *)"", OPT_LOCAL);
 
     return cryptkey;
 }
@@ -2108,7 +2108,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     {
 #ifdef FEAT_AUTOCMD
 	/* It's like the unnamed buffer is deleted.... */
-	if (!curbuf->b_p_bst)
+	if (curbuf->b_p_bl)
 	    apply_autocmds(EVENT_BUFDELETE, NULL, NULL, FALSE, curbuf);
 	apply_autocmds(EVENT_BUFWIPEOUT, NULL, NULL, FALSE, curbuf);
 #endif
@@ -2116,9 +2116,9 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    curbuf->b_flags |= BF_NOTEDITED;
 #ifdef FEAT_AUTOCMD
 	/* ....and a new named one is created */
-	apply_autocmds(EVENT_BUFSECRET, NULL, NULL, FALSE, curbuf);
-	if (!curbuf->b_p_bst)
-	    apply_autocmds(EVENT_BUFCREATE, NULL, NULL, FALSE, curbuf);
+	apply_autocmds(EVENT_BUFNEW, NULL, NULL, FALSE, curbuf);
+	if (curbuf->b_p_bl)
+	    apply_autocmds(EVENT_BUFADD, NULL, NULL, FALSE, curbuf);
 #endif
     }
 
@@ -2229,7 +2229,15 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    --no_wait_return;
 	    msg_scroll = msg_save;
 	    if (did_cmd)
+	    {
+		if (!exiting && overwriting)
+		{
+		    /* Assume the buffer was written, update the timestamp. */
+		    ml_timestamp(buf);
+		    buf->b_flags &= ~BF_WRITE_MASK;
+		}
 		return OK;
+	    }
 	    EMSG(_("Autocommands deleted or unloaded buffer to be written"));
 	    return FAIL;
 	}
@@ -5062,26 +5070,27 @@ static struct event_name
     EVENT_T	event;	/* event number */
 } event_names[] =
 {
-    {"BufSecret",	EVENT_BUFSECRET},
-    {"BufCreate",	EVENT_BUFCREATE},
+    {"BufAdd",		EVENT_BUFADD},
+    {"BufCreate",	EVENT_BUFADD},
     {"BufDelete",	EVENT_BUFDELETE},
-    {"BufWipeout",	EVENT_BUFWIPEOUT},
     {"BufEnter",	EVENT_BUFENTER},
     {"BufFilePost",	EVENT_BUFFILEPOST},
     {"BufFilePre",	EVENT_BUFFILEPRE},
     {"BufHidden",	EVENT_BUFHIDDEN},
     {"BufLeave",	EVENT_BUFLEAVE},
+    {"BufNew",		EVENT_BUFNEW},
     {"BufNewFile",	EVENT_BUFNEWFILE},
-    {"BufReadAfter",	EVENT_BUFREADAFTER},
-    {"BufReadPost",	EVENT_BUFREADPOST},
-    {"BufReadPre",	EVENT_BUFREADPRE},
     {"BufRead",		EVENT_BUFREADPOST},
     {"BufReadCmd",	EVENT_BUFREADCMD},
+    {"BufReadPost",	EVENT_BUFREADPOST},
+    {"BufReadPre",	EVENT_BUFREADPRE},
     {"BufUnload",	EVENT_BUFUNLOAD},
+    {"BufWinEnter",	EVENT_BUFWINENTER},
     {"BufWinLeave",	EVENT_BUFWINLEAVE},
+    {"BufWipeout",	EVENT_BUFWIPEOUT},
+    {"BufWrite",	EVENT_BUFWRITEPRE},
     {"BufWritePost",	EVENT_BUFWRITEPOST},
     {"BufWritePre",	EVENT_BUFWRITEPRE},
-    {"BufWrite",	EVENT_BUFWRITEPRE},
     {"BufWriteCmd",	EVENT_BUFWRITECMD},
     {"CmdwinEnter",	EVENT_CMDWINENTER},
     {"CmdwinLeave",	EVENT_CMDWINLEAVE},
@@ -7049,7 +7058,7 @@ alt_charset(name)
 	{"ucs-4bl", "ucs-4"},
 	{"ucs-4lb", "ucs-4"},
 	{"unicode", "ucs-2"},
-#ifdef WIN32
+#if defined(WIN32) || defined(WIN32UNIX)
 	{"japan", "cp932"},
 #else
 	{"japan", "euc-jp"},

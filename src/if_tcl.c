@@ -1141,7 +1141,7 @@ tcldoexcommand(interp, objc, objv, objn)
     arg = Tcl_GetStringFromObj(objv[objn], NULL);
     if (flag)
 	++emsg_off;
-    do_cmdline((char_u *)arg, NULL, NULL, DOCMD_NOWAIT|DOCMD_VERBOSE);
+    do_cmdline_cmd((char_u *)arg);
     if (flag)
 	--emsg_off;
     err = vimerror(interp);
@@ -1229,7 +1229,7 @@ tclsetoption(interp, objc, objv, objn)
 	    sval = (char_u *)Tcl_GetStringFromObj(objv[objn], NULL);
 	if (err == TCL_OK)
 	{
-	    set_option_value(option, lval, sval, TRUE);
+	    set_option_value(option, lval, sval, OPT_LOCAL);
 	    err = vimerror(interp);
 	}
     }

@@ -10,7 +10,7 @@
 " postscr_display		- include display PS operators
 " postscr_ghostscript		- include GS extensions
 " postscr_fonts			- highlight standard font names (a lot for PS 3)
-" postscr_encoding		- highlight encoding names (there are a lot)
+" postscr_encodings		- highlight encoding names (there are a lot)
 " postscr_andornot_binary	- highlight and, or, and not as binary operators (not logical)
 "
 

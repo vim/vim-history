@@ -1,7 +1,9 @@
 " Vim syntax file
 " Language:	Yacc
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	December 15, 1999
+" Last Change:	February 1, 2001
+" Option:
+"   yacc_uses_cpp : if this variable exists, then C++ is loaded rather than C
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")
@@ -10,9 +12,16 @@ endif
 
 " Read the C syntax to start with
 if version >= 600
-  runtime! syntax/c.vim
+  if exists("yacc_uses_cpp")
+    runtime! syntax/cpp.vim
+  else
+    runtime! syntax/c.vim
+  endif
+elseif exists("yacc_uses_cpp")
+  so <sfile>:p:h/cpp.vim
 else
-  so <sfile>:p:h/c.vim
+   so <sfile>:p:h/c.vim
+  endif
 endif
 
 " Clusters

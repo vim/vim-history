@@ -21,6 +21,9 @@
 #define lt(a, b) (((a).lnum != (b).lnum) \
 		   ? ((a).lnum < (b).lnum) : ((a).col < (b).col))
 
+#define ltp(a, b) (((a)->lnum != (b)->lnum) \
+		   ? ((a)->lnum < (b)->lnum) : ((a)->col < (b)->col))
+
 #ifdef FEAT_VIRTUALEDIT
 # define lt_coladd(a, aa, b, bb) (((a).lnum != (b).lnum) \
 		   ? (a).lnum < (b).lnum \
@@ -63,6 +66,9 @@
 #  define TO_LOWER	tolower
 # endif
 #endif
+
+/* some versions of isalnum() can't handle negative or big numbers */
+#define IS_ALNUM(x)	((x) > 0 && (x) < 256 && isalnum(x))
 
 /* macro version of chartab().
  * Only works with values 0-255!

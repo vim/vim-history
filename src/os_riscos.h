@@ -21,10 +21,6 @@
 #define USE_TERM_CONSOLE
 #define HAVE_AVAIL_MEM
 
-#ifdef FEAT_NORMAL
-# define VIM_BACKTICK		/* internal backtick expansion */
-#endif
-
 /* 10, but 4 char margin for extension. */
 #ifndef BASENAMELEN
 # define BASENAMELEN 6

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Perl
 " Maintainer:	Nick Hibma <n_hibma@webweaving.org>
-" Last Change:	2001 Jan 15
+" Last Change:	2001 Feb 04
 " Location:	http://www.etla.net/~n_hibma/vim/syntax/perl.vim
 "
 " Please download most recent version first before mailing
@@ -23,6 +23,7 @@
 " unlet perl_no_sync_on_sub
 " unlet perl_no_sync_on_global_var
 " let perl_sync_dist = 100
+" unlet perl_fold
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")
@@ -181,29 +182,48 @@ syn region perlMatch		matchgroup=perlMatchStartEnd start=+[m!]/+ end=+/[cgimosx]
 syn region perlMatch		matchgroup=perlMatchStartEnd start=+[m!]#+ end=+#[cgimosx]*+ contains=@perlInterpMatch
 syn region perlMatch		matchgroup=perlMatchStartEnd start=+[m!]\[+ end=+\][cgimosx]*+ contains=@perlInterpMatch
 
+" A special case for m!!x which allows for comments and extra whitespace in the pattern
+syn region perlMatch		matchgroup=perlMatchStartEnd start=+[m!]!+ end=+![cgimosx]*+ contains=@perlInterpSlash,perlComment
+
 " Below some hacks to recognise the // variant. This is virtually impossible to catch in all
 " cases as the / is used in so many other ways, but these should be the most obvious ones.
 syn region perlMatch		matchgroup=perlMatchStartEnd start=+^split /+lc=5 start=+[^$@%]\<split /+lc=6 start=+^if /+lc=2 start=+[^$@%]if /+lc=3 start=+[!=]\~\s*/+lc=2 start=+[(~]/+lc=1 start=+\.\./+lc=2 start=+\s/[^= \t0-9$@%]+lc=1,me=e-1,rs=e-1 start=+^/+ skip=+\\/+ end=+/[cgimosx]*+ contains=@perlInterpSlash
 
 " Substitutions
 " caters for s///, s### and s[][]
-" perlMatch is the first part, perlSubstitution is the substitution part
-syn region perlMatch		matchgroup=perlMatchStartEnd start=+\<\(tr\|s\)/+ end=+/+me=e-1 contains=@perlInterpSlash nextgroup=perlSubstitution
-syn region perlMatch		matchgroup=perlMatchStartEnd start=+\<\(tr\|s\)#+ end=+#+me=e-1 contains=@perlInterpMatch nextgroup=perlSubstitution
-syn region perlMatch		matchgroup=perlMatchStartEnd start=+\<\(tr\|s\)\[+ end=+\]+ contains=@perlInterpMatch nextgroup=perlSubstitution
-syn region perlSubstitution	matchgroup=perlMatchStartEnd start=+/+ end=+/[ecgimosx]*+ contained contains=@perlInterpDQ
-syn region perlSubstitution	matchgroup=perlMatchStartEnd start=+#+ end=+#[ecgimosx]*+ contained contains=@perlInterDQ
-syn region perlSubstitution	matchgroup=perlMatchStartEnd start=+\[+ end=+\][ecgimosx]*+ contained contains=@perlInterpDQ
+" perlMatch is the first part, perlSubstitution* is the substitution part
+syn region perlMatch		matchgroup=perlMatchStartEnd start=+\<s'+ end=+'+me=e-1 contains=@perlInterpSQ nextgroup=perlSubstitutionSQ
+syn region perlMatch		matchgroup=perlMatchStartEnd start=+\<s"+ end=+"+me=e-1 contains=@perlInterpMatch nextgroup=perlSubstitutionDQ
+syn region perlMatch		matchgroup=perlMatchStartEnd start=+\<s/+ end=+/+me=e-1 contains=@perlInterpSlash nextgroup=perlSubstitutionSlash
+syn region perlMatch		matchgroup=perlMatchStartEnd start=+\<s#+ end=+#+me=e-1 contains=@perlInterpMatch nextgroup=perlSubstitutionHash
+syn region perlMatch		matchgroup=perlMatchStartEnd start=+\<s\[+ end=+\]+ contains=@perlInterpMatch nextgroup=perlSubstitutionBracket skipwhite skipempty skipnl
+syn region perlMatch		matchgroup=perlMatchStartEnd start=+\<s{+ end=+}+ contains=@perlInterpMatch nextgroup=perlSubstitutionCurly skipwhite skipempty skipnl
+syn region perlSubstitutionSQ		matchgroup=perlMatchStartEnd start=+'+ end=+'[ecgimosx]*+ contained contains=@perlInterpSQ
+syn region perlSubstitutionDQ		matchgroup=perlMatchStartEnd start=+"+ end=+"[ecgimosx]*+ contained contains=@perlInterpDQ
+syn region perlSubstitutionSlash	matchgroup=perlMatchStartEnd start=+/+ end=+/[ecgimosx]*+ contained contains=@perlInterpDQ
+syn region perlSubstitutionHash		matchgroup=perlMatchStartEnd start=+#+ end=+#[ecgimosx]*+ contained contains=@perlInterpDQ
+syn region perlSubstitutionBracket	matchgroup=perlMatchStartEnd start=+\[+ end=+\][ecgimosx]*+ contained contains=@perlInterpDQ
+syn region perlSubstitutionCurly	matchgroup=perlMatchStartEnd start=+{+ end=+}[ecgimosx]*+ contained contains=@perlInterpDQ
+
+" A special case for m!!x which allows for comments and extra whitespace in the pattern
+syn region perlMatch		matchgroup=perlMatchStartEnd start=+\<s!+ end=+!+me=e-1 contains=@perlInterpSlash,perlComment nextgroup=perlSubstitutionPling
+syn region perlSubstitutionPling	matchgroup=perlMatchStartEnd start=+!+ end=+![ecgimosx]*+ contained contains=@perlInterpDQ
 
 " Substitutions
 " caters for tr///, tr### and tr[][]
-" perlMatch is the first part, perlTranslation is the second, translator part.
-syn region perlMatch		matchgroup=perlMatchStartEnd start=+\<\(tr\|y\)/+ end=+/+me=e-1 contains=@perlInterpSQ nextgroup=perlTranslation
-syn region perlMatch		matchgroup=perlMatchStartEnd start=+\<\(tr\|y\)#+ end=+#+me=e-1 contains=@perlInterpSQ nextgroup=perlTranslation
-syn region perlMatch		matchgroup=perlMatchStartEnd start=+\<\(tr\|y\)\[+ end=+\]+ contains=@perlInterpSQ nextgroup=perlTranslation
-syn region perlTranslation	matchgroup=perlMatchStartEnd start=+/+ end=+/[cds]*+ contained
-syn region perlTranslation	matchgroup=perlMatchStartEnd start=+#+ end=+#[cds]*+ contained
-syn region perlTranslation	matchgroup=perlMatchStartEnd start=+\[+ end=+\][cds]*+ contained
+" perlMatch is the first part, perlTranslation* is the second, translator part.
+syn region perlMatch		matchgroup=perlMatchStartEnd start=+\<\(tr\|y\)'+ end=+'+me=e-1 contains=@perlInterpSQ nextgroup=perlTranslationSQ
+syn region perlMatch		matchgroup=perlMatchStartEnd start=+\<\(tr\|y\)"+ end=+"+me=e-1 contains=@perlInterpSQ nextgroup=perlTranslationDQ
+syn region perlMatch		matchgroup=perlMatchStartEnd start=+\<\(tr\|y\)/+ end=+/+me=e-1 contains=@perlInterpSQ nextgroup=perlTranslationSlash
+syn region perlMatch		matchgroup=perlMatchStartEnd start=+\<\(tr\|y\)#+ end=+#+me=e-1 contains=@perlInterpSQ nextgroup=perlTranslationHash
+syn region perlMatch		matchgroup=perlMatchStartEnd start=+\<\(tr\|y\)\[+ end=+\]+ contains=@perlInterpSQ nextgroup=perlTranslationBracket skipwhite skipempty skipnl
+syn region perlMatch		matchgroup=perlMatchStartEnd start=+\<\(tr\|y\){+ end=+}+ contains=@perlInterpSQ nextgroup=perlTranslationCurly skipwhite skipempty skipnl
+syn region perlTranslationSQ		matchgroup=perlMatchStartEnd start=+'+ end=+'[cds]*+ contained
+syn region perlTranslationDQ		matchgroup=perlMatchStartEnd start=+"+ end=+"[cds]*+ contained
+syn region perlTranslationSlash		matchgroup=perlMatchStartEnd start=+/+ end=+/[cds]*+ contained
+syn region perlTranslationHash		matchgroup=perlMatchStartEnd start=+#+ end=+#[cds]*+ contained
+syn region perlTranslationBracket	matchgroup=perlMatchStartEnd start=+\[+ end=+\][cds]*+ contained
+syn region perlTranslationCurly		matchgroup=perlMatchStartEnd start=+{+ end=+}[cds]*+ contained
 
 
 " The => operator forces a bareword to the left of it to be interpreted as
@@ -289,95 +309,115 @@ syn match  perlFormatField	"@$" contained
 syntax region perlDATA		start="^__\(DATA\|END\)__$" skip="." end="." contains=perlPOD
 
 
+
+"
+" Folding
+
+if version >= 600 && exists("perl_fold")
+  syn region myFold start="\s*sub\>" end="^}" transparent fold
+  syn sync fromstart
+  set foldmethod=syntax
+endif
+
+
 " The default highlighting.
 hi def link perlSharpBang		PreProc
-hi def link perlControl			PreProc
-hi def link perlInclude			Include
-hi def link perlSpecial			Special
-hi def link perlString			String
+hi def link perlControl		PreProc
+hi def link perlInclude		Include
+hi def link perlSpecial		Special
+hi def link perlString		String
 hi def link perlCharacter		Character
-hi def link perlNumber			Number
-hi def link perlType			Type
-hi def link perlIdentifier		Identifier
-hi def link perlLabel			Label
+hi def link perlNumber		Number
+hi def link perlType		Type
+hi def link perlIdentifier	Identifier
+hi def link perlLabel		Label
 hi def link perlStatement		Statement
-hi def link perlConditional		Conditional
-hi def link perlRepeat			Repeat
+hi def link perlConditional	Conditional
+hi def link perlRepeat		Repeat
 hi def link perlOperator		Operator
 hi def link perlFunction		Function
 hi def link perlFunctionPrototype	perlFunction
-hi def link perlComment			Comment
-hi def link perlTodo			Todo
-hi def link perlList			perlStatement
-hi def link perlMisc			perlStatement
+hi def link perlComment		Comment
+hi def link perlTodo		Todo
+hi def link perlList		perlStatement
+hi def link perlMisc		perlStatement
 hi def link perlVarPlain		perlIdentifier
-hi def link perlFiledescRead		perlIdentifier
+hi def link perlFiledescRead	perlIdentifier
 hi def link perlFiledescStatement	perlIdentifier
-hi def link perlVarSimpleMember		perlIdentifier
+hi def link perlVarSimpleMember	perlIdentifier
 hi def link perlVarSimpleMemberName	perlString
-hi def link perlVarNotInMatches		perlIdentifier
+hi def link perlVarNotInMatches	perlIdentifier
 hi def link perlVarSlash		perlIdentifier
-hi def link perlQQ			perlString
-hi def link perlUntilEOFDQ		perlString
-hi def link perlUntilEOFSQ		perlString
-hi def link perlUntilEmptyDQ		perlString
-hi def link perlUntilEmptySQ		perlString
+hi def link perlQQ		perlString
+hi def link perlUntilEOFDQ	perlString
+hi def link perlUntilEOFSQ	perlString
+hi def link perlUntilEmptyDQ	perlString
+hi def link perlUntilEmptySQ	perlString
 hi def link perlUntilEOF		perlString		
 hi def link perlStringUnexpanded	perlString
-hi def link perlSubstitution		perlString
-hi def link perlTranslation		perlString
-hi def link perlMatch			perlString
-hi def link perlMatchStartEnd		perlStatement
+hi def link perlSubstitutionSQ		perlString
+hi def link perlSubstitutionDQ		perlString
+hi def link perlSubstitutionSlash		perlString
+hi def link perlSubstitutionHash		perlString
+hi def link perlSubstitutionBracket	perlString
+hi def link perlSubstitutionCurly 	perlString
+hi def link perlSubstitutionPling		perlString
+hi def link perlTranslationSlash		perlString
+hi def link perlTranslationHash		perlString
+hi def link perlTranslationBracket	perlString
+hi def link perlTranslationCurly		perlString
+hi def link perlMatch		perlString
+hi def link perlMatchStartEnd	perlStatement
 if exists("perl_string_as_statement")
   hi def link perlStringStartEnd	perlStatement
 else
   hi def link perlStringStartEnd	perlString
 endif
-hi def link perlFormatName		perlIdentifier
-hi def link perlFormatField		perlString
-hi def link perlPackageDecl		perlType
-hi def link perlStorageClass		perlType
-hi def link perlPackageRef		perlType
+hi def link perlFormatName	perlIdentifier
+hi def link perlFormatField	perlString
+hi def link perlPackageDecl	perlType
+hi def link perlStorageClass	perlType
+hi def link perlPackageRef	perlType
 hi def link perlStatementPackage	perlStatement
-hi def link perlStatementSub		perlStatement
+hi def link perlStatementSub	perlStatement
 hi def link perlStatementStorage	perlStatement
 hi def link perlStatementControl	perlStatement
-hi def link perlStatementScalar		perlStatement
-hi def link perlStatementRegexp		perlStatement
+hi def link perlStatementScalar	perlStatement
+hi def link perlStatementRegexp	perlStatement
 hi def link perlStatementNumeric	perlStatement
-hi def link perlStatementList		perlStatement
-hi def link perlStatementHash		perlStatement
-hi def link perlStatementIOfunc		perlStatement
+hi def link perlStatementList	perlStatement
+hi def link perlStatementHash	perlStatement
+hi def link perlStatementIOfunc	perlStatement
 hi def link perlStatementFiledesc	perlStatement
-hi def link perlStatementVector		perlStatement
-hi def link perlStatementFiles		perlStatement
-hi def link perlStatementFlow		perlStatement
-hi def link perlStatementScope		perlStatement
+hi def link perlStatementVector	perlStatement
+hi def link perlStatementFiles	perlStatement
+hi def link perlStatementFlow	perlStatement
+hi def link perlStatementScope	perlStatement
 hi def link perlStatementInclude	perlStatement
-hi def link perlStatementProc		perlStatement
-hi def link perlStatementSocket		perlStatement
-hi def link perlStatementIPC		perlStatement
+hi def link perlStatementProc	perlStatement
+hi def link perlStatementSocket	perlStatement
+hi def link perlStatementIPC	perlStatement
 hi def link perlStatementNetwork	perlStatement
-hi def link perlStatementPword		perlStatement
-hi def link perlStatementTime		perlStatement
-hi def link perlStatementMisc		perlStatement
-hi def link perlFunctionName		perlIdentifier
-hi def link perlFunctionPRef		perlType
-hi def link perlPOD			perlComment
-hi def link perlShellCommand		perlString
-hi def link perlSpecialAscii		perlSpecial
-hi def link perlSpecialDollar		perlSpecial
-hi def link perlSpecialString		perlSpecial
-hi def link perlSpecialStringU		perlSpecial
-hi def link perlSpecialMatch		perlSpecial
-hi def link perlSpecialBEOM		perlSpecial
-hi def link perlDATA			perlComment
+hi def link perlStatementPword	perlStatement
+hi def link perlStatementTime	perlStatement
+hi def link perlStatementMisc	perlStatement
+hi def link perlFunctionName	perlIdentifier
+hi def link perlFunctionPRef	perlType
+hi def link perlPOD		perlComment
+hi def link perlShellCommand	perlString
+hi def link perlSpecialAscii	perlSpecial
+hi def link perlSpecialDollar	perlSpecial
+hi def link perlSpecialString	perlSpecial
+hi def link perlSpecialStringU	perlSpecial
+hi def link perlSpecialMatch	perlSpecial
+hi def link perlSpecialBEOM	perlSpecial
+hi def link perlDATA		perlComment
 
 hi def link perlBrackets		Error
 
 " Possible errors
-hi def link perlNotEmptyLine		Error
-hi def link perlElseIfError		Error
+hi def link perlNotEmptyLine	Error
+hi def link perlElseIfError	Error
 
 " Syncing to speed up processing
 "

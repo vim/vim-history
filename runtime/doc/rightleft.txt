@@ -1,4 +1,4 @@
-*rightleft.txt* For Vim version 6.0t.  Last change: 2000 Jul 07
+*rightleft.txt* For Vim version 6.0u.  Last change: 2001 Feb 02
 
 
 		  VIM REFERENCE MANUAL    by Avner Lottem
@@ -78,6 +78,9 @@ Change details
    +  'hkmap' ('hk') sets keyboard mapping to Hebrew, in insert/replace modes.
    +  'aleph' ('al'), numeric, holds the decimal code of Aleph, for keyboard
       mapping.
+   +  'delcombine' ('deco'), boolean, if editing UTF-8 encoded Hebrew, allows
+      one to remove the niqud by pressing 'x' on a character (with associated
+      niqud).
 
 +  Encoding:
    +  Under Unix, ISO 8859-8 encoding (Hebrew letters codes: 224-250).

@@ -152,6 +152,7 @@ static void win_update __ARGS((win_t *wp));
 static void win_draw_end __ARGS((win_t *wp, int c, int row));
 #ifdef FEAT_FOLDING
 static void fold_line __ARGS((win_t *wp, long fold_count, int level, linenr_t lnum, int row));
+static void move_screenline __ARGS((win_t *wp, int n));
 static void fill_foldcolumn __ARGS((char_u *p, win_t *wp, int closed));
 #endif
 static int win_line __ARGS((win_t *, linenr_t, int, int));
@@ -182,6 +183,7 @@ static void screen_char_n __ARGS((unsigned off, int n, int row, int col));
 #endif
 static void screenclear2 __ARGS((void));
 static void lineclear __ARGS((unsigned off));
+static void lineinvalid __ARGS((unsigned off));
 static void check_cursor_moved __ARGS((win_t *wp));
 static void curs_rows __ARGS((win_t *wp, int do_botline));
 static void validate_virtcol_win __ARGS((win_t *wp));
@@ -338,12 +340,12 @@ update_curbuf(type)
  */
     void
 update_screen(type)
-    int		    type;
+    int		type;
 {
-    win_t	    *wp;
-    static int	    did_intro = FALSE;
+    win_t	*wp;
+    static int	did_intro = FALSE;
 #if defined(FEAT_SEARCH_EXTRA) || defined(FEAT_CLIPBOARD)
-    int		    did_one;
+    int		did_one;
 #endif
 
     if (!screen_valid(TRUE))
@@ -356,13 +358,14 @@ update_screen(type)
 	must_redraw = 0;
     }
 
+    /* Need to update w_lines[]. */
     if (curwin->w_lines_valid == 0 && type < NOT_VALID)
 	type = NOT_VALID;
 
     if (!redrawing())
     {
 	redraw_later(type);		/* remember type for next time */
-	if (type > INVERTED)
+	if (type > INVERTED_ALL)
 	    curwin->w_lines_valid = 0;	/* don't use w_lines[].wl_size now */
 	return;
     }
@@ -462,25 +465,25 @@ update_screen(type)
      * Correct stored syntax highlighting info for changes in each displayed
      * buffer.  Each buffer must only be done once.
      */
-#ifndef FEAT_WINDOWS
+# ifndef FEAT_WINDOWS
     wp = curwin;
-#else
+# else
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
-#endif
+# endif
 	if (wp->w_buffer->b_mod_set)
 	{
-#ifdef FEAT_WINDOWS
+# ifdef FEAT_WINDOWS
 	    win_t	*wwp;
 
 	    /* Check if we already did this buffer. */
 	    for (wwp = firstwin; wwp != wp; wwp = wwp->w_next)
 		if (wwp->w_buffer == wp->w_buffer)
 		    break;
-#endif
+# endif
 	    if (
-#ifdef FEAT_WINDOWS
+# ifdef FEAT_WINDOWS
 		    wwp == wp &&
-#endif
+# endif
 		    syntax_present(wp->w_buffer))
 		syn_stack_apply_changes(wp->w_buffer);
 	}
@@ -680,6 +683,7 @@ updateWindow(wp)
  * NOT_VALID	redraw the whole window
  * REDRAW_TOP	redraw the top w_upd_rows window lines, otherwise like VALID
  * INVERTED	redraw the changed part of the Visual area
+ * INVERTED_ALL	redraw the whole Visual area
  * VALID	1. scroll up/down to adjust for a changed w_topline
  *		2. update lines at the top when scrolled down
  *		3. redraw changed text:
@@ -894,7 +898,7 @@ win_update(wp)
      *    w_lines[] that needs updating.
      * Also don't do this when the window is part of a vertical split.
      */
-    if ((type == VALID || type == INVERTED)
+    if ((type == VALID || type == INVERTED || type == INVERTED_ALL)
 #ifdef FEAT_VERTSPLIT
 	    && W_WIDTH(wp) == Columns
 #endif
@@ -1061,17 +1065,20 @@ win_update(wp)
 #ifdef FEAT_VISUAL
     /* check if we are updating or removing the inverted part */
     if ((VIsual_active && buf == curwin->w_buffer)
-	    || (wp->w_old_cursor_lnum && type != NOT_VALID))
+	    || (wp->w_old_cursor_lnum != 0 && type != NOT_VALID))
     {
 	linenr_t    from, to;
 
 	if (VIsual_active)
 	{
-	    if (VIsual_active && VIsual_mode != wp->w_old_visual_mode)
+	    if (VIsual_active
+		    && (VIsual_mode != wp->w_old_visual_mode
+			|| type == INVERTED_ALL))
 	    {
 		/*
 		 * If the type of Visual selection changed, redraw the whole
-		 * selection.
+		 * selection.  Also when the ownership of the X selection is
+		 * gained or lost.
 		 */
 		if (curwin->w_cursor.lnum < VIsual.lnum)
 		{
@@ -1130,41 +1137,23 @@ win_update(wp)
 	     */
 	    if (VIsual_mode == Ctrl_V)
 	    {
-		colnr_t	from1, from2, to1, to2;
+		colnr_t	fromc, toc;
 
-		if (lt(VIsual, curwin->w_cursor))
-		{
-		    getvvcol(wp, &VIsual, &from1, NULL, &to1);
-		    getvvcol(wp, &curwin->w_cursor, &from2, NULL, &to2);
-		}
-		else
-		{
-		    getvvcol(wp, &curwin->w_cursor, &from1, NULL, &to1);
-		    getvvcol(wp, &VIsual, &from2, NULL, &to2);
-		}
-		if (from2 < from1)
-		    from1 = from2;
-		if (to2 > to1)
-		{
-		    if (*p_sel == 'e' && from2 - 1 >= to1)
-			to1 = from2 - 1;
-		    else
-			to1 = to2;
-		}
-		++to1;
+		getvcols(wp, &VIsual, &curwin->w_cursor, &fromc, &toc);
+		++toc;
 		if (curwin->w_curswant == MAXCOL)
-		    to1 = MAXCOL;
+		    toc = MAXCOL;
 
-		if (from1 != wp->w_old_cursor_fcol
-			|| to1 != wp->w_old_cursor_lcol)
+		if (fromc != wp->w_old_cursor_fcol
+			|| toc != wp->w_old_cursor_lcol)
 		{
 		    if (from > VIsual.lnum)
 			from = VIsual.lnum;
 		    if (to < VIsual.lnum)
 			to = VIsual.lnum;
 		}
-		wp->w_old_cursor_fcol = from1;
-		wp->w_old_cursor_lcol = to1;
+		wp->w_old_cursor_fcol = fromc;
+		wp->w_old_cursor_lcol = toc;
 	    }
 	}
 	else
@@ -1292,6 +1281,8 @@ win_update(wp)
 	/*
 	 * Update a line when it is in an area that needs updating, when it
 	 * has changes or w_lines[idx] is invalid.
+	 * bot_start may be halfway a wrapped line after using
+	 * win_del_lines(), check if the current line includes it.
 	 * When syntax folding is being used, the saved syntax states will
 	 * already have been updated, we can't see where the syntax state is
 	 * the same again, just update until the end of the window.
@@ -1301,8 +1292,8 @@ win_update(wp)
 #ifdef FEAT_SEARCH_EXTRA
 		|| top_to_mod
 #endif
-		|| (row >= bot_start)
 		|| idx >= wp->w_lines_valid
+		|| (row + wp->w_lines[idx].wl_size > bot_start)
 		|| (mod_top != 0
 		    && (lnum == mod_top
 			|| (lnum >= mod_top
@@ -1365,7 +1356,7 @@ win_update(wp)
 #endif
 		}
 
-		if (i == wp->w_lines_valid)
+		if (i >= wp->w_lines_valid)
 		{
 		    /* When buffer lines have been inserted/deleted, and
 		     * insering/deleting window lines is not possible, need to
@@ -1806,13 +1797,15 @@ fold_line(wp, fold_count, level, lnum, row)
     enum hlf_value attr;
     pos_t	*top, *bot;
     linenr_t	lnume = lnum + fold_count - 1;
-    int		from;
     int		len;
     char_u	*p;
     char_u	*text = NULL;
     int		fdc = wp->w_p_fdc;
+    win_t	*save_curwin;
 
-    /* Compose the folded-line string with 'foldtext', if set. */
+    /*
+     * Compose the folded-line string with 'foldtext', if set.
+     */
     if (*wp->w_p_fdt != NUL)
     {
 	/* Set "v:foldstart" and "v:foldend". */
@@ -1827,11 +1820,16 @@ fold_line(wp, fold_count, level, lnum, row)
 	vim_memset(dashes, '-', (size_t)level);
 	dashes[level] = NUL;
 	set_vim_var_string(VV_FOLDDASHES, dashes, -1);
+	save_curwin = curwin;
+	curwin = wp;
+	curbuf = wp->w_buffer;
 
 	++emsg_off;
 	text = eval_to_string_safe(wp->w_p_fdt, NULL);
 	--emsg_off;
 
+	curwin = save_curwin;
+	curbuf = curwin->w_buffer;
 	set_vim_var_string(VV_FOLDDASHES, NULL, -1);
 
 	if (text != NULL)
@@ -1863,79 +1861,43 @@ fold_line(wp, fold_count, level, lnum, row)
 	sprintf((char *)buf, "+--- %ld lines folded ", fold_count);
 	text = buf;
     }
+
+    /* Build the fold line:
+     * 1. move the text to current_ScreenLine.
+     * 2. set highlighting for the Visual area an other text.
+     * 3. Insert the 'number' column
+     * 4. Insert the 'foldcolumn'
+     * 5. Insert the cmdwin_type for the command-line window
+     */
+    /*
+     * 1. move the text to current_ScreenLine.  Fill up with "fill_fold".
+     */
     len = STRLEN(text);
-    len += fdc;
-    p = current_ScreenLine;
-#ifdef FEAT_CMDWIN
-    if (cmdwin_type != 0 && wp == curwin)
-    {
-	++len;
-	*p++ = cmdwin_type;
-    }
-#endif
     if (len > W_WIDTH(wp))
 	len = W_WIDTH(wp);
-    if (fdc > 0)
-    {
-	if (len < fdc)
-	{
-	    fdc = len;
-#ifdef FEAT_CMDWIN
-	    if (cmdwin_type != 0 && wp == curwin && fdc > 0)
-		--fdc;
-#endif
-	}
-	fill_foldcolumn(p, wp, TRUE);
-	{
-#ifdef FEAT_RIGHTLEFT
-	    if (wp->w_p_rl)		/* reverse fold column */
-	    {
-		char_u *p1 = current_ScreenLine;
-		char_u *p2 = current_ScreenLine + W_WIDTH(wp) - 1;
-		int	    t;
-
-		/* cmdline window is never right-left, ignore cmdwin_type */
-		while (p1 < current_ScreenLine + fdc)
-		{
-		    t = *p1;
-		    *p1 = *p2;
-		    *p2 = t;
-		    ++p1;
-		    --p2;
-		}
-		STRNCPY(current_ScreenLine, text, len - fdc);
-	    }
-	    else
-#endif
-		STRNCPY(p + fdc, text, len - fdc);
-	}
-    }
-    else
-	STRNCPY(current_ScreenLine, text, len);
-    while (len < W_WIDTH(wp)
-#ifdef FEAT_RIGHTLEFT
-	    - (wp->w_p_rl ? fdc : 0)
-#endif
-	  )
+    STRNCPY(current_ScreenLine, text, len);
+    while (len < W_WIDTH(wp))
 	current_ScreenLine[len++] = fill_fold;
     if (text != buf)
 	vim_free(text);
 
     /*
+     * 2. set highlighting for the Visual area an other text.
      * If all folded lines are in the Visual area, highlight the line.
      */
     attr = HLF_FL;
 #ifdef FEAT_VISUAL
     if (VIsual_active && wp->w_buffer == curwin->w_buffer)
     {
-	/* Visual is after curwin->w_cursor */
 	if (ltoreq(curwin->w_cursor, VIsual))
 	{
+	    /* Visual is after curwin->w_cursor */
 	    top = &curwin->w_cursor;
 	    bot = &VIsual;
 	}
-	else	/* Visual is before curwin->w_cursor */
+	else
 	{
+	    /* Visual is before curwin->w_cursor */
 	    top = &VIsual;
 	    bot = &curwin->w_cursor;
 	}
@@ -1954,40 +1916,97 @@ fold_line(wp, fold_count, level, lnum, row)
 
     if (attr == HLF_V && VIsual_mode == Ctrl_V)
     {
+	int		from;
+
+	/* Visual block mode: highlight the chars part of the block */
 	from = 0;
-	if (wp->w_old_cursor_fcol + fdc < (colnr_t)W_WIDTH(wp))
+	if (wp->w_old_cursor_fcol < (colnr_t)W_WIDTH(wp))
 	{
-#ifdef FEAT_RIGHTLEFT
-# define RL_MEMSET(p, v, l) vim_memset(current_ScreenAttrs + (wp->w_p_rl ? (W_WIDTH(wp) - (p) - (l)) : (p)), v, l)
-#else
-# define RL_MEMSET(p, v, l) vim_memset(current_ScreenAttrs + p, v, l)
-#endif
-	    RL_MEMSET(fdc, hl_attr(HLF_FL), (size_t)wp->w_old_cursor_fcol);
-	    if (wp->w_old_cursor_lcol + fdc < (colnr_t)W_WIDTH(wp))
+# ifdef FEAT_RIGHTLEFT
+#  define RL_MEMSET(p, v, l) vim_memset(current_ScreenAttrs + (wp->w_p_rl ? (W_WIDTH(wp) - (p) - (l)) : (p)), v, l)
+# else
+#  define RL_MEMSET(p, v, l) vim_memset(current_ScreenAttrs + p, v, l)
+# endif
+	    RL_MEMSET(0, hl_attr(HLF_FL), (size_t)wp->w_old_cursor_fcol);
+	    if (wp->w_old_cursor_lcol < (colnr_t)W_WIDTH(wp))
 		from = wp->w_old_cursor_lcol;
 	    else
-		from = W_WIDTH(wp) - fdc;
-	    RL_MEMSET(wp->w_old_cursor_fcol + fdc,
+		from = W_WIDTH(wp);
+	    RL_MEMSET(wp->w_old_cursor_fcol,
 		      hl_attr(HLF_V), (size_t)(from - wp->w_old_cursor_fcol));
 	}
-	if (from < W_WIDTH(wp) - fdc)
-	    RL_MEMSET(from + fdc,
-			 hl_attr(HLF_FL), (size_t)(W_WIDTH(wp) - from - fdc));
+	if (from < W_WIDTH(wp))
+	    RL_MEMSET(from, hl_attr(HLF_FL), (size_t)(W_WIDTH(wp) - from));
     }
     else
 #endif
 	vim_memset(current_ScreenAttrs, hl_attr(attr), (size_t)(W_WIDTH(wp)));
 
-    if (fdc > 0)
+    /*
+     * 3. Add the 'number' column
+     */
+    if (wp->w_p_nu)
     {
+	sprintf((char *)buf, "%7ld ", (long)lnum);
+	if (W_WIDTH(wp) > 8)
+	    len = 8;
+	else
+	    len = W_WIDTH(wp);
+	move_screenline(wp, 8);
 #ifdef FEAT_RIGHTLEFT
 	if (wp->w_p_rl)
-	    vim_memset(current_ScreenAttrs + W_WIDTH(wp) - fdc,
-						hl_attr(HLF_FC), (size_t)fdc);
+	{
+	    mch_memmove(current_ScreenLine + W_WIDTH(wp) - 8, buf, (size_t)len);
+	    vim_memset(current_ScreenAttrs + W_WIDTH(wp) - 8, hl_attr(HLF_N),
+								 (size_t)len);
+	}
 	else
 #endif
-	    vim_memset(current_ScreenAttrs, hl_attr(HLF_FC), (size_t)fdc);
+	{
+	    mch_memmove(current_ScreenLine, buf, (size_t)len);
+	    vim_memset(current_ScreenAttrs, hl_attr(HLF_N), (size_t)len);
+	}
     }
+
+    /*
+     * 4. Add the 'foldcolumn'
+     */
+    if (fdc > 0)
+    {
+	if (fdc > W_WIDTH(wp))
+	    fdc = W_WIDTH(wp);
+	fill_foldcolumn(buf, wp, TRUE);
+	move_screenline(wp, fdc);
+#ifdef FEAT_RIGHTLEFT
+	if (wp->w_p_rl)
+	{
+	    int	t;
+
+	    for (t = 0; t < fdc; ++t)	/* reverse fold column */
+		current_ScreenLine[W_WIDTH(wp) - t - 1] = buf[t];
+	    vim_memset(current_ScreenAttrs + W_WIDTH(wp) - fdc,
+						hl_attr(HLF_FC), (size_t)fdc);
+	}
+	else
+#endif
+	{
+	    mch_memmove(current_ScreenLine, buf, (size_t)fdc);
+	    vim_memset(current_ScreenAttrs, hl_attr(HLF_FC), (size_t)fdc);
+	}
+    }
+
+    /*
+     * 5. Add the cmdwin_type for the command-line window
+     * Ignores 'rightleft', this window is never right-left.
+     */
+#ifdef FEAT_CMDWIN
+    if (cmdwin_type != 0 && wp == curwin)
+    {
+	move_screenline(wp, 1);
+	*current_ScreenLine = cmdwin_type;
+	*current_ScreenAttrs = hl_attr(HLF_AT);
+    }
+#endif
 
     SCREEN_LINE(row + W_WINROW(wp), W_WINCOL(wp), (int)W_WIDTH(wp),
 						     (int)W_WIDTH(wp), FALSE);
@@ -2004,6 +2023,36 @@ fold_line(wp, fold_count, level, lnum, row)
 	curwin->w_cline_height = 1;
 	curwin->w_cline_folded = TRUE;
 	curwin->w_valid |= (VALID_CHEIGHT|VALID_CROW);
+    }
+}
+
+/*
+ * Move the current_ScreenLine and current_ScreenAttrs "n" characters to the
+ * right (left when 'rightleft' set) for window "wp".
+ */
+    static void
+move_screenline(wp, n)
+    win_t	*wp;
+    int		n;
+{
+    if (W_WIDTH(wp) > n)
+    {
+#ifdef FEAT_RIGHTLEFT
+	if (wp->w_p_rl)
+	{
+	    mch_memmove(current_ScreenLine, current_ScreenLine + n,
+						     (size_t)W_WIDTH(wp) - n);
+	    mch_memmove(current_ScreenAttrs, current_ScreenAttrs + n,
+						     (size_t)W_WIDTH(wp) - n);
+	}
+	else
+#endif
+	{
+	    mch_memmove(current_ScreenLine + n, current_ScreenLine,
+						     (size_t)W_WIDTH(wp) - n);
+	    mch_memmove(current_ScreenAttrs + n, current_ScreenAttrs,
+						     (size_t)W_WIDTH(wp) - n);
+	}
     }
 }
 
@@ -5316,9 +5365,9 @@ screen_stop_highlight()
 	    if (t_colors > 1)
 	    {
 		/* set Normal cterm colors */
-		if (cterm_normal_fg_color)
+		if (cterm_normal_fg_color != 0)
 		    term_fg_color(cterm_normal_fg_color - 1);
-		if (cterm_normal_bg_color)
+		if (cterm_normal_bg_color != 0)
 		    term_bg_color(cterm_normal_bg_color - 1);
 		if (cterm_normal_fg_bold)
 		    out_str(T_MD);
@@ -5356,14 +5405,18 @@ screen_char(off, row, col)
 {
     int		attr;
 
-    /*
-     * Outputting the last character on the screen may scrollup the screen.
-     * Don't to it!  At the same time check for illegal values, just in case.
-     */
-    if (row >= screen_Rows
-	    || col >= screen_Columns
-	    || (row == screen_Rows - 1 && col == screen_Columns - 1))
+    /* Check for illegal values, just in case (could happen just after
+     * resizing). */
+    if (row >= screen_Rows || col >= screen_Columns)
 	return;
+
+    /* Outputting the last character on the screen may scrollup the screen.
+     * Don't to it!  Mark the character invalid (update it when scrolled up) */
+    if (row == screen_Rows - 1 && col == screen_Columns - 1)
+    {
+	ScreenAttrs[off] = (sattr_t)-1;
+	return;
+    }
 
     /*
      * Stop highlighting first, so it's easier to move the cursor.
@@ -5470,7 +5523,7 @@ screen_fill(start_row, end_row, start_col, end_col, c1, c2, attr)
 	did_delete = FALSE;
 	if (c2 == ' '
 		&& end_col == Columns
-		&& *T_CE != NUL
+		&& can_clear(T_CE)
 		&& (attr == 0
 		    || (norm_term
 			&& attr <= HL_ALL
@@ -5929,24 +5982,35 @@ screenclear2()
 	return;
 
     screen_stop_highlight();	/* don't want highlighting here */
-    out_str(T_CL);		/* clear the display */
 
     /* blank out ScreenLines */
     for (i = 0; i < Rows; ++i)
 	lineclear(LineOffset[i]);
 
-    screen_cleared = TRUE;	    /* can use contents of ScreenLines now */
+    if (can_clear(T_CL))
+    {
+	out_str(T_CL);		/* clear the display */
+	clear_cmdline = FALSE;
+    }
+    else
+    {
+	/* can't clear the screen, mark all chars with invalid attributes */
+	for (i = 0; i < Rows; ++i)
+	    lineinvalid(LineOffset[i]);
+	clear_cmdline = TRUE;
+    }
+
+    screen_cleared = TRUE;	/* can use contents of ScreenLines now */
 
     win_rest_invalid(firstwin);
-    clear_cmdline = FALSE;
     redraw_cmdline = TRUE;
-    if (must_redraw == CLEAR)	    /* no need to clear again */
+    if (must_redraw == CLEAR)	/* no need to clear again */
 	must_redraw = NOT_VALID;
     compute_cmdrow();
-    msg_row = cmdline_row;	    /* put cursor on last line for messages */
+    msg_row = cmdline_row;	/* put cursor on last line for messages */
     msg_col = 0;
-    screen_start();		    /* don't know where cursor is now */
-    msg_scrolled = 0;		    /* can't scroll back */
+    screen_start();		/* don't know where cursor is now */
+    msg_scrolled = 0;		/* can't scroll back */
     msg_didany = FALSE;
     msg_didout = FALSE;
 }
@@ -5956,14 +6020,37 @@ screenclear2()
  */
     static void
 lineclear(off)
-    unsigned  off;
+    unsigned	off;
 {
     (void)vim_memset(ScreenLines + off, ' ', (size_t)Columns * sizeof(schar_t));
 #ifdef FEAT_MBYTE
     if (cc_utf8)
-	(void)vim_memset(ScreenLinesUC + off, 0, (size_t)Columns * sizeof(u8char_t));
+	(void)vim_memset(ScreenLinesUC + off, 0,
+					  (size_t)Columns * sizeof(u8char_t));
 #endif
     (void)vim_memset(ScreenAttrs + off, 0, (size_t)Columns * sizeof(sattr_t));
+}
+
+    static void
+lineinvalid(off)
+    unsigned	off;
+{
+    (void)vim_memset(ScreenAttrs + off, -1, (size_t)Columns * sizeof(sattr_t));
+}
+
+/*
+ * Return TRUE if clearing with term string "p" would work.
+ * It can't work when the string is empty or it won't set the right background.
+ */
+    int
+can_clear(p)
+    char_u	*p;
+{
+    return (*p != NUL && (t_colors <= 1
+#ifdef FEAT_GUI
+		|| gui.in_use
+#endif
+		|| cterm_normal_bg_color == 0 || *T_UT != NUL));
 }
 
 /*
@@ -8581,6 +8668,7 @@ screen_ins_lines(off, row, line_count, end)
     int		cursor_row;
     int		type;
     int		result_empty;
+    int		can_ce = can_clear(T_CE);
 
     /*
      * FAIL if
@@ -8615,19 +8703,19 @@ screen_ins_lines(off, row, line_count, end)
      * exists.
      */
     result_empty = (row + line_count >= end);
-    if (*T_CD != NUL && result_empty)
+    if (can_clear(T_CD) && result_empty)
 	type = USE_T_CD;
     else if (*T_CAL != NUL && (line_count > 1 || *T_AL == NUL))
 	type = USE_T_CAL;
-    else if (*T_CDL != NUL && result_empty && (line_count > 1 || *T_CE == NUL))
+    else if (*T_CDL != NUL && result_empty && (line_count > 1 || !can_ce))
 	type = USE_T_CDL;
     else if (*T_AL != NUL)
 	type = USE_T_AL;
-    else if (*T_CE != NUL && result_empty)
+    else if (can_ce && result_empty)
 	type = USE_T_CE;
     else if (*T_DL != NUL && result_empty)
 	type = USE_T_DL;
-    else if (*T_SR != NUL && row == 0 && (*T_DA == NUL || *T_CE))
+    else if (*T_SR != NUL && row == 0 && (*T_DA == NUL || can_ce))
 	type = USE_T_SR;
     else
 	return FAIL;
@@ -8669,7 +8757,10 @@ screen_ins_lines(off, row, line_count, end)
 	while ((j -= line_count) >= row)
 	    LineOffset[j + line_count] = LineOffset[j];
 	LineOffset[j + line_count] = temp;
-	lineclear(temp);
+	if (can_clear((char_u *)" "))
+	    lineclear(temp);
+	else
+	    lineinvalid(temp);
     }
 #ifdef FEAT_GUI_BEOS
     vim_unlock_screen();
@@ -8764,7 +8855,7 @@ screen_del_lines(off, row, line_count, end, force)
      * We can delete lines only when 'db' flag not set or when 'ce' option
      * available.
      */
-    can_delete = (*T_DB == NUL || *T_CE);
+    can_delete = (*T_DB == NUL || can_clear(T_CE));
 
     /*
      * There are four ways to delete lines:
@@ -8775,7 +8866,7 @@ screen_del_lines(off, row, line_count, end, force)
      * 4. Use T_CE (erase line) if the result is empty.
      * 5. Use T_DL (delete line) if it exists.
      */
-    if (*T_CD != NUL && result_empty)
+    if (can_clear(T_CD) && result_empty)
 	type = USE_T_CD;
 #if defined(__BEOS__) && defined(BEOS_DR8)
     /*
@@ -8801,7 +8892,7 @@ screen_del_lines(off, row, line_count, end, force)
 	type = USE_NL;
     else if (*T_CDL != NUL && line_count > 1 && can_delete)
 	type = USE_T_CDL;
-    else if (*T_CE != NUL && result_empty)
+    else if (can_clear(T_CE) && result_empty)
 	type = USE_T_CE;
     else if (*T_DL != NUL && can_delete)
 	type = USE_T_DL;
@@ -8837,7 +8928,10 @@ screen_del_lines(off, row, line_count, end, force)
 	while ((j += line_count) <= end - 1)
 	    LineOffset[j - line_count] = LineOffset[j];
 	LineOffset[j - line_count] = temp;
-	lineclear(temp);
+	if (can_clear((char_u *)" "))
+	    lineclear(temp);
+	else
+	    lineinvalid(temp);
     }
 #ifdef FEAT_GUI_BEOS
     vim_unlock_screen();
@@ -9337,10 +9431,13 @@ win_redr_ruler(wp, always)
 	    buffer[WITH_WIDTH(width) - this_ru_col] = NUL;
 
 	screen_puts(buffer, row, this_ru_col + WITH_OFF(off), attr);
+	i = redraw_cmdline;
 	screen_fill(row, row + 1,
 		this_ru_col + WITH_OFF(off) + (int)STRLEN(buffer),
 		(int)(WITH_OFF(off) + WITH_WIDTH(width)),
 		fillchar, fillchar, attr);
+	/* don't redraw the cmdline because of showing the ruler */
+	redraw_cmdline = i;
 	wp->w_ru_cursor = wp->w_cursor;
 	wp->w_ru_virtcol = wp->w_virtcol;
 #ifdef FEAT_VIRTUALEDIT

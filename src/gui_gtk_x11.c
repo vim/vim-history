@@ -722,9 +722,9 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
 	return TRUE;
 
     /* Special keys (and a few others) may have modifiers */
-    if (len == 3 || key_sym == GDK_space || key_sym == GDK_Tab ||
-	key_sym == GDK_Return || key_sym == GDK_Linefeed ||
-	key_sym == GDK_Escape)
+    if (len == 3 || key_sym == GDK_space || key_sym == GDK_Tab
+	    || key_sym == GDK_Return || key_sym == GDK_Linefeed
+	    || key_sym == GDK_Escape)
     {
 	modifiers = 0;
 	if (state & GDK_SHIFT_MASK)

@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:    TeX
-" Version:     6.0-4
+" Version:     6.0-5
 " Maintainer:  Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change: November 13, 2000
+" Last Change: January 31, 2001
 "
 " Notes:
 " 1. If you have a \begin{verbatim} that appears to overrun its boundaries,
@@ -30,11 +30,11 @@ setlocal isk-=_
 
 " Clusters
 " --------
-syn cluster texCmdGroup	contains=texCmdBody,texComment,texDelimiter,texDocumentType,texDocumentTypeArgs,texInput,texLength,texLigature,texMathDelim,texMathError,texMathOper,texNewCmd,texNewEnv,texRefZone,texSection,texSectionMarker,texSectionName,texSpecialChar,texStatement,texString,texTypeSize,texTypeStyle
+syn cluster texCmdGroup	contains=texCmdBody,texComment,texDelimiter,texDocType,texDocTypeArgs,texInput,texLength,texLigature,texMathDelim,texMathError,texMathOper,texNewCmd,texNewEnv,texRefZone,texSection,texSectionMarker,texSectionName,texSpecialChar,texStatement,texString,texTypeSize,texTypeStyle
 syn cluster texEnvGroup	contains=texMatcher,texMathDelim,texSpecialChar,texStatement
-syn cluster texMatchGroup	contains=@texMathZones,texAccent,texBadMath,texComment,texDefCmd,texDelimiter,texDocumentType,texInput,texLength,texLigature,texMatcher,texNewCmd,texNewEnv,texOnlyMath,texParen,texRefZone,texSection,texSpecialChar,texStatement,texString,texTypeSize,texTypeStyle,texZone,texInputFile
+syn cluster texMatchGroup	contains=@texMathZones,texAccent,texBadMath,texComment,texDefCmd,texDelimiter,texDocType,texInput,texLength,texLigature,texMatcher,texNewCmd,texNewEnv,texOnlyMath,texParen,texRefZone,texSection,texSpecialChar,texStatement,texString,texTypeSize,texTypeStyle,texZone,texInputFile
 syn cluster texMathDelimGroup	contains=texMathDelimBad,texMathDelimKey,texMathDelimSet1,texMathDelimSet2
-syn cluster texMathMatchGroup contains=@texMathZones,texComment,texDefCmd,texDelimiter,texDocumentType,texInput,texLength,texLigature,texMathDelim,texMathError,texMathMatcher,texMathOper,texNewCmd,texNewEnv,texRefZone,texSection,texSpecialChar,texStatement,texString,texTypeSize,texTypeStyle,texZone
+syn cluster texMathMatchGroup contains=@texMathZones,texComment,texDefCmd,texDelimiter,texDocType,texInput,texLength,texLigature,texMathDelim,texMathError,texMathMatcher,texMathOper,texNewCmd,texNewEnv,texRefZone,texSection,texSpecialChar,texStatement,texString,texTypeSize,texTypeStyle,texZone
 syn cluster texMathZoneGroup	contains=texComment,texDelimiter,texLength,texMathDelim,texMathError,texMathMatcher,texMathOper,texRefZone,texSpecialChar,texStatement,texTypeSize,texTypeStyle
 syn cluster texMathZones	contains=texMathZoneA,texMathZoneB,texMathZoneC,texMathZoneD,texMathZoneE,texMathZoneF,texMathZoneG,texMathZoneH,texMathZoneI,texMathZoneJ,texMathZoneK,texMathZoneL,texMathZoneM,texMathZoneN,texMathZoneO,texMathZoneP,texMathZoneQ,texMathZoneR,texMathZoneS,texMathZoneT,texMathZoneU,texMathZoneV,texMathZoneW
 
@@ -74,11 +74,11 @@ syn match  texSectionMarker	"\\begin\>\|\\end\>" nextgroup=texSectionName
 syn region texSectionName	matchgroup=Delimiter start="{" end="}" contained
 
 " \documentclass, \documentstyle, \usepackage
-syn match  texDocumentType	"\\documentclass\>\|\\documentstyle\>\|\\usepackage\>"	nextgroup=texSectionName,texDocumentTypeArgs
-syn region texDocumentTypeArgs matchgroup=Delimiter start="\[" end="]" contained	nextgroup=texSectionName
+syn match  texDocType	"\\documentclass\>\|\\documentstyle\>\|\\usepackage\>"	nextgroup=texSectionName,texDocTypeArgs
+syn region texDocTypeArgs matchgroup=Delimiter start="\[" end="]" contained	nextgroup=texSectionName
 
 " TeX input
-syn match texInput	"\\input\s\+[a-zA-Z/.0-9]\+"hs=s+7		contains=texStatement
+syn match texInput	"\\input\s\+[a-zA-Z/.0-9_]\+"hs=s+7		contains=texStatement
 syn match texInputFile	"\\include\(graphics\|list\)\=\(\[.\{-}\]\)\=\s*{.\{-}}"	contains=texStatement,texInputCurlies
 syn match texInputFile	"\\\(epsfig\|input\|usepackage\)\s*{.\{-}}"		contains=texStatement,texInputCurlies
 syn match texInputCurlies	"[{}]"				contained
@@ -196,7 +196,7 @@ syn match texSpecialChar	"\^\^[0-9a-f]\{2}\|\^\^\S"
 "              Documented TeX Format:  ^^A...    -and-  leading %s (only)
 syn cluster texCommentGroup	contains=texTodo
 syn case ignore
-syn keyword texTodo	contained	todo
+syn keyword texTodo	contained	combak	fixme	todo
 syn case match
 if b:extfname == "dtx"
   syn match texComment	"\^\^A.*$"	contains=@texCommentGroup
@@ -216,6 +216,8 @@ else
  syn region texZone	start="\\verb\z(.\)"		end="\z1\|%stopzone\>"
 endif
 syn region texZone	start="@samp{"		end="}\|%stopzone\>"
+syn region texRefZone	matchgroup=texStatement start="\\nocite{"	keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
+syn region texRefZone	matchgroup=texStatement start="\\bibliography{" keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
 syn region texRefZone	matchgroup=texStatement start="\\cite{"	keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
 syn region texRefZone	matchgroup=texStatement start="\\label{"	keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
 syn region texRefZone	matchgroup=texStatement start="\\pageref{"	keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
@@ -307,9 +309,8 @@ syn sync match texSyncMathZoneS	groupthere NONE	"\\\(sub\)*section\>"
 hi def link texBadMath	texError
 hi def link texDefCmd	texDef
 hi def link texDefName	texDef
-hi def link texDocumentType	texCmdName
-hi def link texDocumentTypeArgs texCmdArgs
-hi def link texInput	Todo
+hi def link texDocType	texCmdName
+hi def link texDocTypeArgs	texCmdArgs
 hi def link texInputCurlies	texDelimiter
 hi def link texLigature	texSpecialChar
 hi def link texMathDelimBad	texError
@@ -354,6 +355,7 @@ hi def link texComment	Comment
 hi def link texDef	Statement
 hi def link texDelimiter	Delimiter
 hi def link texError	Error
+hi def link texInput	Special
 hi def link texLength	Number
 hi def link texMath	Special
 hi def link texMathDelim	Statement
@@ -365,6 +367,7 @@ hi def link texSection	PreCondit
 hi def link texSpecialChar	SpecialChar
 hi def link texStatement	Statement
 hi def link texString	String
+hi def link texTodo	Todo
 hi def link texType	Type
 hi def link texZone	PreCondit
 

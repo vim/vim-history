@@ -676,9 +676,14 @@ mch_FullName(fname, buf, len, force)
 	    if (retval == OK)
 	    {
 		i = STRLEN(buf);
-		if (i < len - 1 && (i == 0 || buf[i - 1] != ':'))
-		    buf[i++] = '/';
-		STRNCPY(buf + i, fname, (len - i)); /* concatenate the fname */
+		/* Concatenate the fname to the directory.  Don't add a slash
+		 * if fname is empty, but do change "" to "/". */
+		if (i == 0 || *fname != NUL)
+		{
+		    if (i < len - 1 && (i == 0 || buf[i - 1] != ':'))
+			buf[i++] = '/';
+		    STRNCPY(buf + i, fname, len - i);
+		}
 	    }
 	}
     }

@@ -1160,7 +1160,7 @@ theend:
     else
     {
 	apply_autocmds(EVENT_BUFREADPOST, NULL, curbuf->b_fname, FALSE, curbuf);
-	apply_autocmds(EVENT_BUFREADAFTER, NULL, curbuf->b_fname, FALSE, curbuf);
+	apply_autocmds(EVENT_BUFWINENTER, NULL, curbuf->b_fname, FALSE, curbuf);
     }
 #endif
     return;

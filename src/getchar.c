@@ -1580,7 +1580,7 @@ vgetorpeek(advance)
 
 			    del_typebuf(mlen, 0); /* remove the chars */
 			    set_option_value((char_u *)"paste",
-						 (long)!p_paste, NULL, FALSE);
+						     (long)!p_paste, NULL, 0);
 			    if (!(State & INSERT))
 			    {
 				msg_col = 0;
@@ -3316,6 +3316,10 @@ makemap(fd, buf)
 
 	    for ( ; mp; mp = mp->m_next)
 	    {
+		/* skip script-local mappings */
+		if (mp->m_noremap == REMAP_SCRIPT)
+		    continue;
+
 		c1 = NUL;
 		c2 = NUL;
 		if (abbr)
@@ -3385,7 +3389,7 @@ makemap(fd, buf)
 		    }
 		    if (c1 && putc(c1, fd) < 0)
 			return FAIL;
-		    if (mp->m_noremap != REMAP_NONE && fprintf(fd, "nore") < 0)
+		    if (mp->m_noremap != REMAP_YES && fprintf(fd, "nore") < 0)
 			return FAIL;
 		    if (fprintf(fd, cmd) < 0)
 			return FAIL;
@@ -3393,9 +3397,9 @@ makemap(fd, buf)
 			return FAIL;
 
 		    if (       putc(' ', fd) < 0
-			    || put_escstr(fd, mp->m_keys, FALSE) == FAIL
+			    || put_escstr(fd, mp->m_keys, 0) == FAIL
 			    || putc(' ', fd) < 0
-			    || put_escstr(fd, mp->m_str, FALSE) == FAIL
+			    || put_escstr(fd, mp->m_str, 1) == FAIL
 			    || put_eol(fd) < 0)
 			return FAIL;
 		    c1 = c2;
@@ -3416,22 +3420,24 @@ makemap(fd, buf)
 
 /*
  * write escape string to file
+ * "what": 0 for :map lhs, 1 for :map rhs, 2 for :set
  *
  * return FAIL for failure, OK otherwise
  */
     int
-put_escstr(fd, str, set)
+put_escstr(fd, str, what)
     FILE	*fd;
     char_u	*str;
-    int		set;	    /* TRUE for makeset(), FALSE for makemap() */
+    int		what;
 {
     int	    c;
     int	    modifiers;
 
     /* :map xx <Nop> */
-    if (*str == NUL && !set)
+    if (*str == NUL && what == 1)
     {
-	fprintf(fd, "<Nop>");
+	if (fprintf(fd, "<Nop>") < 0)
+	    return FAIL;
 	return OK;
     }
 
@@ -3442,7 +3448,7 @@ put_escstr(fd, str, set)
 	 * Special key codes have to be translated to be able to make sense
 	 * when they are read back.
 	 */
-	if (c == K_SPECIAL && !set)
+	if (c == K_SPECIAL && what != 2)
 	{
 	    modifiers = 0x0;
 	    if (str[1] == KS_MODIFIER)
@@ -3458,22 +3464,31 @@ put_escstr(fd, str, set)
 	    }
 	    if (IS_SPECIAL(c) || modifiers)	/* special key */
 	    {
-		fprintf(fd, (char *)get_special_key_name(c, modifiers));
+		if (fprintf(fd, (char *)get_special_key_name(c, modifiers)) < 0)
+		    return FAIL;
 		continue;
 	    }
 	}
+
 	/*
 	 * A '\n' in a map command should be written as <NL>.
 	 * A '\n' in a set command should be written as \^V^J.
 	 */
 	if (c == NL)
 	{
-	    if (set)
-		fprintf(fd, IF_EB("\\\026\n", "\\" CTRL_V_STR "\n"));
+	    if (what == 2)
+	    {
+		if (fprintf(fd, IF_EB("\\\026\n", "\\" CTRL_V_STR "\n")) < 0)
+		    return FAIL;
+	    }
 	    else
-		fprintf(fd, "<NL>");
+	    {
+		if (fprintf(fd, "<NL>") < 0)
+		    return FAIL;
+	    }
 	    continue;
 	}
+
 	/*
 	 * Some characters have to be escaped with CTRL-V to
 	 * prevent them from misinterpreted in DoOneCmd().
@@ -3481,13 +3496,15 @@ put_escstr(fd, str, set)
 	 * prevent it to be misinterpreted in do_set().
 	 * A '<' has to be escaped with a CTRL-V to prevent it being
 	 * interpreted as the start of a special key name.
+	 * A space in the lhs of a :map needs a CTRL-V.
 	 */
-	if (set && (vim_iswhite(c) || c == '"' || c == '\\'))
+	if (what == 2 && (vim_iswhite(c) || c == '"' || c == '\\'))
 	{
 	    if (putc('\\', fd) < 0)
 		return FAIL;
 	}
-	else if (c < ' ' || c > '~' || c == '|' || (!set && c == '<'))
+	else if (c < ' ' || c > '~' || c == '|' || (what != 2 && c == '<')
+						   || (what == 0 && c == ' '))
 	{
 	    if (putc(Ctrl_V, fd) < 0)
 		return FAIL;

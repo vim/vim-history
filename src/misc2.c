@@ -2348,9 +2348,9 @@ get_fileformat_force(buf, eap)
  * Note: Does _not_ set global value of 'textmode'!
  */
     void
-set_fileformat(t, local)
+set_fileformat(t, opt_flags)
     int		t;
-    int		local;		/* only change the local value */
+    int		opt_flags;	/* OPT_LOCAL and/or OPT_GLOBAL */
 {
     char	*p = NULL;
 
@@ -2371,7 +2371,7 @@ set_fileformat(t, local)
     }
     if (p != NULL)
 	set_string_option_direct((char_u *)"ff", -1, (char_u *)p,
-					 OPT_FREE | (local ? 0 : OPT_GLOBAL));
+							OPT_FREE | opt_flags);
 #ifdef FEAT_WINDOWS
     check_status(curbuf);
 #endif
@@ -2982,25 +2982,53 @@ crypt_init_keys(passwd)
  * Returns NULL on failure.
  */
     char_u *
-get_crypt_key(store)
+get_crypt_key(store, twice)
     int		store;
+    int		twice;	    /* Ask for the key twice. */
 {
-    char_u	*p;
+    char_u	*p1, *p2 = NULL;
+    int		round;
 
-    cmdline_star = TRUE;
-    cmdline_row = msg_row;
-    p = getcmdline_prompt(NUL, (char_u *)_("Enter encryption key: "), 0);
-    cmdline_star = FALSE;
+    for (round = 0; ; ++round)
+    {
+	cmdline_star = TRUE;
+	cmdline_row = msg_row;
+	p1 = getcmdline_prompt(NUL, round == 0
+		? (char_u *)_("Enter encryption key: ")
+		: (char_u *)_("Enter same key again: "), 0);
+	cmdline_star = FALSE;
+
+	if (p1 == NULL)
+	    break;
+
+	if (round == twice)
+	{
+	    if (p2 != NULL && STRCMP(p1, p2) != 0)
+	    {
+		MSG(_("Keys don't match!"));
+		vim_free(p1);
+		vim_free(p2);
+		p2 = NULL;
+		round = -1;		/* do it again */
+		continue;
+	    }
+	    if (store)
+	    {
+		set_option_value((char_u *)"key", 0L, p1, OPT_LOCAL);
+		vim_free(p1);
+		p1 = curbuf->b_p_key;
+	    }
+	    break;
+	}
+	p2 = p1;
+    }
 
     /* since the user typed this, no need to wait for return */
     need_wait_return = FALSE;
     msg_didout = FALSE;
-    if (p != NULL && store)
-    {
-	set_option_value((char_u *)"key", 0L, p, TRUE);
-	return curbuf->b_p_key;
-    }
-    return p;
+
+    vim_free(p2);
+    return p1;
 }
 
 #endif /* FEAT_CRYPT */
@@ -3298,7 +3326,7 @@ vim_findnext()
 /*ARGSUSED*/
     void *
 vim_findfile_init(path, filename, stopdirs, level, free_visited, need_dir,
-	search_ctx)
+								   search_ctx)
     char_u	*path;
     char_u	*filename;
     char_u	*stopdirs;
@@ -3451,7 +3479,7 @@ vim_findfile_init(path, filename, stopdirs, level, free_visited, need_dir,
 
 	/* save the fix part of the path */
 	ff_search_ctx->ffsc_fix_path = vim_strnsave(path,
-		(int)(wc_part - path));
+						       (int)(wc_part - path));
 
 	/*
 	 * copy wc_path and add restricts to the '**' wildcard.
@@ -4525,7 +4553,8 @@ find_file_in_path(ptr, len, options, first)
     int		options;
     int		first;		/* use count'th matching file name */
 {
-    return find_file_in_path_option(ptr, len, options, first, p_path, FALSE);
+    return find_file_in_path_option(ptr, len, options, first,
+	    *curbuf->b_p_path == NUL ? p_path : curbuf->b_p_path, FALSE);
 }
 
 /*

@@ -44,10 +44,6 @@
 # define HAVE_PUTENV		/* at least Bcc 5.2 has it */
 #endif
 
-#ifdef FEAT_NORMAL
-# define VIM_BACKTICK		/* internal backtick expansion */
-#endif
-
 #ifdef FEAT_GUI_W16
 # define NO_CONSOLE		/* don't included console-only code */
 #endif

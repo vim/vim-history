@@ -386,7 +386,8 @@ mch_delay(msec, ignoreinput)
     long	msec;
     int		ignoreinput;
 {
-#if __MWERKS__ >= 0x2000 || defined(__MRC__) || defined(__SC__)
+#if (defined(__MWERKS__) && __MWERKS__ >= 0x2000) \
+	|| defined(__MRC__) || defined(__SC__)
     unsigned
 #endif
     long   finalTick;
@@ -556,6 +557,8 @@ mch_dirname(buf, len)
 	    STRCPY(buf, strerror(errno));
 	    return FAIL;
 	}
+    else if (*buf != NUL && buf[STRLEN(buf) - 1] == ':')
+	buf[STRLEN(buf) - 1] = NUL;	/* remove trailing ':' */
     return OK;
 #endif
 }
@@ -681,7 +684,6 @@ mch_FullName(fname, buf, len, force)
     int     len;
     int     force;	    /* also expand when already absolute path name */
 {
-
     /*
      * TODO: Find what TODO
      */
@@ -692,18 +694,13 @@ mch_FullName(fname, buf, len, force)
     char_u	c;
     int		retval = OK;
 
-    if (force || !mch_isFullName(fname))	/* if forced or not an absolute path */
+    if (force || !mch_isFullName(fname))
     {
 	/*
+	 * Forced or not an absolute path.
 	 * If the file name has a path, change to that directory for a moment,
 	 * and then do the getwd() (and get back to where we were).
 	 * This will get the correct path name with "../" things.
-	 */
-
-	/*		STRCAT(buf, fname);
-			slash_n_colon_adjust (buf);
-			fname[0] = 0;
-			STRCAT(fname, buf);
 	 */
 	if ((p = vim_strrchr(fname, ':')) != NULL)
 	{
@@ -730,20 +727,19 @@ mch_FullName(fname, buf, len, force)
 	    *newdir = NUL;
 	}
 	l = STRLEN(buf);
-	if (l && buf[l - 1] != ':') /*MAC*/
+	if (l > 0 && buf[l - 1] != ':' && *fname != NUL)
 	    STRCAT(buf, ":");
 	if (p != NULL)
 	    mch_chdir((char *)olddir);
+	STRCAT(buf, fname);
     }
     else
     {
-	STRCAT(buf, fname);
-	slash_n_colon_adjust (buf);
-	fname[0] = 0;
-	STRCAT(fname, buf);
-	buf[0] = 0;
+	STRNCPY(buf, fname, len);
+	buf[len - 1] = NUL;
+	slash_n_colon_adjust(buf);
     }
-    STRCAT(buf, fname);
+
     return retval;
 }
 
@@ -824,8 +820,8 @@ mch_getperm(name)
  */
     int
 mch_setperm(name, perm)
-    char_u  *name;
-    int     perm;
+    char_u	*name;
+    long	perm;
 {
     /*
      * TODO: Maybe use AppleShare info??
@@ -1093,7 +1089,7 @@ mch_copy_file(from, to)
     /*
      * First try a normal rename, return if it works.
      */
-    PBHCopyFile (&paramBlock,false);
+    (void) PBHCopyFile(&paramBlock, false);
     return 0;
 
 }

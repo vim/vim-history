@@ -7,11 +7,9 @@
  */
 
 /*
- * This file contains the machine dependent escape sequences that the editor
- * needs to perform various operations. Some of the sequences here are
- * optional. Anything not available should be indicated by a null string. In
- * the case of insert/delete line sequences, the editor checks the capability
- * and works around the deficiency, if necessary.
+ * This file contains the defines for the machine dependent escape sequences
+ * that the editor needs to perform various operations. All of the sequences
+ * here are optional, except "cm" (cursor motion).
  */
 
 #if defined(SASC) && SASC < 658
@@ -36,6 +34,7 @@ enum SpecialKey
     KS_CS,	/* scroll region */
     KS_CL,	/* clear screen */
     KS_CD,	/* clear to end of display */
+    KS_UT,	/* clearing uses current background color */
     KS_DA,	/* text may be scrolled down from up */
     KS_DB,	/* text may be scrolled up from down */
     KS_VI,	/* cursor invisible */
@@ -104,6 +103,7 @@ extern char_u *(term_strings[]);    /* current terminal strings */
 #define T_CS	(term_str(KS_CS))	/* scroll region */
 #define T_CL	(term_str(KS_CL))	/* clear screen */
 #define T_CD	(term_str(KS_CD))	/* clear to end of display */
+#define T_UT	(term_str(KS_UT))	/* clearing uses background color */
 #define T_DA	(term_str(KS_DA))	/* text may be scrolled down from up */
 #define T_DB	(term_str(KS_DB))	/* text may be scrolled up from down */
 #define T_VI	(term_str(KS_VI))	/* cursor invisible */

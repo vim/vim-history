@@ -437,7 +437,7 @@ do_window(nchar, Prenum)
     case Ctrl_I:
 		type = FIND_ANY;
 		/* FALLTHROUGH */
-    case 'd':			    /* Go to definition, using p_def */
+    case 'd':			    /* Go to definition, using 'define' */
     case Ctrl_D:
 		CHECK_CMDWIN
 		if ((len = find_ident_under_cursor(&ptr, FIND_IDENT)) == 0)
@@ -1008,26 +1008,37 @@ win_count()
 }
 
 /*
- * Make 'count' windows on the screen.
+ * Make "count" windows on the screen.
  * Return actual number of windows on the screen.
  * Must be called when there is just one window, filling the whole screen
  * (excluding the command line).
  */
+/*ARGSUSED*/
     int
-make_windows(count)
-    int	    count;
+make_windows(count, vertical)
+    int		count;
+    int		vertical;	/* split windows vertically if TRUE */
 {
-    int	    maxcount;
-    int	    todo;
-    int	    p_sb_save;
+    int		maxcount;
+    int		todo;
+    int		p_sb_save;
 
-    /*
-     * Each window needs at least 'winminheight' lines and a status line.  Add
-     * 4 lines for one window, otherwise we may end up with all zero-line
-     * windows. Use value of 'winheight' if it is set
-     */
-    maxcount = (curwin->w_height + curwin->w_status_height
+#ifdef FEAT_VERTSPLIT
+    if (vertical)
+    {
+	/* Each windows needs at least 'winminwidth' lines and a separator
+	 * column. */
+	maxcount = (curwin->w_width + curwin->w_vsep_width
+					     - (p_wiw - p_wmw)) / (p_wmw + 1);
+    }
+    else
+#endif
+    {
+	/* Each window needs at least 'winminheight' lines and a status line. */
+	maxcount = (curwin->w_height + curwin->w_status_height
 				  - (p_wh - p_wmh)) / (p_wmh + STATUS_HEIGHT);
+    }
+
     if (maxcount < 2)
 	maxcount = 2;
     if (count > maxcount)
@@ -1054,10 +1065,21 @@ make_windows(count)
     p_sb = FALSE;
     /* todo is number of windows left to create */
     for (todo = count - 1; todo > 0; --todo)
-	if (win_split(curwin->w_height - (curwin->w_height - todo
-			     * STATUS_HEIGHT) / (todo + 1) - STATUS_HEIGHT, 0)
-								      == FAIL)
-	    break;
+#ifdef FEAT_VERTSPLIT
+	if (vertical)
+	{
+	    if (win_split(curwin->w_width - (curwin->w_width - todo)
+			/ (todo + 1) - 1, WSP_VERT) == FAIL)
+		break;
+	}
+	else
+#endif
+	{
+	    if (win_split(curwin->w_height - (curwin->w_height - todo
+			    * STATUS_HEIGHT) / (todo + 1)
+			- STATUS_HEIGHT, 0) == FAIL)
+		break;
+	}
     p_sb = p_sb_save;
 
 #ifdef FEAT_AUTOCMD
@@ -2253,7 +2275,7 @@ win_init(wp)
 win_alloc_first()
 {
     curwin = win_alloc(NULL);
-    curbuf = buflist_new(NULL, NULL, 1L, FALSE, FALSE);
+    curbuf = buflist_new(NULL, NULL, 1L, FALSE, TRUE);
     if (curwin == NULL || curbuf == NULL)
 	mch_windexit(0);
     curwin->w_buffer = curbuf;
@@ -2889,7 +2911,7 @@ win_size_save(gap)
 {
     win_t	*wp;
 
-    ga_init2(gap, sizeof(int), 1);
+    ga_init2(gap, (int)sizeof(int), 1);
     if (ga_grow(gap, win_count() * 2) == OK)
 	for (wp = firstwin; wp != NULL; wp = wp->w_next)
 	{
@@ -3929,7 +3951,7 @@ last_status_rec(fr, statusline)
 /*
  * Return the file name under or after the cursor.
  *
- * The p_path variable is searched if the file name is not absolute.
+ * The 'path' option is searched if the file name is not absolute.
  * The string returned has been alloc'ed and should be freed by the caller.
  * NULL is returned if the file name or file is not found.
  *

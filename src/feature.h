@@ -183,6 +183,10 @@
 # define FEAT_CMDL_COMPL
 #endif
 
+#ifdef FEAT_NORMAL
+# define VIM_BACKTICK		/* internal backtick expansion */
+#endif
+
 /*
  * +textobjects		Text objects: "vaw", "das", etc.
  */
@@ -383,9 +387,10 @@
 #endif
 
 /*
- * +wildignore		'wildignore' option
+ * +wildignore		'wildignore' and 'backupskip' options
+ *			Needed for Unix to make "crontab -e" work.
  */
-#ifdef FEAT_NORMAL
+#if defined(FEAT_NORMAL) || defined(UNIX)
 # define FEAT_WILDIGN
 #endif
 
@@ -543,7 +548,8 @@
 #endif
 
 /* Use iconv() when it's available. */
-#if defined(FEAT_MBYTE) && (defined(HAVE_ICONV_H) || defined(DYNAMIC_ICONV))
+#if defined(FEAT_MBYTE) && ((defined(HAVE_ICONV_H) && defined(HAVE_ICONV)) \
+		|| defined(DYNAMIC_ICONV))
 # define USE_ICONV
 #endif
 

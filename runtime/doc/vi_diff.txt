@@ -1,4 +1,4 @@
-*vi_diff.txt*   For Vim version 6.0t.  Last change: 2001 Jan 01
+*vi_diff.txt*   For Vim version 6.0u.  Last change: 2001 Jan 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -397,6 +397,9 @@ This file can then be used to redo the editing, possibly on another file or
 after changing some commands in the script file.
 
 The "-o" option opens a window for each argument.  "-o4" opens four windows.
+
+Vi requires several termcap entries to be able to work full-screen.  Vim only
+requires the "cm" entry (cursor motion).
 
 
 In command mode:

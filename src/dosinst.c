@@ -31,6 +31,7 @@
 #endif
 #ifdef DJGPP
 # include <unistd.h>
+# include <errno.h>
 #endif
 
 #include "version.h"
@@ -275,68 +276,74 @@ my_fullpath(char *buf, char *fname, int len)
     if (strchr(fname, ':') != NULL)	/* allready expanded */
     {
 	strncpy(buf, fname, len);
-	return buf;
     }
-
-    *buf = NUL;
-    /*
-     * change to the directory for a moment,
-     * and then do the getwd() (and get back to where we were).
-     * This will get the correct path name with "../" things.
-     */
-    p = strrchr(fname, '/');
-    q = strrchr(fname, '\\');
-    if (q != NULL && (p == NULL || q > p))
-	p = q;
-    q = strrchr(fname, ':');
-    if (q != NULL && (p == NULL || q > p))
-	p = q;
-    if (p != NULL)
+    else
     {
-	if (getcwd(olddir, BUFSIZE) == NULL)
+	*buf = NUL;
+	/*
+	 * change to the directory for a moment,
+	 * and then do the getwd() (and get back to where we were).
+	 * This will get the correct path name with "../" things.
+	 */
+	p = strrchr(fname, '/');
+	q = strrchr(fname, '\\');
+	if (q != NULL && (p == NULL || q > p))
+	    p = q;
+	q = strrchr(fname, ':');
+	if (q != NULL && (p == NULL || q > p))
+	    p = q;
+	if (p != NULL)
 	{
-	    p = NULL;			/* can't get current dir: don't chdir */
-	    retval = NULL;
-	}
-	else
-	{
-	    if (p == fname)		/* /fname	    */
-		q = p + 1;		/* -> /		    */
-	    else if (q + 1 == p)	/* ... c:\foo	    */
-		q = p + 1;		/* -> c:\	    */
-	    else			/* but c:\foo\bar   */
-		q = p;			/* -> c:\foo	    */
-
-	    c = *q;			/* truncate at start of fname */
-	    *q = NUL;
-	    if (mch_chdir(fname))	/* change to the directory */
+	    if (getcwd(olddir, BUFSIZE) == NULL)
+	    {
+		p = NULL;		/* can't get current dir: don't chdir */
 		retval = NULL;
+	    }
 	    else
 	    {
-		fname = q;
-		if (c == '\\')		/* if we cut the name at a */
-		    fname++;		/* '\', don't add it again */
+		if (p == fname)		/* /fname	    */
+		    q = p + 1;		/* -> /		    */
+		else if (q + 1 == p)	/* ... c:\foo	    */
+		    q = p + 1;		/* -> c:\	    */
+		else			/* but c:\foo\bar   */
+		    q = p;		/* -> c:\foo	    */
+
+		c = *q;			/* truncate at start of fname */
+		*q = NUL;
+		if (mch_chdir(fname))	/* change to the directory */
+		    retval = NULL;
+		else
+		{
+		    fname = q;
+		    if (c == '\\')	/* if we cut the name at a */
+			fname++;	/* '\', don't add it again */
+		}
+		*q = c;
 	    }
-	    *q = c;
 	}
+	if (getcwd(buf, len) == NULL)
+	{
+	    retval = NULL;
+	    *buf = NUL;
+	}
+	/*
+	 * Concatenate the file name to the path.
+	 */
+	if (strlen(buf) + strlen(fname) >= len - 1)
+	{
+	    printf("ERROR: File name too long!\n");
+	    exit(1);
+	}
+	add_pathsep(buf);
+	strcat(buf, fname);
+	if (p)
+	    mch_chdir(olddir);
     }
-    if (getcwd(buf, len) == NULL)
-    {
-	retval = NULL;
-	*buf = NUL;
-    }
-    /*
-     * Concatenate the file name to the path.
-     */
-    if (strlen(buf) + strlen(fname) >= len - 1)
-    {
-	printf("ERROR: File name too long!\n");
-	exit(1);
-    }
-    add_pathsep(buf);
-    strcat(buf, fname);
-    if (p)
-	mch_chdir(olddir);
+
+    /* Replace forward slashes with backslashes, required for the path to a
+     * command. */
+    while ((p = strchr(buf, '/')) != NULL)
+	*p = '\\';
 
     return retval;
 # endif
@@ -492,7 +499,7 @@ check_unpack(void)
 
     /* check if filetype.vim is present, which means the runtime archive has
      * been unpacked  */
-    sprintf(buf, "%s/filetype.vim", installdir);
+    sprintf(buf, "%s\\filetype.vim", installdir);
     if (stat(buf, &st) < 0)
     {
 	printf("ERROR: Cannot find filetype.vim in \"%s\"\n", installdir);
@@ -559,6 +566,63 @@ pathcmp(char *p, int plen, char *q, int qlen)
 }
 
 /*
+ * On input **destination is the path of an executable.
+ * If that executable is in the current directory, look for another one.
+ * *destination is set to NULL or the location of that file.
+ */
+
+    static void
+findoldfile(char **destination)
+{
+    char	*bp = *destination;
+    size_t	indir_l = strlen(installdir);
+    char	*cp = bp + indir_l;
+    char	*tmpname;
+    char	*farname;
+
+    /*
+     * No action needed if exe not found or not in this directory.
+     */
+    if (bp == NULL
+	    || strnicmp(bp, installdir, indir_l) != 0
+	    || strchr("/\\", *cp++) == NULL
+	    || strchr(cp, '\\') != NULL
+	    || strchr(cp, '/') != NULL)
+	return;
+
+    tmpname = alloc(strlen(cp) + 1);
+    strcpy(tmpname, cp);
+    tmpname[strlen(tmpname) - 1] = 'x';	/* .exe -> .exx */
+
+    if (access(tmpname, 0) == 0)
+    {
+	printf("\nERROR: %s and %s clash. remove/move so only %s exists\n",
+	    tmpname, cp, cp);
+	exit(1);
+    }
+
+    if (rename(cp, tmpname) != 0)
+    {
+	printf("\nERROR: failed to rename %s to %s: %s\n",
+	    cp, tmpname, strerror(errno));
+	exit(1);
+    }
+
+    farname = searchpath_save(cp);
+
+    if (rename(tmpname, cp) != 0)
+    {
+	printf("\nERROR: failed to rename %s back to %s: %s\n",
+	    tmpname, cp, strerror(errno));
+	exit(1);
+    }
+
+    free(*destination);
+    free(tmpname);
+    *destination = farname;
+}
+
+/*
  * Find out information about the system.
  */
     static void
@@ -605,6 +669,15 @@ inspect_system(void)
     oldvimexe = searchpath_save("vim.exe");
     oldgvimexe = searchpath_save("gvim.exe");
     mch_chdir(installdir);
+
+    /*
+     * The technique used above to set oldvimexe and oldgvimexe
+     * gives a spurious result for Windows 2000 Professional.
+     * w.briscoe@ponl.com 2001-01-20
+     */
+    findoldfile(&oldvimexe);
+    findoldfile(&oldgvimexe);
+
     if (oldvimexe != NULL || oldgvimexe != NULL)
     {
 	printf("Warning: Found a Vim executable in your $PATH:\n");
@@ -789,7 +862,16 @@ install_bat_choice(int idx)
 	else
 	{
 	    fprintf(fd, "@echo off\n");
-	    fprintf(fd, "rem Run Vim\n");
+	    fprintf(fd, "rem -- Run Vim --\n\n");
+	    fprintf(fd, "rem first collect the arguments in VIMARGS\n");
+	    fprintf(fd, "set VIMARGS=\n");
+	    fprintf(fd, ":loopstart\n");
+	    fprintf(fd, "if .%%1==. goto loopend\n");
+	    fprintf(fd, "set VIMARGS=%%VIMARGS%% %%1\n");
+	    fprintf(fd, "shift\n");
+	    fprintf(fd, "goto loopstart\n");
+	    fprintf(fd, ":loopend\n\n");
+
 	    strcpy(buf, installdir);
 	    buf[runtimeidx] = NUL;
 	    /* Don't use double quotes for the value here, also when buf
@@ -800,8 +882,8 @@ install_bat_choice(int idx)
 	    strcpy(buf, installdir);
 	    add_pathsep(buf);
 	    strcat(buf, exename);
-	    /* Can only handle 9 arguments now.  Use "shift" to use more? */
-	    fprintf(fd, "%s %%1 %%2 %%3 %%4 %%5 %%6 %%7 %%8 %%9\n", buf);
+	    fprintf(fd, "%s %%VIMARGS%%\n", buf);
+	    fprintf(fd, "set VIMARGS=\n");
 
 	    fclose(fd);
 	    printf("%s has been %s\n", batname,
@@ -1324,7 +1406,8 @@ main(int argc, char **argv)
 	for (i = 0; i < choice_count; ++i)
 	    if (choices[i].active)
 		printf("%2d  %s\n", i + 1, choices[i].text);
-	printf("Enter number of item to change, h (help), d (do it) or q (quit): ");
+	printf("To change an item, enter its number\n\n");
+	printf("Enter item number, h (help), d (do it) or q (quit): ");
 	if (scanf("%99s", buf) == 1)
 	{
 	    if (isdigit(buf[0]))

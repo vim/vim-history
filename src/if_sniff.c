@@ -998,7 +998,7 @@ vi_buffer_name()
 vi_exec_cmd(vicmd)
     char *vicmd;
 {
-    do_cmdline((char_u *)vicmd, NULL, NULL, DOCMD_NOWAIT);  /* [ex_docmd.c] */
+    do_cmdline_cmd((char_u *)vicmd);  /* [ex_docmd.c] */
 }
 
 /*

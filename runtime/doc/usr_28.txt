@@ -1,4 +1,4 @@
-*usr_28.txt*	For Vim version 6.0t.  Last change: 2001 Jan 21
+*usr_28.txt*	For Vim version 6.0u.  Last change: 2001 Jan 26
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -129,8 +129,24 @@ To close all folds at the cursor line use |zC|.
 To delete a fold at the cursor line use |zd|.
 To delete all folds at the cursor line use |zD|.
 
-When in Insert mode, the cursor line is never folded.  That allows you to see
-what you type!
+When in Insert mode, the fold at the cursor line is never closed.  That allows
+you to see what you type!
+
+Folds are opened automatically when jumping around or moving the cursor left
+or right.  For example, the "0" command opens the fold under the cursor
+(if 'foldopen' contains "hor", which is the default).  The 'foldopen' option
+can be changed to open folds for specific commands.  If you want the line
+under the cursor always to be open, do this: >
+	:set foldopen=all
+Warning: you won't be able to move onto a closed fold then.  You might want to
+use this only temporarily and then set it back to the default: >
+	:set foldopen&
+
+You can make folds close automatically when you move out of it: >
+	:set foldclose=all
+This will re-apply 'foldlevel' to all folds that don't contain the cursor.
+You have to try it out if you like how this feels.  Use |zm| to fold more and
+|zr| to fold less (reduce folds).
 
 The folding is local to the window.  This allows you to open two windows on
 the same buffer, one with folds and one without folds.  Or one with all folds

@@ -406,6 +406,9 @@ CClink = $(CC)
 #CONF_OPT_FEAT = --with-features=big
 #CONF_OPT_FEAT = --with-features=huge
 
+# COMPILED BY - For including a specific e-mail address for ":version".
+#CONF_OPT_COMPBY = "--with-compiledby=John Doe <JohnDoe@yahoo.com>"
+
 # X WINDOWS DISABLE - For creating a plain Vim without any X11 related fancies
 # (otherwise Vim configure will try to include xterm titlebar access)
 # Also disable the GUI above, otherwise it will be included anyway.
@@ -777,7 +780,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and some things
 ### might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60t
+VIMRTDIR = /vim60u
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 INDSUBDIR = /indent
@@ -1081,8 +1084,9 @@ CPP_DEPEND = $(CC) -I$(srcdir) -M$(CPP_MM) $(DEPEND_CFLAGS)
 
 # flags for cproto
 #     This is for cproto 3 patchlevel 8 or below
-#     __inline and __attribute__ are not recognized by cproto
-NO_ATTR = -D__inline= -D"__attribute__\\(x\\)="
+#     __inline, __attribute__ and __extension__ are not recognized by cproto
+NO_ATTR = -D__inline= -D"__attribute__\\(x\\)=" -D__extension__=
+
 #
 #     This is for cproto 3 patchlevel 9 or above (currently 4.6)
 #     __inline and __attribute__ are now recognized by cproto
@@ -1314,8 +1318,8 @@ config auto/config.mk: auto/configure
 		$(CONF_OPT_TCL) $(CONF_OPT_RUBY) \
 		$(CONF_OPT_CSCOPE) $(CONF_OPT_MULTIBYTE) $(CONF_OPT_INPUT) \
 		$(CONF_OPT_OUTPUT) $(CONF_OPT_GPM) $(CONF_OPT_WORKSHOP) \
-		$(CONF_OPT_SNIFF) \
-		$(CONF_OPT_FEAT) $(CONF_TERM_LIB) $(CONF_ARGS)
+		$(CONF_OPT_SNIFF) $(CONF_OPT_FEAT) $(CONF_TERM_LIB) \
+		$(CONF_OPT_COMPBY) $(CONF_ARGS)
 
 # When configure.in has changed, run autoconf to produce configure.
 # If you don't have autoconf, use the existing configure script.
@@ -1350,7 +1354,7 @@ $(VIMTARGET): auto/config.mk objects $(OBJ) version.c version.h
 		MAKE="$(MAKE)" sh $(srcdir)/link.sh
 
 xxd/xxd$(SUFFIX): xxd/xxd.c
-	cd xxd; CC="$(CC)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" \
+	cd xxd; CC="$(CC)" CFLAGS="$(CPPFLAGS) $(CFLAGS)" \
 		$(MAKE) -f Makefile
 
 # build the language specific files if they were unpacked
@@ -1788,10 +1792,12 @@ auto/pathdef.c: Makefile auto/config.mk
 	-@echo 'char_u *all_cflags = (char_u *)"$(CC) -c -I$(srcdir) $(ALL_CFLAGS)";' >>  $@
 	-@echo 'char_u *all_lflags = (char_u *)"$(CC) $(LDFLAGS) $(ALL_LIB_DIRS) -o $(VIMTARGET) $(ALL_LIBS) ";' >>  $@
 	-@echo 'char_u *compiled_user = (char_u *)"' | tr -d $(NL) >> $@
-	-@whoami | tr -d $(NL) >> $@
+	-@if test -n "$(COMPILEDBY)"; then \
+		echo "$(COMPILEDBY)" | tr -d $(NL) >> $@; \
+		else whoami | tr -d $(NL) >> $@; fi
 	-@echo '";' >> $@
 	-@echo 'char_u *compiled_sys = (char_u *)"' | tr -d $(NL) >> $@
-	-@hostname | tr -d $(NL) >> $@
+	-@if test -z "$(COMPILEDBY)"; then hostname | tr -d $(NL) >> $@; fi
 	-@echo '";' >> $@
 	-@sh $(srcdir)/pathdef.sh
 
