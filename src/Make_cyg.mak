@@ -413,10 +413,10 @@ endif
 $(OUTDIR)/if_ruby.o:	if_ruby.c $(INCL)
 	$(CC) -c $(CFLAGS) -U_WIN32 if_ruby.c -o $(OUTDIR)/if_ruby.o
 
-$(OUTDIR)/vimrc.o:	vim.rc $(INCL)
+$(OUTDIR)/vimrc.o:	vim.rc version.h gui_w32_rc.h
 	$(RC) $(RCFLAGS) vim.rc -o $(OUTDIR)/vimrc.o
 
-pathdef.c:
+pathdef.c: $(INCL)
 ifneq (sh.exe, $(SHELL))
 	@echo creating pathdef.c
 	@echo '/* pathdef.c */' > pathdef.c

@@ -453,33 +453,42 @@ endif
 	$(MAKE) -C xxd -f Make_cyg.mak clean
 
 ###########################################################################
+INCL = vim.h feature.h os_win32.h os_dos.h ascii.h keymap.h term.h macros.h \
+	structs.h regexp.h option.h ex_cmds.h proto.h globals.h farsi.h \
+	gui.h
+
 $(OUTDIR)/%.o : %.c $(INCL)
 	$(CC) -c $(CFLAGS) $< -o $@
 
-$(OUTDIR)/vimres.res: vim.rc
+$(OUTDIR)/vimres.res: vim.rc version.h gui_w32_rc.h
 	$(WINDRES) $(DEFINES) vim.rc $(OUTDIR)/vimres.res
 
 $(OUTDIR)/vimrc.o: $(OUTDIR)/vimres.res
 	$(WINDRES) $(OUTDIR)/vimres.res $(OUTDIR)/vimrc.o
 
-INCL = vim.h feature.h os_win32.h os_dos.h ascii.h keymap.h term.h macros.h \
-	structs.h regexp.h option.h ex_cmds.h proto.h globals.h farsi.h \
-	gui.h
-
 $(OUTDIR):
 	mkdir $(OUTDIR)
 
-$(OUTDIR)/if_ole.o: if_ole.cpp
+$(OUTDIR)/ex_docmd.o:	ex_docmd.c $(INCL) ex_cmds.h
+	$(CC) -c $(CFLAGS) ex_docmd.c -o $(OUTDIR)/ex_docmd.o
+
+$(OUTDIR)/ex_eval.o:	ex_eval.c $(INCL) ex_cmds.h
+	$(CC) -c $(CFLAGS) ex_eval.c -o $(OUTDIR)/ex_eval.o
+
+$(OUTDIR)/if_cscope.o:	if_cscope.c $(INCL) if_cscope.h
+	$(CC) -c $(CFLAGS) if_cscope.c -o $(OUTDIR)/if_cscope.o
+
+$(OUTDIR)/if_ole.o: if_ole.cpp $(INCL)
 	$(CC) $(CFLAGS) -D__IID_DEFINED__ -c -o $(OUTDIR)/if_ole.o if_ole.cpp
 
-$(OUTDIR)/if_ruby.o: if_ruby.c
+$(OUTDIR)/if_ruby.o: if_ruby.c $(INCL)
 	$(CC) $(CFLAGS) -U_WIN32 -c -o $(OUTDIR)/if_ruby.o if_ruby.c
 
 if_perl.c: if_perl.xs typemap
 	perl $(PERLLIB)/ExtUtils/xsubpp -prototypes -typemap \
 	     $(PERLLIB)/ExtUtils/typemap if_perl.xs > $@
 
-pathdef.c:
+pathdef.c: $(INCL)
 ifneq (sh.exe, $(SHELL))
 	@echo creating pathdef.c
 	@echo '/* pathdef.c */' > pathdef.c
