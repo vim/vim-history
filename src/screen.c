@@ -4679,11 +4679,15 @@ win_redr_status_matches(xp, num_matches, matches, match)
 	    }
 	    else
 	    {
-		/* create status line if needed */
+		/* Create status line if needed by setting 'laststatus' to 2.
+		 * Set 'winminheight' to zero to avoid that the window is
+		 * resized. */
 		if (lastwin->w_status_height == 0)
 		{
 		    save_p_ls = p_ls;
+		    save_p_wmh = p_wmh;
 		    p_ls = 2;
+		    p_wmh = 0;
 		    last_status(FALSE);
 		}
 		wild_menu_showing = WM_SHOWN;

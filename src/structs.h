@@ -156,6 +156,10 @@ typedef struct
 #define w_p_list w_onebuf_opt.wo_list	/* 'list' */
     int		wo_nu;
 #define w_p_nu w_onebuf_opt.wo_nu	/* 'number' */
+#if defined(FEAT_WINDOWS)
+    int		wo_wfh;
+# define w_p_wfh w_onebuf_opt.wo_wfh	/* 'winfixheight' */
+#endif
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
     int		wo_pvw;
 # define w_p_pvw w_onebuf_opt.wo_pvw	/* 'previewwindow' */
@@ -1129,6 +1133,7 @@ struct frame
     int		fr_width;
 #endif
     int		fr_height;
+    int		fr_newheight;	/* new height used in win_equal_rec() */
     frame_T	*fr_parent;	/* containing frame or NULL */
     frame_T	*fr_next;	/* frame right or below in same parent, NULL
 				   for first */

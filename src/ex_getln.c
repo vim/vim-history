@@ -366,8 +366,9 @@ getcmdline(firstc, count, indent)
 		}
 		else if (save_p_ls != -1)
 		{
-		    /* restore 'laststatus' if it was changed */
+		    /* restore 'laststatus' and 'winminheight' */
 		    p_ls = save_p_ls;
+		    p_wmh = save_p_wmh;
 		    last_status(FALSE);
 		    update_screen(VALID);	/* redraw the screen NOW */
 		    redrawcmd();

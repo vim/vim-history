@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.1.  Last change: 2002 Apr 09
+*options.txt*   For Vim version 6.1.  Last change: 2002 Sep 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1885,6 +1885,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	When mixing vertically and horizontally split windows, a minimal size
 	is computed and some windows may be larger if there is room.  The
 	'eadirection' option tells in which direction the size is affected.
+	Changing the height of a window can be avoided by setting
+	'winfixheight'.
 
 						*'equalprg'* *'ep'*
 'equalprg' 'ep'		string	(default "")
@@ -6175,6 +6177,17 @@ A jump table for the options with a short description can be found at |Q_op|.
 	height of the current window.
 	'winheight' applies to the current window.  Use 'winminheight' to set
 	the minimal height for other windows.
+
+						*'winfixheight'* *'wfh'*
+'winfixheight' 'wfh'	boolean	(default off)
+			local to window
+			{not in Vi}
+			{not available when compiled without the +windows
+			feature}
+	Keep the window height when windows are opened or closed and
+	'equalalways' is set.  Set by default for the |preview-window| and
+	|quickfix-window|.
+	The height may be changed anyway when running out of room.
 
 						*'winminheight'* *'wmh'*
 'winminheight' 'wmh'	number	(default 1)
