@@ -11,11 +11,25 @@
 
 #include <winver.h>
 #include "version.h"
+#include "gui_w32_rc.h"
 
 //
-// Icon
+// Icons
 //
-IDR_VIM ICON "VIM.ICO"
+IDR_VIM		ICON "VIM.ICO"
+
+#ifdef USE_GUI_WIN32
+IDR_VIM_ERROR	ICON "VIM_ERROR.ICO"
+IDR_VIM_ALERT	ICON "VIM_ALERT.ICO"
+IDR_VIM_INFO	ICON "VIM_INFO.ICO"
+IDR_VIM_QUESTION ICON "VIM_QUEST.ICO"
+
+//
+// Bitmaps
+//
+IDB_TEAROFF	BITMAP  DISCARDABLE  "tearoff.bmp"
+IDR_TOOLBAR1	BITMAP  DISCARDABLE  "tools.bmp"
+#endif // USE_GUI_WIN32
 
 //
 // Type Library

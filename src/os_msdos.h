@@ -13,8 +13,6 @@
 #include "os_dos.h"		/* common MS-DOS and Win32 stuff */
 
 #define BINARY_FILE_IO
-#define USE_VIM_REMOVE
-#define USE_VIM_CHDIR
 #define USE_EXE_NAME		/* use argv[0] for $VIM */
 #define NO_COOKED_INPUT		/* mch_inchar() doesn't return whole lines */
 #define SYNC_DUP_CLOSE		/* sync() a file with dup() and close() */
@@ -102,6 +100,9 @@ typedef long off_t;
 #define MSDOS_MOUSE_MIDDLE	0x04
 
 #ifdef DJGPP
-/* Work around a bug in Windows 95's rename() */
-#define rename(old, new)  djgpp_rename(old, new)
+int mch_rename(const char *OldFile, const char *NewFile);
+#else
+# define mch_rename(src, dst) rename(src, dst)
 #endif
+
+#define mch_setenv(name, val, x) setenv(name, val, x)

@@ -21,12 +21,15 @@
 
 #define EFN	0			/* Event flag */
 
+#ifdef PROTO
+# define DESC int
+#endif
+
 static void	vms_flushbuf(void);
 static void	vms_outchar(int c);
 static int	vms_x(unsigned int fun);
 static int	vms_inchar(int wtime);
-static char	*vms_vwild(char *arg, char *wilds);
-static int	vms_sys(char *cmd, char *log);
+static int	vms_sys(char *cmd, char *log, char *inp);
 
 char	ibuf[16 /*1*/];			/* Input buffer */
 
@@ -93,7 +96,6 @@ static void	may_core_dump __ARGS((void));
 
 static int	Read __ARGS((char_u *, long));
 static int	WaitForChar __ARGS((long));
-static int	RealWaitForChar __ARGS((int, long));
 static void	fill_inbuf __ARGS((int));
 
 static RETSIGTYPE	sig_winch __ARGS(SIGPROTOARG);
@@ -239,8 +241,22 @@ mch_write(char_u *s, int len)
     int
 mch_inchar(char_u *buf, int maxlen, long wtime)
 {
-    int		len, c, i = 0, m, ret, res, term[2] = { 0, 0 };
-    char	mbuf[128];
+    int		c, res;
+
+#ifdef USE_GUI
+    if (gui.in_use)
+    {
+	if (!gui_wait_for_chars(wtime))
+	    return 0;
+	return read_from_input_buf(buf,(long)maxlen);
+    }
+#endif
+    /* first check to see if any characters read by
+     * mch_breakcheck(), mch_delay() or mch_char_avail()
+     */
+    if( ! vim_is_input_buf_empty() ) {
+	return read_from_input_buf(buf,(long)maxlen);
+    }
 
     vms_flushbuf();
     if (wtime == -1)
@@ -249,86 +265,10 @@ mch_inchar(char_u *buf, int maxlen, long wtime)
 	res = vms_x(wtime ? TIM_1 : TIM_0);	/* with timeout */
     if (res != SS$_NORMAL)
 	return(0);
-    mbuf[i] = *ibuf;
     vms_flushbuf();
     c = (ibuf[0] & 0xFF);			/* Allow multinational */
     *buf = c;
     return(1);
-
-#ifdef USE_GUI
-    if (gui.in_use)
-    {
-	if (!gui_wait_for_chars(wtime))
-	    return 0;
-	return Read(buf, (long)maxlen);
-    }
-#endif
-#ifdef nee
-    if (wtime >= 0)
-    {
-	ret = sys$qiow(EFN, iochan, IO$_READLBLK | IO$M_TIMED, iosb, 0, 0,
-		       ibuf, 1, wtime, term, 0, 0);
-	if ((ret != SS$_NORMAL) && (ret != SS$_TIMEOUT))
-	    return(0);
-	buf[i] = *ibuf;
-	vms_flushbuf();
-	return(1);
-	while (WaitForChar(wtime) == 0)		/* no character available */
-	{
-	    if (!do_resize)			/* return if not interrupted by resize */
-		return 0;
-	    set_winsize(0, 0, FALSE);
-	    do_resize = FALSE;
-	}
-    }
-    else		/* wtime == -1 */
-    {
-	/*
-	 * If there is no character available within 'updatetime' seconds
-	 * flush all the swap files to disk
-	 * Also done when interrupted by SIGWINCH.
-	 */
-	if (WaitForChar(p_ut) == 0)
-	    updatescript(0);
-    }
-
-    for (;;)	/* repeat until we got a character */
-    {
-	if (do_resize)		/* window changed size */
-	{
-	    set_winsize(0, 0, FALSE);
-	    do_resize = FALSE;
-	}
-	/*
-	 * we want to be interrupted by the winch signal
-	 */
-	WaitForChar(-1L);
-	if (do_resize)		/* interrupted by SIGWINCHsignal */
-	    continue;
-
-	/*
-	 * For some terminals we only get one character at a time.
-	 * We want the get all available characters, so we could keep on
-	 * trying until none is available
-	 * For some other terminals this is quite slow, that's why we don't do
-	 * it.
-	 */
-	len = Read(buf, (long)maxlen);
-	if (len > 0)
-	    return len;
-    }
-    if (wtime == -1)
-	ret = sys$qiow(EFN, iochan, IO$_READLBLK, iosb, 0, 0,
-		       ibuf, 1, 0, term, 0, 0);
-    else
-	ret = sys$qiow(EFN, iochan, IO$_READLBLK | IO$M_TIMED, iosb, 0, 0,
-		       ibuf, 1, wtime, term, 0, 0);
-    if ((ret != SS$_NORMAL) && (ret != SS$_TIMEOUT))
-	return(0);
-    buf[i] = *ibuf;
-    vms_flushbuf();
-    return(1);
-#endif /*nee*/
 }
 
 /*
@@ -341,8 +281,8 @@ mch_char_avail(void)
 #ifdef USE_GUI
     if (gui.in_use)
     {
-	gui_update();
-	return(!is_input_buf_empty());
+	gui_mch_update();
+	return(!vim_is_input_buf_empty());
     }
 #endif
     return(WaitForChar(0L));
@@ -365,8 +305,14 @@ mch_avail_mem(int special)
     void
 mch_delay(long msec, int ignoreinput)
 {
-	if (!ignoreinput)
-		WaitForChar(msec);
+	if (ignoreinput)
+	{
+	    sleep(msec/1000);  /* as good as it gets for VMS? */
+	}
+	else
+	{
+	    WaitForChar(msec);
+	}
 }
 
 /*
@@ -469,13 +415,13 @@ mch_suspend(void)
 #ifdef USE_GUI
     if (gui.in_use)
     {
-	gui_iconify();
+	gui_mch_iconify();
 	return;
     }
 #endif
 #ifdef SIGTSTP
     vms_flushbuf();	/* needed to make cursor visible on some systems */
-    settmode(0);
+    settmode(TMODE_COOK);
     vms_flushbuf();	/* needed to disable mouse on some systems */
     kill(0, SIGTSTP);	/* send ourselves a STOP signal */
 
@@ -487,7 +433,7 @@ mch_suspend(void)
 	vim_free(oldtitle);
 	oldtitle = NULL;
     }
-    settmode(1);
+    settmode(TMODE_RAW);
 #else
     if (!sw_detached)
     {
@@ -496,10 +442,10 @@ mch_suspend(void)
 	return;
     }
     vms_flushbuf();
-    settmode(0);				/* set to cooked mode */
+    settmode(TMODE_COOK);		/* set to cooked mode */
 
     sprintf(symstr, "%08X", pid);
-    vim_setenv("VIMPID", symstr);
+    mch_setenv("VIMPID", symstr);
 
     /* windgoto(wins[cw].rows-1,0);	*/
     /* putchar('\r');	*/
@@ -518,7 +464,7 @@ mch_suspend(void)
     /* screenclear(cw);*/
     /* updatescreen();*/
 
-    settmode(1);					/* set to raw mode */
+    settmode(TMODE_RAW);		/* set to raw mode */
     resettitle();
 #endif
     need_check_timestamps = TRUE;
@@ -653,7 +599,7 @@ get_x11_windis(void)
      * We assume that zero is invalid for WINDOWID.
      */
     if (x11_window == 0 &&
-	(winid = (char *)vim_getenv((unsigned char *)"WINDOWID")) != NULL)
+	(winid = (char *)mch_getenv((char_u *)"WINDOWID")) != NULL)
 	    x11_window = (Window)atol(winid);
     if (x11_window != 0 && x11_display == NULL)
     {
@@ -708,7 +654,7 @@ get_x11_title(int test_only)
 	    {
 		retval = TRUE;
 		if (!test_only)
-		    oldtitle = strsave((char_u *)text_prop.value);
+		    oldtitle = vim_strsave((char_u *)text_prop.value);
 	    }
 	    XFree((void *)text_prop.value);
 	}
@@ -737,7 +683,7 @@ get_x11_icon(int test_only)
 	    {
 		retval = TRUE;
 		if (!test_only)
-		    oldicon = strsave((char_u *)text_prop.value);
+		    oldicon = vim_strsave((char_u *)text_prop.value);
 	    }
 	    XFree((void *)text_prop.value);
 	}
@@ -746,10 +692,10 @@ get_x11_icon(int test_only)
 	    /* could not get old icon, use terminal name */
     if (oldicon == NULL && !test_only)
     {
-	if (STRNCMP(term_strings[KS_NAME], "builtin_", 8) == 0)
-	    oldicon = term_strings[KS_NAME] + 8;
+	if (STRNCMP(term_str(KS_NAME), "builtin_", 8) == 0)
+	    oldicon = term_str(KS_NAME) + 8;
 	else
-	    oldicon = term_strings[KS_NAME];
+	    oldicon = term_str(KS_NAME);
     }
 
     return retval;
@@ -815,10 +761,10 @@ get_x11_icon(int test_only)
 {
 	if (!test_only)
 	{
-		if (STRNCMP(term_strings[KS_NAME], "builtin_", 8) == 0)
-			oldicon = term_strings[KS_NAME] + 8;
+		if (STRNCMP(term_str(KS_NAME), "builtin_", 8) == 0)
+			oldicon = term_str(KS_NAME) + 8;
 		else
-			oldicon = term_strings[KS_NAME];
+			oldicon = term_str(KS_NAME);
 	}
 	return FALSE;
 }
@@ -870,7 +816,7 @@ mch_settitle(char_u *title, char_u *icon)
     int		type = 0;
     char_u	title_buf[80];
 
-    if (term_strings[KS_NAME] == NULL)		/* no terminal name (yet) */
+    if (term_str(KS_NAME) == NULL)		/* no terminal name (yet) */
 	return;
     if (title == NULL && icon == NULL)		/* nothing to do */
 	return;
@@ -888,9 +834,9 @@ mch_settitle(char_u *title, char_u *icon)
      * Check only if the start of the terminal name is "xterm", also catch
      * "xterms".
      */
-    if (is_xterm(term_strings[KS_NAME]))
+    if (vim_is_xterm(term_str(KS_NAME)))
 	type = 2;
-    if (is_iris_ansi(term_strings[KS_NAME]))
+    if (vim_is_iris_ansi(term_str(KS_NAME)))
 	type = 3;
     if (type)
     {
@@ -944,7 +890,7 @@ mch_settitle(char_u *title, char_u *icon)
 }
 
     int
-is_xterm(char_u *name)
+vim_is_xterm(char_u *name)
 {
     if (name == NULL)
 	return FALSE;
@@ -953,7 +899,7 @@ is_xterm(char_u *name)
 }
 
     int
-is_iris_ansi(char_u *name)
+vim_is_iris_ansi(char_u *name)
 {
     if (name == NULL)
 	return FALSE;
@@ -970,7 +916,7 @@ is_fastterm(char_u *name)
 {
     if (name == NULL)
 	return FALSE;
-    if (is_xterm(name) || is_iris_ansi(name))
+    if (vim_is_xterm(name) || vim_is_iris_ansi(name))
 	return TRUE;
     return(vim_strnicmp((char *)name, "hpterm", (size_t)6) == 0 ||
 	    vim_strnicmp((char *)name, "sun-cmd", (size_t)7) == 0);
@@ -1050,6 +996,9 @@ mch_dirname(char_u *buf, int len)
 	STRCPY(buf, strerror(errno));
 	return(FAIL);
     }
+    /* tranlate from VMS to UNIX format */
+    STRNCPY(buf,decc$translate_vms((char *)buf),len);
+    STRCAT(buf,"/");
     return(OK);
 }
 
@@ -1094,7 +1043,7 @@ mch_FullName(char_u *fname, char_u *buf, int len, int force)
 		{
 		    STRNCPY(buf, fname, p - fname);
 		    buf[p - fname] = NUL;
-		    if (vim_chdir((char *)buf))
+		    if (mch_chdir((char *)buf))
 			retval = FAIL;
 		    else
 			fname = p + 1;
@@ -1109,7 +1058,7 @@ mch_FullName(char_u *fname, char_u *buf, int len, int force)
 	}
 	l = STRLEN(buf);
 	if (p)
-	    vim_chdir((char *)olddir);
+	    mch_chdir((char *)olddir);
     }
     STRCAT(buf, fname);
     return(retval);
@@ -1122,8 +1071,10 @@ mch_FullName(char_u *fname, char_u *buf, int len, int force)
     int
 mch_isFullName(char_u *fname)
 {
-    return(strchr((char *)fname, ':')?1:0);
-    /*return(strchr((char *)fname, ':') || strchr((char *)fname, '['));*/
+    if(fname[0] == '/' || strchr((char *)fname, ':'))
+	return 1;
+    else
+	return 0;
 }
 
 
@@ -1182,7 +1133,7 @@ mch_isdir(char_u *name)
 mch_windexit(int r)
 {
     mch_settitle(oldtitle, oldicon);	/* restore xterm title */
-    settmode(0);
+    settmode(TMODE_COOK);
     exiting = TRUE;
     stoptermcap();
     vms_flushbuf();
@@ -1218,7 +1169,7 @@ ass_tty(void)
 
     if (iochan)
 	return;
-    while (cp1 = (char *)vim_getenv((char_u *)cp2))
+    while (cp1 = (char *)mch_getenv((char_u *)cp2))
 	cp2 = cp1;
     vul_desc(&odsc, cp2);
     (void)sys$assign(&odsc, &iochan, 0, 0);
@@ -1411,7 +1362,7 @@ mch_setmouse(int on)
 
     if (on == ison)		/* return quickly if nothing to do */
 	return;
-    if (is_xterm(term_strings[KS_NAME]))
+    if (vim_is_xterm(term_str(KS_NAME)))
     {
 	if (on)
 	    OUT_STR_NF((char_u *)"\033[?1000h"); /* xterm: enable mouse events */
@@ -1457,7 +1408,7 @@ mch_set_winsize(void)
 #ifdef USE_GUI
     if (gui.in_use)
     {
-	gui_set_winsize();
+	gui_set_winsize(FALSE);
 	return;
     }
 #endif
@@ -1486,15 +1437,22 @@ mch_call_shell(char_u *cmd, int options)
 
     vms_flushbuf();
     if (options & SHELL_COOKED)
-	settmode(0);				/* set to cooked mode */
+	settmode(TMODE_COOK);			/* set to cooked mode */
     if (cmd)
     {
 	if (ofn = strchr((char *)cmd, '>'))
 	    *ofn++ = '\0';
 	if (ifn = strchr((char *)cmd, '<'))
+	{
+	   char *p;
 	    *ifn++ = '\0';
+	    /* chop off any trailing spaces */
+	    p = strchr(ifn,' ');
+	    if( p ) *p = '\0';
+
+	}
 	if (ofn)
-	    x = vms_sys((char *)cmd, ofn);
+	    x = vms_sys((char *)cmd, ofn, ifn);
 	else
 	    x = system((char *)cmd);
     }
@@ -1508,9 +1466,9 @@ mch_call_shell(char_u *cmd, int options)
 	msg_outnum((long)x);
 	OUT_STR(" returned\n");
     }
-    settmode(1);					/* set to raw mode */
+    settmode(TMODE_RAW);			/* set to raw mode */
     resettitle();
-    return(x ? FAIL : OK);
+    return x;
 }
 
 #ifdef TESTING_PTY
@@ -1523,77 +1481,15 @@ mch_call_shell(char_u *cmd, int options)
  * a portable way for a tty in RAW mode.
  */
 
-/*
- * Internal typeahead buffer.  Includes extra space for long key code
- * descriptions which would otherwise overflow.  The buffer is considered full
- * when only this extra space (or part of it) remains.
- */
-#define INBUFLEN 250
-
-static char_u	inbuf[INBUFLEN + MAX_KEY_CODE_LEN];
-static int	inbufcount = 0;		/* number of chars in inbuf[] */
-
-/*
- * is_input_buf_full(), is_input_buf_empty(), add_to_input_buf(), and
- * trash_input_buf() are functions for manipulating the input buffer.  These
- * are used by the gui_* calls when a GUI is used to handle keyboard input.
- *
- * NOTE: These functions will be identical in msdos.c etc, and should probably
- * be taken out and put elsewhere, but at the moment inbuf is only local.
- */
-
-    int
-is_input_buf_full()
-{
-	return (inbufcount >= INBUFLEN);
-}
-
-    int
-is_input_buf_empty()
-{
-	return (inbufcount == 0);
-}
-
-/* Add the given bytes to the input buffer */
-    void
-add_to_input_buf(char_u *s, int len)
-{
-	if (inbufcount + len > INBUFLEN + MAX_KEY_CODE_LEN)
-		return;		/* Shouldn't ever happen! */
-
-	while (len--)
-		inbuf[inbufcount++] = *s++;
-}
-
-/* Remove everything from the input buffer.  Called when ^C is found */
-    void
-trash_input_buf()
-{
-	inbufcount = 0;
-}
-
-    static int
-Read(char_u *buf, long maxlen)
-{
-	if (inbufcount == 0)		/* if the buffer is empty, fill it */
-		fill_inbuf(TRUE);
-	if (maxlen > inbufcount)
-		maxlen = inbufcount;
-	vim_memmove(buf, inbuf, (size_t)maxlen);
-	inbufcount -= maxlen;
-	if (inbufcount)
-		vim_memmove(inbuf, inbuf + maxlen, (size_t)inbufcount);
-	return (int)maxlen;
-}
-
-
     void
 mch_breakcheck(void)
 {
 #ifdef USE_GUI
+    if (gui.starting)  /* Transition state, can't check for ^C yet */
+	return;
     if (gui.in_use)
     {
-	gui_update();
+	gui_mch_update();
 	return;
     }
 #endif /* USE_GUI */
@@ -1601,62 +1497,9 @@ mch_breakcheck(void)
      * check for CTRL-C typed by reading all available characters
      */
     if (RealWaitForChar(0, 0L))		/* if characters available */
-	fill_inbuf(FALSE);
-}
-
-/*
- *	fill_inbuf()
- */
-
-    static void
-fill_inbuf(int exit_on_error)
-{
-    int		len, try;
-
-#ifdef USE_GUI
-    if (gui.in_use)
     {
-	gui_update();
-	return;
-    }
-#endif
-    if (is_input_buf_full())
-	return;
-    /*
-     * Fill_inbuf() is only called when we really need a character.
-     * If we can't get any, but there is some in the buffer, just return.
-     * If we can't get any, and there isn't any in the buffer, we give up and
-     * exit Vim.
-     */
-    for (try = 0; try < 100; ++try)
-    {
-	    len = read(0, (char *)inbuf + inbufcount,
-										     (size_t)(INBUFLEN - inbufcount));
-	    if (len > 0)
-		    break;
-	    if (!exit_on_error)
-		    return;
-    }
-    if (len <= 0)
-    {
-	    windgoto((int)Rows - 1, 0);
-	    fprintf(stderr, "Vim: Error reading input, exiting...\n");
-	    ml_sync_all(FALSE, TRUE);		/* preserve all swap files */
-	    getout(1);
-    }
-    while (len-- > 0)
-    {
-	    /*
-	     * if a CTRL-C was typed, remove it from the buffer and set got_int
-	     */
-	    if (inbuf[inbufcount] == 3)
-	    {
-		    /* remove everything typed before the CTRL-C */
-		    vim_memmove(inbuf, inbuf + inbufcount, (size_t)(len + 1));
-		    inbufcount = 0;
-		    got_int = TRUE;
-	    }
-	    ++inbufcount;
+	add_to_input_buf((char_u *)ibuf,1);
+	fill_input_buf(FALSE);
     }
 }
 
@@ -1666,12 +1509,19 @@ fill_inbuf(int exit_on_error)
  * When a GUI is being used, this will never get called -- webb
  */
 
-    static int
+    int
 WaitForChar(long msec)
 {
-    if (inbufcount)		/* something in inbuf[] */
+    if (vim_is_input_buf_empty()) {
+	if(RealWaitForChar(0,msec)) {
+	    add_to_input_buf((char_u *)ibuf,1);
+	    return 1;
+	}
+	else
+	    return 0;
+    }
+    else
 	return 1;
-    return RealWaitForChar(0, msec);
 }
 
 /*
@@ -1682,7 +1532,7 @@ WaitForChar(long msec)
  *				used for input -- webb
  */
 
-    static int
+    int
 RealWaitForChar(int fd, long msec)
 {
     int		res;
@@ -1694,8 +1544,91 @@ RealWaitForChar(int fd, long msec)
 	case 0:  res = vms_x(TIM_0); break;	/* with timeout		*/
 	default: res = vms_x(TIM_1); break;	/* with timeout		*/
     }
-    return((!res || (res == SS$_NORMAL)) ? 0 : 1);
+    return(res == SS$_NORMAL ? 1 : 0);
 }
+
+
+#define EXPL_ALLOC_INC 16
+int vms_match_num = 0;
+int vms_match_alloced = 0;
+int vms_match_free = 0;
+char_u **vms_fmatch = NULL;
+
+/*
+ * vms_wproc() is called for each matching filename by decc$to_vms().
+ * We want to save each match for later retrieval.
+ *
+ * Returns:  1 - continue finding matches
+ *	     0 - stop trying to find any further mathces
+ *
+ */
+int
+vms_wproc( char *name, int type )
+{
+    char xname[MAXPATHL];
+    int i;
+
+    if(vms_match_num == 0) {
+	/* first time through, setup some things */
+	if(NULL == vms_fmatch) {
+	    vms_fmatch = (char_u **)alloc(EXPL_ALLOC_INC * sizeof(char *));
+	    if( ! vms_fmatch )
+		return 0;
+	    vms_match_alloced = EXPL_ALLOC_INC;
+	    vms_match_free = EXPL_ALLOC_INC;
+	}
+	else {
+	    /* re-use existing space */
+	    vms_match_free = vms_match_alloced;
+	}
+    }
+    /* remove version from filename (if it exists) */
+    strcpy(xname,name);
+    { char *cp = strchr(xname,';');
+	if(cp) *cp = '\0';
+	/* also may have the form: filename.ext.ver */
+	cp = strchr(xname,'.');
+	if(cp) {
+	   ++cp;
+	   cp = strchr(cp,'.');
+	   if(cp)
+		*cp = '\0';
+	}
+    }
+    /* translate name */
+    strcpy(xname,decc$translate_vms(xname));
+
+    /* if name already exists, don't add it */
+    for(i = 0; i<vms_match_num; i++) {
+	if( 0 == STRCMP((char_u *)xname,vms_fmatch[i]) )
+	    return 1;
+    }
+    if(--vms_match_free == 0) {
+	/* add more space to store matches */
+	vms_match_alloced += EXPL_ALLOC_INC;
+	vms_fmatch = (char_u **)realloc(vms_fmatch,
+		sizeof(char **) * vms_match_alloced);
+	if( ! vms_fmatch )
+	    return 0;
+	vms_match_free = EXPL_ALLOC_INC;
+    }
+#ifdef APPEND_DIR_SLASH
+    if( type == DECC$K_DIRECTORY ) {
+	STRCAT(xname,"/");
+	vms_fmatch[vms_match_num] = vim_strsave((char_u *)xname);
+    }
+    else {
+	vms_fmatch[vms_match_num] =
+	    vim_strsave((char_u *)xname);
+    }
+#else
+    vms_fmatch[vms_match_num] =
+	vim_strsave((char_u *)xname);
+#endif
+    ++vms_match_num;
+    return 1;
+}
+
 
 /*
  *	mch_expand_wildcards	this code does wild-card pattern
@@ -1709,8 +1642,6 @@ RealWaitForChar(int fd, long msec)
  *	num_file   pointer to number of matched file names
  *	file	   pointer to array of pointers to matched file names
  *
- *	TODO: On VMS we do not check for files only yet
- *	TODO: On VMS EW_NOTFOUND is ignored
  */
 
     int
@@ -1718,37 +1649,59 @@ mch_expand_wildcards(int num_pat, char_u **pat, int *num_file, char_u ***file, i
 {
     int		i, j = 0, cnt = 0;
     char	*cp;
+    char_u	buf[MAXPATHL];
+    int		dir;
+    int files_alloced, files_free;
 
     *num_file = 0;			/* default: no files found	*/
-    *file = (char_u **)"";
-    for (i=0; i<num_pat; i++)
-	while (cp = vms_vwild((char *)pat[i], NULL))
-	    cnt++;
-    if (cnt > 0)
-    {
-	if (!(*file = (char_u **)alloc(cnt * sizeof(char_u *))))
-	{
-	    *file = (char_u **)"";
-	    return(FAIL);
-	}
-	for (i=0; i<num_pat; i++)
-	    while (cp = vms_vwild((char *)pat[i], NULL))
-		(*file)[j++] = vim_strsave((char_u *)cp);
+    files_alloced = EXPL_ALLOC_INC;
+    files_free = EXPL_ALLOC_INC;
+    *file = (char_u **) alloc(sizeof(char_u **) * files_alloced);
+    if (*file == NULL ){
+	*num_file = 0;
+	return FAIL;
     }
-    else
-    {
-	if (!(*file = (char_u **)alloc(num_pat * sizeof(char_u *))))
-	{
-	    *file = (char_u **)"";
-	    return(FAIL);
+    for (i=0; i<num_pat; i++) {
+	/* expand environment var or home dir */
+	if (vim_strchr(pat[i],'$') || vim_strchr(pat[i],'~'))
+	    expand_env(pat[i],buf,MAXPATHL);
+	else
+	    STRCPY(buf,pat[i]);
+
+	vms_match_num = 0; /* reset collection counter */
+	cnt = decc$to_vms((char *)buf,vms_wproc,1,0);
+	if(cnt > 0) cnt = vms_match_num;
+
+	if(cnt < 1)
+	    continue;
+
+	for( i = 0; i<cnt; i++ ) {
+	    /* files should exist if expanding interactively */
+	    if (expand_interactively && mch_getperm(vms_fmatch[i]) < 0 )
+		continue;
+	    /* check if this entry should be included */
+	    dir = (mch_isdir(vms_fmatch[i]));
+	    if (( dir && !(flags & EW_DIR)) || (!dir && !(flags & EW_FILE)))
+		continue;
+	    /* allocate memory for pointers */
+	    if(--files_free < 1 ) {
+		files_alloced += EXPL_ALLOC_INC;
+		*file = (char_u **)realloc(*file,
+		    sizeof(char_u **) * files_alloced);
+		if( *file == NULL ) {
+		    *file = (char_u **)"";
+		    *num_file = 0;
+		    return(FAIL);
+		}
+		files_free = EXPL_ALLOC_INC;
+	    }
+	    /* need to append '/' on directories here?? */
+
+	    (*file)[*num_file++] = vms_fmatch[i];
 	}
-	for (i=0; i<num_pat; i++)
-	    (*file)[cnt++] = vim_strsave(pat[i]);
     }
-    *num_file = cnt;
     return(OK);
 }
-
 /*
  *	mch_has_wildcard
  */
@@ -1760,7 +1713,7 @@ mch_has_wildcard(char_u *p)
     {
 	if (*p == '\\' && p[1] != NUL)
 	    ++p;
-	else if (vim_strchr((char_u *)"*%", *p) != NULL)
+	else if (vim_strchr((char_u *)"*%$~", *p) != NULL)
 	    return TRUE;
     }
     return FALSE;
@@ -1797,7 +1750,7 @@ getlinecol(void)
 {
     char_u	tbuf[TBUFSZ];
 
-    if (term_strings[KS_NAME] /*&& TGETENT(tbuf, term_strings[KS_NAME]) > 0*/)
+    if (term_str(KS_NAME) /*&& TGETENT(tbuf, term_str(KS_NAME)) > 0*/)
     {
 	if (Columns == 0)
 	    Columns = 80; /*tgetnum("co");*/
@@ -1818,12 +1771,12 @@ sig(int x)
     got_int = TRUE;
 }
 
-    unsigned char *
-vim_getenv(char_u *lognam)
+    char_u *
+mch_getenv(char_u *lognam)
 {
     DESC		d_file_dev, d_lognam  ;
     static char		buffer[LNM$C_NAMLENGTH+1];
-    unsigned char	*cp = NULL;
+    char_u		*cp = NULL;
     unsigned long	attrib;
     int			lengte = 0, dum = 0, idx = 0;
     ITMLST2		itmlst;
@@ -1872,29 +1825,6 @@ vms_flushbuf(void)
     }
 }
 
-/*
- * If wtime == 0 do not wait for characters.		TIM_0	1
- * If wtime == n wait a short time for characters.	TIM_1	2
- * If wtime == -1 wait forever for characters.		NOTIM	0
- */
-
-    static int
-vms_inchar(int wtime)
-{
-    char	mbuf[128];
-    int		i = 0, m, res;
-
-    vms_flushbuf();
-    if (wtime == -1)
-	res = vms_x(NOTIM);			/* without timeout	*/
-    else
-	res = vms_x(wtime ? TIM_1 : TIM_0);	/* with timeout		*/
-    if (res != SS$_NORMAL)
-	return(-1);
-    mbuf[i] = *ibuf;
-    vms_flushbuf();
-    return(ibuf[0] & 0xFF);			/* Allow multinational	*/
-}
 
     static int
 vms_x(unsigned int fun)
@@ -1924,83 +1854,22 @@ vms_x(unsigned int fun)
     return(iosb[1] + iosb[3]);
 }
 
-/*
- *	vms_vwild	expand wildcards
- *
- *	arg	file string
- *	wilds	default wildcards
- */
-
-    static char *
-vms_vwild(char *arg, char *wilds)
-{
-    int			i, status;
-    char		*cp;
-    static struct FAB	f;
-    static struct NAM	n;
-    static char		exp_str[NAM$C_MAXRSS], res_str[NAM$C_MAXRSS];
-    static char		inp_str[NAM$C_MAXRSS], fil_nam[NAM$C_MAXRSS];
-    static char		*inp_ptr = NULL, *defwld = "[]*.*;0";
-
-    if (!inp_ptr || strcmp(inp_ptr, arg)) /* new argument, re-initialize */
-    {
-	f = cc$rms_fab;
-	n = cc$rms_nam;
-
-	n.nam$l_rsa = res_str;
-	n.nam$b_rss = sizeof(res_str);
-	n.nam$l_esa = exp_str;
-	n.nam$b_ess = sizeof(exp_str);
-	f.fab$l_nam = &n;
-	f.fab$l_fna = arg;
-	f.fab$b_fns = strlen(arg);
-	f.fab$l_dna = (wilds ? wilds : defwld);
-	f.fab$b_dns = strlen(f.fab$l_dna);
-	inp_ptr = inp_str;
-	strcpy(inp_ptr, arg);
-	if ((status = sys$parse(&f)) != RMS$_NORMAL)
-	    return(NULL);
-    }
-
-    if ((status = sys$search(&f)) == RMS$_NORMAL)
-    {
-	*(cp = fil_nam) = '\0';			/* re-build filename */
-	if (n.nam$l_fnb & NAM$M_NODE)
-	    strncat(cp, n.nam$l_node, n.nam$b_node);
-	if (n.nam$l_fnb & NAM$M_EXP_DEV)
-	    strncat(cp, n.nam$l_dev, n.nam$b_dev);
-	if (n.nam$l_fnb & NAM$M_EXP_DIR)
-	    strncat(cp, n.nam$l_dir, n.nam$b_dir);
-	if (n.nam$l_fnb & NAM$M_EXP_NAME)
-	    strncat(cp, n.nam$l_name, n.nam$b_name);
-	if (n.nam$l_fnb & NAM$M_EXP_TYPE)
-	    strncat(cp, n.nam$l_type, n.nam$b_type);
-	if (n.nam$l_fnb & NAM$M_EXP_VER)
-	    strncat(cp, n.nam$l_ver, n.nam$b_ver);
-	for (i=0; i<strlen(fil_nam); i++)
-	    if (isupper(fil_nam[i]))
-		fil_nam[i] = tolower(fil_nam[i]);
-	return(fil_nam);
-    }
-    else
-    {
-	inp_ptr = NULL;
-	return(NULL);
-    }
-}
 
     static int
-vms_sys(char *cmd, char *log)
+vms_sys(char *cmd, char *log, char *inp)
 {
-    DESC	cdsc, ldsc;
+    DESC	cdsc, ldsc, idsc;
     long	status, substatus;
 
     if (cmd)
 	vul_desc(&cdsc, cmd);
     if (log)
 	vul_desc(&ldsc, log);
-    status = lib$spawn(cmd ? &cdsc : NULL, 0, log ? &ldsc : NULL, 0, 0, 0,
-			&substatus, 0, 0, 0);
+    if (inp)
+	vul_desc(&idsc, inp);
+
+    status = lib$spawn(cmd ? &cdsc : NULL, inp ? &idsc : NULL,
+	    log ? &ldsc : NULL, 0, 0, 0, &substatus, 0, 0, 0);
     if (status != SS$_NORMAL)
 	substatus = status;
     if ((substatus&STS$M_SUCCESS) == 0)     /* Command failed.	    */
@@ -2009,11 +1878,10 @@ vms_sys(char *cmd, char *log)
 }
 
 /*
- *	vim_setenv	VMS version of setenv()
+ *	mch_setenv	VMS version of setenv()
  */
-
     int
-vim_setenv(char *var, char *value)
+mch_setenv(char *var, char *value, int x)
 {
     int		res, dum;
     long	attrib = 0L;
@@ -2067,16 +1935,18 @@ mch_input_isatty(void)
     int
 mch_expandpath(struct growarray *gap, char_u *path, int flags)
 {
-    int		cnt = 0;
+    int		i,cnt = 0;
     char	*cp;
 
-    while (cp = vms_vwild((char *)path, NULL))
-    {
-	if (mch_getperm((char_u *)cp) >= 0)	/* add existing file */
+    vms_match_num = 0;
+    cnt = decc$to_vms((char *)path,vms_wproc,1,0);
+    if(cnt > 0) cnt = vms_match_num;
+    for(i=0;i<cnt;i++) {
+	if (mch_getperm(vms_fmatch[i]) >= 0) /* add existing file */
 	{
-	    addfile(gap, (char_u *)cp, flags);
-	    cnt++;
+	    addfile(gap, vms_fmatch[i], flags);
 	}
+
     }
     return cnt;
 }

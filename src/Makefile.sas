@@ -81,7 +81,7 @@ SHELL	= csh
 DEL	= $(SHELL) -c rm -f
 
 # ignore error messages for uninitialized variables, they are mostly not correct
-CFLAGS  = NOLINK $(DBG) CPU=$(CPU) NOSTACKCHECK DEF=AMIGA idir=proto ignore=317
+CFLAGS  = NOLINK $(DBG) CPU=$(CPU) NOSTACKCHECK DEF=AMIGA CODE=FAR idir=proto ignore=317
 CFLAGS2 = $(OPTIMIZE) $(ERROR) GSTIMMEDIATE GST=$(GST)
 CFLAGS3 = $(COPTS) STRINGMERGE MEMSIZE=$(MEMSIZE)
 CFLAGS4 = $(DEFINES) DATAMEMORY=$(MEMORYTYPE)
@@ -106,6 +106,7 @@ SRC = \
 	message.c \
 	misc1.c \
 	misc2.c \
+	multbyte.c \
 	normal.c \
 	ops.c \
 	option.c \
@@ -140,6 +141,7 @@ OBJ = \
 	message.o \
 	misc1.o \
 	misc2.o \
+	multbyte.o \
 	normal.o \
 	ops.o \
 	option.o \
@@ -174,6 +176,7 @@ PRO = \
 	proto/message.pro \
 	proto/misc1.pro \
 	proto/misc2.pro \
+	proto/multbyte.pro \
 	proto/normal.pro \
 	proto/ops.pro \
 	proto/option.pro \
@@ -279,6 +282,8 @@ misc1.o:		misc1.c
 proto/misc1.pro:	misc1.c
 misc2.o:		misc2.c
 proto/misc2.pro:	misc2.c
+multbyte.o:		multbyte.c
+proto/multbyte.pro:	multbyte.c
 normal.o:		normal.c
 proto/normal.pro:	normal.c
 ops.o:			ops.c

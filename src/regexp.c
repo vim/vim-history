@@ -35,6 +35,7 @@
  *
  * Changes have been made by Tony Andrews, Olaf 'Rhialto' Seibert, Robert Webb
  * and Bram Moolenaar.
+ * Named character class support added by Walter Briscoe (1998 Jul 01)
  */
 
 #include "vim.h"
@@ -43,6 +44,64 @@
 
 #include <stdio.h>
 #include "option.h"
+
+/*
+ * Get around a problem with #defined char class functions.
+ */
+#ifdef isalnum
+static int myisalnum __ARGS((int c));
+static int myisalnum(c) int c; { return isalnum(c); }
+# undef isalnum
+# define isalnum myisalnum
+#endif
+#ifdef isalpha
+static int myisalpha __ARGS((int c));
+static int myisalpha(c) int c; { return isalpha(c); }
+# undef isalpha
+# define isalpha myisalpha
+#endif
+#ifdef iscntrl
+static int myiscntrl __ARGS((int c));
+static int myiscntrl(c) int c; { return iscntrl(c); }
+# undef iscntrl
+# define iscntrl myiscntrl
+#endif
+#ifdef isdigit
+static int myisdigit __ARGS((int c));
+static int myisdigit(c) int c; { return isdigit(c); }
+# undef isdigit
+# define isdigit myisdigit
+#endif
+# ifdef isgraph
+static int myisgraph __ARGS((int c));
+static int myisgraph(c) int c; { return isgraph(c); }
+# undef isgraph
+# define isgraph myisgraph
+#endif
+#ifdef islower
+static int myislower __ARGS((int c));
+static int myislower(c) int c; { return islower(c); }
+# undef islower
+# define islower myislower
+#endif
+#ifdef ispunct
+static int myispunct __ARGS((int c));
+static int myispunct(c) int c; { return ispunct(c); }
+# undef ispunct
+# define ispunct myispunct
+#endif
+#ifdef isupper
+static int myisupper __ARGS((int c));
+static int myisupper(c) int c; { return isupper(c); }
+# undef isupper
+# define isupper myisupper
+#endif
+#ifdef isxdigit
+static int myisxdigit __ARGS((int c));
+static int myisxdigit(c) int c; { return isxdigit(c); }
+# undef isxdigit
+# define isxdigit myisxdigit
+#endif
 
 /*
  * The "internal use only" fields in regexp.h are present to pass info from
@@ -103,7 +162,7 @@
 #define BOW		13	/* no	Match "" after [^a-zA-Z0-9_] */
 #define EOW		14	/* no	Match "" at    [^a-zA-Z0-9_] */
 #define IDENT		15	/* no	Match identifier char */
-#define WORD		16	/* no	Match keyword char */
+#define KWORD		16	/* no	Match keyword char */
 #define FNAME		17	/* no	Match file name char */
 #define PRINT		18	/* no	Match printable char */
 #define SIDENT		19	/* no	Match identifier char but no digit */
@@ -114,11 +173,27 @@
 				 *	and BRACE_COMPLEX. */
 #define WHITE		24	/* no	Match whitespace char */
 #define NWHITE		25	/* no	Match non-whitespace char */
-#define MOPEN		30 /* -39  no	Mark this point in input as start of
+#define DIGIT		26	/* no	Match digit char */
+#define NDIGIT		27	/* no	Match non-digit char */
+#define HEX		28	/* no   Match hex char */
+#define NHEX		29	/* no   Match non-hex char */
+#define OCTAL		30	/* no	Match octal char */
+#define NOCTAL		31	/* no	Match non-octal char */
+#define WORD		32	/* no	Match word char */
+#define NWORD		33	/* no	Match non-word char */
+#define HEAD		34	/* no	Match head char */
+#define NHEAD		35	/* no	Match non-head char */
+#define ALPHA		36	/* no	Match alpha char */
+#define NALPHA		37	/* no	Match non-alpha char */
+#define LOWER		38	/* no	Match lowercase char */
+#define NLOWER		39	/* no	Match non-lowercase char */
+#define UPPER		40	/* no	Match uppercase char */
+#define NUPPER		41	/* no	Match non-uppercase char */
+#define MOPEN		60 /* -69  no	Mark this point in input as start of
 				 *	\( subexpr. */
-#define MCLOSE		40 /* -49  no	Analogous to MOPEN. */
-#define BACKREF		50 /* -59  node Match same string again \1-\9 */
-#define BRACE_COMPLEX	60 /* -69  node Match nodes between m & n times */
+#define MCLOSE		70 /* -79  no	Analogous to MOPEN. */
+#define BACKREF		80 /* -89  node Match same string again \1-\9 */
+#define BRACE_COMPLEX	90 /* -99  node Match nodes between m & n times */
 
 #define Magic(x)    ((x) | ('\\' << 8))
 
@@ -227,7 +302,10 @@ static char_u REGEXP_INRANGE[] = "]^-\\";
 static char_u REGEXP_ABBR[] = "rteb";
 
 static int	backslash_trans __ARGS((int c));
+static int	my_isblank __ARGS((int c));
+static int	(* skip_class_name __ARGS((char_u **pp)))__ARGS((int));
 static char_u * skip_range __ARGS((char_u *p));
+static void	init_class_tab __ARGS((void));
 
     static int
 backslash_trans(c)
@@ -241,6 +319,59 @@ backslash_trans(c)
 	case 'b':   return Ctrl('H');
     }
     return c;
+}
+
+/*
+ * Function version of the macro vim_iswhite().
+ */
+    static int
+my_isblank(c)
+    int		c;
+{
+    return vim_iswhite(c);
+}
+
+/*
+ * Check for a character class name.  "pp" is at the '['.
+ * If not: NULL is returned; If so, a function of the sort is* is returned and
+ * the name is skipped.
+ */
+    static int (*
+skip_class_name(pp))__ARGS((int))
+    char_u	**pp;
+{
+    typedef struct
+    {
+	size_t	    len;
+	int	    (*func)__ARGS((int));
+	char_u	    name[sizeof("xdigit:]")];
+    } namedata_t;
+
+#define t(n, func) { sizeof(n) - 1, func, n }
+    static const namedata_t class_names[] =
+    {
+	t("alnum:]", isalnum),		t("alpha:]", isalpha),
+	t("blank:]", my_isblank),	t("cntrl:]", iscntrl),
+	t("digit:]", isdigit),		t("graph:]", isgraph),
+	t("lower:]", islower),		t("print:]", vim_isprintc),
+	t("punct:]", ispunct),		t("space:]", vim_isspace),
+	t("upper:]", isupper),		t("xdigit:]", isxdigit)
+    };
+#undef t
+
+    const namedata_t *np;
+
+    if ((*pp)[1] != ':')
+	return NULL;
+    for (   np = class_names;
+	    np < class_names + sizeof(class_names) / sizeof(*class_names);
+	    np++)
+	if (STRNCMP(*pp+2, np->name, np->len) == 0)
+	{
+	    *pp += np->len + 2;
+	    return np->func;
+	}
+    return NULL;
 }
 
 /*
@@ -265,19 +396,77 @@ skip_range(p)
 	if (*p == '-')
 	{
 	    ++p;
-	    if (*p != ']' && *p != '\0')
+	    if (*p != ']' && *p != NUL)
 		++p;
 	}
 	else if (*p == '\\'
 		&& (vim_strchr(REGEXP_INRANGE, p[1]) != NULL
 		    || (!cpo_lit && vim_strchr(REGEXP_ABBR, p[1]) != NULL)))
 	    p += 2;
+	else if (*p == '[')
+	{
+	    if (skip_class_name(&p) == NULL)
+		++p; /* It was not a class name */
+	}
 	else
 	    ++p;
     }
 
     return p;
 }
+
+/*
+ * Specific version of character class functions.
+ * Using a table to keep this fast.
+ */
+static char_u	class_tab[256];
+
+#define	    RI_DIGIT	0x01
+#define	    RI_HEX	0x02
+#define	    RI_OCTAL	0x04
+#define	    RI_WORD	0x08
+#define	    RI_HEAD	0x10
+#define	    RI_ALPHA	0x20
+#define	    RI_LOWER	0x40
+#define	    RI_UPPER	0x80
+
+    static void
+init_class_tab()
+{
+    int		i;
+    static int	done = FALSE;
+
+    if (done)
+	return;
+
+    for (i = 0; i < 256; ++i)
+    {
+	if (i >= '0' && i <= '7')
+	    class_tab[i] = RI_DIGIT + RI_HEX + RI_OCTAL + RI_WORD;
+	else if (i >= '8' && i <= '9')
+	    class_tab[i] = RI_DIGIT + RI_HEX + RI_WORD;
+	else if (i >= 'a' && i <= 'f')
+	    class_tab[i] = RI_HEX + RI_WORD + RI_HEAD + RI_ALPHA + RI_LOWER;
+	else if (i >= 'g' && i <= 'z')
+	    class_tab[i] = RI_WORD + RI_HEAD + RI_ALPHA + RI_LOWER;
+	else if (i >= 'A' && i <= 'F')
+	    class_tab[i] = RI_HEX + RI_WORD + RI_HEAD + RI_ALPHA + RI_UPPER;
+	else if (i >= 'G' && i <= 'Z')
+	    class_tab[i] = RI_WORD + RI_HEAD + RI_ALPHA + RI_UPPER;
+	else if (i == '_')
+	    class_tab[i] = RI_WORD + RI_HEAD;
+    }
+    done = TRUE;
+}
+
+#define ri_digit(c)	(class_tab[c] & RI_DIGIT)
+#define ri_hex(c)	(class_tab[c] & RI_HEX)
+#define ri_octal(c)	(class_tab[c] & RI_OCTAL)
+#define ri_word(c)	(class_tab[c] & RI_WORD)
+#define ri_head(c)	(class_tab[c] & RI_HEAD)
+#define ri_alpha(c)	(class_tab[c] & RI_ALPHA)
+#define ri_lower(c)	(class_tab[c] & RI_LOWER)
+#define ri_upper(c)	(class_tab[c] & RI_UPPER)
 
 /*
  * Global work variables for vim_regcomp().
@@ -299,7 +488,7 @@ static int	reg_magic;	/* p_magic passed to vim_regexec() */
  * META contains all characters that may be magic, except '^' and '$'.
  */
 
-static char_u META[] = ".[()|=+*<>iIkKfFpPsS~123456789{";
+static char_u META[] = ".[()|=+*<>iIkKfFpPsSdDxXoOwWhHaAlLuU~123456789{";
 
 /*
  * Forward declarations for vim_regcomp()'s friends.
@@ -342,7 +531,11 @@ skip_regexp(p, dirc, magic)
 	if (p[0] == dirc)	/* found end of regexp */
 	    break;
 	if ((p[0] == '[' && magic) || (p[0] == '\\' && p[1] == '[' && !magic))
+	{
 	    p = skip_range(p + 1);
+	    if (p[0] == NUL)
+		break;
+	}
 	else if (p[0] == '\\' && p[1] != NUL)
 	    ++p;    /* skip next character */
     }
@@ -381,6 +574,7 @@ vim_regcomp(exp, magic)
 	EMSG_RETURN(e_null);
 
     reg_magic = magic;
+    init_class_tab();
 
     /* First pass: determine size, legality. */
     initchr((char_u *)exp);
@@ -747,7 +941,7 @@ regatom(flagp)
 	*flagp |= HASWIDTH | SIMPLE;
 	break;
       case Magic('k'):
-	ret = regnode(WORD);
+	ret = regnode(KWORD);
 	*flagp |= HASWIDTH | SIMPLE;
 	break;
       case Magic('I'):
@@ -780,6 +974,70 @@ regatom(flagp)
 	break;
       case Magic('S'):
 	ret = regnode(NWHITE);
+	*flagp |= HASWIDTH | SIMPLE;
+	break;
+      case Magic('d'):
+	ret = regnode(DIGIT);
+	*flagp |= HASWIDTH | SIMPLE;
+	break;
+      case Magic('D'):
+	ret = regnode(NDIGIT);
+	*flagp |= HASWIDTH | SIMPLE;
+	break;
+      case Magic('x'):
+	ret = regnode(HEX);
+	*flagp |= HASWIDTH | SIMPLE;
+	break;
+      case Magic('X'):
+	ret = regnode(NHEX);
+	*flagp |= HASWIDTH | SIMPLE;
+	break;
+      case Magic('o'):
+	ret = regnode(OCTAL);
+	*flagp |= HASWIDTH | SIMPLE;
+	break;
+      case Magic('O'):
+	ret = regnode(NOCTAL);
+	*flagp |= HASWIDTH | SIMPLE;
+	break;
+      case Magic('w'):
+	ret = regnode(WORD);
+	*flagp |= HASWIDTH | SIMPLE;
+	break;
+      case Magic('W'):
+	ret = regnode(NWORD);
+	*flagp |= HASWIDTH | SIMPLE;
+	break;
+      case Magic('h'):
+	ret = regnode(HEAD);
+	*flagp |= HASWIDTH | SIMPLE;
+	break;
+      case Magic('H'):
+	ret = regnode(NHEAD);
+	*flagp |= HASWIDTH | SIMPLE;
+	break;
+      case Magic('a'):
+	ret = regnode(ALPHA);
+	*flagp |= HASWIDTH | SIMPLE;
+	break;
+      case Magic('A'):
+	ret = regnode(NALPHA);
+	*flagp |= HASWIDTH | SIMPLE;
+	break;
+      case Magic('l'):
+	ret = regnode(LOWER);
+	*flagp |= HASWIDTH | SIMPLE;
+	break;
+      case Magic('L'):
+	ret = regnode(NLOWER);
+	*flagp |= HASWIDTH | SIMPLE;
+	break;
+      case Magic('u'):
+	ret = regnode(UPPER);
+	*flagp |= HASWIDTH | SIMPLE;
+	break;
+      case Magic('U'):
+	ret = regnode(NUPPER);
 	*flagp |= HASWIDTH | SIMPLE;
 	break;
       case Magic('('):
@@ -916,6 +1174,19 @@ regatom(flagp)
 		    {
 			regparse++;
 			regc(backslash_trans(*regparse++));
+		    }
+		    else if (*regparse == '[')
+		    {
+			int (*func)__ARGS((int));
+			int cu;
+
+			if ((func = skip_class_name(&regparse)) == NULL)
+			    regc(*regparse++);
+			else
+			    /* Characters assumed to be 8 bits */
+			    for (cu = 0; cu <= 255; cu++)
+				if ((*func)(cu))
+				    regc(cu);
 		    }
 		    else
 			regc(*regparse++);
@@ -1553,7 +1824,7 @@ regmatch(prog)
 		return 0;
 	    reginput++;
 	    break;
-	  case WORD:
+	  case KWORD:
 	    if (!vim_iswordc(*reginput))
 		return 0;
 	    reginput++;
@@ -1595,6 +1866,86 @@ regmatch(prog)
 	    break;
 	  case NWHITE:
 	    if (*reginput == NUL || vim_iswhite(*reginput))
+		return 0;
+	    reginput++;
+	    break;
+	  case DIGIT:
+	    if (!ri_digit(*reginput))
+		return 0;
+	    reginput++;
+	    break;
+	  case NDIGIT:
+	    if (*reginput == NUL || ri_digit(*reginput))
+		return 0;
+	    reginput++;
+	    break;
+	  case HEX:
+	    if (!ri_hex(*reginput))
+		return 0;
+	    reginput++;
+	    break;
+	  case NHEX:
+	    if (*reginput == NUL || ri_hex(*reginput))
+		return 0;
+	    reginput++;
+	    break;
+	  case OCTAL:
+	    if (!ri_octal(*reginput))
+		return 0;
+	    reginput++;
+	    break;
+	  case NOCTAL:
+	    if (*reginput == NUL || ri_octal(*reginput))
+		return 0;
+	    reginput++;
+	    break;
+	  case WORD:
+	    if (!ri_word(*reginput))
+		return 0;
+	    reginput++;
+	    break;
+	  case NWORD:
+	    if (*reginput == NUL || ri_word(*reginput))
+		return 0;
+	    reginput++;
+	    break;
+	  case HEAD:
+	    if (!ri_head(*reginput))
+		return 0;
+	    reginput++;
+	    break;
+	  case NHEAD:
+	    if (*reginput == NUL || ri_head(*reginput))
+		return 0;
+	    reginput++;
+	    break;
+	  case ALPHA:
+	    if (!ri_alpha(*reginput))
+		return 0;
+	    reginput++;
+	    break;
+	  case NALPHA:
+	    if (*reginput == NUL || ri_alpha(*reginput))
+		return 0;
+	    reginput++;
+	    break;
+	  case LOWER:
+	    if (!ri_lower(*reginput))
+		return 0;
+	    reginput++;
+	    break;
+	  case NLOWER:
+	    if (*reginput == NUL || ri_lower(*reginput))
+		return 0;
+	    reginput++;
+	    break;
+	  case UPPER:
+	    if (!ri_upper(*reginput))
+		return 0;
+	    reginput++;
+	    break;
+	  case NUPPER:
+	    if (*reginput == NUL || ri_upper(*reginput))
 		return 0;
 	    reginput++;
 	    break;
@@ -1955,11 +2306,12 @@ regmatch(prog)
  */
     static int
 regrepeat(p)
-    char_u	   *p;
+    char_u	*p;
 {
-    int	    count = 0;
-    char_u  *scan;
-    char_u  *opnd;
+    int		count = 0;
+    char_u	*scan;
+    char_u	*opnd;
+    int		mask;
 
     scan = reginput;
     opnd = OPERAND(p);
@@ -1973,7 +2325,7 @@ regrepeat(p)
 	for (count = 0; vim_isIDc(*scan); ++count)
 	    ++scan;
 	break;
-      case WORD:
+      case KWORD:
 	for (count = 0; vim_iswordc(*scan); ++count)
 	    ++scan;
 	break;
@@ -2009,6 +2361,60 @@ regrepeat(p)
 	for (count = 0; *scan != NUL && !vim_iswhite(*scan); ++count)
 	    ++scan;
 	break;
+      case DIGIT:
+	mask = RI_DIGIT;
+do_class:
+	for (count = 0; class_tab[*scan] & mask; ++count)
+	    ++scan;
+	break;
+      case NDIGIT:
+	mask = RI_DIGIT;
+do_nclass:
+	for (count = 0; *scan != NUL && !(class_tab[*scan] & mask); ++count)
+	    ++scan;
+	break;
+      case HEX:
+	mask = RI_HEX;
+	goto do_class;
+      case NHEX:
+	mask = RI_HEX;
+	goto do_nclass;
+      case OCTAL:
+	mask = RI_OCTAL;
+	goto do_class;
+      case NOCTAL:
+	mask = RI_OCTAL;
+	goto do_nclass;
+      case WORD:
+	mask = RI_WORD;
+	goto do_class;
+      case NWORD:
+	mask = RI_WORD;
+	goto do_nclass;
+      case HEAD:
+	mask = RI_HEAD;
+	goto do_class;
+      case NHEAD:
+	mask = RI_HEAD;
+	goto do_nclass;
+      case ALPHA:
+	mask = RI_ALPHA;
+	goto do_class;
+      case NALPHA:
+	mask = RI_ALPHA;
+	goto do_nclass;
+      case LOWER:
+	mask = RI_LOWER;
+	goto do_class;
+      case NLOWER:
+	mask = RI_LOWER;
+	goto do_nclass;
+      case UPPER:
+	mask = RI_UPPER;
+	goto do_class;
+      case NUPPER:
+	mask = RI_UPPER;
+	goto do_nclass;
       case EXACTLY:
 	{
 	    int	    cu, cl;
@@ -2100,7 +2506,8 @@ regdump(pattern, r)
     printf("\nregcomp(%s):\n", pattern);
 
     s = r->program + 1;
-    while (op != END) {		/* While that wasn't END last time... */
+    while (op != END)		/* While that wasn't END last time... */
+    {
 	op = OP(s);
 	printf("%2d%s", (int)(s - r->program), regprop(s)); /* Where, what. */
 	next = regnext(s);
@@ -2119,13 +2526,10 @@ regdump(pattern, r)
 	{
 	    /* Literal string, where present. */
 	    while (*s != '\0')
-	    {
-		putchar(*s);
-		s++;
-	    }
+		printf("%c", *s++);
 	    s++;
 	}
-	putchar('\n');
+	printf("\n");
     }
 
     /* Header fields of interest. */
@@ -2170,8 +2574,8 @@ regprop(op)
       case IDENT:
 	p = "IDENT";
 	break;
-      case WORD:
-	p = "WORD";
+      case KWORD:
+	p = "KWORD";
 	break;
       case FNAME:
 	p = "FNAME";
@@ -2196,6 +2600,54 @@ regprop(op)
 	break;
       case NWHITE:
 	p = "NWHITE";
+	break;
+      case DIGIT:
+	p = "DIGIT";
+	break;
+      case NDIGIT:
+	p = "NDIGIT";
+	break;
+      case HEX:
+	p = "HEX";
+	break;
+      case NHEX:
+	p = "NHEX";
+	break;
+      case OCTAL:
+	p = "OCTAL";
+	break;
+      case NOCTAL:
+	p = "NOCTAL";
+	break;
+      case WORD:
+	p = "WORD";
+	break;
+      case NWORD:
+	p = "NWORD";
+	break;
+      case HEAD:
+	p = "HEAD";
+	break;
+      case NHEAD:
+	p = "NHEAD";
+	break;
+      case ALPHA:
+	p = "ALPHA";
+	break;
+      case NALPHA:
+	p = "NALPHA";
+	break;
+      case LOWER:
+	p = "LOWER";
+	break;
+      case NLOWER:
+	p = "NLOWER";
+	break;
+      case UPPER:
+	p = "UPPER";
+	break;
+      case NUPPER:
+	p = "NUPPER";
 	break;
       case ANYOF:
 	p = "ANYOF";
@@ -2431,9 +2883,9 @@ regtilde(source, magic)
 		{
 		    /* copy prefix */
 		    len = (int)(p - newsub);	/* not including ~ */
-		    vim_memmove(tmpsub, newsub, (size_t)len);
+		    mch_memmove(tmpsub, newsub, (size_t)len);
 		    /* interpretate tilde */
-		    vim_memmove(tmpsub + len, reg_prev_sub, (size_t)prevlen);
+		    mch_memmove(tmpsub + len, reg_prev_sub, (size_t)prevlen);
 		    /* copy postfix */
 		    if (!magic)
 			++p;			/* back off \ */

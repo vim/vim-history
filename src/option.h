@@ -41,6 +41,8 @@
 # endif
 #endif
 
+#define GEFM_DFLT	"%f:%l%m,%f  %l%m"
+
 /* default values for b_p_ff 'fileformat' and p_ffs 'fileformats' */
 #define FF_DOS		"dos"
 #define FF_MAC		"mac"
@@ -61,6 +63,20 @@
 # endif
 # define FFS_VI		""
 # define TA_DFLT	FALSE
+#endif
+
+#ifdef MULTI_BYTE
+#define FE_ANSI		"ansi"
+#define FE_UNICODE	"unicode"
+#define FE_DBJPN	"japan"
+#define FE_DBKOR	"korea"
+#define FE_DBCHT	"taiwan"
+#define FE_DBCHS	"prc"
+#define FE_HEBREW	"hebrew"
+#define FE_FARSI	"farsi"
+
+/* default value for 'fileencoding' */
+#define FE_DFLT		FE_ANSI
 #endif
 
 /* end-of-line style */
@@ -113,25 +129,23 @@
 #define CPO_DOLLAR	'$'
 #define CPO_FILTER	'!'
 #define CPO_MATCH	'%'
+#define CPO_STAR	'*'	/* ":*" means ":@" */
 #define CPO_SPECI	'<'	/* don't recognize <> in mappings */
 #define CPO_DEFAULT	"aABceFs"
-#define CPO_ALL		"aAbBcdeEfFjklLmorsStuwWxy$!%<"
+#define CPO_ALL		"aAbBcdeEfFjklLmorsStuwWxy$!%*<"
 
 /* characters for p_ww option: */
 #define WW_ALL		"bshl<>[],"
 
 /* characters for p_mouse option: */
-#define MOUSE_NORMAL	'n'		/* use mouse in normal mode */
-#define MOUSE_NORMAL_NV	'N'		/* idem, but no Visual mode */
-#define MOUSE_VISUAL	'v'		/* use mouse in visual mode */
-#define MOUSE_INSERT	'i'		/* use mouse in insert mode */
-#define MOUSE_INSERT_NV	'I'		/* idem, but no Visual mode */
-#define MOUSE_COMMAND	'c'		/* use mouse in command line mode */
+#define MOUSE_NORMAL	'n'		/* use mouse in Normal mode */
+#define MOUSE_VISUAL	'v'		/* use mouse in Visual/Select mode */
+#define MOUSE_INSERT	'i'		/* use mouse in Insert mode */
+#define MOUSE_COMMAND	'c'		/* use mouse in Command-line mode */
 #define MOUSE_HELP	'h'		/* use mouse in help buffers */
 #define MOUSE_RETURN	'r'		/* use mouse for hit-return message */
-#define MOUSE_A		"nvichVCH"	/* used for 'a' flag */
-#define MOUSE_A_NV	"NvIchVCH"	/* used for 'A' flag */
-#define MOUSE_ALL	"aAnNviIcrh"	/* all possible characters */
+#define MOUSE_A		"nvich"		/* used for 'a' flag */
+#define MOUSE_ALL	"anvichr"	/* all possible characters */
 
 /* characters for p_shm option: */
 #define SHM_RO		'r'		/* readonly */
@@ -146,20 +160,25 @@
 #define SHM_WRITE	'W'		/* don't use "written" at all */
 #define SHM_TRUNC	't'		/* trunctate message */
 #define SHM_OVER	'o'		/* overwrite file messages */
+#define SHM_OVERALL	'O'		/* overwrite more messages */
 #define SHM_SEARCH	's'		/* no search hit bottom messages */
 #define SHM_ATTENTION	'A'		/* no ATTENTION messages */
 #define SHM_INTRO	'I'		/* intro messages */
-#define SHM_ALL		"rmfixlnwaWtosAI" /* all possible flags for 'shm' */
+#define SHM_ALL		"rmfixlnwaWtoOsAI" /* all possible flags for 'shm' */
 
 /* characters for p_guioptions: */
 #define GO_ASEL		'a'		/* autoselect */
-#define GO_BOT		'b'		/* GUI: use bottom scrollbar */
-#define GO_FORG		'f'		/* GUI: start GUI in foreground */
-#define GO_GREY		'g'		/* GUI: use grey menu items */
-#define GO_LEFT		'l'		/* GUI: use left scrollbar */
-#define GO_MENUS	'm'		/* GUI: use menu bar */
-#define GO_RIGHT	'r'		/* GUI: use right scrollbar */
-#define GO_ALL		"abfglmr"	/* all possible flags for 'go' */
+#define GO_BOT		'b'		/* use bottom scrollbar */
+#define GO_FORG		'f'		/* start GUI in foreground */
+#define GO_GREY		'g'		/* use grey menu items */
+#define GO_ICON		'i'		/* use Vim icon */
+#define GO_LEFT		'l'		/* use left scrollbar */
+#define GO_MENUS	'm'		/* use menu bar */
+#define GO_POINTER	'p'		/* pointer enter/leave callbacks */
+#define GO_RIGHT	'r'		/* use right scrollbar */
+#define GO_TEAROFF	't'		/* add tear-off menu items */
+#define GO_TOOLBAR	'T'		/* add toolbar */
+#define GO_ALL		"abfgilmprtT"	/* all possible flags for 'go' */
 
 /* flags for 'comments' option */
 #define COM_NEST	'n'		/* comments strings nest */
@@ -173,12 +192,17 @@
 #define COM_ALL		"nbsmeflr"	/* all flags for 'comments' option */
 #define COM_MAX_LEN	50		/* maximum length of a part */
 
+/* flags used for parsed 'wildmode' */
+#define WIM_FULL	1
+#define WIM_LONGEST	2
+#define WIM_LIST	4
+
 /*
  * The following are actual variabables for the options
  */
 
 #ifdef RIGHTLEFT
-EXTERN int	p_aleph;	/* Hebrew 'Aleph' encoding */
+EXTERN long	p_aleph;	/* Hebrew 'Aleph' encoding */
 #endif
 EXTERN int	p_aw;		/* auto-write */
 EXTERN long	p_bs;		/* backspace over newlines in insert mode */
@@ -186,13 +210,23 @@ EXTERN char_u  *p_bg;		/* window background color: light or dark */
 EXTERN int	p_bk;		/* make backups when writing out files */
 EXTERN char_u  *p_bdir;		/* list of directory names for backup files */
 EXTERN char_u  *p_bex;		/* extension for backup file */
+EXTERN char_u  *p_bsdir;	/* 'browsedir' */
 #ifdef MSDOS
 EXTERN int	p_biosk;	/* Use bioskey() instead of kbhit() */
 #endif
 EXTERN char_u  *p_breakat;	/* characters that can cause a line break */
 EXTERN long	p_ch;		/* command line height */
+#if defined(GUI_DIALOG) || defined(CON_DIALOG)
+EXTERN int	p_confirm;	/* 'confirm' */
+#endif
 EXTERN int	p_cp;		/* vi-compatible */
 EXTERN char_u  *p_cpo;		/* vi-compatible option flags */
+#ifdef USE_CSCOPE
+EXTERN char_u  *p_csprg;	/* name of cscope program */
+EXTERN int	p_cst;		/* always use :cstag instead of :tag command */
+EXTERN long	p_csto;		/* cscope/tags search order */
+EXTERN int	p_csverbose;	/* cscope verbose messages flag */
+#endif
 EXTERN char_u  *p_def;		/* Pattern for recognising definitions */
 EXTERN char_u  *p_dict;		/* Dictionaries for ^P/^N */
 #ifdef DIGRAPHS
@@ -203,8 +237,11 @@ EXTERN int	p_ed;		/* :s is ed compatible */
 EXTERN int	p_ea;		/* make windows equal height */
 EXTERN char_u	*p_ep;		/* program name for '=' command */
 EXTERN int	p_eb;		/* ring bell for errors */
+#ifdef QUICKFIX
 EXTERN char_u  *p_ef;		/* name of errorfile */
 EXTERN char_u  *p_efm;		/* error format */
+EXTERN char_u  *p_gefm;		/* error format for grep -n */
+#endif
 #ifdef AUTOCMD
 EXTERN char_u  *p_ei;		/* events ignored for autocommands */
 #endif
@@ -216,6 +253,8 @@ EXTERN int	p_gd;		/* /g is default for :s */
 #ifdef USE_GUI
 EXTERN char_u  *p_guifont;	/* GUI font list */
 EXTERN int	p_guipty;	/* use pseudo pty for external commands */
+#endif
+#ifdef CURSOR_SHAPE
 EXTERN char_u  *p_guicursor;	/* shape settings for cursor */
 #endif
 #if defined(USE_GUI) || defined(USE_CLIPBOARD)
@@ -246,23 +285,32 @@ EXTERN char_u  *p_isi;		/* characters in an identifier */
 EXTERN char_u  *p_isp;		/* characters that are printable */
 EXTERN int	p_js;		/* use two spaces after '.' with Join */
 EXTERN char_u  *p_kp;		/* keyword program */
+EXTERN char_u  *p_km;		/* 'keymodel' */
 #ifdef HAVE_LANGMAP
 EXTERN char_u  *p_langmap;	/* mapping for some language */
 #endif
 EXTERN long	p_ls;		/* last window has status line */
+EXTERN char_u  *p_lcs;		/* characters for list mode */
+
 EXTERN int	p_lz;		/* lazy redraw, only when key typed */
 EXTERN int	p_magic;	/* use some characters for reg exp */
+#ifdef QUICKFIX
 EXTERN char_u  *p_mef;		/* name of make errorfile */
 EXTERN char_u  *p_mp;		/* program for :make command */
+EXTERN char_u  *p_gp;		/* program for :grep command */
+#endif
 EXTERN long	p_mat;		/* time to show the match of a paren */
-EXTERN long	p_mmd;		/* maximal map depth */
+EXTERN long	p_mfd;		/* 'maxfuncdepth' */
+EXTERN long	p_mmd;		/* 'maxmapdepth' */
 EXTERN long	p_mm;		/* maximal amount of memory for buffer */
 EXTERN long	p_mmt;		/* maximal amount of memory for Vim */
 EXTERN long	p_mls;		/* number of mode lines */
-EXTERN char_u  *p_mouse;	/* enable mouse clicks (for xterm) */
+EXTERN char_u  *p_mouse;	/* flags for use of mouse */
 #ifdef USE_GUI
+EXTERN int	p_mousef;	/* 'mousefocus' */
 EXTERN int	p_mh;		/* hide pointer enable */
 #endif
+EXTERN char_u  *p_mousem;	/* 'mousemodel' */
 EXTERN long	p_mouset;	/* mouse double click time */
 EXTERN int	p_more;		/* wait when screen full when listing */
 EXTERN char_u  *p_para;		/* paragraphs */
@@ -275,6 +323,7 @@ EXTERN long	p_report;	/* minimum number of lines for report */
 EXTERN int	p_rs;		/* restore startup screen upon exit */
 #endif
 #ifdef RIGHTLEFT
+EXTERN int	p_ari;		/* allow CTRL-_ command */
 EXTERN int	p_ri;		/* reverse direction of insert */
 #endif
 EXTERN int	p_ru;		/* show column/line number */
@@ -282,6 +331,9 @@ EXTERN long	p_sj;		/* scroll jump size */
 EXTERN long	p_so;		/* scroll offset */
 EXTERN char_u  *p_sections;	/* sections */
 EXTERN int	p_secure;	/* do .exrc and .vimrc in secure mode */
+EXTERN char_u  *p_sel;		/* 'selection' */
+EXTERN char_u  *p_slm;		/* 'selectmode' */
+EXTERN char_u  *p_sessopt;	/* sessionoptions */
 EXTERN char_u  *p_sh;		/* name of shell to use */
 EXTERN char_u  *p_shcf;		/* flag to shell to execute one command */
 EXTERN char_u  *p_sp;		/* string for output of make */
@@ -293,6 +345,7 @@ EXTERN int	p_sr;		/* shift round off (for < and >) */
 EXTERN char_u  *p_shm;		/* When to use short message */
 EXTERN char_u  *p_sbr;		/* string for break of line */
 EXTERN int	p_sc;		/* show command in status line */
+EXTERN int	p_sft;		/* showfulltag */
 EXTERN int	p_sm;		/* showmatch */
 EXTERN int	p_smd;		/* show mode */
 EXTERN long	p_ss;		/* sideways scrolling offset */
@@ -319,6 +372,7 @@ EXTERN long	p_ttm;		/* key code timeoutlen (msec) */
 EXTERN int	p_tbi;		/* 'ttybuiltin' use builtin termcap first */
 EXTERN int	p_tf;		/* terminal fast I/O */
 EXTERN long	p_ttyscroll;	/* maximum nr of screen lines for a scroll */
+EXTERN char_u  *p_ttym;		/* 'ttymouse', type of mouse */
 EXTERN long	p_ul;		/* number of Undo Levels */
 EXTERN long	p_uc;		/* update count for swap file */
 EXTERN long	p_ut;		/* update time for swap file */
@@ -328,10 +382,18 @@ EXTERN char_u  *p_viminfo;	/* Parameters for using ~/.viminfo file */
 EXTERN int	p_vb;		/* visual bell only (no beep) */
 EXTERN long	p_verbose;	/* verbosity, -V command line argument */
 EXTERN int	p_warn;		/* warn for changes at shell command */
+#if defined(USE_GUI_WIN32) || defined(USE_GUI_MOTIF) || defined(LINT)
+EXTERN char_u	*p_wak;		/* 'winaltkeys' */
+#endif
+#ifdef WILDIGNORE
+EXTERN char_u  *p_wig;		/* 'wildignore' */
+#endif
 EXTERN int	p_wiv;		/* inversion of text is weird */
 EXTERN char_u  *p_ww;		/* which keys wrap to next/prev line */
 EXTERN long	p_wc;		/* character for wildcard exapansion */
+EXTERN char_u  *p_wim;		/* 'wildmode' */
 EXTERN long	p_wh;		/* desired window height */
+EXTERN long	p_wmh;		/* minimal window height */
 EXTERN int	p_ws;		/* wrap scan */
 EXTERN int	p_wa;		/* write any */
 EXTERN int	p_wb;		/* write backup files */

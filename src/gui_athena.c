@@ -15,6 +15,7 @@
 #include <X11/Xaw/MenuButton.h>
 #include <X11/Xaw/SmeBSB.h>
 #include <X11/Xaw/Box.h>
+#include <X11/Xaw/Dialog.h>
 
 #include "vim.h"
 #include "gui_at_sb.h"
@@ -32,12 +33,13 @@ static char_u puller_bits[] =
 
 extern Widget vimShell;
 
-static Widget vimForm = (Widget)NULL;
+static Widget vimForm = (Widget)0;
 static Widget textArea;
 static Widget menuBar;
 
 static void gui_athena_scroll_cb_jump	__ARGS((Widget, XtPointer, XtPointer));
 static void gui_athena_scroll_cb_scroll __ARGS((Widget, XtPointer, XtPointer));
+static char_u *make_pull_name __ARGS((char_u * name));
 static void gui_mch_submenu_colors __ARGS((GuiMenu *mp));
 static void gui_athena_reorder_menus	__ARGS((void));
 static void gui_athena_pullright_action __ARGS((Widget, XEvent *, String *,
@@ -50,7 +52,7 @@ static XtActionsRec	pullAction[2] = {{ "menu-pullright",
 				(XtActionProc)gui_athena_pullright_action},
 					 { "menu-pullleft",
 				(XtActionProc)gui_athena_pullleft_action}};
-static XtTranslations	parentTrans, menuTrans, supermenuTrans;
+static XtTranslations	popupTrans, parentTrans, menuTrans, supermenuTrans;
 static Pixmap		pullerBitmap;
 
 /*
@@ -207,7 +209,8 @@ gui_x11_create_widgets()
      */
     gui_x11_callbacks(textArea, vimForm);
 
-    parentTrans = XtParseTranslationTable("<EnterWindow>: highlight()\n<LeaveWindow>:\n<BtnUp>: notify() unhighlight() MenuPopdown()\n<BtnMotion>: highlight() menu-pullright()");
+    popupTrans = XtParseTranslationTable("<EnterWindow>: highlight()\n<LeaveWindow>: unhighlight()\n<BtnDown>: notify() unhighlight() MenuPopdown()\n<Motion>: highlight() menu-pullright()");
+    parentTrans = XtParseTranslationTable("<EnterWindow>: highlight()\n<LeaveWindow>: unhighlight()\n<BtnUp>: notify() unhighlight() MenuPopdown()\n<BtnMotion>: highlight() menu-pullright()");
     menuTrans = XtParseTranslationTable("<EnterWindow>: highlight()\n<LeaveWindow>: unhighlight() MenuPopdown()\n<BtnUp>: notify() unhighlight() MenuPopdown()\n<BtnMotion>: highlight() menu-pullright()");
     supermenuTrans = XtParseTranslationTable("<EnterWindow>: highlight() menu-pullleft()\n<LeaveWindow>:\n<BtnUp>: notify() unhighlight() MenuPopdown()\n<BtnMotion>:");
 
@@ -284,63 +287,78 @@ gui_mch_set_menu_pos(x, y, w, h)
     XtManageChild(menuBar);
 }
 
+/* ARGSUSED */
     void
-gui_mch_add_menu(menu, parent)
-    GuiMenu *menu;
-    GuiMenu *parent;
+gui_mch_add_menu(menu, parent, idx)
+    GuiMenu	*menu;
+    GuiMenu	*parent;
+    int		idx;
 {
     char_u	*pullright_name;
     Dimension	height, space, border;
 
     if (parent == NULL)
     {
-	menu->id = XtVaCreateManagedWidget((char *)menu->name,
-	    menuButtonWidgetClass, menuBar,
-	    XtNmenuName, menu->name,
-	    XtNforeground, gui.menu_fg_pixel,
-	    XtNbackground, gui.menu_bg_pixel,
-	    NULL);
-
-	menu->submenu_id = XtVaCreatePopupShell((char *)menu->name,
-	    simpleMenuWidgetClass, menu->id,
-	    XtNforeground, gui.menu_fg_pixel,
-	    XtNbackground, gui.menu_bg_pixel,
-	    NULL);
-
-	/* Don't update the menu height when it was set at a fixed value */
-	if (!gui.menu_height_fixed)
+	if (gui_popup_menu(menu->dname))
 	{
-	    /*
-	     * When we add a top-level item to the menu bar, we can figure out
-	     * how high the menu bar should be.
-	     */
-	    XtVaGetValues(menuBar,
-		    XtNvSpace,	&space,
-		    XtNborderWidth, &border,
-		    NULL);
-	    XtVaGetValues(menu->id,
-		    XtNheight,	&height,
-		    NULL);
-	    gui.menu_height = height + 2 * (space + border);
+	    menu->submenu_id = XtVaCreatePopupShell((char *)menu->dname,
+		simpleMenuWidgetClass, vimShell,
+		XtNforeground, gui.menu_fg_pixel,
+		XtNbackground, gui.menu_bg_pixel,
+		NULL);
 	}
+	else if (gui_menubar_menu(menu->dname))
+	{
+	    menu->id = XtVaCreateManagedWidget((char *)menu->dname,
+		menuButtonWidgetClass, menuBar,
+		XtNmenuName, menu->dname,
+		XtNforeground, gui.menu_fg_pixel,
+		XtNbackground, gui.menu_bg_pixel,
+		NULL);
+	    if (menu->id == (Widget)0)
+		return;
 
-	gui_athena_reorder_menus();
+	    menu->submenu_id = XtVaCreatePopupShell((char *)menu->dname,
+		simpleMenuWidgetClass, menu->id,
+		XtNforeground, gui.menu_fg_pixel,
+		XtNbackground, gui.menu_bg_pixel,
+		NULL);
+
+	    /* Don't update the menu height when it was set at a fixed value */
+	    if (!gui.menu_height_fixed)
+	    {
+		/*
+		 * When we add a top-level item to the menu bar, we can figure
+		 * out how high the menu bar should be.
+		 */
+		XtVaGetValues(menuBar,
+			XtNvSpace,	&space,
+			XtNborderWidth, &border,
+			NULL);
+		XtVaGetValues(menu->id,
+			XtNheight,	&height,
+			NULL);
+		gui.menu_height = height + 2 * (space + border);
+	    }
+
+	    gui_athena_reorder_menus();
+	}
     }
-    else
+    else if (parent->submenu_id != (Widget)0)
     {
-	menu->id = XtVaCreateManagedWidget((char *)menu->name,
+	menu->id = XtVaCreateManagedWidget((char *)menu->dname,
 	    smeBSBObjectClass, parent->submenu_id,
 	    XtNforeground, gui.menu_fg_pixel,
 	    XtNbackground, gui.menu_bg_pixel,
 	    XtNrightMargin, puller_width,
 	    XtNrightBitmap, pullerBitmap,
 	    NULL);
+	if (menu->id == (Widget)0)
+	    return;
 	XtAddCallback(menu->id, XtNcallback, gui_x11_menu_cb,
 	    (XtPointer)menu);
 
-	pullright_name = vim_strnsave(menu->name,
-				   STRLEN(menu->name) + strlen("-pullright"));
-	strcat((char *)pullright_name, "-pullright");
+	pullright_name = make_pull_name(menu->dname);
 	menu->submenu_id = XtVaCreatePopupShell((char *)pullright_name,
 	    simpleMenuWidgetClass, parent->submenu_id,
 	    XtNforeground, gui.menu_fg_pixel,
@@ -353,19 +371,55 @@ gui_mch_add_menu(menu, parent)
     }
 }
 
-    void
-gui_mch_add_menu_item(menu, parent)
-    GuiMenu *menu;
-    GuiMenu *parent;
+/*
+ * Make a submenu name into a pullright name.
+ * Replace '.' by '_', can't include '.' in the submenu name.
+ */
+    static char_u *
+make_pull_name(name)
+    char_u * name;
 {
-    menu->submenu_id = (Widget)0;
-    menu->id = XtVaCreateManagedWidget((char *)menu->name,
-	smeBSBObjectClass, parent->submenu_id,
-	XtNforeground, gui.menu_fg_pixel,
-	XtNbackground, gui.menu_bg_pixel,
-	NULL);
-    XtAddCallback(menu->id, XtNcallback, gui_x11_menu_cb,
-	(XtPointer)menu);
+    char_u  *pname;
+    char_u  *p;
+
+    pname = vim_strnsave(name, STRLEN(name) + strlen("-pullright"));
+    if (pname != NULL)
+    {
+	strcat((char *)pname, "-pullright");
+	while ((p = vim_strchr(pname, '.')) != NULL)
+	    *p = '_';
+    }
+    return pname;
+}
+
+/* ARGSUSED */
+    void
+gui_mch_add_menu_item(menu, parent, idx)
+    GuiMenu	*menu;
+    GuiMenu	*parent;
+    int		idx;
+{
+    if (parent != NULL && parent->submenu_id != (Widget)0)
+    {
+	menu->submenu_id = (Widget)0;
+	menu->id = XtVaCreateManagedWidget((char *)menu->dname,
+		smeBSBObjectClass, parent->submenu_id,
+		XtNforeground, gui.menu_fg_pixel,
+		XtNbackground, gui.menu_bg_pixel,
+		NULL);
+	if (menu->id == (Widget)0)
+	    return;
+	XtAddCallback(menu->id, XtNcallback, gui_x11_menu_cb,
+		(XtPointer)menu);
+    }
+}
+
+/* ARGSUSED */
+    void
+gui_mch_toggle_tearoffs(enable)
+    int		enable;
+{
+    /* no tearoff menus */
 }
 
     void
@@ -388,10 +442,11 @@ gui_mch_submenu_colors(mp)
 {
     while (mp != NULL)
     {
-	XtVaSetValues(mp->id,
-		XtNforeground, gui.menu_fg_pixel,
-		XtNbackground, gui.menu_bg_pixel,
-		NULL);
+	if (mp->id != (Widget)0)
+	    XtVaSetValues(mp->id,
+		    XtNforeground, gui.menu_fg_pixel,
+		    XtNbackground, gui.menu_bg_pixel,
+		    NULL);
 	if (mp->submenu_id != (Widget)0)
 	    XtVaSetValues(mp->submenu_id,
 		    XtNforeground, gui.menu_fg_pixel,
@@ -445,7 +500,8 @@ gui_mch_destroy_menu(menu)
 	 * The code above causes a crash.  Apparantly because the highlighting
 	 * is still there, and removing it later causes the crash.
 	 * This fix just unmanages the menu item, without destroying it.  The
-	 * only problem is that the highlighting will be wrong.
+	 * problem now is that the highlighting will be wrong, and the item
+	 * will re-appear later...
 	 */
 	XtUnmanageChild(menu->id);
 #endif
@@ -477,7 +533,8 @@ gui_athena_reorder_menus()
     {
 	for (from = to; from < num_children; ++from)
 	{
-	    if (strcmp((char *)XtName(children[from]), (char *)menu->name) == 0)
+	    if (strcmp((char *)XtName(children[from]),
+						    (char *)menu->dname) == 0)
 	    {
 		if (to != from)		/* need to move this one */
 		{
@@ -510,6 +567,9 @@ gui_mch_set_scrollbar_thumb(sb, val, size, max)
 {
     double	    v, s;
 
+    if (sb->id == (Widget)0)
+	return;
+
     /*
      * Athena scrollbar must go from 0.0 to 1.0.
      */
@@ -534,6 +594,9 @@ gui_mch_set_scrollbar_pos(sb, x, y, w, h)
     int		    w;
     int		    h;
 {
+    if (sb->id == (Widget)0)
+	return;
+
     XtUnmanageChild(sb->id);
     XtVaSetValues(sb->id,
 		  XtNhorizDistance, x,
@@ -562,6 +625,9 @@ gui_mch_create_scrollbar(sb, orient)
 	    XtNforeground, gui.scroll_fg_pixel,
 	    XtNbackground, gui.scroll_bg_pixel,
 	    NULL);
+    if (sb->id == (Widget)0)
+	return;
+
     XtAddCallback(sb->id, XtNjumpProc,
 		  gui_athena_scroll_cb_jump, (XtPointer)sb->ident);
     XtAddCallback(sb->id, XtNscrollProc,
@@ -574,14 +640,15 @@ gui_mch_create_scrollbar(sb, orient)
 gui_mch_destroy_scrollbar(sb)
     GuiScrollbar    *sb;
 {
-    XtDestroyWidget(sb->id);
+    if (sb->id != (Widget)0)
+	XtDestroyWidget(sb->id);
 }
 
     void
 gui_mch_set_scrollbar_colors(sb)
     GuiScrollbar    *sb;
 {
-    if (sb->id != NULL)
+    if (sb->id != (Widget)0)
 	XtVaSetValues(sb->id,
 	    XtNforeground, gui.scroll_fg_pixel,
 	    XtNbackground, gui.scroll_bg_pixel,
@@ -624,7 +691,7 @@ gui_athena_pullright_action(w, event, args, nargs)
 	return;
 
     popup = get_popup_entry(w);
-    if (popup == (Widget)NULL)
+    if (popup == (Widget)0)
 	return;
 
     /* Don't Popdown the previous submenu now */
@@ -659,11 +726,11 @@ gui_athena_pullleft_action(w, event, args, nargs)
 
     /* Do Popdown the submenu now */
     popup = get_popup_entry(w);
-    if (popup != (Widget)NULL)
+    if (popup != (Widget)0)
 	XtPopdown(popup);
 
     /* If this is the toplevel menu item, set parentTrans */
-    if ((parent = XtParent(w)) != (Widget)NULL && XtParent(parent) == menuBar)
+    if ((parent = XtParent(w)) != (Widget)0 && XtParent(parent) == menuBar)
 	XtOverrideTranslations(w, parentTrans);
     else
 	XtOverrideTranslations(w, menuTrans);
@@ -678,14 +745,223 @@ get_popup_entry(w)
     Widget	popup;
 
     /* Get the active entry for the current menu */
-    if ((menuw = XawSimpleMenuGetActiveEntry(w)) == (Widget)NULL)
+    if ((menuw = XawSimpleMenuGetActiveEntry(w)) == (Widget)0)
 	return NULL;
 
-    pullright_name = vim_strnsave((char_u *)XtName(menuw),
-				strlen(XtName(menuw)) + strlen("-pullright"));
-    strcat((char *)pullright_name, "-pullright");
+    pullright_name = make_pull_name((char_u *)XtName(menuw));
     popup = XtNameToWidget(w, (char *)pullright_name);
     vim_free(pullright_name);
 
     return popup;
 }
+
+/* ARGSUSED */
+    void
+gui_mch_show_popupmenu(menu)
+    GuiMenu *menu;
+{
+    int		rootx, rooty, winx, winy;
+    Window	root, child;
+    unsigned int mask;
+
+    if (menu->submenu_id == (Widget)0)
+	return;
+
+    /* Position the popup menu at the pointer */
+    if (XQueryPointer(gui.dpy, XtWindow(vimShell), &root, &child,
+		&rootx, &rooty, &winx, &winy, &mask))
+    {
+	rootx -= 30;
+	if (rootx < 0)
+	    rootx = 0;
+	rooty -= 5;
+	if (rooty < 0)
+	    rooty = 0;
+	XtVaSetValues(menu->submenu_id,
+		XtNx, rootx,
+		XtNy, rooty,
+		NULL);
+    }
+
+    XtOverrideTranslations(menu->submenu_id, popupTrans);
+    XtPopupSpringLoaded(menu->submenu_id);
+}
+
+#if defined(USE_BROWSE) || defined(PROTO)
+/*
+ * Put up a file requester.
+ * Returns the selected name in allocated memory, or NULL for Cancel.
+ */
+/* ARGSUSED */
+    char_u *
+gui_mch_browse(saving, title, dflt, ext, initdir, filter)
+    int		saving;		/* select file to write */
+    char_u	*title;		/* not used (title for the window) */
+    char_u	*dflt;		/* not used (default name) */
+    char_u	*ext;		/* not used (extension added) */
+    char_u	*initdir;	/* initial directory, NULL for current dir */
+    char_u	*filter;	/* not used (file name filter) */
+{
+    Position x, y;
+
+    /* Position the file selector just below the menubar */
+    XtTranslateCoords(vimShell, (Position)0, (Position)gui.menu_height, &x, &y);
+    return (char_u *)vim_SelFile(vimShell, (char *)title, (char *)initdir,
+		  NULL, (int)x, (int)y, gui.menu_fg_pixel, gui.menu_bg_pixel);
+}
+#endif
+
+#if defined(GUI_DIALOG) || defined(PROTO)
+
+int	dialogStatus;
+
+static void butproc __ARGS((Widget w, XtPointer client_data, XtPointer call_data));
+
+/* ARGSUSED */
+    static void
+butproc(w, client_data, call_data)
+    Widget	w;
+    XtPointer	client_data;
+    XtPointer	call_data;
+{
+    dialogStatus = (int)(long)client_data + 1;
+}
+
+/* ARGSUSED */
+    int
+gui_mch_dialog(type, title, message, buttons, dfltbutton)
+    int		type;
+    char_u	*title;
+    char_u	*message;
+    char_u	*buttons;
+    int		dfltbutton;
+{
+    char_u		*buts;
+    char_u		*p, *next;
+    XtAppContext	app;
+    XEvent		event;
+    Position		wd, hd;
+    Position		wv, hv;
+    Position		x, y;
+    Widget		dialog;
+    Widget		dialogshell;
+    Widget		dialogmessage;
+#define MAXBUT 10
+    Widget		dialogButton[MAXBUT];
+    int			butcount;
+
+    if (title == NULL)
+	title = (char_u *)"Vim dialog";
+    dialogStatus = -1;
+
+    /* if our pointer is currently hidden, then we should show it. */
+    gui_mch_mousehide(FALSE);
+
+    /* The shell is created each time, to make sure it is resized properly */
+    dialogshell = XtVaCreatePopupShell("dialogShell",
+	    transientShellWidgetClass, vimShell,
+	    XtNlabel, title,
+	    NULL);
+    if (dialogshell == (Widget)0)
+	goto error;
+    dialog = XtVaCreateManagedWidget("dialog",
+	    formWidgetClass, dialogshell,
+	    XtNdefaultDistance, 30,
+	    XtNforeground, gui.menu_fg_pixel,
+	    XtNbackground, gui.menu_bg_pixel,
+	    NULL);
+    if (dialog == (Widget)0)
+	goto error;
+    dialogmessage = XtVaCreateManagedWidget("dialogMessage",
+	    labelWidgetClass, dialog,
+	    XtNlabel, message,
+	    XtNtop, XtChainTop,
+	    XtNbottom, XtChainTop,
+	    XtNleft, XtChainLeft,
+	    XtNright, XtChainLeft,
+	    XtNresizable, True,
+	    XtNborderWidth, 0,
+	    XtNforeground, gui.menu_fg_pixel,
+	    XtNbackground, gui.menu_bg_pixel,
+	    NULL);
+
+    /* make a copy, so that we can insert NULs */
+    buts = vim_strsave(buttons);
+    if (buts == NULL)
+	return -1;
+
+    p = buts;
+    for (butcount = 0; butcount < MAXBUT; ++butcount)
+    {
+	for (next = p; *next; ++next)
+	{
+	    if (*next == DLG_HOTKEY_CHAR)
+		mch_memmove(next, next + 1, STRLEN(next));
+	    if (*next == DLG_BUTTON_SEP)
+	    {
+		*next++ = NUL;
+		break;
+	    }
+	}
+	dialogButton[butcount] = XtVaCreateManagedWidget("button",
+		commandWidgetClass, dialog,
+		XtNlabel, p,
+		XtNtop, XtChainBottom,
+		XtNbottom, XtChainBottom,
+		XtNleft, XtChainLeft,
+		XtNright, XtChainLeft,
+		XtNfromVert, dialogmessage,
+		XtNforeground, gui.menu_fg_pixel,
+		XtNbackground, gui.menu_bg_pixel,
+		XtNresizable, False,
+		NULL);
+	if (butcount > 0)
+	    XtVaSetValues(dialogButton[butcount],
+		    XtNfromHoriz, dialogButton[butcount - 1],
+		    NULL);
+
+	XtAddCallback(dialogButton[butcount], XtNcallback,
+						butproc, (XtPointer)butcount);
+	if (*next == NUL)
+	    break;
+	p = next;
+    }
+    ++butcount;
+    vim_free(buts);
+
+    XtRealizeWidget(dialogshell);
+
+    XtVaGetValues(dialogshell,
+	    XtNwidth, &wd,
+	    XtNheight, &hd,
+	    NULL);
+    XtVaGetValues(vimShell,
+	    XtNwidth, &wv,
+	    XtNheight, &hv,
+	    NULL);
+    XtTranslateCoords(vimShell,
+	    (Position)((wv - wd) / 2),
+	    (Position)((hv - hd) / 2),
+	    &x, &y);
+    XtVaSetValues(dialogshell, XtNx, x, XtNy, y, NULL);
+
+    app = XtWidgetToApplicationContext(dialogshell);
+
+    XtPopup(dialogshell, XtGrabNonexclusive);
+
+    while (1)
+    {
+	XtAppNextEvent(app, &event);
+	XtDispatchEvent(&event);
+	if (dialogStatus >= 0)
+	    break;
+    }
+
+    XtPopdown(dialogshell);
+
+error:
+    XtDestroyWidget(dialogshell);
+
+    return dialogStatus;
+}
+#endif

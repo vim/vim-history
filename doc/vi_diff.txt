@@ -1,4 +1,4 @@
-*vi_diff.txt*   For Vim version 5.1.  Last modification: 1998 Jan 25
+*vi_diff.txt*   For Vim version 5.2.  Last modification: 1998 Aug 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -15,7 +15,7 @@ other files and gives an overview.
 3. Limits				|limits|
 4. The most interesting additions	|vim-additions|
 5. Other vim features			|other-features|
-6. Command line arguments		|cmdline-arguments|
+6. Command-line arguments		|cmdline-arguments|
 
 ==============================================================================
 1. Missing commands					*missing-commands*
@@ -31,21 +31,21 @@ These options are in the Unix Vi, but not in Vim.  If you try to set one of
 them you won't get an error message, but the value is not used and cannot be
 printed.
 
-autoprint (ap)		toggle	(default on)		*'autoprint'* *'ap'*
-beautify (bf)		toggle	(default off)		*'beautify'* *'bf'*
-flash (fl)		toggle	(default ??)		*'flash'* *'fl'*
-graphic (gr)		toggle	(default off)		*'graphic'* *'gr'*
+autoprint (ap)		boolean	(default on)		*'autoprint'* *'ap'*
+beautify (bf)		boolean	(default off)		*'beautify'* *'bf'*
+flash (fl)		boolean	(default ??)		*'flash'* *'fl'*
+graphic (gr)		boolean	(default off)		*'graphic'* *'gr'*
 hardtabs (ht)		number	(default 8)		*'hardtabs'* *'ht'*
 	number of spaces that a <Tab> moves on the display
-mesg			toggle	(default on)		*'mesg'*
-novice			toggle	(default ??)		*'novice'*
-open			toggle	(default on)		*'open'*
-optimize (op)		toggle	(default off)		*'optimize'* *'op'*
-prompt			toggle	(default on)		*'prompt'*
-redraw			toggle	(default off)		*'redraw'*
-slowopen (slow)		toggle	(default off)		*'slowopen'* *'slow'*
-sourceany		toggle	(default off)		*'sourceany'*
-tagstack (tgst)		toggle  (default on)		*'tagstack'* *'tgst'*
+mesg			boolean	(default on)		*'mesg'*
+novice			boolean	(default ??)		*'novice'*
+open			boolean	(default on)		*'open'*
+optimize (op)		boolean	(default off)		*'optimize'* *'op'*
+prompt			boolean	(default on)		*'prompt'*
+redraw			boolean	(default off)		*'redraw'*
+slowopen (slow)		boolean	(default off)		*'slowopen'* *'slow'*
+sourceany		boolean	(default off)		*'sourceany'*
+tagstack (tgst)		boolean  (default on)		*'tagstack'* *'tgst'*
 	enables the tagstack and ":pop".
 window (wi)		number	(default 23)		*'window'* *'wi'*
 w300			number	(default 23)		*'w300'*
@@ -77,7 +77,7 @@ Maximum lhs of a mapping   50 characters.
 Information for undo and registers are kept in memory, thus when making (big)
 changes the amount of (virtual) memory available limits the number of undo
 levels and the text that can be kept in registers.  Other things are also kept
-in memory:  Command line history, error messages for Quickfix mode, etc.
+in memory:  Command-line history, error messages for Quickfix mode, etc.
 This is a summary of the differences between VIM and vi. It is not complete.
 Look in the other documentation files for comments in {}, like "{not in Vi}".
 
@@ -113,7 +113,7 @@ Vi compatibility.					|'compatible'|
 		vim -N
 	This is done automatically if you have a .vimrc file.  See |startup|.
 	The 'cpoptions' option can be used to set Vi compatibility on/off for
-	a number of specific items. 			|'cpoptions'|
+	a number of specific items.			|'cpoptions'|
 
 Support for different systems.
 	Vim can be used on:
@@ -142,7 +142,8 @@ Graphical User Interface (GUI)				|gui|
 	Included support for GUI: menu's, mouse, scrollbars, etc.  You can
 	define your own menus.  Better support for CTRL/SHIFT/ALT keys in
 	combination with special keys and mouse.  Currently for X11 (with
-	Motif and Athena interfaces) and Win32 (Windows 95 and Windows NT).
+	Motif and Athena interfaces), Win32 (Windows 95 and Windows NT), BeOS,
+	Amiga and Macintosh.
 
 Multiple windows and buffers.				|windows.txt|
 	Vim can split the screen into several windows, each editing a
@@ -354,7 +355,7 @@ Editing binary files					|edit-binary|
 	Vim can edit binary files.  You can change a few characters in an
 	executable file, whithout corrupting it.  Vim doesn't remove NUL
 	characters (they are represented as <NL> internally).
-	|-b|		command line argument to start editing a binary file
+	|-b|		command-line argument to start editing a binary file
 	|'binary'|	Option set by "-b".  Prevents adding an <EOL> for the
 			last line in the file.
 
@@ -529,7 +530,7 @@ command (default 1) is added to/subtracted from the number at or after the
 cursor.  That number may be decimal, octal (starts with a '0') or hexadecimal
 (starts with '0x').  Very useful in macros.
 
-With the :set command the prefix "inv" can be used to invert toggle options.
+With the :set command the prefix "inv" can be used to invert boolean options.
 
 In both Vi and Vim you can create a line break with the ":substitute" command
 by using a CTRL-M.  For Vi this means you cannot insert a real CTRL-M in the
@@ -673,19 +674,20 @@ message, since that may cause a mapping to be aborted.
 The AUX: device of the Amiga is supported.
 
 ==============================================================================
-6. Command line arguments				*cmdline-arguments*
+6. Command-line arguments				*cmdline-arguments*
 
-Different versions of Vi have different command line arguments.  This can be
+Different versions of Vi have different command-line arguments.  This can be
 confusing.  To help you, this section gives an overview of the differences.
 
-Five versions of Vi will be considered here:
+Five variants of Vi will be considered here:
 	Elvis	Elvis version 2.1b
 	Nvi	Nvi version 1.79
 	Posix	Posix 1003.2
 	Vi	Vi version 3.7 (for Sun 4.1.x)
-	Vim	Vim version 5.0
+	Vile	Vile version 7.4 (incomplete)
+	Vim	Vim version 5.2
 
-Only Vim is able accept options after the file names.
+Only Vim is able to accept options in between and after the file names.
 
 +{command}	Elvis, Nvi, Posix, Vi, Vim: Same as "-c {command}".
 
@@ -693,6 +695,12 @@ Only Vim is able accept options after the file names.
 		Vim: Read file from stdin (use -s for batch mode).
 
 --		Vim: End of options, only file names are following.
+
+--help		Vim: show help message and exit.
+
+--version	Vim: show version message and exit.
+
+-?		Vile: print usage summary and exit.
 
 -a		Elvis: Load all specified file names into a window (use -o for
 		Vim).
@@ -704,24 +712,27 @@ Only Vim is able accept options after the file names.
 
 -c {command}	Elvis, Nvi, Posix, Vim: run {command} as an Ex command after
 		loading the edit buffer.
-		Vim: allow up to 10 commands.
+		Vim: allow up to 10 "-c" arguments
 
 -d {device}	Vim: Use {device} for I/O (Amiga only).
 
 -e		Elvis, Nvi, Vim: Start in Ex mode, as if the executable is
 		called "ex".
 
--f		Nvi: Don't copy the whole file when editing starts.
-		Vim: Run GUI in foreground (Amiga: don't open new window).
+-f		Vim: Run GUI in foreground (Amiga: don't open new window).
 -f {session}	Elvis: Use {session} as the session file.
 
 -F		Vim: Start in Farsi mode (when compiled with Farsi).
+		Nvi: Fast start, don't read the entire file when editing
+		starts.
 
 -G {gui}	Elvis: Use the {gui} as user interface.
 
 -g		Vim: Start GUI.
+-g N		Vile: start editing at line N
 
 -h		Vim: Give help message.
+		Vile: edit the help file
 
 -H		Vim: start Hebrew mode (when compiled with it).
 
@@ -741,9 +752,9 @@ Only Vim is able accept options after the file names.
 -q {name}	Vim: Use {name} for quickfix error file.
 -q{name}	Vim: Idem.
 
--R		Elvis, Nvi, Posix, Vim: Set the 'readonly' option.
+-R		Elvis, Nvi, Posix, Vile, Vim: Set the 'readonly' option.
 
--r		Elvis, Nvi, Posix, Vi, Vim, Vim: Recovery mode.
+-r		Elvis, Nvi, Posix, Vi, Vim: Recovery mode.
 
 -S		Nvi: Set 'secure' option.
 
@@ -751,6 +762,7 @@ Only Vim is able accept options after the file names.
 		Elvis: Sets the 'safer' option.
 -s {scriptin}	Vim: Read from script file {scriptin}; only when not in Ex
 		mode.
+-s {pattern}	Vile: search for {pattern}
 
 -t {tag}	Elvis, Nvi, Posix, Vi, Vim: Edit the file containing {tag}.
 -t{tag}		Vim: Idem.
@@ -763,6 +775,7 @@ Only Vim is able accept options after the file names.
 
 -v		Nvi, Posix, Vi, Vim: Begin in Normal mode (visual mode, in Vi
 		terms).
+		Vile: View mode, no changes possible.
 
 -V		Elvis, Vim: Verbose mode.
 
@@ -774,5 +787,7 @@ Only Vim is able accept options after the file names.
 
 -x		Vi: Ask for encryption key.
 		Vim: Reserved for encryption key (not implemented yet).
+
+@{cmdfile}	Vile: use {cmdfile} as startup file.
 
  vim:ts=8:sw=8:tw=78:

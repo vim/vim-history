@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 5.1.  Last modification: 1998 Apr 06
+*motion.txt*    For Vim version 5.2.  Last modification: 1998 Aug 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -149,7 +149,7 @@ g$ or g<End>		When lines wrap ('wrap' on): To the last character of
 			the screen line and [count - 1] screen lines downward
 			(inclusive).  Differs from "$" when a line is wider
 			than the screen.
-			When lines don't wrap ('wrap' off): To the righmost
+			When lines don't wrap ('wrap' off): To the rightmost
 			character of the current line that is visible on the
 			screen.  Differs from "$" when the last character of
 			the line is not on the screen or when a count is used.
@@ -204,11 +204,13 @@ CTRL-N			[count] lines downward (linewise).
 
 gk		or					*gk* *g<Up>*
 g<Up>			[count] display lines upward (exclusive).  Differs
-			from 'k' when lines wrap.  {not in Vi}
+			from 'k' when lines wrap, and when used with an
+			operator, because it's not linewise.  {not in Vi}
 
 gj		or					*gj* *g<Down>*
 g<Down>			[count] display lines downward (exclusive).  Differs
-			from 'j' when lines wrap.  {not in Vi}
+			from 'j' when lines wrap, and when used with an
+			operator, because it's not linewise.  {not in Vi}
 
 							*-*
 -  <minus>		[count] lines upward, on the first non-blank
@@ -380,7 +382,7 @@ without white space, or just the white space.  Thus the "inner" commands
 always select less text than the "a" commands.
 
 These commands are {not in Vi}.
-These commands are not avaialble when the |+textobjects| feature has been
+These commands are not available when the |+textobjects| feature has been
 disabled at compile time.
 							*v_aw*
 aw			"a word", select [count] words (see |word|).
@@ -416,22 +418,48 @@ ap			"a paragraph", select [count] paragraphs (see
 ip			"inner paragraph", select [count] paragraphs (see
 			|paragraph|).
 
-							*v_ab*
+a]							*v_a]* *v_a[*
+a[			"a [] block", select [count] '[' ']' blocks.  This
+			goes backwards to the [count] unclosed '[', and finds
+			the matching ']'.  The enclosed text is selected,
+			including the '[' and ']'.
+
+i]							*v_i]* *v_i[*
+i[			"inner [] block", select [count] '[' ']' blocks.  This
+			goes backwards to the [count] unclosed '[', and finds
+			the matching ']'.  The enclosed text is selected,
+			excluding the '[' and ']'.
+
+a)							*v_a)*
+a(							*v_ab* *v_a(*
 ab			"a block", select [count] blocks, from "[count] [(" to
 			the matching ')', including the '(' and ')' (see
 			|[(|).
 
-							*v_ib*
+i)							*v_i)*
+i(							*v_ib* *v_i(*
 ib			"inner block", select [count] blocks, from "[count] [("
 			to the matching ')', excluding the '(' and ')' (see
 			|[(|).
 
-							*v_aB*
+a>							*v_a>* *v_a<*
+a<			"a <> block", select [count] <> blocks, from the
+			[count]'th unmatched '<' backwards to the matching
+			'>', including the '<' and '>'.
+
+i>							*v_i>* *v_i<*
+i<			"inner <> block", select [count] <> blocks, from
+			the [count]'th unmatched '<' backwards to the matching
+			'>', excluding the '<' and '>'.
+
+a}							*v_a}*
+a{							*v_aB* *v_a{*
 aB			"a Block", select [count] Blocks, from "[count] [{" to
 			the matching '}', including the '{' and '}' (see
 			|[{|).
 
-							*v_iB*
+i}							*v_i}*
+i{							*v_iB* *v_i{*
 iB			"inner Block", select [count] Blocks, from "[count] [{"
 			to the matching '}', excluding the '{' and '}' (see
 			|[{|).
@@ -648,7 +676,8 @@ CTRL-I			Go to [count] newer cursor position in jump list
 							*jumplist*
 Jumps are remembered in a jump list.  With the CTRL-O and CTRL-I command you
 can go to cursor positions before older jumps, and back again.  Thus you can
-move up and down the list.
+move up and down the list.  There is a separate jump list for each window.
+The maximum number of entries is fixed at 50.
 
 For example, after three jump commands you have this jump list:
 
@@ -676,7 +705,7 @@ back to the position before the CTRL-O.  In this case this is line 1167.
 
 With more CTRL-O commands you will go to lines 70 and 1.  If you use CTRL-I
 you can go back to 1154 and 1167 again.  Note that the number in the "jump"
-column indicates the cound for the CTRL-O or CTRL-I command that takes you to
+column indicates the count for the CTRL-O or CTRL-I command that takes you to
 this position.
 
 If you use a jump command, the current line number is inserted at the end of
@@ -702,6 +731,8 @@ if you stop editing a file without writing, like with ":n!".
 			cursor and jump to its match (inclusive).  Items can
 			be:
 			([{}])		parenthesis or (curly/square) brackets
+					(this can be changed with the
+					'matchpairs' option)
 			/* */		start or end of C-style comment
 			#if, #ifdef, #else, #elif, #endif
 					C preprocessor conditionals

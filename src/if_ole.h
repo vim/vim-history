@@ -28,7 +28,7 @@ extern "C"{
 #ifndef __IVim_FWD_DEFINED__
 #define __IVim_FWD_DEFINED__
 typedef interface IVim IVim;
-#endif 	/* __IVim_FWD_DEFINED__ */
+#endif	/* __IVim_FWD_DEFINED__ */
 
 
 /* header files for imported files */
@@ -56,80 +56,80 @@ EXTERN_C const IID IID_IVim;
     interface IVim : public IDispatch
     {
     public:
-        virtual HRESULT STDMETHODCALLTYPE SendKeys(
-            /* [in] */ BSTR keys) = 0;
+	virtual HRESULT STDMETHODCALLTYPE SendKeys(
+	    /* [in] */ BSTR keys) = 0;
 
-        virtual HRESULT STDMETHODCALLTYPE Eval(
-            /* [in] */ BSTR expr,
-            /* [retval][out] */ BSTR __RPC_FAR *result) = 0;
+	virtual HRESULT STDMETHODCALLTYPE Eval(
+	    /* [in] */ BSTR expr,
+	    /* [retval][out] */ BSTR __RPC_FAR *result) = 0;
 
-        virtual HRESULT STDMETHODCALLTYPE SetForeground( void) = 0;
+	virtual HRESULT STDMETHODCALLTYPE SetForeground( void) = 0;
     };
 
-#else 	/* C style interface */
+#else	/* C style interface */
 
     typedef struct IVimVtbl
     {
-        BEGIN_INTERFACE
+	BEGIN_INTERFACE
 
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *QueryInterface )(
-            IVim __RPC_FAR * This,
-            /* [in] */ REFIID riid,
-            /* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvObject);
+	HRESULT ( STDMETHODCALLTYPE __RPC_FAR *QueryInterface )(
+	    IVim __RPC_FAR * This,
+	    /* [in] */ REFIID riid,
+	    /* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvObject);
 
-        ULONG ( STDMETHODCALLTYPE __RPC_FAR *AddRef )(
-            IVim __RPC_FAR * This);
+	ULONG ( STDMETHODCALLTYPE __RPC_FAR *AddRef )(
+	    IVim __RPC_FAR * This);
 
-        ULONG ( STDMETHODCALLTYPE __RPC_FAR *Release )(
-            IVim __RPC_FAR * This);
+	ULONG ( STDMETHODCALLTYPE __RPC_FAR *Release )(
+	    IVim __RPC_FAR * This);
 
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *GetTypeInfoCount )(
-            IVim __RPC_FAR * This,
-            /* [out] */ UINT __RPC_FAR *pctinfo);
+	HRESULT ( STDMETHODCALLTYPE __RPC_FAR *GetTypeInfoCount )(
+	    IVim __RPC_FAR * This,
+	    /* [out] */ UINT __RPC_FAR *pctinfo);
 
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *GetTypeInfo )(
-            IVim __RPC_FAR * This,
-            /* [in] */ UINT iTInfo,
-            /* [in] */ LCID lcid,
-            /* [out] */ ITypeInfo __RPC_FAR *__RPC_FAR *ppTInfo);
+	HRESULT ( STDMETHODCALLTYPE __RPC_FAR *GetTypeInfo )(
+	    IVim __RPC_FAR * This,
+	    /* [in] */ UINT iTInfo,
+	    /* [in] */ LCID lcid,
+	    /* [out] */ ITypeInfo __RPC_FAR *__RPC_FAR *ppTInfo);
 
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *GetIDsOfNames )(
-            IVim __RPC_FAR * This,
-            /* [in] */ REFIID riid,
-            /* [size_is][in] */ LPOLESTR __RPC_FAR *rgszNames,
-            /* [in] */ UINT cNames,
-            /* [in] */ LCID lcid,
-            /* [size_is][out] */ DISPID __RPC_FAR *rgDispId);
+	HRESULT ( STDMETHODCALLTYPE __RPC_FAR *GetIDsOfNames )(
+	    IVim __RPC_FAR * This,
+	    /* [in] */ REFIID riid,
+	    /* [size_is][in] */ LPOLESTR __RPC_FAR *rgszNames,
+	    /* [in] */ UINT cNames,
+	    /* [in] */ LCID lcid,
+	    /* [size_is][out] */ DISPID __RPC_FAR *rgDispId);
 
-        /* [local] */ HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Invoke )(
-            IVim __RPC_FAR * This,
-            /* [in] */ DISPID dispIdMember,
-            /* [in] */ REFIID riid,
-            /* [in] */ LCID lcid,
-            /* [in] */ WORD wFlags,
-            /* [out][in] */ DISPPARAMS __RPC_FAR *pDispParams,
-            /* [out] */ VARIANT __RPC_FAR *pVarResult,
-            /* [out] */ EXCEPINFO __RPC_FAR *pExcepInfo,
-            /* [out] */ UINT __RPC_FAR *puArgErr);
+	/* [local] */ HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Invoke )(
+	    IVim __RPC_FAR * This,
+	    /* [in] */ DISPID dispIdMember,
+	    /* [in] */ REFIID riid,
+	    /* [in] */ LCID lcid,
+	    /* [in] */ WORD wFlags,
+	    /* [out][in] */ DISPPARAMS __RPC_FAR *pDispParams,
+	    /* [out] */ VARIANT __RPC_FAR *pVarResult,
+	    /* [out] */ EXCEPINFO __RPC_FAR *pExcepInfo,
+	    /* [out] */ UINT __RPC_FAR *puArgErr);
 
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *SendKeys )(
-            IVim __RPC_FAR * This,
-            /* [in] */ BSTR keys);
+	HRESULT ( STDMETHODCALLTYPE __RPC_FAR *SendKeys )(
+	    IVim __RPC_FAR * This,
+	    /* [in] */ BSTR keys);
 
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Eval )(
-            IVim __RPC_FAR * This,
-            /* [in] */ BSTR expr,
-            /* [retval][out] */ BSTR __RPC_FAR *result);
+	HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Eval )(
+	    IVim __RPC_FAR * This,
+	    /* [in] */ BSTR expr,
+	    /* [retval][out] */ BSTR __RPC_FAR *result);
 
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *SetForeground )(
-            IVim __RPC_FAR * This);
+	HRESULT ( STDMETHODCALLTYPE __RPC_FAR *SetForeground )(
+	    IVim __RPC_FAR * This);
 
-        END_INTERFACE
+	END_INTERFACE
     } IVimVtbl;
 
     interface IVim
     {
-        CONST_VTBL struct IVimVtbl __RPC_FAR *lpVtbl;
+	CONST_VTBL struct IVimVtbl __RPC_FAR *lpVtbl;
     };
 
 #ifdef COBJMACROS
@@ -170,7 +170,7 @@ EXTERN_C const IID IID_IVim;
 #endif /* COBJMACROS */
 
 
-#endif 	/* C style interface */
+#endif	/* C style interface */
 
 
 
@@ -211,7 +211,7 @@ void __RPC_STUB IVim_SetForeground_Stub(
 
 
 
-#endif 	/* __IVim_INTERFACE_DEFINED__ */
+#endif	/* __IVim_INTERFACE_DEFINED__ */
 
 
 
@@ -238,10 +238,10 @@ class Vim;
 
 /* Additional Prototypes for ALL interfaces */
 
-unsigned long             __RPC_USER  BSTR_UserSize(     unsigned long __RPC_FAR *, unsigned long            , BSTR __RPC_FAR * );
+unsigned long		  __RPC_USER  BSTR_UserSize(	 unsigned long __RPC_FAR *, unsigned long	     , BSTR __RPC_FAR * );
 unsigned char __RPC_FAR * __RPC_USER  BSTR_UserMarshal(  unsigned long __RPC_FAR *, unsigned char __RPC_FAR *, BSTR __RPC_FAR * );
 unsigned char __RPC_FAR * __RPC_USER  BSTR_UserUnmarshal(unsigned long __RPC_FAR *, unsigned char __RPC_FAR *, BSTR __RPC_FAR * );
-void                      __RPC_USER  BSTR_UserFree(     unsigned long __RPC_FAR *, BSTR __RPC_FAR * );
+void			  __RPC_USER  BSTR_UserFree(	 unsigned long __RPC_FAR *, BSTR __RPC_FAR * );
 
 /* end of Additional Prototypes */
 

@@ -37,6 +37,7 @@ SRC =	buffer.c \
 	message.c \
 	misc1.c \
 	misc2.c \
+	multbyte.c \
 	normal.c \
 	ops.c \
 	option.c \
@@ -70,6 +71,7 @@ OBJ =	objects/buffer.obj \
 	objects/message.obj \
 	objects/misc1.obj \
 	objects/misc2.obj \
+	objects/multbyte.obj \
 	objects/normal.obj \
 	objects/ops.obj \
 	objects/option.obj \
@@ -148,6 +150,9 @@ objects/misc1.obj:	misc1.c  $(INCL)
 
 objects/misc2.obj:	misc2.c  $(INCL)
 	$(CC) $(CFLAGS) misc2.c -o objects/misc2.obj
+
+objects/multbyte.obj:	multbyte.c  $(INCL)
+	$(CC) $(CFLAGS) multbyte.c -o objects/multbyte.obj
 
 objects/normal.obj:	normal.c  $(INCL)
 	$(CC) $(CFLAGS) normal.c -o objects/normal.obj

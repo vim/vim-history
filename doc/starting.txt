@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 5.1.  Last modification: 1998 Apr 06
+*starting.txt*  For Vim version 5.2.  Last modification: 1998 Aug 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -74,7 +74,7 @@ filename	One or more file names.  The first one will be the current
 
 The startup mode can be changed by using another name instead of "vim", which
 is equal to giving options:
-ex	vim -e	    Start in Ex mode (see |ex-mode|).		    *ex*
+ex	vim -e	    Start in Ex mode (see |Ex-mode|).		    *ex*
 view	vim -R	    Start in read-only mode (see |-R|).		    *view*
 gvim	vim -g	    Start the GUI (see |gui|).			    *gvim*
 gex	vim -eg	    Start the GUI in Ex mode.			    *gex*
@@ -100,8 +100,12 @@ The option arguments may be given in any order.  Single-letter options can be
 combined after one dash.  There can be no option arguments after the "--"
 argument.
 
-							*-h*
+--help							*-h* *--help*
 -h		Give usage (help) message and exit.  {not in Vi}
+
+							*--version*
+--version	Print version information and exit.  Same output as for
+		|:version| command.  {not in Vi}
 
 							*-+*
 +[num]		The cursor will be positioned on line "num" for the first
@@ -168,7 +172,9 @@ argument.
 		when preceded with the "-e" argument.  Otherwise see |-s|.
 		To be used when Vim is used to execute Ex commands from a file
 		instead of a terminal.  Switches off most prompts and
-		informative messages (not warning and error messages).
+		informative messages.  But not warning and error messages, and
+		the output from commands that print text lines, like ":print"
+		and ":list".
 		Initializations are skipped (exept the ones given with the
 		"-u" argument).
 
@@ -340,7 +346,7 @@ will accept only ":" commands.  But when the "-v" argument is given, Vim will
 start in in Normal mode anyway.
 
 ==============================================================================
-2. Vim on the Amiga 					*starting-amiga*
+2. Vim on the Amiga					*starting-amiga*
 
 Starting Vim from the Workbench				*workbench*
 -------------------------------
@@ -455,16 +461,16 @@ accordingly.  Vim proceeds in this order:
 	directory is searched for four files.  The first that exists is used,
 	the others are ignored.
 	-  The file ".vimrc" (for Unix, Amiga and OS/2) (*)
-	            "_vimrc" (for MS-DOS and Win32) (*)
+		    "_vimrc" (for MS-DOS and Win32) (*)
 	-  The file "_vimrc" (for Unix, Amiga and OS/2) (*)
-	            ".vimrc" (for MS-DOS and Win32) (*)
+		    ".vimrc" (for MS-DOS and Win32) (*)
 	-  The file ".exrc"  (for Unix, Amiga and OS/2)
-	            "_exrc"  (for MS-DOS and Win32)
+		    "_exrc"  (for MS-DOS and Win32)
 	-  The file "_exrc"  (for Unix, Amiga and OS/2)
-	            ".exrc"  (for MS-DOS and Win32)
+		    ".exrc"  (for MS-DOS and Win32)
 
      (*) Using this file or environment variable will cause 'compatible' to be
-         off by default.  See |compatible-default|.
+	 off by default.  See |compatible-default|.
 
 4. Set 'shellpipe' and 'shellredir'
 	The 'shellpipe' and 'shellredir' options are set according to the
@@ -607,7 +613,7 @@ If Vim takes a long time to start up, there may be a few causes:
   while.  You can find out if this is the problem by disabling viminfo for a
   moment (use the Vim argument "-i NONE", |-i|).  Try reducing the number of
   lines stored in a register with ":set viminfo='20\"50".
-  							|viminfo-file|.
+							|viminfo-file|.
 
 							*:intro*
 When Vim starts without a file name, an introductory message is displayed (for
@@ -618,18 +624,20 @@ To avoid the intro message on startup, add the 'I' flag to 'shortmess'.
 ==============================================================================
 4. Suspending						*suspend*
 
-							*CTRL-Z* *v_CTRL-Z*
-CTRL-Z			On Unix systems: Suspend Vim.  On other systems:
-			start a new shell (like ":sh").  Same as ":stop".
+						*iconise* *CTRL-Z* *v_CTRL-Z*
+CTRL-Z			Suspend Vim.
 			Works in Normal and in Visual mode.  In Insert and
 			Command-line mode, the CTRL-Z is inserted as a normal
 			character.
 
 
 :sus[pend][!]	or			*:sus* *:suspend* *:st* *:stop*
-:st[op][!]		Suspend the editor.  If the '!' is not given, the
-			buffer was changed, 'autowrite' is set, and a file
-			name is known, the buffer will be written.
+:st[op][!]		Suspend Vim, like with CTRL-Z.  If the '!' is
+			not given, the buffer was changed, 'autowrite' is set,
+			and a file name is known, the buffer will be written.
+
+In the GUI, suspending is implemented as iconising gvim.  In Windows 95/NT,
+gvim is minimised.
 
 On many Unix systems, it is possible to suspend Vim with CTRL-Z.  This is only
 possible in Normal and Visual mode (see next chapter, |vim-modes|).  Vim will
@@ -685,7 +693,7 @@ is ignored, except for commands that don't consider comments, as shown in
 examples below.  A comment can start on any character position on the line.
 
 There is a little "catch" with comments:
->	ab dev development		" shorthand 
+>	ab dev development		" shorthand
 >	map <F3> o#include		" insert include
 >	!ls *.c				" list C files
 The abbreviation 'dev' will be expand to 'development     " shorthand'.  The
@@ -697,13 +705,13 @@ There can be no comments after ":map", ":ab" and "!" commands.
 For these commands, any character until the end-of-line is included.  As a
 consequence of this behaviour, you don't always see that trailing whitespace
 is included:
->	map <F4> o#include    
+>	map <F4> o#include
 To avoid these problems, you can set the 'list' option when editing vimrc
 files.
 
 Even bigger problem arises in the following example:
 >	map ,ab o#include
->	unmap ,ab 
+>	unmap ,ab
 Here the mapping of ,ab will be ',ab', no trailing whitespaces is included.
 However, the "unmap" does not end directly with the end-of-line, Vim will try
 to unmap ',ab ', which does not exist as a mapped sequence.  An error will be
@@ -718,7 +726,7 @@ Here the comment part will be ignored.  However, Vim will try to unmap
 whitespaces up the ending 'b' character will cure the problem.
 
 Except for the situations as above, it is legal to put a comment on the same
-line as the Vim definitions, such as 
+line as the Vim definitions, such as
 >	set number	" display line numbers
 
 ==============================================================================

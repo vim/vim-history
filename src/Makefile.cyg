@@ -38,6 +38,7 @@ OBJ = \
 	obj/message.o \
 	obj/misc1.o \
 	obj/misc2.o \
+	obj/multbyte.o \
 	obj/normal.o \
 	obj/ops.o \
 	obj/option.o \
@@ -134,6 +135,9 @@ obj/misc1.o:	misc1.c $(INCL)
 
 obj/misc2.o:	misc2.c $(INCL)
 	$(CC) -c $(CFLAGS) misc2.c -o obj/misc2.o
+
+obj/multbyte.o:	multbyte.c $(INCL)
+	$(CC) -c $(CFLAGS) multbyte.c -o obj/multbyte.o
 
 obj/normal.o:	normal.c $(INCL)
 	$(CC) -c $(CFLAGS) normal.c -o obj/normal.o

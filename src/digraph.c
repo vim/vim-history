@@ -259,7 +259,8 @@ char_u	digraphdefault[][3] =	    /* standard ISO digraphs */
        {{'~', '!', 161},	/* ¡ */
 	{'c', '|', 162},	/* ¢ */
 	{'$', '$', 163},	/* £ */
-	{'o', 'x', 164},	/* ¤ */
+	{'o', 'x', 164},	/* ¤ - currency symbol in ISO 8859-1 */
+	{'e', '=', 164},	/* ¤ - euro symbol in ISO 8859-15 */
 	{'Y', '-', 165},	/* ¥ */
 	{'|', '|', 166},	/* ¦ */
 	{'p', 'a', 167},	/* § */
@@ -293,6 +294,7 @@ char_u	digraphdefault[][3] =	    /* standard ISO digraphs */
 	{'A', '~', 195},	/* Ã */
 	{'A', '"', 196},	/* Ä */
 	{'A', '@', 197},	/* Å */
+	{'A', 'A', 197},	/* Å */
 	{'A', 'E', 198},	/* Æ */
 	{'C', ',', 199},	/* Ç */
 	{'E', '`', 200},	/* È */
@@ -310,7 +312,8 @@ char_u	digraphdefault[][3] =	    /* standard ISO digraphs */
 	{'O', '^', 212},	/* Ô */
 	{'O', '~', 213},	/* Õ */
 	{'O', '"', 214},	/* Ö */
-	{'/', '\\', 215},	/* × */
+	{'/', '\\', 215},	/* × - multiplication symbol in ISO 8859-1 */
+	{'O', 'E', 215},	/* × - OE in ISO 8859-15 */
 	{'O', '/', 216},	/* Ø */
 	{'U', '`', 217},	/* Ù */
 	{'U', '\'', 218},	/* Ú */
@@ -325,6 +328,7 @@ char_u	digraphdefault[][3] =	    /* standard ISO digraphs */
 	{'a', '~', 227},	/* ã */
 	{'a', '"', 228},	/* ä */
 	{'a', '@', 229},	/* å */
+	{'a', 'a', 229},	/* å */
 	{'a', 'e', 230},	/* æ */
 	{'c', ',', 231},	/* ç */
 	{'e', '`', 232},	/* è */
@@ -342,7 +346,8 @@ char_u	digraphdefault[][3] =	    /* standard ISO digraphs */
 	{'o', '^', 244},	/* ô */
 	{'o', '~', 245},	/* õ */
 	{'o', '"', 246},	/* ö */
-	{':', '-', 247},	/* ÷ */
+	{':', '-', 247},	/* ÷ - division symbol in ISO 8859-1 */
+	{'o', 'e', 247},	/* ÷ - oe in ISO 8859-15 */
 	{'o', '/', 248},	/* ø */
 	{'u', '`', 249},	/* ù */
 	{'u', '\'', 250},	/* ú */
@@ -490,7 +495,7 @@ putdigraph(str)
 	newtab = (char_u (*)[3])alloc(digraphcount * 3 + 3);
 	if (newtab)
 	{
-	    vim_memmove(newtab, digraphnew, (size_t)(digraphcount * 3));
+	    mch_memmove(newtab, digraphnew, (size_t)(digraphcount * 3));
 	    vim_free(digraphnew);
 	    digraphnew = newtab;
 	    digraphnew[digraphcount][0] = char1;

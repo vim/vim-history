@@ -15,6 +15,7 @@
 # To add interfaces, define any of the following:
 #	GUI interface: GUI=yes
 #	OLE interface: OLE=yes
+#	IME support: IME=yes	(requires GUI=yes)
 #	Perl interface: PERL=[Path to Perl directory]
 #	Python interface: PYTHON=[Path to Python directory]
 #	Debug version: DEBUG=1
@@ -36,6 +37,20 @@
 
 TARGETOS = BOTH
 
+# select one of four object code directories, depends on GUI and DEBUG
+!ifdef GUI
+!ifdef DEBUG
+OBJDIR = .\ObjGD
+!else
+OBJDIR = .\ObjG
+!endif
+!else
+!ifdef DEBUG
+OBJDIR = .\ObjCD
+!else
+OBJDIR = .\ObjC
+!endif
+!endif
 
 # ntwin32.mak requires that CPU be set appropriately
 
@@ -102,15 +117,15 @@ OS_TYPE	= win95
 DEL_TREE = deltree /y
 !endif
 
+INTDIR=$(OBJDIR)
+OUTDIR=$(OBJDIR)
+
 !ifdef NODEBUG
-INTDIR=.\Objects
-OUTDIR=.\Objects
 VIM = vim
 CFLAGS = $(CFLAGS) -DNDEBUG /Ox
 RCFLAGS = $(rcflags) $(rcvars) -DNDEBUG
+LIBC = libc.lib
 !else  # DEBUG
-INTDIR=.\Debug
-OUTDIR=.\Debug
 VIM = vimd
 # MSVC 4.1
 PDB = /Fd$(OUTDIR)/
@@ -120,6 +135,7 @@ LINK_PDB = /PDB:$(OUTDIR)/
 # LINK_PDB = /PDB:$(OUTDIR)/vim.pdb
 CFLAGS = $(CFLAGS) -D_DEBUG -DDEBUG /Zi /Od
 RCFLAGS = $(rcflags) $(rcvars) -D_DEBUG -DDEBUG
+LIBC = libcd.lib
 !endif # DEBUG
 
 INCL =	vim.h os_win32.h ascii.h feature.h globals.h keymap.h macros.h \
@@ -143,6 +159,7 @@ OBJ = \
 	$(OUTDIR)\message.obj \
 	$(OUTDIR)\misc1.obj \
 	$(OUTDIR)\misc2.obj \
+	$(OUTDIR)\multbyte.obj \
 	$(OUTDIR)\normal.obj \
 	$(OUTDIR)\option.obj \
 	$(OUTDIR)\ops.obj \
@@ -163,14 +180,20 @@ OBJ = \
 # Force gui version to be built
 GUI = yes
 CFLAGS = $(CFLAGS) -DHAVE_OLE
+RCFLAGS = $(RCFLAGS) -DHAVE_OLE
 OLE_OBJ = $(OUTDIR)\if_ole.obj
 OLE_IDL = if_ole.idl
 OLE_LIBS = ole32.lib oleaut32.lib uuid.lib 
 !endif
 
+!if "$(IME)" == "yes"
+IMELIB = imm32.lib
+!endif
+
 !if "$(GUI)" == "yes"
 SUBSYSTEM = windows
 CFLAGS = $(CFLAGS) -DUSE_GUI_WIN32 -DWIN32
+RCFLAGS = $(RCFLAGS) -DUSE_GUI_WIN32
 VIM = g$(VIM)
 GUI_INCL = \
 	gui.h \
@@ -191,8 +214,8 @@ GUI_OBJ = \
 	$(OUTDIR)\gui_w32.obj \
 	$(OUTDIR)\os_w32exe.obj
 GUI_LIBS = \
-	libc.lib oldnames.lib kernel32.lib gdi32.lib \
-	winspool.lib comdlg32.lib advapi32.lib shell32.lib \
+	oldnames.lib kernel32.lib gdi32.lib $(IMELIB) \
+	winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib \
 	/machine:I386 /nodefaultlib
 !else
 SUBSYSTEM = console
@@ -222,7 +245,7 @@ XSUBPP_TYPEMAP = $(PERL)\lib\ExtUtils\typemap
 
 conflags = /nologo /subsystem:$(SUBSYSTEM) /incremental:no
 
-all:	$(VIM) ctags/ctags.exe xxd/xxd.exe
+all:	$(VIM) install.exe vimrun.exe ctags/ctags.exe xxd/xxd.exe
 
 $(VIM): $(OUTDIR) $(OBJ) $(GUI_OBJ) $(OLE_OBJ) $(OLE_IDL) $(PERLOBJ) $(PYTHONOBJ) $(OUTDIR)\version.obj
 	$(link) $(linkdebug) $(conflags) -out:$*.exe $(OBJ) $(GUI_OBJ) $(OLE_OBJ) $(PERLOBJ) $(PYTHONOBJ) \
@@ -233,6 +256,13 @@ $(VIM).exe: $(VIM)
 
 $(OUTDIR):
 	if not exist $(OUTDIR)/nul    mkdir $(OUTDIR)
+
+install.exe: dosinst.c
+	$(CC) -DWIN32 dosinst.c kernel32.lib
+	ren dosinst.exe install.exe
+
+vimrun.exe: vimrun.c
+	$(CC) vimrun.c
 
 ctags/ctags.exe: ctags/main.c
 	cd ctags
@@ -339,6 +369,9 @@ $(OUTDIR)/misc1.obj:	$(OUTDIR) misc1.c  $(INCL)
 $(OUTDIR)/misc2.obj:	$(OUTDIR) misc2.c  $(INCL)
 	$(CC) $(CFLAGS) misc2.c /Fo$(OUTDIR)/misc2.obj $(PDB)
 
+$(OUTDIR)/multbyte.obj:	$(OUTDIR) multbyte.c  $(INCL)
+	$(CC) $(CFLAGS) multbyte.c /Fo$(OUTDIR)/multbyte.obj $(PDB)
+
 $(OUTDIR)/normal.obj:	$(OUTDIR) normal.c  $(INCL)
 	$(CC) $(CFLAGS) normal.c /Fo$(OUTDIR)/normal.obj $(PDB)
 
@@ -387,7 +420,7 @@ $(OUTDIR)/version.obj: $(OUTDIR) version.c version.h
 $(OUTDIR)/window.obj:	$(OUTDIR) window.c  $(INCL)
 	$(CC) $(CFLAGS) window.c /Fo$(OUTDIR)/window.obj $(PDB)
 
-$(OUTDIR)/vim.res:	$(OUTDIR) vim.rc version.h
+$(OUTDIR)/vim.res:	$(OUTDIR) vim.rc version.h tools.bmp tearoff.bmp vim.ico vim_error.ico vim_alert.ico vim_info.ico vim_quest.ico
 	$(RC) /l 0x409 /Fo$(OUTDIR)/vim.res $(RCFLAGS) vim.rc
 
 iid_ole.c if_ole.h vim.tlb: if_ole.idl $(INTDIR) $(OUTDIR)
@@ -412,6 +445,7 @@ proto.h: \
 	proto/message.pro \
 	proto/misc1.pro \
 	proto/misc2.pro \
+	proto/multbyte.pro \
 	proto/normal.pro \
 	proto/ops.pro \
 	proto/option.pro \

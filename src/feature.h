@@ -18,6 +18,16 @@
  */
 
 /*
+ * When adding a new feature:
+ * - Add a #define below.
+ * - Add a message in do_version().
+ * - Add a string to f_has().
+ * - Add a feature to ":help feature-list" in doc/eval.txt.
+ * - Add feature to ":help +feature-list" in doc/various.txt.
+ * - Add comment for the documentation of commands that use the feature.
+ */
+
+/*
  * Basic choices:
  * ==============
  *
@@ -66,7 +76,7 @@
 #endif
 
 /*
- * +insert_expand 	When INSERT_EXPAND defined: Support for
+ * +insert_expand	When INSERT_EXPAND defined: Support for
  *			CTRL-N/CTRL-P/CTRL-X in insert mode. Takes about
  *			4Kbyte of code.
  */
@@ -140,7 +150,7 @@
 
 /*
  * +farsi		When FKMAP defined: Farsi (Persian language) Keymap
- *			support Takes some code.  Needs RIGHTLEFT.
+ *			support.  Takes some code.  Needs RIGHTLEFT.
  */
 #ifdef MAX_FEAT
 # ifndef RIGHTLEFT
@@ -151,7 +161,7 @@
 
 /*
  * +emacs_tags		When EMACS_TAGS defined: Include support for emacs
- *			style TAGS file. Takes some code.
+ *			style TAGS file.  Takes some code.
  */
 #ifdef MAX_FEAT
 # define EMACS_TAGS
@@ -182,6 +192,14 @@
 /* #define TAG_ANY_WHITE */
 
 /*
+ * +cscope		Unix only.  When USE_CSCOPE defined, enable interface
+ *			to support cscope.
+ */
+#if defined(UNIX) && defined(MAX_FEAT) && !defined(USE_CSCOPE)
+# define USE_CSCOPE
+#endif
+
+/*
  * +eval		When WANT_EVAL defined: Include built-in script
  *			language and expression evaluation, ":let", ":if",
  *			etc.
@@ -191,10 +209,44 @@
 #endif
 
 /*
+ * +user_commands	When USER_COMMANDS defined: Allow the user to define
+ *			his own commands.
+ */
+#ifndef MIN_FEAT
+# define USER_COMMANDS
+#endif
+
+/*
+ * +modify_fname	When WANT_MODIFY_FNAME defined: Include modifiers for
+ *			file name.  E.g., "%:p:h".
+ */
+#ifndef MIN_FEAT
+# define WANT_MODIFY_FNAME
+#endif
+
+/*
  * +autocmd		When defined: Include support for ":autocmd"
  */
 #ifndef MIN_FEAT
 # define AUTOCMD
+#endif
+
+/*
+ * +wildignore		When defined: Include support for 'wildignore'
+ */
+#ifndef MIN_FEAT
+# define WILDIGNORE
+#endif
+
+/*
+ * +filetype		When WANT_FILETYPE defined: Include support for
+ *			filetype checking in autocommands. Eg:
+ *			*.html,*.htm,<html>,*.shtml
+ *			Only on systems that support filetypes (RISC OS).
+ */
+#if 0
+# define WANT_FILETYPE
+# define FT_DFLT "Text"
 #endif
 
 /*
@@ -275,6 +327,66 @@
 #endif
 
 /*
+ * +browse		Enable :browse command.
+ */
+#if !defined(MIN_FEAT) && (defined(USE_GUI_WIN32) || defined(USE_GUI_MOTIF) || defined(USE_GUI_ATHENA))
+# define USE_BROWSE
+#endif
+
+/*
+ * +multi_byte		Enable generic multi-byte character handling.
+ *			Not tested much!
+ */
+#ifdef MAX_FEAT
+# define MULTI_BYTE
+#endif
+
+/*
+ * +multi_byte_ime	Win32 IME input method.  Requires +multi_byte.
+ *			Only for far-east Windows, so IME can be used to input
+ *			chars.  Not tested much!
+ */
+#if defined(MULTI_BYTE) && defined(USE_GUI_WIN32)
+/* #  define MULTI_BYTE_IME */
+# endif
+
+/*
+ * BROWSE_CURRBUF	When defined: Open file browser in the directory of
+ *			the current buffer, instead of the current directory.
+ *
+ * USE_GUI_WIN32_TOOLBAR  Include a toolbar in the Win32 GUI.
+ */
+#if defined(USE_GUI_WIN32) && !defined(MIN_FEAT)
+# define BROWSE_CURRBUF
+# define USE_GUI_WIN32_TOOLBAR
+#endif
+
+/*
+ *			When WINDOWS_ALT_KEYS defined, let Windows handle ALT
+ *			keys, they are not available to Vim.  Allows
+ *			selectiong menu items.
+ */
+/* #define WINDOWS_ALT_KEYS */
+
+/*
+ * +dialog_gui		When GUI_DIALOG defined, use GUI dialog.
+ * +dialog_con		When CON_DIALOG defined, may use Console dialog.
+ *			When none of these defined, no dialog support.
+ */
+#ifndef MIN_FEAT
+# if defined(USE_GUI_WIN32)
+#  define GUI_DIALOG
+# else
+#  if defined(USE_GUI_ATHENA) || defined(USE_GUI_MOTIF)
+#   define CON_DIALOG
+#   define GUI_DIALOG
+#  else
+#   define CON_DIALOG
+#  endif
+# endif
+#endif
+
+/*
  * Preferences:
  * ============
  */
@@ -320,6 +432,11 @@
 /* #define GVIMRC_FILE	".gvimrc" */
 
 /*
+ * SESSION_FILE		Name of the default ":mksession" file.
+ */
+#define SESSION_FILE	"Session.vim"
+
+/*
  * USR_VIMRC_FILE	Name of the user .vimrc file.
  * USR_VIMRC_FILE2	Name of alternate user .vimrc file.
  */
@@ -359,6 +476,11 @@
  * SYS_MENU_FILE	Name of the default menu.vim file.
  */
 /* #define SYS_MENU_FILE	"/foo/menu.vim" */
+
+/*
+ * SYNTAX_FNAME		Name of a syntax file, where %s is the syntax name.
+ */
+/* #define SYNTAX_FNAME	"/foo/%s.vim" */
 
 
 /*

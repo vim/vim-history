@@ -52,6 +52,15 @@ ui_inchar(buf, maxlen, wtime)
     int	    maxlen;
     long    wtime;	    /* don't use "time", MIPS cannot handle it */
 {
+#ifdef NO_CONSOLE
+    /* Don't wait for character input when the window hasn't been opened yet.
+     * Must return something, otherwise we'll loop forever.  */
+    if (!gui.in_use || gui.starting)
+    {
+	buf[0] = CR;
+	return 1;
+    }
+#endif
 #ifdef USE_GUI
     if (gui.in_use)
     {
@@ -80,6 +89,8 @@ ui_char_avail()
 #endif
 #ifndef NO_CONSOLE
     return mch_char_avail();
+#else
+    return 0;
 #endif
 }
 
@@ -125,7 +136,7 @@ ui_suspend()
 suspend_shell()
 {
     MSG_PUTS("new shell started\n");
-    mch_call_shell(NULL, SHELL_COOKED);
+    (void)mch_call_shell(NULL, SHELL_COOKED);
     need_check_timestamps = TRUE;
 }
 
@@ -192,7 +203,13 @@ ui_set_winsize()
 {
 #ifdef USE_GUI
     if (gui.in_use)
-	gui_set_winsize(FALSE);
+	gui_set_winsize(
+#ifdef WIN32
+		TRUE
+#else
+		FALSE
+#endif
+		);
     else
 #endif
 	mch_set_winsize();
@@ -981,7 +998,7 @@ clip_clear_selection()
  * in a portable way for a tty in RAW mode.
  */
 
-#if defined(UNIX) || defined(USE_GUI) || defined(OS2)
+#if defined(UNIX) || defined(USE_GUI) || defined(OS2) || defined(VMS)
 
 /*
  * Internal typeahead buffer.  Includes extra space for long key code
@@ -1051,10 +1068,10 @@ read_from_input_buf(buf, maxlen)
 	fill_input_buf(TRUE);
     if (maxlen > inbufcount)
 	maxlen = inbufcount;
-    vim_memmove(buf, inbuf, (size_t)maxlen);
+    mch_memmove(buf, inbuf, (size_t)maxlen);
     inbufcount -= maxlen;
     if (inbufcount)
-	vim_memmove(inbuf, inbuf + maxlen, (size_t)inbufcount);
+	mch_memmove(inbuf, inbuf + maxlen, (size_t)inbufcount);
     return (int)maxlen;
 }
 
@@ -1062,10 +1079,13 @@ read_from_input_buf(buf, maxlen)
 fill_input_buf(exit_on_error)
     int	exit_on_error;
 {
-#if defined(UNIX) || defined(OS2)
+#if defined(UNIX) || defined(OS2) || defined(VMS)
     int		len;
     int		try;
     static int	did_read_something = FALSE;
+#endif
+#ifdef VMS
+    extern char ibuf[];
 #endif
 
 #ifdef USE_GUI
@@ -1075,7 +1095,7 @@ fill_input_buf(exit_on_error)
 	return;
     }
 #endif
-#if defined(UNIX) || defined(OS2)
+#if defined(UNIX) || defined(OS2) || defined(VMS)
     if (vim_is_input_buf_full())
 	return;
     /*
@@ -1104,6 +1124,16 @@ fill_input_buf(exit_on_error)
 	return;
     }
 #endif
+#  ifdef VMS
+    while (!vim_is_input_buf_full() && RealWaitForChar(0, 0L))
+    {
+	add_to_input_buf((char_u *)ibuf, 1);
+    }
+    if (inbufcount < 1 && !exit_on_error)
+	return;
+    len = inbufcount;
+    inbufcount = 0;
+#  else
 
     for (try = 0; try < 100; ++try)
     {
@@ -1120,6 +1150,7 @@ fill_input_buf(exit_on_error)
 	if (!exit_on_error)
 	    return;
     }
+#  endif /* VMS */
 # endif
     if (len <= 0 && !got_int)
 	read_error_exit();
@@ -1138,15 +1169,15 @@ fill_input_buf(exit_on_error)
 	    if (inbuf[inbufcount] == 3)
 	    {
 		/* remove everything typed before the CTRL-C */
-		vim_memmove(inbuf, inbuf + inbufcount, (size_t)(len + 1));
+		mch_memmove(inbuf, inbuf + inbufcount, (size_t)(len + 1));
 		inbufcount = 0;
 		got_int = TRUE;
 	    }
 	    ++inbufcount;
 	}
-#endif /* UNIX or OS2 */
+#endif /* UNIX or OS2 or VMS*/
 }
-#endif /* defined(UNIX) || defined(USE_GUI) || defined(OS2) */
+#endif /* defined(UNIX) || defined(USE_GUI) || defined(OS2)  || defined(VMS) */
 
 /*
  * Exit because of an input read error.
@@ -1159,3 +1190,20 @@ read_error_exit()
     STRCPY(IObuff, "Vim: Error reading input, exiting...\n");
     preserve_exit();
 }
+
+#if defined(CURSOR_SHAPE) || defined(PROTO)
+/*
+ * May update the shape of the cursor.
+ */
+    void
+ui_cursor_shape()
+{
+#ifdef USE_GUI
+    if (gui.in_use)
+	gui_upd_cursor_shape();
+#endif
+#if defined(MSDOS) || (defined(WIN32) && !defined(USE_GUI_WIN32))
+    mch_update_cursor();
+#endif
+}
+#endif

@@ -195,7 +195,7 @@ u_savecommon(top, bot, newbot)
 		       ((curbuf->b_ml.ml_flags & ML_EMPTY) ? UH_EMPTYBUF : 0);
 
 	/* save named marks for undo */
-	vim_memmove(uhp->uh_namedm, curbuf->b_namedm, sizeof(FPOS) * NMARKS);
+	mch_memmove(uhp->uh_namedm, curbuf->b_namedm, sizeof(FPOS) * NMARKS);
 	curbuf->b_u_newhead = uhp;
 	if (curbuf->b_u_oldhead == NULL)
 	    curbuf->b_u_oldhead = uhp;
@@ -380,16 +380,16 @@ u_undoredo()
     new_flags = (curbuf->b_changed ? UH_CHANGED : 0) +
 	       ((curbuf->b_ml.ml_flags & ML_EMPTY) ? UH_EMPTYBUF : 0);
     if (old_flags & UH_CHANGED)
-	CHANGED;
+	changed();
     else
-	UNCHANGED(curbuf);
+	unchanged(curbuf, FALSE);
     setpcmark();
     changed_line_abv_curs();	/* need to recompute cursor posn on screen */
 
     /*
      * save marks before undo/redo
      */
-    vim_memmove(namedm, curbuf->b_namedm, sizeof(FPOS) * NMARKS);
+    mch_memmove(namedm, curbuf->b_namedm, sizeof(FPOS) * NMARKS);
     curbuf->b_op_start.lnum = curbuf->b_ml.ml_line_count;
     curbuf->b_op_start.col = 0;
     curbuf->b_op_end.lnum = 0;
@@ -404,7 +404,7 @@ u_undoredo()
 	if (top > curbuf->b_ml.ml_line_count || top >= bot || bot > curbuf->b_ml.ml_line_count + 1)
 	{
 	    EMSG("u_undo: line numbers wrong");
-	    CHANGED;	    /* don't want UNCHANGED now */
+	    changed();		/* don't want UNCHANGED now */
 	    return;
 	}
 
@@ -750,6 +750,10 @@ u_undoline()
     ml_replace(curbuf->b_u_line_lnum, curbuf->b_u_line_ptr, TRUE);
     u_free_line(curbuf->b_u_line_ptr);
     curbuf->b_u_line_ptr = oldp;
+#ifdef SYNTAX_HL
+    /* recompute syntax hl., starting with current line */
+    syn_changed(curbuf->b_u_line_lnum);
+#endif
 
     t = curbuf->b_u_line_colnr;
     if (curwin->w_cursor.lnum == curbuf->b_u_line_lnum)
@@ -1097,7 +1101,7 @@ u_save_line(lnum)
     src = ml_get(lnum);
     len = STRLEN(src);
     if ((dst = u_alloc_line(len)) != NULL)
-	vim_memmove(dst, src, (size_t)(len + 1));
+	mch_memmove(dst, src, (size_t)(len + 1));
     return (dst);
 }
 

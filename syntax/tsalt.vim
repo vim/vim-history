@@ -119,7 +119,7 @@ syn keyword tsaltTodo contained	TODO
 
 " String and Character constants
 " Highlight special characters (those which have a backslash) differently
-syn match tsaltSpecial		contained "\^[0-9][0-9][0-9]\|\^."
+syn match tsaltSpecial		contained "\^\d\d\d\|\^."
 syn region tsaltString		start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=tsaltSpecial
 syn match tsaltCharacter	"'[^\\]'"
 syn match tsaltSpecialCharacter	"'\\.'"
@@ -133,13 +133,13 @@ hi link tsaltParenError		tsaltError
 hi link tsaltInParen		tsaltError
 
 "integer number, or floating point number without a dot and with "f".
-syn match  tsaltNumber		"\<[0-9]\+\(u\=l\=\|lu\|f\)\>"
+syn match  tsaltNumber		"\<\d\+\(u\=l\=\|lu\|f\)\>"
 "floating point number, with dot, optional exponent
-syn match  tsaltFloat		"\<[0-9]\+\.[0-9]*\(e[-+]\=[0-9]\+\)\=[fl]\=\>"
+syn match  tsaltFloat		"\<\d\+\.\d*\(e[-+]\=\d\+\)\=[fl]\=\>"
 "floating point number, starting with a dot, optional exponent
-syn match  tsaltFloat		"\.[0-9]\+\(e[-+]\=[0-9]\+\)\=[fl]\=\>"
+syn match  tsaltFloat		"\.\d\+\(e[-+]\=\d\+\)\=[fl]\=\>"
 "floating point number, without dot, with exponent
-syn match  tsaltFloat		"\<[0-9]\+e[-+]\=[0-9]\+[fl]\=\>"
+syn match  tsaltFloat		"\<\d\+e[-+]\=\d\+[fl]\=\>"
 "hex number
 syn match  tsaltNumber		"0x[0-9a-f]\+\(u\=l\=\|lu\)\>"
 "syn match  cIdentifier	"\<[a-z_][a-z0-9_]*\>"

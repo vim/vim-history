@@ -45,17 +45,17 @@ syn keyword laceBool		true false
 syn keyword laceBool		True False
 syn region  laceString		start=+"+ skip=+%"+ end=+"+ contains=laceEscape,laceStringError
 syn match   laceEscape		contained "%[^/]"
-syn match   laceEscape		contained "%/[0-9]\+/"
+syn match   laceEscape		contained "%/\d\+/"
 syn match   laceEscape		contained "^[ \t]*%"
 syn match   laceEscape		contained "%[ \t]*$"
 syn match   laceStringError	contained "%/[^0-9]"
-syn match   laceStringError	contained "%/[0-9]\+[^0-9/]"
-syn match   laceStringError	"'\(%[^/]\|%/[0-9]\+/\|[^'%]\)\+'"
-syn match   laceCharacter	"'\(%[^/]\|%/[0-9]\+/\|[^'%]\)'" contains=laceEscape
-syn match   laceNumber		"-\=\<[0-9]\+\(_[0-9]\+\)*\>"
+syn match   laceStringError	contained "%/\d\+[^0-9/]"
+syn match   laceStringError	"'\(%[^/]\|%/\d\+/\|[^'%]\)\+'"
+syn match   laceCharacter	"'\(%[^/]\|%/\d\+/\|[^'%]\)'" contains=laceEscape
+syn match   laceNumber		"-\=\<\d\+\(_\d\+\)*\>"
 syn match   laceNumber		"\<[01]\+[bB]\>"
-syn match   laceNumber		"-\=\<[0-9]\+\(_[0-9]\+\)*\.\([0-9]\+\(_[0-9]\+\)*\)\=\([eE][-+]\=[0-9]\+\(_[0-9]\+\)*\)\="
-syn match   laceNumber		"-\=\.[0-9]\+\(_[0-9]\+\)*\([eE][-+]\=[0-9]\+\(_[0-9]\+\)*\)\="
+syn match   laceNumber		"-\=\<\d\+\(_\d\+\)*\.\(\d\+\(_\d\+\)*\)\=\([eE][-+]\=\d\+\(_\d\+\)*\)\="
+syn match   laceNumber		"-\=\.\d\+\(_\d\+\)*\([eE][-+]\=\d\+\(_\d\+\)*\)\="
 syn match   laceComment		"--.*" contains=laceTodo
 
 
@@ -89,13 +89,13 @@ if !exists("did_lace_syntax_inits")
   hi link laceExternal			Statement
   hi link laceCluster			ModeMsg
 
-  hi link laceEscape 			Special
+  hi link laceEscape			Special
 
   hi link laceBool				Boolean
-  hi link laceString 			String
+  hi link laceString			String
   hi link laceCharacter			Character
-  hi link laceClassName 		Type
-  hi link laceNumber 			Number
+  hi link laceClassName			Type
+  hi link laceNumber			Number
 
   hi link laceOperator			Special
   hi link laceArray				Special

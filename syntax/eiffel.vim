@@ -24,7 +24,7 @@ else
 endif
 
 if exists("eiffel_hex_constants")
-  syn match  eiffelNumber          "[0-9][0-9a-fA-F]*[xX]"
+  syn match  eiffelNumber          "\d[0-9a-fA-F]*[xX]"
 endif
 
 " Keyword definitions
@@ -76,19 +76,19 @@ syn keyword eiffelBitType        BIT
 syn keyword eiffelBool           true false
 syn keyword eiffelBool		 True False
 syn region  eiffelString         start=+"+ skip=+%"+ end=+"+ contains=eiffelEscape,eiffelStringError
-syn match   eiffelEscape 	 contained "%[^/]"
-syn match   eiffelEscape 	 contained "%/[0-9]\+/"
-syn match   eiffelEscape 	 contained "^[ \t]*%"
-syn match   eiffelEscape 	 contained "%[ \t]*$"
+syn match   eiffelEscape	 contained "%[^/]"
+syn match   eiffelEscape	 contained "%/\d\+/"
+syn match   eiffelEscape	 contained "^[ \t]*%"
+syn match   eiffelEscape	 contained "%[ \t]*$"
 syn match   eiffelStringError    contained "%/[^0-9]"
-syn match   eiffelStringError    contained "%/[0-9]\+[^0-9/]"
-syn match   eiffelBadConstant    "'\(%[^/]\|%/[0-9]\+/\|[^'%]\)\+'"
+syn match   eiffelStringError    contained "%/\d\+[^0-9/]"
+syn match   eiffelBadConstant    "'\(%[^/]\|%/\d\+/\|[^'%]\)\+'"
 syn match   eiffelBadConstant    "''"
-syn match   eiffelCharacter      "'\(%[^/]\|%/[0-9]\+/\|[^'%]\)'" contains=eiffelEscape
-syn match   eiffelNumber         "-\=\<[0-9]\+\(_[0-9]\+\)*\>"
+syn match   eiffelCharacter      "'\(%[^/]\|%/\d\+/\|[^'%]\)'" contains=eiffelEscape
+syn match   eiffelNumber         "-\=\<\d\+\(_\d\+\)*\>"
 syn match   eiffelNumber         "\<[01]\+[bB]\>"
-syn match   eiffelNumber         "-\=\<[0-9]\+\(_[0-9]\+\)*\.\([0-9]\+\(_[0-9]\+\)*\)\=\([eE][-+]\=[0-9]\+\(_[0-9]\+\)*\)\="
-syn match   eiffelNumber         "-\=\.[0-9]\+\(_[0-9]\+\)*\([eE][-+]\=[0-9]\+\(_[0-9]\+\)*\)\="
+syn match   eiffelNumber         "-\=\<\d\+\(_\d\+\)*\.\(\d\+\(_\d\+\)*\)\=\([eE][-+]\=\d\+\(_\d\+\)*\)\="
+syn match   eiffelNumber         "-\=\.\d\+\(_\d\+\)*\([eE][-+]\=\d\+\(_\d\+\)*\)\="
 syn match   eiffelComment        "--.*" contains=eiffelTodo
 
 syn case match
@@ -125,13 +125,13 @@ if !exists("did_eiffel_syntax_inits")
   hi link eiffelAnchored	Special
   hi link eiffelBitType		Special
 
-  hi link eiffelEscape 		Special
+  hi link eiffelEscape		Special
 
-  hi link eiffelBool	 	Boolean
-  hi link eiffelString 		String
+  hi link eiffelBool		Boolean
+  hi link eiffelString		String
   hi link eiffelCharacter	Character
-  hi link eiffelClassName 	Type
-  hi link eiffelNumber 		Number
+  hi link eiffelClassName	Type
+  hi link eiffelNumber		Number
 
   hi link eiffelOperator	Special
   hi link eiffelArray		Special

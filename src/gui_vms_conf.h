@@ -1,5 +1,4 @@
-/* config.h.  Generated automatically by configure.  */
-/* config.h.in.  Generated automatically from configure.in by autoheader.  */
+/* os_vms_conf.h.  Replaces config.h for VMS with GUI */
 
 /* Define unless no X support found */
 #define HAVE_X11 1
@@ -39,7 +38,7 @@
 
 /*
  * If we cannot trust one of the following from the libraries, we use our
- * own safe but probably slower vim_memmove().
+ * own safe but probably slower mch_memmove().
  */
 /* #undef USEBCOPY */
 #define USEMEMMOVE 1
@@ -100,7 +99,7 @@
 #define HAVE_STRTOL 1
 
 /* Define if you have the tgetent() function.  */
-/*#define HAVE_TGETENT 1*/
+#define HAVE_TGETENT 1
 
 /* Define if you have the memset() function.  */
 #define HAVE_MEMSET 1
@@ -207,7 +206,7 @@
 /* #undef HAVE_SYS_PTEM_H */
 
 /* Define if you have the <termios.h> header file. */
-#define HAVE_TERMIOS_H 1
+/* #define HAVE_TERMIOS_H 1 */
 
 /* Define if you have the <libc.h> header file. */
 /* #undef HAVE_LIBC_H */

@@ -72,13 +72,17 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /* Private definitions. */
 
 static char defaultTranslations[] =
-    "<Btn1Down>:   NotifyScroll()\n\
-     <Btn2Down>:   MoveThumb() NotifyThumb() \n\
-     <Btn3Down>:   NotifyScroll()\n\
-     <Btn1Motion>: HandleThumb() \n\
-     <Btn3Motion>: HandleThumb() \n\
-     <Btn2Motion>: MoveThumb() NotifyThumb() \n\
-     <BtnUp>:	   EndScroll()";
+    "<Btn1Down>: NotifyScroll()\n\
+     <Btn2Down>: MoveThumb() NotifyThumb()\n\
+     <Btn3Down>: NotifyScroll()\n\
+     <Btn4Down>: ScrollOneLineUp()\n\
+     Shift<Btn4Down>: ScrollPageUp()\n\
+     <Btn5Down>: ScrollOneLineDown()\n\
+     Shift<Btn5Down>: ScrollPageDown()\n\
+     <Btn1Motion>: HandleThumb()\n\
+     <Btn3Motion>: HandleThumb()\n\
+     <Btn2Motion>: MoveThumb() NotifyThumb()\n\
+     <BtnUp>: EndScroll()";
 
 static float floatZero = 0.0;
 
@@ -115,7 +119,9 @@ static XtResource resources[] =
   {XtNtopShadowPixel, XtCTopShadowPixel, XtRPixel, sizeof(Pixel),
        Offset(scrollbar.top_shadow_pixel), XtRString, XtDefaultBackground},
   {XtNbottomShadowPixel, XtCBottomShadowPixel, XtRPixel, sizeof(Pixel),
-       Offset(scrollbar.bot_shadow_pixel), XtRString, XtDefaultForeground}
+       Offset(scrollbar.bot_shadow_pixel), XtRString, XtDefaultForeground},
+  {XtNlimitThumb, XtCLimitThumb, XtRBool, sizeof(Bool),
+       Offset(scrollbar.limit_thumb), XtRImmediate, (XtPointer)0}
 };
 #undef Offset
 
@@ -132,6 +138,11 @@ static void MoveThumb __ARGS((Widget, XEvent *, String *, Cardinal *));
 static void NotifyThumb __ARGS((Widget, XEvent *, String *, Cardinal *));
 static void NotifyScroll __ARGS((Widget, XEvent *, String *, Cardinal *));
 static void EndScroll __ARGS((Widget, XEvent *, String *, Cardinal *));
+static void ScrollOneLineUp __ARGS((Widget, XEvent *, String *, Cardinal *));
+static void ScrollOneLineDown __ARGS((Widget, XEvent *, String *, Cardinal *));
+static void ScrollPageUp __ARGS((Widget, XEvent *, String *, Cardinal *));
+static void ScrollPageDown __ARGS((Widget, XEvent *, String *, Cardinal *));
+static void ScrollSome __ARGS((Widget w, XEvent *event, int call_data));
 static void _Xaw3dDrawShadows __ARGS((Widget, XEvent *, Region, int));
 static void AllocTopShadowGC __ARGS((Widget));
 static void AllocBotShadowGC __ARGS((Widget));
@@ -142,7 +153,11 @@ static XtActionsRec actions[] =
     {"MoveThumb",	MoveThumb},
     {"NotifyThumb",	NotifyThumb},
     {"NotifyScroll",	NotifyScroll},
-    {"EndScroll",	EndScroll}
+    {"EndScroll",	EndScroll},
+    {"ScrollOneLineUp", ScrollOneLineUp},
+    {"ScrollOneLineDown", ScrollOneLineDown},
+    {"ScrollPageUp",	ScrollPageUp},
+    {"ScrollPageDown",	ScrollPageDown}
 };
 
 
@@ -286,33 +301,32 @@ FillArea(sbw, top, bottom, fill, draw_shadow)
 	if (!(sbw->scrollbar.orientation == XtorientHorizontal))
 	{
 	    /* Left border */
-	    XDrawLine (XtDisplay ((Widget) sbw), XtWindow ((Widget) sbw),
+	    XDrawLine(XtDisplay ((Widget) sbw), XtWindow ((Widget) sbw),
 		    sbw->scrollbar.top_shadow_GC,
 		    lx, ly, lx, ly + lh - 1);
 
 	    /* Right border */
-	    XDrawLine (XtDisplay ((Widget) sbw), XtWindow ((Widget) sbw),
+	    XDrawLine(XtDisplay ((Widget) sbw), XtWindow ((Widget) sbw),
 		    sbw->scrollbar.bot_shadow_GC,
 		    lx + lw - 1, ly, lx + lw - 1, ly + lh - 1);
 	}
 	else
 	{
 	    /* Top border */
-	    XDrawLine (XtDisplay ((Widget) sbw), XtWindow ((Widget) sbw),
+	    XDrawLine(XtDisplay ((Widget) sbw), XtWindow ((Widget) sbw),
 		    sbw->scrollbar.top_shadow_GC,
 		    lx, ly, lx + lw - 1, ly);
 
 	    /* Bottom border */
-	    XDrawLine (XtDisplay ((Widget) sbw), XtWindow ((Widget) sbw),
+	    XDrawLine(XtDisplay ((Widget) sbw), XtWindow ((Widget) sbw),
 		    sbw->scrollbar.bot_shadow_GC,
 		    lx, ly + lh - 1, lx + lw - 1, ly + lh - 1);
 	}
     }
     else
     {
-	XClearArea (XtDisplay((Widget) sbw), XtWindow((Widget) sbw),
-		lx, ly, (unsigned int) lw, (unsigned int) lh,
-		FALSE);
+	XClearArea(XtDisplay((Widget) sbw), XtWindow((Widget) sbw),
+		lx, ly, (unsigned int) lw, (unsigned int) lh, FALSE);
     }
 }
 
@@ -594,7 +608,7 @@ Resize (w)
     /* ForgetGravity has taken care of background, but thumb may
      * have to move as a result of the new size. */
     SetDimensions ((ScrollbarWidget) w);
-    Redisplay (w, (XEvent*) NULL, (Region)NULL);
+    Redisplay(w, (XEvent*) NULL, (Region)NULL);
 }
 
 
@@ -755,13 +769,12 @@ ExtractPosition(event, x, y, state)
     }
 }
 
-/* ARGSUSED */
     static void
 HandleThumb(w, event, params, num_params)
     Widget w;
     XEvent *event;
-    String *params;	/* unused */
-    Cardinal *num_params;   /* unused */
+    String *params;
+    Cardinal *num_params;
 {
     Position x, y, loc;
     ScrollbarWidget sbw = (ScrollbarWidget) w;
@@ -827,6 +840,68 @@ FloatInRange(num, small, big)
     float num, small, big;
 {
     return (num < small) ? small : ((num > big) ? big : num);
+}
+
+/* ARGSUSED */
+    static void
+ScrollOneLineUp(w, event, params, num_params)
+    Widget	w;
+    XEvent	*event;
+    String	*params;
+    Cardinal	*num_params;
+{
+    ScrollSome(w, event, -ONE_LINE_DATA);
+}
+
+/* ARGSUSED */
+    static void
+ScrollOneLineDown(w, event, params, num_params)
+    Widget	w;
+    XEvent	*event;
+    String	*params;
+    Cardinal	*num_params;
+{
+    ScrollSome(w, event, ONE_LINE_DATA);
+}
+
+/* ARGSUSED */
+    static void
+ScrollPageDown(w, event, params, num_params)
+    Widget	w;
+    XEvent	*event;
+    String	*params;
+    Cardinal	*num_params;
+{
+    ScrollSome(w, event, ONE_PAGE_DATA);
+}
+
+/* ARGSUSED */
+    static void
+ScrollPageUp(w, event, params, num_params)
+    Widget	w;
+    XEvent	*event;
+    String	*params;
+    Cardinal	*num_params;
+{
+    ScrollSome(w, event, -ONE_PAGE_DATA);
+}
+
+    static void
+ScrollSome(w, event, call_data)
+    Widget	w;
+    XEvent	*event;
+    int		call_data;
+{
+    ScrollbarWidget	sbw = (ScrollbarWidget) w;
+
+    if (sbw->scrollbar.scroll_mode == SMODE_CONT)   /* if scroll continuous */
+	return;
+
+    if (LookAhead(w, event))
+	return;
+
+    sbw->scrollbar.scroll_mode = SMODE_LINE_UP;
+    XtCallCallbacks(w, XtNscrollProc, (XtPointer)call_data);
 }
 
 /* ARGSUSED */
@@ -985,7 +1060,11 @@ MoveThumb(w, event, params, num_params)
     }
 
     top -= sbw->scrollbar.scroll_off;
-    top = FloatInRange(top, 0.0, sbw->scrollbar.max);
+    if (sbw->scrollbar.limit_thumb)
+	top = FloatInRange(top, 0.0,
+			sbw->scrollbar.max - sbw->scrollbar.shown + 0.000001);
+    else
+	top = FloatInRange(top, 0.0, sbw->scrollbar.max);
 
     sbw->scrollbar.top = top;
     PaintThumb(sbw);

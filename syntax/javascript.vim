@@ -2,24 +2,30 @@
 " Language:	JavaScript
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/javascript.vim
-" Last change:	1998 Jan 12
+" Last change:	1998 Jun 16
 
 
 " Remove any old syntax stuff hanging around
 syn clear
 syn case ignore
 
+if !exists("main_syntax")
+  let main_syntax = 'javascript'
+endif
+
+let b:current_syntax = "javascript"
+
 syn match   javaScriptLineComment      "\/\/.*$"
 syn match   javaScriptCommentSkip      "^[ \t]*\*\($\|[ \t]\+\)"
 syn region  javaScriptCommentString    start=+"+  skip=+\\\\\|\\"+  end=+"+ end=+\*/+me=s-1,he=s-1 contains=javaScriptSpecial,javaScriptCommentSkip
 syn region  javaScriptComment2String   start=+"+  skip=+\\\\\|\\"+  end=+$\|"+  contains=javaScriptSpecial
 syn region  javaScriptComment          start="/\*"  end="\*/" contains=javaScriptCommentString,javaScriptCharacter,javaScriptNumber
-syn match   javaScriptSpecial          "\\[0-9][0-9][0-9]\|\\."
+syn match   javaScriptSpecial          "\\\d\d\d\|\\."
 syn region  javaScriptStringD          start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=javaScriptSpecial
 syn region  javaScriptStringS          start=+'+  skip=+\\\\\|\\'+  end=+'+  contains=javaScriptSpecial
 syn match   javaScriptSpecialCharacter "'\\.'"
-syn match   javaScriptNumber           "-\=\<[0-9]\+L\=\>\|0[xX][0-9a-fA-F]\+\>"
-syn keyword javaScriptConditionall     if else
+syn match   javaScriptNumber           "-\=\<\d\+L\=\>\|0[xX][0-9a-fA-F]\+\>"
+syn keyword javaScriptConditional      if else
 syn keyword javaScriptRepeat           while for
 syn keyword javaScriptBranch           break continue
 syn keyword javaScriptOperator         new in
@@ -30,12 +36,13 @@ syn keyword javaScriptBoolean          true false
 syn match   javaScriptBraces           "[{}]"
 
 " catch errors caused by wrong parenthesis
-syn region  javaScriptParen       transparent start="(" end=")" contains=ALLBUT,javaScriptParenError
-syn match   javaScriptParenError  ")"
+syn region  javaScriptParen       transparent start="(" end=")" contains=javaScript*
+syn match   javaScrParenError  ")"
 syn match   javaScriptInParen     contained "[{}]"
 
-syn sync ccomment javaScriptComment
-
+if main_syntax == "javascript"
+  syn sync ccomment javaScriptComment
+endif
 
 if !exists("did_javascript_syntax_inits")
   let did_javascript_syntax_inits = 1
@@ -56,11 +63,14 @@ if !exists("did_javascript_syntax_inits")
   hi link javaScriptFunction          Function
   hi link javaScriptBraces            Function
   hi link javaScriptError             Error
-  hi link javaScriptParenError        javaScriptError
+  hi link javaScrParenError           javaScriptError
   hi link javaScriptInParen           javaScriptError
   hi link javaScriptBoolean           Boolean
 endif
 
 let b:current_syntax = "javascript"
+if main_syntax == 'javascript'
+  unlet main_syntax
+endif
 
 " vim: ts=8

@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language:	C++
+" Language:	ESQL-C
 " Maintainer:	Jonathan A. George <jageorge@tel.gte.com>
-" Last change:	1998 Feb 17
+" Last change:	1998 Aug 12
 
 " Remove any old syntax stuff hanging around
 syntax clear
@@ -33,14 +33,14 @@ syntax keyword esqlcKeyword	session share size smallint
 syntax keyword esqlcOperator	not and or
 syntax keyword esqlcOperator	in any some all between exists
 syntax keyword esqlcOperator	like escape
-syntax keyword esqlcOperator  	intersect minus
-syntax keyword esqlcOperator  	prior distinct
+syntax keyword esqlcOperator	intersect minus
+syntax keyword esqlcOperator	prior distinct
 syntax keyword esqlcOperator	sysdate
 
 syntax keyword esqlcStatement	alter analyze audit comment commit create
 syntax keyword esqlcStatement	delete drop explain grant insert lock noaudit
 syntax keyword esqlcStatement	rename revoke rollback savepoint select set
-syntax keyword esqlcStatement 	truncate update
+syntax keyword esqlcStatement	truncate update
 
 if !exists("did_esqlc_syntax_inits")
   let did_esqlc_syntax_inits = 1
@@ -50,4 +50,6 @@ if !exists("did_esqlc_syntax_inits")
   highlight link esqlcSpecial	Special
   highlight link esqlcPreProc	PreProc
 endif
+
+let b:current_syntax = "esqlc"
 

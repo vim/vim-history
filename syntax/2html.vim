@@ -1,16 +1,15 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1998 Feb 20
+" Last change:	1998 Jul 25
 
 " Transform a file into HTML, using the current syntax highlighting.
-" Does NOT support background colors.
-
-if !has("gui_running")
-  echo "This only works in gvim"
-else
 
 " Split window to create a buffer with the HTML file.
-new %.html
+if expand("%") == ""
+  new Untitled.html
+else
+  new %.html
+endif
 1,$d
 let old_title = &title
 let old_icon = &icon
@@ -18,8 +17,8 @@ let old_paste = &paste
 set notitle noicon paste noet
 
 " Find out the background and foreground color.
-let bg = synIDattr(highlightID("Normal"), "bg#")
-let fg = synIDattr(highlightID("Normal"), "fg#")
+let bg = synIDattr(highlightID("Normal"), "bg#", "gui")
+let fg = synIDattr(highlightID("Normal"), "fg#", "gui")
 if bg == ""
    if &background == "dark"
      let bg = "#000000"
@@ -54,6 +53,7 @@ while lnum <= line("$")
   let len = strlen(line)
   let new = ""
   let color = ""
+  let bgcolor = ""
   let bold = ""
   let italic = ""
   let underline = ""
@@ -93,6 +93,9 @@ while lnum <= line("$")
       if color != ""
         let new = new . "</FONT>"
       endif
+      if bgcolor != ""
+        let new = new . "</SPAN>"
+      endif
       if bold == "1"
         let new = new . "</B>"
       endif
@@ -107,19 +110,23 @@ while lnum <= line("$")
     " If the following text has highlighing, start it
     if new_id != id && col <= len
       let id = new_id
-      let underline = synIDattr(synIDtrans(id), "underline")
+      let underline = synIDattr(synIDtrans(id), "underline", "gui")
       if underline == "1"
         let new = new . "<U>"
       endif
-      let italic = synIDattr(synIDtrans(id), "italic")
+      let italic = synIDattr(synIDtrans(id), "italic", "gui")
       if italic == "1"
         let new = new . "<I>"
       endif
-      let bold = synIDattr(synIDtrans(id), "bold")
+      let bold = synIDattr(synIDtrans(id), "bold", "gui")
       if bold == "1"
         let new = new . "<B>"
       endif
-      let color = synIDattr(synIDtrans(id), "fg#")
+      let bgcolor = synIDattr(synIDtrans(id), "bg#", "gui")
+      if bgcolor != ""
+        let new = new . '<SPAN style="background-color: ' . bgcolor . '">'
+      endif
+      let color = synIDattr(synIDtrans(id), "fg#", "gui")
       if color != ""
 	let new = new . "<FONT COLOR=" . color . ">"
       endif
@@ -138,5 +145,3 @@ exec "normal \<C-W>pa</PRE>\n</BODY>\n</HTML>\e"
 let &title = old_title
 let &icon = old_icon
 let &paste = old_paste
-
-endif " has("gui_running")

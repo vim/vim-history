@@ -1,9 +1,10 @@
 /* syntax.c */
 void syntax_start __ARGS((WIN *wp, linenr_t lnum));
+void syn_changed __ARGS((linenr_t lnum));
 int syntax_check_changed __ARGS((linenr_t lnum));
 int get_syntax_attr __ARGS((colnr_t col, char_u *line));
 void syntax_clear __ARGS((BUF *buf));
-void do_syntax __ARGS((EXARG *eap));
+void do_syntax __ARGS((EXARG *eap, char_u **cmdlinep));
 int syntax_present __ARGS((BUF *buf));
 void set_context_in_syntax_cmd __ARGS((char_u *arg));
 char_u *get_syntax_name __ARGS((int idx));
@@ -17,8 +18,8 @@ void hl_set_fg_color_name __ARGS((char_u *name));
 struct attr_entry *syn_gui_attr2entry __ARGS((int attr));
 struct attr_entry *syn_term_attr2entry __ARGS((int attr));
 struct attr_entry *syn_cterm_attr2entry __ARGS((int attr));
-char_u *highlight_has_attr __ARGS((int id, int flag));
-char_u *highlight_color __ARGS((int id, char_u *what));
+char_u *highlight_has_attr __ARGS((int id, int flag, int modec));
+char_u *highlight_color __ARGS((int id, char_u *what, int modec));
 int syn_name2id __ARGS((char_u *name));
 int highlight_exists __ARGS((char_u *name));
 int syn_check_group __ARGS((char_u *pp, int len));
@@ -29,3 +30,4 @@ void highlight_gui_started __ARGS((void));
 int highlight_changed __ARGS((void));
 void set_context_in_highlight_cmd __ARGS((char_u *arg));
 char_u *get_highlight_name __ARGS((int idx));
+void free_highlight_fonts __ARGS((void));

@@ -44,11 +44,11 @@ syn region sqlString		start=+"+  skip=+\\\\\|\\"+  end=+"+
 syn region sqlString		start=+'+  skip=+\\\\\|\\"+  end=+'+
 
 " Numbers:
-syn match sqlNumber		"-\=\<[0-9]*\.\=[0-9_]\>"
+syn match sqlNumber		"-\=\<\d*\.\=[0-9_]\>"
 
 " Comments:
 syn region sqlComment    start="/\*"  end="\*/"
-syn match sqlComment 	"--.*"
+syn match sqlComment	"--.*"
 
 syn sync ccomment sqlComment
 

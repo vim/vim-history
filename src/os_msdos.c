@@ -14,6 +14,8 @@
  * A lot in this file was made by Juergen Weigert (jw).
  *
  * DJGPP changes by Gert van Antwerpen
+ * Faster text screens by John Lange (jlange@zilker.net)
+ *
  */
 
 #include <io.h>
@@ -27,6 +29,7 @@
 #ifdef DJGPP
 # include <dpmi.h>
 # include <signal.h>
+# include <sys/movedata.h>
 #else
 # include <alloc.h>
 #endif
@@ -35,45 +38,257 @@
 # define _cdecl	    /* DJGPP doesn't have this */
 #endif
 
-static int WaitForChar __ARGS((long));
-#ifdef USE_MOUSE
-static void show_mouse __ARGS((int));
-static void mouse_area __ARGS((void));
-#endif
-static int change_drive __ARGS((int));
-static _cdecl int cbrk_handler __ARGS(());
-static void set_interrupts __ARGS((int on));
-
-static _cdecl int	pstrcmp();  /* __ARGS((char **, char **)); BCC does not like this */
-static void	namelowcpy __ARGS((char_u *, char_u *));
-
 static int cbrk_pressed = FALSE;    /* set by ctrl-break interrupt */
 static int ctrlc_pressed = FALSE;   /* set when ctrl-C or ctrl-break detected */
 static int delayed_redraw = FALSE;  /* set when ctrl-C detected */
 
 #ifdef USE_MOUSE
-static int mouse_avail = FALSE;	    /* mouse present */
-static int mouse_active;	    /* mouse enabled */
-static int mouse_hidden;	    /* mouse not shown */
-static int mouse_click = -1;	    /* mouse status */
-static int mouse_last_click = -1;   /* previous status at click */
-static int mouse_x = -1;	    /* mouse x coodinate */
-static int mouse_y = -1;	    /* mouse y coodinate */
-static long mouse_click_time = 0;   /* biostime() of last click */
-static int mouse_click_count = 0;   /* count for multi-clicks */
-static int mouse_click_x = 0;	    /* x of previous mouse click */
-static int mouse_click_y = 0;	    /* y of previous mouse click */
-static linenr_t mouse_topline = 0;  /* topline at previous mouse click */
-static int mouse_x_div = 8;	    /* column = x coord / mouse_x_div */
-static int mouse_y_div = 8;	    /* line   = y coord / mouse_y_div */
+static int mouse_avail = FALSE;		/* mouse present */
+static int mouse_active;		/* mouse enabled */
+static int mouse_hidden;		/* mouse not shown */
+static int mouse_click = -1;		/* mouse status */
+static int mouse_last_click = -1;	/* previous status at click */
+static int mouse_x = -1;		/* mouse x coodinate */
+static int mouse_y = -1;		/* mouse y coodinate */
+static long mouse_click_time = 0;	/* biostime() of last click */
+static int mouse_click_count = 0;	/* count for multi-clicks */
+static int mouse_click_x = 0;		/* x of previous mouse click */
+static int mouse_click_y = 0;		/* y of previous mouse click */
+static linenr_t mouse_topline = 0;	/* topline at previous mouse click */
+static int mouse_x_div = 8;		/* column = x coord / mouse_x_div */
+static int mouse_y_div = 8;		/* line   = y coord / mouse_y_div */
 #endif
 
 #define BIOSTICK    55		    /* biostime() increases one tick about
 					every 55 msec */
 
+#ifdef DJGPP
+/*
+ * For DJGPP, use our own functions for fast text screens.  JML 1/18/98
+ */
+
+unsigned long	S_ulScreenBase = 0xb8000;
+unsigned short	S_uiAttribute = 7 << 8;
+int		S_iCurrentRow = 0;	/* These are 0 offset */
+int		S_iCurrentColumn = 0;
+int		S_iLeft = 0;	/* These are 1 offset */
+int		S_iTop = 0;
+int		S_iRight = 0;
+int		S_iBottom = 0;
+short		S_selVideo;	/* Selector for DJGPP direct video transfers */
+
+    static void
+mygotoxy(int x, int y)
+{
+    S_iCurrentRow = y - 1;
+    S_iCurrentColumn = x - 1;
+    gotoxy(x,y);		/* set cursor position */
+}
+
+    static void
+myscroll(void)
+{
+    short iRow, iColumn;
+    unsigned short uiValue;
+
+    /* Copy the screen */
+    for (iRow = S_iTop; iRow < S_iBottom; iRow++)
+	movedata(S_selVideo, (iRow * Columns) << 1,
+		S_selVideo, ((iRow - 1) * Columns) << 1,
+		(S_iRight - S_iLeft + 1) << 1);
+
+    /* Clear the bottom row */
+    uiValue = S_uiAttribute | ' ';
+    for (iColumn = S_iLeft - 1; iColumn < S_iRight; iColumn++)
+	_dosmemputw(&uiValue, 1, S_ulScreenBase
+			 + (S_iBottom - 1) * (Columns << 1) + (iColumn << 1));
+}
+
+    static int
+myputch(int iChar)
+{
+    unsigned int *puiLocation;
+    unsigned short uiValue;
+
+    if (iChar == '\n')
+    {
+	if (S_iCurrentRow >= S_iBottom - S_iTop)
+	    myscroll();
+	else
+	    mygotoxy(S_iLeft, S_iCurrentRow + 2);
+    }
+    else if (iChar == '\r')
+	mygotoxy(S_iLeft, S_iCurrentRow + 1);
+    else if (iChar == '\b')
+	mygotoxy(S_iCurrentColumn, S_iCurrentRow + 1);
+    else if (iChar == 7)
+    {
+	sound(440);	/* short beep */
+	delay(200);
+	nosound();
+    }
+    else
+    {
+	uiValue = S_uiAttribute | (unsigned char)iChar;
+
+	_dosmemputw(&uiValue, 1, S_ulScreenBase
+		  + S_iCurrentRow * (Columns << 1) + (S_iCurrentColumn << 1));
+
+	S_iCurrentColumn++;
+	if (S_iCurrentColumn >= S_iRight && S_iCurrentRow >= S_iBottom - S_iTop)
+	{
+	    myscroll();
+	    mygotoxy(S_iLeft, S_iCurrentRow + 2);
+	}
+	else
+	    mygotoxy(S_iCurrentColumn + 1, S_iCurrentRow + 1);
+    }
+
+    return 0;
+}
+
+    static void
+mywindow(int iLeft, int iTop, int iRight, int iBottom)
+{
+    S_iLeft = iLeft;
+    S_iTop = iTop;
+    S_iRight = iRight;
+    S_iBottom = iBottom;
+    window(iLeft, iTop, iRight, iBottom);
+}
+
+    static void
+mytextinit(struct text_info *pTextinfo)
+{
+    S_selVideo = __dpmi_segment_to_descriptor(S_ulScreenBase >> 4);
+    S_uiAttribute = pTextinfo->normattr << 8;
+    mywindow(1, 1, Columns, Rows);
+}
+
+    static void
+get_screenbase(void)
+{
+    static union REGS	    regs;
+
+    /* old Hercules grafic card has different base address (Macewicz) */
+    regs.h.ah = 0x0f;
+    (void)int86(0x10, &regs, &regs);	/* int 10 0f */
+    if (regs.h.al == 0x07)		/* video mode 7 -- hercules mono */
+	S_ulScreenBase = 0xb0000;
+    else
+	S_ulScreenBase = 0xb8000;
+}
+
+    static void
+mynormvideo(void)
+{
+    S_uiAttribute = 0x700;
+    textbackground(0);			/*for delline() etc*/
+}
+
+    static void
+mytextattr(int iAttribute)
+{
+    S_uiAttribute = (unsigned short)iAttribute << 8;
+    iAttribute >>= 4;
+    if (iAttribute < 8)
+	textbackground(iAttribute);	/*for delline() etc*/
+    else
+	textbackground(0);
+}
+
+    static void
+mytextcolor(int iTextColor)
+{
+    S_uiAttribute = (unsigned short)((S_uiAttribute & 0xf000)
+					   | (unsigned short)iTextColor << 8);
+    textcolor(iTextColor);		/*for delline() etc*/
+}
+
+    static void
+mytextbackground(int iBkgColor)
+{
+    S_uiAttribute = (unsigned short)((S_uiAttribute & 0x0f00)
+					 | (unsigned short)(iBkgColor << 12));
+    if (iBkgColor < 8)
+	textbackground(iBkgColor);	/*for delline() etc*/
+    else
+	textbackground(0);
+}
+
+#else
+# define mygotoxy gotoxy
+# define myputch putch
+# define myscroll scroll
+# define mywindow window
+# define mynormvideo normvideo
+# define mytextattr textattr
+# define mytextcolor textcolor
+# define mytextbackground textbackground
+#endif
+
+/*
+ * Save/restore the shape of the cursor.
+ * call with FALSE to save, TRUE to restore
+ */
+    static void
+mch_restore_cursor_shape(int restore)
+{
+    static union REGS	    regs;
+    static int		    saved = FALSE;
+
+    if (restore)
+    {
+	if (saved)
+	    regs.h.ah = 0x01;	    /*Set Cursor*/
+	else
+	    return;
+    }
+    else
+    {
+	regs.h.ah = 0x03;	    /*Get Cursor*/
+	regs.h.bh = 0x00;	    /*Page */
+	saved = TRUE;
+    }
+
+    (void)int86(0x10, &regs, &regs);
+}
+
+/*
+ * Set the shape of the cursor.
+ * 'thickness' can be from 0 (thin) to 7 (block)
+ */
+    static void
+mch_set_cursor_shape(int thickness)
+{
+    union REGS	    regs;
+
+    regs.h.ch = 7 - thickness;	    /*Starting Line*/
+    regs.h.cl = 7;		    /*Ending Line*/
+    regs.h.ah = 0x01;		    /*Set Cursor*/
+    (void)int86(0x10, &regs, &regs);
+}
+
+    void
+mch_update_cursor(void)
+{
+    int		idx;
+    int		thickness;
+
+    /*
+     * How the cursor is drawn depends on the current mode.
+     */
+    idx = get_cursor_idx();
+
+    if (cursor_table[idx].shape == SHAPE_BLOCK)
+	thickness = 7;
+    else
+	thickness = (7 * cursor_table[idx].percentage + 90) / 100;
+    mch_set_cursor_shape(thickness);
+}
+
     long_u
-mch_avail_mem(special)
-    int special;
+mch_avail_mem(int special)
 {
 #ifdef DJGPP
     return _go32_dpmi_remaining_virtual_memory();
@@ -82,140 +297,60 @@ mch_avail_mem(special)
 #endif
 }
 
-/*
- * don't do anything for about "msec" msec
- */
-    void
-mch_delay(msec, ignoreinput)
-    long    msec;
-    int	    ignoreinput;
-{
-    long    starttime;
+#ifdef USE_MOUSE
 
-    if (ignoreinput)
+/*
+ * Set area where mouse can be moved to: The whole screen.
+ * Rows must be valid when calling!
+ */
+    static void
+mouse_area(void)
+{
+    union REGS	    regs;
+    int		    mouse_y_max;	    /* maximum mouse y coord */
+
+    if (mouse_avail)
     {
-	/*
-	 * We busy-wait here.  Unfortunately, delay() and usleep() have been
-	 * reported to give problems with the original Windows 95.  This is
-	 * fixed in service pack 1, but not everybody installed that.
-	 */
-	starttime = biostime(0, 0L);
-	while (biostime(0, 0L) < starttime + msec / BIOSTICK)
-	    ;
+	mouse_y_max = Rows * mouse_y_div - 1;
+	if (mouse_y_max < 199)	    /* is this needed? */
+	    mouse_y_max = 199;
+	regs.x.cx = 0;	/* mouse visible between cx and dx */
+	regs.x.dx = 639;
+	regs.x.ax = 7;
+	(void)int86(0x33, &regs, &regs);
+	regs.x.cx = 0;	/* mouse visible between cx and dx */
+	regs.x.dx = mouse_y_max;
+	regs.x.ax = 8;
+	(void)int86(0x33, &regs, &regs);
     }
-    else
-	WaitForChar(msec);
 }
 
-/*
- * this version of remove is not scared by a readonly (backup) file
- *
- * returns -1 on error, 0 otherwise (just like remove())
- */
-    int
-vim_remove(name)
-    char_u  *name;
+    static void
+show_mouse(int on)
 {
-    (void)mch_setperm(name, 0);    /* default permissions */
-    return unlink((char *)name);
-}
+    static int	    was_on = FALSE;
+    union REGS	    regs;
 
-/*
- * mch_write(): write the output buffer to the screen
- */
-    void
-mch_write(s, len)
-    char_u  *s;
-    int	    len;
-{
-    char_u	*p;
-    int		row, col;
-
-    if (term_console)	    /* translate ESC | sequences into bios calls */
-	while (len--)
+    if (mouse_avail)
+    {
+	if (!mouse_active || mouse_hidden)
+	    on = FALSE;
+	/*
+	 * Careful: Each switch on must be compensated by exactly one switch
+	 * off
+	 */
+	if (on && !was_on || !on && was_on)
 	{
-	    if (p_wd)	    /* testing: wait a bit for each char */
-		WaitForChar(p_wd);
-
-	    if (s[0] == '\n')
-		putch('\r');
-	    else if (s[0] == ESC && len > 1 && s[1] == '|')
-	    {
-		switch (s[2])
-		{
-#ifdef DJGPP
-		case 'B':   ScreenVisualBell();
-			    goto got3;
-#endif
-		case 'J':   clrscr();
-			    goto got3;
-
-		case 'K':   clreol();
-			    goto got3;
-
-		case 'L':   insline();
-			    goto got3;
-
-		case 'M':   delline();
-got3:			    s += 3;
-			    len -= 2;
-			    continue;
-
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':   p = s + 2;
-			    row = getdigits(&p);    /* no check for length! */
-			    if (p > s + len)
-				break;
-			    if (*p == ';')
-			    {
-				++p;
-				col = getdigits(&p); /* no check for length! */
-				if (p > s + len)
-				    break;
-				if (*p == 'H' || *p == 'r')
-				{
-				    if (*p == 'H')  /* set cursor position */
-					gotoxy(col, row);
-				    else	    /* set scroll region  */
-					window(1, row, Columns, col);
-				    len -= p - s;
-				    s = p + 1;
-				    continue;
-				}
-			    }
-			    else if (*p == 'm' || *p == 'f' || *p == 'b')
-			    {
-				if (*p == 'm')	    /* set color */
-				{
-				    if (row == 0)
-					normvideo();/* reset color */
-				    else
-					textattr(row);
-				}
-				else if (*p == 'f') /* set foreground color */
-				    textcolor(row);
-				else		    /* set background color */
-				    textbackground(row);
-
-				len -= p - s;
-				s = p + 1;
-				continue;
-			    }
-		}
-	    }
-	    putch(*s++);
+	    was_on = on;
+	    regs.x.ax = on ? 1 : 2;
+	    int86(0x33, &regs, &regs);	/* show mouse */
+	    if (on)
+		mouse_area();
 	}
-    else
-	write(1, s, (unsigned)len);
+    }
 }
+
+#endif
 
 #ifdef DJGPP
 /*
@@ -254,8 +389,7 @@ vim_kbhit(void)
 #define FOREVER 1999999999L
 
     static  int
-WaitForChar(msec)
-    long    msec;
+WaitForChar(long msec)
 {
     union REGS	regs;
     long	starttime;
@@ -346,6 +480,140 @@ WaitForChar(msec)
 }
 
 /*
+ * don't do anything for about "msec" msec
+ */
+    void
+mch_delay(
+    long	msec,
+    int		ignoreinput)
+{
+    long	starttime;
+
+    if (ignoreinput)
+    {
+	/*
+	 * We busy-wait here.  Unfortunately, delay() and usleep() have been
+	 * reported to give problems with the original Windows 95.  This is
+	 * fixed in service pack 1, but not everybody installed that.
+	 */
+	starttime = biostime(0, 0L);
+	while (biostime(0, 0L) < starttime + msec / BIOSTICK)
+	    ;
+    }
+    else
+	WaitForChar(msec);
+}
+
+/*
+ * this version of remove is not scared by a readonly (backup) file
+ *
+ * returns -1 on error, 0 otherwise (just like remove())
+ */
+    int
+mch_remove(char_u *name)
+{
+    (void)mch_setperm(name, 0);    /* default permissions */
+    return unlink((char *)name);
+}
+
+/*
+ * mch_write(): write the output buffer to the screen
+ */
+    void
+mch_write(
+    char_u	*s,
+    int		len)
+{
+    char_u	*p;
+    int		row, col;
+
+    if (term_console)	    /* translate ESC | sequences into bios calls */
+	while (len--)
+	{
+	    if (p_wd)	    /* testing: wait a bit for each char */
+		WaitForChar(p_wd);
+
+	    if (s[0] == '\n')
+		myputch('\r');
+	    else if (s[0] == ESC && len > 1 && s[1] == '|')
+	    {
+		switch (s[2])
+		{
+#ifdef DJGPP
+		case 'B':   ScreenVisualBell();
+			    goto got3;
+#endif
+		case 'J':   clrscr();
+			    goto got3;
+
+		case 'K':   clreol();
+			    goto got3;
+
+		case 'L':   insline();
+			    goto got3;
+
+		case 'M':   delline();
+got3:			    s += 3;
+			    len -= 2;
+			    continue;
+
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':   p = s + 2;
+			    row = getdigits(&p);    /* no check for length! */
+			    if (p > s + len)
+				break;
+			    if (*p == ';')
+			    {
+				++p;
+				col = getdigits(&p); /* no check for length! */
+				if (p > s + len)
+				    break;
+				if (*p == 'H' || *p == 'r')
+				{
+				    if (*p == 'H')  /* set cursor position */
+					mygotoxy(col, row);
+				    else	    /* set scroll region  */
+					mywindow(1, row, Columns, col);
+				    len -= p - s;
+				    s = p + 1;
+				    continue;
+				}
+			    }
+			    else if (*p == 'm' || *p == 'f' || *p == 'b')
+			    {
+				if (*p == 'm')	    /* set color */
+				{
+				    if (row == 0)
+					mynormvideo();/* reset color */
+				    else
+					mytextattr(row);
+				}
+				else if (*p == 'f') /* set foreground color */
+				    mytextcolor(row);
+				else		    /* set background color */
+				    mytextbackground(row);
+
+				len -= p - s;
+				s = p + 1;
+				continue;
+			    }
+		}
+	    }
+	    myputch(*s++);
+	}
+    else
+	write(1, s, (unsigned)len);
+}
+
+/*
  * mch_inchar(): low level input funcion.
  * Get a characters from the keyboard.
  * If time == 0 do not wait for characters.
@@ -355,10 +623,10 @@ WaitForChar(msec)
  * return the number of characters obtained
  */
     int
-mch_inchar(buf, maxlen, time)
-    char_u	*buf;
-    int		maxlen;
-    long	time;
+mch_inchar(
+    char_u	*buf,
+    int		maxlen,
+    long	time)
 {
     int		len = 0;
     int		c;
@@ -520,16 +788,109 @@ mch_inchar(buf, maxlen, time)
  * return non-zero if a character is available
  */
     int
-mch_char_avail()
+mch_char_avail(void)
 {
     return WaitForChar(0L);
+}
+
+#ifdef DJGPP
+# define INT_ARG    int
+#else
+# define INT_ARG
+#endif
+
+/*
+ * function for ctrl-break interrupt
+ */
+    static void interrupt
+#ifdef DJGPP
+catch_cbrk(int a)
+#else
+catch_cbrk(void)
+#endif
+{
+    cbrk_pressed = TRUE;
+    ctrlc_pressed = TRUE;
+}
+
+/*
+ * ctrl-break handler for DOS. Never called when a ctrl-break is typed, because
+ * we catch interrupt 1b. If you type ctrl-C while Vim is waiting for a
+ * character this function is not called. When a ctrl-C is typed while Vim is
+ * busy this function may be called. By that time a ^C has been displayed on
+ * the screen, so we have to redisplay the screen. We can't do that here,
+ * because we may be called by DOS. The redraw is in mch_inchar().
+ */
+    static int _cdecl
+cbrk_handler(void)
+{
+    delayed_redraw = TRUE;
+    return 1;		    /* resume operation after ctrl-break */
+}
+
+/*
+ * function for critical error interrupt
+ * For DOS 1 and 2 return 0 (Ignore).
+ * For DOS 3 and later return 3 (Fail)
+ */
+    static void interrupt
+catch_cint(bp, di, si, ds, es, dx, cx, bx, ax)
+    unsigned bp, di, si, ds, es, dx, cx, bx, ax;
+{
+    ax = (ax & 0xff00);	    /* set AL to 0 */
+    if (_osmajor >= 3)
+	ax |= 3;	    /* set AL to 3 */
+}
+
+/*
+ * Set the interrupt vectors for use with Vim on or off.
+ * on == TRUE means as used within Vim
+ */
+    static void
+set_interrupts(int on)
+{
+    static int saved_cbrk;
+#ifndef DJGPP
+    static void interrupt (*old_cint)();
+#endif
+    static void interrupt (*old_cbrk)(INT_ARG);
+
+    if (on)
+    {
+	saved_cbrk = getcbrk();		/* save old ctrl-break setting */
+	setcbrk(0);			/* do not check for ctrl-break */
+#ifdef DJGPP
+	old_cbrk = signal(SIGINT, catch_cbrk);	/* critical error interrupt */
+#else
+	old_cint = getvect(0x24);	/* save old critical error interrupt */
+	setvect(0x24, catch_cint);	/* install our critical error interrupt */
+	old_cbrk = getvect(0x1B);	/* save old ctrl-break interrupt */
+	setvect(0x1B, catch_cbrk);	/* install our ctrl-break interrupt */
+	ctrlbrk(cbrk_handler);		/* vim's ctrl-break handler */
+#endif
+	if (term_console)
+	    out_str(T_ME);		/* set colors */
+    }
+    else
+    {
+	setcbrk(saved_cbrk);		/* restore ctrl-break setting */
+#ifdef DJGPP
+	signal(SIGINT,old_cbrk);	/* critical error interrupt */
+#else
+	setvect(0x24, old_cint);	/* restore critical error interrupt */
+	setvect(0x1B, old_cbrk);	/* restore ctrl-break interrupt */
+#endif
+	/* restore ctrl-break handler, how ??? */
+	if (term_console)
+	    mynormvideo();		/* restore screen colors */
+    }
 }
 
 /*
  * We have no job control, fake it by starting a new shell.
  */
     void
-mch_suspend()
+mch_suspend(void)
 {
     suspend_shell();
 }
@@ -541,7 +902,7 @@ extern int _fmode;
  * we do not use windows, there is not much to do here
  */
     void
-mch_windinit()
+mch_windinit(void)
 {
     union REGS regs;
 
@@ -556,10 +917,8 @@ mch_windinit()
      */
     if (getenv("LFN") == NULL)
 	putenv("LFN=y");
-    /*
-     * Always use the shell for system() when redirecting.
-     */
-    __system_flags &= ~__system_redirect;
+
+    get_screenbase();
 #endif
 
 #ifdef USE_MOUSE
@@ -583,67 +942,17 @@ mch_windinit()
     regs.h.bl = 0x00;
     regs.h.bh = 0x00;
     int86(0x10, &regs, &regs);
+
+    /* Save the old cursor shape */
+    mch_restore_cursor_shape(FALSE);
+    /* Initialise the cursor shape */
+    mch_update_cursor();
 }
-
-#ifdef USE_MOUSE
-    static void
-show_mouse(on)
-    int	    on;
-{
-    static int	    was_on = FALSE;
-    union REGS	    regs;
-
-    if (mouse_avail)
-    {
-	if (!mouse_active || mouse_hidden)
-	    on = FALSE;
-	/*
-	 * Careful: Each switch on must be compensated by exactly one switch
-	 * off
-	 */
-	if (on && !was_on || !on && was_on)
-	{
-	    was_on = on;
-	    regs.x.ax = on ? 1 : 2;
-	    int86(0x33, &regs, &regs);	/* show mouse */
-	    if (on)
-		mouse_area();
-	}
-    }
-}
-
-/*
- * Set area where mouse can be moved to: The whole screen.
- * Rows must be valid when calling!
- */
-    static void
-mouse_area()
-{
-    union REGS	    regs;
-    int		    mouse_y_max;	    /* maximum mouse y coord */
-
-    if (mouse_avail)
-    {
-	mouse_y_max = Rows * mouse_y_div - 1;
-	if (mouse_y_max < 199)	    /* is this needed? */
-	    mouse_y_max = 199;
-	regs.x.cx = 0;	/* mouse visible between cx and dx */
-	regs.x.dx = 639;
-	regs.x.ax = 7;
-	(void)int86(0x33, &regs, &regs);
-	regs.x.cx = 0;	/* mouse visible between cx and dx */
-	regs.x.dx = mouse_y_max;
-	regs.x.ax = 8;
-	(void)int86(0x33, &regs, &regs);
-    }
-}
-
-#endif
 
     int
-mch_check_win(argc, argv)
-    int	    argc;
-    char    **argv;
+mch_check_win(
+    int		argc,
+    char	**argv)
 {
     /* store argv[0], may be used for $VIM */
     if (*argv[0] != NUL)
@@ -658,7 +967,7 @@ mch_check_win(argc, argv)
  * Return TRUE if the input comes from a terminal, FALSE otherwise.
  */
     int
-mch_input_isatty()
+mch_input_isatty(void)
 {
     if (isatty(read_cmd_fd))
 	return TRUE;
@@ -670,8 +979,7 @@ mch_input_isatty()
  * fname_case(): Set the case of the file name, if it already exists.
  */
     void
-fname_case(name)
-    char_u *name;
+fname_case(char_u *name)
 {
     char_u	    *tail;
     struct ffblk    fb;
@@ -691,9 +999,9 @@ fname_case(name)
  * Dos console has no title.
  */
     void
-mch_settitle(title, icon)
-    char_u *title;
-    char_u *icon;
+mch_settitle(
+    char_u *title,
+    char_u *icon)
 {
 }
 
@@ -701,19 +1009,18 @@ mch_settitle(title, icon)
  * Restore the window/icon title. (which we don't have)
  */
     void
-mch_restore_title(which)
-    int which;
+mch_restore_title(int which)
 {
 }
 
     int
-mch_can_restore_title()
+mch_can_restore_title(void)
 {
     return FALSE;
 }
 
     int
-mch_can_restore_icon()
+mch_can_restore_icon(void)
 {
     return FALSE;
 }
@@ -722,9 +1029,9 @@ mch_can_restore_icon()
  * Insert user name in s[len].
  */
     int
-mch_get_user_name(s, len)
-    char_u  *s;
-    int	    len;
+mch_get_user_name(
+    char_u	*s,
+    int		len)
 {
     *s = NUL;
     return FAIL;
@@ -734,9 +1041,9 @@ mch_get_user_name(s, len)
  * Insert host name is s[len].
  */
     void
-mch_get_host_name(s, len)
-    char_u  *s;
-    int	    len;
+mch_get_host_name(
+    char_u	*s,
+    int		len)
 {
 #ifdef DJGPP
     STRNCPY(s, "PC (32 bits Vim)", len);
@@ -749,7 +1056,7 @@ mch_get_host_name(s, len)
  * return process ID
  */
     long
-mch_get_pid()
+mch_get_pid(void)
 {
     return (long)0;
 }
@@ -759,19 +1066,26 @@ mch_get_pid()
  * Return OK for success, FAIL for failure.
  */
     int
-mch_dirname(buf, len)
-    char_u  *buf;
-    int	    len;
+mch_dirname(
+    char_u	*buf,
+    int		len)
 {
+#ifdef DJGPP
+    if (getcwd((char *)buf, len) == NULL)
+	return FAIL;
+    /* turn the '/'s returned by DJGPP into '\'s */
+    slash_adjust(buf);
+    return OK;
+#else
     return (getcwd((char *)buf, len) != NULL ? OK : FAIL);
+#endif
 }
 
 /*
  * Change default drive (just like _chdrive of Borland C 3.1)
  */
     static int
-change_drive(drive)
-    int drive;
+change_drive(int drive)
 {
     union REGS regs;
 
@@ -794,10 +1108,11 @@ change_drive(drive)
  * return FAIL for failure, OK otherwise
  */
     int
-mch_FullName(fname, buf, len, force)
-    char_u  *fname, *buf;
-    int	    len;
-    int	    force;
+mch_FullName(
+    char_u	*fname,
+    char_u	*buf,
+    int		len,
+    int		force)
 {
     if (fname == NULL)	/* always fail */
     {
@@ -851,19 +1166,27 @@ mch_FullName(fname, buf, len, force)
 	    }
 	    else
 	    {
-		q = p + 1;
+		if ((q + 1) == p)		/* ... c:\foo	    */
+		    q = p + 1;			/* -> c:\	    */
+		else				/* but c:\foo\bar   */
+		    q = p;			/* -> c:\foo	    */
+
 		c = *q;			/* truncate at start of fname */
 		*q = NUL;
 #ifdef DJGPP
 		STRCPY(buf, fname);
 		slash_adjust(buf);	/* needed when fname starts with \ */
-		if (vim_chdir(buf))	/* change to the directory */
+		if (mch_chdir(buf))	/* change to the directory */
 #else
-		if (vim_chdir(fname))	/* change to the directory */
+		if (mch_chdir(fname))	/* change to the directory */
 #endif
 		    retval = FAIL;
 		else
+		{
 		    fname = q;
+		    if (c == '\\')	    /* if we cut the name at a */
+			fname++;	    /* '\', don't add it again */
+		}
 		*q = c;
 	    }
 	}
@@ -879,7 +1202,7 @@ mch_FullName(fname, buf, len, force)
 	if (l && buf[l - 1] != '/' && buf[l - 1] != '\\')
 	    strcat(buf, "/");
 	if (p)
-	    vim_chdir(olddir);
+	    mch_chdir(olddir);
 	strcat(buf, fname);
 	slash_adjust(buf);
 	return retval;
@@ -896,8 +1219,7 @@ mch_FullName(fname, buf, len, force)
  * backslash twice.
  */
     void
-slash_adjust(p)
-    char_u  *p;
+slash_adjust(char_u *p)
 {
 #ifdef OLD_DJGPP    /* this seems to have been fixed in DJGPP 2.01 */
     /* DJGPP can't handle a file name that starts with a backslash, and when it
@@ -923,8 +1245,7 @@ slash_adjust(p)
  * return TRUE is fname is an absolute path name
  */
     int
-mch_isFullName(fname)
-    char_u	*fname;
+mch_isFullName(char_u *fname)
 {
     return (vim_strchr(fname, ':') != NULL);
 }
@@ -935,8 +1256,7 @@ mch_isFullName(fname)
  * else FA_attributes defined in dos.h
  */
     long
-mch_getperm(name)
-    char_u *name;
+mch_getperm(char_u *name)
 {
     return (long)_chmod((char *)name, 0, 0);	 /* get file mode */
 }
@@ -947,9 +1267,9 @@ mch_getperm(name)
  * return FAIL for failure, OK otherwise
  */
     int
-mch_setperm(name, perm)
-    char_u	*name;
-    long	perm;
+mch_setperm(
+    char_u	*name,
+    long	perm)
 {
     perm |= FA_ARCH;	    /* file has changed, set archive bit */
     return (_chmod((char *)name, 1, (int)perm) == -1 ? FAIL : OK);
@@ -959,8 +1279,7 @@ mch_setperm(name, perm)
  * Set hidden flag for "name".
  */
     void
-mch_hide(name)
-    char_u	*name;
+mch_hide(char_u *name)
 {
     /* DOS 6.2 share.exe causes "seek error on file write" errors when making
      * the swap file hidden.  Thus don't do it. */
@@ -974,8 +1293,7 @@ mch_hide(name)
  * beware of a trailing backslash
  */
     int
-mch_isdir(name)
-    char_u *name;
+mch_isdir(char_u *name)
 {
     int	    f;
     char_u  *p;
@@ -1001,8 +1319,7 @@ mch_isdir(name)
  * Careful: mch_windexit() may be called before mch_windinit()!
  */
     void
-mch_windexit(r)
-    int r;
+mch_windexit(int r)
 {
     settmode(TMODE_COOK);
     stoptermcap();
@@ -1011,57 +1328,8 @@ mch_windexit(r)
     out_char('\n');
     out_flush();
     ml_close_all(TRUE);		    /* remove all memfiles */
+    mch_restore_cursor_shape(TRUE);
     exit(r);
-}
-
-#ifdef DJGPP
-# define INT_ARG    int
-#else
-# define INT_ARG
-#endif
-
-/*
- * function for ctrl-break interrupt
- */
-    static void interrupt
-#ifdef DJGPP
-catch_cbrk(int a)
-#else
-catch_cbrk()
-#endif
-{
-    cbrk_pressed = TRUE;
-    ctrlc_pressed = TRUE;
-}
-
-/*
- * ctrl-break handler for DOS. Never called when a ctrl-break is typed, because
- * we catch interrupt 1b. If you type ctrl-C while Vim is waiting for a
- * character this function is not called. When a ctrl-C is typed while Vim is
- * busy this function may be called. By that time a ^C has been displayed on
- * the screen, so we have to redisplay the screen. We can't do that here,
- * because we may be called by DOS. The redraw is in mch_inchar().
- */
-    static int
-	_cdecl
-cbrk_handler()
-{
-    delayed_redraw = TRUE;
-    return 1;		    /* resume operation after ctrl-break */
-}
-
-/*
- * function for critical error interrupt
- * For DOS 1 and 2 return 0 (Ignore).
- * For DOS 3 and later return 3 (Fail)
- */
-    static void interrupt
-catch_cint(bp, di, si, ds, es, dx, cx, bx, ax)
-    unsigned bp, di, si, ds, es, dx, cx, bx, ax;
-{
-    ax = (ax & 0xff00);	    /* set AL to 0 */
-    if (_osmajor >= 3)
-	ax |= 3;	    /* set AL to 3 */
 }
 
 /*
@@ -1069,59 +1337,13 @@ catch_cint(bp, di, si, ds, es, dx, cx, bx, ax)
  * Does not change the tty, as bioskey() and kbhit() work raw all the time.
  */
     void
-mch_settmode(tmode)
-    int  tmode;
+mch_settmode(int tmode)
 {
-}
-
-/*
- * Set the interrupt vectors for use with Vim on or off.
- */
-    static void
-set_interrupts(on)
-    int	    on;				/* TRUE means as used within Vim */
-{
-    static int saved_cbrk;
-#ifndef DJGPP
-    static void interrupt (*old_cint)();
-#endif
-    static void interrupt (*old_cbrk)(INT_ARG);
-
-    if (on)
-    {
-	saved_cbrk = getcbrk();		/* save old ctrl-break setting */
-	setcbrk(0);			/* do not check for ctrl-break */
-#ifdef DJGPP
-	old_cbrk = signal(SIGINT, catch_cbrk);	/* critical error interrupt */
-#else
-	old_cint = getvect(0x24);	/* save old critical error interrupt */
-	setvect(0x24, catch_cint);	/* install our critical error interrupt */
-	old_cbrk = getvect(0x1B);	/* save old ctrl-break interrupt */
-	setvect(0x1B, catch_cbrk);	/* install our ctrl-break interrupt */
-	ctrlbrk(cbrk_handler);		/* vim's ctrl-break handler */
-#endif
-	if (term_console)
-	    out_str(T_ME);		/* set colors */
-    }
-    else
-    {
-	setcbrk(saved_cbrk);		/* restore ctrl-break setting */
-#ifdef DJGPP
-	signal(SIGINT,old_cbrk);	/* critical error interrupt */
-#else
-	setvect(0x24, old_cint);	/* restore critical error interrupt */
-	setvect(0x1B, old_cbrk);	/* restore ctrl-break interrupt */
-#endif
-	/* restore ctrl-break handler, how ??? */
-	if (term_console)
-	    normvideo();		/* restore screen colors */
-    }
 }
 
 #ifdef USE_MOUSE
     void
-mch_setmouse(on)
-    int	    on;
+mch_setmouse(int on)
 {
     mouse_active = on;
     mouse_hidden = TRUE;	/* dont show it until moved */
@@ -1133,8 +1355,7 @@ mch_setmouse(on)
  * return FAIL for failure, OK otherwise
  */
     int
-mch_screenmode(arg)
-    char_u	*arg;
+mch_screenmode(char_u *arg)
 {
     int		    mode;
     int		    i;
@@ -1159,9 +1380,14 @@ mch_screenmode(arg)
 	return FAIL;
     }
     textmode(mode);		    /* use Borland function */
+#ifdef DJGPP
+    /* base address may have changed */
+    get_screenbase();
+#endif
 
     /* Screen colors may have changed. */
     out_str(T_ME);
+
 #ifdef USE_MOUSE
     if (mode <= 1 || mode == 4 || mode == 5 || mode == 13 || mode == 0x13)
 	mouse_x_div = 16;
@@ -1191,9 +1417,9 @@ extern struct text_info _video;
  * return FAIL for failure, OK otherwise
  */
     int
-mch_get_winsize()
+mch_get_winsize(void)
 {
-    struct text_info ti;
+    struct text_info textinfo;
 /*
  * The screenwidth is returned by the BIOS OK.
  * The screenheight is in a location in the bios RAM, if the display is EGA or
@@ -1201,13 +1427,14 @@ mch_get_winsize()
  */
     if (!term_console)
 	return FAIL;
-    gettextinfo(&ti);
-    Columns = ti.screenwidth;
-    Rows = ti.screenheight;
+    gettextinfo(&textinfo);
+    Columns = textinfo.screenwidth;
+    Rows = textinfo.screenheight;
 #ifndef DJGPP
-    if (ti.currmode > 10)
+    if (textinfo.currmode > 10)
 	Rows = *(char far *)MK_FP(0x40, 0x84) + 1;
 #endif
+
     /*
      * don't call set_window() when not doing full screen, since it will move
      * the cursor.  Also skip this when exiting.
@@ -1215,7 +1442,7 @@ mch_get_winsize()
     if (full_screen && !exiting)
 	set_window();
 
-    if (Columns < MIN_COLUMNS || Rows < MIN_ROWS + 1)
+    if (Columns < MIN_COLUMNS || Rows < MIN_LINES)
     {
 	/* these values are overwritten by termcap size or default */
 	Columns = 80;
@@ -1223,6 +1450,9 @@ mch_get_winsize()
 	return FAIL;
     }
     check_winsize();
+#ifdef DJGPP
+    mytextinit(&textinfo);   /* Added by JML, 1/15/98 */
+#endif
 
     return OK;
 }
@@ -1231,17 +1461,17 @@ mch_get_winsize()
  * Set the active window for delline/insline.
  */
     void
-set_window()
+set_window(void)
 {
 #ifndef DJGPP
     _video.screenheight = Rows;
 #endif
-    window(1, 1, Columns, Rows);
+    mywindow(1, 1, Columns, Rows);
     screen_start();
 }
 
     void
-mch_set_winsize()
+mch_set_winsize(void)
 {
     /* should try to set the window size to Rows and Columns */
     /* may involve switching display mode.... */
@@ -1253,12 +1483,13 @@ mch_set_winsize()
 
 /*
  * call shell, return FAIL for failure, OK otherwise
+ * options == SHELL_FILTER if called by do_filter()
+ * options == SHELL_COOKED if term needs cooked mode
  */
     int
-mch_call_shell(cmd, options)
-    char_u  *cmd;
-    int	    options;	    /* SHELL_FILTER if called by do_filter() */
-			    /* SHELL_COOKED if term needs cooked mode */
+mch_call_shell(
+    char_u	*cmd,
+    int		options)
 {
     int	    x;
     char_u  *newcmd;
@@ -1281,14 +1512,16 @@ mch_call_shell(cmd, options)
     else
     {
 #ifdef DJGPP
-	/* DJGPP uses the value of $SHELL, use that to execute the "cmd" */
-	setenv("SHELL", p_sh, 1);
+	/*
+	 * Use 'shell' for system().
+	 */
+	setenv("SHELL", (char *)p_sh, 1);
 	x = system(cmd);
 #else
 	/* we use "command" to start the shell, slow but easy */
 	newcmd = alloc(STRLEN(p_sh) + STRLEN(p_shcf) + STRLEN(cmd) + 3);
 	if (newcmd == NULL)
-	    x = 1;
+	    x = -1;
 	else
 	{
 	    sprintf((char *)newcmd, "%s %s %s", p_sh, p_shcf, cmd);
@@ -1315,14 +1548,14 @@ mch_call_shell(cmd, options)
 
     /* resettitle();		    we don't have titles */
     (void)ui_get_winsize();	    /* display mode may have been changed */
-    return (x ? FAIL : OK);
+    return x;
 }
 
 /*
  * check for an "interrupt signal": CTRL-break or CTRL-C
  */
     void
-mch_breakcheck()
+mch_breakcheck(void)
 {
     if (ctrlc_pressed)
     {
@@ -1331,8 +1564,9 @@ mch_breakcheck()
     }
 }
 
-    static int
-	_cdecl
+static int _cdecl pstrcmp();  /* BCC does not like the types */
+
+    static int _cdecl
 pstrcmp(a, b)
     char_u **a, **b;
 {
@@ -1340,15 +1574,15 @@ pstrcmp(a, b)
 }
 
     int
-mch_has_wildcard(s)
-    char_u *s;
+mch_has_wildcard(char_u *s)
 {
     return (vim_strpbrk(s, (char_u *)"?*$~") != NULL);
 }
 
     static void
-namelowcpy(d, s)
-    char_u *d, *s;
+namelowcpy(
+    char_u *d,
+    char_u *s)
 {
 #ifdef DJGPP
     if (USE_LONG_FNAME)	    /* don't lower case on Windows 95/NT systems */
@@ -1366,16 +1600,16 @@ namelowcpy(d, s)
  * Return the number of matches found.
  */
     int
-mch_expandpath(gap, path, flags)
-    struct growarray	*gap;
-    char_u		*path;
-    int			flags;
+mch_expandpath(
+    struct growarray	*gap,
+    char_u		*path,
+    int			flags)
 {
-    char_u	    *buf;
-    char_u	    *p, *s, *e;
-    int		    start_len, c;
-    struct ffblk    fb;
-    int		    matches;
+    char_u		*buf;
+    char_u		*p, *s, *e;
+    int			start_len, c;
+    struct ffblk	fb;
+    int			matches;
 
     start_len = gap->ga_len;
     buf = alloc(STRLEN(path) + BASENAMELEN + 5);   /* make room for file name */
@@ -1444,19 +1678,17 @@ mch_expandpath(gap, path, flags)
 
     matches = gap->ga_len - start_len;
     if (matches)
-	qsort(((char_u **)gap->ga_data) + start_len, matches,
+	qsort(((char_u **)gap->ga_data) + start_len, (size_t)matches,
 						   sizeof(char_u *), pstrcmp);
     return matches;
 }
 
-#ifdef USE_VIM_CHDIR
 /*
  * The normal chdir() does not change the default drive.
  * This one does.
  */
     int
-vim_chdir(path)
-    char *path;
+mch_chdir(char *path)
 {
     if (path[0] == NUL)		    /* just checking... */
 	return 0;
@@ -1470,11 +1702,10 @@ vim_chdir(path)
 	return 0;
     return chdir(path);		    /* let the normal chdir() do the rest */
 }
-#endif
 
 #ifdef DJGPP
 /*
- * djgpp_rename() works around a bug in rename (aka MoveFile) in
+ * mch_rename() works around a bug in rename (aka MoveFile) in
  * Windows 95: rename("foo.bar", "foo.bar~") will generate a
  * file whose short file name is "FOO.BAR" (its long file name will
  * be correct: "foo.bar~").  Because a file can be accessed by
@@ -1483,16 +1714,14 @@ vim_chdir(path)
  * seems to happen only when renaming files with three-character
  * extensions by appending a suffix that does not include ".".
  * Windows NT gets it right, however, with an SFN of "FOO~1.BAR".
- * This works like win95rename in os_win32.c, but is a bit simpler.
+ * This works like mch_rename in os_win32.c, but is a bit simpler.
  *
  * Like rename(), returns 0 upon success, non-zero upon failure.
  * Should probably set errno appropriately when errors occur.
  */
 
-#undef rename
-
     int
-djgpp_rename(const char *OldFile, const char *NewFile)
+mch_rename(const char *OldFile, const char *NewFile)
 {
     char_u  *TempFile;
     int	    retval;
@@ -1526,7 +1755,7 @@ djgpp_rename(const char *OldFile, const char *NewFile)
 	    return -1;
 	retval = rename(TempFile, NewFile);
 	close(fd);
-	vim_remove((char_u *)OldFile);
+	mch_remove((char_u *)OldFile);
     }
     vim_free(TempFile);
 
@@ -1538,8 +1767,7 @@ djgpp_rename(const char *OldFile, const char *NewFile)
  * Special version of getenv(): use $HOME when $VIM not defined.
  */
     char_u *
-vim_getenv(var)
-    char_u *var;
+mch_getenv(char_u *var)
 {
     char_u  *retval;
 
@@ -1569,7 +1797,7 @@ vim_getenv(var)
 #define LOCASE (__dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISLOWER)
 
     void
-djgpp_setlocale()
+djgpp_setlocale(void)
 {
     __dpmi_regs regs;
     struct { char id; unsigned short off, seg; } __attribute__ ((packed)) info;

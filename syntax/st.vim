@@ -47,9 +47,9 @@ syn match  stSymbol	"\(#'[^']*'\)"
 syn match  stBlockVariable "\(:[ \t]*\<[a-z_][a-z0-9_]*\>[ \t]*\)\+|" contained
 
 " some representations of numbers
-syn match  stNumber	"\<[0-9]\+\(u\=l\=\|lu\|f\)\>"
-syn match  stFloat	"\<[0-9]\+\.[0-9]*\(e[-+]\=[0-9]\+\)\=[fl]\=\>"
-syn match  stFloat	"\<[0-9]\+e[-+]\=[0-9]\+[fl]\=\>"
+syn match  stNumber	"\<\d\+\(u\=l\=\|lu\|f\)\>"
+syn match  stFloat	"\<\d\+\.\d*\(e[-+]\=\d\+\)\=[fl]\=\>"
+syn match  stFloat	"\<\d\+e[-+]\=\d\+[fl]\=\>"
 
 syn case match
 

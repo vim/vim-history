@@ -479,7 +479,7 @@ fname_case(name)
     {
 	len = STRLEN(name);
 	if (len == strlen(fib->fib_FileName))	/* safety check */
-	    vim_memmove(name, fib->fib_FileName, len);
+	    mch_memmove(name, fib->fib_FileName, len);
 	vim_free(fib);
     }
 }
@@ -994,7 +994,8 @@ dos_packet(pid, action, arg)
 #endif
 
 /*
- * call shell, return FAIL for failure, OK otherwise
+ * Call shell.
+ * Return error number for failure, 0 otherwise
  */
     int
 mch_call_shell(cmd, options)
@@ -1009,13 +1010,13 @@ mch_call_shell(cmd, options)
     char_u  *shellcmd = NULL;
     char_u  *shellarg;
 #endif
-    int	retval = OK;
+    int	    retval = 0;
 
     if (close_win)
     {
 	/* if Vim opened a window: Executing a shell may cause crashes */
 	EMSG("Cannot execute shell with -f option");
-	return FAIL;
+	return -1;
     }
 
     if (term_console)
@@ -1064,7 +1065,7 @@ mch_call_shell(cmd, options)
 	else
 	    msg_outtrans(cmd);
 	msg_putchar('\n');
-	retval = FAIL;
+	retval = -1;
     }
 # ifdef NO_ARP
     else if (x)
@@ -1080,7 +1081,7 @@ mch_call_shell(cmd, options)
 		msg_outnum((long)x);
 		MSG_PUTS(" returned\n");
 	    }
-	    retval = FAIL;
+	    retval = x;
 	}
     }
 #else	/* else part is for AZTEC_C */
@@ -1159,7 +1160,7 @@ mch_call_shell(cmd, options)
 	    msg_outtrans(shellcmd);
 	}
 	msg_putchar('\n');
-	retval = FAIL;
+	retval = -1;
     }
     else
     {
@@ -1182,7 +1183,7 @@ mch_call_shell(cmd, options)
 		msg_outnum((long)x);
 		MSG_PUTS(" returned\n");
 	    }
-	    retval = FAIL;
+	    retval = x;
 	}
     }
     vim_free(shellcmd);
@@ -1370,7 +1371,7 @@ mch_has_wildcard(p)
  * - A small one to hold the return value.  It is kept until the next call.
  */
     char_u *
-vim_getenv(var)
+mch_getenv(var)
     char_u *var;
 {
     int		    len;
@@ -1412,10 +1413,12 @@ vim_getenv(var)
 /*
  * Amiga version of setenv() with AmigaDOS 2.0 support.
  */
+/* ARGSUSED */
     int
-vim_setenv(var, value)
+mch_setenv(var, value, x)
     char *var;
     char *value;
+    int	 x;
 {
 #ifndef NO_ARP
     if (!dos2)

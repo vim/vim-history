@@ -8,6 +8,7 @@ void update_screen __ARGS((int type));
 void updateWindow __ARGS((WIN *wp));
 void update_other_win __ARGS((void));
 void status_redraw_all __ARGS((void));
+void redraw_statuslines __ARGS((void));
 void win_redr_status __ARGS((WIN *wp));
 void screen_putchar __ARGS((int c, int row, int col, int attr));
 void screen_puts __ARGS((char_u *text, int row, int col, int attr));

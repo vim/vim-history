@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Python
 " Maintainer:	Neil Schemenauer <nascheme@acs.ucalgary.ca>
-" Last change:	1998 January 17
+" Last change:	1998 July 17
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -10,6 +10,7 @@ syn keyword pythonStatement		break continue del
 syn keyword pythonStatement		except exec finally
 syn keyword pythonStatement		pass print raise
 syn keyword pythonStatement		return try
+syn keyword pythonStatement		global assert
 syn keyword pythonRepeat		for while
 syn keyword pythonConditional		if elif else then
 syn keyword pythonOperator		and in is not or
@@ -22,7 +23,10 @@ syn keyword pythonPreCondit		import from
 syn match   pythonComment		"#.*$" contains=pythonTodo
 syn keyword pythonTodo			contained TODO FIXME XXX
 
-syn sync lines=100
+" triple quoted strings make syncronizing difficult
+"syn sync match pythonSync1 grouphere NONE +\("""$\)\|\('''$\)+
+syn sync match pythonSync grouphere NONE "):$"
+syn sync maxlines=100
 
 if !exists("did_python_syntax_inits")
   let did_python_syntax_inits = 1

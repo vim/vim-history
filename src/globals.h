@@ -26,7 +26,7 @@
  * Number of Rows and Columns in the screen.
  * Must be long to be able to use them as options in option.c.
  */
-EXTERN long	Rows INIT(= MIN_ROWS + 1);   /* nr of rows in the screen */
+EXTERN long	Rows INIT(= MIN_LINES);		/* nr of rows in the screen */
 EXTERN long	Columns INIT(= MIN_COLUMNS); /* nr of columns in the screen */
 
 /*
@@ -179,6 +179,16 @@ EXTERN int	mouse_past_eol INIT(= FALSE);	/* mouse right of line */
 EXTERN int	WantQueryMouse INIT(= 0);
 #endif
 
+#ifdef USE_GUI
+/* When the window layout is about to be changed, need_mouse_correct is set,
+ * so that gui_mouse_correct() is called afterwards, to correct the mouse
+ * pointer when focus-follow-mouse is being used. */
+EXTERN int	need_mouse_correct INIT(= FALSE);
+
+/* When double clicking, topline must be the same */
+EXTERN linenr_t gui_prev_topline INIT(= 0);
+#endif
+
 #endif
 
 #ifdef USE_GUI
@@ -254,7 +264,12 @@ EXTERN int	silent_mode INIT(= FALSE);
 
 EXTERN FPOS	VIsual;		/* start position of active Visual selection */
 EXTERN int	VIsual_active INIT(= FALSE);
-				/* wheter Visual mode is active */
+				/* whether Visual mode is active */
+EXTERN int	VIsual_select INIT(= FALSE);
+				/* whether Select mode is active */
+EXTERN int	VIsual_reselect;
+				/* whether to restart the selection after a
+				 * Select mode mapping or menu */
 
 EXTERN int	VIsual_mode INIT(= 'v');
 				/* type of Visual mode */
@@ -295,6 +310,20 @@ EXTERN int	can_si INIT(= FALSE);
  * one indent will be removed.
  */
 EXTERN int	can_si_back INIT(= FALSE);
+#endif
+
+#ifdef MULTI_BYTE
+/*
+ * These flags are set based upon 'fileencoding'
+ */
+# define DBCS_JPN    932
+# define DBCS_KOR    949
+# define DBCS_CHS    936
+# define DBCS_CHT    950
+EXTERN int	is_dbcs INIT(= FALSE);	/* One of DBCS_xxx values if DBCS
+					   encoding */
+EXTERN int	is_unicode INIT(= FALSE);
+EXTERN int	is_funky_dbcs INIT(= FALSE);	/* if DBCS encoding, but not CP of system */
 #endif
 
 EXTERN int	State INIT(= NORMAL);	/* This is the current state of the
@@ -340,7 +369,16 @@ EXTERN char_u	*exe_name;		/* the name of the executable */
 #endif
 
 #ifdef USE_GUI_WIN32
-EXTERN	int	dont_scroll INIT(= FALSE);/* don't use scrollbars when TRUE */
+EXTERN int	dont_scroll INIT(= FALSE);/* don't use scrollbars when TRUE */
+EXTERN int	mapped_ctrl_c INIT(= FALSE); /* CTRL-C is mapped */
+#endif
+
+#ifdef USE_BROWSE
+EXTERN int	browse INIT(= FALSE);/* TRUE to invoke file dialog */
+#endif
+
+#if defined(GUI_DIALOG) || defined(CON_DIALOG)
+EXTERN int	confirm INIT(= FALSE);/* TRUE to invoke yes/no dialog */
 #endif
 
 EXTERN char_u	*IObuff;		/* sprintf's are done in this buffer */
@@ -400,6 +438,7 @@ EXTERN char_u	*last_cmdline INIT(= NULL); /* last command line (for ":) */
 EXTERN char_u	*new_last_cmdline INIT(= NULL);	/* new value for last_cmdline */
 #ifdef AUTOCMD
 EXTERN char_u	*autocmd_fname INIT(= NULL); /* fname for <afile> on cmdline */
+EXTERN int	autocmd_bufnr INIT(= 0);    /* fnum for <abuf> on cmdline */
 #endif
 
 EXTERN int	postponed_split INIT(= 0);  /* for CTRL-W CTRL-] command */
@@ -451,7 +490,27 @@ extern char_u *all_cflags;		/* this is in pathdef.c */
 extern char_u *all_lflags;		/* this is in pathdef.c */
 #endif
 
+/* Characters from 'listchars' option */
+EXTERN int	lcs_eol INIT(= '$');
+EXTERN int	lcs_ext INIT(= NUL);
+EXTERN int	lcs_tab1 INIT(= NUL);
+EXTERN int	lcs_tab2 INIT(= NUL);
+EXTERN int	lcs_trail INIT(= NUL);
+
 EXTERN char_u no_lines_msg[]	INIT(="--No lines in buffer--");
+
+/* table to store parsed 'wildmode' */
+EXTERN char_u	wim_flags[4];
+
+#ifdef EXTRA_SEARCH
+/* don't use 'hlsearch' temporarily */
+EXTERN int	no_hlsearch INIT(= FALSE);
+#endif
+
+#ifdef CURSOR_SHAPE
+/* the table is in misc2.c, because of initializations */
+extern struct cursor_entry cursor_table[SHAPE_COUNT];
+#endif
 
 /*
  * The error messages that can be shared are included here.

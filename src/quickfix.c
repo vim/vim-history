@@ -14,7 +14,8 @@
 
 #ifdef QUICKFIX
 
-static void qf_free __ARGS((void));
+static void qf_msg __ARGS((void));
+static void qf_free __ARGS((int idx));
 static char_u *qf_types __ARGS((int, int));
 
 /*
@@ -34,12 +35,22 @@ struct qf_line
     char_u	     qf_valid;	/* valid error message detected */
 };
 
-static struct qf_line *qf_start;	/* pointer to the first error */
-static struct qf_line *qf_ptr;		/* pointer to the current error */
+/*
+ * There is a stack of error lists.
+ */
+#define LISTCOUNT   10
 
-static int  qf_count = 0;	/* number of errors (0 means no error list) */
-static int  qf_index;		/* current index in the error list */
-static int  qf_nonevalid;	/* set to TRUE if not a single valid entry found */
+struct qf_list
+{
+    struct qf_line *qf_start;	/* pointer to the first error */
+    struct qf_line *qf_ptr;	/* pointer to the current error */
+    int  qf_count;		/* number of errors (0 means no error list) */
+    int  qf_index;		/* current index in the error list */
+    int  qf_nonevalid;		/* TRUE if not a single valid entry found */
+} qf_lists[LISTCOUNT];
+
+static int	qf_curlist = 0;	/* current error list */
+static int	qf_listcount = 0;   /* current number of lists */
 
 #define MAX_ADDR    7		/* maximum number of % recognized, also adjust
 				    sscanf() below */
@@ -64,8 +75,9 @@ struct eformat
  * Return -1 for error, number of errors for success.
  */
     int
-qf_init(efile)
+qf_init(efile, errorformat)
     char_u	    *efile;
+    char_u	    *errorformat;
 {
     char_u	    *namebuf;
     char_u	    *errmsg;
@@ -100,14 +112,28 @@ qf_init(efile)
 	emsg2(e_openerrf, efile);
 	goto qf_init_end;
     }
-    qf_free();
-    qf_index = 0;
+
+    /*
+     * When the stack is full, remove to oldest entry
+     * Otherwise, add a new entry.
+     */
+    if (qf_listcount == LISTCOUNT)
+    {
+	qf_free(0);
+	for (i = 1; i < LISTCOUNT; ++i)
+	    qf_lists[i - 1] = qf_lists[i];
+	qf_curlist = LISTCOUNT - 1;
+    }
+    else
+	qf_curlist = qf_listcount++;
+    qf_lists[qf_curlist].qf_index = 0;
+    qf_lists[qf_curlist].qf_count = 0;
 
 /*
- * Each part of the format string is copied and modified from p_efm to fmtstr.
- * Only a few % characters are allowed.
+ * Each part of the format string is copied and modified from errorformat to
+ * fmtstr.  Only a few % characters are allowed.
  */
-    efm = p_efm;
+    efm = errorformat;
     while (efm[0])
     {
 	/*
@@ -306,7 +332,12 @@ qf_init(efile)
 	if (namebuf[0] == NUL)		/* no file name */
 	    qfp->qf_fnum = 0;
 	else
+#ifdef RISCOS
+	    /* Name is reported as `main.c', but file is `c.main' */
+	    qfp->qf_fnum = ro_buflist_add(namebuf);
+#else
 	    qfp->qf_fnum = buflist_add(namebuf);
+#endif
 	if ((qfp->qf_text = vim_strsave(errmsg)) == NULL)
 	    goto error1;
 	if (!vim_isprintc(type))	/* only printable chars allowed */
@@ -317,9 +348,9 @@ qf_init(efile)
 	qfp->qf_type = type;
 	qfp->qf_valid = valid;
 
-	if (qf_count == 0)	/* first element in the list */
+	if (qf_lists[qf_curlist].qf_count == 0)	/* first element in the list */
 	{
-	    qf_start = qfp;
+	    qf_lists[qf_curlist].qf_start = qfp;
 	    qfp->qf_prev = qfp;	/* first element points to itself */
 	}
 	else
@@ -330,32 +361,35 @@ qf_init(efile)
 	qfp->qf_next = qfp;	/* last element points to itself */
 	qfp->qf_cleared = FALSE;
 	qfprev = qfp;
-	++qf_count;
-	if (qf_index == 0 && qfp->qf_valid)	/* first valid entry */
+	++qf_lists[qf_curlist].qf_count;
+	if (qf_lists[qf_curlist].qf_index == 0 && qfp->qf_valid)	/* first valid entry */
 	{
-	    qf_index = qf_count;
-	    qf_ptr = qfp;
+	    qf_lists[qf_curlist].qf_index = qf_lists[qf_curlist].qf_count;
+	    qf_lists[qf_curlist].qf_ptr = qfp;
 	}
 	line_breakcheck();
     }
     if (!ferror(fd))
     {
-	if (qf_index == 0)	/* no valid entry found */
+	if (qf_lists[qf_curlist].qf_index == 0)	/* no valid entry found */
 	{
-	    qf_ptr = qf_start;
-	    qf_index = 1;
-	    qf_nonevalid = TRUE;
+	    qf_lists[qf_curlist].qf_ptr = qf_lists[qf_curlist].qf_start;
+	    qf_lists[qf_curlist].qf_index = 1;
+	    qf_lists[qf_curlist].qf_nonevalid = TRUE;
 	}
 	else
-	    qf_nonevalid = FALSE;
-	retval = qf_count;	/* return number of matches */
+	    qf_lists[qf_curlist].qf_nonevalid = FALSE;
+	retval = qf_lists[qf_curlist].qf_count;	/* return number of matches */
 	goto qf_init_ok;
     }
     emsg(e_readerrf);
 error1:
     vim_free(qfp);
 error2:
-    qf_free();
+    qf_free(qf_curlist);
+    qf_listcount--;
+    if (qf_curlist > 0)
+	--qf_curlist;
 qf_init_ok:
     fclose(fd);
     for (fmt_ptr = fmt_first; fmt_ptr != NULL; fmt_ptr = fmt_first)
@@ -383,20 +417,24 @@ qf_jump(dir, errornr, forceit)
     int	    errornr;
     int	    forceit;
 {
+    struct qf_line  *qf_ptr;
     struct qf_line  *old_qf_ptr;
+    int		    qf_index;
     int		    old_qf_index;
     static char_u   *e_no_more_items = (char_u *)"No more items";
     char_u	    *err = e_no_more_items;
     linenr_t	    i;
     BUF		    *old_curbuf;
 
-    if (qf_count == 0)
+    if (qf_curlist >= qf_listcount || qf_lists[qf_curlist].qf_count == 0)
     {
 	emsg(e_quickfix);
 	return;
     }
 
+    qf_ptr = qf_lists[qf_curlist].qf_ptr;
     old_qf_ptr = qf_ptr;
+    qf_index = qf_lists[qf_curlist].qf_index;
     old_qf_index = qf_index;
     if (dir == FORWARD)	    /* next valid entry */
     {
@@ -406,21 +444,22 @@ qf_jump(dir, errornr, forceit)
 	    old_qf_index = qf_index;
 	    do
 	    {
-		if (qf_index == qf_count || qf_ptr->qf_next == NULL)
+		if (qf_index == qf_lists[qf_curlist].qf_count
+						   || qf_ptr->qf_next == NULL)
 		{
 		    qf_ptr = old_qf_ptr;
 		    qf_index = old_qf_index;
 		    if (err != NULL)
 		    {
 			emsg(err);
-			return;
+			goto theend;
 		    }
 		    errornr = 0;
 		    break;
 		}
 		++qf_index;
 		qf_ptr = qf_ptr->qf_next;
-	    } while (!qf_nonevalid && !qf_ptr->qf_valid);
+	    } while (!qf_lists[qf_curlist].qf_nonevalid && !qf_ptr->qf_valid);
 	    err = NULL;
 	}
     }
@@ -439,14 +478,14 @@ qf_jump(dir, errornr, forceit)
 		    if (err != NULL)
 		    {
 			emsg(err);
-			return;
+			goto theend;
 		    }
 		    errornr = 0;
 		    break;
 		}
 		--qf_index;
 		qf_ptr = qf_ptr->qf_prev;
-	    } while (!qf_nonevalid && !qf_ptr->qf_valid);
+	    } while (!qf_lists[qf_curlist].qf_nonevalid && !qf_ptr->qf_valid);
 	    err = NULL;
 	}
     }
@@ -457,7 +496,8 @@ qf_jump(dir, errornr, forceit)
 	    --qf_index;
 	    qf_ptr = qf_ptr->qf_prev;
 	}
-	while (errornr > qf_index && qf_index < qf_count && qf_ptr->qf_next != NULL)
+	while (errornr > qf_index && qf_index < qf_lists[qf_curlist].qf_count
+						   && qf_ptr->qf_next != NULL)
 	{
 	    ++qf_index;
 	    qf_ptr = qf_ptr->qf_next;
@@ -494,7 +534,8 @@ qf_jump(dir, errornr, forceit)
 	else
 	    beginline(BL_WHITE | BL_FIX);
 	update_topline_redraw();
-	smsg((char_u *)"(%d of %d)%s%s: %s", qf_index, qf_count,
+	smsg((char_u *)"(%d of %d)%s%s: %s", qf_index,
+		qf_lists[qf_curlist].qf_count,
 	      qf_ptr->qf_cleared ? (char_u *)" (line deleted)" : (char_u *)"",
 		    qf_types(qf_ptr->qf_type, qf_ptr->qf_nr), qf_ptr->qf_text);
 	/*
@@ -515,6 +556,9 @@ qf_jump(dir, errornr, forceit)
 	qf_ptr = old_qf_ptr;
 	qf_index = old_qf_index;
     }
+theend:
+    qf_lists[qf_curlist].qf_ptr = qf_ptr;
+    qf_lists[qf_curlist].qf_index = qf_index;
 }
 
 /*
@@ -529,16 +573,16 @@ qf_list(all)
     struct qf_line  *qfp;
     int		    i;
 
-    if (qf_count == 0)
+    if (qf_curlist >= qf_listcount || qf_lists[qf_curlist].qf_count == 0)
     {
 	emsg(e_quickfix);
 	return;
     }
 
-    if (qf_nonevalid)
+    if (qf_lists[qf_curlist].qf_nonevalid)
 	all = TRUE;
-    qfp = qf_start;
-    for (i = 1; !got_int && i <= qf_count; ++i)
+    qfp = qf_lists[qf_curlist].qf_start;
+    for (i = 1; !got_int && i <= qf_lists[qf_curlist].qf_count; ++i)
     {
 	if (qfp->qf_valid || all)
 	{
@@ -551,7 +595,7 @@ qf_list(all)
 		sprintf((char *)IObuff, "%2d", i);
 	    else
 		sprintf((char *)IObuff, "%2d %s", i, fname);
-	    msg_outtrans_attr(IObuff, highlight_attr[HLF_D]);
+	    msg_outtrans_attr(IObuff, hl_attr(HLF_D));
 	    if (qfp->qf_lnum == 0)
 		IObuff[0] = NUL;
 	    else if (qfp->qf_col == 0)
@@ -561,7 +605,7 @@ qf_list(all)
 						   qfp->qf_lnum, qfp->qf_col);
 	    sprintf((char *)IObuff + STRLEN(IObuff), "%s: ",
 					qf_types(qfp->qf_type, qfp->qf_nr));
-	    msg_puts_attr(IObuff, highlight_attr[HLF_N]);
+	    msg_puts_attr(IObuff, hl_attr(HLF_N));
 	    msg_prt_line(qfp->qf_text);
 	    out_flush();		/* show one line at a time */
 	}
@@ -571,20 +615,66 @@ qf_list(all)
 }
 
 /*
+ * ":colder [count]": Up in the quickfix stack.
+ */
+    void
+qf_older(count)
+    int count;
+{
+    while (count--)
+    {
+	if (qf_curlist == 0)
+	{
+	    EMSG("At bottom of quickfix stack");
+	    return;
+	}
+	--qf_curlist;
+    }
+    qf_msg();
+}
+
+/*
+ * ":cnewer [count]": Down in the quickfix stack.
+ */
+    void
+qf_newer(count)
+    int count;
+{
+    while (count--)
+    {
+	if (qf_curlist >= qf_listcount - 1)
+	{
+	    EMSG("At top of quickfix stack");
+	    return;
+	}
+	++qf_curlist;
+    }
+    qf_msg();
+}
+
+    static void
+qf_msg()
+{
+    smsg((char_u *)"error list %d of %d; %d errors",
+	    qf_curlist + 1, qf_listcount, qf_lists[qf_curlist].qf_count);
+}
+
+/*
  * free the error list
  */
     static void
-qf_free()
+qf_free(idx)
+    int		idx;
 {
     struct qf_line *qfp;
 
-    while (qf_count)
+    while (qf_lists[idx].qf_count)
     {
-	qfp = qf_start->qf_next;
-	vim_free(qf_start->qf_text);
-	vim_free(qf_start);
-	qf_start = qfp;
-	--qf_count;
+	qfp = qf_lists[idx].qf_start->qf_next;
+	vim_free(qf_lists[idx].qf_start->qf_text);
+	vim_free(qf_lists[idx].qf_start);
+	qf_lists[idx].qf_start = qfp;
+	--qf_lists[idx].qf_count;
     }
 }
 
@@ -598,23 +688,26 @@ qf_mark_adjust(line1, line2, amount, amount_after)
     long	amount;
     long	amount_after;
 {
-    int		    i;
-    struct qf_line  *qfp;
+    int			i;
+    struct qf_line	*qfp;
+    int			idx;
 
-    if (qf_count)
-	for (i = 0, qfp = qf_start; i < qf_count; ++i, qfp = qfp->qf_next)
-	    if (qfp->qf_fnum == curbuf->b_fnum)
-	    {
-		if (qfp->qf_lnum >= line1 && qfp->qf_lnum <= line2)
+    for (idx = 0; idx < qf_listcount; ++idx)
+	if (qf_lists[idx].qf_count)
+	    for (i = 0, qfp = qf_lists[idx].qf_start;
+		       i < qf_lists[idx].qf_count; ++i, qfp = qfp->qf_next)
+		if (qfp->qf_fnum == curbuf->b_fnum)
 		{
-		    if (amount == MAXLNUM)
-			qfp->qf_cleared = TRUE;
-		    else
-			qfp->qf_lnum += amount;
+		    if (qfp->qf_lnum >= line1 && qfp->qf_lnum <= line2)
+		    {
+			if (amount == MAXLNUM)
+			    qfp->qf_cleared = TRUE;
+			else
+			    qfp->qf_lnum += amount;
+		    }
+		    if (amount_after && qfp->qf_lnum > line2)
+			qfp->qf_lnum += amount_after;
 		}
-		if (amount_after && qfp->qf_lnum > line2)
-		    qfp->qf_lnum += amount_after;
-	    }
 }
 
 /*

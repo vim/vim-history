@@ -1,4 +1,4 @@
-*os_mac.txt*    For Vim version 5.1.  Last modification: 1998 Feb 14
+*os_mac.txt*    For Vim version 5.2.  Last modification: 1998 Aug 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -24,7 +24,7 @@ This file documents the particularities of the macintosh version of Vim.
 NOTE: This version 5, is still in the alpha stage
 
 1. Filename Convention		|mac-filename|
-2. .vimrc an .vim files         |mac-vimfile|
+2. .vimrc an .vim files		|mac-vimfile|
 3. Known Lack			|mac-lack|
 4. Mac Bug Report		|mac-bug|
 

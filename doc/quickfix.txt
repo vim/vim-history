@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 5.1.  Last modification: 1998 Jan 25
+*quickfix.txt*  For Vim version 5.2.  Last modification: 1998 Jun 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -60,11 +60,11 @@ The following commands can be used if you are in QuickFix mode:
 			[!].
 
 							*:crewind* *:cr*
-:crewind[!] [nr]	Display error [nr].  If [nr] is omitted, the FIRST
+:cr[ewind][!] [nr]	Display error [nr].  If [nr] is omitted, the FIRST
 			error is displayed.  See |:cc|.
 
 							*:clast* *:cla*
-:clast[!] [nr]		Display error [nr].  If [nr] is omitted, the LAST
+:cla[st][!] [nr]	Display error [nr].  If [nr] is omitted, the LAST
 			error is displayed.  See |:cc|.
 
 							*:cq* *:cquit*
@@ -98,6 +98,11 @@ The following commands can be used if you are in QuickFix mode:
 			4. The errorfile is then read and the first error is
 			   jumped to.
 			5. The errorfile is deleted.
+
+							    *:gr* *:grep*
+:gr[ep] [arguments]	Just like ":make", but use 'grepprg' instead of
+			'makeprg' and 'grepformat' instead of 'errorformat'.
+			See |grep|.
 
 A template for the errorfile name can be set with the 'makeef' option.  If it
 includes "##", Vim will replace this with a number to make it a unique name.
@@ -179,6 +184,25 @@ The backslashes before the pipe character are required to avoid it to be
 recognized as a command separator.  The backslash before each space is
 required for the set command.
 
+						*quickfix-error-lists*
+So far has been assumed that there is only one list of errors.  Actually the
+ten last used lists are remembered.  When starting a new list, the previous
+ones are automatically kept.  Two commands can be used to access older error
+lists.  They set one of the existing error lists as the current one.
+
+						*:colder* *:col*
+:col[der] [count]	Go to older error list.  When [count] is given, do
+			this [count] times.  When already at the oldest error
+			list, an error message is given.
+
+						*:cnewer* *:cnew*
+:cnew[er] [count]	Go to newer error list.  When [count] is given, do
+			this [count] times.  When already at the newest error
+			list, an error message is given.
+
+When adding a new error list, it becomes the current list.
+
+
 						*:make_makeprg*
 The ":make" command executes the command given with the 'makeprg' option.
 This is done by passing the command to the shell given with the 'shell'
@@ -188,7 +212,7 @@ option.  This works almost like typing
 
 {makeprg} is the string given with the 'makeprg' option.  Any command can be
 used, not just "make".  Characters '%' and '#' are expanded as usual on a
-command line.  You can use "#<" to insert the current file name without
+command-line.  You can use "#<" to insert the current file name without
 extension, for example:
 >  :set makeprg=make\ #<.o
 

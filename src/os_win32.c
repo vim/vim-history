@@ -104,13 +104,14 @@ char * _fullpath(char *buf, char *fname, int len)
 {
     LPTSTR toss;
 
-   return (char *) GetFullPathName(  fname, len, buf, &toss  );
+   return (char *) GetFullPathName(fname, len, buf, &toss);
 }
+
 int _chdrive(int drive)
 {
     char temp [3] = "-:";
-    temp[0] = drive + 'A';
-    return SetCurrentDirectory(temp);
+    temp[0] = drive + 'A' - 1;
+    return !SetCurrentDirectory(temp);
 }
 #else
 #ifdef __BORLANDC__
@@ -176,13 +177,28 @@ static void cursor_visible(BOOL fVisible);
 static BOOL write_chars(LPCSTR pchBuf, DWORD cchToWrite, DWORD* pcchWritten);
 static char_u tgetch(void);
 static void create_conin(void);
-
+static void mch_set_cursor_shape(int thickness);
+static int s_cursor_visible = TRUE;
 static int did_create_conin = FALSE;
+#else
+static int s_dont_use_vimrun = TRUE;
+static char *vimrun_path = "vimrun ";
 #endif
 
+/*
+ * The old solution for opening a console is still there.
+ */
+//#define OLD_CONSOLE_STUFF
+
+#ifdef OLD_CONSOLE_STUFF
 static void mch_open_console(void);
-static void mch_close_console(int wait_key);
+static void mch_close_console(int wait_key, DWORD ret);
+#endif
 struct growarray error_ga = {0, 0, 0, 0, NULL};
+
+#ifndef USE_GUI_WIN32
+static int suppress_winsize = 1;	/* don't fiddle with console */
+#endif
 
 /* This symbol is not defined in older versions of the SDK or Visual C++ */
 
@@ -190,26 +206,30 @@ struct growarray error_ga = {0, 0, 0, 0, NULL};
 # define VER_PLATFORM_WIN32_WINDOWS 1
 #endif
 
-static DWORD PlatformId(void);
+static void PlatformId(void);
 static DWORD g_PlatformId;
 
 /*
- *  Returns VER_PLATFORM_WIN32_NT (NT) or VER_PLATFORM_WIN32_WINDOWS (Win95)
+ * Set g_PlatformId to VER_PLATFORM_WIN32_NT (NT) or
+ * VER_PLATFORM_WIN32_WINDOWS (Win95).
  */
-    static DWORD
+    static void
 PlatformId(void)
 {
-    OSVERSIONINFO ovi;
+    static int done = FALSE;
 
-    ovi.dwOSVersionInfoSize = sizeof(ovi);
-    GetVersionEx(&ovi);
+    if (!done)
+    {
+	OSVERSIONINFO ovi;
 
-    g_PlatformId = ovi.dwPlatformId;
+	ovi.dwOSVersionInfoSize = sizeof(ovi);
+	GetVersionEx(&ovi);
 
-    return g_PlatformId;
+	g_PlatformId = ovi.dwPlatformId;
+	done = TRUE;
+    }
 }
 
-#if !defined(USE_GUI_WIN32) || defined(PROTO)
 /*
  * Return TRUE when running on Windows 95.  Only to be used after
  * mch_windinit().
@@ -218,6 +238,21 @@ PlatformId(void)
 mch_windows95(void)
 {
     return g_PlatformId == VER_PLATFORM_WIN32_WINDOWS;
+}
+
+#ifdef USE_GUI_WIN32
+/*
+ * Used to work around the "can't do synchronous spawn"
+ * problem on Win32s, without resorting to Universal Thunk.
+ */
+static int old_num_windows;
+static int num_windows;
+
+    static BOOL CALLBACK
+win32ssynch_cb(HWND hwnd, LPARAM lparam)
+{
+    num_windows++;
+    return TRUE;
 }
 #endif
 
@@ -774,6 +809,38 @@ decode_mouse_event(
 
 #ifndef USE_GUI_WIN32	    /* this isn't used for the GUI */
 /*
+ * Set the shape of the cursor.
+ * 'thickness' can be from 1 (thin) to 99 (block)
+ */
+    static void
+mch_set_cursor_shape(int thickness)
+{
+    CONSOLE_CURSOR_INFO ConsoleCursorInfo;
+    ConsoleCursorInfo.dwSize = thickness;
+    ConsoleCursorInfo.bVisible = s_cursor_visible;
+
+    SetConsoleCursorInfo(g_hCurOut, &ConsoleCursorInfo);
+}
+
+    void
+mch_update_cursor(void)
+{
+    int		idx;
+    int		thickness;
+
+    /*
+     * How the cursor is drawn depends on the current mode.
+     */
+    idx = get_cursor_idx();
+
+    if (cursor_table[idx].shape == SHAPE_BLOCK)
+	thickness = 99;	/* 100 doesn't work on W95 */
+    else
+	thickness = cursor_table[idx].percentage;
+    mch_set_cursor_shape(thickness);
+}
+
+/*
  * Wait until console input from keyboard or mouse is available,
  * or the time is up.
  * Return TRUE if something is available FALSE if not.
@@ -817,9 +884,24 @@ WaitForChar(long msec)
 
 	if (cRecords > 0)
 	{
+#ifdef MULTI_BYTE_IME
+	    /* Windows IME sends two '\n's with only one 'ENTER'.
+	       first, wVirtualKeyCode == 13. second, wVirtualKeyCode == 0 */
+	    if (ir.EventType == KEY_EVENT && ir.Event.KeyEvent.bKeyDown)
+	    {
+		if (ir.Event.KeyEvent.uChar.UnicodeChar == 0
+			&& ir.Event.KeyEvent.wVirtualKeyCode == 13)
+		{
+		    ReadConsoleInput(g_hConIn, &ir, 1, &cRecords);
+		    continue;
+		}
+		return decode_key_event(&ir.Event.KeyEvent, &ch, &ch2, FALSE);
+	    }
+#else
 	    if (ir.EventType == KEY_EVENT && ir.Event.KeyEvent.bKeyDown
 		    && decode_key_event(&ir.Event.KeyEvent, &ch, &ch2, FALSE))
 		return TRUE;
+#endif
 
 	    ReadConsoleInput(g_hConIn, &ir, 1, &cRecords);
 #ifdef USE_CLIPBOARD
@@ -1009,6 +1091,9 @@ mch_inchar(
 }
 
 #ifdef USE_GUI_WIN32
+
+#include <shellapi.h>	/* required for FindExecutable() */
+
 /*
  * GUI version of mch_windinit().
  */
@@ -1024,6 +1109,50 @@ mch_windinit()
     Columns = 80;
 
     _fmode = O_BINARY;		/* we do our own CR-LF translation */
+
+    /* Look for 'vimrun' */
+    if (!gui_is_win32s())
+    {
+	char_u vimrun_location[2 * _MAX_PATH + 2];
+	char_u widename[40];
+
+	/* First try in same directory as gvim.exe */
+	STRCPY(vimrun_location, exe_name);
+	STRCPY(gettail(vimrun_location), "vimrun.exe");
+	if (mch_getperm(vimrun_location) >= 0)
+	{
+	    STRCPY(gettail(vimrun_location), "vimrun ");
+	    vimrun_path = (char *)vim_strsave(vimrun_location);
+	    s_dont_use_vimrun = FALSE;
+	}
+	else
+	{
+	    /* There appears to be a bug in FindExecutableA() on Windows NT.
+	     * Use FindExecutableW() instead... */
+	    if (g_PlatformId == VER_PLATFORM_WIN32_NT)
+	    {
+		MultiByteToWideChar(CP_ACP, 0, (LPCTSTR)"vimrun.exe", -1,
+							(LPWSTR)widename, 20);
+		if (FindExecutableW((LPCWSTR)widename, (LPCWSTR)"",
+			    (LPWSTR)vimrun_location) > (HINSTANCE)32)
+		    s_dont_use_vimrun = FALSE;
+	    }
+	    else
+	    {
+		if (FindExecutableA((LPCTSTR)"vimrun.exe", (LPCTSTR)"",
+			    (LPTSTR)vimrun_location) > (HINSTANCE)32)
+		    s_dont_use_vimrun = FALSE;
+	    }
+	}
+
+	if (s_dont_use_vimrun)
+	    MessageBox(NULL,
+			"VIMRUN.EXE not found in your $PATH.\n"
+			"External commands will not pause after completion.\n"
+			"See  :help win32-vimrun  for more information.",
+			"Vim Warning",
+			MB_ICONWARNING);
+    }
 
 #ifdef USE_CLIPBOARD
     clip_init(TRUE);
@@ -1174,7 +1303,7 @@ mch_windexit(
 
     if (g_hConOut != INVALID_HANDLE_VALUE)
     {
-	(void) CloseHandle(g_hConOut);
+	(void)CloseHandle(g_hConOut);
 
 	if (g_hSavOut != INVALID_HANDLE_VALUE)
 	{
@@ -1571,8 +1700,7 @@ mch_hide(char_u *name)
  * return FALSE if "name" is not a directory or upon error
  */
     int
-mch_isdir(
-    char_u *name)
+mch_isdir(char_u *name)
 {
     int f = mch_getperm(name);
 
@@ -1585,8 +1713,7 @@ mch_isdir(
 
 #ifdef USE_GUI_WIN32
     void
-mch_settmode(
-    int tmode)
+mch_settmode(int tmode)
 {
     /* nothing to do */
 }
@@ -1718,7 +1845,7 @@ mch_get_winsize()
 	Columns = 80;
     }
 
-    if (Columns < MIN_COLUMNS || Rows < MIN_ROWS + 1)
+    if (Columns < MIN_COLUMNS || Rows < MIN_LINES)
     {
 	/* these values are overwritten by termcap size or default */
 	Rows = 25;
@@ -1744,6 +1871,7 @@ ResizeConBufAndWindow(
     CONSOLE_SCREEN_BUFFER_INFO csbi;	/* hold current console buffer info */
     SMALL_RECT	    srWindowRect;	/* hold the new console size */
     COORD	    coordScreen;
+    int		    did_start_termcap = FALSE;
 
 #ifdef MCH_WRITE_DUMP
     if (fdDump)
@@ -1753,7 +1881,16 @@ ResizeConBufAndWindow(
     }
 #endif
 
-    GetConsoleScreenBufferInfo(hConsole, &csbi);
+    /*
+     * The resizing MUST be done while in our own console buffer, otherwise it
+     * will never be possible to restore the old one, and we will crash on
+     * exit in Windows 95.
+     */
+    if (g_hCurOut != g_hConOut)
+    {
+	termcap_mode_start();
+	did_start_termcap = TRUE;
+    }
 
     /* get the largest size we can size the console window to */
     coordScreen = GetLargestConsoleWindowSize(hConsole);
@@ -1763,9 +1900,29 @@ ResizeConBufAndWindow(
     srWindowRect.Right =  (SHORT) (min(xSize, coordScreen.X) - 1);
     srWindowRect.Bottom = (SHORT) (min(ySize, coordScreen.Y) - 1);
 
-    /* define the new console buffer size */
-    coordScreen.X = xSize;
-    coordScreen.Y = ySize;
+    if (GetConsoleScreenBufferInfo(g_hCurOut, &csbi))
+    {
+	int sx, sy;
+
+	sx = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+	sy = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+	if (sy < ySize || sx < xSize)
+	{
+	    /*
+	     * Increasing number of lines/columns, do buffer first.
+	     * Use the maximal size in x and y direction.
+	     */
+	    if (sy < ySize)
+		coordScreen.Y = ySize;
+	    else
+		coordScreen.Y = sy;
+	    if (sx < xSize)
+		coordScreen.X = xSize;
+	    else
+		coordScreen.X = sx;
+	    SetConsoleScreenBufferSize(hConsole, coordScreen);
+	}
+    }
 
     if (!SetConsoleWindowInfo(hConsole, TRUE, &srWindowRect))
     {
@@ -1779,6 +1936,10 @@ ResizeConBufAndWindow(
 #endif
     }
 
+    /* define the new console buffer size */
+    coordScreen.X = xSize;
+    coordScreen.Y = ySize;
+
     if (!SetConsoleScreenBufferSize(hConsole, coordScreen))
     {
 #ifdef MCH_WRITE_DUMP
@@ -1791,6 +1952,8 @@ ResizeConBufAndWindow(
 #endif
     }
 
+    if (did_start_termcap)
+	termcap_mode_end();
 }
 
 
@@ -1800,7 +1963,16 @@ ResizeConBufAndWindow(
     void
 mch_set_winsize()
 {
-    COORD coordScreen = GetLargestConsoleWindowSize(g_hCurOut);
+    COORD coordScreen;
+
+    /* Don't change window size while still starting up */
+    if (suppress_winsize)
+    {
+	suppress_winsize = 2;
+	return;
+    }
+
+    coordScreen = GetLargestConsoleWindowSize(g_hCurOut);
 
     /* Clamp Rows and Columns to reasonable values */
     if (Rows > coordScreen.Y)
@@ -1812,6 +1984,20 @@ mch_set_winsize()
     set_scroll_region(0, 0, Columns - 1, Rows - 1);
 }
 
+/*
+ * Called when started up, to set the winsize that was delayed.
+ */
+    void
+mch_set_winsize_now()
+{
+    if (suppress_winsize == 2)
+    {
+	suppress_winsize = 0;
+	mch_set_winsize();
+	check_winsize();	    /* in case 'columns' changed */
+    }
+    suppress_winsize = 0;
+}
 #endif /* USE_GUI_WIN32 */
 
 
@@ -1825,6 +2011,8 @@ mch_suspend()
 }
 
 #if defined(USE_GUI_WIN32) || defined(PROTO)
+
+#ifdef OLD_CONSOLE_STUFF
 /*
  * Functions to open and close a console window.
  * The open function sets the size of the window to 25x80, to avoid problems
@@ -1872,7 +2060,7 @@ mch_open_console(void)
 }
 
     static void
-mch_close_console(int wait_key)
+mch_close_console(int wait_key, DWORD ret)
 {
     if (wait_key)
     {
@@ -1880,8 +2068,14 @@ mch_close_console(int wait_key)
 	HANDLE hStderr = GetStdHandle(STD_ERROR_HANDLE);
 	DWORD number;
 	static char message[] = "\nPress any key to close this window...";
+	static char err_buf[80];
 	char buffer[1];
 
+	if (ret)
+	{
+	    sprintf(err_buf, "\n%ld returned.", ret);
+	    WriteConsole(hStderr, err_buf, strlen(err_buf), &number, NULL);
+	}
 	/* Write a message to the user */
 	WriteConsole(hStderr, message, sizeof(message)-1, &number, NULL);
 
@@ -1896,6 +2090,7 @@ mch_close_console(int wait_key)
     /* Close the console window */
     FreeConsole();
 }
+#endif
 
 #ifdef mch_errmsg
 # undef mch_errmsg
@@ -1917,7 +2112,7 @@ mch_errmsg(char *str)
     }
     if (ga_grow(&error_ga, len) == OK)
     {
-	vim_memmove((char_u *)error_ga.ga_data + error_ga.ga_len,
+	mch_memmove((char_u *)error_ga.ga_data + error_ga.ga_len,
 							  (char_u *)str, len);
 	--len;			/* don't count the NUL at the end */
 	error_ga.ga_len += len;
@@ -1957,7 +2152,7 @@ mch_display_error()
 static BOOL fUseConsole = TRUE;
 
     static int
-mch_system(char * cmd, int options)
+mch_system(char *cmd, int options)
 {
     STARTUPINFO		si;
     PROCESS_INFORMATION pi;
@@ -1967,10 +2162,19 @@ mch_system(char * cmd, int options)
     si.lpReserved = NULL;
     si.lpDesktop = NULL;
     si.lpTitle = NULL;
-    si.dwFlags = 0;
+    si.dwFlags = STARTF_USESHOWWINDOW;
+    /*
+     * It's nicer to run a filter command in a minimized window, but in
+     * Windows 95 this makes the command MUCH slower.
+     */
+    if ((options & SHELL_DOOUT) && !mch_windows95())
+	si.wShowWindow = SW_SHOWMINIMIZED;
+    else
+	si.wShowWindow = SW_SHOWNORMAL;
     si.cbReserved2 = 0;
     si.lpReserved2 = NULL;
 
+#ifdef OLD_CONSOLE_STUFF
     /* Create a console for the process. This lets us write a termination
      * message at the end, and wait for the user to close the console
      * window manually...
@@ -1991,27 +2195,60 @@ mch_system(char * cmd, int options)
 	    WriteConsole(hStderr, "\n", 1, &number, NULL);
 	}
     }
+#else
+    /* There is a strange error on Windows 95 when using "c:\\command.com".
+     * When the "c:\\" is left out it works OK...? */
+    if (mch_windows95()
+	    && (STRNICMP(cmd, "c:/command.com", 14) == 0
+		|| STRNICMP(cmd, "c:\\command.com", 14) == 0))
+	cmd += 3;
+#endif
 
     /* Now, run the command */
-    CreateProcess (NULL,		/* Executable name */
-		   cmd,			/* Command to execute */
-		   NULL,		/* Process security attributes */
-		   NULL,		/* Thread security attributes */
-		   FALSE,		/* Inherit handles */
-		   0,			/* Creation flags */
-		   NULL,		/* Environment */
-		   NULL,		/* Current directory */
-		   &si,			/* Startup information */
-		   &pi);		/* Process information */
+    CreateProcess(NULL,			/* Executable name */
+		  cmd,			/* Command to execute */
+		  NULL,			/* Process security attributes */
+		  NULL,			/* Thread security attributes */
+		  FALSE,		/* Inherit handles */
+		  CREATE_DEFAULT_ERROR_MODE |	/* Creation flags */
+#ifdef OLD_CONSOLE_STUFF
+		  0,
+#else
+		  CREATE_NEW_CONSOLE,
+#endif
+		  NULL,			/* Environment */
+		  NULL,			/* Current directory */
+		  &si,			/* Startup information */
+		  &pi);			/* Process information */
 
 
     /* Wait for the command to terminate before continuing */
     if (fUseConsole)
     {
-	WaitForSingleObject(pi.hProcess, INFINITE);
+	if (g_PlatformId != VER_PLATFORM_WIN32s)
+	{
+	    WaitForSingleObject(pi.hProcess, INFINITE);
 
-	/* Get the command exit code */
-	GetExitCodeProcess(pi.hProcess, &ret);
+	    /* Get the command exit code */
+	    GetExitCodeProcess(pi.hProcess, &ret);
+	}
+	else
+	{
+	    /*
+	     * This ugly code is the only quick way of performing
+	     * a synchronous spawn under Win32s. Yuk.
+	     */
+	    num_windows = 0;
+	    EnumWindows(win32ssynch_cb, 0);
+	    old_num_windows = num_windows;
+	    do
+	    {
+		Sleep(1000);
+		num_windows = 0;
+		EnumWindows(win32ssynch_cb, 0);
+	    } while (num_windows == old_num_windows);
+	    ret = 0;
+	}
     }
 
     /* Close the handles to the subprocess, so that it goes away */
@@ -2021,8 +2258,10 @@ mch_system(char * cmd, int options)
     /* Close the console window. If we are not redirecting output, wait for
      * the user to press a key.
      */
+#ifdef OLD_CONSOLE_STUFF
     if (fUseConsole)
-	mch_close_console(!(options & SHELL_DOOUT));
+	mch_close_console(!(options & SHELL_DOOUT), ret);
+#endif
 
     return ret;
 }
@@ -2052,7 +2291,8 @@ mch_call_shell(
     /*
      * ALWAYS switch to non-termcap mode, otherwise ":r !ls" may crash.
      */
-    if (g_hCurOut == g_hConOut)
+    if (g_hCurOut == g_hConOut &&
+	    ((cmd == NULL) || STRNICMP(cmd, "start ", 6) != 0))
     {
 	termcap_mode_end();
 	stopped_termcap_mode = TRUE;
@@ -2088,29 +2328,79 @@ mch_call_shell(
 
     if (cmd == NULL)
     {
-	/* Set the SHELL_DOOUT flag, to avoid the "hit any key" prompt */
-	x = mch_system(p_sh, options | SHELL_DOOUT);
+	x = mch_system(p_sh, options);
     }
     else
     {
 	/* we use "command" or "cmd" to start the shell; slow but easy */
 	char_u *newcmd;
 
-#ifdef USE_GUI_WIN32
-	fUseConsole = (STRNICMP(cmd, "start ", 6) != 0);
-#endif
-	newcmd = lalloc(STRLEN(p_sh) + STRLEN(p_shcf) + STRLEN(cmd) + 3, TRUE);
+	newcmd = lalloc(STRLEN(p_sh) + STRLEN(p_shcf) + STRLEN(cmd) + 10, TRUE);
 	if (newcmd != NULL)
 	{
-	    sprintf((char *)newcmd, "%s %s %s", p_sh, p_shcf, cmd);
-	    x = mch_system((char *)newcmd, options);
+	    if (STRNICMP(cmd, "start ", 6) == 0)
+	    {
+		STARTUPINFO		si;
+		PROCESS_INFORMATION	pi;
+
+		si.cb = sizeof(si);
+		si.lpReserved = NULL;
+		si.lpDesktop = NULL;
+		si.lpTitle = NULL;
+		si.dwFlags = 0;
+		si.cbReserved2 = 0;
+		si.lpReserved2 = NULL;
+		sprintf((char *)newcmd, "%s\0", cmd+6);
+		/*
+		 * Now, start the command as a process, so that it doesn't
+		 * inherit our handles which causes unpleasant dangling swap
+		 * files if we exit before the spawned process
+		 */
+		if (CreateProcess (NULL,	// Executable name
+			newcmd,			// Command to execute
+			NULL,			// Process security attributes
+			NULL,			// Thread security attributes
+			FALSE,			// Inherit handles
+			CREATE_NEW_CONSOLE,	// Creation flags
+			NULL,			// Environment
+			NULL,			// Current directory
+			&si,			// Startup information
+			&pi))			// Process information
+		    x = 0;
+		else
+		    x = -1;
+		/* Close the handles to the subprocess, so that it goes away */
+		CloseHandle(pi.hThread);
+		CloseHandle(pi.hProcess);
+	    }
+	    else
+	    {
+		sprintf((char *)newcmd, "%s%s %s %s",
+#if defined(OLD_CONSOLE_STUFF) || !defined(USE_GUI_WIN32)
+			"",
+#else
+			/*
+			 * Do we need to use "vimrun"?
+			 */
+			((options & SHELL_DOOUT) || s_dont_use_vimrun) ?
+			    "" : vimrun_path,
+#endif
+			p_sh,
+			p_shcf,
+			cmd);
+		x = mch_system((char *)newcmd, options);
+	    }
 	    vim_free(newcmd);
 	}
     }
 
     settmode(TMODE_RAW);	    /* set to raw mode */
 
+#ifdef USE_GUI_WIN32
+    if (x && !expand_interactively && !fUseConsole)
+#else
     if (x && !expand_interactively)
+#endif
     {
 	smsg("%d returned", x);
 	msg_putchar('\n');
@@ -2134,7 +2424,7 @@ mch_call_shell(
 	termcap_mode_start();
 #endif
 
-    return (x ? FAIL : OK);
+    return x;
 }
 
 
@@ -2269,17 +2559,12 @@ mch_expandpath(
 }
 
 
-#ifdef vim_chdir
-# undef vim_chdir
-#endif
-
 /*
  * The normal _chdir() does not change the default drive.  This one does.
  * Returning 0 implies success; -1 implies failure.
  */
     int
-vim_chdir(
-    char *path)
+mch_chdir(char *path)
 {
     if (path[0] == NUL)		/* just checking... */
 	return -1;
@@ -2391,14 +2676,12 @@ termcap_mode_start(void)
     g_coordOrig.Y = csbi.dwCursorPosition.Y;
 
     if (g_hConOut == INVALID_HANDLE_VALUE)
-    {
 	/* Create a new screen buffer in which we do all of our editing.
 	 * This means we can restore the original screen when we finish. */
 	g_hConOut = CreateConsoleScreenBuffer(GENERIC_WRITE | GENERIC_READ,
 					      0, (LPSECURITY_ATTRIBUTES) NULL,
 					      CONSOLE_TEXTMODE_BUFFER,
 					      (LPVOID) NULL);
-    }
 
     coord.X = coord.Y = 0;
     FillConsoleOutputCharacter(g_hConOut, ' ', Rows * Columns, coord, &dwDummy);
@@ -2428,6 +2711,12 @@ termcap_mode_end()
     g_attrSave = g_attrCurrent;
 
     ResizeConBufAndWindow(g_hCurOut, g_nOldColumns, g_nOldRows);
+
+    /* This weird Sleep(0) is required to allow Windows to really resize the
+     * console window.  Apparently it's done asynchronously, which may cause
+     * the following screenbuffer switch to go wrong */
+    Sleep(0);
+
     check_winsize();
 
     g_hCurOut = g_hSavOut;
@@ -2794,12 +3083,8 @@ visual_bell()
 cursor_visible(
     BOOL fVisible)
 {
-    CONSOLE_CURSOR_INFO cci;
-
-    cci.bVisible = fVisible;
-    /* make cursor big and visible (100 on Win95 makes it disappear)  */
-    cci.dwSize = 99;	       /* 100 percent cursor */
-    SetConsoleCursorInfo(g_hCurOut, &cci);
+    s_cursor_visible = fVisible;
+    mch_update_cursor();
 }
 
 
@@ -3156,16 +3441,11 @@ mch_delay(
 }
 
 
-#ifdef vim_remove
-# undef vim_remove
-#endif
-
 /*
  * this version of remove is not scared by a readonly (backup) file
  */
     int
-vim_remove(
-    char_u *name)
+mch_remove(char_u *name)
 {
     SetFileAttributes(name, FILE_ATTRIBUTE_NORMAL);
     return DeleteFile(name) ? 0 : -1;
@@ -3227,7 +3507,7 @@ mch_screenmode(
 
 
 /*
- * win95rename works around a bug in rename (aka MoveFile) in
+ * mch_rename() works around a bug in rename (aka MoveFile) in
  * Windows 95: rename("foo.bar", "foo.bar~") will generate a
  * file whose short file name is "FOO.BAR" (its long file name will
  * be correct: "foo.bar~").  Because a file can be accessed by
@@ -3241,7 +3521,7 @@ mch_screenmode(
  * Should probably set errno appropriately when errors occur.
  */
     int
-win95rename(
+mch_rename(
     const char	*pszOldFile,
     const char	*pszNewFile)
 {
@@ -3250,7 +3530,11 @@ win95rename(
     char	*pszFilePart;
     HANDLE	hf;
 
-#undef rename
+    /*
+     * No need to play tricks if not running Windows 95
+     */
+    if (!mch_windows95())
+	return rename(pszOldFile, pszNewFile);
 
     /* get base path of new file name */
     if (GetFullPathName(pszNewFile, _MAX_PATH, szNewPath, &pszFilePart) == 0)
@@ -3263,39 +3547,38 @@ win95rename(
 	return -2;
 
     /* blow the temp file away */
-    if (! DeleteFile(szTempFile))
+    if (!DeleteFile(szTempFile))
 	return -3;
 
     /* rename old file to the temp file */
-    if (! MoveFile(pszOldFile, szTempFile))
+    if (!MoveFile(pszOldFile, szTempFile))
 	return -4;
 
-    /* now create an empty file called pszOldFile; this prevents
-     * the operating system using pszOldFile as an alias (SFN)
-     * if we're renaming within the same directory.  For example,
-     * we're editing a file called filename.asc.txt by its SFN,
-     * filena~1.txt.  If we rename filena~1.txt to filena~1.txt~
-     * (i.e., we're making a backup while writing it), the SFN
-     * for filena~1.txt~ will be filena~1.txt, by default, which
-     * will cause all sorts of problems later in buf_write.  So, we
-     * create an empty file called filena~1.txt and the system will have
-     * to find some other SFN for filena~1.txt~, such as filena~2.txt
+    /* now create an empty file called pszOldFile; this prevents the operating
+     * system using pszOldFile as an alias (SFN) if we're renaming within the
+     * same directory.  For example, we're editing a file called
+     * filename.asc.txt by its SFN, filena~1.txt.  If we rename filena~1.txt
+     * to filena~1.txt~ (i.e., we're making a backup while writing it), the
+     * SFN for filena~1.txt~ will be filena~1.txt, by default, which will
+     * cause all sorts of problems later in buf_write.  So, we create an empty
+     * file called filena~1.txt and the system will have to find some other
+     * SFN for filena~1.txt~, such as filena~2.txt
      */
     if ((hf = CreateFile(pszOldFile, GENERIC_WRITE, 0, NULL, CREATE_NEW,
-			 FILE_ATTRIBUTE_NORMAL, NULL)) == INVALID_HANDLE_VALUE)
+		    FILE_ATTRIBUTE_NORMAL, NULL)) == INVALID_HANDLE_VALUE)
 	return -5;
-    if (! CloseHandle(hf))
+    if (!CloseHandle(hf))
 	return -6;
 
     /* rename the temp file to the new file */
-    if (! MoveFile(szTempFile, pszNewFile))
+    if (!MoveFile(szTempFile, pszNewFile))
 	return -7;
 
     /* Seems to be left around on Novell filesystems */
     DeleteFile(szTempFile);
 
     /* finally, remove the empty old file */
-    if (! DeleteFile(pszOldFile))
+    if (!DeleteFile(pszOldFile))
 	return -8;
 
     return 0;	/* success */
@@ -3305,8 +3588,7 @@ win95rename(
  * Special version of getenv(): use $HOME when $VIM not defined.
  */
     char_u *
-vim_getenv(
-    char_u *var)
+mch_getenv(char_u *var)
 {
     char_u  *retval;
     retval = (char_u *)getenv((char *)var);
@@ -3338,7 +3620,7 @@ default_shell()
 
     if (g_PlatformId == VER_PLATFORM_WIN32_NT)		/* Windows NT */
 	psz = "cmd.exe";
-    else if (g_PlatformId == VER_PLATFORM_WIN32_WINDOWS)  /* Windows 95 */
+    else if (g_PlatformId == VER_PLATFORM_WIN32_WINDOWS) /* Windows 95 */
 	psz = "command.com";
 
     return psz;
@@ -3352,6 +3634,14 @@ default_shell()
 
 /*
  * Get the current selection and put it in the clipboard register.
+ *
+ * NOTE: Must use GlobalLock/Unlock here to ensure Win32s compatibility.
+ * On NT/W95 the clipboard data is a fixed global memory object and
+ * so its handle = its pointer.
+ * On Win32s, however, co-operation with the Win16 system means that
+ * the clipboard data is moveable and its handle is not a pointer at all,
+ * so we can't just cast the return value of GetClipboardData to (char_u*).
+ * <VN>
  */
     void
 clip_mch_request_selection()
@@ -3369,51 +3659,56 @@ clip_mch_request_selection()
 	/* Check for vim's own clipboard format first */
 	if ((hMem = GetClipboardData(clipboard.format)) != NULL)
 	{
-	    str = (char_u *)hMem;
-	    switch (*str++)
-	    {
-		default:
-		case 'L':	type = MLINE;	break;
-		case 'C':	type = MCHAR;	break;
-		case 'B':	type = MBLOCK;	break;
-	    }
-	    /* TRACE("Got '%c' type\n", str[-1]); */
+	    str = (char_u *)GlobalLock(hMem);
+	    if (str != NULL)
+		switch (*str++)
+		{
+		    default:
+		    case 'L':	type = MLINE;	break;
+		    case 'C':	type = MCHAR;	break;
+		    case 'B':	type = MBLOCK;	break;
+		}
+		/* TRACE("Got '%c' type\n", str[-1]); */
 	}
 	/* Otherwise, check for the normal text format */
 	else if ((hMem = GetClipboardData(CF_TEXT)) != NULL)
 	{
-	    str = (char_u *)hMem;
-	    type = (strchr((char*) str, '\r') != NULL) ? MLINE : MCHAR;
+	    str = (char_u *)GlobalLock(hMem);
+	    if (str != NULL)
+		type = (vim_strchr((char*) str, '\r') != NULL) ? MLINE : MCHAR;
 	    /* TRACE("TEXT\n"); */
 	}
 
-	if (hMem != NULL && *str != NUL)
+	if (hMem != NULL && str != NULL)
 	{
-	    LPCSTR psz = (LPCSTR) str;
-	    char_u *temp_clipboard = (char_u *)lalloc(STRLEN(psz) + 1, TRUE);
-	    char_u *pszTemp = temp_clipboard;
-
-	    if (temp_clipboard != NULL)
+	    /*successful lock - must unlock when finished*/
+	    if (*str != NUL)
 	    {
-		while (*psz != NUL)
+		LPCSTR psz = (LPCSTR)str;
+		char_u *temp_clipboard = (char_u *)lalloc(STRLEN(psz) + 1, TRUE);
+		char_u *pszTemp = temp_clipboard;
+
+		if (temp_clipboard != NULL)
 		{
-		    const char* pszNL = strchr(psz, '\r');
-		    const int len = (pszNL != NULL) ? pszNL - psz : STRLEN(psz);
-
-		    STRNCPY(pszTemp, psz, len);
-
-		    pszTemp += len;
-		    if (pszNL != NULL)
-			*pszTemp++ = '\n';
-
-		    psz += len + ((pszNL != NULL) ? 2 : 0);
+		    while (*psz != NUL)
+		    {
+			const char* pszNL = strchr(psz, '\r');
+			const int len = (pszNL != NULL) ?
+					    pszNL - psz : STRLEN(psz);
+			STRNCPY(pszTemp, psz, len);
+			pszTemp += len;
+			if (pszNL != NULL)
+			    *pszTemp++ = '\n';
+			psz += len + ((pszNL != NULL) ? 2 : 0);
+		    }
+		    *pszTemp = NUL;
+		    clip_yank_selection(type, temp_clipboard,
+					(long)(pszTemp - temp_clipboard));
+		    vim_free(temp_clipboard);
 		}
-
-		*pszTemp = NUL;
-		clip_yank_selection(type, temp_clipboard,
-				    (long)(pszTemp - temp_clipboard));
-		vim_free(temp_clipboard);
 	    }
+	    /*unlock the global object*/
+	    (void)GlobalUnlock(hMem);
 	}
 	CloseClipboard();
     }

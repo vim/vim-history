@@ -32,18 +32,18 @@ static WIN	*prevwin = NULL;	/* previous window */
  */
     void
 do_window(nchar, Prenum)
-    int	    nchar;
-    long    Prenum;
+    int		nchar;
+    long	Prenum;
 {
-    long    Prenum1;
-    WIN	    *wp;
-    int	    xchar;
+    long	Prenum1;
+    WIN		*wp;
+    int		xchar;
 #if defined(FILE_IN_PATH) || defined(FIND_IN_PATH)
-    char_u  *ptr;
+    char_u	*ptr;
 #endif
 #ifdef FIND_IN_PATH
-    int	    type = FIND_DEFINE;
-    int	    len;
+    int		type = FIND_DEFINE;
+    int		len;
 #endif
 
     if (Prenum == 0)
@@ -57,6 +57,9 @@ do_window(nchar, Prenum)
     case 'S':
     case Ctrl('S'):
     case 's':	reset_VIsual();			/* stop Visual mode */
+#ifdef USE_GUI
+		need_mouse_correct = TRUE;
+#endif
 		win_split((int)Prenum, TRUE, FALSE);
 		break;
 
@@ -199,20 +202,36 @@ do_window(nchar, Prenum)
 		break;
 
 /* make all windows the same height */
-    case '=':	win_equal(NULL, TRUE);
+    case '=':
+#ifdef USE_GUI
+		need_mouse_correct = TRUE;
+#endif
+		win_equal(NULL, TRUE);
 		break;
 
 /* increase current window height */
-    case '+':	win_setheight(curwin->w_height + (int)Prenum1);
+    case '+':
+#ifdef USE_GUI
+		need_mouse_correct = TRUE;
+#endif
+		win_setheight(curwin->w_height + (int)Prenum1);
 		break;
 
 /* decrease current window height */
-    case '-':	win_setheight(curwin->w_height - (int)Prenum1);
+    case '-':
+#ifdef USE_GUI
+		need_mouse_correct = TRUE;
+#endif
+		win_setheight(curwin->w_height - (int)Prenum1);
 		break;
 
 /* set current window height */
     case Ctrl('_'):
-    case '_':	win_setheight(Prenum ? (int)Prenum : 9999);
+    case '_':
+#ifdef USE_GUI
+		need_mouse_correct = TRUE;
+#endif
+		win_setheight(Prenum ? (int)Prenum : 9999);
 		break;
 
 /* jump to tag and split window if tag exists */
@@ -235,6 +254,9 @@ do_window(nchar, Prenum)
 								     Prenum1);
 		if (ptr != NULL)
 		{
+#ifdef USE_GUI
+		    need_mouse_correct = TRUE;
+#endif
 		    setpcmark();
 		    if (win_split(0, FALSE, FALSE) == OK)
 			(void)do_ecmd(0, ptr, NULL, NULL, (linenr_t)0,
@@ -311,6 +333,7 @@ reset_VIsual()
 	end_visual_mode();
 	update_curbuf(NOT_VALID);	/* delete the inversion */
     }
+    VIsual_reselect = FALSE;
 }
 
 /*
@@ -336,7 +359,7 @@ win_split(new_height, redraw, req_room)
     int		available;
     int		curwin_height;
 
-	/* add a status line when p_ls == 1 and splitting the first window */
+    /* add a status line when p_ls == 1 and splitting the first window */
     if (lastwin == firstwin && p_ls == 1 && curwin->w_status_height == 0)
 	need_status = STATUS_HEIGHT;
     else
@@ -346,16 +369,16 @@ win_split(new_height, redraw, req_room)
  * check if we are able to split the current window and compute its height
  */
     available = curwin->w_height;
-    needed = 2 * MIN_ROWS + STATUS_HEIGHT + need_status;
+    needed = 2 * p_wmh + STATUS_HEIGHT + need_status;
     if (req_room)
-	needed += (p_wh ? (p_wh - 1) : 4);
+	needed += p_wh - p_wmh;
     if (p_ea)
     {
 	for (wp = firstwin; wp != NULL; wp = wp->w_next)
 	    if (wp != curwin)
 	    {
 		available += wp->w_height;
-		needed += MIN_ROWS;
+		needed += p_wmh;
 	    }
     }
     if (available < needed)
@@ -372,14 +395,14 @@ win_split(new_height, redraw, req_room)
     if (new_height == 0)
 	new_height = curwin_height / 2;
 
-    if (new_height > curwin_height - MIN_ROWS - STATUS_HEIGHT)
-	new_height = curwin_height - MIN_ROWS - STATUS_HEIGHT;
+    if (new_height > curwin_height - p_wmh - STATUS_HEIGHT)
+	new_height = curwin_height - p_wmh - STATUS_HEIGHT;
 
-    if (new_height < MIN_ROWS)
-	new_height = MIN_ROWS;
+    if (new_height < p_wmh)
+	new_height = p_wmh;
 
-	/* if it doesn't fit in the current window, need win_equal() */
-    if (curwin_height - new_height - STATUS_HEIGHT < MIN_ROWS)
+    /* if it doesn't fit in the current window, need win_equal() */
+    if (curwin_height - new_height - STATUS_HEIGHT < p_wmh)
 	do_equal = TRUE;
 /*
  * allocate new window structure and link it in the window list
@@ -512,12 +535,12 @@ make_windows(count)
     int	    p_sb_save;
 
 /*
- * Each window needs at least MIN_ROWS lines and a status line.
- * Add 4 lines for one window, otherwise we may end up with all one-line
+ * Each window needs at least 'winminheight' lines and a status line.
+ * Add 4 lines for one window, otherwise we may end up with all zero-line
  * windows. Use value of 'winheight' if it is set
  */
-    maxcount = (curwin->w_height + curwin->w_status_height -
-			(p_wh ? (p_wh - 1) : 4)) / (MIN_ROWS + STATUS_HEIGHT);
+    maxcount = (curwin->w_height + curwin->w_status_height
+				  - (p_wh - p_wmh)) / (p_wmh + STATUS_HEIGHT);
     if (maxcount < 2)
 	maxcount = 2;
     if (count > maxcount)
@@ -577,6 +600,10 @@ win_exchange(Prenum)
 	beep_flush();
 	return;
     }
+
+#ifdef USE_GUI
+    need_mouse_correct = TRUE;
+#endif
 
 /*
  * find window to exchange with
@@ -638,6 +665,11 @@ win_rotate(upwards, count)
 	beep_flush();
 	return;
     }
+
+#ifdef USE_GUI
+    need_mouse_correct = TRUE;
+#endif
+
     while (count--)
     {
 	if (upwards)		/* first window becomes last window */
@@ -729,7 +761,7 @@ win_equal(next_curwin, redraw)
     wincount = 0;
     for (wp = firstwin; wp; wp = wp->w_next)
     {
-	total += wp->w_height - MIN_ROWS;
+	total += wp->w_height - p_wmh;
 	wincount++;
     }
 
@@ -739,16 +771,13 @@ win_equal(next_curwin, redraw)
     less = 0;
     if (next_curwin != NULL)
     {
-	if (p_wh)
+	if (p_wh - p_wmh > total)    /* all lines go to current window */
+	    less = total;
+	else
 	{
-	    if (p_wh - MIN_ROWS > total)    /* all lines go to current window */
-		less = total;
-	    else
-	    {
-		less = p_wh - MIN_ROWS - total / wincount;
-		if (less < 0)
-		    less = 0;
-	    }
+	    less = p_wh - p_wmh - total / wincount;
+	    if (less < 0)
+		less = 0;
 	}
     }
 
@@ -761,13 +790,13 @@ win_equal(next_curwin, redraw)
 	if (wp == next_curwin && less)
 	{
 	    less = 0;
-	    temp = p_wh - MIN_ROWS;
+	    temp = p_wh - p_wmh;
 	    if (temp > total)
 		temp = total;
 	}
 	else
 	    temp = (total - less + ((unsigned)wincount >> 1)) / wincount;
-	new_height = MIN_ROWS + temp;
+	new_height = p_wmh + temp;
 	if (wp->w_winpos != winpos || wp->w_height != new_height)
 	{
 	    wp->w_redr_type = NOT_VALID;
@@ -846,11 +875,11 @@ close_window(win, free_buf)
 	if (wp->w_buffer != curbuf)
 	{
 	    other_buffer = TRUE;
-	    apply_autocmds(EVENT_BUFLEAVE, NULL, NULL, FALSE);
+	    apply_autocmds(EVENT_BUFLEAVE, NULL, NULL, FALSE, curbuf);
 	    if (!win_valid(win))
 		return;
 	}
-	apply_autocmds(EVENT_WINLEAVE, NULL, NULL, FALSE);
+	apply_autocmds(EVENT_WINLEAVE, NULL, NULL, FALSE, curbuf);
 	if (!win_valid(win))
 	    return;
     }
@@ -889,7 +918,7 @@ close_window(win, free_buf)
 #ifdef AUTOCMD
 	if (other_buffer)
 	    /* careful: after this wp and win may be invalid! */
-	    apply_autocmds(EVENT_BUFENTER, NULL, NULL, FALSE);
+	    apply_autocmds(EVENT_BUFENTER, NULL, NULL, FALSE, curbuf);
 #endif
     }
 
@@ -971,6 +1000,7 @@ close_others(message, forceit)
     {
 	win_new_height(curwin, curwin->w_height + curwin->w_status_height);
 	curwin->w_status_height = 0;
+	comp_col();
     }
     if (message)
 	update_screen(NOT_VALID);
@@ -1016,6 +1046,10 @@ win_goto(wp)
 	end_visual_mode();
 	redraw_curbuf_later(NOT_VALID);
     }
+    VIsual_reselect = FALSE;
+#ifdef USE_GUI
+    need_mouse_correct = TRUE;
+#endif
     win_enter(wp, TRUE);
 }
 
@@ -1058,12 +1092,12 @@ win_enter(wp, undo_sync)
 	 */
 	if (wp->w_buffer != curbuf)
 	{
-	    apply_autocmds(EVENT_BUFLEAVE, NULL, NULL, FALSE);
+	    apply_autocmds(EVENT_BUFLEAVE, NULL, NULL, FALSE, curbuf);
 	    other_buffer = TRUE;
 	    if (!win_valid(wp))
 		return;
 	}
-	apply_autocmds(EVENT_WINLEAVE, NULL, NULL, FALSE);
+	apply_autocmds(EVENT_WINLEAVE, NULL, NULL, FALSE, curbuf);
 	if (!win_valid(wp))
 	    return;
     }
@@ -1082,19 +1116,20 @@ win_enter(wp, undo_sync)
     }
     curwin = wp;
     curbuf = wp->w_buffer;
+    adjust_cursor();
     changed_line_abv_curs();	/* assume cursor position needs updating */
 
 #ifdef AUTOCMD
-    apply_autocmds(EVENT_WINENTER, NULL, NULL, FALSE);
+    apply_autocmds(EVENT_WINENTER, NULL, NULL, FALSE, curbuf);
     if (other_buffer)
-	apply_autocmds(EVENT_BUFENTER, NULL, NULL, FALSE);
+	apply_autocmds(EVENT_BUFENTER, NULL, NULL, FALSE, curbuf);
 #endif
 
     maketitle();
     curwin->w_redr_status = TRUE;
 
 	    /* set window height to desired minimal value */
-    if (p_wh && curwin->w_height < p_wh)
+    if (curwin->w_height < p_wh)
 	win_setheight((int)p_wh);
 #ifdef USE_MOUSE
     setmouse();			/* in case jumped to/from help buffer */
@@ -1165,6 +1200,10 @@ win_free(wp)
 
 #ifdef HAVE_PYTHON
     python_window_free(wp);
+#endif
+
+#ifdef HAVE_TCL
+    tcl_window_free(wp);
 #endif
 
 #ifdef WANT_EVAL
@@ -1283,10 +1322,10 @@ screen_new_rows()
     {
 	for (wp = lastwin; wp; wp = wp->w_prev)
 	{
-	    if (wp->w_height - MIN_ROWS < -extra_lines)
+	    if (wp->w_height - p_wmh < -extra_lines)
 	    {
-		extra_lines += wp->w_height - MIN_ROWS;
-		win_new_height(wp, MIN_ROWS);
+		extra_lines += wp->w_height - p_wmh;
+		win_new_height(wp, (int)p_wmh);
 	    }
 	    else
 	    {
@@ -1343,16 +1382,32 @@ win_setheight(height)
     int	    row;
     int	    run;
 
-    if (height < MIN_ROWS)	/* need at least some lines */
-	height = MIN_ROWS;
+    if (p_wmh == 0)
+    {
+	/* Always keep current window at least one line high, even when
+	 * 'winminheight' is zero */
+	if (height == 0)	/* need at least one line */
+	{
+	    height = 1;
+	    room = 1;
+	}
+	else
+	    room = p_wmh;	/* count 'winminheight' for the curr. window */
+    }
+    else
+    {
+	if (height < p_wmh)	/* need at least some lines */
+	    height = p_wmh;
+	room = p_wmh;		/* count 'winminheight' for the curr. window */
+    }
+
 /*
  * compute the room we have from all the windows
  */
-    room = MIN_ROWS;		/* count the MIN_ROWS for the current window */
     room_cmdline = Rows - p_ch;
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
     {
-	room += wp->w_height - MIN_ROWS;
+	room += wp->w_height - p_wmh;
 	room_cmdline -= wp->w_height + wp->w_status_height;
     }
 /*
@@ -1390,10 +1445,10 @@ win_setheight(height)
 	    wp = curwin->w_prev;	/* 2nd run: start with prev window */
 	while (wp != NULL && take != 0)
 	{
-	    if (wp->w_height - take < MIN_ROWS)
+	    if (wp->w_height - take < p_wmh)
 	    {
-		take -= wp->w_height - MIN_ROWS;
-		win_new_height(wp, MIN_ROWS);
+		take -= wp->w_height - p_wmh;
+		win_new_height(wp, (int)p_wmh);
 	    }
 	    else
 	    {
@@ -1421,7 +1476,35 @@ win_setheight(height)
     update_screen(NOT_VALID);
 }
 
+/*
+ * Check 'winminheight' for a valid value.
+ */
+    void
+win_setminheight()
+{
+    int		room;
+    int		first = TRUE;
+    WIN		*wp;
+
+    /* loop until there is a 'winminheight' that is possible */
+    while (p_wmh > 0)
+    {
+	room = -p_wh;
+	for (wp = firstwin; wp != NULL; wp = wp->w_next)
+	    room += wp->w_height - p_wmh;
+	if (room >= 0)
+	    break;
+	--p_wmh;
+	if (first)
+	{
+	    EMSG(e_noroom);
+	    first = FALSE;
+	}
+    }
+}
+
 #ifdef USE_MOUSE
+
     void
 win_drag_status_line(offset)
     int	    offset;
@@ -1429,7 +1512,7 @@ win_drag_status_line(offset)
     WIN	    *wp;
     int	    room;
     int	    row;
-    int	    up;		    /* if TRUE, drag status line up, otherwise down */
+    int	    up;		/* if TRUE, drag status line up, otherwise down */
 
     if (offset < 0)
     {
@@ -1441,9 +1524,12 @@ win_drag_status_line(offset)
 
     if (up) /* drag up */
     {
-	room = 0;
+	if (p_wmh == 0)
+	    room = -1;	/* current window should be at least one line */
+	else
+	    room = 0;
 	for (wp = curwin; wp != NULL && room < offset; wp = wp->w_prev)
-	    room += wp->w_height - MIN_ROWS;
+	    room += wp->w_height - p_wmh;
 	wp = curwin->w_next;		    /* put wp at window that grows */
     }
     else    /* drag down */
@@ -1457,7 +1543,7 @@ win_drag_status_line(offset)
 	else
 	    room -= p_ch;
 	for (wp = curwin->w_next; wp != NULL && room < offset; wp = wp->w_next)
-	    room += wp->w_height - MIN_ROWS;
+	    room += wp->w_height - p_wmh;
 	wp = curwin;			    /* put wp at window that grows */
     }
 
@@ -1476,10 +1562,16 @@ win_drag_status_line(offset)
 
     while (wp != NULL && offset > 0)
     {
-	if (wp->w_height - offset < MIN_ROWS)
+	if (wp->w_height - offset <= p_wmh)
 	{
-	    offset -= wp->w_height - MIN_ROWS;
-	    win_new_height(wp, MIN_ROWS);
+	    offset -= wp->w_height - p_wmh;
+	    if (wp == curwin && p_wmh == 0)
+	    {
+		win_new_height(wp, 1);
+		offset += 1;
+	    }
+	    else
+		win_new_height(wp, (int)p_wmh);
 	}
 	else
 	{
@@ -1517,6 +1609,7 @@ win_new_height(wp, height)
 				    + FRACTION_MULT / 2) / (long)wp->w_height;
 
     wp->w_height = height;
+    wp->w_skipcol = 0;
 
     lnum = wp->w_cursor.lnum;
     if (lnum < 1)		/* can happen when starting up */
@@ -1600,8 +1693,14 @@ command_height(old_p_ch)
 		    break;
 		}
 		h = wp->w_height - (p_ch - old_p_ch);
-		if (h < MIN_ROWS)
-		    h = MIN_ROWS;
+		if (p_wmh == 0)
+		{
+		    /* don't make current window zero lines */
+		    if (wp == curwin && h < 1)
+			h = 1;
+		}
+		else if (h < p_wmh)
+		    h = p_wmh;
 		old_p_ch += wp->w_height - h;
 		win_new_height(wp, h);
 	    }
@@ -1625,28 +1724,32 @@ command_height(old_p_ch)
     void
 last_status()
 {
+    WIN		*wp;
+
     if (lastwin->w_status_height)
     {
-		    /* remove status line */
+	/* remove status line */
 	if (p_ls == 0 || (p_ls == 1 && firstwin == lastwin))
 	{
 	    win_new_height(lastwin, lastwin->w_height + 1);
 	    lastwin->w_status_height = 0;
+	    comp_col();
 	}
     }
-    else
+    else if (p_ls == 2 || (p_ls == 1 && firstwin != lastwin))
     {
-	/* add status line */
-	if (p_ls == 2 || (p_ls == 1 && firstwin != lastwin))
-	{
-	    if (lastwin->w_height <= MIN_ROWS)	    /* can't do it */
-		emsg(e_noroom);
-	    else
+	/* go to first window with enough room for a win_new_height(-1) */
+	for (wp = lastwin; wp->w_height <= p_wmh; wp = wp->w_prev)
+	    if (wp == NULL)
 	    {
-		win_new_height(lastwin, lastwin->w_height - 1);
-		lastwin->w_status_height = 1;
+		emsg(e_noroom);
+		return;
 	    }
-	}
+	win_new_height(wp, wp->w_height - 1);
+	win_comp_pos();
+	lastwin->w_status_height = 1;
+	comp_col();
+	update_screen(CLEAR);
     }
 }
 
@@ -1828,7 +1931,7 @@ find_file_in_path(ptr, len, options, count)
 		    else		/* "./path": move "path" */
 		    {
 			len -= 2;
-			vim_memmove(file_name + curr_path_len, file_name + 2,
+			mch_memmove(file_name + curr_path_len, file_name + 2,
 								 (size_t)len);
 		    }
 		    STRNCPY(file_name, curr_path, curr_path_len);
@@ -2066,11 +2169,13 @@ min_rows()
     int	    total;
 
     if (firstwin == NULL)	/* not initialized yet */
-	return MIN_ROWS + 1;	/* one window plus command line */
+	return MIN_LINES;
 
     total = p_ch;	/* count the room for the status line */
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
-	total += MIN_ROWS + wp->w_status_height;
+	total += p_wmh + wp->w_status_height;
+    if (p_wmh == 0)
+	total += 1;	/* at least one window should have a line! */
     return total;
 }
 

@@ -18,6 +18,7 @@ int win_alloc_lsize __ARGS((WIN *wp));
 void win_free_lsize __ARGS((WIN *wp));
 void screen_new_rows __ARGS((void));
 void win_setheight __ARGS((int height));
+void win_setminheight __ARGS((void));
 void win_drag_status_line __ARGS((int offset));
 void win_comp_scroll __ARGS((WIN *wp));
 void command_height __ARGS((long old_p_ch));

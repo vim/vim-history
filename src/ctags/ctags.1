@@ -1,83 +1,64 @@
-.TH CTAGS 1 "Version 2.0.2" "Darren Hiebert"
+.TH CTAGS 1 "Version 2.3" "Darren Hiebert"
+
 
 .SH NAME
 ctags \- Generate C and C++ language tag files for use with
 .BR vi (1)
 
+
 .SH SYNOPSIS
 .TP 6
-\fBctags\fP
-[
-.B \-aBeFnNuwWx
-] [
-.BI \-f " tagfile"
-] [
-.BI \-h " list"
-]
-.br
-[
-.BI \-i " types"
-] [
-.BI \-I " ignorelist"
-] [
-.BI \-L " listfile"
-]
-.br
-[
-.BI \-p " path"
-] [
-.BI \-o " tagfile"
-] [ \fB--append\fP ]
-.br
-[ \fB--excmd=\fIm\fR|\fIn\fR|\fIp\fR ] [ \fB--format=\fIlevel\fR ]
-[ \fB--help\fR ]
-.br
-[ \fB--if0\fR ] [ \fB--sort\fR ] [ \fB--totals\fR ] [ \fB--version\fR ]
-.br
-[
-.I file(s)
-]
+\fBctags\fR
+[\fB-aBeFnNRux\fR]
+[\fB-f \fItagfile\fR]
+[\fB-h \fIlist\fR]
+[\fB-i \fItypes\fR]
+[\fB-I \fIignorelist\fR]
+[\fB-L \fIlistfile\fR]
+[\fB-p \fIpath\fR]
+[\fB-o \fItagfile\fR]
+[\fB--append\fR]
+[\fB--excmd=\fIm\fR|\fIn\fR|\fIp\fR]
+[\fB--format=\fIlevel\fR]
+[\fB--help\fR]
+[\fB--if0\fR]
+[\fB--lang=\fIc\fR|\fIc++\fR|\fIjava\fR]
+[\fB--langmap=\fImap(s)\fR]
+[\fB--recurse\fR]
+[\fB--sort\fR]
+[\fB--totals\fR]
+[\fB--version\fR]
+[\fIfile(s)\fR]
 
 .br
 .br
 .TP 6
 \fBetags\fP
-[
-.B \-ax
-] [
-.BI \-f " tagfile"
-] [
-.BI \-h " list"
-] [
-.BI \-i " types"
-]
-.br
-[
-.BI \-I " ignorelist"
-] [
-.BI \-L " listfile"
-] [
-.BI \-p " path"
-]
-.br
-[
-.BI \-o " tagfile"
-] [ \fB--append\fP ] [
-.B \--help
-] [ \fB--if0\fP ]
-.br
-[ \fB--totals\fP ] [
-.B --version
-] [
-.I file(s)
-]
+[\fB-aRx\fR]
+[\fB-f \fItagfile\fR]
+[\fB-h \fIlist\fR]
+[\fB-i \fItypes\fR]
+[\fB-I \fIignorelist\fR]
+[\fB-L \fIlistfile\fR]
+[\fB-p \fIpath\fR]
+[\fB-o \fItagfile\fR]
+[\fB--append\fR]
+[\fB--help\fR]
+[\fB--if0\fR]
+[\fB--lang=\fIc\fR|\fIc++\fR|\fIjava\fR]
+[\fB--langmap=\fImap(s)\fR]
+[\fB--recurse\fR]
+[\fB--totals\fR]
+[\fB--version\fR]
+[\fIfile(s)\fR]
+
 
 .SH DESCRIPTION
 The \fBctags\fP and \fBetags\fP programs (hereinafter collectively referred to
 as \fBctags\fP, except where distinguished) generate an index (or "tag") file
-of C and C++ language objects found in \fIfile(s)\fP that allows these items
-to be quickly and easily located by a text editor or other utility. A "tag"
-signifies a C language object for which an index entry is available (or,
+for C, C++ and Java language objects found in \fIfile(s)\fP that allows these
+items to be quickly and easily located by a text editor or other utility. A
+"tag" signifies a C language object for which an index entry is available (or,
 alternatively, the index entry created for that object).
 .PP
 Alternatively, \fBctags\fP can generate a cross reference file which lists, in
@@ -90,30 +71,29 @@ Tag index files are supported by the \fBvi\fP(1) editor and its derivatives
 which allow the user to locate the object associated with a name appearing in
 a source file and jump to the file and line which defines the name.
 
-The following types of tags are supported by \fBctags\fP:
+The following types of tags are supported by \fBctags\fP (some are optional):
 .PP
 .RS 4
-class names
 .br
 macro definitions (names created by #define)
-.br
-enum names
 .br
 enumerators (values inside an enumeration)
 .br
 function (method) definitions
 .br
-function (method) prototypes/declarations
+class, enum, struct, and union names
 .br
-class, structure, and union data members
+interface names (Java)
 .br
-struct names
+namespace names (C++)
 .br
 typedefs
 .br
-union names
+variables (definitions and extern declarations)
 .br
-variables
+function prototypes and declarations
+.br
+data members
 .RE
 .PP
 .B Ctags
@@ -122,11 +102,42 @@ visibility). This means that, with the exception of macro definitions, only
 objects defined outside of brace enclosed function blocks are candidates for a
 tag.
 
+
+.SH SOURCE FILES
+.PP
+Unless the \fB--lang\fP option is specified, the language of each source file
+is automatically selected based upon its file extension, according to the
+following default mapping.
+.PP
+.PD 0
+.RS 4
+.TP 8
+C
+*.c
+.TP 8
+C++
+*.C, *.c++, *.cc, *.cpp, *.cxx and any file considered a header file according
+to the \fB-h\fP option.
+.TP 8
+Java
+*.java
+.PD 1
+.RE
+.PP
+All other files extensions are ignored. This permits running \fBctags\fP on
+all files in either a single directory (e.g. "ctags *"), or all files in an
+entire source directory tree (e.g. "ctags -R"), since only those files whose
+extensions are known to \fBctags\fP will be scanned. This default mapping of
+file extensions to source language may be changed by using the \fB--langmap\fP
+option. Automatic selection of the source language may be disabled by using
+the \fB--lang\fP option.
+
+
 .SH OPTIONS
 .PP
 Despite the wealth of available options, defaults are set so that \fBctags\fP
-is most commonly executed without any options (e.g. "ctags *.[ch]"), which
-will create a tag file in the current directory for the specified files. The
+is most commonly executed without any options (e.g. "ctags *"), which will
+create a tag file in the current directory for the specified files. The
 options described below are provided merely to allow custom tailoring to meet
 special needs.
 .PP
@@ -169,19 +180,27 @@ Use forward searching patterns (e.g. /regexp/) (default).
 
 .TP 5
 .BI \-h  " list"
-Specifies a list of file extensions used for headers, separated by either
-periods or commas. The default list is ".h.H.hh.hpp.hxx.h++".
+Specifies a list of file extensions used for headers, separated by periods.
+This option affects how the scoping of tag types is interpreted (i.e. whether
+or not they are considered as static). All tag types other than functions
+(methods) and variables are considered static when they appear in a non-header
+file (since they cannot be seen outside of that file) and non-static when they
+appear in a header file (since they can be seen in other files wherever that
+header file is included). See also the \fBS\fP modifier of the  \fB-i\fP
+option. The default list is ".h.H.hh.hpp.hxx.h++".
 
 .TP 5
 .BI \-i " types"
 Specifies the list of tag types to include in the output file.
 .I Types
-is a group of letters designating the types of tags affected. Each letter or
-group of letters may be preceded by either a '+' sign (default, if omitted) to
-add it to those already included, a '-' sign to exclude it from the list (e.g.
-to exclude a default tag type), or an '=' sign to include its corresponding
-tag type at the exclusion of those not listed. Tags for the following language
-contructs are supported (default settings are shown in brackets):
+is a group of one-letter flags designating the types of tags affected. Each
+letter or group of letters may be preceded by either a '+' sign (default, if
+omitted) to add it to those already included, a '-' sign to exclude it from
+the list (e.g. to exclude a default tag type), or an '=' sign to include its
+corresponding tag type at the exclusion of those not listed. Tags for the
+following language contructs are supported (default settings are on except as
+noted):
+.PP
 .RS 8
 .PD 0
 .TP 4
@@ -192,7 +211,7 @@ class names
 macro definitions
 .TP 4
 .I e
-enumerators (values inside an enumeration)
+enumerators
 .TP 4
 .I f
 function (or method) definitions
@@ -200,11 +219,17 @@ function (or method) definitions
 .I g
 enumeration names
 .TP 4
+.I i
+interface names (Java only)
+.TP 4
 .I m
-class, structure, and union data members
+data members [off]
+.TP 4
+.I i
+namespace names (C++ only)
 .TP 4
 .I p
-external function prototypes
+function prototypes and declarations [off]
 .TP 4
 .I s
 structure names
@@ -217,35 +242,48 @@ union names
 .TP 4
 .I v
 variable definitions
+.TP 4
+.I x
+extern variable declarations [off]
 .RE
+.PD 1
+.PP
 .RS 5
-In addition, the following modifiers are accepted:
+In addition to the above flags, the following one-letter modifiers are
+accepted:
 .RE
+.PP
+.PD 0
 .RS 8
 .TP 4
 .I C
-Include a second tag entry for each class method and member (when selected) in
-the form "class::member". This allows locating class-qualified tags (e.g.
-":tag class::member" in \fBvi\fP(1)).
+For C++ and Java, include an extra, class-qualified tag entry for each class
+member (function/method and data) in the form "class::member" (C++) or
+"class.member" (Java). This allows locating class-qualified tags (e.g. ":tag
+class::member" in \fBvi\fP(1)). This is disabled by default because this could
+potentially more than double the size of the tag file.
 .RE
 .RS 8
 .TP 4
 .I F
 Include tags for the basename of each source file. This permits jumping to a
-file by its name (e.g. ":tag file.c" in \fBvi\fP(1)).
+file by its name (e.g. ":tag file.c" in \fBvi\fP(1)). This is disabled by
+default.
 .TP 4
 .I S
 Include static tags (those not visible outside of a single source file).
 Function and variable definitions are considered static only when their
 definitions are preceded with the "static" keyword. All other types of tags
-are considered static when they appear in a non-header file (see the -h
-option).
-.RE
-.RS 5
-The default value for \fItypes\fP is "=cdefgtuvS" (i.e all tag types except
-for structure/class members and function prototypes; include static tags).
+are considered static when they appear in a non-header file, and non-static
+when they appear in a header file. See also the \fB-h\fP option. This is
+enabled by default.
 .RE
 .PD 1
+.PP
+.RS 5
+.PP
+The default value for \fItypes\fP is "=cdefgintuvCS".
+.RE
 
 .TP 5
 .BI \-I " ignorelist"
@@ -269,7 +307,7 @@ illustrate this point.
 .PP
 .RS
 /* creates a global version string in module */
-MODULE_VERSION("$Revision: 5.3 $")
+MODULE_VERSION("$Revision: 6.10 $")
 .RE
 .PP
 .RS 5
@@ -313,23 +351,19 @@ Alternative for \fB-f\fP.
 
 .TP 5
 .BI \-p " path"
-Use \fIpath\fP as the default directory for all supplied source files (whether
+Use \fIpath\fP as the default directory for each supplied source file (whether
 supplied on the command line or in a file specified with the \fB-L\fP option),
-unless the source file is already specified as an absolute path. Note that
-this will not work together with wildcards in the filenames, since they are
-expanded by the shell.
+unless the source file is already specified as an absolute path. The supplied
+\fIpath\fP is merely prepended to the each non-absolute source file name,
+adding any necessary path separator.
+
+.TP 5
+.B \-R
+Equivalent to \fB--recurse\fI=yes\fR.
 
 .TP 5
 .B \-u
 Equivalent to \fB--sort\fI=no\fR.
-
-.TP 5
-.B \-w
-Exclude warnings about duplicate tags (default).
-
-.TP 5
-.B \-W
-Generate warnings about duplicate tags.
 
 .TP 5
 .B \-x
@@ -338,7 +372,7 @@ instead of generating a tag file. The information contained in the output
 includes: the tag name; the kind of tag; the line number, file name, and
 source line (with extra white space condensed) of the file which defines the
 tag. No tag file is written and the following options will be ignored:
-\fB-aBfFno\fP, and \fB-i\fP\fI+P\fP. Example applications for this feature are
+\fB-aBefFno\fP, and \fB-i\fP\fI+P\fP. Example applications for this feature are
 generating a listing of all functions (including statics) located in a source
 file (e.g. \fBctags -xi\fP\fI=fS\fP \fIfile\fP), or generating a list of all
 externally visible global variables located in a source file (e.g. \fBctags
@@ -356,12 +390,12 @@ Determines the type of EX command used to locate tags in the source file. The
 valid values for \fItype\fP are (either the entire word or the first letter is
 accepted):
 .RS 5
-.TP 10
+.TP 9
 .I number
 Places into the tag file line numbers in the source file where tags are located
 rather than patterns to be searched for. This has three advantages:
 .PD 0
-.RS 10
+.RS 9
 .TP 4
 1.
 Significantly reduces the size of the resulting tag file.
@@ -383,13 +417,13 @@ source code to which it is applied is not subject to change. Selecting this
 option type causes the following options to be ignored: \fB-BF\fP.
 .RE
 .PD 1
-.TP 10
+.TP 9
 .I pattern
 Uses EX search patterns for all tags, rather than the line numbers usually
 used for macro definitions. This has the advantage of not referencing obsolete
 line numbers when lines have been added or removed since the tag file was
 generated.
-.TP 10
+.TP 9
 .I mixed
 Uses line numbers for macro definition tags and EX patterns for everything
 else. This is the default format generated by the original \fBctags\fP and is,
@@ -420,11 +454,37 @@ conditionals are too complex follows all branches of a conditional. If the
 parameter is omitted, \fB=\fIyes\fR is implied. This option is off by default.
 
 .TP 5
+\fB--lang=\fIc\fR|\fIc++\fR|\fIjava\fR
+By default, \fBctags\fP automatically selects the language of a source file
+according to its file name extension, ignoring those files whose extensions
+are unknown to \fBctags\fP. This option forces the specified language to be
+used for every supplied file, instead of keying off of their extensions.
+
+.TP 5
+\fB--langmap=\fImap(s)\fR
+Overrides the default mapping between source language and file extension. Each
+comma-separated \fImap\fP consists of the source language name, a colon, and a
+list of extensions separated by periods. For example, to specify that files
+with extensions of .c, .ec, and .xs are to be treated as C language files, use
+"\fB--langmap=\fP\fIc:.c.ec.xs\fP". To also specify that files with extensions
+of .j are to be treated as Java language files, use
+"\fB--langmap=\fP\fIc:.c.ec.xs,java:.java.j\fP".
+
+.TP 5
+\fB--recurse=\fIyes\fR|\fIno\fR
+Recurse into directories encountered in the list of supplied files. If the
+list of supplied files is empty and no file list is specified with the
+\fB-L\fP option, then the current directory (i.e. ".") is assumed. On Unix,
+directories named "SCCS" are skipped, because files in these directories are
+not source code, even though they have the same names as the source code they
+relate to. Also on Unix, symbolic links are followed; if you don't like this,
+pipe the output of \fBfind\fP(1) into \fBctags -L-\fP instead. \fBNote:\fP
+This option is not supported on all platforms at present.
+
+.TP 5
 \fB--sort=\fIyes\fR|\fIno\fR
 Indicates whether the tag file should be sorted on the tag name (default is
-\fIyes\fP). Note that disabling sorting also disables the warning messages
-normally enabled by \fB-W\fP, because sorted tags are used to detect duplicate
-tags. Also note that the original \fBvi\fP(1) requires sorted tags. If the
+\fIyes\fP). Note that the original \fBvi\fP(1) requires sorted tags. If the
 parameter is omitted, \fB=\fIyes\fR is implied. This option is on by default
 for \fBctags\fR, and ignored for \fBetags\fR.
 
@@ -436,7 +496,9 @@ the current invocation of \fBctags\fP. If the parameter is omitted,
 
 .TP 5
 .B \--version
-Prints a version identifier for \fBctags\fP to standard output.
+Prints a version identifier for \fBctags\fP to standard output. This is
+guaranteed to always contain the string "Exuberant Ctags".
+
 
 .SH "OPERATIONAL DETAILS"
 For every one of the qualified objects which are discovered in the source
@@ -468,9 +530,9 @@ a single tab character
 an EX command to locate the tag within the file; generally a search pattern
 (either /pattern/ or ?pattern?) or line number (see \fB--excmd\fP). Tag file
 format 2 (see \fB--format\fP) extends this EX command under certain
-circumstances to include a set of extension flags embedded in an EX comment
-immediately appended to the EX command, which should make it backwards
-compatible with original \fBvi\fP(1).
+circumstances to include a set of extension flags (see \fBEXTENSION FLAGS\fP,
+below) embedded in an EX comment immediately appended to the EX command, which
+leaves it backwards compatible with original \fBvi\fP(1) implemenations.
 .RE
 .PD 1
 .PP
@@ -538,6 +600,14 @@ extern void foo __ARGS((int one, char two));
 Any name immediately preceding the "((" will be automatically ignored and
 the previous name will be used.
 .PP
+C++ operator definitions are specially handled. In the case of operators
+beginning with a non-identifer character (e.g. "operator ="), the name of the
+tag added to the tag file will be the operator prefixed by "operator", with no
+intervening white space (e.g. "operator="). In the case of operators beginning
+with identifer characters (e.g. "operator new"), the name of the tag added to
+the tag file will be simply the name of the operator, without a prefix (e.g.
+"new").
+.PP
 After creating or appending to the tag file, it is sorted by the tag name,
 removing identical tag lines.
 .PP
@@ -546,6 +616,79 @@ the editor to search for tags are identical to the paths specified for
 \fIfile(s)\fP on the command line. This means the if you want the paths for
 files to be relative to some directory, you must invoke \fBctags\fP with the
 same pathnames for \fIfile(s)\fP (this can be overridden with \fB-p\fP).
+
+.SH "EXTENSION FLAGS"
+Extension flags are tab-separated key-value pairs appended to the end of the
+EX command as a comment, as described above in \fBOPERATIONAL DETAILS\fP.
+These key value pairs appear in the general form "\fIkey\fP:\fIvalue\fP".
+The possible keys and the meaning of their values are as follows:
+.PP
+
+.TP 12
+.I class
+Indicates that this tag is a member of the class whose name is given by
+\fIvalue\fP.
+.PP
+
+.TP 12
+.I enum
+Indicates that this tag is a member of the enumeration whose name is given by
+\fIvalue\fP.
+.PP
+
+.TP 12
+.I file
+Indicates that the tag has a file-limited scope (i.e. is static to the file).
+This key has no corresponding value.
+.PP
+
+.TP 12
+.I kind
+Indicates the type of the tag. Its value is one of the corresponding
+one-letter flags described under the \fB-i\fP option, above. Alternatively,
+this key may be omitted, with only the value present (i.e. a field without a
+':' defaults to the \fBkind\fP key).
+.PP
+
+.TP 12
+.I interface
+Indicates that this tag is a member of the interface whose name is given by
+\fIvalue\fP.
+.PP
+
+.TP 12
+.I namespace
+Indicates that this tag is a member of the namespace whose name is given by
+\fIvalue\fP.
+.PP
+
+.TP 12
+.I private
+Indicates the visibility of this class member is private.
+This key has no corresponding value.
+
+.TP 12
+.I protected
+Indicates the visibility of this class member is protected.
+This key has no corresponding value.
+
+.TP 12
+.I public
+Indicates the visibility of this class member is public.
+This key has no corresponding value.
+
+.TP 12
+.I struct
+Indicates that this tag is a member of the structure whose name is given by
+\fIvalue\fP.
+.PP
+
+.TP 12
+.I union
+Indicates that this tag is a member of the union whose name is given by
+\fIvalue\fP.
+.PP
+
 
 .SH "ENVIRONMENT VARIABLES"
 .TP 8
@@ -580,6 +723,7 @@ Find a tag.
 .B Control-T
 Return to previous location before jump to tag (not widely implemented).
 
+
 .SH "HOW TO USE WITH GNU EMACS"
 Emacs will, by default, expect a tag file by the name "TAGS" in the current
 directory. Once the tag file is built, the following commands exercise the
@@ -602,16 +746,20 @@ For more commands, see the
 .I Tags
 topic in the Emacs info tree.
 
+
 .SH BUGS
-Because \fBctags\fP does not look inside brace enclosed function blocks, local
-declarations of classes, enum/struct/union tags, enumeration values and
-variables within a function will not have tags generated for them.
+Because \fBctags\fP does not look inside brace-enclosed function blocks, local
+definitions of objects within a function will not have tags generated for them.
+.PP
+Legacy C source code which uses C++ reserved keywords as variable or parameter
+names (e.g. "class", etc.) in a header file may fail to have correct tags
+generated for the objects using them. In order to properly handle such code,
+use the \fB--lang\fP option.
 .PP
 Note that when \fBctags\fP generates uses patterns for locating tags (see
 the \fB--excmd\fP option), it is entirely possible that the wrong line may be
-found by your editor if there exists another, identical, line (whose context
-prevents it from generating a tag) which is identical to the line containing
-the tag. The following example demonstrates this condition:
+found by your editor if there exists another source line which is identical to
+the line containing the tag. The following example demonstrates this condition:
 .PP
 .RS
 int variable;
@@ -633,7 +781,7 @@ Depending upon which editor you use and where in the code you happen to be, it
 is possible that the search pattern may locate the local parameter declaration
 in foo() before it finds the actual global variable definition, since the
 lines (and therefore their search patterns are identical). This can be avoided
-by use of the \fB-n\fP option.
+by use of the \fB--excmd=n\fP option.
 .PP
 Because \fBctags\fP is neither a preprocessor nor a compiler, some complex
 or obscure constructs can fool \fBctags\fP into either missing a tag or
@@ -667,6 +815,7 @@ preprocessor. The moral of the story: don't do this if you want a tag
 generated for it, or use the \fB-I\fP option to specify "INIT" as a keyword
 to be ignored.
 
+
 .SH FILES
 .TP 10
 .I tags
@@ -679,7 +828,7 @@ The default tag file created by \fBetags\fP.
 The official Exuberant Ctags web site at:
 .PP
 .RS 4
-http://home.hiwaay.net/~darren/ctags/
+http://darren.hiebert.com/ctags/index.html
 .RE
 .PP
 Also \fBex\fP(1), \fBvi\fP(1), \fBelvis\fP, or, better yet, \fBvim\fP, the
@@ -690,10 +839,12 @@ Pages web site at:
 http://www.vim.org/
 .RE
 
+
 .SH AUTHOR
-Darren Hiebert <darren@hiebert.com>
+Darren Hiebert <darren@hiebert.com>, <darren@hiwaay.net>
 .br
-http://home.hiwaay.net/~darren
+http://darren.hiebert.com/
+
 
 .SH MOTIVATION
 "Think ye at all times of rendering some service to every member of the human
@@ -705,6 +856,7 @@ to humanity."
 .PP
 .RS 10
 \-- From the Baha'i Writings
+
 
 .SH CREDITS
 This version of \fBctags\fP was originally derived from and inspired by the

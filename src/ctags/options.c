@@ -1,7 +1,7 @@
 /*****************************************************************************
-*   $Id: options.c,v 5.3 1998/03/13 04:19:11 darren Exp $
+*   $Id: options.c,v 6.11 1998/08/04 03:25:29 darren Exp $
 *
-*   Copyright (c) 1996-1997, Darren Hiebert
+*   Copyright (c) 1996-1998, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.
@@ -31,23 +31,23 @@
  *--------------------------------------------------------------------------*/
 
 #define CTAGS_INVOCATION  "\
-  Usage: ctags [-aBeFnNuwWx] [-{f|o} name] [-h list] [-i [+-=]types]\n\
+  Usage: ctags [-aBeFnNRux] [-{f|o} name] [-h list] [-i [+-=]types]\n\
                [-I list] [-L file] [-p path] [--append] [--excmd=n|p|m]\n\
-               [--format=level] [--help] [--if0] [--sort] [--totals]\n\
-               [--version] file(s)\n"
+               [--format=level] [--help] [--if0] [--lang=lang] [--recurse]\n\
+	       [--sort] [--totals] [--version] file(s)\n"
 
 #define ETAGS_INVOCATION  "\
-  Usage: etags [-ax] [-{f|o} name] [-h list] [-i [+-=]types] [-I list]\n\
-               [-L file] [-p path] [--append] [--help] [--if0] [--totals]\n\
-               [--version] file(s)\n"
+  Usage: etags [-aRx] [-{f|o} name] [-h list] [-i [+-=]types] [-I list]\n\
+               [-L file] [-p path] [--append] [--help] [--if0] [--lang=lang]\n\
+	       [--recurse] [--totals] [--version] file(s)\n"
 
 #define CTAGS_ENVIRONMENT	"CTAGS"
 #define ETAGS_ENVIRONMENT	"ETAGS"
 
 /*  The following separators are permitted for list options.
  */
-#define HEADER_SEPARATORS   ".,;"
-#define IGNORE_SEPARATORS   ",; \t\n"
+#define EXTENSION_SEPARATORS   "."
+#define IGNORE_SEPARATORS   ", \t\n"
 
 #ifndef DEFAULT_FILE_FORMAT
 # define DEFAULT_FILE_FORMAT	2
@@ -69,6 +69,22 @@ typedef struct {
 -   Globally shared
 ----------------------------------------------------------------------------*/
 
+static const char *const CExtensionList[] = {
+    "c", NULL
+};
+static const char *const CppExtensionList[] = {
+#if !defined(MSDOS) && !defined(WIN32) && !defined(OS2)
+    "C",
+#endif
+    "c++", "cc", "cpp", "cxx", NULL
+};
+static const char *const JavaExtensionList[] = {
+    "java", NULL
+};
+static const char *const HeaderExtensionList[] = {
+    "h", "H", "hh", "hpp", "hxx", "h++", NULL
+};
+
 optionValues Option = {
     {
 	TRUE,		/* -ic */
@@ -76,12 +92,15 @@ optionValues Option = {
 	TRUE,		/* -ie */
 	TRUE,		/* -if */
 	TRUE,		/* -ig */
+	TRUE,		/* -ii */
 	FALSE,		/* -im */
+	TRUE,		/* -in */
 	FALSE,		/* -ip */
 	TRUE,		/* -is */
 	TRUE,		/* -it */
 	TRUE,		/* -iu */
 	TRUE,		/* -iv */
+	FALSE,		/* -ix */
 	FALSE,		/* -iC */
 	FALSE,		/* -iF */
 	TRUE,		/* -iS */
@@ -96,12 +115,12 @@ optionValues Option = {
     EX_MIX,		/* -n, --excmd */
 #endif
     NULL,		/* -p */
+    FALSE,		/* -R */
     TRUE,		/* -u, --sort */
-    FALSE,		/* -w */
     FALSE,		/* -x */
     NULL,		/* -L */
     NULL,		/* -o */
-    { "h", "H", "hh", "hpp", "hxx", "h++", NULL },	    /* -h */
+    HeaderExtensionList,/* -h */
 #ifdef DEBUG
     0, 0,		/* -D, -b */
 #endif
@@ -109,6 +128,12 @@ optionValues Option = {
     FALSE,		/* brace formatting */
     DEFAULT_FILE_FORMAT,/* --format */
     FALSE,		/* --if0 */
+    LANG_AUTO,		/* --lang */
+    {			/* --langmap */
+	CExtensionList,
+	CppExtensionList,
+	JavaExtensionList,
+    },
     FALSE		/* --totals */
 };
 
@@ -145,22 +170,25 @@ static optionDescription LongOptionDescription[] = {
  {1,"       a default tag type), or an '=' sign to include its corresponding"},
  {1,"       tag type at the exclusion of those not listed. A space separating"},
  {1,"       the option letter from the list is optional. The following tag"},
- {1,"       types are supported (default settings are shown in brackets):"},
- {1,"          c   class names [on]"},
- {1,"          d   macro definitions [on]"},
- {1,"          e   enumerators (values inside an enumeration) [on]"},
- {1,"          f   function (or method) definitions [on]"},
- {1,"          g   enumeration names [on]"},
- {1,"          m   class, structure, and union data members [off]"},
- {1,"          p   external function prototypes [off]"},
- {1,"          s   structure names [on]"},
- {1,"          t   typedefs [on]"},
- {1,"          u   union names [on]"},
- {1,"          v   variable declarations [on]"},
+ {1,"       types are supported (default settings are on except as noted):"},
+ {1,"          c   class names"},
+ {1,"          d   macro definitions"},
+ {1,"          e   enumerators (values inside an enumeration)"},
+ {1,"          f   function (or method) definitions"},
+ {1,"          g   enumeration names"},
+ {1,"          i   interface names (Java only)"},
+ {1,"          m   data members [off]"},
+ {1,"          n   namespace names (C++ only)"},
+ {1,"          p   function prototypes [off]"},
+ {1,"          s   structure names"},
+ {1,"          t   typedefs"},
+ {1,"          u   union names"},
+ {1,"          v   variable definitions"},
+ {1,"          x   external variable declarations [off]"},
  {1,"       In addition, the following modifiers are accepted:"},
- {1,"          C   include extra \"class::member\" tag entries [off]"},
+ {1,"          C   include extra, class-qualified member tag entries [off]"},
  {1,"          F   include source filenames as tags [off]"},
- {1,"          S   include static tags (special case of above types) [on]"},
+ {1,"          S   include static tags"},
  {1,"  -I <list | file>"},
  {1,"       A list of tokens to ignore is read from either the command line,"},
  {1,"       or the specified file (if leading character is '.', '/', or '\\')."},
@@ -174,9 +202,12 @@ static optionDescription LongOptionDescription[] = {
  {1,"  -o   Alternative for -f."},
  {1,"  -p <path>"},
  {1,"       Default path to use for all (relative path) filenames."},
+#ifdef RECURSE_SUPPORTED
+ {1,"  -R   Equivalent to --recurse=yes."},
+#else
+ {1,"  -R   Not supported on this platform."},
+#endif
  {0,"  -u   Equivalent to --sort=no."},
- {0,"  -w   Exclude warnings about duplicate tags (default)."},
- {0,"  -W   Generate warnings about duplicate tags (disabled if not sorted)."},
  {1,"  -x   Print a tabular cross reference file to standard output."},
  {1,"  --append=[yes|no]"},
  {1,"       Indicates whether tags should be appended to existing tag file"},
@@ -198,6 +229,14 @@ static optionDescription LongOptionDescription[] = {
  {1,"  --if0=[yes|no]"},
  {1,"       Indicates whether code within #if 0 conditional branches should"},
  {1,"       be examined for tags (default=no)."},
+ {1,"  --lang=[c|c++|java]"},
+ {1,"       Forces specified language, disabling automatic selection."},
+ {1,"  --recurse=[yes|no]"},
+#ifdef RECURSE_SUPPORTED
+ {1,"       Recurse into directories supplied on command line (default=no)."},
+#else
+ {1,"       Not supported on this platform."},
+#endif
  {0,"  --sort=[yes|no]"},
  {0,"       Indicates whether tags should be sorted (default=yes)."},
  {1,"  --totals=[yes|no]"},
@@ -244,17 +283,25 @@ static void printProgramIdentification __ARGS((FILE *const where));
 static void printInvocationDescription __ARGS((FILE *const where));
 static void printOptionDescriptions __ARGS((const optionDescription *const optDesc, FILE *const where));
 static void printHelp __ARGS((const optionDescription *const optDesc, FILE *const where));
-static void readExtensionList __ARGS((char *const list));
+static char *readOptionArg __ARGS((const int option, char **const pArg, char *const *const argList, int *const pArgNum));
+static unsigned int countExtensions __ARGS((const char *const list));
+static const char *const *readExtensionList __ARGS((const char *const list));
 static void clearTagList __ARGS((void));
 static void applyTagInclusionList __ARGS((const char *const list));
+static char *saveString __ARGS((const char *const string));
+static void resizeIgnoreList __ARGS((void));
+static void saveIgnoreToken __ARGS((const char *const ignoreToken));
 static void readIgnoreList __ARGS((char *const list));
 static void readIgnoreListFromFile __ARGS((const char *const fileName));
-static char *readOptionArg __ARGS((const int option, char **const pArg, char *const *const argList, int *const pArgNum));
 static void processHeaderListOption __ARGS((const int option, char **const argP, char *const *const argList, int *const argNumP));
 static void processIgnoreOption __ARGS((const int option, char **const argP, char *const *const argList, int *const argNumP));
 static boolean getBooleanOption __ARGS((const char *const optionName, const char *const parameter, const boolean defaultValue));
 static void processExcmdOption __ARGS((const char *const optionName, const char *const parameter));
 static void processFormatOption __ARGS((const char *const optionName, const char *const parameter));
+static langType getLangType __ARGS((const char *const name));
+static void processLangOption __ARGS((const char *const optionName, const char *const parameter));
+static void installLangMap __ARGS((char *const map));
+static void processLangMapOption __ARGS((const char *const optionName, const char *const parameter));
 static void processLongOption __ARGS((const char *const optionString));
 static void processCompoundOption __ARGS((const int option, char **const pArg, char *const *const argList, int *const pArgNum));
 static boolean processSimpleOption __ARGS((const int option));
@@ -325,39 +372,91 @@ static void printHelp( optDesc, where )
     printOptionDescriptions(optDesc, where);
 }
 
-/*  Reads a list of header file extensions.
- */
-static void readExtensionList( list )
-    char *const list;
+static char *readOptionArg( option, pArg, argList, pArgNum )
+    const int option;
+    char **const pArg;
+    char *const *const argList;
+    int *const pArgNum;
 {
-    const char *extension = strtok(list, HEADER_SEPARATORS);
-    int extIndex = 0;
+    char *list;
 
-    while (extension != NULL  &&  extIndex < MaxHeaderExtensions)
+    if ((*pArg)[0] != '\0')	    /* does list immediately follow option? */
+    {
+	list = *pArg;
+	*pArg += strlen(*pArg);
+    }
+    else if ((list = argList[++(*pArgNum)]) == NULL) /* at least 1 more arg? */
+	error(FATAL, "-%c: Parameter missing", option);
+
+    DebugStatement( if (debug(DEBUG_OPTION)) fputs(list, errout); )
+
+    return list;
+}
+
+/*  Reads a list of file extensions.
+ */
+static unsigned int countExtensions( list )
+    const char *const list;
+{
+    unsigned int count = 0;
+    const char *p;
+
+    /*  Increase count by one if list does not begin with a separator.
+     */
+    if (strchr(EXTENSION_SEPARATORS, list[0]) == NULL)
+	++count;
+
+    for (p = list  ;  *p != '\0'  ;  ++p)
+    {
+	if (strchr(EXTENSION_SEPARATORS, *p) != NULL)
+	    ++count;
+    }
+    return count + 1;
+}
+
+static const char *const *readExtensionList( list )
+    const char *const list;
+{
+    int extIndex = 0;
+    const char *extension;
+    const unsigned int numExtensions = countExtensions(list);
+    char *const extensionList  = (char *)malloc(strlen(list) + 1);
+    const char **const extensionArray = (const char **)malloc(
+					(numExtensions + 1) * sizeof(char *));
+
+    if (extensionList == NULL  ||  extensionArray == NULL)
+	error(FATAL | PERROR, "");
+    strcpy(extensionList, list);
+    extension = strtok(extensionList, EXTENSION_SEPARATORS);
+    while (extension != NULL)
     {
 	DebugStatement( if (debug(DEBUG_STATUS))
-			    printf("header extension: %s\n", extension); )
-	Option.headerExt[extIndex++] = extension;
-	extension = strtok(NULL, HEADER_SEPARATORS);
+			    printf("extension: %s\n", extension); )
+	extensionArray[extIndex++] = extension;
+	extension = strtok(NULL, EXTENSION_SEPARATORS);
     }
-    Option.headerExt[extIndex] = NULL;
+    extensionArray[extIndex] = NULL;
+
+    return extensionArray;
 }
 
 static void clearTagList()
 {
-    Option.include.classNames	= FALSE;	/* -ic */
-    Option.include.defines	= FALSE;	/* -id */
-    Option.include.enumerators	= FALSE;	/* -ie */
-    Option.include.functions	= FALSE;	/* -if */
-    Option.include.enumNames	= FALSE;	/* -ig */
-    Option.include.members	= FALSE;	/* -im */
-    Option.include.prototypes	= FALSE;	/* -ip */
-    Option.include.structNames	= FALSE;	/* -is */
-    Option.include.typedefs	= FALSE;	/* -it */
-    Option.include.unionNames	= FALSE;	/* -iu */
-    Option.include.variables	= FALSE;	/* -iC */
-    Option.include.sourceFiles	= FALSE;	/* -iF */
-    Option.include.statics	= FALSE;	/* -iS */
+    Option.include.classNames		= FALSE;	/* -ic */
+    Option.include.defines		= FALSE;	/* -id */
+    Option.include.enumerators		= FALSE;	/* -ie */
+    Option.include.functions		= FALSE;	/* -if */
+    Option.include.enumNames		= FALSE;	/* -ig */
+    Option.include.interfaceNames	= FALSE;	/* -ii */
+    Option.include.members		= FALSE;	/* -im */
+    Option.include.namespaceNames	= FALSE;	/* -in */
+    Option.include.prototypes		= FALSE;	/* -ip */
+    Option.include.structNames		= FALSE;	/* -is */
+    Option.include.typedefs		= FALSE;	/* -it */
+    Option.include.unionNames		= FALSE;	/* -iu */
+    Option.include.variables		= FALSE;	/* -iC */
+    Option.include.sourceFiles		= FALSE;	/* -iF */
+    Option.include.statics		= FALSE;	/* -iS */
 }
 
 static void applyTagInclusionList( list )
@@ -382,18 +481,79 @@ static void applyTagInclusionList( list )
 	    case 'e':	Option.include.enumerators	= mode;		break;
 	    case 'f':	Option.include.functions	= mode;		break;
 	    case 'g':	Option.include.enumNames	= mode;		break;
+	    case 'i':	Option.include.interfaceNames	= mode;		break;
 	    case 'm':	Option.include.members		= mode;		break;
+	    case 'n':	Option.include.namespaceNames	= mode;		break;
 	    case 'p':	Option.include.prototypes	= mode;		break;
 	    case 's':	Option.include.structNames	= mode;		break;
 	    case 't':	Option.include.typedefs		= mode;		break;
 	    case 'u':	Option.include.unionNames	= mode;		break;
 	    case 'v':	Option.include.variables	= mode;		break;
+	    case 'x':	Option.include.externVars	= mode;		break;
 	    case 'C':	Option.include.classPrefix	= mode;		break;
 	    case 'F':	Option.include.sourceFiles	= mode;		break;
 	    case 'S':	Option.include.statics		= mode;		break;
 
 	    default: error(FATAL, "-i: Invalid tag option '%c'", *p);	break;
 	}
+}
+
+/*  Determines whether or not "name" should be ignored, per the ignore list.
+ */
+extern boolean isIgnoreToken( name )
+    const char *const name;
+{
+    boolean ignore = FALSE;
+    unsigned int i;
+
+    for (i = 0  ;  i < Option.ignore.count ; ++i)
+    {
+	if (strcmp(Option.ignore.list[i], name) == 0)
+	{
+	    ignore = TRUE;
+	    break;
+	}
+    }
+    return ignore;
+}
+
+static char *saveString( string )
+    const char *const string;
+{
+    char *const here = (char *)malloc(strlen(string) + 1);
+
+    if (here == NULL)
+	error(FATAL | PERROR, "");
+    strcpy(here, string);
+
+    return here;
+}
+
+static void resizeIgnoreList()
+{
+    size_t newSize;
+
+    Option.ignore.max = Option.ignore.count + 10;
+    newSize = Option.ignore.max * sizeof(char *);
+
+    if (Option.ignore.list == NULL)
+	Option.ignore.list = (char **)malloc(newSize);
+    else
+	Option.ignore.list = (char **)realloc(Option.ignore.list, newSize);
+    if (Option.ignore.list == NULL)
+	error(FATAL | PERROR, "cannot create ignore list");
+}
+
+static void saveIgnoreToken( ignoreToken )
+    const char *const ignoreToken;
+{
+    const unsigned int i = Option.ignore.count++;
+
+    if (Option.ignore.count > Option.ignore.max)
+	resizeIgnoreList();
+    Option.ignore.list[i] = saveString(ignoreToken);
+    DebugStatement( if (debug(DEBUG_STATUS))
+			printf("ignore token: %s\n", ignoreToken); )
 }
 
 static void readIgnoreList( list )
@@ -403,18 +563,7 @@ static void readIgnoreList( list )
 
     while (token != NULL)
     {
-	unsigned int i = Option.ignore.count++;
-
-	if (Option.ignore.count > Option.ignore.max)
-	{
-	    Option.ignore.max = Option.ignore.count + 10;
-	    Option.ignore.list = (char **)realloc(Option.ignore.list,
-					    Option.ignore.max * sizeof(char *));
-	}
-	Option.ignore.list[i] = (char *)malloc(strlen(token) + 1);
-	strcpy(Option.ignore.list[i], token);
-	DebugStatement(	if (debug(DEBUG_STATUS))
-			    printf("ignore token: %s\n", token); )
+	saveIgnoreToken(token);
 	token = strtok(NULL, IGNORE_SEPARATORS);
     }
 }
@@ -429,50 +578,10 @@ static void readIgnoreListFromFile( fileName )
     else
     {
 	char ignoreToken[MaxNameLength];
-	unsigned int i = Option.ignore.count;
 
 	while (fscanf(fp, "%255s", ignoreToken) == 1)
-	    ++Option.ignore.count;
-	rewind(fp);
-	if (Option.ignore.count > Option.ignore.max)
-	{
-	    Option.ignore.max = Option.ignore.count;
-	    Option.ignore.list = (char **)realloc(Option.ignore.list,
-					    Option.ignore.max * sizeof(char *));
-	}
-	if (Option.ignore.list == NULL)
-	    error(WARNING | PERROR, "cannot create ignore list");
-	else while (fscanf(fp, "%255s", ignoreToken) == 1)
-	{
-	    DebugStatement( assert(i < Option.ignore.count); )
-	    Option.ignore.list[i] = (char *)malloc(strlen(ignoreToken) + 1);
-	    strcpy(Option.ignore.list[i], ignoreToken);
-	    ++i;
-	    DebugStatement( if (debug(DEBUG_STATUS))
-				printf("ignore token: %s\n", ignoreToken); )
-	}
+	    saveIgnoreToken(ignoreToken);
     }
-}
-
-static char *readOptionArg( option, pArg, argList, pArgNum )
-    const int option;
-    char **const pArg;
-    char *const *const argList;
-    int *const pArgNum;
-{
-    char *list;
-
-    if ((*pArg)[0] != '\0')	    /* does list immediately follow option? */
-    {
-	list = *pArg;
-	*pArg += strlen(*pArg);
-    }
-    else if ((list = argList[++(*pArgNum)]) == NULL) /* at least 1 more arg? */
-	error(FATAL, "-%c: Parameter missing", option);
-
-    DebugStatement( if (debug(DEBUG_OPTION)) fputs(list, errout); )
-
-    return list;
 }
 
 extern void freeIgnoreList()
@@ -501,7 +610,11 @@ static void processHeaderListOption( option, argP, argList, argNumP )
     if (doesFileExist(list) == 0)
 	error(FATAL, "-h: Invalid list");
     else
-	readExtensionList(list);
+    {
+	DebugStatement( if (debug(DEBUG_STATUS))
+			    printf("Header Extensions:\n"); )
+	Option.headerExt = readExtensionList(list);
+    }
 }
 
 static void processIgnoreOption( option, argP, argList, argNumP )
@@ -525,7 +638,7 @@ static boolean getBooleanOption( optionName, parameter, defaultValue )
 {
     boolean selection = defaultValue;
 
-    if (parameter == NULL  ||  parameter[0] == '\0')
+    if (parameter[0] == '\0')
 	selection = defaultValue;
     else if (strcmp(parameter, "0") == 0  ||  strcmp(parameter, "no") == 0)
 	selection = FALSE;
@@ -560,10 +673,120 @@ static void processFormatOption( optionName, parameter )
 
     if (sscanf(parameter, "%u", &format) < 1)
 	error(FATAL, "Missing or invalid value for \"--%s\" option",optionName);
-    else if (format <= MaxSupportedTagFormat)
+    else if (format <= (unsigned int)MaxSupportedTagFormat)
 	Option.tagFileFormat = format;
     else
 	error(FATAL, "Unsupported value for \"--%s\" option", optionName);
+}
+
+extern const char *getLanguageName( language )
+    const langType language;
+{
+    static const char *const names[] = { "c", "c++", "java" };
+
+    DebugStatement( if (sizeof(names)/sizeof(names[0]) != LANG_COUNT)
+	error(FATAL, "LangNames array not consistent with LANG enumeration"); )
+
+    return names[(int)language];
+}
+
+extern boolean strequiv( s1, s2 )
+    const char *s1;
+    const char *s2;
+{
+    boolean equivalent;
+
+    if (strcmp(s1, s2) == 0)
+	equivalent = TRUE;
+    else
+    {
+	equivalent = TRUE;
+	do
+	{
+	    if (toupper(*s1) != toupper(*s2))
+	    {
+		equivalent = FALSE;
+		break;
+	    }
+	} while (*s1++ != '\0'  &&  *s2++ != '\0');
+    }
+    return equivalent;
+}
+
+static langType getLangType( name )
+    const char *const name;
+{
+    unsigned int i;
+    langType language = LANG_IGNORE;
+
+    for (i = 0  ;  i < LANG_COUNT  ;  ++i)
+    {
+         if (strequiv(name, getLanguageName((langType)i)))
+	 {
+	    language = (langType)i;
+	    break;
+	 }
+    }
+    return language;
+}
+
+static void processLangOption( optionName, parameter )
+    const char *const optionName;
+    const char *const parameter;
+{
+    const langType language = getLangType(parameter);
+
+    if (language == LANG_IGNORE)
+	error(FATAL, "Invalid value for option --%s", optionName);
+    else
+	Option.language = language;
+}
+
+static void installLangMap( map )
+    char *const map;
+{
+    char *const separator = strchr(map, ':');
+
+    if (separator != NULL)
+    {
+	langType language;
+
+	*separator = '\0';
+	language = getLangType(map);
+	if (language == LANG_IGNORE)
+	    error(FATAL, "Invalid language specified for option --langmap");
+	DebugStatement( if (debug(DEBUG_STATUS))
+			    printf("%s map:\n", map); )
+	Option.langMap[(int)language] = readExtensionList(separator + 1);
+    }
+}
+
+static void processLangMapOption( optionName, parameter )
+    const char *const __unused__ optionName;
+    const char *const parameter;
+{
+    char *const maps = (char *)malloc(strlen(parameter) + 1);
+    char *map = maps;
+
+    if (maps == NULL)
+	error(FATAL | PERROR, "");
+    strcpy(maps, parameter);
+
+    DebugStatement( if (debug(DEBUG_STATUS))
+			printf("Language-extension maps:\n"); )
+    while (map != NULL)
+    {
+	char *end = strchr(parameter, ',');
+
+	if (end != NULL)
+	    *end = '\0';
+	installLangMap(map);
+	if (end != NULL)
+	    map = end + 1;
+	else
+	    map = NULL;
+    }
+    free(maps);
 }
 
 static void processLongOption( optionString )
@@ -572,7 +795,7 @@ static void processLongOption( optionString )
     enum { MaxOptionName = 10 };
     char optionName[MaxOptionName + 1];
     const char *const equal = strchr(optionString, '=');
-    const char *parameter = (equal == NULL) ? NULL : equal + 1;
+    const char *parameter = (equal == NULL) ? "" : equal + 1;
     const size_t optionLength = (equal == NULL) ? strlen(optionString) :
 	    					  (equal - optionString);
 
@@ -580,10 +803,10 @@ static void processLongOption( optionString )
 			fprintf(errout, "Option: --%s\n", optionString); )
 
     strncpy(optionName, optionString, optionLength);
-    if (optionLength < MaxOptionName)
+    if (optionLength < (size_t)MaxOptionName)
 	optionName[optionLength] = '\0';
     else
-	optionName[MaxOptionName] = '\0';
+	optionName[(size_t)MaxOptionName] = '\0';
 
 #define isOption(string)	(strcmp(optionName, string) == 0)
     if (isOption("append"))
@@ -596,6 +819,16 @@ static void processLongOption( optionString )
 	{ printHelp(LongOptionDescription, stdout); exit(0); }
     else if (isOption("if0"))
 	Option.if0 = getBooleanOption(optionName, parameter, TRUE);
+    else if (isOption("lang"))
+	processLangOption(optionName, parameter);
+    else if (isOption("langmap"))
+	processLangMapOption(optionName, parameter);
+    else if (isOption("recurse"))
+#ifdef RECURSE_SUPPORTED
+	Option.recurse = getBooleanOption(optionName, parameter, TRUE);
+#else
+	error(FATAL, "--%s option not supported on this host", optionName);
+#endif
     else if (isOption("sort"))
 	Option.sorted = getBooleanOption(optionName, parameter, TRUE);
     else if (isOption("totals"))
@@ -667,9 +900,15 @@ static boolean processSimpleOption( option )
 	case 'F':	Option.backward		= FALSE;	break;
 	case 'n':	Option.locate		= EX_LINENUM;	break;
 	case 'N':	Option.locate		= EX_PATTERN;	break;
+	case 'R':
+#ifdef RECURSE_SUPPORTED
+			Option.recurse		= TRUE;		break;
+#else
+			error(FATAL, "-R option not supported on this host");
+#endif
 	case 'u':	Option.sorted		= FALSE;	break;
-	case 'w':	Option.warnings		= FALSE;	break;
-	case 'W':	Option.warnings		= TRUE;		break;
+	case 'w':
+	case 'W':	break;
 	case 'x':	Option.xref		= TRUE;		break;
 
 	case '?':	printHelp(LongOptionDescription, stdout);
@@ -797,7 +1036,7 @@ extern void *parseEnvironmentOptions()
 	envOptions = getenv(ETAGS_ENVIRONMENT);
     if (envOptions == NULL)
 	envOptions = getenv(CTAGS_ENVIRONMENT);
-    if (envOptions != NULL)
+    if (envOptions != NULL  &&  envOptions[0] != '\0')
     {
 	argList = creatArgListForString(envOptions);
 	parseOptions(argList);

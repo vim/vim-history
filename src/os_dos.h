@@ -35,7 +35,7 @@
 #  define USR_GVIMRC_FILE2	"$VIM\\_gvimrc"
 # endif
 # ifndef SYS_MENU_FILE
-# define SYS_MENU_FILE		"$VIM\\menu.vim"
+#  define SYS_MENU_FILE		"$VIM\\menu.vim"
 # endif
 #endif
 
@@ -64,6 +64,10 @@
 
 #ifndef VIM_HLP
 # define VIM_HLP	"$VIM\\doc\\help.txt"
+#endif
+
+#ifndef SYNTAX_FNAME
+# define SYNTAX_FNAME	"$VIM\\syntax\\%s.vim"
 #endif
 
 #ifndef DEF_BDIR

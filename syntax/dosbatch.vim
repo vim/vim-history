@@ -45,7 +45,7 @@ syn match dosbatchEchoStatement	"@[a-zA-Z]\+\>"
 "syn match dosbatchLabelMark		"^\ *:\ \+[0-9a-zA-Z_\-]\+\>"
 
 syn match dosbatchVariable		"%[0-9a-z_\-]%"
-syn match dosbatchArgument		"%[0-9]\>"
+syn match dosbatchArgument		"%\d\>"
 syn match dosbatchArgument		"%%[a-zA-Z]\>"
 
 syn keyword dosbatchImplicit		append assign attrib backup break

@@ -28,11 +28,11 @@ syn keyword asnType           UTF8String
 syn keyword asnStructure      CHOICE SEQUENCE SET OF ENUMERATED CONSTRAINED BY WITH COMPONENTS CLASS
 
 " Strings and constants
-syn match   asnSpecial           contained "\\[0-9][0-9][0-9]\|\\."
+syn match   asnSpecial           contained "\\\d\d\d\|\\."
 syn region  asnString            start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=asnSpecial
 syn match   asnCharacter         "'[^\\]'"
 syn match   asnSpecialCharacter  "'\\.'"
-syn match   asnNumber            "-\=\<[0-9]\+L\=\>\|0[xX][0-9a-fA-F]\+\>"
+syn match   asnNumber            "-\=\<\d\+L\=\>\|0[xX][0-9a-fA-F]\+\>"
 syn match   asnLineComment       "--.*"
 syn match   asnLineComment       "--.*--"
 

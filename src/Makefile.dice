@@ -43,6 +43,7 @@ SRC = \
 	message.c \
 	misc1.c \
 	misc2.c \
+	multbyte.c \
 	normal.c \
 	ops.c \
 	option.c \
@@ -76,6 +77,7 @@ OBJ =	o/buffer.o \
 	o/message.o \
 	o/misc1.o \
 	o/misc2.o \
+	o/multbyte.o \
 	o/normal.o \
 	o/ops.o \
 	o/option.o \
@@ -144,6 +146,8 @@ o/message.o:	message.c  $(SYMS)
 o/misc1.o:	misc1.c  $(SYMS)
 
 o/misc2.o:	misc2.c  $(SYMS)
+
+o/multbyte.o:	multbyte.c  $(SYMS)
 
 o/normal.o:	normal.c  $(SYMS)
 

@@ -2,7 +2,7 @@ Some tools that can be used with Vim:
 
 blink.c:	C program to make the cursor blink in an xterm.
 
-ccfilter.*:	C program to filter the output of a few compilers to a common
+ccfilter*:	C program to filter the output of a few compilers to a common
 		QuickFix format.
 
 efm_filter.*:	Perl script to filter error messages to QuickFix format.

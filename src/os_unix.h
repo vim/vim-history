@@ -67,7 +67,7 @@
 #endif
 
 /* always use unlink() to remove files */
-#define vim_remove(x) unlink((char *)(x))
+#define mch_remove(x) unlink((char *)(x))
 
 /* The number of arguments to a signal handler is configured here. */
 /* It used to be a long list of almost all systems. Any system that doesn't
@@ -209,7 +209,11 @@
 #endif
 
 #ifndef VIM_HLP
-# define VIM_HLP "$VIM/doc/help.txt"
+# define VIM_HLP	"$VIM/doc/help.txt"
+#endif
+
+#ifndef SYNTAX_FNAME
+# define SYNTAX_FNAME	"$VIM/syntax/%s.vim"
 #endif
 
 #ifndef DEF_BDIR
@@ -224,7 +228,7 @@
 # ifdef OS2
 #  define DEF_DIR	".,~/tmp,c:/tmp,/tmp"
 # else
-#  define DEF_DIR	".,~/tmp,/tmp"	/* default for 'directory' */
+#  define DEF_DIR	".,~/tmp,/var/tmp,/tmp"	/* default for 'directory' */
 # endif
 #endif
 
@@ -239,16 +243,16 @@
 /*
  * Try several directories to put the temp files.
  */
-#define TEMPDIRNAMES	"$TMP", "$TEMP", "c:\\TMP", "c:\\TEMP", ""
-#define TEMPNAME	"v?XXXXXX"
-#define TEMPNAMELEN	128
+# define TEMPDIRNAMES	"$TMP", "$TEMP", "c:\\TMP", "c:\\TEMP", ""
+# define TEMPNAME	"v?XXXXXX"
+# define TEMPNAMELEN	128
 #else
-#define TEMPNAME	"/tmp/v?XXXXXX"
-#define TEMPNAMELEN	15
+# define TEMPNAME	"/tmp/v?XXXXXX"
+# define TEMPNAMELEN	15
 #endif
 
 /* Special wildcards that need to be handled by the shell */
-#define SPECIAL_WILDCHAR    "`"
+#define SPECIAL_WILDCHAR    "`'{"
 
 #if !defined(HAVE_OPENDIR) || !defined(HAVE_QSORT)
 # define NO_EXPANDPATH
@@ -278,15 +282,37 @@
 /* Some systems have (void *) arguments, some (char *). If we use (char *) it
  * works for all */
 #ifdef USEMEMMOVE
-# define vim_memmove(to, from, len) memmove((char *)(to), (char *)(from), len)
+# define mch_memmove(to, from, len) memmove((char *)(to), (char *)(from), len)
 #else
 # ifdef USEBCOPY
-#  define vim_memmove(to, from, len) bcopy((char *)(from), (char *)(to), len)
+#  define mch_memmove(to, from, len) bcopy((char *)(from), (char *)(to), len)
 # else
 #  ifdef USEMEMCPY
-#   define vim_memmove(to, from, len) memcpy((char *)(to), (char *)(from), len)
+#   define mch_memmove(to, from, len) memcpy((char *)(to), (char *)(from), len)
 #  else
 #   define VIM_MEMMOVE	    /* found in alloc.c */
 #  endif
 # endif
+#endif
+
+#ifdef HAVE_RENAME
+# define mch_rename(src, dst) rename(src, dst)
+#else
+int mch_rename __ARGS((const char *src, const char *dest));
+#endif
+#define mch_chdir(s) chdir(s)
+#define mch_getenv(x) (char_u *)getenv((char *)x)
+#define mch_setenv(name, val, x) setenv(name, val, x)
+
+#if !defined(S_ISDIR) && defined(S_IFDIR)
+# define	S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+#endif
+#if !defined(S_ISREG) && defined(S_IFREG)
+# define	S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
+#endif
+#if !defined(S_ISSOCK) && defined(S_IFSOCK)
+# define	S_ISSOCK(m) (((m) & S_IFMT) == S_IFSOCK)
+#endif
+#if !defined(S_ISFIFO) && defined(S_IFIFO)
+# define	S_ISFIFO(m) (((m) & S_IFMT) == S_IFIFO)
 #endif

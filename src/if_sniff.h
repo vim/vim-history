@@ -11,7 +11,8 @@ extern int  want_sniff_request;
 extern int  sniff_request_waiting;
 extern int  sniff_connected;
 extern int  fd_from_sniff;
-extern void ProcessSniffRequests();
+extern void sniff_disconnect __ARGS((int immediately));
+extern void ProcessSniffRequests __ARGS((void));
 extern void do_sniff __ARGS((char_u *arg));
 
 #endif

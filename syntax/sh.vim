@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	shell (sh) Korn shell (ksh) bash (sh)
 " Maintainer:	Lennart Schultz <Lennart.Schultz@ecmwf.int>
-" Last change:	1997 November 24
+" Last change:	1998 July 24
 "
 " Using the following VIM variables:
 " is_kornshell               if defined enhance with kornshell syntax
@@ -14,7 +14,7 @@
 "	With many good inputs from Éric Brunet, especially he got the
 "	case statement to work!
 " Updated 1997 November 24
-" 	Sync included with thanks to Dr. Charles E. Campbell Jr <cec@gryphon.gsfc.nasa.gov>
+"	Sync included with thanks to Dr. Charles E. Campbell Jr <Charles.Campbell@gsfc.nasa.gov>
 "	Echo included with thanks to Éric Brunet
 "	[ \t] removed using \s instead
 " Updated 1998 March 24
@@ -23,6 +23,10 @@
 "       Error correction from Dr. Charles E. Campbell Jr 
 " Updated 1998 March 29
 "	added sh_minlines (Bram Moolenaar)
+" Updated 1998 April 16
+"	added check for ksh and bash for $( .. ) command substitution
+"       Error correction from Dr. Charles E. Campbell Jr 
+"	
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -34,16 +38,16 @@ syn match	shComment		"#.*$" contains=shTodo
 
 " String and Character constants
 "===============================
-syn match   shNumber       "-\=\<[0-9]\+\>"
-syn match   shSpecial      contained "\\[0-9][0-9][0-9]\|\\[abcfnrtv]"
+syn match   shNumber       "-\=\<\d\+\>"
+syn match   shSpecial      contained "\\\d\d\d\|\\[abcfnrtv]"
 syn region  shSinglequote matchgroup=shOperator start=+'+ end=+'+
 syn region  shDoubleQuote      matchgroup=shOperator start=+"+ skip=+\\"+ end=+"+ contains=shDeref,shCommandSub,shSpecialShellVar,shSpecial
 syn match  shSpecial  "\\[\\\"\'`$]"
 	" This must be after the strings, so that bla \" be correct
-syn region shEmbeddedEcho contained matchgroup=shStatement start="\<echo\>" skip="\\$" matchgroup=shOperator end="$" matchgroup=NONE end="[<>;&|`]"me=e-1 end="[0-9][<>]"me=e-2 end="#"me=e-1 contains=shNumber,shSinglequote,shDeref,shSpecialVar,shSpecial,shOperator,shDoubleQuote
- 	" This one is needed INSIDE a CommandSub, so that
- 	" `echo bla` be correct
-syn region shEcho matchgroup=shStatement start="\<echo\>" skip="\\$" matchgroup=shOperator end="$" matchgroup=NONE end="[<>;&|]"me=e-1 end="[0-9][<>]"me=e-2 end="#"me=e-1 contains=shNumber,shCommandSub,shSinglequote,shDeref,shSpecialVar,shSpecial,shOperator,shDoubleQuote
+syn region shEmbeddedEcho contained matchgroup=shStatement start="\<echo\>" skip="\\$" matchgroup=shOperator end="$" matchgroup=NONE end="[<>;&|`]"me=e-1 end="\d[<>]"me=e-2 end="#"me=e-1 contains=shNumber,shSinglequote,shDeref,shSpecialVar,shSpecial,shOperator,shDoubleQuote
+	" This one is needed INSIDE a CommandSub, so that
+	" `echo bla` be correct
+syn region shEcho matchgroup=shStatement start="\<echo\>" skip="\\$" matchgroup=shOperator end="$" matchgroup=NONE end="[<>;&|]"me=e-1 end="\d[<>]"me=e-2 end="#"me=e-1 contains=shNumber,shCommandSub,shSinglequote,shDeref,shSpecialVar,shSpecial,shOperator,shDoubleQuote
 
 "Error Codes
 syn match   shDoError "\<done\>"
@@ -57,6 +61,9 @@ if exists("is_kornshell")
 syn match     shDTestError "]]"
 endif
 syn match     shTestError "]"
+  
+" Options interceptor
+syn match   shOption  "[\-+][a-zA-Z0-9]\+\>"
 
 " Tests
 "======
@@ -81,6 +88,9 @@ syn region  shSubSh transparent matchgroup=shOperator start="(" end=")" contains
 syn match   shOperator		"[!&;|=]"
 syn match   shWrapLineOperator	"\\$"
 syn region  shCommandSub   start="`" skip="\\`" end="`" contains=ALLBUT,shFunction,shCommandSub,shTestOpr,shCase,shEcho
+if exists("is_kornshell") || exists("is_bash")
+syn region  shCommandSub start="$(" end=")" contains=ALLBUT,shFunction,shCommandSub,shTestOpr,shCase,shEcho
+endif
 
 syn match   shSource	"^\.\s"
 syn match   shSource	"\s\.\s"
@@ -88,10 +98,10 @@ syn region  shColon	start="^\s*:" end="$\|" end="#"me=e-1 contains=ALLBUT,shFunc
 
 " File redirection highlighted as operators
 "==========================================
-syn match	shRedir	"[0-9]\=>\(&[-0-9]\)\="
-syn match	shRedir	"[0-9]\=>>-\="
-syn match	shRedir	"[0-9]\=<\(&[-0-9]\)\="
-syn match	shRedir	"[0-9]<<-\="
+syn match	shRedir	"\d\=>\(&[-0-9]\)\="
+syn match	shRedir	"\d\=>>-\="
+syn match	shRedir	"\d\=<\(&[-0-9]\)\="
+syn match	shRedir	"\d<<-\="
 
 " Shell Input Redirection (Here Documents)
 syn region shHereDoc matchgroup=shRedir start="<<-\=\s*\**END[a-zA-Z_0-9]*\**" matchgroup=shRedir end="^END[a-zA-Z_0-9]*$"
@@ -110,7 +120,7 @@ endif
 		" The [^/] in the start pattern is a kludge to avoid bad
 		" highlighting with cd /usr/local/lib...
 
-syn region  shFunction transparent matchgroup=shFunctionName 	start="^\s*\<[a-zA-Z_][a-zA-Z0-9_]*\>\s*()\s*{" end="}" contains=ALLBUT,shFunction,shCurlyError,shCase
+syn region  shFunction transparent matchgroup=shFunctionName	start="^\s*\<[a-zA-Z_][a-zA-Z0-9_]*\>\s*()\s*{" end="}" contains=ALLBUT,shFunction,shCurlyError,shCase
 syn region shDeref	     start="\${" end="}"
 syn match  shDeref	     "\$\<[a-zA-Z_][a-zA-Z0-9_]*\>"
 syn match  shSpecialShellVar "\$[-#@*$?!0-9]"
@@ -142,7 +152,10 @@ endif
 if !exists("sh_minlines")
   let sh_minlines = 100
 endif
-exec "syn sync minlines=" . sh_minlines
+if !exists("sh_maxlines")
+  let sh_maxlines = 2 * sh_minlines
+endif
+exec "syn sync minlines=" . sh_minlines . " maxlines=" . sh_maxlines
 syn sync match shDoSync       grouphere  shDo       "\<do\>"
 syn sync match shDoSync       groupthere shDo       "\<done\>"
 syn sync match shIfSync       grouphere  shIf       "\<if\>"

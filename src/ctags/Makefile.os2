@@ -1,16 +1,16 @@
-# A Makefile for OS/2 using the EMX port of gcc
+# A Makefile for OS/2 using EMX gcc 0.9
 #
 # Provided and supported by Alexander Mai
 #   <st002279@hrzpub.tu-darmstadt.de> or
-#   <Alexander.Mai@physik.tu-darmstadt.de>
+#   <am@os-2.de>
 
 default:
 	@echo "Enter $(MAKE) -f makefile.os2 target"
 	@echo "where target is one of:"
-	@echo "   small   (small executable req. EMX runtime)"
-	@echo "   debug   (executable for debugging purposes)"
-	@echo "   release (stand-alone executable)"
-	@echo "   clean   (remove all files built)"
+	@echo "   small    (small executable req. EMX runtime)"
+	@echo "   debug    (executable for debugging purposes)"
+	@echo "   release  (stand-alone executable)"
+	@echo "   clean    (remove all files built)"
 
 # Use this to create a small binary
 # (which requires EMX runtime)  
@@ -25,7 +25,7 @@ small:
 debug: 
 	$(MAKE) -f makefile.os2 ctags                         \
 	CC="gcc"                                              \
-	CFLAGS="-O --Wall fno-strength-reduce -DOS2 -g"       \
+	CFLAGS="-O0 -Wall fno-strength-reduce -DOS2 -g"       \
 	LFLAGS="-Zcrtdll -g"
 
 # Use this to create a stand-alone binary for distribution

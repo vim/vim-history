@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 5.1.  Last modification: 1998 Feb 26
+*map.txt*       For Vim version 5.2.  Last modification: 1998 Aug 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -6,8 +6,9 @@
 
 Key mapping and abbreviations.
 
-1. Key mapping		|key-mapping|
-2. Abbreviations	|abbreviations|
+1. Key mapping			|key-mapping|
+2. Abbreviations		|abbreviations|
+3. User-defined commands	|user-commands|
 
 ==============================================================================
 1. Key mapping						*key-mapping*
@@ -107,15 +108,15 @@ Overview of which map command works in which mode:
 
     commands:				      modes:			      ~
 					  Normal     Visual  Operator-pending ~
-:map   :noremap   :unmap   :mapclear         X		X	   X
-:nmap  :nnoremap  :nunmap  :nmapclear        X       	.     	   .
-:vmap  :vnoremap  :vunmap  :vmapclear        .       	X          .
-:omap  :onoremap  :ounmap  :omapclear        .	     	.          X
+:map   :noremap   :unmap   :mapclear	     X		X	   X
+:nmap  :nnoremap  :nunmap  :nmapclear	     X		.	   .
+:vmap  :vnoremap  :vunmap  :vmapclear	     .		X	   .
+:omap  :onoremap  :ounmap  :omapclear	     .		.	   X
 
 					  Insert Command-line		~
-:map!  :noremap!  :unmap!  :mapclear!        X         X
-:imap  :inoremap  :iunmap  :imapclear        X         .
-:cmap  :cnoremap  :cunmap  :cmapclear        .         X
+:map!  :noremap!  :unmap!  :mapclear!	     X	       X
+:imap  :inoremap  :iunmap  :imapclear	     X	       .
+:cmap  :cnoremap  :cunmap  :cmapclear	     .	       X
 
 The original Vi did not have separate mappings for
 Normal/Visual/Operator-pending mode and for Insert/Command-line mode.
@@ -177,6 +178,13 @@ single CTRL-V (you have to type CTRL-V two times).
 You can create an empty {rhs} by typing nothing after a single CTRL-V (you
 have to type CTRL-V two times).  Unfortunately, you cannot do this in a vimrc
 file.
+							*<Nop>*
+A easier way to get a mapping that doesn't produce anything, is to use "<Nop>"
+for the {rhs}.  This only works when the |<>| notation is enabled.  For
+example, to make sure that function key 8 does nothing at all:
+>	:map  <F8>  <Nop>
+>	:map! <F8>  <Nop>
+
 							*map-comments*
 It is not possible to put a comment after these commands, because the '"'
 character is considered to be part of the {lhs} or {rhs}.
@@ -185,10 +193,10 @@ character is considered to be part of the {lhs} or {rhs}.
 Since the '|' character is used to separate a map command from the next
 command, you will have to do something special to include  a '|' in {rhs}.
 There are three methods:
-   use       works when                    example	~
-   <Bar>     '<' is not in 'cpoptions'     :map _l :!ls <Bar> more^M
-   \|        'b' is not in 'cpoptions'     :map _l :!ls \| more^M
-   ^V|       always, in Vim and Vi         :map _l :!ls ^V| more^M
+   use	     works when			   example	~
+   <Bar>     '<' is not in 'cpoptions'	   :map _l :!ls <Bar> more^M
+   \|	     'b' is not in 'cpoptions'	   :map _l :!ls \| more^M
+   ^V|	     always, in Vim and Vi	   :map _l :!ls ^V| more^M
 
 (here ^V stands for CTRL-V; to get one CTRL-V you have to type it twice; you
 cannot use the <> notation "<C-V>" here).
@@ -481,11 +489,11 @@ You type:   ab esc ^V^V^V^V^V^[
 
 	All keyboard input is subjected to ^V quote interpretation, so
 	the first, third, and fifth ^V  characters simply allow the second,
-	and fourth ^Vs, and the ^[, to be entered into the command line.
+	and fourth ^Vs, and the ^[, to be entered into the command-line.
 
 You see:    ab esc ^V^V^[
 
-	The command line contains two actual ^Vs before the ^[.  This is
+	The command-line contains two actual ^Vs before the ^[.  This is
 	how it should appear in your .exrc file, if you choose to go that
 	route.  The first ^V is there to quote the second ^V; the :ab
 	command uses ^V as its own quote character, so you can include quoted
@@ -510,5 +518,205 @@ Stored as:  esc     ^V^[
 Expands to: ^[
 
 [example given by Steve Kirkendall]
+
+==============================================================================
+3. User-defined commands				*user-commands*
+
+It is possible to define your own ex commands. A user-defined command can act
+just like a built-in command (it can have a range or arguments, arguments can
+be completed as filenames or buffer names, etc), except that when the command
+is executed, it is transformed into a normal ex command and then executed.
+
+All user defined commands must start with an uppercase letter, to avoid
+confusion with builtin commands. (There are a few builtin commands, notably
+:Next and :Print, which do start with an uppercase letter. The builtin will
+always take precedence in these cases).
+
+When using a user-defined command, the command can be abbreviated. However, if
+an abbreviation is not unique, an error will be issued. Furthermore, a
+built-in command will always take precedence.
+
+Example:
+>	:command Rename ...
+>	:command Renumber ...
+>	:Rena				" Means "Rename"
+>	:Renu				" Means "Renumber"
+>	:Ren				" Error - ambiguous
+>	:command Paste ...
+>	:P				" The built-in :Print
+
+It is recommended that full names for user-defined commands are used in
+scripts.
+
+:com[mand]						*:com* *:command*
+			List all user-defined commands. When listing commands,
+			the characters in the first two columns are
+			    !	Command has the -bang attribute
+			    "	Command has the -register attribute
+			(see below for details on attributes)
+
+:com[mand] <cmd>	List the user-defined commands that start with <cmd>
+
+:com[mand][!] [<attr>...] <cmd> <rep>
+			Define a user command.  The name of the command is
+			<cmd> and its replacement text is <rep>. The command's
+			attributes (see below) are <attr>. If the command
+			already exists, an error is reported, unless a ! is
+			specified, when the command is redefined.
+
+:delc[ommand] <cmd>					*:delc* *:delcommand*
+			Delete the user-defined command <cmd>.
+
+:comc[lear]						*:comc* *:comclear*
+			Delete all user-defined commands.
+
+Command attributes
+
+User-defined commands are treated by Vim just like any other ex commands. They
+can have arguments, or have a range specified. Arguments are subject to
+completion as filenames, buffers, etc. Exactly how this works depends upon the
+command's attributes, which are specified when the command is defined.
+
+There are a number of attributes, split into four categories: argument
+handling, completion behaviour, range handling, and special cases. The
+attributes are described below, by category.
+
+Argument handling
+
+By default, a user defined command will take no arguments (and an error is
+reported if any are supplied). However, it is possible to specify that the
+command can take arguments, using the -nargs attribute. Valid cases are:
+
+	-nargs=0    No arguments are allowed (the default)
+	-nargs=1    Exactly one argument is required
+	-nargs=*    Any number of arguments are allowed (0, 1, or many)
+	-nargs=?    0 or 1 arguments are allowed
+	-nargs=+    Arguments must be supplied, but any number are allowed
+
+Arguments are considered to be separated by (unescaped) spaces in this
+context.
+
+Completion behaviour
+
+By default, the arguments of user defined commands do not undergo completion.
+However, by specifying one or the other of the following attributes, argument
+completion can be enabled:
+
+	-complete=augroup	autocmd groups
+	-complete=buffer	buffer names
+	-complete=command	Ex command (and arguments)
+	-complete=dir		directory names
+	-complete=event		autocommand events
+	-complete=file		file and directory names
+	-complete=help		help subjects
+	-complete=highlight	highlight groups
+	-complete=menu		menus
+	-complete=option	options
+	-complete=tag		tags
+	-complete=var		user variables
+
+Range handling
+
+By default, user-defined commands do not accept a line number range. However,
+it is possible to specify that the command does take a range (the -range
+attribute), or that it takes an arbitrary count value, either in the line
+number position (-range=N, like the |:split| command) or as a "count"
+argument (-count=N, like the |:Next| command). Possible attributes are:
+
+	-range	    Range allowed, default is current line
+	-range=%    Range allowed, default is whole file (1,$)
+	-range=N    A count (default N) which is specified in the line
+		    number position (like |:split|)
+	-count=N    A count (default N) which is specified either in the line
+		    number position, or as an initial argument (like |:Next|)
+		    Specifying -count (without a default) acts like -count=0
+
+Note that -range=N and -count=N are mutually exclusive - only one should be
+specified.
+
+Special cases
+
+There are some special cases as well:
+
+	-bang	    The command can take a ! modifier (like :q or :w)
+	-register   The first argument to the command can be an optional
+		    register name (like :del, :put, :yank).
+
+In the cases of the -count and -register attributes, if the optional argument
+is supplied, it is removed from the argument list and is available to the
+replacement text separately.
+
+Replacement text
+
+The replacement text for a user defined command is scanned for special escape
+sequences, using <...> notation. Escape sequences are replaced with values
+from the entered command line, and all other text is copied unchanged. The
+resulting string is executed as an Ex command. If the initial < of an escape
+sequence is preceded by a backslash, the sequence is copied unchanged.
+
+The valid escape sequences are
+
+	<line1>	The starting line of the command range.
+	<line2>	The final line of the command range.
+	<count>	Any count supplied (as described for the '-range'
+		and '-count' attributes).
+	<bang>	(See the '-bang' attribute) Expands to a ! if the
+		command was executed with a ! modifier, otherwise
+		expands to nothing.
+	<reg>	(See the '-register' attribute) The optional register,
+		if specified. Otherwise, expands to nothing. <register>
+		is a synonym for this.
+	<args>	The command arguments, exactly as supplied (but as
+		noted above, any count or register can consume some
+		of the arguments, which are then not part of <args>).
+	<lt>	A single '<' (Less-Then) character.  This is needed if you
+		want to get a literal copy of one of these escape sequences
+		into the expansion - for example, to get <bang>, use
+		<lt>bang>.
+
+If the first two characters of an escape sequence are "q-" (for example,
+<q-args>) then the value is quoted in such a way as to make it a valid value
+for use in an expression.
+
+To allow commands to pass their arguments on to a user-defined function, there
+is a special form <f-args> ("function args"). This splits the command
+arguments at spaces, quotes each argument individually, and the <f-args>
+sequence is replaced by the comma-separated list of quoted arguments.  See the
+Mycmd example below.
+
+Examples
+
+>   " Delete everything after here to the end
+>   :com Ddel +,$d
+
+>   " Rename the current buffer
+>   :com -nargs=1 -bang -complete=file Ren f <args>|w<bang>
+
+>   " Replace a range with the contents of a file
+>   " (Enter this all as one line)
+>   :com -range -nargs=1 -complete=file
+>	 Replace <line1>-pu_|<line1>,<line2>d|r <args>|<line1>d
+
+>   " Call a user function (example of <q-args>)
+>   :com -nargs=* Mycmd call Myfunc(<q-args>)
+
+>   " A more substantial example
+>   :function Allbuf(command)
+>   :	let i = 1
+>   :	while i <= bufnr("$")
+>   :	   if bufexists(i)
+>   :	      execute 'buffer ' . i
+>   :	      execute a:command
+>   :      endif
+>   :      let i = i + 1
+>   :   endwhile
+>   :endfunction
+>   :command -nargs=+ -complete=command Allbuf call Allbuf(<q-args>)
+
+The command Allbuf takes any Vim command(s) as argument and executes it on all
+buffers in the buffer list.  Usage example (note use of the "e" flag to ignore
+errors and the "update" command to write modified buffers):
+
+>   :Allbuf %s/foo/bar/ge|update
 
  vim:tw=78:ts=8:sw=8:

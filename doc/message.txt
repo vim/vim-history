@@ -1,4 +1,4 @@
-*message.txt*     For Vim version 5.1.  Last modification: 1998 Feb 18
+*message.txt*     For Vim version 5.2.  Last modification: 1998 Aug 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -125,10 +125,20 @@ changes to:
 
 >  Scripts nested too deep
 
-Scripts can be read with the "-s" command line argument and with the ":source"
+Scripts can be read with the "-s" command-line argument and with the ":source"
 command.  The script can then again read another script.  This can continue
 for about 14 levels.  When more nesting is done, Vim assumes that there is a
 recursive loop somewhere and stops with this error message.
+
+
+>  Tags file not sorted: <file name>
+
+Vim (and Vi) expect tags files to be sorted in ASCII order.  Binary searching
+can then be used, which is a lot faster than a linear search.  If your tags
+files are not properly sorted, reset the |'tagbsearch'| option.
+This message is only given when Vim detects a problem when searching for a
+tag.  Sometimes this message is not given, even thought the tags file is not
+properly sorted.
 
 
 >  Too many file names
@@ -179,7 +189,7 @@ Type:
      <Space>			for the next page
      'd'			for down half a page
      'q', <Esc> or CTRL-C	to stop the listing
-     ':'	    		to stop the listing and enter a command line
+     ':'			to stop the listing and enter a command-line
 Any other key causes the meaning of the keys to be displayed.
 
 Note: The typed key is directly obtained from the terminal, it is not mapped

@@ -200,6 +200,7 @@ edit(cmdchar, startln, count)
 #endif
     linenr_t	 old_topline = 0;	    /* topline before insertion */
     int		 inserted_space = FALSE;    /* just inserted a space */
+    int		 has_startsel;		    /* may start selection */
 
     /* sleep before redrawing, needed for "CTRL-O :" that results in an
      * error message */
@@ -252,6 +253,10 @@ edit(cmdchar, startln, count)
     }
     else
 	State = INSERT;
+#if defined(USE_GUI_WIN32) && defined(MULTI_BYTE_IME)
+    ImeSetOriginMode();
+#endif
+
     /*
      * Need to recompute the cursor position, it might move when the cursor is
      * on a TAB or special character.
@@ -273,6 +278,10 @@ edit(cmdchar, startln, count)
     revins_legal = 0;
     revins_scol = -1;
 #endif
+
+    /* if 'keymodel' contains "startsel", may start selection on shifted
+     * special key */
+    has_startsel = (vim_strchr(p_km, 'a') != NULL);
 
     /*
      * Handle restarting Insert mode.
@@ -332,12 +341,11 @@ edit(cmdchar, startln, count)
     if (!p_im)
 	change_warning(i + 1);
 
-#ifdef USE_GUI
-    if (gui.in_use)
-	gui_upd_cursor_shape();	    /* may show different cursor shape */
+#ifdef CURSOR_SHAPE
+    ui_cursor_shape();		/* may show different cursor shape */
 #endif
 #ifdef DIGRAPHS
-    do_digraph(-1);		    /* clear digraphs */
+    do_digraph(-1);		/* clear digraphs */
 #endif
 
 /*
@@ -397,6 +405,10 @@ edit(cmdchar, startln, count)
 	    {
 		set_topline(curwin, curwin->w_topline + 1);
 		update_topline();
+#ifdef SYNTAX_HL
+		/* recompute syntax hl., starting with current line */
+		syn_changed(curwin->w_cursor.lnum);
+#endif
 		update_screen(VALID_TO_CURSCHAR);
 		need_redraw = FALSE;
 	    }
@@ -468,7 +480,7 @@ edit(cmdchar, startln, count)
 #ifdef SHOWCMD
 	    clear_showcmd();
 #endif
-	    insert_special(c, TRUE, TRUE);
+	    insert_special(c, FALSE, TRUE);
 	    need_redraw = TRUE;
 #ifdef RIGHTLEFT
 	    revins_chars++;
@@ -477,6 +489,21 @@ edit(cmdchar, startln, count)
 	    c = Ctrl('V');	/* pretend CTRL-V is last typed character */
 	    continue;
 	}
+#ifdef MULTI_BYTE
+# if defined(USE_GUI) && !defined(USE_GUI_WIN32)
+	if (!gui.in_use)
+# endif
+	if (is_dbcs && IsLeadByte(c))
+	{
+	    int c2;
+
+	    c2 = get_literal();
+	    insert_special(c, FALSE, FALSE);
+	    insert_special(c2, FALSE, FALSE);
+	    need_redraw = TRUE;
+	    continue;
+	}
+#endif
 
 #ifdef CINDENT
 	if (curbuf->b_p_cin
@@ -523,6 +550,40 @@ edit(cmdchar, startln, count)
 	    }
 #endif
 
+	/* if 'keymodel' contains "startsel", may start selection */
+	if (has_startsel)
+	    switch (c)
+	    {
+		case K_KHOME:
+		case K_KEND:
+		case K_PAGEUP:
+		case K_KPAGEUP:
+		case K_PAGEDOWN:
+		case K_KPAGEDOWN:
+		    if (!(mod_mask & MOD_MASK_SHIFT))
+			break;
+		    /* FALLTHROUGH */
+		case K_S_LEFT:
+		case K_S_RIGHT:
+		case K_S_UP:
+		case K_S_DOWN:
+		case K_S_END:
+		case K_S_HOME:
+		    stuffcharReadbuff(Ctrl('O'));
+		    if (mod_mask)
+		    {
+			char_u	    buf[4];
+
+			buf[0] = K_SPECIAL;
+			buf[1] = KS_MODIFIER;
+			buf[2] = mod_mask;
+			buf[3] = NUL;
+			stuffReadbuff(buf);
+		    }
+		    stuffcharReadbuff(c);
+		    continue;
+	    }
+
 	/*
 	 * The big switch to handle a character in insert mode.
 	 */
@@ -543,9 +604,8 @@ edit(cmdchar, startln, count)
 		State = REPLACE;
 	    AppendCharToRedobuff(K_INS);
 	    showmode();
-#ifdef USE_GUI
-	    if (gui.in_use)
-		gui_upd_cursor_shape();	/* may show different cursor shape */
+#ifdef CURSOR_SHAPE
+	    ui_cursor_shape();		/* may show different cursor shape */
 #endif
 	    break;
 
@@ -560,6 +620,9 @@ edit(cmdchar, startln, count)
 	    showmode();
 	    break;
 #endif
+
+	case K_SELECT:	    /* end of Select mode mapping - ignore */
+	    break;
 
 	case Ctrl('Z'):	    /* suspend when 'insertmode' set */
 	    if (!p_im)
@@ -603,7 +666,9 @@ edit(cmdchar, startln, count)
 #ifdef UNIX
 do_intr:
 #endif
-	    if (p_im)
+	    /* when 'insertmode' set, and not halfway a mapping, don't leave
+	     * Insert mode */
+	    if (goto_im())
 	    {
 		if (got_int)
 		{
@@ -643,11 +708,9 @@ doESCkey:
 	    break;
 
 #ifdef RIGHTLEFT
-	/*
-	 * toggle language: khmap and revins_on
-	 * Move to end of reverse inserted text.
-	 */
 	case Ctrl('_'):
+	    if (!p_ari)
+		goto normalchar;
 	    ins_ctrl_();
 	    break;
 #endif
@@ -720,11 +783,13 @@ doESCkey:
 
 	case K_HOME:
 	case K_KHOME:
+	case K_S_HOME:
 	    ins_home();
 	    break;
 
 	case K_END:
 	case K_KEND:
+	case K_S_END:
 	    ins_end();
 	    break;
 
@@ -770,6 +835,12 @@ doESCkey:
 	    ins_pagedown();
 	    break;
 
+	    /* keypad keys: When not mapped they produce a normal char */
+	case K_KPLUS:		c = '+'; goto normalchar;
+	case K_KMINUS:		c = '-'; goto normalchar;
+	case K_KDIVIDE:		c = '/'; goto normalchar;
+	case K_KMULTIPLY:	c = '*'; goto normalchar;
+
 	    /* When <S-Tab> isn't mapped, use it like a normal TAB */
 	case K_S_TAB:
 	    c = TAB;
@@ -787,6 +858,9 @@ doESCkey:
 	    need_redraw = TRUE;
 	    break;
 
+	case K_KENTER:
+	    c = CR;
+	    /* FALLTHROUGH */
 	case CR:
 	case NL:
 	    if (ins_eol(c) && !p_im)
@@ -802,7 +876,7 @@ doESCkey:
 		{
 		    ctrl_x_mode = 0;
 		    msg_attr((char_u *)"'dictionary' option is empty",
-			     highlight_attr[HLF_E]);
+			     hl_attr(HLF_E));
 		    vim_beep();
 		    setcursor();
 		    out_flush();
@@ -890,8 +964,10 @@ docomplete:
 
 		    /* The character must be taken literally, insert like it
 		     * was typed after a CTRL-V, and pretend 'textwidth'
-		     * wasn't set */
-		    AppendToRedobuff((char_u *)"\026");	/* CTRL-V */
+		     * wasn't set.  Digits, 'o' and 'x' are special after a
+		     * CTRL-V, don't use it for these. */
+		    if (!isalnum(c))
+			AppendToRedobuff((char_u *)"\026");	/* CTRL-V */
 		    tw_save = curbuf->b_p_tw;
 		    curbuf->b_p_tw = -1;
 		    insert_special(c, TRUE, TRUE);
@@ -988,7 +1064,7 @@ edit_putchar(c, highlight)
 	update_topline();	/* just in case w_topline isn't valid */
 	validate_cursor();
 	if (highlight)
-	    attr = highlight_attr[HLF_8];
+	    attr = hl_attr(HLF_8);
 	else
 	    attr = 0;
 	screen_putchar(c, curwin->w_winpos + curwin->w_wrow,
@@ -1501,6 +1577,12 @@ complete_dictionaries(dict, pat, dir, flags)
 	for (i = 0; i < count && !got_int; i++)
 	{
 	    fp = fopen((char *)files[i], "r");	/* open dictionary file */
+	    if (flags != DICT_EXACT)
+	    {
+		sprintf((char*)IObuff, "Scanning dictionary: %s",
+							    (char *)files[i]);
+		msg_trunc_attr(IObuff, TRUE, hl_attr(HLF_R));
+	    }
 
 	    if (fp != NULL)
 	    {
@@ -1735,12 +1817,23 @@ ins_expand_pre(c)
 		    }
 		}
 	    }
-	    /* Break line if it's too long */
+
+	    /*
+	     * When completing whole lines: fix indent for 'cindent'.
+	     * Otherwise, break line if it's too long.
+	     */
 	    lnum = curwin->w_cursor.lnum;
-	    /* hmm, we better don't format the WHOLE_LINE just inserted */
-	    /* put the cursor on the last char, for correct 'tw' formatting */
-	    if (continue_mode != CTRL_X_WHOLE_LINE)
+	    if (continue_mode == CTRL_X_WHOLE_LINE)
 	    {
+#ifdef CINDENT
+		/* re-indent the current line */
+		if (curbuf->b_p_cin)
+		    fixthisline(get_c_indent);
+#endif
+	    }
+	    else
+	    {
+		/* put the cursor on the last char, for 'tw' formatting */
 		curwin->w_cursor.col--;
 		insertchar(NUL, FALSE, -1, FALSE);
 		curwin->w_cursor.col++;
@@ -1889,8 +1982,10 @@ get_expansion(ini, dir)
 		    dict = ins_buf->b_fname;
 		    dict_f = DICT_EXACT;
 		}
-		sprintf((char*) IObuff, "Scanning: %s", ins_buf->b_sfname);
-		msg_attr(IObuff, highlight_attr[HLF_R]);
+		sprintf((char*)IObuff, "Scanning: %s",
+			ins_buf->b_sfname == NULL ? "No File"
+						  : (char *)ins_buf->b_sfname);
+		msg_trunc_attr(IObuff, TRUE, hl_attr(HLF_R));
 	    }
 	    else if (*e_cpt == NUL)
 		break;
@@ -1910,7 +2005,11 @@ get_expansion(ini, dir)
 		    type = CTRL_X_PATH_PATTERNS;
 #endif
 		else if (*e_cpt == ']' || *e_cpt == 't')
+		{
 		    type = CTRL_X_TAGS;
+		    sprintf((char*)IObuff, "Scanning tags.");
+		    msg_trunc_attr(IObuff, TRUE, hl_attr(HLF_R));
+		}
 		else
 		    type = -1;
 
@@ -1949,7 +2048,8 @@ get_expansion(ini, dir)
 	    /* set reg_ic according to p_ic, p_scs and pat */
 	    set_reg_ic(complete_pat);
 	    if (find_tags(complete_pat, &temp, &matches,
-			    TAG_REGEXP | TAG_NAMES, MAXCOL) == OK && temp > 0)
+		    TAG_REGEXP | TAG_NAMES | (ctrl_x_mode ? TAG_VERBOSE : 0),
+						    MAXCOL) == OK && temp > 0)
 	    {
 		int	add_r = OK;
 		int	ldir = dir;
@@ -2064,10 +2164,11 @@ get_expansion(ini, dir)
 		    {
 			if (pos->lnum < ins_buf->b_ml.ml_line_count)
 			{
-			    /* Try next line, if any. the new word will be "join"
-			     * as if the normal command "J" was used.  IOSIZE is
-			     * always greater than completion_length, so the next
-			     * STRNCPY always works -- Acevedo */
+			    /* Try next line, if any. the new word will be
+			     * "join" as if the normal command "J" was used.
+			     * IOSIZE is always greater than
+			     * completion_length, so the next STRNCPY always
+			     * works -- Acevedo */
 			    STRNCPY(IObuff, ptr, temp);
 			    ptr = ml_get_buf(ins_buf, pos->lnum + 1, FALSE);
 			    tmp_ptr = ptr = skipwhite(ptr);
@@ -2504,7 +2605,7 @@ ins_complete(c)
 	sprintf((char *)IObuff, (char *)ptr, temp);
 	if (dollar_vcol)
 	    curs_columns(FALSE);
-	msg_attr(IObuff, highlight_attr[HLF_R]);
+	msg_attr(IObuff, hl_attr(HLF_R));
 	if (!char_avail())
 	{
 	    setcursor();
@@ -2518,7 +2619,7 @@ ins_complete(c)
 	if (!p_smd)
 	    msg_attr(edit_submode_extra,
 		    edit_submode_highl < HLF_COUNT
-		    ? highlight_attr[edit_submode_highl] : 0);
+		    ? hl_attr(edit_submode_highl) : 0);
 	if (!char_avail())
 	{
 	    setcursor();
@@ -2602,9 +2703,10 @@ quote_meta(dest, src, len)
     int
 get_literal()
 {
-    int		 cc;
-    int		 nc;
-    int		 i;
+    int		cc;
+    int		nc;
+    int		i;
+    int		hexmode = 0, octalmode = 0;
 
     if (got_int)
 	return Ctrl('C');
@@ -2624,21 +2726,61 @@ get_literal()
 #endif
     ++no_mapping;	    /* don't map the next key hits */
     cc = 0;
-    for (i = 0; i < 3; ++i)
+    i = 0;
+    for (;;)
     {
 	do
 	    nc = vgetc();
 	while (nc == K_IGNORE || nc == K_SCROLLBAR || nc == K_HORIZ_SCROLLBAR);
 #ifdef SHOWCMD
-	if (!(State & CMDLINE))
+	if (!(State & CMDLINE)
+#ifdef MULTI_BYTE
+		&& (is_dbcs && !IsLeadByte(nc))
+#endif
+		)
 	    add_to_showcmd(nc);
 #endif
-	if (!vim_isdigit(nc))
-	    break;
-	cc = cc * 10 + nc - '0';
+	if (nc == 'x' || nc == 'X')
+	    hexmode++;
+	else if (nc == 'o' || nc == 'O')
+	    octalmode++;
+	else
+	{
+	    if (hexmode)
+	    {
+		if (!vim_isdigit(nc) && !isxdigit(nc))
+		    break;
+		nc = tolower(nc);
+		if (nc >= 'a')
+		    nc = 10 + nc - 'a';
+		else
+		    nc = nc - '0';
+		cc = cc * 16 + nc ;
+	    }
+	    else if (octalmode)
+	    {
+		if (!vim_isdigit(nc) || (nc > '7'))
+		    break;
+		cc = cc * 8 + nc - '0';
+	    }
+	    else
+	    {
+		if (!vim_isdigit(nc))
+		    break;
+		cc = cc * 10 + nc - '0';
+	    }
+
+	    ++i;
+	}
+
 	if (cc > 255)
 	    cc = 255;		/* limit range to 0-255 */
 	nc = 0;
+
+	if (hexmode && (i >= 2))
+	    break;
+	if (!hexmode && (i >= 3))
+	    break;
     }
     if (i == 0)	    /* no number entered */
     {
@@ -2893,6 +3035,13 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 	    haveto_redraw = TRUE;
 #ifdef CINDENT
 	    can_cindent = TRUE;
+#endif
+	    /* moved the cursor, don't autoindent or cindent now */
+	    did_ai = FALSE;
+#ifdef SMARTINDENT
+	    did_si = FALSE;
+	    can_si = FALSE;
+	    can_si_back = FALSE;
 #endif
 	    line_breakcheck();
 	}
@@ -3187,6 +3336,19 @@ oneright()
     ptr = ml_get_cursor();
     if (*ptr++ == NUL || *ptr == NUL)
 	return FAIL;
+
+#ifdef MULTI_BYTE
+    if (is_dbcs)
+    {
+	/* if the character on the current cursor is a multi-byte character,
+	   move two characters right */
+	char_u *base;
+
+	base = ml_get(curwin->w_cursor.lnum);
+	if (*(ptr+1) != NUL && IsTrailByte(base, ptr))
+	    ++curwin->w_cursor.col;
+    }
+#endif
     curwin->w_set_curswant = TRUE;
     ++curwin->w_cursor.col;
     return OK;
@@ -3199,13 +3361,19 @@ oneleft()
 	return FAIL;
     curwin->w_set_curswant = TRUE;
     --curwin->w_cursor.col;
+#ifdef MULTI_BYTE
+    /* if the character on the left of the current cursor is a multi-byte
+     * character, move two characters left */
+    if (is_dbcs)
+	AdjustCursorForMultiByteCharacter();
+#endif
     return OK;
 }
 
     int
 cursor_up(n, upd_topline)
-    long    n;
-    int	    upd_topline;	    /* When TRUE: update topline */
+    long	n;
+    int		upd_topline;	    /* When TRUE: update topline */
 {
     if (n != 0)
     {
@@ -3401,7 +3569,7 @@ replace_push(c)
 	}
 	if (replace_stack != NULL)
 	{
-	    vim_memmove(p, replace_stack,
+	    mch_memmove(p, replace_stack,
 				 (size_t)(replace_stack_nr * sizeof(char_u)));
 	    vim_free(replace_stack);
 	}
@@ -3409,7 +3577,7 @@ replace_push(c)
     }
     p = replace_stack + replace_stack_nr - replace_offset;
     if (replace_offset)
-	vim_memmove(p + 1, p, (size_t)(replace_offset * sizeof(char_u)));
+	mch_memmove(p + 1, p, (size_t)(replace_offset * sizeof(char_u)));
     *p = c;
     ++replace_stack_nr;
 }
@@ -3459,7 +3627,7 @@ replace_join(off)
 	if (replace_stack[i] == NUL && off-- <= 0)
 	{
 	    --replace_stack_nr;
-	    vim_memmove(replace_stack + i, replace_stack + i + 1,
+	    mch_memmove(replace_stack + i, replace_stack + i + 1,
 					      (size_t)(replace_stack_nr - i));
 	    return;
 	}
@@ -3709,11 +3877,15 @@ hkmap(c)
 	    KAFsofit, hKAF, LAMED, MEMsofit, MEM, NUNsofit, NUN, SAMEH, AIN,
 	    PEIsofit, PEI, ZADIsofit, ZADI, KOF, RESH, hSHIN, TAV};
 	static char_u map[26] =
-	    {hALEF/*a*/, BET/*b*/, hKAF/*c*/, DALET/*d*/, (char_u)-1/*e*/,
-	     PEIsofit/*f*/, GIMEL/*g*/, HEI/*h*/, IUD/*i*/, HET/*j*/, KOF/*k*/,
-	     LAMED/*l*/, MEM/*m*/, NUN/*n*/, SAMEH/*o*/, PEI/*p*/,
-	     (char_u)-1/*q*/, RESH/*r*/, ZAIN/*s*/, TAV/*t*/, TET/*u*/,
-	     VAV/*v*/, hSHIN/*w*/, (char_u)-1/*x*/, AIN/*y*/, ZADI/*z*/};
+	    {(char_u)hALEF/*a*/, (char_u)BET  /*b*/, (char_u)hKAF    /*c*/,
+	     (char_u)DALET/*d*/, (char_u)-1   /*e*/, (char_u)PEIsofit/*f*/,
+	     (char_u)GIMEL/*g*/, (char_u)HEI  /*h*/, (char_u)IUD     /*i*/,
+	     (char_u)HET  /*j*/, (char_u)KOF  /*k*/, (char_u)LAMED   /*l*/,
+	     (char_u)MEM  /*m*/, (char_u)NUN  /*n*/, (char_u)SAMEH   /*o*/,
+	     (char_u)PEI  /*p*/, (char_u)-1   /*q*/, (char_u)RESH    /*r*/,
+	     (char_u)ZAIN /*s*/, (char_u)TAV  /*t*/, (char_u)TET     /*u*/,
+	     (char_u)VAV  /*v*/, (char_u)hSHIN/*w*/, (char_u)-1      /*x*/,
+	     (char_u)AIN  /*y*/, (char_u)ZADI /*z*/};
 
 	if (c == 'N' || c == 'M' || c == 'P' || c == 'C' || c == 'Z')
 	    return map[tolower(c) - 'a'] - 1 + p_aleph; /* '-1'='sofit' */
@@ -3846,6 +4018,10 @@ ins_esc(count, need_redraw, cmdchar)
     int		 temp;
     static int	 disabled_redraw = FALSE;
 
+#if defined(MULTI_BYTE_IME) && defined(USE_GUI_WIN32)
+    ImeSetEnglishMode();
+#endif
+
     temp = curwin->w_cursor.col;
     if (disabled_redraw)
     {
@@ -3917,10 +4093,10 @@ ins_esc(count, need_redraw, cmdchar)
 #ifdef USE_MOUSE
     setmouse();
 #endif
-#ifdef USE_GUI
-    if (gui.in_use)
-	gui_upd_cursor_shape();		/* may show different cursor shape */
+#ifdef CURSOR_SHAPE
+    ui_cursor_shape();		/* may show different cursor shape */
 #endif
+
     /*
      * When recording or for CTRL-O, need to display the new mode.
      * Otherwise remove the mode message.
@@ -3934,6 +4110,10 @@ ins_esc(count, need_redraw, cmdchar)
 }
 
 #ifdef RIGHTLEFT
+/*
+ * Toggle language: khmap and revins_on.
+ * Move to end of reverse inserted text.
+ */
     static void
 ins_ctrl_()
 {
@@ -4023,13 +4203,13 @@ ins_del()
     int	    temp;
 
     stop_arrow();
-    if (gchar_cursor() == NUL)	    /* delete newline */
+    if (gchar_cursor() == NUL)	/* delete newline */
     {
 	temp = curwin->w_cursor.col;
-	if (!p_bs ||		    /* only if 'bs' set */
-	    u_save((linenr_t)(curwin->w_cursor.lnum - 1),
-		(linenr_t)(curwin->w_cursor.lnum + 2)) == FAIL ||
-		    do_join(FALSE, TRUE) == FAIL)
+	if (!p_bs		/* only if 'bs' set */
+		|| u_save((linenr_t)(curwin->w_cursor.lnum - 1),
+		    (linenr_t)(curwin->w_cursor.lnum + 2)) == FAIL
+		|| do_join(FALSE, TRUE) == FAIL)
 	    beep_flush();
 	else
 	{
@@ -4355,13 +4535,16 @@ ins_mouse(c)
 
     undisplay_dollar();
     tpos = curwin->w_cursor;
-    if (do_mouse(NULL, c, BACKWARD, 1L, FALSE))
+    if (do_mouse(NULL, c, BACKWARD, 1L, 0))
     {
 	start_arrow(&tpos);
 # ifdef CINDENT
 	can_cindent = TRUE;
 # endif
     }
+
+    /* redraw status lines (in case another window became active) */
+    redraw_statuslines();
 }
 #endif
 
@@ -4480,6 +4663,15 @@ ins_right()
     if (gchar_cursor() != NUL)
     {
 	start_arrow(&curwin->w_cursor);
+#ifdef MULTI_BYTE
+	if (is_dbcs)
+	{
+	    char_u *p = ml_get_pos(&curwin->w_cursor);
+
+	    if (IsLeadByte(p[0]) && p[1] != NUL)
+		++curwin->w_cursor.col;
+	}
+#endif
 	curwin->w_set_curswant = TRUE;
 	++curwin->w_cursor.col;
 #ifdef RIGHTLEFT
@@ -4720,7 +4912,7 @@ ins_tab()
 	    i = curwin->w_cursor.col - fpos.col;
 	    if (i > 0)
 	    {
-		vim_memmove(ptr, ptr + i, STRLEN(ptr + i) + 1);
+		mch_memmove(ptr, ptr + i, STRLEN(ptr + i) + 1);
 		/* correct replace stack. */
 		if (State == REPLACE)
 		    for (temp = i; --temp >= 0; )
@@ -4809,7 +5001,7 @@ ins_digraph()
     c = vgetc();
     --no_mapping;
     --allow_keys;
-    if (IS_SPECIAL(c))	    /* special key */
+    if (IS_SPECIAL(c) || mod_mask)	    /* special key */
     {
 #ifdef SHOWCMD
 	clear_showcmd();

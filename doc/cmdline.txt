@@ -1,25 +1,26 @@
-*cmdline.txt*   For Vim version 5.1.  Last modification: 1998 Mar 25
+*cmdline.txt*   For Vim version 5.2.  Last modification: 1998 Jul 26
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
+					*Cmdline-mode* *Command-line-mode*
 Command-line mode					*mode-cmdline* *:*
 
 Command-line mode is used to enter Ex commands (":"), search patterns
 ("/" and "?"), and filter commands ("!").
 
-1. Command line editing		|cmdline-editing|
-2. Command line completion	|cmdline-completion|
-3. Ex command lines		|cmdline-lines|
-4. Ex command line ranges	|cmdline-ranges|
+1. Command-line editing		|cmdline-editing|
+2. Command-line completion	|cmdline-completion|
+3. Ex command-lines		|cmdline-lines|
+4. Ex command-line ranges	|cmdline-ranges|
 5. Ex special characters	|cmdline-special|
 
 ==============================================================================
-1. Command line editing					*cmdline-editing*
+1. Command-line editing					*cmdline-editing*
 
 Normally characters are inserted in front of the cursor position.  You can
-move around in the command line with the left and right cursor keys.  With the
+move around in the command-line with the left and right cursor keys.  With the
 <Insert> key, you can toggle between inserting and overstriking characters.
 {Vi: can only alter the last character in the line}
 
@@ -34,18 +35,19 @@ For example, to define tcsh style editing keys:		*tcsh-style*
 (<> notation |<>|; type all this literally)
 
 							*cmdline-history*
-The command lines that you enter are remembered in a history table.  You can
-recall them with the up and down cursor keys.  There are actually three
+The command-lines that you enter are remembered in a history table.  You can
+recall them with the up and down cursor keys.  There are actually four
 history tables:
 - one for ':' commands
 - one for search strings
 - one for expressions
+- one for input lines, typed for the |input()| function.
 These are completely separate.  Each history can only be accessed when
 entering the same type of line.
 Use the 'history' option to set the number of lines that are remembered
 (default: 20).
 Notes:
-- When you enter a command line that is excactly the same as an older one, the
+- When you enter a command-line that is exactly the same as an older one, the
   old one is removed (to avoid repeated commands moving older commands out of
   the history).
 - Only commands that are typed are remembered.  Ones that completely come from
@@ -55,7 +57,7 @@ Notes:
   remembered (to avoid that long mappings trash the history).
 {Vi: no history}
 
-There is an automatic completion of names on the command line; see
+There is an automatic completion of names on the command-line; see
 |cmdline-completion|.
 
 							*c_CTRL-V*
@@ -77,9 +79,9 @@ CTRL-Q		Same as CTRL-V.
 <S-Right> or <C-Right>					*c_<C-Right>*
 		cursor one WORD right
 CTRL-B or <Home>					*c_CTRL-B* *c_<Home>*
-		cursor to beginning of command line
+		cursor to beginning of command-line
 CTRL-E or <End>						*c_CTRL-E* *c_<End>*
-		cursor to end of command line
+		cursor to end of command-line
 
 							*c_<LeftMouse>*
 <LeftMouse>	cursor to position of mouse click.
@@ -96,7 +98,7 @@ CTRL-W		delete the word before the cursor
 							*c_CTRL-U*
 CTRL-U		remove all characters
 
-		Note: if the command line becomes empty with one of the
+		Note: if the command-line becomes empty with one of the
 		delete commands, Command-line mode is quit.
 							*c_<Insert>*
 <Insert>	Toggle between insert and overstrike.  {not in Vi}
@@ -116,7 +118,7 @@ CTRL-R <0-9a-z"%#:-=>					*c_CTRL-R*
 				the last delete or yank
 			'%'	the current file name
 			'#'	the alternate file name
-			':'	the last command line
+			':'	the last command-line
 			'-'	the last small (less than a line) delete
 			'='	the expression register: you are prompted to
 				enter an expression (see |expression|)
@@ -130,62 +132,63 @@ CTRL-J						*c_CTRL-J* *c_<NL>* *c_<CR>*
 		Command-line mode without executing.  In macros or when 'x'
 		present in 'cpoptions', start entered command.
 							*c_CTRL-C*
-CTRL-C		quit command line without executing
+CTRL-C		quit command-line without executing
 
 							*c_<Up>*
-<Up>		recall older command line from history, whose beginning
-		matches the current command line (see below).
+<Up>		recall older command-line from history, whose beginning
+		matches the current command-line (see below).
 							*c_<Down>*
-<Down>		recall more recent command line from history, whose beginning
-		matches the current command line (see below).
+<Down>		recall more recent command-line from history, whose beginning
+		matches the current command-line (see below).
 
 							*c_<S-Up>* *c_<PageUp>*
 <S-Up> or <PageUp>
-		recall older command line from history
+		recall older command-line from history
 						*c_<S-Down>* *c_<PageDown>*
 <S-Down> or <PageDown>
-		recall more recent command line from history
+		recall more recent command-line from history
 
-CTRL-D		command line completion (see |cmdline-completion|)
+CTRL-D		command-line completion (see |cmdline-completion|)
 'wildchar' option
-		command line completion (see |cmdline-completion|)
-CTRL-N		command line completion (see |cmdline-completion|)
-CTRL-P		command line completion (see |cmdline-completion|)
-CTRL-A		command line completion (see |cmdline-completion|)
-CTRL-L		command line completion (see |cmdline-completion|)
+		command-line completion (see |cmdline-completion|)
+CTRL-N		command-line completion (see |cmdline-completion|)
+CTRL-P		command-line completion (see |cmdline-completion|)
+CTRL-A		command-line completion (see |cmdline-completion|)
+CTRL-L		command-line completion (see |cmdline-completion|)
 
 							*c_CTRL-_*
 CTRL-_		a - switch between Hebrew and English keyboard mode, which is
-		private to the command line and not related to hkmap.
+		private to the command-line and not related to hkmap.
 		This is useful when Hebrew text entry is required in the
-		command line, searches, abbreviations, etc.  Applies only if
-		Vim is compiled with the |+rightleft| feature.
+		command-line, searches, abbreviations, etc.  Applies only if
+		Vim is compiled with the |+rightleft| feature and the
+		'allowrevins' option is set.
 		See |rightleft.txt|.
 
 		b - switch between Farsi and English keyboard mode, which is
-		private to the command line and not related to fkmap.  In
-		Farsi keyboard mode the characters are inserted in revese
+		private to the command-line and not related to fkmap.  In
+		Farsi keyboard mode the characters are inserted in reverse
 		insert manner.  This is useful when Farsi text entry is
-		required in the command line, searches, abbreviations, etc.
+		required in the command-line, searches, abbreviations, etc.
 		Applies only if Vim is compiled with the |+farsi| feature.
 		See |farsi.txt|.
 
-The <Up> and <Down> keys take the current command line as a search string.
-The beginning of the next/previous command lines are compared with this
-string.  The first line that matches is the new command line.  When typing
+The <Up> and <Down> keys take the current command-line as a search string.
+The beginning of the next/previous command-lines are compared with this
+string.  The first line that matches is the new command-line.  When typing
 these two keys repeatedly, the same string is used again.  For example, this
 can be used to find the previous substitute command: Type ":s" and then <Up>.
 The same could be done by typing <S-Up> a number of times until the desired
-command line is shown.  (Note: the shifted arrow keys do not work on all
+command-line is shown.  (Note: the shifted arrow keys do not work on all
 terminals)
 
 ==============================================================================
-2. Command line completion				*cmdline-completion*
+2. Command-line completion				*cmdline-completion*
 
-When editing the command line, a few commands can be used to complete the
+When editing the command-line, a few commands can be used to complete the
 word before the cursor.  This is available for:
 
-- Command names: at the start of the command line.  Works always.
+- Command names: at the start of the command-line.  Works always.
 - tags: only after the ":tag" command.
 - file names: only after a command that accepts a file name or a setting for
   an option that can be set to a file name.  This is called file name
@@ -197,7 +200,8 @@ These are the commands that can be used:
 							*c_CTRL-D*
 CTRL-D		List names that match the pattern in front of the cursor.
 		When showing file names, directories are highlighted (see
-		'highlight' option)
+		'highlight' option).  Names where 'suffixes' matches are moved
+		to the end.
 					*c_CTRL-I* *c_wildchar* *c_<Tab>*
 'wildchar' option
 		A match is done on the pattern in front of the cursor.  The
@@ -208,12 +212,13 @@ CTRL-D		List names that match the pattern in front of the cursor.
 		again and there were multiple matches, the next
 		match is inserted.  After the last match, the first is used
 		again (wrap around).
+		The behaviour can be changed with the 'wildmode' option.
 							*c_CTRL-N*
 CTRL-N		After using 'wildchar' which got multiple matches, go to next
-		match.  Otherwise recall more recent command line from history.
+		match.  Otherwise recall more recent command-line from history.
 <S-Tab>							*c_CTRL-P* *c_<S-Tab>*
 CTRL-P		After using 'wildchar' which got multiple matches, go to
-		previous match.  Otherwise recall older command line from
+		previous match.  Otherwise recall older command-line from
 		history.  <S-Tab> only works with the GUI, on the Amiga and
 		with MS-DOS.
 							*c_CTRL-A*
@@ -223,7 +228,8 @@ CTRL-A		All names that match the pattern in front of the cursor are
 CTRL-L		A match is done on the pattern in front of the cursor.  If
 		there is one match, it is inserted in place of the pattern.
 		If there are multiple matches the longest common part is
-		inserted in place of the pattern.
+		inserted in place of the pattern.  If the result is shorter
+		than the pattern, no completion is done.
 
 The 'wildchar' option defaults to <Tab> (CTRL-E when in Vi compatible mode; in
 a previous version <Esc> was used).  In the pattern standard wildcards '*' and
@@ -266,7 +272,7 @@ And this in your .vimrc:
 >	cmap <Esc>[1~ <C-P>		(<C-P> is CTRL-P)
 
 ==============================================================================
-3. Ex command lines					*cmdline-lines*
+3. Ex command-lines					*cmdline-lines*
 
 The Ex commands have a few specialties:
 
@@ -293,6 +299,9 @@ followed by another command:
     :pyfile
     :python
     :read !
+    :tcl
+    :tcldo
+    :tclfile
     :vglobal
     :write !
     :[range]!
@@ -364,7 +373,7 @@ argument for the command, which has a different meaning.  For example:
 			"name"
 
 ==============================================================================
-4. Ex command line ranges			*cmdline-ranges* *[range]*
+4. Ex command-line ranges			*cmdline-ranges* *[range]*
 
 Some Ex commands accept a line range in front of them.  This is noted as
 [range].  It consists of one or more line specifiers, separated with ',' or
@@ -390,7 +399,6 @@ Line numbers may be specified with:			*:range*
 	.		the current line			  *:.*
 	$		the last line in the file		  *:$*
 	%		equal to 1,$ (the entire file)		  *:%*
-	*		equal to '<,'> (the Visual area)	  *:star*
 	't		position of mark t (lower case)		  *:'*
 	/{pattern}[/]	the next line where {pattern} matches	  *:/*
 	?{pattern}[?]	the previous line where {pattern} matches *:?*
@@ -448,9 +456,9 @@ three lines:
 >		3:d<CR>		is translated into: .,.+2d<CR>
 
 							*v_:*
-{Visual}:	Starts a command line with the Visual selected lines as a
+{Visual}:	Starts a command-line with the Visual selected lines as a
 		range.  The code ":'<,'>" is used for this range, which makes
-		it possible to select a similar line from the command line
+		it possible to select a similar line from the command-line
 		history for repeating a command on different Visually selected
 		lines.
 
@@ -475,61 +483,91 @@ it, no matter how many backslashes.
 
 			       *:<cword>* *:<cWORD>* *:<cfile>* *<cfile>*
 			       *:<sfile>* *<sfile>* *:<afile>* *<afile>*
+			       *:<abuf>* *<abuf>*
 Note: the next four are typed literally, these are not special keys!
 	<cword>    is replaced with the word under the cursor
 	<cWORD>    is replaced with the WORD under the cursor (see |WORD|)
 	<cfile>    is replaced with the path name under the cursor
 	<afile>    when executing autocommands, is replaced with the file name
 		   for a file read or write
+	<abuf>     when executing autocommands, is replaced with the currently
+		   effective buffer number (for ":r file" it is the current
+		   buffer, the file being read is not in a buffer).
 	<sfile>    when executing a ":source" command, is replaced with the
 		   file name of the sourced file.
 
-		*filename-modifiers* *:_%:* *::p* *::h* *::t* *::r* *::e*
-After "%", "#", "#n", "<cfile>", "<sfile>" or "<afile>" modifiers can be given
-(in this order):
-	:p	   Make file name a full path.  Must be the first modifier.
-	:h	   Head of the file name (the last component and any
-		   separators removed).  Cannot be used with :e, :r or :t.
-		   Can be repeated to remove several components at the end.
-		   When the file name is an absolute path (starts with "/" for
-		   Unix; "x:\" for MS-DOS, WIN32, OS/2; "drive:" for Amiga),
-		   that part is not removed.  When there is no head (path is
-		   relative to current directory) the result is empty.
-	:t	   Tail of the file name (last component of the name).  Must
-		   precede any :r or :e.
-	:r	   Root of the file name (the last extension removed).  When
-		   there is only an extension (file name that starts with
-		   '.', e.g., ".vimrc"), it is not removed.  Can be repeated to
-		   remove several extensions (last one first).
-	:e	   Extension of the file name.  Only makes sense when used
-		   alone.  When there is no extension the result is empty.
-		   When there is only an extension (file name that starts with
-		   '.'), the result is empty.  Can be repeated to include more
-		   extensions.  If there are not enough extensions (but at
-		   least one) as much as possible are included.
+							 *filename-modifiers*
+		 *:_%:* *::p* *::.* *::~* *::h* *::t* *::r* *::e* *::s* *::gs*
+The file name modifers can be used after "%", "#", "#n", "<cfile>", "<sfile>",
+"<afile>" or "<abuf>".  They are also used with the |fnamemodify()| function.
+These are not available when Vim has been compiled without the |+modify_fname|
+feature.
+These modifiers can be given, in this order:
+	:p	Make file name a full path.  Must be the first modifier.
+	:.	Reduce file name to be relative to current directory, if
+		possible.  File name is unmodifed if it is not below the
+		current directory.
+	:~	Reduce file name to be relative to the home directory, if
+		possible.  File name is unmodifed if it is not below the home
+		directory.
+		For maximum shortness, use ":~:.".
+	:h	Head of the file name (the last component and any separators
+		removed).  Cannot be used with :e, :r or :t.
+		Can be repeated to remove several components at the end.
+		When the file name is an absolute path (starts with "/" for
+		Unix; "x:\" for MS-DOS, WIN32, OS/2; "drive:" for Amiga), that
+		part is not removed.  When there is no head (path is relative
+		to current directory) the result is empty.
+	:t	Tail of the file name (last component of the name).  Must
+		precede any :r or :e.
+	:r	Root of the file name (the last extension removed).  When
+		there is only an extension (file name that starts with '.',
+		e.g., ".vimrc"), it is not removed.  Can be repeated to remove
+		several extensions (last one first).
+	:e	Extension of the file name.  Only makes sense when used alone.
+		When there is no extension the result is empty.
+		When there is only an extension (file name that starts with
+		'.'), the result is empty.  Can be repeated to include more
+		extensions.  If there are not enough extensions (but at least
+		one) as much as possible are included.
+	:s?pat?sub?
+		Substitute the first occurence of "pat" with "sub".  This
+		works like the |:s| command.  "pat" is a regular expression.
+		Any character can be used for '?', but it must not occur in
+		"pat" or "sub".
+		After this, the previous modifiers can be used again.  For
+		example ":p", to make a full path after the substitution.
+	:gs?pat?sub?
+		Substitute all occurences of "path" with "sub".  Otherwise
+		this works like ":s".
 
-Examples, when the file name is "src/version.c":
->	:p	   /home/mool/vim/src/version.c
->	:h			  src
->	:p:h	   /home/mool/vim/src
->	:p:h:h	   /home/mool/vim
->	:t			      version.c
->	:p:t			      version.c
->	:r			  src/version
->	:p:r	   /home/mool/vim/src/version
->	:t:r			      version
->	:e				      c
+Examples, when the file name is "src/version.c", current dir "/home/mool/vim":
+>  :p			/home/mool/vim/src/version.c
+>  :p:.				       src/version.c
+>  :p:~				 ~/vim/src/version.c
+>  :h				       src
+>  :p:h			/home/mool/vim/src
+>  :p:h:h		/home/mool/vim
+>  :t					   version.c
+>  :p:t					   version.c
+>  :r				       src/version
+>  :p:r			/home/mool/vim/src/version
+>  :t:r					   version
+>  :e						   c
+>  :s?version?main?		       src/main.c
+>  :s?version?main?:p	/home/mool/vim/src/main.c
+>  :p:gs?/?\\?		\home\mool\vim\src\version.c
 
 Examples, when the file name is "src/version.c.gz":
->	:p	   /home/mool/vim/src/version.c.gz
->	:e		                        gz
->	:e:e                                  c.gz
->	:e:e:e                                c.gz
->	:e:e:r                                c
->	:r                        src/version.c
->	:r:e                                  c
->	:r:r                      src/version
->	:r:r:r                    src/version
+>  :p			/home/mool/vim/src/version.c.gz
+>  :e						     gz
+>  :e:e						   c.gz
+>  :e:e:e					   c.gz
+>  :e:e:r					   c
+>  :r				       src/version.c
+>  :r:e						   c
+>  :r:r				       src/version
+>  :r:r:r			       src/version
 
 					*extension-removal* *:_%<*
 If a "<" is appended to "%", "#", "#n" or "CTRL-V p" the extension of the file

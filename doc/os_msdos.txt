@@ -1,4 +1,4 @@
-*os_msdos.txt*  For Vim version 5.1.  Last modification: 1998 Feb 19
+*os_msdos.txt*  For Vim version 5.2.  Last modification: 1998 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -35,10 +35,12 @@ For compiling Vim see src/INSTALL.pc.			*msdos-compiling*
 
 There are two versions of Vim that can be used with MS-DOS machines:
 
+							*dos16*
 Dos16 version	Can be used on any MS-DOS system, only uses up to 640 Kbyte of
 		memory.  Also runs on OS/2, Windows 95, and NT.  Excludes some
 		Vim-specific features (autocommands, syntax highlighting,
 		etc.).  Recommended for use on pre-386 machines.
+							*dos32*
 Dos32 version	Requires 386 processor and a |DPMI| driver, uses all
 		available memory.  Supports long file names, but NOT on
 		Windows NT.  Recommended for MS-DOS, Windows 3.1 and Windows
@@ -67,7 +69,6 @@ driver.  Such a driver is included with the executable in CSDPMI4B.ZIP.  Run
 "cwsdpmi -p" in your autoexec.bat to make it resident.  The latest version of
 "CSDPMI*.ZIP" can be obtained from: "ftp.neosoft.com:pub/users/s/sandmann".
 
-							*dos16*
 The 16 bit DOS version has been compiled with minimal functions.  These are
 missing:
 |+autocmd|	autocommands
@@ -80,7 +81,7 @@ missing:
 		":ilist", ":checkpath"
 |+insert_expand| Insert mode expansion, such as CTRL-N, CTRL-X CTRL-F
 |+lispindent|	'lispindent'
-|+quickfix|	Quickfix commands ":make", ":cnext", "-q" command line option
+|+quickfix|	Quickfix commands ":make", ":cnext", "-q" command-line option
 |+showcmd|	'showcmd' option
 |+smartindent|	'smartindent'
 |+syntax|	syntax highlighting
@@ -106,8 +107,11 @@ You can include (some of) these by editing feature.h and recompiling.
   at one time.  With more files you will get error messages when trying to
   read or write a file, and for filter commands.  Or Vim runs out of memory,
   and random problems may result.
-- The Dos32 version can only have about 15 files open (in a window or hidden)
-  at one time.  With more files, shell commands may cause a crash!
+- The Dos32 version cannot have an unlimited number of files open at any one
+  time.  The limit depends on the setting of FILES in your CONFIG.SYS. This
+  defaults to 15; if you need to edit a lot of files, you should increase
+  this. If you do not set FILES high enough, you can get strange errors, and
+  shell commands may cause a crash!
 - The Dos32 version can work with long file names.  When doing file name
   completion, matches for the short file name will also be found.  But this
   will result in the corresponding long file name.  For example, if you have

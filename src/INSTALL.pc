@@ -26,8 +26,8 @@ make -f Makefile.bor		     32 bit, Borland C++ 5.0 (edit it to
 					     define DOS)
 
 Warning: Be sure to use the right make.exe.  Microsoft C make doesn't work;
-Borland make only works with makefile.bcc and makefile.dos; DJGPP/GNU make
-must be used for makefile.djg.
+Borland make only works with makefile.bcc, makefile.bor and makefile.dos; 
+DJGPP/GNU make must be used for makefile.djg.
 
 The Borland C++ compiler has been used to generate the MS-DOS executable; it
 should work without problems. You will probably have to change the paths for
@@ -48,8 +48,9 @@ DJGPP needs to be installed properly to compile Vim; you need a lot of things
 before it works. When your setup is OK, Vim should compile with just one
 warning (about an argument to signal()).
 
-Makefile.bor is for those that have Borland C++ 5.0.  You need to make a few
-changes to make a 32 bit DOS version.  It has not been tested much yet.
+Makefile.bor is for those that have Borland C++ 5.0 or later.  At the top of
+the file, there are some variables you can change to make either a 32-bit
+Windows exe (GUI or console mode), or a 16-bit MS-DOS version.
 
 If you get all kinds of strange error messages when compiling, try adding <CR>
 characters at the end of each line.
@@ -88,12 +89,17 @@ Vim for Win32 compiles with the Microsoft Visual C++ 2.0 compiler and later,
 and with the Borland C++ 4.5 32-bit compiler and later.  It compiles on
 Windows 95 and all four NT platforms: i386, Alpha, MIPS, and PowerPC.  The
 NT/i386 and the Windows 95 binaries are identical.  Use Makefile.w32 to
-compile with Visual C++ and Makefile.b32 to compile with Borland C++.
+compile with Visual C++ and Makefile.bor to compile with Borland C++.
+
+For compiling Gvim with IME support on far-east Windows, uncomment the
+MULTI_BYTE_IME define in the src/feature.h file before compiling.
 
 The Win32 console binary was compiled with Visual C++ version 5.0, using
-Makefile.w32.  Other compilers should also work.  If you get all kinds of
-strange error messages when compiling (you shouldn't with the Microsoft or
-Borland 32-bit compilers), try adding <CR> characters at the end of each line.
+Makefile.w32 and makefile.bor (Borland C).  Other compilers should also work.  
+If you get all kinds of strange error messages when compiling (you shouldn't 
+with the Microsoft or Borland 32-bit compilers), try adding <CR> characters 
+at the end of each line.
+
 You probably need to run "vcvars32" before using "nmake".
 
 For making the Win32s version, you need Microsoft Visual C++ 4.1 OR EARLIER.

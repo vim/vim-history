@@ -1,4 +1,4 @@
-*os_unix.txt*   For Vim version 5.1.  Last modification: 1998 Mar 15
+*os_unix.txt*   For Vim version 5.2.  Last modification: 1998 Mar 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

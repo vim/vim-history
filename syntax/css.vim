@@ -2,11 +2,15 @@
 " Language:	Cascading Style Sheets
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/css.vim
-" Last change:	1998 Mar 28
+" Last change:	1998 Jun 16
 
 " Remove any old syntax stuff hanging around
 syn clear
 syn case ignore
+
+if !exists("main_syntax")
+  let main_syntax = 'css'
+endif
 
 syn keyword cssTagName address applet area a base basefont
 syn keyword cssTagName big blockquote body br b caption center
@@ -19,10 +23,10 @@ syn keyword cssTagName table td textarea th title tr tt ul u var
 
 syn match cssIdentifier "#[a-zA-Z][a-zA-Z0-9-]*"
 
-syn match cssLength contained "[-+]\=[0-9]\+\(\.[0-9]*\)\=\(%\|mm\|cm\|in\|pt\|pc\|em\|ex\|px\)\="
+syn match cssLength contained "[-+]\=\d\+\(\.\d*\)\=\(%\|mm\|cm\|in\|pt\|pc\|em\|ex\|px\)\="
 syn keyword cssColor contained aqua black blue fuchsia gray green lime maroon navy olive purple red silver teal yellow 
 syn match cssColor contained "white"
-syn match cssColor contained "\(#[0-9A-Fa-f]\{3\}\>\|#[0-9A-Fa-f]\{6\}\>\|rgb\s*(\s*[0-9]\+\(\.[0-9]*\)\=%\=\s*,\s*[0-9]\+\(\.[0-9]*\)\=%\=\s*,\s*[0-9]\+\(\.[0-9]*\)\=%\=\s*)\)"
+syn match cssColor contained "\(#[0-9A-Fa-f]\{3\}\>\|#[0-9A-Fa-f]\{6\}\>\|rgb\s*(\s*\d\+\(\.\d*\)\=%\=\s*,\s*\d\+\(\.\d*\)\=%\=\s*,\s*\d\+\(\.\d*\)\=%\=\s*)\)"
 syn match cssURL contained "\<url\s*([^)]*)"ms=s+4,me=e-1
 
 syn match cssImportant contained "!\s*important\>"
@@ -64,10 +68,10 @@ syn keyword cssClassificationAttr contained disc circle square decimal none
 syn match cssClassificationAttr contained "\<list-item\>"
 syn match cssClassificationAttr contained "\<\(lower\|upper\)-\(roman\|alpha\)\>"
 
-syn region cssInclude start="@import" end=";" contains=cssComment,cssURL
+syn region cssInclude start="@import" start="@include" end=";" contains=cssComment,cssURL
 syn match cssBraces contained "[{}]"
 syn match cssError contained "{@<>"
-syn region cssDefinition transparent matchgroup=cssBraces start='{' end='}' contains=css.*Attr,css.*Properties,cssComment,cssLength,cssColor,cssURL,cssImportant,cssError
+syn region cssDefinition transparent matchgroup=cssBraces start='{' end='}' contains=css.*Attr,css.*Properties,cssComment,cssLength,cssColor,cssURL,cssImportant,cssError,cssString
 
 syn match cssPseudoClass transparent ":\S*" contains=cssPseudoClassId
 syn keyword cssPseudoClassId contained link visited active
@@ -76,7 +80,12 @@ syn match cssPseudoClassId contained "\<first-\(line\|letter\)\>"
 syn region cssComment start="/\*" end="\*/"
 syn match cssComment "//.*$"
 
-syn sync minlines=10
+syn region cssString start=+"+ skip=+\\\\\|\\"+ end=+"+
+syn region cssString start=+'+ skip=+\\\\\|\\'+ end=+'+
+
+if main_syntax == "css"
+  syn sync minlines=10
+endif
 
 if !exists("did_css_syntax_inits")
   hi link cssComment Comment
@@ -100,6 +109,14 @@ if !exists("did_css_syntax_inits")
   hi link cssImportant Special
   hi link cssBraces Function
   hi link cssError Error
-let b:current_syntax = "html"
+  hi link cssInclude Include
+  hi link cssString String
+endif
+
+let b:current_syntax = "css"
+
+if main_syntax == 'css'
+  unlet main_syntax
+endif
 
 " vim: ts=8

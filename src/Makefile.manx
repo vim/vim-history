@@ -51,6 +51,7 @@ SRC =	buffer.c \
 	message.c \
 	misc1.c \
 	misc2.c \
+	multbyte.c \
 	normal.c \
 	ops.c \
 	option.c \
@@ -67,7 +68,7 @@ SRC =	buffer.c \
 	window.c \
 	version.c
 
-INCL = vim.h keymap.h macros.h ascii.h term.h structs.h os_amiga.h
+INCL = vim.h feature.h keymap.h macros.h ascii.h term.h structs.h os_amiga.h
 
 OBJ =	obj/buffer.o \
 	obj/charset.o \
@@ -86,6 +87,7 @@ OBJ =	obj/buffer.o \
 	obj/message.o \
 	obj/misc1.o \
 	obj/misc2.o \
+	obj/multbyte.o \
 	obj/normal.o \
 	obj/ops.o \
 	obj/option.o \
@@ -119,6 +121,7 @@ PRO =	proto/buffer.pro \
 	proto/message.pro \
 	proto/misc1.pro \
 	proto/misc2.pro \
+	proto/multbyte.pro \
 	proto/normal.pro \
 	proto/ops.pro \
 	proto/option.pro \
@@ -236,6 +239,9 @@ obj/misc1.o:	misc1.c
 
 obj/misc2.o:	misc2.c
 	$(CCSYM) $@ misc2.c
+
+obj/multbyte.o:	multbyte.c
+	$(CCSYM) $@ multbyte.c
 
 obj/normal.o:	normal.c
 	$(CCSYM) $@ normal.c

@@ -79,6 +79,7 @@ SOFTWARE.
 #define XtCShadowWidth		"ShadowWidth"
 #define XtCTopShadowPixel	"TopShadowPixel"
 #define XtCBottomShadowPixel	"BottomShadowPixel"
+#define XtCLimitThumb		"LimitThumb"
 
 #define XtNminimumThumb		"minimumThumb"
 #define XtNtopOfThumb		"topOfThumb"
@@ -86,6 +87,7 @@ SOFTWARE.
 #define XtNshadowWidth		"shadowWidth"
 #define XtNtopShadowPixel	"topShadowPixel"
 #define XtNbottomShadowPixel	"bottomShadowPixel"
+#define XtNlimitThumb		"limitThumb"
 
 typedef struct _ScrollbarRec	  *ScrollbarWidget;
 typedef struct _ScrollbarClassRec *ScrollbarWidgetClass;
@@ -122,6 +124,7 @@ typedef struct
     Dimension	shadow_width;
     Pixel	top_shadow_pixel;
     Pixel	bot_shadow_pixel;
+    Bool	limit_thumb;	/* limit thumb to inside scrollbar */
     int		top_shadow_contrast;
     int		bot_shadow_contrast;
     GC		top_shadow_GC;

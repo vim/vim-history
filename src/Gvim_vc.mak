@@ -72,6 +72,7 @@ CLEAN :
 	-@erase "$(INTDIR)\message.obj"
 	-@erase "$(INTDIR)\misc1.obj"
 	-@erase "$(INTDIR)\misc2.obj"
+	-@erase "$(INTDIR)\multbyte.obj"
 	-@erase "$(INTDIR)\normal.obj"
 	-@erase "$(INTDIR)\ops.obj"
 	-@erase "$(INTDIR)\option.obj"
@@ -102,9 +103,9 @@ CPP_PROJ=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
  /Iproto /Fo"$(INTDIR)/" /c 
 CPP_OBJS=.\Rel/
 CPP_SBRS=.\.
-# ADD BASE RSC /l 0x409 /d "NDEBUG"
-# ADD RSC /l 0x409 /d "NDEBUG"
-RSC_PROJ=/l 0x409 /fo"$(INTDIR)/vim.res" /d "NDEBUG" 
+# ADD BASE RSC /l 0x409 /d "NDEBUG" /d "USE_GUI_WIN32"
+# ADD RSC /l 0x409 /d "NDEBUG" /d "USE_GUI_WIN32"
+RSC_PROJ=/l 0x409 /fo"$(INTDIR)/vim.res" /d "NDEBUG" /d "USE_GUI_WIN32" 
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
@@ -112,11 +113,11 @@ BSC32_FLAGS=/nologo /o"$(OUTDIR)/Gvim_vc.bsc"
 BSC32_SBRS= \
 	
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 libc.lib oldnames.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib /nologo /subsystem:windows /machine:I386 /nodefaultlib /out:"gvim.exe"
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib imm32.lib winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
+# ADD LINK32 libc.lib oldnames.lib kernel32.lib user32.lib gdi32.lib imm32.lib winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib /nologo /subsystem:windows /machine:I386 /nodefaultlib /out:"gvim.exe"
 # SUBTRACT LINK32 /pdb:none
-LINK32_FLAGS=libc.lib oldnames.lib kernel32.lib user32.lib gdi32.lib\
- winspool.lib comdlg32.lib advapi32.lib shell32.lib /nologo /subsystem:windows\
+LINK32_FLAGS=libc.lib oldnames.lib kernel32.lib user32.lib gdi32.lib imm32.lib\
+ winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib /nologo /subsystem:windows\
  /incremental:no /pdb:"$(OUTDIR)/gvim.pdb" /machine:I386 /nodefaultlib\
  /out:"gvim.exe" 
 LINK32_OBJS= \
@@ -139,6 +140,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\message.obj" \
 	"$(INTDIR)\misc1.obj" \
 	"$(INTDIR)\misc2.obj" \
+	"$(INTDIR)\multbyte.obj" \
 	"$(INTDIR)\normal.obj" \
 	"$(INTDIR)\ops.obj" \
 	"$(INTDIR)\option.obj" \
@@ -216,6 +218,8 @@ CLEAN :
 	-@erase "$(INTDIR)\misc1.sbr"
 	-@erase "$(INTDIR)\misc2.obj"
 	-@erase "$(INTDIR)\misc2.sbr"
+	-@erase "$(INTDIR)\multbyte.obj"
+	-@erase "$(INTDIR)\multbyte.sbr"
 	-@erase "$(INTDIR)\normal.obj"
 	-@erase "$(INTDIR)\normal.sbr"
 	-@erase "$(INTDIR)\ops.obj"
@@ -264,9 +268,9 @@ CPP_PROJ=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
  "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /c 
 CPP_OBJS=.\Dbg/
 CPP_SBRS=.\Dbg/
-# ADD BASE RSC /l 0x409 /d "_DEBUG"
-# ADD RSC /l 0x409 /d "_DEBUG"
-RSC_PROJ=/l 0x409 /fo"$(INTDIR)/vim.res" /d "_DEBUG" 
+# ADD BASE RSC /l 0x409 /d "_DEBUG" /d "USE_GUI_WIN32"
+# ADD RSC /l 0x409 /d "_DEBUG" /d "USE_GUI_WIN32"
+RSC_PROJ=/l 0x409 /fo"$(INTDIR)/vim.res" /d "_DEBUG" /d "USE_GUI_WIN32" 
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
@@ -291,6 +295,7 @@ BSC32_SBRS= \
 	"$(INTDIR)\message.sbr" \
 	"$(INTDIR)\misc1.sbr" \
 	"$(INTDIR)\misc2.sbr" \
+	"$(INTDIR)\multbyte.sbr" \
 	"$(INTDIR)\normal.sbr" \
 	"$(INTDIR)\ops.sbr" \
 	"$(INTDIR)\option.sbr" \
@@ -314,11 +319,11 @@ BSC32_SBRS= \
 <<
 
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386
-# ADD LINK32 libcd.lib oldnames.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib /nologo /subsystem:windows /profile /debug /machine:I386 /nodefaultlib /out:"gvimd.exe"
-LINK32_FLAGS=libcd.lib oldnames.lib kernel32.lib user32.lib gdi32.lib\
- winspool.lib comdlg32.lib advapi32.lib shell32.lib /nologo /subsystem:windows\
- /profile /debug /machine:I386 /nodefaultlib /out:"gvimd.exe" 
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib imm32.lib winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386
+# ADD LINK32 libcd.lib oldnames.lib kernel32.lib user32.lib gdi32.lib imm32.lib winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib /nologo /subsystem:windows /profile /debug /machine:I386 /nodefaultlib /out:"gvimd.exe"
+LINK32_FLAGS=libcd.lib oldnames.lib kernel32.lib user32.lib gdi32.lib imm32.lib\
+ winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib /nologo /subsystem:windows\
+ /profile /map:"$(INTDIR)\gvimd.map" /debug /machine:I386 /nodefaultlib /out:"gvimd.exe" 
 LINK32_OBJS= \
 	"$(INTDIR)\buffer.obj" \
 	"$(INTDIR)\charset.obj" \
@@ -339,6 +344,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\message.obj" \
 	"$(INTDIR)\misc1.obj" \
 	"$(INTDIR)\misc2.obj" \
+	"$(INTDIR)\multbyte.obj" \
 	"$(INTDIR)\normal.obj" \
 	"$(INTDIR)\ops.obj" \
 	"$(INTDIR)\option.obj" \
@@ -397,6 +403,7 @@ CLEAN :
 	-@erase "$(INTDIR)\message.obj"
 	-@erase "$(INTDIR)\misc1.obj"
 	-@erase "$(INTDIR)\misc2.obj"
+	-@erase "$(INTDIR)\multbyte.obj"
 	-@erase "$(INTDIR)\normal.obj"
 	-@erase "$(INTDIR)\ops.obj"
 	-@erase "$(INTDIR)\option.obj"
@@ -430,9 +437,9 @@ CPP_PROJ=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
  "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /c 
 CPP_OBJS=.\RelDebug/
 CPP_SBRS=.\.
-# ADD BASE RSC /l 0x409 /d "NDEBUG"
-# ADD RSC /l 0x409 /d "NDEBUG"
-RSC_PROJ=/l 0x409 /fo"$(INTDIR)/vim.res" /d "NDEBUG" 
+# ADD BASE RSC /l 0x409 /d "NDEBUG" /d "USE_GUI_WIN32"
+# ADD RSC /l 0x409 /d "NDEBUG" /d "USE_GUI_WIN32"
+RSC_PROJ=/l 0x409 /fo"$(INTDIR)/vim.res" /d "NDEBUG" /d "USE_GUI_WIN32" 
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
@@ -440,10 +447,10 @@ BSC32_FLAGS=/nologo /o"$(OUTDIR)/Gvim_vc.bsc"
 BSC32_SBRS= \
 	
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386 /out:"vim.exe"
-# ADD LINK32 libcd.lib oldnames.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib /nologo /subsystem:windows /profile /debug /machine:I386 /nodefaultlib /out:"gvimrwd.exe"
-LINK32_FLAGS=libcd.lib oldnames.lib kernel32.lib user32.lib gdi32.lib\
- winspool.lib comdlg32.lib advapi32.lib shell32.lib /nologo /subsystem:windows\
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib imm32.lib winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386 /out:"vim.exe"
+# ADD LINK32 libcd.lib oldnames.lib kernel32.lib user32.lib gdi32.lib imm32.lib winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib /nologo /subsystem:windows /profile /debug /machine:I386 /nodefaultlib /out:"gvimrwd.exe"
+LINK32_FLAGS=libcd.lib oldnames.lib kernel32.lib user32.lib gdi32.lib imm32.lib\
+ winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib /nologo /subsystem:windows\
  /profile /debug /machine:I386 /nodefaultlib /out:"gvimrwd.exe" 
 LINK32_OBJS= \
 	"$(INTDIR)\buffer.obj" \
@@ -465,6 +472,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\message.obj" \
 	"$(INTDIR)\misc1.obj" \
 	"$(INTDIR)\misc2.obj" \
+	"$(INTDIR)\multbyte.obj" \
 	"$(INTDIR)\normal.obj" \
 	"$(INTDIR)\ops.obj" \
 	"$(INTDIR)\option.obj" \
@@ -1920,7 +1928,13 @@ BuildCmds= \
 SOURCE=.\vim.rc
 DEP_RSC_VIM_R=\
 	".\version.h"\
+	".\tearoff.bmp"\
+	".\tools.bmp"\
 	".\vim.ico"\
+	".\vim_error.ico"\
+	".\vim_alert.ico"\
+	".\vim_info.ico"\
+	".\vim_quest.ico"\
 	
 
 !IF  "$(CFG)" == "Vim - Win32 Release"
@@ -2458,6 +2472,50 @@ NODEP_CPP_MISC2=\
 
 
 "$(INTDIR)\misc2.obj" : $(SOURCE) $(DEP_CPP_MISC2) "$(INTDIR)"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\multbyte.c
+DEP_CPP_MISC2=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_MISC2=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+
+"$(INTDIR)\multbyte.obj" : $(SOURCE) $(DEP_CPP_MISC2) "$(INTDIR)"
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+"$(INTDIR)\multbyte.obj" : $(SOURCE) $(DEP_CPP_MISC2) "$(INTDIR)"
+
+"$(INTDIR)\multbyte.sbr" : $(SOURCE) $(DEP_CPP_MISC2) "$(INTDIR)"
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+
+"$(INTDIR)\multbyte.obj" : $(SOURCE) $(DEP_CPP_MISC2) "$(INTDIR)"
 
 
 !ENDIF 

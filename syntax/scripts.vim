@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1998 April 1 (really!)
+" Last change:	1998 April 14
 
 " This file is called by an autocommand for every file that has just been
 " loaded into a buffer.  It checks if the first line of the file is recognized
@@ -48,7 +48,7 @@ if !has("syntax_items")
     so <sfile>:p:h/zsh.vim
 
   " ELM Mail files
-  elseif getline(1) =~ "^From [a-zA-Z][a-zA-Z_0-9\.-]*@.*[12][09][0-9][0-9]$"
+  elseif getline(1) =~ '^From [a-zA-Z][a-zA-Z_0-9\.=-]*\(@[^ ]*\)\= .*[12][09]\d\d$'
     so <sfile>:p:h/mail.vim
 
   " Expect scripts
@@ -83,8 +83,16 @@ if !has("syntax_items")
     so <sfile>:p:h/awk.vim
 
   " AmigaDos scripts
-  elseif $TERM == "amiga" && (getline(1) =~ "^;" || getline(1) =~ "^\.[bB][rR][aA]")
+  elseif $TERM == "amiga" && (getline(1) =~ "^;" || getline(1) =~ '^\.[bB][rR][aA]')
     so <sfile>:p:h/amiga.vim
+
+  " SiCAD scripts (must have procn or procd as the first line to trigger this)
+  elseif getline(1) =~ '^ *[pP][rR][oO][cC][nNdD] *$'
+    source <sfile>:p:h/sicad.vim
+
+  " Purify log files start with "****  Purify"
+  elseif getline(1) =~ '^\*\*\*\*  Purify'
+    source <sfile>:p:h/purifylog.vim
 
   endif
 

@@ -39,13 +39,13 @@ syn match pikeInParen contained	"[^(][{}][^)]"
 
 "integer number, or floating point number without a dot and with "f".
 syn case ignore
-syn match pikeNumber		"\<[0-9]\+\(u\=l\=\|lu\|f\)\>"
+syn match pikeNumber		"\<\d\+\(u\=l\=\|lu\|f\)\>"
 "floating point number, with dot, optional exponent
-syn match pikeFloat		"\<[0-9]\+\.[0-9]*\(e[-+]\=[0-9]\+\)\=[fl]\=\>"
+syn match pikeFloat		"\<\d\+\.\d*\(e[-+]\=\d\+\)\=[fl]\=\>"
 "floating point number, starting with a dot, optional exponent
-syn match pikeFloat		"\.[0-9]\+\(e[-+]\=[0-9]\+\)\=[fl]\=\>"
+syn match pikeFloat		"\.\d\+\(e[-+]\=\d\+\)\=[fl]\=\>"
 "floating point number, without dot, with exponent
-syn match pikeFloat		"\<[0-9]\+e[-+]\=[0-9]\+[fl]\=\>"
+syn match pikeFloat		"\<\d\+e[-+]\=\d\+[fl]\=\>"
 "hex number
 syn match pikeNumber		"\<0x[0-9a-f]\+\(u\=l\=\|lu\)\>"
 "syn match pikeIdentifier	"\<[a-z_][a-z0-9_]*\>"

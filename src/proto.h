@@ -14,7 +14,7 @@
  * Don't include these while generating prototypes.  Prevents problems when
  * files are missing.
  */
-#ifndef PROTO
+#if !defined(PROTO) && !defined(NOPROTO)
 
 /*
  * Machine-dependent routines.
@@ -24,9 +24,6 @@
 # endif
 # if defined(UNIX) || defined(__EMX__)
 #  include "os_unix.pro"
-#  ifndef HAVE_RENAME
-    int rename __ARGS((const char *, const char *));
-#  endif
 # endif
 # ifdef MSDOS
 #  include "os_msdos.pro"
@@ -43,9 +40,15 @@
 # ifdef macintosh
 #  include "os_mac.pro"
 # endif
+# ifdef RISCOS
+#  include "os_riscos.pro"
+# endif
 
 # include "buffer.pro"
 # include "charset.pro"
+# ifdef UNIX
+#  include "if_cscope.pro"
+# endif
 # include "digraph.pro"
 # include "edit.pro"
 # include "eval.pro"
@@ -76,6 +79,9 @@ smsg_attr __ARGS((int, char_u *, ...));
 #ifndef HAVE_STRPBRK	    /* not generated automatically from misc2.c */
 char_u *vim_strpbrk __ARGS((char_u *s, char_u *charset));
 #endif
+# ifdef MULTI_BYTE
+#  include "multbyte.pro"
+# endif
 # include "normal.pro"
 # include "ops.pro"
 # include "option.pro"
@@ -98,6 +104,10 @@ char_u *vim_strpbrk __ARGS((char_u *s, char_u *charset));
 #  include "if_python.pro"
 # endif
 
+# ifdef HAVE_TCL
+#  include "if_tcl.pro"
+# endif
+
 # ifdef USE_GUI
 #  include "gui.pro"
 #  ifdef USE_GUI_WIN32
@@ -111,18 +121,27 @@ char_u *vim_strpbrk __ARGS((char_u *s, char_u *charset));
 #  endif
 #  ifdef USE_GUI_ATHENA
 #   include "gui_athena.pro"
+#ifdef USE_BROWSE
+extern char *vim_SelFile __ARGS((Widget toplevel, char *prompt, char *init_path, int (*show_entry)(), int x, int y, GuiColor fg, GuiColor bg));
+#endif
 #  endif
 #  ifdef USE_GUI_BEOS
 #   include "gui_beos.pro"
 #  endif
 #  ifdef USE_GUI_MAC
 #   include "gui_mac.pro"
-extern int putenv __ARGS((char *string));		/* from pty.c */
+extern int putenv __ARGS((const char *string));		/* from pty.c */
 extern int OpenPTY __ARGS((char **ttyn));		/* from pty.c */
 #  endif
 #  ifdef USE_GUI_X11
 #   include "gui_x11.pro"
 extern int OpenPTY __ARGS((char **ttyn));	/* from pty.c */
+#  endif
+#  if defined(USE_GUI_AMIGA)
+#    include "gui_amiga.pro"
+#  endif
+#  ifdef RISCOS
+#   include "gui_riscos.pro"
 #  endif
 # endif	/* USE_GUI */
 
@@ -134,12 +153,18 @@ extern int OpenPTY __ARGS((char **ttyn));	/* from pty.c */
  * other files.
  */
 #if defined(HAVE_PERL_INTERP) && !defined(IN_PERL_FILE)
-#   define CV void
+# define CV void
+# ifdef __BORLANDC__
+#  pragma option -pc
+# endif
 # include "if_perl.pro"
+# ifdef __BORLANDC__
+#  pragma option -p.
+# endif
 # include "if_perlsfio.pro"
 #endif
 
 #ifdef __BORLANDC__
-#define _PROTO_H
+# define _PROTO_H
 #endif
-#endif /* PROTO */
+#endif /* !PROTO && !NOPROTO */

@@ -43,11 +43,11 @@ syn keyword satherClassDecl      abstract value class include
 syn keyword satherScopeDecl      public private readonly
 
 
-syn match   satherSpecial           contained "\\[0-9][0-9][0-9]\|\\."
+syn match   satherSpecial           contained "\\\d\d\d\|\\."
 syn region  satherString            start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=satherSpecial
 syn match   satherCharacter         "'[^\\]'"
 syn match   satherSpecialCharacter  "'\\.'"
-syn match   satherNumber          "-\=\<[0-9]\+L\=\>\|0[xX][0-9a-fA-F]\+\>"
+syn match   satherNumber          "-\=\<\d\+L\=\>\|0[xX][0-9a-fA-F]\+\>"
 syn match   satherCommentSkip     contained "^\s*\*\($\|\s\+\)"
 syn region  satherComment2String  contained start=+"+  skip=+\\\\\|\\"+  end=+$\|"+  contains=satherSpecial
 syn match   satherComment         "--.*" contains=satherComment2String,satherCharacter,satherNumber
@@ -59,29 +59,29 @@ syn sync ccomment satherComment
 if !exists("did_sather_syntax_inits")
   let did_sather_syntax_inits = 1
   " The default methods for highlighting.  Can be overridden later
-  hi link satherBranch	satherStatement
-  hi link satherLabel	satherStatement
+  hi link satherBranch		satherStatement
+  hi link satherLabel		satherStatement
   hi link satherConditional	satherStatement
   hi link satherSynchronize	satherStatement
-  hi link satherRepeat 	satherStatement
-  hi link satherExceptions satherStatement
+  hi link satherRepeat		satherStatement
+  hi link satherExceptions	satherStatement
   hi link satherStorageClass	satherDeclarative
-  hi link satherMethodDecl satherDeclarative
-  hi link satherClassDecl 	satherDeclarative
-  hi link satherScopeDecl 	satherDeclarative
-  hi link satherBoolValue 	satherValue
-  hi link satherSpecial 	satherValue
-  hi link satherString 	satherValue
+  hi link satherMethodDecl	satherDeclarative
+  hi link satherClassDecl	satherDeclarative
+  hi link satherScopeDecl	satherDeclarative
+  hi link satherBoolValue	satherValue
+  hi link satherSpecial		satherValue
+  hi link satherString		satherValue
   hi link satherCharacter	satherValue
   hi link satherSpecialCharacter	satherValue
-  hi link satherNumber 	satherValue
+  hi link satherNumber		satherValue
   hi link satherStatement	Statement
   hi link satherOperator	Statement
-  hi link satherComment	Comment
-  hi link satherType	Type
-  hi link satherValue	String
-  hi link satherString	String
-  hi link satherSpecial	String
+  hi link satherComment		Comment
+  hi link satherType		Type
+  hi link satherValue		String
+  hi link satherString		String
+  hi link satherSpecial		String
   hi link satherCharacter	String
   hi link satherDeclarative	Type
   hi link satherExternal	PreCondit

@@ -20,17 +20,24 @@
 #	system, compiler or preferences.  Uncommenting means that the '#' in
 #	the first column of a line is removed.
 #	- If you want a version of Vim that is small and starts up quickly,
-#	  you might want to disable the GUI, X11, Perl and Python.
+#	  you might want to disable the GUI, X11, Perl, Python and Tcl.
 #	- Uncomment the line with --enable-gui=no if you have Motif and/or
 #	  Athena but don't want to make gvim (the GUI version of Vim with nice
 #	  menus and scrollbars, but makes Vim bigger and startup slower).
 #	- Uncomment the line "CONF_OPT_X = --without-x" if you have X11 but
 #	  want to disable using X11 libraries.  Vim won't set the window
 #	  titles then.  This speeds up starting Vim.
-#	- Unocmment the line with --disable-perlinterp to disable Perl, even
-#	  though you have it.  Makes Vim a lot smaller.
-#	- Uncomment the line with --disable-pythoninterp to disable Python,
-#	  even though you have it.  Makes Vim a lot smaller.
+#	- Uncomment the line with --enable-perlinterp to enable Perl.  Makes
+#	  Vim quite a bit bigger.
+#	- Uncomment the line with --enable-pythoninterp to enable Python.
+#	  Makes Vim quite a bit bigger.
+#	- Uncomment the line with --enable-tclinterp to enable Tcl.  Makes Vim
+#	  quite a bit bigger.
+#	- Uncomment the line with --enable-cscope to enable the Cscope
+#	  interface.
+#	- Uncomment the line with --enable-max-features to enable many
+#	  features (but not the interfaces just mentioned).
+#	- Uncomment the line with --enable-min-features to exclude features.
 #	- Uncomment one of the lines with CFLAGS and/or CC if you have
 #	  something very special or want to tune the optimizer.
 #	- Search for the name of your system to see if it needs anything
@@ -120,14 +127,17 @@
 #AIX_4.1              gcc 2.7.2      +X11 +Motif        5.0s     Karsten Sievert
 #AIX 4.1.1	      cc	     +X11 +GUI		5.0c	 Jeff Walker
 #AIX 4.2              gcc 2.7.2.1    +X11 +GUI_Motif    5.0w     D. Rothkamp
+#AIX 4.2.1            cc                                5.2k (C) Will Fiveash
 #A/UX 3.1.1	      gcc	     +X11		4.0  (6) Jim Jagielski
 #BeOS PR	      mwcc DR3                        	5.0n (T) Olaf Seibert
 #BSDI 2.1 (x86)       shlicc2 gcc-2.6.3 -X11 X11R6	4.5  (1) Jos Backus
 #BSD/OS 3.0 (x86)     gcc gcc-2.7.2.1 -X11 X11R6	4.6c (1) Jos Backus
 #DG/UX 5.4*           gcc 2.5.8      GUI                5.0e (H) Jonas Schlein
 #DG/UX 5.4R4.20       gcc 2.7.2      GUI                5.0s (H) Rocky Olive
-#HP-UX (most)	      c89 cc				5.1b (2) Bram Moolenaar
+#HP-UX (most)	      c89 cc				5.1  (2) Bram Moolenaar
+#HP-UX_9.04           cc             +X11 +Motif        5.0  (2) Carton Lao
 #HP-UX_10.20          gcc 2.7.2.1    +X11 +Motif        5.0s     Karsten Sievert
+#HP-UX_10.20          gcc 2.7.2.1    +X11R6 +Motif      5.1      Kayhan Demirel
 #Irix 6.3 (O2)	      cc	     ?			4.5  (L) Edouard Poor
 #Irix 6.4             cc             ?                  5.0m (S) Rick Sayre
 #Irix 64 bit						4.5  (K) Jon Wright
@@ -139,6 +149,7 @@
 #Linux 2.0.29	      gcc-2.7.2.1    +X11 +GUI Athena	5.0x     Ant. Colombo
 #Linux 2.0.31         gcc            +X11 +GUI Athena   5.0w (U) Darren Hiebert
 #Linux 2.0.33	      gcc-2.7.2.1    X11R6, Lesstif	5.0s	 Tony Nugent
+#Linux 2.0.34         gcc-2.90.29    +X11 +GUI Motif    5.2i     Ant. Colombo
 #LynxOS 2.5.0         gcc-2.7-96q1   +X11 +GUI Athena   5.0  (O) Lorenz Hahn
 #LynxOS 2.5.0         gcc-2.7-96q1   +X11 -GUI Athena   5.0  (O) Lorenz Hahn
 #NEC UP4800 UNIX_SV 4.2MP  cc	     +X11R6 Motif,Athena4.6b (Q) Lennart Schultz
@@ -157,6 +168,7 @@
 #Solaris 2.5 (sun4m)  cc (SC4.0)     +X11R6 +GUI (CDE)	4.6b (E) Andrew Large
 #Solaris 2.5	      cc	     +X11 +GUI Athena	4.2  (9) Sonia Heimann
 #Solaris 2.5          gcc 2.5.6      +X11 Motif         5.0m (R) Ant. Colombo
+#Solaris 2.5 (Sparc)  gcc-2.7.2.3    +X11 +GUI Motif    5.2i     Ant. Colombo
 #Solaris 2.5 (sparc)  gcc 2.7.2.1 +X11 +GUI_Motif (CDE) 5.0s     D. Rothkamp
 #Solaris 2.6 (sun4u)  gcc 2.7.2.3    +X11 +GUI (CDE)    5.0w     D. Rothkamp
 #Solaris 2.6 (sun4u)  cc (SC4.2)     +X11R6 +GUI (CDE)	5.0v     Andrew Large
@@ -241,93 +253,119 @@ include config.mk
 # make variables with predefined values instead. Thus any second invocation
 # of make, will buid Vim.
 
+# CONFIGURE - configure arguments
 # You can give a lot of options to configure.
 # Change this to your desire and do 'make config' afterwards
 
-### For creating Vim with GUI (gvim)
+# just an example:
+#CONF_ARGS = --exec-prefix=/usr
+
+# GUI - For creating Vim with GUI (gvim)
 # Uncomment the first line when you don't want to get the GUI version,
 # although you have Motif and/or Athena. (B)
 # When using "yes" configure will use Motif if it can be found, otherwise use
 # Athena when it can be found (this is the default).
-# If the Motif and Athena files are not found, GUI is disabled automatically
+# If the Motif and Athena files are not found, the GUI is disabled automatically
 #CONF_OPT_GUI = --enable-gui=no
 #CONF_OPT_GUI = --enable-gui=motif
+#CONF_OPT_GUI = --enable-gui=motif --with-motif-lib="-static -lXm -shared"
 #CONF_OPT_GUI = --enable-gui=athena
 
-### For creating Vim with Perl interface
-# Uncomment this when you don't want to include the Perl interface, although
-# you have Perl.
+# For testing with Lesstif
+#CONF_OPT_GUI = --enable-gui=motif
+#GUI_LIB_LOC = /home/mool/src/lesstif/lib
+#GUI_INC_LOC = /home/mool/src/lesstif/include
+
+# PERL - For creating Vim with Perl interface
+# Uncomment this when you want to include the Perl interface.
 # The Perl option sometimes causes problems, because it adds extra flags
 # to the command line.  If you see strange flags during compilation, check in
-# config.mk where they come from.  If it's PERL_CFLAGS, try uncommenting the
+# config.mk where they come from.  If it's PERL_CFLAGS, try commenting the
 # next line.
 # When you get an error for a missing "perl.exp" file, try creating an emtpy
 # one: "touch perl.exp".
-#CONF_OPT_PERL = --disable-perlinterp
+#CONF_OPT_PERL = --enable-perlinterp
 
-### For creating Vim with Python interface
-# Uncomment this when you don't want to include the Python interface,
-# although you have Python.
-#CONF_OPT_PYTHON = --disable-pythoninterp
+# PYTHON - For creating Vim with Python interface
+# Uncomment this when you want to include the Python interface.
+#CONF_OPT_PYTHON = --enable-pythoninterp
 
-### Extra configure arguments - just put anything here, just an example
-#CONF_ARGS = --exec-prefix=/usr
+# TCL - For creating Vim with Tcl interface
+# Uncomment this when you want to include the Tcl interface.
+#CONF_OPT_TCL = --enable-tclinterp
 
-### For creating a plain Vim without any X11 related fancies use this one:
-### (otherwise Vim configure will try to include xterm titlebar access)
-### Also disable the GUI above, otherwise it will be included anyway.
-### When both GUI and X11 have been disabled this may save about 15% of the
-### code and make Vim startup quicker.
+# CSCOPE - For creating Vim with Cscope interface
+# Uncomment this when you want to include the Cscope interface.
+#CONF_OPT_CSCOPE = --enable-cscope
+
+# MAXIMAL FEATURES - For creating Vim with many features
+# Uncomment this when you want to include many features
+#CONF_OPT_MAX = --enable-max-features
+
+# MINIMAL FEATURES - For creating Vim with less features
+# Uncomment this when you want to include less features
+#CONF_OPT_MIN = --enable-min-features
+
+# X WINDOWS DISABLE - For creating a plain Vim without any X11 related fancies
+# (otherwise Vim configure will try to include xterm titlebar access)
+# Also disable the GUI above, otherwise it will be included anyway.
+# When both GUI and X11 have been disabled this may save about 15% of the
+# code and make Vim startup quicker.
 #CONF_OPT_X = --without-x
 
-### If you have multiple X11 derivates installed, you may wish to specify
-### which one to use. This here selects openwin (as found on sun).
-### Select nothing to let configure choose.
+# X WINDOWS DIRECTORY - specify X directories
+# If configure can't find you X stuff, or if you have multiple X11 derivates
+# installed, you may wish to specify which one to use.
+# Select nothing to let configure choose.
+# This here selects openwin (as found on sun).
 #XROOT = /usr/openwin
 #CONF_OPT_X = --x-include=$(XROOT)/include --x-libraries=$(XROOT)/lib
 
-### COMPILER -- the default from configure will mostly be fine, no need to
-### change this, just an example. If a compiler is defined here, configure
-### will use it rather than probing for one. It is dangerous to change this
-### after configure was run. Make will use your choice then -- but beware:
-### Many things may change with another compiler. It is wise to run 'make
-### distclean' and start all over again.
+# COMPILER - Name of the compiler
+# The default from configure will mostly be fine, no need to change this, just
+# an example. If a compiler is defined here, configure will use it rather than
+# probing for one. It is dangerous to change this after configure was run.
+# Make will use your choice then -- but beware: Many things may change with
+# another compiler. It is wise to run 'make distclean' and start all over
+# again.
 #CC = cc
 #CC = gcc
 
-### COMPILER FLAGS - change as you please. Either before running configure
-### or afterwards. For examples see below.
-### When using -g with some older versions of Linux you might get a
-### statically linked executable.
-### When not defined, configure will try to use -O2 -g for gcc and -O for cc.
+# COMPILER FLAGS - change as you please. Either before running configure
+# or afterwards. For examples see below.
+# When using -g with some older versions of Linux you might get a
+# statically linked executable.
+# When not defined, configure will try to use -O2 -g for gcc and -O for cc.
 #CFLAGS = -g
 #CFLAGS = -O
 
-### Often used for GCC: mixed optimizing, lot of optimizing, debugging
+# Often used for GCC: mixed optimizing, lot of optimizing, debugging
 #CFLAGS = -g -O2 -fno-strength-reduce -Wall -Wshadow -Wmissing-prototypes
 #CFLAGS = -O6 -fno-strength-reduce -Wall -Wshadow -Wmissing-prototypes
 #CFLAGS = -g -DDEBUG -Wall -Wshadow -Wmissing-prototypes
 
+# Used for debugging memory allocation
+#CFLAGS = -g -O2 -DMEM_PROFILE -Wall -Wshadow -Wmissing-prototypes
 
-### Electric-Fence malloc debugging - catches memory accesses beyond allocated
-### memory.  Electric Fence is free (search ftp sites).
+# EFENCE - Electric-Fence malloc debugging - catches memory accesses beyond
+# allocated memory.  Electric Fence is free (search ftp sites).
 #EXTRA_LIBS = /usr/local/lib/libefence.a
 
-### PURIFY - remove the # to use the "purify" program (hoi Nia++!)
+# PURIFY - remove the # to use the "purify" program (hoi Nia++!)
 #PURIFY = purify
 
-### for running lint
+# LINT - for running lint
 LINT_OPTIONS = -bepruxzF
 
-### PROFILING - Uncomment the next three lines to do profiling with gcc and
-### gprof.  Only works when using termcap library.  Doesn't work with GUI or
-### Perl.
-### Need to recompile everything after changing this: "make clean" "make".
+# PROFILING - Uncomment the next three lines to do profiling with gcc and
+# gprof.  Only works when using termcap library.  Doesn't work with GUI or
+# Perl.
+# Need to recompile everything after changing this: "make clean" "make".
 #CFLAGS = -g -pg -O2 -fno-strength-reduce -Wall -Wshadow -Wmissing-prototypes
 #LDFLAGS = -pg
 #LIBS = -ltermcap_p
 
-### Include support for SNiFF+.
+# SNIFF - Include support for SNiFF+.
 #SNIFF_INCL = if_sniff.h
 #SNIFF_SRC  = if_sniff.c
 #SNIFF_OBJ  = if_sniff.o
@@ -358,11 +396,17 @@ LINT_OPTIONS = -bepruxzF
 ###	After changing this do "touch digraph.c; make".
 #EXTRA_DEFS = -DHPUX_DIGRAPHS
 
+### (2) For HP-UX: 9.04 cpp default macro definition table of 128000 bytes 
+###     is too small to compile many routines.  It produces too much defining
+###     and no space errors.
+###     Uncomment the following to specify a larger macro definition table.
+#CFLAGS = -Wp,-H256000
+
 ### (2) For HP-UX 10.20 using the HP cc, with X11R6 and Motif 1.2, with
 ###	libraries in /usr/lib instead of /lib (avoiding transition links).
 ###	Information provided by: David Green
 #XROOT = /usr
-#ONF_OPT_X = --x-include=$(XROOT)/include/X11R6 --x-libraries=$(XROOT)/lib/X11R6
+#CONF_OPT_X = --x-include=$(XROOT)/include/X11R6 --x-libraries=$(XROOT)/lib/X11R6
 #GUI_INC_LOC = /usr/include/Motif1.2
 #GUI_LIB_LOC = /usr/lib/Motif1.2_R6
 
@@ -488,7 +532,7 @@ LINT_OPTIONS = -bepruxzF
 #CONF_OPT_X = --x-include=$(XROOT)/include --x-libraries=$(XROOT)/lib/X11R6
 #EXTRA_LIBS = -lsocket -lgen
 
-### (R) Solaris 2.5 (or 2.5.1) with gcc > 2.5.6
+### (R) for Solaris 2.5 (or 2.5.1) with gcc > 2.5.6 you might need this:
 #LDFLAGS = -lw -ldl
 
 ### (S) Irix 6.4 (and later?): Uses different Olimit flag:
@@ -497,6 +541,8 @@ LINT_OPTIONS = -bepruxzF
 ### (C)  On SCO Unix v3.2.5 (and probably other versions) the termcap library,
 ###	 which is found by configure, doesn't work correctly.  Symptom is the
 ###	 error message "Termcap entry too long".  Uncomment the next line.
+###	 On AIX 4.2.1 (and other versions probably), libtermcap is reported
+###	 not to display properly.
 ### after changing this, you need to do "make distclean; make".
 #CONF_TERM_LIB = --with-tlib=curses
 
@@ -659,7 +705,7 @@ MOTIF_DEFS	= -DUSE_GUI_MOTIF $(NARROW_PROTO)
 MOTIF_IPATH	= -I$(GUI_INC_LOC)
 MOTIF_LIBS_DIR	= -L$(GUI_LIB_LOC)
 MOTIF_LIBS1	=
-MOTIF_LIBS2	= -lXm -lXt
+MOTIF_LIBS2	= $(MOTIF_LIBNAME) -lXt
 MOTIF_TARGETS	= $(BINDIR)/$(GVIMTARGET) \
 			$(BINDIR)/$(GVIEWTARGET) \
 			$(BINDIR)/$(RGVIMTARGET) \
@@ -680,13 +726,13 @@ XAW_LIB = -lXaw
 
 ### When using Xaw3d, uncomment/comment the following lines to also get the
 ### scrollbars from Xaw3d.
-#ATHENA_SRC	= gui.c gui_athena.c gui_x11.c pty.c
-#ATHENA_OBJ	= gui.o gui_athena.o gui_x11.o pty.o
+#ATHENA_SRC	= gui.c gui_athena.c gui_x11.c pty.c gui_at_fs.c
+#ATHENA_OBJ	= gui.o gui_athena.o gui_x11.o pty.o gui_at_fs.o
 #ATHENA_DEFS	= -DUSE_GUI_ATHENA $(NARROW_PROTO) \
 #		    -Dvim_scrollbarWidgetClass=scrollbarWidgetClass \
 #		    -Dvim_XawScrollbarSetThumb=XawScrollbarSetThumb
-ATHENA_SRC	= gui.c gui_athena.c gui_x11.c pty.c gui_at_sb.c
-ATHENA_OBJ	= gui.o gui_athena.o gui_x11.o pty.o gui_at_sb.o
+ATHENA_SRC	= gui.c gui_athena.c gui_x11.c pty.c gui_at_sb.c gui_at_fs.c
+ATHENA_OBJ	= gui.o gui_athena.o gui_x11.o pty.o gui_at_sb.o gui_at_fs.o
 ATHENA_DEFS	= -DUSE_GUI_ATHENA $(NARROW_PROTO)
 
 ATHENA_INCL	= gui.h
@@ -736,8 +782,8 @@ BEOSGUI_TESTTARGET = gui
 
 # GUI files used for making ctags
 ALL_GUI_INCL = gui.h gui_at_sb.h
-ALL_GUI_SRC  = gui.c gui_motif.c gui_athena.c gui_x11.c gui_at_sb.c
-ALL_GUI_PRO  = gui.pro gui_motif.pro gui_athena.pro gui_x11.pro gui_w32.pro
+ALL_GUI_SRC  = gui.c gui_motif.c gui_athena.c gui_x11.c gui_at_sb.c gui_at_fs.c
+ALL_GUI_PRO  = gui.pro gui_motif.pro gui_athena.pro gui_x11.pro gui_w32.pro gui_amiga.pro
 
 ### our grand parent directory should know who we are...
 ### only used for "make tar"
@@ -776,17 +822,17 @@ SHELL = /bin/sh
 .SUFFIXES: .cc .c .o .pro
 
 PRE_DEFS = -Iproto $(DEFS) $(SNIFF_DEFS) $(GUI_DEFS) $(GUI_IPATH)
-POST_DEFS = $(X_CFLAGS) $(PERL_CFLAGS) $(PYTHON_CFLAGS) $(EXTRA_DEFS)
+POST_DEFS = $(X_CFLAGS) $(PERL_CFLAGS) $(PYTHON_CFLAGS) $(TCL_CFLAGS) $(EXTRA_DEFS)
 
 ALL_CFLAGS = $(PRE_DEFS) $(CFLAGS) $(POST_DEFS)
 
-LINT_CFLAGS = $(PRE_DEFS) $(POST_DEFS)
+LINT_CFLAGS = -DLINT $(PRE_DEFS) $(POST_DEFS)
 
 DEPEND_CFLAGS = -DPROTO -DUSE_GUI $(LINT_CFLAGS)
 
 PFLAGS = $(PROTO_FLAGS) -DPROTO $(LINT_CFLAGS)
 
-ALL_LIBS = $(GUI_LIBS_DIR) $(X_LIBS_DIR) $(GUI_LIBS1) $(GUI_X_LIBS) $(GUI_LIBS2) $(X_PRE_LIBS) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS) $(PYTHON_LIBS) $(EXTRA_LIBS)
+ALL_LIBS = $(GUI_LIBS_DIR) $(X_LIBS_DIR) $(GUI_LIBS1) $(GUI_X_LIBS) $(GUI_LIBS2) $(X_PRE_LIBS) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS) $(PYTHON_LIBS) $(TCL_LIBS) $(EXTRA_LIBS)
 
 #     BASIC_INCL and BASIC_SRC: files that are always used
 #	  GUI_INCL and GUI_SRC: extra GUI files for current configuration
@@ -817,6 +863,7 @@ BASIC_SRC = \
 	ex_getln.c \
 	fileio.c \
 	getchar.c \
+	if_cscope.c \
 	main.c \
 	mark.c \
 	memfile.c \
@@ -824,6 +871,7 @@ BASIC_SRC = \
 	message.c \
 	misc1.c \
 	misc2.c \
+	multbyte.c \
 	normal.c \
 	ops.c \
 	option.c \
@@ -843,11 +891,12 @@ BASIC_SRC = \
 	window.c \
 	$(OS_EXTRA_SRC)
 
-SRC =	$(BASIC_SRC) $(GUI_SRC) $(PERL_SRC) $(PYTHON_SRC)
+SRC =	$(BASIC_SRC) $(GUI_SRC) $(PERL_SRC) $(PYTHON_SRC) $(TCL_SRC)
 
 TAGS_SRC = $(SRC) farsi.c
 
-ALL_SRC = $(BASIC_SRC) $(ALL_GUI_SRC) $(PERL_SRC) $(PYTHON_SRC) if_sniff.c
+ALL_SRC = $(BASIC_SRC) $(ALL_GUI_SRC) if_perl.c if_perlsfio.c \
+	if_python.c if_tcl.c if_sniff.c
 
 OBJ = \
 	buffer.o \
@@ -860,6 +909,7 @@ OBJ = \
 	ex_getln.o \
 	fileio.o \
 	getchar.o \
+	if_cscope.o \
 	main.o \
 	mark.o \
 	memfile.o \
@@ -867,6 +917,7 @@ OBJ = \
 	message.o \
 	misc1.o \
 	misc2.o \
+	multbyte.o \
 	normal.o \
 	ops.o \
 	option.o \
@@ -886,6 +937,7 @@ OBJ = \
 	$(GUI_OBJ) \
 	$(PERL_OBJ) \
 	$(PYTHON_OBJ) \
+	$(TCL_OBJ) \
 	$(OS_EXTRA_OBJ)
 
 PRO_AUTO = \
@@ -899,6 +951,7 @@ PRO_AUTO = \
 	ex_getln.pro \
 	fileio.pro \
 	getchar.pro \
+	if_cscope.pro \
 	main.pro \
 	mark.pro \
 	memfile.pro \
@@ -906,6 +959,7 @@ PRO_AUTO = \
 	message.pro \
 	misc1.pro \
 	misc2.pro \
+	multbyte.pro \
 	normal.pro \
 	ops.pro \
 	option.pro \
@@ -923,9 +977,10 @@ PRO_AUTO = \
 	version.pro \
 	window.pro \
 	$(ALL_GUI_PRO) \
+	$(TCL_PRO) \
 	$(PERL_PRO)
 
-PRO_MANUAL = os_amiga.pro os_msdos.pro os_win32.pro os_beos.pro
+PRO_MANUAL = os_amiga.pro os_msdos.pro os_win32.pro os_beos.pro os_vms.pro
 
 # Default target is making the executable and tools
 all: $(VIMTARGET) $(TOOLS)
@@ -933,11 +988,13 @@ all: $(VIMTARGET) $(TOOLS)
 tools: $(TOOLS)
 
 # Run ./configure with all the setting above.
-config: configure
+config config.h: configure
 	GUI_INC_LOC="$(GUI_INC_LOC)" GUI_LIB_LOC="$(GUI_LIB_LOC)" \
 		CC="$(CC)" CFLAGS="$(CFLAGS)" \
 	$(CONF_SHELL) ./configure $(CONF_OPT_GUI) $(CONF_OPT_X) \
-	$(CONF_OPT_PERL) $(CONF_OPT_PYTHON) $(CONF_TERM_LIB) $(CONF_ARGS)
+	$(CONF_OPT_PERL) $(CONF_OPT_PYTHON) $(CONF_OPT_TCL) \
+	$(CONF_OPT_CSCOPE) $(CONF_OPT_MAX) $(CONF_OPT_MIN) \
+	$(CONF_TERM_LIB) $(CONF_ARGS)
 
 # When configure.in has changed, run autoconf to produce configure
 # If you don't have autoconf, use the configure that's there
@@ -966,7 +1023,7 @@ ctags/ctags: ctags/Makefile $(CTAGSFILES)
 	cd ctags; CC="$(CC)" CFLAGS="$(CFLAGS)" $(MAKE) -f Makefile
 
 ctags/Makefile: ctags/Makefile.in
-	cd ctags; CC="$(CC)" CFLAGS="$(CFLAGS)" ./configure --mandir="$(MANDIR)" --exec_prefix="$(exec_prefix)"
+	cd ctags; CC="$(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" ./configure --mandir="$(MANDIR)" --exec_prefix="$(exec_prefix)"
 
 xxd/xxd: xxd/xxd.c
 	cd xxd; CC="$(CC)" CFLAGS="$(CFLAGS)" $(MAKE) -f Makefile.unix
@@ -1001,8 +1058,17 @@ os_win32.pro: os_win32.c
 os_beos.pro: os_beos.c
 	cproto $(PFLAGS) -D__BEOS__ -UHAVE_CONFIG_H os_beos.c > proto/os_beos.pro
 
+os_vms.pro: os_vms.c
+# must use os_vms_conf.h for config.h
+	mv config.h config.h.save
+	cp os_vms_conf.h config.h
+	cproto $(PFLAGS) -DVMS -UUSE_GUI_ATHENA -UUSE_GUI_MOTIF os_vms.c > proto/os_vms.pro
+	rm config.h
+	mv config.h.save config.h
+
+
 notags:
-	rm -f tags
+	-rm -f tags
 
 # Note: tags is made for the currently configured version, can't include both
 #	Motif and Athena GUI
@@ -1054,7 +1120,7 @@ installvimbin: $(VIMTARGET) $(exec_prefix) $(BINDIR)
 	-$(LINKIT)
 
 # install the help files; first adjust the contents for the location
-installvimhelp: $(MANSUBDIR) $(VIMLOC) $(HELPSUBLOC) $(SYNSUBLOC)
+installvimhelp: $(HELPSOURCE)/vim.1 $(MANSUBDIR) $(VIMLOC) $(HELPSUBLOC) $(SYNSUBLOC)
 	sed -e s+/usr/local/lib/vim+$(VIMLOC)+ \
 		-e s+$(VIMLOC)/doc+$(HELPENDLOC)+ \
 		-e s+$(VIMLOC)/syntax+$(SYNTAXENDLOC)+ \
@@ -1076,7 +1142,7 @@ installvimhelp: $(MANSUBDIR) $(VIMLOC) $(HELPSUBLOC) $(SYNSUBLOC)
 	cp $(SYNSOURCE)/*.vim $(SYNSUBLOC)
 	chmod $(HELPMOD) $(SYNSUBLOC)/*.vim
 
-installmacros: $(VIMLOC) $(MACROSUBLOC)
+installmacros: $(MACROSOURCE) $(VIMLOC) $(MACROSUBLOC)
 	cp -r $(MACROSOURCE)/* $(MACROSUBLOC)
 
 # install helper programs ctags and xxd
@@ -1090,6 +1156,11 @@ installtools: $(TOOLS) $(exec_prefix) $(BINDIR) $(MANSUBDIR)
 	chmod $(BINMOD) $(BINDIR)/xxd$(SUFFIX)
 	cp $(HELPSOURCE)/xxd.1 $(MANSUBDIR)
 	chmod $(MANMOD) $(MANSUBDIR)/xxd.1
+
+$(HELPSOURCE)/vim.1 $(MACROSOURCE):
+	@echo Runtime files not found.
+	@echo You need to unpack the runtime archive before running "make install".
+	test -f error
 
 $(exec_prefix) $(BINDIR) $(MANSUBDIR) $(VIMLOC) $(HELPSUBLOC) $(SYNSUBLOC) $(MACROSUBLOC):
 	-ctags/mkinstalldirs $@
@@ -1182,17 +1253,22 @@ clean celan: testclean
 
 shadow:	doc menu.vim bugreport.vim syntax macros
 	mkdir shadow
-	cd shadow; ln -s ../*.[ch] ../*.in ../*.sh ../*.xs ../toolcheck ../proto ../configure .
+	cd shadow; ln -s ../*.[ch] ../*.in ../*.sh ../*.xs ../*.xbm ../toolcheck ../proto ../configure .
 	cd shadow; rm -f osdef.h config.h pathdef.c link.sed
 	cp Makefile shadow
 	echo "the first targets to make vim are: scratch config myself" > shadow/config.mk
-# TODO: how do we make a nice shadow for ctags?
-	cd shadow; ln -s ../ctags .
+	mkdir shadow/ctags
+	cd shadow/ctags; ln -s ../../ctags/*.[ch1] \
+				../../ctags/*.in \
+				../../ctags/mkinstalldirs \
+				../../ctags/configure .
 	mkdir shadow/xxd
 	cd shadow/xxd; ln -s ../../xxd/*.[ch] ../../xxd/Make* .
 	mkdir shadow/testdir
 	cd shadow/testdir; ln -s ../../testdir/Makefile \
-				 ../../testdir/*.in  ../../testdir/*.ok .
+				 ../../testdir/vimrc.unix \
+				 ../../testdir/*.in \
+				 ../../testdir/*.ok .
 
 # Links needed for doing "make install" in a shadow directory.
 doc:
@@ -1212,8 +1288,8 @@ macros:
 
 # Start configure from scratch
 scrub scratch:
-	rm -f config.status config.cache config.h config.log
-	if test -f ctags/Makefile; then \
+	-rm -f config.status config.cache config.h config.log
+	-if test -f ctags/Makefile; then \
 		cd ctags; $(MAKE) -f Makefile distclean; \
 	fi
 
@@ -1229,6 +1305,7 @@ tar: clean
 dist: distclean tar
 
 check:
+	@echo "check what?"
 
 mdepend:
 	-@rm -f Makefile~
@@ -1306,128 +1383,140 @@ Makefile:
 ### (automatically generated by 'make depend')
 ### Dependencies:
 buffer.o: buffer.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
- keymap.h term.h macros.h regexp.h structs.h gui.h globals.h option.h \
- ex_cmds.h proto.h
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
 charset.o: charset.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
- option.h ex_cmds.h proto.h
+ farsi.h option.h ex_cmds.h proto.h
 digraph.o: digraph.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
- option.h ex_cmds.h proto.h
+ farsi.h option.h ex_cmds.h proto.h
 edit.o: edit.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
- keymap.h term.h macros.h regexp.h structs.h gui.h globals.h option.h \
- ex_cmds.h proto.h
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
 eval.o: eval.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
- keymap.h term.h macros.h regexp.h structs.h gui.h globals.h option.h \
- ex_cmds.h proto.h
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
 ex_cmds.o: ex_cmds.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
- option.h ex_cmds.h proto.h
+ farsi.h option.h ex_cmds.h proto.h
 ex_docmd.o: ex_docmd.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
- option.h ex_cmds.h proto.h
+ farsi.h option.h ex_cmds.h proto.h
 ex_getln.o: ex_getln.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
- option.h ex_cmds.h proto.h
+ farsi.h option.h ex_cmds.h proto.h
 fileio.o: fileio.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
- keymap.h term.h macros.h regexp.h structs.h gui.h globals.h option.h \
- ex_cmds.h proto.h
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
 getchar.o: getchar.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
- option.h ex_cmds.h proto.h
+ farsi.h option.h ex_cmds.h proto.h
+if_cscope.o: if_cscope.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h if_cscope.h
 main.o: main.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
- keymap.h term.h macros.h regexp.h structs.h gui.h globals.h option.h \
- ex_cmds.h proto.h
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h farsi.c
 mark.o: mark.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
- keymap.h term.h macros.h regexp.h structs.h gui.h globals.h option.h \
- ex_cmds.h proto.h
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
 memfile.o: memfile.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
- option.h ex_cmds.h proto.h
+ farsi.h option.h ex_cmds.h proto.h
 memline.o: memline.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
- option.h ex_cmds.h proto.h
+ farsi.h option.h ex_cmds.h proto.h
 message.o: message.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
- option.h ex_cmds.h proto.h
+ farsi.h option.h ex_cmds.h proto.h
 misc1.o: misc1.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
- keymap.h term.h macros.h regexp.h structs.h gui.h globals.h option.h \
- ex_cmds.h proto.h
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
 misc2.o: misc2.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
- keymap.h term.h macros.h regexp.h structs.h gui.h globals.h option.h \
- ex_cmds.h proto.h
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
+multbyte.o: multbyte.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h
 normal.o: normal.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
- keymap.h term.h macros.h regexp.h structs.h gui.h globals.h option.h \
- ex_cmds.h proto.h
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
 ops.o: ops.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
- keymap.h term.h macros.h regexp.h structs.h gui.h globals.h option.h \
- ex_cmds.h proto.h
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
 option.o: option.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
- keymap.h term.h macros.h regexp.h structs.h gui.h globals.h option.h \
- ex_cmds.h proto.h
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
 os_unix.o: os_unix.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
- option.h ex_cmds.h proto.h os_unixx.h
+ farsi.h option.h ex_cmds.h proto.h os_unixx.h
 pathdef.o: pathdef.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
- option.h ex_cmds.h proto.h
+ farsi.h option.h ex_cmds.h proto.h
 quickfix.o: quickfix.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
- option.h ex_cmds.h proto.h
+ farsi.h option.h ex_cmds.h proto.h
 regexp.o: regexp.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
- keymap.h term.h macros.h regexp.h structs.h gui.h globals.h option.h \
- ex_cmds.h proto.h
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
 screen.o: screen.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
- keymap.h term.h macros.h regexp.h structs.h gui.h globals.h option.h \
- ex_cmds.h proto.h
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
 search.o: search.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
- keymap.h term.h macros.h regexp.h structs.h gui.h globals.h option.h \
- ex_cmds.h proto.h
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
 syntax.o: syntax.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
- keymap.h term.h macros.h regexp.h structs.h gui.h globals.h option.h \
- ex_cmds.h proto.h
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
 tag.o: tag.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
- keymap.h term.h macros.h regexp.h structs.h gui.h globals.h option.h \
- ex_cmds.h proto.h
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
 term.o: term.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
- keymap.h term.h macros.h regexp.h structs.h gui.h globals.h option.h \
- ex_cmds.h proto.h
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
 ui.o: ui.c vim.h config.h feature.h os_unix.h osdef.h ascii.h keymap.h \
- term.h macros.h regexp.h structs.h gui.h globals.h option.h ex_cmds.h \
- proto.h
-undo.o: undo.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
- keymap.h term.h macros.h regexp.h structs.h gui.h globals.h option.h \
+ term.h macros.h regexp.h structs.h gui.h globals.h farsi.h option.h \
  ex_cmds.h proto.h
+undo.o: undo.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
 version.o: version.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
- option.h ex_cmds.h proto.h version.h
+ farsi.h option.h ex_cmds.h proto.h version.h
 window.o: window.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
- keymap.h term.h macros.h regexp.h structs.h gui.h globals.h option.h \
- ex_cmds.h proto.h
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
 gui.o: gui.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
- keymap.h term.h macros.h regexp.h structs.h gui.h globals.h option.h \
- ex_cmds.h proto.h
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
 gui_motif.o: gui_motif.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
- option.h ex_cmds.h proto.h
+ farsi.h option.h ex_cmds.h proto.h
 gui_athena.o: gui_athena.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
- option.h ex_cmds.h proto.h gui_at_sb.h
+ farsi.h option.h ex_cmds.h proto.h gui_at_sb.h
 gui_x11.o: gui_x11.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
- option.h ex_cmds.h proto.h
+ farsi.h option.h ex_cmds.h proto.h vim_icon.xbm vim_mask.xbm
 gui_at_sb.o: gui_at_sb.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
- option.h ex_cmds.h proto.h gui_at_sb.h
+ farsi.h option.h ex_cmds.h proto.h gui_at_sb.h
+gui_at_fs.o: gui_at_fs.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h gui_at_sb.h
 if_perl.o: if_perl.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
- option.h ex_cmds.h proto.h
+ farsi.h option.h ex_cmds.h proto.h
 if_perlsfio.o: if_perlsfio.c vim.h config.h feature.h os_unix.h \
  osdef.h ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h \
- globals.h option.h ex_cmds.h proto.h
+ globals.h farsi.h option.h ex_cmds.h proto.h
 if_python.o: if_python.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h
+if_tcl.o: if_tcl.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
  option.h ex_cmds.h proto.h
 if_sniff.o: if_sniff.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
- option.h ex_cmds.h proto.h os_unixx.h
+ farsi.h option.h ex_cmds.h proto.h os_unixx.h

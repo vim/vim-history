@@ -209,9 +209,9 @@ trans_characters(buf, bufsize)
 	    room -= new_len - 1;
 	    if (room <= 0)
 		return;
-	    vim_memmove(buf + new_len, buf + 1, (size_t)len);
+	    mch_memmove(buf + new_len, buf + 1, (size_t)len);
 	}
-	vim_memmove(buf, new, (size_t)new_len);
+	mch_memmove(buf, new, (size_t)new_len);
 	buf += new_len;
 	--len;
     }
@@ -315,7 +315,7 @@ vim_strsize(s)
  */
 
 #define RET_WIN_BUF_CHARTABSIZE(wp, buf, c, col) \
-    if ((c) == TAB && !(wp)->w_p_list) \
+    if ((c) == TAB && (!(wp)->w_p_list || lcs_tab1)) \
     { \
 	int ts; \
 	ts = (buf)->b_p_ts; \
@@ -558,7 +558,7 @@ getvcol(wp, pos, start, cursor, end)
      * This function is used very often, do some speed optimizations.
      * When 'list', 'linebreak' and 'showbreak' are not set use a simple loop.
      */
-    if (!wp->w_p_list && !wp->w_p_lbr && *p_sbr == NUL)
+    if ((!wp->w_p_list || lcs_tab1) && !wp->w_p_lbr && *p_sbr == NUL)
     {
 	head = 0;
 	for (col = pos->col; ; --col, ++ptr)
@@ -608,7 +608,8 @@ getvcol(wp, pos, start, cursor, end)
 	*end = vcol + incr - 1;
     if (cursor != NULL)
     {
-	if (*ptr == TAB && (State & NORMAL) && !wp->w_p_list)
+	if (*ptr == TAB && (State & NORMAL) && !wp->w_p_list
+					 && !(VIsual_active && *p_sel == 'e'))
 	    *cursor = vcol + incr - 1;	    /* cursor at end */
 	else
 	    *cursor = vcol + head;	    /* cursor at start */
@@ -734,30 +735,33 @@ vim_isblankline(lbuf)
 }
 
 /*
- * Convert a string into a long, taking care of hexadecimal and octal numbers.
- * Returns the number.
+ * Convert a string into a long and/or unsigned long, taking care of
+ * hexadecimal and octal numbers.
  * If "hexp" is not NULL, returns a flag to indicate the type of the number:
  *  0	    decimal
  *  '0'	    octal
  *  'X'	    hex
  *  'x'	    hex
  * If "len" is not NULL, the length of the number in characters is returned.
+ * If "nptr" is not NULL, the signed result is returned in it.
+ * If "unptr" is not NULL, the unsigned result is returned in it.
  */
-    long
-vim_str2nr(start, hexp, len, dooct, dohex)
-    char_u	*start;
-    int		*hexp;	    /* return: type of number 0 = decimal, 'x' or 'X'
-			       is hex, '0' = octal */
-    int		*len;	    /* return: detected length of number */
-    int		dooct;	    /* recognize octal number */
-    int		dohex;	    /* recognize hex number */
+    void
+vim_str2nr(start, hexp, len, dooct, dohex, nptr, unptr)
+    char_u		*start;
+    int			*hexp;	    /* return: type of number 0 = decimal, 'x'
+				       or 'X' is hex, '0' = octal */
+    int			*len;	    /* return: detected length of number */
+    int			dooct;	    /* recognize octal number */
+    int			dohex;	    /* recognize hex number */
+    long		*nptr;	    /* return: signed result */
+    unsigned long	*unptr;	    /* return: unsigned result */
 {
     char_u	    *ptr = start;
-    int		    hex = 0;			/* default is decimal */
+    int		    hex = 0;		/* default is decimal */
     int		    negative = FALSE;
-    char_u	    buf[NUMBUFLEN];
-    int		    i;
-    long	    n;
+    long	    n = 0;
+    unsigned long   un = 0;
 
     if (ptr[0] == '-')
     {
@@ -780,31 +784,53 @@ vim_str2nr(start, hexp, len, dooct, dohex)
     }
 
     /*
-     * Copy the number into a buffer because some versions of sscanf()
-     * cannot handle characters with the upper bit set, making some special
-     * characters handled like digits.
+     * Do the string-to-numeric conversion "manually" to avoid sscanf quirks.
      */
-    for (i = 0; (hex ? (hex == '0' ? *ptr >= '0' && *ptr <= '7'
-		     : isxdigit(*ptr)) : isdigit(*ptr)) &&
-						       i < NUMBUFLEN - 1; ++i)
-	buf[i] = *ptr++;
-    buf[i] = NUL;
-
-    if (hex == '0')
-	sscanf((char *)buf, "%lo", &n);
-    else if (hex)
-	sscanf((char *)buf, "%lx", &n);		/* "%X" doesn't work! */
+    if (hex)
+    {
+	if (hex == '0')
+	{
+	    /* octal */
+	    while ('0' <= *ptr && *ptr <= '7')
+	    {
+		n = 8 * n + (long)(*ptr - '0');
+		un = 8 * un + (unsigned long)(*ptr - '0');
+		++ptr;
+	    }
+	}
+	else
+	{
+	    /* hex */
+	    while (isxdigit(*ptr))
+	    {
+		n = 16 * n + (long)hex2nr(*ptr);
+		un = 16 * un + (unsigned long)hex2nr(*ptr);
+		++ptr;
+	    }
+	}
+    }
     else
-	n = atol((char *)buf);
+    {
+	/* decimal */
+	while (isdigit(*ptr))
+	{
+	    n = 10 * n + (long)(*ptr - '0');
+	    un = 10 * un + (unsigned long)(*ptr - '0');
+	    ++ptr;
+	}
+    }
+
+    if (!hex && negative)   /* account for leading '-' for decimal numbers */
+	n = -n;
 
     if (hexp != NULL)
 	*hexp = hex;
     if (len != NULL)
 	*len = ptr - start;
-
-    if (negative)
-	return -n;
-    return n;
+    if (nptr != NULL)
+	*nptr = n;
+    if (unptr != NULL)
+	*unptr = un;
 }
 
 /*

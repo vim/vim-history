@@ -1,24 +1,32 @@
 Begin3
 Title:          Exuberant Ctags
-Version:        2.0.2
-Entered-date:   25FEB98
-Description:    A better ctags which generates tags for all possible tag
-		types: macro definitions, enumerated values (values inside
-		enum{...}), function and method definitions, enum/struct/union
-		tags, external function prototypes (optional), typedefs, and 
-		variable declarations. It is far less easily fooled by code
-		containing #if preprocessor conditional constructs. Can also
-		be used to print out a list of selected objects found in
-		source files. Supports C++ and can also produce Emacs-style
-		tag files.
-Keywords:       ctags etags tags Exuberant C C++ tool utility source index
+Version:        2.3
+Entered-date:   20AUG98
+Description:    A better ctags with support for C, C++ and Java. It can
+		generate tags for all of the following tag types (some are
+		optional):
+		    macro definitions
+		    enumerators
+		    function and method definitions
+		    class, enum, struct, and union names
+		    interface names (Java)
+		    namespace names (C++)
+		    typedefs
+		    variables (definitions and extern declarations)
+		    function (method) prototypes/declarations
+		    data members
+		It is far less easily fooled by C code containing #if
+		preprocessor conditional constructs. It can also be used to
+		print out a list of selected objects found in source files.
+		It can also produce Emacs-style TAGS files.
+Keywords:       ctags etags tags Exuberant C C++ Java tool utility source index
 Author:         darren@hiebert.com (Darren Hiebert)
 Primary-site:   sunsite.unc.edu /pub/Linux/devel/lang/c
-		83kB ctags-2.0.2.tar.gz
-Alternate-site: ftp://ftp.hmi.com/pub/ctags
-		83kB ctags-2.0.2.tar.gz
-Original-site:  http://home.hiwaay.net/~darren/ctags
-		83kB archives/ctags-2.0.2.tar.gz
-Platforms:      UNIX, MSDOS, QNX, Windows 95/NT, OS/2, Amiga
+		97kB ctags-2.3.tar.gz
+Alternate-site: ftp://ftp.revnet.com/pub/ctags
+		97kB ctags-2.3.tar.gz
+Original-site:  http://darren.hiebert.com/ctags
+		97kB archives/ctags-2.3.tar.gz
+Platforms:      UNIX, MSDOS, QNX, Windows 95/NT, OS/2, Amiga, VMS
 Copying-policy: GNU General Public License
 End

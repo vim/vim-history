@@ -16,7 +16,7 @@ void swapchar __ARGS((int op_type, FPOS *pos));
 int op_change __ARGS((OPARG *oap));
 void init_yank __ARGS((void));
 int op_yank __ARGS((OPARG *oap, int deleting, int mess));
-void do_put __ARGS((int regname, int dir, long count, int fix_indent));
+void do_put __ARGS((int regname, int dir, long count, int flags));
 int get_register_name __ARGS((int num));
 void do_dis __ARGS((char_u *arg));
 void dis_msg __ARGS((char_u *p, int skip_esc));

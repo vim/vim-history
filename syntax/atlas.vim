@@ -36,9 +36,9 @@ syn match atlasSpecial		"^[BE ][ 0-9]\{,6}\>"
 syn match atlasHexNumber	"\<X'[0-9A-F]\+'"
 syn match atlasOctalNumber	"\<O'[0-7]\+'"
 syn match atlasBinNumber	"\<B'[01]\+'"
-syn match atlasNumber		"\<[0-9]\+\>"
+syn match atlasNumber		"\<\d\+\>"
 "Floating point number part only
-syn match atlasDecimalNumber	"\.[0-9]\+\([eE][-+]\=[0-9]\)\=\>"
+syn match atlasDecimalNumber	"\.\d\+\([eE][-+]\=\d\)\=\>"
 
 syn region atlasFormatString	start=+((+	end=+\())\)\|\()[	 ]*\$\)+me=e-1
 syn region atlasString		start=+\<C'+	end=+'+   oneline

@@ -518,6 +518,14 @@ set_signals()
      * Arrange for other signals to gracefully shutdown Vim.
      */
     catch_signals(deathtrap, SIG_ERR);
+
+#if defined(USE_GUI) && defined(SIGHUP)
+    /*
+     * When the GUI is running, ignore the hangup signal.
+     */
+    if (gui.in_use)
+	signal(SIGHUP, SIG_IGN);
+#endif
 }
 
     void
@@ -749,47 +757,47 @@ get_x11_thing(get_title, test_only)
 
     if (get_x11_windis() == OK)
     {
-        /* Get window/icon name if any */
+	/* Get window/icon name if any */
 	if (get_title)
 	    status = XGetWMName(x11_display, x11_window, &text_prop);
 	else
 	    status = XGetWMIconName(x11_display, x11_window, &text_prop);
 
-        /*
+	/*
 	 * If terminal is xterm, then x11_window may be a child window of the
 	 * outer xterm window that actually contains the window/icon name, so
 	 * keep traversing up the tree until a window with a title/icon is
 	 * found.
-         */
-        if (vim_is_xterm(T_NAME))
-        {
-            Window          root;
-            Window          parent;
-            Window          win = x11_window;
-            Window         *children;
-            unsigned int    num_children;
+	 */
+	if (vim_is_xterm(T_NAME))
+	{
+	    Window	    root;
+	    Window	    parent;
+	    Window	    win = x11_window;
+	    Window	   *children;
+	    unsigned int    num_children;
 
-            while (!status || text_prop.value == NULL)
-            {
-                if (!XQueryTree(x11_display, win, &root, &parent, &children, 
+	    while (!status || text_prop.value == NULL)
+	    {
+		if (!XQueryTree(x11_display, win, &root, &parent, &children,
 							       &num_children))
 		    break;
-                if (children)
-                    XFree((void *)children);
-                if (parent == root || parent == 0)
-                    break;
+		if (children)
+		    XFree((void *)children);
+		if (parent == root || parent == 0)
+		    break;
 
-                win = parent;
+		win = parent;
 		if (get_title)
 		    status = XGetWMName(x11_display, win, &text_prop);
 		else
 		    status = XGetWMIconName(x11_display, win, &text_prop);
-            }
-        }
-        if (status && text_prop.value != NULL)
-        {
-            retval = TRUE;
-            if (!test_only)
+	    }
+	}
+	if (status && text_prop.value != NULL)
+	{
+	    retval = TRUE;
+	    if (!test_only)
 	    {
 		if (get_title)
 		    oldtitle = vim_strsave((char_u *)text_prop.value);
@@ -797,9 +805,8 @@ get_x11_thing(get_title, test_only)
 		    oldicon = vim_strsave((char_u *)text_prop.value);
 	    }
 	    XFree((void *)text_prop.value);
-        }
+	}
     }
-
     return retval;
 }
 
@@ -919,7 +926,7 @@ mch_settitle(title, icon)
     if (vim_is_xterm(T_NAME))
 	type = 2;
 
-    if (vim_is_iris_ansi(T_NAME))
+    if (vim_is_iris(T_NAME))
 	type = 3;
 
     if (type)
@@ -985,17 +992,23 @@ vim_is_xterm(name)
     if (name == NULL)
 	return FALSE;
     return (STRNICMP(name, "xterm", 5) == 0
-				       || STRCMP(name, "builtin_xterm") == 0);
+		|| STRCMP(name, "builtin_xterm") == 0);
 }
 
     int
-vim_is_iris_ansi(name)
+use_xterm_mouse()
+{
+    return (STRICMP(p_ttym, "xterm") == 0);
+}
+
+    int
+vim_is_iris(name)
     char_u  *name;
 {
     if (name == NULL)
 	return FALSE;
     return (STRNICMP(name, "iris-ansi", 9) == 0
-				   || STRCMP(name, "builtin_iris-ansi") == 0);
+	    || STRCMP(name, "builtin_iris-ansi") == 0);
 }
 
 /*
@@ -1008,7 +1021,7 @@ vim_is_fastterm(name)
 {
     if (name == NULL)
 	return FALSE;
-    if (vim_is_xterm(name) || vim_is_iris_ansi(name))
+    if (vim_is_xterm(name) || vim_is_iris(name))
 	return TRUE;
     return (   STRNICMP(name, "hpterm", 6) == 0
 	    || STRNICMP(name, "sun-cmd", 7) == 0
@@ -1042,13 +1055,22 @@ mch_get_user_name(s, len)
     char_u  *s;
     int	    len;
 {
+    return mch_get_uname(getuid(), s, len);
+}
+
+/*
+ * Insert user name for "uid" in s[len].
+ * Return OK if a name found.
+ */
+    int
+mch_get_uname(uid, s, len)
+    uid_t	uid;
+    char_u	*s;
+    int		len;
+{
 #if defined(HAVE_PWD_H) && defined(HAVE_GETPWUID)
     struct passwd   *pw;
-#endif
-    uid_t	    uid;
 
-    uid = getuid();
-#if defined(HAVE_PWD_H) && defined(HAVE_GETPWUID)
     if ((pw = getpwuid(uid)) != NULL &&
 				 pw->pw_name != NULL && *(pw->pw_name) != NUL)
     {
@@ -1206,7 +1228,7 @@ mch_FullName(fname, buf, len, force)
 	     */
 	    if (!dont_fchdir)
 	    {
-		fd = open(".", O_RDONLY | O_EXTRA);
+		fd = open(".", O_RDONLY | O_EXTRA, 0);
 		if (fd >= 0 && fchdir(fd) < 0)
 		{
 		    close(fd);
@@ -1244,7 +1266,7 @@ mch_FullName(fname, buf, len, force)
 		{
 		    STRNCPY(buf, fname, p - fname);
 		    buf[p - fname] = NUL;
-		    if (vim_chdir((char *)buf))
+		    if (mch_chdir((char *)buf))
 			retval = FAIL;
 		    else
 			fname = p + 1;
@@ -1278,7 +1300,7 @@ mch_FullName(fname, buf, len, force)
 	    }
 	    else
 #endif
-		vim_chdir((char *)olddir);
+		mch_chdir((char *)olddir);
 	}
     }
     STRCAT(buf, fname);
@@ -1565,14 +1587,14 @@ mch_setmouse(on)
     if (on == ison)	/* return quickly if nothing to do */
 	return;
 
-    if (vim_is_xterm(T_NAME))	    /* for Xterm */
+    if (use_xterm_mouse())
     {
 	if (on)
 	    out_str_nf((char_u *)"\033[?1000h"); /* enable mouse events */
 	else
 	    out_str_nf((char_u *)"\033[?1000l"); /* disable mouse events */
+	ison = on;
     }
-    ison = on;
 }
 #endif
 
@@ -1689,7 +1711,7 @@ mch_set_winsize()
     char_u  string[10];
 
     /* try to set the window size to Rows and Columns */
-    if (vim_is_iris_ansi(T_NAME))
+    if (vim_is_iris(T_NAME))
     {
 	sprintf((char *)string, "\033[203;%ld;%ld/y", Rows, Columns);
 	out_str_nf(string);
@@ -1787,7 +1809,7 @@ mch_call_shell(cmd, options)
     ui_get_winsize();
 #endif
     resettitle();
-    return (x ? FAIL : OK);
+    return x;
 
 #else /* USE_SYSTEM */	    /* don't use system(), use fork()/exec() */
 
@@ -1801,7 +1823,7 @@ mch_call_shell(cmd, options)
 #else
     int	    status = -1;
 #endif
-    int	    retval = FAIL;
+    int	    retval = -1;
     char    **argv = NULL;
     int	    argc;
     int	    i;
@@ -1897,7 +1919,7 @@ mch_call_shell(cmd, options)
 	{
 	    pty_master_fd = OpenPTY(&tty_name);	    /* open pty */
 	    if (pty_master_fd >= 0 && ((pty_slave_fd =
-				       open(tty_name, O_RDWR | O_EXTRA)) < 0))
+				    open(tty_name, O_RDWR | O_EXTRA, 0)) < 0))
 	    {
 		close(pty_master_fd);
 		pty_master_fd = -1;
@@ -1967,7 +1989,7 @@ mch_call_shell(cmd, options)
 		 * Connect stdin to /dev/null too, so ":n `cat`" doesn't hang,
 		 * waiting for input.
 		 */
-		fd = open("/dev/null", O_RDWR | O_EXTRA);
+		fd = open("/dev/null", O_RDWR | O_EXTRA, 0);
 		fclose(stdin);
 		fclose(stdout);
 		fclose(stderr);
@@ -2079,7 +2101,7 @@ mch_call_shell(cmd, options)
 	    if (gui.in_use && show_shell_mess)
 	    {
 #define BUFLEN 100		/* length for buffer, pseudo tty limit is 128 */
-		char_u	    buffer[BUFLEN];
+		char_u	    buffer[BUFLEN + 1];
 		int	    len;
 		int	    p_more_save;
 		int	    old_State;
@@ -2130,7 +2152,7 @@ mch_call_shell(cmd, options)
 		     * wild cards (would eat typeahead).
 		     */
 		    if (!(options & SHELL_EXPAND) &&
-			      (len = ui_inchar(buffer, BUFLEN - 1, 10L)) != 0)
+			      (len = ui_inchar(buffer, BUFLEN, 10L)) != 0)
 		    {
 			/*
 			 * For pipes:
@@ -2168,7 +2190,7 @@ mch_call_shell(cmd, options)
 				c = TERMCAP2KEY(buffer[i + 1], buffer[i + 2]);
 				if (c == K_DEL || c == K_BS)
 				{
-				    vim_memmove(buffer + i + 1, buffer + i + 3,
+				    mch_memmove(buffer + i + 1, buffer + i + 3,
 						       (size_t)(len - i - 2));
 				    if (c == K_DEL)
 					buffer[i] = DEL;
@@ -2277,10 +2299,10 @@ finished:
 
 	    if (WIFEXITED(status))
 	    {
-		i = WEXITSTATUS(status);
-		if (i)
+		retval = WEXITSTATUS(status);
+		if (retval)
 		{
-		    if (i == EXEC_FAILED)
+		    if (retval == EXEC_FAILED)
 		    {
 			MSG_PUTS("\nCannot execute shell ");
 			msg_outtrans(p_sh);
@@ -2289,12 +2311,10 @@ finished:
 		    else if (!expand_interactively)
 		    {
 			msg_putchar('\n');
-			msg_outnum((long)i);
+			msg_outnum((long)retval);
 			MSG_PUTS(" returned\n");
 		    }
 		}
-		else
-		    retval = OK;
 	    }
 	    else
 		MSG_PUTS("\nCommand terminated\n");
@@ -2381,10 +2401,12 @@ RealWaitForChar(fd, msec)
 
     ret = poll(&fds, nfd, (int)msec);	/* is this correct  when fd != 0?? */
 
-    if (ret > 0 && sniff_connected)
+    if (ret < 0)
+	sniff_disconnect(1);
+    else if (want_sniff_request)
     {
 	if (fds[1].revents & POLLHUP)
-	    sniff_connected = 0;
+	    sniff_disconnect(1);
 	if (fds[1].revents & POLLIN)
 	    sniff_request_waiting = 1;
     }
@@ -2442,10 +2464,12 @@ RealWaitForChar(fd, msec)
     ret = select(maxfd + 1, &rfds, NULL, &efds, (msec >= 0) ? &tv : NULL);
 
 # ifdef USE_SNIFF
-    if (ret > 0 && want_sniff_request)
+    if (ret < 0 )
+	sniff_disconnect(1);
+    else if (ret > 0 && want_sniff_request)
     {
 	if (FD_ISSET(fd_from_sniff, &efds))
-	    sniff_connected = 0;
+	    sniff_disconnect(1);
 	if (FD_ISSET(fd_from_sniff, &rfds))
 	    sniff_request_waiting = 1;
     }
@@ -2670,7 +2694,7 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
 		{
 		    /* need more room in table of pointers */
 		    files_alloced += EXPL_ALLOC_INC;
-		    *file = (char_u **)realloc(*file,
+		    *file = (char_u **)vim_realloc(*file,
 					   sizeof(char_u **) * files_alloced);
 		    if (*file == NULL)
 		    {
@@ -2813,17 +2837,17 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
      * in one of the patterns, otherwise we can still use the fast option.
      */
     else if (shell_style == STYLE_GLOB && !have_dollars(num_pat, pat))
-	extra_shell_arg = (char_u *)"-f";    /* Use csh fast option */
+	extra_shell_arg = (char_u *)"-f";	/* Use csh fast option */
 
     i = call_shell(command, SHELL_EXPAND);	/* execute it */
 
-    extra_shell_arg = NULL;		    /* cleanup */
+    extra_shell_arg = NULL;		/* cleanup */
     show_shell_mess = TRUE;
     vim_free(command);
 
-    if (i == FAIL)			    /* mch_call_shell() failed */
+    if (i)				/* mch_call_shell() failed */
     {
-	vim_remove(tempname);
+	mch_remove(tempname);
 	vim_free(tempname);
 	/*
 	 * With interactive completion, the error message is not printed.
@@ -2834,9 +2858,9 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
 	if (!expand_interactively)
 #endif
 	{
-	    must_redraw = CLEAR;	    /* probably messed up screen */
-	    msg_putchar('\n');		    /* clear bottom line quickly */
-	    cmdline_row = Rows - 1;	    /* continue on last line */
+	    must_redraw = CLEAR;	/* probably messed up screen */
+	    msg_putchar('\n');		/* clear bottom line quickly */
+	    cmdline_row = Rows - 1;	/* continue on last line */
 	}
 	return FAIL;
     }
@@ -2857,14 +2881,14 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
     buffer = alloc(len + 1);
     if (buffer == NULL)
     {
-	vim_remove(tempname);
+	mch_remove(tempname);
 	vim_free(tempname);
 	fclose(fd);
 	return FAIL;
     }
     i = fread((char *)buffer, 1, len, fd);
     fclose(fd);
-    vim_remove(tempname);
+    mch_remove(tempname);
     if (i != len)
     {
 	emsg2(e_notread, tempname);
@@ -3043,7 +3067,7 @@ mch_has_wildcard(p)
     {
 	if (*p == '\\' && p[1] != NUL)
 	    ++p;
-	else if (vim_strchr((char_u *)"*?[{`~$", *p) != NULL)
+	else if (vim_strchr((char_u *)"*?[{`'~$", *p) != NULL)
 	    return TRUE;
     }
     return FALSE;
@@ -3080,12 +3104,12 @@ have_dollars(num, file)
 
 #ifndef HAVE_RENAME
 /*
- * Scaled-down version of rename, which is missing in Xenix.
+ * Scaled-down version of rename(), which is missing in Xenix.
  * This version can only move regular files and will fail if the
  * destination exists.
  */
     int
-rename(src, dest)
+mch_rename(src, dest)
     const char *src, *dest;
 {
     struct stat	    st;
@@ -3094,7 +3118,7 @@ rename(src, dest)
 	return -1;
     if (link(src, dest) != 0)	    /* link file to new name */
 	return -1;
-    if (vim_remove(src) == 0)	    /* delete link to old name */
+    if (mch_remove(src) == 0)	    /* delete link to old name */
 	return 0;
     return -1;
 }

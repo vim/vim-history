@@ -17,6 +17,7 @@ void XS_VIWIN_SetHeight __ARGS((CV *cv));
 void XS_VIWIN_Cursor __ARGS((CV *cv));
 void XS_VIBUF_DESTROY __ARGS((CV *cv));
 void XS_VIBUF_Name __ARGS((CV *cv));
+void XS_VIBUF_Number __ARGS((CV *cv));
 void XS_VIBUF_Count __ARGS((CV *cv));
 void XS_VIBUF_Get __ARGS((CV *cv));
 void XS_VIBUF_Set __ARGS((CV *cv));

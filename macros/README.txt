@@ -11,9 +11,12 @@ urm	Macros that simulate a simple computer: "Universal Register Machine"
 The other files contain some handy utilities.  They also serve as examples for
 how to use Vi and Vim functionality.
 
-dvorak		 for when you use a Dvorak keyboard
-file_select.vim	 macros that make a handy file selector (Unix only)
-html		 macros for editing HTML files
-rot13.vim	 code/decode the buffer for rot13
-shellmenu.vim	 menus for editing shell scripts in the GUI version
-swapmous.vim	 swap left and right mouse buttons
+dvorak		  for when you use a Dvorak keyboard
+html		  macros for editing HTML files
+justify.vim	  user function for justifying text
+rot13.vim	  code/decode the buffer for rot13
+shellmenu.vim	  menus for editing shell scripts in the GUI version
+swapmous.vim	  swap left and right mouse buttons
+
+This one is only for Unix, and in the extra archive:
+file_select.vim	  macros that make a handy file selector

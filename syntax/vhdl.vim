@@ -1,7 +1,8 @@
 " Vim syntax file
-" Language:    VHDL
-" Maintainer:  Stephan Hegel <ea273@fen.baynet.de>
-" Credits:     Czo (Olivier Sirol) <sirol@cao-vlsi.ibp.fr>
+" Language:	VHDL
+" Maintainer:	<vacancy>
+" Credits:	Stephan Hegel <ea273@fen.baynet.de>
+"		Czo (Olivier Sirol) <sirol@cao-vlsi.ibp.fr>
 " $Id: vhdl.vim,v 1.4 1998/03/28 19:37:33 steve Exp $
 
 " Remove any old syntax stuff hanging around
@@ -112,15 +113,15 @@ syn match  vhdlCharacter "\'[&><=:+\-*\/().,;\'$#|~!%@?\^\[\]{}\\a-z0-9 ]\'"
 syn region vhdlString start=+"+  end=+"+
 
 " floating numbers
-syn match vhdlNumber "-\=\<[0-9]\+\.[0-9]\+\(E[+\-]\=[0-9]\+\)\>"
-syn match vhdlNumber "-\=\<[0-9]\+\.[0-9]\+\>"
-syn match vhdlNumber "0*2#[01_]\+\.[01_]\+#\(E[+\-]\=[0-9]\+\)\="
-syn match vhdlNumber "0*16#[0-9a-f_]\+\.[0-9a-f_]\+#\(E[+\-]\=[0-9]\+\)\="
+syn match vhdlNumber "-\=\<\d\+\.\d\+\(E[+\-]\=\d\+\)\>"
+syn match vhdlNumber "-\=\<\d\+\.\d\+\>"
+syn match vhdlNumber "0*2#[01_]\+\.[01_]\+#\(E[+\-]\=\d\+\)\="
+syn match vhdlNumber "0*16#[0-9a-f_]\+\.[0-9a-f_]\+#\(E[+\-]\=\d\+\)\="
 " integer numbers
-syn match vhdlNumber "-\=\<[0-9]\+\(E[+\-]\=[0-9]\+\)\>"
-syn match vhdlNumber "-\=\<[0-9]\+\>"
-syn match vhdlNumber "0*2#[01_]\+#\(E[+\-]\=[0-9]\+\)\="
-syn match vhdlNumber "0*16#[0-9a-f_]\+#\(E[+\-]\=[0-9]\+\)\="
+syn match vhdlNumber "-\=\<\d\+\(E[+\-]\=\d\+\)\>"
+syn match vhdlNumber "-\=\<\d\+\>"
+syn match vhdlNumber "0*2#[01_]\+#\(E[+\-]\=\d\+\)\="
+syn match vhdlNumber "0*16#[0-9a-f_]\+#\(E[+\-]\=\d\+\)\="
 " operators
 syn keyword vhdlOperator and nand or nor xor xnor
 syn keyword vhdlOperator rol ror sla sll sra srl
@@ -128,8 +129,8 @@ syn keyword vhdlOperator mod rem abs not
 syn match   vhdlOperator "[&><=:+\-*\/|]"
 syn match   vhdlSpecial  "[().,;]"
 " time
-syn match vhdlTime "\<[0-9]\+\s\+\(\([fpnum]s\)\|\(sec\)\|\(min\)\|\(hr\)\)\>"
-syn match vhdlTime "\<[0-9]\+\.[0-9]\+\s\+\(\([fpnum]s\)\|\(sec\)\|\(min\)\|\(hr\)\)\>"
+syn match vhdlTime "\<\d\+\s\+\(\([fpnum]s\)\|\(sec\)\|\(min\)\|\(hr\)\)\>"
+syn match vhdlTime "\<\d\+\.\d\+\s\+\(\([fpnum]s\)\|\(sec\)\|\(min\)\|\(hr\)\)\>"
 
 syn match vhdlComment "--.*$"
 " syn match vhdlGlobal "[\'$#~!%@?\^\[\]{}\\]"

@@ -1,4 +1,4 @@
-*os_dos.txt*    For Vim version 5.1.  Last modification: 1998 Mar 15
+*os_dos.txt*    For Vim version 5.2.  Last modification: 1998 Aug 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -83,8 +83,8 @@ CTRL-PageDown	cursor to last screen line, last character	*<C-PageDown>*
 
 This is accomplished with these mappings:
 
-key	    	key code     Normal/Visual mode	    Insert mode ~
-CTRL-PageUp 	<M-N><M-C-D>	    H		    <C-O>H
+key		key code     Normal/Visual mode	    Insert mode ~
+CTRL-PageUp	<M-N><M-C-D>	    H		    <C-O>H
 CTRL-PageDown	<M-N>v		    L$		    <C-O>L<C-O>$
 
 Additionally, these keys are used for copy/cut/paste.  Only in the Win32
@@ -97,7 +97,7 @@ Shift-Del	cut Visual text (to clipboard)			*<S-Del>*
 
 This is accomplished with these mappings (Win32 version of Vim):
 
-key	    	key code     Normal	Visual	    Insert ~
+key		key code     Normal	Visual	    Insert ~
 Shift-Insert	<M-N><M-T>   "*P	""d"*P      <C-O>"*P
 CTRL-Insert	<M-N><M-U>		"*y
 Shift-Del	<M-N><M-W>		"*d
@@ -105,8 +105,8 @@ CTRL-Del	<M-N><M-X>		"*d
 
 Or these mappings (non-Win32 version of Vim):
 
-key	    	key code     Normal	Visual	    Insert ~
-Shift-Insert	<M-N><M-T>   P		d"0P        <C-O>P
+key		key code     Normal	Visual	    Insert ~
+Shift-Insert	<M-N><M-T>   P		d"0P	    <C-O>P
 CTRL-Insert	<M-N><M-U>		y
 Shift-Del	<M-N><M-W>		d
 CTRL-Del	<M-N><M-X>		d
@@ -199,7 +199,7 @@ Example:
 >  :set t_me=^V^[\|112m	" back to normal mode: Black (0) on LightGray (112)
 >
 >  :set t_so=^V^[\|37m	" start of standout mode: DarkMagenta (5) on DarkGreen
-> 									(32)
+>									(32)
 >  :set t_se=^V^[\|112m	" back to normal mode: Black (0) on LightGray (112)
 
 ==============================================================================
@@ -265,7 +265,7 @@ For example, with the MKS Korn shell or with bash, the values of the options
 should be:
 
 		DOS 16 bit	    DOS 32 bit		Win32  ~
-'shellcmdflag'	   -c		        -c		 -c
+'shellcmdflag'	   -c			-c		 -c
 'shellquote'	   "
 'shellxquote'						 "
 

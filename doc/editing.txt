@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 5.1.  Last modification: 1998 Feb 07
+*editing.txt*   For Vim version 5.2.  Last modification: 1998 Aug 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -135,6 +135,24 @@ example: ":q" will not work if the buffer was changed, but ":q!" will.  To see
 whether the buffer was changed use the "CTRL-G" command.  The message includes
 the string "[Modified]" if the buffer has been changed.
 
+							*:confirm* *:conf*
+:conf[irm] {command}	Execute {command}, and use a dialog when an
+			operation has to be confirmed.  Can be used on the
+			":q", ":qa" and ":w" commands (the latter to over-ride
+			a read-only setting).
+
+Examples:
+>  :confirm w foo
+	Will ask for confirmation when "foo" already exists.
+>  :confirm q
+	Will ask for confirmation when there are changes.
+>  :confirm qa
+	If any modified, unsaved buffers exist, you will be prompted to save
+	or abandon each one.  There are also choices to "save all" or "abandon
+	all".
+
+If you want to always use ":confirm", set the 'confirm' option.
+
 ==============================================================================
 2. Editing a file					*edit-a-file*
 
@@ -165,14 +183,17 @@ the string "[Modified]" if the buffer has been changed.
 
 							*:ex*
 :ex [+cmd] [file]	Same as :edit, but also switch to "Ex" mode.  See
-			|ex-mode|.
+			|Ex-mode|.
 
 							*:vi* *:visual*
-:vi[sual] [+cmd] [file]	Same as :edit, but also exit "Ex" mode.
+:vi[sual][!] [+cmd] [file]
+			When entered in Ex mode: Leave Ex mode, go back to
+			Normal mode.  Otherwise same as :edit.
 
 							*:vie* *:view*
-:vie[w] [+cmd] file	Same as :edit, but set 'readonly' option for this
-			buffer.  {not in Vi}
+:vie[w] [+cmd] file	When entered in Ex mode: Leave Ex mode, go back to
+			Normal mode.  Otherwise same as :edit, but set
+			'readonly' option for this buffer.  {not in Vi}
 
 							*CTRL-^*
 [count]CTRL-^		Edit [count]th alternate file (equivalent to ":e
@@ -256,12 +277,12 @@ all over again.  The ":e" command is only useful if you have changed the
 current file name.
 
 							*abandon-file*
-You abondon a file when you start editing another file in the same window.
+You abandon a file when you start editing another file in the same window.
 But the text is not unloaded, when the 'hidden' option is set, or when another
 window is editing the same file.  When the text will be unloaded, and there
 are changes in the text, Vim will protect you from accidently losing those
 changes.  When 'autowrite' is set, the file is written.  Otherwise you will
-get an error message, unless you used the '!' to force abondoning the changes.
+get an error message, unless you used the '!' to force abandoning the changes.
 Note that ":e file" will fail if there are changes in the current buffer,
 also when the 'autowrite' option is on.  This is illogical, because with
 other commands (e.g., ":next") the current buffer would be written and
@@ -340,7 +361,7 @@ option.  This will avoid the use of 'fileformat'.  Without this you risk that
 single <NL> characters are unexpectedly replaced with <CR><NL>.
 
 ==============================================================================
-3. The argument list					*argument-list*
+3. The argument list				*argument-list* *arglist*
 
 If you give more than one file name when starting Vim, this list is
 remembered as the argument list.  Do not confuse this with the file list,
@@ -349,7 +370,8 @@ already present in Vi, the file list is new in Vim.  The file names in the
 argument list will also be present in the file list (unless they were
 deleted with ":bdel").
 
-You can use the argument list with the following commands:
+You can use the argument list with the following commands, and with the
+expression functions |argc()| and |argv()|.
 
 							*:ar* *:args*
 :ar[gs]			Print the argument list, with the current file in
@@ -509,10 +531,17 @@ used, for example, when the write fails and you want to try again later with
 :q[uit]			Quit, unless changes have been made or not editing
 			the last file in the argument list.
 
-:q[uit]!		Quit always, without writing.
+:conf[irm] q[uit]	Quit, but give prompt when changes have been made, or
+			not editing the last file in the argument list.  See
+			|:confirm| and 'confirm'.  {not in Vi}
 
-:cq			Quit always, without writing, and return an error
-			code.  Used for Manx's QuickFix mode (see |quickfix|).
+:q[uit]!		Quit without writing, also when visible buffers have
+			changes.  Does not exit when there are changed hidden
+			buffers.  Use ":qall!" to exit always.
+
+:cq[uit]		Quit always, without writing, and return an error
+			code.  See |:cq|.  Used for Manx's QuickFix mode (see
+			|quickfix|).  {not in Vi}
 
 							*:wq*
 :wq			Write the current file and exit (unless editing the

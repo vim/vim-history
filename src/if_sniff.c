@@ -1,4 +1,5 @@
-/*
+/* vi:set ts=8 sts=4 sw=4:
+ *
  * if_sniff.c Interface between Vim and SNiFF+
  *
  * $Id: if_sniff.c,v 1.6 1998/01/26 14:46:48 toni Exp $
@@ -7,6 +8,7 @@
 #include "vim.h"
 #include "os_unixx.h"
 
+int sniffemacs_pid;
 int fd_from_sniff;
 int sniff_connected;
 int sniff_request_waiting=0;
@@ -48,8 +50,8 @@ static struct sn_cmd sniff_cmds[] =
     { "browse-class", 'w', "Browse class",			RQ_CONTEXT },
     { "hierarchy",    't', "Show class in hierarchy",		RQ_CONTEXT },
     { "restr-hier",   'T', "Show class in restricted hierarchy",RQ_CONTEXT },
-    { "xref-to",      'x', "Xref refers to",		    	RQ_CONTEXT },
-    { "xref-by",      'X', "Xref referred by",		    	RQ_CONTEXT },
+    { "xref-to",      'x', "Xref refers to",			RQ_CONTEXT },
+    { "xref-by",      'X', "Xref referred by",			RQ_CONTEXT },
     { "xref-has",     'c', "Xref has a",			RQ_CONTEXT },
     { "xref-used-by", 'C', "Xref used by",			RQ_CONTEXT },
     { "show-docu",    'd', "Show docu of",			RQ_CONTEXT },
@@ -58,13 +60,14 @@ static struct sn_cmd sniff_cmds[] =
     { "disconnect",   'q', NULL,				RQ_DISCONNECT },
     { "font-info",    'z', NULL,				RQ_SILENT },
     { "update",       'u', NULL,				RQ_SILENT },
-    { NULL,			  '\0', NULL, 0}
+    { NULL,	     '\0', NULL, 0}
 };
 
 static char *SniffEmacs[2] = {"sniffemacs", (char *)NULL};  /* Yes, Emacs! */
 static int fd_to_sniff;
 static int sniff_will_disconnect = 0;
-
+static int sniff_will_connect = 0;
+static char msg_sniff_disconnect[] = "aCannot connect to SNiFF+. Check environment.\n";
 /* Initializing vim commands
  * executed each time vim connects to Sniff
  */
@@ -95,22 +98,21 @@ static char *init_cmds[]= {
 
 /*-------- Function Prototypes ----------------------------------*/
 
-static int ConnectToSniffEmacs();
-static void sniff_connect();
-static void sniff_disconnect __ARGS((int immediately));
+static int ConnectToSniffEmacs __ARGS((void));
+static void sniff_connect __ARGS((void));
 static void HandleSniffRequest __ARGS((char* buffer));
 static int get_request __ARGS((int fd, char *buf, int maxlen));
 static void WriteToSniff __ARGS((char *str));
 static void SendRequest __ARGS((struct sn_cmd *command, char* symbol));
 static void vi_msg __ARGS((char *));
 static void vi_error_msg __ARGS((char *));
-static char *vi_symbol_under_cursor();
+static char *vi_symbol_under_cursor __ARGS((void));
 static void vi_open_file __ARGS((char *));
-static char *vi_buffer_name();
+static char *vi_buffer_name __ARGS((void));
 static BUF  *vi_find_buffer __ARGS((char *));
 static void vi_exec_cmd __ARGS((char *));
 static void vi_set_cursor_pos __ARGS((long char_nr));
-static long vi_cursor_pos();
+static long vi_cursor_pos __ARGS((void));
 
 
 
@@ -152,7 +154,8 @@ void ProcessSniffRequests()
  * Handle ":sniff" command
  */
     void
-do_sniff(char_u *arg)
+do_sniff(arg)
+    char_u *arg;
 {
     char *symbol = NULL;
     char *cmd = NULL;
@@ -227,8 +230,9 @@ sniff_connect()
     }
 }
 
-    static void
-sniff_disconnect(int immediately)
+    void
+sniff_disconnect(immediately)
+    int immediately;
 {
     if (!sniff_connected)
 	return;
@@ -239,7 +243,16 @@ sniff_disconnect(int immediately)
 	vi_exec_cmd("augroup END");
 	vi_exec_cmd("unlet sniff_connected");
 	sniff_connected = 0;
+	want_sniff_request = 0;
 	sniff_will_disconnect = 0;
+	sniff_will_connect = 0;
+#ifdef USE_GUI
+	if (gui.in_use)
+	    gui_mch_wait_for_chars(0L);
+#endif
+	close(fd_to_sniff);
+	close(fd_from_sniff);
+	wait(NULL);
     }
     else
     {
@@ -255,14 +268,13 @@ sniff_disconnect(int immediately)
     static int
 ConnectToSniffEmacs()
 {
-    int pid;
     int ToSniffEmacs[2], FromSniffEmacs[2];
 
     pipe(ToSniffEmacs);
     pipe(FromSniffEmacs);
 
     /* fork */
-    if ((pid=fork()) == 0)
+    if ((sniffemacs_pid=fork()) == 0)
     {
 	/* child */
 
@@ -278,17 +290,28 @@ ConnectToSniffEmacs()
 
 	/* start sniffemacs */
 	execvp (SniffEmacs[0], SniffEmacs);
-
-	exit(1);
+	{
+/*	    FILE *out = fdopen(FromSniffEmacs[1], "w"); */
+	    sleep(1);
+	    fputs(msg_sniff_disconnect, stdout);
+	    fflush(stdout);
+	    sleep(3);
+#ifdef USE_GUI
+	    if (gui.in_use)
+		gui_exit(1);
+#endif
+	    exit(1);
+	}
 	return 1;
     }
-    else if (pid>0)
+    else if (sniffemacs_pid>0)
     {
 	/* parent process */
 	close(ToSniffEmacs[0]);
 	fd_to_sniff  = ToSniffEmacs[1];
 	close(FromSniffEmacs[1]);
 	fd_from_sniff = FromSniffEmacs[0];
+	sniff_will_connect = 1;
 	sniff_connected = 1;
 	return 0;
     }
@@ -303,7 +326,8 @@ ConnectToSniffEmacs()
  * Handle one request from SNiFF+
  */
     static void
-HandleSniffRequest( char* buffer )
+HandleSniffRequest(buffer)
+    char *buffer;
 {
     static int first_time=0;
     char VICommand[256];
@@ -406,6 +430,7 @@ HandleSniffRequest( char* buffer )
 
 	case 'A' :  /* Warning/Info msg */
 	    vi_msg(arguments);
+
 	    if (!strncmp(arguments, "Discon", 6)) /* "Disconnected ..." */
 		sniff_disconnect(1);	/* unexpected disconnection */
 	    break;
@@ -413,6 +438,8 @@ HandleSniffRequest( char* buffer )
 	    vi_error_msg(arguments);
 	    if (!strncmp(arguments, "Cannot", 6)) /* "Cannot connect ..." */
 		sniff_disconnect(1);
+	    if (sniff_will_connect)
+		sniff_will_connect = 0;
 	    break;
 
 	case '\0':
@@ -432,7 +459,10 @@ HandleSniffRequest( char* buffer )
  *	   <0 on error
  */
     static int
-get_request(int fd, char *buf, int maxlen)
+get_request(fd, buf, maxlen)
+    int  fd;
+    char *buf;
+    int  maxlen;
 {
     static char inbuf[1024];
     static int pos=0, bytes=0;
@@ -482,7 +512,9 @@ get_request(int fd, char *buf, int maxlen)
 
 
     static void
-SendRequest(struct sn_cmd *command, char* symbol)
+SendRequest(command, symbol)
+    struct sn_cmd *command;
+    char *symbol;
 {
     int  cmd_type = command->cmd_type;
     static char cmdstr[256];
@@ -549,7 +581,8 @@ SendRequest(struct sn_cmd *command, char* symbol)
 
 
     static void
-WriteToSniff(char *str)
+WriteToSniff(str)
+    char *str;
 {
     int bytes;
     bytes = write(fd_to_sniff, str, strlen(str));
@@ -563,21 +596,24 @@ WriteToSniff(char *str)
 /*-------- vim helping functions --------------------------------*/
 
     static void
-vi_msg(char *str)
+vi_msg(str)
+    char *str;
 {
     if (str && *str)
 	MSG((char_u *)str);
 }
 
     static void
-vi_error_msg(char *str)
+vi_error_msg(str)
+    char *str;
 {
     if (str && *str)
 	EMSG((char_u *)str);
 }
 
     static void
-vi_open_file(char *fname)
+vi_open_file(fname)
+    char *fname;
 {
     ++no_wait_return;
     do_ecmd(0, (char_u *)fname, NULL, NULL, (linenr_t)1,
@@ -587,7 +623,8 @@ vi_open_file(char *fname)
 }
 
     static BUF *
-vi_find_buffer(char *fname)
+vi_find_buffer(fname)
+    char *fname;
 {			    /* derived from buflist_findname() [buffer.c] */
     BUF		*buf;
 
@@ -624,7 +661,8 @@ vi_buffer_name()
 }
 
     static void
-vi_exec_cmd( char *vicmd )
+vi_exec_cmd(vicmd)
+    char *vicmd;
 {
     do_cmdline((char_u *)vicmd, NULL, NULL, DOCMD_NOWAIT);  /* [ex_docmd.c] */
 }
@@ -634,12 +672,13 @@ vi_exec_cmd( char *vicmd )
  * derived from cursor_pos_info() [buffer.c]
  */
     static void
-vi_set_cursor_pos( long char_pos )
+vi_set_cursor_pos(char_pos)
+    long char_pos;
 {
-    linenr_t		lnum;
-    long			char_count=1;  /* first position = 1 */
-    int				line_size;
-    int				eol_size;
+    linenr_t	lnum;
+    long	char_count=1;  /* first position = 1 */
+    int		line_size;
+    int		eol_size;
 
     if (curbuf->b_p_tx)
 	eol_size = 2;
@@ -658,10 +697,10 @@ vi_set_cursor_pos( long char_pos )
     static long
 vi_cursor_pos()
 {
-    linenr_t		lnum;
-    long			char_count=1;  /* sniff starts with pos 1 */
-    int				line_size;
-    int				eol_size;
+    linenr_t	lnum;
+    long	char_count=1;  /* sniff starts with pos 1 */
+    int		line_size;
+    int		eol_size;
 
     if (curbuf->b_p_tx)
 	eol_size = 2;

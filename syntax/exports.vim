@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	exports
-" Maintainer:	Charles E. Campbell
-" Last change:	March 26, 1998
+" Maintainer : Dr. Charles E. Campbell, Jr. <Charles.Campbell@gsfc.nasa.gov>
+" Last change:	May 18, 1998
 " Notes: This file includes both SysV and BSD 'isms
 
 " Remove any old syntax stuff hanging around
@@ -37,7 +37,7 @@ if !exists("did_exports_syntax_inits")
   hi link exportsOptSet	exportsSettings
 
   hi link exportsComment	Comment
-  hi link exportsKeyOptions 	Type
+  hi link exportsKeyOptions	Type
   hi link exportsKeySettings	Keyword
   hi link exportsOptions	Constant
   hi link exportsSeparator	Constant

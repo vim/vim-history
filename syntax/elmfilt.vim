@@ -1,6 +1,6 @@
 " Vim syntax file
 " Language:	Elm Filter rules
-" Maintainer:	Dr. Charles E. Campbell, Jr. <cec@gryphon.gsfc.nasa.gov>
+" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.Campbell@gsfc.nasa.gov>
 " Last change:	January 5, 1998
 
 " remove any old syntax stuff hanging around
@@ -10,7 +10,7 @@ syn keyword	elmfiltAction	delete execute executec forward leave save savecopy
 syn match	elmfiltArg	"[^\\]%[&0-9]"lc=1	contained
 syn keyword	elmfiltCond	lines always subject sender from to lines received
 syn region	elmfiltMatch	start="/" skip="\\/" end="/"
-syn match	elmfiltNumber	"[0-9]\+"
+syn match	elmfiltNumber	"\d\+"
 syn keyword	elmfiltOper	and not matches
 syn match	elmfiltOper	"\~"
 syn match	elmfiltOper	"<=\|>=\|!=\|<\|<\|=\|(\|)"

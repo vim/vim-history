@@ -10,10 +10,7 @@ INC	= -I$(BCCLOC)\include
 LIB	= -L$(BCCLOC)\lib
 
 # Add this file for wildcard expansion (does NOT work with 4.0!)
-EXTRA   =   $(BCCLOC)\lib\wildargs.obj
-
-# uncomment the next line for including debugging messages
-#DEBUG	= -DDEBUG
+#EXTRA   =   $(BCCLOC)\lib\wildargs.obj
 
 # The following compile options can be changed for better machines.
 #	replace -1- with -2 to produce code for a 80286 or higher
@@ -21,13 +18,24 @@ EXTRA   =   $(BCCLOC)\lib\wildargs.obj
 #	add -v for source debugging
 OPTIMIZE= -1- -Ox
 
-CFLAGS	= -A -mc -w-pia -w-par -DMSDOS $(DEBUG) $(OPTIMIZE) $(INC)
+CFLAGS	= -DMSDOS -mc -w-ccc -w-par -w-pia -w-rch -w-sus $(INC)
 LFLAGS	= $(LIB) $(EXTRA)
 
 ctags.exe: $(SOURCES) respfile
-	$(CC) -e$@ @respfile
+	$(CC) $(OPTIMIZE) -e$@ @respfile
+
+debug: dctags.exe
+
+dctags.exe: $(SOURCES) respfile debug.c
+	$(CC) -DDEBUG -v -e$@ @respfile debug.c
 
 respfile: makefile.bcc
 	echo $(CFLAGS) > $@
 	echo $(LFLAGS) >> $@
 	echo $(SOURCES) >> $@
+
+clean:
+	del *.exe
+	del *.obj
+	del respfile
+	del tags

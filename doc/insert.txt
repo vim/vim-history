@@ -1,9 +1,10 @@
-*insert.txt*    For Vim version 5.1.  Last modification: 1998 Mar 08
+*insert.txt*    For Vim version 5.2.  Last modification: 1998 Aug 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
+							*Insert-mode*
 Inserting and replacing text				*mode-ins-repl*
 
 Most of this file is about Insert and Replace mode.  At the end are a few
@@ -13,7 +14,7 @@ commands for inserting text in other ways.
 2. Special special keys					|ins-special-special|
 3. 'textwidth' and 'wrapmargin' options			|ins-textwidth|
 4. 'expandtab', 'smarttab' and 'softtabstop'  options	|ins-expandtab|
-5. Replace mode						|replace-mode|
+5. Replace mode						|Replace-mode|
 6. Insert mode completion				|ins-completion|
 7. Insert mode commands					|inserting|
 8. Ex insert commands					|inserting-ex|
@@ -78,10 +79,12 @@ CTRL-U		Delete all entered characters in the current line (see
 						*i_CTRL-M* *i_<CR>*
 <CR> or CTRL-M	Begin new line.
 						*i_CTRL-K*
-CTRL-K {char1} {char2}
+CTRL-K {char1} [char2]
 		Enter digraph (see |digraphs|).  When {char1} is a special
-		key, the code for that key is inserted.  Neither char is
-		considered for mapping.  {not in Vi}
+		key, the code for that key is inserted.  For example, the
+		string "<S-Space>" can be entered by typing <C-K><S-Space>
+		(two keys).  Neither char is considered for mapping.  {not in
+		Vi}
 
 CTRL-N		Find next keyword (see |i_CTRL-N|).  {not in Vi}
 CTRL-P		Find previous keyword (see |i_CTRL-P|).  {not in Vi}
@@ -100,7 +103,7 @@ CTRL-R <0-9a-z"%#:.-=>				*i_CTRL-R* *i_<C-R>*
 				the last delete or yank
 			'%'	the current file name
 			'#'	the alternate file name
-			':'	the last command line
+			':'	the last command-line
 			'.'	the last inserted text
 			'-'	the last small (less than a line) delete
 			'='	the expression register: you are prompted to
@@ -112,7 +115,7 @@ CTRL-R CTRL-R <0-9a-z"%#:.-=>		*i_CTRL-R_CTRL-R* *i_<C-R>_<C-R>*
 		CTRL-R, but the text is inserted literally, not as if typed.
 		This differs when the register contains characters like <BS>.
 		Example, where register a contains "ab^Hc":
->	CTRL-R a        	results in "ac".
+>	CTRL-R a		results in "ac".
 >	CTRL-R CTRL-R a		results in "ab^Hc".
 		Options 'textwidth', 'formatoptions', etc. still apply.  If
 		you also want to avoid these, use "<C-O>"xP", where 'x' is the
@@ -168,6 +171,8 @@ CTRL-_		Switch between languages, as follows:
 
 		CTRL-_ moves the cursor to the end of the typed text.
 
+		This command is only available when the 'allowrevins' option
+		is set.
 		Please refer to |rightleft.txt| for more information about
 		right-to-left mode.
 		{not in Vi}
@@ -353,7 +358,7 @@ extra spaces to get where you want to be.
 
 
 ==============================================================================
-5. Replace mode					*replace-mode* *mode-replace*
+5. Replace mode					*Replace-mode* *mode-replace*
 
 In Replace mode, one character in the line is deleted for every character you
 type.  If there is no character to delete (at the end of the line), the
@@ -546,7 +551,7 @@ CTRL-X CTRL-I		Search for the first keyword in the current and
 	CTRL-N		Search forwards for next matching keyword.  This
 			keyword replaces the previous matching keyword.
 			Note: CTRL-I is the same as <Tab>, which is likely to
-			be typed after a succesful completion, therefore
+			be typed after a successfull completion, therefore
 			CTRL-I is not used for searching for the next match.
 
 	CTRL-P		Search backward for previous matching keyword.  This
@@ -564,6 +569,8 @@ CTRL-X CTRL-]		Search for the first tag that starts with the same
 			characters and characters in 'iskeyword' are used
 			to decide which characters are included in the tag
 			name (same as for a keyword).  See also |CTRL-]|.
+			The 'showfulltag' option can be used to add context
+			from around the tag definition.
 	CTRL-]	or
 	CTRL-N		Search forwards for next matching tag.  This tag
 			replaces the previous matching tag.

@@ -1,4 +1,4 @@
-*gui_x11.txt*   For Vim version 5.1.  Last modification: 1998 Apr 05
+*gui_x11.txt*   For Vim version 5.2.  Last modification: 1998 Aug 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -127,7 +127,7 @@ The resources can also be set with arguments to vim:
    -geom <geom>		idem				*-geom*
    -borderwidth <width>	Use a border width of <width>	*-borderwidth*
    -bw <width>		idem				*-bw*
-   							*-scrollbarwidth*
+							*-scrollbarwidth*
    -scrollbarwidth <width>	Use a scrollbar width of <width>
    -sw <width>		idem				*-sw*
    -menuheight <height>	Use a menu bar height of <height> *-menuheight*
@@ -198,8 +198,11 @@ For example:
 >  :10vmenu File.Print :w !lpr -Php3
 
 							*X11-icon*
-A Vim icon is included as $VIM/vim32x32.xpm.  Unfortunately, how you should
-install it depends on your window manager.
+Vim uses a black&white icon by default.  A colored Vim icon is included as
+$VIM/vim32x32.xpm.  Unfortunately, how you should install it depends on your
+window manager.  When you use this, remove the 'i' flag from 'guioptions', to
+remove the black&white icon:
+>  :set guioptions-=i
 
 If you use one of the fvwm* family of window managers simply add this line to
 your .fvwm2rc configuration file:

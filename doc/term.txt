@@ -1,4 +1,4 @@
-*term.txt*      For Vim version 5.1.  Last modification: 1998 Mar 29
+*term.txt*      For Vim version 5.2.  Last modification: 1998 Aug 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -131,20 +131,22 @@ CTRL-H is never recognized as cursor-left.
 Other terminals (e.g., vt100 and xterm) have cursor keys that send <Esc>OA,
 <Esc>OB, etc.  Unfortunately these are valid commands in insert mode: Stop
 insert, Open a new line above the new one, start inserting 'A', 'B', etc.
-Instead of performing these commands Vim will recognize this key sequence as a
-cursor key movement.  To avoid this you could use these settings:
+Instead of performing these commands Vim will erroneously recognize this typed
+key sequence as a cursor key movement.  To avoid this and make Vim do what you
+want in either case you could use these settings:
 	:set notimeout		" don't timeout on mappings
 	:set ttimeout		" do timeout on terminal key codes
 	:set timeoutlen=100	" timemout in 100 msec
-This requires the keys to be hit withing 100msec.  When you type you normally
-are not that fast.  The cursor key codes arrive within 100 msec, so they are
-still recognized.
+This requires the key-codes to be send within 100msec in order to recognize
+them as a cursor key.  When you type you normally are not that fast, so they
+are recognized as individual typed commands, even though Vim receives the same
+sequence of bytes.
 
 				*vt100-function-keys* *xterm-function-keys*
 An xterm can send function keys F1 to F4 in two modes: vt100 compatible or
 not.  Because Vim cannot know what the xterm is sending, both types of keys
 are recognized:
-	                normal		vt100 ~
+			normal		vt100 ~
 	<F1>>	t_k1	<Esc>[11~	<Esc>OP
 	<F2>	t_k2	<Esc>[12~	<Esc>OQ
 	<F3>	t_k3	<Esc>[13~	<Esc>OR
@@ -249,17 +251,17 @@ Note: Use the <> form if possible
 	t_%i	<S-Right>	shift arrow right		*t_%i* *'t_%i'*
 	t_#4	<S-Left>	shift arrow left		*t_#4* *'t_#4'*
 	t_k1	<F1>		function key 1			*t_k1* *'t_k1'*
-	t_k2	<F2>		function key 2 			*t_k2* *'t_k2'*
-	t_k3	<F3>		function key 3 			*t_k3* *'t_k3'*
-	t_k4	<F4>		function key 4 			*t_k4* *'t_k4'*
-	t_k5	<F5>		function key 5 			*t_k5* *'t_k5'*
-	t_k6	<F6>		function key 6 			*t_k6* *'t_k6'*
-	t_k7	<F7>		function key 7 			*t_k7* *'t_k7'*
-	t_k8	<F8>		function key 8 			*t_k8* *'t_k8'*
-	t_k9	<F9>		function key 9 			*t_k9* *'t_k9'*
-	t_k;	<F10>		function key 10 		*t_k;* *'t_k;'*
-	t_F1	<F11>		function key 11 		*t_F1* *'t_F1'*
-	t_F2	<F12>		function key 12 		*t_F2* *'t_F2'*
+	t_k2	<F2>		function key 2			*t_k2* *'t_k2'*
+	t_k3	<F3>		function key 3			*t_k3* *'t_k3'*
+	t_k4	<F4>		function key 4			*t_k4* *'t_k4'*
+	t_k5	<F5>		function key 5			*t_k5* *'t_k5'*
+	t_k6	<F6>		function key 6			*t_k6* *'t_k6'*
+	t_k7	<F7>		function key 7			*t_k7* *'t_k7'*
+	t_k8	<F8>		function key 8			*t_k8* *'t_k8'*
+	t_k9	<F9>		function key 9			*t_k9* *'t_k9'*
+	t_k;	<F10>		function key 10			*t_k;* *'t_k;'*
+	t_F1	<F11>		function key 11			*t_F1* *'t_F1'*
+	t_F2	<F12>		function key 12			*t_F2* *'t_F2'*
 		<S-F1)		shifted function key 1
 		<S-F2>		shifted function key 2
 		<S-F3>		shifted function key 3
@@ -423,26 +425,22 @@ screen updating a lot slower, making it possible to see what is happening.
 This section is about using the mouse on a terminal or a terminal window.  How
 to use the mouse in a GUI window is explained in |gui-mouse|.
 
-Don't forget to enable the mouse with either one of these commands:
+Don't forget to enable the mouse with this commands:
 >	:set mouse=a
->	:set mouse=A
 Otherwise Vim won't recognize the mouse in all modes (See 'mouse').
 
 Currently the mouse is supported for Unix in an xterm window and for MS-DOS.
-Mouse clicks can be used to position the cursor, select the Visual area and
-paste.  The GUI also has menus.
+Mouse clicks can be used to position the cursor, select an area and paste.
+The GUI also has menus.
 
-The characters in the 'mouse' option tell in which situations the mouse will
+These characters in the 'mouse' option tell in which situations the mouse will
 be used by Vim:
 		n	Normal mode
-		N	Normal mode, xterm-like selection
 		v	Visual mode
 		i	Insert mode
-		I	Insert mode, xterm-like selection
 		c	Command-line mode
 		h	all previous modes when in a help file
-		a	all previous modes, except 'N' and 'I'
-		A	all previous modes, except 'n' and 'i'
+		a	all previous modes
 		r	for |hit-return| prompt
 
 The default for 'mouse' is empty, the mouse is not used.  Normally you would do
@@ -457,10 +455,9 @@ Will make the mouse work in Normal mode and Visual mode.
 Will make the mouse work in help files only (so you can use "g<LeftMouse>" to
 jump to tags).
 
-The 'N' and 'I' flags allow the cursor to be positioned by the mouse, but
-dragging the mouse doesn't start Visual mode.  Instead, xterm-like selection
-is used.  In the Command-line mode this always happens.  This behaviour is
-similar to how Windows programs work.
+Whether the selection that is started with the mouse is in Visual mode or
+Select mode depends on whethere "mouse" in included in the 'selectmode'
+option.
 
 In an xterm, with the currently active mode included in the 'mouse' option,
 normal mouse clicks are used by Vim, mouse clicks with the shift or ctrl key
@@ -506,10 +503,10 @@ make it possible to do the mouse commands that require the ctrl modifier, the
 	"g<LeftMouse>"	is "<C-LeftMouse>	(jump to tag under mouse click)
 	"g<RightMouse>" is "<C-RightMouse>	("CTRL-T")
 
-A short overview of what the mouse buttons do:
+A short overview of what the mouse buttons do, when 'mousemodel' is "extend":
 
 Normal Mode:
-event	      position	   Visual	  change  action	~
+event	      position	   selection	  change  action	~
 	       cursor			  window		~
 <LeftMouse>     yes	     end	    yes
 <C-LeftMouse>   yes	     end	    yes	   "CTRL-]" (2)
@@ -520,12 +517,12 @@ event	      position	   Visual	  change  action	~
 <MiddleMouse>   yes	  if active	    no	   yank and put
 <RightMouse>    yes	start or extend     yes
 <S-RightMouse>  yes	   no change	    yes	   "#" (2)    *<S-RightMouse>*
-<C-RightMouse>  no     	   no change	    no	   "CTRL-T"
+<C-RightMouse>  no	   no change	    no	   "CTRL-T"
 <RightDrag>     yes	    extend	    no		      *<RightDrag>*
 <RightRelease>  yes	    extend	    no		      *<RightRelease>*
 
 Insert or Replace Mode:
-event	      position	   Visual	  change  action	~
+event	      position	   selection	  change  action	~
 	       cursor			  window		~
 <LeftMouse>     yes     (cannot be active)  yes
 <C-LeftMouse>   yes     (cannot be active)  yes	   "CTRL-O^]" (2)
@@ -535,34 +532,49 @@ event	      position	   Visual	  change  action	~
 <MiddleMouse>   no      (cannot be active)  no	   put register
 <RightMouse>    yes     start or extend	    yes	   like CTRL-O
 <S-RightMouse>  yes     (cannot be active)  yes	   "CTRL-O#" (2)
-<C-RightMouse>  no     	(cannot be active)  no	   "CTRL-O CTRL-T"
+<C-RightMouse>  no	(cannot be active)  no	   "CTRL-O CTRL-T"
 
 In a help window:
-event	      position	   Visual	  change  action	~
+event	      position	   selection	  change  action	~
 	       cursor			  window		~
 <2-LeftMouse>   yes     (cannot be active)  no	   "^]" (jump to help tag)
+
+When 'mousemodel' is "popup", these are different:
+
+Normal Mode:
+event	      position	   selection	  change  action	~
+	       cursor			  window		~
+<S-LeftMouse>	yes	start or extend (1) no
+<RightMouse>	no	popup menu	    no
+
+Insert or Replace Mode:
+event	      position	   selection	  change  action	~
+	       cursor			  window		~
+<S-LeftMouse>   yes     start or extend (1) no	   like CTRL-O (1)
+<RightMouse>    no	popup menu	    no
 
 (1) only if mouse pointer moved since press
 (2) only if click is in same buffer
 
 Clicking the left mouse button causes the cursor to be positioned.  If the
 click is in another window that window is made the active window.  When
-editing the command line the cursor can only be positioned on the
-command line.  When in Insert mode Vim remains in Insert mode.  If 'scrolloff'
+editing the command-line the cursor can only be positioned on the
+command-line.  When in Insert mode Vim remains in Insert mode.  If 'scrolloff'
 is set, and the cursor is positioned within 'scrolloff' lines from the window
 border, the text is scrolled.
 
-A Visual area can be selected by pressing the left mouse button on the first
+A seleciton can be started by pressing the left mouse button on the first
 character, moving the mouse to the last character, then releasing the mouse
-button.  You will not always see the Visual selection until you release the
-button, only in some versions (GUI, MS-DOS, WIN32) will the dragging be shown
+button.  You will not always see the selection until you release the button,
+only in some versions (GUI, MS-DOS, WIN32) will the dragging be shown
 immediately.  Note that you can make the text scroll by moving the mouse at
 least one character in the first/last line in the window when 'scrolloff' is
 non-zero.
 
-In Normal and Visual mode clicking the right mouse button causes the Visual
-area to be extended.  When clicking in a window which is editing another
-buffer, the Visual mode is stopped.
+In Normal, Visual and Select mode clicking the right mouse button causes the
+Visual area to be extended.  When 'mousemodel' is "popup", the left button has
+to be used while keeping the shift key pressed.  When clicking in a window
+which is editing another buffer, the Visual or Select mode is stopped.
 
 Double, triple and quadruple clicks are supported when the GUI is active,
 for MS-DOS and Win32, and for an xterm (if the gettimeofday() function is
@@ -572,9 +584,10 @@ rectangular block-wise.  For MS-DOS and xterm the time for double clicking can
 be set with the 'mousetime' option.  For the other systems this time is
 defined outside of Vim.
 
-In Insert mode, when a Visual area is selected, Vim goes into Normal mode
-temporarily.  When Visual mode ends, it returns to Insert mode.  This is like
-using CTRL-O in Insert mode.
+In Insert mode, when a selected is started, Vim goes into Normal mode
+temporarily.  When Visual or Select mode ends, it returns to Insert mode.
+This is like using CTRL-O in Insert mode.  Select mode is used when the
+'selectmode' option contains "mouse".
 
 							*drag-status-line*
 When working with several windows, the size of the windows can be changed by
@@ -588,14 +601,14 @@ confusing, but it will work (just try it).
 Mouse clicks can be mapped.  The codes for mouse clicks are:
      code	    mouse button	      normal action	~
  <LeftMouse>	 left pressed		    set cursor position
- <LeftDrag>	 left moved while pressed   extend Visual area
- <LeftRelease>	 left released		    set Visual area end
+ <LeftDrag>	 left moved while pressed   extend selection
+ <LeftRelease>	 left released		    set selection end
  <MiddleMouse>	 middle pressed		    paste text at cursor position
  <MiddleDrag>	 middle moved while pressed -
  <MiddleRelease> middle released	    -
- <RightMouse>	 right pressed		    extend Visual area
- <RightDrag>	 right moved while pressed  extend Visual area
- <RightRelease>  right released		    set Visual area end
+ <RightMouse>	 right pressed		    extend selection
+ <RightDrag>	 right moved while pressed  extend selection
+ <RightRelease>  right released		    set selection end
 
 Examples:
 >	:noremap <MiddleMouse> <LeftMouse><MiddleMouse>
@@ -603,7 +616,7 @@ Paste at the position of the middle mouse button click (otherwise the paste
 would be done at the cursor position).
 
 >	:noremap <LeftRelease> <LeftRelease>y
-Immediately yank the Visually highlighted text.
+Immediately yank the selection, when using Visual mode.
 
 Note the use of ":noremap" instead of "map" to avoid a recursive mapping.
 

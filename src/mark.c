@@ -843,7 +843,7 @@ write_viminfo_marks(fp_out)
 	    if (is_mark_set && buf->b_ffname != NULL &&
 		 buf->b_ffname[0] != NUL && !removable(buf->b_ffname))
 	    {
-		home_replace(NULL, buf->b_ffname, IObuff, IOSIZE);
+		home_replace(NULL, buf->b_ffname, IObuff, IOSIZE, TRUE);
 		fprintf(fp_out, "\n> %s\n", (char *)IObuff);
 		if (buf->b_last_cursor.lnum != 0)
 		    fprintf(fp_out, "\t\"\t%ld\t%d\n",
@@ -923,7 +923,7 @@ copy_viminfo_marks(line, fp_in, fp_out, count, eof)
 	{
 	    if (curbuf->b_ffname != NULL)
 	    {
-		home_replace(NULL, curbuf->b_ffname, name_buf, LSIZE);
+		home_replace(NULL, curbuf->b_ffname, name_buf, LSIZE, TRUE);
 		if (fnamecmp(str, name_buf) == 0)
 		    load_marks = TRUE;
 	    }
@@ -934,7 +934,7 @@ copy_viminfo_marks(line, fp_in, fp_out, count, eof)
 	    for (buf = firstbuf; buf != NULL; buf = buf->b_next)
 		if (buf->b_ffname != NULL)
 		{
-		    home_replace(NULL, buf->b_ffname, name_buf, LSIZE);
+		    home_replace(NULL, buf->b_ffname, name_buf, LSIZE, TRUE);
 		    if (fnamecmp(str, name_buf) == 0)
 			break;
 		}

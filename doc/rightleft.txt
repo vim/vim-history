@@ -1,4 +1,4 @@
-*rightleft.txt* For Vim version 5.1.  Last modification: 1998 Feb 19
+*rightleft.txt* For Vim version 5.2.  Last modification: 1998 Aug 17
 
 
 		  VIM REFERENCE MANUAL    by Avner Lottem
@@ -87,6 +87,9 @@ Change details
       are set.
 
 +  Keyboard:
+   +  The 'allowrevins' option enables the CTRL-_ command in Insert mode and
+      in Command-line mode.
+
    +  CTRL-_ in insert/replace modes toggles revins and hkmap as follows:
 
       When in rightleft window, revins+nohkmap are toggled, since English
@@ -105,11 +108,11 @@ Change details
 
    +  Keyboard mapping while hkmap is set:
 
-        q w e r t y u i o p 		The characters in the mapping shown
-        / ' ÷ ø à è å ï í ô		here are for ISO 8859-8.
+	q w e r t y u i o p		The characters in the mapping shown
+	/ ' ÷ ø à è å ï í ô		here are for ISO 8859-8.
 
 	 a s d f g h j k l ; '
-         ù ã â ë ò é ç ì ê ó ,
+	 ù ã â ë ò é ç ì ê ó ,
 
 	  z x c v b n m , . /
 	  æ ñ á ä ð î ö ú õ .
@@ -153,13 +156,14 @@ There is no reverse replace mode (yet).
 If the 'showmode' option is set, "-- REVERSE INSERT --" will be shown in the
 status line when reverse Insert mode is active.
 
-Reverse Insert mode can be also entered via CTRL-_, which has some extra
-functionality: First, keyboard mapping is changed according to the window
-orientation -- if in a left-to-right window, revins is used to enter Hebrew
-text, so the keyboard changes to Hebrew (hkmap is set); if in a right-to-left
-window, revins is used to enter English text, so the keyboard changes to
-English (hkmap is reset).  Second, when exiting revins via CTRL-_, the cursor
-moves to the end of the typed text (if possible).
+When the 'allowrevins' option is set, reverse Insert mode can be also entered
+via CTRL-_, which has some extra functionality: First, keyboard mapping is
+changed according to the window orientation -- if in a left-to-right window,
+revins is used to enter Hebrew text, so the keyboard changes to Hebrew (hkmap
+is set); if in a right-to-left window, revins is used to enter English text,
+so the keyboard changes to English (hkmap is reset).  Second, when exiting
+revins via CTRL-_, the cursor moves to the end of the typed text (if
+possible).
 
 
 Pasting when in a rightleft window

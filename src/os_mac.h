@@ -49,8 +49,6 @@
 #define USE_CR
 #define NO_CONSOLE		    /* don't include console mode */
 
-#define USE_VIM_REMOVE
-#define USE_VIM_CHDIR
 /* #define SYNC_DUP_CLOSE	    /* sync() a file with dup() and close() */
 #define HAVE_STRING_H
 #define HAVE_STRCSPN
@@ -88,7 +86,7 @@
 # define SYS_GVIMRC_FILE "$VIM:gvimrc"
 #endif
 #ifndef SYS_MENU_FILE
-# define SYS_MENU_FILE "$VIM:menu.vim"
+# define SYS_MENU_FILE	"$VIM:menu.vim"
 #endif
 
 #ifdef USE_GUI
@@ -119,6 +117,10 @@
 # define VIM_HLP	"$VIM:doc:help.txt"
 #endif
 
+#ifndef SYNTAX_FNAME
+# define SYNTAX_FNAME	"$VIM:syntax:%s.vim"
+#endif
+
 #ifdef VIMINFO
 # ifndef VIMINFO_FILE
 #  define VIMINFO_FILE	"$VIM:viminfo"
@@ -141,7 +143,7 @@
  */
 #define CMDBUFFSIZE 1024	/* size of the command processing buffer */
 
-#define MAXPATHL    256 	/* Limited by the Pascal Strings */
+#define MAXPATHL    256		/* Limited by the Pascal Strings */
 
 #define BASENAMELEN	(MAXPATHL-5)	/* length of base of filename */
 
@@ -154,3 +156,9 @@
 #endif
 
 #define WILDCHAR_LIST "*?[{`$"
+
+#define mch_rename(src, dst) rename(src, dst)
+#define mch_remove(x) unlink((char *)(x))
+#define mch_chdir(s) chdir(s)
+#define mch_getenv(x) (char_u *)getenv((char *)x)
+#define mch_setenv(name, val, x) setenv(name, val, x)

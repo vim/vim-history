@@ -1,7 +1,7 @@
 /*****************************************************************************
-*   $Id: parse.c,v 5.2 1998/02/26 05:32:07 darren Exp $
+*   $Id: parse.c,v 6.6 1998/08/20 04:50:36 darren Exp $
 *
-*   Copyright (c) 1996-1997, Darren Hiebert
+*   Copyright (c) 1996-1998, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.
@@ -20,7 +20,8 @@
 /*============================================================================
 =   Macros
 ============================================================================*/
-#define activeTag(st)		((st)->tag[(st)->buf1])
+#define hashIndex(c)		((c) - '_')
+#define activeTag(st)		((st)->tag[(int)(st)->buf1])
 #define activeName(st)		(activeTag(st).name)
 #define swapNameBuffers(st)	((st)->buf1 = (boolean)!(st)->buf1)
 
@@ -33,19 +34,39 @@
 
 /*  Used to specify type of keyword.
  */
-typedef enum _keywordType {
-    KEYWORD_UNKNOWN, KEYWORD_ATTRIBUTE,
-    KEYWORD_CHAR, KEYWORD_CLASS, KEYWORD_CONST, KEYWORD_DOUBLE,
-    KEYWORD_ENUM, KEYWORD_EXPLICIT, KEYWORD_EXTERN,
-    KEYWORD_FLOAT, KEYWORD_FRIEND,
-    KEYWORD_INLINE, KEYWORD_INT, KEYWORD_LONG, KEYWORD_MUTABLE,
-    KEYWORD_NAMESPACE, KEYWORD_NEW, KEYWORD_OPERATOR, KEYWORD_OVERLOAD,
-    KEYWORD_PRIVATE, KEYWORD_PROTECTED, KEYWORD_PUBLIC,
+typedef enum _keywordId {
+    KEYWORD_UNKNOWN,
+    KEYWORD_ABSTRACT, KEYWORD_ATTRIBUTE,
+    KEYWORD_BOOLEAN, KEYWORD_BYTE,
+    KEYWORD_CHAR, KEYWORD_CLASS, KEYWORD_CONST,
+    KEYWORD_DOUBLE,
+    KEYWORD_ENUM, KEYWORD_EXPLICIT, KEYWORD_EXTERN, KEYWORD_EXTENDS,
+    KEYWORD_FINAL, KEYWORD_FLOAT, KEYWORD_FRIEND,
+    KEYWORD_IMPLEMENTS, KEYWORD_IMPORT, KEYWORD_INLINE, KEYWORD_INT,
+    KEYWORD_INTERFACE,
+    KEYWORD_LONG,
+    KEYWORD_MUTABLE,
+    KEYWORD_NAMESPACE, KEYWORD_NEW, KEYWORD_NATIVE,
+    KEYWORD_OPERATOR, KEYWORD_OVERLOAD,
+    KEYWORD_PACKAGE, KEYWORD_PRIVATE, KEYWORD_PROTECTED, KEYWORD_PUBLIC,
+    KEYWORD_REGISTER,
     KEYWORD_SHORT, KEYWORD_SIGNED, KEYWORD_STATIC, KEYWORD_STRUCT,
-    KEYWORD_TEMPLATE, KEYWORD_THROW, KEYWORD_TYPEDEF, KEYWORD_TYPENAME,
+    KEYWORD_SYNCHRONIZED,
+    KEYWORD_TEMPLATE, KEYWORD_THROW, KEYWORD_THROWS, KEYWORD_TRANSIENT,
+    KEYWORD_TYPEDEF, KEYWORD_TYPENAME,
     KEYWORD_UNION, KEYWORD_UNSIGNED, KEYWORD_USING,
-    KEYWORD_VIRTUAL, KEYWORD_VOID, KEYWORD_VOLATILE, KEYWORD_WCHAR_T
-} keywordType;
+    KEYWORD_VIRTUAL, KEYWORD_VOID, KEYWORD_VOLATILE,
+    KEYWORD_WCHAR_T
+} keywordId;
+
+/*  Used to determine whether keyword is valid for the current language and
+ *  what its ID is.
+ */
+typedef struct _keywordDesc {
+    const char *name;
+    keywordId id;
+    short isValid[LANG_COUNT]; /* indicates languages for which kw is valid */
+} keywordDesc;
 
 /*  Used for reporting the type of object parsed by nextToken().
  */
@@ -70,6 +91,9 @@ typedef struct _statementInfo {
 	DECL_BASE,		/* base type (default) */
 	DECL_CLASS,		/* C++ class */
 	DECL_ENUM,		/* enumeration */
+	DECL_IGNORE,		/* non-taggable "declaration" */
+	DECL_INTERFACE,		/* interface */
+	DECL_NAMESPACE,		/* namespace */
 	DECL_STRUCT,		/* structure */
 	DECL_UNION,		/* union */
 	DECL_NOMANGLE		/* C++ name demangling block */
@@ -81,6 +105,7 @@ typedef struct _statementInfo {
     boolean inEnumBody;	/* currently within enumeration value list? */
     boolean buf1;	/* is tag[1] the primary buffer? */
     tagInfo tag[2];	/* information regarding last 2 tag candidates */
+    tagInfo class;	/* class declaration name info */
     memberInfo member;	/* information regarding parent class/struct */
 } statementInfo;
 
@@ -94,25 +119,102 @@ typedef struct _parenInfo {
 } parenInfo;
 
 /*============================================================================
+=   Data definitions
+============================================================================*/
+
+enum { HashSize = ('z' - '_' + 1) };	/* '_' through 'z' */
+static short KeywordHash[(int)HashSize];
+
+static const keywordDesc KeywordTable[] = {
+    /* 						    C++		*/
+    /* 					     ANSI C  |  Java	*/
+    /* keyword		keyword ID		 \   |   /  	*/
+    { "__attribute__",	KEYWORD_ATTRIBUTE,	{ 1, 1, 0 } },
+    { "abstract",	KEYWORD_ABSTRACT,	{ 0, 0, 1 } },
+    { "boolean",	KEYWORD_BOOLEAN,	{ 0, 0, 1 } },
+    { "byte",		KEYWORD_BYTE,		{ 0, 0, 1 } },
+    { "char",		KEYWORD_CHAR,		{ 1, 1, 1 } },
+    { "class",		KEYWORD_CLASS,		{ 0, 1, 1 } },
+    { "const",		KEYWORD_CONST,		{ 1, 1, 1 } },
+    { "double",		KEYWORD_DOUBLE,		{ 1, 1, 1 } },
+    { "enum",		KEYWORD_ENUM,		{ 1, 1, 0 } },
+    { "explicit",	KEYWORD_EXPLICIT,	{ 0, 1, 0 } },
+    { "extends",	KEYWORD_EXTENDS,	{ 0, 0, 1 } },
+    { "extern",		KEYWORD_EXTERN,		{ 1, 1, 0 } },
+    { "final",		KEYWORD_FINAL,		{ 0, 0, 1 } },
+    { "float",		KEYWORD_FLOAT,		{ 1, 1, 1 } },
+    { "friend",		KEYWORD_FRIEND,		{ 0, 1, 0 } },
+    { "implements",	KEYWORD_IMPLEMENTS,	{ 0, 0, 1 } },
+    { "import",		KEYWORD_IMPORT,		{ 0, 0, 1 } },
+    { "inline",		KEYWORD_INLINE,		{ 0, 1, 0 } },
+    { "int",		KEYWORD_INT,		{ 1, 1, 1 } },
+    { "interface",	KEYWORD_INTERFACE,	{ 0, 0, 1 } },
+    { "long",		KEYWORD_LONG,		{ 1, 1, 1 } },
+    { "mutable",	KEYWORD_MUTABLE,	{ 0, 1, 0 } },
+    { "namespace",	KEYWORD_NAMESPACE,	{ 0, 1, 0 } },
+    { "native",		KEYWORD_NATIVE,		{ 0, 0, 1 } },
+    { "new",		KEYWORD_NEW,		{ 0, 1, 1 } },
+    { "operator",	KEYWORD_OPERATOR,	{ 0, 1, 0 } },
+    { "overload",	KEYWORD_OVERLOAD,	{ 0, 1, 0 } },
+    { "package",	KEYWORD_PACKAGE,	{ 0, 0, 1 } },
+    { "private",	KEYWORD_PRIVATE,	{ 0, 1, 1 } },
+    { "protected",	KEYWORD_PROTECTED,	{ 0, 1, 1 } },
+    { "public",		KEYWORD_PUBLIC,		{ 0, 1, 1 } },
+    { "register",	KEYWORD_REGISTER,	{ 1, 1, 0 } },
+    { "short",		KEYWORD_SHORT,		{ 1, 1, 1 } },
+    { "signed",		KEYWORD_SIGNED,		{ 1, 1, 0 } },
+    { "static",		KEYWORD_STATIC,		{ 1, 1, 1 } },
+    { "struct",		KEYWORD_STRUCT,		{ 1, 1, 0 } },
+    { "synchronized",	KEYWORD_SYNCHRONIZED,	{ 0, 0, 1 } },
+    { "template",	KEYWORD_TEMPLATE,	{ 0, 1, 0 } },
+    { "throw",		KEYWORD_THROW,		{ 0, 1, 1 } },
+    { "throws",		KEYWORD_THROWS,		{ 0, 0, 1 } },
+    { "transient",	KEYWORD_TRANSIENT,	{ 0, 0, 1 } },
+    { "typedef",	KEYWORD_TYPEDEF,	{ 1, 1, 0 } },
+    { "typename",	KEYWORD_TYPENAME,	{ 0, 1, 0 } },
+    { "union",		KEYWORD_UNION,		{ 1, 1, 0 } },
+    { "unsigned",	KEYWORD_UNSIGNED,	{ 1, 1, 0 } },
+    { "using",		KEYWORD_USING,		{ 0, 1, 0 } },
+    { "virtual",	KEYWORD_VIRTUAL,	{ 0, 1, 0 } },
+    { "void",		KEYWORD_VOID,		{ 1, 1, 1 } },
+    { "volatile",	KEYWORD_VOLATILE,	{ 1, 1, 1 } },
+    { "wchar_t",	KEYWORD_WCHAR_T,	{ 1, 1, 0 } }
+};
+
+static const size_t KeywordTableSize =
+				sizeof(KeywordTable)/sizeof(KeywordTable[0]);
+
+/*============================================================================
 =   Function prototypes
 ============================================================================*/
+static void initTag __ARGS((tagInfo *const tag));
+static void initMemberInfo __ARGS((memberInfo *const pMember));
+static void reinitStatement __ARGS((statementInfo *const st));
+static void initStatement __ARGS((statementInfo *const st, const statementInfo *const parent));
+
+/*  Tag generation functions.
+ */
+static void qualifyBlockTag __ARGS((const statementInfo *const st, const tagInfo *const tag, const tagScope declScope));
+static void qualifyEnumeratorTag __ARGS((const statementInfo *const st, const tagInfo *const tag, const tagScope declScope));
+static void qualifyFunctionTag __ARGS((statementInfo *const st, const tagInfo *const tag));
+static void qualifyVariableTag __ARGS((const statementInfo *const st, const tagInfo *const tag));
+static void qualifyFunctionDeclTag __ARGS((const statementInfo *const st, const tagInfo *const tag));
+
 /*  Parsing functions.
  */
 static int skipToNonWhite __ARGS((void));
-static int skipToCharacter __ARGS((const int findchar));
 static void skipToFormattedBraceMatch __ARGS((void));
 static boolean skipToMatch __ARGS((const char *const pair));
-static void readIdendifier __ARGS((const int firstChar, char *const name));
-static void readOperator __ARGS((char *const name));
-static keywordType analyzeKeyword __ARGS((const char *const name));
-static void processKeyword __ARGS((statementInfo *const st, keywordType keyword));
+static void readIdentifier __ARGS((const int firstChar, char *const name));
+static void readOperator __ARGS((const int firstChar, char *const name));
+static keywordId analyzeKeyword __ARGS((const char *const name));
+static void processKeyword __ARGS((statementInfo *const st, keywordId keyword));
 static int skipPostArgumentStuff __ARGS((int c, statementInfo *const st, const boolean emptyArgList));
 static boolean analyzePostParens __ARGS((statementInfo *const st, const parenInfo *const paren, const boolean emptyArgList));
 static void initParenInfo __ARGS((parenInfo *const paren));
 static boolean saveParenInfo __ARGS((parenInfo *const paren, int c));
 static boolean doubleParens __ARGS((statementInfo *const st));
 static boolean analyzeParens __ARGS((statementInfo *const st));
-static boolean isIgnoreToken __ARGS((const char *const name));
 static void analyzeIdentifier __ARGS((statementInfo *const st));
 static boolean beginBlock __ARGS((statementInfo *const st, const unsigned int nesting));
 static boolean endBlock __ARGS((statementInfo *const st, const unsigned int nesting));
@@ -124,19 +226,183 @@ static boolean processTemplate __ARGS((statementInfo *const st));
 static void processIdentifier __ARGS((statementInfo *const st, const int c));
 static boolean nextToken __ARGS((statementInfo *const st, const unsigned int nesting));
 
-/*  Scanning functions.
- */
-static void reinitStatement __ARGS((statementInfo *const st));
-static void initStatement __ARGS((statementInfo *const st, const statementInfo *const parent));
-static void qualifyBlockTag __ARGS((const statementInfo *const st, const tagInfo *const tag, const tagScope declScope));
-static void qualifyEnumeratorTag __ARGS((const statementInfo *const st, const tagInfo *const tag, const tagScope declScope));
-static void qualifyFunctionTag __ARGS((statementInfo *const st, const tagInfo *const tag));
-static void qualifyVariableTag __ARGS((const statementInfo *const st, const tagInfo *const tag, const unsigned int nesting));
-static void qualifyFunctionDeclTag __ARGS((const statementInfo *const st, const tagInfo *const tag));
-
 /*============================================================================
 =   Function definitions
 ============================================================================*/
+
+static void initTag( tag )
+    tagInfo *const tag;
+{
+    tag->location	= 0;
+    tag->lineNumber	= 0;
+    tag->name[0]	= '\0';
+    DebugStatement( clearString(tag->name, MaxNameLength); )
+}
+
+static void initMemberInfo( pMember )
+    memberInfo *const pMember;
+{
+    pMember->type	= MEMBER_NONE;
+    pMember->visibility	= VIS_UNDEFINED;
+    pMember->parent[0]	= '\0';
+    DebugStatement( clearString(pMember->parent, MaxNameLength); )
+}
+
+static void reinitStatement( st )
+    statementInfo *const st;
+{
+    int i;
+
+    st->scope		= SCOPE_GLOBAL;
+    st->declaration	= DECL_BASE;
+    st->token		= TOK_NONE;
+    st->prev[0]		= TOK_NONE;
+    st->prev[1]		= TOK_NONE;
+    st->gotName		= FALSE;
+    st->isFuncPtr	= FALSE;
+    st->buf1		= FALSE;
+
+    for (i = 0  ;  i < 2  ;  ++i)
+	initTag(&st->tag[i]);
+
+    initTag(&st->class);
+
+    if (st->member.type != MEMBER_NONE  &&  ! st->member.persistent)
+	initMemberInfo(&st->member);
+}
+
+static void initStatement( st, parent )
+    statementInfo *const st;
+    const statementInfo *const parent;
+{
+    /*  Set the member information. If there is a parent statement, inherit
+     *  the parent member information from it.
+     */
+    if (parent == NULL)
+    {
+	initMemberInfo(&st->member);
+	st->inEnumBody = FALSE;
+    }
+    else
+    {
+	st->inEnumBody = (boolean)(parent->declaration == DECL_ENUM);
+	st->member.visibility = VIS_UNDEFINED;
+	switch (parent->declaration)
+	{
+	    case DECL_ENUM:	st->member.type = MEMBER_ENUM;		break;
+	    case DECL_CLASS:	st->member.type = MEMBER_CLASS;
+				st->member.visibility = VIS_PRIVATE;	break;
+	    case DECL_INTERFACE:st->member.type = MEMBER_INTERFACE;	break;
+	    case DECL_NAMESPACE:st->member.type = MEMBER_NAMESPACE;	break;
+	    case DECL_STRUCT:	st->member.type = MEMBER_STRUCT;
+				st->member.visibility = VIS_PUBLIC;	break;
+	    case DECL_UNION:	st->member.type = MEMBER_UNION;		break;
+	    default:		st->member.type = MEMBER_NONE;		break;
+	}
+	DebugStatement( clearString(st->member.parent, MaxNameLength); )
+	if (st->member.type != MEMBER_NONE)
+	{
+	    st->member.persistent = TRUE;
+	    if (parent->declaration == DECL_CLASS)
+		strcpy(st->member.parent, parent->class.name);
+	    else
+		strcpy(st->member.parent,
+		       (parent->prev[0] == TOK_NAME) ? activeName(parent) : "");
+	}
+    }
+    reinitStatement(st);
+}
+
+/*----------------------------------------------------------------------------
+*-	Tag generation functions
+----------------------------------------------------------------------------*/
+
+static void qualifyBlockTag( st, tag, declScope )
+    const statementInfo *const st;
+    const tagInfo *const tag;
+    const tagScope declScope;
+{
+    if (st->prev[0] == TOK_NAME)
+    {
+	boolean ok = TRUE;
+	tagType type = TAG_NUMTYPES;	/* assignment to avoid warning */
+
+	switch (st->declaration)
+	{
+	    case DECL_CLASS:	type = TAG_CLASS;	break;
+	    case DECL_ENUM:	type = TAG_ENUM;	break;
+	    case DECL_INTERFACE:type = TAG_INTERFACE;	break;
+	    case DECL_NAMESPACE:type = TAG_NAMESPACE;	break;
+	    case DECL_STRUCT:	type = TAG_STRUCT;	break;
+	    case DECL_UNION:	type = TAG_UNION;	break;
+	    default:		ok = FALSE;		break;
+	}
+	if (ok)
+	    makeTag(tag, &st->member, declScope, type);
+    }
+}
+
+static void qualifyEnumeratorTag( st, tag, declScope )
+    const statementInfo *const st;
+    const tagInfo *const tag;
+    const tagScope declScope;
+{
+    if (st->token == TOK_NAME)
+	makeTag(tag, &st->member, declScope, TAG_ENUMERATOR);
+}
+
+static void qualifyFunctionTag( st, tag )
+    statementInfo *const st;
+    const tagInfo *const tag;
+{
+    if (st->scope == SCOPE_EXTERN)		/* allowed for func. def. */
+	st->scope = SCOPE_GLOBAL;
+    makeTag(tag, &st->member, st->scope, TAG_FUNCTION);
+}
+
+static void qualifyVariableTag( st, tag )
+    const statementInfo *const st;
+    const tagInfo *const tag;
+{
+    /*	We have to watch that we do not interpret a declaration of the
+     *	form "struct tag;" as a variable definition. In such a case, the
+     *	declaration will be either class, enum, struct or union, and prev[1]
+     *	will be empty.
+     */
+    if (st->declaration == DECL_IGNORE)
+	;
+    else if (st->declaration == DECL_BASE  ||  st->prev[1] != TOK_SPEC)
+    {
+	if (st->member.type == MEMBER_NONE)
+	{
+	    if (st->scope == SCOPE_EXTERN)
+		makeTag(tag, &st->member, st->scope, TAG_EXTERN_VAR);
+	    else
+		makeTag(tag, &st->member, st->scope, TAG_VARIABLE);
+	}
+	else
+	{
+	    if (st->scope == SCOPE_GLOBAL)
+		makeTag(tag, &st->member, st->scope, TAG_MEMBER);
+	    else if (st->scope == SCOPE_STATIC)
+		makeTag(tag, &st->member, SCOPE_EXTERN, TAG_MEMBER);
+	}
+    }
+}
+
+static void qualifyFunctionDeclTag( st, tag )
+    const statementInfo *const st;
+    const tagInfo *const tag;
+{
+    if (! File.isHeader)
+	makeTag(tag, &st->member, SCOPE_STATIC, TAG_FUNCDECL);
+    else if (st->scope == SCOPE_GLOBAL  ||  st->scope == SCOPE_EXTERN)
+	makeTag(tag, &st->member, SCOPE_GLOBAL, TAG_FUNCDECL);
+}
+
+/*----------------------------------------------------------------------------
+*-	Parsing functions
+----------------------------------------------------------------------------*/
 
 /*  Skip to the next non-white character.
  */
@@ -152,6 +418,7 @@ static int skipToNonWhite()
     return c;
 }
 
+#if 0
 /*  Skip to the next occurance of the specified character.
  */
 static int skipToCharacter( findchar )
@@ -165,6 +432,7 @@ static int skipToCharacter( findchar )
 
     return c;
 }
+#endif
 
 /*  Skips to the next brace in column 1. This is intended for cases where
  *  preprocessor constructs result in unbalanced braces.
@@ -229,7 +497,7 @@ static boolean skipToMatch( pair )
 
 /*  Read a C identifier beginning with "firstChar" and places it into "name".
  */
-static void readIdendifier( firstChar, name )
+static void readIdentifier( firstChar, name )
     const int firstChar;
     char *const name;
 {
@@ -237,7 +505,7 @@ static void readIdendifier( firstChar, name )
 
     name[0] = firstChar;
     for (i = 1, c = cppGetc() ;
-	 i < MaxNameLength - 1  &&  isident(c) ;
+	 i < (int)MaxNameLength - 1  &&  isident(c) ;
 	 i++, c = cppGetc())
     {
 	name[i] = c;
@@ -249,13 +517,14 @@ static void readIdendifier( firstChar, name )
 
 /*  Read a C++ operator and appends to "name" (which should contain "operator").
  */
-static void readOperator( name )
+static void readOperator( firstChar, name )
+    const int firstChar;
     char *const name;
 {
     int c, i;
 
-    for (c = cppGetc(), i = strlen(name) ;
-	 i < MaxNameLength - 1  &&  ! isspace(c)  &&  c != '(' ;
+    for (c = firstChar, i = strlen(name) ;
+	 i < (int)MaxNameLength - 1  &&  ! isspace(c)  &&  c != '(' ;
 	 i++, c = cppGetc())
     {
 	name[i] = c;
@@ -270,100 +539,70 @@ static void readOperator( name )
  *  statement structure and adjusts the structure according the significance
  *  of the identifier.
  */
-static keywordType analyzeKeyword( name )
+static keywordId analyzeKeyword( name )
     const char *const name;
 {
-    keywordType keyword = KEYWORD_UNKNOWN;
+    keywordId id = KEYWORD_UNKNOWN;
 
-#define match(word) ((strcmp(name,(word)) == 0))
-
-    switch ((unsigned char)name[0])	/* is it a reserved word? */
+    if (name[0] == '_'  ||  islower(name[0]))
     {
-    case '_':	     if (match("__attribute__"))keyword = KEYWORD_ATTRIBUTE;
-		break;
-    case 'c':	     if (match("class"	))	keyword = KEYWORD_CLASS;
-		else if (match("const"	))	keyword = KEYWORD_CONST;
-		else if (match("char"	))	keyword = KEYWORD_CHAR;
-		break;
-    case 'd':	     if (match("double"	))	keyword = KEYWORD_DOUBLE;
-		break;
-    case 'e':	     if (match("enum"	))	keyword = KEYWORD_ENUM;
-		else if (match("explicit"))	keyword = KEYWORD_EXPLICIT;
-		else if (match("extern"	))	keyword = KEYWORD_EXTERN;
-		break;
-    case 'f':	     if (match("float"	))	keyword = KEYWORD_FLOAT;
-		else if (match("friend"	))	keyword = KEYWORD_FRIEND;
-		break;
-    case 'i':	     if (match("int"	))	keyword = KEYWORD_INT;
-		else if (match("inline"	))	keyword = KEYWORD_INLINE;
-		break;
-    case 'l':	     if (match("long"	))	keyword = KEYWORD_LONG;
-		break;
-    case 'm':	     if (match("mutable"))	keyword = KEYWORD_MUTABLE;
-		break;
-    case 'n':	     if (match("namespace"))	keyword = KEYWORD_NAMESPACE;
-		else if (match("new"))		keyword = KEYWORD_NEW;
-		break;
-    case 'o':	     if (match("operator"))	keyword = KEYWORD_OPERATOR;
-		else if (match("overload"))	keyword = KEYWORD_OVERLOAD;
-		break;
-    case 'p':	     if (match("private"))	keyword = KEYWORD_PRIVATE;
-		else if (match("protected"))	keyword = KEYWORD_PROTECTED;
-		else if (match("public"	))	keyword = KEYWORD_PUBLIC;
-		break;
-    case 's':	     if (match("static"	))	keyword = KEYWORD_STATIC;
-		else if (match("struct"	))	keyword = KEYWORD_STRUCT;
-		else if (match("short"	))	keyword = KEYWORD_SHORT;
-		else if (match("signed"	))	keyword = KEYWORD_SIGNED;
-		break;
-    case 't':	     if (match("template"))	keyword = KEYWORD_TEMPLATE;
-		else if (match("throw"	))	keyword = KEYWORD_THROW;
-		else if (match("typedef"))	keyword = KEYWORD_TYPEDEF;
-		else if (match("typename"))	keyword = KEYWORD_TYPENAME;
-		break;
-    case 'u':	     if (match("union"	))	keyword = KEYWORD_UNION;
-		else if (match("unsigned"))	keyword = KEYWORD_UNSIGNED;
-		else if (match("using"))	keyword = KEYWORD_USING;
-		break;
-    case 'v':	     if (match("virtual"))	keyword = KEYWORD_VIRTUAL;
-		else if (match("void"	))	keyword = KEYWORD_VOID;
-		else if (match("volatile"))	keyword = KEYWORD_VOLATILE;
-		break;
-    case 'w':	     if (match("wchar_t"))	keyword = KEYWORD_WCHAR_T;
-		break;
-    }
-#undef match
+	const short hash = KeywordHash[hashIndex(name[0])];
 
-    return keyword;
+	if (hash >= 0)
+	{
+	    unsigned int i;
+
+	    for (i = hash  ;  i < KeywordTableSize  ;  ++i)
+	    {
+		const keywordDesc *pKw = &KeywordTable[i];
+
+		if (pKw->name[0] != name[0])
+		    break;
+
+		if (pKw->isValid[File.language] && strcmp(pKw->name, name) == 0)
+		{
+		    id = pKw->id;
+		    break;
+		}
+	    }
+	}
+    }
+    return id;
 }
 
 static void processKeyword( st, keyword )
     statementInfo *const st;
-    keywordType keyword;
+    keywordId keyword;
 {
     st->token = TOK_SPEC;			/* default unless otherwise */
 
     switch (keyword)		/* is it a reserved word? */
     {
-	default:		st->token	= TOK_IGNORE;	break;
+	default:		st->token	= TOK_IGNORE;		break;
 
-	case KEYWORD_CHAR:	st->declaration = DECL_BASE;	break;
-	case KEYWORD_CLASS:	st->declaration = DECL_CLASS;	break;
-	case KEYWORD_DOUBLE:	st->declaration = DECL_BASE;	break;
-	case KEYWORD_ENUM:	st->declaration = DECL_ENUM;	break;
-	case KEYWORD_EXTERN:	st->scope	= SCOPE_EXTERN;	break;
-	case KEYWORD_FLOAT:	st->declaration = DECL_BASE;	break;
-	case KEYWORD_FRIEND:	st->scope	= SCOPE_FRIEND;	break;
-	case KEYWORD_INT:	st->declaration = DECL_BASE;	break;
-	case KEYWORD_LONG:	st->declaration = DECL_BASE;	break;
-	case KEYWORD_SHORT:	st->declaration = DECL_BASE;	break;
-	case KEYWORD_SIGNED:	st->declaration = DECL_BASE;	break;
-	case KEYWORD_STATIC:	st->scope	= SCOPE_STATIC;	break;
-	case KEYWORD_STRUCT:	st->declaration = DECL_STRUCT;	break;
-	case KEYWORD_TYPEDEF:	st->scope	= SCOPE_TYPEDEF;break;
-	case KEYWORD_UNION:	st->declaration = DECL_UNION;	break;
-	case KEYWORD_UNSIGNED:	st->declaration = DECL_BASE;	break;
-	case KEYWORD_VOID:	st->declaration = DECL_BASE;	break;
+	case KEYWORD_CHAR:	st->declaration = DECL_BASE;		break;
+	case KEYWORD_CLASS:	st->declaration = DECL_CLASS;		break;
+	case KEYWORD_DOUBLE:	st->declaration = DECL_BASE;		break;
+	case KEYWORD_ENUM:	st->declaration = DECL_ENUM;		break;
+	case KEYWORD_EXTERN:	st->scope	= SCOPE_EXTERN;		break;
+	case KEYWORD_FLOAT:	st->declaration = DECL_BASE;		break;
+	case KEYWORD_FRIEND:	st->scope	= SCOPE_FRIEND;		break;
+	case KEYWORD_IMPORT:	st->declaration = DECL_IGNORE;		break;
+	case KEYWORD_INT:	st->declaration = DECL_BASE;		break;
+	case KEYWORD_INTERFACE:	st->declaration = DECL_INTERFACE;	break;
+	case KEYWORD_LONG:	st->declaration = DECL_BASE;		break;
+	case KEYWORD_NAMESPACE:	st->declaration = DECL_NAMESPACE;	break;
+	case KEYWORD_PACKAGE:	st->declaration = DECL_IGNORE;		break;
+	case KEYWORD_PRIVATE:	st->member.visibility = VIS_PRIVATE;	break;
+	case KEYWORD_PROTECTED:	st->member.visibility = VIS_PROTECTED;	break;
+	case KEYWORD_PUBLIC:	st->member.visibility = VIS_PUBLIC;	break;
+	case KEYWORD_SHORT:	st->declaration = DECL_BASE;		break;
+	case KEYWORD_SIGNED:	st->declaration = DECL_BASE;		break;
+	case KEYWORD_STRUCT:	st->declaration = DECL_STRUCT;		break;
+	case KEYWORD_TYPEDEF:	st->scope	= SCOPE_TYPEDEF;	break;
+	case KEYWORD_UNION:	st->declaration = DECL_UNION;		break;
+	case KEYWORD_UNSIGNED:	st->declaration = DECL_BASE;		break;
+	case KEYWORD_VOID:	st->declaration = DECL_BASE;		break;
 
 	case KEYWORD_ATTRIBUTE:
 	{
@@ -377,9 +616,42 @@ static void processKeyword( st, keyword )
 	    break;
 	}
 
+	case KEYWORD_EXTENDS:
+	case KEYWORD_IMPLEMENTS:
+	case KEYWORD_THROWS:
+	{
+	    char *const name = activeName(st);
+	    int c = skipToNonWhite();
+
+	    /*  Read and discard interface or class type-list (ident[, ident]).
+	     */
+	    while (isident1(c))
+	    {
+		readIdentifier(c, name);
+		c = skipToNonWhite();
+		if (c == '.'  ||  c == ',')
+		    c = skipToNonWhite();
+	    }
+	    cppUngetc(c);
+	    st->token = TOK_IGNORE;
+	    break;
+	}
+
+	case KEYWORD_STATIC:
+	    if (File.language != LANG_JAVA)
+		st->scope = SCOPE_STATIC;
+	    break;
+
 	case KEYWORD_OPERATOR:
-	    readOperator(activeName(st));
-	    /* fall through to unknown keyword case */
+	{
+	    char *const name = activeName(st);
+	    const int c = skipToNonWhite();
+
+	    if (isident1(c))
+		readIdentifier(c, name);
+	    else
+		readOperator(c, name);
+	} /* fall through to unknown keyword case */
 	case KEYWORD_UNKNOWN:
 	{
 	    tagInfo *const tag = &activeTag(st);
@@ -390,6 +662,12 @@ static void processKeyword( st, keyword )
 	    tag->location   = File.seek;
 	    tag->lineNumber = File.lineNumber;
 
+	    if (st->declaration == DECL_CLASS  &&  st->class.name[0] == '\0')
+	    {
+		strcpy(st->class.name, tag->name);
+		st->class.location   = tag->location;
+		st->class.lineNumber = tag->lineNumber;
+	    }
 	    break;
 	}
     }
@@ -419,9 +697,9 @@ static int skipPostArgumentStuff( c, st, emptyArgList )
 	else if (isident1(c))
 	{
 	    char name[MaxNameLength];
-	    keywordType keyword;
+	    keywordId keyword;
 
-	    readIdendifier(c, name);
+	    readIdentifier(c, name);
 	    ++tokenCount;
 	    keyword = analyzeKeyword(name);
 	    switch (keyword)
@@ -442,7 +720,7 @@ static int skipPostArgumentStuff( c, st, emptyArgList )
 	    case KEYWORD_EXTERN:
 	    case KEYWORD_STATIC:
 	    case KEYWORD_TYPEDEF:
-		DebugStatement( if (debug(DEBUG_VISUAL)) printf("<ES>"); )
+		DebugStatement( if (debug(DEBUG_PARSE)) printf("<ES>"); )
 		reinitStatement(st);
 		processKeyword(st, keyword);
 		c = skipToNonWhite();
@@ -465,7 +743,7 @@ static int skipPostArgumentStuff( c, st, emptyArgList )
 		 */
 		if (emptyArgList)
 		{
-		    DebugStatement( if (debug(DEBUG_VISUAL)) printf("<ES>"); )
+		    DebugStatement( if (debug(DEBUG_PARSE)) printf("<ES>"); )
 		    reinitStatement(st);
 		    processKeyword(st, keyword);
 		    c = skipToNonWhite();
@@ -534,7 +812,8 @@ static boolean analyzePostParens( st, paren, emptyArgList )
 	{
 	    st->token = TOK_ARGS;		/* parameter list to a func. */
 	    st->declaration = DECL_BASE;	/* clear any other decl. */
-	    c = skipPostArgumentStuff(c, st, emptyArgList);
+	    if (File.language != LANG_JAVA)
+		c = skipPostArgumentStuff(c, st, emptyArgList);
 	}
 	else
 	    st->token = TOK_IGNORE;
@@ -577,7 +856,7 @@ static boolean saveParenInfo( paren, c )
 {
     boolean ok = TRUE;
 
-    readIdendifier(c, paren->name);
+    readIdentifier(c, paren->name);
     c = skipToNonWhite();
     if (c == ')')		/* saved if only identifier in parentheses */
     {
@@ -658,25 +937,6 @@ static boolean analyzeParens( st )
     return ok;
 }
 
-/*  Determines whether or not "name" should be ignored, per the ignore list.
- */
-static boolean isIgnoreToken( name )
-    const char *const name;
-{
-    boolean ignore = FALSE;
-    unsigned int i;
-
-    for (i = 0  ;  i < Option.ignore.count ; ++i)
-    {
-	if (strcmp(Option.ignore.list[i], name) == 0)
-	{
-	    ignore = TRUE;
-	    break;
-	}
-    }
-    return ignore;
-}
-
 /*  Analyzes the identifier contained in a statement described by the
  *  statement structure and adjusts the structure according the significance
  *  of the identifier.
@@ -702,7 +962,7 @@ static void processIdentifier( st, c )
 {
     if (st->gotName)
 	swapNameBuffers(st);
-    readIdendifier(c, activeName(st));
+    readIdentifier(c, activeName(st));
     analyzeIdentifier(st);
     if (st->gotName  &&  st->token == TOK_IGNORE)
 	swapNameBuffers(st);
@@ -711,17 +971,11 @@ static void processIdentifier( st, c )
 static void processColon( st )
     statementInfo *const st;
 {
-    if (st->declaration == DECL_CLASS)
-    {
-	const int c = skipToCharacter('{');	/* skip over intervening junk */
-
-	cppUngetc(c);
-    }
-    else
+    if (st->declaration != DECL_CLASS)
     {
 	const int c = skipToNonWhite();
 
-	if (c == ':')			/* this is a method declaration */
+	if (c == ':')	/* this is a method or static member definition */
 	{
 	    st->member.type = MEMBER_CLASS;
 	    strcpy(st->member.parent, activeName(st));
@@ -817,19 +1071,22 @@ static boolean beginBlock( st, nesting )
     statementInfo *const st;
     const unsigned int nesting;
 {
-    const tagScope declScope = File.header ? SCOPE_GLOBAL : SCOPE_STATIC;
+    const tagScope declScope = (File.isHeader || File.language == LANG_JAVA) ?
+				SCOPE_GLOBAL : SCOPE_STATIC;
     tagInfo *const tag = &activeTag(st);
     boolean ok;
 
     switch (st->declaration)
     {
-	case DECL_ENUM:
 	case DECL_CLASS:
-	case DECL_STRUCT:
-	    qualifyBlockTag(st, tag, declScope);
+	    qualifyBlockTag(st, &st->class, declScope);
 	    ok = createTags(nesting + 1, st);
 	    break;
 
+	case DECL_ENUM:
+	case DECL_INTERFACE:
+	case DECL_NAMESPACE:
+	case DECL_STRUCT:
 	case DECL_UNION:
 	    qualifyBlockTag(st, tag, declScope);
 	    ok = createTags(nesting + 1, st);
@@ -907,150 +1164,9 @@ static boolean nextToken( st, nesting )
     return ok;
 }
 
-static void reinitStatement( st )
-    statementInfo *const st;
-{
-    int i;
-
-    st->scope		= SCOPE_GLOBAL;
-    st->declaration	= DECL_BASE;
-    st->token		= TOK_NONE;
-    st->prev[0]		= TOK_NONE;
-    st->prev[1]		= TOK_NONE;
-    st->gotName		= FALSE;
-    st->isFuncPtr	= FALSE;
-    st->buf1		= FALSE;
-
-    for (i = 0  ;  i < 2  ;  ++i)
-    {
-	tagInfo *const tag = &st->tag[i];
-
-	tag->location	= 0;
-	tag->lineNumber	= 0;
-	tag->name[0]	= '\0';
-	DebugStatement( clearString(tag->name, MaxNameLength); )
-    }
-
-    if (st->member.type != MEMBER_NONE  &&  ! st->member.persistent)
-    {
-	DebugStatement( clearString(st->member.parent, MaxNameLength); )
-	st->member.type = MEMBER_NONE;
-	st->member.parent[0] = '\0';
-    }
-}
-
-static void initStatement( st, parent )
-    statementInfo *const st;
-    const statementInfo *const parent;
-{
-    reinitStatement(st);
-
-    /*  Set the member information. If there is a parent statement, inherit
-     *  the parent member information from it.
-     */
-    if (parent == NULL)
-    {
-	DebugStatement( clearString(st->member.parent, MaxNameLength); )
-	st->member.type = MEMBER_NONE;
-	st->member.parent[0] = '\0';
-	st->inEnumBody = FALSE;
-    }
-    else
-    {
-	st->inEnumBody = (boolean)(parent->declaration == DECL_ENUM);
-	switch (parent->declaration)
-	{
-	    case DECL_ENUM:	st->member.type = MEMBER_ENUM;		break;
-	    case DECL_CLASS:	st->member.type = MEMBER_CLASS;		break;
-	    case DECL_STRUCT:	st->member.type = MEMBER_STRUCT;	break;
-	    case DECL_UNION:	st->member.type = MEMBER_UNION;		break;
-	    default:		st->member.type = MEMBER_NONE;		break;
-	}
-	DebugStatement( clearString(st->member.parent, MaxNameLength); )
-	if (st->member.type != MEMBER_NONE)
-	{
-	    st->member.persistent = TRUE;
-	    strcpy(st->member.parent,
-		(parent->prev[0] == TOK_NAME) ? activeName(parent) : "");
-	}
-    }
-}
-
-static void qualifyBlockTag( st, tag, declScope )
-    const statementInfo *const st;
-    const tagInfo *const tag;
-    const tagScope declScope;
-{
-    if (st->prev[0] == TOK_NAME)
-    {
-	boolean ok = TRUE;
-	tagType type = TAG_NUMTYPES;	/* assignment to avoid warning */
-
-	switch (st->declaration)
-	{
-	    case DECL_CLASS:	type = TAG_CLASS;	break;
-	    case DECL_ENUM:	type = TAG_ENUM;	break;
-	    case DECL_STRUCT:	type = TAG_STRUCT;	break;
-	    case DECL_UNION:	type = TAG_UNION;	break;
-	    default:		ok = FALSE;		break;
-	}
-	if (ok)
-	    makeTag(tag, &st->member, declScope, type);
-    }
-}
-
-static void qualifyEnumeratorTag( st, tag, declScope )
-    const statementInfo *const st;
-    const tagInfo *const tag;
-    const tagScope declScope;
-{
-    if (st->token == TOK_NAME)
-	makeTag(tag, &st->member, declScope, TAG_ENUMERATOR);
-}
-
-static void qualifyFunctionTag( st, tag )
-    statementInfo *const st;
-    const tagInfo *const tag;
-{
-    if (st->scope == SCOPE_EXTERN)		/* allowed for func. def. */
-	st->scope = SCOPE_GLOBAL;
-    makeTag(tag, &st->member, st->scope, TAG_FUNCTION);
-}
-
-static void qualifyVariableTag( st, tag, nesting )
-    const statementInfo *const st;
-    const tagInfo *const tag;
-    const unsigned int nesting;
-{
-    /*	We have to watch that we do not interpret a declaration of the
-     *	form "struct tag;" as a variable definition. In such a case, the
-     *	declaration will be either class, enum, struct or union, and prev[1]
-     *	will be empty.
-     */
-    if (nesting == 0  ||  st->member.type == MEMBER_NONE)
-    {
-	if (st->declaration == DECL_BASE  ||  st->prev[1] != TOK_SPEC)
-	{
-	    if (st->scope != SCOPE_EXTERN)
-		makeTag(tag, &NoClass, st->scope, TAG_VARIABLE);
-	}
-    }
-    else if (nesting > 0  &&  st->member.type != MEMBER_NONE)
-    {
-	if (st->scope == SCOPE_GLOBAL)
-	    makeTag(tag, &st->member, st->scope, TAG_MEMBER);
-    }
-}
-
-static void qualifyFunctionDeclTag( st, tag )
-    const statementInfo *const st;
-    const tagInfo *const tag;
-{
-    if (! File.header)
-	makeTag(tag, &st->member, SCOPE_STATIC, TAG_FUNCDECL);
-    else if (st->scope == SCOPE_GLOBAL  ||  st->scope == SCOPE_EXTERN)
-	makeTag(tag, &st->member, SCOPE_GLOBAL, TAG_FUNCDECL);
-}
+/*----------------------------------------------------------------------------
+*-	Scanning functions
+----------------------------------------------------------------------------*/
 
 /*  Parses the current file and decides whether to write out and tags that
  *  are discovered.
@@ -1059,52 +1175,83 @@ extern boolean createTags( nesting, parent )
     const unsigned int nesting;
     const void *const parent;
 {
-    const tagScope declScope = File.header ? SCOPE_GLOBAL : SCOPE_STATIC;
-    statementInfo st;
+    const tagScope declScope = File.isHeader ? SCOPE_GLOBAL : SCOPE_STATIC;
+    statementInfo *st;
     boolean ok;
 
     DebugStatement( if (nesting > 0) debugParseNest(TRUE, nesting); )
-    initStatement(&st, (const statementInfo *)parent);
+    st = (statementInfo *)malloc(sizeof(statementInfo));
+    if (st == NULL)
+	error(FATAL | PERROR, "cannot allocate statement info");
+    initStatement(st, (const statementInfo *)parent);
 
-    while ((ok = nextToken(&st, nesting)))
+    while ((ok = nextToken(st, nesting)))
     {
-	tagInfo *const tag = &activeTag(&st);
+	tagInfo *const tag = &activeTag(st);
 
-	if (st.token == TOK_EOF)
+	if (st->token == TOK_EOF)
 	    break;
-	else if (! st.gotName)
+	else if (! st->gotName)
 	    ;
-	else if (st.inEnumBody)
-	    qualifyEnumeratorTag(&st, tag, declScope);
-	else if (st.token == TOK_BODY  &&  st.prev[0] == TOK_ARGS)
-	    qualifyFunctionTag(&st, tag);
-	else if (st.token == TOK_SEMICOLON  ||  st.token == TOK_COMMA)
+	else if (st->inEnumBody)
+	    qualifyEnumeratorTag(st, tag, declScope);
+	else if (st->token == TOK_BODY  &&  st->prev[0] == TOK_ARGS)
+	    qualifyFunctionTag(st, tag);
+	else if (st->token == TOK_SEMICOLON  ||  st->token == TOK_COMMA)
 	{
-	    if (st.scope == SCOPE_TYPEDEF)
-		makeTag(tag, &st.member, declScope, TAG_TYPEDEF);
-	    else if (st.prev[0] == TOK_NAME  ||  st.isFuncPtr)
-		qualifyVariableTag(&st, tag, nesting);
-	    else if (st.prev[0] == TOK_ARGS)
-		qualifyFunctionDeclTag(&st, tag);
+	    if (st->scope == SCOPE_TYPEDEF)
+		makeTag(tag, &st->member, declScope, TAG_TYPEDEF);
+	    else if (st->prev[0] == TOK_NAME  ||  st->isFuncPtr)
+		qualifyVariableTag(st, tag);
+	    else if (st->prev[0] == TOK_ARGS)
+		qualifyFunctionDeclTag(st, tag);
 	}
 
-	/*  Reset after a semicolon or ARGS BODY pair.
+	/*  Reset after a semicolon, or BODY preceeded by ARGS (a function),
+	 *  a namspace definition, or an "extern" block.
 	 */
-	if (st.token == TOK_SEMICOLON  ||  (st.token == TOK_BODY  &&
-	     (st.prev[0] == TOK_ARGS  ||  st.declaration == DECL_NOMANGLE)))
+	if (st->token == TOK_SEMICOLON  ||  (st->token == TOK_BODY  &&
+	     (st->declaration == DECL_NAMESPACE  ||
+	      st->declaration == DECL_NOMANGLE   ||
+	      st->prev[0] == TOK_ARGS)))
 	{
-	    DebugStatement( if (debug(DEBUG_VISUAL)) printf("<ES>"); )
-	    reinitStatement(&st);
+	    DebugStatement( if (debug(DEBUG_PARSE)) printf("<ES>"); )
+	    reinitStatement(st);
 	    Cpp.resolveRequired = FALSE;	/* end of statement */
 	}
 	else
 	    Cpp.resolveRequired = TRUE;		/* in middle of statement */
 
-	st.prev[1] = st.prev[0];
-	st.prev[0] = st.token;
+	st->prev[1] = st->prev[0];
+	st->prev[0] = st->token;
     }
     DebugStatement( if (nesting > 0) debugParseNest(FALSE, nesting - 1); )
+    free(st);
     return ok;
+}
+
+extern void buildKeywordHash()
+{
+    int lastInitialChar = '\0';
+    size_t i;
+
+    /*  Clear all hash entries.
+     */
+    for (i = 0  ;  i < sizeof(KeywordHash)/sizeof(KeywordHash[0])  ;  ++i)
+	KeywordHash[i] = -1;
+
+    /*  Set those hash entries corresponding to keywords.
+     */
+    for (i = 0  ;  i < KeywordTableSize  ;  ++i)
+    {
+	const unsigned char initialChar = KeywordTable[i].name[0];
+
+	if (initialChar != lastInitialChar)
+	{
+	    KeywordHash[hashIndex(initialChar)] = i;
+	    lastInitialChar = initialChar;
+	}
+    }
 }
 
 /* vi:set tabstop=8 shiftwidth=4: */

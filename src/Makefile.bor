@@ -9,6 +9,7 @@
 #	Note: this has been tested, and works, for BC5.  Your mileage may vary.
 #	Has been reported NOT to work with BC 4.52.  Maybe it can be fixed?
 #	10/1997 - ron - fixed bugs w/ BC 5.02
+#	8/1998 - ron - updated with new targets, fixed some stuff
 #
 # It builds on Windows 95 and NT-Intel, producing the same binary in either
 # case.  To build using Microsoft Visual C++, use Makefile.w32.
@@ -27,109 +28,92 @@
 #   CPU	    -	one of 1 through 6 - select CPU to compile for
 #   USEDLL  -	use the Runtime library DLL
 #   VIMDLL  -	create vim32.dll, and stub (g)vim.exe
-#   INTEL   -	use the Intel backend compiler (faster EXE)
 #   ALIGN   -	Alignment to use (1,2,4)
 #   FASTCALL -	Use register-based function protocol
 #   OS	    -	DOS16 or WIN32
-
+#
 # Change this to point to the root of *your* BC installation:
-BOR = \bc5
-
+BOR = c:\bc5
+#
 # PERL STUFF
-# NOTE WELL: If you want perl support, you must NOT have FASTCALL turned on.  
-# Also, 'USEDLL' can't be turned on because it doesn't work (!) 
-
+# 'USEDLL' doesn't seem to work with perl, don't know why.
 # if the following line is uncommented, you will have perl support in vim:
-PERL=perl.exe
+# PERL=perl.exe
 PERLLIB=c:\perl\lib
-
-# Can be DOS16 or WIN32 (WIN16 later?)
+#
+# OS Target - can be DOS16 or WIN32
 OS = WIN32
-#OS = DOS16
-!if ($(OS)!=WIN32) && ($(OS)!=DOS16)
-!error Check the OS variable again: $(OS) is not supported!
-!endif
-
+#
 # Uncomment to make an executable for debugging:
 #DEBUG = -v
-
+#
 # Comment out to make a console-mode only version:
 GUI = 1
-
+#
 # Uncomment to make an OLE-capable version:
 #OLE = 1
-
+#
 # Uncomment to use the CODEGUARD stuff (BC 5.0 or later):
 #CODEGUARD = -vG
-
-# Uncomment to use FASTCALL calling convention (must be off for PERL):
-#FASTCALL = 1
-
-# Optimize for space or speed?
+#
+# Uncomment to use FASTCALL calling convention (RECOMMENDED!)
+FASTCALL = 1
+#
+# Optimize for space or speed? (SPEED RECOMMENDED)
 OPTIMIZE = SPEED
-
+#
 # Change as appropriate for your target processor (3 to 6):
 CPU = 3
-
-# Comment out to use precompiled headers (faster, but lots of disk!)
+#
+# Comment out to use precompiled headers (faster, but uses lots of disk!)
 HEADERS = -H -H=vim.csm -Hc
-
-# Uncomment to use DLL version of run-time:
-# NOTE::: This doesn't seem to work properly at least in 5.02
-#USEDLL = 1
-
-# Uncomment to make a DLL version of VIM:
+#
+# Comment out to use statically linked version of run-time:
+USEDLL = 1
+#
+# Uncomment to make a DLL version of VIM (NOT RECOMMENDED):
 #VIMDLL = 1
-
-# Uncomment to use the Intel back-end compiler (BC 5.0 or later):
-#INTEL = 1
-
-
-# Change to alignment you desire: (1,2 or 4)
+#
+# Change to alignment you desire: (1,2 or 4: s/b 4 for Win32, 2 for DOS)
 !if ($(OS)==DOS16)
 ALIGN = 2
 !else
 ALIGN = 4
 !endif
-
-# warning:
-!if $d(INTEL) && $d(FASTCALL)
-!error INTEL and FASTCALL dont work together!
-!endif
-
-!if $d(INTEL) && $d(USEDLL)
-!error INTEL and USEDLL dont work together!
-!endif
-
+#
+# Sanity checks for the above options:
+#
 !if ($(OS)==DOS16)
 !if (($(CPU)+0)>4)
 !error CPU Must be less than or equal to 4 for DOS16
 !endif
-
+#
 !if (($(ALIGN)+0)>2)
 !error ALIGN Must be less than or equal to 2 for DOS16
 !endif
-
+#
 !else	# not DOS16
 !if (($(CPU)+0)<3)
 !error CPU Must be greater or equal to 3 for WIN32
 !endif
 !endif
-
-# Optimizations: change as desired:
+#
+!if ($(OS)!=WIN32) && ($(OS)!=DOS16)
+!error Check the OS variable again: $(OS) is not supported!
+!endif
+#
+# Optimizations: change as desired (RECOMMENDATION: Don't change!):
+#
 !ifdef DEBUG
 OPT = -Od -N
 !else
 !if ($(OPTIMIZE)==SPACE)
-OPT = -O1 -ff -N- -d
+OPT = -O1 -f- -N- -d
 !else
-OPT = -O2 -ff -d
+OPT = -O2 -f- -d -N- -Oca -O
 !endif
 !ifdef FASTCALL
 OPT = $(OPT) -pr
-!endif
-!ifdef INTEL
-OPT = $(OPT) -OM -OI
 !endif
 !ifndef CODEGUARD
 OPT = $(OPT) -vi-
@@ -137,31 +121,34 @@ OPT = $(OPT) -vi-
 !endif
 !if ($(OS)==DOS16)
 !undef GUI
+!undef VIMDLL
+!undef USEDLL
 !endif
-
 # shouldn't have to change:
 LIB = $(BOR)\lib
-INCLUDE = $(BOR)\include;$(PERLLIB)\core
-DEFINES = -DWIN32;PC
-
+INCLUDE = $(BOR)\include;$(PERLLIB)\core;.;proto 
+DEFINES = -DWIN32 -DPC
+#
 !ifdef PERL
-DEFINES = $(DEFINES);HAVE_PERL_INTERP
+DEFINES = $(DEFINES) -DHAVE_PERL_INTERP
+INCLUDE = $(PERLIB)\core;$(INCLUDE)
 !endif
-
-# don't change below:
+#
+# DO NOT change below:
+#
 CPU = -$(CPU)
 ALIGN = -a$(ALIGN)
-
+#
 !ifdef DEBUG
-DEFINES=$(DEFINES);DEBUG
+DEFINES=$(DEFINES) -DDEBUG
 !endif
-
+#
 !if ($(OLE)==1)
-DEFINES = $(DEFINES);HAVE_OLE
+DEFINES = $(DEFINES) -DHAVE_OLE
 !endif
-
+#
 !if ($(GUI)==1)
-DEFINES = $(DEFINES);USE_GUI_WIN32;USE_CLIPBOARD
+DEFINES = $(DEFINES) -DUSE_GUI_WIN32 -DUSE_CLIPBOARD
 !ifdef DEBUG
 TARGET = gvimd.exe
 !else
@@ -169,7 +156,7 @@ TARGET = gvim.exe
 !endif
 !ifdef VIMDLL
 EXETYPE=-WD
-DEFINES = $(DEFINES);VIMDLL
+DEFINES = $(DEFINES) -DVIMDLL
 !else
 EXETYPE=-WE
 !endif
@@ -198,13 +185,17 @@ RESFILE =
 !endif
 
 !ifdef USEDLL
-DEFINES = $(DEFINES);_RTLDLL
+DEFINES = $(DEFINES) -D_RTLDLL
 !endif
 
 !ifdef DEBUG
 OBJDIR	= $(OS)\objdbg
 !else
+!if ($(GUI)==1)
+OBJDIR	= $(OS)\gobj
+!else
 OBJDIR	= $(OS)\obj
+!endif
 !endif
 
 ##### BASE COMPILER/TOOLS RULES #####
@@ -214,23 +205,19 @@ LINK	= $(BOR)\BIN\TLink
 CC   = $(BOR)\BIN\Bcc
 LFLAGS	= -Tde -c -m -L$(LIB) $(DEBUG) $(LINK2)
 LFLAGSDLL  =
-CFLAGS = -w -w-aus -w-par -Iproto -I$(INCLUDE) -H- -P- $(HEADERS)
+CFLAGS = -w- -w-aus -w-par -I$(INCLUDE) -H- -P- $(HEADERS)
 !else
 BRC = brc32
 LINK	= $(BOR)\BIN\TLink32
-!ifdef INTEL
-CC   = $(BOR)\BIN\Bcc32i
-!else
 CC   = $(BOR)\BIN\Bcc32
-!endif
-LFLAGS	= -OS -o -Tpe -c -m -L$(LIB) $(DEBUG) $(LINK2)
+LFLAGS	= -OS -r -Tpe -c -m -L$(LIB) $(DEBUG) $(LINK2)
 LFLAGSDLL  = -Tpd -c -m -L$(LIB) $(DEBUG) $(LINK2)
-CFLAGS = -w- -w-aus -w-par -Iproto -I$(INCLUDE) -P- -d -RT- -k- -vi $(HEADERS) -N- -ff-
+CFLAGS = -w- -w-aus -w-par -I$(INCLUDE) -P- -d -x- -RT- -k- -Oi $(HEADERS) -N- -f-
 !endif
 
 CC1 = -c
 CC2 = -o
-CC = $(CC) +bcc.cfg
+CC = $(CC) +$(OBJDIR)\bcc.cfg
 
 # implicit rules:
 .c.obj:
@@ -270,6 +257,7 @@ vimobj = $(vimwinmain) \
 	$(OBJDIR)\message.obj \
 	$(OBJDIR)\misc1.obj \
 	$(OBJDIR)\misc2.obj \
+	$(OBJDIR)\multbyte.obj \
 	$(OBJDIR)\normal.obj \
 	$(OBJDIR)\ops.obj \
 	$(OBJDIR)\option.obj \
@@ -292,8 +280,7 @@ vimobj = $(vimobj) \
 
 !ifdef PERL
 vimobj = $(vimobj) \
-    $(OBJDIR)\if_perl.obj\
-    $(OBJDIR)\if_perlsfio.obj
+    $(OBJDIR)\if_perl.obj
 !endif
 
 !ifdef VIMDLL
@@ -337,31 +324,55 @@ MSG = $(MSG) DEBUG
 !ifdef CODEGUARD
 MSG = $(MSG) CODEGUARD
 !endif
-!ifdef INTEL
-MSG = $(MSG) INTEL
-!endif
 MSG = $(MSG) cpu=$(CPU)
 MSG = $(MSG) Align=$(ALIGN)
 
 !message $(MSG)
 
+!if ($(OS)==DOS16)
+TARGETS = $(TARGET)
+!else
+!ifdef VIMDLL
+TARGETS = $(DLLTARGET)
+!endif
+TARGETS = $(TARGETS) $(TARGET)
+!endif
+
 # Targets:
-vim: bcc.cfg $(DLLTARGET) $(TARGET)
+vim: dirs $(OBJDIR)\bcc.cfg $(TARGETS)
 	@del $(OBJDIR)\version.obj
 
-all:	vim ctags\ctags.exe
+dirs: 
+    -@md $(OS)
+    -@md $(OBJDIR)
 
-ctags\ctags.exe:
-    cd ctags
-    make -f makefile.bcc
-    cd ..
+all: vim vimrun.exe install.exe xxd ctags
+
+###########################################################################
+###### Note well: Before you attempt to make 'xxd' or 'ctags', you will
+###### have to edit their respective makefile.w32 files to work with 
+###### Borland C.  It isn't hard, but I can't do it for you!
+###########################################################################
+xxd:
+	@cd xxd
+	$(MAKE) -f makefile.w32
+	@cd ..
+
+ctags:
+	@cd ctags
+	$(MAKE) -f makefile.w32
+	@cd ..
+
+install.exe: dosinst.c
+	$(BOR)\BIN\bcc32 -WC -einstall dosinst.c
 
 clean:
-	@del /y $(OBJDIR)\*.*
-	@del /y bcc.cfg
-	@del /y *.res
-	@del /y vim32?.dll
-	@del /y *vim*.exe
+	-@del /y $(OBJDIR)\*.*
+	-@del /y *.res
+	-@del /y *.dll
+	-@del /y *vim*.exe
+	-@del /y *.csm
+	-@del /y *.map
 
 $(DLLTARGET): $(OBJDIR) $(vimdllobj)
   $(LINK) @&&|
@@ -390,7 +401,6 @@ $(DLLTARGET): $(OBJDIR) $(vimdllobj)
 	cl.lib
 !endif
 |
-
 
 !ifdef VIMDLL
 $(TARGET): $(OBJDIR) $(DLLTARGET) $(vimmain) $(RESFILE)
@@ -465,6 +475,8 @@ $(OBJDIR)\misc1.obj:  misc1.c
 
 $(OBJDIR)\misc2.obj:  misc2.c
 
+$(OBJDIR)\multbyte.obj:  multbyte.c
+
 $(OBJDIR)\normal.obj:  normal.c
 
 $(OBJDIR)\ops.obj:  ops.c
@@ -514,17 +526,26 @@ $(OBJDIR):
 	-@if not exist $(OBJDIR)\nul mkdir $(OBJDIR)
 
 $(OBJDIR)\if_perl.obj: if_perl.c
+	$(CC) $(CC1) $(CC2)$@ -pc if_perl.c
 
-$(OBJDIR)\if_perlsfio.obj: if_perlsfio.c 
 
 if_perl.c: if_perl.xs typemap
 	$(PERL) $(PERLLIB)\ExtUtils\xsubpp -prototypes -typemap \
 	    $(PERLLIB)\ExtUtils\typemap if_perl.xs > $@
 
-vim.res: vim.rc
-    $(BRC) -DHAVE_OLE -i $(BOR)\include -32 -r $*.rc
+vim.res: vim.rc version.h tools.bmp tearoff.bmp vim.ico vim_error.ico vim_alert.ico vim_info.ico vim_quest.ico
+    $(BRC) $(DEFINES) -i $(BOR)\include -32 -r $*.rc
+    
+# vimrun.exe:
+vimrun.exe: vimrun.c 
+!if $d(USEDLL)
+	$(BOR)\BIN\BCC32 -WC -O1 -I$(INCLUDE) -D_RTLDLL vimrun.c cw32mti.lib
+!else
+	$(BOR)\BIN\BCC32 -WC -O1 -I$(INCLUDE) vimrun.c 
+!endif
 
-bcc.cfg: Makefile.bor
+
+$(OBJDIR)\bcc.cfg: Makefile.bor
   copy &&|
 	$(CFLAGS)
 	$(DEFINES)

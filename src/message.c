@@ -23,6 +23,9 @@ static int  msg_use_printf __ARGS((void));
 static void msg_screen_putchar __ARGS((int c, int attr));
 static int  msg_check_screen __ARGS((void));
 static void redir_write __ARGS((char_u *s));
+#ifdef CON_DIALOG
+static char_u *msg_show_console_dialog __ARGS((char_u *message, char_u *buttons, int dfltbutton));
+#endif
 
 /*
  * msg(s) - displays the string 's' on the status line
@@ -148,6 +151,7 @@ emsg(s)
     static int	    last_lnum = 0;
     static char_u   *last_sourcing_name = NULL;
     int		    attr;
+    int		    other_sourcing_name;
 
     if (emsg_off)		/* no error messages at the moment */
 	return TRUE;
@@ -162,7 +166,7 @@ emsg(s)
     did_emsg = TRUE;		/* flag for DoOneCmd() */
     emsg_on_display = TRUE;	/* remember there is an error message */
     ++msg_scroll;		/* don't overwrite a previous message */
-    attr = highlight_attr[HLF_E];   /* set highlight mode for error messages */
+    attr = hl_attr(HLF_E);	/* set highlight mode for error messages */
     if (msg_scrolled)
 	need_wait_return = TRUE;    /* needed in case emsg() is called after
 				     * wait_return has reset need_wait_return
@@ -172,12 +176,22 @@ emsg(s)
 /*
  * First output name and line number of source of error message
  */
-    if (sourcing_name != NULL &&
-	   (sourcing_name != last_sourcing_name || sourcing_lnum != last_lnum)
-				      && (Buf = alloc(MAXPATHL + 30)) != NULL)
+    if (sourcing_name != NULL)
+    {
+	if (last_sourcing_name != NULL)
+	    other_sourcing_name = STRCMP(sourcing_name, last_sourcing_name);
+	else
+	    other_sourcing_name = TRUE;
+    }
+    else
+	other_sourcing_name = FALSE;
+
+    if (sourcing_name != NULL
+	    && (other_sourcing_name || sourcing_lnum != last_lnum)
+	    && (Buf = alloc(MAXPATHL + 30)) != NULL)
     {
 	++no_wait_return;
-	if (sourcing_name != last_sourcing_name)
+	if (other_sourcing_name)
 	{
 	    sprintf((char *)Buf, "Error detected while processing %s:",
 					    sourcing_name);
@@ -188,13 +202,22 @@ emsg(s)
 	if (sourcing_lnum != 0)
 	{
 	    sprintf((char *)Buf, "line %4ld:", sourcing_lnum);
-	    msg_attr(Buf, highlight_attr[HLF_N]);
+	    msg_attr(Buf, hl_attr(HLF_N));
 	}
 	--no_wait_return;
 	last_lnum = sourcing_lnum;  /* only once for each line */
 	vim_free(Buf);
     }
-    last_sourcing_name = sourcing_name;	/* do this also when it is NULL */
+
+    /* remember the last sourcing name printed, also when it's empty */
+    if (sourcing_name == NULL || other_sourcing_name)
+    {
+	vim_free(last_sourcing_name);
+	if (sourcing_name == NULL)
+	    last_sourcing_name = NULL;
+	else
+	    last_sourcing_name = vim_strsave(sourcing_name);
+    }
     msg_nowait = FALSE;			/* wait for this msg */
 
 #ifdef WANT_EVAL
@@ -232,23 +255,26 @@ emsgn(s, n)
 }
 
 /*
- * Like msg(), but truncate to a single line if p_shm contains 't'.
+ * Like msg(), but truncate to a single line if p_shm contains 't', or when
+ * "force" is TRUE.
  * Careful: The string may be changed!
  * Returns a pointer to the printed message, if wait_return() not called.
  */
     char_u *
-msg_trunc(s)
-    char_u  *s;
+msg_trunc_attr(s, force, attr)
+    char_u	*s;
+    int		force;
+    int		attr;
 {
-    int	    n;
+    int		n;
 
-    if (shortmess(SHM_TRUNC) && (n = (int)STRLEN(s) -
+    if ((force || shortmess(SHM_TRUNC)) && (n = (int)STRLEN(s) -
 		    (int)(Rows - cmdline_row - 1) * Columns - sc_col + 1) > 0)
     {
 	s += n;
 	*s = '<';
     }
-    if (msg(s))
+    if (msg_attr(s, attr))
 	return s;
     return NULL;
 }
@@ -311,7 +337,7 @@ wait_return(redraw)
 	    MSG_PUTS("Interrupt: ");
 
 #ifdef ORG_HITRETURN
-	MSG_PUTS_ATTR("Press RETURN to continue", highlight_attr[HLF_R]);
+	MSG_PUTS_ATTR("Press RETURN to continue", hl_attr(HLF_R));
 	do {
 	    c = vgetc();
 	} while (vim_strchr((char_u *)"\r\n: ", c) == NULL);
@@ -319,7 +345,7 @@ wait_return(redraw)
 	    stuffcharReadbuff(c);
 #else
 	MSG_PUTS_ATTR("Press RETURN or enter command to continue",
-						       highlight_attr[HLF_R]);
+							      hl_attr(HLF_R));
 	if (!msg_use_printf())
 	    msg_clr_eos();
 	do
@@ -495,7 +521,7 @@ msg_home_replace(fname)
 msg_home_replace_hl(fname)
     char_u	*fname;
 {
-    msg_home_replace_attr(fname, highlight_attr[HLF_D]);
+    msg_home_replace_attr(fname, hl_attr(HLF_D));
 }
 
     static void
@@ -600,7 +626,7 @@ msg_outtrans_special(str, all)
     int	    modifiers;
     int	    attr;
 
-    attr = highlight_attr[HLF_8];
+    attr = hl_attr(HLF_8);
     for (; *str; ++str)
     {
 	c = *str;
@@ -628,7 +654,9 @@ msg_outtrans_special(str, all)
 		continue;
 	    }
 	}
-	if (all && (c & 0x80) && !vim_isprintc(c))
+	/* output unprintable meta characters, and <M-Space> */
+	if (all && (((c & 0x80) && (!vim_isprintc(c) || c == 0xa0))
+		    || c == ' '))
 	{
 	    string = get_special_key_name(c, 0);
 	    msg_puts_attr(string, attr);
@@ -650,14 +678,23 @@ msg_outtrans_special(str, all)
 msg_prt_line(s)
     char_u	*s;
 {
-    int		si = 0;
     int		c;
     int		col = 0;
 
     int		n_extra = 0;
-    int		n_spaces = 0;
-    char_u	*p = NULL;	    /* init to make SASC shut up */
+    int		c_extra = 0;
+    char_u	*p_extra = NULL;	    /* init to make SASC shut up */
     int		n;
+    int		attr= 0;
+    char_u	*trail = NULL;
+
+    /* find start of trailing whitespace */
+    if (curwin->w_p_list && lcs_trail)
+    {
+	trail = s + STRLEN(s);
+	while (trail > s && vim_iswhite(trail[-1]))
+	    --trail;
+    }
 
     /* output a space for an empty line, otherwise the line will be
      * overwritten */
@@ -669,40 +706,58 @@ msg_prt_line(s)
 	if (n_extra)
 	{
 	    --n_extra;
-	    c = *p++;
-	}
-	else if (n_spaces)
-	{
-	    --n_spaces;
-	    c = ' ';
+	    if (c_extra)
+		c = c_extra;
+	    else
+		c = *p_extra++;
 	}
 	else
 	{
-	    c = s[si++];
-	    if (c == TAB && !curwin->w_p_list)
+	    attr = 0;
+	    c = *s++;
+	    if (c == TAB && (!curwin->w_p_list || lcs_tab1))
 	    {
 		/* tab amount depends on current column */
-		n_spaces = curbuf->b_p_ts - col % curbuf->b_p_ts - 1;
-		c = ' ';
+		n_extra = curbuf->b_p_ts - col % curbuf->b_p_ts - 1;
+		if (!curwin->w_p_list)
+		{
+		    c = ' ';
+		    c_extra = ' ';
+		}
+		else
+		{
+		    c = lcs_tab1;
+		    c_extra = lcs_tab2;
+		    attr = hl_attr(HLF_AT);
+		}
 	    }
-	    else if (c == NUL && curwin->w_p_list)
+	    else if (c == NUL && curwin->w_p_list && lcs_eol)
 	    {
-		p = (char_u *)"";
+		p_extra = (char_u *)"";
+		c_extra = NUL;
 		n_extra = 1;
-		c = '$';
+		c = lcs_eol;
+		attr = hl_attr(HLF_AT);
+		--s;
 	    }
 	    else if (c != NUL && (n = charsize(c)) > 1)
 	    {
 		n_extra = n - 1;
-		p = transchar(c);
-		c = *p++;
+		p_extra = transchar(c);
+		c_extra = NUL;
+		c = *p_extra++;
+	    }
+	    else if (c == ' ' && trail != NULL && s > trail)
+	    {
+		c = lcs_trail;
+		attr = hl_attr(HLF_AT);
 	    }
 	}
 
 	if (c == NUL)
 	    break;
 
-	msg_putchar(c);
+	msg_putchar_attr(c, attr);
 	col++;
     }
     msg_clr_eos();
@@ -723,7 +778,53 @@ msg_puts(s)
 msg_puts_title(s)
     char_u	*s;
 {
-    msg_puts_attr(s, highlight_attr[HLF_T]);
+    msg_puts_attr(s, hl_attr(HLF_T));
+}
+
+/*
+ * if printing a string will exceed the screen width, print "..." in the
+ * middle.
+ */
+    void
+msg_puts_long(longstr)
+    char_u	*longstr;
+{
+    msg_puts_long_len(longstr, (int)strlen((char *)longstr));
+}
+
+    void
+msg_puts_long_attr(longstr, attr)
+    char_u	*longstr;
+    int		attr;
+{
+    msg_puts_long_len_attr(longstr, (int)strlen((char *)longstr), attr);
+}
+
+    void
+msg_puts_long_len(longstr, len)
+    char_u	*longstr;
+    int		len;
+{
+    msg_puts_long_len_attr(longstr, len, 0);
+}
+
+    void
+msg_puts_long_len_attr(longstr, len, attr)
+    char_u	*longstr;
+    int		len;
+    int		attr;
+{
+    int		slen = len;
+    int		room;
+
+    room = Columns - msg_col;
+    if (len > room && room >= 20)
+    {
+	slen = (room - 3) / 2;
+	msg_outtrans_len_attr(longstr, slen, attr);
+	msg_puts_attr((char_u *)"...", hl_attr(HLF_AT));
+    }
+    msg_outtrans_len_attr(longstr + len - slen, slen, attr);
 }
 
     void
@@ -946,7 +1047,7 @@ msg_moremsg(full)
 {
     int	    attr;
 
-    attr = highlight_attr[HLF_M];
+    attr = hl_attr(HLF_M);
     screen_puts((char_u *)"-- More --", (int)Rows - 1, 0, attr);
     if (full)
 	screen_puts((char_u *)
@@ -1001,6 +1102,17 @@ msg_clr_eos()
 	screen_fill(msg_row, msg_row + 1, msg_col, (int)Columns, ' ', ' ', 0);
 	screen_fill(msg_row + 1, (int)Rows, 0, (int)Columns, ' ', ' ', 0);
     }
+}
+
+/*
+ * Clear the command line.
+ */
+    void
+msg_clr_cmdline()
+{
+    msg_row = cmdline_row;
+    msg_col = 0;
+    msg_clr_eos();
 }
 
 /*
@@ -1090,7 +1202,7 @@ give_warning(message, hl)
 {
     keep_msg = NULL;
     if (hl)
-	keep_msg_attr = highlight_attr[HLF_W];
+	keep_msg_attr = hl_attr(HLF_W);
     else
 	keep_msg_attr = 0;
     if (msg_attr(message, keep_msg_attr) && !msg_scrolled)
@@ -1112,3 +1224,425 @@ msg_advance(col)
     while (msg_col < col)
 	msg_putchar(' ');
 }
+
+#if defined(CON_DIALOG) || defined(PROTO)
+/*
+ * Used for "confirm()" function, and the :confirm command prefix.
+ * Versions which haven't got flexible dialogs yet, and console
+ * versions, get this generic handler which uses the command line.
+ *
+ * type  = one of:
+ *	   VIM_QUESTION, VIM_INFO, VIM_WARNING, VIM_ERROR or VIM_GENERIC
+ * title = title string (can be NULL for default)
+ * (neither used in console dialogs at the moment)
+ *
+ * Format of the "buttons" string:
+ * "Button1Name\nButton2Name\nButton3Name"
+ * The first button should normally be the default/accept
+ * The second button should be the 'Cancel' button
+ * Other buttons- use your imagination!
+ * A '&' in a button name becomes a shortcut, so each '&' should be before a
+ * different letter.
+ */
+/* ARGSUSED */
+    int
+do_dialog(type, title, message, buttons, dfltbutton)
+    int		type;
+    char_u	*title;
+    char_u	*message;
+    char_u	*buttons;
+    int		dfltbutton;
+{
+    int		oldState;
+    char_u	buf[20];	/* for getting keystrokes */
+    int		retval = 0;
+    char_u	*hotkeys;
+
+#ifndef NO_CONSOLE
+    /* Don't output anything in silent mode ("ex -s") */
+    if (silent_mode)
+	return dfltbutton;   /* return default option */
+#endif
+
+#ifdef GUI_DIALOG
+    /* When GUI is running, use the GUI dialog */
+    if (gui.in_use)
+	return gui_mch_dialog(type, title, message, buttons, dfltbutton);
+#endif
+
+    oldState = State;
+    State = CONFIRM;
+#ifdef USE_MOUSE
+    setmouse();
+#endif
+
+    /*
+     * Since we wait for a keypress, don't make the
+     * user press RETURN as well afterwards.
+     */
+    ++no_wait_return;
+    hotkeys = msg_show_console_dialog(message, buttons, dfltbutton);
+
+    if (hotkeys != NULL)
+    {
+	for (;;)
+	{
+	    /*
+	     * Get a typed character directly from the user.
+	     * Don't use vgetc(), it syncs undo and eats mapped
+	     * characters.  Disadvantage: Special keys and mouse
+	     * cannot be used here, typeahead is ignored.
+	     */
+	    cursor_on();
+	    out_flush();
+	    (void)ui_inchar(buf, 20, -1L);
+	    switch (buf[0])
+	    {
+	    case CR:		/* User accepts default option */
+	    case NL:
+		retval = dfltbutton;
+		break;
+	    case Ctrl('C'):		/* User aborts/cancels */
+	    case ESC:
+		retval = 0;
+		break;
+	    default:		/* Could be a hotkey? */
+#ifdef UNIX
+		if (buf[0] == intr_char)
+		{
+		    retval = 0;	/* another way of cancelling */
+		    break;
+		}
+#endif
+		for (retval = 0; hotkeys[retval]; retval++)
+		{
+		    if (hotkeys[retval] == TO_LOWER(buf[0]))
+			break;
+		}
+		if (hotkeys[retval])
+		{
+		    retval++;
+		    break;
+		}
+		/* No hotkey match, so keep waiting */
+		continue;
+	    }
+	    break;
+	}
+
+	vim_free(hotkeys);
+    }
+
+    State = oldState;
+#ifdef USE_MOUSE
+    setmouse();
+#endif
+    --no_wait_return;
+    need_wait_return = FALSE;
+    dont_wait_return = TRUE;	    /* don't wait again in main() */
+
+    return retval;
+}
+
+char_u	*confirm_msg = NULL;	    /* ":confirm" message */
+
+/*
+ * Format the dialog string, and display it at the bottom of
+ * the screen. Return a string of hotkey chars (if defined) for
+ * each 'button'. If a button has no hotkey defined, the string
+ * has the buttons first letter.
+ *
+ * Returns allocated array, or NULL for error.
+ *
+ */
+    static char_u *
+msg_show_console_dialog(message, buttons, dfltbutton)
+    char_u	*message;
+    char_u	*buttons;
+    int		dfltbutton;
+{
+    int		len = 0;
+    int		lenhotkey = 1;	/*first button*/
+    char_u	*hotk;
+    char_u	*p;
+    char_u	*q;
+    char_u	*r;
+
+    /*
+     * First compute how long a string we need to allocate for the message.
+     */
+    r = buttons;
+    while (*r)
+    {
+	if (*r == DLG_BUTTON_SEP)
+	{
+	    len++;	    /* '\n' -> ', ' */
+	    lenhotkey++;    /* each button needs a hotkey */
+	}
+	else if (*r == DLG_HOTKEY_CHAR)
+	{
+	    len++;	    /* '&a' -> '[a]' */
+	}
+	r++;
+    }
+
+    len += STRLEN(message)
+	    + 2			/* for the NL's */
+	    + STRLEN(buttons)
+	    + 3;		/* for the ": " and NUL */
+
+    lenhotkey++;		/* for the NUL */
+
+    /*
+     * Now allocate and load the strings
+     */
+    vim_free(confirm_msg);
+    confirm_msg = alloc(len);
+    if (confirm_msg == NULL)
+	return NULL;
+    *confirm_msg = NUL;
+    hotk = alloc(lenhotkey);
+    if (hotk == NULL)
+	return NULL;
+
+    *confirm_msg = '\n';
+    STRCPY(confirm_msg + 1, message);
+
+    p = confirm_msg + 1 + STRLEN(message);
+    q = hotk;
+    r = buttons;
+    *q = (char_u)TO_LOWER(*r);	/* define lowercase hotkey */
+
+    *p++ = '\n';
+
+    while (*r)
+    {
+	if (*r == DLG_BUTTON_SEP)
+	{
+	    *p++ = ',';
+	    *p++ = ' ';	    /* '\n' -> ', ' */
+	    *(++q) = (char_u)TO_LOWER(*(r + 1)); /* next hotkey */
+	    if (dfltbutton)
+		--dfltbutton;
+	}
+	else if (*r == DLG_HOTKEY_CHAR)
+	{
+	    r++;
+	    if (*r == DLG_HOTKEY_CHAR)		/* duplicate magic = literal */
+		*p++ = *r;
+	    else
+	    {
+		/* '&a' -> '[a]' */
+		*p++ = (dfltbutton == 1) ? '[' : '(';
+		*p++ = *r;
+		*p++ = (dfltbutton == 1) ? ']' : ')';
+		*q = (char_u)TO_LOWER(*r);	/* define lowercase hotkey */
+	    }
+	}
+	else
+	{
+	    *p++ = *r;	    /* everything else copy literally */
+	}
+	r++;
+    }
+    *p++ = ':';
+    *p++ = ' ';
+    *p = NUL;
+    *(++q) = NUL;
+
+    display_confirm_msg();
+    return hotk;
+}
+
+/*
+ * Display the ":confirm" message.  Also called when screen resized.
+ */
+    void
+display_confirm_msg()
+{
+    if (confirm_msg != NULL)
+	msg_puts_attr(confirm_msg, hl_attr(HLF_M));
+}
+
+#endif /* CON_DIALOG */
+
+#if defined(CON_DIALOG) || defined(GUI_DIALOG)
+
+/*
+ * Various stock dialogs used throughout Vim when :confirm is used.
+ */
+#if 0	/* not used yet */
+    void
+vim_dialog_ok(type, title, message)
+    int		type;
+    char_u	*title;
+    char_u	*message;
+{
+    (void)do_dialog(type,
+			  title == NULL ? (char_u *)"Information" : title,
+			  message,
+			  (char_u *)"&OK", 1);
+}
+#endif
+
+#if 0	/* not used yet */
+    int
+vim_dialog_okcancel(type, title, message, dflt)
+    int		type;
+    char_u	*title;
+    char_u	*message;
+    int		dflt;
+{
+    if (do_dialog(type,
+		title == NULL ? (char_u *)"Confirmation" : title,
+		message,
+		(char_u *)"&OK\n&Cancel", dflt) == 1)
+	return VIM_OK;
+    return VIM_CANCEL;
+}
+#endif
+
+    int
+vim_dialog_yesno(type, title, message, dflt)
+    int		type;
+    char_u	*title;
+    char_u	*message;
+    int		dflt;
+{
+    if (do_dialog(type,
+		title == NULL ? (char_u *)"Question" : title,
+		message,
+		(char_u *)"&Yes\n&No", dflt) == 1)
+	return VIM_YES;
+    return VIM_NO;
+}
+
+    int
+vim_dialog_yesnocancel(type, title, message, dflt)
+    int		type;
+    char_u	*title;
+    char_u	*message;
+    int		dflt;
+{
+    switch (do_dialog(type,
+		title == NULL ? (char_u *)"Question" : title,
+		message,
+		(char_u *)"&Yes\n&No\n&Cancel", dflt))
+    {
+	case 1: return VIM_YES;
+	case 2: return VIM_NO;
+    }
+    return VIM_CANCEL;
+}
+
+    int
+vim_dialog_yesnoallcancel(type, title, message, dflt)
+    int		type;
+    char_u	*title;
+    char_u	*message;
+    int		dflt;
+{
+    switch (do_dialog(type,
+		title == NULL ? (char_u *)"Question" : title,
+		message,
+		(char_u *)"&Yes\n&No\nSave &All\n&Discard All\n&Cancel", dflt))
+    {
+	case 1: return VIM_YES;
+	case 2: return VIM_NO;
+	case 3: return VIM_ALL;
+	case 4: return VIM_DISCARDALL;
+    }
+    return VIM_CANCEL;
+}
+
+#endif /* GUI_DIALOG || CON_DIALOG */
+
+#if defined(USE_BROWSE) || defined(PROTO)
+/*
+ * Generic browse function.  Calls gui_mch_browse() when possible.
+ * Later this may pop-up a non-GUI file selector (external command?).
+ */
+    char_u *
+do_browse(saving, title, dflt, ext, initdir, filter, buf)
+    int		saving;		/* write action */
+    char_u	*title;		/* title for the window */
+    char_u	*dflt;		/* default file name */
+    char_u	*ext;		/* extension added */
+    char_u	*initdir;	/* initial directory, NULL for current dir */
+    char_u	*filter;	/* file name filter */
+    BUF		*buf;		/* buffer to read/write for */
+{
+    char_u		*fname;
+    static char_u	*last_dir = NULL;    /* last used directory */
+    char_u		*tofree = NULL;
+
+
+    /* Must turn off browse straight away, or :so autocommands will get the
+     * flag too!  */
+    browse = FALSE;
+
+    if (title == NULL)
+    {
+	if (saving)
+	    title = (char_u *)"Save File dialog";
+	else
+	    title = (char_u *)"Open File dialog";
+    }
+
+    /* When no directory specified, use buffer dir, last dir or current dir */
+    if (initdir == NULL || *initdir == NUL)
+    {
+	/* When saving or 'browsedir' is "buffer", use buffer fname */
+	if ((saving || *p_bsdir == 'b') && buf != NULL && buf->b_ffname != NULL)
+	{
+	    dflt = gettail(curbuf->b_ffname);
+	    tofree = vim_strsave(curbuf->b_ffname);
+	    if (tofree != NULL)
+	    {
+		initdir = tofree;
+		*gettail(initdir) = NUL;
+	    }
+	}
+	/* When 'browsedir' is "last", use dir from last browse */
+	else if (*p_bsdir == 'l')
+	    initdir = last_dir;
+	/* When 'browsedir is "current", use current directory.  This is the
+	 * default already, leave initdir empty. */
+    }
+
+# ifdef USE_GUI
+    if (gui.in_use)		/* when this changes, also adjust f_has()! */
+    {
+	fname = gui_mch_browse(saving, title, dflt, ext, initdir, filter);
+    }
+    else
+# endif
+    {
+	/* TODO: non-GUI file selector here */
+	fname = NULL;
+    }
+
+    /* keep the directory for next time */
+    if (fname != NULL)
+    {
+	vim_free(last_dir);
+	last_dir = vim_strsave(fname);
+	if (last_dir != NULL)
+	{
+	    *gettail(last_dir) = NUL;
+	    if (*last_dir == NUL)
+	    {
+		/* filename only returned, must be in current dir*/
+		vim_free(last_dir);
+		last_dir = alloc(MAXPATHL);
+		if (last_dir != NULL)
+		    mch_dirname(last_dir, MAXPATHL);
+	    }
+	}
+    }
+
+    vim_free(tofree);
+
+    return fname;
+}
+#endif

@@ -1,4 +1,4 @@
-*version4.txt*  For Vim version 5.1.  Last modification: 1997 Dec 06
+*version4.txt*  For Vim version 5.2.  Last modification: 1998 May 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -85,7 +85,7 @@ Backspace and Delete keys				*backspace-delete*
 In 3.0 both the delete key and the backspace key worked as a backspace in
 insert mode; they deleted the character to the left of the cursor.  In 4.0 the
 delete key has a new function: it deletes the character under the cursor, just
-like it does on the command line.  If the cursor is after the end of the line
+like it does on the command-line.  If the cursor is after the end of the line
 and 'bs' is set, two lines are joined.			|<Del>| |i_<Del>|
 
 In 3.0 the backspace key was always defined as CTRL-H and delete as CTRL-?.

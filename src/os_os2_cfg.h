@@ -62,7 +62,7 @@
 
 /*
  * If we cannot trust one of the following from the libraries, we use our
- * own safe but probably slower vim_memmove().
+ * own safe but probably slower mch_memmove().
  */
 #define USEBCOPY	1
 #undef USEMEMMOVE

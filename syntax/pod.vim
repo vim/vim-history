@@ -45,7 +45,7 @@ endif
 syn match podCmdText	".*$" contained
 
 " Indent amount of =over command
-syn match podOverIndent	"[0-9]\+" contained
+syn match podOverIndent	"\d\+" contained
 
 " Formatter identifier keyword for =for, =begin and =end commands
 syn match podForKeywd	"[^ ]\+" contained

@@ -27,7 +27,7 @@
  *    causes a second message loop to be created: the window thread.
  *
  * == alternatively ===
- * 
+ *
  * #if RUN_BAPPLICATION_IN_NEW_THREAD...
  *
  * 1. The initial thread. In gui_mch_prepare() this gets to spawn
@@ -61,7 +61,7 @@
  * thread. To make this work correctly, a locking protocol is used when
  * any thread is accessing the essential variables that are used by
  * the window thread.
- * 
+ *
  * This locking protocol consists of locking Vim's window. This is both
  * convenient and necessary.
  */
@@ -436,7 +436,7 @@ static struct specialkey
     static void
 docd(BPath &path)
 {
-    vim_chdir(path.Path());
+    mch_chdir(path.Path());
     /* Do this to get the side effects of a :cd command */
     do_cmdline((char_u *)"cd .", NULL, 0, DOCMD_NOWAIT);
 }
@@ -475,12 +475,13 @@ RefsReceived(BMessage *m, bool changedir)
 	//fprintf(stderr, "bad!\n");
 	delete m;
 	return;
-    } 
+    }
 
     /* reset_VIsual(); */
     if (VIsual_active)
     {
 	end_visual_mode();
+	VIsual_reselect = FALSE;
 	update_curbuf(NOT_VALID);	/* delete the inversion */
     }
 
@@ -497,7 +498,7 @@ RefsReceived(BMessage *m, bool changedir)
 	    entry_ref ref;
 	    if (m->FindRef("refs", i, &ref) == B_OK) {
 		BEntry entry(&ref, false);
-		BPath path; 
+		BPath path;
 		entry.GetPath(&path);
 
 		/* Change to parent directory? */
@@ -636,9 +637,9 @@ VimApp::QuitRequested()
 /* ---------------- VimWindow ---------------- */
 
 VimWindow::VimWindow():
-    BWindow(BRect(40, 40, 150, 150), 
-	    "Vim", 
-	    B_TITLED_WINDOW, 
+    BWindow(BRect(40, 40, 150, 150),
+	    "Vim",
+	    B_TITLED_WINDOW,
 	    0,
 	    B_CURRENT_WORKSPACE)
 
@@ -876,7 +877,7 @@ VimTextAreaView::Draw(BRect updateRect)
      * but we can't do that, since it involves too much information
      * that is owned by other threads...
      */
-    
+
     /*
      *  No need to use gui.vimWindow->Lock(): we are locked already.
      *  However, it would not hurt.
@@ -908,7 +909,7 @@ VimTextAreaView::KeyDown(const char *bytes, int32 numBytes)
     struct VimKeyMsg km;
     char_u *dest = km.chars;
 
-    BMessage *msg = Window()->CurrentMessage(); 
+    BMessage *msg = Window()->CurrentMessage();
     assert(msg);
     //msg->PrintToStream();
 
@@ -930,7 +931,7 @@ VimTextAreaView::KeyDown(const char *bytes, int32 numBytes)
 	memcpy((char *)dest, bytes, numBytes);
     } else {
 	int32 scancode = 0;
-	msg->FindInt32("key", &scancode); 
+	msg->FindInt32("key", &scancode);
 
 	int32 beModifiers = 0;
 	msg->FindInt32("modifiers", &beModifiers);
@@ -982,7 +983,7 @@ VimTextAreaView::KeyDown(const char *bytes, int32 numBytes)
 	     * If numBytes == 0 that probably always indicates a special key.
 	     * (does not happen yet)
 	     */
-	    if (numBytes == 0 || bytes[0] == B_FUNCTION_KEY) { 
+	    if (numBytes == 0 || bytes[0] == B_FUNCTION_KEY) {
 		beoskey = F(scancode);
 		first = FIRST_FUNCTION_KEY;
 		last = NUM_SPECIAL_KEYS;
@@ -995,7 +996,7 @@ VimTextAreaView::KeyDown(const char *bytes, int32 numBytes)
 		beoskey = K(bytes[0]);
 		first = 0;
 		last = FIRST_FUNCTION_KEY;
-	    } 
+	    }
 
 	    for (int i = first; i < last; i++) {
 		if (special_keys[i].BeKeys == beoskey) {
@@ -1717,7 +1718,7 @@ vim_lock_screen()
     void
 vim_unlock_screen()
 {
-    if (gui.vimWindow) 
+    if (gui.vimWindow)
 	gui.vimWindow->Unlock();
 }
 
@@ -1790,7 +1791,7 @@ gui_mch_prepare(
 	    /*
 	     * This is rather horrible.
 	     * call_main will call main() again...
-	     * There will be no infinite recursion since 
+	     * There will be no infinite recursion since
 	     * gui.vimApp is set now.
 	     */
 	    app.Run();			    /* Run until Quit() called */
@@ -1888,7 +1889,7 @@ gui_mch_init()
 gui_mch_new_colors()
 {
     rgb_color rgb = GUI_TO_RGB(gui.back_pixel);
-	
+
     if (gui.vimWindow->Lock()) {
 	gui.vimForm->SetViewColor(rgb);
 	// Does this not have too much effect for those small rectangles?
@@ -1996,13 +1997,13 @@ gui_mch_set_winsize(
 	 */
 	SetWindowAlignment(
 	    B_PIXEL_ALIGNMENT,		// window_alignment mode,
-	    1,				// int32 h, 
-	    0,				// int32 hOffset = 0, 
-	    gui.char_width,		// int32 width = 0, 
-	    base_width,			// int32 widthOffset = 0, 
-	    1,				// int32 v = 0, 
-	    0,				// int32 vOffset = 0, 
-	    gui.char_height,		// int32 height = 0, 
+	    1,				// int32 h,
+	    0,				// int32 hOffset = 0,
+	    gui.char_width,		// int32 width = 0,
+	    base_width,			// int32 widthOffset = 0,
+	    1,				// int32 v = 0,
+	    0,				// int32 vOffset = 0,
+	    gui.char_height,		// int32 height = 0,
 	    base_height			// int32 heightOffset = 0
 	);
 #else
@@ -2248,7 +2249,7 @@ gui_mch_init_font(
 
 	return rc;
     }
-	
+
     return FAIL;
 }
 
@@ -2273,7 +2274,7 @@ gui_mch_get_font(
 	    return (GuiFont)flp;
 	}
     }
-    
+
     font = new VimFont(be_fixed_font);
 
     /* Set some universal features: */
@@ -2840,7 +2841,6 @@ gui_mch_clear_block(
 	gui.vimTextArea->mchClearBlock(row1, col1, row2, col2);
 	gui.vimWindow->Unlock();
     }
-    
 }
 
     void
@@ -2915,25 +2915,36 @@ gui_mch_set_menu_pos(
     void
 gui_mch_add_menu(
     GuiMenu	*menu,
-    GuiMenu	*parent)
+    GuiMenu	*parent
+    int		idx)
 {
-    if (gui.vimWindow->Lock()) {
-	BMenu *bmenu = new BMenu((char *)menu->name);
+    if (!gui_menubar_menu(menu->name)
+	    || (parent != NULL && parent->submenu_id == NULL))
+	return;
+
+    /* TODO: use menu->mnemonic and menu->actext */
+    if (gui.vimWindow->Lock())
+    {
+	BMenu *bmenu = new BMenu((char *)menu->dname);
 	BMenuItem *bmenuitem = new BMenuItem(bmenu);
 
 	menu->id = bmenuitem;
 	menu->submenu_id = bmenu;
 
-	if (parent) {
+	if (parent)
+	{
 	     parent->submenu_id->AddItem(bmenuitem);
-	} else {
+	}
+	else
+	{
 	    /*
 	     * Find out where to insert this menu by looking through
 	     * the root menu to find the current one.
 	     */
 	    int pos = 0;
+
 	    for (GuiMenu *gm = gui.root_menu;
-		    gm && gm != menu; 
+		    gm && gm != menu;
 		    gm = gm->next, pos++)
 		;
 	    /*
@@ -2951,8 +2962,14 @@ gui_mch_add_menu(
     }
 }
 
-static
-BMessage *
+    void
+gui_mch_toggle_tearoffs(enable)
+    int		enable;
+{
+    /* no tearoff menus */
+}
+
+    static BMessage *
 MenuMessage(GuiMenu *menu)
 {
     BMessage *m = new BMessage('menu');
@@ -2967,10 +2984,18 @@ MenuMessage(GuiMenu *menu)
     void
 gui_mch_add_menu_item(
     GuiMenu	*menu,
-    GuiMenu	*parent)
+    GuiMenu	*parent
+    int		idx)
 {
-    if (gui.vimWindow->Lock()) {
-	BMenuItem *item = new BMenuItem((char *)menu->name, MenuMessage(menu));
+    int		mnemonic = 0;
+
+    if (parent->submenu_id == NULL)
+	return;
+
+    /* TODO: use menu->mnemonic and menu->actext */
+    if (gui.vimWindow->Lock())
+    {
+	BMenuItem *item = new BMenuItem((char *)menu->dname, MenuMessage(menu));
 	item->SetTarget(gui.vimTextArea);
 	parent->submenu_id->AddItem(item);
 	menu->id = item;
@@ -2986,7 +3011,8 @@ gui_mch_add_menu_item(
 gui_mch_destroy_menu(
     GuiMenu	*menu)
 {
-    if (gui.vimWindow->Lock()) {
+    if (gui.vimWindow->Lock())
+    {
 	assert(menu->submenu_id == NULL || menu->submenu_id->CountItems() == 0);
 	/*
 	 * Detach this menu from its parent, so that it is not deleted
@@ -2996,21 +3022,22 @@ gui_mch_destroy_menu(
 	 * removed and deleted before).
 	 */
 	BMenu *bmenu = menu->id->Menu();
-	if (bmenu) {
+	if (bmenu)
+	{
 	    bmenu->RemoveItem(menu->id);
 	    /*
 	     * If we removed the last item from the menu bar,
 	     * resize it out of sight.
 	     */
-	    if (bmenu == gui.vimForm->MenuBar() &&
-		    bmenu->CountItems() == 0) {
+	    if (bmenu == gui.vimForm->MenuBar() && bmenu->CountItems() == 0)
+	    {
 		bmenu->ResizeTo(-MENUBAR_MARGIN, -MENUBAR_MARGIN);
 	    }
 	}
 	delete menu->id;
 	menu->id = NULL;
 	menu->submenu_id = NULL;
-	
+
 	gui.menu_height = gui.vimForm->MenuHeight();
 	gui.vimWindow->Unlock();
     }
@@ -3024,7 +3051,8 @@ gui_mch_menu_grey(
     GuiMenu	*menu,
     int		grey)
 {
-    menu->id->SetEnabled(!grey);
+    if (menu->id != NULL)
+	menu->id->SetEnabled(!grey);
 }
 
 /*
@@ -3035,7 +3063,8 @@ gui_mch_menu_hidden(
     GuiMenu	*menu,
     int		hidden)
 {
-    menu->id->SetEnabled(!hidden);
+    if (menu->id != NULL)
+	menu->id->SetEnabled(!hidden);
 }
 
 /*
@@ -3195,6 +3224,19 @@ gui_mch_get_rgb(
     sprintf((char *)retval, "#%02x%02x%02x", rgb.red, rgb.green, rgb.blue);
     return retval;
 }
+
+    void
+gui_mch_setmouse(int x, int y)
+{
+    /* TODO */
+}
+
+    void
+gui_mch_show_popupmenu(GuiMenu *menu)
+{
+    /* TODO */
+}
+
 
 } /* extern "C" */
 

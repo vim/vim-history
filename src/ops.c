@@ -68,7 +68,7 @@ static void	get_yank_register __ARGS((int regname, int writing));
 static int	stuff_yank __ARGS((int, char_u *));
 static int	put_in_typebuf __ARGS((char_u *s, int colon));
 static void	stuffescaped __ARGS((char_u *arg));
-static int	get_spec_reg __ARGS((int regname, char_u **argp, int *allocated));
+static int	get_spec_reg __ARGS((int regname, char_u **argp, int *allocated, int errmsg));
 static void	free_yank __ARGS((long));
 static void	free_yank_all __ARGS((void));
 static void	block_prep __ARGS((OPARG *oap, struct block_def *, linenr_t, int));
@@ -93,6 +93,12 @@ op_shift(oap, curs_top, amount)
     if (u_save((linenr_t)(curwin->w_cursor.lnum - 1),
 		 (linenr_t)(curwin->w_cursor.lnum + oap->line_count)) == FAIL)
 	return;
+
+#ifdef SYNTAX_HL
+    /* recompute syntax hl., starting with current line */
+    syn_changed(curwin->w_cursor.lnum);
+#endif
+
     for (i = oap->line_count; --i >= 0; )
     {
 	first_char = *ml_get_curline();
@@ -210,6 +216,11 @@ op_reindent(oap, how)
     if (u_save((linenr_t)(curwin->w_cursor.lnum - 1),
 		 (linenr_t)(curwin->w_cursor.lnum + oap->line_count)) == FAIL)
 	return;
+
+#ifdef SYNTAX_HL
+    /* recompute syntax hl., starting with current line */
+    syn_changed(curwin->w_cursor.lnum);
+#endif
 
     for (i = oap->line_count; --i >= 0 && !got_int; )
     {
@@ -330,6 +341,7 @@ valid_yank_reg(regname, writing)
 					, regname) != NULL)
 	    || regname == '"'
 	    || regname == '-'
+	    || regname == '_'
 #ifdef USE_CLIPBOARD
 	    || (clipboard.available && regname == '*')
 #endif
@@ -340,6 +352,7 @@ valid_yank_reg(regname, writing)
 
 /*
  * Set y_current and y_append, according to the value of "regname".
+ * Cannot handle the '_' register.
  *
  * If regname is 0 and writing, use register 0
  * If regname is 0 and reading, use previous register
@@ -352,7 +365,7 @@ get_yank_register(regname, writing)
     int	    i;
 
     y_append = FALSE;
-    if (((regname == 0 && !writing) || regname == '"') && y_previous != NULL)
+    if ((regname == 0 && !writing) && y_previous != NULL)
     {
 	y_current = y_previous;
 	return;
@@ -388,6 +401,8 @@ yank_register_mline(regname)
     int	    regname;
 {
     if (regname != 0 && !valid_yank_reg(regname, FALSE))
+	return FALSE;
+    if (regname == '_')		/* black hole is always empty */
 	return FALSE;
     get_yank_register(regname, FALSE);
     return (y_current->y_type == MLINE);
@@ -453,15 +468,23 @@ do_record(c)
  */
     static int
 stuff_yank(regname, p)
-    int	    regname;
-    char_u  *p;
+    int		regname;
+    char_u	*p;
 {
-    char_u *lp;
-    char_u **pp;
+    char_u	*lp;
+    char_u	**pp;
 
-					    /* check for read-only register */
+    /* check for read-only register */
     if (regname != 0 && !valid_yank_reg(regname, TRUE))
+    {
+	vim_free(p);
 	return FAIL;
+    }
+    if (regname == '_')		    /* black hole: don't do anything */
+    {
+	vim_free(p);
+	return OK;
+    }
     get_yank_register(regname, TRUE);
     if (y_append && y_current->y_array != NULL)
     {
@@ -508,7 +531,7 @@ do_execreg(regname, colon, addcr)
     static int	lastc = NUL;
     long	i;
     char_u	*p;
-    int		retval;
+    int		retval = OK;
 
 
     if (regname == '@')			/* repeat previous one */
@@ -517,6 +540,9 @@ do_execreg(regname, colon, addcr)
     if (regname == '%' || regname == '#' || !valid_yank_reg(regname, FALSE))
 	return FAIL;
     lastc = regname;
+
+    if (regname == '_')			/* black hole: don't stuff anything */
+	return OK;
 
     if (regname == ':')			/* use last command line */
     {
@@ -537,7 +563,6 @@ do_execreg(regname, colon, addcr)
 	    return FAIL;
 	retval = put_in_typebuf(p, colon);
 	vim_free(p);
-	return retval;
     }
 #endif
     else if (regname == '.')		/* use last inserted text */
@@ -550,7 +575,6 @@ do_execreg(regname, colon, addcr)
 	}
 	retval = put_in_typebuf(p, colon);
 	vim_free(p);
-	return retval;
     }
     else
     {
@@ -577,7 +601,7 @@ do_execreg(regname, colon, addcr)
 	}
 	Exec_reg = TRUE;	/* disable the 'q' command */
     }
-    return OK;
+    return retval;
 }
 
     static int
@@ -632,7 +656,7 @@ insert_reg(regname, literally)
 
     if (regname == '.')			/* insert last inserted text */
 	retval = stuff_inserted(NUL, 1L, TRUE);
-    else if (get_spec_reg(regname, &arg, &allocated))
+    else if (get_spec_reg(regname, &arg, &allocated, TRUE))
     {
 	if (arg == NULL)
 	    return FAIL;
@@ -689,47 +713,49 @@ stuffescaped(arg)
  * If "regname" is a special register, return a pointer to its value.
  */
     static int
-get_spec_reg(regname, argp, allocated)
-    int	    regname;
-    char_u  **argp;
-    int	    *allocated;
+get_spec_reg(regname, argp, allocated, errmsg)
+    int		regname;
+    char_u	**argp;
+    int		*allocated;
+    int		errmsg;		/* give error message when failing */
 {
     *argp = NULL;
     *allocated = FALSE;
-    if (regname == '%')		/* file name */
+    switch (regname)
     {
-	if (check_fname() != FAIL)  /* will give emsg if not set */
+	case '%':		/* file name */
+	    if (errmsg)
+		check_fname();	/* will give emsg if not set */
 	    *argp = curbuf->b_fname;
-	return TRUE;
-    }
-    if (regname == '#')		/* alternate file name */
-    {
-	*argp = getaltfname();	/* will give emsg if not set */
-	return TRUE;
-    }
+	    return TRUE;
+
+	case '#':		/* alternate file name */
+	    *argp = getaltfname(errmsg);	/* may give emsg if not set */
+	    return TRUE;
+
 #ifdef WANT_EVAL
-    if (regname == '=')		/* result of expression */
-    {
-	*argp = get_expr_line();
-	*allocated = TRUE;
-	return TRUE;
-    }
+	case '=':		/* result of expression */
+	    *argp = get_expr_line();
+	    *allocated = TRUE;
+	    return TRUE;
 #endif
-    if (regname == ':')		/* last command line */
-    {
-	if (last_cmdline == NULL)
-	    EMSG(e_nolastcmd);
-	else
+
+	case ':':		/* last command line */
+	    if (last_cmdline == NULL && errmsg)
+		EMSG(e_nolastcmd);
 	    *argp = last_cmdline;
-	return TRUE;
-    }
-    if (regname == '.')		/* last inserted text */
-    {
-	*argp = get_last_insert_save();
-	*allocated = TRUE;
-	if (*argp == NULL)
-	    EMSG(e_noinstext);
-	return TRUE;
+	    return TRUE;
+
+	case '.':		/* last inserted text */
+	    *argp = get_last_insert_save();
+	    *allocated = TRUE;
+	    if (*argp == NULL && errmsg)
+		EMSG(e_noinstext);
+	    return TRUE;
+
+	case '_':		/* black hole: always empty */
+	    *argp = (char_u *)"";
+	    return TRUE;
     }
 
     return FALSE;
@@ -762,7 +788,7 @@ cmdline_paste(regname)
     if (regname == '.')			/* insert last inserted text */
 	return FAIL;			/* Unimplemented */
 
-    if (get_spec_reg(regname, &arg, &allocated))
+    if (get_spec_reg(regname, &arg, &allocated, TRUE))
     {
 	if (arg == NULL)
 	    return FAIL;
@@ -813,6 +839,26 @@ op_delete(oap)
 	return u_save_cursor();
     }
 
+#ifdef MULTI_BYTE
+    if (is_dbcs)
+    {
+	char_u *p;
+
+	if (oap->end.col >= oap->start.col)
+	{
+	    p = ml_get(oap->end.lnum);
+	    if (IsTrailByte(p, p + oap->end.col + oap->inclusive))
+		oap->end.col++;
+	}
+	else
+	{
+	    p = ml_get(oap->start.lnum);
+	    if (IsTrailByte(p, p + oap->start.col + oap->inclusive))
+		oap->start.col++;
+	}
+    }
+#endif
+
 /*
  * Imitate the strange Vi behaviour: If the delete spans more than one line
  * and motion_type == MCHAR and the result is a blank line, make the delete
@@ -849,56 +895,62 @@ op_delete(oap)
 
 /*
  * Do a yank of whatever we're about to delete.
- * If a yank register was specified, put the deleted text into that register
+ * If a yank register was specified, put the deleted text into that register.
+ * For the black hole register '_' don't yank anything.
  */
-    if (oap->regname != 0)
+    if (oap->regname != '_')
     {
-					/* check for read-only register */
-	if (!valid_yank_reg(oap->regname, TRUE))
+	if (oap->regname != 0)
 	{
-	    beep_flush();
-	    return OK;
+	    /* check for read-only register */
+	    if (!valid_yank_reg(oap->regname, TRUE))
+	    {
+		beep_flush();
+		return OK;
+	    }
+	    get_yank_register(oap->regname, TRUE); /* yank into specif'd reg. */
+	    if (op_yank(oap, TRUE, FALSE) == OK)   /* yank without message */
+		did_yank = TRUE;
 	}
-	get_yank_register(oap->regname, TRUE);	/* yank into specified reg. */
-	if (op_yank(oap, TRUE, FALSE) == OK)	/* yank without message */
-	    did_yank = TRUE;
-    }
 
-/*
- * Put deleted text into register 1 and shift number registers if
- * the delete contains a line break, or when a regname has been specified!
- */
-    if (oap->regname != 0 || oap->motion_type == MLINE || oap->line_count > 1)
-    {
-	y_current = &y_regs[9];
-	free_yank_all();		/* free register nine */
-	for (n = 9; n > 1; --n)
-	    y_regs[n] = y_regs[n - 1];
-	y_previous = y_current = &y_regs[1];
-	y_regs[1].y_array = NULL;	/* set register one to empty */
-	oap->regname = 0;
-    }
-    else if (oap->regname == 0)		/* yank into unnamed register */
-    {
-	oap->regname = '-';		/* use special delete register */
-	get_yank_register(oap->regname, TRUE);
-	oap->regname = 0;
-    }
-
-    if (oap->regname == 0 && op_yank(oap, TRUE, FALSE) == OK)
-	did_yank = TRUE;
-
-/*
- * If there's too much stuff to fit in the yank register, then get a
- * confirmation before doing the delete. This is crude, but simple. And it
- * avoids doing a delete of something we can't put back if we want.
- */
-    if (!did_yank)
-    {
-	if (ask_yesno((char_u *)"cannot yank; delete anyway", TRUE) != 'y')
+	/*
+	 * Put deleted text into register 1 and shift number registers if the
+	 * delete contains a line break, or when a regname has been specified!
+	 */
+	if (oap->regname != 0 || oap->motion_type == MLINE
+						       || oap->line_count > 1)
 	{
-	    emsg(e_abort);
-	    return FAIL;
+	    y_current = &y_regs[9];
+	    free_yank_all();			/* free register nine */
+	    for (n = 9; n > 1; --n)
+		y_regs[n] = y_regs[n - 1];
+	    y_previous = y_current = &y_regs[1];
+	    y_regs[1].y_array = NULL;		/* set register one to empty */
+	    oap->regname = 0;
+	}
+	else if (oap->regname == 0)		/* yank into unnamed register */
+	{
+	    oap->regname = '-';		/* use special delete register */
+	    get_yank_register(oap->regname, TRUE);
+	    oap->regname = 0;
+	}
+
+	if (oap->regname == 0 && op_yank(oap, TRUE, FALSE) == OK)
+	    did_yank = TRUE;
+
+	/*
+	 * If there's too much stuff to fit in the yank register, then get a
+	 * confirmation before doing the delete. This is crude, but simple.
+	 * And it avoids doing a delete of something we can't put back if we
+	 * want.
+	 */
+	if (!did_yank)
+	{
+	    if (ask_yesno((char_u *)"cannot yank; delete anyway", TRUE) != 'y')
+	    {
+		emsg(e_abort);
+		return FAIL;
+	    }
 	}
     }
 
@@ -911,6 +963,10 @@ op_delete(oap)
 			       (linenr_t)(oap->end.lnum + 1)) == FAIL)
 	    return FAIL;
 
+#ifdef SYNTAX_HL
+	/* recompute syntax hl., starting with this line */
+	syn_changed(curwin->w_cursor.lnum);
+#endif
 	for (lnum = curwin->w_cursor.lnum;
 			       curwin->w_cursor.lnum <= oap->end.lnum;
 						      ++curwin->w_cursor.lnum)
@@ -929,13 +985,13 @@ op_delete(oap)
 	    if (newp == NULL)
 		continue;
 	    /* copy up to deleted part */
-	    vim_memmove(newp, oldp, (size_t)bd.textcol);
+	    mch_memmove(newp, oldp, (size_t)bd.textcol);
 	    /* insert spaces */
 	    copy_spaces(newp + bd.textcol,
 				     (size_t)(bd.startspaces + bd.endspaces));
 	    /* copy the part after the deleted part */
 	    oldp += bd.textcol + bd.textlen;
-	    vim_memmove(newp + bd.textcol + bd.startspaces + bd.endspaces,
+	    mch_memmove(newp + bd.textcol + bd.startspaces + bd.endspaces,
 						      oldp, STRLEN(oldp) + 1);
 	    /* replace the line */
 	    ml_replace(curwin->w_cursor.lnum, newp, FALSE);
@@ -946,7 +1002,7 @@ op_delete(oap)
 	approximate_botline();		/* w_botline may be wrong now */
 	adjust_cursor();
 
-	CHANGED;
+	changed();
 	update_screen(VALID_TO_CURSCHAR);
 	oap->line_count = 0;	    /* no lines deleted */
     }
@@ -974,6 +1030,10 @@ op_delete(oap)
 	    }
 	    else
 		beginline(0);		    /* cursor in column 0 */
+#ifdef SYNTAX_HL
+	    /* recompute syntax hl., starting with current line */
+	    syn_changed(curwin->w_cursor.lnum);
+#endif
 	    truncate_line(FALSE);   /* delete the rest of the line */
 				    /* leave cursor past last char in line */
 	}
@@ -1001,6 +1061,10 @@ op_delete(oap)
     {
 	if (u_save_cursor() == FAIL)	/* save first line for undo */
 	    return FAIL;
+#ifdef SYNTAX_HL
+	/* recompute syntax hl., starting with current line */
+	syn_changed(curwin->w_cursor.lnum);
+#endif
 	truncate_line(TRUE);		/* delete from cursor to end of line */
 
 	oap->start = curwin->w_cursor;	/* remember curwin->w_cursor */
@@ -1110,6 +1174,10 @@ op_tilde(oap)
 	update_screenline();
     else
     {
+#ifdef SYNTAX_HL
+	/* recompute syntax hl., starting with current line */
+	syn_changed(oap->start.lnum);
+#endif
 	update_topline();
 	update_screen(NOT_VALID);
     }
@@ -1135,12 +1203,12 @@ swapchar(op_type, pos)
     if (islower(c) && op_type != OP_LOWER)
     {
 	pchar(*pos, TO_UPPER(c));
-	CHANGED;
+	changed();
     }
     else if (isupper(c) && op_type != OP_UPPER)
     {
 	pchar(*pos, TO_LOWER(c));
-	CHANGED;
+	changed();
     }
 }
 
@@ -1285,6 +1353,9 @@ op_yank(oap, deleting, mess)
 	beep_flush();
 	return FAIL;
     }
+    if (oap->regname == '_')	    /* black hole: nothing to do */
+	return OK;
+
     if (!deleting)		    /* op_delete() already set y_current */
 	get_yank_register(oap->regname, TRUE);
 
@@ -1302,6 +1373,7 @@ op_yank(oap, deleting, mess)
     if (       oap->motion_type == MCHAR
 	    && oap->start.col == 0
 	    && !oap->inclusive
+	    && (!oap->is_VIsual || *p_sel == 'o')
 	    && oap->end.col == 0
 	    && yanklines > 1)
     {
@@ -1342,7 +1414,7 @@ op_yank(oap, deleting, mess)
 	    copy_spaces(pnew, (size_t)bd.startspaces);
 	    pnew += bd.startspaces;
 
-	    vim_memmove(pnew, bd.textstart, (size_t)bd.textlen);
+	    mch_memmove(pnew, bd.textstart, (size_t)bd.textlen);
 	    pnew += bd.textlen;
 
 	    copy_spaces(pnew, (size_t)bd.endspaces);
@@ -1477,25 +1549,27 @@ success:
 /*
  * put contents of register "regname" into the text
  * For ":put" command count == -1.
+ * flags: PUT_FIXINDENT	make indent look nice
+ *	  PUT_CURSEND	leave cursor after end of new text
  */
     void
-do_put(regname, dir, count, fix_indent)
-    int	    regname;
-    int	    dir;		/* BACKWARD for 'P', FORWARD for 'p' */
-    long    count;
-    int	    fix_indent;		/* make indent look nice */
+do_put(regname, dir, count, flags)
+    int		regname;
+    int		dir;		/* BACKWARD for 'P', FORWARD for 'p' */
+    long	count;
+    int		flags;
 {
     char_u	*ptr;
     char_u	*newp, *oldp;
     int		yanklen;
     int		oldlen;
-    int		totlen = 0;		    /* init for gcc */
+    int		totlen = 0;		/* init for gcc */
     linenr_t	lnum;
     colnr_t	col;
-    long	i;			    /* index in y_array[] */
+    long	i;			/* index in y_array[] */
     int		y_type;
     long	y_size;
-    char_u	**y_array;
+    char_u	**y_array = NULL;
     long	nr_lines = 0;
     colnr_t	vcol;
     int		delcount;
@@ -1503,25 +1577,44 @@ do_put(regname, dir, count, fix_indent)
     long	j;
     FPOS	new_cursor;
     int		indent;
-    int		orig_indent = 0;	    /* init for gcc */
-    int		indent_diff = 0;	    /* init for gcc */
+    int		orig_indent = 0;	/* init for gcc */
+    int		indent_diff = 0;	/* init for gcc */
     int		first_indent = TRUE;
     FPOS	old_pos;
     struct block_def bd;
     char_u	*insert_string = NULL;
     int		allocated = FALSE;
+#ifdef MULTI_BYTE
+    int		bMultiByteCode = 0;
+#endif
 
 #ifdef USE_CLIPBOARD
     if (regname == '*')
 	clip_get_selection();
 #endif
 
-    if (fix_indent)
+    if (flags & PUT_FIXINDENT)
 	orig_indent = get_indent();
 
     curbuf->b_op_start = curwin->w_cursor;	/* default for '[ mark */
+
     if (dir == FORWARD)
+    {
+#ifdef MULTI_BYTE
+	/* put it on the next of the multi-byte character. */
+	if (is_dbcs)
+	{
+	    ptr = ml_get(curwin->w_cursor.lnum) + curwin->w_cursor.col;
+	    if (IsLeadByte(*ptr) && (*(ptr + 1) != '\0'))
+	    {
+		bMultiByteCode = 1;
+		curbuf->b_op_start.col++;
+	    }
+	}
+#endif
 	curbuf->b_op_start.col++;
+    }
+
     curbuf->b_op_end = curwin->w_cursor;	/* default for '] mark */
 
     /*
@@ -1532,6 +1625,10 @@ do_put(regname, dir, count, fix_indent)
     {
 	(void)stuff_inserted((dir == FORWARD ? (count == -1 ? 'o' : 'a') :
 				    (count == -1 ? 'O' : 'i')), count, FALSE);
+	/* Putting the text is done later, so can't really move the cursor to
+	 * the nex character.  Use "l" to simulate it. */
+	if ((flags & PUT_CURSEND) && gchar_cursor() != NUL)
+	    stuffcharReadbuff('l');
 	return;
     }
 
@@ -1539,7 +1636,7 @@ do_put(regname, dir, count, fix_indent)
      * For special registers '%' (file name), '#' (alternate file name) and
      * ':' (last command line), etc. we have to create a fake yank register.
      */
-    if (get_spec_reg(regname, &insert_string, &allocated))
+    if (get_spec_reg(regname, &insert_string, &allocated, TRUE))
     {
 	if (insert_string == NULL)
 	    return;
@@ -1547,9 +1644,48 @@ do_put(regname, dir, count, fix_indent)
 
     if (insert_string != NULL)
     {
-	y_type = MCHAR;			/* use fake one-line yank register */
-	y_size = 1;
-	y_array = &insert_string;
+	y_type = MCHAR;
+	if (regname == '=')
+	{
+	    /* For the = register we need to split the string at NL
+	     * characters. */
+	    /* Loop twice: count the number of lines and save them. */
+	    for (;;)
+	    {
+		y_size = 0;
+		ptr = insert_string;
+		while (ptr != NULL)
+		{
+		    if (y_array != NULL)
+			y_array[y_size] = ptr;
+		    ++y_size;
+		    ptr = vim_strchr(ptr, '\n');
+		    if (ptr != NULL)
+		    {
+			if (y_array != NULL)
+			    *ptr = NUL;
+			++ptr;
+			/* A trailing '\n' makes the string linewise */
+			if (*ptr == NUL)
+			{
+			    y_type = MLINE;
+			    break;
+			}
+		    }
+		}
+		if (y_array != NULL)
+		    break;
+		y_array = (char_u **)alloc((unsigned)
+						 (y_size * sizeof(char_u *)));
+		if (y_array == NULL)
+		    goto end;
+	    }
+	}
+	else
+	{
+	    y_size = 1;		/* use fake one-line yank register */
+	    y_array = &insert_string;
+	}
     }
     else
     {
@@ -1585,7 +1721,7 @@ do_put(regname, dir, count, fix_indent)
 	goto end;
 
     yanklen = STRLEN(y_array[0]);
-    CHANGED;
+    changed();
 
     lnum = curwin->w_cursor.lnum;
     col = curwin->w_cursor.col;
@@ -1600,11 +1736,27 @@ do_put(regname, dir, count, fix_indent)
 	if (dir == FORWARD && gchar_cursor() != NUL)
 	{
 	    getvcol(curwin, &curwin->w_cursor, NULL, NULL, &col);
-	    ++col;
-	    ++curwin->w_cursor.col;
+
+#ifdef MULTI_BYTE
+	    if (is_dbcs)
+	    {
+		/* put it on the next of the multi-byte character. */
+		col += bMultiByteCode + 1;
+		curwin->w_cursor.col += bMultiByteCode + 1;
+	    }
+	    else
+#endif
+	    {
+		++col;
+		++curwin->w_cursor.col;
+	    }
 	}
 	else
 	    getvcol(curwin, &curwin->w_cursor, &col, NULL, NULL);
+#ifdef SYNTAX_HL
+	/* recompute syntax hl., starting with current line */
+	syn_changed(curwin->w_cursor.lnum);
+#endif
 	for (i = 0; i < y_size; ++i)
 	{
 	    bd.startspaces = 0;
@@ -1613,7 +1765,7 @@ do_put(regname, dir, count, fix_indent)
 	    vcol = 0;
 	    delcount = 0;
 
-	/* add a new line */
+	    /* add a new line */
 	    if (curwin->w_cursor.lnum > curbuf->b_ml.ml_line_count)
 	    {
 		ml_append(curbuf->b_ml.ml_line_count, (char_u *)"",
@@ -1645,24 +1797,24 @@ do_put(regname, dir, count, fix_indent)
 	    newp = alloc_check((unsigned)totlen + oldlen + 1);
 	    if (newp == NULL)
 		break;
-	/* copy part up to cursor to new line */
+	    /* copy part up to cursor to new line */
 	    ptr = newp;
-	    vim_memmove(ptr, oldp, (size_t)bd.textcol);
+	    mch_memmove(ptr, oldp, (size_t)bd.textcol);
 	    ptr += bd.textcol;
-	/* may insert some spaces before the new text */
+	    /* may insert some spaces before the new text */
 	    copy_spaces(ptr, (size_t)bd.startspaces);
 	    ptr += bd.startspaces;
-	/* insert the new text */
+	    /* insert the new text */
 	    for (j = 0; j < count; ++j)
 	    {
-		vim_memmove(ptr, y_array[i], (size_t)yanklen);
+		mch_memmove(ptr, y_array[i], (size_t)yanklen);
 		ptr += yanklen;
 	    }
-	/* may insert some spaces after the new text */
+	    /* may insert some spaces after the new text */
 	    copy_spaces(ptr, (size_t)bd.endspaces);
 	    ptr += bd.endspaces;
-	/* move the text after the cursor to the end of the line. */
-	    vim_memmove(ptr, oldp + bd.textcol + delcount,
+	    /* move the text after the cursor to the end of the line. */
+	    mch_memmove(ptr, oldp + bd.textcol + delcount,
 				(size_t)(oldlen - bd.textcol - delcount + 1));
 	    ml_replace(curwin->w_cursor.lnum, newp, FALSE);
 
@@ -1673,9 +1825,18 @@ do_put(regname, dir, count, fix_indent)
 						/* adjust '] mark */
 	curbuf->b_op_end.lnum = curwin->w_cursor.lnum - 1;
 	curbuf->b_op_end.col = bd.textcol + totlen - 1;
-	curwin->w_cursor.lnum = lnum;
+	if (flags & PUT_CURSEND)
+	{
+	    curwin->w_cursor = curbuf->b_op_end;
+	    curwin->w_cursor.col++;
+	}
+	else
+	    curwin->w_cursor.lnum = lnum;
 	update_topline();
-	update_screen(VALID_TO_CURSCHAR);
+	if (flags & PUT_CURSEND)
+	    update_screen(NOT_VALID);
+	else
+	    update_screen(VALID_TO_CURSCHAR);
     }
     else	/* not block mode */
     {
@@ -1684,11 +1845,26 @@ do_put(regname, dir, count, fix_indent)
     /* if type is MCHAR, FORWARD is the same as BACKWARD on the next char */
 	    if (dir == FORWARD && gchar_cursor() != NUL)
 	    {
-		++col;
-		if (yanklen)
+#ifdef MULTI_BYTE
+		if (is_dbcs)
 		{
-		    ++curwin->w_cursor.col;
-		    ++curbuf->b_op_end.col;
+		    /* put it on the next of the multi-byte character. */
+		    col += bMultiByteCode + 1;
+		    if (yanklen)
+		    {
+			curwin->w_cursor.col += bMultiByteCode + 1;
+			curbuf->b_op_end.col += bMultiByteCode + 1;
+		    }
+		}
+		else
+#endif
+		{
+		    ++col;
+		    if (yanklen)
+		    {
+			++curwin->w_cursor.col;
+			++curbuf->b_op_end.col;
+		    }
 		}
 	    }
 	    new_cursor = curwin->w_cursor;
@@ -1709,26 +1885,30 @@ do_put(regname, dir, count, fix_indent)
 		newp = alloc_check((unsigned)(STRLEN(oldp) + totlen + 1));
 		if (newp == NULL)
 		    goto end;		/* alloc() will give error message */
-		vim_memmove(newp, oldp, (size_t)col);
+		mch_memmove(newp, oldp, (size_t)col);
 		ptr = newp + col;
 		for (i = 0; i < count; ++i)
 		{
-		    vim_memmove(ptr, y_array[0], (size_t)yanklen);
+		    mch_memmove(ptr, y_array[0], (size_t)yanklen);
 		    ptr += yanklen;
 		}
-		vim_memmove(ptr, oldp + col, STRLEN(oldp + col) + 1);
+		mch_memmove(ptr, oldp + col, STRLEN(oldp + col) + 1);
 		ml_replace(lnum, newp, FALSE);
 		/* Put cursor on last putted char. */
 		curwin->w_cursor.col += (colnr_t)(totlen - 1);
 	    }
 	    curbuf->b_op_end = curwin->w_cursor;
 	    /* For "CTRL-O p" in Insert mode, put cursor after last char */
-	    if (totlen && restart_edit)
+	    if (totlen && (restart_edit || (flags & PUT_CURSEND)))
 		++curwin->w_cursor.col;
 	    update_screenline();
 	}
 	else
 	{
+#ifdef SYNTAX_HL
+	    /* recompute syntax hl., starting with current line */
+	    syn_changed(lnum);
+#endif
 	    while (--count >= 0)
 	    {
 		i = 0;
@@ -1755,9 +1935,9 @@ do_put(regname, dir, count, fix_indent)
 		    if (newp == NULL)
 			goto error;
 					    /* copy first part of line */
-		    vim_memmove(newp, oldp, (size_t)col);
+		    mch_memmove(newp, oldp, (size_t)col);
 					    /* append to first line */
-		    vim_memmove(newp + col, y_array[0], (size_t)(yanklen + 1));
+		    mch_memmove(newp + col, y_array[0], (size_t)(yanklen + 1));
 		    ml_replace(lnum, newp, FALSE);
 
 		    curwin->w_cursor.lnum = lnum;
@@ -1771,7 +1951,7 @@ do_put(regname, dir, count, fix_indent)
 			    goto error;
 		    lnum++;
 		    i++;
-		    if (fix_indent)
+		    if (flags & PUT_FIXINDENT)
 		    {
 			old_pos = curwin->w_cursor;
 			curwin->w_cursor.lnum = lnum;
@@ -1813,7 +1993,26 @@ do_put(regname, dir, count, fix_indent)
 	    else
 		curbuf->b_op_end.col = 0;
 
-	    if (y_type == MLINE)
+	    if (flags & PUT_CURSEND)
+	    {
+		/* put cursor after inserted text */
+		if (y_type == MLINE)
+		{
+		    if (lnum >= curbuf->b_ml.ml_line_count)
+			curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
+		    else
+			curwin->w_cursor.lnum = lnum + 1;
+		    curwin->w_cursor.col = 0;
+		}
+		else
+		{
+		    curwin->w_cursor.lnum = lnum;
+		    curwin->w_cursor.col = col;
+		}
+		/* the text before the cursor needs redrawing */
+		redraw_curbuf_later(NOT_VALID);
+	    }
+	    else if (y_type == MLINE)
 	    {
 		/* put cursor onfirst non-blank in first inserted line */
 		curwin->w_cursor.col = 0;
@@ -1822,9 +2021,7 @@ do_put(regname, dir, count, fix_indent)
 		beginline(BL_WHITE | BL_FIX);
 	    }
 	    else	/* put cursor on first inserted character */
-	    {
 		curwin->w_cursor = new_cursor;
-	    }
 
 error:
 	    if (y_type == MLINE)	/* adjust '[ mark */
@@ -1836,7 +2033,7 @@ error:
 	    mark_adjust(curbuf->b_op_start.lnum + (y_type == MCHAR),
 					     (linenr_t)MAXLNUM, nr_lines, 0L);
 	    update_topline();
-	    update_screen(NOT_VALID);
+	    update_screen(VALID_TO_CURSCHAR);
 	}
     }
 
@@ -1845,7 +2042,13 @@ error:
 
 end:
     if (allocated)
+    {
 	vim_free(insert_string);
+	if (regname == '=')
+	    vim_free(y_array);
+    }
+    if ((flags & PUT_CURSEND) && gchar_cursor() == NUL && curwin->w_cursor.col)
+	--curwin->w_cursor.col;
 }
 
 /* Return the character name of the register with the given number */
@@ -1883,7 +2086,7 @@ do_dis(arg)
 
     if (arg != NULL && *arg == NUL)
 	arg = NULL;
-    attr = highlight_attr[HLF_8];
+    attr = hl_attr(HLF_8);
 
     /* Highlight title */
     MSG_PUTS_TITLE("\n--- Registers ---");
@@ -2108,14 +2311,19 @@ do_join(insert_space, redraw)
      * Curr has to be obtained again, because getting next will have
      * invalidated it.
      */
-    vim_memmove(newp + currsize + spaces, next, (size_t)(nextsize + 1));
+    mch_memmove(newp + currsize + spaces, next, (size_t)(nextsize + 1));
 
     curr = ml_get_curline();
-    vim_memmove(newp, curr, (size_t)currsize);
+    mch_memmove(newp, curr, (size_t)currsize);
 
     copy_spaces(newp + currsize, (size_t)spaces);
 
     ml_replace(curwin->w_cursor.lnum, newp, FALSE);
+
+#ifdef SYNTAX_HL
+    /* recompute syntax hl. for current line */
+    syn_changed(curwin->w_cursor.lnum);
+#endif
 
     /*
      * Delete the following line. To do this we move the cursor there
@@ -2149,7 +2357,7 @@ do_join(insert_space, redraw)
 	curwin->w_cursor.col = currsize - 1;
 	(void)oneright();
     }
-    CHANGED;
+    changed();
 
     return OK;
 }
@@ -2359,6 +2567,10 @@ op_format(oap)
 		while (curwin->w_cursor.col && vim_isspace(gchar_cursor()))
 		    dec_cursor();
 
+#ifdef SYNTAX_HL
+		/* recompute syntax hl., starting with current line */
+		syn_changed(curwin->w_cursor.lnum);
+#endif
 		/* do the formatting, without 'showmode' */
 		State = INSERT;	/* for open_line() */
 		smd_save = p_smd;
@@ -2593,7 +2805,8 @@ do_addsub(command, Prenum1)
     char_u	    buf2[NUMBUFLEN];
     int		    hex;		/* 'X' or 'x': hex; '0': octal */
     static int	    hexupper = FALSE;	/* 0xABC */
-    long	    n;
+    unsigned long   n;
+    unsigned long   oldn;
     char_u	    *ptr;
     int		    c;
     int		    length = 0;		/* character length of the number */
@@ -2601,6 +2814,8 @@ do_addsub(command, Prenum1)
     int		    dohex;
     int		    dooct;
     int		    firstdigit;
+    int		    negative;
+    int		    subtract;
 
     dohex = (vim_strchr(curbuf->b_p_nf, 'x') != NULL);
     dooct = (vim_strchr(curbuf->b_p_nf, 'o') != NULL);
@@ -2656,15 +2871,59 @@ do_addsub(command, Prenum1)
     ptr = ml_get_curline();
     RLADDSUBFIX();
 
+    negative = FALSE;
     if (col > 0 && ptr[col - 1] == '-')	    /* negative number */
+    {
 	--col;
-					    /* get the number value */
-    n = vim_str2nr(ptr + col, &hex, &length, dooct, dohex);
+	negative = TRUE;
+    }
 
-    if (command == Ctrl('A'))		    /* add or subtract */
-	n += Prenum1;
+    /* get the number value (unsigned) */
+    vim_str2nr(ptr + col, &hex, &length, dooct, dohex, NULL, &n);
+
+    /* ignore leading '-' for hex and octal numbers */
+    if (hex && negative)
+    {
+	++col;
+	--length;
+	negative = FALSE;
+    }
+
+    /* add or subtract */
+    subtract = FALSE;
+    if (command == Ctrl('X'))
+	subtract ^= TRUE;
+    if (negative)
+	subtract ^= TRUE;
+
+    oldn = n;
+    if (subtract)
+	n -= (unsigned long)Prenum1;
     else
-	n -= Prenum1;
+	n += (unsigned long)Prenum1;
+
+    /* handle wraparound for decimal numbers */
+    if (!hex)
+    {
+	if (subtract)
+	{
+	    if (n > oldn)
+	    {
+		n = 1 + (n ^ (unsigned long)-1);
+		negative ^= TRUE;
+	    }
+	}
+	else /* add */
+	{
+	    if (n < oldn)
+	    {
+		n = (n ^ (unsigned long)-1);
+		negative ^= TRUE;
+	    }
+	}
+	if (n == 0)
+	    negative = FALSE;
+    }
 
     /*
      * Delete the old number.
@@ -2695,10 +2954,9 @@ do_addsub(command, Prenum1)
      * Prepare the leading characters in buf1[].
      */
     ptr = buf1;
-    if (n < 0)
+    if (negative)
     {
 	*ptr++ = '-';
-	n = -n;
     }
     if (hex)
     {
@@ -2715,7 +2973,7 @@ do_addsub(command, Prenum1)
      * Put the number characters in buf2[].
      */
     if (hex == 0)
-	sprintf((char *)buf2, "%ld", n);
+	sprintf((char *)buf2, "%lu", n);
     else if (hex == '0')
 	sprintf((char *)buf2, "%lo", n);
     else if (hex && hexupper)
@@ -2927,6 +3185,7 @@ clip_get_selection()
 {
     struct yankreg *old_y_previous, *old_y_current;
     FPOS    old_cursor, old_visual;
+    int	    old_visual_mode;
     colnr_t old_curswant;
     int	    old_set_curswant;
     OPARG   oa;
@@ -2944,6 +3203,7 @@ clip_get_selection()
 	old_curswant = curwin->w_curswant;
 	old_set_curswant = curwin->w_set_curswant;
 	old_visual = VIsual;
+	old_visual_mode = VIsual_mode;
 	clear_oparg(&oa);
 	oa.regname = '*';
 	oa.op_type = OP_YANK;
@@ -2958,6 +3218,7 @@ clip_get_selection()
 	curwin->w_curswant = old_curswant;
 	curwin->w_set_curswant = old_set_curswant;
 	VIsual = old_visual;
+	VIsual_mode = old_visual_mode;
     }
     else
     {
@@ -3076,7 +3337,7 @@ get_reg_contents(regname)
 	clip_get_selection();		/* may fill * register */
 #endif
 
-    if (get_spec_reg(regname, &retval, &allocated))
+    if (get_spec_reg(regname, &retval, &allocated, FALSE))
     {
 	if (retval == NULL)
 	    return NULL;
@@ -3148,6 +3409,9 @@ write_reg_contents(name, str)
 	EMSG2("Invalid register name: '%s'", transchar(name));
 	return;
     }
+
+    if (name == '_')	    /* black hole: nothing to do */
+	return;
 
     /* Don't want to change the current (unnamed) register */
     old_y_previous = y_previous;
@@ -3242,11 +3506,11 @@ str_to_reg(y_ptr, type, str, len)
 	    break;
 	if (extra)
 	{
-	    vim_memmove(s, y_ptr->y_array[lnum], (size_t)extra);
+	    mch_memmove(s, y_ptr->y_array[lnum], (size_t)extra);
 	    vim_free(y_ptr->y_array[lnum]);
 	}
 	if (i)
-	    vim_memmove(s + extra, str + start, (size_t)i);
+	    mch_memmove(s + extra, str + start, (size_t)i);
 	extra += i;
 	s[extra] = NUL;
 	y_ptr->y_array[lnum++] = s;

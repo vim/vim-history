@@ -18,6 +18,8 @@
 :map!
 :echo "--- Abbreviations ---"
 :ab
+:echo "--- Highlighting ---"
+:highlight
 :echo "--- Variables ---"
 :let
 :redir END

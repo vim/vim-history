@@ -1827,11 +1827,11 @@ int lnum, llen, i;
     ** Following lines contains Farsi encoded character.
     */
 
-    do_cmdline((char_u *)"%s/Çô/ö/g", NULL, NULL, DOCMD_NOWAIT | DOCMD_VERBOSE);
-    do_cmdline((char_u *)"%s/Åô/¯‹/g", NULL, NULL, DOCMD_NOWAIT | DOCMD_VERBOSE);
+    do_cmdline((char_u *)"%s/\202\231/\232/g", NULL, NULL, DOCMD_NOWAIT | DOCMD_VERBOSE);
+    do_cmdline((char_u *)"%s/\201\231/\370\334/g", NULL, NULL, DOCMD_NOWAIT | DOCMD_VERBOSE);
 
     update_screen(CLEAR);
-    MSG_ATTR(farsi_text_1, highlight_attr[HLF_S]);
+    MSG_ATTR(farsi_text_1, hl_attr(HLF_S));
 }
 
 /*
@@ -1847,7 +1847,7 @@ int lnum, llen, i;
     ** Following line contains Farsi encoded character.
     */
 
-    do_cmdline((char_u *)"%s/ö/Çô/g", NULL, NULL, DOCMD_NOWAIT | DOCMD_VERBOSE);
+    do_cmdline((char_u *)"%s/\232/\202\231/g", NULL, NULL, DOCMD_NOWAIT | DOCMD_VERBOSE);
 
     for (lnum = 1; lnum <= curbuf->b_ml.ml_line_count; ++lnum)
     {
@@ -1863,7 +1863,7 @@ int lnum, llen, i;
     }
 
     update_screen(CLEAR);
-    MSG_ATTR(farsi_text_2, highlight_attr[HLF_S]);
+    MSG_ATTR(farsi_text_2, hl_attr(HLF_S));
 }
 
 /*

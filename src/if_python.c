@@ -631,13 +631,14 @@ VimCommand(PyObject *self, PyObject *args)
 
     do_cmdline((char_u *)cmd, NULL, NULL, DOCMD_NOWAIT|DOCMD_VERBOSE);
     update_screen(NOT_VALID);
+
+    Python_Release_Vim();
+    Py_END_ALLOW_THREADS
+
     if (VimErrorCheck())
 	result = NULL;
     else
 	result = Py_None;
-
-    Python_Release_Vim();
-    Py_END_ALLOW_THREADS
 
     Py_XINCREF(result);
     return result;
@@ -1460,6 +1461,9 @@ WindowSetattr(PyObject *self, char *name, PyObject *val)
 	if (!PyArg_Parse(val, "i", &height))
 	    return -1;
 
+#ifdef USE_GUI
+	need_mouse_correct = TRUE;
+#endif
 	savewin = curwin;
 	curwin = this->win;
 	win_setheight(height);
@@ -1810,7 +1814,10 @@ SetBufferLine(BUF *buf, int n, PyObject *line, int *len_change)
 	else if (ml_delete((linenr_t)n, FALSE) == FAIL)
 	    PyErr_SetVim("cannot delete line");
 	else
+	{
 	    mark_adjust((linenr_t)n, (linenr_t)n, (long)MAXLNUM, -1L);
+	    changed();
+	}
 
 	curbuf = savebuf;
 	update_screen(NOT_VALID);
@@ -1841,6 +1848,13 @@ SetBufferLine(BUF *buf, int n, PyObject *line, int *len_change)
 	    PyErr_SetVim("cannot save undo information");
 	else if (ml_replace((linenr_t)n, (char_u *)save, TRUE) == FAIL)
 	    PyErr_SetVim("cannot replace line");
+	else
+	{
+	    changed();
+#ifdef SYNTAX_HL
+	    syn_changed((linenr_t)n); /* recompute syntax hl. for this line */
+#endif
+	}
 
 	curbuf = savebuf;
 	update_screen(NOT_VALID);
@@ -1901,11 +1915,13 @@ SetBufferLineList(BUF *buf, int lo, int hi, PyObject *list, int *len_change)
 		    ok = 0;
 		    break;
 		}
+		changed();
 	    }
 	}
 
 	if (ok)
-	    mark_adjust((linenr_t)lo, (linenr_t)(hi-1), (long)MAXLNUM, (long)-n);
+	    mark_adjust((linenr_t)lo, (linenr_t)(hi-1), (long)MAXLNUM,
+								    (long)-n);
 
 	curbuf = savebuf;
 	update_screen(NOT_VALID);
@@ -1967,6 +1983,7 @@ SetBufferLineList(BUF *buf, int lo, int hi, PyObject *list, int *len_change)
 		    PyErr_SetVim("cannot delete line");
 		    break;
 		}
+		changed();
 	    }
 	}
 
@@ -1978,11 +1995,17 @@ SetBufferLineList(BUF *buf, int lo, int hi, PyObject *list, int *len_change)
 	{
 	    for (i = 0; i < lines && i < n; ++i)
 	    {
-		if (ml_replace((linenr_t)(lo+i), (char_u *)array[i], TRUE) == FAIL)
+		if (ml_replace((linenr_t)(lo+i), (char_u *)array[i], TRUE)
+								      == FAIL)
 		{
 		    PyErr_SetVim("cannot replace line");
 		    break;
 		}
+		changed();
+#ifdef SYNTAX_HL
+		/* recompute syntax hl. for this line */
+		syn_changed((linenr_t)(lo+i));
+#endif
 	    }
 	}
 
@@ -1999,7 +2022,7 @@ SetBufferLineList(BUF *buf, int lo, int hi, PyObject *list, int *len_change)
 		    PyErr_SetVim("cannot insert line");
 		    break;
 		}
-
+		changed();
 		vim_free(array[i]);
 		++i;
 	    }
@@ -2074,7 +2097,10 @@ InsertBufferLines(BUF *buf, int n, PyObject *lines, int *len_change)
 	else if (ml_append((linenr_t)n, (char_u *)str, 0, FALSE) == FAIL)
 	    PyErr_SetVim("cannot insert line");
 	else
+	{
 	    mark_adjust((linenr_t)(n+1), (linenr_t)MAXLNUM, 1L, 0L);
+	    changed();
+	}
 
 	vim_free(str);
 	curbuf = savebuf;
@@ -2140,7 +2166,7 @@ InsertBufferLines(BUF *buf, int n, PyObject *lines, int *len_change)
 
 		    break;
 		}
-
+		changed();
 		vim_free(array[i]);
 	    }
 	}

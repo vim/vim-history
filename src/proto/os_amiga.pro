@@ -35,5 +35,5 @@ void mch_breakcheck __ARGS((void));
 long Chk_Abort __ARGS((void));
 int mch_expandpath __ARGS((struct growarray *gap, char_u *pat, int flags));
 int mch_has_wildcard __ARGS((char_u *p));
-char_u *vim_getenv __ARGS((char_u *var));
-int vim_setenv __ARGS((char *var, char *value));
+char_u *mch_getenv __ARGS((char_u *var));
+int mch_setenv __ARGS((char *var, char *value, int x));

@@ -1,10 +1,16 @@
-*os_os2.txt*    For Vim version 5.1.  Last modification: 1997 Dec 06
+*os_os2.txt*    For Vim version 5.2.  Last modification: 1998 Apr 13
 
 
 		  VIM REFERENCE MANUAL    by Paul Slootman
 
 
 This file contains the particularities for the OS/2 version of Vim.
+
+At present there is no native PM version of the GUI version of vim: The OS/2
+version is a console application.  However, there is now a Win32s-compatible
+GUI version, which should be usable by owners of Warp 4 (which supports
+Win32s) in a Win-OS/2 session.  The notes in this file refer to the native
+console version.
 
 
 NOTE

@@ -398,6 +398,7 @@ open_line(dir, redraw, del_spaces, old_indent)
 	char_u	*comment_end = NULL;	    /* where lead_end has been found */
 	int	extra_space = FALSE;	    /* append extra space */
 	int	current_flag;
+	int	require_blank = FALSE;	    /* requires blank after middle */
 
 	/*
 	 * If the comment leader has the start, middle or end flag, it may not
@@ -405,6 +406,11 @@ open_line(dir, redraw, del_spaces, old_indent)
 	 */
 	for (p = lead_flags; *p && *p != ':'; ++p)
 	{
+	    if (*p == COM_BLANK)
+	    {
+		require_blank = TRUE;
+		continue;
+	    }
 	    if (*p == COM_START || *p == COM_MIDDLE)
 	    {
 		current_flag = *p;
@@ -419,15 +425,20 @@ open_line(dir, redraw, del_spaces, old_indent)
 			break;
 		    }
 
-		   /* find start of middle part */
+		    /* find start of middle part */
 		    (void)copy_option_part(&p, lead_middle, COM_MAX_LEN, ",");
+		    require_blank = FALSE;
 		}
 
 		/*
 		 * Isolate the strings of the middle and end leader.
 		 */
 		while (*p && p[-1] != ':')	/* find end of middle flags */
+		{
+		    if (*p == COM_BLANK)
+			require_blank = TRUE;
 		    ++p;
+		}
 		(void)copy_option_part(&p, lead_middle, COM_MAX_LEN, ",");
 		while (*p && p[-1] != ':')	/* find end of end flags */
 		    ++p;
@@ -465,10 +476,12 @@ open_line(dir, redraw, del_spaces, old_indent)
 		     * comment leader, then put a space after the middle
 		     * comment leader on the next line.
 		     */
-		    if (!vim_iswhite(saved_line[lead_len - 1]) &&
-			    ((p_extra != NULL &&
-				     (int)curwin->w_cursor.col == lead_len) ||
-			     (p_extra == NULL && saved_line[lead_len] == NUL)))
+		    if (!vim_iswhite(saved_line[lead_len - 1])
+			    && ((p_extra != NULL
+				    && (int)curwin->w_cursor.col == lead_len)
+				|| (p_extra == NULL
+				    && saved_line[lead_len] == NUL)
+				|| require_blank))
 			extra_space = TRUE;
 		}
 		break;
@@ -549,7 +562,7 @@ open_line(dir, redraw, del_spaces, old_indent)
 			    p = leader;
 			else
 			    p -= lead_repl_len;
-			vim_memmove(p, lead_repl, (size_t)lead_repl_len);
+			mch_memmove(p, lead_repl, (size_t)lead_repl_len);
 			if (p + lead_repl_len > leader + lead_len)
 			    p[lead_repl_len] = NUL;
 
@@ -561,7 +574,7 @@ open_line(dir, redraw, del_spaces, old_indent)
 		    else		    /* left adjusted leader */
 		    {
 			p = skipwhite(leader);
-			vim_memmove(p, lead_repl, (size_t)lead_repl_len);
+			mch_memmove(p, lead_repl, (size_t)lead_repl_len);
 
 			/* blank-out any other chars from the old leader. */
 			for (p += lead_repl_len; p < leader + lead_len; ++p)
@@ -741,6 +754,10 @@ open_line(dir, redraw, del_spaces, old_indent)
 		*(saved_line + curwin->w_cursor.col) = NUL;
 	    ml_replace(curwin->w_cursor.lnum, saved_line, FALSE);
 	    saved_line = NULL;
+#ifdef SYNTAX_HL
+	    /* recompute syntax hl. for this line */
+	    syn_changed(curwin->w_cursor.lnum);
+#endif
 	    if (redraw)
 		new_plines = plines(curwin->w_cursor.lnum);
 	}
@@ -766,7 +783,14 @@ open_line(dir, redraw, del_spaces, old_indent)
 	    n = curwin->w_cline_row + new_plines;
 	    if (n + plines(curwin->w_cursor.lnum + 1) - 1 >=
 						      curwin->w_height - p_so)
+	    {
+		/* If redraw < 0, will later redraw with NOT_VALID, thus not
+		 * scroll but redraw.  Scroll the text here instead. */
+		if (redraw < 0)
+		    win_del_lines(curwin, 0, plines(curwin->w_topline),
+								  TRUE, TRUE);
 		scrollup(1L);
+	    }
 	    else
 		win_ins_lines(curwin, n,
 		  plines(curwin->w_cursor.lnum + 1) + new_plines - old_plines,
@@ -817,7 +841,7 @@ open_line(dir, redraw, del_spaces, old_indent)
 	update_topline();
 	update_screen(VALID_BEF_CURSCHAR);
     }
-    CHANGED;
+    changed();
 
     retval = TRUE;		/* success! */
 theend:
@@ -957,10 +981,10 @@ plines_win(wp, p)
     col = win_linetabsize(wp, s);
 
     /*
-     * If list mode is on, then the '$' at the end of the line takes up one
+     * If list mode is on, then the '$' at the end of the line may take up one
      * extra column.
      */
-    if (wp->w_p_list)
+    if (wp->w_p_list && lcs_eol != NUL)
 	col += 1;
 
     /*
@@ -1005,7 +1029,7 @@ plines_win_col(wp, p, column)
      * from one screen line to the next (when 'columns' is not a multiple of
      * 'ts') -- webb.
      */
-    if (*s == TAB && (State & NORMAL) && !wp->w_p_list)
+    if (*s == TAB && (State & NORMAL) && (!wp->w_p_list || lcs_tab1))
 	col += win_lbr_chartabsize(wp, s, (colnr_t)col, NULL) - 1;
 
     /*
@@ -1080,9 +1104,18 @@ ins_char(c)
     newp = alloc_check((unsigned)(oldlen + extra));
     if (newp == NULL)
 	return;
-    vim_memmove(newp, oldp, (size_t)col);
+    mch_memmove(newp, oldp, (size_t)col);
     p = newp + col;
-    vim_memmove(p + extra, oldp + col, (size_t)(oldlen - col));
+    mch_memmove(p + extra, oldp + col, (size_t)(oldlen - col));
+#ifdef MULTI_BYTE
+    /*
+     * We define that "[]" is a multi-byte character.  For example. If
+     * replace(R) is done over "a[]" with "[]".  finnaly, "[]]" is
+     * constructed. but the following line replaces "[]]" with "[] ".
+     */
+    if (is_dbcs && State == REPLACE && IsLeadByte(*p) && p[1] != NUL)
+	p[1] = ' ';
+#endif
     *p = c;
     ml_replace(lnum, newp, FALSE);
 
@@ -1105,7 +1138,7 @@ ins_char(c)
     if (!p_ri || State == REPLACE)	/* normal insert: cursor right */
 #endif
 	++curwin->w_cursor.col;
-    CHANGED;
+    changed();
     /*
      * TODO: should try to update w_row here, to avoid recomputing it later.
      */
@@ -1133,12 +1166,12 @@ ins_str(s)
     newp = alloc_check((unsigned)(oldlen + newlen + 1));
     if (newp == NULL)
 	return;
-    vim_memmove(newp, oldp, (size_t)col);
-    vim_memmove(newp + col, s, (size_t)newlen);
-    vim_memmove(newp + col + newlen, oldp + col, (size_t)(oldlen - col + 1));
+    mch_memmove(newp, oldp, (size_t)col);
+    mch_memmove(newp + col, s, (size_t)newlen);
+    mch_memmove(newp + col + newlen, oldp + col, (size_t)(oldlen - col + 1));
     ml_replace(lnum, newp, FALSE);
     curwin->w_cursor.col += newlen;
-    CHANGED;
+    changed();
     changed_cline_bef_curs();
     approximate_botline();	/* w_botline might have changed */
 }
@@ -1153,7 +1186,28 @@ ins_str(s)
 del_char(fixpos)
     int		fixpos;
 {
-    return del_chars(1L, fixpos);
+#ifdef MULTI_BYTE
+    if (is_dbcs)
+    {
+	/* delete two-bytes, when the character is an multi-byte character */
+	if (AdjustCursorForMultiByteCharacter())
+	    return del_chars(2L, fixpos); /* do BACKSPACE key */
+	else
+	{
+	    char_u *p; /* do DELETE key */
+
+	    p = ml_get_cursor();
+	    if (p == NULL || p[0] == NUL)
+		return FALSE;
+	    if (p[1] != NUL && IsLeadByte(p[0]))
+		return del_chars(2L, fixpos);
+	    else
+		return del_chars(1L, fixpos);
+	}
+    }
+    else
+#endif
+	return del_chars(1L, fixpos);
 }
 
 /*
@@ -1211,13 +1265,13 @@ del_chars(count, fixpos)
 	newp = alloc((unsigned)(oldlen + 1 - count));
 	if (newp == NULL)
 	    return FAIL;
-	vim_memmove(newp, oldp, (size_t)col);
+	mch_memmove(newp, oldp, (size_t)col);
     }
-    vim_memmove(newp + col, oldp + col + count, (size_t)movelen);
+    mch_memmove(newp + col, oldp + col + count, (size_t)movelen);
     if (!was_alloced)
 	ml_replace(lnum, newp, FALSE);
 
-    CHANGED;
+    changed();
 
     /*
      * When the new character under the cursor is a TAB, the cursor will move
@@ -1257,7 +1311,7 @@ truncate_line(fixpos)
     if (fixpos && curwin->w_cursor.col > 0)
 	--curwin->w_cursor.col;
 
-    CHANGED;
+    changed();
     changed_cline_bef_curs();
     approximate_botline();	/* w_botline might have changed */
     return OK;
@@ -1265,11 +1319,12 @@ truncate_line(fixpos)
 
     void
 del_lines(nlines, dowindow, undo)
-    long	    nlines;	    /* number of lines to delete */
-    int		    dowindow;	    /* if true, update the window */
-    int		    undo;	    /* if true, prepare for undo */
+    long	nlines;		/* number of lines to delete */
+    int		dowindow;	/* if true, update the window */
+    int		undo;		/* if true, prepare for undo */
 {
-    int		    num_plines = 0;
+    int		num_plines = 0;
+    int		offset = 0;
 
     if (nlines <= 0)
 	return;
@@ -1318,12 +1373,13 @@ del_lines(nlines, dowindow, undo)
 
 	ml_delete(curwin->w_cursor.lnum, TRUE);
 
-	CHANGED;
+	changed();
 
 	/* If we delete the last line in the file, stop */
 	if (curwin->w_cursor.lnum > curbuf->b_ml.ml_line_count)
 	{
 	    curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
+	    offset = 1;
 	    break;
 	}
     }
@@ -1340,7 +1396,8 @@ del_lines(nlines, dowindow, undo)
     if (dowindow && num_plines > 0)
     {
 	validate_cline_row();
-	win_del_lines(curwin, curwin->w_cline_row, num_plines, TRUE, TRUE);
+	win_del_lines(curwin, curwin->w_cline_row + offset, num_plines,
+								  TRUE, TRUE);
     }
 }
 
@@ -1348,13 +1405,25 @@ del_lines(nlines, dowindow, undo)
 gchar(pos)
     FPOS *pos;
 {
-    return (int)(*(ml_get_pos(pos)));
+    char_u	*ptr = ml_get_pos(pos);
+
+#ifdef MULTI_BYTE
+    if (ptr[0] && (is_unicode || (is_dbcs && IsLeadByte(*ptr))))
+	return ptr[0] + (ptr[1] << 8);
+#endif
+    return (int)*ptr;
 }
 
     int
 gchar_cursor()
 {
-    return (int)(*(ml_get_cursor()));
+    char_u	*ptr = ml_get_cursor();
+
+#ifdef MULTI_BYTE
+    if (ptr[0] && (is_unicode || (is_dbcs && IsLeadByte(*ptr))))
+	return ptr[0] + (ptr[1] << 8);
+#endif
+    return (int)*ptr;
 }
 
 /*
@@ -1432,10 +1501,10 @@ plural(n)
 }
 
 /*
- * set_Changed is called when something in the current buffer is changed
+ * changed() is called when something in the current buffer is changed
  */
     void
-set_Changed()
+changed()
 {
     int	    save_msg_scroll = msg_scroll;
 
@@ -1466,15 +1535,18 @@ set_Changed()
 }
 
 /*
- * unset_Changed is called when the changed flag must be reset for buffer 'buf'
+ * unchanged() is called when the changed flag must be reset for buffer 'buf'
  */
     void
-unset_Changed(buf)
+unchanged(buf, ff)
     BUF	    *buf;
+    int	    ff;	    /* also reset 'fileformat' */
 {
-    if (buf->b_changed)
+    if (buf->b_changed || (ff && buf->b_start_ffc != *buf->b_p_ff))
     {
 	buf->b_changed = 0;
+	if (ff)
+	    buf->b_start_ffc = *buf->b_p_ff;	/* keep this fileformat */
 	check_status(buf);
     }
 }
@@ -1522,17 +1594,20 @@ change_warning(col)
 	    && curbuf->b_p_ro)
     {
 	/*
-	 * Do what msg() does, but with a column offset.
+	 * Do what msg() does, but with a column offset if the warning should
+	 * be after the mode message.
 	 */
 	msg_start();
-	msg_col = col;
-	MSG_PUTS_ATTR("Warning: Changing a readonly file",
-						       highlight_attr[HLF_W]);
+	if (msg_row == Rows - 1)
+	    msg_col = col;
+	MSG_PUTS_ATTR("Warning: Changing a readonly file", hl_attr(HLF_W));
 	msg_clr_eos();
 	(void)msg_end();
 	ui_delay(1000L, TRUE);	/* give him some time to think about it */
 	curbuf->b_did_warn = TRUE;
 	redraw_cmdline = FALSE;	/* don't redraw and erase the message */
+	if (msg_row < Rows - 1)
+	    showmode();
     }
 }
 
@@ -1554,6 +1629,7 @@ ask_yesno(str, direct)
     char_u  buf[20];
     int	    len = 0;
     int	    idx = 0;
+    int	    save_State = State;
 
     if (exiting)		/* put terminal in raw mode for this question */
 	settmode(TMODE_RAW);
@@ -1561,10 +1637,15 @@ ask_yesno(str, direct)
 #ifdef USE_GUI_WIN32
     dont_scroll = TRUE;		/* disallow scrolling here */
 #endif
+    State = CONFIRM;		/* mouse behaves like with :confirm */
+#ifdef USE_MOUSE
+    setmouse();			/* disables mouse for xterm */
+#endif
+
     while (r != 'y' && r != 'n')
     {
 	/* same highlighting as for wait_return */
-	smsg_attr(highlight_attr[HLF_R], (char_u *)"%s (y/n)?", str);
+	smsg_attr(hl_attr(HLF_R), (char_u *)"%s (y/n)?", str);
 	if (direct)
 	{
 	    out_flush();
@@ -1583,6 +1664,10 @@ ask_yesno(str, direct)
 	out_flush();
     }
     --no_wait_return;
+    State = save_State;
+#ifdef USE_MOUSE
+    setmouse();
+#endif
     return r;
 }
 
@@ -1714,7 +1799,7 @@ init_homedir()
 {
     char_u  *var;
 
-    var = vim_getenv((char_u *)"HOME");
+    var = mch_getenv((char_u *)"HOME");
 #if defined(OS2) || defined(MSDOS) || defined(WIN32)
     /*
      * Default home dir is C:/
@@ -1728,9 +1813,9 @@ init_homedir()
 #ifdef UNIX
 	if (mch_dirname(NameBuff, MAXPATHL) == OK)
 	{
-	    if (!vim_chdir((char *)var) && mch_dirname(IObuff, IOSIZE) == OK)
+	    if (!mch_chdir((char *)var) && mch_dirname(IObuff, IOSIZE) == OK)
 		var = IObuff;
-	    vim_chdir((char *)NameBuff);
+	    mch_chdir((char *)NameBuff);
 	}
 #endif
 	homedir = vim_strsave(var);
@@ -1806,7 +1891,7 @@ expand_env(src, dst, dstlen)
 		else
 #endif
 		{
-		    var = vim_getenv(dst);
+		    var = mch_getenv(dst);
 		    /*
 		     * When expanding $VIM fails, try using the directory name
 		     * from 'helpfile'.
@@ -1990,14 +2075,18 @@ expand_env_save(src)
 
 /*
  * Replace home directory by "~" in each space or comma separated file name in
- * 'src'.  If anything fails (except when out of space) dst equals src.
+ * 'src'.
+ * if "one" is TRUE, only replace one file name, include spaces and commas in
+ * the file name.
+ * If anything fails (except when out of space) dst equals src.
  */
     void
-home_replace(buf, src, dst, dstlen)
+home_replace(buf, src, dst, dstlen, one)
     BUF	    *buf;	    /* when not NULL, check for help files */
     char_u  *src;	    /* input file name */
     char_u  *dst;	    /* where to put the result */
     int	    dstlen;	    /* maximum length of the result */
+    int	    one;
 {
     size_t  dirlen = 0, envlen = 0;
     size_t  len;
@@ -2025,11 +2114,12 @@ home_replace(buf, src, dst, dstlen)
      */
     if (homedir != NULL)
 	dirlen = STRLEN(homedir);
-    homedir_env = vim_getenv((char_u *)"HOME");
+    homedir_env = mch_getenv((char_u *)"HOME");
     if (homedir_env != NULL)
 	envlen = STRLEN(homedir_env);
 
-    src = skipwhite(src);
+    if (!one)
+	src = skipwhite(src);
     while (*src && dstlen > 0)
     {
 	/*
@@ -2048,8 +2138,7 @@ home_replace(buf, src, dst, dstlen)
 	    if (   len
 		&& fnamencmp(src, p, len) == 0
 		&& (vim_ispathsep(src[len])
-		    || src[len] == ','
-		    || src[len] == ' '
+		    || (!one && (src[len] == ',' || src[len] == ' '))
 		    || src[len] == NUL))
 	    {
 		src += len;
@@ -2068,8 +2157,8 @@ home_replace(buf, src, dst, dstlen)
 	    len = envlen;
 	}
 
-	/* skip to separator: space or comma */
-	while (*src && *src != ',' && *src != ' ' && --dstlen > 0)
+	/* if (!one) skip to separator: space or comma */
+	while (*src && (one || (*src != ',' && *src != ' ')) && --dstlen > 0)
 	    *dst++ = *src++;
 	/* skip separator */
 	while ((*src == ' ' || *src == ',') && --dstlen > 0)
@@ -2097,7 +2186,7 @@ home_replace_save(buf, src)
 	len += STRLEN(src);
     dst = alloc(len);
     if (dst != NULL)
-	home_replace(buf, src, dst, len);
+	home_replace(buf, src, dst, len, TRUE);
     return dst;
 }
 
@@ -2254,19 +2343,27 @@ get_past_head(path)
 vim_ispathsep(c)
     int c;
 {
-#ifdef UNIX
-    return (c == '/');	    /* UNIX has ':' inside file names */
+#ifdef RISCOS
+    return (c == '.' || c == ':');
 #else
-# ifdef BACKSLASH_IN_FILENAME
-    return (c == ':' || c == '/' || c == '\\');
+# ifdef UNIX
+    return (c == '/');	    /* UNIX has ':' inside file names */
 # else
-#  ifdef COLON_AS_PATHSEP
+#  ifdef BACKSLASH_IN_FILENAME
+    return (c == ':' || c == '/' || c == '\\');
+#  else
+#   ifdef VMS
+    return (c == ':' || c == '[' || c == ']' || c == '/');
+#   else
+#    ifdef COLON_AS_PATHSEP
     return (c == ':');
-#  else	/* Amiga */
+#    else		/* Amiga */
     return (c == ':' || c == '/');
+#    endif
+#   endif /* VMS */
 #  endif
 # endif
-#endif
+#endif /* RISC OS */
 }
 
 /*
@@ -2305,6 +2402,9 @@ FullName_save(fname, force)
     char_u	*buf;
     char_u	*new_fname = NULL;
 
+    if (fname == NULL)
+	return NULL;
+
     buf = alloc((unsigned)MAXPATHL);
     if (buf != NULL)
     {
@@ -2316,6 +2416,86 @@ FullName_save(fname, force)
     }
     return new_fname;
 }
+
+#if defined(CINDENT) || defined(SYNTAX_HL)
+
+static char_u	*skip_string __ARGS((char_u *p));
+
+/*
+ * Find the start of a comment, not knowing if we are in a comment right now.
+ * Search starts at w_cursor.lnum and goes backwards.
+ */
+    FPOS *
+find_start_comment(ind_maxcomment)	    /* XXX */
+    int		ind_maxcomment;
+{
+    FPOS	*pos;
+    char_u	*line;
+    char_u	*p;
+
+    if ((pos = findmatchlimit(NULL, '*', FM_BACKWARD, ind_maxcomment)) == NULL)
+	return NULL;
+
+    /*
+     * Check if the comment start we found is inside a string.
+     */
+    line = ml_get(pos->lnum);
+    for (p = line; *p && (unsigned)(p - line) < pos->col; ++p)
+	p = skip_string(p);
+    if ((unsigned)(p - line) > pos->col)
+	return NULL;
+    return pos;
+}
+
+/*
+ * Skip over a "string" and a 'c' character.
+ */
+    static char_u *
+skip_string(p)
+    char_u  *p;
+{
+    int	    i;
+
+    /*
+     * We loop, because strings may be concatenated: "date""time".
+     */
+    for ( ; ; ++p)
+    {
+	if (p[0] == '\'')		    /* 'c' or '\n' or '\000' */
+	{
+	    if (!p[1])			    /* ' at end of line */
+		break;
+	    i = 2;
+	    if (p[1] == '\\')		    /* '\n' or '\000' */
+	    {
+		++i;
+		while (isdigit(p[i - 1]))   /* '\000' */
+		    ++i;
+	    }
+	    if (p[i] == '\'')		    /* check for trailing ' */
+	    {
+		p += i;
+		continue;
+	    }
+	}
+	else if (p[0] == '"')		    /* start of string */
+	{
+	    for (++p; p[0]; ++p)
+	    {
+		if (p[0] == '\\' && p[1])
+		    ++p;
+		else if (p[0] == '"')	    /* end of string */
+		    break;
+	    }
+	    continue;
+	}
+	break;				    /* no string found */
+    }
+    if (!*p)
+	--p;				    /* backup from NUL */
+    return p;
+}
+#endif /* CINDENT || SYNTAX_HL */
 
 #ifdef CINDENT
 
@@ -2336,7 +2516,6 @@ static int	cin_iscomment __ARGS((char_u *));
 static int	commentorempty __ARGS((char_u *));
 static int	cin_isterminated __ARGS((char_u *, int));
 static int	cin_isfuncdecl __ARGS((char_u *));
-static char_u	*skip_string __ARGS((char_u *p));
 static int	cin_isif __ARGS((char_u *));
 static int	cin_iselse __ARGS((char_u *));
 static int	cin_isdo __ARGS((char_u *));
@@ -2344,8 +2523,7 @@ static int	cin_iswhileofdo __ARGS((char_u *, linenr_t, int));
 static FPOS	*find_start_brace __ARGS((int));
 static FPOS	*find_match_paren __ARGS((int, int));
 static int	find_last_paren __ARGS((char_u *l));
-static int	find_match __ARGS((int lookfor, linenr_t ourscope,
-			int ind_maxparen, int ind_maxcomment));
+static int	find_match __ARGS((int lookfor, linenr_t ourscope, int ind_maxparen, int ind_maxcomment));
 
 /*
  * Recognize a label: "label:".
@@ -2428,6 +2606,7 @@ cin_iscase(s)
     if (STRNCMP(s, "case", 4) == 0 && !vim_isIDc(s[4]))
     {
 	for (s += 4; *s; ++s)
+	{
 	    if (*s == ':')
 	    {
 		if (s[1] == ':')	/* skip over "::" for C++ */
@@ -2435,6 +2614,13 @@ cin_iscase(s)
 		else
 		    return TRUE;
 	    }
+	    if (*s == '\'' && s[1] && s[2] == '\'')
+		s += 2;			/* skip over '.' */
+	    else if (*s == '/' && (s[1] == '*' || s[1] == '/'))
+		return FALSE;		/* stop at comment */
+	    else if (*s == '"')
+		return FALSE;		/* stop at string */
+	}
 	return FALSE;
     }
 
@@ -2487,6 +2673,7 @@ after_label(l)
     char_u  *l;
 {
     for ( ; *l; ++l)
+    {
 	if (*l == ':')
 	{
 	    if (l[1] == ':')	    /* skip over "::" for C++ */
@@ -2494,6 +2681,9 @@ after_label(l)
 	    else
 		break;
 	}
+	if (*l == '\'' && l[1] && l[2] == '\'')
+	    l += 2;		    /* skip over 'x' */
+    }
     if (*l == NUL)
 	return NULL;
     l = skipwhite(l + 1);
@@ -2654,55 +2844,6 @@ cin_isfuncdecl(s)
     return FALSE;
 }
 
-/*
- * Skip over a "string" and a 'c' character.
- */
-    static char_u *
-skip_string(p)
-    char_u  *p;
-{
-    int	    i;
-
-    /*
-     * We loop, because strings may be concatenated: "date""time".
-     */
-    for ( ; ; ++p)
-    {
-	if (p[0] == '\'')		    /* 'c' or '\n' or '\000' */
-	{
-	    if (!p[1])			    /* ' at end of line */
-		break;
-	    i = 2;
-	    if (p[1] == '\\')		    /* '\n' or '\000' */
-	    {
-		++i;
-		while (isdigit(p[i - 1]))   /* '\000' */
-		    ++i;
-	    }
-	    if (p[i] == '\'')		    /* check for trailing ' */
-	    {
-		p += i;
-		continue;
-	    }
-	}
-	else if (p[0] == '"')		    /* start of string */
-	{
-	    for (++p; p[0]; ++p)
-	    {
-		if (p[0] == '\\' && p[1])
-		    ++p;
-		else if (p[0] == '"')	    /* end of string */
-		    break;
-	    }
-	    continue;
-	}
-	break;				    /* no string found */
-    }
-    if (!*p)
-	--p;				    /* backup from NUL */
-    return p;
-}
-
     static int
 cin_isif(p)
     char_u  *p;
@@ -2765,32 +2906,6 @@ cin_iswhileofdo(p, lnum, ind_maxparen)	    /* XXX */
 	curwin->w_cursor = cursor_save;
     }
     return retval;
-}
-
-/*
- * Find the start of a comment, not knowing if we are in a comment right now.
- * Search starts at w_cursor.lnum and goes backwards.
- */
-    FPOS *
-find_start_comment(ind_maxcomment)	    /* XXX */
-    int		ind_maxcomment;
-{
-    FPOS	*pos;
-    char_u	*line;
-    char_u	*p;
-
-    if ((pos = findmatchlimit(NULL, '*', FM_BACKWARD, ind_maxcomment)) == NULL)
-	return NULL;
-
-    /*
-     * Check if the comment start we found is inside a string.
-     */
-    line = ml_get(pos->lnum);
-    for (p = line; *p && (unsigned)(p - line) < pos->col; ++p)
-	p = skip_string(p);
-    if ((unsigned)(p - line) > pos->col)
-	return NULL;
-    return pos;
 }
 
 /*
@@ -4306,6 +4421,130 @@ line_breakcheck()
 }
 
 #ifndef NO_EXPANDPATH
+static int	gen_expand_wildcards __ARGS((int num_pat, char_u **pat, int *num_file, char_u ***file, int flags));
+#endif
+
+/*
+ * Expand wildcards.  Calls gen_expand_wildcards() and removes files matching
+ * 'wildignore'.
+ */
+    int
+expand_wildcards(num_pat, pat, num_file, file, flags)
+    int	    num_pat;	    /* number of input patterns */
+    char_u  **pat;	    /* array of input patterns */
+    int	    *num_file;	    /* resulting number of files */
+    char_u  ***file;	    /* array of resulting files */
+    int	    flags;	    /* EW_DIR, EW_FILE, EW_NOTFOUND */
+{
+    int		retval;
+    int		i, j;
+    char_u	*p;
+    int		non_suf_match;		/* number without matching suffix */
+#ifdef WILDIGNORE
+    char_u	buf[100];
+    char_u	*ffname;
+    char_u	*tail;
+    char_u	*regpat;
+    char	allow_dirs;
+    int		match;
+#endif
+
+    retval = gen_expand_wildcards(num_pat, pat, num_file, file, flags);
+
+#ifdef WILDIGNORE
+    /*
+     * Remove names that match 'wildignore'.
+     */
+    if (*p_wig)
+    {
+	/* check all files in (*file)[] */
+	for (i = 0; i < *num_file; ++i)
+	{
+	    ffname = FullName_save((*file)[i], FALSE);
+	    if (ffname == NULL)		/* out of memory */
+		break;
+	    tail = gettail((*file)[i]);
+
+	    /* try all patterns in 'wildignore' */
+	    p = p_wig;
+	    while (*p)
+	    {
+		copy_option_part(&p, buf, 100, ",");
+		regpat = file_pat_to_reg_pat(buf, buf + STRLEN(buf),
+								 &allow_dirs);
+		if (regpat == NULL)
+		    break;
+		match = match_file_pat(regpat, ffname, (*file)[i], tail,
+							      (int)allow_dirs);
+		vim_free(regpat);
+		if (match)
+		{
+		    /* remove this matching file from the list */
+		    vim_free((*file)[i]);
+		    for (j = i; j + 1 < *num_file; ++j)
+			(*file)[j] = (*file)[j + 1];
+		    --*num_file;
+		    --i;
+		    break;
+		}
+	    }
+	    vim_free(ffname);
+	}
+    }
+#endif
+
+    /*
+     * Move the names where 'suffixes' match to the end.
+     */
+    if (*num_file > 1)
+    {
+	non_suf_match = 0;
+	for (i = 0; i < *num_file; ++i)
+	{
+	    if (!match_suffix((*file)[i]))
+	    {
+		/*
+		 * Move the name without matching suffix to the front
+		 * of the list.
+		 */
+		p = (*file)[i];
+		for (j = i; j > non_suf_match; --j)
+		    (*file)[j] = (*file)[j - 1];
+		(*file)[non_suf_match++] = p;
+	    }
+	}
+    }
+
+    return retval;
+}
+
+/*
+ * Return TRUE if "fname" matches with an entry in 'suffixes'.
+ */
+    int
+match_suffix(fname)
+    char_u	*fname;
+{
+    int		fnamelen, setsuflen;
+    char_u	*setsuf;
+#define MAXSUFLEN 30	    /* maximum length of a file suffix */
+    char_u	suf_buf[MAXSUFLEN];
+
+    fnamelen = STRLEN(fname);
+    setsuflen = 0;
+    for (setsuf = p_su; *setsuf; )
+    {
+	setsuflen = copy_option_part(&setsuf, suf_buf, MAXSUFLEN, ".,");
+	if (fnamelen >= setsuflen
+		&& STRNCMP(suf_buf, fname + fnamelen - setsuflen,
+					      (size_t)setsuflen) == 0)
+	    break;
+	setsuflen = 0;
+    }
+    return (setsuflen != 0);
+}
+
+#ifndef NO_EXPANDPATH
 /*
  * Generic wildcard expansion code.
  *
@@ -4314,8 +4553,8 @@ line_breakcheck()
  * Return OK when some files found.  "num_file" is set to the number of
  * matches, "file" to the array of matches.  Call FreeWild() later.
  */
-    int
-expand_wildcards(num_pat, pat, num_file, file, flags)
+    static int
+gen_expand_wildcards(num_pat, pat, num_file, file, flags)
     int	    num_pat;	    /* number of input patterns */
     char_u  **pat;	    /* array of input patterns */
     int	    *num_file;	    /* resulting number of files */
@@ -4358,9 +4597,7 @@ expand_wildcards(num_pat, pat, num_file, file, flags)
     /*
      * The matching file names are stored in a growarray.  Init it empty.
      */
-    ga_init(&ga);
-    ga.ga_itemsize = sizeof(char_u *);
-    ga.ga_growsize = 30;
+    ga_init2(&ga, (int)sizeof(char_u *), 30);
 
     for (i = 0; i < num_pat; ++i)
     {
@@ -4443,7 +4680,7 @@ addfile(gap, f, flags)
     /*
      * Append a slash or backslash after directory names.
      */
-#ifndef DONT_ADD_PATHSEP_TO_DIR 
+#ifndef DONT_ADD_PATHSEP_TO_DIR
     if (isdir)
 	STRCAT(p, PATHSEPSTR);
 #endif
@@ -4474,4 +4711,14 @@ FreeWild(num, file)
 	vim_free(file[num]);
     vim_free(file);
 #endif
+}
+
+/*
+ * return TRUE when need to go to Insert mode because of 'insertmode'.
+ * Don't do this when still processing a command or a mapping.
+ */
+    int
+goto_im()
+{
+    return (p_im && stuff_empty() && typebuf_typed());
 }

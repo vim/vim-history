@@ -27,12 +27,12 @@
 mac_expandpath(
     struct growarray	*gap,
     char_u		*path,
-    int			flags,
-    short		start_at, 
+    int			flags
+    short		start_at,
     short		as_full)
 {
     /*
-     * TODO: 
+     * TODO:
      *       +Get Volumes (when looking for files in current dir)
      *       +Make it work when working dir not on select volume
      *       +Cleanup
@@ -45,7 +45,7 @@ mac_expandpath(
     char_u      *new_name;
     CInfoPBRec  gMyCPB;
     HParamBlockRec gMyHPBlock;
-    FSSpec         usedDir;
+    FSSpec	   usedDir;
 
     char_u	    *buf;
     char_u	    *p, *s, *e;
@@ -58,7 +58,7 @@ mac_expandpath(
     start_len = gap->ga_len;
     buf = alloc(STRLEN(path) + BASENAMELEN + 5);/* make room for file name */
     if (buf == NULL)
-    	return 0;
+	return 0;
 
 /*
  * Find the first part in the path name that contains a wildcard.
@@ -77,7 +77,7 @@ mac_expandpath(
     {
 	    if (*path == ':')
 	    {
-    	    if (e)
+	    if (e)
 			break;
 		else
 			s = p;
@@ -86,7 +86,7 @@ mac_expandpath(
 /*	    if (vim_strchr((char_u *)"*?[{~$", *path) != NULL)*/
 	    if (vim_strchr((char_u *)WILDCHAR_LIST, *path) != NULL)
 		e = p;
-    	*p++ = *path++;
+	*p++ = *path++;
     }
     e = p;
     if (s != NULL)
@@ -148,7 +148,7 @@ mac_expandpath(
     *s = c;
 
     FSMakeFSSpec (0, 0, dirname, &usedDir);
-    
+
     gMyCPB.dirInfo.ioNamePtr    = dirname;
     gMyCPB.dirInfo.ioVRefNum    = usedDir.vRefNum;
     gMyCPB.dirInfo.ioFDirIndex  = 0;
@@ -203,7 +203,7 @@ mac_expandpath(
 	index++;
     }
     while (gErr == noErr);
-    
+
     if (as_full)
     {
 	index = 1;
@@ -212,7 +212,7 @@ mac_expandpath(
 	    gMyHPBlock.volumeParam.ioNamePtr = (char_u *) dirname;
 	    gMyHPBlock.volumeParam.ioVRefNum =0;
 	    gMyHPBlock.volumeParam.ioVolIndex = index;
-	    
+
 	    gErr = PBHGetVInfo (&gMyHPBlock,false);
 	    if (gErr == noErr)
 	    {
@@ -242,7 +242,7 @@ mac_expandpath(
 	}
 	while (gErr == noErr);
     }
-    
+
     return gap->ga_len - start_len;
 }
 /*
@@ -258,16 +258,16 @@ mch_expandpath(
 
     char_u first = *path;
     short  scan_volume;
-    
+
     slash_n_colon_adjust (path);
-   
+
     scan_volume = (first != *path);
-    
+
     return mac_expandpath (gap, path, flags, 0, scan_volume);
 
 #if 0
     /*
-     * TODO: 
+     * TODO:
      *       +Get Volumes (when looking for files in current dir)
      *       +Make it work when working dir not on select volume
      *       +Cleanup
@@ -281,7 +281,7 @@ mch_expandpath(
     CInfoPBRec  gMyCPB;
     short       show_volume = 1;
     HParamBlockRec gMyHPBlock;
-    
+
     char_u	    *buf;
     char_u	    *p, *s, *e;
     int		    start_len, c;
@@ -293,7 +293,7 @@ mch_expandpath(
     start_len = gap->ga_len;
     buf = alloc(STRLEN(path) + BASENAMELEN + 5);/* make room for file name */
     if (buf == NULL)
-    	return 0;
+	return 0;
 
 /*
  * Find the first part in the path name that contains a wildcard.
@@ -306,7 +306,7 @@ mch_expandpath(
     {
 	    if (*path == ':')
 	    {
-    	    if (e)
+	    if (e)
 			break;
 		else
 			s = p;
@@ -314,7 +314,7 @@ mch_expandpath(
 	    /* should use  WILCARDLIST but ehat about ` */
 	    if (vim_strchr((char_u *)"*?[{~$", *path) != NULL)
 		e = p;
-    	*p++ = *path++;
+	*p++ = *path++;
     }
     e = p;
     if (s != NULL)
@@ -435,7 +435,7 @@ mch_expandpath(
 	    gMyHPBlock.volumeParam.ioNamePtr = (char_u *) dirname;
 	    gMyHPBlock.volumeParam.ioVRefNum =0;
 	    gMyHPBlock.volumeParam.ioVolIndex = index;
-	    
+
 	    gErr = PBHGetVInfo (&gMyHPBlock,false);
 	    if (gErr == noErr)
 	    {
@@ -451,23 +451,9 @@ mch_expandpath(
 	}
 	while (gErr == noErr);
     }
-    
+
     return gap->ga_len - start_len;
 #endif
-}
-
-    int
-vim_chdir (x)
-    char    *x;
-{
-  return (chdir (x));
-}
-
-    int
-vim_remove (x)
-    unsigned char *x;
-{
-  return (unlink((char *)x));
 }
 
     void
@@ -535,8 +521,8 @@ mch_avail_mem(special)
      *       figure out what the special is for
      *
      * FreeMem  ->   returns all avail memory is application heap
-     * MaxBlock ->   returns the biggest contigeous block in application heap 
-     * PurgeSpace -> 
+     * MaxBlock ->   returns the biggest contigeous block in application heap
+     * PurgeSpace ->
      */
     return MaxBlock();
 }
@@ -836,82 +822,80 @@ mch_FullName(fname, buf, len, force)
     /*
      * TODO: Find what TODO
      */
-	int		l;
-	char_u	olddir[MAXPATHL];
-	char_u   newdir[MAXPATHL];
-	char_u	*p;
-	char_u	c;
-	int		retval = OK;
+    int		l;
+    char_u	olddir[MAXPATHL];
+    char_u   newdir[MAXPATHL];
+    char_u	*p;
+    char_u	c;
+    int		retval = OK;
 
-	if (fname == NULL)	/* always fail */
+    if (fname == NULL)	/* always fail */
+    {
+	*buf = NUL;
+	return FAIL;
+    }
+
+    *buf = 0;
+    if (force || !mch_isFullName(fname))	/* if forced or not an absolute path */
+    {
+	/*
+	 * If the file name has a path, change to that directory for a moment,
+	 * and then do the getwd() (and get back to where we were).
+	 * This will get the correct path name with "../" things.
+	 */
+
+	/*		STRCAT(buf, fname);
+			slash_n_colon_adjust (buf);
+			fname[0] = 0;
+			STRCAT(fname, buf);
+	 */
+	if ((p = vim_strrchr(fname, ':')) != NULL)
 	{
-		*buf = NUL;
-		return FAIL;
-	}
-
-	*buf = 0;
-	if (force || !mch_isFullName(fname))	/* if forced or not an absolute path */
-	{
-		/*
-		 * If the file name has a path, change to that directory for a moment,
-		 * and then do the getwd() (and get back to where we were).
-		 * This will get the correct path name with "../" things.
-		 */
-
-/*		STRCAT(buf, fname);
-		slash_n_colon_adjust (buf);
-		fname[0] = 0;
-		STRCAT(fname, buf);
-*/
-		if ((p = vim_strrchr(fname, ':')) != NULL)
-		{
 #ifdef USE_NEW_CODE
-		    p++;
+	    p++;
 #endif
-			if (mch_dirname(olddir, MAXPATHL) == FAIL)
-			{
-				p = NULL;		/* can't get current dir: don't chdir */
-				retval = FAIL;
-			}
-			else
-			{
-				c = *p;
-				*p = NUL;
-				if (vim_chdir((char *)fname))
-					retval = FAIL;
-				else
+	    if (mch_dirname(olddir, MAXPATHL) == FAIL)
+	    {
+		p = NULL;		/* can't get current dir: don't chdir */
+		retval = FAIL;
+	    }
+	    else
+	    {
+		c = *p;
+		*p = NUL;
+		if (mch_chdir((char *)fname))
+		    retval = FAIL;
+		else
 #ifndef USE_NEW_CODE
-					fname = p + 1;
+		    fname = p + 1;
 #else
-					fname = p;
+		fname = p;
 #endif
-				*p = c;
-			}
-		}
-		if (mch_dirname(buf, len) == FAIL)
-		{
-			retval = FAIL;
-			*newdir = NUL;
-		}
-		l = STRLEN(buf);
-		if (l && buf[l - 1] != ':') /*MAC*/
-			STRCAT(buf, ":");
-		if (p != NULL)
-		{
-				vim_chdir((char *)olddir);
-		}
+		*p = c;
+	    }
 	}
-	else
+	if (mch_dirname(buf, len) == FAIL)
 	{
-		STRCAT(buf, fname);
-		slash_n_colon_adjust (buf);
-		fname[0] = 0;
-		STRCAT(fname, buf);
-		buf[0] = 0;
+	    retval = FAIL;
+	    *newdir = NUL;
 	}
+	l = STRLEN(buf);
+	if (l && buf[l - 1] != ':') /*MAC*/
+	    STRCAT(buf, ":");
+	if (p != NULL)
+	    mch_chdir((char *)olddir);
+    }
+    else
+    {
 	STRCAT(buf, fname);
-	slash_adjust(buf);
-	return retval;
+	slash_n_colon_adjust (buf);
+	fname[0] = 0;
+	STRCAT(fname, buf);
+	buf[0] = 0;
+    }
+    STRCAT(buf, fname);
+    slash_adjust(buf);
+    return retval;
 }
 
 /*
@@ -1093,7 +1077,7 @@ mch_call_shell(cmd, options)
      *       for some simple useful command
      */
 
-    return (FAIL);
+    return (-1);
 }
 
 	int
@@ -1113,43 +1097,43 @@ mch_has_wildcard(p)
 /*
  * Convert a FSSpec to a fuill path
  */
- 
+
 void GetFullPathFromFSSpec (char_u *fname, FSSpec file)
 {
-    /* 
+    /*
      * TODO: Add protection for 256 char max.
      */
     CInfoPBRec  theCPB;
     Str255      directoryName;
     OSErr       error;
-    int         folder = 1;
+    int		folder = 1;
 
     *fname = 0;
-    
+
     theCPB.dirInfo.ioNamePtr = directoryName;
     theCPB.dirInfo.ioDrParID = file.parID;
-	
+
     if ((file.parID != fsRtDirID) && (file.parID != fsRtParID))
     do
     {
-        theCPB.dirInfo.ioVRefNum   = file.vRefNum;
-        theCPB.dirInfo.ioFDirIndex = -1;
-        theCPB.dirInfo.ioDrDirID   = theCPB.dirInfo.ioDrParID;
+	theCPB.dirInfo.ioVRefNum   = file.vRefNum;
+	theCPB.dirInfo.ioFDirIndex = -1;
+	theCPB.dirInfo.ioDrDirID   = theCPB.dirInfo.ioDrParID;
 
-        error = PBGetCatInfo (&theCPB,false);
+	error = PBGetCatInfo (&theCPB,false);
 
-        directoryName[directoryName[0] + 1] = 0;
-        STRCAT(&directoryName[1], ":");
-        STRCAT(&directoryName[1], fname);
-        STRCPY(fname, &directoryName[1]);
+	directoryName[directoryName[0] + 1] = 0;
+	STRCAT(&directoryName[1], ":");
+	STRCAT(&directoryName[1], fname);
+	STRCPY(fname, &directoryName[1]);
     }
     while (theCPB.dirInfo.ioDrDirID != fsRtDirID);
-      
+
     STRNCAT(fname, &file.name[1], file.name[0]);
     STRCAT (fname, ":");
     STRCPY(&directoryName[1], fname);
     directoryName[0] = STRLEN(&directoryName[1]);
-    
+
     /*
      * Find back if the original file
      * is a folder or a file
@@ -1158,11 +1142,10 @@ void GetFullPathFromFSSpec (char_u *fname, FSSpec file)
     theCPB.dirInfo.ioVRefNum = fsRtDirID;
     theCPB.dirInfo.ioFDirIndex = 0;  /* Scan for NamePtr in VRefNum */
     theCPB.dirInfo.ioDrDirID = 0;
-	
+
     error = PBGetCatInfo (&theCPB, false);
-	
+
     if ((theCPB.hFileInfo.ioFlAttrib & ioDirMask) == 0)
-        fname[directoryName[0]-1] = 0;
-		
+	fname[directoryName[0]-1] = 0;
 }
 

@@ -1,6 +1,6 @@
 Exuberant Ctags
 ===============
-Author: Darren Hiebert (darren@hiebert.com, http://home.hiwaay.net/~darren)
+Author: Darren Hiebert (darren@hiebert.com, http://darren.hiebert.com)
 
 This is a reimplementation of the much underused ctags(1) program and is
 intended to be the mother of all ctags programs. I was motivated to write this
@@ -13,22 +13,23 @@ provides.
 
 What makes this ctags desirable?
 
-1.  It is capable of generating tags for *all* types of C language tags,
+1.  Supports C, C++, and Java code.
+
+2.  It is capable of generating tags for *all* types of language tags,
     including all of the following:
 
         class names
         macro definitions
-        enum names
-        enumerators (values inside an enumeration)
+        enumeration names
+        enumerators
         function (method) definitions
         function (method) prototypes/declarations
-        structure members and class data members
-        struct names
+        interface names (Java)
+        class, interface, struct, and union data members
+        structure names
         typedefs
         union names
-        variables
-
-2.  Supports both C and C++ code.
+        variables (definitions and external declarations)
 
 3.  It is very robust in parsing code and is far less easily fooled by code
     containing #if preprocessor conditional constructs, using a conditional
@@ -38,16 +39,16 @@ What makes this ctags desirable?
 4.  Can also be used to print out a human-readable list of selected objects
     found in source files.
 
-5.  Supports generation of Emacs-style tag files ("etags").
+5.  Supports output of Emacs-style TAGS files ("etags").
 
-6.  Supports UNIX, QNX, MSDOS, Windows 95/NT, OS/2 and the Amiga.
+6.  Supports UNIX, QNX, MSDOS, Windows 95/NT, OS/2, Amiga, and VMS.
     Some pre-compiled binaries are available on the web site.
 
 
 You can find Exuberant Ctags at the following locations:
 
-    http://home.hiwaay.net/~darren/ctags/         (Official web site)
-    ftp://ftp.hmi.com/pub/ctags/
+    http://darren.hiebert.com/ctags/         (Official web site)
+    ftp://ftp.revnet.com/pub/ctags/
     ftp://sunsite.unc.edu/pub/Linux/devel/lang/c/
 
 

@@ -88,50 +88,50 @@ extern char_u *(term_strings[]);    /* current terminal strings */
 /*
  * strings used for terminal
  */
-#define T_NAME	(term_strings[KS_NAME])	/* terminal name */
-#define T_CE	(term_strings[KS_CE])	/* clear to end of line */
-#define T_AL	(term_strings[KS_AL])	/* add new blank line */
-#define T_CAL	(term_strings[KS_CAL])	/* add number of blank lines */
-#define T_DL	(term_strings[KS_DL])	/* delete line */
-#define T_CDL	(term_strings[KS_CDL])	/* delete number of lines */
-#define T_CS	(term_strings[KS_CS])	/* scroll region */
-#define T_CL	(term_strings[KS_CL])	/* clear screen */
-#define T_CD	(term_strings[KS_CD])	/* clear to end of display */
-#define T_DA	(term_strings[KS_DA])	/* text may be scrolled down from up */
-#define T_DB	(term_strings[KS_DB])	/* text may be scrolled up from down */
-#define T_VI	(term_strings[KS_VI])	/* cursor invisible */
-#define T_VE	(term_strings[KS_VE])	/* cursor visible */
-#define T_VS	(term_strings[KS_VS])	/* cursor very visible */
-#define T_ME	(term_strings[KS_ME])	/* normal mode */
-#define T_MR	(term_strings[KS_MR])	/* reverse mode */
-#define T_MD	(term_strings[KS_MD])	/* bold mode */
-#define T_SE	(term_strings[KS_SE])	/* normal mode */
-#define T_SO	(term_strings[KS_SO])	/* standout mode */
-#define T_CZH	(term_strings[KS_CZH])	/* italic mode start */
-#define T_CZR	(term_strings[KS_CZR])	/* italic mode end */
-#define T_UE	(term_strings[KS_UE])	/* exit underscore mode */
-#define T_US	(term_strings[KS_US])	/* underscore mode */
-#define T_MS	(term_strings[KS_MS])	/* save to move cur in reverse mode */
-#define T_CM	(term_strings[KS_CM])	/* cursor motion */
-#define T_SR	(term_strings[KS_SR])	/* scroll reverse (backward) */
-#define T_CRI	(term_strings[KS_CRI])	/* cursor number of chars right */
-#define T_VB	(term_strings[KS_VB])	/* visual bell */
-#define T_KS	(term_strings[KS_KS])	/* put term in "keypad transmit" mode */
-#define T_KE	(term_strings[KS_KE])	/* out of "keypad transmit" mode */
-#define T_TI	(term_strings[KS_TI])	/* put terminal in termcap mode */
-#define T_TE	(term_strings[KS_TE])	/* out of termcap mode */
-#define T_BC	(term_strings[KS_BC])	/* backspace character */
-#define T_CCS	(term_strings[KS_CCS])	/* cur is relative to scroll region */
-#define T_CCO	(term_strings[KS_CCO])	/* number of colors */
-#define T_CSF	(term_strings[KS_CSF])	/* set foreground color */
-#define T_CSB	(term_strings[KS_CSB])	/* set background color */
-#define T_XS	(term_strings[KS_XS])	/* standout not erased by overwriting */
-#define T_MB	(term_strings[KS_MB])	/* blink mode */
-#define T_CAF	(term_strings[KS_CAF])	/* set foreground color (ANSI) */
-#define T_CAB	(term_strings[KS_CAB])	/* set background color (ANSI) */
-#define T_LE	(term_strings[KS_LE])	/* cursor left */
-#define T_ND	(term_strings[KS_ND])	/* cursor right */
-#define T_OP	(term_strings[KS_OP])	/* original color pair */
+#define T_NAME	(term_str(KS_NAME))	/* terminal name */
+#define T_CE	(term_str(KS_CE))	/* clear to end of line */
+#define T_AL	(term_str(KS_AL))	/* add new blank line */
+#define T_CAL	(term_str(KS_CAL))	/* add number of blank lines */
+#define T_DL	(term_str(KS_DL))	/* delete line */
+#define T_CDL	(term_str(KS_CDL))	/* delete number of lines */
+#define T_CS	(term_str(KS_CS))	/* scroll region */
+#define T_CL	(term_str(KS_CL))	/* clear screen */
+#define T_CD	(term_str(KS_CD))	/* clear to end of display */
+#define T_DA	(term_str(KS_DA))	/* text may be scrolled down from up */
+#define T_DB	(term_str(KS_DB))	/* text may be scrolled up from down */
+#define T_VI	(term_str(KS_VI))	/* cursor invisible */
+#define T_VE	(term_str(KS_VE))	/* cursor visible */
+#define T_VS	(term_str(KS_VS))	/* cursor very visible */
+#define T_ME	(term_str(KS_ME))	/* normal mode */
+#define T_MR	(term_str(KS_MR))	/* reverse mode */
+#define T_MD	(term_str(KS_MD))	/* bold mode */
+#define T_SE	(term_str(KS_SE))	/* normal mode */
+#define T_SO	(term_str(KS_SO))	/* standout mode */
+#define T_CZH	(term_str(KS_CZH))	/* italic mode start */
+#define T_CZR	(term_str(KS_CZR))	/* italic mode end */
+#define T_UE	(term_str(KS_UE))	/* exit underscore mode */
+#define T_US	(term_str(KS_US))	/* underscore mode */
+#define T_MS	(term_str(KS_MS))	/* save to move cur in reverse mode */
+#define T_CM	(term_str(KS_CM))	/* cursor motion */
+#define T_SR	(term_str(KS_SR))	/* scroll reverse (backward) */
+#define T_CRI	(term_str(KS_CRI))	/* cursor number of chars right */
+#define T_VB	(term_str(KS_VB))	/* visual bell */
+#define T_KS	(term_str(KS_KS))	/* put term in "keypad transmit" mode */
+#define T_KE	(term_str(KS_KE))	/* out of "keypad transmit" mode */
+#define T_TI	(term_str(KS_TI))	/* put terminal in termcap mode */
+#define T_TE	(term_str(KS_TE))	/* out of termcap mode */
+#define T_BC	(term_str(KS_BC))	/* backspace character */
+#define T_CCS	(term_str(KS_CCS))	/* cur is relative to scroll region */
+#define T_CCO	(term_str(KS_CCO))	/* number of colors */
+#define T_CSF	(term_str(KS_CSF))	/* set foreground color */
+#define T_CSB	(term_str(KS_CSB))	/* set background color */
+#define T_XS	(term_str(KS_XS))	/* standout not erased by overwriting */
+#define T_MB	(term_str(KS_MB))	/* blink mode */
+#define T_CAF	(term_str(KS_CAF))	/* set foreground color (ANSI) */
+#define T_CAB	(term_str(KS_CAB))	/* set background color (ANSI) */
+#define T_LE	(term_str(KS_LE))	/* cursor left */
+#define T_ND	(term_str(KS_ND))	/* cursor right */
+#define T_OP	(term_str(KS_OP))	/* original color pair */
 
 #define TMODE_COOK  0	    /* terminal mode for external cmds and Ex mode */
 #define TMODE_RAW   1	    /* terminal mode for Normal and Insert mode */

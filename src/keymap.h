@@ -79,6 +79,17 @@
 #define KS_DEC_MOUSE	    246
 
 /*
+ * Used for switching Select mode back on after a mapping or menu.
+ */
+#define KS_SELECT	    245
+#define K_SELECT_STRING	    (char_u *)"\200\365X"
+
+/*
+ * Used for tearing off a menu.
+ */
+#define KS_TEAROFF	    244
+
+/*
  * Filler used after KS_SPECIAL and others
  */
 #define K_FILLER	    ('X')
@@ -195,6 +206,8 @@ enum key_extra
 #define K_S_DOWN	TERMCAP2KEY(KS_EXTRA, KE_S_DOWN)
 #define K_S_LEFT	TERMCAP2KEY('#', '4')
 #define K_S_RIGHT	TERMCAP2KEY('%', 'i')
+#define K_S_HOME	TERMCAP2KEY('#', '2')
+#define K_S_END		TERMCAP2KEY('*', '7')
 #define K_TAB		TERMCAP2KEY(KS_EXTRA, KE_TAB)
 #define K_S_TAB		TERMCAP2KEY(KS_EXTRA, KE_S_TAB)
 
@@ -294,14 +307,23 @@ enum key_extra
 #define K_PAGEUP	TERMCAP2KEY('k', 'P')
 #define K_PAGEDOWN	TERMCAP2KEY('k', 'N')
 #define K_KHOME		TERMCAP2KEY('K', '1')	/* keypad home (upper left) */
-#define K_KEND		TERMCAP2KEY('K', '4')	/* keypad end (lower left) */
 #define K_KPAGEUP	TERMCAP2KEY('K', '3')	/* keypad pageup (upper R.) */
+#define K_KEND		TERMCAP2KEY('K', '4')	/* keypad end (lower left) */
 #define K_KPAGEDOWN	TERMCAP2KEY('K', '5')	/* keypad pagedown (lower R.) */
+
+#define K_KPLUS		TERMCAP2KEY('K', '6')	/* keypad plus */
+#define K_KMINUS	TERMCAP2KEY('K', '7')	/* keypad minus */
+#define K_KDIVIDE	TERMCAP2KEY('K', '8')	/* keypad / */
+#define K_KMULTIPLY	TERMCAP2KEY('K', '9')	/* keypad * */
+#define K_KENTER	TERMCAP2KEY('K', 'A')	/* keypad Enter */
 
 #define K_MOUSE		TERMCAP2KEY(KS_MOUSE, K_FILLER)
 #define K_MENU		TERMCAP2KEY(KS_MENU, K_FILLER)
 #define K_SCROLLBAR	TERMCAP2KEY(KS_SCROLLBAR, K_FILLER)
 #define K_HORIZ_SCROLLBAR   TERMCAP2KEY(KS_HORIZ_SCROLLBAR, K_FILLER)
+
+#define K_SELECT	TERMCAP2KEY(KS_SELECT, K_FILLER)
+#define K_TEAROFF	TERMCAP2KEY(KS_TEAROFF, K_FILLER)
 
 /*
  * Symbols for pseudo keys which are translated from the real key symbols
@@ -330,7 +352,7 @@ enum key_extra
 #define MOD_MASK_3CLICK	    0x20
 #define MOD_MASK_4CLICK	    0x40
 #ifdef macintosh
-# define MOD_MASK_CMD        0x80
+# define MOD_MASK_CMD	     0x80
 #endif
 
 #define MOD_MASK_MULTI_CLICK	(MOD_MASK_2CLICK|MOD_MASK_3CLICK|MOD_MASK_4CLICK)

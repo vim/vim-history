@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language: Inform
 " Maintainer: Stephen Thomas (stephent@isltd.insignia.com)
-" Last change: 1998 March 27th
+" Last change: 1998 May 27th
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -13,15 +13,17 @@ syn case ignore
 syn keyword informDefine Constant
 
 syn keyword informType Array Attribute Class Global Nearby
-syn keyword informType Object Property
+syn keyword informType Object Property String Routine
 
 syn keyword informInclude Import Include Link Replace System_file
 
-syn keyword informPreCondit End Ifdef Ifndef Iftrue Iffalse Ifv3 Ifv5
+syn keyword informPreCondit End Endif Ifdef Ifndef Iftrue Iffalse Ifv3 Ifv5
 
-syn keyword informPreProc Abbreviate Default Extend Fake_action Lowstring
+syn keyword informPreProc Abbreviate Default Fake_action Lowstring
 syn keyword informPreProc Message Release Serial Statusline Stub Switches
-syn keyword informPreProc Trace Verb Zcharacter
+syn keyword informPreProc Trace Zcharacter
+
+syn keyword informGramPreProc contained Verb Extend
 
 " Now the case sensitive stuff.
 
@@ -29,128 +31,33 @@ syntax case match
 
 " Assembly language mnemonics must be preceded by a '@'.
 
-syn match informAsm "@\s*je"
-syn match informAsm "@\s*jl"
-syn match informAsm "@\s*jg"
-syn match informAsm "@\s*dec_chk"
-syn match informAsm "@\s*inc_chk"
-syn match informAsm "@\s*jin"
-syn match informAsm "@\s*test"
-syn match informAsm "@\s*or"
-syn match informAsm "@\s*and"
-syn match informAsm "@\s*test_attr"
-syn match informAsm "@\s*set_attr"
-syn match informAsm "@\s*clear_attr"
-syn match informAsm "@\s*store"
-syn match informAsm "@\s*insert_obj"
-syn match informAsm "@\s*loadw"
-syn match informAsm "@\s*loadb"
-syn match informAsm "@\s*get_prop"
-syn match informAsm "@\s*get_prop_addr"
-syn match informAsm "@\s*get_next_prop"
-syn match informAsm "@\s*add"
-syn match informAsm "@\s*sub"
-syn match informAsm "@\s*mul"
-syn match informAsm "@\s*div"
-syn match informAsm "@\s*mod"
-syn match informAsm "@\s*call"
-syn match informAsm "@\s*storew"
-syn match informAsm "@\s*storeb"
-syn match informAsm "@\s*put_prop"
-syn match informAsm "@\s*sread"
-syn match informAsm "@\s*print_char"
-syn match informAsm "@\s*print_num"
-syn match informAsm "@\s*random"
-syn match informAsm "@\s*push"
-syn match informAsm "@\s*pull"
-syn match informAsm "@\s*split_window"
-syn match informAsm "@\s*set_window"
-syn match informAsm "@\s*output_stream"
-syn match informAsm "@\s*input_stream"
-syn match informAsm "@\s*sound_effect"
-syn match informAsm "@\s*jz"
-syn match informAsm "@\s*get_sibling"
-syn match informAsm "@\s*get_child"
-syn match informAsm "@\s*get_parent"
-syn match informAsm "@\s*get_prop_len"
-syn match informAsm "@\s*inc"
-syn match informAsm "@\s*dec"
-syn match informAsm "@\s*print_addr"
-syn match informAsm "@\s*remove_obj"
-syn match informAsm "@\s*print_obj"
-syn match informAsm "@\s*ret"
-syn match informAsm "@\s*jump"
-syn match informAsm "@\s*print_paddr"
-syn match informAsm "@\s*load"
-syn match informAsm "@\s*not"
-syn match informAsm "@\s*rtrue"
-syn match informAsm "@\s*rfalse"
-syn match informAsm "@\s*print"
-syn match informAsm "@\s*print_ret"
-syn match informAsm "@\s*nop"
-syn match informAsm "@\s*save"
-syn match informAsm "@\s*restore"
-syn match informAsm "@\s*restart"
-syn match informAsm "@\s*ret_popped"
-syn match informAsm "@\s*pop"
-syn match informAsm "@\s*quit"
-syn match informAsm "@\s*new_line"
-syn match informAsm "@\s*show_status"
-syn match informAsm "@\s*verify"
-syn match informAsm "@\s*call_2s"
-syn match informAsm "@\s*call_vs"
-syn match informAsm "@\s*aread"
-syn match informAsm "@\s*call_vs2"
-syn match informAsm "@\s*erase_window"
-syn match informAsm "@\s*erase_line"
-syn match informAsm "@\s*set_cursor"
-syn match informAsm "@\s*get_cursor"
-syn match informAsm "@\s*set_text_style"
-syn match informAsm "@\s*buffer_mode"
-syn match informAsm "@\s*read_char"
-syn match informAsm "@\s*scan_table"
-syn match informAsm "@\s*call_1s"
-syn match informAsm "@\s*call_2n"
-syn match informAsm "@\s*set_colour"
-syn match informAsm "@\s*throw"
-syn match informAsm "@\s*call_vn"
-syn match informAsm "@\s*call_vn2"
-syn match informAsm "@\s*tokenise"
-syn match informAsm "@\s*encode_text"
-syn match informAsm "@\s*copy_table"
-syn match informAsm "@\s*print_table"
-syn match informAsm "@\s*check_arg_count"
-syn match informAsm "@\s*call_1n"
-syn match informAsm "@\s*catch"
-syn match informAsm "@\s*piracy"
-syn match informAsm "@\s*log_shift"
-syn match informAsm "@\s*art_shift"
-syn match informAsm "@\s*set_font"
-syn match informAsm "@\s*save_undo"
-syn match informAsm "@\s*restore_undo"
-syn match informAsm "@\s*draw_picture"
-syn match informAsm "@\s*picture_data"
-syn match informAsm "@\s*erase_picture"
-syn match informAsm "@\s*set_margins"
-syn match informAsm "@\s*move_window"
-syn match informAsm "@\s*window_size"
-syn match informAsm "@\s*window_style"
-syn match informAsm "@\s*get_wind_prop"
-syn match informAsm "@\s*scroll_window"
-syn match informAsm "@\s*pop_stack"
-syn match informAsm "@\s*read_mouse"
-syn match informAsm "@\s*mouse_window"
-syn match informAsm "@\s*push_stack"
-syn match informAsm "@\s*put_wind_prop"
-syn match informAsm "@\s*print_form"
-syn match informAsm "@\s*make_menu"
-syn match informAsm "@\s*picture_table"
-
-syn keyword informPredicate contained has hasnt in notin ofclass or
-syn keyword informPredicate contained provides
-
-syn keyword informPrintSpec contained char string address name a an the The
-syn keyword informPrintSpec contained property object
+syn match informAsm "@\s*\(je\|jl\|jg\|dec_chk\|inc_chk\|jin\|test\|or\|and\)\>"
+syn match informAsm "@\s*\(test_attr\|set_attr\|clear_attr\|store\)\>"
+syn match informAsm "@\s*\(insert_obj\|loadw\|loadb\|get_prop\)\>"
+syn match informAsm "@\s*\(get_prop_addr\|get_next_prop\|add\|sub\|mul\|div\)\>"
+syn match informAsm "@\s*\(mod\|call\|storew\|storeb\|put_prop\|sread\)\>"
+syn match informAsm "@\s*\(print_char\|print_num\|random\|push\|pull\)\>"
+syn match informAsm "@\s*\(split_window\|set_window\|output_stream\)\>"
+syn match informAsm "@\s*\(input_stream\|sound_effect\|jz\|get_sibling\)\>"
+syn match informAsm "@\s*\(get_child\|get_parent\|get_prop_len\|inc\|dec\)\>"
+syn match informAsm "@\s*\(print_addr\|remove_obj\|print_obj\|ret\|jump\)\>"
+syn match informAsm "@\s*\(print_paddr\|load\|not\|rtrue\|rfalse\|print\)\>"
+syn match informAsm "@\s*\(print_ret\|nop\|save\|restore\|restart\)\>"
+syn match informAsm "@\s*\(ret_popped\|pop\|quit\|new_line\|show_status\)\>"
+syn match informAsm "@\s*\(verify\|call_2s\|call_vs\|aread\|call_vs2\)\>"
+syn match informAsm "@\s*\(erase_window\|erase_line\|set_cursor\|get_cursor\)\>"
+syn match informAsm "@\s*\(set_text_style\|buffer_mode\|read_char\)\>"
+syn match informAsm "@\s*\(scan_table\|call_1s\|call_2n\|set_colour\|throw\)\>"
+syn match informAsm "@\s*\(call_vn\|call_vn2\|tokenise\|encode_text\)\>"
+syn match informAsm "@\s*\(copy_table\|print_table\|check_arg_count\)\>"
+syn match informAsm "@\s*\(call_1n\|catch\|piracy\|log_shift\|art_shift\)\>"
+syn match informAsm "@\s*\(set_font\|save_undo\|restore_undo\|draw_picture\)\>"
+syn match informAsm "@\s*\(picture_data\|erase_picture\|set_margins\)\>"
+syn match informArm "@\s*\(move_window\|window_size\|window_style\)\>"
+syn match informArm "@\s*\(get_wind_prop\|scroll_window\|pop_stack\)\>"
+syn match informAsm "@\s*\(read_mouse\|mouse_window\|push_stack\)\>"
+syn match informArm "@\s*\(put_wind_prop\|print_form\|make_menu\)\>"
+syn match informArm "@\s*picture_table\>"
 
 syn keyword informSysFunc child children elder indirect parent random
 syn keyword informSysFunc sibling younger youngest metaclass
@@ -168,17 +75,14 @@ syn keyword informStatement box font give inversion jump move new_line
 syn keyword informStatement print print_ret quit read remove restore return
 syn keyword informStatement rfalse rtrue save spaces string style
 
-syn keyword informOperator number roman reverse bold
-syn keyword informOperator underline fixed on off to
+syn keyword informOperator roman reverse bold underline fixed on off to
 syn keyword informOperator near from
 
 syn keyword informKeyword dictionary symbols objects verbs assembly
 syn keyword informKeyword expressions lines tokens linker on off alias long
-syn keyword informKeyword additive score time noun held multi multiheld
-syn keyword informKeyword multiexcept multiinside creature special number
-syn keyword informKeyword scope topic reverse meta only replace first last
-syn keyword informKeyword string table data initial initstr with private has
-syn keyword informKeyword class error fatalerror warning self
+syn keyword informKeyword additive score time string table data initial
+syn keyword informKeyword initstr with private has class error fatalerror
+syn keyword informKeyword warning self
 
 syn keyword informMetaAttrib remaining create destroy recreate copy call
 
@@ -204,7 +108,8 @@ if !exists("inform_highlight_simple")
 
   syn keyword informLibObj e_obj se_obj s_obj sw_obj w_obj nw_obj n_obj
   syn keyword informLibObj ne_obj u_obj d_obj in_obj out_obj compass
-  syn keyword informLibObj thedark selfobj player location
+  syn keyword informLibObj thedark selfobj player location second actor
+  syn keyword informLibObj noun
 
   syn keyword informLibRoutine Achieved AddToScope AllowPushDir CDefArt
   syn keyword informLibRoutine ChangeDefault ChangePlayer DefArt DoMenu
@@ -216,6 +121,12 @@ if !exists("inform_highlight_simple")
   syn keyword informLibRoutine StopDaemon StopTimer TestScope TryNumber
   syn keyword informLibRoutine UnsignedCompare WordAddress WordLength
   syn keyword informLibRoutine WriteListFrom YesOrNo ZRegion RunRoutines
+  syn keyword informLibRoutine AfterLife AfterPrompt Amusing BeforeParsing
+  syn keyword informLibRoutine ChooseObjects DarkToDark DeathMessage
+  syn keyword informLibRoutine GamePostRoutine GamePreRoutine Initialise
+  syn keyword informLibRoutine InScope LookRoutine NewRoom ParseNoun
+  syn keyword informLibRoutine ParseNumber ParserError PrintRank PrintVerb
+  syn keyword informLibRoutine PrintTaskName TimePasses UnknownVerb
 
   syn keyword informLibAction1a Quit Restart Restore Verify Save ScriptOn
   syn keyword informLibAction1a ScriptOff Pronouns Score Fullscore LMode1
@@ -245,8 +156,8 @@ if !exists("inform_highlight_simple")
   syn keyword informLibAction3 JumpOver Tie Drink Fill Sorry Strong Mild
   syn keyword informLibAction3 Attack Swim Swing Blow Rub Set SetTo
   syn keyword informLibAction3 WaveHands Wave Pull Push PushDir Turn
-  syn keyword informLibAction3 Squeeze LookUnder ThrowAt Answer Buy Ask
-  syn keyword informLibAction3 AskFor Sing Climb Wait Sleep
+  syn keyword informLibAction3 Squeeze LookUnder ThrowAt Tell Answer Buy
+  syn keyword informLibAction3 Ask AskFor Sing Climb Wait Sleep
 
   hi link informLibAction3 informLibAction
 
@@ -255,26 +166,59 @@ if !exists("inform_highlight_simple")
 
   hi link informLibActionFake informLibAction
 
-  syn keyword informLibVariable second keep_silent deadflag
+  syn keyword informLibVariable keep_silent deadflag action special_number
+  syn keyword informLibVariable consult_from consult_words etype verb_num
+  syn keyword informLibVariable verb_word the_time real_location c_style
+  syn keyword informLibVariable parser_one parser_two listing_together wn
+  syn keyword informLibVariable parser_action scope_stage scope_reason
+  syn keyword informLibVariable action_to_be menu_item item_name item_width
+  syn keyword informLibVariable lm_o lm_n inventory_style task_scores
+
+  syn keyword informLibConst AMUSING_PROVIDED DEBUG Headline MAX_CARRIED
+  syn keyword informLibConst MAX_SCORE MAX_TIMERS NO_PLACES NUMBER_TASKS
+  syn keyword informLibConst OBJECT_SCORE ROOM_SCORE SACK_OBJECT Story
+  syn keyword informLibConst TASKS_PROVIDED WITHOUT_DIRECTIONS
+  syn keyword informLibConst NEWLINE_BIT INDENT_BIT FULLINV_BIT ENGLISH_BIT
+  syn keyword informLibConst RECURSE_BIT ALWAYS_BIT TERSE_BIT PARTINV_BIT
+  syn keyword informLibConst DEFART_BIT WORKFLAG_BIT ISARE_BIT CONCEAL_BIT
+  syn keyword informLibConst PARSING_REASON TALKING_REASON EACHTURN_REASON
+  syn keyword informLibConst REACT_BEFORE_REASON REACT_AFTER_REASON
+  syn keyword informLibConst TESTSCOPE_REASON LOOPOVERSCOPE_REASON
+  syn keyword informLibConst STUCK_PE UPTO_PE NUMBER_PE CANTSEE_PE TOOLIT_PE
+  syn keyword informLibConst NOTHELD_PE MULTI_PE MMULTI_PE VAGUE_PE EXCEPT_PE
+  syn keyword informLibConst ANIMA_PE VERB_PE SCENERY_PE ITGONE_PE
+  syn keyword informLibConst JUNKAFTER_PE TOOFEW_PE NOTHING_PE ASKSCOPE_PE
 endif
+
+syn keyword informPredicate contained has hasnt in notin ofclass or
+syn keyword informPredicate contained provides
+
+syn keyword informGrammar contained noun held multi multiheld multiexcept
+syn keyword informGrammar contained multiinside creature special number
+syn keyword informGrammar contained scope topic reverse meta only replace
+syn keyword informGrammar contained first last
 
 syn keyword informTodo contained TODO
 
+" Grammar sections.
+
+syn region informGrammarSection matchgroup=informGramPreProc start="\<Verb\|Extend\>" skip=+".*"+ end=";"he=e-1 contains=ALL
+
 " Special character forms.
 
-syn match informSpecChar contained "@[''\:c~o^]\|@@[0-9][0-9]*\|@{[0-9]*}\|@.."
+syn match informSpecChar contained "@[''\:c~o^]\|@@\d\d*\|@{\d*}\|@.."
 
 " String and Character constants
 syn region informString start=+"+ skip=+\\\\+ end=+"+ contains=informSpecChar
 syn region informDictString start="'" skip="@'" end="'"
 
 " Catch errors caused by wrong parenthesis
-syn region informParen transparent start='(' end=')' contains=ALLBUT,informParenError,informTodo
+syn region informParen transparent start='(' end=')' contains=ALLBUT,informParenError,informTodo,informGrammar
 syn match informParenError ")"
 syn match informInParen contained "[{}]"
 
 " Integer numbers: decimal, hexadecimal and binary.
-syn match informNumber "\<[0-9]\+\>"
+syn match informNumber "\<\d\+\>"
 syn match informNumber "\<\$[0-9A-Za-z]\+\>"
 syn match informNumber "\<\$\$[01]\+\>"
 
@@ -283,6 +227,7 @@ syn match informComment "!.*" contains=informTodo
 
 " Syncronization
 syn sync match informSyncRoutine grouphere NONE "\[\|\]"
+syn sync match informSyncRoutine groupthere informGrammarSection "\<Verb\|Extend\>"
 syn sync maxlines=500
 
 if !exists("did_inform_syntax_inits")
@@ -293,9 +238,9 @@ if !exists("did_inform_syntax_inits")
   hi link informInclude		Include
   hi link informPreCondit	PreCondit
   hi link informPreProc		PreProc
+  hi link informGramPreProc	PreProc
   hi link informAsm		Special
   hi link informPredicate	Operator
-  hi link informPrintSpec	Operator
   hi link informSysFunc		Identifier
   hi link informSysConst	Identifier
   hi link informConditional	Conditional
@@ -303,6 +248,7 @@ if !exists("did_inform_syntax_inits")
   hi link informStatement	Statement
   hi link informOperator	Operator
   hi link informKeyword		Keyword
+  hi link informGrammar		Keyword
   hi link informDictString	String
   hi link informNumber		Number
   hi link informError		Error
@@ -316,6 +262,7 @@ if !exists("did_inform_syntax_inits")
     hi link informLibObj	Identifier
     hi link informLibRoutine	Identifier
     hi link informLibVariable	Identifier
+    hi link informLibConst	Identifier
     hi link informLibAction	Statement
   endif
   hi link informParenError	informError

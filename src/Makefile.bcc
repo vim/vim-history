@@ -55,6 +55,7 @@ EXE_dependencies =  \
  message.obj \
  misc1.obj \
  misc2.obj \
+ multbyte.obj \
  os_msdos.obj \
  normal.obj \
  ops.obj \
@@ -71,7 +72,7 @@ EXE_dependencies =  \
  window.obj \
  version.obj
 
-all: vim.exe ctags/ctags.exe xxd/xxd.exe
+all: vim.exe install.exe ctags/ctags.exe xxd/xxd.exe
 
 #		*Explicit Rules*
 #  add /v to TLINK for debugging
@@ -96,6 +97,7 @@ memline.obj+
 message.obj+
 misc1.obj+
 misc2.obj+
+multbyte.obj+
 os_msdos.obj+
 normal.obj+
 ops.obj+
@@ -118,6 +120,10 @@ mathl.lib+
 spawnl.lib+
 cl.lib
 |
+
+install.exe: dosinst.c
+	$(CC) dosinst.c
+	copy dosinst.exe install.exe
 
 ctags/ctags.exe: ctags/main.c
 	cd ctags
@@ -173,6 +179,8 @@ message.obj: message.c
 misc1.obj: misc1.c
 
 misc2.obj: misc2.c
+
+multbyte.obj: multbyte.c
 
 os_msdos.obj: os_msdos.c
 

@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 5.1.  Last modification: 1998 Feb 21
+*various.txt*   For Vim version 5.2.  Last modification: 1998 Aug 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -48,6 +48,11 @@ ga			Print the ascii value of the character under the
 			Print {count} lines, starting with [range] (default
 			current line |cmdline-ranges|).
 
+							*:P* *:Print*
+:[range]P[rint] [count]
+			Just as ":print".  Was apparantly added to Vi for
+			people that keep the shift key pressed too long...
+
 							*:l* *:list*
 :[range]l[ist] [count]
 			Same as :print, but display unprintable characters
@@ -77,7 +82,7 @@ ga			Print the ascii value of the character under the
 			+      current line  1 scr forward  1 scr forward
 			-      1 scr back    current line   current line
 			^      2 scr back    1 scr back     1 scr back
-                        .      1/2 scr back  1/2 scr fwd    1/2 src fwd
+			.      1/2 scr back  1/2 scr fwd    1/2 src fwd
 			=      1/2 src back  1/2 scr fwd    current line
 
 			Specifying no mark at all is the same as "+".
@@ -90,7 +95,7 @@ ga			Print the ascii value of the character under the
 :norm[al][!] {commands}					*:norm* *:normal*
 			Execute Normal mode commands {commands}.  This makes
 			it possible to execute Normal mode commands typed on
-			the command line.  {commands} is executed like it is
+			the command-line.  {commands} is executed like it is
 			typed.  For undo all commands are undone together.  If
 			the [!] is given, mappings will not be used.
 			{commands} should be a complete command.  If
@@ -100,8 +105,10 @@ ga			Print the ascii value of the character under the
 			Mostly useful for autocommands.  This command cannot
 			be followed by another command, since any '|' is
 			considered part of the command.
-			An alternative is to use ":execute", which uses an
-			expression as argument.  See |:exe|.
+			An alternative is to use |:execute|, which uses an
+			expression as argument.  This allows the use of
+			printable characters.  Example:
+>				:exe "normal \<c-w>\<c-w>"
 			Hint: If the {commands} ends in an <Esc>, Vim may
 			think it's the start of a function key, and 'ttimeout'
 			will apply, which makes things very slow, or even wait
@@ -162,9 +169,14 @@ ga			Print the ascii value of the character under the
 							*+feature-list*
 *+ARP*			Amiga only: ARP support included
 *+autocmd*		|:autocmd|, automatic commands
+*+browse*		|:browse| command
 *+builtin_terms*	some terminals builtin |builtin-terms|
 *++builtin_terms*	maximal terminals builtin |builtin-terms|
 *+cindent*		|'cindent'|, C indenting
+*+cscope*		|cscope| support
+*+dialog_gui*		Support for |:confirm| with GUI dialog.
+*+dialog_con*		Support for |:confirm| with console dialog.
+*+dialog_con_gui*	Support for |:confirm| with GUI and console dialog.
 *+digraphs*		|digraphs|
 *+emacs_tags*		|emacs-tags| files
 *+eval*			expression evaluation |eval.txt|
@@ -173,6 +185,8 @@ ga			Print the ascii value of the character under the
 *+extra_search*		|'hlsearch'| and |'incsearch'| options.
 *+farsi*		|farsi| language
 *+file_in_path*		|gf|, |CTRL-W_f| and |<cfile>|
+*+filetype*		Support for filetype checking in automatic commands.
+			|autocmd-filetypes|
 *+find_in_path*		include file searches: |[I|, |:isearch|,
 			|CTRL-W_CTRL-I|, |:checkpath|, etc.
 *+fork*			Unix only: |fork| shell commands
@@ -182,10 +196,13 @@ ga			Print the ascii value of the character under the
 *+insert_expand*	|insert_expand| Insert mode completion
 *+langmap*		|'langmap'|
 *+lispindent*		|'lisp'|
+*+modify_fname*		|filename-modifiers|
 *+mouse*		Mouse handling |mouse-using|
 *+mouse_dec*		Unix only: Dec terminal mouse handling
 *+mouse_netterm*	Unix only: netterm mouse handling
 *+mouse_xterm*		Unix only: xterm mouse handling
+*+multi_byte*		Korean and other languages
+*+multi_byte_ime*	Win32 input method for multi_byte characters.
 *+ole*			Win32 GUI only: |ole-interface|
 *+perl*			Perl interface |perl|
 *+python*		Python interface |python|
@@ -199,10 +216,13 @@ ga			Print the ascii value of the character under the
 *+tag_binary*		binary searching in tags file |tag-binary-search|
 *+tag_old_static*	old method for static tags |tag-old-static|
 *+tag_any_white*	any white space allowed in tags file |tag-any-white|
+*+tcl*			Tcl interface |tcl|
 *+terminfo*		uses |terminfo| instead of termcap
 *+textobjects*		|text-objects| selection
 *+tgetent*		non-Unix only: able to use external termcap
+*+user-commands*	User-defined commands.
 *+viminfo*		|'viminfo'|
+*+wildignore*		|'wildignore'|
 *+writebackup*		|'writebackup'| is default on
 *+xterm_save*		Save and restore xterm screen |xterm-screens|
 *+X11*			Unix only: can restore window title |X11|
@@ -246,6 +266,9 @@ K			Run a program to lookup the keyword under the
 			  the keyword.  For example, using "2K" while the
 			  cursor is on "mkdir", results in:
 >				!man 2 mkdir
+			- When 'keywordprg' is equal to "man -s", a count
+			  before "K" is inserted after the "-s".  If there is
+			  no count, the "-s" is removed.
 			{not in Vi}
 
 							*v_K*
@@ -254,10 +277,20 @@ K			Run a program to lookup the keyword under the
 			not more than one line.  {not in Vi}
 
 [N]gs							*gs* *:sl* *:sleep*
-:[N]sl[eep] [N]		Do nothing for [N] seconds.  Can be interrupted with
-			CTRL-C (CTRL-Break on MS-DOS).  "gs" stands for "goto
-			sleep".  While sleeping the cursor is positioned in
-			the text (if visible).  {not in Vi}
+:[N]sl[eep] [N]	[m]	Do nothing for [N] seconds.  When [m] is included,
+			sleep for [N] milliseconds.
+>  :sleep	  "sleep for one second
+>  :5sleep	  "sleep for five seconds
+>  :sleep 100m    "sleep for hunderd millisonds
+			Can be interrupted with CTRL-C (CTRL-Break on MS-DOS).
+			"gs" stands for "goto sleep".  While sleeping the
+			cursor is positioned in the text (if visible).  {not
+			in Vi}
+
+							*g_CTRL-A*
+g CTRL-A		Only when Vim was compiled with MEM_PROFILING defined
+			(which is very rare): print memory usage statistics.
+			Only useful for debugging Vim.
 
 ==============================================================================
 2. Online help						*online-help*

@@ -40,8 +40,8 @@
 # endif
 #endif
 
-/* always use unlink() to remove files */
-#define vim_remove(x) delete((char *)(x))
+/* use delete() to remove files */
+#define mch_remove(x) delete((char *)(x))
 
 /* The number of arguments to a signal handler is configured here. */
 /* It used to be a long list of almost all systems. Any system that doesn't
@@ -137,9 +137,9 @@
 #include	<prvdef.h>
 #include	<dvidef.h>
 #include	<dcdef.h>
-#include		<stsdef.h>
-#include		<iodef.h>
-#include		<ttdef.h>
+#include	<stsdef.h>
+#include	<iodef.h>
+#include	<ttdef.h>
 #include	<tt2def.h>
 #include	<jpidef.h>
 #include	<rms.h>
@@ -155,6 +155,8 @@
 # define W_OK 2			/* for systems that don't have W_OK in unistd.h */
 #endif
 
+/* #define USE_TMPNAM */		/* use tmpnam() instead of mktemp() */
+
 /*
  * system-dependent filenames
  */
@@ -167,6 +169,10 @@
 # define USR_VIMRC_FILE	"sys$login:.vimrc"
 #endif
 
+#ifndef SYS_VIMRC_FILE
+# define SYS_VIMRC_FILE	"$VIM/.vimrc"
+#endif
+
 #ifdef USE_GUI
 # ifndef USR_GVIMRC_FILE
 #  define USR_GVIMRC_FILE	"sys$login:.gvimrc"
@@ -174,9 +180,13 @@
 #endif
 
 #ifdef USE_GUI
-# ifndef SYSGVIMRC_FILE
-#  define SYSGVIMRC_FILE	"sys$login:.gvimrc"
+# ifndef SYS_GVIMRC_FILE
+#  define SYS_GVIMRC_FILE	"$VIM/.gvimrc"
 # endif
+#endif
+
+#ifndef SYS_MENU_FILE
+# define SYS_MENU_FILE "$VIM/menu.vim"
 #endif
 
 #ifndef EXRC_FILE
@@ -194,7 +204,12 @@
 #endif
 
 #ifndef VIM_HLP
-# define VIM_HLP	"vim_hlp:vim_help.txt"
+/* # define VIM_HLP		"vim_hlp:vim_help.txt" */
+# define VIM_HLP		"$VIM/doc/help.txt"
+#endif
+
+#ifndef SYNTAX_FNAME
+# define SYNTAX_FNAME	"$VIM/syntax/%s.vim"
 #endif
 
 #ifdef VIMINFO
@@ -213,10 +228,10 @@
 
 #define TEMPNAME		"tmp:viXXXXXX.txt"
 #define TMPNAME2		"tmp:voXXXXXX.log"
-#define TEMPNAMELEN		18
+#define TEMPNAMELEN		28
 
 #define CMDBUFFSIZE	1024	/* size of the command processing buffer */
-#define MAXPATHL	1024	/* Unix has long paths and plenty of memory */
+#define MAXPATHL	1024	/* VMS has long paths and plenty of memory */
 
 /*#define CHECK_INODE		** used when checking if a swap file already
 							   exists for a file */
@@ -236,18 +251,21 @@
 /* Some systems have (void *) arguments, some (char *). If we use (char *) it
  * works for all */
 #ifdef USEMEMMOVE
-# define vim_memmove(to, from, len) memmove((char *)(to), (char *)(from), len)
+# define mch_memmove(to, from, len) memmove((char *)(to), (char *)(from), len)
 #else
 # ifdef USEBCOPY
-#  define vim_memmove(to, from, len) bcopy((char *)(from), (char *)(to), len)
+#  define mch_memmove(to, from, len) bcopy((char *)(from), (char *)(to), len)
 # else
 #  ifdef USEMEMCPY
-#	define vim_memmove(to, from, len) memcpy((char *)(to), (char *)(from), len)
+#	define mch_memmove(to, from, len) memcpy((char *)(to), (char *)(from), len)
 #  else
 #	define VIM_MEMMOVE		/* found in alloc.c */
 #  endif
 # endif
 #endif
+
+#define mch_rename(src, dst) rename(src, dst)
+#define mch_chdir(s) chdir(s)
 
 /* modifications by C Campbell */
 typedef     struct dsc$descriptor   DESC;

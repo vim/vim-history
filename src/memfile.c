@@ -74,7 +74,8 @@ extern int dos2;			/* this is in os_amiga.c */
 
 #define MEMFILE_PAGE_SIZE 4096		/* default page size */
 
-static long_u total_mem_used = 0;	/* total memory used for memfiles */
+static long_u	total_mem_used = 0;	/* total memory used for memfiles */
+static int	dont_release = FALSE;	/* don't release blocks */
 
 static void mf_ins_hash __ARGS((MEMFILE *, BHDR *));
 static void mf_rem_hash __ARGS((MEMFILE *, BHDR *));
@@ -236,7 +237,7 @@ mf_close(mfp, del_file)
 	    EMSG("Close error on swap file");
     }
     if (del_file && mfp->mf_fname != NULL)
-	vim_remove(mfp->mf_fname);
+	mch_remove(mfp->mf_fname);
 					    /* free entries in used list */
     for (hp = mfp->mf_used_first; hp != NULL; hp = nextp)
     {
@@ -255,6 +256,42 @@ mf_close(mfp, del_file)
     vim_free(mfp->mf_fname);
     vim_free(mfp->mf_ffname);
     vim_free(mfp);
+}
+
+/*
+ * Close the swap file for a memfile.  Used when 'swapfile' is reset.
+ */
+    void
+mf_close_file(buf)
+    BUF		*buf;
+{
+    MEMFILE	*mfp;
+    linenr_t	lnum;
+
+    mfp = buf->b_ml.ml_mfp;
+    if (mfp == NULL || mfp->mf_fd < 0)		/* nothing to close */
+	return;
+
+    /* get all blocks in memory by accessing all lines (clumsy!) */
+    dont_release = TRUE;
+    for (lnum = 1; lnum <= buf->b_ml.ml_line_count; ++lnum)
+	(void)ml_get_buf(buf, lnum, FALSE);
+    dont_release = FALSE;
+
+    /* TODO: should check if all blocks are really in core */
+
+    if (close(mfp->mf_fd) < 0)			/* close the file */
+	EMSG("Close error on swap file");
+    mfp->mf_fd = -1;
+
+    if (mfp->mf_fname != NULL)
+    {
+	mch_remove(mfp->mf_fname);		/* delete the swap file */
+	vim_free(mfp->mf_fname);
+	vim_free(mfp->mf_ffname);
+	mfp->mf_fname = NULL;
+	mfp->mf_ffname = NULL;
+    }
 }
 
 /*
@@ -551,6 +588,13 @@ mf_sync(mfp, flags)
 	    sync();
 # endif
 #endif
+#ifdef VMS
+	if (STRCMP(p_sws, "fsync") == 0)
+	{
+	    if (fsync(mfp->mf_fd))
+		status = FAIL;
+	}
+#endif
 #ifdef MSDOS
 	if (_dos_commit(mfp->mf_fd))
 	    status = FAIL;
@@ -705,6 +749,10 @@ mf_release(mfp, page_count)
     BHDR	*hp;
     int		need_release;
     BUF		*buf;
+
+    /* don't release while in mf_close_file() */
+    if (dont_release)
+	return NULL;
 
     /*
      * Need to release a block if the number of blocks for this memfile is
@@ -1141,7 +1189,7 @@ mf_do_open(mfp, fname, trunc_file)
      * fname cannot be NameBuff, because it must have been allocated.
      */
     mf_set_ffname(mfp);
-#if defined(MSDOS) || defined(WIN32)
+#if defined(MSDOS) || defined(WIN32) || defined(RISCOS)
     /*
      * A ":!cd e:xxx" may change the directory without us knowning, use the
      * full pathname always.  Careful: This frees fname!
@@ -1154,7 +1202,7 @@ mf_do_open(mfp, fname, trunc_file)
      */
     mfp->mf_fd = open((char *)mfp->mf_fname,
 	    (trunc_file ? (O_CREAT | O_RDWR | O_TRUNC) : (O_RDONLY)) | O_EXTRA
-#ifdef UNIX		    /* open in rw------- mode */
+#if defined(UNIX) || defined(RISCOS)		 /* open in rw------- mode */
 		    , (mode_t)0600
 #endif
 #if defined(MSDOS) || defined(WIN32) || defined(__EMX__)

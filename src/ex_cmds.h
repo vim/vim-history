@@ -31,6 +31,10 @@
 # define EXCMD(a, b, c)  a
 #endif
 
+#ifdef RANGE
+# undef RANGE			/* SASC on Amiga defines it */
+#endif
+
 #define RANGE	   0x01		/* allow a linespecs */
 #define BANG	   0x02		/* allow a ! after the command name */
 #define EXTRA	   0x04		/* allow extra args after command name */
@@ -71,7 +75,7 @@ static struct cmdname
 enum CMD_index
 #endif
 {
-    EXCMD(CMD_append,	"append",	BANG+RANGE+TRLBAR),
+    EXCMD(CMD_append,	"append",	BANG+RANGE+ZEROR+TRLBAR),
     EXCMD(CMD_all,	"all",		RANGE+NOTADR+COUNT+TRLBAR),
     EXCMD(CMD_abbreviate,"abbreviate",	EXTRA+TRLBAR+NOTRLCOM+USECTRLV),
     EXCMD(CMD_abclear,	"abclear",	TRLBAR),
@@ -85,9 +89,9 @@ enum CMD_index
     EXCMD(CMD_aunmenu,	"aunmenu",	EXTRA+TRLBAR+NOTRLCOM+USECTRLV),
     EXCMD(CMD_buffer,	"buffer",	BANG+RANGE+NOTADR+BUFNAME+COUNT+EXTRA+TRLBAR),
     EXCMD(CMD_ball,	"ball",		RANGE+NOTADR+COUNT+TRLBAR),
-    EXCMD(CMD_buffers,	"buffers",	TRLBAR),
-    EXCMD(CMD_bdelete,	"bdelete",	BANG+RANGE+BUFNAME+NOTADR+COUNT+EXTRA+TRLBAR),
-    EXCMD(CMD_bunload,	"bunload",	BANG+RANGE+BUFNAME+NOTADR+COUNT+EXTRA+TRLBAR),
+    EXCMD(CMD_badd,	"badd",		FILE1+EDITCMD+TRLBAR),
+    EXCMD(CMD_bdelete,	"bdelete",	BANG+RANGE+NOTADR+BUFNAME+COUNT+EXTRA+TRLBAR),
+    EXCMD(CMD_behave,	"behave",	WORD1+TRLBAR),
     EXCMD(CMD_blast,	"blast",	BANG+RANGE+TRLBAR),
     EXCMD(CMD_bmodified,"bmodified",	BANG+RANGE+NOTADR+COUNT+TRLBAR),
     EXCMD(CMD_bnext,	"bnext",	BANG+RANGE+NOTADR+COUNT+TRLBAR),
@@ -95,9 +99,13 @@ enum CMD_index
     EXCMD(CMD_bprevious,"bprevious",	BANG+RANGE+NOTADR+COUNT+TRLBAR),
     EXCMD(CMD_brewind,	"brewind",	BANG+RANGE+TRLBAR),
     EXCMD(CMD_break,	"break",	TRLBAR),
+    EXCMD(CMD_browse,	"browse",	EXTRA+TRLBAR),
+    EXCMD(CMD_buffers,	"buffers",	TRLBAR),
+    EXCMD(CMD_bunload,	"bunload",	BANG+RANGE+NOTADR+BUFNAME+COUNT+EXTRA+TRLBAR),
     EXCMD(CMD_change,	"change",	BANG+RANGE+COUNT+TRLBAR),
     EXCMD(CMD_cabbrev,	"cabbrev",	EXTRA+TRLBAR+NOTRLCOM+USECTRLV),
     EXCMD(CMD_cabclear, "cabclear",	TRLBAR),
+    EXCMD(CMD_call,	"call",		RANGE+EXTRA+NOTRLCOM),
     EXCMD(CMD_cc,	"cc",		RANGE+NOTADR+COUNT+TRLBAR+BANG),
     EXCMD(CMD_cd,	"cd",		NAMEDF+TRLBAR),
     EXCMD(CMD_center,	"center",	TRLBAR+RANGE+EXTRA),
@@ -112,19 +120,27 @@ enum CMD_index
     EXCMD(CMD_cmenu,	"cmenu",	RANGE+NOTADR+ZEROR+EXTRA+TRLBAR+NOTRLCOM+USECTRLV),
     EXCMD(CMD_cnext,	"cnext",	RANGE+NOTADR+COUNT+TRLBAR+BANG),
     EXCMD(CMD_cNext,	"cNext",	RANGE+NOTADR+COUNT+TRLBAR+BANG),
+    EXCMD(CMD_cnewer,	"cnewer",	RANGE+NOTADR+COUNT+TRLBAR),
     EXCMD(CMD_cnoremap, "cnoremap",	EXTRA+TRLBAR+NOTRLCOM+USECTRLV),
     EXCMD(CMD_cnoremenu,"cnoremenu",	RANGE+NOTADR+ZEROR+EXTRA+TRLBAR+NOTRLCOM+USECTRLV),
     EXCMD(CMD_cnoreabbrev,"cnoreabbrev",EXTRA+TRLBAR+NOTRLCOM+USECTRLV),
     EXCMD(CMD_copy,	"copy",		RANGE+EXTRA+TRLBAR),
+    EXCMD(CMD_colder,	"colder",	RANGE+NOTADR+COUNT+TRLBAR),
+    EXCMD(CMD_command,	"command",	EXTRA+BANG+NOTRLCOM+USECTRLV),
+    EXCMD(CMD_comclear,	"comclear",	TRLBAR),
     EXCMD(CMD_continue, "continue",	TRLBAR),
-    EXCMD(CMD_coffee,	"coffee",	RANGE+EXTRA+TRLBAR),
+    EXCMD(CMD_confirm,  "confirm",	EXTRA+TRLBAR),
     EXCMD(CMD_cprevious,"cprevious",	RANGE+NOTADR+COUNT+TRLBAR+BANG),
     EXCMD(CMD_cquit,	"cquit",	TRLBAR+BANG),
     EXCMD(CMD_crewind,	"crewind",	RANGE+NOTADR+COUNT+TRLBAR+BANG),
+    EXCMD(CMD_cscope,   "cscope",       EXTRA+NOTRLCOM),
+    EXCMD(CMD_cstag,	"cstag",	BANG+TRLBAR+WORD1),
     EXCMD(CMD_cunmap,	"cunmap",	EXTRA+TRLBAR+NOTRLCOM+USECTRLV),
     EXCMD(CMD_cunmenu,	"cunmenu",	EXTRA+TRLBAR+NOTRLCOM+USECTRLV),
     EXCMD(CMD_cunabbrev,"cunabbrev",	EXTRA+TRLBAR+NOTRLCOM+USECTRLV),
     EXCMD(CMD_delete,	"delete",	RANGE+REGSTR+COUNT+TRLBAR),
+    EXCMD(CMD_delcommand,"delcommand",	WORD1+TRLBAR),
+    EXCMD(CMD_delfunction,"delfunction",WORD1+TRLBAR),
     EXCMD(CMD_display,	"display",	EXTRA+NOTRLCOM+TRLBAR),
     EXCMD(CMD_digraphs, "digraphs",	EXTRA+TRLBAR),
     EXCMD(CMD_djump,	"djump",	BANG+RANGE+DFLALL+EXTRA),
@@ -140,6 +156,7 @@ enum CMD_index
     EXCMD(CMD_else,	"else",		TRLBAR),
     EXCMD(CMD_elseif,	"elseif",	EXTRA+NOTRLCOM),
     EXCMD(CMD_endif,	"endif",	TRLBAR),
+    EXCMD(CMD_endfunction,"endfunction",TRLBAR),
     EXCMD(CMD_endwhile,	"endwhile",	TRLBAR),
     EXCMD(CMD_ex,	"ex",		BANG+FILE1+EDITCMD+TRLBAR),
     EXCMD(CMD_execute,	"execute",	EXTRA+NOTRLCOM),
@@ -147,7 +164,9 @@ enum CMD_index
     EXCMD(CMD_file,	"file",		BANG+FILE1+TRLBAR),
     EXCMD(CMD_files,	"files",	TRLBAR),
     EXCMD(CMD_fixdel,	"fixdel",	TRLBAR),
+    EXCMD(CMD_function,	"function",	EXTRA+BANG),
     EXCMD(CMD_global,	"global",	RANGE+BANG+EXTRA+DFLALL),
+    EXCMD(CMD_grep,	"grep",		NEEDARG+EXTRA+TRLBAR+XFILE),
     EXCMD(CMD_gui,	"gui",		BANG+NAMEDFS+EDITCMD+TRLBAR),
     EXCMD(CMD_gvim,	"gvim",		BANG+NAMEDFS+EDITCMD+TRLBAR),
     EXCMD(CMD_help,	"help",		EXTRA+NOTRLCOM),
@@ -187,6 +206,7 @@ enum CMD_index
     EXCMD(CMD_make,	"make",		NEEDARG+EXTRA+TRLBAR+XFILE),
     EXCMD(CMD_menu,	"menu",		RANGE+NOTADR+ZEROR+BANG+EXTRA+TRLBAR+NOTRLCOM+USECTRLV),
     EXCMD(CMD_mkexrc,	"mkexrc",	BANG+FILE1+TRLBAR),
+    EXCMD(CMD_mksession,"mksession",	BANG+FILE1+TRLBAR),
     EXCMD(CMD_mkvimrc,	"mkvimrc",	BANG+FILE1+TRLBAR),
     EXCMD(CMD_mfstat,	"mfstat",	TRLBAR),	/* for debugging */
     EXCMD(CMD_mode,	"mode",		WORD1+TRLBAR),
@@ -199,6 +219,7 @@ enum CMD_index
     EXCMD(CMD_nnoremenu,"nnoremenu",	RANGE+NOTADR+ZEROR+EXTRA+TRLBAR+NOTRLCOM+USECTRLV),
     EXCMD(CMD_number,	"number",	RANGE+COUNT+TRLBAR),
     EXCMD(CMD_noremap,	"noremap",	BANG+EXTRA+TRLBAR+NOTRLCOM+USECTRLV),
+    EXCMD(CMD_nohlsearch,"nohlsearch",	TRLBAR),
     EXCMD(CMD_noremenu, "noremenu",	RANGE+NOTADR+ZEROR+BANG+EXTRA+TRLBAR+NOTRLCOM+USECTRLV),
     EXCMD(CMD_noreabbrev,"noreabbrev",	EXTRA+TRLBAR+NOTRLCOM+USECTRLV),
     EXCMD(CMD_normal,	"normal",	RANGE+BANG+EXTRA+NEEDARG+NOTRLCOM+USECTRLV),
@@ -220,6 +241,8 @@ enum CMD_index
     EXCMD(CMD_put,	"put",		RANGE+BANG+REGSTR+TRLBAR+ZEROR),
     EXCMD(CMD_preserve, "preserve",	TRLBAR),
     EXCMD(CMD_previous, "previous",	EXTRA+RANGE+NOTADR+COUNT+BANG+EDITCMD+TRLBAR),
+    EXCMD(CMD_promptfind, "promptfind",	EXTRA+NOTRLCOM),
+    EXCMD(CMD_promptrepl, "promptrepl", EXTRA+NOTRLCOM),
     EXCMD(CMD_pwd,	"pwd",		TRLBAR),
     EXCMD(CMD_python,	"python",	RANGE+EXTRA+NEEDARG),
     EXCMD(CMD_pyfile,	"pyfile",	RANGE+FILE1+NEEDARG),
@@ -233,6 +256,7 @@ enum CMD_index
     EXCMD(CMD_registers,"registers",	EXTRA+NOTRLCOM+TRLBAR),
     EXCMD(CMD_resize,	"resize",	TRLBAR+WORD1),
     EXCMD(CMD_retab,	"retab",	TRLBAR+RANGE+DFLALL+BANG+WORD1),
+    EXCMD(CMD_return,	"return",	EXTRA+NOTRLCOM),
     EXCMD(CMD_right,	"right",	TRLBAR+RANGE+EXTRA),
     EXCMD(CMD_rviminfo, "rviminfo",	BANG+FILE1+TRLBAR),
     EXCMD(CMD_substitute,"substitute",	RANGE+EXTRA),
@@ -249,11 +273,16 @@ enum CMD_index
     EXCMD(CMD_suspend,	"suspend",	TRLBAR+BANG),
     EXCMD(CMD_set,	"set",		EXTRA+TRLBAR),
     EXCMD(CMD_shell,	"shell",	TRLBAR),
-    EXCMD(CMD_sleep,	"sleep",	RANGE+COUNT+NOTADR+TRLBAR),
-    EXCMD(CMD_source,	"source",	BANG+NAMEDF+NEEDARG+TRLBAR),
+#ifdef USE_GUI_WIN32
+    EXCMD(CMD_simalt,	"simalt",	NEEDARG+WORD1+TRLBAR),
+#endif
+    EXCMD(CMD_sleep,	"sleep",	RANGE+COUNT+NOTADR+EXTRA+TRLBAR),
+    EXCMD(CMD_smagic,	"smagic",	RANGE+EXTRA),
+    EXCMD(CMD_source,	"source",	BANG+NAMEDF+TRLBAR),
     EXCMD(CMD_split,	"split",	BANG+FILE1+RANGE+NOTADR+EDITCMD+TRLBAR),
     EXCMD(CMD_snext,	"snext",	RANGE+NOTADR+BANG+NAMEDFS+EDITCMD+TRLBAR),
     EXCMD(CMD_sniff,	"sniff",	EXTRA+TRLBAR),
+    EXCMD(CMD_snomagic,	"snomagic",	RANGE+EXTRA),
     EXCMD(CMD_sNext,	"sNext",	EXTRA+RANGE+NOTADR+COUNT+BANG+EDITCMD+TRLBAR),
     EXCMD(CMD_sprevious,"sprevious",	EXTRA+RANGE+NOTADR+COUNT+BANG+EDITCMD+TRLBAR),
     EXCMD(CMD_srewind,	"srewind",	EXTRA+BANG+EDITCMD+TRLBAR),
@@ -264,22 +293,28 @@ enum CMD_index
     EXCMD(CMD_stselect,	"stselect",	BANG+TRLBAR+WORD1),
     EXCMD(CMD_sunhide,	"sunhide",	RANGE+NOTADR+COUNT+TRLBAR),
     EXCMD(CMD_sview,	"sview",	NEEDARG+RANGE+BANG+FILE1+EDITCMD+TRLBAR),
-    EXCMD(CMD_swapname, "swapname",	TRLBAR),
+    EXCMD(CMD_swapname,	"swapname",	TRLBAR),
     EXCMD(CMD_syntax,	"syntax",	EXTRA+NOTRLCOM),
     EXCMD(CMD_t,	"t",		RANGE+EXTRA+TRLBAR),
     EXCMD(CMD_tag,	"tag",		RANGE+NOTADR+BANG+WORD1+TRLBAR+ZEROR),
     EXCMD(CMD_tags,	"tags",		TRLBAR),
+    EXCMD(CMD_tcl,	"tcl",		RANGE+EXTRA+NEEDARG),
+    EXCMD(CMD_tcldo,	"tcldo",	RANGE+EXTRA+NEEDARG),
+    EXCMD(CMD_tclfile,	"tclfile",	RANGE+FILE1+NEEDARG),
+    EXCMD(CMD_tearoff,	"tearoff",	EXTRA+TRLBAR+NOTRLCOM),
     EXCMD(CMD_tjump,	"tjump",	BANG+TRLBAR+WORD1),
     EXCMD(CMD_tlast,	"tlast",	BANG+TRLBAR),
+    EXCMD(CMD_tmenu,	"tmenu",	RANGE+NOTADR+ZEROR+EXTRA+TRLBAR+NOTRLCOM+USECTRLV),
     EXCMD(CMD_tnext,	"tnext",	RANGE+NOTADR+BANG+TRLBAR+ZEROR),
     EXCMD(CMD_tNext,	"tNext",	RANGE+NOTADR+BANG+TRLBAR+ZEROR),
     EXCMD(CMD_tprevious,"tprevious",	RANGE+NOTADR+BANG+TRLBAR+ZEROR),
     EXCMD(CMD_trewind,	"trewind",	RANGE+NOTADR+BANG+TRLBAR+ZEROR),
     EXCMD(CMD_tselect,	"tselect",	BANG+TRLBAR+WORD1),
+    EXCMD(CMD_tunmenu,	"tunmenu",	EXTRA+TRLBAR+NOTRLCOM+USECTRLV),
     EXCMD(CMD_undo,	"undo",		TRLBAR),
     EXCMD(CMD_unabbreviate,"unabbreviate",EXTRA+TRLBAR+NOTRLCOM+USECTRLV),
     EXCMD(CMD_unhide,	"unhide",	RANGE+NOTADR+COUNT+TRLBAR),
-    EXCMD(CMD_unlet,	"unlet",	NEEDARG+WORD1+TRLBAR),
+    EXCMD(CMD_unlet,	"unlet",	BANG+EXTRA+NEEDARG+TRLBAR),
     EXCMD(CMD_unmap,	"unmap",	BANG+EXTRA+TRLBAR+NOTRLCOM+USECTRLV),
     EXCMD(CMD_unmenu,	"unmenu",	BANG+EXTRA+TRLBAR+NOTRLCOM+USECTRLV),
     EXCMD(CMD_update,	"update",	RANGE+BANG+FILE1+DFLALL+TRLBAR),
@@ -309,7 +344,9 @@ enum CMD_index
     EXCMD(CMD_yank,	"yank",		RANGE+REGSTR+COUNT+TRLBAR),
     EXCMD(CMD_z,	"z",		RANGE+EXTRA+TRLBAR),
     EXCMD(CMD_Next,	"Next",		EXTRA+RANGE+NOTADR+COUNT+BANG+EDITCMD+TRLBAR),
+    EXCMD(CMD_Print,	"Print",	RANGE+COUNT+TRLBAR),
     EXCMD(CMD_at,	"@",		RANGE+EXTRA+TRLBAR),
+    EXCMD(CMD_star,	"*",		RANGE+EXTRA+TRLBAR),
     EXCMD(CMD_pound,	"#",		RANGE+COUNT+TRLBAR),
     EXCMD(CMD_bang,	"!",		RANGE+BANG+NAMEDFS),
     EXCMD(CMD_lshift,	"<",		RANGE+COUNT+TRLBAR),
@@ -319,7 +356,12 @@ enum CMD_index
     EXCMD(CMD_tilde,	"~",		RANGE+EXTRA),
 
 #ifndef DO_DECLARE_EXCMD
+#ifdef USER_COMMANDS
+    CMD_SIZE,		/* MUST be after all real commands! */
+    CMD_USER = -1	/* User-defined command */
+#else
     CMD_SIZE	/* MUST be the last one! */
+#endif
 #endif
 };
 
@@ -335,6 +377,7 @@ typedef struct exarg
     char_u	*nextcmd;   /* next command (NULL if none) */
     char_u	*cmd;	    /* the name of the command (except for :make) */
     CMDIDX	cmdidx;	    /* the index for the command */
+    long	argt;	    /* flags for the command */
     int		skip;	    /* don't execute the command, only parse it */
     int		forceit;    /* TRUE if ! present */
     int		addr_count; /* the number of addresses given */
@@ -346,5 +389,8 @@ typedef struct exarg
     int		usefilter;  /* TRUE with ":w !command" and ":r!command" */
     int		amount;	    /* number of '>' or '<' for shift command */
     int		regname;    /* register name (NUL if none) */
+#ifdef USER_COMMANDS
+    int		useridx;    /* user command index */
+#endif
 } EXARG;
 #endif

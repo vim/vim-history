@@ -1,4 +1,4 @@
-*os_beos.txt*  	For Vim version 5.1.  Last modification: 1998 Mar 30
+*os_beos.txt*	For Vim version 5.2.  Last modification: 1998 Aug 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -48,7 +48,7 @@ Compiling Vim						*beos-compiling*
 
 From the Advanced Access Preview Release (AAPR) on, Vim can be configured with
 the standard configure script. To get the compiler and its flags right, use
-the following command line in the shell (you can cut and paste it in one go):
+the following command-line in the shell (you can cut and paste it in one go):
 
 CC=$BE_C_COMPILER CFLAGS="$BE_DEFAULT_C_FLAGS -O7" \
     ./configure --prefix=/boot/home/config \
@@ -233,27 +233,27 @@ If the font you specify is unavailable, you get the system fixed font.
 
 Standard fixed-width system fonts are:
 
-              ProFontISOLatin1/Regular
-                  Courier10_BT/Roman
-                  Courier10_BT/Italic
-                  Courier10_BT/Bold
-                  Courier10_BT/Bold_Italic
+	      ProFontISOLatin1/Regular
+		  Courier10_BT/Roman
+		  Courier10_BT/Italic
+		  Courier10_BT/Bold
+		  Courier10_BT/Bold_Italic
 
 Standard proportional system fonts are:
 
-                    Swis721_BT/Roman
-                    Swis721_BT/Italic
-                    Swis721_BT/Bold
-                    Swis721_BT/Bold_Italic
-                Dutch801_Rm_BT/Roman
-                Dutch801_Rm_BT/Italic
-                Dutch801_Rm_BT/Bold
-                Dutch801_Rm_BT/Bold_Italic
-                   Baskerville/Roman
-                   Baskerville/Italic
-                   Baskerville/Bold
-                   Baskerville/Bold_Italic
-                 SymbolProp_BT/Regular
+		    Swis721_BT/Roman
+		    Swis721_BT/Italic
+		    Swis721_BT/Bold
+		    Swis721_BT/Bold_Italic
+		Dutch801_Rm_BT/Roman
+		Dutch801_Rm_BT/Italic
+		Dutch801_Rm_BT/Bold
+		Dutch801_Rm_BT/Bold_Italic
+		   Baskerville/Roman
+		   Baskerville/Italic
+		   Baskerville/Bold
+		   Baskerville/Bold_Italic
+		 SymbolProp_BT/Regular
 
 Try some of them, just for fun.
 

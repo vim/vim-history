@@ -34,7 +34,7 @@ syn match asmIdentifier 	"[a-z_][a-z0-9_]*"
 " since the value of 0-7 octal is the same as 0-7 decimal,
 " I prefer to map it as decimal:
 syn match decNumber		"0\+[1-7]\=[\t\n$,; ]"
-syn match decNumber		"[1-9][0-9]*"
+syn match decNumber		"[1-9]\d*"
 syn match octNumber		"0[0-7][0-7]\+"
 syn match hexNumber		"0[xX][0-9a-fA-F]\+"
 syn match binNumber		"0[bB][0-1]*"

@@ -25,6 +25,7 @@ A few special files:
 2html.vim	Converts any highlighted file to HTML (GUI only).
 colortest.vim	Check for color names and actual color on screen.
 hitest.vim	View the current highlight settings.
+whitespace.vim  View Tabs and Spaces.
 
 
 For further info see ":help syntax" in Vim.

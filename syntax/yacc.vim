@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Yacc
-" Maintainer:  Dr. Charles E. Campbell, Jr. <cec@gryphon.gsfc.nasa.gov>
-" Last change:	November 10, 1997
+" Maintainer:  Dr. Charles E. Campbell, Jr. <Charles.Campbell@gsfc.nasa.gov>
+" Last change:	June 22, 1998
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -11,14 +11,14 @@ source <sfile>:p:h/c.vim
 
 " Yacc stuff
 syn match	yaccDelim	"^[ \t]*[:|;]"
-syn match	yaccOper	"@[0-9]\+"
+syn match	yaccOper	"@\d\+"
 
 syn match	yaccKey	"^[ \t]*%\(token\|type\|left\|right\|start\|ident\)\>"
 syn match	yaccKey	"[ \t]%\(prec\|expect\|nonassoc\)\>"
-syn match	yaccKey	"\$\(<[a-zA-Z_][a-zA-Z_0-9]*>\)\=[\$0-9]"
+syn match	yaccKey	"\$\(<[a-zA-Z_][a-zA-Z_0-9]*>\)\=[\$0-9]\+"
 syn keyword	yaccKeyActn	yyerrok yyclearin
 
-syn region	yaccUnion	matchgroup=yaccKey start="%union[\$ \t]*{\=" matchgroup=yaccBrace end="}"	contains=yaccKey,cComment,yaccBrace
+syn region	yaccUnion	matchgroup=yaccKey start="%union[\$ \t]*{\=" matchgroup=yaccBrace end="}"	contains=yaccKey,cComment,yaccBrace,cType,cStructure,cStorageClass
 syn match	yaccBrkt	contained "[<>]"
 syn match	yaccType	"<[a-zA-Z_][a-zA-Z0-9_]*>"	contains=yaccBrkt
 syn match	yaccDefinition	"^[A-Za-z][A-Za-z0-9_]*[ \t]*:"
@@ -37,13 +37,13 @@ if !exists("did_yacc_syntax_inits")
   let did_yacc_syntax_inits = 1
 
   " Internal yacc highlighting links
-  hi link yaccBrace	YaccDelim
-  hi link yaccBrkt	YaccStmt
-  hi link yaccKey	YaccStmt
-  hi link yaccOper	YaccStmt
+  hi link yaccBrace	yaccDelim
+  hi link yaccBrkt	yaccStmt
+  hi link yaccKey	yaccStmt
+  hi link yaccOper	yaccStmt
 
   " External yacc highlighting links
-  hi link YaccStmt	Statement
+  hi link yaccStmt	Statement
   hi link yaccDefinition	Function
   hi link yaccDelim	Function
   hi link yaccKeyActn	Special

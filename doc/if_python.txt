@@ -1,4 +1,4 @@
-*if_python.txt* For Vim version 5.1.  Last modification: 1998 Feb 14
+*if_python.txt* For Vim version 5.2.  Last modification: 1998 May 10
 
 		  VIM REFERENCE MANUAL    by Paul Moore
 
@@ -28,7 +28,7 @@ Both of these commands do essentially the same thing - they execute a piece of
 Python code, with the "current range" |python-range| set to the given line
 range.
 
-In the case of :python, the code to execute is specified on the command line.
+In the case of :python, the code to execute is specified on the command-line.
 In the case of :pyfile, the code to execute is the contents of the given file.
 
 Here are some examples					*python-examples*

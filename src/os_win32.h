@@ -13,8 +13,6 @@
 #include "os_dos.h"		/* common MS-DOS and Win32 stuff */
 
 #define BINARY_FILE_IO
-#define USE_VIM_REMOVE
-#define USE_VIM_CHDIR
 #define USE_EXE_NAME		/* use argv[0] for $VIM */
 #define NO_COOKED_INPUT		/* mch_inchar() doesn't return whole lines */
 #define SYNC_DUP_CLOSE		/* sync() a file with dup() and close() */
@@ -74,12 +72,6 @@
 
 #ifndef MAXMEMTOT
 # define MAXMEMTOT	(5*1024)    /* use up to 5 Mbyte for Vim */
-#endif
-
-#if defined(__BORLANDC__) && (defined(__FASTCALL__) || defined(_DEBUG))
-#else
-/* Work around a bug in Windows 95's rename() */
-#define rename(old, new)  win95rename(old, new)
 #endif
 
 /*
@@ -151,3 +143,5 @@ Trace(char *pszFormat, ...);
 
 #define ASSERT_NULL_OR_POINTER(p, type) \
     ASSERT(((p) == NULL)  ||  IsValidAddress((p), sizeof(type), FALSE))
+
+#define mch_setenv(name, val, x) setenv(name, val, x)

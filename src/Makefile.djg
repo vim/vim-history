@@ -36,6 +36,7 @@ OBJ = \
 	obj/message.o \
 	obj/misc1.o \
 	obj/misc2.o \
+	obj/multbyte.o \
 	obj/normal.o \
 	obj/ops.o \
 	obj/option.o \
@@ -52,10 +53,13 @@ OBJ = \
 	obj/window.o \
 	$(TERMLIB)
 
-all: vim.exe ctags/ctags.exe xxd/xxd.exe
+all: vim.exe install.exe ctags/ctags.exe xxd/xxd.exe
 
 vim.exe: obj $(OBJ) version.c version.h
 	$(CC) $(CFLAGS) -s -o vim.exe version.c $(OBJ) -lpc
+
+install.exe: dosinst.c
+	$(CC) $(CFLAGS) -s -o install.exe dosinst.c -lpc
 
 ctags/ctags.exe: ctags/main.c
 	cd ctags
@@ -137,6 +141,9 @@ obj/misc1.o:	misc1.c $(INCL)
 
 obj/misc2.o:	misc2.c $(INCL)
 	$(CC) -c $(CFLAGS) misc2.c -o obj/misc2.o
+
+obj/multbyte.o:	multbyte.c $(INCL)
+	$(CC) -c $(CFLAGS) multbyte.c -o obj/multbyte.o
 
 obj/normal.o:	normal.c $(INCL)
 	$(CC) -c $(CFLAGS) normal.c -o obj/normal.o

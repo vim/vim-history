@@ -31,18 +31,18 @@ syn region fortranReadWriteFunc		matchgroup=fortranReadWrite start="\(read\|writ
 "syn match fortranTab			"\t"
 
 " This is valid with Gnu Fortran
-"syn match  fortranSpecial contained "\\[0-9]\{3}\|\\."
+"syn match  fortranSpecial contained "\\\d\{3}\|\\."
 "syn region fortranString	start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=fortranSpecial
 "syn region fortranString	start=+'+ skip=+\\\\\|\\"+ end=+'+ contains=fortranSpecial
 
 " Any integer
-syn match fortranNumber		"-\=\<[0-9]\+\>"
+syn match fortranNumber		"-\=\<\d\+\>"
 " floating point number, with dot, optional exponent
-syn match fortranFloat		"\<[0-9]\+\.[0-9]*\([edED][-+]\=[0-9]\+\)\=\>"
+syn match fortranFloat		"\<\d\+\.\d*\([edED][-+]\=\d\+\)\=\>"
 " floating point number, starting with a dot, optional exponent
-syn match fortranFloat		"\.[0-9]\+\([edED][-+]\=[0-9]\+\)\=\>"
+syn match fortranFloat		"\.\d\+\([edED][-+]\=\d\+\)\=\>"
 " floating point number, without dot, with exponent
-syn match fortranFloat		"\<[0-9]\+[edED][-+]\=[0-9]\+\>"
+syn match fortranFloat		"\<\d\+[edED][-+]\=\d\+\>"
 
 syn match fortranOperator		"\.\(gt\|ge\|\lt\|\e\)\."
 syn match fortranOperator		"\.\(eq\|ne\|eqv\|neqv\)\."
@@ -61,17 +61,17 @@ syn match fortranComment	"^[cC*].*$"	contains=fortranTodo,fortranTab
 syn match fortranComment	"!.*$"		contains=fortranTodo,fortranTab
 syn match fortranContinueLine		"^\ \{5}\S"ms=e
 
-syn match fortranNoLabelNumber		"^[0-9]\{5}\S.*$"
-syn match fortranNoLabelNumber		"^\ [0-9]\{4}\S.*$"
-syn match fortranNoLabelNumber		"^\ \{2}[0-9]\{3}\S.*$"
-syn match fortranNoLabelNumber		"^\ \{3}[0-9]\{2}\S.*$"
-syn match fortranNoLabelNumber		"^\ \{4}[0-9]\S.*$"
+syn match fortranNoLabelNumber		"^\d\{5}\S.*$"
+syn match fortranNoLabelNumber		"^\ \d\{4}\S.*$"
+syn match fortranNoLabelNumber		"^\ \{2}\d\{3}\S.*$"
+syn match fortranNoLabelNumber		"^\ \{3}\d\{2}\S.*$"
+syn match fortranNoLabelNumber		"^\ \{4}\d\S.*$"
 
-syn match fortranLabelNumber		"^[0-9]\{1,5}\>"
-syn match fortranLabelNumber		"^\ [0-9]\{1,4}\>"
-syn match fortranLabelNumber		"^\ \{2}[0-9]\{1,3}\>"
-syn match fortranLabelNumber		"^\ \{3}[0-9]\{1,2}\>"
-syn match fortranLabelNumber		"^\ \{4}[0-9]\>"
+syn match fortranLabelNumber		"^\d\{1,5}\>"
+syn match fortranLabelNumber		"^\ \d\{1,4}\>"
+syn match fortranLabelNumber		"^\ \{2}\d\{1,3}\>"
+syn match fortranLabelNumber		"^\ \{3}\d\{1,2}\>"
+syn match fortranLabelNumber		"^\ \{4}\d\>"
 
 "syn match fortranPreCondit		"^#define\>"
 "syn match fortranPreCondit		"^#include\>"

@@ -33,26 +33,24 @@ static Atom   wm_atoms[2];	/* Window Manager Atoms */
 #define DELETE_WINDOW_IDX 0	/* index in wm_atoms[] for WM_DELETE_WINDOW */
 #define SAVE_YOURSELF_IDX 1	/* index in wm_atoms[] for WM_SAVE_YOURSELF */
 
+static void gui_x11_timer_cb __ARGS((XtPointer timed_out, XtIntervalId *interval_id));
+static void gui_x11_visibility_cb __ARGS((Widget w, XtPointer dud, XEvent *event, Boolean *dum));
+static void gui_x11_expose_cb __ARGS((Widget w, XtPointer dud, XEvent *event, Boolean *dum));
+static void gui_x11_resize_window_cb __ARGS((Widget w, XtPointer dud, XEvent *event, Boolean *dum));
+static void gui_x11_focus_change_cb __ARGS((Widget w, XtPointer data, XEvent *event, Boolean *dum));
+static void gui_x11_enter_cb __ARGS((Widget w, XtPointer data, XEvent *event, Boolean *dum));
+static void gui_x11_leave_cb __ARGS((Widget w, XtPointer data, XEvent *event, Boolean *dum));
+static void gui_x11_mouse_cb __ARGS((Widget w, XtPointer data, XEvent *event, Boolean *dum));
+#ifdef USE_SNIFF
+static void gui_x11_sniff_request_cb __ARGS((XtPointer closure, int *source, XtInputId *id));
+#endif
 static void  gui_x11_check_copy_area __ARGS((void));
-
-static void  clip_x11_request_selection_cb
-	__ARGS((Widget, XtPointer, Atom *, Atom *, XtPointer, long_u *, int *));
-
-static Boolean	clip_x11_convert_selection_cb
-	__ARGS((Widget, Atom *, Atom *, Atom *, XtPointer *, long_u *, int *));
-
-static void  clip_x11_lose_ownership_cb
-	__ARGS((Widget, Atom *));
-
-static void  gui_x11_wm_protocol_handler
-	__ARGS((Widget, XtPointer, XEvent *, Boolean *));
-
-static void gui_x11_blink_cb
-	__ARGS((XtPointer timed_out, XtIntervalId *interval_id));
-
+static void  clip_x11_request_selection_cb __ARGS((Widget, XtPointer, Atom *, Atom *, XtPointer, long_u *, int *));
+static Boolean	clip_x11_convert_selection_cb __ARGS((Widget, Atom *, Atom *, Atom *, XtPointer *, long_u *, int *));
+static void  clip_x11_lose_ownership_cb __ARGS((Widget, Atom *));
+static void  gui_x11_wm_protocol_handler __ARGS((Widget, XtPointer, XEvent *, Boolean *));
+static void gui_x11_blink_cb __ARGS((XtPointer timed_out, XtIntervalId *interval_id));
 static Cursor gui_x11_create_blank_mouse __ARGS((void));
-
-static void gui_x11_blank_mouse __ARGS((int should_blank));
 
 
 static struct specialkey
@@ -343,7 +341,7 @@ static char **gui_argv = NULL;
  */
 
 /* ARGSUSED */
-    void
+    static void
 gui_x11_timer_cb(timed_out, interval_id)
     XtPointer	    timed_out;
     XtIntervalId    *interval_id;
@@ -352,7 +350,7 @@ gui_x11_timer_cb(timed_out, interval_id)
 }
 
 /* ARGSUSED */
-    void
+    static void
 gui_x11_visibility_cb(w, dud, event, dum)
     Widget	w;
     XtPointer	dud;
@@ -373,7 +371,7 @@ gui_x11_visibility_cb(w, dud, event, dum)
 }
 
 /* ARGSUSED */
-    void
+    static void
 gui_x11_expose_cb(w, dud, event, dum)
     Widget	w;
     XtPointer	dud;
@@ -402,7 +400,7 @@ gui_x11_expose_cb(w, dud, event, dum)
 }
 
 /* ARGSUSED */
-    void
+    static void
 gui_x11_resize_window_cb(w, dud, event, dum)
     Widget	w;
     XtPointer	dud;
@@ -416,7 +414,7 @@ gui_x11_resize_window_cb(w, dud, event, dum)
 }
 
 /* ARGSUSED */
-    void
+    static void
 gui_x11_focus_change_cb(w, data, event, dum)
     Widget	w;
     XtPointer	data;
@@ -424,6 +422,30 @@ gui_x11_focus_change_cb(w, data, event, dum)
     Boolean	*dum;
 {
     gui_focus_change(event->type == FocusIn);
+}
+
+/* ARGSUSED */
+    static void
+gui_x11_enter_cb(w, data, event, dum)
+    Widget	w;
+    XtPointer	data;
+    XEvent	*event;
+    Boolean	*dum;
+{
+    gui_focus_change(TRUE);
+    gui_update_cursor(TRUE, FALSE);
+}
+
+/* ARGSUSED */
+    static void
+gui_x11_leave_cb(w, data, event, dum)
+    Widget	w;
+    XtPointer	data;
+    XEvent	*event;
+    Boolean	*dum;
+{
+    gui_focus_change(FALSE);
+    gui_update_cursor(TRUE, FALSE);
 }
 
 /* ARGSUSED */
@@ -464,6 +486,12 @@ gui_x11_key_hit_cb(w, dud, event, dum)
     if (len == 1 && (ev_press->state & Mod1Mask)
 			&& !(key_sym == XK_BackSpace || key_sym == XK_Delete))
     {
+#ifdef USE_GUI_MOTIF
+	/* Ignore ALT keys when they are used for the menu only */
+	if (p_wak[0] == 'y'
+		|| (p_wak[0] == 'm' && gui_is_menu_shortcut(string[0])))
+	    return;
+#endif
 	/*
 	 * Before we set the 8th bit, check to make sure the user doesn't
 	 * already have a mapping defined for this sequence. We determine this
@@ -569,15 +597,12 @@ gui_x11_key_hit_cb(w, dud, event, dum)
     /*
      * blank out the pointer if necessary
      */
-    if (p_mh && !gui.pointer_hidden)
-    {
-	gui_x11_blank_mouse(TRUE);
-	gui.pointer_hidden = TRUE;
-    }
+    if (p_mh)
+	gui_mch_mousehide(TRUE);
 }
 
 /* ARGSUSED */
-    void
+    static void
 gui_x11_mouse_cb(w, dud, event, dum)
     Widget	w;
     XtPointer	dud;
@@ -604,14 +629,15 @@ gui_x11_mouse_cb(w, dud, event, dum)
 	/*
 	 * if our pointer is currently hidden, then we should show it.
 	 */
-	if (gui.pointer_hidden)
-	{
-	    gui_x11_blank_mouse(FALSE);
-	    gui.pointer_hidden = FALSE;
-	}
+	gui_mch_mousehide(FALSE);
 
-	if (button != MOUSE_DRAG)
+	if (button != MOUSE_DRAG)	/* just moving the rodent */
+	{
+	    if (dud)			/* moved in vimForm */
+		y -= gui.menu_height;
+	    gui_mouse_moved(y);
 	    return;
+	}
     }
     else
     {
@@ -656,9 +682,9 @@ gui_x11_mouse_cb(w, dud, event, dum)
     gui_send_mouse_event(button, x, y, repeated_click, vim_modifiers);
 }
 
-#if defined(USE_SNIFF) || defined(PROTO)
+#ifdef USE_SNIFF
 /* ARGSUSED */
-    void
+    static void
 gui_x11_sniff_request_cb(closure, source, id)
     XtPointer	closure;
     int		*source;
@@ -718,14 +744,14 @@ gui_mch_prepare(argc, argv)
 	    gui_argv[gui_argc++] = argv[arg];
 	    if (--*argc > arg)
 	    {
-		vim_memmove(&argv[arg], &argv[arg + 1], (*argc - arg)
+		mch_memmove(&argv[arg], &argv[arg + 1], (*argc - arg)
 						    * sizeof(char *));
 		if (cmdline_options[i].argKind != XrmoptionNoArg)
 		{
 		    /* Move the options argument as well */
 		    gui_argv[gui_argc++] = argv[arg];
 		    if (--*argc > arg)
-			vim_memmove(&argv[arg], &argv[arg + 1], (*argc - arg)
+			mch_memmove(&argv[arg], &argv[arg + 1], (*argc - arg)
 							    * sizeof(char *));
 		}
 	    }
@@ -880,6 +906,32 @@ gui_mch_init()
     }
 
     gui_x11_create_widgets();
+
+   /*
+    * Add an icon to Vim (Marcel Douben: 11 May 1998).
+    */
+    if (vim_strchr(p_guioptions, GO_ICON) != NULL)
+    {
+#include "vim_icon.xbm"
+#include "vim_mask.xbm"
+
+	Arg	arg[2];
+
+	XtSetArg(arg[0], XtNiconPixmap,
+		XCreateBitmapFromData(gui.dpy,
+		    DefaultRootWindow(gui.dpy),
+		    (char *)vim_icon_bits,
+		    vim_icon_width,
+		    vim_icon_height));
+	XtSetArg(arg[1], XtNiconMask,
+		XCreateBitmapFromData(gui.dpy,
+		    DefaultRootWindow(gui.dpy),
+		    (char *)vim_mask_icon_bits,
+		    vim_mask_icon_width,
+		    vim_mask_icon_height));
+	XtSetValues(vimShell, arg, (Cardinal)2);
+    }
+
     return OK;
 }
 
@@ -1145,7 +1197,8 @@ gui_mch_same_font(f1, f2)
 gui_mch_free_font(font)
     GuiFont	font;
 {
-    XFreeFont(gui.dpy, (XFontStruct *)font);
+    if (font)
+	XFreeFont(gui.dpy, (XFontStruct *)font);
 }
 
 /*
@@ -1255,16 +1308,20 @@ gui_x11_create_blank_mouse()
 }
 
 /*
- * use the blank mouse pointer
+ * Use the blank mouse pointer or not.
  */
-    static void
-gui_x11_blank_mouse(should_blank)
-    int should_blank;  /* nonzero = use blank ptr ; zero = use parent ptr */
+    void
+gui_mch_mousehide(hide)
+    int		hide;	/* TRUE = use blank ptr, FALSE = use parent ptr */
 {
-    if (should_blank)
-	XDefineCursor(gui.dpy, gui.wid, gui.blank_pointer);
-    else
-	XUndefineCursor(gui.dpy, gui.wid);
+    if (gui.pointer_hidden != hide)
+    {
+	if (hide)
+	    XDefineCursor(gui.dpy, gui.wid, gui.blank_pointer);
+	else
+	    XUndefineCursor(gui.dpy, gui.wid);
+	gui.pointer_hidden = hide;
+    }
 }
 
     void
@@ -1762,11 +1819,11 @@ clip_x11_convert_selection_cb(w, selection, target, type, value, length, format)
 	return False;
     }
     if (*target == XA_STRING)
-	vim_memmove(result, string, (size_t)(*length));
+	mch_memmove(result, string, (size_t)(*length));
     else
     {
 	result[0] = motion_type;
-	vim_memmove(result + 1, string, (size_t)(*length - 1));
+	mch_memmove(result + 1, string, (size_t)(*length - 1));
     }
     *type = *target;
     *format = 8;	    /* 8 bits per char */
@@ -1821,11 +1878,14 @@ gui_mch_menu_grey(menu, grey)
     GuiMenu *menu;
     int	    grey;
 {
-    gui_mch_menu_hidden(menu, False);
-    if (grey)
-	XtSetSensitive(menu->id, False);
-    else
-	XtSetSensitive(menu->id, True);
+    if (menu->id != (Widget)0)
+    {
+	gui_mch_menu_hidden(menu, False);
+	if (grey)
+	    XtSetSensitive(menu->id, False);
+	else
+	    XtSetSensitive(menu->id, True);
+    }
 }
 
 /*
@@ -1836,10 +1896,13 @@ gui_mch_menu_hidden(menu, hidden)
     GuiMenu *menu;
     int	    hidden;
 {
-    if (hidden)
-	XtUnmanageChild(menu->id);
-    else
-	XtManageChild(menu->id);
+    if (menu->id != (Widget)0)
+    {
+	if (hidden)
+	    XtUnmanageChild(menu->id);
+	else
+	    XtManageChild(menu->id);
+    }
 }
 
 /*
@@ -1869,10 +1932,13 @@ gui_mch_enable_scrollbar(sb, flag)
     GuiScrollbar    *sb;
     int		    flag;
 {
-    if (flag)
-	XtManageChild(sb->id);
-    else
-	XtUnmanageChild(sb->id);
+    if (sb->id != (Widget)0)
+    {
+	if (flag)
+	    XtManageChild(sb->id);
+	else
+	    XtUnmanageChild(sb->id);
+    }
 }
 
 
@@ -1912,7 +1978,7 @@ gui_x11_wm_protocol_handler(w, client_data, event, dum)
 
     /* Only exit when there are no changed files */
     exiting = TRUE;
-    if (!check_changed_any())	    /* will give warning for changed buffer */
+    if (!check_changed_any(FALSE))    /* will give warning for changed buffer */
 	getout(0);
 
     exiting = FALSE;
@@ -2065,13 +2131,76 @@ gui_x11_callbacks(textArea, vimForm)
 
     XtAddEventHandler(vimShell, FocusChangeMask, FALSE, gui_x11_focus_change_cb,
 	(XtPointer)0);
+    /*
+     * Only install these enter/leave callbacks when 'p' in 'guioptions'.
+     * Only needed for some window managers.
+     */
+    if (vim_strchr(p_guioptions, GO_POINTER) != NULL)
+    {
+	XtAddEventHandler(vimShell, LeaveWindowMask, FALSE, gui_x11_leave_cb,
+	    (XtPointer)0);
+	XtAddEventHandler(textArea, LeaveWindowMask, FALSE, gui_x11_leave_cb,
+	    (XtPointer)0);
+	XtAddEventHandler(textArea, EnterWindowMask, FALSE, gui_x11_enter_cb,
+	    (XtPointer)0);
+	XtAddEventHandler(vimShell, EnterWindowMask, FALSE, gui_x11_enter_cb,
+	    (XtPointer)0);
+    }
 
     XtAddEventHandler(vimForm, KeyPressMask, FALSE, gui_x11_key_hit_cb,
 	(XtPointer)0);
     XtAddEventHandler(textArea, KeyPressMask, FALSE, gui_x11_key_hit_cb,
 	(XtPointer)0);
 
+    /* get pointer moved events from scrollbar, needed for 'mousefocus' */
+    XtAddEventHandler(vimForm, PointerMotionMask,
+	FALSE, gui_x11_mouse_cb, (XtPointer)1);
     XtAddEventHandler(textArea, ButtonPressMask | ButtonReleaseMask |
 					 ButtonMotionMask | PointerMotionMask,
 	FALSE, gui_x11_mouse_cb, (XtPointer)0);
+}
+
+/*
+ * Get current y mouse coordinate in text window.
+ * Return -1 when unknown.
+ */
+    int
+gui_mch_get_mouse_x()
+{
+    int		rootx, rooty, winx, winy;
+    Window	root, child;
+    unsigned int mask;
+
+    if (XQueryPointer(gui.dpy, XtWindow(vimShell), &root, &child,
+		&rootx, &rooty, &winx, &winy, &mask))
+    {
+	if (gui.which_scrollbars[SBAR_LEFT])
+	    return winx - gui.scrollbar_width;
+	return winx;
+    }
+    return -1;
+}
+
+    int
+gui_mch_get_mouse_y()
+{
+    int		rootx, rooty, winx, winy;
+    Window	root, child;
+    unsigned int mask;
+
+    if (XQueryPointer(gui.dpy, XtWindow(vimShell), &root, &child,
+		&rootx, &rooty, &winx, &winy, &mask))
+	return winy - gui.menu_height;
+    return -1;
+}
+
+    void
+gui_mch_setmouse(x, y)
+    int		x;
+    int		y;
+{
+    if (gui.which_scrollbars[SBAR_LEFT])
+	x += gui.scrollbar_width;
+    XWarpPointer(gui.dpy, (Window)0, XtWindow(vimShell), 0, 0, 0, 0,
+						      x, y + gui.menu_height);
 }

@@ -1,7 +1,8 @@
 /* os_msdos.c */
+void mch_update_cursor __ARGS((void));
 long_u mch_avail_mem __ARGS((int special));
 void mch_delay __ARGS((long msec, int ignoreinput));
-int vim_remove __ARGS((char_u *name));
+int mch_remove __ARGS((char_u *name));
 void mch_write __ARGS((char_u *s, int len));
 int mch_inchar __ARGS((char_u *buf, int maxlen, long time));
 int mch_char_avail __ARGS((void));
@@ -35,5 +36,5 @@ int mch_call_shell __ARGS((char_u *cmd, int options));
 void mch_breakcheck __ARGS((void));
 int mch_has_wildcard __ARGS((char_u *s));
 int mch_expandpath __ARGS((struct growarray *gap, char_u *path, int flags));
-int vim_chdir __ARGS((char *path));
-char_u *vim_getenv __ARGS((char_u *var));
+int mch_chdir __ARGS((char *path));
+char_u *mch_getenv __ARGS((char_u *var));
