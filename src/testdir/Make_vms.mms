@@ -4,15 +4,15 @@
 # Authors:	Zoltan Arpadffy, <arpadffy@polarfox.com>
 #		Sandor Kopanyi,  <sandor.kopanyi@mailbox.hu>
 #
-# Last change:  2002 Apr 08
+# Last change:  2002 Apr 14
 #
 # This has been tested on VMS 6.2 to 7.2 on DEC Alpha and VAX.
 # Edit the lines in the Configuration section below to select.
 #
 # Execute with:
 #		mms/descrip=Make_vms.mms
-# Clean up with:
-#		mmk/descrip=Make_vms.mms clean
+# Cleanup with:
+#		mms/descrip=Make_vms.mms clean
 #
 # Make files are MMK compatible.
 #
@@ -35,8 +35,12 @@
 # Comment out if you have gzip on your system
 # HAVE_GZIP = YES
 
+# Comment out if you have GNU compatible diff on your system
+# HAVE_GDIFF = YES
+
 #######################################################################
 # End of configuration section.
+#
 # Please, do not change anything below without programming experience.
 #######################################################################
 
@@ -52,7 +56,7 @@ SCRIPT = test1.out  test2.out  test3.out  test4.out  test5.out  \
 	 test28.out test29.out test31.out test32.out \
 	 test33.out test34.out test35.out test36.out test37.out \
 	 test38.out test39.out test40.out test41.out test42.out \
-	 test43.out test44.out test45.out test46.out test47.out \
+	 test43.out test44.out test45.out test46.out \
 	 test48.out
 
 .IFDEF WANT_GUI
@@ -68,6 +72,10 @@ SCRIPT_UNIX = test10.out test12.out test25.out test27.out test30.out
 SCRIPT_GZIP = test11.out
 .ENDIF
 
+.IFDEF HAVE_GDIFF
+SCRIPT_GDIFF = test47.out
+.ENDIF
+
 .in.out :
 	-@ write sys$output " "
 	-@ write sys$output "-----------------------------------------------"
@@ -78,7 +86,7 @@ SCRIPT_GZIP = test11.out
 	-@ if "''F$SEARCH("test.out.*")'" .NES. "" then rename test.out $*.out
 	-@ if "''F$SEARCH("Xdotest.*")'"  .NES. "" then delete/noconfirm/nolog Xdotest.*.*
 
-all : clean nolog $(SCRIPT) $(SCRIPT_GUI) $(SCRIPT_UNIX) $(SCRIPT_GZIP)
+all : clean nolog $(SCRIPT) $(SCRIPT_GUI) $(SCRIPT_UNIX) $(SCRIPT_GZIP) $(SCRIPT_GDIFF)
 	-@ write sys$output " "
 	-@ write sys$output "-----------------------------------------------"
 	-@ write sys$output "                All done"
@@ -96,14 +104,15 @@ nolog :
         -@ write sys$output " Vim version:"
         -@ mcr $(VIMPROG) --version
         -@ write sys$output " Test date:"
-        -@ show time
+        -@ show time	
 	-@ write sys$output "-----------------------------------------------"
-	-@ write sys$output "                Test results"
+	-@ write sys$output "                Test results:"
 	-@ write sys$output "-----------------------------------------------"
 	-@ write sys$output "MAKE_VMS.MMS options:"
 	-@ write sys$output "   WANT_GUI  = ""$(WANT_GUI)"" "
 	-@ write sys$output "   WANT_UNIX = ""$(WANT_UNIX)"" "
 	-@ write sys$output "   HAVE_GZIP = ""$(HAVE_GZIP)"" "
+        -@ write sys$output "   HAVE_GDIFF= ""$(HAVE_GDIFF)"" "
 	-@ write sys$output "Default vimrc file is VMS.VIM:
 	-@ write sys$output "-----------------------------------------------"
 	-@ type VMS.VIM
@@ -111,5 +120,5 @@ nolog :
 clean :
 	-@ if "''F$SEARCH("*.out")'"     .NES. "" then delete/noconfirm/nolog *.out.*
 	-@ if "''F$SEARCH("test.log")'"  .NES. "" then delete/noconfirm/nolog test.log.*
-        -@ if "''F$SEARCH("Xdotest.*")'" .NES. "" then delete/noconfirm/nolog Xdotest.*.*
+	-@ if "''F$SEARCH("Xdotest.*")'" .NES. "" then delete/noconfirm/nolog Xdotest.*.*
 	-@ if "''F$SEARCH("*.*_sw*")'"   .NES. "" then delete/noconfirm/nolog *.*_sw*.*

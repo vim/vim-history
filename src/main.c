@@ -152,7 +152,7 @@ main
     mch_early_init();
 
 #ifdef FEAT_TCL
-    tcl_init(argv[0]);
+    vim_tcl_init(argv[0]);
 #endif
 
 #ifdef MEM_PROFILE

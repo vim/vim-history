@@ -1,5 +1,5 @@
 /* if_tcl.c */
-void tcl_init __ARGS((char *arg));
+void vim_tcl_init __ARGS((char *arg));
 int tcl_enabled __ARGS((int verbose));
 void tcl_end __ARGS((void));
 void ex_tcl __ARGS((exarg_T *eap));

@@ -217,7 +217,7 @@ static char *find_executable_arg = NULL;
 #endif
 
     void
-tcl_init(arg)
+vim_tcl_init(arg)
     char	*arg;
 {
 #ifndef DYNAMIC_TCL
