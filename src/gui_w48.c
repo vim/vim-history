@@ -2524,6 +2524,46 @@ gui_mch_init_font(char_u *font_name, int fontset)
     GetFontSize(font);
     hl_set_font_name(lf.lfFaceName);
 
+    /* When setting 'guifont' to "*" replace it with the actual font name. */
+    if (STRCMP(font_name, "*") == 0 && STRCMP(p_guifont, "*") == 0)
+    {
+	char	    *charset_name;
+	char_u	    *p;
+
+	charset_name = charset_id2name((int)lf.lfCharSet);
+	p = alloc((unsigned)(strlen(lf.lfFaceName) + 20
+		    + (charset_name == NULL ? 0 : strlen(charset_name) + 2)));
+	if (p != NULL)
+	{
+	    /* make a normal font string out of the lf thing:*/
+	    sprintf((char *)p, "%s:h%d", lf.lfFaceName, pixels_to_points(
+			 lf.lfHeight < 0 ? -lf.lfHeight : lf.lfHeight, TRUE));
+	    vim_free(p_guifont);
+	    p_guifont = p;
+	    while (*p)
+	    {
+		if (*p == ' ')
+		    *p = '_';
+		++p;
+	    }
+#ifndef MSWIN16_FASTTEXT
+	    if (lf.lfItalic)
+		STRCAT(p, ":i");
+	    if (lf.lfWeight >= FW_BOLD)
+		STRCAT(p, ":b");
+#endif
+	    if (lf.lfUnderline)
+		STRCAT(p, ":u");
+	    if (lf.lfStrikeOut)
+		STRCAT(p, ":s");
+	    if (charset_name != NULL)
+	    {
+		STRCAT(p, ":c");
+		STRCAT(p, charset_name);
+	    }
+	}
+    }
+
 #ifndef MSWIN16_FASTTEXT
     if (!lf.lfItalic)
     {
