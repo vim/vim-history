@@ -3674,11 +3674,11 @@ findswapname(buf, dirp, old_fname)
 		    (void)EMSG(_("E325: ATTENTION"));
 		    MSG_PUTS(_("\nFound a swap file by the name \""));
 		    msg_home_replace(fname);
-		    MSG_PUTS(_("\"\n"));
+		    MSG_PUTS("\"\n");
 		    sx = swapfile_info(fname);
 		    MSG_PUTS(_("While opening file \""));
 		    msg_outtrans(buf->b_fname);
-		    MSG_PUTS(_("\"\n"));
+		    MSG_PUTS("\"\n");
 		    if (mch_stat((char *)buf->b_fname, &st) != -1)
 		    {
 			MSG_PUTS(_("             dated: "));

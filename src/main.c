@@ -933,14 +933,14 @@ scripterror:
 			mch_errmsg(argv[-1]);
 			mch_errmsg(" ");
 			mch_errmsg(argv[0]);
-			mch_errmsg(_("\"\n"));
+			mch_errmsg("\"\n");
 			mch_exit(2);
 		    }
 		    if ((scriptin[0] = mch_fopen(argv[0], READBIN)) == NULL)
 		    {
 			mch_errmsg(_("Cannot open for reading: \""));
 			mch_errmsg(argv[0]);
-			mch_errmsg(_("\"\n"));
+			mch_errmsg("\"\n");
 			mch_exit(2);
 		    }
 		    if (save_typebuf() == FAIL)
@@ -984,7 +984,7 @@ scripterror:
 		    {
 			mch_errmsg(_("Cannot open for script output: \""));
 			mch_errmsg(argv[0]);
-			mch_errmsg(_("\"\n"));
+			mch_errmsg("\"\n");
 			mch_exit(2);
 		    }
 		    break;
