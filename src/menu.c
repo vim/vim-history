@@ -2357,7 +2357,6 @@ menutrans_lookup(name, len)
     menutrans_T		*tp = (menutrans_T *)menutrans_ga.ga_data;
     int			i;
     char_u		*dname;
-    int			dlen;
 
     for (i = 0; i < menutrans_ga.ga_len; ++i)
 	if (STRNCMP(name, tp[i].from, len) == 0 && tp[i].from[len] == NUL)
@@ -2370,7 +2369,6 @@ menutrans_lookup(name, len)
     name[len] = i;
     if (dname != NULL)
     {
-	dlen = STRLEN(dname);
 	for (i = 0; i < menutrans_ga.ga_len; ++i)
 	    if (STRCMP(dname, tp[i].from_noamp) == 0)
 	    {
