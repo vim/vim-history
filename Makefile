@@ -614,6 +614,7 @@ RT_ALL =	\
 		runtime/macros/maze/maze_5.78 \
 		runtime/macros/maze/maze_mac \
 		runtime/macros/maze/mazeansi.c \
+		runtime/macros/maze/mazeclean.c \
 		runtime/macros/maze/poster \
 		runtime/macros/shellmenu.vim \
 		runtime/macros/swapmous.vim \
@@ -630,7 +631,7 @@ RT_ALL =	\
 		runtime/indoff.vim \
 		runtime/termcap \
 		runtime/tools/README.txt \
-		runtime/tools/[a-z]*[^~] \
+		runtime/tools/[a-z]*[a-z0-9] \
 		runtime/tutor/README.txt \
 		runtime/tutor/tutor \
 		runtime/tutor/tutor.vim \
