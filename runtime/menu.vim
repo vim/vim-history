@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Dec 22
+" Last change:	1999 Dec 27
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -118,27 +118,27 @@ if !exists("bmenu_priority")
     let bmenu_priority = 60
 endif
 
-func! Bmenu_add()
+func! BmenuAdd()
     if g:bmenu_wait == 0
-	call Menufilename(expand("<afile>"), expand("<abuf>"))
+	call BMenuFilename(expand("<afile>"), expand("<abuf>"))
     endif
 endfunc
 
-func! Bmenu_remove()
+func! BmenuRemove()
     if g:bmenu_wait == 0
-	let munge = Mungename(expand("<afile>"), expand("<abuf>"))
+	let munge = BmenuMunge(expand("<afile>"), expand("<abuf>"))
 
 	if g:bmenu_short == 0
 	    exe 'aun &Buffers.' . munge
 	else
-	    exe 'aun &Buffers.' . Hash2(munge) . munge
+	    exe 'aun &Buffers.' . BmenuHash2(munge) . munge
 	endif
 	let g:bmenu_count = g:bmenu_count - 1
     endif
 endfunc
 
 " buffer menu stuff
-func! Bmenu(...)
+func! BmenuShow(...)
     let g:bmenu_wait = 1
     let g:bmenu_short = 1
     let g:bmenu_count = 0
@@ -157,7 +157,7 @@ func! Bmenu(...)
     " create new menu; make 'cpo' empty to include the <CR>
     let cpo_save = &cpo
     let &cpo = ""
-    exe 'am ' . g:bmenu_priority . ".2 &Buffers.Refresh :call Bmenu()<CR>"
+    exe 'am ' . g:bmenu_priority . ".2 &Buffers.Refresh :call BmenuShow()<CR>"
     exe 'am ' . g:bmenu_priority . ".4 &Buffers.Delete :bd<CR>"
     exe 'am ' . g:bmenu_priority . ".6 &Buffers.Alternate :b #<CR>"
     exe 'am ' . g:bmenu_priority . ".8 &Buffers.-SEP- :"
@@ -179,26 +179,26 @@ func! Bmenu(...)
     let buf = 1
     while buf <= bufnr('$')
 	if bufexists(buf)
-	    call Menufilename(bufname(buf), buf)
+	    call BMenuFilename(bufname(buf), buf)
 	endif
 	let buf = buf + 1
     endwhile
     let g:bmenu_wait = 0
     aug buffer_list
 	au!
-	au BufCreate,BufFilePost * call Bmenu_add()
-	au BufDelete,BufFilePre * call Bmenu_remove()
+	au BufCreate,BufFilePost * call BmenuAdd()
+	au BufDelete,BufFilePre * call BmenuRemove()
     aug END
 endfunc
 
-func! Hash(name)
+func! BmenuHash(name)
     " Make name all upper case, so that chars are between 32 and 96
     let nm = substitute(a:name, ".*", '\U\0', "")
     " convert first six chars into a number for sorting:
     return (char2nr(nm[0]) - 32) * 0x1000000 + (char2nr(nm[1]) - 32) * 0x40000 + (char2nr(nm[2]) - 32) * 0x1000 + (char2nr(nm[3]) - 32) * 0x40 + (char2nr(nm[4]) - 32) * 0x40 + (char2nr(nm[5]) - 32)
 endfunc
 
-func! Hash2(name)
+func! BmenuHash2(name)
     let nm = substitute(a:name, ".", '\L\0', "")
     if nm[0] >= 'a' && nm[0] <= 'd'
 	return '&abcd.'
@@ -217,13 +217,13 @@ func! Hash2(name)
 endfunc
 
 " take a buffer number, return a name to insert into a menu:
-func! Menufilename(name, num)
-    let munge = Mungename(a:name, a:num)
-    let hash = Hash(munge)
+func! BMenuFilename(name, num)
+    let munge = BmenuMunge(a:name, a:num)
+    let hash = BmenuHash(munge)
     if g:bmenu_short == 0
 	let name = 'am ' . g:bmenu_priority . '.' . hash .' &Buffers.' . munge
     else
-	let name = 'am ' . g:bmenu_priority . '.' . hash . '.' . hash .' &Buffers.' . Hash2(munge) . munge
+	let name = 'am ' . g:bmenu_priority . '.' . hash . '.' . hash .' &Buffers.' . BmenuHash2(munge) . munge
     endif
     " make 'cpo' empty to include the <CR>
     let cpo_save = &cpo
@@ -232,7 +232,7 @@ func! Menufilename(name, num)
     let &cpo = cpo_save
 endfunc
 
-func! Mungename(fname, bnum)
+func! BmenuMunge(fname, bnum)
     let name = a:fname
     if name == ''
 	let name = '[No File]'
@@ -253,11 +253,11 @@ endfunc
 " When just starting Vim, load the buffer menu later
 if has("vim_starting")
     augroup LoadBufferMenu
-        au! VimEnter * if !exists("no_buffers_menu") | call Bmenu() | endif
+        au! VimEnter * if !exists("no_buffers_menu") | call BmenuShow() | endif
 	au  VimEnter * au! LoadBufferMenu
     augroup END
 else
-    call Bmenu()
+    call BmenuShow()
 endif
 
 endif " !exists("no_buffers_menu")
@@ -677,13 +677,24 @@ delfun SynMenu
 am 50.95 &Syntax.-SEP1-				:
 
 am 50.100 &Syntax.Set\ 'syntax'\ only		:let syntax_menu_synonly=1<CR>
-am 50.101 &Syntax.Set\ 'filetype'\ too		:if exists("syntax_menu_synonly")<Bar>unlet syntax_menu_synonly<Bar>endif<CR>
+am 50.101 &Syntax.Set\ 'filetype'\ too		:call SmenuNosynonly()<CR>
+fun! SmenuNosynonly()
+  if exists("syntax_menu_synonly")
+    unlet syntax_menu_synonly
+  endif
+endfun
 
 am 50.110 &Syntax.&Off			:syn off<CR>
 am 50.112 &Syntax.&Manual		:syn manual<CR>
 am 50.114 &Syntax.A&utomatic		:syn on<CR>
 
-am 50.116 &Syntax.&on\ (this\ file)	:if !exists("syntax_on")<Bar>syn manual<Bar>endif<Bar>set syn=ON<CR>
+am 50.116 &Syntax.&on\ (this\ file)	:call SmenuSynoff()<CR>
+fun! SmenuSynoff()
+  if !exists("syntax_on")
+    syn manual
+  endif
+  set syn=ON
+endfun
 am 50.118 &Syntax.o&ff\ (this\ file)	:syn clear<CR>
 
 am 50.700 &Syntax.-SEP3-		:
