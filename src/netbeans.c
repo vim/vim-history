@@ -1120,7 +1120,8 @@ nb_do_cmd(
 		nb_reply_nr(cmdno, (long)count_changed_buffers());
 	    else
 		/* Return whether the buffer is modified. */
-		nb_reply_nr(cmdno, (long)buf->bufp->b_changed);
+		nb_reply_nr(cmdno, (long)(buf->bufp->b_changed
+					   || isNetbeansModified(buf->bufp)));
 /* =====================================================================*/
 	}
 	else if (streq((char *)cmd, "saveAndExit"))
