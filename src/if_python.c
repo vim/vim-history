@@ -363,33 +363,42 @@ static int initialised = 0;
 typedef PyObject PyThreadState;
 #endif /* Python 1.4 */
 
+#if defined(PY_VERSION_HEX) && PY_VERSION_HEX >= 0x020300F0
+  /* Python 2.3: can invoke ":python" recursively. */
+# define PY_CAN_RECURSE
+#else
 static PyThreadState* saved_python_thread = NULL;
 
-/* suspend a thread of the python interpreter
-   - other threads are allowed to run */
-
+/*
+ * Suspend a thread of the Python interpreter, other threads are allowed to
+ * run.
+ */
 static void Python_SaveThread(void)
 {
     saved_python_thread = PyEval_SaveThread();
 }
 
-/* restore a thread of the python interpreter
-   - waits for other threads to block */
-
+/*
+ * Restore a thread of the Python interpreter, waits for other threads to
+ * block.
+ */
 static void Python_RestoreThread(void)
 {
-    PyEval_RestoreThread( saved_python_thread );
+    PyEval_RestoreThread(saved_python_thread);
     saved_python_thread = NULL;
 }
+#endif
 
-/* obtain a lock on the Vim data structures */
-
+/*
+ * obtain a lock on the Vim data structures
+ */
 static void Python_Lock_Vim(void)
 {
 }
 
-/* release a lock on the Vim data structures */
-
+/*
+ * release a lock on the Vim data structures
+ */
 static void Python_Release_Vim(void)
 {
 }
@@ -433,8 +442,10 @@ Python_Init(void)
 	if (PythonMod_Init())
 	    goto fail;
 
+#ifndef PY_CAN_RECURSE
 	/* the first python thread is vim's */
 	Python_SaveThread();
+#endif
 
 	initialised = 1;
     }
@@ -457,20 +468,28 @@ fail:
     static void
 DoPythonCommand(exarg_T *eap, const char *cmd)
 {
-    static int recursive = 0;
+#ifdef PY_CAN_RECURSE
+    PyGILState_STATE	pygilstate;
+#else
+    static int		recursive = 0;
+#endif
+#if defined(MACOS) && !defined(MACOS_X_UNIX)
+    GrafPtr		oldPort;
+#endif
 
+#ifndef PY_CAN_RECURSE
     if (recursive)
     {
 	EMSG(_("E659: Cannot invoke Python recursively"));
 	return;
     }
     ++recursive;
+#endif
 
 #if defined(MACOS) && !defined(MACOS_X_UNIX)
-    GrafPtr oldPort;
-    GetPort (&oldPort);
+    GetPort(&oldPort);
     /* Check if the Python library is available */
-    if ( (Ptr) PyMac_Initialize == (Ptr) kUnresolvedCFragSymbolAddress)
+    if ((Ptr)PyMac_Initialize == (Ptr)kUnresolvedCFragSymbolAddress)
 	goto theend;
 #endif
     if (Python_Init())
@@ -479,17 +498,32 @@ DoPythonCommand(exarg_T *eap, const char *cmd)
     RangeStart = eap->line1;
     RangeEnd = eap->line2;
     Python_Release_Vim();	    /* leave vim */
+
+#ifdef PY_CAN_RECURSE
+    pygilstate = PyGILState_Ensure();
+#else
     Python_RestoreThread();	    /* enter python */
+#endif
+
     PyRun_SimpleString((char *)(cmd));
+
+#ifdef PY_CAN_RECURSE
+    PyGILState_Release(pygilstate);
+#else
     Python_SaveThread();	    /* leave python */
+#endif
+
     Python_Lock_Vim();		    /* enter vim */
     PythonIO_Flush();
 #if defined(MACOS) && !defined(MACOS_X_UNIX)
-    SetPort (oldPort);
+    SetPort(oldPort);
 #endif
 
 theend:
-    --recursive;
+#ifndef PY_CAN_RECURSE
+    --recursive
+#endif
+    return;	    /* keeps lint happy */
 }
 
 /*
