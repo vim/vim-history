@@ -2508,7 +2508,7 @@ win_line(wp, lnum, startrow, endrow)
 #ifdef FEAT_DIFF
     int		filler_lines;		/* nr of filler lines to be drawn */
     int		filler_todo;		/* nr of filler lines still to do + 1 */
-    int		diff_attr = 0;		/* attributes for changed/added line */
+    enum hlf_value diff_hlf = (enum hlf_value)0; /* type of diff highlighting */
     int		change_start = MAXCOL;	/* first col of changed area */
     int		change_end = -1;	/* last col of changed area */
 #endif
@@ -2718,14 +2718,14 @@ win_line(wp, lnum, startrow, endrow)
 	if (filler_lines == -1)
 	{
 	    if (diff_find_change(wp, lnum, &change_start, &change_end))
-		diff_attr = hl_attr(HLF_ADD);	/* added line */
+		diff_hlf = HLF_ADD;	/* added line */
 	    else if (change_start == 0)
-		diff_attr = hl_attr(HLF_TXD);	/* changed text */
+		diff_hlf = HLF_TXD;	/* changed text */
 	    else
-		diff_attr = hl_attr(HLF_CHD);	/* changed line */
+		diff_hlf = HLF_CHD;	/* changed line */
 	}
 	else
-	    diff_attr = hl_attr(HLF_ADD);	/* added line */
+	    diff_hlf = HLF_ADD;		/* added line */
 	filler_lines = 0;
 	area_highlighting = TRUE;
     }
@@ -3230,20 +3230,20 @@ win_line(wp, lnum, startrow, endrow)
 		char_attr = search_attr;
 
 #ifdef FEAT_DIFF
-	    if (diff_attr != 0 && n_extra == 0)
+	    if (diff_hlf != (enum hlf_value)0 && n_extra == 0)
 	    {
-		if (diff_attr == hl_attr(HLF_CHD) && ptr - line >= change_start)
-		    diff_attr = hl_attr(HLF_TXD);	/* changed text */
-		if (diff_attr == hl_attr(HLF_TXD) && ptr - line > change_end)
-		    diff_attr = hl_attr(HLF_CHD);	/* changed line */
+		if (diff_hlf == HLF_CHD && ptr - line >= change_start)
+		    diff_hlf = HLF_TXD;		/* changed text */
+		if (diff_hlf == HLF_TXD && ptr - line > change_end)
+		    diff_hlf = HLF_CHD;		/* changed line */
 		if (attr == 0 || area_attr != attr)
-		    area_attr = diff_attr;
+		    area_attr = hl_attr(diff_hlf);
 		if (attr == 0 || char_attr != attr)
 		{
 		    if (search_attr != 0)
 			char_attr = search_attr;
 		    else
-			char_attr = diff_attr;
+			char_attr = hl_attr(diff_hlf);
 		}
 	    }
 #endif
@@ -3627,7 +3627,7 @@ win_line(wp, lnum, startrow, endrow)
 		     * "$". */
 		    if (
 # ifdef FEAT_DIFF
-			    diff_attr == 0
+			    diff_hlf == (enum hlf_value)0
 #  ifdef LINE_ATTR
 			    &&
 #  endif
@@ -3711,7 +3711,7 @@ win_line(wp, lnum, startrow, endrow)
 #if defined(FEAT_DIFF) || defined(LINE_ATTR)
 		else if ((
 # ifdef FEAT_DIFF
-			    diff_attr != 0
+			    diff_hlf != (enum hlf_value)0
 #  ifdef LINE_ATTR
 			    ||
 #  endif
@@ -3725,11 +3725,11 @@ win_line(wp, lnum, startrow, endrow)
 		    c = ' ';
 		    --ptr;	    /* put it back at the NUL */
 # ifdef FEAT_DIFF
-		    if (diff_attr == hl_attr(HLF_TXD))
+		    if (diff_hlf == HLF_TXD)
 		    {
-			diff_attr = hl_attr(HLF_CHD);
+			diff_hlf = HLF_CHD;
 			if (attr == 0 || char_attr != attr)
-			    char_attr = diff_attr;
+			    char_attr = hl_attr(diff_hlf);
 		    }
 # endif
 		}
