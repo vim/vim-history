@@ -1333,6 +1333,8 @@ scrollup(line_count, byfold)
 
     if (curwin->w_topline > curbuf->b_ml.ml_line_count)
 	curwin->w_topline = curbuf->b_ml.ml_line_count;
+    if (curwin->w_botline > curbuf->b_ml.ml_line_count + 1)
+	curwin->w_botline = curbuf->b_ml.ml_line_count + 1;
 
 #ifdef FEAT_DIFF
     check_topfill(curwin, FALSE);
