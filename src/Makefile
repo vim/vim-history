@@ -1142,12 +1142,12 @@ PHOTONGUI_TESTTARGET = gui
 CARBONGUI_SRC	= gui.c gui_mac.c
 CARBONGUI_OBJ	= objects/gui.o objects/gui_mac.o objects/pty.o
 CARBONGUI_DEFS	= -DFEAT_GUI_MAC -arch ppc -fno-common -fpascal-strings \
-                  -Wall -Wno-unknown-pragmas \
-                  -mdynamic-no-pic -pipe
+		  -Wall -Wno-unknown-pragmas \
+		  -mdynamic-no-pic -pipe
 CARBONGUI_IPATH	= -I. -Iproto
 CARBONGUI_LIBS_DIR =
 CARBONGUI_LIBS1	= -framework Carbon
-CARBONGUI_LIBS2	= -ltermcap
+CARBONGUI_LIBS2	=
 CARBONGUI_INSTALL = install_macosx
 CARBONGUI_TARGETS =
 CARBONGUI_MAN_TARGETS =
