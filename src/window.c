@@ -847,6 +847,7 @@ close_window(win, free_buf)
 		win_enter(wp, FALSE);
 #ifdef AUTOCMD
 		if (other_buffer)
+			/* careful: after this wp and win may be invalid! */
 			apply_autocmds(EVENT_BUFENTER, NULL, NULL);
 #endif
 	}

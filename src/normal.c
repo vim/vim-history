@@ -102,6 +102,7 @@ normal()
 	int				old_col = 0;
 	int				dont_adjust_op_end = FALSE;
 	static int		search_dont_set_mark = FALSE;	/* for "*" and "#" */
+	FPOS			old_pos;				/* cursor position before command */
 
 	Prenum = 0;
 	/*
@@ -236,6 +237,7 @@ getcount:
 	}
 	msg_didout = FALSE;		/* don't scroll screen up for normal command */
 	msg_col = 0;
+	old_pos = curwin->w_cursor;			/* remember where cursor was */
 
 #ifdef RIGHTLEFT
 	if (curwin->w_p_rl && KeyTyped)		/* invert horizontal operations */
@@ -547,7 +549,8 @@ dozet:
 	  case K_CCIRCM:			/* CTRL-^, short for ":e #" */
 		if (checkclearopq())
 			break;
-		(void)buflist_getfile((int)Prenum, (linenr_t)0, GETF_SETMARK|GETF_ALT);
+		(void)buflist_getfile((int)Prenum, (linenr_t)0,
+												GETF_SETMARK|GETF_ALT, FALSE);
 		break;
 
 		/*
@@ -680,7 +683,7 @@ search_word:
 	  case Ctrl('T'):		/* backwards in tag stack */
 		if (checkclearopq())
 			break;
-		do_tag((char_u *)"", 2, (int)Prenum1);
+		do_tag((char_u *)"", 2, (int)Prenum1, FALSE);
 		break;
 
 /*
@@ -1121,12 +1124,10 @@ docsearch:
 		if ((c == '[' && vim_strchr((char_u *)"{(*/#", nchar) != NULL) ||
 		    (c == ']' && vim_strchr((char_u *)"})*/#", nchar) != NULL))
 		{
-			FPOS old_pos;
 			FPOS new_pos;
 
 			if (nchar == '*')
 				nchar = '/';
-			old_pos = curwin->w_cursor;
 			new_pos.lnum = 0;
 			while (Prenum1--)
 			{
@@ -1932,7 +1933,7 @@ cursormark:
 				if (curwin->w_p_wrap)
 				{
 					n = ((curwin->w_virtcol + (curwin->w_p_nu ? 8 : 0)) /
-															   Columns) * Columns;
+														   Columns) * Columns;
 					if (curwin->w_p_nu && n > 8)
 						n -= 8;
 				}
@@ -1952,11 +1953,11 @@ cursormark:
 				op_inclusive = TRUE;
 				if (curwin->w_p_wrap)
 				{
-					curwin->w_curswant = MAXCOL;		/* so we stay at the end */
+					curwin->w_curswant = MAXCOL;	/* so we stay at the end */
 					if (Prenum1 == 1)
 					{
 						n = ((curwin->w_virtcol + (curwin->w_p_nu ? 8 : 0)) /
-													   Columns + 1) * Columns - 1;
+												   Columns + 1) * Columns - 1;
 						if (curwin->w_p_nu && n > 8)
 							n -= 8;
 						coladvance((colnr_t)n);
@@ -2018,7 +2019,7 @@ gotofile:
 				{
 					/* do autowrite if necessary */
 					if (curbuf->b_changed && curbuf->b_nwindows <= 1 && !p_hid)
-						autowrite(curbuf);
+						autowrite(curbuf, FALSE);
 					setpcmark();
 					(void)do_ecmd(0, ptr, NULL, NULL, (linenr_t)0,
 													   p_hid ? ECMD_HIDE : 0);
@@ -2199,11 +2200,14 @@ goto_line_one:
 	 * message.
 	 * In Visual mode and with "^O" in Insert mode, a short message will be
 	 * overwritten by the mode message.  Wait a bit, until a key is hit.
+	 * In Visual mode, it's more important to keep the Visual area updated
+	 * than keeping a message (e.g. from a /pat search).
 	 * Only do this if the command was typed, not from a mapping.
 	 * Also wait a bit after an error message, e.g. for "^O:".
 	 * Don't redraw the screen, it would remove the message.
 	 */
-	if (((p_smd && (VIsual_active || restart_edit) &&
+	if (((p_smd && ((VIsual_active && old_pos.lnum == curwin->w_cursor.lnum &&
+			old_pos.col == curwin->w_cursor.col) || restart_edit) &&
 			(clear_cmdline || redraw_cmdline) && msg_didany && KeyTyped) ||
 			(restart_edit && !VIsual_active && (msg_scroll || emsg_on_display
 #ifdef SLEEP_IN_EMSG

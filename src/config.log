@@ -133,6 +133,10 @@ configure:3011: gcc -o conftest -g -O2 -fno-strength-reduce -Wall -Wshadow -Wmis
 configure:2997: warning: no previous prototype for `t'
 configure:3011: gcc -o conftest -g -O2 -fno-strength-reduce -Wall -Wshadow -Wmissing-prototypes -Wall -Wshadow   conftest.c -ltermcap  1>&5
 configure:2997: warning: no previous prototype for `t'
+configure:3011: gcc -o conftest -g -O2 -fno-strength-reduce -Wall -Wshadow -Wmissing-prototypes -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:2997: warning: no previous prototype for `t'
+configure:3011: gcc -o conftest -g -O2 -fno-strength-reduce -Wall -Wshadow -Wmissing-prototypes -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:2997: warning: no previous prototype for `t'
 configure:3064: gcc -o conftest -g -O2 -fno-strength-reduce -Wall -Wshadow -Wmissing-prototypes -Wall -Wshadow   conftest.c -ltermcap  1>&5
 configure:3050: warning: no previous prototype for `t'
 configure:3064: gcc -o conftest -g -O2 -fno-strength-reduce -Wall -Wshadow -Wmissing-prototypes -Wall -Wshadow   conftest.c -ltermcap  1>&5
@@ -168,9 +172,9 @@ configure:3223: warning: implicit declaration of function `memmove'
 configure:3224: warning: implicit declaration of function `strncmp'
 etags: not found
 etags: not found
-Exuberant Ctags, Version 1.3, by Darren Hiebert
+Exuberant Ctags, Version 1.4, by Darren Hiebert
 Usage: ctags [-aBdFnsStTuwWx] [-{f|o} name] [-h list] [-i [+-=]types]
-             [-L file] [--help] file(s)
+             [-I file] [-L file] [--help] file(s)
     --help     Prints a more detailed help message.
     -a         Append tags to existing tag file.
     -B         Use backward searching patterns (?...?).
@@ -178,6 +182,7 @@ Usage: ctags [-aBdFnsStTuwWx] [-{f|o} name] [-h list] [-i [+-=]types]
     -F         Use forward searching patterns (/.../) (default).
     -h <list>  List of header file extensions (default ".h.H.hpp.hxx.h++").
     -i <types> List of tag types to include [defgptvPS] (default "=defgtvS").
+    -I <file>  List of tokens to ignore are read from specified file.
     -L <file>  List of source file names are read from specified file.
     -n         Use line numbers in tag file instead of search patterns.
     -o <name>  Alternative for -f.

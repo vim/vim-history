@@ -99,7 +99,7 @@ gui_athena_scroll_cb_jump(w, client_data, call_data)
 
 			sb = &wp->w_scrollbar;
 
-			value = *((float *)call_data) * (float)sb->max + 0.5;
+			value = *((float *)call_data) * (float)(sb->max - 1) + 0.5;
 			++value;						/* range is 1 to line_count */
 			sb->value = value;
 			

@@ -20,11 +20,11 @@ static int get_tagfname __ARGS((int, char_u	*));
 #ifdef EMACS_TAGS
 static int parse_tag_line __ARGS((char_u *, int,
 					  char_u **, char_u **, char_u **, char_u **, char_u **));
-static int jumpto_tag __ARGS((char_u *, int, char_u *, char_u *));
+static int jumpto_tag __ARGS((char_u *, int, char_u *, char_u *, int));
 #else
 static int parse_tag_line __ARGS((char_u *,
 					  char_u **, char_u **, char_u **, char_u **, char_u **));
-static int jumpto_tag __ARGS((char_u *, char_u *));
+static int jumpto_tag __ARGS((char_u *, char_u *, int));
 #endif
 static int test_for_static __ARGS((char_u **, char_u *, char_u *, char_u *));
 static char_u *expand_rel_name __ARGS((char_u *fname, char_u *tag_fname));
@@ -46,10 +46,11 @@ static char_u *topmsg = (char_u *)"at top of tag stack";
  * type == 0 (:tag): jump to old tag
  */
 	void
-do_tag(tag, type, count)
+do_tag(tag, type, count, forceit)
 	char_u	*tag;
 	int		type;
 	int		count;
+	int		forceit;		/* :ta with ! */
 {
 	int 			i;
 	struct taggy	*tagstack = curwin->w_tagstack;
@@ -115,7 +116,8 @@ do_tag(tag, type, count)
 			 * changed) keep original position in tag stack.
 			 */
 			if (buflist_getfile(tagstack[tagstackidx].fmark.fnum,
-				 tagstack[tagstackidx].fmark.mark.lnum, GETF_SETMARK) == FAIL)
+					tagstack[tagstackidx].fmark.mark.lnum,
+					GETF_SETMARK, forceit) == FAIL)
 			{
 				tagstackidx = oldtagstackidx;	/* back to old position */
 				goto end_do_tag;
@@ -156,7 +158,8 @@ do_tag(tag, type, count)
 	/* curwin will change in the call to find_tags() if ^W^] was used -- webb */
 	curwin->w_tagstackidx = tagstackidx;
 	curwin->w_tagstacklen = tagstacklen;
-	if (find_tags(tagstack[tagstackidx].tagname, NULL, NULL, NULL, FALSE) > 0)
+	if (find_tags(tagstack[tagstackidx].tagname, NULL, NULL, NULL,
+														  FALSE, forceit) > 0)
 		++tagstackidx;
 
 end_do_tag:
@@ -229,12 +232,13 @@ do_tags()
 #define PRI_FULL_MATCH		4		/* case of tag matches */
 
 	int
-find_tags(tag, prog, num_file, file, help_only)
+find_tags(tag, prog, num_file, file, help_only, forceit)
 	char_u		*tag;				/* NULL or tag to search for */
 	regexp		*prog;				/* regexp program or NULL */
 	int			*num_file;			/* return value: number of matches found */
 	char_u		***file;			/* return value: array of matches found */
 	int			help_only;			/* if TRUE: only tags for help files */
+	int			forceit;			/* :ta with ! */
 {
 	FILE	   *fp;
 	char_u	   *lbuf;					/* line buffer */
@@ -584,7 +588,7 @@ find_tags(tag, prog, num_file, file, help_only)
 #ifdef EMACS_TAGS
 													is_etag, ebuf,
 #endif
-																   tag_fname);
+														  tag_fname, forceit);
 							stop_searching = TRUE;
 							break;
 						}
@@ -671,7 +675,7 @@ find_tags(tag, prog, num_file, file, help_only)
 #ifdef EMACS_TAGS
 						bestmatch_is_etag, bestmatch_ebuf,
 #endif
-						bestmatch_tag_fname);
+						bestmatch_tag_fname, forceit);
 			}
 			else
 				EMSG("tag not found");
@@ -989,13 +993,14 @@ jumpto_tag(lbuf,
 #ifdef EMACS_TAGS
 				is_etag, etag_fname,
 #endif
-									tag_fname)
+									tag_fname, forceit)
 	char_u		*lbuf;			/* line from the tags file for this tag */
 #ifdef EMACS_TAGS
 	int			is_etag;		/* TRUE if it's from an emacs tags file */
 	char_u		*etag_fname;	/* file name for tag if is_etag is TRUE */
 #endif
 	char_u		*tag_fname;		/* file name of the tags file itself */
+	int			forceit;		/* :ta with ! */
 {
 	int			save_secure;
 	int			save_p_ws, save_p_scs, save_p_ic;
@@ -1140,7 +1145,7 @@ jumpto_tag(lbuf,
 	 * A :ta from a help file will keep the b_help flag set.
 	 */
 	keep_help_flag = curbuf->b_help;
-	getfile_result = getfile(0, fname, NULL, TRUE, (linenr_t)0);
+	getfile_result = getfile(0, fname, NULL, TRUE, (linenr_t)0, forceit);
 
 	if (getfile_result <= 0)			/* got to the right file */
 	{

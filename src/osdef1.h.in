@@ -56,6 +56,12 @@ extern void  memmove __ARGS((char *, char *, int));
 #endif
 /* used inside of FDZERO macro: */
 extern void  bzero __ARGS((char *, int));
+#ifdef HAVE_SETSID
+extern pid_t setsid __ARGS((void));
+#endif
+#ifdef HAVE_SETPGID
+extern int   setpgid __ARGS((pid_t, pid_t));
+#endif
 #ifdef HAVE_STRTOL
 extern int   strtol __ARGS((char *, char **, int));
 #endif

@@ -733,6 +733,7 @@ mch_windexit(r)
 		settmode(0);
 		stoptermcap();
 	}
+	outchar('\n');
 	if (raw_out)
 	{
 		if (term_console)

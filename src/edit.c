@@ -118,7 +118,6 @@ edit(initstr, startln, count)
 	char_u		*complete_pat = NULL;
 	char_u		*tmp_ptr;
 	char_u		*mesg = NULL;				/* Message about completion */
-	char_u		*quick_m;					/* Message without sleep */
 	int			 started_completion = FALSE;
 	colnr_t		 complete_col = 0;			/* init for gcc */
 	int			 complete_direction;
@@ -1350,7 +1349,7 @@ docomplete:
 					complete_direction = BACKWARD;
 				else
 					complete_direction = FORWARD;
-				quick_m = mesg = NULL;			/* No message by default */
+				mesg = NULL;			/* No message by default */
 				if (!started_completion)
 				{
 					/* First time we hit ^N or ^P (in a row, I mean) */
@@ -1490,8 +1489,8 @@ docomplete:
 						set_reg_ic(complete_pat);
 						prog = vim_regcomp(complete_pat);
 						if (prog != NULL &&
-							find_tags(NULL, prog, &num_matches, &matches, FALSE)
-													== OK && num_matches > 0)
+							find_tags(NULL, prog, &num_matches, &matches,
+									   FALSE, FALSE) == OK && num_matches > 0)
 						{
 							for (i = 0; i < num_matches; i++)
 								if (add_completion(matches[i], -1, NULL,
@@ -1522,11 +1521,9 @@ docomplete:
 												&matches, FALSE, FALSE) == OK)
 						{
 							/*
-							 * If the pattern starts with a '~', replace the
-							 * home directory with '~' again.
+							 * May change home directory back to "~".
 							 */
-							if (*complete_pat == '~')
-								tilde_replace(num_matches, matches);
+							tilde_replace(complete_pat, num_matches, matches);
 							for (i = 0; i < num_matches; i++)
 								if (add_completion(matches[i], -1, NULL,
 														FORWARD) == RET_ERROR)
@@ -1566,7 +1563,10 @@ docomplete:
 				complete_pos = NULL;
 				if (started_completion && curr_match == NULL &&
 										(p_ws || done_dir == BOTH_DIRECTIONS))
-					quick_m = e_patnotf;
+				{
+					edit_submode_extra = e_patnotf;
+					edit_submode_highl = TRUE;
+				}
 				else if (curr_match != NULL && complete_direction == FORWARD &&
 											curr_match->next != NULL)
 					curr_match = curr_match->next;
@@ -1653,7 +1653,10 @@ docomplete:
 						mesg = IObuff;
 					}
 					else if (tot == 0)
-						quick_m = e_patnotf;
+					{
+						edit_submode_extra = e_patnotf;
+						edit_submode_highl = TRUE;
+					}
 				}
 
 				/* eat the ESC to avoid leaving insert mode */
@@ -1671,17 +1674,21 @@ docomplete:
 				else			/* back to what has been typed */
 					ptr = original_text;
 
-				if (curr_match == NULL || curr_match->original)
+				if (edit_submode_extra == NULL)
 				{
-					edit_submode_extra = (char_u *)"Back at original";
-					edit_submode_highl = TRUE;
-				}
-				else if (first_match != NULL && first_match->next != NULL &&
-										  (first_match->next == first_match ||
-												  first_match->next->original))
-				{
-					edit_submode_extra = (char_u *)"(the only match)";
-					edit_submode_highl = FALSE;
+					if (curr_match == NULL || curr_match->original)
+					{
+						edit_submode_extra = (char_u *)"Back at original";
+						edit_submode_highl = TRUE;
+					}
+					else if (first_match != NULL &&
+							first_match->next != NULL &&
+							(first_match->next == first_match ||
+							 first_match->next->original))
+					{
+						edit_submode_extra = (char_u *)"(the only match)";
+						edit_submode_highl = FALSE;
+					}
 				}
 
 				/*
@@ -1694,19 +1701,19 @@ docomplete:
 
 				started_completion = TRUE;
 				need_redraw = TRUE;
-				(void)set_highlight('r');
-				msg_highlight = TRUE;
+
 				if (mesg != NULL)
 				{
+					(void)set_highlight('r');
+					msg_highlight = TRUE;
 					msg(mesg);
-					mch_delay(1000L, FALSE);
+					mch_delay(2000L, FALSE);
 				}
-				else if (quick_m != NULL)
-					msg(quick_m);
-				else if (edit_submode_extra != NULL)
+				if (edit_submode_extra != NULL)
+				{
 					showmode();
-				edit_submode_extra = NULL;
-				msg_highlight = FALSE;
+					edit_submode_extra = NULL;
+				}
 
 				/*
 				 * If there is a file name for the match, overwrite any
@@ -1715,8 +1722,7 @@ docomplete:
 				 * Truncate the file name to avoid a wait for return.
 				 */
 				if (curr_match != NULL && curr_match->fname != NULL &&
-							(ctrl_x_mode != CTRL_X_DICTIONARY ||
-										   (mesg == NULL && quick_m == NULL)))
+							(ctrl_x_mode != CTRL_X_DICTIONARY || mesg == NULL))
 				{
 					STRCPY(IObuff, "match in file ");
 					i = (strsize(curr_match->fname) + 16) - sc_col;
@@ -1726,7 +1732,9 @@ docomplete:
 						STRCAT(IObuff, "<");
 					STRCAT(IObuff, curr_match->fname + i);
 					msg(IObuff);
+					redraw_cmdline = FALSE;		/* don't overwrite! */
 				}
+
 				break;
 #endif /* INSERT_EXPAND */
 
@@ -2904,7 +2912,7 @@ beginline(flag)
  * oneright oneleft cursor_down cursor_up
  *
  * Move one char {right,left,down,up}.
- * Return OK when sucessful, FAIL when we hit a line of file boundary.
+ * Return OK when successful, FAIL when we hit a line of file boundary.
  */
 
 	int

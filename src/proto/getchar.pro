@@ -24,7 +24,7 @@ int vpeekc __PARMS((void));
 int char_avail __PARMS((void));
 void vungetc __PARMS((int c));
 int do_map __PARMS((int maptype, char_u *keys, int mode));
-void map_clear __PARMS((int modec, int force, int abbr));
+void map_clear __PARMS((int modec, int forceit, int abbr));
 int check_abbr __PARMS((int c, char_u *ptr, int col, int mincol));
 int makemap __PARMS((FILE *fd));
 int putescstr __PARMS((FILE *fd, char_u *str, int set));

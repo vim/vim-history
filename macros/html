@@ -1,28 +1,18 @@
-Article 4506 of comp.editors:
-Xref: not-for-mail comp.editors:4506
-Path: not-for-mail!oce.nl!Utrecht.NL.net!sun4nl!EU.net!howland.reston.ans.net!swrinde!newsfeed.internetmci.com!in1.uu.net!nwnews.wa.com!nwfocus.wa.com!camco!camco1.celestial.com!ray
+This message was posted in comp.editors.
+A few irrelevant details in the text were deleted or replaced with [...]
+
 From: ray@camco1.celestial.com (Ray A. Jones)
 Newsgroups: comp.editors
 Subject: Re: VI-like HTML-Editor
 Date: 17 Feb 1996 01:42:30 GMT
 Organization: Celestial Software
 Lines: 232
-Distribution: inet
-Message-ID: <4g3bq6$di6@camco.celestial.com>
-References: <30FFACC7.167E@adv.magwien.gv.at> <qtfspgysxcp.fsf@plethora.cs.wustl.edu> <4entc3$4fq@abel.cc.sunysb.edu> <31107288.167E@adv.magwien.gv.at> <4f47ip$7cn@abel.cc.sunysb.edu> <4faprf$4fo@camco.celestial.com> <3120CBC6.C3@crl.com>
-NNTP-Posting-Host: camco1.celestial.com
-X-Newsreader: TIN [version 1.2 PL2]
 
-Zot from Nt (zot@crl.com) wrote:
 : > I use vi for HTML editing and have 12 macros (one for each function key).
-: > The 12th function key is a "macro switch" macro to change to a whole different
-: > set of macros for those 12 function keys.
+: > The 12th function key is a "macro switch" macro to change to a whole
+: > different set of macros for those 12 function keys.
 
-
-: Can you post these macros?
-: Is there a list available somewhere?
-: Is there a faq, I have not found a man page or doc file.
-
+[...]
 
 : > The href macro works like:
 : >         This is a reference
@@ -30,10 +20,7 @@ Zot from Nt (zot@crl.com) wrote:
 : > [press function key 5]
 : >         This is a <A href="X$"><B>reference</B></A>
 : >                            ^- cursor
-: > with vi in the change word mode.  At that point, just type in the file name for
-
-: I tried to build this, how to you force the escape from the insert mode?
-: -- 
+: > with vi in the change word mode.  At that point, just type in the file name
 
 I got buried in request for those macros, so yes, I will post them here.
 

@@ -12,11 +12,9 @@ ALIGN_SIZE	structs.h	123
 ANY	regexp.c	102
 ANYBUT	regexp.c	104
 ANYOF	regexp.c	103
-APPENDBIN	vim.h	436
-APPENDBIN	vim.h	440
+APPENDBIN	vim.h	437
+APPENDBIN	vim.h	441
 ASKMORE	vim.h	210
-AllocBotShadowGC	gui_at_sb.c	/^AllocBotShadowGC (w)$/
-AllocTopShadowGC	gui_at_sb.c	/^AllocTopShadowGC (w)$/
 AppendCharToRedobuff	getchar.c	/^AppendCharToRedobuff(c)$/
 AppendNumberToRedobuff	getchar.c	/^AppendNumberToRedobuff(n)$/
 AppendToRedobuff	getchar.c	/^AppendToRedobuff(s)$/
@@ -49,17 +47,17 @@ BLOCK0_ID1	memline.c	93
 BOL	regexp.c	100
 BOTH_DIRECTIONS	vim.h	218
 BOW	regexp.c	115
-BRACE_AT_END	misccmds.c	2733
-BRACE_AT_START	misccmds.c	2732
-BRACE_IN_COL0	misccmds.c	2731
+BRACE_AT_END	misccmds.c	2735
+BRACE_AT_START	misccmds.c	2734
+BRACE_IN_COL0	misccmds.c	2733
 BRANCH	regexp.c	106
-BREAKCHECK_SKIP	misccmds.c	3920
+BREAKCHECK_SKIP	misccmds.c	3922
 BSIZE	term.c	1598
 BT_EXTRA_KEYS	term.c	73
 BUF	structs.h	/^typedef struct buffer BUF;$/
-BUFLEN	unix.c	2001
+BUFLEN	unix.c	2002
 BUFSIZE	fileio.c	29
-CHANGED	vim.h	453
+CHANGED	vim.h	454
 CHAR_BOLD	vim.h	191
 CHAR_ID	charset.c	25
 CHAR_IF	charset.c	26
@@ -75,9 +73,9 @@ CHECK_INODE	unix.h	229
 CHECK_PATH	vim.h	257
 CLEAR	vim.h	183
 CMDBUFFSIZE	unix.h	226
-CMDBUFFSIZE	vim.h	411
+CMDBUFFSIZE	vim.h	412
 CMDLINE	vim.h	205
-COL_RULER	option.c	2529
+COL_RULER	option.c	2541
 COM_ALL	option.h	109
 COM_BLANK	option.h	102
 COM_END	option.h	105
@@ -121,14 +119,10 @@ CTRL_X_SCROLL	edit.c	26
 CTRL_X_TAGS	edit.c	29
 CTRL_X_WANT_IDENT	edit.c	23
 CTRL_X_WHOLE_LINE	edit.c	27
-CURSOR_MOVED	vim.h	392
+CURSOR_MOVED	vim.h	393
 CURSUPD	vim.h	182
-Check	gui_at_sb.c	673
-ClassInitialize	gui_at_sb.c	/^static void ClassInitialize()$/
 Columns	globals.h	/^EXTERN long		Columns;				\/* number of columns in the screen *\/$/
-CompareEvents	gui_at_sb.c	/^static Boolean CompareEvents (oldEvent, newEvent)$/
 Completion	edit.c	/^struct Completion$/
-CreateGC	gui_at_sb.c	/^static void CreateGC (w)$/
 Ctrl	ascii.h	23
 D	gui.h	12
 DATA_BL	memline.c	/^typedef struct data_block		DATA_BL;	\/* contents of a data block *\/$/
@@ -153,7 +147,7 @@ DFLT_MENU_BG_COLOR	gui_x11.c	27
 DFLT_MENU_FG_COLOR	gui_x11.c	28
 DFLT_SCROLL_BG_COLOR	gui_x11.c	29
 DFLT_SCROLL_FG_COLOR	gui_x11.c	30
-DIR_SEP	tag.c	1316
+DIR_SEP	tag.c	1321
 DOBUF_CURRENT	vim.h	320
 DOBUF_DEL	vim.h	317
 DOBUF_FIRST	vim.h	321
@@ -162,13 +156,13 @@ DOBUF_LAST	vim.h	322
 DOBUF_MOD	vim.h	323
 DOBUF_SPLIT	vim.h	315
 DOBUF_UNLOAD	vim.h	316
-Destroy	gui_at_sb.c	/^static void Destroy(w)$/
+ECMD_FORCEIT	vim.h	343
 ECMD_HIDE	vim.h	339
 ECMD_OLDBUF	vim.h	342
 ECMD_SET_HELP	vim.h	340
-EMSG	vim.h	469
-EMSG2	vim.h	470
-EMSGN	vim.h	471
+EMSG	vim.h	470
+EMSG2	vim.h	471
+EMSGN	vim.h	472
 EMSG_RETURN	regexp.c	181
 END	regexp.c	99
 END_PAGE_DATA	gui_at_sb.h	144
@@ -197,7 +191,7 @@ EVENT_VIMLEAVE	vim.h	/^	EVENT_VIMLEAVE,			\/* before exiting Vim *\/$/
 EVENT_WINENTER	vim.h	/^	EVENT_WINENTER,			\/* after entering a window *\/$/
 EVENT_WINLEAVE	vim.h	/^	EVENT_WINLEAVE,			\/* before leaving a window *\/$/
 EXACTLY	regexp.c	109
-EXEC_FAILED	unix.c	1717
+EXEC_FAILED	unix.c	1718
 EXPAND_BOOL_SETTINGS	vim.h	234
 EXPAND_BUFFERS	vim.h	238
 EXPAND_COMMANDS	vim.h	230
@@ -211,7 +205,7 @@ EXPAND_OLD_SETTING	vim.h	236
 EXPAND_SETTINGS	vim.h	233
 EXPAND_TAGS	vim.h	235
 EXPAND_UNSUCCESSFUL	vim.h	228
-EXPL_ALLOC_INC	unix.c	2463
+EXPL_ALLOC_INC	unix.c	2464
 EXRC_FILE	unix.h	176
 EXTERN	globals.h	16
 EXTERN	main.c	9
@@ -220,8 +214,6 @@ EXTERN	option.h	16
 EXTERNCMD	vim.h	213
 EXTRASIZE	pty.c	446
 EXTRA_MARKS	mark.c	29
-EndScroll	gui_at_sb.c	/^static void EndScroll(w, event, params, num_params)$/
-EventData	gui_at_sb.c	/^struct EventData$/
 ExpandBufnames	buffer.c	/^ExpandBufnames(pat, num_file, file, options)$/
 ExpandCommands	cmdline.c	/^ExpandCommands(prog, num_file, file)$/
 ExpandEvents	option.c	/^ExpandEvents(prog, num_file, file)$/
@@ -230,9 +222,8 @@ ExpandOldSetting	option.c	/^ExpandOldSetting(num_file, file)$/
 ExpandOne	cmdline.c	/^ExpandOne(str, orig, options, mode)$/
 ExpandSettings	option.c	/^ExpandSettings(prog, num_file, file)$/
 ExpandWildCards	unix.c	/^ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)$/
-ExtractPosition	gui_at_sb.c	/^static void ExtractPosition(event, x, y, state)$/
 FAIL	vim.h	222
-FALSE	vim.h	376
+FALSE	vim.h	377
 FILL_X	gui.h	43
 FILL_Y	gui.h	44
 FIND_ANY	vim.h	255
@@ -247,7 +238,7 @@ FNAME	regexp.c	119
 FNAME_EXP	vim.h	286
 FNAME_HYP	vim.h	287
 FNAME_MESS	vim.h	285
-FONTLEN	gui.c	294
+FONTLEN	gui.c	310
 FORWARD	vim.h	216
 FO_ALL	option.h	37
 FO_DFLT	option.h	36
@@ -268,13 +259,10 @@ FPC_SAME	vim.h	333
 FPOS	structs.h	/^typedef struct fpos		FPOS;$/
 F_BSIZE	memfile.c	55
 F_BSIZE	memfile.c	61
-FillArea	gui_at_sb.c	/^static void FillArea(sbw, top, bottom, fill, draw_shadow)$/
-FloatInRange	gui_at_sb.c	/^static float FloatInRange(num, small, big)$/
-FractionLoc	gui_at_sb.c	/^static float FractionLoc(sbw, x, y)$/
 FreeWild	misccmds.c	/^FreeWild(num, file)$/
 FullName	unix.c	/^FullName(fname, buf, len, force)$/
 FullName_save	misccmds.c	/^FullName_save(fname)$/
-GAP	option.c	2269
+GAP	option.c	2281
 GAP	term.c	3021
 GETF_ALT	vim.h	291
 GETF_SETMARK	vim.h	290
@@ -298,43 +286,45 @@ GuiSelection	gui.h	/^typedef struct GuiSelection$/
 GuiSelection	gui.h	/^} GuiSelection;$/
 HASWIDTH	regexp.c	196
 HAVE_DATE_TIME	config.h	38
-HAVE_DIRENT_H	config.h	154
-HAVE_ERRNO_H	config.h	210
-HAVE_FCHDIR	config.h	133
-HAVE_FCHOWN	config.h	124
-HAVE_FCNTL_H	config.h	189
-HAVE_FSYNC	config.h	130
+HAVE_DIRENT_H	config.h	160
+HAVE_ERRNO_H	config.h	216
+HAVE_FCHDIR	config.h	139
+HAVE_FCHOWN	config.h	130
+HAVE_FCNTL_H	config.h	195
+HAVE_FSYNC	config.h	136
 HAVE_GETCWD	config.h	100
-HAVE_GETPWNAM	config.h	148
-HAVE_GETPWUID	config.h	145
-HAVE_GETTIMEOFDAY	config.h	142
+HAVE_GETPWNAM	config.h	154
+HAVE_GETPWUID	config.h	151
+HAVE_GETTIMEOFDAY	config.h	148
 HAVE_GETWD	config.h	103
 HAVE_LIBTERMCAP	config.h	11
-HAVE_LOCALE_H	config.h	219
-HAVE_MEMSET	config.h	118
+HAVE_LOCALE_H	config.h	225
+HAVE_MEMSET	config.h	124
 HAVE_OSPEED	config.h	23
-HAVE_PUTENV	config.h	139
-HAVE_PWD_H	config.h	240
-HAVE_QSORT	config.h	151
-HAVE_RENAME	config.h	127
+HAVE_PUTENV	config.h	145
+HAVE_PWD_H	config.h	246
+HAVE_QSORT	config.h	157
+HAVE_RENAME	config.h	133
 HAVE_SELECT	config.h	106
-HAVE_SETENV	config.h	136
-HAVE_SGTTY_H	config.h	192
-HAVE_STDLIB_H	config.h	176
+HAVE_SETENV	config.h	142
+HAVE_SETPGID	config.h	118
+HAVE_SETSID	config.h	115
+HAVE_SGTTY_H	config.h	198
+HAVE_STDLIB_H	config.h	182
 HAVE_STRCSPN	config.h	109
-HAVE_STRERROR	config.h	121
-HAVE_STRINGS_H	config.h	213
-HAVE_STRING_H	config.h	177
+HAVE_STRERROR	config.h	127
+HAVE_STRINGS_H	config.h	219
+HAVE_STRING_H	config.h	183
 HAVE_STRTOL	config.h	112
-HAVE_SYS_IOCTL_H	config.h	195
-HAVE_SYS_SELECT_H	config.h	180
-HAVE_SYS_TIME_H	config.h	198
-HAVE_SYS_UTSNAME_H	config.h	183
-HAVE_SYS_WAIT_H	config.h	166
-HAVE_TERMCAP_H	config.h	186
-HAVE_TERMIOS_H	config.h	228
-HAVE_TGETENT	config.h	115
-HAVE_UNISTD_H	config.h	204
+HAVE_SYS_IOCTL_H	config.h	201
+HAVE_SYS_SELECT_H	config.h	186
+HAVE_SYS_TIME_H	config.h	204
+HAVE_SYS_UTSNAME_H	config.h	189
+HAVE_SYS_WAIT_H	config.h	172
+HAVE_TERMCAP_H	config.h	192
+HAVE_TERMIOS_H	config.h	234
+HAVE_TGETENT	config.h	121
+HAVE_UNISTD_H	config.h	210
 HAVE_UP_BC_PC	config.h	29
 HAVE_X11	config.h	5
 HEADER_SIZE	memline.c	150
@@ -347,12 +337,11 @@ HL_NORMAL	gui.h	81
 HL_SELECTED	gui.h	87
 HL_STANDOUT	gui.h	86
 HL_UNDERLINE	gui.h	85
-HandleThumb	gui_at_sb.c	/^static void HandleThumb(w, event, params, num_params)$/
 IDENT	regexp.c	117
-INBUFLEN	unix.c	2235
-INC	option.c	2268
+INBUFLEN	unix.c	2236
+INC	option.c	2280
 INC	term.c	3020
-INCSTACK_SIZE	tag.c	276
+INCSTACK_SIZE	tag.c	280
 INDENT_DEC	vim.h	305
 INDENT_INC	vim.h	304
 INDENT_SET	vim.h	303
@@ -362,21 +351,20 @@ INIT	globals.h	20
 INIT	normal.c	22
 INIT	option.h	17
 INIT	option.h	20
-INPUT_BUFLEN	edit.c	2738
+INPUT_BUFLEN	edit.c	2746
 INSERT	vim.h	206
 INVALIDATE_CURSOR	gui.h	107
 INVERTED	vim.h	179
-IN_BUFFER	vim.h	390
-IN_STATUS_LINE	vim.h	391
-IN_UNKNOWN	vim.h	389
-IOSIZE	vim.h	416
+IN_BUFFER	vim.h	391
+IN_STATUS_LINE	vim.h	392
+IN_UNKNOWN	vim.h	390
+IOSIZE	vim.h	417
 IObuff	globals.h	/^EXTERN char_u 	*IObuff;				\/* sprintf's are done in this buffer *\/$/
 IPTR	structs.h	/^typedef struct info_pointer		IPTR;		\/* block\/index pair *\/$/
-ISSPECIAL	edit.c	2532
+ISSPECIAL	edit.c	2540
 IS_ABBR	keymap.h	39
 IS_CURSOR_VALID	gui.h	115
 IS_SPECIAL	keymap.h	38
-Initialize	gui_at_sb.c	/^static void Initialize(request, new, args, num_args)$/
 Insstart	edit.c	/^static FPOS 	Insstart;		\/* This is where the latest insert\/append$/
 Insstart_blank_vcol	edit.c	/^static colnr_t	Insstart_blank_vcol;	\/* vcol for first inserted blank *\/$/
 Insstart_textlen	edit.c	/^static colnr_t	Insstart_textlen;	\/* length of line when insert started *\/$/
@@ -539,7 +527,7 @@ K_MIDDLEDRAG	keymap.h	292
 K_MIDDLEMOUSE	keymap.h	291
 K_MIDDLERELEASE	keymap.h	293
 K_MOUSE	keymap.h	279
-K_NEEDMORET	getchar.c	887
+K_NEEDMORET	getchar.c	895
 K_NUL	keymap.h	15
 K_PAGEDOWN	keymap.h	273
 K_PAGEUP	keymap.h	272
@@ -598,22 +586,17 @@ K_ZERO	keymap.h	172
 KeyStuffed	globals.h	/^EXTERN int		KeyStuffed;				\/* TRUE if current char from stuffbuf *\/$/
 KeyTyped	globals.h	/^EXTERN int		KeyTyped;				\/* TRUE if user typed current char *\/$/
 LANGMAP_ADJUST	macros.h	58
-LINE_DELAY	gui_at_sb.c	205
-LINE_REPEAT	gui_at_sb.c	207
-LOOKFOR_ANY	misccmds.c	2741
-LOOKFOR_CASE	misccmds.c	2740
-LOOKFOR_DO	misccmds.c	2739
-LOOKFOR_IF	misccmds.c	2738
-LOOKFOR_TERM	misccmds.c	2742
-LOOKFOR_UNTERM	misccmds.c	2743
-LSIZE	vim.h	414
-LookAhead	gui_at_sb.c	/^static Boolean LookAhead (w, event)$/
-MARGIN	gui_at_sb.c	217
-MAX	gui_at_sb.c	203
-MAXCOL	vim.h	482
-MAXCOL	vim.h	484
-MAXLNUM	vim.h	479
-MAXMAPLEN	vim.h	431
+LOOKFOR_ANY	misccmds.c	2743
+LOOKFOR_CASE	misccmds.c	2742
+LOOKFOR_DO	misccmds.c	2741
+LOOKFOR_IF	misccmds.c	2740
+LOOKFOR_TERM	misccmds.c	2744
+LOOKFOR_UNTERM	misccmds.c	2745
+LSIZE	vim.h	415
+MAXCOL	vim.h	483
+MAXCOL	vim.h	485
+MAXLNUM	vim.h	480
+MAXMAPLEN	vim.h	432
 MAXMEM	unix.h	234
 MAXMEMTOT	unix.h	237
 MAXNAMLEN	unix.h	120
@@ -623,11 +606,11 @@ MAXNAMLEN	unix.h	136
 MAXPATHL	unix.h	227
 MAXPATHL	vim.h	118
 MAXPATHL	vim.h	120
-MAXSUFLEN	cmdline.c	4040
+MAXSUFLEN	cmdline.c	4067
 MAX_ADDR	quickfix.c	45
 MAX_KEY_CODE_LEN	keymap.h	324
 MAX_KEY_NAME_LEN	keymap.h	314
-MAYBE	vim.h	380
+MAYBE	vim.h	381
 MCLOSE	regexp.c	128
 MEMBLOCKSIZE	undo.c	770
 MEMFILE	structs.h	/^typedef struct memfile		MEMFILE;$/
@@ -651,10 +634,9 @@ META	regexp.c	/^       static char_u META[] = ".[()|=+*<>iIkKfFpP";$/
 META	regexp.c	/^       static char_u META[] = ".[()|=+*<>iIkKfFpP123456789";$/
 META	regexp.c	/^       static char_u META[] = ".[()|=+*<>iIkKfFpP~";$/
 META	regexp.c	/^       static char_u META[] = ".[()|=+*<>iIkKfFpP~123456789";$/
-MIN	gui_at_sb.c	202
 MINIMAL_SIZE	getchar.c	32
-MIN_COLUMNS	vim.h	403
-MIN_ROWS	vim.h	404
+MIN_COLUMNS	vim.h	404
+MIN_ROWS	vim.h	405
 ML_DELETE	memline.c	208
 ML_EMPTY	structs.h	262
 ML_FIND	memline.c	210
@@ -678,30 +660,29 @@ MOUSE_ALT	unix.h	264
 MOUSE_CLICK_MASK	unix.h	268
 MOUSE_COMMAND	option.h	68
 MOUSE_CTRL	unix.h	265
-MOUSE_DID_MOVE	vim.h	397
+MOUSE_DID_MOVE	vim.h	398
 MOUSE_DRAG	unix.h	266
-MOUSE_FOCUS	vim.h	395
+MOUSE_FOCUS	vim.h	396
 MOUSE_HELP	option.h	69
 MOUSE_INSERT	option.h	67
 MOUSE_LEFT	unix.h	259
-MOUSE_MAY_VIS	vim.h	396
+MOUSE_MAY_VIS	vim.h	397
 MOUSE_MIDDLE	unix.h	260
 MOUSE_NORMAL	option.h	65
 MOUSE_RELEASE	unix.h	262
 MOUSE_RETURN	option.h	70
 MOUSE_RIGHT	unix.h	261
-MOUSE_SETPOS	vim.h	398
+MOUSE_SETPOS	vim.h	399
 MOUSE_SHIFT	unix.h	263
 MOUSE_VISUAL	option.h	66
-MSG	vim.h	468
-MSG_BUF_LEN	vim.h	417
-MSG_OUTSTR	vim.h	474
-M_NEEDMORET	getchar.c	888
+MSG	vim.h	469
+MSG_BUF_LEN	vim.h	418
+MSG_OUTSTR	vim.h	475
+M_NEEDMORET	getchar.c	896
 M_OFFSET	undo.c	786
 M_OFFSET	undo.c	789
 Magic	regexp.c	131
 Meta	ascii.h	24
-MoveThumb	gui_at_sb.c	/^static void MoveThumb(w, event, params, num_params)$/
 NAMLEN	unix.h	93
 NAMLEN	unix.h	97
 NEXT	regexp.c	169
@@ -721,34 +702,27 @@ NUM_MOUSE_CLICKS	unix.h	270
 NUM_REGISTERS	ops.c	29
 NUM_REGISTERS	ops.c	31
 NameBuff	globals.h	/^EXTERN char_u	*NameBuff;				\/* file names are expanded in this$/
-NoButton	gui_at_sb.c	199
-NotifyScroll	gui_at_sb.c	/^static void NotifyScroll(w, event, params, num_params)$/
-NotifyThumb	gui_at_sb.c	/^static void NotifyThumb(w, event, params, num_params)$/
 OK	vim.h	221
 ONE_LINE_DATA	gui_at_sb.h	142
 ONE_PAGE_DATA	gui_at_sb.h	143
 OP	regexp.c	168
 OPERAND	regexp.c	170
-OUTSTR	vim.h	472
-OUTSTRN	vim.h	473
-O_EXTRA	vim.h	448
-O_EXTRA	vim.h	450
+OUTSTR	vim.h	473
+OUTSTRN	vim.h	474
+O_EXTRA	vim.h	449
+O_EXTRA	vim.h	451
 O_NOCTTY	pty.c	111
-Offset	gui_at_sb.c	86
 OpenPTY	pty.c	/^OpenPTY(ttyn)$/
 Opencmd	misccmds.c	/^Opencmd(dir, redraw, del_spaces)$/
-PAGE_DELAY	gui_at_sb.c	206
-PAGE_REPEAT	gui_at_sb.c	208
-PARAM_COUNT	option.c	722
+PARAM_COUNT	option.c	734
 PATHSEP	ascii.h	31
 PATHSEPSTR	ascii.h	32
 PC	term.c	/^char *UP, *BC, PC;$/
-PICKLENGTH	gui_at_sb.c	200
 PLUS	regexp.c	113
 PRINT	regexp.c	120
-PRI_CURRENT	tag.c	228
-PRI_FULL_MATCH	tag.c	229
-PRI_GLOBAL	tag.c	227
+PRI_CURRENT	tag.c	231
+PRI_FULL_MATCH	tag.c	232
+PRI_GLOBAL	tag.c	230
 PTR_BL	memline.c	/^typedef struct pointer_block	PTR_BL;		\/* contents of a pointer block *\/$/
 PTR_EN	memline.c	/^typedef struct pointer_entry	PTR_EN;		\/* block\/line-count pair *\/$/
 PTR_ID	memline.c	91
@@ -799,19 +773,16 @@ P_NO_MKRC	option.c	49
 P_NUM	option.c	38
 P_STRING	option.c	39
 P_WAS_SET	option.c	48
-PaintArrows	gui_at_sb.c	/^static void PaintArrows(sbw)$/
-PaintThumb	gui_at_sb.c	/^static void PaintThumb(sbw)$/
 PeekChr	regexp.c	262
-PeekNotifyEvent	gui_at_sb.c	/^static Bool PeekNotifyEvent (dpy, event, args)$/
 Prenum	normal.c	/^static linenr_t	Prenum; 		\/* The (optional) number before a command. *\/$/
 PtyProto	pty.c	/^static char PtyProto[] = "\/dev\/ptyXY";$/
 PtyProto	pty.c	/^static char PtyProto[] = "\/dev\/ptym\/ptyXY";$/
-READBIN	vim.h	435
-READBIN	vim.h	439
+READBIN	vim.h	436
+READBIN	vim.h	440
 REGEXP_ABBR	regexp.c	/^static char_u REGEXP_ABBR[] = "rteb";$/
 REPLACE	vim.h	208
 RETSIGTYPE	config.h	82
-RET_ERROR	vim.h	383
+RET_ERROR	vim.h	384
 RET_WIN_BUF_CHARTABSIZE	charset.c	292
 RE_BOTH	vim.h	329
 RE_LAST	vim.h	330
@@ -819,11 +790,7 @@ RE_SEARCH	vim.h	327
 RE_SUBST	vim.h	328
 Read	unix.c	/^Read(buf, maxlen)$/
 RealWaitForChar	unix.c	/^RealWaitForChar(fd, msec)$/
-Realize	gui_at_sb.c	/^static void Realize(w, valueMask, attributes)$/
-Redisplay	gui_at_sb.c	/^static void Redisplay(w, event, region)$/
-RepeatNotify	gui_at_sb.c	/^static void RepeatNotify(client_data, idp)$/
 ResetRedobuff	getchar.c	/^ResetRedobuff()$/
-Resize	gui_at_sb.c	/^static void Resize (w)$/
 Rows	globals.h	/^EXTERN long		Rows;					\/* number of rows in the screen *\/$/
 SBUFSIZE	fileio.c	30
 SB_BOTTOM	gui.h	72
@@ -847,8 +814,8 @@ SEARCH_NOOF	vim.h	275
 SEARCH_OPT	vim.h	272
 SEARCH_REV	vim.h	268
 SEARCH_START	vim.h	276
-SEEK_END	unix.c	2447
-SEEK_SET	unix.c	2444
+SEEK_END	unix.c	2448
+SEEK_SET	unix.c	2445
 SELECT_CLEARED	gui.h	93
 SELECT_DONE	gui.h	95
 SELECT_IN_PROGRESS	gui.h	94
@@ -875,7 +842,7 @@ SHM_TEXT	option.h	79
 SHM_TRUNC	option.h	85
 SHM_WRI	option.h	82
 SHM_WRITE	option.h	84
-SHOWCMD_COLS	vim.h	487
+SHOWCMD_COLS	vim.h	488
 SIDENT	regexp.c	121
 SIGDEFARG	unix.c	/^deathtrap SIGDEFARG(sigarg)$/
 SIGDEFARG	unix.c	/^sig_alarm SIGDEFARG(sigarg)$/
@@ -902,27 +869,27 @@ SMODE_NONE	gui_at_sb.h	135
 SMODE_PAGE_DOWN	gui_at_sb.h	138
 SMODE_PAGE_UP	gui_at_sb.h	137
 SOLARIS	unix.h	37
-SPEC_AFILE	cmdline.c	1655
-SPEC_CCWORD	cmdline.c	1650
-SPEC_CFILE	cmdline.c	1652
-SPEC_COUNT	cmdline.c	1658
-SPEC_CWORD	cmdline.c	1648
-SPEC_HASH	cmdline.c	1646
-SPEC_PERC	cmdline.c	1644
+SPEC_AFILE	cmdline.c	1672
+SPEC_CCWORD	cmdline.c	1667
+SPEC_CFILE	cmdline.c	1669
+SPEC_COUNT	cmdline.c	1675
+SPEC_CWORD	cmdline.c	1665
+SPEC_HASH	cmdline.c	1663
+SPEC_PERC	cmdline.c	1661
 SPRINT	regexp.c	124
 SPSTART	regexp.c	198
 STACK_INCR	memline.c	195
 STAR	regexp.c	111
 STATFS	memfile.c	54
 STATFS	memfile.c	60
-STATUS_HEIGHT	vim.h	405
-STRCAT	vim.h	465
-STRCMP	vim.h	463
-STRCPY	vim.h	461
-STRLEN	vim.h	460
-STRNCAT	vim.h	466
-STRNCMP	vim.h	464
-STRNCPY	vim.h	462
+STATUS_HEIGHT	vim.h	406
+STRCAT	vim.h	466
+STRCMP	vim.h	464
+STRCPY	vim.h	462
+STRLEN	vim.h	461
+STRNCAT	vim.h	467
+STRNCMP	vim.h	465
+STRNCPY	vim.h	463
 SWORD	regexp.c	122
 SYS_SELECT_WITH_SYS_TIME	config.h	79
 ScrollbarClassPart	gui_at_sb.h	/^typedef struct {int empty;} ScrollbarClassPart;$/
@@ -933,19 +900,17 @@ ScrollbarWidget	gui_at_sb.h	/^typedef struct _ScrollbarRec	  *ScrollbarWidget;$/
 ScrollbarWidgetClass	gui_at_sb.h	/^typedef struct _ScrollbarClassRec *ScrollbarWidgetClass;$/
 SearchedFile	search.c	/^typedef struct SearchedFile$/
 SearchedFile	search.c	/^} SearchedFile;$/
-SetDimensions	gui_at_sb.c	/^static void SetDimensions(sbw)$/
-SetValues	gui_at_sb.c	/^static Boolean SetValues(current, request, desired, args, num_args)$/
 SpecialKeys	term.h	/^enum SpecialKeys$/
 TAB	ascii.h	14
 TAGSTACKSIZE	structs.h	49
-TBUFSZ	vim.h	422
-TBUFSZ	vim.h	424
+TBUFSZ	vim.h	423
+TBUFSZ	vim.h	425
 TEMPDIRNAMES	unix.h	215
 TEMPNAME	unix.h	216
 TEMPNAME	unix.h	219
 TEMPNAMELEN	unix.h	217
 TEMPNAMELEN	unix.h	220
-TERMBUFSIZE	vim.h	419
+TERMBUFSIZE	vim.h	420
 TERMCAP2KEY	keymap.h	83
 TEXT_X	gui.h	40
 TEXT_Y	gui.h	41
@@ -953,7 +918,7 @@ TGETENT	term.c	113
 TGETSTR	term.c	112
 TILDE	regexp.c	210
 TIME_WITH_SYS_TIME	config.h	76
-TIOCSETN	unix.c	1398
+TIOCSETN	unix.c	1399
 TO_LOWER	macros.h	44
 TO_LOWER	macros.h	47
 TO_SPECIAL	keymap.h	97
@@ -962,7 +927,7 @@ TO_UPPER	macros.h	46
 TPUTSFUNCAST	term.c	41
 TPUTSFUNCAST	term.c	44
 TPUTSFUNCAST	term.c	46
-TRUE	vim.h	377
+TRUE	vim.h	378
 TYPELEN_INIT	getchar.c	91
 T_AL	term.h	81
 T_CAL	term.h	82
@@ -1004,7 +969,7 @@ UCHARAT	regsub.c	65
 UCHARAT	regsub.c	67
 UH_CHANGED	structs.h	113
 UH_EMPTYBUF	structs.h	114
-UNCHANGED	vim.h	454
+UNCHANGED	vim.h	455
 UNIX	config.h	40
 UNKNOWN	fileio.c	102
 UP	term.c	/^char *UP, *BC, PC;$/
@@ -1041,7 +1006,7 @@ VIsual	globals.h	/^EXTERN FPOS 	VIsual; 		\/* start position of Visual *\/$/
 VIsual_end	globals.h	/^EXTERN FPOS 	VIsual_end;		\/* end position of Visual; set when$/
 VIsual_mode_save	globals.h	/^EXTERN int		VIsual_mode_save;$/
 VIsual_save	globals.h	/^EXTERN FPOS		VIsual_save;	\/* copy of VIsual before 'v' command *\/$/
-Version	version.c	/^char		   *Version = "VIM 4.3";$/
+Version	version.c	/^char		   *Version = "VIM 4.4";$/
 WEXITSTATUS	unixunix.h	38
 WEXITSTATUS	unixunix.h	40
 WIFEXITED	unixunix.h	46
@@ -1059,8 +1024,8 @@ WIN	structs.h	/^typedef struct window		WIN;$/
 WINLNUM	structs.h	/^typedef struct winlnum		WINLNUM;$/
 WORD	regexp.c	118
 WORST	regexp.c	199
-WRITEBIN	vim.h	434
-WRITEBIN	vim.h	438
+WRITEBIN	vim.h	435
+WRITEBIN	vim.h	439
 WW_ALL	option.h	62
 W_OK	unix.h	154
 WaitForChar	unix.c	/^WaitForChar(msec)$/
@@ -1110,7 +1075,6 @@ _IO_PTEM_H	unixunix.h	77
 _ScrollbarClassRec	gui_at_sb.h	/^typedef struct _ScrollbarClassRec {$/
 _ScrollbarRec	gui_at_sb.h	/^typedef struct _ScrollbarRec {$/
 _Scrollbar_h	gui_at_sb.h	60
-_Xaw3dDrawShadows	gui_at_sb.c	/^_Xaw3dDrawShadows(gw, event, region, out)$/
 __ARGS	regsub.c	54
 __ARGS	regsub.c	75
 __ARGS	unix.h	52
@@ -1125,7 +1089,6 @@ __PARMS	vim.h	42
 __PARMS	vim.h	48
 __PARMS	vim.h	54
 __PARMS	vim.h	79
-actions	gui_at_sb.c	/^static XtActionsRec actions[] =$/
 add_buff	getchar.c	/^add_buff(buf, s)$/
 add_char_buff	getchar.c	/^add_char_buff(buf, c)$/
 add_completion	edit.c	/^add_completion(str, len, fname, dir)$/
@@ -1141,7 +1104,7 @@ addstar	cmdline.c	/^addstar(fname, len)$/
 adjust_cursor	linefunc.c	/^adjust_cursor()$/
 after_label	misccmds.c	/^after_label(l)$/
 aixhack	pty.c	/^int aixhack = -1;$/
-all_cflags	pathdef.c	/^char_u *all_cflags = (char_u *)"gcc -c -I. -DHAVE_CONFIG_H -DUSE_GUI_ATHENA -DFUNCPROTO=15 -DNARROWPROTO  -I. -g -O2 -fno-strength-reduce -Wall -Wshadow -Wmissing-prototypes -Wall -Wshadow -I\/usr\/X11R6\/include ";$/
+all_cflags	pathdef.c	/^char_u *all_cflags = (char_u *)"gcc -c -I. -DHAVE_CONFIG_H -DUSE_GUI_MOTIF -DFUNCPROTO=15 -DNARROWPROTO  -I\/usr\/local\/include -g -O2 -fno-strength-reduce -Wall -Wshadow -Wmissing-prototypes -I\/usr\/X11R6\/include ";$/
 alloc	alloc.c	/^alloc(size)$/
 alloc_check	alloc.c	/^alloc_check(size)$/
 alloc_cmdbuff	cmdline.c	/^alloc_cmdbuff(len)$/
@@ -1156,7 +1119,7 @@ ask_yesno	misccmds.c	/^ask_yesno(str, direct)$/
 at_start	regexp.c	/^static int		at_start;	\/* True when we are on the first character *\/$/
 attributes	screen.c	/^static int		attributes = 0;	\/* current attributes for screen character*\/$/
 auto_events	vim.h	/^enum auto_events$/
-autowrite	cmdline.c	/^autowrite(buf)$/
+autowrite	cmdline.c	/^autowrite(buf, forceit)$/
 autowrite_all	cmdline.c	/^autowrite_all()$/
 b0_magic_wrong	memline.c	/^b0_magic_wrong(b0p)$/
 back_in_line	search.c	/^back_in_line()$/
@@ -1172,7 +1135,6 @@ block_prep	ops.c	/^block_prep(bd, lnum, is_del)$/
 block_redo	getchar.c	/^static int		block_redo = FALSE;$/
 blocknr_t	structs.h	/^typedef long				blocknr_t;$/
 bot_top_msg	search.c	/^static char_u *bot_top_msg = (char_u *)"search hit BOTTOM, continuing at TOP";$/
-bottomScrollbar	gui_athena.c	/^static Widget bottomScrollbar;			\/* Bottom scrollbar *\/$/
 bottommsg	tag.c	/^static char_u *bottommsg = (char_u *)"at bottom of tag stack";$/
 bpos	term.c	/^static int				bpos = 0;		\/* number of chars in outbuf *\/$/
 breakat_flags	globals.h	/^EXTERN char		breakat_flags[256];		\/* which characters are in 'breakat' *\/$/
@@ -1194,7 +1156,7 @@ buflist_findlnum	buffer.c	/^buflist_findlnum(buf)$/
 buflist_findname	buffer.c	/^buflist_findname(fname)$/
 buflist_findnr	buffer.c	/^buflist_findnr(nr)$/
 buflist_findpat	buffer.c	/^buflist_findpat(pattern, pattern_end)$/
-buflist_getfile	buffer.c	/^buflist_getfile(n, lnum, options)$/
+buflist_getfile	buffer.c	/^buflist_getfile(n, lnum, options, forceit)$/
 buflist_getlnum	buffer.c	/^buflist_getlnum()$/
 buflist_list	buffer.c	/^buflist_list()$/
 buflist_match	buffer.c	/^buflist_match(prog, buf)$/
@@ -1224,7 +1186,7 @@ chdir	vim.h	88
 check_abbr	getchar.c	/^check_abbr(c, ptr, col, mincol)$/
 check_arg_idx	cmdline.c	/^check_arg_idx()$/
 check_buf_options	option.c	/^check_buf_options(buf)$/
-check_changed	cmdline.c	/^check_changed(buf, checkaw, mult_win)$/
+check_changed	cmdline.c	/^check_changed(buf, checkaw, mult_win, forceit)$/
 check_changed_any	cmdline.c	/^check_changed_any()$/
 check_col	gui.c	/^check_col(col)$/
 check_cursor	screen.c	/^check_cursor()$/
@@ -1232,9 +1194,9 @@ check_fname	cmdline.c	/^check_fname()$/
 check_map_keycodes	getchar.c	/^check_map_keycodes()$/
 check_mark	mark.c	/^check_mark(pos)$/
 check_marks_read	fileio.c	/^check_marks_read()$/
-check_more	cmdline.c	/^check_more(message)$/
+check_more	cmdline.c	/^check_more(message, forceit)$/
 check_options	option.c	/^check_options()$/
-check_readonly	cmdline.c	/^check_readonly()$/
+check_readonly	cmdline.c	/^check_readonly(forceit)$/
 check_row	gui.c	/^check_row(row)$/
 check_shifted_spec_key	tables.c	/^check_shifted_spec_key(c)$/
 check_status	misccmds.c	/^check_status(buf)$/
@@ -1316,7 +1278,6 @@ debug1	pty.c	46
 dec	linefunc.c	/^dec(lp)$/
 dec_cursor	linefunc.c	/^dec_cursor()$/
 decl	linefunc.c	/^decl(lp)$/
-defaultTranslations	gui_at_sb.c	/^static char defaultTranslations[] =$/
 default_menu	gui.c	/^static struct default_menu$/
 default_menus	gui.c	/^} default_menus[] = $/
 del_autocmd	option.c	/^del_autocmd(ap)$/
@@ -1346,8 +1307,8 @@ do_align	cmdcmds.c	/^do_align(start, end, width, type)$/
 do_arg_all	buffer.c	/^do_arg_all(count)$/
 do_arglist	cmdline.c	/^do_arglist(str)$/
 do_ascii	cmdcmds.c	/^do_ascii()$/
-do_autocmd	option.c	/^do_autocmd(arg, force)$/
-do_autocmd_event	option.c	/^do_autocmd_event(event, pat, cmd, force)$/
+do_autocmd	option.c	/^do_autocmd(arg, forceit)$/
+do_autocmd_event	option.c	/^do_autocmd_event(event, pat, cmd, forceit)$/
 do_bang	cmdcmds.c	/^do_bang(addr_count, line1, line2, forceit, arg, do_in, do_out)$/
 do_bufdel	buffer.c	/^do_bufdel(command, arg, addr_count, start_bnr, end_bnr, forceit)$/
 do_buffer	buffer.c	/^do_buffer(action, start, dir, count, forceit)$/
@@ -1385,7 +1346,7 @@ do_put	ops.c	/^do_put(dir, count, fix_indent)$/
 do_record	ops.c	/^do_record(c)$/
 do_reindent	ops.c	/^do_reindent(how)$/
 do_resize	unix.c	/^static int		do_resize = FALSE;$/
-do_retab	cmdcmds.c	/^do_retab(start, end, new_ts, force)$/
+do_retab	cmdcmds.c	/^do_retab(start, end, new_ts, forceit)$/
 do_search	search.c	/^do_search(dirc, str, count, options)$/
 do_set	option.c	/^do_set(arg)$/
 do_shell	cmdcmds.c	/^do_shell(cmd)$/
@@ -1393,14 +1354,14 @@ do_shift	ops.c	/^do_shift(op, curs_top, amount)$/
 do_source	cmdline.c	/^do_source(fname, check_other)$/
 do_sub	csearch.c	/^do_sub(lp, up, cmd, nextcommand, use_old)$/
 do_sub_msg	csearch.c	/^do_sub_msg()$/
-do_tag	tag.c	/^do_tag(tag, type, count)$/
+do_tag	tag.c	/^do_tag(tag, type, count, forceit)$/
 do_tags	tag.c	/^do_tags()$/
 do_tilde	ops.c	/^do_tilde()$/
 do_upper	regsub.c	/^do_upper(d, c)$/
 do_version	version.c	/^do_version(arg)$/
 do_viminfo	cmdcmds.c	/^do_viminfo(fp_in, fp_out, want_info, want_marks, force_read)$/
 do_window	window.c	/^do_window(nchar, Prenum)$/
-do_write	cmdline.c	/^do_write(fname, append)$/
+do_write	cmdline.c	/^do_write(fname, line1, line2, append, forceit)$/
 do_yank	ops.c	/^do_yank(deleting, mess)$/
 echeck_abbr	edit.c	/^echeck_abbr(c)$/
 edit	edit.c	/^edit(initstr, startln, count)$/
@@ -1447,7 +1408,7 @@ find_special_key_in_table	tables.c	/^find_special_key_in_table(c)$/
 find_start_brace	misccmds.c	/^find_start_brace(ind_maxcomment)			\/* XXX *\/$/
 find_start_comment	misccmds.c	/^find_start_comment(ind_maxcomment)			\/* XXX *\/$/
 find_start_of_word	normal.c	/^find_start_of_word(pos)$/
-find_tags	tag.c	/^find_tags(tag, prog, num_file, file, help_only)$/
+find_tags	tag.c	/^find_tags(tag, prog, num_file, file, help_only, forceit)$/
 find_termcode	term.c	/^find_termcode(name)$/
 findenv	pty.c	/^findenv(name)$/
 findmatch	search.c	/^findmatch(initc)$/
@@ -1463,20 +1424,18 @@ firstwin	globals.h	/^EXTERN WIN		*firstwin;		\/* first window *\/$/
 fix_fname	buffer.c	/^fix_fname(fname)$/
 fixedtitle	unix.c	/^static char_u	*fixedtitle = (char_u *)"Thanks for flying Vim";$/
 fixthisline	edit.c	/^fixthisline(get_the_indent)$/
-floatZero	gui_at_sb.c	/^static float floatZero = 0.0;$/
 flush_buffers	getchar.c	/^flush_buffers(typeahead)$/
 flushbuf	term.c	/^flushbuf()$/
 fm_getname	mark.c	/^fm_getname(fmark)$/
 fmarks_check_names	mark.c	/^fmarks_check_names(buf)$/
 fmt_end_block	ops.c	/^fmt_end_block(lnum, leader_len, leader_flags)$/
 fname_expand	buffer.c	/^fname_expand(fname, sfname)$/
-fnamecmp	vim.h	515
-fnamecmp	vim.h	518
+fnamecmp	vim.h	516
+fnamecmp	vim.h	519
 fnamecmp_ino	memline.c	/^fnamecmp_ino(fname_c, fname_s, ino_block0)$/
-fnamencmp	vim.h	516
-fnamencmp	vim.h	519
+fnamencmp	vim.h	517
+fnamencmp	vim.h	520
 force_menu_update	gui.c	/^int force_menu_update = FALSE;$/
-forceit	cmdline.c	/^static int			forceit;$/
 fpos	structs.h	/^struct fpos$/
 fptr	regsub.c	/^typedef void (*(*fptr) __ARGS((char_u *, int)))();$/
 free_buf_options	buffer.c	/^free_buf_options(buf)$/
@@ -1536,7 +1495,7 @@ getcwd	vim.h	87
 getdigits	misccmds.c	/^getdigits(pp)$/
 getdigraph	digraph.c	/^getdigraph(char1, char2, meta)$/
 getexactdigraph	digraph.c	/^getexactdigraph(char1, char2, meta)$/
-getfile	cmdline.c	/^getfile(fnum, fname, sfname, setpm, lnum)$/
+getfile	cmdline.c	/^getfile(fnum, fname, sfname, setpm, lnum, forceit)$/
 gethostname	unix.c	1035
 getlinecol	term.c	/^getlinecol()$/
 getmark	mark.c	/^getmark(c, changefile)$/
@@ -1554,24 +1513,20 @@ gui_ExpandMenuNames	gui.c	/^gui_ExpandMenuNames(prog, num_file, file)$/
 gui_add_menu_path	gui.c	/^gui_add_menu_path(path_name, modes, call_back, call_data, noremap)$/
 gui_argc	gui_x11.c	/^static int gui_argc = 0;$/
 gui_argv	gui_x11.c	/^static char **gui_argv = NULL;$/
-gui_athena_pullright_action	gui_athena.c	/^gui_athena_pullright_action(w, event, args, nargs)$/
-gui_athena_reorder_menus	gui_athena.c	/^gui_athena_reorder_menus()$/
-gui_athena_scroll_cb_jump	gui_athena.c	/^gui_athena_scroll_cb_jump(w, client_data, call_data)$/
-gui_athena_scroll_cb_scroll	gui_athena.c	/^gui_athena_scroll_cb_scroll(w, client_data, call_data)$/
 gui_auto_select	gui.c	/^gui_auto_select()$/
 gui_check_screen	gui.c	/^gui_check_screen()$/
 gui_convert_selection	ops.c	/^gui_convert_selection(str, len)$/
 gui_copy_selection	gui.c	/^gui_copy_selection()$/
 gui_create_initial_menus	gui.c	/^gui_create_initial_menus(menu, parent)$/
 gui_do_horiz_scroll	gui.c	/^gui_do_horiz_scroll()$/
-gui_do_menu	gui.c	/^gui_do_menu(cmd, arg, force)$/
+gui_do_menu	gui.c	/^gui_do_menu(cmd, arg, forceit)$/
 gui_do_scroll	gui.c	/^gui_do_scroll()$/
 gui_exit	gui.c	/^gui_exit()$/
 gui_free_menu	gui.c	/^gui_free_menu(menu)$/
 gui_free_menu_string	gui.c	/^gui_free_menu_string(menu, idx)$/
 gui_free_selection	ops.c	/^gui_free_selection()$/
 gui_get_max_horiz_scroll	gui.c	/^gui_get_max_horiz_scroll()$/
-gui_get_menu_cmd_modes	gui.c	/^gui_get_menu_cmd_modes(cmd, force, noremap, unmenu)$/
+gui_get_menu_cmd_modes	gui.c	/^gui_get_menu_cmd_modes(cmd, forceit, noremap, unmenu)$/
 gui_get_menu_index	gui.c	/^gui_get_menu_index(menu, state)$/
 gui_get_selection	ops.c	/^gui_get_selection()$/
 gui_get_x11_windis	gui_x11.c	/^gui_get_x11_windis(win, dis)$/
@@ -1579,22 +1534,22 @@ gui_init	gui.c	/^gui_init()$/
 gui_init_font	gui.c	/^gui_init_font()$/
 gui_init_which_components	gui.c	/^gui_init_which_components(oldval)$/
 gui_lose_selection	gui.c	/^gui_lose_selection()$/
-gui_mch_add_menu	gui_athena.c	/^gui_mch_add_menu(menu, parent)$/
-gui_mch_add_menu_item	gui_athena.c	/^gui_mch_add_menu_item(menu, parent)$/
+gui_mch_add_menu	gui_motif.c	/^gui_mch_add_menu(menu, parent)$/
+gui_mch_add_menu_item	gui_motif.c	/^gui_mch_add_menu_item(menu, parent)$/
 gui_mch_beep	gui_x11.c	/^gui_mch_beep()$/
 gui_mch_clear_block	gui_x11.c	/^gui_mch_clear_block(row1, col1, row2, col2)$/
 gui_mch_clear_selection	gui_x11.c	/^gui_mch_clear_selection()$/
-gui_mch_create_which_components	gui_athena.c	/^gui_mch_create_which_components()$/
-gui_mch_create_widgets	gui_athena.c	/^gui_mch_create_widgets()$/
+gui_mch_create_which_components	gui_motif.c	/^gui_mch_create_which_components()$/
+gui_mch_create_widgets	gui_motif.c	/^gui_mch_create_widgets()$/
 gui_mch_delete_lines	gui_x11.c	/^gui_mch_delete_lines(row, num_lines)$/
-gui_mch_destroy_menu	gui_athena.c	/^gui_mch_destroy_menu(menu)$/
-gui_mch_destroy_scrollbar	gui_athena.c	/^gui_mch_destroy_scrollbar(wp)$/
+gui_mch_destroy_menu	gui_motif.c	/^gui_mch_destroy_menu(menu)$/
+gui_mch_destroy_scrollbar	gui_motif.c	/^gui_mch_destroy_scrollbar(wp)$/
 gui_mch_draw_cursor	gui_x11.c	/^gui_mch_draw_cursor()$/
 gui_mch_exit	gui_x11.c	/^gui_mch_exit()$/
 gui_mch_flash	gui_x11.c	/^gui_mch_flash()$/
 gui_mch_flush	gui_x11.c	/^gui_mch_flush()$/
-gui_mch_get_wid	gui_athena.c	/^gui_mch_get_wid()$/
-gui_mch_get_winsize	gui_athena.c	/^gui_mch_get_winsize()$/
+gui_mch_get_wid	gui_motif.c	/^gui_mch_get_wid()$/
+gui_mch_get_winsize	gui_motif.c	/^gui_mch_get_winsize()$/
 gui_mch_haskey	gui_x11.c	/^gui_mch_haskey(name)$/
 gui_mch_iconify	gui_x11.c	/^gui_mch_iconify()$/
 gui_mch_init	gui_x11.c	/^gui_mch_init()$/
@@ -1604,11 +1559,11 @@ gui_mch_lose_selection	gui_x11.c	/^gui_mch_lose_selection()$/
 gui_mch_outstr_nowrap	gui_x11.c	/^gui_mch_outstr_nowrap(s, len, wrap_cursor, is_cursor)$/
 gui_mch_own_selection	gui_x11.c	/^gui_mch_own_selection()$/
 gui_mch_prepare	gui_x11.c	/^gui_mch_prepare(argc, argv)$/
-gui_mch_reorder_scrollbars	gui_athena.c	/^gui_mch_reorder_scrollbars(which_sb)$/
-gui_mch_set_winsize	gui_athena.c	/^gui_mch_set_winsize()$/
+gui_mch_reorder_scrollbars	gui_motif.c	/^gui_mch_reorder_scrollbars(which_sb)$/
+gui_mch_set_winsize	gui_motif.c	/^gui_mch_set_winsize()$/
 gui_mch_update	gui_x11.c	/^gui_mch_update()$/
-gui_mch_update_horiz_scrollbar	gui_athena.c	/^gui_mch_update_horiz_scrollbar(value, size, max)$/
-gui_mch_update_scrollbars	gui_athena.c	/^gui_mch_update_scrollbars(worst_update, which_sb)$/
+gui_mch_update_horiz_scrollbar	gui_motif.c	/^gui_mch_update_horiz_scrollbar(value, size, max)$/
+gui_mch_update_scrollbars	gui_motif.c	/^gui_mch_update_scrollbars(worst_update, which_sb)$/
 gui_mch_wait_for_chars	gui_x11.c	/^gui_mch_wait_for_chars(wtime)$/
 gui_menu_cb	gui.c	/^gui_menu_cb(menu)$/
 gui_menu_name_skip	gui.c	/^gui_menu_name_skip(name)$/
@@ -1622,7 +1577,7 @@ gui_request_selection	gui_x11.c	/^gui_request_selection()$/
 gui_reset_scroll_region	gui.c	/^gui_reset_scroll_region()$/
 gui_resize_window	gui.c	/^gui_resize_window(pixel_width, pixel_height)$/
 gui_send_mouse_event	gui.c	/^gui_send_mouse_event(button, x, y, repeated_click, modifiers)$/
-gui_set_context_in_menu_cmd	gui.c	/^gui_set_context_in_menu_cmd(cmd, arg, force)$/
+gui_set_context_in_menu_cmd	gui.c	/^gui_set_context_in_menu_cmd(cmd, arg, forceit)$/
 gui_set_cursor	gui.c	/^gui_set_cursor(row, col)$/
 gui_show_menus	gui.c	/^gui_show_menus(path_name, modes)$/
 gui_show_menus_recursive	gui.c	/^gui_show_menus_recursive(menu, modes, depth)$/
@@ -1680,6 +1635,7 @@ hkmap	edit.c	/^hkmap(c)$/
 home_replace	misccmds.c	/^home_replace(buf, src, dst, dstlen)$/
 home_replace_save	misccmds.c	/^home_replace_save(buf, src)$/
 homedir	misccmds.c	/^static char_u	*homedir = NULL;$/
+horiz_scroll_cb	gui_motif.c	/^horiz_scroll_cb(w, client_data, call_data)$/
 hpux	pty.c	79
 illegal_char	option.c	/^illegal_char(errbuf, c)$/
 in_cinkeys	edit.c	/^in_cinkeys(keytyped, when, line_is_empty)$/
@@ -1759,10 +1715,6 @@ lasticon	buffer.c	/^static char_u *lasticon = NULL;$/
 lasttitle	buffer.c	/^static char_u *lasttitle = NULL;$/
 lastwin	globals.h	/^EXTERN WIN		*lastwin;		\/* last window *\/$/
 lbr_chartabsize	charset.c	/^lbr_chartabsize(s, col)$/
-leftBottomScrollFiller	gui_athena.c	/^static Widget leftBottomScrollFiller;	\/* Left filler for bottom scrollbar *\/$/
-leftScrollbarFiller	gui_athena.c	/^static Widget leftScrollbarFiller;		\/* Filler for left scrollbar *\/$/
-line1	cmdline.c	/^static linenr_t 	line1, line2;$/
-line2	cmdline.c	/^static linenr_t 	line1, line2;$/
 line_breakcheck	misccmds.c	/^line_breakcheck()$/
 lineclear	screen.c	/^lineclear(p)$/
 lineempty	macros.h	32
@@ -1772,8 +1724,8 @@ lines_left	message.c	/^static int	lines_left = -1;			\/* lines left for listing 
 linetabsize	charset.c	/^linetabsize(s)$/
 linewhite	search.c	/^linewhite(lnum)$/
 listdigraphs	digraph.c	/^listdigraphs()$/
-longVersion	version.c	/^char		   *longVersion = "VIM - Vi IMproved 4.3 BETA (1996 Aug 6)";$/
-longVersion	version.c	/^char		   *longVersion = "VIM - Vi IMproved 4.3 BETA (1996 Aug 6, compiled " __DATE__ " " __TIME__ ")";$/
+longVersion	version.c	/^char		   *longVersion = "VIM - Vi IMproved 4.4 BETA (1996 Sep 11)";$/
+longVersion	version.c	/^char		   *longVersion = "VIM - Vi IMproved 4.4 BETA (1996 Sep 11, compiled " __DATE__ " " __TIME__ ")";$/
 long_to_char	memline.c	/^long_to_char(n, s)$/
 long_u	vim.h	/^typedef unsigned long	long_u;$/
 lowest_marked	memline.c	/^static linenr_t	lowest_marked = 0;$/
@@ -1789,12 +1741,13 @@ makemap	getchar.c	/^makemap(fd)$/
 makeset	option.c	/^makeset(fd)$/
 makeswapname	memline.c	/^makeswapname(buf, dir_name)$/
 maketitle	buffer.c	/^maketitle()$/
-map_clear	getchar.c	/^map_clear(modec, force, abbr)$/
+map_clear	getchar.c	/^map_clear(modec, forceit, abbr)$/
 map_free	getchar.c	/^map_free(mprev)$/
 mapblock	getchar.c	/^struct mapblock$/
 maplist	getchar.c	/^static struct mapblock maplist = {NULL, NULL, 0, NULL, 0, 0};$/
 mark_adjust	mark.c	/^mark_adjust(line1, line2, amount, amount_after)$/
 may_core_dump	unix.c	/^may_core_dump()$/
+may_sync_undo	getchar.c	/^may_sync_undo()$/
 mch_avail_mem	unix.c	/^mch_avail_mem(special)$/
 mch_breakcheck	unix.c	/^mch_breakcheck()$/
 mch_can_restore_icon	unix.c	/^mch_can_restore_icon()$/
@@ -1824,8 +1777,7 @@ mch_windinit	unix.c	/^mch_windinit()$/
 mch_write	unix.c	/^mch_write(s, len)$/
 memfile	structs.h	/^struct memfile$/
 memline	structs.h	/^struct memline$/
-menuBar	gui_athena.c	/^static Widget menuBar;$/
-menuTrans	gui_athena.c	/^static XtTranslations	parentTrans, menuTrans;$/
+menuBar	gui_motif.c	/^static Widget menuBar;$/
 mf_alloc_bhdr	memfile.c	/^mf_alloc_bhdr(mfp, page_count)$/
 mf_close	memfile.c	/^mf_close(mfp, del_file)$/
 mf_do_open	memfile.c	/^mf_do_open(mfp, fname, trunc_file)$/
@@ -1895,7 +1847,7 @@ mouse_has	term.c	/^mouse_has(c)$/
 mouse_row	globals.h	/^EXTERN int		mouse_row;$/
 mouse_table	tables.c	/^} mouse_table[] =$/
 movemark	mark.c	/^movemark(count)$/
-movetail	tag.c	1311
+movetail	tag.c	1316
 mr_pattern	search.c	/^static char_u	*mr_pattern = NULL;		\/* pattern used by myregcomp() *\/$/
 msg	message.c	/^msg(s)$/
 msg_add_eol	fileio.c	/^msg_add_eol()$/
@@ -2089,7 +2041,6 @@ p_wh	option.h	/^EXTERN long		p_wh;		\/* desired window height *\/$/
 p_wiv	option.h	/^EXTERN int		p_wiv;		\/* inversion of text is weird *\/$/
 p_ws	option.h	/^EXTERN int		p_ws;		\/* wrap scan *\/$/
 p_ww	option.h	/^EXTERN char_u  *p_ww;		\/* which keys wrap to next\/prev line *\/$/
-parentTrans	gui_athena.c	/^static XtTranslations	parentTrans, menuTrans;$/
 parse_builtin_tcap	term.c	/^parse_builtin_tcap(term)$/
 parse_tag_line	tag.c	/^parse_tag_line(lbuf,$/
 paste_option_changed	option.c	/^paste_option_changed()$/
@@ -2112,11 +2063,6 @@ prevchr	regexp.c	/^static int		prevchr;$/
 prevwin	window.c	/^static WIN		*prevwin = NULL;		\/* previous window *\/$/
 print_line	cmdcmds.c	/^print_line(lnum, use_number)$/
 printdigraph	digraph.c	/^printdigraph(p)$/
-pullAction	gui_athena.c	/^static XtActionsRec		pullAction = { "menu-pullright",$/
-pullerBitmap	gui_athena.c	/^static Pixmap			pullerBitmap;$/
-puller_bits	gui_athena.c	/^static char_u puller_bits[] =$/
-puller_height	gui_athena.c	28
-puller_width	gui_athena.c	27
 push_showcmd	normal.c	/^push_showcmd()$/
 put_on_cmdline	cmdline.c	/^put_on_cmdline(str, len, redraw)$/
 putcmdline	cmdline.c	/^putcmdline(c)$/
@@ -2127,7 +2073,7 @@ qf_count	quickfix.c	/^static int	qf_count = 0;		\/* number of errors (0 means no
 qf_free	quickfix.c	/^qf_free()$/
 qf_index	quickfix.c	/^static int	qf_index;			\/* current index in the error list *\/$/
 qf_init	quickfix.c	/^qf_init()$/
-qf_jump	quickfix.c	/^qf_jump(dir, errornr)$/
+qf_jump	quickfix.c	/^qf_jump(dir, errornr, forceit)$/
 qf_line	quickfix.c	/^struct qf_line$/
 qf_list	quickfix.c	/^qf_list(all)$/
 qf_mark_adjust	quickfix.c	/^qf_mark_adjust(line1, line2, amount, amount_after)$/
@@ -2138,13 +2084,13 @@ qf_types	quickfix.c	/^qf_types(c, nr)$/
 quitmore	cmdline.c	/^static int			quitmore = 0;$/
 read_redo	getchar.c	/^read_redo(init, old_redo)$/
 read_stuff	getchar.c	/^read_stuff(advance)$/
-read_viminfo	cmdcmds.c	/^read_viminfo(file, want_info, want_marks, force)$/
+read_viminfo	cmdcmds.c	/^read_viminfo(file, want_info, want_marks, forceit)$/
 read_viminfo_filemark	mark.c	/^read_viminfo_filemark(line, fp, force)$/
 read_viminfo_history	cmdline.c	/^read_viminfo_history(line, fp)$/
 read_viminfo_register	ops.c	/^read_viminfo_register(line, fp, force)$/
 read_viminfo_search_pattern	search.c	/^read_viminfo_search_pattern(line, fp, force)$/
 read_viminfo_sub_string	csearch.c	/^read_viminfo_sub_string(line, fp, force)$/
-read_viminfo_up_to_marks	cmdcmds.c	/^read_viminfo_up_to_marks(line, fp, force)$/
+read_viminfo_up_to_marks	cmdcmds.c	/^read_viminfo_up_to_marks(line, fp, forceit)$/
 readfile	fileio.c	/^readfile(fname, sfname, from, newfile, lines_to_skip, lines_to_read, filtering)$/
 realloc_cmdbuff	cmdline.c	/^realloc_cmdbuff(len)$/
 recordbuff	getchar.c	/^static struct buffheader recordbuff = {{NULL, {NUL}}, NULL, 0, 0};$/
@@ -2169,7 +2115,6 @@ regendp	regexp.c	/^static char_u   **regendp;		\/* Ditto for endp. *\/$/
 reginput	regexp.c	/^static char_u    *reginput;		\/* String-input pointer. *\/$/
 reginsert	regexp.c	/^reginsert(op, opnd)$/
 regmatch	regexp.c	/^regmatch(prog)$/
-regname	cmdline.c	/^static int			regname;$/
 regnarrate	regexp.c	/^int 			regnarrate = 1;$/
 regnext	regexp.c	/^regnext(p)$/
 regnode	regexp.c	/^regnode(op)$/
@@ -2200,9 +2145,6 @@ resel_VIsual_mode	normal.c	/^static int		resel_VIsual_mode = NUL;	\/* 'v', 'V', 
 reset_VIsual	window.c	/^reset_VIsual()$/
 reset_signals	unix.c	/^reset_signals()$/
 resettitle	buffer.c	/^resettitle()$/
-resources	gui_at_sb.c	/^static XtResource resources[] =$/
-rightBottomScrollFiller	gui_athena.c	/^static Widget rightBottomScrollFiller;	\/* Right filler for bottom scrollbar *\/$/
-rightScrollbarFiller	gui_athena.c	/^static Widget rightScrollbarFiller;		\/* Filler for right scrollbar *\/$/
 rightleft	screen.c	/^static int		rightleft = 0;	\/* set to 1 for right to left in screen_fill *\/$/
 ru_col	globals.h	/^EXTERN int		ru_col;			\/* column for ruler *\/$/
 same_leader	ops.c	/^same_leader(leader1_len, leader1_flags, leader2_len, leader2_flags)$/
@@ -2223,13 +2165,14 @@ screenclear	screen.c	/^screenclear()$/
 screenclear2	screen.c	/^screenclear2()$/
 screengo	edit.c	/^screengo(dir, dist)$/
 scriptin	globals.h	/^EXTERN FILE 	*scriptin[NSCRIPT];			\/* streams to read script from *\/$/
+scroll_cb	gui_motif.c	/^scroll_cb(w, client_data, call_data)$/
 scroll_cursor_bot	screen.c	/^scroll_cursor_bot(min_scroll, set_topline)$/
 scroll_cursor_halfway	screen.c	/^scroll_cursor_halfway(atend)$/
 scroll_cursor_top	screen.c	/^scroll_cursor_top(min_scroll, always)$/
 scroll_region_reset	term.c	/^scroll_region_reset()$/
 scroll_region_set	term.c	/^scroll_region_set(wp, off)$/
 scroll_start	term.c	/^scroll_start()$/
-scrollbarBox	gui_athena.c	/^static Widget scrollbarBox[3];		\/* Left, right & bottom scrollbar boxes *\/$/
+scrollbarBox	gui_motif.c	/^static Widget scrollbarBox[3];		\/* Left, right & bottom scrollbar boxes *\/$/
 scrollbar_value	globals.h	/^EXTERN long_u	scrollbar_value;$/
 scrolldown	screen.c	/^scrolldown(line_count)$/
 scrolldown_clamp	screen.c	/^scrolldown_clamp()$/
@@ -2361,11 +2304,11 @@ termcodes	term.c	/^} *termcodes = NULL;$/
 termleader	term.c	/^static char_u	termleader[256 + 1];			\/* for check_termcode() *\/$/
 test_for_current	tag.c	/^test_for_current(is_etag, fname, fname_end, tag_fname)$/
 test_for_static	tag.c	/^test_for_static(tagname, tagname_end, fname, fname_end)$/
-textArea	gui_athena.c	/^static Widget textArea;$/
+textArea	gui_motif.c	/^static Widget textArea;$/
 tgetent_error	term.c	/^tgetent_error(tbuf, term)$/
 tgetstr	term.c	24
 tgoto	term.c	/^tgoto(cm, x, y)$/
-tilde_replace	cmdline.c	/^tilde_replace(num_files, files)$/
+tilde_replace	cmdline.c	/^tilde_replace(orig_pat, num_files, files)$/
 tltoa	term.c	/^tltoa(i)$/
 top_bot_msg	search.c	/^static char_u *top_bot_msg = (char_u *)"search hit TOP, continuing at BOTTOM";$/
 topmsg	tag.c	/^static char_u *topmsg = (char_u *)"at top of tag stack";$/
@@ -2425,33 +2368,29 @@ usage	main.c	/^usage(n, str)$/
 version_msg	version.c	/^version_msg(s)$/
 vgetc	getchar.c	/^vgetc()$/
 vgetorpeek	getchar.c	/^vgetorpeek(advance)$/
-vimForm	gui_athena.c	/^static Widget vimForm = (Widget)NULL;$/
-vimPanes	gui_athena.c	/^static Widget vimPanes;$/
+vimForm	gui_motif.c	/^static Widget vimForm;$/
 vimShell	gui_x11.c	/^Widget vimShell = (Widget)NULL;$/
-vim_XawScrollbarSetThumb	gui_at_sb.c	/^void vim_XawScrollbarSetThumb (w, top, shown, max)$/
 vim_beep	misccmds.c	/^vim_beep()$/
-vim_chdir	vim.h	532
+vim_chdir	vim.h	533
 vim_fexists	misccmds.c	/^vim_fexists(fname)$/
 vim_fgets	fileio.c	/^vim_fgets(buf, size, fp)$/
 vim_free	alloc.c	/^vim_free(x)$/
-vim_getenv	vim.h	505
+vim_getenv	vim.h	506
 vim_isspace	alloc.c	/^vim_isspace(x)$/
-vim_iswhite	vim.h	539
+vim_iswhite	vim.h	540
 vim_memmove	alloc.c	/^vim_memmove(dst_arg, src_arg, len)$/
 vim_memmove	unix.h	245
 vim_memmove	unix.h	248
 vim_memmove	unix.h	251
-vim_memmove	vim.h	496
+vim_memmove	vim.h	497
 vim_memset	alloc.c	/^vim_memset(ptr, c, size)$/
-vim_memset	vim.h	523
+vim_memset	vim.h	524
 vim_regcomp	regexp.c	/^vim_regcomp(exp)$/
 vim_regexec	regexp.c	/^vim_regexec(prog, string, at_bol)$/
 vim_regsub	regsub.c	/^vim_regsub(prog, source, dest, copy, magic)$/
 vim_remove	unix.h	59
 vim_rename	fileio.c	/^vim_rename(from, to)$/
 vim_resources	gui_x11.c	/^static XtResource vim_resources[] =$/
-vim_scrollbarClassRec	gui_at_sb.c	/^ScrollbarClassRec vim_scrollbarClassRec =$/
-vim_scrollbarWidgetClass	gui_at_sb.c	/^WidgetClass vim_scrollbarWidgetClass = (WidgetClass)&vim_scrollbarClassRec;$/
 vim_strchr	alloc.c	/^vim_strchr(string, n)$/
 vim_strncpy	cmdline.c	/^vim_strncpy(to, from, len)$/
 vim_strnicmp	alloc.c	/^vim_strnicmp(s1, s2, len)$/
@@ -2469,7 +2408,6 @@ viminfo_writestring	cmdcmds.c	/^viminfo_writestring(fd, p)$/
 vpeekc	getchar.c	/^vpeekc()$/
 vungetc	getchar.c	/^vungetc(c)		\/* unget one character (can only be done once!) *\/$/
 wait_return	message.c	/^wait_return(redraw)$/
-want_start	search.c	/^static int		want_start;				\/* looking for start of line? *\/$/
 where_paste_started	globals.h	/^EXTERN FPOS		where_paste_started;$/
 win_alloc	window.c	/^win_alloc(after)$/
 win_alloc_lsize	window.c	/^win_alloc_lsize(wp)$/
@@ -2506,7 +2444,7 @@ winlnum	structs.h	/^struct winlnum$/
 write_buf	fileio.c	/^write_buf(fd, buf, len)$/
 write_lnum_adjust	fileio.c	/^write_lnum_adjust(offset)$/
 write_no_eol_lnum	fileio.c	/^static linenr_t	write_no_eol_lnum = 0; 	\/* non-zero lnum when last line of$/
-write_viminfo	cmdcmds.c	/^write_viminfo(file, force)$/
+write_viminfo	cmdcmds.c	/^write_viminfo(file, forceit)$/
 write_viminfo_filemarks	mark.c	/^write_viminfo_filemarks(fp)$/
 write_viminfo_history	cmdline.c	/^write_viminfo_history(fp)$/
 write_viminfo_marks	mark.c	/^write_viminfo_marks(fp_out)$/

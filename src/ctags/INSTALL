@@ -1,9 +1,9 @@
 Simple makefiles are provided for a few environments.
 
     Makefile.amiga	For Amiga with Manx C
-    Makefile.b32	For Borland C/C++ on Win32 (NT and Windows95)
     Makefile.bcc	For Borland C/C++ on MSDOS
-    Makefile.djg	For the Gnu GCC compiler on MSDOS
+    Makefile.djg	For the Gnu GCC (DJGPP) compiler on MSDOS
+    Makefile.os2	For OS/2 with EMX
     Makefile.unix	For UNIX flavors
     Makefile.w32	For Win32 with Visual C++ or Borland C++
 

@@ -483,6 +483,7 @@ mch_windinit()
 {
 	union REGS regs;
 
+    term_console = TRUE;	/* assume using the console for the things here */
 	_fmode = O_BINARY;		/* we do our own CR-LF translation */
 	flushbuf();
 	(void)mch_get_winsize();
@@ -902,6 +903,8 @@ mch_windexit(r)
 {
 	settmode(0);
 	stoptermcap();
+	outchar('\r');
+	outchar('\n');
 	flushbuf();
 	ml_close_all(TRUE);				/* remove all memfiles */
 	exit(r);

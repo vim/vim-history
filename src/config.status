@@ -306,75 +306,81 @@ CEOF
 ${ac_dA}HAVE_STRTOL${ac_dB}HAVE_STRTOL${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_STRTOL${ac_uB}HAVE_STRTOL${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_STRTOL${ac_eB}HAVE_STRTOL${ac_eC}1${ac_eD}
+${ac_dA}HAVE_SETSID${ac_dB}HAVE_SETSID${ac_dC}1${ac_dD}
+${ac_uA}HAVE_SETSID${ac_uB}HAVE_SETSID${ac_uC}1${ac_uD}
+${ac_eA}HAVE_SETSID${ac_eB}HAVE_SETSID${ac_eC}1${ac_eD}
+${ac_dA}HAVE_SETPGID${ac_dB}HAVE_SETPGID${ac_dC}1${ac_dD}
+${ac_uA}HAVE_SETPGID${ac_uB}HAVE_SETPGID${ac_uC}1${ac_uD}
+${ac_eA}HAVE_SETPGID${ac_eB}HAVE_SETPGID${ac_eC}1${ac_eD}
 ${ac_dA}HAVE_TGETENT${ac_dB}HAVE_TGETENT${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_TGETENT${ac_uB}HAVE_TGETENT${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_TGETENT${ac_eB}HAVE_TGETENT${ac_eC}1${ac_eD}
+CEOF
+  sed -f conftest.frag conftest.in > conftest.out
+  rm -f conftest.in
+  mv conftest.out conftest.in
+
+  cat > conftest.frag <<CEOF
 ${ac_dA}HAVE_MEMSET${ac_dB}HAVE_MEMSET${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_MEMSET${ac_uB}HAVE_MEMSET${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_MEMSET${ac_eB}HAVE_MEMSET${ac_eC}1${ac_eD}
 ${ac_dA}HAVE_STRERROR${ac_dB}HAVE_STRERROR${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_STRERROR${ac_uB}HAVE_STRERROR${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_STRERROR${ac_eB}HAVE_STRERROR${ac_eC}1${ac_eD}
-CEOF
-  sed -f conftest.frag conftest.in > conftest.out
-  rm -f conftest.in
-  mv conftest.out conftest.in
-
-  cat > conftest.frag <<CEOF
 ${ac_dA}HAVE_FCHOWN${ac_dB}HAVE_FCHOWN${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_FCHOWN${ac_uB}HAVE_FCHOWN${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_FCHOWN${ac_eB}HAVE_FCHOWN${ac_eC}1${ac_eD}
 ${ac_dA}HAVE_FSYNC${ac_dB}HAVE_FSYNC${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_FSYNC${ac_uB}HAVE_FSYNC${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_FSYNC${ac_eB}HAVE_FSYNC${ac_eC}1${ac_eD}
+CEOF
+  sed -f conftest.frag conftest.in > conftest.out
+  rm -f conftest.in
+  mv conftest.out conftest.in
+
+  cat > conftest.frag <<CEOF
 ${ac_dA}HAVE_FCHDIR${ac_dB}HAVE_FCHDIR${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_FCHDIR${ac_uB}HAVE_FCHDIR${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_FCHDIR${ac_eB}HAVE_FCHDIR${ac_eC}1${ac_eD}
 ${ac_dA}HAVE_SETENV${ac_dB}HAVE_SETENV${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_SETENV${ac_uB}HAVE_SETENV${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_SETENV${ac_eB}HAVE_SETENV${ac_eC}1${ac_eD}
-CEOF
-  sed -f conftest.frag conftest.in > conftest.out
-  rm -f conftest.in
-  mv conftest.out conftest.in
-
-  cat > conftest.frag <<CEOF
 ${ac_dA}HAVE_PUTENV${ac_dB}HAVE_PUTENV${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_PUTENV${ac_uB}HAVE_PUTENV${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_PUTENV${ac_eB}HAVE_PUTENV${ac_eC}1${ac_eD}
 ${ac_dA}HAVE_GETTIMEOFDAY${ac_dB}HAVE_GETTIMEOFDAY${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_GETTIMEOFDAY${ac_uB}HAVE_GETTIMEOFDAY${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_GETTIMEOFDAY${ac_eB}HAVE_GETTIMEOFDAY${ac_eC}1${ac_eD}
+CEOF
+  sed -f conftest.frag conftest.in > conftest.out
+  rm -f conftest.in
+  mv conftest.out conftest.in
+
+  cat > conftest.frag <<CEOF
 ${ac_dA}HAVE_GETPWUID${ac_dB}HAVE_GETPWUID${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_GETPWUID${ac_uB}HAVE_GETPWUID${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_GETPWUID${ac_eB}HAVE_GETPWUID${ac_eC}1${ac_eD}
 ${ac_dA}HAVE_GETPWNAM${ac_dB}HAVE_GETPWNAM${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_GETPWNAM${ac_uB}HAVE_GETPWNAM${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_GETPWNAM${ac_eB}HAVE_GETPWNAM${ac_eC}1${ac_eD}
-CEOF
-  sed -f conftest.frag conftest.in > conftest.out
-  rm -f conftest.in
-  mv conftest.out conftest.in
-
-  cat > conftest.frag <<CEOF
 ${ac_dA}HAVE_QSORT${ac_dB}HAVE_QSORT${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_QSORT${ac_uB}HAVE_QSORT${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_QSORT${ac_eB}HAVE_QSORT${ac_eC}1${ac_eD}
 ${ac_dA}HAVE_RENAME${ac_dB}HAVE_RENAME${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_RENAME${ac_uB}HAVE_RENAME${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_RENAME${ac_eB}HAVE_RENAME${ac_eC}1${ac_eD}
-${ac_dA}SIZEOF_INT${ac_dB}SIZEOF_INT${ac_dC}4${ac_dD}
-${ac_uA}SIZEOF_INT${ac_uB}SIZEOF_INT${ac_uC}4${ac_uD}
-${ac_eA}SIZEOF_INT${ac_eB}SIZEOF_INT${ac_eC}4${ac_eD}
-${ac_dA}USEMEMMOVE${ac_dB}USEMEMMOVE${ac_dC}1${ac_dD}
-${ac_uA}USEMEMMOVE${ac_uB}USEMEMMOVE${ac_uC}1${ac_uD}
-${ac_eA}USEMEMMOVE${ac_eB}USEMEMMOVE${ac_eC}1${ac_eD}
 CEOF
   sed -f conftest.frag conftest.in > conftest.out
   rm -f conftest.in
   mv conftest.out conftest.in
 
   cat > conftest.frag <<CEOF
+${ac_dA}SIZEOF_INT${ac_dB}SIZEOF_INT${ac_dC}4${ac_dD}
+${ac_uA}SIZEOF_INT${ac_uB}SIZEOF_INT${ac_uC}4${ac_uD}
+${ac_eA}SIZEOF_INT${ac_eB}SIZEOF_INT${ac_eC}4${ac_eD}
+${ac_dA}USEMEMMOVE${ac_dB}USEMEMMOVE${ac_dC}1${ac_dD}
+${ac_uA}USEMEMMOVE${ac_uB}USEMEMMOVE${ac_uC}1${ac_uD}
+${ac_eA}USEMEMMOVE${ac_eB}USEMEMMOVE${ac_eC}1${ac_eD}
 s%^[ 	]*#[ 	]*undef[ 	][ 	]*[a-zA-Z_][a-zA-Z_0-9]*%/* & */%
 CEOF
   sed -f conftest.frag conftest.in > conftest.out

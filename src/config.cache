@@ -38,6 +38,7 @@ ac_cv_header_fcntl_h=${ac_cv_header_fcntl_h='yes'}
 ac_cv_func_memset=${ac_cv_func_memset='yes'}
 ac_cv_prog_gcc_traditional=${ac_cv_prog_gcc_traditional='no'}
 ac_cv_c_const=${ac_cv_c_const='yes'}
+ac_cv_func_setsid=${ac_cv_func_setsid='yes'}
 ac_cv_header_termios_h=${ac_cv_header_termios_h='yes'}
 ac_cv_header_sys_systeminfo_h=${ac_cv_header_sys_systeminfo_h='no'}
 ac_cv_lib_socket_socket=${ac_cv_lib_socket_socket='no'}
@@ -81,4 +82,5 @@ ac_cv_header_sys_ioctl_h=${ac_cv_header_sys_ioctl_h='yes'}
 ac_cv_func_getpwnam=${ac_cv_func_getpwnam='yes'}
 ac_cv_type_uid_t=${ac_cv_type_uid_t='yes'}
 ac_cv_func_putenv=${ac_cv_func_putenv='yes'}
+ac_cv_func_setpgid=${ac_cv_func_setpgid='yes'}
 ac_cv_lib_ICE_IceConnectionNumber=${ac_cv_lib_ICE_IceConnectionNumber='yes'}

@@ -110,6 +110,12 @@
 /* Define if you have the strtol() function.  */
 #undef HAVE_STRTOL
 
+/* Define if you have the setsid() function.  */
+#undef HAVE_SETSID
+
+/* Define if you have the setpgid() function.  */
+#undef HAVE_SETPGID
+
 /* Define if you have the tgetent() function.  */
 #undef HAVE_TGETENT
 

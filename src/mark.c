@@ -185,7 +185,7 @@ movemark(count)
 	{
 		if (buflist_getfile(curwin->w_jumplist[curwin->w_jumplistidx].fnum,
 						  curwin->w_jumplist[curwin->w_jumplistidx].mark.lnum,
-															   0) == FAIL)
+															0, FALSE) == FAIL)
 			return (FPOS *)NULL;
 		curwin->w_cursor.col =
 						   curwin->w_jumplist[curwin->w_jumplistidx].mark.col;
@@ -277,7 +277,7 @@ getmark(c, changefile)
 			if (namedfm[c].mark.lnum != 0 && changefile && namedfm[c].fnum)
 			{
 				if (buflist_getfile(namedfm[c].fnum,
-									namedfm[c].mark.lnum, GETF_SETMARK) == OK)
+							 namedfm[c].mark.lnum, GETF_SETMARK, FALSE) == OK)
 				{
 					curwin->w_cursor.col = namedfm[c].mark.col;
 					return (FPOS *)-1;

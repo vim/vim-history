@@ -36,14 +36,6 @@ static int		 cmdfirstc; 	/* ':', '/' or '?' */
  */
 static int		overstrike = FALSE;	/* typing mode */
 
-/*
- * The next two variables contain the bounds of any range given in a command.
- * They are set by do_cmdline().
- */
-static linenr_t 	line1, line2;
-
-static int			forceit;
-static int			regname;
 static int			quitmore = 0;
 static int  		cmd_numfiles = -1;	  /* number of files found by
 													filename completion */
@@ -69,16 +61,16 @@ static void		cursorcmd __ARGS((void));
 static int		ccheck_abbr __ARGS((int));
 static char_u	*do_one_cmd __ARGS((char_u **, int *, int));
 static int		buf_write_all __ARGS((BUF *));
-static int		do_write __ARGS((char_u *, int));
+static int		do_write __ARGS((char_u *, linenr_t, linenr_t, int, int));
 static char_u	*getargcmd __ARGS((char_u **));
 static void		backslash_halve __ARGS((char_u *p, int expand_wildcards));
 static void		do_make __ARGS((char_u *));
 static int		do_arglist __ARGS((char_u *));
 static int		is_backslash __ARGS((char_u *str));
-static int		check_readonly __ARGS((void));
-static int		check_changed __ARGS((BUF *, int, int));
+static int		check_readonly __ARGS((int));
+static int		check_changed __ARGS((BUF *, int, int, int));
 static int		check_changed_any __ARGS((void));
-static int		check_more __ARGS((int));
+static int		check_more __ARGS((int, int));
 static void		vim_strncpy __ARGS((char_u *, char_u *, int));
 static int		nextwild __ARGS((int));
 static int		showmatches __ARGS((char_u *));
@@ -1168,14 +1160,18 @@ do_one_cmd(cmdlinep, cmdlinelenp, sourcing)
 	long				argt;
 	register linenr_t	lnum;
 	long				n = 0;					/* init to shut up gcc */
+	linenr_t 			line1 = 1, line2 = 1;	/* the command range */
 	int					addr_count;				/* number of address specs */
+	int					forceit = FALSE;		/* '!' after command */
 	FPOS				pos;
 	int					append = FALSE;			/* write with append */
 	int					usefilter = FALSE;		/* no read/write but filter */
+	int					regname = 0;			/* register name flag */
 	char_u				*nextcomm = NULL;		/* no next command yet */
 	int					amount = 0;				/* for ":>"; init for gcc */
 	char_u				*errormsg = NULL;		/* error message */
 	WIN					*old_curwin = NULL;		/* init for GCC */
+	static int			if_level = 0;			/* depth in :if */
 
 		/* when not editing the last file :q has to be typed twice */
 	if (quitmore)
@@ -1210,6 +1206,9 @@ do_one_cmd(cmdlinep, cmdlinelenp, sourcing)
  */
 
 	addr_count = 0;
+	if (if_level)
+		goto skip_address;
+
 	--cmd;
 	do
 	{
@@ -1265,6 +1264,7 @@ do_one_cmd(cmdlinep, cmdlinelenp, sourcing)
 		if (lnum == MAXLNUM)
 			addr_count = 0;
 	}
+skip_address:
 
 /*
  * 4. parse command
@@ -1291,6 +1291,8 @@ do_one_cmd(cmdlinep, cmdlinelenp, sourcing)
 		 * ":3|..."		prints line 3
 		 * ":|"			prints current line
 		 */
+		if (if_level)				/* skip this if inside :if */
+			goto doend;
 		if (*cmd == '|')
 		{
 			cmdidx = CMD_print;
@@ -1345,15 +1347,31 @@ do_one_cmd(cmdlinep, cmdlinelenp, sourcing)
 				break;
 		if (i == 0 || cmdidx == CMD_SIZE)
 		{
-			STRCPY(IObuff, "Not an editor command");
-			if (!sourcing)
+			if (if_level == 0)
 			{
-				STRCAT(IObuff, ": ");
-				STRNCAT(IObuff, *cmdlinep, 40);
+				STRCPY(IObuff, "Not an editor command");
+				if (!sourcing)
+				{
+					STRCAT(IObuff, ": ");
+					STRNCAT(IObuff, *cmdlinep, 40);
+				}
+				errormsg = IObuff;
 			}
-			errormsg = IObuff;
 			goto doend;
 		}
+	}
+
+/*
+ * Handle the future ":if" command.
+ * For version 4 everything between ":if" and ":endif" is ignored.
+ */
+	if (cmdidx == CMD_if)
+		++if_level;
+	if (if_level)
+	{
+		if (cmdidx == CMD_endif)
+			--if_level;
+		goto doend;
 	}
 
 	if (*p == '!')					/* forced commands */
@@ -1575,7 +1593,6 @@ do_one_cmd(cmdlinep, cmdlinelenp, sourcing)
 		line2 = curbuf->b_ml.ml_line_count;
 	}
 
-	regname = 0;
 		/* accept numbered register only when no count allowed (:put) */
 	if ((argt & REGSTR) && *arg != NUL && is_yank_buffer(*arg, FALSE) &&
 										   !((argt & COUNT) && isdigit(*arg)))
@@ -1991,11 +2008,11 @@ cmdswitch:
 		 */
 		case CMD_quit:
 						/* if more files or windows we won't exit */
-				if (check_more(FALSE) == OK && only_one_window())
+				if (check_more(FALSE, forceit) == OK && only_one_window())
 					exiting = TRUE;
-				if (check_changed(curbuf, FALSE, FALSE) ||
-							check_more(TRUE) == FAIL ||
-							(only_one_window() && check_changed_any()))
+				if (check_changed(curbuf, FALSE, FALSE, forceit) ||
+							check_more(TRUE, forceit) == FAIL ||
+					   (only_one_window() && !forceit && check_changed_any()))
 				{
 					exiting = FALSE;
 					settmode(1);
@@ -2011,7 +2028,7 @@ cmdswitch:
 		 */
 		case CMD_qall:
 				exiting = TRUE;
-				if (!check_changed_any())
+				if (forceit || !check_changed_any())
 					getout(0);
 				exiting = FALSE;
 				settmode(1);
@@ -2059,12 +2076,12 @@ cmdswitch:
 		case CMD_xit:
 		case CMD_wq:
 							/* if more files or windows we won't exit */
-				if (check_more(FALSE) == OK && only_one_window())
+				if (check_more(FALSE, forceit) == OK && only_one_window())
 					exiting = TRUE;
 				if (((cmdidx == CMD_wq || curbuf->b_changed) &&
-											  do_write(arg, FALSE) == FAIL) ||
-												   check_more(TRUE) == FAIL || 
-							(only_one_window() && check_changed_any()))
+					   do_write(arg, line1, line2, FALSE, forceit) == FAIL) ||
+										  check_more(TRUE, forceit) == FAIL || 
+					   (only_one_window() && !forceit && check_changed_any()))
 				{
 					exiting = FALSE;
 					settmode(1);
@@ -2127,7 +2144,7 @@ cmdswitch:
 
 		case CMD_recover:					/* recover file */
 				recoverymode = TRUE;
-				if (!check_changed(curbuf, FALSE, TRUE) &&
+				if (!check_changed(curbuf, FALSE, TRUE, forceit) &&
 							(*arg == NUL || setfname(arg, NULL, TRUE) == OK))
 					ml_recover();
 				recoverymode = FALSE;
@@ -2171,7 +2188,7 @@ cmdswitch:
 					i = curwin->w_arg_idx - (int)line2;
 				line1 = 1;
 				line2 = curbuf->b_ml.ml_line_count;
-				if (do_write(arg, FALSE) == FAIL)
+				if (do_write(arg, line1, line2, FALSE, forceit) == FAIL)
 					break;
 				goto donextfile;
 
@@ -2183,7 +2200,7 @@ do_next:
 					 * argument list is not redefined.
 					 */
 				if (!(p_hid || cmdidx == CMD_snext) &&
-								check_changed(curbuf, TRUE, FALSE))
+								check_changed(curbuf, TRUE, FALSE, forceit))
 					break;
 
 				if (*arg != NUL)				/* redefine file list */
@@ -2223,7 +2240,7 @@ donextfile:		if (i < 0 || i >= arg_count)
 					if (p_hid)
 						other = otherfile(fix_fname(arg_files[i]));
 					if ((!p_hid || !other) &&
-										check_changed(curbuf, TRUE, !other))
+								 check_changed(curbuf, TRUE, !other, forceit))
 					break;
 				}
 				curwin->w_arg_idx = i;
@@ -2231,7 +2248,8 @@ donextfile:		if (i < 0 || i >= arg_count)
 					arg_had_last = TRUE;
 				(void)do_ecmd(0, arg_files[curwin->w_arg_idx],
 							   NULL, do_ecmd_cmd, do_ecmd_lnum,
-							   p_hid ? ECMD_HIDE : 0);
+							   (p_hid ? ECMD_HIDE : 0) +
+												(forceit ? ECMD_FORCEIT : 0));
 				break;
 
 		case CMD_previous:
@@ -2344,7 +2362,7 @@ donextfile:		if (i < 0 || i >= arg_count)
 				if (usefilter)		/* input lines to shell command */
 					do_bang(1, line1, line2, FALSE, arg, TRUE, FALSE);
 				else
-					(void)do_write(arg, append);
+					(void)do_write(arg, line1, line2, append, forceit);
 				break;
 
 			/*
@@ -2392,7 +2410,7 @@ donextfile:		if (i < 0 || i >= arg_count)
 				{
 					setpcmark();
 					(void)do_ecmd(0, NULL, NULL, do_ecmd_cmd, (linenr_t)1,
-																   ECMD_HIDE);
+								  ECMD_HIDE + (forceit ? ECMD_FORCEIT : 0));
 				}
 				else if (cmdidx != CMD_split || *arg != NUL)
 				{
@@ -2401,7 +2419,8 @@ donextfile:		if (i < 0 || i >= arg_count)
 						readonlymode = TRUE;
 					setpcmark();
 					(void)do_ecmd(0, arg, NULL, do_ecmd_cmd, do_ecmd_lnum,
-													   p_hid ? ECMD_HIDE : 0);
+													 (p_hid ? ECMD_HIDE : 0) +
+												(forceit ? ECMD_FORCEIT : 0));
 					readonlymode = n;
 				}
 				else
@@ -2567,11 +2586,11 @@ donextfile:		if (i < 0 || i >= arg_count)
 				postponed_split = TRUE;
 				/*FALLTHROUGH*/
 		case CMD_tag:
-				do_tag(arg, 0, addr_count ? (int)line2 : 1);
+				do_tag(arg, 0, addr_count ? (int)line2 : 1, forceit);
 				break;
 
 		case CMD_pop:
-				do_tag((char_u *)"", 1, addr_count ? (int)line2 : 1);
+				do_tag((char_u *)"", 1, addr_count ? (int)line2 : 1, forceit);
 				break;
 
 		case CMD_tags:
@@ -2974,7 +2993,7 @@ doabbr:
 				}
 
 		case CMD_cc:
-					qf_jump(0, addr_count ? (int)line2 : 0);
+					qf_jump(0, addr_count ? (int)line2 : 0, forceit);
 					break;
 
 		case CMD_cfile:
@@ -2991,7 +3010,7 @@ doabbr:
 						(void)do_set(arg);
 					}
 					if (qf_init() == OK)
-						qf_jump(0, 0);			/* display first error */
+						qf_jump(0, 0, forceit);		/* display first error */
 					break;
 
 		case CMD_clist:
@@ -2999,16 +3018,17 @@ doabbr:
 					break;
 
 		case CMD_cnext:
-					qf_jump(FORWARD, addr_count ? (int)line2 : 1);
+					qf_jump(FORWARD, addr_count ? (int)line2 : 1, forceit);
 					break;
 
 		case CMD_cNext:
 		case CMD_cprevious:
-					qf_jump(BACKWARD, addr_count ? (int)line2 : 1);
+					qf_jump(BACKWARD, addr_count ? (int)line2 : 1, forceit);
 					break;
 
 		case CMD_cquit:
-					getout(1);		/* this does not always work. why? */
+					getout(1);		/* this does not always pass on the exit
+									   code to the Manx compiler. why? */
 
 		case CMD_mark:
 		case CMD_k:
@@ -3129,7 +3149,6 @@ doend:
 	}
 	if (did_emsg)
 		nextcomm = NULL;				/* cancel nextcomm at an error */
-	forceit = FALSE;		/* reset now so it can be used in getfile() */
 	if (nextcomm && *nextcomm == NUL)		/* not really a next command */
 		nextcomm = NULL;
 	return nextcomm;
@@ -3141,8 +3160,9 @@ doend:
  * return FAIL for failure, OK otherwise
  */
 	int
-autowrite(buf)
+autowrite(buf, forceit)
 	BUF		*buf;
+	int		forceit;
 {
 	if (!p_aw || (!forceit && buf->b_p_ro) || buf->b_filename == NULL)
 		return FAIL;
@@ -3186,7 +3206,8 @@ buf_write_all(buf)
 #endif
 
 	retval = (buf_write(buf, buf->b_filename, buf->b_sfilename,
-					 (linenr_t)1, buf->b_ml.ml_line_count, 0, 0, TRUE, FALSE));
+										 (linenr_t)1, buf->b_ml.ml_line_count,
+												  FALSE, FALSE, TRUE, FALSE));
 #ifdef AUTOCMD
 	if (curbuf != old_curbuf)
 		MSG("Warning: Entered other buffer unexpectedly (check autocommands)");
@@ -3204,9 +3225,11 @@ buf_write_all(buf)
  * return FAIL for failure, OK otherwise
  */
 	static int
-do_write(fname, append)
-	char_u	*fname;
-	int		append;
+do_write(fname, line1, line2, append, forceit)
+	char_u		*fname;
+	linenr_t	line1, line2;
+	int			append;
+	int			forceit;
 {
 	int		other;
 	char_u	*sfname = NULL;				/* init to shut up gcc */
@@ -3230,7 +3253,7 @@ do_write(fname, append)
 	 * writing to the current file is not allowed in readonly mode
 	 * and need a file name
 	 */
-	if (!other && (check_readonly() || check_fname() == FAIL))
+	if (!other && (check_readonly(forceit) || check_fname() == FAIL))
 		return FAIL;
 
 	if (!other)
@@ -3285,6 +3308,7 @@ do_write(fname, append)
  *         ECMD_HIDE: if TRUE don't free the current buffer
  *     ECMD_SET_HELP: set b_help flag of (new) buffer before opening file
  *       ECMD_OLDBUF: use existing buffer if it exists
+ *      ECMD_FORCEIT: ! used for Ex command
  *
  * return FAIL for failure, OK otherwise
  */
@@ -3346,7 +3370,7 @@ do_ecmd(fnum, fname, sfname, command, newlnum, flags)
  */
 	if (((!other_file && !(flags & ECMD_OLDBUF)) ||
 			(curbuf->b_nwindows == 1 && !(flags & ECMD_HIDE))) &&
-						check_changed(curbuf, FALSE, !other_file))
+			check_changed(curbuf, FALSE, !other_file, (flags & ECMD_FORCEIT)))
 	{
 		if (fnum == 0 && other_file && fname != NULL)
 			setaltfname(fname, sfname, (linenr_t)1);
@@ -3437,6 +3461,8 @@ do_ecmd(fnum, fname, sfname, command, newlnum, flags)
 			}
 #endif
 		}
+		else
+			++curbuf->b_nwindows;
 
 		curwin->w_pcmark.lnum = 1;
 		curwin->w_pcmark.col = 0;
@@ -3615,7 +3641,7 @@ do_make(arg)
 #endif
 
 	if (qf_init() == OK)
-		qf_jump(0, 0);			/* display first error */
+		qf_jump(0, 0, FALSE);			/* display first error */
 
 	vim_remove(p_ef);
 }
@@ -3751,7 +3777,8 @@ gotocmdline(clr)
 }
 
 	static int
-check_readonly()
+check_readonly(forceit)
+	int		forceit;
 {
 	if (!forceit && curbuf->b_p_ro)
 	{
@@ -3765,14 +3792,15 @@ check_readonly()
  * return TRUE if buffer was changed and cannot be abandoned.
  */
 	static int
-check_changed(buf, checkaw, mult_win)
+check_changed(buf, checkaw, mult_win, forceit)
 	BUF		*buf;
 	int		checkaw;		/* do autowrite if buffer was changed */
 	int		mult_win;		/* check also when several windows for the buffer */
+	int		forceit;
 {
 	if (	!forceit &&
 			buf->b_changed && (mult_win || buf->b_nwindows <= 1) &&
-			(!checkaw || autowrite(buf) == FAIL))
+			(!checkaw || autowrite(buf, forceit) == FAIL))
 	{
 		emsg(e_nowrtmsg);
 		return TRUE;
@@ -3790,28 +3818,24 @@ check_changed_any()
 	BUF		*buf;
 	int		save;
 
-	if (!forceit)
+	for (buf = firstbuf; buf != NULL; buf = buf->b_next)
 	{
-		for (buf = firstbuf; buf != NULL; buf = buf->b_next)
+		if (buf->b_changed)
 		{
-			if (buf->b_changed)
+			/* There must be a wait_return for this message, do_buffer
+			 * will cause a redraw */
+			exiting = FALSE;
+			if (EMSG2("No write since last change for buffer \"%s\"",
+						  buf->b_xfilename == NULL ? (char_u *)"No File" :
+														buf->b_xfilename))
 			{
-				/* There must be a wait_return for this message, do_buffer
-				 * will cause a redraw */
-				exiting = FALSE;
-				if (EMSG2("No write since last change for buffer \"%s\"",
-							  buf->b_xfilename == NULL ? (char_u *)"No File" :
-															buf->b_xfilename))
-				{
-					save = no_wait_return;
-					no_wait_return = FALSE;
-					wait_return(FALSE);
-					no_wait_return = save;
-				}
-				(void)do_buffer(DOBUF_GOTO, DOBUF_FIRST, FORWARD,
-															  buf->b_fnum, 0);
-				return TRUE;
+				save = no_wait_return;
+				no_wait_return = FALSE;
+				wait_return(FALSE);
+				no_wait_return = save;
 			}
+			(void)do_buffer(DOBUF_GOTO, DOBUF_FIRST, FORWARD, buf->b_fnum, 0);
+			return TRUE;
 		}
 	}
 	return FALSE;
@@ -3841,8 +3865,9 @@ check_fname()
  * return OK otherwise
  */
 	static int
-check_more(message)
+check_more(message, forceit)
 	int message;			/* when FALSE check only, no messages */
+	int forceit;
 {
 	if (!forceit && only_one_window() && arg_count > 1 && !arg_had_last &&
 									quitmore == 0)
@@ -3866,12 +3891,13 @@ check_more(message)
  * 'lnum' is the line number for the cursor in the new file (if non-zero).
  */
 	int
-getfile(fnum, fname, sfname, setpm, lnum)
+getfile(fnum, fname, sfname, setpm, lnum, forceit)
 	int			fnum;
 	char_u		*fname;
 	char_u		*sfname;
 	int			setpm;
 	linenr_t	lnum;
+	int			forceit;
 {
 	int other;
 
@@ -3886,7 +3912,7 @@ getfile(fnum, fname, sfname, setpm, lnum)
 	if (other)
 		++no_wait_return;			/* don't wait for autowrite message */
 	if (other && !forceit && curbuf->b_nwindows == 1 &&
-			!p_hid && curbuf->b_changed && autowrite(curbuf) == FAIL)
+			!p_hid && curbuf->b_changed && autowrite(curbuf, forceit) == FAIL)
 	{
 		if (other)
 			--no_wait_return;
@@ -3906,7 +3932,8 @@ getfile(fnum, fname, sfname, setpm, lnum)
 
 		return 0;		/* it's in the same file */
 	}
-	if (do_ecmd(fnum, fname, sfname, NULL, lnum, p_hid ? ECMD_HIDE : 0) == OK)
+	if (do_ecmd(fnum, fname, sfname, NULL, lnum,
+				(p_hid ? ECMD_HIDE : 0) + (forceit ? ECMD_FORCEIT : 0)) == OK)
 		return -1;		/* opened another file */
 	return 1;			/* error encountered */
 }
@@ -4144,11 +4171,10 @@ ExpandOne(str, orig, options, mode)
 		else
 		{
 			/*
-			 * If the pattern starts with a '~', replace the home directory
-			 * with '~' again.
+			 * May change home directory back to "~"
 			 */
-			if (*str == '~' && (options & WILD_HOME_REPLACE))
-				tilde_replace(cmd_numfiles, cmd_files);
+			if (options & WILD_HOME_REPLACE)
+				tilde_replace(str, cmd_numfiles, cmd_files);
 
 			/*
 			 * Insert backslashes into a file name before a space, \, %, # and
@@ -4286,23 +4312,28 @@ ExpandOne(str, orig, options, mode)
 }
 
 /*
- * Replace the home directory in each file name with '~'.
+ * For each file name in files[num_files]:
+ * If 'orig_pat' starts with "~/", replace the home directory with "~".
  */
 	void
-tilde_replace(num_files, files)
+tilde_replace(orig_pat, num_files, files)
+	char_u	*orig_pat;
 	int		num_files;
 	char_u	**files;
 {
 	int		i;
 	char_u	*p;
 
-	for (i = 0; i < num_files; ++i)
+	if (orig_pat[0] == '~' && ispathsep(orig_pat[1]))
 	{
-		p = home_replace_save(NULL, files[i]);
-		if (p != NULL)
+		for (i = 0; i < num_files; ++i)
 		{
-			vim_free(files[i]);
-			files[i] = p;
+			p = home_replace_save(NULL, files[i]);
+			if (p != NULL)
+			{
+				vim_free(files[i]);
+				files[i] = p;
+			}
 		}
 	}
 }
@@ -4859,7 +4890,7 @@ set_one_cmd_context(firstc, buff)
 	int					cmdidx;
 	long				argt;
 	char_u				delim;
-	int					forced = FALSE;
+	int					forceit = FALSE;
 	int					usefilter = FALSE;	/* filter instead of file name */
 
 	expand_pattern = buff;
@@ -4987,7 +5018,7 @@ set_one_cmd_context(firstc, buff)
 
 	if (*p == '!')					/* forced commands */
 	{
-		forced = TRUE;
+		forceit = TRUE;
 		++p;
 	}
 
@@ -5015,7 +5046,7 @@ set_one_cmd_context(firstc, buff)
 
 	if (cmdidx == CMD_read)
 	{
-		usefilter = forced;					/* :r! filter if forced */
+		usefilter = forceit;					/* :r! filter if forced */
 		if (*arg == '!')						/* :r !filter */
 		{
 			++arg;
@@ -5237,7 +5268,7 @@ set_one_cmd_context(firstc, buff)
 		case CMD_vmenu:		case CMD_vnoremenu:		case CMD_vunmenu:
 		case CMD_imenu:		case CMD_inoremenu:		case CMD_iunmenu:
 		case CMD_cmenu:		case CMD_cnoremenu:		case CMD_cunmenu:
-			return gui_set_context_in_menu_cmd(cmd, arg, forced);
+			return gui_set_context_in_menu_cmd(cmd, arg, forceit);
 			break;
 #endif
 		default:
@@ -5315,7 +5346,7 @@ ExpandFromContext(pat, num_file, file, files_only, options)
 									   expand_context == EXPAND_BOOL_SETTINGS)
 		ret = ExpandSettings(prog, num_file, file);
 	else if (expand_context == EXPAND_TAGS)
-		ret = find_tags(NULL, prog, num_file, file, FALSE);
+		ret = find_tags(NULL, prog, num_file, file, FALSE, FALSE);
 #ifdef AUTOCMD
 	else if (expand_context == EXPAND_EVENTS)
 		ret = ExpandEvents(prog, num_file, file);

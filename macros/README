@@ -1,12 +1,11 @@
 The macros in the maze, hanoi and urm directories can be used to test Vim for
 vi compatibility.  They have been written for vi to show its unlimited
-possibilities.
+possibilities.  The life macros can be used for performance compares.
 
 hanoi	Macros that solve the tower of hanoi problem.
+life	Macros that run Conway's game of life.
 maze	Macros that solve a maze (amazing!).
 urm	Macros that simulate a simple computer: "Universal Register Machine"
-
-They are unmodified.
 
 
 The other files contain some handy utilities:

@@ -646,7 +646,12 @@ do_glob(type, lp, up, cmd)
 
 		global_busy = 0;
 
-		must_redraw = CLEAR;
+		/*
+		 * Redraw everything.  Could use CLEAR, which is faster in some
+		 * situations, but when there are few changes this makes the display
+		 * flicker.
+		 */
+		must_redraw = NOT_VALID;
 		cursupdate();
 
 		/* If subsitutes done, report number of substitues, otherwise report

@@ -112,12 +112,12 @@
 #FreeBSD 2.1.0           gcc-2.6.3   +X11 -GUI +Athena  4.3      Bram Moolenaar
 #HP-UX 9.00           c89 cc         X11R5 Motif 1.2    3.24 (2) Bram Moolenaar
 #HP-UX 9.01           gcc            +X11 +GUI          4.1      Mun Johl
-#HP-UX 9.01 (400)     gcc 2.7.2      +X11 +Athena       3.29     Axel Kielhorn
+#HP-UX 9.01 (400)     gcc 2.7.2      +X11 -GUI          4.3      Axel Kielhorn
 #HP-UX 9.01 (400)     cc89           +X11 +Motif 1.2    3.27     Axel Kielhorn
-#HP-UX 9.01 (700)     gcc            +X11 +Motif 1.2    3.27     Axel Kielhorn
+#HP-UX 9.01 (700)     gcc 2.7.2      +X11 -GUI          4.3      Axel Kielhorn
 #HP-UX 9.01 (700)     cc89         +X11 +Athena +Motif  3.27     Axel Kielhorn
 #HP-UX A.09.03U (SPP1000) gcc-2.5.8  +X11 Motif         3.29     Lennart Schultz
-#HP-UX 9.04E          cc gcc-2.6.3   X11R5 Motif 1.2    3.25     Kayhan Demirel
+#HP-UX 9.04E          cc gcc-2.6.3   X11R5 Motif 1.2    4.3      Kayhan Demirel
 #HP-UX 9.04E          cc             +X11 +GUI  Motif   3.27     Bill Foster
 #HP-UX 9.05           cc             -X11 -GUI          3.27     Juergen Weigert
 #HP-UX 9.05           cc             +X11 -GUI  X11R5   3.25     Robert Colon
@@ -127,7 +127,7 @@
 #HP-UX 9.05           gcc-2.7.2      +X11 -GUI          4.2      L.  Duperval
 #HP-UX 9.05 (700)     cc             X11R5 Motif 1.2    4.3      Bram Moolenaar
 #HP-UX 9.07           c89            X11R5 Motif 1.2    3.23 (Y) Nikhil Patel
-#HP-UX 10.01A         cc gcc-2.6.3   X11R5 Motif 1.2    3.25     Kayhan Demirel
+#HP-UX 10.01A         cc gcc-2.6.3   X11R5 Motif 1.2    4.3      Kayhan Demirel
 #HP-UX 10.01          cc             X11R6  -GUI        3.20     Jiwei Wang
 #HP-UX 10.01          cc             -X11 -GUI          3.27     Juergen Weigert
 #HP-UX 10.10          cc             X11R5 Motif 1.2    3.22     Nikhil Patel
@@ -154,6 +154,7 @@
 #Linux 1.99.7            gcc-2.7.0   +X11 Athena        3.29     Lennart Schultz
 #Linux 1.99.7            gcc-2.7.0   +X11 +GUI Athena   3.29     Paul Slootman
 #Linux 1.99.8(pre-2.0.8) gcc-2.7.2   X11R6 +GUI         3.29     Tony Nugent
+#Linux 2.0               gcc-2.7.2   Infomagic Motif    4.3  (3) Ronald Rietman
 #mot88 R32V3          cc             -X11 -GUI          3.21     Juergen Weigert
 #NCR Tower 32/450 SVR3   cc          -X11               3.22     Paul Slootman
 #NCR Tower 32/450 SVR3   gcc-2.4.3   -X11               3.22     Paul Slootman
@@ -184,9 +185,9 @@
 #Solaris 2.5          cc             -X11 -GUI          3.27     Juergen Weigert
 #Solaris 2.5          cc        +X11=openwin +GUI=Motif 3.27     Juergen Weigert
 #Solaris 2.5          gcc-2.7.2      +X11 +GUI Motif    3.26     Iva Cabric
-#Solaris 2.5          gcc 2.7.2      +X11R6 +GUI        4.1      Renate Schmidt
-#Solaris 2.5 (sun4m)     gcc-2.7.2   +X11R6 +GUI (CDE)  4.2      Andrew Large
-#Solaris 2.5 (sun4m)   cc (SC4.0)    +X11R6 +GUI (CDE)  4.2  (E) Andrew Large
+#Solaris 2.5          gcc 2.7.2      +X11R6 +GUI        4.3      Renate Schmidt
+#Solaris 2.5 (sun4m)     gcc-2.7.2   +X11R6 +GUI (CDE)  4.3      Andrew Large
+#Solaris 2.5 (sun4m)   cc (SC4.0)    +X11R6 +GUI (CDE)  4.3  (E) Andrew Large
 #Solaris 2.5 (sun4u)     gcc-2.7.2   +X11 Motif Athena  3.29     Lennart Schultz
 #Solaris 2.5         cc              +X11 +GUI Athena   4.2  (9) Sonia Heimann
 #SunOS 4.1.1          gcc 2.7.2      +X11 -GUI          4.0      L.  Duperval
@@ -202,7 +203,7 @@
 #SunOS 4.1.4          cc gcc-2.6.3   +X11 +GUI          3.23     Robert Webb
 #SunOS 4.1.4 (sparc)  cc gcc-2.6.3       openwin        3.17     Eric Fischer
 #SunOS 4.1.4 (sun4c)     gcc-2.7.2   +X11 Athena        3.29     Lennart Schultz
-#SunOS 4.1.4          gcc            +X11R5 +GUI Motif  4.2      Karsten Sievert
+#SunOS 4.1.4          gcc            +X11R5 +GUI_Athena 4.3      Karsten Sievert
 #SUPER-UX 6.1.r1 (SX-4)   cc         +X11 Motif         3.29     Lennart Schultz
 #Ultrix               cc             -X11 +X11          4.3      Bram Moolenaar
 #Unisys 6035          cc                 X11 Motif      3.29 (8) Glauber
@@ -216,6 +217,8 @@
 #
 # (1)  Uncomment line below for shlicc2
 # (2)  Needs c89 on a 400 system, uncomment line below
+# (3)  Infomagic Motif needs GUI_LIB_LOC and GUI_INC_LOC set, see below.
+#      And add "-lXpm" to GUI_LIBS.
 # (4)  For cc the optimizer must be disabled (use CFLAGS= after running
 #      configure) (symptom: ":set termcap" output looks weird).
 # (5)  Lesstif compiles fine, but it does not really work (menus crash, etc.)
@@ -245,6 +248,9 @@ CC=
 # When changed, run "make distclean" next!
 #GUI_INC_LOC = /usr/include/Motif2.0 /usr/include/Motif1.2
 #GUI_LIB_LOC = /usr/lib/Motif2.0 /usr/lib/Motif1.2
+### Use these two lines for Infomagic Motif (3)
+#GUI_INC_LOC = /usr/X11R6/include
+#GUI_LIB_LOC = /usr/X11R6/lib
 
 ######################## config.mk ########################
 # At this position config.mk is included. When starting from the
@@ -273,9 +279,9 @@ include config.mk
 # When using "yes" configure will use Motif if it can be found, otherwise use
 # Athena when it can be found.
 # If the Motif and Athena files are not found, GUI is disabled automatically
-CONF_OPT_GUI = --enable-gui=yes
+#CONF_OPT_GUI = --enable-gui=yes
 #CONF_OPT_GUI = --enable-gui=motif
-#CONF_OPT_GUI = --enable-gui=athena
+CONF_OPT_GUI = --enable-gui=athena
 
 ### For creating a plain Vim without any X11 related fancies use this one:
 ### (otherwise Vim configure will try to include xterm titlebar access)
@@ -307,7 +313,7 @@ CONF_OPT_GUI = --enable-gui=yes
 ### When not defined, configure will try to use -O2 -g for gcc and -O for cc.
 #CFLAGS = -g
 #CFLAGS = -O
-#CFLAGS = -g -O2 -fno-strength-reduce -Wall -Wshadow -Wmissing-prototypes
+CFLAGS = -g -O2 -fno-strength-reduce -Wall -Wshadow -Wmissing-prototypes
 
 ### Often used for GCC: optimizing, lot of optimizing, debugging
 #CFLAGS = -O2 -fno-strength-reduce -Wall -Wshadow -Wmissing-prototypes
@@ -650,10 +656,10 @@ debug: $(OBJ) version.c
 	$(CC) $(LDFLAGS) -o $(TARGET) -g $(OBJ) version.o $(ALL_LIBS) 
 
 ctags/ctags: ctags/ctags.c
-	cd ctags; $(MAKE) -f Makefile.unix
+	cd ctags; CC="$(CC)" CFLAGS="$(CFLAGS)" $(MAKE) -f Makefile.unix
 
 xxd/xxd: xxd/xxd.c
-	cd xxd; $(MAKE) -f Makefile.unix
+	cd xxd; CC="$(CC)" CFLAGS="$(CFLAGS)" $(MAKE) -f Makefile.unix
 
 # Generate function prototypes.  This is not needed to compile vim, but if
 # you want to use it, cproto is out there on the net somewhere -- Webb
@@ -734,7 +740,7 @@ uninstall:
 # Clean up all the files that have been produced, except configure's
 # We support common typing mistakes for Juergen! :-)
 clean celan:
-	-rm -f *.o core vim.core $(TARGET) 
+	-rm -f *.o core vim.core $(TARGET) xxd/*.o ctags/*.o $(TOOLS)
 	-rm -f osdef.h pathdef.c mkcmdtab cmdtab.h conftest* *~
 
 shadow:	doc
@@ -743,6 +749,10 @@ shadow:	doc
 	cd shadow; rm -f osdef.h config.h cmdtab.h pathdef.c
 	cp Makefile shadow
 	echo "the first targets to make vim are: scratch config myself" > shadow/config.mk
+	mkdir shadow/ctags
+	cd shadow/ctags; ln -s ../../ctags/*.[ch] ../../ctags/Make* .
+	mkdir shadow/xxd
+	cd shadow/xxd; ln -s ../../xxd/*.[ch] ../../xxd/Make* .
 
 doc:
 	ln -s ../doc .

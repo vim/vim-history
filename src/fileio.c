@@ -1604,7 +1604,7 @@ nofail:
 		if (end == 0)
 		{
 			MSG_OUTSTR("\nWARNING: Original file may be lost or damaged\n");
-			MSG_OUTSTR("don't quit the editor until the file is sucessfully written!");
+			MSG_OUTSTR("don't quit the editor until the file is successfully written!");
 		}
 	}
 	msg_scroll = msg_save;

@@ -3290,10 +3290,6 @@ jump_to_mouse(flags)
 		col = Columns - 1 - col;
 #endif
 
-	if (curwin->w_p_nu)			/* skip number in front of the line */
-		if ((col -= 8) < 0)
-			col = 0;
-
 	if (curwin->w_p_wrap)		/* lines wrap */
 	{
 		while (row)
@@ -3323,6 +3319,11 @@ jump_to_mouse(flags)
 		}
 		col += curwin->w_leftcol;
 	}
+
+	if (curwin->w_p_nu)			/* skip number in front of the line */
+		if ((col -= 8) < 0)
+			col = 0;
+
 	curwin->w_curswant = col;
 	curwin->w_set_curswant = FALSE;		/* May still have been TRUE */
 	if (coladvance(col) == FAIL)

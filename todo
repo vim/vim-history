@@ -3,16 +3,18 @@ Known problems and priority improvements:
 Small problems:
 - CTRL-F at the end of the file, when 'so' is set, redraws twice.  When the
   window is small (< 2 * 'so') it behaves differently.
+- CTRL-E and CTRL-Y in a small windows, with 'so' set, sometimes doesn't
+  scroll, because getting the context scrolls the screen back.
 - in configure, put termlib before termcap?
 - tilde_replace() can only handle "~/", should also do "~user/".
 - "1000ii<Esc>" takes an awful long time.
 - If writing to the swap file fails, should try to open one in another
-  directory.  Useful in case the file system is full.
+  directory from 'dir'.  Useful in case the file system is full.
 - ":wall|make", when writing something, ":!make" echo does not have a CRLF
   before it.
 - There are often a few <CR> on a row sent to the screen, should not be
   necessary.
-- Text is scrolled up and down: (acevedo)
+- Text is scrolled up and down: (Acevedo)
    - set scrolloff to something >1 (i always use "set so=4")
    - set the win. hegiht to scrolloff + 1  (i'd do ^W5_)
    - load a file with scrolloff + 2 lines
@@ -102,10 +104,10 @@ When doing a CTRL-Z and typing a command for the shell, while Vim is busy
 
 
 Main changes for version 5.0:
+- The last few big things for Vi compatibility (Ex mode, "Q", ":append")
 - Syntax coloring/highlighting, configurable for different languages.
 - Add scripting language support (probably Perl).
 - GUI version for Windows (3.1/95/NT).
-- The last few things for Vi compatibility (POSIX compatible mode, "Q"?).
 - VINE (Vim Is Not Emacs): Keep it small!
 
 
@@ -113,6 +115,7 @@ Further extentions and improvements:
 
 GUI stuff (see ":help gui_todo").
 
+POSIX compatible mode?
 Make "5dd" on last-but-one-line not delete anything (vi compatible).
 	Change cursor_down()???  Many other commands will change too: "5j", "c5j",
 	etc.  Add flag in 'cpoptions'?
@@ -195,7 +198,6 @@ Add events to autocommands:?
 	replaceenter - Entering replace mode.
 	cmdenter     - Entering cmdline mode.
 	visualenter  - Entering visual mode.
-Implement mouse support for the Amiga.
 Give better error messages by using errno (strerror()).
 Add 'sidescrolloff' option, like 'scrolloff' for sideways scrolling.
 Make 'restorescreen' option also work for xterm (and others), replaces the
@@ -348,6 +350,7 @@ Add 'scrollmax' option, maximum number of lines to scroll display, above this
 	a redraw is done.
 Add ":alias" command, like ":cmap" or ":cabb", but only for the command name
 	and it isn't displayed.
+Implement mouse support for the Amiga.
 xterm: Implement support for visual feedback of mouse dragging.
 Using right mouse button to extend a blockwise selection should attach to the
 	nearest corner of the rectangle (four possible corners).

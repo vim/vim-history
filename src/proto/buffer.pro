@@ -8,7 +8,7 @@ char_u *do_bufdel __PARMS((int command, char_u *arg, int addr_count, int start_b
 int do_buffer __PARMS((int action, int start, int dir, int count, int forceit));
 BUF *buflist_new __PARMS((char_u *fname, char_u *sfname, linenr_t lnum, int use_curbuf));
 void free_buf_options __PARMS((BUF *buf));
-int buflist_getfile __PARMS((int n, linenr_t lnum, int options));
+int buflist_getfile __PARMS((int n, linenr_t lnum, int options, int forceit));
 void buflist_getlnum __PARMS((void));
 BUF *buflist_findname __PARMS((char_u *fname));
 int buflist_findpat __PARMS((char_u *pattern, char_u *pattern_end));

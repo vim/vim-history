@@ -19,8 +19,10 @@ static void do_filter __ARGS((linenr_t line1, linenr_t line2,
 									char_u *buff, int do_in, int do_out));
 #ifdef VIMINFO
 static char_u *viminfo_filename __ARGS((char_u 	*));
-static void do_viminfo __ARGS((FILE *fp_in, FILE *fp_out, int want_info, int want_marks, int force_read));
-static int read_viminfo_up_to_marks __ARGS((char_u *line, FILE *fp, int force));
+static void do_viminfo __ARGS((FILE *fp_in, FILE *fp_out, int want_info,
+											 int want_marks, int force_read));
+static int read_viminfo_up_to_marks __ARGS((char_u *line, FILE *fp,
+																int forceit));
 #endif /* VIMINFO */
 
 	void
@@ -32,6 +34,11 @@ do_ascii()
 	char_u	buf3[3];
 
 	c = gchar_cursor();
+	if (c == NUL)
+	{
+		MSG("empty line");
+		return;
+	}
 	if (c == NL)			/* NUL is stored as NL */
 		c = NUL;
 	if (isprintchar(c) && (c < ' ' || c > '~'))
@@ -133,11 +140,11 @@ do_align(start, end, width, type)
 }
 
 	void
-do_retab(start, end, new_ts, force)
+do_retab(start, end, new_ts, forceit)
 	linenr_t	start;
 	linenr_t	end;
 	int			new_ts;
-	int			force;
+	int			forceit;
 {
 	linenr_t	lnum;
 	int			got_tab = FALSE;
@@ -180,7 +187,7 @@ do_retab(start, end, new_ts, force)
 			}
 			else
 			{
-				if (got_tab || (force && num_spaces > 1))
+				if (got_tab || (forceit && num_spaces > 1))
 				{
 					/* Retabulate this string of white-space */
 
@@ -714,7 +721,7 @@ do_filter(line1, line2, buff, do_in, do_out)
  */
 	++no_wait_return;			/* don't call wait_return() while busy */
 	if (do_in && buf_write(curbuf, itmp, NULL, line1, line2,
-											  FALSE, 0, FALSE, TRUE) == FAIL)
+										   FALSE, FALSE, FALSE, TRUE) == FAIL)
 	{
 		msg_outchar('\n');					/* keep message from buf_write() */
 		--no_wait_return;
@@ -920,11 +927,11 @@ viminfo_error(message, line)
  * set are not over-written unless force is TRUE. -- webb
  */
 	int
-read_viminfo(file, want_info, want_marks, force)
+read_viminfo(file, want_info, want_marks, forceit)
 	char_u	*file;
 	int		want_info;
 	int		want_marks;
-	int		force;
+	int		forceit;
 {
 	FILE	*fp;
 
@@ -936,7 +943,7 @@ read_viminfo(file, want_info, want_marks, force)
 		return FAIL;
 
 	viminfo_errcnt = 0;
-	do_viminfo(fp, NULL, want_info, want_marks, force);
+	do_viminfo(fp, NULL, want_info, want_marks, forceit);
 
 	fclose(fp);
 
@@ -947,13 +954,13 @@ read_viminfo(file, want_info, want_marks, force)
  * write_viminfo() -- Write the viminfo file.  The old one is read in first so
  * that effectively a merge of current info and old info is done.  This allows
  * multiple vims to run simultaneously, without losing any marks etc.  If
- * force is TRUE, then the old file is not read in, and only internal info is
+ * forceit is TRUE, then the old file is not read in, and only internal info is
  * written to the file. -- webb
  */
 	void
-write_viminfo(file, force)
+write_viminfo(file, forceit)
 	char_u	*file;
-	int		force;
+	int		forceit;
 {
 	FILE	*fp_in = NULL;
 	FILE	*fp_out = NULL;
@@ -982,7 +989,7 @@ write_viminfo(file, force)
 	}
 
 	viminfo_errcnt = 0;
-	do_viminfo(fp_in, fp_out, !force, !force, FALSE);
+	do_viminfo(fp_in, fp_out, !forceit, !forceit, FALSE);
 
 	fclose(fp_out);			/* errors are ignored !? */
 	if (fp_in != NULL)
@@ -1062,14 +1069,14 @@ do_viminfo(fp_in, fp_out, want_info, want_marks, force_read)
  * are local to a file.  Returns TRUE when end-of-file is reached. -- webb
  */
 	static int
-read_viminfo_up_to_marks(line, fp, force)
+read_viminfo_up_to_marks(line, fp, forceit)
 	char_u	*line;
 	FILE	*fp;
-	int		force;
+	int		forceit;
 {
 	int		eof;
 
-	prepare_viminfo_history(force ? 9999 : 0);
+	prepare_viminfo_history(forceit ? 9999 : 0);
 	eof = vim_fgets(line, LSIZE, fp);
 	while (!eof && line[0] != '>')
 	{
@@ -1082,15 +1089,15 @@ read_viminfo_up_to_marks(line, fp, force)
 				eof = vim_fgets(line, LSIZE, fp);
 				break;
 			case '"':
-				eof = read_viminfo_register(line, fp, force);
+				eof = read_viminfo_register(line, fp, forceit);
 				break;
 			case '/':		/* Search string */
 			case '&':		/* Substitute search string */
 			case '~':		/* Last search string, followed by '/' or '&' */
-				eof = read_viminfo_search_pattern(line, fp, force);
+				eof = read_viminfo_search_pattern(line, fp, forceit);
 				break;
 			case '$':
-				eof = read_viminfo_sub_string(line, fp, force);
+				eof = read_viminfo_sub_string(line, fp, forceit);
 				break;
 			case ':':
 			case '?':
@@ -1100,7 +1107,7 @@ read_viminfo_up_to_marks(line, fp, force)
 				/* How do we have a file mark when the file is not in the
 				 * buffer list?
 				 */
-				eof = read_viminfo_filemark(line, fp, force);
+				eof = read_viminfo_filemark(line, fp, forceit);
 				break;
 #if 0
 			case '+':
@@ -1206,7 +1213,7 @@ print_line(lnum, use_number)
 }
 
 /*
- * Implementation of ":file [fname]".
+ * Implementation of ":file[!] [fname]".
  */
 	void
 do_file(arg, forceit)

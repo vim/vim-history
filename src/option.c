@@ -193,12 +193,16 @@ static struct option options[] =
 #else
 # if defined MSDOS  ||  defined WIN32
 							(char_u *)"%*[^\"]\"%f\"%*[^0-9]%l: %m,%f(%l) : %m,%*[^ ] %f %l: %m,%f:%l:%m"},
-# elif defined(__EMX__)	/* put most common here (i.e. gcc format) at front */
-							(char_u *)"%f:%l:%m,%*[^\"]\"%f\"%*[^0-9]%l: %m,\"%f\"%*[^0-9]%l: %m,%f(%l:%c) : %m"},
-# elif defined(__QNX__)
-							(char_u *)"%f(%l):%*[^WE]%t%*[^0123456789]%n:%m"},
 # else
+#  if defined(__EMX__)	/* put most common here (i.e. gcc format) at front */
+							(char_u *)"%f:%l:%m,%*[^\"]\"%f\"%*[^0-9]%l: %m,\"%f\"%*[^0-9]%l: %m,%f(%l:%c) : %m"},
+#  else
+#   if defined(__QNX__)
+							(char_u *)"%f(%l):%*[^WE]%t%*[^0123456789]%n:%m"},
+#   else /* Unix, probably */
 							(char_u *)"%*[^\"]\"%f\"%*[^0-9]%l: %m,\"%f\"%*[^0-9]%l: %m,%f:%l:%m,\"%f\"\\, line %l%*[^0-9]%c%*[^ ] %m"},
+#   endif
+#  endif
 # endif
 #endif
 	{"esckeys",		"ek",	P_BOOL,				(char_u *)&p_ek,
@@ -396,10 +400,12 @@ static struct option options[] =
 	{"path",		"pa",  	P_STRING|P_EXPAND,	(char_u *)&p_path,
 #if defined AMIGA  ||  defined MSDOS  ||  defined WIN32
 							(char_u *)".,,"},
-#elif defined(__EMX__)
-							(char_u *)".,/emx/include,,"},
 #else
+# if defined(__EMX__)
+							(char_u *)".,/emx/include,,"},
+# else /* Unix, probably */
 							(char_u *)".,/usr/include,,"},
+# endif
 #endif
 	{"prompt",		NULL,	P_BOOL,				(char_u *)NULL,
 							(char_u *)FALSE},
@@ -434,16 +440,22 @@ static struct option options[] =
 	{"secure",		NULL,	P_BOOL,				(char_u *)&p_secure,
 							(char_u *)FALSE},
 	{"shell",		"sh",	P_STRING|P_EXPAND,	(char_u *)&p_sh,
-#if   defined(MSDOS)
+#if defined(MSDOS)
 							(char_u *)"command"},
-#elif defined(WIN32)
-							(char_u *)""},		/* set in set_init_1() */
-#elif defined(__EMX__)
-							(char_u *)"cmd.exe"},
-#elif defined(ARCHIE)
-							(char_u *)"gos"},
 #else
+# if defined(WIN32)
+							(char_u *)""},		/* set in set_init_1() */
+# else
+#  if defined(__EMX__)
+							(char_u *)"cmd.exe"},
+#  else
+#   if defined(ARCHIE)
+							(char_u *)"gos"},
+#   else
 							(char_u *)"sh"},
+#   endif
+#  endif
+# endif
 #endif
 	{"shellcmdflag","shcf", P_STRING,           (char_u *)&p_shcf,
 #if defined(MSDOS) || defined(WIN32)
@@ -3301,7 +3313,7 @@ static int event_name2nr __ARGS((char_u *start, char_u **end));
 static char *event_nr2name __ARGS((int event));
 static char_u *find_end_event __ARGS((char_u *arg));
 static int do_autocmd_event __ARGS((int event, char_u *pat,
-													 char_u *cmd, int force));
+												   char_u *cmd, int forceit));
 
 	static void
 show_autocmd(ap, event)
@@ -3470,9 +3482,9 @@ find_end_event(arg)
  * :autocmd * *.c				show all autocommands for *.c files.
  */
 	void
-do_autocmd(arg, force)
+do_autocmd(arg, forceit)
 	char_u	*arg;
-	int		force;
+	int		forceit;
 {
 	char_u	*pat;
 	char_u	*cmd;
@@ -3510,7 +3522,7 @@ do_autocmd(arg, force)
 	/*
 	 * Print header when showing autocommands.
 	 */
-	if (!force && *cmd == NUL)
+	if (!forceit && *cmd == NUL)
 	{
 		set_highlight('t');		/* Highlight title */
 		start_highlight();
@@ -3524,14 +3536,14 @@ do_autocmd(arg, force)
 	if (*arg == '*' || *arg == NUL)
 	{
 		for (event = 0; event < NUM_EVENTS; ++event)
-			if (do_autocmd_event(event, pat, cmd, force) == FAIL)
+			if (do_autocmd_event(event, pat, cmd, forceit) == FAIL)
 				break;
 	}
 	else
 	{
 		while (*arg && !vim_iswhite(*arg))
 			if (do_autocmd_event(event_name2nr(arg, &arg), pat,
-														  cmd, force) == FAIL)
+														cmd, forceit) == FAIL)
 				break;
 	}
 }
@@ -3540,14 +3552,14 @@ do_autocmd(arg, force)
  * do_autocmd() for one event.
  * If *pat == NUL do for all patterns.
  * If *cmd == NUL show entries.
- * If force == TRUE delete entries.
+ * If forceit == TRUE delete entries.
  */
 	static int
-do_autocmd_event(event, pat, cmd, force)
+do_autocmd_event(event, pat, cmd, forceit)
 	int		event;
 	char_u	*pat;
 	char_u	*cmd;
-	int		force;
+	int		forceit;
 {
 	AutoPat		*ap;
 	AutoPat		*ap2;
@@ -3566,12 +3578,12 @@ do_autocmd_event(event, pat, cmd, force)
 		for (ap = first_autopat[event]; ap != NULL; ap = ap2)
 		{
 			ap2 = ap->next;
-			if (force)
+			if (forceit)
 				del_autocmd(ap);
 			else
 				show_autocmd(ap, event);
 		}
-		if (force)
+		if (forceit)
 			first_autopat[event] = NULL;
 	}
 
@@ -3646,7 +3658,7 @@ do_autocmd_event(event, pat, cmd, force)
 		 * If not adding any new autocmd's for this pattern, delete the
 		 * pattern from the autopat list
 		 */
-		else if (force)
+		else if (forceit)
 		{
 			del_autocmd_cmds(ap);
 			if (*cmd == NUL)
@@ -3668,7 +3680,7 @@ do_autocmd_event(event, pat, cmd, force)
 		/*
 		 * Show autocmd's for this autopat
 		 */
-		if (*cmd == NUL && !force)
+		if (*cmd == NUL && !forceit)
 		{
 			show_autocmd(ap, event);
 		}
@@ -3803,7 +3815,7 @@ apply_autocmds(event, fname, fname_io)
 
 	tail = gettail(fname);
 
-	for (ap = first_autopat[event]; ap != NULL; ap = ap->next)
+	for (ap = first_autopat[event]; ap != NULL && !got_int; ap = ap->next)
 	{
 #ifdef CASE_INSENSITIVE_FILENAME
 		reg_ic = TRUE;		/* Always ignore case */
@@ -3828,6 +3840,7 @@ apply_autocmds(event, fname, fname_io)
 			vim_free(sourcing_name);
 		}
 		vim_free(prog);
+		mch_breakcheck();
 	}
 	RedrawingDisabled = temp;
 	autocmd_busy = FALSE;

@@ -69,8 +69,6 @@ static int		last_magic = TRUE;
 static int		last_no_scs = FALSE;
 static char_u	*mr_pattern = NULL;		/* pattern used by myregcomp() */
 
-static int		want_start;				/* looking for start of line? */
-
 /*
  * Type used by find_pattern_in_path() to remember which included files have
  * been searched already.
@@ -189,7 +187,6 @@ myregcomp(pat, sub_cmd, which_pat, options)
 		}
 	}
 
-	want_start = (*pat == '^');	/* looking for start of line? */
 	set_reg_ic(pat);			/* tell the vim_regexec routine how to search */
 	return vim_regcomp(pat);
 }
@@ -297,15 +294,10 @@ searchit(pos, dir, str, count, options, which_pat)
 			for ( ; lnum > 0 && lnum <= curbuf->b_ml.ml_line_count;
 										   lnum += dir, at_first_line = FALSE)
 			{
-				ptr = ml_get(lnum);
-											/* forward search, first line */
-				if (dir == FORWARD && at_first_line && start_pos.col > 0 &&
-																   want_start)
-					continue;				/* match not possible */
-
 				/*
 				 * Look for a match somewhere in the line.
 				 */
+				ptr = ml_get(lnum);
 				if (vim_regexec(prog, ptr, TRUE))
 				{
 					match = prog->startp[0];
@@ -361,7 +353,7 @@ searchit(pos, dir, str, count, options, which_pat)
 						if (!match_ok)
 							continue;
 					}
-					if (dir == BACKWARD && !want_start)
+					if (dir == BACKWARD)
 					{
 						/*
 						 * Now, if there are multiple matches on this line,
@@ -2921,7 +2913,7 @@ find_pattern_in_path(ptr, len, whole, skip_comments,
 					}
 					else
 						if (getfile(0, files[depth].name, NULL, TRUE,
-														files[depth].lnum) > 0)
+												files[depth].lnum, FALSE) > 0)
 							break;		/* failed to jump to file */
 				}
 				if (action != ACTION_SHOW)

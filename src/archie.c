@@ -347,8 +347,10 @@ mch_windexit(r)
 {
 	settmode(0);
 	stoptermcap();
+	outchar('\r');
+	outchar('\n');
 	flushbuf();
-	stopscript();					/* remove autoscript file */
+	ml_close_all(TRUE); 			/* remove all memfiles */
 	exit(r);
 }
 

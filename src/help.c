@@ -39,7 +39,7 @@ do_help(arg)
 			return;
 		}
 
-		/* The first file is the best match */
+		/* The first match is the best match */
 		arg = strsave(matches[0]);
 		need_free = TRUE;
 		FreeWild(num_matches, matches);
@@ -202,34 +202,42 @@ find_help_tags(arg, num_matches, matches)
 	regexp	*prog;
 	int		attempt;
 	int		retval = FAIL;
+	int		i;
+	static char *(mtable[]) = {"*", "g*", "[*", "]*",
+							   "/*", "/\\*", "/\\(\\)",
+							   "?", ":?", "?<CR>"};
+	static char *(rtable[]) = {"star", "gstar", "[star", "]star",
+							   "/star", "/\\\\star", "/\\\\(\\\\)",
+							   "?", ":?", "?<CR>"};
 
 	reg_magic = p_magic;
 	d = IObuff;				/* assume IObuff is long enough! */
 
 	/*
-	 * Replace "|" with "bar", """ with "quote" and "*" with "star" to
-	 * match the name of the tags for these commands.
-	 * Replace "*" with ".*" and "?" with "." to match command line
-	 * completion.
-	 * Insert a backslash before '~', '$' and '.' to avoid their
-	 * special meaning.
-	 * Replace "^x" by "CTRL-X". Don't do this for "^_" to make
-	 * ":help i_^_CTRL-D" work.
-	 * If tag starts with ', toss everything after a second '. Fixes
-	 * CTRL-] on 'option'. (would include the trailing '.').
+	 * Recognize a few exceptions to the rule.  Some strings that contain '*'
+	 * with "star".  Otherwise '*' is recognized as a wildcard.
 	 */
-	if (STRCMP(arg, "*") == 0 || STRCMP(arg, "[*") == 0 ||
-											   STRCMP(arg, "]*") == 0)
+	for (i = sizeof(mtable) / sizeof(char *); --i >= 0; )
 	{
-		if (*arg != '*')
-			*d++ = *arg;
-		STRCPY(d, "star");
-		d += 4;
+		if (STRCMP(arg, mtable[i]) == 0)
+		{
+			STRCPY(d, rtable[i]);
+			break;
+		}
 	}
-	else
+
+	if (i < 0)		/* no match in table, replace single characters */
 	{
 		for (s = arg; *s; ++s)
 		{
+			/*
+			 * Replace "|" with "bar" and """ with "quote" to match the name of
+			 * the tags for these commands.
+			 * Replace "*" with ".*" and "?" with "." to match command line
+			 * completion.
+			 * Insert a backslash before '~', '$' and '.' to avoid their
+			 * special meaning.
+			 */
 			if (d - IObuff > IOSIZE - 10)		/* getting too long!? */
 				break;
 			switch (*s)
@@ -242,18 +250,18 @@ find_help_tags(arg, num_matches, matches)
 							continue;
 				case '*':	*d++ = '.';
 							break;
-							/* "?", ":?" and "?<CR>" are real tags */
-				case '?':	if (arg[1] == NUL ||
-											 STRCMP(arg, ":?") == 0 ||
-											STRCMP(arg, "?<CR>") == 0)
-								break;
-							*d++ = '.';
+				case '?':	*d++ = '.';
 							continue;
 				case '$':
 				case '.':
 				case '~':	*d++ = '\\';
 							break;
 			}
+
+			/*
+			 * Replace "^x" by "CTRL-X". Don't do this for "^_" to make
+			 * ":help i_^_CTRL-D" work.
+			 */
 			if (*s < ' ' || (*s == '^' && s[1] && s[1] != '_'))	/* ^x */
 			{
 				STRCPY(d, "CTRL-");
@@ -267,12 +275,26 @@ find_help_tags(arg, num_matches, matches)
 			}
 			else if (*s == '^')			/* "^" or "CTRL-^" or "^_" */
 				*d++ = '\\';
+
+			/*
+			 * Insert a backslash before a backslash after a slash, for search
+			 * pattern tags: "/\|" --> "/\\|".
+			 */
+			else if (s[0] == '\\' && s[1] != '\\' &&
+												  *arg == '/' && s == arg + 1)
+				*d++ = '\\';
+
 			*d++ = *s;
+
+			/*
+			 * If tag starts with ', toss everything after a second '. Fixes
+			 * CTRL-] on 'option'. (would include the trailing '.').
+			 */
 			if (*s == '\'' && s > arg && *arg == '\'')
 				break;
 		}
+		*d = NUL;
 	}
-	*d = NUL;
 
 	reg_ic = FALSE;
 	prog = vim_regcomp(IObuff);
@@ -284,7 +306,7 @@ find_help_tags(arg, num_matches, matches)
 	{
 		*matches = (char_u **)"";
 		*num_matches = 0;
-		retval = find_tags(NULL, prog, num_matches, matches, TRUE);
+		retval = find_tags(NULL, prog, num_matches, matches, TRUE, FALSE);
 		if (retval == FAIL || *num_matches)
 			break;
 	}

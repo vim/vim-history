@@ -277,7 +277,7 @@ do_bufdel(command, arg, addr_count, start_bnr, end_bnr, forceit)
 			if (bnr == curbuf->b_fnum)
 				do_current = bnr;
 			else if (do_buffer(command, DOBUF_FIRST, FORWARD, (int)bnr,
-					forceit) == OK)
+															   forceit) == OK)
 				++deleted;
 
 			/*
@@ -306,7 +306,7 @@ do_bufdel(command, arg, addr_count, start_bnr, end_bnr, forceit)
 			}
 		}
 		if (!got_int && do_current && do_buffer(command, DOBUF_FIRST,
-				FORWARD, do_current, forceit) == OK)
+										  FORWARD, do_current, forceit) == OK)
 			++deleted;
 
 		if (deleted == 0)
@@ -442,7 +442,8 @@ do_buffer(action, start, dir, count, forceit)
 			close_others(FALSE);
 			buf = curbuf;
 			setpcmark();
-			retval = do_ecmd(0, NULL, NULL, NULL, (linenr_t)1, 0);
+			retval = do_ecmd(0, NULL, NULL, NULL, (linenr_t)1,
+												  forceit ? ECMD_FORCEIT : 0);
 
 			/*
 			 * do_ecmd() may create a new buffer, then we have to delete
@@ -716,10 +717,11 @@ free_buf_options(buf)
  * return FAIL for failure, OK for success
  */
 	int
-buflist_getfile(n, lnum, options)
+buflist_getfile(n, lnum, options, forceit)
 	int			n;
 	linenr_t	lnum;
 	int			options;
+	int			forceit;
 {
 	BUF		*buf;
 
@@ -741,7 +743,8 @@ buflist_getfile(n, lnum, options)
 	if (lnum == 0)
 		lnum = buflist_findlnum(buf);
 	++RedrawingDisabled;
-	if (getfile(buf->b_fnum, NULL, NULL, (options & GETF_SETMARK), lnum) <= 0)
+	if (getfile(buf->b_fnum, NULL, NULL, (options & GETF_SETMARK),
+														  lnum, forceit) <= 0)
 	{
 		--RedrawingDisabled;
 		return OK;

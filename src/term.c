@@ -2224,7 +2224,7 @@ clear_termcodes()
 #ifdef HAVE_TGETENT
 	BC = (char *)empty_option;
 	UP = (char *)empty_option;
-	PC = ' ';					/* set pad character to space */
+	PC = NUL;					/* set pad character to NUL */
 	ospeed = 0;
 #endif
 

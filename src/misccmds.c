@@ -1808,8 +1808,8 @@ expand_env(src, dst, dstlen)
 }
 
 /* 
- * Replace home directory by "~/" in each space or comma separated filename in
- * 'src'. If anything fails (except when out of space) dst equals src.
+ * Replace home directory by "~" in each space or comma separated filename in
+ * 'src'.  If anything fails (except when out of space) dst equals src.
  */
 	void
 home_replace(buf, src, dst, dstlen)
@@ -1870,8 +1870,9 @@ home_replace(buf, src, dst, dstlen)
 				src += len;
 				if (--dstlen > 0)
 					*dst++ = '~';
+
 				/*
-				 * If it's just the home directory, make it "~/".
+				 * If it's just the home directory, add  "/".
 				 */
 				if (!ispathsep(src[0]) && --dstlen > 0)
 					*dst++ = '/';
@@ -1906,10 +1907,9 @@ home_replace_save(buf, src)
 	char_u		*dst;
 	unsigned	len;
 
-	if (src == NULL)		/* just in case */
-		len = 3;
-	else
-		len = STRLEN(src) + 3;		/* extra space for "~/" and trailing NUL */
+	len = 3;					/* space for "~/" and trailing NUL */
+	if (src != NULL)			/* just in case */
+		len += STRLEN(src);
 	dst = alloc(len);
 	if (dst != NULL)
 		home_replace(buf, src, dst, len);
@@ -2008,13 +2008,15 @@ get_past_head(path)
 		retval = path + 2;
 	else
 		retval = path;
-#elif defined(AMIGA)
+#else
+# if defined(AMIGA)
 	/* may skip "label:" */
 	retval = vim_strchr(path, ':');
 	if (retval == NULL)
 		retval = path;
-#else	/* Unix */
+# else	/* Unix */
 	retval = path;
+# endif
 #endif
 
 	while (ispathsep(*retval))

@@ -1307,6 +1307,7 @@ mch_windexit(r)
 	exiting = TRUE;
 	mch_settitle(oldtitle, oldicon);	/* restore xterm title */
 	stoptermcap();
+	outchar('\n');
 	flushbuf();
 	ml_close_all(TRUE); 				/* remove all memfiles */
 	may_core_dump();
@@ -2463,6 +2464,8 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 # define EXPL_ALLOC_INC	16
 	char_u	**expl_files;
 	size_t	files_alloced, files_free;
+	char_u	*buf;
+	int		has_wildcard;
 
 	*num_file = 0;		/* default: no files found */
 	files_alloced = EXPL_ALLOC_INC;	/* how much space is allocated */
@@ -2477,101 +2480,82 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 		if (vim_strchr(*pat, '$') || vim_strchr(*pat, '~'))
 		{
 			/* expand environment var or home dir */
-			char_u	*buf = alloc(MAXPATHL);
+			buf = alloc(MAXPATHL);
 			if (buf == NULL)
 				return FAIL;
 			expand_env(*pat, buf, MAXPATHL);
-			if (mch_has_wildcard(buf))	/* still wildcards in there? */
-				expl_files = (char_u **)_fnexplode(buf);
-			if (expl_files == NULL)
-			{
-				/*
-				 * If no wildcard still remaining, simply add
-				 * the pattern to the results.
-				 * If wildcard did not match, add the pattern to
-				 * the list of results anyway. This way, doing
-				 * :n exist.c notexist*
-				 * will at least edits exist.c and then say
-				 * notexist* [new file]
-				 */
-				expl_files = (char_u **)alloc(sizeof(char_u **) * 2);
-				if (expl_files != NULL)
-				{
-					expl_files[0] = strsave(buf);
-					expl_files[1] = NULL;
-				}
-			}
-			vim_free(buf);
 		}
 		else
 		{
-			expl_files = (char_u **)_fnexplode(*pat);
-			if (expl_files == NULL)
+			buf = strsave(*pat);
+		}
+        expl_files = NULL;
+		has_wildcard = mch_has_wildcard(buf);  /* (still) wildcards in there? */
+		if (has_wildcard)   /* yes, so expand them */
+			expl_files = (char_u **)_fnexplode(buf);
+        /*
+         * return value of buf if no wildcards left,
+         * OR if no match AND list_notfound is true.
+         */
+		if (!has_wildcard || (expl_files == NULL && list_notfound))
+		{	/* simply save the current contents of *buf */
+			expl_files = (char_u **)alloc(sizeof(char_u **) * 2);
+			if (expl_files != NULL)
 			{
-				/* see above for explanation */
-				expl_files = (char_u **)alloc(sizeof(char_u **) * 2);
-				if (expl_files != NULL)
-				{
-					expl_files[0] = strsave(*pat);
-					expl_files[1] = NULL;
-				}
+				expl_files[0] = strsave(buf);
+				expl_files[1] = NULL;
 			}
 		}
-		if (!expl_files)
-		{
-			/* Can't happen */
-			char_u msg[128];
-			sprintf(msg, "%s (unix.c:%d)", e_internal, __LINE__);
-			emsg(msg);
-			*file = NULL;
-			*num_file = 0;
-			return FAIL;
-		}
+        vim_free(buf);
+
 		/*
 		 * Count number of names resulting from expansion,
 		 * At the same time add a backslash to the end of names that happen to
 		 * be directories, and replace slashes with backslashes.
 		 */
-		for (i = 0; (p = expl_files[i]) != NULL; i++, (*num_file)++)
+		if (expl_files)
 		{
-			if (--files_free == 0)
+			for (i = 0; (p = expl_files[i]) != NULL; i++, (*num_file)++)
 			{
-				/* need more room in table of pointers */
-				files_alloced += EXPL_ALLOC_INC;
-				*file = (char_u **) realloc(*file,
-											sizeof(char_u **) * files_alloced);
-				if (*file == NULL)
+				if (--files_free == 0)
 				{
-					emsg(e_outofmem);
-					*num_file = 0;
-					return FAIL;
+					/* need more room in table of pointers */
+					files_alloced += EXPL_ALLOC_INC;
+					*file = (char_u **) realloc(*file,
+												sizeof(char_u **) * files_alloced);
+					if (*file == NULL)
+					{
+						emsg(e_outofmem);
+						*num_file = 0;
+						return FAIL;
+					}
+					files_free = EXPL_ALLOC_INC;
 				}
-				files_free = EXPL_ALLOC_INC;
-			}
-			slash_adjust(p);
-			if (mch_isdir(p))
-			{
-				len = strlen(p);
-				if (((*file)[*num_file] = alloc(len + 2)) != NULL)
+				slash_adjust(p);
+				if (mch_isdir(p))
 				{
-					strcpy((*file)[*num_file], p);
-					(*file)[*num_file][len] = '\\';
-					(*file)[*num_file][len+1] = 0;
+					len = strlen(p);
+					if (((*file)[*num_file] = alloc(len + 2)) != NULL)
+					{
+						strcpy((*file)[*num_file], p);
+						(*file)[*num_file][len] = '\\';
+						(*file)[*num_file][len+1] = 0;
+					}
 				}
-			}
-			else
-			{
-				(*file)[*num_file] = strsave(p);
-			}
+				else
+				{
+					(*file)[*num_file] = strsave(p);
+				}
 
-			/*
-			 * Error message already given by either alloc or strsave.
-			 * Should return FAIL, but returning OK works also.
-			 */
-			if ((*file)[*num_file] == NULL)
-				break;
-		}
+				/*
+				 * Error message already given by either alloc or strsave.
+				 * Should return FAIL, but returning OK works also.
+				 */
+				if ((*file)[*num_file] == NULL)
+					break;
+			}
 		_fnexplodefree((char **)expl_files);
+		}
 	}
 	return OK;
 

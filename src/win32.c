@@ -1404,6 +1404,8 @@ mch_windexit(
 	int r)
 {
     stoptermcap();
+	outchar('\r');
+	outchar('\n');
     flushbuf();
 
 	if (g_fWindInitCalled)

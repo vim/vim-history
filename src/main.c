@@ -863,9 +863,6 @@ main(argc, argv)
 		msg_scroll = FALSE;
 		if (curbuf->b_ml.ml_mfp == NULL) /* failed */
 			getout(1);
-#ifdef AUTOCMD
-		apply_autocmds(EVENT_BUFENTER, NULL, NULL);
-#endif
 		do_modelines();					/* do modelines */
 	}
 	else
@@ -892,6 +889,12 @@ main(argc, argv)
 				curwin = firstwin;			/* start again */
 #endif
 			}
+			mch_breakcheck();
+			if (got_int)
+			{
+				(void)vgetc();	/* only break the file loading, not the rest */
+				break;
+			}
 		}
 #ifdef AUTOCMD
 		--autocmd_no_enter;
@@ -901,13 +904,16 @@ main(argc, argv)
 		curbuf = curwin->w_buffer;
 	}
 
+#ifdef AUTOCMD
+	apply_autocmds(EVENT_BUFENTER, NULL, NULL);
+#endif
 	setpcmark();
 
 	/*
 	 * When started with "-e errorfile" jump to first error now.
 	 */
 	if (doqf)
-		qf_jump(0, 0);
+		qf_jump(0, 0, FALSE);
 
 	/*
 	 * If opened more than one window, start editing files in the other windows.
@@ -1102,14 +1108,16 @@ getout(r)
 #endif
 
 #ifdef VIMINFO
+	msg_didany = FALSE;
 	/* Write out the registers, history, marks etc, to the viminfo file */
 	if (*p_viminfo != NUL)
 		write_viminfo(NULL, FALSE);
+	if (msg_didany)				/* make the user read the error message */
+	{
+		no_wait_return = FALSE;
+		wait_return(FALSE);
+	}
 #endif /* VIMINFO */
 
-#if !(defined(UNIX) || defined(VMS) || defined(AMIGA))
-	outchar('\r');
-#endif
-	outchar('\n');
 	mch_windexit(r);
 }

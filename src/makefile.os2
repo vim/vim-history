@@ -12,7 +12,7 @@
 
 #system:              configurations:    	     version (*) tested by:
 #-------------        ------------------------       -------  -  ----------
-#OS/2 Warp HPFS       gcc-2.7.2+emx-0.9b -GUI           4.1      Paul Slootman
+#OS/2 Warp HPFS       gcc-2.7.2+emx-0.9b -GUI           4.3      Paul Slootman
 #OS/2 FAT             gcc-2.6.3+emx      -GUI           3.29     Karsten Sievert
 
 #>>>>> choose options:
@@ -26,6 +26,13 @@ DEFINES = -DUSE_SYSTEM=1
 CC = gcc
 
 #>>>>> end of choices
+
+### Name of target(s)
+TARGET = vim.exe
+
+### Names of the tools that are also made
+TOOLS = ctags/ctags.exe xxd/xxd.exe tee/tee.exe
+
 ###########################################################################
 
 INCL = vim.h globals.h option.h keymap.h macros.h ascii.h term.h msdos.h structs.h
@@ -37,17 +44,32 @@ OBJ =	alloc.o buffer.o charset.o cmdcmds.o cmdline.o csearch.o digraph.o \
 	regexp.o regsub.o screen.o search.o tables.o tag.o term.o undo.o \
 	window.o unix.o pathdef.o
 
-vim.exe: $(OBJ) version.c
-	$(CC) $(CFLAGS) -s -o vim.exe version.c $(OBJ) -ltermcap
+LIBS = -ltermcap
 
-ctags:
-	cmd /c ctags *.c $(INCL)
+# Default target is making the executable
+all: $(TARGET) $(TOOLS)
+
+# Link the target for normal use
+$(TARGET): $(OBJ) version.c
+	$(CC) $(CFLAGS) -s -o $(TARGET) version.c $(OBJ) $(LIBS)
+
+ctags/ctags.exe: ctags/ctags.c
+	cd ctags & $(MAKE) -f Makefile.os2
+
+xxd/xxd.exe: xxd/xxd.c
+	cd xxd & $(MAKE) -f Makefile.os2
+
+tee/tee.exe: tee/tee.c
+	cd tee & $(MAKE) -f Makefile
 
 clean:
 	-del *.o
 	-del *.exe
 	-del cmdtab.h pathdef.c
 	-del *.~ *~ *.bak
+	cd ctags & $(MAKE) -f Makefile.os2 clean
+	cd xxd   & $(MAKE) -f Makefile.os2 clean
+	cd tee   & $(MAKE) -f Makefile clean
 
 addcr:	addcr.c addcr.cmd
 	$(CC) addcr.c

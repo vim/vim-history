@@ -20,7 +20,7 @@ void set_context_in_set_cmd __PARMS((char_u *arg));
 int ExpandSettings __PARMS((regexp *prog, int *num_file, char_u ***file));
 int ExpandOldSetting __PARMS((int *num_file, char_u ***file));
 char_u *file_pat_to_reg_pat __PARMS((char_u *pat, char_u *pat_end, int *allow_directories));
-void do_autocmd __PARMS((char_u *arg, int force));
+void do_autocmd __PARMS((char_u *arg, int forceit));
 void do_doautocmd __PARMS((char_u *arg));
 int apply_autocmds __PARMS((int event, char_u *fname, char_u *fname_io));
 char_u *set_context_in_autocmd __PARMS((char_u *arg, int doautocmd));

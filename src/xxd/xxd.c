@@ -33,7 +33,10 @@
  *     included by MacHeaders (Axel Kielhorn 1996/05/25). Renamed to xxdline().
  *     jw.
  * -i printed 'int' instead of 'char'. *blush* 7.6.96
- * added bram's OS2 ifdefs...
+ * added Bram's OS2 ifdefs...
+ * gcc -Wall @ SunOS4 is now slient. 18.7.96
+ * Added osver for MSDOS/DJGPP/WIN32.
+ * Added size_t to strncmp() for Amiga. 29.8.96
  *
  * (c) 1990-1996 by Juergen Weigert (jnweiger@informatik.uni-erlangen.de)
  *
@@ -51,8 +54,10 @@
 #endif
 #if defined(MSDOS) || defined(WIN32) || defined(OS2)
 # include <io.h>	/* for setmode() */
-#elif defined(UNIX)
-# include <unistd.h>
+#else
+# ifdef UNIX
+#  include <unistd.h>
+# endif
 #endif
 #include <stdlib.h>
 #include <string.h>	/* for strncmp() */
@@ -61,17 +66,37 @@
 # include <unix.h>	/* for fdopen() on MAC */
 #endif
 
+#if defined(sun) && !defined(__SVR4) && defined(__STDC__)
+#define __P(a) a
+/* excerpt from my sun_stdlib.h */
+extern int fprintf __P((FILE *, char *, ...));
+extern int fputs   __P((char *, FILE *));
+extern int _flsbuf __P((unsigned char, FILE *));
+extern int _filbuf __P((FILE *));
+extern int fflush  __P((FILE *));
+extern int fclose  __P((FILE *));
+extern int fseek   __P((FILE *, long, int));
+extern int rewind  __P((FILE *));
+
+extern void perror __P((char *));
+#endif
+
 extern long int strtol();
 extern long int ftell();
 
+char version[] = "xxd V1.5mj 29aug96 by Juergen Weigert";
 #ifdef WIN32
-char version[] = "xxd V1.4m 8aug96 (Win32) by Juergen Weigert";
-#elif defined DJGPP
-char version[] = "xxd V1.4m 8aug96 (32 bit) by Juergen Weigert";
-#elif defined MSDOS
-char version[] = "xxd V1.4m 8aug96 (16 bit) by Juergen Weigert";
+char osver[] = " (Win32)";
 #else
-char version[] = "xxd V1.4m 8aug96 by Juergen Weigert";
+# ifdef DJGPP
+char osver[] = " (dos 32 bit)";
+# else
+#  ifdef MSDOS
+char osver[] = " (dos 16 bit)";
+#  else
+char osver[] = "";
+#  endif
+# endif
 #endif
 
 #if defined(MSDOS) || defined(WIN32) || defined(OS2)
@@ -89,6 +114,12 @@ char version[] = "xxd V1.4m 8aug96 by Juergen Weigert";
 # define OPEN(name, mode, umask) open(name, mode)
 #else
 # define OPEN(name, mode, umask) open(name, mode, umask)
+#endif
+
+#ifdef AMIGA
+# define STRNCMP(s1, s2, l) strncmp(s1, s2, (size_t)l)
+#else
+# define STRNCMP(s1, s2, l) strncmp(s1, s2, l)
 #endif
 
 #ifndef __P
@@ -138,7 +169,7 @@ char *pname;
 	  "", "");
 #endif
   fprintf(stderr, "    -u          use upper case hex letters.\n");
-  fprintf(stderr, "    -v          show version: \"%s\".\n", version);
+  fprintf(stderr, "    -v          show version: \"%s%s\".\n", version, osver);
   exit(1);
 }
 
@@ -313,20 +344,20 @@ char *argv[];
 
   while (argc >= 2)
     {
-      pp = argv[1] + (!strncmp(argv[1], "--", (size_t)2) && argv[1][2]);
-           if (!strncmp(pp, "-a", (size_t)2)) autoskip = 1 - autoskip;
-      else if (!strncmp(pp, "-u", (size_t)2)) hexx = hexxa + 16;
-      else if (!strncmp(pp, "-p", (size_t)2)) hextype = HEX_POSTSCRIPT;
-      else if (!strncmp(pp, "-i", (size_t)2)) hextype = HEX_CINCLUDE;
-      else if (!strncmp(pp, "-r", (size_t)2)) revert++;
-      else if (!strncmp(pp, "-v", (size_t)2)) 
+      pp = argv[1] + (!STRNCMP(argv[1], "--", 2) && argv[1][2]);
+           if (!STRNCMP(pp, "-a", 2)) autoskip = 1 - autoskip;
+      else if (!STRNCMP(pp, "-u", 2)) hexx = hexxa + 16;
+      else if (!STRNCMP(pp, "-p", 2)) hextype = HEX_POSTSCRIPT;
+      else if (!STRNCMP(pp, "-i", 2)) hextype = HEX_CINCLUDE;
+      else if (!STRNCMP(pp, "-r", 2)) revert++;
+      else if (!STRNCMP(pp, "-v", 2)) 
         {
-	  fprintf(stderr, "%s\n", version);
+	  fprintf(stderr, "%s%s\n", version, osver);
 	  exit(0);
 	}
-      else if (!strncmp(pp, "-c", (size_t)2))
+      else if (!STRNCMP(pp, "-c", 2))
 	{
-	  if (pp[2] && strncmp("ols", pp + 2, (size_t)3))
+	  if (pp[2] && STRNCMP("ols", pp + 2, 3))
 	    cols = (int)strtol(pp + 2, NULL, 0);
 	  else
 	    {
@@ -337,11 +368,11 @@ char *argv[];
 	      argc--;
 	    }
 	}
-      else if (!strncmp(pp, "-s", (size_t)2))
+      else if (!STRNCMP(pp, "-s", 2))
 	{
 	  relseek = 0;
 	  negseek = 0;
-	  if (pp[2] && strncmp("kip", pp+2, (size_t)3) && strncmp("eek", pp+2, (size_t)3))
+	  if (pp[2] && STRNCMP("kip", pp+2, 3) && STRNCMP("eek", pp+2, 3))
 	    {
 #ifdef TRY_SEEK
 	      if (pp[2] == '+')
@@ -366,9 +397,9 @@ char *argv[];
 	      argc--;
 	    }
 	}
-      else if (!strncmp(pp, "-l", (size_t)2))
+      else if (!STRNCMP(pp, "-l", 2))
 	{
-	  if (pp[2] && strncmp("en", pp + 2, (size_t)2))
+	  if (pp[2] && STRNCMP("en", pp + 2, 2))
 	    length = strtol(pp + 2, (char **)NULL, 0);
 	  else
 	    {

@@ -329,6 +329,11 @@ gui_mch_set_winsize()
 		base_height += menu_height;
 	}
 
+	/*
+	 * Need to unmanage vimForm here for a moment, to avoid an error message
+	 * when .gvimrc contains ":set guioptions=r".
+	 */
+	XtUnmanageChild(vimForm);
 	XtVaSetValues(vimShell,
 #ifdef XmNbaseWidth
 		XmNbaseWidth, base_width,
@@ -341,6 +346,7 @@ gui_mch_set_winsize()
 		XmNwidth,	  base_width  + Columns * gui.char_width,
 		XmNheight,	  base_height + Rows * gui.char_height,
 		NULL);
+	XtManageChild(vimForm);
 }
 
 /*

@@ -1,9 +1,9 @@
 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*
-*    W e l c o m e   t o   V I   T u t o r    -    V e r s i o n   1 . 2      *
+*    W e l c o m e   t o   V I	 T u t o r    -    V e r s i o n   1 . 2      *
 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*
-                             **************
-                             * Lesson 1.0 *
-                             **************
+			     **************
+			     * Lesson 1.0 *
+			     **************
 
      Vim is a very powerful editor that has many commands, too many to
      explain in a tutor such as this.  This tutor is designed to describe
@@ -21,17 +21,17 @@
      the   j   key enough times to move the cursor so that Lesson 1.1
      completely fills the screen.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             **************
-                             * Lesson 1.1 *
-                             **************
-                 =====>>>>> MOVING THE CURSOR <<<<<=====
+			     **************
+			     * Lesson 1.1 *
+			     **************
+		 =====>>>>> MOVING THE CURSOR <<<<<=====
 
    ** To move the cursor, press the h,j,k,l keys as indicated. **
-                                   ^
-                                   k
-                             < h       l >
-                                   j
-                                   v
+	     ^
+	     k		    Hint:  The h key is at the left and moves left.
+       < h	 l >		   The l key is at the right and moves right.
+	     j			   The j key looks like a down arrow
+	     v
   1. Move the cursor around the screen until you are comfortable.
 
   2. Hold down the down key (j) until it repeats.
@@ -43,10 +43,10 @@ Note: If you are ever unsure about something you typed, press <ESC> to place
       you in Command Mode.  Then retype the command you wanted.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             **************
-                             * Lesson 1.2 *
-                             **************
-              =====>>>>> ENTERING AND EXITING VIM <<<<<=====
+			     **************
+			     * Lesson 1.2 *
+			     **************
+	      =====>>>>> ENTERING AND EXITING VIM <<<<<=====
 
   !! NOTE: Before executing any of the steps below, read this entire lesson!!
 
@@ -55,9 +55,9 @@ Note: If you are ever unsure about something you typed, press <ESC> to place
   2. Type      :q! <RETURN>.
 
 ---> This exits the editor WITHOUT saving any changes you have made.
-     If you want to save the changes and exit type        :wq  <RETURN>
+     If you want to save the changes and exit type	  :wq  <RETURN>
 
-  3. When you see the shell prompt (%) type:    vim tutor <RETURN>.
+  3. When you see the shell prompt (%) type:	vim tutor <RETURN>.
 
 ---> 'vim' means enter the vim editor, 'tutor' is the file you wish to edit.
 
@@ -65,19 +65,19 @@ Note: If you are ever unsure about something you typed, press <ESC> to place
      1 through 3 to exit and re-enter the editor.  Then cursor down to
      Lesson 1.3.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             **************
-                             * Lesson 1.3 *
-                             **************
-              =====>>>>> TEXT EDITING - DELETION <<<<<=====
+			     **************
+			     * Lesson 1.3 *
+			     **************
+	      =====>>>>> TEXT EDITING - DELETION <<<<<=====
 
-** While in Command Mode press  x  to delete the character under the cursor. **
+** While in Command Mode press	x  to delete the character under the cursor. **
 
   1. Move the cursor to the line below marked --->.
 
   2. To fix the errors, move the cursor until it is on top of the
      character to be deleted.
 
-  3. Press the  x  key to delete the unwanted character.
+  3. Press the	x  key to delete the unwanted character.
 
   4. Repeat steps 2 through 4 until the sentence is correct.
 
@@ -87,12 +87,12 @@ Note: If you are ever unsure about something you typed, press <ESC> to place
 
 NOTE: As you go through this tutor, do not try to memorize, learn by usage.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             **************
-                             * Lesson 1.4 *
-                             **************
-             =====>>>>> TEXT EDITING - INSERTION <<<<<=====
+			     **************
+			     * Lesson 1.4 *
+			     **************
+	     =====>>>>> TEXT EDITING - INSERTION <<<<<=====
 
-         ** While in Command Mode press  i  to insert text. **
+	 ** While in Command Mode press  i  to insert text. **
 
   1. Move the cursor to the first line below marked --->.
 
@@ -109,34 +109,34 @@ NOTE: As you go through this tutor, do not try to memorize, learn by usage.
 
   5. When you are comfortable inserting text move to the summary below.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                          ********************
-                          * LESSON 1 SUMMARY *
-                          ********************
+			  ********************
+			  * LESSON 1 SUMMARY *
+			  ********************
 
   1. The cursor is moved using either the arrow keys or the h,j,k,l keys.
-         h (left)       j (down)       k (up)       l (right)
+	 h (left)	j (down)       k (up)	    l (right)
 
-  2. To enter Vim (from the % prompt) type:      % vim FILENAME <RETURN>
+  2. To enter Vim (from the % prompt) type:	 % vim FILENAME <RETURN>
 
-  3. To exit Vim type:     <ESC>   :q!   <RETURN>
-             OR type:      <ESC>   :wq   <RETURN>  to save the changes.
+  3. To exit Vim type:	   <ESC>   :q!	 <RETURN>
+	     OR type:	   <ESC>   :wq	 <RETURN>  to save the changes.
 
   4. To delete a character under the cursor in Command Mode type:  x
 
   5. To insert text at the cursor while in Command Mode type:
-         i     type in text     <ESC>
+	 i     type in text	<ESC>
 
 NOTE: Pressing <ESC> will place you in Command Mode or will cancel
       an unwanted and partially completed command.
 
 Now continue with Lesson 2.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             **************
-                             * Lesson 2.1 *
-                             **************
-                =====>>>>> DELETION COMMANDS <<<<<=====
+			     **************
+			     * Lesson 2.1 *
+			     **************
+		=====>>>>> DELETION COMMANDS <<<<<=====
 
-            ** Type  dw  to delete to the end of a word. **
+	    ** Type  dw  to delete to the end of a word. **
 
   1. Press  <ESC>  to make sure you are in Command Mode.
 
@@ -144,10 +144,10 @@ Now continue with Lesson 2.
 
   3. Move the cursor to the beginning of a word that needs to be deleted.
 
-  4. Type   dw   to make the word disappear.
+  4. Type   dw	 to make the word disappear.
 
   NOTE: The letters dw will appear on the last line of the screen as you type
-  	them. If you typed something wrong, press  <ESC>  and start over.
+	them. If you typed something wrong, press  <ESC>  and start over.
 
 ---> There are a some words fun that don't belong paper in this sentence.
 
@@ -156,9 +156,9 @@ Now continue with Lesson 2.
 			     **************
 			     * Lesson 2.2 *
 			     **************
-              =====>>>>> MORE DELETION COMMANDS <<<<<=====
+	      =====>>>>> MORE DELETION COMMANDS <<<<<=====
 
-           ** Type  d$  to delete to the end of the line. **
+	   ** Type  d$	to delete to the end of the line. **
 
   1. Press  <ESC>  to make sure you are in Command Mode.
 
@@ -178,11 +178,11 @@ Now continue with Lesson 2.
 			     **************
 			     * Lesson 2.3 *
 			     **************
-             =====>>>>> ON COMMANDS AND OBJECTS <<<<<=====
+	     =====>>>>> ON COMMANDS AND OBJECTS <<<<<=====
 
   The format for the  d  delete command is as follows:
 
-         [number]   d   object      OR       d   [number]   object
+	 [number]   d	object	    OR	     d	 [number]   object
   Where:
     number - is how many times to execute the command (optional, default=1).
     d - is the command to delete.
@@ -197,12 +197,12 @@ NOTE:  For the adventurous, pressing just the object while in Command Mode
        without a command will move the cursor as specified in the object list.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             **************
-                             * Lesson 2.4 *
-                             **************
-        =====>>>>> AN EXCEPTION TO  'COMMAND-OBJECT' <<<<<=====
+			     **************
+			     * Lesson 2.4 *
+			     **************
+	=====>>>>> AN EXCEPTION TO  'COMMAND-OBJECT' <<<<<=====
 
-               ** Type   dd   to delete a whole line. **
+	       ** Type	 dd   to delete a whole line. **
 
   Due to the frequency of whole line deletion, the designers of Vim decided
   it would be easier to simply type two d's in a row to delete a line.
@@ -224,12 +224,12 @@ NOTE:  For the adventurous, pressing just the object while in Command Mode
       7)  And so are you.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             **************
-                             * Lesson 2.5 *
-                             **************
-                 =====>>>>> THE UNDO COMMAND <<<<<=====
+			     **************
+			     * Lesson 2.5 *
+			     **************
+		 =====>>>>> THE UNDO COMMAND <<<<<=====
 
-   ** Press  u  to undo the last commands,   U   to fix a whole line. **
+   ** Press  u	to undo the last commands,   U	 to fix a whole line. **
 
   1. Move the cursor to the line below marked ---> and place it on the
      first error.
@@ -245,9 +245,9 @@ NOTE:  For the adventurous, pressing just the object while in Command Mode
 
   8. These are very useful commands.  Now move on to the Lesson 2 Summary.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                          ********************
-                          * LESSON 2 SUMMARY *
-                          ********************
+			  ********************
+			  * LESSON 2 SUMMARY *
+			  ********************
 
   1. To delete from the cursor to the end of a word type:    dw
 
@@ -257,23 +257,23 @@ NOTE:  For the adventurous, pressing just the object while in Command Mode
 
   4. The format for a command in command mode is:
 
-       [number]   command   object     OR     command   [number]   object
+       [number]   command   object     OR     command	[number]   object
      where:
        number - is how many times to repeat the command
        command - is what to do, such as  d  for delete
        object - is what the command should act upon, such as  w (word),
-                $ (to the end of line), etc.
+		$ (to the end of line), etc.
 
-  5. To undo previous actions, type:         u   (lowercase u)
-     To undo all the changes on a line type: U   (capital U)
+  5. To undo previous actions, type:	     u	 (lowercase u)
+     To undo all the changes on a line type: U	 (capital U)
      To undo the undo's type:		     CTRL-R
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             **************
-                             * Lesson 3.1 *
-                             **************
-                 =====>>>>> THE PUT COMMAND <<<<<=====
+			     **************
+			     * Lesson 3.1 *
+			     **************
+		 =====>>>>> THE PUT COMMAND <<<<<=====
 
-       ** Type  p  to put the last deletion after the cursor. **
+       ** Type	p  to put the last deletion after the cursor. **
 
   1. Move the cursor to the first line in the set below.
 
@@ -281,7 +281,7 @@ NOTE:  For the adventurous, pressing just the object while in Command Mode
 
   3. Move the cursor to the line ABOVE where the deleted line should go.
 
-  4. While in Command Mode, type    p    to replace the line.
+  4. While in Command Mode, type    p	 to replace the line.
 
   5. Repeat steps 2 through 4 to put all the lines in correct order.
 
@@ -290,10 +290,10 @@ NOTE:  For the adventurous, pressing just the object while in Command Mode
      c) Intelligence is learned,
      a) Roses are red,
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             **************
-                             * Lesson 3.2 *
-                             **************
-               =====>>>>> THE REPLACE COMMAND <<<<<=====
+			     **************
+			     * Lesson 3.2 *
+			     **************
+	       =====>>>>> THE REPLACE COMMAND <<<<<=====
 
   ** Type  r  and a character to replace the character under the cursor. **
 
@@ -301,7 +301,7 @@ NOTE:  For the adventurous, pressing just the object while in Command Mode
 
   2. Move the cursor so that it is on top of the first error.
 
-  3. Type   r   and then the character which should replace the error.
+  3. Type   r	and then the character which should replace the error.
 
   4. Repeat steps 2 and 3 until the first line is correct.
 
@@ -312,12 +312,12 @@ NOTE:  For the adventurous, pressing just the object while in Command Mode
 
 NOTE: Remember that you should be learning by use, not memorization.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             **************
-                             * Lesson 3.3 *
-                             **************
-                =====>>>>> THE CHANGE COMMAND <<<<<=====
+			     **************
+			     * Lesson 3.3 *
+			     **************
+		=====>>>>> THE CHANGE COMMAND <<<<<=====
 
-           ** To change part or all of a word, type  cw . **
+	   ** To change part or all of a word, type  cw . **
 
   1. Move the cursor to the first line below marked --->.
 
@@ -334,16 +334,16 @@ NOTE: Remember that you should be learning by use, not memorization.
 
 Notice that  cw  not only replaces the word, but also places you in insert.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             **************
-                             * Lesson 3.4 *
-                             **************
-               =====>>>>> MORE CHANGES USING c <<<<<=====
+			     **************
+			     * Lesson 3.4 *
+			     **************
+	       =====>>>>> MORE CHANGES USING c <<<<<=====
 
      ** The change command is used with the same objects as delete. **
 
   1. The change command works in the same way as delete.  The format is:
 
-       [number]   c   object       OR       c   [number]   object
+       [number]   c   object	   OR	    c	[number]   object
 
   2. The objects are also the same, such as   w (word), $ (end of line), etc.
 
@@ -356,11 +356,11 @@ Notice that  cw  not only replaces the word, but also places you in insert.
 ---> The end of this line needs some help to make it like the second.
 ---> The end of this line needs to be corrected using the  c$  command.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                          ********************
-                          * LESSON 3 SUMMARY *
-                          ********************
+			  ********************
+			  * LESSON 3 SUMMARY *
+			  ********************
 
-  1. To replace text that has already been deleted, type   p .  This Puts the
+  1. To replace text that has already been deleted, type   p .	This Puts the
      deleted text AFTER the cursor (if a line was deleted it will go on the
      line below the cursor).
 
@@ -369,19 +369,19 @@ Notice that  cw  not only replaces the word, but also places you in insert.
 
   3. The change command allows you to change the specified object from the
      cursor to the end of the object.  eg. Type  cw  to change from the
-     cursor to the end of the word, c$  to change to the end of a line.
+     cursor to the end of the word, c$	to change to the end of a line.
 
   4. The format for change is:
 
-         [number]   c   object        OR        c   [number]   object
+	 [number]   c	object	      OR	c   [number]   object
 
 Now go on to the next lesson.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             **************
-                             * Lesson 4.1 *
-                             **************
-             =====>>>>> LOCATION AND FILE STATUS <<<<<=====
+			     **************
+			     * Lesson 4.1 *
+			     **************
+	     =====>>>>> LOCATION AND FILE STATUS <<<<<=====
 
   ** Type CTRL-g to show your location in the file and the file status.
      Type SHIFT-G to move to a line in the file. **
@@ -400,15 +400,15 @@ Now go on to the next lesson.
 
   4. If you feel confident to do this, execute steps 1 through 3.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             **************
-                             * Lesson 4.2 *
-                             **************
-                =====>>>>> THE SEARCH COMMAND <<<<<=====
+			     **************
+			     * Lesson 4.2 *
+			     **************
+		=====>>>>> THE SEARCH COMMAND <<<<<=====
 
      ** Type  /  followed by a phrase to search for the phrase. **
 
   1. In command mode type the  /  character.  Notice that it and the cursor
-     appear at the bottom of the screen as with the  :  command.
+     appear at the bottom of the screen as with the  :	command.
 
   2. Now type 'errroor' <RETURN>.  This is the word you want to search for.
 
@@ -422,12 +422,12 @@ Now go on to the next lesson.
 
   "errroor" is not the way to spell error;  errroor is an error.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             **************
-                             * Lesson 4.3 *
-                             **************
-            =====>>>>> MATCHING PARENTHESES SEARCH <<<<<=====
+			     **************
+			     * Lesson 4.3 *
+			     **************
+	    =====>>>>> MATCHING PARENTHESES SEARCH <<<<<=====
 
-              ** Type  %  to find a matching ),], or } . **
+	      ** Type  %  to find a matching ),], or } . **
 
   1. Place the cursor on any (, [, or { in the line below marked --->.
 
@@ -444,19 +444,19 @@ Note: This is very useful in debugging a program with unmatched parentheses!
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             **************
-                             * Lesson 4.4 *
-                             **************
-              =====>>>>> A WAY TO CHANGE ERRORS <<<<<=====
+			     **************
+			     * Lesson 4.4 *
+			     **************
+	      =====>>>>> A WAY TO CHANGE ERRORS <<<<<=====
 
-        ** Type  :s/old/new/g  to substitute 'new' for 'old'. **
+	** Type  :s/old/new/g  to substitute 'new' for 'old'. **
 
   1. Move the cursor to the line below marked --->.
 
   2. Type  :s/thee/the <RETURN> .  Note that this command only changes the
      first occurrence on the line.
 
-  3. Now type    :s/thee/the/g     meaning substitute globally on the line.
+  3. Now type	 :s/thee/the/g	   meaning substitute globally on the line.
      This changes all occurrences on the line.
 
 ---> thee best time to see thee flowers is in thee spring.
@@ -466,36 +466,36 @@ Note: This is very useful in debugging a program with unmatched parentheses!
      Type   :%s/old/new/g    to change every occurrence in the whole file.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                          ********************
-                          * LESSON 4 SUMMARY *
-                          ********************
+			  ********************
+			  * LESSON 4 SUMMARY *
+			  ********************
 
   1. Ctrl-g  displays your location in the file and the file status.
      Shift-G  moves to the end of the file.  A line number followed
      by  Shift-G  moves to that line number.
 
-  2. Typing  /  followed by a phrase searches FORWARD for the phrase.
-     Typing  ?  followed by a phrase searches BACKWARD for the phrase.
+  2. Typing  /	followed by a phrase searches FORWARD for the phrase.
+     Typing  ?	followed by a phrase searches BACKWARD for the phrase.
      After a search type  n  to find the next occurrence in the same direction
      or  Shift-N  to search in the opposite direction.
 
-  3. Typing  %  while the cursor is on a  (,),[,],{, or }  locates its
+  3. Typing  %	while the cursor is on a  (,),[,],{, or }  locates its
      matching pair.
 
   4. To substitute new for the first old on a line type    :s/old/new
-     To substitute new for all 'old's on a line type       :s/old/new/g
-     To substitute phrases between two line #'s type       :#,#s/old/new/g
-     To substitute all occurrences in the file type        :%s/old/new/g
-     To ask for confirmation each time add 'c'             :%s/old/new/gc
+     To substitute new for all 'old's on a line type	   :s/old/new/g
+     To substitute phrases between two line #'s type	   :#,#s/old/new/g
+     To substitute all occurrences in the file type	   :%s/old/new/g
+     To ask for confirmation each time add 'c'		   :%s/old/new/gc
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             **************
-                             * Lesson 5.1 *
-                             **************
-          =====>>>>> HOW TO EXECUTE AN AMIGA COMMAND <<<<<=====
+			     **************
+			     * Lesson 5.1 *
+			     **************
+	  =====>>>>> HOW TO EXECUTE AN AMIGA COMMAND <<<<<=====
 
-   ** Type  :!  followed by an Amiga command to execute that command. **
+   ** Type  :!	followed by an Amiga command to execute that command. **
 
-  1. Type the familiar command  :  to set the cursor at the bottom of the
+  1. Type the familiar command	:  to set the cursor at the bottom of the
      screen.  This allows you to enter a command.
 
   2. Now type the  !  (exclamation point) character.  This allows you to
@@ -510,10 +510,10 @@ Note: This is very useful in debugging a program with unmatched parentheses!
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             **************
-                             * Lesson 5.2 *
-                             **************
-              =====>>>>> MORE ON WRITING FILES <<<<<=====
+			     **************
+			     * Lesson 5.2 *
+			     **************
+	      =====>>>>> MORE ON WRITING FILES <<<<<=====
 
      ** To save the changes made to the file, type  :w FILENAME. **
 
@@ -521,9 +521,9 @@ Note: This is very useful in debugging a program with unmatched parentheses!
 
   2. Choose a filename that is not already in your area, such as TEST.
 
-  3. Now type:   :w TEST   (where TEST is the filename you chose.)
+  3. Now type:	 :w TEST   (where TEST is the filename you chose.)
 
-  4. This saves the whole file  (Vim Tutor)  under the name TEST.
+  4. This saves the whole file	(Vim Tutor)  under the name TEST.
      To verify this, type    :!dir   again to see your directory
 
 ---> Note that if you were to exit Vim and enter again with the filename TEST,
@@ -532,14 +532,14 @@ Note: This is very useful in debugging a program with unmatched parentheses!
   5. Now remove the file from your area by typing:     :!delete TEST
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             **************
-                             * Lesson 5.3 *
-                             **************
-            =====>>>>> A SELECTIVE WRITE COMMAND <<<<<=====
+			     **************
+			     * Lesson 5.3 *
+			     **************
+	    =====>>>>> A SELECTIVE WRITE COMMAND <<<<<=====
 
-        ** To save part of the file, type   :#,# w FILENAME **
+	** To save part of the file, type   :#,# w FILENAME **
 
-  1. Once again, type    :!dir    to obtain a listing of your directory and
+  1. Once again, type	 :!dir	  to obtain a listing of your directory and
      choose a suitable filename such as TEST.
 
   2. Move the cursor to the top of this page and type  Ctrl-g  to find the
@@ -554,10 +554,10 @@ Note: This is very useful in debugging a program with unmatched parentheses!
   5. Again, see that the file is there with  :!dir  but DO NOT remove it.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             **************
-                             * Lesson 5.4 *
-                             **************
-           =====>>>>> RETRIEVING AND MERGING FILES <<<<<=====
+			     **************
+			     * Lesson 5.4 *
+			     **************
+	   =====>>>>> RETRIEVING AND MERGING FILES <<<<<=====
 
        ** To insert the contents of a file, type   :r FILENAME **
 
@@ -565,7 +565,7 @@ Note: This is very useful in debugging a program with unmatched parentheses!
 
   2. Place the cursor at the top of this page.
 
-NOTE:  After executing Step 3 you will see Lesson 5.3.  Then move DOWN to
+NOTE:  After executing Step 3 you will see Lesson 5.3.	Then move DOWN to
        this lesson again.
 
   3. Now retrieve your TEST file using the command   :r TEST   where TEST is
@@ -576,15 +576,15 @@ NOTE:  The file you retrieve is placed starting where the cursor is located.
   4. To verify that a file was retrieved, cursor back and notice that there
      are now two copies of Lesson 5.3, the original and the file version.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                          ********************
-                          * LESSON 5 SUMMARY *
-                          ********************
+			  ********************
+			  * LESSON 5 SUMMARY *
+			  ********************
 
   1.  :!command  executes an Amiga system command.
 
       Some useful examples are:
-          :!dir  -  shows a directory listing of your area.
-          :!delete FILENAME  -  removes file FILENAME from your area.
+	  :!dir  -  shows a directory listing of your area.
+	  :!delete FILENAME  -	removes file FILENAME from your area.
 
   2.  :w FILENAME  writes the current Vim file to disk with name FILENAME.
 
@@ -598,10 +598,10 @@ NOTE:  The file you retrieve is placed starting where the cursor is located.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             **************
-                             * Lesson 6.1 *
-                             **************
-                 =====>>>>> THE OPEN COMMAND <<<<<=====
+			     **************
+			     * Lesson 6.1 *
+			     **************
+		 =====>>>>> THE OPEN COMMAND <<<<<=====
 
  ** Type  o  to open a line below the cursor and place you in insert mode. **
 
@@ -614,20 +614,20 @@ NOTE:  The file you retrieve is placed starting where the cursor is located.
 
 ---> After typing  o  the cursor is placed on the open line in insert mode.
 
-  4. To open up a line ABOVE the cursor, simply type a capital  O , rather
+  4. To open up a line ABOVE the cursor, simply type a capital	O , rather
      than a lowercase  o.  Try this on the line below.
 Open up a line above this by typing Shift-O while the cursor is on this line.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             **************
-                             * Lesson 6.2 *
-                             **************
-                =====>>>>> THE APPEND COMMAND <<<<<=====
+			     **************
+			     * Lesson 6.2 *
+			     **************
+		=====>>>>> THE APPEND COMMAND <<<<<=====
 
-             ** Type  a  to insert text AFTER the cursor. **
+	     ** Type  a  to insert text AFTER the cursor. **
 
   1. Move the cursor to the end of the first line below marked ---> by
-     typing  $  in Command mode.
+     typing  $	in Command mode.
 
   2. Type an  a  (lowercase) to append text AFTER the character under the
      cursor.  (Uppercase  A  appends to the end of the line.)
@@ -641,10 +641,10 @@ Note: This avoids typing  i , the last character, the text to insert, <ESC>,
 ---> This line will allow you to practice
 ---> This line will allow you to practice appending text to the end of a line.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             **************
-                             * Lesson 6.3 *
-                             **************
-            =====>>>>> ANOTHER VERSION OF REPLACE <<<<<=====
+			     **************
+			     * Lesson 6.3 *
+			     **************
+	    =====>>>>> ANOTHER VERSION OF REPLACE <<<<<=====
 
       ** Type a capital  R  to replace more than one character. **
 
@@ -663,10 +663,10 @@ Note: This avoids typing  i , the last character, the text to insert, <ESC>,
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             **************
-                             * Lesson 6.4 *
-                             **************
-            =====>>>>> SET ENVIRONMENT VARIABLE <<<<<=====
+			     **************
+			     * Lesson 6.4 *
+			     **************
+	    =====>>>>> SET ENVIRONMENT VARIABLE <<<<<=====
 
       ** Change environment so a search or substitute ignores case **
 
@@ -685,11 +685,11 @@ Note: This avoids typing  i , the last character, the text to insert, <ESC>,
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                          ********************
-                          * LESSON 6 SUMMARY *
-                          ********************
+			  ********************
+			  * LESSON 6 SUMMARY *
+			  ********************
 
-  1. Typing  o  opens a line BELOW the cursor and places the cursor on the open
+  1. Typing  o	opens a line BELOW the cursor and places the cursor on the open
      line in insert mode.
      Typing a capital  O  opens the line ABOVE the line the cursor is on.
 
@@ -712,13 +712,16 @@ Note: This avoids typing  i , the last character, the text to insert, <ESC>,
   the Vim editor, just enough to allow you to use the editor fairly easily.
   It is far from complete as Vim has many many more commands.
 
-  For more information on Vim editor please refer to:
+  For more information on Vim please refer to:
 
-	doc/reference.doc - a complete description of Vim
-	doc/index - a short summary of all commands
-	doc/difference.doc - summary of differences between vi and Vim
+	doc/vim_ref.txt  - a complete description of Vim
+	doc/vim_help.txt - a short summary of all commands
+	doc/vim_diff.txt - summary of differences between vi and Vim
 
-  Or hit the HELP key!
+  Or use the on-line help!  This can be accessed by one of:
+	pressing the <Help> key
+	pressing the <F1> key
+	typing ":help" and pressing the <Enter> key
 
   This tutorial was written by Michael C. Pierce and Robert K. Ware,
   Colorado School of Mines using ideas supplied by Charles Smith,

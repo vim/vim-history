@@ -15,10 +15,58 @@
  * It has been changed beyond recognition since then.
  *
  * All the remarks about older versions have been removed, they are not very
- * interesting.  Differences between version 3.0 and 4.0 can be found in
+ * interesting.  Differences between version 3.0 and 4.x can be found in
  * "../doc/vim_40.txt".
  *
- * Changes between version 4.2 and 4.3:
+ * Changes between version 4.3 BETA and 4.4 BETA:
+ * - Moved outputting newline from getout() to mch_windexit().  Helps when
+ *   switching display pages in xterm after an error message for ":!".
+ * - Fixed problem: Not executing BufEnter autocommands for first buffer.
+ * - Fixed Makefile: "make shadow" didn't make ctags and xxd directories.  Now
+ *   passes CC and CFLAGS to ctags and xxd makefiles.
+ * - Removed use of #elif, some old compilers don't understand it.
+ * - Included version 1.4 of ctags.  New Makefile.bcc, supports wildcards for
+ *   16 bit DOS version.
+ * - Fixed mouse positioning in wrong column for MSDOS 16 and 32 bit versions.
+ * - Fixed: Delay in updating Visual area when using "/pat".
+ * - Fixed: With some shells gvim could be killed with CTRL-C in the shell
+ *   where it was started.
+ * - Fixed: For abbreviations entered with ":noreab" only the first two
+ *   characters were not re-mapped instead of all.
+ * - Added help tags for search pattern special characters.  Adjusted
+ *   doctags.c to insert a backslash before a backslash.
+ * - Fixed Vi incompatibility: If the rhs of a mapping starts with the lhs,
+ *   remapping is only disabled for the first character, not the whole lhs.
+ * - Fixed: Default padding character was a space, which caused trouble on
+ *   some systems.  Now it's a NUL.
+ * - Fixed: With GUI Athena the scrollbar could get stuck at the bottom.
+ * - Fixed: When using :imenu to insert more than one line of text, only the
+ *   first line could be undone.
+ * - Fixed: Word completion (CTRL-N) in Insert mode, when there was not
+ *   matching word, the "Pattern not found" message was not shown.
+ * - Fixed: Pattern completion (CTRL-X I) in Insert mode; the file name shown
+ *   was overwritten with the mode message.
+ * - Added ":if" and ":endif" commands.  Everything in between them is
+ *   ingored.  Just to allow for future expansion that is backwards compatible.
+ * - Fixed: Starting Vim without a file, then ":e file", ":sp" and ":q"
+ *   unloaded the buffer.
+ * - Fixed: execution of autocommands could not be interrupted.
+ * - Fixed: "ga" on an empty line gave a misleading message, now it prints
+ *   "empty line".
+ * - Fixed: With 'number' set mouse positioning was wrong when lines wrap, and
+ *   in the GUI horizontal scrolling didn't work properly.
+ * - Removed "src/tags" from the source distribution; you can generate it
+ *   yourself now that ctags is included.
+ * - Included "macros/life", macros to run Conway's game of life.
+ * - Fixed using "set go=r" in gvimrc problem for Motif GUI.
+ * - Fixed problems when using autocommands with ":next" et. al..  Made
+ *   "line1", "line2" and "forceit" local variables, instead of global.  Lots
+ *   of function have to pass it as an argument, which is required to avoid
+ *   the vars to get mixed up with recursive Ex commands.
+ * - Removed the use of "want_start" in search.c.  Fixes bug when using a
+ *   search string that starts with "^" and contains "\|".
+ *
+ * Changes between version 4.2 and 4.3 BETA:
  * - Moved ctags, tee and xxd sources from the binary to the source archive.
  * - OS/2: Adjusted ExpandWildCards again, fixed alloc/free error.
  * - Fixed: "Nothing in register ^@", ^@ for buffer 0 is now "
@@ -251,11 +299,11 @@
 
 #include "version.h"
 
-char		   *Version = "VIM 4.3";
+char		   *Version = "VIM 4.4";
 #ifdef HAVE_DATE_TIME
-char		   *longVersion = "VIM - Vi IMproved 4.3 BETA (1996 Aug 8, compiled " __DATE__ " " __TIME__ ")";
+char		   *longVersion = "VIM - Vi IMproved 4.4 BETA (1996 Sep 11, compiled " __DATE__ " " __TIME__ ")";
 #else
-char		   *longVersion = "VIM - Vi IMproved 4.3 BETA (1996 Aug 8)";
+char		   *longVersion = "VIM - Vi IMproved 4.4 BETA (1996 Sep 11)";
 #endif
 
 static void version_msg __ARGS((char *s));

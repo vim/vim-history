@@ -111,6 +111,12 @@
 /* Define if you have the strtol() function.  */
 #define HAVE_STRTOL 1
 
+/* Define if you have the setsid() function.  */
+#define HAVE_SETSID 1
+
+/* Define if you have the setpgid() function.  */
+#define HAVE_SETPGID 1
+
 /* Define if you have the tgetent() function.  */
 #define HAVE_TGETENT 1
 

@@ -340,6 +340,7 @@ typedef unsigned long	long_u;
 #define ECMD_SET_HELP	2		/* set b_help flag of (new) buffer before
 								   opening file */
 #define ECMD_OLDBUF		4		/* use existing buffer if it exists */
+#define ECMD_FORCEIT	8		/* ! used in Ex command */
 
 /*
  * Events for autocommands.
