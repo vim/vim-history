@@ -1196,7 +1196,10 @@ scripterror:
     {
 	p = (char_u *)getenv("SESSION_MANAGER");
 	if (p != NULL && *p != NUL)
+	{
 	    xsmp_init();
+	    TIME_MSG("xsmp init");
+	}
     }
 #endif
 
@@ -1592,6 +1595,7 @@ scripterror:
     {
 	(void)serverRegisterName(X_DISPLAY, servername);
 	vim_free(servername);
+	TIME_MSG("register server name");
     }
     else
 	serverDelayedStartName = servername;
@@ -1656,6 +1660,8 @@ scripterror:
      * defined by termcapinit and redifined in .exrc.
      */
     settmode(TMODE_RAW);
+    TIME_MSG("setting raw mode");
+
     if (need_wait_return || msg_didany)
     {
 	wait_return(TRUE);
@@ -1663,6 +1669,8 @@ scripterror:
     }
 
     starttermcap();	    /* start termcap if not done by wait_return() */
+    TIME_MSG("start termcap");
+
 #ifdef FEAT_MOUSE
     setmouse();				/* may start using the mouse */
 #endif
