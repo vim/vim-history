@@ -712,14 +712,19 @@ re_multiline(prog)
  * Stop at end of 'p' of where 'dirc' is found ('/', '?', etc).
  * Take care of characters with a backslash in front of it.
  * Skip strings inside [ and ].
+ * When "newp" is not NULL and "dirc" is '?', make an allocated copy of the
+ * expression and change "\?" to "?".  If "*newp" is not NULL the expression
+ * is changed in-place.
  */
     char_u *
-skip_regexp(p, dirc, magic)
-    char_u	*p;
+skip_regexp(startp, dirc, magic, newp)
+    char_u	*startp;
     int		dirc;
     int		magic;
+    char_u	**newp;
 {
     int		mymagic;
+    char_u	*p = startp;
 
     if (magic)
 	mymagic = MAGIC_ON;
@@ -739,7 +744,22 @@ skip_regexp(p, dirc, magic)
 	}
 	else if (p[0] == '\\' && p[1] != NUL)
 	{
-	    ++p;    /* skip next character */
+	    if (dirc == '?' && newp != NULL && p[1] == '?')
+	    {
+		/* change "\?" to "?", make a copy first. */
+		if (*newp == NULL)
+		{
+		    *newp = vim_strsave(startp);
+		    if (*newp != NULL)
+			p = *newp + (p - startp);
+		}
+		if (*newp != NULL)
+		    mch_memmove(p, p + 1, STRLEN(p));
+		else
+		    ++p;
+	    }
+	    else
+		++p;    /* skip next character */
 	    if (*p == 'v')
 		mymagic = MAGIC_ALL;
 	    else if (*p == 'V')
