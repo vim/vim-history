@@ -6854,6 +6854,7 @@ nv_visual(cap)
 		    curwin->w_cursor.col += resel_VIsual_col * cap->count0 - 1;
 		else
 		    curwin->w_cursor.col = resel_VIsual_col;
+		check_cursor_col();
 	    }
 	    if (resel_VIsual_col == MAXCOL)
 	    {
@@ -6864,7 +6865,7 @@ nv_visual(cap)
 	    {
 		validate_virtcol();
 		curwin->w_curswant = curwin->w_virtcol
-		    + resel_VIsual_col * cap->count0 - 1;
+					 + resel_VIsual_col * cap->count0 - 1;
 		coladvance(curwin->w_curswant);
 	    }
 	    else
