@@ -55,6 +55,11 @@ static void	clear_wininfo __ARGS((buf_T *buf));
 # define dev_T unsigned
 #endif
 
+#if defined(FEAT_SIGNS)
+static void insert_sign __ARGS((buf_T *buf, signlist_T *prev, signlist_T *next, int id, linenr_T lnum, int typenr));
+static void buf_delete_signs __ARGS((buf_T *buf));
+#endif
+
 /*
  * Open current buffer, that is: open the memfile and read the file into memory
  * return FAIL for failure, OK otherwise
@@ -558,6 +563,9 @@ buf_freeall(buf, del_buf, wipe_buf)
     u_clearall(buf);		    /* reset all undo information */
 #ifdef FEAT_SYN_HL
     syntax_clear(buf);		    /* reset syntax info */
+#endif
+#ifdef FEAT_SIGNS
+    buf_delete_signs(buf);	    /* delete any signs */
 #endif
 }
 
@@ -4557,9 +4565,6 @@ buf_spname(buf)
 
 
 #if defined(FEAT_SIGNS) || defined(PROTO)
-
-static void insert_sign __ARGS((buf_T *buf, signlist_T *prev, signlist_T *next, int id, linenr_T lnum, int typenr));
-
 /*
  * Insert the sign into the signlist.
  */
@@ -4822,24 +4827,37 @@ buf_signcount(buf, lnum)
 # endif /* FEAT_NETBEANS_INTG */
 
 
+/*
+ * Delete signs in buffer "buf".
+ */
+    static void
+buf_delete_signs(buf)
+    buf_T	*buf;
+{
+    signlist_T	*next;
+
+    while (buf->b_signlist != NULL)
+    {
+	next = buf->b_signlist->next;
+	vim_free(buf->b_signlist);
+	buf->b_signlist = next;
+    }
+}
+
+/*
+ * Delete all signs in all buffers.
+ */
     void
 buf_delete_all_signs()
 {
     buf_T	*buf;		/* buffer we are checking for signs */
-    signlist_T	*sign;		/* a sign in a b_signlist */
-    signlist_T	*next;		/* the next sign in a b_signlist */
 
     for (buf = firstbuf; buf != NULL; buf = buf->b_next)
 	if (buf->b_signlist != NULL)
 	{
 	    /* Need to redraw the windows to remove the sign column. */
 	    redraw_buf_later(buf, NOT_VALID);
-	    for (sign = buf->b_signlist; sign != NULL; sign = next)
-	    {
-		next = sign->next;
-		vim_free(sign);
-	    }
-	    buf->b_signlist = NULL;
+	    buf_delete_signs(buf);
 	}
 }
 
