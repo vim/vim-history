@@ -2674,6 +2674,7 @@ cursorentry_T shape_table[SHAPE_IDX_COUNT] =
     {0,	0, 0,   0L,   0L,   0L, 0, 0, "vs", SHAPE_MOUSE},
     {0,	0, 0,   0L,   0L,   0L, 0, 0, "vd", SHAPE_MOUSE},
     {0,	0, 0,   0L,   0L,   0L, 0, 0, "m", SHAPE_MOUSE},
+    {0,	0, 0,   0L,   0L,   0L, 0, 0, "ml", SHAPE_MOUSE},
     {0,	0, 0, 100L, 100L, 100L, 0, 0, "sm", SHAPE_CURSOR},
 };
 
@@ -2960,7 +2961,13 @@ get_shape_idx(mouse)
 {
 #ifdef FEAT_MOUSESHAPE
     if (mouse && (State == HITRETURN || State == ASKMORE))
+    {
+# ifdef FEAT_GUI
+	if (Y_2_ROW(gui_mch_get_mouse_y()) == Rows - 1)
+	    return SHAPE_IDX_MOREL;
+# endif
 	return SHAPE_IDX_MORE;
+    }
     if (mouse && drag_status_line)
 	return SHAPE_IDX_SDRAG;
 # ifdef FEAT_VERTSPLIT

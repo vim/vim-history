@@ -2515,7 +2515,14 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
 #endif
 	case INSERT:
 	case INSERT+LANGMAP:	checkfor = MOUSE_INSERT;	break;
-	case HITRETURN:		checkfor = MOUSE_RETURN;	break;
+	case ASKMORE:
+	case HITRETURN:		/* At the more- and hit-enter prompt pass the
+				   mouse event for a click on the last line. */
+				if (Y_2_ROW(y) == Rows - 1)
+				    checkfor = MOUSE_NORMAL;
+				else
+				    checkfor = MOUSE_RETURN;
+				break;
 
 	    /*
 	     * On the command line, use the clipboard selection on all lines
@@ -3868,7 +3875,12 @@ xy2win(x, y)
     wp = mouse_find_win(&row, &col);
 # ifdef FEAT_MOUSESHAPE
     if (State == HITRETURN || State == ASKMORE)
-	update_mouseshape(SHAPE_IDX_MORE);
+    {
+	if (Y_2_ROW(y) == Rows - 1)
+	    update_mouseshape(SHAPE_IDX_MOREL);
+	else
+	    update_mouseshape(SHAPE_IDX_MORE);
+    }
     else if (row > wp->w_height)	/* below status line */
 	update_mouseshape(SHAPE_IDX_CLINE);
 #  ifdef FEAT_VERTSPLIT

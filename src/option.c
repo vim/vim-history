@@ -1436,7 +1436,7 @@ static struct vimoption
     {"mouseshape",  "mouses",  P_STRING|P_VI_DEF|P_COMMA|P_NODUP,
 #ifdef FEAT_MOUSESHAPE
 			    (char_u *)&p_mouseshape, PV_NONE,
-			    {(char_u *)"i-r:beam,s:updown,sd:udsizing,vs:leftright,vd:lrsizing,m:no,v:rightup-arrow", (char_u *)0L}
+			    {(char_u *)"i-r:beam,s:updown,sd:udsizing,vs:leftright,vd:lrsizing,m:no,ml:up-arrow,v:rightup-arrow", (char_u *)0L}
 #else
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)NULL, (char_u *)0L}
