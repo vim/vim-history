@@ -5,6 +5,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -784,6 +785,17 @@ mch_suspend()
     settmode(TMODE_COOK);
     out_flush();	    /* needed to disable mouse on some systems */
 
+# if defined(FEAT_CLIPBOARD) && defined(FEAT_X11)
+    /* Since we are going to sleep, we can't respond to requests for the X
+     * selection.  Lose it, otherwise other applications will hang. */
+    if (clipboard.owned)
+    {
+	clip_lose_selection();
+	if (x11_display != NULL)
+	    XFlush(x11_display);
+    }
+# endif
+
 # ifdef _REENTRANT
     sigcont_received = FALSE;
 # endif
@@ -1223,7 +1235,7 @@ get_x11_thing(get_title, test_only)
 	 * keep traversing up the tree until a window with a title/icon is
 	 * found.
 	 */
-	if (vim_is_xterm(T_NAME))
+	if (term_is_xterm)
 	{
 	    Window	    root;
 	    Window	    parent;
@@ -3234,6 +3246,9 @@ RealWaitForChar(fd, msec, check_for_gpm)
     int		*check_for_gpm;
 {
     int		ret;
+# if defined(FEAT_XCLIPBOARD) && defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
+    struct timeval  start_tv;
+# endif
 
     while (1)
     {
@@ -3267,6 +3282,10 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	    fds[nfd].fd = ConnectionNumber(xterm_dpy);
 	    fds[nfd].events = POLLIN;
 	    nfd++;
+#  if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
+	    if (msec >= 0)
+		gettimeofday(&start_tv, NULL);
+#  endif
 	}
 # endif
 # ifdef FEAT_MOUSE_GPM
@@ -3296,19 +3315,38 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	if (xterm_Shell != (Widget)0 && (fds[xterm_idx].revents & POLLIN))
 	{
 	    xterm_update();      /* Maybe we should hand out clipboard */
-	    if (vim_is_input_buf_empty())
-		ret--;
-	    if (msec < 0 && !ret)
+	    if (--ret == 0 && vim_is_input_buf_empty())
+	    {
+		if (msec > 0)
+		{
+#  if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
+		    struct timeval  tv;
+
+		    /* Compute remaining wait time. */
+		    gettimeofday(&tv, NULL);
+		    msec -= (tv.tv_sec - start_tv.tv_sec) * 1000L
+				    + (tv.tv_usec - start_tv.tv_usec) / 1000L;
+		    if (msec <= 0)
+			break;	/* waited long enough */
+#  else
+		    /* Guess we got interrupted halfway. */
+		    msec = msec / 2;
+#  endif
+		}
 		continue;
+	    }
 	}
 # endif
 # ifdef FEAT_MOUSE_GPM
 	if (gpm_idx >= 0 && (fds[gpm_idx].revents & POLLIN))
 	{
 	    *check_for_gpm = 1;
-	    ret--;
-	    if (msec < 0 && !ret)
+	    if (--ret == 0)
+	    {
+		if (msec > 0)
+		    msec = msec / 2;
 		continue;
+	    }
 	}
 # endif
 	break;
@@ -3359,6 +3397,10 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	    FD_SET(ConnectionNumber(xterm_dpy), &rfds);
 	    if (maxfd < ConnectionNumber(xterm_dpy))
 		maxfd = ConnectionNumber(xterm_dpy);
+#  if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
+	    if (msec >= 0)
+		gettimeofday(&start_tv, NULL);
+#  endif
 	}
 # endif
 # ifdef FEAT_MOUSE_GPM
@@ -3389,11 +3431,26 @@ RealWaitForChar(fd, msec, check_for_gpm)
 		&& FD_ISSET(ConnectionNumber(xterm_dpy), &rfds))
 	{
 	    xterm_update();	      /* Maybe we should hand out clipboard */
-	    --ret;
 	    /* continue looping when we only got the X event and the input
 	     * buffer is empty */
-	    if (msec < 0 && ret == 0 && vim_is_input_buf_empty())
+	    if (--ret == 0 && vim_is_input_buf_empty())
+	    {
+		if (msec > 0)
+		{
+#  if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
+		    /* Compute remaining wait time. */
+		    gettimeofday(&tv, NULL);
+		    msec -= (tv.tv_sec - start_tv.tv_sec) * 1000L
+				    + (tv.tv_usec - start_tv.tv_usec) / 1000L;
+		    if (msec <= 0)
+			break;	/* waited long enough */
+#  else
+		    /* Guess we got interrupted halfway. */
+		    msec = msec / 2;
+#  endif
+		}
 		continue;
+	    }
 	}
 # endif
 # ifdef FEAT_MOUSE_GPM
@@ -3485,7 +3542,7 @@ unix_expandpath(gap, path, wildoff, flags)
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
 	{
-	    len = mb_ptr2len_check(path_end);
+	    len = (*mb_ptr2len_check)(path_end);
 	    STRNCPY(p, path_end, len);
 	    p += len;
 	    path_end += len;
@@ -4687,7 +4744,7 @@ clip_xterm_own_selection()
 {
     if (xterm_Shell != (Widget)0)
 	return clip_x11_own_selection(xterm_Shell);
-    return FALSE;
+    return FAIL;
 }
 
     void

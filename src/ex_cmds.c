@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -65,7 +66,7 @@ do_ascii(eap)
 
 #ifdef FEAT_MBYTE
     IObuff[0] = NUL;
-    if (!has_mbyte || (enc_dbcs && c < 0x100) || c < 0x80)
+    if (!has_mbyte || (enc_dbcs != 0 && c < 0x100) || c < 0x80)
 #endif
     {
 	if (c == NL)	    /* NUL is stored as NL */
@@ -111,7 +112,7 @@ do_ascii(eap)
 #endif
 		)
 	    IObuff[len++] = ' '; /* draw composing char on top of a space */
-	IObuff[len + mb_char2bytes(c, IObuff + len)] = NUL;
+	IObuff[len + (*mb_char2bytes)(c, IObuff + len)] = NUL;
 	if (c < 0x10000)
 	    sprintf((char *)IObuff + STRLEN(IObuff),
 					 "> %d, Hex %04x, Octal %o", c, c, c);
@@ -378,7 +379,7 @@ ex_retab(eap)
 	    vcol += chartabsize(ptr + col, (colnr_t)vcol);
 #ifdef FEAT_MBYTE
 	    if (has_mbyte)
-		col += mb_ptr2len_check(ptr + col);
+		col += (*mb_ptr2len_check)(ptr + col);
 	    else
 #endif
 		++col;
@@ -682,7 +683,7 @@ do_bang(addr_count, eap, forceit, do_in, do_out)
 
     if (bangredo)	    /* put cmd in redo buffer for ! command */
     {
-	AppendToRedobuff(prevcmd);
+	AppendToRedobuffLit(prevcmd);
 	AppendToRedobuff((char_u *)"\n");
 	bangredo = FALSE;
     }
@@ -1238,14 +1239,16 @@ read_viminfo(file, want_info, want_marks, forceit)
     if (fname == NULL)
 	return FAIL;
     fp = mch_fopen((char *)fname, READBIN);
+
+    if (p_verbose > 0)
+	smsg((char_u *)_("Reading viminfo file \"%s\"%s%s%s"), fname,
+		    want_info ? _(" info") : "",
+		    want_marks ? _(" marks") : "",
+		    fp == NULL ? _(" FAILED") : "");
+
     vim_free(fname);
     if (fp == NULL)
 	return FAIL;
-
-    if (p_verbose > 0)
-	smsg((char_u *)_("Reading viminfo file \"%s\"%s%s"), file,
-		    want_info ? _(" info") : "",
-		    want_marks ? _(" marks") : "");
 
     viminfo_errcnt = 0;
     do_viminfo(fp, NULL, want_info, want_marks, forceit);
@@ -1574,7 +1577,9 @@ do_viminfo(fp_in, fp_out, want_info, want_marks, force_read)
 #endif
 	write_viminfo_search_pattern(fp_out);
 	write_viminfo_sub_string(fp_out);
+#ifdef FEAT_CMDHIST
 	write_viminfo_history(fp_out);
+#endif
 	write_viminfo_registers(fp_out);
 #ifdef FEAT_EVAL
 	write_viminfo_varlist(fp_out);
@@ -1607,7 +1612,9 @@ read_viminfo_up_to_marks(virp, forceit, writing)
     int		eof;
     buf_t	*buf;
 
+#ifdef FEAT_CMDHIST
     prepare_viminfo_history(forceit ? 9999 : 0);
+#endif
     eof = viminfo_readline(virp);
     while (!eof && virp->vir_line[0] != '>')
     {
@@ -1653,7 +1660,11 @@ read_viminfo_up_to_marks(virp, forceit, writing)
 	    case '?':
 	    case '=':
 	    case '@':
+#ifdef FEAT_CMDHIST
 		eof = read_viminfo_history(virp);
+#else
+		eof = viminfo_readline(virp);
+#endif
 		break;
 	    case '-':
 	    case '\'':
@@ -1668,8 +1679,10 @@ read_viminfo_up_to_marks(virp, forceit, writing)
 	}
     }
 
+#ifdef FEAT_CMDHIST
     /* Finish reading history items. */
     finish_viminfo_history();
+#endif
 
     /* Change file names to buffer numbers for fmarks. */
     for (buf = firstbuf; buf != NULL; buf = buf->b_next)
@@ -2068,8 +2081,8 @@ do_write(eap)
     }
 
     if (check_overwrite(eap, curbuf, fname, ffname, other) == OK)
-	retval = (buf_write(curbuf, ffname, fname, eap->line1, eap->line2,
-				eap, eap->append, eap->forceit, TRUE, FALSE));
+	retval = buf_write(curbuf, ffname, fname, eap->line1, eap->line2,
+				 eap, eap->append, eap->forceit, TRUE, FALSE);
 
 theend:
 #ifdef FEAT_BROWSE
@@ -2607,7 +2620,7 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 		/* May get the window options from the last time this buffer
 		 * was in this window (or another window).  If not used
 		 * before, reset the local window options to the global
-		 * values.  */
+		 * values.  Also restores old folding stuff. */
 		get_winopts(buf);
 
 #ifdef FEAT_AUTOCMD
@@ -2748,13 +2761,11 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 #ifdef FEAT_FOLDING
 	/* It's like all lines in the buffer changed.  Need to update
 	 * automatic folding. */
-	if (other_file)
-	    clearFolding(curwin);
 	foldUpdateAll(curwin);
 #endif
 
 #ifdef FEAT_SUN_WORKSHOP
-	if (usingSunWorkShop && curbuf->b_ffname)
+	if (usingSunWorkShop && curbuf->b_ffname != NULL)
 	    vim_chdirfile(curbuf->b_ffname);
 #endif
 	/*
@@ -2857,6 +2868,12 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 
     if (command != NULL)
 	do_cmdline(command, NULL, NULL, DOCMD_VERBOSE);
+
+#ifdef FEAT_KEYMAP
+    if (curbuf->b_kmap_state & KEYMAP_INIT)
+	keymap_init();
+#endif
+
     --RedrawingDisabled;
     if (!skip_redraw)
     {
@@ -2875,7 +2892,7 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 	need_start_insertmode = TRUE;
 
 #ifdef FEAT_SUN_WORKSHOP
-    if (usingSunWorkShop && curbuf->b_ffname)
+    if (usingSunWorkShop && curbuf->b_ffname != NULL)
 	vim_chdirfile(curbuf->b_ffname);
 
     if (gui.in_use && curbuf != NULL && curbuf->b_fname != NULL)
@@ -2917,6 +2934,8 @@ ex_append(eap)
 	--lnum;
 
     State = INSERT;		    /* behave like in Insert mode */
+    if (curbuf->b_lmap & B_LMAP_INSERT)
+	State |= LANGMAP;
     while (1)
     {
 	msg_scroll = TRUE;
@@ -3278,7 +3297,7 @@ do_sub(eap)
 		++cmd;
 #ifdef FEAT_MBYTE
 	    if (has_mbyte)
-		cmd += mb_ptr2len_check(cmd);
+		cmd += (*mb_ptr2len_check)(cmd);
 	    else
 #endif
 		++cmd;

@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -267,6 +268,9 @@ do_tag(tag, type, count, forceit, verbose)
 
 	    if (type == DT_POP)		/* go to older position */
 	    {
+#ifdef FEAT_FOLDING
+		int	old_KeyTyped = KeyTyped;
+#endif
 		if ((tagstackidx -= count) < 0)
 		{
 		    EMSG(_(bottommsg));
@@ -309,7 +313,7 @@ do_tag(tag, type, count, forceit, verbose)
 		curwin->w_set_curswant = TRUE;
 		check_cursor();
 #ifdef FEAT_FOLDING
-		if ((fdo_flags & FDO_TAG) && KeyTyped)
+		if ((fdo_flags & FDO_TAG) && old_KeyTyped)
 		    foldOpenCursor();
 #endif
 
@@ -1953,6 +1957,8 @@ get_tagfname(first, buf)
     {
 	if (curbuf->b_help)
 	    np = p_rtp;
+	else if (*curbuf->b_p_tags != NUL)
+	    np = curbuf->b_p_tags;
 	else
 	    np = p_tags;
 	vim_findfile_free_visited(search_ctx);
@@ -2508,10 +2514,12 @@ jumpto_tag(lbuf, forceit)
 	    p_ws = TRUE;	/* need 'wrapscan' for backward searches */
 	    p_ic = FALSE;	/* don't ignore case now */
 	    p_scs = FALSE;
-
+#if 0	/* disabled for now */
+#ifdef FEAT_CMDHIST
 	    /* put pattern in search history */
 	    add_to_history(HIST_SEARCH, pbuf + 1, TRUE);
-
+#endif
+#endif
 	    save_lnum = curwin->w_cursor.lnum;
 	    curwin->w_cursor.lnum = 0;	/* start search before first line */
 	    if (do_search(NULL, pbuf[0], pbuf + 1, (long)1, search_options))

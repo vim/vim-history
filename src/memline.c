@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /* for debugging */
@@ -253,16 +254,16 @@ ml_open()
     if (mfp == NULL)
 	goto error;
 
+    curbuf->b_ml.ml_mfp = mfp;
+    curbuf->b_ml.ml_flags = ML_EMPTY;
+    curbuf->b_ml.ml_line_count = 1;
+
 #if defined(MSDOS) && !defined(DJGPP)
     /* for 16 bit MS-DOS create a swapfile now, because we run out of
      * memory very quickly */
     if (p_uc)
 	ml_open_file(curbuf);
 #endif
-
-    curbuf->b_ml.ml_mfp = mfp;
-    curbuf->b_ml.ml_flags = ML_EMPTY;
-    curbuf->b_ml.ml_line_count = 1;
 
 /*
  * fill block0 struct and write page 0
@@ -3318,13 +3319,15 @@ findswapname(buf, dirp, old_fname)
     int		n;
     time_t	x;
     char_u	*dir_name;
-
 #ifdef AMIGA
     BPTR	fh;
 #endif
-
 #ifndef SHORT_FNAME
     int		r;
+#endif
+
+#if !defined(SHORT_FNAME) \
+		     && ((!defined(UNIX) && !defined(OS2)) || defined(ARCHIE))
     FILE	*dummyfd = NULL;
 
 /*
@@ -3332,19 +3335,11 @@ findswapname(buf, dirp, old_fname)
  * compatible filesystem, it is possible that the file "test.doc.swp" which we
  * create will be exactly the same file. To avoid this problem we temporarily
  * create "test.doc".
- * Don't do this for a symbolic link to a file that doesn't exist yet,
- * because the link would be deleted further on!
+ * Don't do this when the check below for a 8.3 file name is used.
  */
-    if (!(buf->b_p_sn || buf->b_shortname) && buf->b_fname
+    if (!(buf->b_p_sn || buf->b_shortname) && buf->b_fname != NULL
 					     && mch_getperm(buf->b_fname) < 0)
-    {
-# if defined(HAVE_LSTAT) && defined(HAVE_ISSYMLINK)
-	struct stat st;
-
-	if (mch_lstat((char *)buf->b_fname, &st) == -1 || ISSYMLINK(st.st_mode))
-# endif
-	    dummyfd = mch_fopen((char *)buf->b_fname, "w");
-    }
+	dummyfd = mch_fopen((char *)buf->b_fname, "w");
 #endif
 
 /*
@@ -3611,11 +3606,11 @@ findswapname(buf, dirp, old_fname)
 		    (void)EMSG(_("ATTENTION"));
 		    MSG_PUTS(_("\nFound a swap file by the name \""));
 		    msg_home_replace(fname);
-		    MSG_PUTS("\"\n");
+		    MSG_PUTS(_("\"\n"));
 		    swapfile_info(fname);
 		    MSG_PUTS(_("While opening file \""));
 		    msg_outtrans(buf->b_fname);
-		    MSG_PUTS("\"\n");
+		    MSG_PUTS(_("\"\n"));
 		    if (mch_stat((char *)buf->b_fname, &st) != -1)
 		    {
 			MSG_PUTS(_("             dated: "));
@@ -3720,8 +3715,9 @@ findswapname(buf, dirp, old_fname)
     }
 
     vim_free(dir_name);
-#ifndef SHORT_FNAME
-    if (dummyfd)	/* file has been created temporarily */
+#if !defined(SHORT_FNAME) \
+		     && ((!defined(UNIX) && !defined(OS2)) || defined(ARCHIE))
+    if (dummyfd != NULL)	/* file has been created temporarily */
     {
 	fclose(dummyfd);
 	mch_remove(buf->b_fname);
@@ -4141,6 +4137,7 @@ ml_updatechunk(buf, line, len, updtype)
     ml_upd_lastcurline = curline;
     ml_upd_lastcurix = curix;
 }
+
 /*
  * Find offset for line or line with offset.
  * Find line with offset if line is 0; return remaining offset in offp

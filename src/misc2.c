@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -32,7 +33,7 @@ virtual_active()
 }
 
 /*
- * Get the screen position of character number pos on the current line.
+ * Get the screen position of the cursor.
  */
     int
 getviscol()
@@ -44,7 +45,25 @@ getviscol()
     for (p = line; (colnr_t)(p - line) < curwin->w_cursor.col; )
 	x += lbr_chartabsize_adv(&p, x);
 
-    return x + curwin->w_coladd;
+    return x + curwin->w_cursor.coladd;
+}
+
+/*
+ * Get the screen position of character col with a coladd.
+ */
+    int
+getviscol2(col, coladd)
+    colnr_t	col;
+    colnr_t	coladd;
+{
+    int		x = 0;
+    char_u	*line = ml_get_curline();
+    char_u	*p;
+
+    for (p = line; (colnr_t)(p - line) < col; )
+	x += lbr_chartabsize_adv(&p, x);
+
+    return x + coladd;
 }
 
 /*
@@ -95,7 +114,7 @@ coladvance2(addspaces, finetune, wcol)
 					  ;
 
 #ifdef FEAT_VIRTUALEDIT
-    curwin->w_coladd = 0;
+    curwin->w_cursor.coladd = 0;
 
     if ((addspaces || finetune)
 	    && curwin->w_p_wrap
@@ -240,7 +259,7 @@ coladvance2(addspaces, finetune, wcol)
 	/* modify the real cursor position to make the cursor appear at the
 	 * wanted column */
 	if (b > 0 && b < (MAXCOL - 2 * W_WIDTH(curwin)))
-	    curwin->w_coladd = b;
+	    curwin->w_cursor.coladd = b;
     }
 #endif
 
@@ -276,7 +295,7 @@ inc(lp)
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
 	{
-	    int l = mb_ptr2len_check(p);
+	    int l = (*mb_ptr2len_check)(p);
 
 	    lp->col += l;
 	    return ((p[l] != NUL) ? 0 : 2);
@@ -384,7 +403,7 @@ check_cursor_col()
 {
     colnr_t len;
 #ifdef FEAT_VIRTUALEDIT
-    colnr_t oldcol = curwin->w_cursor.col + curwin->w_coladd;
+    colnr_t oldcol = curwin->w_cursor.col + curwin->w_cursor.coladd;
 #endif
 
     len = STRLEN(ml_get_curline());
@@ -408,7 +427,7 @@ check_cursor_col()
     /* If virtual editing is on, we can leave the cursor on the old position,
        only we must set it to virtual */
     if (ve_flags == VE_ALL)
-	curwin->w_coladd = oldcol - curwin->w_cursor.col;
+	curwin->w_cursor.coladd = oldcol - curwin->w_cursor.col;
 #endif
 }
 
@@ -901,7 +920,7 @@ vim_strsave_escaped(string, esc_chars)
     for (p = string; *p; p++)
     {
 #ifdef FEAT_MBYTE
-	if (has_mbyte && (l = mb_ptr2len_check(p)) > 1)
+	if (has_mbyte && (l = (*mb_ptr2len_check)(p)) > 1)
 	{
 	    length += l;		/* count a multibyte char */
 	    p += l - 1;
@@ -919,7 +938,7 @@ vim_strsave_escaped(string, esc_chars)
 	for (p = string; *p; p++)
 	{
 #ifdef FEAT_MBYTE
-	    if (has_mbyte && (l = mb_ptr2len_check(p)) > 1)
+	    if (has_mbyte && (l = (*mb_ptr2len_check)(p)) > 1)
 	    {
 		mch_memmove(p2, p, (size_t)l);
 		p2 += l;
@@ -1297,11 +1316,11 @@ vim_strchr(string, c)
 	{
 	    if (utf_ptr2char(p) == c)
 		return p;
-	    p += mb_ptr2len_check(p);
+	    p += (*mb_ptr2len_check)(p);
 	}
 	return NULL;
     }
-    if (enc_dbcs && c > 255)
+    if (enc_dbcs != 0 && c > 255)
     {
 	int	n2 = c & 0xff;
 
@@ -1310,7 +1329,7 @@ vim_strchr(string, c)
 	{
 	    if (b == c && p[1] == n2)
 		return p;
-	    p += mb_ptr2len_check(p);
+	    p += (*mb_ptr2len_check)(p);
 	}
 	return NULL;
     }
@@ -1320,7 +1339,7 @@ vim_strchr(string, c)
 	{
 	    if (b == c)
 		return p;
-	    p += mb_ptr2len_check(p);
+	    p += (*mb_ptr2len_check)(p);
 	}
 	return NULL;
     }
@@ -1352,7 +1371,7 @@ vim_strrchr(string, c)
 	    retval = string;
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
-	    string += mb_ptr2len_check(string);
+	    string += (*mb_ptr2len_check)(string);
 	else
 #endif
 	    ++string;
@@ -1919,7 +1938,7 @@ get_special_key_name(c, modifiers)
      * extract modifiers.
      */
 #ifdef FEAT_MBYTE
-    if (mb_char2len(c) == 1)
+    if ((*mb_char2len)(c) == 1)
 #endif
     {
 	if (table_idx < 0
@@ -1963,8 +1982,8 @@ get_special_key_name(c, modifiers)
 	else
 	{
 #ifdef FEAT_MBYTE
-	    if (has_mbyte && mb_char2len(c) > 1)
-		idx += mb_char2bytes(c, string + idx);
+	    if (has_mbyte && (*mb_char2len)(c) > 1)
+		idx += (*mb_char2bytes)(c, string + idx);
 	    else
 #endif
 	    if (vim_isprintc(c))
@@ -2038,13 +2057,14 @@ find_special_key(srcp, modp, keycode)
     int		*modp;
     int		keycode; /* prefer key code, e.g. K_DEL instead of DEL */
 {
-    char_u  *last_dash;
-    char_u  *end_of_name;
-    char_u  *src;
-    char_u  *bp;
-    int	    modifiers;
-    int	    bit;
-    int	    key;
+    char_u	*last_dash;
+    char_u	*end_of_name;
+    char_u	*src;
+    char_u	*bp;
+    int		modifiers;
+    int		bit;
+    int		key;
+    long_u	n;
 
     src = *srcp;
     if (src[0] != '<')
@@ -2067,6 +2087,15 @@ find_special_key(srcp, modp, keycode)
     if (*bp == '>')	/* found matching '>' */
     {
 	end_of_name = bp + 1;
+
+	if (STRNICMP(src + 1, "char-", 5) == 0 && isdigit(src[6]))
+	{
+	    /* <Char-123> or <Char-033> or <Char-0x33> */
+	    vim_str2nr(src + 6, NULL, NULL, TRUE, TRUE, NULL, &n);
+	    *modp = 0;
+	    *srcp = end_of_name;
+	    return (int)n;
+	}
 
 	/* Which modifiers are given? */
 	modifiers = 0x0;
@@ -2405,45 +2434,52 @@ call_shell(cmd, opt)
     char_u	*ncmd;
     int		retval;
 
-#ifdef FEAT_GUI_MSWIN
-    /* Don't hide the pointer while executing a shell command. */
-    gui_mch_mousehide(FALSE);
-#endif
-#ifdef FEAT_GUI
-    ++hold_gui_events;
-#endif
-    /* The external command may update a tags file, clear cached tags. */
-    tag_freematch();
-
-    if (cmd == NULL || *p_sxq == NUL)
-	retval = mch_call_shell(cmd, opt);
+    if (*p_sh == NUL)
+    {
+	EMSG(_(e_shellempty));
+	retval = -1;
+    }
     else
     {
-	ncmd = alloc((unsigned)(STRLEN(cmd) + STRLEN(p_sxq) * 2 + 1));
-	if (ncmd != NULL)
-	{
-	    STRCPY(ncmd, p_sxq);
-	    STRCAT(ncmd, cmd);
-	    STRCAT(ncmd, p_sxq);
-	    retval = mch_call_shell(ncmd, opt);
-	    vim_free(ncmd);
-	}
-	else
-	    retval = -1;
-    }
-#ifdef FEAT_GUI
-    --hold_gui_events;
+#ifdef FEAT_GUI_MSWIN
+	/* Don't hide the pointer while executing a shell command. */
+	gui_mch_mousehide(FALSE);
 #endif
+#ifdef FEAT_GUI
+	++hold_gui_events;
+#endif
+	/* The external command may update a tags file, clear cached tags. */
+	tag_freematch();
+
+	if (cmd == NULL || *p_sxq == NUL)
+	    retval = mch_call_shell(cmd, opt);
+	else
+	{
+	    ncmd = alloc((unsigned)(STRLEN(cmd) + STRLEN(p_sxq) * 2 + 1));
+	    if (ncmd != NULL)
+	    {
+		STRCPY(ncmd, p_sxq);
+		STRCAT(ncmd, cmd);
+		STRCAT(ncmd, p_sxq);
+		retval = mch_call_shell(ncmd, opt);
+		vim_free(ncmd);
+	    }
+	    else
+		retval = -1;
+	}
+#ifdef FEAT_GUI
+	--hold_gui_events;
+#endif
+	/*
+	 * Check the window size, in case it changed while executing the
+	 * external command.
+	 */
+	shell_resized_check();
+    }
 
 #ifdef FEAT_EVAL
     set_vim_var_nr(VV_SHELL_ERROR, (long)retval);
 #endif
-
-    /*
-     * Check the window size, in case it changed while executing the
-     * external command.
-     */
-    shell_resized_check();
 
     return retval;
 }
@@ -2777,13 +2813,13 @@ get_shape_idx(mouse)
 #endif
     if (!mouse && State == SHOWMATCH)
 	return SHAPE_IDX_SM;
-    if (State == INSERT)
+    if (State & VREPLACE_FLAG)
+	return SHAPE_IDX_R;
+    if (State & REPLACE_FLAG)
+	return SHAPE_IDX_R;
+    if (State & INSERT)
 	return SHAPE_IDX_I;
-    if (State == REPLACE)
-	return SHAPE_IDX_R;
-    if (State == VREPLACE)
-	return SHAPE_IDX_R;
-    if (State == CMDLINE)
+    if (State & CMDLINE)
     {
 	if (cmdline_at_end())
 	    return SHAPE_IDX_C;

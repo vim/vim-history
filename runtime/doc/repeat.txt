@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.0v.  Last change: 2001 Feb 11
+*repeat.txt*    For Vim version 6.0w.  Last change: 2001 Feb 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -28,6 +28,8 @@ the same SIZE of area is used, see |visual-repeat|.
 
 							*@:*
 @:			Repeat last command-line [count] times.
+			{not available when compiled without the
+			|+cmdline_hist| feature}
 
 
 ==============================================================================
@@ -173,8 +175,9 @@ q			Stops recording.  (Implementation note: The 'q' that
 				scriptencoding iso-8859-5
 				scriptencoding cp932
 <
-			{not in Vi} {only available when compiled with the
-			|+multi_byte| feature}
+			When compiled without the |+multi_byte| feature this
+			command is ignored.
+			{not in Vi}
 
 						*:scrip* *:scriptnames*
 :scrip[tnames]		List all sourced script names, in the order they were

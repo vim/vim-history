@@ -5,6 +5,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 #include <X11/keysym.h>
@@ -788,7 +789,7 @@ gui_x11_key_hit_cb(w, dud, event, dum)
     {
 	string[1] = KS_EXTRA;
 	string[2] = (int)KE_CSI;
-	len = 3;
+	len = -3;
     }
 
     /* Check for special keys.  Also do this when len == 1 (key has an ASCII
@@ -802,7 +803,7 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 		string[0] = CSI;
 		string[1] = special_keys[i].vim_code0;
 		string[2] = special_keys[i].vim_code1;
-		len = 3;
+		len = -3;
 		break;
 	    }
 	}
@@ -813,7 +814,7 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 	goto theend;
 
     /* Special keys (and a few others) may have modifiers */
-    if (len == 3 || key_sym == XK_space || key_sym == XK_Tab
+    if (len == -3 || key_sym == XK_space || key_sym == XK_Tab
 	|| key_sym == XK_Return || key_sym == XK_Linefeed
 	|| key_sym == XK_Escape)
     {
@@ -825,34 +826,28 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 	if (ev_press->state & Mod1Mask)
 	    modifiers |= MOD_MASK_ALT;
 
-#if defined(FEAT_XIM) && defined(FEAT_MBYTE)
-	if (!enc_dbcs || key_sym != XK_VoidSymbol)
-#endif
+	/*
+	 * For some keys a shift modifier is translated into another key
+	 * code.
+	 */
+	if (len == -3)
+	    key = TO_SPECIAL(string[1], string[2]);
+	else
+	    key = string[0];
+	key = simplify_key(key, &modifiers);
+	if (key == CSI)
+	    key = K_CSI;
+	if (IS_SPECIAL(key))
 	{
-	    /*
-	     * For some keys a shift modifier is translated into another key
-	     * code.  Do we need to handle the case where len != 1 and
-	     * string[0] != CSI?
-	     */
-	    if (string[0] == CSI && len == 3)
-		key = TO_SPECIAL(string[1], string[2]);
-	    else
-		key = string[0];
-	    key = simplify_key(key, &modifiers);
-	    if (key == CSI)
-		key = K_CSI;
-	    if (IS_SPECIAL(key))
-	    {
-		string[0] = CSI;
-		string[1] = K_SECOND(key);
-		string[2] = K_THIRD(key);
-		len = 3;
-	    }
-	    else
-	    {
-		string[0] = key;
-		len = 1;
-	    }
+	    string[0] = CSI;
+	    string[1] = K_SECOND(key);
+	    string[2] = K_THIRD(key);
+	    len = 3;
+	}
+	else
+	{
+	    string[0] = key;
+	    len = 1;
 	}
 
 	if (modifiers)
@@ -1090,9 +1085,6 @@ gui_mch_prepare(argc, argv)
     int
 gui_mch_init_check()
 {
-#if defined(FEAT_XFONTSET) && (defined(HAVE_LOCALE_H) || defined(X_LOCALE))
-    setlocale(LC_ALL, "");
-#endif
 #ifdef FEAT_XIM
     XtSetLanguageProc(NULL, NULL, NULL);
 #endif
@@ -2291,7 +2283,7 @@ gui_mch_draw_part_cursor(w, h, color)
     XFillRectangle(gui.dpy, gui.wid, gui.text_gc,
 #ifdef FEAT_RIGHTLEFT
 	    /* vertical line should be on the right of current point */
-	    State != CMDLINE && curwin->w_p_rl ? FILL_X(gui.col + 1) - w :
+	    !(State & CMDLINE) && curwin->w_p_rl ? FILL_X(gui.col + 1) - w :
 #endif
 		FILL_X(gui.col),
 	    FILL_Y(gui.row) + gui.char_height - h + (int)p_linespace / 2,

@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.0v.  Last change: 2001 Feb 05
+*cmdline.txt*   For Vim version 6.0w.  Last change: 2001 Feb 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -62,6 +62,7 @@ Notes:
   from commands like "*" and "#".  But for a mapping, only the last search is
   remembered (to avoid that long mappings trash the history).
 {Vi: no history}
+{not available when compiled without the |+cmdline_hist| feature}
 
 There is an automatic completion of names on the command-line; see
 |cmdline-completion|.
@@ -178,16 +179,24 @@ CTRL-C		quit command-line without executing
 							*c_<Up>*
 <Up>		recall older command-line from history, whose beginning
 		matches the current command-line (see below).
+		{not available when compiled without the |+cmdline_hist|
+		feature}
 							*c_<Down>*
 <Down>		recall more recent command-line from history, whose beginning
 		matches the current command-line (see below).
+		{not available when compiled without the |+cmdline_hist|
+		feature}
 
 							*c_<S-Up>* *c_<PageUp>*
 <S-Up> or <PageUp>
 		recall older command-line from history
+		{not available when compiled without the |+cmdline_hist|
+		feature}
 						*c_<S-Down>* *c_<PageDown>*
 <S-Down> or <PageDown>
 		recall more recent command-line from history
+		{not available when compiled without the |+cmdline_hist|
+		feature}
 
 CTRL-D		command-line completion (see |cmdline-completion|)
 'wildchar' option
@@ -214,6 +223,24 @@ CTRL-_		a - switch between Hebrew and English keyboard mode, which is
 		Applies only if Vim is compiled with the |+farsi| feature.
 		See |farsi.txt|.
 
+							*c_CTRL-^*
+CTRL-^		Toggle the use of language |:lmap| mappings.  Unfortunately,
+		the current status cannot be seen.  You have to try typing a
+		character to see the effect.
+		These mappings are normally used to type characters that are
+		different from what the keyboard produces.  The 'keymap'
+		option can be used to install a whole number of them.
+		For entering Search patterns the use of the mappings is
+		remembered for each buffer separately.  When you start a "/"
+		or "?" command the state from the last time is used again.
+		The use for Search patterns is switched on when defining a new
+		|:lmap| mapping.
+		When entering a command line, its use is switched off, since
+		you are expected to type a command.  After switching it on
+		with CTRL-^, the new state is not used again for the next
+		command or Search pattern.
+		{not in Vi}
+
 For Emacs-style editing on the command-line see |emacs-keys|.
 
 The <Up> and <Down> keys take the current command-line as a search string.
@@ -226,7 +253,10 @@ command-line is shown.  (Note: the shifted arrow keys do not work on all
 terminals)
 
 							*his* *:history*
-:his[tory]	Print the history of last entered commands.  {not in Vi}
+:his[tory]	Print the history of last entered commands.
+		{not in Vi}
+		{not available when compiled without the |+cmdline_hist|
+		feature}
 
 :his[tory] [{name}] [{first}][, [{last}]]
 		List the contents of history {name} which can be:
@@ -727,7 +757,7 @@ backslash is followed by a normal file name character, it does not have a
 special meaning.  Therefore "\file\foo" is a valid file name, you don't have
 to type the backslash twice.
 
-And exception is the '$' sign.  It is a valid character in a file name.  But
+An exception is the '$' sign.  It is a valid character in a file name.  But
 to avoid a file name like "$home" to be interpreted as an environment variable,
 it needs to be preceded by a backslash.  Therefore you need to use "/\$home"
 for the file "$home" in the root directory.  A few examples:
@@ -744,6 +774,8 @@ for the file "$home" in the root directory.  A few examples:
 In the command-line window the command line can be edited just like editing
 text in any window.  It is a special kind of window, because you cannot leave
 it in a normal way.
+{not available when compiled without the |+cmdline_hist| or |+vertsplit|
+feature}
 
 
 OPEN

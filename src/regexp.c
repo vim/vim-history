@@ -43,7 +43,6 @@
 #undef DEBUG
 
 #include <stdio.h>
-#include "option.h"
 
 /*
  * Get around a problem with #defined char class functions.
@@ -507,7 +506,7 @@ skip_anyof(p)
     while (*p != NUL && *p != ']')
     {
 #ifdef FEAT_MBYTE
-	if (has_mbyte && (l = mb_ptr2len_check(p)) > 1)
+	if (has_mbyte && (l = (*mb_ptr2len_check)(p)) > 1)
 	{
 	    p += l;
 	}
@@ -520,7 +519,7 @@ skip_anyof(p)
 		{
 #ifdef FEAT_MBYTE
 		    if (has_mbyte)
-			p += mb_ptr2len_check(p);
+			p += (*mb_ptr2len_check)(p);
 		    else
 #endif
 			++p;
@@ -686,7 +685,7 @@ static int	re_ismultibytecode __ARGS((int c));
 static char_u	*mbyte_exactly __ARGS((int *flagp));
 
 /*
- * Is chr multi-byte? If no then return 0 else return leadbyte
+ * Is chr double-byte? If no then return 0 else return leadbyte
  */
     static int
 re_ismultibytecode(c)
@@ -694,7 +693,7 @@ re_ismultibytecode(c)
 {
     int		lead;
 
-    if (!enc_dbcs)
+    if (enc_dbcs == 0)
 	return 0;
     lead = ((unsigned)c >> 8) & 0xff;
     return MB_BYTE2LEN(lead) > 1 ? lead : 0;
@@ -773,7 +772,7 @@ skip_regexp(p, dirc, magic)
 	    ++p;    /* skip next character */
 #ifdef FEAT_MBYTE
 	else if (has_mbyte)
-	    p += mb_ptr2len_check(p) - 1;
+	    p += (*mb_ptr2len_check)(p) - 1;
 #endif
     }
     return p;
@@ -1677,7 +1676,8 @@ collection:
 			    start = UCHARAT(regparse - 2) + 1;
 			    end = UCHARAT(regparse);
 #ifdef FEAT_MBYTE
-			    if (enc_dbcs && mb_head_off(base, regparse - 2) > 0)
+			    if (enc_dbcs
+				     && dbcs_head_off(base, regparse - 2) > 0)
 			    {
 				int	lead;
 
@@ -1776,7 +1776,7 @@ collection:
 			{
 			    int	l;
 
-			    l = mb_ptr2len_check(regparse);
+			    l = (*mb_ptr2len_check)(regparse);
 			    while (--l > 0)
 				regc(*regparse++);
 			}
@@ -2147,7 +2147,7 @@ peekchr()
 
 #ifdef FEAT_MBYTE
 	default:
-	    if (enc_dbcs && MB_BYTE2LEN(curchr) > 1 && regparse[1] != NUL)
+	    if (enc_dbcs != 0 && MB_BYTE2LEN(curchr) > 1 && regparse[1] != NUL)
 		curchr = (curchr << 8) | regparse[1];
 #endif
 	}
@@ -2160,7 +2160,7 @@ peekchr()
 skipchr()
 {
 #ifdef FEAT_MBYTE
-    if (enc_dbcs && mb_ptr2len_check(regparse) > 1)
+    if (enc_dbcs && (*mb_ptr2len_check)(regparse) > 1)
     {
 	skip_multi = TRUE;
 	regparse++;
@@ -2552,7 +2552,7 @@ vim_regexec_both(line, col)
 		break;		/* Found it. */
 #ifdef FEAT_MBYTE
 	    if (has_mbyte)
-		s += mb_ptr2len_check(s);
+		s += (*mb_ptr2len_check)(s);
 	    else
 #endif
 		++s;
@@ -2607,7 +2607,7 @@ vim_regexec_both(line, col)
 		break;
 #ifdef FEAT_MBYTE
 	    if (has_mbyte)
-		col += mb_ptr2len_check(regline + col);
+		col += (*mb_ptr2len_check)(regline + col);
 	    else
 #endif
 		++col;
@@ -2763,7 +2763,7 @@ static int reg_prev_class __ARGS((void));
 advance_reginput()
 {
     if (has_mbyte)
-	reginput += mb_ptr2len_check(reginput);
+	reginput += (*mb_ptr2len_check)(reginput);
     else
 	++reginput;
 }
@@ -2775,7 +2775,7 @@ reg_prev_class()
 
     if (reginput - 1 > regline)
     {
-	prev_off = mb_head_off(regline, reginput - 1) + 1;
+	prev_off = (*mb_head_off)(regline, reginput - 1) + 1;
 	if (regline <= reginput - prev_off)
 	    return mb_get_class(reginput - prev_off);
     }
@@ -3146,14 +3146,14 @@ regmatch(scan)
 	    if (*reginput == NUL)
 		return FALSE;
 #ifdef FEAT_MBYTE
-	    if (enc_utf8 && mb_ptr2len_check(reginput) > 1)
+	    if (enc_utf8 && (*mb_ptr2len_check)(reginput) > 1)
 	    {
 		if ((vim_strchr(OPERAND(scan), utf_ptr2char(reginput))
 						    == NULL) == (op == ANYOF))
 		    return FALSE;
-		reginput += mb_ptr2len_check(reginput) - 1;
+		reginput += (*mb_ptr2len_check)(reginput) - 1;
 	    }
-	    else if (enc_dbcs && mb_ptr2len_check(reginput) > 1)
+	    else if (enc_dbcs && (*mb_ptr2len_check)(reginput) > 1)
 	    {
 		if ((cstrchr(OPERAND(scan), *reginput << 8 | reginput[1])
 						    == NULL) == (op == ANYOF))
@@ -4091,7 +4091,7 @@ do_class:
 		    break;
 	    }
 #ifdef FEAT_MBYTE
-	    else if (enc_dbcs && mb_ptr2len_check(scan) > 1)
+	    else if (enc_dbcs && (*mb_ptr2len_check)(scan) > 1)
 	    {
 		if ((cstrchr(opnd, *scan << 8 | scan[1]) == NULL) == testval)
 		    break;
@@ -4811,7 +4811,7 @@ cstrchr(s, c)
 	    return p;
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
-	    p += mb_ptr2len_check(p) - 1;
+	    p += (*mb_ptr2len_check)(p) - 1;
 #endif
     }
     return NULL;
@@ -5132,7 +5132,7 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 #ifdef FEAT_MBYTE
 		int	l;
 
-		if (enc_dbcs && (l = mb_ptr2len_check(src - 1)) > 1)
+		if (enc_dbcs != 0 && (l = (*mb_ptr2len_check)(src - 1)) > 1)
 		{
 		    mch_memmove(dst, src - 1, l);
 		    dst += l - 1;

@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.0v.  Last change: 2001 Feb 08
+*windows.txt*   For Vim version 6.0w.  Last change: 2001 Feb 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -309,13 +309,18 @@ CTRL-W W	Without count: move cursor to window above/left of current
 		from top-left to bottom-right).
 
 CTRL-W t					*CTRL-W_t* *CTRL-W_CTRL-T*
-CTRL-W CTRL-T	move cursor to top-left window.
+CTRL-W CTRL-T	Move cursor to top-left window.
 
 CTRL-W b					*CTRL-W_b* *CTRL-W_CTRL-B*
-CTRL-W CTRL-B	move cursor to bottom-right window.
+CTRL-W CTRL-B	Move cursor to bottom-right window.
 
 CTRL-W p					*CTRL-W_p* *CTRL-W_CTRL-P*
-CTRL-W CTRL-P	go to previous (last accessed) window.
+CTRL-W CTRL-P	Go to previous (last accessed) window.
+
+						*CTRL-W_P*
+CTRL-W P	Go to preview window.  When there is no preview window this is
+		an error.
+		{not available when compiled without the |+quickfix| feature}
 
 If Visual mode is active and the new window is not for the same buffer, the
 Visual mode is ended.  If the window is on the same buffer, the cursor
@@ -992,8 +997,8 @@ purposes.  A few options can be set to change the behavior of a buffer:
 A few useful kinds of a buffer:
 
 quickfix	Used to contain the error list.  See |:cwindow|.  This command
-		sets the 'buftype' option is to "quickfix".  You are not
-		supposed to change this!  'swapfile' is off.
+		sets the 'buftype' option to "quickfix".  You are not supposed
+		to change this!  'swapfile' is off.
 
 help		Contains a help file.  Will only be created with the |:help|
 		command.  The flag that indicates a help buffer is internal

@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 #include "vim.h"
@@ -105,6 +106,11 @@ static char *(features[]) =
 #else
 	"-cmdline_compl",
 #endif
+#ifdef FEAT_CMDHIST
+	"+cmdline_hist",
+#else
+	"-cmdline_hist",
+#endif
 #ifdef FEAT_CMDL_INFO
 	"+cmdline_info",
 #else
@@ -189,9 +195,9 @@ static char *(features[]) =
 	"-find_in_path",
 #endif
 #ifdef FEAT_FOLDING
-	"+folding"
+	"+folding",
 #else
-	"-folding"
+	"-folding",
 #endif
 #ifdef FEAT_FOOTER
 	"+footer",
@@ -216,6 +222,11 @@ static char *(features[]) =
 	"+insert_expand",
 #else
 	"-insert_expand",
+#endif
+#ifdef FEAT_KEYMAP
+	"+keymap",
+#else
+	"-keymap",
 #endif
 #ifdef FEAT_LANGMAP
 	"+langmap",
@@ -713,58 +724,58 @@ list_version()
 #ifdef SYS_VIMRC_FILE
     version_msg(_("   system vimrc file: \""));
     version_msg(SYS_VIMRC_FILE);
-    version_msg("\"\n");
+    version_msg(_("\"\n"));
 #endif
 #ifdef USR_VIMRC_FILE
     version_msg(_("     user vimrc file: \""));
     version_msg(USR_VIMRC_FILE);
-    version_msg("\"\n");
+    version_msg(_("\"\n"));
 #endif
 #ifdef USR_VIMRC_FILE2
     version_msg(_(" 2nd user vimrc file: \""));
     version_msg(USR_VIMRC_FILE2);
-    version_msg("\"\n");
+    version_msg(_("\"\n"));
 #endif
 #ifdef USR_VIMRC_FILE3
     version_msg(_(" 3rd user vimrc file: \""));
     version_msg(USR_VIMRC_FILE3);
-    version_msg("\"\n");
+    version_msg(_("\"\n"));
 #endif
 #ifdef USR_EXRC_FILE
     version_msg(_("      user exrc file: \""));
     version_msg(USR_EXRC_FILE);
-    version_msg("\"\n");
+    version_msg(_("\"\n"));
 #endif
 #ifdef USR_EXRC_FILE2
     version_msg(_("  2nd user exrc file: \""));
     version_msg(USR_EXRC_FILE2);
-    version_msg("\"\n");
+    version_msg(_("\"\n"));
 #endif
 #ifdef FEAT_GUI
 # ifdef SYS_GVIMRC_FILE
     version_msg(_("  system gvimrc file: \""));
     version_msg(SYS_GVIMRC_FILE);
-    MSG_PUTS("\"\n");
+    MSG_PUTS(_("\"\n"));
 # endif
     version_msg(_("    user gvimrc file: \""));
     version_msg(USR_GVIMRC_FILE);
-    version_msg("\"\n");
+    version_msg(_("\"\n"));
 # ifdef USR_GVIMRC_FILE2
     version_msg(_("2nd user gvimrc file: \""));
     version_msg(USR_GVIMRC_FILE2);
-    version_msg("\"\n");
+    version_msg(_("\"\n"));
 # endif
 # ifdef USR_GVIMRC_FILE3
     version_msg(_("3rd user gvimrc file: \""));
     version_msg(USR_GVIMRC_FILE3);
-    version_msg("\"\n");
+    version_msg(_("\"\n"));
 # endif
 #endif
 #ifdef FEAT_GUI
 # ifdef SYS_MENU_FILE
     version_msg(_("    system menu file: \""));
     version_msg(SYS_MENU_FILE);
-    MSG_PUTS("\"\n");
+    MSG_PUTS(_("\"\n"));
 # endif
 #endif
 #ifdef HAVE_PATHDEF
@@ -772,13 +783,13 @@ list_version()
     {
 	version_msg(_("  fall-back for $VIM: \""));
 	version_msg((char *)default_vim_dir);
-	MSG_PUTS("\"\n");
+	MSG_PUTS(_("\"\n"));
     }
     if (*default_vimruntime_dir != NUL)
     {
 	version_msg(_(" f-b for $VIMRUNTIME: \""));
 	version_msg((char *)default_vimruntime_dir);
-	MSG_PUTS("\"\n");
+	MSG_PUTS(_("\"\n"));
     }
     version_msg(_("Compilation: "));
     version_msg((char *)all_cflags);

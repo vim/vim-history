@@ -62,6 +62,8 @@ typedef long off_t;
 
 #include <stdlib.h>
 #include <time.h>
+#include <dos.h>
+#include <dir.h>
 
 /*
  *  plenty of memory, use large buffers

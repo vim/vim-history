@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0v.  Last change: 2001 Feb 05
+*change.txt*    For Vim version 6.0w.  Last change: 2001 Feb 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -229,17 +229,21 @@ If you prefer "cw" to include the space after a word, use this mapping: >
 r{char}			Replace the character under the cursor with {char}.
 			If {char} is a <CR> or <NL>, a line break replaces the
 			character.  To replace with a real <CR>, use CTRL-V
-			<CR>.  CTRL-V <NL> replaces with a <Nul>.  {Vi: CTRL-V
-			<CR> still replaces with a line break, cannot replace
-			something with a <CR>} If you give a [count], Vim
-			replaces [count] characters with [count] {char}s.
-			When {char} is a <CR> or <NL>, however, Vim inserts
-			only one <CR>: "5r<CR>" replaces five characters with
-			a single line break.  When {char} is a <CR> or <NL>,
-			Vim performs autoindenting.  This works just like
-			deleting the characters that are replaced and then
-			doing "i<CR><Esc>".
+			<CR>.  CTRL-V <NL> replaces with a <Nul>.
+			{Vi: CTRL-V <CR> still replaces with a line break,
+			cannot replace something with a <CR>}
+			If you give a [count], Vim replaces [count] characters
+			with [count] {char}s.  When {char} is a <CR> or <NL>,
+			however, Vim inserts only one <CR>: "5r<CR>" replaces
+			five characters with a single line break.
+			When {char} is a <CR> or <NL>, Vim performs
+			autoindenting.  This works just like deleting the
+			characters that are replaced and then doing
+			"i<CR><Esc>".
 			{char} can be entered as a digraph |digraph-arg|.
+			|:lmap| mappings apply to {char}.  The CTRL-^ command
+			in Insert mode can be used to switch this on/off
+			|i_CTRL-^|.
 
 							*gr*
 gr{char}		Replace the virtual characters under the cursor with
@@ -650,10 +654,12 @@ Examples: >
 Note: In previous versions CTRL-V was handled in a special way.  Since this is
 not Vi compatible, this was removed.  Use a backslash instead.
 
-command		text	result
+command		text	result ~
 :s/aa/a^Ma/	aa	a<line-break>a
 :s/aa/a\^Ma/	aa	a^Ma
 :s/aa/a\\^Ma/	aa	a\<line-break>a
+
+(you need to type CTRL-V <CR> to get a ^M here)
 
 The numbering of "\1", "\2" etc. is done based on which "\(" comes first in
 the pattern (going left to right).  When a parentheses group matches several
@@ -766,10 +772,16 @@ inside of strings can change!  Also see 'softtabstop' option. >
 ["x]p			Put the text [from register x] after the cursor
 			[count] times.  {Vi: no count}
 
-["x]P		    or					*P* *<MiddleMouse>*
-["x]<MiddleMouse>	Put the text [from register x] before the cursor
-			[count] times.  Using the mouse only works when
-			'mouse' contains 'n' or 'a'.  {Vi: no count}
+							*P*
+["x]P		    	Put the text [from register x] before the cursor
+			[count] times.  {Vi: no count}
+
+							*<MiddleMouse>*
+["x]<MiddleMouse>	Put the text from a register before the cursor [count]
+			times.  Uses the "* register, unless another is
+			specified.  Using the mouse only works when 'mouse'
+			contains 'n' or 'a'.
+			{not in Vi}
 
 							*gp*
 ["x]gp			Just like "p", but leave the cursor just after the new
@@ -906,6 +918,8 @@ and ":put" commands and with CTRL-R.  {not in Vi}
 		The command-line is only stored in this register when at least
 		one character of it was typed.  Thus it remains unchanged if
 		the command was completely from a mapping.
+		{not available when compiled without the |+cmdline_hist|
+		feature}
 
 6. Expression register "=				*quote_=* *quote=*
 This is not really a register that stores text, but is a way to use an

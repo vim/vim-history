@@ -5,6 +5,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -1246,7 +1247,7 @@ menu_name_skip(name)
 	}
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
-	    p += mb_ptr2len_check(p) - 1;	/* skip multibyte char */
+	    p += (*mb_ptr2len_check)(p) - 1;	/* skip multibyte char */
 #endif
     }
     if (*p)
@@ -1567,7 +1568,7 @@ gui_create_initial_menus(menu)
 {
     int		idx = 0;
 
-    while (menu)
+    while (menu != NULL)
     {
 	if (menu->children != NULL)
 	{

@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0v.  Last change: 2001 Feb 04
+*syntax.txt*    For Vim version 6.0w.  Last change: 2001 Feb 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1790,10 +1790,10 @@ and may be mixed with patterns.
 Not all commands accept all arguments.  This table shows which arguments
 can not be used for all commands:
 
-		    contains  oneline  fold ~
-:syntax keyword		 -	 -	-
-:syntax match		yes	 -     yes
-:syntax region		yes	yes    yes
+		    contains  oneline	fold  display  extend~
+:syntax keyword		 -	 -	 -	 -	 -
+:syntax match		yes	 -	yes	yes	yes
+:syntax region		yes	yes	yes	yes	yes
 
 These arguments can be used for all three commands:
 	contained
@@ -1802,10 +1802,6 @@ These arguments can be used for all three commands:
 	skipwhite
 	skipnl
 	skipempty
-
-And the argument that can be used for a match and region, but not for a
-keyword:
-	display
 
 
 contained						*:syn-contained*
@@ -2763,8 +2759,8 @@ ModeMsg		'showmode' message (e.g., "-- INSERT --")
 							*hl-MoreMsg*
 MoreMsg		|more-prompt|
 							*hl-NonText*
-NonText		'~' and '@' at the end of the window and characters from
-		'showbreak'
+NonText		'~' and '@' at the end of the window, characters from
+		'showbreak' and the translation of unprintable characters
 							*hl-Question*
 Question	|hit-enter| prompt and yes/no questions
 							*hl-SpecialKey*

@@ -1,8 +1,6 @@
 /* os_mswin.c */
 void mch_init __ARGS((void));
 int mch_input_isatty __ARGS((void));
-void key_hit __ARGS((unsigned ch));
-void sys_key_hit __ARGS((unsigned cch));
 void mch_settitle __ARGS((char_u *title, char_u *icon));
 void mch_restore_title __ARGS((int which));
 int mch_can_restore_title __ARGS((void));

@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -300,7 +301,7 @@ open_line(dir, del_spaces, old_indent)
     if (saved_line == NULL)	    /* out of memory! */
 	return FALSE;
 
-    if (State == VREPLACE)
+    if (State & VREPLACE_FLAG)
     {
 	/*
 	 * With VREPLACE we make a copy of the next line, which we will be
@@ -333,7 +334,7 @@ open_line(dir, del_spaces, old_indent)
 	saved_line[curwin->w_cursor.col] = NUL;
     }
 
-    if (State == INSERT || State == REPLACE)
+    if ((State & INSERT) && !(State & VREPLACE_FLAG))
     {
 	p_extra = saved_line + curwin->w_cursor.col;
 #ifdef FEAT_SMARTINDENT
@@ -891,13 +892,13 @@ open_line(dir, del_spaces, old_indent)
 	 * When in REPLACE mode, put the deleted blanks on the replace stack,
 	 * preceded by a NUL, so they can be put back when a BS is entered.
 	 */
-	if (State == REPLACE)
+	if ((State & REPLACE_FLAG) && !(State & VREPLACE_FLAG))
 	    replace_push(NUL);	    /* end of extra blanks */
 	if (curbuf->b_p_ai || del_spaces)
 	{
 	    while (*p_extra == ' ' || *p_extra == '\t')
 	    {
-		if (State == REPLACE)
+		if ((State & REPLACE_FLAG) && !(State & VREPLACE_FLAG))
 		    replace_push(*p_extra);
 		++p_extra;
 	    }
@@ -924,7 +925,7 @@ open_line(dir, del_spaces, old_indent)
     old_cursor = curwin->w_cursor;
     if (dir == BACKWARD)
 	--curwin->w_cursor.lnum;
-    if (State != VREPLACE || old_cursor.lnum >= orig_line_count)
+    if (!(State & VREPLACE_FLAG) || old_cursor.lnum >= orig_line_count)
     {
 	if (ml_append(curwin->w_cursor.lnum, p_extra, (colnr_t)0, FALSE)
 								      == FAIL)
@@ -972,7 +973,7 @@ open_line(dir, del_spaces, old_indent)
 	 * In REPLACE mode, for each character in the new indent, there must
 	 * be a NUL on the replace stack, for when it is deleted with BS
 	 */
-	if (State == REPLACE)
+	if ((State & REPLACE_FLAG) && !(State & VREPLACE_FLAG))
 	    for (n = 0; n < (int)curwin->w_cursor.col; ++n)
 		replace_push(NUL);
 	newcol += curwin->w_cursor.col;
@@ -987,7 +988,7 @@ open_line(dir, del_spaces, old_indent)
      * In REPLACE mode, for each character in the extra leader, there must be
      * a NUL on the replace stack, for when it is deleted with BS.
      */
-    if (State == REPLACE)
+    if ((State & REPLACE_FLAG) && !(State & VREPLACE_FLAG))
 	while (lead_len-- > 0)
 	    replace_push(NUL);
 #endif
@@ -996,8 +997,7 @@ open_line(dir, del_spaces, old_indent)
 
     if (dir == FORWARD)
     {
-	if (trunc_line || State == INSERT || State == REPLACE
-							 || State == VREPLACE)
+	if (trunc_line || (State & INSERT))
 	{
 	    /* truncate current line at cursor */
 	    saved_line[curwin->w_cursor.col] = NUL;
@@ -1030,13 +1030,13 @@ open_line(dir, del_spaces, old_indent)
      * fixthisline() from doing it (via change_indent()) by telling it we're in
      * normal INSERT mode.
      */
-    if (State == VREPLACE)
+    if (State & VREPLACE_FLAG)
     {
+	vreplace_mode = State;	/* So we know to put things right later */
 	State = INSERT;
-	vreplace_mode = TRUE;	/* So we know to put things right later */
     }
     else
-	vreplace_mode = FALSE;
+	vreplace_mode = 0;
 #endif
 #ifdef FEAT_LISP
     /*
@@ -1077,8 +1077,8 @@ open_line(dir, del_spaces, old_indent)
     }
 #endif
 #if defined(FEAT_LISP) || defined(FEAT_CINDENT)
-    if (vreplace_mode)
-	State = VREPLACE;
+    if (vreplace_mode != 0)
+	State = vreplace_mode;
 #endif
 
     /*
@@ -1086,7 +1086,7 @@ open_line(dir, del_spaces, old_indent)
      * original line, and inserts the new stuff char by char, pushing old stuff
      * onto the replace stack (via ins_char()).
      */
-    if (State == VREPLACE)
+    if (State & VREPLACE_FLAG)
     {
 	/* Put new line in p_extra */
 	p_extra = vim_strsave(ml_get_curline());
@@ -1351,7 +1351,7 @@ plines_win_col(wp, lnum, column)
 	col += win_lbr_chartabsize(wp, s, (colnr_t)col, NULL);
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
-	    s += mb_ptr2len_check(s);
+	    s += (*mb_ptr2len_check)(s);
 	else
 #endif
 	    ++s;
@@ -1462,7 +1462,7 @@ ins_bytes_len(p, len)
 
     for (i = 0; i < len; i += n)
     {
-	n = mb_ptr2len_check(p + i);
+	n = (*mb_ptr2len_check)(p + i);
 	ins_char_bytes(p + i, n);
     }
 #else
@@ -1486,16 +1486,8 @@ ins_char(c)
     char_u	buf[MB_MAXBYTES];
     int		n;
 
-    if (has_mbyte && (n = mb_char2len(c)) > 1)
-    {
-	mb_char2bytes(c, buf);
-	ins_char_bytes(buf, n);
-    }
-    else
-    {
-	buf[0] = c;
-	ins_char_bytes(buf, 1);
-    }
+    n = (*mb_char2bytes)(c, buf);
+    ins_char_bytes(buf, n);
 }
 
     void
@@ -1520,7 +1512,7 @@ ins_char_bytes(buf, newlen)
     int		old_list;
 
 #ifdef FEAT_VIRTUALEDIT
-    if (virtual_active() && curwin->w_coladd)
+    if (virtual_active() && curwin->w_cursor.coladd)
 	coladvance_force(getviscol());
 #endif
 
@@ -1528,34 +1520,32 @@ ins_char_bytes(buf, newlen)
     oldp = ml_get(lnum);
     linelen = STRLEN(oldp) + 1;
 
+    if ((State & REPLACE_FLAG) && !(State & VREPLACE_FLAG) && oldp[col] != NUL)
+    {
 #ifdef FEAT_MBYTE
-    if (has_mbyte)
-    {
-	if (State == REPLACE && oldp[col] != NUL)
-	    oldlen = mb_ptr2len_check(oldp + col);
+	if (has_mbyte)
+	    oldlen = (*mb_ptr2len_check)(oldp + col);
 	else
-	    oldlen = 0;
-    }
-    else
-    {
-	if (State == REPLACE && oldp[col] != NUL)
 	    oldlen = 1;
-	else
-	    oldlen = 0;
-    }
-    extra = newlen - oldlen;	/* extra can be negative! */
 #else
-    if (State != REPLACE || oldp[col] == NUL)
-	extra = 1;			/* inserting or appending */
-    else
 	extra = 0;			/* overwriting */
+#endif
+    }
+    else
+#ifdef FEAT_MBYTE
+	oldlen = 0;
+#else
+	extra = 1;			/* inserting or appending */
+#endif
+#ifdef FEAT_MBYTE
+    extra = newlen - oldlen;	/* extra can be negative! */
 #endif
 
     /*
      * A character has to be put on the replace stack if there is a
      * character that is replaced, so it can be put back when BS is used.
      */
-    if (State == REPLACE)
+    if ((State & REPLACE_FLAG) && !(State & VREPLACE_FLAG))
     {
 	replace_push(NUL);
 	if (oldp[col] != NUL)
@@ -1573,7 +1563,7 @@ ins_char_bytes(buf, newlen)
      * In virtual replace mode each character may replace any number of
      * characters from zero up.  Make sure BS works.
      */
-    if (State == VREPLACE)
+    if (State & VREPLACE_FLAG)
     {
 #ifndef FEAT_MBYTE
 	char_u	buf[2];
@@ -1631,7 +1621,7 @@ ins_char_bytes(buf, newlen)
 
     /* Copy bytes after (and under) the cursor. */
     p = newp + col;
-    if (State == VREPLACE && extra <= 0)
+    if ((State & VREPLACE_FLAG) && extra <= 0)
     {
 	i = col - extra + 1;
 	mch_memmove(p + 1, oldp + i, (size_t)(linelen - i));
@@ -1677,7 +1667,7 @@ ins_char_bytes(buf, newlen)
 	showmatch();
 
 #ifdef FEAT_RIGHTLEFT
-    if (!p_ri || State == REPLACE || State == VREPLACE)
+    if (!p_ri || (State & REPLACE_FLAG))
 #endif
     {
 	/* Normal insert: move cursor right */
@@ -1711,7 +1701,7 @@ ins_str(s)
     linenr_t	lnum = curwin->w_cursor.lnum;
 
 #ifdef FEAT_VIRTUALEDIT
-    if (virtual_active() && curwin->w_coladd)
+    if (virtual_active() && curwin->w_cursor.coladd)
 	coladvance_force(getviscol());
 #endif
 
@@ -1754,7 +1744,7 @@ del_char(fixpos)
 	if (p == NULL || p[0] == NUL)
 	    return FALSE;
 
-	return del_chars((long)mb_ptr2len_check(p), fixpos);
+	return del_chars((long)(*mb_ptr2len_check)(p), fixpos);
     }
 #endif
     return del_chars(1L, fixpos);
@@ -1834,10 +1824,14 @@ del_chars(count, fixpos)
 	if (col > 0 && fixpos)
 	{
 	    --curwin->w_cursor.col;
+#ifdef FEAT_VIRTUALEDIT
+	    if (virtual_active())	/* But keep the cursor where it is. */
+		++curwin->w_cursor.coladd;
+#endif
 #ifdef FEAT_MBYTE
 	    if (has_mbyte)
 		curwin->w_cursor.col -=
-			       mb_head_off(oldp, oldp + curwin->w_cursor.col);
+			    (*mb_head_off)(oldp, oldp + curwin->w_cursor.col);
 #endif
 	}
 	count = oldlen - col;
@@ -1949,7 +1943,7 @@ gchar_pos(pos)
 
 #ifdef FEAT_MBYTE
     if (has_mbyte)
-	return mb_ptr2char(ptr);
+	return (*mb_ptr2char)(ptr);
 #endif
     return (int)*ptr;
 }
@@ -1959,7 +1953,7 @@ gchar_cursor()
 {
 #ifdef FEAT_MBYTE
     if (has_mbyte)
-	return mb_ptr2char(ml_get_cursor());
+	return (*mb_ptr2char)(ml_get_cursor());
 #endif
     return (int)*ml_get_cursor();
 }
@@ -2636,8 +2630,11 @@ msgmore(n)
     void
 beep_flush()
 {
-    flush_buffers(FALSE);
-    vim_beep();
+    if (emsg_silent == 0)
+    {
+	flush_buffers(FALSE);
+	vim_beep();
+    }
 }
 
 /*
@@ -2646,28 +2643,31 @@ beep_flush()
     void
 vim_beep()
 {
-    if (p_vb)
+    if (emsg_silent == 0)
     {
-	out_str(T_VB);
-    }
-    else
-    {
-#ifdef MSDOS
-	/*
-	 * The number of beeps outputted is reduced to avoid having to wait
-	 * for all the beeps to finish. This is only a problem on systems
-	 * where the beeps don't overlap.
-	 */
-	if (beep_count == 0 || beep_count == 10)
+	if (p_vb)
 	{
-	    out_char('\007');
-	    beep_count = 1;
+	    out_str(T_VB);
 	}
 	else
-	    ++beep_count;
+	{
+#ifdef MSDOS
+	    /*
+	     * The number of beeps outputted is reduced to avoid having to wait
+	     * for all the beeps to finish. This is only a problem on systems
+	     * where the beeps don't overlap.
+	     */
+	    if (beep_count == 0 || beep_count == 10)
+	    {
+		out_char('\007');
+		beep_count = 1;
+	    }
+	    else
+		++beep_count;
 #else
-	out_char('\007');
+	    out_char('\007');
 #endif
+	}
     }
 }
 
@@ -2768,7 +2768,11 @@ expand_env(src, dst, dstlen)
     while (*src && dstlen > 0)
     {
 	copy_char = TRUE;
-	if (*src == '$' || (*src == '~' && at_start))
+	if (*src == '$'
+#if defined(MSDOS) || defined(MSWIN) || defined(OS2)
+		|| *src == '%'
+#endif
+		|| (*src == '~' && at_start))
 	{
 	    mustfree = FALSE;
 
@@ -2776,7 +2780,7 @@ expand_env(src, dst, dstlen)
 	     * The variable name is copied into dst temporarily, because it may
 	     * be a string in read-only memory and a NUL needs to be appended.
 	     */
-	    if (*src == '$')				/* environment var */
+	    if (*src != '~')				/* environment var */
 	    {
 		tail = src + 1;
 		var = dst;
@@ -2789,12 +2793,15 @@ expand_env(src, dst, dstlen)
 		    tail++;	/* ignore '{' */
 		    while (c-- > 0 && *tail && *tail != '}')
 			*var++ = *tail++;
-		    tail++;	/* ignore '}' */
 		}
 		else
 #endif
 		{
-		    while (c-- > 0 && *tail && vim_isIDc(*tail))
+		    while (c-- > 0 && *tail != NUL && ((vim_isIDc(*tail))
+#if defined(MSDOS) || defined(MSWIN) || defined(OS2)
+			    || (*src == '%' && *tail != '%')
+#endif
+			    ))
 		    {
 #ifdef OS2		/* env vars only in uppercase */
 			*var++ = TO_UPPER(*tail);
@@ -2805,8 +2812,27 @@ expand_env(src, dst, dstlen)
 		    }
 		}
 
-		*var = NUL;
-		var = vim_getenv(dst, &mustfree);
+#if defined(MSDOS) || defined(MSWIN) || defined(OS2) || defined(UNIX)
+# ifdef UNIX
+		if (src[1] == '{' && *tail != '}')
+# else
+		if (*src == '%' && *tail != '%')
+# endif
+		    var = NULL;
+		else
+		{
+# ifdef UNIX
+		    if (src[1] == '{')
+# else
+		    if (*src == '%')
+#endif
+			++tail;
+#endif
+		    *var = NUL;
+		    var = vim_getenv(dst, &mustfree);
+#if defined(MSDOS) || defined(MSWIN) || defined(OS2) || defined(UNIX)
+		}
+#endif
 	    }
 							/* home directory */
 	    else if (  src[1] == NUL
@@ -2897,8 +2923,8 @@ expand_env(src, dst, dstlen)
 #endif /* UNIX || VMS */
 	    }
 
-	    if (var != NULL && *var != NUL &&
-			  (STRLEN(var) + STRLEN(tail) + 1 < (unsigned)dstlen))
+	    if (var != NULL && *var != NUL
+		    && (STRLEN(var) + STRLEN(tail) + 1 < (unsigned)dstlen))
 	    {
 		STRCPY(dst, var);
 		dstlen -= STRLEN(var);
@@ -3460,7 +3486,7 @@ gettail(fname)
 	    p1 = p2 + 1;
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
-	    p2 += mb_ptr2len_check(p2);
+	    p2 += (*mb_ptr2len_check)(p2);
 	else
 #endif
 	    ++p2;
@@ -5743,6 +5769,43 @@ get_expr_indent()
 #endif /* FEAT_CINDENT */
 
 #ifdef FEAT_LISP
+
+static int lisp_match __ARGS((char_u *p));
+
+    static int
+lisp_match(p)
+    char_u	*p;
+{
+    static char *(tab[]) =
+    {	"defun", "define", "defmacro", "set!", "lambda", "if", "case", "let",
+	"flet", "let*", "letrec", "do", "do*", "define-syntax", "let-syntax",
+	"letrec-syntax",
+	/* the following taken from the indenting rules for cmucl's hemlock */
+	"destructuring-bind", "defpackage", "defparameter", "defstruct",
+	"deftype", "defvar", "do-all-symbols", "do-external-symbols",
+	"do-symbols", "dolist", "dotimes", "ecase", "etypecase", "eval-when",
+	"labels", "macrolet", "multiple-value-bind", "multiple-value-call",
+	"multiple-value-prog1", "multiple-value-setq", "prog1", "progv",
+	"typecase", "unless", "unwind-protect", "when",
+	"with-input-from-string", "with-open-file", "with-open-stream",
+	"with-output-to-string", "with-package-iterator", "define-condition",
+	"handler-bind", "handler-case", "restart-bind", "restart-case",
+	"with-simple-restart", "store-value", "use-value", "muffle-warning",
+	"abort", "continue", "with-slots", "with-slots*", "with-accessors",
+	"with-accessors*", "defclass", "defmethod", "print-unreadable-object"
+    };
+    int		i;
+    int		len;
+
+    for (i = 0; i < sizeof(tab) / sizeof(char *); ++i)
+    {
+	len = STRLEN(tab[i]);
+	if (STRNCMP(tab[i], p, len) == 0 && p[len] == ' ')
+	    return TRUE;
+    }
+    return FALSE;
+}
+
 /*
  * When 'p' is present in 'cpoptions, a Vi compatible method is used.
  * The incompatible newer method is quite a bit better at indenting
@@ -5844,23 +5907,7 @@ get_lisp_indent()
 		 *   (...))           of           (...))
 		 */
 
-		if (!vi_lisp && *that == '('
-			&& (!STRNCMP(that + 1, "defun ", 6)
-			    || !STRNCMP(that + 1, "define ", 7)
-			    || !STRNCMP(that + 1, "defmacro ", 9)
-			    || !STRNCMP(that + 1, "set! ", 5)
-			    || !STRNCMP(that + 1, "lambda ", 7)
-			    || !STRNCMP(that + 1, "if ", 3)
-			    || !STRNCMP(that + 1, "case ", 5)
-			    || !STRNCMP(that + 1, "let ", 4)
-			    || !STRNCMP(that + 1, "flet ", 5)
-			    || !STRNCMP(that + 1, "let* ", 5)
-			    || !STRNCMP(that + 1, "letrec ", 7)
-			    || !STRNCMP(that + 1, "do ", 3)
-			    || !STRNCMP(that + 1, "do* ", 4)
-			    || !STRNCMP(that + 1, "define-syntax ", 14)
-			    || !STRNCMP(that + 1, "let-syntax ", 11)
-			    || !STRNCMP(that + 1, "letrec-syntax ", 14)))
+		if (!vi_lisp && *that == '(' && lisp_match(that + 1))
 		    amount += 2;
 		else
 		{
@@ -6247,7 +6294,7 @@ dos_expandpath(
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
 	{
-	    len = mb_ptr2len_check(path);
+	    len = (*mb_ptr2len_check)(path);
 	    STRNCPY(p, path, len);
 	    p += len;
 	    path += len;

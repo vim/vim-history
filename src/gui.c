@@ -5,6 +5,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 #include "vim.h"
@@ -436,6 +437,11 @@ gui_init()
     /* Set the shell size, adjusted for the screen size.  For GTK this only
      * works after the shell has been opened, thus it is further down. */
     gui_set_shellsize(TRUE);
+#endif
+#ifdef FEAT_GUI_MOTIF
+    /* Need to set the size of the menubar after all the menus have been
+     * created. */
+    gui_mch_compute_menu_height((Widget)0);
 #endif
 
     /*
@@ -1477,10 +1483,10 @@ gui_outstr(s, len)
 	    cells = 0;
 	    for (this_len = 0; this_len < len; )
 	    {
-		cells += mb_ptr2cells(s + this_len);
+		cells += (*mb_ptr2cells)(s + this_len);
 		if (gui.col + cells > Columns)
 		    break;
-		this_len += mb_ptr2len_check(s + this_len);
+		this_len += (*mb_ptr2len_check)(s + this_len);
 	    }
 	}
 	else
@@ -1530,10 +1536,16 @@ gui_screenchar(off, flags, fg, bg, back)
 	gui_outstr_nowrap(buf,
 		utfc_char2bytes(off, buf),
 		flags, fg, bg, 0);
+    else if (enc_dbcs == DBCS_JPNU && ScreenLines[off] == 0x8e)
+    {
+	buf[0] = ScreenLines[off];
+	buf[1] = ScreenLines2[off];
+	gui_outstr_nowrap(buf, 2, flags, fg, bg, 0);
+    }
     else
 	/* Draw non-multi-byte character or DBCS character. */
 	gui_outstr_nowrap(ScreenLines + off,
-		enc_dbcs ? mb_ptr2len_check(ScreenLines + off) : 1,
+		enc_dbcs ? (*mb_ptr2len_check)(ScreenLines + off) : 1,
 		flags, fg, bg, back);
 #else
 	gui_outstr_nowrap(ScreenLines + off,
@@ -1967,9 +1979,9 @@ gui_redraw_block(row1, col1, row2, col2, flags)
 #ifdef FEAT_MBYTE
 	col1 = orig_col1;
 	col2 = orig_col2;
-	if (enc_dbcs)
+	if (enc_dbcs != 0)
 	{
-	    col1 -= mb_head_off(ScreenLines + LineOffset[gui.row],
+	    col1 -= (*mb_head_off)(ScreenLines + LineOffset[gui.row],
 				    ScreenLines + LineOffset[gui.row] + col1);
 	    col2 += mb_tail_off(ScreenLines + LineOffset[gui.row],
 				    ScreenLines + LineOffset[gui.row] + col2);
@@ -2020,12 +2032,30 @@ gui_redraw_block(row1, col1, row2, col2, flags)
 #ifdef FEAT_MBYTE
 		    if (enc_utf8 && ScreenLinesUC[off + idx] != 0)
 			break;
+		    if (enc_dbcs == DBCS_JPNU && ScreenLines[off + idx] == 0x8e)
+			break;
 #endif
 		    --len;
 		}
 		gui_outstr_nowrap(ScreenLines + off, idx, flags,
 					  (guicolor_t)0, (guicolor_t)0, back);
 		off += idx;
+#ifdef FEAT_MBYTE
+		if (enc_dbcs == DBCS_JPNU && ScreenLines[off] == 0x8e)
+		{
+		    char_u buf[2];
+
+		    /* output double-byte, single-width character separately */
+		    buf[0] = ScreenLines[off];
+		    buf[1] = ScreenLines2[off];
+		    if (idx > 0)
+			back = 0;
+		    gui_outstr_nowrap(buf, 2, flags,
+					  (guicolor_t)0, (guicolor_t)0, back);
+		    ++off;
+		    --len;
+		}
+#endif
 	    }
 	    back = 0;
 	}
@@ -2242,18 +2272,22 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
     {
 	case NORMAL_BUSY:
 	case OP_PENDING:
-	case NORMAL:	    checkfor = MOUSE_NORMAL;	break;
-	case VISUAL:	    checkfor = MOUSE_VISUAL;	break;
+	case NORMAL:		checkfor = MOUSE_NORMAL;	break;
+	case VISUAL:		checkfor = MOUSE_VISUAL;	break;
 	case REPLACE:
+	case REPLACE+LANGMAP:
 	case VREPLACE:
-	case INSERT:	    checkfor = MOUSE_INSERT;	break;
-	case HITRETURN:	    checkfor = MOUSE_RETURN;	break;
+	case VREPLACE+LANGMAP:
+	case INSERT:
+	case INSERT+LANGMAP:	checkfor = MOUSE_INSERT;	break;
+	case HITRETURN:		checkfor = MOUSE_RETURN;	break;
 
 	    /*
 	     * On the command line, use the clipboard selection on all lines
 	     * but the command line.  But not when pasting.
 	     */
 	case CMDLINE:
+	case CMDLINE+LANGMAP:
 	    if (Y_2_ROW(y) < cmdline_row && button != MOUSE_MIDDLE)
 		checkfor = MOUSE_NONE;
 	    else
@@ -2270,8 +2304,7 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
      * modes.  Don't do this when dragging the status line, or extending a
      * Visual selection.
      */
-    if ((State == NORMAL || State == NORMAL_BUSY
-		|| State == INSERT || State == REPLACE || State == VREPLACE)
+    if ((State == NORMAL || State == NORMAL_BUSY || (State & INSERT))
 	    && Y_2_ROW(y) >= gui.num_rows - p_ch
 	    && button != MOUSE_DRAG
 # ifdef FEAT_MOUSESHAPE
@@ -2329,7 +2362,7 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
 	{
 	    if (clipboard.state == SELECT_CLEARED)
 	    {
-		if (State == CMDLINE)
+		if (State & CMDLINE)
 		{
 		    col = msg_col;
 		    row = msg_row;
@@ -2474,7 +2507,7 @@ gui_xy2colrow(x, y, colp)
 #ifdef FEAT_MBYTE
     if (ScreenLines != NULL
 	    && col > 0
-	    && ((enc_dbcs && mb_isbyte1(ScreenLines + LineOffset[row], col))
+	    && ((enc_dbcs && dbcs_isbyte1(ScreenLines + LineOffset[row], col))
 		|| (enc_utf8 && ScreenLines[LineOffset[row] + col] == 0)))
 	--col;
 #endif
@@ -3174,9 +3207,14 @@ gui_do_scroll()
     curwin = wp;
     curbuf = wp->w_buffer;
     if (nlines < 0)
-	scrolldown(-nlines, FALSE);
+	scrolldown(-nlines, gui.dragged_wp == NULL);
     else
-	scrollup(nlines, FALSE);
+	scrollup(nlines, gui.dragged_wp == NULL);
+    /* Reset dragged_wp after using it.  "dragged_sb" will have been reset for
+     * the mouse-up event already. */
+    if (gui.dragged_sb == SBAR_NONE)
+	gui.dragged_wp = NULL;
+
     if (old_topline != wp->w_topline)
     {
 	if (p_so != 0)
@@ -3200,7 +3238,7 @@ gui_do_scroll()
      */
     if (old_topline != wp->w_topline)
     {
-	wp->w_redr_type = VALID;
+	redraw_win_later(wp, VALID);
 	updateWindow(wp);   /* update window, status line, and cmdline */
     }
 
@@ -3261,7 +3299,7 @@ gui_update_horiz_scrollbar(force)
 		max += chartabsize(p, (colnr_t)max);
 #ifdef FEAT_MBYTE
 		if (has_mbyte)
-		    p += mb_ptr2len_check(p);
+		    p += (*mb_ptr2len_check)(p);
 		else
 #endif
 		    ++p;
@@ -3391,7 +3429,7 @@ gui_focus_change(in_focus)
     if (apply_autocmds(in_focus ? EVENT_FOCUSGAINED : EVENT_FOCUSLOST,
 						   NULL, NULL, FALSE, curbuf))
     {
-	if (State == CMDLINE)
+	if (State & CMDLINE)
 	    redrawcmdline();
 	else if (State == HITRETURN || State == SETWSIZE || State == ASKMORE
 		|| State == EXTERNCMD || State == CONFIRM || exmode_active)
@@ -3525,10 +3563,11 @@ xy2win(x, y)
 	update_mouseshape(SHAPE_IDX_MORE);
     else if (wp == NULL)
 	update_mouseshape(SHAPE_IDX_CLINE);
-    else if (State != CMDLINE && W_STATUS_HEIGHT(wp) > 0 && row == wp->w_height)
+    else if (!(State & CMDLINE) && W_STATUS_HEIGHT(wp) > 0
+						       && row == wp->w_height)
 	update_mouseshape(SHAPE_IDX_STATUS);
 #  ifdef FEAT_VERTSPLIT
-    else if (State != CMDLINE && W_VSEP_WIDTH(wp) > 0 && col == wp->w_width)
+    else if (!(State & CMDLINE) && W_VSEP_WIDTH(wp) > 0 && col == wp->w_width)
 	update_mouseshape(SHAPE_IDX_VSEP);
 #  endif
     else

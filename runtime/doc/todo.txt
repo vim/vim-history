@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0v.  Last change: 2001 Feb 11
+*todo.txt*      For Vim version 6.0w.  Last change: 2001 Feb 24
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,10 +29,16 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-DJGPP: When moving around the cursor can't be seen.
+Define mch_mkdir for Amiga and a few other systems.
+For Win32 a header file should be included for _mkdir().
+
+Win32 GUI: When editing closed folds, dragging the scrollbar and then clicking
+on a scrollbar arrow causes a jump.
 
 Backtick expansion in expressions and ":let"?  Or use {}, because it's hard to
 see the difference between a backtick and a single quote. (Vince Negri)
+
+The source archive is over the 1.4M floppy limit.  How to avoid this?
 
 
 Main items for 6.0:
@@ -40,7 +46,6 @@ A.  Folding
 	Works.
 B.  UTF-8 support
 	Mostly works.  Many small items still to be fixed.
-	Allow working with UTF-8 while locale is different.
 	Make regexp patterns multi-byte aware.
 C.  Multi-line regexp patterns
 	Works.
@@ -67,29 +72,14 @@ J.  User Friendlier
 
 B. UTF-8 support:
     See ASCII graphics in multibyte.c.
--   ":menutrans" commands are translated as specified with ":scriptencoding"
-    OK.  But how to set the font used for the menus to match 'encoding'?
--   Support ++cc=name for ":w".
--   show other non-printable characters as <xx>.
--   Check mbyte with 'fontset'.
--   When inserting a UTF-8 byte sequence in the input stream, does a K_SPECIAL
-    byte (0x80) get inserted as one byte or as K_SPECIAL - KS_SPECIAL -
-    KE_FILLER?  See cmdline_paste_str().  Check all occurences of
-    stuffcharReadbuff().
--   Use function pointers for some mb_ functions to speed it up?
--   Check callers of get_literal() to handle char > 255 as multi-byte.
--   prep_redo() should handle mbyte (at least for last arg)
--   set_last_insert() should handle mbyte.
 -   Visual-block delete doesn't work properly (Marinichev)
+-   Overstrike mode for the cmdline replaces only first byte of multibyte.
 -   out_char() doesn't handle mbyte, check callers.
 -   cls() should work for UTF-8 chars.  Use class table function from Markus
     Kuhn: ~/info/utf8-classtab or charclass.c from xterm patch.  With
     modification from Markus.
--   Handle mbyte in win_line().  When double-cell char doesn't fit at end of
-    line, move it to next line, fill gap with '>' with HLF_AT attributes.
--   Also support UTF-16 and convert it to UTF-8? (like mined)
--   readfile(): When reading UCS-2 or UCS-4 and the number of bytes returned
-    by read() isn't a multiple of 2 or 4, what to do?
+-   When wrapping words, allow splitting at each multibyte character, not only
+    at a space (with an option). (Nishioka)
 -   Handle mbyte in clip_yank_non_visual_selection().
 -   Check MBYTE code in regexp.c to add UTF-8 support.  Make "/\w" work.
 -   Substitute doesn't work well on multibyte characters:
@@ -97,29 +87,32 @@ B. UTF-8 support:
     Requires regexp code that sees a multibyte character as one char.
 -   Check replace stack for mbyte.
 -   Check if "gR" (virtual replace) works with mbyte.
--   init_chartab(): which UTF-8 characters are file name characters?
--   Info:
-    List of encodings: ftp://ftp.ora.com/pub/examples/nutshell/ujip/doc/cjk.inf
-    and http://czyborra.com/charsets/cjk.html
-    Unicode-HOWTO: ftp://ftp.ilog.fr/pub/Users/haible/utf8/Unicode-HOWTO.html
+    Check "gR" for proper working of backspacing.
 -   Win32: make gui_mch_draw_string() output several chars at a time for
     speed.  Only break at composing characters?
 -   Put MB_DEBUG in feature.h in comments!
--   GTK GUI: Should allow the user to disble XIM input style which don't work
+-   Allow selecting fonts for 'guifontset' with the fontselector somehow.
+-   GTK GUI: Should allow the user to disable XIM input style which don't work
     for him.  (Nam)
-9   Check "gR" for proper working of backspacing.
-9   With Athena and Motif the status line overwrites a bottom scrollbar?
--   When wrapping words, allow splitting at each multibyte character, not only
-    at a space (with an option). (Nishioka)
--   Support "overstrike" characters.  E.g., vowel points for Hebrew. (Aaron)
 -   Check "yudit" for its Unicode handling.  But its keyboard translation
     files are not powerful enough.
--   Add mnemonics from RFC1345 longer than two characters.
-    Support CTRL-K _{mnemonic}_
 -   Use OTP files from Omega. http://www/ens.fr/omega/  (Vidal)
     Or use input software like xkinput.
--   Keyboard conversion from 'termencoding' to 'encoding' with convert_input()
-    for Mac GUI, RiscOS GUI, BeOS GUI, VMS.
+-   ":menutrans" commands are translated as specified with ":scriptencoding"
+    OK.  But how to set the font used for the menus to match 'encoding'?
+    For Motif: See message from Harrison.
+
+Later:
+-   Find some way to automatically select the right GUI font or fontset,
+    depending on the default value of 'encoding'.
+    For Windows, the charset_pairs[] table could be used.  But how do we know
+    if a font exists?
+-   Do keyboard conversion from 'termencoding' to 'encoding' with
+    convert_input() for Mac GUI, RiscOS GUI, BeOS GUI, VMS.
+-   Add mnemonics from RFC1345 longer than two characters.
+    Support CTRL-K _{mnemonic}_
+-   Do we need the reverse of 'keymap', like 'langmap' but with files and
+    multi-byte characters?
 
 
 D. Vertical window split:
@@ -146,7 +139,6 @@ D. Vertical window split:
 
 E. Virtual edit:
 -   Still a lot of work to do.  Test various commands.
--   "x" at the end of a line doesn't work.
 -   Bugs: (Mark Waggoner)
     See patches in ~/Mail/oldmail/waggoner/in.00132.
 
@@ -162,15 +154,13 @@ E. Virtual edit:
 
 -   Leaving Insert mode when 'virtualedit' is "insert" should move the cursor
     to a valid character.
--   In Visual-block mode "x" doesn't delete part of a tab correctly.
-    Deleting a whole tab also doesn't work properly (deletes to much).
--   b_op_start and b_op_end also need coladd.
+-   In Visual-block mode highlighting part of a tab is wrong.
 -   Add more documentation.
 -   Use vpos_t instead of fpos_t for positions that can have a coladd?
 -   coladvance2() can be a bit slow.
 -   Should not insert spaces for yank or filter.
--   trailing blanks can't be deleted.
--   "x" after end of line adds another space
+-   When past the end of a line that ends in a single character "b" skips that
+    word.
 
 
 F. Sun Visual Workshop patch from Gordon Prieur:
@@ -255,6 +245,10 @@ J. User Friendlier
 9   Add buffer-local menu.  Should offer a choice between removing the menu or
     disabling it.  Be careful that tear-offs don't disappear (keep one empty
     item?).
+    Alternative: use BufEnter and BufLeave autocommands.
+9   Buffer-local autocommands?
+	:au BufEnter <current> menu enable ...
+	:au BufLeave <current> menu disable ...
 9   Make Windows install program better:
     - Add an icon on the Desktop, if the user wants this.
     - Add Vim to the Start/Programs menu if the user wants this.
@@ -280,7 +274,12 @@ Messages:
 
 
 Various recent:
-8   gui_w16.c and gui_w32.c have much code in common.  Move this to os_mswin.c
+9   These places need to be fixed for EBCDIC:
+    -   AppendToRedobuffLit().
+    -   stuffescaped().
+    -   set_last_insert()
+8   gui_w16.c and gui_w32.c still have much code in common.  Move this to
+    gui_w48.c.
 9   What happens with :execute "normal a\<Up>\200\<Esc>"?
     How to distinguish a special key from a 0x80 byte?  CSI too.
 9   This pattern in syntax/java.vim causes a recursive call of regmatch():
@@ -294,7 +293,7 @@ Various recent:
 9   Number output of ":function <name>", so that the line of an error message
     can be located?
 8   Motif GUI: Add tooltips, using the gui_beval.c code.
-8   Implement ":tearoff".
+8   Implement ":tearoff" for other systems than Win32 GUI
 8   ":let @" = "val" should not have side effects for other registers (after
     "ayy). (Raul Acevedo)
     ""yy should probably not change the last used register from "ayy.
@@ -348,7 +347,6 @@ Various recent:
 8   Use $install_prefix? (Cabric)
 -   Where 'suffixesadd' is used, also try removing a trailing "." or "," from
     the file name.
--   Add regexp items to match start-of-file and end-of-file.
 -   ":ta", ":tn" and "cn" don't always redraw.  Try ":help '<" and then ":tn".
 8   Test if it possible for a skip pattern to include "\n", so that it can
     skip over newlines for a "oneline" region.
@@ -357,8 +355,6 @@ Various recent:
     Check use of multi-line regexp in syntax highlighting.
 -   When starting GUI with invalid DISPLAY, the hit-enter prompt is always in
     line 2, while the "cannot open display" is somewhere else.
--   Win32 GUI bug: When inserting a /* or removing it (changing the
-    highlighting) a line of the screen is deleted.
 -   Insert completion doesn't show match while searching for others.  Also try
     with "disable cursor" removed.  E.g., when "Back at original". (Gil)
 -   When swap file message sees that date of file is newer as date of swap
@@ -566,6 +562,8 @@ GTK+ GUI known bugs:
 
 Win32 GUI known bugs:
 9   dosinst.c: don't use autoexec.bat for Windows NT, use registry.
+    Check dosinst.c with Vim in "Program Files" (long filename).  Does it use
+    the short filename instead and does the path compare work?
 8   When ativating window with mouse click, don't move cursor to mouse click.
     Catch WM_MOUSEACTIVATE. (Luevelsmeyer)
 9   Clipboard doesn't always work as it should:
@@ -863,6 +861,8 @@ VMS:
 
 "Small" problems:
 8   For a "/*" "**" "*/" comment the end isn't aligned properly.
+    Using "==" the middle isn't aligned as 'comments' indicates.
+	:set comments=sr:/*,mb:**,ex:*/,://
 8   A nested include file should also be found relative to the file that
     includes it.  "lev1/foo.h" includes "lev2/bar.h" which is
     "lev1/lev2/bar.h".  Should pass current file name on from
@@ -915,7 +915,8 @@ VMS:
     (Neil Bird)  Use the "+ register to access the clipboard? (Bird)
     Use "unnamed", "clipboard" and "autoselect" in the 'clipboard' option.
     (Wall)  Also copy text to CUT_BUFFER0, but don't do it too often (can be
-    slow when there is a lot of text).  Or just recommend xcb?
+    slow when there is a lot of text).  Only do it when exiting and still
+    owning the selection?  Or just recommend xcb?
 8   When compiled with "xterm_clipboard", startup can be slower and might get
     error message for invalid $DISPLAY.  Use an option to disable connecting
     to the X server, so that Vim doesn't have to be recompiled for this?
@@ -950,11 +951,6 @@ VMS:
     redrawn.  Should not be necessary.
 7   Using "gqj" near the last line of the window, makes the window scroll up,
     even though this isn't necessary.
--   These mappings don't work with the Win32 versions: (Bradley)
-    nmap ,p {<Right>V}<Left>
-    nmap ,> ,p,>
-    vmap ,> >
-    Looks like the nmap is used instead of the vmap.
 8   Should be able to compile Vim in another directory, with $(srcdir) set to
     where the sources are. Add $(srcdir) in the Makefile in a lot of places.
     (Netherton)
@@ -1018,6 +1014,8 @@ VMS:
     Don't check when compiling, check while matching?
 7   When switching to Daylight Saving Time, Vim complains that a file has been
     changed since last read.  Can we use a function that uses GMT?
+7   When completing an environment variable after a '$', check for file names
+    that contain a '$' after all have been found.
 
 
 I can't reproduce these (if you can, let me know how!):
@@ -1092,10 +1090,6 @@ Problems that will (probably) not be solved:
     libraries, get a patch from Sun.
 -   Solaris 2.6 with GTK and Perl: gvim crashes when started.  Problem with X
     input method called from GDK code.  Without Perl it doesn't crash.
--   "Hebrew-enabled" MS-Windows 98 shows Hebrew words backwards.  This is a
-    MS-Windows problem, it automatically reverses words that Vim already
-    reversed, thus messing up the display.  A workaround is to install Hebrew
-    fonts that are not marked as being Hebrew. (Nadav Har'El)
 -   Win32 GUI: mouse wheel always scrolls rightmost window.  The events arrive
     in Vim as if the rightmost scrollbar was used.
 
@@ -1105,6 +1099,7 @@ Problems that will (probably) not be solved:
 
 Documentation:
 9   Merge in ideas from ~/vim/patches/tutor.txt (Gabriel Zachmann)
+9   Update the overview of options in quickref.txt.
 9   Errors in doc to HTML conversion:
     autocmd.txt "like \| in a |pattern|"
 9   Add 'fold' section to quick reference.
@@ -1161,6 +1156,10 @@ Help:
 Folding:
     (commands still available: zg zG zI zJ zK zp zP zq zQ zV zw zW zy zY;
     secondary: zB zS zT zZ)
+-   When pressing the down arrow of a scrollbar, a closed fold doesn't scroll
+    until after a long time.  How to make scrolling with closed folds
+    smoother?
+-   When a buffer becomes hidden, keep the manual folds for it?
 -   'foldmethod' "textobject": fold on sections and paragraph text objects.
 -   Add 'hidecomment' option: don't display comments in /* */ and after //.
 -   "zu": undo change in manual fold. "zU" redo change in manual fold.  How to
@@ -1315,6 +1314,10 @@ Built-in script language:
 	:catch [error-type]
 	:  [error handling]
 	:endtry
+7   Be able to call a function while passing on a variable number of
+    arguments:
+	:function Foo(abc, ...)
+	:  call Bar(a:abc, ...)    of call Bar(a:abc, a:*)
 8   Have a look at VSEL.  Would it be useful to include? (Bigham)
 8   Add ":fungroup" command, to group function definitions together.  When
     encountered, all functions in the group are removed.  Suggest using an
@@ -2124,7 +2127,6 @@ Visual mode:
 7   CTRL-I and CTRL-O should work in Visual mode, but only jump to marks in the
     current buffer.
 7   CTRL-A and CTRL-X should increase/decrease all numbers in the Visual area.
-7   "g_CTRL-G" should count the number of characters in the Visual area.
 6   "I" should insert the same text in front of each line, before the first
     non-blank, "gI" in column 1.
 6   "A" should append the same text after each line.
@@ -2257,7 +2259,7 @@ Searching:
 -   Add \%h{group-name}; to search for a specific highlight group.
     Add \%s{syntax-group}; to search for a specific syntax group.
 -   Support Perl regexp.  Use PCRE (Perl Compatible RE) package. (Shade)
-    Or translate pattern to a Vim one.
+    Or translate the pattern to a Vim one.
     Don't switch on with an option for typed commands/mappings/functions, it's
     too confusing.  Use "\@@" in the pattern, to avoid incompatibilities.
 7   Add POSIX regexp, like Nvi, with 'extended' option?  It's like very-magic.
@@ -2298,6 +2300,7 @@ Searching:
     ":s/pat/foo/f"??? Then when 'autowrite' and 'hidden' are both not set, ask
     before saving files: "Save modified buffer "/path/file"? (Yes/Hide/No
     Save-all/hide-All/Quit) ".
+-   ":s/pat/foo/3": find 3rd match of "pat", like sed. (Thomas Koehler)
 -   Special characters in patterns:
     Inside []:
     \012  octal character
@@ -2410,6 +2413,7 @@ Viminfo:
     "File.Open Recent" menu.  Default is to remember 10 files or so.
     Also remember which files have been read and written.  How to display
     this?
+7   Also store the ". register (last inserted text).
 7   Make it possible to store buffer names in viminfo file relative to some
     directory, to make them portable over a network. (Aaron)
 6   Store a snapshot of the currently opened windows.  So that when quitting
@@ -2523,8 +2527,8 @@ Marks:
       move some marks if the number of lines decreases.
     - changing text, e.g. when formatting with "gq".
     - inserting/deleting characters in a line.
-5   Include marks for start/end of current word, sentence, paragraph, section.
-    Useful in mappings.
+5   Include marks for start/end of the current word and section.  Useful in
+    mappings.
 
 
 Digraphs:
@@ -2686,7 +2690,7 @@ Various improvements:
     the 2nd previously visited buffer, "3 CTRL-^" to the third, etc.  Or use
     "3 g CTRL-^" for this?
 5   Add an option to set the width of the 'number' column.  Eight positions is
-    often more than needed.
+    often more than needed.  Or adjust the width to the length of the file?
 -   Add code to disable the CAPS key when going from Insert to Normal mode.
 -   Set date/protection/etc. of the patchfile the same as the original file.
 -   Use growarray for termcodes[] in term.c
@@ -2833,6 +2837,7 @@ Various improvements:
     the last TYPED command.
 -   Support URL links for ^X^F in Insert mode, like for "gf".
 -   Add 'wwwpath', used like 'path' for when "gf" used on an URL?
+-   Support %name% expansion for "gf" on Windows.
 -   When finding an URL or file name, and it doesn't exist, try removing a
     trailing '.'.
 -   Add ":path" command modifier.  Should work for every command that takes a
@@ -2877,7 +2882,6 @@ Various improvements:
 -   Screen updating is inefficient with CTRL-F and CTRL-B when there are long
     lines.
 -   Uppercase characters in ex commands can be made lowercase?
--   Add word count to "g CTRL-G".
 8   Add option to show characters in text not as "|A" but as decimal ("^129"),
     hex ("\x81") or octal ("\201") or meta (M-x).  Nvi has the 'octal' option
     to switch from hex to octal.  Vile can show unprintable characters in hex

@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 /*
  * move.c: Functions for moving the cursor and scrolling text.
@@ -375,7 +376,7 @@ update_curswant()
 	validate_virtcol();
 	curwin->w_curswant = curwin->w_virtcol
 #ifdef FEAT_VIRTUALEDIT
-	    + curwin->w_coladd
+	    + curwin->w_cursor.coladd
 #endif
 	    ;
 	curwin->w_set_curswant = FALSE;
@@ -395,14 +396,11 @@ check_cursor_moved(wp)
 				     |VALID_CHEIGHT|VALID_CROW|VALID_TOPLINE);
 	wp->w_valid_cursor = wp->w_cursor;
 	wp->w_valid_leftcol = wp->w_leftcol;
-#ifdef FEAT_VIRTUALEDIT
-	wp->w_valid_coladd = wp->w_coladd;
-#endif
     }
     else if (wp->w_cursor.col != wp->w_valid_cursor.col
 	     || wp->w_leftcol != wp->w_valid_leftcol
 #ifdef FEAT_VIRTUALEDIT
-	     || wp->w_coladd != wp->w_valid_coladd
+	     || wp->w_cursor.coladd != wp->w_valid_cursor.coladd
 #endif
 	     )
     {
@@ -410,7 +408,7 @@ check_cursor_moved(wp)
 	wp->w_valid_cursor.col = wp->w_cursor.col;
 	wp->w_valid_leftcol = wp->w_leftcol;
 #ifdef FEAT_VIRTUALEDIT
-	wp->w_valid_coladd = wp->w_coladd;
+	wp->w_valid_cursor.coladd = wp->w_cursor.coladd;
 #endif
     }
 }
@@ -445,8 +443,8 @@ set_topline(wp, lnum)
     /* Approximate the value of w_botline */
     wp->w_botline += lnum - wp->w_topline;
     wp->w_topline = lnum;
-    wp->w_valid &= ~(VALID_WROW|VALID_CROW|VALID_BOTLINE);
-    /* Don't set VALID_TOPLINE here! */
+    wp->w_valid &= ~(VALID_WROW|VALID_CROW|VALID_BOTLINE|VALID_TOPLINE);
+    /* Don't set VALID_TOPLINE here, 'scrolloff' needs to be checked. */
     redraw_later(VALID);
 }
 
@@ -700,7 +698,10 @@ curs_rows(wp, do_botline)
     check_cursor_moved(wp);
     if (!(wp->w_valid & VALID_CHEIGHT))
     {
-	if (all_invalid || (i < wp->w_lines_valid && !wp->w_lines[i].wl_valid))
+	if (all_invalid
+		|| (i < wp->w_lines_valid
+		    && (!wp->w_lines[i].wl_valid
+			|| wp->w_lines[i].wl_lnum != wp->w_cursor.lnum)))
 	{
 	    wp->w_cline_height = plines_win(wp, wp->w_cursor.lnum, TRUE);
 #ifdef FEAT_FOLDING
@@ -787,7 +788,7 @@ validate_cursor_col()
     {
 	col = curwin->w_virtcol
 #ifdef FEAT_VIRTUALEDIT
-	    + curwin->w_coladd
+	    + curwin->w_cursor.coladd
 #endif
 	    ;
 	off = curwin_col_off();
@@ -818,7 +819,7 @@ win_col_off(wp)
 {
     return ((wp->w_p_nu ? 8 : 0)
 #ifdef FEAT_CMDWIN
-	    + (cmdwin_type == 0 && wp == curwin ? 0 : 1)
+	    + (cmdwin_type == 0 || wp != curwin ? 0 : 1)
 #endif
 #ifdef FEAT_FOLDING
 	    + wp->w_p_fdc
@@ -902,7 +903,7 @@ curs_columns(scroll)
     extra = curwin_col_off();
     curwin->w_wcol = curwin->w_virtcol + extra
 #ifdef FEAT_VIRTUALEDIT
-	+ curwin->w_coladd
+	+ curwin->w_cursor.coladd
 #endif
 	;
     endcol += extra;
@@ -1033,7 +1034,7 @@ curs_columns(scroll)
 	extra = 0;
 	if (curwin->w_skipcol + p_so * width > curwin->w_virtcol
 #ifdef FEAT_VIRTUALEDIT
-							    + curwin->w_coladd
+							    + curwin->w_cursor.coladd
 #endif
 		)
 	    extra = 1;
@@ -1052,7 +1053,7 @@ curs_columns(scroll)
 	    /* not enough room for 'scrolloff', put cursor in the middle */
 	    n = (curwin->w_virtcol
 #ifdef FEAT_VIRTUALEDIT
-		    + curwin->w_coladd
+		    + curwin->w_cursor.coladd
 #endif
 				     ) / width;
 	    if (n > curwin->w_height / 2)
@@ -1066,7 +1067,7 @@ curs_columns(scroll)
 	    /* less then 'scrolloff' lines above, decrease skipcol */
 	    extra = (curwin->w_skipcol + p_so * width - curwin->w_virtcol
 #ifdef FEAT_VIRTUALEDIT
-							    + curwin->w_coladd
+							    + curwin->w_cursor.coladd
 #endif
 				     + width - 1) / width;
 	    if (extra > 0)
@@ -1167,7 +1168,7 @@ scrolldown(line_count, byfold)
 	validate_cheight();
 	wrow += curwin->w_cline_height - 1 - (curwin->w_virtcol
 #ifdef FEAT_VIRTUALEDIT
-							    + curwin->w_coladd
+							    + curwin->w_cursor.coladd
 #endif
 							  ) / W_WIDTH(curwin);
     }
@@ -1287,7 +1288,7 @@ scrolldown_clamp()
 	validate_virtcol();
 	end_row += curwin->w_cline_height - 1 - (curwin->w_virtcol
 #ifdef FEAT_VIRTUALEDIT
-							    + curwin->w_coladd
+							    + curwin->w_cursor.coladd
 #endif
 							  ) / W_WIDTH(curwin);
     }
@@ -1328,7 +1329,7 @@ scrollup_clamp()
 	validate_virtcol();
 	start_row -= (curwin->w_virtcol
 #ifdef FEAT_VIRTUALEDIT
-			+ curwin->w_coladd
+			+ curwin->w_cursor.coladd
 #endif
 			) / W_WIDTH(curwin);
     }
@@ -2083,7 +2084,20 @@ halfpage(flag, Prenum)
 	 */
 	if (n > 0)
 	{
-	    curwin->w_cursor.lnum += n;
+#ifdef FEAT_FOLDING
+	    if (hasAnyFolding(curwin))
+	    {
+		while (--n >= 0
+			&& curwin->w_cursor.lnum < curbuf->b_ml.ml_line_count)
+		{
+		    (void)hasFolding(curwin->w_cursor.lnum, NULL,
+						      &curwin->w_cursor.lnum);
+		    ++curwin->w_cursor.lnum;
+		}
+	    }
+	    else
+#endif
+		curwin->w_cursor.lnum += n;
 	    check_cursor_lnum();
 	}
 #else
@@ -2131,16 +2145,28 @@ halfpage(flag, Prenum)
 	 */
 	if (n > 0)
 	{
-	    if (curwin->w_cursor.lnum > (linenr_t)n)
-		curwin->w_cursor.lnum -= n;
-	    else
+	    if (curwin->w_cursor.lnum <= (linenr_t)n)
 		curwin->w_cursor.lnum = 1;
+	    else
+#ifdef FEAT_FOLDING
+	    if (hasAnyFolding(curwin))
+	    {
+		while (--n >= 0 && curwin->w_cursor.lnum > 1)
+		{
+		    --curwin->w_cursor.lnum;
+		    (void)hasFolding(curwin->w_cursor.lnum,
+						&curwin->w_cursor.lnum, NULL);
+		}
+	    }
+	    else
+#endif
+		curwin->w_cursor.lnum -= n;
 	}
 #else
 	/* try to put the cursor in the same screen line */
 	scrolled += n;	    /* move cursor when topline is 1 */
-	while (curwin->w_cursor.lnum > curwin->w_topline &&
-		 (scrolled > 0 || curwin->w_cursor.lnum >= curwin->w_botline))
+	while (curwin->w_cursor.lnum > curwin->w_topline
+	      && (scrolled > 0 || curwin->w_cursor.lnum >= curwin->w_botline))
 	{
 	    scrolled -= plines(curwin->w_cursor.lnum - 1);
 	    if (scrolled < 0 && curwin->w_cursor.lnum < curwin->w_botline)

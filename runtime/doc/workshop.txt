@@ -1,10 +1,10 @@
-*workshop.txt*  For Vim version 6.0v.  Last change: 2000 Aug 31
+*workshop.txt*  For Vim version 6.0w.  Last change: 2001 Feb 13
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
 
 
-Sun Visual WorkShop Features				*workshop-support*
+Sun Visual WorkShop Features			*workshop* *workshop-support*
 
 1. Introduction						|workshop-intro|
 2. Commands						|workshop-commands|

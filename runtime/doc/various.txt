@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0v.  Last change: 2001 Feb 11
+*various.txt*   For Vim version 6.0w.  Last change: 2001 Feb 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -208,6 +208,7 @@ N  *+byte_offset*	support for 'o' flag in 'statusline' option, "go"
 			and ":goto" commands.
 N  *+cindent*		|'cindent'|, C indenting
 N  *+cmdline_compl*	command line completion |cmdline-completion|
+N  *+cmdline_hist*	command line history |cmdline-history|
 N  *+cmdline_info*	|'showcmd'| and |'ruler'|
 N  *+comments*		|'comments'| support
 N  *+cryptv*		encryption support |encryption|
@@ -235,6 +236,7 @@ N  *+gettext*		message translations |multi-lang|
 m  *+hangul_input*	Hangul input support |hangul|
    *+iconv*		Compiled with the |iconv()| function
 N  *+insert_expand*	|insert_expand| Insert mode completion
+B  *+keymap*		|'keymap'|
 B  *+langmap*		|'langmap'|
 N  *+libcall*		|libcall()|
 N  *+linebreak*		|'linebreak'|, |'breakat'| and |'showbreak'|
@@ -326,8 +328,8 @@ N  *+X11*		Unix only: can restore window title |X11|
 :sil[ent][!] {command}	Execute {command} silently.  Normal messages will not
 			be given.
 			When [!] is added, error messages will also be
-			skipped, and commands will not be aborted when an
-			error is detected.  |v:errmsg| is still set.
+			skipped, and commands and mappings will not be aborted
+			when an error is detected.  |v:errmsg| is still set.
 			Redirection, started with |:redir|, will continue as
 			usual.  This will allow redirecting the output of a
 			command without seeing it on the screen.  Example: >

@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read a list of people who contributed.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 #include "vim.h"
@@ -168,6 +169,7 @@ do_window(nchar, Prenum)
 		stuffReadbuff((char_u *)":close\n");
 		break;
 
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 /* close preview window */
     case Ctrl_Z:
     case 'z':
@@ -177,6 +179,18 @@ do_window(nchar, Prenum)
 #endif
 		stuffReadbuff((char_u *)":pclose\n");
 		break;
+
+/* cursor to preview window */
+    case 'P':
+		for (wp = firstwin; wp != NULL; wp = wp->w_next)
+		    if (wp->w_p_pvw)
+			break;
+		if (wp == NULL)
+		    beep_flush();
+		else
+		    win_goto(wp);
+		break;
+#endif
 
 /* close all but current window */
     case Ctrl_O:
@@ -650,7 +664,10 @@ win_split(size, flags)
 	 * or preview window.  Take them from a window above or below
 	 * instead, if possible. */
 	if (bt_quickfix(oldwin->w_buffer) || oldwin->w_p_pvw)
+	{
 	    win_setheight_win(oldwin->w_height + new_size, oldwin);
+	    oldwin_height += new_size;
+	}
 #endif
     }
 
@@ -881,12 +898,10 @@ win_split(size, flags)
     /*
      * Both windows need redrawing
      */
-    wp->w_redr_type = NOT_VALID;
+    redraw_win_later(wp, NOT_VALID);
     wp->w_redr_status = TRUE;
-    wp->w_lines_valid = 0;
-    oldwin->w_redr_type = NOT_VALID;
+    redraw_win_later(oldwin, NOT_VALID);
     oldwin->w_redr_status = TRUE;
-    oldwin->w_lines_valid = 0;
 
     if (need_status)
     {
@@ -931,8 +946,6 @@ win_split(size, flags)
     else
 #endif
 	p_wh = i;
-
-    redraw_later(NOT_VALID);
 
     return OK;
 }
@@ -2245,11 +2258,12 @@ close_others(message, forceit)
 win_init(wp)
     win_t	*wp;
 {
-    wp->w_redr_type = NOT_VALID;
+    redraw_win_later(wp, NOT_VALID);
+    wp->w_lines_valid = 0;
     wp->w_cursor.lnum = 1;
     wp->w_curswant = wp->w_cursor.col = 0;
 #ifdef FEAT_VIRTUALEDIT
-    wp->w_coladd = 0;
+    wp->w_cursor.coladd = 0;
 #endif
     wp->w_pcmark.lnum = 1;	/* pcmark not cleared but set to line 1 */
     wp->w_pcmark.col = 0;
@@ -2542,7 +2556,7 @@ win_enter_ext(wp, undo_sync, curwin_invalid)
     check_cursor();
 #ifdef FEAT_VIRTUALEDIT
     if (!virtual_active())
-	curwin->w_coladd = 0;
+	curwin->w_cursor.coladd = 0;
 #endif
     changed_line_abv_curs();	/* assume cursor position needs updating */
 
@@ -2994,7 +3008,7 @@ frame_comp_pos(topfrp, row, col)
 #ifdef FEAT_VERTSPLIT
 	    wp->w_wincol = *col;
 #endif
-	    wp->w_redr_type = NOT_VALID;
+	    redraw_win_later(wp, NOT_VALID);
 	    wp->w_redr_status = TRUE;
 	}
 	*row += wp->w_height + wp->w_status_height;
@@ -3154,7 +3168,8 @@ frame_setheight(curfrp, height)
 							   frp = frp->fr_next)
 	    {
 #ifdef FEAT_QUICKFIX
-		if (frp->fr_win != NULL
+		if (frp != curfrp
+			&& frp->fr_win != NULL
 			&& (frp->fr_win->w_p_pvw
 			    || bt_quickfix(frp->fr_win->w_buffer)))
 		    room_reserved += frp->fr_height;
@@ -3742,7 +3757,7 @@ win_new_height(wp, height)
     wp->w_prev_fraction_row = wp->w_wrow;
 
     win_comp_scroll(wp);
-    wp->w_redr_type = NOT_VALID;
+    redraw_win_later(wp, NOT_VALID);
 #ifdef FEAT_WINDOWS
     wp->w_redr_status = TRUE;
 #endif
@@ -3767,7 +3782,7 @@ win_new_width(wp, width)
 	update_topline();
 	curs_columns(TRUE);	/* validate w_wrow */
     }
-    wp->w_redr_type = NOT_VALID;
+    redraw_win_later(wp, NOT_VALID);
     wp->w_redr_status = TRUE;
 }
 #endif
@@ -4014,7 +4029,7 @@ file_name_in_line(line, col, options, count)
 			 || ((options & FNAME_HYP) && path_is_url(ptr + len)))
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
-	    len += mb_ptr2len_check(ptr + len);
+	    len += (*mb_ptr2len_check)(ptr + len);
 	else
 #endif
 	    ++len;

@@ -30,27 +30,28 @@
 # undef RANGE			/* SASC on Amiga defines it */
 #endif
 
-#define RANGE	   0x01		/* allow a linespecs */
-#define BANG	   0x02		/* allow a ! after the command name */
-#define EXTRA	   0x04		/* allow extra args after command name */
-#define XFILE	   0x08		/* expand wildcards in extra part */
-#define NOSPC	   0x10		/* no spaces allowed in the extra part */
-#define	DFLALL	   0x20		/* default file range is 1,$ */
-#define WHOLEFOLD  0x40		/* extend range to include whole fold also
+#define RANGE		0x001	/* allow a linespecs */
+#define BANG		0x002	/* allow a ! after the command name */
+#define EXTRA		0x004	/* allow extra args after command name */
+#define XFILE		0x008	/* expand wildcards in extra part */
+#define NOSPC		0x010	/* no spaces allowed in the extra part */
+#define	DFLALL		0x020	/* default file range is 1,$ */
+#define WHOLEFOLD	0x040	/* extend range to include whole fold also
 				   when less than two numbers given */
-#define NEEDARG	   0x80		/* argument required */
-#define TRLBAR	  0x100		/* check for trailing vertical bar */
-#define REGSTR	  0x200		/* allow "x for register designation */
-#define COUNT	  0x400		/* allow count in argument, after command */
-#define NOTRLCOM  0x800		/* no trailing comment allowed */
-#define ZEROR	 0x1000		/* zero line number allowed */
-#define USECTRLV 0x2000		/* do not remove CTRL-V from argument */
-#define NOTADR	 0x4000		/* number before command is not an address */
-#define EDITCMD	 0x8000		/* allow "+command" argument */
-#define BUFNAME 0x10000L	/* accepts buffer name */
-#define ARGOPT	0x20000L	/* allow "++opt=val" argument */
-#define SBOXOK	0x40000L	/* allowed in the sandbox */
-#define CMDWIN	0x80000L	/* allowed in cmdline window */
+#define NEEDARG		0x080	/* argument required */
+#define TRLBAR		0x100	/* check for trailing vertical bar */
+#define REGSTR		0x200	/* allow "x for register designation */
+#define COUNT		0x400	/* allow count in argument, after command */
+#define NOTRLCOM	0x800	/* no trailing comment allowed */
+#define ZEROR	       0x1000	/* zero line number allowed */
+#define USECTRLV       0x2000	/* do not remove CTRL-V from argument */
+#define NOTADR	       0x4000	/* number before command is not an address */
+#define EDITCMD	       0x8000	/* allow "+command" argument */
+#define BUFNAME	      0x10000L	/* accepts buffer name */
+#define BUFUNL	      0x20000L	/* accepts unlisted buffer too */
+#define ARGOPT	      0x40000L	/* allow "++opt=val" argument */
+#define SBOXOK	      0x80000L	/* allowed in the sandbox */
+#define CMDWIN	     0x100000L	/* allowed in cmdline window */
 #define FILES	(XFILE | EXTRA)	/* multiple extra files allowed */
 #define WORD1	(EXTRA | NOSPC)	/* one extra word allowed */
 #define FILE1	(FILES | NOSPC)	/* 1 file allowed, defaults to current file */
@@ -127,7 +128,7 @@ EX(CMD_augroup,		"augroup",	ex_autocmd,
 EX(CMD_aunmenu,		"aunmenu",	ex_menu,
 			EXTRA|TRLBAR|NOTRLCOM|USECTRLV|CMDWIN),
 EX(CMD_buffer,		"buffer",	ex_buffer,
-			BANG|RANGE|NOTADR|BUFNAME|COUNT|EXTRA|TRLBAR),
+			BANG|RANGE|NOTADR|BUFNAME|BUFUNL|COUNT|EXTRA|TRLBAR),
 EX(CMD_bNext,		"bNext",	ex_bprevious,
 			BANG|RANGE|NOTADR|COUNT|TRLBAR),
 EX(CMD_ball,		"ball",		do_buffer_all,
@@ -169,7 +170,7 @@ EX(CMD_bufdo,		"bufdo",	ex_listdo,
 EX(CMD_bunload,		"bunload",	ex_bunload,
 			BANG|RANGE|NOTADR|BUFNAME|COUNT|EXTRA|TRLBAR),
 EX(CMD_bwipeout,	"bwipeout",	ex_bunload,
-			BANG|RANGE|NOTADR|BUFNAME|COUNT|EXTRA|TRLBAR),
+			BANG|RANGE|NOTADR|BUFNAME|BUFUNL|COUNT|EXTRA|TRLBAR),
 EX(CMD_change,		"change",	ex_change,
 			BANG|WHOLEFOLD|RANGE|COUNT|TRLBAR|CMDWIN),
 EX(CMD_cNext,		"cNext",	ex_cnext,
@@ -410,6 +411,16 @@ EX(CMD_left,		"left",		ex_align,
 			TRLBAR|RANGE|WHOLEFOLD|EXTRA|CMDWIN),
 EX(CMD_let,		"let",		ex_let,
 			EXTRA|NOTRLCOM|SBOXOK|CMDWIN),
+EX(CMD_lmap,		"lmap",		ex_map,
+			EXTRA|TRLBAR|NOTRLCOM|USECTRLV|CMDWIN),
+EX(CMD_lmapclear,	"lmapclear",	ex_mapclear,
+			EXTRA|TRLBAR|CMDWIN),
+EX(CMD_lnoremap,	"lnoremap",	ex_map,
+			EXTRA|TRLBAR|NOTRLCOM|USECTRLV|CMDWIN),
+EX(CMD_loadkeymap,	"loadkeymap",	ex_loadkeymap,
+			0),
+EX(CMD_lunmap,		"lunmap",	ex_unmap,
+			EXTRA|TRLBAR|NOTRLCOM|USECTRLV|CMDWIN),
 EX(CMD_ls,		"ls",		buflist_list,
 			BANG|TRLBAR|CMDWIN),
 EX(CMD_loadview,	"loadview",	ex_loadview,
@@ -589,7 +600,7 @@ EX(CMD_sargument,	"sargument",	ex_argument,
 EX(CMD_sall,		"sall",		ex_all,
 			RANGE|NOTADR|COUNT|TRLBAR),
 EX(CMD_sbuffer,		"sbuffer",	ex_buffer,
-			BANG|RANGE|NOTADR|BUFNAME|COUNT|EXTRA|TRLBAR),
+			BANG|RANGE|NOTADR|BUFNAME|BUFUNL|COUNT|EXTRA|TRLBAR),
 EX(CMD_sbNext,		"sbNext",	ex_bprevious,
 			RANGE|NOTADR|COUNT|TRLBAR),
 EX(CMD_sball,		"sball",	do_buffer_all,

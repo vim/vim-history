@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -215,9 +216,14 @@ ui_suspend()
     void
 suspend_shell()
 {
-    MSG_PUTS(_("new shell started\n"));
-    (void)mch_call_shell(NULL, SHELL_COOKED);
-    need_check_timestamps = TRUE;
+    if (*p_sh == NUL)
+	EMSG(_(e_shellempty));
+    else
+    {
+	MSG_PUTS(_("new shell started\n"));
+	(void)mch_call_shell(NULL, SHELL_COOKED);
+	need_check_timestamps = TRUE;
+    }
 }
 #endif
 
@@ -307,7 +313,7 @@ ui_breakcheck()
  * Note: there are some more functions in ops.c that handle selection stuff.
  */
 
-#ifdef FEAT_CLIPBOARD
+#if defined(FEAT_CLIPBOARD) || defined(PROTO)
 
 #define char_class(c)	(c <= ' ' ? ' ' : vim_iswordc(c))
 
@@ -356,7 +362,7 @@ clip_update_selection()
 	    end = curwin->w_cursor;
 #ifdef FEAT_MBYTE
 	    if (has_mbyte)
-		end.col += mb_ptr2len_check(ml_get_cursor()) - 1;
+		end.col += (*mb_ptr2len_check)(ml_get_cursor()) - 1;
 #endif
 	}
 	else
@@ -1564,7 +1570,7 @@ clip_x11_request_selection_cb(w, success, selection, type, value, length,
     }
     else if (*type == clipboard.xa_compound_text || (
 #ifdef FEAT_MBYTE
-		enc_dbcs &&
+		enc_dbcs != 0 &&
 #endif
 		*type == clipboard.xa_text))
     {
@@ -1762,7 +1768,7 @@ clip_x11_own_selection(myShell)
 {
     if (XtOwnSelection(myShell, XA_PRIMARY, CurrentTime,
 	    clip_x11_convert_selection_cb, clip_x11_lose_ownership_cb,
-	    NULL) == False)
+							       NULL) == False)
 	return FAIL;
     return OK;
 }
@@ -2177,10 +2183,10 @@ mouse_comp_pos(rowp, colp, lnump)
 	    while (row > 0)
 	    {
 		--row;
+		(void)hasFolding(lnum, NULL, &lnum);
 		++lnum;
 		if (lnum > curbuf->b_ml.ml_line_count)
 		    break;
-		(void)hasFolding(lnum, NULL, &lnum);
 	    }
 	}
 	else
@@ -2299,7 +2305,7 @@ get_fpos_of_mouse(mpos)
 	count += win_lbr_chartabsize(wp, ptr, count, NULL);
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
-	    ptr += mb_ptr2len_check(ptr);
+	    ptr += (*mb_ptr2len_check)(ptr);
 	else
 #endif
 	    ++ptr;

@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.0v.  Last change: 2000 Dec 12
+*motion.txt*    For Vim version 6.0w.  Last change: 2001 Feb 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -216,23 +216,26 @@ g$ or g<End>		When lines wrap ('wrap' on): To the last character of
 f{char}			To [count]'th occurrence of {char} to the right.  The
 			cursor is placed on {char} (inclusive).
 			{char} can be entered as a digraph |digraph-arg|.
+			|:lmap| mappings apply to {char}.  The CTRL-^ command
+			in Insert mode can be used to switch this on/off
+			|i_CTRL-^|.
 
 							*F*
 F{char}			To the [count]'th occurrence of {char} to the left.
 			The cursor is placed on {char} (inclusive).
-			{char} can be entered as a digraph |digraph-arg|.
+			{char} can be entered like with the |f| command.
 
 							*t*
 t{char}			Till before [count]'th occurrence of {char} to the
 			right.  The cursor is placed on the character left of
 			{char} (inclusive).
-			{char} can be entered as a digraph |digraph-arg|.
+			{char} can be entered like with the |f| command.
 
 							*T*
 T{char}			Till after [count]'th occurrence of {char} to the
 			left.  The cursor is placed on the character right of
 			{char} (inclusive).
-			{char} can be entered as a digraph |digraph-arg|.
+			{char} can be entered like with the |f| command.
 
 							*;*
 ;			Repeat latest f, t, F or T [count] times.

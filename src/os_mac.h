@@ -177,11 +177,11 @@ struct stat
 #endif /* FEAT_VIMINFO */
 
 #ifndef DFLT_BDIR
-# define DFLT_BDIR	".,c:\\tmp,c:\\temp"	/* default for 'backupdir' */
+# define DFLT_BDIR	"."	/* default for 'backupdir' */
 #endif
 
 #ifndef DFLT_DIR
-# define DFLT_DIR	".,c:\\tmp,c:\\temp"	/* default for 'directory' */
+# define DFLT_DIR	"."	/* default for 'directory' */
 #endif
 
 #ifndef DFLT_VDIR

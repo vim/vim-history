@@ -15,3 +15,8 @@ gvimext.dll:    gvimext.obj	\
 
 gvimext.res: gvimext.rc
     $(rc) $(rcflags) $(rcvars)  gvimext.rc
+
+clean:
+    - if exist gvimext.dll del gvimext.dll
+    - if exist gvimext.obj del gvimext.obj
+    - if exist gvimext.res del gvimext.res

@@ -1,6 +1,7 @@
 /* misc2.c */
 int virtual_active __ARGS((void));
 int getviscol __ARGS((void));
+int getviscol2 __ARGS((colnr_t col, colnr_t coladd));
 int coladvance_force __ARGS((colnr_t wcol));
 int coladvance __ARGS((colnr_t wcol));
 int inc_cursor __ARGS((void));

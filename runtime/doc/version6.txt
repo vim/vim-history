@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0v.  Last change: 2001 Feb 11
+*version6.txt*  For Vim version 6.0w.  Last change: 2001 Feb 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -82,7 +82,7 @@ substitute command				*substitute-CR*
 
 The substitute string has been made Vi compatible.  Previously a CTRL-V had a
 special meaning and could be used to prevent a <CR> to insert a line break.
-This made it impossible to insert a CTRL-V at the end of a line.  Now a
+This made it impossible to insert a CTRL-V before a line break.  Now a
 backslash is used to prevent a <CR> to cause a line break.  Since the number
 of backslashes is halved, it is still possible to insert a line break at the
 end of the line.  This now works just like Vi, but it's not compatible with
@@ -261,8 +261,8 @@ A buffer for a directory is no longer added to the Buffers menu.
 Renamed <Return> to <Enter>, since that's what it's called on most keyboards.
 Thus it's now the hit-enter prompt instead of the hit-return prompt.
 
-The help items for syntax files are now tagged with "-syntax" instead of
-".vim", because the indent and filetype plugins use "-indent" and "-plugin".
+When setting 'syntax' to a name for which there is no syntax file, the syntax
+highlighting is cleared.  Previously the existing highlighting was kept.
 
 The default for the 'viminfo' option is now '50,"50,h when 'compatible' isn't
 set.  Most people will want to use it, including beginners, but it required
@@ -276,9 +276,6 @@ The patterns in 'errorformat' would sometimes ignore case (MS-Windows) and
 sometimes not (Unix).  Now case is always ignored.  Add "\C" to the pattern to
 match case.
 
-When setting 'syntax' to a name for which there is no syntax file, the syntax
-highlighting is cleared.  Previously the existing highlighting was kept.
-
 The 16 bit MS-DOS version is now compiled without the +listcmds feature
 (buffer list manipulation commands).  They are not often needed and this
 executable needs to be smaller.
@@ -290,6 +287,8 @@ going to the directory where the session file is located.
 A session deleted all buffers, deleting all marks.  Now keep the buffer list,
 it shouldn't hurt for some existing buffers to remain present.
 When the argument list is empty ":argdel *" caused an error message.
+
+No longer put the search pattern from a tag jump in the history.
 
 ==============================================================================
 NEW FEATURES
@@ -435,8 +434,8 @@ used, but only 16 bit characters are displayed.  Up to two combining
 characters are supported, they overprint the preceding character.
 Double-width characters are also supported.  See |UTF-8|.
 
-UCS-2 and UCS-4 encodings are supported too, they are converted to UTF-8
-internally.  There is also support for editing Unicode files in a Latin1
+UCS-2, UCS-4 and UTF-16 encodings are supported too, they are converted to
+UTF-8 internally.  There is also support for editing Unicode files in a Latin1
 environment.  Other encodings are converted with iconv() or an external
 converter specified with 'charconvert'.
 
@@ -470,12 +469,32 @@ Many new items for Multi-byte support:
 - Added ":scriptencoding" command: convert lines in a sourced script to
   'encoding'.  Useful for menu files.
 - Made "\<" and "\>" in regexp work for UTF-8. (Muraoka Taro)
+- Support double-byte single-width characters for euc-jp: Characters starting
+  with 0x8E.  Added ScreenLines2[] to store the second byte.
 
 Allow defining digraphs for multi-byte characters.
 Added RFC1345 digraphs for Unicode.
 Most Normal mode commands that accept a character argument, like "r", "t" and
 "f" now accept a digraph.  The 'D' flag in 'cpoptions' disables this to remain
 Vi compatible.
+
+Added Language mapping and 'keymap' to be able to type multi-byte characters:
+- Added the ":lmap" command and friends: Define mappings that are used when
+  typing characters in the language of the text.  Also for "r", "t", etc.  In
+  Insert and Command-line mode CTRL-^ switches the use of the mappings on/off.
+- "<char-123>" argument to ":map", allows to specify the decimal, octal or
+  hexadecimal value of a character.
+- Implemented the 'keymap' option: Load a keymap file.  Uses ":lnoremap" to
+  define mappings for the keymap.  The new ":loadkeymap" command is used in
+  the keymap file.
+- Added 'k' flag in 'statusline': Value of "b:keymap_name" or 'keymap' when
+  it's being used.  Uses "<lang>" when no keymap is loaded and ":lmap"s are
+  active.  Show this text in the default statusline too.
+- When typing a mapping that's not finished yet, display the last character
+  under the cursor in Insert mode and Command-line mode.  Looks good for dead
+  characters.
+- Made the 'langmap' option recognize multi-byte characters.  But mapping only
+  works for 8-bit characters.  Helps when using UTF-8.
 
 
 Multi-language support					*new-multi-lang*
@@ -560,8 +579,8 @@ To be able to make this work, several features were added:
   ":setglobal" displays the global value for a local option.  Setting only
   the global value isn't implemented yet.
 - Added the buffer-local value for some global options: 'equalprg', 'makeprg',
-  'grepprg', 'path', 'dictionary', 'thesaurus' and 'define'.  This allows
-  setting a local value for these global options, without making it
+  'grepprg', 'path', 'dictionary', 'thesaurus', 'tags' and 'define'.  This
+  allows setting a local value for these global options, without making it
   incompatible.
 - Added mappings and abbreviations local to a buffer: ":map <buffer>".
 - In a mapping "<Leader>" can be used to get the value of the "mapleader"
@@ -676,6 +695,8 @@ Quickfix extended					*quickfix-6*
   used for the start of a multi-line informational message. (Tony Leneis)
 - The "%p" argument can be used in 'errorformat' to get the column number from
   a line where "^" points to the column. (Stefan Roemer)
+- When using "%f" in 'errorformat' on a DOS/Windows system, also include "c:"
+  in the filename, even when using "%f:".
 
 
 Operator modifiers					*new-operator-mod*
@@ -872,6 +893,7 @@ last insert position or changed text.
 
 
 New functions: ~
+buflisted()	Checks if the buffer exists and has 'buflisted' set.
 executable()	Checks if a program or batch script can be executed.
 filewritable()	Checks if a file can be written. (Ron Aaron)
 foldclosed()	Find out if there is a closed fold. (Johannes Zellner).
@@ -885,6 +907,7 @@ getbufvar()	gets the value of an option or local variable in a buffer (Ron
 getfsize()	Return the size of a file.
 getwinvar()	gets the value of an option or local variable in a window (Ron
 		Aaron)
+globpath()	Find matching files in a list of directories.
 hasmapto()	Detect if a mapping to a string is already present.
 iconv()		Convert a string from one encoding to another.
 indent()	gets the indent of a line (Ron Aaron)
@@ -941,6 +964,7 @@ The preview window is now also used by these commands:
 |:pedit| edits the specified file in the preview window
 |:psearch| searches for a word in included files, like |:ijump|, and
 displays the found text in the preview window.
+Added the CTRL-W P command: go to preview window.
 
 MS-DOS and MS-Windows also read the system-wide vimrc file $VIM/vimrc.  Mostly
 for NT systems with multiple users.
@@ -1129,6 +1153,9 @@ Complete environment variable names. (Mike Steed)
 For ":command", added a few completion methods: "mapping", "function",
 "expression" and "environment".
 
+For MS-DOS, MS-Windows and OS/2: Expand %VAR% environment variables like $VAR.
+(Walter Briscoe)
+
 Added "improved Ex mode".  Entered when Vim is started as "exim" or "vim -E",
 and with the "gQ" command.  Works like repeated use of ":", with full
 command-line editing and completion. (Ulf Carlsson)
@@ -1155,6 +1182,7 @@ cscope_connection() function.
 
 exists() can also be used to check for Ex commands and defined autocommands.
 
+Added extra argument to input(): Default text.
 
 VMS:
 - Command line arguments are always uppercase.  Interpret a "-X" argument as
@@ -1269,6 +1297,17 @@ When a swap file already exists, and the user selects "Delete" at the
 ATTENTION prompt, use the same ".swp" swapfile, to avoid creating a ".swo"
 file which won't always be found.
 
+The g CTRL-G command also works in Visual mode and counts the number of words.
+(Chase Tingley)
+
+Give an error message when using 'shell' and it's empty.
+
+Added "uhex" value for 'display': show non-printable characters as <xx>.
+Show unprintable characters with NonText highlighting, also in the command
+line.
+
+Added a number of Lisp names after which the indent isn't increased that much.
+
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
 
@@ -1276,6 +1315,8 @@ All generated files have been moved out of the "src" directory.  This makes it
 easy to see which files are not edited by hand.  The files generated by
 configure are now in the "src/auto" directory.  For Unix, compiled object
 files go in the objects directory.
+
+Added src/README.txt to give an overview of the main parts of the source code.
 
 Added the possibility for a maintainer of a binary version to include his
 e-mail address with the --with-compiledby configure argument.
@@ -1305,8 +1346,13 @@ gettext().
 For the tiny version or when FEAT_WINDOWS is not defined: Firstwin and lastwin
 are equal to curwin and don't use w_next and w_prev.
 
+Moved the command line history stuff into the +cmdline_hist feature, to
+exclude the command line history from the tiny version.
+
 MS-Windows: Moved common functions from Win16 and Win32 to os_mswin.c.  Avoids
 having to change two files for one problem.  (Vince Negri)
+
+Moved common code from gui_w16.c and gui_w32.c to gui_w48.c (Vince Negri)
 
 ==============================================================================
 BUG FIXES						*bug-fixes-6*
@@ -1666,6 +1712,9 @@ The DOS install program: On Win2000 the check for a vim.exe or gvim.exe in
 $PATH didn't work, it always found it in the current directory.
 Rename the vim.exe in the current dir to avoid this. (Walter Briscoe)
 
+In the MS-DOS/Windows install program, use %VIM% instead of an absolute path,
+so that moving Vim requires only one change in the batch file.
+
 Mac: mch_FullName() changed the "fname" argument and didn't always initialize
 the buffer.
 
@@ -1739,5 +1788,51 @@ When using multibyte characters in a ":normal" command, a trailing byte that
 is CSI or K_SPECIAL caused problems.
 
 Wildmenu didn't handle multi-byte characters.
+
+":sleep 10" could not be interrupted on Windows, while "gs" could.  Made them
+both work the same.
+
+Unix: When waiting for a character is interrupted by an X-windows event (e.g.,
+to obtain the contents of the selection), the wait time would not be honored.
+A message could be overwritten quickly.  Now compute the remaining waiting
+time.
+
+Windows: Completing "\\share\c$\S" inserted a backslash before the $ and then
+the name is invalid.  Don't insert the backslash.
+
+When doing an auto-write before ":make", IObuff was overwritten and the wrong
+text displayed later.
+
+On the Mac the directories "c:/tmp" and "c:/temp" were used in the defaults
+for 'backupdir' and 'directory, they don't exist.
+
+The check for a new file not to be on an MS-DOS filesystem created the file
+temporarily, which can be slow.  Don't do this if there is another check for
+the swap file being on an MS-DOS filesystem.
+
+Don't give the "Changing a readonly file" warning when reading from stdin.
+
+When using the "Save As" menu entry and not entering a file name, would get an
+error message for the trailing ":edit #".  Now only do that when the
+alternate file name was changed.
+
+When Vim owns the X11 selection and is being suspended, an application that
+tries to use the selection hangs.  When Vim continues it could no longer
+obtain the selection.  Now give up the selection when suspending.
+
+option.h and globals.h were included in some files, while they were already
+included in vim.h.  Moved the definition of EXTERN to vim.h to avoid doing it
+twice.
+
+When repeating an operator that used a search pattern and the search pattern
+contained characters that have a special meaning on the cmdline (e.g., CTRL-U)
+it didn't work.
+
+Fixed various problems with using K_SPECIAL (0x80) and CSI (0x9b) as a byte in
+a (multibyte) character.  For example, the "r" command could not be repeated.
+
+The DOS/Windows install program didn't always work from a directory with a
+long filename, because $VIM and the executable name would not have the same
+path.
 
  vim:tw=78:

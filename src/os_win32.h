@@ -11,6 +11,7 @@
  */
 
 #include "os_dos.h"		/* common MS-DOS and Win32 stuff */
+#include <direct.h>		/* for _mkdir() */
 
 #define BINARY_FILE_IO
 #define USE_EXE_NAME		/* use argv[0] for $VIM */
@@ -160,3 +161,4 @@ Trace(char *pszFormat, ...);
 
 #define mch_setenv(name, val, x) setenv(name, val, x)
 #define mch_getenv(x) (char_u *)getenv((char *)(x))
+#define mch_mkdir(x, y) _mkdir(x)

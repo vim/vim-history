@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -118,8 +119,6 @@ static int  quote_meta __ARGS((char_u *dest, char_u *str, int len));
 
 static void ins_redraw __ARGS((void));
 static void ins_ctrl_v __ARGS((void));
-static void edit_putchar __ARGS((int c, int highlight));
-static void edit_unputchar __ARGS((void));
 static void undisplay_dollar __ARGS((void));
 static void insert_special __ARGS((int, int, int));
 static void redo_literal __ARGS((int c));
@@ -178,7 +177,8 @@ static colnr_t get_nolist_virtcol __ARGS((void));
 static colnr_t	Insstart_textlen;	/* length of line when insert started */
 static colnr_t	Insstart_blank_vcol;	/* vcol for first inserted blank */
 
-static char_u	*last_insert = NULL;	/* the text of the previous insert */
+static char_u	*last_insert = NULL;	/* the text of the previous insert,
+					   K_SPECIAL and CSI are escaped */
 static int	last_insert_skip; /* nr of chars in front of previous insert */
 static int	new_insert_skip;  /* nr of chars in front of current insert */
 
@@ -318,6 +318,8 @@ edit(cmdchar, startln, count)
     }
     else
 	State = INSERT;
+    if (curbuf->b_lmap & B_LMAP_INSERT)
+	State |= LANGMAP;
 #if defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)
     ImeSetOriginMode();
 #endif
@@ -388,7 +390,7 @@ edit(cmdchar, startln, count)
 #ifdef FEAT_MBYTE
 	    else if (has_mbyte)
 	    {
-		i = mb_ptr2len_check(ptr);
+		i = (*mb_ptr2len_check)(ptr);
 		if (ptr[i] == NUL)
 		    curwin->w_cursor.col += i;
 	    }
@@ -643,10 +645,10 @@ edit(cmdchar, startln, count)
 		break;
 	    }
 #endif
-	    if (State == replaceState)
-		State = INSERT;
+	    if (State & REPLACE_FLAG)
+		State = INSERT | (State & LANGMAP);
 	    else
-		State = replaceState;
+		State = replaceState | (State & LANGMAP);
 	    AppendCharToRedobuff(K_INS);
 	    showmode();
 #ifdef CURSOR_SHAPE
@@ -693,12 +695,12 @@ edit(cmdchar, startln, count)
 	    if (echeck_abbr(Ctrl_O + ABBR_OFF))
 		break;
 	    count = 0;
-	    if (State == INSERT)
-		restart_edit = 'I';
-	    else if (State == VREPLACE)
+	    if (State & VREPLACE_FLAG)
 		restart_edit = 'V';
-	    else
+	    else if (State & REPLACE_FLAG)
 		restart_edit = 'R';
+	    else
+		restart_edit = 'I';
 	    o_lnum = curwin->w_cursor.lnum;
 	    o_eol = (gchar_cursor() == NUL);
 	    goto doESCkey;
@@ -780,6 +782,16 @@ doESCkey:
 
 	case Ctrl_G:
 	    ins_ctrl_g();
+	    break;
+
+	case Ctrl_HAT:
+	    /* Toggle use of ":lmap" mappings. */
+	    curbuf->b_lmap ^= B_LMAP_INSERT;
+	    State ^= LANGMAP;
+#if defined(FEAT_WINDOWS) && defined(FEAT_KEYMAP)
+	    /* Show/unshow value of 'keymap' in status lines. */
+	    status_redraw_curbuf();
+#endif
 	    break;
 
 #ifdef FEAT_RIGHTLEFT
@@ -1069,7 +1081,7 @@ docomplete:
 		     * was typed after a CTRL-V, and pretend 'textwidth'
 		     * wasn't set.  Digits, 'o' and 'x' are special after a
 		     * CTRL-V, don't use it for these. */
-		    if (!isalnum(c))
+		    if (c < 256 && !isalnum(c))
 			AppendToRedobuff((char_u *)CTRL_V_STR);	/* CTRL-V */
 		    tw_save = curbuf->b_p_tw;
 		    curbuf->b_p_tw = -1;
@@ -1211,7 +1223,7 @@ static int  pc_attr;
 static int  pc_row;
 static int  pc_col;
 
-    static void
+    void
 edit_putchar(c, highlight)
     int	    c;
     int	    highlight;
@@ -1241,7 +1253,7 @@ edit_putchar(c, highlight)
 /*
  * Undo the previous edit_putchar().
  */
-    static void
+    void
 edit_unputchar()
 {
     if (pc_row >= msg_scrolled)
@@ -1315,7 +1327,7 @@ change_indent(type, amount, round, replaced)
     char_u	*new_line, *orig_line = NULL;	/* init for GCC */
 
     /* VREPLACE mode needs to know what the line was like before changing */
-    if (State == VREPLACE)
+    if (State & VREPLACE_FLAG)
     {
 	orig_line = vim_strsave(ml_get_curline());  /* Deal with NULL below */
 	orig_col = curwin->w_cursor.col;
@@ -1400,7 +1412,7 @@ change_indent(type, amount, round, replaced)
 	    last_vcol = vcol;
 #ifdef FEAT_MBYTE
 	    if (has_mbyte)
-		new_cursor_col += mb_ptr2len_check(ptr + new_cursor_col);
+		new_cursor_col += (*mb_ptr2len_check)(ptr + new_cursor_col);
 	    else
 #endif
 		++new_cursor_col;
@@ -1469,7 +1481,7 @@ change_indent(type, amount, round, replaced)
      * If the number of characters before the cursor increased, need to push a
      * few NULs onto the replace stack.
      */
-    if (State == REPLACE && start_col >= 0)
+    if ((State & REPLACE_FLAG) && !(State & VREPLACE_FLAG) && start_col >= 0)
     {
 	while (start_col > (int)curwin->w_cursor.col)
 	{
@@ -1493,7 +1505,7 @@ change_indent(type, amount, round, replaced)
      * it is always possible because we backspace over the whole line and then
      * put it back again the way we wanted it.
      */
-    if (State == VREPLACE)
+    if (State & VREPLACE_FLAG)
     {
 	/* If orig_line didn't allocate, just return.  At least we did the job,
 	 * even if you can't backspace.
@@ -1538,7 +1550,7 @@ truncate_spaces(line)
     /* find start of trailing white space */
     for (i = STRLEN(line) - 1; i >= 0 && vim_iswhite(line[i]); i--)
     {
-	if (State == REPLACE || State == VREPLACE)
+	if (State & REPLACE_FLAG)
 	    replace_join(0);	    /* remove a NUL from the replace stack */
     }
     line[i + 1] = NUL;
@@ -1555,7 +1567,7 @@ backspace_until_column(col)
     while ((int)curwin->w_cursor.col > col)
     {
 	curwin->w_cursor.col--;
-	if (State == REPLACE || State == VREPLACE)
+	if (State & REPLACE_FLAG)
 	    replace_do_bs();
 	else
 	    (void)del_char(FALSE);
@@ -2012,7 +2024,7 @@ ins_compl_prep(c)
 	    case Ctrl_E:
 	    case Ctrl_Y:
 		ctrl_x_mode = CTRL_X_SCROLL;
-		if (State == INSERT)
+		if (!(State & REPLACE_FLAG))
 		    edit_submode = (char_u *)_(" (insert) Scroll (^E/^Y)");
 		else
 		    edit_submode = (char_u *)_(" (replace) Scroll (^E/^Y)");
@@ -2127,37 +2139,7 @@ ins_compl_prep(c)
 		}
 		for (temp = 0; tmp_ptr[temp]; ++temp)
 		    AppendCharToRedobuff(K_BS);
-		while (*ptr)
-		{
-		    /* Put a string of normal characters in the redo buffer */
-		    tmp_ptr = ptr;
-		    while (*ptr >= ' ' && *ptr < DEL)
-			++ptr;
-		    /* Don't put '0' or '^' as last character, just in case a
-		     * CTRL-D is typed next */
-		    if (*ptr == NUL && (ptr[-1] == '0' || ptr[-1] == '^'))
-			--ptr;
-		    if (ptr > tmp_ptr)
-		    {
-			temp = *ptr;
-			*ptr = NUL;
-			AppendToRedobuff(tmp_ptr);
-			*ptr = temp;
-		    }
-		    if (*ptr)
-		    {
-			/* quote special chars with a CTRL-V */
-			AppendCharToRedobuff(Ctrl_V);
-			AppendCharToRedobuff(*ptr);
-			/* CTRL-V '0' must be inserted as CTRL-V 048 */
-			if (*ptr++ == '0')
-#ifdef EBCDIC
-			    AppendToRedobuff((char_u *)"240");
-#else
-			    AppendToRedobuff((char_u *)"48");
-#endif
-		    }
-		}
+		AppendToRedobuffLit(ptr);
 	    }
 
 #ifdef FEAT_CINDENT
@@ -3414,7 +3396,7 @@ insert_special(c, allow_modmask, ctrlv)
 		return;
 	    p[len - 1] = NUL;
 	    ins_str(p);
-	    AppendToRedobuff(p);
+	    AppendToRedobuffLit(p);
 	    ctrlv = FALSE;
 	}
     }
@@ -3476,7 +3458,8 @@ insertchar(c, force_formatting, second_indent, ctrlv)
     if (textwidth
 	    && (force_formatting
 		|| (!vim_iswhite(c)
-		    && !(State == REPLACE && *ml_get_cursor() != NUL)
+		    && !((State & REPLACE_FLAG) && !(State & VREPLACE_FLAG)
+						   && *ml_get_cursor() != NUL)
 		    && (curwin->w_cursor.lnum != Insstart.lnum
 			|| ((!has_format_option(FO_INS_LONG)
 				|| Insstart_textlen <= (colnr_t)textwidth)
@@ -3599,7 +3582,7 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 	     * stack functions.  VREPLACE does not use this, and backspaces
 	     * over the text instead.
 	     */
-	    if (State == VREPLACE)
+	    if (State & VREPLACE_FLAG)
 		orig_col = startcol;	/* Will start backspacing from here */
 	    else
 		replace_offset = startcol - end_foundcol - 1;
@@ -3618,7 +3601,7 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 	    if (startcol < 0)
 		startcol = 0;
 
-	    if (State == VREPLACE)
+	    if (State & VREPLACE_FLAG)
 	    {
 		/*
 		 * In VREPLACE mode, we will backspace over the text to be
@@ -3653,7 +3636,7 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 		    second_indent = get_number_indent(curwin->w_cursor.lnum -1);
 		if (second_indent >= 0)
 		{
-		    if (State == VREPLACE)
+		    if (State & VREPLACE_FLAG)
 			change_indent(INDENT_SET, second_indent, FALSE, NUL);
 		    else
 			(void)set_indent(second_indent, SIN_CHANGED);
@@ -3661,7 +3644,7 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 		first_line = FALSE;
 	    }
 
-	    if (State == VREPLACE)
+	    if (State & VREPLACE_FLAG)
 	    {
 		/*
 		 * In VREPLACE mode we have backspaced over the text to be
@@ -3791,11 +3774,10 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 
     if (       !ISSPECIAL(c)
 #ifdef FEAT_MBYTE
-	    && (!has_mbyte || mb_char2len(c) == 1)
+	    && (!has_mbyte || (*mb_char2len)(c) == 1)
 #endif
 	    && vpeekc() != NUL
-	    && State != REPLACE
-	    && State != VREPLACE
+	    && !(State & REPLACE_FLAG)
 #ifdef FEAT_CINDENT
 	    && !cindent_on()
 #endif
@@ -3859,19 +3841,19 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 	else
 	    i = 0;
 	if (buf[i] != NUL)
-	    AppendToRedobuff(buf + i);
+	    AppendToRedobuffLit(buf + i);
     }
     else
     {
 #ifdef FEAT_MBYTE
-	if (has_mbyte && (cc = mb_char2len(c)) > 1)
+	if (has_mbyte && (cc = (*mb_char2len)(c)) > 1)
 	{
 	    char_u	buf[MB_MAXBYTES + 1];
 
-	    mb_char2bytes(c, buf);
+	    (*mb_char2bytes)(c, buf);
 	    buf[cc] = NUL;
 	    ins_char_bytes(buf, cc);
-	    AppendToRedobuff(buf);
+	    AppendCharToRedobuff(c);
 	}
 	else
 #endif
@@ -3963,7 +3945,7 @@ stop_arrow()
 	Insstart = curwin->w_cursor;	/* new insertion starts here */
 	Insstart_textlen = linetabsize(ml_get_curline());
 	ai_col = 0;
-	if (State == VREPLACE)
+	if (State & VREPLACE_FLAG)
 	{
 	    orig_line_count = curbuf->b_ml.ml_line_count;
 	    vr_lines_changed = 1;
@@ -4025,18 +4007,56 @@ stop_insert(end_insert_pos)
  */
     void
 set_last_insert(c)
-    int	    c;
+    int		c;
 {
+    char_u	*s;
+#ifdef FEAT_MBYTE
+    char_u	temp[MB_MAXBYTES];
+    int		i;
+    int		len;
+#endif
+
     vim_free(last_insert);
-    last_insert = alloc(4);
+#ifdef FEAT_MBYTE
+    last_insert = alloc(MB_MAXBYTES * 3 + 5);
+#else
+    last_insert = alloc(6);
+#endif
     if (last_insert != NULL)
     {
-	last_insert[0] = Ctrl_V;
-	last_insert[1] = c;
-	last_insert[2] = ESC;
-	last_insert[3] = NUL;
-	    /* Use the CTRL-V only when not entering a digit */
-	last_insert_skip = isdigit(c) ? 1 : 0;
+	s = last_insert;
+	/* Use the CTRL-V only when entering a special char (TODO: EBCDIC) */
+	if (c < ' ' || c == DEL)
+	    *s++ = Ctrl_V;
+#ifdef FEAT_MBYTE
+	len = (*mb_char2bytes)(c, temp);
+	for (i = 0; i < len; ++i)
+	{
+	    c = temp[i];
+#endif
+	    /* Need to escape K_SPECIAL and CSI like in the typeahead buffer. */
+	    if (c == K_SPECIAL)
+	    {
+		*s++ = K_SPECIAL;
+		*s++ = KS_SPECIAL;
+		*s++ = KE_FILLER;
+	    }
+#ifdef FEAT_GUI
+	    else if (gui.in_use && c == CSI)
+	    {
+		*s++ = CSI;
+		*s++ = KS_EXTRA;
+		*s++ = (int)KE_CSI;
+	    }
+#endif
+	    else
+		*s++ = c;
+#ifdef FEAT_MBYTE
+	}
+#endif
+	*s++ = ESC;
+	*s++ = NUL;
+	last_insert_skip = 0;
     }
 }
 
@@ -4057,7 +4077,7 @@ beginline(flags)
     {
 	curwin->w_cursor.col = 0;
 #ifdef FEAT_VIRTUALEDIT
-	curwin->w_coladd = 0;
+	curwin->w_cursor.coladd = 0;
 #endif
 
 	if (flags & (BL_WHITE | BL_SOL))
@@ -4099,7 +4119,7 @@ oneright()
 
     ptr = ml_get_cursor();
 #ifdef FEAT_MBYTE
-    if (has_mbyte && (l = mb_ptr2len_check(ptr)) > 1)
+    if (has_mbyte && (l = (*mb_ptr2len_check)(ptr)) > 1)
     {
 	/* The character under the cursor is a multi-byte character, move
 	 * several bytes right, but don't end up on the NUL. */
@@ -4181,8 +4201,9 @@ cursor_up(n, upd_topline)
 		if (lnum <= 1)
 		    break;
 		/* If we entered a fold, move to the beginning, unless in
-		 * Insert mode: it will open in a moment. */
-		if (n > 0 || !(State & INSERT))
+		 * Insert mode or when 'foldopen' contains "all": it will open
+		 * in a moment. */
+		if (n > 0 || !((State & INSERT) || (fdo_flags & FDO_ALL)))
 		    (void)hasFolding(lnum, &lnum, NULL);
 	    }
 	    if (lnum < 1)
@@ -4282,7 +4303,7 @@ stuff_inserted(c, count, no_esc)
     }
 
     /* may want to stuff the command character, to start Insert mode */
-    if (c)
+    if (c != NUL)
 	stuffcharReadbuff(c);
     if ((esc_ptr = (char_u *)vim_strrchr(ptr, ESC)) != NULL)
 	*esc_ptr = NUL;	    /* remove the ESC */
@@ -4305,7 +4326,7 @@ stuff_inserted(c, count, no_esc)
 	/* a trailing "0" is inserted as "<C-V>048", "^" as "<C-V>^" */
 	if (last)
 	    stuffReadbuff((char_u *)(last == '0'
-			? IF_EB("\026048", CTRL_V_STR "0360")
+			? IF_EB("\026048", CTRL_V_STR "xf0")
 			: IF_EB("\026^", CTRL_V_STR "^")));
     }
     while (--count > 0);
@@ -4912,18 +4933,6 @@ in_cinkeys(keytyped, when, line_is_empty)
 }
 #endif /* FEAT_CINDENT */
 
-#if defined(FEAT_KEYMAP) || defined(PROTO)
-/*
- * Set up key mapping tables for 'keymap' option
- */
-    char_u *
-keymap_init()
-{
-	/* do nothing for now, just say we're ok */
-	return NULL;
-}
-#endif /* FEAT_KEYMAP */
-
 #if defined(FEAT_RIGHTLEFT) || defined(PROTO)
 /*
  * Map Hebrew keyboard when in hkmap mode.
@@ -5040,6 +5049,9 @@ ins_reg()
      */
     ++no_mapping;
     regname = safe_vgetc();
+#ifdef FEAT_LANGMAP
+    LANGMAP_ADJUST(regname, TRUE);
+#endif
     if (regname == Ctrl_R || regname == Ctrl_O || regname == Ctrl_P)
     {
 	/* Get a third key for literal register insertion */
@@ -5048,11 +5060,11 @@ ins_reg()
 	add_to_showcmd_c(literally);
 #endif
 	regname = safe_vgetc();
+#ifdef FEAT_LANGMAP
+	LANGMAP_ADJUST(regname, TRUE);
+#endif
     }
     --no_mapping;
-#ifdef FEAT_LANGMAP
-    LANGMAP_ADJUST(regname, TRUE);
-#endif
 
 #ifdef FEAT_EVAL
     /*
@@ -5250,7 +5262,7 @@ ins_esc(count, cmdchar)
 
 #ifdef FEAT_RIGHTLEFT
 /*
- * Toggle language: khmap and revins_on.
+ * Toggle language: hkmap and revins_on.
  * Move to end of reverse inserted text.
  */
     static void
@@ -5382,7 +5394,7 @@ ins_shift(c, lastc)
 	--curwin->w_cursor.col;
 	(void)del_char(FALSE);		/* delete the '^' or '0' */
 	/* In Replace mode, restore the characters that '^' or '0' replaced. */
-	if (State == REPLACE || State == VREPLACE)
+	if (State & REPLACE_FLAG)
 	    replace_pop_ins();
 	if (lastc == '^')
 	    old_indent = get_indent();	/* remember curr. indent */
@@ -5515,21 +5527,20 @@ ins_bs(c, mode, inserted_space_p)
 	 * cc >= 0: NL was replaced, put original characters back
 	 */
 	cc = -1;
-	if (State == REPLACE || State == VREPLACE)
+	if (State & REPLACE_FLAG)
 	    cc = replace_pop();	    /* returns -1 if NL was inserted */
 	/*
 	 * In replace mode, in the line we started replacing, we only move the
 	 * cursor.
 	 */
-	if ((State == REPLACE || State == VREPLACE)
-			&& curwin->w_cursor.lnum <= lnum)
+	if ((State & REPLACE_FLAG) && curwin->w_cursor.lnum <= lnum)
 	{
 	    dec_cursor();
 	}
 	else
 	{
-	    if (State != VREPLACE
-		|| curwin->w_cursor.lnum > orig_line_count)
+	    if (!(State & VREPLACE_FLAG)
+		    || curwin->w_cursor.lnum > orig_line_count)
 	    {
 		temp = gchar_cursor();	/* remember current char */
 		--curwin->w_cursor.lnum;
@@ -5546,7 +5557,7 @@ ins_bs(c, mode, inserted_space_p)
 	     * sequence of characters that were deleted and then the
 	     * characters that NL replaced.
 	     */
-	    if (State == REPLACE || State == VREPLACE)
+	    if (State & REPLACE_FLAG)
 	    {
 		/*
 		 * Do the next ins_char() in NORMAL state, to
@@ -5631,12 +5642,12 @@ ins_bs(c, mode, inserted_space_p)
 		dec_cursor();
 		/* TODO: calling getvcol() each time is slow */
 		getvcol(curwin, &curwin->w_cursor, &vcol, NULL, NULL);
-		if (State == REPLACE || State == VREPLACE)
+		if (State & REPLACE_FLAG)
 		{
 		    /* Don't delete characters before the insert point when in
 		     * Replace mode */
 		    if (curwin->w_cursor.lnum != Insstart.lnum
-			|| curwin->w_cursor.col >= Insstart.col)
+			    || curwin->w_cursor.col >= Insstart.col)
 		    {
 #if 0	/* what was this for?  It causes problems when sw != ts. */
 			if (State == REPLACE && (int)vcol < want_vcol)
@@ -5661,12 +5672,12 @@ ins_bs(c, mode, inserted_space_p)
 				   && curwin->w_cursor.col < Insstart.col)
 		    Insstart.col = curwin->w_cursor.col;
 
-		if (State == VREPLACE)
+		if (State & VREPLACE_FLAG)
 		    ins_char(' ');
 		else
 		{
 		    ins_str((char_u *)" ");
-		    if (State == REPLACE && extra <= 1)
+		    if ((State & REPLACE_FLAG) && extra <= 1)
 		    {
 			if (extra)
 			    replace_push_off(NUL);
@@ -5706,14 +5717,14 @@ ins_bs(c, mode, inserted_space_p)
 #endif
 		    inc_cursor();
 #ifdef FEAT_RIGHTLEFT
-		else if (State == REPLACE || State == VREPLACE)
+		else if (State & REPLACE_FLAG)
 		    dec_cursor();
 #endif
 		break;
 	    }
-	    if (State == REPLACE || State == VREPLACE)
+	    if (State & REPLACE_FLAG)
 		replace_do_bs();
-	    else  /* State != REPLACE && State != VREPLACE */
+	    else
 	    {
 #ifdef FEAT_MBYTE
 		if (p_deco)
@@ -5903,7 +5914,7 @@ ins_home()
 	curwin->w_cursor.lnum = 1;
     curwin->w_cursor.col = 0;
 #ifdef FEAT_VIRTUALEDIT
-    curwin->w_coladd = 0;
+    curwin->w_cursor.coladd = 0;
 #endif
     curwin->w_curswant = 0;
     start_arrow(&tpos);
@@ -5958,7 +5969,7 @@ ins_right()
 	{
 #ifdef FEAT_MBYTE
 	    if (has_mbyte)
-		curwin->w_cursor.col += mb_ptr2len_check(ml_get_cursor());
+		curwin->w_cursor.col += (*mb_ptr2len_check)(ml_get_cursor());
 	    else
 #endif
 		++curwin->w_cursor.col;
@@ -6141,12 +6152,12 @@ ins_tab()
     ins_char(' ');
     while (--temp)
     {
-	if (State == VREPLACE)
+	if (State & VREPLACE_FLAG)
 	    ins_char(' ');
 	else
 	{
 	    ins_str((char_u *)" ");
-	    if (State == REPLACE)	    /* no char replaced */
+	    if (State & REPLACE_FLAG)	    /* no char replaced */
 		replace_push(NUL);
 	}
     }
@@ -6167,7 +6178,7 @@ ins_tab()
 	 * Get the current line.  For VREPLACE mode, don't make real changes
 	 * yet, just work on a copy of the line.
 	 */
-	if (State == VREPLACE)
+	if (State & VREPLACE_FLAG)
 	{
 	    pos = curwin->w_cursor;
 	    cursor = &pos;
@@ -6191,7 +6202,7 @@ ins_tab()
 	}
 
 	/* In Replace mode, don't change characters before the insert point. */
-	if ((State == REPLACE || State == VREPLACE)
+	if ((State & REPLACE_FLAG)
 		&& fpos.lnum == Insstart.lnum
 		&& fpos.col < Insstart.col)
 	{
@@ -6234,7 +6245,7 @@ ins_tab()
 	    {
 		mch_memmove(ptr, ptr + i, STRLEN(ptr + i) + 1);
 		/* correct replace stack. */
-		if (State == REPLACE)
+		if ((State & REPLACE_FLAG) && !(State & VREPLACE_FLAG))
 		    for (temp = i; --temp >= 0; )
 			replace_join(want_vcol - vcol);
 	    }
@@ -6245,7 +6256,7 @@ ins_tab()
 	     * backspacing over the changed spacing and then inserting the new
 	     * spacing.
 	     */
-	    if (State == VREPLACE)
+	    if (State & VREPLACE_FLAG)
 	    {
 		/* Backspace from real cursor to change_col */
 		backspace_until_column(change_col);
@@ -6257,7 +6268,7 @@ ins_tab()
 	    }
 	}
 
-	if (State == VREPLACE)
+	if (State & VREPLACE_FLAG)
 	    vim_free(saved_line);
     }
 
@@ -6285,7 +6296,7 @@ ins_eol(c)
      * character under the cursor.  Only push a NUL on the replace stack,
      * nothing to put back when the NL is deleted.
      */
-    if (State == REPLACE)
+    if ((State & REPLACE_FLAG) && !(State & VREPLACE_FLAG))
 	replace_push(NUL);
 
     /*
@@ -6429,7 +6440,7 @@ ins_copychar(lnum)
     if ((colnr_t)temp > curwin->w_virtcol)
 	--ptr;
 #ifdef FEAT_MBYTE
-    if ((c = mb_ptr2char(ptr)) == NUL)
+    if ((c = (*mb_ptr2char)(ptr)) == NUL)
 #else
     if ((c = *ptr) == NUL)
 #endif
@@ -6480,7 +6491,7 @@ ins_try_si(c)
 		curwin->w_cursor = *pos;
 	    i = get_indent();
 	    curwin->w_cursor = old_pos;
-	    if (State == VREPLACE)
+	    if (State & VREPLACE_FLAG)
 		change_indent(INDENT_SET, i, FALSE, NUL);
 	    else
 		(void)set_indent(i, SIN_CHANGED);

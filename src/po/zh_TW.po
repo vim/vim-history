@@ -1,0 +1,4931 @@
+# Traditional Chinese Translation for Vim	vim:set foldmethod=marker:
+#
+# Do ":help uganda"  in Vim to read copying and usage conditions.
+# Do ":help credits" in Vim to see a list of people who contributed.
+#
+# FIRST AUTHOR Francis.S.Lin <piaip@csie.ntu.edu.tw>, 2000
+#
+# Last update: Mon Feb 19 18:04:39 CST 2001
+#
+# !! This version is still buggy!!!
+#  This is only a test version for VIM-6.0v
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: Vim(Traditional Chinese)\n"
+"POT-Creation-Date: 2001-02-19 13:59+0800\n"
+"PO-Revision-Date: Mon Feb 19 22:49:21 CST 2001\n"
+"Last-Translator: Francis S.Lin <piaip@csie.ntu.edu.tw>\n"
+"Language-Team: Francis S.Lin <piaip@csie.ntu.edu.tw>, "
+"Cecil Sheng <b7506022@csie.ntu.edu.tw>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=big5\n"
+"Content-Transfer-Encoding: 8-bit\n"
+
+#: buffer.c:91
+msgid "Cannot allocate buffer, exiting..."
+msgstr "µLªk°t¸m½w½Ä°Ï¡AÂ÷¶}µ{¦¡..."
+
+#: buffer.c:94
+msgid "Cannot allocate buffer, using other one..."
+msgstr "µLªk°t¸m½w½Ä°Ï¡A¨Ï¥Î¥t¤@­Ó½w½Ä°Ï...."
+
+#: buffer.c:663
+msgid "No buffers were unloaded"
+msgstr "¨S¦³ÄÀ©ñ¥ô¦ó½w½Ä°Ï"
+
+#: buffer.c:665
+msgid "No buffers were deleted"
+msgstr "¨S¦³§R°£¥ô¦ó½w½Ä°Ï"
+
+#: buffer.c:667
+msgid "No buffers were wiped out"
+msgstr "¨S¦³§R°£¥ô¦ó½w½Ä°Ï"
+
+#: buffer.c:675
+msgid "1 buffer unloaded"
+msgstr "¤wÄÀ©ñ¤@­Ó½w½Ä°Ï"
+
+#: buffer.c:677
+#, c-format
+msgid "%d buffers unloaded"
+msgstr "¤wÄÀ©ñ %d ­Ó½w½Ä°Ï"
+
+#: buffer.c:682
+msgid "1 buffer deleted"
+msgstr "¤w§R°£¤@­Ó½w½Ä°Ï"
+
+#: buffer.c:684
+#, c-format
+msgid "%d buffers deleted"
+msgstr "¤w§R°£ %d ­Ó½w½Ä°Ï"
+
+#: buffer.c:689
+msgid "1 buffer wiped out"
+msgstr "¤w§R°£¤@­Ó½w½Ä°Ï"
+
+#: buffer.c:691
+#, c-format
+msgid "%d buffers wiped out"
+msgstr "¤w§R°£ %d ­Ó½w½Ä°Ï"
+
+#: buffer.c:748
+msgid "No modified buffer found"
+msgstr "¨S¦³­×§ï¹Lªº½w½Ä°Ï"
+
+#: buffer.c:793
+#, c-format
+msgid "Cannot go to buffer %ld"
+msgstr "µLªk¤Á´«¨ì²Ä %ld ­Ó½w½Ä°Ï"
+
+#: buffer.c:796
+msgid "Cannot go beyond last buffer"
+msgstr "µLªk¤Á´«¨ì§ó«á­±ªº½w½Ä°Ï"
+
+#: buffer.c:798
+msgid "Cannot go before first buffer"
+msgstr "µLªk¤Á´«¨ì§ó«e­±ªº½w½Ä°Ï"
+
+#: buffer.c:822
+#, c-format
+msgid "No write since last change for buffer %ld (use ! to override)"
+msgstr "¤w§ó§ï¹L½w½Ä°Ï %ld ¦ý©|¥¼¦sÀÉ (¥i¥Î ! ±j¨î°õ¦æ)"
+
+#: buffer.c:838
+msgid "Cannot unload last buffer"
+msgstr "µLªkÄÀ©ñ³Ì«á¤@­Ó½w½Ä°Ï"
+
+#: buffer.c:1243
+msgid "Warning: List of file names overflow"
+msgstr "Äµ§i: ÀÉ¦W¹L¦h"
+
+#: buffer.c:1399
+#, c-format
+msgid "buffer %ld not found"
+msgstr "§ä¤£¨ì²Ä %ld ­Ó½w½Ä°Ï"
+
+#: buffer.c:1593
+#, c-format
+msgid "More than one match for %s"
+msgstr "§ä¨ì¤@­Ó¥H¤Wªº %s"
+
+#: buffer.c:1595
+#, c-format
+msgid "No matching buffer for %s"
+msgstr "§ä¤£¨ì %s"
+
+#: buffer.c:1963 ex_docmd.c:5809
+#, c-format
+msgid "line %ld"
+msgstr "¦æ %ld"
+
+#: buffer.c:2046
+msgid "Buffer with this name already exists"
+msgstr "¤w¦³½w½Ä°Ï¨Ï¥Î³o­Ó¦W¦r"
+
+#: buffer.c:2326
+msgid " [Modified]"
+msgstr " [¤w­×§ï]"
+
+#: buffer.c:2331
+msgid "[Not edited]"
+msgstr "[¥¼½s¿è]"
+
+#: buffer.c:2336
+msgid "[New file]"
+msgstr "[·sÀÉ®×]"
+
+#: buffer.c:2337
+msgid "[Read errors]"
+msgstr "[Åª¨ú¿ù»~]"
+
+#: buffer.c:2339 fileio.c:1633
+msgid "[readonly]"
+msgstr "[°ßÅª]"
+
+#: buffer.c:2355
+msgid "1 line --%d%%--"
+msgstr "¦æ¼Æ 1 --%d%%--"
+
+#: buffer.c:2355
+msgid "%ld lines --%d%%--"
+msgstr "¦æ¼Æ %ld --%d%%--"
+
+#: buffer.c:2363
+msgid "line %ld of %ld --%d%%-- col "
+msgstr "¦æ %ld/%ld --%d%%-- Äæ "
+
+#: buffer.c:2515
+msgid "[No file]"
+msgstr "[¥¼©R¦W]"
+
+#: buffer.c:2555
+msgid "help"
+msgstr "[»²§U»¡©ú]"
+
+#: buffer.c:3045 screen.c:4061
+msgid "[help]"
+msgstr "[»²§U»¡©ú]"
+
+#: buffer.c:3075 screen.c:4067
+msgid "[Preview]"
+msgstr "[¹wÄý]"
+
+#: buffer.c:3278
+msgid "All"
+msgstr "¥þ³¡"
+
+#: buffer.c:3278
+msgid "Bot"
+msgstr "©³ºÝ"
+
+#: buffer.c:3280
+msgid "Top"
+msgstr "³»ºÝ"
+
+#: buffer.c:3998
+msgid ""
+"\n"
+"# Buffer list:\n"
+msgstr ""
+"\n"
+"# ½w½Ä°Ï¦Cªí:\n"
+
+#: buffer.c:4031
+msgid "[Error List]"
+msgstr "[¿ù»~¦Cªí]"
+
+#: buffer.c:4044 memline.c:1504
+msgid "[No File]"
+msgstr "[¥¼©R¦W]"
+
+#: digraph.c:2160
+msgid "Escape not allowed in digraph"
+msgstr "¤G¦X¦r¥À(digraph)¤¤¤£¯à¨Ï¥Î Escape"
+
+#: edit.c:39
+msgid " Keyword completion (^N/^P)"
+msgstr " ·s¼WÃöÁä¦r¸É§¹ (^N/^P)"
+
+#: edit.c:40
+msgid " ^X mode (^E/^Y/^L/^]/^F/^I/^K/^D/^V/^N/^P)"
+msgstr " ^X ¼Ò¦¡ (^E/^Y/^L/^]/^F/^I/^K/^D/^N/^P)"
+
+#: edit.c:43
+msgid " Keyword Local completion (^N/^P)"
+msgstr " ·s¼W¦a°Ï©ÊªºÃöÁä¦r¸É§¹ (^N/^P)"
+
+#: edit.c:44
+msgid " Whole line completion (^L/^N/^P)"
+msgstr " ·s¼W¾ã¦æ¸É§¹ (^L/^N/^P)"
+
+#: edit.c:45
+msgid " File name completion (^F/^N/^P)"
+msgstr " ·s¼WÀÉ¦W¸É§¹ (^F/^N/^P)"
+
+#: edit.c:46
+msgid " Tag completion (^]/^N/^P)"
+msgstr " ·s¼W¼ÐÅÒ¸É§¹ (^]/^N/^P)"
+
+#: edit.c:47
+msgid " Path pattern completion (^N/^P)"
+msgstr " ·s¼W¸ô®|¸É§¹ (^N/^P)"
+
+#: edit.c:48
+msgid " Definition completion (^D/^N/^P)"
+msgstr " ·s¼W©w¸q¸É§¹ (^D/^N/^P)"
+
+#: edit.c:50
+msgid " Dictionary completion (^K/^N/^P)"
+msgstr " ·s¼W¦r¨å¸É§¹ (^K/^N/^P)"
+
+#: edit.c:51
+msgid " Thesaurus completion (^T/^N/^P)"
+msgstr " ·s¼W Thesaurus ¸É§¹ (^T/^N/^P)"
+
+#: edit.c:52
+msgid " Command-line completion (^V/^N/^P)"
+msgstr " ·s¼W©R¥O¦C¸É§¹ (^V/^N/^P)"
+
+#: edit.c:55
+msgid "Hit end of paragraph"
+msgstr "¤w¨ì¬q¸¨µ²§À"
+
+#: edit.c:809
+msgid "'thesaurus' option is empty"
+msgstr "¿ï¶µ 'thesaurus' ¥¼³]©w"
+
+#: edit.c:984
+msgid "'dictionary' option is empty"
+msgstr "¿ï¶µ 'dictionary' ¥¼³]©w"
+
+#: edit.c:1878
+#, c-format
+msgid "Scanning dictionary: %s"
+msgstr "±½ºË¥Ø¿ý: %s"
+
+#: edit.c:2016
+msgid " (insert) Scroll (^E/^Y)"
+msgstr " (´¡¤J) Scroll (^E/^Y)"
+
+#: edit.c:2018
+msgid " (replace) Scroll (^E/^Y)"
+msgstr " (¨ú¥N) Scroll (^E/^Y)"
+
+#: edit.c:2349
+#, c-format
+msgid "Scanning: %s"
+msgstr "±½ºË: %s"
+
+#: edit.c:2382
+msgid "Scanning tags."
+msgstr "±½ºË¼ÐÅÒ."
+
+#: edit.c:3002
+msgid " Adding"
+msgstr " ¼W¥["
+
+#: edit.c:3051
+msgid "-- Searching..."
+msgstr "-- ·j´M¤¤..."
+
+#: edit.c:3107
+msgid "Back at original"
+msgstr "¦^¨ì°_ÂI"
+
+#: edit.c:3112
+msgid "Word from other line"
+msgstr "±q§O¦æ¶}©lªº¦r (?)"
+
+#: edit.c:3117
+msgid "The only match"
+msgstr "¥u¦³¦¹¶µ²Å¦X"
+
+#: edit.c:3173
+#, c-format
+msgid "match %d of %d"
+msgstr "§ä¨ì %d / %d"
+
+#: edit.c:3176
+#, c-format
+msgid "match %d"
+msgstr "²Å¦X %d"
+
+#: eval.c:594
+#, c-format
+msgid "Unknown variable: \"%s\""
+msgstr "¥¼©w¸qªºÅÜ¼Æ: \"%s\""
+
+#: eval.c:849
+#, c-format
+msgid "Missing braces: %s"
+msgstr "¯Ê¤Ö¹ïÀ³ªº¬A¸¹: %s"
+
+#: eval.c:912
+#, c-format
+msgid "No such variable: \"%s\""
+msgstr "µL¦¹ÅÜ¼Æ: \"%s\""
+
+#: eval.c:1136
+msgid "Missing ':' after '?'"
+msgstr "'?' «á¯Ê¤Ö ':'"
+
+#: eval.c:1740
+msgid "Missing ')'"
+msgstr "¯Ê¤Ö¹ïÀ³ªº \")\""
+
+#: eval.c:1783
+msgid "Missing ']'"
+msgstr "¯Ê¤Ö¹ïÀ³ªº \"]\""
+
+#: eval.c:1857
+#, c-format
+msgid "Option name missing: %s"
+msgstr "¯Ê¤Ö¿ï¶µ¦WºÙ: %s"
+
+#: eval.c:1875 option.c:5841
+#, c-format
+msgid "Unknown option: %s"
+msgstr "¤£¥¿½Tªº¿ï¶µ: %s"
+
+#: eval.c:1932 eval.c:2049
+#, c-format
+msgid "Missing quote: %s"
+msgstr "¯Ê¤Ö¤Þ¸¹: %s"
+
+#: eval.c:2345
+#, c-format
+msgid "Invalid arguments for function %s"
+msgstr "¨ç¦¡ %s ªº¤Þ¼Æ¤£¥¿½T"
+
+#: eval.c:2346
+#, c-format
+msgid "Unknown function: %s"
+msgstr "¥¼©w¸qªº¨ç¦¡: %s"
+
+#: eval.c:2347
+#, c-format
+msgid "Too many arguments for function: %s"
+msgstr "¨ç¦¡ %s ªº¤Þ¼Æ¹L¦h"
+
+#: eval.c:2348
+#, c-format
+msgid "Not enough arguments for function: %s"
+msgstr "¨ç¦¡ %s ªº¤Þ¼Æ¤Ó¤Ö"
+
+#: eval.c:2349
+#, c-format
+msgid "Using <SID> not in a script context: %s"
+msgstr "<SID> ¤£¯à¦b script ¥»¤å¥~¨Ï¥Î: %s"
+
+#: eval.c:4987
+msgid "(Invalid)"
+msgstr "(¤£¥¿½T)"
+
+#: eval.c:5850
+#, c-format
+msgid "Undefined variable: %s"
+msgstr "ÅÜ¼Æ %s ©|¥¼©w¸q"
+
+#: eval.c:6558 eval.c:7007
+#, c-format
+msgid "Undefined function: %s"
+msgstr "¨ç¦¡ %s ©|¥¼©w¸q"
+
+#: eval.c:6571
+#, c-format
+msgid "Missing '(': %s"
+msgstr "¯Ê¤Ö \"(\": %s"
+
+#: eval.c:6601 syntax.c:2941 syntax.c:6362
+#, c-format
+msgid "Illegal argument: %s"
+msgstr "°Ñ¼Æ¤£¥¿½T: %s"
+
+#: eval.c:6676
+msgid "Missing :endfunction"
+msgstr "¯Ê¤Ö :endfunction"
+
+#: eval.c:6750
+#, c-format
+msgid "Function %s already exists, use ! to replace"
+msgstr "¨ç¦¡ %s ¤w¸g¦s¦b, ½Ð¨Ï¥Î ! ±j¨î¨ú¥N"
+
+#: eval.c:6755
+#, c-format
+msgid "Cannot redefine function %s: It is in use"
+msgstr "¨ç¦¡ %s ¥¿¦b¨Ï¥Î¤¤¡AµLªk­«·s©w¸q"
+
+#: eval.c:6809
+#, c-format
+msgid "Function name must start with a capital: %s"
+msgstr "¨ç¦¡¦WºÙ²Ä¤@­Ó¦r¥À¥²¶·¤j¼g: %s"
+
+#: eval.c:6816
+msgid "Function name required"
+msgstr "»Ý­n¨ç¦¡¦WºÙ"
+
+#: eval.c:6832 term.c:4486
+msgid "Using <SID> not in a script context"
+msgstr "<SID> ¤£¯à¦b script ¥»¤å¥~¨Ï¥Î."
+
+#: eval.c:6896
+msgid "function "
+msgstr "¨ç¦¡ "
+
+#: eval.c:7012
+#, c-format
+msgid "Cannot delete function %s: It is in use"
+msgstr "¨ç¦¡ %s ¥¿¦b¨Ï¥Î¤¤¡AµLªk§R°£"
+
+#: eval.c:7059
+msgid "Function call depth is higher than 'maxfuncdepth'"
+msgstr "¨ç¦¡»¼°j©I¥s¼h¼Æ¶W¹L 'maxfuncdepth'"
+
+#: eval.c:7110
+#, c-format
+msgid "calling %s"
+msgstr "©I¥s %s"
+
+#: eval.c:7135 ex_cmds2.c:1709
+#, c-format
+msgid "continuing in %s"
+msgstr "Ä~Äò: %s"
+
+#: eval.c:7189
+msgid ":return not inside a function"
+msgstr ":return ¥²¶·¦b¨ç¦¡¸Ì¨Ï¥Î"
+
+#: eval.c:7267
+#, c-format
+msgid "%s returning #%ld"
+msgstr "%s ¶Ç¦^­È #%ld "
+
+#: eval.c:7270
+#, c-format
+msgid "%s returning \"%s\""
+msgstr "%s ¶Ç¦^­È \"%s\""
+
+#: eval.c:7411
+msgid ""
+"\n"
+"# global variables:\n"
+msgstr ""
+"\n"
+"# ¥þ°ìÅÜ¼Æ:\n"
+
+#: ex_cmds.c:90
+#, c-format
+msgid "<%s>%s%s  %d,  Hex %02x,  Octal %03o"
+msgstr "<%s>%s%s  %d,  ¤Q¤»¶i¦ì %02x,  ¤K¶i¦ì %03o"
+
+#: ex_cmds.c:426
+#~ msgid "Move lines into themselves"
+#~ msgstr ""
+
+#: ex_cmds.c:495
+msgid "1 line moved"
+msgstr "¤w·h²¾ 1 ¦æ"
+
+#: ex_cmds.c:497
+#, c-format
+msgid "%ld lines moved"
+msgstr "¤w·h²¾ %ld ¦æ"
+
+#: ex_cmds.c:887
+#, c-format
+msgid "%ld lines filtered"
+msgstr "¤w³B²z %ld ¦æ"
+
+#: ex_cmds.c:914
+#~ msgid "*Filter* Autocommands must not change current buffer"
+#~ msgstr ""
+
+#: ex_cmds.c:998
+msgid "[No write since last change]\n"
+msgstr "[§ó·s«á©|¥¼Àx¦s]\n"
+
+#: ex_cmds.c:1209
+#, c-format
+msgid "viminfo: %s in line: "
+msgstr "viminfo: %s ¦b¦æ¤¤: "
+
+#: ex_cmds.c:1214
+msgid "viminfo: Too many errors, skipping rest of file"
+msgstr "viminfo: ¹L¦h¿ù»~, ©¿²¤ÀÉ®×¨ä¾l³¡¤À"
+
+#: ex_cmds.c:1246
+#, c-format
+msgid "Reading viminfo file \"%s\"%s%s"
+msgstr "Åª¨ú viminfo ÀÉ®× \"%s\"%s%s"
+
+#: ex_cmds.c:1247
+msgid " info"
+msgstr " °T®§"
+
+#: ex_cmds.c:1248
+msgid " marks"
+msgstr " ¼Ð°O"
+
+#: ex_cmds.c:1335
+#, c-format
+msgid "Viminfo file is not writable: %s"
+msgstr "Viminfo ÀÉ®×µLªk¼g¤J: %s"
+
+#: ex_cmds.c:1460
+#, c-format
+msgid "Can't write viminfo file %s!"
+msgstr "µLªk¼g¤J viminfo ÀÉ®× %s !"
+
+#: ex_cmds.c:1468
+#, c-format
+msgid "Writing viminfo file \"%s\""
+msgstr "¼g¤J viminfo ÀÉ®× \"%s\" ¤¤"
+
+#: ex_cmds.c:1569
+msgid "# This viminfo file was generated by vim\n"
+msgstr "# ¥» viminfo ÀÉ®×¬O¥Ñ vim ©Ò²£¥Í\n"
+
+#: ex_cmds.c:1570
+msgid ""
+"# You may edit it if you're careful!\n"
+"\n"
+msgstr ""
+"# ¦pªG·Q­n¦Û¦æ­×§ï½Ð¯S§O¤p¤ß¡I\n"
+"\n"
+
+#: ex_cmds.c:1572
+msgid "# Value of 'encoding' when this file was written\n"
+msgstr "# 'encoding' ¦b¦¹ÀÉ«Ø¥ß®Éªº­È\n"
+
+#: ex_cmds.c:1663
+msgid "Illegal starting char"
+msgstr "µL®Äªº°_©l¦r¤¸"
+
+#: ex_cmds.c:2000 ex_cmds.c:2191 ex_cmds2.c:581
+msgid "Save As"
+msgstr "¥t¦s·sÀÉ"
+
+#: ex_cmds.c:2057
+msgid "Write partial file?"
+msgstr "­n¼g¤J³¡¤ÀÀÉ®×¶Ü¡H"
+
+#: ex_cmds.c:2064
+msgid "Use ! to write partial buffer"
+msgstr "½Ð¨Ï¥Î ! ¥H¼g¤J³¡¤À½w½Ä°Ï"
+
+#: ex_cmds.c:2116 ex_docmd.c:6437
+#, c-format
+msgid "\"%s\" is a directory"
+msgstr "\"%s\" ¬O¥Ø¿ý"
+
+#: ex_cmds.c:2125
+#, c-format
+msgid "Overwrite existing file \"%.*s\"?"
+msgstr "­nÂÐ¼g¤w¦s¦bªºÀÉ®× \"%.*s\"¡H"
+
+#: ex_cmds.c:2196
+#, c-format
+msgid "No file name for buffer %ld"
+msgstr "½w½Ä°Ï %ld ¨S¦³ÀÉ®×¦WºÙ"
+
+#: ex_cmds.c:2234
+msgid "File not written: Writing is disabled by 'write' option"
+msgstr "ÀÉ®×¥¼¼g¤J¡A¦]¬° 'write' ¿ï¶µ³QÃö³¬"
+
+#: ex_cmds.c:2254
+#, c-format
+msgid ""
+"'readonly' option is set for \"%.*s\".\n"
+"Do you wish to override it?"
+msgstr ""
+"¤w³]©w 'readonly' ¿ï¶µ \"%.*s\".\n"
+"½T©w­nÂÐ¼g¶Ü¡H"
+
+#: ex_cmds.c:2419
+msgid "Edit File"
+msgstr "½s¿èÀÉ®×"
+
+#: ex_cmds.c:2898
+#, c-format
+#~ msgid "Autocommands unexpectedly deleted new buffer %s"
+#~ msgstr ""
+
+#: ex_cmds.c:3017
+msgid "non-numeric argument to :z"
+msgstr ":z ¤£±µ¨ü«D¼Æ¦rªº°Ñ¼Æ"
+
+#: ex_cmds.c:3106
+msgid "Shell commands not allowed in rvim"
+msgstr "rvim ¤¤¸T¤î¨Ï¥Î shell ©R¥O"
+
+#: ex_cmds.c:3233
+#~ msgid "Regular expressions can't be delimited by letters"
+#~ msgstr ""
+
+#: ex_cmds.c:3555
+#, c-format
+msgid "replace with %s (y/n/a/q/^E/^Y)?"
+msgstr "¨ú¥N¬° %s (y/n/a/q/^E/^Y)?"
+
+#: ex_cmds.c:3898
+msgid "(Interrupted) "
+msgstr "(¤w¤¤Â_) "
+
+#: ex_cmds.c:3902
+msgid "1 substitution"
+msgstr "¨ú¥N¤@²Õ"
+
+#: ex_cmds.c:3904
+#, c-format
+msgid "%ld substitutions"
+msgstr "¨ú¥N %ld ²Õ"
+
+#: ex_cmds.c:3907
+msgid " on 1 line"
+msgstr " ¤@¦æ¤¤"
+
+#: ex_cmds.c:3909
+#, c-format
+msgid " on %ld lines"
+msgstr " %ld ¦æ¤¤"
+
+#: ex_cmds.c:3959
+#~ msgid "Cannot do :global recursive"
+#~ msgstr ""
+
+#: ex_cmds.c:3994
+#~ msgid "Regular expression missing from global"
+#~ msgstr ""
+
+#: ex_cmds.c:4122
+msgid ""
+"\n"
+"# Last Substitute String:\n"
+"$"
+msgstr ""
+"\n"
+"# «e¤@²Õ´À¥N¦r¦ê:\n"
+"$"
+
+#: ex_cmds.c:4221
+#, c-format
+msgid "Sorry, no help for %s"
+msgstr "©êºp, ¨S¦³ %s ªº»¡©ú"
+
+#: ex_cmds.c:4255
+#, c-format
+msgid "Sorry, help file \"%s\" not found"
+msgstr "©êºp, §ä¤£¨ì»¡©úÀÉ \"%s\""
+
+#: ex_cmds.c:4686
+#, c-format
+msgid "Not a directory: %s"
+msgstr "%s ¤£¬O¥Ø¿ý"
+
+#: ex_cmds.c:4714
+#, c-format
+msgid "Cannot open %s for writing"
+msgstr "µLªk¥H¼g¤J¼Ò¦¡¶}±Ò \"%s\""
+
+#: ex_cmds.c:4728
+#, c-format
+msgid "Unable to open %s for reading"
+msgstr "µLªkÅª¨úÀÉ®×: \""
+
+#: ex_cmds.c:4807
+#, c-format
+msgid "Duplicate tag \"%s\" in file %s"
+msgstr "¼ÐÅÒ(tag) \"%s\" ¦bÀÉ®×¸Ì­«½Æ¥X²{¦h¦¸"
+
+#: ex_cmds.c:4899 ex_cmds.c:5003
+msgid "Missing sign ID"
+msgstr "¯Ê¤Ö Sign ID"
+
+#: ex_cmds.c:4932
+msgid "Missing filename"
+msgstr "¯Ê¤ÖÀÉ¦W"
+
+#: ex_cmds.c:4964
+#, c-format
+msgid "Invalid line number: %ld"
+msgstr "¦æ¸¹¿ù»~: %d"
+
+#: ex_cmds.c:4967
+#, c-format
+msgid "Invalid buffer name: %s"
+msgstr "½w½Ä°Ï¦WºÙ¿ù»~: %s"
+
+#: ex_cmds.c:5024
+#, c-format
+msgid "Cannot find buffer: %s"
+msgstr "§ä¤£¨ì½w½Ä°Ï: %s"
+
+#: ex_cmds.c:5035
+#, c-format
+#~ msgid "    line %ld, id %d, type %d"
+#~ msgstr ""
+
+#: ex_cmds.c:5055
+#, c-format
+#~ msgid "Signs for %s:"
+#~ msgstr ""
+
+#: ex_cmds2.c:61
+msgid "Entering Debug mode.  Type \"cont\" to leave."
+msgstr "¶i¤J°£¿ù¼Ò¦¡. ¿é¤J \"cont\" ¥H¦^¨ì¥¿±`¼Ò¦¡."
+
+#: ex_cmds2.c:65 ex_docmd.c:744
+#, c-format
+msgid "line %ld: %s"
+msgstr "¦æ %ld: %s"
+
+#: ex_cmds2.c:67
+#, c-format
+msgid "cmd: %s"
+msgstr "cmd: %s"
+
+#: ex_cmds2.c:206
+#, c-format
+msgid "Breakpoint in \"%s%s\" line %ld"
+msgstr "\"%s%s\" ¤¤Â_ÂI: ²Ä %ld ¦æ"
+
+#: ex_cmds2.c:370
+#, c-format
+msgid "Breakpoint not found: %s"
+msgstr "§ä¤£¨ì¤¤Â_ÂI: %s"
+
+#: ex_cmds2.c:396
+msgid "No breakpoints defined"
+msgstr "¨S¦³©w¸q¤¤Â_ÂI"
+
+#: ex_cmds2.c:401
+#, c-format
+msgid "%3d  %s %s  line %ld"
+msgstr "%3d  %s %s  ²Ä %ld ¦æ"
+
+#: ex_cmds2.c:604
+#, c-format
+msgid "Save changes to \"%.*s\"?"
+msgstr "±NÅÜ°Ê¦sÀx¦Ü \"%.*s\"?"
+
+#: ex_cmds2.c:742
+#, c-format
+msgid "No write since last change for buffer \"%s\""
+msgstr "¤w§ó§ï¹L½w½Ä°Ï \"%s\" ¦ý©|¥¼¦sÀÉ (¥i¥Î ! ±j¨î°õ¦æ)"
+
+#: ex_cmds2.c:811
+#~ msgid "Warning: Entered other buffer unexpectedly (check autocommands)"
+#~ msgstr ""
+
+#: ex_cmds2.c:1187
+msgid "There is only one file to edit"
+msgstr "¥u¦³¤@­ÓÀÉ®×¥i½s¿è"
+
+#: ex_cmds2.c:1189
+msgid "Cannot go before first file"
+msgstr "¤w¸g¦b²Ä¤@­ÓÀÉ®×¤F"
+
+#: ex_cmds2.c:1191
+msgid "Cannot go beyond last file"
+msgstr "¤w¸g¦b³Ì«á¤@­ÓÀÉ®×¤F"
+
+#: ex_cmds2.c:1597
+#, c-format
+msgid "could not source \"%s\""
+msgstr "µLªk°õ¦æ \"%s\""
+
+#: ex_cmds2.c:1607
+#, c-format
+msgid "sourcing \"%s\""
+msgstr "°õ¦æ \"%s\" ¤¤"
+
+#: ex_cmds2.c:1707
+#, c-format
+msgid "finished sourcing %s"
+msgstr "µ²§ô°õ¦æ %s"
+
+#: ex_cmds2.c:2003
+#~ msgid "Warning: Wrong line separator, ^M may be missing"
+#~ msgstr ""
+
+#: ex_cmds2.c:2050
+#~ msgid ":scriptencoding used outside of a sourced file"
+#~ msgstr ""
+
+#: ex_cmds2.c:2083
+#~ msgid ":finish used outside of a sourced file"
+#~ msgstr ""
+
+#: ex_docmd.c:466
+msgid "Entering Ex mode.  Type \"visual\" to go to Normal mode."
+msgstr "¶i¤J Ex ¼Ò¦¡. ¿é¤J \"visua\" ¥H¦^¨ì¥¿±`¼Ò¦¡."
+
+#: ex_docmd.c:502
+msgid "At end-of-file"
+msgstr "¤w¨ìÀÉ®×µ²§À"
+
+#: ex_docmd.c:883
+msgid "Missing :endwhile"
+msgstr "¯Ê¤Ö :endwhile"
+
+#: ex_docmd.c:885
+msgid "Missing :endif"
+msgstr "¯Ê¤Ö :endif"
+
+#: ex_docmd.c:895
+#~ msgid "End of sourced file"
+#~ msgstr ""
+
+#: ex_docmd.c:896
+msgid "End of function"
+msgstr "¨ç¦¡µ²§À"
+
+#: ex_docmd.c:1191
+#~ msgid "Ambiguous use of user-defined command"
+#~ msgstr ""
+
+#: ex_docmd.c:1205
+msgid "Not an editor command"
+msgstr "¤£¬O½s¿è¾¹ªº©R¥O"
+
+#: ex_docmd.c:1275
+msgid "Don't panic!"
+msgstr "¤£­nÅå·W!"
+
+#: ex_docmd.c:1294
+#~ msgid "Backwards range given"
+#~ msgstr ""
+
+#: ex_docmd.c:1298
+#~ msgid "Backwards range given, OK to swap"
+#~ msgstr ""
+
+#: ex_docmd.c:1406
+msgid "Use w or w>>"
+msgstr "½Ð¨Ï¥Î w ©Î w>>"
+
+#: ex_docmd.c:2789
+msgid "Sorry, this command is not implemented"
+msgstr "©êºp, ¥»©R¥O©|¥¼¹ê§@§¹¦¨"
+
+#: ex_docmd.c:2955
+msgid "Only one file name allowed"
+msgstr "¥u¤¹³\\¤@­ÓÀÉ"
+
+#: ex_docmd.c:3502
+#, c-format
+msgid "%d more files to edit.  Quit anyway?"
+msgstr "ÁÙ¦³ %d ­ÓÀÉ®×¥¼½s¿è. ½T©w­nÂ÷¶}¡H"
+
+#: ex_docmd.c:3509
+#, c-format
+msgid "%ld more files to edit"
+msgstr "ÁÙ¦³ %ld ­ÓÀÉ®×¥¼½s¿è"
+
+#: ex_docmd.c:3603
+msgid "Command already exists: use ! to redefine"
+msgstr "©R¥O¤w¸g¦s¦b, ½Ð¨Ï¥Î ! ±j¨î­«·s©w¸q"
+
+#: ex_docmd.c:3706
+#~ msgid ""
+#~ "\n"
+#~ "    Name        Args Range Complete  Definition"
+#~ msgstr ""
+
+#: ex_docmd.c:3795
+#~ msgid "No user-defined commands found"
+#~ msgstr ""
+
+#: ex_docmd.c:3878
+msgid "Invalid number of arguments"
+msgstr "¤£¥¿½Tªº°Ñ¼Æ¼Æ¥Ø"
+
+#: ex_docmd.c:3893
+#~ msgid "Count cannot be specified twice"
+#~ msgstr ""
+
+#: ex_docmd.c:3903
+#~ msgid "Invalid default value for count"
+#~ msgstr ""
+
+#: ex_docmd.c:3931
+msgid "argument required for complete"
+msgstr "»Ý­n«ü¥O°Ñ¼Æ¤~¯à§¹¦¨"
+
+#: ex_docmd.c:3958
+#, c-format
+msgid "Invalid attribute: %s"
+msgstr "¤£¥¿½TªºÄÝ©Ê: %s"
+
+#: ex_docmd.c:3999
+msgid "Invalid command name"
+msgstr "«ü¥O¦WºÙ¤£¥¿½T"
+
+#: ex_docmd.c:4014
+msgid "User defined commands must start with an uppercase letter"
+msgstr "¨Ï¥ÎªÌ¦Û©w«ü¥O¥²¶·¥H¤j¼g¦r¥À¶}©l"
+
+#: ex_docmd.c:4085
+#, c-format
+#~ msgid "No such user-defined command: %s"
+#~ msgstr ""
+
+#: ex_docmd.c:5309
+msgid "Edit File in new window"
+msgstr "¦b·sµøµ¡½s¿èÀÉ®×"
+
+#: ex_docmd.c:5563
+msgid "No swap file"
+msgstr "µL¼È¦sÀÉ"
+
+#: ex_docmd.c:5667
+msgid "Append File"
+msgstr "ªþ¥[ÀÉ®×"
+
+#: ex_docmd.c:5726
+msgid "No previous directory"
+msgstr "¨S¦³«e¤@­Ó¥Ø¿ý"
+
+#: ex_docmd.c:5864
+#, c-format
+#~ msgid "Ambiguous mapping, conflicts with \"%s\""
+#~ msgstr ""
+
+#: ex_docmd.c:5902
+#, c-format
+msgid "Window position: X %d, Y %d"
+msgstr "µøµ¡¦ì¸m: X %d, Y %d"
+
+#: ex_docmd.c:5907
+#~ msgid "Obtaining window position not implemented for this platform"
+#~ msgstr ""
+
+#: ex_docmd.c:6167
+#~ msgid "Save Redirection"
+#~ msgstr ""
+
+#: ex_docmd.c:6298
+msgid "Save Session"
+msgstr "Àx¦s Session"
+
+#: ex_docmd.c:6300
+#~ msgid "Save Setup"
+#~ msgstr ""
+
+#: ex_docmd.c:6443
+#, c-format
+msgid "\"%s\" exists (use ! to override)"
+msgstr "\"%s\" ¤w¦s¦b (½Ð¥Î ! ±j¨î°õ¦æ)"
+
+#: ex_docmd.c:6448
+#, c-format
+msgid "Cannot open \"%s\" for writing"
+msgstr "µLªk¥H¼g¤J¼Ò¦¡¶}±Ò \"%s\""
+
+#: ex_docmd.c:6472
+#~ msgid "Argument must be a letter or forward/backward quote"
+#~ msgstr ""
+
+#: ex_docmd.c:6500
+#~ msgid "Recursive use of :normal too deep"
+#~ msgstr ""
+
+#: ex_docmd.c:6507
+#~ msgid "Cannot use :normal from event handler"
+#~ msgstr ""
+
+#: ex_docmd.c:6846
+msgid ":if nesting too deep"
+msgstr ":if ¼h¼Æ¹L²`"
+
+#: ex_docmd.c:6881
+msgid ":endif without :if"
+msgstr ":endif ¯Ê¤Ö¹ïÀ³ªº :if"
+
+#: ex_docmd.c:6901
+msgid ":else without :if"
+msgstr ":else ¯Ê¤Ö¹ïÀ³ªº :if"
+
+#: ex_docmd.c:6903
+msgid ":elseif without :if"
+msgstr ":elseif ¯Ê¤Ö¹ïÀ³ªº :if"
+
+#: ex_docmd.c:6955
+msgid ":while nesting too deep"
+msgstr ":while ¼h¼Æ¹L²`"
+
+#: ex_docmd.c:7001
+msgid ":continue without :while"
+msgstr ":continue ¯Ê¤Ö¹ïÀ³ªº :while"
+
+#: ex_docmd.c:7028
+msgid ":break without :while"
+msgstr ":break ¯Ê¤Ö¹ïÀ³ªº :while"
+
+#: ex_docmd.c:7051 ex_docmd.c:7056
+msgid ":endwhile without :while"
+msgstr ":endwhile ¯Ê¤Ö¹ïÀ³ªº :while"
+
+#: ex_docmd.c:7077
+msgid ":endfunction not inside a function"
+msgstr ":endfunction ¥²¶·¦b¨ç¦¡¤º³¡¨Ï¥Î"
+
+#: ex_docmd.c:7253
+#~ msgid "No alternate file name to substitute for '#'"
+#~ msgstr ""
+
+#: ex_docmd.c:7284
+#~ msgid "no autocommand file name to substitute for \"<afile>\""
+#~ msgstr ""
+
+#: ex_docmd.c:7292
+#~ msgid "no autocommand buffer number to substitute for \"<abuf>\""
+#~ msgstr ""
+
+#: ex_docmd.c:7303
+#~ msgid "no autocommand match name to substitute for \"<amatch>\""
+#~ msgstr ""
+
+#: ex_docmd.c:7313
+#~ msgid "no :source file name to substitute for \"<sfile>\""
+#~ msgstr ""
+
+#: ex_docmd.c:7347
+#, c-format
+#~ msgid "Empty file name for '%' or '#', only works with \":p:h\""
+#~ msgstr ""
+
+#: ex_docmd.c:7349
+#~ msgid "Evaluates to an empty string"
+#~ msgstr ""
+
+#: ex_docmd.c:8145 globals.h:934
+msgid "No file name"
+msgstr "¨S¦³ÀÉ¦W"
+
+#: ex_docmd.c:8255
+msgid "Cannot open viminfo file for reading"
+msgstr "µLªkÅª¨ú viminfo"
+
+#: ex_docmd.c:8303
+#, c-format
+#~ msgid "Searching for \"%s\" in \"%s\""
+#~ msgstr ""
+
+#: ex_docmd.c:8325
+#, c-format
+msgid "Searching for \"%s\""
+msgstr "·j´MÜ \"%s\""
+
+#: ex_docmd.c:8345
+#, c-format
+#~ msgid "not found in 'runtimepath': \"%s\""
+#~ msgstr ""
+
+#: ex_docmd.c:8364
+msgid "Run Macro"
+msgstr "°õ¦æ¥¨¶°"
+
+#: ex_docmd.c:8548
+msgid "No digraphs in this version"
+msgstr "¥»ª©¥»µL¤G¦X¦r¤¸(digraph)"
+
+#: ex_docmd.c:8696
+#, c-format
+msgid "Current language: %s"
+msgstr "¥Ø«eªº»y¨¥: %s"
+
+#: ex_docmd.c:8702
+#, c-format
+msgid "Cannot set language to \"%s\""
+msgstr "¤£¯à³]©w»y¨¥¦¨ \"%s\""
+
+msgid "'history' option is zero"
+msgstr "¿ï¶µ 'history' ¬O¹s"
+
+#: ex_getln.c:3829
+#, c-format
+#~ msgid ""
+#~ "\n"
+#~ "# %s History (newest to oldest):\n"
+#~ msgstr ""
+
+#: ex_getln.c:3830
+msgid "Command Line"
+msgstr "©R¥O¦C"
+
+#: ex_getln.c:3831
+msgid "Search String"
+msgstr "·j´M¦r¦ê"
+
+#: ex_getln.c:3832
+msgid "Expression"
+msgstr "¹Bºâ¦¡"
+
+#: ex_getln.c:3833
+msgid "Input Line"
+msgstr "¿é¤J¦æ"
+
+#: ex_getln.c:3863
+#~ msgid "cmd_pchar beyond the command length"
+#~ msgstr ""
+
+#: ex_getln.c:4026
+msgid "Active window or buffer deleted"
+msgstr "¤w§R°£±¼§@¥Î¤¤ªºµøµ¡©Î¼È¦s°Ï"
+
+#: fileio.c:339
+msgid "Illegal file name"
+msgstr "¤£¥¿½TªºÀÉ¦W"
+
+#: fileio.c:363 fileio.c:481 fileio.c:2341 fileio.c:2385
+msgid "is a directory"
+msgstr "¬O¥Ø¿ý"
+
+#: fileio.c:365
+msgid "is not a file"
+msgstr "¤£¬OÀÉ®×"
+
+#: fileio.c:501 fileio.c:3361
+msgid "[New File]"
+msgstr "[¥¼©R¦W]"
+
+#: fileio.c:518
+msgid "[Permission Denied]"
+msgstr "[Åv­­¤£¨¬]"
+
+#: fileio.c:610
+#~ msgid "*ReadPre autocommands made the file unreadable"
+#~ msgstr ""
+
+#: fileio.c:612
+#~ msgid "*ReadPre autocommands must not change current buffer"
+#~ msgstr ""
+
+#: fileio.c:632
+msgid "Vim: Reading from stdin...\n"
+msgstr "Vim: ±q¼Ð·Ç¿é¤JÅª¨ú...\n"
+
+#: fileio.c:638
+msgid "Reading from stdin..."
+msgstr "±q¼Ð·Ç¿é¤JÅª¨ú..."
+
+#: fileio.c:845
+msgid "Conversion made file unreadable!"
+msgstr "Âà´«¿ù»~"
+
+#: fileio.c:1611
+#~ msgid "[fifo/socket]"
+#~ msgstr ""
+
+#: fileio.c:1618
+#~ msgid "[fifo]"
+#~ msgstr ""
+
+#: fileio.c:1625
+#~ msgid "[socket]"
+#~ msgstr ""
+
+#: fileio.c:1633
+msgid "[RO]"
+msgstr "[°ßÅª]"
+
+#: fileio.c:1643
+msgid "[CR missing]"
+msgstr "[¯Ê¤ÖCR]'"
+
+#: fileio.c:1648
+msgid "[NL found]"
+msgstr "[§ä¨ìNL]"
+
+#: fileio.c:1653
+msgid "[long lines split]"
+msgstr "[¤À³Î¹Lªø¦æ]"
+
+#: fileio.c:1659 fileio.c:3345
+msgid "[NOT converted]"
+msgstr "[¥¼Âà´«]"
+
+#: fileio.c:1664 fileio.c:3350
+msgid "[converted]"
+msgstr "[¤wÂà´«]"
+
+#: fileio.c:1671 fileio.c:3375
+msgid "[crypted]"
+msgstr "[¤w¥[±K]"
+
+#: fileio.c:1678
+msgid "[CONVERSION ERROR]"
+msgstr "Âà´«¿ù»~"
+
+#: fileio.c:1685
+msgid "[READ ERRORS]"
+msgstr "[Åª¨ú¿ù»~]"
+
+#: fileio.c:1864
+msgid "Can't find temp file for conversion"
+msgstr "§ä¤£¨ìÂà´«¥Îªº¼È¦sÀÉ"
+
+#: fileio.c:1871
+msgid "Conversion with 'charconvert' failed"
+msgstr "¦r¤¸¶°Âà´«¿ù»~"
+
+#: fileio.c:1874
+#~ msgid "can't read output of 'charconvert'"
+#~ msgstr ""
+
+#: fileio.c:2257
+#~ msgid "Autocommands deleted or unloaded buffer to be written"
+#~ msgstr ""
+
+#: fileio.c:2280
+#~ msgid "Autocommand changed number of lines in unexpected way"
+#~ msgstr ""
+
+#: fileio.c:2346 fileio.c:2369
+msgid "is not a file or writable device"
+msgstr "¤£¬OÀÉ®×©Î¥i¼g¤Jªº¸Ë¸m"
+
+#: fileio.c:2397
+msgid "is read-only (use ! to override)"
+msgstr "¬O°ßÅªÀÉ (½Ð¨Ï¥Î ! ±j¨î°õ¦æ)"
+
+#: fileio.c:2685
+msgid "Can't write to backup file (use ! to override)"
+msgstr "µLªk¼g¤J³Æ¥÷ÀÉ (½Ð¨Ï¥Î ! ±j¨î°õ¦æ)"
+
+#: fileio.c:2691
+msgid "Close error for backup file (use ! to override)"
+msgstr "µLªkÃö³¬³Æ¥÷ÀÉ (½Ð¨Ï¥Î ! ±j¨î°õ¦æ)"
+
+#: fileio.c:2693
+msgid "Can't read file for backup (use ! to override)"
+msgstr "µLªkÅª¨úÀÉ®×¥H¨Ñ³Æ¥÷ (½Ð¨Ï¥Î ! ±j¨î°õ¦æ)"
+
+#: fileio.c:2709
+msgid "Cannot create backup file (use ! to override)"
+msgstr "µLªk«Ø¥ß³Æ¥÷ÀÉ (½Ð¨Ï¥Î ! ±j¨î°õ¦æ)"
+
+#: fileio.c:2798
+msgid "Can't make backup file (use ! to override)"
+msgstr "µLªk»s§@³Æ¥÷ÀÉ (½Ð¨Ï¥Î ! ±j¨î°õ¦æ)"
+
+#: fileio.c:2945
+msgid "Can't find temp file for writing"
+msgstr "§ä¤£¨ì¼g¤J¥Îªº¼È¦sÀÉ"
+
+#: fileio.c:2963
+#~ msgid "Cannot convert (use ! to write without conversion)"
+#~ msgstr ""
+
+#: fileio.c:2993
+msgid "Can't open file for writing"
+msgstr "µLªk¥H¼g¤J¼Ò¦¡¶}±Ò"
+
+#: fileio.c:3216
+msgid "Close failed"
+msgstr "Ãö³¬¥¢±Ñ"
+
+#: fileio.c:3271
+msgid "write error, conversion failed"
+msgstr "µLªk¼g¤J -- Âà´«¥¢±Ñ"
+
+#: fileio.c:3274
+msgid "write error (file system full?)"
+msgstr "¼g¤J¿ù»~ (ÀÉ®×¨t²Î¤wº¡¡H)"
+
+#: fileio.c:3340
+msgid " CONVERSION ERROR"
+msgstr "Âà´«¿ù»~"
+
+#: fileio.c:3356
+msgid "[Device]"
+msgstr "[¸Ë¸m]"
+
+#: fileio.c:3361
+msgid "[New]"
+msgstr "[·s]"
+
+#: fileio.c:3383
+#~ msgid " appended"
+#~ msgstr ""
+
+#: fileio.c:3385
+msgid " written"
+msgstr " ¤w¼g¤J"
+
+#: fileio.c:3435
+#~ msgid "patchmode: can't save original file"
+#~ msgstr ""
+
+#: fileio.c:3456
+#~ msgid "patchmode: can't touch empty original file"
+#~ msgstr ""
+
+#: fileio.c:3471
+msgid "Can't delete backup file"
+msgstr "µLªk§R°£³Æ¥÷ÀÉ"
+
+#: fileio.c:3523
+msgid ""
+"\n"
+"WARNING: Original file may be lost or damaged\n"
+msgstr ""
+"\n"
+"Äµ§i: ­ì©lÀÉ®×¬y¥¢©Î·lÃa\n"
+
+#: fileio.c:3525
+#~ msgid "don't quit the editor until the file is successfully written!"
+#~ msgstr ""
+
+#: fileio.c:3593
+#~ msgid "[dos]"
+#~ msgstr ""
+
+#: fileio.c:3593
+msgid "[dos format]"
+msgstr "[dos ®æ¦¡]"
+
+#: fileio.c:3600
+msgid "[mac]"
+msgstr "[mac]"
+
+#: fileio.c:3600
+msgid "[mac format]"
+msgstr "[mac ®æ¦¡]"
+
+#: fileio.c:3607
+msgid "[unix]"
+msgstr "[unix]"
+
+#: fileio.c:3607
+msgid "[unix format]"
+msgstr "[unix ®æ¦¡]"
+
+#: fileio.c:3651
+msgid "[noeol]"
+msgstr "[noeol]"
+
+#: fileio.c:3651
+msgid "[Incomplete last line]"
+msgstr "[µ²§À¦æ¤£§¹¾ã]"
+
+#: fileio.c:3667
+msgid "WARNING: The file has been changed since reading it!!!"
+msgstr "Äµ§i: ¥»ÀÉ®×¦Û¤W¦¸Åª¤J«á¤wÅÜ°Ê!!!"
+
+#: fileio.c:3669
+msgid "Do you really want to write to it"
+msgstr "½T©w­n¼g¤J¶Ü"
+
+#: fileio.c:4586
+#, c-format
+msgid "Error writing to \"%s\""
+msgstr "¼g¤JÀÉ®× \"%s\" ¿ù»~"
+
+#: fileio.c:4593
+#, c-format
+msgid "Error closing \"%s\""
+msgstr "Ãö³¬ÀÉ®× \"%s\" ¿ù»~"
+
+#: fileio.c:4596
+#, c-format
+msgid "Error reading \"%s\""
+msgstr "Åª¨úÀÉ®× \"%s\" ¿ù»~"
+
+#: fileio.c:4716
+#, c-format
+msgid "Warning: File \"%s\" no longer available"
+msgstr "Äµ§i: ÀÉ®× \"%s\" ¤w¸g¤£¦s¦b"
+
+#: fileio.c:4718
+#, c-format
+msgid "Warning: File \"%s\" has changed since editing started"
+msgstr "Äµ§i: ÀÉ®× \"%s\" ¦Û¤W¦¸Åª¤J«á¤wÅÜ°Ê!!!"
+
+#: fileio.c:4725
+#, c-format
+#~ msgid "Warning: File \"%s\" has been created after editing started"
+#~ msgstr ""
+
+#: fileio.c:5467
+#, c-format
+msgid "Illegal character after *: %s"
+msgstr "* «á­±¦³¤£¥¿½Tªº¦r¤¸: %s"
+
+#: fileio.c:5478
+#, c-format
+msgid "No such event: %s"
+msgstr "µL¦¹¨Æ¥ó: %s"
+
+#: fileio.c:5627
+msgid ""
+"\n"
+"--- Auto-Commands ---"
+msgstr ""
+"\n"
+"--- Auto ©R¥O ---"
+
+#: fileio.c:5891
+#~ msgid "Can't execute autocommands for ALL events"
+#~ msgstr ""
+
+#: fileio.c:5914
+msgid "No matching autocommands"
+msgstr "§ä¤£¨ì¹ïÀ³ªº autocommand"
+
+#: fileio.c:6172
+msgid "autocommand nesting too deep"
+msgstr "autocommand ¼h¼Æ¹L²`"
+
+#: fileio.c:6441
+#, c-format
+#~ msgid "%s Auto commands for \"%s\""
+#~ msgstr ""
+
+#: fileio.c:6449
+#, c-format
+msgid "Executing %s"
+msgstr "°õ¦æ %s"
+
+#: fileio.c:6517
+#, c-format
+#~ msgid "autocommand %s"
+#~ msgstr ""
+
+#: fileio.c:7027
+msgid "Missing {."
+msgstr "¯Ê¤Ö {."
+
+#: fileio.c:7029
+msgid "Missing }."
+msgstr "¯Ê¤Ö }."
+
+#: fold.c:1630
+msgid "'commentstring' is empty"
+msgstr "¿ï¶µ 'commentstring' ¥¼³]©w"
+
+#: getchar.c:241
+#~ msgid "Add to read buffer"
+#~ msgstr ""
+
+#: getchar.c:1737
+#~ msgid "recursive mapping"
+#~ msgstr ""
+
+#: getchar.c:2393
+#, c-format
+#~ msgid "global abbreviation already exists for %s"
+#~ msgstr ""
+
+#: getchar.c:2396
+#, c-format
+#~ msgid "global mapping already exists for %s"
+#~ msgstr ""
+
+#: getchar.c:2532
+#, c-format
+#~ msgid "abbreviation already exists for %s"
+#~ msgstr ""
+
+#: getchar.c:2535
+#, c-format
+msgid "mapping already exists for %s"
+msgstr "%s ªº mapping ¤w¸g¦s¦b"
+
+#: getchar.c:2600
+msgid "No mapping found"
+msgstr "¨S¦³³o­Ó mapping ¹ïÀ³"
+
+#: getchar.c:3366
+#~ msgid "makemap: Illegal mode"
+#~ msgstr ""
+
+#: gui.c:171
+msgid "Cannot start the GUI"
+msgstr "µLªk±Ò°Ê¹Ï«¬¬É­±"
+
+#: gui.c:285 main.c:1060
+#, c-format
+msgid "Cannot read from \"%s\""
+msgstr "µLªkÅª¨úÀÉ®× \"%s\""
+
+#: gui.c:402
+#~ msgid "'guifontwide' invalid"
+#~ msgstr ""
+
+#: gui_at_fs.c:288
+msgid "<cannot open> "
+msgstr "<¤£¯à¶}±Ò>"
+
+#: gui_at_fs.c:1115
+#, c-format
+#~ msgid "vim_SelFile: can't get font %s"
+#~ msgstr ""
+
+#: gui_at_fs.c:2535
+#~ msgid "vim_SelFile: can't return to current directory"
+#~ msgstr ""
+
+#: gui_at_fs.c:2552
+msgid "Pathname:"
+msgstr "¸ô®|:"
+
+#: gui_at_fs.c:2560 gui_gtk.c:2274
+#~ msgid "OK"
+#~ msgstr ""
+
+#: gui_at_fs.c:2560 gui_gtk.c:1726 gui_gtk.c:2268
+msgid "Cancel"
+msgstr "¨ú®ø"
+
+#: gui_at_fs.c:2569
+msgid "vim_SelFile: can't get current directory"
+msgstr "vim_SelFile: µLªk¨ú±o¥Ø«e¥Ø¿ý"
+
+#: gui_at_sb.c:488
+#~ msgid "Scrollbar Widget: Could not get geometry of thumb pixmap."
+#~ msgstr ""
+
+#: gui_athena.c:950 gui_motif.c:1424
+msgid "Vim dialog"
+msgstr "Vim ¹ï¸Ü²°"
+
+#: gui_beval.c:66
+#~ msgid "Cannot create BalloonEval with both message and callback"
+#~ msgstr ""
+
+#: gui_gtk.c:1183
+msgid "Vim dialog..."
+msgstr "Vim ¹ï¸Ü²°..."
+
+#: gui_gtk.c:1563
+msgid "VIM - Search and Replace..."
+msgstr "VIM - ´M§ä»P¨ú¥N..."
+
+#: gui_gtk.c:1568
+msgid "VIM - Search..."
+msgstr "VIM - ´M§ä..."
+
+#: gui_gtk.c:1591
+msgid "Find what:"
+msgstr "·j´M:"
+
+#: gui_gtk.c:1609
+msgid "Replace with:"
+msgstr "¨ú¥N¬°:"
+
+#: gui_gtk.c:1641
+#~ msgid "Match exact word only"
+#~ msgstr ""
+
+#: gui_gtk.c:1652
+msgid "Direction"
+msgstr "¤è¦V"
+
+#: gui_gtk.c:1664
+msgid "Up"
+msgstr "¦V¤W"
+
+#: gui_gtk.c:1668
+msgid "Down"
+msgstr "¦V¤U"
+
+#: gui_gtk.c:1690
+msgid "Find Next"
+msgstr "§ä¤U¤@­Ó"
+
+#: gui_gtk.c:1707
+msgid "Replace"
+msgstr "¨ú¥N"
+
+#: gui_gtk.c:1716
+msgid "Replace All"
+msgstr "¨ú¥N¥þ³¡"
+
+#: gui_gtk.c:2229
+msgid "VIM - Help on..."
+msgstr "VIM - ¨D§U..."
+
+#: gui_gtk.c:2251
+msgid "Topic:"
+msgstr "¥DÃD:"
+
+#: gui_gtk_x11.c:1001 gui_x11.c:1108
+msgid "cannot open display"
+msgstr "<¤£¯à¶}±Ò X Server DISPLAY>"
+
+#: gui_gtk_x11.c:2256 gui_x11.c:1770
+#, c-format
+msgid "Unknown fontset: %s"
+msgstr "¤£¥¿½Tªº¦r¤¸¶° (Fontset): %s"
+
+#: gui_gtk_x11.c:2282
+msgid "Font Selection"
+msgstr "¦r«¬¿ï¾Ü"
+
+#: gui_gtk_x11.c:2524 gui_x11.c:1606
+#, c-format
+msgid "Unknown font: %s"
+msgstr "¤£¥¿½Tªº¦r«¬¦WºÙ: %s"
+
+#: gui_gtk_x11.c:2535 gui_x11.c:1630
+#, c-format
+msgid "Font \"%s\" is not fixed-width"
+msgstr "\"%s\" ¤£¬O©T©w¼e«×¦r«¬"
+
+#: gui_gtk_x11.c:2664
+#, c-format
+#~ msgid "Color name not recognized: %s"
+#~ msgstr ""
+
+#: gui_x11.c:1271
+#~ msgid "Vim: Cannot allocate colormap entry, some colors may be incorrect"
+#~ msgstr ""
+
+#: gui_x11.c:1759
+#, c-format
+msgid "Error: During loading fontset %s"
+msgstr "µLªk¸ü¤J¦r«¬¶° %s"
+
+#: gui_x11.c:1760
+#~ msgid "Font(s) for the following character sets are missing:"
+#~ msgstr ""
+
+#: gui_x11.c:1803
+#~ msgid "locale is not set correctly"
+#~ msgstr ""
+
+#: gui_x11.c:1804
+#~ msgid "Set LANG environment variable to your locale"
+#~ msgstr ""
+
+#: gui_x11.c:1805
+#~ msgid "For korean:"
+#~ msgstr ""
+
+#: gui_x11.c:1806
+#~ msgid "   csh: setenv LANG ko"
+#~ msgstr ""
+
+#: gui_x11.c:1807
+#~ msgid "   sh : export LANG=ko"
+#~ msgstr ""
+
+#: gui_x11.c:1809
+#, c-format
+#~ msgid "fontset name: %s"
+#~ msgstr ""
+
+#: gui_x11.c:1810
+#~ msgid "Your language Font missing"
+#~ msgstr ""
+
+#: gui_x11.c:1811
+#, c-format
+#~ msgid "loaded fontname: %s"
+#~ msgstr ""
+
+#: gui_x11.c:1819
+#, c-format
+#~ msgid "Fontset name: %s"
+#~ msgstr ""
+
+#: gui_x11.c:1820
+#, c-format
+msgid "Font '%s' is not fixed-width"
+msgstr "'%s' ¤£¬O©T©w¼e«×¦r«¬"
+
+#: gui_x11.c:1839
+#, c-format
+#~ msgid "Fontset name: %s\n"
+#~ msgstr ""
+
+#: gui_x11.c:1840
+#, c-format
+msgid "Font0: %s\n"
+msgstr "Font0: %s\n"
+
+#: gui_x11.c:1841
+#, c-format
+msgid "Font1: %s\n"
+msgstr "Font1: %s\n"
+
+#: gui_x11.c:1842
+#, c-format
+#~ msgid "Font%d width is not twice that of font0\n"
+#~ msgstr ""
+
+#: gui_x11.c:1843
+#, c-format
+#~ msgid "Font0 width: %ld\n"
+#~ msgstr ""
+
+#: gui_x11.c:1844
+#, c-format
+#~ msgid ""
+#~ "Font1 width: %ld\n"
+#~ "\n"
+#~ msgstr ""
+
+#: gui_x11.c:1947
+#, c-format
+msgid "Cannot allocate color %s"
+msgstr "¤£¯à°t¸mÃC¦â %s"
+
+#: gui_x11.c:2997
+msgid "Cannot allocate memory for debugger sign"
+msgstr "µLªk°t¸m°£¿ù¾¹©Ò»Ýªº°O¾ÐÅé"
+
+#: gui_x11.c:3022
+#~ msgid "Error -- couldn't read in sign data!"
+#~ msgstr ""
+
+#: hangulin.c:603
+msgid "automata ERROR: internal"
+msgstr "¦Û°Ê¾÷¿ù»~: ¤º³¡°T®§"
+
+#: if_cscope.c:64
+msgid "Add a new database"
+msgstr "·s¼W¸ê®Æ®w"
+
+#: if_cscope.c:66
+#~ msgid "Query for a pattern"
+#~ msgstr ""
+
+#: if_cscope.c:68
+#~ msgid "Show this message"
+#~ msgstr ""
+
+#: if_cscope.c:70
+#~ msgid "Kill a connection"
+#~ msgstr ""
+
+#: if_cscope.c:72
+#~ msgid "Reinit all connections"
+#~ msgstr ""
+
+#: if_cscope.c:74
+#~ msgid "Show connections"
+#~ msgstr ""
+
+#: if_cscope.c:121
+#~ msgid "Usage: cstag <ident>"
+#~ msgstr ""
+
+#: if_cscope.c:177
+msgid "cstag: tag not found"
+msgstr "cstag: §ä¤£¨ì tag"
+
+#: if_cscope.c:373
+#~ msgid "cs_add_common: alloc fail #1"
+#~ msgstr ""
+
+#: if_cscope.c:380
+#~ msgid "cs_add_common: alloc fail #2"
+#~ msgstr ""
+
+#: if_cscope.c:390 if_cscope.c:413 if_cscope.c:447
+#, c-format
+#~ msgid "stat(%s) error: %d"
+#~ msgstr ""
+
+#: if_cscope.c:403
+#~ msgid "cs_add_common: alloc fail #3"
+#~ msgstr ""
+
+#: if_cscope.c:427
+#~ msgid "cs_add_common: alloc fail #4"
+#~ msgstr ""
+
+#: if_cscope.c:456 if_cscope.c:463
+#, c-format
+msgid "Added cscope database %s"
+msgstr "·s¼W cscope ¸ê®Æ®w %s"
+
+#: if_cscope.c:470
+#, c-format
+#~ msgid "%s is not a directory or a valid cscope database"
+#~ msgstr ""
+
+#: if_cscope.c:553 if_cscope.c:1338
+#, c-format
+#~ msgid "error reading cscope connection %d"
+#~ msgstr ""
+
+#: if_cscope.c:629
+#~ msgid "unknown cscope search type"
+#~ msgstr ""
+
+#: if_cscope.c:676
+#~ msgid "Could not create cscope pipes"
+#~ msgstr ""
+
+#: if_cscope.c:741
+#~ msgid "cs_create_connection exec failed"
+#~ msgstr ""
+
+#: if_cscope.c:751
+#~ msgid "cs_create_connection: fdopen for to_fp failed"
+#~ msgstr ""
+
+#: if_cscope.c:753
+#~ msgid "cs_create_connection: fdopen for fr_fp failed"
+#~ msgstr ""
+
+#: if_cscope.c:781
+#~ msgid "no cscope connections"
+#~ msgstr ""
+
+#: if_cscope.c:851
+#~ msgid "no matches found in cscope connections"
+#~ msgstr ""
+
+#: if_cscope.c:862
+#, c-format
+#~ msgid "no matches found for cscope query %s of %s"
+#~ msgstr ""
+
+#: if_cscope.c:896
+msgid "cscope commands:\n"
+msgstr "cscope ©R¥O:\n"
+
+#: if_cscope.c:899
+#, c-format
+#~ msgid "%-5s: %-30s (Usage: %s)\n"
+#~ msgstr ""
+
+#: if_cscope.c:967
+#~ msgid "duplicate cscope database not added"
+#~ msgstr ""
+
+#: if_cscope.c:978
+#~ msgid "maximum number of cscope connections reached"
+#~ msgstr ""
+
+#: if_cscope.c:1099
+#~ msgid "cscope connection not found"
+#~ msgstr ""
+
+#: if_cscope.c:1102
+#, c-format
+#~ msgid "cscope connection %s not found"
+#~ msgstr ""
+
+#: if_cscope.c:1138
+#~ msgid "cscope connection closed"
+#~ msgstr ""
+
+#: if_cscope.c:1146
+#, c-format
+#~ msgid "cscope connection %s closed\n"
+#~ msgstr ""
+
+#: if_cscope.c:1287
+#~ msgid "fatal error in cs_manage_matches"
+#~ msgstr ""
+
+#: if_cscope.c:1426
+msgid "couldn't malloc\n"
+msgstr "µLªk¨Ï¥Î malloc\n"
+
+#: if_cscope.c:1431
+#, c-format
+#~ msgid "Cscope tag: %s\n"
+#~ msgstr ""
+
+#: if_cscope.c:1435
+msgid "   #   line"
+msgstr "   #   ¦æ  "
+
+#: if_cscope.c:1437
+#~ msgid "filename / context / line\n"
+#~ msgstr ""
+
+#: if_cscope.c:1695
+#~ msgid "All cscope databases reset"
+#~ msgstr ""
+
+#: if_cscope.c:1762
+#~ msgid "no cscope connections\n"
+#~ msgstr ""
+
+#: if_cscope.c:1766
+#~ msgid " # pid    database name                       prepend path\n"
+#~ msgstr ""
+
+#: if_cscope.c:1777
+#, c-format
+#~ msgid "%2d %-5ld  %-34s  <none>\n"
+#~ msgstr ""
+
+#: if_python.c:559
+#~ msgid "can't delete OutputObject attributes"
+#~ msgstr ""
+
+#: if_python.c:566
+#~ msgid "softspace must be an integer"
+#~ msgstr ""
+
+#: if_python.c:574
+msgid "invalid attribute"
+msgstr "¤£¥¿½TªºÄÝ©Ê"
+
+#: if_python.c:613 if_python.c:627
+#~ msgid "writelines() requires list of strings"
+#~ msgstr ""
+
+#: globals.h:954 if_python.c:672
+msgid "Out of memory!"
+msgstr "°O¾ÐÅé¤£¨¬!"
+
+#: if_python.c:757
+#~ msgid "Python: Error initialising I/O objects"
+#~ msgstr ""
+
+#: if_python.c:942 if_tcl.c:1264
+msgid "invalid expression"
+msgstr "¤£¥¿½Tªº¹Bºâ¦¡"
+
+#: if_python.c:969
+#~ msgid "attempt to refer to deleted buffer"
+#~ msgstr ""
+
+#: if_python.c:984 if_python.c:1025 if_python.c:1089 if_tcl.c:1078
+msgid "line number out of range"
+msgstr "¦æ¸¹¶W¥X½d³ò"
+
+#: if_python.c:1222
+#, c-format
+#~ msgid "<buffer object (deleted) at %8lX>"
+#~ msgstr ""
+
+#: if_python.c:1313 if_tcl.c:700
+msgid "invalid mark name"
+msgstr "¼Ð°O¦WºÙ¤£¥¿½T"
+
+#: if_python.c:1588
+#~ msgid "no such buffer"
+#~ msgstr ""
+
+#: if_python.c:1676
+#~ msgid "attempt to refer to deleted window"
+#~ msgstr ""
+
+#: if_python.c:1721
+#~ msgid "readonly attribute"
+#~ msgstr ""
+
+#: if_python.c:1734
+#~ msgid "cursor position outside buffer"
+#~ msgstr ""
+
+#: if_python.c:1811
+#, c-format
+#~ msgid "<window object (deleted) at %.8lX>"
+#~ msgstr ""
+
+#: if_python.c:1823
+#, c-format
+#~ msgid "<window object (unknown) at %.8lX>"
+#~ msgstr ""
+
+#: if_python.c:1825
+#, c-format
+msgid "<window %d>"
+msgstr "<µøµ¡ %d>"
+
+#: if_python.c:1901
+msgid "no such window"
+msgstr "µL¦¹µøµ¡"
+
+#: if_python.c:2131 if_python.c:2162 if_python.c:2212 if_python.c:2272
+#: if_python.c:2389 if_python.c:2441 if_tcl.c:548 if_tcl.c:593 if_tcl.c:667
+#: if_tcl.c:737 if_tcl.c:1845
+msgid "cannot save undo information"
+msgstr "µLªkÀx¦s´_­ì¸ê°T"
+
+#: if_python.c:2133 if_python.c:2219 if_python.c:2283
+msgid "cannot delete line"
+msgstr "¤£¯à§R°£¦¹¦æ"
+
+#: if_python.c:2164 if_python.c:2299 if_tcl.c:554 if_tcl.c:1867
+msgid "cannot replace line"
+msgstr "¤£¯à´À¥N¦¹¦æ"
+
+#: if_python.c:2315 if_python.c:2391 if_python.c:2449
+msgid "cannot insert line"
+msgstr "¤£¯à´À¥N´¡¤J¦¹¦æ"
+
+#: if_python.c:2553
+#~ msgid "string cannot contain newlines"
+#~ msgstr ""
+
+#: if_tcl.c:282
+msgid "invalid buffer number"
+msgstr "½w½Ä°Ï¸¹½X¿ù»~"
+
+#: if_tcl.c:328 if_tcl.c:795 if_tcl.c:974
+#~ msgid "not implemented yet"
+#~ msgstr ""
+
+#: if_tcl.c:365
+msgid "unknown option"
+msgstr "¤£¥¿½Tªº¿ï¶µ"
+
+#: if_tcl.c:709
+msgid "mark not set"
+msgstr "¨S¦³³]©w¼Ð°O"
+
+#: if_tcl.c:715 if_tcl.c:930
+#, c-format
+msgid "row %d column %d"
+msgstr "¦C %d ¦æ %d"
+
+#: if_tcl.c:745
+msgid "cannot insert/append line"
+msgstr "¤£¯à´¡¤J©Îªþ¥[¦¹¦æ"
+
+#: if_tcl.c:1130
+msgid "unknown flag: "
+msgstr "¿ù»~ªººX¼Ð: "
+
+#: if_tcl.c:1200
+msgid "unknown vimOption"
+msgstr "¤£¥¿½Tªº VIM ¿ï¶µ"
+
+#: if_tcl.c:1285
+#~ msgid "keyboard interrupt"
+#~ msgstr ""
+
+#: if_tcl.c:1290
+#~ msgid "vim error"
+#~ msgstr ""
+
+#: if_tcl.c:1333
+#~ msgid "cannot create buffer/window command: object is being deleted"
+#~ msgstr ""
+
+#: if_tcl.c:1407
+#~ msgid ""
+#~ "cannot register callback command: buffer/window is already being deleted"
+#~ msgstr ""
+
+#: if_tcl.c:1424
+#~ msgid ""
+#~ "TCL FATAL ERROR: reflist corrupt!? Please report this to vim-dev@vim.org"
+#~ msgstr ""
+
+#: if_tcl.c:1425
+#~ msgid "cannot register callback command: buffer/window reference not found"
+#~ msgstr ""
+
+#: if_tcl.c:1740
+#~ msgid "TCL ERROR: exit code is not int!? Please report this to vim-dev@vim.org"
+#~ msgstr ""
+
+#: main.c:50 option.c:2873 option.c:3002
+msgid "Unknown option"
+msgstr "¤£¥¿½Tªº¿ï¶µ"
+
+#: main.c:51
+msgid "Too many edit arguments"
+msgstr "¤Ó¦h½s¿è°Ñ¼Æ"
+
+#: main.c:53
+#~ msgid "Garbage after option"
+#~ msgstr ""
+
+#: main.c:54
+#~ msgid "Too many \"+command\" or \"-c command\" arguments"
+#~ msgstr ""
+
+#: main.c:70
+#~ msgid ""
+#~ "\n"
+#~ "More info with: \"vim -h\"\n"
+#~ msgstr ""
+
+#: main.c:93
+#~ msgid "[file ..]       edit specified file(s)"
+#~ msgstr ""
+
+#: main.c:94
+#~ msgid "-               read text from stdin"
+#~ msgstr ""
+
+#: main.c:95
+#~ msgid "-t tag          edit file where tag is defined"
+#~ msgstr ""
+
+#: main.c:97
+#~ msgid "-q [errorfile]  edit file with first error"
+#~ msgstr ""
+
+#: main.c:106
+msgid ""
+"\n"
+"\n"
+"usage:"
+msgstr ""
+"\n"
+"\n"
+"¥Îªk:"
+
+#: main.c:109
+msgid " vim [arguments] "
+msgstr "vim [°Ñ¼Æ]"
+
+#: main.c:113
+msgid ""
+"\n"
+"   or:"
+msgstr ""
+"\n"
+"   ©Î:"
+
+#: main.c:116
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "Arguments:\n"
+#~ msgstr ""
+
+#: main.c:117
+#~ msgid "--\t\t\tOnly file names after this"
+#~ msgstr ""
+
+#: main.c:119
+#~ msgid "-register\t\tRegister this gvim for OLE"
+#~ msgstr ""
+
+#: main.c:120
+#~ msgid "-unregister\t\tUnregister gvim for OLE"
+#~ msgstr ""
+
+#: main.c:123
+msgid "-g\t\t\tRun using GUI (like \"gvim\")"
+msgstr "-g\t\t\t¨Ï¥Î¹Ï§Î¬É­± (¦P \"gvim\")"
+
+#: main.c:124
+#~ msgid "-f\t\t\tForeground: Don't fork when starting GUI"
+#~ msgstr ""
+
+#: main.c:126
+msgid "-v\t\t\tVi mode (like \"vi\")"
+msgstr "-v\t\t\tVi ¼Ò¦¡ (¦P \"vi\")"
+
+#: main.c:127
+msgid "-e\t\t\tEx mode (like \"ex\")"
+msgstr "-e\t\t\tEx ¼Ò¦¡ (¦P \"ex\")"
+
+#: main.c:128
+msgid "-s\t\t\tSilent (batch) mode (only for \"ex\")"
+msgstr "-s\t\t\tSilent (batch) mode (only for \"ex\")"
+
+#: main.c:129
+msgid "-R\t\t\tReadonly mode (like \"view\")"
+msgstr "-R\t\t\t°ßÅª¼Ò¦¡ (¦P \"view\")"
+
+#: main.c:130
+msgid "-Z\t\t\tRestricted mode (like \"rvim\")"
+msgstr "-Z\t\t\t­­¨î¼Ò¦¡ (¦P \"rvim\")"
+
+#: main.c:131
+#~ msgid "-m\t\t\tModifications (writing files) not allowed"
+#~ msgstr ""
+
+#: main.c:132
+#~ msgid "-b\t\t\tBinary mode"
+#~ msgstr ""
+
+#: main.c:134
+#~ msgid "-l\t\t\tLisp mode"
+#~ msgstr ""
+
+#: main.c:136
+#~ msgid "-C\t\t\tCompatible with Vi: 'compatible'"
+#~ msgstr ""
+
+#: main.c:137
+#~ msgid "-N\t\t\tNot fully Vi compatible: 'nocompatible'"
+#~ msgstr ""
+
+#: main.c:138
+#~ msgid "-V[N]\t\tVerbose level"
+#~ msgstr ""
+
+#: main.c:139
+#~ msgid "-D\t\t\tDebugging mode"
+#~ msgstr ""
+
+#: main.c:140
+msgid "-n\t\t\tNo swap file, use memory only"
+msgstr "-n\t\t\t¤£¨Ï¥Î¼È¦sÀÉ, ¥u¨Ï¥Î°O¾ÐÅé"
+
+#: main.c:141
+#~ msgid "-r\t\t\tList swap files and exit"
+#~ msgstr ""
+
+#: main.c:142
+#~ msgid "-r (with file name)\tRecover crashed session"
+#~ msgstr ""
+
+#: main.c:143
+#~ msgid "-L\t\t\tSame as -r"
+#~ msgstr ""
+
+#: main.c:145
+#~ msgid "-f\t\t\tDon't use newcli to open window"
+#~ msgstr ""
+
+#: main.c:146
+#~ msgid "-d <device>\t\tUse <device> for I/O"
+#~ msgstr ""
+
+#: main.c:149
+#~ msgid "-H\t\t\tstart in Hebrew mode"
+#~ msgstr ""
+
+#: main.c:152
+#~ msgid "-F\t\t\tstart in Farsi mode"
+#~ msgstr ""
+
+#: main.c:154
+#~ msgid "-T <terminal>\tSet terminal type to <terminal>"
+#~ msgstr ""
+
+#: main.c:155
+#~ msgid "-u <vimrc>\t\tUse <vimrc> instead of any .vimrc"
+#~ msgstr ""
+
+#: main.c:157
+#~ msgid "-U <gvimrc>\t\tUse <gvimrc> instead of any .gvimrc"
+#~ msgstr ""
+
+#: main.c:159
+#~ msgid "--noplugin\t\tDon't load plugin scripts"
+#~ msgstr ""
+
+#: main.c:160
+#~ msgid "-o[N]\t\tOpen N windows (default: one for each file)"
+#~ msgstr ""
+
+#: main.c:161
+#~ msgid "+\t\t\tStart at end of file"
+#~ msgstr ""
+
+#: main.c:162
+#~ msgid "+<lnum>\t\tStart at line <lnum>"
+#~ msgstr ""
+
+#: main.c:163
+#~ msgid "-c <command>\t\tExecute <command> after loading the first file"
+#~ msgstr ""
+
+#: main.c:164
+#~ msgid ""
+#~ "-S <session>\tExecute commands in file <session> after loading the first file"
+#~ msgstr ""
+
+#: main.c:165
+#~ msgid "-s <scriptin>\tRead Normal mode commands from file <scriptin>"
+#~ msgstr ""
+
+#: main.c:166
+#~ msgid "-w <scriptout>\tAppend all typed commands to file <scriptout>"
+#~ msgstr ""
+
+#: main.c:167
+#~ msgid "-W <scriptout>\tWrite all typed commands to file <scriptout>"
+#~ msgstr ""
+
+#: main.c:169
+#~ msgid "-x\t\t\tEdit encrypted files"
+#~ msgstr ""
+
+#: main.c:172
+#~ msgid "-X\t\t\tDo not connect to X server"
+#~ msgstr ""
+
+#: main.c:175
+#~ msgid "-i <viminfo>\t\tUse <viminfo> instead of .viminfo"
+#~ msgstr ""
+
+#: main.c:177
+#~ msgid "-h\t\t\tprint Help (this message) and exit"
+#~ msgstr ""
+
+#: main.c:178
+#~ msgid "--version\t\tprint version information and exit"
+#~ msgstr ""
+
+#: main.c:182
+msgid ""
+"\n"
+"Arguments recognised by gvim (Motif version):\n"
+msgstr ""
+"\n"
+"gvim »{±oªº°Ñ¼Æ (Motif ª©):\n"
+
+#: main.c:185
+msgid ""
+"\n"
+"Arguments recognised by gvim (Athena version):\n"
+msgstr ""
+"\n"
+"gvim »{±oªº°Ñ¼Æ (Athena ª©):\n"
+
+#: main.c:188
+#~ msgid "-display <display>\tRun vim on <display>"
+#~ msgstr ""
+
+#: main.c:189
+#~ msgid "-iconic\t\tStart vim iconified"
+#~ msgstr ""
+
+#: main.c:191
+#~ msgid "-name <name>\t\tUse resource as if vim was <name>"
+#~ msgstr ""
+
+#: main.c:192
+msgid "\t\t\t  (Unimplemented)\n"
+msgstr "\t\t\t  (©|¥¼¹ê§@)\n"
+
+#: main.c:194
+#~ msgid "-background <color>\tUse <color> for the background (also: -bg)"
+#~ msgstr ""
+
+#: main.c:195
+#~ msgid "-foreground <color>\tUse <color> for normal text (also: -fg)"
+#~ msgstr ""
+
+#: main.c:196 main.c:214
+#~ msgid "-font <font>\t\tUse <font> for normal text (also: -fn)"
+#~ msgstr ""
+
+#: main.c:197
+#~ msgid "-boldfont <font>\tUse <font> for bold text"
+#~ msgstr ""
+
+#: main.c:198
+#~ msgid "-italicfont <font>\tUse <font> for italic text"
+#~ msgstr ""
+
+#: main.c:199 main.c:215
+#~ msgid "-geometry <geom>\tUse <geom> for initial geometry (also: -geom)"
+#~ msgstr ""
+
+#: main.c:200
+#~ msgid "-borderwidth <width>\tUse a border width of <width> (also: -bw)"
+#~ msgstr ""
+
+#: main.c:201
+#~ msgid "-scrollbarwidth <width>\tUse a scrollbar width of <width> (also: -sw)"
+#~ msgstr ""
+
+#: main.c:202
+#~ msgid "-menuheight <height>\tUse a menu bar height of <height> (also: -mh)"
+#~ msgstr ""
+
+#: main.c:203 main.c:216
+#~ msgid "-reverse\t\tUse reverse video (also: -rv)"
+#~ msgstr ""
+
+#: main.c:204
+#~ msgid "+reverse\t\tDon't use reverse video (also: +rv)"
+#~ msgstr ""
+
+#: main.c:205
+#~ msgid "-xrm <resource>\tSet the specified resource"
+#~ msgstr ""
+
+#: main.c:208
+msgid ""
+"\n"
+"Arguments recognised by gvim (RISC OS version):\n"
+msgstr ""
+"\n"
+"gvim »{±oªº°Ñ¼Æ (RISC OS ª©):\n"
+
+#: main.c:209
+#~ msgid "--columns <number>\tInitial width of window in columns"
+#~ msgstr ""
+
+#: main.c:210
+#~ msgid "--rows <number>\tInitial height of window in rows"
+#~ msgstr ""
+
+#: main.c:213
+msgid ""
+"\n"
+"Arguments recognised by gvim (GTK+ version):\n"
+msgstr ""
+"\n"
+"gvim »{±oªº°Ñ¼Æ (GTK+ ª©):\n"
+
+#: main.c:217
+#~ msgid "-display <display>\tRun vim on <display> (also: --display)"
+#~ msgstr ""
+
+#: main.c:219
+#~ msgid "--help\t\tShow Gnome arguments"
+#~ msgstr ""
+
+#: main.c:793 main.c:843
+msgid "Attempt to open script file again: \""
+msgstr "¸Õ¹Ï¦A¦¸¶}±Ò script ÀÉ: \""
+
+#: main.c:802
+msgid "Cannot open for reading: \""
+msgstr "µLªk¶}±Ò¥HÅª¨ú: \""
+
+#: main.c:853
+msgid "Cannot open for script output: \""
+msgstr "µLªk¶}±Ò¬° script ¿é¥X: \""
+
+#: main.c:855
+#~ msgid "\"\n"
+#~ msgstr ""
+
+#: main.c:930
+#, c-format
+msgid "%d files to edit\n"
+msgstr "ÁÙ¦³ %d ­ÓÀÉ®×µ¥«Ý½s¿è\n"
+
+#: main.c:988
+msgid "Vim: Warning: Output is not to a terminal\n"
+msgstr "Vim: ª`·N: ¿é¥X¤£¬O²×ºÝ¾÷(¿Ã¹õ)\n"
+
+#: main.c:990
+msgid "Vim: Warning: Input is not from a terminal\n"
+msgstr "Vim: ª`·N: ¿é¤J¤£¬O²×ºÝ¾÷(Áä½L)\n"
+
+#: mark.c:703
+#~ msgid "No marks set"
+#~ msgstr ""
+
+#: mark.c:705
+#, c-format
+msgid "No marks matching \"%s\""
+msgstr "§ä¤£¨ì²Å¦X \"%s\" ªº¼Ð°O"
+
+#: mark.c:716
+#~ msgid ""
+#~ "\n"
+#~ "mark line  col file/text"
+#~ msgstr ""
+
+#: mark.c:753
+#~ msgid ""
+#~ "\n"
+#~ " jump line  col file/text"
+#~ msgstr ""
+
+#: mark.c:1079
+#~ msgid ""
+#~ "\n"
+#~ "# File marks:\n"
+#~ msgstr ""
+
+#: mark.c:1116
+#~ msgid ""
+#~ "\n"
+#~ "# Jumplist (newest first):\n"
+#~ msgstr ""
+
+#: mark.c:1210
+#~ msgid ""
+#~ "\n"
+#~ "# History of marks within files (newest to oldest):\n"
+#~ msgstr ""
+
+#: mark.c:1293
+msgid "Missing '>'"
+msgstr "¯Ê¤Ö¹ïÀ³ªº '>'"
+
+#: memfile.c:239 memfile.c:289
+msgid "Close error on swap file"
+msgstr "¼È¦sÀÉÃö³¬¿ù»~"
+
+#: memfile.c:472
+#~ msgid "block was not locked"
+#~ msgstr ""
+
+#: memfile.c:957
+msgid "Seek error in swap file read"
+msgstr "¼È¦sÀÉÅª¨ú¿ù»~"
+
+#: memfile.c:962
+msgid "Read error in swap file"
+msgstr "¼È¦sÀÉÅª¨ú¿ù»~"
+
+#: memfile.c:1014
+msgid "Seek error in swap file write"
+msgstr "¼È¦sÀÉ¼g¤J¿ù»~"
+
+#: memfile.c:1032
+msgid "Write error in swap file"
+msgstr "¼È¦sÀÉ¼g¤J¿ù»~"
+
+#: memline.c:274
+#~ msgid "didn't get block nr 0?"
+#~ msgstr ""
+
+#: memline.c:314
+#~ msgid "didn't get block nr 1?"
+#~ msgstr ""
+
+#: memline.c:332
+#~ msgid "didn't get block nr 2?"
+#~ msgstr ""
+
+#: memline.c:442
+msgid "Oops, lost the swap file!!!"
+msgstr "¾¾¾¾, ¼È¦sÀÉ¤£¨£¤F!!!"
+
+#: memline.c:447
+msgid "Could not rename swap file"
+msgstr "µLªk§ïÅÜ¼È¦sÀÉªº¦WºÙ"
+
+#: memline.c:514
+#, c-format
+#~ msgid "Unable to open swap file for \"%s\", recovery impossible"
+#~ msgstr ""
+
+#: memline.c:613
+#~ msgid "ml_timestamp: Didn't get block 0??"
+#~ msgstr ""
+
+#: memline.c:751
+#, c-format
+msgid "No swap file found for %s"
+msgstr "§ä¤£¨ì %s ªº¼È¦sÀÉ"
+
+#: memline.c:761
+#~ msgid "Enter number of swap file to use (0 to quit): "
+#~ msgstr ""
+
+#: memline.c:805
+#, c-format
+msgid "Cannot open %s"
+msgstr "µLªk¶}±Ò %s"
+
+#: memline.c:827
+#~ msgid "Unable to read block 0 from "
+#~ msgstr ""
+
+#: memline.c:830
+#~ msgid ""
+#~ "\n"
+#~ "Maybe no changes were made or Vim did not update the swap file."
+#~ msgstr ""
+
+#: memline.c:840 memline.c:856
+msgid " cannot be used with this version of Vim.\n"
+msgstr " µLªk¦b¥»ª©¥»ªº Vim ¤¤¨Ï¥Î.\n"
+
+#: memline.c:841
+msgid "Use Vim version 3.0.\n"
+msgstr "¨Ï¥Î Vim 3.0¡C\n"
+
+#: memline.c:847
+#, c-format
+msgid "%s does not look like a Vim swap file"
+msgstr "%s ¬Ý°_¨Ó¤£¹³¬O Vim ¼È¦sÀÉ"
+
+#: memline.c:860
+msgid " cannot be used on this computer.\n"
+msgstr " µLªk¦b³o»O¹q¸£¤W¨Ï¥Î.\n"
+
+#: memline.c:862
+msgid "The file was created on "
+msgstr "¥»ÀÉ®×«Ø¥ß©ó "
+
+#: memline.c:866
+msgid ""
+",\n"
+"or the file has been damaged."
+msgstr ""
+",\n"
+"©Î¬O³oÀÉ®×¤w¸g·l·´¡C"
+
+#: memline.c:895
+#, c-format
+msgid "Using swap file \"%s\""
+msgstr "¨Ï¥Î¼È¦sÀÉ \"%s\""
+
+#: memline.c:907
+#, c-format
+msgid "Original file \"%s\""
+msgstr "­ì©lÀÉ \"%s\""
+
+#: memline.c:926
+msgid "Warning: Original file may have been changed"
+msgstr "Äµ§i: ­ì©lÀÉ®×¥i¯à¤w¸g­×§ï¹L¤F"
+
+#: memline.c:967
+#, c-format
+#~ msgid "Unable to read block 1 from %s"
+#~ msgstr ""
+
+#: memline.c:971
+#~ msgid "???MANY LINES MISSING"
+#~ msgstr ""
+
+#: memline.c:987
+#~ msgid "???LINE COUNT WRONG"
+#~ msgstr ""
+
+#: memline.c:994
+#~ msgid "???EMPTY BLOCK"
+#~ msgstr ""
+
+#: memline.c:1020
+#~ msgid "???LINES MISSING"
+#~ msgstr ""
+
+#: memline.c:1052
+#, c-format
+#~ msgid "Block 1 ID wrong (%s not a .swp file?)"
+#~ msgstr ""
+
+#: memline.c:1057
+#~ msgid "???BLOCK MISSING"
+#~ msgstr ""
+
+#: memline.c:1073
+#~ msgid "??? from here until ???END lines may be messed up"
+#~ msgstr ""
+
+#: memline.c:1089
+#~ msgid "??? from here until ???END lines may have been inserted/deleted"
+#~ msgstr ""
+
+#: memline.c:1109
+msgid "???END"
+msgstr "???µ²§À"
+
+#: memline.c:1135
+msgid "Recovery Interrupted"
+msgstr "­×´_¤w¤¤Â_"
+
+#: memline.c:1137
+#~ msgid "Errors detected while recovering; look for lines starting with ???"
+#~ msgstr ""
+
+#: memline.c:1140
+msgid "Recovery completed. You should check if everything is OK."
+msgstr "´_­ì§¹¦¨. ½Ð½T©w¤@¤Á¥¿±`."
+
+#: memline.c:1141
+#~ msgid ""
+#~ "\n"
+#~ "(You might want to write out this file under another name\n"
+#~ msgstr ""
+
+#: memline.c:1142
+#~ msgid "and run diff with the original file to check for changes)\n"
+#~ msgstr ""
+
+#: memline.c:1143
+msgid ""
+"Delete the .swp file afterwards.\n"
+"\n"
+msgstr ""
+"(D)ª½±µ§R°£ .swp ¼È¦sÀÉ\n"
+"\n"
+
+#: memline.c:1199
+msgid "Swap files found:"
+msgstr "§ä¨ì¥H¤Uªº¼È¦sÀÉ:"
+
+#: memline.c:1377
+msgid "   In current directory:\n"
+msgstr "   ¦b¥Ø«eªº¥Ø¿ý:\n"
+
+#: memline.c:1379
+msgid "   Using specified name:\n"
+msgstr "   Using specified name:\n"
+
+#: memline.c:1383
+msgid "   In directory "
+msgstr "   ¦b¥Ø¿ý "
+
+#: memline.c:1401
+msgid "      -- none --\n"
+msgstr "      -- µL --\n"
+
+#: memline.c:1465 memline.c:3621
+msgid "             dated: "
+msgstr "              ¤é´Á: "
+
+#: memline.c:1476
+msgid "          owned by: "
+msgstr "            ¾Ö¦³ªÌ: "
+
+#: memline.c:1494
+msgid "         [from Vim version 3.0]"
+msgstr "              [±q Vim ª©¥» 3.0]"
+
+#: memline.c:1498
+msgid "         [does not look like a Vim swap file]"
+msgstr "         [does not look like a Vim swap file]"
+
+#: memline.c:1502
+msgid "         file name: "
+msgstr "         file name: "
+
+#: memline.c:1514
+msgid ""
+"\n"
+"          modified: "
+msgstr ""
+"\n"
+"            ­×§ï¹L: "
+
+#: memline.c:1515
+msgid "YES"
+msgstr "¬O"
+
+#: memline.c:1515
+msgid "no"
+msgstr "§_"
+
+#: memline.c:1519
+msgid ""
+"\n"
+"         host name: "
+msgstr ""
+"\n"
+"          ¥D¾÷¦WºÙ: "
+
+#: memline.c:1525
+msgid ""
+"\n"
+"         user name: "
+msgstr ""
+"\n"
+"            ¨Ï¥ÎªÌ: "
+
+#: memline.c:1531
+msgid ""
+"\n"
+"        process ID: "
+msgstr ""
+"\n"
+"        process ID: "
+
+#: memline.c:1537
+msgid " (still running)"
+msgstr " (°õ¦æ¤¤)"
+
+#: memline.c:1549
+msgid ""
+"\n"
+"         [not usable with this version of Vim]"
+msgstr ""
+"\n"
+"         [µLªk¦b¥»ª©¥»ªº Vim ¤W¨Ï¥Î]"
+
+#: memline.c:1552
+msgid ""
+"\n"
+"         [not usable on this computer]"
+msgstr ""
+"\n"
+"         [µLªk¦b¥»¹q¸£¤W¨Ï¥Î]"
+
+#: memline.c:1557
+msgid "         [cannot be read]"
+msgstr "         [µLªkÅª¨ú]"
+
+#: memline.c:1561
+msgid "         [cannot be opened]"
+msgstr "         [µLªk¶}±Ò]"
+
+#: memline.c:1746
+msgid "Cannot preserve, there is no swap file"
+msgstr "µLªk«O¯d, ¤£¨Ï¥Î¼È¦sÀÉ"
+
+#: memline.c:1793
+#~ msgid "File preserved"
+#~ msgstr ""
+
+#: memline.c:1795
+msgid "Preserve failed"
+msgstr "«O¯d¥¢±Ñ"
+
+#: memline.c:1859
+#, c-format
+msgid "ml_get: invalid lnum: %ld"
+msgstr "ml_get: ¿ù»~ªº lnum: %ld"
+
+#: memline.c:1885
+#, c-format
+msgid "ml_get: cannot find line %ld"
+msgstr "ml_get: §ä¤£¨ì²Ä %ld ¦æ"
+
+#: memline.c:2273
+#~ msgid "pointer block id wrong 3"
+#~ msgstr ""
+
+#: memline.c:2353
+#~ msgid "stack_idx should be 0"
+#~ msgstr ""
+
+#: memline.c:2415
+#~ msgid "Updated too many blocks?"
+#~ msgstr ""
+
+#: memline.c:2572
+#~ msgid "pointer block id wrong 4"
+#~ msgstr ""
+
+#: memline.c:2599
+#~ msgid "deleted block 1?"
+#~ msgstr ""
+
+#: memline.c:2799
+#, c-format
+msgid "Cannot find line %ld"
+msgstr "§ä¤£¨ì²Ä %ld ¦æ"
+
+#: memline.c:3042
+#~ msgid "pointer block id wrong"
+#~ msgstr ""
+
+#: memline.c:3058
+#~ msgid "pe_line_count is zero"
+#~ msgstr ""
+
+#: memline.c:3087
+#, c-format
+msgid "line number out of range: %ld past the end"
+msgstr "¦æ¸¹¶W¥X½d³ò: %ld ¶W¹Lµ²§À"
+
+#: memline.c:3091
+#, c-format
+#~ msgid "line count wrong in block %ld"
+#~ msgstr ""
+
+#: memline.c:3140
+#~ msgid "Stack size increases"
+#~ msgstr ""
+
+#: memline.c:3186
+#~ msgid "pointer block id wrong 2"
+#~ msgstr ""
+
+#: memline.c:3611
+msgid "ATTENTION"
+msgstr "ª`·N"
+
+#: memline.c:3612
+#~ msgid ""
+#~ "\n"
+#~ "Found a swap file by the name \""
+#~ msgstr ""
+
+#: memline.c:3616
+#~ msgid "While opening file \""
+#~ msgstr ""
+
+#: memline.c:3627
+#~ msgid ""
+#~ "\n"
+#~ "(1) Another program may be editing the same file.\n"
+#~ "    If this is the case, be careful not to end up with two\n"
+#~ "    different instances of the same file when making changes.\n"
+#~ msgstr ""
+
+#: memline.c:3628
+#~ msgid "    Quit, or continue with caution.\n"
+#~ msgstr ""
+
+#: memline.c:3629
+#~ msgid ""
+#~ "\n"
+#~ "(2) An edit session for this file crashed.\n"
+#~ msgstr ""
+
+#: memline.c:3630
+#~ msgid "    If this is the case, use \":recover\" or \"vim -r "
+#~ msgstr ""
+
+#: memline.c:3632
+#~ msgid ""
+#~ "\"\n"
+#~ "    to recover the changes (see \":help recovery)\".\n"
+#~ msgstr ""
+
+#: memline.c:3633
+#~ msgid "    If you did this already, delete the swap file \""
+#~ msgstr ""
+
+#: memline.c:3635
+#~ msgid ""
+#~ "\"\n"
+#~ "    to avoid this message.\n"
+#~ "\n"
+#~ msgstr ""
+
+#: memline.c:3649 memline.c:3653
+msgid "Swap file \""
+msgstr "¼È¦sÀÉ \""
+
+#: memline.c:3650 memline.c:3656
+msgid "\" already exists!"
+msgstr "\" ¤w¸g¦s¦b¤F!"
+
+#: memline.c:3659
+msgid "VIM - ATTENTION"
+msgstr "VIM - ª`·N"
+
+#: memline.c:3661
+msgid "Swap file already exists!"
+msgstr "¼È¦sÀÉ¤w¸g¦s¦b!"
+
+#: memline.c:3665
+#~ msgid ""
+#~ "&Open Read-Only\n"
+#~ "&Edit anyway\n"
+#~ "&Recover\n"
+#~ "&Quit"
+#~ msgstr ""
+
+#: memline.c:3667
+#~ msgid ""
+#~ "&Open Read-Only\n"
+#~ "&Edit anyway\n"
+#~ "&Recover\n"
+#~ "&Quit\n"
+#~ "&Delete it"
+#~ msgstr ""
+
+#: memline.c:3711
+msgid "Too many swap files found"
+msgstr "§ä¨ì¤Ó¦h¼È¦sÀÉ"
+
+#: globals.h:984 menu.c:220
+msgid "Trailing characters"
+msgstr "§A¿é¤J¤F¦h¾lªº¦r¤¸"
+
+#: menu.c:405
+#~ msgid "Menu path must not lead to a sub-menu"
+#~ msgstr ""
+
+#: menu.c:415 menu.c:656 menu.c:717 menu.c:892 menu.c:1890 menu.c:2012
+#~ msgid "Part of menu-item path is not sub-menu"
+#~ msgstr ""
+
+#: menu.c:444
+#~ msgid "Must not add menu items directly to menu bar"
+#~ msgstr ""
+
+#: menu.c:450
+#~ msgid "Separator cannot be part of a menu path"
+#~ msgstr ""
+
+#: menu.c:681 menu.c:777 menu.c:908
+#~ msgid "No menu of that name"
+#~ msgstr ""
+
+#: menu.c:739 menu.c:898
+#~ msgid "Menu only exists in another mode"
+#~ msgstr ""
+
+#: menu.c:754
+#~ msgid "Sorry, deleting a menu is not possible in the Athena version"
+#~ msgstr ""
+
+#: menu.c:919
+msgid ""
+"\n"
+"--- Menus ---"
+msgstr ""
+"\n"
+"--- ¥\\¯àªí ---"
+
+#: menu.c:1820
+#~ msgid "Tear off this menu"
+#~ msgstr ""
+
+#: menu.c:1885
+#~ msgid "Menu path must lead to a menu item"
+#~ msgstr ""
+
+#: menu.c:1905
+#, c-format
+msgid "Menu not found: %s"
+msgstr "[¥\\¯àªí] §ä¤£¨ì %s"
+
+#: menu.c:1974
+#, c-format
+#~ msgid "Menu not defined for %s mode"
+#~ msgstr ""
+
+#: menu.c:2010
+#~ msgid "Menu path must lead to a sub-menu"
+#~ msgstr ""
+
+#: menu.c:2031
+#~ msgid "Menu not found - check menu names"
+#~ msgstr ""
+
+#: message.c:416
+#, c-format
+msgid "Error detected while processing %s:"
+msgstr "³B²z %s ®Éµo¥Í¿ù»~:"
+
+#: message.c:432
+#, c-format
+msgid "line %4ld:"
+msgstr "¦æ %4ld:"
+
+#: message.c:470
+msgid "[string too long]"
+msgstr "[¦¹¦æ¹Lªø]"
+
+#: message.c:602
+msgid "Messages maintainer: Bram Moolenaar <Bram@vim.org>"
+msgstr ""
+"¤¤¤å°T®§ºûÅ@ªÌ: Francis S.Lin <piaip@csie.ntu.edu.tw>," 
+"                               Cecil Sheng   <b7506022@csie.ntu.edu.tw>"
+
+#: message.c:803
+msgid "Interrupt: "
+msgstr "¤w¤¤Â_: "
+
+#: message.c:806
+msgid "Hit ENTER to continue"
+msgstr "½Ð«ö ENTER Ä~Äò"
+
+#: message.c:808
+msgid "Hit ENTER or type command to continue"
+msgstr "½Ð«ö ENTER ©Î¨ä¥¦©R¥O¥HÄ~Äò"
+
+#: message.c:1696
+msgid "-- More --"
+msgstr "-- ©|¦³ --"
+
+#: message.c:1699
+msgid " (RET/BS: line, SPACE/b: page, d/u: half page, q: quit)"
+msgstr " (RET/BS: ¦V¤U/¦V¤W¤@¦æ, ªÅ¥ÕÁä/b: ¤@­¶, d/u: ¥b­¶, q: Â÷¶})"
+
+#: message.c:1700
+msgid " (RET: line, SPACE: page, d: half page, q: quit)"
+msgstr " (RET: ¦V¤U¤@¦æ, ªÅ¥ÕÁä: ¤@­¶, d: ¥b­¶, q: Â÷¶})"
+
+#: message.c:2208 message.c:2223
+msgid "Question"
+msgstr "°ÝÃD"
+
+#: message.c:2210
+msgid ""
+"&Yes\n"
+"&No"
+msgstr ""
+"&Y¬O\n"
+"&N§_"
+
+#: message.c:2225
+msgid ""
+"&Yes\n"
+"&No\n"
+"&Cancel"
+msgstr ""
+"&Y¬O\n"
+"&N§_\n"
+"&C¨ú®ø"
+
+#: message.c:2243
+msgid ""
+"&Yes\n"
+"&No\n"
+"Save &All\n"
+"&Discard All\n"
+"&Cancel"
+msgstr ""
+"&Y¬O\n"
+"&N§_\n"
+"&A¥þ³¡¦sÀÉ\n"
+"&D¥þ³¡¤£¦s\n"
+"&C¨ú®ø"
+
+#: message.c:2282
+msgid "Save File dialog"
+msgstr "¦sÀÉ"
+
+#: message.c:2284
+msgid "Open File dialog"
+msgstr "¶}ÀÉ"
+
+#: message.c:2317
+#~ msgid "Sorry, no file browser in console mode"
+#~ msgstr ""
+
+#: misc1.c:2397
+msgid "Warning: Changing a readonly file"
+msgstr "ª`·N: §A¥¿¦b­×§ï¤@­Ó°ßÅªÀÉ"
+
+#: misc1.c:2612
+msgid "1 more line"
+msgstr "ÁÙ¦³¤@¦æ"
+
+#: misc1.c:2614
+msgid "1 line less"
+msgstr "¤Ö©ó¤@¦æ"
+
+#: misc1.c:2619
+#, c-format
+msgid "%ld more lines"
+msgstr " ÁÙ¦³ %ld ¦æ"
+
+#: misc1.c:2621
+#, c-format
+msgid "%ld fewer lines"
+msgstr "¥u³Ñ %ld ¦æ"
+
+#: misc1.c:2624
+msgid " (Interrupted)"
+msgstr " (¤w¤¤Â_)"
+
+#: misc1.c:5984
+msgid "Vim: preserving files...\n"
+msgstr "Vim: «O¯dÀÉ®×¤¤...\n"
+
+#: misc1.c:5994
+msgid "Vim: Finished.\n"
+msgstr "Vim: µ²§ô.\n"
+
+#: misc2.c:584 misc2.c:600
+msgid "ERROR: "
+msgstr "¿ù»~: "
+
+#: misc2.c:604
+#, c-format
+#~ msgid ""
+#~ "\n"
+#~ "[bytes] total alloc-freed %lu-%lu, in use %lu, peak use %lu\n"
+#~ msgstr ""
+
+#: misc2.c:606
+#, c-format
+#~ msgid ""
+#~ "[calls] total re/malloc()'s %lu, total free()'s %lu\n"
+#~ "\n"
+#~ msgstr ""
+
+#: misc2.c:664
+msgid "Line is becoming too long"
+msgstr "¦¹¦æ¹Lªø"
+
+#: misc2.c:709
+#, c-format
+msgid "Internal error: lalloc(%ld, )"
+msgstr "¤º³¡¿ù»~: lalloc(%ld, )"
+
+#: misc2.c:2585 option.c:4239
+msgid "Missing colon"
+msgstr "¯Ê¤Ö colon"
+
+#: misc2.c:2611
+msgid "Illegal mode"
+msgstr "¤£¥¿½Tªº¼Ò¦¡"
+
+#: misc2.c:2647
+msgid "Illegal mouseshape"
+msgstr "¤£¥¿½Tªº·Æ¹«§Îª¬"
+
+#: misc2.c:2683
+msgid "digit expected"
+msgstr "À³¸Ó­n¦³¼Æ¦r"
+
+#: misc2.c:2688
+msgid "Illegal percentage"
+msgstr "¤£¥¿½Tªº¦Ê¤À¤ñ"
+
+#: misc2.c:2959
+#~ msgid "Enter encryption key: "
+#~ msgstr ""
+
+#: misc2.c:2960
+#~ msgid "Enter same key again: "
+#~ msgstr ""
+
+#: misc2.c:3476
+#, c-format
+#~ msgid ""
+#~ "Invalid path: '**[number]' must be at the end of the path or be followed by "
+#~ "'%s'. See :help path."
+#~ msgstr ""
+
+#: misc2.c:4703
+#, c-format
+#~ msgid "Can't find directory \"%s\" in cdpath"
+#~ msgstr ""
+
+#: misc2.c:4705
+#, c-format
+msgid "Can't find file \"%s\" in path"
+msgstr "¦b¸ô®|¤¤§ä¤£¨ìÀÉ®× \"%s\""
+
+#: misc2.c:4710
+#, c-format
+#~ msgid "No more directory \"%s\" found in cdpath"
+#~ msgstr ""
+
+#: misc2.c:4713
+#, c-format
+msgid "No more file \"%s\" found in path"
+msgstr "¦b¸ô®|¤¤§ä¤£¨ì§ó¦hªºÀÉ®× \"%s\""
+
+#: multibyte.c:361
+#~ msgid "Not a valid codepage"
+#~ msgstr ""
+
+#: multibyte.c:2050
+msgid "Cannot set IC values"
+msgstr "¤£¯à³]©w IC ¼Æ­È"
+
+#: multibyte.c:2308
+#~ msgid "XIM requires VIM compiled with +xfontset feature."
+#~ msgstr ""
+
+#: multibyte.c:2354
+#~ msgid "Failed to open input method"
+#~ msgstr ""
+
+#: multibyte.c:2365
+#~ msgid "Warning: Could not set destroy callback to IM"
+#~ msgstr ""
+
+#: multibyte.c:2371
+#~ msgid "input method doesn't support any style"
+#~ msgstr ""
+
+#: multibyte.c:2425
+#~ msgid "input method doesn't support my preedit type"
+#~ msgstr ""
+
+#: multibyte.c:2465
+#~ msgid "Failed to create input context"
+#~ msgstr ""
+
+#: multibyte.c:2499
+#~ msgid "Your GTK+ is older than 1.2.3. Status area disabled"
+#~ msgstr ""
+
+#: multibyte.c:2720
+msgid "Input Method Server is not running"
+msgstr "¨S¦³°õ¦æ¤¤ªº¿é¤JªkºÞ²zµ{¦¡"
+
+#: multibyte.c:2752 multibyte.c:2774
+#~ msgid "over-the-spot style requires fontset"
+#~ msgstr ""
+
+#: multibyte.c:2797
+msgid "Can't create input context."
+msgstr "¤£¯à»P¿é¤JªkºÞ²zµ{¦¡«Ø¥ß³s½u"
+
+#: normal.c:2692
+#~ msgid "Warning: terminal cannot highlight"
+#~ msgstr ""
+
+#: normal.c:2829
+msgid "No string under cursor"
+msgstr "´å¼Ð³B¨S¦³¦r¦ê"
+
+#: normal.c:2831
+msgid "No identifier under cursor"
+msgstr "´å¼Ð³B¨S¦³ÃÑ§O¦r"
+
+#: normal.c:3903
+#~ msgid "Cannot create fold with current 'foldmethod'"
+#~ msgstr ""
+
+#: normal.c:3921
+#~ msgid "Cannot delete fold with current 'foldmethod'"
+#~ msgstr ""
+
+#: normal.c:3933
+#~ msgid "Cannot erase folds with current 'foldmethod'"
+#~ msgstr ""
+
+#: ops.c:262
+#, c-format
+msgid "1 line %sed 1 time"
+msgstr "¤@¦æ %s ¹L ¤@¦¸"
+
+#: ops.c:264
+#, c-format
+msgid "1 line %sed %d times"
+msgstr "¤@¦æ %s ¹L %d ¦¸"
+
+#: ops.c:269
+#, c-format
+msgid "%ld lines %sed 1 time"
+msgstr "%ld ¦æ %s ¹L ¤@¦¸"
+
+#: ops.c:272
+#, c-format
+msgid "%ld lines %sed %d times"
+msgstr "%ld ¦æ %s ¹L %d ¦¸"
+
+#: ops.c:619
+#, c-format
+msgid "%ld lines to indent... "
+msgstr "ÁY±Æ %ld ¦æ..."
+
+#: ops.c:663
+msgid "1 line indented "
+msgstr "¤@¦æ¤wÁY±Æ"
+
+#: ops.c:665
+#, c-format
+msgid "%ld lines indented "
+msgstr "¤wÁY±Æ %ld ¦æ"
+
+#: ops.c:1420
+#~ msgid "cannot yank; delete anyway"
+#~ msgstr ""
+
+#: ops.c:1777
+msgid "1 line ~ed"
+msgstr " 1 ¦æ ~ed"
+
+#: ops.c:1779
+#, c-format
+msgid "%ld lines ~ed"
+msgstr " %ld ¦æ ~ed"
+
+#: ops.c:2115
+#, c-format
+msgid "freeing %ld lines"
+msgstr "ÄÀ©ñ %ld ¦æ¤¤"
+
+#: ops.c:2356
+msgid "1 line yanked"
+msgstr "¤w½Æ»s 1 ¦æ"
+
+#: ops.c:2358
+#, c-format
+msgid "%ld lines yanked"
+msgstr "¤w½Æ»s %ld ¦æ"
+
+#: ops.c:2580
+#, c-format
+#~ msgid "Nothing in register %s"
+#~ msgstr ""
+
+#: ops.c:3112
+msgid ""
+"\n"
+"--- Registers ---"
+msgstr ""
+"\n"
+"--- ¼È¦s¾¹ ---"
+
+#: ops.c:4191
+msgid "Illegal register name"
+msgstr "¤£¥¿½Tªº¼È¦s¾¹¦WºÙ"
+
+#: ops.c:4271
+#~ msgid ""
+#~ "\n"
+#~ "# Registers:\n"
+#~ msgstr ""
+
+#: ops.c:4297
+#, c-format
+#~ msgid "Unknown register type %d"
+#~ msgstr ""
+
+#: ops.c:4593
+#, c-format
+msgid "Invalid register name: '%s'"
+msgstr "¼È¦s¾¹¦WºÙ¿ù»~: '%s'"
+
+#: option.c:1814
+#~ msgid "Thanks for flying Vim"
+#~ msgstr ""
+
+#: option.c:2989
+#~ msgid ""
+#~ "\n"
+#~ "\tLast set from "
+#~ msgstr ""
+
+#: option.c:3113
+#~ msgid "Number required after ="
+#~ msgstr ""
+
+#: option.c:3392 option.c:3988
+#~ msgid "Not found in termcap"
+#~ msgstr ""
+
+#: option.c:3458
+#, c-format
+msgid "Illegal character <%s>"
+msgstr "¤£¥¿½Tªº¦r¤¸ <%s>"
+
+#: option.c:3973 option.c:5060
+msgid "Not allowed here"
+msgstr "³o¸Ì¤£¥i¨Ï¥Î"
+
+#: option.c:3980
+#~ msgid "Cannot set 'term' to empty string"
+#~ msgstr ""
+
+#: option.c:3983
+msgid "Cannot change term in GUI"
+msgstr "¦b¹Ï«¬¬É­±¤¤µLªk¤Á´« term"
+
+#: option.c:3985
+msgid "Use \":gui\" to start the GUI"
+msgstr "¿é¤J \":gui\" ¨Ó±Ò°Ê¹Ï§Î¬É­±"
+
+#: option.c:4006
+#~ msgid "'backupext' and 'patchmode' are equal"
+#~ msgstr ""
+
+#: option.c:4241
+#~ msgid "Zero length string"
+#~ msgstr ""
+
+#: option.c:4309
+#, c-format
+msgid "Missing number after <%s>"
+msgstr "<%s> «á¯Ê¤Ö¼Æ¦r"
+
+#: option.c:4323
+msgid "Missing comma"
+msgstr "¯Ê¤Ö³r¸¹"
+
+#: option.c:4330
+#~ msgid "Must specify a ' value"
+#~ msgstr ""
+
+#: option.c:4370
+#~ msgid "contains unprintable character"
+#~ msgstr ""
+
+#: option.c:4383
+msgid "Invalid font(s)"
+msgstr "¤£¥¿½Tªº¦r«¬"
+
+#: option.c:4389
+msgid "can't select fontset"
+msgstr "µLªk¨Ï¥Î¦r«¬¶°(Fontset)"
+
+#: option.c:4391
+msgid "Invalid fontset"
+msgstr "¤£¥¿½Tªº¦r«¬¶°(Fontset)"
+
+#: option.c:4398
+msgid "can't select wide font"
+msgstr "µLªk¨Ï¥Î³]©wªº¤¤¤å¦r«¬(Widefont)"
+
+#: option.c:4400
+msgid "Invalid wide font"
+msgstr "¤£¥¿½Tªº¦r«¬(Widefont)"
+
+#: option.c:4662
+#, c-format
+msgid "Illegal character after <%c>"
+msgstr "<%c> «á¦³¤£¥¿½Tªº¦r¤¸"
+
+#: option.c:4734
+msgid "comma required"
+msgstr "»Ý­n³r¸¹"
+
+#: option.c:4743
+#, c-format
+#~ msgid "'commentstring' must be empty or contain %s"
+#~ msgstr ""
+
+#: option.c:4788
+#~ msgid "No mouse support"
+#~ msgstr ""
+
+#: option.c:5026
+msgid "Unclosed expression sequence"
+msgstr "¨S¦³µ²§ôªº¹Bºâ¦¡: "
+
+#: option.c:5030
+msgid "too many items"
+msgstr "¤Ó¦h¶µ¥Ø"
+
+#: option.c:5032
+#~ msgid "unbalanced groups"
+#~ msgstr ""
+
+#: option.c:5171
+msgid "A preview window already exists"
+msgstr "¹wµøªºµøµ¡¤w¸g¦s¦b¤F"
+
+#: option.c:5382 option.c:5412
+#~ msgid "'winheight' cannot be smaller than 'winminheight'"
+#~ msgstr ""
+
+#: option.c:5428 option.c:5447
+#~ msgid "'winwidth' cannot be smaller than 'winminwidth'"
+#~ msgstr ""
+
+#: option.c:5562
+#, c-format
+#~ msgid "Need at least %d lines"
+#~ msgstr ""
+
+#: option.c:5571
+#, c-format
+#~ msgid "Need at least %d columns"
+#~ msgstr ""
+
+#: option.c:5950
+msgid ""
+"\n"
+"--- Terminal codes ---"
+msgstr ""
+"\n"
+"--- ²×ºÝ¾÷½X ---"
+
+#: option.c:5952
+msgid ""
+"\n"
+"--- Global option values ---"
+msgstr ""
+"\n"
+"--- Global ¿ï¶µ­È ---"
+
+#: option.c:5954
+msgid ""
+"\n"
+"--- Local option values ---"
+msgstr ""
+"\n"
+"--- Local ¿ï¶µ­È ---"
+
+#: option.c:5956
+msgid ""
+"\n"
+"--- Options ---"
+msgstr ""
+"\n"
+"--- ¿ï¶µ ---"
+
+#: option.c:6608
+msgid "get_varp ERROR"
+msgstr "get_varp ¿ù»~"
+
+#: option.c:7445
+#, c-format
+msgid "'langmap': Matching character missing for %s"
+msgstr "'langmap': §ä¤£¨ì %s ¹ïÀ³ªº¦r¤¸"
+
+#: option.c:7472
+#, c-format
+msgid "'langmap': Extra characters after semicolon: %s"
+msgstr "'langmap': ¤À¸¹«á¦³¦h¾lªº¦r¤¸: %s"
+
+#: os_unix.c:735
+#~ msgid "Vim: Double signal, exiting\n"
+#~ msgstr ""
+
+#: os_unix.c:741
+#, c-format
+msgid "Vim: Caught %s %s\n"
+msgstr "Vim: ÄdºI¨ì %s \n"
+
+#: os_unix.c:743 os_unix.c:745
+#~ msgid "deadly signal"
+#~ msgstr ""
+
+#: os_unix.c:745
+#~ msgid "some"
+#~ msgstr ""
+
+#: os_unix.c:974
+#~ msgid ""
+#~ "\n"
+#~ "Vim: Got X error\n"
+#~ msgstr ""
+
+#: os_unix.c:2365
+msgid "Screen mode setting not supported"
+msgstr "¤£¤ä´©³]©w¿Ã¹õ¼Ò¦¡"
+
+#: os_unix.c:2530 os_unix.c:3094
+msgid ""
+"\n"
+"Cannot execute shell "
+msgstr ""
+"\n"
+"¤£¯à°õ¦æ shell"
+
+#: os_unix.c:2556
+msgid ""
+"\n"
+"Cannot execute shell sh\n"
+msgstr ""
+"\n"
+"¤£¯à°õ¦æ shell sh\n"
+
+#: os_unix.c:2561 os_unix.c:3100
+msgid ""
+"\n"
+"shell returned "
+msgstr ""
+"\n"
+"Shell ¤wªð¦^"
+
+#: os_unix.c:2695
+msgid ""
+"\n"
+"Cannot create pipes\n"
+msgstr ""
+"\n"
+"¤£¯à«Ø¥ß pipe ºÞ½u\n"
+
+#: os_unix.c:2710
+#~ msgid ""
+#~ "\n"
+#~ "Cannot fork\n"
+#~ msgstr ""
+
+#: os_unix.c:3107
+msgid ""
+"\n"
+"Command terminated\n"
+msgstr ""
+"\n"
+"©R¥O¤w²×µ²\n"
+
+#: os_unix.c:4459
+#~ msgid "Library call failed"
+#~ msgstr ""
+
+#: quickfix.c:256
+msgid "Too many %%%c in format string"
+msgstr "®æ¦¡¤Æ¦r¦ê¸Ì¦³¤Ó¦h %%%c "
+
+#: quickfix.c:269
+msgid "Unexpected %%%c in format string"
+msgstr "®æ¦¡¤Æ¦r¦ê¤£À³¸Ó¥X²{ %%%c "
+
+#: quickfix.c:313
+msgid "Missing ] in format string"
+msgstr "®æ¦¡¤Æ¦r¦ê¸Ì¤Ö¤F ]"
+
+#: quickfix.c:327
+msgid "Unsupported %%%c in format string"
+msgstr "®æ¦¡¤Æ¦r¦ê¸Ì¦³¤£¤ä´©ªº %%%c "
+
+#: quickfix.c:345
+msgid "Invalid %%%c in format string prefix"
+msgstr "®æ¦¡¤Æ¦r¦ê¶}ÀY¸Ì¦³¤£¥¿½Tªº %%%c "
+
+#: quickfix.c:353
+msgid "Invalid %%%c in format string"
+msgstr "®æ¦¡¤Æ¦r¦ê¸Ì¦³¤£¥¿½Tªº %%%c "
+
+#: quickfix.c:379
+#~ msgid "'errorformat' contains no pattern"
+#~ msgstr ""
+
+#: quickfix.c:479
+#~ msgid "Missing or empty directory name"
+#~ msgstr ""
+
+#: quickfix.c:881
+msgid "No more items"
+msgstr "¨S¦³¨ä¥¦¶µ¥Ø"
+
+#: quickfix.c:1083
+#, c-format
+msgid "(%d of %d)%s%s: "
+msgstr "(%d / %d)%s%s: "
+
+#: quickfix.c:1085
+msgid " (line deleted)"
+msgstr " (¦æ¤w§R°£)"
+
+#: quickfix.c:1289
+#~ msgid "At bottom of quickfix stack"
+#~ msgstr ""
+
+#: quickfix.c:1298
+#~ msgid "At top of quickfix stack"
+#~ msgstr ""
+
+#: quickfix.c:1310
+#, c-format
+#~ msgid "error list %d of %d; %d errors"
+#~ msgstr ""
+
+#: quickfix.c:1651
+#~ msgid "Cannot write, 'buftype' option is set"
+#~ msgstr ""
+
+#: regexp.c:971
+msgid "Too many \\z("
+msgstr "¤Ó¦h \\z("
+
+#: regexp.c:982
+msgid "Too many \\("
+msgstr "¤Ó¦h \\("
+
+#: regexp.c:1039
+msgid "Unmatched \\z("
+msgstr "¨S¦³¹ïÀ³ªº \\z("
+
+#: regexp.c:1043
+msgid "Unmatched \\%("
+msgstr "¨S¦³¹ïÀ³ªº \\%("
+
+#: regexp.c:1045
+msgid "Unmatched \\("
+msgstr "¨S¦³¹ïÀ³ªº \\("
+
+#: regexp.c:1050
+msgid "Unmatched \\)"
+msgstr "¨S¦³¹ïÀ³ªº \\)"
+
+#: regexp.c:1199
+#~ msgid "*, \\+ or \\{ operand could be empty"
+#~ msgstr ""
+
+#: regexp.c:1250
+msgid "invalid character after \\@"
+msgstr "\\@ «á¦³¤£¥¿½Tªº¦r¤¸"
+
+#: regexp.c:1278
+msgid "Too many complex \\{...}s"
+msgstr "¤Ó½ÆÂøªº \\{...}"
+
+#: regexp.c:1290
+msgid "Nested *, \\=, \\+, \\! or \\{"
+msgstr "±_ª¬ªº \\*, \\=, \\+, ©Î \\{"
+
+#: regexp.c:1402
+msgid "invalid use of \\_"
+msgstr "\\_ ªº¥Îªk¤£¥¿½T"
+
+#: regexp.c:1427
+#~ msgid "\\= follows nothing"
+#~ msgstr ""
+
+#: regexp.c:1431
+#~ msgid "\\+ follows nothing"
+#~ msgstr ""
+
+#: regexp.c:1435
+#~ msgid "\\@ follows nothing"
+#~ msgstr ""
+
+#: regexp.c:1439
+#~ msgid "\\{ follows nothing"
+#~ msgstr ""
+
+#: regexp.c:1444
+#~ msgid "* follows nothing"
+#~ msgstr ""
+
+#: regexp.c:1445
+#~ msgid "\\* follows nothing"
+#~ msgstr ""
+
+#: regexp.c:1495
+msgid "Illegal back reference"
+msgstr "¤£¥¿½Tªº°Ñ¦Ò"
+
+#: regexp.c:1506
+#~ msgid "\\z( not allowed here"
+#~ msgstr ""
+
+#: regexp.c:1523
+#~ msgid "\\z1 et al. not allowed here"
+#~ msgstr ""
+
+#: regexp.c:1534
+#~ msgid "Invalid character after \\z"
+#~ msgstr ""
+
+#: regexp.c:1578
+msgid "Missing ] after \\%["
+msgstr "\\%[ «á¯Ê¤Ö ]"
+
+#: regexp.c:1593
+#~ msgid "Empty \\%[]"
+#~ msgstr ""
+
+#: regexp.c:2266
+#, c-format
+msgid "Syntax error in \\%c...%c"
+msgstr "»yªk¿ù»~: \\%c...%c"
+
+#: regexp.c:2503
+#~ msgid "Crash intercepted; regexp too complex?"
+#~ msgstr ""
+
+#: regexp.c:2618
+#~ msgid "pattern caused out-of-stack error"
+#~ msgstr ""
+
+#: regexp.c:2855
+#~ msgid "External submatches:\n"
+#~ msgstr ""
+
+#: screen.c:6304
+msgid " REVERSE"
+msgstr " ¤ÏÂà"
+
+#: screen.c:6306
+msgid " INSERT"
+msgstr " ´¡¤J"
+
+#: screen.c:6309
+msgid " REPLACE"
+msgstr " ¨ú¥N"
+
+#: screen.c:6311
+msgid " VREPLACE"
+msgstr " V-¨ú¥N"
+
+#: screen.c:6313
+msgid " (insert)"
+msgstr " (´¡¤J)"
+
+#: screen.c:6315
+msgid " (replace)"
+msgstr " (¨ú¥N)"
+
+#: screen.c:6317
+msgid " (vreplace)"
+msgstr " (v-¨ú¥N)"
+
+#: screen.c:6320
+msgid " Hebrew"
+msgstr " Hebrew"
+
+#: screen.c:6327
+msgid " (paste)"
+msgstr " (¶K¤W)"
+
+#: screen.c:6333
+msgid " SELECT"
+msgstr " ¿ï¨ú"
+
+#: screen.c:6335
+msgid " VISUAL"
+msgstr " ¿ï¨ú"
+
+#: screen.c:6337
+msgid " BLOCK"
+msgstr " °Ï¶ô"
+
+#: screen.c:6339
+msgid " LINE"
+msgstr " ¦æ¿ï¨ú"
+
+#: screen.c:6348 screen.c:6402
+msgid "recording"
+msgstr "°O¿ý¤¤"
+
+#: search.c:35
+msgid "search hit TOP, continuing at BOTTOM"
+msgstr "¤w·j´M¨ìÀÉ®×¶}ÀY¡F¦A±qµ²§ÀÄ~Äò·j´M"
+
+#: search.c:36
+msgid "search hit BOTTOM, continuing at TOP"
+msgstr "¤w·j´M¨ìÀÉ®×µ²§À¡F¦A±q¶}ÀYÄ~Äò·j´M"
+
+#: search.c:444
+#, c-format
+msgid "Invalid search string: %s"
+msgstr "¿ù»~ªº·j´M¦r¦ê: %s"
+
+#: search.c:719
+#, c-format
+msgid "search hit TOP without match for: %s"
+msgstr "¤w·j´M¨ìÀÉ®×¶}ÀY¤´§ä¤£¨ì %s"
+
+#: search.c:721
+#, c-format
+msgid "search hit BOTTOM without match for: %s"
+msgstr "¤w·j´M¨ìÀÉ®×µ²§À¤´§ä¤£¨ì %s"
+
+#: search.c:1079
+#~ msgid "Expected '?' or '/'  after ';'"
+#~ msgstr ""
+
+#: search.c:3426
+#~ msgid " (includes previously listed match)"
+#~ msgstr ""
+
+#: search.c:3446
+msgid "--- Included files "
+msgstr "--- ¤Þ¤JÀÉ®× "
+
+#: search.c:3448
+msgid "not found "
+msgstr "§ä¤£¨ì "
+
+#: search.c:3449
+msgid "in path ---\n"
+msgstr "in path ---\n"
+
+#: search.c:3488
+msgid "  (Already listed)"
+msgstr "  (¤w¦C¥X)"
+
+#: search.c:3490
+msgid "  NOT FOUND"
+msgstr "  §ä¤£¨ì"
+
+#: search.c:3542
+#, c-format
+msgid "Scanning included file: %s"
+msgstr "·j´M¤Þ¤JÀÉ®×: %s"
+
+#: search.c:3769
+#~ msgid "Match is on current line"
+#~ msgstr ""
+
+#: search.c:3903
+msgid "All included files were found"
+msgstr "©Ò¦³¤Þ¤JÀÉ®×³£¤w§ä¨ì"
+
+#: search.c:3905
+msgid "No included files"
+msgstr "¨S¦³¤Þ¤JÀÉ®×"
+
+#: search.c:3921
+msgid "Couldn't find definition"
+msgstr "§ä¤£¨ì©w¸q"
+
+#: search.c:3923
+msgid "Couldn't find pattern"
+msgstr "§ä¤£¨ì pattern"
+
+#: syntax.c:3118 syntax.c:3306
+#, c-format
+msgid "No such syntax cluster: %s"
+msgstr "µL¦¹ syntax cluster: \"%s\""
+
+#: syntax.c:3139 syntax.c:3314
+#, c-format
+#~ msgid "No such highlight group name: %s"
+#~ msgstr ""
+
+#: syntax.c:3250
+#~ msgid "No Syntax items defined for this buffer"
+#~ msgstr ""
+
+#: syntax.c:3258
+#~ msgid "syncing on C-style comments"
+#~ msgstr ""
+
+#: syntax.c:3266
+#~ msgid "no syncing"
+#~ msgstr ""
+
+#: syntax.c:3269
+#~ msgid "syncing starts "
+#~ msgstr ""
+
+#: syntax.c:3275
+#~ msgid ""
+#~ "\n"
+#~ "--- Syntax sync items ---"
+#~ msgstr ""
+
+#: syntax.c:3278
+#~ msgid ""
+#~ "\n"
+#~ "syncing on items"
+#~ msgstr ""
+
+#: syntax.c:3283
+msgid ""
+"\n"
+"--- Syntax items ---"
+msgstr ""
+"\n"
+"--- »yªk¶µ¥Ø ---"
+
+#: syntax.c:3330
+#~ msgid "minimal "
+#~ msgstr ""
+
+#: syntax.c:3337
+#~ msgid "maximal "
+#~ msgstr ""
+
+#: syntax.c:3931
+#~ msgid "group[t]here not accepted here"
+#~ msgstr ""
+
+#: syntax.c:3955
+#, c-format
+#~ msgid "Didn't find region item for %s"
+#~ msgstr ""
+
+#: syntax.c:3983
+#~ msgid "contains argument not accepted here"
+#~ msgstr ""
+
+#: syntax.c:4060
+msgid "Filename required"
+msgstr "»Ý­nÀÉ®×¦WºÙ"
+
+#: syntax.c:4368
+#, c-format
+msgid "Missing '=': %s"
+msgstr "¯Ê¤Ö \"=\": %s"
+
+#: syntax.c:4521
+#, c-format
+msgid "Not enough arguments: syntax region %s"
+msgstr "syntax region %s ªº¤Þ¼Æ¤Ó¤Ö"
+
+#: syntax.c:4852
+#~ msgid "No cluster specified"
+#~ msgstr ""
+
+#: syntax.c:4889
+#, c-format
+msgid "Pattern delimiter not found: %s"
+msgstr "§ä¤£¨ì¤À¹j²Å¸¹: %s"
+
+#: syntax.c:4964
+#, c-format
+#~ msgid "Garbage after pattern: %s"
+#~ msgstr ""
+
+#: syntax.c:5046
+#~ msgid "syntax sync: line continuations pattern specified twice"
+#~ msgstr ""
+
+#: syntax.c:5103
+#, c-format
+msgid "Illegal arguments: %s"
+msgstr "°Ñ¼Æ¤£¥¿½T: %s"
+
+#: syntax.c:5153
+#, c-format
+#~ msgid "Missing equal sign: %s"
+#~ msgstr ""
+
+#: syntax.c:5159
+#, c-format
+msgid "Empty argument: %s"
+msgstr "ªÅ¥Õ°Ñ¼Æ: %s"
+
+#: syntax.c:5186
+#, c-format
+msgid "%s not allowed here"
+msgstr "%s ¤£¯à¦b¦¹¥X²{"
+
+#: syntax.c:5193
+#, c-format
+msgid "%s must be first in contains list"
+msgstr "%s ¥²¶·¬O¦Cªí¸Ìªº²Ä¤@­Ó"
+
+#: syntax.c:5263
+#, c-format
+msgid "Unknown group name: %s"
+msgstr "¤£¥¿½Tªº¸s²Õ¦WºÙ: %s"
+
+#: syntax.c:5464
+#, c-format
+msgid "Invalid :syntax subcommand: %s"
+msgstr "¤£¥¿½Tªº :syntax ¤l©R¥O: %s"
+
+#: syntax.c:5775
+#, c-format
+msgid "highlight group not found: %s"
+msgstr "§ä¤£¨ì highlight group: %s"
+
+#: syntax.c:5799
+#, c-format
+msgid "Not enough arguments: \":highlight link %s\""
+msgstr "°Ñ¼Æ¤Ó¤Ö: \":highlight link %s\""
+
+#: syntax.c:5806
+#, c-format
+msgid "Too many arguments: \":highlight link %s\""
+msgstr "°Ñ¼Æ¹L¦h: \":highlight link %s\""
+
+#: syntax.c:5826
+#~ msgid "group has settings, highlight link ignored"
+#~ msgstr ""
+
+#: syntax.c:5848
+#~ msgid "Cannot clear all highlight groups"
+#~ msgstr ""
+
+#: syntax.c:5884
+#, c-format
+#~ msgid "unexpected equal sign: %s"
+#~ msgstr ""
+
+#: syntax.c:5942
+#, c-format
+msgid "missing argument: %s"
+msgstr "¯Ê¤Ö°Ñ¼Æ: %s"
+
+#: syntax.c:5979
+#, c-format
+msgid "Illegal value: %s"
+msgstr "¤£¦Xªkªº­È: %s"
+
+#: syntax.c:6056
+msgid "FG color unknown"
+msgstr "¿ù»~ªº«e´ºÃC¦â"
+
+#: syntax.c:6067
+msgid "BG color unknown"
+msgstr "¿ù»~ªº­I´ºÃC¦â"
+
+#: syntax.c:6117
+#, c-format
+#~ msgid "Color name or number not recognized: %s"
+#~ msgstr ""
+
+#: syntax.c:6295
+#, c-format
+#~ msgid "terminal code too long: %s"
+#~ msgstr ""
+
+#: syntax.c:6808
+#~ msgid "Too many different highlighting attributes in use"
+#~ msgstr ""
+
+#: tag.c:89
+#~ msgid "at bottom of tag stack"
+#~ msgstr ""
+
+#: tag.c:90
+#~ msgid "at top of tag stack"
+#~ msgstr ""
+
+#: tag.c:384
+msgid "Cannot go before first matching tag"
+msgstr "¤w¸g¦b³Ì«e­±ªº tag ¤F"
+
+#: tag.c:504
+#, c-format
+msgid "tag not found: %s"
+msgstr "§ä¤£¨ì tag: %s"
+
+#: tag.c:536
+#~ msgid "  # pri kind tag"
+#~ msgstr ""
+
+#: tag.c:539
+msgid "file\n"
+msgstr "ÀÉ®×\n"
+
+#: tag.c:696
+#~ msgid "Enter nr of choice (<CR> to abort): "
+#~ msgstr ""
+
+#: tag.c:732
+msgid "There is only one matching tag"
+msgstr "¥u¦³¦¹¶µ²Å¦X"
+
+#: tag.c:734
+msgid "Cannot go beyond last matching tag"
+msgstr "¤v¸g¦b³Ì«á¤@­Ó²Å¦Xªº tag ¤F"
+
+#: tag.c:754 tag.c:814
+#, c-format
+msgid "File \"%s\" does not exist"
+msgstr "ÀÉ®× \"%s\" ¤£¦s¦b"
+
+#: tag.c:766
+#, c-format
+msgid "tag %d of %d%s"
+msgstr "§ä¨ì tag: %d / %d"
+
+#: tag.c:769
+msgid " or more"
+msgstr " ©Î§ó¦h"
+
+#: tag.c:771
+#~ msgid "  Using tag with different case!"
+#~ msgstr ""
+
+#: tag.c:883
+msgid ""
+"\n"
+"  # TO tag         FROM line  in file/text"
+msgstr ""
+"\n"
+"  # TO tag         FROM line  in file/text"
+
+#: tag.c:1122
+#~ msgid "Linear tag search"
+#~ msgstr ""
+
+#: tag.c:1124
+#~ msgid "Binary tag search"
+#~ msgstr ""
+
+#: tag.c:1150
+#, c-format
+msgid "Searching tags file %s"
+msgstr "·j´M tag ÀÉ®× \"%s\""
+
+#: tag.c:1334
+#, c-format
+msgid "Tag file path truncated for %s\n"
+msgstr "Tag ÀÉ®×¸ô®|³QºIÂ_¬° %s\n"
+
+#: tag.c:1825
+#, c-format
+msgid "Format error in tags file \"%s\""
+msgstr "Tag ÀÉ \"%s\" ®æ¦¡¿ù»~"
+
+#: tag.c:1829
+#, c-format
+msgid "Before byte %ld"
+msgstr "¦b %ld ¦ì¤¸¤§«e"
+
+#: tag.c:1850
+#, c-format
+msgid "Tags file not sorted: %s"
+msgstr "Tag ÀÉ®×¥¼±Æ§Ç: %s"
+
+#: tag.c:1889
+msgid "No tags file"
+msgstr "¨S¦³ tag ÀÉ"
+
+#: tag.c:2552
+msgid "Can't find tag pattern"
+msgstr "§ä¤£¨ì tag"
+
+#: tag.c:2563
+msgid "Couldn't find tag, just guessing!"
+msgstr "§ä¤£¨ì tag, ¥Î²qªº!"
+
+#: term.c:1689
+msgid "' not known. Available builtin terminals are:"
+msgstr "' µLªk¸ü¤J¡C¥i¥Îªº¤º«Ø²×ºÝ¾÷§Î¦¡¦³:"
+
+#: term.c:1713
+msgid "defaulting to '"
+msgstr "¹w³]: '"
+
+#: term.c:2036
+msgid "Cannot open termcap file"
+msgstr "µLªk¶}±Ò termcap ÀÉ®×"
+
+#: term.c:2039
+#~ msgid "Terminal entry not found in terminfo"
+#~ msgstr ""
+
+#: term.c:2041
+#~ msgid "Terminal entry not found in termcap"
+#~ msgstr ""
+
+#: term.c:2200
+#, c-format
+#~ msgid "No \"%s\" entry in termcap"
+#~ msgstr ""
+
+#: term.c:2669
+#~ msgid "terminal capability \"cm\" required"
+#~ msgstr ""
+
+#: term.c:4708
+msgid ""
+"\n"
+"--- Terminal keys ---"
+msgstr ""
+"\n"
+"--- ²×ºÝ¾÷«öÁä ---"
+
+#: ui.c:218
+msgid "new shell started\n"
+msgstr "°_°Ê·s shell\n"
+
+#: ui.c:1435
+msgid "Vim: Error reading input, exiting...\n"
+msgstr "Vim: Åª¨ú¿é¤J¿ù»~¡AÂ÷¶}¤¤...\n"
+
+#: undo.c:332
+#~ msgid "No undo possible; continue anyway"
+#~ msgstr ""
+
+#: undo.c:486
+msgid "u_undo: line numbers wrong"
+msgstr "u_undo: ¦æ¸¹¿ù»~"
+
+#: undo.c:644
+msgid "1 change"
+msgstr "¤@¶µ§ïÅÜ"
+
+#: undo.c:646
+#, c-format
+msgid "%ld changes"
+msgstr "%ld ¶µ§ïÅÜ"
+
+#: undo.c:686
+#~ msgid "undo list corrupt"
+#~ msgstr ""
+
+#: undo.c:716
+#~ msgid "undo line missing"
+#~ msgstr ""
+
+#: version.c:580
+msgid ""
+"\n"
+"MS-Windows 16/32 bit GUI version"
+msgstr ""
+"\n"
+"MS-Windows 16/32 Bit ¹Ï«¬¬É­±ª©¥»"
+
+#: version.c:582
+msgid ""
+"\n"
+"MS-Windows 32 bit GUI version"
+msgstr ""
+"\n"
+"MS-Windows 32 Bit ¹Ï«¬¬É­±ª©¥»"
+
+#: version.c:585
+msgid " in Win32s mode"
+msgstr "Win32s ¼Ò¦¡"
+
+#: version.c:587
+msgid " with OLE support"
+msgstr "¤ä´© OLE"
+
+#: version.c:590
+msgid ""
+"\n"
+"MS-Windows 32 bit console version"
+msgstr ""
+"\n"
+"MS-Windows 32 Bit console ª©¥»"
+
+#: version.c:594
+msgid ""
+"\n"
+"MS-Windows 16 bit version"
+msgstr ""
+"\n"
+"MS-Windows 32 Bit console ª©¥»"
+
+#: version.c:598
+msgid ""
+"\n"
+"32 bit MS-DOS version"
+msgstr ""
+"\n"
+"32 Bit MS-DOS ª©¥»"
+
+#: version.c:600
+msgid ""
+"\n"
+"16 bit MS-DOS version"
+msgstr ""
+"\n"
+"16 Bit MS-DOS ª©¥»"
+
+#: version.c:604
+msgid ""
+"\n"
+"MacOS version"
+msgstr ""
+"\n"
+"MacOS ª©¥»"
+
+#: version.c:607
+msgid ""
+"\n"
+"RISC OS version"
+msgstr ""
+"\n"
+"RISC OS ª©¥»"
+
+#: version.c:617
+msgid ""
+"\n"
+"Included patches: "
+msgstr ""
+"\n"
+"¤Þ¤J­×¥¿: "
+
+#: version.c:644
+msgid ""
+"\n"
+"Compiled "
+msgstr ""
+"\n"
+"½sÄ¶"
+
+#: version.c:647
+msgid "by "
+msgstr "ªÌ:"
+
+#: version.c:659
+msgid ""
+"\n"
+"Huge version "
+msgstr ""
+"\n"
+"¶W±jª©¥» "
+
+#: version.c:662
+msgid ""
+"\n"
+"Big version "
+msgstr ""
+"\n"
+"¤j«¬ª©¥» "
+
+#: version.c:665
+msgid ""
+"\n"
+"Normal version "
+msgstr ""
+"\n"
+"¤@¯ëª©¥» "
+
+#: version.c:668
+msgid ""
+"\n"
+"Small version "
+msgstr ""
+"\n"
+"Â²©öª©¥» "
+
+#: version.c:670
+msgid ""
+"\n"
+"Tiny version "
+msgstr ""
+"\n"
+"ºëÂ²ª©¥» "
+
+#: version.c:676
+msgid "without GUI."
+msgstr "¤£¨Ï¥Î¹Ï«¬¬É­±¡C"
+
+#: version.c:680
+msgid "with GTK-GNOME GUI."
+msgstr "¨Ï¥Î GTK-GNOME ¹Ï«¬¬É­±¡C"
+
+#: version.c:682
+msgid "with GTK GUI."
+msgstr "¨Ï¥Î GTK ¹Ï«¬¬É­±¡C"
+
+#: version.c:686
+msgid "with X11-Motif GUI."
+msgstr "¨Ï¥Î X11-Motif ¹Ï«¬¬É­±¡C"
+
+#: version.c:689
+msgid "with X11-Athena GUI."
+msgstr "¨Ï¥Î X11-Athena ¹Ï«¬¬É­±¡C"
+
+#: version.c:692
+msgid "with BeOS GUI."
+msgstr "¨Ï¥Î BeOS ¹Ï«¬¬É­±¡C"
+
+#: version.c:695
+msgid "with GUI."
+msgstr "¨Ï¥Î¹Ï«¬¬É­±¡C"
+
+#: version.c:702
+msgid "  Features included (+) or not (-):\n"
+msgstr " ¥Ø«e¥i¨Ï¥Î(+) »P¤£¥i¨Ï¥Î(-)ªº¥\\¯à¦Cªí:\n"
+
+#: version.c:714
+msgid "   system vimrc file: \""
+msgstr "        ¨t²Î vimrc ³]©wÀÉ: \""
+
+#: version.c:719
+msgid "     user vimrc file: \""
+msgstr "  ¨Ï¥ÎªÌ­Ó¤H vimrc ³]©wÀÉ: \""
+
+#: version.c:724
+msgid " 2nd user vimrc file: \""
+msgstr "    ²Ä¤G²Õ­Ó¤H vimrc ÀÉ®×: \""
+
+#: version.c:729
+msgid " 3rd user vimrc file: \""
+msgstr "    ²Ä¤T²Õ­Ó¤H vimrc ÀÉ®×: \""
+
+#: version.c:734
+msgid "      user exrc file: \""
+msgstr "   ¨Ï¥ÎªÌ­Ó¤H exrc ³]©wÀÉ: \""
+
+#: version.c:739
+msgid "  2nd user exrc file: \""
+msgstr "   ²Ä¤G²Õ¨Ï¥ÎªÌ exrc ÀÉ®×: \""
+
+#: version.c:745
+msgid "  system gvimrc file: \""
+msgstr "         ¨t²Î gvimrc ÀÉ®×: \""
+
+#: version.c:749
+msgid "    user gvimrc file: \""
+msgstr "     ¨Ï¥ÎªÌ­Ó¤H gvimrc ÀÉ: \""
+
+#: version.c:753
+msgid "2nd user gvimrc file: \""
+msgstr "   ²Ä¤G²Õ­Ó¤H gvimrc ÀÉ®×: \""
+
+#: version.c:758
+msgid "3rd user gvimrc file: \""
+msgstr "   ²Ä¤T²Õ­Ó¤H gvimrc ÀÉ®×: \""
+
+#: version.c:765
+msgid "    system menu file: \""
+msgstr "           ¨t²Î¿ï³æ³]©wÀÉ: \""
+
+#: version.c:773
+msgid "  fall-back for $VIM: \""
+msgstr "              $VIM ¹w³]­È: \""
+
+#: version.c:779
+msgid " f-b for $VIMRUNTIME: \""
+msgstr "       $VIMRUNTIME ¹w³]­È: \""
+
+#: version.c:783
+msgid "Compilation: "
+msgstr "½sÄ¶¤è¦¡: "
+
+#: version.c:789
+msgid "Compiler: "
+msgstr "½sÄ¶¾¹: "
+
+#: version.c:794
+msgid "Linking: "
+msgstr "Ãìµ²¤è¦¡: "
+
+#: version.c:799
+msgid "  DEBUG BUILD"
+msgstr "  °£¿ùª©¥»"
+
+#: version.c:833
+msgid "VIM - Vi IMproved"
+msgstr " VIM - Vi ¥[±jª©  "
+
+#: version.c:835
+msgid "version "
+msgstr "ª©¥»   "
+
+#: version.c:836
+msgid "by Bram Moolenaar et al."
+msgstr "ºûÅ@ªÌ: Moolenaar et al."
+
+#: version.c:838
+msgid "Vim is freely distributable"
+msgstr "Vim ¬°¦Û¥Ñ³nÅé"
+
+#: version.c:839
+msgid "type  :help uganda<Enter>     if you like Vim "
+msgstr "¦pªG§A·QÃÙ§U VIM ½Ð¿é¤J  :help uganda<Enter>  "
+
+#: version.c:841
+msgid "type  :q<Enter>               to exit         "
+msgstr "­nÂ÷¶}½Ð¿é¤J             :q<Enter>            "
+
+#: version.c:842
+msgid "type  :help<Enter>  or  <F1>  for on-line help"
+msgstr "½u¤W»¡©ú½Ð¿é¤J           :help<Enter>         "
+
+#: version.c:843
+msgid "type  :help version6<Enter>   for version info"
+msgstr "·sª©¥»¸ê°T½Ð¿é¤J         :help version6<Enter>"
+
+#: version.c:846
+msgid "Running in Vi compatible mode"
+msgstr "Vi ¬Û®e¼Ò¦¡"
+
+#: version.c:847
+msgid "type  :set nocp<Enter>        for Vim defaults"
+msgstr "¦pªG­n§¹¥þ¼ÒÀÀ¶Ç²Î Vi ½Ð¿é¤J :set nocp<Enter>"
+
+#: version.c:848
+msgid "type  :help cp-default<Enter> for info on this"
+msgstr "¦pªG»Ý­n¹ï Vi ¬Û®e¼Ò¦¡ªº¶i¤@¨B»¡©ú½Ð¿é¤J :help cp-default<Enter>"
+
+#: version.c:904
+msgid "WARNING: Windows 95/98/ME detected"
+msgstr "ª`·N: °»´ú¨ì Windows 95/98/ME"
+
+#: version.c:906
+msgid "type  :help windows95<Enter>  for info on this"
+msgstr "¦pªG»Ý­n¹ï Windows 95 ¤ä´©ªº§ó¦h¸ê°T½Ð¿é¤J :help windows95<Enter>"
+
+#: version.c:911
+msgid "     WARNING: Intel CPU detected.    "
+msgstr "     ª`·N: °»´ú¨ì Intel CPU "
+
+#: version.c:913
+msgid " PPC has a much better architecture. "
+msgstr " ¶Q«Ü¦hªº PowerPC ®Ä¯à·|¤ñ¸û¦n "
+
+#: window.c:541
+#~ msgid "Can't split topleft and botright at the same time"
+#~ msgstr ""
+
+#: window.c:1209
+#~ msgid "Cannot rotate when another window is split"
+#~ msgstr ""
+
+#: window.c:1647
+msgid "Cannot close last window"
+msgstr "¤£¯àÃö³¬³Ì«á¤@­Óµøµ¡"
+
+#: window.c:2204
+msgid "Already only one window"
+msgstr "¤w¸g¥u³Ñ¤@­Óµøµ¡¤F"
+
+#: window.c:2234
+msgid "Other window contains changes"
+msgstr "¨ä¥¦µøµ¡¦³§ó°Ê¸ê®Æ"
+
+#: window.c:3995
+msgid "No file name under cursor"
+msgstr "´å¼Ð³B¨S¦³ÀÉ¦W"
+
+#: globals.h:826
+msgid "--No lines in buffer--"
+msgstr "--½w½Ä°ÏµL¸ê®Æ--"
+
+#: globals.h:888
+msgid "Command aborted"
+msgstr "©R¥O³Q±j¨î¤¤Â_°õ¦æ"
+
+#: globals.h:889
+msgid "Argument required"
+msgstr "»Ý­n«ü¥O°Ñ¼Æ"
+
+#: globals.h:890
+msgid "\\ should be followed by /, ? or &"
+msgstr "\\ «á­±À³¸Ó¦³ / ? ©Î &"
+
+#: globals.h:892
+#~ msgid "Invalid in command-line window; <CR> executes, CTRL-C quits"
+#~ msgstr ""
+
+#: globals.h:894
+msgid "Command not allowed from exrc/vimrc in current dir or tag search"
+msgstr "exrc/vimrc ¸Ìªº«ü¥OµLªk°õ¦æ"
+
+#: globals.h:895
+msgid "File exists (use ! to override)"
+msgstr "ÀÉ®×¤w¸g¦s¦b (¥i¥Î ! ±j¨î¨ú¥N)"
+
+#: globals.h:896
+msgid "Command failed"
+msgstr "©R¥O°õ¦æ¥¢±Ñ"
+
+#: globals.h:897
+msgid "Internal error"
+msgstr "¤º³¡¿ù»~"
+
+#: globals.h:898
+msgid "Interrupted"
+msgstr "¤w¤¤Â_"
+
+#: globals.h:899
+msgid "Invalid address"
+msgstr "¤£¥¿½Tªº¦ì§}"
+
+#: globals.h:900
+msgid "Invalid argument"
+msgstr "¤£¥¿½Tªº°Ñ¼Æ"
+
+#: globals.h:901
+#, c-format
+msgid "Invalid argument: %s"
+msgstr "¤£¥¿½Tªº°Ñ¼Æ: %s"
+
+#: globals.h:903
+#, c-format
+msgid "Invalid expression: %s"
+msgstr "¤£¥¿½Tªº¹Bºâ¦¡: %s"
+
+#: globals.h:905
+msgid "Invalid range"
+msgstr "¤£¥¿½Tªº½d³ò"
+
+#: globals.h:906
+msgid "Invalid command"
+msgstr "¤£¥¿½Tªº©R¥O"
+
+#: globals.h:908
+msgid "Unexpected characters before '='"
+msgstr "'=' «e­±¥X²{¤F¿ù»~ªº¦r¤¸"
+
+#: globals.h:910
+msgid "Mark has invalid line number"
+msgstr "¼Ð°Oªº¦æ¸¹¿ù»~"
+
+#: globals.h:911
+msgid "Mark not set"
+msgstr "¨S¦³³]©w¼Ð°O"
+
+#: globals.h:912
+msgid "Cannot make changes, 'modifiable' is off"
+msgstr "¦]¬° 'modifiable' ¿ï¶µ¬OÃö³¬ªº¡A¬H¥H¤£¯à­×§ï"
+
+#: globals.h:914
+msgid "GUI is not running"
+msgstr "¨S¦³¹Ï«¬¬É­±"
+
+#: globals.h:916
+msgid "Scripts nested too deep"
+msgstr "±_ª¬»¼°j©I¥s¤Ó¦h¼h"
+
+#: globals.h:917
+msgid "No alternate file"
+msgstr "¨S¦³´À¥NªºÀÉ®×"
+
+#: globals.h:919
+msgid "No ! allowed"
+msgstr "¤£¥i¨Ï¥Î '!'"
+
+#: globals.h:921
+msgid "GUI cannot be used: Not enabled at compile time"
+msgstr "¦]¬°½sÄ¶®É¨S¦³¥[¤J¹Ï«¬¬É­±ªºµ{¦¡½X¡A©Ò¥HµLªk¨Ï¥Î¹Ï«¬¬É­±"
+
+#: globals.h:924
+msgid "Hebrew cannot be used: Not enabled at compile time\n"
+msgstr "¦]¬°½sÄ¶®É¨S¦³¥[¤J Hebrew ªºµ{¦¡½X¡A©Ò¥HµLªk¨Ï¥Î Hebrew\n"
+
+#: globals.h:927
+msgid "Farsi cannot be used: Not enabled at compile time\n"
+msgstr "¦]¬°½sÄ¶®É¨S¦³¥[¤J Farsi ªºµ{¦¡½X¡A©Ò¥HµLªk¨Ï¥Î Farsi\n"
+
+#: globals.h:929
+msgid "No inserted text yet"
+msgstr "ÁÙ¨S¦³´¡¤J¤å¦r¹L"
+
+#: globals.h:930
+msgid "No previous command line"
+msgstr "¨S¦³«e¤@¶µ©R¥O"
+
+#: globals.h:931
+msgid "No such mapping"
+msgstr "¨S¦³³o­Ó mapping ¹ïÀ³"
+
+#: globals.h:932
+msgid "No match"
+msgstr "§ä¤£¨ì"
+
+#: globals.h:933
+#, c-format
+msgid "No match: %s"
+msgstr "§ä¤£¨ì: %s"
+
+#: globals.h:935
+msgid "No previous substitute regular expression"
+msgstr "¨S¦³«e¤@­Ó·j´M/¨ú¥Nªº©R¥O"
+
+#: globals.h:936
+msgid "No previous command"
+msgstr "¨S¦³«e¤@­Ó©R¥O"
+
+#: globals.h:937
+msgid "No previous regular expression"
+msgstr "¨S¦³«e¤@­Ó·j´M«ü¥O"
+
+#: globals.h:938
+msgid "No range allowed"
+msgstr "¤£¥i¨Ï¥Î½d³ò«ü¥O"
+
+#: globals.h:940
+msgid "Not enough room"
+msgstr "¨S¦³¨¬°÷ªºªÅ¶¡"
+
+#: globals.h:942
+#, c-format
+msgid "Can't create file %s"
+msgstr "¤£¯à«Ø¥ßÀÉ®× %s"
+
+#: globals.h:943
+msgid "Can't get temp file name"
+msgstr "µLªk±oª¾¼È¦sÀÉ¦W"
+
+#: globals.h:944
+#, c-format
+msgid "Can't open file %s"
+msgstr "µLªk¶}±ÒÀÉ®× %s"
+
+#: globals.h:945
+#, c-format
+msgid "Can't read file %s"
+msgstr "µLªkÅª¨úÀÉ®× %s"
+
+#: globals.h:946
+msgid "No write since last change (use ! to override)"
+msgstr "¤w§ó§ï¹LÀÉ®×¦ý©|¥¼¦sÀÉ (¥i¥Î ! ±j¨î°õ¦æ)"
+
+#: globals.h:947
+msgid "Null argument"
+msgstr "ªÅªº (Null) °Ñ¼Æ"
+
+#: globals.h:949
+msgid "Number expected"
+msgstr "À³¸Ó­n¦³¼Æ¦r"
+
+#: globals.h:956
+msgid "Pattern not found"
+msgstr "§ä¤£¨ì"
+
+#: globals.h:958
+#, c-format
+msgid "Pattern not found: %s"
+msgstr "§ä¤£¨ì %s"
+
+#: globals.h:959
+msgid "Argument must be positive"
+msgstr "°Ñ¼ÆÀ³¸Ó¬O¥¿¼Æ"
+
+#: globals.h:961
+msgid "No Errors"
+msgstr "¨S¦³¿ù»~"
+
+#: globals.h:963
+msgid "Damaged match string"
+msgstr "²Å¦X¦r¦ê¦³°ÝÃD"
+
+#: globals.h:964
+msgid "Corrupted regexp program"
+msgstr "regexp ¦³°ÝÃD"
+
+#: globals.h:965
+msgid "'readonly' option is set (use ! to override)"
+msgstr "¦³³]©w 'readonly' ¿ï¶µ(°ßÅª) (¥i¥Î ! ±j¨î°õ¦æ)"
+
+#: globals.h:967
+#, c-format
+msgid "Cannot set read-only variable \"%s\""
+msgstr "µLªk³]©w°ßÅªÅÜ¼Æ \"%s\""
+
+#: globals.h:970
+msgid "Error while reading errorfile"
+msgstr "Åª¨ú¿ù»~ÀÉ®×¥¢±Ñ"
+
+#: globals.h:973
+msgid "Not allowed in sandbox"
+msgstr "sandbox ¸Ì¤£¤¹³\\"
+
+#: globals.h:975
+msgid "Invalid scroll size"
+msgstr "¿ù»~ªº±²°Ê¤j¤p"
+
+#: globals.h:976
+msgid "tag stack empty"
+msgstr "¼ÐÅÒ°ïÅ|¤wªÅ"
+
+#: globals.h:977
+msgid "Command too complex"
+msgstr "©R¥O¤Ó½ÆÂø"
+
+#: globals.h:978
+msgid "Name too long"
+msgstr "¦W¦r¤Óªø"
+
+#: globals.h:979
+msgid "Too many ["
+msgstr "¤Ó¦h ["
+
+#: globals.h:981
+msgid "Command too long"
+msgstr "©R¥O¦C¹Lªø"
+
+#: globals.h:983
+msgid "Too many file names"
+msgstr "¤Ó¦hÀÉ¦W"
+
+#: globals.h:985
+msgid "Unknown mark"
+msgstr "µLªk¿ìÃÑªº¼Ð°O"
+
+#: globals.h:986
+msgid "Unknown"
+msgstr "µLªk¿ìÃÑ"
+
+#: globals.h:987
+msgid "Cannot expand wildcards"
+msgstr "µLªk®i¶}¸U¥Î¦r¤¸"
+
+#: globals.h:988
+msgid "Error while writing"
+msgstr "¼g¤J¿ù»~"
+
+#: globals.h:989
+msgid "Zero count"
+msgstr "¼Æ¨ì¹s (?)"

@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0v.  Last change: 2001 Feb 11
+*eval.txt*      For Vim version 6.0w.  Last change: 2001 Feb 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -665,6 +665,7 @@ argv( {nr})			String	{nr} entry of the argument list
 browse( {save}, {title}, {initdir}, {default})
 				String	put up a file requester
 bufexists( {expr})		Number	TRUE if buffer {expr} exists
+buflisted( {expr})		Number  TRUE if buffer {expr} is listed
 bufloaded( {expr})		Number  TRUE if buffer {expr} is loaded
 bufname( {expr})		String	Name of the buffer {expr}
 bufnr( {expr})			Number	Number of the buffer {expr}
@@ -697,7 +698,8 @@ getline( {lnum})		String	line {lnum} from current buffer
 getwinposx()			Number	X coord in pixels of GUI vim window
 getwinposy()			Number	Y coord in pixels of GUI vim window
 getwinvar( {nr}, {varname}		variable {varname} in window {nr}
-glob( {expr} [, {flag}])	String	expand file wildcards in {expr}
+glob( {expr}])			String	expand file wildcards in {expr}
+globpath( {path}, {expr})	String	do glob({expr}) for all dirs in {path}
 has( {feature})			Number	TRUE if feature {feature} supported
 hasmapto( {what} [, {mode}])	Number	TRUE if mapping to {what} exists
 histadd( {history},{item})	String	add an item to a history
@@ -708,7 +710,8 @@ hlexists( {name})		Number	TRUE if highlight group {name} exists
 hlID( {name})			Number	syntax ID of highlight group {name}
 hostname()			String	name of the machine vim is running on
 indent( {lnum})			Number  indent of line {lnum}
-input( {prompt})		String	get input from the user
+input( {prompt} [, {text}])	String	get input from the user
+inputsecret( {prompt} [, {text}]) String  like input() but hiding the text
 isdirectory( {directory})	Number	TRUE if {directory} is a directory
 libcall( {lib}, {func}, {arg})	String  call {func} in library {lib} with {arg}
 libcallnr( {lib}, {func}, {arg})  Number  idem, but return a Number
@@ -796,13 +799,21 @@ bufexists({expr})					*bufexists()*
 		The result is a Number, which is non-zero if a buffer called
 		{expr} exists.
 		If the {expr} argument is a string it must match a buffer name
-		exactly.  Unlisted buffers will not be found.
+		exactly.
 		If the {expr} argument is a number buffer numbers are used.
 		Unlisted buffers will be found.
+		Note that help files are listed by their short name in the
+		output of |:buffers|, but bufexists() requires using their
+		long name to be able to find them.
 		Use "bufexists(0)" to test for the existence of an alternate
 		file name.
 							*buffer_exists()*
 		Obsolete name: buffer_exists().
+
+buflisted({expr})					*buflisted()*
+		The result is a Number, which is non-zero if a buffer called
+		{expr} exists and is listed (has the 'buflisted' option set).
+		The {expr} argument is used like with bufexists().
 
 bufloaded({expr})					*bufloaded()*
 		The result is a Number, which is non-zero if a buffer called
@@ -1158,10 +1169,12 @@ foldtext()	Returns a String, to be displayed for a closed fold.  This is
 		|v:foldstart|, |v:foldend| and |v:folddashes| variables.
 		The returned string looks like this: >
 			+-- 45 lines: abcdef
-<		The number of dashses depends on the foldlevel.  The "45" is
+<		The number of dashes depends on the foldlevel.  The "45" is
 		the number of lines in the fold.  "abcdef" is the text in the
 		first non-blank line of the fold.  Leading white space, "//"
-		or "/*" and text following "{{{" are removed.
+		or "/*" and the text from the 'foldmarker' and 'commentstring'
+		options is removed.
+		{not available when compiled without the |+folding| feature}
 
 getchar([expr])						*getchar()*
 		Get a single character from the user.
@@ -1277,6 +1290,16 @@ glob({expr})	Expand the file wildcards in {expr}.  The result is a String.
 		See |expand()| for expanding special Vim variables.  See
 		|system()| for getting the raw output of an external command.
 
+globpath({path}, {expr})				*globpath()*
+		Perform glob() on all directories in {path} and concatenate
+		the results.  Example: >
+			:echo globpath(&rtp, "syntax/c.vim")
+<		{path} is a comma-separated list of directory names.  Each
+		directory name is prepended to {expr} and expanded like with
+		glob().  A path separator is inserted when needed.
+		If the expansion fails for one of the directories, there is no
+		error message.
+
 							*has()*
 has({feature})	The result is a Number, which is 1 if the feature {feature} is
 		supported, zero otherwise.  The {feature} argument is a
@@ -1294,6 +1317,7 @@ hasmapto({what} [, {mode}])				*hasmapto()*
 			v	Visual mode
 			o	Operator-pending mode
 			i	Insert mode
+			l	Language-Argument ("r", "f", "t", etc.)
 			c	Command-line mode
 		When {mode} is omitted, "nvo" is used.
 
@@ -1426,7 +1450,7 @@ indent({lnum})	The result is a Number, which is indent of line {lnum} in the
 		|getline()|.
 		When {lnum} is invalid -1 is returned.
 
-input({prompt})						*input()*
+input({prompt} [, {text}])				*input()*
 		The result is a String, which is whatever the user typed on
 		the command-line.  The parameter is either a prompt string, or
 		a blank string (for no prompt).  A '\n' can be used in the
@@ -1435,6 +1459,8 @@ input({prompt})						*input()*
 		like a command-line, with the same editing commands and
 		mappings.  There is a separate history for lines typed for
 		input().
+		If the optional {text} is present, this is used for the
+		default reply, as if the use typed this.
 		NOTE: This must not be used in a startup file, for the
 		versions that only run in GUI mode (e.g., the Win32 GUI).
 
@@ -1442,8 +1468,10 @@ input({prompt})						*input()*
 			:if input("Coffee or beer? ") == "beer"
 			:  echo "Cheers!"
 			:endif
+<		Example with default text: >
+			:let color = input("Color? ", "while")
 
-inputsecret({prompt})					*inputsecret()*
+inputsecret({prompt} [, {text}])			*inputsecret()*
 		This function acts much like the |input()| function with but
 		two exceptions:
 		a) the user's response will be displayed as a sequence of
@@ -2071,6 +2099,7 @@ byte_offset		Compiled with support for 'o' in 'statusline'
 cindent			Compiled with 'cindent' support.
 clipboard		Compiled with 'clipboard' support.
 cmdline_compl		Compiled with |cmdline-completion| support.
+cmdline_hist		Compiled with |cmdline-history| support.
 cmdline_info		Compiled with 'showcmd' and 'ruler' support.
 comments		Compiled with |'comments'| support.
 cryptv			Compiled with encryption support |encryption|.
@@ -2110,6 +2139,7 @@ hangul_input		Compiled with Hangul input support. |hangul|
 iconv			Can use iconv() for coversion.
 insert_expand		Compiled with support for CTRL-X expansion commands in
 			Insert mode.
+keymap			Compiled with 'keymap' support.
 langmap			Compiled with 'langmap' support.
 libcall			Compiled with |libcall()| support.
 linebreak		Compiled with 'linebreak', 'breakat' and 'showbreak'

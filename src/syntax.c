@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -394,7 +395,7 @@ static void free_keywtab __ARGS((keyentry_t **ktabp));
 static void add_keyword __ARGS((char_u *name, int id, int flags, short *next_list));
 static int syn_khash __ARGS((char_u *p));
 static char_u *get_group_name __ARGS((char_u *arg, char_u **name_end));
-static char_u *get_syn_options __ARGS((char_u *arg, int *flagsp, int nodisplay, int *sync_idx, short **cont_list, short **next_list));
+static char_u *get_syn_options __ARGS((char_u *arg, int *flagsp, int keyword, int *sync_idx, short **cont_list, short **next_list));
 static void syn_cmd_include __ARGS((exarg_t *eap, int syncing));
 static void syn_cmd_keyword __ARGS((exarg_t *eap, int syncing));
 static void syn_cmd_match __ARGS((exarg_t *eap, int syncing));
@@ -3865,10 +3866,10 @@ get_group_name(arg, name_end)
  * Return NULL for any error;
  */
     static char_u *
-get_syn_options(arg, flagsp, nodisplay, sync_idx, cont_list, next_list)
+get_syn_options(arg, flagsp, keyword, sync_idx, cont_list, next_list)
     char_u	*arg;		/* next argument */
     int		*flagsp;	/* flags for contained and transpartent */
-    int		nodisplay;	/* TRUE if "display" argument not allowed */
+    int		keyword;	/* TRUE for ":syn keyword" */
     int		*sync_idx;	/* syntax item for "grouphere" argument, NULL
 				   if not allowed */
     short	**cont_list;	/* group IDs for "contains" argument, NULL if
@@ -3913,9 +3914,12 @@ get_syn_options(arg, flagsp, nodisplay, sync_idx, cont_list, next_list)
 	    if (STRNICMP(arg, flagtab[fidx].name, len) == 0
 		    && (ends_excmd(arg[len]) || vim_iswhite(arg[len])))
 	    {
-		if (flagtab[fidx].val == HL_DISPLAY && nodisplay)
+		if (keyword
+			&& (flagtab[fidx].val == HL_DISPLAY
+			    || flagtab[fidx].val == HL_FOLD
+			    || flagtab[fidx].val == HL_EXTEND))
 		{
-		    /* handle "display" as a keyword, not a flag */
+		    /* treat "display", "fold" and "extend" as a keyword */
 		    fidx = -1;
 		    break;
 		}

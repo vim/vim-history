@@ -119,8 +119,15 @@
 # define FEAT_WINDOWS
 #endif
 
-/* the cmdline-window requires FEAT_VERTSPLIT */
-#ifdef FEAT_VERTSPLIT
+/*
+ * +cmdhist		Command line history.
+ */
+#ifdef FEAT_SMALL
+# define FEAT_CMDHIST
+#endif
+
+/* the cmdline-window requires FEAT_VERTSPLIT and FEAT_CMDHIST */
+#if defined(FEAT_VERTSPLIT) && defined(FEAT_CMDHIST)
 # define FEAT_CMDWIN
 #endif
 
@@ -153,8 +160,8 @@
 #endif
 
 /*
- * +keymap		'keymap' option. Allow you to fake having unusual
- *			language support.
+ * +keymap		'keymap' option.  Allows you to map typed keys in
+ *			Insert mode for a special language.
  */
 #ifdef FEAT_BIG
 # define FEAT_KEYMAP

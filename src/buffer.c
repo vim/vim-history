@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -42,6 +43,7 @@ static int	buf_same_ino __ARGS((buf_t *buf, struct stat *stp));
 #else
 static int	otherfile_buf __ARGS((buf_t *buf, char_u *ffname));
 #endif
+static long	line_count_info __ARGS((char_u *line, long *wc, long limit, int eol_size));
 #ifdef FEAT_TITLE
 static int	ti_change __ARGS((char_u *str, char_u **last));
 #endif
@@ -142,6 +144,9 @@ open_buffer(read_stdin, eap)
 		while (curbuf->b_ml.ml_line_count > line_count)
 		    ml_delete(line_count, FALSE);
 	    }
+	    /* Put the cursor on the first line. */
+	    curwin->w_cursor.lnum = 0;
+	    curwin->w_cursor.col = 0;
 #ifdef FEAT_AUTOCMD
 	    apply_autocmds(EVENT_STDINREADPOST, NULL, NULL, FALSE, curbuf);
 #endif
@@ -151,6 +156,11 @@ open_buffer(read_stdin, eap)
     /* if first time loading this buffer, init b_chartab[] */
     if (curbuf->b_flags & BF_NEVERLOADED)
 	(void)buf_init_chartab(curbuf, FALSE);
+
+#ifdef FEAT_FOLDING
+    /* Need to update automatic folding. */
+    foldUpdateAll(curwin);
+#endif
 
     /*
      * Set/reset the Changed flag first, autocmds may change the buffer.
@@ -499,7 +509,12 @@ clear_wininfo(buf)
 	wip = buf->b_wininfo;
 	buf->b_wininfo = wip->wi_next;
 	if (wip->wi_optset)
+	{
 	    clear_winopt(&wip->wi_opt);
+#ifdef FEAT_FOLDING
+	    deleteFoldRecurse(&wip->wi_folds);
+#endif
+	}
 	vim_free(wip);
     }
 }
@@ -1057,17 +1072,17 @@ enter_buffer(buf)
     buf_copy_options(buf, BCO_ENTER | BCO_NOHELP);
     if (!buf->b_help)
 	get_winopts(buf);
+#ifdef FEAT_FOLDING
+    else
+	/* Remove all folds in the window. */
+	clearFolding(curwin);
+    foldUpdateAll(curwin);	/* update folds (later). */
+#endif
 
     /* Get the buffer in the current window. */
     curwin->w_buffer = buf;
     curbuf = buf;
     ++curbuf->b_nwindows;
-
-#ifdef FEAT_FOLDING
-    /* Remove all folds in the window and update folds (later). */
-    clearFolding(curwin);
-    foldUpdateAll(curwin);
-#endif
 
     /* Make sure the buffer is loaded. */
     if (curbuf->b_ml.ml_mfp == NULL)	/* need to load the file */
@@ -1095,6 +1110,10 @@ enter_buffer(buf)
 #ifdef FEAT_SUN_WORKSHOP
     if (usingSunWorkShop)
 	vim_chdirfile(buf->b_ffname);
+#endif
+#ifdef FEAT_KEYMAP
+    if (curbuf->b_kmap_state & KEYMAP_INIT)
+	keymap_init();
 #endif
     redraw_later(NOT_VALID);
 }
@@ -1323,6 +1342,7 @@ free_buf_options(buf, free_p_ff)
     clear_string_option(&buf->b_p_isk);
 #ifdef FEAT_KEYMAP
     clear_string_option(&buf->b_p_keymap);
+    ga_clear(&buf->b_kmap_ga);
 #endif
 #ifdef FEAT_COMMENTS
     clear_string_option(&buf->b_p_com);
@@ -1359,6 +1379,7 @@ free_buf_options(buf, free_p_ff)
 #endif
     clear_string_option(&buf->b_p_ep);
     clear_string_option(&buf->b_p_path);
+    clear_string_option(&buf->b_p_tags);
 #ifdef FEAT_FIND_ID
     clear_string_option(&buf->b_p_def);
 #endif
@@ -1817,7 +1838,12 @@ buflist_setfpos(buf, lnum, col, copy_options)
 	if (wip->wi_next)
 	    wip->wi_next->wi_prev = wip->wi_prev;
 	if (copy_options && wip->wi_optset)
+	{
 	    clear_winopt(&wip->wi_opt);
+#ifdef FEAT_FOLDING
+	    deleteFoldRecurse(&wip->wi_folds);
+#endif
+	}
     }
     if (lnum != 0)
     {
@@ -1828,6 +1854,10 @@ buflist_setfpos(buf, lnum, col, copy_options)
     {
 	/* Save the window-specific option values. */
 	copy_winopt(&curwin->w_onebuf_opt, &wip->wi_opt);
+#ifdef FEAT_FOLDING
+	wip->wi_fold_manual = curwin->w_fold_manual;
+	cloneFoldGrowArray(&curwin->w_folds, &wip->wi_folds);
+#endif
 	wip->wi_optset = TRUE;
     }
 
@@ -1873,11 +1903,23 @@ get_winopts(buf)
     wininfo_t	*wip;
 
     clear_winopt(&curwin->w_onebuf_opt);
+#ifdef FEAT_FOLDING
+    clearFolding(curwin);
+#endif
+
     wip = find_wininfo(buf);
     if (wip != NULL && wip->wi_optset)
+    {
 	copy_winopt(&wip->wi_opt, &curwin->w_onebuf_opt);
+#ifdef FEAT_FOLDING
+	curwin->w_fold_manual = wip->wi_fold_manual;
+	curwin->w_foldinvalid = TRUE;
+	cloneFoldGrowArray(&wip->wi_folds, &curwin->w_folds);
+#endif
+    }
     else
 	copy_winopt(&curwin->w_allbuf_opt, &curwin->w_onebuf_opt);
+
 #ifdef FEAT_FOLDING
     /* Set 'foldlevel' to 'foldlevelstart' if it's not negative. */
     if (p_fdls >= 0)
@@ -2386,7 +2428,57 @@ fileinfo(fullname, shorthelp, dont_truncate)
 }
 
 /*
+ *  Count the number of characters and "words" in a line.
+ *
+ *  "Words" are counted by looking for boundaries between non-space and
+ *  space characters.  (it seems to produce results that match 'wc'.)
+ *
+ *  Return value is character count; word count for the line is ADDED
+ *  to "*wc".
+ *
+ *  The function will only examine the first "limit" characters in the
+ *  line, stopping if it encounters an end-of-line (NUL byte).  In that
+ *  case, eol_size will be added to the character count to account for
+ *  the size of the EOL character.
+ */
+    static long
+line_count_info(line, wc, limit, eol_size)
+    char_u	*line;
+    long	*wc;
+    long	limit;
+    int		eol_size;
+{
+    long	i, words = 0;
+    int		is_word = 0;
+
+    for (i = 0; line[i] && i < limit; i++)
+    {
+	if (is_word)
+	{
+	    if (vim_isspace(line[i]))
+	    {
+		words++;
+		is_word = 0;
+	    }
+	}
+	else if (!vim_isspace(line[i]))
+	    is_word = 1;
+    }
+
+    if (is_word)
+	words++;
+    *wc += words;
+
+    /* Add eol_size if the end of line was reached before hitting limit. */
+    if (!line[i] && i < limit)
+	i += eol_size;
+    return i;
+}
+
+/*
  * Give some info about the position of the cursor (for "g CTRL-G").
+ * In Visual mode, give some info about the selected region.  (In this case,
+ * the *_count_cursor variables store running totals for the selection.)
  */
     void
 cursor_pos_info()
@@ -2399,6 +2491,12 @@ cursor_pos_info()
     long	char_count_cursor = 0;
     int		eol_size;
     long	last_check = 100000L;
+    long	word_count = 0;
+    long	word_count_cursor = 0;
+#ifdef FEAT_VISUAL
+    long	line_count_selected = 0;
+    pos_t	min_pos, max_pos;
+#endif
 
     /*
      * Compute the length of the file in characters.
@@ -2413,12 +2511,40 @@ cursor_pos_info()
 	    eol_size = 2;
 	else
 	    eol_size = 1;
+
+#ifdef FEAT_VISUAL
+	if (VIsual_active)
+	{
+	    if (lt(VIsual, curwin->w_cursor))
+	    {
+		min_pos = VIsual;
+		max_pos = curwin->w_cursor;
+	    }
+	    else
+	    {
+		min_pos = curwin->w_cursor;
+		max_pos = VIsual;
+	    }
+	    if (VIsual_mode == Ctrl_V)
+	    {
+		/* For block visual mode, a little monkey business here cuts
+		 * a couple special cases later on. It's not enough to
+		 * just use getvcols here, because those column numbers
+		 * can't be trusted as buffer indices. */
+		if (max_pos.col < min_pos.col)
+		{
+		    min_pos.col += max_pos.col;
+		    max_pos.col = min_pos.col - max_pos.col;
+		    min_pos.col -= max_pos.col;
+		}
+	    }
+	    line_count_selected = max_pos.lnum - min_pos.lnum + 1;
+	}
+#endif
+
 	for (lnum = 1; lnum <= curbuf->b_ml.ml_line_count; ++lnum)
 	{
-	    if (lnum == curwin->w_cursor.lnum)
-		char_count_cursor = char_count + curwin->w_cursor.col + 1;
-	    char_count += STRLEN(ml_get(lnum)) + eol_size;
-	    /* Check for a CTRL-C every 100000 characters */
+	    /* Check for a CTRL-C every 100000 characters. */
 	    if (char_count > last_check)
 	    {
 		ui_breakcheck();
@@ -2426,28 +2552,107 @@ cursor_pos_info()
 		    return;
 		last_check = char_count + 100000L;
 	    }
+
+#ifdef FEAT_VISUAL
+	    /* Do extra processing for VIsual mode. */
+	    if (VIsual_active
+		    && lnum >= min_pos.lnum && lnum <= max_pos.lnum)
+	    {
+		switch (VIsual_mode)
+		{
+		    case Ctrl_V:
+			char_count_cursor += line_count_info(ml_get(lnum)
+				+ min_pos.col, &word_count_cursor,
+			     (long)(max_pos.col - min_pos.col + 1), eol_size);
+			break;
+		    case 'V':
+			char_count_cursor += line_count_info(ml_get(lnum),
+				&word_count_cursor, MAXCOL, eol_size);
+			break;
+		    case 'v':
+			{
+			    colnr_t start_col = (lnum == min_pos.lnum)
+							   ? min_pos.col : 0;
+			    colnr_t end_col = (lnum == max_pos.lnum)
+				      ? max_pos.col - start_col + 1 : MAXCOL;
+
+			    char_count_cursor +=
+				line_count_info(ml_get(lnum) + start_col,
+				 &word_count_cursor, (long)end_col, eol_size);
+			}
+			break;
+		}
+	    }
+	    else
+#endif
+	    {
+		/* In non-visual mode, check for the line the cursor is on */
+		if (lnum == curwin->w_cursor.lnum)
+		{
+		    word_count_cursor += word_count;
+		    char_count_cursor = char_count +
+			line_count_info(ml_get(lnum), &word_count_cursor,
+				  (long)(curwin->w_cursor.col + 1), eol_size);
+		}
+	    }
+	    /* Add to the running totals */
+	    char_count += line_count_info(ml_get(lnum), &word_count, MAXCOL,
+								    eol_size);
 	}
+
 	/* Correction for when last line doesn't have an EOL. */
 	if (!curbuf->b_p_eol && curbuf->b_p_bin)
 	    char_count -= eol_size;
 
-	p = ml_get_curline();
-	validate_virtcol();
-	col_print(buf1, (int)curwin->w_cursor.col + 1,
-						  (int)curwin->w_virtcol + 1);
-	col_print(buf2, (int)STRLEN(p), linetabsize(p));
+#ifdef FEAT_VISUAL
+	if (VIsual_active)
+	{
+	    if (VIsual_mode == Ctrl_V)
+	    {
+		getvcols(curwin, &min_pos, &max_pos, &min_pos.col,
+			&max_pos.col);
+		sprintf((char *)buf1, _("%ld Cols; "),
+				       (long)(max_pos.col - min_pos.col + 1));
+	    }
+	    else
+		buf1[0] = NUL;
 
-	sprintf((char *)IObuff, "Col %s of %s; Line %ld of %ld; Char %ld of %ld",
-		(char *)buf1, (char *)buf2,
-		(long)curwin->w_cursor.lnum, (long)curbuf->b_ml.ml_line_count,
-		char_count_cursor, char_count);
+	    sprintf((char *)IObuff,
+	    _("Selected %s%ld of %ld Lines; %ld of %ld Words; %ld of %ld Chars"),
+			buf1, line_count_selected,
+			(long)curbuf->b_ml.ml_line_count,
+			word_count_cursor, word_count,
+			char_count_cursor, char_count);
+	}
+	else
+#endif
+	{
+	    p = ml_get_curline();
+	    validate_virtcol();
+	    col_print(buf1, (int)curwin->w_cursor.col + 1,
+		    (int)curwin->w_virtcol + 1);
+	    col_print(buf2, (int)STRLEN(p), linetabsize(p));
+
+	    sprintf((char *)IObuff,
+		_("Col %s of %s; Line %ld of %ld; Word %ld of %ld; Char %ld of %ld"),
+		    (char *)buf1, (char *)buf2,
+		    (long)curwin->w_cursor.lnum,
+		    (long)curbuf->b_ml.ml_line_count,
+		    word_count_cursor, word_count,
+		    char_count_cursor, char_count);
+	}
+
 #ifdef FEAT_MBYTE
 	char_count = bomb_size();
 	if (char_count > 0)
-	    sprintf((char *)IObuff + STRLEN(IObuff), "(+%ld for BOM)",
+	    sprintf((char *)IObuff + STRLEN(IObuff), _("(+%ld for BOM)"),
 								  char_count);
 #endif
+	/* Don't shorten this message, the user asked for it. */
+	p = p_shm;
+	p_shm = (char_u *)"";
 	msg(IObuff);
+	p_shm = p;
     }
 }
 
@@ -2715,7 +2920,8 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
     int		zeropad;
     char_u	base;
     char_u	opt;
-    char_u	tmp[70];
+#define TMPLEN 70
+    char_u	tmp[TMPLEN];
 
     if (!fillchar)
 	fillchar = ' ';
@@ -2994,12 +3200,17 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 		str = tmp;
 	    break;
 
+	case STL_KEYMAP:
+	    if (get_keymap_str(wp, tmp, TMPLEN))
+		str = tmp;
+	    break;
+
 	case STL_BUFNO:
 	    num = wp->w_buffer->b_fnum;
 	    break;
 
 	case STL_OFFSET_X:
-	    base= 'X';
+	    base = 'X';
 	case STL_OFFSET:
 #ifdef FEAT_BYTEOFF
 	    l = ml_find_line_or_offset(wp->w_buffer, wp->w_cursor.lnum, NULL);
@@ -3016,12 +3227,10 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 		num = 0;
 	    else
 	    {
-		num = linecont[wp->w_cursor.col];
 #ifdef FEAT_MBYTE
-		if (enc_dbcs && MB_BYTE2LEN((int)num) > 1)
-		    num = (num << 8) + linecont[wp->w_cursor.col + 1];
-		else if (enc_utf8)
-		    num = utf_ptr2char(linecont + wp->w_cursor.col);
+		num = (*mb_ptr2char)(linecont + wp->w_cursor.col);
+#else
+		num = linecont[wp->w_cursor.col];
 #endif
 	    }
 	    if (num == NL)
@@ -3047,7 +3256,8 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 
 #ifdef FEAT_AUTOCMD
 	case STL_FILETYPE:
-	    if (*wp->w_buffer->b_p_ft != NUL)
+	    if (*wp->w_buffer->b_p_ft != NUL
+		    && STRLEN(wp->w_buffer->b_p_ft) < TMPLEN - 3)
 	    {
 		sprintf((char *)tmp, "[%s]", wp->w_buffer->b_p_ft);
 		str = tmp;
@@ -3056,7 +3266,8 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 
 	case STL_FILETYPE_ALT:
 	    itemisflag = TRUE;
-	    if (*wp->w_buffer->b_p_ft != NUL)
+	    if (*wp->w_buffer->b_p_ft != NUL
+		    && STRLEN(wp->w_buffer->b_p_ft) < TMPLEN - 2)
 	    {
 		sprintf((char *)tmp, ",%s", wp->w_buffer->b_p_ft);
 		for (t = tmp; *t != 0; t++)
@@ -3787,8 +3998,8 @@ do_modelines()
 	if (chk_modeline(lnum) == FAIL)
 	    nmlines = 0;
 
-    for (lnum = curbuf->b_ml.ml_line_count; lnum > 0 && lnum > nmlines &&
-			  lnum > curbuf->b_ml.ml_line_count - nmlines; --lnum)
+    for (lnum = curbuf->b_ml.ml_line_count; lnum > 0 && lnum > nmlines
+		       && lnum > curbuf->b_ml.ml_line_count - nmlines; --lnum)
 	if (chk_modeline(lnum) == FAIL)
 	    nmlines = 0;
     --entered;
@@ -4076,7 +4287,7 @@ insert_image(buf, prev, next, id, lineno, type)
 	    /* When adding first sign need to redraw the windows to create the
 	     * column for signs. */
 	    if (buf->b_signlist == NULL)
-		redraw_buf_later(NOT_VALID, buf);
+		redraw_buf_later(buf, NOT_VALID);
 
 	    /* first sign in signlist */
 	    newsign->next = next;
@@ -4187,7 +4398,7 @@ buf_delsign(buf, id)
     /* When deleted the last sign need to redraw the windows to remove the
      * sign column. */
     if (buf->b_signlist == NULL)
-	redraw_buf_later(NOT_VALID, buf);
+	redraw_buf_later(buf, NOT_VALID);
 
     return lnum;
 }
@@ -4246,7 +4457,7 @@ buf_delete_all_signs()
     /* When deleted the last sign need to redraw the windows to remove the
      * sign column. */
     if (buf->b_signlist == NULL)
-	redraw_buf_later(NOT_VALID, buf);
+	redraw_buf_later(buf, NOT_VALID);
 }
 
 #endif /* FEAT_SIGNS */

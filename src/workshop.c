@@ -5,6 +5,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -35,7 +36,6 @@
 
 #include "vim.h"
 #include "version.h"
-#include "globals.h"
 #include "gui_beval.h"
 #include "workshop.h"
 
@@ -1460,7 +1460,7 @@ warp_to_pc(
 
     if (lnum > 0)
     {
-	if (State == INSERT)
+	if (State & INSERT)
 	{
 	    add_to_input_buf((char_u *) "\033", 1);
 	}

@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -179,7 +180,7 @@ msg_strtrunc(s)
 		    buf[i] = s[i];
 #ifdef FEAT_MBYTE
 		    if (has_mbyte)
-			for (n = mb_ptr2len_check(s + i); --n > 0; )
+			for (n = (*mb_ptr2len_check)(s + i); --n > 0; )
 			{
 			    ++i;
 			    buf[i] = s[i];
@@ -192,7 +193,7 @@ msg_strtrunc(s)
 
 		/* Last part: End of the string. */
 #ifdef FEAT_MBYTE
-		if (enc_dbcs)
+		if (enc_dbcs != 0)
 		{
 		    /* For DBCS going backwards in a string is slow, but
 		     * computing the cell width isn't too slow: go forward
@@ -205,7 +206,7 @@ msg_strtrunc(s)
 		    /* For UTF-8 we can go backwards easily. */
 		    for (i = STRLEN(s) - 1; len < room; --i)
 		    {
-			i -= mb_head_off(s, s + i);
+			i -= (*mb_head_off)(s, s + i);
 			n = ptr2cells(s + i);
 			if (len + n >= room)
 			    break;
@@ -774,7 +775,7 @@ wait_return(redraw)
     msg_didany = FALSE;		/* reset lines_left at next msg_start() */
     lines_left = -1;
     reset_last_sourcing();
-    if (keep_msg != NULL && linetabsize(keep_msg) >=
+    if (keep_msg != NULL && vim_strsize(keep_msg) >=
 				  (Rows - cmdline_row - 1) * Columns + sc_col)
 	keep_msg = NULL;	    /* don't redisplay message, it's too long */
 
@@ -961,7 +962,7 @@ msg_outtrans_one(p, attr)
 #ifdef FEAT_MBYTE
     int		l;
 
-    if (has_mbyte && (l = mb_ptr2len_check(p)) > 1)
+    if (has_mbyte && (l = (*mb_ptr2len_check)(p)) > 1)
     {
 	msg_outtrans_len_attr(p, l, attr);
 	return p + l;
@@ -978,6 +979,7 @@ msg_outtrans_len_attr(str, len, attr)
     int		attr;
 {
     int		retval = 0;
+    char_u	*s;
 #ifdef FEAT_MBYTE
     int		n;
     int		c;
@@ -995,29 +997,35 @@ msg_outtrans_len_attr(str, len, attr)
     {
 #ifdef FEAT_MBYTE
 	/* check multibyte; print it directly if it's printable.  */
-	if (has_mbyte && (n = mb_ptr2len_check(str)) > 1)
+	if (has_mbyte && (n = (*mb_ptr2len_check)(str)) > 1)
 	{
 	    mch_memmove(buf, str, (size_t)n);
 	    buf[n] = NUL;
-	    c = mb_ptr2char(buf);
+	    c = (*mb_ptr2char)(buf);
 	    if (vim_isprintc(c))
 	    {
 		msg_puts_attr(buf, attr);
-		retval += mb_ptr2cells(buf);
+		retval += (*mb_ptr2cells)(buf);
 	    }
 	    else
 	    {
-		msg_puts_attr(transchar(c), attr);
+		msg_puts_attr(transchar(c), attr == 0 ? hl_attr(HLF_AT) : attr);
 		retval += char2cells(c);
 	    }
 	    len -= n - 1;
 	    str += n;
-	    continue;
 	}
+	else
 #endif
-	msg_puts_attr(transchar(*str), attr);
-	retval += ptr2cells(str);
-	++str;
+	{
+	    s = transchar(*str);
+	    if (attr == 0 && s[1] != NUL)
+		msg_puts_attr(s, hl_attr(HLF_AT));	/* unprintable char */
+	    else
+		msg_puts_attr(s, attr);
+	    retval += ptr2cells(str);
+	    ++str;
+	}
     }
     return retval;
 }
@@ -1071,8 +1079,13 @@ msg_outtrans_special(str, from)
     while (*str != NUL)
     {
 	string = str2special(&str, from);
-	len = STRLEN(string);
-	msg_puts_attr(string, len > 1 ? attr : 0);
+	len = vim_strsize(string);
+	/* Highlight special keys */
+	msg_puts_attr(string, len > 1
+#ifdef FEAT_MBYTE
+		&& (*mb_ptr2len_check)(string) <= 1
+#endif
+		? attr : 0);
 	retval += len;
     }
     return retval;
@@ -1103,7 +1116,8 @@ str2special(sp, from)
     {
 	int	n, m = 0;
 
-	/* Must translate K_SPECIAL KS_SPECIAL KE_FILLER to K_SPECIAL. */
+	/* Must translate K_SPECIAL KS_SPECIAL KE_FILLER to K_SPECIAL and CSI
+	 * KS_EXTRA KE_CSI to CSI. */
 	for (n = 0; str[n] != NUL && m <= MB_MAXBYTES; ++n)
 	{
 	    if (str[n] == K_SPECIAL
@@ -1113,12 +1127,21 @@ str2special(sp, from)
 		buf[m++] = K_SPECIAL;
 		n += 2;
 	    }
+# ifdef FEAT_GUI
+	    else if (gui.in_use && str[n] == CSI
+		    && str[n + 1] == KS_EXTRA
+		    && str[n + 2] == KE_CSI)
+	    {
+		buf[m++] = CSI;
+		n += 2;
+	    }
+# endif
 	    else
 		buf[m++] = str[n];
 	    buf[m] = NUL;
 
 	    /* Return a multi-byte character. */
-	    if (mb_ptr2len_check(buf) > 1)
+	    if ((*mb_ptr2len_check)(buf) > 1)
 	    {
 		*sp = str + n + 1;
 		return buf;
@@ -1221,7 +1244,7 @@ msg_prt_line(s)
 		c = *p_extra++;
 	}
 #ifdef FEAT_MBYTE
-	else if (has_mbyte && (l = mb_ptr2len_check(s)) > 1)
+	else if (has_mbyte && (l = (*mb_ptr2len_check)(s)) > 1)
 	{
 	    s = screen_puts_mbyte(s, l, attr);
 	    continue;
@@ -1293,7 +1316,7 @@ screen_puts_mbyte(s, l, attr)
     int		cw;
     char_u	buf[MB_MAXBYTES + 1];
 
-    cw = mb_ptr2cells(s);
+    cw = (*mb_ptr2cells)(s);
     if (cw > 1 && msg_col == Columns - 1)
     {
 	/* Doesn't fit, print a highlighted '>' to fill it up. */
@@ -1478,7 +1501,7 @@ msg_puts_attr(s, attr)
 		    || msg_col >= Columns - 1
 		    || (*s == TAB && msg_col >= ((Columns - 1) & ~7))
 #ifdef FEAT_MBYTE
-		    || (has_mbyte && mb_ptr2cells(s) > 1
+		    || (has_mbyte && (*mb_ptr2cells)(s) > 1
 						    && msg_col >= Columns - 2)
 #endif
 			      ))
@@ -1643,7 +1666,7 @@ msg_puts_attr(s, attr)
 	    while (msg_col & 7);
 	}
 #ifdef FEAT_MBYTE
-	else if (has_mbyte && (l = mb_ptr2len_check(s)) > 1)
+	else if (has_mbyte && (l = (*mb_ptr2len_check)(s)) > 1)
 	    s = screen_puts_mbyte(s, l, attr) - 1;
 #endif
 	else
@@ -1805,7 +1828,7 @@ msg_end()
      * we have to redraw the window.
      * Do not do this if we are abandoning the file or editing the command line.
      */
-    if (!exiting && need_wait_return && State != CMDLINE)
+    if (!exiting && need_wait_return && !(State & CMDLINE))
     {
 	wait_return(FALSE);
 	return FALSE;

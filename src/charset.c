@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 #include "vim.h"
@@ -16,9 +17,7 @@ static int win_chartabsize __ARGS((win_t *wp, char_u *p, colnr_t col));
 static int win_nolbr_chartabsize __ARGS((win_t *wp, char_u *s, colnr_t col, int *headp));
 #endif
 
-#if defined(FEAT_MBYTE)
 static int nr2hex __ARGS((int c));
-#endif
 
 static int    chartab_initialized = FALSE;
 
@@ -78,7 +77,7 @@ buf_init_chartab(buf, global)
 	 */
 	c = 0;
 	while (c < ' ')
-	    chartab[c++] = 2;
+	    chartab[c++] = (dy_flags & DY_UHEX) ? 4 : 2;
 #ifdef EBCDIC
 	while (c < 255)
 #else
@@ -95,22 +94,27 @@ buf_init_chartab(buf, global)
 	while (c < 256)
 	{
 #ifdef FEAT_MBYTE
-	    /* UTF-8: can't tell width from first byte unless it's ASCII */
+	    /* UTF-8: bytes 0xa0 - 0xff are printable (latin1) */
 	    if (enc_utf8 && c >= 0xa0)
 		chartab[c++] = CT_PRINT_CHAR + 1;
-	    /* double-byte chars can be printable AND double-width */
-	    else if (enc_dbcs && MB_BYTE2LEN(c) == 2)
+	    /* euc-jp characters starting with 0x8e are single width */
+	    else if (enc_dbcs == DBCS_JPNU && c == 0x8e)
+		chartab[c++] = CT_PRINT_CHAR + 1;
+	    /* other double-byte chars can be printable AND double-width */
+	    else if (enc_dbcs != 0 && MB_BYTE2LEN(c) == 2)
 		chartab[c++] = CT_PRINT_CHAR + 2;
 	    else
 #endif
 		/* the rest is unprintable by default */
-		chartab[c++] = 2;
+		chartab[c++] = (dy_flags & DY_UHEX) ? 4 : 2;
 	}
 
 #ifdef FEAT_MBYTE
 	/* Assume that every multi-byte char is a filename character. */
 	for (c = 1; c < 256; ++c)
-	    if ((enc_dbcs && MB_BYTE2LEN(c) > 1) || (enc_utf8 && c >= 0xa0))
+	    if ((enc_dbcs != 0 && MB_BYTE2LEN(c) > 1)
+		    || (enc_dbcs == DBCS_JPNU && c == 0x8e)
+		    || (enc_utf8 && c >= 0xa0))
 		chartab[c] |= CT_FNAME_CHAR;
 #endif
     }
@@ -229,7 +233,8 @@ buf_init_chartab(buf, global)
 			{
 			    if (tilde)
 			    {
-				chartab[c] = (chartab[c] & ~CT_CELL_MASK) + 2;
+				chartab[c] = (chartab[c] & ~CT_CELL_MASK)
+					     + ((dy_flags & DY_UHEX) ? 4 : 2);
 				chartab[c] &= ~CT_PRINT_CHAR;
 			    }
 			    else
@@ -279,7 +284,7 @@ trans_characters(buf, bufsize)
     {
 #ifdef FEAT_MBYTE
 	/* Assume a multi-byte character doesn't need translation. */
-	if (has_mbyte && (new_len = mb_ptr2len_check(buf)) > 1)
+	if (has_mbyte && (new_len = (*mb_ptr2len_check)(buf)) > 1)
 	    len -= new_len;
 	else
 #endif
@@ -322,7 +327,7 @@ transstr(s)
 	while (*s != NUL)
 	{
 #ifdef FEAT_MBYTE
-	    if (has_mbyte && (l = mb_ptr2len_check(s)) > 1)
+	    if (has_mbyte && (l = (*mb_ptr2len_check)(s)) > 1)
 	    {
 		STRNCAT(res, s, l);
 		s += l;
@@ -388,17 +393,21 @@ transchar_nonprint(buf, c)
     char_u	*buf;
     int		c;
 {
+    if (c == NL)
+	c = NUL;		/* we use newline in place of a NUL */
+    else if (c == CR && get_fileformat(curbuf) == EOL_MAC)
+	c = NL;			/* we use CR in place of  NL in this case */
+
+    if (dy_flags & DY_UHEX)		/* 'display' has "uhex" */
+	transchar_hex(buf, c);
+
 #ifdef EBCDIC
     /* For EBCDIC only the characters 0-63 and 255 are not printable */
-    if (CtrlChar(c) != 0 || c == DEL)
+    else if (CtrlChar(c) != 0 || c == DEL)
 #else
-    if (c <= 0x7f)				    /* 0x00 - 0x1f and 0x7f */
+    else if (c <= 0x7f)				/* 0x00 - 0x1f and 0x7f */
 #endif
     {
-	if (c == NL)
-	    c = NUL;			/* we use newline in place of a NUL */
-	else if (c == CR && get_fileformat(curbuf) == EOL_MAC)
-	    c = NL;		/* we use CR in place of  NL in this case */
 	buf[0] = '^';
 #ifdef EBCDIC
 	if (c == DEL)
@@ -448,7 +457,6 @@ transchar_nonprint(buf, c)
     }
 }
 
-#if defined(FEAT_MBYTE) || defined(PROTO)
     void
 transchar_hex(buf, c)
     char_u	*buf;
@@ -460,7 +468,18 @@ transchar_hex(buf, c)
     buf[3] = '>';
     buf[4] = NUL;
 }
-#endif
+
+/*
+ * Convert the lower 4 bits of byte "c" to its hex character.
+ */
+    static int
+nr2hex(c)
+    int		c;
+{
+    if ((c & 0xf) <= 9)
+	return (c & 0xf) + '0';
+    return (c & 0xf) - 10 + 'A';
+}
 
 /*
  * Return number of display cells occupied by byte "b".
@@ -484,7 +503,7 @@ byte2cells(b)
 /*
  * Return number of display cells occupied by character "c".
  * "c" can be a special key (negative number) in which case 3 or 4 is returned.
- * A TAB is counted as two cells: "^I".
+ * A TAB is counted as two cells: "^I" or four: "<09>".
  */
     int
 char2cells(c)
@@ -498,9 +517,14 @@ char2cells(c)
 	/* UTF-8: above 0x80 need to check the value */
 	if (enc_utf8)
 	    return utf_char2cells(c);
-	/* DBCS: double-byte means double-width */
-	if (enc_dbcs && c >= 0x100)
+	/* DBCS: double-byte means double-width, except for euc-jp with first
+	 * byte 0x8e */
+	if (enc_dbcs != 0 && c >= 0x100)
+	{
+	    if (enc_dbcs == DBCS_JPNU && ((unsigned)c >> 8) == 0x8e)
+		return 1;
 	    return 2;
+	}
     }
 #endif
     return (chartab[c & 0xff] & CT_CELL_MASK);
@@ -508,7 +532,7 @@ char2cells(c)
 
 /*
  * Return number of display cells occupied by character at "*p".
- * A TAB is counted as two cells: "^I".
+ * A TAB is counted as two cells: "^I" or four: "<09>".
  */
     int
 ptr2cells(p)
@@ -517,7 +541,7 @@ ptr2cells(p)
 #ifdef FEAT_MBYTE
     /* For UTF-8 we need to look at more bytes if the first byte is >= 0x80. */
     if (enc_utf8 && *p >= 0x80)
-	return mb_ptr2cells(p);
+	return utf_ptr2cells(p);
     /* For DBCS we can tell the cell count from the first byte. */
 #endif
     return (chartab[*p] & CT_CELL_MASK);
@@ -539,7 +563,7 @@ vim_strsize(s)
 	if (has_mbyte)
 	{
 	    len += ptr2cells(s);
-	    s += mb_ptr2len_check(s);
+	    s += (*mb_ptr2len_check)(s);
 	}
 	else
 #endif
@@ -614,7 +638,7 @@ win_linetabsize(wp, s)
 	col += win_lbr_chartabsize(wp, s, col, NULL);
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
-	    s += mb_ptr2len_check(s);
+	    s += (*mb_ptr2len_check)(s);
 	else
 #endif
 	    ++s;
@@ -725,7 +749,7 @@ lbr_chartabsize_adv(s, col)
     retval = lbr_chartabsize(*s, col);
 #ifdef FEAT_MBYTE
     if (has_mbyte)
-	*s += mb_ptr2len_check(*s);
+	*s += (*mb_ptr2len_check)(*s);
     else
 #endif
 	++*s;
@@ -806,7 +830,7 @@ win_lbr_chartabsize(wp, s, col, headp)
 	    ps = s;
 # ifdef FEAT_MBYTE
 	    if (has_mbyte)
-		s += mb_ptr2len_check(s);
+		s += (*mb_ptr2len_check)(s);
 	    else
 # endif
 		++s;
@@ -979,7 +1003,7 @@ getvcol(wp, pos, start, cursor, end)
 		    /* For utf-8, if the byte is >= 0x80, need to look at
 		     * further bytes to find the cell width. */
 		    if (enc_utf8 && c >= 0x80)
-			incr = mb_ptr2cells(ptr);
+			incr = utf_ptr2cells(ptr);
 		    else
 			incr = CHARSIZE(c);
 
@@ -1003,7 +1027,7 @@ getvcol(wp, pos, start, cursor, end)
 	    vcol += incr;
 #ifdef FEAT_MBYTE
 	    if (has_mbyte)
-		ptr += mb_ptr2len_check(ptr);
+		ptr += (*mb_ptr2len_check)(ptr);
 	    else
 #endif
 		++ptr;
@@ -1029,7 +1053,7 @@ getvcol(wp, pos, start, cursor, end)
 	    vcol += incr;
 #ifdef FEAT_MBYTE
 	    if (has_mbyte)
-		ptr += mb_ptr2len_check(ptr);
+		ptr += (*mb_ptr2len_check)(ptr);
 	    else
 #endif
 		++ptr;
@@ -1091,16 +1115,7 @@ getvvcol(wp, pos, start, cursor, end)
 
     if (virtual_active() && start != NULL)
     {
-	/* We should pass the "coladd" value instead of guessing it... */
-	if (pos->col == wp->w_cursor.col && pos->lnum == wp->w_cursor.lnum)
-	    add = wp->w_coladd;
-	else if (pos->col == curwin->w_cursor.col
-					&& pos->lnum == curwin->w_cursor.lnum)
-	    add = wp->w_coladd;
-#ifdef FEAT_VISUAL
-	else if (pos->col == VIsual.col && pos->lnum == VIsual.lnum)
-	    add = VIsual_coladd;
-#endif
+	add = pos -> coladd;
 	*start += add;
 	if (cursor != NULL)
 	    *cursor = *start;
@@ -1372,20 +1387,6 @@ hexhex2nr(p)
     if (!isxdigit(p[0]) || !isxdigit(p[1]))
 	return -1;
     return (hex2nr(p[0]) << 4) + hex2nr(p[1]);
-}
-#endif
-
-#if defined(FEAT_MBYTE)
-/*
- * Convert the lower 4 bits of byte "c" to its hex character.
- */
-    static int
-nr2hex(c)
-    int		c;
-{
-    if ((c & 0xf) <= 9)
-	return (c & 0xf) + '0';
-    return (c & 0xf) - 10 + 'A';
 }
 #endif
 

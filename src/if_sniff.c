@@ -3,6 +3,8 @@
  * if_sniff.c Interface between Vim and SNiFF+
  *
  * $Id$
+ *
+ * See README.txt for an overview of the Vim source code.
  */
 
 #include "vim.h"

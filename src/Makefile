@@ -1,5 +1,5 @@
 # Makefile for Vim on Unix and Unix-like systems	vim:ts=8:sw=8:tw=78
-#
+#							vim600:fdm=marker
 # This Makefile is loosely based on the GNU Makefile conventions found in
 # standards.info.
 #
@@ -14,7 +14,7 @@
 # other file for machine specific things!
 # The name of this file MUST be Makefile (note the uppercase 'M').
 #
-# 1. Edit this Makefile
+# 1. Edit this Makefile  {{{1
 #	The defaults for Vim should work on most machines, but you may want to
 #	uncomment some lines or make other changes below to tune it to your
 #	system, compiler or preferences.  Uncommenting means that the '#' in
@@ -46,7 +46,7 @@
 #	- A few versions of make use '.include "file"' instead of 'include
 #	  file'.  Adjust the include line below if yours does.
 #
-# 2. Edit feature.h
+# 2. Edit feature.h  {{{1
 #	Only if you do not agree with the default compile features, e.g.:
 #	- you want Vim to be as vi compatible as it can be
 #	- you want to use Emacs tags files
@@ -54,7 +54,7 @@
 #	- you want 'langmap' support (Greek)
 #	- you want to remove features to make Vim smaller
 #
-# 3. "make"
+# 3. "make"  {{{1
 #	Will first run ./configure with the options in this file. Then it will
 #	start make again on this Makefile to do the compiling. You can also do
 #	this in two steps with:
@@ -92,13 +92,13 @@
 #	  (Bram@vim.org). Don't bother to do that when you made a hack
 #	  solution for a non-standard system.
 #
-# 4. "make test"
+# 4. "make test"  {{{1
 #	This is optional.  This will run Vim scripts on a number of test
 #	files, and compare the produced output with the expected output.
 #	If all is well, you will get the "ALL DONE" message in the end.  See
 #	below (search for "/^test").
 #
-# 5. "make install"
+# 5. "make install"  {{{1
 #	If the new Vim seems to be working OK you can install it and the
 #	documentation in the appropriate location. The default is
 #	"/usr/local".  Change "prefix" below to change the location.
@@ -119,9 +119,9 @@
 #		make installtutor	only installs the Vim tutor
 #		make installtools	only installs xxd
 #
-# 6. Use Vim until a new version comes out.
+# 6. Use Vim until a new version comes out.  {{{1
 #
-# 7. "make uninstall_runtime"
+# 7. "make uninstall_runtime"  {{{1
 #	Will remove the runtime files for the current version.	This is safe
 #	to use while another version is being used, only version-specific
 #	files will be deleted.
@@ -134,8 +134,9 @@
 #	Be careful not to remove a version of Vim that is still being used!
 #	To find out which files and directories will be deleted, use:
 #		make -n uninstall
-
-### This Makefile has been succesfully tested on these systems.
+# }}}
+#
+### This Makefile has been succesfully tested on these systems. {{{
 ### Check the (*) column for remarks, listed below.
 ### Later code changes may cause small problems, otherwise Vim is supposed to
 ### compile and run without problems.
@@ -216,8 +217,9 @@
 #SunOS 4.1.3_U1 (sun4c) gcc	     +X11 +GUI Athena	5.0w (J) Darren Hiebert
 #SUPER-UX 6.2 (NEC SX-4) cc	     +X11R6 Motif,Athena4.6b (P) Lennart Schultz
 #Unisys 6035	      cc	     +X11 Motif		5.3  (8) Glauber Ribeiro
+# }}}
 
-# (*)  Remarks:
+# (*)  Remarks: {{{
 #
 # (1)  Uncomment line below for shlicc2
 # (2)  HPUX with compile problems or wrong digraphs, uncomment line below
@@ -259,6 +261,7 @@
 # (X)  Need to use the .include "auto/config.mk" line below
 # (Y)  See line with c89 below
 # (Z)  See lines with cc or c89 below
+# }}}
 
 
 #DO NOT CHANGE the next line, we need it for configure to find the compiler
@@ -267,7 +270,7 @@
 CC=
 
 # Change and use these defines if configure cannot find your Motif stuff.
-# Unfortunately there is no "standard" location for Motif.
+# Unfortunately there is no "standard" location for Motif. {{{
 # These defines can contain a single directory (recommended) or a list of
 # directories (for when you are working with several systems). The LAST
 # directory that exists is used.
@@ -277,8 +280,9 @@ CC=
 ### Use these two lines for Infomagic Motif (3)
 #GUI_INC_LOC = /usr/X11R6/include
 #GUI_LIB_LOC = /usr/X11R6/lib
+# }}}
 
-######################## auto/config.mk ########################
+######################## auto/config.mk ######################## {{{1
 # At this position auto/config.mk is included. When starting from the
 # distribution it is almost empty. After running auto/configure it contains
 # settings that have been discovered for your system. Settings below this
@@ -294,13 +298,15 @@ include auto/config.mk
 #.include "auto/config.mk"
 CClink = $(CC)
 
+#}}}
+
 # Include the configuration choices first, so we can override everything
 # below. As shipped, this file contains a target that causes to run
 # configure. Once configure was run, this file contains a list of
 # make variables with predefined values instead. Thus any second invocation
 # of make, will buid Vim.
 
-# CONFIGURE - configure arguments
+# CONFIGURE - configure arguments {{{1
 # You can give a lot of options to configure.
 # Change this to your desire and do 'make config' afterwards
 
@@ -424,7 +430,7 @@ CClink = $(CC)
 #XROOT = /usr/openwin
 #CONF_OPT_X = --x-include=$(XROOT)/include --x-libraries=$(XROOT)/lib
 
-# COMPILER - Name of the compiler
+# COMPILER - Name of the compiler {{{1
 # The default from configure will mostly be fine, no need to change this, just
 # an example. If a compiler is defined here, configure will use it rather than
 # probing for one. It is dangerous to change this after configure was run.
@@ -434,8 +440,8 @@ CClink = $(CC)
 #CC = cc
 #CC = gcc
 
-# COMPILER FLAGS - change as you please. Either before running configure
-# or afterwards. For examples see below.
+# COMPILER FLAGS - change as you please. Either before running {{{1
+# configure or afterwards. For examples see below.
 # When using -g with some older versions of Linux you might get a
 # statically linked executable.
 # When not defined, configure will try to use -O2 -g for gcc and -O for cc.
@@ -464,6 +470,7 @@ CClink = $(CC)
 
 # PURIFY - remove the # to use the "purify" program (hoi Nia++!)
 #PURIFY = purify
+# }}}
 
 # LINT - for running lint
 LINT_OPTIONS = -beprxzF
@@ -477,7 +484,7 @@ LINT_OPTIONS = -beprxzF
 #LIBS = -ltermcap_p
 
 #####################################################
-###  Specific systems, check if yours is listed!  ###
+###  Specific systems, check if yours is listed!  ### {{{
 #####################################################
 
 ### Uncomment things here only if the values chosen by configure are wrong.
@@ -726,9 +733,9 @@ LINT_OPTIONS = -beprxzF
 #CFLAGS = -O -Qtarget=m88110compat
 #EXTRA_LIBS = -lgen
 
-##################### end of system specific lines ###################
+##################### end of system specific lines ################### }}}
 
-### Names of the programs and targets
+### Names of the programs and targets  {{{1
 VIMTARGET	= $(VIMNAME)$(SUFFIX)
 EXTARGET	= $(EXNAME)$(SUFFIX)
 VIEWTARGET	= $(VIEWNAME)$(SUFFIX)
@@ -745,10 +752,10 @@ RGVIMTARGET	= $(RGVIMNAME)$(SUFFIX)
 RGVIEWNAME	= r$(GVIEWNAME)
 RGVIEWTARGET	= $(RGVIEWNAME)$(SUFFIX)
 
-### Names of the tools that are also made
+### Names of the tools that are also made  {{{1
 TOOLS = xxd/xxd$(SUFFIX)
 
-### Installation directories.  The defaults come from configure.
+### Installation directories.  The defaults come from configure. {{{1
 #
 ### prefix	the top directory for the data (default "/usr/local")
 #
@@ -777,16 +784,17 @@ TOOLS = xxd/xxd$(SUFFIX)
 ### Location of man page
 MANSUBDIR = $(MANDIR)/man1
 
-### Location of Vim files (should not need to be changed, and some things
-### might not work when they are changed!)
+### Location of Vim files (should not need to be changed, and  {{{1
+### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60v
+VIMRTDIR = /vim60w
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 INDSUBDIR = /indent
 PLUGSUBDIR = /plugin
 FTPLUGSUBDIR = /ftplugin
 LANGSUBDIR = /lang
+KMAPSUBDIR = /keymap
 MACROSUBDIR = /macros
 TOOLSSUBDIR = /tools
 TUTORSUBDIR = /tutor
@@ -801,7 +809,8 @@ PODIR = po
 ### INDSUBLOC	location for indent files
 ### PLUGSUBLOC	location for standard plugin files
 ### FTPLUGSUBLOC  location for ftplugin files
-### LANGSUBLOC	location for syntax files
+### LANGSUBLOC	location for language files
+### KMAPSUBLOC	location for keymap files
 ### MACROSUBLOC	location for macro files
 ### TOOLSSUBLOC	location for tools files
 ### TUTORSUBLOC	location for tutor files
@@ -817,6 +826,7 @@ INDSUBLOC	= $(VIMRTLOC)$(INDSUBDIR)
 PLUGSUBLOC	= $(VIMRTLOC)$(PLUGSUBDIR)
 FTPLUGSUBLOC	= $(VIMRTLOC)$(FTPLUGSUBDIR)
 LANGSUBLOC	= $(VIMRTLOC)$(LANGSUBDIR)
+KMAPSUBLOC	= $(VIMRTLOC)$(KMAPSUBDIR)
 MACROSUBLOC	= $(VIMRTLOC)$(MACROSUBDIR)
 TOOLSSUBLOC	= $(VIMRTLOC)$(TOOLSSUBDIR)
 TUTORSUBLOC	= $(VIMRTLOC)$(TUTORSUBDIR)
@@ -844,6 +854,8 @@ FTPLUGINFTENDLOC = $(FTPLUGSUBLOC)
 #FTPLUGINFTENDLOC = /usr/lib/vim/ftplugin
 LANGENDLOC = $(LANGSUBLOC)
 #LANGENDLOC = /usr/share/locale/vim
+KMAPENDLOC = $(KMAPSUBLOC)
+#KMAPENDLOC = /usr/lib/vim/keymap
 SCRIPTENDLOC = $(SCRIPTLOC)
 #SCRIPTENDLOC = /etc
 TUTORENDLOC = $(TUTORSUBLOC)
@@ -889,7 +901,7 @@ INSTALL_DATA_R	= cp -r
 ### Program to run on installed binary
 #STRIP = strip
 
-### Permissions for binaries
+### Permissions for binaries  {{{1
 BINMOD = 755
 
 ### Permissions for man page
@@ -940,6 +952,9 @@ TUTORSOURCE = ../runtime/tutor
 # Where to look for language specific files
 LANGSOURCE = ../runtime/lang
 
+# Where to look for keymap files
+KMAPSOURCE = ../runtime/keymap
+
 # If you are using Linux, you might want to use this to make vim the
 # default vi editor, it will create a link from vi to Vim when doing
 # "make install".  An existing file will be overwritten!
@@ -948,7 +963,7 @@ LANGSOURCE = ../runtime/lang
 LINKIT = @echo >/dev/null
 
 ###
-### GRAPHICAL USER INTERFACE (GUI).
+### GRAPHICAL USER INTERFACE (GUI).  {{{1
 ### 'configure --enable-gui' can enable one of these for you if you did set
 ### a corresponding CONF_OPT_GUI above and have X11.
 ### Override configures choice by uncommenting all the following lines.
@@ -1070,6 +1085,8 @@ BEOSGUI_TESTTARGET = gui
 # GUI files used for making Vim
 ALL_GUI_SRC  = gui.c gui_gtk.c gui_gtk_f.c gui_motif.c gui_athena.c gui_gtk_x11.c gui_x11.c gui_at_sb.c gui_at_fs.c pty.c
 ALL_GUI_PRO  = gui.pro gui_gtk.pro gui_motif.pro gui_athena.pro gui_gtk_x11.pro gui_x11.pro gui_w16.pro gui_w32.pro gui_amiga.pro
+
+# }}}
 
 ### our grand parent directory should know who we are...
 ### only used for "make tar"
@@ -1584,14 +1601,18 @@ installtools: $(TOOLS) $(exec_prefix) $(BINDIR) $(MANSUBDIR) \
 	-chmod $(SCRIPTMOD) `grep -l "^#!" $(TOOLSSUBLOC)/*`
 
 # install the language specific files, if they were unpacked
-install-languages: languages $(LANGSUBLOC)
+install-languages: languages $(LANGSUBLOC) $(KMAPSUBLOC)
 	if test -n "$(MAKEMO)"; then \
 	   cd $(PODIR); $(MAKE) prefix=$(prefix) LOCALEDIR=$(LANGSUBLOC) \
 	   INSTALL_DATA=$(INSTALL_DATA) FILEMOD=$(FILEMOD) install; \
 	fi
 	if test -d $(LANGSOURCE); then \
-	   $(INSTALL_DATA) $(LANGSOURCE)/*.vim $(LANGSUBLOC); \
+	   $(INSTALL_DATA) $(LANGSOURCE)/README.txt $(LANGSOURCE)/*.vim $(LANGSUBLOC); \
 	   chmod $(FILEMOD) $(LANGSUBLOC)/*.vim; \
+	fi
+	if test -d $(KMAPSOURCE); then \
+	   $(INSTALL_DATA) $(KMAPSOURCE)/README.txt $(KMAPSOURCE)/*.vim $(KMAPSUBLOC); \
+	   chmod $(FILEMOD) $(KMAPSUBLOC)/*.vim; \
 	fi
 
 
@@ -1602,6 +1623,7 @@ $(HELPSOURCE)/vim.1 $(MACROSOURCE) $(TOOLSSOURCE):
 
 $(exec_prefix) $(BINDIR) $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) $(HELPSUBLOC) \
 		$(SYNSUBLOC) $(INDSUBLOC) $(FTPLUGSUBLOC) $(LANGSUBLOC) \
+		$(KMAPSUBLOC) \
 		$(MACROSUBLOC) $(TOOLSSUBLOC) $(TUTORSUBLOC) $(PLUGSUBLOC):
 	-$(SHELL) ./mkinstalldirs $@
 	-chmod $(DIRMOD) $@
@@ -1690,6 +1712,7 @@ uninstall_runtime:
 	-rm -rf $(TUTORSUBLOC)
 	-rm -rf $(TOOLSSUBLOC)
 	-rm -rf $(LANGSUBLOC)
+	-rm -rf $(KMAPSUBLOC)
 	-rmdir $(HELPSUBLOC) $(SYNSUBLOC) $(INDSUBLOC)
 	-rm -rf $(FTPLUGSUBLOC)/*/*.vim $(FTPLUGSUBLOC)/README.txt
 	-rm -f $(PLUGSUBLOC)/*.vim $(PLUGSUBLOC)/README.txt
@@ -2012,127 +2035,127 @@ Makefile:
 ### Dependencies:
 objects/buffer.o: buffer.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h version.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h version.h
 objects/charset.o: charset.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/digraph.o: digraph.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/edit.o: edit.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h
+ ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h option.h \
+ ex_cmds.h proto.h globals.h farsi.h
 objects/eval.o: eval.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h version.h
+ ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h option.h \
+ ex_cmds.h proto.h globals.h farsi.h version.h
 objects/ex_cmds.o: ex_cmds.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/ex_cmds2.o: ex_cmds2.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/ex_docmd.o: ex_docmd.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/ex_getln.o: ex_getln.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/fileio.o: fileio.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/fold.o: fold.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h
+ ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h option.h \
+ ex_cmds.h proto.h globals.h farsi.h
 objects/getchar.o: getchar.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/if_cscope.o: if_cscope.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h if_cscope.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h if_cscope.h
 objects/main.o: main.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h farsi.c
+ ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h option.h \
+ ex_cmds.h proto.h globals.h farsi.h farsi.c
 objects/mark.o: mark.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h
+ ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h option.h \
+ ex_cmds.h proto.h globals.h farsi.h
 objects/memfile.o: memfile.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/memline.o: memline.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/menu.o: menu.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h
+ ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h option.h \
+ ex_cmds.h proto.h globals.h farsi.h
 objects/message.o: message.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/misc1.o: misc1.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h version.h
+ ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h option.h \
+ ex_cmds.h proto.h globals.h farsi.h version.h
 objects/misc2.o: misc2.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h
+ ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h option.h \
+ ex_cmds.h proto.h globals.h farsi.h
 objects/move.o: move.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h
+ ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h option.h \
+ ex_cmds.h proto.h globals.h farsi.h
 objects/multibyte.o: multibyte.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/normal.o: normal.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/ops.o: ops.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h
+ ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h option.h \
+ ex_cmds.h proto.h globals.h farsi.h
 objects/option.o: option.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/os_unix.o: os_unix.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h os_unixx.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h os_unixx.h
 objects/pathdef.o: auto/pathdef.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/quickfix.o: quickfix.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/regexp.o: regexp.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/screen.o: screen.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/search.o: search.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/syntax.o: syntax.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/tag.o: tag.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h
+ ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h option.h \
+ ex_cmds.h proto.h globals.h farsi.h
 objects/term.o: term.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h
+ ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h option.h \
+ ex_cmds.h proto.h globals.h farsi.h
 objects/ui.o: ui.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h
+ ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h option.h \
+ ex_cmds.h proto.h globals.h farsi.h
 objects/undo.o: undo.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h
+ ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h option.h \
+ ex_cmds.h proto.h globals.h farsi.h
 objects/version.o: version.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h version.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h version.h
 objects/window.o: window.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/gui.o: gui.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h
+ ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h option.h \
+ ex_cmds.h proto.h globals.h farsi.h
 objects/gui_gtk.o: gui_gtk.c gui_gtk_f.h vim.h auto/config.h feature.h \
  os_unix.h auto/osdef.h ascii.h keymap.h term.h macros.h structs.h \
- regexp.h gui.h globals.h farsi.h option.h ex_cmds.h proto.h \
+ regexp.h gui.h option.h ex_cmds.h proto.h globals.h farsi.h \
  ../pixmaps/tb_new.xpm ../pixmaps/tb_open.xpm ../pixmaps/tb_close.xpm \
  ../pixmaps/tb_save.xpm ../pixmaps/tb_print.xpm ../pixmaps/tb_cut.xpm \
  ../pixmaps/tb_copy.xpm ../pixmaps/tb_paste.xpm ../pixmaps/tb_find.xpm \
@@ -2150,10 +2173,10 @@ objects/gui_gtk.o: gui_gtk.c gui_gtk_f.h vim.h auto/config.h feature.h \
  ../pixmaps/tb_minwidth.xpm
 objects/gui_gtk_f.o: gui_gtk_f.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h gui_gtk_f.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h gui_gtk_f.h
 objects/gui_motif.o: gui_motif.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h \
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h \
  ../pixmaps/tb_new.xpm ../pixmaps/tb_open.xpm ../pixmaps/tb_close.xpm \
  ../pixmaps/tb_save.xpm ../pixmaps/tb_print.xpm ../pixmaps/tb_cut.xpm \
  ../pixmaps/tb_copy.xpm ../pixmaps/tb_paste.xpm ../pixmaps/tb_find.xpm \
@@ -2171,55 +2194,55 @@ objects/gui_motif.o: gui_motif.c vim.h auto/config.h feature.h os_unix.h \
  ../pixmaps/tb_minwidth.xpm
 objects/gui_athena.o: gui_athena.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h gui_at_sb.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h gui_at_sb.h
 objects/gui_gtk_x11.o: gui_gtk_x11.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h version.h \
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h version.h \
  gui_gtk_f.h ../runtime/vim32x32.xpm ../runtime/vim16x16.xpm \
  ../runtime/vim48x48.xpm
 objects/gui_x11.o: gui_x11.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h vim_icon.xbm \
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h vim_icon.xbm \
  vim_mask.xbm
 objects/gui_at_sb.o: gui_at_sb.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h gui_at_sb.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h gui_at_sb.h
 objects/gui_at_fs.o: gui_at_fs.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h gui_at_sb.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h gui_at_sb.h
 objects/pty.o: pty.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
- farsi.h option.h ex_cmds.h proto.h
+ ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h option.h \
+ ex_cmds.h proto.h globals.h farsi.h
 objects/hangulin.o: hangulin.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/if_perl.o: auto/if_perl.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/if_perlsfio.o: if_perlsfio.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/if_python.o: if_python.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/if_tcl.o: if_tcl.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/if_ruby.o: if_ruby.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h version.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h version.h
 objects/if_sniff.o: if_sniff.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h os_unixx.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h os_unixx.h
 objects/gui_beval.o: gui_beval.c auto/config.h feature.h vim.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h gui_beval.h \
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h gui_beval.h \
  proto/gui_beval.pro
 objects/workshop.o: workshop.c auto/config.h integration.h vim.h feature.h \
  os_unix.h auto/osdef.h ascii.h keymap.h term.h macros.h structs.h \
- regexp.h gui.h globals.h farsi.h option.h ex_cmds.h proto.h version.h \
+ regexp.h gui.h option.h ex_cmds.h proto.h globals.h farsi.h version.h \
  gui_beval.h proto/gui_beval.pro workshop.h
 objects/wsdebug.o: wsdebug.c
 objects/integration.o: integration.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h integration.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h integration.h

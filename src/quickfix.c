@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -203,7 +204,11 @@ qf_init(efile, errorformat)
     i = (FMT_PATTERNS * 3) + (STRLEN(efm) << 2);
     for (round = FMT_PATTERNS; round > 0; )
 	i += strlen(fmt_pat[--round].pattern);
+#ifdef COLON_IN_FILENAME
+    i += 12; /* "%f" can become twelve chars longer */
+#else
     i += 2; /* "%f" can become two chars longer */
+#endif
     if ((fmtstr = alloc(i)) == NULL)
 	goto error2;
 
@@ -273,6 +278,16 @@ qf_init(efile, errorformat)
 		    fmt_ptr->addr[idx] = (char_u)++round;
 		    *ptr++ = '\\';
 		    *ptr++ = '(';
+#ifdef BACKSLASH_IN_FILENAME
+		    if (*efmp == 'f')
+		    {
+			/* Also match "c:" in the file name, even when
+			 * checking for a colon next: "%f:".
+			 * "\%(\a:\)\=" */
+			STRCPY(ptr, "\\%(\\a:\\)\\=");
+			ptr += 10;
+		    }
+#endif
 		    if (*efmp == 'f' && efmp[1] != NUL
 					 && efmp[1] != '\\' && efmp[1] != '%')
 		    {
@@ -1699,8 +1714,9 @@ ex_make(eap)
      * Output a newline if there's something else than the :make command that
      * was typed (in which case the cursor is in column 0).
      */
-    if (msg_col != 0)
-	msg_putchar('\n');
+    if (msg_col == 0)
+	msg_didout = FALSE;
+    msg_start();
     MSG_PUTS(":!");
     msg_outtrans(IObuff);		/* show what we are doing */
 
