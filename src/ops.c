@@ -1793,6 +1793,9 @@ swapchar(op_type, pos)
     if (c & 0xff00)	/* No lower/uppercase letter */
 	return;
 #endif
+    /* Only do rot13 encoding for ASCII characters. */
+    if (c >= 0x80 && op_type == OP_ROT13)
+	return;
     nc = c;
     if (islower(c))
     {
