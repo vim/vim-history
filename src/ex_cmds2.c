@@ -5510,8 +5510,8 @@ get_mess_env()
 	if (p == NULL || *p == NUL)
 	{
 	    p = mch_getenv((char_u *)"LANG");
-	    if (VIM_ISDIGIT(*p))	/* ignore something like "1043" */
-		p = NULL;
+	    if (p != NULL && VIM_ISDIGIT(*p))
+		p = NULL;		/* ignore something like "1043" */
 # if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
 	    if (p == NULL || *p == NUL)
 		p = (char_u *)get_locale_val(LC_CTYPE);
