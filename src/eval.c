@@ -174,6 +174,7 @@ struct vimvar
     {"foldlevel", sizeof("foldlevel") - 1, NULL, VAR_NUMBER, VV_RO},
     {"progname", sizeof("progname") - 1, NULL, VAR_STRING, VV_RO},
     {"servername", sizeof("servername") - 1, NULL, VAR_STRING, VV_RO},
+    {"dying", sizeof("dying") - 1, NULL, VAR_NUMBER, VV_RO},
 };
 
 static int eval0 __ARGS((char_u *arg,  VAR retvar, char_u **nextcmd, int evaluate));

@@ -1413,7 +1413,8 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 #define VV_FOLDLEVEL	25
 #define VV_PROGNAME	26
 #define VV_SEND_SERVER	27
-#define VV_LEN		28	/* number of v: vars */
+#define VV_DYING	28
+#define VV_LEN		29	/* number of v: vars */
 
 #ifdef FEAT_CLIPBOARD
 
