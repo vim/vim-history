@@ -2553,15 +2553,24 @@ static void exit_scroll __ARGS((void));
     static void
 exit_scroll()
 {
-    if (msg_use_printf())
+    if (newline_on_exit || msg_didout)
     {
-	if (info_message)
-	    mch_msg("\n");
+	if (msg_use_printf())
+	{
+	    if (info_message)
+		mch_msg("\n");
+	    else
+		mch_errmsg("\r\n");
+	}
 	else
-	    mch_errmsg("\r\n");
+	    out_char('\n');
     }
     else
-	out_char('\n');
+    {
+	restore_cterm_colors();	/* get original colors back */
+	msg_clr_eos();		/* clear the rest of the display */
+	windgoto((int)Rows - 1, 0);	/* may have moved the cursor */
+    }
 }
 
     void
@@ -2588,7 +2597,7 @@ mch_exit(r)
 	 * t_ti does swap pages it should not go to the shell page.  Do this
 	 * before stoptermcap().
 	 */
-	if (swapping_screen() && !newline_on_exit && msg_didout)
+	if (swapping_screen() && !newline_on_exit)
 	    exit_scroll();
 
 	/* Stop termcap: May need to check for T_CRV response, which
@@ -2600,16 +2609,7 @@ mch_exit(r)
 	 * This is set to TRUE by wait_return().
 	 */
 	if (!swapping_screen() || newline_on_exit)
-	{
-	    if (newline_on_exit || msg_didout)
-		exit_scroll();
-	    else
-	    {
-		restore_cterm_colors();	/* get original colors back */
-		msg_clr_eos();		/* clear the rest of the display */
-		windgoto((int)Rows - 1, 0);	/* may have moved the cursor */
-	    }
-	}
+	    exit_scroll();
 
 	/* Cursor may have been switched off without calling starttermcap()
 	 * when doing "vim -u vimrc" and vimrc contains ":q". */
