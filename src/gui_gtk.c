@@ -119,8 +119,6 @@ static void find_replace_cb(GtkWidget *widget, unsigned int flags);
 static void exact_match_cb(GtkWidget *widget, gpointer data);
 static void repl_dir_cb(GtkWidget * widget, gpointer data);
 
-#if defined(FEAT_MENU) || defined(PROTO)
-
 /*
  * Only use accelerators when gtk_menu_ensure_uline_accel_group() is
  * available, which is in version 1.2.1.  That was the first version where
@@ -131,6 +129,8 @@ static void repl_dir_cb(GtkWidget * widget, gpointer data);
 #  define GTK_USE_ACCEL
 # endif
 #endif
+
+#if defined(FEAT_MENU) || defined(PROTO)
 
 /*
  * Create a highly customized menu item by hand instead of by using:
@@ -1337,6 +1337,8 @@ gui_mch_dialog(	int	type,		/* type of dialog */
 		    accel_key, 0,
 		    0);
 	}
+# else
+	(void)gtk_label_parse_uline(GTK_LABEL(label), (const gchar *)p);
 # endif
 
 	gtk_container_add(GTK_CONTAINER(button[butcount]), label);
