@@ -82,6 +82,12 @@ static    OSType	_ftype = 'TEXT';
 # endif
 #endif
 
+#undef USE_MOUSEWHEEL
+#if defined(MACOS_X) && defined(USE_CARBONIZED)
+# define USE_MOUSEWHEEL
+static EventHandlerUPP mouseWheelHandlerUPP = NULL;
+#endif
+
 /* Debugging feature: start Vim window OFFSETed */
 #undef USE_OFFSETED_WINDOW
 
@@ -1525,7 +1531,6 @@ gui_mac_get_vim_menu (menuID, itemIndex, pMenu)
     void
 gui_mac_drag_thumb (ControlHandle theControl, short partCode)
 {
-    /* TODO: have live support */
     scrollbar_T		*sb;
     int			value, dragging;
     ControlHandle	theControlToUse;
@@ -1540,7 +1545,7 @@ gui_mac_drag_thumb (ControlHandle theControl, short partCode)
 
     /* Need to find value by diff between Old Poss New Pos */
     value = GetControl32BitValue (theControlToUse);
-    dragging = TRUE;
+    dragging = (partCode != 0);
 
     /* When "allow_scrollbar" is FALSE still need to remember the new
      * position, but don't actually scroll by setting "dont_scroll". */
@@ -1678,6 +1683,8 @@ gui_mac_doInContentClick (theEvent, whichWindow)
 #else
 	    TrackControl(theControl, thePoint, NULL);
 #endif
+	    /* pass 0 as the part to tell gui_mac_drag_thumb, that the mouse
+	     * button has been released */
 	    gui_mac_drag_thumb (theControl, 0); /* Should it be thePortion ? (Dany) */
 	    dragged_sb = NULL;
 	}
@@ -2250,6 +2257,64 @@ gui_mac_doMouseUpEvent (theEvent)
       (MOUSE_RELEASE, thePoint.h, thePoint.v, FALSE, vimModifiers);
 }
 
+#ifdef USE_MOUSEWHEEL
+    static pascal OSStatus
+gui_mac_mouse_wheel(EventHandlerCallRef nextHandler, EventRef theEvent,
+								   void *data)
+{
+    EventRef	bogusEvent;
+    Point	point;
+    Rect	bounds;
+    UInt32	mod;
+    SInt32	delta;
+    int_u	vim_mod;
+
+    if (noErr != GetEventParameter(theEvent, kEventParamMouseWheelDelta,
+			      typeSInt32, NULL, sizeof(SInt32), NULL, &delta))
+	goto bail;
+    if (noErr != GetEventParameter(theEvent, kEventParamMouseLocation,
+			      typeQDPoint, NULL, sizeof(Point), NULL, &point))
+	goto bail;
+    if (noErr != GetEventParameter(theEvent, kEventParamKeyModifiers,
+				typeUInt32, NULL, sizeof(UInt32), NULL, &mod))
+	goto bail;
+
+    vim_mod = 0;
+    if (mod & shiftKey)
+	vim_mod |= MOUSE_SHIFT;
+    if (mod & controlKey)
+	vim_mod |= MOUSE_CTRL;
+    if (mod & optionKey)
+	vim_mod |= MOUSE_ALT;
+
+    /* post a bogus event to wake up WaitNextEvent */
+    if (noErr != CreateEvent(NULL, kEventClassMouse, kEventMouseMoved, 0,
+					    kEventAttributeNone, &bogusEvent))
+	goto bail;
+    if (noErr != PostEventToQueue(GetMainEventQueue(), bogusEvent,
+							   kEventPriorityLow))
+	goto bail;
+
+    if (noErr == GetWindowBounds(gui.VimWindow, kWindowContentRgn, &bounds))
+    {
+	point.h -= bounds.left;
+	point.v -= bounds.top;
+    }
+
+    gui_send_mouse_event((delta > 0) ? MOUSE_4 : MOUSE_5,
+					    point.h, point.v, FALSE, vim_mod);
+
+    return noErr;
+
+  bail:
+    /*
+     * when we fail give any additional callback handler a chance to perform
+     * it's actions
+     */
+    return CallNextEventHandler(nextHandler, theEvent);
+}
+#endif /* defined(USE_MOUSEWHEEL) */
+
 #if 0
 
 /*
@@ -2739,6 +2804,10 @@ gui_mch_init()
 #ifdef USE_CTRLCLICKMENU
     long	gestalt_rc;
 #endif
+#ifdef USE_MOUSEWHEEL
+    EventTypeSpec   eventTypeSpec;
+    EventHandlerRef mouseWheelHandlerRef;
+#endif
 #if 1
     InitCursor();
 
@@ -2875,6 +2944,19 @@ gui_mch_init()
     vim_setenv((char_u *)"QDTEXT_MINSIZE", (char_u *)"1");
 #endif
 
+#ifdef USE_MOUSEWHEEL
+    eventTypeSpec.eventClass = kEventClassMouse;
+    eventTypeSpec.eventKind = kEventMouseWheelMoved;
+    mouseWheelHandlerUPP = NewEventHandlerUPP(gui_mac_mouse_wheel);
+    if (noErr != InstallApplicationEventHandler(mouseWheelHandlerUPP, 1,
+				 &eventTypeSpec, NULL, &mouseWheelHandlerRef))
+    {
+	mouseWheelHandlerRef = NULL;
+	DisposeEventHandlerUPP(mouseWheelHandlerUPP);
+	mouseWheelHandlerUPP = NULL;
+    }
+#endif
+
     /* TODO: Load bitmap if using TOOLBAR */
     return OK;
 }
@@ -2922,6 +3004,12 @@ gui_mch_exit(int rc)
 {
     /* TODO: find out all what is missing here? */
     DisposeRgn(cursorRgn);
+
+#ifdef USE_MOUSEWHEEL
+    if (mouseWheelHandlerUPP != NULL)
+	DisposeEventHandlerUPP(mouseWheelHandlerUPP);
+#endif
+
     /* Exit to shell? */
     exit(rc);
 }
