@@ -5930,6 +5930,7 @@ xsmp_handle_requests()
 	return OK;
 }
 
+static int dummy;
 
 /* Set up X Session Management Protocol */
     void
@@ -5959,8 +5960,9 @@ xsmp_init(void)
     smcallbacks.shutdown_cancelled.callback = xsmp_shutdown_cancelled;
     smcallbacks.shutdown_cancelled.client_data = NULL;
 
-    /* Set up a watch on ICE connection creations */
-    if (IceAddConnectionWatch(xsmp_ice_connection, NULL) == 0)
+    /* Set up a watch on ICE connection creations.  The "dummy" argument is
+     * apparently required for FreeBSD (we get a BUS error when using NULL). */
+    if (IceAddConnectionWatch(xsmp_ice_connection, &dummy) == 0)
     {
 	if (p_verbose > 0)
 	    MSG(_("XSMP ICE connection watch failed"));
