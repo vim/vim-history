@@ -833,8 +833,8 @@ struct nbbuf_struct
 typedef struct nbbuf_struct nbbuf_T;
 
 static nbbuf_T *buf_list = 0;
-int buf_list_size = 0;
-int buf_list_used = -1; /* last index in use */
+int buf_list_size = 0;	/* size of buf_list */
+int buf_list_used = 0;	/* nr of entries in buf_list actually in use */
 
 static char **globalsignmap;
 static int globalsignmaplen;
@@ -855,12 +855,9 @@ nb_getbufno(buf_T *bufp)
 {
     int i;
 
-    for (i = 0; i <= buf_list_used; i++)
-    {
+    for (i = 0; i < buf_list_used; i++)
 	if (buf_list[i].bufp == bufp)
 	    return i;
-    }
-
     return -1;
 }
 
@@ -913,18 +910,18 @@ nb_get_buf(int bufno)
 	buf_list = (nbbuf_T *)alloc_clear(100 * sizeof(nbbuf_T));
 	buf_list_size = 100;
     }
-    if (bufno > buf_list_used) /* new */
+    if (bufno >= buf_list_used) /* new */
     {
 	if (bufno >= buf_list_size) /* grow list */
 	{
-	    incr = 100;
+	    incr = bufno - buf_list_size + 90;
 	    buf_list_size += incr;
 	    buf_list = (nbbuf_T *)vim_realloc(
-				buf_list, buf_list_size * sizeof(nbbuf_T));
+				   buf_list, buf_list_size * sizeof(nbbuf_T));
 	    memset(buf_list + buf_list_size - incr, 0, incr * sizeof(nbbuf_T));
 	}
 
-	while (buf_list_used < bufno)
+	while (buf_list_used <= bufno)
 	{
 	    /* Default is to fire text changes. */
 	    buf_list[buf_list_used].fireChanges = 1;
@@ -963,7 +960,7 @@ netbeans_end(void)
     if (!haveConnection)
 	return;
 
-    for (i = 0; i <= buf_list_used; i++)
+    for (i = 0; i < buf_list_used; i++)
     {
 	if (!buf_list[i].bufp)
 	    continue;
@@ -1156,6 +1153,8 @@ nb_unquote(char_u *p, char_u **endp)
 		    case 't':	*q++ = '\t';	break;
 		    case 'r':	*q++ = '\r';	break;
 		    case '"':	*q++ = '"';	break;
+		    case NUL:	--p;		break;
+		    /* default: skip over illegal chars */
 		}
 		++p;
 		break;
