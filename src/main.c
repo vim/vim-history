@@ -2736,7 +2736,13 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 		NOTIFYICONDATA ni;
 		int	count = 0;
 		extern HWND message_window;
+# endif
 
+		if (numFiles > 0 && argv[i + 1][0] == '+')
+		    /* Skip "+cmd" argument, don't wait for it to be edited. */
+		    --numFiles;
+
+# ifdef FEAT_GUI_W32
 		ni.cbSize = sizeof(ni);
 		ni.hWnd = message_window;
 		ni.uID = 0;
