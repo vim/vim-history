@@ -2304,11 +2304,8 @@ op_change(oap)
 	 */
 	if ((ins_len = (long)STRLEN(firstline) - pre_textlen) > 0)
 	{
-	    if ((ins_text = alloc_check((unsigned)(ins_len + 1))) != 0)
+	    if ((ins_text = alloc_check((unsigned)(ins_len + 1))) != NULL)
 	    {
-		/* put cursor at end of changed text */
-		curwin->w_cursor = oap->end;
-
 		STRNCPY(ins_text, firstline + bd.textcol, ins_len);
 		*(ins_text + ins_len) = NUL;
 		for (linenr = oap->start.lnum + 1; linenr <= oap->end.lnum;
@@ -2331,11 +2328,8 @@ op_change(oap)
 			mch_memmove(newp + bd.textcol + offset, oldp,
 							    STRLEN(oldp) + 1);
 			ml_replace(linenr, newp, FALSE);
-			if (linenr == oap->end.lnum)
-			    curwin->w_cursor.col = bd.textcol + ins_len - 1;
 		    }
 		}
-		curwin->w_cursor.col = oap->start.col;
 		check_cursor();
 
 		changed_lines(oap->start.lnum + 1, 0, oap->end.lnum + 1, 0L);
@@ -3135,6 +3129,9 @@ do_put(regname, dir, count, flags)
 	/* adjust '] mark */
 	curbuf->b_op_end.lnum = curwin->w_cursor.lnum - 1;
 	curbuf->b_op_end.col = bd.textcol + totlen - 1;
+#ifdef FEAT_VIRTUALEDIT
+	curbuf->b_op_end.coladd = 0;
+#endif
 	if (flags & PUT_CURSEND)
 	{
 	    curwin->w_cursor = curbuf->b_op_end;
@@ -3375,7 +3372,13 @@ end:
 	    && gchar_cursor() == NUL
 	    && curwin->w_cursor.col
 	    && !(restart_edit || (State & INSERT)))
+    {
 	--curwin->w_cursor.col;
+#ifdef FEAT_VIRTUALEDIT
+	if (ve_flags == VE_ALL)
+	    ++curwin->w_cursor.coladd;
+#endif
+    }
 }
 
 #if defined(FEAT_SMARTINDENT) || defined(FEAT_CINDENT) || defined(PROTO)
