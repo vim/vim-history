@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.2f.  Last change: 2003 Apr 11
+*windows.txt*   For Vim version 6.2f.  Last change: 2003 May 26
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -884,8 +884,9 @@ list of buffers. |unlisted-buffer|
 		  h	a hidden buffer: It is loaded, but currently not
 			   displayed in a window |hidden-buffer|
 		   -	a buffer with 'modifiable' off
-		    =	a readonly buffer
-		     +	a modified buffer
+		   =	a readonly buffer
+		    +	a modified buffer
+		    x   a buffer with read errors
 
 						*:bad* *:badd*
 :bad[d]	[+lnum] {fname}
