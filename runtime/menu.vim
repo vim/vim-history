@@ -2,7 +2,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Sep 09
+" Last Change:	2001 Sep 18
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -154,6 +154,8 @@ amenu <silent> 20.400 &Edit.&Select\ all<Tab>ggVG	:if &slm != ""<Bar>exe ":norm 
 amenu 20.405 &Edit.-SEP2-			:
 if has("win32")  || has("win16") || has("gui_gtk") || has("gui_motif")
   amenu 20.410 &Edit.&Find\.\.\.		:promptfind<CR>
+  vunmenu      &Edit.&Find\.\.\.
+  vmenu	       &Edit.&Find\.\.\.		y:promptfind <C-R>"<CR>
   amenu 20.420 &Edit.Find\ and\ Rep&lace\.\.\.	:promptrepl<CR>
   vunmenu      &Edit.Find\ and\ Rep&lace\.\.\.
   vmenu	       &Edit.Find\ and\ Rep&lace\.\.\.	y:promptrepl <C-R>"<CR>
@@ -566,7 +568,7 @@ func! s:BMHash(name)
     let sp = char2nr(' ')
   endif
   " convert first six chars into a number for sorting:
-  return (char2nr(nm[0]) - sp) * 0x1000000 + (char2nr(nm[1]) - sp) * 0x40000 + (char2nr(nm[2]) - sp) * 0x1000 + (char2nr(nm[3]) - sp) * 0x40 + (char2nr(nm[4]) - sp) * 0x40 + (char2nr(nm[5]) - sp)
+  return (char2nr(nm[0]) - sp) * 0x800000 + (char2nr(nm[1]) - sp) * 0x20000 + (char2nr(nm[2]) - sp) * 0x1000 + (char2nr(nm[3]) - sp) * 0x80 + (char2nr(nm[4]) - sp) * 0x20 + (char2nr(nm[5]) - sp)
 endfunc
 
 func! s:BMHash2(name)
@@ -720,18 +722,18 @@ if has("toolbar")
   amenu 1.20 ToolBar.Save	:w<CR>
   amenu 1.30 ToolBar.SaveAll	:wa<CR>
 
-  if has("win32")
+  if has("printer")
     amenu 1.40 ToolBar.Print	:hardcopy<CR>
     vunmenu ToolBar.Print
     vmenu ToolBar.Print		:hardcopy<CR>
+  elseif has("unix")
+    amenu 1.40 ToolBar.Print	:w !lpr<CR>
+    vunmenu ToolBar.Print
+    vmenu ToolBar.Print		:w !lpr<CR>
   elseif has("vms")
     amenu <silent> 1.40 ToolBar.Print	:call VMSPrint(":")<CR>
     vunmenu ToolBar.Print
-    vmenu <silent> ToolBar.Print		<Esc>:call VMSPrint(":'<,'>")<CR>
-  else
-    amenu 1.40 ToolBar.Print	:w !lpr<CR>
-    vunmenu ToolBar.Print
-    vmenu ToolBar.Print		<Esc>:w !lpr<CR>
+    vmenu <silent> ToolBar.Print	<Esc>:call VMSPrint(":'<,'>")<CR>
   endif
 
   amenu 1.45 ToolBar.-sep1-	<nul>
@@ -747,8 +749,8 @@ if has("toolbar")
   imenu      ToolBar.Paste	x<Esc><SID>Paste"_s
   cmenu      ToolBar.Paste	<C-R>+
 
-  amenu 1.95 ToolBar.-sep3-	<nul>
   if !has("gui_athena")
+    amenu 1.95 ToolBar.-sep3-		<nul>
     amenu 1.100 ToolBar.Find		:promptfind<CR>
     amenu 1.110 ToolBar.FindNext	n
     amenu 1.120 ToolBar.FindPrev	N
