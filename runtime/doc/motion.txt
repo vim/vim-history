@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.2.  Last change: 2004 Mar 02
+*motion.txt*    For Vim version 6.2.  Last change: 2004 Mar 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -652,9 +652,15 @@ Jumping to a mark can be done in two ways:
 m{a-zA-Z}		Set mark {a-zA-Z} at cursor position (does not move
 			the cursor, this is not a motion command).
 
+						*m'* *m`*
 m'  or  m`		Set the previous context mark.  This can be jumped to
 			with the "''" or "``" command (does not move the
 			cursor, this is not a motion command).
+
+						*m[* *m]*
+m[  or  m]		Set the |'[| or |']| mark.  Useful when an operator is
+			to be simulated by multiple commands.  (does not move
+			the cursor, this is not a motion command).
 
 						*:ma* *:mark* *E191*
 :[range]ma[rk] {a-zA-Z}	Set mark {a-zA-Z} at last line number in [range],

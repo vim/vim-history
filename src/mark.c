@@ -60,6 +60,19 @@ setmark(c)
 	return OK;
     }
 
+    /* Allow setting '[ and '] for an autocommand that simulates reading a
+     * file. */
+    if (c == '[')
+    {
+	curbuf->b_op_start = curwin->w_cursor;
+	return OK;
+    }
+    if (c == ']')
+    {
+	curbuf->b_op_end = curwin->w_cursor;
+	return OK;
+    }
+
 #ifndef EBCDIC
     if (c > 'z')	    /* some islower() and isupper() cannot handle
 				characters above 127 */
