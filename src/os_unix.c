@@ -4567,7 +4567,7 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
     /*
      * read the names from the file into memory
      */
-    fd = fopen((char *)tempname, "r");
+    fd = fopen((char *)tempname, READBIN);
     if (fd == NULL)
     {
 	/* Something went wrong, perhaps a file name with a special char. */
@@ -4603,6 +4603,16 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
 	return FAIL;
     }
     vim_free(tempname);
+
+#if defined(__CYGWIN__) || defined(__CYGWIN32__)
+    /* Translate <CR><NL> into <NL>.  Caution, buffer may contain NUL. */
+    p = buffer;
+    for (i = 0; i < len; ++i)
+	if (!(buffer[i] == CR && buffer[i + 1] == NL))
+	    *p++ = buffer[i];
+    len = p - buffer;
+# endif
+
 
     /* file names are separated with Space */
     if (shell_style == STYLE_ECHO)
