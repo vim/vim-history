@@ -43,6 +43,7 @@ static void	    cs_reading_emsg __ARGS((int idx));
 static int	    cs_cnt_matches __ARGS((int idx));
 static char *	    cs_create_cmd __ARGS((char *csoption, char *pattern));
 static int	    cs_create_connection __ARGS((int i));
+static void	    do_cscope_general __ARGS((exarg_T *eap, int make_split));
 static void	    cs_file_results __ARGS((FILE *, int *));
 static void	    cs_fill_results __ARGS((char *, int , int *, char ***,
 			char ***, int *));
@@ -95,18 +96,16 @@ cs_usage_msg(x)
 }
 
 /*
- * PUBLIC functions
- ****************************************************************************/
-
-/*
- * PUBLIC: do_cscope
+ * PRIVATE: do_cscope_general
  *
  * find the command, print help if invalid, and the then call the
- * corresponding command function
+ * corresponding command function,
+ * called from do_cscope and do_scscope
  */
-    void
-do_cscope(eap)
-    exarg_T *eap;
+    static void
+do_cscope_general(eap, make_split)
+    exarg_T	*eap;
+    int		make_split; /* whether to split window */
 {
     cscmd_T *cmdp;
 
@@ -114,26 +113,33 @@ do_cscope(eap)
     if ((cmdp = cs_lookup_cmd(eap)) == NULL)
     {
 	cs_help(eap);
-#ifdef FEAT_WINDOWS
-	postponed_split = 0;
-#endif
 	return;
     }
 
 #ifdef FEAT_WINDOWS
-    if (postponed_split && !cmdp->cansplit)
+    if (make_split)
     {
-	(void)MSG_PUTS(_("This cscope command does not support splitting the window.\n"));
-	postponed_split = 0;
-	return;
+	if (!cmdp->cansplit)
+	{
+	    (void)MSG_PUTS(_("This cscope command does not support splitting the window.\n"));
+	    return;
+	}
+	postponed_split = -1;
     }
 #endif
 
     cmdp->func(eap);
-#ifdef FEAT_WINDOWS
-    postponed_split = 0; /* restore state */
-#endif
-} /* do_cscope */
+}
+
+/*
+ * PUBLIC: do_cscope
+ */
+    void
+do_cscope(eap)
+    exarg_T *eap;
+{
+    do_cscope_general(eap, FALSE);
+}
 
 /*
  * PUBLIC: do_scscope
@@ -144,10 +150,7 @@ do_cscope(eap)
 do_scscope(eap)
     exarg_T *eap;
 {
-#ifdef FEAT_WINDOWS
-    postponed_split = -1;
-#endif
-    do_cscope(eap);
+    do_cscope_general(eap, TRUE);
 }
 
 /*
@@ -1211,49 +1214,60 @@ cs_insert_filelist(fname, ppath, flags, sb)
     char *flags;
     struct stat *sb;
 {
-    short i;
+    short	i, j;
 #ifndef UNIX
-    HANDLE hFile;
+    HANDLE	hFile;
     BY_HANDLE_FILE_INFORMATION bhfi;
-    hFile = CreateFile (fname, GENERIC_READ, 0, NULL, OPEN_EXISTING,
-			FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hFile == INVALID_HANDLE_VALUE)
+
+    vim_memset(&bhfi, 0, sizeof(bhfi));
+    /* On windows 9x GetFileInformationByHandle doesn't work, so skip it */
+    if (!mch_windows95())
     {
-	if (p_csverbose)
+	hFile = CreateFile(fname, FILE_READ_ATTRIBUTES, 0, NULL, OPEN_EXISTING,
+						 FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile == INVALID_HANDLE_VALUE)
 	{
-	    char *cant_msg = _("E625: cannot open cscope database: %s");
-	    char *winmsg = GetWin32Error();
-	    if (winmsg != NULL)
+	    if (p_csverbose)
 	    {
-		(void)EMSG2(cant_msg, winmsg);
-		LocalFree(winmsg);
+		char *cant_msg = _("E625: cannot open cscope database: %s");
+		char *winmsg = GetWin32Error();
+
+		if (winmsg != NULL)
+		{
+		    (void)EMSG2(cant_msg, winmsg);
+		    LocalFree(winmsg);
+		}
+		else
+		    /* subst filename if can't get error text */
+		    (void)EMSG2(cant_msg, fname);
 	    }
-	    else
-		/* subst filename if can't get error text */
-		(void)EMSG2(cant_msg, fname);
+	    return -1;
 	}
-	return -1;
-    }
-    if (!GetFileInformationByHandle(hFile, &bhfi))
-    {
+	if (!GetFileInformationByHandle(hFile, &bhfi))
+	{
+	    CloseHandle(hFile);
+	    if (p_csverbose)
+		(void)EMSG(_("E626: cannot get cscope database information"));
+	    return -1;
+	}
 	CloseHandle(hFile);
-	if (p_csverbose)
-	    (void)EMSG(_("E626: cannot get cscope database information"));
-	return -1;
     }
-    else
-	CloseHandle(hFile);
 #endif
 
-    for (i = 0; i < CSCOPE_MAX_CONNECTIONS; i++)
+    i = -1; /* can be set to the index of an empty item in csinfo */
+    for (j = 0; j < CSCOPE_MAX_CONNECTIONS; j++)
     {
-	if (csinfo[i].fname
+	if (csinfo[j].fname != NULL
 #if defined(UNIX)
-	    && csinfo[i].st_dev == sb->st_dev && csinfo[i].st_ino == sb->st_ino
+	    && csinfo[j].st_dev == sb->st_dev && csinfo[j].st_ino == sb->st_ino
 #else
-	    && csinfo[i].nVolume == bhfi.dwVolumeSerialNumber
-	    && csinfo[i].nIndexHigh == bhfi.nFileIndexHigh
-	    && csinfo[i].nIndexLow == bhfi.nFileIndexLow
+	    /* compare pathnames first */
+	    && ((fullpathcmp(csinfo[j].fname, fname, FALSE) & FPC_SAME)
+		/* if not Windows 9x, test index file atributes too */
+		|| (!mch_windows95()
+		    && csinfo[j].nVolume == bhfi.dwVolumeSerialNumber
+		    && csinfo[j].nIndexHigh == bhfi.nFileIndexHigh
+		    && csinfo[j].nIndexLow == bhfi.nFileIndexLow))
 #endif
 	    )
 	{
@@ -1262,11 +1276,11 @@ cs_insert_filelist(fname, ppath, flags, sb)
 	    return -1;
 	}
 
-	if (csinfo[i].fname == NULL)
-	    break;
+	if (csinfo[j].fname == NULL && i == -1)
+	    i = j; /* remember first empty entry */
     }
 
-    if (i == CSCOPE_MAX_CONNECTIONS)
+    if (i == -1)
     {
 	if (p_csverbose)
 	    (void)EMSG(_("E569: maximum number of cscope connections reached"));
