@@ -1321,7 +1321,7 @@ static struct vimoption
 			    (char_u *)NULL, PV_NONE,
 #endif
 			    {(char_u *)FALSE, (char_u *)0L}},
-    {"lispwords",   "lw",   P_STRING|P_VI_DEF,
+    {"lispwords",   "lw",   P_STRING|P_VI_DEF|P_COMMA|P_NODUP,
 #ifdef FEAT_LISP
 			    (char_u *)&p_lispwords, PV_NONE,
 			    {(char_u *)LISPWORD_VALUE, (char_u *)0L}
