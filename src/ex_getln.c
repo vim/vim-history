@@ -369,7 +369,14 @@ getcmdline(firstc, count, indent)
 		    save_p_ls = -1;
 		}
 		else
-		    win_redr_status(lastwin);
+		{
+# ifdef FEAT_VERTSPLIT
+		    win_redraw_last_status(topframe);
+# else
+		    lastwin->w_redr_status = TRUE;
+# endif
+		    redraw_statuslines();
+		}
 		KeyTyped = skt;
 		wild_menu_showing = 0;
 	    }
