@@ -3,35 +3,31 @@ Only for use on Win32 systems!
 
 STARTTEST
 :so small.vim
-
 :fun! TestIt(file, bits, expected)
-:	let res=fnamemodify(a:file,a:bits)
-:	if a:expected == ''
-:		echo "'".a:file."'->(".a:bits.")->'".res."'"
-:	else
-:		if substitute(res,'/','\\', 'g') != substitute( a:expected, '/','\\', 'g') 
-:			echo "FAILED: '".a:file."'->(".a:bits.")->'".res."'"
-:			echo "Expected: '".a:expected."'"
-:		else
-:			echo "OK"
-:		endif
-:	endif
-:endfun
-
+	let res=fnamemodify(a:file,a:bits)
+	if a:expected == ''
+		echo "'".a:file."'->(".a:bits.")->'".res."'"
+	else
+		if substitute(res,'/','\\', 'g') != substitute( a:expected, '/','\\', 'g') 
+			echo "FAILED: '".a:file."'->(".a:bits.")->'".res."'"
+			echo "Expected: '".a:expected."'"
+		else
+			echo "OK"
+		endif
+	endif
+endfun
 :fun! MakeDir( dirname )
-:	"exe '!mkdir '.substitute(a:dirname,'/','\\','g')
-:	call system('mkdir '.substitute(a:dirname,'/','\\','g'))
-:endfun
+	"exe '!mkdir '.substitute(a:dirname,'/','\\','g')
+	call system('mkdir '.substitute(a:dirname,'/','\\','g'))
+endfun
 :fun! RMDir( dirname)
-:	"exe '!rmdir '.substitute(a:dirname,'/','\\','g')
-:	call system('rmdir '.substitute(a:dirname,'/','\\','g'))
-:endfun
-
+	"exe '!rmdir '.substitute(a:dirname,'/','\\','g')
+	call system('rmdir '.substitute(a:dirname,'/','\\','g'))
+endfun
 :fun! MakeFile( filename)
-:	"exe '!copy nul '.substitute(a:filename,'/','\\','g')
-:	call system('copy nul '.substitute(a:filename,'/','\\','g'))
-:endfun
-
+	"exe '!copy nul '.substitute(a:filename,'/','\\','g')
+	call system('copy nul '.substitute(a:filename,'/','\\','g'))
+endfun
 :fun! TestColonEight()
    redir! >test.out
 	" This could change for CygWin to //cygdrive/c
@@ -77,9 +73,13 @@ STARTTEST
 	call RMDir( dir1 )
        echo
    redir END
-   qa!
 endfun
+:let dir = getcwd()
 :call TestColonEight()
+:exe "cd " . dir
+:edit! test.out
+:set ff=dos
+:w
 :qa!
 ENDTEST
 
