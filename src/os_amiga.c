@@ -307,7 +307,7 @@ mch_check_win(argc, argv)
     static char_u   *(constrings[3]) = {(char_u *)"con:0/0/662/210/",
 					(char_u *)"con:0/0/640/200/",
 					(char_u *)"con:0/0/320/200/"};
-    static char_u   winerr[] = (char_u *)N_("VIM: Can't open window!\n");
+    static char_u   *winerr = (char_u *)N_("VIM: Can't open window!\n");
     struct WBArg    *argp;
     int		    ac;
     char	    *av;

@@ -20,8 +20,8 @@
 #include <proto/graphics.h>
 #include <proto/layers.h>
 #include <assert.h>
-#include "gui_amiga.h"
 #include "vim.h"
+#include "gui_amiga.h"
 #include <math.h>
 #include <limits.h>
 
@@ -784,9 +784,9 @@ gui_mch_init(void)
 	SetDrMd(gui.window->RPort, JAM2);
 	atexit(atexitDoThis);
 	TextDimensions();
-	returnCode = OK; /* we've had sucess */
+	returnCode = OK; /* we've had success */
 	if (gui_win_x != -1 && gui_win_y != -1)
-	    gui_mch_set_winpos(gui_win_x, gui_win_y)
+	    gui_mch_set_winpos(gui_win_x, gui_win_y);
     }
     gui.menu = NULL;
 
