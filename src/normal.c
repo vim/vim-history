@@ -6134,16 +6134,16 @@ nv_replace(cap)
 			    || cap->nchar == ']'))
 		    showmatch();
 		++curwin->w_cursor.col;
-#ifdef FEAT_NETBEANS_INTG
-		if (usingNetbeans)
-		{
-		    colnr_T start = (colnr_T)(curwin->w_cursor.col
-							       - cap->count1);
-		    netbeans_inserted(curbuf, curwin->w_cursor.lnum, start,
-			     (int)cap->count1, &ptr[start], (int)cap->count1);
-		}
-#endif
 	    }
+#ifdef FEAT_NETBEANS_INTG
+	    if (usingNetbeans)
+	    {
+		colnr_T start = (colnr_T)(curwin->w_cursor.col - cap->count1);
+
+		netbeans_inserted(curbuf, curwin->w_cursor.lnum, start,
+			(int)cap->count1, &ptr[start], (int)cap->count1);
+	    }
+#endif
 
 	    /* mark the buffer as changed and prepare for displaying */
 	    changed_bytes(curwin->w_cursor.lnum,
