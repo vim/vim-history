@@ -296,7 +296,7 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_UE,	"\033[0m"},
     {(int)KS_CZH,	"\033[3m"},
     {(int)KS_CZR,	"\033[0m"},
-#if defined(__MORPHOS__)
+#if defined(__MORPHOS__) || defined(__AROS__)
     {(int)KS_CCO,	"8"},		/* allow 8 colors */
 #  ifdef TERMINFO
     {(int)KS_CAB,	"\033[4%p1%dm"},/* set background color */

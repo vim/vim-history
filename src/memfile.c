@@ -655,36 +655,41 @@ mf_sync(mfp, flags)
 # endif
 #endif
 #ifdef AMIGA
+# ifdef __AROS__
+        if (fsync(mfp->mf_fd) != 0)
+	    status = FAIL;
+# else
 	/*
 	 * Flush() only exists for AmigaDos 2.0.
 	 * For 1.3 it should be done with close() + open(), but then the risk
 	 * is that the open() may fail and lose the file....
 	 */
-# ifdef FEAT_ARP
+#  ifdef FEAT_ARP
 	if (dos2)
-# endif
-# ifdef SASC
+#  endif
+#  ifdef SASC
 	{
 	    struct UFB *fp = chkufb(mfp->mf_fd);
 
 	    if (fp != NULL)
 		Flush(fp->ufbfh);
 	}
-# else
-#  if defined(_DCC) || defined(__GNUC__) || defined(__MORPHOS__)
+#  else
+#   if defined(_DCC) || defined(__GNUC__) || defined(__MORPHOS__)
 	{
-#   if defined(__GNUC__) && !defined(__MORPHOS__)
+#    if defined(__GNUC__) && !defined(__MORPHOS__)
 	    /* Have function (in libnix at least),
 	     * but ain't got no prototype anywhere. */
 	    extern unsigned long fdtofh(int filedescriptor);
-#   endif
+#    endif
 	    BPTR fh = (BPTR)fdtofh(mfp->mf_fd);
 
 	    if (fh != 0)
 		Flush(fh);
-	    }
-#  else /* assume Manx */
+        }
+#   else /* assume Manx */
 	    Flush(_devtab[mfp->mf_fd].fd);
+#   endif
 #  endif
 # endif
 #endif /* AMIGA */
