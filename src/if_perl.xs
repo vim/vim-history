@@ -528,7 +528,7 @@ perl_buf_free(bp)
 }
 
 #ifndef PROTO
-I32 cur_val(IV iv, SV *sv);
+I32 cur_val(pTHX_ IV iv, SV *sv);
 
 /*
  * Handler for the magic variables $main::curwin and $main::curbuf.
@@ -536,7 +536,7 @@ I32 cur_val(IV iv, SV *sv);
  * (This is effectively a C-level equivalent of a tied variable).
  * There is no "set" function as the variables are read-only.
  */
-I32 cur_val(IV iv, SV *sv)
+I32 cur_val(pTHX_ IV iv, SV *sv)
 {
     SV *rv;
     if (iv == 0)
