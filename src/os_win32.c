@@ -4202,3 +4202,110 @@ mch_copy_file_attribute(char_u *from, char_u *to)
 {
     return copy_infostreams(from, to);
 }
+
+#if defined(MYRESETSTKOFLW) || defined(PROTO)
+/*
+ * Recreate a destroyed stack guard page in win32.
+ * Written by Benjamin Peterson.
+ */
+
+/* These magic numbers are from the MS header files */
+#define MIN_STACK_WIN9X 17
+#define MIN_STACK_WINNT 2
+
+/*
+ * This function does the same thing as _resetstkoflw(), which is only
+ * available in DevStudio .net and later.
+ * Returns 0 for failure, 1 for success.
+ */
+    int
+myresetstkoflw(void)
+{
+    BYTE	*pStackPtr;
+    BYTE	*pGuardPage;
+    BYTE	*pStackBase;
+    BYTE	*pLowestPossiblePage;
+    MEMORY_BASIC_INFORMATION mbi;
+    SYSTEM_INFO si;
+    DWORD	nPageSize;
+    DWORD	dummy;
+
+    /* This code will not work on win32s. */
+    PlatformId();
+    if (g_PlatformId == VER_PLATFORM_WIN32s)
+	return 0;
+
+    /* We need to know the system page size. */
+    GetSystemInfo(&si);
+    nPageSize = si.dwPageSize;
+
+    /* ...and the current stack pointer */
+    pStackPtr = (BYTE*)_alloca(1);
+
+    /* ...and the base of the stack. */
+    if (VirtualQuery(pStackPtr, &mbi, sizeof mbi) == 0)
+        return 0;
+    pStackBase = (BYTE*)mbi.AllocationBase;
+
+    /* ...and the page thats min_stack_req pages away from stack base; this is
+     * the lowest page we could use. */
+    pLowestPossiblePage = pStackBase + ((g_PlatformId == VER_PLATFORM_WIN32_NT)
+			     ? MIN_STACK_WINNT : MIN_STACK_WIN9X) * nPageSize;
+
+    /* On Win95, we want the next page down from the end of the stack. */
+    if (g_PlatformId == VER_PLATFORM_WIN32_WINDOWS)
+    {
+	/* Find the page that's only 1 page down from the page that the stack
+	 * ptr is in. */
+        pGuardPage = (BYTE*)((DWORD)nPageSize * (((DWORD)pStackPtr
+						    / (DWORD)nPageSize) - 1));
+        if (pGuardPage < pLowestPossiblePage)
+            return 0;
+
+	/* Apply the noaccess attribute to the page -- there's no guard
+	 * attribute in win95-type OSes. */
+        if (!VirtualProtect(pGuardPage, nPageSize, PAGE_NOACCESS, &dummy))
+            return 0;
+    }
+    else
+    {
+	/* On NT, however, we want the first committed page in the stack Start
+	 * at the stack base and move forward through memory until we find a
+	 * committed block. */
+        BYTE *pBlock = pStackBase;
+
+        while (1)
+        {
+            if (VirtualQuery(pBlock, &mbi, sizeof mbi) == 0)
+                return 0;
+
+            pBlock += mbi.RegionSize;
+
+            if (mbi.State & MEM_COMMIT)
+                break;
+        }
+
+        /* mbi now describes the first committed block in the stack. */
+        if (mbi.Protect & PAGE_GUARD)
+            return 1;
+
+        /* decide where the guard page should start */
+        if ((long_u)(mbi.BaseAddress) < (long_u)pLowestPossiblePage)
+            pGuardPage = pLowestPossiblePage;
+        else
+            pGuardPage = (BYTE*)mbi.BaseAddress;
+
+        /* allocate the guard page */
+        if (!VirtualAlloc(pGuardPage, nPageSize, MEM_COMMIT, PAGE_READWRITE))
+            return 0;
+
+        /* apply the guard attribute to the page */
+        if (!VirtualProtect(pGuardPage, nPageSize, PAGE_READWRITE | PAGE_GUARD,
+								      &dummy))
+            return 0;
+    }
+
+    return 1;
+}
+
+#endif

@@ -488,7 +488,7 @@ LINK	= $(BOR)\BIN\ILink32
 CC   = $(BOR)\BIN\Bcc32
 LFLAGS	= -OS -Tpe -c -m -L$(LIB) $(DEBUG_FLAG) $(LINK2)
 LFLAGSDLL  = -Tpd -c -m -L$(LIB) $(DEBUG_FLAG) $(LINK2)
-CFLAGS = -w-aus -w-par -w-pch -I$(INCLUDE) -d -x- -RT- -k- -Oi $(HEADERS) -f-
+CFLAGS = -w-aus -w-par -w-pch -I$(INCLUDE) -d -RT- -k- -Oi $(HEADERS) -f-
 !endif
 
 CC1 = -c

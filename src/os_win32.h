@@ -117,6 +117,19 @@
 # define DFLT_MAXMEMTOT	(5*1024)    /* use up to 5 Mbyte for Vim */
 #endif
 
+#if defined(_MSC_VER) || defined(__BORLANDC__)
+    /* Support for __try / __except.  All versions of MSVC and Borland C are
+     * expected to have this.  Any other compilers that support it? */
+# define HAVE_TRY_EXCEPT 1
+# include <malloc.h>		/* for _resetstkoflw() */
+# if defined(_MSC_VER) && (_MSC_VER >= 1300)
+#  define RESETSTKOFLW _resetstkoflw
+# else
+#  define RESETSTKOFLW myresetstkoflw
+#  define MYRESETSTKOFLW
+# endif
+#endif
+
 /*
  * Some simple debugging macros that look and behave a lot like their
  * namesakes in MFC.

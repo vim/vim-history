@@ -41,4 +41,5 @@ int mch_rename __ARGS((const char *pszOldFile, const char *pszNewFile));
 char *default_shell __ARGS((void));
 int mch_access __ARGS((char *n, int p));
 int mch_copy_file_attribute __ARGS((char_u *from, char_u *to));
+int myresetstkoflw __ARGS((void));
 /* vim: set ft=c : */
