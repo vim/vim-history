@@ -2348,7 +2348,7 @@ gui_mswin_get_valid_dimensions(
 gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
 {
 
-    *screen_w = GetSystemMetrics(SM_CXSCREEN)
+    *screen_w = GetSystemMetrics(SM_CXFULLSCREEN)
 	      - GetSystemMetrics(SM_CXFRAME) * 2;
     /* FIXME: dirty trick: Because the gui_get_base_height() doesn't include
      * the menubar for MSwin, we subtract it from the screen height, so that

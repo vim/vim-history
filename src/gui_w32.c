@@ -1197,6 +1197,15 @@ gui_mch_set_shellsize(int width, int height,
     if (win_ypos < workarea_rect.top)
 	win_ypos = workarea_rect.top;
 
+    /* When the taskbar is placed on the left or top of the screen,
+     * SetWindowPlacement() adds its width or height automatically, compensate
+     * for that.  When the offset is over 400 it's probably something else,
+     * skip it then (just in case). */
+    if (workarea_rect.left > 0 && workarea_rect.left < 400)
+	win_xpos -= workarea_rect.left;
+    if (workarea_rect.top > 0 && workarea_rect.top < 400)
+	win_ypos -= workarea_rect.top;
+
     wndpl.rcNormalPosition.left = win_xpos;
     wndpl.rcNormalPosition.right = win_xpos + win_width;
     wndpl.rcNormalPosition.top = win_ypos;
