@@ -1540,6 +1540,7 @@ mch_init()
      * character to specify MCHAR, MLINE or MBLOCK.
      */
     clip_star.format = RegisterClipboardFormat("VimClipboard2");
+    clip_star.format_raw = RegisterClipboardFormat("VimRawBytes");
 #endif
 }
 
@@ -2038,6 +2039,7 @@ mch_init()
      * character to specify MCHAR, MLINE or MBLOCK.
      */
     clip_star.format = RegisterClipboardFormat("VimClipboard2");
+    clip_star.format_raw = RegisterClipboardFormat("VimRawBytes");
 #endif
 
     /* This will be NULL on anything but NT 4.0 */
