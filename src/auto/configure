@@ -80,6 +80,8 @@ ac_help="$ac_help
 ac_help="$ac_help
   --with-tlib=library     terminal library to be used "
 ac_help="$ac_help
+  --disable-acl           Don't check for ACL support."
+ac_help="$ac_help
   --disable-gpm           Don't use gpm (Linux mouse daemon)."
 ac_help="$ac_help
   --disable-nls           Don't support NLS (gettext())."
@@ -6065,8 +6067,20 @@ else
 fi
 rm -f conftest*
 
+echo $ac_n "checking --disable-acl argument""... $ac_c" 1>&6
+echo "configure:6072: checking --disable-acl argument" >&5
+# Check whether --enable-acl or --disable-acl was given.
+if test "${enable_acl+set}" = set; then
+  enableval="$enable_acl"
+  echo "$ac_t""yes" 1>&6
+else
+  enable_acl="yes"; echo "$ac_t""no" 1>&6
+fi
+
+if test "$enable_acl" = "yes"; then
+
 echo $ac_n "checking for acl_get_file in -lposix1e""... $ac_c" 1>&6
-echo "configure:5997: checking for acl_get_file in -lposix1e" >&5
+echo "configure:6084: checking for acl_get_file in -lposix1e" >&5
 ac_lib_var=`echo posix1e'_'acl_get_file | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -6283,9 +6297,10 @@ else
   echo "$ac_t""no" 1>&6
 fi
 rm -f conftest*
+fi
 
 echo $ac_n "checking --disable-gpm argument""... $ac_c" 1>&6
-echo "configure:6176: checking --disable-gpm argument" >&5
+echo "configure:6304: checking --disable-gpm argument" >&5
 # Check whether --enable-gpm or --disable-gpm was given.
 if test "${enable_gpm+set}" = set; then
   enableval="$enable_gpm"
