@@ -916,8 +916,10 @@ else
 
   dnl Remove "-I/usr/include " from X_CFLAGS, should not be needed.
   X_CFLAGS="`echo $X_CFLAGS\  | sed 's%-I/usr/include %%'`"
-  dnl Remove " -L/usr/lib" from X_LIBS, should not be needed.
-  X_LIBS="`echo $X_LIBS\  | sed 's% -L/usr/lib%%'`"
+  dnl Remove "-L/usr/lib " from X_LIBS, should not be needed.
+  X_LIBS="`echo $X_LIBS\  | sed 's%-L/usr/lib %%'`"
+  dnl Same for "-R/usr/lib ".
+  X_LIBS="`echo $X_LIBS\  | sed -e 's%-R/usr/lib %%' -e 's%-R /usr/lib %%'`"
 
 
   dnl Check if the X11 header files are correctly installed. On some systems
@@ -1644,6 +1646,11 @@ if test -z "$SKIP_ATHENA" -o -z "$SKIP_NEXTAW" -o -z "$SKIP_MOTIF"; then
   LDFLAGS="$X_LIBS $LDFLAGS"
   AC_CHECK_LIB(Xext, XShapeQueryExtension, [GUI_X_LIBS="-lXext"],,
 		[-lXt $X_PRE_LIBS -lX11 $X_EXTRA_LIBS])
+  dnl For Solaris we need -lw and -ldl before linking with -lXmu works.
+  AC_CHECK_LIB(w, wslen, [X_EXTRA_LIBS="$X_EXTRA_LIBS -lw"],,
+		[$GUI_X_LIBS -lXt $X_PRE_LIBS -lX11 $X_EXTRA_LIBS])
+  AC_CHECK_LIB(dl, dlsym, [X_EXTRA_LIBS="$X_EXTRA_LIBS -ldl"],,
+		[$GUI_X_LIBS -lXt $X_PRE_LIBS -lX11 $X_EXTRA_LIBS])
   AC_CHECK_LIB(Xmu, XmuCreateStippledPixmap, [GUI_X_LIBS="-lXmu $GUI_X_LIBS"],,
 		[$GUI_X_LIBS -lXt $X_PRE_LIBS -lX11 $X_EXTRA_LIBS])
   if test -z "$SKIP_MOTIF"; then
