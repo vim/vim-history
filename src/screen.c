@@ -1484,15 +1484,10 @@ win_update(wp)
 
 		if (i >= wp->w_lines_valid)
 		{
-		    /* When buffer lines have been inserted/deleted, and
-		     * insering/deleting window lines is not possible, need to
-		     * check for redraw until the end of the window.  This is
-		     * also required when w_topline changed. */
-		    if (buf->b_mod_xlines != 0
-			    || (wp->w_topline == mod_top
-				&& wp->w_lines_valid > 0
-				&& wp->w_lines[0].wl_lnum != mod_top))
-			bot_start = 0;
+		    /* We can't find a valid line below the changed lines,
+		     * need to redraw until the end of the window.
+		     * Inserting/deleting lines has no use. */
+		    bot_start = 0;
 		}
 		else
 		{
