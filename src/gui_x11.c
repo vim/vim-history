@@ -3225,7 +3225,7 @@ gui_mch_register_sign(signfile)
 	{
 	    XpmColorSymbol color[5] =
 	    {
-		{"none", "none", 0},
+		{"none", NULL, 0},
 		{"iconColor1", NULL, 0},
 		{"bottomShadowColor", NULL, 0},
 		{"topShadowColor", NULL, 0},
@@ -3251,7 +3251,6 @@ gui_mch_register_sign(signfile)
 		sign = NULL;
 		EMSG(_("E255: Couldn't read in sign data!"));
 	    }
-	    vim_free(attrs.colorsymbols);
 	}
     }
 
