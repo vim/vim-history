@@ -5432,7 +5432,8 @@ set_chars_option(varp)
     char_u	**varp;
 {
     int		round, i, len, entries;
-    char_u	*p;
+    char_u	*p, *s;
+    int		c1, c2 = 0;
     struct charstab
     {
 	int	*cp;
@@ -5499,18 +5500,36 @@ set_chars_option(varp)
 			&& p[len] == ':'
 			&& p[len + 1] != NUL)
 		{
+		    s = p + len + 1;
+#ifdef FEAT_MBYTE
+		    c1 = mb_ptr2char_adv(&s);
+#else
+		    c1 = *s++;
+#endif
 		    if (tab[i].cp == &lcs_tab2)
-			++len;
-		    if (p[len + 1] != NUL
-			    && (p[len + 2] == ',' || p[len + 2] == NUL))
+		    {
+			if (*s == NUL)
+			    continue;
+#ifdef FEAT_MBYTE
+			c2 = mb_ptr2char_adv(&s);
+#else
+			c2 = *s++;
+#endif
+		    }
+		    if (*s == ',' || *s == NUL)
 		    {
 			if (round)
 			{
-			    *(tab[i].cp) = p[len + 1];
 			    if (tab[i].cp == &lcs_tab2)
-				lcs_tab1 = p[len];
+			    {
+				lcs_tab1 = c1;
+				lcs_tab2 = c2;
+			    }
+			    else
+				*(tab[i].cp) = c1;
+
 			}
-			p += len + 2;
+			p = s;
 			break;
 		    }
 		}
