@@ -5038,10 +5038,14 @@ draw_glyph_string(int row, int col, int num_cells, int flags,
 gui_gtk2_draw_string(int row, int col, char_u *s, int len, int flags)
 {
     GdkRectangle	area;		    /* area for clip mask	  */
-    char_u		*conv_buf = NULL;   /* result of UTF-8 conversion */
     PangoGlyphString	*glyphs;	    /* glyphs of current item	  */
     int			column_offset = 0;  /* column offset in cells	  */
     int			i;
+    char_u		*conv_buf = NULL;   /* result of UTF-8 conversion */
+    char_u		*new_conv_buf;
+    int			convlen;
+    char_u		*sp, *bp;
+    int			plen;
 
     if (gui.text_context == NULL || gui.drawarea->window == NULL)
 	return len;
@@ -5054,10 +5058,37 @@ gui_gtk2_draw_string(int row, int col, char_u *s, int len, int flags)
 	 * prohibits changing this to something else than UTF-8 if the GUI is
 	 * in use.
 	 */
-	conv_buf = string_convert(&output_conv, s, &len);
-	s = conv_buf;
-
+	convlen = len;
+	conv_buf = string_convert(&output_conv, s, &convlen);
 	g_return_val_if_fail(conv_buf != NULL, len);
+
+	/* Correct for differences in char width: some chars are
+	 * double-wide in 'encoding' but single-wide in utf-8.  Add a space to
+	 * compensate for that. */
+	for (sp = s, bp = conv_buf; sp < s + len && bp < conv_buf + convlen; )
+	{
+	    plen = utf_ptr2len_check(bp);
+	    if ((*mb_ptr2cells)(sp) == 2 && utf_ptr2cells(bp) == 1)
+	    {
+		new_conv_buf = alloc(convlen + 2);
+		if (new_conv_buf == NULL)
+		    return len;
+		plen += bp - conv_buf;
+		mch_memmove(new_conv_buf, conv_buf, plen);
+		new_conv_buf[plen] = ' ';
+		mch_memmove(new_conv_buf + plen + 1, conv_buf + plen,
+							  convlen - plen + 1);
+		vim_free(conv_buf);
+		conv_buf = new_conv_buf;
+		++convlen;
+		bp = conv_buf + plen;
+		plen = 1;
+	    }
+	    sp += (*mb_ptr2len_check)(sp);
+	    bp += plen;
+	}
+	s = conv_buf;
+	len = convlen;
     }
 
     /*
