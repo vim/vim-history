@@ -743,6 +743,11 @@
 # define FEAT_GUI_TEXTDIALOG
 #endif
 
+/* Mac specific thing: Codewarrior interface. */
+#ifdef FEAT_GUI_MAC
+# define FEAT_CW_EDITOR
+#endif
+
 /*
  * Preferences:
  * ============

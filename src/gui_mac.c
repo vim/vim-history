@@ -60,7 +60,6 @@
 #define USE_AEVENT
 
 /* Compile as CodeWarior External Editor */
-#define FEAT_CW_EDITOR
 #if defined(FEAT_CW_EDITOR) && !defined(USE_AEVENT)
 # define USE_AEVENT /* Need Apple Event Support */
 #endif
@@ -5108,20 +5107,18 @@ gui_mch_show_popupmenu(menu)
 #endif
 }
 
-/*
- *
- */
+#if defined(FEAT_CW_EDITOR) || defined(PROTO)
+/* TODO: Is it need for MACOS_X? (Dany) */
     void
 mch_post_buffer_write (buf_T *buf)
 {
-#ifdef USE_SIOUX
+# ifdef USE_SIOUX
     printf ("Writing Buf...\n");
-#endif
+# endif
     GetFSSpecFromPath (buf->b_ffname, &buf->b_FSSpec);
-#ifdef FEAT_CW_EDITOR
     Send_KAHL_MOD_AE (buf);
-#endif
 }
+#endif
 
 #ifdef FEAT_TITLE
 /*
