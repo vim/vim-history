@@ -3820,10 +3820,11 @@ win_setminheight()
 #ifdef FEAT_MOUSE
 
 /*
- * Status line of curwin is dragged "offset" lines down (negative is up).
+ * Status line of dragwin is dragged "offset" lines down (negative is up).
  */
     void
-win_drag_status_line(offset)
+win_drag_status_line(dragwin, offset)
+    win_T	*dragwin;
     int		offset;
 {
     frame_T	*curfr;
@@ -3833,7 +3834,7 @@ win_drag_status_line(offset)
     int		up;	/* if TRUE, drag status line up, otherwise down */
     int		n;
 
-    fr = curwin->w_frame;
+    fr = dragwin->w_frame;
     curfr = fr;
     if (fr != topframe)		/* more than one window */
     {
@@ -3950,10 +3951,11 @@ win_drag_status_line(offset)
 
 #ifdef FEAT_VERTSPLIT
 /*
- * Separator line of curwin is dragged "offset" lines right (negative is left).
+ * Separator line of dragwin is dragged "offset" lines right (negative is left).
  */
     void
-win_drag_vsep_line(offset)
+win_drag_vsep_line(dragwin, offset)
+    win_T	*dragwin;
     int		offset;
 {
     frame_T	*curfr;
@@ -3962,7 +3964,7 @@ win_drag_vsep_line(offset)
     int		left;	/* if TRUE, drag separator line left, otherwise right */
     int		n;
 
-    fr = curwin->w_frame;
+    fr = dragwin->w_frame;
     if (fr == topframe)		/* only one window (cannot happe?) */
 	return;
     curfr = fr;

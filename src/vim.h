@@ -1388,6 +1388,7 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 # define MOUSE_DID_MOVE		0x04	/* only act when mouse has moved */
 # define MOUSE_SETPOS		0x08	/* only set current mouse position */
 # define MOUSE_MAY_STOP_VIS	0x10	/* may stop Visual mode */
+# define MOUSE_RELEASED		0x20	/* button was released */
 
 # if defined(UNIX) && defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
 #  define CHECK_DOUBLE_CLICK 1	/* Checking for double clicks ourselves. */

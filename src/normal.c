@@ -2413,6 +2413,10 @@ do_mouse(oap, c, dir, count, fixindent)
 	oap->motion_type = MCHAR;
     }
 
+    /* When releasing the button let jump_to_mouse() know. */
+    if (!is_click && !is_drag)
+	jump_flags |= MOUSE_RELEASED;
+
     /*
      * JUMP!
      */
