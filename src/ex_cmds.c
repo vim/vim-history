@@ -1840,7 +1840,7 @@ viminfo_readstring(virp, off, convert)
     *d = NUL;
 
 #ifdef FEAT_MBYTE
-    if (convert && virp->vir_conv.vc_type != CONV_NONE)
+    if (convert && virp->vir_conv.vc_type != CONV_NONE && *retval != NUL)
     {
 	d = string_convert(&virp->vir_conv, retval, NULL);
 	if (d != NULL)
