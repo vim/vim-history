@@ -2151,13 +2151,13 @@ gui_mch_open()
 
     if (found_reverse_arg)
     {
-	gui.def_norm_pixel = gui_mch_get_color((char_u *)"White");
-	gui.def_back_pixel = gui_mch_get_color((char_u *)"Black");
+	gui.def_norm_pixel = gui_get_color((char_u *)"White");
+	gui.def_back_pixel = gui_get_color((char_u *)"Black");
     }
     else
     {
-	gui.def_norm_pixel = gui_mch_get_color((char_u *)"Black");
-	gui.def_back_pixel = gui_mch_get_color((char_u *)"White");
+	gui.def_norm_pixel = gui_get_color((char_u *)"Black");
+	gui.def_back_pixel = gui_get_color((char_u *)"White");
     }
 
     /* Get the colors from the "Normal" and "Menu" group (set in syntax.c or
@@ -2844,7 +2844,6 @@ gui_mch_get_color(char_u * name)
 	{
 	    if (vimnames[i][0] == NULL)
 	    {
-		EMSG2(_("E242: Color name not recognized: %s"), name);
 		name = NULL;
 		break;
 	    }

@@ -1252,9 +1252,9 @@ gui_mch_def_colors()
 	gui.scroll_bg_pixel = gui.scroll_def_bg_pixel;
 #ifdef FEAT_BEVAL
 	gui.tooltip_fg_pixel =
-			gui_mch_get_color((char_u *)gui.rsrc_tooltip_fg_name);
+			gui_get_color((char_u *)gui.rsrc_tooltip_fg_name);
 	gui.tooltip_bg_pixel =
-			gui_mch_get_color((char_u *)gui.rsrc_tooltip_bg_name);
+			gui_get_color((char_u *)gui.rsrc_tooltip_bg_name);
 #endif
     }
 }

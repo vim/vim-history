@@ -3665,7 +3665,7 @@ gui_check_colors()
 gui_set_fg_color(name)
     char_u	*name;
 {
-    gui.norm_pixel = gui_mch_get_color(name);
+    gui.norm_pixel = gui_get_color(name);
     hl_set_fg_color_name(vim_strsave(name));
 }
 
@@ -3673,8 +3673,28 @@ gui_set_fg_color(name)
 gui_set_bg_color(name)
     char_u	*name;
 {
-    gui.back_pixel = gui_mch_get_color(name);
+    gui.back_pixel = gui_get_color(name);
     hl_set_bg_color_name(vim_strsave(name));
+}
+
+/*
+ * Allocate a color by name.
+ * Returns -1 and gives an error message when failed.
+ */
+    guicolor_T
+gui_get_color(name)
+    char_u	*name;
+{
+    guicolor_T	t;
+
+    t = gui_mch_get_color(name);
+    if (t < 0
+#if defined(FEAT_GUI_X11) || defined(FEAT_GUI_GTK)
+	    && gui.in_use
+#endif
+	    )
+	EMSG2(_("E254: Cannot allocate color %s"), name);
+    return t;
 }
 
 /*

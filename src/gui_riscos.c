@@ -1164,7 +1164,6 @@ gui_mch_get_color(char_u *name)
 	int level = (255 * atoi(name + 4)) / 100;
 	return (guicolor_T) grgb(level, level, level);
     }
-    EMSG2(_("E242: Missing color: %s"), name);
     return (guicolor_T) -1;
 }
 

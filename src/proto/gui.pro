@@ -43,6 +43,7 @@ int gui_do_horiz_scroll __ARGS((void));
 void gui_check_colors __ARGS((void));
 void gui_set_fg_color __ARGS((char_u *name));
 void gui_set_bg_color __ARGS((char_u *name));
+guicolor_T gui_get_color __ARGS((char_u *name));
 int gui_get_lightness __ARGS((guicolor_T pixel));
 void gui_new_scrollbar_colors __ARGS((void));
 void gui_focus_change __ARGS((int in_focus));

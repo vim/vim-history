@@ -5939,7 +5939,7 @@ init_highlight(both, reset)
 	 * everything anyway. */
 	return;
 
-    if (TO_LOWER(*p_bg) == 'l')
+    if (*p_bg == 'l')
 	pp = highlight_init_light;
     else
 	pp = highlight_init_dark;
@@ -7108,7 +7108,7 @@ color_name2handle(name)
     if (STRICMP(name, "bg") == 0 || STRICMP(name, "background") == 0)
 	return gui.back_pixel;
 
-    return gui_mch_get_color(name);
+    return gui_get_color(name);
 }
 
 /*
