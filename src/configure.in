@@ -1174,9 +1174,24 @@ AC_TRY_LINK([#include <stdio.h>], [rename("this", "that")],
 	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_RENAME),
 	AC_MSG_RESULT(no))
 
-dnl this generates a warning, because the macro from autoconf is wrong.
-dnl just ignore it.
-AC_CHECK_SIZEOF(int)
+dnl Our own version of AC_CHECK_SIZEOF(int); fixes a bug when sizeof() can't
+dnl be printed with "%d", and avoids a warning for cross-compiling.
+
+AC_MSG_CHECKING(size of int)
+AC_CACHE_VAL(ac_cv_sizeof_int,
+	[AC_TRY_RUN([#include <stdio.h>
+		main()
+		{
+		  FILE *f=fopen("conftestval", "w");
+		  if (!f) exit(1);
+		  fprintf(f, "%d\n", (int)sizeof(int));
+		  exit(0);
+		}],
+	    ac_cv_sizeof_int=`cat conftestval`,
+	    ac_cv_sizeof_int=0,
+	    AC_MSG_ERROR(failed to compile test program))])
+AC_MSG_RESULT($ac_cv_sizeof_int)
+AC_DEFINE_UNQUOTED(SIZEOF_INT, $ac_cv_sizeof_int)
 
 AC_MSG_CHECKING(whether memmove/bcopy/memcpy handle overlaps)
 [bcopy_test_prog='
