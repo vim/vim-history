@@ -2454,9 +2454,11 @@ mch_call_shell(cmd, options)
 	     * There is no type cast for the argv, because the type may be
 	     * different on different machines. This may cause a warning
 	     * message with strict compilers, don't worry about it.
+	     * Call _exit() instead of exit() to avoid closing the connection
+	     * to the X server (esp. with GTK, which uses atexit()).
 	     */
 	    execvp(argv[0], argv);
-	    exit(EXEC_FAILED);	    /* exec failed, return failure code */
+	    _exit(EXEC_FAILED);	    /* exec failed, return failure code */
 	}
 	else			/* parent */
 	{
