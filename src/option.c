@@ -6701,6 +6701,15 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 	    ml_open_files();
     }
 
+    /* sync undo before 'undolevels' changes */
+    else if (pp == &p_ul)
+    {
+	/* use the old value, otherwise u_sync() may not work properly */
+	p_ul = old_value;
+	u_sync();
+	p_ul = value;
+    }
+
     /*
      * Check the bounds for numeric options here
      */
