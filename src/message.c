@@ -26,7 +26,6 @@ static void msg_home_replace_attr __ARGS((char_u *fname, int attr));
 #ifdef FEAT_MBYTE
 static char_u *screen_puts_mbyte __ARGS((char_u *s, int l, int attr));
 #endif
-static int  msg_use_printf __ARGS((void));
 static void msg_screen_putchar __ARGS((int c, int attr));
 static int  msg_check_screen __ARGS((void));
 static void redir_write __ARGS((char_u *s));
@@ -1809,7 +1808,7 @@ msg_puts_attr(s, attr)
  * different, e.g. for Win32 console) or we just don't know where the
  * cursor is.
  */
-    static int
+    int
 msg_use_printf()
 {
     return (!msg_check_screen()

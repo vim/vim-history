@@ -2340,7 +2340,18 @@ mch_exit(r)
 	if (!swapping_screen() || newline_on_exit)
 	{
 	    if (newline_on_exit || msg_didout)
-		out_char('\n');
+	    {
+		/* Make sure the newline goes to the same stream as the text */
+		if (msg_use_printf())
+		{
+		    if (info_message)
+			mch_msg("\r\n");
+		    else
+			mch_errmsg("\r\n");
+		}
+		else
+		    out_char('\n');
+	    }
 	    else
 	    {
 		restore_cterm_colors();	/* get original colors back */

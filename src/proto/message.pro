@@ -35,6 +35,7 @@ void msg_puts_long __ARGS((char_u *longstr));
 void msg_puts_long_attr __ARGS((char_u *longstr, int attr));
 void msg_puts_long_len_attr __ARGS((char_u *longstr, int len, int attr));
 void msg_puts_attr __ARGS((char_u *s, int attr));
+int msg_use_printf __ARGS((void));
 void mch_errmsg __ARGS((char *str));
 void mch_msg __ARGS((char *str));
 void msg_moremsg __ARGS((int full));
