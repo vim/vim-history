@@ -2565,17 +2565,7 @@ mouse_comp_pos(win, rowp, colp, lnump)
 #endif
 	    count = plines_win(win, lnum, TRUE);
 	if (count > row)
-	{
-	    /* Position is in this buffer line.  Compute the column
-	     * without wrapping. */
-	    off = win_col_off(win) - win_col_off2(win);
-	    if (col < off)
-		col = off;
-	    col += row * (W_WIDTH(win) - off);
-	    /* add skip column (for long wrapping line) */
-	    col += win->w_skipcol;
-	    break;
-	}
+	    break;	/* Position is in this buffer line. */
 #ifdef FEAT_FOLDING
 	(void)hasFoldingWin(win, lnum, NULL, &lnum, TRUE, NULL);
 #endif
@@ -2586,6 +2576,17 @@ mouse_comp_pos(win, rowp, colp, lnump)
 	}
 	row -= count;
 	++lnum;
+    }
+
+    if (!retval)
+    {
+	/* Compute the column without wrapping. */
+	off = win_col_off(win) - win_col_off2(win);
+	if (col < off)
+	    col = off;
+	col += row * (W_WIDTH(win) - off);
+	/* add skip column (for long wrapping line) */
+	col += win->w_skipcol;
     }
 
     if (!win->w_p_wrap)
