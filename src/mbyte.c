@@ -210,7 +210,9 @@ enc_canon_table[] =
     {"euc-tw",		ENC_DBCS,		DBCS_CHTU},
 #define IDX_BIG5	34
     {"big5",		ENC_DBCS,		DBCS_CHT},
-#define IDX_COUNT	35
+#define IDX_CP1251	35
+    {"cp1251",		ENC_8BIT,		1251},
+#define IDX_COUNT	36
 };
 
 /*
