@@ -86,6 +86,9 @@
 /* Define to `unsigned' if <sys/types.h> doesn't define.  */
 #undef dev_t
 
+/* Define to `unsigned long' if <sys/types.h> doesn't define.  */
+#undef rlim_t
+
 /* Define to `struct sigaltstack' if <signal.h> doesn't define.  */
 #undef stack_t
 

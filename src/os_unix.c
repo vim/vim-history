@@ -428,6 +428,7 @@ mch_total_mem(special)
     struct rlimit	rlp;
 
     if (getrlimit(RLIMIT_DATA, &rlp) == 0
+	    && rlp.rlim_cur < ((rlim_t)1 << (sizeof(long_u) * 8 - 1))
 #  ifdef RLIM_INFINITY
 	    && rlp.rlim_cur != RLIM_INFINITY
 #  endif
@@ -544,8 +545,10 @@ get_stack_limit()
     struct rlimit	rlp;
     int			i;
 
-    /* Set the stack limit to 15/16 of the allowable size. */
+    /* Set the stack limit to 15/16 of the allowable size.  Skip this when the
+     * limit doesn't fit in a long (rlim_cur might be "long long"). */
     if (getrlimit(RLIMIT_STACK, &rlp) == 0
+	    && rlp.rlim_cur < ((rlim_t)1 << (sizeof(long_u) * 8 - 1))
 #  ifdef RLIM_INFINITY
 	    && rlp.rlim_cur != RLIM_INFINITY
 #  endif
