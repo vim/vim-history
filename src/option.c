@@ -327,6 +327,15 @@ static struct vimoption
 			    (char_u *)NULL, PV_NONE,
 #endif
 			    {(char_u *)FALSE, (char_u *)0L}},
+    {"ambiwidth",  "ambw",  P_STRING|P_VI_DEF|P_RCLR,
+#if defined(FEAT_MBYTE) && defined(FEAT_EVAL)
+			    (char_u *)&p_ambw, PV_NONE,
+			    {(char_u *)"single", (char_u *)0L}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)0L, (char_u *)0L}
+#endif
+			    },
 #if defined(FEAT_NETBEANS_INTG) || defined(FEAT_SUN_WORKSHOP)
     {"autochdir",  "acd",   P_BOOL|P_VI_DEF,
 			    (char_u *)&p_acd, PV_NONE,
@@ -2292,6 +2301,9 @@ static struct vimoption
 
 #define PARAM_COUNT (sizeof(options) / sizeof(struct vimoption))
 
+#ifdef FEAT_MBYTE
+static char *(p_ambw_values[]) = {"single", "double", NULL};
+#endif
 static char *(p_bg_values[]) = {"light", "dark", NULL};
 static char *(p_bkc_values[]) = {"yes", "auto", "no", NULL};
 static char *(p_nf_values[]) = {"octal", "hex", "alpha", NULL};
@@ -2741,6 +2753,11 @@ set_option_default(opt_idx, opt_flags, compatible)
 								*(int *)varp;
 	}
     }
+
+#ifdef FEAT_EVAL
+    /* Remember where the option was set. */
+    options[opt_idx].scriptID = current_SID;
+#endif
 }
 
 /*
@@ -4475,6 +4492,15 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     else if (varp == &p_sbo)
     {
 	if (check_opt_strings(p_sbo, p_scbopt_values, TRUE) != OK)
+	    errmsg = e_invarg;
+    }
+#endif
+
+    /* 'ambiwidth' */
+#ifdef FEAT_MBYTE
+    else if (varp == &p_ambw)
+    {
+	if (check_opt_strings(p_ambw, p_ambw_values, FALSE) != OK)
 	    errmsg = e_invarg;
     }
 #endif

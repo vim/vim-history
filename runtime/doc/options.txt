@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.1.  Last change: 2003 Mar 08
+*options.txt*   For Vim version 6.1.  Last change: 2003 Apr 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -585,6 +585,37 @@ A jump table for the options with a short description can be found at |Q_op|.
 	is useful to start the vim in native mode i.e. English (left-to-right
 	mode) and have default second language Farsi or Hebrew (right-to-left
 	mode).  See |farsi.txt|.
+
+						*'ambiwidth'* *'ambw'*
+'ambiwidth' 'ambw'	string (default: "single")
+			global
+			{not in Vi}
+			{only available when compiled with the |+multi_byte|
+			feature}
+	Only effective when 'encoding' is "utf-8" or another Unicode encoding.
+	Tells Vim what to do with characters with East Asian Width Class
+	Ambiguous (such as Euro, Registered Sign, Copyright Sign, Greek
+	letters, Cyrillic letters).
+
+	There are currently two possible values:
+	"single":	Use the same width as characters in US-ASCII. This is
+			expected by most users.
+	"double":	Use twice the width of ASCII characters.
+
+	There are a number of CJK fonts for which the width of glyphs for
+	those characters are solely based on how many octets they take in 
+	legacy/traditional CJK encodings.  In those encodings, Euro,
+	Registered sign, Greek/Cyrillic letters are represented by two octets,
+	therefore those fonts have "wide" glyphs for them. This is also
+	true of some line drawing characters used to make tables in text
+	file. Therefore, when a CJK font is used for GUI vim or
+	vim is running inside a terminal (emulators) that uses a CJK font
+	(or vim is run inside an xterm invoked with "-cjkwidth" option.),
+	this option should be set to "double" to match the width perceived
+	by Vim with the width of glyphs in the font.  Perhaps it also has 
+	to be set to "double" under CJK Windows 9x/ME or Windows 2k/XP 
+	when the system locale is set to one of CJK locales.  See Unicode 
+	Standard Annex #11 (http://www.unicode.org/reports/tr11).
 
 			*'autochdir'* *'acd'* *'noatuochdir'* *'noacd'*
 'autochdir' 'acd'	boolean (default off)
