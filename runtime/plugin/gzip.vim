@@ -1,6 +1,6 @@
 " Vim plugin for editing compressed files.
 " Maintainer: Bram Moolenaar <Bram@vim.org>
-" Last Change: 2002 May 06
+" Last Change: 2002 Aug 21
 
 " Exit quickly when:
 " - this plugin was already loaded
@@ -68,11 +68,12 @@ fun s:read(cmd)
   execute "silent '[,']w " . tmpe
   " uncompress the temp file: call system("gzip -d tmp.gz")
   call system(a:cmd . " " . tmpe)
-  " delete the compressed lines
+  " delete the compressed lines; remember the line number
+  let l = line("'[") - 1
   '[,']d
   " read in the uncompressed lines "'[-1r tmp"
   setlocal nobin
-  execute "silent '[-1r " . tmp
+  execute "silent " . l . "r " . tmp
   " if buffer became empty, delete trailing blank line
   if empty
     silent $delete
