@@ -1619,7 +1619,8 @@ push_raw_key (s, len)
 }
 #endif
 
-#if defined(FEAT_GUI) || defined(PROTO)
+#if defined(FEAT_GUI) || defined(FEAT_EVAL) || defined(FEAT_EX_EXTRA) \
+	|| defined(PROTO)
 /* Remove everything from the input buffer.  Called when ^C is found */
     void
 trash_input_buf()
