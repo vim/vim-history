@@ -937,10 +937,12 @@ close_window(win, free_buf)
     win_free(win);
 
     /* Make sure curwin isn't invalid.  It can cause severe trouble when
-     * printing an error message. */
+     * printing an error message.  For win_equal() curbuf needs to be valid
+     * too. */
     if (win == curwin)
     {
 	curwin = wp;
+	curbuf = wp->w_buffer;
 	close_curwin = TRUE;
     }
     if (p_ea)
