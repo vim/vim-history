@@ -307,6 +307,10 @@ EXTERN vimmenu_T	*root_menu INIT(= NULL);
 EXTERN int	sys_menu INIT(= FALSE);
 #endif
 
+/* While redrawing the screen this flag is set.  It means the screen size
+ * ('lines' and 'rows') must not be changed. */
+EXTERN int	updating_screen INIT(= FALSE);
+
 #ifdef FEAT_GUI
 /* Menu item just selected, set by check_termcode() */
 EXTERN vimmenu_T	*current_menu;
@@ -333,10 +337,9 @@ EXTERN char	*font_argument INIT(= NULL);
 EXTERN int	hold_gui_events INIT(= 0);
 
 /*
- * While the screen is being redrawn, must not handle resizing the shell.
- * Remember the new size, and call gui_resize_shell() later.
+ * When resizing the shell is postponed, remember the new size, and call
+ * gui_resize_shell() later.
  */
-EXTERN int	updating_screen INIT(= FALSE);
 EXTERN int	new_pixel_width INIT(= 0);
 EXTERN int	new_pixel_height INIT(= 0);
 

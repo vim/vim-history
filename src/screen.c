@@ -345,9 +345,7 @@ update_screen(type)
 	return;
     }
 
-#ifdef FEAT_GUI
     updating_screen = TRUE;
-#endif
 #ifdef FEAT_SYN_HL
     ++display_tick;	    /* let syntax code know we're in a next round of
 			     * display updating */
@@ -523,8 +521,8 @@ update_screen(type)
 	curbuf->b_mod_set = FALSE;
 #endif
 
-#ifdef FEAT_GUI
     updating_screen = FALSE;
+#ifdef FEAT_GUI
     gui_may_resize_shell();
 #endif
 
@@ -567,6 +565,7 @@ update_debug_sign(buf, lnum)
 #ifdef FEAT_FOLDING
     win_foldinfo.fi_level = 0;
 #endif
+    updating_screen = TRUE;
 
 #ifdef FEAT_GUI
     /* Remove the cursor before starting to do anything, because scrolling may
@@ -616,6 +615,11 @@ update_debug_sign(buf, lnum)
 	gui_update_cursor(FALSE, FALSE);
 	gui_update_scrollbars(FALSE);
     }
+#endif
+
+    updating_screen = FALSE;
+#ifdef FEAT_GUI
+    gui_may_resize_shell();
 #endif
 }
 #endif
