@@ -695,6 +695,7 @@ eval_to_number(expr)
     return retval;
 }
 
+#if (defined(FEAT_USR_CMDS) && defined(FEAT_CMDL_COMPL)) || defined(PROTO)
 /*
  * Call some vimL function and return the result as a string
  * Uses argv[argc] for the function arguments.
@@ -757,6 +758,7 @@ call_vim_function(func, argc, argv, safe)
     }
     return retval;
 }
+#endif
 
 /*
  * Save the current function call pointer, and set it to NULL.

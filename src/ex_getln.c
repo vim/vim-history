@@ -93,7 +93,9 @@ static int	ExpandFromContext __ARGS((expand_T *xp, char_u *, int *, char_u ***, 
 static int	glob_in_path_prefix __ARGS((expand_T *xp));
 #ifdef FEAT_CMDL_COMPL
 static int	ExpandRTDir __ARGS((char_u *pat, int *num_file, char_u ***file, char *dirname));
+# if defined(FEAT_USR_CMDS) && defined(FEAT_EVAL)
 static int	ExpandUserDefined __ARGS((expand_T *xp, regmatch_T *regmatch, int *num_file, char_u ***file));
+# endif
 #endif
 
 #ifdef FEAT_CMDWIN
@@ -3733,8 +3735,10 @@ ExpandFromContext(xp, pat, num_file, file, options)
 	ret = ExpandSettings(xp, &regmatch, num_file, file);
     else if (xp->xp_context == EXPAND_MAPPINGS)
 	ret = ExpandMappings(&regmatch, num_file, file);
+# if defined(FEAT_USR_CMDS) && defined(FEAT_EVAL)
     else if (xp->xp_context == EXPAND_USER_DEFINED)
 	ret = ExpandUserDefined(xp, &regmatch, num_file, file);
+# endif
     else
     {
 	static struct expgen
@@ -3872,6 +3876,7 @@ ExpandGeneric(xp, regmatch, num_file, file, func)
     return OK;
 }
 
+# if defined(FEAT_USR_CMDS) && defined(FEAT_EVAL)
 /*
  * Expand names with a function defined by the user.
  */
@@ -3882,7 +3887,6 @@ ExpandUserDefined(xp, regmatch, num_file, file)
     int		*num_file;
     char_u	***file;
 {
-#ifdef FEAT_EVAL
     char_u	*args[3];
     char_u	*all;
     char_u	*s;
@@ -3890,6 +3894,7 @@ ExpandUserDefined(xp, regmatch, num_file, file)
     char_u      keep;
     char_u      num[50];
     garray_T	ga;
+    int		save_current_SID = current_SID;
 
     if (xp->xp_arg == NULL || xp->xp_arg[0] == '\0')
 	return FAIL;
@@ -3903,7 +3908,9 @@ ExpandUserDefined(xp, regmatch, num_file, file)
     args[1] = ccline.cmdbuff;
     args[2] = num;
 
+    current_SID = xp->xp_scriptID;
     all = call_vim_function(xp->xp_arg, 3, args, FALSE);
+    current_SID = save_current_SID;
     ccline.cmdbuff[ccline.cmdlen] = keep;
     if (all == NULL)
 	return FAIL;
@@ -3940,10 +3947,8 @@ ExpandUserDefined(xp, regmatch, num_file, file)
     *file = ga.ga_data;
     *num_file = ga.ga_len;
     return OK;
-#else
-    return FAIL;
-#endif
 }
+#endif
 
 /*
  * Expand color scheme names: 'runtimepath'/colors/{pat}.vim

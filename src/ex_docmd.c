@@ -32,7 +32,9 @@ typedef struct ucmd
     long	uc_def;		/* The default value for a range/count */
     scid_T	uc_scriptID;	/* SID where the command was defined */
     int		uc_compl;	/* completion type */
+# if defined(FEAT_EVAL) && defined(FEAT_CMDL_COMPL)
     char_u	*uc_compl_arg;	/* completion argument if any */
+# endif
 } ucmd_T;
 
 #define UC_BUFFER	1	/* -buffer: local to current buffer */
@@ -2813,7 +2815,9 @@ set_one_cmd_context(xp, buff)
     xp->xp_pattern = buff;
     xp->xp_context = EXPAND_COMMANDS;	/* Default until we get past command */
     xp->xp_backslash = XP_BS_NONE;
+#if defined(FEAT_USR_CMDS) && defined(FEAT_EVAL) && defined(FEAT_CMDL_COMPL)
     xp->xp_arg = NULL;
+#endif
 
 /*
  * 2. skip comment lines and leading space, colons or bars
@@ -2883,8 +2887,8 @@ set_one_cmd_context(xp, buff)
 					 cmdidx = (cmdidx_T)((int)cmdidx + 1))
 	    if (STRNCMP(cmdnames[(int)cmdidx].cmd_name, cmd, (size_t)i) == 0)
 		break;
-#ifdef FEAT_USR_CMDS
 
+#ifdef FEAT_USR_CMDS
 	if (cmd[0] >= 'A' && cmd[0] <= 'Z')
 	{
 	    while (ASCII_ISALNUM(*p) || *p == '*')	/* Allow * wild card */
@@ -2955,7 +2959,10 @@ set_one_cmd_context(xp, buff)
 			    argt = uc->uc_argt;
 #ifdef FEAT_CMDL_COMPL
 			    compl = uc->uc_compl;
+# ifdef FEAT_EVAL
 			    xp->xp_arg = uc->uc_compl_arg;
+			    xp->xp_scriptID = uc->uc_scriptID;
+# endif
 #endif
 			    /* Do not search for further abbreviations
 			     * if this is an exact match
@@ -4662,16 +4669,20 @@ uc_add_command(name, name_len, rep, argt, def, flags, compl, compl_arg, force)
     cmd->uc_argt = argt;
     cmd->uc_def = def;
     cmd->uc_compl = compl;
-    cmd->uc_compl_arg = compl_arg;
 #ifdef FEAT_EVAL
     cmd->uc_scriptID = current_SID;
+# ifdef FEAT_CMDL_COMPL
+    cmd->uc_compl_arg = compl_arg;
+# endif
 #endif
 
     return OK;
 
 fail:
     vim_free(rep_buf);
+#if defined(FEAT_EVAL) && defined(FEAT_CMDL_COMPL)
     vim_free(compl_arg);
+#endif
     return FAIL;
 }
 
@@ -4688,7 +4699,7 @@ static struct
     {EXPAND_AUGROUP, "augroup"},
     {EXPAND_BUFFERS, "buffer"},
     {EXPAND_COMMANDS, "command"},
-#ifdef FEAT_EVAL
+#if defined(FEAT_EVAL) && defined(FEAT_CMDL_COMPL)
     {EXPAND_USER_DEFINED, "custom"},
 #endif
     {EXPAND_DIRECTORIES, "dir"},
@@ -4998,18 +5009,24 @@ invalid_count:
 		EMSG2(_("E180: Invalid complete value: %s"), val);
 		return FAIL;
 	    }
+#if defined(FEAT_EVAL) && defined(FEAT_CMDL_COMPL)
+	    if (*compl != EXPAND_USER_DEFINED && arg != NULL)
+#else
+	    if (arg != NULL)
+#endif
+	    {
+		EMSG(_("E468: Completion argument only allowed for custom completion"));
+		return FAIL;
+	    }
+#if defined(FEAT_EVAL) && defined(FEAT_CMDL_COMPL)
 	    if (*compl == EXPAND_USER_DEFINED && arg == NULL)
 	    {
 		EMSG(_("E467: Custom completion requires a function argument"));
 		return FAIL;
 	    }
-	    if (*compl != EXPAND_USER_DEFINED && arg != NULL)
-	    {
-		EMSG(_("E468: Completion argument only allowed for custom completion"));
-		return FAIL;
-	    }
 	    if (arg != NULL)
 		*compl_arg = vim_strnsave(arg, (int)arglen);
+#endif
 	}
 	else
 	{
@@ -5111,7 +5128,9 @@ uc_clear(gap)
 	cmd = USER_CMD_GA(gap, i);
 	vim_free(cmd->uc_name);
 	vim_free(cmd->uc_rep);
+# if defined(FEAT_EVAL) && defined(FEAT_CMDL_COMPL)
 	vim_free(cmd->uc_compl_arg);
+# endif
     }
     ga_clear(gap);
 }
@@ -5148,7 +5167,9 @@ ex_delcommand(eap)
 
     vim_free(cmd->uc_name);
     vim_free(cmd->uc_rep);
+# if defined(FEAT_EVAL) && defined(FEAT_CMDL_COMPL)
     vim_free(cmd->uc_compl_arg);
+# endif
 
     --gap->ga_len;
     ++gap->ga_room;

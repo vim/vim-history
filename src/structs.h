@@ -383,7 +383,10 @@ typedef struct expand
 {
     int		xp_context;		/* type of expansion */
     char_u	*xp_pattern;		/* start of item to expand */
-    char_u	*xp_arg;		/* generic expansion argument */
+#if defined(FEAT_USR_CMDS) && defined(FEAT_EVAL) && defined(FEAT_CMDL_COMPL)
+    char_u	*xp_arg;		/* completion function */
+    int		xp_scriptID;		/* SID for completion function */
+#endif
     int		xp_backslash;		/* one of the XP_BS_ values */
     int		xp_numfiles;		/* number of files found by
 						    file name completion */
