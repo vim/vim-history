@@ -4855,6 +4855,12 @@ vim_rename(from, to)
 #endif
 
     /*
+     * When the names are identical, there is nothing to do.
+     */
+    if (fnamecmp(from, to) == 0)
+	return 0;
+
+    /*
      * First delete the "to" file, this is required on some systems to make
      * the mch_rename() work, on other systems it makes sure that we don't
      * have two files when the mch_rename() fails.
@@ -4863,9 +4869,10 @@ vim_rename(from, to)
 #ifdef AMIGA
     /*
      * With MSDOS-compatible filesystems (crossdos, messydos) it is possible
-     * that the name of the "to" file is the same as the "from" file. To
-     * avoid the chance of accidently deleting the "from" file (horror!) we
-     * lock it during the remove.
+     * that the name of the "to" file is the same as the "from" file, even
+     * though the names are different. To avoid the chance of accidently
+     * deleting the "from" file (horror!) we lock it during the remove.
+     *
      * When used for making a backup before writing the file: This should not
      * happen with ":w", because startscript() should detect this problem and
      * set buf->b_shortname, causing modname() to return a correct ".bak" file
