@@ -2069,7 +2069,7 @@ cls()
     if (c == ' ' || c == '\t' || c == NUL)
 	return 0;
 #ifdef MULTI_BYTE
-    if (is_dbcs && IsLeadByte(c))
+    if (is_dbcs && c > 0xff)
     {
 	/* process code leading/trailing bytes */
 	unsigned char pcode_lb = c & 0xff;
@@ -2084,7 +2084,7 @@ cls()
 	    lb = pcode_lb;
 	    tb = pcode_tb;
 	    /* convert process code to JIS */
-#ifdef WIN32
+# if defined(WIN32) || defined(macintosh)
 	    /* process code is SJIS */
 	    if (lb <= 0x9f)
 		lb = (lb - 0x81) * 2 + 0x21;
@@ -2099,7 +2099,7 @@ cls()
 		tb -= 0x7e;
 		lb += 1;
 	    }
-#else
+# else
 	    /*
 	     * XXX:  Code page identification can not use with all
 	     *       system! So, some other encoding information
@@ -2112,7 +2112,7 @@ cls()
 	    /* assume process code is JAPANESE-EUC */
 	    lb &= 0x7f;
 	    tb &= 0x7f;
-#endif
+# endif
 	    /* exceptions */
 	    switch (lb << 8 | tb)
 	    {

@@ -351,9 +351,16 @@ edit(cmdchar, startln, count)
 	update_curswant();
 	if (	   ((o_eol && curwin->w_cursor.lnum == o_lnum)
 		    || curwin->w_curswant > curwin->w_virtcol)
-		&& *(ptr = ml_get_curline() + curwin->w_cursor.col) != NUL
-		&& *(ptr + 1) == NUL)
-	    ++curwin->w_cursor.col;
+		&& *(ptr = ml_get_curline() + curwin->w_cursor.col) != NUL)
+	{
+	    if (ptr[1] == NUL)
+		++curwin->w_cursor.col;
+#ifdef MULTI_BYTE
+	    else if (is_dbcs && ptr[2] == NUL && IsLeadByte(ptr[0])
+		    && IsTrailByte(ptr - curwin->w_cursor.col, ptr + 1))
+		curwin->w_cursor.col += 2;
+#endif
+	}
     }
     else
     {
