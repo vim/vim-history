@@ -5656,7 +5656,9 @@ ex_shell(eap)
     do_shell(NULL, 0);
 }
 
-#if (defined(FEAT_WINDOWS) && defined(HAVE_DROP_FILE)) || defined(PROTO)
+#if (defined(FEAT_WINDOWS) && defined(HAVE_DROP_FILE)) \
+	|| (defined(FEAT_GUI_GTK) && defined(FEAT_DND)) \
+	|| defined(PROTO)
 
 /*
  * Handle a file drop. The code is here because a drop is *nearly* like an
@@ -5702,16 +5704,20 @@ handle_drop(filec, filev, split)
     }
     if (split)
     {
+# ifdef FEAT_WINDOWS
 	if (win_split(0, 0) == FAIL)
 	    return;
-# ifdef FEAT_SCROLLBIND
+#  ifdef FEAT_SCROLLBIND
 	curwin->w_p_scb = FALSE;
-# endif
+#  endif
 
 	/* When splitting the window, create a new alist.  Otherwise the
 	 * existing one is overwritten. */
 	alist_unlink(curwin->w_alist);
 	alist_new();
+# else
+	return;	    /* can't split, always fail */
+# endif
     }
 
     /*
