@@ -1060,7 +1060,16 @@ catch_signals(func_deadly, func_other)
 	    /* Setup to use the alternate stack for the signal function. */
 	    sa.sa_handler = func_deadly;
 	    sigemptyset(&sa.sa_mask);
+# if defined(__linux__) && defined(_REENTRANT)
+	    /* On Linux, with glibc compiled for kernel 2.2, there is a bug in
+	     * thread handling in combination with using the alternate stack:
+	     * pthread library functions try to use the stack pointer to
+	     * identify the current thread, causing a SEGV signal, which
+	     * recursively calls deathtrap() and hangs. */
+	    sa.sa_flags = 0;
+# else
 	    sa.sa_flags = SA_ONSTACK;
+# endif
 	    sigaction(signal_info[i].sig, &sa, NULL);
 #else
 # if defined(HAVE_SIGALTSTACK) && defined(HAVE_SIGVEC)
