@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0.  Last change: 2001 Sep 11
+*change.txt*    For Vim version 6.0.  Last change: 2002 Jan 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -640,12 +640,16 @@ For the definition of a pattern, see |pattern|.
 
 						*sub-replace-special*
 When the {string} starts with "\=" it is evaluated as an expression.  The
-special meaning for characters as mentioned below does not apply then.
-The whole matched text can be accessed with "submatch(0)".  The text matched
-with the first pair of () with "submatch(1)".  Likewise for further
+special meaning for characters as mentioned below does not apply then, except
+"<CR>", "\<CR>" and "\\".  Thus in the result of the expression you need to
+use two backslashes get one, put a backslash before a <CR> you want to insert
+and use a <CR> without a backslash where you want to break the line.
+   The whole matched text can be accessed with "submatch(0)".  The text
+matched with the first pair of () with "submatch(1)".  Likewise for further
 sub-matches in ().
-Be careful: The separation character must not appear in the expression!
-Consider using a character like "@" or "|".
+   Be careful: The separation character must not appear in the expression!
+Consider using a character like "@" or "|".  There is no problem if the result
+of the expression contains the separation character.
 Example: >
 	:s@\n@\="\r" . expand("$HOME") . "\r"@
 This replaces an end-of-line with a new line containing the value of $HOME.
@@ -663,9 +667,9 @@ magic	nomagic	  action    ~
   ~	  \~	  replaced with the {string} of the previous substitute
  \~	   ~	  replaced with ~ 
       \u	  next character made uppercase
-      \U	  following characters made uppercase
+      \U	  following characters made uppercase, until \E
       \l	  next character made lowercase
-      \L	  following characters made lowercase
+      \L	  following characters made lowercase, until \E
       \e	  end of \u, \U, \l and \L (NOTE: not <Esc>!)
       \E	  end of \u, \U, \l and \L
       <CR>	  split line in two at this point (Type the <CR> as CTRL-V

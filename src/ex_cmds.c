@@ -3548,8 +3548,10 @@ do_sub(eap)
     /*
      * ~ in the substitute pattern is replaced with the old pattern.
      * We do it here once to avoid it to be replaced over and over again.
+     * But don't do it when it starts with "\=", then it's an expression.
      */
-    sub = regtilde(sub, p_magic);
+    if (!(sub[0] == '\\' && sub[1] == '='))
+	sub = regtilde(sub, p_magic);
 
     /*
      * Check for a match on each line.
