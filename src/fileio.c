@@ -5371,16 +5371,26 @@ vim_tempname(extra_char)
 #endif
 		    if (r == 0)
 		    {
-			/* Directory was created, use this name. */
+			char_u	*buf;
+
+			/* Directory was created, use this name.
+			 * Expand to full path; When using the current
+			 * directory a ":cd" would confuse us. */
+			buf = alloc((unsigned)MAXPATHL + 1);
+			if (buf != NULL)
+			{
+			    if (vim_FullName(itmp, buf, MAXPATHL, FALSE)
+								      == FAIL)
+				STRCPY(buf, itmp);
 # ifdef __EMX__
-			if (vim_strchr(itmp, '/') != NULL)
-			    STRCAT(itmp, "/");
-			else
+			    if (vim_strchr(buf, '/') != NULL)
+				STRCAT(buf, "/");
+			    else
 # endif
-			    add_pathsep(itmp);
-			/* Use the full path; When using the current directory
-			 * a ":cd" would confuse us. */
-			vim_tempdir = FullName_save(itmp, FALSE);
+				add_pathsep(buf);
+			    vim_tempdir = vim_strsave(buf);
+			    vim_free(buf);
+			}
 			break;
 		    }
 # ifdef EEXIST
