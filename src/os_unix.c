@@ -2287,8 +2287,25 @@ mch_isdir(name)
 }
 
 #if defined(FEAT_EVAL) || defined(PROTO)
+
+static int executable_file __ARGS((char_u *name));
+
 /*
- * Return 1 if "name" can be executed, 0 if not.
+ * Return 1 if "name" is an executable file, 0 if not or it doesn't exist.
+ */
+    static int
+executable_file(name)
+    char_u	*name;
+{
+    struct stat	st;
+
+    if (stat((char *)name, &st))
+	return 0;
+    return S_ISREG(st.st_mode) && mch_access((char *)name, X_OK) == 0;
+}
+
+/*
+ * Return 1 if "name" can be found in $PATH and executed, 0 if not.
  * Return -1 if unknown.
  */
     int
@@ -2296,25 +2313,49 @@ mch_can_exe(name)
     char_u	*name;
 {
     char_u	*buf;
-    char_u	*p;
+    char_u	*p, *e;
     int		retval;
 
-#ifdef VMS
-    /* TODO */
-    return -1;
-#endif
+    /* If it's an absolute or relative path don't need to use $PATH. */
+    if (mch_isFullName(name) || (name[0] == '.' && (name[1] == '/'
+				      || (name[1] == '.' && name[2] == '/'))))
+	return executable_file(name);
 
-    buf = alloc((unsigned)STRLEN(name) + 7);
+    p = (char_u *)getenv("PATH");
+    if (p == NULL || *p == NUL)
+	return -1;
+    buf = alloc((unsigned)(STRLEN(name) + STRLEN(p) + 2));
     if (buf == NULL)
 	return -1;
-    sprintf((char *)buf, "which %s", name);
-    p = get_cmd_output(buf, SHELL_SILENT);
+
+    /*
+     * Walk through all entries in $PATH to check if "name" exists there and
+     * is an executable file.
+     */
+    for (;;)
+    {
+	e = (char_u *)strchr((char *)p, ':');
+	if (e == NULL)
+	    e = p + STRLEN(p);
+	if (e - p <= 1)		/* empty entry means current dir */
+	    STRCPY(buf, "./");
+	else
+	{
+	    STRNCPY(buf, p, e - p);
+	    buf[e - p] = NUL;
+	    add_pathsep(buf);
+	}
+	STRCAT(buf, name);
+	retval = executable_file(buf);
+	if (retval == 1)
+	    break;
+
+	if (*e != ':')
+	    break;
+	p = e + 1;
+    }
+
     vim_free(buf);
-    if (p == NULL)
-	return -1;
-    /* result can be: "name: Command not found" */
-    retval = (*p != NUL && strstr((char *)p, "not found") == NULL);
-    vim_free(p);
     return retval;
 }
 #endif
