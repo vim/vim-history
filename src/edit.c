@@ -3986,7 +3986,9 @@ get_last_insert_save()
 echeck_abbr(c)
     int c;
 {
-    if (p_paste || no_abbr)	    /* no abbreviations or in paste mode */
+    /* Don't check for abbreviation in paste mode, when disabled and just
+     * after moving around with cursor keys. */
+    if (p_paste || no_abbr || arrow_used)
 	return FALSE;
 
     return check_abbr(c, ml_get_curline(), curwin->w_cursor.col,
