@@ -4,7 +4,7 @@
 # This compiles Vim as a Windows application.  If you want Vim to run as a
 # Cygwin application use the Makefile (just like on Unix).
 #
-# Last updated by Dan Sharp.  Last Change: 2002 Nov 2
+# Last updated by Dan Sharp.  Last Change: 2003 Jan 19
 #
 # GUI		no or yes: set to yes if you want the GUI version (yes)
 # PERL		define to path to Perl dir to get Perl support (not defined)
@@ -61,7 +61,7 @@ endif
 ### See feature.h for a list of optionals.
 ### Any other defines can be included here.
 
-DEFINES = -D__CYGWIN__ -DHAVE_PATHDEF -DFEAT_$(FEATURES)
+DEFINES = -DHAVE_PATHDEF -DFEAT_$(FEATURES)
 INCLUDES = -mcpu=$(CPUNR) -march=$(ARCH)
 
 #>>>>> name of the compiler and linker, name of lib directory
@@ -165,6 +165,8 @@ endif
 ##############################
 ifeq (no, $(USEDLL))
 INCLUDES += -mno-cygwin
+else
+DEFINES += -D__CYGWIN__
 endif
 
 ##############################
@@ -172,16 +174,6 @@ ifeq (yes, $(POSTSCRIPT))
 DEFINES += -DMSWINPS
 endif
 
-##############################
-# OLE does not work with the current (2.0-1) w32api headers in Cygwin.  They
-# define DeregisterTypeLib instead of UnRegisterTypeLib in oleauto.h, even though
-# the supplied oleaut32.a library implements UnRegisterTypeLib and not 
-# DeregisterTypeLib.
-# 
-# OLE=yes will work if you patch if_ole.cpp to include the prototype 
-#    WINOLEAUTAPI UnRegisterTypeLib(REFGUID libID, WORD wVerMajor,
-#                                   WORD wVerMinor, LCID lcid, SYSKIND syskind);
-# 
 ##############################
 ifeq (yes, $(OLE))
 INCLUDES += -DFEAT_OLE

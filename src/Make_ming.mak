@@ -2,6 +2,7 @@
 # Info at http://www.mingw.org
 # Also requires 'GNU make 3.77', which you can get through a link
 # to 'JanJaap's page from the above page.
+# Get missing libraries from http://gnuwin32.sf.net.
 #
 # Tested on Win32 NT 4 and Win95.
 #
@@ -27,16 +28,19 @@ DEBUG=0
 OPTSIZE=0
 # set to 1 to make gvim, 0 for vim
 GUI=1
-# set to 1 to make minimal version (few features)
-MIN=0
+# FEATURES=[TINY | SMALL  | NORMAL | BIG | HUGE]
+# set to TINY to make minimal version (few features)
+FEATURES=BIG
 # set to one of i386, i486, i586, i686 as the *target* processor
-CPU=i686
-# set to same choices as 'CPU', but will prevent running on 'lower' cpus:
+CPUNR=i686
+# set to same choices as 'CPUNR', but will prevent running on 'lower' cpus:
 ARCH=i386
 # set to '1' to cross-compile from unix; 0=native Windows
 CROSS=0
 # set to path to iconv.h and libiconv.a to enable using 'iconv.dll'
 #ICONV="."
+# set to 1 to enable writing a postscript file with :hardcopy
+POSTSCRIPT=0
 
 # Added by E.F. Amatria <eferna1@platea.ptic.mec.es> 2001 Feb 23
 # Uncomment the first line and one of the following three if you want Native Language
@@ -165,8 +169,8 @@ endif
 #>>>>> end of choices
 ###########################################################################
 
-CFLAGS = -Iproto $(DEFINES) -pipe -malign-double -mwide-multiply -w
-CFLAGS += -march=$(ARCH) -mcpu=$(CPU) -Wall
+CFLAGS = -Iproto $(DEFINES) -pipe -malign-double -w
+CFLAGS += -march=$(ARCH) -mcpu=$(CPUNR) -Wall -DFEAT_$(FEATURES)
 
 ifdef GETTEXT
 DEFINES +=-DHAVE_GETTEXT -DHAVE_LOCALE_H
@@ -202,12 +206,16 @@ CFLAGS += -DDYNAMIC_PYTHON
 endif
 endif
 
+ifdef POSTSCRIPT
+CFLAGS += -DMSWINPS
+endif
+
 ifeq ($(DEBUG),1)
 CFLAGS += -g -fstack-check
 else
 CFLAGS += -s
 CFLAGS += -fomit-frame-pointer -freg-struct-return
-CFLAGS += -malign-double -mwide-multiply -finline-functions
+CFLAGS += -malign-double -finline-functions
 ifeq ($(OPTSIZE),1)
 CFLAGS += -Os
 else
