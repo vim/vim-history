@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.2.  Last change: 2004 Jan 18
+*eval.txt*      For Vim version 6.2.  Last change: 2004 Feb 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1113,7 +1113,7 @@ confirm({msg} [, {choices} [, {default} [, {type}]]])
 		The optional {default} argument is the number of the choice
 		that is made if the user hits <CR>.  Use 1 to make the first
 		choice the default one.  Use 0 to not set a default.  If
-		{default} is omitted, 0 is used.
+		{default} is omitted, 1 is used.
 		The optional {type} argument gives the type of dialog.  This
 		is only used for the icon of the Win32 GUI.  It can be one of
 		these values: "Error", "Question", "Info", "Warning" or
