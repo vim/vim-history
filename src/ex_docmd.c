@@ -106,7 +106,7 @@ static void	ex_blast __ARGS((exarg_T *eap));
 # define ex_buffer_all		ex_ni
 #endif
 static char_u	*getargcmd __ARGS((char_u **));
-static char_u	*skip_cmd_arg __ARGS((char_u *p));
+static char_u	*skip_cmd_arg __ARGS((char_u *p, int rembs));
 static int	getargopt __ARGS((exarg_T *eap));
 #ifndef FEAT_QUICKFIX
 # define ex_make		ex_ni
@@ -2393,7 +2393,7 @@ set_one_cmd_context(xp, buff)
     {
 	/* Check if we're in the +command */
 	p = arg + 1;
-	arg = skip_cmd_arg(arg);
+	arg = skip_cmd_arg(arg, FALSE);
 
 	/* Still touching the command after '+'? */
 	if (*arg == NUL)
@@ -3490,9 +3490,9 @@ getargcmd(argp)
 	else
 	{
 	    command = arg;
-	    arg = skip_cmd_arg(command);
-	    if (*arg)
-		*arg++ = NUL;	/* terminate command with NUL */
+	    arg = skip_cmd_arg(command, TRUE);
+	    if (*arg != NUL)
+		*arg++ = NUL;		/* terminate command with NUL */
 	}
 
 	arg = skipwhite(arg);	/* skip over spaces */
@@ -3505,14 +3505,25 @@ getargcmd(argp)
  * Find end of "+command" argument.  Skip over "\ " and "\\".
  */
     static char_u *
-skip_cmd_arg(p)
+skip_cmd_arg(p, rembs)
     char_u *p;
+    int	   rembs;	/* TRUE to halve the number of backslashes */
 {
     while (*p && !vim_isspace(*p))
     {
 	if (*p == '\\' && p[1] != NUL)
+	{
+	    if (rembs)
+		mch_memmove(p, p + 1, STRLEN(p));
+	    else
+		++p;
+	}
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	    p += (*mb_ptr2len_check)(p);
+	else
+#endif
 	    ++p;
-	++p;
     }
     return p;
 }
@@ -3559,7 +3570,7 @@ getargopt(eap)
 
     ++arg;
     *pp = (int)(arg - eap->cmd);
-    arg = skip_cmd_arg(arg);
+    arg = skip_cmd_arg(arg, FALSE);
     eap->arg = skipwhite(arg);
     *arg = NUL;
 
