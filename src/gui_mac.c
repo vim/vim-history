@@ -2153,7 +2153,12 @@ gui_mac_doKeyEvent(EventRecord *theEvent)
 
     /* Add the modifier to the input bu if needed */
     /* Do not want SHIFT-A or CTRL-A with modifier */
-    if (!IS_SPECIAL(key_char))
+    if (!IS_SPECIAL(key_char)
+	    && key_sym != vk_Space
+	    && key_sym != vk_Tab
+	    && key_sym != vk_Return
+	    && key_sym != vk_Enter
+	    && key_sym != vk_Esc)
     {
 #if 1
     /* Clear modifiers when only one modifier is set */
