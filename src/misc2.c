@@ -2509,7 +2509,12 @@ call_shell(cmd, opt)
     int		retval;
 
     if (p_verbose > 3)
-	smsg((char_u *)_("Calling shell to execute: \"%s\""), cmd);
+    {
+	smsg((char_u *)_("Calling shell to execute: \"%s\""),
+						    cmd == NULL ? p_sh : cmd);
+	out_char('\n');
+	cursor_on();
+    }
 
     if (*p_sh == NUL)
     {
