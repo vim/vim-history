@@ -3697,6 +3697,9 @@ f_cursor(argvars, retvar)
     col = get_var_number(&argvars[1]);
     if (col > 0)
 	curwin->w_cursor.col = col - 1;
+#ifdef FEAT_VIRTUALEDIT
+    curwin->w_cursor.coladd = 0;
+#endif
 
     /* Make sure the cursor is in a valid position. */
     check_cursor();
