@@ -1323,11 +1323,14 @@ win_line(wp, lnum, startrow, endrow)
 	reg_ic = search_hl_ic;
 	for (;;)
 	{
-	    if (*matchp != NUL && vim_regexec(search_hl_prog, matchp, TRUE))
+	    if (vim_regexec(search_hl_prog, matchp, matchp == line))
 	    {
 		search_hl_start = search_hl_prog->startp[0];
 		search_hl_end = search_hl_prog->endp[0];
-		if (search_hl_end <= ptr)    /* match before leftcol */
+		/* If match ends before leftcol: Find next match. */
+		if (search_hl_start < ptr
+			&& search_hl_end <= ptr
+			&& *search_hl_end != NUL)
 		{
 		    /* For an empty match and with Vi-compatible searching,
 		     * continue searching on the next character. */
@@ -1337,6 +1340,14 @@ win_line(wp, lnum, startrow, endrow)
 		    else
 			matchp = search_hl_end;
 		    continue;
+		}
+		/* Highlight one character for an empty match. */
+		if (search_hl_start == search_hl_end)
+		{
+		    if (*search_hl_start == NUL && search_hl_start > line)
+			--search_hl_start;
+		    else
+			++search_hl_end;
 		}
 		if (search_hl_start < ptr)  /* match at leftcol */
 		    search_attr = search_hl_attr;
@@ -1457,7 +1468,14 @@ win_line(wp, lnum, startrow, endrow)
 			     * match starts at the current position */
 			    if (search_hl_start != search_hl_end)
 				continue;
-			    ++search_hl_end; /* try again after empty match */
+			    /* highlight empty match, try again after it */
+			    ++search_hl_end;
+			    if (*search_hl_start == NUL
+						    && search_hl_start > line)
+			    {
+				--search_hl_start;
+				continue;
+			    }
 			}
 		    }
 		    break;
@@ -1635,40 +1653,42 @@ win_line(wp, lnum, startrow, endrow)
 	 */
 	if (c == NUL)
 	{
-	    if (area_attr)
+	    /* invert at least one char, used for Visual and empty line or
+	     * highlight match at end of line. If it's beyond the last
+	     * char on the screen, just overwrite that one (tricky!) */
+	    if ((area_attr && vcol == fromcol)
+#ifdef EXTRA_SEARCH
+		    /* highlight 'hlsearch' match in empty line */
+		    || (search_attr && *line == NUL && wp->w_leftcol == 0)
+#endif
+	       )
 	    {
-		/* invert at least one char, used for Visual and empty line or
-		 * highlight match at end of line. If it's beyond the last
-		 * char on the screen, just overwrite that one (tricky!) */
-		if (vcol == fromcol)
+#ifdef RIGHTLEFT
+		if (wp->w_p_rl)
 		{
-#ifdef RIGHTLEFT
-		    if (wp->w_p_rl)
+		    if (col < 0)
 		    {
-			if (col < 0)
-			{
-			    ++screenp;
-			    ++col;
-			}
-		    }
-		    else
-#endif
-		    {
-			if (col >= Columns)
-			{
-			    --screenp;
-			    --col;
-			}
-		    }
-		    *screenp = ' ';
-		    *(screenp + Columns) = char_attr;
-#ifdef RIGHTLEFT
-		    if (wp->w_p_rl)
-			--col;
-		    else
-#endif
+			++screenp;
 			++col;
+		    }
 		}
+		else
+#endif
+		{
+		    if (col >= Columns)
+		    {
+			--screenp;
+			--col;
+		    }
+		}
+		*screenp = ' ';
+		*(screenp + Columns) = char_attr;
+#ifdef RIGHTLEFT
+		if (wp->w_p_rl)
+		    --col;
+		else
+#endif
+		    ++col;
 	    }
 
 	    SCREEN_LINE(screen_row, col, TRUE, wp->w_p_rl);
