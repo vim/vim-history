@@ -778,7 +778,7 @@ decode_mouse_event(
 #endif
     static int s_cClicks = 1;
     static BOOL s_fReleased = TRUE;
-    static s_dwLastClickTime = 0;
+    static DWORD s_dwLastClickTime = 0;
     static BOOL s_fNextIsMiddle = FALSE;
 
     static DWORD cButtons = 0;	/* number of buttons supported */
@@ -1052,7 +1052,7 @@ handle_focus_event(INPUT_RECORD ir)
     static int
 WaitForChar(long msec)
 {
-    DWORD	    dwNow = 0, dwEndTime;
+    DWORD	    dwNow = 0, dwEndTime = 0;
     INPUT_RECORD    ir;
     DWORD	    cRecords;
     char_u	    ch, ch2;
