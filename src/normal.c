@@ -1629,10 +1629,13 @@ do_pending_operator(cap, old_col, gui_yank)
 				get_op_char(oap->op_type),
 				get_extra_op_char(oap->op_type),
 				oap->op_type == OP_REPLACE ? cap->nchar : NUL);
-		redo_VIsual_mode = resel_VIsual_mode;
-		redo_VIsual_col = resel_VIsual_col;
-		redo_VIsual_line_count = resel_VIsual_line_count;
-		redo_VIsual_count = cap->count0;
+		if (!redo_VIsual_busy)
+		{
+		    redo_VIsual_mode = resel_VIsual_mode;
+		    redo_VIsual_col = resel_VIsual_col;
+		    redo_VIsual_line_count = resel_VIsual_line_count;
+		    redo_VIsual_count = cap->count0;
+		}
 	    }
 
 	    /*
