@@ -5737,6 +5737,9 @@ do_exedit(eap, old_curwin)
 	n = readonlymode;
 	if (eap->cmdidx == CMD_view || eap->cmdidx == CMD_sview)
 	    readonlymode = TRUE;
+	else if (eap->cmdidx == CMD_enew)
+	    readonlymode = FALSE;   /* 'readonly' doesn't make sense in an
+				       empty buffer */
 	setpcmark();
 	if (do_ecmd(0, (eap->cmdidx == CMD_enew ? NULL : eap->arg),
 		    NULL, eap,
