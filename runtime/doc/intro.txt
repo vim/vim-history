@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 6.0q.  Last change: 2000 Dec 03
+*intro.txt*     For Vim version 6.0r.  Last change: 2000 Dec 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -140,7 +140,7 @@ This will create a file "bugreport.txt" in the current directory, with a lot
 of information of your environment.  Before sending this out, check if it
 doesn't contain any confidential information!
 
-							*debug*
+							*debug-vim*
 When Vim crashes in one of the test files, and you are using gcc for
 compilation, here is what you can do to find out exactly where Vim crashes:
 

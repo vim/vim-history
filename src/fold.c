@@ -2128,5 +2128,103 @@ foldlevelSyntax(flp)
     }
 }
 
+/* functions for storing the fold state in a View {{{1 */
+/* put_folds() {{{2 */
+#if defined(FEAT_SESSION) || defined(PROTO)
+static int put_folds_recurse __ARGS((FILE *fd, garray_t *gap, linenr_t off));
+static int put_foldopen_recurse __ARGS((FILE *fd, garray_t *gap, linenr_t off));
+
+/*
+ * Write commands to "fd" to restore the manual folds in window "wp".
+ * Return FAIL if writing fails.
+ */
+    int
+put_folds(fd, wp)
+    FILE	*fd;
+    win_t	*wp;
+{
+    if (foldmethodIsManual(wp))
+    {
+	if (put_line(fd, "normal zD") == FAIL
+		|| put_folds_recurse(fd, &wp->w_folds, (linenr_t)0) == FAIL)
+	    return FAIL;
+    }
+
+    /* If some folds are manually opened/closed, need to restore that. */
+    if (wp->w_fold_manual)
+	return put_foldopen_recurse(fd, &wp->w_folds, (linenr_t)0);
+
+    return OK;
+}
+
+/* put_folds_recurse() {{{2 */
+/*
+ * Write commands to "fd" to recreate manually created folds.
+ * Returns FAIL when writing failed.
+ */
+    static int
+put_folds_recurse(fd, gap, off)
+    FILE	*fd;
+    garray_t	*gap;
+    linenr_t	off;
+{
+    int		i;
+    fold_t	*fp;
+
+    fp = (fold_t *)gap->ga_data;
+    for (i = 0; i < gap->ga_len; i++)
+    {
+	if (fprintf(fd, "%ld,%ldfold", fp->fd_top + off,
+					fp->fd_top + off + fp->fd_len - 1) < 0
+		|| put_eol(fd) == FAIL)
+	    return FAIL;
+	if (put_folds_recurse(fd, &fp->fd_nested, off + fp->fd_top) == FAIL)
+	    return FAIL;
+	++fp;
+    }
+    return OK;
+}
+
+/* put_folds_recurse() {{{2 */
+/*
+ * Write commands to "fd" to open and close manually opened/closed folds.
+ * Returns FAIL when writing failed.
+ */
+    static int
+put_foldopen_recurse(fd, gap, off)
+    FILE	*fd;
+    garray_t	*gap;
+    linenr_t	off;
+{
+    int		i;
+    fold_t	*fp;
+
+    fp = (fold_t *)gap->ga_data;
+    for (i = 0; i < gap->ga_len; i++)
+    {
+	if (fp->fd_flags != FD_LEVEL)
+	{
+	    if (fp->fd_nested.ga_len > 0)
+	    {
+		/* open/close nested folds while this fold is open */
+		if (fprintf(fd, "normal %ldGzo", fp->fd_top + off) < 0
+			|| put_eol(fd) == FAIL)
+		    return FAIL;
+		if (put_foldopen_recurse(fd, &fp->fd_nested, off + fp->fd_top)
+			== FAIL)
+		    return FAIL;
+	    }
+	    if (fprintf(fd, "normal %ldGz%c", fp->fd_top + off,
+			fp->fd_flags == FD_CLOSED ? 'c' : 'o') < 0
+		    || put_eol(fd) == FAIL)
+		return FAIL;
+	}
+	++fp;
+    }
+
+    return OK;
+}
+#endif /* FEAT_SESSION */
+
 /* }}}1 */
 #endif /* defined(FEAT_FOLDING) || defined(PROTO) */

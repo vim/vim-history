@@ -887,6 +887,11 @@ gotchars(s, len)
     }
     may_sync_undo();
 
+#ifdef FEAT_EVAL
+    /* output "debug mode" message next time in debug mode */
+    debug_did_msg = FALSE;
+#endif
+
     /* Since characters have been typed, consider the following to be in
      * another mapping.  Search string will be kept in history. */
     ++maptick;
@@ -3268,8 +3273,9 @@ check_abbr(c, ptr, col, mincol)
  * Return FAIL on error, OK otherwise.
  */
     int
-makemap(fd)
-    FILE *fd;
+makemap(fd, buf)
+    FILE	*fd;
+    buf_t	*buf;	    /* buffer for local mappings or NULL */
 {
     mapblock_t	*mp;
     char_u	c1, c2;
@@ -3293,10 +3299,23 @@ makemap(fd)
 	    {
 		if (hash)	    /* there is only one abbr list */
 		    break;
-		mp = first_abbr;
+#ifdef FEAT_LOCALMAP
+		if (buf != NULL)
+		    mp = buf->b_first_abbr;
+		else
+#endif
+		    mp = first_abbr;
 	    }
 	    else
-		mp = maphash[hash];
+	    {
+#ifdef FEAT_LOCALMAP
+		if (buf != NULL)
+		    mp = buf->b_maphash[hash];
+		else
+#endif
+		    mp = maphash[hash];
+	    }
+
 	    for ( ; mp; mp = mp->m_next)
 	    {
 		c1 = NUL;
@@ -3372,11 +3391,13 @@ makemap(fd)
 			return FAIL;
 		    if (fprintf(fd, cmd) < 0)
 			return FAIL;
+		    if (buf != NULL && fputs(" <buffer>", fd) < 0)
+			return FAIL;
 
 		    if (       putc(' ', fd) < 0
-			    || putescstr(fd, mp->m_keys, FALSE) == FAIL
+			    || put_escstr(fd, mp->m_keys, FALSE) == FAIL
 			    || putc(' ', fd) < 0
-			    || putescstr(fd, mp->m_str, FALSE) == FAIL
+			    || put_escstr(fd, mp->m_str, FALSE) == FAIL
 			    || put_eol(fd) < 0)
 			return FAIL;
 		    c1 = c2;
@@ -3401,10 +3422,10 @@ makemap(fd)
  * return FAIL for failure, OK otherwise
  */
     int
-putescstr(fd, str, set)
+put_escstr(fd, str, set)
     FILE	*fd;
     char_u	*str;
-    int		set;	    /* TRUE for makeset, FALSE for makemap */
+    int		set;	    /* TRUE for makeset(), FALSE for makemap() */
 {
     int	    c;
     int	    modifiers;

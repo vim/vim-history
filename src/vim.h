@@ -663,11 +663,12 @@ typedef unsigned short u8char_t;
 /*
  * There are four history tables:
  */
-#define HIST_CMD    0		/* colon commands */
-#define HIST_SEARCH 1		/* search commands */
-#define HIST_EXPR   2		/* expressions (from entering = register) */
-#define HIST_INPUT  3		/* input() lines */
-#define HIST_COUNT  4		/* number of history tables */
+#define HIST_CMD	0	/* colon commands */
+#define HIST_SEARCH	1	/* search commands */
+#define HIST_EXPR	2	/* expressions (from entering = register) */
+#define HIST_INPUT	3	/* input() lines */
+#define HIST_DEBUG	4	/* debug commands */
+#define HIST_COUNT	5	/* number of history tables */
 
 /*
  * Flags for chartab[].
@@ -1169,7 +1170,10 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 #define VV_CC_IN	14
 #define VV_CC_OUT	15
 #define VV_CMDARG	16
-#define VV_LEN		17	/* number of v: vars */
+#define VV_FOLDSTART	17
+#define VV_FOLDEND	18
+#define VV_FOLDDASHES	19
+#define VV_LEN		20	/* number of v: vars */
 
 #ifdef FEAT_CLIPBOARD
 

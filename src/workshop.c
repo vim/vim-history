@@ -2074,22 +2074,20 @@ findYourself(
 	/*
 	 * We found the run directory. Now find the install dir.
 	 */
-	if (mch_FullName((char_u *) runpath,
-		    (char_u *) runbuf, MAXPATHLEN, 1) == FAIL)
-	{
-	    strcpy(runbuf, runpath);
-	}
+	(void)vim_FullName((char_u *)runpath, (char_u *)runbuf, MAXPATHLEN, 1);
 	path = strrchr(runbuf, '/');
-	*path = NULL;		/* remove the vim/gvim name */
+	if (path != NULL)
+	    *path = NUL;		/* remove the vim/gvim name */
 	path = strrchr(runbuf, '/');
-	if (path && strncmp(path, "/bin", 4) == NULL)
+	if (path != NULL)
 	{
-	    setDollarVim(runbuf);
-	}
-	else if (path && strncmp(path, "/src", 4) == NULL)
-	{
-	    *path = NULL;	/* development tree */
-	    setDollarVim(runbuf);
+	    if (strncmp(path, "/bin", 4) == NULL)
+		setDollarVim(runbuf);
+	    else if (strncmp(path, "/src", 4) == NULL)
+	    {
+		*path = NULL;	/* development tree */
+		setDollarVim(runbuf);
+	    }
 	}
 	free(runpath);
     }

@@ -2,10 +2,14 @@
 " Language:	JSP (Java Server Pages)
 " Maintainer:	Rafael Garcia-Suarez <rgarciasuarez@free.fr>
 " URL:		http://rgarciasuarez.free.fr/vim/syntax/jsp.vim
-" Last change:	2000 Dec 17
+" Last change:	2000 Dec 21
 
 " Remove any old syntax stuff hanging around
 syn clear
+
+if !exists("main_syntax")
+  let main_syntax = 'jsp'
+endif
 
 " Source HTML syntax
 runtime syntax/html.vim
@@ -36,6 +40,10 @@ hi def link jspTag          htmlTag
 hi def link jspDirective    jspTag
 hi def link jspDirName      htmlTagName
 hi def link jspDirArg       htmlArg
+
+if main_syntax == 'jsp'
+  unlet main_syntax
+endif
 
 let b:current_syntax = "jsp"
 

@@ -38,6 +38,8 @@
 #define DCS		0x90	/* Device Control String */
 #define STERM		0x9c	/* String Terminator */
 
+#define POUND           0xA3
+
 #define Ctrl_chr(x)	((x) & 0x1f)
 #define Meta(x)		((x) | 0x80)
 
@@ -95,6 +97,9 @@
 #define CharOrdUp(x) (CharOrd__((x) - 'A'))
 #define CharOrd(x) (isupper(x) ? CharOrdUp(x) : CharOrdLow(x))
 
+#define EBCDIC_CHAR_ADD_(x) ((x) < 0?'a':(x)>25?'z':"abcdefghijklmnopqrstuvwxyz"[x])
+#define EBCDIC_CHAR_ADD(c,s) (isupper(c) ? toupper(EBCDIC_CHAR_ADD_(CharOrdUp(c)+(s))) : EBCDIC_CHAR_ADD_(CharOrdLow(c)+(s)))
+     
 #define R13_(c) ("abcdefghijklmnopqrstuvwxyz"[((c) + 13) % 26])
 #define ROT13(c, a)  (isupper(c) ? toupper(R13_(CharOrdUp(c))) : R13_(CharOrdLow(c)))
 
@@ -115,6 +120,8 @@
 #define CSI_STR		"\233"
 #define DCS		0x90	/* Device Control String */
 #define STERM		0x9c	/* String Terminator */
+
+#define POUND           '£'
 
 #define CTRL_H_STR	"\026"
 #define CTRL_V_STR	"\062"

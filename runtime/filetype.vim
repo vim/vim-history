@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Dec 11
+" Last change:	2000 Dec 27
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -183,7 +183,8 @@ au BufNewFile,BufRead *.css			setf css
 au BufNewFile,BufRead *.con			setf cterm
 
 " Changelog
-au BufNewFile,BufReadPost Change[lL]og		setf changelog
+au BufNewFile,BufReadPost [cC]hange[lL]og	if getline(1) =~ '; urgency='
+	\| setf debchangelog | else | setf changelog | endif
 
 " CHILL
 au BufNewFile,BufReadPost *..ch			setf ch
@@ -226,6 +227,9 @@ au BufNewFile,BufRead *.csp,*.fdr		setf csp
 " CUPL logic description and simulation
 au BufNewFile,BufRead *.pld			setf cupl
 au BufNewFile,BufRead *.si			setf cuplsim
+
+" Debian Control
+au BufNewFile,BufRead */debian/control		setf debcontrol
 
 " Diff files
 au BufNewFile,BufRead *.diff,*.rej		setf diff
@@ -404,11 +408,11 @@ au BufNewFile,BufRead *.lex,*.l			setf lex
 " Lilo: Linux loader
 au BufNewFile,BufRead lilo.conf*		setf lilo
 
-" Lisp (*.el = ELisp, *.cl = Common Lisp)
+" Lisp (*.el = ELisp, *.cl = Common Lisp, *.jl = librep Lisp)
 if has("fname_case")
-  au BufNewFile,BufRead *.lsp,*.el,*.cl,*.L	setf lisp
+  au BufNewFile,BufRead *.lsp,*.el,*.cl,*.jl,*.L	setf lisp
 else
-  au BufNewFile,BufRead *.lsp,*.el,*.cl		setf lisp
+  au BufNewFile,BufRead *.lsp,*.el,*.cl,*.jl		setf lisp
 endif
 
 " Lite
@@ -778,7 +782,7 @@ au BufNewFile,BufRead *.tli			setf tli
 au BufNewFile,BufRead *.slt			setf tsalt
 
 " TeX
-au BufNewFile,BufRead *.tex,*.sty,*.dtx,*.ltx	setf tex
+au BufNewFile,BufRead *.tex,*.latex,*.sty,*.dtx,*.ltx	setf tex
 
 " Texinfo
 au BufNewFile,BufRead *.texinfo,*.texi,*.txi	setf texinfo

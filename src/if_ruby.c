@@ -199,15 +199,18 @@ static VALUE vim_command(VALUE self, VALUE str)
 
 static VALUE vim_evaluate(VALUE self, VALUE str)
 {
-    char_u *value = eval_to_string((char_u *) STR2CSTR(str), (char_u**) 0);
-    if (value) {
+#ifdef FEAT_EVAL
+    char_u *value = eval_to_string((char_u *)STR2CSTR(str), NULL);
+
+    if (value)
+    {
 	VALUE val = rb_str_new2(value);
 	vim_free(value);
 	return val;
     }
-    else {
+    else
+#endif
 	return Qnil;
-    }
 }
 
 static VALUE buffer_new(buf_t *buf)

@@ -2907,6 +2907,9 @@ gui_update_scrollbars(force)
     long	val, size, max;		/* need 32 bits here */
     int		which_sb;
     int		h, y;
+#ifdef FEAT_VERTSPLIT
+    static win_t *prev_curwin = NULL;
+#endif
 
     /* Update the horizontal scrollbar */
     gui_update_horiz_scrollbar(force);
@@ -3001,11 +3004,13 @@ gui_update_scrollbars(force)
 	    || sb->status_height != wp->w_status_height
 # ifdef FEAT_VERTSPLIT
 	    || sb->width != wp->w_width
+	    || prev_curwin != curwin
 # endif
 #endif
 	    )
 	{
-	    /* Height, width or position of scrollbar has changed */
+	    /* Height, width or position of scrollbar has changed.  For
+	     * vertical split: curwin changed. */
 	    sb->height = wp->w_height;
 #ifdef FEAT_WINDOWS
 	    sb->top = wp->w_winrow;
@@ -3077,12 +3082,16 @@ gui_update_scrollbars(force)
 					    val, size, max);
 	}
     }
+#ifdef FEAT_VERTSPLIT
+    prev_curwin = curwin;
+#endif
     --hold_gui_events;
 }
 
 /*
  * Enable or disable a scrollbar.
- * Check for scrollbars for vertically split windows which are never enabled.
+ * Check for scrollbars for vertically split windows which are not enabled
+ * sometimes.
  */
     static void
 gui_do_scrollbar(wp, which, enable)
@@ -3091,13 +3100,36 @@ gui_do_scrollbar(wp, which, enable)
     int		enable;	    /* TRUE to enable scrollbar */
 {
 #ifdef FEAT_VERTSPLIT
-    /* Only enable/disable scrollbars touching the window
-     * frame. */
-    if ((which == SBAR_LEFT
-		&& wp->w_wincol != 0)
-	    || (which == SBAR_RIGHT
-		&& wp->w_wincol + wp->w_width != Columns))
-	enable = FALSE;
+    int		midcol = curwin->w_wincol + curwin->w_width / 2;
+    int		has_midcol = (wp->w_wincol <= midcol
+				     && wp->w_wincol + wp->w_width >= midcol);
+
+    /* Only enable scrollbars that contain the middle column of the current
+     * window. */
+    if (gui.which_scrollbars[SBAR_RIGHT] != gui.which_scrollbars[SBAR_LEFT])
+    {
+	/* Scrollbars only on one side.  Don't enable scrollbars that don't
+	 * contain the middle column of the current window. */
+	if (!has_midcol)
+	    enable = FALSE;
+    }
+    else
+    {
+	/* Scrollbars on both sides.  Don't enable scrollbars that neither
+	 * contain the middle column of the current window nor are on the far
+	 * side. */
+	if (midcol > Columns / 2)
+	{
+	    if (which == SBAR_LEFT ? wp->w_wincol != 0 : !has_midcol)
+		enable = FALSE;
+	}
+	else
+	{
+	    if (which == SBAR_RIGHT ? wp->w_wincol + wp->w_width != Columns
+								: !has_midcol)
+		enable = FALSE;
+	}
+    }
 #endif
     gui_mch_enable_scrollbar(&wp->w_scrollbars[which], enable);
 }
@@ -3110,7 +3142,7 @@ gui_do_scrollbar(wp, which, enable)
     int
 gui_do_scroll()
 {
-    win_t	*wp, *old_wp;
+    win_t	*wp, *save_wp;
     int		i;
     long	nlines;
     pos_t	old_cursor;
@@ -3130,30 +3162,31 @@ gui_do_scroll()
     if (nlines == 0)
 	return FALSE;
 
-    old_cursor = curwin->w_cursor;
-    old_wp = curwin;
+    save_wp = curwin;
     old_topline = wp->w_topline;
+    old_cursor = wp->w_cursor;
     curwin = wp;
     curbuf = wp->w_buffer;
     if (nlines < 0)
-	scrolldown(-nlines);
+	scrolldown(-nlines, FALSE);
     else
-	scrollup(nlines);
+	scrollup(nlines, FALSE);
     if (old_topline != wp->w_topline)
     {
-	if (p_so)
+	if (p_so != 0)
 	{
 	    cursor_correct();		/* fix window for 'so' */
 	    update_topline();		/* avoid up/down jump */
 	}
-	coladvance(curwin->w_curswant);
+	if (old_cursor.lnum != wp->w_cursor.lnum)
+	    coladvance(wp->w_curswant);
 #ifdef FEAT_SCROLLBIND
-	curwin->w_scbind_pos = curwin->w_topline;
+	wp->w_scbind_pos = wp->w_topline;
 #endif
     }
 
-    curwin = old_wp;
-    curbuf = old_wp->w_buffer;
+    curwin = save_wp;
+    curbuf = save_wp->w_buffer;
 
     /*
      * Don't call updateWindow() when nothing has changed (it will overwrite
@@ -3165,7 +3198,7 @@ gui_do_scroll()
 	updateWindow(wp);   /* update window, status line, and cmdline */
     }
 
-    return !equal(curwin->w_cursor, old_cursor);
+    return (wp == curwin && !equal(curwin->w_cursor, old_cursor));
 }
 
 

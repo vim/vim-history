@@ -1,6 +1,6 @@
 " Menu Translations:	Italian
 " Maintainer:		Antonio Colombo <antonio.colombo@jrc.org>
-" Last Change:	2000 Dic 02
+" Last Change:	2000 Dic 20
 
 menutrans clear
 let did_menu_trans = 1
@@ -19,7 +19,7 @@ menutrans &About		&Informazioni
 " File menu
 "menutrans &File				&File
 menutrans &Open\.\.\.<Tab>:e		&Apri\.\.\.<Tab>:e
-menutrans Sp&lit-Open\.\.\.<Tab>:sp	A&pri\ in\ una\ nuova\ Finestra\.\.\.<Tab>:sp
+menutrans Sp&lit-Open\.\.\.<Tab>:sp	A&pri\ in\ nuova\ Finestra\.\.\.<Tab>:sp
 menutrans &New<Tab>:enew		&Nuovo<Tab>:enew
 menutrans &Close<Tab>:q			&Chiudi<Tab>:q
 menutrans &Save<Tab>:w			&Salva<Tab>:w
@@ -29,18 +29,23 @@ menutrans Sa&ve-Exit<Tab>:wqa		Sa&lva\ ed\ esci<Tab>:wqa
 menutrans E&xit<Tab>:qa			&Esci<Tab>:qa
 
 " Edit menu
-menutrans &Edit				&Edita
+" menutrans &Edit			&Edit
 menutrans &Undo<Tab>u			&Torna\ indietro<Tab>u
 menutrans &Redo<Tab>^R			&Vai\ in\ avanti<Tab>^R
-menutrans Repea&t<Tab>\.		&Ripeti<Tab>\.
+menutrans Rep&eat<Tab>\.		&Ripeti<Tab>\.
 menutrans Cu&t<Tab>"*x			T&aglia<Tab>"*x
 menutrans &Copy<Tab>"*y			&Copia<Tab>"*y
 menutrans &Paste<Tab>"*p		&Incolla<Tab>"*p
 menutrans Put\ &Before<Tab>[p		&Metti\ davanti<Tab>[p
 menutrans Put\ &After<Tab>]p		M&etti\ dietro<Tab>]p
+menutrans &Delete<Tab>x			Cance&lla<Tab>x
 menutrans &Select\ all<Tab>ggVG		&Seleziona\ tutto<Tab>ggVG
 menutrans &Find\.\.\.			C&erca\.\.\.
-menutrans Find\ and\ R&eplace\.\.\.	Cerca\ e\ rim&piazza\.\.\.
+menutrans &Find<Tab>/			C&erca<Tab>/
+menutrans Find\ and\ Rep&lace		Cerca\ e\ rim&piazza
+menutrans Find\ and\ Rep&lace\.\.\.	Cerca\ e\ rim&piazza\.\.\.
+menutrans Find\ and\ Rep&lace<Tab>:s	Cerca\ e\ rim&piazza<Tab>:s
+menutrans Find\ and\ Rep&lace<Tab>:%s	Cerca\ e\ rim&piazza<Tab>:%s
 menutrans Options\.\.\.			Opzioni\.\.\.
 
 " Programming menu
@@ -51,7 +56,7 @@ menutrans Build\ &Tags\ File		Costruisci\ File\ &Tags\
 menutrans &Make<Tab>:make		Esegui\ &Make<Tab>:make
 menutrans &List\ Errors<Tab>:cl		Lista\ &Errori<Tab>:cl
 menutrans L&ist\ Messages<Tab>:cl!	Lista\ &Messaggi<Tab>:cl!
-menutrans &Next\ Error<Tab>:cn	Erreur\ Errore\ S&uccessivo<Tab>:cn
+menutrans &Next\ Error<Tab>:cn		Errore\ S&uccessivo<Tab>:cn
 menutrans &Previous\ Error<Tab>:cp	Errore\ &Precedente<Tab>:cp
 menutrans &Older\ List<Tab>:cold	Lista\ men&o\ recente<Tab>:cold
 menutrans N&ewer\ List<Tab>:cnew	Lista\ più\ rece&nte<Tab>:cnew

@@ -1,4 +1,4 @@
-README_srcdos.txt for version 6.0q of Vim: Vi IMproved.
+README_srcdos.txt for version 6.0r of Vim: Vi IMproved.
 
 See "README.txt" for general information about Vim.
 See "README_dos.txt" for installation instructions for MS-DOS and MS-Windows.
@@ -9,4 +9,4 @@ The DOS source archive contains the files needed to compile Vim on MS-DOS or
 MS-Windows.  It is packed for DOS systems, with CR-LF.  It also includes the
 VisVim sources.
 
-See "src/INSTALL_pc.txt" for instructions on how to compile Vim on the PC.
+See "src/INSTALLpc.txt" for instructions on how to compile Vim on the PC.

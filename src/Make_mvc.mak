@@ -21,15 +21,15 @@
 #	  DYNAMIC_PERL=yes (to load the Perl DLL dynamically)
 #	  PERL_VER=[Perl version, in the form 55 (5.005), 56 (5.6.x), etc]
 #	Python interface:
-#	  PYTHON=[Path to Python directory]          -- statically loaded
-#	  DYNAMIC_PYTHON=[Path to Python directory]  -- dynamically loaded
+#	  PYTHON=[Path to Python directory]
+#	  DYNAMIC_PYTHON=yes (to load the Python DLL dynamically)
 #	  PYTHON_VER=[Python version, eg 15, 20]  (default is 15)
 #	Tcl interface:
 #	  TCL=[Path to Tcl directory]
 #	  TCL_VER=[Tcl version, e.g. 80, 83]  (default is 83)
 #	Debug version: DEBUG=1
 #	SNiFF+ interface: SNIFF=yes
-#	Iconv library (dynamically loaded) support:
+#	Iconv library support (always dynamically loaded):
 #	  ICONV=[yes or no]  (default is yes)
 #
 # You can combine any of these interfaces
@@ -314,22 +314,18 @@ TCL_LIB = $(TCL)\lib\tcl$(TCL_VER)vc.lib
 PYTHON_VER = 15
 !endif
 !message Python detected (version $(PYTHON_VER)) - root dir is "$(PYTHON)"
-CFLAGS    = $(CFLAGS) -DFEAT_PYTHON
+!if "$(DYNAMIC_PYTHON)" == "yes"
+!message Python DLL will be loaded dynamically
+!endif
+CFLAGS = $(CFLAGS) -DFEAT_PYTHON
 PYTHON_OBJ = $(OUTDIR)\if_python.obj
 PYTHON_INC = /I "$(PYTHON)\Include" /I "$(PYTHON)\PC"
-PYTHON_LIB = $(PYTHON)\libs\python$(PYTHON_VER).lib
-# Dynamic (linked) PYTHON interface
-!elseifdef DYNAMIC_PYTHON
-!ifndef PYTHON_VER
-PYTHON_VER = 15
-!endif
-!message Dynamic Python detected (version $(PYTHON_VER)) - root dir is "$(DYNAMIC_PYTHON)"
-CFLAGS    = $(CFLAGS) -DFEAT_PYTHON \
-	-DDYNAMIC_PYTHON -DDYNAMIC_PYTHON_DLL=\"python$(PYTHON_VER).dll\"
-PYTHON_OBJ = $(OUTDIR)\if_python.obj
-PYTHON_INC = /I "$(DYNAMIC_PYTHON)\Include" /I "$(DYNAMIC_PYTHON)\PC"
-# Disable default loading of pythonXX.lib (forced by the Python headers)
+!if "$(DYNAMIC_PYTHON)" == "yes"
+CFLAGS = $(CFLAGS) -DDYNAMIC_PYTHON -DDYNAMIC_PYTHON_DLL=\"python$(PYTHON_VER).dll\"
 PYTHON_LIB = /nodefaultlib:python$(PYTHON_VER).lib
+!else
+PYTHON_LIB = $(PYTHON)\libs\python$(PYTHON_VER).lib
+!endif
 !endif
 
 # Perl interface

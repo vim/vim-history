@@ -39,6 +39,7 @@
 # CODEGUARD	set to "-vG" if you want to use CODEGUARD (not defined)
 # CPU		1 through 6: select CPU to compile for (3)
 # USEDLL	0 or 1: set to 1 to use the Runtime library DLL (1)
+#		For USEDLL=1 the cc3250.dll is required to run Vim.
 # VIMDLL	0 or 1: create vim32.dll, and stub (g)vim.exe (0)
 # ALIGN		1, 2 or 4: Alignment to use (4 for Win32, 2 for DOS16)
 # FASTCALL	0 or 1: set to 1 to use register-based function protocol (1)

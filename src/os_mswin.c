@@ -325,9 +325,6 @@ mch_FullName(
 {
     int		nResult = FAIL;
 
-    if (fname == NULL)		/* always fail */
-	return FAIL;
-
 #ifdef __BORLANDC__
     if (*fname == NUL) /* Borland behaves badly here - make it consistent */
 	nResult = mch_dirname(buf, len);

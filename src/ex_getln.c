@@ -44,10 +44,9 @@ typedef struct hist_entry
     char_u	*hisstr;	/* actual entry */
 } histentry_t;
 
-/*static char_u	**(history[HIST_COUNT]) = {NULL, NULL, NULL, NULL};*/
-static histentry_t *(history[HIST_COUNT]) = {NULL, NULL, NULL, NULL};
-static int	hisidx[HIST_COUNT] = {-1, -1, -1, -1};  /* last entered entry */
-static int	hisnum[HIST_COUNT] = {0, 0, 0, 0};
+static histentry_t *(history[HIST_COUNT]) = {NULL, NULL, NULL, NULL, NULL};
+static int	hisidx[HIST_COUNT] = {-1, -1, -1, -1, -1};  /* lastused entry */
+static int	hisnum[HIST_COUNT] = {0, 0, 0, 0, 0};
 		    /* identifying (unique) number of newest history entry */
 static int	hislen = 0;		/* actual length of history tables */
 
@@ -90,6 +89,7 @@ static int	ExpandFromContext __ARGS((expand_t *xp, char_u *, int *, char_u ***, 
  * firstc == '/' or '?'	    get search pattern
  * firstc == '='	    get expression
  * firstc == '@'	    get text for input() function
+ * firstc == '>'	    get text for debug mode
  * firstc == NUL	    get text for :insert command
  * firstc == -1		    like NUL, and break on CTRL-C
  *
@@ -154,7 +154,7 @@ getcmdline(firstc, count, indent)
 #endif
 #ifdef FEAT_RIGHTLEFT
     /* start without Hebrew mapping for a command line */
-    if (firstc == ':' || firstc == '=')
+    if (firstc == ':' || firstc == '=' || firstc == '>')
 	cmd_hkmap = 0;
 #endif
 
@@ -686,8 +686,12 @@ getcmdline(firstc, count, indent)
 		else if (ccline.cmdlen == 0 && c != Ctrl_W
 				   && ccline.cmdprompt == NULL && indent == 0)
 		{
-		    /* In exmode it doesn't make sense to return. */
-		    if (exmode_active)
+		    /* In ex and debug mode it doesn't make sense to return. */
+		    if (exmode_active
+#ifdef FEAT_EVAL
+			    || ccline.cmdfirstc == '>'
+#endif
+			    )
 			goto cmdline_not_changed;
 
 		    vim_free(ccline.cmdbuff);	/* no commandline to return */
@@ -1305,8 +1309,8 @@ getcmdline_prompt(firstc, prompt, attr)
 cmdline_charsize(idx)
     int		idx;
 {
-#ifdef FEAT_CRYPT
-    if (cmdline_crypt)	    /* showing '*', always 1 position */
+#if defined(FEAT_CRYPT) || defined(FEAT_EVAL)
+    if (cmdline_star)	    /* showing '*', always 1 position */
 	return 1;
 #endif
     return ptr2cells(ccline.cmdbuff + idx);
@@ -1717,8 +1721,8 @@ put_on_cmdline(str, len, redraw)
 	mch_memmove(ccline.cmdbuff + ccline.cmdpos, str, (size_t)len);
 	if (redraw)
 	{
-#ifdef FEAT_CRYPT
-	    if (cmdline_crypt)		/* only write '*' characters */
+#if defined(FEAT_CRYPT) || defined(FEAT_EVAL)
+	    if (cmdline_star)		/* only write '*' characters */
 		for (i = ccline.cmdpos; i < ccline.cmdlen; ++i)
 		    msg_putchar('*');
 	    else
@@ -1744,8 +1748,8 @@ put_on_cmdline(str, len, redraw)
 		m = MAXCOL;
 	    for (i = 0; i < len; ++i)
 	    {
-#ifdef FEAT_CRYPT
-		if (cmdline_crypt)
+#if defined(FEAT_CRYPT) || defined(FEAT_EVAL)
+		if (cmdline_star)
 		    c = 1;
 		else
 #endif
@@ -1838,8 +1842,8 @@ redrawcmd()
 
     msg_start();
     redrawcmdprompt();
-#ifdef FEAT_CRYPT
-    if (cmdline_crypt)
+#if defined(FEAT_CRYPT) || defined(FEAT_EVAL)
+    if (cmdline_star)
     {
 	/* Show '*' for every character typed */
 	for (i = 0; i < ccline.cmdlen; ++i)
@@ -2716,7 +2720,12 @@ set_expand_context(xp)
     char_u	*nextcomm;
     int		old_char = NUL;
 
-    if (ccline.cmdfirstc != ':')	/* only expansion for ':' commands */
+    /* only expansion for ':' and '>' commands */
+    if (ccline.cmdfirstc != ':'
+#ifdef FEAT_EVAL
+	    && ccline.cmdfirstc != '>'
+#endif
+	    )
     {
 	xp->xp_context = EXPAND_NOTHING;
 	return;
@@ -2979,6 +2988,8 @@ hist_char2type(c)
 	return HIST_EXPR;
     if (c == '@')
 	return HIST_INPUT;
+    if (c == '>')
+	return HIST_DEBUG;
     return HIST_SEARCH;	    /* must be '?' or '/' */
 }
 
@@ -2994,6 +3005,7 @@ static char *(history_names[]) =
     "search",
     "expr",
     "input",
+    "debug",
     NULL
 };
 
@@ -3134,8 +3146,8 @@ in_history(type, str, move_to_front)
 }
 
 /*
- * Convert history name (from table above) to its number equivalent:
- * HIST_CMD, HIST_SEARCH, HIST_EXPR, or HIST_INPUT.
+ * Convert history name (from table above) to its HIST_ equivalent.
+ * When "name" is empty, return "cmd" history.
  * Returns -1 for unknown history name.
  */
     int
@@ -3145,11 +3157,15 @@ get_histtype(name)
     int		i;
     int		len = STRLEN(name);
 
+    /* No argument: use current history. */
+    if (len == 0)
+	return hist_char2type(ccline.cmdfirstc);
+
     for (i = 0; history_names[i] != NULL; ++i)
 	if (STRNICMP(name, history_names[i], len) == 0)
 	    return i;
 
-    if (vim_strchr((char_u *)":=@?/", name[0]) != NULL && name[1] == NUL)
+    if (vim_strchr((char_u *)":=@>?/", name[0]) != NULL && name[1] == NUL)
 	return hist_char2type(name[0]);
 
     return -1;
@@ -3159,8 +3175,8 @@ static int	last_maptick = -1;	/* last seen maptick */
 
 /*
  * Add the given string to the given history.  If the string is already in the
- * history then it is moved to the front.  "histype" may be HIST_CMD,
- * HIST_SEARCH, HIST_EXPR or HIST_INPUT.
+ * history then it is moved to the front.  "histype" may be one of he HIST_
+ * values.
  */
     void
 add_to_history(histype, new_entry, in_map)
@@ -3210,7 +3226,7 @@ add_to_history(histype, new_entry, in_map)
 
 /*
  * Get identifier of newest history entry.
- * "histype" may be HIST_CMD, HIST_SEARCH, HIST_EXPR or HIST_INPUT.
+ * "histype" may be one of the HIST_ values.
  */
     int
 get_history_idx(histype)
@@ -3227,7 +3243,7 @@ get_history_idx(histype)
  * Calculate history index from a number:
  *   num > 0: seen as identifying number of a history entry
  *   num < 0: relative position in history wrt newest entry
- * "histype" may be HIST_CMD, HIST_SEARCH, HIST_EXPR or HIST_INPUT.
+ * "histype" may be one of the HIST_ values.
  */
     static int
 calc_hist_idx(histype, num)
@@ -3264,7 +3280,7 @@ calc_hist_idx(histype, num)
 
 /*
  * Get a history entry by its index.
- * "histype" may be HIST_CMD, HIST_SEARCH, HIST_EXPR or HIST_INPUT.
+ * "histype" may be one of the HIST_ values.
  */
     char_u*
 get_history_entry(histype, idx)
@@ -3280,7 +3296,7 @@ get_history_entry(histype, idx)
 
 /*
  * Clear all entries of a history.
- * "histype" may be HIST_CMD, HIST_SEARCH, HIST_EXPR or HIST_INPUT.
+ * "histype" may be one of the HIST_ values.
  */
     int
 clr_history(histype)
@@ -3307,7 +3323,7 @@ clr_history(histype)
 
 /*
  * Remove all entries matching {str} from a history.
- * "histype" may be HIST_CMD, HIST_SEARCH, HIST_EXPR or HIST_INPUT.
+ * "histype" may be one of the HIST_ values.
  */
     int
 del_history_entry(histype, str)
@@ -3365,7 +3381,7 @@ del_history_entry(histype, str)
 
 /*
  * Remove an indexed entry from a history.
- * "histype" may be HIST_CMD, HIST_SEARCH, HIST_EXPR or HIST_INPUT.
+ * "histype" may be one of the HIST_ values.
  */
     int
 del_history_idx(histype, idx)
@@ -3501,14 +3517,14 @@ ex_history(eap)
     if (!(isdigit(*arg) || *arg == '-' || *arg == ','))
     {
 	end = arg;
-	while (isalpha(*end) || vim_strchr((char_u *)":=@/?", *end) != NULL)
+	while (isalpha(*end) || vim_strchr((char_u *)":=@>/?", *end) != NULL)
 	    end++;
 	i = *end;
 	*end = NUL;
 	histype1 = get_histtype(arg);
 	if (histype1 == -1)
 	{
-	    if (STRNICMP(arg, "all", STRLEN(arg)) == 0)
+	    if (STRICMP(arg, "all") == 0)
 	    {
 		histype1 = 0;
 		histype2 = HIST_COUNT-1;

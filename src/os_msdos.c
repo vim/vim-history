@@ -1504,36 +1504,21 @@ mch_FullName(
     int		len,
     int		force)
 {
-    if (fname == NULL)	/* always fail */
-    {
-	*buf = NUL;
-	return FAIL;
-    }
-
     if (!force && mch_isFullName(fname))	/* allready expanded */
     {
 	STRNCPY(buf, fname, len);
-	slash_adjust(buf);
 	return OK;
     }
 
 #ifdef __BORLANDC__		/* Only Borland C++ has this */
     if (_fullpath((char *)buf, (char *)fname, len - 1) == NULL)
-    {
-	STRNCPY(buf, fname, len);   /* failed, use the relative path name */
-	slash_adjust(buf);
 	return FAIL;
-    }
-    /* Append a backslash after a directory name, unless it's already there */
-    {
-	int	c;
 
-	if (mch_isdir(buf) && (c = buf[STRLEN(buf) - 1]) != '\\' && c != '/')
-	    STRCAT(buf, pseps);
-    }
-    slash_adjust(buf);
+    /* Append a backslash after a directory name, unless it's already there */
+    if (mch_isdir(buf))
+	add_pathsep(buf);
     return OK;
-#else			/* almost the same as mch_FullName in os_unix.c */
+#else			/* almost the same as mch_FullName() in os_unix.c */
     {
 	int	l;
 	char_u	olddir[MAXPATHL];
@@ -1603,7 +1588,6 @@ mch_FullName(
 	if (p)
 	    mch_chdir(olddir);
 	strcat(buf, fname);
-	slash_adjust(buf);
 	return retval;
     }
 #endif
@@ -2098,6 +2082,7 @@ dos_expandpath(
     struct ffblk	fb;
     int			matches;
     int			len;
+    int			dot_at_start;
 
     start_len = gap->ga_len;
     /* make room for file name */
@@ -2148,6 +2133,7 @@ dos_expandpath(
 	*e++ = '*';
 	*e = NUL;
     }
+    dot_at_start = (*s == '.');
 
     /* If we are expanding wildcards we try both files and directories */
     if ((c = findfirst((char *)buf, &fb,
@@ -2161,8 +2147,8 @@ dos_expandpath(
     while (!c)
     {
 	namelowcpy((char *)s, fb.ff_name);
-	/* ignore "." and ".." */
-	if (*s != '.' || (s[1] != NUL && (s[1] != '.' || s[2] != NUL)))
+	/* ignore names starting with "." unless asked for */
+	if (*s != '.' || dot_at_start)
 	{
 	    len = STRLEN(buf);
 	    STRCPY(buf + len, path);

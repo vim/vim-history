@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.0q.  Last change: 2000 Nov 23
+*repeat.txt*    For Vim version 6.0r.  Last change: 2001 Jan 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -9,6 +9,7 @@ Repeating commands					*repeating*
 1. Single repeats	|single-repeat|
 2. Multiple repeats	|multi-repeat|
 3. Complex repeats	|complex-repeat|
+4. Debugging scripts	|debug-scripts|
 
 ==============================================================================
 1. Single repeats					*single-repeat*
@@ -267,5 +268,143 @@ Rationale:
 	For example for this Vi mapping: >
 		:map xx  asdf\
 <	Therefore the unusual leading backslash is used.
+
+==============================================================================
+4. Debugging scripts					*debug-scripts*
+
+Besides the obvious messages that you can add to your scripts to find out what
+they are doing, Vim offers a debug mode.  This allows you to step through a
+sourced file or user function and set breakpoints.
+
+NOTE: The debugging mode is far from perfect.  Debugging will have side
+effects on how Vim works.  You cannot use it to debug everything.  For
+example, the display is messed up by the debugging messages.
+{Vi does not have a debug mode}
+
+
+STARTING DEBUG MODE						*debug-mode*
+
+To enter debugging mode use one of these methods:
+1. Start Vim with the |-D| argument: >
+	vim -D file.txt
+<  Debugging will start as soon as the first vimrc file is sourced.  This is
+   useful to find out what is happening when Vim is starting up.  A side
+   effect is that Vim will switch the terminal mode before initialisations
+   have finished, with unpredictable results.
+   For a GUI-only version (Windows, Macintosh) the debugging will start as
+   soon as the GUI window has been opened.  To make this happen early, add a
+   ":gui" command in the vimrc file.
+								*:debug*
+2. Run a command with ":debug" prepended.  Debugging will only be done while
+   this command executes.  Useful for debugging a specific script or user
+   function.  And for scripts and fuctions used by autocommands.  Example: >
+   	:debug edit test.txt.gz
+
+3. Set a breakpoint in a sourced file or user function.  You could do this in
+   the command line: >
+	vim -c "breakadd file */explorer.vim" .
+<  This will run Vim and stop in the first line of the "explorer.vim" script.
+   Breakpoints can also be set while in debugging mode.
+
+In debugging mode every executed command is displayed before it is executed.
+Comment lines, empty lines and lines that are not executed are skipped.  When
+a line contains two commands, separated by "|", each command will be displayed
+separately.
+
+
+DEBUG MODE
+
+Once in debugging mode, the usual Ex commands can be used.  For example, to
+inspect the value of a variable: >
+	echo idx
+When inside a user function, this will print the value of the local variable
+"idx".  Prepend "g:" to get the value of a global variable: >
+	echo g:idx
+All commands are executed in the context of the current function or script.
+You can also set options, for example setting or resetting 'verbose' will show
+what happens, but you might want to set it just before executing the lines you
+are interested in: >
+	:set verbose=20
+
+Commands that require updating the screen should be avoided, because their
+effect won't be noticed until after leaving debug mode.  For example: >
+	:help
+won't be very helpful.
+
+There is a separate command-line history for debug mode.
+
+Additionally, these commands can be used:
+							*>cont*
+	cont	Continue execution without coming back to debug mode.
+							*>next*
+	next	Execute the command and come back to debug mode when it's
+		finished.  This steps over user function calls and sourced
+		files.
+							*>step*
+	step	Execute the command and come back to debug mode for the next
+		command.  This steps into called user functions and sourced
+		files.
+							*>finish*
+	finish	Finish the current script or user function and come back to
+		debug mode for the command after the one that sourced or
+		called it.
+
+About the additional commands in debug mode:
+- There is no command-line completion.
+- They cannot be abbreviated.  For example, typing "con" doesn't work.
+- Hitting <CR> will repeat the previous one.
+
+
+DEFINING BREAKPOINTS
+							*:breaka* *:breakadd*
+:breaka[dd] func [lnum] {name}
+		Set a breakpoint in a function.
+
+:breaka[dd] file [lnum] {name}
+		Set a breakpoint in a sourced file.
+
+The [lnum] is the line number of the breakpoint.  Vim will stop at or after
+this line.  When omitted line 1 is used.
+
+{name} is a pattern that is matched with the file or function name.  The
+pattern is like what is used for autocommands.  There must be a full match (as
+if the pattern starts with "^" and ends in "$").  A "*" matches any sequence
+of characters.
+
+The match for sourced scripts is done against the full file name.  Examples: >
+	breakadd file explorer
+won't match, the path is missing. >
+	breakadd file *explorer.vim
+matches ".../plugin/explorer.vim" and ".../plugin/iexplorer.vim". >
+	breakadd file */explorer.vim
+matches ".../plugin/explorer.vim" only.
+
+The match for functions is done against the name as it's shown in the output
+of ":function".  For local functions this means that something like "<SNR>99_"
+is prepended.
+
+
+DELETING BREAKPOINTS
+							*:breakd* *:breakdel*
+:breakd[el] {nr}
+		Delete breakpoint {nr}.  Use |:breaklist| to see the number of
+		each breakpoint.
+
+:breakd[el] func [lnum] {name}
+		Delete a breakpoint in a function.
+
+:breakd[el] file [lnum] {name}
+		Delete a breakpoint in a sourced file.
+
+When [lnum] is omitted, the first breakpoint in the function or file is
+deleted.
+The {name} must be exactly the same as what was typed for the ":breakadd"
+command.  "explorer", "*explorer.vim" and "*explorer*" are different.
+
+
+LISTING BREAKPOINTS
+							*:breakl* *:breaklist*
+:breakl[ist]
+		List all breakpoints.
 
  vim:tw=78:

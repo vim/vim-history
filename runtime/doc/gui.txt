@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0q.  Last change: 2000 Dec 14
+*gui.txt*       For Vim version 6.0r.  Last change: 2000 Dec 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -177,6 +177,13 @@ will appear in the top of the window.
 If a window is shrunk to zero height (by the growth of another window) its
 scrollbar disappears. It reappears when the window is restored.
 
+If a window is vertically split, it will only get a scrollbar when it is the
+current window, or the middle of the current window is above or below it.
+When there are scrollbars on both sides, and the middle of the current window
+is on the left halve, the right scrollbar column will contain scrollbars for
+the rightmost windows.  The same happens on the other side.
+
+
 Horizontal Scrollbars					*gui-horiz-scroll*
 
 The horizontal scrollbar (at the bottom of the Vim GUI) may be used to
@@ -294,7 +301,7 @@ A different kind of selection is used when:
 - in Command-line mode
 - at the |hit-enter| prompt
 - whenever the current mode is not in the 'mouse' option
-- when hodling the CTRL and SHIFT keys in the GUI
+- when holding the CTRL and SHIFT keys in the GUI
 Since Vim continues like the selection isn't there, and there is no mode
 associated with the selection, this is called modeless selection.  Any text in
 the Vim window can be selected.  Select the text by pressing the left mouse

@@ -651,51 +651,50 @@ list_version()
 #endif
 
 #ifdef FEAT_HUGE
-    MSG_PUTS(_("\nHuge"));
+    MSG_PUTS(_("\nHuge version "));
 #else
 # ifdef FEAT_BIG
-    MSG_PUTS(_("\nBig"));
+    MSG_PUTS(_("\nBig version "));
 # else
 #  ifdef FEAT_NORMAL
-    MSG_PUTS(_("\nNormal"));
+    MSG_PUTS(_("\nNormal version "));
 #  else
 #   ifdef FEAT_SMALL
-    MSG_PUTS(_("\nSmall"));
+    MSG_PUTS(_("\nSmall version "));
 #   else
-    MSG_PUTS(_("\nTiny"));
+    MSG_PUTS(_("\nTiny version "));
 #   endif
 #  endif
 # endif
 #endif
-    MSG_PUTS(_(" version "));
 #ifndef FEAT_GUI
-    MSG_PUTS(_("without"));
+    MSG_PUTS(_("without GUI."));
 #else
 # ifdef FEAT_GUI_GTK
 #  ifdef FEAT_GUI_GNOME
-    MSG_PUTS(_("with GTK-GNOME"));
+    MSG_PUTS(_("with GTK-GNOME GUI."));
 #  else
-    MSG_PUTS(_("with GTK"));
+    MSG_PUTS(_("with GTK GUI."));
 #  endif
 # else
 #  ifdef FEAT_GUI_MOTIF
-    MSG_PUTS(_("with X11-Motif"));
+    MSG_PUTS(_("with X11-Motif GUI."));
 #  else
 #   ifdef FEAT_GUI_ATHENA
-    MSG_PUTS(_("with X11-Athena"));
+    MSG_PUTS(_("with X11-Athena GUI."));
 #   else
 #    ifdef FEAT_GUI_BEOS
-    MSG_PUTS(_("with BeOS"));
+    MSG_PUTS(_("with BeOS GUI."));
 #    else
 #     if defined(MSWIN) || defined(macintosh)
-    MSG_PUTS(_("with"));
+    MSG_PUTS(_("with GUI."));
 #     endif
 #    endif
 #   endif
 #  endif
 # endif
 #endif
-    MSG_PUTS(_(" GUI.  Features included (+) or not (-):\n"));
+    MSG_PUTS(_("  Features included (+) or not (-):\n"));
 
     /* print all the features */
     for (i = 0; features[i] != NULL; ++i)

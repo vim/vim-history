@@ -622,7 +622,7 @@ win_split(new_size, flags)
 	/* We don't like to take lines for the new window from a quickfix
 	 * or preview window.  Take them from a window above or below
 	 * instead, if possible. */
-	if (bt_quickfix(oldwin->w_buffer) || oldwin->w_preview)
+	if (bt_quickfix(oldwin->w_buffer) || oldwin->w_p_pvw)
 	    win_setheight_win(oldwin->w_height + new_size, oldwin);
 #endif
     }
@@ -1422,7 +1422,7 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
 		     * Watch out for this window being the next_curwin. */
 		    if (fr->fr_win != NULL
 			    && (bt_quickfix(fr->fr_win->w_buffer)
-				|| fr->fr_win->w_preview))
+				|| fr->fr_win->w_p_pvw))
 		    {
 			new_size = fr->fr_height;
 			if (fr->fr_win == next_curwin)
@@ -1440,7 +1440,7 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
 			    new_size += room;
 			    room = 0;
 			}
-			if (fr->fr_win->w_preview)
+			if (fr->fr_win->w_p_pvw)
 			    preview_height = new_size;
 			else
 			    quickfix_height = new_size;
@@ -1483,7 +1483,7 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
 		new_size = quickfix_height;
 		wincount = 0;	    /* doesn't count as a sizeable window */
 	    }
-	    else if (fr->fr_win != NULL && fr->fr_win->w_preview)
+	    else if (fr->fr_win != NULL && fr->fr_win->w_p_pvw)
 	    {
 		new_size = preview_height;
 		wincount = 0;	    /* doesn't count as a sizeable window */
@@ -1640,7 +1640,7 @@ win_close(win, free_buf)
 	/* For a preview or quickfix window, remember its old size and restore
 	 * it later (it's a simplistic solution...). */
 	if (frp2->fr_win != NULL
-		&& (frp2->fr_win->w_preview
+		&& (frp2->fr_win->w_p_pvw
 		    || bt_quickfix(frp2->fr_win->w_buffer)))
 	    old_height = frp2->fr_win->w_height;
 #endif
@@ -3026,7 +3026,7 @@ frame_setheight(curfrp, height)
 	    {
 #ifdef FEAT_QUICKFIX
 		if (frp->fr_win != NULL
-			&& (frp->fr_win->w_preview
+			&& (frp->fr_win->w_p_pvw
 			    || bt_quickfix(frp->fr_win->w_buffer)))
 		    room_reserved += frp->fr_height;
 #endif
@@ -3103,7 +3103,7 @@ frame_setheight(curfrp, height)
 #ifdef FEAT_QUICKFIX
 		if (room_reserved > 0
 			&& frp->fr_win != NULL
-			&& (frp->fr_win->w_preview
+			&& (frp->fr_win->w_p_pvw
 			    || bt_quickfix(frp->fr_win->w_buffer)))
 		{
 		    if (room_reserved >= frp->fr_height)
@@ -3904,45 +3904,13 @@ get_file_name_in_path(line, col, options, count)
 						       && ptr[len - 2] != '.')
 	--len;
 
-#if 0
-    if (options & FNAME_HYP)
-    {
-	char_u	*path;
-
-	/* For hypertext links, ignore the name of the machine.
-	 * Such a link looks like "type://machine/path". Only "/path" is used.
-	 * First search for the string "://", then for the extra '/'
-	 */
-	if ((file_name = vim_strchr(ptr, ':')) != NULL
-		&& ((path_is_url(file_name) == URL_SLASH
-			&& (path = vim_strchr(file_name + 3, '/')) != NULL)
-		    || (path_is_url(file_name) == URL_BACKSLASH
-			&& (path = vim_strchr(file_name + 3, '\\')) != NULL))
-		&& path < ptr + len)
-	{
-	    len -= path - ptr;
-	    ptr = path;
-	    if (ptr[1] == '~')	    /* skip '/' for /~user/path */
-	    {
-		++ptr;
-		--len;
-	    }
-	}
-    }
-#endif
-
 #if defined(FEAT_FIND_ID) && defined(FEAT_EVAL)
     if ((options & FNAME_INCL) && *curbuf->b_p_inex != NUL)
     {
-	void	*save_funccalp;
-
 	set_vim_var_string(VV_FNAME, ptr, len);
-	/* Don't want to use local function variables here. */
-	save_funccalp = save_funccal();
 
-	tofree = eval_to_string(curbuf->b_p_inex, NULL);
+	tofree = eval_to_string_safe(curbuf->b_p_inex, NULL);
 
-	restore_funccal(save_funccalp);
 	set_vim_var_string(VV_FNAME, NULL, 0);
 	if (tofree != NULL)
 	{
@@ -4008,6 +3976,50 @@ path_with_url(fname)
 }
 
 /*
+ * Return TRUE if "name" is a full (absolute) path name or URL.
+ */
+    int
+vim_isAbsName(name)
+    char_u	*name;
+{
+    return (path_with_url(name) != 0 || mch_isFullName(name));
+}
+
+/*
+ * Get absolute file name into buffer 'buf' of length 'len' bytes.
+ * Adds a slash to an existing directory name.
+ *
+ * return FAIL for failure, OK otherwise
+ */
+    int
+vim_FullName(fname, buf, len, force)
+    char_u	*fname, *buf;
+    int		len;
+    int		force;
+{
+    int		retval = OK;
+    int		url;
+
+    *buf = NUL;
+    if (fname == NULL)
+	return FAIL;
+
+    url = path_with_url(fname);
+    if (!url)
+	retval = mch_FullName(fname, buf, len, force);
+    if (url || retval == FAIL)
+    {
+	/* something failed; use the file name (truncate when too long) */
+	STRNCPY(buf, fname, len);
+	buf[len - 1] = NUL;
+    }
+#if defined(macintosh) || defined(OS2) || defined(MSDOS) || defined(MSWIN)
+    slash_adjust(buf);
+#endif
+    return retval;
+}
+
+/*
  * Return the minimal number of rows that is needed on the screen to display
  * the current number of windows.
  */
@@ -4046,7 +4058,7 @@ only_one_window()
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
 	if (!(wp->w_buffer->b_help
 # ifdef FEAT_QUICKFIX
-		    || wp->w_preview
+		    || wp->w_p_pvw
 # endif
 	     ) || wp == curwin)
 	    ++count;

@@ -1,4 +1,4 @@
-*os_390.txt*    For Vim version 6.0q.  Last change: 2000 Aug 20
+*os_390.txt*    For Vim version 6.0r.  Last change: 2001 Jan 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -78,8 +78,9 @@ configure and make.
     $ make test
 <
         NOTE: Test 11 will fail, if you don't have gzip installed.
-        On Vim 6.0f (alpha) test 3 will fail. This is a known bug and it
-        is worked on it. >
+        Test 42 will fail, as VIM on OS/390 Unix doesn't support the multibyte
+        feature.
+        >
 
     $ make install
 <
@@ -113,9 +114,9 @@ Here is what you do, if you want Motif:
   b) Dynamic link:
      Make VIM as described for the static link. Then change the contense of
      the 'auto/link.sed' file to the following: >
-	s%-lXext  *%%g
-	s%-lXmu  *%%g
-	s%-lXt	*%%g
+	s/-lXext  *//g
+	s/-lXmu  *//g
+	s/-lXt	*//g
 	s%-lXm	*%/usr/lib/Xm.x %g
 	s%-lX11  *%/usr/lib/X11.x %g
 	s%-lSM	*%/usr/lib/SM.x %g
@@ -157,8 +158,7 @@ open the file browser). No solution for this yet.
 							*OS390-ctags*
 5) Ctags
 
-Vim 6.0 contains Exuberant Ctags 4.0 or later by Darren Hiebert. With 4.0
-there are two known problems:
+Vim 6.0 doesn't include ctags anymore. Known problems:
 
     1) Ctags doesn't support trigraphs.
        All system header files start with a ifdef section. This section
@@ -194,6 +194,8 @@ there are two known problems:
 6) Known weaknesses
 
 - No binary search in tag files (see |OS390-ctags|).
+- Multibyte support (utf-8) doesn't work, it's disabled at compile time.
+  (|multibyte|)
 
 - Perl interface never tried or tested		(|perl|)
 - Hangul imput never tried or tested		(|hangul|)
@@ -209,6 +211,12 @@ If you try on of this and it works
 
 							*OS390-changes*
 7) Changes
+
+6.0q (alpha):
+  Minor changes for nrformats=alpha (see |'nrformats'|).
+  Problem with hardcoded keycode for the english pound sign. Added a define in
+  ascii.h
+  Disabled multibyte for EBCDIC in feature.h
 
 6.0f (alpha):
   First compile of Vim 6 on OS/390 Unix. Some minor changes were needed.

@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0q.  Last change: 2000 Dec 17
+*eval.txt*      For Vim version 6.0r.  Last change: 2001 Jan 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -564,12 +564,6 @@ v:count		The count given for the last Normal mode command.  Can be used
 v:count1	Just like "v:count", but defaults to one when no count is
 		used.
 
-						*v:lang* *lang-variable*
-v:lang		The current locale setting of the applications runtime
-		environment.  This facilitates making Vim scripts aware of it.
-		This variable can be set with the |:language| command.
-		See |multi-lang|.
-
 					*v:errmsg* *errmsg-variable*
 v:errmsg	Last given error message.  It's allowed to set this variable.
 		Example: >
@@ -578,6 +572,22 @@ v:errmsg	Last given error message.  It's allowed to set this variable.
 	:if v:errmsg != ""
 	:  ... handle error
 <		"errmsg" also works, for backwards compatibility.
+
+					*v:folddashes* *folddashes-variable*
+v:folddashes	Used for 'foldtext': dashes representing foldlevel of closed
+		fold.
+
+					*v:foldend* *foldend-variable*
+v:foldend	Used for 'foldtext': last line of closed fold.
+
+					*v:foldstart* *foldstart-variable*
+v:foldstart	Used for 'foldtext': first line of closed fold.
+
+						*v:lang* *lang-variable*
+v:lang		The current locale setting of the applications runtime
+		environment.  This facilitates making Vim scripts aware of it.
+		This variable can be set with the |:language| command.
+		See |multi-lang|.
 
 						*v:lnum* *lnum-variable*
 v:lnum		Line number for the 'foldexpr' and 'indentexpr' expressions.
@@ -663,6 +673,7 @@ filereadable( {file})		Number	TRUE if {file} is a readable file
 fnamemodify( {fname}, {mods})	String	modify file name
 foldclosed( {lnum})		Number  >0 if fold at {lnum} is closed
 foldlevel( {lnum})		Number	fold level at {lnum}
+foldtext( )			String  line displayed for closed fold
 getbufvar( {expr}, {varname})		variable {varname} in buffer {expr}
 getcwd()			String	the current working directory
 getftime( {fname})		Number	last modification time of file
@@ -702,7 +713,7 @@ nextnonblank( {lnum})		Number	line nr of non-blank line >= {lnum}
 nr2char( {expr})		String	single char with ASCII value {expr}
 prevnonblank( {lnum})		Number	line nr of non-blank line <= {lnum}
 rename({from}, {to})		Number  rename (move) file from {from} to {to}
-search( {pattern}[, {wrap})	Number  search for {pattern}
+search( {pattern} [, {flags}])	Number  search for {pattern}
 setbufvar( {expr}, {varname}, {val})	set {varname} in buffer {expr} to {val}
 setline( {lnum}, {line})	Number	set line {lnum} to {line}
 setwinvar( {nr}, {varname}, {val})	set {varname} in window {nr} to {val}
@@ -1091,6 +1102,13 @@ filereadable({file})
 							*file_readable()*
 		Obsolete name: file_readable().
 
+							*filewritable()*
+filewritable({file})
+		The result is a Number, which is 1 when a file with the
+		name {file} exists, and can be written.  If {file} doesn't
+		exist, or is not writable, the result is 0.  If (file) is a
+		directory, and we can write to it, the result is 2.
+
 							*fnamemodify()*
 fnamemodify({fname}, {mods})
 		Modify file name {fname} according to {mods}.  {mods} is a
@@ -1114,6 +1132,17 @@ foldlevel({lnum})
 		in the current buffer.  If line {lnum} starts a new fold, the
 		foldlevel is returned as negative number, e.g. if {lnum}
 		starts a fold with level 3, |foldlevel()| returns -3.
+
+							*foldtext()*
+foldtext()	Returns a String, to be displayed for a closed fold.  This is
+		the default function used for the 'foldtext' option.  It uses
+		the |v:foldstart|, |v:foldend| and |v:folddashes| variables.
+		The returned string looks like this: >
+			+-- 45 lines: abcdef
+<		The number of dashses depends on the foldlevel.  The "45" is
+		the number of lines in the fold.  "abcdef" is the text in the
+		first non-blank line of the fold.  Leading white space, "//"
+		or "/*" and text following "{{{" are removed.
 
 							*getbufvar()*
 getbufvar({expr}, {varname})
@@ -1349,8 +1378,18 @@ input({prompt})						*input()*
 			:if input("Coffee or beer? ") == "beer"
 			:  echo "Cheers!"
 			:endif
-<							*isdirectory()*
-isdirectory({directory})
+
+inputsecret({prompt})					*inputsecret()*
+		This function acts much like the |input()| function with but
+		two exceptions:
+		a) the user's response will be displayed as a sequence of
+		asterisks ("*") thereby keeping the entry secret, and
+		b) the user's response will not be recorded on the input
+		|history| stack.
+		The result is a String, which is whatever the user actually
+		typed on the command-line in response to the issued prompt.
+
+isdirectory({directory})				*isdirectory()*
 		The result is a Number, which is TRUE when a directory with
 		the name {directory} exists.  If {directory} doesn't exist, or
 		isn't a directory, the result is FALSE.  {directory} is any
@@ -2530,12 +2569,12 @@ missing: >
 	:endif
 <
 ==============================================================================
-9. The sandbox					*eval-sandbox*
+9. The sandbox					*eval-sandbox* *sandbox*
 
-The 'foldexpr' and 'indentexpr' are evaluated in a sandbox.  This means that
-you are protected from these expression having nasty side effects.  This gives
-some safety for when these options are set from a modeline.  This is not 100%
-secure though!
+The 'foldexpr', 'indentexpr', 'statusline' and 'indentexpr' options are
+evaluated in a sandbox.  This means that you are protected from these
+expression having nasty side effects.  This gives some safety for when these
+options are set from a modeline.  This is not 100% secure though!
 
 These items are not allowed in the sandbox:
 	- changing the buffer text

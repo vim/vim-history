@@ -1989,6 +1989,7 @@ python_buffer_free(buf_t *buf)
     }
 }
 
+#if defined(FEAT_WINDOWS) || defined(PROTO)
     void
 python_window_free(win_t *win)
 {
@@ -1999,6 +2000,7 @@ python_window_free(win_t *win)
 	win->python_ref = NULL;
     }
 }
+#endif
 
 static BufListObject TheBufferList =
 {

@@ -466,7 +466,9 @@ EXTERN char_u	*p_cdpath;	/* 'cdpath' */
 #endif
 EXTERN int	p_remap;	/* 'remap' */
 EXTERN long	p_report;	/* 'report' */
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 EXTERN long	p_pvh;		/* 'previewheight' */
+#endif
 #ifdef WIN32
 EXTERN int	p_rs;		/* 'restorescreen' */
 #endif
@@ -493,7 +495,26 @@ EXTERN char_u	*p_sel;		/* 'selection' */
 EXTERN char_u	*p_slm;		/* 'selectmode' */
 #endif
 #ifdef FEAT_SESSION
-EXTERN char_u	*p_sessopt;	/* 'sessionoptions' */
+EXTERN char_u	*p_ssop;	/* 'sessionoptions' */
+EXTERN unsigned	ssop_flags;
+# ifdef IN_OPTION_C
+static char *(p_ssop_values[]) = {"buffers", "winpos", "resize", "winsize",
+    "options", "help", "blank", "globals", "slash", "unix", "sesdir",
+    "curdir", "folds", NULL};
+# endif
+# define SSOP_BUFFERS	0x001
+# define SSOP_WINPOS	0x002
+# define SSOP_RESIZE	0x004
+# define SSOP_WINSIZE	0x008
+# define SSOP_OPTIONS	0x010
+# define SSOP_HELP	0x020
+# define SSOP_BLANK	0x040
+# define SSOP_GLOBALS	0x080
+# define SSOP_SLASH	0x100
+# define SSOP_UNIX	0x200
+# define SSOP_SESDIR	0x400
+# define SSOP_CURDIR	0x800
+# define SSOP_FOLDS	0x1000
 #endif
 EXTERN char_u	*p_sh;		/* 'shell' */
 EXTERN char_u	*p_shcf;	/* 'shellcmdflag' */
@@ -564,8 +585,17 @@ EXTERN int	p_tf;		/* 'ttyfast' */
 EXTERN char_u	*p_toolbar;	/* 'toolbar' */
 #endif
 EXTERN long	p_ttyscroll;	/* 'ttyscroll' */
-#ifdef FEAT_MOUSE
+#if defined(FEAT_MOUSE) && (defined(UNIX) || defined(VMS))
 EXTERN char_u	*p_ttym;	/* 'ttymouse' */
+EXTERN unsigned ttym_flags;
+# ifdef IN_OPTION_C
+static char *(p_ttym_values[]) = {"xterm", "xterm2", "dec", "netterm", "jsbterm", NULL};
+# endif
+# define TTYM_XTERM	0x01
+# define TTYM_XTERM2	0x02
+# define TTYM_DEC	0x04
+# define TTYM_NETTERM	0x08
+# define TTYM_JSBTERM	0x10
 #endif
 EXTERN long	p_ul;		/* 'undolevels' */
 EXTERN long	p_uc;		/* 'updatecount' */
@@ -579,6 +609,13 @@ EXTERN char_u	*p_viminfo;	/* 'viminfo' */
 EXTERN int	p_vb;		/* 'visualbell' */
 #ifdef FEAT_VIRTUALEDIT
 EXTERN char_u	*p_ve;		/* 'virtualedit' */
+EXTERN unsigned ve_flags;
+# ifdef IN_OPTION_C
+static char *(p_ve_values[]) = {"block", "insert", "all", NULL};
+# endif
+# define VE_BLOCK	1	/* flag */
+# define VE_INSERT	2	/* flag */
+# define VE_ALL		7	/* mask */
 #endif
 EXTERN long	p_verbose;	/* 'verbose' */
 EXTERN int	p_warn;		/* 'warn' */

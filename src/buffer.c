@@ -883,10 +883,10 @@ static int  top_file_num = 1;		/* highest file number */
 
     buf_t *
 buflist_new(ffname, sfname, lnum, use_curbuf)
-    char_u	*ffname;
-    char_u	*sfname;
-    linenr_t	lnum;
-    int		use_curbuf;
+    char_u	*ffname;	/* full path of fname or relative */
+    char_u	*sfname;	/* short fname or NULL */
+    linenr_t	lnum;		/* preferred cursor line */
+    int		use_curbuf;	/* re-use curbuf if it's empty and unnamed */
 {
     buf_t	*buf;
 #ifdef UNIX
@@ -895,14 +895,15 @@ buflist_new(ffname, sfname, lnum, use_curbuf)
 
     fname_expand(&ffname, &sfname);	/* will allocate ffname */
 
-#ifdef UNIX
-    if (sfname == NULL || mch_stat((char *)sfname, &st) < 0)
-	st.st_dev = (unsigned)-1;
-#endif
-
     /*
      * If file name already exists in the list, update the entry.
      */
+#ifdef UNIX
+    /* On Unix we can use inode numbers when the file exists.  Works better
+     * for hard links. */
+    if (sfname == NULL || mch_stat((char *)sfname, &st) < 0)
+	st.st_dev = (unsigned)-1;
+#endif
     if (ffname != NULL && (buf =
 #ifdef UNIX
 		buflist_findname_stat(ffname, &st)
@@ -979,7 +980,7 @@ buflist_new(ffname, sfname, lnum, use_curbuf)
 	buf_freeall(buf, FALSE); /* free all things allocated for this buffer */
 	if (buf != curbuf)	 /* autocommands deleted the buffer! */
 	    return NULL;
-	buf->b_nwindows = 0;
+	/* buf->b_nwindows = 0; why was this here? */
 #ifdef FEAT_EVAL
 	var_clear(&buf->b_vars);	/* delete internal variables */
 #endif
@@ -1018,11 +1019,7 @@ buflist_new(ffname, sfname, lnum, use_curbuf)
     }
 
     buf->b_wininfo->wi_fpos.lnum = lnum;
-    buf->b_wininfo->wi_fpos.col = 0;
-    buf->b_wininfo->wi_next = NULL;
-    buf->b_wininfo->wi_prev = NULL;
     buf->b_wininfo->wi_win = curwin;
-    buf->b_wininfo->wi_optset = FALSE;
 
 #ifdef FEAT_EVAL
     var_init(&buf->b_vars);		/* init internal variables */
@@ -1049,18 +1046,6 @@ buflist_new(ffname, sfname, lnum, use_curbuf)
 
     return buf;
 }
-
-#if 0 /* not used */
-/*
- * Get the highest buffer number.  Note that some buffers may have been
- * deleted.
- */
-    int
-buflist_maxbufnr()
-{
-    return (top_file_num - 1);
-}
-#endif
 
 /*
  * Free the memory for the options of a buffer.
@@ -1890,16 +1875,36 @@ getaltfname(errmsg)
  * used by qf_init(), main() and doarglist()
  */
     int
-buflist_add(fname)
+buflist_add(fname, use_curbuf)
     char_u	*fname;
+    int		use_curbuf;	/* re-use curbuf if it's empty and unnamed */
 {
     buf_t	*buf;
 
-    buf = buflist_new(fname, NULL, (linenr_t)0, FALSE);
+    buf = buflist_new(fname, NULL, (linenr_t)0, use_curbuf);
     if (buf != NULL)
 	return buf->b_fnum;
     return 0;
 }
+
+#if defined(BACKSLASH_IN_FILENAME) || defined(PROTO)
+/*
+ * Adjust slashes in file names.  Called after 'shellslash' was set.
+ */
+    void
+buflist_slash_adjust()
+{
+    buf_t	*bp;
+
+    for (bp = firstbuf; bp != NULL; bp = bp->b_next)
+    {
+	if (bp->b_ffname != NULL)
+	    slash_adjust(bp->b_ffname);
+	if (bp->b_sfname != NULL)
+	    slash_adjust(bp->b_sfname);
+    }
+}
+#endif
 
 /*
  * Set alternate cursor position for current window.
@@ -1913,7 +1918,7 @@ buflist_altfpos()
 
 /*
  * Return TRUE if 'ffname' is not the same file as current file.
- * Fname must have a full path (expanded by mch_FullName).
+ * Fname must have a full path (expanded by mch_FullName()).
  */
     int
 otherfile(ffname)
@@ -2245,7 +2250,9 @@ maketitle()
 		buf[IOSIZE - 100] = NUL; /* in case it was too long */
 	    }
 
-	    if (curbuf->b_p_ro)
+	    if (!curbuf->b_p_ma)
+		STRCAT(buf, " -");
+	    else if (curbuf->b_p_ro)
 	    {
 		if (bufIsChanged(curbuf))
 		    STRCAT(buf, " =+");
@@ -2421,7 +2428,7 @@ fix_fname(fname)
 #ifdef UNIX
     return FullName_save(fname, TRUE);
 #else
-    if (!mch_isFullName(fname))
+    if (!vim_isAbsName(fname))
 	return FullName_save(fname, FALSE);
 
     fname = vim_strsave(fname);
@@ -2454,6 +2461,22 @@ fname_expand(ffname, sfname)
     if (*sfname == NULL)	/* if no short file name given, use ffname */
 	*sfname = *ffname;
     *ffname = fix_fname(*ffname);   /* expand to full path */
+}
+
+/*
+ * Get the file name for an argument list entry.
+ */
+    char_u *
+alist_name(aep)
+    aentry_t	*aep;
+{
+    buf_t	*bp;
+
+    /* Use the name from the associated buffer if it exists. */
+    bp = buflist_findnr(aep->ae_fnum);
+    if (bp == NULL)
+	return aep->ae_fname;
+    return bp->b_fname;
 }
 
 #if defined(FEAT_WINDOWS) || defined(PROTO)
@@ -2515,7 +2538,9 @@ do_arg_all(count, forceit)
 	    /* check if the buffer in this window is in the arglist */
 	    for (i = 0; i < ARGCOUNT; ++i)
 	    {
-		if (fullpathcmp(ARGLIST[i], buf->b_ffname, TRUE) & FPC_SAME)
+		if (ARGLIST[i].ae_fnum == buf->b_fnum
+			|| fullpathcmp(alist_name(&ARGLIST[i]),
+					      buf->b_ffname, TRUE) & FPC_SAME)
 		{
 		    if (i < opened_len)
 			opened[i] = TRUE;
@@ -2579,8 +2604,8 @@ do_arg_all(count, forceit)
 	count = ARGCOUNT;
 
     /* Autocommands may do anything to the argument list.  Make sure it's not
-     * freed while we are working here.  We still have to watch out for its
-     * size to be changed. */
+     * freed while we are working here by "locking" it.  We still have to
+     * watch out for its size to be changed. */
     alist = curwin->w_alist;
     ++alist->al_refcount;
 
@@ -2632,10 +2657,10 @@ do_arg_all(count, forceit)
 	     * edit file i
 	     */
 	    curwin->w_arg_idx = i;
-	    (void)do_ecmd(0, ((char_u **)alist->al_ga.ga_data)[i],
-							 NULL, NULL, ECMD_ONE,
-		   ((P_HID(curwin->w_buffer)
-		     || bufIsChanged(curwin->w_buffer)) ? ECMD_HIDE : 0)
+	    (void)do_ecmd(0, alist_name(&AARGLIST(alist)[i]), NULL, NULL,
+		      ECMD_ONE,
+		      ((P_HID(curwin->w_buffer)
+			   || bufIsChanged(curwin->w_buffer)) ? ECMD_HIDE : 0)
 							       + ECMD_OLDBUF);
 #ifdef FEAT_AUTOCMD
 	    if (use_firstwin)

@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0q.  Last change: 2000 Dec 17
+*version6.txt*  For Vim version 6.0r.  Last change: 2001 Jan 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -37,6 +37,7 @@ UTF-8 support				|new-utf-8|
 Multi-language support			|new-multi-lang|
 Plugin support				|new-plugins|
 Filetype plugins			|new-filetype-plugins|
+Debugging mode				|new-debug-mode|
 Cursor in virtual position		|new-virtedit|
 Debugger interface			|new-debug-itf|
 Buffer types				|new-buftype|
@@ -47,6 +48,7 @@ Search Path				|new-search-path|
 Editing files over a network		|new-network-files|
 Writing files				|new-file-writing|
 Argument list				|new-argument-list|
+Restore a View				|new-View|
 Various new items			|new-items-6|
 
 IMPROVEMENTS				|improvements-6|
@@ -229,6 +231,10 @@ The 16 bit MS-DOS version is now compiled without the +listcmds feature
 (buffer list manipulation commands).  They are not often needed and this
 executable needs to be smaller.
 
+'sessionoptions' now includes "curdir" by default.  This means that restoring
+a session will result in the current directory being restored, instead of
+going to the directory where the session file is located.
+
 ==============================================================================
 NEW FEATURES
 
@@ -266,7 +272,8 @@ is easy when using the mouse, just position the pointer on a status line or
 vertical separator and drag it.  In the GUI a special mouse pointer shape
 indicates where you can drag a status or separator line.
 
-To resize vertically split windows use the |CTRL-W_<| and |CTRL-W_>| commands.  To make a window the maximum width use the CTRL-W | command |CTRL-W_bar|.
+To resize vertically split windows use the |CTRL-W_<| and |CTRL-W_>| commands.
+To make a window the maximum width use the CTRL-W | command |CTRL-W_bar|.
 
 To force a new window to use the full width or height of the Vim window,
 these two modifiers are available:
@@ -477,6 +484,19 @@ The new ":setfiletype" command is used in the filetype detection autocommands,
 to avoid that 'filetype' is set twice.
 
 
+Debugging mode						*new-debug-mode*
+--------------
+
+In debugging mode sourced scripts and user functions can be executed line by
+line.  There are commands to step over a command or step into it. |debug-mode|
+
+Breakpoints can be set to run until a certain line in a script or user
+function is executed. |:breakadd|
+
+Debugging can be started with ":debug {cmd}" to debug what happens when a
+command executes.  The |-D| argument can be used to debug while starting up.
+
+
 Cursor in virtual position				*new-virtedit*
 --------------------------
 
@@ -612,6 +632,26 @@ be removed with |:argdelete|.
 list concatenated.  Useful for ":grep foo ##".
 
 
+Restore a View						*new-View*
+--------------
+
+The ":mkview" command writes a Vim script with the settings and mappings for
+one window.  When the created file is sourced, the view of the window is
+restored.  It's like ":mksession" for one window.
+The View also contains the local argument list and manually created, opened
+and closed folds.
+
+":mksession" now also works fine with vertical splits.  It has been further
+improved and restores the view of each window.  It also works properly with
+preview and quickfix windows.
+
+'sessionoptions' is used for ":mkview" as well.
+Added "curdir" and "sesdir" to 'sessionoptions'.  Allows selection of what
+the current directory will be restored to.
+
+The session file now also contains the argument list(s).
+
+
 Various new items					*new-items-6*
 -----------------
 
@@ -633,6 +673,8 @@ Options: ~
 		otherwise be omitted.  Useful for debugging 'indentexpr' and
 		'foldexpr'.
 'modifiable'	When off, it is impossible to make changes to a buffer.
+'previewwindow' Set in the preview window.  Used in a session file to mark a
+		window as the preview window.
 
 
 Ex commands: ~
@@ -695,6 +737,7 @@ last insert position or changed text.
 
 New functions: ~
 executable()	Checks if a program or batch script can be executed.
+filewritable()	Checks if a file can be written. (Ron Aaron)
 foldclosed()	Find out if there is a closed fold. (Johannes Zellner).
 foldlevel()	Find out the foldlevel. (Johannes Zellner)
 getbufvar()	gets the value of an option or local variable in a buffer (Ron
@@ -704,6 +747,8 @@ getwinvar()	gets the value of an option or local variable in a window (Ron
 		Aaron)
 hasmapto()	Detect if a mapping to a string is already present.
 indent()	gets the indent of a line (Ron Aaron)
+inputsecret()	Ask the user to type a string without showing the typed keys.
+		(Charles Campbell)
 libcall()	for Unix (Neil Bird, Johannes Zellner, Stephen Wall)
 libcallnr()	for Win32 and Unix
 mode()		Return a string that indicates the current mode.
@@ -718,6 +763,10 @@ tolower()	Convert string to all-lower case.
 toupper()	Convert string to all-upper case.
 type()		Check the type of an expression.
 winwidth()	Width of a window. (Johannes Zellner)
+
+New Syntax files: ~
+Debian Control file and Debian Changelog syntax files. (Wichert Akkerman)
+
 
 The ":command" command now accepts a "-bar" argument.  This allows the user
 command to be followed by "| command".
@@ -754,7 +803,7 @@ $PATH.  Less choices to be made.
 
 The window title now has "VIM" on the end.  The file name comes first, useful
 in the taskbar.  A "+" is added when the file is modified.  "=" is added for
-a read-only file.
+a read-only file.  "-" is added for a file with 'modifiable' off.
 
 Added "b:changedtick" variable.  Incremented at each change, also for undo.
 Can be used to take action only if the buffer has been changed.
@@ -804,6 +853,8 @@ Security:
   symbolic link.  Gives some protection against symlink attacks.
 - When creating a backup file copy or a swap file, check for it already
   existing to avoid a symlink attack. (Colin Phipps)
+- Evaluating options which are an expression is done in a |sandbox|.  If the
+  option was set by a modeline, it cannot cause damage.
 
 Reduced the amount of stack space used by regmatch() to allow it to handle
 complicated patterns on a longer text.
@@ -1006,6 +1057,13 @@ Previously this was only possible when getting to that file with ":next" or
 ":last".
 
 Added the '1' flag to 'formatoptions'. (Vit Stradal)
+
+In the verbose message about returning from a function, also show the return
+value.
+
+When a swap file already exists, and the user selects "Delete" at the
+ATTENTION prompt, use the same ".swp" swapfile, to avoid creating a ".swo"
+file which won't always be found.
 
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
@@ -1282,5 +1340,36 @@ closed window #2, Vim would crash.
 When there is a preview window and only one other window, ":q" wouldn't exit.
 
 In Insert mode, when cancelling a digraph with ESC, the '?' wasn't removed.
+
+On Unix glob(".*") returned "." and "..", on Windows it didn't.  On Windows
+glob("*") also returned files starting with a dot.  Made this work like Unix
+on all systems.
+
+Win32: Removed old code to open a console.  Vimrun is now used and works fine.
+
+Compute the room needed by the intro message accurately, so that it also fits
+on a 25 line console. (Craig Barkhouse)
+
+":ptnext" was broken.  Now remember the last tag used in the preview window
+separately from the tagstack.
+
+Didn't check for "-display" being the last argument. (Wichert Akkerman)
+
+GTK GUI: When starting "gvim" under some conditions there would be an X error.
+Don't replace the error handler when creating the xterm clipboard. (Wichert
+Akkerman)
+
+Adding a space after a help tag caused the tag not to be found.  E.g., ":he
+autoindent ".
+
+Was trying to expand a URL into a full path name.  On Windows this resulted in
+the current directory to be prepended to the URL.  Added vim_isAbsName() and
+vim_FullName() to avoid that various machine specific functions do it
+differently.
+
+":n *.c" ":cd .." ":n" didn't use the original directory of the file.  Vi only
+does it for the current file (looks like a bug).  Now remember the buffer used
+for the entry in the argument list and use it's name (adjusted when doing
+":cd"), unless it's deleted.
 
  vim:tw=78:

@@ -677,7 +677,7 @@ qf_get_fnum(directory, fname)
 	char_u	    *ptr;
 	int	    fnum;
 
-	if (directory != NULL && !mch_isFullName(fname)
+	if (directory != NULL && !vim_isAbsName(fname)
 	    && (ptr = concat_fnames(directory, fname, TRUE)) != NULL)
 	{
 	    /*
@@ -696,11 +696,11 @@ qf_get_fnum(directory, fname)
 		    ptr = vim_strsave(fname);
 	    }
 	    /* Use concatenated directory name and file name */
-	    fnum = buflist_add(ptr);
+	    fnum = buflist_add(ptr, FALSE);
 	    vim_free(ptr);
 	    return fnum;
 	}
-	return buflist_add(fname);
+	return buflist_add(fname, FALSE);
 #endif
     }
 }
@@ -726,8 +726,9 @@ qf_push_dir(dirbuf, stackptr)
     *stackptr = ds_new;
 
     /* store directory on the stack */
-    if (mch_isFullName(dirbuf) || (*stackptr)->next == NULL
-	|| (*stackptr && dir_stack != *stackptr))
+    if (vim_isAbsName(dirbuf)
+	    || (*stackptr)->next == NULL
+	    || (*stackptr && dir_stack != *stackptr))
 	(*stackptr)->dirname = vim_strsave(dirbuf);
     else
     {

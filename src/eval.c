@@ -114,6 +114,8 @@ struct funccall
     var		lastline;	/* "a:lastline" variable */
     garray_t	l_vars;		/* local function variables */
     VAR		retvar;		/* return value variable */
+    linenr_t	breakpoint;	/* next line with breakpoint or zero */
+    int		dbg_tick;	/* debug_tick when breakpoint was set */
 };
 
 /* pointer to funccal for currently active function */
@@ -156,6 +158,9 @@ struct vimvar
     {"charconvert_in", sizeof("charconvert_in") - 1, NULL, VAR_STRING, VV_RO},
     {"charconvert_out", sizeof("charconvert_out") - 1, NULL, VAR_STRING, VV_RO},
     {"cmdarg", sizeof("cmdarg") - 1, NULL, VAR_STRING, VV_RO},
+    {"foldstart", sizeof("foldstart") - 1, NULL, VAR_NUMBER, VV_RO},
+    {"foldend", sizeof("foldend") - 1, NULL, VAR_NUMBER, VV_RO},
+    {"folddashes", sizeof("folddashes") - 1, NULL, VAR_STRING, VV_RO},
 };
 
 static int eval0 __ARGS((char_u *arg,  VAR retvar, char_u **nextcmd, int evaluate));
@@ -195,9 +200,11 @@ static void f_executable __ARGS((VAR argvars, VAR retvar));
 static void f_exists __ARGS((VAR argvars, VAR retvar));
 static void f_expand __ARGS((VAR argvars, VAR retvar));
 static void f_filereadable __ARGS((VAR argvars, VAR retvar));
+static void f_filewritable __ARGS((VAR argvars, VAR retvar));
 static void f_fnamemodify __ARGS((VAR argvars, VAR retvar));
 static void f_foldclosed __ARGS((VAR argvars, VAR retvar));
 static void f_foldlevel __ARGS((VAR argvars, VAR retvar));
+static void f_foldtext __ARGS((VAR argvars, VAR retvar));
 static void f_getbufvar __ARGS((VAR argvars, VAR retvar));
 static void f_getwinvar __ARGS((VAR argvars, VAR retvar));
 static void f_getcwd __ARGS((VAR argvars, VAR retvar));
@@ -219,6 +226,7 @@ static void f_hostname __ARGS((VAR argvars, VAR retvar));
 static void f_indent __ARGS((VAR argvars, VAR retvar));
 static void f_isdirectory __ARGS((VAR argvars, VAR retvar));
 static void f_input __ARGS((VAR argvars, VAR retvar));
+static void f_inputsecret __ARGS((VAR argvars, VAR retvar));
 static void f_last_buffer_nr __ARGS((VAR argvars, VAR retvar));
 static void f_libcall __ARGS((VAR argvars, VAR retvar));
 static void f_libcallnr __ARGS((VAR argvars, VAR retvar));
@@ -378,6 +386,25 @@ eval_to_string(arg, nextcmd)
 	clear_var(&retvar);
     }
 
+    return retval;
+}
+
+/*
+ * Call eval_to_string() with "sandbox" set and not using local variables.
+ */
+    char_u *
+eval_to_string_safe(arg, nextcmd)
+    char_u	*arg;
+    char_u	**nextcmd;
+{
+    char_u	*retval;
+    void	*save_funccalp;
+
+    save_funccalp = save_funccal();
+    ++sandbox;
+    retval = eval_to_string(arg, nextcmd);
+    --sandbox;
+    restore_funccal(save_funccalp);
     return retval;
 }
 
@@ -2114,9 +2141,11 @@ static struct fst
     {"expand",		1, 2, f_expand},
     {"file_readable",	1, 1, f_filereadable},	/* obsolete */
     {"filereadable",	1, 1, f_filereadable},
+    {"filewritable",	1, 1, f_filewritable},
     {"fnamemodify",	2, 2, f_fnamemodify},
     {"foldclosed",	1, 1, f_foldclosed},
     {"foldlevel",	1, 1, f_foldlevel},
+    {"foldtext",	0, 0, f_foldtext},
     {"getbufvar",	2, 2, f_getbufvar},
     {"getcwd",		0, 0, f_getcwd},
     {"getfsize",	1, 1, f_getfsize},
@@ -2139,6 +2168,7 @@ static struct fst
     {"hostname",	0, 0, f_hostname},
     {"indent",		1, 1, f_indent},
     {"input",		1, 1, f_input},
+    {"inputsecret",	1, 1, f_inputsecret},
     {"isdirectory",	1, 1, f_isdirectory},
     {"last_buffer_nr",	0, 0, f_last_buffer_nr},/* obsolete */
     {"libcall",		3, 3, f_libcall},
@@ -2522,7 +2552,7 @@ f_argv(argvars, retvar)
 
     idx = get_var_number(&argvars[0]);
     if (idx >= 0 && idx < ARGCOUNT)
-	retvar->var_val.var_string = vim_strsave(ARGLIST[idx]);
+	retvar->var_val.var_string = vim_strsave(alist_name(&ARGLIST[idx]));
     else
 	retvar->var_val.var_string = NULL;
     retvar->var_type = VAR_STRING;
@@ -3090,6 +3120,41 @@ f_filereadable(argvars, retvar)
 }
 
 /*
+ * return 0 for not writable, 1 for writable file, 2 for a dir which we have
+ * rights to write into.
+ */
+    static void
+f_filewritable(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    char_u	*p;
+    int		retval = 0;
+#ifndef WIN32
+    int		perm = 0;
+#endif
+
+    p = get_var_string(&argvars[0]);
+#ifdef WIN32
+    if (mch_writable(p))
+#else
+    perm = mch_getperm(p);
+    if (
+# ifdef UNIX
+	    (perm & 0222) &&
+# endif
+	    mch_access((char *)p, W_OK) == 0
+       )
+#endif
+    {
+	++retval;
+	if (mch_isdir(p))
+	    ++retval;
+    }
+    retvar->var_val.var_number = retval;
+}
+
+/*
  * "fnamemodify({fname}, {mods})" function
  */
     static void
@@ -3164,6 +3229,54 @@ f_foldlevel(argvars, retvar)
     else
 #endif
 	retvar->var_val.var_number = 0;
+}
+
+/*
+ * "foldtext()" function
+ */
+/*ARGSUSED*/
+    static void
+f_foldtext(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+#ifdef FEAT_FOLDING
+    linenr_t	lnum;
+    char_u	*s;
+    char_u	*r;
+#endif
+
+    retvar->var_type = VAR_STRING;
+    retvar->var_val.var_string = NULL;
+#ifdef FEAT_FOLDING
+    /* Find first non-empty line in the fold. */
+    lnum = (linenr_t)vimvars[VV_FOLDSTART].val;
+    while (lnum < (linenr_t)vimvars[VV_FOLDEND].val)
+    {
+	if (!linewhite(lnum))
+	    break;
+	++lnum;
+    }
+
+    /* Find interesting text in this line. */
+    s = skipwhite(ml_get(lnum));
+    /* skip comment-start */
+    if (s[0] == '/' && (s[1] == '*' || s[1] == '/'))
+	s = skipwhite(s + 2);
+    r = alloc((unsigned)(STRLEN(s) + STRLEN(vimvars[VV_FOLDDASHES].val) + 20));
+    if (r != NULL)
+    {
+	sprintf((char *)r, "+-%s %ld lines: %s", vimvars[VV_FOLDDASHES].val,
+		(long)((linenr_t)vimvars[VV_FOLDEND].val
+				   - (linenr_t)vimvars[VV_FOLDSTART].val + 1),
+		s);
+	/* remove trailing "{{{" foldmarker */
+	s = (char_u *)strstr((char *)r, "{{{");
+	if (s != NULL)
+	    *s = NUL;
+	retvar->var_val.var_string = r;
+    }
+#endif
 }
 
 /*
@@ -3899,7 +4012,7 @@ f_histnr(argvars, retvar)
     int		i;
 
     i = get_histtype(get_var_string(&argvars[0]));
-    if (i >= HIST_CMD && i <= HIST_INPUT)
+    if (i >= HIST_CMD && i < HIST_COUNT)
 	i = get_history_idx(i);
     else
 	i = -1;
@@ -3961,8 +4074,11 @@ f_indent(argvars, retvar)
 	retvar->var_val.var_number = -1;
 }
 
+static int inputsecret_flag = 0;
+
 /*
  * "input()" function
+ *     Also handles inputsecret() when inputsecret is set.
  */
     static void
 f_input(argvars, retvar)
@@ -4008,11 +4124,27 @@ f_input(argvars, retvar)
 	cmdline_row = msg_row;
     }
 
-    retvar->var_val.var_string = getcmdline_prompt('@', p, echo_attr);
+    retvar->var_val.var_string =
+		getcmdline_prompt(inputsecret_flag ? NUL : '@', p, echo_attr);
 
     /* since the user typed this, no need to wait for return */
     need_wait_return = FALSE;
     msg_didout = FALSE;
+}
+
+/*
+ * "inputsecret()" function
+ */
+    static void
+f_inputsecret(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    ++cmdline_star;
+    ++inputsecret_flag;
+    f_input(argvars, retvar);
+    --cmdline_star;
+    --inputsecret_flag;
 }
 
 /*
@@ -6003,6 +6135,7 @@ ex_execute(eap)
     char_u	*p;
     garray_t	ga;
     int		len;
+    int		save_did_emsg;
 
     ga_init2(&ga, 1, 80);
 
@@ -6047,7 +6180,12 @@ ex_execute(eap)
 	if (eap->cmdidx == CMD_echomsg)
 	    MSG((char_u *)ga.ga_data);
 	else if (eap->cmdidx == CMD_echoerr)
+	{
+	    /* We don't want to abort following commands, restore did_emsg. */
+	    save_did_emsg = did_emsg;
 	    EMSG((char_u *)ga.ga_data);
+	    did_emsg = save_did_emsg;
+	}
 	else if (eap->cmdidx == CMD_execute)
 	    do_cmdline((char_u *)ga.ga_data,
 		       eap->getline, eap->cookie, DOCMD_NOWAIT|DOCMD_VERBOSE);
@@ -6639,6 +6777,9 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
     fc.lastline.var_type = VAR_NUMBER;
     fc.lastline.var_val.var_number = lastline;
     fc.lastline.var_name = NULL;
+    /* Check if this function has a breakpoint. */
+    fc.breakpoint = dbg_find_breakpoint(FALSE, fp->name, (linenr_t)0);
+    fc.dbg_tick = debug_tick;
 
     /* Don't redraw while executing the function. */
     ++RedrawingDisabled;
@@ -6651,7 +6792,7 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
     {
 	if (save_sourcing_name != NULL
 			  && STRNCMP(save_sourcing_name, "function ", 9) == 0)
-	    sprintf((char *)sourcing_name, "%s->", save_sourcing_name);
+	    sprintf((char *)sourcing_name, "%s..", save_sourcing_name);
 	else
 	    STRCPY(sourcing_name, "function ");
 	cat_func_name(sourcing_name + STRLEN(sourcing_name), fp);
@@ -6793,6 +6934,14 @@ get_func_line(c, cookie, indent)
     char_u		*retval;
     garray_t		*gap;  /* growarray with function lines */
 
+    /* If breakpoints have been added/deleted need to check for it. */
+    if (fcp->dbg_tick != debug_tick)
+    {
+	fcp->breakpoint = dbg_find_breakpoint(FALSE, fcp->func->name,
+							       sourcing_lnum);
+	fcp->dbg_tick = debug_tick;
+    }
+
     gap = &fcp->func->lines;
     if ((fcp->func->flags & FC_ABORT) && did_emsg)
 	retval = NULL;
@@ -6808,11 +6957,27 @@ get_func_line(c, cookie, indent)
     {
 	++no_wait_return;
 	msg_scroll = TRUE;	    /* always scroll up, don't overwrite */
-	smsg((char_u *)_("%s returning"), sourcing_name);
+	if (fcp->retvar->var_type == VAR_NUMBER)
+	    smsg((char_u *)_("%s returning #%ld"), sourcing_name,
+				       (long)fcp->retvar->var_val.var_number);
+	else if (fcp->retvar->var_type == VAR_STRING)
+	    smsg((char_u *)_("%s returning \"%s\""), sourcing_name,
+						 get_var_string(fcp->retvar));
 	msg_puts((char_u *)"\n");   /* don't overwrite this either */
 	cmdline_row = msg_row;
 	--no_wait_return;
     }
+
+    /* Did we encounter a breakpoint? */
+    if (fcp->breakpoint != 0 && fcp->breakpoint <= sourcing_lnum)
+    {
+	dbg_breakpoint(fcp->func->name, sourcing_lnum);
+	/* Find next breakpoint. */
+	fcp->breakpoint = dbg_find_breakpoint(FALSE, fcp->func->name,
+							       sourcing_lnum);
+	fcp->dbg_tick = debug_tick;
+    }
+
     return retval;
 }
 
@@ -6960,6 +7125,7 @@ store_session_globals(fd)
     garray_t	*gap = &variables;		/* global variable */
     VAR		this_var;
     int		i;
+    char_u	*p;
 
     for (i = gap->ga_len; --i >= 0; )
     {
@@ -6968,13 +7134,19 @@ store_session_globals(fd)
 	{
 	    if (var_flavour(this_var->var_name) == VAR_FLAVOUR_SESSION)
 	    {
+		p = vim_strsave_escaped(get_var_string(this_var),
+							    (char_u *)"\\\"");
 		if ((fprintf(fd, "let %s = %c%s%c",
 			    this_var->var_name,
 			    (this_var->var_type == VAR_STRING) ? '"' : ' ',
-			    get_var_string(this_var),
+			    p,
 			    (this_var->var_type == VAR_STRING) ? '"' : ' ') < 0)
-			    || put_eol(fd) == FAIL)
+			|| put_eol(fd) == FAIL)
+		{
+		    vim_free(p);
 		    return FAIL;
+		}
+		vim_free(p);
 	    }
 
 	}
@@ -7042,7 +7214,7 @@ repeat:
 	valid |= VALID_PATH;
 	*usedlen += 2;
 	/* FullName_save() is slow, don't use it when not needed. */
-	if (!mch_isFullName(*fnamep))
+	if (!vim_isAbsName(*fnamep))
 	{
 	    *fnamep = FullName_save(*fnamep, FALSE);
 	    vim_free(*bufp);	/* free any allocated file name */

@@ -1,10 +1,10 @@
-*os_os2.txt*    For Vim version 6.0q.  Last change: 2000 Oct 29
+*os_os2.txt*    For Vim version 6.0r.  Last change: 2000 Dec 30
 
 
 		  VIM REFERENCE MANUAL    by Paul Slootman
 
 
-							*OS2* *OS/2*
+							*os2* *OS2* *OS/2*
 This file contains the particularities for the OS/2 version of Vim.
 
 At present there is no native PM version of the GUI version of vim: The OS/2
@@ -175,5 +175,46 @@ vimbig2.cmd: >
    vim.exe %1 %2 %3 %4
    exit
 <
+
+CLIPBOARD ACCESS (provided by Alexander Wagner)
+
+Vim for OS/2 has no direct access to the system clipboard.  To enable access
+anyway you need an additional tool which gives you access to the clipboard
+from within a vio application.  The freeware package clipbrd.zip by Stefan
+Gruendel can be used for this purpose.  You might download the package
+including precompiled binaries and all sources from: >
+	http://www.stellarcom.org/vim/index.html.
+
+Installation of this package is straight forward: just put the two executables
+that come with this package into a directory within your PATH for vim should
+be able to call them from whatever directory you are working.
+
+To copy text from the clipboard to your vim session you can use the :r
+command.  Simply call clipbrd.exe from within vim in the following way: >
+
+	:r !clipbrd -r
+
+To copy text from vim to the system clipboard just mark the text in the usual
+vim-manner and call: >
+
+	:!clipbrd -w
+
+which will write your selection right into OS/2's clipboard.
+
+For ease of use you might want to add some maps for this commands.  E.g. to
+use F11 to paste the clipboard into vim and F12 to copy selected text to the
+clipboard you would use: >
+
+	if has("os2")
+	  imap <F11>     <ESC>:r !clipbrd -r<CR>i
+	  vmap <F12>     :!clipbrd -w<cr>
+	else
+	  imap <F11>     <ESC>"*p<CR>i
+	  vmap <F12>     "*y
+	endif
+
+This will ensure that only on OS/2 clipbrd is called whereas on other
+platforms vims build in mechanism is used. (To enable this functions on every
+load of vim plase the above lines in your .vimrc.)
 
  vim:tw=78:

@@ -1,4 +1,4 @@
-*tagsearch.txt* For Vim version 6.0q.  Last change: 2000 Dec 17
+*tagsearch.txt* For Vim version 6.0r.  Last change: 2000 Dec 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -455,8 +455,7 @@ ctags			As found on most Unix systems.  Only supports C.  Only
 			does the basic work.
 exuberant ctags		This a very good one.  It works for C, C++, Java,
 			Fortran, Eiffel and others.  It can generate tags for
-			many items.  See http://ctags.sourceforge.net.  The
-			executable is included with the Vim executable.
+			many items.  See http://ctags.sourceforge.net.
 etags			Connected to Emacs.  Supports many languages.
 JTags			For Java, in Java.  It can be found at
 			http://www.fleiner.com/jtags/.

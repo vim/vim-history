@@ -2583,7 +2583,9 @@ do_put(regname, dir, count, flags)
     col = curwin->w_cursor.col;
 
 #ifdef FEAT_VIRTUALEDIT
-    if (ve_all && curwin->w_coladd && (y_type == MBLOCK || y_type == MCHAR))
+    if (ve_flags == VE_ALL
+	    && curwin->w_coladd
+	    && (y_type == MBLOCK || y_type == MCHAR))
 	coladvance_force(getviscol() + 1);
 #endif
 
@@ -3890,21 +3892,35 @@ do_addsub(command, Prenum1)
 	/* decrement or increment alphabetic character */
 	if (command == Ctrl_X)
 	{
-	    if (isupper(firstdigit) && firstdigit - Prenum1 < 'A')
-		firstdigit = 'A';
-	    else if (islower(firstdigit) && firstdigit - Prenum1 < 'a')
-		firstdigit = 'a';
+            if (CharOrd(firstdigit) < Prenum1)
+            {
+                if (isupper(firstdigit))
+                    firstdigit = 'A';
+                else
+                    firstdigit = 'a';
+            }
 	    else
+#ifdef EBCDIC
+                firstdigit = EBCDIC_CHAR_ADD(firstdigit, -Prenum1);
+#else
 		firstdigit -= Prenum1;
+#endif
 	}
 	else
 	{
-	    if (isupper(firstdigit) && firstdigit + Prenum1 > 'Z')
-		firstdigit = 'Z';
-	    else if (islower(firstdigit) && firstdigit + Prenum1 > 'z')
-		firstdigit = 'z';
+            if (26 - CharOrd(firstdigit) - 1 < Prenum1)
+            {
+                if (isupper(firstdigit))
+                    firstdigit = 'Z';
+                else
+                    firstdigit = 'z';
+            }
 	    else
+#ifdef EBCDIC
+                firstdigit = EBCDIC_CHAR_ADD(firstdigit, Prenum1);
+#else
 		firstdigit += Prenum1;
+#endif
 	}
 	curwin->w_cursor.col = col;
 	(void)del_char(FALSE);

@@ -661,13 +661,6 @@ mch_FullName(fname, buf, len, force)
     char_u	c;
     int		retval = OK;
 
-    if (fname == NULL)	/* always fail */
-    {
-	*buf = NUL;
-	return FAIL;
-    }
-
-    *buf = 0;
     if (force || !mch_isFullName(fname))	/* if forced or not an absolute path */
     {
 	/*
@@ -720,7 +713,6 @@ mch_FullName(fname, buf, len, force)
 	buf[0] = 0;
     }
     STRCAT(buf, fname);
-    slash_adjust(buf);
     return retval;
 }
 

@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0q.  Last change: 2000 Dec 15
+*starting.txt*  For Vim version 6.0r.  Last change: 2000 Dec 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -6,13 +6,16 @@
 
 Starting Vim						*starting*
 
-1. Vim arguments		|vim-arguments|
-2. Vim on the Amiga		|starting-amiga|
-3. Running Vim from xargs	|xargs|
-4. Initialization		|initialization|
-5. Suspending			|suspend|
-6. The vimrc file		|vimrc-intro|
-7. The viminfo file		|viminfo-file|
+ 1. Vim arguments		|vim-arguments|
+ 2. Vim on the Amiga		|starting-amiga|
+ 3. Running Vim from xargs	|xargs|
+ 4. Initialization		|initialization|
+ 5. $VIM and $VIMRUNTIME	|$VIM|
+ 6. Suspending			|suspend|
+ 7. The vimrc file		|vimrc-intro|
+ 8. Saving settings		|save-settings|
+ 9. Views and Sessions		|views-sessions|
+10. The viminfo file		|viminfo-file|
 
 ==============================================================================
 1. Vim arguments					*vim-arguments*
@@ -249,6 +252,11 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		Messages will be given for each file that is ":source"d and
 		for reading or writing a viminfo file.  Can be used to find
 		out what is happening upon startup and exit.  {not in Vi}
+
+							*-D*
+-D		Debugging.  Go to debugging mode when executing the first
+		command from a script. |debug-mode|
+		{not available when compiled without the |+eval| feature}
 
 							*-C*
 -C		Compatible mode.  Sets the 'compatible' option.  You can use
@@ -743,7 +751,64 @@ redrawn in any way.  To see the message again, use the ":intro" command.
 To avoid the intro message on startup, add the 'I' flag to 'shortmess'.
 
 ==============================================================================
-5. Suspending						*suspend*
+5. $VIM and $VIMRUNTIME
+								*$VIM*
+The environment variable "$VIM" is used to locate various user files for Vim,
+such as the user startup script ".vimrc".  This depends on the system, see
+|startup|.
+
+To avoid the need for every user to set the $VIM environment variable, Vim
+will try to get the value for $VIM in this order:
+1. The value defined by the $VIM environment variable.  You can use this to
+   make Vim look in a specific directory for its support files.  Example: >
+	setenv VIM /home/paul/vim
+2. The path from 'helpfile' is used, unless it contains some environment
+   variable too (the default is "$VIMRUNTIME/doc/help.txt": chicken-egg
+   problem).  The file name ("help.txt" or any other) is removed.  Then
+   trailing directory names are removed, in this order: "doc", "runtime" and
+   "vim{version}" (e.g., "vim54").
+3. For MSDOS, Win32 and OS/2 Vim tries to use the directory name of the
+   executable.  If it ends in "/src", this is removed.  This is useful if you
+   unpacked the .zip file in some directory, and adjusted the search path to
+   find the vim executable.  Trailing directory names are removed, in this
+   order: "runtime" and "vim{version}" (e.g., "vim54").
+4. For Unix the compile-time defined installation directory is used (see the
+   output of ":version").
+
+Once Vim has done this once, it will set the $VIM environment variable.  To
+change it later, use a ":let" command like this: >
+	:let $VIM = "/home/paul/vim/"
+<
+								*$VIMRUNTIME*
+The environment variable "$VIMRUNTIME" is used to locate various support
+files, such as the on-line documentation and files used for syntax
+highlighting.  For example, the main help file is normally
+"$VIMRUNTIME/doc/help.txt".
+You don't normally set $VIMRUNTIME yourself, but let Vim figure it out.  This
+is the order used to find the value of $VIMRUNTIME:
+1. If the environment variable $VIMRUNTIME is set, it is used.  You can use
+   this when the runtime files are in an unusual location.
+2. If "$VIM/vim{version}" exists, it is used.  {version} is the version
+   number of Vim, without any '-' or '.'.  For example: "$VIM/vim54".  This is
+   the normal value for $VIMRUNTIME.
+3. If "$VIM/runtime" exists, it is used.
+4. The value of $VIM is used.  This is for backwards compatibility with older
+   versions.
+5. When the 'helpfile' option is set and doesn't contain a '$', its value is
+   used, with "doc/help.txt" removed from the end.
+
+For Unix, when there is a compiled-in default for $VIMRUNTIME (check the
+output of ":version"), steps 2, 3 and 4 are skipped, and the compiled-in
+default is used after step 5.  This means that the compiled-in default
+overrules the value of $VIM.  This is useful if $VIM is "/etc" and the runtime
+files are in "/user/share/vim/vim54".
+
+Once Vim has done this once, it will set the $VIMRUNTIME environment variable.
+To change it later, use a ":let" command like this: >
+	:let $VIMRUNTIME = "/home/piet/vim/vim54"
+
+==============================================================================
+6. Suspending						*suspend*
 
 					*iconize* *iconise* *CTRL-Z* *v_CTRL-Z*
 CTRL-Z			Suspend Vim, like ":stop".
@@ -770,7 +835,7 @@ will start a new shell.  This is the same as the ":sh" command.  Vim will
 continue if you exit from the shell.
 
 ==============================================================================
-6. The vimrc file			*vimrc-intro* *vim-script-intro*
+7. The vimrc file			*vimrc-intro* *vim-script-intro*
 
 A vimrc file can be used for settings you intend to use more-or-less for every
 of your Vim sessions.  Normally the file is called $HOME/.vimrc, but other
@@ -1084,7 +1149,169 @@ characters.  This is easy to type and to read back.  The " <BS> is used to
 avoid that the indent is removed when <CR> is typed.
 
 ==============================================================================
-7. The viminfo file				*viminfo* *viminfo-file*
+8. Saving settings					*save-settings*
+
+Mostly you will edit your vimrc files manually.  This gives you the greatest
+flexibility.  There are a few commands to generate a vimrc file automatically.
+You can use these files as they are, or copy/paste lines to include in another
+vimrc file.
+
+							*:mk* *:mkexrc*
+:mk[exrc] [file]	Write current key mappings and changed options to
+			[file] (default ".exrc" in the current directory),
+			unless it already exists.  {not in Vi}
+
+:mk[exrc]! [file]	Always write current key mappings and changed
+			options to [file] (default ".exrc" in the current
+			directory).  {not in Vi}
+
+							*:mkv* *:mkvimrc*
+:mkv[imrc][!] [file]	Like ":mkexrc", but the default is ".vimrc" in the
+			current directory.  The ":version" command is also
+			written to the file.  {not in Vi}
+
+These commands will write ":map" and ":set" commands to a file, in such a way
+that when these commands are executed, the current key mappings and options
+will be set to the same values.  The options 'columns', 'endofline',
+'fileformat', 'key', 'lines', 'modified', 'scroll', 'term', 'textmode',
+'ttyfast' and 'ttymouse' are not included, because these are terminal or file
+dependent.  Note that the options 'binary', 'paste' and 'readonly' are
+included, this might not always be what you want.
+
+When special keys are used in mappings, The 'cpoptions' option will be
+temporarily set to its Vim default, to avoid the mappings to be
+misinterpreted.  This makes the file incompatible with Vi, but makes sure it
+can be used with different terminals.
+
+Only global mappings are stored, not mappings local to a buffer.
+
+A common method is to use a default ".vimrc" file, make some modifications
+with ":map" and ":set" commands and write the modified file.  First read the
+default ".vimrc" in with a command like ":source ~piet/.vimrc.Cprogs", change
+the settings and then save them in the current directory with ":mkvimrc!".  If
+you want to make this file your default .vimrc, move it to your home directory
+(on Unix), s: (Amiga) or $VIM directory (MS-DOS).  You could also use
+autocommands |autocommand| and/or modelines |modeline|.
+
+If you only want to add a single option setting to your vimrc, you can use
+these steps:
+1. Edit your vimrc file with Vim.
+2. Play with the option until it's right.  E.g., try out different values for
+   'guifont'.
+3. Append a line to set the value of the option, using the expression register
+   '=' to enter the value.  E.g., for the 'guifont' option: >
+   o:set guifont=<C-R>=&guifont<CR><Esc>
+<  [<C-R> is a CTRL-R, <CR> is a return, <Esc> is the escape key]
+
+Note that when you create a .vimrc file, this can influence the 'compatible'
+option, which has several side effects.  See |'compatible'|.
+":mkvimrc", ":mkexrc" and ":mksession" write the command to set or reset the
+'compatible' option to the output file first, because of these side effects.
+
+==============================================================================
+9. Views and Sessions					*views-sessions*
+
+						*View* *view-file*
+A View is a collection of settings that apply to one window.  You can save a
+View and when you restore it later, the text is displayed in the same way.
+The options and mappings in this window will also be restored, so that you can
+continue editing like when the View was saved.
+
+						*Session* *session-file*
+A Session keeps the Views for all windows, plus the global settings.  You can
+save a Session and when you restore it later the window layout looks the same.
+You can use a Session to quickly switch between different projects,
+automatically loading the files you were last working on in that project.
+
+Views and Sessions are a nice addition to viminfo-files, which are used to
+remember information for all Views and Sessions together |viminfo-file|.
+
+You can quickly start editing with a previously saved View or Session with the
+|-S| argument: >
+	vim -S Session.vim
+<
+All this is {not in Vi} and {not available when compiled without the
+|+mksession| feature}.
+
+							*:mks* *:mksession*
+:mks[ession][!] [file]	Write a Vim script that restores the current editing
+			session.
+			When [!] is included an existing file is overwritten.
+			When [file] is omitted "Session.vim" is used.
+
+The output of ":mksession" is like ":mkvimrc", but additional commands are
+added to the file.  Which ones depends on the 'sessionoptions' option.  The
+resulting file, when executed with a ":source" command:
+1. Restores global mappings and options, if 'sessionoptions' contains
+   "options".
+2. Restores global variables that start with an uppercase letter and contain
+   at least one lowercase letter, if 'sessionoptions' contains "globals".
+3. Unloads all currently loaded buffers.
+4. Restores the current directory if 'sessionoptions' contains "curdir", or
+   sets the current directory to where the Session file is if 'sessionoptions'
+   contains "sesdir".
+5. Restores GUI Vim window position, if 'sessionoptions' contains "winpos".
+6. Restores screen size, if 'sessionoptions' contains "resize".
+7. Reloads the buffer list, with the last cursor positions.  If
+   'sessionoptions' contains "buffers" then all buffers are restored,
+   including hidden and unloaded buffers.  Otherwise only buffers in windows
+   are restored.
+8. Restores all windows with the same layout.  If 'sessionoptions' contains
+   contains "help", help windows are restored.  If 'sessionoptions' contains
+   "blank", windows editing a buffer without a name will be restored.
+   If 'sessionoptions' contains "winsize" and no (help/blank) windows were
+   left out, the window sizes are restored (relative to the screen size).
+   Otherwise, the windows are just given sensible sizes.
+9. Restores the Views for all the windows, as with |:mkview|.
+10. If a file exists with the same name as the Session file, but ending in
+   "x.vim" (for eXtra), executes that as well.  You can use *x.vim files to
+   specify additional settings and actions associated with a given Session,
+   such as creating menu items in the GUI version.
+
+After restoring the Session, the full filename of your current Session is
+available in the internal variable "v:this_session" |this_session-variable|.
+An example mapping: >
+  :nmap <F2> :wa<Bar>exe "mksession! " . v:this_session<CR>:so ~/sessions/
+This saves the current Session, and starts off the command to load another.
+
+							*:mkvie* *:mkview*
+:mkvie[w][!] [file]	Write a Vim script that restores the contents of the
+			current window.
+			When [!] is included an existing file is overwritten.
+			When [file] is omitted "View.vim" is used.
+
+The output of ":mkview" contains these items:
+1. The argument list used in the window.  When the global argument list is
+   used it is reset to the global list.
+   The index in the argument list is also restored.
+2. The file being edited in the window.  If there is no file, the window is
+   made empty.
+3. Restore mappings, abbreviations and options local to the window if
+   'sessionoptions' contains "options".  For the options it restores local to
+   the current buffer, options local to the window, and global values for
+   window-local options
+4. Restore folds when using manual folding and 'sessionoptions' contains
+   "folds".  Restore manually opened and closed folds.
+5. The scroll position and the cursor position in the file.  Doesn't work very
+   well when there are closed folds.
+6. The local current directory, if it is different from the global current
+   directory.
+
+Note that Views and Sessions are not perfect:
+- They don't restore everything.  For example, defined functions, autocommands
+  and ":syntax on" are not included.  Things like register contents and
+  command line history are in viminfo, not in Sessions or Views.
+- Global option values are only set when the differ from the default value.
+  When the current value is not the default value, loading a Session will not
+  set it back to the default value.  Local options will be set back to the
+  default value though.
+- Existing mappings will be overwritten without warning.  An existing mapping
+  may cause an error for ambiguity.
+- The Vim script is not very efficient.  But still faster than typing the
+  commands yourself!
+
+==============================================================================
+10. The viminfo file				*viminfo* *viminfo-file*
 
 If you exit Vim and later start it again, you would normally lose a lot of
 information.  The viminfo file can be used to remember that information, which
@@ -1104,11 +1331,11 @@ The viminfo file is used to store:
 The viminfo file is not supported when the |+viminfo| feature has been
 disabled at compile time.
 
-You could also use a session file.  The difference is that the viminfo file
+You could also use a Session file.  The difference is that the viminfo file
 does not depend on what you are working on.  There normally is only one
 viminfo file.  Session files are used to save the state of a specific editing
-session.  You could have several session files, one for each project you are
-working on.  Viminfo and session files together can be used to effectively
+Session.  You could have several Session files, one for each project you are
+working on.  Viminfo and Session files together can be used to effectively
 enter Vim and directly start working in your desired setup. |session-file|
 
 							*viminfo-read*

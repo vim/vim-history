@@ -1639,6 +1639,15 @@ collection:
 
 	    ungetchr();
 #ifdef FEAT_MBYTE
+	    if (cc_utf8 && (len = utf_byte2len(peekchr())) > 1)
+	    {
+		ret = regnode(MULTIBYTECODE);
+		while (len--)
+		    regc(getchr());
+		*flagp |= HASWIDTH;	/* SIMPLE? */
+		break;
+	    }
+
 	    chr = re_ismultibytecode(peekchr());
 	    if (chr)
 	    {
@@ -2939,7 +2948,14 @@ regmatch(scan)
 	    if (*reginput == NUL)
 		return FALSE;
 #ifdef FEAT_MBYTE
-	    if (cc_dbcs && mb_ptr2len_check(reginput) > 1)
+	    if (cc_utf8 && mb_ptr2len_check(reginput) > 1)
+	    {
+		if ((vim_strchr(OPERAND(scan), utf_ptr2char(reginput))
+						    == NULL) == (op == ANYOF))
+		    return FALSE;
+		reginput += mb_ptr2len_check(reginput) - 1;
+	    }
+	    else if (cc_dbcs && mb_ptr2len_check(reginput) > 1)
 	    {
 		if ((cstrchr(OPERAND(scan), *reginput << 8 | reginput[1])
 						    == NULL) == (op == ANYOF))
@@ -2958,8 +2974,21 @@ regmatch(scan)
 	  case MULTIBYTECODE:
 	    {
 		char_u	    *opnd;
+		int	    len;
 
 		opnd = OPERAND(scan);
+
+		if (cc_utf8 && (len = utf_byte2len(*opnd)) > 1)
+		{
+		    int	    i;
+
+		    for (i = 0; i < len; i++)
+			if (opnd[i] != reginput[i])
+			    return FALSE;
+		    reginput += len;
+		    break;
+		}
+
 		if (*opnd != *reginput || opnd[1] != reginput[1])
 		    return FALSE;
 		reginput += 2;
@@ -4804,16 +4833,6 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 	    {
 		no = *src++ - '0';
 	    }
-	    else if (*src == 'f' && reg_folded_count != NULL)
-	    {
-		no = 998;
-		++src;
-	    }
-	    else if (*src == 'd' && reg_level_string != NULL)
-	    {
-		no = 999;
-		++src;
-	    }
 	    else if (vim_strchr((char_u *)"uUlLeE", *src))
 	    {
 		switch (*src++)
@@ -4880,17 +4899,7 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 	}
 	else
 	{
-	    if (no == 998)
-	    {
-		s = reg_folded_count;
-		len = STRLEN(reg_folded_count);
-	    }
-	    else if (no == 999)
-	    {
-		s = reg_level_string;
-		len = STRLEN(reg_level_string);
-	    }
-	    else if (REG_MULTI)
+	    if (REG_MULTI)
 	    {
 		clnum = reg_mmatch->startpos[no].lnum;
 		if (clnum < 0 || reg_mmatch->endpos[no].lnum < 0)

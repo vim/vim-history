@@ -657,10 +657,6 @@ mch_FullName(fname, buf, len, force)
     int		retval = FAIL;
     int		i;
 
-    *buf = NUL;
-    if (fname == NULL)	/* always fail */
-	return FAIL;
-
     /* Lock the file.  If it exists, we can get the exact name. */
     if ((l = Lock((UBYTE *)fname, (long)ACCESS_READ)) != (BPTR)0)
     {
@@ -688,8 +684,8 @@ mch_FullName(fname, buf, len, force)
 	    }
 	}
     }
-    if (retval == FAIL || *buf == 0 || *buf == ':')
-	STRCPY(buf, fname); /* something failed; use the file name */
+    if (*buf == 0 || *buf == ':')
+	retval = FAIL;	/* something failed; use the file name */
     return retval;
 }
 

@@ -1,4 +1,4 @@
-*fold.txt*      For Vim version 6.0q.  Last change: 2000 Dec 10
+*fold.txt*      For Vim version 6.0r.  Last change: 2001 Jan 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -68,7 +68,6 @@ this does the same: >
 
 Note that backslashes must be used to escape characters that ":set" handles
 differently (space, backslash, double quote, etc., see |option-backslash|).
-Alternatively, use ":set foldexpr@{expression}" |:set@|.
 
 These are the conditions with which the expression is evaluated:
 - The current buffer and window are set for the line.
@@ -270,32 +269,26 @@ When decreased, folds above the new level are closed.  No manually closed
 folds will be opened.
 
 						*fold-foldtext*
-'foldtext' is a string option of the form: /{pattern}/{replacement}
-It is used to set the text which is shown for a closed fold.
+'foldtext' is a string option that specifies an expression.  This expression
+is evaluated to obtain the text displayed for a closed fold.  This is done in
+the |sandbox|.  Errors are ignored.
 
-The first character is used as a separator between the {pattern} and the
-{replacement}.  It can be any character, but it must not appear anywhere in
-the {pattern} or {replacement}.
+The default value is |foldtext()|.  This returns a reasonable text for most
+types of folding.  If you don't like it, you can specify your own 'foldtext'
+expression.  It can use these special Vim variables:
+	v:foldstart	line number of first line in the fold
+	v:foldend	line number of last line in the fold
+	v:folddashes	a string that contains dashes to represent the
+			foldlevel.  The length can be used to get the
+			foldlevel.
 
-The {pattern} is matched on the first line of closed fold.  Items matched with
-it can be used in the {replacement} to give information about what the fold
-contains.  The {pattern} can contain a multi-line pattern, so that text from
-further down in the fold can be shown.  But be careful not to include lines
-from below the fold!
-
-Two special items in the {replacement} are recognized:
-\f  is replaced by the number of lines in the fold
-\d  is replaced by a string of dashes.  The number of dashes is the level of
-    the fold.
+In the result a TAB is replaced with a space and unprintable characters are
+made into printable characters.
 
 The resulting line is truncated to fit in the window, it never wraps.
 When there is room after the text, it is filled with the character specified
 by 'fillchars'.
 
-Example: >
-	:set foldtext=/\\(\\S.*\\)/+\\d\ \\f\ lines:\ \\1/
-This will show a line like this:
-	+- 5 lines: foobar
 Note that backslashes need to be used for characters that the ":set" command
 handles differently: Space, backslash and double-quote. |option-backslash|
 

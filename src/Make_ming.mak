@@ -160,7 +160,7 @@ endif
 
 ifdef ICONV
 LIB += -L$(ICONV) -liconv
-DEFINES+=-DHAVE_ICONV_H
+DEFINES+=-DDYNAMIC_ICONV
 CFLAGS += -I$(ICONV)
 endif
 

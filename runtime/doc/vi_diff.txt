@@ -1,4 +1,4 @@
-*vi_diff.txt*   For Vim version 6.0q.  Last change: 2000 Oct 29
+*vi_diff.txt*   For Vim version 6.0r.  Last change: 2001 Jan 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -486,6 +486,10 @@ On non-UNIX systems ":cd" command shows current directory instead of going to
 the home directory (there isn't one).  ":pwd" prints the current directory on
 all systems.
 
+After a ":cd" command the file names (in the argument list, opened files)
+still point to the same files.  In Vi ":cd" is not allowed in a changed file;
+otherwise the meaning of file names change.
+
 ':source!' command reads Vi commands from a file.
 
 ':mkexrc' command writes current modified options and mappings to a ".exrc"
@@ -723,6 +727,8 @@ Only Vim is able to accept options in between and after the file names.
 
 --version	Vim: show version message and exit.
 
+--noplugin[s]	Vim: Skip loading plugins.
+
 -?		Vile: print usage summary and exit.
 
 -a		Elvis: Load all specified file names into a window (use -o for
@@ -738,6 +744,8 @@ Only Vim is able to accept options in between and after the file names.
 		Vim: allow up to 10 "-c" arguments
 
 -d {device}	Vim: Use {device} for I/O (Amiga only).
+
+-D		Vim: debug mode.
 
 -e		Elvis, Nvi, Vim: Start in Ex mode, as if the executable is
 		called "ex".
@@ -782,6 +790,7 @@ Only Vim is able to accept options in between and after the file names.
 -r		Elvis, Nvi, Posix, Vi, Vim: Recovery mode.
 
 -S		Nvi: Set 'secure' option.
+-S {script}	Vim: source script after starting up.
 
 -s		Nvi, Posix, Vim: Same as "-" (silent mode), when in Ex mode.
 		Elvis: Sets the 'safer' option.
@@ -803,6 +812,7 @@ Only Vim is able to accept options in between and after the file names.
 		Vile: View mode, no changes possible.
 
 -V		Elvis, Vim: Verbose mode.
+-V{nr}		Vim: Verbose mode with specified level.
 
 -w {size}	Elvis, Posix, Nvi, Vi, Vim: Set value of 'window' to {size}.
 -w{size}	Nvi, Vi: Same as "-w {size}".
@@ -811,6 +821,10 @@ Only Vim is able to accept options in between and after the file names.
 -W {name}	Vim: Append to script file {name}.
 
 -x		Vi, Vim: Ask for encryption key.  See |encryption|.
+
+-X		Vim: Don't connect to the X server.
+
+-Z		Vim: restricted mode
 
 @{cmdfile}	Vile: use {cmdfile} as startup file.
 

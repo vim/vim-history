@@ -1279,13 +1279,18 @@ retry:
 	    }
 	    else if (cc_utf8 && !conv_error && !curbuf->b_p_bin)
 	    {
-		/* Converting to UTF-8: Check if the bytes are valid UTF-8. */
-		for (p = ptr; p < ptr + size; ++p)
+		/* Converting to UTF-8: Check if the bytes are valid UTF-8.
+		 * Need to start before "ptr" when part of the character was
+		 * read in the previous read() call. */
+		for (p = ptr - utf_head_off(buffer, ptr); p < ptr + size; ++p)
 		{
 		    if (*p >= 0x80)
 		    {
 			len = utf_ptr2len_check(p);
-			if (len == 1)
+			/* A length of 1 means it's an illegal byte.  Accept
+			 * it at the end though, the next read() will probably
+			 * get the next byte, we'll check it then. */
+			if (len == 1 && p + 1 < ptr + size)
 			    break;
 			p += len - 1;
 		    }
@@ -4197,6 +4202,7 @@ shorten_fnames(force)
 #ifdef FEAT_QUICKFIX
 	        && !bt_nofile(buf)
 #endif
+		&& !path_with_url(buf->b_fname)
 		&& (force
 		    || buf->b_sfname == NULL
 		    || mch_isFullName(buf->b_sfname)))
@@ -6723,7 +6729,7 @@ match_file_pat(pattern, fname, sfname, tail, allow_dirs)
     char_u *
 file_pat_to_reg_pat(pat, pat_end, allow_dirs, no_bslash)
     char_u	*pat;
-    char_u	*pat_end;	/* first char after pattern */
+    char_u	*pat_end;	/* first char after pattern or NULL */
     char	*allow_dirs;	/* Result passed back out in here */
     int		no_bslash;	/* Don't use a backward slash as pathsep */
 {
@@ -6740,6 +6746,8 @@ file_pat_to_reg_pat(pat, pat_end, allow_dirs, no_bslash)
 
     if (allow_dirs != NULL)
 	*allow_dirs = FALSE;
+    if (pat_end == NULL)
+	pat_end = pat + STRLEN(pat);
 
 #ifdef FEAT_OSFILETYPE
     /* Find out how much of the string is the filetype check */

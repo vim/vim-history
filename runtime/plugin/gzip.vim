@@ -1,6 +1,6 @@
 " Vim plugin for editing compressed files.
 " Maintainer: Bram Moolenaar <Bram@vim.org>
-" Last Change: 2000 Dec 17
+" Last Change: 2000 Dec 23
 
 " Exit quickly when:
 " - this plugin was already loaded
@@ -33,7 +33,7 @@ augroup gzip
   autocmd FileAppendPost		*.Z   call s:write("compress -f")
 augroup END
 
-" Function to check that executing "cmd" works.
+" Function to check that executing "cmd [-f]" works.
 " The result is cached in s:have_"cmd" for speed.
 fun s:check(cmd)
   let name = substitute(a:cmd, '\(\S*\).*', '\1', '')
@@ -54,29 +54,35 @@ fun s:read(cmd)
   if !s:check(a:cmd)
     return
   endif
-  " set 'cmdheight' to two, to avoid the hit-return prompt
-  let ch_save = &ch
-  set ch=3
+  " make 'patchmode' empty, we don't want a copy of the written file
+  let pm_save = &pm
+  set pm=
+  " set 'modifiable'
+  let ma_save = &ma
+  set ma
   " when filtering the whole buffer, it will become empty
   let empty = line("'[") == 1 && line("']") == line("$")
   let tmp = tempname()
   let tmpe = tmp . "." . expand("<afile>:e")
   " write the just read lines to a temp file "'[,']w tmp.gz"
-  execute "'[,']w " . tmpe
+  execute "silent '[,']w " . tmpe
   " uncompress the temp file: call system("gzip -d tmp.gz")
   call system(a:cmd . " " . tmpe)
   " delete the compressed lines
   '[,']d
   " read in the uncompressed lines "'[-1r tmp"
   set nobin
-  execute "'[-1r " . tmp
+  execute "silent '[-1r " . tmp
   " if buffer became empty, delete trailing blank line
   if empty
     normal Gdd''
   endif
-  " delete the temp file
+  " delete the temp file and the used buffers
   call delete(tmp)
-  let &ch = ch_save
+  exe "bdel " . tmp
+  exe "bdel " . tmpe
+  let &pm = pm_save
+  let &ma = ma_save
   " When uncompressed the whole buffer, do autocommands
   if empty
     execute ":silent! doau BufReadPost " . expand("%:r")

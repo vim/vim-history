@@ -1152,9 +1152,6 @@ mch_FullName(char_u *fname, char_u *buf, int len, int force)
     int		l, retval = OK;
     char_u	olddir[MAXPATHL], *p, c;
 
-    *buf = NUL;
-    if (!fname)						/* always fail */
-	return(FAIL);
     if (force || !mch_isFullName(fname)) /* if forced or not an absolute path */
     {	/*
 	 * If the file name has a path, change to that directory for a
@@ -1197,8 +1194,10 @@ mch_FullName(char_u *fname, char_u *buf, int len, int force)
 	if (p)
 	    mch_chdir((char *)olddir);
     }
+
+    /* TODO: check for buffer overflow. */
     STRCAT(buf, vms_fixfilename(fname));
-    return(retval);
+    return retval;
 }
 
 /*
@@ -1564,24 +1563,24 @@ mch_setmouse(int on)
     xterm_mouse_vers = use_xterm_mouse();
     if (xterm_mouse_vers > 0)
     {
-      if (on) /* enable mouse events, use mouse tracking if available */
-	  out_str_nf((char_u *)
-		  (xterm_mouse_vers > 1 ? "\033[?1002h" : "\033[?1000h"));
-      else    /* disable mouse events, could probably always send the same */
-	  out_str_nf((char_u *)
-		  (xterm_mouse_vers > 1 ? "\033[?1002l" : "\033[?1000l"));
-      ison = on;
+	if (on) /* enable mouse events, use mouse tracking if available */
+	    out_str_nf((char_u *)
+		    (xterm_mouse_vers > 1 ? "\033[?1002h" : "\033[?1000h"));
+	else    /* disable mouse events, could probably always send the same */
+	    out_str_nf((char_u *)
+		    (xterm_mouse_vers > 1 ? "\033[?1002l" : "\033[?1000l"));
+	ison = on;
     }
-#ifdef FEAT_MOUSE_DEC
-    else if (use_dec_mouse())
+# ifdef FEAT_MOUSE_DEC
+    else if (ttym_flags == TTYM_DEC)
     {
-      if (on) /* enable mouse events */
-	  out_str_nf((char_u *) "\033[1;2'z\033[1;3'{");
-      else    /* disable mouse events */
-	  out_str_nf((char_u *) "\033['z");
-    ison = on;
+	if (on) /* enable mouse events */
+	    out_str_nf((char_u *)"\033[1;2'z\033[1;3'{");
+	else    /* disable mouse events */
+	    out_str_nf((char_u *)"\033['z");
+	ison = on;
     }
-#endif
+# endif
 }
 
 /*
@@ -1630,29 +1629,12 @@ check_mouse_termcode()
     int
 use_xterm_mouse()
 {
-    if (STRNICMP(p_ttym, "xterm", 5) == 0)
-    {
-	if (isdigit(p_ttym[5]))
-	    return atoi((char *)&p_ttym[5]);
+    if (ttym_flags == TTYM_XTERM2)
+	return 2;
+    if (ttym_flags == TTYM_XTERM)
 	return 1;
-    }
     return 0;
 }
-
-#ifdef FEAT_MOUSE_DEC
-/*
- * Return non-zero when using a DEC mouse, according to 'ttymouse'.
- */
-    int
-use_dec_mouse()
-{
-    if (STRNICMP(p_ttym, "dec", 3) == 0)
-    {
-      return 1;
-    }
-    return 0;
-}
-#endif
 
 #endif /* USE_MOUSE */
 
