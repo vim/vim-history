@@ -39,6 +39,7 @@
 
 #if defined(__CYGWIN__) || defined(__CYGWIN32__)
 # define WIN32UNIX	/* Compiling for Win32 using Unix files. */
+# define BINARY_FILE_IO
 #endif
 
 /* On AIX 4.2 there is a conflicting prototype for ioctl() in stropts.h and
