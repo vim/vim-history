@@ -190,11 +190,6 @@ static int allow_scrollbar = FALSE;
 # define MyTranslateMessage(x) TranslateMessage(x)
 #endif
 
-#ifdef FEAT_MBYTE
-static int sysfixed_width = 0;
-static int sysfixed_height = 0;
-#endif
-
 extern int current_font_height;	    /* this is in os_mswin.c */
 
 static struct
@@ -2221,35 +2216,6 @@ _OnActivateApp(
     /* we call gui_focus_change() in _OnSetFocus() */
     /* gui_focus_change((int)fActivate); */
     return DefWindowProc(hwnd, WM_ACTIVATEAPP, fActivate, (DWORD)dwThreadId);
-}
-
-    static BOOL
-_OnCreate(HWND hwnd, LPCREATESTRUCT lpcs)
-{
-#ifdef FEAT_MBYTE
-    /* get system fixed font size*/
-    static const char ach[] = {'W', 'f', 'g', 'M'};
-
-    HDC	    hdc = GetWindowDC(hwnd);
-    HFONT   hfntOld = SelectFont(hdc, GetStockObject(SYSTEM_FIXED_FONT));
-    SIZE    siz;
-
-    GetTextExtentPoint(hdc, ach, sizeof(ach), &siz);
-
-    sysfixed_width = siz.cx / sizeof(ach);
-    /*
-     * Make characters one pixel higher (by default), so that italic and bold
-     * fonts don't draw off the bottom of their character space.  Also means
-     * that we can underline an underscore for normal text.
-     */
-    sysfixed_height = siz.cy + p_linespace;
-
-    SelectFont(hdc, hfntOld);
-
-    ReleaseDC(hwnd, hdc);
-#endif
-
-    return 0;
 }
 
 #if defined(FEAT_WINDOWS) || defined(PROTO)

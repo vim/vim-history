@@ -729,9 +729,6 @@ _WndProc(
 #endif
 	    return 0;
 
-    case WM_CREATE:	/* HANDLE_MSG doesn't seem to handle this one */
-	return _OnCreate (hwnd, (LPCREATESTRUCT)lParam);
-
     case WM_SIZING:	/* HANDLE_MSG doesn't seem to handle this one */
 	return _DuringSizing(hwnd, (UINT)wParam, (LPRECT)lParam);
 
@@ -1237,8 +1234,6 @@ gui_mch_set_font(GuiFont font)
 }
 
 
-
-
 /*
  * Set the current text foreground color.
  */
@@ -1259,82 +1254,12 @@ gui_mch_set_bg_color(guicolor_T color)
 
 #if defined(FEAT_MBYTE) && defined(FEAT_MBYTE_IME)
 /*
- * Multi-byte handling, by Sung-Hoon Baek
+ * Multi-byte handling, originally by Sung-Hoon Baek.
  * First static functions (no prototypes generated).
  */
 
-    static void
-HanExtTextOut(HDC hdc, int X, int Y, UINT fuOption, const RECT *lprc,
-	LPCTSTR lpString, UINT cbCount, const int *lpDx, BOOL bOpaque)
-{
-    LPCTSTR	pszTemp;
-    int		i;
-    HPEN	hpen, old_pen;
-    POINT	point;
-    int		n;
-
-    if (gui.char_width == sysfixed_width && gui.char_height == sysfixed_height)
-    {
-	hpen = CreatePen(PS_SOLID, 2, gui.currFgColor);
-	old_pen = SelectObject(hdc, hpen);
-
-	pszTemp = lpString;
-	i = 0;
-	while (cbCount > 0)
-	{
-	    if (cbCount > 1 && (n = MB_BYTE2LEN(*(char_u *)pszTemp)) > 1)
-	    {
-		cbCount -= n;
-		pszTemp += n;
-		i += n;
-	    }
-	    else if (*pszTemp == '\\')
-	    {
-		if (i > 0)
-		    ExtTextOut(hdc, X+((pszTemp-i)-lpString)*gui.char_width, Y,
-			    fuOption, lprc, pszTemp-i, i, lpDx);
-		MoveToEx(hdc, (int)(X+(pszTemp-lpString)*gui.char_width
-			    + gui.char_width*0.2),
-			(int)(Y + gui.char_height*0.2), &point);
-		LineTo(hdc, (int)(X+(pszTemp-lpString)*gui.char_width
-			    + gui.char_width*0.8),
-			(int)(Y + gui.char_height*0.75));
-		pszTemp++;
-		cbCount--;
-		i = 0;
-	    }
-	    else
-	    {
-		pszTemp++;
-		cbCount--;
-		i++;
-	    }
-	}
-	if (i > 0)
-	{
-	    int OldBkMode = 0;
-
-	    if (bOpaque)
-	    {
-		OldBkMode = GetBkMode(hdc);
-		SetBkMode(hdc, OPAQUE);
-	    }
-	    ExtTextOut(hdc, X+((pszTemp-i)-lpString)*gui.char_width, Y,
-		    fuOption, lprc, pszTemp-i, i, lpDx);
-	    if (bOpaque)
-		SetBkMode(hdc, OldBkMode);
-	}
-
-	DeleteObject(SelectObject(hdc, old_pen));
-    }
-    else
-	ExtTextOut(hdc, X, Y, fuOption, lprc, lpString, cbCount, lpDx);
-}
-
 #include <ime.h>
 #include <imm.h>
-
-static BOOL bInComposition=FALSE;
 
 /*
  * display composition string(korean)
@@ -1495,29 +1420,8 @@ GetResultStr(HWND hwnd, int GCS)
     vim_free(buf);
     return convbuf;
 }
-
-    static char_u *
-ImeGetTempComposition(void)
-{
-    if (bInComposition == TRUE)
-    {
-	HIMC    hImc;
-	DWORD   dwConvMode, dwSentMode;
-
-	if (pImmGetContext && (hImc = pImmGetContext(s_hwnd)))
-	{
-	    pImmGetConversionStatus(hImc, &dwConvMode, &dwSentMode);
-	    pImmReleaseContext(s_hwnd, hImc);
-	    if (dwConvMode & IME_CMODE_NATIVE)
-	    {
-		return GetResultStr(s_hwnd, GCS_COMPSTR);
-	    }
-	}
-    }
-    return NULL;
-}
-
 #endif
+
 /* For global functions we need prototypes. */
 #if (defined(FEAT_MBYTE) && defined(FEAT_MBYTE_IME)) || defined(PROTO)
 
@@ -1722,9 +1626,6 @@ gui_mch_draw_string(
     static int		brush_lru = 0;
     HBRUSH		hbr;
     RECT		rc;
-#ifdef FEAT_MBYTE_IME
-    char_u		*szComp;
-#endif
 
     if (!(flags & DRAW_TRANSP))
     {
@@ -1813,102 +1714,83 @@ gui_mch_draw_string(
      * versions.
      * No check for DRAW_BOLD, Windows will have done it already.
      */
-#ifdef FEAT_MBYTE_IME
-    if (enc_dbcs != 0)
+
+#ifdef FEAT_MBYTE
+    /* Check if there are any UTF-8 characters.  If not, use normal text
+     * output to speed up output. */
+    if (enc_utf8)
+	for (n = 0; n < len; ++n)
+	    if (text[n] >= 0x80)
+		break;
+
+    /* Check if the Unicode buffer exists and is big enough.  Create it
+     * with the same lengt as the multi-byte string, the number of wide
+     * characters is always equal or smaller. */
+    if ((enc_utf8 || is_funky_dbcs) && (unicodebuf == NULL || len > unibuflen))
     {
-	/* draw an incomplete composition character (korean) */
-	if (len == 1 && blink_state == BLINK_ON
-		&& (szComp = ImeGetTempComposition()) != NULL) // hangul
+	vim_free(unicodebuf);
+	unicodebuf = (WCHAR *)alloc(len * sizeof(WCHAR));
+	unibuflen = len;
+    }
+
+    if (enc_utf8 && n < len && unicodebuf != NULL)
+    {
+	/* Output UTF-8 characters.  Caller has already separated
+	 * composing characters. */
+	int		i = 0;
+	int		clen;	/* string length up to composing char */
+	int		cells;	/* cell width of string up to composing char */
+
+	cells = 0;
+	for (clen = 0; i < len; )
 	{
-	    HanExtTextOut(s_hdc, TEXT_X(col), TEXT_Y(row),
-			       foptions, pcliprect, szComp, 2, padding, TRUE);
-	    vim_free(szComp);
+	    unicodebuf[clen] = utf_ptr2char(text + i);
+	    cells += utf_char2cells(unicodebuf[clen]);
+	    i += utfc_ptr2len_check_len(text + i, len - i);
+	    ++clen;
 	}
+	if (os_version.dwPlatformId == VER_PLATFORM_WIN32_NT)
+	    ExtTextOutW(s_hdc, TEXT_X(col), TEXT_Y(row),
+			     foptions | ETO_IGNORELANGUAGE,
+				       pcliprect, unicodebuf, clen, NULL);
 	else
-	    HanExtTextOut(s_hdc, TEXT_X(col), TEXT_Y(row),
-		      foptions, pcliprect, (char *)text, len, padding, FALSE);
+	    ExtTextOutW(s_hdc, TEXT_X(col), TEXT_Y(row),
+			     foptions, pcliprect, unicodebuf, clen, NULL);
+	len = cells;	/* used for underlining */
+    }
+    else if (is_funky_dbcs)
+    {
+	/* If we want to display DBCS, and the current CP is not the DBCS
+	 * one, we need to go via Unicode. */
+	if (unicodebuf != NULL)
+	{
+	    if ((len = MultiByteToWideChar(enc_dbcs,
+			MB_PRECOMPOSED,
+			(char *)text, len,
+			(LPWSTR)unicodebuf, unibuflen)))
+		ExtTextOutW(s_hdc, TEXT_X(col), TEXT_Y(row),
+			      foptions, pcliprect, unicodebuf, len, NULL);
+	}
     }
     else
 #endif
     {
-#ifdef FEAT_MBYTE
-	/* Check if there are any UTF-8 characters.  If not, use normal text
-	 * output to speed up output. */
-	if (enc_utf8)
-	    for (n = 0; n < len; ++n)
-		if (text[n] >= 0x80)
-		    break;
-
-	/* Check if the Unicode buffer exists and is big enough.  Create it
-	 * with the same lengt as the multi-byte string, the number of wide
-	 * characters is always equal or smaller. */
-	if ((enc_utf8 || is_funky_dbcs)
-		&& (unicodebuf == NULL || len > unibuflen))
+#ifdef FEAT_RIGHTLEFT
+	/* ron: fixed Hebrew on Win98/Win2000 */
+	if (curwin->w_p_rl)
 	{
-	    vim_free(unicodebuf);
-	    unicodebuf = (WCHAR *)alloc(len * sizeof(WCHAR));
-	    unibuflen = len;
-	}
-
-	if (enc_utf8 && n < len && unicodebuf != NULL)
-	{
-	    /* Output UTF-8 characters.  Caller has already separated
-	     * composing characters. */
-	    int		i = 0;
-	    int		clen;	/* string length up to composing char */
-	    int		cells;	/* cell width of string up to composing char */
-
-	    cells = 0;
-	    for (clen = 0; i < len; )
-	    {
-		unicodebuf[clen] = utf_ptr2char(text + i);
-		cells += utf_char2cells(unicodebuf[clen]);
-		i += utfc_ptr2len_check_len(text + i, len - i);
-		++clen;
-	    }
 	    if (os_version.dwPlatformId == VER_PLATFORM_WIN32_NT)
-		ExtTextOutW(s_hdc, TEXT_X(col), TEXT_Y(row),
-				 foptions | ETO_IGNORELANGUAGE,
-					   pcliprect, unicodebuf, clen, NULL);
+		ExtTextOut(s_hdc, TEXT_X(col), TEXT_Y(row),
+			 foptions | ETO_IGNORELANGUAGE,
+				   pcliprect, (char *)text, len, padding);
 	    else
-		ExtTextOutW(s_hdc, TEXT_X(col), TEXT_Y(row),
-				 foptions, pcliprect, unicodebuf, clen, NULL);
-	    len = cells;	/* used for underlining */
-	}
-	else if (is_funky_dbcs)
-	{
-	    /* If we want to display DBCS, and the current CP is not the DBCS
-	     * one, we need to go via Unicode. */
-	    if (unicodebuf != NULL)
-	    {
-		if ((len = MultiByteToWideChar(enc_dbcs,
-			    MB_PRECOMPOSED,
-			    (char *)text, len,
-			    (LPWSTR)unicodebuf, unibuflen)))
-		    ExtTextOutW(s_hdc, TEXT_X(col), TEXT_Y(row),
-				  foptions, pcliprect, unicodebuf, len, NULL);
-	    }
+		RevOut(s_hdc, TEXT_X(col), TEXT_Y(row),
+			 foptions, pcliprect, (char *)text, len, padding);
 	}
 	else
 #endif
-	{
-#ifdef FEAT_RIGHTLEFT
-	    /* ron: fixed Hebrew on Win98/Win2000 */
-	    if (curwin->w_p_rl)
-	    {
-		if (os_version.dwPlatformId == VER_PLATFORM_WIN32_NT)
-		    ExtTextOut(s_hdc, TEXT_X(col), TEXT_Y(row),
-			     foptions | ETO_IGNORELANGUAGE,
-				       pcliprect, (char *)text, len, padding);
-		else
-		    RevOut(s_hdc, TEXT_X(col), TEXT_Y(row),
-			     foptions, pcliprect, (char *)text, len, padding);
-	    }
-	    else
-#endif
-		ExtTextOut(s_hdc, TEXT_X(col), TEXT_Y(row),
-			     foptions, pcliprect, (char *)text, len, padding);
-	}
+	    ExtTextOut(s_hdc, TEXT_X(col), TEXT_Y(row),
+			 foptions, pcliprect, (char *)text, len, padding);
     }
 
     if (flags & DRAW_UNDERL)
