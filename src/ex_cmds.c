@@ -4377,6 +4377,7 @@ ex_help(eap)
     int		need_free = FALSE;
     char_u	*p;
     int		empty_fnum = 0;
+    int		alt_fnum = 0;
     buf_T	*buf;
 
     if (eap != NULL)
@@ -4476,11 +4477,14 @@ ex_help(eap)
 #endif
 
 	    /*
-	     * open help file (do_ecmd() will set b_help flag, readfile() will
-	     * set b_p_ro flag)
+	     * Open help file (do_ecmd() will set b_help flag, readfile() will
+	     * set b_p_ro flag).
+	     * Set the alternate file to the previously edited file.
 	     */
+	    alt_fnum = curbuf->b_fnum;
 	    (void)do_ecmd(0, NULL, NULL, NULL, ECMD_LASTL,
 						   ECMD_HIDE + ECMD_SET_HELP);
+	    curwin->w_alt_fnum = alt_fnum;
 	    empty_fnum = curbuf->b_fnum;
 	}
     }
@@ -4502,6 +4506,10 @@ ex_help(eap)
 	if (buf != NULL)
 	    wipe_buffer(buf);
     }
+
+    /* keep the previous alternate file */
+    if (alt_fnum != 0 && curwin->w_alt_fnum == empty_fnum)
+	curwin->w_alt_fnum = alt_fnum;
 
     /*
      * Always set these options after jumping to a help tag, because the user
