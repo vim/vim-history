@@ -5,6 +5,7 @@ int prep_exarg __ARGS((exarg_T *eap, buf_T *buf));
 int buf_write __ARGS((buf_T *buf, char_u *fname, char_u *sfname, linenr_T start, linenr_T end, exarg_T *eap, int append, int forceit, int reset_changed, int filtering));
 char_u *shorten_fname __ARGS((char_u *full_path, char_u *dir_name));
 void shorten_fnames __ARGS((int force));
+void shorten_filenames __ARGS((char_u **fnames, int count));
 char_u *modname __ARGS((char_u *fname, char_u *ext, int prepend_dot));
 char_u *buf_modname __ARGS((int shortname, char_u *fname, char_u *ext, int prepend_dot));
 int vim_fgets __ARGS((char_u *buf, int size, FILE *fp));
