@@ -56,7 +56,8 @@
 # OSTYPE	DOS16 or WIN32 (WIN32)
 # DEBUG		set to "-v" if you wish a DEBUGging build (not defined)
 # CODEGUARD	set to "-vG" if you want to use CODEGUARD (not defined)
-# CPU		1 through 6: select CPU to compile for (3)
+# CPUNR		1 through 6: select -CPU argument to compile with (3)
+#               3 for 386, 4 for 486, 5 for pentium, 6 for pentium pro.
 # USEDLL	no or yes: set to yes to use the Runtime library DLL (no)
 #		For USEDLL=yes the cc3250.dll is required to run Vim.
 # VIMDLL	no or yes: create vim32.dll, and stub (g)vim.exe (no)
@@ -117,9 +118,9 @@ OSTYPE = WIN32
 ### CODEGUARD: Uncomment to use the CODEGUARD stuff (BC 5.0 or later):
 #CODEGUARD = -vG
 #
-### CPU: set your target processor (3 to 6)
-!if ("$(CPU)"=="")
-CPU = 3
+### CPUNR: set your target processor (3 to 6)
+!if ("$(CPUNR)"=="")
+CPUNR = 3
 !endif
 #
 ### Comment out to use precompiled headers (faster, but uses lots of disk!)
@@ -179,8 +180,8 @@ WINVER = -DWINVER=0x0400 -D_WIN32_WINNT=0x0400
 # Sanity checks for the above options:
 #
 !if ($(OSTYPE)==DOS16)
-!if (($(CPU)+0)>4)
-!error CPU Must be less than or equal to 4 for DOS16
+!if (($(CPUNR)+0)>4)
+!error CPUNR Must be less than or equal to 4 for DOS16
 !endif
 #
 !if (($(ALIGN)+0)>2)
@@ -188,8 +189,8 @@ WINVER = -DWINVER=0x0400 -D_WIN32_WINNT=0x0400
 !endif
 #
 !else	# not DOS16
-!if (($(CPU)+0)<3)
-!error CPU Must be greater or equal to 3 for WIN32
+!if (($(CPUNR)+0)<3)
+!error CPUNR Must be greater or equal to 3 for WIN32
 !endif
 !endif
 #
@@ -289,8 +290,8 @@ TCL_LIB_FLAG =
 #
 # DO NOT change below:
 #
-CPU = -$(CPU)
-ALIGN = -a$(ALIGN)
+CPUARG = -$(CPUNR)
+ALIGNARG = -a$(ALIGN)
 #
 !ifdef DEBUG
 DEFINES=$(DEFINES) -DDEBUG
@@ -553,8 +554,8 @@ MSG = $(MSG) TCL
 MSG = $(MSG)(dynamic)
 ! endif
 !endif
-MSG = $(MSG) cpu=$(CPU)
-MSG = $(MSG) Align=$(ALIGN)
+MSG = $(MSG) cpu=$(CPUARG)
+MSG = $(MSG) Align=$(ALIGNARG)
 
 !message $(MSG)
 
@@ -853,8 +854,8 @@ $(OBJDIR)\bcc.cfg: Make_bc5.mak $(OBJDIR)
 	$(DEBUG)
 	$(OPT)
 	$(CODEGUARD)
-	$(CPU)
-	$(ALIGN)
+	$(CPUARG)
+	$(ALIGNARG)
 | $@
 
 # vi:set sts=4 sw=4:
