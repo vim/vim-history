@@ -129,6 +129,9 @@
 /* Define if touuper/tolower only work on lower/upercase characters */
 #undef BROKEN_TOUPPER
 
+/* Define if stat() ignores a trailing slash */
+#undef STAT_IGNORES_SLASH
+
 /* Define if tgetstr() has a second argument that is (char *) */
 #undef TGETSTR_CHAR_P
 

@@ -5953,12 +5953,40 @@ else
 fi
 rm -f conftest*
 
+echo $ac_n "checking whether stat() ignores a trailing slash""... $ac_c" 1>&6
+echo "configure:5958: checking whether stat() ignores a trailing slash" >&5
+if test "$cross_compiling" = yes; then
+  { echo "configure: error: failed to compile test program" 1>&2; exit 1; }
+else
+  cat > conftest.$ac_ext <<EOF
+#line 5963 "configure"
+#include "confdefs.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+main() {struct stat st;  exit(stat("configure/", &st) != 0); }
+EOF
+if { (eval echo configure:5969: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+then
+  echo "$ac_t""yes" 1>&6; cat >> confdefs.h <<\EOF
+#define STAT_IGNORES_SLASH 1
+EOF
+
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -fr conftest*
+  echo "$ac_t""no" 1>&6
+fi
+rm -fr conftest*
+fi
+
+
 echo $ac_n "checking for iconv_open()""... $ac_c" 1>&6
-echo "configure:5913: checking for iconv_open()" >&5
+echo "configure:5986: checking for iconv_open()" >&5
 save_LIBS="$LIBS"
 LIBS="$LIBS -liconv"
 cat > conftest.$ac_ext <<EOF
-#line 5917 "configure"
+#line 5990 "configure"
 #include "confdefs.h"
 
 #ifdef HAVE_ICONV_H
