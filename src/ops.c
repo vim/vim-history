@@ -2148,8 +2148,12 @@ op_tilde(oap)
     pos_T		pos;
 #ifdef FEAT_VISUAL
     struct block_def	bd;
+    int			done;
 #endif
     int			did_change = 0;
+#ifdef FEAT_MBYTE
+    colnr_T		col;
+#endif
 
     if (u_save((linenr_T)(oap->start.lnum - 1),
 				       (linenr_T)(oap->end.lnum + 1)) == FAIL)
@@ -2163,12 +2167,29 @@ op_tilde(oap)
 	{
 	    block_prep(oap, &bd, pos.lnum, FALSE);
 	    pos.col = bd.textcol;
-	    while (--bd.textlen >= 0)
+	    for (done = 0; done < bd.textlen; ++done)
 	    {
 		did_change |= swapchar(oap->op_type, &pos);
+# ifdef FEAT_MBYTE
+		col = pos.col + 1;
+# endif
 		if (inc(&pos) == -1)	    /* at end of file */
 		    break;
+# ifdef FEAT_MBYTE
+		if (pos.col > col)
+		    /* Count extra bytes of a multi-byte character. */
+		    done += pos.col - col;
+# endif
 	    }
+# ifdef FEAT_NETBEANS_INTG
+	    if (usingNetbeans && did_change)
+	    {
+		char_u *ptr = ml_get_buf(curbuf, pos.lnum, FALSE);
+
+		netbeans_inserted(curbuf, pos.lnum, bd.textcol,
+				    bd.textlen, &ptr[bd.textcol], bd.textlen);
+	    }
+# endif
 	}
 	if (did_change)
 	    changed_lines(oap->start.lnum, 0, oap->end.lnum + 1, 0L);
@@ -2194,8 +2215,32 @@ op_tilde(oap)
 		break;
 	}
 	if (did_change)
+	{
 	    changed_lines(oap->start.lnum, oap->start.col, oap->end.lnum + 1,
 									  0L);
+#ifdef FEAT_NETBEANS_INTG
+	    if (usingNetbeans && did_change)
+	    {
+		char_u *ptr;
+		int count;
+
+		pos = oap->start;
+		while (pos.lnum < oap->end.lnum)
+		{
+		    ptr = ml_get_buf(curbuf, pos.lnum, FALSE);
+		    count = STRLEN(ptr) - pos.col;
+		    netbeans_inserted(curbuf, pos.lnum, pos.col,
+						 count, &ptr[pos.col], count);
+		    pos.col = 0;
+		    pos.lnum++;
+		}
+		ptr = ml_get_buf(curbuf, pos.lnum, FALSE);
+		count = oap->end.col - pos.col + 1;
+		netbeans_inserted(curbuf, pos.lnum, pos.col,
+						 count, &ptr[pos.col], count);
+	    }
+#endif
+	}
     }
 
 #ifdef FEAT_VISUAL

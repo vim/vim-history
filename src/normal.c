@@ -6460,6 +6460,11 @@ n_swapchar(cap)
     long	n;
     pos_T	startpos;
     int		did_change = 0;
+#ifdef FEAT_NETBEANS_INTG
+    pos_T	pos;
+    char_u	*ptr;
+    int		count;
+#endif
 
     if (checkclearopq(cap->oap))
 	return;
@@ -6476,6 +6481,9 @@ n_swapchar(cap)
 	return;
 
     startpos = curwin->w_cursor;
+#ifdef FEAT_NETBEANS_INTG
+    pos = startpos;
+#endif
     for (n = cap->count1; n > 0; --n)
     {
 	did_change |= swapchar(cap->oap->op_type, &curwin->w_cursor);
@@ -6485,6 +6493,20 @@ n_swapchar(cap)
 	    if (vim_strchr(p_ww, '~') != NULL
 		    && curwin->w_cursor.lnum < curbuf->b_ml.ml_line_count)
 	    {
+#ifdef FEAT_NETBEANS_INTG
+		if (usingNetbeans)
+		{
+		    if (did_change)
+		    {
+			ptr = ml_get(pos.lnum);
+			count = STRLEN(ptr) - pos.col;
+			netbeans_inserted(curbuf, pos.lnum, pos.col,
+						 count, &ptr[pos.col], count);
+		    }
+		    pos.col = 0;
+		    pos.lnum++;
+		}
+#endif
 		++curwin->w_cursor.lnum;
 		curwin->w_cursor.col = 0;
 		if (n > 1)
@@ -6498,6 +6520,16 @@ n_swapchar(cap)
 		break;
 	}
     }
+#ifdef FEAT_NETBEANS_INTG
+    if (did_change && usingNetbeans)
+    {
+	ptr = ml_get(pos.lnum);
+	count = curwin->w_cursor.col - pos.col;
+	netbeans_inserted(curbuf, pos.lnum, pos.col,
+						 count, &ptr[pos.col], count);
+    }
+#endif
+
 
     check_cursor();
     curwin->w_set_curswant = TRUE;
