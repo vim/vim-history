@@ -4458,7 +4458,7 @@ replace_termcodes(from, bufp, from_part, do_lt)
 		    result[dlen++] = K_SPECIAL;
 		    result[dlen++] = (int)KS_EXTRA;
 		    result[dlen++] = (int)KE_SNR;
-		    sprintf((char *)result + dlen, "%ld", current_SID);
+		    sprintf((char *)result + dlen, "%ld", (long)current_SID);
 		    dlen += STRLEN(result + dlen);
 		    result[dlen++] = '_';
 		    continue;

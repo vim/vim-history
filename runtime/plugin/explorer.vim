@@ -21,6 +21,12 @@
 " 3. The help is only one line with an option for detailed help
 " 4. Works as a plugin for Vim6.0+
 "=============================================================================
+
+if exists("loaded_explorer")
+  finish
+endif
+let loaded_explorer=1
+
 "Default settings :
 if (!exists("g:explVertical"))
   let g:explVertical=0
@@ -51,31 +57,29 @@ if (!exists("g:explHideFiles"))
 endif
 
 
-if exists("loaded_explorer")
-  finish
+if !exists(':Explore')
+  command Explore :call s:Initiate(0)
 endif
-let loaded_explorer=1
-
-if !hasmapto('<Plug>ExplorerInitiate(0)')
-  nmap <unique> <Leader>e <Plug>ExplorerInitiate(0)
-endif
-if !hasmapto('<Plug>ExplorerInitiate(1)')
-  nmap <unique> <Leader>s <Plug>ExplorerInitiate(1)
+if !exists(':Sexplore')
+  command Sexplore :call s:Initiate(1)
 endif
 
-nnoremap <unique> <script> <Plug>ExplorerInitiate(0) :call <SID>Initiate(0)<cr>
-nnoremap <unique> <script> <Plug>ExplorerInitiate(1) :call <SID>Initiate(1)<cr>
+" The user can define mappings:
+" nmap <unique> <Leader>e <Plug>ExplorerOpen
+" nmap <unique> <Leader>s <Plug>ExplorerSplit
+nnoremap <unique> <script> <Plug>ExplorerOpen :call <SID>Initiate(0)<cr>
+nnoremap <unique> <script> <Plug>ExplorerSplit :call <SID>Initiate(1)<cr>
 
-function! <SID>Initiate(split, ...)
+function! s:Initiate(split, ...)
   if (expand("%:p:t")=="_fileExplorer.tmp")
     echo "Already in file explorer"
   else
     let s:oldCh=&ch
     let &ch=2
     if (a:0==0)
-      call <SID>InitializeDirName("")
+      call s:InitializeDirName("")
     else
-      call <SID>InitializeDirName(a:1)
+      call s:InitializeDirName(a:1)
     endif
     if ((&modified==1) || (a:split==1))
       if (g:explVertical==0)
@@ -92,13 +96,13 @@ function! <SID>Initiate(split, ...)
     endif
     let s:tempShowFileSize=0
     let s:tempShowFileDate=0
-    call <SID>SyntaxFile()
+    call s:SyntaxFile()
     let g:filterFormula=substitute(g:explHideFiles, '\([^\\]\),', '\1\\|', 'g')
-    call <SID>ProcessFile(g:currDir)
+    call s:ProcessFile(g:currDir)
   endif
 endfunction
 
-function! <SID>InitializeDirName(dirName)
+function! s:InitializeDirName(dirName)
   if (a:dirName=="")
     if (exists("&bsdir"))
       if (&bsdir=="buffer")
@@ -123,7 +127,7 @@ function! <SID>InitializeDirName(dirName)
   let g:currDir=substitute(g:currDir,"/\./","/","g")
 endfunction
 
-function! <SID>ProcessFile(fileName, ...)
+function! s:ProcessFile(fileName, ...)
   if ((isdirectory(a:fileName)) || (a:fileName==g:currDir."../"))
     "Delete all lines
     1,$d _
@@ -134,9 +138,9 @@ function! <SID>ProcessFile(fileName, ...)
     else
       let g:currDir=a:fileName
     endif
-    call <SID>AddHeader(g:explDetailedHelp)
+    call s:AddHeader(g:explDetailedHelp)
     $ d
-    call <SID>DisplayFiles(g:currDir)
+    call s:DisplayFiles(g:currDir)
     normal zz
     if (isdirectory(@#))
       " Delete the previous buffer if the explorer was launched by means of
@@ -169,13 +173,13 @@ function! <SID>ProcessFile(fileName, ...)
     endif
     exec("e! ".escape(a:fileName, ' %#'))
     if (newWindow==0)
-      call <SID>CloseExplorer()
+      call s:CloseExplorer()
     endif
   endif
   let &modified=0
 endfunction
 
-function! <SID>GetFileName()
+function! s:GetFileName()
   if ((s:fileSizesShown==0) && (s:fileDatesShown==0))
     return g:currDir.getline(".")
   else
@@ -185,7 +189,7 @@ function! <SID>GetFileName()
   endif
 endfunction
 
-function! <SID>AddHeader(detailed)
+function! s:AddHeader(detailed)
     let save_f=@f
     exe '1'
     if (a:detailed==1)
@@ -208,7 +212,7 @@ function! <SID>AddHeader(detailed)
     let @f=save_f
 endfunction
 
-function! <SID>DisplayFiles(dir)
+function! s:DisplayFiles(dir)
   let save_f=@f
   let @f=glob(a:dir."*")
   " Removing dot files if they are a part of @f. In Unix for example, dot files
@@ -224,15 +228,15 @@ function! <SID>DisplayFiles(dir)
     let s:maxFileLen=0
     let s:fileSizesShown=0
     let s:fileDatesShown=0
-    /^\.\.\//,$g/^/call <SID>MarkDirs()
+    /^\.\.\//,$g/^/call s:MarkDirs()
     normal `t
-    call <SID>ShowFileSizes((g:explShowFileSize) || (s:tempShowFileSize))
-    call <SID>ShowFileDates((g:explShowFileDate) || (s:tempShowFileDate))
+    call s:ShowFileSizes((g:explShowFileSize) || (s:tempShowFileSize))
+    call s:ShowFileDates((g:explShowFileDate) || (s:tempShowFileDate))
   endif
   let @f=save_f
 endfunction
 
-function! <SID>MarkDirs()
+function! s:MarkDirs()
   let oldRep=&report
   set report=1000
   "Remove slashes if added
@@ -242,7 +246,7 @@ function! <SID>MarkDirs()
   s;^.*/\([^/]*\)$;\1;e
   "normal ^
   let currLine=getline(".")
-  if (isdirectory(<SID>GetFileName()))
+  if (isdirectory(s:GetFileName()))
     s;$;/;
     let fileLen=strlen(currLine)+1
   else
@@ -261,16 +265,16 @@ function! <SID>MarkDirs()
   let &report=oldRep
 endfunction
 
-function! <SID>ShowFileSizes(enable)
+function! s:ShowFileSizes(enable)
   if (a:enable==1)
     normal mt
     if (s:fileDatesShown==1)
       "Check if date field exists
-      /^\.\.\//,$g/^/let fileSize=getfsize(<SID>GetFileName()) |
+      /^\.\.\//,$g/^/let fileSize=getfsize(s:GetFileName()) |
           \exec "norm ".(9-strlen(fileSize))."A \<esc>" |
           \exec 's/$/'.fileSize.'/'
     else
-      /^\.\.\//,$g/^/let fileSize=getfsize(<SID>GetFileName()) |
+      /^\.\.\//,$g/^/let fileSize=getfsize(s:GetFileName()) |
           \exec "norm ".(s:maxFileLen-strlen(getline("."))+2+9-strlen(fileSize))."A \<esc>" |
           \exec 's/$/'.fileSize.'/'
     endif
@@ -281,14 +285,14 @@ function! <SID>ShowFileSizes(enable)
   endif
 endfunction
 
-function! <SID>ShowFileDates(enable)
+function! s:ShowFileDates(enable)
   if (a:enable==1)
     normal mt
     if (s:fileSizesShown==1)
       "If file size field exists
-      /^\.\.\//,$g/^/exec 's/$/ '.escape(strftime(g:explDateFormat, getftime(<SID>GetFileName())), '/').'/'
+      /^\.\.\//,$g/^/exec 's/$/ '.escape(strftime(g:explDateFormat, getftime(s:GetFileName())), '/').'/'
     else
-      /^\.\.\//,$g/^/let fileTime=getftime(<SID>GetFileName()) |
+      /^\.\.\//,$g/^/let fileTime=getftime(s:GetFileName()) |
                      \exec "norm $".(s:maxFileLen-strlen(getline("."))+2)."a \<esc>" |
                      \exec 's/$/ '.escape(strftime(g:explDateFormat, fileTime), '/').'/'
 
@@ -300,7 +304,7 @@ function! <SID>ShowFileDates(enable)
   endif
 endfunction
 
-function! <SID>DeleteFile() range
+function! s:DeleteFile() range
   let oldRep = &report
   let &report = 1000
 
@@ -311,7 +315,7 @@ function! <SID>DeleteFile() range
   let lastLine = a:lastline
   while ((currLine <= lastLine) && (stopDel==0))
     exec(currLine)
-    let fileName=<SID>GetFileName()
+    let fileName=s:GetFileName()
     if (isdirectory(fileName))
       echo fileName." : Directory deletion not supported yet"
       let currLine = currLine + 1
@@ -345,8 +349,8 @@ function! <SID>DeleteFile() range
   let &modified=0
 endfunction
 
-function! <SID>RenameFile()
-  let fileName=<SID>GetFileName()
+function! s:RenameFile()
+  let fileName=s:GetFileName()
   if (isdirectory(fileName))
     echo "Directory renaming not supported yet"
   elseif (filereadable(fileName))
@@ -366,7 +370,7 @@ function! <SID>RenameFile()
   let &modified=0
 endfunction
 
-function! <SID>GotoDir(dummy, dirName)
+function! s:GotoDir(dummy, dirName)
   if (isdirectory(expand(a:dirName)))
     " Guess the complete path
     if (isdirectory(expand(getcwd()."/".a:dirName)))
@@ -374,29 +378,29 @@ function! <SID>GotoDir(dummy, dirName)
     else
       let dirpath=expand(a:dirName)
     endif
-    call <SID>InitializeDirName(dirpath)
-    call <SID>ProcessFile(g:currDir)
+    call s:InitializeDirName(dirpath)
+    call s:ProcessFile(g:currDir)
   else
     echo a:dirName." : No such directory"
   endif
 endfunction
 
-function! <SID>CloseExplorer()
+function! s:CloseExplorer()
   bd! /_fileExplorer.tmp
   if (exists("s:oldCh"))
     let &ch=s:oldCh
   endif
 endfunction
 
-function! <SID>Back2PrevFile()
+function! s:Back2PrevFile()
   if ((@#!="") && (@#!="_fileExplorer.tmp") && (b:splitWindow==0) && 
         \(isdirectory(@#)==0))
     exec("e #")
   endif
-  call <SID>CloseExplorer()
+  call s:CloseExplorer()
 endfunction
 
-function! <SID>SyntaxFile()
+function! s:SyntaxFile()
   if 1 || has("syntax") && exists("syntax_on") && !has("syntax_items")
     syn match browseSynopsis	"^\".*"
     syn match browseDirectory	"[^\"].*/ "
@@ -412,41 +416,41 @@ function! <SID>SyntaxFile()
   endif
 endfunction
       
-function! <SID>EditDir(fileName)
+function! s:EditDir(fileName)
   if (isdirectory(a:fileName))
     " Do some processing if the path is relative..
     let completePath=expand("%:p")
-    call <SID>Initiate(0, completePath)
+    call s:Initiate(0, completePath)
   elseif ((expand("%")=="") && (bufloaded(".")==1))
     " This is a workaround for a vim bug in Windows. When one tries to edit   
     " :e .
     " expand("%") *sometimes* returns a blank string
-    call <SID>Initiate(0, getcwd())
+    call s:Initiate(0, getcwd())
   endif
 endfunction
 
-function! <SID>ExpandHelp()
+function! s:ExpandHelp()
   normal mt
   1, /^\.\.\//- d
-  call <SID>AddHeader(1)
+  call s:AddHeader(1)
   /^\.\.\// d _
   normal `t
   let &modified=0
 endfunction
 
-function! <SID>IncrVerbosity()
+function! s:IncrVerbosity()
   if (s:fileSizesShown==0)
-    call <SID>ShowFileSizes(1)
+    call s:ShowFileSizes(1)
     let s:tempShowFileSize=1
   elseif (s:fileDatesShown==0)
-    call <SID>ShowFileDates(1)
+    call s:ShowFileDates(1)
     let s:tempShowFileDate=1
   endif
 endfunction
 
-function! <SID>ShowAllFiles()
+function! s:ShowAllFiles()
   let g:filterFormula=""
-  call <SID>ProcessFile(g:currDir)
+  call s:ProcessFile(g:currDir)
 endfunction
 
 augroup fileExplorer
@@ -479,7 +483,7 @@ augroup fileExplorer
   au BufLeave _fileExplorer.tmp nun i
   au BufEnter _fileExplorer.tmp nm s :exec ("cd ".escape(g:currDir,' '))<cr>
   au BufLeave _fileExplorer.tmp nun s
-  au BufEnter _fileExplorer.tmp command! -nargs=+ -complete=dir ChangeDirectory call <SID>GotoDir(<f-args>)
+  au BufEnter _fileExplorer.tmp command! -nargs=+ -complete=dir ChangeDirectory call s:GotoDir(<f-args>)
   au BufLeave _fileExplorer.tmp delcommand ChangeDirectory
-  au BufEnter * nested call <SID>EditDir(expand("%"))
+  au BufEnter * nested call s:EditDir(expand("%"))
 augroup end

@@ -1492,7 +1492,7 @@ get_window(
 {
     win_t	*wp = NULL;	/* window filename is in */
 
-    for (wp = firstwin; wp != NULL; wp = wp->w_next)
+    for (wp = firstwin; wp != NULL; wp = W_NEXT(wp))
 	if (buf == wp->w_buffer)
 	    break;
     return wp;

@@ -179,7 +179,7 @@ EXTERN char_u	*sourcing_name INIT( = NULL);/* name of error message source */
 EXTERN linenr_t	sourcing_lnum INIT(= 0);    /* line number of the source file */
 
 #ifdef FEAT_EVAL
-EXTERN long	current_SID INIT(= 0);	    /* ID of script being sourced or
+EXTERN sid_t	current_SID INIT(= 0);	    /* ID of script being sourced or
 					       was sourced to define the
 					       current function. */
 #endif
@@ -313,12 +313,20 @@ EXTERN VimClipboard clipboard;
 #endif
 
 /*
- * All windows are linked in a list. firstwin points to the first entry, lastwin
- * to the last entry (can be the same as firstwin) and curwin to the currently
- * active window.
+ * All windows are linked in a list. firstwin points to the first entry,
+ * lastwin to the last entry (can be the same as firstwin) and curwin to the
+ * currently active window.
+ * Without the FEAT_WINDOWS they are all equal.
  */
+#ifdef FEAT_WINDOWS
 EXTERN win_t	*firstwin;	/* first window */
 EXTERN win_t	*lastwin;	/* last window */
+# define W_NEXT(wp) ((wp)->w_next)
+#else
+# define firstwin curwin
+# define lastwin curwin
+# define W_NEXT(wp) NULL
+#endif
 EXTERN win_t	*curwin;	/* currently active window */
 
 /*
@@ -336,11 +344,12 @@ EXTERN buf_t	*lastbuf INIT(= NULL);	/* last buffer */
 EXTERN buf_t	*curbuf INIT(= NULL);	/* currently active buffer */
 
 /*
- * list of files being edited (argument list)
+ * List of files being edited (global argument list).  curwin->w_alist points
+ * to this when the window is using the global argument list.
  */
-EXTERN char_u	**arg_files;	/* list of files */
-EXTERN int	arg_file_count;	/* number of files */
-EXTERN int	arg_had_last INIT(= FALSE); /* accessed last file in arglist */
+EXTERN alist_t	global_alist;	/* global argument list */
+EXTERN int	arg_had_last INIT(= FALSE); /* accessed last file in
+					       global_alist */
 
 EXTERN int	ru_col;		/* column for ruler */
 #ifdef FEAT_STL_OPT
@@ -768,11 +777,13 @@ EXTERN int	lcs_tab1 INIT(= NUL);
 EXTERN int	lcs_tab2 INIT(= NUL);
 EXTERN int	lcs_trail INIT(= NUL);
 
-#ifdef FEAT_WINDOWS
+#if defined(FEAT_WINDOWS) || defined(FEAT_WILDMENU) || defined(FEAT_STL_OPT)
 /* Characters from 'fillchars' option */
 EXTERN int	fill_stl INIT(= ' ');
 EXTERN int	fill_stlnc INIT(= ' ');
 EXTERN int	fill_vert INIT(= ' ');
+#endif
+#ifdef FEAT_FOLDING
 EXTERN int	fill_fold INIT(= '-');
 #endif
 

@@ -3,7 +3,7 @@
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
 "		Author and previous maintainer:
 "		Paul Siegmann <pauls@euronet.nl>
-" Last Change:	Fre, 10 Nov 2000 16:04:07 +0100
+" Last Change:	Mit, 15 Nov 2000 17:06:42 +0100
 " Filenames:	*.xml
 " URL:		http://www.zellner.org/vim/syntax/xml.vim
 " $Id$
@@ -20,7 +20,6 @@
 " REFERENCES:
 "   http://www.w3.org/TR/1998/REC-xml-19980210
 "   http://www.w3.org/XML/1998/06/xmlspec-report-19980910.htm
-"
 
 syn clear
 
@@ -41,12 +40,8 @@ syn match   xmlTagError                                              contained "
 
 " syntax-folding
 if v:version >= 600
-    syn cluster xmlFoldCluster
-	\ contains=xmlTag,xmlEndTag,xmlProcessing,xmlComment,xmlFold,xmlCdata,xmlEntity
-    syn region  xmlFold 
-	\ start=+<\z([^ /!?>]\+\)\(\(\_[^>]*[^/!?]>\)\|>\)+ 
-	\ end=+</\z1>+ 
-	\ transparent fold contains=@xmlFoldCluster keepend
+    syn cluster xmlFoldCluster contains=xmlTag,xmlEndTag,xmlProcessing,xmlComment,xmlFold,xmlCdata,xmlEntity
+    syn region  xmlFold start=+<\z([^ /!?>]\+\)\(\(\_[^>]*[^/!?]>\)\|>\)+ end=+</\z1>+ transparent fold contains=@xmlFoldCluster keepend
 endif
 
 " &entities; compare with dtd

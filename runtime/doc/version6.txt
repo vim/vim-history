@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0m.  Last change: 2000 Nov 12
+*version6.txt*  For Vim version 6.0n.  Last change: 2000 Nov 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -46,6 +46,7 @@ Operator modifiers			|new-operator-mod|
 Search Path				|new-search-path|
 Editing files over a network		|new-network-files|
 Writing files				|new-file-writing|
+Argument list				|new-argument-list|
 Various new items			|new-items-6|
 
 IMPROVEMENTS				|improvements-6|
@@ -220,6 +221,13 @@ setting the option, which isn't that easy.
 After using ":colder" the newer error lists are overwritten.  This makes it
 possible to use ":grep" to browse in a tree-like way.  Must use ":cnewer 99"
 to get the old behavior.
+
+When setting 'syntax' to a name for which there is no syntax file, the syntax
+highlighting is cleared.  Previously the existing highlighting was kept.
+
+The 16 bit MS-DOS version is now compiled without the +listcmds feature
+(buffer list manipulation commands).  They are not often needed and this
+executable needs to be smaller.
 
 ==============================================================================
 NEW FEATURES
@@ -567,6 +575,25 @@ is copied from the original file to the new file (or the backup if it's
 copied).
 
 
+Argument list						*new-argument-list*
+-------------
+
+The support for the argument list has been extended.  It can now be
+manipulated to contain the files you want it to contain.
+
+The argument list can now be local to a window.  It is created with the
+|:arglocal| command.  The |:argglobal| command can be used to go back to the
+global argument list.
+
+The |:argdo| command executes a command on all files in the argument list.
+
+File names can be added to the argument list with |:argadd|.  File names can
+be removed with |:argdelete|.
+
+"##" can be used like "#", it is replaced by all the names in the argument
+list concatenated.  Useful for ":grep foo ##".
+
+
 Various new items					*new-items-6*
 -----------------
 
@@ -751,8 +778,11 @@ autocommands instead of normal file read/write.  Use this in netrw.vim to be
 able to edit files on a remote system. (Charles Campbell)
 FuncUndefined: When a user function is not defined. (Ron Aaron)
 
-TermReponse autocommand event and v:termreponse internal variable.  Can be
-used to react to the version of the terminal.  (Ronald Schild)
+Added TermReponse autocommand event and v:termreponse internal variable.  Can
+be used to react to the version of the terminal.  (Ronald Schild)
+
+Added FileChangedRO event: Triggered when making the first change to a
+read-only file.  Can be used to check-out the file. (Scott Graham)
 
 GUI:
 - X11: When a color can't be allocated, use the nearest match from the
@@ -863,7 +893,11 @@ error message.
 when more than 'report'.  The message was annoying when deleting a buffer in a
 script.
 
-The number of marks kept in the jumplist has been increased from 50 to 100.
+Jump list:
+- The number of marks kept in the jumplist has been increased from 50 to 100.
+- The jumplist is now stored in the viminfo file.  CTRL-O can be used to jump
+  to positions from a previous edit session.
+- When doing ":split" copy the jumplist to the new window.
 
 Python interface: Allow setting the width of a vertically split window. (John
 Cook)
@@ -890,6 +924,12 @@ This greatly simplifies using non-default colors for a specific language.
 
 Also set "v:errmsg" when using ":silent! cmd".
 
+When editing the last file in the argument list in any way, allow exiting.
+Previously this was only possible when getting to that file with ":next" or
+":last".
+
+Added the '1' flag to 'formatoptions'. (Vit Stradal)
+
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
 
@@ -901,6 +941,10 @@ files go in the objects directory.
 Included features are now grouped in "tiny", "small", "normal", "big" and
 "huge".  This replaces "min-features" and "max-features".  Using "tiny"
 disables multiple window for a really small Vim.
+
+Added the +listcmds feature.  Can be used to compile without the Vim commands
+that manipulate the buffer list and argument list (the buffer list itself is
+still there, can't do without it).
 
 Removed GTK+ support for versions older than 1.1.16.
 
@@ -915,6 +959,9 @@ Made enabling the SNiFF+ interface possible with a Configure argument.
 Configure now always checks /usr/local/lib for libraries and
 /usr/local/include for include files.  Helps finding the stuff for iconv() and
 gettext().
+
+For the tiny version or when FEAT_WINDOWS is not defined: Firstwin and lastwin
+are equal to curwin and don't use w_next and w_prev.
 
 ==============================================================================
 BUG FIXES						*bug-fixes-6*
@@ -1052,5 +1099,20 @@ Selecting a Visual block, with the start partly on a Tab, deleting it leaves
 the cursor too far to the left.  Causes "s" to work in the wrong position.
 
 Pound sign in normal.c caused trouble on some compilers.  Use 0xA3 instead.
+
+Warning for changing a read-only file wasn't given when 'insertmode' was set.
+
+Win32: When 'shellxquote' is set to a double quote (e.g., using csh), ":!start
+notepad file" doesn't work.  Remove the double quotes added by 'shellxquote'
+when using ":!start". (Pavol Juhas)
+
+The "<f-args>" argument of ":command" didn't accept Tabs for white space.
+Also, don't add an empty argument when there are trailing blanks.
+
+":e test\\je" edited "test\je", but ":next test\\je" edited "testje".
+Backslashes were removed one time too many for ":next".
+
+VMS: "gf" didn't work properly.  Use vms_fixfilename() to translate the file
+name. (Zoltan Arpadffy)
 
  vim:tw=78:

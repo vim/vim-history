@@ -1590,12 +1590,13 @@ do_viminfo(fp_in, fp_out, want_info, want_marks, force_read)
  */
     static int
 read_viminfo_up_to_marks(line, fp, forceit, writing)
-    char_u  *line;
-    FILE    *fp;
-    int	    forceit;
-    int	    writing;
+    char_u	*line;
+    FILE	*fp;
+    int		forceit;
+    int		writing;
 {
-    int	    eof;
+    int		eof;
+    buf_t	*buf;
 
     prepare_viminfo_history(forceit ? 9999 : 0);
     eof = vim_fgets(line, LSIZE, fp);
@@ -1606,7 +1607,6 @@ read_viminfo_up_to_marks(line, fp, forceit, writing)
 		/* Characters reserved for future expansion, ignored now */
 	    case '+': /* "+40 /path/dir file", for running vim without args */
 	    case '|': /* to be defined */
-	    case '-': /* to be defined */
 	    case '^': /* to be defined */
 	    case '*': /* to be defined */
 	    case '<': /* long line - ignored */
@@ -1644,10 +1644,8 @@ read_viminfo_up_to_marks(line, fp, forceit, writing)
 	    case '@':
 		eof = read_viminfo_history(line, fp);
 		break;
+	    case '-':
 	    case '\'':
-		/* How do we have a file mark when the file is not in the
-		 * buffer list?
-		 */
 		eof = read_viminfo_filemark(line, fp, forceit);
 		break;
 	    default:
@@ -1658,7 +1656,14 @@ read_viminfo_up_to_marks(line, fp, forceit, writing)
 		break;
 	}
     }
+
+    /* Finish reading history items. */
     finish_viminfo_history();
+
+    /* Change file names to buffer numbers for fmarks. */
+    for (buf = firstbuf; buf != NULL; buf = buf->b_next)
+	fmarks_check_names(buf);
+
     return eof;
 }
 
@@ -2355,8 +2360,10 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 	    fname_case(sfname);	    /* set correct case for short file name */
 #endif
 
+#ifdef FEAT_LISTCMDS
 	if ((flags & ECMD_ADDBUF) && (ffname == NULL || *ffname == NUL))
 	    goto theend;
+#endif
 
 	if (ffname == NULL)
 	    other_file = TRUE;
@@ -2411,7 +2418,9 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
      */
     if (other_file)
     {
+#ifdef FEAT_LISTCMDS
 	if (!(flags & ECMD_ADDBUF))
+#endif
 	{
 	    curwin->w_alt_fnum = curbuf->b_fnum;
 	    buflist_altfpos();
@@ -2421,6 +2430,7 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 	    buf = buflist_findnr(fnum);
 	else
 	{
+#ifdef FEAT_LISTCMDS
 	    if (flags & ECMD_ADDBUF)
 	    {
 		linenr_t	tlnum = 1L;
@@ -2434,6 +2444,7 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 		(void)buflist_new(ffname, sfname, tlnum, FALSE);
 		goto theend;
 	    }
+#endif
 	    buf = buflist_new(ffname, sfname, 0L, TRUE);
 	}
 	if (buf == NULL)
@@ -2538,7 +2549,11 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
     }
     else /* !other_file */
     {
-	if ((flags & ECMD_ADDBUF) || check_fname() == FAIL)
+	if (
+#ifdef FEAT_LISTCMDS
+		(flags & ECMD_ADDBUF) ||
+#endif
+		check_fname() == FAIL)
 	    goto theend;
 	oldbuf = (flags & ECMD_OLDBUF);
     }
@@ -2714,8 +2729,10 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 	}
     }
 
+#ifdef FEAT_WINDOWS
     /* Check if cursors in other windows on the same buffer are still valid */
     check_lnums(FALSE);
+#endif
 
     /*
      * Did not read the file, need to show some info about the file.
@@ -4737,12 +4754,11 @@ ex_sign(eap)
     char_u	*arg2;			/* the second argument */
     char_u	*arg3;			/* the third argument */
     int		markId;			/* unique mark identifier */
-    int		lnum = 0;		/* line number mark displayed on */
+    linenr_t	lnum = 0;		/* line number mark displayed on */
     int		idx;			/* which mark to use */
     char_u	*filename;		/* filename which gets the mark */
     buf_t	*buf;			/* buffer to set mark in */
     char_u	cmd[MAXPATHL];		/* build :edit command here */
-    win_t	*win;			/* used for warping to a sign */
 
     if (eap->cmdidx == CMD_signs)
     {
@@ -4785,7 +4801,7 @@ ex_sign(eap)
 	if (arg == skipdigits(arg3))
 	{				/* arg2 and arg3 are both numbers */
 	    arg = skipwhite(arg);
-	    lnum = atoi((char *)arg2);
+	    lnum = atol((char *)arg2);
 	    idx = atoi((char *)arg3);
 	    filename = arg;
 	}
@@ -4819,19 +4835,19 @@ ex_sign(eap)
 	}
 	else if ((lnum = buf_findsign(buf, markId)) > 0)
 	{				/* goto a sign ... */
-	    if ((win = buf_jump_open_win(buf)) != NULL)
+	    if (buf_jump_open_win(buf) != NULL)
 	    {				/* ... in a current window */
-		sprintf((char *)cmd, "%dG", lnum);
+		sprintf((char *)cmd, "%ldG", (long)lnum);
 		add_to_input_buf(cmd, strlen((char *) cmd));
 	    }
 	    else
 	    {				/* ... not currently in a window */
-		sprintf((char *)cmd, "e +%d %s", lnum, buf->b_fname);
+		sprintf((char *)cmd, "e +%ld %s", (long)lnum, buf->b_fname);
 		do_cmdline(cmd, NULL, NULL, DOCMD_NOWAIT);
 	    }
 	}
 	else
-	    EMSG2(_("Invalid line number: %d"), lnum);
+	    EMSG2(_("Invalid line number: %ld"), (long)lnum);
     }
     else
 	EMSG2(_("Invalid buffer name: %s"), filename);
@@ -4844,7 +4860,7 @@ ex_unsign(eap)
     char_u	*arg;			/* argument pointer */
     char_u	*filename;		/* filename which gets the mark */
     int		markId;			/* unique mark identifier */
-    int		lnum;			/* line number mark displayed on */
+    linenr_t	lnum;			/* line number mark displayed on */
     buf_t	*buf;			/* buffer of mark we want to delete */
 
     arg = eap->arg;
@@ -4854,7 +4870,7 @@ ex_unsign(eap)
     if (*arg == '*')
     {
 	buf_delete_all_signs();
-	update_debug_sign(NULL, 0);
+	update_debug_sign(NULL, (linenr_t)0);
     }
     else
     {
@@ -4902,8 +4918,8 @@ print_sign(glist)
 {
     char	lbuf[BUFSIZ];
 
-    sprintf(lbuf, _("    line %d, id %d, type %d"),
-        glist->lineno, glist->id, glist->type);
+    sprintf(lbuf, _("    line %ld, id %d, type %d"),
+	    (long)glist->lineno, glist->id, glist->type);
     MSG_PUTS_ATTR(lbuf, 0);
     msg_putchar('\n');
 }

@@ -1,7 +1,7 @@
 " Vim settings file
 " Language:	Fortran90 (and Fortran95, Fortran77, F and elf90)
-" Version:	0.20
-" Last Change:	2000 Nov 03
+" Version:	0.21
+" Last Change:	2000 Nov 13
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
 " For the latest version of this file, see <http://www.unb.ca/chem/ajit/vim.htm>
 
@@ -16,16 +16,20 @@ let b:did_ftplugin = 1
 " Determine whether this is a fixed or free format source file
 " if this hasn't been done yet
 if !exists("b:fortran_fixed_source")
-  let b:fortran_fixed_source = 1
-  let s:ln=1
-  while s:ln < 25
-    let s:test = strpart(getline(s:ln),0,5)
-    if s:test[0] !~ '[Cc*]' && s:test !~ '^\s*!' && s:test =~ '[^ 0-9\t]'
-      let b:fortran_fixed_source = 0
-      break
-    endif
-    let s:ln = s:ln + 1
-  endwhile
+  if exists("fortran_free_source")
+    let b:fortran_fixed_source = 0
+  else
+    let b:fortran_fixed_source = 1
+    let s:ln=1
+    while s:ln < 25
+      let s:test = strpart(getline(s:ln),0,5)
+      if s:test[0] !~ '[Cc*]' && s:test !~ '^\s*!' && s:test =~ '[^ 0-9\t]'
+	let b:fortran_fixed_source = 0
+	break
+      endif
+      let s:ln = s:ln + 1
+    endwhile
+  endif
 endif
 
 " Set comments and textwidth according to source type
@@ -44,7 +48,7 @@ else
 endif
 
 " Tabs are not a good idea in Fortran so the default is to expand tabs
-if !exists("b:fortran_have_tabs")
+if !exists("fortran_have_tabs")
   setlocal expandtab
 endif
 

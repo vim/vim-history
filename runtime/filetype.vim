@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Nov 12
+" Last change:	2000 Nov 18
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -277,7 +277,7 @@ au BufNewFile,BufRead *.mas,*.master		setf master
 au BufNewFile,BufRead *.fs,*.ft			setf forth
 
 " Fortran
-au BufNewFile,BufRead *.f,*.F,*.for,*.fpp,*.f90,*.f95	setf fortran
+au BufNewFile,BufRead *.f,*.F,*.for,*.fpp,*.ftn,*.f77,*.f90,*.f95	setf fortran
 
 " Fvwm
 au BufNewFile,BufRead *fvwmrc*,*fvwm95*.hook
@@ -408,8 +408,8 @@ au BufNewFile,BufRead *.m4
 " MaGic Point
 au BufNewFile,BufRead *.mgp			setf mgp
 
-" Mail (for Elm, trn, mutt and rn)
-au BufNewFile,BufRead snd.\d\+,.letter,.letter.\d\+,.followup,.article,.article.\d\+,pico.\d\+,mutt-*-\d\+,mutt\w\{6\},ae\d\+.txt setf mail
+" Mail (for Elm, trn, mutt, rn, slrn)
+au BufNewFile,BufRead snd.\d\+,.letter,.letter.\d\+,.followup,.article,.article.\d\+,pico.\d\+,mutt-*-\d\+,mutt\w\{6\},ae\d\+.txt,/tmp/SLRN[0-9A-Z.]\+ setf mail
 
 " Makefile (but not Automake)
 au BufNewFile,BufRead [mM]akefile*
@@ -500,6 +500,9 @@ au BufNewFile,BufRead *.[Oo][Pp][Ll]		setf opl
 
 " Oracle config file
 au BufNewFile,BufRead *.ora			setf ora
+
+" PApp
+au BufNewFile,BufRead *.papp,*.pxml,*.pxsl	setf papp
 
 " Pascal
 au BufNewFile,BufRead *.p,*.pas			setf pascal

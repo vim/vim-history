@@ -1483,7 +1483,7 @@ typedef struct ConsoleBufferStruct
     PCHAR_INFO Buffer;
     COORD BufferSize;
 } ConsoleBuffer;
- 
+
 /*
  * SaveConsoleBuffer()
  * Description:
@@ -1531,7 +1531,7 @@ SaveConsoleBuffer(
 	if (cb->Buffer == NULL)
 	    return FALSE;
     }
-    
+
     /*
      * We will now copy the console screen buffer into our buffer.
      * ReadConsoleOutput() seems to be limited as far as how much you
@@ -1608,6 +1608,20 @@ RestoreConsoleBuffer(
 	return TRUE;
     }
 
+    /*
+     * Before restoring the buffer contents, clear the current buffer, and
+     * restore the cursor position and window information.  Doing this now
+     * prevents old buffer contents from "flashing" onto the screen.
+     */
+    ClearConsoleBuffer(cb->Info.wAttributes);
+    if (!SetConsoleCursorPosition(g_hConOut, cb->Info.dwCursorPosition))
+	return FALSE;
+    if (!SetConsoleWindowInfo(g_hConOut, TRUE, &cb->Info.srWindow))
+	return FALSE;
+
+    /*
+     * Restore the screen buffer contents.
+     */
     if (cb->Buffer != NULL)
     {
 	BufferCoord.X = 0;
@@ -1625,11 +1639,6 @@ RestoreConsoleBuffer(
 	    return FALSE;
 	}
     }
-
-    if (!SetConsoleCursorPosition(g_hConOut, cb->Info.dwCursorPosition))
-	return FALSE;
-    if (!SetConsoleWindowInfo(g_hConOut, TRUE, &cb->Info.srWindow))
-	return FALSE;
 
     return TRUE;
 }
@@ -3104,9 +3113,21 @@ mch_call_shell(
 		    si.wShowWindow = SW_SHOWMINNOACTIVE;
 		}
 
-		if (*cmd == '"')
-		    *newcmd = '"';
-		STRCPY(newcmd + ((*cmd == '"') ? 1 : 0), cmdbase);
+		/* When the command is in double quotes, but 'shellxquote' is
+		 * empty, keep the double quotes around the command.
+		 * Otherwise remove the double quotes, they aren't needed
+		 * here, because we don't use a shell to run the command. */
+		if (*cmd == '"' && *p_sxq == NUL)
+		{
+		    newcmd[0] = '"';
+		    STRCPY(newcmd + 1, cmdbase);
+		}
+		else
+		{
+		    STRCPY(newcmd, cmdbase);
+		    if (*cmd == '"' && *newcmd != NUL)
+			newcmd[STRLEN(newcmd) - 1] = NUL;
+		}
 
 		/*
 		 * Now, start the command as a process, so that it doesn't

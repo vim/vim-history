@@ -650,9 +650,13 @@ win_split(new_size, flags)
     wp->w_alt_fnum = curwin->w_alt_fnum;
     wp->w_fraction = curwin->w_fraction;
     wp->w_prev_fraction_row = curwin->w_prev_fraction_row;
+    copy_jumplist(curwin, wp);
     if (curwin->w_localdir != NULL)
 	wp->w_localdir = vim_strsave(curwin->w_localdir);
 
+    /* Use the same argument list. */
+    wp->w_alist = curwin->w_alist;
+    ++wp->w_alist->al_refcount;
     wp->w_arg_idx = curwin->w_arg_idx;
 
     /*
@@ -1551,6 +1555,9 @@ win_close(win, free_buf)
     if (!win_valid(win))
 	return;
 
+    /* reduce the reference count to the argument list. */
+    alist_unlink(curwin->w_alist);
+
     /*
      * Remove the window from its frame.
      */
@@ -2130,6 +2137,9 @@ win_alloc_first()
 	mch_windexit(0);
     curwin->w_buffer = curbuf;
     curbuf->b_nwindows = 1;	/* there is one window */
+#ifdef FEAT_WINDOWS
+    curwin->w_alist = &global_alist;
+#endif
     win_init(curwin);		/* init current window */
 
     topframe = (frame_t *)alloc_clear((unsigned)sizeof(frame_t));
@@ -2180,10 +2190,14 @@ win_goto_nr(winnr)
 {
     win_t	*wp;
 
+# ifdef FEAT_WINDOWS
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
 	if (--winnr == 0)
 	    break;
     return wp;
+# else
+    return curwin;
+# endif
 }
 #endif
 
@@ -2494,10 +2508,6 @@ win_alloc(after)
 	 */
 #ifdef FEAT_WINDOWS
 	win_append(after, newwin);
-#else
-	firstwin = lastwin = newwin;
-	newwin->w_next = NULL;
-	newwin->w_prev = NULL;
 #endif
 #ifdef FEAT_VERTSPLIT
 	newwin->w_wincol = 0;
@@ -2577,6 +2587,7 @@ win_free(wp)
 	vim_free(wp->w_tagstack[i].tagname);
 
     vim_free(wp->w_localdir);
+    free_jumplist(wp);
 
 #ifdef FEAT_GUI
     if (gui.in_use)
@@ -3937,8 +3948,13 @@ check_lnums(do_curwin)
 {
     win_t	*wp;
 
+#ifdef FEAT_WINDOWS
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
 	if ((do_curwin || wp != curwin) && wp->w_buffer == curbuf)
+#else
+    wp = curwin;
+    if (do_curwin)
+#endif
 	{
 	    if (wp->w_cursor.lnum > curbuf->b_ml.ml_line_count)
 		wp->w_cursor.lnum = curbuf->b_ml.ml_line_count;

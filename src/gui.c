@@ -407,7 +407,11 @@ gui_init()
     gui_reset_scroll_region();
 
     /* Create initial scrollbars */
+#ifndef FEAT_WINDOWS
+    wp = curwin;
+#else
     for (wp = firstwin; wp; wp = wp->w_next)
+#endif
     {
 	gui_create_scrollbar(&wp->w_scrollbars[SBAR_LEFT], SBAR_LEFT, wp);
 	gui_create_scrollbar(&wp->w_scrollbars[SBAR_RIGHT], SBAR_RIGHT, wp);
@@ -2597,7 +2601,11 @@ gui_init_which_components(oldval)
 						     gui.which_scrollbars[i]);
 		else
 		{
+#ifndef FEAT_WINDOWS
+		    wp = curwin;
+#else
 		    for (wp = firstwin; wp != NULL; wp = wp->w_next)
+#endif
 			gui_do_scrollbar(wp, i, gui.which_scrollbars[i]);
 		}
 		need_set_size = TRUE;
@@ -2682,7 +2690,11 @@ gui_find_scrollbar(ident)
 
     if (gui.bottom_sbar.ident == ident)
 	return &gui.bottom_sbar;
+#ifndef FEAT_WINDOWS
+    wp = curwin;
+#else
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
+#endif
     {
 	if (wp->w_scrollbars[SBAR_LEFT].ident == ident)
 	    return &wp->w_scrollbars[SBAR_LEFT];
@@ -2713,7 +2725,9 @@ gui_drag_scrollbar(sb, value, still_dragging)
     long	value;
     int		still_dragging;
 {
+#ifdef FEAT_WINDOWS
     win_t	*wp;
+#endif
     int		sb_num;
 #ifdef USE_ON_FLY_SCROLL
     colnr_t	old_leftcol = curwin->w_leftcol;
@@ -2780,11 +2794,15 @@ gui_drag_scrollbar(sb, value, still_dragging)
     if (sb->wp != NULL)		/* vertical scrollbar */
     {
 	sb_num = 0;
+#ifdef FEAT_WINDOWS
 	for (wp = firstwin; wp != sb->wp && wp != NULL; wp = wp->w_next)
 	    sb_num++;
-
 	if (wp == NULL)
 	    return;
+#else
+	if (sb->wp != curwin)
+	    return;
+#endif
 
 #ifdef USE_ON_FLY_SCROLL
 	current_scrollbar = sb_num;
@@ -2918,7 +2936,7 @@ gui_update_scrollbars(force)
     /* avoid that moving components around generates events */
     ++hold_gui_events;
 
-    for (wp = firstwin; wp; wp = wp->w_next)
+    for (wp = firstwin; wp != NULL; wp = W_NEXT(wp))
     {
 	if (wp->w_buffer == NULL)	/* just in case */
 	    continue;
@@ -3088,17 +3106,12 @@ gui_do_scroll()
     pos_t	old_cursor;
     linenr_t	old_topline;
 
-    for (wp = firstwin, i = 0; i < current_scrollbar; i++)
-    {
+    for (wp = firstwin, i = 0; i < current_scrollbar; wp = W_NEXT(wp), i++)
 	if (wp == NULL)
 	    break;
-	wp = wp->w_next;
-    }
     if (wp == NULL)
-    {
 	/* Couldn't find window */
 	return FALSE;
-    }
 
     /*
      * Compute number of lines to scroll.  If zero, nothing to do.
@@ -3296,7 +3309,11 @@ gui_new_scrollbar_colors()
 {
     win_t	*wp;
 
+# ifndef FEAT_WINDOWS
+    wp = curwin;
+# else
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
+# endif
     {
 	gui_mch_set_scrollbar_colors(&(wp->w_scrollbars[SBAR_LEFT]));
 	gui_mch_set_scrollbar_colors(&(wp->w_scrollbars[SBAR_RIGHT]));

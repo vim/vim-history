@@ -73,13 +73,13 @@ endif
 " ------------------------------------------------------------------------
 
 " Commands: :Nread and :Nwrite
-:com -nargs=* Nread call <SID>NetRead(<f-args>)
-:com -range=% -nargs=* Nwrite <line1>,<line2>call <SID>NetWrite(<f-args>)
+:com -nargs=* Nread call s:NetRead(<f-args>)
+:com -range=% -nargs=* Nwrite <line1>,<line2>call s:NetWrite(<f-args>)
 
 " ------------------------------------------------------------------------
 
 " NetRead: Nread:
-function! <SID>NetRead(...)
+function! s:NetRead(...)
 " echo "DBG: NetRead(a:1<".a:1.">) {"
 
  " Get Temporary Filename
@@ -140,13 +140,13 @@ function! <SID>NetRead(...)
   let ichoice= ichoice + 1
 
   " Determine method of read (ftp, rcp, etc)
-  call <SID>NetMethod(choice)
+  call s:NetMethod(choice)
 
   " Perform Read
   if     s:netrw_method  == 1	" read with rcp
 "   echo "DBG: read via rcp (method #1)"
    exe "!rcp " . s:netrw_machine . ":" . s:netrw_fname . " " . tmpfile
-   let result = <SID>NetGetFile(readcmd, tmpfile)
+   let result = s:NetGetFile(readcmd, tmpfile)
    let b:netrw_lastfile = choice
 
   elseif s:netrw_method  == 2		" read with ftp + <.netrc>
@@ -154,7 +154,7 @@ function! <SID>NetRead(...)
 "   echo "DBG: this line gets wiped out"
    exe "norm mzoascii\<cr>get ".s:netrw_fname." ".tmpfile."\<esc>"
    exe "'z+1,.!ftp -i " . s:netrw_machine
-   let result = <SID>NetGetFile(readcmd, tmpfile)
+   let result = s:NetGetFile(readcmd, tmpfile)
    let b:netrw_lastfile = choice
 
   elseif s:netrw_method == 3		" read with ftp + machine, id, passwd, and fname
@@ -177,7 +177,7 @@ function! <SID>NetRead(...)
     exe "'z+1,.!ftp -i " . s:netrw_machine
    endif
    norm 'z
-   let result = <SID>NetGetFile(readcmd, tmpfile)
+   let result = s:NetGetFile(readcmd, tmpfile)
 
    " save choice/id/password for future use
    let b:netrw_lastfile = choice
@@ -185,13 +185,13 @@ function! <SID>NetRead(...)
   elseif     s:netrw_method  == 4	" read with scp
 "   echo "DBG: read via scp (method #4)"
    exe "!scp " . s:netrw_machine . ":" . s:netrw_fname . " " . tmpfile
-   let result = <SID>NetGetFile(readcmd, tmpfile)
+   let result = s:NetGetFile(readcmd, tmpfile)
    let b:netrw_lastfile = choice
 
   elseif     s:netrw_method  == 5	" read with http (wget)
 "   echo "DBG: read via http (method #5)"
    exe "!wget http://" . s:netrw_machine . "/" . s:netrw_fname . " -O " . tmpfile
-   let result = <SID>NetGetFile(readcmd, tmpfile)
+   let result = s:NetGetFile(readcmd, tmpfile)
    let b:netrw_lastfile = choice
 
   else " Complain
@@ -211,7 +211,7 @@ endfunction
 " Function to read file "fname" with command "readcmd".
 " Takes care of deleting the last line when the buffer was emtpy.
 " Deletes the file "fname".
-function! <SID>NetGetFile(readcmd, fname)
+function! s:NetGetFile(readcmd, fname)
   let dodel = 0
   if line("$") == 1 && getline(1) == ""
     let dodel = 1
@@ -227,7 +227,7 @@ endfun
 " ------------------------------------------------------------------------
 
 " NetWrite: Nwrite:
-function! <SID>NetWrite(...) range
+function! s:NetWrite(...) range
 " echo "DBG: NetWrite(a:0=".a:0.") {"
 
  " Get Temporary Filename
@@ -282,7 +282,7 @@ function! <SID>NetWrite(...) range
   let ichoice= ichoice + 1
 
   " Determine method of read (ftp, rcp, etc)
-  call <SID>NetMethod(choice)
+  call s:NetMethod(choice)
 
   " Perform Write
   if     s:netrw_method == 1	" write with rcp
@@ -340,7 +340,7 @@ endfunction
 "            3: ftp + machine, id, password, and [path]filename
 "            4: scp
 "            5: http (wget)
-function! <SID>NetMethod(choice)  " globals: method machine id passwd fname
+function! s:NetMethod(choice)  " globals: method machine id passwd fname
 " echo "DBG: NetMethod1(a:choice<".a:choice.">) {"
 
  " initialization

@@ -15,7 +15,7 @@ char_u *get_expr_name __ARGS((expand_t *xp, int idx));
 void set_vim_var_nr __ARGS((int idx, long val));
 void set_vim_var_string __ARGS((int idx, char_u *val, int len));
 char_u *get_var_value __ARGS((char_u *name));
-void new_script_vars __ARGS((long id));
+void new_script_vars __ARGS((sid_t id));
 void var_init __ARGS((garray_t *gap));
 void var_clear __ARGS((garray_t *gap));
 void ex_echo __ARGS((exarg_t *eap));

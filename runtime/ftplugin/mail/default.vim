@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	Mail
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Oct 21
+" Last Change:	2000 Nov 13
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -25,6 +25,6 @@ if !exists("no_plugin_maps") && !exists("no_mail_maps")
     vmap <buffer> <LocalLeader>q <Plug>MailQuote
     nmap <buffer> <LocalLeader>q <Plug>MailQuote
   endif
-  vnoremap <buffer> <Plug>MailQuote :s/^/> /<CR>
-  nnoremap <buffer> <Plug>MailQuote :.,$s/^/> /<CR>
+  vnoremap <buffer> <Plug>MailQuote :s/^/> /<CR>:noh<CR>``
+  nnoremap <buffer> <Plug>MailQuote :.,$s/^/> /<CR>:noh<CR>``
 endif

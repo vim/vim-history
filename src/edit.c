@@ -2279,16 +2279,22 @@ ins_compl_next_buf(buf, flag)
     buf_t	*buf;
     int		flag;
 {
-    static win_t *w;
+#ifdef FEAT_WINDOWS
+    static win_t *wp;
+#endif
 
     if (flag == 'w')		/* just windows */
     {
+#ifdef FEAT_WINDOWS
 	if (buf == curbuf)	/* first call for this flag/expansion */
-	    w = curwin;
-	while ((w = w->w_next ? w->w_next : firstwin) != curwin
-		&& w->w_buffer->b_scanned)
+	    wp = curwin;
+	while ((wp = wp->w_next != NULL ? wp->w_next : firstwin) != curwin
+		&& wp->w_buffer->b_scanned)
 	    ;
-	buf = w->w_buffer;
+	buf = wp->w_buffer;
+#else
+	buf = curbuf;
+#endif
     }
     else	/* 'b' (just loaded buffers) or 'u' (just non-loaded buffers) */
 	while ((buf = buf->b_next ? buf->b_next : firstbuf) != curbuf
@@ -3588,6 +3594,19 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 		    if (curwin->w_cursor.col < leader_len)
 			break;
 #endif
+		    if (has_format_option(FO_ONE_LETTER))
+		    {
+			/* do not break after one-letter words */
+			if (curwin->w_cursor.col == 0)
+			    break;	/* one-letter word at begin */
+
+			--curwin->w_cursor.col;
+			cc = gchar_cursor();
+
+			if (vim_iswhite(cc))
+			    continue;	/* one-letter, contiue */
+			++curwin->w_cursor.col;
+		    }
 		    foundcol = curwin->w_cursor.col + 1;
 		    if (curwin->w_cursor.col < (colnr_t)wantcol)
 			break;

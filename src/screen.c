@@ -190,7 +190,7 @@ static void validate_virtcol_win __ARGS((win_t *wp));
 static int win_do_lines __ARGS((win_t *wp, int row, int line_count, int mayclear, int del));
 static int screen_ins_lines __ARGS((int, int, int, int));
 static void msg_pos_mode __ARGS((void));
-#ifdef FEAT_WINDOWS
+#if defined(FEAT_WINDOWS) || defined(FEAT_WILDMENU) || defined(FEAT_STL_OPT)
 static int fillchar_status __ARGS((int *attr, int is_curwin));
 #endif
 #ifdef FEAT_VERTSPLIT
@@ -234,7 +234,11 @@ redraw_all_later(type)
 {
     win_t	*wp;
 
+#ifndef FEAT_WINDOWS
+    wp = curwin;
+#else
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
+#endif
 	if (wp->w_redr_type < type)
 	    wp->w_redr_type = type;
     if (must_redraw < type)	/* must_redraw is the maximum of all windows */
@@ -258,7 +262,11 @@ redraw_buf_later(type, buf)
 {
     win_t	*wp;
 
+#ifndef FEAT_WINDOWS
+    wp = curwin;
+#else
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
+#endif
 	if (wp->w_redr_type < type && wp->w_buffer == buf)
 	    wp->w_redr_type = type;
     if (must_redraw < type)	/* must_redraw is the maximum of all windows */
@@ -369,7 +377,11 @@ update_screen(type)
 	    check_for_delay(FALSE);
 	    if (screen_ins_lines(0, 0, msg_scrolled, (int)Rows) == FAIL)
 		type = CLEAR;
+#ifndef FEAT_WINDOWS
+	    wp = curwin;
+#else
 	    for (wp = firstwin; wp != NULL; wp = wp->w_next)
+#endif
 	    {
 		if (W_WINROW(wp) < msg_scrolled)
 		{
@@ -439,16 +451,26 @@ update_screen(type)
      * Correct stored syntax highlighting info for changes in each displayed
      * buffer.  Each buffer must only be done once.
      */
+#ifndef FEAT_WINDOWS
+    wp = curwin;
+#else
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
+#endif
 	if (wp->w_buffer->b_mod_set)
 	{
+#ifdef FEAT_WINDOWS
 	    win_t	*wwp;
 
 	    /* Check if we already did this buffer. */
 	    for (wwp = firstwin; wwp != wp; wwp = wwp->w_next)
 		if (wwp->w_buffer == wp->w_buffer)
 		    break;
-	    if (wwp == wp && syntax_present(wp->w_buffer))
+#endif
+	    if (
+#ifdef FEAT_WINDOWS
+		    wwp == wp &&
+#endif
+		    syntax_present(wp->w_buffer))
 		syn_stack_apply_changes(wp->w_buffer);
 	}
 #endif
@@ -463,7 +485,11 @@ update_screen(type)
 #ifdef FEAT_SEARCH_EXTRA
     search_hl_rm.regprog = NULL;
 #endif
+#ifndef FEAT_WINDOWS
+    wp = curwin;
+#else
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
+#endif
     {
 	if (wp->w_redr_type)
 	{
@@ -498,10 +524,14 @@ update_screen(type)
     end_search_hl();
 #endif
 
+#ifdef FEAT_WINDOWS
     /* Reset b_mod_set flags.  Going through all windows is probably faster
      * than going through all buffers (there could be many buffers). */
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
 	wp->w_buffer->b_mod_set = FALSE;
+#else
+	curbuf->b_mod_set = FALSE;
+#endif
 
 #ifdef FEAT_GUI
     updating_screen = FALSE;
@@ -514,7 +544,9 @@ update_screen(type)
     /* May put up an introductory message when not editing a file */
     if (!did_intro && bufempty()
 	    && curbuf->b_fname == NULL
+#ifdef FEAT_WINDOWS
 	    && firstwin->w_next == NULL
+#endif
 	    && vim_strchr(p_shm, SHM_INTRO) == NULL)
 	intro_message();
     did_intro = TRUE;
@@ -524,7 +556,7 @@ update_screen(type)
     static int
 lnum2row(wp, lnum)
     win_t	*wp;
-    int		lnum;
+    linenr_t	lnum;
 {
     int		row = 0;
     int		j;
@@ -546,14 +578,18 @@ lnum2row(wp, lnum)
     void
 update_debug_sign(buf, lnum)
     buf_t	*buf;
-    int		lnum;
+    linenr_t	lnum;
 {
     win_t	*wp;
     int		row;
 
     if (buf != NULL && lnum > 0)
     {					/* update/delete a specific mark */
+#ifndef FEAT_WINDOWS
+	wp = curwin;
+#else
 	for (wp = firstwin; wp; wp = wp->w_next)
+#endif
 	{
 	    if (wp->w_buffer == buf && lnum < wp->w_botline)
 	    {
@@ -569,8 +605,12 @@ update_debug_sign(buf, lnum)
     }
     else
     {					/* delete all marks */
+#ifdef FEAT_WINDOWS
 	for (wp = firstwin; wp; wp = wp->w_next)
 	    win_update(wp);
+#else
+	    win_update(curwin);
+#endif
     }
 }
 #endif
@@ -3896,7 +3936,9 @@ win_redr_custom(wp, Ruler)
 	col = ru_col;
 #endif
 	maxlen = W_WIDTH(wp) - col;
+#ifdef FEAT_WINDOWS
 	if (!wp->w_status_height)
+#endif
 	{
 	    row = Rows - 1;
 	    --maxlen;	/* writing in last column may cause scrolling */
@@ -3932,10 +3974,12 @@ win_redr_custom(wp, Ruler)
 
 	if (hl[n].userhl == 0)
 	    curattr = attr;
-	else if (wp == curwin || !wp->w_status_height)
-	    curattr = highlight_user[hl[n].userhl - 1];
-	else
+#ifdef FEAT_WINDOWS
+	else if (wp != curwin && wp->w_status_height != 0)
 	    curattr = highlight_stlnc[hl[n].userhl - 1];
+#endif
+	else
+	    curattr = highlight_user[hl[n].userhl - 1];
     }
     screen_puts(p, row, col, curattr);
 }
@@ -5422,8 +5466,12 @@ screenalloc(clear)
      * Continuing with the old ScreenLines may result in a crash, because the
      * size is wrong.
      */
+#ifdef FEAT_WINDOWS
     for (wp = firstwin; wp; wp = wp->w_next)
 	win_free_lsize(wp);
+#else
+	win_free_lsize(curwin);
+#endif
 
     new_ScreenLines = (schar_t *)lalloc((long_u)(
 			      (Rows + 1) * Columns * sizeof(schar_t)), FALSE);
@@ -5443,7 +5491,7 @@ screenalloc(clear)
     new_LineOffset = (unsigned *)lalloc((long_u)(
 					 Rows * sizeof(unsigned)), FALSE);
 
-    for (wp = firstwin; wp; wp = wp->w_next)
+    for (wp = firstwin; wp; wp = W_NEXT(wp))
 	if (win_alloc_lines(wp) == FAIL)
 	{
 	    outofmem = TRUE;
@@ -7711,7 +7759,7 @@ win_ins_lines(wp, row, line_count, invalid, mayclear)
 #ifdef FEAT_WINDOWS
 	    wp->w_redr_status = TRUE;
 #endif
-	    win_rest_invalid(wp->w_next);
+	    win_rest_invalid(W_NEXT(wp));
 	}
 	return FAIL;
     }
@@ -7838,8 +7886,10 @@ win_do_lines(wp, row, line_count, mayclear, del)
 	return retval;
     }
 
-    if (wp->w_next && p_tf)	/* don't delete/insert on fast terminal */
+#ifdef FEAT_WINDOWS
+    if (wp->w_next != NULL && p_tf) /* don't delete/insert on fast terminal */
 	return FAIL;
+#endif
 
     return MAYBE;
 }
@@ -7851,14 +7901,18 @@ win_do_lines(wp, row, line_count, mayclear, del)
 win_rest_invalid(wp)
     win_t	*wp;
 {
+#ifdef FEAT_WINDOWS
     while (wp != NULL)
+#else
+    if (wp != NULL)
+#endif
     {
 	wp->w_lines_valid = 0;
 	wp->w_redr_type = NOT_VALID;
 #ifdef FEAT_WINDOWS
 	wp->w_redr_status = TRUE;
-#endif
 	wp = wp->w_next;
+#endif
     }
     redraw_cmdline = TRUE;
 }
@@ -8419,7 +8473,7 @@ unshowmode(force)
     }
 }
 
-#ifdef FEAT_WINDOWS
+#if defined(FEAT_WINDOWS) || defined(FEAT_WILDMENU) || defined(FEAT_STL_OPT)
 /*
  * Get the character to use in a status line.  Get its attributes in "*attr".
  */
@@ -8622,7 +8676,9 @@ win_redr_ruler(wp, always)
 	i = STRLEN(buffer);
 	get_rel_pos(wp, buffer + i + 1);
 	o = STRLEN(buffer + i + 1);
+#ifdef FEAT_WINDOWS
 	if (wp->w_status_height == 0)	/* can't use last char of screen */
+#endif
 	    ++o;
 #ifdef FEAT_VERTSPLIT
 	this_ru_col = ru_col - (Columns - width);

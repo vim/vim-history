@@ -775,7 +775,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and some things
 ### might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60m
+VIMRTDIR = /vim60n
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 INDSUBDIR = /indent
@@ -1517,8 +1517,8 @@ installruntime: $(HELPSOURCE)/vim.1 $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) \
 	$(INSTALL_DATA) $(SCRIPTSOURCE)/optwin.vim $(SYS_OPTWIN_FILE)
 	chmod $(VIMSCRIPTMOD) $(SYS_OPTWIN_FILE)
 # install the syntax files
-	cd $(SYNSOURCE); $(INSTALL_DATA) *.vim $(SYNSUBLOC)
-	cd $(SYNSUBLOC); chmod $(HELPMOD) *.vim
+	cd $(SYNSOURCE); $(INSTALL_DATA) *.vim README.txt $(SYNSUBLOC)
+	cd $(SYNSUBLOC); chmod $(HELPMOD) *.vim README.txt
 # install the indent files
 	cd $(INDSOURCE); $(INSTALL_DATA) *.vim $(INDSUBLOC)
 	cd $(INDSUBLOC); chmod $(HELPMOD) *.vim

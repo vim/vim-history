@@ -249,7 +249,7 @@ LFLAGS	= -Tde -c -m -L$(LIB) $(DEBUG) $(LINK2)
 LFLAGSDLL  =
 CFLAGS = -w- -w-aus -w-par -I$(INCLUDE) -H- -P- $(HEADERS)
 !else
-BRC = brc32
+BRC = $(BOR)\BIN\brc32
 !if ("$(LINK)"=="")
 LINK	= $(BOR)\BIN\ILink32
 !endif

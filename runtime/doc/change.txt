@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0m.  Last change: 2000 Nov 12
+*change.txt*    For Vim version 6.0n.  Last change: 2000 Nov 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1170,6 +1170,9 @@ b	Like 'v', but only auto-wrap if you enter a blank at or before
 l	Long lines are not broken in insert mode: When a line was longer than
 	'textwidth' when the insert command started, Vim does not
 	automatically format it.
+1	Don't break a line after a one-letter word.  It's broken before it
+	instead (if possible).
+
 
 With 't' and 'c' you can specify when Vim performs auto-wrapping:
 value	action	~
@@ -1530,5 +1533,43 @@ for Unix.  You can find examples for these indent files in the distributed
 "indent" directory.
 
 Also see 'indentexpr' and 'indentkeys'.
+
+
+Remarks about specific indent files ~
+
+FORTRAN							*fortran-indent*
+
+Block if, select case, and where constructs are indented. Comments, labelled
+statements and continuation lines are indented if the Fortran is in free
+source form, whereas they are not indented if the Fortran is in fixed source
+form because of the left margin requirements. Hence manual indent corrections
+will be necessary for labelled statements and continuation lines when fixed
+source form is being used. For further discussion of the method used for the
+detection of source format see |fortran-syntax|.
+
+Do loops ~
+All do loops are left unindented by default. Do loops can be unstructured in
+Fortran with (possibly multiple) loops ending on a labelled executable
+statement of almost arbitrary type. Correct indentation requires
+compiler-quality parsing. Old code with do loops ending on labelled statements
+of arbitrary type can be indented with elaborate programs such as Tidy
+(http://www.unb.ca/chem/ajit/f_tidy.htm). Structured do/continue loops are
+also left unindented because continue statements are also used for purposes
+other than ending a do loop. Programs such as Tidy can convert structured
+do/continue loops to the do/enddo form. Do loops of the do/enddo variety can
+be indented. If you use only structured loops of the do/enddo form, you should
+declare this by setting the fortran_do_enddo variable in your .vimrc as
+follows >
+
+   let fortran_do_enddo=1
+
+in which case do loops will be indented. If all your loops are of do/enddo
+type only in, say, .f90 files, then you should set a buffer flag with an
+autocommand such as >
+
+  au! BufRead,BufNewFile *.f90 let b:fortran_do_enddo=1
+
+to get do loops indented in .f90 files and left alone in Fortran files with
+other extensions such as .for.
 
  vim:tw=78:

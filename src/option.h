@@ -113,10 +113,11 @@
 #define FO_INS_VI	'v'
 #define FO_INS_LONG	'l'
 #define FO_INS_BLANK	'b'
+#define FO_ONE_LETTER	'1'
 
 #define DFLT_FO_VI	"vt"
 #define DFLT_FO_VIM	"tcq"
-#define FO_ALL		"tcroq2vlb,"	/* for do_set() */
+#define FO_ALL		"tcroq2vlb1,"	/* for do_set() */
 
 /* characters for the p_cpo option: */
 #define CPO_ALTREAD	'a'	/* ":read" sets alternate file name */

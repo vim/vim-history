@@ -182,7 +182,7 @@ hasFoldingWin(win, lnum, firstp, lastp, cache, levelp)
     }
 
     /* The cursor line is never folded in Insert mode. */
-    if ((State & INSERT) && lnum == win->w_cursor.lnum)
+    if ((State & INSERT) && lnum == win->w_cursor.lnum && win == curwin)
 	had_folded = FALSE;
 
     if (!had_folded)
@@ -199,7 +199,7 @@ hasFoldingWin(win, lnum, firstp, lastp, cache, levelp)
 
     /* In Insert mode the cursor line is never folded, truncate the fold at
      * the cursor line (lnum can't be the cursor line, was checked above). */
-    if ((State & INSERT)
+    if ((State & INSERT) && win == curwin
 		 && first <= win->w_cursor.lnum && last >= win->w_cursor.lnum)
     {
 	if (lnum < win->w_cursor.lnum)

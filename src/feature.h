@@ -64,7 +64,7 @@
 #  define FEAT_BIG
 # else
 #  ifdef MSDOS
-#   define FEAT_TINY
+#   define FEAT_SMALL
 #  else
 #   define FEAT_NORMAL
 #  endif
@@ -98,6 +98,15 @@
  */
 #ifdef FEAT_SMALL
 # define FEAT_WINDOWS
+#endif
+
+/*
+ * +listcmds		Vim commands for the buffer list and the argument
+ *			listMultiple buffers.  Without this there is no
+ *			":buffer" ":bnext", ":bdel", ":argdelete", etc.
+ */
+#ifdef FEAT_NORMAL
+# define FEAT_LISTCMDS
 #endif
 
 /*
@@ -582,7 +591,7 @@
 /*
  * +scrollbind		synchronization of split windows
  */
-#ifdef FEAT_NORMAL
+#if defined(FEAT_NORMAL) && defined(FEAT_WINDOWS)
 # define FEAT_SCROLLBIND
 #endif
 

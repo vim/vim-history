@@ -26,7 +26,7 @@ typedef struct ucmd
     long	uc_argt;	/* The argument type */
     char_u	*uc_rep;	/* The command's replacement string */
     long	uc_def;		/* The default value for a range/count */
-    long	uc_scriptID;	/* SID where the command was defined */
+    sid_t	uc_scriptID;	/* SID where the command was defined */
     int		uc_compl;	/* completion type */
 } UCMD;
 
@@ -78,6 +78,8 @@ static void	ex_doautocmd __ARGS((exarg_t *eap));
 # define ex_doautocmd		ex_ni
 # define ex_doautoall		ex_ni
 #endif
+#ifdef FEAT_LISTCMDS
+static void	ex_bunload __ARGS((exarg_t *eap));
 static void	ex_buffer __ARGS((exarg_t *eap));
 static void	ex_bmodified __ARGS((exarg_t *eap));
 static void	ex_bnext __ARGS((exarg_t *eap));
@@ -85,7 +87,19 @@ static void	ex_bprevious __ARGS((exarg_t *eap));
 static void	ex_brewind __ARGS((exarg_t *eap));
 static void	ex_blast __ARGS((exarg_t *eap));
 static void	goto_buffer __ARGS((exarg_t *eap, int start, int dir, int count));
-static void	ex_bunload __ARGS((exarg_t *eap));
+#else
+# define ex_bunload		ex_ni
+# define ex_buffer		ex_ni
+# define ex_bmodified		ex_ni
+# define ex_bnext		ex_ni
+# define ex_bprevious		ex_ni
+# define ex_brewind		ex_ni
+# define ex_blast		ex_ni
+# define buflist_list		ex_ni
+#endif
+#if !defined(FEAT_LISTCMDS) || !defined(FEAT_WINDOWS)
+# define do_buffer_all		ex_ni
+#endif
 static char_u	*getargcmd __ARGS((char_u **));
 static char_u	*skip_cmd_arg __ARGS((char_u *p));
 static int	getargopt __ARGS((exarg_t *eap));
@@ -106,7 +120,10 @@ static void	ex_cfile __ARGS((exarg_t *eap));
 #if !defined(FEAT_QUICKFIX) || !defined(FEAT_WINDOWS)
 # define ex_cwindow		ex_ni
 #endif
-static int	do_arglist __ARGS((char_u *));
+static int	do_arglist __ARGS((char_u *str, int what, int after));
+#define AL_SET	1
+#define AL_ADD	2
+#define AL_DEL	3
 #if defined(FEAT_BROWSE) && (defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG))
 static void	browse_save_fname __ARGS((buf_t *buf));
 #endif
@@ -141,7 +158,6 @@ static void	ex_pedit __ARGS((exarg_t *eap));
 # define ex_stag		ex_ni
 # define ex_ptag		ex_ni
 # define ex_pedit		ex_ni
-# define do_buffer_all		ex_ni
 #endif
 static void	ex_hide __ARGS((exarg_t *eap));
 static void	ex_stop __ARGS((exarg_t *eap));
@@ -161,6 +177,15 @@ static void	ex_next __ARGS((exarg_t *eap));
 static void	ex_preserve __ARGS((exarg_t *eap));
 static void	ex_recover __ARGS((exarg_t *eap));
 static void	ex_args __ARGS((exarg_t *eap));
+#ifdef FEAT_LISTCMDS
+static void	ex_argadd __ARGS((exarg_t *eap));
+static void	ex_argdelete __ARGS((exarg_t *eap));
+static void	ex_argdo __ARGS((exarg_t *eap));
+#else
+# define ex_argadd		ex_ni
+# define ex_argdelete		ex_ni
+# define ex_argdo		ex_ni
+#endif
 static void	ex_mode __ARGS((exarg_t *eap));
 static void	ex_browse __ARGS((exarg_t *eap));
 static void	ex_confirm __ARGS((exarg_t *eap));
@@ -316,6 +341,7 @@ static int	did_endif = FALSE;	/* just had ":endif" */
 # define ex_delfunction		ex_ni
 # define ex_return		ex_ni
 #endif
+static char_u	*arg_all __ARGS((void));
 #ifdef FEAT_SESSION
 static int	makeopens __ARGS((FILE *fd));
 static int	ses_fname_line __ARGS((FILE *fd, char *cmd, linenr_t lnum, buf_t *buf));
@@ -1192,7 +1218,7 @@ do_one_cmd(cmdlinep, sourcing,
     }
 #endif
 
-    if (!(ea.argt & RANGE) && ea.addr_count)	/* no range allowed */
+    if (!(ea.argt & RANGE) && ea.addr_count > 0)	/* no range allowed */
     {
 	errormsg = (char_u *)_(e_norange);
 	goto doend;
@@ -1526,14 +1552,15 @@ do_one_cmd(cmdlinep, sourcing,
 	    goto doend;
     }
 
+#ifdef FEAT_LISTCMDS
     /*
      * Accept buffer name.  Cannot be used at the same time with a buffer
      * number.  Don't do this for a user command.
      */
     if ((ea.argt & BUFNAME) && *ea.arg != NUL && ea.addr_count == 0
-#ifdef FEAT_USR_CMDS
+# ifdef FEAT_USR_CMDS
 	    && !USER_CMDIDX(ea.cmdidx)
-#endif
+# endif
 	    )
     {
 	/*
@@ -1555,6 +1582,7 @@ do_one_cmd(cmdlinep, sourcing,
 	ea.addr_count = 1;
 	ea.arg = skipwhite(p);
     }
+#endif
 
 /*
  * 6. switch on command name
@@ -1841,6 +1869,20 @@ ex_doautocmd(eap)
 }
 #endif
 
+#ifdef FEAT_LISTCMDS
+/*
+ * :[N]bunload[!] [N] [bufname] unload buffer
+ * :[N]bdelete[!] [N] [bufname] delete buffer
+ */
+    static void
+ex_bunload(eap)
+    exarg_t	*eap;
+{
+    eap->errmsg = do_bufdel(
+	    eap->cmdidx == CMD_bdelete ? DOBUF_DEL : DOBUF_UNLOAD, eap->arg,
+	    eap->addr_count, (int)eap->line1, (int)eap->line2, eap->forceit);
+}
+
 /*
  * :[N]buffer [N]	to buffer N
  * :[N]sbuffer [N]	to buffer N
@@ -1929,14 +1971,14 @@ goto_buffer(eap, start, dir, count)
     int		dir;
     int		count;
 {
-#if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
+#if defined(FEAT_WINDOWS) && (defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG))
     buf_t	*old_curbuf = curbuf;
 
     swap_exists_action = SEA_DIALOG;
 #endif
     (void)do_buffer(*eap->cmd == 's' ? DOBUF_SPLIT : DOBUF_GOTO,
 					     start, dir, count, eap->forceit);
-#if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
+#if defined(FEAT_WINDOWS) && (defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG))
     if (swap_exists_action == SEA_QUIT && *eap->cmd == 's')
     {
 	/* Quitting means closing the split window, nothing else. */
@@ -1947,6 +1989,7 @@ goto_buffer(eap, start, dir, count)
 	handle_swap_exists(old_curbuf);
 #endif
 }
+#endif
 
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG) || defined(PROTO)
 /*
@@ -1980,19 +2023,6 @@ handle_swap_exists(old_curbuf)
     swap_exists_action = SEA_NONE;
 }
 #endif
-
-/*
- * :[N]bunload[!] [N] [bufname] unload buffer
- * :[N]bdelete[!] [N] [bufname] delete buffer
- */
-    static void
-ex_bunload(eap)
-    exarg_t	*eap;
-{
-    eap->errmsg = do_bufdel(
-	    eap->cmdidx == CMD_bdelete ? DOBUF_DEL : DOBUF_UNLOAD, eap->arg,
-	    eap->addr_count, (int)eap->line1, (int)eap->line2, eap->forceit);
-}
 
 /*
  * This is all pretty much copied from do_one_cmd(), with all the extra stuff
@@ -2596,6 +2626,7 @@ set_one_cmd_context(xp, buff)
 	case CMD_highlight:
 	    set_context_in_highlight_cmd(xp, arg);
 	    break;
+#ifdef FEAT_LISTCMDS
 	case CMD_bdelete:
 	case CMD_bunload:
 	    while ((xp->xp_pattern = vim_strchr(arg, ' ')) != NULL)
@@ -2606,6 +2637,7 @@ set_one_cmd_context(xp, buff)
 	    xp->xp_context = EXPAND_BUFFERS;
 	    xp->xp_pattern = arg;
 	    break;
+#endif
 #ifdef FEAT_USR_CMDS
 	case CMD_USER:
 	case CMD_USER_BUF:
@@ -3554,7 +3586,9 @@ getargopt(eap)
 {
     char_u	*arg = eap->arg + 2;
     int		*pp = NULL;
+#ifdef FEAT_MBYTE
     char_u	*p;
+#endif
 
     if (STRNCMP(arg, "ff", 2) == 0)
     {
@@ -3781,7 +3815,7 @@ ex_cc(eap)
     exarg_t	*eap;
 {
     qf_jump(0,
-	    eap->addr_count
+	    eap->addr_count > 0
 	    ? (int)eap->line2
 	    : eap->cmdidx == CMD_cc
 		? 0
@@ -3803,7 +3837,7 @@ ex_cnext(eap)
 	    : eap->cmdidx == CMD_cnfile
 		? FORWARD_FILE
 		: BACKWARD,
-	    eap->addr_count ? (int)eap->line2 : 1, eap->forceit);
+	    eap->addr_count > 0 ? (int)eap->line2 : 1, eap->forceit);
 }
 
 /*
@@ -3821,40 +3855,46 @@ ex_cfile(eap)
 #endif /* FEAT_QUICKFIX */
 
 /*
- * Redefine the argument list to 'str'.
+ * "what" == AL_SET: Redefine the argument list to 'str'.
+ * "what" == AL_ADD: add files in 'str' to the argument list after "after".
+ * "what" == AL_DEL: remove files in 'str' from the argument list.
  *
  * Return FAIL for failure, OK otherwise.
  */
     static int
-do_arglist(str)
-    char_u *str;
+do_arglist(str, what, after)
+    char_u	*str;
+    int		what;
+    int		after;
 {
-    int		new_count = 0;
-    char_u	**new_files = NULL;
+    garray_t	new_ga;
     int		exp_count;
     char_u	**exp_files;
-    char_u	**t;
     char_u	*p;
     int		inquote;
     int		inbacktick;
     int		i;
+#ifdef FEAT_LISTCMDS
+    int		match;
+#endif
+#ifdef FEAT_WINDOWS
     win_t	*win;
+#endif
+
+    ga_init2(&new_ga, sizeof(char_u *), 20);
 
     while (*str)
     {
 	/*
-	 * create a new entry in new_files[]
+	 * add a new entry to new_ga.
 	 */
-	t = (char_u **)lalloc((long_u)(sizeof(char_u *) * (new_count + 1)),
-									TRUE);
-	if (t != NULL)
-	    for (i = new_count; --i >= 0; )
-		t[i] = new_files[i];
-	vim_free(new_files);
-	if (t == NULL)
+	if (ga_grow(&new_ga, 1) == FAIL)
+	{
+	    ga_clear(&new_ga);
 	    return FAIL;
-	new_files = t;
-	new_files[new_count++] = str;
+	}
+	((char_u **)new_ga.ga_data)[new_ga.ga_len++] = str;
+	--new_ga.ga_room;
 
 	/*
 	 * Isolate one argument, taking quotes and backticks.
@@ -3869,7 +3909,10 @@ do_arglist(str)
 	     * Only skip ", space and tab.
 	     */
 	    if (rem_backslash(str))
-		*p++ = *++str;
+	    {
+		*p++ = *str++;
+		*p++ = *str;
+	    }
 	    else
 	    {
 		/* An item ends at a space not in quotes or backticks */
@@ -3887,32 +3930,117 @@ do_arglist(str)
 	*p = NUL;
     }
 
-    i = expand_wildcards(new_count, new_files, &exp_count, &exp_files,
-				      EW_DIR|EW_FILE|EW_ADDSLASH|EW_NOTFOUND);
-    vim_free(new_files);
-    if (i == FAIL)
-	return FAIL;
-    if (exp_count == 0)
+#ifdef FEAT_LISTCMDS
+    if (what == AL_DEL)
     {
-	EMSG(_(e_nomatch));
-	return FAIL;
-    }
-    FreeWild(arg_file_count, arg_files);
-    arg_files = exp_files;
-    arg_file_count = exp_count;
-    arg_had_last = FALSE;
+	regmatch_t	regmatch;
+	int		didone;
 
-    /*
-     * put all file names in the buffer list
-     */
-    for (i = 0; i < arg_file_count; ++i)
-	(void)buflist_add(arg_files[i]);
+	/*
+	 * Delete the items: use each item as a regexp and find a match in the
+	 * argument list.
+	 */
+#ifdef CASE_INSENSITIVE_FILENAME
+	reg_ic = TRUE;		/* Always ignore case */
+#else
+	reg_ic = FALSE;		/* Never ignore case */
+#endif
+	for (i = 0; i < new_ga.ga_len && !got_int; ++i)
+	{
+	    p = ((char_u **)new_ga.ga_data)[i];
+	    p = file_pat_to_reg_pat(p, p + STRLEN(p), NULL, FALSE);
+	    if (p == NULL)
+		break;
+	    regmatch.regprog = vim_regcomp(p, (int)p_magic);
+	    if (regmatch.regprog == NULL)
+	    {
+		vim_free(p);
+		break;
+	    }
+
+	    didone = FALSE;
+	    for (match = 0; match < ARGCOUNT; ++match)
+		if (vim_regexec(&regmatch, ARGLIST[match], (colnr_t)0))
+		{
+		    didone = TRUE;
+		    vim_free(ARGLIST[match]);
+		    mch_memmove(ARGLIST + match, ARGLIST + match + 1,
+			    (ARGCOUNT - match - 1) * sizeof(char_u *));
+		    --ALIST(curwin)->al_ga.ga_len;
+		    ++ALIST(curwin)->al_ga.ga_room;
+		    if (curwin->w_arg_idx > match)
+			--curwin->w_arg_idx;
+		    --match;
+		}
+
+	    vim_free(regmatch.regprog);
+	    vim_free(p);
+	    if (!didone)
+		EMSG2(_(e_nomatch2), ((char_u **)new_ga.ga_data)[i]);
+	}
+	ga_clear(&new_ga);
+    }
+    else
+#endif
+    {
+	i = expand_wildcards(new_ga.ga_len, (char_u **)new_ga.ga_data,
+		&exp_count, &exp_files, EW_DIR|EW_FILE|EW_ADDSLASH|EW_NOTFOUND);
+	ga_clear(&new_ga);
+	if (i == FAIL)
+	    return FAIL;
+	if (exp_count == 0)
+	{
+	    EMSG(_(e_nomatch));
+	    return FAIL;
+	}
+
+	/*
+	 * put all added file names in the buffer list
+	 */
+	for (i = 0; i < exp_count; ++i)
+	    (void)buflist_add(exp_files[i]);
+
+#ifdef FEAT_LISTCMDS
+	if (what == AL_ADD)
+	{
+	    if (ga_grow(&new_ga, exp_count + ARGCOUNT) == OK)
+	    {
+		if (after < 0)
+		    after = 0;
+		if (after > ARGCOUNT)
+		    after = ARGCOUNT;
+		if (after > 0)
+		    mch_memmove(new_ga.ga_data,
+			    ARGLIST, after * sizeof(char_u *));
+		mch_memmove((char_u **)new_ga.ga_data + after,
+			exp_files, exp_count * sizeof(char_u *));
+		if (after < ARGCOUNT)
+		    mch_memmove((char_u **)new_ga.ga_data + after + exp_count,
+			    ARGLIST + after,
+				       (ARGCOUNT - after) * sizeof(char_u *));
+		vim_free(ARGLIST);
+		ALIST(curwin)->al_ga.ga_data = new_ga.ga_data;
+		ALIST(curwin)->al_ga.ga_len += exp_count;
+		ALIST(curwin)->al_ga.ga_room = new_ga.ga_room - ARGCOUNT;
+		if (curwin->w_arg_idx >= after)
+		    ++curwin->w_arg_idx;
+	    }
+	}
+	else /* what == AL_SET */
+#endif
+	    alist_set(exp_count, exp_files);
+    }
 
     /*
      * Check the validity of the arg_idx for each other window.
      */
+#ifdef FEAT_WINDOWS
     for (win = firstwin; win != NULL; win = win->w_next)
-	check_arg_idx(win);
+	if (win->w_alist == curwin->w_alist)
+	    check_arg_idx(win);
+#else
+    check_arg_idx(curwin);
+#endif
 
     return OK;
 }
@@ -3924,14 +4052,39 @@ do_arglist(str)
 check_arg_idx(win)
     win_t	*win;
 {
-    if (arg_file_count > 1
+    if (ALIST(win)->al_ga.ga_len > 1
 	    && (win->w_buffer->b_ffname == NULL
-		|| win->w_arg_idx >= arg_file_count
-		|| !(fullpathcmp(arg_files[win->w_arg_idx],
+		|| win->w_arg_idx >= ALIST(win)->al_ga.ga_len
+		|| !(fullpathcmp(
+		     ((char_u **)ALIST(win)->al_ga.ga_data)[win->w_arg_idx],
 				  win->w_buffer->b_ffname, TRUE) & FPC_SAME)))
+    {
+	/* We are not editing the current entry in the argument list.
+	 * Set "arg_had_last" if we are editing the last one. */
 	win->w_arg_idx_invalid = TRUE;
+	if (win->w_arg_idx != ALIST(win)->al_ga.ga_len - 1
+		&& arg_had_last == FALSE
+#ifdef FEAT_WINDOWS
+		&& ALIST(win) == &global_alist
+#endif
+		&& win->w_buffer->b_ffname != NULL
+		&& (fullpathcmp(((char_u **)ALIST(win)->al_ga.ga_data)
+					       [ALIST(win)->al_ga.ga_len - 1],
+				  win->w_buffer->b_ffname, TRUE) & FPC_SAME))
+	    arg_had_last = TRUE;
+    }
     else
+    {
+	/* We are editing the current entry in the argument list.
+	 * Set "arg_had_last" if it's also the last one */
 	win->w_arg_idx_invalid = FALSE;
+	if (win->w_arg_idx == ALIST(win)->al_ga.ga_len - 1
+#ifdef FEAT_WINDOWS
+		&& ALIST(win) == &global_alist
+#endif
+		)
+	    arg_had_last = TRUE;
+    }
 }
 
     int
@@ -3988,10 +4141,10 @@ check_more(message, forceit)
     int message;	    /* when FALSE check only, no messages */
     int forceit;
 {
-    int	    n = arg_file_count - curwin->w_arg_idx - 1;
+    int	    n = ARGCOUNT - curwin->w_arg_idx - 1;
 
-    if (!forceit && only_one_window() && arg_file_count > 1 && !arg_had_last
-	&& n >= 0 && quitmore == 0)
+    if (!forceit && only_one_window() && ARGCOUNT > 1 && !arg_had_last
+						   && n >= 0 && quitmore == 0)
     {
 	if (message)
 	{
@@ -4060,8 +4213,8 @@ do_source(fname, check_other, is_vimrc)
     char_u		    *fname_exp;
     int			    retval = FAIL;
 #ifdef FEAT_EVAL
-    long		    save_current_SID;
-    static long		    last_current_SID = 0;
+    sid_t		    save_current_SID;
+    static sid_t	    last_current_SID = 0;
     void		    *save_funccalp;
 #endif
 
@@ -5094,7 +5247,7 @@ uc_split_args(arg, lenp)
 
     while (*p)
     {
-	if (p[0] == '\\' && p[1] == ' ')
+	if (p[0] == '\\' && vim_iswhite(p[1]))
 	{
 	    len += 1;
 	    p += 2;
@@ -5104,11 +5257,12 @@ uc_split_args(arg, lenp)
 	    len += 2;
 	    p += 1;
 	}
-	else if (*p == ' ')
+	else if (vim_iswhite(*p))
 	{
+	    p = skipwhite(p);
+	    if (*p == NUL)
+		break;
 	    len += 3; /* "," */
-	    while (*p == ' ')
-		++p;
 	}
 	else
 	{
@@ -5129,7 +5283,7 @@ uc_split_args(arg, lenp)
     *q++ = '"';
     while (*p)
     {
-	if (p[0] == '\\' && p[1] == ' ')
+	if (p[0] == '\\' && vim_iswhite(p[1]))
 	{
 	    *q++ = p[1];
 	    p += 2;
@@ -5139,13 +5293,14 @@ uc_split_args(arg, lenp)
 	    *q++ = '\\';
 	    *q++ = *p++;
 	}
-	else if (*p == ' ')
+	else if (vim_iswhite(*p))
 	{
+	    p = skipwhite(p);
+	    if (*p == NUL)
+		break;
 	    *q++ = '"';
 	    *q++ = ',';
 	    *q++ = '"';
-	    while (*p == ' ')
-		++p;
 	}
 	else
 	{
@@ -5350,7 +5505,7 @@ do_ucmd(eap)
     size_t	split_len = 0;
     char_u	*split_buf = NULL;
     UCMD	*cmd;
-    long	save_current_SID = current_SID;
+    sid_t	save_current_SID = current_SID;
 
     if (eap->cmdidx == CMD_USER)
 	cmd = USER_CMD(eap->useridx);
@@ -5815,8 +5970,8 @@ ex_previous(eap)
     exarg_t	*eap;
 {
     /* If past the last one already, go to the last one. */
-    if (curwin->w_arg_idx - (int)eap->line2 >= arg_file_count)
-	do_argfile(eap, arg_file_count - 1);
+    if (curwin->w_arg_idx - (int)eap->line2 >= ARGCOUNT)
+	do_argfile(eap, ARGCOUNT - 1);
     else
 	do_argfile(eap, curwin->w_arg_idx - (int)eap->line2);
 }
@@ -5838,7 +5993,7 @@ ex_rewind(eap)
 ex_last(eap)
     exarg_t	*eap;
 {
-    do_argfile(eap, arg_file_count - 1);
+    do_argfile(eap, ARGCOUNT - 1);
 }
 
 /*
@@ -5850,7 +6005,7 @@ ex_argument(eap)
 {
     int		i;
 
-    if (eap->addr_count)
+    if (eap->addr_count > 0)
 	i = eap->line2 - 1;
     else
 	i = curwin->w_arg_idx;
@@ -5868,9 +6023,9 @@ do_argfile(eap, argn)
     int		other;
     char_u	*p;
 
-    if (argn < 0 || argn >= arg_file_count)
+    if (argn < 0 || argn >= ARGCOUNT)
     {
-	if (arg_file_count <= 1)
+	if (ARGCOUNT <= 1)
 	    EMSG(_("There is only one file to edit"));
 	else if (argn < 0)
 	    EMSG(_("Cannot go before first file"));
@@ -5900,7 +6055,7 @@ do_argfile(eap, argn)
 	    other = TRUE;
 	    if (P_HID(curbuf))
 	    {
-		p = fix_fname(arg_files[argn]);
+		p = fix_fname(ARGLIST[argn]);
 		other = otherfile(p);
 		vim_free(p);
 	    }
@@ -5910,11 +6065,15 @@ do_argfile(eap, argn)
 	}
 
 	curwin->w_arg_idx = argn;
-	if (argn == arg_file_count - 1)
+	if (argn == ARGCOUNT - 1
+#ifdef FEAT_WINDOWS
+		&& curwin->w_alist == &global_alist
+#endif
+	   )
 	    arg_had_last = TRUE;
 
 	/* Edit the file; always use the last known line number. */
-	(void)do_ecmd(0, arg_files[curwin->w_arg_idx], NULL, eap, ECMD_LAST,
+	(void)do_ecmd(0, ARGLIST[curwin->w_arg_idx], NULL, eap, ECMD_LAST,
 		      (P_HID(curwin->w_buffer) ? ECMD_HIDE : 0) +
 					   (eap->forceit ? ECMD_FORCEIT : 0));
     }
@@ -5939,7 +6098,7 @@ ex_next(eap)
     {
 	if (*eap->arg != NUL)		    /* redefine file list */
 	{
-	    if (do_arglist(eap->arg) == FAIL)
+	    if (do_arglist(eap->arg, AL_SET, 0) == FAIL)
 		return;
 	    i = 0;
 	}
@@ -5949,8 +6108,11 @@ ex_next(eap)
     }
 }
 
-#if defined(FEAT_GUI_MSWIN) || defined(FEAT_GUI_BEOS) || defined(macintosh) \
-	|| defined(FEAT_GUI_GTK) || defined(PROTO)
+#if (defined(FEAT_WINDOWS) \
+	&& (defined(FEAT_GUI_MSWIN) || defined(FEAT_GUI_BEOS) \
+	    || defined(macintosh) || defined(FEAT_GUI_GTK))) \
+    || defined(PROTO)
+
 /*
  * Handle a file drop. The code is here because a drop is *nearly* like an
  * :args command, but not quite (we have a list of exact filenames, so we
@@ -5961,7 +6123,7 @@ ex_next(eap)
  * The list should be allocated using vim_alloc(), as should each item in the
  * list. This function takes over responsibility for freeing the list.
  *
- * XXX The list is made into the arg_files list. This is freed using
+ * XXX The list is made into the arggument list. This is freed using
  * FreeWild(), which does a series of vim_free() calls, unless the two defines
  * __EMX__ and __ALWAYS_HAS_TRAILING_NUL_POINTER are set. In this case, a
  * routine _fnexplodefree() is used. This may cause problems, but as the drop
@@ -5990,31 +6152,35 @@ handle_drop(filec, filev, split)
 	split = check_changed(curbuf, TRUE, FALSE, FALSE, FALSE);
 	emsg_off = old_emsg;
     }
+    if (split && win_split(0, 0) == FAIL)
+	return;
 
     /*
      * Set up the new argument list.
-     * This code is copied from the tail end of do_arglist()
+     * When splitting the window, create a new alist.  Otherwise overwrite the
+     * existing one.
      */
-    FreeWild(arg_file_count, arg_files);
-    arg_file_count = filec;
-    arg_files = filev;
-    arg_had_last = FALSE;
+    if (split)
+    {
+	alist_unlink(curwin->w_alist);
+	alist_new();
+    }
+    alist_set(filec, filev);
 
-    for (i = 0; i < arg_file_count; ++i)
-	if (arg_files[i] != NULL)
+    for (i = 0; i < ARGCOUNT; ++i)
+	if (ARGLIST[i] != NULL)
 	{
 #ifdef BACKSLASH_IN_FILENAME
-	    slash_adjust(arg_files[i]);
+	    slash_adjust(ARGLIST[i]);
 #endif
-	    (void)buflist_add(arg_files[i]);
+	    (void)buflist_add(ARGLIST[i]);
 	}
 
     /*
      * Move to the first file.
      */
-
-    /* Fake up a minimal "[s]next" command for do_argfile() */
-    ea.cmd = (char_u *)(split ? "snext" : "next");
+    /* Fake up a minimal "next" command for do_argfile() */
+    ea.cmd = (char_u *)"next";
     ea.forceit = FALSE;
     ea.do_ecmd_cmd = NULL;
     ea.do_ecmd_lnum = 0;
@@ -6022,10 +6188,61 @@ handle_drop(filec, filev, split)
 #ifdef FEAT_MBYTE
     ea.force_fcc = 0;
 #endif
-
     do_argfile(&ea, 0);
 }
 #endif
+
+#if defined(FEAT_WINDOWS) || defined(PROTO)
+/*
+ * Remove a reference from an argument list.
+ * Ignored when the argument list is the global one.
+ * If the argument list is no longer used by any window, free it.
+ */
+    void
+alist_unlink(al)
+    alist_t	*al;
+{
+    if (al != &global_alist && --al->al_refcount <= 0)
+    {
+	FreeWild(al->al_ga.ga_len, (char_u **)al->al_ga.ga_data);
+	vim_free(al);
+    }
+}
+
+/*
+ * Create a new argument list and use it for the current window.
+ */
+    void
+alist_new()
+{
+    curwin->w_alist = (alist_t *)alloc(sizeof(alist_t));
+    if (curwin->w_alist == NULL)
+	curwin->w_alist = &global_alist;
+    else
+    {
+	curwin->w_alist->al_refcount = 1;
+	ga_init2(&curwin->w_alist->al_ga, sizeof(char_u *), 5);
+    }
+}
+#endif
+
+/*
+ * Set the argument list for the current window.
+ */
+    void
+alist_set(count, files)
+    int		count;
+    char_u	**files;
+{
+    FreeWild(ARGCOUNT, ARGLIST);
+    ALIST(curwin)->al_ga.ga_len = count;
+    ALIST(curwin)->al_ga.ga_data = files;
+    ALIST(curwin)->al_ga.ga_room = 0;
+#ifdef FEAT_WINDOWS
+    if (ALIST(curwin) == &global_alist)
+#endif
+	arg_had_last = FALSE;
+}
 
 #if defined(FEAT_GUI) || defined(PROTO)
 /*
@@ -6087,7 +6304,7 @@ ex_recover(eap)
 }
 
 /*
- * ":args".
+ * ":args", ":argslocal" and ":argsglobal".
  */
     static void
 ex_args(eap)
@@ -6095,12 +6312,37 @@ ex_args(eap)
 {
     int		i;
 
-    /* ":args file": handle like :next */
-    if (!ends_excmd(*eap->arg))
-	ex_next(eap);
-    else
+    if (eap->cmdidx != CMD_args)
     {
-	if (arg_file_count == 0)	    /* no file name list */
+#if defined(FEAT_WINDOWS) && defined(FEAT_LISTCMDS)
+	alist_unlink(ALIST(curwin));
+	if (eap->cmdidx == CMD_argglobal)
+	    ALIST(curwin) = &global_alist;
+	else /*  eap->cmdidx == CMD_arglocal */
+	    alist_new();
+#else
+	ex_ni(eap);
+	return;
+#endif
+    }
+
+    if (!ends_excmd(*eap->arg))
+    {
+	/*
+	 * ":args file ..": define new argument list, handle like ":next"
+	 * Also for ":argslocal file .." and ":argsglobal file ..".
+	 */
+	ex_next(eap);
+    }
+    else
+#if defined(FEAT_WINDOWS) && defined(FEAT_LISTCMDS)
+	if (eap->cmdidx == CMD_args)
+#endif
+    {
+	/*
+	 * ":args": list arguments.
+	 */
+	if (ARGCOUNT == 0)		    /* no file name list */
 	{
 	    if (check_fname() == OK)	    /* check for no file name */
 		smsg((char_u *)"[%s]", curbuf->b_ffname);
@@ -6112,18 +6354,111 @@ ex_args(eap)
 	     * required and no wait_return().
 	     */
 	    gotocmdline(TRUE);
-	    for (i = 0; i < arg_file_count; ++i)
+	    for (i = 0; i < ARGCOUNT; ++i)
 	    {
 		if (i == curwin->w_arg_idx)
 		    msg_putchar('[');
-		msg_outtrans(arg_files[i]);
+		msg_outtrans(ARGLIST[i]);
 		if (i == curwin->w_arg_idx)
 		    msg_putchar(']');
 		msg_putchar(' ');
 	    }
 	}
     }
+#if defined(FEAT_WINDOWS) && defined(FEAT_LISTCMDS)
+    else if (eap->cmdidx == CMD_arglocal)
+    {
+	/*
+	 * ":argslocal": make a local copy of the global argument list.
+	 */
+	if (ga_grow(&curwin->w_alist->al_ga, GARGCOUNT) == OK)
+	{
+	    for (i = 0; i < GARGCOUNT; ++i)
+	    {
+		if (GARGLIST[i] == NULL)
+		    ARGLIST[i] = NULL;
+		else
+		    ARGLIST[i] = vim_strsave(GARGLIST[i]);
+	    }
+	    curwin->w_alist->al_ga.ga_len = GARGCOUNT;
+	    curwin->w_alist->al_ga.ga_room -= GARGCOUNT;
+	}
+    }
+#endif
 }
+
+#ifdef FEAT_LISTCMDS
+/*
+ * ":argadd"
+ */
+    static void
+ex_argadd(eap)
+    exarg_t	*eap;
+{
+    do_arglist(eap->arg, AL_ADD,
+	       eap->addr_count > 0 ? (int)eap->line2 : curwin->w_arg_idx + 1);
+#ifdef FEAT_TITLE
+    maketitle();
+#endif
+}
+
+/*
+ * ":argdelete"
+ */
+    static void
+ex_argdelete(eap)
+    exarg_t	*eap;
+{
+    do_arglist(eap->arg, AL_DEL, 0);
+#ifdef FEAT_TITLE
+    maketitle();
+#endif
+}
+
+/*
+ * ":argdo"
+ */
+    static void
+ex_argdo(eap)
+    exarg_t	*eap;
+{
+    int		i;
+#ifdef FEAT_AUTOCMD
+    char_u	*save_ei = vim_strsave(p_ei);
+    char_u	*new_ei;
+
+    new_ei = vim_strnsave(p_ei, (int)STRLEN(p_ei) + 8);
+    if (new_ei != NULL)
+    {
+	STRCAT(new_ei, ",Syntax");
+	set_string_option_direct((char_u *)"ei", -1, new_ei, OPT_FREE);
+	vim_free(new_ei);
+    }
+#endif
+
+    if (P_HID(curbuf)
+		  || !check_changed(curbuf, TRUE, FALSE, eap->forceit, FALSE))
+    {
+	for (i = 0; i < ARGCOUNT && !got_int; ++i)
+	{
+	    do_argfile(eap, i);
+	    if (curwin->w_arg_idx != i)
+		break;
+	    do_cmdline(eap->arg, eap->getline, eap->cookie,
+						DOCMD_VERBOSE + DOCMD_NOWAIT);
+	}
+    }
+#ifdef FEAT_AUTOCMD
+    if (new_ei != NULL)
+    {
+	set_string_option_direct((char_u *)"ei", -1, save_ei, OPT_FREE);
+	apply_autocmds(EVENT_SYNTAX, curbuf->b_p_syn,
+					     curbuf->b_fname, TRUE, curbuf);
+    }
+    vim_free(save_ei);
+#endif
+}
+#endif
 
 /*
  * Command modifiers: The argument is another command.
@@ -6255,7 +6590,7 @@ ex_splitview(eap)
 	eap->arg = fname;
     }
 #endif
-    if (win_split(eap->addr_count ? (int)eap->line2 : 0,
+    if (win_split(eap->addr_count > 0 ? (int)eap->line2 : 0,
 				     *eap->cmd == 'v' ? WSP_VERT : 0) != FAIL)
 	do_exedit(eap, old_curwin);
 
@@ -6340,7 +6675,7 @@ ex_find(eap)
 }
 
 /*
- * ":edit".
+ * ":edit", ":badd".
  */
     static void
 ex_edit(eap)
@@ -6400,9 +6735,12 @@ do_exedit(eap, old_curwin)
 	setpcmark();
 	if (do_ecmd(0, (eap->cmdidx == CMD_enew ? NULL : eap->arg),
 		    NULL, eap, eap->do_ecmd_lnum,
-		    (P_HID(curbuf) ? ECMD_HIDE : 0) +
-		    (eap->forceit ? ECMD_FORCEIT : 0) +
-		    (eap->cmdidx == CMD_badd ? ECMD_ADDBUF : 0 )) == FAIL
+		    (P_HID(curbuf) ? ECMD_HIDE : 0)
+		    + (eap->forceit ? ECMD_FORCEIT : 0)
+#ifdef FEAT_LISTCMDS
+		    + (eap->cmdidx == CMD_badd ? ECMD_ADDBUF : 0 )
+#endif
+		    ) == FAIL
 		&& (eap->cmdidx == CMD_split || eap->cmdidx == CMD_vsplit))
 	{
 #ifdef FEAT_WINDOWS
@@ -7661,7 +7999,7 @@ ex_tag_cmd(eap, name)
 		  break;
     }
 
-    do_tag(eap->arg, cmd, eap->addr_count ? (int)eap->line2 : 1,
+    do_tag(eap->arg, cmd, eap->addr_count > 0 ? (int)eap->line2 : 1,
 							  eap->forceit, TRUE);
 }
 
@@ -7964,6 +8302,9 @@ eval_vars(src, usedlen, lnump, errormsg, srcstart)
     buf_t	*buf;
     int		valid = VALID_HEAD + VALID_PATH;    /* assume valid result */
     int		spec_idx;
+#ifdef FEAT_MODIFY_FNAME
+    int		skip_mod = FALSE;
+#endif
     static char *(spec_str[]) =
 		{
 		    "%",
@@ -8064,6 +8405,16 @@ eval_vars(src, usedlen, lnump, errormsg, srcstart)
 		break;
 
 	case SPEC_HASH:		/* '#' or "#99": alternate file */
+		if (src[1] == '#')  /* "##": the argument list */
+		{
+		    result = arg_all();
+		    resultbuf = result;
+		    *usedlen = 2;
+#ifdef FEAT_MODIFY_FNAME
+		    skip_mod = TRUE;
+#endif
+		    break;
+		}
 		s = src + 1;
 		i = (int)getdigits(&s);
 		*usedlen = s - src;	/* length of what we expand */
@@ -8149,7 +8500,7 @@ eval_vars(src, usedlen, lnump, errormsg, srcstart)
 		resultlen = s - result;
 	}
 #ifdef FEAT_MODIFY_FNAME
-	else
+	else if (!skip_mod)
 	{
 	    valid |= modify_fname(src, usedlen, &result, &resultbuf,
 								  &resultlen);
@@ -8174,6 +8525,69 @@ eval_vars(src, usedlen, lnump, errormsg, srcstart)
 	result = vim_strnsave(result, resultlen);
     vim_free(resultbuf);
     return result;
+}
+
+/*
+ * Concatenate all files in the argument list, separated by spaces, and return
+ * it in one allocated string.
+ * Spaces and backslashes in the file names are escaped with a backslash.
+ * Returns NULL when out of memory.
+ */
+    static char_u *
+arg_all()
+{
+    int		len;
+    int		idx;
+    char_u	*retval = NULL;
+    char_u	*p;
+
+    /*
+     * Do this loop two times:
+     * first time: compute the total length
+     * second time: concatenate the names
+     */
+    for (;;)
+    {
+	len = 0;
+	for (idx = 0; idx < ARGCOUNT; ++idx)
+	    if (ARGLIST[idx] != NULL)
+	    {
+		if (len > 0)
+		{
+		    /* insert a space in between names */
+		    if (retval != NULL)
+			retval[len] = ' ';
+		    ++len;
+		}
+		for (p = ARGLIST[idx]; *p != NUL; ++p)
+		{
+		    if (*p == ' ' || *p == '\\')
+		    {
+			/* insert a backslash */
+			if (retval != NULL)
+			    retval[len] = '\\';
+			++len;
+		    }
+		    if (retval != NULL)
+			retval[len] = *p;
+		    ++len;
+		}
+	    }
+
+	/* second time: break here */
+	if (retval != NULL)
+	{
+	    retval[len] = NUL;
+	    break;
+	}
+
+	/* allocate memory */
+	retval = alloc(len + 1);
+	if (retval == NULL)
+	    break;
+    }
+
+    return retval;
 }
 
 #if defined(FEAT_AUTOCMD) || defined(PROTO)
@@ -8351,7 +8765,7 @@ makeopens(fd)
     if (fputs("let sbsave = &splitbelow | set splitbelow", fd) < 0
 	    || put_eol(fd) == FAIL)
 	return FAIL;
-    for (wp = firstwin; wp != NULL; wp = wp->w_next)
+    for (wp = firstwin; wp != NULL; wp = W_NEXT(wp))
     {
 	++nr;
 	if (wp->w_buffer->b_fname == NULL)
@@ -8396,6 +8810,7 @@ makeopens(fd)
 	if (put_eol(fd) == FAIL)
 	    return FAIL;
 
+#ifdef FEAT_WINDOWS
 	/*
 	 * Make window as big as possible so that we have lots of room to split
 	 * off other windows.
@@ -8404,6 +8819,7 @@ makeopens(fd)
 		&& (fputs(IF_EB("normal \027_", "normal " CTRL_W_STR "_"),
 					      fd) < 0 || put_eol(fd) == FAIL))
 	    return FAIL;
+#endif
 
 	if (curwin == wp)
 	    cnr = nr;
@@ -8411,6 +8827,7 @@ makeopens(fd)
     if (fputs("let &splitbelow = sbsave", fd) < 0 || put_eol(fd) == FAIL)
 	return FAIL;
 
+#ifdef FEAT_WINDOWS
     /*
      * If more than one window, see if sizes can be restored.
      */
@@ -8454,6 +8871,7 @@ makeopens(fd)
 		return FAIL;
 	}
     }
+#endif
 
     /*
      * Set the topline of each window, and the current line and column.
@@ -8461,7 +8879,11 @@ makeopens(fd)
     if (fputs(IF_EB("normal \027t", "normal " CTRL_W_STR "t"), fd) < 0)
 	return FAIL;
 
+#ifndef FEAT_WINDOWS
+    wp = curwin;
+#else
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
+#endif
     {
 	if (wp != firstwin && fputs(
 		    IF_EB("normal \027j", "normal " CTRL_W_STR "j"), fd) < 0)
@@ -8480,6 +8902,7 @@ makeopens(fd)
 	    return FAIL;
     }
 
+#ifdef FEAT_WINDOWS
     /*
      * Restore cursor to the window it was in before.
      */
@@ -8487,6 +8910,7 @@ makeopens(fd)
 					 "normal %d" CTRL_W_STR "w"), cnr) < 0
 						      || put_eol(fd) == FAIL))
 	return FAIL;
+#endif
 
     if (fputs("let &shortmess = shmsave", fd) < 0 || put_eol(fd) == FAIL)
 	return FAIL;

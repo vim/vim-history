@@ -281,11 +281,6 @@ mch_shellinit()
 #endif
 }
 
-    void
-mch_init(void)
-{
-}
-
 /*
  * GUI version of mch_windexit().
  * Shut down and exit with status `r'

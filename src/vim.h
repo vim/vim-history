@@ -789,6 +789,7 @@ enum auto_event
     EVENT_FILEAPPENDPRE,	/* before appending to a file */
     EVENT_FILEAPPENDCMD,	/* appende to a file using command */
     EVENT_FILECHANGEDSHELL,	/* after shell command that changed file */
+    EVENT_FILECHANGEDRO,	/* before first change to read-only file */
     EVENT_FILEREADPOST,		/* after reading a file */
     EVENT_FILEREADPRE,		/* before reading a file */
     EVENT_FILEREADCMD,		/* read from a file using command */

@@ -416,7 +416,11 @@ mch_total_mem(special)
 # else
     struct rlimit	rlp;
 
-    if (getrlimit(RLIMIT_DATA, &rlp) == 0)
+    if (getrlimit(RLIMIT_DATA, &rlp) == 0
+#  ifdef RLIM_INFINITY
+	    && rlp.rlim_cur != RLIM_INFINITY
+#  endif
+	    )
 	return (long_u)rlp.rlim_cur;
     return (long_u)0x7fffffff;
 # endif
@@ -1957,7 +1961,9 @@ mch_nodetype(name)
     void
 mch_init()
 {
+#ifdef HAVE_CHECK_STACK_GROWTH
     int			i;
+#endif
 #ifdef HAVE_GETRLIMIT
     struct rlimit	rlp;
 #endif
@@ -1967,7 +1973,11 @@ mch_init()
 
 # ifdef HAVE_GETRLIMIT
     /* Set the stack limit to 15/16 of the allowable size. */
-    if (getrlimit(RLIMIT_STACK, &rlp) == 0)
+    if (getrlimit(RLIMIT_STACK, &rlp) == 0
+#  ifdef RLIM_INFINITY
+	    && rlp.rlim_cur != RLIM_INFINITY
+#  endif
+       )
     {
 	if (stack_grows_downwards)
 	    stack_limit = (char *)((long)&i - ((long)rlp.rlim_cur / 16L * 15L));

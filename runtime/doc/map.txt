@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.0m.  Last change: 2000 Nov 10
+*map.txt*       For Vim version 6.0n.  Last change: 2000 Nov 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -648,14 +648,18 @@ underscore.  Example: >
 	:map <SID>Add
 could define a mapping "<SNR>23_Add".
 
-When defining a function in a script, "<SID>" can be prepended to the name to
-make it local to the script.  The same translation is done as for mappings.
-This makes it possible to define a call to the function in mapping.
+When defining a function in a script, "s:" can be prepended to the name to
+make it local to the script.  But when a mapping is executed from outside of
+the script, it doesn't know in which script the function was defined.  To
+avoid this problem, use "<SID>" instead of "s:".  The same translation is done
+as for mappings.  This makes it possible to define a call to the function in
+mapping.
 
 When a local function is executed, it runs in the context of the script it was
 defined in.  This means that new functions and mappings it defines can also
-use "<SID>" and it will use the same unique number as when the function itself
-was defined.  Also, the "s:var" local script variables can be used.
+use "s:" or "<SID>" and it will use the same unique number as when the
+function itself was defined.  Also, the "s:var" local script variables can be
+used.
 
 When executing an autocommand or a user command, it will run in the context of
 the script it was defined in.  This makes it possible that the command calls a
@@ -752,7 +756,7 @@ command can take arguments, using the -nargs attribute. Valid cases are:
 	-nargs=?    0 or 1 arguments are allowed
 	-nargs=+    Arguments must be supplied, but any number are allowed
 
-Arguments are considered to be separated by (unescaped) spaces in this
+Arguments are considered to be separated by (unescaped) spaces or Tabs in this
 context.
 
 Completion behavior
@@ -853,9 +857,9 @@ for use in an expression.  This uses the argument as one single value.
 
 To allow commands to pass their arguments on to a user-defined function, there
 is a special form <f-args> ("function args"). This splits the command
-arguments at spaces, quotes each argument individually, and the <f-args>
-sequence is replaced by the comma-separated list of quoted arguments.  See the
-Mycmd example below.  When there is no argument, <f-args> also has no
+arguments at spaces and Tabs, quotes each argument individually, and the
+<f-args> sequence is replaced by the comma-separated list of quoted arguments.
+See the Mycmd example below.  When there is no argument, <f-args> also has no
 argument.
 
 Examples >

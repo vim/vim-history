@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:     samba configuration files (smb.conf)
-" Maintainer:   Rafael Garcia-Suarez <garcia_suarez@hotmail.com>
-" URL:          http://altern.org/rgs/vim/syntax/samba.vim
-" Last change:  2000 Nov 04
+" Maintainer:	Rafael Garcia-Suarez <rgarciasuarez@free.fr>
+" URL:		http://rgarciasuarez.free.fr/vim/syntax/samba.vim
+" Last change:  2000 Nov 13
 
 " Don't forget to run your config file through testparm(1)!
 
@@ -12,7 +12,7 @@ syn case ignore
 syn match sambaParameter /^[a-zA-Z \t]\+=/ contains=sambaKeyword
 syn match sambaSection /^\s*\[[a-zA-Z0-9_\-. ]\+\]/
 syn match sambaMacro /%[SPugUGHvhmLMNpRdaIT]/
-syn match sambaComment /^[;#].*/
+syn match sambaComment /^\s*[;#].*/
 syn match sambaContinue /\\$/
 syn keyword sambaBoolean true false yes no
 

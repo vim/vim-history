@@ -504,7 +504,7 @@ gui_mac_scroll_action (ControlHandle theControl, short partCode)
 /*  if (sb_info->wp != NULL)
     {
 	sb_num = 0;
-	for (wp = firstwin; wp != sb->wp && wp != NULL; wp = wp->w_next)
+	for (wp = firstwin; wp != sb->wp && wp != NULL; wp = W_NEXT(wp))
 	sb_num++;
 
 	if (wp != NULL)

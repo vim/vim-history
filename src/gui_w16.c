@@ -692,6 +692,7 @@ _OnDropFiles(
     HWND hwnd,
     HDROP hDrop)
 {
+#ifdef FEAT_WINDOWS
     char    szFile[MAXPATHL];
     UINT    cFiles = DragQueryFile(hDrop, 0xFFFF, szFile, MAXPATHL);
     UINT    i;
@@ -776,6 +777,7 @@ _OnDropFiles(
 	out_flush();
     }
     s_need_activate = TRUE;
+#endif
 }
 
     static void
@@ -1140,7 +1142,11 @@ gui_w16_find_scrollbar(HWND hwnd)
 
     if (gui.bottom_sbar.id == hwnd)
 	return &gui.bottom_sbar;
+#ifndef FEAT_WINDOWS
+    wp = curwin;
+#else
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
+#endif
     {
 	if (wp->w_scrollbars[SBAR_LEFT].id == hwnd)
 	    return &wp->w_scrollbars[SBAR_LEFT];

@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0m.  Last change: 2000 Nov 08
+*eval.txt*      For Vim version 6.0n.  Last change: 2000 Nov 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -447,7 +447,7 @@ Inside functions local variables are accessed without prepending anything.
 But you can also prepend "l:" if you like.
 
 						*script-variable* *s:var*
-In a Vim script variables starting with "s:" can be used.  The cannot be
+In a Vim script variables starting with "s:" can be used.  They cannot be
 accessed from outside of the scripts, thus are local to the script.
 
 They can be used in:
@@ -456,9 +456,9 @@ They can be used in:
 - autocommands defined in the script
 - functions and autocommands defined in functions and autocommands which were
   defined in the script (recursively)
+- user defined commands defined in the script
 Thus not in:
 - other scripts sourced from this one
-- user defined commands
 - mappings 
 - etc.
 
@@ -728,12 +728,13 @@ append({lnum}, {string}					*append()*
 		success.
 
 							*argc()*
-argc()		The result is the number of files in the argument list.  See
-		|arglist|.
+argc()		The result is the number of files in the argument list of the
+		current window.  See |arglist|.
 
 							*argv()*
-argv({nr})	The result is the {nr}th file in the argument list.  See
-		|arglist|.  "argv(0)" is the first one.  Example: >
+argv({nr})	The result is the {nr}th file in the argument list of the
+		current window.  See |arglist|.  "argv(0)" is the first one.
+		Example: >
 	:let i = 0
 	:while i < argc()
 	:  let f = substitute(argv(i), '\([. ]\)', '\\&', 'g')
@@ -1936,6 +1937,8 @@ libcall			Compiled with |libcall()| support.
 linebreak		Compiled with 'linebreak', 'breakat' and 'showbreak'
 			support.
 lispindent		Compiled with support for lisp indenting.
+listcmds		Compiled with commands for the buffer list |:files|
+			and the argument list |arglist|.
 localmap		Compiled with local mappings and abbr. |:map-local|
 mac			Macintosh version of Vim.
 menu			Compiled with support for |:menu|.
@@ -2018,9 +2021,11 @@ avoid obvious, short names.  A good habit is to start the function name with
 the name of the script, e.g., "HTMLcolor()".
 
 							*local-function*
-A function local to a script must start with |<SID>|.  A local script function
-can only be called from within the script, from functions defined in the
-script and mappings defined in the script.  See |<SID>| for details.
+A function local to a script must start with "s:".  A local script function
+can only be called from within the script and from functions, user commands
+and autocommands defined in the script.  It is also possible to call the
+function from a mappings defined in the script, but then |<SID>| must be used
+instead of ":s" when the mapping is expanded outside of the script.
 
 							*:fu* *:function*
 :fu[nction]		List all functions and their arguments.

@@ -547,7 +547,7 @@ auto/pathdef.c: auto
 	@echo char_u *compiled_sys = (char_u *)"$(USERDOMAIN)"; >> auto\pathdef.c
 
 auto:
-	mkdir auto
+	if not exist auto/nul mkdir auto
 
 # End Custom Build
 proto.h: \

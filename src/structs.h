@@ -25,8 +25,8 @@ typedef unsigned short	short_u;
  */
 typedef struct
 {
-    linenr_t	    lnum;	    /* line number */
-    colnr_t	    col;	    /* column number */
+    linenr_t	lnum;	/* line number */
+    colnr_t	col;	/* column number */
 } pos_t;
 
 /*
@@ -34,9 +34,10 @@ typedef struct
  */
 #include "regexp.h"
 
-typedef struct window	    win_t;
-typedef struct wininfo	    wininfo_t;
-typedef struct frame	    frame_t;
+typedef struct window	win_t;
+typedef struct wininfo	wininfo_t;
+typedef struct frame	frame_t;
+typedef int		sid_t;		/* script ID */
 
 /*
  * This is here because gui.h needs the pos_t and win_t, and win_t needs gui.h
@@ -48,7 +49,7 @@ typedef struct frame	    frame_t;
 # ifdef FEAT_XCLIPBOARD
 #  include <X11/Intrinsic.h>
 # endif
-# define guicolor_t int		    /* avoid error in prototypes */
+# define guicolor_t int		/* avoid error in prototypes */
 #endif
 
 /*
@@ -59,18 +60,25 @@ typedef struct frame	    frame_t;
 /* (Note: for EBCDIC there are more than 26, because there are gaps in the
  * alphabet coding.  To minimize changes to the code, I decided to just
  * increase the number of possible marks. */
-#define NMARKS		('z' - 'a' + 1)	    /* max. # of named marks */
-#define JUMPLISTSIZE	100	    /* max. # of marks in jump list */
-#define TAGSTACKSIZE	20	    /* max. # of tags in tag stack */
+#define NMARKS		('z' - 'a' + 1)	/* max. # of named marks */
+#define JUMPLISTSIZE	100		/* max. # of marks in jump list */
+#define TAGSTACKSIZE	20		/* max. # of tags in tag stack */
 
 typedef struct filemark
 {
-    pos_t	    mark;	    /* cursor position */
-    int		    fnum;	    /* file number */
+    pos_t	mark;		/* cursor position */
 #ifdef FEAT_VIRTUALEDIT
-    int		    coladd;	    /* offset for 'virtualedit' */
+    int		coladd;		/* offset for 'virtualedit' */
 #endif
+    int		fnum;		/* file number */
 } fmark_t;
+
+/* Xtended file mark: also has a file name */
+typedef struct xfilemark
+{
+    fmark_t	fmark;
+    char_u	*fname;		/* file name, used when fnum == 0 */
+} xfmark_t;
 
 /*
  * The taggy struct is used to store the information about a :tag command.
@@ -145,7 +153,7 @@ struct wininfo
     wininfo_t	*wi_prev;	/* previous entry or NULL for first entry */
     win_t	*wi_win;	/* pointer to window that did set wi_lnum */
     pos_t	wi_fpos;	/* last cursor position in the file */
-    int		wi_optset;	/* TRUE wne wi_opt has useful values */
+    int		wi_optset;	/* TRUE when wi_opt has useful values */
     winopt_t	wi_opt;		/* local window options */
 };
 
@@ -410,11 +418,31 @@ typedef struct signlist signlist_t;
 struct signlist
 {
     int		id;		/* unique identifier for each sign */
-    int		lineno;		/* line number which has this sign */
+    linenr_t	lineno;		/* line number which has this sign */
     int		type;		/* type of sign (index into signtab) */
     signlist_t *next;		/* next signlist entry */
 };
 #endif
+
+/*
+ * Argument list: Array of file names.
+ * Used for the global argument list and the argument lists local to a window.
+ */
+typedef struct arglist
+{
+    garray_t	al_ga;		/* growarray with the array of file names */
+    int		al_refcount;	/* number of windows using this arglist */
+} alist_t;
+
+#ifdef FEAT_WINDOWS
+# define ALIST(win) (win)->w_alist
+#else
+# define ALIST(win) (&global_alist)
+#endif
+#define ARGLIST ((char_u **)ALIST(curwin)->al_ga.ga_data)
+#define GARGLIST ((char_u **)global_alist.al_ga.ga_data)
+#define ARGCOUNT (ALIST(curwin)->al_ga.ga_len)
+#define GARGCOUNT (global_alist.al_ga.ga_len)
 
 #ifdef FEAT_EVAL
 /*
@@ -543,6 +571,8 @@ struct mapblock
     char_u	*m_str;		/* mapped to */
     int		m_mode;		/* valid mode */
     int		m_noremap;	/* if non-zero no re-mapping for m_str */
+    sid_t	m_script_ID;	/* ID of script where map was defined,
+				   used for s: variables and functions */
 };
 
 /*
@@ -920,8 +950,10 @@ struct window
     buf_t	*w_buffer;	    /* buffer we are a window into (used
 				       often, keep it the first item!) */
 
+#ifdef FEAT_WINDOWS
     win_t	*w_prev;	    /* link to previous window */
     win_t	*w_next;	    /* link to next window */
+#endif
 
     frame_t	*w_frame;	    /* frame containing this window */
 
@@ -1073,6 +1105,9 @@ struct window
 
     int		w_alt_fnum;	    /* alternate file (for # and CTRL-^) */
 
+#ifdef FEAT_WINDOWS
+    alist_t	*w_alist;	    /* pointer to arglist for this window */
+#endif
     int		w_arg_idx;	    /* current index in argument list (can be
 				       out of range!) */
     int		w_arg_idx_invalid;  /* editing another file then w_arg_idx */
@@ -1117,7 +1152,7 @@ struct window
     /*
      * the jumplist contains old cursor positions
      */
-    fmark_t	w_jumplist[JUMPLISTSIZE];
+    xfmark_t	w_jumplist[JUMPLISTSIZE];
     int		w_jumplistlen;		/* number of active entries */
     int		w_jumplistidx;		/* current position */
 

@@ -875,6 +875,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 +libcall	various.txt	/*+libcall*
 +linebreak	various.txt	/*+linebreak*
 +lispindent	various.txt	/*+lispindent*
++listcmds	various.txt	/*+listcmds*
 +localmap	various.txt	/*+localmap*
 +menu	various.txt	/*+menu*
 +mksession	various.txt	/*+mksession*
@@ -1182,6 +1183,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :\bar	cmdline.txt	/*:\\bar*
 :_!	cmdline.txt	/*:_!*
 :_#	cmdline.txt	/*:_#*
+:_##	cmdline.txt	/*:_##*
 :_%	cmdline.txt	/*:_%*
 :_%:	cmdline.txt	/*:_%:*
 :_%<	cmdline.txt	/*:_%<*
@@ -1200,6 +1202,13 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :anoremenu	gui.txt	/*:anoremenu*
 :append	insert.txt	/*:append*
 :ar	editing.txt	/*:ar*
+:arga	editing.txt	/*:arga*
+:argadd	editing.txt	/*:argadd*
+:argd	editing.txt	/*:argd*
+:argdelete	editing.txt	/*:argdelete*
+:argdo	editing.txt	/*:argdo*
+:argglobal	editing.txt	/*:argglobal*
+:arglocal	editing.txt	/*:arglocal*
 :args	editing.txt	/*:args*
 :args_f	editing.txt	/*:args_f*
 :args_f!	editing.txt	/*:args_f!*
@@ -2289,6 +2298,7 @@ Farsi	farsi.txt	/*Farsi*
 FileAppendCmd	autocmd.txt	/*FileAppendCmd*
 FileAppendPost	autocmd.txt	/*FileAppendPost*
 FileAppendPre	autocmd.txt	/*FileAppendPre*
+FileChangedRO	autocmd.txt	/*FileChangedRO*
 FileChangedShell	autocmd.txt	/*FileChangedShell*
 FileEncoding	autocmd.txt	/*FileEncoding*
 FileReadCmd	autocmd.txt	/*FileReadCmd*
@@ -3063,6 +3073,7 @@ file-browser	pi_expl.txt	/*file-browser*
 file-browser-5.2	version5.txt	/*file-browser-5.2*
 file-explorer	pi_expl.txt	/*file-explorer*
 file-formats	editing.txt	/*file-formats*
+file-pattern	autocmd.txt	/*file-pattern*
 file-read	insert.txt	/*file-read*
 file-searching	editing.txt	/*file-searching*
 file-type	filetype.txt	/*file-type*
@@ -3112,6 +3123,8 @@ format-bullet-list	tips.txt	/*format-bullet-list*
 format-comments	change.txt	/*format-comments*
 formatting	change.txt	/*formatting*
 formfeed	intro.txt	/*formfeed*
+fortran-indent	change.txt	/*fortran-indent*
+fortran-plugin	filetype.txt	/*fortran-plugin*
 fortran-syntax	syntax.txt	/*fortran-syntax*
 fortran.vim	syntax.txt	/*fortran.vim*
 french-maillist	intro.txt	/*french-maillist*
@@ -3691,6 +3704,7 @@ netterm-mouse	options.txt	/*netterm-mouse*
 network	pi_netrw.txt	/*network*
 new-GTK-GUI	version5.txt	/*new-GTK-GUI*
 new-Select-mode	version5.txt	/*new-Select-mode*
+new-argument-list	version6.txt	/*new-argument-list*
 new-buftype	version6.txt	/*new-buftype*
 new-commands	version5.txt	/*new-commands*
 new-commands-5.4	version5.txt	/*new-commands-5.4*
@@ -3781,6 +3795,8 @@ page-down	intro.txt	/*page-down*
 page-up	intro.txt	/*page-up*
 page_down	intro.txt	/*page_down*
 page_up	intro.txt	/*page_up*
+papp-syntax	syntax.txt	/*papp-syntax*
+papp.vim	syntax.txt	/*papp.vim*
 paragraph	motion.txt	/*paragraph*
 pascal-syntax	syntax.txt	/*pascal-syntax*
 pascal.vim	syntax.txt	/*pascal.vim*

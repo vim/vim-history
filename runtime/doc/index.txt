@@ -1,4 +1,4 @@
-*index.txt*     For Vim version 6.0m.  Last change: 2000 Oct 18
+*index.txt*     For Vim version 6.0n.  Last change: 2000 Nov 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -928,6 +928,11 @@ The commands are sorted on the non-optional part of their name.
 |:anoremenu|	:an[oremenu]	enter a new menu for all modes that will not
 				be remapped
 |:args|		:ar[gs]		print the argument list
+|:argadd|	:arga[dd]	add items to the argument list
+|:argdelete|	:argd[elete]	delete items from the argument list
+|:argdo|	:argdo		do a command on all items in the argument list
+|:argglobal|	:argg[lobal]	define the global argument list
+|:arglocal|	:argl[ocal]	define a local argument list
 |:argument|	:argu[ment]	go to specific file in the argument list
 |:ascii|	:as[cii]	print ascii value of character under the cursor
 |:autocmd|	:au[tocmd]	enter or show autocommands

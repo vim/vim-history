@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Fortran90 (and Fortran95, Fortran77, F and elf90)
-" Version:	0.75
-" Last Change:	2000 Nov 12
+" Version:	0.76
+" Last Change:	2000 Nov 15
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
 " For the latest version of this file, see <http://www.unb.ca/chem/ajit/vim.htm>
 " Credits:
@@ -22,41 +22,35 @@ else
   let b:fortran_dialect = "unknown"
 endif
 
-" If fortran_dialect not set or set incorrectly by user,
-" then guess b:fortran_dialect from file extension
-" and, in some cases, content of first three lines of file
+" fortran_dialect not set or set incorrectly by user,
 if b:fortran_dialect == "unknown"
-  let b:extfname = expand("%:e")
-  if b:extfname ==? "f95"
-    let b:fortran_dialect = "f95"
-  elseif b:extfname ==? "f90"
-    let b:fortran_retype = getline(1)." ".getline(2)." ".getline(3)
-    if b:fortran_retype =~ '\<fortran_dialect\s*=\s*F\>'
-      let b:fortran_dialect = "F"
-    elseif b:fortran_retype =~ '\<fortran_dialect\s*=\s*elf\>'
-      let b:fortran_dialect = "elf"
-    else
-      let b:fortran_dialect = "f90"
-    endif
-    unlet b:fortran_retype
-  elseif b:extfname ==? "f"
-    if getline(1)." ".getline(2)." ".getline(3) =~ '\<fortran_dialect\s*=\s*F\>'
-      let b:fortran_dialect = "F"
-    else
-      let b:fortran_dialect = "f77"
-    endif
-  elseif b:extfname ==? "for" || b:extfname ==? "fpp"
-    if getline(1)." ".getline(2)." ".getline(3) =~ '\<fortran_dialect\s*=\s*f90\>'
-      let b:fortran_dialect = "f90"
-    else
-      let b:fortran_dialect = "f77"
-    endif
-  else
-"Unrecognized extension
-    echohl WarningMsg | echo "Unknown extension. Setting fortran_dialect=f90" | echohl None
+  " set b:fortran_dialect from directive in first three lines of file
+  let s:fortran_retype = getline(1)." ".getline(2)." ".getline(3)
+  if s:fortran_retype =~ '\<fortran_dialect\s*=\s*F\>'
+    let b:fortran_dialect = "F"
+  elseif s:fortran_retype =~ '\<fortran_dialect\s*=\s*elf\>'
+    let b:fortran_dialect = "elf"
+  elseif s:fortran_retype =~ '\<fortran_dialect\s*=\s*f90\>'
     let b:fortran_dialect = "f90"
+  elseif s:fortran_retype =~ '\<fortran_dialect\s*=\s*f95\>'
+    let b:fortran_dialect = "f95"
+  elseif s:fortran_retype =~ '\<fortran_dialect\s*=\s*f77\>'
+    let b:fortran_dialect = "f77"
+  else
+    " no directive found, so guess b:fortran_dialect from file extension
+    let s:extfname = expand("%:e")
+    if s:extfname ==? "f95"
+      let b:fortran_dialect = "f95"
+    elseif s:extfname ==? "f90"
+      let b:fortran_dialect = "f90"
+    elseif s:extfname ==? "f" ||s:extfname ==? "for" || s:extfname ==? "fpp" || s:extfname ==? "f77" || s:extfname ==? "ftn"
+      let b:fortran_dialect = "f77"
+    else
+      " Unrecognized extension
+      echohl WarningMsg | echo "Unknown extension. Setting fortran_dialect=f90" | echohl None
+      let b:fortran_dialect = "f90"
+    endif
   endif
-  unlet b:extfname
 endif
 
 " Choose between fixed and free source form
@@ -68,24 +62,26 @@ if !exists("b:fortran_fixed_source")
   elseif b:fortran_dialect == "f77"
     " f77 requires fixed source form
     let b:fortran_fixed_source = 1
+  elseif exists("fortran_free_source")
+    " user guarantees free source form for all f90 and f95 files
+    let b:fortran_fixed_source = 0
   else
   " f90 and f95 allow both fixed and free source form
   " assume fixed source form unless signs of free source form
   " are detected in the first five columns of the first 25 lines
     let b:fortran_fixed_source = 1
-    let b:ln=1
+    let s:ln=1
     " Detection becomes more accurate and time-consuming if more lines
     " are checked. Increase the limit below if you keep lots of comments at
     " the very top of each file and you have a fast computer
-    while b:ln < 25
-      let b:test = strpart(getline(b:ln),0,5)
-      if b:test[0] !~ '[Cc*]' && b:test !~ '^\s*!' && b:test =~ '[^ 0-9\t]'
+    while s:ln < 25
+      let s:test = strpart(getline(s:ln),0,5)
+      if s:test[0] !~ '[Cc*]' && s:test !~ '^\s*!' && s:test =~ '[^ 0-9\t]'
 	let b:fortran_fixed_source = 0
 	break
       endif
-      let b:ln = b:ln + 1
+      let s:ln = s:ln + 1
     endwhile
-    unlet b:ln b:test
   endif
 endif
 
@@ -129,7 +125,7 @@ syn keyword fortranReadWrite	backspace close inquire open rewind endfile
 syn keyword fortranReadWrite	read write print
 
 "If tabs are allowed then the left margin checks do not work
-if exists("b:fortran_have_tabs")
+if exists("fortran_have_tabs")
   syn match fortranTab		"\t"  transparent
 else
   syn match fortranTab		"\t"

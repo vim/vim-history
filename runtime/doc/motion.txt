@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.0m.  Last change: 2000 Oct 30
+*motion.txt*    For Vim version 6.0n.  Last change: 2000 Nov 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -818,6 +818,11 @@ jump command (e.g., "G").  The jump list would then become: >
 
 The line numbers will be adjusted for deleted and inserted lines.  This fails
 if you stop editing a file without writing, like with ":n!".
+
+When you split a window, the jumplist will be copied to the new window.
+
+If you have included the ' item in the 'viminfo' option the jumplist will be
+stored in the viminfo file and restored when starting Vim.
 
 ==============================================================================
 9. Various motions				*various-motions*

@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Nov 12
+" Last Change:	2000 Nov 18
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -739,6 +739,7 @@ SynMenu MNO.OpenROAD:openroad
 SynMenu MNO.Open\ Psion\ Lang:opl
 SynMenu MNO.Oracle\ config:ora
 
+SynMenu PQR.PApp:papp
 SynMenu PQR.Pascal:pascal
 SynMenu PQR.PCCTS:pccts
 SynMenu PQR.Perl:perl

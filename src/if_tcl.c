@@ -353,7 +353,7 @@ windowcmd(dummy, interp, objc, objv)
     what = Tcl_GetStringFromObj(objv[1], NULL);
     if (strcmp(what, "list") == 0)
     {
-	for (win = firstwin; win != NULL; win = win->w_next)
+	for (win = firstwin; win != NULL; win = W_NEXT(win))
 	{
 	    string = tclgetwindow(interp, win);
 	    if (string == NULL)
@@ -761,7 +761,7 @@ bufselfcmd(ref, interp, objc, objv)
 		break;
 	    }
 	    Tcl_ResetResult(interp);
-	    for (win = firstwin; win != NULL; win = win->w_next)
+	    for (win = firstwin; win != NULL; win = W_NEXT(win))
 	    {
 		if (win->w_buffer == buf)
 		{
@@ -1091,11 +1091,9 @@ tclfindwin(buf)
 {
     win_t *win;
 
-    for (win = firstwin; win != NULL; win = win->w_next)
-    {
+    for (win = firstwin; win != NULL; win = W_NEXT(win))
 	if (win->w_buffer == buf)
 	    return win;
-    }
     return curwin;  /* keep current window context */
 }
 

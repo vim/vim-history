@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 6.0m.  Last change: 2000 Oct 18
+*autocmd.txt*   For Vim version 6.0n.  Last change: 2000 Nov 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -263,6 +263,12 @@ FileChangedShell		After Vim runs a shell command and notices
 				buffer that was changed "<afile>".
 				NOTE: This even never nests, to avoid an
 				endless loop.
+							*FileChangedRO*
+FileChangedRO			Before making the first change to a read-only
+				file.  Can be used to check-out the file from
+				a source control system.  Not triggered when
+				the change was caused by an autocommand.
+
 							*FocusGained*
 FocusGained			When Vim got input focus.  Only for the GUI
 				version and a few console versions where this
@@ -454,6 +460,7 @@ And ~ can be used for the home directory (if $HOME is defined): >
 The environment variable is expanded when the autocommand is defined, not when
 the autocommand is executed.  This is different from the command!
 
+							*file-pattern*
 The pattern is interpreted like mostly used in file names:
 	*	matches any sequence of characters
 	?	matches any single character

@@ -994,7 +994,11 @@ syn_stack_free_all(buf)
     }
 #ifdef FEAT_FOLDING
     /* When using "syntax" fold method, must update all folds. */
+# ifndef FEAT_WINDOWS
+    wp = curwin;
+# else
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
+# endif
 	if (wp->w_buffer == buf && foldmethodIsSyntax(wp))
 	    foldUpdateAll(wp);
 #endif

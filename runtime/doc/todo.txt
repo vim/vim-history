@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0m.  Last change: 2000 Nov 12
+*todo.txt*      For Vim version 6.0n.  Last change: 2000 Nov 19
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,9 +29,22 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Dos 16 bit: "make test" doesn't work: stack overflow.
+Let :map also list buffer-local mappings.  Add a command to exclude local
+mappings?
+
+After ":hi Normal ctermbg=black ctermfg=white" CTRL-Z fg doesn't redraw all
+characters. (Cesar Crusius)
+
+"make test" doesn't work with tiny or small features.  Perform only those
+tests that will work.
+
+Fold bug: Creating a higher level fold deletes a lower level fold. (Weiguang
+Shi)
 
 Win32: Compiling the Python interface with MSVC doesn't work.
+
+Syntax: skip pattern in a region that matches more than one line doesn't avoid
+a match with an end pattern past the first line.
 
 
 Main items for 6.0:
@@ -134,6 +147,8 @@ A. Folding:
 -   When moving over a fold, always put the cursor on the first line.
 -   In Insert mode, not only show the line the cursor is in but the whole
     fold.
+-   In Insert mode, only unfold the line/fold of the current window.  Not
+    other windows with the same buffer.
 -   When moving into a closed fold with <Up> or <Down> in Insert mode the line
     isn't displayed.
 -   Add ":foldclose": close folds in a range of lines.
@@ -387,6 +402,9 @@ J. User Friendlier
 
 
 Messages:
+-   In the message history, add a help tag for each message and number the
+    messages.  ":msghelp <nr>" could then be used to jump to help for the
+    message. (Charles Campbell)
 -   Need to hit return after selecting entry for ":ts".
 -   Remember message line for redraw.  Use instead of keep_msg.  Integrate the
     command line in update_screen().
@@ -415,6 +433,8 @@ Various recent:
     See list with success/failure for different names and situations.
 9   Win32: mouseshape doesn't return to normal after a ":set" command.
     (Timothy) Stays at "no entry".  Only visible with ":set nomousehide".
+9   Win32: when 'shell' is "zsh", ":!start notepad file" doesn't work. (Pavol
+    Juhas).
 9   'smartcase' also uses 'noignorecase' when using "\S" in a pattern.
 -   GUI: Implement ":popup" for other systems than Windows.
 -   GUI: <C--> cannot be mapped.  Should be possible to recognize this as a
@@ -443,14 +463,10 @@ Various recent:
     coordinates.
 -   Remove "\" shown in complete/wildmenu.
     Bug: <C-O>:emenu in Insert mode inserts the command.
--   ":colder" then ":grep" should overwrite the entry in the quickfix list.
-    Thus make it work like a stack.  Mention in the docs that ":cnewer" can be
-    used to avoid the overwriting.
 -   When accidentally hitting Shift-R instead of Ctrl-R, further Ctrl-R is not
     possible, also when typing <Esc> immediately. (Grahn)
 -   When starting GUI with "-u NONE" get "Unknown font" errors.
 -   include flipcase patch: ~/vim/patches/wall.flipcase2
--   When doing ":split" copy the jumplist to the new window.
 -   Mouse scroll wheel in xterm should work with Ctrl key ("a" changes to
     "q" == 32 more).
 -   "/$" in 'list' mode should put the highlighting on the "$" character, also
@@ -530,9 +546,6 @@ Various recent:
 -   When displaying a space with only foreground highlighting, it's the same
     as a space without attributes.  Avoid displaying spaces for the "~" lines
     when starting up in a color terminal.
--   When using the arglist, use a flag for each file in it that indicates if
-    it has been edited.  When using ":q" check if all flags are set.  Helps
-    when using buffer commands to go to the files.
 -   Windows NT: writing to aux.* makes Vim hang. (Acevedo)
 -   Problem with cscope jumping to the wrong position? (Medley)
 -   ":abbr b byte", append "b " to an existing word still expands to "byte".
@@ -548,11 +561,6 @@ Considered for release 6.0:
 8   Use configure to set absolute paths in tools scripts when installing.
 8   Windows (and others): When using the scrollbar to scroll, don't move the
     cursor position.  When moving the cursor scroll to the cursor position.
-8   Add commands for argument list manipulation:
-	:add <file>	    add file to arglist
-	:remove [file]	    remove file from arglist (default: current)
-    -> Buffer list contains all buffers that have been accessed some way.
-    -> Arglist contains files that user is working on.
 9   It is possible to create the same swap file twice, when there is latency
     in the system (and 'directory' is ~/tmp). (Soulier)
     Create the swap file as soon as its name is chosen, when mf_fname is set.
@@ -1256,7 +1264,6 @@ Documentation:
 
 
 Help:
-8   When a help window is closed, delete the help buffer from the buffer list?
 -   First try using the ":help" argument literally, before using it as a
     pattern.  And then match it as part of a tag.
 -   Use GNU Texinfo for the help files somehow?  Use Info format files?
@@ -1284,6 +1291,11 @@ Help:
 Syntax highlighting:
 8   Allow the user to add items to the Syntax menu sorted, without having to
     change this for each release.
+8   Add a "matchcontains" for regions: items containd in the start or end
+    pattern, but not in the body.
+8   Add a "keepend-contained" argument: Don't change the end of an item this
+    one is contained in.  Like "keepend" but specified on the contained item,
+    instead of the containing item.
 8   Add a "containedin" argument, to later add contained items (e.g., to
     highlight a name in a comment).
 8   For keywords, allow to define the size of the hash table with ":syn
@@ -1513,6 +1525,7 @@ Built-in script language:
 
 Code cleanup:
 8   Put command line history in a feature, disabled for "tiny" version.
+8   Put jumplist in a feature, disabled for "small" version.
 
 
 Performance:
@@ -1572,6 +1585,7 @@ Performance:
     - highlighting "~/vim/test/longline.tex", "~/vim/test/scwoop.tcl" and
       "~/vim/test/lockup.pl".
     - loading a syntax file to highlight all words not from a dictionary.
+    - editing a vim script with syntax highlighting on (loading vim.vim).
 7   Screen updating can be further improved by only redrawing lines that were
     changed (and lines after them, when syntax highlighting was used, and it
     changed).
@@ -2233,9 +2247,6 @@ Visual mode:
 
 
 Quickfix:
-9   Change the ":colder" MRU list into a stack?  Makes it possible to do a
-    ":grep" with many matches and then do other ":grep"s without losing the
-    original error list.
 8   Quickfix mode: Column number should be interpreted with an 8-character
     tabstop.
 
@@ -2525,7 +2536,6 @@ Viminfo:
     same files in the windows.  Use ":mksession" code?
 -   Make marks present in .viminfo usable as file marks: Display a list of
     "last visited files" and select one to jump to.
--   Add jumplist to viminfo file, so that CTRL-O can be used.
 
 
 Modelines:
@@ -2700,7 +2710,6 @@ Substitute:
 
 
 Mouse support:
-8   Move code common to jump_to_mouse() and get_fpos_of_mouse() together.
 8   Add 'mouse' flag, which sets a behavior like Visual mode, but automatic
     yanking at the button-up event.  Or like Select mode, but typing gets you
     out of Select mode, instead of replacing the text. (Bhaskar)
@@ -2720,21 +2729,10 @@ Crypt:
 
 
 Argument list:
-7   Make an argument list per window.  ":argnew <file> .."?
-    And/or: Add the possibility to use more than one argument list: ":arglist
-    2".
-    Would require commands to switch to another argument list too.
-    Simpler: just have one global arglist and one local to each window.
-7   Add a symbol like % or # that stands for the whole argument list.  Useful
-    for ":grep".
-6   Add command to add or remove files from the argument list.  Useful when
-    doing commands for all files in the argument list.
-    ":argadd <file> .." and ":argdel <file> .."?
 6   Add command to put all filenames from the tag files in the argument list.
     When given an argument, only use the files where that argument matches
     (like `grep -l ident`) and jump to the first match.
 6   Add command to form an args list from all the buffers?
-7   Allow multiple arguments for ":edit", add them to the argument list.
 
 
 Registers:
@@ -2813,6 +2811,9 @@ Various improvements:
 8   For the "--more--" prompt, support the 'b'ack command for more commands.
 7   "g CTRL-O" jumps back to last used buffer.	Skip CTRL-O jumps in the same
     buffer.  Make jumplist remember the last ten accessed buffers?
+-   Keep a list of most recently used files for each window, use "[o" to go
+    back (older file) and "]n" to go forward (newer file) (like ^O and ^I for
+    jumps) (Webb). Use ":files" and ":ls" to list the files in history order.
 7   Add a history of recently accessed buffer.	Maybe make "2 CTRL-^" jump to
     the 2nd previously visited buffer, "3 CTRL-^" to the third, etc.  Or use
     "3 g CTRL-^" for this?
@@ -2946,9 +2947,6 @@ Various improvements:
     mapping starts, restore it when an error aborts the mapping?
 -   Use a builtin grep command for ":grep"?  Makes it possible to add the
     column number.
--   Keep a list of most recently used files for each window, use "[o" to go
-    back (older file) and "]n" to go forward (newer file) (like ^O and ^I for
-    jumps) (Webb). Use ":files" and ":ls" to list the files in history order.
 -   Change ":fixdel" into option 'fixdel', t_del will be adjusted each time
     t_bs is set? (Webb)
 -   "gc": goto character, move absolute character positions forward, also
@@ -3161,9 +3159,6 @@ Far future and "big" extensions:
     Vim users, C programmers, xterm users, GUI users,...
 -   Add a mode to only view text.  Like Less, but with syntax highlighting
     etc.
--   Add some way to display manpages, with tags highlighted to jump to
-    locations in the same or other manpages.  Requires generating a tags file
-    for manpages.
 -   Change layout of blocks in swap file: Text at the start, with '\n' in
     between lines (just load the file without changes, except for Mac).
     Indexes for lines are from the end of the block backwards.  It's the

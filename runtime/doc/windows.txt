@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.0m.  Last change: 2000 Nov 12
+*windows.txt*   For Vim version 6.0n.  Last change: 2000 Nov 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -675,6 +675,7 @@ CTRL-W g }						*CTRL-W_g}*
 A hidden buffer is not displayed in a window, but is still loaded into memory.
 This makes it possible to jump from file to file, without the need to read or
 write the file every time you get another buffer in a window.
+{not available when compiled without the |+listcmds| feature}
 
 							*:buffer-!*
 If the option 'hidden' ('hid') is set, abandoned buffers are kept for all

@@ -55,8 +55,10 @@
  * if_perl.h, because we get all sorts of name clashes then.
  */
 #ifndef PROTO
+#ifndef __MINGW32__
 # include "proto/if_perl.pro"
 # include "proto/if_perlsfio.pro"
+#endif
 #endif
 
 // static void *perl_interp = NULL;
@@ -808,7 +810,7 @@ Windows(...)
 	    XPUSHs(sv_2mortal(newSViv(win_count())));
 	else
 	{
-	    for (vimwin = firstwin; vimwin != NULL; vimwin = vimwin->w_next)
+	    for (vimwin = firstwin; vimwin != NULL; vimwin = W_NEXT(vimwin))
 		XPUSHs(newWINrv(newSV(0), vimwin));
 	}
     }
