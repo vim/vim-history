@@ -2640,6 +2640,20 @@ if test "x$MACOSX" = "xyes" -a -n "$PERL"; then
   fi
 fi
 
+if test "x$MACOSX" = "xyes" && test "x$CARBON" = "xyes" \
+	&& test "x$GUITYPE" != "xCARBONGUI"; then
+  AC_MSG_CHECKING(whether we need -framework Carbon)
+  dnl check for MACOSX without Carbon GUI, but with FEAT_MBYTE
+  if test "x$enable_multibyte" = "xyes" || test "x$features" == "xbig" \
+	|| test "x$features" = "xhuge"; then
+    LIBS="$LIBS -framework Carbon"
+    AC_MSG_RESULT(yes)
+  else
+    AC_MSG_RESULT(no)
+  fi
+fi
+
+
 dnl write output files
 AC_OUTPUT(auto/config.mk:config.mk.in)
 

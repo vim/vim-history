@@ -8249,6 +8249,20 @@ if test "x$MACOSX" = "xyes" -a -n "$PERL"; then
   fi
 fi
 
+if test "x$MACOSX" = "xyes" && test "x$CARBON" = "xyes" \
+	&& test "x$GUITYPE" != "xCARBONGUI"; then
+  echo $ac_n "checking whether we need -framework Carbon""... $ac_c" 1>&6
+echo "configure:8260: checking whether we need -framework Carbon" >&5
+    if test "x$enable_multibyte" = "xyes" || test "x$features" == "xbig" \
+	|| test "x$features" = "xhuge"; then
+    LIBS="$LIBS -framework Carbon"
+    echo "$ac_t""yes" 1>&6
+  else
+    echo "$ac_t""no" 1>&6
+  fi
+fi
+
+
 trap '' 1 2 15
 cat > confcache <<\EOF
 # This file is a shell script that caches the results of configure
