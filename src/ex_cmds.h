@@ -565,6 +565,8 @@ EX(CMD_sbprevious,	"sbprevious",	ex_bprevious,
 			RANGE|NOTADR|COUNT|TRLBAR),
 EX(CMD_sbrewind,	"sbrewind",	ex_brewind,
 			TRLBAR),
+EX(CMD_scriptnames,	"scriptnames",	ex_scriptnames,
+			TRLBAR),
 EX(CMD_set,		"set",		ex_set,
 			TRLBAR|EXTRA),
 EX(CMD_setfiletype,	"setfiletype",	ex_setfiletype,
@@ -771,12 +773,15 @@ EX(CMD_tilde,		"~",		do_sub,
 #ifndef DO_DECLARE_EXCMD
 #ifdef FEAT_USR_CMDS
     CMD_SIZE,		/* MUST be after all real commands! */
-    CMD_USER = -1	/* User-defined command */
+    CMD_USER = -1,	/* User-defined command */
+    CMD_USER_BUF = -2	/* User-defined command local to buffer */
 #else
     CMD_SIZE	/* MUST be the last one! */
 #endif
 #endif
 };
+
+#define USER_CMDIDX(idx) ((int)(idx) < 0)
 
 #ifndef DO_DECLARE_EXCMD
 typedef enum CMD_index cmdidx_t;

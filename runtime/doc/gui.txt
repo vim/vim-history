@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0i.  Last change: 2000 Aug 22
+*gui.txt*       For Vim version 6.0j.  Last change: 2000 Oct 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -499,6 +499,12 @@ included they make the <> form and raw key codes not being recognized).
 Note that <Esc> in Cmdline mode executes the command, like in a mapping.  This
 is Vi compatible.  Use CTRL-C to quit Cmdline mode.
 
+							*:menu-<script>*
+The "to" part of the menu will be inspected for mappings.  If you don't want
+this, use the ":noremenu" command (or the similar one for a specific mode).
+If you do want to use script-local mappings, add "<script>" as the very first
+argument to the ":menu" command.
+
 							*menu-priority*
 You can give a priority to a menu.  Menus with a higher priority go more to
 the right.  The priority is given as a number before the ":menu" command.
@@ -626,8 +632,11 @@ specified is a submenu, then all menus under that hierarchy will be shown.
 If no argument is given after :menu at all, then ALL menu items are shown
 for the appropriate mode (eg, Command-line mode for :cmenu).
 
-When the menu was defined with "nore" to disallow remapping, a "*" is used
-in the list.  When the menu was disabled a "-" is used in the list.
+Special characters in the list, just before the rhs:
+*	The menu was defined with "nore" to disallow remapping.
+&	The menu was defined with "<script>" to allow remapping script-local
+	mappings only.
+-	The menu was disabled.
 
 Note that hitting <Tab> while entering a menu name after a menu command may
 be used to complete the name of the menu item.

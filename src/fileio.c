@@ -102,7 +102,7 @@ filemess(buf, name, s, attr)
      * calling filemess().
      */
     msg_scroll_save = msg_scroll;
-    if (shortmess(SHM_OVERALL) && !exiting)
+    if (shortmess(SHM_OVERALL) && !exiting && p_verbose == 0)
 	msg_scroll = FALSE;
     if (!msg_scroll)	/* wait a bit when overwriting an error msg */
 	check_for_delay(FALSE);
@@ -246,7 +246,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
     }
 #endif
 
-    if (shortmess(SHM_OVER) || curbuf->b_help)
+    if ((shortmess(SHM_OVER) || curbuf->b_help) && p_verbose == 0)
 	msg_scroll = FALSE;	/* overwrite previous file message */
     else
 	msg_scroll = TRUE;	/* don't overwrite previous file message */
@@ -3907,6 +3907,9 @@ typedef struct AutoCmd
 					   when command has been removed) */
     char	    nested;		/* If autocommands nest here */
     char	    last;		/* last command in list */
+#ifdef FEAT_EVAL
+    long	    scriptID;		/* script ID where defined */
+#endif
     struct AutoCmd  *next;		/* Next AutoCmd in list */
 } AutoCmd;
 
@@ -4707,6 +4710,9 @@ do_autocmd_event(event, pat, nested, cmd, forceit, group)
 	    if (ac == NULL)
 		return FAIL;
 	    ac->cmd = vim_strsave(cmd);
+#ifdef FEAT_EVAL
+	    ac->scriptID = current_SID;
+#endif
 	    if (ac->cmd == NULL)
 	    {
 		vim_free(ac);
@@ -4973,6 +4979,7 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf)
     AutoPatCmd	patcmd;
     AutoPat	*ap;
 #ifdef FEAT_EVAL
+    long	save_current_SID;
     void	*save_funccalp;
 #endif
 
@@ -5134,6 +5141,8 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf)
     sourcing_lnum = 0;		/* no line number here */
 
 #ifdef FEAT_EVAL
+    save_current_SID = current_SID;
+
     /* Don't use local function variables, if called from a function */
     save_funccalp = save_funccal();
 #endif
@@ -5194,6 +5203,7 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf)
     autocmd_bufnr = save_autocmd_bufnr;
     autocmd_match = save_autocmd_match;
 #ifdef FEAT_EVAL
+    current_SID = save_current_SID;
     restore_funccal(save_funccalp);
 #endif
     vim_free(fname);
@@ -5297,6 +5307,7 @@ getnextac(c, cookie, indent)
 {
     AutoPatCmd	    *acp = (AutoPatCmd *)cookie;
     char_u	    *retval;
+    AutoCmd	    *ac;
 
     /* Can be called again after returning the last line. */
     if (acp->curpat == NULL)
@@ -5326,19 +5337,24 @@ getnextac(c, cookie, indent)
 	    return NULL;
     }
 
+    ac = acp->nextcmd;
+
     if (p_verbose >= 9)
     {
 	msg_scroll = TRUE;	    /* always scroll up, don't overwrite */
-	smsg((char_u *)_("autocommand %s"), acp->nextcmd->cmd);
+	smsg((char_u *)_("autocommand %s"), ac->cmd);
 	msg_puts((char_u *)"\n");   /* don't overwrite this either */
 	cmdline_row = msg_row;
     }
-    retval = vim_strsave(acp->nextcmd->cmd);
-    autocmd_nested = acp->nextcmd->nested;
-    if (acp->nextcmd->last)
+    retval = vim_strsave(ac->cmd);
+    autocmd_nested = ac->nested;
+#ifdef FEAT_EVAL
+    current_SID = ac->scriptID;
+#endif
+    if (ac->last)
 	acp->nextcmd = NULL;
     else
-	acp->nextcmd = acp->nextcmd->next;
+	acp->nextcmd = ac->next;
     return retval;
 }
 

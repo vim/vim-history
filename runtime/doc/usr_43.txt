@@ -1,4 +1,4 @@
-*usr_43.txt*	For Vim version 6.0i.  Last change: 2000 Oct 15
+*usr_43.txt*	For Vim version 6.0j.  Last change: 2000 Oct 20
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -20,29 +20,8 @@ When you are editing a certain kind of file you tend to use the same option
 values and mappings, but different from when editing other files.  And you
 don't want to set these manually each time.  Vim has support for this.
 
-First of all, Vim will recognize the filetype.  This is done by looking at the
-file name and sometimes by inspecting a few lines in the file.  Then it will
-load scripts specifially for that filetype.  Both ones that were provided with
-Vim and scripts you have added yourself.
-
-To use the provided plugins, use this command: >
-	:filetype plugin on
-Then edit a C language file.  You will notice that the 'cindent' option has
-been switched on, so that indents are automatically adjusted.  The same
-happens for other filetypes.  You can look in the directory
-$VIMRUNTIME/ftplugin to see which filetypes have plugins.  For most files
-there is also a section in the help file |filetype.txt|.
-
-							*maplocalleader*
-Some of the settings files define mappings.  But since you can also define
-mappings yourself, these default mappings need to know which key sequence they
-can safely use.  You can to define this with the variable "maplocalleader".
-For example, you could use an underscore: >
-	:let maplocalleader = '_'
-If you now edit a mail message, you will notice the mapping "_q" has been
-defined, which quotes lines.  The default for "maplocalleader" is a backslash.
-Also see |filetype-plugins|.
-
+How to start using filetype plugins has alread been discussed here:
+|add-filetype-plugin|.
 
 But you probably are not satisfied with the default settings, because they
 have been kept minimal.  Suppose that for C files you want to set the
@@ -65,7 +44,7 @@ You do this with only two steps:			*your-runtime-dir*
 
 2. Create the file "~/.vim/ftplugin/c/c.vim", with the contents: >
 	setlocal softtabstop=4
-	map <buffer> <LocalLeader>c o/**************<CR><CR>/<Esc>
+	noremap <buffer> <LocalLeader>c o/**************<CR><CR>/<Esc>
 
 Try editing a C file.  You should notice that the 'softtabstop' option is set
 to 4.  But when you edit another file it's reset to the default zero.  That is
@@ -79,6 +58,10 @@ Also, the mapping for "\c" will disappear when editing another buffer.  The
 This works with any mapping command: ":map!", ":vmap", etc.  The
 |<LocalLeader>| in the mapping is replaced with the value of "maplocalleader".
 
+You can find examples for filetype plugins below this directory: >
+	$VIMRUNTIME/ftplugin/
+More details about writing a filetype plugin can be found here:
+|write-plugin|.
 
 ==============================================================================
 *43.2*  Adding a filetype

@@ -777,8 +777,8 @@ do_filter(line1, line2, eap, cmd, do_in, do_out)
      * 6. Remove the temp files
      */
 
-    if ((do_in && (itmp = vim_tempname('i')) == NULL) ||
-			       (do_out && (otmp = vim_tempname('o')) == NULL))
+    if ((do_in && (itmp = vim_tempname('i')) == NULL)
+	    || (do_out && (otmp = vim_tempname('o')) == NULL))
     {
 	EMSG(_(e_notmp));
 	goto filterend;
@@ -2111,7 +2111,7 @@ do_wqall(eap)
 #endif
 	    if (buf->b_ffname == NULL)
 	    {
-		EMSG(_(e_noname));
+		EMSG2(_("No file name for buffer %d"), buf->b_fnum);
 		++error;
 	    }
 	    else if (check_readonly(&eap->forceit, buf)
@@ -4156,8 +4156,8 @@ ex_help(eap)
     /*
      * Always set these options after jumping to a help tag, because the user
      * may have an autocommand that gets in the way.
-     * accept all chars for keywords, except ' ', '*', '"', '|'.  Only set it
-     * when needed, buf_init_chartab() is some work.
+     * accept all chars for keywords, except ' ', '*', '"', '|'.
+     * Only set it when needed, buf_init_chartab() is some work.
      */
     p =
 #ifdef EBCDIC

@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0i.  Last change: 2000 Oct 15
+*version6.txt*  For Vim version 6.0j.  Last change: 2000 Oct 22
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -21,7 +21,8 @@ CR in substitute command		|substitute-CR|
 'include' option local			|include-local|
 global option values used		|new-global-values|
 'fileencoding' obsolete			|fileencoding-obsolete|
-filetype detection changed		|filetypedetect-changed|
+Digraphs changed			|digraphs-changed|
+Filetype detection changed		|filetypedetect-changed|
 CTRL-U in Command-line mode		|CTRL-U-changed|
 Ctags gone				|ctags-gone|
 Documentation				|documentation-6|
@@ -111,7 +112,14 @@ in all buffers was interpreted.  The FileEncoding autocommand now does the
 same as the new CharCode event.
 
 
-filetype detection changed			*filetypedetect-changed*
+Digraphs changed				*digraphs-changed*
+----------------
+
+The default digraphs now correspond to RFC1345.  This is different from
+what was used in Vim 5.x. |digraphs|
+
+
+Filetype detection changed			*filetypedetect-changed*
 --------------------------
 
 The filetype detection previously was using the "filetype" autocommand group.
@@ -332,6 +340,9 @@ Multi-byte:
 - Added Korean support for character class detection.  Also fix cls() in
   search.c. (Chong-Dae Park)
 
+Allow defining digraphs for multi-byte characters.
+Added RFC1345 digraphs for Unicode.
+
 
 Multi-language support					*new-multi-lang*
 ----------------------
@@ -368,6 +379,8 @@ Added the ":helptags" command: Generate a tags file for a help directory.
 The first line of each help file is automagically added to the "LOCAL
 ADDITIONS" section in doc/help.txt.
 
+<unique> argument to ":map": only add a mapping when it wasn't defined before.
+
 
 Filetype plugins				*new-filetype-plugins*
 -----------------
@@ -381,7 +394,9 @@ makes it possible to use several sets of plugins: Your own, system-wide,
 included in the Vim distribution, etc.
 
 To be able to make this work, several features were added:
-- Added the "s:" variables, local to a script.  Avoids name conflicts and
+- Added the "s:" variables, local to a script.  Avoids name conflicts with
+  global variables.  They can be used in the script and in functions,
+  autocommands and user commands defined in the script. |s:var|
   automatically deletes them when the script ends.
 - Added the global value for local options.  This value is used when opening
   a new buffer or editing another file.  The option value specified in a
@@ -395,6 +410,11 @@ To be able to make this work, several features were added:
   variable.  This simplifies mappings that use "mapleader".  "<Leader>"
   defaults to "\".  "<LocalLeader>" does the same with "maplocalleader".  This
   is to be used for mappings local to a buffer.
+- Added <SID> Script ID to define functions and mappings local to a script.
+- Added <script> argument to ":noremap" and ":noremenu": Only remap
+  script-local mappings.  Avoids that mappings from other scripts get in the
+  way, but does allow using mappings defined in the script.
+- User commands can be local to a buffer: ":command -buffer".
 
 The new ":setfiletype" command is used in the filetype detection autocommands,
 to avoid that 'filetype' is set twice.
@@ -442,6 +462,8 @@ Included jsbmouse support. (Darren Garth)
 Support for dec mouse in Unix. (Steve Wall)
 
 Port to 16-bit MS Windows (Windows 3.1x) (Vince Negri)
+
+Allow cross-compiling the Win32 version with Make_ming.mak. (Ron Aaron)
 
 
 Quickfix extended					*quickfix-6*
@@ -535,9 +557,19 @@ New marks:
 New functions:
 foldclosed()	Find out if there is a closed fold. (Johannes Zellner).
 foldlevel()	Find out the foldlevel. (Johannes Zellner)
+getbufvar()	gets the value of an option or local variable in a buffer (Ron
+		Aaron)
 getfsize()	Return the size of a file.
+getwinvar()	gets the value of an option or local variable in a window (Ron
+		Aaron)
 hasmapto()	Detect if a mapping to a string is already present.
+indent()	gets the indent of a line (Ron Aaron)
+libcall()	for Unix (Neil Bird, Johannes Zellner, Stephen Wall)
+libcallnr()	for Win32 and Unix
+mode()		Return a string that indicates the current mode.
 search()	Search for a pattern.
+setbufvar()	sets an option or variable local to a buffer (Ron Aaron)
+setwinvar()	sets an option or variable local to a window (Ron Aaron)
 skipblank()	Skip blank lines.  Useful to for indent scripts.
 stridx()	Search for first occurrence of one string in another.
 strridx()	Search for last occurrence of one string in another.
@@ -545,15 +577,6 @@ tolower()	Convert string to all-lower case.
 toupper()	Convert string to all-upper case.
 type()		Check the type of an expression.
 winwidth()	Width of a window. (Johannes Zellner)
-getwinvar()	gets the value of an option or local variable in a window (Ron
-		Aaron)
-getbufvar()	gets the value of an option or local variable in a buffer (Ron
-		Aaron)
-indent()	gets the indent of a line (Ron Aaron)
-setwinvar()	sets an option or variable local to a window (Ron Aaron)
-setbufvar()	sets an option or variable local to a buffer (Ron Aaron)
-libcall()	for Unix (Neil Bird, Johannes Zellner, Stephen Wall)
-libcallnr()	for Win32 and Unix
 
 The ":command" command now accepts a "-bar" argument.  This allows the user
 command to be followed by "| command".
@@ -580,7 +603,7 @@ never moved or $PATH changed.  A small batch file is created in a directory in
 $PATH.  Less choices to be made.
 
 The window title now has "VIM" on the end.  The file name comes first, useful
-in the taskbar.  A "+" is added when the file is modified.  "RO" is added for
+in the taskbar.  A "+" is added when the file is modified.  "=" is added for
 a read-only file.
 
 Added "b:changedtick" variable.  Incremented at each change, also for undo.
@@ -627,6 +650,9 @@ Win32 console version:
 - Set the window icon to Vim's icon (only for Windows 2000).  While executing
   a shell command, modify the window title to show this.  When exiting,
   restore the cursor position too.  (Craig Barkhouse)
+
+Win32: When $HOMEDRIVE and $HOMEPATH are defined, use them to define $HOME.
+(Craig Barkhouse)
 
 Added keypad special keys <kEnter>, <k0> - <k9>.  When not mapped they behave
 like the ASCII equivalent. (Ivan Wellesz and Vince Negri)
@@ -700,6 +726,8 @@ Cscope: (kahn)
 cscope_connection() function.
 ":cscope kill -1" kills all cscope connections.
 
+exists() can also be used to check for Ex commands.
+
 VMS: Command line arguments are always uppercase.  Interpret a "-X" argument
 as "-x" and "-/X" as "-X".
 
@@ -748,6 +776,12 @@ Added "=word" and "=~word" to 'cinkeys' (also used in 'indentkeys').
 
 When doing Insert mode completion, when completion is finished check for a
 match with words from 'cinkeys' or 'indentkeys'.
+
+When doing ":wall" or ":wqall" and a modified buffer doesn't have a name,
+mention its buffer number in the error message.
+
+":function Name" lists the function with line numbers.  Makes it easier to
+find out where an error happened.
 
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
@@ -862,5 +896,19 @@ Mac: Also accept tags files in DOS format. (Axel Kielhorn)
 
 Pasting a register containing CTRL-R on the command line could cause an
 endless loop that can't be interrupted.  Now it can be stopped with CTRL-C.
+
+When 'verbose' is set, a message for file read/write could overwrite the
+previous message.
+When 'verbose' is set, the header from ":select" was put after the last
+message.  Now start a new line.
+
+The hit-return prompt reacted to the the response of the t_RV string, causing
+messages at startup to disappear.
+
+When t_Co was set to 1, colors were still used.  Now only use color when t_Co
+> 1.
+
+Listing functions with ":function" didn't quit when 'q' or ':' was typed at
+the more prompt.
 
  vim:tw=78:

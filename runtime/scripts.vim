@@ -1,7 +1,7 @@
 " Vim support file to detect file types in scripts
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Oct 15
+" Last change:	2000 Oct 21
 
 " This file is called by an autocommand for every file that has just been
 " loaded into a buffer.  It checks if the type of file can be recognized by
@@ -26,7 +26,7 @@ set cpo-=C
 let s:line1 = getline(1)
 
 " Bourne-like shell scripts: sh ksh bash bash2
-if s:line1 =~ '^#!.*[/\\]\(bash\|bash2\|ksh\|sh\)\>'
+if s:line1 =~ '^#!.*[/\\]\(bash\|bash2\|ksh\|sh\)\>' || s:line1 =~ '^:$'
   call SetFileTypeSH(s:line1)	" defined in filetype.vim
 
 " csh and tcsh scripts
@@ -176,3 +176,5 @@ endif
 
 " Restore 'cpoptions'
 let &cpo = s:cpo_save
+
+unlet s:cpo_save s:line1

@@ -688,6 +688,10 @@ get_x11_windis(void)
     if (result != -1)		/* Have already been here and set this */
 	return result;		/* Don't do all these X calls again */
 
+    /* When started with the "-X" argument, don't try connecting. */
+    if (x_no_connect)
+	return FAIL;
+
     /*
      * If WINDOWID not set, should try another method to find out
      * what the current window number is. The only code I know for

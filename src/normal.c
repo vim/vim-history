@@ -3312,7 +3312,7 @@ nv_screengo(oap, dir, dist)
 	    n = ((linelen - width1 - 1) / width2 + 1) * width2 + width1;
 	else
 	    n = width1;
-	if (curwin->w_curswant > n + 1)
+	if (curwin->w_curswant > (colnr_t)n + 1)
 	    curwin->w_curswant -= ((curwin->w_curswant - n) / width2 + 1)
 								     * width2;
     }
@@ -6026,7 +6026,7 @@ nv_g_cmd(cap)
 
 	    validate_virtcol();
 	    i = 0;
-	    if (curwin->w_virtcol >= width1 && width2 > 0)
+	    if (curwin->w_virtcol >= (colnr_t)width1 && width2 > 0)
 		i = (curwin->w_virtcol - width1) / width2 * width2 + width1;
 	}
 	else
@@ -6088,7 +6088,7 @@ nv_g_cmd(cap)
 
 		    validate_virtcol();
 		    i = width1 - 1;
-		    if (curwin->w_virtcol >= width1)
+		    if (curwin->w_virtcol >= (colnr_t)width1)
 			i += ((curwin->w_virtcol - width1) / width2 + 1)
 								     * width2;
 		    coladvance((colnr_t)i);

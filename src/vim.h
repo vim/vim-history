@@ -546,6 +546,12 @@ typedef unsigned short u8char_t;
 #define KEY_OPEN_BACK	0x102
 #define KEY_COMPLETE	0x103	/* end of completion */
 
+/* Values for "noremap" argument of ins_typebuf().  Also used for
+ * map->m_noremap and menu->noremap[]. */
+#define REMAP_YES	0	/* allow remapping */
+#define REMAP_NONE	-1	/* no remapping */
+#define REMAP_SCRIPT	-2	/* remap script-local mappings only */
+
 /* Values for mch_call_shell() second argument */
 #define SHELL_FILTER	1	/* filtering text */
 #define SHELL_EXPAND	2	/* expanding wildcards */

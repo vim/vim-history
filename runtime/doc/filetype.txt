@@ -1,4 +1,4 @@
-*filetype.txt*   For Vim version 6.0i.  Last change: 2000 Oct 15
+*filetype.txt*   For Vim version 6.0j.  Last change: 2000 Oct 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -264,7 +264,9 @@ define yourself.  There are a few ways to avoid this:
 
 
 Docs for the default filetype plugins.
-							*mail-plugin*
+
+MAIL							*mail-plugin*
+
 Options:
 'modeline'	is switched off to avoid the danger of trojan horses, and to
 		avoid that a Subject line with "Vim:" in it will cause an
@@ -279,5 +281,25 @@ Local mappings:
 	Quotes the text selected in Visual mode, or from the cursor position
 	to the end of the file in Normal mode.  This means "> " is inserted in
 	each line.
+
+MAN							*man-plugin*
+
+Displays a manual page in a nice way.
+
+To start using the ":Man" command before any manual page was loaded, source
+this script from your startup vimrc file: >
+
+	runtime ftplugin/man/default.vim
+
+Options:
+'iskeyword'	the '.' character is added to be able to use CTRL-] on the
+		manual page name.
+
+Commands:
+Man {name}	Display the manual page for {name} in a window.
+
+Local mappings:
+CTRL-]		Jump to the manual page for the word under the cursor.
+CTRL-T		Jump back to the previous manual page.
 
  vim:tw=78:

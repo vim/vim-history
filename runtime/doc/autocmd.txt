@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 6.0i.  Last change: 2000 Sep 21
+*autocmd.txt*   For Vim version 6.0j.  Last change: 2000 Oct 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -92,6 +92,11 @@ with ":au group ..."; use ":augroup" for that.
 While testing autocommands, you might find the 'verbose' option to be useful: >
 	:set verbose=9
 This setting makes Vim echo the autocommands as it executes them.
+
+When defining an autocommand in a script, it will be able to call functions
+local to the script and use mappings local the the script.  When the event is
+triggered and the command executed, it will run in the context of the script
+it was defined in.  This matters if |<SID>| is used in a command.
 
 ==============================================================================
 3. Removing autocommands				*autocmd-remove*

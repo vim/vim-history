@@ -268,7 +268,7 @@ typedef DWORD (WINAPI *PSNSECINFO) (LPTSTR, enum SE_OBJECT_TYPE,
 typedef DWORD (WINAPI *PGNSECINFO) (LPSTR, enum SE_OBJECT_TYPE,
 	SECURITY_INFORMATION, PSID *, PSID *, PACL *, PACL *,
 	PSECURITY_DESCRIPTOR *);
-static HANDLE advapi_lib;	/* Handle for ADVAPI library */
+static HANDLE advapi_lib = NULL;	/* Handle for ADVAPI library */
 static PSNSECINFO pSetNamedSecurityInfo;
 static PGNSECINFO pGetNamedSecurityInfo;
 
@@ -297,17 +297,28 @@ PlatformId(void)
 	if (g_PlatformId == VER_PLATFORM_WIN32_NT)
 	{
 	    /*
-	     * do this load.  Problems:  Doesn't unload at end of run (this is
+	     * do this load.  Problems: Doesn't unload at end of run (this is
 	     * theoretically okay, since Windows should unload it when VIM
 	     * terminates).  Should we be using the 'mch_libcall' routines?
 	     * Seems like a lot of overhead to load/unload ADVAPI32.DLL each
 	     * time we verify security...
 	     */
 	    advapi_lib = LoadLibrary("ADVAPI32.DLL");
-	    pSetNamedSecurityInfo = (PSNSECINFO)GetProcAddress(advapi_lib,
-						      "SetNamedSecurityInfo");
-	    pGetNamedSecurityInfo = (PGNSECINFO)GetProcAddress(advapi_lib,
-						      "GetNamedSecurityInfo");
+	    if (advapi_lib != NULL)
+	    {
+		pSetNamedSecurityInfo = (PSNSECINFO)GetProcAddress(advapi_lib,
+						      "SetNamedSecurityInfoA");
+		pGetNamedSecurityInfo = (PGNSECINFO)GetProcAddress(advapi_lib,
+						      "GetNamedSecurityInfoA");
+		if (pSetNamedSecurityInfo == NULL
+			|| pGetNamedSecurityInfo == NULL)
+		{
+		    /* If we can't get the function addresses, set advapi_lib
+		     * to NULL so that we don't use them. */
+		    FreeLibrary(advapi_lib);
+		    advapi_lib = NULL;
+		}
+	    }
 	}
 	done = TRUE;
     }
@@ -1632,7 +1643,11 @@ static ConsoleBuffer g_cbNonTermcap = { 0 };
 static ConsoleBuffer g_cbTermcap = { 0 };
 
 #ifdef FEAT_TITLE
+#ifdef __BORLANDC__
+typedef HWND (__stdcall *GETCONSOLEWINDOWPROC)(VOID);
+#else
 typedef WINBASEAPI HWND (WINAPI *GETCONSOLEWINDOWPROC)(VOID);
+#endif
 static char g_szOrigTitle[256] = { 0 };
 static HWND g_hWnd = NULL;
 static HICON g_hOrigIconSmall = NULL;
@@ -2326,14 +2341,8 @@ mch_nodetype(char_u *name)
     return NODE_OTHER;
 }
 
-/*
- * Mingw doesn't have the acl stuff.
- * Borland only in version 5.5 and later.
- */
-#if !defined(__MINGW32__) && (!defined(__BORLANDC__) || __BORLANDC__ >= 0x550)
+#ifdef HAVE_ACL
 # include <aclapi.h>
-
-# define HAVE_ACL
 
 struct my_acl
 {
@@ -2359,7 +2368,7 @@ mch_get_acl(fname)
     struct my_acl   *p = NULL;
 
     /* This only works on Windows NT and 2000. */
-    if (g_PlatformId == VER_PLATFORM_WIN32_NT)
+    if (g_PlatformId == VER_PLATFORM_WIN32_NT && advapi_lib != NULL)
     {
 	p = (struct my_acl *)alloc_clear((unsigned)sizeof(struct my_acl));
 	if (p != NULL)
@@ -2402,7 +2411,7 @@ mch_set_acl(fname, acl)
 #ifdef HAVE_ACL
     struct my_acl   *p = (struct my_acl *)acl;
 
-    if (p != NULL)
+    if (p != NULL && advapi_lib != NULL)
 	(void)pSetNamedSecurityInfo(
 		    (LPTSTR)fname,		// Abstract filename
 		    SE_FILE_OBJECT,		// File Object

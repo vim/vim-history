@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Oct 15
+" Last Change:	2000 Oct 21
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -190,166 +190,166 @@ if !exists("no_buffers_menu")
 
 " wait with building the menu until after loading 'session' files. Makes
 " startup faster.
-let bmenu_wait = 1
+let s:bmenu_wait = 1
 
 if !exists("bmenu_priority")
-    let bmenu_priority = 60
+  let bmenu_priority = 60
 endif
 
-func! BmenuAdd()
-    if g:bmenu_wait == 0
-	call BMenuFilename(expand("<afile>"), expand("<abuf>"))
-    endif
+func! <SID>BMAdd()
+  if s:bmenu_wait == 0
+    call <SID>BMFilename(expand("<afile>"), expand("<abuf>"))
+  endif
 endfunc
 
-func! BmenuRemove()
-    if g:bmenu_wait == 0
-	let munge = BmenuMunge(expand("<afile>"), expand("<abuf>"))
+func! <SID>BMRemove()
+  if s:bmenu_wait == 0
+    let munge = <SID>BMMunge(expand("<afile>"), expand("<abuf>"))
 
-	if g:bmenu_short == 0
-	    exe 'aun &Buffers.' . munge
-	else
-	    exe 'aun &Buffers.' . BmenuHash2(munge) . munge
-	endif
-	let g:bmenu_count = g:bmenu_count - 1
+    if s:bmenu_short == 0
+      exe 'aun &Buffers.' . munge
+    else
+      exe 'aun &Buffers.' . <SID>BMHash2(munge) . munge
     endif
+    let s:bmenu_count = s:bmenu_count - 1
+  endif
 endfunc
 
 " buffer menu stuff
-func! BmenuShow(...)
-    let g:bmenu_wait = 1
-    let g:bmenu_short = 1
-    let g:bmenu_count = 0
-    if version >= 600
-	let bmenu_cutoff = &menuitems
-    elseif exists('g:bmenu_cutoff')
-	let bmenu_cutoff = g:bmenu_cutoff
-    else
-	let bmenu_cutoff = &lines / 2
+func! <SID>BMShow(...)
+  let s:bmenu_wait = 1
+  let s:bmenu_short = 1
+  let s:bmenu_count = 0
+  if version >= 600
+    let bmenu_cutoff = &menuitems
+  elseif exists('g:bmenu_cutoff')
+    let bmenu_cutoff = g:bmenu_cutoff
+  else
+    let bmenu_cutoff = &lines / 2
+  endif
+  " remove old menu, if exists
+  exe g:bmenu_priority . 'am &Buffers.x x'
+  exe "aun &Buffers"
+
+  " get new priority, if exists
+  if a:0 == 1
+    let g:bmenu_priority = a:1
+  endif
+
+  " create new menu; make 'cpo' empty to include the <CR>
+  let cpo_save = &cpo
+  let &cpo = ""
+  exe 'am ' . g:bmenu_priority . ".2 &Buffers.Refresh :call <SID>BMShow()<CR>"
+  exe 'am ' . g:bmenu_priority . ".4 &Buffers.Delete :bd<CR>"
+  exe 'am ' . g:bmenu_priority . ".6 &Buffers.Alternate :b #<CR>"
+  exe 'am ' . g:bmenu_priority . ".8 &Buffers.-SEP- :"
+  let &cpo = cpo_save
+
+  " figure out how many buffers there are
+  let buf = 1
+  while buf <= bufnr('$')
+    if bufexists(buf)
+      let s:bmenu_count = s:bmenu_count + 1
     endif
-    " remove old menu, if exists
-    exe g:bmenu_priority . 'am &Buffers.x x'
-    exe "aun &Buffers"
+    let buf = buf + 1
+  endwhile
+  if s:bmenu_count < bmenu_cutoff
+    let s:bmenu_short = 0
+  endif
 
-    " get new priority, if exists
-    if a:0 == 1
-	let g:bmenu_priority = a:1
+  " iterate through buffer list, adding each buffer to the menu:
+  let buf = 1
+  while buf <= bufnr('$')
+    if bufexists(buf)
+      call <SID>BMFilename(bufname(buf), buf)
     endif
-
-    " create new menu; make 'cpo' empty to include the <CR>
-    let cpo_save = &cpo
-    let &cpo = ""
-    exe 'am ' . g:bmenu_priority . ".2 &Buffers.Refresh :call BmenuShow()<CR>"
-    exe 'am ' . g:bmenu_priority . ".4 &Buffers.Delete :bd<CR>"
-    exe 'am ' . g:bmenu_priority . ".6 &Buffers.Alternate :b #<CR>"
-    exe 'am ' . g:bmenu_priority . ".8 &Buffers.-SEP- :"
-    let &cpo = cpo_save
-
-    " figure out how many buffers there are
-    let buf = 1
-    while buf <= bufnr('$')
-	if bufexists(buf)
-	    let g:bmenu_count = g:bmenu_count + 1
-	endif
-	let buf = buf + 1
-    endwhile
-    if g:bmenu_count < bmenu_cutoff
-	let g:bmenu_short = 0
-    endif
-
-    " iterate through buffer list, adding each buffer to the menu:
-    let buf = 1
-    while buf <= bufnr('$')
-	if bufexists(buf)
-	    call BMenuFilename(bufname(buf), buf)
-	endif
-	let buf = buf + 1
-    endwhile
-    let g:bmenu_wait = 0
-    aug buffer_list
-	au!
-	au BufCreate,BufFilePost * call BmenuAdd()
-	au BufDelete,BufFilePre * call BmenuRemove()
-    aug END
+    let buf = buf + 1
+  endwhile
+  let s:bmenu_wait = 0
+  aug buffer_list
+  au!
+  au BufCreate,BufFilePost * call <SID>BMAdd()
+  au BufDelete,BufFilePre * call <SID>BMRemove()
+  aug END
 endfunc
 
-func! BmenuHash(name)
-    " Make name all upper case, so that chars are between 32 and 96
-    let nm = substitute(a:name, ".*", '\U\0', "")
-    if has("ebcdic")
-        " HACK: Replace all non alphabetics with 'Z'
-        "       Just to make it work for now.
-        let nm = substitute(nm, "[^A-Z]", 'Z', "g")
-        let sp = char2nr('A') - 1
-    else
-        let sp = char2nr(' ')
-    endif
-    " convert first six chars into a number for sorting:
-    return (char2nr(nm[0]) - sp) * 0x1000000 + (char2nr(nm[1]) - sp) * 0x40000 + (char2nr(nm[2]) - sp) * 0x1000 + (char2nr(nm[3]) - sp) * 0x40 + (char2nr(nm[4]) - sp) * 0x40 + (char2nr(nm[5]) - sp)
+func! <SID>BMHash(name)
+  " Make name all upper case, so that chars are between 32 and 96
+  let nm = substitute(a:name, ".*", '\U\0', "")
+  if has("ebcdic")
+    " HACK: Replace all non alphabetics with 'Z'
+    "       Just to make it work for now.
+    let nm = substitute(nm, "[^A-Z]", 'Z', "g")
+    let sp = char2nr('A') - 1
+  else
+    let sp = char2nr(' ')
+  endif
+  " convert first six chars into a number for sorting:
+  return (char2nr(nm[0]) - sp) * 0x1000000 + (char2nr(nm[1]) - sp) * 0x40000 + (char2nr(nm[2]) - sp) * 0x1000 + (char2nr(nm[3]) - sp) * 0x40 + (char2nr(nm[4]) - sp) * 0x40 + (char2nr(nm[5]) - sp)
 endfunc
 
-func! BmenuHash2(name)
-    let nm = substitute(a:name, ".", '\L\0', "")
-    if nm[0] >= 'a' && nm[0] <= 'd'
-	return '&abcd.'
-    elseif nm[0] >= 'e' && nm[0] <= 'h'
-	return '&efgh.'
-    elseif nm[0] >= 'i' && nm[0] <= 'l'
-	return '&ijkl.'
-    elseif nm[0] >= 'm' && nm[0] <= 'p'
-	return '&mnop.'
-    elseif nm[0] >= 'q' && nm[0] <= 't'
-	return '&qrst.'
-    elseif nm[0] >= 'u' && nm[0] <= 'z'
-	return '&u-z.'
-    else
-	return '&others.'
-    endif
+func! <SID>BMHash2(name)
+  let nm = substitute(a:name, ".", '\L\0', "")
+  if nm[0] >= 'a' && nm[0] <= 'd'
+    return '&abcd.'
+  elseif nm[0] >= 'e' && nm[0] <= 'h'
+    return '&efgh.'
+  elseif nm[0] >= 'i' && nm[0] <= 'l'
+    return '&ijkl.'
+  elseif nm[0] >= 'm' && nm[0] <= 'p'
+    return '&mnop.'
+  elseif nm[0] >= 'q' && nm[0] <= 't'
+    return '&qrst.'
+  elseif nm[0] >= 'u' && nm[0] <= 'z'
+    return '&u-z.'
+  else
+    return '&others.'
+  endif
 endfunc
 
 " take a buffer number, return a name to insert into a menu:
-func! BMenuFilename(name, num)
-    let munge = BmenuMunge(a:name, a:num)
-    let hash = BmenuHash(munge)
-    if g:bmenu_short == 0
-	let name = 'am ' . g:bmenu_priority . '.' . hash . ' &Buffers.' . munge
-    else
-	let name = 'am ' . g:bmenu_priority . '.' . hash . '.' . hash . ' &Buffers.' . BmenuHash2(munge) . munge
-    endif
-    " make 'cpo' empty to include the <CR>
-    let cpo_save = &cpo
-    let &cpo = ""
-    exe name . ' :b' . a:num . '<CR>'
-    let &cpo = cpo_save
+func! <SID>BMFilename(name, num)
+  let munge = <SID>BMMunge(a:name, a:num)
+  let hash = <SID>BMHash(munge)
+  if s:bmenu_short == 0
+    let name = 'am ' . g:bmenu_priority . '.' . hash . ' &Buffers.' . munge
+  else
+    let name = 'am ' . g:bmenu_priority . '.' . hash . '.' . hash . ' &Buffers.' . <SID>BMHash2(munge) . munge
+  endif
+  " make 'cpo' empty to include the <CR>
+  let cpo_save = &cpo
+  let &cpo = ""
+  exe name . ' :b' . a:num . '<CR>'
+  let &cpo = cpo_save
 endfunc
 
-func! BmenuMunge(fname, bnum)
-    let name = a:fname
-    if name == ''
-	let name = "[No File]"
+func! <SID>BMMunge(fname, bnum)
+  let name = a:fname
+  if name == ''
+    let name = "[No File]"
+  endif
+  let name = fnamemodify(name, ':~')
+  if !isdirectory(a:fname)
+    " detach file name and separate it out:
+    let name2 = fnamemodify(name, ':t')
+    if a:bnum >= 0
+      let name2 = name2 . ' (' . a:bnum . ')'
     endif
-    let name = fnamemodify(name, ':~')
-    if !isdirectory(a:fname)
-	" detach file name and separate it out:
-	let name2 = fnamemodify(name, ':t')
-	if a:bnum >= 0
-	    let name2 = name2 . ' (' . a:bnum . ')'
-	endif
-	let name = name2 . "\t" . fnamemodify(name,':h')
-    endif
-    let name = escape(name, "\\. \t|")
-    let name = substitute(name, "\n", "^@", "g")
-    return name
+    let name = name2 . "\t" . fnamemodify(name,':h')
+  endif
+  let name = escape(name, "\\. \t|")
+  let name = substitute(name, "\n", "^@", "g")
+  return name
 endfunc
 
 " When just starting Vim, load the buffer menu later
 if has("vim_starting")
     augroup LoadBufferMenu
-        au! VimEnter * if !exists("no_buffers_menu") | call BmenuShow() | endif
+        au! VimEnter * if !exists("no_buffers_menu") | call <SID>BMShow() | endif
 	au  VimEnter * au! LoadBufferMenu
     augroup END
 else
-    call BmenuShow()
+    call <SID>BMShow()
 endif
 
 endif " !exists("no_buffers_menu")
@@ -547,7 +547,7 @@ fun! SetSyn(name)
   else
     let name = a:name
   endif
-  if !exists("g:syntax_menu_synonly")
+  if !exists("s:syntax_menu_synonly")
     exe "set ft=" . name
     if exists("g:syntax_manual")
       exe "set syn=" . name
@@ -558,14 +558,14 @@ fun! SetSyn(name)
 endfun
 
 " Use the SynMenu command and function to define all menu entries
-command -nargs=* SynMenu call SynMenu(<q-args>)
+command -nargs=* SynMenu call <SID>Syn(<q-args>)
 
-let current_menu_name = ""
-let current_menu_nr = 0
-let current_menu_item = 0
-let current_menu_char = ""
+let s:cur_menu_name = ""
+let s:cur_menu_nr = 0
+let s:cur_menu_item = 0
+let s:cur_menu_char = ""
 
-fun SynMenu(arg)
+fun <SID>Syn(arg)
   " isolate menu name: until the first dot
   let i = match(a:arg, '\.')
   let menu_name = strpart(a:arg, 0, i)
@@ -576,23 +576,23 @@ fun SynMenu(arg)
   " after the colon is the syntax name
   let syntax_name = strpart(r, i + 1, 999)
 
-  if g:current_menu_name != menu_name
-    let g:current_menu_name = menu_name
-    let g:current_menu_nr = g:current_menu_nr + 10
-    let g:current_menu_item = 100
-    let g:current_menu_char = submenu_name[0]
+  if s:cur_menu_name != menu_name
+    let s:cur_menu_name = menu_name
+    let s:cur_menu_nr = s:cur_menu_nr + 10
+    let s:cur_menu_item = 100
+    let s:cur_menu_char = submenu_name[0]
   else
     " When starting a new letter, insert a menu separator.
     " Make an exception for "4DOS", which is after "MS-DOS".
     let c = submenu_name[0]
-    if c != g:current_menu_char && c != "4"
-      exe 'am 50.' . g:current_menu_nr . '.' . g:current_menu_item . ' &Syntax.' . menu_name . ".-" . c . '- <nul>'
-      let g:current_menu_item = g:current_menu_item + 10
-      let g:current_menu_char = c
+    if c != s:cur_menu_char && c != "4"
+      exe 'am 50.' . s:cur_menu_nr . '.' . s:cur_menu_item . ' &Syntax.' . menu_name . ".-" . c . '- <nul>'
+      let s:cur_menu_item = s:cur_menu_item + 10
+      let s:cur_menu_char = c
     endif
   endif
-  exe 'am 50.' . g:current_menu_nr . '.' . g:current_menu_item . ' &Syntax.' . menu_name . "." . submenu_name . ' :cal SetSyn("' . syntax_name . '")<CR>'
-  let g:current_menu_item = g:current_menu_item + 10
+  exe 'am 50.' . s:cur_menu_nr . '.' . s:cur_menu_item . ' &Syntax.' . menu_name . "." . submenu_name . ' :cal SetSyn("' . syntax_name . '")<CR>'
+  let s:cur_menu_item = s:cur_menu_item + 10
 endfun
 
 SynMenu AB.Abaqus:abaqus
@@ -842,20 +842,20 @@ SynMenu WXYZ.Yacc:yacc
 SynMenu WXYZ.Z-80\ assembler:z8a
 SynMenu WXYZ.Zsh\ shell\ script:zsh
 
-unlet current_menu_name
-unlet current_menu_nr
-unlet current_menu_item
-unlet current_menu_char
+unlet s:cur_menu_name
+unlet s:cur_menu_nr
+unlet s:cur_menu_item
+unlet s:cur_menu_char
 delcommand SynMenu
-delfun SynMenu
+delfun <SID>Syn
 
 am 50.95 &Syntax.-SEP1-				:
 
-am 50.100 &Syntax.Set\ 'syntax'\ only		:let syntax_menu_synonly=1<CR>
-am 50.101 &Syntax.Set\ 'filetype'\ too		:call SmenuNosynonly()<CR>
-fun! SmenuNosynonly()
-  if exists("syntax_menu_synonly")
-    unlet syntax_menu_synonly
+am 50.100 &Syntax.Set\ 'syntax'\ only		:let s:syntax_menu_synonly=1<CR>
+am 50.101 &Syntax.Set\ 'filetype'\ too		:call <SID>Nosynonly()<CR>
+fun! <Sid>Nosynonly()
+  if exists("s:syntax_menu_synonly")
+    unlet s:syntax_menu_synonly
   endif
 endfun
 
@@ -863,9 +863,9 @@ am 50.110 &Syntax.&Off			:syn off<CR>
 am 50.112 &Syntax.&Manual		:syn manual<CR>
 am 50.114 &Syntax.A&utomatic		:syn on<CR>
 
-am 50.116 &Syntax.o&n\ (this\ file)	:call SmenuSynoff()<CR>
-fun! SmenuSynoff()
-  if !exists("syntax_on")
+am 50.116 &Syntax.o&n\ (this\ file)	:call <SID>Synoff()<CR>
+fun! <SID>Synoff()
+  if !exists("g:syntax_on")
     syn manual
   endif
   set syn=ON
@@ -881,3 +881,5 @@ endif " !exists("did_install_syntax_menu")
 
 " Restore the previous value of 'cpoptions'.
 let &cpo = s:cpo_save
+
+" vim: set sw=2 :

@@ -50,9 +50,11 @@ typedef var *	VAR;
 garray_t	variables = {0, 0, sizeof(var), 4, NULL};
 
 /*
- * Variables in a Vim script, used for ":source".
+ * Array to hold an array with variables local to each sourced script.
  */
-garray_t	*script_vars = NULL;
+static garray_t	    ga_scripts = {0, 0, sizeof(garray_t), 4, NULL};
+#define SCRIPT_VARS(id) (((garray_t *)ga_scripts.ga_data)[(id) - 1])
+
 
 #define VAR_ENTRY(idx)	(((VAR)(variables.ga_data))[idx])
 #define VAR_GAP_ENTRY(idx, gap)	(((VAR)(gap->ga_data))[idx])
@@ -64,15 +66,20 @@ static int echo_attr = 0;   /* attributes used for ":echo" */
 /*
  * Structure to hold info for a user function.
  */
+typedef struct ufunc ufunc_t;
+
 struct ufunc
 {
-    struct ufunc	*next;		/* next function in list */
-    char_u		*name;		/* name of function */
-    int			varargs;	/* variable nr of arguments */
-    int			flags;
-    int			calls;		/* nr of active calls */
-    garray_t		args;		/* arguments */
-    garray_t		lines;		/* function lines */
+    ufunc_t	*next;		/* next function in list */
+    char_u	*name;		/* name of function; can start with <SNR>123_
+				   (<SNR> is K_SPECIAL KS_EXTRA KE_SNR) */
+    int		varargs;	/* variable nr of arguments */
+    int		flags;
+    int		calls;		/* nr of active calls */
+    garray_t	args;		/* arguments */
+    garray_t	lines;		/* function lines */
+    long	script_ID;	/* ID of script where function was defined,
+				   used for s: variables */
 };
 
 /* function flags */
@@ -83,7 +90,7 @@ struct ufunc
  * All user-defined functions are found in the forward-linked function list.
  * The first function is pointed at by firstfunc.
  */
-struct ufunc	    *firstfunc = NULL;
+ufunc_t		*firstfunc = NULL;
 
 #define FUNCARG(fp, j)	((char_u **)(fp->args.ga_data))[j]
 #define FUNCLINE(fp, j)	((char_u **)(fp->lines.ga_data))[j]
@@ -91,7 +98,7 @@ struct ufunc	    *firstfunc = NULL;
 /* structure to hold info for a function that is currently being executed. */
 struct funccall
 {
-    struct ufunc *func;		/* function being called */
+    ufunc_t	*func;		/* function being called */
     int		linenr;		/* next line to be executed */
     int		argcount;	/* nr of arguments */
     VAR		argvars;	/* arguments */
@@ -216,6 +223,7 @@ static void get_maparg __ARGS((VAR argvars, VAR retvar, int exact));
 static void f_match __ARGS((VAR argvars, VAR retvar));
 static void f_matchend __ARGS((VAR argvars, VAR retvar));
 static void f_matchstr __ARGS((VAR argvars, VAR retvar));
+static void f_mode __ARGS((VAR argvars, VAR retvar));
 static void f_nr2char __ARGS((VAR argvars, VAR retvar));
 static void f_setbufvar __ARGS((VAR argvars, VAR retvar));
 static void f_setwinvar __ARGS((VAR argvars, VAR retvar));
@@ -250,6 +258,7 @@ static win_t *find_win_by_nr __ARGS((VAR vp));
 static pos_t *var2fpos __ARGS((VAR varp, int lnum));
 static int get_env_len __ARGS((char_u **arg));
 static int get_id_len __ARGS((char_u **arg));
+static int get_func_len __ARGS((char_u **arg));
 static int eval_isnamec __ARGS((int c));
 static int find_vim_var __ARGS((char_u *name, int len));
 static int get_var_var __ARGS((char_u *name, int len, VAR retvar));
@@ -271,9 +280,12 @@ static void list_one_var_a __ARGS((char_u *prefix, char_u *name, int type, char_
 static void set_var __ARGS((char_u *name, VAR varp));
 static void copy_var __ARGS((VAR from, VAR to));
 static char_u *find_option_end __ARGS((char_u *p));
-static void list_func_head __ARGS((struct ufunc *fp));
-static struct ufunc *find_func __ARGS((char_u *name));
-static void call_func __ARGS((struct ufunc *fp, int argcount, VAR argvars, VAR retvar, linenr_t firstline, linenr_t lastline));
+static char_u *trans_function_name __ARGS((char_u **pp));
+static int eval_fname_script __ARGS((char_u *p));
+static int eval_fname_sid __ARGS((char_u *p));
+static void list_func_head __ARGS((ufunc_t *fp));
+static ufunc_t *find_func __ARGS((char_u *name));
+static void call_func __ARGS((ufunc_t *fp, int argcount, VAR argvars, VAR retvar, linenr_t firstline, linenr_t lastline));
 
 
 #if defined(FEAT_STL_OPT) || defined(PROTO)
@@ -708,10 +720,17 @@ set_context_for_expression(arg, cmdidx)
 	    /* environment variable */
 	    expand_context = EXPAND_ENV_VARS;
 	}
-	else if (*expand_pattern == '=')
+	else if (c == '=')
 	{
 	    got_eq = TRUE;
 	    expand_context = EXPAND_EXPRESSION;
+	}
+	else if (c == '<'
+		&& expand_context == EXPAND_FUNCTIONS
+		&& vim_strchr(expand_pattern, '(') == NULL)
+	{
+	    /* Function name can start with "<SNR>" */
+	    break;
 	}
 	else if (cmdidx != CMD_let || got_eq)
 	{
@@ -770,7 +789,7 @@ ex_call(eap)
     int		failed = FALSE;
 
     name = arg;
-    len = get_id_len(&arg);
+    len = get_func_len(&arg);
     startarg = arg;
     retvar.var_type = VAR_UNKNOWN;	/* clear_var() uses this */
 
@@ -1673,7 +1692,7 @@ eval7(arg, retvar, evaluate)
      * Must be a variable or function name then.
      */
     default:	s = *arg;
-		len = get_id_len(arg);
+		len = get_func_len(arg);
 		if (len)
 		{
 		    if (**arg == '(')		/* recursive! */
@@ -2117,6 +2136,7 @@ static struct fst
     {"match",		2, 3, f_match},
     {"matchend",	2, 3, f_matchend},
     {"matchstr",	2, 3, f_matchstr},
+    {"mode",		0, 0, f_mode},
     {"nr2char",		1, 1, f_nr2char},
     {"rename",		2, 2, f_rename},
     {"search",		1, 2, f_search},
@@ -2162,7 +2182,6 @@ get_function_name(idx)
 {
     static int	intidx = -1;
     char_u	*name;
-    int		len;
 
     if (idx == 0)
 	intidx = -1;
@@ -2170,16 +2189,7 @@ get_function_name(idx)
     {
 	name = get_user_func_name(idx);
 	if (name != NULL)
-	{
-	    len = STRLEN(name);
-	    if (len >= IOSIZE-1)
-		return name;	/* prevents overflow */
-
-	    STRCPY(IObuff, name);
-	    IObuff[len] = '(';
-	    IObuff[++len] = NUL;
-	    return IObuff;
-	}
+	    return name;
     }
     if (++intidx < (int)(sizeof(functions) / sizeof(struct fst)))
     {
@@ -2269,20 +2279,66 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
 		 N_("Unknown function: %s"),
 		 N_("Too many arguments for function: %s"),
 		 N_("Not enough arguments for function: %s"),
+		 N_("Using <SID> not in a script context: %s"),
 		};
 #define ERROR_INVARG	0
 #define ERROR_UNKNOWN	1
 #define ERROR_TOOMANY	2
 #define ERROR_TOOFEW	3
-#define ERROR_NONE	4
-#define ERROR_OTHER	5
+#define ERROR_SCRIPT	4
+#define ERROR_NONE	5
+#define ERROR_OTHER	6
     int		error = ERROR_NONE;
     int		i;
-    struct ufunc *fp;
+    ufunc_t	*fp;
     int		cc;
+#define FLEN_FIXED 40
+    char_u	fname_buf[FLEN_FIXED + 1];
+    char_u	*fname;
 
+    /*
+     * In a script change <SID>name() to K_SNR 123_name().
+     * Change <SNR>123_name() to K_SNR 123_name().
+     * Use fname_buf[] when it fits, otherwise allocate memory (slow).
+     */
     cc = name[len];
     name[len] = NUL;
+    if (eval_fname_script(name))
+    {
+	fname_buf[0] = K_SPECIAL;
+	fname_buf[1] = KS_EXTRA;
+	fname_buf[2] = (int)KE_SNR;
+	i = 3;
+	if (eval_fname_sid(name))	/* "<SID>" */
+	{
+	    if (current_SID == 0)
+		error = ERROR_SCRIPT;
+	    else
+	    {
+		sprintf((char *)fname_buf + 3, "%ld_", current_SID);
+		i = STRLEN(fname_buf);
+	    }
+	}
+	if (i + STRLEN(name + 5) < FLEN_FIXED)
+	{
+	    STRCPY(fname_buf + i, name + 5);
+	    fname = fname_buf;
+	}
+	else
+	{
+	    fname = alloc(i + STRLEN(name + 5) + 1);
+	    if (fname == NULL)
+		error = ERROR_OTHER;
+	    else
+	    {
+		mch_memmove(fname, fname_buf, i);
+		STRCPY(fname + i, name + 5);
+	    }
+	}
+    }
+    else
+	fname = name;
+
     *doesrange = FALSE;
 
     /*
@@ -2312,18 +2368,18 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
 	retvar->var_type = VAR_NUMBER;	/* default is number retvar */
 	error = ERROR_UNKNOWN;
 
-	if (!islower(name[0]))
+	if (!islower(fname[0]))
 	{
 	    /*
 	     * User defined function.
 	     */
-	    fp = find_func(name);
+	    fp = find_func(fname);
 #ifdef FEAT_AUTOCMD
 	    if (fp == NULL && apply_autocmds(EVENT_FUNCUNDEFINED,
-						      name, name, TRUE, NULL))
+						    fname, fname, TRUE, NULL))
 	    {
 		/* executed an autocommand, search for function again */
-		fp = find_func(name);
+		fp = find_func(fname);
 	    }
 #endif
 	    if (fp != NULL)
@@ -2338,7 +2394,8 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
 		{
 		    /*
 		     * Call the user function.
-		     * Save and restore search patterns and redo buffer.
+		     * Save and restore search patterns, script variables and
+		     * redo buffer.
 		     */
 		    save_search_patterns();
 		    saveRedobuff();
@@ -2357,7 +2414,7 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
 	    /*
 	     * Find the function name in the table, call its implementation.
 	     */
-	    i = find_internal_func(name);
+	    i = find_internal_func(fname);
 	    if (i >= 0)
 	    {
 		if (argcount < functions[i].f_min_argc)
@@ -2385,6 +2442,8 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
 	EMSG2((char_u *)_(errors[error]), name);
 
     name[len] = cc;
+    if (fname != name && fname != fname_buf)
+	vim_free(fname);
 
     return ret;
 }
@@ -2898,8 +2957,19 @@ f_exists(argvars, retvar)
 	++p;
 	if (islower(*p))
 	    n = (find_internal_func(p) >= 0);
-	else if (isupper(*p))
-	    n = (find_func(p) != NULL);
+	else if (isupper(*p) || *p == '<')
+	{
+	    p = trans_function_name(&p);
+	    if (p != NULL)
+	    {
+		n = (find_func(p) != NULL);
+		vim_free(p);
+	    }
+	}
+    }
+    else if (*p == ':')
+    {
+	n = cmd_exists(p + 1);
     }
     else				/* internal variable */
     {
@@ -3668,6 +3738,8 @@ f_hasmapto(argvars, retvar)
 
     if (map_to_exists(name, mode))
 	retvar->var_val.var_number = TRUE;
+    else
+	retvar->var_val.var_number = FALSE;
 }
 
 /*
@@ -4084,7 +4156,7 @@ f_some_match(argvars, retvar, type)
 	start = get_var_number(&argvars[2]);
 	if (start < 0)
 	    start = 0;
-	if (start > STRLEN(str))
+	if (start > (long)STRLEN(str))
 	    start = STRLEN(str);
 	str += start;
     }
@@ -4111,6 +4183,46 @@ f_some_match(argvars, retvar, type)
     }
 
     p_cpo = save_cpo;
+}
+
+/*
+ * "mode()" function
+ */
+/*ARGSUSED*/
+    static void
+f_mode(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    char_u	buf[2];
+
+#ifdef FEAT_VISUAL
+    if (VIsual_active)
+    {
+	if (VIsual_select)
+	    buf[0] = VIsual_mode + 's' - 'v';
+	else
+	    buf[0] = VIsual_mode;
+    }
+    else
+#endif
+	if (State == HITRETURN || State == ASKMORE || State == SETWSIZE)
+	buf[0] = 'r';
+    else if (State & INSERT)
+    {
+	if (State & REPLACE)
+	    buf[0] = 'R';
+	else
+	    buf[0] = 'i';
+    }
+    else if (State & CMDLINE)
+	buf[0] = 'c';
+    else
+	buf[0] = 'n';
+
+    buf[1] = NUL;
+    retvar->var_val.var_string = vim_strsave(buf);
+    retvar->var_type = VAR_STRING;
 }
 
 /*
@@ -4543,7 +4655,7 @@ f_synIDattr(argvars, retvar)
 	    modec = 'g';
 	else
 #endif
-	    if (*T_CCO)
+	    if (t_colors > 1)
 	    modec = 'c';
 	else
 	    modec = 't';
@@ -4991,6 +5103,31 @@ get_id_len(arg)
     return len;
 }
 
+/*
+ * Get the length of the name of a function.
+ * "arg" is advanced to the first non-white character after the name.
+ * Return 0 if something is wrong.
+ */
+    static int
+get_func_len(arg)
+    char_u	**arg;
+{
+    if ((*arg)[0] == K_SPECIAL && (*arg)[1] == KS_EXTRA
+						  && (*arg)[2] == (int)KE_SNR)
+    {
+	/* hard coded <SNR>, already translated */
+	*arg += 3;
+	return get_id_len(arg) + 3;
+    }
+    if (eval_fname_script(*arg))
+    {
+	/* literal "<SID>" or "<SNR>" */
+	*arg += 5;
+	return get_id_len(arg) + 5;
+    }
+    return get_id_len(arg);
+}
+
     static int
 eval_isnamec(c)
     int	    c;
@@ -5239,6 +5376,7 @@ get_var_lnum(argvars)
     lnum = get_var_number(&argvars[0]);
     if (lnum == 0)  /* no valid number, try using line() */
     {
+	retvar.var_type = VAR_NUMBER;
 	f_line(argvars, &retvar);
 	lnum = retvar.var_val.var_number;
 	clear_var(&retvar);
@@ -5370,8 +5508,9 @@ find_var_ga(name, varname)
 	return &variables;
     if (*name == 'l' && current_funccal != NULL)/* local function variable */
 	return &current_funccal->l_vars;
-    if (*name == 's')				/* script variable */
-	return script_vars;
+    if (*name == 's'				/* script variable */
+	    && current_SID > 0 && current_SID <= ga_scripts.ga_len)
+	return &SCRIPT_VARS(current_SID);
     return NULL;
 }
 
@@ -5391,18 +5530,22 @@ get_var_value(name)
 }
 
 /*
- * Set a new list of script variables to be used.
- * Called by do_source().
+ * Allocate a new growarry for a sourced script.  It will be used while
+ * sourcing this script and when executing functions defined in the script.
  */
-    garray_t *
-set_script_vars(gap)
-    garray_t	*gap;
+    void
+new_script_vars(id)
+    long id;
 {
-    garray_t	*p;
-
-    p = script_vars;
-    script_vars = gap;
-    return p;
+    if (ga_grow(&ga_scripts, (int)(id - ga_scripts.ga_len)) == OK)
+    {
+	while (ga_scripts.ga_len < id)
+	{
+	    var_init(&SCRIPT_VARS(ga_scripts.ga_len + 1));
+	    ++ga_scripts.ga_len;
+	    --ga_scripts.ga_room;
+	}
+    }
 }
 
 /*
@@ -5750,8 +5893,7 @@ ex_function(eap)
     char_u	*theline;
     int		j;
     int		c;
-    char_u	*name;
-    char_u	*nameend;
+    char_u	*name = NULL;
     char_u	*p;
     char_u	*arg;
     garray_t	newargs;
@@ -5759,7 +5901,7 @@ ex_function(eap)
     int		varargs = FALSE;
     int		mustend = FALSE;
     int		flags = 0;
-    struct ufunc *fp;
+    ufunc_t	*fp;
     int		indent;
     int		nesting;
 
@@ -5769,16 +5911,13 @@ ex_function(eap)
     if (*eap->arg == NUL)
     {
 	if (!eap->skip)
-	    for (fp = firstfunc; fp != NULL; fp = fp->next)
+	    for (fp = firstfunc; fp != NULL && !got_int; fp = fp->next)
 		list_func_head(fp);
 	return;
     }
 
-    if (!isupper(*eap->arg))
-    {
-	EMSG2(_("Function name must start with a capital: %s"), eap->arg);
-	return;
-    }
+    p = eap->arg;
+    name = trans_function_name(&p);
 
     /*
      * ":function func" with only function name: list function.
@@ -5787,40 +5926,36 @@ ex_function(eap)
     {
 	if (!eap->skip)
 	{
-	    fp = find_func(eap->arg);
+	    fp = find_func(name);
 	    if (fp != NULL)
 	    {
 		list_func_head(fp);
 		for (j = 0; j < fp->lines.ga_len; ++j)
 		{
 		    msg_putchar('\n');
+		    msg_outnum((long)(j + 1));
+		    do
+		    {
+			msg_putchar(' ');
+		    } while (msg_col < 3);
 		    msg_prt_line(FUNCLINE(fp, j));
 		}
-		MSG("endfunction");
+		MSG("   endfunction");
 	    }
 	    else
 		EMSG2(_("Undefined function: %s"), eap->arg);
 	}
-	return;
+	goto erret_name;
     }
 
     /*
      * ":function name(arg1, arg2)" Define function.
      */
-    name = eap->arg;
-    for (p = name; isalpha(*p) || isdigit(*p) || *p == '_'; ++p)
-	;
-    if (p == name)
-    {
-	EMSG(_("Function name required"));
-	return;
-    }
-    nameend = p;
     p = skipwhite(p);
     if (*p != '(')
     {
-	EMSG2(_("Missing '(': %s"), name);
-	return;
+	EMSG2(_("Missing '(': %s"), eap->arg);
+	goto erret_name;
     }
     p = skipwhite(p + 1);
 
@@ -5941,7 +6076,9 @@ ex_function(eap)
 	if (STRNCMP(p, "fu", 2) == 0)
 	{
 	    p = skipwhite(skiptowhite(p));
-	    if (isupper(*p))
+	    if (eval_fname_script(p))
+		p += 5;
+	    if (isalpha(*p))
 	    {
 		while (isalpha(*p) || isdigit(*p) || *p == '_')
 		    ++p;
@@ -5965,7 +6102,6 @@ ex_function(eap)
     /*
      * If there are no errors, add the function
      */
-    *nameend = NUL;
     fp = find_func(name);
     if (fp != NULL)
     {
@@ -5985,15 +6121,9 @@ ex_function(eap)
     }
     else
     {
-	fp = (struct ufunc *)alloc((unsigned)sizeof(struct ufunc));
+	fp = (ufunc_t *)alloc((unsigned)sizeof(ufunc_t));
 	if (fp == NULL)
 	    goto erret;
-	name = vim_strsave(name);
-	if (name == NULL)
-	{
-	    vim_free(fp);
-	    goto erret;
-	}
 	/* insert the new function in the function list */
 	fp->next = firstfunc;
 	firstfunc = fp;
@@ -6004,11 +6134,108 @@ ex_function(eap)
     fp->varargs = varargs;
     fp->flags = flags;
     fp->calls = 0;
+    fp->script_ID = current_SID;
     return;
 
 erret:
     ga_clear_strings(&newargs);
     ga_clear_strings(&newlines);
+erret_name:
+    vim_free(name);
+}
+
+/*
+ * Get a function name, translating "<SID>" and "<SNR>".
+ * Returns the function name in allocated memory, or NULL for failure.
+ * Advances "pp" to just after the function name (if no error).
+ */
+    static char_u *
+trans_function_name(pp)
+    char_u	**pp;
+{
+    char_u	*name;
+    char_u	*start;
+    char_u	*end;
+    int		j;
+    char_u	sid_buf[20];
+
+    /* A name starting with "<SID>" or "<SNR>" is local to a script. */
+    start = *pp;
+    if (eval_fname_script(start))
+	start += 5;
+    else if (!isupper(*start))
+    {
+	EMSG2(_("Function name must start with a capital: %s"), start);
+	return NULL;
+    }
+    for (end = start; isalpha(*end) || isdigit(*end) || *end == '_'; ++end)
+	;
+    if (end == start)
+    {
+	EMSG(_("Function name required"));
+	return NULL;
+    }
+
+    /*
+     * Copy the function name to allocated memory.
+     * Accept <SID>name() inside a script, translate into <SNR>123_name().
+     * Accept <SNR>123_name() outside a script.
+     */
+    if (start > *pp)
+    {
+	j = 3;
+	if (eval_fname_sid(*pp))	/* If it's "<SID>" */
+	{
+	    if (current_SID == 0)
+	    {
+		EMSG(_("Using <SID> not in a script context"));
+		return NULL;
+	    }
+	    sprintf((char *)sid_buf, "%ld_", current_SID);
+	    j += STRLEN(sid_buf);
+	}
+    }
+    else
+	j = 0;
+    name = alloc(end - start + j + 1);
+    if (name == NULL)
+	return NULL;
+    if (start > *pp)
+    {
+	name[0] = K_SPECIAL;
+	name[1] = KS_EXTRA;
+	name[2] = (int)KE_SNR;
+	if (eval_fname_sid(*pp))	/* If it's "<SID>" */
+	    STRCPY(name + 3, sid_buf);
+    }
+    mch_memmove(name + j, start, end - start);
+    name[end - start + j] = NUL;
+
+    *pp = end;
+    return name;
+}
+
+/*
+ * Return TRUE if "p" starts with "<SID>" or "<SNR>" (ignoring case).
+ */
+    static int
+eval_fname_script(p)
+    char_u	*p;
+{
+    return (*p == '<'
+	    && (STRNICMP(p + 1, "SID>", 4) == 0
+		|| STRNICMP(p + 1, "SNR>", 4) == 0));
+}
+
+/*
+ * Return TRUE if "p" starts with "<SID>".  Only works if eval_fname_script()
+ * returned TRUE for "p"!
+ */
+    static int
+eval_fname_sid(p)
+    char_u	*p;
+{
+    return (TO_UPPER(p[2]) == 'I');
 }
 
 /*
@@ -6016,12 +6243,18 @@ erret:
  */
     static void
 list_func_head(fp)
-    struct ufunc *fp;
+    ufunc_t	*fp;
 {
     int		j;
 
     MSG(_("function "));
-    msg_puts(fp->name);
+    if (fp->name[0] == K_SPECIAL)
+    {
+	MSG_PUTS_ATTR("<SNR>", hl_attr(HLF_8));
+	msg_puts(fp->name + 3);
+    }
+    else
+	msg_puts(fp->name);
     msg_putchar('(');
     for (j = 0; j < fp->args.ga_len; ++j)
     {
@@ -6042,11 +6275,11 @@ list_func_head(fp)
  * Find a function by name, return pointer to it in ufuncs.
  * Return NULL for unknown function.
  */
-    static struct ufunc *
+    static ufunc_t *
 find_func(name)
     char_u	*name;
 {
-    struct ufunc *fp;
+    ufunc_t	*fp;
 
     for (fp = firstfunc; fp != NULL; fp = fp->next)
 	if (STRCMP(name, fp->name) == 0)
@@ -6064,16 +6297,27 @@ find_func(name)
 get_user_func_name(idx)
     int	    idx;
 {
-    static struct ufunc *fp = NULL;
-    char_u		*name;
+    static ufunc_t *fp = NULL;
 
     if (idx == 0)
 	fp = firstfunc;
     if (fp != NULL)
     {
-	name = fp->name;
+	if (STRLEN(fp->name) + 4 >= IOSIZE)
+	    return fp->name;	/* prevents overflow */
+
+	if (fp->name[0] == K_SPECIAL)
+	{
+	    STRCPY(IObuff, "<SNR>");
+	    STRCAT(IObuff, fp->name + 3);
+	}
+	else
+	    STRCPY(IObuff, fp->name);
+	if (expand_context != EXPAND_USER_FUNC)
+	    STRCAT(IObuff, "(");
+
 	fp = fp->next;
-	return name;
+	return IObuff;
     }
     return NULL;
 }
@@ -6087,9 +6331,15 @@ get_user_func_name(idx)
 ex_delfunction(eap)
     exarg_t	*eap;
 {
-    struct ufunc *fp, *pfp;
+    ufunc_t	*fp, *pfp;
+    char_u	*p;
+    char_u	*name;
 
-    fp = find_func(eap->arg);
+    p = eap->arg;
+    name = trans_function_name(&p);
+    fp = find_func(name);
+    vim_free(name);
+
     if (fp == NULL)
     {
 	EMSG2(_("Undefined function: %s"), eap->arg);
@@ -6126,7 +6376,7 @@ ex_delfunction(eap)
  */
     static void
 call_func(fp, argcount, argvars, retvar, firstline, lastline)
-    struct ufunc *fp;		/* pointer to function */
+    ufunc_t	*fp;		/* pointer to function */
     int		argcount;	/* nr of args */
     VAR		argvars;	/* arguments */
     VAR		retvar;		/* return value */
@@ -6135,6 +6385,7 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
 {
     char_u		*save_sourcing_name;
     linenr_t		save_sourcing_lnum;
+    long		save_current_SID;
     struct funccall	fc;
     struct funccall	*save_fcp = current_funccal;
     int			save_did_emsg;
@@ -6197,6 +6448,8 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
 	    --no_wait_return;
 	}
     }
+    save_current_SID = current_SID;
+    current_SID = fp->script_ID;
     save_did_emsg = did_emsg;
     did_emsg = FALSE;
 
@@ -6208,6 +6461,7 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
     vim_free(sourcing_name);
     sourcing_name = save_sourcing_name;
     sourcing_lnum = save_sourcing_lnum;
+    current_SID = save_current_SID;
 
     if (p_verbose >= 12 && sourcing_name != NULL)
     {

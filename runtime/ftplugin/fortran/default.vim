@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	Fortran90 (and Fortran95, Fortran77, F and elf90)
 " Version:	0.1
-" Last Change:	2000 Oct 15
+" Last Change:	2000 Oct 21
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
 " For the latest version of this file, see <http://www.unb.ca/chem/ajit/vim.htm>
 
@@ -27,7 +27,7 @@ endwhile
 unlet b:ln b:test
 
 "Set comments according to source type
-if (b:fortran_fixed_source == 1)
+if b:fortran_fixed_source == 1
   setlocal comments=:!,:*,:C
 else
   setlocal comments=:!

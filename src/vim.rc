@@ -14,7 +14,7 @@
 # ifndef VS_FFI_FILEFLAGSMASK
 #  define VS_FFI_FILEFLAGSMASK    0x0000003FL
 # endif
-# ifdef VOS__WINDOWS32
+# ifndef VOS__WINDOWS32
 #  define VOS__WINDOWS32          0x00000004L
 # endif
 #else
@@ -26,13 +26,13 @@
 //
 // Icons
 //
-IDR_VIM		ICON "VIM.ICO"
+IDR_VIM		ICON "vim.ico"
 
 #ifdef FEAT_GUI_W32
-IDR_VIM_ERROR	ICON "VIM_ERROR.ICO"
-IDR_VIM_ALERT	ICON "VIM_ALERT.ICO"
-IDR_VIM_INFO	ICON "VIM_INFO.ICO"
-IDR_VIM_QUESTION ICON "VIM_QUEST.ICO"
+IDR_VIM_ERROR	ICON "vim_error.ico"
+IDR_VIM_ALERT	ICON "vim_alert.ico"
+IDR_VIM_INFO	ICON "vim_info.ico"
+IDR_VIM_QUESTION ICON "vim_quest.ico"
 
 //
 // Bitmaps

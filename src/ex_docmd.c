@@ -26,12 +26,16 @@ typedef struct ucmd
     long	uc_argt;	/* The argument type */
     char_u	*uc_rep;	/* The command's replacement string */
     long	uc_def;		/* The default value for a range/count */
+    long	uc_scriptID;	/* SID where the command was defined */
     int		uc_compl;	/* completion type */
 } UCMD;
+
+#define UC_BUFFER	1	/* -buffer: local to current buffer */
 
 garray_t ucmds = {0, 0, sizeof(UCMD), 4, NULL};
 
 #define USER_CMD(i) (&((UCMD *)(ucmds.ga_data))[i])
+#define USER_CMD_GA(gap, i) (&((UCMD *)((gap)->ga_data))[i])
 
 static void do_ucmd __ARGS((exarg_t *eap));
 static void ex_command __ARGS((exarg_t *eap));
@@ -54,6 +58,7 @@ static char_u	*do_one_cmd __ARGS((char_u **, int, struct condstack *, char_u *(*
 static char_u	*do_one_cmd __ARGS((char_u **, int, char_u *(*getline)(int, void *, int), void *cookie));
 static int	if_level = 0;		/* depth in :if */
 #endif
+static char_u	*find_command __ARGS((exarg_t *eap));
 
 static void	ex_abbreviate __ARGS((exarg_t *eap));
 static void	ex_map __ARGS((exarg_t *eap));
@@ -277,6 +282,7 @@ static void	ex_psearch __ARGS((exarg_t *eap));
 static void	ex_tag __ARGS((exarg_t *eap));
 static void	ex_tag_cmd __ARGS((exarg_t *eap, char_u *name));
 #ifdef FEAT_EVAL
+static void	ex_scriptnames __ARGS((exarg_t *eap));
 static void	ex_finish __ARGS((exarg_t *eap));
 static int	source_finished __ARGS((void *cookie));
 static void	ex_if __ARGS((exarg_t *eap));
@@ -290,6 +296,7 @@ static void	ex_endfunction __ARGS((exarg_t *eap));
 static int	has_while_cmd __ARGS((char_u *p));
 static int	did_endif = FALSE;	/* just had ":endif" */
 #else
+# define ex_scriptnames		ex_ni
 # define ex_finish		ex_ni
 # define ex_echo		ex_ni
 # define ex_echohl		ex_ni
@@ -1114,135 +1121,35 @@ do_one_cmd(cmdlinep, sourcing,
 	goto doend;
     }
 
-    /*
-     * Isolate the command and search for it in the command table.
-     * Exeptions:
-     * - the 'k' command can directly be followed by any character.
-     * - the 's' command can be followed directly by 'c', 'g', 'i', 'I' or 'r'
-     *	    but :sre[wind] is another command, as is :sim[alt], :sig[ns] and
-     *	    :sil[ent].
-     */
-    if (*ea.cmd == 'k')
-    {
-	ea.cmdidx = CMD_k;
-	p = ea.cmd + 1;
-    }
-    else if (ea.cmd[0] == 's'
-	    && (ea.cmd[1] == 'c'
-		|| ea.cmd[1] == 'g'
-		|| (ea.cmd[1] == 'i' && ea.cmd[2] != 'm' && ea.cmd[2] != 'l'
-							  && ea.cmd[2] != 'g')
-		|| ea.cmd[1] == 'I'
-		|| (ea.cmd[1] == 'r' && ea.cmd[2] != 'e')))
-    {
-	ea.cmdidx = CMD_substitute;
-	p = ea.cmd + 1;
-    }
-    else
-    {
-	p = ea.cmd;
-	while (isalpha(*p))
-	    ++p;
-	/* check for non-alpha command */
-	if (p == ea.cmd && vim_strchr((char_u *)"@*!=><&~#", *p) != NULL)
-	    ++p;
-	i = (int)(p - ea.cmd);
-
-	if (islower(*ea.cmd))
-	    ea.cmdidx = cmdidxs[CharOrdLow(*ea.cmd)];
-	else
-	    ea.cmdidx = cmdidxs[26];
-
-	for ( ; (int)ea.cmdidx < (int)CMD_SIZE;
-				   ea.cmdidx = (cmdidx_t)((int)ea.cmdidx + 1))
-	    if (STRNCMP(cmdnames[(int)ea.cmdidx].cmd_name, (char *)ea.cmd,
-							      (size_t)i) == 0)
-		break;
+    /* Find the command and let "p" point to after it. */
+    p = find_command(&ea);
 
 #ifdef FEAT_USR_CMDS
-	/* Look for a user defined command as a last resort */
-	if (ea.cmdidx == CMD_SIZE && *ea.cmd >= 'A' && *ea.cmd <= 'Z')
-	{
-	    UCMD    *cmd = USER_CMD(0);
-	    int	    j, k, matchlen = 0;
-	    int	    found = FALSE, possible = FALSE;
-	    char_u  *cp, *np;	/* Pointers into typed cmd and test name */
-
-	    /* User defined commands may contain numbers */
-	    while (isalnum(*p))
-		++p;
-	    i = (int)(p - ea.cmd);
-
-	    /* Check for fun command. */
-	    if (i == 2 && *p == '!' && ea.cmd[1] == 0151 && ea.cmd[0] == 78)
-	    {
-		errormsg = uc_fun_cmd();
-		goto doend;
-	    }
-
-	    for (j = 0; j < ucmds.ga_len; ++j, ++cmd)
-	    {
-		cp = ea.cmd;
-		np = cmd->uc_name;
-		k = 0;
-		while (k < i && *np != NUL && *cp++ == *np++)
-		    k++;
-		if (k == i || (*np == NUL && isdigit(ea.cmd[k])))
-		{
-		    if (k == i && found)
-		    {
-			errormsg = (char_u *)_("Ambiguous use of user-defined command");
-			goto doend;
-		    }
-
-		    if (!found)
-		    {
-			/* If we matched up to a digit, then there could be
-			 * another command including the digit that we should
-			 * use instead.
-			 */
-			if (k == i)
-			    found = TRUE;
-			else
-			    possible = TRUE;
-
-			ea.cmdidx = CMD_USER;
-			ea.argt = cmd->uc_argt;
-			ea.useridx = j;
-
-			matchlen = k;
-
-			/* Do not search for further abbreviations
-			 * if this is an exact match
-			 */
-			if (k == i && *np == NUL)
-			    break;
-		    }
-		}
-	    }
-
-	    /* The match we found may be followed immediately by a
-	     * number.  Move *p back to point to it.
-	     */
-	    if (found || possible)
-		p += matchlen - i;
-	}
+    /* Check for wrong commands. */
+    if (*p == '!' && ea.cmd[1] == 0151 && ea.cmd[0] == 78)
+    {
+	errormsg = uc_fun_cmd();
+	goto doend;
+    }
 #endif
-
-	if (i == 0 || ea.cmdidx == CMD_SIZE)
+    if (p == NULL)
+    {
+	errormsg = (char_u *)_("Ambiguous use of user-defined command");
+	goto doend;
+    }
+    if (ea.cmdidx == CMD_SIZE)
+    {
+	if (!ea.skip)
 	{
-	    if (!ea.skip)
+	    STRCPY(IObuff, _("Not an editor command"));
+	    if (!sourcing)
 	    {
-		STRCPY(IObuff, _("Not an editor command"));
-		if (!sourcing)
-		{
-		    STRCAT(IObuff, ": ");
-		    STRNCAT(IObuff, *cmdlinep, 40);
-		}
-		errormsg = IObuff;
+		STRCAT(IObuff, ": ");
+		STRNCAT(IObuff, *cmdlinep, 40);
 	    }
-	    goto doend;
+	    errormsg = IObuff;
 	}
+	goto doend;
     }
 
 #ifndef FEAT_EVAL
@@ -1273,7 +1180,7 @@ do_one_cmd(cmdlinep, sourcing,
  * 5. parse arguments
  */
 #ifdef FEAT_USR_CMDS
-    if (ea.cmdidx != CMD_USER)
+    if (!USER_CMDIDX(ea.cmdidx))
 #endif
 	ea.argt = cmdnames[(int)ea.cmdidx].cmd_argt;
 
@@ -1495,9 +1402,9 @@ do_one_cmd(cmdlinep, sourcing,
 	    && *ea.arg != NUL
 #ifdef FEAT_USR_CMDS
 	    && valid_yank_reg(*ea.arg, (ea.cmdidx != CMD_put
-						    && ea.cmdidx != CMD_USER))
+						   && USER_CMDIDX(ea.cmdidx)))
 	    /* Do not allow register = for user commands */
-	    && (ea.cmdidx != CMD_USER || *ea.arg != '=')
+	    && (!USER_CMDIDX(ea.cmdidx) || *ea.arg != '=')
 #else
 	    && valid_yank_reg(*ea.arg, ea.cmdidx != CMD_put)
 #endif
@@ -1621,9 +1528,13 @@ do_one_cmd(cmdlinep, sourcing,
 
     /*
      * Accept buffer name.  Cannot be used at the same time with a buffer
-     * number.
+     * number.  Don't do this for a user command.
      */
-    if ((ea.argt & BUFNAME) && *ea.arg && ea.addr_count == 0)
+    if ((ea.argt & BUFNAME) && *ea.arg != NUL && ea.addr_count == 0
+#ifdef FEAT_USR_CMDS
+	    && !USER_CMDIDX(ea.cmdidx)
+#endif
+	    )
     {
 	/*
 	 * :bdelete and :bunload take several arguments, separated by spaces:
@@ -1651,7 +1562,7 @@ do_one_cmd(cmdlinep, sourcing,
  * The "ea" structure holds the arguments that can be used.
  */
 #ifdef FEAT_USR_CMDS
-    if (ea.cmdidx == CMD_USER)
+    if (USER_CMDIDX(ea.cmdidx))
 	do_ucmd(&ea);
     else
 #endif
@@ -1696,6 +1607,147 @@ doend:
 #if (_MSC_VER == 1200)
 #pragma optimize( "", on )
 #endif
+
+/*
+ * Find an Ex command by its name, either built-in or user.
+ * Name can be found at eap->cmd.
+ * Returns pointer to char after the command name.
+ * Returns NULL for an ambiguous user command.
+ */
+    static char_u *
+find_command(eap)
+    exarg_t	*eap;
+{
+    int		len;
+    char_u	*p;
+
+    /*
+     * Isolate the command and search for it in the command table.
+     * Exeptions:
+     * - the 'k' command can directly be followed by any character.
+     * - the 's' command can be followed directly by 'c', 'g', 'i', 'I' or 'r'
+     *	    but :sre[wind] is another command, as is :scrip[tnames],
+     *	    :sim[alt], :sig[ns] and :sil[ent].
+     */
+    p = eap->cmd;
+    if (*p == 'k')
+    {
+	eap->cmdidx = CMD_k;
+	++p;
+    }
+    else if (p[0] == 's'
+	    && ((p[1] == 'c' && (p[2] != 'r' || p[3] != 'i' || p[4] != 'p'))
+		|| p[1] == 'g'
+		|| (p[1] == 'i' && p[2] != 'm' && p[2] != 'l' && p[2] != 'g')
+		|| p[1] == 'I'
+		|| (p[1] == 'r' && p[2] != 'e')))
+    {
+	eap->cmdidx = CMD_substitute;
+	++p;
+    }
+    else
+    {
+	while (isalpha(*p))
+	    ++p;
+	/* check for non-alpha command */
+	if (p == eap->cmd && vim_strchr((char_u *)"@*!=><&~#", *p) != NULL)
+	    ++p;
+	len = (int)(p - eap->cmd);
+
+	if (islower(*eap->cmd))
+	    eap->cmdidx = cmdidxs[CharOrdLow(*eap->cmd)];
+	else
+	    eap->cmdidx = cmdidxs[26];
+
+	for ( ; (int)eap->cmdidx < (int)CMD_SIZE;
+			       eap->cmdidx = (cmdidx_t)((int)eap->cmdidx + 1))
+	    if (STRNCMP(cmdnames[(int)eap->cmdidx].cmd_name, (char *)eap->cmd,
+							    (size_t)len) == 0)
+		break;
+
+#ifdef FEAT_USR_CMDS
+	/* Look for a user defined command as a last resort */
+	if (eap->cmdidx == CMD_SIZE && *eap->cmd >= 'A' && *eap->cmd <= 'Z')
+	{
+	    UCMD	*cmd;
+	    int		j, k, matchlen = 0;
+	    int		found = FALSE, possible = FALSE;
+	    char_u	*cp, *np;	/* Point into typed cmd and test name */
+	    garray_t	*gap;
+
+	    /* User defined commands may contain numbers */
+	    while (isalnum(*p))
+		++p;
+	    len = (int)(p - eap->cmd);
+
+	    /*
+	     * Look for buffer-local user commands first, then global ones.
+	     */
+	    gap = &curbuf->b_ucmds;
+	    for (;;)
+	    {
+		cmd = USER_CMD_GA(gap, 0);
+
+		for (j = 0; j < gap->ga_len; ++j, ++cmd)
+		{
+		    cp = eap->cmd;
+		    np = cmd->uc_name;
+		    k = 0;
+		    while (k < len && *np != NUL && *cp++ == *np++)
+			k++;
+		    if (k == len || (*np == NUL && isdigit(eap->cmd[k])))
+		    {
+			if (k == len && found)
+			    return NULL;
+
+			if (!found)
+			{
+			    /* If we matched up to a digit, then there could
+			     * be another command including the digit that we
+			     * should use instead.
+			     */
+			    if (k == len)
+				found = TRUE;
+			    else
+				possible = TRUE;
+
+			    if (gap == &ucmds)
+				eap->cmdidx = CMD_USER;
+			    else
+				eap->cmdidx = CMD_USER_BUF;
+			    eap->argt = cmd->uc_argt;
+			    eap->useridx = j;
+
+			    /* Do not search for further abbreviations
+			     * if this is an exact match
+			     */
+			    matchlen = k;
+			    if (k == len && *np == NUL)
+				break;
+			}
+		    }
+		}
+
+		/* Stop if we found a match of searched all. */
+		if (j < gap->ga_len || gap == &ucmds)
+		    break;
+		gap = &ucmds;
+	    }
+
+	    /* The match we found may be followed immediately by a
+	     * number.  Move *p back to point to it.
+	     */
+	    if (found || possible)
+		p += matchlen - len;
+	}
+#endif
+
+	if (len == 0)
+	    eap->cmdidx = CMD_SIZE;
+    }
+
+    return p;
+}
 
 /*
  * ":abbreviate" and friends.
@@ -2088,52 +2140,62 @@ set_one_cmd_context(buff)
 	else if (cmd[0] >= 'A' && cmd[0] <= 'Z')
 	{
 	    /* Look for a user defined command as a last resort */
-	    UCMD *c = USER_CMD(0);
-	    int j, k, matchlen = 0;
-	    int found = FALSE, possible = FALSE;
-	    char_u *cp, *np;	/* Pointers into typed cmd and test name */
+	    UCMD	*uc;
+	    int		j, k, matchlen = 0;
+	    int		found = FALSE, possible = FALSE;
+	    char_u	*cp, *np;	/* Point into typed cmd and test name */
+	    garray_t	*gap;
 
-	    for (j = 0; j < ucmds.ga_len; ++j, ++c)
+	    gap = &curbuf->b_ucmds;
+	    for (;;)
 	    {
-		cp = cmd;
-		np = c->uc_name;
-		k = 0;
-		while (k < i && *np != NUL && *cp++ == *np++)
-		    k++;
-		if (k == i || (*np == NUL && isdigit(cmd[k])))
+		uc = USER_CMD_GA(gap, 0);
+		for (j = 0; j < gap->ga_len; ++j, ++uc)
 		{
-		    if (k == i && found)
+		    cp = cmd;
+		    np = uc->uc_name;
+		    k = 0;
+		    while (k < i && *np != NUL && *cp++ == *np++)
+			k++;
+		    if (k == i || (*np == NUL && isdigit(cmd[k])))
 		    {
-			/* Ambiguous abbreviation */
-			expand_context = EXPAND_UNSUCCESSFUL;
-			return NULL;
-		    }
-		    if (!found)
-		    {
-			/* If we matched up to a digit, then there could be
-			 * another command including the digit that we should
-			 * use instead.
-			 */
-			if (k == i)
-			    found = TRUE;
-			else
-			    possible = TRUE;
+			if (k == i && found)
+			{
+			    /* Ambiguous abbreviation */
+			    expand_context = EXPAND_UNSUCCESSFUL;
+			    return NULL;
+			}
+			if (!found)
+			{
+			    /* If we matched up to a digit, then there could
+			     * be another command including the digit that we
+			     * should use instead.
+			     */
+			    if (k == i)
+				found = TRUE;
+			    else
+				possible = TRUE;
 
-			cmdidx = CMD_USER;
-			argt = c->uc_argt;
+			    if (gap == &ucmds)
+				cmdidx = CMD_USER;
+			    else
+				cmdidx = CMD_USER_BUF;
+			    argt = uc->uc_argt;
 #ifdef FEAT_CMDL_COMPL
-			compl = c->uc_compl;
+			    compl = uc->uc_compl;
 #endif
-
-			matchlen = k;
-
-			/* Do not search for further abbreviations
-			 * if this is an exact match
-			 */
-			if (k == i && *np == NUL)
-			    break;
+			    /* Do not search for further abbreviations
+			     * if this is an exact match
+			     */
+			    matchlen = k;
+			    if (k == i && *np == NUL)
+				break;
+			}
 		    }
 		}
+		if (gap == &ucmds || j < gap->ga_len)
+		    break;
+		gap = &ucmds;
 	    }
 
 	    /* The match we found may be followed immediately by a
@@ -2163,7 +2225,7 @@ set_one_cmd_context(buff)
  * 5. parse arguments
  */
 #ifdef FEAT_USR_CMDS
-    if (cmdidx != CMD_USER)
+    if (!USER_CMDIDX(cmdidx))
 #endif
 	argt = cmdnames[(int)cmdidx].cmd_argt;
 
@@ -2545,6 +2607,7 @@ set_one_cmd_context(buff)
 	    break;
 #ifdef FEAT_USR_CMDS
 	case CMD_USER:
+	case CMD_USER_BUF:
 	    /* XFILE: file names are handled above */
 	    if (compl != EXPAND_NOTHING && !(argt & XFILE))
 	    {
@@ -3959,6 +4022,12 @@ struct source_cookie
 
 static char_u *get_one_sourceline __ARGS((struct source_cookie *sp));
 
+#ifdef FEAT_EVAL
+/* Growarray to store the names of sourced scripts. */
+static garray_t script_names = {0, 0, sizeof(char_u *), 4, NULL};
+#define SCRIPT_NAME(id) (((char_u **)script_names.ga_data)[(id) - 1])
+#endif
+
 /*
  * do_source: Read the file "fname" and execute its lines as EX commands.
  *
@@ -3979,9 +4048,9 @@ do_source(fname, check_other, is_vimrc)
     char_u		    *fname_exp;
     int			    retval = FAIL;
 #ifdef FEAT_EVAL
+    long		    save_current_SID;
+    static long		    last_current_SID = 0;
     void		    *save_funccalp;
-    garray_t		    *save_script_vars;
-    garray_t		    script_vars;
 #endif
 
 #ifdef RISCOS
@@ -4057,17 +4126,41 @@ do_source(fname, check_other, is_vimrc)
      * Keep the sourcing name/lnum, for recursive calls.
      */
     save_sourcing_name = sourcing_name;
-    save_sourcing_lnum = sourcing_lnum;
     sourcing_name = fname_exp;
+    save_sourcing_lnum = sourcing_lnum;
     sourcing_lnum = 0;
 
 #ifdef FEAT_EVAL
+    /*
+     * Check if this script was sourced before to finds its SID.
+     * If it's new, generate a new SID.
+     */
+    save_current_SID = current_SID;
+    for (current_SID = script_names.ga_len; current_SID > 0; --current_SID)
+	if (SCRIPT_NAME(current_SID) != NULL
+		&& fnamecmp(SCRIPT_NAME(current_SID), fname_exp) == 0)
+	    break;
+    if (current_SID == 0)
+    {
+	current_SID = ++last_current_SID;
+	if (ga_grow(&script_names, (int)(current_SID - script_names.ga_len))
+									== OK)
+	{
+	    while (script_names.ga_len < current_SID)
+	    {
+		SCRIPT_NAME(script_names.ga_len + 1) = NULL;
+		++script_names.ga_len;
+		--script_names.ga_room;
+	    }
+	    SCRIPT_NAME(current_SID) = fname_exp;
+	    fname_exp = NULL;
+	}
+	/* Allocate the local script variables to use for this script. */
+	new_script_vars(current_SID);
+    }
+
     /* Don't use local function variables, if called from a function */
     save_funccalp = save_funccal();
-
-    /* Set the new local script variables to use here. */
-    var_init(&script_vars);
-    save_script_vars = set_script_vars(&script_vars);
 #endif
 
     /*
@@ -4084,9 +4177,8 @@ do_source(fname, check_other, is_vimrc)
     sourcing_name = save_sourcing_name;
     sourcing_lnum = save_sourcing_lnum;
 #ifdef FEAT_EVAL
+    current_SID = save_current_SID;
     restore_funccal(save_funccalp);
-    (void)set_script_vars(save_script_vars);
-    var_clear(&script_vars);
 #endif
     if (p_verbose > 0)
     {
@@ -4099,6 +4191,23 @@ theend:
     vim_free(fname_exp);
     return retval;
 }
+
+#ifdef FEAT_EVAL
+/*
+ * ":scriptnames"
+ */
+/*ARGSUSED*/
+    static void
+ex_scriptnames(eap)
+    exarg_t	*eap;
+{
+    int i;
+
+    for (i = 1; i <= script_names.ga_len && !got_int; ++i)
+	if (SCRIPT_NAME(i) != NULL)
+	    smsg((char_u *)"%3d: %s", i, SCRIPT_NAME(i));
+}
+#endif
 
 #if defined(USE_CR) || defined(PROTO)
 /*
@@ -4394,19 +4503,20 @@ get_command_name(idx)
 #endif
 
 #if defined(FEAT_USR_CMDS) || defined(PROTO)
-static int	uc_add_command __ARGS((char_u *name, size_t name_len, char_u *rep, long argt, long def, int compl, int force));
+static int	uc_add_command __ARGS((char_u *name, size_t name_len, char_u *rep, long argt, long def, int flags, int compl, int force));
 static void	uc_list __ARGS((char_u *name, size_t name_len));
-static int	uc_scan_attr __ARGS((char_u *attr, size_t len, long *argt, long *def, int *compl));
+static int	uc_scan_attr __ARGS((char_u *attr, size_t len, long *argt, long *def, int *flags, int *compl));
 static char_u	*uc_split_args __ARGS((char_u *arg, size_t *lenp));
 static size_t	uc_check_code __ARGS((char_u *code, size_t len, char_u *buf, UCMD *cmd, exarg_t *eap, char_u **split_buf, size_t *split_len));
 
     static int
-uc_add_command(name, name_len, rep, argt, def, compl, force)
+uc_add_command(name, name_len, rep, argt, def, flags, compl, force)
     char_u	*name;
     size_t	name_len;
     char_u	*rep;
     long	argt;
     long	def;
+    int		flags;
     int		compl;
     int		force;
 {
@@ -4415,6 +4525,7 @@ uc_add_command(name, name_len, rep, argt, def, compl, force)
     int		i;
     int		cmp = 1;
     char_u	*rep_buf = NULL;
+    garray_t	*gap;
 
     replace_termcodes(rep, &rep_buf, FALSE, FALSE);
     if (rep_buf == NULL)
@@ -4427,10 +4538,20 @@ uc_add_command(name, name_len, rep, argt, def, compl, force)
 	    return FAIL;
     }
 
+    /* get address of growarray: global or in curbuf */
+    if (flags & UC_BUFFER)
+    {
+	gap = &curbuf->b_ucmds;
+	if (gap->ga_itemsize == 0)
+	    ga_init2(gap, sizeof(UCMD), 4);
+    }
+    else
+	gap = &ucmds;
+
     /* Search for the command */
-    cmd = USER_CMD(0);
+    cmd = USER_CMD_GA(gap, 0);
     i = 0;
-    while (i < ucmds.ga_len)
+    while (i < gap->ga_len)
     {
 	size_t len = STRLEN(cmd->uc_name);
 
@@ -4467,16 +4588,16 @@ uc_add_command(name, name_len, rep, argt, def, compl, force)
     /* Extend the array unless we're replacing an existing command */
     if (cmp != 0)
     {
-	if (ga_grow(&ucmds, 1) != OK)
+	if (ga_grow(gap, 1) != OK)
 	    goto fail;
 	if ((p = vim_strnsave(name, (int)name_len)) == NULL)
 	    goto fail;
 
-	cmd = USER_CMD(i);
-	mch_memmove(cmd + 1, cmd, (ucmds.ga_len - i) * sizeof(UCMD));
+	cmd = USER_CMD_GA(gap, i);
+	mch_memmove(cmd + 1, cmd, (gap->ga_len - i) * sizeof(UCMD));
 
-	++ucmds.ga_len;
-	--ucmds.ga_room;
+	++gap->ga_len;
+	--gap->ga_room;
 
 	cmd->uc_name = p;
     }
@@ -4485,6 +4606,7 @@ uc_add_command(name, name_len, rep, argt, def, compl, force)
     cmd->uc_argt = argt;
     cmd->uc_def = def;
     cmd->uc_compl = compl;
+    cmd->uc_scriptID = current_SID;
 
     return OK;
 
@@ -4533,95 +4655,108 @@ uc_list(name, name_len)
     UCMD	*cmd;
     int		len;
     long	a;
+    garray_t	*gap;
 
-    for (i = 0; i < ucmds.ga_len; ++i)
+    gap = &curbuf->b_ucmds;
+    for (;;)
     {
-	cmd = USER_CMD(i);
-	a = cmd->uc_argt;
-
-	/* Skip commands which don't match the requested prefix */
-	if (STRNCMP(name, cmd->uc_name, name_len) != 0)
-	    continue;
-
-	/* Put out the title first time */
-	if (!found)
-	    MSG_PUTS_TITLE(_("\n   Name        Args Range Complete  Definition"));
-	found = TRUE;
-	msg_putchar('\n');
-
-	/* Special cases */
-	msg_putchar(a & BANG ? '!' : ' ');
-	msg_putchar(a & REGSTR ? '"' : ' ');
-	msg_putchar(' ');
-
-	msg_outtrans_attr(cmd->uc_name, hl_attr(HLF_D));
-	len = STRLEN(cmd->uc_name) + 3;
-
-	do {
-	    msg_putchar(' ');
-	    ++len;
-	} while (len < 15);
-
-	len = 0;
-
-	/* Arguments */
-	switch ((int)(a & (EXTRA|NOSPC|NEEDARG)))
+	for (i = 0; i < gap->ga_len; ++i)
 	{
-	case 0:			    IObuff[len++] = '0'; break;
-	case (EXTRA):		    IObuff[len++] = '*'; break;
-	case (EXTRA|NOSPC):	    IObuff[len++] = '?'; break;
-	case (EXTRA|NEEDARG):	    IObuff[len++] = '+'; break;
-	case (EXTRA|NOSPC|NEEDARG): IObuff[len++] = '1'; break;
-	}
+	    cmd = USER_CMD_GA(gap, i);
+	    a = cmd->uc_argt;
 
-	do {
-	    IObuff[len++] = ' ';
-	} while (len < 5);
+	    /* Skip commands which don't match the requested prefix */
+	    if (STRNCMP(name, cmd->uc_name, name_len) != 0)
+		continue;
 
-	/* Range */
-	if (a & (RANGE|COUNT))
-	{
-	    if (a & COUNT)
-	    {
-		/* -count=N */
-		sprintf((char *)IObuff + len, "%ldc", cmd->uc_def);
-		len += STRLEN(IObuff + len);
-	    }
-	    else if (a & DFLALL)
-		IObuff[len++] = '%';
-	    else if (cmd->uc_def >= 0)
-	    {
-		/* -range=N */
-		sprintf((char *)IObuff + len, "%ld", cmd->uc_def);
-		len += STRLEN(IObuff + len);
-	    }
-	    else
-		IObuff[len++] = '.';
-	}
-
-	do {
-	    IObuff[len++] = ' ';
-	} while (len < 11);
-
-	/* Completion */
-	for (j = 0; command_complete[j].expand != 0; ++j)
-	    if (command_complete[j].expand == cmd->uc_compl)
-	    {
-		STRCPY(IObuff + len, command_complete[j].name);
-		len += STRLEN(IObuff + len);
+	    /* Put out the title first time */
+	    if (!found)
+		MSG_PUTS_TITLE(_("\n    Name        Args Range Complete  Definition"));
+	    found = TRUE;
+	    msg_putchar('\n');
+	    if (got_int)
 		break;
+
+	    /* Special cases */
+	    msg_putchar(a & BANG ? '!' : ' ');
+	    msg_putchar(a & REGSTR ? '"' : ' ');
+	    msg_putchar(gap != &ucmds ? 'b' : ' ');
+	    msg_putchar(' ');
+
+	    msg_outtrans_attr(cmd->uc_name, hl_attr(HLF_D));
+	    len = STRLEN(cmd->uc_name) + 4;
+
+	    do {
+		msg_putchar(' ');
+		++len;
+	    } while (len < 16);
+
+	    len = 0;
+
+	    /* Arguments */
+	    switch ((int)(a & (EXTRA|NOSPC|NEEDARG)))
+	    {
+	    case 0:			    IObuff[len++] = '0'; break;
+	    case (EXTRA):		    IObuff[len++] = '*'; break;
+	    case (EXTRA|NOSPC):	    IObuff[len++] = '?'; break;
+	    case (EXTRA|NEEDARG):	    IObuff[len++] = '+'; break;
+	    case (EXTRA|NOSPC|NEEDARG): IObuff[len++] = '1'; break;
 	    }
 
-	do {
-	    IObuff[len++] = ' ';
-	} while (len < 21);
+	    do {
+		IObuff[len++] = ' ';
+	    } while (len < 5);
 
-	IObuff[len] = '\0';
-	msg_outtrans(IObuff);
+	    /* Range */
+	    if (a & (RANGE|COUNT))
+	    {
+		if (a & COUNT)
+		{
+		    /* -count=N */
+		    sprintf((char *)IObuff + len, "%ldc", cmd->uc_def);
+		    len += STRLEN(IObuff + len);
+		}
+		else if (a & DFLALL)
+		    IObuff[len++] = '%';
+		else if (cmd->uc_def >= 0)
+		{
+		    /* -range=N */
+		    sprintf((char *)IObuff + len, "%ld", cmd->uc_def);
+		    len += STRLEN(IObuff + len);
+		}
+		else
+		    IObuff[len++] = '.';
+	    }
 
-	msg_outtrans(cmd->uc_rep);
-	out_flush();
-	ui_breakcheck();
+	    do {
+		IObuff[len++] = ' ';
+	    } while (len < 11);
+
+	    /* Completion */
+	    for (j = 0; command_complete[j].expand != 0; ++j)
+		if (command_complete[j].expand == cmd->uc_compl)
+		{
+		    STRCPY(IObuff + len, command_complete[j].name);
+		    len += STRLEN(IObuff + len);
+		    break;
+		}
+
+	    do {
+		IObuff[len++] = ' ';
+	    } while (len < 21);
+
+	    IObuff[len] = '\0';
+	    msg_outtrans(IObuff);
+
+	    msg_outtrans_special(cmd->uc_rep, FALSE);
+	    out_flush();
+	    ui_breakcheck();
+	    if (got_int)
+		break;
+	}
+	if (gap == &ucmds || i < gap->ga_len)
+	    break;
+	gap = &ucmds;
     }
 
     if (!found)
@@ -4644,11 +4779,12 @@ uc_fun_cmd()
 }
 
     static int
-uc_scan_attr(attr, len, argt, def, compl)
+uc_scan_attr(attr, len, argt, def, flags, compl)
     char_u	*attr;
     size_t	len;
     long	*argt;
     long	*def;
+    int		*flags;
     int		*compl;
 {
     char_u	*p;
@@ -4662,6 +4798,8 @@ uc_scan_attr(attr, len, argt, def, compl)
     /* First, try the simple attributes (no arguments) */
     if (STRNICMP(attr, "bang", len) == 0)
 	*argt |= BANG;
+    else if (STRNICMP(attr, "buffer", len) == 0)
+	*flags |= UC_BUFFER;
     else if (STRNICMP(attr, "register", len) == 0)
 	*argt |= REGSTR;
     else if (STRNICMP(attr, "bar", len) == 0)
@@ -4803,6 +4941,7 @@ ex_command(eap)
     char_u  *p;
     long    argt = 0;
     long    def = -1;
+    int	    flags = 0;
     int	    compl = EXPAND_NOTHING;
     int	    has_attr = (eap->arg[0] == '-');
 
@@ -4813,7 +4952,7 @@ ex_command(eap)
     {
 	++p;
 	end = skiptowhite(p);
-	if (uc_scan_attr(p, end - p, &argt, &def, &compl) == FAIL)
+	if (uc_scan_attr(p, end - p, &argt, &def, &flags, &compl) == FAIL)
 	    return;
 	p = skipwhite(end);
     }
@@ -4837,37 +4976,49 @@ ex_command(eap)
     if (!has_attr && ends_excmd(*p))
     {
 	uc_list(name, end - name);
-	return;
     }
-
-    if (!isupper(*name))
+    else if (!isupper(*name))
     {
 	EMSG(_("User defined commands must start with an uppercase letter"));
 	return;
     }
-
-    uc_add_command(name, end - name, p, argt, def, compl, eap->forceit);
+    else
+	uc_add_command(name, end - name, p, argt, def, flags, compl,
+								eap->forceit);
 }
 
 /*
  * ":comclear"
  */
 /*ARGSUSED*/
+/*
+ * Clear all user commands, global and for current buffer.
+ */
     static void
 ex_comclear(eap)
     exarg_t	*eap;
 {
+    uc_clear(&ucmds);
+    uc_clear(&curbuf->b_ucmds);
+}
+
+/*
+ * Clear all user commands for "gap".
+ */
+    void
+uc_clear(gap)
+    garray_t	*gap;
+{
     int		i;
     UCMD	*cmd;
 
-    for (i = 0; i < ucmds.ga_len; ++i)
+    for (i = 0; i < gap->ga_len; ++i)
     {
-	cmd = USER_CMD(i);
+	cmd = USER_CMD_GA(gap, i);
 	vim_free(cmd->uc_name);
 	vim_free(cmd->uc_rep);
     }
-
-    ga_clear(&ucmds);
+    ga_clear(gap);
 }
 
     static void
@@ -4875,17 +5026,26 @@ ex_delcommand(eap)
     exarg_t	*eap;
 {
     int		i = 0;
-    UCMD	*cmd = USER_CMD(0);
+    UCMD	*cmd;
     int		cmp = -1;
+    garray_t	*gap;
 
-    while (i < ucmds.ga_len)
+    gap = &curbuf->b_ucmds;
+    for (;;)
     {
-	cmp = STRCMP(eap->arg, cmd->uc_name);
-	if (cmp <= 0)
-	    break;
+	cmd = USER_CMD_GA(gap, 0);
+	while (i < gap->ga_len)
+	{
+	    cmp = STRCMP(eap->arg, cmd->uc_name);
+	    if (cmp <= 0)
+		break;
 
-	++i;
-	++cmd;
+	    ++i;
+	    ++cmd;
+	}
+	if (gap == &ucmds || i < gap->ga_len)
+	    break;
+	gap = &ucmds;
     }
 
     if (cmp != 0)
@@ -4897,11 +5057,11 @@ ex_delcommand(eap)
     vim_free(cmd->uc_name);
     vim_free(cmd->uc_rep);
 
-    --ucmds.ga_len;
-    ++ucmds.ga_room;
+    --gap->ga_len;
+    ++gap->ga_room;
 
-    if (i < ucmds.ga_len)
-	mch_memmove(cmd, cmd + 1, (ucmds.ga_len - i) * sizeof(UCMD));
+    if (i < gap->ga_len)
+	mch_memmove(cmd, cmd + 1, (gap->ga_len - i) * sizeof(UCMD));
 }
 
     static char_u *
@@ -5175,7 +5335,13 @@ do_ucmd(eap)
 
     size_t	split_len = 0;
     char_u	*split_buf = NULL;
-    UCMD	*cmd = USER_CMD(eap->useridx);
+    UCMD	*cmd;
+    long	save_current_SID = current_SID;
+
+    if (eap->cmdidx == CMD_USER)
+	cmd = USER_CMD(eap->useridx);
+    else
+	cmd = USER_CMD_GA(&curbuf->b_ucmds, eap->useridx);
 
     /*
      * Replace <> in the command by the arguments.
@@ -5225,7 +5391,9 @@ do_ucmd(eap)
 	}
     }
 
+    current_SID = cmd->uc_scriptID;
     do_cmdline(buf, NULL, NULL, DOCMD_VERBOSE|DOCMD_NOWAIT);
+    current_SID = save_current_SID;
     vim_free(buf);
     vim_free(split_buf);
 }
@@ -5235,11 +5403,7 @@ do_ucmd(eap)
 get_user_command_name(idx)
     int		idx;
 {
-    int	i = idx - (int)CMD_SIZE;
-
-    if (i >= ucmds.ga_len)
-	return NULL;
-    return USER_CMD(i)->uc_name;
+    return get_user_commands(idx - (int)CMD_SIZE);
 }
 
 /*
@@ -5249,9 +5413,12 @@ get_user_command_name(idx)
 get_user_commands(idx)
     int		idx;
 {
-    if (idx >= ucmds.ga_len)
-	return NULL;
-    return USER_CMD(idx)->uc_name;
+    if (idx < curbuf->b_ucmds.ga_len)
+	return USER_CMD_GA(&curbuf->b_ucmds, idx)->uc_name;
+    idx -= curbuf->b_ucmds.ga_len;
+    if (idx < ucmds.ga_len)
+	return USER_CMD(idx)->uc_name;
+    return NULL;
 }
 
 /*
@@ -5263,7 +5430,8 @@ get_user_cmd_flags(idx)
     int		idx;
 {
     static char *user_cmd_flags[] =
-	{"bang", "bar", "complete", "count", "nargs", "range", "register"};
+	{"bang", "bar", "buffer", "complete", "count",
+	    "nargs", "range", "register"};
 
     if (idx >= sizeof(user_cmd_flags) / sizeof(user_cmd_flags[0]))
 	return NULL;
@@ -6419,7 +6587,7 @@ ex_syncbind(eap)
 
 	    ctrl_o[0] = Ctrl_O;
 	    ctrl_o[1] = 0;
-	    ins_typebuf(ctrl_o, -1, 0, TRUE);
+	    ins_typebuf(ctrl_o, REMAP_NONE, 0, TRUE);
 	}
     }
 #endif
@@ -7250,7 +7418,7 @@ ex_normal(eap)
 	 * typeahead than there was before this command.
 	 */
 	len = typelen;
-	ins_typebuf(eap->arg, eap->forceit ? -1 : 0, 0, TRUE);
+	ins_typebuf(eap->arg, eap->forceit ? REMAP_NONE : REMAP_YES, 0, TRUE);
 	while (	   (!stuff_empty()
 			|| (!typebuf_typed()
 			    && typelen > len))
@@ -8847,5 +9015,22 @@ ex_language(eap)
 # endif
 	}
     }
+}
+#endif
+
+#if defined(FEAT_EVAL) || defined(PROTO)
+/*
+ * Return TRUE if an Ex command "name" exists.
+ */
+    int
+cmd_exists(name)
+    char_u	*name;
+{
+    exarg_t	ea;
+
+    ea.cmd = name;
+    ea.cmdidx = (cmdidx_t)0;
+    (void)find_command(&ea);
+    return (ea.cmdidx != CMD_SIZE);
 }
 #endif

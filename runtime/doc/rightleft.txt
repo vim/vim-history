@@ -1,4 +1,4 @@
-*rightleft.txt* For Vim version 6.0i.  Last change: 2000 Jul 07
+*rightleft.txt* For Vim version 6.0j.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Avner Lottem

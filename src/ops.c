@@ -200,6 +200,7 @@ op_shift(oap, curs_top, amount)
     long	    i;
     int		    first_char;
     int		    block_col = 0;
+    char_u	    *s;
 
     if (u_save((linenr_t)(oap->start.lnum - 1),
 				       (linenr_t)(oap->end.lnum + 1)) == FAIL)
@@ -246,15 +247,26 @@ op_shift(oap, curs_top, amount)
 
     if (oap->line_count > p_report)
     {
+	if (oap->op_type == OP_RSHIFT)
+	    s = (char_u *)">";
+	else
+	    s = (char_u *)"<";
 	if (oap->line_count == 1)
-	    STRCPY(IObuff, _("1 line "));
+	{
+	    if (amount == 1)
+		sprintf((char *)IObuff, _("1 line %sed 1 time"), s);
+	    else
+		sprintf((char *)IObuff, _("l line %sed %d times"), s, amount);
+	}
 	else
-	    sprintf((char *)IObuff, _("%ld lines "), oap->line_count);
-	STRCAT(IObuff, (oap->op_type == OP_RSHIFT) ? ">" : "<");
-	if (amount == 1)
-	    STRCAT(IObuff, _("ed 1 time"));
-	else
-	    sprintf((char *)IObuff + STRLEN(IObuff), _("ed %d times"), amount);
+	{
+	    if (amount == 1)
+		sprintf((char *)IObuff, _("%ld lines %sed 1 time"),
+							  oap->line_count, s);
+	    else
+		sprintf((char *)IObuff, _("%ld lines %sed %d times"),
+						  oap->line_count, s, amount);
+	}
 	msg(IObuff);
     }
 
@@ -959,14 +971,14 @@ do_execreg(regname, colon, addcr)
 	    return FAIL;
 
 	/* Disallow remaping for ":@r". */
-	remap = colon ? -1 : 0;
+	remap = colon ? REMAP_NONE : REMAP_YES;
 
 	/*
 	 * Insert lines into typeahead buffer, from last one to first one.
 	 */
 	for (i = y_current->y_size; --i >= 0; )
 	{
-	/* insert newline between lines and after last line if type is MLINE */
+	    /* insert NL between lines and after last line if type is MLINE */
 	    if (y_current->y_type == MLINE || i < y_current->y_size - 1
 								     || addcr)
 	    {
@@ -991,11 +1003,11 @@ put_in_typebuf(s, colon)
     int		retval = OK;
 
     if (colon)
-	retval = ins_typebuf((char_u *)"\n", FALSE, 0, TRUE);
+	retval = ins_typebuf((char_u *)"\n", REMAP_YES, 0, TRUE);
     if (retval == OK)
-	retval = ins_typebuf(s, FALSE, 0, TRUE);
+	retval = ins_typebuf(s, REMAP_YES, 0, TRUE);
     if (colon && retval == OK)
-	retval = ins_typebuf((char_u *)":", FALSE, 0, TRUE);
+	retval = ins_typebuf((char_u *)":", REMAP_YES, 0, TRUE);
     return retval;
 }
 

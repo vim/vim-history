@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0i.  Last change: 2000 Oct 15
+*eval.txt*      For Vim version 6.0j.  Last change: 2000 Oct 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -33,29 +33,29 @@ These are converted automatically, depending on how they are used.
 
 Conversion from a Number to a String is by making the ASCII representation of
 the Number.  Examples: >
-	Number 123	-->	String "123"
-	Number 0	-->	String "0"
-	Number -1	-->	String "-1"
+Number 123	-->	String "123"
+Number 0	-->	String "0"
+Number -1	-->	String "-1"
 
 Conversion from a String to a Number is done by converting the first digits
 to a number.  Hexadecimal "0xf9" and Octal "017" numbers are recognized.  If
 the String doesn't start with digits, the result is zero.  Examples: >
-	String "456"	-->	Number 456
-	String "6bar"	-->	Number 6
-	String "foo"	-->	Number 0
-	String "0xf1"	-->	Number 241
-	String "0100"	-->	Number 64
+String "456"	-->	Number 456
+String "6bar"	-->	Number 6
+String "foo"	-->	Number 0
+String "0xf1"	-->	Number 241
+String "0100"	-->	Number 64
 
 To force conversion from String to Number, add zero to it: >
-	:echo "0100" + 0
+:echo "0100" + 0
 
 For boolean operators Numbers are used.  Zero is FALSE, non-zero is TRUE.
 
 Note that in the command >
-	:if "foo"
+:if "foo"
 "foo" is converted to 0, which means FALSE.  To test for a non-empty string,
 use strlen(): >
-	:if strlen("foo")
+:if strlen("foo")
 
 If you need to know the type of a variable or expression, use the |type()|
 function.
@@ -85,44 +85,44 @@ Expression syntax summary, from least to most significant:
 |expr3|	expr4 && expr4 ..	logical AND
 
 |expr4|	expr5 == expr5		equal
-	expr5 != expr5		not equal
-	expr5 >	 expr5		greater than
-	expr5 >= expr5		greater than or equal
-	expr5 <	 expr5		smaller than
-	expr5 <= expr5		smaller than or equal
-	expr5 =~ expr5		regexp matches
-	expr5 !~ expr5		regexp doesn't match
-	expr5 ==? expr5		equal, ignoring case
-	expr5 ==# expr5		equal, match case
-	etc.  As above, append ? for ignoring case, # for matching case
+expr5 != expr5		not equal
+expr5 >	 expr5		greater than
+expr5 >= expr5		greater than or equal
+expr5 <	 expr5		smaller than
+expr5 <= expr5		smaller than or equal
+expr5 =~ expr5		regexp matches
+expr5 !~ expr5		regexp doesn't match
+expr5 ==? expr5		equal, ignoring case
+expr5 ==# expr5		equal, match case
+etc.  As above, append ? for ignoring case, # for matching case
 
 |expr5|	expr6 +	 expr6 ..	number addition
-	expr6 -	 expr6 ..	number subtraction
-	expr6 .	 expr6 ..	string concatenation
+expr6 -	 expr6 ..	number subtraction
+expr6 .	 expr6 ..	string concatenation
 
 |expr6|	expr7 *	 expr7 ..	number multiplication
-	expr7 /	 expr7 ..	number division
-	expr7 %	 expr7 ..	number modulo
+expr7 /	 expr7 ..	number division
+expr7 %	 expr7 ..	number modulo
 
 |expr7|	! expr7			logical NOT
-	- expr7			unary minus
-	expr8
+- expr7			unary minus
+expr8
 
 |expr8|	expr9[expr1]		index in String
 
 |expr9|	number			number constant
-	"string"		string constant
-	'string'		literal string constant
-	&option			option value
-	(expr1)			nested expression
-	variable		internal variable
-	$VAR			environment variable
-	@r			contents of register 'r'
-	function(expr1, ...)	function call
+"string"		string constant
+'string'		literal string constant
+&option			option value
+(expr1)			nested expression
+variable		internal variable
+$VAR			environment variable
+@r			contents of register 'r'
+function(expr1, ...)	function call
 
 ".." indicates that the operations in this level can be concatenated.
 Example: >
-	&nu || &list && &shell == "csh"
+&nu || &list && &shell == "csh"
 
 All expressions within one level are parsed from left to right.
 
@@ -130,59 +130,59 @@ All expressions within one level are parsed from left to right.
 expr1							*expr1*
 -----
 
-	expr2 ? expr1 : expr1
+expr2 ? expr1 : expr1
 
 The expression before the '?' is evaluated to a number.  If it evaluates to
 non-zero, the result is the value of the expression between the '?' and ':',
 otherwise the result is the value of the expression after the ':'.
 Example: >
-	:echo lnum == 1 ? "top" : lnum
+:echo lnum == 1 ? "top" : lnum
 
 Since the first expression is an "expr2", it cannot contain another ?:.  The
 other two expressions can, thus allow for recursive use of ?:.
 Example: >
-	:echo lnum == 1 ? "top" : lnum == 1000 ? "last" : lnum
+:echo lnum == 1 ? "top" : lnum == 1000 ? "last" : lnum
 
 To keep this readable, using |line-continuation| is suggested: >
-	:echo lnum == 1
-	:\	? "top"
-	:\	: lnum == 1000
-	:\		? "last"
-	:\		: lnum
+:echo lnum == 1
+:\	? "top"
+:\	: lnum == 1000
+:\		? "last"
+:\		: lnum
 
 
 expr2 and expr3						*expr2* *expr3*
 ---------------
 
-						*expr-barbar* *expr-&&*
+					*expr-barbar* *expr-&&*
 The "||" and "&&" operators take one argument on each side.  The arguments
 are (converted to) Numbers.  The result is:
 
-	 input				 output		    ~
-    n1		n2		n1 || n2	n1 && n2    ~
-    zero	zero		zero		zero
-    zero	non-zero	non-zero	zero
-    non-zero	zero		non-zero	zero
-    non-zero	non-zero	non-zero	non-zero
+ input				 output		    ~
+n1		n2		n1 || n2	n1 && n2    ~
+zero	zero		zero		zero
+zero	non-zero	non-zero	zero
+non-zero	zero		non-zero	zero
+non-zero	non-zero	non-zero	non-zero
 
 The operators can be concatenated, for example: >
 
-	&nu || &list && &shell == "csh"
+&nu || &list && &shell == "csh"
 
 Note that "&&" takes precedence over "||", so this has the meaning of: >
 
-	&nu || (&list && &shell == "csh")
+&nu || (&list && &shell == "csh")
 
 Once the result is known, the expression "short-circuits", that is, further
 arguments are not evaluated.  This is like what happens in C.  For example: >
 
-	let a = 1
-	echo a || b
+let a = 1
+echo a || b
 
 This is valid even if there is no variable called "b" because "a" is non-zero,
 so the result must be non-zero.  Similarly below: >
 
-	echo exists("b") && b == "yes"
+echo exists("b") && b == "yes"
 
 This is valid whether "b" has been defined or not.  The second clause will
 only be evaluated if "b" has been defined.
@@ -191,18 +191,18 @@ only be evaluated if "b" has been defined.
 expr4							*expr4*
 -----
 
-	expr5 {cmp} expr5
+expr5 {cmp} expr5
 
 Compare two expr5 expressions, resulting in a 0 if it evaluates to false, or 1
 if it evaluates to true.
 
-				*expr-==*  *expr-!=*  *expr->*   *expr->=*
-				*expr-<*   *expr-<=*  *expr-=~*  *expr-!~*
-				*expr-==#* *expr-!=#* *expr->#*  *expr->=#*
-				*expr-<#*  *expr-<=#* *expr-=~#* *expr-!~#*
-				*expr-==?* *expr-!=?* *expr->?*  *expr->=?*
-				*expr-<?*  *expr-<=?* *expr-=~?* *expr-!~?*
-		use 'ignorecase'    match case	   ignore case ~
+			*expr-==*  *expr-!=*  *expr->*   *expr->=*
+			*expr-<*   *expr-<=*  *expr-=~*  *expr-!~*
+			*expr-==#* *expr-!=#* *expr->#*  *expr->=#*
+			*expr-<#*  *expr-<=#* *expr-=~#* *expr-!~#*
+			*expr-==?* *expr-!=?* *expr->?*  *expr->=?*
+			*expr-<?*  *expr-<=?* *expr-=~?* *expr-!~?*
+	use 'ignorecase'    match case	   ignore case ~
 equal			==		==#		==?
 not equal		!=		!=#		!=?
 greater than		>		>#		>?
@@ -213,9 +213,9 @@ regexp matches		=~		=~#		=~?
 regexp doesn't match	!~		!~#		!~?
 
 Examples:
-	"abc" ==# "Abc"	  evaluates to 0
-	"abc" ==? "Abc"	  evaluates to 1
-	"abc" == "Abc"	  evaluates to 1 if 'ignorecase' is set, 0 otherwise
+"abc" ==# "Abc"	  evaluates to 0
+"abc" ==? "Abc"	  evaluates to 1
+"abc" == "Abc"	  evaluates to 1 if 'ignorecase' is set, 0 otherwise
 
 When comparing a String with a Number, the String is converted to a Number,
 and the comparison is done on Numbers.
@@ -239,25 +239,25 @@ single-quote string, see |literal-string|.
 Since a string is considered to be a single line, a multi-line pattern
 (containing \n, backslash-n) will not match.  However, a literal NL character
 can be matched like an ordinary character.  Examples:
-	"foo\nbar" =~ "\n"	evaluates to 1
-	"foo\nbar" =~ "\\n"	evaluates to 0
+"foo\nbar" =~ "\n"	evaluates to 1
+"foo\nbar" =~ "\\n"	evaluates to 0
 
 
 expr5 and expr6						*expr5* *expr6*
 ---------------
-	expr6 +	 expr6 ..	number addition		*expr-+*
-	expr6 -	 expr6 ..	number subtraction	*expr--*
-	expr6 .	 expr6 ..	string concatenation	*expr-.*
+expr6 +	 expr6 ..	number addition		*expr-+*
+expr6 -	 expr6 ..	number subtraction	*expr--*
+expr6 .	 expr6 ..	string concatenation	*expr-.*
 
-	expr7 *	 expr7 ..	number multiplication	*expr-star*
-	expr7 /	 expr7 ..	number division		*expr-/*
-	expr7 %	 expr7 ..	number modulo		*expr-%*
+expr7 *	 expr7 ..	number multiplication	*expr-star*
+expr7 /	 expr7 ..	number division		*expr-/*
+expr7 %	 expr7 ..	number modulo		*expr-%*
 
 For all, except ".", Strings are converted to Numbers.
 
 Note the difference between "+" and ".":
-	"123" + "456" = 579
-	"123" . "456" = "123456"
+"123" + "456" = 579
+"123" . "456" = "123456"
 
 When the righthand side of '/' is zero, the result is 0xfffffff.
 When the righthand side of '%' is zero, the result is 0.
@@ -265,8 +265,8 @@ When the righthand side of '%' is zero, the result is 0.
 
 expr7							*expr7*
 -----
-	! expr7			logical NOT		*expr-!*
-	- expr7			unary minus		*expr-unary--*
+! expr7			logical NOT		*expr-!*
+- expr7			unary minus		*expr-unary--*
 
 For '!' non-zero becomes zero, zero becomes one.
 For '-' the sign of the number is changed.
@@ -274,14 +274,14 @@ For '-' the sign of the number is changed.
 A String will be converted to a Number first.
 
 These two can be repeated and mixed.  Examples:
-    !-1	    == 0
-    !!8	    == 1
-    --9	    == 9
+!-1	    == 0
+!!8	    == 1
+--9	    == 9
 
 
 expr8							*expr8*
 -----
-	expr9[expr1]		index in String		*expr-[]*
+expr9[expr1]		index in String		*expr-[]*
 
 This results in a String that contains the expr1'th single character from
 expr9.  expr9 is used as a String, expr1 as a Number.
@@ -289,49 +289,49 @@ expr9.  expr9 is used as a String, expr1 as a Number.
 Note that index zero gives the first character.  This is like it works in C.
 Careful: text column numbers start with one!  Example, to get the character
 under the cursor: >
-	:let c = getline(line("."))[col(".") - 1]
+:let c = getline(line("."))[col(".") - 1]
 
 If the length of the String is less than the index, the result is an empty
 String.
 
-							*expr9*
+						*expr9*
 number
 ------
-	number			number constant		*expr-number*
+number			number constant		*expr-number*
 
 Decimal, Hexadecimal (starting with 0x or 0X), or Octal (starting with 0).
 
 
 string							*expr-string*
 ------
-	"string"		string constant		*expr-quote*
+"string"		string constant		*expr-quote*
 
 Note that double quotes are used.
 
 A string constant accepts these special characters:
-	\...	three-digit octal number (e.g., "\316")
-	\..	two-digit octal number (must be followed by non-digit)
-	\.	one-digit octal number (must be followed by non-digit)
-	\x..	two-character hex number (e.g., "\x1f")
-	\x.	one-character hex number (must be followed by non-hex)
-	\X..	same as \x..
-	\X.	same as \x.
-	\b	backspace <BS>
-	\e	escape <Esc>
-	\f	formfeed <FF>
-	\n	newline <NL>
-	\r	return <CR>
-	\t	tab <Tab>
-	\\	backslash
-	\"	double quote
-	\<xxx>	Special key named "xxx".  e.g. "\<C-W>" for CTRL-W.
+\...	three-digit octal number (e.g., "\316")
+\..	two-digit octal number (must be followed by non-digit)
+\.	one-digit octal number (must be followed by non-digit)
+\x..	two-character hex number (e.g., "\x1f")
+\x.	one-character hex number (must be followed by non-hex)
+\X..	same as \x..
+\X.	same as \x.
+\b	backspace <BS>
+\e	escape <Esc>
+\f	formfeed <FF>
+\n	newline <NL>
+\r	return <CR>
+\t	tab <Tab>
+\\	backslash
+\"	double quote
+\<xxx>	Special key named "xxx".  e.g. "\<C-W>" for CTRL-W.
 
 Note that "\000" and "\x00" force the end of the string.
 
 
 literal-string						*literal-string*
 ---------------
-	'string'		literal string constant		*expr-'*
+'string'		literal string constant		*expr-'*
 
 Note that single quotes are used.
 
@@ -342,14 +342,14 @@ for that.
 
 option							*expr-option*
 ------
-	&option			option value
+&option			option value
 
 Any option name can be used here.  See |options|.
 
 
 register						*expr-register*
 --------
-	@r			contents of register 'r'
+@r			contents of register 'r'
 
 The result is the contents of the named register, as a single string.
 Newlines are inserted where required.  To get the contents of the unnamed
@@ -359,37 +359,37 @@ an explanation of the available registers.
 
 nesting							*expr-nesting*
 -------
-	(expr1)			nested expression
+(expr1)			nested expression
 
 
 environment variable					*expr-env*
 --------------------
-	$VAR			environment variable
+$VAR			environment variable
 
 The String value of any environment variable.  When it is not defined, the
 result is an empty string.
-							*expr-env-expand*
+						*expr-env-expand*
 Note that there is a difference between using $VAR directly and using
 expand("$VAR").  Using it directly will only expand environment variables that
 are known inside the current Vim session.  Using expand() will first try using
 the environment variables known inside the current Vim session.  If that
 fails, a shell will be used to expand the variable.  This can be slow, but it
 does expand all variables that the shell knows about.  Example: >
-	:echo $version
-	:echo expand("$version")
+:echo $version
+:echo expand("$version")
 The first one probably doesn't echo anything, the second echoes the $version
 variable (if you shell supports it).
 
 
 internal variable					*expr-variable*
 -----------------
-	variable		internal variable
+variable		internal variable
 See below |internal-variables|.
 
 
 function call						*expr-function*
 -------------
-	function(expr1, ...)	function call
+function(expr1, ...)	function call
 See below |functions|.
 
 
@@ -407,16 +407,16 @@ been destroyed, results in an error.
 There are several name spaces for variables.  Which one is to be used is
 specified by what is prepended::
 
-		(nothing) In a function: local to a function; Otherwise: global
+	(nothing) In a function: local to a function; Otherwise: global
 |buffer-variable|    b:	  Local to the current buffer.
 |window-variable|    w:	  Local to the current window.
 |global-variable|    g:	  Global.
-		     l:	  Local to a function.
+|local-variable|     l:	  Local to a function.
 |script-variable|    s:	  Local to a |:source|'ed Vim script.
 |function-argument|  a:	  Function argument (only inside a function).
 |vim-variable|       v:	  Global, predefined by Vim.
 
-						*buffer-variable*
+						*buffer-variable* *b:var*
 A variable name that is preceded with "b:" is local to the current buffer.
 Thus you can have several "b:foo" variables, one for each buffer.
 This kind of variable is deleted when the buffer is unloaded.  If you want to
@@ -433,28 +433,91 @@ b:changedtick	The total number of changes to the current buffer.  It is
 		    :   call My_Update()
 		    :endif
 <
-						*window-variable*
+						*window-variable* *w:var*
 A variable name that is preceded with "w:" is local to the current window.  It
 is deleted when the window is closed.
 
-						*global-variable*
+						*global-variable* *g:var*
 Inside functions global variables are accessed with "g:".  Omitting this will
 access a variable local to a function.  But "g:" can also be used in any other
 place if you like.
 
-						*local-variable*
+						*local-variable* *l:var*
 Inside functions local variables are accessed without prepending anything.
 But you can also prepend "l:" if you like.
 
-						*script-variable*
-In a Vim script, read by a ":source" command, variables starting with "s:" can
-be used.  They are only valid within that script and while it is being
-executed.  Thus not in other scripts sourced from this one, autocommands or
-functions.  These variables can be used to avoid conflicts with global
-variable names used for other purposes, and to have them automatically deleted
-when the script ends (also when an error is detected).
+						*script-variable* *s:var*
+In a Vim script variables starting with "s:" can be used.  The cannot be
+accessed from outside of the scripts, thus are local to the script.
 
-Predefined Vim variables:			*vim-variable*
+They can be used in:
+- commands executed while the script is sourced
+- functions defined in the script
+- autocommands defined in the script
+- functions and autocommands defined in functions and autocommands which were
+  defined in the script (recursively)
+Thus not in:
+- other scripts sourced from this one
+- user defined commands
+- mappings 
+- etc.
+
+script variables can be used to avoid conflicts with global variable names.
+An example that works: >
+
+	let s:counter = 0
+	function MyCounter()
+	  let s:counter = s:counter + 1
+	  echo s:counter
+	endfunction
+	command Tick call MyCounter()
+
+And an example that does NOT work: >
+
+	let s:counter = 0
+	command Tick let s:counter = s:counter + 1 | echo s:counter
+
+When the ":Tick" command is executed outside the script, the s:counter
+variable will not be available.  In the previous example, calling the
+MyCounter() function sets the context for script variables to where the
+function was defined, then s:counter can be used.
+The script variables are also available when a function is defined inside a
+function that is defined in a script.  Example: >
+
+	let s:counter = 0
+	function StartCounting(incr)
+	  if a:incr
+	    function MyCounter()
+	      let s:counter = s:counter + 1
+	    endfunction
+	  else
+	    function MyCounter()
+	      let s:counter = s:counter - 1
+	    endfunction
+	  endif
+	endfunction
+
+This defines the MyCounter() function either for counting up or counting down
+when calling StartCounting().  It doesn't matter from where StartCounting() is
+called, the s:counter variable will be accessible in MyCounter().
+
+When the same script is sourced again it will use the same script variables.
+They will remain valid as long as Vim is running.  This can be used to
+maintain a counter: >
+
+	if !exists("s:counter")
+	  let s:counter = 1
+	  echo "script executed for the first time"
+	else
+	  let s:counter = s:counter + 1
+	  echo "script executed " . s:counter . " times now"
+	endif
+
+Note that this means that filetype plugins don't get a different set of script
+variables for each buffer.  Use local buffer variables instead |b:var|.
+
+
+Predefined Vim variables:			*vim-variable* *v:var*
 
 					*v:count* *count-variable*
 v:count		The count given for the last Normal mode command.  Can be used
@@ -624,6 +687,7 @@ matchend( {expr}, {pat}[, {start})
 				Number	position where {pat} ends in {expr}
 matchstr( {expr}, {pat}[, {start}])
 				String	match of {pat} in {expr}
+mode()				String  current editing mode
 nr2char( {expr})		String	single char with ASCII value {expr}
 rename({from}, {to})		Number  rename (move) file from {from} to {to}
 search( {pattern}[, {wrap})	Number  search for {pattern}
@@ -903,12 +967,15 @@ exists({expr})	The result is a Number, which is 1 if {var} is defined, zero
 					|user-functions|).
 			varname		internal variable (see
 					|internal-variables|).
+			:cmdname	Ex command, both built-in and user
+					commands |:command|
 
 		Examples: >
 			exists("&shortname")
 			exists("$HOSTNAME")
 			exists("*strftime")
 			exists("bufcount")
+			exists(":Make")
 <		There must be no space between the symbol &/$/* and the name.
 		Note that the argument must be a string, not the name of the
 		variable itself!  This example doesn't check for existence of
@@ -1433,6 +1500,22 @@ matchstr({expr}, {pat}[, {start}])
 			:echo matchstr("testing", "ing", 5)
 <		result is "".
 
+							*mode()*
+mode()		Return a string that indicates the current mode:
+			n	Normal
+			v	Visual by character
+			V	Visual by line
+			CTRL-V	Visual blockwise
+			s	Select by character
+			S	Select by line
+			CTRL-S	Select blockwise
+			i	Insert
+			R	Replace
+			c	Command-line
+			r	Hit-return prompt
+		This is useful in the 'statusline' option.  In most other
+		places it always returns "c".
+
 							*nr2char()*
 nr2char({expr})
 		Return a string with a single character, which has the ASCII
@@ -1917,6 +2000,11 @@ builtin functions.  To prevent from using the same name in different scripts
 avoid obvious, short names.  A good habit is to start the function name with
 the name of the script, e.g., "HTMLcolor()".
 
+							*local-function*
+A function local to a script must start with |<SID>|.  A local script function
+can only be called from within the script, from functions defined in the
+script and mappings defined in the script.  See |<SID>| for details.
+
 							*:fu* *:function*
 :fu[nction]		List all functions and their arguments.
 
@@ -1926,7 +2014,7 @@ the name of the script, e.g., "HTMLcolor()".
 			Define a new function by the name {name}.  The name
 			must be made of alphanumeric characters and '_', and
 			must start with a capital.
-							*function-argument*
+						*function-argument* *a:var*
 			An argument can be defined by giving its name.  In the
 			function this can then be used as "a:name" ("a:" for
 			argument).

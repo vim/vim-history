@@ -69,7 +69,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0i
+MINOR = 0j
 
 # CHECKLIST for creating a new version:
 #
@@ -272,6 +272,8 @@ SRC_UNIX =	\
 		src/hangulin.c \
 		src/if_cscope.c \
 		src/if_cscope.h \
+		src/if_ruby.c \
+		src/proto/if_ruby.pro \
 		src/integration.c \
 		src/integration.h \
 		src/link.sh \
@@ -492,7 +494,6 @@ SRC_EXTRA =	\
 		src/gui_beos.h \
 		src/gui_riscos.c \
 		src/gui_riscos.h \
-		src/if_ruby.c \
 		src/if_sniff.c \
 		src/if_sniff.h \
 		src/link.390 \
@@ -504,7 +505,6 @@ SRC_EXTRA =	\
 		src/os_riscos.h \
 		src/proto/gui_beos.pro \
 		src/proto/gui_riscos.pro \
-		src/proto/if_ruby.pro \
 		src/proto/os_beos.pro \
 		src/proto/os_riscos.pro \
 		src/os_vms_fix.com \

@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0i.  Last change: 2000 Sep 29
+*quickfix.txt*  For Vim version 6.0j.  Last change: 2000 Oct 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -201,7 +201,7 @@ The following uppercase conversion characters specify the type of special
 format strings.  At most one of them may be given as a prefix at the begin
 of a single comma-separated format pattern.
 Some compilers produce messages that consist of directory names that have to
-be prepended to each file name read by %f (example: GUN make). The following
+be prepended to each file name read by %f (example: GNU make). The following
 codes can be used to scan these directory names; they will be stored in an
 internal directory stack.
 	%D		"enter directory" format string; expects a following

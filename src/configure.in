@@ -602,7 +602,7 @@ else
 		[-lXt $X_PRE_LIBS -lX11 $X_EXTRA_LIBS -lXdmcp])
 
     dnl Check for -lXpm (needed for some versions of Motif)
-    AC_CHECK_LIB(Xpm, XpmFreeXpmImage, [X_PRE_LIBS="$X_PRE_LIBS -lXpm"],,
+    AC_CHECK_LIB(Xpm, XpmCreatePixmapFromData, [X_PRE_LIBS="$X_PRE_LIBS -lXpm"],,
 		[-lXt $X_PRE_LIBS -lXpm -lX11 $X_EXTRA_LIBS])
 
     LDFLAGS=$ldflags_save

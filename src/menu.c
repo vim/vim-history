@@ -95,6 +95,14 @@ ex_menu(eap)
     modes = get_menu_cmd_modes(eap->cmd, eap->forceit, &noremap, &unmenu);
     arg = eap->arg;
 
+#ifdef FEAT_EVAL
+    if (STRNCMP(arg, "<script>", 8) == 0)
+    {
+	noremap = REMAP_SCRIPT;
+	arg = skipwhite(arg + 8);
+    }
+#endif
+
     /*
      * Fill in the priority table.
      */
@@ -956,8 +964,10 @@ show_menus_recursive(menu, modes, depth)
 		for (i = 0; i < depth + 2; i++)
 		    MSG_PUTS("  ");
 		msg_putchar(menu_mode_chars[bit]);
-		if (menu->noremap[bit])
+		if (menu->noremap[bit] == REMAP_NONE)
 		    msg_putchar('*');
+		else if (menu->noremap[bit] == REMAP_SCRIPT)
+		    msg_putchar('&');
 		else
 		    msg_putchar(' ');
 		if ((menu->modes & menu->enabled & (1 << bit)) == 0)
@@ -1269,10 +1279,11 @@ menu_namecmp(name, mname)
 
 /*
  * Return the modes specified by the given menu command (eg :menu! returns
- * MENU_CMDLINE_MODE | MENU_INSERT_MODE).  If noremap is not NULL, then the
- * flag it points to is set according to whether the command is a "nore"
- * command.  If unmenu is not NULL, then the flag it points to is set
- * according to whether the command is an "unmenu" command.
+ * MENU_CMDLINE_MODE | MENU_INSERT_MODE).
+ * If "noremap" is not NULL, then the flag it points to is set according to
+ * whether the command is a "nore" command.
+ * If "unmenu" is not NULL, then the flag it points to is set according to
+ * whether the command is an "unmenu" command.
  */
     static int
 get_menu_cmd_modes(cmd, forceit, noremap, unmenu)
@@ -1321,7 +1332,7 @@ get_menu_cmd_modes(cmd, forceit, noremap, unmenu)
     }
 
     if (noremap != NULL)
-	*noremap = (*cmd == 'n');
+	*noremap = (*cmd == 'n' ? REMAP_NONE : REMAP_YES);
     if (unmenu != NULL)
 	*unmenu = (*cmd == 'u');
     return modes;
@@ -1871,7 +1882,7 @@ ex_emenu(eap)
     vim_free(saved_name);
     if (menu == NULL)
     {
-	EMSG(_("Menu not found - check menu names"));
+	EMSG2(_("Menu not found: %s"), eap->arg);
 	return;
     }
 
@@ -1881,7 +1892,7 @@ ex_emenu(eap)
 	mode = (char_u *)"Insert";
 	idx = MENU_INDEX_INSERT;
     }
-    else if (eap->argt & RANGE)
+    else if (eap->addr_count)
     {
 	pos_t	tpos;
 
@@ -1937,8 +1948,8 @@ ex_emenu(eap)
 	idx = MENU_INDEX_NORMAL;
     }
 
-    if (idx != MENU_INDEX_INVALID)
-	ins_typebuf(menu->strings[idx], menu->noremap[idx] ? -1 : 0, 0, TRUE);
+    if (idx != MENU_INDEX_INVALID && menu->strings[idx] != NULL)
+	ins_typebuf(menu->strings[idx], menu->noremap[idx], 0, TRUE);
     else
 	EMSG2(_("Menu not defined for %s mode"),mode);
 }

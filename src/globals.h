@@ -166,6 +166,9 @@ EXTERN int	more_back_used INIT(= FALSE); /* using more_back */
 EXTERN int	newline_on_exit INIT(= FALSE);	/* did msg in altern. screen */
 EXTERN int	intr_char INIT(= 0);	    /* extra interrupt character */
 #endif
+#if (defined(UNIX) || defined(VMS)) && defined(FEAT_X11)
+EXTERN int	x_no_connect INIT(= FALSE); /* don't connect to X server */
+#endif
 EXTERN int	vgetc_busy INIT(= FALSE);   /* inside vgetc() now */
 
 EXTERN int	didset_vim INIT(= FALSE);   /* did set $VIM ourselves */
@@ -182,7 +185,13 @@ EXTERN int	msg_no_more INIT(= FALSE);  /* don't use more prompt, truncate
 EXTERN char_u	*sourcing_name INIT( = NULL);/* name of error message source */
 EXTERN linenr_t	sourcing_lnum INIT(= 0);    /* line number of the source file */
 
+#ifdef FEAT_EVAL
+EXTERN long	current_SID INIT(= 0);	    /* ID of script being sourced or
+					       was sourced to define the
+					       current function. */
+#endif
 EXTERN int	scroll_region INIT(= FALSE); /* term supports scroll region */
+EXTERN int	t_colors INIT(= 0);	    /* int value of T_CCO */
 
 /*
  * When highlight_match is TRUE, highlight a match, starting at the cursor
@@ -916,7 +925,6 @@ EXTERN char_u e_tagstack[]	INIT(=N_("tag stack empty"));
 EXTERN char_u e_toocompl[]	INIT(=N_("Command too complex"));
 EXTERN char_u e_longname[]	INIT(=N_("Name too long"));
 EXTERN char_u e_toombra[]	INIT(=N_("Too many \\("));
-EXTERN char_u e_toomket[]	INIT(=N_("Too many \\)"));
 EXTERN char_u e_toomsbra[]	INIT(=N_("Too many ["));
 #ifdef FEAT_SYN_HL
 EXTERN char_u e_toomzbra[]	INIT(=N_("Too many \\z("));
