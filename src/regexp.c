@@ -5705,7 +5705,23 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 
 	    eval_result = eval_to_string(source + 2, NULL);
 	    if (eval_result != NULL)
+	    {
+		for (s = eval_result; *s != NUL; ++s)
+		{
+		    /* Change NL to CR, so that it becomes a line break.
+		     * Skip over a backslashed character. */
+		    if (*s == NL)
+			*s = CR;
+		    else if (*s == '\\' && s[1] != NUL)
+			++s;
+#ifdef FEAT_MBYTE
+		    if (has_mbyte)
+			s += (*mb_ptr2len_check)(s) - 1;
+#endif
+		}
+
 		dst += STRLEN(eval_result);
+	    }
 
 	    reg_match = submatch_match;
 	    reg_mmatch = submatch_mmatch;
@@ -5713,7 +5729,6 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 	    reg_win = save_reg_win;
 	    ireg_ic = save_ireg_ic;
 	    can_f_submatch = FALSE;
-
 	}
 #endif
     }
