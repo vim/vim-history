@@ -1942,7 +1942,6 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
 	    for (pifUnderline = 0; pifUnderline <= 1; pifUnderline++)
 	    {
 		fLogFont.lfWeight =  boldface[pifBold];
-		fLogFont.lfCharSet = DEFAULT_CHARSET;
 		fLogFont.lfItalic = pifItalic;
 		fLogFont.lfUnderline = pifUnderline;
 		prt_font_handles[pifBold][pifItalic][pifUnderline]
