@@ -2153,7 +2153,7 @@ set_one_cmd_context(xp, buff)
 
     xp->xp_pattern = buff;
     xp->xp_context = EXPAND_COMMANDS;	/* Default until we get past command */
-    xp->xp_set_path = FALSE;
+    xp->xp_backslash = XP_BS_NONE;
 
 /*
  * 2. skip comment lines and leading space, colons or bars

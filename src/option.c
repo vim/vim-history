@@ -7603,7 +7603,6 @@ set_context_in_set_cmd(xp, arg, opt_flags)
     int		opt_idx = 0;	/* init for GCC */
     char_u	*p;
     char_u	*s;
-    char_u	*after_blank = NULL;
     int		is_term_option = FALSE;
     int		key;
 
@@ -7636,11 +7635,6 @@ set_context_in_set_cmd(xp, arg, opt_flags)
 	    ++p;
 	    break;
 	}
-	/* remember possible start of file name to expand */
-	if (after_blank == NULL
-		&& ((*p == ' ' && (p - s) < 2)
-		    || (*p == ',' && p == s)))
-	    after_blank = p + 1;
 	--p;
     }
     if (STRNCMP(p, "no", 2) == 0)
@@ -7733,10 +7727,9 @@ set_context_in_set_cmd(xp, arg, opt_flags)
     xp->xp_context = EXPAND_NOTHING;
     if (is_term_option || (flags & P_NUM))
 	return;
-    if (after_blank != NULL)
-	xp->xp_pattern = after_blank;
-    else
-	xp->xp_pattern = p + 1;
+
+    xp->xp_pattern = p + 1;
+
     if (flags & P_EXPAND)
     {
 	p = options[opt_idx].var;
@@ -7758,11 +7751,40 @@ set_context_in_set_cmd(xp, arg, opt_flags)
 		    || p == (char_u *)&p_cdpath
 #endif
 		   )
-		xp->xp_set_path = TRUE;
+		xp->xp_backslash = XP_BS_THREE;
+	    else
+		xp->xp_backslash = XP_BS_ONE;
 	}
 	else
+	{
 	    xp->xp_context = EXPAND_FILES;
+	    /* for 'tags' need three backslashes for a space */
+	    if (p == (char_u *)&p_tags)
+		xp->xp_backslash = XP_BS_THREE;
+	    else
+		xp->xp_backslash = XP_BS_ONE;
+	}
     }
+
+    /* For an option that is a list of file names, find the start of the
+     * last file name. */
+    for (p = arg + STRLEN(arg) - 1; p > xp->xp_pattern; --p)
+    {
+	/* count number of backslashes before ' ' or ',' */
+	if (*p == ' ' || *p == ',')
+	{
+	    s = p;
+	    while (s > xp->xp_pattern && *(s - 1) == '\\')
+		--s;
+	    if ((*p == ' ' && (xp->xp_backslash == XP_BS_THREE && (p - s) < 3))
+		    || (*p == ',' && (flags & P_COMMA) && ((p - s) & 1) == 0))
+	    {
+		xp->xp_pattern = p + 1;
+		break;
+	    }
+	}
+    }
+
     return;
 }
 
