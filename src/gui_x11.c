@@ -143,6 +143,11 @@ static void gui_x11_blink_cb __ARGS((XtPointer timed_out, XtIntervalId *interval
 static Cursor gui_x11_create_blank_mouse __ARGS((void));
 
 
+/*
+ * Keycodes recognized by vim.
+ * NOTE: when changing this, the table in gui_gtk_x11.c probably needs the
+ * same change!
+ */
 static struct specialkey
 {
     KeySym  key_sym;
@@ -215,12 +220,12 @@ static struct specialkey
     {XK_KP_Right,	'k', 'r'},
     {XK_KP_Up,		'k', 'u'},
     {XK_KP_Down,	'k', 'd'},
-    {XK_KP_Insert,	'k', 'I'},
-    {XK_KP_Delete,	'k', 'D'},
-    {XK_KP_Home,	'k', 'h'},
-    {XK_KP_End,		'@', '7'},
-    {XK_KP_Prior,	'k', 'P'},
-    {XK_KP_Next,	'k', 'N'},
+    {XK_KP_Insert,	KS_EXTRA, KE_KINS},
+    {XK_KP_Delete,	KS_EXTRA, KE_KDEL},
+    {XK_KP_Home,	'K', '1'},
+    {XK_KP_End,		'K', '4'},
+    {XK_KP_Prior,	'K', '3'},
+    {XK_KP_Next,	'K', '5'},
 
     {XK_KP_Add,		'K', '6'},
     {XK_KP_Subtract,	'K', '7'},

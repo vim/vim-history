@@ -136,6 +136,8 @@ static GdkAtom vim_atom = GDK_NONE;	/* Vim's own special selection format */
 
 /*
  * Keycodes recognized by vim.
+ * NOTE: when changing this, the table in gui_x11.c probably needs the same
+ * change!
  */
 static struct special_key
 {
@@ -202,12 +204,12 @@ static struct special_key
     {GDK_KP_Right,	'k', 'r'},
     {GDK_KP_Up,		'k', 'u'},
     {GDK_KP_Down,	'k', 'd'},
-    {GDK_KP_Insert,	'k', 'I'},
-    {GDK_KP_Delete,	'k', 'D'},
-    {GDK_KP_Home,	'k', 'h'},
-    {GDK_KP_End,	'@', '7'},
-    {GDK_KP_Prior,	'k', 'P'},
-    {GDK_KP_Next,	'k', 'N'},
+    {GDK_KP_Insert,	KS_EXTRA, KE_KINS},
+    {GDK_KP_Delete,	KS_EXTRA, KE_KDEL},
+    {GDK_KP_Home,	'K', '1'},
+    {GDK_KP_End,	'K', '4'},
+    {GDK_KP_Prior,	'K', '3'},  /* page up */
+    {GDK_KP_Next,	'K', '5'},  /* page down */
 
     {GDK_KP_Add,	'K', '6'},
     {GDK_KP_Subtract,	'K', '7'},
@@ -785,8 +787,9 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
 #endif
     }
 
-    /* Check for special keys, making sure BS and DEL are recognized. */
-    if (len == 0 || key_sym == GDK_BackSpace || key_sym == GDK_Delete)
+    /* Check for special keys.  Also do this when len == 1 (key has an ASCII
+     * value) to detect backspace, delete and keypad keys. */
+    if (len == 0 || len == 1)
     {
 	for (i = 0; special_keys[i].key_sym != 0; i++)
 	{
