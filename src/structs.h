@@ -1235,6 +1235,7 @@ struct file_buffer
 
 #ifdef FEAT_NETBEANS_INTG
     int		b_netbeans_file;    /* TRUE when buffer is owned by NetBeans */
+    int		b_was_netbeans_file;/* TRUE if b_netbeans_file was once set */
 #endif
 
 };
