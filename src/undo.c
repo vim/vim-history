@@ -180,6 +180,18 @@ u_savecommon(top, bot, newbot)
     }
 #endif
 
+#ifdef FEAT_NETBEANS_INTG
+    /*
+     * Netbeans defines areas that cannot be modified.  Bail out here when
+     * trying to change text in a guarded area.
+     */
+    if (usingNetbeans && netbeans_is_guarded(top, bot))
+    {
+	EMSG(_(e_guarded));
+	return FAIL;
+    }
+#endif
+
 #ifdef FEAT_AUTOCMD
     /*
      * Saving text for undo means we are going to make a change.  Give a

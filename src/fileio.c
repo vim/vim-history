@@ -1799,7 +1799,13 @@ failed:
 	/* need to delete the last line, which comes from the empty buffer */
 	if (newfile && wasempty && !(curbuf->b_ml.ml_flags & ML_EMPTY))
 	{
+#ifdef FEAT_NETBEANS_INTG
+	    netbeansFireChanges = 0;
+#endif
 	    ml_delete(curbuf->b_ml.ml_line_count, FALSE);
+#ifdef FEAT_NETBEANS_INTG
+	    netbeansFireChanges = 1;
+#endif
 	    --linecnt;
 	}
 	linecnt = curbuf->b_ml.ml_line_count - linecnt;
@@ -3795,6 +3801,9 @@ restore_backup:
     {
 	unchanged(buf, TRUE);
 	u_unchanged(buf);
+#ifdef FEAT_NETBEANS_INTG
+	netbeans_saved(buf);
+#endif
     }
 
     /*

@@ -2891,8 +2891,8 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 	foldUpdateAll(curwin);
 #endif
 
-#ifdef FEAT_SUN_WORKSHOP
-	if (usingSunWorkShop && curbuf->b_ffname != NULL
+#if defined(FEAT_SUN_WORKSHOP) || defined(FEAT_NETBEANS_INTG)
+	if (p_acd && curbuf->b_ffname != NULL
 				     && vim_chdirfile(curbuf->b_ffname) == OK)
 	    shorten_fnames(TRUE);
 #endif
@@ -3047,13 +3047,23 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
     if (p_im)
 	need_start_insertmode = TRUE;
 
-#ifdef FEAT_SUN_WORKSHOP
-    if (usingSunWorkShop && curbuf->b_ffname != NULL
+#if defined(FEAT_SUN_WORKSHOP) || defined(FEAT_NETBEANS_INTG)
+    /* Change directories when the acd option is set on. */
+    if (p_acd && curbuf->b_ffname != NULL
 				     && vim_chdirfile(curbuf->b_ffname) == OK)
 	shorten_fnames(TRUE);
 
-    if (gui.in_use && curbuf != NULL && curbuf->b_fname != NULL)
-	workshop_file_opened((char *)curbuf->b_ffname, curbuf->b_p_ro);
+    if (gui.in_use && curbuf->b_fname != NULL)
+    {
+# ifdef FEAT_SUN_WORKSHOP
+	if (usingSunWorkShop)
+	    workshop_file_opened((char *)curbuf->b_ffname, curbuf->b_p_ro);
+# endif
+# ifdef FEAT_NETBEANS_INTG
+	if (usingNetbeans)
+	    netbeans_file_opened((char *)curbuf->b_ffname);
+# endif
+    }
 #endif
 
 theend:

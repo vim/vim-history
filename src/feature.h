@@ -1052,6 +1052,8 @@
  * +python		Python interface: "--enable-pythoninterp"
  * +tcl			TCL interface: "--enable-tclinterp"
  * +sniff		Sniff interface: "--enable-sniff"
+ * +sun_workshop	Sun Workshop integegration
+ * +netbeans_intg	Netbeans integration
  */
 
 /*
@@ -1071,10 +1073,12 @@
  * +signs		Allow signs to be displayed to the left of text lines.
  *			Adds the ":sign" command.
  */
-#if defined(FEAT_BIG) || defined(FEAT_SUN_WORKSHOP)
+#if defined(FEAT_BIG) || defined(FEAT_SUN_WORKSHOP) \
+	    || defined(FEAT_NETBEANS_INTG)
 # define FEAT_SIGNS
 # if ((defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)) \
-	&& defined(HAVE_X11_XPM_H)) \
+		&& defined(HAVE_X11_XPM_H)) \
+	|| defined(FEAT_GUI_GTK) \
 	|| (defined(WIN32) && defined(FEAT_GUI))
 #  define FEAT_SIGN_ICONS
 # endif
@@ -1086,23 +1090,27 @@
  *			Currently only for Athena and Motif.
  */
 #if (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)) \
-	&& (defined(FEAT_TOOLBAR) || defined(FEAT_SUN_WORKSHOP))
+	&& (   defined(FEAT_TOOLBAR) \
+            || defined(FEAT_SUN_WORKSHOP) \
+            || defined(FEAT_NETBEANS_INTG))
 # define FEAT_BEVAL
 # ifndef FEAT_XFONTSET
 #  define FEAT_XFONTSET
 # endif
 #endif
 
-#if defined(FEAT_SUN_WORKSHOP)
+#if defined(FEAT_SUN_WORKSHOP) || defined(FEAT_NETBEANS_INTG)
 /*
- * The following features are (currently) only used by Sun Visual WorkShop 6.
- * These features could be used with other integrations with debuggers so I've
- * used separate feature defines.
+ * The following features are (currently) only used by Sun Visual WorkShop 6
+ * and NetBeans. These features could be used with other integrations with
+ * debuggers so I've used separate feature defines.
  */
 # if !defined(FEAT_MENU)
 #  define FEAT_MENU
 # endif
+#endif
 
+#if defined(FEAT_SUN_WORKSHOP)
 /*
  *			Use an alternative method of X input for a secondary
  *			command input.

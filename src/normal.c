@@ -165,6 +165,9 @@ static void	nv_open __ARGS((cmdarg_T *cap));
 #ifdef FEAT_SNIFF
 static void	nv_sniff __ARGS((cmdarg_T *cap));
 #endif
+#ifdef FEAT_NETBEANS_INTG
+static void	nv_nbcmd __ARGS((cmdarg_T *cap));
+#endif
 
 /*
  * Function to be called for a Normal or Visual mode command.
@@ -412,6 +415,9 @@ static const struct nv_cmd
 #endif
 #ifdef FEAT_SNIFF
     {K_SNIFF,	nv_sniff,	0,			0},
+#endif
+#ifdef FEAT_NETBEANS_INTG
+    {K_F21,	nv_nbcmd,	NV_NCH_ALW,		0},
 #endif
 };
 
@@ -2993,6 +2999,22 @@ find_ident_under_cursor(string, find_type)
     char_u	**string;
     int		find_type;
 {
+    return find_ident_at_pos(curwin, curwin->w_cursor.lnum,
+				     curwin->w_cursor.col, string, find_type);
+}
+
+/*
+ * Like find_ident_under_cursor(), but for any window and any position.
+ * However: Uses 'iskeyword' from the current window!.
+ */
+    int
+find_ident_at_pos(wp, lnum, startcol, string, find_type)
+    win_T	*wp;
+    linenr_T	lnum;
+    colnr_T	startcol;
+    char_u	**string;
+    int		find_type;
+{
     char_u	*ptr;
     int		col = 0;	    /* init to shut up GCC */
     int		i;
@@ -3006,13 +3028,13 @@ find_ident_under_cursor(string, find_type)
      * if i == 0: try to find an identifier
      * if i == 1: try to find any non-white string
      */
-    ptr = ml_get_curline();
+    ptr = ml_get_buf(wp->w_buffer, lnum, FALSE);
     for (i = (find_type & FIND_IDENT) ? 0 : 1;	i < 2; ++i)
     {
 	/*
 	 * 1. skip to start of identifier/string
 	 */
-	col = curwin->w_cursor.col;
+	col = startcol;
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
 	{
@@ -4805,7 +4827,9 @@ nv_ident(cap)
     /*
      * Now grab the chars in the identifier
      */
-    if (cmdchar == '*' || cmdchar == '#')
+    if (cmdchar == '*')
+	aux_ptr = (char_u *)(p_magic ? "/.*~[^$\\" : "/^$\\");
+    else if (cmdchar == '#')
 	aux_ptr = (char_u *)(p_magic ? "/?.*~[^$\\" : "/?^$\\");
     else if (cmdchar == 'K' && *p_kp != NUL)
 	aux_ptr = (char_u *)" \t\\\"|!";
@@ -8107,5 +8131,14 @@ nv_sniff(cap)
     cmdarg_T	*cap;
 {
     ProcessSniffRequests();
+}
+#endif
+
+#ifdef FEAT_NETBEANS_INTG
+    static void
+nv_nbcmd(cap)
+    cmdarg_T	*cap;
+{
+    netbeans_keycommand(cap->nchar);
 }
 #endif

@@ -4944,6 +4944,10 @@ ex_quit(eap)
     }
 #endif
 
+#ifdef FEAT_NETBEANS_INTG
+    netbeansForcedQuit = eap->forceit;
+#endif
+
     /*
      * If there are more files or windows we won't exit.
      */

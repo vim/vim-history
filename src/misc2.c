@@ -2634,7 +2634,8 @@ get_real_state()
 
 #if defined(FEAT_SESSION) || defined(MSWIN) \
 	|| (defined(FEAT_GUI_GTK) && defined(FEAT_WINDOWS)) \
-	|| defined(FEAT_SUN_WORKSHOP) || defined(PROTO)
+	|| defined(FEAT_SUN_WORKSHOP) || defined(FEAT_NETBEANS_INTG) \
+	|| defined(PROTO)
 /*
  * Change to a file's directory.
  * Caller must call shorten_fnames()!

@@ -1535,6 +1535,9 @@ gui_write(s, len)
 #endif
 #ifdef FEAT_SIGN_ICONS
 		&& s[0] != SIGN_BYTE
+# ifdef FEAT_NETBEANS_INTG
+		&& s[0] != MULTISIGN_BYTE
+# endif
 #endif
 		)
 	{
@@ -1579,6 +1582,9 @@ gui_write(s, len)
 #endif
 #ifdef FEAT_SIGN_ICONS
 			|| *p == SIGN_BYTE
+# ifdef FEAT_NETBEANS_INTG
+			|| *p == MULTISIGN_BYTE
+# endif
 #endif
 			))
 	    {
@@ -1774,6 +1780,9 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
     int		col = gui.col;
 #ifdef FEAT_SIGN_ICONS
     int		draw_sign = FALSE;
+# ifdef FEAT_NETBEANS_INTG
+    int		multi_sign = FALSE;
+# endif
 #endif
 
     if (len < 0)
@@ -1782,8 +1791,16 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 	return OK;
 
 #ifdef FEAT_SIGN_ICONS
-    if (*s == SIGN_BYTE)
+    if (*s == SIGN_BYTE
+# ifdef FEAT_NETBEANS_INTG
+	  || *s == MULTISIGN_BYTE
+# endif
+    )
     {
+# ifdef FEAT_NETBEANS_INTG
+	if (*s == MULTISIGN_BYTE)
+	    multi_sign = TRUE;
+# endif
 	/* draw spaces instead */
 	s = (char_u *)"  ";
 	if (len == 1 && col > 0)
@@ -2070,6 +2087,10 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
     if (draw_sign)
 	/* Draw the sign on top of the spaces. */
 	gui_mch_drawsign(gui.row, col, gui.highlight_mask);
+# ifdef FEAT_NETBEANS_INTG
+    if (multi_sign)
+	netbeans_draw_multisign_indicator(gui.row);
+# endif
 #endif
 
     return OK;

@@ -893,7 +893,12 @@ win_col_off(wp)
 	    + wp->w_p_fdc
 #endif
 #ifdef FEAT_SIGNS
-	    + (wp->w_buffer->b_signlist != NULL ? 2 : 0)
+	    + (
+# ifdef FEAT_NETBEANS_INTG
+		/* always show glyph gutter in netbeans */
+		usingNetbeans ||
+# endif
+		wp->w_buffer->b_signlist != NULL ? 2 : 0)
 #endif
 	   );
 }

@@ -46,6 +46,7 @@ DOCS = \
 	motion.txt \
 	mbyte.txt \
 	mlang.txt \
+	netbeans.txt \
 	options.txt \
 	os_390.txt \
 	os_amiga.txt \

@@ -147,6 +147,11 @@ main
     int		literal = FALSE;	/* don't expand file names */
 #endif
 
+# ifdef NBDEBUG
+    nbdebug_wait(WT_ENV | WT_WAIT | WT_STOP, "SPRO_GVIM_WAIT", 20);
+    nbdebug_log_init("SPRO_GVIM_DEBUG", "SPRO_GVIM_DLEVEL");
+# endif
+
     /*
      * Do any system-specific initialisations.  These can NOT use IObuff or
      * NameBuff.  Thus emsg2() cannot be called!
@@ -307,6 +312,9 @@ main
 
 #ifdef FEAT_SUN_WORKSHOP
     findYourself(argv[0]);
+#endif
+#ifdef FEAT_NETBEANS_INTG
+    netbeans_setRunDir(argv[0]);
 #endif
 #if defined(FEAT_GUI) && !defined(MAC_OS_CLASSIC)
     gui_prepare(&argc, argv);	/* Prepare for possibly starting GUI sometime */
@@ -1178,6 +1186,10 @@ scripterror:
      * Set the default values for the options that use Rows and Columns.
      */
     ui_get_shellsize();		/* inits Rows and Columns */
+#ifdef FEAT_NETBEANS_INTG
+    if (usingNetbeans)
+	Columns += 2;		/* leave room for glyph gutter */
+#endif
     firstwin->w_height = Rows - p_ch;
     topframe->fr_height = Rows - p_ch;
 #ifdef FEAT_VERTSPLIT
@@ -1893,6 +1905,12 @@ scripterror:
     if (restart_edit != 0)
 	stuffcharReadbuff(K_IGNORE);
 
+#ifdef FEAT_NETBEANS_INTG
+    if (usingNetbeans)
+	/* Tell the client that it can start sending commands. */
+	netbeans_startup_done();
+#endif
+
     TIME_MSG("before starting main loop");
 
     /*
@@ -2134,6 +2152,9 @@ getout(exitval)
 #endif
 #if defined(USE_ICONV) && defined(DYNAMIC_ICONV)
     iconv_end();
+#endif
+#ifdef FEAT_NETBEANS_INTG
+    netbeans_end();
 #endif
 
     mch_exit(exitval);

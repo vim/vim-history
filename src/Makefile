@@ -350,8 +350,12 @@ CClink = $(CC)
 # Uncomment this when you want to include the Cscope interface.
 #CONF_OPT_CSCOPE = --enable-cscope
 
-# WORKShOP - Sun Visual Workshop interface.  Only works with Motif!
+# WORKSHOP - Sun Visual Workshop interface.  Only works with Motif!
 #CONF_OPT_WORKSHOP = --enable-workshop
+
+# NETBEANS - NetBeans interface. Only works with Motif, GTK, and gnome.
+# Motif version must have XPM libraries (see |workshop-xpm|).
+# CONF_OPT_NETBEANS = --enable-netbeans
 
 # SNIFF - Include support for SNiFF+.
 #CONF_OPT_SNIFF = --enable-sniff
@@ -1201,7 +1205,7 @@ TAGS_SRC = *.c *.cpp if_perl.xs
 
 EXTRA_SRC = hangulin.c auto/if_perl.c if_perlsfio.c if_python.c if_tcl.c \
 		if_ruby.c if_sniff.c gui_beval.c \
-		workshop.c wsdebug.c integration.c
+		workshop.c wsdebug.c integration.c netbeans.c
 
 # All sources, also the ones that are not configured
 ALL_SRC = $(BASIC_SRC) $(ALL_GUI_SRC) $(EXTRA_SRC)
@@ -1210,7 +1214,7 @@ ALL_SRC = $(BASIC_SRC) $(ALL_GUI_SRC) $(EXTRA_SRC)
 # checks more, but may not work well for checking a GUI that wasn't configured.
 # The perl sources also don't work well with lint.
 LINT_SRC = $(BASIC_SRC) $(GUI_SRC) $(HANGULIN_SRC) $(PYTHON_SRC) $(TCL_SRC) \
-	$(SNIFF_SRC) $(WORKSHOP_SRC) $(WSDEBUG_SRC)
+	$(SNIFF_SRC) $(WORKSHOP_SRC) $(WSDEBUG_SRC) $(NETBEANS_SRC)
 #LINT_SRC = $(SRC)
 #LINT_SRC = $(ALL_SRC)
 
@@ -1264,6 +1268,7 @@ OBJ = \
 	$(RUBY_OBJ) \
 	$(OS_EXTRA_OBJ) \
 	$(WORKSHOP_OBJ) \
+	$(NETBEANS_OBJ) \
 	$(WSDEBUG_OBJ)
 
 PRO_AUTO = \
@@ -1313,6 +1318,7 @@ PRO_AUTO = \
 	window.pro \
 	gui_beval.pro \
 	workshop.pro \
+	netbeans.pro \
 	$(ALL_GUI_PRO) \
 	$(TCL_PRO)
 
@@ -1343,7 +1349,8 @@ config auto/config.mk: auto/configure config.mk.in config.h.in
 		$(CONF_OPT_CSCOPE) $(CONF_OPT_MULTIBYTE) $(CONF_OPT_INPUT) \
 		$(CONF_OPT_OUTPUT) $(CONF_OPT_GPM) $(CONF_OPT_WORKSHOP) \
 		$(CONF_OPT_SNIFF) $(CONF_OPT_FEAT) $(CONF_TERM_LIB) \
-		$(CONF_OPT_COMPBY) $(CONF_ARGS)
+		$(CONF_OPT_COMPBY) $(CONF_OPT_ACL)  $(CONF_OPT_NETBEANS) \
+		$(CONF_ARGS)
 
 # Use "make reconfig" to rerun configure without cached values.
 # When config.h changes, most things will be recompiled automatically.
@@ -2187,6 +2194,8 @@ objects/workshop.o: workshop.c
 objects/wsdebug.o: wsdebug.c
 	$(CCC) -o $@ wsdebug.c
 
+objects/netbeans.o: netbeans.c
+	$(CCC) -o $@ netbeans.c
 
 Makefile:
 	@echo The name of the makefile MUST be "Makefile" (with capital M)!!!!
@@ -2418,3 +2427,6 @@ objects/wsdebug.o: wsdebug.c
 objects/integration.o: integration.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h option.h ex_cmds.h proto.h globals.h farsi.h integration.h
+objects/netbeans.o: netbeans.c vim.h auto/config.h feature.h os_unix.h \
+ auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h version.h

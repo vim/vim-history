@@ -210,7 +210,7 @@ static long char_to_long __ARGS((char_u *));
 static char_u *make_percent_swname __ARGS((char_u *dir, char_u *name));
 #endif
 #ifdef FEAT_BYTEOFF
-static void ml_updatechunk __ARGS((buf_T *buf, long line, int len, int updtype));
+static void ml_updatechunk __ARGS((buf_T *buf, long line, long len, int updtype));
 #endif
 
 /*
@@ -1922,7 +1922,9 @@ ml_line_alloced()
 }
 
 /*
- * append a line after lnum (may be 0 to insert a line in front of the file)
+ * Append a line after lnum (may be 0 to insert a line in front of the file).
+ * "line" does not need to be allocated, but can't be another line in a
+ * buffer, unlocking may make it invalid.
  *
  *   newfile: TRUE when starting to edit a new file, meaning that pe_old_lnum
  *		will be set for recovery
@@ -2431,7 +2433,12 @@ ml_append_int(buf, lnum, line, len, newfile, mark)
 
 #ifdef FEAT_BYTEOFF
     /* The line was inserted below 'lnum' */
-    ml_updatechunk(buf, lnum + 1, len, ML_CHNK_ADDLINE);
+    ml_updatechunk(buf, lnum + 1, (long)len, ML_CHNK_ADDLINE);
+#endif
+#ifdef FEAT_NETBEANS_INTG
+    if (STRLEN(line) > 0)
+	netbeans_inserted(buf, lnum+1, (colnr_T)0, 0, line, STRLEN(line));
+    netbeans_inserted(buf, lnum+1, (colnr_T)STRLEN(line), 0, (char_u *)"\n", 1);
 #endif
     return OK;
 }
@@ -2460,12 +2467,16 @@ ml_replace(lnum, line, copy)
     if (curbuf->b_ml.ml_mfp == NULL && open_buffer(FALSE, NULL) == FAIL)
 	return FAIL;
 
+    if (copy && (line = vim_strsave(line)) == NULL) /* allocate memory */
+	return FAIL;
+#ifdef FEAT_NETBEANS_INTG
+    netbeans_removed(curbuf, lnum, 0, (long)STRLEN(ml_get(lnum)));
+    netbeans_inserted(curbuf, lnum, 0, 0, line, STRLEN(line));
+#endif
     if (curbuf->b_ml.ml_line_lnum != lnum)	    /* other line buffered */
 	ml_flush_line(curbuf);			    /* flush it */
     else if (curbuf->b_ml.ml_flags & ML_LINE_DIRTY) /* same line allocated */
 	vim_free(curbuf->b_ml.ml_line_ptr);	    /* free it */
-    if (copy && (line = vim_strsave(line)) == NULL) /* allocate memory */
-	return FAIL;
     curbuf->b_ml.ml_line_ptr = line;
     curbuf->b_ml.ml_line_lnum = lnum;
     curbuf->b_ml.ml_flags = (curbuf->b_ml.ml_flags | ML_LINE_DIRTY) & ~ML_EMPTY;
@@ -2506,7 +2517,7 @@ ml_delete_int(buf, lnum, message)
     int		stack_idx;
     int		text_start;
     int		line_start;
-    int		line_size;
+    long	line_size;
     int		i;
 
     if (lnum < 1 || lnum > buf->b_ml.ml_line_count)
@@ -2520,7 +2531,11 @@ ml_delete_int(buf, lnum, message)
  */
     if (buf->b_ml.ml_line_count == 1)	    /* file becomes empty */
     {
-	if (message)
+	if (message
+#ifdef FEAT_NETBEANS_INTG
+		&& !netbeansSuppressNoLines
+#endif
+	   )
 	{
 	    set_keep_msg((char_u *)_(no_lines_msg));
 	    keep_msg_attr = 0;
@@ -2557,6 +2572,10 @@ ml_delete_int(buf, lnum, message)
 	line_size = dp->db_txt_end - line_start;
     else
 	line_size = ((dp->db_index[idx - 1]) & DB_INDEX_MASK) - line_start;
+
+#ifdef FEAT_NETBEANS_INTG
+    netbeans_removed(buf, lnum, 0, line_size);
+#endif
 
 /*
  * special case: If there is only one line in the data block it becomes empty.
@@ -2851,7 +2870,7 @@ ml_flush_line(buf)
 		buf->b_ml.ml_flags |= (ML_LOCKED_DIRTY | ML_LOCKED_POS);
 #ifdef FEAT_BYTEOFF
 		/* The else case is already covered by the insert and delete */
-		ml_updatechunk(buf, lnum, extra, ML_CHNK_UPDLINE);
+		ml_updatechunk(buf, lnum, (long)extra, ML_CHNK_UPDLINE);
 #endif
 	    }
 	    else
@@ -3965,7 +3984,7 @@ ml_setdirty(buf, flag)
 ml_updatechunk(buf, line, len, updtype)
     buf_T	*buf;
     linenr_T	line;
-    int		len;
+    long	len;
     int		updtype;
 {
     static buf_T	*ml_upd_lastbuf = NULL;
@@ -3981,7 +4000,7 @@ ml_updatechunk(buf, line, len, updtype)
     bhdr_T		*hp;
     DATA_BL		*dp;
 
-    if (buf->b_ml.ml_usedchunks == -1 || !len)
+    if (buf->b_ml.ml_usedchunks == -1 || len == 0)
 	return;
     if (buf->b_ml.ml_chunksize == NULL)
     {

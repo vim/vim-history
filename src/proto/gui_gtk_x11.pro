@@ -57,4 +57,7 @@ int gui_mch_get_mouse_y __ARGS((void));
 void gui_mch_setmouse __ARGS((int x, int y));
 void gui_mch_mousehide __ARGS((int hide));
 void mch_set_mouse_shape __ARGS((int shape));
+void gui_mch_drawsign __ARGS((int row, int col, int typenr));
+void *gui_mch_register_sign __ARGS((char_u *signfile));
+void gui_mch_destroy_sign __ARGS((void *sign));
 /* vim: set ft=c : */

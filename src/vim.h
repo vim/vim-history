@@ -1656,6 +1656,11 @@ typedef int VimClipboard;	/* This is required for the prototypes. */
 #define SIGN_BYTE 1	    /* byte value used where sign is displayed;
 			       attribute value is sign type */
 
+#ifdef FEAT_NETBEANS_INTG
+# define MULTISIGN_BYTE 2   /* byte value used where sign is displayed if
+			       multiple signs exist on the line */
+#endif
+
 #if defined(FEAT_GUI) && defined(FEAT_XCLIPBOARD)
 # define X_DISPLAY	(gui.in_use ? gui.dpy : xterm_dpy)
 #else
@@ -1664,6 +1669,12 @@ typedef int VimClipboard;	/* This is required for the prototypes. */
 # else
 #  define X_DISPLAY	xterm_dpy
 # endif
+#endif
+
+#ifdef NBDEBUG /* Netbeans debugging. */
+# include "nbdebug.h"
+#else
+# define nbdebug(a)
 #endif
 
 #endif /* VIM__H */

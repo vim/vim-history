@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.1.  Last change: 2003 Jan 08
+*options.txt*   For Vim version 6.1.  Last change: 2003 Mar 08
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -586,6 +586,19 @@ A jump table for the options with a short description can be found at |Q_op|.
 	mode) and have default second language Farsi or Hebrew (right-to-left
 	mode).  See |farsi.txt|.
 
+			*'autochdir'* *'acd'* *'noatuochdir'* *'noacd'*
+'autochdir' 'acd'	boolean (default off)
+			global
+			{not in Vi}
+			{only available when compiled with the
+			|+netbeans_intg| feature}
+	When on, vim will change its value for the current working directory
+	whenever you open a file, switch buffers, delete a buffer or
+	open/close a window. It will change to the directory containing the
+	file which was opened or selected.  This option is provided for
+	backward compatibility with the vim released with Sun ONE Studio 4
+	Enterprise Edition.
+
 			*'autoindent'* *'ai'* *'noautoindent'* *'noai'*
 'autoindent' 'ai'	boolean	(default off)
 			local to buffer
@@ -850,7 +863,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			global
 			{not in Vi}
 			{only available when compiled with the |+balloon_eval|
-			and |+sun_workshop| features}
+			and |+sun_workshop| or |+netbeans_intg| features}
 	Switch on the |balloon-eval| functionality.
 
 				     *'binary'* *'bin'* *'nobinary'* *'nobin'*

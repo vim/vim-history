@@ -330,6 +330,14 @@ EXTERN int	found_reverse_arg INIT(= FALSE);
 /* "-fn" or "-font" command line argument */
 EXTERN char	*font_argument INIT(= NULL);
 
+# ifdef FEAT_GUI_GTK
+/* "-bg" or "-background" command line argument */
+EXTERN char	*background_argument INIT(= NULL);
+
+/* "-fg" or "-foreground" command line argument */
+EXTERN char	*foreground_argument INIT(= NULL);
+# endif
+
 /*
  * While executing external commands or in Ex mode, should not insert GUI
  * events in the input buffer: Set hold_gui_events to non-zero.
@@ -1046,6 +1054,17 @@ EXTERN garray_T error_ga
 	;
 #endif
 
+#ifdef FEAT_NETBEANS_INTG
+char	*netbeansArg INIT(= 0);		/* the -nb[:host:port:passwd] arg */
+int	netbeansCloseFile INIT(= 0);	/* send killed if != 0 */
+int	netbeansFireChanges INIT(= 1);	/* send buffer changes if != 0 */
+int	netbeansForcedQuit INIT(= 0);	/* don't write modified files */
+int	netbeansOpenFile INIT(= 1);	/* send fileOpened if != 0 */
+int	netbeansReadFile INIT(= 1);	/* OK to read from disk if != 0 */
+int	netbeansSuppressNoLines INIT(= 0); /* don't put out "No lines in buffer" */
+int	usingNetbeans INIT(= 0);	/* set if -nb flag is used */
+#endif
+
 /*
  * The error messages that can be shared are included here.
  * Excluded are errors that are only used once and debugging messages.
@@ -1164,6 +1183,9 @@ EXTERN char_u e_usingsid[]	INIT(=N_("E81: Using <SID> not in a script context"))
 #endif
 #ifdef FEAT_CLIENTSERVER
 EXTERN char_u e_invexprmsg[]	INIT(=N_("E449: Invalid expression received"));
+#endif
+#ifdef FEAT_NETBEANS_INTG
+EXTERN char_u e_guarded[]	INIT(=N_("E463: Region is guarded, cannot modify"));
 #endif
 #ifdef MACOS_X_UNIX
 EXTERN short disallow_gui	INIT(= FALSE);

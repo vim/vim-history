@@ -1916,10 +1916,15 @@ del_bytes(count, fixpos)
      * existing line. Otherwise a new line has to be allocated
      */
     was_alloced = ml_line_alloced();	    /* check if oldp was allocated */
+#ifdef FEAT_NETBEANS_INTG
+    if (was_alloced)
+	netbeans_removed(curbuf, lnum, col, count);
+    /* else is handled by ml_replace() */
+#endif
     if (was_alloced)
 	newp = oldp;			    /* use same allocated memory */
     else
-    {					    /* need to allocated a new line */
+    {					    /* need to allocate a new line */
 	newp = alloc((unsigned)(oldlen + 1 - count));
 	if (newp == NULL)
 	    return FAIL;
@@ -2412,6 +2417,9 @@ unchanged(buf, ff)
     }
     ++buf->b_changedtick;
     ++global_changedtick;
+#ifdef FEAT_NETBEANS_INTG
+    netbeans_unmodified(buf);
+#endif
 }
 
 #if defined(FEAT_WINDOWS) || defined(PROTO)
@@ -3797,7 +3805,7 @@ vim_fnamencmp(x, y, len)
 	++y;
 	--len;
     }
-    if (len <= 0)
+    if (len == 0)
 	return 0;
     return (*x - *y);
 }

@@ -2414,9 +2414,6 @@ win_line(wp, lnum, startrow, endrow)
 #ifdef FEAT_LINEBREAK
     int		need_showbreak = FALSE;
 #endif
-#ifdef FEAT_SIGNS
-    int_u	sign_typenr;		/* sign type (if signs are used) */
-#endif
 #if defined(FEAT_SIGNS) || (defined(FEAT_QUICKFIX) && defined(FEAT_WINDOWS))
 # define LINE_ATTR
     int		line_attr = 0;		/* atrribute for the whole line */
@@ -2633,10 +2630,10 @@ win_line(wp, lnum, startrow, endrow)
 
 #ifdef LINE_ATTR
 # ifdef FEAT_SIGNS
-    /* Draw a sign at the start of the line and/or highlight the line. */
-    sign_typenr = buf_getsigntype(wp->w_buffer, lnum);
-    if (sign_typenr != 0)
-	line_attr = sign_get_attr(sign_typenr, TRUE);
+    /* If this line has a sign with line highlighting set line_attr. */
+    v = buf_getsigntype(wp->w_buffer, lnum, SIGN_LINEHL);
+    if (v != 0)
+	line_attr = sign_get_attr((int)v, TRUE);
 # endif
 # if defined(FEAT_QUICKFIX) && defined(FEAT_WINDOWS)
     /* Highlight the current line in the quickfix window. */
@@ -2850,39 +2847,53 @@ win_line(wp, lnum, startrow, endrow)
 	    if (draw_state == WL_SIGN - 1 && n_extra == 0)
 	    {
 		draw_state = WL_SIGN;
-		if (wp->w_buffer->b_signlist != NULL
+		/* Show the sign column when there are any signs in this
+		 * buffer or when using Netbeans. */
+		if ((wp->w_buffer->b_signlist != NULL
+# ifdef FEAT_NETBEANS_INTG
+			    || usingNetbeans
+# endif
+		    )
 # ifdef FEAT_DIFF
 			&& filler_todo <= 0
 # endif
-			)
+		   )
 		{
-		    /* Draw two bytes with the sign value or blank. */
-		    if (sign_typenr == 0 || row > startrow)
-		    {
-			c_extra = ' ';
-			char_attr = 0;
-		    }
-		    else
-		    {
+		    int_u	text_sign;
 # ifdef FEAT_SIGN_ICONS
-			if (gui.in_use && sign_get_image(sign_typenr) != NULL)
+		    int_u	icon_sign;
+# endif
+
+		    /* Draw two bytes with the sign value or blank. */
+		    c_extra = ' ';
+		    char_attr = 0;
+		    n_extra = 2;
+
+		    if (row == startrow)
+		    {
+			text_sign = buf_getsigntype(wp->w_buffer, lnum,
+								   SIGN_TEXT);
+# ifdef FEAT_SIGN_ICONS
+			icon_sign = buf_getsigntype(wp->w_buffer, lnum,
+								   SIGN_ICON);
+			if (gui.in_use && icon_sign != 0)
 			{
 			    /* Use the image in this position. */
 			    c_extra = SIGN_BYTE;
-			    char_attr = sign_typenr;
+#  ifdef FEAT_NETBEANS_INTG
+			    if (buf_signcount(wp->w_buffer, lnum) > 1)
+				c_extra = MULTISIGN_BYTE;
+#  endif
+			    char_attr = icon_sign;
 			}
-			else
+			else if (text_sign != 0)
 # endif
 			{
-			    p_extra = sign_get_text(sign_typenr);
-			    if (p_extra == NULL)
-				c_extra = ' ';
-			    else
-				c_extra = NUL;
-			    char_attr = sign_get_attr(sign_typenr, FALSE);
+			    p_extra = sign_get_text(text_sign);
+			    c_extra = NUL;
+			    char_attr = sign_get_attr(text_sign, FALSE);
 			}
 		    }
-		    n_extra = 2;
 		}
 	    }
 #endif
