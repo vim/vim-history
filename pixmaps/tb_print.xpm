@@ -6,7 +6,7 @@ static char * tb_print_xpm[] = {
 "X	c #FFFFFF",
 "o	c #AAAAAA",
 "O	c #888888",
-"+	c #FF0000",
+"+	c #FF1144",
 "   .......        ",
 "   .XXXXX..       ",
 "   .X...X.X.      ",

@@ -3,7 +3,7 @@ static char * alert_xpm[] = {
 "34 34 4 1",
 " 	c None",
 ".	c #000000",
-"+	c #FFFFFF",
+"+	c #FFFF00",
 "@	c #888888",
 "                                  ",
 "              ...                 ",

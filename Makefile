@@ -62,7 +62,7 @@ first all install uninstall tools config configure proto depend lint tags types 
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0d
+MINOR = 0e
 
 # CHECKLIST for creating a new version:
 #
@@ -71,9 +71,12 @@ MINOR = 0d
 #   runtime/doc/*.txt.
 # - Correct included_patches[] in src/version.c.
 # - Compile Vim with GTK, Perl, Python, TCL, Cscope and "huge" features.
-# - "make proto" and "make depend" with these features.
+# - With these features: "make proto" (requires cproto, ignore warnings for
+#   missing include files).
+# - With these features: "make depend" (works best with gcc).
 # - "make lint" and check the output (ignore GTK warnings).
-# - enable the efence library and run "make test".
+# - Enable the efence library and run "make test".  May require Perl or Python
+#   to be disabled.
 # - Add remarks for changes to runtime/doc/version6.txt.
 # - In runtime/doc run "make" and "make html" to check for errors.
 # - Check if src/Makefile and src/feature.h don't contain any personal
@@ -605,6 +608,7 @@ RT_ALL =	\
 		runtime/menu.vim \
 		runtime/mswin.vim \
 		runtime/optwin.vim \
+		runtime/plugin/README.txt \
 		runtime/scripts.vim \
 		runtime/settings.vim \
 		runtime/setsoff.vim \

@@ -2,7 +2,7 @@
 static char * error_xpm[] = {
 "34 34 4 1",
 " 	c None",
-".	c #000000",
+".	c #FF1144",
 "+	c #888888",
 "@	c #FFFFFF",
 "                                  ",
