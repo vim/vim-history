@@ -1551,6 +1551,7 @@ msg_puts_attr(s, attr)
      */
     if (msg_scrolled && !msg_scrolled_ign)
 	need_wait_return = TRUE;
+    msg_didany = TRUE;		/* remember that something was outputted */
 
     /*
      * If there is no valid screen, use fprintf so we can see error messages.
@@ -1601,7 +1602,6 @@ msg_puts_attr(s, attr)
 	return;
     }
 
-    msg_didany = TRUE;		/* remember that something was outputted */
     did_wait_return = FALSE;
     while (*s)
     {
