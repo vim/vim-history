@@ -2,7 +2,7 @@
 " You can also use this as a start for your own set of menus.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2004 Mar 01
+" Last Change:	2004 May 04
 
 " Note that ":an" (short for ":anoremenu") is often used to make a menu work
 " in all modes and avoid side effects from mappings defined by the user.
@@ -30,6 +30,11 @@ if exists("v:lang") || &langmenu != ""
   endif
   " A language name must be at least two characters, don't accept "C"
   if strlen(s:lang) > 1
+    " When the language does not include the charset add 'encoding'
+    if s:lang =~ '^\a\a$\|^\a\a_\a\a$'
+      let s:lang = s:lang . '.' . &enc
+    endif
+
     " We always use a lowercase name.
     " Change "iso-8859" to "iso_8859" and "iso8859" to "iso_8859", some
     " systems appear to use this.
