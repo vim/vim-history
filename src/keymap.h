@@ -270,12 +270,6 @@ enum key_extra
 #define K_XF3		TERMCAP2KEY(KS_EXTRA, KE_XF3)
 #define K_XF4		TERMCAP2KEY(KS_EXTRA, KE_XF4)
 
-/* extra set of function keys F1-F4, for vt100 compatible xterm */
-#define K_XF1		TERMCAP2KEY(KS_EXTRA, KE_XF1)
-#define K_XF2		TERMCAP2KEY(KS_EXTRA, KE_XF2)
-#define K_XF3		TERMCAP2KEY(KS_EXTRA, KE_XF3)
-#define K_XF4		TERMCAP2KEY(KS_EXTRA, KE_XF4)
-
 #define K_F1		TERMCAP2KEY('k', '1')	/* function keys */
 #define K_F2		TERMCAP2KEY('k', '2')
 #define K_F3		TERMCAP2KEY('k', '3')

@@ -2800,9 +2800,9 @@ vim_regexec_both(line, col)
     if (SETJMP(lc_jump_env) != 0)
     {
 	mch_didjmp();
-#ifdef SIGHASARG
+# ifdef SIGHASARG
 	if (lc_signal != SIGINT)
-#endif
+# endif
 	    EMSG(_("E361: Crash intercepted; regexp too complex?"));
 	retval = 0L;
 	goto theend;
@@ -4101,7 +4101,6 @@ regmatch(scan)
 		regsave_T	save_after, save_start;
 		regsave_T	save_behind_pos;
 		int		needmatch = (op == BEHIND);
-		long		col;
 
 		/*
 		 * Look back in the input of the operand matches or not. This
@@ -4124,7 +4123,7 @@ regmatch(scan)
 		     * will match it. */
 		    save_behind_pos = behind_pos;
 		    behind_pos = save_start;
-		    for (col = 0; ; ++col)
+		    for (;;)
 		    {
 			reg_restore(&save_start);
 			if (regmatch(OPERAND(scan))
