@@ -1766,6 +1766,7 @@ check_linecomment(line)
 /*
  * Move cursor briefly to character matching the one under the cursor.
  * Show the match only if it is visible on the screen.
+ * If there isn't a match, then beep.
  */
     void
 showmatch()

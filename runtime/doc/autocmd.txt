@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 5.7a.  Last change: 2000 Apr 26
+*autocmd.txt*   For Vim version 5.7.  Last change: 2000 Jun 22
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -339,6 +339,7 @@ VimLeavePre			Before exiting Vim, just before writing the
 VimLeave			Before exiting Vim, just after writing the
 				.viminfo file.  Executed only once, like
 				VimLeavePre.
+							*FileEncoding*
 FileEncoding			Fires off when you change the file encoding
 				with ':set fileencoding'.  Allows you to set
 				up fonts or other language sensitive settings.

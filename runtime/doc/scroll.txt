@@ -1,4 +1,4 @@
-*scroll.txt*    For Vim version 5.7a.  Last change: 2000 Feb 08
+*scroll.txt*    For Vim version 5.7.  Last change: 2000 Jun 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -252,7 +252,10 @@ your mouse.  For FreeBSD, this entry works for a Logitech scrollmouse:
 See the Xfree86 documentation for information.
 
 							*xterm-mouse-wheel*
-To use the mouse wheel in an xterm you must do this:
+To use the mouse wheel in a new xterm you only have to make the scroll wheel
+work in your Xserver, as mentioned above.
+
+To use the mouse wheel in an older xterm you must do this:
 1. Make it work in your Xserver, as mentioned above.
 2. Add translations for the xterm, so that the xterm will pass a scroll event
    to Vim as an escape sequence.

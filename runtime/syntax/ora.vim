@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Oracle config files (.ora) (Oracle 8i, ver. 8.1.5)
 " Maintainer:	Sandor Kopanyi <sandor.kopanyi@altavista.net>
-" Last Change:	2000 Jun 07
+" Last Change:	2000 Jun 14
 
 " * the keywords are listed by file (sqlnet.ora, listener.ora, etc.)
 " * the parathesis-checking is made at the beginning for all keywords
@@ -9,7 +9,6 @@
 " * there are some overlappings (e.g. METHOD is mentioned both for
 "   sqlnet-ora and tnsnames.ora; since will not cause(?) problems
 "   is easier to follow separately each file's keywords)
-
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -428,7 +427,7 @@ syn keyword oraKeywordUndObs  _transaction_recovery_servers _use_ism _yield_chec
 
 
 syn cluster oraAll add=oraKeyword,oraKeywordGroup,oraKeywordPref,oraKeywordObs,oraKeywordUnd,oraKeywordUndObs
-syn cluster oraAll add=oraValue,oraModifier,oraString,oraSpecial
+syn cluster oraAll add=oraValue,oraModifier,oraString,oraSpecial,oraComment
 
 "==============================================================================
 " highlighting

@@ -2,9 +2,22 @@
 
 # pltags - create a tags file for Perl code, for use by vi(m)
 #
-# Written by Michael Schaap <mscha@dogbert.demon.nl>
+# Distributed with Vim <http://www.vim.org/>, latest version always available
+# at <http://www.mscha.com/cgi-bin/page/mscha.html?pltags#tools>
+#
+# Version 2.1, 24 June 2000
+#
+# Written by Michael Schaap <mscha@mscha.com>.  Suggestions for improvement
+# are very welcome!
 #
 # This script will not work with Perl 4 or below!
+#
+# Revision history:
+#  1.0  1997?     Original version, quickly hacked together
+#  2.0  1999?     Completely rewritten, better structured and documented,
+#                 support for variables, packages, Exuberant Ctags extensions
+#  2.1  Jun 2000  Fixed critical bug (typo in comment) ;-)
+#                 Support multiple level packages (e.g. Archive::Zip::Member)
 
 # Complain about undeclared variables
 use strict;
@@ -17,9 +30,10 @@ my $do_subs = 1;    # --subs, --nosubs    include subs in tags file?
 my $do_vars = 1;    # --vars, --novars    include variables in tags file?
 my $do_pkgs = 1;    # --pkgs, --nopkgs    include packages in tags file?
 my $do_exts = 1;    # --extensions, --noextensions
-                    #                     include exuberant ctags extensions
+                    #                     include Exuberant Ctags extensions
 
 # Global variables
+my $VERSION = "2.1";    # pltags version
 my $status = 0;         # GetOptions return value
 my $file = "";          # File being processed
 my @tags = ();          # List of produced tags
@@ -74,9 +88,13 @@ sub PackageName($)
     my ($stmt) = @_;    # Statement
 
     # Look for the argument to "package".  Return it if found, else return ""
-    if ($stmt =~ /^package\s+(\w+)/)
+    if ($stmt =~ /^package\s+([\w:]+)/)
     {
-        return $1;
+        my $pkgname = $1;
+
+        # Remove any parent package name(s)
+        $pkgname =~ s/.*://;
+        return $pkgname;
     }
     else
     {
@@ -90,9 +108,13 @@ sub SubName($)
     my ($stmt) = @_;    # Statement
 
     # Look for the argument to "sub".  Return it if found, else return ""
-    if ($stmt =~ /^sub\s+(\w+)/)
+    if ($stmt =~ /^sub\s+([\w:]+)/)
     {
-        return $1;
+        my $subname = $1;
+
+        # Remove any parent package name(s)
+        $subname =~ s/.*://;
+        return $subname;
     }
     else
     {
@@ -112,14 +134,17 @@ sub VarNames($)
     $stmt =~ s/\s*=.*//;
 
     # Now find all variable names, i.e. "words" preceded by $, @ or %
-    @vars = ($stmt =~ /[\$\@\%](\w+)\b/g);
+    @vars = ($stmt =~ /[\$\@\%]([\w:]+)\b/g);
+
+    # Remove any parent package name(s)
+    map(s/.*://, @vars);
 
     return (@vars);
 }
 
 ############### Start ###############
 
-print "\npltags - by Michael Schaap <mscha\@dogbert.demon.nl>\n\n";
+print "\npltags $VERSION by Michael Schaap <mscha\@mscha.com>\n\n";
 
 # Get options
 $status = GetOptions("subs!" => \$do_subs,
@@ -205,7 +230,7 @@ foreach $file (@ARGV)
 
             if ($package_name)
             {
-                # Remeber that we're doing a package
+                # Remember that we're doing a package
                 $is_pkg = 1;
 
                 # Make a tag for this package unless we're told not to.  A
@@ -244,9 +269,9 @@ if (@tags)
     {
         push (@tags, "!_TAG_FILE_FORMAT\t2\t/extended format/");
         push (@tags, "!_TAG_FILE_SORTED\t1\t/0=unsorted, 1=sorted/");
-        push (@tags, "!_TAG_PROGRAM_AUTHOR\tMichael Schaap\t/mscha\@dogbert.demon.nl/");
+        push (@tags, "!_TAG_PROGRAM_AUTHOR\tMichael Schaap\t/mscha\@mscha.com/");
         push (@tags, "!_TAG_PROGRAM_NAME\tpltags\t//");
-        push (@tags, "!_TAG_PROGRAM_VERSION\t2.0\t/supports multiple tags and extended format/");
+        push (@tags, "!_TAG_PROGRAM_VERSION\t$VERSION\t/supports multiple tags and extended format/");
     }
 
     print "\nWriting tags file.\n";

@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 5.7a.  Last change: 2000 Jun 10
+*todo.txt*      For Vim version 5.7.  Last change: 2000 Jun 24
 
 
 				  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -110,6 +110,10 @@ GTK+ GUI known bugs:
 	the WM_SAVE_YOURSELF event doesn't work.
 8	For some fonts characters are drawn in the line above.  Include fix
 	~/vim/patches/dalecki-5.6 . (Marcin Dalecki)
+9	When selecting a font from the font selector with an embedded space it
+	cannot be found. (Tsirkin)
+8	When a font is not fixed width, the message "not fixed-width" disappears
+	immediately. (Tsirkin)
 8	Move gtk_main_quit() calls from call to add_to_input_buf() to inside the
 	function?
 9	GTK GUI: Include changes in gtklayout.c since GTK 1.1.6 in gui_gtk_f.c?
@@ -717,6 +721,7 @@ Considered for release 6.0:
 9	":redir @*" should work: Redirect to the clipboard.  Just allow using this
 	register and add a flag to write_reg_contents() to append.
 	~/vim/patches/wall.redir (Wall)
+8	":redir >$HOME/xxx" should work: expand file name argument of ":redir".
 
 
 Documentation:
@@ -1111,6 +1116,7 @@ Code size:
 
 
 Messages:
+8	For 'verbose' level 12 print commands from source'ed files.
 8	Use 'report' for ":bdel"?  (Krishna)  To avoid these messages when using a
 	script.
 -	Delete message after new command has been entered and have waited for key.
@@ -1572,6 +1578,14 @@ Insert mode:
 		char *name;
 9	When using 'cino' "f1s" the indent after a function is set to the indent
 	of the "}", should be zero.
+9	One indent to much when doing "o" below this "while": (Rouben Rostamian)
+		{
+			do
+				if (1) {
+					asdf;
+				} else
+					qwer;
+			while (1);
 7	Allow aligning a closing ")" with the line above, instead of the matching
 	"(": (Riehm) if (asdfasdf &&
 						asdf

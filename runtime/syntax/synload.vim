@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Jun 07
+" Last Change:	2000 Jun 16
 
 " This file sets up for syntax highlighting.
 " It is loaded from "syntax.vim" and "manual.vim".
@@ -173,6 +173,7 @@ SynAu jsp
 SynAu kscript
 SynAu kwt
 SynAu lace
+SynAu latte
 SynAu lex
 SynAu lhaskell
 SynAu lilo

@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 5.7a.  Last change: 2000 May 03
+*map.txt*       For Vim version 5.7.  Last change: 2000 Jun 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -242,6 +242,11 @@ suggestions:
 - Use a key that is a synonym for another command.  For example: CTRL-P and
   CTRL-N.  Use an extra character to allow more mappings.
 
+See the file "index" for keys that are not used and thus can be mapped without
+losing any builtin function.  You can also use ":help {key}^D" to find out if
+a key is used for some command.  ({key} is the specific key you want to find
+out about, ^D is CTRL-D).
+
 							*map-examples*
 A few examples (given as you type them, for "<CR>" you type four characters;
 the '<' flag must not be present in 'cpoptions' for this to work).
@@ -316,19 +321,14 @@ Vim will replace x with y, and then y with x, etc.  When this has happened
 'maxmapdepth' times (default 1000), Vim will give the error message
 "recursive mapping".
 
-See the file "index" for keys that are not used and thus can be mapped
-without losing any builtin function.  I suggest you use function keys,
-and meta-keys.  If you are prepared to lose a command that you hardly ever use
-you can make mappings that start with '_' or '-'.  You can also use
-":help {key}^D" to find out if a key is used for some command.  ({key} is the
-specific key you want to find out about, ^D is CTRL-D).
-
+							*:map-undo*
 If you include an undo command inside a mapped sequence, this will bring the
 text back in the state before executing the macro.  This is compatible with
 the original Vi, as long as there is only one undo command in the mapped
 sequence (having two undo commands in a mapped sequence did not make sense
 in the original Vi, you would get back the text before the first undo).
 
+							*:map-special-keys*
 There are three ways to map a special key:
 1. The Vi-compatible method: Map the key code.  Often this is a sequence that
    starts with <Esc>.  To enter a mapping like this you type ":map " and then

@@ -3,7 +3,7 @@
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
 "		Author and previous maintainer:
 "		Gautam H. Mudunuri <gmudunur@informatica.com>
-" Last Change:	Wed, 16 Feb 2000 03:46:14 +0100
+" Last Change:	Sat, 08 Apr 2000 11:26:31 +0200
 " URL:		http://www.zellner.org/vim/syntax/xdefaults.vim
 " $Id$
 "
@@ -118,7 +118,6 @@ if !exists("did_xdefaults_syntax_inits")
     hi link xdefaultsCppOut		Comment
     hi link xdefaultsIncluded		String
     hi link xdefaultsDefine		Macro
-    hi link xdefaultsPreProc		PreProc
     hi link xdefaultsSymbol		Statement
     hi link xdefaultsSpecial		Statement
     hi link xdefaultsErrorLine		Error

@@ -1,4 +1,4 @@
-README_vms.txt for version 5.7a of Vim: Vi IMproved.
+README_vms.txt for version 5.7 of Vim: Vi IMproved.
 
 This file explains the installation of Vim on VMS systems.
 See "README.txt" in the runtime archive for information about Vim.
@@ -17,11 +17,24 @@ Compilation is recommended, because it will make sure that the correct
 libraries will be used for your specific system.  However, you might not be
 able to compile Vim.
 
-To use the binary version, you need these archives:
-  vim-5.7-vms.tar.gz	executables
-  vim-5.7-rt.tar.gz	runtime files
+To use the binary version, you need one of these archives:
 
-The binary archive contains two files: vim.exe and xxd.exe.  These are
-executables compiled on OpenVMS v6.2.  The executables have been made by Chip
-Campbell <cec@gryphon.gsfc.nasa.gov>.  ctags.exe is missing, because it could
-not be compiled without errors.
+  vim-57exe-alpha-gui.zip	Alpha GUI executables
+  vim-57exe-alpha-term.zip	Alpha console executables
+  vim-57exe-vax-gui.zip		VAX GUI executables
+  vim-57exe-vax-term.zip	VAX console executables
+
+and of course
+  vim-5.7-rt.tar.gz		runtime files
+
+The binary archives contain: vim.exe, ctags.exe, xxd.exe, mms_vim.exe files, but there are also prepared "deploy ready" archives:
+
+vim-57-alpha.zip		GUI and console executables with runtime and 
+				help files for Alpha systems
+vim-57-vax.zip			GUI and console executables with runtime and 
+				help files for VAX systems
+
+These executables and up to date patches for OpenVMS system are downloadable
+from http://www.polarfox.com/vim/
+
+

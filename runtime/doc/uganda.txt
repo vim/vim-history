@@ -1,4 +1,4 @@
-*uganda.txt*    For Vim version 5.7a.  Last change: 1999 Dec 28
+*uganda.txt*    For Vim version 5.7.  Last change: 1999 Dec 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

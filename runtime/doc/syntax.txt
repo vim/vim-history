@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 5.7a.  Last change: 2000 Jun 07
+*syntax.txt*    For Vim version 5.7.  Last change: 2000 Jun 22
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -656,14 +656,12 @@ Extension	Dialect ~
 .f95		f95
 .f90		f90
 .f,.for,.fpp	f77
-any other	f90
-none		f90
 
 If you consistently use a different file extension convention, then the
 defaults can be over ruled most conveniently by setting the variable
 fortran_dialect in your .vimrc with an autocommand placed prior to the
 :syntax on command. For example, if all your .f90 files are written in
-the elf subset, then "let fortran_dialect=elf" for all .f90 files. The
+the elf subset, then let fortran_dialect="elf" for all .f90 files. The
 permissible values of fortran_dialect are case-sensitive and must be
 "f95", "f90", "f77", "elf" or "F". Invalid values of fortran_dialect are
 ignored.
@@ -673,8 +671,9 @@ fixed source form. The syntax file attempts to determine which form your
 file uses by examining the first five columns of its first five lines.
 The algorithm should work in the vast majority of cases. In some rare
 cases, it may incorrectly decide that the fortran code is in fixed form.
-If that happens, just add a comment beginning anywhere in the first five
-columns of the first five lines, save and then reload the file.
+If that happens, just add a non-comment statement beginning anywhere in
+the first five columns of the first five lines, save and then reload the
+file.
 
 If the dialect is elf or F, the Fortran source code is assumed to be in
 free source form as required by these dialects. If the dialect is f77,
@@ -693,8 +692,7 @@ in .f files, and fortran_dialect=elf and fortran_dialect=F in .f90
 files. F overrides elf if both directives are present in an .f90 file.
 
 Limitations: Parenthesis checking does not catch too few closing
-parentheses. Multiline strings and F90 statement labels are colored
-sloppily. Hollerith strings are not recognized. Some keywords may be
+parentheses. Hollerith strings are not recognized. Some keywords may be
 highlighted incorrectly because Fortran90 has no reserved words.
 
 
@@ -809,6 +807,13 @@ way, put the following line into your vim startup file:
 All identifiers in java.lang.* are always visible in all classes.  To
 highlight them use:
 >  let java_highlight_java_lang_ids=1
+
+You can also highlight identifiers of most standard java packages
+if you download the script at http://www.fleiner.com/vim/syntax/javaid.vim
+If you prefer to only highlight identifiers of a certain package, say
+java.io use the following:
+>  let java_highligh_java_io=1
+Check the javaid.vim file for a list of all the packages that are supported.
 
 Function names are not highlighted, as the way to find functions depends on
 how you write java code.  The syntax file knows two possible ways to highlight

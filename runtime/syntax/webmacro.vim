@@ -2,7 +2,7 @@
 " Language:     WebMacro
 " Maintainer:   Claudio Fleiner <claudio@fleiner.com>
 " URL:          http://www.fleiner.com/vim/syntax/webmacro.vim
-" Last Change:  2000 Feb 12
+" Last Change:  2000 Feb 13
 
 " webmacro is a nice little language that you should
 " check out if you use java servlets.
@@ -18,10 +18,9 @@ endif
 
 so <sfile>:p:h/html.vim
 
-syn cluster htmlPreProc add=webmacroIf,webmacroUse,webmacroBraces,webmacroParse,webmacroInclude,webmacroSet,webmacroForeach
+syn cluster htmlPreProc add=webmacroIf,webmacroUse,webmacroBraces,webmacroParse,webmacroInclude,webmacroSet,webmacroForeach,webmacroComment
 
-syn match webmacroComment "\#\#.*$" contained
-syn match webmacroVariable "\$[a-zA-Z0-9.()]*" contained
+syn match webmacroVariable "\$[a-zA-Z0-9.()]*;\=" 
 syn match webmacroNumber "[-+]\=\d\+[lL]\=" contained
 syn keyword webmacroBoolean true false contained
 syn match webmacroSpecial "\\." contained
@@ -37,6 +36,7 @@ syn match webmacroParse "#parse .*$" contains=webmacroVariable,webmacroNumber,we
 syn region webmacroUse matchgroup=PreProc start="#use .*" matchgroup=PreProc end="^-.*" contains=webmacroHash,@HtmlTop
 syn region webmacroBraces matchgroup=Structure start="{" matchgroup=Structure end="}" contained transparent
 syn match webmacroBracesError "[{}]"
+syn match webmacroComment "##.*$" 
 syn match webmacroHash "[#{}\$]" contained
 
 if !exists("did_webmacro_syntax_inits")

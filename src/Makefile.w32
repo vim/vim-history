@@ -250,7 +250,7 @@ TCL_LIB = $(TCL)\lib\tcl83vc.lib
 CFLAGS    = $(CFLAGS) -DHAVE_PYTHON
 PYTHON_OBJ = $(OUTDIR)\if_python.obj
 PYTHON_INC = /I "$(PYTHON)\Include" /I "$(PYTHON)\PC"
-PYTHON_LIB = $(PYTHON)\vc40\python14.lib
+PYTHON_LIB = $(PYTHON)\libs\python15.lib
 !endif
 
 # Perl interface
@@ -320,7 +320,7 @@ clean:
 	- del install.exe
 	- del uninstal.exe
 	cd ctags
-	$(MAKE) -f Makefile.w32 clean
+	$(MAKE) -f Makefile.mvc clean
 	cd ..
 	cd xxd
 	$(MAKE) -f Makefile.w32 clean

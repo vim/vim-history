@@ -1,13 +1,14 @@
 " Vim syntax file
 " Language:	gp (version 2.0)
-" Maintainer:	Karim Belabas <karim@mpim-bonn.mpg.de>
-" Last Change:	1998 February 23
+" Maintainer:	Karim Belabas <Karim.Belabas@math.u-psud.fr>
+" Last change:	2000 June 23
 
 syntax clear
 " some control statements
 syntax keyword gpStatement	break return next
 syntax keyword gpConditional	if
 syntax keyword gpRepeat		until while for fordiv forprime forstep forvec
+syntax keyword gpLocal          local
 
 syntax keyword gpInterfaceKey	buffersize colors compatible debug debugmem
 syntax keyword gpInterfaceKey	echo format help histsize log logfile output
@@ -55,6 +56,8 @@ if !exists("did_gp_syntax_inits")
   highlight link gpInput	Type
   highlight link gpInterfaceKey Statement
   highlight link gpFunction	Function
+  highlight link gpLocal 	Type
+
   " contained ones
   highlight link gpSpecial	Special
   highlight link gpTodo		Todo

@@ -1,4 +1,4 @@
-*os_mac.txt*    For Vim version 5.7a.  Last change: 1999 Sep 14
+*os_mac.txt*    For Vim version 5.7.  Last change: 2000 Jun 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -57,17 +57,16 @@ You can use the |$VIM| and |$VIMRUNTIME|  variable.
 2. .vimrc and .vim files				*mac-vimfile*
 
 On the Mac files starting with a dot "." are discouraged, thus the rc files
-are named "vimrc" and "gvimrc". These files can be in any format (mac, dos or
-unix).
-Vim can handle any file format when the |'nocompatible'| option is set,
-otherwise it will only handle mac format files.
+are named "vimrc" or "_vimrc" and "gvimrc" or "_gvimrc". These files can be in
+any format (mac, dos or unix).  Vim can handle any file format when the
+|'nocompatible'| option is set, otherwise it will only handle mac format
+files.
 
 ==============================================================================
 3. Mac Lack						*mac-lack*
 
 -The filenames containing both ":" and "/" are sometimes misinterpreted.
   (just re-execute the command)
--Can't use the command key
 -Scrollbar are not scrolling live, and  when only the arrow or scroll area,
    a limit of 32 line or page is scrolled.
 -Syntax highlighting works on 68k Macs but is _really_ slow.
@@ -79,6 +78,7 @@ When reporting any Mac specific bug or feature change, makes sure to include
 the following address in the "To:" or "Copy To:" field.
 
  <dany.stamant@sympatico.ca>
+ <A.Kielhorn@tu-bs.de>
 
 ==============================================================================
 5. Compiling Vim					*mac-compile*

@@ -2,7 +2,7 @@
 " Language:	Java
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/java.vim
-" Last Change:	2000 Jan 30
+" Last Change:  2000 Jun 1
 
 " Please check :help java.vim for comments on some of the options available.
 
@@ -47,7 +47,8 @@ syn keyword javaBranch          break continue nextgroup=javaUserLabelRef skipwh
 syn match   javaUserLabelRef    "\k\+" contained
 syn keyword javaScopeDecl       public protected private abstract
 
-if exists("java_highlight_java_lang_ids")
+if exists("java_highlight_java_lang_ids") || exists("java_highlight_java_lang") || exists("java_highlight_all")
+  " java.lang.*
   syn match javaLangClass "System"
   syn keyword javaLangClass  Cloneable Comparable Runnable Boolean Byte Class
   syn keyword javaLangClass  Character ClassLoader Compiler Double Float
@@ -86,6 +87,11 @@ if exists("java_highlight_java_lang_ids")
   syn keyword javaLangObject notify notifyAll toString wait
   hi link javaLangClass                   javaConstant
   hi link javaLangObject                  javaConstant
+  syn cluster javaTop add=javaLangObject
+endif
+
+if filereadable(expand("<sfile>:p:h")."/javaid.vim")
+  source <sfile>:p:h/javaid.vim
 endif
 
 if exists("java_space_errors")
@@ -108,7 +114,7 @@ if !exists("java_allow_cpp_keywords")
 endif
 
 " The following cluster contains all java groups except the contained ones
-syn cluster javaTop contains=javaExternal,javaError,javaError,javaBranch,javaLabelRegion,javaLabel,javaConditional,javaRepeat,javaBoolean,javaConstant,javaTypedef,javaOperator,javaType,javaType,javaStatement,javaStorageClass,javaExceptions,javaMethodDecl,javaClassDecl,javaClassDecl,javaClassDecl,javaScopeDecl,javaError,javaError2,javaUserLabel,javaLangClass,javaLangObject
+syn cluster javaTop add=javaExternal,javaError,javaError,javaBranch,javaLabelRegion,javaLabel,javaConditional,javaRepeat,javaBoolean,javaConstant,javaTypedef,javaOperator,javaType,javaType,javaStatement,javaStorageClass,javaExceptions,javaMethodDecl,javaClassDecl,javaClassDecl,javaClassDecl,javaScopeDecl,javaError,javaError2,javaUserLabel,javaLangObject
 
 
 " Comments

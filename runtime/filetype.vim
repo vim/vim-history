@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Jun 08
+" Last change:	2000 Jun 21
 
 if !exists("did_load_filetypes")
 let did_load_filetypes = 1
@@ -126,9 +126,9 @@ au BufNewFile,BufRead *.c			set ft=c
 
 " C++
 if has("fname_case")
-  au BufNewFile,BufRead *.cpp,*.cc,*.cxx,*.c++,*.C,*.H,*.hh,*.hxx,*.hpp,*.inl,named.conf set ft=cpp
+  au BufNewFile,BufRead *.cpp,*.cc,*.cxx,*.c++,*.C,*.H,*.hh,*.hxx,*.hpp,*.tcc,*.inl,named.conf set ft=cpp
 else
-  au BufNewFile,BufRead *.cpp,*.cc,*.cxx,*.c++,*.hh,*.hxx,*.hpp,*.inl set ft=cpp
+  au BufNewFile,BufRead *.cpp,*.cc,*.cxx,*.c++,*.hh,*.hxx,*.hpp,*.tcc,*.inl,named.conf set ft=cpp
 endif
 
 " .h files can be C or C++, set c_syntax_for_h if you want C
@@ -303,17 +303,20 @@ au BufNewFile,BufRead *.ks			set ft=kscript
 " Lace (ISE)
 au BufNewFile,BufRead *.ace,*.ACE		set ft=lace
 
+" Latte
+au BufNewFile,BufRead *.latte,*.lte		set ft=latte
+
 " Lex
 au BufNewFile,BufRead *.lex,*.l			set ft=lex
 
 " Lilo: Linux loader
 au BufNewFile,BufRead lilo.conf*		set ft=lilo
 
-" Lisp
+" Lisp (*.el = ELisp, *.cl = Common Lisp)
 if has("fname_case")
-  au BufNewFile,BufRead *.lsp,*.el,*.L		set ft=lisp
+  au BufNewFile,BufRead *.lsp,*.el,*.cl,*.L	set ft=lisp
 else
-  au BufNewFile,BufRead *.lsp,*.el		set ft=lisp
+  au BufNewFile,BufRead *.lsp,*.el,*.cl		set ft=lisp
 endif
 
 " Lite
@@ -334,8 +337,8 @@ au BufNewFile,BufRead *.lss			set ft=lss
 " M4
 au BufNewFile,BufRead *.m4			if expand("<afile>") !~?  "html.m4$" | set ft=m4 | endif
 
-" Mail (for Elm, trn and rn)
-au BufNewFile,BufRead snd.\d\+,.letter,.letter.\d\+,.followup,.article,.article.\d\+,pico.\d\+,mutt-*-\d\+,ae\d\+.txt set ft=mail
+" Mail (for Elm, trn, mutt and rn)
+au BufNewFile,BufRead snd.\d\+,.letter,.letter.\d\+,.followup,.article,.article.\d\+,pico.\d\+,mutt-*-\d\+,mutt\w\{6\},ae\d\+.txt set ft=mail
 
 " Makefile
 au BufNewFile,BufRead [mM]akefile*,GNUmakefile,*.mk,*.mak,*.dsp set ft=make
@@ -410,6 +413,9 @@ au BufNewFile,BufRead *.ora			set ft=ora
 
 " Pascal
 au BufNewFile,BufRead *.p,*.pas			set ft=pascal
+
+" Delphi project file
+au BufNewFile,BufRead *.dpr			set ft=pascal
 
 " Perl
 if has("fname_case")

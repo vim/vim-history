@@ -12,8 +12,9 @@ Contents:
 6. Atari MiNT
 
 For BeBox see doc/os_bebox.txt.
-For Amiga see INSTALL.amiga
-For PC (MS-DOS, Windows NT, Windows 95) see INSTALL.pc
+For Amiga see INSTALL_ami.txt
+For PC (MS-DOS, Windows NT, Windows 95) see INSTALL_pc.txt
+For Macintosh see INSTALL_mac.txt
 
 
 1. Generic

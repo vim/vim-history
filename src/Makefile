@@ -175,9 +175,9 @@
 #FreeBSD 2.1.6	      gcc-2.6.3      +X11 -GUI Athena	5.0c	 Bram Moolenaar
 #FreeBSD 2.2.5	      gcc-2.7.2.1    X11R6 Moo-Tiff	5.4d	 Bram Moolenaar
 #FreeBSD 2.2.5	      gcc-2.7.2.1    +X11 -GUI Athena	5.4d	 Bram Moolenaar
-#FreeBSD 3.3	      gcc-2.7.2.1    +X11 GTK 1.2.5	5.6a	 Bram Moolenaar
-#FreeBSD 3.3	      gcc-2.7.2.1    +X11 Athena	5.6a	 Bram Moolenaar
-#FreeBSD 3.3	      gcc-2.7.2.1    +X11 Lesstif0.89.4 5.6a	 Bram Moolenaar
+#FreeBSD 3.3	      gcc-2.7.2.1    +X11 GTK 1.2.5	5.7	 Bram Moolenaar
+#FreeBSD 3.3	      gcc-2.7.2.1    +X11 Athena	5.7	 Bram Moolenaar
+#FreeBSD 3.3	      gcc-2.7.2.1    +X11 Lesstif0.89.4 5.7	 Bram Moolenaar
 #Linux 2.0	      gcc-2.7.2      Infomagic Motif	4.3  (3) Ronald Rietman
 #Linux 2.0.31	      gcc	     +X11 +GUI Athena	5.0w (U) Darren Hiebert
 #Linux 2.0.33	      gcc-2.7.2.1    X11R6, Lesstif	5.0s	 Tony Nugent
@@ -683,6 +683,11 @@ LINT_OPTIONS = -beprxzF
 
 ### (O)  For LynxOS 2.5.0, tested on PC.
 #EXTRA_LIBS = -lXext -lSM -lICE -lbsd
+###	 For LynxOS 3.0.1, tested on PPC
+#EXTRA_LIBS= -lXext -lSM -lICE -lnetinet -lXmu -liberty
+###	 For LynxOS 3.0.1, tested on PC
+#EXTRA_LIBS= -lXext -lSM -lICE -lnetinet -lXmu
+
 
 ### (V)  For CX/UX 6.2	(on Harris/Concurrent NightHawk 4800, 5800). Remove
 ###	 -Qtarget if only in a 5800 environment.  (Kipp E. Howard)
@@ -746,7 +751,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and some things
 ### might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim57a
+VIMRTDIR = /vim57
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 MACROSUBDIR = /macros
@@ -1315,7 +1320,7 @@ notags:
 ctags tags TAGS: notags
 	$(TAGPRG) $(TAGS_SRC) $(TAGS_INCL)
 
-# Make a highlight file for types.  Requires Exhuberant ctags and awk
+# Make a highlight file for types.  Requires Exuberant ctags and awk
 types: types.vim
 types.vim: $(TAGS_SRC) $(TAGS_INCL)
 	ctags -i=gstuS -o- $(TAGS_SRC) $(TAGS_INCL) |\

@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Jun 07
+" Last change:	2000 Jun 16
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -568,6 +568,7 @@ SynMenu IJKL.Jgraph:jgraph
 SynMenu IJKL.KDE\ script:kscript
 SynMenu IJKL.Kimwitu:kwt
 SynMenu IJKL.Lace:lace
+SynMenu IJKL.Latte:latte
 SynMenu IJKL.Lex:lex
 SynMenu IJKL.Lilo:lilo
 SynMenu IJKL.Lisp:lisp

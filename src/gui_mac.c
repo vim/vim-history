@@ -1466,8 +1466,8 @@ gui_mac_doMouseDown (theEvent)
 				if (theEvent->modifiers & (optionKey | rightOptionKey))
 					vimModifier |= MOUSE_ALT;
 
-#ifdef USE_CTRLCLICKMENU
 				vimButton = MOUSE_LEFT;
+#ifdef USE_CTRLCLICKMENU
 				clickIsPopup = FALSE;
 
 				if (gui.MacOSHaveCntxMenu)

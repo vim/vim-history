@@ -1,4 +1,4 @@
-*if_cscope.txt* For Vim version 5.7a.  Last change: 2000 May 06
+*if_cscope.txt* For Vim version 5.7.  Last change: 2000 May 06
 
 
 		  VIM REFERENCE MANUAL    by Andy Kahn
