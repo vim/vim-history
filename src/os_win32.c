@@ -1679,15 +1679,15 @@ SaveConsoleBuffer(
      * We will now copy the console screen buffer into our buffer.
      * ReadConsoleOutput() seems to be limited as far as how much you
      * can read at a time.  Empirically, this number seems to be about
-     * 15000 cells (rows * columns).  Start at position (0, 0) and copy
+     * 12000 cells (rows * columns).  Start at position (0, 0) and copy
      * in chunks until it is all copied.  The chunks will all have the
      * same horizontal characteristics, so initialize them now.  The
-     * height of each chunk will be (15000 / width).
+     * height of each chunk will be (12000 / width).
      */
     BufferCoord.X = 0;
     ReadRegion.Left = 0;
     ReadRegion.Right = cb->Info.dwSize.X - 1;
-    Y_incr = 15000 / cb->Info.dwSize.X;
+    Y_incr = 12000 / cb->Info.dwSize.X;
     for (Y = 0; Y < cb->BufferSize.Y; Y += Y_incr)
     {
 	/*
