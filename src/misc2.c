@@ -979,6 +979,19 @@ vim_strsave_escaped(string, esc_chars)
     char_u	*string;
     char_u	*esc_chars;
 {
+    return vim_strsave_escaped_ext(string, esc_chars, FALSE);
+}
+
+/*
+ * Same as vim_strsave_escaped(), but when "bsl" is TRUE also escape
+ * characters where rem_backslash() would remove the backslash.
+ */
+    char_u *
+vim_strsave_escaped_ext(string, esc_chars, bsl)
+    char_u	*string;
+    char_u	*esc_chars;
+    int		bsl;
+{
     char_u	*p;
     char_u	*p2;
     char_u	*escaped_string;
@@ -1002,7 +1015,7 @@ vim_strsave_escaped(string, esc_chars)
 	    continue;
 	}
 #endif
-	if (vim_strchr(esc_chars, *p) != NULL)
+	if (vim_strchr(esc_chars, *p) != NULL || (bsl && rem_backslash(p)))
 	    ++length;			/* count a backslash */
 	++length;			/* count an ordinary char */
     }
@@ -1021,7 +1034,7 @@ vim_strsave_escaped(string, esc_chars)
 		continue;
 	    }
 #endif
-	    if (vim_strchr(esc_chars, *p) != NULL)
+	    if (vim_strchr(esc_chars, *p) != NULL || (bsl && rem_backslash(p)))
 		*p2++ = '\\';
 	    *p2++ = *p;
 	}
