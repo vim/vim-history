@@ -411,6 +411,10 @@ diff_mark_adjust(line1, line2, amount, amount_after)
 
     }
     diff_redraw(TRUE);
+
+    /* Recompute the scroll binding, may remove or add filler lines (e.g.,
+     * when adding lines above w_topline). */
+    check_scrollbind((linenr_T)0, 0L);
 }
 
 /*
@@ -538,6 +542,7 @@ diff_redraw(dofold)
     int		dofold;	    /* also recompute the folds */
 {
     win_T	*wp;
+    int		n;
 
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
 	if (wp->w_p_diff)
@@ -547,6 +552,14 @@ diff_redraw(dofold)
 	    if (dofold && foldmethodIsDiff(wp))
 		foldUpdateAll(wp);
 #endif
+	    /* A change may have made filler lines invalid, need to take care
+	     * of that for other windows. */
+	    if (wp != curwin && wp->w_topfill > 0)
+	    {
+		n = diff_check(wp, wp->w_topline);
+		if (wp->w_topfill > n)
+		    wp->w_topfill = (n < 0 ? 0 : n);
+	    }
 	}
 }
 
@@ -1804,9 +1817,19 @@ ex_diffgetput(eap)
 
     diff_busy = TRUE;
 
-    /* When no range given include the line above the cursor. */
-    if (eap->addr_count == 0 && eap->line1 > 1)
-	--eap->line1;
+    /* When no range given include the line above or below the cursor. */
+    if (eap->addr_count == 0)
+    {
+	/* Make it possible that ":diffget" on the last line gets line below
+	 * the cursor line when there is no difference above the cursor. */
+	if (eap->cmdidx == CMD_diffget
+		&& eap->line1 == curbuf->b_ml.ml_line_count
+		&& diff_check(curwin, eap->line1) == 0
+		&& (eap->line1 == 1 || diff_check(curwin, eap->line1 - 1) == 0))
+	    ++eap->line2;
+	else if (eap->line1 > 0)
+	    --eap->line1;
+    }
 
     if (eap->cmdidx == CMD_diffget)
     {
