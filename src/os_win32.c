@@ -146,6 +146,10 @@ typedef WINBASEAPI BOOL (WINAPI *PFNGCKLN)(LPSTR);
 PFNGCKLN    s_pfnGetConsoleKeyboardLayoutName = NULL;
 #endif
 
+#if defined(__BORLANDC__)
+/* Strangely Borland uses a non-standard name. */
+# define wcsicmp(a, b) wcscmpi((a), (b))
+#endif
 
 #ifndef FEAT_GUI_W32
 /* Win32 Console handles for input and output */
@@ -4458,7 +4462,9 @@ copy_substream(HANDLE sh, void *context, WCHAR *to, WCHAR *substream, long len)
 	/* Copy block of bytes at a time.  Abort when something goes wrong. */
 	for (done = 0; done < len; done += written)
 	{
-	    todo = len - done > sizeof(buf) ? sizeof(buf) : len - done;
+	    /* (size_t) cast for Borland C 5.5 */
+	    todo = (size_t)(len - done) > sizeof(buf) ? sizeof(buf)
+						       : (size_t)(len - done);
 	    if (!BackupRead(sh, (LPBYTE)buf, todo, &readcnt,
 						       FALSE, FALSE, context)
 		    || readcnt != todo
