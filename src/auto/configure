@@ -20,6 +20,8 @@ ac_help="$ac_help
 ac_help="$ac_help
   --with-global-runtime=DIR    global runtime directory in 'runtimepath'"
 ac_help="$ac_help
+  --with-modified-by=NAME       name of who modified a rlease version"
+ac_help="$ac_help
   --with-features=TYPE    tiny, small, normal, big or huge (default: normal)"
 ac_help="$ac_help
   --with-compiledby=NAME  name to show in :version message"
@@ -1207,10 +1209,24 @@ else
 fi
 
 
+echo $ac_n "checking --with-modified-by argument""... $ac_c" 1>&6
+echo "configure:1221: checking --with-modified-by argument" >&5
+# Check whether --with-modified-by or --without-modified-by was given.
+if test "${with_modified_by+set}" = set; then
+  withval="$with_modified_by"
+  echo "$ac_t""$withval" 1>&6; cat >> confdefs.h <<EOF
+#define MODIFIED_BY "$withval"
+EOF
+
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+
 echo $ac_n "checking if character set is EBCDIC""... $ac_c" 1>&6
-echo "configure:1212: checking if character set is EBCDIC" >&5
+echo "configure:1235: checking if character set is EBCDIC" >&5
 cat > conftest.$ac_ext <<EOF
-#line 1214 "configure"
+#line 1237 "configure"
 #include "confdefs.h"
  
 int main() {
