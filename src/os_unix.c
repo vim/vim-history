@@ -765,6 +765,11 @@ deathtrap SIGDEFARG(sigarg)
     /* Remember how often we have been called. */
     ++entered;
 
+#ifdef FEAT_EVAL
+    /* Set the v:dying variable. */
+    set_vim_var_nr(VV_DYING, (long)entered);
+#endif
+
 #ifdef HAVE_GETRLIMIT
     /* Since we are now using the signal stack, need to reset the stack
      * limit.  Otherwise using a regexp will fail. */
