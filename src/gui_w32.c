@@ -2783,7 +2783,7 @@ tearoff_callback(
 	    POINT   mp;
 	    RECT    rect;
 
-	    if (GetCursorPos(&mp) && GetWindowRect(hwnd, &rect));
+	    if (GetCursorPos(&mp) && GetWindowRect(hwnd, &rect))
 	    {
 		(void)TrackPopupMenu(
 			 (HMENU)(LOWORD(wParam) ^ 0x8000),
