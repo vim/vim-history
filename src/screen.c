@@ -927,7 +927,7 @@ win_update(wp)
 	/* When a change starts above w_topline and the end is below
 	 * w_topline, start redrawing at w_topline.
 	 * If the end of the change is above w_topline: do like no changes was
-	 * maded, but redraw the first line to find changes in syntax. */
+	 * made, but redraw the first line to find changes in syntax. */
 	if (mod_top != 0 && mod_top < wp->w_topline)
 	{
 	    if (mod_bot > wp->w_topline)
@@ -937,6 +937,11 @@ win_update(wp)
 		top_end = 1;
 #endif
 	}
+
+	/* When line numbers are displayed need to redraw all lines below
+	 * inserted/deleted lines. */
+	if (mod_top != 0 && buf->b_mod_xlines != 0 && wp->w_p_nu)
+	    mod_bot = MAXLNUM;
     }
 
     /*
@@ -1607,12 +1612,6 @@ win_update(wp)
 			}
 		    }
 		}
-
-		/* When inserting or deleting lines and 'number' is set:
-		 * Redraw all lines below the change to update the line
-		 * numbers. */
-		if (buf->b_mod_xlines != 0 && wp->w_p_nu)
-		    bot_start = 0;
 	    }
 
 #ifdef FEAT_FOLDING
