@@ -3384,7 +3384,7 @@ win_line(wp, lnum, startrow, endrow)
 		    mb_utf8 = FALSE;	/* don't draw as UTF-8 */
 #endif
 		}
-		else if (c == NUL && wp->w_p_list && lcs_eol_one != NUL)
+		else if (c == NUL && wp->w_p_list && lcs_eol_one > 0)
 		{
 #if defined(FEAT_DIFF) || defined(LINE_ATTR)
 		    /* For a diff line the highlighting continues after the
@@ -3417,7 +3417,7 @@ win_line(wp, lnum, startrow, endrow)
 			}
 		    }
 		    c = lcs_eol;
-		    lcs_eol_one = NUL;
+		    lcs_eol_one = -1;
 		    --ptr;	    /* put it back at the NUL */
 		    if (area_attr == 0 && search_attr == 0)
 		    {
@@ -3789,12 +3789,13 @@ win_line(wp, lnum, startrow, endrow)
 	    ++row;
 	    ++screen_row;
 
-	    /* When not wrapping and finished diff lines, break here. */
-	    if (!wp->w_p_wrap
+	    /* When not wrapping and finished diff lines, or when displayed
+	     * '$' and highlighting until last column, break here. */
+	    if ((!wp->w_p_wrap
 #ifdef FEAT_DIFF
 		    && filler_todo <= 0
 #endif
-		    )
+		    ) || lcs_eol_one == -1)
 		break;
 
 	    /* When the window is too narrow draw all "@" lines. */
