@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.1.  Last change: 2002 May 07
+*gui.txt*       For Vim version 6.1.  Last change: 2003 Mar 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -692,9 +692,10 @@ nr  Name		Normal action  ~
 29  WinMaxWidth		make current window use many columns
 30  WinMinWidth		make current window use few columns
 
-							*win32-hidden-menus*
-In the Win32 GUI, starting a menu name with ']' excludes that menu from the
-main menu bar.  You must then use the |:tearoff| command to display it.
+					*hidden-menus* *win32-hidden-menus*
+In the Win32 and GTK+ GUI, starting a menu name with ']' excludes that menu
+from the main menu bar.  You must then use the |:popup| or |:tearoff| command
+to display it.
 
 							*popup-menu*
 In the Win32, GTK, Motif, Athena and Photon GUI, you can define the special
@@ -770,11 +771,12 @@ To remove all menus use:			*:unmenu-all*  >
 If you do not want to remove a menu, but disable it for a moment, this can be
 done by adding the "enable" or "disable" keyword to a ":menu" command.
 Examples: >
-	:menu disable File.Open
+	:menu disable &File.&Open\.\.\.
 	:amenu enable *
-	:amenu disable Tools.*
+	:amenu disable &Tools.*
 
-The command applies to the modes as used with all menu commands.
+The command applies to the modes as used with all menu commands.  Note that
+characters like "&" need to be included for translated names to be found.
 When the argument is "*", all menus are affected.  Otherwise the given menu
 name and all existing submenus below it are affected.
 
@@ -796,7 +798,7 @@ mappings, or put these lines in your gvimrc; "<C-R>" is CTRL-R, "<CR>" is
 the <CR> key.  |<>|)
 
 
-Tooltips & Menu tips
+5.8 Tooltips & Menu tips
 
 See section |42.4| in the user manual.
 
@@ -826,9 +828,6 @@ The tip is defined like this: >
 And delete it with: >
 	:tunmenu MyMenu.Hello
 
-When using the GTK GUI, and Vim has already opened the GUI window, the tooltip
-must be defined before the ToolBar menu.  Otherwise it won't show up.
-
 Tooltips are currently only supported for the X11 and Win32 GUI. However, they
 should appear for the other gui platforms in the not too distant future.
 
@@ -841,10 +840,11 @@ deletes the menu tip (and the item) for you.  This means that :aunmenu deletes
 a menu item - you don't need to do a :tunmenu as well.
 
 
-5.8 Popup Menus
+5.9 Popup Menus
 
-In the win32 gui, you can cause a menu to popup at the cursor.  This behaves
-similarly to the PopUp menus except that any menu tree can be popped up.
+In the Win32 and GTK+ GUI, you can cause a menu to popup at the cursor.
+This behaves similarly to the PopUp menus except that any menu tree can
+be popped up.
 
 This command is for backwards compatibility, using it is discouraged, because
 it behaves in a strange way.
@@ -852,8 +852,8 @@ it behaves in a strange way.
 							*:popup* *:popu*
 :pop[up] {name}			Popup the menu {name}.  The menu named must
 				have at least one subentry, but need not
-				appear on the menu-bar (see
-				|win32-hidden-menus|).
+				appear on the menu-bar (see |hidden-menus|).
+				{only available for Win32 and GTK GUI}
 
 Example: >
 	:popup File

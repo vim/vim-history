@@ -2150,9 +2150,9 @@ ex_emenu(eap)
 	EMSG2(_("E335: Menu not defined for %s mode"), mode);
 }
 
-#if defined(FEAT_GUI_MSWIN) || (defined(FEAT_BEVAL) \
-		&& (defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MOTIF))) \
-	|| defined(PROTO)
+#if defined(FEAT_GUI_MSWIN) \
+	|| (defined(FEAT_GUI_GTK) && defined(FEAT_MENU)) \
+	|| defined(FEAT_BEVAL_TIP) || defined(PROTO)
 /*
  * Given a menu descriptor, e.g. "File.New", find it in the menu hierarchy.
  */
