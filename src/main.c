@@ -521,6 +521,7 @@ main
 		else if (STRICMP(argv[0] + argv_idx, "version") == 0)
 		{
 		    Columns = 80;	/* need to init Columns */
+		    info_message = TRUE; /* use mch_msg(), not mch_errmsg() */
 		    list_version();
 		    mch_exit(1);
 		}

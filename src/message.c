@@ -1545,7 +1545,10 @@ msg_puts_attr(s, attr)
 #endif
 		    *p++ = *s;
 		*p = '\0';
-		mch_errmsg((char *)buf);
+		if (info_message)	/* informative message, not an error */
+		    mch_msg((char *)buf);
+		else
+		    mch_errmsg((char *)buf);
 	    }
 
 	    /* primitive way to compute the current column */
@@ -1827,8 +1830,9 @@ msg_use_printf()
 #endif
 
 /*
- * collect error messages until the GUI has started and they can be
- * displayed in a message box.
+ * Give an error message.  To be used when the screen hasn't been initialized
+ * yet.  When stderr can't be used, collect error messages until the GUI has
+ * started and they can be displayed in a message box.
  */
     void
 mch_errmsg(str)
@@ -1890,6 +1894,11 @@ mch_errmsg(str)
     }
 }
 
+/*
+ * Give a message.  To be used when the screen hasn't been initialized yet.
+ * When there is no tty, collect messages until the GUI has started and they
+ * can be displayed in a message box.
+ */
     void
 mch_msg(str)
     char	*str;
