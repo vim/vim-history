@@ -3344,13 +3344,23 @@ check_termcode(max_offset, buf, buflen)
 	    {
 		/*
 		 * For xterm and MSDOS we get "<t_mouse>scr", where
-		 *  s == encoded button state (0x20 = left, 0x22 = right, etc.)
+		 *  s == encoded button state:
+		 *	   0x20 = left button down
+		 *	   0x21 = middle button down
+		 *	   0x22 = right button down
+		 *	   0x23 = any button release
+		 *	   0x60 = button 4 down (scroll wheel down)
+		 *	   0x61 = button 5 down (scroll wheel up)
+		 *	add 0x04 for SHIFT
+		 *	add 0x08 for ALT
+		 *	add 0x10 for CTRL
+		 *	add 0x20 for mouse drag (0x40 is drag with left button)
 		 *  c == column + ' ' + 1 == column + 33
 		 *  r == row + ' ' + 1 == row + 33
 		 *
-		 * The coordinates are passed on through global variables. Ugly,
-		 * but this avoids trouble with mouse clicks at an unexpected
-		 * moment and allows for mapping them.
+		 * The coordinates are passed on through global variables.
+		 * Ugly, but this avoids trouble with mouse clicks at an
+		 * unexpected moment and allows for mapping them.
 		 */
 		num_bytes = get_bytes_from_buf(tp + slen, bytes, 3);
 		if (num_bytes == -1)	/* not enough coordinates */
@@ -3359,17 +3369,23 @@ check_termcode(max_offset, buf, buflen)
 		mouse_col = bytes[1] - ' ' - 1;
 		mouse_row = bytes[2] - ' ' - 1;
 		slen += num_bytes;
+
+		/*
+		 * Handle mouse events other than using the mouse wheel.
+		 */
 #  ifdef UNIX
 		if (use_xterm_mouse() > 1)
 		{
-		    if (mouse_code & MOUSE_DRAG_XTERM)
+		    if ((mouse_code & MOUSE_DRAG_XTERM)
+					       && mouse_code < MOUSEWHEEL_LOW)
 			mouse_code |= MOUSE_DRAG;
 		}
 #  endif
 #  ifdef XTERM_CLIP
 		else
 		{
-		    if (!(mouse_code & MOUSE_DRAG & ~MOUSE_CLICK_MASK))
+		    if (!(mouse_code & MOUSE_DRAG & ~MOUSE_CLICK_MASK)
+					       && mouse_code < MOUSEWHEEL_LOW)
 		    {
 			if ((mouse_code & MOUSE_RELEASE) == MOUSE_RELEASE)
 			    stop_xterm_trace();
@@ -3558,7 +3574,7 @@ check_termcode(max_offset, buf, buflen)
 		    is_drag = TRUE;
 		current_button = held_button;
 	    }
-	    else
+	    else if (mouse_code < MOUSEWHEEL_LOW)
 	    {
 # if defined(UNIX) && defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
 #  ifdef GPM_MOUSE
@@ -3643,7 +3659,10 @@ check_termcode(max_offset, buf, buflen)
 
 	    /* Work out our pseudo mouse event */
 	    key_name[0] = (int)KS_EXTRA;
-	    key_name[1] = get_pseudo_mouse_code(current_button,
+	    if (mouse_code >= MOUSEWHEEL_LOW)
+		key_name[1] = (mouse_code & 1) ? KE_MOUSEUP : KE_MOUSEDOWN;
+	    else
+		key_name[1] = get_pseudo_mouse_code(current_button,
 							   is_click, is_drag);
 	}
 #endif /* USE_MOUSE */

@@ -886,16 +886,18 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 
 #ifdef USE_MOUSE
 
-/* Codes for mouse event */
+/* Codes for mouse button events in lower three bits: */
 # define MOUSE_LEFT	0x00
 # define MOUSE_MIDDLE	0x01
 # define MOUSE_RIGHT	0x02
 # define MOUSE_RELEASE	0x03
+
+/* bit masks for modifiers: */
 # define MOUSE_SHIFT	0x04
 # define MOUSE_ALT	0x08
 # define MOUSE_CTRL	0x10
 
-/* mouse buttons that are handled like a key press */
+/* mouse buttons that are handled like a key press (GUI only) */
 # define MOUSE_4	0x100	/* scroll wheel down */
 # define MOUSE_5	0x200	/* scroll wheel up */
 
@@ -904,7 +906,10 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 
 # define MOUSE_DRAG	(0x40 | MOUSE_RELEASE)
 
-# define MOUSE_CLICK_MASK    0x03
+/* Lowest button code for using the mouse wheel (xterm only) */
+# define MOUSEWHEEL_LOW		0x60
+
+# define MOUSE_CLICK_MASK	0x03
 
 # define NUM_MOUSE_CLICKS(code) \
     (((unsigned)((code) & 0xC0) >> 6) + 1)
