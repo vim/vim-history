@@ -1,4 +1,4 @@
-*usr_41.txt*	For Vim version 6.2.  Last change: 2003 Jun 03
+*usr_41.txt*	For Vim version 6.2.  Last change: 2003 Aug 14
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -1432,6 +1432,24 @@ them, like "typecorr-settings" in the example.
 
 Using references to other parts of the help in || is recommended.  This makes
 it easy for the user to find associated help.
+
+
+FILETYPE DETECTION					*plugin-filetype*
+
+If your filetype is not already detected by Vim, you should create a filetype
+detection snippet in a separate file.  It is usually in the form of an
+autocommand that sets the filetype when the file name matches a pattern.
+Example: >
+
+	au BufNewFile,BufRead *.foo                     set filetype=foofoo
+
+Write this single-line file as "ftdetect/foofoo.vim" in the first directory
+that appears in 'runtimepath'.  For Unix that would be
+"~/.vim/ftdetect/foofoo.vim".  The convention is to use the name of the
+filetype for the script name.
+
+You can make more complicated checks if you like, for example to inspect the
+contents of the file to recognize the language.  Also see |new-filetype|.
 
 
 SUMMARY							*plugin-special*
