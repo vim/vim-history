@@ -1,6 +1,6 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -34,6 +34,33 @@ static int jumplistlen = 0;
 static int jumplistidx = 0;
 
 static FPOS *mark2pos __ARGS((struct mark *));
+
+#ifdef NEW
+struct markptr
+{
+	int					mp_ident;		/* 'a' - 'z', 'A' - 'Z' or jumplist */
+	struct	filemark	mp_fm;
+} marklist[NMARKS + NMARKS + JUMPLISTSIZE];
+int marklistlen = 0;
+
+adjustmark(old, new)
+{
+	max = marklistlen - 1;
+	min = 0;
+	while (max > min)
+	{
+		i = (max + min) / 2;
+		t = marklist[i].mp_fm.ptr;
+		if (t > old)
+			max = i - 1;
+		else if (t < old)
+			min = i + 1;
+	}
+	if (max == min && marklist[i].mp_fm.ptr == old)
+	{
+	}
+}
+#endif
 
 /*
  * setmark(c) - set named mark 'c' at current cursor position
@@ -290,30 +317,42 @@ decrmarks()
 /*
  * adjustmark: set new ptr for a mark
  * if new == NULL the mark is effectively deleted
+ * (this is slow: we have to check about 100 pointers!)
  */
    void
 adjustmark(old, new)
 		char *old, *new;
 {
-		register int i;
+	register int i, j;
 
-		for (i = 0; i < NMARKS; ++i)
+	for (i = 0; i < NMARKS; ++i)
+	{
+		if (namedm[i].ptr == old)
+			namedm[i].ptr = new;
+		if (namedfm[i].mark.ptr == old)
 		{
-			if (namedm[i].ptr == old)
-				namedm[i].ptr = new;
-			if (namedfm[i].mark.ptr == old)
-			{
-				namedfm[i].mark.ptr = new;
-				if (new == NULL)
-					namedfm[i].lnum = 0;		/* delete this mark */
-			}
+			namedfm[i].mark.ptr = new;
+			if (new == NULL)
+				namedfm[i].lnum = 0;		/* delete this mark */
 		}
-		if (pcmark.ptr == old)
-				pcmark.ptr = new;
-		for (i = 0; i < jumplistlen; ++i)
-				if (jumplist[i].mark.ptr == old)
-						jumplist[i].mark.ptr = new;
-		qf_adjustmark(old, new);
+	}
+	if (pcmark.ptr == old)
+		pcmark.ptr = new;
+	for (i = 0; i < jumplistlen; ++i)
+		if (jumplist[i].mark.ptr == old)
+		{
+			if (new == NULL)				/* delete this mark */
+			{
+				--jumplistlen;
+				if (jumplistidx > jumplistlen)
+					--jumplistidx;
+				for (j = i; j < jumplistlen; ++j)
+					jumplist[j] = jumplist[j + 1];
+			}
+			else
+				jumplist[i].mark.ptr = new;
+		}
+	qf_adjustmark(old, new);
 }
 
 /*
@@ -336,7 +375,10 @@ fm_getname(fmark)
 		fmark->fnum = 0;
 	}
 	if (fmark->mark.ptr == NULL)
-		fmark->mark.ptr = nr2ptr(fmark->lnum);	/* update ptr */
+	{
+		if (fmark->lnum <= line_count)				/* safety check */
+			fmark->mark.ptr = nr2ptr(fmark->lnum);	/* update ptr */
+	}
 	else
 	{
 		nr = ptr2nr(fmark->mark.ptr, (linenr_t)1);

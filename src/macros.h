@@ -1,6 +1,6 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -42,3 +42,14 @@
  * bufempty() - return TRUE if the file buffer is empty
  */
 #define bufempty() (buf1line() && lineempty((linenr_t)1))
+
+/*
+ * On some systems toupper()/tolower() only work on lower/uppercase characters
+ */
+#if defined(sequent) || defined(DOMAIN) || !defined(__STDC__)
+# define TO_UPPER(c)	(islower(c) ? toupper(c) : (c))
+# define TO_LOWER(c)	(isupper(c) ? tolower(c) : (c))
+#else
+# define TO_UPPER		toupper
+# define TO_LOWER		tolower
+#endif

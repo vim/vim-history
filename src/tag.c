@@ -1,6 +1,6 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -41,7 +41,6 @@ static int tagstackidx = 0;				/* index just below active entry */
 static int tagstacklen = 0;				/* number of tags on the stack */
 
 static int findtag __ARGS((char *));
-static char *firsttaborspace __ARGS((char *));
 
 static char bottommsg[] = "at bottom of tag stack";
 static char topmsg[] = "at top of tag stack";
@@ -115,7 +114,7 @@ dotag(tag, type, count)
 		{
 			if (getaltfile(tagstack[tagstackidx].fmark.fnum - 1, tagstack[tagstackidx].fmark.lnum, TRUE))
 			{
-				emsg(e_notopen);
+				/* emsg(e_notopen); */
 				return;
 			}
 			/* "refresh" this position, so we will not fall off the altfile array */
@@ -245,7 +244,7 @@ findtag(tag)
 	char		pbuf[LSIZE];			/* search pattern buffer */
 	char	   *fname, *str;
 	int			cmplen;
-	char		*m = NULL;
+	char		*m = "No tags file";
 	register char	*p;
 	char		*np;					/* pointer into file name string */
 	char		sbuf[CMDBUFFSIZE + 1];	/* tag file name */
@@ -272,31 +271,32 @@ findtag(tag)
 		}
 		sbuf[i] = 0;
 		if ((tp = fopen(sbuf, "r")) == NULL)
-		{
-			m = "Can't open tags file %s";
-			goto erret2;
-		}
+			continue;
 		while (fgets(lbuf, LSIZE, tp) != NULL)
 		{
 			m = "Format error in tags file %s";	/* default error message */
 
-		/* find start of file name, after first TAB or space */
-			fname = firsttaborspace(lbuf);
-			if (fname == NULL)
+		/* find start of file name, after first white space */
+			fname = lbuf;
+			skiptospace(&fname);	/* skip tag */
+			if (*fname == NUL)
 				goto erret;
 			*fname++ = '\0';
 
-		/* find start of search command, after second TAB or space */
-			str = firsttaborspace(fname);
-			if (str == NULL)
-				goto erret;
-			*str++ = '\0';
-
-			if (strncmp(lbuf, tag, (size_t)cmplen) == 0)
+			if (strncmp(lbuf, tag, (size_t)cmplen) == 0)	/* Tag found */
 			{
 				fclose(tp);
+				skipspace(&fname);
+
+			/* find start of search command, after second white space */
+				str = fname;
+				skiptospace(&str);
+				if (*str == NUL)
+					goto erret;
+				*str++ = '\0';
+				skipspace(&str);
+
 				/*
-				 * Tag found!
 				 * If the command is a string like "/^function fname"
 				 * scan through the search string. If we see a magic
 				 * char, we have to quote it. This lets us use "real"
@@ -319,8 +319,10 @@ findtag(tag)
 										*p++ = *str++;
 									break;
 
+						case '\r':
 						case '\n':	*p++ = pbuf[0];	/* copy '/' or '?' */
 									*str = 'n';		/* no setpcmark() for search */
+									str[1] = NUL;	/* delete NL after CR */
 									break;
 
 									/*
@@ -328,9 +330,10 @@ findtag(tag)
 									 * else escape it with '\'
 									 */
 						case '/':
-						case '?':	if (*str != pbuf[0])	/* not a search char */
+						case '?':	if (*str != pbuf[0])	/* not the search char */
 										break;
-									if (str[1] == '\n')		/* last char */
+															/* last char */
+									if (str[1] == '\n' || str[1] == '\r')
 									{
 										++str;
 										continue;
@@ -352,12 +355,17 @@ findtag(tag)
 				*p = NUL;
 
 				RedrawingDisabled = TRUE;
-				if ((i = getfile(fname, TRUE)) <= 0)
+				/* expand filename (for environment variables) */
+				if ((p = ExpandOne((u_char *)fname, 1, -1)) != NULL)
+					fname = p;
+				i = getfile(fname, NULL, TRUE);
+				if (p)
+					free(p);
+				if (i <= 0)
 				{
 					set_want_col = TRUE;
 
 					RedrawingDisabled = FALSE;
-					/* dosearch(pbuf[0] == '/' ? FORWARD : BACKWARD, pbuf + 1, FALSE, 1L); */
 					save_secure = secure;
 					secure = 1;
 					docmdline((u_char *)pbuf);
@@ -365,10 +373,11 @@ findtag(tag)
 						wait_return(TRUE);
 					secure = save_secure;
 
+						/* print the file message after redraw */
 					if (p_im && i == -1)
 						stuffReadbuff("\033\007i");	/* ESC CTRL-G i */
 					else
-						stuffReadbuff("\007");		/* CTRL-G */
+						stuffcharReadbuff('\007');		/* CTRL-G */
 					return 1;
 				}
 				RedrawingDisabled = FALSE;
@@ -379,30 +388,15 @@ findtag(tag)
 
 erret:
 		fclose(tp);
-erret2:
 		if (m)
 		{
-			smsg(m, sbuf);
+			emsg2(m, sbuf);
 			sleep(1);
 		}
 	}
 	if (m == NULL)
 		emsg("tag not found");
+	else if (*np == NUL)
+		emsg(m);
 	return 0;
-}
-
-/*
- * find first TAB or space
- */
-	static char *
-firsttaborspace(str)
-	char *str;
-{
-	char *p1, *p2;
-
-	p1 = strchr(str, TAB);			/* find first TAB */
-	p2 = strchr(str, ' ');			/* find first space */
-	if (p1 == NULL || (p2 != NULL && p2 < p1))
-		return p2;					/* space comes first */
-	return p1;
 }

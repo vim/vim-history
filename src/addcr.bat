@@ -164,6 +164,4 @@ addcr <proto\termlib.pro >tmp
 cp tmp proto\termlib.pro 
 addcr <proto\undo.pro >tmp
 cp tmp proto\undo.pro 
-addcr <proto\version.pro >tmp
-cp tmp proto\version.pro 
 del tmp

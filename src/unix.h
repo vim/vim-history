@@ -1,6 +1,6 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -11,7 +11,7 @@
 /*
  * Unix system-dependent filenames
  */
-#define BACKUPDIR "~/"
+#define BACKUPDIR "$HOME"
 
 #ifdef TMPNAME1
 # undef TMPNAME1
@@ -32,6 +32,7 @@
 void	flushbuf __ARGS((void));
 void	outchar __ARGS((unsigned));
 void	outstr __ARGS((char *));
+void	mch_write __ARGS((char *, int));
 int 	GetChars __ARGS((char *, int, int));
 void	vim_delay __ARGS((void));
 void	mch_suspend __ARGS((void));
@@ -49,27 +50,38 @@ int		isdir __ARGS((char *));
 void	mch_windexit __ARGS((int));
 int		mch_get_winsize __ARGS((void));
 void	mch_set_winsize __ARGS((void));
-int		call_shell __ARGS((char *, int));
+int		call_shell __ARGS((char *, int, int));
 void	breakcheck __ARGS((void));
-#ifndef linux
-int		remove __ARGS((char *));
+#ifdef SCO
+int		chmod __ARGS((const char *, mode_t));
+#endif
+#if !defined(linux) && !defined(__NeXT) && !defined(M_UNIX) && !defined(ISC) && !defined(USL)
+int		remove __ARGS((const char *));
+/*
+ * If you get an error message on "const" in the lines above, try
+ * adding "-Dconst=" to the options in the makefile.
+ */
 
 /* generic functions, not in unix.c */
+# if !defined(SCO) && !defined(SOLARIS)
 void	sleep __ARGS((int));
-int		rename __ARGS((char *, char *));
+# endif
+int		rename __ARGS((const char *, const char *));
 #endif
 
 int		stricmp __ARGS((char *, char *));
 
-#ifdef WILD_CARDS
 int		has_wildcard __ARGS((char *));
+int		have_wildcard __ARGS((int, char **));
 int		ExpandWildCards __ARGS((int, char **, int *, char ***, int, int));
 void	FreeWild __ARGS((int, char **));
-#endif
 
-/* memmove is not present on all systems, use bcopy or memcpy */
-#ifdef SYSV
-#define memmove(to, from, len) memcpy(to, from, len)
-#else
-#define memmove(to, from, len) bcopy(from, to, len);
+/* memmove is not present on all systems, use our own version or bcopy */
+#if !defined(SCO) && !defined(SOLARIS) && !defined(AIX) && !defined(UTS4) && !defined(USL)
+# ifdef SYSV_UNIX
+#   define MEMMOVE
+void *memmove __ARGS((void *, void *, int));
+# else
+#  define memmove(to, from, len) bcopy(from, to, len)
+# endif
 #endif

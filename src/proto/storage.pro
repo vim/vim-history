@@ -8,6 +8,7 @@ void filealloc __PARMS((void));
 void freeall __PARMS((void));
 char *nr2ptr __PARMS((long nr));
 char *pos2ptr __PARMS((struct fpos *pos));
+char *Curpos2ptr __PARMS((void));
 void setmarked __PARMS((long lnum));
 long firstmarked __PARMS((void));
 void clearmarked __PARMS((void));

@@ -1,6 +1,6 @@
 /* vi:ts=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -48,21 +48,28 @@ static struct
 } cmdnames[] =
 {
 |	{"append",		BANG+RANGE+TRLBAR},			/* not supported */
-	{"abbreviate",	EXTRA+TRLBAR+NOTRLCOM},		/* not supported */
+	{"abbreviate",	EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
 	{"args",		TRLBAR},
 	{"change",		BANG+RANGE+COUNT+TRLBAR},	/* not supported */
-	{"cd",			NAMEDF+TRLBAR},
+	{"cabbrev",		EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
 	{"cc",			TRLBAR+WORD1+BANG},
+	{"cd",			NAMEDF+TRLBAR},
+	{"center",		TRLBAR+RANGE+EXTRA},
 	{"cf",			TRLBAR+FILE1+BANG},
+	{"chdir",		NAMEDF+TRLBAR},
 	{"cl",			TRLBAR},
+	{"cmap",		BANG+EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
 	{"cn",			TRLBAR+BANG},
+	{"cnoremap",	BANG+EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
+	{"cnoreabbrev",	EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
+	{"copy",		RANGE+EXTRA+TRLBAR},
 	{"cp",			TRLBAR+BANG},
 	{"cq",			TRLBAR+BANG},
-	{"copy",		RANGE+EXTRA+TRLBAR},
-	{"chdir",		NAMEDF+TRLBAR},
+	{"cunmap",		BANG+EXTRA+TRLBAR+USECTRLV},
+	{"cunabbrev",	EXTRA+TRLBAR+USECTRLV},
 	{"delete",		RANGE+REGSTR+COUNT+TRLBAR},
 	{"display",		TRLBAR},
-	{"digraph",		EXTRA+TRLBAR},
+	{"digraphs",	EXTRA+TRLBAR},
 	{"edit",		BANG+FILE1+TRLBAR},
 	{"ex",			BANG+FILE1+TRLBAR},
 	{"file",		FILE1+TRLBAR},
@@ -70,29 +77,42 @@ static struct
 	{"global",		RANGE+BANG+EXTRA+DFLALL},
 	{"help",		TRLBAR},
 	{"insert",		BANG+RANGE+TRLBAR},			/* not supported */
+	{"iabbrev",		EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
+	{"imap",		BANG+EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
+	{"inoremap",	BANG+EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
+	{"inoreabbrev",	EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
+	{"iunmap",		BANG+EXTRA+TRLBAR+USECTRLV},
+	{"iunabbrev",	EXTRA+TRLBAR+USECTRLV},
 	{"join",		RANGE+COUNT+TRLBAR},
 	{"jumps",		TRLBAR},
 	{"k",			RANGE+WORD1+TRLBAR},
 	{"list",		RANGE+COUNT+TRLBAR},
+	{"left",		TRLBAR+RANGE+EXTRA},
 	{"move",		RANGE+EXTRA+TRLBAR},
 	{"mark",		RANGE+WORD1+TRLBAR},
 	{"marks",		TRLBAR},
 	{"map",			BANG+EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
+	{"make",		NEEDARG+EXTRA+TRLBAR+XFILE},
 	{"mkexrc",		BANG+FILE1+TRLBAR},
 	{"mkvimrc",		BANG+FILE1+TRLBAR},
 	{"next",		RANGE+BANG+NAMEDFS+TRLBAR},
 	{"number",		RANGE+COUNT+TRLBAR},
 	{"noremap",		BANG+EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
+	{"noreabbrev",	EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
 	{"Next",		RANGE+BANG+TRLBAR},
 	{"print",		RANGE+COUNT+TRLBAR},
 	{"pop",			RANGE+TRLBAR+ZEROR},
 	{"put",			RANGE+BANG+REGSTR+TRLBAR},
 	{"previous",	RANGE+BANG+TRLBAR},
+	{"pwd",			TRLBAR},
 	{"quit",		BANG+TRLBAR},
 	{"read",		RANGE+NAMEDF+NEEDARG+TRLBAR+ZEROR},
 	{"rewind",		BANG+TRLBAR},
 	{"recover",		FILE1+TRLBAR},				/* not supported */
+	{"redo",		TRLBAR},
+	{"right",		TRLBAR+RANGE+EXTRA},
 	{"substitute",	RANGE+EXTRA},
+	{"suspend",		TRLBAR+BANG},
 	{"set",			EXTRA+TRLBAR},
 	{"setkeymap",	NAMEDF+TRLBAR},
 	{"shell",		TRLBAR},
@@ -102,8 +122,8 @@ static struct
 	{"tag",			RANGE+BANG+WORD1+TRLBAR+ZEROR},
 	{"tags",		TRLBAR},
 	{"undo",		TRLBAR},
-	{"unabbreviate", EXTRA+TRLBAR},				/* not supported */
-	{"unmap",		BANG+EXTRA+TRLBAR},
+	{"unabbreviate", EXTRA+TRLBAR+USECTRLV},
+	{"unmap",		BANG+EXTRA+TRLBAR+USECTRLV},
 	{"vglobal",		RANGE+EXTRA+DFLALL},
 	{"version",		TRLBAR},
 	{"visual",		RANGE+BANG+FILE1+TRLBAR},

@@ -1,0 +1,72 @@
+Vim is public domain. If you are happy with Vim and want to express that,
+don't send me money. I don't need it. But I know a place where they do need
+your money. Please read on.
+
+Summer 1993 I spent one month in Uganda with a Dutch team. What I experienced
+there was very impressive. Together with local people we built a nursery
+school in Kibale. In only three weeks from nothing to a roofed building!
+
+Kibale is a small town in the south of Uganda. It is an area that is suffering
+from AIDS very badly. About 30% of the adults are infected. Because parents
+die, there are many orphans. They need a lot of help. The Kibale children
+centre is working hard to provide the needy with food, medical care and
+education. Food and medical care to keep them healthy now, and education so
+that they can take care of themselves in the future. This is the best charity
+program I have ever encountered.
+
+The key to solving the problems in this area is education. This has been
+neglected in the past years with president Idi Amin and the following civil
+wars. The people have to learn how to take care of themselves and how to avoid
+infections. There is also help for people who are ill, but the primary goal
+is to prevent people from getting ill.
+
+I was impressed by the progress that is being made there. The work is very
+well organized. Every dollar is spent on something useful. Our team brought
+about $2000. For that money we were able to built most of a two classroom
+nursery school. They have further plans to build a primary school and houses
+for the teachers. They also need money for books and other teaching materials.
+
+If you want to support the Kibale children centre, please send a contribution.
+
+How do you know that the money will be spent right? First of all you have my
+personal guarantee as the author of Vim. Further the project is co-sponsored
+and inspected by World Vision and International Child Care Fund. I will visit
+the project a second time in January 1994. Friends of mine will go there in
+the summer of 1994. So I keep informed about what is happening there.
+
+If you have any further questions, send me e-mail: mool@oce.nl.
+
+The director of the project is:
+Sekaran Vellasamy
+p.o. box 1658
+Masaka, Uganda, East Africa
+
+Transfering money from Holland:
+Use one of my accounts:
+Rabobank Venlo, nr. 3765.05.117
+Postbank, nr. 1644503
+
+Transfering money from Europe:
+To avoid banking costs the best thing is to send me a Eurocheque. But any
+other method should work.
+
+Transfering money from USA:
+Send me a check that can be cashed in Holland. Any "standard" banking check
+should be OK. Please consider adding $10 for banking costs.
+
+My address: Bram Moolenaar   
+            Clematisstraat 30
+            5925 BE  Venlo   
+            The Netherlands. 
+
+Or you can transfer the money directly to the director of the project.
+I don't know how well this works and what the costs are.
+
+Gold Trust Bank LTD - Kampala
+a/c no. 36059709
+Citibank, N.A.
+Global Clearance Services
+111 Wall Street 16th floor
+New York 10043
+U.S.A.
+Beneficiary Mr. Sekaran Vellasamy a/c no. 2100

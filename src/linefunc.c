@@ -1,6 +1,6 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -86,13 +86,13 @@ incCurpos()
  */
 	int
 incl(lp)
-		register FPOS *lp;
+	register FPOS *lp;
 {
-		register int r;
+	register int r;
 
-		if ((r = inc(lp)) == 1 && lp->col)
-				r = inc(lp);
-		return r;
+	if ((r = inc(lp)) == 1 && lp->col)
+		r = inc(lp);
+	return r;
 }
 
 /*

@@ -1,6 +1,6 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -18,6 +18,10 @@
  * binary files!
  */
 
+#ifdef MSDOS
+# include <io.h>
+#endif
+
 #include "vim.h"
 #include "globals.h"
 #include "proto.h"
@@ -28,7 +32,13 @@
 # include <proto/dos.h>		/* for Lock() and UnLock() */
 #endif
 
-#define BUFSIZE 4096
+static int	noendofline = FALSE;	/* Set to TRUE when last line has no
+															EOL in binary mode */
+
+#define BUFSIZE 4096				/* size of normal write buffer */
+#define SBUFSIZE 256				/* size of emergency write buffer */
+
+static int  write_buf __ARGS((int, char *, int));
 static void do_mlines __ARGS((void));
 
 	void
@@ -49,8 +59,9 @@ filemess(name, s)
  * (caller must check that fname != NULL)
  */
 	int
-readfile(fname, from, newfile)
+readfile(fname, sfname, from, newfile)
 	char		   *fname;
+	char		   *sfname;
 	linenr_t		from;
 	int				newfile;
 {
@@ -64,6 +75,7 @@ readfile(fname, from, newfile)
 	register u_char 	*ptr = NULL;			/* pointer into read buffer */
 	register u_char		*buffer = NULL;			/* read buffer */
 	register long		size;
+	register u_char		*p;
 	long				filesize;
 #define UNKNOWN		0x0fffffff					/* file size is unknown */
 	linenr_t			linecnt = line_count;
@@ -71,43 +83,91 @@ readfile(fname, from, newfile)
 	int 				error = 0;				/* read errors encountered */
 	long				linerest = 0;			/* remaining characters in line */
 	long				filerest;				/* remaining characters in file */
+	int					firstpart = TRUE;		/* reading first part */
+#ifdef UNIX
+	int					perm;
+#endif
+	int					textmode = p_tx;		/* accept CR-LF for line break */
+
+	if (sfname == NULL)
+		sfname = fname;
+	/*
+	 * Use the short filename whenever possible.
+	 * Avoids problems with networks and when directory names are changed.
+	 */
+	if (!did_cd)
+		fname = sfname;
 
 	if (bufempty())		/* special case: buffer has no lines */
 		linecnt = 0;
 
+#ifdef UNIX
+		/*
+		 * On Unix it is possible to read a directory, so we have to
+		 * check for it before the open().
+		 */
+	perm = getperm(fname);
+#ifdef _POSIX_SOURCE
+	if (perm >= 0 && !S_ISREG(perm))				/* not a regular file */
+#else
+	if (perm >= 0 && (perm & S_IFMT) != S_IFREG)	/* not a regular file */
+#endif
+	{
+#ifdef _POSIX_SOURCE
+		if (S_ISDIR(perm))
+#else
+		if ((perm & S_IFMT) == S_IFDIR)
+#endif
+			filemess(fname, "is a directory");
+		else
+			filemess(fname, "is not a file");
+		return TRUE;
+	}
+#endif
+
 	if (
 #ifdef UNIX
-		!(getperm(fname) & 0200) ||				/* root's way to check RO */
+		!(perm & 0200) ||						/* root's way to check RO */
 #endif
 		(fd = open(fname, O_RDWR)) == -1)		/* cannot open r/w */
 	{
 		if ((fd = open(fname, O_RDONLY)) == -1) /* cannot open at all */
 		{
-			if (newfile)
-				filemess(fname, "[New File]");
-
-#ifdef MSDOS		/* the screen may be messed up by the "insert disk
-							in drive b: and hit return" message */
+#ifdef MSDOS
+		/*
+		 * The screen may be messed up by the "insert disk
+		 * in drive b: and hit return" message
+		 */
 			updateScreen(CLEAR);
 #endif
+
+#ifndef UNIX
+		/*
+		 * On MSDOS and Amiga we can't open a directory, check here.
+		 */
+			if (isdir(fname) > 0)
+				filemess(fname, "is a directory");
+			else
+#endif
+				if (newfile)
+					filemess(fname, "[New File]");
+
 			return TRUE;
 		}
-		if (newfile)							/* set file readonly */
+		if (newfile)						/* set file readonly */
 			p_ro = TRUE;
 	}
 	else if (newfile && !readonlymode)		/* set file not readonly */
 		p_ro = FALSE;
 
-	if (
-#ifdef MSDOS
-	/* the CR characters disappear in read(), so the file lenght is wrong */
-		p_tx == TRUE ||
-#endif
-			(filesize = lseek(fd, 0L, 2)) < 0)	/* get length of file */
+	if (newfile)
+		noendofline = FALSE;
+
+	if ((filesize = lseek(fd, 0L, 2)) < 0)	/* get length of file */
 		filesize = UNKNOWN;
 	lseek(fd, 0L, 0);
 
-	filemess(fname, "");
+	filemess(fname, "");					/* show that we are busy */
 
 	for (filerest = filesize; !error && !got_int && filerest != 0; breakcheck())
 	{
@@ -115,7 +175,7 @@ readfile(fname, from, newfile)
 		 * We allocate as much space for the file as we can get, plus
 		 * space for the old line, one NUL in front and one NUL at the tail.
 		 * The amount is limited by the fact that read() only can read
-		 * upto max_unsigned characters.
+		 * upto max_unsigned characters (and other things).
 		 * If we don't know the file size, just get one Kbyte.
 		 */
 		if (filesize >= UNKNOWN)
@@ -162,6 +222,28 @@ readfile(fname, from, newfile)
 			filerest -= size;				/* .. compute the remaining length */
 
 		/*
+		 * when reading the first part of a file: guess EOL type
+		 */
+		if (firstpart && p_ta)
+		{
+			for (p = ptr; p < ptr + size; ++p)
+				if (*p == NL)
+				{
+					if (p > ptr && p[-1] == CR)	/* found CR-NL */
+						textmode = TRUE;
+					else						/* found a single NL */
+						textmode = FALSE;
+						/* if editing a new file: may set p_tx */
+					if (newfile && p_tx != textmode)
+					{
+						p_tx = textmode;
+						paramchanged("tx");
+					}
+					break;
+				}
+		}
+
+		/*
 		 * This loop is executed once for every character read.
 		 * Keep it fast!
 		 */
@@ -175,6 +257,8 @@ readfile(fname, from, newfile)
 			else
 			{
 				*ptr = NUL;		/* end of line */
+				if (textmode && ptr[-1] == CR)	/* remove CR */
+					ptr[-1] = NUL;
 				if (!appendline(lnum, (char *)buffer))
 				{
 					error = 1;
@@ -185,7 +269,10 @@ readfile(fname, from, newfile)
 			}
 		}
 		linerest = ptr - buffer;
+		firstpart = FALSE;
 	}
+	if (lnum != from && !newfile)	/* added at least one line */
+		CHANGED;
 	if (error != 1 && linerest != 0)
 	{
 		/*
@@ -193,9 +280,13 @@ readfile(fname, from, newfile)
 		 * complete the line ourselves.
 		 */
 		incomplete = TRUE;
+		if (newfile && p_bin)		/* remember for when writing */
+			noendofline = TRUE;
 		*ptr = NUL;
 		if (!appendline(lnum, (char *)buffer))
 			error = 1;
+		else if (!newfile)
+			CHANGED;
 	}
 	if (error == 2 && filesize >= UNKNOWN)	/* no error, just EOF encountered */
 	{
@@ -217,13 +308,24 @@ readfile(fname, from, newfile)
 	}
 
 	linecnt = line_count - linecnt;
-	smsg("\"%s\" %s%s%s%ld line%s, %ld character%s",
+	smsg("\"%s\" %s%s%s%s%ld line%s, %ld character%s",
 			fname,
 			p_ro ? "[readonly] " : "",
 			incomplete ? "[Incomplete last line] " : "",
 			error ? "[READ ERRORS] " : "",
+#ifdef MSDOS
+			textmode ? "" : "[notextmode] ",
+#else
+			textmode ? "[textmode] " : "",
+#endif
 			(long)linecnt, plural((long)linecnt),
 			filesize, plural(filesize));
+
+	if (error && newfile)	/* with errors we should not write the file */
+	{
+		p_ro = TRUE;
+		paramchanged("ro");
+	}
 
 	u_clearline();		/* cannot use "U" command after adding lines */
 
@@ -246,13 +348,16 @@ readfile(fname, from, newfile)
  * If forceit is true, we don't care for errors when attempting backups (jw).
  * In case of an error everything possible is done to restore the original file.
  * But when forceit is TRUE, we risk loosing it.
+ * When whole is TRUE and start == 1 and end == line_count, reset Changed.
  */
 	int
-writeit(fname, start, end, append, forceit)
+writeit(fname, sfname, start, end, append, forceit, whole)
 	char			*fname;
+	char			*sfname;
 	linenr_t		start, end;
 	int				append;
 	int				forceit;
+	int				whole;
 {
 	int 				fd;
 	char			   *backup = NULL;
@@ -264,6 +369,8 @@ writeit(fname, start, end, append, forceit)
 	long				nchars;
 	char				*errmsg = NULL;
 	char				*buffer;
+	char				smallbuf[SBUFSIZE];
+	int					bufsize;
 	long 				perm = -1;			/* file permissions */
 	int					retval = TRUE;
 	int					newfile = FALSE;	/* TRUE if file does not exist yet */
@@ -277,6 +384,14 @@ writeit(fname, start, end, append, forceit)
 
 	if (fname == NULL || *fname == NUL)		/* safety check */
 		return FALSE;
+	if (sfname == NULL)
+		sfname = fname;
+	/*
+	 * Use the short filename whenever possible.
+	 * Avoids problems with networks and when directory names are changed.
+	 */
+	if (!did_cd)
+		fname = sfname;
 
 	/*
 	 * Disallow writing from .exrc and .vimrc in current directory for
@@ -289,11 +404,19 @@ writeit(fname, start, end, append, forceit)
 		return FALSE;
 	}
 
+	if (exiting)
+		settmode(0);			/* when exiting allow typahead now */
+
 	filemess(fname, "");		/* show that we are busy */
 
 	buffer = alloc(BUFSIZE);
-	if (buffer == NULL)
-		return FALSE;
+	if (buffer == NULL)			/* can't allocate big buffer, use small one */
+	{
+		buffer = smallbuf;
+		bufsize = SBUFSIZE;
+	}
+	else
+		bufsize = BUFSIZE;
 
 #ifdef UNIX
 		/* get information about original file (if there is one) */
@@ -301,7 +424,25 @@ writeit(fname, start, end, append, forceit)
 	if (stat(fname, &old))
 		newfile = TRUE;
 	else
+	{
+#ifdef _POSIX_SOURCE
+		if (!S_ISREG(old.st_mode))      		/* not a file */
+#else
+		if ((old.st_mode & S_IFMT) != S_IFREG)	/* not a file */
+#endif
+		{
+#ifdef _POSIX_SOURCE
+			if (S_ISDIR(old.st_mode))
+#else
+			if ((old.st_mode & S_IFMT) == S_IFDIR)
+#endif
+				errmsg = "is a directory";
+			else
+				errmsg = "is not a file";
+			goto fail;
+		}
 		perm = old.st_mode;
+	}
 /*
  * If we are not appending, the file exists, and the 'writebackup' or
  * 'backup' option is set, try to make a backup copy of the file.
@@ -309,7 +450,7 @@ writeit(fname, start, end, append, forceit)
 	if (!append && perm >= 0 && (p_wb || p_bk) &&
 					(fd = open(fname, O_RDONLY)) >= 0)
 	{
-		int				bfd, buflen, wlen;
+		int				bfd, buflen;
 		char			buf[BUFSIZE + 1], *wp;
 		int				some_error = FALSE;
 		struct stat		new;
@@ -318,7 +459,7 @@ writeit(fname, start, end, append, forceit)
 
 		/*
 		 * Unix semantics has it, that we may have a writable file, 
-		 * that cannot be recreated with a simple open(..., O_CREATE, ) e.g:
+		 * that cannot be recreated with a simple open(..., O_CREAT, ) e.g:
 		 *  - the directory is not writable, 
 		 *  - the file may be a symbolic link, 
 		 *  - the file may belong to another user/group, etc.
@@ -331,8 +472,8 @@ writeit(fname, start, end, append, forceit)
 			some_error = TRUE;
 			goto nobackup;
 		}			
-		stat(backup, &new);
-		if (new.st_dev == old.st_dev && new.st_ino == old.st_ino)
+		if (!stat(backup, &new) &&
+					new.st_dev == old.st_dev && new.st_ino == old.st_ino)
 		{
 			/*
 			 * may happen when modname gave the same file back.
@@ -340,7 +481,7 @@ writeit(fname, start, end, append, forceit)
 			 * If we don't check here, we either ruin the file when
 			 * copying or erase it after writing. jw.
 			 */
-			errmsg = "Invalid backup file";
+			errmsg = "Invalid backup file (use ! to override)";
 			free(backup);
 			backup = NULL;	/* there is no backup file to delete */
 			goto nobackup;
@@ -348,8 +489,6 @@ writeit(fname, start, end, append, forceit)
 		remove(backup);		/* remove old backup, if present */
 		if ((bfd = open(backup, O_WRONLY | O_CREAT, 0666)) < 0)
 		{
-			char *home;
-
 			/* 
 			 * oops, no write/create permission here?
 			 * try again in p_bdir directory. 
@@ -358,21 +497,17 @@ writeit(fname, start, end, append, forceit)
 				if (*wp == '/')
 					break;
 			++wp;
-			if (p_bdir[0] == '~' && p_bdir[1] == '/' &&
-							(home = (char *)vimgetenv("HOME")) != NULL)
-				sprintf(buf, "%s/%s/%s", home, p_bdir + 2, wp);
-			else
-				sprintf(buf, "%s/%s", p_bdir, wp);
+			sprintf(buf, "%s/%s", p_bdir, wp);
 			free(backup);
 			if ((backup = modname(buf, ".bak")) == NULL)
 			{
 				some_error = TRUE;
 				goto nobackup;
 			}
-			stat(backup, &new);
-			if (new.st_dev == old.st_dev && new.st_ino == old.st_ino)
+			if (!stat(backup, &new) &&
+						new.st_dev == old.st_dev && new.st_ino == old.st_ino)
 			{
-				errmsg = "Invalid backup file";
+				errmsg = "Invalid backup file (use ! to override)";
 				free(backup);
 				backup = NULL;	/* there is no backup file to delete */
 				goto nobackup;
@@ -382,7 +517,7 @@ writeit(fname, start, end, append, forceit)
 			{
 				free(backup);
 				backup = NULL;	/* there is no backup file to delete */
-				errmsg = "Can't make backup file";
+				errmsg = "Can't make backup file (use ! to override)";
 				goto nobackup;
 			}
 		}
@@ -392,23 +527,16 @@ writeit(fname, start, end, append, forceit)
 		/* copy the file. */
 		while ((buflen = read(fd, buf, BUFSIZE)) > 0)
 		{
-			wp = buf;
-			do
+			if (write_buf(bfd, buf, buflen) == -1)
 			{
-				if ((wlen = write(bfd, wp, buflen)) <= 0)
-				{
-					errmsg = "Can't write to backup file";
-					goto writeerr;
-				}
-				wp += wlen;
-				buflen -= wlen;
+				errmsg = "Can't write to backup file (use ! to override)";
+				goto writeerr;
 			}
-			while (buflen > 0);
 		}
 writeerr:
 		close(bfd);
 		if (buflen < 0)
-			errmsg = "Can't read file for backup";
+			errmsg = "Can't read file for backup (use ! to override)";
 nobackup:
 		close(fd);
 	/* ignore errors when forceit is TRUE */
@@ -423,8 +551,11 @@ nobackup:
 	if (forceit && (old.st_uid == getuid()) && perm >= 0 && !(perm & 0200))
  	{
 		perm |= 0200;	
-		made_writable = TRUE;
 		setperm(fname, perm);
+		made_writable = TRUE;
+			/* if we are writing to the current file, readonly makes no sense */
+		if (fname == Filename || fname == sFilename)
+			p_ro = FALSE;
  	}
 #else /* UNIX */
 
@@ -438,6 +569,11 @@ nobackup:
 	perm = getperm(fname);
 	if (perm < 0)
 		newfile = TRUE;
+	else if (isdir(fname) > 0)
+	{
+		errmsg = "is a directory";
+		goto fail;
+	}
 	if (!append && perm >= 0 && (p_wb || p_bk))
 	{
 		/*
@@ -486,7 +622,7 @@ nobackup:
 				}
 				else
 				{
-					errmsg = "Can't make backup file";
+					errmsg = "Can't make backup file (use ! to override)";
 					goto fail;
 				}
 			}
@@ -499,8 +635,11 @@ nobackup:
 		 * file and forceit is TRUE we delete the existing file and try to create
 		 * a new one. If this still fails we may have lost the original file!
 		 * (this may happen when the user reached his quotum for number of files).
+		 * Appending will fail if the file does not exist and forceit is FALSE.
 		 */
-	while ((fd = open(fname, O_WRONLY | (append ? O_APPEND : (O_CREAT | O_TRUNC)), 0666)) < 0)
+	while ((fd = open(fname, O_WRONLY | (append ?
+					(forceit ? (O_APPEND | O_CREAT) : O_APPEND) :
+					(O_CREAT | O_TRUNC)), 0666)) < 0)
  	{
 		/*
 		 * A forced write will try to create a new file if the old one is
@@ -520,7 +659,8 @@ nobackup:
 				if (old.st_uid != getuid() || old.st_gid != getgid())
 					perm &= 0777;
 #endif /* UNIX */
-				remove(fname);
+				if (!append)		/* don't remove when appending */
+					remove(fname);
 				continue;
 			}
 		}
@@ -551,13 +691,15 @@ nobackup:
  	}
 	errmsg = NULL;
 
+	if (end > line_count)
+		end = line_count;
 	len = 0;
 	s = buffer;
 	nchars = 0;
 	for (lnum = start; lnum <= end; ++lnum)
 	{
 		/*
-		 * The next loop is done once for each character written.
+		 * The next while loop is done once for each character written.
 		 * Keep it fast!
 		 */
 		ptr = (u_char *)nr2ptr(lnum) - 1;
@@ -568,31 +710,53 @@ nobackup:
 			else
 				*s = c;
 			++s;
-			if (++len != BUFSIZE)
+			if (++len != bufsize)
 				continue;
-			if (write(fd, buffer, (size_t)BUFSIZE) == -1)
+			if (write_buf(fd, buffer, bufsize) == -1)
 			{
 				end = 0;				/* write error: break loop */
 				break;
 			}
-			nchars += BUFSIZE;
+			nchars += bufsize;
 			s = buffer;
 			len = 0;
 		}
+			/* write failed or last line has no EOL: stop here */
+		if (end == 0 || (p_bin && lnum == line_count && noendofline))
+			break;
+		if (p_tx)		/* write CR-NL */
+		{
+			*s = CR;
+			++s;
+			if (++len == bufsize)
+			{
+				if (write_buf(fd, buffer, bufsize) == -1)
+				{
+					end = 0;				/* write error: break loop */
+					break;
+				}
+				nchars += bufsize;
+				s = buffer;
+				len = 0;
+			}
+		}
 		*s = NL;
 		++s;
-		if (++len == BUFSIZE)
+		if (++len == bufsize && end)
 		{
-			if (write(fd, buffer, (size_t)BUFSIZE) == -1)
+			if (write_buf(fd, buffer, bufsize) == -1)
+			{
 				end = 0;				/* write error: break loop */
-			nchars += BUFSIZE;
+				break;
+			}
+			nchars += bufsize;
 			s = buffer;
 			len = 0;
 		}
 	}
-	if (len)
+	if (len && end)
 	{
-		if (write(fd, buffer, (size_t)len) == -1)
+		if (write_buf(fd, buffer, len) == -1)
 			end = 0;				/* write error */
 		nchars += len;
 	}
@@ -617,18 +781,25 @@ nobackup:
 
 #ifdef MSDOS		/* the screen may be messed up by the "insert disk
 							in drive b: and hit return" message */
-	updateScreen(CLEAR);
+	if (!exiting)
+		updateScreen(CLEAR);
 #endif
 
 	lnum -= start;		/* compute number of written lines */
-	smsg("\"%s\"%s %ld line%s, %ld character%s",
+	smsg("\"%s\"%s%s %ld line%s, %ld character%s",
 			fname,
 			newfile ? " [New File]" : " ",
+#ifdef MSDOS
+			p_tx ? "" : "[notextmode]",
+#else
+			p_tx ? "[textmode]" : "",
+#endif
 			(long)lnum, plural((long)lnum),
 			nchars, plural(nchars));
-	if (start == 1 && end == line_count)		/* when written everything */
+	if (whole && start == 1 && end == line_count)	/* when written everything */
 	{
 		UNCHANGED;
+		NotEdited = FALSE;
 		startscript();		/* re-start auto script file */
 	}
 
@@ -659,6 +830,28 @@ nofail:
 }
 
 /*
+ * write_buf: call write() to write a buffer
+ */
+	static int
+write_buf(fd, buf, len)
+	int		fd;
+	char	*buf;
+	int		len;
+{
+	int		wlen;
+
+	while (len)
+	{
+		wlen = write(fd, buf, (size_t)len);
+		if (wlen <= 0)				/* error! */
+			return -1;
+		len -= wlen;
+		buf += wlen;
+	}
+	return 0;
+}
+
+/*
  * do_mlines() - process mode lines for the current file
  *
  * Returns immediately if the "ml" parameter isn't set.
@@ -668,18 +861,18 @@ static void 	chk_mline __ARGS((linenr_t));
 	static void
 do_mlines()
 {
-		linenr_t		lnum;
-		int 			nmlines;
+	linenr_t		lnum;
+	int 			nmlines;
 
-		if ((nmlines = p_ml) == 0)
-				return;
+	if (!p_ml || (nmlines = (int)p_mls) == 0)
+		return;
 
-		for (lnum = 1; lnum <= line_count && lnum <= nmlines; ++lnum)
-				chk_mline(lnum);
+	for (lnum = 1; lnum <= line_count && lnum <= nmlines; ++lnum)
+		chk_mline(lnum);
 
-		for (lnum = line_count; lnum > 0 && lnum > nmlines &&
-								lnum > line_count - nmlines; --lnum)
-				chk_mline(lnum);
+	for (lnum = line_count; lnum > 0 && lnum > nmlines &&
+							lnum > line_count - nmlines; --lnum)
+		chk_mline(lnum);
 }
 
 /*
@@ -698,25 +891,33 @@ chk_mline(lnum)
 	prev = ' ';
 	for (s = nr2ptr(lnum); *s != NUL; ++s)
 	{
-		if (isspace(prev) && (strncmp(s, "vi:", (size_t)3) == 0 || strncmp(s, "ex:", (size_t)3) == 0))
+		if (isspace(prev) && (strncmp(s, "vi:", (size_t)3) == 0 || strncmp(s, "ex:", (size_t)3) == 0 || strncmp(s, "vim:", (size_t)4) == 0))
 		{
-			s += 3;
-			end = FALSE;
+			do
+				++s;
+			while (s[-1] != ':');
 			s = cs = strsave(s);
 			if (cs == NULL)
 				break;
+			end = FALSE;
 			while (end == FALSE)
 			{
 				while (*s == ' ' || *s == TAB)
 					++s;
 				if (*s == NUL)
 					break;
-				for (e = s; *e != ':' && *e != NUL; ++e)
+				for (e = s; (*e != ':' || *(e - 1) == '\\') && *e != NUL; ++e)
 					;
 				if (*e == NUL)
 					end = TRUE;
 				*e = NUL;
-				doset(s);
+				if (strncmp(s, "set ", (size_t)4) == 0) /* "vi:set opt opt opt: foo" */
+				{
+					doset(s + 4);
+					break;
+				}
+				if (doset(s))		/* stop if error found */
+					break;
 				s = e + 1;
 			}
 			free(cs);

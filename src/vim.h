@@ -1,6 +1,6 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -8,7 +8,7 @@
  *							G. R. (Fred) Walter		watmath!watcgl!grwalter 
  */
 
-#if defined(SYSV) || defined(BSD)
+#if defined(SYSV_UNIX) || defined(BSD_UNIX)
 # ifndef UNIX
 #  define UNIX
 # endif
@@ -18,14 +18,16 @@
 
 #include <stdio.h>
 
-#ifndef SYSV
-# include <stdlib.h>
+#include <ctype.h>
+#ifndef DOMAIN
+#include <limits.h>		/* For MAX_INT, remove this if it does not exist */
 #endif
 
-#include <ctype.h>
-
-#ifdef BSD
+#ifdef BSD_UNIX
 # include <strings.h>
+# ifdef __STDC__
+#  include <string.h>
+# endif
 #else
 # include <string.h>
 #endif
@@ -56,6 +58,10 @@
 #   endif
 #  endif
 # endif
+#endif
+
+#ifndef DOMAIN
+# include <stdlib.h>
 #endif
 
 #ifdef AMIGA
@@ -105,14 +111,38 @@
 # include <dir.h>
 #endif
 
+#ifdef SOLARIS
+# include <stdlib.h>
+# include <unistd.h>
+#endif
+
 #ifdef UNIX
-# include <sys/dir.h>		/* for MAXNAMLEN */
+# ifdef SCO
+#  undef M_XENIX
+#  include <sys/ndir.h>		/* for MAXNAMLEN */
+# else
+#  if defined(SOLARIS) || defined(AIX)
+#   include <dirent.h>		/* for MAXNAMLEN */
+#  else
+#   include <sys/dir.h>		/* for MAXNAMLEN */
+#  endif
+# endif
+# ifdef USL
+#  define MAXNAMLEN DIRSIZ
+# endif
 # if defined(UFS_MAXNAMLEN) && !defined(MAXNAMLEN)
 #  define MAXNAMLEN UFS_MAXNAMLEN		/* for dynix/ptx */
 # endif
 # if defined(NAME_MAX) && !defined(MAXNAMLEN)
-#  define MAXNAMLEN NAME_MAX			/* for Linux befor .99p3 */
+#  define MAXNAMLEN NAME_MAX			/* for Linux before .99p3 */
 # endif
+# if !defined(MAXNAMLEN)
+#  define MAXNAMLEN 512                 /* for all other Unix */
+# endif
+#endif
+
+#ifdef UNICOS		/* would make sense for other systems too */
+# include <errno.h>
 #endif
 
 #if defined(__STDC__) || defined(__GNUC__)
@@ -122,10 +152,10 @@
 # if defined(_SEQUENT_)
 #  include "ptx_stdlib.h"
 # endif
-# if defined(sun)
+# if defined(sun) && !defined(SOLARIS)
 #  include "sun_stdlib.h"
 # endif
-# if defined(linux)
+# if defined(linux) || defined(SCO) || defined(M_UNIX)
 #  include <unistd.h>  /* may make sense for others too. jw. */
 # endif
 #else /*__STDC__*/
@@ -170,16 +200,20 @@
 #define CURSUPD					95	/* update cursor first */
 
 /* values for State */
-#define NORMAL					 0
-#define CMDLINE 				 1
-#define INSERT					 2
-#define APPEND					 3
-#define REPLACE 				 4	/* replace mode */
-#define HELP					 5
-#define NOMAPPING 				 6	/* no :mapping mode for vgetc() */
-#define HITRETURN				 7
-#define SETWINSIZE				 8
-#define NORMAL_BUSY				 9	/* busy interpreting a command */
+/*
+ * The lowest three bits are used to distinguish normal/cmdline/insert+replace
+ * mode. This is used for mapping.
+ */
+#define NORMAL					0x01
+#define NORMAL_BUSY				0x11	/* busy interpreting a command */
+#define CMDLINE 				0x02
+#define INSERT					0x04
+#define REPLACE 				0x24	/* replace mode */
+#define HELP					0x30	/* displaying help */
+#define NOMAPPING 				0x40	/* no :mapping mode for vgetc() */
+#define HITRETURN				0x51	/* waiting for a return */
+#define SETWSIZE				0x60	/* window size has changed */
+#define ABBREV					0x80	/* abbreviation instead of mapping */
 
 /* directions */
 #define FORWARD 				 1
@@ -190,7 +224,7 @@
 #define T_WAIT					2	/* wait for a short time */
 #define T_BLOCK					3	/* wait forever */
 
-#define QUOTELINE				29999	/* Quoting is linewise */
+#define VISUALLINE			MAXCOL	/* Visual is linewise */
 
 /*
  * Names for the EXRC, HELP and temporary files.
@@ -224,14 +258,18 @@
 #endif
 
 /*
- * Maximum screen dimensions
+ * Maximum screen width
  */
-#define MAX_COLUMNS 140L
+#define MAX_COLUMNS 255L
 
 /*
  * Buffer sizes
  */
-#define CMDBUFFSIZE	256			/* size of the command processing buffer */
+#ifdef UNIX		/* Unix has plenty of memory */
+# define CMDBUFFSIZE	1024	/* size of the command processing buffer */
+#else
+# define CMDBUFFSIZE	256		/* size of the command processing buffer */
+#endif
 
 #define LSIZE		512			/* max. size of a line in the tags file */
 
@@ -275,17 +313,20 @@
 #define CHANGED   set_Changed()
 #define UNCHANGED Changed = 0
 
-#if !defined(BSD) && !defined(linux) && !defined(SASC)
+#if !defined(BSD_UNIX) && !defined(linux) && !defined(SASC) && !defined(__sgi) && !defined(SCO) && !defined(hpux) && !defined(SOLARIS) && !defined(M_UNIX) && !defined(AIX) && !defined(_UTS) && !defined(USL)
 typedef unsigned char	u_char;		/* shorthand */
 typedef unsigned short	u_short;	/* shorthand */
 typedef unsigned int	u_int;		/* shorthand */
 typedef unsigned long	u_long;		/* shorthand */
 #endif
 
-#ifdef BSD
-#define strchr(ptr, c)			index(ptr, c)
-#define strrchr(ptr, c)			rindex(ptr, c)
-#define memset(ptr, c, size)	bsdmemset(ptr, c, size)
+#if defined(BSD_UNIX) && !defined(__STDC__)
+# define strchr(ptr, c)			index((ptr), (c))
+# define strrchr(ptr, c)		rindex((ptr), (c))
+#endif
+
+#ifdef BSD_UNIX
+# define memset(ptr, c, size)	bsdmemset((ptr), (c), (size))
 char *bsdmemset __ARGS((char *, int, long));
 #endif
 
@@ -294,9 +335,25 @@ typedef unsigned		colnr_t;	/* column number type */
 typedef struct fpos		FPOS;		/* file position type */
 
 #define INVLNUM (0x7fffffff)		/* invalid line number */
+#ifdef MAX_INT
+# define MAXCOL	MAX_INT				/* maximum column number */
+#else
+# define MAXCOL	32767				/* maximum column number */
+#endif
 
 struct fpos
 {
 		linenr_t		lnum;	/* line number */
 		colnr_t 		col;	/* column number */
 };
+
+/*
+ * Some versions of isspace() handle Meta character like a space!
+ * This define fixes that.
+ */
+#ifdef VIM_ISSPACE
+# ifdef isspace
+#  undef isspace
+# endif /* isspace */
+# define isspace(x)  (((x) >= 9 && (x) <= 13) || ((x) == 32))
+#endif /* VIM_ISSPACE */

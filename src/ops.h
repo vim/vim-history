@@ -1,6 +1,6 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -32,7 +32,7 @@
 /*
  * operator characters; the order must correspond to the defines above
  */
-EXTERN char *opchars INIT(= "dyc<>!~=V:uU");
+EXTERN char *opchars INIT(= "dyc<>!~=Q:Uu");
 
 /*
  * When a cursor motion command is made, it is marked as being a character or
@@ -57,10 +57,10 @@ EXTERN char *opchars INIT(= "dyc<>!~=V:uU");
 EXTERN int		operator INIT(= NOP);	/* current pending operator */
 EXTERN int		mtype;					/* type of the current cursor motion */
 EXTERN int		mincl;					/* true if char motion is inclusive */
-EXTERN int		oneless;				/* 1 if !mincl and startop != endop */
 EXTERN FPOS 	startop;				/* cursor pos. at start of operator */
 EXTERN FPOS		endop;					/* cursor pos. at end of operator */
 EXTERN colnr_t	startvcol;				/* start col for block mode operator */
 EXTERN colnr_t	endvcol;				/* end col for block mode operator */
 EXTERN long		nlines;					/* lines between startop and endop + 1 */
 EXTERN int		yankbuffer INIT(= 0);	/* current yank buffer */
+EXTERN int		no_op;					/* startop and endop the same */

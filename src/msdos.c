@@ -1,6 +1,6 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:		Bram Moolenaar			mool@oce.nl
  *								Tim Thompson			twitch!tjt
@@ -16,6 +16,7 @@
  * A lot in this file was made by Juergen Weigert (jw).
  */
 
+#include <io.h>
 #include "vim.h"
 #include "globals.h"
 #include "param.h"
@@ -27,7 +28,6 @@
 static int WaitForChar __ARGS((int));
 static int cbrk_handler __ARGS(());
 
-#ifdef WILD_CARDS
 typedef struct filelist
 {
 	char	**file;
@@ -35,22 +35,14 @@ typedef struct filelist
 	int		maxfiles;
 } FileList;
 
-static void		addfile __ARGS((FileList *, char *));
-static int		pstrcmp __ARGS((char **, char **));
+static void		addfile __ARGS((FileList *, char *, int));
+static int		pstrcmp();	/* __ARGS((char **, char **)); BCC does not like this */
 static void		strlowcpy __ARGS((char *, char *));
 static int		expandpath __ARGS((FileList *, char *, int, int, int));
-#endif
 
 static int cbrk_pressed = FALSE;	/* set by ctrl-break interrupt */
 static int ctrlc_pressed = FALSE;	/* set when ctrl-C or ctrl-break detected */
 static int delayed_redraw = FALSE;	/* set when ctrl-C detected */
-
-/*
- * the number of calls to Write is reduced by using the buffer "outbuf"
- */
-#define BSIZE	2048
-static u_char	outbuf[BSIZE];
-static int		bpos = 0;
 
 #ifdef DEBUG
 /*
@@ -81,7 +73,7 @@ vim_delay()
  * this version of remove is not scared by a readonly (backup) file
  */
 	int
-remove(name)
+vim_remove(name)
 	char *name;
 {
 	setperm(name, 0);    /* default permissions */
@@ -89,78 +81,93 @@ remove(name)
 }
 
 /*
- * flushbuf(): flush the output buffer
+ * mch_write(): write the output buffer to the screen
  */
 	void
-flushbuf()
+mch_write(s, len)
+	char	*s;
+	int		len;
 {
-	if (bpos != 0)
-	{
-		write(1, (char *)outbuf, (long)bpos);
-		bpos = 0;
-	}
-}
+	char	*p;
+	int		row, col;
 
-/*
- * outchar(c): put a character into the output buffer.
- * Flush it if it becomes full.
- */
-	void
-outchar(c)
-	unsigned c;
-{
-	outbuf[bpos] = c;
-	++bpos;
-	if (bpos >= BSIZE)
-		flushbuf();
-}
-
-/*
- * outstr(s): put a string character at a time into the output buffer.
- */
-	void
-outstr(s)
-	register char *s;
-{
-	if (!s)			/* s is NULL in case of not defined termcap entry */
-		return;
-	/*
-	 * The prefix ESC| is used to emulate capabilities
-	 * missing in ansi.sys by direct calls to conio routines.
-	 * If we want to avoid this we need the nansi.sys driver. (jw)
-	 * Only works if the string starts with ESC!
-	 */
-	if (s[0] == ESC && s[1] == '|')
-	{
-		flushbuf();
-		switch (s[2])
+	if (term_console)		/* translate ESC | sequences into bios calls */
+		while (len--)
 		{
-		case 'L':	insline();
-			 			return;
+			if (s[0] == '\n')
+				putch('\r');
+			else if (s[0] == ESC && len > 1 && s[1] == '|')
+			{
+				switch (s[2])
+				{
+				case 'J':	clrscr();
+							goto got3;
 
-		case 'M':	delline();
-					return;
+				case 'K':	clreol();
+							goto got3;
 
-		default:	outstr("OOPS");
-					return;
+				case 'L':	insline();
+							goto got3;
+
+				case 'M':	delline();
+got3:						s += 3;
+							len -= 2;
+							continue;
+
+				case '0':
+				case '1':
+				case '2':
+				case '3':
+				case '4':
+				case '5':
+				case '6':
+				case '7':
+				case '8':
+				case '9':	p = s + 2;
+							row = getdigits(&p);		/* no check for length! */
+							if (p > s + len)
+								break;
+							if (*p == ';')
+							{
+								++p;
+								col = getdigits(&p);	/* no check for length! */
+								if (p > s + len)
+									break;
+								if (*p == 'H')
+								{
+									gotoxy(col, row);
+									len -= p - s;
+									s = p + 1;
+									continue;
+								}
+							}
+							else if (*p == 'm')
+							{
+								if (row == 0)
+									normvideo();
+								else
+									textattr(row);
+								len -= p - s;
+								s = p + 1;
+								continue;
+							}
+				}
+			}
+			putch(*s++);
 		}
-	}
-#ifdef TERMCAP
-	tputs(s, 1, outchar);
-#else
-	while (*s)
-		outchar(*s++);
-#endif
+	else
+		write(1, s, (unsigned)len);
 }
 
 #define POLL_SPEED 10	/* milliseconds between polls */
 
 /*
- * Simulate WaitForChar() by slowly polling with bioskey(1).
+ * Simulate WaitForChar() by slowly polling with bioskey(1) or kbhit().
  *
  * If Vim should work over the serial line after a 'ctty com1' we must use
  * kbhit() and getch(). (jw)
- * Usually kbhit() is not used, because then CTRL-C will be catched by DOS (mool).
+ * Usually kbhit() is not used, because then CTRL-C and CTRL-P
+ * will be catched by DOS (mool).
  */
 
 	static int
@@ -169,11 +176,7 @@ WaitForChar(msec)
 {
 	do
 	{
-#ifdef USE_KBHIT
-		if (kbhit() || cbrk_pressed)
-#else
-		if (bioskey(1) || cbrk_pressed)
-#endif
+		if ((p_biosk ? bioskey(1) : kbhit()) || cbrk_pressed)
 			return 1;
 		delay(POLL_SPEED);
 		msec -= POLL_SPEED;
@@ -183,20 +186,19 @@ WaitForChar(msec)
 }
 
 /*
- * GetChars(): low level input function.
- * Get characters from the keyboard.
- * If type == T_PEEK do not wait for characters.
- * If type == T_WAIT wait a short time for characters.
- * If type == T_BLOCK wait for characters.
+ * GetChars(): low level input funcion.
+ * Get a characters from the keyboard.
+ * If time == 0 do not wait for characters.
+ * If time == n wait a short time for characters.
+ * If time == -1 wait forever for characters.
  */
 	int
-GetChars(buf, maxlen, type)
+GetChars(buf, maxlen, time)
 	char		*buf;
 	int 		maxlen;
-	int 		type;
+	int 		time;
 {
 	int 		len = 0;
-	int 		time = 1000;	/* one second */
 	int			c;
 
 /*
@@ -211,18 +213,15 @@ GetChars(buf, maxlen, type)
 		flushbuf();
 	}
 
-	switch (type)
+	if (time >= 0)
 	{
-	case T_PEEK:
-		time = 1;
-		 /* FALLTHROUGH */
-
-	case T_WAIT:
+		if (time == 0)			/* don't know if time == 0 is allowed */
+			time = 1;
 		if (WaitForChar(time) == 0) 	/* no character available */
 			return 0;
-		break;
-
-	case T_BLOCK:
+	}
+	else	/* time == -1 */
+	{
 	/*
 	 * If there is no character available within 2 seconds (default)
 	 * write the autoscript file to disk
@@ -244,57 +243,44 @@ GetChars(buf, maxlen, type)
 	 * implies a key hit.
 	 */
 	cbrk_pressed = FALSE;
-#ifdef USE_KBHIT
-	while ((len == 0 || kbhit()) && len < maxlen)
-	{
-		switch (c = getch())
+	if (p_biosk)
+		while ((len == 0 || bioskey(1)) && len < maxlen)
 		{
-		case 0:
-				*buf++ = K_NUL;
-				break;
-		case 3:
-				cbrk_pressed = TRUE;
-				/*FALLTHROUGH*/
-		default:
-				*buf++ = c;
-		}
-		len++;
-	}
-#else
-	while ((len == 0 || bioskey(1)) && len < maxlen)
-	{
-		c = bioskey(0);			/* get the key */
-		if (c == 0)				/* ctrl-break */
-			c = 3;				/* return a CTRL-C */
-		if ((c & 0xff) == 0)
-		{
-			if (c == 0x0300)		/* CTRL-@ is 0x0300, translated into K_ZERO */
-				c = K_ZERO;
-			else		/* extended key code 0xnn00 translated into K_NUL, nn */
+			c = bioskey(0);			/* get the key */
+			if (c == 0)				/* ctrl-break */
+				c = 3;				/* return a CTRL-C */
+			if ((c & 0xff) == 0)
 			{
-				c >>= 8;
-				*buf++ = K_NUL;
-				++len;
+				if (c == 0x0300)		/* CTRL-@ is 0x0300, translated into K_ZERO */
+					c = K_ZERO;
+				else		/* extended key code 0xnn00 translated into K_NUL, nn */
+				{
+					c >>= 8;
+					*buf++ = K_NUL;
+					++len;
+				}
 			}
+
+			*buf++ = c;
+			len++;
 		}
-
-		*buf++ = c;
-		len++;
-	}
-#endif
+	else
+		while ((len == 0 || kbhit()) && len < maxlen)
+		{
+			switch (c = getch())
+			{
+			case 0:
+					*buf++ = K_NUL;
+					break;
+			case 3:
+					cbrk_pressed = TRUE;
+					/*FALLTHROUGH*/
+			default:
+					*buf++ = c;
+			}
+			len++;
+		}
 	return len;
-}
-
-extern int _fmode;
-
-	void
-textfile(on)
-	int on;
-{
-	/*
-	 * in O_TEXT mode we read and write files with CR/LF translation.
-	 */
-	_fmode = on ? O_TEXT : O_BINARY;
 }
 
 /*
@@ -304,19 +290,19 @@ textfile(on)
 mch_suspend()
 {
 	outstr("new shell started\n");
-	stoptermcap();
-	call_shell(NULL, 0);
-	starttermcap();
+	call_shell(NULL, 0, TRUE);
 }
 
+extern int _fmode;
 /*
  * we do not use windows, there is not much to do here
  */
 	void
 mch_windinit()
 {
-	textfile(p_tx);
+	_fmode = O_BINARY;		/* we do our own CR-LF translation */
 	flushbuf();
+	mch_get_winsize();
 }
 
 	void
@@ -329,6 +315,14 @@ check_win(argc, argv)
 		fprintf(stderr, "VIM: no controlling terminal\n");
 		exit(2);
 	}
+	/*
+	 * In some cases with DOS 6.0 on a NEC notebook there is a 12 seconds
+	 * delay when starting up that can be avoided by the next two lines.
+	 * Don't ask me why!
+	 * This could be fixed by removing setver.sys from config.sys. Forget it.
+	gotoxy(1,1);
+	cputs(" ");
+	 */
 }
 
 /*
@@ -357,15 +351,39 @@ resettitle()
 }
 
 /*
- * get name of current directory into buffer 'buf' of length 'len' bytes
+ * Get name of current directory into buffer 'buf' of length 'len' bytes.
+ * Return non-zero for success.
  */
 	int
 dirname(buf, len)
 	char	*buf;
 	int		len;
 {
-	return (int)getcwd(buf, len);
+	return (getcwd(buf, len) != NULL);
 }
+
+/*
+ * Change default drive (for Turbo C, Borland C already has it)
+ */
+#ifndef __BORLANDC__
+	int
+_chdrive(drive)
+	int drive;
+{
+	unsigned dummy;
+	union REGS regs;
+
+	regs.h.ah = 0x0e;
+	regs.h.dl = drive - 1;
+	intdos(&regs, &regs);	/* set default drive */
+	regs.h.ah = 0x19;
+	intdos(&regs, &regs);	/* get default drive */
+	if (regs.h.al == drive - 1)
+		return 0;
+	else
+		return -1;
+}
+#endif
 
 /*
  * get absolute filename into buffer 'buf' of length 'len' bytes
@@ -375,9 +393,73 @@ FullName(fname, buf, len)
 	char	*fname, *buf;
 	int		len;
 {
-	/* failed, because we are under MSDOS */
-	strncpy(buf, fname, len);
-	return 0;
+	if (fname == NULL)	/* always fail */
+		return 0;
+
+#ifdef __BORLANDC__		/* the old Turbo C does not have this */
+	if (_fullpath(buf, fname, len) == NULL)
+	{
+		strncpy(buf, fname, len);	/* failed, use the relative path name */
+		return 0;
+	}
+	return 1;
+#else					/* almost the same as FullName in unix.c */
+	{
+		int		l;
+		char	olddir[MAXPATHL];
+		char	*p, *q;
+		int		c;
+		int		retval = 1;
+
+		*buf = 0;
+		/*
+		 * change to the directory for a moment,
+		 * and then do the getwd() (and get back to where we were).
+		 * This will get the correct path name with "../" things.
+		 */
+		p = strrchr(fname, '/');
+		q = strrchr(fname, '\\');
+		if (q && (p == NULL || q > p))
+			p = q;
+		q = strrchr(fname, ':');
+		if (q && (p == NULL || q > p))
+			p = q;
+		if (p != NULL)
+		{
+			if (getcwd(olddir, MAXPATHL) == NULL)
+			{
+				p = NULL;		/* can't get current dir: don't chdir */
+				retval = 0;
+			}
+			else
+			{
+				if (*p == ':' || (p > fname && p[-1] == ':'))
+					q = p + 1;
+				else
+					q = p;
+				c = *q;
+				*q = NUL;
+				if (chdir(fname))
+					retval = 0;
+				else
+					fname = p + 1;
+				*q = c;
+			}
+		}
+		if (getcwd(buf, len) == NULL)
+		{
+			retval = 0;
+			*buf = NUL;
+		}
+		l = strlen(buf);
+		if (l && buf[l - 1] != '/' && buf[l - 1] != '\\')
+			strcat(buf, "\\");
+		if (p)
+			chdir(olddir);
+		strcat(buf, fname);
+		return retval;
+	}
+#endif
 }
 
 /*
@@ -401,10 +483,10 @@ getperm(name)
 	int
 setperm(name, perm)
 	char	*name;
-	int		perm;
+	long	perm;
 {
 	perm &= ~FA_ARCH;
-	return _chmod(name, 1, perm);
+	return _chmod(name, 1, (int)perm);
 }
 
 /*
@@ -414,7 +496,14 @@ setperm(name, perm)
 isdir(name)
 	char *name;
 {
-	return (_chmod(name, 0, 0) & FA_DIREC) ? 1 : 0;
+	int f;
+
+	f = _chmod(name, 0, 0);
+	if (f == -1)
+		return -1;					/* file does not exist at all */
+	if ((f & FA_DIREC) == 0)
+		return 0;					/* not a directory */
+	return 1;
 }
 
 /*
@@ -473,7 +562,7 @@ catch_cint(bp, di, si, ds, es, dx, cx, bx, ax)
 /*
  * set the tty in (raw) ? "raw" : "cooked" mode
  *
- * Does not change the tty, as bioskey() works raw all the time.
+ * Does not change the tty, as bioskey() and kbhit() work raw all the time.
  */
 
 extern void interrupt CINT_FUNC();
@@ -495,6 +584,8 @@ mch_settmode(raw)
 		old_cbrk = getvect(0x1B); 		/* save old ctrl-break interrupt */
 		setvect(0x1B, catch_cbrk);		/* install our ctrl-break interrupt */
 		ctrlbrk(cbrk_handler);			/* vim's ctrl-break handler */
+		if (term_console)
+			outstr(T_TP);				/* set colors */
 	}
 	else
 	{
@@ -502,29 +593,58 @@ mch_settmode(raw)
 		setvect(0x24, old_cint);		/* restore critical error interrupt */
 		setvect(0x1B, old_cbrk);		/* restore ctrl-break interrupt */
 		/* restore ctrl-break handler, how ??? */
+		if (term_console)
+			normvideo();				/* restore screen colors */
 	}
 }
+
+/*
+ * Structure used by Turbo-C/Borland-C to store video parameters.
+ */
+extern struct text_info _video;
 
 	int
 mch_get_winsize()
 {
+	int i;
 	struct text_info ti;
-
-	debug("mch_get_winsize\n");
+/*
+ * The screenwidth is returned by the BIOS OK.
+ * The screenheight is in a location in the bios RAM, if the display is EGA or VGA.
+ */
 	if (!term_console)
 		return 1;
 	gettextinfo(&ti);
 	Columns = ti.screenwidth;
 	Rows = ti.screenheight;
+	if (ti.currmode > 10)
+		Rows = *(char far *)MK_FP(0x40, 0x84) + 1;
+	set_window();
+
 	if (Columns < 5 || Columns > MAX_COLUMNS ||
 					Rows < 2 || Rows > MAX_COLUMNS)
 	{
-		/* these values are not used. overwritten by termcap size or default */
+		/* these values are overwritten by termcap size or default */
 		Columns = 80;
-		Rows = 24;
+		Rows = 25;
 		return 1;
 	}
+	Rows_max = Rows;				/* remember physical max height */
+
+	check_winsize();
+	script_winsize();
+
 	return 0;
+}
+
+/*
+ * Set the active window for delline/insline.
+ */
+	void
+set_window()
+{
+	_video.screenheight = Rows;
+	window(1, 1, Columns, Rows);
 }
 
 	void
@@ -535,16 +655,18 @@ mch_set_winsize()
 }
 
 	int
-call_shell(cmd, filter)
+call_shell(cmd, filter, cooked)
 	char	*cmd;
 	int 	filter; 		/* if != 0: called by dofilter() */
+	int		cooked;
 {
 	int		x;
 	char	newcmd[200];
 
 	flushbuf();
 
-	settmode(0);		/* set to cooked mode */
+	if (cooked)
+		settmode(0);		/* set to cooked mode */
 
 	if (cmd == NULL)
 		x = system(p_sh);
@@ -554,7 +676,8 @@ call_shell(cmd, filter)
 		x = system(newcmd);
 	}
 	outchar('\n');
-	settmode(1);		/* set to raw mode */
+	if (cooked)
+		settmode(1);		/* set to raw mode */
 
 	if (x)
 	{
@@ -576,18 +699,19 @@ breakcheck()
 	{
 		ctrlc_pressed = FALSE;
 		got_int = TRUE;
-		flush_buffers();		/* remove all typeahead and macro stuff */
 	}
 }
 
-#ifdef WILD_CARDS
 #define FL_CHUNK 32
 
 	static void
-addfile(fl, f)
+addfile(fl, f, isdir)
 	FileList	*fl;
 	char		*f;
+	int			isdir;
 {
+	char		*p;
+
 	if (!fl->file)
 	{
 		fl->file = (char **)alloc(sizeof(char *) * FL_CHUNK);
@@ -601,7 +725,7 @@ addfile(fl, f)
 		char	**t;
 		int		i;
 
-		t = (char **)alloc(sizeof(char *) * (fl->maxfiles + FL_CHUNK));
+		t = (char **)lalloc(sizeof(char *) * (fl->maxfiles + FL_CHUNK), TRUE);
 		if (!t)
 			return;
 		for (i = fl->nfiles - 1; i >= 0; i--)
@@ -610,7 +734,14 @@ addfile(fl, f)
 		fl->file = t;
 		fl->maxfiles += FL_CHUNK;
 	}
-	fl->file[fl->nfiles++] = f;
+	p = alloc((unsigned)(strlen(f) + 1 + isdir));
+	if (p)
+	{
+		strcpy(p, f);
+		if (isdir)
+			strcat(p, "\\");
+	}
+	fl->file[fl->nfiles++] = p;
 }
 
 	static int
@@ -682,12 +813,13 @@ expandpath(fl, path, fonly, donly, notf)
 	/* now we have one wildcard component between s and e */
 	*e = '\0';
 	r = 0;
-	if ((c = findfirst(buf, &fb, *path ? FA_DIREC : 0)) != 0)
+	/* If we are expanding wildcards we try both files and directories */
+	if ((c = findfirst(buf, &fb, (*path || !notf) ? FA_DIREC : 0)) != 0)
 	{
 		/* not found */
 		strcpy(e, path);
 		if (notf)
-			addfile(fl, strsave(buf));
+			addfile(fl, buf, FALSE);
 		return 1; /* unexpanded or empty */
 	}
 	while (!c)
@@ -697,7 +829,7 @@ expandpath(fl, path, fonly, donly, notf)
 		{
 			strcat(buf, path);
 			if (!has_wildcard(path))
-				addfile(fl, strsave(buf));
+				addfile(fl, buf, (isdir(buf) > 0));
 			else
 				r |= expandpath(fl, buf, fonly, donly, notf);
 		}
@@ -728,7 +860,7 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	for (i = 0; i < num_pat; i++)
 	{
 		if (!has_wildcard(pat[i]))
-			addfile(&f, strsave(pat[i]));
+			addfile(&f, pat[i], files_only ? FALSE : (isdir(pat[i]) > 0));
 		else
 			r |= expandpath(&f, pat[i], files_only, 0, list_notfound);
 	}
@@ -736,6 +868,11 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	{
 		*num_file = f.nfiles;
 		*file = f.file;
+	}
+	else
+	{
+		*num_file = 0;
+		*file = NULL;
 	}
 	return r;
 }
@@ -751,4 +888,25 @@ FreeWild(num, file)
 		free(file[num]);
 	free(file);
 }
-#endif /* WILD_CARDS */
+
+/*
+ * The normal chdir() does not change the default drive.
+ * This one does.
+ */
+#undef chdir
+	int
+vim_chdir(path)
+	char *path;
+{
+	if (path[0] == NUL)				/* just checking... */
+		return 0;
+	if (path[1] == ':')				/* has a drive name */
+	{
+		if (_chdrive(toupper(path[0]) - 'A' + 1))
+			return -1;				/* invalid drive name */
+		path += 2;
+	}
+	if (*path == NUL)				/* drive name only */
+		return 0;
+	return chdir(path);				/* let the normal chdir() do the rest */
+}

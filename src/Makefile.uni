@@ -1,0 +1,276 @@
+#
+# Makefile for Vim on Unix, using gcc or standard cc
+#
+
+#>>>>> choose BSD_UNIX for Sun, Linux, IRIX, NeXT, POSIX and SYSV R4
+#	   or Apollo DOMAIN (with SYSTYPE = bsd4.3, change CC below)
+#	   or BSD_UNIX with TERMINFO for HPUX
+#	   or BSD_UNIX for Convex
+#          or SYSV_UNIX for Dynix/PTX, SCO-UNIX, UNICOS and SYSV R3
+#          or SOLARIS
+#          or UNICOS
+#	   or AIX (rs6000) (disable termcap below)
+#	   or UTS2 for Amdahl UTS 2.1.x (disable termcap below)
+#	   or UTS4 for Amdahl UTS 4.x
+#	   or USL for Unix Systems Laboratories (SYSV 4.2)
+MACHINE = -DBSD_UNIX
+#MACHINE = -DBSD_UNIX -DDOMAIN
+#MACHINE = -DBSD_UNIX -DTERMINFO
+#MACHINE = -DBSD_UNIX -DCONVEX
+#
+#MACHINE = -DSYSV_UNIX
+#MACHINE = -DSYSV_UNIX -DSOLARIS -DTERMINFO
+#MACHINE = -DSYSV_UNIX -DUNICOS
+#MACHINE = -DSYSV_UNIX -DAIX
+#MACHINE = -DSYSV_UNIX -DUTS2
+#MACHINE = -DSYSV_UNIX -DUTS4 -Xa
+#MACHINE = -DSYSV_UNIX -DUSL
+
+#>>>>> choose one compiler
+### standard C compiler, with optimizer, debugger or vanilla
+CC=cc -O
+#CC=cc -g
+#CC=cc
+
+### GCC on sun, Dynix
+#CC=gcc -O -Wall -traditional
+
+### GCC 2.2.2d on Linux (works for Sun OS also)
+#CC=gcc -O6 -Wall
+
+### GCC on SCO 3.2 and GCC 2.4.5 on NeXT
+#CC=gcc -O -Wall
+
+### GCC on another SCO Unix
+#CC=gcc -O6 -g -fpcc-struct-return -fwritable-strings
+
+### CenterLine cc
+#CC=clcc -O
+ 
+### Apollo Domain cc
+#CC=cc -O -A systype,bsd4.3
+
+#>>>>> choose options for install
+### Name of target
+TARGET = vim
+
+### Prefix for location of files
+PREFIX = /usr/local
+
+### Location of binary
+BINLOC = $(PREFIX)/bin
+
+### Location of man page
+MANLOC = $(PREFIX)/man/man1
+
+### Location of help file
+HELPLOC = $(PREFIX)/lib
+
+### Permissions for vim binary
+BINMOD = 755
+
+### Permissions for man page
+MANMOD = 644
+
+### Permissions for help file
+HELPMOD = 644
+
+MANFILE = ../doc/vim.1
+
+HELPFILE = ../doc/vim.hlp
+
+#>>>>> choose options:
+### -DDIGRAPHS		digraph support
+### -DNO_FREE_NULL	do not call free() with a null pointer
+### -DCOMPATIBLE	start in vi-compatible mode
+### -DNOBACKUP		default is no backup file
+### -DDEBUG		output a lot of debugging garbage
+### -DSTRNCASECMP	use strncasecmp() instead of internal function
+### -DUSE_LOCALE	use setlocale() to change ctype() and others
+### -DTERMCAP		full termcap file support
+### -DTERMINFO		use terminfo entries for builtin termcaps
+### -DNO_BUILTIN_TCAPS	do not include builtin termcap entries
+###				(use only with -DTERMCAP)
+### -DSOME_BUILTIN_TCAPS include most useful builtin termcap entries
+###				(use only without -DNO_BUILTIN_TCAPS)
+### -DALL_BUILTIN_TCAPS	include all builtin termcap entries
+###				(use only without -DNO_BUILTIN_TCAPS)
+### -DMAXNAMLEN 31	maximum length of a file name (if not defined in sys/dir.h)
+### -Dconst=		for compilers that don't have type const
+### -DVIMRC_FILE	name of the .vimrc file in current dir
+### -DEXRC_FILE		name of the .exrc file in current dir
+### -DSYSVIMRC_FILE	name of the global .vimrc file
+### -DSYSEXRC_FILE	name of the global .exrc file
+### -DDEFVIMRC_FILE	name of the system-wide .vimrc file
+### -DVIM_HLP		name of the help file
+### -DUSE_SYSTEM	use system() instead of fork/exec for starting a shell
+### -DVIM_ISSPACE	use when isspace() can't handle meta chars
+### -DSCO		SCO UNIX
+### -UM_XENIX		needed on SCO UNIX when using gcc
+DEFS = -DDIGRAPHS -DTERMCAP -DSOME_BUILTIN_TCAPS -DNO_FREE_NULL \
+	-DSYSVIMRC_FILE=\"\$$HOME/.vimrc\" -DSYSEXRC_FILE=\"\$$HOME/.exrc\" \
+	-DDEFVIMRC_FILE=\"/etc/vimrc\" -DVIM_HLP=\"$(HELPLOC)/vim.hlp\"
+
+#>>>>> link with termlib or termcap only if TERMCAP is defined
+### default
+LIBS = -ltermlib
+
+### termcap is for linux, HPUX, NeXT and others
+#LIBS = -ltermcap
+
+### for IRIX (Silicon Graphics Indigo, __sgi will be defined)
+#LIBS = -ltermlib -lmalloc -lc_s
+
+### UTS 2.1.6a (Amdahl UTS, _UTS will be defined)
+#LIBS = -ltermlib -lsocket
+
+### for SCO UNIX 3.2
+#LIBS = -ltinfo
+
+### for some SCO UNIX with gcc
+#LIBS = -ltermlib -lmalloc
+
+### without TERMCAP defined
+#LIBS = 
+
+#>>>>> end of choices
+###########################################################################
+
+CFLAGS = -c $(MACHINE) $(DEFS)
+
+INCL = vim.h globals.h param.h keymap.h macros.h ascii.h term.h unix.h debug.h
+
+OBJ =	alloc.o unix.o buffers.o charset.o cmdline.o csearch.o digraph.o \
+	edit.o fileio.o help.o linefunc.o main.o mark.o message.o misccmds.o \
+	normal.o ops.o param.o quickfix.o regexp.o regsub.o screen.o \
+	script.o search.o storage.o tag.o term.o undo.o
+
+$(TARGET): $(OBJ) version.c
+	$(CC) $(CFLAGS) version.c
+	$(CC) -o $(TARGET) $(OBJ) version.o $(LIBS)
+
+debug: $(OBJ) version.c
+	$(CC) $(CFLAGS) version.c
+	$(CC) -o $(TARGET) -g $(OBJ) version.o $(LIBS)
+
+ctags:
+	csh -c ctags *.c *.h
+
+install: $(TARGET)
+	chmod $(BINMOD) $(TARGET)
+	cp $(TARGET) $(BINLOC)
+	chmod $(MANMOD) $(MANFILE)
+	cp $(MANFILE) $(MANLOC)
+	chmod $(HELPMOD) $(HELPFILE)
+	cp $(HELPFILE) $(HELPLOC)
+
+clean:
+	-rm -f $(OBJ) mkcmdtab.o version.o core $(TARGET) mkcmdtab
+	-rm -f *.bak
+
+#use this in case the files have been transported via an MSDOS system
+
+FILES = *.c *.h makefile makefile.* cmdtab.tab proto/*.pro tags
+
+dos2unix:
+	-mv arp_prot.h arp_proto.h
+	-mv ptx_stdl.h ptx_stdlib.h
+	-mv sun_stdl.h sun_stdlib.h
+	-mv makefile.dic makefile.dice
+	-mv makefile.uni makefile.unix
+	-mv makefile.man makefile.manx
+	-mv makefile.6sa makefile.6sas
+	-mv makefile.5sa makefile.5sas
+	for i in $(FILES); do tr -d '\r\032' < $$i > ~tmp~; mv ~tmp~ $$i; echo $$i; done
+
+###########################################################################
+
+alloc.o:	alloc.c  $(INCL)
+	$(CC) $(CFLAGS) alloc.c
+
+unix.o:	unix.c  $(INCL) unix.h
+	$(CC) $(CFLAGS) unix.c
+
+buffers.o:	buffers.c  $(INCL)
+	$(CC) $(CFLAGS) buffers.c
+
+charset.o:	charset.c  $(INCL)
+	$(CC) $(CFLAGS) charset.c
+
+cmdline.o:	cmdline.c  $(INCL) cmdtab.h
+	$(CC) $(CFLAGS) cmdline.c
+
+csearch.o:	csearch.c  $(INCL)
+	$(CC) $(CFLAGS) csearch.c
+
+digraph.o:	digraph.c  $(INCL)
+	$(CC) $(CFLAGS) digraph.c
+
+edit.o:	edit.c  $(INCL)
+	$(CC) $(CFLAGS) edit.c
+
+fileio.o:	fileio.c  $(INCL)
+	$(CC) $(CFLAGS) fileio.c
+
+help.o:	help.c  $(INCL)
+	$(CC) $(CFLAGS) help.c
+
+linefunc.o:	linefunc.c  $(INCL)
+	$(CC) $(CFLAGS) linefunc.c
+
+main.o:	main.c  $(INCL)
+	$(CC) $(CFLAGS) main.c
+
+mark.o:	mark.c  $(INCL)
+	$(CC) $(CFLAGS) mark.c
+
+message.o:	message.c  $(INCL)
+	$(CC) $(CFLAGS) message.c
+
+misccmds.o:	misccmds.c  $(INCL)
+	$(CC) $(CFLAGS) misccmds.c
+
+normal.o:	normal.c  $(INCL) ops.h
+	$(CC) $(CFLAGS) normal.c
+
+ops.o:	ops.c  $(INCL) ops.h
+	$(CC) $(CFLAGS) ops.c
+
+param.o:	param.c  $(INCL)
+	$(CC) $(CFLAGS) param.c
+
+quickfix.o:	quickfix.c  $(INCL)
+	$(CC) $(CFLAGS) quickfix.c
+
+regexp.o:	regexp.c  $(INCL)
+	$(CC) $(CFLAGS) regexp.c
+
+regsub.o:	regsub.c  $(INCL)
+	$(CC) $(CFLAGS) regsub.c
+
+screen.o:	screen.c  $(INCL)
+	$(CC) $(CFLAGS) screen.c
+
+script.o:	script.c  $(INCL)
+	$(CC) $(CFLAGS) script.c
+
+search.o:	search.c  $(INCL)
+	$(CC) $(CFLAGS) search.c
+
+storage.o:	storage.c  $(INCL)
+	$(CC) $(CFLAGS) storage.c
+
+tag.o:	tag.c  $(INCL)
+	$(CC) $(CFLAGS) tag.c
+
+term.o:	term.c  $(INCL)
+	$(CC) $(CFLAGS) term.c
+
+undo.o:	undo.c  $(INCL)
+	$(CC) $(CFLAGS) undo.c
+
+cmdtab.h: cmdtab.tab mkcmdtab
+	./mkcmdtab cmdtab.tab cmdtab.h
+
+mkcmdtab: mkcmdtab.o
+	$(CC) -o mkcmdtab mkcmdtab.o

@@ -1,8 +1,9 @@
 /* undo.c */
 int u_saveCurpos __PARMS((void));
 int u_save __PARMS((long top, long bot));
-int u_savesub __PARMS((long lnum, char *ptr));
-int u_savedel __PARMS((long lnum, char *ptr));
+int u_savesub __PARMS((long lnum));
+int u_inssub __PARMS((long lnum));
+int u_savedel __PARMS((long lnum, long nlines));
 void u_undo __PARMS((int count));
 void u_redo __PARMS((int count));
 void u_sync __PARMS((void));

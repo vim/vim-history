@@ -1,6 +1,6 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -31,7 +31,7 @@ get_indent()
 	for (ptr = nr2ptr(Curpos.lnum); *ptr; ++ptr)
 	{
 		if (*ptr == TAB)	/* count a tab for what it is worth */
-			count += p_ts - (count % p_ts);
+			count += (int)p_ts - (count % (int)p_ts);
 		else if (*ptr == ' ')
 			++count;			/* count a space for one */
 		else
@@ -58,11 +58,12 @@ set_indent(size, delete)
 		while (isspace(gcharCurpos()))	/* delete old indent */
 			delchar(FALSE);
 	}
-	while (size >= p_ts)
-	{
-		inschar(TAB);
-		size -= p_ts;
-	}
+	if (!p_et)			/* if 'expandtab' is set, don't use TABs */
+		while (size >= (int)p_ts)
+		{
+			inschar(TAB);
+			size -= (int)p_ts;
+		}
 	while (size)
 	{
 		inschar(' ');
@@ -79,12 +80,13 @@ set_indent(size, delete)
  */
 
 	int
-Opencmd(dir, redraw)
+Opencmd(dir, redraw, delspaces)
 	int 		dir;
 	int			redraw;
+	int			delspaces;
 {
 	char   *l;
-	char   *ptr;
+	char   *ptr, *pp;
 	FPOS	oldCurpos; 			/* old cursor position */
 	int		newcol = 0;			/* new cursor column */
 	int 	newindent = 0;		/* auto-indent of the new line */
@@ -102,32 +104,39 @@ Opencmd(dir, redraw)
 		 * count white space on current line
 		 */
 		newindent = get_indent();
+		if (newindent == 0)
+			newindent = old_indent;		/* for ^^D command in insert mode */
+		old_indent = 0;
 
-				/*
-				 * If we just did an auto-indent, then we didn't type anything on the
-				 * prior line, and it should be truncated.
-				 */
+			/*
+			 * If we just did an auto-indent, then we didn't type anything on the
+			 * prior line, and it should be truncated.
+			 */
 		if (dir == FORWARD && did_ai)
-				truncate = TRUE;
-		else if (p_si)
+			truncate = TRUE;
+		else if (p_si && *ptr != NUL)
 		{
 			char	*p;
 			char	*pp;
 			int		i, save;
 
-			p = ptr;
-			skipspace(&p);
 			if (dir == FORWARD)
 			{
-				if (*p == '{')
+				p = ptr + strlen(ptr) - 1;
+				while (p > ptr && isspace(*p))	/* find last non-blank in line */
+					--p;
+				if (*p == '{')					/* line ends in '{': do indent */
 				{
 					did_si = TRUE;
 					no_si = TRUE;
 				}
-				else
+				else							/* look for "if" and the like */
 				{
-					for (pp = p; islower(*pp); ++pp) ;
-					if (!isidchar(*pp))
+					p = ptr;
+					skipspace(&p);
+					for (pp = p; islower(*pp); ++pp)
+						;
+					if (!isidchar(*pp))			/* careful for vars starting with "if" */
 					{
 						save = *pp;
 						*pp = NUL;
@@ -143,7 +152,9 @@ Opencmd(dir, redraw)
 			}
 			else
 			{
-				if (*p == '}')
+				p = ptr;
+				skipspace(&p);
+				if (*p == '}')			/* if line starts with '}': do indent */
 					did_si = TRUE;
 			}
 		}
@@ -152,12 +163,17 @@ Opencmd(dir, redraw)
 			can_si = TRUE;
 	}
 	if (State == INSERT || State == REPLACE)	/* only when dir == FORWARD */
-		extra = strlen(ptr + Curpos.col);
+	{
+		pp = ptr + Curpos.col;
+		if (p_ai && delspaces)
+			skipspace(&pp);
+		extra = strlen(pp);
+	}
 	if ((l = alloc_line(extra)) == NULL)
 		return (FALSE);
 	if (extra)
 	{
-		strcpy(l, ptr + Curpos.col);
+		strcpy(l, pp);
 		did_ai = FALSE; 		/* don't trucate now */
 	}
 
@@ -172,8 +188,8 @@ Opencmd(dir, redraw)
 		if (did_si)
 		{
 			if (p_sr)
-				newindent -= newindent % p_sw;
-			newindent += p_sw;
+				newindent -= newindent % (int)p_sw;
+			newindent += (int)p_sw;
 		}
 		set_indent(newindent, FALSE);
 		newcol = Curpos.col;
@@ -184,15 +200,14 @@ Opencmd(dir, redraw)
 
 	if (dir == FORWARD)
 	{
-		if (truncate)
-			*ptr = NUL;
-		else if (extra)
+		if (truncate || State == INSERT || State == REPLACE)
 		{
-			truncate = TRUE;
-			*(ptr + Curpos.col) = NUL;		/* truncate current line at cursor */
-		}
-		if (truncate)
+			if (truncate)
+				*ptr = NUL;
+			else
+				*(ptr + Curpos.col) = NUL;	/* truncate current line at cursor */
 			canincrease(0);
+		}
 
 		/*
 		 * Get the cursor to the start of the line, so that 'Cursrow' gets
@@ -226,7 +241,7 @@ Opencmd(dir, redraw)
 	if (redraw)
 	{
 		updateScreen(VALID_TO_CURSCHAR);
-		cursupdate();		/* update Cursrow */
+		cursupdate();			/* update Cursrow */
 	}
 	CHANGED;
 
@@ -240,18 +255,13 @@ Opencmd(dir, redraw)
 plines(p)
 	linenr_t p;
 {
-	register int	col = 0;
-	register u_char  *s;
+	register int		col = 0;
+	register u_char		*s;
 
-#ifdef DEBUG
-	if (p == 0)
-	{
-		emsg("plines(0) ????");
-		return (0);
-	}
-#endif
+	if (!p_wrap)
+		return 1;
+
 	s = (u_char *)nr2ptr(p);
-
 	if (*s == NUL)				/* empty line */
 		return 1;
 
@@ -271,7 +281,10 @@ plines(p)
 	if (p_nu)
 		col += 8;
 
-	return ((col + ((int)Columns - 1)) / (int)Columns);
+	col = (col + ((int)Columns - 1)) / (int)Columns;
+	if (col < Rows)
+		return col;
+	return (int)(Rows - 1);		/* maximum length */
 }
 
 /*
@@ -289,16 +302,20 @@ plines_m(first, last)
 }
 
 	void
-fileinfo()
+fileinfo(fullname)
+	int fullname;
 {
 	if (bufempty())
 	{
 		msg("Buffer Empty");
 		return;
 	}
-	sprintf(IObuff, "\"%s\"%s line %ld of %ld -- %d %% --",
-			(Filename != NULL) ? Filename : "No File",
+	sprintf(IObuff, "\"%s\"%s%s%s line %ld of %ld -- %d %% --",
+			(!fullname && sFilename != NULL) ? sFilename :
+				((Filename != NULL) ? Filename : "No File"),
 			Changed ? " [Modified]" : "",
+			NotEdited ? " [Not edited]" : "",
+			p_ro ? " [readonly]" : "",
 			(long)Curpos.lnum,
 			(long)line_count,
 			(int)(((long)Curpos.lnum * 100L) / (long)line_count));
@@ -308,19 +325,34 @@ fileinfo()
 	msg(IObuff);
 }
 
+/*
+ * Set the current file name to 's'.
+ * The file name with the full path is also remembered, for when :cd is used.
+ */
 	void
-setfname(s)
-	char *s;
+setfname(s, ss)
+	char *s, *ss;
 {
-	if (Filename != NULL)
-		free(Filename);
+	free(Filename);
+	free(sFilename);
 	if (s == NULL || *s == NUL)
+	{
 		Filename = NULL;
+		sFilename = NULL;
+	}
 	else
 	{
+		if (ss == NULL)
+			ss = s;
+		sFilename = (char *)strsave(ss);
 		FullName(s, IObuff, IOSIZE);
 		Filename = (char *)strsave(IObuff);
 	}
+	if (did_cd)
+		xFilename = Filename;
+	else
+		xFilename = sFilename;
+
 #ifndef MSDOS
 	thisfile_sn = FALSE;
 #endif
@@ -346,18 +378,18 @@ otherfile(s)
 maketitle()
 {
 #ifdef AMIGA
-		if (Filename == NULL)
-				settitle("");
+	if (Filename == NULL)
+		settitle("");
+	else
+	{
+		if (numfiles <= 1)
+			settitle(Filename);
 		else
 		{
-			if (numfiles == 1)
-				settitle(Filename);
-			else
-			{
-					sprintf(IObuff, "%s (%d of %d)", Filename, curfile + 1, numfiles);
-					settitle(IObuff);
-			}
+			sprintf(IObuff, "%s (%d of %d)", Filename, curfile + 1, numfiles);
+			settitle(IObuff);
 		}
+	}
 #endif
 }
 
@@ -366,24 +398,26 @@ inschar(c)
 	int			c;
 {
 	register char  *p;
-	register char  *pend;
+	int				rir0;		/* reverse replace in column 0 */
 
-	p = nr2ptr(Curpos.lnum);
-	pend = p + Curpos.col;
-	if (State != REPLACE || *pend == NUL)
+	p = Curpos2ptr();
+	rir0 = (State == REPLACE && p_ri && Curpos.col == 0);
+	if (rir0 || State != REPLACE || *p == NUL)
 	{
 			/* make room for the new char. */
-			if (!canincrease(1))
-				return;
+		if (!canincrease(1))	/* make room for the new char */
+			return;
 
-			p = nr2ptr(Curpos.lnum);
-			pend = p + Curpos.col;
-			p += strlen(p) + 1;
-
-			for (; p > pend; p--)
-				*p = *(p - 1);
+		p = Curpos2ptr();		/* get p again, canincrease() may have changed it */
+		memmove(p + 1, p, strlen(p) + 1);	/* move following text and NUL */
 	}
-	*pend = c;
+	if (rir0)					/* reverse replace in column 0 */
+	{
+		*(p + 1) = c;			/* replace the char that was in column 0 */
+		c = ' ';				/* insert a space */
+		extraspace = TRUE;
+	}
+	*p = c;
 
 	/*
 	 * If we're in insert mode and showmatch mode is set, then check for
@@ -403,6 +437,7 @@ inschar(c)
 			csave = Curpos;
 			Curpos = *lpos; 	/* move to matching char */
 			cursupdate();
+			showruler(0);
 			setcursor();
 			flushbuf();
 			vim_delay();		/* brief pause */
@@ -410,8 +445,10 @@ inschar(c)
 			cursupdate();
 		}
 	}
-	++Curpos.col;
-
+	if (!p_ri)							/* normal insert: cursor right */
+		++Curpos.col;
+	else if (State == REPLACE && !rir0)	/* reverse replace mode: cursor left */
+		--Curpos.col;
 	CHANGED;
 }
 
@@ -420,25 +457,15 @@ insstr(s)
 	register char  *s;
 {
 	register char  *p;
-	register char  *pend;
 	register int	n = strlen(s);
 
-	/* Move everything in the file over to make */
-	/* room for the new string. */
-	if (!canincrease(n))
+	if (!canincrease(n))	/* make room for the new string */
 		return;
 
-	p = nr2ptr(Curpos.lnum);
-	pend = p + Curpos.col;
-	p += strlen(p) + n;
-
-	for (; p > pend; p--)
-		*p = *(p - n);
-
+	p = Curpos2ptr();
+	memmove(p + n, p, strlen(p) + 1);
+	memmove(p, s, (size_t)n);
 	Curpos.col += n;
-	while (--n >= 0)
-		*p++ = *s++;
-
 	CHANGED;
 }
 
@@ -449,9 +476,9 @@ delchar(fixpos)
 	char		*ptr;
 	int			lastchar;
 
-	ptr = pos2ptr(&Curpos);
+	ptr = Curpos2ptr();
 
-	if (*ptr == NUL)	/* can't do anything */
+	if (*ptr == NUL)	/* can't do anything (happens with replace mode) */
 		return FALSE;
 
 	lastchar = (*++ptr == NUL);
@@ -464,8 +491,8 @@ delchar(fixpos)
 	 * If we just took off the last character of a non-blank line, we don't
 	 * want to end up positioned at the newline.
 	 */
-	if (fixpos && Curpos.col > 0 && lastchar && State != INSERT)
-			--Curpos.col;
+	if (fixpos && Curpos.col > 0 && lastchar)
+		--Curpos.col;
 
 	(void)canincrease(0);
 	CHANGED;
@@ -473,24 +500,28 @@ delchar(fixpos)
 }
 
 	void
-dellines(nlines, can_update)
-	long 			nlines;
-	int				can_update;
+dellines(nlines, doscreen, undo)
+	long 			nlines;			/* number of lines to delete */
+	int 			doscreen;		/* if true, update the screen */
+	int				undo;			/* if true, prepare for undo */
 {
-	int 			doscreen;	/* if true, update the screen */
 	int 			num_plines = 0;
+	char			*ptr;
 
-	doscreen = can_update;
+	if (nlines <= 0)
+		return;
 	/*
 	 * There's no point in keeping the screen updated if we're deleting more
 	 * than a screen's worth of lines.
 	 */
-	if (nlines > (Rows - 1) && can_update)
+	if (nlines > (Rows - 1 - Cursrow) && doscreen)
 	{
 		doscreen = FALSE;
 		/* flaky way to clear rest of screen */
 		s_del(Cursrow, (int)Rows - 1, TRUE);
 	}
+	if (undo && !u_savedel(Curpos.lnum, nlines))
+		return;
 	while (nlines-- > 0)
 	{
 		if (bufempty()) 		/* nothing to delete */
@@ -503,7 +534,9 @@ dellines(nlines, can_update)
 		if (doscreen)
 			num_plines += plines(Curpos.lnum);
 
-		free_line(delsline(Curpos.lnum, TRUE));
+		ptr = delsline(Curpos.lnum, TRUE);
+		if (!undo)
+			free_line(ptr);
 
 		CHANGED;
 
@@ -532,7 +565,14 @@ gchar(pos)
 	int
 gcharCurpos()
 {
-	return (int)(*(pos2ptr(&Curpos)));
+	return (int)(*(Curpos2ptr()));
+}
+
+	void
+pcharCurpos(c)
+	int c;
+{
+	*(Curpos2ptr()) = c;
 }
 
 /*
@@ -585,6 +625,22 @@ skiptospace(pp)
 }
 
 /*
+ * skiptodigit: skip over text until digit found
+ *
+ * note: you must give a pointer to a char pointer!
+ */
+	void
+skiptodigit(pp)
+	char **pp;
+{
+	register char *p;
+
+	for (p = *pp; !isdigit(*p) && *p != NUL; ++p)
+		;
+	*pp = p;
+}
+
+/*
  * getdigits: get a number from a string and skip over it
  *
  * note: you must give a pointer to a char pointer!
@@ -619,14 +675,24 @@ plural(n)
 /*
  * set_Changed is called whenever something in the file is changed
  * If the file is readonly, give a warning message with the first change.
+ * Don't use emsg(), because it flushes the macro buffer.
  */
 	void
 set_Changed()
 {
-	if (Changed == 0 && p_ro)
-		emsg("Warning: Changing a readonly file");
+	change_warning();
 	Changed = 1;
 	Updated = 1;
+}
+
+	void
+change_warning()
+{
+	if (Changed == 0 && p_ro)
+	{
+		msg("Warning: Changing a readonly file");
+		sleep(1);			/* give him some time to think about it */
+	}
 }
 
 	int
@@ -639,6 +705,8 @@ ask_yesno(str)
 	{
 		smsg("%s (y/n)? ", str);
 		r = vgetc();
+		if (r == Ctrl('C'))
+			r = 'n';
 		outchar(r);		/* show what you typed */
 		flushbuf();
 	}
@@ -667,18 +735,19 @@ msgmore(n)
 	void
 beep()
 {
-	flush_buffers();
+	flush_buffers(FALSE);		/* flush internal buffers */
 	if (p_vb)
 	{
 		if (T_VB && *T_VB)
 		    outstr(T_VB);
 		else
-		{			/* very primitive visual bell */
+		{						/* very primitive visual bell */
 	        msg("    ^G");
 	        msg("     ^G");
 	        msg("    ^G ");
 	        msg("     ^G");
 	        msg("       ");
+			showmode();			/* may have deleted the mode message */
 		}
 	}
 	else
@@ -707,16 +776,20 @@ expand_env(src, dst, dstlen)
  */
 		tail = src + 1;
 		var = dst;
-		c = dstlen;
-		while (c-- > 0 && *tail && *tail != PATHSEP)
+		c = dstlen - 1;
+		while (c-- > 0 && *tail && isidchar(*tail))
 			*var++ = *tail++;
 		*var = NUL;
+/*
+ * It is possible that vimgetenv() uses IObuff for the expansion, and that the
+ * 'dst' is also IObuff. This works, as long as 'var' is the first to be copied
+ * to 'dst'!
+ */
 		var = (char *)vimgetenv(dst);
-		if (*tail)
-			++tail;
-		if (var && (strlen(var) + strlen(tail) + 1 < dstlen))
+		if (var && (strlen(var) + strlen(tail) + 1 < (unsigned)dstlen))
 		{
-			sprintf(dst, "%s%c%s", var, PATHSEP, tail);
+			strcpy(dst, var);
+			strcat(dst, tail);
 			return;
 		}
 	}
@@ -736,11 +809,8 @@ fullpathcmp(s1, s2)
 	char buf1[MAXPATHL];
 
 	expand_env(s1, buf1, MAXPATHL);
-	st1.st_dev = 99;		/* if stat fails, st1 and st2 will be different */
-	st2.st_dev = 100;
-	stat(buf1, &st1);
-	stat(s2, &st2);
-	if (st1.st_dev == st2.st_dev && st1.st_ino == st2.st_ino)
+	if (stat(buf1, &st1) == 0 && stat(s2, &st2) == 0 &&
+				st1.st_dev == st2.st_dev && st1.st_ino == st2.st_ino)
 		return FALSE;
 	return TRUE;
 #else
@@ -754,5 +824,40 @@ fullpathcmp(s1, s2)
 	 * one of the FullNames() failed, file probably doesn't exist.
 	 */
 	return TRUE;
+#endif
+}
+
+/*
+ * get the tail of a path: the file name.
+ */
+	char *
+gettail(fname)
+	char *fname;
+{
+	register char *p1, *p2;
+
+	for (p1 = p2 = fname; *p2; ++p2)	/* find last part of path */
+	{
+		if (ispathsep(*p2))
+			p1 = p2 + 1;
+	}
+	return p1;
+}
+
+/*
+ * return TRUE if 'c' is a path separator.
+ */
+	int
+ispathsep(c)
+	int c;
+{
+#ifdef UNIX
+	return (c == PATHSEP);		/* UNIX has ':' inside file names */
+#else
+# ifdef MSDOS
+	return (c == ':' || c == PATHSEP || c == '/');
+# else
+	return (c == ':' || c == PATHSEP);
+# endif
 #endif
 }

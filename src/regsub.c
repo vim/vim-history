@@ -54,27 +54,6 @@
 # define __ARGS(a)	a
 #endif
 
-/*
- * Short explanation of the tilde: it stands for the previous replacement
- * pattern. If that previous pattern also contains a ~ we should go back
- * a step further... or insert the previous pattern into the current one
- * and remember that.
- * This still does not handle the case where "magic" changes. TODO?
- *
- * On the other hand, this definition is not so useful. We can always retype
- * the previous pattern... especially with command history or in files.
- *
- * It would seem much more useful to remember the previously substituted
- * text. There is generally no other way to get at this. This is useful
- * when you want to do several substitutions on one line, and skip for
- * the second whatever you changed in the first.
- *
- * mool: The last solution is not very useful in combination with the 'g'
- * option, the replacement pattern would get bigger at each replacement.
- * I prefer the original VI method, also for compatibility.
- */
-#define TILDE
-#define VITILDE
 #define CASECONVERT
 
 #include <stdio.h>
@@ -94,7 +73,13 @@
 extern char 	   *reg_prev_sub;
 
 #ifdef CASECONVERT
-typedef void *(*fptr) __ARGS((char *, int));
+	/*
+	 * We should define ftpr as a pointer to a function returning a pointer to
+	 * a function returning a pointer to a function ...
+	 * This is impossible, so we declare a pointer to a function returning a
+	 * pointer to a function returning void. This should work for all compilers.
+	 */
+typedef void (*(*fptr) __ARGS((char *, int)))();
 static fptr strnfcpy __ARGS((fptr, char *, char *, int));
 
 static fptr do_copy __ARGS((char *, int));
@@ -118,7 +103,7 @@ do_upper(d, c)
 	char *d;
 	int c;
 {
-	*d = toupper(c);
+	*d = TO_UPPER(c);
 
 	return (fptr)do_copy;
 }
@@ -128,7 +113,7 @@ do_Upper(d, c)
 	char *d;
 	int c;
 {
-	*d = toupper(c);
+	*d = TO_UPPER(c);
 
 	return (fptr)do_Upper;
 }
@@ -138,7 +123,7 @@ do_lower(d, c)
 	char *d;
 	int c;
 {
-	*d = tolower(c);
+	*d = TO_LOWER(c);
 
 	return (fptr)do_copy;
 }
@@ -148,7 +133,7 @@ do_Lower(d, c)
 	char *d;
 	int c;
 {
-	*d = tolower(c);
+	*d = TO_LOWER(c);
 
 	return (fptr)do_Lower;
 }
@@ -172,6 +157,76 @@ strnfcpy(f, d, s, n)
 #endif
 
 /*
+ * regtilde: replace tildes in the pattern by the old pattern
+ *
+ * Short explanation of the tilde: it stands for the previous replacement
+ * pattern. If that previous pattern also contains a ~ we should go back
+ * a step further... but we insert the previous pattern into the current one
+ * and remember that.
+ * This still does not handle the case where "magic" changes. TODO?
+ *
+ * New solution: The tilde's are parsed once before the first call to regsub().
+ * In the old solution (tilde handled in regsub()) is was possible to get an
+ * endless loop.
+ */
+	char *
+regtilde(source, magic)
+	char	*source;
+	int		magic;
+{
+	char	*newsub = NULL;
+	char	*tmpsub;
+	char	*p;
+	int		len;
+	int		prevlen;
+
+	for (p = source; *p; ++p)
+	{
+		if ((*p == '~' && magic) || (*p == '\\' && *(p + 1) == '~' && !magic))
+		{
+			if (reg_prev_sub)
+			{
+					/* length = len(current) - 1 + len(previous) + 1 */
+				prevlen = strlen(reg_prev_sub);
+				tmpsub = alloc((unsigned)(strlen(source) + prevlen));
+				if (tmpsub)
+				{
+						/* copy prefix */
+					len = (int)(p - source);	/* not including ~ */
+					strncpy(tmpsub, source, (size_t)len);
+						/* interpretate tilde */
+					strcpy(tmpsub + len, reg_prev_sub);
+						/* copy postfix */
+					if (!magic)
+						++p;					/* back off \ */
+					strcat(tmpsub + len, p + 1);
+
+					free(newsub);
+					newsub = tmpsub;
+					p = newsub + len + prevlen;
+				}
+			}
+			else if (magic)
+				strcpy(p, p + 1);				/* remove '~' */
+			else
+				strcpy(p, p + 2);				/* remove '\~' */
+		}
+		else if (*p == '\\' && p[1])			/* skip escaped characters */
+			++p;
+	}
+
+	free(reg_prev_sub);
+	if (newsub)
+	{
+		source = newsub;
+		reg_prev_sub = newsub;
+	}
+	else
+		reg_prev_sub = strsave(source);
+	return source;
+}
+
+/*
  - regsub - perform substitutions after a regexp match
  *
  * Returns the size of the replacement, including terminating \0.
@@ -191,9 +246,6 @@ regsub(prog, source, dest, copy, magic)
 	register int	len;
 #ifdef CASECONVERT
 	fptr			func = (fptr)do_copy;
-#endif
-#ifdef VITILDE
-	char		   *tmp_sub = NULL;
 #endif
 
 	if (prog == NULL || source == NULL || dest == NULL)
@@ -245,71 +297,6 @@ regsub(prog, source, dest, copy, magic)
 			}
 #endif
 		}
-#ifdef TILDE
-		if ((c == '~' && magic) || (c == '\\' && *src == '~' && !magic))
-		{
-			if (c == '\\')
-				++src;
-			if (reg_prev_sub)
-			{
-# ifdef VITILDE
-				/*
-				 * We should now insert the previous pattern at
-				 * this location in the current pattern, and remember that
-				 * for next time... this is very painful to do right.
-				 */
-				if (copy)
-				{
-					char		   *newsub;
-					int				len;
-
-#ifdef DEBUG
-					printf("Old ~: '%s'\r\n", reg_prev_sub);
-#endif
-					/* length = len(current) - 1 + len(previous) + 1 */
-					newsub = alloc((unsigned)(strlen(source) + strlen(reg_prev_sub)));
-					if (newsub)
-					{
-							/* copy prefix */
-						len = (src - source) - 1;	/* not including ~ */
-						if (!magic)
-							len--;					/* back off \ */
-						strncpy(newsub, source, (size_t)len);
-							/* interpretate tilde */
-						strcpy(newsub + len, reg_prev_sub);
-							/* copy postfix */
-						strcat(newsub + len, src);
-
-						if (tmp_sub)
-							free(tmp_sub);
-						tmp_sub = newsub;
-						source = newsub;
-						src = newsub + len;
-					}
-#ifdef DEBUG
-					printf("New  : '%s'\r\n", newsub);
-					printf("Todo : '%s'\r\n", src);
-#endif
-				}
-				else
-				{
-					dst += regsub(prog, reg_prev_sub, dst, copy, magic) - 1;
-				}
-# else /* no VITILDE */
-				if (copy)
-				{
-#  ifdef CASECONVERT
-					func = strnfcpy(func, dst, reg_prev_sub, ((unsigned)~0)>>1);
-#  else
-					(void) strcpy(dst, reg_prev_sub);
-#  endif
-				}
-				dst += strlen(reg_prev_sub);
-# endif /* def VITILDE */
-			}
-		}
-		else
-#endif  /* def TILDE */
 		if (no < 0)           /* Ordinary character. */
 		{
 			if (c == '\\')
@@ -327,7 +314,7 @@ regsub(prog, source, dest, copy, magic)
 		}
 		else if (prog->startp[no] != NULL && prog->endp[no] != NULL)
 		{
-			len = prog->endp[no] - prog->startp[no];
+			len = (int)(prog->endp[no] - prog->startp[no]);
 			if (copy)
 			{
 #ifdef CASECONVERT
@@ -345,29 +332,6 @@ regsub(prog, source, dest, copy, magic)
 	}
 	if (copy)
 		*dst = '\0';
-
-#ifdef TILDE
-# ifdef VITILDE
-	/*
-	 * Save the substitute string for future ~.
-	 * if reg_prev_sub == source, then regsub was called with reg_prev_sub,
-	 * so we don't have to save it again.
-	 */
-	if (copy && reg_prev_sub != source)
-	{
-		free(reg_prev_sub);
-		if (tmp_sub)
-			reg_prev_sub = tmp_sub;		/* tmp_sub == source */
-		else
-			reg_prev_sub = strsave(source);
-	}
-# else
-	if (copy) {
-		free(reg_prev_sub);
-		reg_prev_sub = strsave(dest);
-	}
-# endif
-#endif
 
 exit:
 	return (int)((dst - dest) + 1);

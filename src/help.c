@@ -1,6 +1,6 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -20,15 +20,17 @@
 static long helpfilepos;		/* position in help file */
 static FILE *helpfd;			/* file descriptor of help file */
 
+#define MAXSCREENS 52			/* one screen for a-z and A-Z */
+
 	void
 help()
 {
 	int		c;
 	int		eof;
+	int		screens;
 	int		i;
-	long	filepos[26];	/* seek position for each screen */
-	int		screennr;		/* screen number; 'c' == 1 */
-	char	fnamebuf[MAXPATHL];
+	long	filepos[MAXSCREENS];	/* seek position for each screen */
+	int		screennr;			/* screen number; index == 0, 'c' == 1, 'd' == 2, etc */
 #ifdef MSDOS
 	char	*fnamep;
 #endif
@@ -36,69 +38,81 @@ help()
 /*
  * try to open the file specified by the "helpfile" option
  */
-	expand_env(p_hf, fnamebuf, MAXPATHL);
-	if ((helpfd = fopen(fnamebuf, READBIN)) == NULL)
+	if ((helpfd = fopen(p_hf, READBIN)) == NULL)
 	{
 #ifdef MSDOS
 	/*
-	 * for MSdos: try the DOS search path
+	 * for MSDOS: try the DOS search path
      */
-		strcpy(fnamebuf, "vim.hlp");
-		fnamep = searchpath(fnamebuf);
+		fnamep = searchpath("vim.hlp");
 		if (fnamep == NULL || (helpfd = fopen(fnamep, READBIN)) == NULL)
 		{
-#endif
-			smsg("Sorry, help file %s not found", fnamebuf);
+			smsg("Sorry, help file \"%s\" and \"vim.hlp\" not found", p_hf);
 			return;
-#ifdef MSDOS
 		}
+#else
+		smsg("Sorry, help file \"%s\" not found", p_hf);
+		return;
 #endif
 	}
 	helpfilepos = 0;
 	screennr = 0;
-	for (i = 0; i < 26; ++i)
+	for (i = 0; i < MAXSCREENS; ++i)
 		filepos[i] = 0;
 	State = HELP;
 	for (;;)
 	{
-		eof = redrawhelp();
-		if (!eof)
-			filepos[screennr + 1] = ftell(helpfd);
+		screens = redrawhelp();				/* show one or more screens */
+		eof = (screens < 0);
+		if (!eof && screennr + screens < MAXSCREENS)
+			filepos[screennr + screens] = ftell(helpfd);
 
-		if ((c = vgetc()) == '\n' || c == '\r')
+		if ((c = vgetc()) == '\n' || c == '\r' || c == Ctrl('C') || c == ESC)
 			break;
 
-		if (c == ' ')						/* one screen forwards */
+		if (c == ' ' ||
+#ifdef MSDOS
+				(c == K_NUL && vpeekc() == 'Q') ||	/* page down */
+#endif
+				c == Ctrl('F'))						/* one screen forwards */
 		{
-			if (screennr < 25 && !eof)
+			if (screennr < MAXSCREENS && !eof)
 				++screennr;
 		}
 		else if (c == 'a')					/* go to first screen */
 			screennr = 0;
-		else if (c == 'b')					/* go one screen backwards */
+		else if (c == 'b' ||
+#ifdef MSDOS
+				(c == K_NUL && vpeekc() == 'I') ||	/* page up */
+#endif
+				c == Ctrl('B'))					/* go one screen backwards */
 		{
 			if (screennr > 0)
 				--screennr;
 		}
-		else if (c >= 'c' && c <= 'z')		/* go to specified screen */
+		else if (isalpha(c))				/* go to specified screen */
 		{
-			if (c - 'b' < screennr)			/* backwards */
-				screennr = c - 'b';
-			else							/* forwards */
-			{
-				while (screennr < c - 'b' && filepos[screennr + 1])
-					++screennr;
-				fseek(helpfd, filepos[screennr], 0);
-				while (screennr < c - 'b')
-				{
-					while ((i = getc(helpfd)) != '\f' && i != -1)
-						;
-					if (i == -1)
-						break;
-					filepos[++screennr] = ftell(helpfd);
-				}
-			}
+			if (isupper(c))
+				c = c - 'A' + 'z' + 1;		/* 'A' comes after 'z' */
+			screennr = c - 'b';
 		}
+#ifdef MSDOS
+		if (c == K_NUL)
+			c = vgetc();
+#endif
+		for (i = screennr; i > 0; --i)
+			if (filepos[i])
+				break;
+		fseek(helpfd, filepos[i], 0);
+		while (i < screennr)
+		{
+			while ((c = getc(helpfd)) != '\f' && c != -1)
+				;
+			if (c == -1)
+				break;
+			filepos[++i] = ftell(helpfd);	/* store the position just after the '\f' */
+		}
+		screennr = i;						/* required when end of file reached */
 		helpfilepos = filepos[screennr];
 	}
 	State = NORMAL;
@@ -110,26 +124,39 @@ help()
 	int
 redrawhelp()
 {
-		int nextc;
-		int col;
+	int nextc;
+	int col;
+	int	line = 0;
+	int	screens = 1;
 
-		fseek(helpfd, helpfilepos, 0);
-		col = Columns - 52;
-		if (col < 0)
-				col = 0;
-		outstr(T_ED);
-		while ((nextc = getc(helpfd)) != -1 && nextc != '\f')
+	fseek(helpfd, helpfilepos, 0);
+	outstr(T_ED);
+	windgoto(0,0);
+	while ((nextc = getc(helpfd)) != -1 && (nextc != '\f' || line < Rows - 24))
+	{
+		if (nextc == Ctrl('B'))			/* begin of invert */
+			outstr(T_TI);
+		else if (nextc == Ctrl('E'))	/* end of invert */
+			outstr(T_TP);
+		else if (nextc == '\f')			/* start of next screen */
 		{
-			if (nextc == Ctrl('B'))		/* begin of invert */
-				outstr(T_TI);
-			else if (nextc == Ctrl('E'))	/* end of invert */
-				outstr(T_TP);
-			else
-				outchar((char)nextc);
+			++screens;
+			outchar('\n');
+			++line;
 		}
-		windgoto(0, (int)(Columns - strlen(Version) - 1));
-		outstrn(Version);
-		windgoto((int)Rows - 1, col);
-		outstrn("<space = next; return = quit; a = index; b = back>");
-		return (nextc == -1);
+		else
+		{
+			outchar((char)nextc);
+			if (nextc == '\n')
+				++line;
+		}
+	}
+	windgoto(0, (int)(Columns - strlen(Version) - 1));
+	outstrn(Version);
+	col = (int)Columns - 52;
+	if (col < 0)
+		col = 0;
+	windgoto((int)Rows - 1, col);
+	outstrn("<space = next; return = quit; a = index; b = back>");
+	return (nextc == -1 ? -1 : screens);
 }

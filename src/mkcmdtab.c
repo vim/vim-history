@@ -1,6 +1,6 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -14,11 +14,13 @@
  *	call with: mkcmdtab cmdtab.tab cmdtab.h
  */
 
-#include <stdlib.h>
-#include <stdio.h>
 #include "vim.h"
 
+#if defined(UTS4)
+    int
+#else
 	void
+#endif
 main(argc, argv)
 	int		argc;
 	char	**argv;

@@ -1,6 +1,6 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -22,11 +22,12 @@ extern u_char *get_inserted();
 static void start_arrow __ARGS((void));
 static void stop_arrow __ARGS((void));
 static void stop_insert __ARGS((void));
+static int echeck_abbr __ARGS((int));
 
-int arrow_used;			/* Normally FALSE, set to TRUE after hitting
+int arrow_used;				/* Normally FALSE, set to TRUE after hitting
 							 * cursor key in insert mode. Used by vgetorpeek()
 							 * to decide when to call u_sync() */
-int restart_edit;		/* call edit when next command finished */
+int restart_edit = 0;		/* call edit when next command finished */
 static u_char	*last_insert = NULL;
 							/* the text of the previous insert */
 static int		last_insert_skip;
@@ -41,22 +42,27 @@ edit(count)
 	u_char		 c;
 	u_char		 cc;
 	u_char		*ptr;
+	u_char		*saved_line = NULL;		/* saved line for replace mode */
+	linenr_t	 saved_lnum = 0;		/* lnum of saved line */
+	int			 saved_char = NUL;		/* char replaced by NL */
 	linenr_t	 lnum;
-	int 		 temp = 0, mode;
+	int 		 temp = 0;
+	int			 mode;
 	int			 nextc = 0;
-
-#ifdef DIGRAPHS
-	int			 inserted = 0;		/* last 'normal' inserted char */
-	int			 backspaced = 0;	/* last backspace char */
-#endif /* DIGRAPHS */
+	int			 lastc = 0;
+	colnr_t		 mincol;
 
 	if (restart_edit)
 	{
 		arrow_used = TRUE;
-		restart_edit = FALSE;
+		restart_edit = 0;
 	}
 	else
 		arrow_used = FALSE;
+
+#ifdef DIGRAPHS
+	dodigraph(-1);					/* clear digraphs */
+#endif
 
 /*
  * Get the current length of the redo buffer, those characters have to be
@@ -67,6 +73,8 @@ edit(count)
 	new_insert_skip = strlen((char *)ptr);
 	free(ptr);
 
+	old_indent = 0;
+
 	for (;;)
 	{
 		if (arrow_used)		/* don't repeat insert when arrow key used */
@@ -74,6 +82,7 @@ edit(count)
 
 		set_want_col = TRUE;	/* set Curswant in case of K_DARROW or K_UARROW */
 		cursupdate();		/* Figure out where the cursor is based on Curpos. */
+		showruler(0);
 		setcursor();
 		if (nextc)			/* character remaining from CTRL-V */
 		{
@@ -81,48 +90,71 @@ edit(count)
 			nextc = 0;
 		}
 		else
+		{
 			c = vgetc();
+			if (c == Ctrl('C') && got_int)
+				got_int = FALSE;
+		}
+		if (c != Ctrl('D'))			/* remember to detect ^^D and 0^D */
+			lastc = c;
+
+/*
+ * In replace mode a backspace puts the original text back.
+ * We save the current line to be able to do that.
+ * If characters are appended to the line, they will be deleted.
+ * If we start a new line (with CR) the saved line will be empty, thus
+ * the characters will be deleted.
+ * If we backspace over the new line, that line will be saved.
+ */
+		if (State == REPLACE && saved_lnum != Curpos.lnum)
+		{
+			free(saved_line);
+			saved_line = (u_char *)strsave((char *)nr2ptr(Curpos.lnum));
+			saved_lnum = Curpos.lnum;
+		}
 
 #ifdef DIGRAPHS
-		if (p_dg)
-		{
-			if (backspaced)
-				c = getdigraph(backspaced, c);
-			backspaced = 0;
-			if (c == BS && inserted)
-				backspaced = inserted;
-			else
-				inserted = c;
-		}
+		c = dodigraph(c);
 #endif /* DIGRAPHS */
 
 		if (c == Ctrl('V'))
 		{
-				outchar('^');
-				AppendToRedobuff("\026");	/* CTRL-V */
-				cursupdate();
-				setcursor();
+			outchar('^');
+			AppendToRedobuff("\026");	/* CTRL-V */
+			cursupdate();
+			setcursor();
 
-				c = get_literal(&nextc);
+			c = get_literal(&nextc);
 
-			/* erase the '^' */
-				if ((cc = gcharCurpos()) == NUL)
-					outchar(' ');
-				else
-					outstrn(transchar(cc));
+		/* erase the '^' */
+			if ((cc = gcharCurpos()) == NUL || (cc == TAB && !p_list))
+				outchar(' ');
+			else
+				outstrn(transchar(cc));
 
+			if (isidchar(c) || !echeck_abbr(c))
 				insertchar(c);
-				continue;
+			continue;
 		}
 		switch (c)		/* handle character in insert mode */
 		{
 			  case Ctrl('O'):		/* execute one command */
+			    if (echeck_abbr(Ctrl('O') + 0x100))
+					break;
 			  	count = 0;
-				restart_edit = TRUE;
+				if (State == INSERT)
+					restart_edit = 'I';
+				else
+					restart_edit = 'R';
+				goto doESCkey;
+
+			  case ESC: 			/* an escape ends input mode */
+			    if (echeck_abbr(ESC + 0x100))
+					break;
 				/*FALLTHROUGH*/
 
-			  case ESC: /* an escape ends input mode */
-		doESCkey:
+			  case Ctrl('C'):
+doESCkey:
 				if (!arrow_used)
 				{
 					AppendToRedobuff(ESC_STR);
@@ -139,15 +171,23 @@ edit(count)
 				/*
 				 * The cursor should end up on the last inserted character.
 				 */
-				if (Curpos.col != 0 && (!restart_edit || gcharCurpos() == NUL))
+				if (Curpos.col != 0 && (!restart_edit || gcharCurpos() == NUL) && !p_ri)
 					decCurpos();
+				if (extraspace)			/* did reverse replace in column 0 */
+				{
+					delchar(FALSE);
+					updateline();
+					extraspace = FALSE;
+				}
 				State = NORMAL;
 				script_winsize_pp();	/* may need to put :winsize in script */
 					/* inchar() may have deleted the "INSERT" message */
 				if (Recording)
 					showmode();
-				else if (p_mo)
+				else if (p_smd)
 					msg("");
+				free(saved_line);
+				old_indent = 0;
 				return;
 
 			  	/*
@@ -164,9 +204,14 @@ edit(count)
 			  	/*
 				 * insert the contents of a register
 				 */
-			  case Ctrl('B'):
+			  case Ctrl('R'):
 			  	if (!insertbuf(vgetc()))
 					beep();
+				break;
+
+			  case Ctrl('P'):			/* toggle reverse insert mode */
+			  	p_ri = !p_ri;
+				showmode();
 				break;
 
 				/*
@@ -180,17 +225,32 @@ edit(count)
 			  case Ctrl('T'):		/* make indent one shiftwidth greater */
 			  case Ctrl('D'): 		/* make indent one shiftwidth smaller */
 				stop_arrow();
-				AppendToRedobuff(mkstr(c));
+				AppendCharToRedobuff(c);
+				if ((lastc == '0' || lastc == '^') && Curpos.col)
+				{
+					--Curpos.col;
+					delchar(FALSE);			/* delete the '^' or '0' */
+					if (lastc == '^')
+						old_indent = get_indent();	/* remember current indent */
 
-					/* determine offset from first non-blank */
-				temp = Curpos.col;
-				beginline(TRUE);
-				temp -= Curpos.col;
+						/* determine offset from first non-blank */
+					temp = Curpos.col;
+					beginline(TRUE);
+					temp -= Curpos.col;
+					set_indent(0, TRUE);	/* remove all indent */
+				}
+				else
+				{
+						/* determine offset from first non-blank */
+					temp = Curpos.col;
+					beginline(TRUE);
+					temp -= Curpos.col;
 
-		  		shift_line(c == Ctrl('D'));
+					shift_line(c == Ctrl('D'), TRUE);
 
-					/* try to put cursor on same character */
-				temp += Curpos.col;
+						/* try to put cursor on same character */
+					temp += Curpos.col;
+				}
 				if (temp <= 0)
 					Curpos.col = 0;
 				else
@@ -205,37 +265,54 @@ edit(count)
 nextbs:
 				mode = 0;
 dodel:
+				/* can't delete anything in an empty file */
 				/* can't backup past first character in buffer */
-				/* can't backup past starting point unless "backspace" > 1 */
-				/* can backup to a previous line if "backspace" == 0 */
-				if ((Curpos.lnum == 1 && Curpos.col <= 0) ||
+				/* can't backup past starting point unless 'backspace' > 1 */
+				/* can backup to a previous line if 'backspace' == 0 */
+				if (bufempty() || (!p_ri &&
+						((Curpos.lnum == 1 && Curpos.col <= 0) ||
 						(p_bs < 2 && (arrow_used ||
 							(Curpos.lnum == Insstart.lnum &&
 							Curpos.col <= Insstart.col) ||
-							(Curpos.col <= 0 && p_bs == 0))))
+							(Curpos.col <= 0 && p_bs == 0))))))
 				{
 					beep();
 					goto redraw;
 				}
 
 				stop_arrow();
+				if (p_ri)
+					incCurpos();
 				if (Curpos.col <= 0)		/* delete newline! */
 				{
-					if (Curpos.lnum == Insstart.lnum)
+					lnum = Insstart.lnum;
+					if (Curpos.lnum == Insstart.lnum || p_ri)
 					{
 						if (!u_save((linenr_t)(Curpos.lnum - 2), (linenr_t)(Curpos.lnum + 1)))
 							goto redraw;
 						--Insstart.lnum;
 						Insstart.col = 0;
 					}
-				/* in replace mode with 'repdel' off we only move the cursor */
-					if (State != REPLACE || p_rd)
+				/* in replace mode, in the line we started replacing, we
+														only move the cursor */
+					if (State != REPLACE || Curpos.lnum > lnum)
 					{
 						temp = gcharCurpos();		/* remember current char */
 						--Curpos.lnum;
-						dojoin(FALSE);
+						dojoin(FALSE, TRUE);
 						if (temp == NUL && gcharCurpos() != NUL)
 							++Curpos.col;
+						if (saved_char)				/* restore what NL replaced */
+						{
+							State = NORMAL;			/* no replace for this char */
+							inschar(saved_char);	/* but no showmatch */
+							State = REPLACE;
+							saved_char = NUL;
+							if (!p_ri)
+								decCurpos();
+						}
+						else if (p_ri)				/* in reverse mode */
+							saved_lnum = 0;			/* save this line again */
 					}
 					else
 						decCurpos();
@@ -243,10 +320,24 @@ dodel:
 				}
 				else
 				{
+					if (p_ri && State != REPLACE)
+						decCurpos();
+					mincol = 0;
+					if (mode == 3 && !p_ri && p_ai)	/* keep indent */
+					{
+						temp = Curpos.col;
+						beginline(TRUE);
+						if (Curpos.col < temp)
+							mincol = Curpos.col;
+						Curpos.col = temp;
+					}
+
 					/* delete upto starting point, start of line or previous word */
 					do
 					{
-						decCurpos();
+						if (!p_ri)
+							decCurpos();
+
 								/* start of word? */
 						if (mode == 1 && !isspace(gcharCurpos()))
 						{
@@ -254,17 +345,50 @@ dodel:
 							temp = isidchar(gcharCurpos());
 						}
 								/* end of word? */
-						if (mode == 2 && isidchar(gcharCurpos()) != temp)
+						else if (mode == 2 && (isspace(cc = gcharCurpos()) || isidchar(cc) != temp))
 						{
-							incCurpos();
+							if (!p_ri)
+								incCurpos();
+							else if (State == REPLACE)
+								decCurpos();
 							break;
 						}
-						if (State != REPLACE || p_rd)
-							delchar(TRUE);
+						if (State == REPLACE)
+						{
+							if (saved_line)
+							{
+								if (extraspace)
+								{
+									if ((int)strlen(nr2ptr(Curpos.lnum)) - 1 > (int)strlen((char *)saved_line))
+										delchar(FALSE);
+									else
+									{
+										decCurpos();
+										delchar(FALSE);
+										extraspace = FALSE;
+										pcharCurpos(*saved_line);
+									}
+								}
+								else if (Curpos.col < strlen((char *)saved_line))
+									pcharCurpos(saved_line[Curpos.col]);
+								else if (!p_ri)
+									delchar(FALSE);
+							}
+						}
+						else  /* State != REPLACE */
+						{
+							delchar(FALSE);
+							if (p_ri && gcharCurpos() == NUL)
+								break;
+						}
 						if (mode == 0)		/* just a single backspace */
 							break;
-					} while (Curpos.col > 0 && (Curpos.lnum != Insstart.lnum ||
-							Curpos.col != Insstart.col));
+						if (p_ri && State == REPLACE && incCurpos())
+							break;
+					} while (p_ri || (Curpos.col > mincol && (Curpos.lnum != Insstart.lnum ||
+							Curpos.col != Insstart.col)));
+					if (extraspace)
+						decCurpos();
 				}
 				did_si = FALSE;
 				can_si = FALSE;
@@ -275,7 +399,7 @@ dodel:
 				 * buffer, but it makes auto-indent a lot easier to deal
 				 * with.
 				 */
-				AppendToRedobuff(mkstr(c));
+				AppendCharToRedobuff(c);
 				if (vpeekc() == BS)
 				{
 						c = vgetc();
@@ -286,12 +410,11 @@ redraw:
 				updateline();
 				break;
 
-			  case Ctrl('W'):
-			  	/* delete word before cursor */
+			  case Ctrl('W'):		/* delete word before cursor */
 			  	mode = 1;
 			  	goto dodel;
 
-			  case Ctrl('U'):
+			  case Ctrl('U'):		/* delete inserted text in current line */
 				mode = 3;
 			  	goto dodel;
 
@@ -326,7 +449,7 @@ redraw:
 			  case K_SRARROW:
 			  	if (Curpos.lnum < line_count || gcharCurpos() != NUL)
 				{
-					fwd_word(1L, 0);
+					fwd_word(1L, 0, 0);
 					start_arrow();
 				}
 				else
@@ -362,25 +485,41 @@ redraw:
 				break;
 
 			  case TAB:
-			  	if (!p_et)
+			    if (echeck_abbr(TAB + 0x100))
+					break;
+			  	if (!p_et || (p_ri && State == REPLACE))
 					goto normalchar;
 										/* expand a tab into spaces */
 				stop_arrow();
 				did_ai = FALSE;
 				did_si = FALSE;
 				can_si = FALSE;
-				insstr("                " + 16 - (p_ts - Curpos.col % p_ts));
+				temp = (int)p_ts - Curpos.col % (int)p_ts;
+				inschar(' ');			/* delete one char in replace mode */
+				while (--temp)
+					insstr(" ");		/* insstr does not delete chars */
 				AppendToRedobuff("\t");
 				goto redraw;
 
 			  case CR:
 			  case NL:
+			    if (echeck_abbr(c + 0x100))
+					break;
 				stop_arrow();
-				if (State == REPLACE)           /* DMT added, 12/89 */
+				if (State == REPLACE)
+				{
+					saved_char = gcharCurpos();
 					delchar(FALSE);
+				}
 				AppendToRedobuff(NL_STR);
-				if (!Opencmd(FORWARD, TRUE))
+				if (!Opencmd(FORWARD, TRUE, State == INSERT))
 					goto doESCkey;		/* out of memory */
+				if (p_ri)
+				{
+					decCurpos();
+					if (State == REPLACE && Curpos.col > 0)
+						decCurpos();
+				}
 				break;
 
 #ifdef DIGRAPHS
@@ -395,14 +534,11 @@ redraw:
 				goto normalchar;
 #endif /* DIGRAPHS */
 
-			  case Ctrl('R'):
-				/*
-				 * addition by mool: copy from previous line
-				 */
+			  case Ctrl('Y'):				/* copy from previous line */
 				lnum = Curpos.lnum - 1;
 				goto copychar;
 
-			  case Ctrl('E'):
+			  case Ctrl('E'):				/* copy from next line */
 				lnum = Curpos.lnum + 1;
 copychar:
 				if (lnum < 1 || lnum > line_count)
@@ -429,8 +565,10 @@ copychar:
 			  default:
 normalchar:
 				if (Curpos.col > 0 && ((can_si && c == '}') || (did_si && c == '{')))
-					shift_line(TRUE);
-				insertchar(c);
+					shift_line(TRUE, TRUE);
+
+				if (isidchar(c) || !echeck_abbr(c))
+					insertchar(c);
 				break;
 			}
 	}
@@ -453,6 +591,11 @@ get_literal(nextc)
 	oldstate = State;
 	State = NOMAPPING;		/* next characters not mapped */
 
+	if (got_int)
+	{
+		*nextc = NUL;
+		return Ctrl('C');
+	}
 	cc = 0;
 	for (i = 0; i < 3; ++i)
 	{
@@ -466,12 +609,15 @@ get_literal(nextc)
 	{
 		cc = nc;
 		nc = 0;
+		if (cc == K_ZERO)	/* NUL is stored as NL */
+			cc = '\n';
 	}
 	else if (cc == 0)		/* NUL is stored as NL */
 		cc = '\n';
 
 	State = oldstate;
 	*nextc = nc;
+	got_int = FALSE;		/* CTRL-C typed after CTRL-V is not an interrupt */
 	return cc;
 }
 
@@ -489,61 +635,73 @@ get_literal(nextc)
 insertchar(c)
 	unsigned	c;
 {
-	int		must_redraw = FALSE;
+	int		haveto_redraw = FALSE;
 
 	stop_arrow();
 	/*
 	 * If the cursor is past 'textwidth' and we are inserting a non-space,
 	 * try to break the line in two or more pieces. If c == NUL then we have
-	 * been called to do formatting only.
+	 * been called to do formatting only. If p_tw == 0 it does nothing.
 	 */
 	if (c == NUL || !isspace(c))
 	{
-		while (Cursvcol >= p_tw)
+		while (p_tw && Cursvcol >= p_tw)
 		{
 			int		startcol;		/* Cursor column at entry */
 			int		wantcol;		/* column at textwidth border */
 			int		foundcol;		/* column for start of word */
-			int		mincol;			/* minimum column for break */
 
 			if ((startcol = Curpos.col) == 0)
 				break;
-			coladvance((int)p_tw);	/* find column of textwidth border */
+			coladvance((int)p_tw);			/* find column of textwidth border */
 			wantcol = Curpos.col;
-			beginline((int)p_ai);			/* find start of text */
-			mincol = Curpos.col;
 
 			Curpos.col = startcol - 1;
 			foundcol = 0;
-			while (Curpos.col > mincol)	/* find position to break at */
+			while (Curpos.col > 0)			/* find position to break at */
 			{
 				if (isspace(gcharCurpos()))
 				{
-					foundcol = Curpos.col + 1;
-					while (Curpos.col > 1 && isspace(gcharCurpos()))
+					while (Curpos.col > 0 && isspace(gcharCurpos()))
 						--Curpos.col;
+					if (Curpos.col == 0)	/* only spaces in front of text */
+						break;
+					foundcol = Curpos.col + 1;
 					if (Curpos.col < wantcol)
 						break;
 				}
 				--Curpos.col;
 			}
 
-			if (foundcol == 0)	/* no spaces, cannot break line */
+			if (foundcol == 0)			/* no spaces, cannot break line */
 			{
 				Curpos.col = startcol;
 				break;
 			}
-			Curpos.col = foundcol;
-			startcol -= Curpos.col;
-			Opencmd(FORWARD, FALSE);
+			Curpos.col = foundcol;		/* put cursor after pos. to break line */
+			startcol -= foundcol;
+			Opencmd(FORWARD, FALSE, FALSE);
+			while (isspace(gcharCurpos()) && startcol)		/* delete blanks */
+			{
+				delchar(FALSE);
+				--startcol;				/* adjust cursor pos. */
+			}
 			Curpos.col += startcol;
-			curs_columns();			/* update Cursvcol */
-			must_redraw = TRUE;
+			curs_columns(FALSE);		/* update Cursvcol */
+			haveto_redraw = TRUE;
 		}
-		if (c == NUL)		/* formatting only */
+		if (c == NUL)					/* formatting only */
 			return;
-		if (must_redraw)
+		if (haveto_redraw)
+		{
+			/*
+			 * If the cursor ended up just below the screen we scroll up here
+			 * to avoid a redraw of the whole screen in the most common cases.
+			 */
+ 			if (Curpos.lnum == Botline && !emptyrows)
+				s_del(0, 1, TRUE);
 			updateScreen(CURSUPD);
+		}
 	}
 
 	did_ai = FALSE;
@@ -554,7 +712,7 @@ insertchar(c)
 	 * If there's any pending input, grab up to MAX_COLUMNS at once.
 	 * This speeds up normal text input considerably.
 	 */
-	if (vpeekc() != NUL && State != REPLACE)
+	if (vpeekc() != NUL && State != REPLACE && !p_ri)
 	{
 		char			p[MAX_COLUMNS + 1];
 		int 			i;
@@ -562,7 +720,8 @@ insertchar(c)
 		p[0] = c;
 		i = 1;
 		while ((c = vpeekc()) != NUL && !ISSPECIAL(c) && i < MAX_COLUMNS &&
-					(Cursvcol += charsize(p[i - 1])) < p_tw)
+					(!p_tw || (Cursvcol += charsize(p[i - 1])) < p_tw) &&
+					!(!no_abbr && !isidchar(c) && isidchar(p[i - 1])))
 			p[i++] = vgetc();
 		p[i] = '\0';
 		insstr(p);
@@ -571,7 +730,7 @@ insertchar(c)
 	else
 	{
 		inschar(c);
-		AppendToRedobuff(mkstr(c));
+		AppendCharToRedobuff(c);
 	}
 
 	updateline();
@@ -604,7 +763,7 @@ stop_arrow()
 	{
 		u_saveCurpos();			/* errors are ignored! */
 		Insstart = Curpos;		/* new insertion starts here */
-		ResetBuffers();
+		ResetRedobuff();
 		AppendToRedobuff("1i");	/* pretend we start an insertion */
 		arrow_used = FALSE;
 	}
@@ -634,6 +793,8 @@ stop_insert()
 		*nr2ptr(Curpos.lnum) = NUL;
 		canincrease(0);
 		Curpos.col = 0;
+		if (p_list)			/* the deletion is only seen in list mode */
+			updateline();
 	}
 	did_ai = FALSE;
 	did_si = FALSE;
@@ -652,7 +813,7 @@ oneright()
 {
 	char *ptr;
 
-	ptr = pos2ptr(&Curpos);
+	ptr = Curpos2ptr();
 	set_want_col = TRUE;
 
 	if (*ptr++ == NUL || *ptr == NUL)
@@ -741,27 +902,48 @@ onepage(dir, count)
 			beep();
 			return FALSE;
 		}
-		lp = Topline;
-		n = 0;
-		if (dir == BACKWARD)
-		{
-			if (lp < line_count)
-				++lp;
-			Curpos.lnum = lp;
-		}
-		while (n < Rows - 1 && lp >= 1 && lp <= line_count)
-		{
-			n += plines(lp);
-			lp += dir;
-		}
 		if (dir == FORWARD)
 		{
-			if (--lp > 1)
-				--lp;
-			Topline = Curpos.lnum = lp;
+			if (Botline > line_count)				/* at end of file */
+				Topline = line_count;
+			else if (plines(Botline) >= Rows - 3 ||	/* next line is big */
+					Botline - Topline <= 3)		/* just three lines on screen */
+				Topline = Botline;
+			else
+				Topline = Botline - 2;
+			Curpos.lnum = Topline;
+			if (count != 1)
+				comp_Botline();
 		}
-		else
-			Topline = lp + 1;
+		else	/* dir == BACKWARDS */
+		{
+			lp = Topline;
+			/*
+			 * If the first two lines on the screen are not too big, we keep
+			 * them on the screen.
+			 */
+			if ((n = plines(lp)) > Rows / 2)
+				--lp;
+			else if (lp < line_count && n + plines(lp + 1) < Rows / 2)
+				++lp;
+			Curpos.lnum = lp;
+			n = 0;
+			while (n <= Rows - 1 && lp >= 1)
+			{
+				n += plines(lp);
+				--lp;
+			}
+			if (n <= Rows - 1)				/* at begin of file */
+				Topline = 1;
+			else if (lp >= Topline - 2)		/* happens with very long lines */
+			{
+				--Topline;
+				comp_Botline();
+				Curpos.lnum = Botline - 1;
+			}
+			else
+				Topline = lp + 2;
+		}
 	}
 	beginline(TRUE);
 	updateScreen(VALID);
@@ -779,11 +961,11 @@ stuff_inserted(c, count, no_esc)
 
 	if (last_insert == NULL)
 	{
-		beep();
+		emsg("No inserted text yet");
 		return;
 	}
 	if (c)
-		stuffReadbuff(mkstr(c));
+		stuffcharReadbuff(c);
 	if (no_esc && (esc_ptr = (u_char *)strrchr((char *)last_insert, 27)) != NULL)
 		*esc_ptr = NUL;		/* remove the ESC */
 
@@ -796,4 +978,21 @@ stuff_inserted(c, count, no_esc)
 
 	if (no_esc && esc_ptr)
 		*esc_ptr = 27;		/* put the ESC back */
+}
+
+/*
+ * Check the word in front of the cursor for an abbreviation.
+ * Called when the non-id character "c" has been entered.
+ * When an abbreviation is recognized it is removed from the text and
+ * the replacement string is inserted in typestr, followed by "c".
+ */
+	static int
+echeck_abbr(c)
+	int c;
+{
+	if (p_paste || no_abbr)			/* no abbreviations or in paste mode */
+		return FALSE;
+
+	return check_abbr(c, nr2ptr(Curpos.lnum), Curpos.col,
+				Curpos.lnum == Insstart.lnum ? Insstart.col : 0);
 }

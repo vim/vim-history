@@ -1,6 +1,6 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -25,6 +25,7 @@
 #define CSI 					0x9b
 
 #define Ctrl(x) ((x) & 0x1f)
+#define Meta(x) ((x) | 0x80)
 
 /*
  * character that separates dir names in a path

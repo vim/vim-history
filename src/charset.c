@@ -1,6 +1,6 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -35,7 +35,10 @@ transchar(c)
 		}
 		else
 		{
-				buf[0] = '~';
+				if (c == 0x7f)		/* DEL displayed as ^?, not ~? */
+					buf[0] = '^';
+				else
+					buf[0] = '~';
 				buf[1] = c - 0x80 + '@';
 				buf[2] = NUL;
 		}
@@ -95,7 +98,8 @@ strsize(s)
  */
 	int
 chartabsize(c, col)
-	int c, col;
+	register int	c;
+	int				col;
 {
 	if ((c >= ' ' && (c <= '~' || p_gr)) || c > 0xa0)
    		return 1;

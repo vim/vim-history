@@ -3,9 +3,7 @@
 #
 
 #>>>>> choose options:
-### -DUSE_KBHIT		use kbhit() and getch() instead of bioskey()
 ### -DDIGRAPHS		digraph support (at the cost of 1.6 Kbyte code)
-### -DWILD_CARDS	wildcard expansion code
 ### -DCOMPATIBLE	start in vi-compatible mode
 ### -DNOBACKUP		default is no backup file
 ### -DDEBUG		output a lot of debugging garbage
@@ -22,12 +20,12 @@
 ### -DSYSEXRC_FILE	name of the global .exrc file
 ### -DDEFVIMRC_FILE	name of the system-wide .vimrc file
 ### -DVIM_HLP		name of the help file
-DEFINES = -DWILD_CARDS
+DEFINES = -DDIGRAPHS
 
 #>>>>> name of the compiler and linker, name of lib directory
 CC = tcc
 LINK = tlink
-LIB = d:\tc\lib
+LIB = c:\turboc\lib
 
 #>>>>> end of choices
 ###########################################################################

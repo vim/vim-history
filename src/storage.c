@@ -1,6 +1,6 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -25,18 +25,48 @@
 
 /*
  * Memory is allocated in relatively large blocks. These blocks are linked
- * in the allocated block list, headed by m_ahead. They are all freed
- * when abandoning a file.
+ * in the allocated block list, headed by block_head. They are all freed
+ * when abandoning a file, so we don't have to free every single line. The
+ * list is kept sorted on memory address.
+ * block_alloc() allocates a block.
+ * m_blockfree() frees all blocks.
  *
- * The available chunks of memory are kept in the free chunk list, headed
- * by m_fhead. This is a circular list. m_search points to the chunk before the
- * chunk that was freed/allocated the last time. alloc_line() gets a chunk
- * from the free list; free_line() returns a chunk to the free list.
+ * The available chunks of memory are kept in free chunk lists. There is
+ * one free list for each block of allocated memory. The list is kept sorted
+ * on memory address.
+ * alloc_line() gets a chunk from the free lists.
+ * free_line() returns a chunk to the free lists.
+ * m_search points to the chunk before the chunk that was freed/allocated the
+ * last time.
+ * mb_current points to the b_head where m_search points into the free list.
+ *
+ *
+ *    block_head     /---> block #1     /---> block #2
+ *       mb_next ---/       mb_next ---/       mb_next ---> NULL
+ *       mb_info            mb_info            mb_info
+ *          |                  |                  |
+ *          V                  V                  V
+ *        NULL          free chunk #1.1      free chunk #2.1
+ *                             |                  |
+ *                             V                  V
+ *                      free chunk #1.2          NULL
+ *                             |
+ *                             V
+ *                            NULL
+ *
+ * When a single free chunk list would have been used, it could take a lot
+ * of time in free_line() to find the correct place to insert a chunk in the
+ * free list. The single free list would become very long when many lines are
+ * changed (e.g. with :%s/^M$//).
  */
 
-	/* on the Amiga the blocksize must not be a multiple of 256 */
-	/* with MS-Dos the blocksize must be larger than 255 */
-	/* For Unix it does not really matter */
+	/*
+	 * this blocksize is used when allocating new lines
+	 * When reading files larger blocks are used (see fileio.c)
+	 * on the Amiga the blocksize must not be a multiple of 256
+	 * with MS-Dos the blocksize must be larger than 255
+	 * For Unix it does not really matter
+	 */
 #define MEMBLOCKSIZE 2044
 
 typedef struct m_info info_t;
@@ -59,8 +89,8 @@ typedef struct m_info info_t;
  *		trailing NUL are all part of the chunk.
  *
  * When the chunk is not in-use it is preceded with the m_info structure.
- * The m_next field links it in the free chunk list. It must still end in
- * a NUL byte, because it may be followed by a type 1 chunk!
+ * The m_next field links it in one of the free chunk lists. It must still
+ * end in a NUL byte, because it may be followed by a type 1 chunk!
  *
  * When in-use we must make sure there is a non-NUL byte in front of type
  * 2 chunks.
@@ -74,12 +104,14 @@ typedef struct m_info info_t;
  * On Unix systems an extra 0xff byte is added. This costs 4 bytes because
  * pointers must be kept long-aligned.
  *
- * On most unix systems structures have to be longword aligned.
+ * On most unix systems structures have to be longword (32 or 64 bit) aligned.
  * On most other systems they are short (16 bit) aligned.
  */
 
 #ifdef UNIX
-# define ALIGN_LONG		/* 32 bit alignment and use filler byte */
+# define ALIGN_LONG		/* longword alignment and use filler byte */
+# define ALIGN_SIZE (sizeof(long))
+# define ALIGN_MASK (ALIGN_SIZE - 1)
 #else
 # ifdef AMIGA
 #  define LOWBYTE		/* size must not be multiple of 256 */
@@ -92,6 +124,9 @@ typedef struct m_info info_t;
 # endif
 #endif
 
+/*
+ * stucture used to link chunks in one of the free chunk lists.
+ */
 struct m_info
 {
 #ifdef ALIGN_LONG
@@ -110,66 +145,49 @@ struct m_info
 # define M_OFFSET (sizeof(u_short))
 #endif
 
-static char	 *m_ahead = NULL;		/* head of allocated memory block list */
+/*
+ * structure used to link blocks in the list of allocated blocks.
+ */
+struct m_block
+{
+	struct m_block	*mb_next;	/* pointer to next allocated block */
+	info_t			mb_info;	/* head of free chuck list for this block */
+};
 
-static info_t m_fhead = {0, NULL};	/* head of free chunk list */
+static struct m_block block_head = {NULL, {0, NULL}};
+								/* head of allocated memory block list */
 
 static info_t *m_search = NULL; 	/* pointer to chunk before previously
 									   allocated/freed chunk */
-
-#ifdef DEBUG
-# ifdef AMIGA
-m_error()
-{
-	printf("list error\n");
-}
-# endif
-
-check_list()
-{
-# ifdef AMIGA
-	register info_t *mp;
-
-	for (mp = &m_fhead; ; )
-	{
-		/*
-		 * adjust these addresses for the actual available memory!
-		 */
-		if (mp >= 0x080000L && mp < 0x200000L ||
-			mp >= 0x400000L && mp < 0xc00000 ||
-			mp >= 0xc80000 || mp->m_next->m_size > 23000)
-		{
-			m_error();
-			return 1;
-		}
-		mp = mp->m_next;
-		if (mp == &m_fhead)
-			break;
-	}
-# endif
-	return 0;
-}
-#endif	/* DEBUG */
+static struct m_block *mb_current = NULL;	/* block where m_search points in */
 
 /*
- * Allocate a block of memory and link it in the allocated list, so that
- * the block will be freed when abandoning the file.
+ * Allocate a block of memory and link it in the allocated block list.
  */
 	char *
 m_blockalloc(size, message)
 	u_long	size;
 	int		message;
 {
-	char *p;
+	struct m_block *p;
+	struct m_block *mp, *next;
 
-	p = lalloc(size + sizeof(char *), message);
+	p = (struct m_block *)lalloc(size + sizeof(struct m_block), message);
 	if (p != NULL)
 	{
-		*(char **)p = m_ahead;
-		m_ahead = p;
-		p += sizeof(char *);
+		 /* Insert the block into the allocated block list, keeping it
+		 			sorted on address. */
+		for (mp = &block_head; (next = mp->mb_next) != NULL && next < p; mp = next)
+			;
+		p->mb_next = next;				/* link in block list */
+		mp->mb_next = p;
+		p->mb_info.m_next = NULL;		/* clear free list */
+		p->mb_info.m_size = 0;
+		mb_current = p;					/* remember current block */
+		m_search = NULL;
+		p++;							/* return usable memory */
 	}
-	return p;
+	return (char *)p;
 }
 
 /*
@@ -178,36 +196,34 @@ m_blockalloc(size, message)
 	void
 m_blockfree()
 {
-	char *p, *np;
+	struct m_block *p, *np;
 
-	for (p = m_ahead; p != NULL; p = np)
+	for (p = block_head.mb_next; p != NULL; p = np)
 	{
-		np = *(char **)p;
-		free(p);
+		np = p->mb_next;
+		free((char *)p);
 	}
-	m_ahead = NULL;
+	block_head.mb_next = NULL;
 	m_search = NULL;
+	mb_current = NULL;
 }
 
 /*
  * Free a chunk of memory which was
  *  1. inserted with readfile(); these are preceded with a NUL byte
  *  2. allocated with alloc_line(); these are preceded with a non-NUL byte
- * Insert the chunk into the free list, keeping it sorted on address.
+ * Insert the chunk into the correct free list, keeping it sorted on address.
  */
 	void
 free_line(ptr)
 	char *ptr;
 {
-	info_t			*mp;
-	register info_t *next;
-	info_t			*prev, *curr;
-	long			len;
+	register info_t		*next;
+	register info_t		*prev, *curr;
+	register info_t		*mp;
+	long				len;
+	struct m_block		*nextb;
 
-#ifdef DEBUG
-	if (check_list())
-		return;
-#endif
 	if (ptr == NULL || ptr == IObuff)
 		return;	/* illegal address can happen in out-of-memory situations */
 
@@ -217,14 +233,16 @@ free_line(ptr)
 		long c;
 
 		len = strlen(ptr) + 1;
-		if ((c = ((long)ptr & 3)) != 0)     /* lose some bytes */
+		if ((c = ((long)ptr & ALIGN_MASK)) != 0)     /* lose some bytes */
 		{
-		    c = 4 - c;
+		    c = ALIGN_SIZE - c;
 		    ptr += c;
 		    len -= c;
 		}
 #else			/* use short (16 bit) alignment */
 		len = strlen(ptr) + 1;
+		if (len > 0xff00)		/* can't handle this large (cannot happen?) */
+			len = 0xff00;
 		if ((long)ptr & 1)					/* lose a byte */
 		{
 			++ptr;
@@ -244,7 +262,7 @@ free_line(ptr)
 	{
 		mp = (info_t *)(ptr - M_OFFSET);
 	}
-	else
+	else		/* illegal situation: there is no NUL or 0xff in front of the line */
 	{
 		emsg("Illegal chunk");
 		return;
@@ -265,19 +283,63 @@ free_line(ptr)
 	}
 #endif
 
+		/* find block where chunk could be a part off */
+		/* if we change mb_current, m_search is set to NULL */
+	if (mb_current == NULL || mp < (info_t *)mb_current)
+	{
+		mb_current = block_head.mb_next;
+		m_search = NULL;
+	}
+	if ((nextb = mb_current->mb_next) != NULL && (info_t *)nextb < mp)
+	{
+		mb_current = nextb;
+		m_search = NULL;
+	}
+	while ((nextb = mb_current->mb_next) != NULL && (info_t *)nextb < mp)
+		mb_current = nextb;
+
 	curr = NULL;
-	/* if mp is smaller than m_search->m_next we start at m_fhead */
-	if (mp < (m_search->m_next))
-		next = &m_fhead;
+	/* if mp is smaller than m_search->m_next we go to the start of the free list */
+	if (m_search == NULL || mp < (m_search->m_next))
+		next = &(mb_current->mb_info);
 	else
 		next = m_search;
+	/*
+	 * The following loop is executed very often.
+	 * Therefore it has been optimized at the cost of readability.
+	 * Keep it fast!
+	 */
+#ifdef SLOW_BUT_EASY_TO_READ
 	do
 	{
 		prev = curr;
 		curr = next;
 		next = next->m_next;
 	}
-	while (mp > next && next != &m_fhead);
+	while (mp > next && next != NULL);
+#else
+	do										/* first, middle, last */
+	{
+		prev = next->m_next;				/* curr, next, prev */
+		if (prev == NULL || mp <= prev)
+		{
+			prev = curr;
+			curr = next;
+			next = next->m_next;
+			break;
+		}
+		curr = prev->m_next;				/* next, prev, curr */
+		if (curr == NULL || mp <= curr)
+		{
+			prev = next;
+			curr = prev->m_next;
+			next = curr->m_next;
+			break;
+		}
+		next = curr->m_next;				/* prev, curr, next */
+	}
+	while (mp > next && next != NULL);
+#endif
 
 /* if *mp and *next are concatenated, join them into one chunk */
 	if ((char *)mp + mp->m_size == (char *)next)
@@ -300,9 +362,6 @@ free_line(ptr)
 		curr->m_next = mp;
 		m_search = curr;	/* put m_search before freed chunk */
 	}
-#ifdef DEBUG
-	check_list();
-#endif
 }
 
 /*
@@ -314,12 +373,9 @@ alloc_line(size)
 	register unsigned size;
 {
 	register info_t *mp, *mprev, *mp2;
-	int		 size_align;
+	struct m_block	*mbp;
+	int		 		size_align;
 
-#ifdef DEBUG
-	if (m_search != NULL && check_list())
-		return NULL;
-#endif
 /*
  * Add room for size field, optional 0xff byte and trailing NUL byte.
  * Adjust for minimal size (must be able to store info_t
@@ -333,43 +389,64 @@ alloc_line(size)
  * round size up for alignment
  */
 #ifdef ALIGN_LONG			/* use longword alignment */
-	size_align = (size + 3) & ~3;
+	size_align = (size + ALIGN_MASK) & ~ALIGN_MASK;
 #else /* ALIGN_LONG */	/* use short (16 bit) alignment */
 	size_align = (size + 1) & ~1;
 #endif	/* ALIGN_LONG */
 
-/* if m_search is NULL we have to initialize the free list */
-	if (m_search == NULL)
+/* if m_search is NULL (uninitialized free list) we start at block_head */
+	if (mb_current == NULL || m_search == NULL)
 	{
-		m_search = &m_fhead;
-		m_fhead.m_next = &m_fhead;
+		mb_current = &block_head;
+		m_search = &(block_head.mb_info);
 	}
 
 /* search for space in free list */
 	mprev = m_search;
-	for (mp = m_search->m_next; mp->m_size < size; mp = mp->m_next)
+	mbp = mb_current;
+	mp = m_search->m_next;
+	if (mp == NULL)
 	{
-		if (mp == m_search)
+		if (mbp->mb_next)
+			mbp = mbp->mb_next;
+		else
+			mbp = &block_head;
+		mp = m_search = &(mbp->mb_info);
+	}
+	while (mp->m_size < size)
+	{
+		if (mp == m_search)		/* back where we started in free chunk list */
 		{
-			int		n = (size_align > (MEMBLOCKSIZE / 4) ? size_align : MEMBLOCKSIZE);
+			if (mbp->mb_next)
+				mbp = mbp->mb_next;
+			else
+				mbp = &block_head;
+			mp = m_search = &(mbp->mb_info);
+			if (mbp == mb_current)	/* back where we started in block list */
+			{
+				int		n = (size_align > (MEMBLOCKSIZE / 4) ? size_align : MEMBLOCKSIZE);
 
-			mp = (info_t *)m_blockalloc((u_long)n, TRUE);
-			if (mp == NULL)
-				return (NULL);
+				mp = (info_t *)m_blockalloc((u_long)n, TRUE);
+				if (mp == NULL)
+					return (NULL);
 #ifdef HIGHBYTE
-			mp->m_size = n + 256;
+				mp->m_size = n + 256;
 #endif
 #ifdef LOWBYTE
-			mp->m_size = (n << 1) + 1;
+				mp->m_size = (n << 1) + 1;
 #endif
 #ifdef ALIGN_LONG
-			mp->m_size = n;
-			*((u_char *)mp + M_OFFSET - 1) = 0xff;
+				mp->m_size = n;
+				*((u_char *)mp + M_OFFSET - 1) = 0xff;
 #endif
-			free_line((char *)mp + M_OFFSET);
-			mp = m_search;
+				free_line((char *)mp + M_OFFSET);
+				mp = m_search;
+				mbp = mb_current;
+			}
 		}
 		mprev = mp;
+		if ((mp = mp->m_next) == NULL)		/* at end of the list */
+			mp = &(mbp->mb_info);			/* wrap around to begin */
 	}
 
 /* if the chunk we found is large enough, split it up in two */
@@ -386,6 +463,7 @@ alloc_line(size)
 		mprev->m_next = mp->m_next;
 	}
 	m_search = mprev;
+	mb_current = mbp;
 
 #ifdef HIGHBYTE
 	mp->m_size += 256;
@@ -398,9 +476,6 @@ alloc_line(size)
 	*((u_char *)mp - 1) = 0xff;			/* mark type 2 chunk */
 #endif
 	*(char *)mp = NUL;					/* set the first byte to NUL */
-#ifdef DEBUG
-	check_list();
-#endif
 
 	return ((char *)mp);
 }
@@ -436,11 +511,11 @@ typedef struct block block_t;
 
 struct block
 {
+	char	*b_ptr[BLOCK_SIZE];		/* pointers to the lines */
+	char	 b_flags[BLOCK_SIZE];	/* see below */
 	u_short  b_count;				/* current number of pointers in b_ptr */
 	block_t *b_next;				/* pointer to next block */
 	block_t *b_prev;				/* pointer to previous block */
-	char	*b_ptr[BLOCK_SIZE];		/* pointers to the lines */
-	char	 b_flags[BLOCK_SIZE];	/* see below */
 };
 
 #define B_MARKED	0x01		/* mark for :global command */
@@ -450,6 +525,7 @@ static block_t *last_block;		/* pointer to last block in block list */
 
 static block_t *curr_block;		/* block used by nr2ptr */
 static linenr_t curr_count;		/* first line number of block curr_block */
+static linenr_t curr_count_max;	/* curr_count + curr_block->b_count */
 
 static block_t *alloc_block __ARGS((void));
 
@@ -484,6 +560,7 @@ filealloc()
 	curr_count = 0;
 	clrallmarks();
 	clrtags();
+	UNCHANGED;
 }
 
 /*
@@ -509,11 +586,16 @@ freeall()
 nr2ptr(nr)
     register linenr_t nr;
 {
-	register linenr_t count;
-	register block_t *bp = NULL;
+	register linenr_t count = curr_count;
 
-	if ((count = curr_count) == 0 || nr >= count + (bp = curr_block)->b_count || nr < count)
+	/*
+	 * if we don't have a current block or the line is not in the current block,
+	 * make the block containing the line the current block.
+	 */
+	if (count == 0 || nr >= curr_count_max || nr < count)
 	{
+		register block_t *bp = curr_block;
+
 		if (nr < 1 || nr > line_count)
 		{
 			emsg("nr2ptr: illegal nr");
@@ -576,9 +658,10 @@ nr2ptr(nr)
 			return (IObuff);
 		}
 		curr_count = count;
+		curr_count_max = count + bp->b_count;
 		curr_block = bp;
 	}
-	return (bp->b_ptr[nr - count]);
+	return (curr_block->b_ptr[nr - count]);
 }
 
 /*
@@ -589,6 +672,12 @@ pos2ptr(pos)
     FPOS	*pos;
 {
 	return (nr2ptr(pos->lnum) + pos->col);
+}
+
+	char *
+Curpos2ptr()
+{
+	return (nr2ptr(Curpos.lnum) + Curpos.col);
 }
 
 /*
@@ -610,7 +699,7 @@ firstmarked()
 {
 	register block_t	*bp;
 	register linenr_t	lnum;
-	register int		i;
+	register u_short	i;
 
 	for (bp = first_block, lnum = 1; bp != NULL; bp = bp->b_next)
 		for (i = 0; i < bp->b_count; ++i, ++lnum)
@@ -718,6 +807,7 @@ appendline(after, s)
 		*pp = s;
 		*fp = 0;
 		++bp->b_count;
+		++curr_count_max;
 		return TRUE;
 	}
 
@@ -773,8 +863,9 @@ appendline(after, s)
 		bp->b_ptr[j] = s;
 		bp->b_flags[j] = 0;
 		++bp->b_count;
-		return TRUE;
+		curr_count_max = curr_count + bp->b_count;
 	}
+	return TRUE;
 }
 
 /*
@@ -800,7 +891,7 @@ delsline(nr, delmarks)
 	}
 	ptr = nr2ptr(nr);
 	if (delmarks)
-		adjustmark(ptr, NULL);			/* remove marks for this line */
+		adjustmark(ptr, NULL);			/* remove marks for this line (slow!) */
 	bp = curr_block;
 	if (line_count == 1)	/* don't delete the last line in the file */
 	{
@@ -830,6 +921,8 @@ delsline(nr, delmarks)
 		free_line((char *)bp);
 		curr_count = 0; /* curr_block invalid */
 	}
+	else
+		--curr_count_max;
 	return (ptr);
 }
 

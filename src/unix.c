@@ -1,7 +1,7 @@
 /* vi:ts=4:sw=4
  *
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -30,29 +30,57 @@
 #endif
 #include <signal.h>
 
-#ifdef SYSV
-# ifdef M_XENIX
+#ifndef USE_SYSTEM		/* use fork/exec to start the shell */
+# include <sys/wait.h>
+# if !defined(SCO) && !defined(SOLARIS)			/* SCO returns pid_t */
+extern int fork();
+# endif
+# if !defined(linux) && !defined(SOLARIS) && !defined(USL)
+extern int execvp __ARGS((const char *, const char **));
+# endif
+#endif
+
+#ifdef SYSV_UNIX
+# if defined(__sgi) || defined(UTS2) || defined(UTS4)
+#  include <sys/time.h>
+# endif
+# if defined(M_XENIX) || defined(SCO) || defined(UNICOS)
+#  ifndef UNICOS
+#   include <stropts.h>
+#  endif
 #  include <sys/select.h>
 #  define bzero(a, b)	memset((a), 0, (b))
 # else
 #  include <poll.h>
 # endif
+# if defined(SCO) || defined(ISC)
+#  include <sys/stream.h>
+#  include <sys/ptem.h>
+# endif
+# if defined(M_UNIX) && !defined(SCO)
+#  include <sys/time.h>
+# endif       /* M_UNIX */
+# ifdef ISC
+#  include <termios.h>
+# endif
 # include <termio.h>
-#else	/* SYSV */
+#else	/* SYSV_UNIX */
 # include <sys/time.h>
-# ifdef hpux
+# if defined(hpux) || defined(linux)
 #  include <termio.h>
-#  define SIGWINCH SIGWINDOW
+#  if defined(hpux) && !defined(SIGWINCH)	/* hpux 9.01 has it */
+#   define SIGWINCH SIGWINDOW
+#  endif
 # else
 #  include <sgtty.h>
 # endif	/* hpux */
-#endif	/* SYSV */
+#endif	/* !SYSV_UNIX */
 
-#if (defined(pyr) || defined(NO_FD_ZERO)) && defined(SYSV) && defined(FD_ZERO)
+#if (defined(pyr) || defined(NO_FD_ZERO)) && defined(SYSV_UNIX) && defined(FD_ZERO)
 # undef FD_ZERO
 #endif
 
-#ifdef ESIX
+#if defined(ESIX) || defined(M_UNIX)
 # ifdef SIGWINCH
 #  undef SIGWINCH
 # endif
@@ -65,8 +93,12 @@ static int	Read __ARGS((char *, long));
 static int	WaitForChar __ARGS((int));
 static int	RealWaitForChar __ARGS((int));
 static void fill_inbuf __ARGS((void));
-#if defined(SIGWINCH) && !defined(linux)
+#ifdef USL
+static void sig_winch __ARGS((int));
+#else
+# if defined(SIGWINCH) && !defined(linux) && !defined(__alpha) && !defined(mips) && !defined(_SEQUENT_) && !defined(SCO) && !defined(SOLARIS) && !defined(ISC)
 static void sig_winch __ARGS((int, int, struct sigcontext *));
+# endif
 #endif
 
 static int do_resize = FALSE;
@@ -79,65 +111,38 @@ static int do_resize = FALSE;
 #undef FALSE
 #define FALSE 0
 
-/*
- * the number of calls to Write is reduced by using the buffer "outbuf"
- */
-#define BSIZE	2048
-static u_char	outbuf[BSIZE];
-static int		bpos = 0;
-
-/*
- * flushbuf(): flush the output buffer
- */
 	void
-flushbuf()
+mch_write(s, len)
+	char	*s;
+	int		len;
 {
-	if (bpos != 0)
-		write(1, (char *)outbuf, (long)bpos);
-	bpos = 0;
-}
-
-/*
- * outchar(c): put a character into the output buffer. Flush it if it becomes full.
- */
-	void
-outchar(c)
-	unsigned c;
-{
-	if (c == '\n')		/* turn LF into CR-LF (CRMOD does not seem to do this) */
-		outchar('\r');
-	outbuf[bpos] = c;
-	++bpos;
-	if (bpos >= BSIZE)
-		flushbuf();
+	write(1, s, len);
 }
 
 /*
  * GetChars(): low level input funcion.
  * Get a characters from the keyboard.
- * If type == T_PEEK do not wait for characters.
- * If type == T_WAIT wait a short time for characters.
- * If type == T_BLOCK wait for characters.
+ * If time == 0 do not wait for characters.
+ * If time == n wait a short time for characters.
+ * If time == -1 wait forever for characters.
  */
 	int
-GetChars(buf, maxlen, type)
+GetChars(buf, maxlen, time)
 	char	*buf;
 	int		maxlen;
-	int		type;
+	int		time;
 {
 	int		len;
-	int		time = 1000;	/* one second */
 
-	switch (type)
+	if (time >= 0)
 	{
-	case T_PEEK:
-		time = 20;
-	case T_WAIT:
+		if (time < 20)		/* don't know if this is necessary */
+			time = 20;
 		if (WaitForChar(time) == 0)		/* no character available */
 			return 0;
-		break;
-
-	case T_BLOCK:
+	}
+	else		/* time == -1 */
+	{
 	/*
 	 * If there is no character available within 2 seconds (default)
 	 * write the autoscript file to disk
@@ -165,28 +170,49 @@ GetChars(buf, maxlen, type)
 	}
 }
 
+#if defined(SYSV_UNIX) && !defined(M_XENIX) && !defined(UNICOS)
 	void
 vim_delay()
 {
-#if defined(SYSV) && !defined(M_XENIX)
 	poll(0, 0, 500);
+}
 #else
+extern int select __ARGS((int, fd_set *, fd_set *, fd_set *, struct timeval *));
+
+	void
+vim_delay()
+{
 	struct timeval tv;
 
 	tv.tv_sec = 25 / 50;
 	tv.tv_usec = (25 % 50) * (1000000/50);
 	select(0, 0, 0, 0, &tv);
-#endif
 }
+#endif
 
 	static void
+#if defined(__alpha) || defined(mips)
+sig_winch()
+#else
+# if defined(_SEQUENT_) || defined(SCO) || defined(ISC)
+sig_winch(sig, code)
+	int		sig;
+	int		code;
+# else
+#  if defined(USL)
+sig_winch(sig)
+	int		sig;
+#  else
 sig_winch(sig, code, scp)
 	int		sig;
 	int		code;
 	struct sigcontext *scp;
+#  endif
+# endif
+#endif
 {
-#if defined(SIGWINCH) && (defined(SYSV) || defined(linux) || defined(hpux))
-	signal(SIGWINCH, sig_winch);
+#if defined(SIGWINCH) && (defined(SYSV_UNIX) || defined(linux) || defined(hpux) || defined(USL))
+	signal(SIGWINCH, (void (*)())sig_winch);
 #endif
 	do_resize = TRUE;
 }
@@ -200,15 +226,11 @@ mch_suspend()
 {
 #ifdef SIGTSTP
 	settmode(0);
-	stoptermcap();
 	kill(0, SIGTSTP);		/* send ourselves a STOP signal */
 	settmode(1);
-	starttermcap();
 #else
 	outstr("new shell started\n");
-	stoptermcap();
-	call_shell(NULL, 0);
-	starttermcap();
+	call_shell(NULL, 0, TRUE);
 #endif
 }
 
@@ -222,7 +244,7 @@ mch_windinit()
 
 	mch_get_winsize();
 #if defined(SIGWINCH)
-	signal(SIGWINCH, sig_winch);
+	signal(SIGWINCH, (void (*)())sig_winch);
 #endif
 }
 
@@ -272,25 +294,26 @@ resettitle()
 }
 
 /*
- * get name of current directory into buffer 'buf' of length 'len' bytes
+ * Get name of current directory into buffer 'buf' of length 'len' bytes.
+ * Return non-zero for success.
  */
 	int 
 dirname(buf, len)
 	char *buf;
 	int len;
 {
-#if defined(SYSV) || defined(hpux)
+#if defined(SYSV_UNIX) || defined(hpux) || defined(linux)
 	extern int		errno;
 	extern char		*sys_errlist[];
 
 	if (getcwd(buf,len) == NULL)
 	{
 	    strcpy(buf, sys_errlist[errno]);
-	    return 1;
+	    return 0;
 	}
-    return 0;
+    return 1;
 #else
-	return (int)getwd(buf);
+	return (getwd(buf) != NULL);
 #endif
 }
 
@@ -302,26 +325,62 @@ FullName(fname, buf, len)
 	char *fname, *buf;
 	int len;
 {
-	*buf = 0;
-#if defined(linux) || defined(UNIX_WITHOUT_AMD)
-    {
-    	int l;
+	int		l;
+	char	olddir[MAXPATHL];
+	char	*p;
+	int		c;
+	int		retval = 1;
 
-    	if (*fname != '/')
+	if (fname == NULL)	/* always fail */
+		return 0;
+
+	*buf = 0;
+	if (*fname != '/')
+	{
+		/*
+		 * If the file name has a path, change to that directory for a moment,
+		 * and then do the getwd() (and get back to where we were).
+		 * This will get the correct path name with "../" things.
+		 */
+		if ((p = strrchr(fname, '/')) != NULL)
 		{
-#if defined(SYSV) || defined(hpux)
-			(void)getcwd(buf,len);
+#if defined(SYSV_UNIX) || defined(hpux) || defined(linux)
+			if (getcwd(olddir, MAXPATHL) == NULL)
 #else
-			(void)getwd(buf);
+			if (getwd(olddir) == NULL)
 #endif
-			l = strlen(buf);
-			if (l && buf[l-1] != '/')
-				strcat(buf, "/");
+			{
+				p = NULL;		/* can't get current dir: don't chdir */
+				retval = 0;
+			}
+			else
+			{
+				c = *p;
+				*p = NUL;
+				if (chdir(fname))
+					retval = 0;
+				else
+					fname = p + 1;
+				*p = c;
+			}
 		}
-    }
-#endif /* UNIX_WITHOUT_AMD */
+#if defined(SYSV_UNIX) || defined(hpux) || defined(linux)
+		if (getcwd(buf, len) == NULL)
+#else
+		if (getwd(buf) == NULL)
+#endif
+		{
+			retval = 0;
+			*buf = NUL;
+		}
+		l = strlen(buf);
+		if (l && buf[l - 1] != '/')
+			strcat(buf, "/");
+		if (p)
+			chdir(olddir);
+	}
 	strcat(buf, fname);
-	return 0;
+	return retval;
 }
 
 /*
@@ -346,7 +405,11 @@ setperm(name, perm)
 	char *name;
 	int perm;
 {
+#ifdef SCO
+	return chmod(name, (mode_t)perm);
+#else
 	return chmod(name, perm);
+#endif
 }
 
 /*
@@ -360,7 +423,11 @@ isdir(name)
 
 	if (stat(name, &statb))
 		return -1;
-	return (statb.st_mode & S_IFMT) != S_IFREG;
+#ifdef _POSIX_SOURCE
+	return S_ISDIR(statb.st_mode);
+#else
+	return (statb.st_mode & S_IFMT) == S_IFDIR;
+#endif
 }
 
 	void
@@ -378,24 +445,44 @@ mch_windexit(r)
 mch_settmode(raw)
 	int				raw;
 {
-#if defined(ECHOE) && defined(ICANON)
+#if defined(ECHOE) && defined(ICANON) && !defined(__NeXT__)
 	/* for "new" tty systems */
+# ifdef CONVEX
+	static struct termios told;
+		   struct termios tnew;
+# else
 	static struct termio told;
 		   struct termio tnew;
+# endif
+#ifdef TIOCLGET
+	static unsigned long tty_local;
+#endif
 
 	if (raw)
 	{
+#ifdef TIOCLGET
+		ioctl(0, TIOCLGET, &tty_local);
+#endif
 		ioctl(0, TCGETA, &told);
 		tnew = told;
-		tnew.c_iflag &= ~ICRNL;			/* enables typing ^V^M */
-		tnew.c_iflag &= ~IXON;			/* enables typing ^Q */
-		tnew.c_lflag &= ~(ICANON | ECHO | ISIG | ECHOE);
+		tnew.c_iflag &= ~(ICRNL | IXON);		/* ICRNL enables typing ^V^M */
+												/* IXON enables typing ^S/^Q */
+		tnew.c_lflag &= ~(ICANON | ECHO | ISIG | ECHOE
+#ifdef IEXTEN
+					| IEXTEN		/* IEXTEN enables typing ^V on SOLARIS */
+#endif
+						);
 		tnew.c_cc[VMIN] = 1;			/* return after 1 char */
 		tnew.c_cc[VTIME] = 0;			/* don't wait */
 		ioctl(0, TCSETA, &tnew);
 	}
 	else
+	{
 		ioctl(0, TCSETA, &told);
+#ifdef TIOCLGET
+		ioctl(0, TIOCLSET, &tty_local);
+#endif
+	}
 #else
 # ifndef TIOCSETN
 #  define TIOCSETN TIOCSETP		/* for hpux 9.0 */
@@ -417,63 +504,64 @@ mch_settmode(raw)
 #endif
 }
 
+/*
+ * Try to get the current window size:
+ * 1. with an ioctl(), most accurate method
+ * 2. from the environment variables LINES and COLUMNS
+ * 3. from the termcap
+ * 4. keep using the old values
+ */
 	int
 mch_get_winsize()
 {
-	int				old_Rows = Rows;
-	int				old_Columns = Columns;
-	char			*p;
+	int			old_Rows = Rows;
+	int			old_Columns = Columns;
+	char		*p;
 
 	Columns = 0;
 	Rows = 0;
 
 /*
- * when called without a signal, get winsize from environment
+ * 1. try using an ioctl. It is the most accurate method.
  */
-	if (!do_resize)
+# ifdef TIOCGSIZE
+	{
+		struct ttysize	ts;
+
+	    if (ioctl(0, TIOCGSIZE, &ts) == 0)
+	    {
+			Columns = ts.ts_cols;
+			Rows = ts.ts_lines;
+	    }
+	}
+# else /* TIOCGSIZE */
+#  ifdef TIOCGWINSZ
+	{
+		struct winsize	ws;
+
+	    if (ioctl(0, TIOCGWINSZ, &ws) == 0)
+	    {
+			Columns = ws.ws_col;
+			Rows = ws.ws_row;
+	    }
+	}
+#  endif /* TIOCGWINSZ */
+# endif /* TIOCGSIZE */
+
+/*
+ * 2. get size from environment
+ */
+	if (Columns == 0 || Rows == 0)
 	{
 	    if ((p = (char *)getenv("LINES")))
 			Rows = atoi(p);
 	    if ((p = (char *)getenv("COLUMNS")))
 			Columns = atoi(p);
-	    if (Columns <= 0 || Rows <= 0)
-			do_resize = TRUE;
-	}
-
-/*
- * when got a signal, or no size in environment, try using an ioctl
- */
-	if (do_resize)
-	{
-# ifdef TIOCGSIZE
-		struct ttysize	ts;
-
-	    if (ioctl(0, TIOCGSIZE, &ts) == 0)
-	    {
-			if (Columns == 0)
-				Columns = ts.ts_cols;
-			if (Rows == 0)
-				Rows = ts.ts_lines;
-	    }
-# else /* TIOCGSIZE */
-#  ifdef TIOCGWINSZ
-		struct winsize	ws;
-
-	    if (ioctl(0, TIOCGWINSZ, &ws) == 0)
-	    {
-			if (Columns == 0)
-				Columns = ws.ws_col;
-			if (Rows == 0)
-				Rows = ws.ws_row;
-	    }
-#  endif /* TIOCGWINSZ */
-# endif /* TIOCGSIZE */
-	    do_resize = FALSE;
 	}
 
 #ifdef TERMCAP
 /*
- * if previous work fails, try reading the termcap
+ * 3. try reading the termcap
  */
 	if (Columns == 0 || Rows == 0)
 	{
@@ -484,7 +572,7 @@ mch_get_winsize()
 #endif
 
 /*
- * If everything fails, use the old values
+ * 4. If everything fails, use the old values
  */
 	if (Columns <= 0 || Rows <= 0)
 	{
@@ -493,6 +581,8 @@ mch_get_winsize()
 		return 1;
 	}
 	debug2("mch_get_winsize: %dx%d\n", (int)Columns, (int)Rows);
+
+	Rows_max = Rows;				/* remember physical max height */
 
 	check_winsize();
 	script_winsize();
@@ -508,27 +598,31 @@ mch_set_winsize()
 }
 
 	int 
-call_shell(cmd, dummy)
+call_shell(cmd, dummy, cooked)
 	char	*cmd;
 	int		dummy;
+	int		cooked;
 {
+#ifdef USE_SYSTEM		/* use system() to start the shell: simple but slow */
+
 	int		x;
 	char	newcmd[1024];
 
 	flushbuf();
 
-	settmode(0); 				/* set to cooked mode */
+	if (cooked)
+		settmode(0); 				/* set to cooked mode */
 
 	if (cmd == NULL)
 		x = system(p_sh);
 	else
-	{			/* we use "sh" to start the shell, slow but easy */
+	{
 		sprintf(newcmd, "%s -c \"%s\"", p_sh, cmd);
 		x = system(newcmd);
 	}
 	if (x == 127)
 	{
-		smsg("Cannot execute shell sh");
+		emsg("Cannot execute shell sh");
 		outchar('\n');
 	}
 	else if (x)
@@ -537,8 +631,97 @@ call_shell(cmd, dummy)
 		outchar('\n');
 	}
 
-	settmode(1); 						/* set to raw mode */
+	if (cooked)
+		settmode(1); 						/* set to raw mode */
 	return x;
+
+#else /* USE_SYSTEM */		/* first attempt at not using system() */
+
+	char	newcmd[1024];
+	int		pid;
+	int		status = -1;
+	char	**argv = NULL;
+	int		argc;
+	int		i;
+	char	*p;
+	int		inquote;
+
+	flushbuf();
+	signal(SIGINT, SIG_IGN);	/* we don't want to be killed here */
+	if (cooked)
+		settmode(0);			/* set to cooked mode */
+
+	/*
+	 * 1: find number of arguments
+	 * 2: separate them and built argv[]
+	 */
+	strcpy(newcmd, p_sh);
+	for (i = 0; i < 2; ++i)	
+	{
+		p = newcmd;
+		inquote = FALSE;
+		argc = 0;
+		for (;;)
+		{
+			if (i == 1)
+				argv[argc] = p;
+			++argc;
+			while (*p && (inquote || (*p != ' ' && *p != TAB)))
+			{
+				if (*p == '"')
+					inquote = !inquote;
+				++p;
+			}
+			if (*p == NUL)
+				break;
+			if (i == 1)
+				*p++ = NUL;
+			skipspace(&p);
+		}
+		if (i == 0)
+		{
+			argv = (char **)alloc((unsigned)((argc + 3) * sizeof(char *)));
+			if (argv == NULL)		/* out of memory */
+				goto error;
+		}
+	}
+	if (cmd != NULL)
+	{
+		argv[argc++] = "-c";
+		argv[argc++] = cmd;
+	}
+	argv[argc] = NULL;
+
+	if ((pid = fork()) == -1)		/* maybe we should use vfork() */
+		emsg("Cannot fork");
+	else if (pid == 0)		/* child */
+	{
+		signal(SIGINT, SIG_DFL);
+		execvp(argv[0], argv);
+		exit(127);			/* exec failed, return failure code */
+	}
+	else					/* parent */
+	{
+		wait(&status);
+		status = (status >> 8) & 255;
+		if (status)
+		{
+			if (status == 127)
+				emsg2("Cannot execute shell %s", p_sh);
+			else
+				smsg("%d returned", status);
+			outchar('\n');
+		}
+	}
+	free(argv);
+
+error:
+	if (cooked)
+		settmode(1); 						/* set to raw mode */
+	signal(SIGINT, SIG_DFL);
+	return status;
+
+#endif /* USE_SYSTEM */
 }
 
 /*
@@ -563,7 +746,7 @@ Read(buf, maxlen)
 	memmove(buf, inbuf, maxlen);
 	inbufcount -= maxlen;
 	if (inbufcount)
-			memmove(inbuf, inbuf + maxlen, inbufcount);
+		memmove(inbuf, inbuf + maxlen, inbufcount);
 	return (int)maxlen;
 }
 
@@ -601,7 +784,6 @@ fill_inbuf()
 			memmove(inbuf, inbuf + inbufcount, len + 1);
 			inbufcount = 0;
 			got_int = TRUE;
-			flush_buffers();		/* remove all typeahead */
 		}
 		++inbufcount;
 	}
@@ -651,17 +833,18 @@ RealWaitForChar(ticks)
 #endif
 }
 
+#if !defined(__alpha) && !defined(mips) && !defined(SCO) && !defined(remove) && !defined(CONVEX)
 	int 
 remove(buf)
-#ifdef linux
+# if defined(linux) || defined(__STDC__) || defined(__NeXT__) || defined(M_UNIX)
 	const
-#endif
+# endif
 			char *buf;
 {
 	return unlink(buf);
 }
+#endif
 
-#ifdef WILD_CARDS
 /*
  * ExpandWildCard() - this code does wild-card pattern matching using the shell
  *
@@ -696,13 +879,33 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	char	tmpname[TMPNAMELEN];
 	char	*command;
 	int		i;
+	int		dir;
 	size_t	len;
 	FILE	*fd;
 	char	*buffer;
 	char	*p;
+	int		use_glob = FALSE;
 
 	*num_file = 0;		/* default: no files found */
 	*file = (char **)"";
+
+	/*
+	 * If there are no wildcards, just copy the names to allocated memory.
+	 * Saves a lot of time, because we don't have to start a new shell.
+	 */
+	if (!have_wildcard(num_pat, pat))
+	{
+		*file = (char **)alloc(num_pat * sizeof(char *));
+		if (*file == NULL)
+		{
+			*file = (char **)"";
+			return 1;
+		}
+		for (i = 0; i < num_pat; i++)
+			(*file)[i] = strsave(pat[i]);
+		*num_file = num_pat;
+		return 0;
+	}
 
 /*
  * get a name for the temp file
@@ -716,28 +919,40 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 
 /*
  * let the shell expand the patterns and write the result into the temp file
+ * If we use csh, glob will work better than echo.
  */
+	if ((len = strlen(p_sh)) >= 3 && strcmp(p_sh + len - 3, "csh") == 0)
+		use_glob = TRUE;
+
 	len = TMPNAMELEN + 10;
 	for (i = 0; i < num_pat; ++i)		/* count the length of the patterns */
 		len += strlen(pat[i]) + 3;
 	command = (char *)alloc(len);
 	if (command == NULL)
 		return 1;
-	strcpy(command, "echo > ");			/* built the shell command */
+	if (use_glob)
+		strcpy(command, "glob >");			/* built the shell command */
+	else
+		strcpy(command, "echo >");			/* built the shell command */
 	strcat(command, tmpname);
 	for (i = 0; i < num_pat; ++i)
 	{
-		strcat(command, " \"");
-		strcat(command, pat[i]);
+#ifdef USE_SYSTEM
+		strcat(command, " \"");				/* need extra quotes because we */
+		strcat(command, pat[i]);			/*   start the shell twice */
 		strcat(command, "\"");
+#else
+		strcat(command, " ");
+		strcat(command, pat[i]);
+#endif
 	}
-	i = call_shell(command, 0);				/* execute it */
+	i = call_shell(command, 0, FALSE);		/* execute it */
 	free(command);
 	if (i)									/* call_shell failed */
 	{
 		remove(tmpname);
 		sleep(1);			/* give the user a chance to read error messages */
-		updateScreen(CLEAR);			/* probably messed up screen */
+		must_redraw = CLEAR;				/* probably messed up screen */
 		return 1;
 	}
 
@@ -769,14 +984,27 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 		free(buffer);
 		return 1;
 	}
-	buffer[len] = '\n';				/* make sure the buffers ends in NL */
 
-	p = buffer;
-	for (i = 0; *p != '\n'; ++i)		/* get number of entries */
+	if (use_glob)		/* file names are separated with NUL */
 	{
-		while (*p != ' ' && *p != '\n')	/* skip entry */
-			++p;
-		skipspace(&p);					/* skip to next entry */
+		buffer[len] = NUL;					/* make sure the buffers ends in NUL */
+		i = 0;
+		for (p = buffer; p < buffer + len; ++p)
+			if (*p == NUL)					/* count entry */
+				++i;
+		if (len)
+			++i;							/* count last entry */
+	}
+	else				/* file names are separated with SPACE */
+	{
+		buffer[len] = '\n';					/* make sure the buffers ends in NL */
+		p = buffer;
+		for (i = 0; *p != '\n'; ++i)		/* count number of entries */
+		{
+			while (*p != ' ' && *p != '\n')	/* skip entry */
+				++p;
+			skipspace(&p);					/* skip to next entry */
+		}
 	}
 	*num_file = i;
 	*file = (char **)alloc(sizeof(char *) * i);
@@ -790,16 +1018,40 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	for (i = 0; i < *num_file; ++i)
 	{
 		(*file)[i] = p;
-		while (*p != ' ' && *p != '\n')
-			++p;
-		if (*p == '\n')
+		if (use_glob)
 		{
-			*p = NUL;
-			break;
+			while (*p && p < buffer + len)		/* skip entry */
+				++p;
+			++p;								/* skip NUL */
 		}
-		*p++ = NUL;
-		skipspace(&p);
+		else
+		{
+			while (*p != ' ' && *p != '\n')		/* skip entry */
+				++p;
+			if (*p == '\n')						/* last entry */
+				*p = NUL;
+			else
+			{
+				*p++ = NUL;
+				skipspace(&p);					/* skip to next entry */
+			}
+		}
 	}
+	for (i = 0; i < *num_file; ++i)
+	{
+		dir = (isdir((*file)[i]) > 0);
+		if (dir < 0)			/* if file doesn't exist don't add '/' */
+			dir = 0;
+		p = alloc((unsigned)(strlen((*file)[i]) + 1 + dir));
+		if (p)
+		{
+			strcpy(p, (*file)[i]);
+			if (dir)
+				strcat(p, "/");
+		}
+		(*file)[i] = p;
+	}
+	free(buffer);
 	return 0;
 }
 
@@ -808,9 +1060,10 @@ FreeWild(num, file)
 	int		num;
 	char	**file;
 {
-	if (file == NULL || num <= 0)
+	if (file == NULL || num == 0)
 		return;
-	free(file[0]);
+	while (num--)
+		free(file[num]);
 	free(file);
 }
 
@@ -818,22 +1071,38 @@ FreeWild(num, file)
 has_wildcard(p)
 	char *p;
 {
+#ifdef __STDC__
+	return strpbrk(p, "*?[{`~$") != NULL;
+#else
 	for ( ; *p; ++p)
 		if (strchr("*?[{`~$", *p) != NULL)
 			return 1;
 	return 0;
+#endif
 }
-#endif	/* WILD_CARDS */
 
-#ifdef M_XENIX
+	int
+have_wildcard(num, file)
+	int		num;
+	char	**file;
+{
+	register int i;
+
+	for (i = 0; i < num; i++)
+		if (has_wildcard(file[i]))
+			return 1;
+	return 0;
+}
+
+#if defined(M_XENIX) || defined(UTS2)
 /*
  * Scaled-down version of rename, which is missing in Xenix.
  * This version can only move regular files and will fail if the
  * destination exists.
  */
 	int
-rename(src, dst)
-	char *src, *dst;
+rename(src, dest)
+	char *src, *dest;
 {
 	struct stat		st;
 
@@ -845,4 +1114,4 @@ rename(src, dst)
 		return 0;
 	return -1;
 }
-#endif /* M_XENIX */
+#endif /* M_XENIX || UTS2 */

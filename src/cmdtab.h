@@ -1,6 +1,6 @@
 /* vi:ts=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -47,152 +47,192 @@ static struct
 {
 	{"append",		BANG+RANGE+TRLBAR},			/* not supported */
 #define CMD_append 0
-	{"abbreviate",	EXTRA+TRLBAR+NOTRLCOM},		/* not supported */
+	{"abbreviate",	EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
 #define CMD_abbreviate 1
 	{"args",		TRLBAR},
 #define CMD_args 2
 	{"change",		BANG+RANGE+COUNT+TRLBAR},	/* not supported */
 #define CMD_change 3
-	{"cd",			NAMEDF+TRLBAR},
-#define CMD_cd 4
+	{"cabbrev",		EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
+#define CMD_cabbrev 4
 	{"cc",			TRLBAR+WORD1+BANG},
 #define CMD_cc 5
+	{"cd",			NAMEDF+TRLBAR},
+#define CMD_cd 6
+	{"center",		TRLBAR+RANGE+EXTRA},
+#define CMD_center 7
 	{"cf",			TRLBAR+FILE1+BANG},
-#define CMD_cf 6
-	{"cl",			TRLBAR},
-#define CMD_cl 7
-	{"cn",			TRLBAR+BANG},
-#define CMD_cn 8
-	{"cp",			TRLBAR+BANG},
-#define CMD_cp 9
-	{"cq",			TRLBAR+BANG},
-#define CMD_cq 10
-	{"copy",		RANGE+EXTRA+TRLBAR},
-#define CMD_copy 11
+#define CMD_cf 8
 	{"chdir",		NAMEDF+TRLBAR},
-#define CMD_chdir 12
+#define CMD_chdir 9
+	{"cl",			TRLBAR},
+#define CMD_cl 10
+	{"cmap",		BANG+EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
+#define CMD_cmap 11
+	{"cn",			TRLBAR+BANG},
+#define CMD_cn 12
+	{"cnoremap",	BANG+EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
+#define CMD_cnoremap 13
+	{"cnoreabbrev",	EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
+#define CMD_cnoreabbrev 14
+	{"copy",		RANGE+EXTRA+TRLBAR},
+#define CMD_copy 15
+	{"cp",			TRLBAR+BANG},
+#define CMD_cp 16
+	{"cq",			TRLBAR+BANG},
+#define CMD_cq 17
+	{"cunmap",		BANG+EXTRA+TRLBAR+USECTRLV},
+#define CMD_cunmap 18
+	{"cunabbrev",	EXTRA+TRLBAR+USECTRLV},
+#define CMD_cunabbrev 19
 	{"delete",		RANGE+REGSTR+COUNT+TRLBAR},
-#define CMD_delete 13
+#define CMD_delete 20
 	{"display",		TRLBAR},
-#define CMD_display 14
-	{"digraph",		EXTRA+TRLBAR},
-#define CMD_digraph 15
+#define CMD_display 21
+	{"digraphs",	EXTRA+TRLBAR},
+#define CMD_digraphs 22
 	{"edit",		BANG+FILE1+TRLBAR},
-#define CMD_edit 16
+#define CMD_edit 23
 	{"ex",			BANG+FILE1+TRLBAR},
-#define CMD_ex 17
+#define CMD_ex 24
 	{"file",		FILE1+TRLBAR},
-#define CMD_file 18
+#define CMD_file 25
 	{"files",		TRLBAR},
-#define CMD_files 19
+#define CMD_files 26
 	{"global",		RANGE+BANG+EXTRA+DFLALL},
-#define CMD_global 20
+#define CMD_global 27
 	{"help",		TRLBAR},
-#define CMD_help 21
+#define CMD_help 28
 	{"insert",		BANG+RANGE+TRLBAR},			/* not supported */
-#define CMD_insert 22
+#define CMD_insert 29
+	{"iabbrev",		EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
+#define CMD_iabbrev 30
+	{"imap",		BANG+EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
+#define CMD_imap 31
+	{"inoremap",	BANG+EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
+#define CMD_inoremap 32
+	{"inoreabbrev",	EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
+#define CMD_inoreabbrev 33
+	{"iunmap",		BANG+EXTRA+TRLBAR+USECTRLV},
+#define CMD_iunmap 34
+	{"iunabbrev",	EXTRA+TRLBAR+USECTRLV},
+#define CMD_iunabbrev 35
 	{"join",		RANGE+COUNT+TRLBAR},
-#define CMD_join 23
+#define CMD_join 36
 	{"jumps",		TRLBAR},
-#define CMD_jumps 24
+#define CMD_jumps 37
 	{"k",			RANGE+WORD1+TRLBAR},
-#define CMD_k 25
+#define CMD_k 38
 	{"list",		RANGE+COUNT+TRLBAR},
-#define CMD_list 26
+#define CMD_list 39
+	{"left",		TRLBAR+RANGE+EXTRA},
+#define CMD_left 40
 	{"move",		RANGE+EXTRA+TRLBAR},
-#define CMD_move 27
+#define CMD_move 41
 	{"mark",		RANGE+WORD1+TRLBAR},
-#define CMD_mark 28
+#define CMD_mark 42
 	{"marks",		TRLBAR},
-#define CMD_marks 29
+#define CMD_marks 43
 	{"map",			BANG+EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
-#define CMD_map 30
+#define CMD_map 44
+	{"make",		NEEDARG+EXTRA+TRLBAR+XFILE},
+#define CMD_make 45
 	{"mkexrc",		BANG+FILE1+TRLBAR},
-#define CMD_mkexrc 31
+#define CMD_mkexrc 46
 	{"mkvimrc",		BANG+FILE1+TRLBAR},
-#define CMD_mkvimrc 32
+#define CMD_mkvimrc 47
 	{"next",		RANGE+BANG+NAMEDFS+TRLBAR},
-#define CMD_next 33
+#define CMD_next 48
 	{"number",		RANGE+COUNT+TRLBAR},
-#define CMD_number 34
+#define CMD_number 49
 	{"noremap",		BANG+EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
-#define CMD_noremap 35
+#define CMD_noremap 50
+	{"noreabbrev",	EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
+#define CMD_noreabbrev 51
 	{"Next",		RANGE+BANG+TRLBAR},
-#define CMD_Next 36
+#define CMD_Next 52
 	{"print",		RANGE+COUNT+TRLBAR},
-#define CMD_print 37
+#define CMD_print 53
 	{"pop",			RANGE+TRLBAR+ZEROR},
-#define CMD_pop 38
+#define CMD_pop 54
 	{"put",			RANGE+BANG+REGSTR+TRLBAR},
-#define CMD_put 39
+#define CMD_put 55
 	{"previous",	RANGE+BANG+TRLBAR},
-#define CMD_previous 40
+#define CMD_previous 56
+	{"pwd",			TRLBAR},
+#define CMD_pwd 57
 	{"quit",		BANG+TRLBAR},
-#define CMD_quit 41
+#define CMD_quit 58
 	{"read",		RANGE+NAMEDF+NEEDARG+TRLBAR+ZEROR},
-#define CMD_read 42
+#define CMD_read 59
 	{"rewind",		BANG+TRLBAR},
-#define CMD_rewind 43
+#define CMD_rewind 60
 	{"recover",		FILE1+TRLBAR},				/* not supported */
-#define CMD_recover 44
+#define CMD_recover 61
+	{"redo",		TRLBAR},
+#define CMD_redo 62
+	{"right",		TRLBAR+RANGE+EXTRA},
+#define CMD_right 63
 	{"substitute",	RANGE+EXTRA},
-#define CMD_substitute 45
+#define CMD_substitute 64
+	{"suspend",		TRLBAR+BANG},
+#define CMD_suspend 65
 	{"set",			EXTRA+TRLBAR},
-#define CMD_set 46
+#define CMD_set 66
 	{"setkeymap",	NAMEDF+TRLBAR},
-#define CMD_setkeymap 47
+#define CMD_setkeymap 67
 	{"shell",		TRLBAR},
-#define CMD_shell 48
+#define CMD_shell 68
 	{"source",		NAMEDF+NEEDARG+TRLBAR},
-#define CMD_source 49
+#define CMD_source 69
 	{"stop",		TRLBAR+BANG},
-#define CMD_stop 50
+#define CMD_stop 70
 	{"t",			RANGE+EXTRA+TRLBAR},
-#define CMD_t 51
+#define CMD_t 71
 	{"tag",			RANGE+BANG+WORD1+TRLBAR+ZEROR},
-#define CMD_tag 52
+#define CMD_tag 72
 	{"tags",		TRLBAR},
-#define CMD_tags 53
+#define CMD_tags 73
 	{"undo",		TRLBAR},
-#define CMD_undo 54
-	{"unabbreviate", EXTRA+TRLBAR},				/* not supported */
-#define CMD_unabbreviate 55
-	{"unmap",		BANG+EXTRA+TRLBAR},
-#define CMD_unmap 56
+#define CMD_undo 74
+	{"unabbreviate", EXTRA+TRLBAR+USECTRLV},
+#define CMD_unabbreviate 75
+	{"unmap",		BANG+EXTRA+TRLBAR+USECTRLV},
+#define CMD_unmap 76
 	{"vglobal",		RANGE+EXTRA+DFLALL},
-#define CMD_vglobal 57
+#define CMD_vglobal 77
 	{"version",		TRLBAR},
-#define CMD_version 58
+#define CMD_version 78
 	{"visual",		RANGE+BANG+FILE1+TRLBAR},
-#define CMD_visual 59
+#define CMD_visual 79
 	{"write",		RANGE+BANG+FILE1+DFLALL+TRLBAR},
-#define CMD_write 60
+#define CMD_write 80
 	{"wnext",		RANGE+BANG+FILE1+TRLBAR},
-#define CMD_wnext 61
+#define CMD_wnext 81
 	{"winsize",		EXTRA+NEEDARG+TRLBAR},
-#define CMD_winsize 62
+#define CMD_winsize 82
 	{"wq",			BANG+FILE1+DFLALL+TRLBAR},
-#define CMD_wq 63
+#define CMD_wq 83
 	{"xit",			BANG+FILE1+DFLALL+TRLBAR},
-#define CMD_xit 64
+#define CMD_xit 84
 	{"yank",		RANGE+REGSTR+COUNT+TRLBAR},
-#define CMD_yank 65
+#define CMD_yank 85
 	{"z",			RANGE+COUNT+TRLBAR},		/* not supported */
-#define CMD_z 66
+#define CMD_z 86
 	{"@",			RANGE+EXTRA+TRLBAR},
-#define CMD_at 67
+#define CMD_at 87
 	{"!",			RANGE+NAMEDFS},
-#define CMD_bang 68
+#define CMD_bang 88
 	{"<",			RANGE+COUNT+TRLBAR},
-#define CMD_lshift 69
+#define CMD_lshift 89
 	{">",			RANGE+COUNT+TRLBAR},
-#define CMD_rshift 70
+#define CMD_rshift 90
 	{"=",			RANGE+TRLBAR},
-#define CMD_equal 71
+#define CMD_equal 91
 	{"&",			RANGE+EXTRA},
-#define CMD_and 72
+#define CMD_and 92
 	{"~",			RANGE+TRLBAR}				/* not supported */
-#define CMD_tilde 73
-#define CMD_SIZE 74
+#define CMD_tilde 93
+#define CMD_SIZE 94
 
 };

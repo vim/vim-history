@@ -1,6 +1,6 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -60,6 +60,7 @@ static long dos_packet __ARGS((struct MsgPort *, long, long));
 #endif
 static int lock2name __ARGS((BPTR lock, char *buf, long	len));
 static struct FileInfoBlock *get_fib __ARGS((char *));
+static int sortcmp __ARGS((char **a, char **b));
 
 static BPTR				raw_in = (BPTR)NULL;
 static BPTR				raw_out = (BPTR)NULL;
@@ -72,7 +73,6 @@ struct ArpBase			*ArpBase = NULL;
 
 static struct Window	*wb_window;
 static char				*oldwindowtitle = NULL;
-static int				quickfix = FALSE;
 
 #ifndef NO_ARP
 int						dos2 = FALSE;		/* Amiga DOS 2.0x or higher */
@@ -91,66 +91,41 @@ win_resize_off()
 	outstrn("\033[12}");
 }
 
-/*
- * the number of calls to Write is reduced by using the buffer "outbuf"
- */
-#define BSIZE	2048
-static u_char			outbuf[BSIZE];
-static int				bpos = 0;		/* number of chars in outbuf */
-
-/*
- * flushbuf(): flush the output buffer
- */
 	void
-flushbuf()
+mch_write(p, len)
+	char	*p;
+	int		len;
 {
-	if (bpos != 0)
-	{
-		Write(raw_out, (char *)outbuf, (long)bpos);
-		bpos = 0;
-	}
-}
-
-/*
- * outchar(c): put a character into the output buffer.
- *			   Flush it if it becomes full.
- */
-	void
-outchar(c)
-	unsigned	c;
-{
-	outbuf[bpos] = c;
-	++bpos;
-	if (bpos >= BSIZE)
-		flushbuf();
+	Write(raw_out, p, (long)len);
 }
 
 /*
  * GetChars(): low level input funcion.
  * Get a characters from the keyboard.
- * If type == T_PEEK do not wait for characters.
- * If type == T_WAIT wait a short time for characters.
- * If type == T_BLOCK wait for characters.
+ * If time == 0 do not wait for characters.
+ * If time == n wait a short time for characters.
+ * If time == -1 wait forever for characters.
  */
 	int
-GetChars(buf, maxlen, type)
+GetChars(buf, maxlen, time)
 	char	*buf;
 	int		maxlen;
-	int		type;
+	int		time;				/* milli seconds */
 {
 	int		len;
-	long	time = 1000000L;	/* one second */
-
-	switch (type)
+	long	utime;
+	
+	if (time >= 0)
 	{
-	case T_PEEK:
-		time = 100L;
-	case T_WAIT:
-		if (WaitForChar(raw_in, time) == 0)	/* no character available */
+		if (time == 0)
+			utime = 100L;			/* time = 0 causes problems in DOS 1.2 */
+		else
+			utime = time * 1000L;	/* convert from milli to micro secs */
+		if (WaitForChar(raw_in, utime) == 0)	/* no character available */
 			return 0;
-		break;
-
-	case T_BLOCK:
+	}
+	else	/* time == -1 */
+	{
 	/*
 	 * If there is no character available within 2 seconds (default)
 	 * write the autoscript file to disk
@@ -192,9 +167,7 @@ void
 mch_suspend()
 {
 	outstr("new shell started\n");
-	stoptermcap();
-	call_shell(NULL, 0);
-	starttermcap();
+	call_shell(NULL, 0, TRUE);
 }
 
 #define DOS_LIBRARY     ((UBYTE *) "dos.library")
@@ -239,7 +212,7 @@ mch_windinit()
  * work properly (Why? probably because we are then running in a background CLI).
  * This also is the best way to assure proper working in a next Workbench release.
  *
- * For the -e option (quickfix mode) we open our own window and disable :sh.
+ * For the -e option (quickfix mode) and -x we open our own window and disable :sh.
  * Otherwise the compiler would never know when editing is finished.
  */
 #define BUF2SIZE 320		/* lenght of buffer for argument with complete path */
@@ -263,6 +236,7 @@ check_win(argc, argv)
 	char			*device = NULL;
 	int				exitval = 4;
 	struct Library	*DosBase;
+	int				usewin = FALSE;
 
 /*
  * check if we are running under DOS 2.0x or higher
@@ -290,7 +264,7 @@ check_win(argc, argv)
 	}
 
 /*
- * scan argv[] for the '-e' and '-d' arguments
+ * scan argv[] for the '-e', '-x' and '-d' arguments
  */
 	for (i = 1; i < argc; ++i)
 		if (argv[i][0] == '-')
@@ -298,7 +272,8 @@ check_win(argc, argv)
 			switch (argv[i][1])
 			{
 			case 'e':
-				quickfix = TRUE;
+			case 'x':
+				usewin = TRUE;
 				break;
 
 			case 'd':
@@ -319,8 +294,9 @@ check_win(argc, argv)
 /*
  * If we are in quickfix mode, we open our own window. We can't use the
  * newcli trick below, because the compiler would not know when we are finished.
+ * We do the same with the '-x' option, for mail, rn, etc.
  */
-	if (quickfix)
+	if (usewin)
 	{
 		/*
 		 * Try to open a window. First try the specified device.
@@ -462,7 +438,7 @@ fname_case(name)
 	{
 		len = strlen(name);
 		if (len == strlen(fib->fib_FileName))	/* safety check */
-				memmove(name, fib->fib_FileName, len);
+			memmove(name, fib->fib_FileName, len);
 		free(fib);
 	}
 }
@@ -526,7 +502,8 @@ resettitle()
 }
 
 /*
- * get name of current directory into buffer 'buf' of length 'len' bytes
+ * Get name of current directory into buffer 'buf' of length 'len' bytes.
+ * Return non-zero for success.
  */
 dirname(buf, len)
 	char		*buf;
@@ -659,7 +636,7 @@ mch_windexit(r)
 	if (close_win)
 		Close(raw_in);
 	if (r)
-		printf("exiting with %d\n", r);	/* somehow this makes :cq work!? */
+		printf("Vim exiting with %d\n", r);	/* somehow this makes :cq work!? */
 	exit(r);
 }
 
@@ -760,6 +737,7 @@ mch_get_winsize()
 		term_console = FALSE;
 		return 1;
 	}
+	Rows_max = Rows;				/* remember physical max height */
 
 	check_winsize();
 	script_winsize();
@@ -967,9 +945,10 @@ dos_packet(pid, action, arg)
  * call shell, return non-zero for failure
  */
 	int
-call_shell(cmd, filter)
+call_shell(cmd, filter, cooked)
 		char	*cmd;
 		int		filter;		/* if != 0: called by dofilter() */
+		int		cooked;
 {
 	BPTR mydir;
 	int x;
@@ -983,58 +962,59 @@ call_shell(cmd, filter)
 	if (close_win)
 	{
 		/* if Vim opened a window: Executing a shell may cause crashes */
-		emsg("Cannot execute shell with -e option");
+		emsg("Cannot execute shell with -e or -x option");
 		return 1;
 	}
 
 	if (term_console)
-		win_resize_off(); 	/* window resize events de-activated */
+		win_resize_off(); 			/* window resize events de-activated */
 	flushbuf();
 
-	settmode(0); 				/* set to cooked mode */
+	if (cooked)
+		settmode(0); 				/* set to cooked mode */
 	mydir = Lock((UBYTE *)"", (long)ACCESS_READ);	/* remember current directory */
 
-#ifdef LATTICE		/* not tested very much */
+#ifdef LATTICE						/* not tested very much */
 	if (cmd == NULL)
 	{
-#ifndef NO_ARP
+# ifndef NO_ARP
 		if (dos2)
-#endif
+# endif
 			x = SystemTags(p_sh, SYS_UserShell, TRUE, TAG_DONE);
-#ifndef NO_ARP
+# ifndef NO_ARP
 		else
 			x = Execute(p_sh, raw_in, raw_out);
-#endif
+# endif
 	}
 	else
 	{
-#ifndef NO_ARP
+# ifndef NO_ARP
 		if (dos2)
-#endif
+# endif
 			x = SystemTags(cmd, SYS_UserShell, TRUE, TAG_DONE);
-#ifndef NO_ARP
+# ifndef NO_ARP
 		else
 			x = Execute(cmd, 0L, raw_out);
-#endif
+# endif
 	}
-#ifdef NO_ARP
+# ifdef NO_ARP
 	if (x < 0)
-#else
+# else
 	if ((dos2 && x < 0) || (!dos2 && !x))
-#endif
+# endif
 	{
 		if (cmd == NULL)
-			smsg("Cannot execute shell %s", p_sh);
+			emsg2("Cannot execute shell %s", p_sh);
 		else
-			smsg("Cannot execute %s", cmd);
+			emsg2("Cannot execute %s", cmd);
 		outchar('\n');
 		retval = 1;
 	}
-#ifdef NO_ARP
+# ifdef NO_ARP
 	else if (x)
-#else
+# else
 	else if (!dos2 || x)
-#endif
+# endif
 	{
 		if (x = IoErr())
 		{
@@ -1043,7 +1023,7 @@ call_shell(cmd, filter)
 			retval = 1;
 		}
 	}
-#else
+#else	/* LATTICE */
 	if (p_st >= 4 || (p_st >= 2 && !filter))
 		use_execute = 1;
 	else
@@ -1059,9 +1039,12 @@ call_shell(cmd, filter)
 		else
 		{
 			shellarg = shellcmd;
-			skiptospace(&shellarg);
-			*shellarg = NUL;
-			skipspace(&shellarg);
+			skiptospace(&shellarg);	/* find start of arguments */
+			if (*shellarg != NUL)
+			{
+				*shellarg++ = NUL;
+				skipspace(&shellarg);
+			}
 		}
 	}
 	if (cmd == NULL)
@@ -1102,9 +1085,9 @@ call_shell(cmd, filter)
 #endif
 	{
 		if (use_execute)
-			smsg("Cannot execute %s", cmd == NULL ? p_sh : cmd);
+			emsg2("Cannot execute %s", cmd == NULL ? p_sh : cmd);
 		else
-			smsg("Cannot execute shell %s", shellcmd);
+			emsg2("Cannot execute shell %s", shellcmd);
 		outchar('\n');
 		retval = 1;
 	}
@@ -1133,10 +1116,11 @@ call_shell(cmd, filter)
 
 	if (mydir = CurrentDir(mydir))		/* make sure we stay in the same directory */
 		UnLock(mydir);
-	settmode(1); 						/* set to raw mode */
+	if (cooked)
+		settmode(1); 					/* set to raw mode */
 	resettitle();
 	if (term_console)
-		win_resize_on(); 			/* window resize events activated */
+		win_resize_on(); 				/* window resize events activated */
 	return retval;
 }
 
@@ -1149,10 +1133,7 @@ call_shell(cmd, filter)
 breakcheck()
 {
    if (SetSignal(0L, (long)(SIGBREAKF_CTRL_C|SIGBREAKF_CTRL_D|SIGBREAKF_CTRL_E|SIGBREAKF_CTRL_F)) & SIGBREAKF_CTRL_C)
-	{
 		got_int = TRUE;
-		flush_buffers();	/* remove all typeahead and macro stuff */
-	}
 }
 
 /* this routine causes manx to use this Chk_Abort() rather than it's own */
@@ -1169,7 +1150,6 @@ Chk_Abort()
 	return(0L);
 }
 
-#ifdef WILD_CARDS
 /*
  * ExpandWildCard() - this code does wild-card pattern matching using the arp
  *					  routines. This is based on WildDemo2.c (found in arp1.1
@@ -1195,7 +1175,7 @@ Chk_Abort()
 
 /* #include <arpfunctions.h> */
 extern void *malloc __ARGS((size_t)), *calloc __ARGS((size_t, size_t));
-static int insfile __ARGS((char *));
+static int insfile __ARGS((char *, int));
 static void freefiles __ARGS((void));
 
 #define ANCHOR_BUF_SIZE (512)
@@ -1216,15 +1196,18 @@ struct onefile
  * return 0 for success
  */
 	static int
-insfile(name)
-	char *name;
+insfile(name, isdir)
+	char	*name;
+	int		isdir;
 {
 	struct onefile *new;
 
-	new = (struct onefile *)alloc((unsigned)(sizeof(struct onefile) + strlen(name)));
+	new = (struct onefile *)alloc((unsigned)(sizeof(struct onefile) + strlen(name) + isdir));
 	if (new == NULL)
 		return -1;
 	strcpy(&(new->name[0]), name);
+	if (isdir)
+		strcat(&(new->name[0]), "/");
 	new->next = namelist;
 	namelist = new;
 	return 0;
@@ -1246,6 +1229,13 @@ freefiles()
 	}
 }
 
+	static int
+sortcmp(a, b)
+	char **a, **b;
+{
+	return strcmp(*a, *b);
+}
+
 ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	int 			num_pat;
 	char		  **pat;
@@ -1261,6 +1251,7 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	struct onefile			*p;
 	char					*errmsg = NULL;
 	char					*starbuf, *sp, *dp;
+	int						foundone;
 
 	*num_file = 0;
 	*file = (char **)"";
@@ -1305,17 +1296,19 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 			Result = FindFirst(pat[i], Anchor);
 #endif
 		domatchend = TRUE;
+		foundone = FALSE;
 		while (Result == 0)
 		{
 			if (!files_only || Anchor->ap_Info.fib_DirEntryType < 0)
 			{
 				(*num_file)++;
-				if (insfile(Anchor->ap_Buf))
+				if (insfile(Anchor->ap_Buf, Anchor->ap_Info.fib_DirEntryType >= 0))
 				{
 OUT_OF_MEMORY:
 					errmsg = "Out of memory";
 					goto Return;
 				}
+				foundone = TRUE;
 			}
 #ifndef NO_ARP
 			if (dos2)
@@ -1331,21 +1324,31 @@ OUT_OF_MEMORY:
 			errmsg = "ANCHOR_BUF_SIZE too small.";
 			goto Return;
 		}
-		if (Result != ERROR_NO_MORE_ENTRIES)
+		if (!foundone)
 		{
 			if (list_notfound)	/* put object with error in list */
 			{
 				(*num_file)++;
-				if (insfile(pat[i]))
+				if (insfile(pat[i], FALSE))
 					goto OUT_OF_MEMORY;
 			}
-			else if (Result != ERROR_OBJECT_NOT_FOUND)
+			else if (Result != ERROR_OBJECT_NOT_FOUND && Result != ERROR_NO_MORE_ENTRIES)
 			{
 				errmsg = "I/O ERROR";
 				goto Return;
 			}
 		}
-		MatchEnd(Anchor);
+#ifndef NO_ARP
+		if (dos2)
+#endif
+			MatchEnd(Anchor);
+#ifndef NO_ARP
+		else
+		{
+			FreeAnchorChain(Anchor);
+			Anchor = NULL;			/* is this right or wrong? */
+		}
+#endif
 		domatchend = FALSE;
 	}
 
@@ -1362,10 +1365,23 @@ OUT_OF_MEMORY:
 				goto OUT_OF_MEMORY;
 			strcpy((*file)[i], p->name);
 		}
+		qsort((void *)*file, (size_t)*num_file, sizeof(char *), sortcmp);
 	}
 Return:
 	if (domatchend)
-		MatchEnd(Anchor);
+	{
+#ifndef NO_ARP
+		if (dos2)
+#endif
+			MatchEnd(Anchor);
+#ifndef NO_ARP
+		else
+		{
+			FreeAnchorChain(Anchor);
+			Anchor = NULL;			/* is this right or wrong? */
+		}
+#endif
+	}
 	if (Anchor)
 		free(Anchor);
 	freefiles();
@@ -1378,16 +1394,16 @@ Return:
 	return 0;
 }
 
-void
+	void
 FreeWild(num, file)
-		int num;
-		char **file;
+	int		num;
+	char	**file;
 {
-		if (file == NULL || num == 0)
-				return;
-		while (num--)
-				free(file[num]);
-		free(file);
+	if (file == NULL || num == 0)
+		return;
+	while (num--)
+		free(file[num]);
+	free(file);
 }
 
 	int
@@ -1399,7 +1415,6 @@ has_wildcard(p)
 			return 1;
 	return 0;
 }
-#endif /* WILD_CARDS */
 
 /*
  * With 2.0 support for reading local environment variables

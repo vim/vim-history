@@ -1,6 +1,6 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -84,7 +84,7 @@ static linenr_t u_line_lnum;			/* line number of line in u_line */
 static colnr_t	u_line_colnr;			/* optional column number */
 
 static void u_getbot __ARGS((void));
-static int u_savecommon __ARGS((linenr_t, linenr_t, int, char *));
+static int u_savecommon __ARGS((linenr_t, linenr_t, int, linenr_t));
 static void u_undoredo __ARGS((void));
 static void u_freelist __ARGS((struct u_header *));
 static void u_freeentry __ARGS((struct u_entry *, long));
@@ -113,38 +113,50 @@ u_save(top, bot)
 	if (top + 2 == bot)
 		u_saveline((linenr_t)(top + 1));
 
-	return (u_savecommon(top, bot, 0, (char *)0));
+	return (u_savecommon(top, bot, FALSE, (linenr_t)0));
 }
 
 /*
- * save the line "lnum", pointed at by "ptr" (used by :g//s commands)
- * "ptr" is handed over to the undo routines
+ * save the line "lnum" (used by :s command)
+ * the line is handed over to the undo routines
+ * The line is replaced, so the new bottom line is lnum + 1.
  */
 	int
-u_savesub(lnum, ptr)
+u_savesub(lnum)
 	linenr_t	lnum;
-	char		*ptr;
 {
-	return (u_savecommon(lnum - 1, lnum + 1, 1, ptr));
+	return (u_savecommon(lnum - 1, lnum + 1, TRUE, lnum + 1));
 }
 
 /*
- * save the line "lnum", pointed at by "ptr" (used by :g//d commands)
- * "ptr" is handed over to the undo routines
+ * a new line is inserted before line "lnum" (used by :s command)
+ * The line is inserted, so the new bottom line is lnum + 1.
+ */
+ 	int
+u_inssub(lnum)
+	linenr_t	lnum;
+{
+	return (u_savecommon(lnum - 1, lnum, TRUE, lnum + 1));
+}
+
+/*
+ * save the lines "lnum" - "lnum" + nlines (used by delete command)
+ * the lines are handed over to the undo routines
+ * The lines are deleted, so the new bottom line is lnum.
  */
 	int
-u_savedel(lnum, ptr)
+u_savedel(lnum, nlines)
 	linenr_t	lnum;
-	char		*ptr;
+	long		nlines;
 {
-	return (u_savecommon(lnum - 1, lnum, 1, ptr));
+	return (u_savecommon(lnum - 1, lnum + nlines, TRUE, lnum));
 }
 
 	static int 
-u_savecommon(top, bot, flag, ptr)
+u_savecommon(top, bot, nocopy, newbot)
 	linenr_t top, bot;
-	int flag;
-	char *ptr;
+	int nocopy;
+	linenr_t newbot;
 {
 	linenr_t		lnum;
 	long			i;
@@ -170,6 +182,9 @@ u_savecommon(top, bot, flag, ptr)
 		while (u_numhead > p_ul && u_oldhead != NULL)
 			u_freelist(u_oldhead);
 
+		if (p_ul < 0)			/* no undo at all */
+			goto noundo;
+
 		/*
 		 * make a new header entry
 		 */
@@ -190,6 +205,16 @@ u_savecommon(top, bot, flag, ptr)
 	else	/* find line number for ue_botptr for previous u_save() */
 		u_getbot();
 
+	size = bot - top - 1;
+#ifndef UNIX
+		/*
+		 * With Amiga and MSDOS we can't handle big undo's, because then
+		 * alloc_line would have to allocate a block larger than 32K
+		 */
+	if (size >= 8000)
+		goto nomem;
+#endif
+
 	/*
 	 * add lines in front of entry list
 	 */
@@ -197,15 +222,11 @@ u_savecommon(top, bot, flag, ptr)
 	if (uep == NULL)
 		goto nomem;
 
-	if (flag)
-		size = 1;
-	else
-		size = bot - top - 1;
 	uep->ue_size = size;
 	uep->ue_top = top;
 	uep->ue_botptr = NULL;
-	if (flag)
-		uep->ue_bot = bot;
+	if (newbot)
+		uep->ue_bot = newbot;
 		/*
 		 * use 0 for ue_bot if bot is below last line or if the buffer is empty, in
 		 * which case the last line may be replaced (e.g. with 'O' command).
@@ -222,15 +243,16 @@ u_savecommon(top, bot, flag, ptr)
 			u_freeentry(uep, 0L);
 			goto nomem;
 		}
-		if (flag)
-			uep->ue_array[0] = ptr;
-		else
-			for (i = 0, lnum = top + 1; i < size; ++i)
-				if ((uep->ue_array[i] = save_line(nr2ptr(lnum++))) == NULL)
-				{
-					u_freeentry(uep, i);
-					goto nomem;
-				}
+		for (i = 0, lnum = top + 1; i < size; ++i)
+		{
+			if (nocopy)
+				uep->ue_array[i] = nr2ptr(lnum++);
+			else if ((uep->ue_array[i] = save_line(nr2ptr(lnum++))) == NULL)
+			{
+				u_freeentry(uep, i);
+				goto nomem;
+			}
+		}
 	}
 	uep->ue_next = u_newhead->uh_entry;
 	u_newhead->uh_entry = uep;
@@ -238,10 +260,14 @@ u_savecommon(top, bot, flag, ptr)
 	return TRUE;
 
 nomem:
-	if (flag)
-		free_line(ptr);
-	else if (ask_yesno("no undo possible; continue anyway") == 'y')
+	if (ask_yesno("no undo possible; continue anyway") == 'y')
+	{
+noundo:
+		if (nocopy)
+			for (lnum = top + 1; lnum < bot; ++lnum)
+				free_line(nr2ptr(lnum));
 		return TRUE;
+	}
 	return FALSE;
 }
 
@@ -249,13 +275,24 @@ nomem:
 u_undo(count)
 	int count;
 {
-	startop.lnum = 0;				/* unset '[ mark */
+	/*
+	 * If we get an undo command while executing a macro, we behave like the 
+	 * original vi. If this happens twice in one macro the result will not
+	 * be compatible.
+	 */
+	if (u_synced == FALSE)
+	{
+		u_sync();
+		count = 1;
+	}
+
+	startop.lnum = 0;			/* unset '[ mark */
 	endop.lnum = 0;				/* unset '] mark */
 	while (count--)
 	{
 		if (u_curhead == NULL)						/* first undo */
 			u_curhead = u_newhead;
-		else if (p_ul != 0)						/* multi level undo */
+		else if (p_ul > 0)							/* multi level undo */
 			u_curhead = u_curhead->uh_next;			/* get next undo */
 
 		if (u_numhead == 0 || u_curhead == NULL)	/* nothing to undo */
@@ -275,7 +312,7 @@ u_redo(count)
 {
 	while (count--)
 	{
-		if (u_curhead == NULL || p_ul == 0)		/* nothing to redo */
+		if (u_curhead == NULL || p_ul <= 0)		/* nothing to redo */
 		{
 			beep();
 			return;
@@ -300,94 +337,94 @@ u_undoredo()
 	linenr_t	oldsize;
 	linenr_t	newsize;
 	linenr_t	top, bot;
-	linenr_t	lnum = 0;
+	linenr_t	lnum;
 	linenr_t	newlnum = INVLNUM;
 	long		i;
 	long		newcount = 0, oldcount = 0;
 	struct u_entry *uep, *nuep;
 	struct u_entry *newlist = NULL;
 
-	if (u_synced == FALSE)
-	{
-		emsg("undo not synced");
-		return;
-	}
-
 	CHANGED;
 	for (uep = u_curhead->uh_entry; uep != NULL; uep = nuep)
 	{
-			top = uep->ue_top;
-			bot = uep->ue_bot;
-			if (bot == 0)
-				bot = line_count + 1;
-			if (top > line_count || top >= bot)
-			{
-				emsg("u_undo: line numbers wrong");
-				return;
-			}
+		top = uep->ue_top;
+		bot = uep->ue_bot;
+		if (bot == 0)
+			bot = line_count + 1;
+		if (top > line_count || top >= bot || bot > line_count + 1)
+		{
+			emsg("u_undo: line numbers wrong");
+			return;
+		}
 
-			if (top < newlnum)
-			{
-				newlnum = top;
-				Curpos.lnum = top + 1;
-			}
-			oldsize = bot - top - 1;	/* number of lines before undo */
+		if (top < newlnum)
+		{
+			newlnum = top;
+			Curpos.lnum = top + 1;
+		}
+		oldsize = bot - top - 1;	/* number of lines before undo */
 
-			newsize = uep->ue_size;		/* number of lines after undo */
+		newsize = uep->ue_size;		/* number of lines after undo */
 
-			/* delete the lines between top and bot and save them in newarray */
-			if (oldsize)
+		/* delete the lines between top and bot and save them in newarray */
+		if (oldsize)
+		{
+			if ((newarray = (char **)alloc_line((unsigned)(sizeof(char *) * oldsize))) == NULL)
 			{
-				if ((newarray = (char **)alloc_line((unsigned)(sizeof(char *) * oldsize))) == NULL)
+				/*
+				 * We have messed up the entry list, repair is impossible.
+				 * we have to free the rest of the list.
+				 */
+				while (uep != NULL)
 				{
-					/*
-					 * We have messed up the entry list, repair is impossible.
-					 * we have to free the rest of the list.
-					 */
-					while (uep != NULL)
-					{
-						nuep = uep->ue_next;
-						u_freeentry(uep, uep->ue_size);
-						uep = nuep;
-					}
-					break;
+					nuep = uep->ue_next;
+					u_freeentry(uep, uep->ue_size);
+					uep = nuep;
 				}
-				/* delete backwards, it goes faster in some cases */
-				for (lnum = bot - 1, i = oldsize; --i >= 0; --lnum)
-					newarray[i] = delsline(lnum, TRUE);
+				break;
 			}
-			/* insert the lines in u_array between top and bot */
-			if (newsize)
-			{
-				for (lnum = top, i = 0; i < newsize; ++i, ++lnum)
-					appendline(lnum, uep->ue_array[i]);
-				free_line((char *)uep->ue_array);
-			}
-			newcount += newsize;
-			oldcount += oldsize;
-			uep->ue_size = oldsize;
-			uep->ue_array = newarray;
-			uep->ue_bot = lnum + 1;
+			/* delete backwards, it goes faster in some cases */
+			for (lnum = bot - 1, i = oldsize; --i >= 0; --lnum)
+				newarray[i] = delsline(lnum, oldsize != newsize);
+		}
 
-			/*
-			 * insert this entry in front of the new entry list
-			 */
-			nuep = uep->ue_next;
-			uep->ue_next = newlist;
-			newlist = uep;
+		/* adjust the marks if the number of lines does not change */
+		if (oldsize == newsize)
+			for (i = 0; i < oldsize; ++i)
+				adjustmark(newarray[i], uep->ue_array[i]);
+
+		/* insert the lines in u_array between top and bot */
+		if (newsize)
+		{
+			for (lnum = top, i = 0; i < newsize; ++i, ++lnum)
+				appendline(lnum, uep->ue_array[i]);
+			free_line((char *)uep->ue_array);
+		}
+		newcount += newsize;
+		oldcount += oldsize;
+		uep->ue_size = oldsize;
+		uep->ue_array = newarray;
+		uep->ue_bot = top + newsize + 1;
+
+		/*
+		 * insert this entry in front of the new entry list
+		 */
+		nuep = uep->ue_next;
+		uep->ue_next = newlist;
+		newlist = uep;
 	}
 
 	u_curhead->uh_entry = newlist;
 
 	/*
 	 * If we deleted or added lines, report the number of less/more lines.
-	 * Otherwise, report the number of changed lines (this may be incorrect
+	 * Otherwise, report the number of changes (this may be incorrect
 	 * in some cases, but it's better than nothing).
 	 */
 	if ((oldcount -= newcount) != 0)
 		msgmore(-oldcount);
 	else if (newcount > p_report)
-		smsg("%ld line%s changed", newcount, plural(newcount));
+		smsg("%ld change%s", newcount, plural(newcount));
 
 	if (u_curhead->uh_curpos.lnum == Curpos.lnum)
 		Curpos.col = u_curhead->uh_curpos.col;
@@ -542,7 +579,7 @@ u_undoline()
 		return;
 	}
 		/* first save the line for the 'u' command */
-	u_savecommon(u_line_lnum - 1, u_line_lnum + 1, 0, (char *)0);
+	u_savecommon(u_line_lnum - 1, u_line_lnum + 1, FALSE, (linenr_t)0);
 	u_line_ptr = replaceline(u_line_lnum, u_line_ptr);
 
 	t = u_line_colnr;

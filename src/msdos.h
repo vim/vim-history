@@ -1,6 +1,6 @@
 /* vi:ts=8:sw=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar		mool@oce.nl
  *				Tim Thompson		twitch!tjt
@@ -43,16 +43,21 @@
  * MSDOS Machine-dependent routines.
  */
 
-#undef remove                   /* MSDOS remove()s when not readonly */
+#ifdef remove
+# undef remove                   /* MSDOS remove()s when not readonly */
+#endif
+#define remove vim_remove
+
+/* use chdir() that also changes the default drive */
+#define chdir vim_chdir
 
 /* msdos.c */
 void	vim_delay __ARGS((void));
-int	remove __ARGS((char *));
+int	vim_remove __ARGS((char *));
 void	flushbuf __ARGS((void));
 void	outchar __ARGS((unsigned));
 void	outstr __ARGS((char *));
 int 	GetChars __ARGS((char *, int, int));
-void    textfile __ARGS((int));
 void	mch_suspend __ARGS((void));
 void	mch_windinit __ARGS((void));
 void	check_win __ARGS((int, char **));
@@ -62,17 +67,16 @@ void	resettitle __ARGS((void));
 int	dirname __ARGS((char *, int));
 int	FullName __ARGS((char *, char *, int));
 long	getperm __ARGS((char *));
-int	setperm __ARGS((char *, int));
+int	setperm __ARGS((char *, long));
 int	isdir __ARGS((char *));
 void	mch_windexit __ARGS((int));
 void	mch_settmode __ARGS((int));
 int	mch_get_winsize __ARGS((void));
 void	mch_set_winsize __ARGS((void));
-int	call_shell __ARGS((char *, int));
+int	call_shell __ARGS((char *, int, int));
 void	breakcheck __ARGS((void));
 char	*modname __ARGS((char *, char *));
-#ifdef WILD_CARDS
 int	has_wildcard __ARGS((char *));
 int	ExpandWildCards __ARGS((int, char **, int *, char ***, int, int));
 void	FreeWild __ARGS((int, char **));
-#endif
+void	set_window __ARGS((void));

@@ -1,0 +1,129 @@
+#
+# Makefile for VIM, using DICE 2.06.40 and 2.06.21
+#
+
+#>>>>> choose options:
+### -DDIGRAPHS		digraph support (at the cost of 1.6 Kbyte code)
+### -DNO_ARP		do not use arp.library, DOS 2.0 required
+### -DCOMPATIBLE	start in vi-compatible mode
+### -DNOBACKUP		default is no backup file
+### -DDEBUG		output a lot of debugging garbage
+### -DTERMCAP		include termcap file support
+### -DNO_BUILTIN_TCAPS	do not include builtin termcap entries
+###				(use only with -DTERMCAP)
+### -DSOME_BUILTIN_TCAPS include most useful builtin termcap entries
+###				(use only without -DNO_BUILTIN_TCAPS)
+### -DALL_BUILTIN_TCAPS	include all builtin termcap entries
+###				(use only without -DNO_BUILTIN_TCAPS)
+DEFINES = -DTERMCAP -DDIGRAPHS -DSOME_BUILTIN_TCAPS
+
+#>>>>> if TERMCAP is defined termlib.o has to be used
+TERMLIB = termlib.o
+#TERMLIB = 
+
+#>>>>> end of choices
+###########################################################################
+
+CFLAGS = -c -DAMIGA $(DEFINES)
+
+INCL = vim.syms
+PRE = -H${INCL}=vim.h
+LIBS = -lmanx -la
+CC = dcc
+LD = dcc
+
+.c.o:
+	${CC} ${PRE} ${CFLAGS} $*.c -o $@
+
+OBJ =	alloc.o amiga.o buffers.o charset.o cmdline.o csearch.o digraph.o \
+	edit.o fileio.o help.o linefunc.o main.o mark.o message.o misccmds.o \
+	normal.o ops.o param.o quickfix.o regexp.o regsub.o screen.o \
+	script.o search.o storage.o tag.o undo.o $(TERMLIB)
+
+/Vim: $(OBJ) version.c
+	${CC} $(CFLAGS) version.c -o version.o
+	${LD} -o /Vim $(OBJ) version.o $(LIBS)
+
+debug: $(OBJ) version.c
+	${CC} $(CFLAGS) version.c -o version.o
+	${LD} -s -o /Vim $(OBJ) version.o $(LIBS)
+
+ctags:
+	csh -c ctags *.c *.h
+
+# can't use delete here, too many file names
+clean:
+	csh -c rm -f $(OBJ) version.o mkcmdtab.o /Vim $(INCL) mkcmdtab
+
+$(INCL)  : vim.h globals.h keymap.h macros.h ascii.h term.h amiga.h
+	delete $(INCL)
+
+###########################################################################
+
+alloc.o:	alloc.c  $(INCL)
+
+amiga.o:	amiga.c  $(INCL) amiga.h
+
+buffers.o:	buffers.c  $(INCL)
+
+charset.o:	charset.c  $(INCL)
+
+cmdline.o:	cmdline.c  $(INCL) cmdtab.h
+
+csearch.o:	csearch.c  $(INCL) regexp.h
+
+digraph.o: digraph.c	$(INCL)
+
+edit.o: edit.c	$(INCL)
+
+fileio.o:	fileio.c  $(INCL)
+
+help.o: help.c	$(INCL)
+
+linefunc.o:	linefunc.c  $(INCL)
+
+main.o: main.c
+	${CC} ${CFLAGS} main.c -o main.o
+
+mark.o: mark.c	$(INCL) mark.h
+
+message.o:	message.c  $(INCL)
+
+misccmds.o:	misccmds.c  $(INCL)
+
+normal.o:	normal.c  $(INCL) ops.h
+
+ops.o:	ops.c  $(INCL) ops.h
+
+param.o:	param.c  $(INCL)
+# Because of a bug in DC1 2.06.40, initialisation of unions does not
+# work correctly. dc1-21 is DC1 2.06.21 which does work.
+	rename dc1-21 dc1
+	${CC} ${CFLAGS} param.c -o param.o
+	rename dc1 dc1-21
+
+quickfix.o:	quickfix.c  $(INCL)
+
+regexp.o:	regexp.c  $(INCL) regexp.h
+
+regsub.o:	regsub.c  $(INCL) regexp.h
+
+screen.o:	screen.c  $(INCL)
+
+script.o:	script.c  $(INCL)
+
+search.o:	search.c  $(INCL) regexp.h
+
+tag.o:	tags.c  $(INCL) mark.h
+
+termlib.o:	termlib.c $(INCL)
+
+storage.o:	storage.c  $(INCL)
+
+undo.o: undo.c	$(INCL)
+
+cmdtab.h: cmdtab.tab mkcmdtab
+	mkcmdtab cmdtab.tab cmdtab.h
+
+mkcmdtab: mkcmdtab.o
+	${LD} -o mkcmdtab mkcmdtab.o

@@ -1,9 +1,8 @@
 /* amiga.c */
 void win_resize_on __PARMS((void));
 void win_resize_off __PARMS((void));
-void flushbuf __PARMS((void));
-void outchar __PARMS((unsigned int c));
-int GetChars __PARMS((char *buf, int maxlen, int type));
+void mch_write __PARMS((char *p, int len));
+int GetChars __PARMS((char *buf, int maxlen, int time));
 void sleep __PARMS((int n));
 void vim_delay __PARMS((void));
 void mch_suspend __PARMS((void));
@@ -21,7 +20,7 @@ void mch_windexit __PARMS((int r));
 void mch_settmode __PARMS((int raw));
 int mch_get_winsize __PARMS((void));
 void mch_set_winsize __PARMS((void));
-int call_shell __PARMS((char *cmd, int filter));
+int call_shell __PARMS((char *cmd, int filter, int cooked));
 void breakcheck __PARMS((void));
 long Chk_Abort __PARMS((void));
 int ExpandWildCards __PARMS((int num_pat, char **pat, int *num_file, char ***file, int files_only, int list_notfound));

@@ -195,18 +195,12 @@ ismult(c)
  * The following supports the ability to ignore case in searches.
  */
 
-#include <ctype.h>
-
 int 			reg_ic = 0; 	/* set by callers to ignore case */
 
 /*
  * mkup - convert to upper case IF we're doing caseless compares
  */
-#ifdef __STDC__
-#define mkup(c) 		(reg_ic ? toupper(c) : (c))
-#else
-#define mkup(c) 		((reg_ic && islower(c)) ? toupper(c) : (c))
-#endif
+#define mkup(c) 		(reg_ic ? TO_UPPER(c) : (c))
 
 /*
  * The following allows empty REs, meaning "the same as the previous RE".
@@ -265,7 +259,6 @@ static char   **regendp;		/* Ditto for endp. */
 static void		initchr __ARGS((unsigned char *));
 static int		getchr __ARGS((void));
 static int		peekchr __ARGS((void));
-static int		peekpeekchr __ARGS((void));
 #define PeekChr() curchr	/* shortcut only when last action was peekchr() */
 static int 		curchr;
 static void		skipchr __ARGS((void));
@@ -595,8 +588,7 @@ regpiece(flagp)
  *
  * Optimization:  gobbles an entire sequence of ordinary characters so that
  * it can turn them into a single node, which is smaller to store and
- * faster to run.  Backslashed characters are exceptions, each becoming a
- * separate node; the code is simpler that way and it's not worth fixing.
+ * faster to run.
  */
 static char    *
 regatom(flagp)
@@ -740,14 +732,8 @@ regatom(flagp)
 			ungetchr();
 			len = 0;
 			ret = regnode(EXACTLY);
-			while ((chr = peekchr()) != '\0' && (chr < Magic(0))) {
-		/*
-		 * We have to check for a following '*', '+' or '?'.
-		 * In those cases we must have a node with a single character
-		 * (added by mool)
-		 */
-				if (len != 0 && peekpeekchr())
-					break;
+			while ((chr = peekchr()) != '\0' && (chr < Magic(0)))
+			{
 				regc(chr);
 				skipchr();
 				len++;
@@ -756,8 +742,16 @@ regatom(flagp)
 			if (len == 0)
 				 FAIL("Unexpected magic character; check META.");
 #endif
+			/*
+			 * If there is a following *, \+ or \? we need the character
+			 * in front of it as a single character operand
+			 */
 			if (len > 1 && ismult(chr))
+			{
 				unregc();			/* Back off of *+? operand */
+				ungetchr();			/* and put it back for next time */
+				--len;
+			}
 			regc('\0');
 			*flagp |= HASWIDTH;
 			if (len == 1)
@@ -873,9 +867,9 @@ regtail(p, val)
 	}
 
 	if (OP(scan) == BACK)
-		offset = scan - val;
+		offset = (int)(scan - val);
 	else
-		offset = val - scan;
+		offset = (int)(val - scan);
 	*(scan + 1) = (char) ((offset >> 8) & 0377);
 	*(scan + 2) = (char) (offset & 0377);
 }
@@ -901,13 +895,14 @@ regoptail(p, val)
 
 /* static int		curchr; */
 static int		prevchr;
+static int		nextchr;	/* used for ungetchr() */
 
 static void
 initchr(str)
 unsigned char *str;
 {
 	regparse = str;
-	curchr = prevchr = -1;
+	curchr = prevchr = nextchr = -1;
 }
 
 static int
@@ -965,28 +960,13 @@ peekchr()
 	return curchr;
 }
 
-/*
- * return 1 if the character returned by peekchr() is followed by a '*', '+' or '?'
- */
-static int
-peekpeekchr()
-{
-	if (regparse[1] == '\\')
-	{
-		if ((!reg_magic && regparse[2] == '*') || regparse[2] == '+' || regparse[2] == '?')
-			return 1;
-	}
-	else if (reg_magic && regparse[1] == '*')
-		return 1;
-	return 0;
-}
-
 static void
 skipchr()
 {
 	regparse++;
 	prevchr = curchr;
-	curchr = -1;
+	curchr = nextchr;		/* use previously unget char, or -1 */
+	nextchr = -1;
 }
 
 static int
@@ -1000,9 +980,13 @@ getchr()
 	return chr;
 }
 
+/*
+ * put character back. Works only once!
+ */
 static void
 ungetchr()
 {
+	nextchr = curchr;
 	curchr = prevchr;
 	/*
 	 * Backup regparse as well; not because we will use what it points at,
@@ -1297,7 +1281,7 @@ regmatch(prog)
 
 				no = OP(scan) - BACKREF;
 				if (regendp[no] != NULL) {
-					len = regendp[no] - regstartp[no];
+					len = (int)(regendp[no] - regstartp[no]);
 					if (cstrncmp(regstartp[no], reginput, len) != 0)
 						return 0;
 					reginput += len;
@@ -1339,13 +1323,13 @@ regmatch(prog)
 				 */
 				nextch = '\0';
 				if (OP(next) == EXACTLY)
-					nextch = *OPERAND(next);
+					nextch = mkup(*OPERAND(next));
 				min = (OP(scan) == STAR) ? 0 : 1;
 				save = reginput;
 				no = regrepeat(OPERAND(scan));
 				while (no >= min) {
 					/* If it could work, try it. */
-					if (nextch == '\0' || *reginput == nextch)
+					if (nextch == '\0' || mkup(*reginput) == nextch)
 						if (regmatch(next))
 							return 1;
 					/* Couldn't or didn't -- back up. */

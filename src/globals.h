@@ -1,6 +1,6 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -23,15 +23,24 @@
 # endif
 #endif
 
-EXTERN long		Rows;			/* Number of Rows and Columns */
-EXTERN long		Columns;		/*     in the current window. */
+/*
+ * Number of Rows and Columns in the current window.
+ * Must be long to be able to use them as options in param.c.
+ */
+EXTERN long		Rows;			/* currently used nr. of rows */
+EXTERN long		Columns;
+EXTERN long		Rows_max;		/* maximal physical nr. of rows */
 
-EXTERN char 	*Filename INIT(= NULL);    /* Current file name */
-
+EXTERN char 	*Filename INIT(= NULL);		/* Current file name */
+EXTERN char 	*sFilename INIT(= NULL);	/* Filename without path */
+EXTERN char 	*xFilename INIT(= NULL);	/* Filename maybe without path */
 
 EXTERN linenr_t Topline;		/* number of the line at the top of the screen */
 EXTERN linenr_t Botline;		/* number of the line below the bottom of the
 								 * screen */
+EXTERN int		redraw_msg INIT(= TRUE);
+								/* TRUE when "insert mode" needs updating */
+EXTERN int		emptyrows INIT(= 0);	/* number of '~' rows on screen */
 EXTERN linenr_t line_count; 	/* current number of lines in the file */
 
 EXTERN FPOS 	Curpos; 		/* current position of the cursor */
@@ -53,6 +62,12 @@ EXTERN int		set_want_col;	/* If set, then update Curswant the next time
 								 * through cursupdate() to the current
 								 * virtual column. */
 
+EXTERN int		cmdoffset INIT(= 0); 	/* offset for command line position */
+EXTERN int		ru_col;			/* column for ruler */
+EXTERN int		sc_col;			/* column for shown command */
+
+EXTERN int		char_count;		/* number of characters sent to screen */
+
 EXTERN int		starting INIT(= TRUE);
 								/* set to FALSE when starting up finished */
 EXTERN int		exiting INIT(= FALSE);
@@ -63,10 +78,10 @@ EXTERN int		secure INIT(= FALSE);
 								 * allowed, e.g. when sourcing .exrc or .vimrc
 								 * in current directory */
 
-EXTERN FPOS 	Quote; 			/* start position of quotation
-								 * (Quote.lnum == 0 when not active) */
-EXTERN int		Quote_block INIT(= FALSE);
-								/* Quoting is blockwise */
+EXTERN FPOS 	Visual; 		/* start position of Visual
+								 * (Visual.lnum == 0 when not active) */
+EXTERN int		Visual_block INIT(= FALSE);
+								/* Visual is blockwise */
 
 EXTERN FPOS 	Insstart;		/* This is where the latest insert/append
 								 * mode started. */
@@ -91,16 +106,32 @@ EXTERN int				did_si INIT(= FALSE);
  */
 EXTERN int				can_si INIT(= FALSE);
 
+EXTERN int				old_indent INIT(= 0); /* for ^^D command in insert mode */
+
+/*
+ * This flag is set after doing a reverse replace in column 0.
+ * An extra space has been inserted in column 0.
+ */
+EXTERN int				extraspace INIT(= FALSE);
+
 EXTERN int		State INIT(= NORMAL);	/* This is the current state of the command
 										 * interpreter. */
 
-EXTERN int		Recording INIT(= FALSE);/* TRUE when recording into a buffer */
+EXTERN int		Recording INIT(= FALSE);/* TRUE when recording into a register */
+EXTERN int		Exec_reg INIT(= FALSE);	/* TRUE when executing a register */
 
 EXTERN int		Changed INIT(= FALSE);	/* Set to TRUE if something in the file has
 								 		 * been changed and not written out. */
 
+EXTERN int		NotEdited INIT(= FALSE);/* Set to TRUE with ":file xxx" command,
+								 		 * reset when file is written out. */
+
 EXTERN int		Updated INIT(= FALSE);	/* Set to TRUE if something in the file has
 								 		 * been changed and .vim not flushed yet */
+
+EXTERN int		did_cd INIT(= FALSE);	/* TRUE when :cd dir used */
+EXTERN int		no_abbr INIT(= TRUE);	/* TRUE when no abbreviations loaded */
+
 
 EXTERN char 	*IObuff;				/* sprintf's are done into this buffer */
 
@@ -114,10 +145,12 @@ EXTERN int		readonlymode INIT(= FALSE); /* Set to TRUE for "view" */
 EXTERN int		recoverymode INIT(= FALSE); /* Set to TRUE for "-r" option */
 
 EXTERN int		KeyTyped;				/* TRUE if user typed the character */
+EXTERN int		must_redraw INIT(= 0);	/* type of redraw necessary */
 
 EXTERN char 	**files INIT(= NULL);	/* list of input files */
 EXTERN int		numfiles INIT(= 0); 	/* number of input files */
 EXTERN int		curfile INIT(= 0);		/* number of the current file */
+EXTERN int		files_exp INIT(= FALSE);	/* *files must be freed */
 #define NSCRIPT 15
 EXTERN FILE 	*scriptin[NSCRIPT];		/* streams to read script from */
 EXTERN int		curscript INIT(= 0);	/* index in scriptin[] */
@@ -125,9 +158,11 @@ EXTERN FILE 	*scriptout	INIT(= NULL); /* stream to write script to */
 
 EXTERN int		got_int INIT(= FALSE);	/* set to TRUE when interrupt
 										   signal occurred */
-EXTERN int		term_console INIT(= FALSE);	/* set to TRUE when amiga window used */
+EXTERN int		term_console INIT(= FALSE);	/* set to TRUE when Amiga window used */
+EXTERN int		termcap_active INIT(= FALSE);	/* set to TRUE by starttermcap() */
 EXTERN int		bangredo INIT(= FALSE);	/* set to TRUE whith ! command */
 EXTERN int		searchcmdlen;			/* length of previous search command */
+EXTERN int		did_outofmem_msg INIT(= FALSE);	/* set after out of memory msg */
 
 #ifdef DEBUG
 EXTERN FILE *debugfp INIT(=NULL);
@@ -136,17 +171,15 @@ EXTERN FILE *debugfp INIT(=NULL);
 extern char *Version;			/* this is in version.c */
 extern char *longVersion;		/* this is in version.c */
 
-/* just a string of 15 spaces */
-EXTERN char spaces[]		INIT(= "               ");
-
 /*
  * The error messages that can be shared are included here.
  * Excluded are very specific errors and debugging messages.
  */
+EXTERN char e_abbr[]		INIT(="No such abbreviation");
 EXTERN char e_abort[]		INIT(="Command aborted");
 EXTERN char e_ambmap[]		INIT(="Ambiguous mapping");
 EXTERN char e_argreq[]		INIT(="Argument required");
-EXTERN char e_curdir[]		INIT(="No write or shell from .exrc/.vimrc in current dir");
+EXTERN char e_curdir[]		INIT(="Command not allowed from from .exrc/.vimrc in current dir");
 EXTERN char e_errorf[]		INIT(="No errorfile name");
 EXTERN char e_exists[]		INIT(="File exists (use ! to override)");
 EXTERN char e_failed[] 		INIT(="Command failed");
@@ -184,9 +217,7 @@ EXTERN char e_re_damg[]		INIT(="Damaged match string");
 EXTERN char e_re_corr[]		INIT(="Corrupted regexp program");
 EXTERN char e_readonly[]	INIT(="File is readonly");
 EXTERN char e_readerrf[]	INIT(="Error while reading errorfile");
-EXTERN char	e_setarg[]		INIT(="Invalid argument: ");	/* must be 16 chars */
 EXTERN char e_scroll[]		INIT(="Invalid scroll size");
-EXTERN char e_tabsize[]		INIT(="Invalid tab size");
 EXTERN char e_toocompl[]	INIT(="Command too complex");
 EXTERN char e_toombra[]		INIT(="Too many (");
 EXTERN char e_toomket[]		INIT(="Too many )");

@@ -1,6 +1,6 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -54,6 +54,13 @@ startscript()
 	int		r;
 	FILE	*dummyfd = NULL;
 #endif
+#ifdef UNIX
+# ifdef SCO
+	mode_t	oldmask;
+# else
+	int		oldmask;
+# endif
+#endif
 
 	script_started = TRUE;
 
@@ -84,8 +91,8 @@ startscript()
  * create will be exactly the same file. To avoid this problem we temporarily
  * create "test.doc".
  */
-	if (!(p_sn || thisfile_sn) && Filename && getperm(Filename) < 0)
-		dummyfd = fopen(Filename, "w");
+	if (!(p_sn || thisfile_sn) && xFilename && getperm(xFilename) < 0)
+		dummyfd = fopen(xFilename, "w");
 #endif
 
 /*
@@ -110,6 +117,17 @@ startscript()
 				/*
 				 * Create the autoscript file.
 				 */
+#ifdef UNIX
+			/*
+			 * Disallow others to read our .vim file. This is useful if the
+			 * .vim file is put in some public place like /tmp.
+			 */
+# ifdef SCO
+			oldmask = umask((mode_t)066);	/* rw------- */
+# else
+			oldmask = umask(066);			/* rw------- */
+# endif
+#endif
 #ifdef AMIGA
 # ifndef NO_ARP
 			if (dos2)
@@ -120,8 +138,11 @@ startscript()
 				autoscriptfd = fopen(scriptname, "w");
 # endif
 #else	/* !AMIGA */
-				autoscriptfd = fopen(scriptname, WRITEBIN);
+			autoscriptfd = fopen(scriptname, WRITEBIN);
 #endif	/* AMIGA */
+#ifdef UNIX
+			umask(oldmask);				/* back to default umask */
+#endif
 
 #ifdef AMIGA
 			/*
@@ -162,7 +183,8 @@ startscript()
 			}
 #endif
 			/* if we get here ".vim" file really exists */
-			emsg(".vim file exists: an edit of this file has not been finished");
+			if (!recoverymode)
+				emsg(".vim file exists: an edit of this file has not been finished");
 		}
 
 		if (scriptname[n - 1] == 'a')	/* tried enough names, give up */
@@ -187,7 +209,7 @@ startscript()
 	if (dummyfd)		/* file has been created temporarily */
 	{
 		fclose(dummyfd);
-		remove(Filename);
+		remove(xFilename);
 	}
 #endif
 }
@@ -345,16 +367,15 @@ openrecover()
 
 	if (recoverymode == 2)		/* end of recovery */
 	{
-		if (got_int)
-		{
-			emsg("Recovery Interrupted");
-				/* somehow the cursor ends up in the wrong place (why?) */
-			setcursor();
-			flushbuf();
-		}
-		else
-			msg("Recovery completed");
 		recoverymode = 0;
+		if (got_int)
+			emsg("Recovery Interrupted");
+		else
+			msg("Recovery completed; If everything is OK: Save this file and delete the .vim file");
+			/* The cursor will be in the wrong place after the msg() */
+			/* We need to fix it here because we are called from inchar() */
+		setcursor();
+		flushbuf();
 	}
 	else
 	{
@@ -362,8 +383,8 @@ openrecover()
 		if (fname)
 		{
 			recoverymode = 2;
-			if (Filename != NULL &&
-					stat(Filename, &efile) != -1 &&
+			if (xFilename != NULL &&
+					stat(xFilename, &efile) != -1 &&
 					stat(fname, &rfile) != -1 &&
 					efile.st_mtime > rfile.st_mtime)
 				emsg(".vim file is older; file not recovered");
@@ -383,30 +404,74 @@ openrecover()
 	static char *
 makescriptname()
 {
-	char *r, *s, *fname;
+	char	*r, *s, *fname;
 
-	r = modname(Filename, ".vim");
+	r = modname(xFilename, ".vim");
 	if (*p_dir == 0 || r == NULL)
 		return r;
 
-	for (fname = s = r; *s; ++s)		/* skip path */
-	{
-#ifdef UNIX
-		if (*s == '/')		/* UNIX has ':' inside file names */
-#else
-		if (*s == ':' || *s == PATHSEP)
-#endif
-			fname = s + 1;
-	}
-
+	fname = gettail(r);
 	s = alloc((unsigned)(strlen(p_dir) + strlen(fname) + 1));
 	if (s != NULL)
 	{
 		strcpy(s, p_dir);
+		if (*s && !ispathsep(*(s + strlen(s) - 1)))	/* don't add '/' after ':' */
+			strcat(s, PATHSEPSTR);
 		strcat(s, fname);
 	}
 	free(r);
 	return s;
+}
+
+/*
+ * add full path to auto script name, used before first :cd command.
+ */
+	void
+scriptfullpath()
+{
+	char *s;
+
+	if (!autoscriptfd)
+		return;		/* nothing to do */
+	/*
+	 * on the Amiga we cannot get the full path name while the file is open
+	 * so we close it for a moment
+	 */
+#ifdef AMIGA
+# ifndef NO_ARP
+	if (dos2)
+# endif
+		Close((BPTR)autoscriptfd);
+# ifndef NO_ARP
+	else
+		fclose(autoscriptfd);
+# endif
+#endif
+
+	if (FullName(scriptname, IObuff, IOSIZE))
+	{
+		s = strsave(IObuff);
+		if (s)
+		{
+			free(scriptname);
+			scriptname = s;
+		}
+	}
+
+#ifdef AMIGA
+# ifndef NO_ARP
+	if (dos2)
+# endif
+	{
+		autoscriptfd = (FILE *)Open((UBYTE *)scriptname, (long)MODE_OLDFILE);
+		if (autoscriptfd)
+			Seek((BPTR)autoscriptfd, 0L, (long)OFFSET_END);
+	}
+# ifndef NO_ARP
+	else
+		autoscriptfd = fopen(scriptname, "a");
+# endif
+#endif
 }
 
 /*
@@ -451,9 +516,9 @@ modname(fname, ext)
 		else
 			strcpy(retval, fname);
 		/*
-		 * search backwards until we hit a '\' or ':' replacing all '.' by '_'
+		 * search backwards until we hit a '/', '\' or ':' replacing all '.' by '_'
 		 * for MSDOS or when dotfname option reset.
-		 * Then truncate what is after the '\' or ':' to 8 characters for MSDOS
+		 * Then truncate what is after the '/', '\' or ':' to 8 characters for MSDOS
 		 * and 26 characters for AMIGA and UNIX.
 		 */
 		for (ptr = retval + fnamelen; ptr >= retval; ptr--)
@@ -463,20 +528,16 @@ modname(fname, ext)
 #endif
 				if (*ptr == '.')	/* replace '.' by '_' */
 					*ptr = '_';
-#ifdef UNIX
-			if (*ptr == '/')		/* UNIX has ':' inside file names */
-#else
-			if (*ptr == ':' || *ptr == PATHSEP)
-#endif
+			if (ispathsep(*ptr))
 				break;
 		}
 		ptr++;
 
 		/* the filename has at most BASENAMELEN characters. */
-		if (strlen(ptr) > BASENAMELEN)
+		if (strlen(ptr) > (unsigned)BASENAMELEN)
 			ptr[BASENAMELEN] = '\0';
 #ifndef MSDOS
-		if ((p_sn || thisfile_sn) && strlen(ptr) > 8)
+		if ((p_sn || thisfile_sn) && strlen(ptr) > (unsigned)8)
 			ptr[8] = '\0';
 #endif
 		s = ptr + strlen(ptr);

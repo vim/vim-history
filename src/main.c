@@ -1,6 +1,6 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMitation
+ * VIM - Vi IMproved
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -25,7 +25,7 @@ usage(n)
 							"-t tag\n",
 							"+[command] file ..\n",
 							"-c {command} file ..\n",
-							"-e\n"};
+							"-e [errorfile]\n"};
 	static char *(errors[]) =  {"Unknown option\n",			/* 0 */
 								"Too many arguments\n",		/* 1 */
 								"Argument missing\n",		/* 2 */
@@ -42,12 +42,16 @@ usage(n)
 		fprintf(stderr, "   or:");
 	}
 #ifdef AMIGA
-	fprintf(stderr, "\noptions: -v -n -r -d device -s scriptin -w scriptout -T terminal\n");
+	fprintf(stderr, "\noptions: -v -n -b -r -x -d device -s scriptin -w scriptout -T terminal\n");
 #else
-	fprintf(stderr, "\noptions: -v -n -r -s scriptin -w scriptout -T terminal\n");
+	fprintf(stderr, "\noptions: -v -n -b -r -s scriptin -w scriptout -T terminal\n");
 #endif
 	mch_windexit(1);
 }
+
+#ifdef USE_LOCALE
+# include <locale.h>
+#endif
 
 	void
 main(argc, argv)
@@ -62,6 +66,7 @@ main(argc, argv)
 	int 			c;
 	int				doqf = 0;
 	int				i;
+	int				bin_mode = FALSE;	/* -b option used */
 
 #ifdef DEBUG
 # ifdef MSDOS
@@ -78,18 +83,30 @@ main(argc, argv)
  */
 	check_win(argc, argv);
 
+/*
+ * If the executable is called "view" we start in readonly mode.
+ */
+	if (strcmp(gettail(argv[0]), "view") == 0)
+	{
+		readonlymode = TRUE;
+		p_ro = TRUE;
+		p_uc = 0;
+	}
+
 	++argv;
 	/*
 	 * Process the command line arguments
-	 * 		'-s scriptin'
-	 *		'-w scriptout'
-	 *		'-v'
-	 *		'-n'
-	 *		'-r'
-	 *		'-T terminal'
+	 * 		'-s scriptin'	read from script file
+	 *		'-w scriptout'	write to script file
+	 *		'-v'			view
+	 *		'-b'			binary
+	 *		'-n'			no .vim file
+	 *		'-r'			recovery mode
+	 *		'-x'			open window directly, not with newcli
+	 *		'-T terminal'	terminal name
 	 */
 	while (argc > 1 && argv[0][0] == '-' &&
-			strchr("swvnrTd", c = argv[0][1]) != NULL && c)
+			strchr("vnbrxswTd", c = argv[0][1]) != NULL && c)
 	{
 		--argc;
 		switch (c)
@@ -103,10 +120,17 @@ main(argc, argv)
 			p_uc = 0;
 			break;
 
+		case 'b':
+			bin_mode = TRUE;		/* postpone to after reading .exrc files */
+			break;
+
 		case 'r':
 			recoverymode = 1;
 			break;
 		
+		case 'x':
+			break;	/* This is ignored as it is handled in check_win() */
+
 		default:	/* options with argument */
 			++argv;
 			--argc;
@@ -173,8 +197,21 @@ main(argc, argv)
 		    switch (c)
 			{
 		  	case 'e':			/* -e QuickFix mode */
-				if (argc != 2)
-					usage(1);
+				switch (argc)
+				{
+					case 2:
+							if (argv[0][2])		/* -eerrorfile */
+								p_ef = argv[0] + 2;
+							break;				/* -e */
+
+					case 3:						/* -e errorfile */
+							++argv;
+							p_ef = argv[0];
+							break;
+
+					default:					/* argc > 3: too many arguments */
+							usage(1);
+				}
 				doqf = 1;
 				break;
 
@@ -186,13 +223,26 @@ main(argc, argv)
 				command = &(argv[0][0]);
 				goto getfiles;
 
-			case 't':			/* -t tag */
-				if (argc < 3)
-					usage(2);
-				if (argc > 3)
-					usage(1);
-				++argv;
-				tagname = argv[0];
+			case 't':			/* -t tag  or -ttag */
+				switch (argc)
+				{
+					case 2:
+							if (argv[0][2])		/* -ttag */
+							{
+								tagname = argv[0] + 2;
+								break;
+							}
+							usage(2);			/* argument missing */
+							break;
+
+					case 3:						/* -t tag */
+							++argv;
+							tagname = argv[0];
+							break;
+
+					default:					/* argc > 3: too many arguments */
+							usage(1);
+				}
 				break;
 
 			default:
@@ -214,11 +264,13 @@ getfiles:
 			/*FALLTHROUGH*/
 
 		  default:				/* must be a file name */
-#if defined(WILD_CARDS) && !defined(UNIX)
+#if !defined(UNIX)
 			ExpandWildCards(argc - 1, argv, &numfiles, &files, TRUE, TRUE);
 			if (numfiles != 0)
+			{
 				fname = files[0];
-
+				files_exp = TRUE;
+			}
 #else
 			files = argv;
 			numfiles = argc - 1;
@@ -230,41 +282,41 @@ getfiles:
 		}
 	}
 
-	if (numfiles == 0)
-		numfiles = 1;
-
 	RedrawingDisabled = TRUE;
 	filealloc();				/* Initialize storage structure */
 	init_yank();				/* init yank buffers */
 	termcapinit(term);			/* get terminal capabilities */
 
 #ifdef USE_LOCALE
-#include <locale.h>
 	setlocale(LC_ALL, "");		/* for ctype() and the like */
 #endif
 
 #ifdef MSDOS /* default mapping for some often used keys */
-	domap(0, "#1 :help\r", 0);				/* F1 is help key */
-	domap(0, "\236R i", 0);					/* INSERT is 'i' */
-	domap(0, "\236S x", 0);					/* DELETE is 'x' */
-	domap(0, "\236G 0", 0);					/* HOME is '0' */
-	domap(0, "\236w H", 0);					/* CTRL-HOME is 'H' */
-	domap(0, "\236O $", 0);					/* END is '$' */
-	domap(0, "\236u L", 0);					/* CTRL-END is 'L' */
-	domap(0, "\236I \002", 0);				/* PageUp is '^B' */
-	domap(0, "\236\204 1G", 0);				/* CTRL-PageUp is '1G' */
-	domap(0, "\236Q \006", 0);				/* PageDown is '^F' */
-	domap(0, "\236v G", 0);					/* CTRL-PageDown is 'G' */
+	domap(0, "#1 :help\r", NORMAL);			/* F1 is help key */
+	domap(0, "\316R i", NORMAL);			/* INSERT is 'i' */
+	domap(0, "\316S \177", NORMAL);			/* DELETE is 0x7f */
+	domap(0, "\316G 0", NORMAL);			/* HOME is '0' */
+	domap(0, "\316w H", NORMAL);			/* CTRL-HOME is 'H' */
+	domap(0, "\316O $", NORMAL);			/* END is '$' */
+	domap(0, "\316u L", NORMAL);			/* CTRL-END is 'L' */
+	domap(0, "\316I \002", NORMAL);			/* PageUp is '^B' */
+	domap(0, "\316\204 1G", NORMAL);		/* CTRL-PageUp is '1G' */
+	domap(0, "\316Q \006", NORMAL);			/* PageDown is '^F' */
+	domap(0, "\316v G", NORMAL);			/* CTRL-PageDown is 'G' */
 			/* insert mode */
-	domap(0, "\236S \017x", INSERT);			/* DELETE is '^Ox' */
-	domap(0, "\236G \017""0", INSERT);		/* HOME is '^O0' */
-	domap(0, "\236w \017H", INSERT);		/* CTRL-HOME is '^OH' */
-	domap(0, "\236O \017$", INSERT);		/* END is '^O$' */
-	domap(0, "\236u \017L", INSERT);		/* CTRL-END is '^OL' */
-	domap(0, "\236I \017\002", INSERT);		/* PageUp is '^O^B' */
-	domap(0, "\236\204 \017\061G", INSERT);	/* CTRL-PageUp is '^O1G' */
-	domap(0, "\236Q \017\006", INSERT);		/* PageDown is '^O^F' */
-	domap(0, "\236v \017G", INSERT);		/* CTRL-PageDown is '^OG' */
+	domap(0, "#1 \017:help\r", INSERT);		/* F1 is help key */
+	domap(0, "\316R \033", INSERT);			/* INSERT is ESC */
+			/* note: extra space needed to avoid the same memory used for this
+			   and the one above, domap() will add a NUL to it */
+	domap(0, "\316S  \177", INSERT+CMDLINE);	/* DELETE is 0x7f */
+	domap(0, "\316G \017""0", INSERT);		/* HOME is '^O0' */
+	domap(0, "\316w \017H", INSERT);		/* CTRL-HOME is '^OH' */
+	domap(0, "\316O \017$", INSERT);		/* END is '^O$' */
+	domap(0, "\316u \017L", INSERT);		/* CTRL-END is '^OL' */
+	domap(0, "\316I \017\002", INSERT);		/* PageUp is '^O^B' */
+	domap(0, "\316\204 \017\061G", INSERT);	/* CTRL-PageUp is '^O1G' */
+	domap(0, "\316Q \017\006", INSERT);		/* PageDown is '^O^F' */
+	domap(0, "\316v \017G", INSERT);		/* CTRL-PageDown is '^OG' */
 #endif
 
 /*
@@ -294,43 +346,48 @@ getfiles:
 
 /*
  * Read initialization commands from ".vimrc" or ".exrc" in current directory.
+ * This is only done if the 'exrc' option is set.
  * Because of security reasons we disallow shell and write commands now,
- * except for unix if the file is owned by the user.
+ * except for unix if the file is owned by the user or 'secure' option has been
+ * reset in environmet of global ".exrc" or ".vimrc".
  * Only do this if VIMRC_FILE is not the same as SYSVIMRC_FILE or DEFVIMRC_FILE.
  */
-#ifdef UNIX
+	if (p_exrc)
 	{
-		struct stat s;
+#ifdef UNIX
+		{
+			struct stat s;
 
-		stat(VIMRC_FILE, &s);
-		if (s.st_uid != getuid())	/* ".vimrc" file is not owned by user */
-			secure = 1;
-	}
+				/* if ".vimrc" file is not owned by user, set 'secure' mode */
+			if (stat(VIMRC_FILE, &s) || s.st_uid != getuid())
+				secure = p_secure;
+		}
 #else
-	secure = 1;
+		secure = p_secure;
 #endif
 
-	i = 1;
-	if (fullpathcmp(SYSVIMRC_FILE, VIMRC_FILE)
+		i = 1;
+		if (fullpathcmp(SYSVIMRC_FILE, VIMRC_FILE)
 #ifdef DEFVIMRC_FILE
-			&& fullpathcmp(DEFVIMRC_FILE, VIMRC_FILE)
+				&& fullpathcmp(DEFVIMRC_FILE, VIMRC_FILE)
 #endif
-			)
-		i = dosource(VIMRC_FILE);
+				)
+			i = dosource(VIMRC_FILE);
 #ifdef UNIX
-	if (i)
-	{
-		struct stat s;
+		if (i)
+		{
+			struct stat s;
 
-		stat(EXRC_FILE, &s);
-		if (s.st_uid != getuid())	/* ".exrc" file is not owned by user */
-			secure = 1;
-		else
-			secure = 0;
-	}
+				/* if ".exrc" file is not owned by user set 'secure' mode */
+			if (stat(EXRC_FILE, &s) || s.st_uid != getuid())
+				secure = p_secure;
+			else
+				secure = 0;
+		}
 #endif
-	if (i && fullpathcmp(SYSEXRC_FILE, EXRC_FILE))
-		dosource(EXRC_FILE);
+		if (i && fullpathcmp(SYSEXRC_FILE, EXRC_FILE))
+			dosource(EXRC_FILE);
+	}
 
 /*
  * Call settmode and starttermcap here, so the T_KS and T_TS may be defined
@@ -346,19 +403,30 @@ getfiles:
 #ifdef AMIGA
 	fname_case(fname);		/* set correct case for file name */
 #endif
-	setfname(fname);
+	setfname(fname, NULL);
 	maketitle();
 
+	if (bin_mode)			/* -b option used */
+	{
+		p_bin = 1;			/* binary file I/O */
+		p_tw = 0;			/* no automatic line wrap */
+		p_tx = 0;			/* no text mode */
+		p_ta = 0;			/* no text auto */
+		p_ml = 0;			/* no modelines */
+		p_et = 0;			/* no expand tab */
+	}
+
 /*
- * start putting things on the screen
+ * Start putting things on the screen.
+ * Clear screen first, so file message will not be cleared.
  */
 	starting = FALSE;
-	screenalloc();
 	screenclear();
 	if (Filename != NULL)
-		readfile(Filename, (linenr_t)0, TRUE);
+		readfile(Filename, sFilename, (linenr_t)0, TRUE);
 	else
 		msg("Empty Buffer");
+	UNCHANGED;
 
 	setpcmark();
 	if (!tagname)
@@ -373,12 +441,8 @@ getfiles:
 	Curpos.col = 0;
 	Cursrow = Curscol = 0;
 
-	if (doqf)
-	{
-		if (qf_init(p_ef))
-			mch_windexit(3);
-		qf_jump(0);
-	}
+	if (doqf && qf_init())		/* if reading error file fails: exit */
+		mch_windexit(3);
 
 	if (command)
 		docmdline((u_char *)command);
@@ -404,12 +468,23 @@ getfiles:
  */
 	for (;;)
 	{
+		if (got_int)
+		{
+			(void)vgetc();				/* flush all buffers */
+			got_int = FALSE;
+		}
 		adjustCurpos();
-		cursupdate();	/* Figure out where the cursor is based on Curpos. */
+		if (stuff_empty())				/* only when no command pending */
+		{
+			cursupdate();	/* Figure out where the cursor is based on Curpos. */
+			showruler(0);
 
-		if (Quote.lnum)
-			updateScreen(INVERTED);		/* update inverted part */
-		setcursor();
+			if (Visual.lnum)
+				updateScreen(INVERTED);		/* update inverted part */
+			if (must_redraw)
+				updateScreen(VALID);
+			setcursor();
+		}
 
 		normal();						/* get and execute a command */
 	}
