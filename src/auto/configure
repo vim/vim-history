@@ -1580,6 +1580,7 @@ __:
 	@echo "python_MODLIBS='$(MODLIBS)'"
 	@echo "python_LIBS='$(LIBS)'"
 	@echo "python_SYSLIBS='$(SYSLIBS)'"
+	@echo "python_LINKFORSHARED='$(LINKFORSHARED)'"
 eof
 	    	    eval "`cd ${PYTHON_CONFDIR} && make -f ${tmp_mkf} __ | sed '/ directory /d'`"
 	    rm -f ${tmp_mkf}
@@ -1588,7 +1589,7 @@ eof
 	    else
 		vi_cv_path_python_plibs="-L${PYTHON_CONFDIR} -lpython${vi_cv_var_python_version}"
 	    fi
-	    vi_cv_path_python_plibs="${vi_cv_path_python_plibs} ${python_MODLIBS} ${python_LIBS} ${python_SYSLIBS}"
+	    vi_cv_path_python_plibs="${vi_cv_path_python_plibs} ${python_MODLIBS} ${python_LIBS} ${python_SYSLIBS} ${python_LINKFORSHARED}"
 	    	    vi_cv_path_python_plibs=`echo $vi_cv_path_python_plibs | sed s/-ltermcap//`
 	
 fi
