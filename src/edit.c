@@ -7181,6 +7181,7 @@ ins_tab()
 	pos_T		*cursor;
 	colnr_T		want_vcol, vcol;
 	int		change_col = -1;
+	int		save_list = curwin->w_p_list;
 
 	/*
 	 * Get the current line.  For VREPLACE mode, don't make real changes
@@ -7202,6 +7203,10 @@ ins_tab()
 	    ptr = ml_get_cursor();
 	    cursor = &curwin->w_cursor;
 	}
+
+	/* When 'L' is not in 'cpoptions' a tab always takes up 'ts' spaces. */
+	if (vim_strchr(p_cpo, CPO_LISTWM) == NULL)
+	    curwin->w_p_list = FALSE;
 
 	/* Find first white before the cursor */
 	fpos = curwin->w_cursor;
@@ -7305,6 +7310,7 @@ ins_tab()
 	if (State & VREPLACE_FLAG)
 	    vim_free(saved_line);
 #endif
+	curwin->w_p_list = save_list;
     }
 
     return FALSE;
