@@ -1122,6 +1122,7 @@ install_vimrc(int idx)
 {
     FILE	*fd, *tfd;
     char	*fname;
+    char	*p;
 
     /* If an old vimrc file exists, overwrite it.
      * Otherwise create a new one. */
@@ -1176,11 +1177,20 @@ install_vimrc(int idx)
 	fprintf(fd, "  let opt = ''\n");
 	fprintf(fd, "  if &diffopt =~ 'icase' | let opt = opt . '-i ' | endif\n");
 	fprintf(fd, "  if &diffopt =~ 'iwhite' | let opt = opt . '-b ' | endif\n");
-	/* Use quotes here if the path includes a space. */
-	if (strchr(installdir, ' ') != NULL)
-	    fprintf(fd, "  silent execute '!\"%s\\diff\" -a ' . opt . '\"' . v:fname_in . '\" \"' . v:fname_new . '\" > \"' . v:fname_out . '\"'\n", installdir);
+	fprintf(fd, "  silent execute '!");
+	p = strchr(installdir, ' ');
+	if (p != NULL)
+	{
+	    /* The path has a space.  Put a double quote just before the space
+	     * and at the end of the command.  Putting quotes around the whole
+	     * thing doesn't work. */
+	    *p = NUL;
+	    fprintf(fd, "%s\" %s\\diff\"", installdir, p + 1);
+	    *p = ' ';
+	}
 	else
-	    fprintf(fd, "  silent execute '!%s\\diff -a ' . opt . '\"' . v:fname_in . '\" \"' . v:fname_new . '\" > \"' . v:fname_out . '\"'\n", installdir);
+	    fprintf(fd, "%s\\diff", installdir);
+	fprintf(fd, " -a ' . opt . '\"' . v:fname_in . '\" \"' . v:fname_new . '\" > \"' . v:fname_out . '\"'\n");
 	fprintf(fd, "endfunction\n");
 	fprintf(fd, "\n");
     }
