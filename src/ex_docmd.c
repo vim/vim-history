@@ -7223,16 +7223,15 @@ ex_at(eap)
 	int	save_efr = exec_from_reg;
 
 	exec_from_reg = TRUE;
-	/* execute from the mapbuf */
-	while (vpeekc() == ':')
-	{
+
+	/*
+	 * Execute from the typeahead buffer.
+	 * Originally this didn't check for the typeahead buffer to be empty,
+	 * thus could read more Ex commands from stdin.  It's not clear why,
+	 * it is certainly unexpected.
+	 */
+	while ((!stuff_empty() || typebuf.tb_len > 0) && vpeekc() == ':')
 	    (void)do_cmdline(NULL, getexline, NULL, DOCMD_NOWAIT|DOCMD_VERBOSE);
-	    /* In Ex mode need to quit when the typeahead is exhausted,
-	     * otherwise input unexpectedly goes to the typeahead buffer and
-	     * getexmodeline() can't get it with inchar(). */
-	    if (exmode_active && stuff_empty() && typebuf.tb_len == 0)
-		break;
-	}
 
 	exec_from_reg = save_efr;
     }
