@@ -2227,7 +2227,8 @@ mch_FullName(fname, buf, len, force)
 #ifndef VMS
 	else
 	{
-	    if (l > 0 && buf[l - 1] != '/' && *fname != NUL)
+	    if (l > 0 && buf[l - 1] != '/' && *fname != NUL
+						   && STRCMP(fname, ".") != 0)
 		STRCAT(buf, "/");
 	}
 #endif
@@ -2236,7 +2237,9 @@ mch_FullName(fname, buf, len, force)
     if (retval == FAIL || STRLEN(buf) + STRLEN(fname) >= len)
 	return FAIL;
 
-    STRCAT(buf, fname);
+    /* Do not append ".", "/dir/." is equal to "/dir". */
+    if (STRCMP(fname, ".") != 0)
+	STRCAT(buf, fname);
 
     return OK;
 }

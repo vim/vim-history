@@ -1,7 +1,7 @@
 "=============================================================================
 " File: explorer.vim
 " Author: M A Aziz Ahmed (aziz@acorn-networks.com - doesn't work)
-" Last Change:	2004 Mar 15
+" Last Change:	2004 May 12
 " Version: 2.5 + changes
 " Additions by Mark Waggoner (waggoner@aracnet.com) et al.
 "-----------------------------------------------------------------------------
@@ -283,16 +283,8 @@ function! s:EditDir()
   endif
 
   " Get the complete path to the directory to look at with a slash at
-  " the end
+  " the end.  This also removes "/../" and "/./" things.
   let b:completePath = s:Path(expand("%:p"))
-
-  " Save the directory we are currently in and chdir to the directory
-  " we are editing so that we can get a real path to the directory,
-  " eliminating things like ".."
-  let origdir= s:Path(getcwd())
-  exe "chdir" escape(b:completePath, s:escfilename)
-  let b:completePath = s:Path(getcwd())
-  exe "chdir" escape(origdir, s:escfilename)
 
   " Add a slash at the end
   if b:completePath !~ '/$'
@@ -518,12 +510,9 @@ function! s:OpenEntry()
   endif
 
   " Is it a directory?  If so, get a real path to it instead of
-  " relative path
+  " relative path.  This also removes "/../" and "/./" things.
   if isdirectory(fn)
-    let origdir= s:Path(getcwd())
-    exe "chdir" escape(fn,s:escfilename)
-    let fn = s:Path(getcwd())
-    exe "chdir" escape(origdir,s:escfilename)
+    let fn = fnamemodify(fn, ":p")
   endif
 
   " Open the new window
@@ -585,12 +574,10 @@ function! s:EditEntry(movefirst,editcmd)
   let s:longlist = w:longlist
 
   " Get the file name
-  let fn=s:GetFullFileName()
+  let fn = s:GetFullFileName()
   if isdirectory(fn)
-    let origdir= s:Path(getcwd())
-    exe "chdir" escape(fn,s:escfilename)
-    let fn = s:Path(getcwd())
-    exe "chdir" escape(origdir,s:escfilename)
+    " This removes "/../" and "/./" things.
+    let fn = fnamemodify(fn, ":p")
   endif
 
   " Move to desired window if needed

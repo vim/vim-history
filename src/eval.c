@@ -10276,15 +10276,29 @@ repeat:
 	    if (*fnamep == NULL)
 		return -1;
 	}
-	/* FullName_save() is slow, don't use it when not needed. */
-	else if (!vim_isAbsName(*fnamep))
+
+	/* When "/." or "/.." is used: force expansion to get rid of it. */
+	for (p = *fnamep; *p != NUL; ++p)
 	{
-	    *fnamep = FullName_save(*fnamep, FALSE);
+	    if (vim_ispathsep(*p)
+		    && p[1] == '.'
+		    && (p[2] == NUL
+			|| vim_ispathsep(p[2])
+			|| (p[2] == '.'
+			    && (p[3] == NUL || vim_ispathsep(p[3])))))
+		break;
+	}
+
+	/* FullName_save() is slow, don't use it when not needed. */
+	if (*p != NUL || !vim_isAbsName(*fnamep))
+	{
+	    *fnamep = FullName_save(*fnamep, *p != NUL);
 	    vim_free(*bufp);	/* free any allocated file name */
 	    *bufp = *fnamep;
 	    if (*fnamep == NULL)
 		return -1;
 	}
+
 	/* Append a path separator to a directory. */
 	if (mch_isdir(*fnamep))
 	{
