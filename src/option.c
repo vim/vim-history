@@ -2803,6 +2803,26 @@ set_init_1()
 	    opt_idx = findoption((char_u *)"encoding");
 	    options[opt_idx].def_val[VI_DEFAULT] = p_enc;
 	    options[opt_idx].flags |= P_DEF_ALLOCED;
+
+# if defined(WIN3264) && !defined(FEAT_GUI)
+	    /* Win32 console: When GetACP() returns a different value from
+	     * GetConsoleCP() set 'termencoding'. */
+	    if (GetACP() != GetConsoleCP())
+	    {
+		char	buf[50];
+
+		sprintf(buf, "cp%ld", (long)GetConsoleCP());
+		p_tenc = vim_strsave((char_u *)buf);
+		if (p_tenc != NULL)
+		{
+		    opt_idx = findoption((char_u *)"termencoding");
+		    options[opt_idx].def_val[VI_DEFAULT] = p_tenc;
+		    options[opt_idx].flags |= P_DEF_ALLOCED;
+		}
+		else
+		    p_tenc = empty_option;
+	    }
+# endif
 	}
 	else
 	{
