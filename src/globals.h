@@ -144,7 +144,9 @@ EXTERN int	info_message INIT(= FALSE); /* printing informative message */
 EXTERN int	emsg_skip INIT(= 0);	    /* don't display errors for
 					       expression that is skipped */
 #endif
-EXTERN int	did_emsg;		    /* set by emsg() for DoOneCmd() */
+EXTERN int	did_emsg;		    /* set by emsg() when the message
+					       is displayed */
+EXTERN int	called_emsg;		    /* always set by emsg() */
 EXTERN int	emsg_on_display INIT(= FALSE);	/* there is an error message */
 EXTERN int	rc_did_emsg INIT(= FALSE);  /* vim_regcomp() called emsg() */
 

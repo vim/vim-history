@@ -680,6 +680,7 @@ extern char* (*dyn_libintl_textdomain)(const char* domainname);
 #define SEARCH_START 0x100  /* start search without col offset */
 #define SEARCH_MARK  0x200  /* set previous context mark */
 #define SEARCH_KEEP  0x400  /* keep previous search pattern */
+#define SEARCH_PEEK  0x800  /* peek for typed char, cancel search */
 
 /* Values for find_ident_under_cursor() */
 #define FIND_IDENT	1	/* find identifier (word) */
