@@ -1648,24 +1648,31 @@ fi
 	fi
 	PYTHON_GETPATH_CFLAGS="-DPYTHONPATH='\"${vi_cv_path_pythonpath}\"' -DPREFIX='\"${vi_cv_path_python_pfx}\"' -DEXEC_PREFIX='\"${vi_cv_path_python_epfx}\"'"
 
-					echo $ac_n "checking if -pthread should be used""... $ac_c" 1>&6
-echo "configure:1636: checking if -pthread should be used" >&5
+							echo $ac_n "checking if -pthread should be used""... $ac_c" 1>&6
+echo "configure:1653: checking if -pthread should be used" >&5
+	threadsafe_flag=
+	thread_lib=
+	test "$GCC" = yes && threadsafe_flag="-pthread"
 	if test "`(uname) 2>/dev/null`" = FreeBSD; then
+	  threadsafe_flag="-D_THREAD_SAFE"
+	  thread_lib="-pthread"
+	fi
+	if test -n "$threadsafe_flag"; then
 	  cflags_save=$CFLAGS
 	  libs_save=$LIBS
-	  CFLAGS="$CFLAGS -D_THREAD_SAFE"
-	  LIBS="$LIBS -pthread"
+	  CFLAGS="$CFLAGS $threadsafe_flag"
+	  LIBS="$LIBS $thread_lib"
 	  cat > conftest.$ac_ext <<EOF
-#line 1643 "configure"
+#line 1667 "configure"
 #include "confdefs.h"
 
 int main() {
  
 ; return 0; }
 EOF
-if { (eval echo configure:1650: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:1674: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
-  echo "$ac_t""yes" 1>&6; PYTHON_CFLAGS="$PYTHON_CFLAGS -D_THREAD_SAFE"
+  echo "$ac_t""yes" 1>&6; PYTHON_CFLAGS="$PYTHON_CFLAGS $threadsafe_flag"
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
