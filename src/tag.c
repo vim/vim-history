@@ -313,6 +313,9 @@ do_tag(tag, type, count, forceit, verbose)
 			tagstackidx = oldtagstackidx;  /* back to old posn */
 			goto end_do_tag;
 		    }
+		    /* An BufReadPost autocommand may jump to the '" mark, but
+		     * we don't what that here. */
+		    curwin->w_cursor.lnum = saved_fmark.mark.lnum;
 		}
 		else
 		{
