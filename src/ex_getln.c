@@ -77,6 +77,7 @@ static void	correct_cmdspos __ARGS((int idx, int cells));
 #endif
 static void	alloc_cmdbuff __ARGS((int len));
 static int	realloc_cmdbuff __ARGS((int len));
+static void	draw_cmdline __ARGS((int start, int len));
 #ifdef FEAT_WILDMENU
 static void	cmdline_del __ARGS((int from));
 #endif
@@ -1265,8 +1266,7 @@ getcmdline(firstc, count, indent)
 		/* may need to remove ^ when composing char was typed */
 		if (enc_utf8 && utf_iscomposing(c) && !cmd_silent)
 		{
-		    msg_outtrans_len(ccline.cmdbuff + ccline.cmdpos,
-					       ccline.cmdlen - ccline.cmdpos);
+		    draw_cmdline(ccline.cmdpos, ccline.cmdlen - ccline.cmdpos);
 		    msg_putchar(' ');
 		    cursorcmd();
 		}
@@ -1558,7 +1558,7 @@ cmdline_charsize(idx)
     int		idx;
 {
 #if defined(FEAT_CRYPT) || defined(FEAT_EVAL)
-    if (cmdline_star)	    /* showing '*', always 1 position */
+    if (cmdline_star > 0)	    /* showing '*', always 1 position */
 	return 1;
 #endif
     return ptr2cells(ccline.cmdbuff + idx);
@@ -1921,6 +1921,26 @@ realloc_cmdbuff(len)
 }
 
 /*
+ * Draw part of the cmdline at the current cursor position.  But draw stars
+ * when cmdline_star is TRUE.
+ */
+    static void
+draw_cmdline(start, len)
+    int		start;
+    int		len;
+{
+#if defined(FEAT_CRYPT) || defined(FEAT_EVAL)
+    int		i;
+
+    if (cmdline_star > 0)
+	for (i = 0; i < len; ++i)
+	    msg_putchar('*');
+    else
+#endif
+	msg_outtrans_len(ccline.cmdbuff + start, len);
+}
+
+/*
  * Put a character on the command line.  Shifts the following text to the
  * right when "shift" is TRUE.  Used for CTRL-V, CTRL-K, etc.
  * "c" must be printable (fit in one display cell)!
@@ -1935,8 +1955,7 @@ putcmdline(c, shift)
     msg_no_more = TRUE;
     msg_putchar(c);
     if (shift)
-	msg_outtrans_len(ccline.cmdbuff + ccline.cmdpos,
-					       ccline.cmdlen - ccline.cmdpos);
+	draw_cmdline(ccline.cmdpos, ccline.cmdlen - ccline.cmdpos);
     msg_no_more = FALSE;
     cursorcmd();
 }
@@ -1953,7 +1972,7 @@ unputcmdline()
     if (ccline.cmdlen == ccline.cmdpos)
 	msg_putchar(' ');
     else
-	msg_outtrans_len(ccline.cmdbuff + ccline.cmdpos, 1);
+	draw_cmdline(ccline.cmdpos, 1);
     msg_no_more = FALSE;
     cursorcmd();
 }
@@ -2053,22 +2072,13 @@ put_on_cmdline(str, len, redraw)
 
 	if (redraw && !cmd_silent)
 	{
-#if defined(FEAT_CRYPT) || defined(FEAT_EVAL)
-	    if (cmdline_star)		/* only write '*' characters */
-		for (i = ccline.cmdpos; i < ccline.cmdlen; ++i)
-		    msg_putchar('*');
-	    else
-#endif
-	    {
-		msg_no_more = TRUE;
-		i = cmdline_row;
-		msg_outtrans_len(ccline.cmdbuff + ccline.cmdpos,
-					       ccline.cmdlen - ccline.cmdpos);
-		/* Avoid clearing the rest of the line too often. */
-		if (cmdline_row != i || ccline.overstrike)
-		    msg_clr_eos();
-		msg_no_more = FALSE;
-	    }
+	    msg_no_more = TRUE;
+	    i = cmdline_row;
+	    draw_cmdline(ccline.cmdpos, ccline.cmdlen - ccline.cmdpos);
+	    /* Avoid clearing the rest of the line too often. */
+	    if (cmdline_row != i || ccline.overstrike)
+		msg_clr_eos();
+	    msg_no_more = FALSE;
 	}
 #ifdef FEAT_FKMAP
 	/*
@@ -2169,32 +2179,18 @@ redrawcmdprompt()
     void
 redrawcmd()
 {
-#if defined(FEAT_CRYPT) || defined(FEAT_EVAL)
-    int		i;
-#endif
-
     if (cmd_silent)
 	return;
 
     msg_start();
     redrawcmdprompt();
-#if defined(FEAT_CRYPT) || defined(FEAT_EVAL)
-    if (cmdline_star)
-    {
-	/* Show '*' for every character typed */
-	for (i = 0; i < ccline.cmdlen; ++i)
-	    msg_putchar('*');
-	msg_clr_eos();
-    }
-    else
-#endif
-    {
-	/* Don't use more prompt, truncate the cmdline if it doesn't fit. */
-	msg_no_more = TRUE;
-	msg_outtrans_len(ccline.cmdbuff, ccline.cmdlen);
-	msg_clr_eos();
-	msg_no_more = FALSE;
-    }
+
+    /* Don't use more prompt, truncate the cmdline if it doesn't fit. */
+    msg_no_more = TRUE;
+    draw_cmdline(0, ccline.cmdlen);
+    msg_clr_eos();
+    msg_no_more = FALSE;
+
     set_cmdspos_cursor();
 
     /*
@@ -4367,7 +4363,11 @@ ex_window()
     int			save_State = State;
 
     /* Can't do this recursively.  Can't do it when typing a password. */
-    if (cmdwin_type != 0 || cmdline_star > 0)
+    if (cmdwin_type != 0
+# if defined(FEAT_CRYPT) || defined(FEAT_EVAL)
+	    || cmdline_star > 0
+# endif
+	    )
     {
 	beep_flush();
 	return K_IGNORE;
