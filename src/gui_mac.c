@@ -22,6 +22,9 @@
 #ifdef USE_AEVENT
 # include <AppleEvents.h>
 #endif
+#if UNIVERSAL_INTERFACES_VERSION >= 0x0330
+# include <ControlDefinitions.h>
+#endif
 
 #define kNothing 0
 #define kCreateEmpty 2 /*1*/
@@ -637,18 +640,21 @@ gui_mch_set_winsize(width, height, min_width, min_height,
 }
 
 /*
- * Allow 10 pixels for horizontal borders, 30 for vertical borders.
- * Is there no way in X to find out how wide the borders really are?
+ * Get the screen dimensions.
+ * Allow 10 pixels for horizontal borders, 40 for vertical borders.
+ * Is there no way to find out how wide the borders really are?
+ * TODO: Add live udate of those value on suspend/resume.
  */
 	void
 gui_mch_get_screen_dimensions(screen_w, screen_h)
 	int		*screen_w;
 	int		*screen_h;
 {
-	/* TODO: Go get the real screen dimension
-	 *		 add live udate of those value on suspend/resume */
-	*screen_w = 640 - 10;
-	*screen_h = 400 - 30;
+	GDHandle	dominantDevice = GetMainDevice();
+	Rect		screenRect = (**dominantDevice).gdRect;
+
+	*screen_w = screenRect.right - 10;
+	*screen_h = screenRect.bottom - 40;
 }
 
 /* Convert a string representing a point size into pixels. The string should
@@ -1365,7 +1371,8 @@ gui_mac_doMouseDown (theEvent)
 			break;
 
 		case (inDrag):
-			SetRect (&movingLimits, 0, 0, 832, 624);
+			/* SetRect (&movingLimits, 0, 0, 832, 624); */
+			movingLimits = (*GetGrayRgn())->rgnBBox;
 			DragWindow (whichWindow, theEvent->where, &movingLimits);
 			break;
 
