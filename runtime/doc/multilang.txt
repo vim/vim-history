@@ -1,4 +1,4 @@
-*multilang.txt* For Vim version 6.0x.  Last change: 2001 Mar 05
+*multilang.txt* For Vim version 6.0y.  Last change: 2001 Mar 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -182,6 +182,7 @@ this is unusual.  But you can use various ways to specify the character: >
 	A	a		literal character
 	A	<char-97>	decimal value
 	A	<char-0x61>	hexadecimal value
+	A	<char-0141>	octal value
 	x	<Space>		special key name
 
 The characters are assumed to be encoded for the current value of 'encoding'.

@@ -1239,6 +1239,9 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 
 #ifdef FEAT_CLIPBOARD
 
+/* Vim-specific selection type for X11 */
+#define VIM_ATOM_NAME "_VIM_TEXT"
+
 /* Selection states for modeless selection */
 # define SELECT_CLEARED		0
 # define SELECT_IN_PROGRESS	1
@@ -1257,11 +1260,11 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 /* Info about selected text */
 typedef struct VimClipboard
 {
-    int		available;	    /* Is clipboard available? */
-    int		owned;		    /* Flag: do we own the selection? */
-    pos_t	start;		    /* Start of selected area */
-    pos_t	end;		    /* End of selected area */
-    int		vmode;		    /* Visual mode character */
+    int		available;	/* Is clipboard available? */
+    int		owned;		/* Flag: do we own the selection? */
+    pos_t	start;		/* Start of selected area */
+    pos_t	end;		/* End of selected area */
+    int		vmode;		/* Visual mode character */
 
     /* Fields for selection that doesn't use Visual mode */
     short_u	origin_row;
@@ -1270,28 +1273,28 @@ typedef struct VimClipboard
     short_u	word_start_col;
     short_u	word_end_col;
 
-    pos_t	prev;		    /* Previous position */
-    short_u	state;		    /* Current selection state */
-    short_u	mode;		    /* Select by char, word, or line. */
+    pos_t	prev;		/* Previous position */
+    short_u	state;		/* Current selection state */
+    short_u	mode;		/* Select by char, word, or line. */
 
 # if defined(FEAT_GUI_X11) || defined(FEAT_XCLIPBOARD)
-    Atom	xatom;		    /* Vim's own special selection format */
-    Atom	xa_targets;
-    Atom	xa_text;
-    Atom	xa_compound_text;
+    Atom	sel_atom;	/* PRIMARY/CLIPBOARD selection ID */
 # endif
 
 # ifdef FEAT_GUI_GTK
-    GdkAtom	atom;		    /* Vim's own special selection format */
+    GdkAtom     gtk_sel_atom;	/* PRIMARY/CLIPBOARD selection ID */
 # endif
+
 # ifdef MSWIN
-    int_u	format;		    /* Vim's own special clipboard format */
+    int_u	format;		/* Vim's own special clipboard format */
 # endif
 # ifdef FEAT_GUI_BEOS
-				    /* no clipboard at the moment */
+				/* no clipboard at the moment */
 # endif
 } VimClipboard;
-#endif /* FEAT_CLIPBOARD */
+#else
+typedef int VimClipboard;	/* This is required for the prototypes. */
+#endif
 
 #ifdef __BORLANDC__
 /* work around a bug in the Borland 'stat' function: */
@@ -1415,10 +1418,8 @@ typedef struct VimClipboard
 # ifdef USE_ICONV
 /* On Win32 iconv.dll is dynamically loaded. */
 #  ifdef DYNAMIC_ICONV
-#   define ICONV_ENABLED iconv_enabled()
 #   define ICONV_ERRNO (*iconv_errno())
 #  else
-#   define ICONV_ENABLED 1
 #   define ICONV_ERRNO errno
 #  endif
 # endif

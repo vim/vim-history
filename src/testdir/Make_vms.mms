@@ -45,7 +45,8 @@ SCRIPT = test1.out test2.out test3.out test4.out test5.out \
 	 test23.out test24.out test26.out \
 	 test28.out test29.out test31.out test32.out \
 	 test33.out test34.out test35.out test36.out test37.out \
-	 test38.out test39.out test40.out test41.out test42.out
+	 test38.out test39.out test40.out test41.out test42.out \
+	 test43.out test44.out
 
 .IFDEF WANT_GUI
 SCRIPT_GUI = test16.out

@@ -1,4 +1,4 @@
-/* multibyte.c */
+/* mbyte.c */
 int enc_canon_props __ARGS((char_u *name));
 char_u *mb_init __ARGS((void));
 int bomb_size __ARGS((void));

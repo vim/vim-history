@@ -204,7 +204,7 @@ OBJ = \
 	$(OUTDIR)\misc1.obj \
 	$(OUTDIR)\misc2.obj \
 	$(OUTDIR)\move.obj \
-	$(OUTDIR)\multibyte.obj \
+	$(OUTDIR)\mbyte.obj \
 	$(OUTDIR)\normal.obj \
 	$(OUTDIR)\option.obj \
 	$(OUTDIR)\ops.obj \
@@ -469,7 +469,7 @@ $(OUTDIR)/getchar.obj:	$(OUTDIR) getchar.c  $(INCL)
 $(OUTDIR)/gui.obj:	$(OUTDIR) gui.c  $(INCL) $(GUI_INCL)
 	$(CC) $(CFLAGS) gui.c /Fo$(OUTDIR)/gui.obj $(PDB)
 
-$(OUTDIR)/gui_w32.obj:	$(OUTDIR) gui_w32.c  $(INCL) $(GUI_INCL)
+$(OUTDIR)/gui_w32.obj:	$(OUTDIR) gui_w32.c gui_w48.c $(INCL) $(GUI_INCL)
 	$(CC) $(CFLAGS) gui_w32.c /Fo$(OUTDIR)/gui_w32.obj $(PDB)
 
 if_perl.c : if_perl.xs typemap
@@ -520,8 +520,8 @@ $(OUTDIR)/misc2.obj:	$(OUTDIR) misc2.c  $(INCL)
 $(OUTDIR)/move.obj:	$(OUTDIR) move.c  $(INCL)
 	$(CC) $(CFLAGS) move.c /Fo$(OUTDIR)/move.obj $(PDB)
 
-$(OUTDIR)/multibyte.obj: $(OUTDIR) multibyte.c  $(INCL)
-	$(CC) $(CFLAGS) multibyte.c /Fo$(OUTDIR)/multibyte.obj $(PDB)
+$(OUTDIR)/mbyte.obj: $(OUTDIR) mbyte.c  $(INCL)
+	$(CC) $(CFLAGS) mbyte.c /Fo$(OUTDIR)/mbyte.obj $(PDB)
 
 $(OUTDIR)/normal.obj:	$(OUTDIR) normal.c  $(INCL)
 	$(CC) $(CFLAGS) normal.c /Fo$(OUTDIR)/normal.obj $(PDB)
@@ -628,7 +628,7 @@ proto.h: \
 	proto/misc1.pro \
 	proto/misc2.pro \
 	proto/move.pro \
-	proto/multibyte.pro \
+	proto/mbyte.pro \
 	proto/normal.pro \
 	proto/ops.pro \
 	proto/option.pro \

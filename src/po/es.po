@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Vim 6.0 (Español)\n"
 "POT-Creation-Date: 2001-03-03 19:07+0100\n"
-"PO-Revision-Date: 2001-03-08 12:03:44+CET\n"
+"PO-Revision-Date: 2001-03-08 21:08:22+CET\n"
 "Last-Translator: Eduardo F. Amatria <eferna1@platea.pntic.mec.es>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -959,7 +959,7 @@ msgstr "El recuento no se puede especificar dos veces"
 
 #: ex_docmd.c:3913
 msgid "Invalid default value for count"
-msgstr "Valor predeterminado para el recuento no válido"
+msgstr "Valor por omisión para el recuento no válido"
 
 #: ex_docmd.c:3941
 msgid "argument required for complete"
@@ -2580,7 +2580,7 @@ msgstr "--noplugin\t\tNo carga los «plugin scripts»"
 
 #: main.c:161
 msgid "-o[N]\t\tOpen N windows (default: one for each file)"
-msgstr "-o[N]\t\tAbre N ventanas (valor predeterminado: una por fichero)"
+msgstr "-o[N]\t\tAbre N ventanas (valor por omisión: una por fichero)"
 
 #: main.c:162
 msgid "+\t\t\tStart at end of file"
@@ -5197,7 +5197,7 @@ msgstr "Ejecutándose en modo compatible con Vi"
 
 #: version.c:858
 msgid "type  :set nocp<Enter>        for Vim defaults"
-msgstr "escriba  :set nocp<Intro>    para los valores predefinidos de Vim"
+msgstr "escriba  :set nocp<Intro>    para los valores por omisión de Vim"
 
 #: version.c:859
 msgid "type  :help cp-default<Enter> for info on this"
@@ -5242,111 +5242,6 @@ msgstr "Ha habido cambios en otra ventana"
 #: window.c:4010
 msgid "No file name under cursor"
 msgstr "No hay un nombre de fichero bajo el cursor"
-
-#: xxd.c:207
-#, c-format
-msgid "Usage:\n       %s [options] [infile [outfile]]\n"
-msgstr "Uso:\n       %s [opciones] [fichero de entrada [salida]]\n"
-
-#: xxd.c:124
-msgid "xxd V1.10 27oct98 by Juergen Weigert"
-msgstr "xxd V1.10 27oct98 por Juergen Weigert"
-
-#: xxd.c:208
-#, c-format
-msgid "    or\n       %s -r [-s [-]offset] [-c cols] [-ps] [infile [outfile]]\n"
-msgstr "    o\n       %s -r [-s [-]offset] [-c cols] [-ps] [fichero de entrada [salida]]\n"
-
-#: xxd.c:209
-msgid "Options:\n"
-msgstr "Opciones:\n"	
-
-#: xxd.c:210
-msgid "    -a          toggle autoskip: A single '*' replaces nul-lines. Default off.\n"
-msgstr "    -a             toggle autoskip: A single '*' replaces nul-lines.\n"
-"                   Valor predeterminado, desactivado.\n"
-
-#: xxd.c:211
-msgid "    -b          binary digit dump (incompatible with -p,-i,-r). Default hex.\n"
-msgstr "    -b             dígitos binarios del volcado (incompatible con -p,-i,-r).\n"
-"                   Valor predeterminado, hexadecimal.\n"
-
-#: xxd.c:212
-msgid "    -c cols     format <cols> octets per line. Default 16 (-i: 12, -ps: 30).\n"
-msgstr "    -c cols        formato: <cols> octetos por línea.\n"
-"                   Valor predeterminado, 16 (-i: 12, -ps: 30).\n"
-
-#: xxd.c:213
-msgid "    -E          show characters in EBCDIC. Default ASCII.\n"
-msgstr "    -E             muestra caracteres en EBCDIC. Predeterminado, ASCII.\n"
-
-#: xxd.c:214
-msgid "    -g          number of octets per group in normal output. Default 2.\n"
-msgstr "    -g             número de octetos por grupo en salida normal.\n"
-"                   Valor predeterminado, 2.\n"
-
-#: xxd.c:215
-msgid "    -h          print this summary.\n"
-msgstr "    -h             imprime este resumen.\n"
-
-#: xxd.c:216
-msgid "    -i          output in C include file style.\n"
-msgstr "    -i             salida al estilo de ficheros «include» de C.\n"
-
-#: xxd.c:217
-msgid "    -l len      stop after <len> octets.\n"
-msgstr "    -l len         para después de mostrar <len> octetos.\n"
-
-#: xxd.c:218
-msgid "    -ps         output in postscript plain hexdump style.\n"
-msgstr "    -ps            salida al estilo de volcado hex postscrip simple.\n"
-
-#: xxd.c:219
-msgid "    -r          reverse operation: convert (or patch) hexdump into binary.\n"
-msgstr "    -r             invierte la operación: convert (or patch) hexdump into binary.\n"
-
-#: xxd.c:220
-msgid "    -r -s off   revert with <off> added to file positions found in hexdump.\n"
-msgstr "    -r -s off      revert with <off> added to file positions found in hexdump.\n"
-
-#: xxd.c:221
-#, c-format
-msgid "    -s %sseek  start at <seek> bytes abs. %sinfile offset.\n"
-msgstr "    -s %sseek  start at <seek> bytes abs. %sinfile offset.\n"
-
-#: xxd.c:223
-msgid "(or +: rel.) "
-msgstr "(o +: rel.) "
-
-#: xxd.c:227
-msgid "    -u          use upper case hex letters.\n"
-msgstr "    -u             usa letras mayúsculas para los números hexadecimales.\n"
-
-#: xxd.c:228
-#, c-format
-msgid "    -v          show version: \"%s%s\".\n"
-msgstr "    -v             muestra la versión:\n"
-"                   «%s%s».\n"
-
-#: xxd.c:300
-#, c-format
-msgid "%s: sorry, cannot seek backwards.\n"
-msgstr "%s: lo siento, no se puede buscar hacia atrás.\n"
-
-#: xxd.c:567
-#, c-format
-msgid "%s: invalid number of columns (max. %d).\n"
-msgstr "%s: número de columnas no válido (máx. %d).\n"
-
-#: xxd.c:610
-#, c-format
-msgid "%s: sorry, cannot revert this type of hexdump\n"
-msgstr "%s: lo siento, no se puede volver atrás este tipo de volcado hex\n"
-
-#: xxd.c:626
-#, c-format
-msgid "%s: sorry cannot seek.\n"
-msgstr "%s: lo siento, no se puede buscar.\n"
 
 #: globals.h:837
 msgid "--No lines in buffer--"

@@ -43,7 +43,7 @@ SrcFiles        =  è
 				  :src:misc1.c è
 				  :src:misc2.c è
 				  :src:move.c è
-				  :src:multibyte.c è
+				  :src:mbyte.c è
 				  :src:normal.c è
 				  :src:ops.c è
 				  :src:option.c è
@@ -91,7 +91,7 @@ ObjFiles-PPC    =  è
 				  "{ObjDir}misc1.c.x" è
 				  "{ObjDir}misc2.c.x" è
 				  "{ObjDir}move.c.x" è
-				  "{ObjDir}multibyte.c.x" è
+				  "{ObjDir}mbyte.c.x" è
 				  "{ObjDir}normal.c.x" è
 				  "{ObjDir}ops.c.x" è
 				  "{ObjDir}option.c.x" è
@@ -170,7 +170,7 @@ VIm  üü  {ObjFiles-PPC} {LibFiles-PPC} {*MondoBuild*}
 "{ObjDir}misc1.c.x"  ü  :src:misc1.c
 "{ObjDir}misc2.c.x"  ü  :src:misc2.c
 "{ObjDir}move.c.x"  ü  :src:move.c
-"{ObjDir}multibyte.c.x"  ü  :src:multibyte.c
+"{ObjDir}mbyte.c.x"  ü  :src:mbyte.c
 "{ObjDir}normal.c.x"  ü  :src:normal.c
 "{ObjDir}ops.c.x"  ü  :src:ops.c
 "{ObjDir}option.c.x"  ü  :src:option.c
@@ -255,7 +255,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -333,7 +333,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -411,7 +411,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -489,7 +489,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -568,7 +568,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -646,7 +646,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -724,7 +724,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -802,7 +802,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -880,7 +880,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -958,7 +958,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -1036,7 +1036,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -1114,7 +1114,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -1192,7 +1192,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -1270,7 +1270,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -1374,7 +1374,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -1453,7 +1453,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -1531,7 +1531,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -1609,7 +1609,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -1687,7 +1687,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -1765,7 +1765,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -1843,7 +1843,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -1922,7 +1922,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -2000,7 +2000,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -2078,7 +2078,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -2109,8 +2109,8 @@ MakeDepend
 	:src:proto:if_perl.pro è
 	:src:proto:if_perlsfio.pro
 
-:obj:multibyte.c.x	ü  è
-	:src:multibyte.c è
+:obj:mbyte.c.x	ü  è
+	:src:mbyte.c è
 	:src:vim.h è
 	:src:globals.h è
 	:src:option.h è
@@ -2156,7 +2156,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -2234,7 +2234,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -2312,7 +2312,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -2390,7 +2390,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -2468,7 +2468,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -2546,7 +2546,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -2624,7 +2624,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -2702,7 +2702,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -2780,7 +2780,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -2858,7 +2858,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -2936,7 +2936,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -3014,7 +3014,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -3092,7 +3092,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -3171,7 +3171,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -3248,7 +3248,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -3326,7 +3326,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -3405,7 +3405,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -3483,7 +3483,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è
@@ -3561,7 +3561,7 @@ MakeDepend
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
 	:src:proto:move.pro è
-	:src:proto:multibyte.pro è
+	:src:proto:mbyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
 	:src:proto:option.pro è

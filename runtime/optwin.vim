@@ -1,7 +1,7 @@
 " These commands create the option window.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Feb 27
+" Last Change:	2001 Mar 15
 
 " If there already is an option window, jump to that one.
 if bufwinnr("option-window") > 0
@@ -793,10 +793,9 @@ if has("farsi")
   call <SID>BinOptionL("fk", &fk)
 endif
 if has("multi_byte")
-  call append("$", "fileencoding\tcharacter encoding of the file: \"ansi\", \"japan\"")
-  call append("$", "\t\"korea\", \"prc\" or \"taiwan\"")
-  call append("$", "\t(local to buffer)")
-  call <SID>Option("fe")
+  call append("$", "encoding\tcharacter encoding used in Vim: \"latin1\", \"utf-8\"")
+  call append("$", "\t\"euc-jp\", \"big5\", etc.")
+  call <SID>Option("enc")
 endif
 if has("langmap")
   call append("$", "langmap\ttranslate characters for Command mode")

@@ -786,7 +786,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60x
+VIMRTDIR = /vim60y
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 INDSUBDIR = /indent
@@ -1087,10 +1087,6 @@ ALL_GUI_PRO  = gui.pro gui_gtk.pro gui_motif.pro gui_athena.pro gui_gtk_x11.pro 
 
 # }}}
 
-### our grand parent directory should know who we are...
-### only used for "make tar"
-VIMVERSION = `eval "basename \`cd ../; pwd\`"`
-
 ### Command to create dependencies based on #include "..."
 ### prototype headers are ignored due to -DPROTO, system
 ### headers #include <...> are ignored if we use the -MM option, as
@@ -1177,7 +1173,7 @@ BASIC_SRC = \
 	misc1.c \
 	misc2.c \
 	move.c \
-	multibyte.c \
+	mbyte.c \
 	normal.c \
 	ops.c \
 	option.c \
@@ -1240,7 +1236,7 @@ OBJ = \
 	objects/misc1.o \
 	objects/misc2.o \
 	objects/move.o \
-	objects/multibyte.o \
+	objects/mbyte.o \
 	objects/normal.o \
 	objects/ops.o \
 	objects/option.o \
@@ -1292,7 +1288,7 @@ PRO_AUTO = \
 	misc1.pro \
 	misc2.pro \
 	move.pro \
-	multibyte.pro \
+	mbyte.pro \
 	normal.pro \
 	ops.pro \
 	option.pro \
@@ -1436,7 +1432,7 @@ os_vms.pro: os_vms.c
 # must use os_vms_conf.h for auto/config.h
 	mv auto/config.h auto/config.h.save
 	cp os_vms_conf.h auto/config.h
-	cproto $(PFLAGS) -DVMS -UFEAT_GUI_ATHENA -UFEAT_GUI_MOTIF -UFEAT_GUI_GTK $< > $@
+	cproto $(PFLAGS) -DVMS -UFEAT_GUI_ATHENA -UFEAT_GUI_MOTIF -UFEAT_GUI_GTK $< > proto/$@
 	echo "/* vim: set ft=c : */" >> proto/$@
 	rm auto/config.h
 	mv auto/config.h.save auto/config.h
@@ -1706,16 +1702,16 @@ uninstall_runtime:
 	-rm -f $(SYS_INDOFF_FILE) $(SYS_INDENT_FILE)
 	-rm -f $(SYS_FTPLUGOF_FILE) $(SYS_FTPLUGIN_FILE)
 	-rm -f $(SYS_OPTWIN_FILE)
-	-rm -f $(SYNSUBLOC)/*.vim $(INDSUBLOC)/*.vim
+	-rm -f $(SYNSUBLOC)/*.vim $(SYNSUBLOC)/README.txt $(INDSUBLOC)/*.vim
 	-rm -rf $(MACROSUBLOC)
 	-rm -rf $(TUTORSUBLOC)
 	-rm -rf $(TOOLSSUBLOC)
 	-rm -rf $(LANGSUBLOC)
 	-rm -rf $(KMAPSUBLOC)
 	-rmdir $(HELPSUBLOC) $(SYNSUBLOC) $(INDSUBLOC)
-	-rm -rf $(FTPLUGSUBLOC)/*/*.vim $(FTPLUGSUBLOC)/README.txt
+	-rm -rf $(FTPLUGSUBLOC)/*.vim $(FTPLUGSUBLOC)/README.txt
 	-rm -f $(PLUGSUBLOC)/*.vim $(PLUGSUBLOC)/README.txt
-	-rmdir $(FTPLUGSUBLOC)/* $(FTPLUGSUBLOC) $(PLUGSUBLOC) $(VIMRTLOC)
+	-rmdir $(FTPLUGSUBLOC) $(PLUGSUBLOC) $(VIMRTLOC)
 
 # Clean up all the files that have been produced, except configure's.
 # We support common typing mistakes for Juergen! :-)
@@ -1758,13 +1754,16 @@ pixmaps:
 
 # Start configure from scratch
 scrub scratch:
-	-rm -f auto/config.status auto/config.cache auto/config.log auto/config.h
+	-rm -f auto/config.status auto/config.cache auto/config.log
+	-rm -f auto/config.h auto/link.log tags
 	touch auto/config.h
 
 distclean: clean scratch
 	cp -f config.mk.dist auto/config.mk
 
-dist: distclean tar
+dist: distclean
+	@echo
+	@echo Making the distribution has to be done in the top directory
 
 mdepend:
 	-@rm -f Makefile~
@@ -1956,8 +1955,8 @@ objects/misc2.o: misc2.c
 objects/move.o: move.c
 	$(CCC) -o $@ move.c
 
-objects/multibyte.o: multibyte.c
-	$(CCC) -o $@ multibyte.c
+objects/mbyte.o: mbyte.c
+	$(CCC) -o $@ mbyte.c
 
 objects/normal.o: normal.c
 	$(CCC) -o $@ normal.c
@@ -2098,9 +2097,9 @@ objects/misc2.o: misc2.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
 objects/move.o: move.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
  ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h option.h \
  ex_cmds.h proto.h globals.h farsi.h
-objects/multibyte.o: multibyte.c vim.h auto/config.h feature.h os_unix.h \
- auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h option.h ex_cmds.h proto.h globals.h farsi.h
+objects/mbyte.o: mbyte.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
+ ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h option.h \
+ ex_cmds.h proto.h globals.h farsi.h
 objects/normal.o: normal.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h option.h ex_cmds.h proto.h globals.h farsi.h

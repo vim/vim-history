@@ -705,7 +705,7 @@ bufselfcmd(ref, interp, objc, objv)
 	    err = vimerror(interp);
 	    if (err != TCL_OK)
 		break;
-	    if (pos->lnum == 0)
+	    if (pos->lnum <= 0)
 	    {
 		Tcl_SetResult(interp, _("mark not set"), TCL_STATIC);
 		err = TCL_ERROR;
@@ -1185,7 +1185,7 @@ tclsetoption(interp, objc, objv, objn)
 
     option = (char_u *)Tcl_GetStringFromObj(objv[objn], NULL);
     ++objn;
-    isnum = get_option_value(option, &lval, &sval);
+    isnum = get_option_value(option, &lval, &sval, 0);
     err = TCL_OK;
     switch (isnum)
     {

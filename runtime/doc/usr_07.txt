@@ -1,4 +1,4 @@
-*usr_07.txt*	For Vim version 6.0x.  Last change: 2000 Jul 09
+*usr_07.txt*	For Vim version 6.0y.  Last change: 2001 Mar 14
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -10,6 +10,7 @@
 |07.3|  Different colors
 |07.4|  With colors or without colors
 |07.5|  Printing with colors
+|07.6|  Further reading
 
      Next chapter: |usr_08.txt|  Editing more than one file
  Previous chapter: |usr_06.txt|  Set your settings
@@ -19,7 +20,8 @@ Table of contents: |usr_toc.txt|
 *07.1*  Switching it on
 
 It all starts with one simple command: >
-	:syntax on
+
+	:syntax enable
 
 That should work in most situations to get color in your files.  Vim will
 automagically detect the type of file and load the right syntax highlighting.
@@ -27,17 +29,17 @@ Suddenly comments are blue, keywords brown and strings red.  This makes it
 easy to overview the file.  After a while you will find that black&white text
 slows you down!
 
-If you always want to use syntax highlighting, put the "syntax on" command in
-your |vimrc| file.
+If you always want to use syntax highlighting, put the "syntax enable" command
+in your |vimrc| file.
 
 If you want syntax highlighting only when the terminal supports colors, you
 can put this in your |vimrc| file: >
 	if &t_Co > 1
-	   syntax on
+	   syntax enable
 	endif
 
-If you want syntax highlighting only in the GUI version, put the ":syntax on"
-command in your |gvimrc| file.
+If you want syntax highlighting only in the GUI version, put the ":syntax
+enable" command in your |gvimrc| file.
 
 ==============================================================================
 *07.2*  No or wrong colors?
@@ -88,9 +90,10 @@ Or the colors could be wrong:
 		:set background=dark
 <	And for a light background: >
 		:set background=light
-<	Make sure you put this _before_ the ":syntax on" command, otherwise
-	the colors will already have been set.  You could do ":syntax on"
-	after setting 'background' to make Vim set the default colors again.
+<	Make sure you put this _before_ the ":syntax enable" command,
+	otherwise the colors will already have been set.  You could do
+	":syntax reset" after setting 'background' to make Vim set the default
+	colors again.
 
 - The colors are wrong when scrolling bottom to top.
 	Vim doesn't read the whole file to parse the text.  It starts parsing
@@ -108,9 +111,7 @@ for example, to make comments green: >
 See |:highlight| about how to specify highlighting attributes.
 
 You can make your own preferred set of colors this way.  If you want to use
-this always, put the ":highlight" commands in your "vimrc" file.  Make sure
-they are _after_ the ":syntax on" command, because that will set the default
-colors.
+this always, put the ":highlight" commands in your "vimrc" file.
 
 ==============================================================================
 *07.4*  With colors or without colors
@@ -133,6 +134,15 @@ when starting to edit a buffer.  To switch highlighting on for the current
 buffer, set the 'syntax' option: >
 	:set syntax=ON
 <
+							*:syn-reset*
+If you have changed the colors and messed them up, use this command to get the
+defaults back: >
+	:syntax reset
+This only resets the colors used for syntax highlighting, not the ones used
+for the 'highlight' option.
+Note that the syntax colors that you set in your vimrc file will also be reset
+back to their Vim default.
+
 ==============================================================================
 *07.5*  Printing with colors				*syntax-printing*
 
@@ -151,6 +161,12 @@ Open this file in your favorite browser and print it from there.
 
 Instead of printing, you could also put the HTML file on a web server, and let
 others look at the colored text.
+
+==============================================================================
+*07.6*  Further reading
+
+|usr_44.txt|  Your own syntax highlighted.
+|syntax|      All the details.
 
 ==============================================================================
  vim:tw=78:

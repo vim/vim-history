@@ -924,7 +924,8 @@ filterend:
 }
 
 /*
- * call a shell to execute a command
+ * Call a shell to execute a command.
+ * When "cmd" is NULL start an interactive shell.
  */
     void
 do_shell(cmd, flags)
@@ -960,7 +961,7 @@ do_shell(cmd, flags)
     /*
      * Check if ":!start" is used.
      */
-    if (cmd)
+    if (cmd != NULL)
 	winstart = (STRNICMP(cmd, "start ", 6) == 0);
 #endif
 
@@ -3166,28 +3167,6 @@ static int	global_need_beginline;	/* call beginline() after ":g" */
 static long	sub_nsubs;	/* total number of substitutions */
 static linenr_t	sub_nlines;	/* total number of lines changed */
 
-/*
- * Get a line for multi-line regexp matching in do_sub().
- * The first line may be a copy, in which case sub_firstline points to that
- * copy.
- */
-static linenr_t sub_firstlnum;
-static char_u *sub_firstline;
-
-static char_u *sub_getline __ARGS((linenr_t lnum));
-
-    static char_u *
-sub_getline(lnum)
-    linenr_t	lnum;
-{
-    if (lnum == 0 && sub_firstline != NULL)
-	return sub_firstline;
-    /* when looking behind for a match/no-match we can't go before line 1 */
-    if (lnum + sub_firstlnum < 1)
-	return NULL;
-    return ml_get(lnum + sub_firstlnum);
-}
-
 /* do_sub()
  *
  * Perform a substitution from line eap->line1 to line eap->line2 using the
@@ -3224,6 +3203,8 @@ do_sub(eap)
     linenr_t	old_line_count = curbuf->b_ml.ml_line_count;
     linenr_t	line2;
     long	nmatch;		/* number of lines in match */
+    linenr_t	sub_firstlnum;	/* nr of first sub line */
+    char_u	*sub_firstline;	/* allocated copy of first sub line */
 
     cmd = eap->arg;
     if (!global_busy)
@@ -3425,8 +3406,7 @@ do_sub(eap)
     for (lnum = eap->line1; lnum <= line2 && !(got_int || got_quit); ++lnum)
     {
 	sub_firstlnum = lnum;
-	nmatch = vim_regexec_multi(&regmatch, sub_getline, (colnr_t)0,
-					   curbuf->b_ml.ml_line_count - lnum);
+	nmatch = vim_regexec_multi(&regmatch, curwin, curbuf, lnum, (colnr_t)0);
 	if (nmatch)
 	{
 	    colnr_t	copycol;
@@ -3569,11 +3549,18 @@ do_sub(eap)
 
 			if (msg_row == Rows - 1)
 			    msg_didout = FALSE;		/* avoid a scroll-up */
+			msg_starthere();
+			i = msg_scroll;
+			msg_scroll = 0;		/* truncate msg when needed */
+			msg_no_more = TRUE;
 			/* write message same highlighting as for wait_return */
 			smsg_attr(hl_attr(HLF_R),
-				(char_u *)_("replace with %s (y/n/a/q/^E/^Y)?"),
+			    (char_u *)_("replace with %s (y/n/a/q/l/^E/^Y)?"),
 				sub);
+			msg_no_more = FALSE;
+			msg_scroll = i;
 			showruler(TRUE);
+			windgoto(msg_row, msg_col);
 			RedrawingDisabled = temp;
 
 #ifdef USE_ON_FLY_SCROLL
@@ -3599,17 +3586,24 @@ do_sub(eap)
 			    got_quit = TRUE;
 			    break;
 			}
-			else if (i == 'n')
+			if (i == 'n')
 			    break;
-			else if (i == 'y')
+			if (i == 'y')
 			    break;
-			else if (i == 'a')
+			if (i == 'l')
+			{
+			    /* last: replace and then stop */
+			    do_all = FALSE;
+			    line2 = lnum;
+			    break;
+			}
+			if (i == 'a')
 			{
 			    do_ask = FALSE;
 			    break;
 			}
 #ifdef FEAT_INS_EXPAND
-			else if (i == Ctrl_E)
+			if (i == Ctrl_E)
 			    scrollup_clamp();
 			else if (i == Ctrl_Y)
 			    scrolldown_clamp();
@@ -3633,9 +3627,8 @@ do_sub(eap)
 		 * 3. substitute the string.
 		 */
 		/* get length of substitution part */
-		sublen = vim_regsub_multi(&regmatch, sub_getline,
-			curbuf->b_ml.ml_line_count - lnum,
-				      sub, sub_firstline, FALSE, p_magic, TRUE);
+		sublen = vim_regsub_multi(&regmatch, lnum,
+				    sub, sub_firstline, FALSE, p_magic, TRUE);
 
 		/* Need room for:
 		 * - result so far in new_start (not for first sub in line)
@@ -3696,8 +3689,7 @@ do_sub(eap)
 		mch_memmove(new_end, sub_firstline + copycol, (size_t)i);
 		new_end += i;
 
-		(void)vim_regsub_multi(&regmatch, sub_getline,
-				 curbuf->b_ml.ml_line_count - lnum,
+		(void)vim_regsub_multi(&regmatch, lnum,
 					   sub, new_end, TRUE, p_magic, TRUE);
 		sub_nsubs++;
 		did_sub = TRUE;
@@ -3770,10 +3762,8 @@ skip:
 			     || got_int || got_quit || !(do_all || do_again));
 		if (lastone
 			|| do_ask
-			|| (nmatch = vim_regexec_multi(&regmatch, sub_getline,
-				matchcol,
-				  curbuf->b_ml.ml_line_count - sub_firstlnum))
-			    == 0)
+			|| (nmatch = vim_regexec_multi(&regmatch, curwin,
+				       curbuf, sub_firstlnum, matchcol)) == 0)
 		{
 		    if (new_start != NULL)
 		    {
@@ -3830,9 +3820,8 @@ skip:
 			copycol = 0;
 		    }
 		    if (nmatch == -1 && !lastone)
-			nmatch = vim_regexec_multi(&regmatch, sub_getline,
-				matchcol,
-				  curbuf->b_ml.ml_line_count - sub_firstlnum);
+			nmatch = vim_regexec_multi(&regmatch, curwin, curbuf,
+						     sub_firstlnum, matchcol);
 
 		    /*
 		     * 5. break if there isn't another match in this line
@@ -4042,10 +4031,7 @@ ex_global(eap)
     for (lnum = eap->line1; lnum <= eap->line2 && !got_int; ++lnum)
     {
 	/* a match on this line? */
-	sub_firstlnum = lnum;
-	sub_firstline = NULL;
-	match = vim_regexec_multi(&regmatch, sub_getline, (colnr_t)0,
-					   curbuf->b_ml.ml_line_count - lnum);
+	match = vim_regexec_multi(&regmatch, curwin, curbuf, lnum, (colnr_t)0);
 	if ((type == 'g' && match) || (type == 'v' && !match))
 	{
 	    ml_setmarked(lnum);

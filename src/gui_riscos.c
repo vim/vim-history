@@ -2017,7 +2017,7 @@ ro_message(block)
 	    ro_datasave(block);
 	    break;
 	case 2:		/* DataSaveAck. */
-	    if (clip_convert_selection(&buffer, &len) == -1)
+	    if (clip_convert_selection(&buffer, &len, &clip_star) == -1)
 		return;
 
 	    /* Save the clipboard contents to a file. */
@@ -2040,12 +2040,12 @@ ro_message(block)
 	case 0xf:	/* Lose clipboard. */
 	    if (block[5] & 4)
 	    {
-		clip_free_selection();
-		clipboard.owned = FALSE;
+		clip_free_selection(&clip_star);
+		clip_star.owned = FALSE;
 	    }
 	    break;
-	case 0x10:	/* DataRequest (clipboard) */
-	    if (clipboard.owned)
+	case 0x10:	/* DataRequest (clip_star) */
+	    if (clip_star.owned)
 	    {
 		int rows;
 
@@ -2055,7 +2055,7 @@ ro_message(block)
 		block[4] = 1;		    /* DataSave message. */
 		/* Create an estimate for the size (larger or same as true
 		 * value) */
-		rows = clipboard.end.lnum - clipboard.start.lnum;
+		rows = clip_star.end.lnum - clip_star.start.lnum;
 		if (rows < 0)
 		    rows = -rows;
 		block[9] = (rows + 1) * Columns + 1; /* Add one for possible
@@ -2643,12 +2643,12 @@ gui_mch_insert_lines(int row, int num_lines)
  * Should we become the new owner?
  */
     void
-clip_mch_request_selection(void)
+clip_mch_request_selection(VimClipboard *cbd)
 {
-    int	    block[64];	/* Will be used in Wimp_Poll. */
-    int	    reason;
-    char_u  *buffer;
-    long_u  length;
+    int		block[64];	/* Will be used in Wimp_Poll. */
+    int		reason;
+    char_u	*buffer;
+    long_u	length;
 
     block[0] = 48;			/* Size of block. */
     block[3] = 0;			/* Orinial message. */
@@ -2715,7 +2715,7 @@ clip_mch_request_selection(void)
     if (xswi(OS_File, 16, "<Wimp$Scrap>", buffer, 0) & v_flag)
 	return;
 
-    clip_yank_selection(MCHAR, buffer, length);
+    clip_yank_selection(MCHAR, buffer, length, cbd);
 
     vim_free(buffer);
 
@@ -2728,7 +2728,7 @@ clip_mch_request_selection(void)
 
 /* Not sure what this means under RISC OS. */
     void
-clip_mch_lose_selection(void)
+clip_mch_lose_selection(VimClipboard *cbd)
 {
 }
 
@@ -2736,7 +2736,7 @@ clip_mch_lose_selection(void)
  * Return OK if our claim is accepted (always, under RISC OS)
  */
     int
-clip_mch_own_selection(void)
+clip_mch_own_selection(VimClipboard *cbd)
 {
     int block[6];
     block[0] = 24;	/* Length of block.  */
@@ -2753,9 +2753,9 @@ clip_mch_own_selection(void)
  * for RISC OS too.
  */
     void
-clip_mch_set_selection(void)
+clip_mch_set_selection(VimClipboard *cbd)
 {
-    clip_get_selection();
+    clip_get_selection(cbd);
 }
 
 /*

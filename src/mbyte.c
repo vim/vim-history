@@ -1,14 +1,14 @@
 /* vi:set ts=8 sts=4 sw=4:
  *
  * VIM - Vi IMproved	by Bram Moolenaar
- * Multibyte extensions by Sung-Hoon Baek
+ * Multibyte extensions partly by Sung-Hoon Baek
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
  * See README.txt for an overview of the Vim source code.
  */
 /*
- * multibyte.c: Code specifically for handling multi-byte characters.
+ * mbyte.c: Code specifically for handling multi-byte characters.
  *
  * The encoding used in the core is set with 'encoding'.  When 'encoding' is
  * changed, the following four variables are set (for speed).
@@ -555,7 +555,11 @@ codepage_invalid:
 		 */
 		buf[0] = i;
 		buf[1] = 0;
+#if 0
+		if (i >= 0x80)/* TESTING DBCS: 'encoding' != current locale */
+#else
 		if (mblen(buf, (size_t)1) <= 0)
+#endif
 		    n = 2;
 		else
 		    n = 1;
@@ -1089,6 +1093,7 @@ utf_ptr2char(p)
 
 /*
  * Get character at **pp and advance *pp to the next character.
+ * Note: composing characters are skipped!
  */
     int
 mb_ptr2char_adv(pp)
@@ -1907,9 +1912,24 @@ enc_default()
      * If there is a '.' remove the part before it.
      * if there is something after the codeset, remove it.
      * Make the name lowercase and replace '_' with '-'.
+     * Exception: "ja_JP.EUC" == "euc-jp", "zh_CN.EUC" = "euc-cn",
+     * "ko_KR.EUC" == "euc-kr"
      */
     if ((p = (char *)vim_strchr((char_u *)s, '.')) != NULL)
-	s = p + 1;
+    {
+	if (p > s + 2 && STRNICMP(p + 1, "EUC", 3) == 0
+			     && !isalnum(p[4]) && p[4] != '-' && p[-3] == '_')
+	{
+	    /* copy "XY.EUC" to "euc-XY" to buf[10] */
+	    STRCPY(buf + 10, "euc-");
+	    buf[14] = p[-2];
+	    buf[15] = p[-1];
+	    buf[16] = 0;
+	    s = buf + 10;
+	}
+	else
+	    s = p + 1;
+    }
     for (i = 0; s[i] != NUL && i < sizeof(buf) - 1; ++i)
     {
 	if (s[i] == '_' || s[i] == '-')
@@ -1961,6 +1981,12 @@ my_iconv_open(to, from)
     if (iconv_ok == FALSE)
 	return (void *)-1;	/* detected a broken iconv() previously */
 
+#ifdef DYNAMIC_ICONV
+    /* Check if the iconv.dll can be found. */
+    if (!iconv_enabled())
+	return (void *)-1;
+#endif
+
     fd = iconv_open((char *)enc_skip(to), (char *)enc_skip(from));
 
     if (fd != (iconv_t)-1 && iconv_ok == -1)
@@ -2006,36 +2032,54 @@ iconv_string(fd, str, strlen)
     size_t	done = 0;
     char_u	*result = NULL;
     char_u	*p;
+    int		l;
 
     from = (char *)str;
     fromlen = strlen;
     for (;;)
     {
-	len = len + fromlen * 2 + 40;	/* enough room for most conversions */
-	p = alloc(len);
-	if (p != NULL && done > 0)
-	    mch_memmove(p, result, done);
-	vim_free(result);
-	result = p;
-	if (result == NULL)	/* out of memory */
-	    break;
+	if (len == 0 || ICONV_ERRNO == E2BIG)
+	{
+	    /* Allocate enough room for most conversions.  When re-allocating
+	     * increase the buffer size. */
+	    len = len + fromlen * 2 + 40;
+	    p = alloc(len);
+	    if (p != NULL && done > 0)
+		mch_memmove(p, result, done);
+	    vim_free(result);
+	    result = p;
+	    if (result == NULL)	/* out of memory */
+		break;
+	}
 
 	to = (char *)result + done;
-	tolen = len - done - 1;
+	tolen = len - done - 2;
 	if (iconv(fd, &from, &fromlen, &to, &tolen) != (size_t)-1)
 	{
 	    /* Finished, append a NUL. */
 	    *to = NUL;
 	    break;
 	}
-	if (ICONV_ERRNO != E2BIG)
+	if (ICONV_ERRNO == EILSEQ)
+	{
+	    /* Can't convert: insert a '?' and skip a character.  This assumes
+	     * conversion from 'encoding' to something else.  In other
+	     * situations we don't know what to skip anyway. */
+	    *to++ = '?';
+	    if ((*mb_ptr2cells)((char_u *)from) > 1)
+		*to++ = '?';
+	    l = (*mb_ptr2len_check)((char_u *)from);
+	    from += l;
+	    fromlen -= l;
+	}
+	else if (ICONV_ERRNO != E2BIG)
 	{
 	    /* conversion failed */
 	    vim_free(result);
 	    result = NULL;
 	    break;
 	}
-	/* Not enough room, increase the buffer size. */
+	/* Not enough room or skipping illegal sequence. */
 	done = to - (char *)result;
     }
     return result;
@@ -2045,7 +2089,6 @@ iconv_string(fd, str, strlen)
 /*
  * Dynamically load the "iconv.dll" on Win32.
  */
-static int iconv_runtime_link_init(char *libname, char *rtlibname);
 
 #ifndef DYNAMIC_ICONV	    /* just generating prototypes */
 # define HINSTANCE int
@@ -2064,43 +2107,42 @@ HINSTANCE hMsvcrtDLL = 0;
 #   endif
 #  endif
 
+/*
+ * Try opening the iconv.dll and return TRUE if iconv() can be used.
+ */
     int
 iconv_enabled()
 {
-    return iconv_runtime_link_init(DYNAMIC_ICONV_DLL, DYNAMIC_MSVCRT_DLL);
-}
-
-    static int
-iconv_runtime_link_init(char *libname, char *rtlibname)
-{
-    if (hIconvDLL && hMsvcrtDLL)
-	return 1;
-    hIconvDLL = LoadLibrary(libname);
-    hMsvcrtDLL = LoadLibrary(rtlibname);
-    if (!hIconvDLL || !hMsvcrtDLL)
+    if (hIconvDLL != 0 && hMsvcrtDLL != 0)
+	return TRUE;
+    hIconvDLL = LoadLibrary(DYNAMIC_ICONV_DLL);
+    hMsvcrtDLL = LoadLibrary(DYNAMIC_MSVCRT_DLL);
+    if (hIconvDLL == 0 || hMsvcrtDLL == 0)
     {
 	iconv_end();
-	return 0;
+	return FALSE;
     }
+
     *((FARPROC*)&iconv)		= GetProcAddress(hIconvDLL, "libiconv");
     *((FARPROC*)&iconv_open)	= GetProcAddress(hIconvDLL, "libiconv_open");
     *((FARPROC*)&iconv_close)	= GetProcAddress(hIconvDLL, "libiconv_close");
     *((FARPROC*)&iconvctl)	= GetProcAddress(hIconvDLL, "libiconvctl");
     *((FARPROC*)&iconv_errno)	= GetProcAddress(hMsvcrtDLL, "_errno");
-    if (!iconv || !iconv_open || !iconv_close || !iconvctl || !iconv_errno)
+    if (iconv == NULL || iconv_open == NULL || iconv_close == NULL
+	    || iconvctl == NULL || iconv_errno == NULL)
     {
 	iconv_end();
-	return 0;
+	return FALSE;
     }
-    return 1;
+    return TRUE;
 }
 
     void
 iconv_end()
 {
-    if (hIconvDLL)
+    if (hIconvDLL != 0)
 	FreeLibrary(hIconvDLL);
-    if (hMsvcrtDLL)
+    if (hMsvcrtDLL != 0)
 	FreeLibrary(hMsvcrtDLL);
     hIconvDLL = 0;
     hMsvcrtDLL = 0;
@@ -2167,8 +2209,8 @@ xim_set_preedit()
 #ifdef FEAT_GUI_GTK
     if (gdk_im_ready())
     {
-	GdkICAttributesType attrmask;
-	GdkICAttr	    *attr;
+	int		attrmask;
+	GdkICAttr	*attr;
 
 	if (!xic_attr)
 	    return;
@@ -2177,7 +2219,7 @@ xim_set_preedit()
 	attrmask = 0;
 
 # ifdef FEAT_XFONTSET
-	if ((xim_input_style & GDK_IM_PREEDIT_POSITION)
+	if ((xim_input_style & (int)GDK_IM_PREEDIT_POSITION)
 		&& gui.fontset != NOFONTSET
 		&& gui.fontset->type == GDK_FONT_FONTSET)
 	{
@@ -2187,7 +2229,7 @@ xim_set_preedit()
 		{
 		    attr->spot_location.x = 0;
 		    attr->spot_location.y = -100;
-		    attrmask |= GDK_IC_SPOT_LOCATION;
+		    attrmask |= (int)GDK_IC_SPOT_LOCATION;
 		}
 	    }
 	    else
@@ -2199,13 +2241,13 @@ xim_set_preedit()
 		{
 		    attr->spot_location.x = TEXT_X(gui.col);
 		    attr->spot_location.y = TEXT_Y(gui.row);
-		    attrmask |= GDK_IC_SPOT_LOCATION;
+		    attrmask |= (int)GDK_IC_SPOT_LOCATION;
 		}
 
 		gdk_window_get_size(gui.drawarea->window, &width, &height);
 		width -= 2 * gui.border_offset;
 		height -= 2 * gui.border_offset;
-		if (xim_input_style & GDK_IM_STATUS_AREA)
+		if (xim_input_style & (int)GDK_IM_STATUS_AREA)
 		    height -= gui.char_height;
 		if (attr->preedit_area.width != width
 		    || attr->preedit_area.height != height)
@@ -2214,13 +2256,13 @@ xim_set_preedit()
 		    attr->preedit_area.y = gui.border_offset;
 		    attr->preedit_area.width = width;
 		    attr->preedit_area.height = height;
-		    attrmask |= GDK_IC_PREEDIT_AREA;
+		    attrmask |= (int)GDK_IC_PREEDIT_AREA;
 		}
 
 		if (attr->preedit_fontset != gui.current_font)
 		{
 		    attr->preedit_fontset = gui.current_font;
-		    attrmask |= GDK_IC_PREEDIT_FONTSET;
+		    attrmask |= (int)GDK_IC_PREEDIT_FONTSET;
 		}
 	    }
 	}
@@ -2234,16 +2276,16 @@ xim_set_preedit()
 	if (attr->preedit_foreground.pixel != xim_fg_color)
 	{
 	    attr->preedit_foreground.pixel = xim_fg_color;
-	    attrmask |= GDK_IC_PREEDIT_FOREGROUND;
+	    attrmask |= (int)GDK_IC_PREEDIT_FOREGROUND;
 	}
 	if (attr->preedit_background.pixel != xim_bg_color)
 	{
 	    attr->preedit_background.pixel = xim_bg_color;
-	    attrmask |= GDK_IC_PREEDIT_BACKGROUND;
+	    attrmask |= (int)GDK_IC_PREEDIT_BACKGROUND;
 	}
 
-	if (attrmask)
-	    gdk_ic_set_attr(xic, attr, attrmask);
+	if (attrmask != 0)
+	    gdk_ic_set_attr(xic, attr, (GdkICAttributesType)attrmask);
     }
 #else /* FEAT_GUI_GTK */
     {
@@ -2313,19 +2355,19 @@ xim_set_status_area()
 # if defined(FEAT_XFONTSET)
     if (use_status_area)
     {
-	GdkICAttr   *attr;
-	GdkIMStyle  style;
-	gint	    width, height;
-	GtkWidget   *widget;
-	GdkICAttributesType attrmask;
+	GdkICAttr	*attr;
+	int		style;
+	gint		width, height;
+	GtkWidget	*widget;
+	int		attrmask;
 
 	if (!xic_attr)
 	    return;
 
 	attr = xic_attr;
 	attrmask = 0;
-	style = gdk_ic_get_style(xic);
-	if ((style & GDK_IM_STATUS_MASK) == GDK_IM_STATUS_AREA)
+	style = (int)gdk_ic_get_style(xic);
+	if ((style & (int)GDK_IM_STATUS_MASK) == (int)GDK_IM_STATUS_AREA)
 	{
 	    if (gui.fontset != NOFONTSET
 		    && gui.fontset->type == GDK_FONT_FONTSET)
@@ -2333,15 +2375,15 @@ xim_set_status_area()
 		widget = gui.mainwin;
 		gdk_window_get_size(widget->window, &width, &height);
 
-		attrmask |= GDK_IC_STATUS_AREA;
+		attrmask |= (int)GDK_IC_STATUS_AREA;
 		attr->status_area.x = 0;
 		attr->status_area.y = height - gui.char_height - 1;
 		attr->status_area.width = width;
 		attr->status_area.height = gui.char_height;
 	    }
 	}
-	if (attrmask)
-	    gdk_ic_set_attr(xic, attr, attrmask);
+	if (attrmask != 0)
+	    gdk_ic_set_attr(xic, attr, (GdkICAttributesType)attrmask);
     }
 # endif
 #else
@@ -2516,8 +2558,8 @@ xim_init()
 
     static int
 xim_real_init(x11_window, x11_display)
-    Window  x11_window;
-    Display *x11_display;
+    Window	x11_window;
+    Display	*x11_display;
 {
     int		i;
     char	*p,
@@ -2715,14 +2757,14 @@ xim_decide_input_style()
 {
     /* GDK_IM_STATUS_CALLBACKS was disabled, enabled it to allow Japanese
      * OverTheSpot. */
-    GdkIMStyle supported_style = GDK_IM_PREEDIT_NONE |
-				 GDK_IM_PREEDIT_NOTHING |
-				 GDK_IM_PREEDIT_POSITION |
-				 GDK_IM_PREEDIT_CALLBACKS |
-				 GDK_IM_STATUS_CALLBACKS |
-				 GDK_IM_STATUS_AREA |
-				 GDK_IM_STATUS_NONE |
-				 GDK_IM_STATUS_NOTHING;
+    int supported_style = (int)GDK_IM_PREEDIT_NONE |
+				 (int)GDK_IM_PREEDIT_NOTHING |
+				 (int)GDK_IM_PREEDIT_POSITION |
+				 (int)GDK_IM_PREEDIT_CALLBACKS |
+				 (int)GDK_IM_STATUS_CALLBACKS |
+				 (int)GDK_IM_STATUS_AREA |
+				 (int)GDK_IM_STATUS_NONE |
+				 (int)GDK_IM_STATUS_NOTHING;
 
     if (!gdk_im_ready()) {
 	xim_input_style = 0;
@@ -2740,10 +2782,11 @@ xim_decide_input_style()
 #ifdef FEAT_XFONTSET
 	if (gui.fontset == NOFONTSET || gui.fontset->type != GDK_FONT_FONTSET)
 #endif
-	    supported_style &= ~(GDK_IM_PREEDIT_POSITION | GDK_IM_STATUS_AREA);
+	    supported_style &= ~((int)GDK_IM_PREEDIT_POSITION
+						   | (int)GDK_IM_STATUS_AREA);
 	if (!use_status_area)
-	    supported_style &= ~GDK_IM_STATUS_AREA;
-	xim_input_style = gdk_im_decide_style(supported_style);
+	    supported_style &= ~(int)GDK_IM_STATUS_AREA;
+	xim_input_style = (int)gdk_im_decide_style((GdkIMStyle)supported_style);
     }
 }
 
@@ -2792,7 +2835,7 @@ add_to_input_buf_csi(char_u *str, int len)
 	{
 	    /* Turn CSI into K_CSI. */
 	    buf[0] = KS_EXTRA;
-	    buf[1] = KE_CSI;
+	    buf[1] = (int)KE_CSI;
 	    add_to_input_buf(buf, 2);
 	}
     }
@@ -2890,7 +2933,7 @@ xim_reset(void)
     if (xic)
     {
 	text = XmbResetIC(((GdkICPrivate *)xic)->xic);
-	if (text != NULL && !(xim_input_style & GDK_IM_PREEDIT_CALLBACKS))
+	if (text != NULL && !(xim_input_style & (int)GDK_IM_PREEDIT_CALLBACKS))
 	    add_to_input_buf_csi((char_u *)text, strlen(text));
 	else
 	    preedit_buf_len = 0;
@@ -2963,28 +3006,29 @@ xim_init(void)
 #ifdef FEAT_XFONTSET
 	gint width, height;
 #endif
-	GdkEventMask mask;
-	GdkColormap *colormap;
-	GdkICAttr *attr = xic_attr;
-	GdkICAttributesType attrmask = GDK_IC_ALL_REQ;
-	GtkWidget *widget = gui.drawarea;
+	int		mask;
+	GdkColormap	*colormap;
+	GdkICAttr	*attr = xic_attr;
+	int		attrmask = (int)GDK_IC_ALL_REQ;
+	GtkWidget	*widget = gui.drawarea;
 
-	attr->style = xim_input_style;
+	attr->style = (GdkIMStyle)xim_input_style;
 	attr->client_window = gui.mainwin->window;
 
 	if ((colormap = gtk_widget_get_colormap(widget)) !=
 	    gtk_widget_get_default_colormap())
 	{
-	    attrmask |= GDK_IC_PREEDIT_COLORMAP;
+	    attrmask |= (int)GDK_IC_PREEDIT_COLORMAP;
 	    attr->preedit_colormap = colormap;
 	}
-	attrmask |= GDK_IC_PREEDIT_FOREGROUND;
-	attrmask |= GDK_IC_PREEDIT_BACKGROUND;
+	attrmask |= (int)GDK_IC_PREEDIT_FOREGROUND;
+	attrmask |= (int)GDK_IC_PREEDIT_BACKGROUND;
 	attr->preedit_foreground = widget->style->fg[GTK_STATE_NORMAL];
 	attr->preedit_background = widget->style->base[GTK_STATE_NORMAL];
 
 #ifdef FEAT_XFONTSET
-	if ((xim_input_style & GDK_IM_PREEDIT_MASK) == GDK_IM_PREEDIT_POSITION)
+	if ((xim_input_style & (int)GDK_IM_PREEDIT_MASK)
+					      == (int)GDK_IM_PREEDIT_POSITION)
 	{
 	    if (gui.fontset == NOFONTSET
 		    || gui.fontset->type != GDK_FONT_FONTSET)
@@ -2995,7 +3039,7 @@ xim_init(void)
 	    {
 		gdk_window_get_size(widget->window, &width, &height);
 
-		attrmask |= GDK_IC_PREEDIT_POSITION_REQ;
+		attrmask |= (int)GDK_IC_PREEDIT_POSITION_REQ;
 		attr->spot_location.x = TEXT_X(0);
 		attr->spot_location.y = TEXT_Y(0);
 		attr->preedit_area.x = gui.border_offset;
@@ -3006,7 +3050,8 @@ xim_init(void)
 	    }
 	}
 
-	if ((xim_input_style & GDK_IM_STATUS_MASK) == GDK_IM_STATUS_AREA)
+	if ((xim_input_style & (int)GDK_IM_STATUS_MASK)
+						   == (int)GDK_IM_STATUS_AREA)
 	{
 	    if (gui.fontset == NOFONTSET
 		    || gui.fontset->type != GDK_FONT_FONTSET)
@@ -3016,7 +3061,7 @@ xim_init(void)
 	    else
 	    {
 		gdk_window_get_size(gui.mainwin->window, &width, &height);
-		attrmask |= GDK_IC_STATUS_AREA_REQ;
+		attrmask |= (int)GDK_IC_STATUS_AREA_REQ;
 		attr->status_area.x = 0;
 		attr->status_area.y = height - gui.char_height - 1;
 		attr->status_area.width = width;
@@ -3024,23 +3069,23 @@ xim_init(void)
 		attr->status_fontset = gui.fontset;
 	    }
 	}
-	else if ((xim_input_style & GDK_IM_STATUS_MASK)
-						   == GDK_IM_STATUS_CALLBACKS)
+	else if ((xim_input_style & (int)GDK_IM_STATUS_MASK)
+					      == (int)GDK_IM_STATUS_CALLBACKS)
 	{
 	    /* FIXME */
 	}
 #endif
 
-	xic = gdk_ic_new(attr, attrmask);
+	xic = gdk_ic_new(attr, (GdkICAttributesType)attrmask);
 
 	if (xic == NULL)
 	    EMSG(_("Can't create input context."));
 	else
 	{
-	    mask = gdk_window_get_events(widget->window);
-	    mask |= gdk_ic_get_events(xic);
-	    gdk_window_set_events(widget->window, mask);
-	    if (xim_input_style & GDK_IM_PREEDIT_CALLBACKS)
+	    mask = (int)gdk_window_get_events(widget->window);
+	    mask |= (int)gdk_ic_get_events(xic);
+	    gdk_window_set_events(widget->window, (GdkEventMask)mask);
+	    if (xim_input_style & (int)GDK_IM_PREEDIT_CALLBACKS)
 		preedit_callback_setup(xic);
 	    reset_state_setup(xic);
 	}
@@ -3052,7 +3097,7 @@ xim_init(void)
 xim_get_status_area_height(void)
 {
 #ifdef FEAT_GUI_GTK
-    if (xim_input_style & GDK_IM_STATUS_AREA)
+    if (xim_input_style & (int)GDK_IM_STATUS_AREA)
 	return gui.char_height;
 #else
     if (status_area_enabled)
@@ -3370,7 +3415,7 @@ ex_loadkeymap(eap)
 	sprintf((char *)buf, "<buffer> %s %s",
 				((kmap_t *)curbuf->b_kmap_ga.ga_data)[i].from,
 				 ((kmap_t *)curbuf->b_kmap_ga.ga_data)[i].to);
-	(void)do_map(2, buf, LANGMAP, FALSE, NULL);
+	(void)do_map(2, buf, LANGMAP, FALSE);
     }
 
     p_cpo = save_cpo;
@@ -3402,7 +3447,7 @@ keymap_unload()
     {
 	sprintf((char *)buf, "<buffer> %s",
 		((kmap_t *)curbuf->b_kmap_ga.ga_data)[i].from);
-	(void)do_map(1, buf, LANGMAP, FALSE, NULL);
+	(void)do_map(1, buf, LANGMAP, FALSE);
     }
 
     p_cpo = save_cpo;

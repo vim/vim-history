@@ -68,6 +68,12 @@ static int gui_mch_compute_footer_height __ARGS((void));
 static void attachDump(Widget, char *);
 #endif
 
+static void gui_motif_menu_colors __ARGS((Widget id));
+static void gui_motif_scroll_colors __ARGS((Widget id));
+#ifdef FEAT_MENU
+static void gui_motif_menu_fontlist __ARGS((Widget id));
+#endif
+
 #if (XmVersion >= 1002)
 # define STRING_TAG  XmFONTLIST_DEFAULT_TAG
 #else
@@ -150,21 +156,22 @@ gui_x11_create_widgets()
 	XmNmarginWidth, 0,
 	XmNmarginHeight, 0,
 	XmNresizePolicy, XmRESIZE_ANY,
-#ifndef FEAT_CDE_COLORS
-	XmNforeground, gui.menu_fg_pixel,
-	XmNbackground, gui.menu_bg_pixel,
-#endif
 	NULL);
+    gui_motif_menu_colors(vimForm);
 
 #ifdef FEAT_MENU
     {
 	Arg al[7]; /* Make sure there is enough room for arguments! */
 	int ac = 0;
 
-# ifndef FEAT_CDE_COLORS
-	XtSetArg(al[ac], XmNforeground, gui.menu_fg_pixel); ac++;
-	XtSetArg(al[ac], XmNbackground, gui.menu_bg_pixel); ac++;
-# endif
+	if (gui.menu_fg_pixel != -1)
+	{
+	    XtSetArg(al[ac], XmNforeground, gui.menu_fg_pixel); ac++;
+	}
+	if (gui.menu_bg_pixel != -1)
+	{
+	    XtSetArg(al[ac], XmNbackground, gui.menu_bg_pixel); ac++;
+	}
 # if (XmVersion >= 1002)
 	XtSetArg(al[ac], XmNtearOffModel, tearoff_val); ac++;
 # endif
@@ -190,11 +197,8 @@ gui_x11_create_widgets()
 	XmNshadowType, XmSHADOW_OUT,
 	XmNleftAttachment, XmATTACH_FORM,
 	XmNrightAttachment, XmATTACH_FORM,
-#ifndef FEAT_CDE_COLORS
-	XmNforeground, gui.menu_fg_pixel,
-	XmNbackground, gui.menu_bg_pixel,
-#endif
 	NULL);
+    gui_motif_menu_colors(toolBarFrame);
 
     toolBar = XtVaCreateManagedWidget("toolBar",
 	xmRowColumnWidgetClass, toolBarFrame,
@@ -204,11 +208,8 @@ gui_x11_create_widgets()
 	XmNisHomogeneous, False,
 	XmNpacking, XmPACK_TIGHT,
 	XmNspacing, 0,
-#ifndef FEAT_CDE_COLORS
-	XmNforeground, gui.menu_fg_pixel,
-	XmNbackground, gui.menu_bg_pixel,
-#endif
 	NULL);
+    gui_motif_menu_colors(toolBar);
 
     XtAddEventHandler(toolBar, EnterWindowMask, False,
 	    toolbar_enter_cb, NULL);
@@ -224,11 +225,8 @@ gui_x11_create_widgets()
 	XmNtopAttachment, XmATTACH_FORM,
 	XmNrightAttachment, XmATTACH_FORM,
 	XmNbottomAttachment, XmATTACH_FORM,
-#ifndef FEAT_CDE_COLORS
-	XmNforeground, gui.menu_fg_pixel,
-	XmNbackground, gui.menu_bg_pixel,
-#endif
 	NULL);
+    gui_motif_scroll_colors(textAreaFrame);
 
     textAreaForm = XtVaCreateManagedWidget("textAreaForm",
 	xmFormWidgetClass, textAreaFrame,
@@ -237,11 +235,8 @@ gui_x11_create_widgets()
 	XmNmarginWidth, 0,
 	XmNmarginHeight, 0,
 	XmNresizePolicy, XmRESIZE_ANY,
-#ifndef FEAT_CDE_COLORS
-	XmNforeground, gui.menu_fg_pixel,
-	XmNbackground, gui.menu_bg_pixel,
-#endif
 	NULL);
+    gui_motif_scroll_colors(textAreaForm);
 
     textArea = XtVaCreateManagedWidget("textArea",
 	xmDrawingAreaWidgetClass, textAreaForm,
@@ -328,7 +323,31 @@ gui_x11_set_back_color()
 #endif
 }
 
-#if defined(FEAT_MENU) || defined(PROTO)
+#if defined(FEAT_MENU) || defined(FEAT_SUN_WORKSHOP) || defined(PROTO)
+/*
+ * Encapsulate the way an XmFontList is created.
+ */
+    XmFontList
+gui_motif_create_fontlist(font)
+    XFontStruct    *font;
+{
+    XmFontList font_list;
+
+#if (XmVersion <= 1001)
+    /* Motif 1.1 method */
+    font_list = XmFontListCreate(font, STRING_TAG);
+#else
+    /* Motif 1.2 method */
+    XmFontListEntry font_list_entry;
+
+    font_list_entry = XmFontListEntryCreate(STRING_TAG, XmFONT_IS_FONT,
+							     (XtPointer)font);
+    font_list = XmFontListAppendEntry(NULL, font_list_entry);
+    XmFontListEntryFree(&font_list_entry);
+#endif
+    return font_list;
+}
+
 /*
  * Menu stuff.
  */
@@ -338,7 +357,7 @@ static void gui_motif_add_actext __ARGS((vimmenu_t *menu));
 static void toggle_tearoff __ARGS((Widget wid));
 static void gui_mch_recurse_tearoffs __ARGS((vimmenu_t *menu));
 #endif
-static void gui_mch_submenu_colors __ARGS((vimmenu_t *mp));
+static void gui_mch_submenu_change __ARGS((vimmenu_t *mp, int colors));
 
 static void do_set_mnemonics __ARGS((int enable));
 static int menu_enabled = TRUE;
@@ -458,10 +477,14 @@ gui_mch_add_menu(menu, idx)
 	if (mouse_model_popup())
 # endif
 	{
-# ifndef FEAT_CDE_COLORS
-	    XtSetArg(arg[0], XmNbackground, gui.menu_bg_pixel); n++;
-	    XtSetArg(arg[1], XmNforeground, gui.menu_fg_pixel); n++;
-# endif
+	    if (gui.menu_bg_pixel != -1)
+	    {
+		XtSetArg(arg[0], XmNbackground, gui.menu_bg_pixel); n++;
+	    }
+	    if (gui.menu_fg_pixel != -1)
+	    {
+		XtSetArg(arg[1], XmNforeground, gui.menu_fg_pixel); n++;
+	    }
 	    menu->submenu_id = XmCreatePopupMenu(textArea, "contextMenu",
 								      arg, n);
 	    menu->id = (Widget)0;
@@ -481,10 +504,6 @@ gui_mch_add_menu(menu, idx)
 	    xmCascadeButtonWidgetClass,
 	    (parent == NULL) ? menuBar : parent->submenu_id,
 	    XmNlabelString, label,
-#ifndef FEAT_CDE_COLORS
-	    XmNforeground, gui.menu_fg_pixel,
-	    XmNbackground, gui.menu_bg_pixel,
-#endif
 	    XmNmnemonic, p_wak[0] == 'n' ? NUL : menu->mnemonic,
 #if (XmVersion >= 1002)
 	    /* submenu: count the tearoff item (needed for LessTif) */
@@ -492,6 +511,8 @@ gui_mch_add_menu(menu, idx)
 			   && tearoff_val == (int)XmTEAR_OFF_ENABLED ? 1 : 0),
 #endif
 	    NULL);
+    gui_motif_menu_colors(menu->id);
+    gui_motif_menu_fontlist(menu->id);
     XmStringFree(label);
 
     if (menu->id == (Widget)0)		/* failed */
@@ -504,15 +525,13 @@ gui_mch_add_menu(menu, idx)
 	xmMenuShellWidgetClass, menu->id,
 	XmNwidth, 1,
 	XmNheight, 1,
-	XmNforeground, gui.menu_fg_pixel,
-	XmNbackground, gui.menu_bg_pixel,
 	NULL);
+    gui_motif_menu_colors(shell);
     menu->submenu_id = XtVaCreateWidget("rowColumnMenu",
 	xmRowColumnWidgetClass, shell,
 	XmNrowColumnType, XmMENU_PULLDOWN,
-	XmNforeground, gui.menu_fg_pixel,
-	XmNbackground, gui.menu_bg_pixel,
 	NULL);
+    gui_motif_menu_colors(menu->submenu_id);
 
     if (menu->submenu_id == (Widget)0)		/* failed */
 	return;
@@ -592,17 +611,7 @@ toggle_tearoff(wid)
     XtVaSetValues(wid, XmNtearOffModel, tearoff_val, NULL);
     if (tearoff_val == (int)XmTEAR_OFF_ENABLED
 	    && (w = XmGetTearOffControl(wid)) != (Widget)0)
-    {
-#if (XmVersion>=1002)
-	XmChangeColor(w, gui.menu_bg_pixel);
-#endif
-	XtVaSetValues(w,
-	    XmNforeground, gui.menu_fg_pixel,
-#if (XmVersion<1002)
-	    XmNbackground, gui.menu_bg_pixel,
-#endif
-	    NULL);
-    }
+	gui_motif_menu_colors(w);
 }
 
     static void
@@ -834,14 +843,13 @@ gui_mch_add_menu_item(menu, idx)
     {
 	menu->id = XtVaCreateWidget("subMenu",
 		xmSeparatorWidgetClass, parent->submenu_id,
-		XmNforeground, gui.menu_fg_pixel,
-		XmNbackground, gui.menu_bg_pixel,
 #if (XmVersion >= 1002)
 		/* count the tearoff item (neede for LessTif) */
 		XmNpositionIndex, idx + (tearoff_val == (int)XmTEAR_OFF_ENABLED
 								     ? 1 : 0),
 #endif
 		NULL);
+	gui_motif_menu_colors(menu->id);
 	return;
     }
 
@@ -851,8 +859,6 @@ gui_mch_add_menu_item(menu, idx)
     menu->id = XtVaCreateWidget("subMenu",
 	xmPushButtonWidgetClass, parent->submenu_id,
 	XmNlabelString, label,
-	XmNforeground, gui.menu_fg_pixel,
-	XmNbackground, gui.menu_bg_pixel,
 	XmNmnemonic, menu->mnemonic,
 #if (XmVersion >= 1002)
 	/* count the tearoff item (neede for LessTif) */
@@ -860,6 +866,8 @@ gui_mch_add_menu_item(menu, idx)
 								     ? 1 : 0),
 #endif
 	NULL);
+    gui_motif_menu_colors(menu->id);
+    gui_motif_menu_fontlist(menu->id);
     XmStringFree(label);
 
     if (menu->id != (Widget)0)
@@ -924,53 +932,53 @@ gui_motif_update_mousemodel(menu)
     void
 gui_mch_new_menu_colors()
 {
-    if (menuBar == NULL)
+    if (menuBar == (Widget)0)
 	return;
-#if (XmVersion >= 1002)
-    XmChangeColor(menuBar, gui.menu_bg_pixel);
-#endif
-    XtVaSetValues(menuBar,
-	XmNforeground, gui.menu_fg_pixel,
-#if (XmVersion < 1002)
-	XmNbackground, gui.menu_bg_pixel,
-#endif
-	NULL);
+    gui_motif_menu_colors(menuBar);
+    gui_motif_menu_colors(toolBarFrame);
+    gui_motif_menu_colors(toolBar);
 
-    gui_mch_submenu_colors(root_menu);
+    gui_mch_submenu_change(root_menu, TRUE);
+}
+
+    void
+gui_mch_new_menu_font()
+{
+    if (menuBar == (Widget)0)
+	return;
+    gui_mch_submenu_change(root_menu, FALSE);
 }
 
     static void
-gui_mch_submenu_colors(mp)
+gui_mch_submenu_change(mp, colors)
     vimmenu_t	*mp;
+    int		colors;		/* TRUE for colors, FALSE for font */
 {
     while (mp != NULL)
     {
 	if (mp->id != (Widget)0)
 	{
-#if (XmVersion >= 1002)
-	    XmChangeColor(mp->id, gui.menu_bg_pixel);
-#endif
-	    XtVaSetValues(mp->id,
-		    XmNforeground, gui.menu_fg_pixel,
-#if (XmVersion <1002)
-		    XmNbackground, gui.menu_bg_pixel,
-#endif
-		    NULL);
+	    if (colors)
+		gui_motif_menu_colors(mp->id);
+	    else
+		gui_motif_menu_fontlist(mp->id);
 	}
 
 	if (mp->children != NULL)
 	{
 #if (XmVersion >= 1002)
-	    /* Set the colors for the tear off widget */
+	    /* Set the colors/font for the tear off widget */
 	    if (mp->submenu_id != (Widget)0)
 	    {
-		XmChangeColor(mp->submenu_id, gui.menu_bg_pixel);
-		XtVaSetValues(mp->submenu_id, XmNforeground, gui.menu_fg_pixel, NULL);
+		if (colors)
+		    gui_motif_menu_colors(mp->submenu_id);
+		else
+		    gui_motif_menu_fontlist(mp->submenu_id);
 		toggle_tearoff(mp->submenu_id);
 	    }
 #endif
 	    /* Set the colors for the children */
-	    gui_mch_submenu_colors(mp->children);
+	    gui_mch_submenu_change(mp->children, colors);
 	}
 	mp = mp->next;
     }
@@ -1175,11 +1183,15 @@ gui_mch_create_scrollbar(sb, orient)
     XtSetArg(args[n], XmNminimum, 0); n++;
     XtSetArg(args[n], XmNorientation,
 	    (orient == SBAR_VERT) ? XmVERTICAL : XmHORIZONTAL); n++;
-#ifndef FEAT_CDE_COLORS
-    XtSetArg(args[n], XmNforeground, gui.scroll_fg_pixel); n++;
-    XtSetArg(args[n], XmNbackground, gui.scroll_fg_pixel); n++;
-    XtSetArg(args[n], XmNtroughColor, gui.scroll_bg_pixel); n++;
-#endif
+    if (gui.scroll_fg_pixel != -1)
+    {
+	XtSetArg(args[n], XmNforeground, gui.scroll_fg_pixel); n++;
+	XtSetArg(args[n], XmNbackground, gui.scroll_fg_pixel); n++;
+    }
+    if (gui.scroll_bg_pixel != -1)
+    {
+	XtSetArg(args[n], XmNtroughColor, gui.scroll_bg_pixel); n++;
+    }
 
     switch (sb->type)
     {
@@ -1230,21 +1242,34 @@ gui_mch_destroy_scrollbar(sb)
 gui_mch_set_scrollbar_colors(sb)
     scrollbar_t *sb;
 {
-#ifndef FEAT_CDE_COLORS
-    if (sb->id != NULL)
+    if (sb->id != (Widget)0)
     {
+	if (gui.scroll_bg_pixel != -1)
+	{
 #if (XmVersion>=1002)
-	XmChangeColor(sb->id, gui.scroll_bg_pixel);
+	    XmChangeColor(sb->id, gui.scroll_bg_pixel);
+#else
+	    XtVaSetValues(sb->id,
+		    XmNtroughColor, gui.scroll_bg_pixel,
+		    NULL);
 #endif
-	XtVaSetValues(sb->id,
-	    XmNforeground, gui.scroll_fg_pixel,
+	}
+
+	if (gui.scroll_fg_pixel != -1)
+	    XtVaSetValues(sb->id,
+		    XmNforeground, gui.scroll_fg_pixel,
 #if (XmVersion<1002)
-	    XmNbackground, gui.scroll_fg_pixel,
-	    XmNtroughColor, gui.scroll_bg_pixel,
+		    XmNbackground, gui.scroll_fg_pixel,
 #endif
-	    NULL);
+		    NULL);
     }
-#endif
+
+    /* This is needed for the rectangle below the vertical scrollbars. */
+    if (sb == &gui.bottom_sbar && textAreaForm != (Widget)0)
+    {
+	gui_motif_scroll_colors(textAreaForm);
+	gui_motif_scroll_colors(textAreaFrame);
+    }
 }
 
 /*
@@ -1318,14 +1343,6 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
 	XtVaTypedArg,
 	    XmNdialogTitle, XmRString,  (char *)title,	STRLEN(title) + 1,
 /*
- These can cause a crash after ":hi Menu guifg=red".  Why?
- This doesn't cause a crash under IRIX (Motif 1.2) or Linux (RedHat Motif 2.1).
- (David Harrison)
-	XmNforeground,		gui.menu_fg_pixel,
-	XmNbackground,		gui.menu_bg_pixel,
- */
-	XmNtroughColor,		gui.scroll_bg_pixel,
-/*
     currently, the background color of the input and selection
     fields are "motif blue".  i'm sure there must be a resource
     that corresponds to this, but i don't know what it is.
@@ -1336,6 +1353,9 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
 	XmNbottomShadowColor,	gui.norm_pixel,
 */
 	NULL);
+    gui_motif_menu_colors(dialog_wgt);
+    if (gui.scroll_bg_pixel != -1)
+	XtVaSetValues(dialog_wgt, XmNtroughColor, gui.scroll_bg_pixel, NULL);
 
     XtAddCallback(dialog_wgt, XmNokCallback, DialogAcceptCB, (XtPointer)0);
     XtAddCallback(dialog_wgt, XmNcancelCallback, DialogCancelCB, (XtPointer)0);
@@ -1716,17 +1736,15 @@ gui_mch_compute_toolbar_height()
     height = 0;
     shadowThickness = 0;
     marginHeight = 0;
-    if (toolBar != NULL && toolBarFrame != NULL)
+    if (toolBar != (Widget)0 && toolBarFrame != (Widget)0)
     {				    /* get height of XmFrame parent */
 	XtVaGetValues(toolBarFrame,
 		XmNshadowThickness, &shadowThickness,
 		NULL);
 	XtVaGetValues(toolBar,
 		XmNmarginHeight, &marginHeight,
-		NULL);
-	XtVaGetValues(toolBar,
-	    XmNchildren, &children,
-	    XmNnumChildren, &numChildren, NULL);
+		XmNchildren, &children,
+		XmNnumChildren, &numChildren, NULL);
 	for (i = 0; i < numChildren; i++)
 	{
 	    whgt = 0;
@@ -1961,6 +1979,11 @@ createXpmImages(path, xpm, sen, insen)
     int		x, y;
     Pixmap	mask;
     Pixmap	map;
+    Pixel	bg_pixel;
+    Pixel	fg_pixel;
+
+    XtVaGetValues(toolBar, XmNbackground, &bg_pixel,
+	    XmNforeground, &fg_pixel, NULL);
 
     /* Setup the color subsititution table */
     attrs.valuemask = XpmColorSymbols;
@@ -1969,10 +1992,10 @@ createXpmImages(path, xpm, sen, insen)
 			  XtMalloc(sizeof(XpmColorSymbol) * attrs.numsymbols);
     attrs.colorsymbols[0].name = "BgColor";
     attrs.colorsymbols[0].value = NULL;
-    attrs.colorsymbols[0].pixel = gui.menu_bg_pixel;
+    attrs.colorsymbols[0].pixel = bg_pixel;
     attrs.colorsymbols[1].name = "FgColor";
     attrs.colorsymbols[1].value = NULL;
-    attrs.colorsymbols[1].pixel = gui.menu_fg_pixel;
+    attrs.colorsymbols[1].pixel = fg_pixel;
 
     screenNum = DefaultScreen(gui.dpy);
     rootWindow = RootWindow(gui.dpy, screenNum);
@@ -1987,7 +2010,7 @@ createXpmImages(path, xpm, sen, insen)
     if (status == XpmSuccess && map != 0)
     {
 	/* Need to create new Pixmaps with the mask applied. */
-	gcvalues.foreground = gui.menu_bg_pixel;
+	gcvalues.foreground = bg_pixel;
 	back_gc = XCreateGC(gui.dpy, map, GCForeground, &gcvalues);
 	mask_gc = XCreateGC(gui.dpy, map, GCForeground, &gcvalues);
 	XSetClipMask(gui.dpy, mask_gc, mask);
@@ -2090,5 +2113,58 @@ toolbarbutton_leave_cb(w, client_data, event, cont)
 # ifdef FEAT_FOOTER
     gui_mch_set_footer((char_u *) "");
 # endif
+}
+#endif
+
+/*
+ * Set the colors of Widget "id" to the menu colors.
+ */
+    static void
+gui_motif_menu_colors(id)
+    Widget  id;
+{
+    if (gui.menu_bg_pixel != -1)
+#if (XmVersion >= 1002)
+	XmChangeColor(id, gui.menu_bg_pixel);
+#else
+	XtVaSetValues(id, XmNbackground, gui.menu_bg_pixel, NULL);
+#endif
+    if (gui.menu_fg_pixel != -1)
+	XtVaSetValues(id, XmNforeground, gui.menu_fg_pixel, NULL);
+}
+
+/*
+ * Set the colors of Widget "id" to the scrollbar colors.
+ */
+    static void
+gui_motif_scroll_colors(id)
+    Widget  id;
+{
+    if (gui.scroll_bg_pixel != -1)
+#if (XmVersion >= 1002)
+	XmChangeColor(id, gui.scroll_bg_pixel);
+#else
+	XtVaSetValues(id, XmNbackground, gui.scroll_bg_pixel, NULL);
+#endif
+    if (gui.scroll_fg_pixel != -1)
+	XtVaSetValues(id, XmNforeground, gui.scroll_fg_pixel, NULL);
+}
+
+#ifdef FEAT_MENU
+    static void
+gui_motif_menu_fontlist(id)
+    Widget  id;
+{
+    if (gui.menu_font != NOFONT)
+    {
+	XmFontList fl;
+
+	fl = gui_motif_create_fontlist((XFontStruct *)gui.menu_font);
+	if (fl != NULL)
+	{
+	    XtVaSetValues(id, XmNfontList, fl, NULL);
+	    XmFontListFree(fl);
+	}
+    }
 }
 #endif

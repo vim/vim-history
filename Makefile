@@ -69,7 +69,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0x
+MINOR = 0y
 
 # CHECKLIST for creating a new version:
 #
@@ -184,7 +184,7 @@ SRC_ALL =	\
 		src/misc1.c \
 		src/misc2.c \
 		src/move.c \
-		src/multibyte.c \
+		src/mbyte.c \
 		src/normal.c \
 		src/ops.c \
 		src/option.c \
@@ -212,7 +212,7 @@ SRC_ALL =	\
 		src/proto/misc1.pro \
 		src/proto/misc2.pro \
 		src/proto/move.pro \
-		src/proto/multibyte.pro \
+		src/proto/mbyte.pro \
 		src/proto/normal.pro \
 		src/proto/ops.pro \
 		src/proto/option.pro \
@@ -579,6 +579,7 @@ RT_ALL =	\
 		runtime/tools \
 		runtime/tutor/README.txt \
 		runtime/tutor/tutor \
+		runtime/tutor/tutor.vim \
 		runtime/vimrc_example.vim \
 
 # Unix runtime
@@ -717,8 +718,7 @@ LANGUAGE = \
 		runtime/lang/menu_*.vim \
 		runtime/keymap/README.txt \
 		runtime/keymap/*.vim \
-		runtime/tutor/tutor.es \
-		runtime/tutor/tutor.it \
+		runtime/tutor/tutor.?? \
 
 # All output is put in the "dist" directory.
 dist:

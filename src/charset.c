@@ -557,7 +557,7 @@ vim_strsize(s)
 {
     int		len = 0;
 
-    while (*s)
+    while (*s != NUL)
     {
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
@@ -627,13 +627,15 @@ linetabsize(s)
  * Like linetabsize(), but for a given window instead of the current one.
  */
     int
-win_linetabsize(wp, s)
+win_linetabsize(wp, p, len)
     win_t	*wp;
-    char_u	*s;
+    char_u	*p;
+    colnr_t	len;
 {
     colnr_t	col = 0;
+    char_u	*s;
 
-    while (*s != NUL)
+    for (s = p; *s != NUL && s < p + len; )
     {
 	col += win_lbr_chartabsize(wp, s, col, NULL);
 #ifdef FEAT_MBYTE

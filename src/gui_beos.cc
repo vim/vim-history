@@ -3175,9 +3175,10 @@ char vimselectiontype[] = "application/x-vnd.Rhialto-Vim-selectiontype";
  * Get the current selection and put it in the clipboard register.
  */
     void
-clip_mch_request_selection()
+clip_mch_request_selection(VimClipboard *cbd)
 {
-    if (be_clipboard->Lock()) {
+    if (be_clipboard->Lock())
+    {
 	BMessage *m = be_clipboard->Data();
 	//m->PrintToStream();
 
@@ -3185,9 +3186,9 @@ clip_mch_request_selection()
 	ssize_t stringlen = -1;
 
 	if (m->FindData(textplain, B_MIME_TYPE,
-		(const void **)&string, &stringlen) == B_OK ||
-	    m->FindString("text", (const char **)&string) == B_OK) {
-
+				   (const void **)&string, &stringlen) == B_OK
+		|| m->FindString("text", (const char **)&string) == B_OK)
+	{
 	    if (stringlen == -1)
 		stringlen = STRLEN(string);
 
@@ -3199,7 +3200,8 @@ clip_mch_request_selection()
 	     * Try to get the special vim selection type first
 	     */
 	    if (m->FindData(vimselectiontype, B_MIME_TYPE,
-		    (const void **)&seltype, &seltypelen) == B_OK) {
+		    (const void **)&seltype, &seltypelen) == B_OK)
+	    {
 		switch (*seltype)
 		{
 		    default:
@@ -3207,11 +3209,13 @@ clip_mch_request_selection()
 		    case 'C':	type = MCHAR;	break;
 		    case 'B':	type = MBLOCK;	break;
 		}
-	    } else {
+	    }
+	    else
+	    {
 		/* Otherwise use heuristic as documented */
 		type = memchr(string, stringlen, '\n') ? MLINE : MCHAR;
 	    }
-	    clip_yank_selection(type, string, (long)stringlen);
+	    clip_yank_selection(type, string, (long)stringlen, cbd);
 	}
 	be_clipboard->Unlock();
     }
@@ -3220,7 +3224,7 @@ clip_mch_request_selection()
  * Make vim the owner of the current selection.
  */
     void
-clip_mch_lose_selection()
+clip_mch_lose_selection(VimClipboard *cbd)
 {
     /* Nothing needs to be done here */
 }
@@ -3229,7 +3233,7 @@ clip_mch_lose_selection()
  * Make vim the owner of the current selection.  Return OK upon success.
  */
     int
-clip_mch_own_selection()
+clip_mch_own_selection(VimClipboard *cbd)
 {
     /*
      * Never actually own the clipboard.  If another application sets the
@@ -3242,23 +3246,24 @@ clip_mch_own_selection()
  * Send the current selection to the clipboard.
  */
     void
-clip_mch_set_selection()
+clip_mch_set_selection(VimClipboard *cbd)
 {
-    if (be_clipboard->Lock()) {
+    if (be_clipboard->Lock())
+    {
 	be_clipboard->Clear();
 	BMessage *m = be_clipboard->Data();
 	assert(m);
 
 	/* If the '*' register isn't already filled in, fill it in now */
-	clipboard.owned = TRUE;
-	clip_get_selection();
-	clipboard.owned = FALSE;
+	cbd->owned = TRUE;
+	clip_get_selection(cbd);
+	cbd->owned = FALSE;
 
 	char_u  *str = NULL;
 	long_u  count;
 	int	type;
 
-	type = clip_convert_selection(&str, &count);
+	type = clip_convert_selection(&str, &count, cbd);
 
 	if (type < 0)
 	    return;

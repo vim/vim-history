@@ -230,9 +230,11 @@ getmark_coladd(c, changefile)
 
 /*
  * Find mark "c".
- * Return pointer to pos_t if found (caller needs to check lnum!)
- *	  NULL if there is no mark called 'c'.
- *	  -1 if mark is in other file (only if changefile is TRUE)
+ * Returns:
+ * - pointer to pos_t if found.  lnum is 0 when mark not set, -1 when mark is
+ *   in another file which can't be gotten. (caller needs to check lnum!)
+ * - NULL if there is no mark called 'c'.
+ * - -1 if mark is in other file and jumped there (only if changefile is TRUE)
  */
     pos_t *
 getmark(c, changefile)
@@ -369,6 +371,8 @@ getmark2(c, changefile, fcoladd)
 	    fname2fnum(&namedfm[c]);
 	if (namedfm[c].fmark.fnum != curbuf->b_fnum)
 	{
+	    posp = &pos_copy;
+
 	    /* mark is in another file */
 	    if (namedfm[c].fmark.mark.lnum != 0
 				       && changefile && namedfm[c].fmark.fnum)
@@ -377,20 +381,18 @@ getmark2(c, changefile, fcoladd)
 				      (linenr_t)1, GETF_SETMARK, FALSE) == OK)
 		{
 		    /* Set the lnum now, autocommands could have changed it */
-		    curwin->w_cursor.lnum = namedfm[c].fmark.mark.lnum;
-		    curwin->w_cursor.col = namedfm[c].fmark.mark.col;
+		    curwin->w_cursor = namedfm[c].fmark.mark;
 #ifdef FEAT_VIRTUALEDIT
-		    if (fcoladd)
-			curwin->w_cursor.coladd = namedfm[c].fmark.mark.coladd;
-		    else
+		    if (!fcoladd)
 			curwin->w_cursor.coladd = 0;
 #endif
 		    return (pos_t *)-1;
 		}
+		pos_copy.lnum = -1;	/* can't get file */
 	    }
-	    posp = &pos_copy;		/* mark exists, but is not valid in
-					    current buffer */
-	    pos_copy.lnum = 0;
+	    else
+		pos_copy.lnum = 0;	/* mark exists, but is not valid in
+					   current buffer */
 	}
     }
 
@@ -539,9 +541,12 @@ check_mark(pos)
 	EMSG(_(e_umark));
 	return FAIL;
     }
-    if (pos->lnum == 0)
+    if (pos->lnum <= 0)
     {
-	EMSG(_(e_marknotset));
+	/* lnum is negative if mark is in another file can can't get that
+	 * file, error message already give then. */
+	if (pos->lnum == 0)
+	    EMSG(_(e_marknotset));
 	return FAIL;
     }
     if (pos->lnum > curbuf->b_ml.ml_line_count)

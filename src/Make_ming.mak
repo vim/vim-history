@@ -37,7 +37,7 @@ CROSS=0
 # added by E.F. Amatria <eferna1@platea.ptic.mec.es> 2001 Feb 23
 # Uncomment the first line and one of the others if you want National Language
 # Support.  You'll need gnu_gettext.win32, a MINGW32 Windows PORT of gettext by
-# Franco Bez <franco.bez@gmx.de> It may be found at
+# Franco Bez <franco.bez@gmx.de>.  It may be found at
 # http://home.a-city.de/franco.bez/gettext/gettext_win32_en.html
 # Tested with mingw32 with GCC-2.95.2 on Win98
 #NLS=nls
@@ -92,6 +92,9 @@ endif
 DEF_GUI=-DFEAT_GUI_W32 -DFEAT_CLIPBOARD -DFEAT_BIG
 DEF_MIN=-DFEAT_SMALL
 DEFINES=-DWIN32 -DPC
+ifdef NLS
+DEFINES +=-DHAVE_GETTEXT -DHAVE_LOCALE_H
+endif
 ifeq ($(CROSS),1)
 # cross-compiler:
 CC = i586-pc-mingw32msvc-gcc
@@ -149,7 +152,7 @@ GUISRC =  vimres.c gui.c gui_w32.c
 SRC    =  os_w32exe.c buffer.c charset.c digraph.c edit.c eval.c ex_cmds.c \
 	  ex_cmds2.c ex_docmd.c ex_getln.c fileio.c fold.c getchar.c main.c \
 	  mark.c memfile.c memline.c menu.c message.c misc1.c misc2.c move.c \
-	  multibyte.c normal.c ops.c option.c os_win32.c os_mswin.c \
+	  mbyte.c normal.c ops.c option.c os_win32.c os_mswin.c \
 	  quickfix.c regexp.c screen.c search.c syntax.c tag.c term.c ui.c \
 	  undo.c window.c version.c
 ifdef PERL

@@ -313,7 +313,7 @@ static void list_vim_var __ARGS((int i));
 static void list_one_var_a __ARGS((char_u *prefix, char_u *name, int type, char_u *string));
 static void set_var __ARGS((char_u *name, VAR varp));
 static void copy_var __ARGS((VAR from, VAR to));
-static char_u *find_option_end __ARGS((char_u *p));
+static char_u *find_option_end __ARGS((char_u **arg, int *opt_flags));
 static char_u *trans_function_name __ARGS((char_u **pp));
 static int eval_fname_script __ARGS((char_u *p));
 static int eval_fname_sid __ARGS((char_u *p));
@@ -754,25 +754,13 @@ ex_let(eap)
 	     */
 	    else if (*arg == '&')
 	    {
-		int opt_flags = 0;
-
-		if (*arg == 'g' && arg[1] == ':')
-		{
-		    opt_flags = OPT_GLOBAL;
-		    arg += 2;
-		}
-		else if (*arg == 'l' && arg[1] == ':')
-		{
-		    opt_flags = OPT_LOCAL;
-		    arg += 2;
-		}
+		int opt_flags;
 
 		/*
 		 * Find the end of the name;
 		 */
-		++arg;
-		p = find_option_end(arg);
-		if (*skipwhite(p) != '=')
+		p = find_option_end(&arg, &opt_flags);
+		if (p == NULL || *skipwhite(p) != '=')
 		    EMSG(_(e_letunexp));
 		else
 		{
@@ -1972,12 +1960,13 @@ get_option_var(arg, retvar, evaluate)
     int		opt_type;
     int		c;
     int		ret = OK;
+    int		opt_flags;
 
     /*
      * Isolate the option name and find its value.
      */
-    option_end = find_option_end(*arg + 1);
-    if (option_end == *arg + 1)
+    option_end = find_option_end(arg, &opt_flags);
+    if (option_end == NULL)
     {
 	if (retvar != NULL)
 	    EMSG2(_("Option name missing: %s"), *arg);
@@ -1992,8 +1981,8 @@ get_option_var(arg, retvar, evaluate)
 
     c = *option_end;
     *option_end = NUL;
-    opt_type = get_option_value(*arg + 1, &numval,
-					  retvar == NULL ? NULL : &stringval);
+    opt_type = get_option_value(*arg, &numval,
+			       retvar == NULL ? NULL : &stringval, 0);
 
     if (opt_type == -2)			/* invalid name */
     {
@@ -2951,7 +2940,7 @@ f_col(argvars, retvar)
     pos_t	*fp;
 
     fp = var2fpos(&argvars[0], FALSE);
-    if (fp != NULL && fp->lnum > 0)
+    if (fp != NULL)
 	col = fp->col + 1;
     retvar->var_val.var_number = col;
 }
@@ -3865,9 +3854,6 @@ f_has(argvars, retvar)
 #ifdef FEAT_BYTEOFF
 	"byte_offset",
 #endif
-#ifdef FEAT_CDE_COLORS
-	"cde_colors",
-#endif
 #ifdef FEAT_CINDENT
 	"cindent",
 #endif
@@ -4170,7 +4156,7 @@ f_has(argvars, retvar)
 	    n = (starting != 0);
 #if defined(USE_ICONV) && defined(DYNAMIC_ICONV)
 	else if (STRICMP(name, "iconv") == 0)
-	    n = iconv_enabled() ? TRUE : FALSE;
+	    n = iconv_enabled();
 #endif
 #ifdef DYNAMIC_PYTHON
 	else if (STRICMP(name, "python") == 0)
@@ -4832,10 +4818,14 @@ f_search(argvars, retvar)
     dir = get_search_arg(&argvars[1], NULL);	/* may set p_ws */
 
     pos = curwin->w_cursor;
-    if (searchit(curbuf, &pos, dir, pat, 1L, SEARCH_KEEP, RE_SEARCH) != FAIL)
+    if (searchit(curwin, curbuf, &pos, dir, pat, 1L,
+					      SEARCH_KEEP, RE_SEARCH) != FAIL)
     {
 	retvar->var_val.var_number = pos.lnum;
 	curwin->w_cursor = pos;
+	/* "/$" will put the cursor after the end of the line, may need to
+	 * correct that here */
+	check_cursor();
     }
     else
 	retvar->var_val.var_number = 0;
@@ -4910,7 +4900,8 @@ f_searchpair(argvars, retvar)
     pat = pat3;
     for (;;)
     {
-	n = searchit(curbuf, &pos, dir, pat, 1L, SEARCH_KEEP, RE_SEARCH);
+	n = searchit(curwin, curbuf, &pos, dir, pat, 1L,
+						      SEARCH_KEEP, RE_SEARCH);
 	if (n == FAIL || (firstpos.lnum != 0 && equal(pos, firstpos)))
 	    /* didn't find it or found the first match again: FAIL */
 	    break;
@@ -5658,7 +5649,7 @@ f_virtcol(argvars, retvar)
     pos_t	*fp;
 
     fp = var2fpos(&argvars[0], FALSE);
-    if (fp != NULL)
+    if (fp != NULL && fp->lnum <= curbuf->b_ml.ml_line_count)
     {
 	getvcol(curwin, fp, NULL, NULL, &vcol);
 	++vcol;
@@ -5794,12 +5785,18 @@ var2fpos(varp, lnum)
 {
     char_u	*name;
     static pos_t	pos;
+    pos_t	*pp;
 
     name = get_var_string(varp);
     if (name[0] == '.')		/* cursor */
 	return &curwin->w_cursor;
     if (name[0] == '\'')	/* mark */
-	return getmark(name[1], FALSE);
+    {
+	pp = getmark(name[1], FALSE);
+	if (pp == NULL || pp == (pos_t *)-1 || pp->lnum <= 0)
+	    return NULL;
+	return pp;
+    }
     if (name[0] == '$')		/* last column or line */
     {
 	if (lnum)
@@ -6788,12 +6785,42 @@ ex_execute(eap)
     eap->nextcmd = check_nextcmd(arg);
 }
 
+/*
+ * Skip over the name of an option: "&option", "&g:option" or "&l:option".
+ * "arg" points to the "&" when called, to "option" when returning.
+ * Returns NULL when no option name found.  Otherwise pointer to the char
+ * after the option name.
+ */
     static char_u *
-find_option_end(p)
-    char_u	*p;
+find_option_end(arg, opt_flags)
+    char_u	**arg;
+    int		*opt_flags;
 {
-    while (isalnum(*p) || *p == '_')
-	++p;
+    char_u	*p = *arg;
+
+    ++p;
+    if (*p == 'g' && p[1] == ':')
+    {
+	*opt_flags = OPT_GLOBAL;
+	p += 2;
+    }
+    else if (*p == 'l' && p[1] == ':')
+    {
+	*opt_flags = OPT_LOCAL;
+	p += 2;
+    }
+    else
+	*opt_flags = 0;
+
+    if (!isalpha(*p))
+	return NULL;
+    *arg = p;
+
+    if (p[0] == 't' && p[1] == '_' && p[2] != NUL && p[3] != NUL)
+	p += 4;	    /* termcap option */
+    else
+	while (isalpha(*p))
+	    ++p;
     return p;
 }
 
@@ -6975,7 +7002,8 @@ ex_function(eap)
 	    theline = getcmdline(':', 0L, indent);
 	else
 	    theline = eap->getline(':', eap->cookie, indent);
-	lines_left = Rows - 1;
+	if (KeyTyped)
+	    lines_left = Rows - 1;
 	if (theline == NULL)
 	{
 	    EMSG(_("Missing :endfunction"));

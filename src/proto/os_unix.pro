@@ -58,8 +58,8 @@ void setup_xterm_clip __ARGS((void));
 void start_xterm_trace __ARGS((int button));
 void stop_xterm_trace __ARGS((void));
 void clear_xterm_clip __ARGS((void));
-int clip_xterm_own_selection __ARGS((void));
-void clip_xterm_lose_selection __ARGS((void));
-void clip_xterm_request_selection __ARGS((void));
-void clip_xterm_set_selection __ARGS((void));
+int clip_xterm_own_selection __ARGS((VimClipboard *cbd));
+void clip_xterm_lose_selection __ARGS((VimClipboard *cbd));
+void clip_xterm_request_selection __ARGS((VimClipboard *cbd));
+void clip_xterm_set_selection __ARGS((VimClipboard *cbd));
 /* vim: set ft=c : */

@@ -16,6 +16,7 @@ void insertchar __ARGS((int c, int force_formatting, int second_indent, int ctrl
 int comp_textwidth __ARGS((int ff));
 int stop_arrow __ARGS((void));
 void set_last_insert __ARGS((int c));
+char_u *add_char2buf __ARGS((int c, char_u *s));
 void beginline __ARGS((int flags));
 int oneright __ARGS((void));
 int oneleft __ARGS((void));

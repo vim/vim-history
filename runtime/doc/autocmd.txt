@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 6.0x.  Last change: 2001 Feb 10
+*autocmd.txt*   For Vim version 6.0y.  Last change: 2001 Mar 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -541,6 +541,19 @@ The pattern is interpreted like mostly used in file names:
 Note that for all systems the '/' character is used for path separator (even
 MS-DOS and OS/2).  This was done because the backslash is difficult to use
 in a pattern and to make the autocommands portable across different systems.
+
+
+Matching with the pattern is done when an event is triggered.  Changing the
+buffer name in one of the autocommands, or even deleting the buffer, does not
+change which autocommands will be executed.  Example: >
+
+	au BufEnter *.foo  bdel
+	au BufEnter *.foo  set modified
+
+This will delete the current buffer and then set 'modified' in what has become
+the current buffer instead.  Vim doesn't take into account that "*.foo"
+doesn't match with that buffer name.  It matches "*.foo" with the name of the
+buffer at the moment the event was triggered.
 
 ==============================================================================
 7. Groups						*autocmd-groups*

@@ -788,10 +788,15 @@ mch_suspend()
 
 # if defined(FEAT_CLIPBOARD) && defined(FEAT_X11)
     /* Since we are going to sleep, we can't respond to requests for the X
-     * selection.  Lose it, otherwise other applications will hang. */
-    if (clipboard.owned)
+     * selections.  Lose them, otherwise other applications will hang.  But
+     * first copy the text to cut buffer 0. */
+    if (clip_star.owned || clip_plus.owned)
     {
-	clip_lose_selection();
+	x11_export_final_selection();
+        if (clip_star.owned)
+            clip_lose_selection(&clip_star);
+        if (clip_plus.owned)
+            clip_lose_selection(&clip_plus);
 	if (x11_display != NULL)
 	    XFlush(x11_display);
     }
@@ -2034,6 +2039,11 @@ mch_windexit(r)
     int r;
 {
     exiting = TRUE;
+
+#if defined(FEAT_X11) && defined(FEAT_CLIPBOARD)
+    x11_export_final_selection();
+#endif
+
 #ifdef FEAT_GUI
     if (!gui.in_use)
 #endif
@@ -2503,7 +2513,6 @@ mch_call_shell(cmd, options)
     int		options;	/* SHELL_*, see vim.h */
 {
 #ifdef USE_SYSTEM	/* use system() to start the shell: simple but slow */
-
     int	    x;
 #ifndef __EMX__
     char_u  *newcmd;   /* only needed for unix */
@@ -4572,10 +4581,10 @@ setup_xterm_clip()
 		XtNwidth, 1,
 		XtNheight, 1,
 		NULL);
-	x11_setup_atoms(xterm_dpy);
 	if (xterm_Shell == (Widget)0)
 	    return;
 
+	x11_setup_atoms(xterm_dpy);
 	if (x11_display == NULL)
 	    x11_display = xterm_dpy;
 
@@ -4744,31 +4753,35 @@ xterm_update()
 }
 
     int
-clip_xterm_own_selection()
+clip_xterm_own_selection(cbd)
+    VimClipboard *cbd;
 {
     if (xterm_Shell != (Widget)0)
-	return clip_x11_own_selection(xterm_Shell);
+	return clip_x11_own_selection(xterm_Shell, cbd);
     return FAIL;
 }
 
     void
-clip_xterm_lose_selection()
+clip_xterm_lose_selection(cbd)
+    VimClipboard *cbd;
 {
     if (xterm_Shell != (Widget)0)
-	clip_x11_lose_selection(xterm_Shell);
+	clip_x11_lose_selection(xterm_Shell, cbd);
 }
 
     void
-clip_xterm_request_selection()
+clip_xterm_request_selection(cbd)
+    VimClipboard *cbd;
 {
     if (xterm_Shell != (Widget)0)
-	clip_x11_request_selection(xterm_Shell, xterm_dpy);
+	clip_x11_request_selection(xterm_Shell, xterm_dpy, cbd);
 }
 
     void
-clip_xterm_set_selection()
+clip_xterm_set_selection(cbd)
+    VimClipboard *cbd;
 {
-    clip_x11_set_selection();
+    clip_x11_set_selection(cbd);
 }
 #endif
 

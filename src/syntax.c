@@ -98,7 +98,7 @@ static GuiFont font_name2handle __ARGS((char_u *name));
 # ifdef FEAT_XFONTSET
 static GuiFontset fontset_name2handle __ARGS((char_u *name));
 # endif
-static void hl_do_font __ARGS((int idx, char_u *arg, int do_normal));
+static void hl_do_font __ARGS((int idx, char_u *arg, int do_normal, int do_menu));
 #endif
 
 /*
@@ -320,6 +320,7 @@ static reg_extmatch_t *next_match_extmatch = NULL;
  * The current state (within the line) of the recognition engine.
  * When current_state.ga_itemsize is 0 the current state is invalid.
  */
+static win_t	*syn_win;		/* current window for highlighting */
 static buf_t	*syn_buf;		/* current buffer for highlighting */
 static linenr_t current_lnum = 0;	/* lnum of current state */
 static colnr_t	current_col = 0;	/* column of current state */
@@ -356,7 +357,7 @@ static void update_si_attr __ARGS((int idx));
 static void check_keepend __ARGS((void));
 static void update_si_end __ARGS((stateitem_t *sip, int startcol, int force));
 static short *copy_id_list __ARGS((short *list));
-static int in_id_list __ARGS((short *cont_list, struct sp_syn *ssp, int contained));
+static int in_id_list __ARGS((stateitem_t *item, short *cont_list, struct sp_syn *ssp, int contained));
 static int push_current_state __ARGS((int idx));
 static void pop_current_state __ARGS((void));
 
@@ -368,7 +369,6 @@ static void limit_pos __ARGS((pos_t *pos, pos_t *limit));
 static void limit_pos_zero __ARGS((pos_t *pos, pos_t *limit));
 static void syn_add_end_off __ARGS((pos_t *result, regmmatch_t *regmatch, synpat_t *spp, int idx, int extra));
 static void syn_add_start_off __ARGS((pos_t *result, regmmatch_t *regmatch, synpat_t *spp, int idx, int extra));
-static char_u *syn_getline __ARGS((linenr_t lnum));
 static char_u *syn_getcurline __ARGS((void));
 static int syn_regexec __ARGS((regmmatch_t *rmp, linenr_t lnum, colnr_t col));
 static int check_keyword_id __ARGS((char_u *line, int startcol, int *endcol, int *flags, short **next_list, stateitem_t *cur_si));
@@ -380,6 +380,8 @@ static void syn_clear_cluster __ARGS((buf_t *buf, int i));
 static void syn_cmd_clear __ARGS((exarg_t *eap, int syncing));
 static void syn_clear_one __ARGS((int id, int syncing));
 static void syn_cmd_on __ARGS((exarg_t *eap, int syncing));
+static void syn_cmd_enable __ARGS((exarg_t *eap, int syncing));
+static void syn_cmd_reset __ARGS((exarg_t *eap, int syncing));
 static void syn_cmd_manual __ARGS((exarg_t *eap, int syncing));
 static void syn_cmd_off __ARGS((exarg_t *eap, int syncing));
 static void syn_cmd_onoff __ARGS((exarg_t *eap, char *name));
@@ -392,10 +394,10 @@ static void put_pattern __ARGS((char *s, int c, synpat_t *spp, int attr));
 static int syn_list_keywords __ARGS((int id, keyentry_t **ktabp, int did_header, int attr));
 static void syn_clear_keyword __ARGS((int id, keyentry_t **ktabp));
 static void free_keywtab __ARGS((keyentry_t **ktabp));
-static void add_keyword __ARGS((char_u *name, int id, int flags, short *next_list));
+static void add_keyword __ARGS((char_u *name, int id, int flags, short *cont_in_list, short *next_list));
 static int syn_khash __ARGS((char_u *p));
 static char_u *get_group_name __ARGS((char_u *arg, char_u **name_end));
-static char_u *get_syn_options __ARGS((char_u *arg, int *flagsp, int keyword, int *sync_idx, short **cont_list, short **next_list));
+static char_u *get_syn_options __ARGS((char_u *arg, int *flagsp, int keyword, int *sync_idx, short **cont_list, short **cont_in_list, short **next_list));
 static void syn_cmd_include __ARGS((exarg_t *eap, int syncing));
 static void syn_cmd_keyword __ARGS((exarg_t *eap, int syncing));
 static void syn_cmd_match __ARGS((exarg_t *eap, int syncing));
@@ -447,6 +449,7 @@ syntax_start(wp, lnum)
 	invalidate_current_state();
 	syn_buf = wp->w_buffer;
     }
+    syn_win = wp;
 
     /*
      * Allocate syntax stack when needed.
@@ -1844,12 +1847,12 @@ syn_current_attr(syncing, displaying)
 				&& (spp->sp_type == SPTYPE_MATCH
 				    || spp->sp_type == SPTYPE_START)
 				&& (current_next_list != NULL
-				    ? in_id_list(current_next_list,
+				    ? in_id_list(NULL, current_next_list,
 							      &spp->sp_syn, 0)
 				    : (cur_si == NULL
 					? !(spp->sp_flags & HL_CONTAINED)
-					: in_id_list(cur_si->si_cont_list,
-					    &spp->sp_syn,
+					: in_id_list(cur_si,
+					    cur_si->si_cont_list, &spp->sp_syn,
 					    spp->sp_flags & HL_CONTAINED))))
 			{
 			    /* If we already tried matching in this line, and
@@ -2791,21 +2794,6 @@ syn_add_start_off(result, regmatch, spp, idx, extra)
 	result->col = col;
 }
 
-static linenr_t	syn_lnum;
-
-/*
- * Function passed to vim_regexec_multi() to get a line.
- */
-    static char_u *
-syn_getline(lnum)
-    linenr_t lnum;
-{
-    /* when looking behind for a match/no-match we can't go before line 1 */
-    if (syn_lnum + lnum < 1)
-	return NULL;
-    return ml_get_buf(syn_buf, syn_lnum + lnum, FALSE);
-}
-
 /*
  * Get current line in syntax buffer.
  */
@@ -2816,8 +2804,8 @@ syn_getcurline()
 }
 
 /*
- * Call vim_regexec() with the current buffer set to syn_buf.  Makes
- * vim_iswordc() work correctly.
+ * Call vim_regexec() to match in syn_buf.
+ * Returns TRUE when there is a match.
  */
     static int
 syn_regexec(rmp, lnum, col)
@@ -2825,20 +2813,13 @@ syn_regexec(rmp, lnum, col)
     linenr_t	lnum;
     colnr_t	col;
 {
-    buf_t	*save_buf = curbuf;
-    int		retval;
-
-    syn_lnum = lnum;
-    curbuf = syn_buf;
-    retval = vim_regexec_multi(rmp, syn_getline, col,
-					  syn_buf->b_ml.ml_line_count - lnum);
-    curbuf = save_buf;
-    if (retval > 0)
+    if (vim_regexec_multi(rmp, syn_win, syn_buf, lnum, col) > 0)
     {
 	rmp->startpos[0].lnum += lnum;
 	rmp->endpos[0].lnum += lnum;
+	return TRUE;
     }
-    return (retval > 0);
+    return FALSE;
 }
 
 /*
@@ -2902,11 +2883,11 @@ check_keyword_id(line, startcol, endcol, flags, next_list, cur_si)
 	for ( ; ktab != NULL; ktab = ktab->next)
 	    if (   STRCMP(keyword, ktab->keyword) == 0
 		&& (current_next_list != 0
-		    ? in_id_list(current_next_list, &ktab->k_syn, 0)
+		    ? in_id_list(NULL, current_next_list, &ktab->k_syn, 0)
 		    : (cur_si == NULL
 			? !(ktab->flags & HL_CONTAINED)
-			: in_id_list(cur_si->si_cont_list, &ktab->k_syn,
-						ktab->flags & HL_CONTAINED))))
+			: in_id_list(cur_si, cur_si->si_cont_list,
+				  &ktab->k_syn, ktab->flags & HL_CONTAINED))))
 	    {
 		*endcol = startcol + len;
 		*flags = ktab->flags;
@@ -3191,6 +3172,34 @@ syn_cmd_on(eap, syncing)
 }
 
 /*
+ * Handle ":syntax enable" command.
+ */
+/* ARGSUSED */
+    static void
+syn_cmd_enable(eap, syncing)
+    exarg_t	*eap;
+    int		syncing;	/* not used */
+{
+    set_internal_string_var((char_u *)"syntax_cmd", (char_u *)"enable");
+    syn_cmd_onoff(eap, "syntax");
+    do_unlet((char_u *)"g:syntax_cmd");
+}
+
+/*
+ * Handle ":syntax reset" command.
+ */
+/* ARGSUSED */
+    static void
+syn_cmd_reset(eap, syncing)
+    exarg_t	*eap;
+    int		syncing;	/* not used */
+{
+    set_internal_string_var((char_u *)"syntax_cmd", (char_u *)"reset");
+    syn_cmd_onoff(eap, "syncolor");
+    do_unlet((char_u *)"g:syntax_cmd");
+}
+
+/*
  * Handle ":syntax manual" command.
  */
 /* ARGSUSED */
@@ -3426,6 +3435,10 @@ syn_list_one(id, syncing, link_only)
 	if (spp->sp_cont_list != NULL)
 	    put_id_list((char_u *)"contains", spp->sp_cont_list, attr);
 
+	if (spp->sp_syn.cont_in_list != NULL)
+	    put_id_list((char_u *)"containedin",
+					      spp->sp_syn.cont_in_list, attr);
+
 	if (spp->sp_next_list != NULL)
 	{
 	    put_id_list((char_u *)"nextgroup", spp->sp_next_list, attr);
@@ -3631,6 +3644,7 @@ syn_list_keywords(id, ktabp, did_header, attr)
     keyentry_t	*ktab;
     int		prev_contained = 0;
     short	*prev_next_list = NULL;
+    short	*prev_cont_in_list = NULL;
     int		prev_skipnl = 0;
     int		prev_skipwhite = 0;
     int		prev_skipempty = 0;
@@ -3652,6 +3666,7 @@ syn_list_keywords(id, ktabp, did_header, attr)
 			|| prev_skipnl != (ktab->flags & HL_SKIPNL)
 			|| prev_skipwhite != (ktab->flags & HL_SKIPWHITE)
 			|| prev_skipempty != (ktab->flags & HL_SKIPEMPTY)
+			|| prev_cont_in_list != ktab->k_syn.cont_in_list
 			|| prev_next_list != ktab->next_list)
 		    outlen = 9999;
 		else
@@ -3661,6 +3676,7 @@ syn_list_keywords(id, ktabp, did_header, attr)
 		{
 		    prev_contained = 0;
 		    prev_next_list = NULL;
+		    prev_cont_in_list = NULL;
 		    prev_skipnl = 0;
 		    prev_skipwhite = 0;
 		    prev_skipempty = 0;
@@ -3671,6 +3687,13 @@ syn_list_keywords(id, ktabp, did_header, attr)
 		    msg_puts_attr((char_u *)"contained", attr);
 		    msg_putchar(' ');
 		    prev_contained = (ktab->flags & HL_CONTAINED);
+		}
+		if (ktab->k_syn.cont_in_list != prev_cont_in_list)
+		{
+		    put_id_list((char_u *)"containedin",
+					      ktab->k_syn.cont_in_list, attr);
+		    msg_putchar(' ');
+		    prev_cont_in_list = ktab->k_syn.cont_in_list;
 		}
 		if (ktab->next_list != prev_next_list)
 		{
@@ -3759,6 +3782,7 @@ free_keywtab(ktabp)
 	    {
 		ktab_next = ktab->next;
 		vim_free(ktab->next_list);
+		vim_free(ktab->k_syn.cont_in_list);
 		vim_free(ktab);
 	    }
 	vim_free(ktabp);
@@ -3769,10 +3793,11 @@ free_keywtab(ktabp)
  * Add a keyword to the list of keywords.
  */
     static void
-add_keyword(name, id, flags, next_list)
+add_keyword(name, id, flags, cont_in_list, next_list)
     char_u	*name;	    /* name of keyword */
     int		id;	    /* group ID for this keyword */
     int		flags;	    /* flags for this keyword */
+    short	*cont_in_list; /* containedin for this keyword */
     short	*next_list; /* nextgroup for this keyword */
 {
     keyentry_t	*ktab;
@@ -3787,6 +3812,7 @@ add_keyword(name, id, flags, next_list)
     ktab->k_syn.id = id;
     ktab->k_syn.inc_tag = current_syn_inc_tag;
     ktab->flags = flags;
+    ktab->k_syn.cont_in_list = copy_id_list(cont_in_list);
     ktab->next_list = copy_id_list(next_list);
 
     if (curbuf->b_syn_ic)
@@ -3866,7 +3892,8 @@ get_group_name(arg, name_end)
  * Return NULL for any error;
  */
     static char_u *
-get_syn_options(arg, flagsp, keyword, sync_idx, cont_list, next_list)
+get_syn_options(arg, flagsp, keyword, sync_idx, cont_list,
+						      cont_in_list, next_list)
     char_u	*arg;		/* next argument */
     int		*flagsp;	/* flags for contained and transpartent */
     int		keyword;	/* TRUE for ":syn keyword" */
@@ -3874,6 +3901,8 @@ get_syn_options(arg, flagsp, keyword, sync_idx, cont_list, next_list)
 				   if not allowed */
     short	**cont_list;	/* group IDs for "contains" argument, NULL if
 				   not allowed */
+    short	**cont_in_list;	/* group IDs for "containedin" argument, NULL
+				   if not allowed */
     short	**next_list;	/* group IDs for "nextgroup" argument */
 {
     int		flags;
@@ -3988,6 +4017,17 @@ get_syn_options(arg, flagsp, keyword, sync_idx, cont_list, next_list)
 		return NULL;
 	    }
 	    if (get_id_list(&arg, 8, cont_list) == FAIL)
+		return NULL;
+	}
+	else if (STRNICMP(arg, "containedin", 11) == 0
+		&& (vim_iswhite(arg[11]) || arg[11] == '='))
+	{
+	    if (cont_in_list == NULL)
+	    {
+		EMSG(_("containedin argument not accepted here"));
+		return NULL;
+	    }
+	    if (get_id_list(&arg, 11, cont_in_list) == FAIL)
 		return NULL;
 	}
 	else if (STRNICMP(arg, "nextgroup", 9) == 0
@@ -4115,6 +4155,7 @@ syn_cmd_keyword(eap, syncing)
     int		round;
     int		flags = 0;
     short	*next_list = NULL;
+    short	*cont_in_list = NULL;
 
     rest = get_group_name(arg, &group_name_end);
 
@@ -4142,7 +4183,7 @@ syn_cmd_keyword(eap, syncing)
 						       rest = skipwhite(rest))
 		{
 		    rest = get_syn_options(rest, &flags, TRUE, NULL,
-							    NULL, &next_list);
+					     NULL, &cont_in_list, &next_list);
 		    if (rest == NULL || ends_excmd(*rest))
 			break;
 		    p = keyword_copy;
@@ -4159,7 +4200,8 @@ syn_cmd_keyword(eap, syncing)
 			{
 			    if (p != NULL)
 				*p = NUL;
-			    add_keyword(keyword_copy, syn_id, flags, next_list);
+			    add_keyword(keyword_copy, syn_id, flags,
+						     cont_in_list, next_list);
 			    if (p == NULL || p[1] == NUL || p[1] == ']')
 				break;
 			    p[0] = p[1];
@@ -4178,6 +4220,7 @@ syn_cmd_keyword(eap, syncing)
     else
 	EMSG2(_(e_invarg2), arg);
 
+    vim_free(cont_in_list);
     vim_free(next_list);
     redraw_curbuf_later(NOT_VALID);
     syn_stack_free_all(curbuf);		/* Need to recompute all syntax. */
@@ -4202,6 +4245,7 @@ syn_cmd_match(eap, syncing)
     int		flags = 0;
     int		sync_idx = 0;
     short	*cont_list = NULL;
+    short	*cont_in_list = NULL;
     short	*next_list = NULL;
 
     /* Isolate the group name, check for validity */
@@ -4209,7 +4253,7 @@ syn_cmd_match(eap, syncing)
 
     /* Get options before the pattern */
     rest = get_syn_options(rest, &flags, FALSE,
-			  syncing ? &sync_idx : NULL, &cont_list, &next_list);
+	   syncing ? &sync_idx : NULL, &cont_list, &cont_in_list, &next_list);
 
     /* get the pattern. */
     init_syn_patterns();
@@ -4220,7 +4264,7 @@ syn_cmd_match(eap, syncing)
 
     /* Get options after the pattern */
     rest = get_syn_options(rest, &flags, FALSE,
-			  syncing ? &sync_idx : NULL, &cont_list, &next_list);
+	   syncing ? &sync_idx : NULL, &cont_list, &cont_in_list, &next_list);
 
     if (rest != NULL)		/* all arguments are valid */
     {
@@ -4247,6 +4291,7 @@ syn_cmd_match(eap, syncing)
 	    SYN_ITEMS(curbuf)[idx].sp_flags = flags;
 	    SYN_ITEMS(curbuf)[idx].sp_sync_idx = sync_idx;
 	    SYN_ITEMS(curbuf)[idx].sp_cont_list = cont_list;
+	    SYN_ITEMS(curbuf)[idx].sp_syn.cont_in_list = cont_in_list;
 	    SYN_ITEMS(curbuf)[idx].sp_next_list = next_list;
 	    ++curbuf->b_syn_patterns.ga_len;
 	    --curbuf->b_syn_patterns.ga_room;
@@ -4271,6 +4316,7 @@ syn_cmd_match(eap, syncing)
     vim_free(item.sp_prog);
     vim_free(item.sp_pattern);
     vim_free(cont_list);
+    vim_free(cont_in_list);
     vim_free(next_list);
 
     if (rest == NULL)
@@ -4315,6 +4361,7 @@ syn_cmd_region(eap, syncing)
     int			idx;
     int			flags = 0;
     short		*cont_list = NULL;
+    short		*cont_in_list = NULL;
     short		*next_list = NULL;
 
     /* Isolate the group name, check for validity */
@@ -4333,7 +4380,7 @@ syn_cmd_region(eap, syncing)
     {
 	/* Check for option arguments */
 	rest = get_syn_options(rest, &flags, FALSE, NULL,
-						      &cont_list, &next_list);
+				       &cont_list, &cont_in_list, &next_list);
 	if (rest == NULL || ends_excmd(*rest))
 	    break;
 
@@ -4483,6 +4530,8 @@ syn_cmd_region(eap, syncing)
 		    if (item == ITEM_START)
 		    {
 			SYN_ITEMS(curbuf)[idx].sp_cont_list = cont_list;
+			SYN_ITEMS(curbuf)[idx].sp_syn.cont_in_list =
+								 cont_in_list;
 			SYN_ITEMS(curbuf)[idx].sp_next_list = next_list;
 		    }
 		    ++curbuf->b_syn_patterns.ga_len;
@@ -4520,6 +4569,7 @@ syn_cmd_region(eap, syncing)
     if (!success)
     {
 	vim_free(cont_list);
+	vim_free(cont_in_list);
 	vim_free(next_list);
 	if (not_enough)
 	    EMSG2(_("Not enough arguments: syntax region %s"), arg);
@@ -5340,13 +5390,15 @@ copy_id_list(list)
 }
 
 /*
- * Check if syntax group "ssp" is in the ID list "list".
+ * Check if syntax group "ssp" is in the ID list "list" of "cur_si".
+ * "cur_si" can be NULL if not checking the "containedin" list.
  * Used to check if a syntax item is in the "contains" or "nextgroup" list of
  * the current item.
  * This function is called very often, keep it fast!!
  */
     static int
-in_id_list(list, ssp, contained)
+in_id_list(cur_si, list, ssp, contained)
+    stateitem_t	*cur_si;	/* current item or NULL */
     short	*list;		/* id list */
     struct sp_syn *ssp;		/* group id and ":syn include" tag of group */
     int		contained;	/* group id is contained */
@@ -5355,6 +5407,14 @@ in_id_list(list, ssp, contained)
     short	*scl_list;
     short	item;
     short	id = ssp->id;
+
+    /* If spp has a "containedin" list and "cur_si" is in it, return TRUE. */
+    if (cur_si != NULL
+	    && ssp->cont_in_list != NULL
+	    && in_id_list(NULL, ssp->cont_in_list,
+		&(SYN_ITEMS(syn_buf)[cur_si->si_idx].sp_syn),
+		  SYN_ITEMS(syn_buf)[cur_si->si_idx].sp_flags & HL_CONTAINED))
+	return TRUE;
 
     /*
      * If list is ID_LIST_ALL, we are in a transparent item that isn't
@@ -5405,7 +5465,7 @@ in_id_list(list, ssp, contained)
 	if (item >= SYNID_CLUSTER)
 	{
 	    scl_list = SYN_CLSTR(syn_buf)[item - SYNID_CLUSTER].scl_list;
-	    if (scl_list != NULL && in_id_list(scl_list, ssp, contained))
+	    if (scl_list != NULL && in_id_list(NULL, scl_list, ssp, contained))
 		return retval;
 	}
 	item = *++list;
@@ -5424,6 +5484,7 @@ static struct subcommand subcommands[] =
     {"case",		syn_cmd_case},
     {"clear",		syn_cmd_clear},
     {"cluster",		syn_cmd_cluster},
+    {"enable",		syn_cmd_enable},
     {"include",		syn_cmd_include},
     {"keyword",		syn_cmd_keyword},
     {"list",		syn_cmd_list},
@@ -5432,6 +5493,7 @@ static struct subcommand subcommands[] =
     {"on",		syn_cmd_on},
     {"off",		syn_cmd_off},
     {"region",		syn_cmd_region},
+    {"reset",		syn_cmd_reset},
     {"sync",		syn_cmd_sync},
     {"",		syn_cmd_list},
     {NULL, NULL}
@@ -5731,6 +5793,8 @@ do_highlight(line, forceit, init)
 #ifdef FEAT_GUI_X11
     int		is_menu_group = FALSE;		/* "Menu" group */
     int		is_scrollbar_group = FALSE;	/* "Scrollbar" group */
+#else
+# define is_menu_group 0
 #endif
 
     /*
@@ -6029,7 +6093,7 @@ do_highlight(line, forceit, init)
 	    gui_mch_free_fontset(HL_TABLE()[idx].sg_fontset);
 	    HL_TABLE()[idx].sg_fontset = NOFONTSET;
 # endif
-	    hl_do_font(idx, arg, is_normal_group);
+	    hl_do_font(idx, arg, is_normal_group, is_menu_group);
 	    vim_free(HL_TABLE()[idx].sg_font_name);
 	    HL_TABLE()[idx].sg_font_name = vim_strsave(arg);
 #endif
@@ -6090,9 +6154,9 @@ do_highlight(line, forceit, init)
 						 13, 14, 14, 15, -1};
 		/* for xterm with 88 colors... */
 		static int color_numbers_88[27] = {0, 4, 2, 6,
-						 1, 5, 52, 84, 84,
+						 1, 5, 32, 84, 84,
 						 7, 7, 82, 82,
-						 12, 43, 10, 46,
+						 12, 43, 10, 61,
 						 14, 63, 9, 74, 13,
 						 75, 11, 78, 15, -1};
 		/* for xterm with 256 colors... */
@@ -6651,11 +6715,13 @@ fontset_name2handle(name)
 /*
  * Get the font or fontset for one highlight group.
  */
+/*ARGSUSED*/
     static void
-hl_do_font(idx, arg, do_normal)
+hl_do_font(idx, arg, do_normal, do_menu)
     int		idx;
     char_u	*arg;
     int		do_normal;	/* set normal font */
+    int		do_menu;	/* set menu font */
 {
 # ifdef FEAT_XFONTSET
     /* If 'guifontset' is not empty, first try using the name as a
@@ -6665,18 +6731,35 @@ hl_do_font(idx, arg, do_normal)
     if (HL_TABLE()[idx].sg_fontset != NOFONTSET)
     {
 	/* If it worked and it's the Normal group, use it as the
-	 * normal fontset. */
+	 * normal fontset.  Same for the Menu group. */
 	if (do_normal)
 	    gui_init_font(arg, TRUE);
+#ifdef FEAT_GUI_MOTIF
+	if (do_menu)
+	{
+	    gui.menu_font = HL_TABLE()[idx].sg_fontset;
+	    gui_mch_new_menu_font();
+	}
+#endif
     }
     else
 # endif
     {
 	HL_TABLE()[idx].sg_font = font_name2handle(arg);
 	/* If it worked and it's the Normal group, use it as the
-	 * normal font. */
-	if (do_normal && HL_TABLE()[idx].sg_font != NOFONT)
-	    gui_init_font(arg, FALSE);
+	 * normal font.  Same for the Menu group. */
+	if (HL_TABLE()[idx].sg_font != NOFONT)
+	{
+	    if (do_normal)
+		gui_init_font(arg, FALSE);
+#if defined(FEAT_GUI_MOTIF) && defined(FEAT_MENU)
+	    if (do_menu)
+	    {
+		gui.menu_font = HL_TABLE()[idx].sg_font;
+		gui_mch_new_menu_font();
+	    }
+#endif
+	}
     }
 }
 
@@ -7444,7 +7527,7 @@ gui_do_one_color(idx)
 
     if (HL_TABLE()[idx].sg_font_name != NULL)
     {
-	hl_do_font(idx, HL_TABLE()[idx].sg_font_name, FALSE);
+	hl_do_font(idx, HL_TABLE()[idx].sg_font_name, FALSE, FALSE);
 	didit = TRUE;
     }
     if (HL_TABLE()[idx].sg_gui_fg_name != NULL)

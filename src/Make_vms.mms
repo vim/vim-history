@@ -2,7 +2,7 @@
 # Makefile for Vim on OpenVMS
 #
 # Maintainer:   Zoltan Arpadffy <arpadffy@altavista.net>
-# Last change:  20-NOV-2000
+# Last change:  2001 Mar 14
 #
 # This has been tested on VMS 6.2 to 7.1 on DEC Alpha and VAX.
 # The following will be built:
@@ -193,7 +193,7 @@ INCL =  vim.h globals.h option.h keymap.h macros.h ascii.h term.h os_unix.h \
 	$(GUI_INC)
 
 SRC =	buffer.c charset.c digraph.c edit.c eval.c ex_cmds.c ex_cmds2.c ex_docmd.c \
-	ex_getln.c fileio.c fold.c getchar.c main.c mark.c menu.c multibyte.c \
+	ex_getln.c fileio.c fold.c getchar.c main.c mark.c menu.c mbyte.c \
 	memfile.c memline.c message.c misc1.c misc2.c move.c normal.c ops.c option.c \
 	pty.c quickfix.c regexp.c search.c syntax.c tag.c term.c termlib.c \
 	ui.c undo.c version.c screen.c window.c os_vms.c pathdef.c \
@@ -202,7 +202,7 @@ SRC =	buffer.c charset.c digraph.c edit.c eval.c ex_cmds.c ex_cmds2.c ex_docmd.c
 OBJ =	buffer.obj charset.obj digraph.obj edit.obj eval.obj ex_cmds.obj ex_cmds2.obj \
 	ex_docmd.obj ex_getln.obj fileio.obj fold.obj getchar.obj \
 	main.obj mark.obj menu.obj memfile.obj memline.obj message.obj misc1.obj \
-	misc2.obj move.obj multibyte.obj normal.obj ops.obj option.obj pty.obj quickfix.obj \
+	misc2.obj move.obj mbyte.obj normal.obj ops.obj option.obj pty.obj quickfix.obj \
 	regexp.obj search.obj syntax.obj tag.obj term.obj termlib.obj ui.obj \
 	undo.obj screen.obj window.obj os_vms.obj pathdef.obj \
 	$(GUI_OBJ) $(PERL_OBJ) $(PYTHON_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) $(RUBY_OBJ) $(HANGULIN_OBJ)
@@ -354,7 +354,7 @@ message.obj : message.c vim.h [.auto]config.h feature.h os_unix.h osdef.h ascii.
 misccmds.obj : misccmds.c vim.h [.auto]config.h feature.h os_unix.h osdef.h ascii.h keymap.h \
 	term.h macros.h structs.h gui.h globals.h proto.h regexp.h option.h
 	$(CC_DEF) $(ALL_CFLAGS) $<
-multibyte.obj : multibyte.c vim.h [.auto]config.h feature.h os_unix.h osdef.h ascii.h keymap.h \
+mbyte.obj : mbyte.c vim.h [.auto]config.h feature.h os_unix.h osdef.h ascii.h keymap.h \
 	term.h macros.h regexp.h structs.h gui.h globals.h farsi.h option.h ex_cmds.h proto.h
 	$(CC_DEF) $(ALL_CFLAGS) $<
 normal.obj : normal.c vim.h [.auto]config.h feature.h os_unix.h osdef.h ascii.h keymap.h term.h \

@@ -55,7 +55,7 @@ SRC =	buffer.c \
 	misc1.c \
 	misc2.c \
 	move.c \
-	multibyte.c \
+	mbyte.c \
 	normal.c \
 	ops.c \
 	option.c \
@@ -95,7 +95,7 @@ OBJ =	obj/buffer.o \
 	obj/misc1.o \
 	obj/misc2.o \
 	obj/move.o \
-	obj/multibyte.o \
+	obj/mbyte.o \
 	obj/normal.o \
 	obj/ops.o \
 	obj/option.o \
@@ -133,7 +133,7 @@ PRO =	proto/buffer.pro \
 	proto/misc1.pro \
 	proto/misc2.pro \
 	proto/move.pro \
-	proto/multibyte.pro \
+	proto/mbyte.pro \
 	proto/normal.pro \
 	proto/ops.pro \
 	proto/option.pro \
@@ -260,8 +260,8 @@ obj/misc2.o:	misc2.c
 obj/move.o:	move.c
 	$(CCSYM) $@ move.c
 
-obj/multibyte.o: multibyte.c
-	$(CCSYM) $@ multibyte.c
+obj/mbyte.o: mbyte.c
+	$(CCSYM) $@ mbyte.c
 
 obj/normal.o:	normal.c
 	$(CCSYM) $@ normal.c

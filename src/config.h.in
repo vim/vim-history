@@ -216,6 +216,7 @@
 #undef HAVE_UTIME_H
 #undef HAVE_X11_SUNKEYSYM_H
 #undef HAVE_X11_XPM_H
+#undef HAVE_X11_XMU_EDITRES_H
 #undef HAVE_XM_XM_H
 
 /* Define if you have <sys/wait.h> that is POSIX.1 compatible.  */

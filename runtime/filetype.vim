@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Mar 09
+" Last change:	2001 Mar 18
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -589,6 +589,9 @@ fun! <SID>FTnroff()
   return 0
 endfun
 
+" Not Quite C
+au BufNewFile,BufRead *.nqc			setf nqc
+
 " OCAML
 au BufNewFile,BufRead *.ml,*.mli,*.mll,*.mly	setf ocaml
 
@@ -710,8 +713,9 @@ function! <SID>FTprogress_asm()
     if line =~ '^\s*;'
       call FTCheck_asm()
       return
-    elseif line !~ '^\s*$'
+    elseif line !~ '^\s*$' || line =~ '^/\*'
       " Not an empty line: Doesn't look like valid assembly code.
+      " Or it looks like a Progress /* comment
       break
     endif
     let lnum = lnum + 1
@@ -737,8 +741,9 @@ function! <SID>FTprogress_pascal()
     	\ || line =~ '^\s*{'
       setf pascal
       return
-    elseif line !~ '^\s*$'
+    elseif line !~ '^\s*$' || line =~ '^/\*'
       " Not an empty line: Doesn't look like valid Pascal code.
+      " Or it looks like a Progress /* comment
       break
     endif
     let lnum = lnum + 1

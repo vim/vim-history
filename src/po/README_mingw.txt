@@ -2,7 +2,8 @@ This file explains how to create and maintain po files using gnu-gettext.win32,
 a MINGW32 Windows PORT of gettext by Franco Bez <franco.bez@gmx.de>; you can
 find it at
 
-	http://
+	http://home.a-city.de/franco.bez/gettext/gettext_win32_en.html
+
 
 The file that does the work is Make_ming.mak in the po directory. It is an
 adaptation of the Unix Makefile, but it does NOT test the presence of any po,
@@ -63,8 +64,6 @@ This will extract all the strings from Vim and merge them in with the
     - items with an empty msgstr
     You can do this with the cleanup.vim script:
     	:source cleanup.vim
-    Background: on Solaris an empty msgstr results in an empty message; GNU
-    gettext ignores empty strings and items marked with "#, fuzzy".
  
 (4) Check:
 

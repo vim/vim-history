@@ -591,25 +591,106 @@ mch_screenmode(
 }
 
 
+#ifdef FEAT_EVAL
+/*
+ * Call a DLL routine which takes either a string or int param
+ * and returns an allocated string.
+ * Return OK if it worked, FAIL if not.
+ */
+#ifdef WIN32
+typedef LPTSTR (*MYSTRPROCSTR)(LPTSTR);
+typedef LPTSTR (*MYINTPROCSTR)(int);
+typedef int (*MYSTRPROCINT)(LPTSTR);
+typedef int (*MYINTPROCINT)(int);
+#else
+typedef LPSTR (*MYSTRPROCSTR)(LPSTR);
+typedef LPSTR (*MYINTPROCSTR)(int);
+typedef int (*MYSTRPROCINT)(LPSTR);
+typedef int (*MYINTPROCINT)(int);
+#endif
+
+    int
+mch_libcall(
+    char_u	*libname,
+    char_u	*funcname,
+    char_u	*argstring,	/* NULL when using a argint */
+    int		argint,
+    char_u	**string_result,/* NULL when using number_result */
+    int		*number_result)
+{
+    HINSTANCE		hinstLib;
+    MYSTRPROCSTR	ProcAdd;
+    MYINTPROCSTR	ProcAddI;
+    char_u		*retval_str = NULL;
+    int			retval_int = 0;
+
+    BOOL fRunTimeLinkSuccess = FALSE;
+
+    // Get a handle to the DLL module.
+    hinstLib = LoadLibrary(libname);
+
+    // If the handle is valid, try to get the function address.
+    if (hinstLib != NULL)
+    {
+	if (argstring != NULL)
+	{
+	    /* Call with string argument */
+	    ProcAdd = (MYSTRPROCSTR) GetProcAddress(hinstLib, funcname);
+	    if ((fRunTimeLinkSuccess = (ProcAdd != NULL)) != 0)
+	    {
+		if (string_result == NULL)
+		    retval_int = ((MYSTRPROCINT)ProcAdd)(argstring);
+		else
+		    retval_str = (ProcAdd)(argstring);
+	    }
+	}
+	else
+	{
+	    /* Call with number argument */
+	    ProcAddI = (MYINTPROCSTR) GetProcAddress(hinstLib, funcname);
+	    if ((fRunTimeLinkSuccess = (ProcAddI != NULL)) != 0)
+	    {
+		if (string_result == NULL)
+		    retval_int = ((MYINTPROCINT)ProcAddI)(argint);
+		else
+		    retval_str = (ProcAddI)(argint);
+	    }
+	}
+
+	// Save the string before we free the library.
+	// Assume that a "1" result is an illegal pointer.
+	if (string_result == NULL)
+	    *number_result = retval_int;
+	else if (retval_str != NULL
+		&& retval_str != (char_u *)1
+		&& retval_str != (char_u *)-1
+		&& !IsBadStringPtr(retval_str, INT_MAX))
+	    *string_result = vim_strsave(retval_str);
+
+	// Free the DLL module.
+	(void)FreeLibrary(hinstLib);
+    }
+
+    if (!fRunTimeLinkSuccess)
+    {
+	EMSG2(_("Library call failed for \"%s\"()"), funcname);
+	return FAIL;
+    }
+
+    return OK;
+}
+#endif
+
 #ifdef FEAT_CLIPBOARD
 /*
  * Clipboard stuff, for cutting and pasting text to other windows.
  */
 
 /*
- * Make vim the owner of the current selection.
- */
-    void
-clip_mch_lose_selection()
-{
-    /* Nothing needs to be done here */
-}
-
-/*
  * Make vim the owner of the current selection.  Return OK upon success.
  */
     int
-clip_mch_own_selection()
+clip_mch_own_selection(VimClipboard *cbd)
 {
     /*
      * Never actually own the clipboard.  If another application sets the
@@ -618,6 +699,171 @@ clip_mch_own_selection()
     return FAIL;
 }
 
+/*
+ * Make vim NOT the owner of the current selection.
+ */
+    void
+clip_mch_lose_selection(VimClipboard *cbd)
+{
+    /* Nothing needs to be done here */
+}
+
+/*
+ * Get the current selection and put it in the clipboard register.
+ *
+ * NOTE: Must use GlobalLock/Unlock here to ensure Win32s compatibility.
+ * On NT/W95 the clipboard data is a fixed global memory object and
+ * so its handle = its pointer.
+ * On Win32s, however, co-operation with the Win16 system means that
+ * the clipboard data is moveable and its handle is not a pointer at all,
+ * so we can't just cast the return value of GetClipboardData to (char_u*).
+ * <VN>
+ */
+    void
+clip_mch_request_selection(VimClipboard *cbd)
+{
+    int		type = MCHAR;
+    HGLOBAL	hMem;
+    char_u	*str = NULL;
+
+    /*
+     * Don't pass GetActiveWindow() as an argument to OpenClipboard() because
+     * then we can't paste back into the same window for some reason - webb.
+     */
+    if (OpenClipboard(NULL))
+    {
+	/* Check for vim's own clipboard format first */
+	if ((hMem = GetClipboardData(cbd->format)) != NULL)
+	{
+	    str = (char_u *)GlobalLock(hMem);
+	    if (str != NULL)
+		switch (*str++)
+		{
+		    default:
+		    case 'L':	type = MLINE;	break;
+		    case 'C':	type = MCHAR;	break;
+		    case 'B':	type = MBLOCK;	break;
+		}
+	}
+	/* Otherwise, check for the normal text format */
+	else if ((hMem = GetClipboardData(CF_TEXT)) != NULL)
+	{
+	    str = (char_u *)GlobalLock(hMem);
+	    if (str != NULL)
+		type = (vim_strchr((char*) str, '\r') != NULL) ? MLINE : MCHAR;
+	}
+
+	if (hMem != NULL && str != NULL)
+	{
+	    /* successful lock - must unlock when finished */
+	    if (*str != NUL)
+	    {
+		LPCSTR		psz = (LPCSTR)str;
+		char_u		*temp_clipboard;
+		char_u		*pszTemp;
+		const char	*pszNL;
+		int		len;
+
+		temp_clipboard = (char_u *)lalloc(STRLEN(psz) + 1, TRUE);
+		if (temp_clipboard != NULL)
+		{
+		    /* Translate <CR><NL> into <NL>. */
+		    pszTemp = temp_clipboard;
+		    while (*psz != NUL)
+		    {
+			pszNL = psz;
+			for (;;)
+			{
+			    pszNL = strchr(pszNL, '\r');
+			    if (pszNL == NULL || pszNL[1] == '\n')
+				break;
+			    ++pszNL;
+			}
+			len = (pszNL != NULL) ?  pszNL - psz : STRLEN(psz);
+			STRNCPY(pszTemp, psz, len);
+			pszTemp += len;
+			if (pszNL != NULL)
+			    *pszTemp++ = '\n';
+			psz += len + ((pszNL != NULL) ? 2 : 0);
+		    }
+		    *pszTemp = NUL;
+		    clip_yank_selection(type, temp_clipboard,
+				(long)(pszTemp - temp_clipboard), cbd);
+		    vim_free(temp_clipboard);
+		}
+	    }
+	    /* unlock the global object */
+	    (void)GlobalUnlock(hMem);
+	}
+	CloseClipboard();
+    }
+}
+
+/*
+ * Send the current selection to the clipboard.
+ */
+    void
+clip_mch_set_selection(VimClipboard *cbd)
+{
+    char_u	*str = NULL;
+    long_u	cch;
+    int		type;
+    HGLOBAL	hMem = NULL;
+    HGLOBAL	hMemVim = NULL;
+    LPSTR	lpszMem = NULL;
+    LPSTR	lpszMemVim = NULL;
+
+    /* If the '*' register isn't already filled in, fill it in now */
+    cbd->owned = TRUE;
+    clip_get_selection(cbd);
+    cbd->owned = FALSE;
+
+    type = clip_convert_selection(&str, &cch, cbd);
+
+    if (type < 0)
+	return;
+
+    if ((hMem = GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE, cch+1)) != NULL
+	&& (lpszMem = (LPSTR)GlobalLock(hMem)) != NULL
+	&& (hMemVim = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE, cch+2)) != NULL
+	&& (lpszMemVim = (LPSTR)GlobalLock(hMemVim)) != NULL)
+    {
+	switch (type)
+	{
+	    default:
+	    case MLINE:	    *lpszMemVim++ = 'L';    break;
+	    case MCHAR:	    *lpszMemVim++ = 'C';    break;
+	    case MBLOCK:    *lpszMemVim++ = 'B';    break;
+	}
+
+	STRNCPY(lpszMem, str, cch);
+	lpszMem[cch] = NUL;
+
+	STRNCPY(lpszMemVim, str, cch);
+	lpszMemVim[cch] = NUL;
+
+	/*
+	 * Don't pass GetActiveWindow() as an argument to OpenClipboard()
+	 * because then we can't paste back into the same window for some
+	 * reason - webb.
+	 */
+	if (OpenClipboard(NULL))
+	{
+	    if (EmptyClipboard())
+	    {
+		SetClipboardData(cbd->format, hMemVim);
+		SetClipboardData(CF_TEXT, hMem);
+	    }
+	    CloseClipboard();
+	}
+    }
+    if (lpszMem != NULL)
+	GlobalUnlock(hMem);
+    if (lpszMemVim != NULL)
+	GlobalUnlock(hMemVim);
+
+    vim_free(str);
+}
 
 #endif /* FEAT_CLIPBOARD */
 

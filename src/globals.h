@@ -313,7 +313,12 @@ EXTERN int	new_pixel_height INIT(= 0);
 #endif
 
 #ifdef FEAT_CLIPBOARD
-EXTERN VimClipboard clipboard;
+EXTERN VimClipboard clip_star;	/* PRIMARY selection in X11 */
+# ifdef FEAT_X11
+EXTERN VimClipboard clip_plus;	/* CLIPBOARD selection in X11 */
+# else
+#  define clip_plus clip_star	/* there is only one clipboard */
+# endif
 #endif
 
 /*

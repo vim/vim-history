@@ -41,6 +41,6 @@ Compilation instructions:
 7. Check additional files if you include non-standard features.
 
    For example, if you added the MULTI_BYTE feature, check
-   Extras/multibyte.c in the project window.
+   Extras/mbyte.c in the project window.
 
 8. Compile and you will obtain binaries: vimPPC, Vim 68k, and/or vimFAT.

@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.0x.  Last change: 2001 Feb 20
+*motion.txt*    For Vim version 6.0y.  Last change: 2001 Mar 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -710,7 +710,11 @@ was made yet in the current file.
 '"  `"			To the cursor position when last exiting the current
 			buffer.  Defaults to the first character of the first
 			line.  See |last-position-jump| for how to use this
-			for each opened file.  {not in Vi}.
+			for each opened file.
+			Only one position is remembered per buffer, not one
+			for each window.  As long as the buffer is visible in
+			a window the position won't be changed.
+			{not in Vi}.
 
 							*'^* *`^*
 '^  `^			To the position where the cursor was the last time

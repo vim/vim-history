@@ -39,6 +39,7 @@ void gui_mch_mousehide __ARGS((int hide));
 void gui_mch_destroy_scrollbar __ARGS((scrollbar_t *sb));
 int gui_mch_init_font __ARGS((char_u *font_name, int fontset));
 void gui_mch_settitle __ARGS((char_u *title, char_u *icon));
+void mch_set_mouse_shape __ARGS((int shape));
 int gui_is_win32s __ARGS((void));
 int gui_mch_get_mouse_x __ARGS((void));
 int gui_mch_get_mouse_y __ARGS((void));
@@ -70,6 +71,5 @@ void gui_mch_destroy_menu __ARGS((vimmenu_t *menu));
 void gui_mch_menu_grey __ARGS((vimmenu_t *menu, int grey));
 char_u *gui_mch_browse __ARGS((int saving, char_u *title, char_u *dflt, char_u *ext, char_u *initdir, char_u *filter));
 int gui_mch_dialog __ARGS((int type, char_u *title, char_u *message, char_u *buttons, int dfltbutton));
-void mch_set_mouse_shape __ARGS((int shape));
 void gui_mch_set_foreground __ARGS((void));
 /* vim: set ft=c : */

@@ -1297,7 +1297,7 @@ plines_win_nofold(wp, lnum)
     s = ml_get_buf(wp->w_buffer, lnum, FALSE);
     if (*s == NUL)		/* empty line */
 	return 1;
-    col = win_linetabsize(wp, s);
+    col = win_linetabsize(wp, s, (colnr_t)MAXCOL);
 
     /*
      * If list mode is on, then the '$' at the end of the line may take up one
@@ -4476,7 +4476,7 @@ get_c_indent()
     /*
      * max lines to search for an open comment
      */
-    int ind_maxcomment = 30;
+    int ind_maxcomment = 70;
 
     /*
      * handle braces for java code

@@ -87,7 +87,7 @@ enum
     SELECTION_STRING,
     SELECTION_TEXT,
     SELECTION_COMPOUND_TEXT,
-    SELECTION_CLIPBOARD
+    SELECTION_VIM
 };
 
 /*
@@ -106,9 +106,9 @@ enum
 
 static GtkTargetEntry target_table[] =
 {
-    {"text/uri-list", 0, TARGET_STRING},
-    {"STRING",     0, TARGET_STRING},
-    {"text/plain", 0, TARGET_STRING}
+    {"text/uri-list",	0, TARGET_STRING},
+    {"STRING",		0, TARGET_STRING},
+    {"text/plain",	0, TARGET_STRING}
 };
 static guint n_targets = sizeof(target_table) / sizeof(target_table[0]);
 #endif
@@ -132,6 +132,13 @@ static GdkAtom save_yourself_atom = GDK_NONE;
 static GdkAtom reread_rcfiles_atom = GDK_NONE;
 
 /*
+ * Atoms used to control/reference X11 selections.
+ */
+static GdkAtom compound_text_atom = GDK_NONE;
+static GdkAtom text_atom = GDK_NONE;
+static GdkAtom vim_atom = GDK_NONE;	/* Vim's own special selection format */
+
+/*
  * Keycodes recognized by vim.
  */
 static struct special_key
@@ -141,91 +148,91 @@ static struct special_key
     char_u code1;
 } special_keys[] =
 {
-    { GDK_Up,		'k', 'u' },
-    { GDK_Down,		'k', 'd' },
-    { GDK_Left,		'k', 'l' },
-    { GDK_Right,	'k', 'r' },
-    { GDK_F1,		'k', '1' },
-    { GDK_F2,		'k', '2' },
-    { GDK_F3,		'k', '3' },
-    { GDK_F4,		'k', '4' },
-    { GDK_F5,		'k', '5' },
-    { GDK_F6,		'k', '6' },
-    { GDK_F7,		'k', '7' },
-    { GDK_F8,		'k', '8' },
-    { GDK_F9,		'k', '9' },
-    { GDK_F10,		'k', ';' },
-    { GDK_F11,		'F', '1' },
-    { GDK_F12,		'F', '2' },
-    { GDK_F13,		'F', '3' },
-    { GDK_F14,		'F', '4' },
-    { GDK_F15,		'F', '5' },
-    { GDK_F16,		'F', '6' },
-    { GDK_F17,		'F', '7' },
-    { GDK_F18,		'F', '8' },
-    { GDK_F19,		'F', '9' },
-    { GDK_F20,		'F', 'A' },
-    { GDK_F21,		'F', 'B' },
-    { GDK_F22,		'F', 'C' },
-    { GDK_F23,		'F', 'D' },
-    { GDK_F24,		'F', 'E' },
-    { GDK_F25,		'F', 'F' },
-    { GDK_F26,		'F', 'G' },
-    { GDK_F27,		'F', 'H' },
-    { GDK_F28,		'F', 'I' },
-    { GDK_F29,		'F', 'J' },
-    { GDK_F30,		'F', 'K' },
-    { GDK_F31,		'F', 'L' },
-    { GDK_F32,		'F', 'M' },
-    { GDK_F33,		'F', 'N' },
-    { GDK_F34,		'F', 'O' },
-    { GDK_F35,		'F', 'P' },
+    {GDK_Up,		'k', 'u'},
+    {GDK_Down,		'k', 'd'},
+    {GDK_Left,		'k', 'l'},
+    {GDK_Right,		'k', 'r'},
+    {GDK_F1,		'k', '1'},
+    {GDK_F2,		'k', '2'},
+    {GDK_F3,		'k', '3'},
+    {GDK_F4,		'k', '4'},
+    {GDK_F5,		'k', '5'},
+    {GDK_F6,		'k', '6'},
+    {GDK_F7,		'k', '7'},
+    {GDK_F8,		'k', '8'},
+    {GDK_F9,		'k', '9'},
+    {GDK_F10,		'k', ';'},
+    {GDK_F11,		'F', '1'},
+    {GDK_F12,		'F', '2'},
+    {GDK_F13,		'F', '3'},
+    {GDK_F14,		'F', '4'},
+    {GDK_F15,		'F', '5'},
+    {GDK_F16,		'F', '6'},
+    {GDK_F17,		'F', '7'},
+    {GDK_F18,		'F', '8'},
+    {GDK_F19,		'F', '9'},
+    {GDK_F20,		'F', 'A'},
+    {GDK_F21,		'F', 'B'},
+    {GDK_F22,		'F', 'C'},
+    {GDK_F23,		'F', 'D'},
+    {GDK_F24,		'F', 'E'},
+    {GDK_F25,		'F', 'F'},
+    {GDK_F26,		'F', 'G'},
+    {GDK_F27,		'F', 'H'},
+    {GDK_F28,		'F', 'I'},
+    {GDK_F29,		'F', 'J'},
+    {GDK_F30,		'F', 'K'},
+    {GDK_F31,		'F', 'L'},
+    {GDK_F32,		'F', 'M'},
+    {GDK_F33,		'F', 'N'},
+    {GDK_F34,		'F', 'O'},
+    {GDK_F35,		'F', 'P'},
 #ifdef SunXK_F36
-    { SunXK_F36,	'F', 'Q' },
-    { SunXK_F37,	'F', 'R' },
+    {SunXK_F36,		'F', 'Q'},
+    {SunXK_F37,		'F', 'R'},
 #endif
-    { GDK_Help,		'%', '1' },
-    { GDK_Undo,		'&', '8' },
-    { GDK_BackSpace,	'k', 'b' },
-    { GDK_Insert,	'k', 'I' },
-    { GDK_Delete,	'k', 'D' },
-    { GDK_Home,		'k', 'h' },
-    { GDK_End,		'@', '7' },
-    { GDK_Prior,	'k', 'P' },
-    { GDK_Next,		'k', 'N' },
-    { GDK_Print,	'%', '9' },
+    {GDK_Help,		'%', '1'},
+    {GDK_Undo,		'&', '8'},
+    {GDK_BackSpace,	'k', 'b'},
+    {GDK_Insert,	'k', 'I'},
+    {GDK_Delete,	'k', 'D'},
+    {GDK_Home,		'k', 'h'},
+    {GDK_End,		'@', '7'},
+    {GDK_Prior,		'k', 'P'},
+    {GDK_Next,		'k', 'N'},
+    {GDK_Print,		'%', '9'},
     /* Keypad keys: */
-    { GDK_KP_Left,	'k', 'l' },
-    { GDK_KP_Right,	'k', 'r' },
-    { GDK_KP_Up,	'k', 'u' },
-    { GDK_KP_Down,	'k', 'd' },
-    { GDK_KP_Insert,	'k', 'I' },
-    { GDK_KP_Delete,	'k', 'D' },
-    { GDK_KP_Home,	'k', 'h' },
-    { GDK_KP_End,	'@', '7' },
-    { GDK_KP_Prior,	'k', 'P' },
-    { GDK_KP_Next,	'k', 'N' },
+    {GDK_KP_Left,	'k', 'l'},
+    {GDK_KP_Right,	'k', 'r'},
+    {GDK_KP_Up,		'k', 'u'},
+    {GDK_KP_Down,	'k', 'd'},
+    {GDK_KP_Insert,	'k', 'I'},
+    {GDK_KP_Delete,	'k', 'D'},
+    {GDK_KP_Home,	'k', 'h'},
+    {GDK_KP_End,	'@', '7'},
+    {GDK_KP_Prior,	'k', 'P'},
+    {GDK_KP_Next,	'k', 'N'},
 
-    { GDK_KP_Add,	'K', '6' },
-    { GDK_KP_Subtract,	'K', '7' },
-    { GDK_KP_Divide,	'K', '8' },
-    { GDK_KP_Multiply,	'K', '9' },
-    { GDK_KP_Enter,	'K', 'A' },
-    { GDK_KP_Decimal,	'K', 'B' },
+    {GDK_KP_Add,	'K', '6'},
+    {GDK_KP_Subtract,	'K', '7'},
+    {GDK_KP_Divide,	'K', '8'},
+    {GDK_KP_Multiply,	'K', '9'},
+    {GDK_KP_Enter,	'K', 'A'},
+    {GDK_KP_Decimal,	'K', 'B'},
 
-    { GDK_KP_0,		'K', 'C' },
-    { GDK_KP_1,		'K', 'D' },
-    { GDK_KP_2,		'K', 'E' },
-    { GDK_KP_3,		'K', 'F' },
-    { GDK_KP_4,		'K', 'G' },
-    { GDK_KP_5,		'K', 'H' },
-    { GDK_KP_6,		'K', 'I' },
-    { GDK_KP_7,		'K', 'J' },
-    { GDK_KP_8,		'K', 'K' },
-    { GDK_KP_9,		'K', 'L' },
+    {GDK_KP_0,		'K', 'C'},
+    {GDK_KP_1,		'K', 'D'},
+    {GDK_KP_2,		'K', 'E'},
+    {GDK_KP_3,		'K', 'F'},
+    {GDK_KP_4,		'K', 'G'},
+    {GDK_KP_5,		'K', 'H'},
+    {GDK_KP_6,		'K', 'I'},
+    {GDK_KP_7,		'K', 'J'},
+    {GDK_KP_8,		'K', 'K'},
+    {GDK_KP_9,		'K', 'L'},
 
     /* End of list marker: */
-    { 0, 0, 0 }
+    {0, 0, 0}
 };
 
 /*
@@ -261,10 +268,10 @@ static struct cmdline_option
     {"-name",		TRUE},
     {"-bw",		TRUE},
     {"-borderwidth",	TRUE},
-    {"-sw",             TRUE},
+    {"-sw",		TRUE},
     {"-scrollbarwidth", TRUE},
-    {"-mh",             TRUE},
-    {"-menuheight",     TRUE},
+    {"-mh",		TRUE},
+    {"-menuheight",	TRUE},
     {"-xrm",		TRUE},
 #endif
 };
@@ -421,7 +428,7 @@ gui_mch_prepare(int *argc, char **argv)
 		break;
 	    }
 	    else
-	        arg++;
+		arg++;
 	}
 	gtk_option++;
     }
@@ -670,7 +677,7 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
 	    {
 		/* Turn CSI into K_CSI. */
 		*d++ = KS_EXTRA;
-		*d++ = KE_CSI;
+		*d++ = (int)KE_CSI;
 	    }
 	}
 	len = d - string;
@@ -724,7 +731,7 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
 	    if (string[1] == CSI)
 	    {
 		string[2] = KS_EXTRA;
-		string[3] = KE_CSI;
+		string[3] = (int)KE_CSI;
 		len = 4;
 	    }
 	    else
@@ -827,7 +834,10 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
     static gint
 selection_clear_event(GtkWidget * widget, GdkEventSelection * event)
 {
-    clip_lose_selection();
+    if (event->selection == clip_plus.gtk_sel_atom)
+	clip_lose_selection(&clip_plus);
+    else
+	clip_lose_selection(&clip_star);
 
     if (gtk_main_level() > 0)
 	gtk_main_quit();
@@ -848,11 +858,17 @@ selection_received_event(GtkWidget * widget, GtkSelectionData * data)
     long_u	len;
     char_u	*p;
     int		free_p = FALSE;
+    VimClipboard *cbd;
+
+    if (data->selection == clip_plus.gtk_sel_atom)
+	cbd = &clip_plus;
+    else
+	cbd = &clip_star;
 
     if ((!data->data) || (data->length <= 0))
     {
 	received_selection = RS_FAIL;
-	/* clip_free_selection(); ??? */
+	/* clip_free_selection(cbd); ??? */
 	if (gtk_main_level() > 0)
 	    gtk_main_quit();
 
@@ -860,8 +876,7 @@ selection_received_event(GtkWidget * widget, GtkSelectionData * data)
     }
 
     motion_type = MCHAR;
-    if (data->type == gdk_atom_intern("COMPOUND_TEXT", FALSE)
-	    || data->type == gdk_atom_intern("TEXT", FALSE))
+    if (data->type == compound_text_atom || data->type == text_atom)
     {
 	int	count, i;
 	char	**list;
@@ -885,13 +900,13 @@ selection_received_event(GtkWidget * widget, GtkSelectionData * data)
 	len = data->length;
     }
 
-    if (data->type == clipboard.atom)
+    if (data->type == vim_atom)
     {
 	motion_type = *p++;
 	len--;
     }
-    clip_yank_selection(motion_type, p, (long) len);
-	received_selection = RS_OK;
+    clip_yank_selection(motion_type, p, (long) len, cbd);
+    received_selection = RS_OK;
     if (gtk_main_level() > 0)
 	gtk_main_quit();
 
@@ -916,25 +931,30 @@ selection_get_event(GtkWidget *widget,
     long_u	length;
     int		motion_type;
     GdkAtom	type = GDK_NONE;
+    VimClipboard *cbd;
 
-    if (!clipboard.owned)
+    if (selection_data->selection == clip_plus.gtk_sel_atom)
+	cbd = &clip_plus;
+    else
+	cbd = &clip_star;
+
+    if (!cbd->owned)
 	return;			/* Shouldn't ever happen */
 
     if (info != (guint)SELECTION_STRING
-	    && info != (guint)SELECTION_CLIPBOARD
+	    && info != (guint)SELECTION_VIM
 	    && info != (guint)SELECTION_COMPOUND_TEXT
 	    && info != (guint)SELECTION_TEXT)
 	return;
 
-    clip_get_selection();
-
-    /* get the selection from the * register */
-    motion_type = clip_convert_selection(&string, &length);
+    /* get the selection from the '*'/'+' register */
+    clip_get_selection(cbd);
+    motion_type = clip_convert_selection(&string, &length, cbd);
     if (motion_type < 0)
 	return;
 
     /* For our own format, the first byte contains the motion type */
-    if (info == (guint)SELECTION_CLIPBOARD)
+    if (info == (guint)SELECTION_VIM)
 	length++;
 
     result = lalloc((long_u)(2 * length), FALSE);
@@ -944,11 +964,11 @@ selection_get_event(GtkWidget *widget,
 	return;
     }
 
-    if (info == (guint)SELECTION_CLIPBOARD)
+    if (info == (guint)SELECTION_VIM)
     {
 	result[0] = motion_type;
 	mch_memmove(result + 1, string, (size_t)(length - 1));
-	type = clipboard.atom;
+	type = vim_atom;
     }
     else if (info == (guint)SELECTION_COMPOUND_TEXT
 					     || info == (guint)SELECTION_TEXT)
@@ -1598,7 +1618,7 @@ drawarea_realize_cb(GtkWidget *widget)
 							&color, &color, 0, 0);
     gdk_bitmap_unref(blank_mask);
     if (gui.pointer_hidden)
-        gdk_window_set_cursor(widget->window, gui.blank_pointer);
+	gdk_window_set_cursor(widget->window, gui.blank_pointer);
 
     /* get the actual size of the scrollbars, if they are realized */
     sbar = firstwin->w_scrollbars[SBAR_LEFT].id;
@@ -1625,12 +1645,11 @@ delete_event_cb(GtkWidget *wgt, gpointer cbdata)
     return TRUE;
 }
 
-#define VIM_ATOM_NAME "_VIM_TEXT"
 static const GtkTargetEntry primary_targets[] = {
-    {VIM_ATOM_NAME, 0, SELECTION_CLIPBOARD},
+    {VIM_ATOM_NAME,   0, SELECTION_VIM},
     {"COMPOUND_TEXT", 0, SELECTION_COMPOUND_TEXT},
-    {"TEXT", 0, SELECTION_TEXT},
-    {"STRING", 0, SELECTION_STRING}
+    {"TEXT",	      0, SELECTION_TEXT},
+    {"STRING",	      0, SELECTION_STRING}
 };
 
 /*
@@ -1650,6 +1669,10 @@ gui_mch_init()
     gui.scrollbar_height = SB_DEFAULT_WIDTH;
     gui.fgcolor = g_new0(GdkColor, 1);
     gui.bgcolor = g_new0(GdkColor, 1);
+
+    /* Initialise atoms */
+    compound_text_atom = gdk_atom_intern("COMPOUND_TEXT", FALSE);
+    text_atom = gdk_atom_intern("TEXT", FALSE);
 
 #ifdef FEAT_MENU
     /* Don't change the menu height values used in gui.c at runtime */
@@ -1797,9 +1820,15 @@ gui_mch_init()
 	gui.def_back_pixel = gui.back_pixel;
     }
     gui.visibility = GDK_VISIBILITY_UNOBSCURED;
-    clipboard.atom = gdk_atom_intern(VIM_ATOM_NAME, FALSE);
     save_yourself_atom = gdk_atom_intern("WM_SAVE_YOURSELF", FALSE);
     reread_rcfiles_atom = gdk_atom_intern("_GTK_READ_RCFILES", FALSE);
+
+    /*
+     * Set clipboard specific atoms
+     */
+    vim_atom = gdk_atom_intern(VIM_ATOM_NAME, FALSE);
+    clip_star.gtk_sel_atom = GDK_SELECTION_PRIMARY;
+    clip_plus.gtk_sel_atom = gdk_atom_intern("CLIPBOARD", FALSE);
 
     /*
      * Start out by adding the configured border width into the border offset.
@@ -1843,7 +1872,13 @@ gui_mch_init()
     gtk_signal_connect(GTK_OBJECT(gui.drawarea), "selection_received",
 		       GTK_SIGNAL_FUNC(selection_received_event), NULL);
 
+    /*
+     * Add selection targets for PRIMARY and CLIPBOARD selections.
+     */
     gtk_selection_add_targets(gui.drawarea, (long)GDK_SELECTION_PRIMARY,
+	    primary_targets,
+	    sizeof(primary_targets)/sizeof(primary_targets[0]));
+    gtk_selection_add_targets(gui.drawarea, (long)clip_plus.gtk_sel_atom,
 	    primary_targets,
 	    sizeof(primary_targets)/sizeof(primary_targets[0]));
     gtk_signal_connect(GTK_OBJECT(gui.drawarea), "selection_get",
@@ -2026,7 +2061,7 @@ gui_mch_open()
      * we thus can make our own adjustments.
      */
     gtk_signal_connect_after(GTK_OBJECT(gui.mainwin), "client_event",
-                       GTK_SIGNAL_FUNC(client_event_cb), NULL);
+		    GTK_SIGNAL_FUNC(client_event_cb), NULL);
 
 #ifdef FEAT_HANGULIN
     hangul_keyboard_set();
@@ -2395,7 +2430,7 @@ get_styled_font_variants(char_u * font_name)
 
     if (i == 14)
     {
-        GdkFont		*font = NULL;
+	GdkFont		*font = NULL;
 	const char	*bold_chunk[3]	    = { "bold", NULL,	"bold" };
 	const char	*italic_chunk[3]    = { NULL,	"o",	"o" };
 
@@ -3341,13 +3376,13 @@ gui_mch_insert_lines(int row, int num_lines)
  * X Selection stuff, for cutting and pasting text to other windows.
  */
     void
-clip_mch_request_selection()
+clip_mch_request_selection(cbd)
+    VimClipboard *cbd;
 {
     /* First try to get the content of our own special clipboard. */
     received_selection = RS_NONE;
     (void)gtk_selection_convert(gui.drawarea,
-				    (GdkAtom)GDK_SELECTION_PRIMARY,
-				    clipboard.atom,
+				    cbd->gtk_sel_atom, vim_atom,
 				    (guint32)GDK_CURRENT_TIME);
     while (received_selection == RS_NONE)
 	gtk_main();		/* wait for selection_received_event */
@@ -3356,8 +3391,7 @@ clip_mch_request_selection()
     {
 	/* Now try to get it out of the usual string selection. */
 	received_selection = RS_NONE;
-	(void)gtk_selection_convert(gui.drawarea,
-				    (GdkAtom)GDK_SELECTION_PRIMARY,
+	(void)gtk_selection_convert(gui.drawarea, cbd->gtk_sel_atom,
 				    gdk_atom_intern("COMPOUND_TEXT", FALSE),
 				    (guint32)GDK_CURRENT_TIME);
 	while (received_selection == RS_NONE)
@@ -3367,8 +3401,7 @@ clip_mch_request_selection()
     {
 	/* Now try to get it out of the usual string selection. */
 	received_selection = RS_NONE;
-	(void)gtk_selection_convert(gui.drawarea,
-				    (GdkAtom)GDK_SELECTION_PRIMARY,
+	(void)gtk_selection_convert(gui.drawarea, cbd->gtk_sel_atom,
 				    gdk_atom_intern("TEXT", FALSE),
 				    (guint32)GDK_CURRENT_TIME);
 	while (received_selection == RS_NONE)
@@ -3378,20 +3411,36 @@ clip_mch_request_selection()
     {
 	/* Now try to get it out of the usual string selection. */
 	received_selection = RS_NONE;
-	(void)gtk_selection_convert(gui.drawarea,
-				    (GdkAtom)GDK_SELECTION_PRIMARY,
+	(void)gtk_selection_convert(gui.drawarea, cbd->gtk_sel_atom,
 				    (GdkAtom)GDK_TARGET_STRING,
 				    (guint32)GDK_CURRENT_TIME);
 	while (received_selection == RS_NONE)
 	    gtk_main();		/* wait for selection_received_event */
     }
+    if (received_selection == RS_FAIL)
+    {
+	/* Final fallback position - use the X CUT_BUFFER0 store */
+	int     nbytes = 0;
+	char_u *buffer;
+
+	buffer = (char_u *)XFetchBuffer(gui.dpy, &nbytes, 0);
+	if (nbytes > 0)
+	{
+	    /* Got something */
+	    clip_yank_selection(MCHAR, buffer, (long)nbytes, cbd);
+	    XFree((void *)buffer);
+	    if (p_verbose > 0)
+		smsg((char_u *)_("Used CUT_BUFFER0 instead of empty selection") );
+	}
+    }
 }
 
     void
-clip_mch_lose_selection()
+clip_mch_lose_selection(cbd)
+    VimClipboard *cbd;
 {
-    gtk_selection_owner_set(gui.drawarea, (GdkAtom)GDK_SELECTION_PRIMARY,
-						   (guint32)GDK_CURRENT_TIME);
+    gtk_selection_owner_set(gui.drawarea, cbd->gtk_sel_atom,
+			    (guint32)GDK_CURRENT_TIME);
     gui_mch_update();
 }
 
@@ -3399,26 +3448,29 @@ clip_mch_lose_selection()
  * Check whatever we allready own the selection.
  */
     int
-clip_mch_own_selection()
+clip_mch_own_selection(cbd)
+    VimClipboard *cbd;
 {
-#if 0
-    return gdk_selection_owner_get(
-				GDK_SELECTION_PRIMARY) == gui.drawarea->window;
-#else
-    /* At this point we always already own the clipboard */
-
-    return OK;
-#endif
+    if (cbd == &clip_star)
+    {
+	/* At this point we always already own the selection - apparently */
+	return OK;
+    }
+    else
+    {
+	return gdk_selection_owner_get(clip_plus.gtk_sel_atom) == gui.drawarea->window;
+    }
 }
 
 /*
  * Send the current selection to the clipboard.
  */
     void
-clip_mch_set_selection()
+clip_mch_set_selection(cbd)
+    VimClipboard* cbd;
 {
-    gtk_selection_owner_set(gui.drawarea, (GdkAtom)GDK_SELECTION_PRIMARY,
-						   (guint32)GDK_CURRENT_TIME);
+    gtk_selection_owner_set(gui.drawarea, cbd->gtk_sel_atom,
+				(guint32)GDK_CURRENT_TIME);
     gui_mch_update();
 }
 

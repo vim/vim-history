@@ -176,6 +176,7 @@ do_tag(tag, type, count, forceit, verbose)
     }
 
     prev_num_matches = num_matches;
+    free_string_option(nofile_fname);
     nofile_fname = NULL;
 
     /*
@@ -730,7 +731,11 @@ do_tag(tag, type, count, forceit, verbose)
 
 	    if (cur_match >= num_matches)
 	    {
-		if (type == DT_NEXT || type == DT_FIRST)
+		/* Avoid giving this error when a file wasn't found and we're
+		 * looking for a match in another file, which wasn't found.
+		 * There will be an EMSG("file doesn't exist") below then. */
+		if ((type == DT_NEXT || type == DT_FIRST)
+						      && nofile_fname == NULL)
 		{
 		    if (num_matches == 1)
 			EMSG(_("There is only one matching tag"));
@@ -2415,7 +2420,7 @@ jumpto_tag(lbuf, forceit)
 	vim_free(nofile_fname);
 	nofile_fname = vim_strsave(fname);
 	if (nofile_fname == NULL)
-	    nofile_fname = (char_u *)"";
+	    nofile_fname = empty_option;
 	goto erret;
     }
 

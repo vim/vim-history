@@ -381,23 +381,6 @@ last_pat_prog(regmatch)
 #endif
 
 /*
- * For multi-line regexp matching we need a function that will return a
- * pointer to the lines for matching.
- */
-static linenr_t search_firstline;
-static buf_t *search_buf;
-
-    char_u *
-search_getline(lnum)
-    linenr_t lnum;
-{
-    /* when looking behind for a match/no-match we can't go before line 1 */
-    if (search_firstline + lnum < 1)
-	return NULL;
-    return ml_get_buf(search_buf, search_firstline + lnum, FALSE);
-}
-
-/*
  * lowest level search function.
  * Search for 'count'th occurrence of 'str' in direction 'dir'.
  * Start at position 'pos' and return the found position in 'pos'.
@@ -416,7 +399,9 @@ search_getline(lnum)
  * subpattern plus one; one if there was none.
  */
     int
-searchit(buf, pos, dir, str, count, options, pat_use)
+searchit(win, buf, pos, dir, str, count, options, pat_use)
+    win_t	*win;		/* window to search in; can be NULL for a
+				   buffer without a window! */
     buf_t	*buf;
     pos_t	*pos;
     int		dir;
@@ -439,6 +424,7 @@ searchit(buf, pos, dir, str, count, options, pat_use)
     int		match_ok;
     long	nmatched;
     int		submatch = 0;
+    linenr_t	first_lnum;
 
     if (search_regcomp(str, RE_SEARCH, pat_use,
 		   (options & (SEARCH_HIS + SEARCH_KEEP)), &regmatch) == FAIL)
@@ -450,10 +436,13 @@ searchit(buf, pos, dir, str, count, options, pat_use)
 
     if (options & SEARCH_START)
 	extra_col = 0;
+#ifdef FEAT_MBYTE
+    else if (has_mbyte)
+	extra_col = (*mb_ptr2len_check)(ml_get_buf(buf, pos->lnum, FALSE)
+								  + pos->col);
+#endif
     else
 	extra_col = 1;
-
-    search_buf = buf;
 
 /*
  * find the string
@@ -490,9 +479,9 @@ searchit(buf, pos, dir, str, count, options, pat_use)
 		/*
 		 * Look for a match somewhere in the line.
 		 */
-		search_firstline = lnum;
-		nmatched = vim_regexec_multi(&regmatch, search_getline,
-			       (colnr_t)0, curbuf->b_ml.ml_line_count - lnum);
+		first_lnum = lnum;
+		nmatched = vim_regexec_multi(&regmatch, win, buf,
+							    lnum, (colnr_t)0);
 		if (nmatched > 0)
 		{
 		    /* match may actually be in another line when using \zs */
@@ -542,19 +531,33 @@ searchit(buf, pos, dir, str, count, options, pat_use)
 				/* for empty match: advance one char */
 				if (matchcol == startcol
 						      && ptr[matchcol] != NUL)
-				    ++matchcol;
+				{
+#ifdef FEAT_MBYTE
+				    if (has_mbyte)
+					matchcol +=
+					  (*mb_ptr2len_check)(ptr + matchcol);
+				    else
+#endif
+					++matchcol;
+				}
 			    }
 			    else
 			    {
 				matchcol = startcol;
 				if (ptr[matchcol] != NUL)
-				    ++matchcol;
+				{
+#ifdef FEAT_MBYTE
+				    if (has_mbyte)
+					matchcol += (*mb_ptr2len_check)(ptr
+								  + matchcol);
+				    else
+#endif
+					++matchcol;
+				}
 			    }
 			    if (ptr[matchcol] == NUL
 				    || (nmatched = vim_regexec_multi(&regmatch,
-					      search_getline, matchcol,
-					   curbuf->b_ml.ml_line_count - lnum))
-					== 0)
+					      win, buf, lnum, matchcol)) == 0)
 			    {
 				match_ok = FALSE;
 				break;
@@ -621,19 +624,33 @@ searchit(buf, pos, dir, str, count, options, pat_use)
 				/* for empty match: advance one char */
 				if (matchcol == startcol
 						      && ptr[matchcol] != NUL)
-				    ++matchcol;
+				{
+#ifdef FEAT_MBYTE
+				    if (has_mbyte)
+					matchcol +=
+					  (*mb_ptr2len_check)(ptr + matchcol);
+				    else
+#endif
+					++matchcol;
+				}
 			    }
 			    else
 			    {
 				matchcol = startcol;
 				if (ptr[matchcol] != NUL)
-				    ++matchcol;
+				{
+#ifdef FEAT_MBYTE
+				    if (has_mbyte)
+					matchcol +=
+					  (*mb_ptr2len_check)(ptr + matchcol);
+				    else
+#endif
+					++matchcol;
+				}
 			    }
 			    if (ptr[matchcol] == NUL
 				    || (nmatched = vim_regexec_multi(&regmatch,
-						   search_getline, matchcol,
-					  curbuf->b_ml.ml_line_count - lnum))
-					== 0)
+					      win, buf, lnum, matchcol)) == 0)
 				break;
 
 			    /* Need to get the line pointer again, a
@@ -651,7 +668,7 @@ searchit(buf, pos, dir, str, count, options, pat_use)
 
 		    if (options & SEARCH_END && !(options & SEARCH_NOOF))
 		    {
-			pos->lnum = endpos.lnum + search_firstline;
+			pos->lnum = endpos.lnum + first_lnum;
 			pos->col = endpos.col - 1;
 		    }
 		    else
@@ -662,8 +679,7 @@ searchit(buf, pos, dir, str, count, options, pat_use)
 		    found = 1;
 
 		    /* Set variables used for 'incsearch' highlighting. */
-		    search_match_lines = endpos.lnum
-						  - (lnum - search_firstline);
+		    search_match_lines = endpos.lnum - (lnum - first_lnum);
 		    search_match_endcol = endpos.col;
 		    break;
 		}
@@ -1007,7 +1023,7 @@ do_search(oap, dirc, str, count, options)
 	     lrFswap(searchstr,0);
 #endif
 
-	c = searchit(curbuf, &pos, dirc == '/' ? FORWARD : BACKWARD,
+	c = searchit(curwin, curbuf, &pos, dirc == '/' ? FORWARD : BACKWARD,
 		searchstr, count, spats[0].off.end + (options &
 		       (SEARCH_KEEP + SEARCH_HIS + SEARCH_MSG + SEARCH_START +
 			   ((str != NULL && *str == ';') ? 0 : SEARCH_NOOF))),
@@ -3859,6 +3875,12 @@ exit_matched:
 	if (got_int)
 #endif
 	    break;
+
+	/*
+	 * Read the next line.  When reading an included file and encountering
+	 * end-of-file, close the file and continue in the file that included
+	 * it.
+	 */
 	while (depth >= 0 && !already
 		&& vim_fgets(line = file_line, LSIZE, files[depth].fp))
 	{

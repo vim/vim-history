@@ -27,7 +27,8 @@
  * The bytes are stored like in the typeahead buffer:
  * - K_SPECIAL introduces a special key (two more bytes follow).  A literal
  *   K_SPECIAL is stored as K_SPECIAL KS_SPECIAL KE_FILLER.
- * - CSI introduces a GUI termcap code (only when gui.in_use is TRUE).
+ * - CSI introduces a GUI termcap code (also when gui.in_use is FALSE,
+ *   otherwise switching the GUI on would make mappings invalid).
  *   A literal CSI is stored as CSI KS_EXTRA KE_CSI.
  * These translations are also done on multi-byte characters!
  *
@@ -350,7 +351,7 @@ add_char_buff(buf, c)
 	    temp[3] = NUL;
 	}
 #ifdef FEAT_GUI
-	else if (gui.in_use && c == CSI)
+	else if (c == CSI)
 	{
 	    /* Translate a CSI to a CSI - KS_EXTRA - KE_CSI sequence */
 	    temp[0] = CSI;
@@ -717,7 +718,7 @@ read_redo(init, old_redo)
 		p += 2;
 	    }
 #ifdef FEAT_GUI
-	    if (gui.in_use && c == CSI)	/* escaped CSI */
+	    if (c == CSI)	/* escaped CSI */
 		p += 2;
 #endif
 	    if (*++p == NUL && bp->b_next != NULL)
@@ -1277,8 +1278,8 @@ updatescript(c)
     }
 }
 
-#define K_NEEDMORET -1		/* keylen value for incomplete key-code */
-#define M_NEEDMORET -2		/* keylen value for incomplete mapping */
+#define KL_PART_KEY -1		/* keylen value for incomplete key-code */
+#define KL_PART_MAP -2		/* keylen value for incomplete mapping */
 
 static int old_char = -1;	/* character put back by vungetc() */
 static int old_mod_mask;	/* mod_mask for ungotten character */
@@ -1333,7 +1334,7 @@ vgetc()
 	/* Get two extra bytes for special keys */
 	if (c == K_SPECIAL
 #ifdef FEAT_GUI
-		|| (gui.in_use && c == CSI)
+		|| c == CSI
 #endif
 	   )
 	{
@@ -1422,7 +1423,7 @@ vgetc()
 		buf[i] = vgetorpeek(TRUE);
 		if (buf[i] == K_SPECIAL
 #ifdef FEAT_GUI
-			|| (gui.in_use && buf[i] == CSI)
+			|| buf[i] == CSI
 #endif
 			)
 		{
@@ -1567,6 +1568,8 @@ vgetorpeek(advance)
 #ifdef FEAT_LOCALMAP
     mapblock_t	*mp2;
 #endif
+    mapblock_t	*mp_match;
+    int		mp_match_len;
     int		timedout = FALSE;	    /* waited for more than 1 second
 						for mapping to complete */
     int		mapdepth = 0;	    /* check for recursive mapping */
@@ -1718,6 +1721,15 @@ vgetorpeek(advance)
 #else
 			mp = maphash[MAP_HASH(local_State, c1)];
 #endif
+			/*
+			 * Loop until a partly matching mapping is found or
+			 * all (local) mappings have been checked.
+			 * The longest full match is remembered in "mp_match".
+			 * A full match is only accepted if there is no partly
+			 * match, so "aa" and "aaa" can both be mapped.
+			 */
+			mp_match = NULL;
+			mp_match_len = 0;
 			for ( ; mp != NULL;
 #ifdef FEAT_LOCALMAP
 				mp->m_next == NULL ? (mp = mp2, mp2 = NULL) :
@@ -1776,21 +1788,32 @@ vgetorpeek(advance)
 				    if (n >= 0)
 					continue;
 
-				    /*
-				     * Need more chars for partly match.
-				     */
 				    if (keylen > typelen)
-					keylen = M_NEEDMORET;
-				    break;
+				    {
+					/* break at a partly match */
+					keylen = KL_PART_MAP;
+					break;
+				    }
+				    if (keylen > mp_match_len)
+				    {
+					/* found a longer match */
+					mp_match = mp;
+					mp_match_len = keylen;
+				    }
 				}
-
-				/*
-				 * no match, may have to check for termcode at
-				 * next character
-				 */
-				if (max_mlen < mlen)
-				    max_mlen = mlen;
+				else
+				    /* No match; may have to check for
+				     * termcode at next character. */
+				    if (max_mlen < mlen)
+					max_mlen = mlen;
 			    }
+			}
+
+			/* If no partly match found, use the full match. */
+			if (keylen != KL_PART_MAP)
+			{
+			    mp = mp_match;
+			    keylen = mp_match_len;
 			}
 		    }
 
@@ -1822,14 +1845,14 @@ vgetorpeek(advance)
 			}
 			/* Need more chars for partly match. */
 			if (mlen == typelen)
-			    keylen = M_NEEDMORET;
+			    keylen = KL_PART_MAP;
 			else if (max_mlen < mlen)
 			    /* no match, may have to check for termcode at
 			     * next character */
 			    max_mlen = mlen + 1;
 		    }
 
-		    if (mp == NULL && keylen != M_NEEDMORET)
+		    if (mp == NULL && keylen != KL_PART_MAP)
 		    {
 			/*
 			 * When no matching mapping found:
@@ -1880,7 +1903,7 @@ vgetorpeek(advance)
 				    continue;
 				}
 				if (*s == NUL)	    /* need more characters */
-				    keylen = K_NEEDMORET;
+				    keylen = KL_PART_KEY;
 			    }
 			    if (keylen >= 0)
 #endif
@@ -1944,7 +1967,7 @@ vgetorpeek(advance)
 			}
 
 			/* partial match: get some more characters */
-			keylen = K_NEEDMORET;
+			keylen = KL_PART_KEY;
 		    }
 
 		    /* complete match */
@@ -2029,7 +2052,7 @@ vgetorpeek(advance)
 			&& !no_mapping
 			&& typemaplen == 0
 			&& (State & INSERT)
-			&& (p_timeout || (keylen == K_NEEDMORET && p_ttimeout))
+			&& (p_timeout || (keylen == KL_PART_KEY && p_ttimeout))
 			&& (c = inchar(typebuf + typeoff + typelen, 3, 25L))
 									 == 0)
 		{
@@ -2180,10 +2203,10 @@ vgetorpeek(advance)
 			typebuflen - typeoff - typelen - 1,
 			!advance
 			    ? 0
-			    : ((typelen == 0 || !(p_timeout || (p_ttimeout &&
-					keylen == K_NEEDMORET)))
+			    : ((typelen == 0 || !(p_timeout || (p_ttimeout
+					    && keylen == KL_PART_KEY)))
 				    ? -1L
-				    : ((keylen == K_NEEDMORET && p_ttm >= 0)
+				    : ((keylen == KL_PART_KEY && p_ttm >= 0)
 					    ? p_ttm
 					    : p_tm)));
 
@@ -2366,20 +2389,32 @@ inchar(buf, maxlen, wait_time)
 
     /*
      * Two characters are special: NUL and K_SPECIAL.
+     * When compiled With the GUI CSI is also special.
      * Replace	     NUL by K_SPECIAL KS_ZERO	 KE_FILLER
      * Replace K_SPECIAL by K_SPECIAL KS_SPECIAL KE_FILLER
+     * Replace       CSI by K_SPECIAL KS_EXTRA   KE_CSI
      * Don't replace K_SPECIAL when reading a script file.
      */
     for (i = len; --i >= 0; ++buf)
     {
 #ifdef FEAT_GUI
-	/* Any character can come after a CSI, don't escape it. */
+	/* When the GUI is used any character can come after a CSI, don't
+	 * escape it. */
 	if (gui.in_use && buf[0] == CSI && i >= 2)
 	{
 	    buf += 2;
 	    i -= 2;
-	    continue;
 	}
+	/* When the GUI is not used CSI needs to be escaped. */
+	else if (!gui.in_use && buf[0] == CSI)
+	{
+	    mch_memmove(buf + 3, buf + 1, (size_t)i);
+	    *buf++ = K_SPECIAL;
+	    *buf++ = KS_EXTRA;
+	    *buf = (int)KE_CSI;
+	    len += 2;
+	}
+	else
 #endif
 	if (buf[0] == NUL || (buf[0] == K_SPECIAL && script_char < 0))
 	{
@@ -2428,17 +2463,15 @@ inchar(buf, maxlen, wait_time)
  * Return 0 for success
  *	  1 for invalid arguments
  *	  2 for no match
- *	  3 for ambiguity
  *	  4 for out of mem
  *	  5 for entry not unique
  */
     int
-do_map(maptype, arg, mode, abbrev, ambig)
+do_map(maptype, arg, mode, abbrev)
     int		maptype;
     char_u	*arg;
     int		mode;
     int		abbrev;		/* not a mapping but an abbreviation */
-    char_u	**ambig;	/* pointer to mapping that caused ambiguity */
 {
     char_u	*keys;
     mapblock_t	*mp, **mpp;
@@ -2610,13 +2643,13 @@ do_map(maptype, arg, mode, abbrev, ambig)
 		n = 1;
 		while (p < keys + len)
 		{
-		    ++n;			/* nr of multi-byte chars */
+		    ++n;			/* nr of (multi-byte) chars */
 		    last = vim_iswordp(p);	/* type of last char */
 		    if (same == -1 && last != first)
-			same = n;		/* count of same char type */
+			same = n - 1;		/* count of same char type */
 		    p += mb_ptr2len_check(p);
 		}
-		if (last && n > 2 && same < n - 1)
+		if (last && n > 2 && same >= 0 && same < n - 1)
 		{
 		    retval = 1;
 		    goto theend;
@@ -2677,34 +2710,19 @@ do_map(maptype, arg, mode, abbrev, ambig)
 	    for ( ; mp != NULL && !got_int; mp = mp->m_next)
 	    {
 		/* check entries with the same mode */
-		if ((mp->m_mode & mode) != 0)
+		if ((mp->m_mode & mode) != 0
+			&& mp->m_keylen == len
+			&& unique
+			&& STRNCMP(mp->m_keys, keys, (size_t)len) == 0)
 		{
-		    n = mp->m_keylen;
-		    if (STRNCMP(mp->m_keys, keys,
-					    (size_t)(n < len ? n : len)) == 0)
-		    {
-			if (n != len)		/* new entry is ambigious */
-			{
-			    if (!abbrev)	/* for abbrev's that's ok */
-			    {
-				if (ambig != NULL)
-				    *ambig = mp->m_keys;
-				retval = 3;
-				goto theend;
-			    }
-			}
-			else if (unique)
-			{
-			    if (abbrev)
-				EMSG2(_("global abbreviation already exists for %s"),
-					mp->m_keys);
-			    else
-				EMSG2(_("global mapping already exists for %s"),
-					mp->m_keys);
-			    retval = 5;
-			    goto theend;
-			}
-		    }
+		    if (abbrev)
+			EMSG2(_("global abbreviation already exists for %s"),
+				mp->m_keys);
+		    else
+			EMSG2(_("global mapping already exists for %s"),
+				mp->m_keys);
+		    retval = 5;
+		    goto theend;
 		}
 	    }
 	}
@@ -2822,15 +2840,8 @@ do_map(maptype, arg, mode, abbrev, ambig)
 			}
 			else if (n != len)	/* new entry is ambigious */
 			{
-			    if (abbrev)		/* for abbrev's that's ok */
-			    {
-				mpp = &(mp->m_next);
-				continue;
-			    }
-			    if (ambig != NULL)
-				*ambig = p;
-			    retval = 3;
-			    goto theend;
+			    mpp = &(mp->m_next);
+			    continue;
 			}
 			else if (unique)
 			{
@@ -4122,7 +4133,7 @@ add_map(map, mode)
     s = vim_strsave(map);
     if (s != NULL)
     {
-	do_map(0, s, mode, FALSE, NULL);
+	(void)do_map(0, s, mode, FALSE);
 	vim_free(s);
     }
     p_cpo = cpo_save;

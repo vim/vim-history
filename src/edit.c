@@ -2519,9 +2519,9 @@ ins_compl_get_exp(ini, dir)
 		    found_new_match = search_for_exact_line(ins_buf, pos,
 							    dir, complete_pat);
 		else
-		    found_new_match = searchit(ins_buf, pos, dir, complete_pat,
-					       1L, SEARCH_KEEP + SEARCH_NFMSG,
-					       RE_LAST);
+		    found_new_match = searchit(NULL, ins_buf, pos, dir,
+				 complete_pat, 1L, SEARCH_KEEP + SEARCH_NFMSG,
+								     RE_LAST);
 		if (!started_completion)
 		{
 		    /* set started_completion even on fail */
@@ -2741,6 +2741,9 @@ ins_compl_next(allow_get_expansion)
 
     if (!allow_get_expansion)
     {
+	/* Display the current match. */
+	update_screen(0);
+
 	/* Delete old text to be replaced, since we're still searching and
 	 * don't want to match ourselves!  */
 	ins_compl_delete();
@@ -2984,18 +2987,15 @@ ins_complete(c)
 		 * or not a word single byte character backward.  */
 		if (has_mbyte)
 		{
-		    int base_class = 0;
-		    int head_off = (*mb_head_off)(line, line + temp);
+		    int base_class;
+		    int head_off;
 
-		    if (head_off > 0 && temp >= head_off)
-		    {
-			temp -= head_off;
-			base_class = mb_get_class(&line[temp]);
-		    }
+		    temp -= (*mb_head_off)(line, line + temp);
+		    base_class = mb_get_class(line + temp);
 		    while (--temp >= 0)
 		    {
 			head_off = (*mb_head_off)(line, line + temp);
-			if (base_class != mb_get_class(&line[temp - head_off]))
+			if (base_class != mb_get_class(line + temp - head_off))
 			    break;
 			temp -= head_off;
 		    }
@@ -4154,11 +4154,6 @@ set_last_insert(c)
     int		c;
 {
     char_u	*s;
-#ifdef FEAT_MBYTE
-    char_u	temp[MB_MAXBYTES];
-    int		i;
-    int		len;
-#endif
 
     vim_free(last_insert);
 #ifdef FEAT_MBYTE
@@ -4172,36 +4167,54 @@ set_last_insert(c)
 	/* Use the CTRL-V only when entering a special char (TODO: EBCDIC) */
 	if (c < ' ' || c == DEL)
 	    *s++ = Ctrl_V;
-#ifdef FEAT_MBYTE
-	len = (*mb_char2bytes)(c, temp);
-	for (i = 0; i < len; ++i)
-	{
-	    c = temp[i];
-#endif
-	    /* Need to escape K_SPECIAL and CSI like in the typeahead buffer. */
-	    if (c == K_SPECIAL)
-	    {
-		*s++ = K_SPECIAL;
-		*s++ = KS_SPECIAL;
-		*s++ = KE_FILLER;
-	    }
-#ifdef FEAT_GUI
-	    else if (gui.in_use && c == CSI)
-	    {
-		*s++ = CSI;
-		*s++ = KS_EXTRA;
-		*s++ = (int)KE_CSI;
-	    }
-#endif
-	    else
-		*s++ = c;
-#ifdef FEAT_MBYTE
-	}
-#endif
+	s = add_char2buf(c, s);
 	*s++ = ESC;
 	*s++ = NUL;
 	last_insert_skip = 0;
     }
+}
+
+/*
+ * Add character "c" to buffer "s".  Escape the special meaning of K_SPECIAL
+ * and CSI.  Handle multi-byte characters.
+ * Returns a pointer to after the added bytes.
+ */
+    char_u *
+add_char2buf(c, s)
+    int		c;
+    char_u	*s;
+{
+#ifdef FEAT_MBYTE
+    char_u	temp[MB_MAXBYTES];
+    int		i;
+    int		len;
+
+    len = (*mb_char2bytes)(c, temp);
+    for (i = 0; i < len; ++i)
+    {
+	c = temp[i];
+#endif
+	/* Need to escape K_SPECIAL and CSI like in the typeahead buffer. */
+	if (c == K_SPECIAL)
+	{
+	    *s++ = K_SPECIAL;
+	    *s++ = KS_SPECIAL;
+	    *s++ = KE_FILLER;
+	}
+#ifdef FEAT_GUI
+	else if (c == CSI)
+	{
+	    *s++ = CSI;
+	    *s++ = KS_EXTRA;
+	    *s++ = (int)KE_CSI;
+	}
+#endif
+	else
+	    *s++ = c;
+#ifdef FEAT_MBYTE
+    }
+#endif
+    return s;
 }
 
 /*

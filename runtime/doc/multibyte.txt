@@ -1,4 +1,4 @@
-*multibyte.txt* For Vim version 6.0x.  Last change: 2001 Mar 10
+*multibyte.txt* For Vim version 6.0y.  Last change: 2001   3 13
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -452,8 +452,6 @@ Multibyte output uses |xfontset| feature.
 -.  Following are requirements to use multibyte language.
 
     If needed, insert the lines below in your $HOME/.Xdefaults file.
-    The GTK+ version of GUI Vim does not use .Xdefaults, thus this change is
-    not needed for the GTK+ version.
 
     These 3 lines are specific for Vim:
 
@@ -477,6 +475,17 @@ Multibyte output uses |xfontset| feature.
 	Vim.fontSet: k14,r14
 	Vim.fontList: k14
 <
+    The GTK+ version of GUI Vim does not use .Xdefaults, use ~/.gtkrc instead.
+    The default mostly works OK.  But for the menus you might have to change
+    it.  Example: >
+
+	style "default"
+	{
+		fontset="-*-*-medium-r-normal--14-*-*-*-c-*-*-*"
+	}
+	widget_class "*" style "default"
+<
+
     You should set the 'guifontset' option to display a multi-byte language.
     Example: >
 

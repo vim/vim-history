@@ -12,7 +12,7 @@ int ptr2cells __ARGS((char_u *p));
 int vim_strsize __ARGS((char_u *s));
 int chartabsize __ARGS((char_u *p, colnr_t col));
 int linetabsize __ARGS((char_u *s));
-int win_linetabsize __ARGS((win_t *wp, char_u *s));
+int win_linetabsize __ARGS((win_t *wp, char_u *p, colnr_t len));
 int vim_isIDc __ARGS((int c));
 int vim_iswordc __ARGS((int c));
 int vim_iswordp __ARGS((char_u *p));

@@ -89,13 +89,6 @@ static char *(features[]) =
 #else
 	"-byte_offset",
 #endif
-#ifdef FEAT_GUI_MOTIF
-# ifdef FEAT_CDE_COLORS
-	"+cde_colors",
-# else
-	"-cde_colors",
-# endif
-#endif
 #ifdef FEAT_CINDENT
 	"+cindent",
 #else
@@ -826,6 +819,8 @@ version_msg(s)
     MSG_PUTS(s);
 }
 
+static void do_intro_line __ARGS((int row, char_u *msg, int add_version, int attr));
+
 /*
  * Give an introductory message about Vim.
  * Only used when starting Vim on an empty file, without a file name.
@@ -836,18 +831,17 @@ intro_message()
 {
     int		i;
     int		row;
-    int		col;
     int		blanklines;
-    char_u	vers[20];
     static char	*(lines[]) =
     {
 	N_("VIM - Vi IMproved"),
 	"",
 	N_("version "),
 	N_("by Bram Moolenaar et al."),
+	N_("Vim is open source and freely distributable"),
 	"",
-	N_("Vim is freely distributable"),
-	N_("type  :help uganda<Enter>     if you like Vim "),
+	N_("Help poor children in Uganda!"),
+	N_("type  :help iccf<Enter>       for information "),
 	"",
 	N_("type  :q<Enter>               to exit         "),
 	N_("type  :help<Enter>  or  <F1>  for on-line help"),
@@ -867,9 +861,6 @@ intro_message()
     if (mch_windows95())
 	blanklines -= 3;  /* subtract 3 for showing "Windows 95" message */
 #endif
-#if defined(__BEOS__) && defined(__INTEL__)
-    blanklines -= 3;      /* subtract 3 for showing "BEOS on Intel" message */
-#endif
 
     /* start displaying the message lines after half of the blank lines */
     row = blanklines / 2;
@@ -884,47 +875,70 @@ intro_message()
 		continue;
 	    }
 	    if (*lines[i] != NUL)
-	    {
-		col = strlen(_(lines[i]));
-		if (i == 2)
-		{
-		    STRCPY(vers, mediumVersion);
-		    if (highest_patch())
-		    {
-			/* Check for 9.9x, alpha/beta version */
-			if (isalpha((int)mediumVersion[3]))
-			    sprintf((char *)vers + 4, ".%d%s", highest_patch(),
-							   mediumVersion + 4);
-			else
-			    sprintf((char *)vers + 3, ".%d", highest_patch());
-		    }
-		    col += STRLEN(vers);
-		}
-		col = (Columns - col) / 2;
-		if (col < 0)
-		    col = 0;
-		screen_puts((char_u *)_(lines[i]), row, col, 0);
-		if (i == 2)
-		    screen_puts(vers, row, col + 8, 0);
-	    }
+		do_intro_line(row, (char_u *)_(lines[i]), i == 2, 0);
 	    ++row;
 	}
 #if defined(WIN32) && !defined(FEAT_GUI_W32)
 	if (mch_windows95())
 	{
-	    screen_puts((char_u *)_("WARNING: Windows 95/98/ME detected"),
-					    row + 1, col + 6, hl_attr(HLF_E));
-	    screen_puts((char_u *)_("type  :help windows95<Enter>  for info on this"),
-							     row + 2, col, 0);
+	    do_intro_line(row + 1,
+		    (char_u *)_("WARNING: Windows 95/98/ME detected"),
+							FALSE, hl_attr(HLF_E));
+	    do_intro_line(row + 2,
+		(char_u *)_("type  :help windows95<Enter>  for info on this"),
+								    FALSE, 0);
 	}
 #endif
-#if defined(__BEOS__) && defined(__INTEL__)
-	screen_puts((char_u *)_("     WARNING: Intel CPU detected.    "),
-					    row + 1, col + 4, hl_attr(HLF_E));
-	screen_puts((char_u *)_(" PPC has a much better architecture. "),
-					    row + 2, col + 4, hl_attr(HLF_E));
-#endif
     }
+}
+
+    static void
+do_intro_line(row, msg, add_version, attr)
+    int		row;
+    char_u	*msg;
+    int		add_version;
+    int		attr;
+{
+    char_u	vers[20];
+    int		col;
+    char_u	*p;
+    int		l;
+    char_u	buf[100];
+
+    /* Center the message horizontally. */
+    col = vim_strsize(msg);
+    if (add_version)
+    {
+	STRCPY(vers, mediumVersion);
+	if (highest_patch())
+	{
+	    /* Check for 9.9x, alpha/beta version */
+	    if (isalpha((int)mediumVersion[3]))
+		sprintf((char *)vers + 4, ".%d%s", highest_patch(),
+							   mediumVersion + 4);
+	    else
+		sprintf((char *)vers + 3, ".%d", highest_patch());
+	}
+	col += STRLEN(vers);
+    }
+    col = (Columns - col) / 2;
+    if (col < 0)
+	col = 0;
+
+    /* Split up in parts to highlight <> items differently. */
+    for (p = msg; *p != NUL; p += l)
+    {
+	buf[0] = *p;
+	for (l = 1; p[l] != NUL && p[l] != '<' && p[l - 1] != '>'; ++l)
+	    buf[l] = p[l];
+	buf[l] = NUL;
+	screen_puts(buf, row, col, *buf == '<' ? hl_attr(HLF_8) : attr);
+	col += vim_strsize(buf);
+    }
+
+    /* Add the version number to the version line. */
+    if (add_version)
+	screen_puts(vers, row, col, 0);
 }
 
 /*

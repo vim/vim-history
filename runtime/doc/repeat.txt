@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.0x.  Last change: 2001 Feb 17
+*repeat.txt*    For Vim version 6.0y.  Last change: 2001 Mar 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -163,18 +163,25 @@ q			Stops recording.  (Implementation note: The 'q' that
 :scripte[ncoding] [encoding]			*:scripte* *:scriptencoding*
 			Specify the character encoding used in the script.
 			The following lines will be converted from [encoding]
-			to the value of the 'encoding' option, if necessary.
-			When [encoding] is empty, no conversion is done.
-			When conversion isn't supported by the system, there
-			is no error message and no conversion is done.
-
-			Don't use "ucs-2" or "ucs-4", scripts cannot be in
-			these encodings.
-
-			Examples: >
+			to the value of the 'encoding' option, if they are
+			different.  Examples: >
 				scriptencoding iso-8859-5
 				scriptencoding cp932
 <
+			When [encoding] is empty, no conversion is done.  This
+			can be used to restrict conversion to a sequence of
+			lines: >
+				scriptencoding euc-jp
+				... lines to be converted ...
+				scriptencoding
+				... not converted ...
+
+<			When conversion isn't supported by the system, there
+			is no error message and no conversion is done.
+
+			Don't use "ucs-2" or "ucs-4", scripts cannot be in
+			these encodings (they would contain NUL bytes).
+
 			When compiled without the |+multi_byte| feature this
 			command is ignored.
 			{not in Vi}

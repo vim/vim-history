@@ -32,15 +32,27 @@
 # include <X11/Sunkeysym.h>
 #endif
 
+#ifdef HAVE_X11_XMU_EDITRES_H
+# include <X11/Xmu/Editres.h>
+#endif
+
 #define VIM_NAME	"vim"
 #define VIM_CLASS	"Vim"
 
 /* Default resource values */
 #define DFLT_FONT		"7x13"
-#define DFLT_MENU_BG_COLOR	"gray77"
-#define DFLT_MENU_FG_COLOR	"black"
-#define DFLT_SCROLL_BG_COLOR	"gray60"
-#define DFLT_SCROLL_FG_COLOR	"gray77"
+#if 0
+# define DFLT_MENU_BG_COLOR	"gray77"
+# define DFLT_MENU_FG_COLOR	"black"
+# define DFLT_SCROLL_BG_COLOR	"gray60"
+# define DFLT_SCROLL_FG_COLOR	"gray77"
+#else
+/* use the default (CDE) colors */
+# define DFLT_MENU_BG_COLOR	""
+# define DFLT_MENU_FG_COLOR	""
+# define DFLT_SCROLL_BG_COLOR	""
+# define DFLT_SCROLL_FG_COLOR	""
+#endif
 
 Widget vimShell = (Widget)0;
 
@@ -111,123 +123,126 @@ static struct specialkey
     char_u  vim_code1;
 } special_keys[] =
 {
-    {XK_Up,	    'k', 'u'},
-    {XK_Down,	    'k', 'd'},
-    {XK_Left,	    'k', 'l'},
-    {XK_Right,	    'k', 'r'},
+    {XK_Up,		'k', 'u'},
+    {XK_Down,		'k', 'd'},
+    {XK_Left,		'k', 'l'},
+    {XK_Right,		'k', 'r'},
 
-    {XK_F1,	    'k', '1'},
-    {XK_F2,	    'k', '2'},
-    {XK_F3,	    'k', '3'},
-    {XK_F4,	    'k', '4'},
-    {XK_F5,	    'k', '5'},
-    {XK_F6,	    'k', '6'},
-    {XK_F7,	    'k', '7'},
-    {XK_F8,	    'k', '8'},
-    {XK_F9,	    'k', '9'},
-    {XK_F10,	    'k', ';'},
+    {XK_F1,		'k', '1'},
+    {XK_F2,		'k', '2'},
+    {XK_F3,		'k', '3'},
+    {XK_F4,		'k', '4'},
+    {XK_F5,		'k', '5'},
+    {XK_F6,		'k', '6'},
+    {XK_F7,		'k', '7'},
+    {XK_F8,		'k', '8'},
+    {XK_F9,		'k', '9'},
+    {XK_F10,		'k', ';'},
 
-    {XK_F11,	    'F', '1'},
-    {XK_F12,	    'F', '2'},
-    {XK_F13,	    'F', '3'},
-    {XK_F14,	    'F', '4'},
-    {XK_F15,	    'F', '5'},
-    {XK_F16,	    'F', '6'},
-    {XK_F17,	    'F', '7'},
-    {XK_F18,	    'F', '8'},
-    {XK_F19,	    'F', '9'},
-    {XK_F20,	    'F', 'A'},
+    {XK_F11,		'F', '1'},
+    {XK_F12,		'F', '2'},
+    {XK_F13,		'F', '3'},
+    {XK_F14,		'F', '4'},
+    {XK_F15,		'F', '5'},
+    {XK_F16,		'F', '6'},
+    {XK_F17,		'F', '7'},
+    {XK_F18,		'F', '8'},
+    {XK_F19,		'F', '9'},
+    {XK_F20,		'F', 'A'},
 
-    {XK_F21,	    'F', 'B'},
-    {XK_F22,	    'F', 'C'},
-    {XK_F23,	    'F', 'D'},
-    {XK_F24,	    'F', 'E'},
-    {XK_F25,	    'F', 'F'},
-    {XK_F26,	    'F', 'G'},
-    {XK_F27,	    'F', 'H'},
-    {XK_F28,	    'F', 'I'},
-    {XK_F29,	    'F', 'J'},
-    {XK_F30,	    'F', 'K'},
+    {XK_F21,		'F', 'B'},
+    {XK_F22,		'F', 'C'},
+    {XK_F23,		'F', 'D'},
+    {XK_F24,		'F', 'E'},
+    {XK_F25,		'F', 'F'},
+    {XK_F26,		'F', 'G'},
+    {XK_F27,		'F', 'H'},
+    {XK_F28,		'F', 'I'},
+    {XK_F29,		'F', 'J'},
+    {XK_F30,		'F', 'K'},
 
-    {XK_F31,	    'F', 'L'},
-    {XK_F32,	    'F', 'M'},
-    {XK_F33,	    'F', 'N'},
-    {XK_F34,	    'F', 'O'},
-    {XK_F35,	    'F', 'P'},	    /* keysymdef.h defines up to F35 */
+    {XK_F31,		'F', 'L'},
+    {XK_F32,		'F', 'M'},
+    {XK_F33,		'F', 'N'},
+    {XK_F34,		'F', 'O'},
+    {XK_F35,		'F', 'P'},	/* keysymdef.h defines up to F35 */
 #ifdef SunXK_F36
-    {SunXK_F36,	    'F', 'Q'},
-    {SunXK_F37,	    'F', 'R'},
+    {SunXK_F36,		'F', 'Q'},
+    {SunXK_F37,		'F', 'R'},
 #endif
 
-    {XK_Help,	    '%', '1'},
-    {XK_Undo,	    '&', '8'},
-    {XK_BackSpace,  'k', 'b'},
-    {XK_Insert,	    'k', 'I'},
-    {XK_Delete,	    'k', 'D'},
-    {XK_Home,	    'k', 'h'},
-    {XK_End,	    '@', '7'},
-    {XK_Prior,	    'k', 'P'},
-    {XK_Next,	    'k', 'N'},
-    {XK_Print,	    '%', '9'},
+    {XK_Help,		'%', '1'},
+    {XK_Undo,		'&', '8'},
+    {XK_BackSpace,	'k', 'b'},
+    {XK_Insert,		'k', 'I'},
+    {XK_Delete,		'k', 'D'},
+    {XK_Home,		'k', 'h'},
+    {XK_End,		'@', '7'},
+    {XK_Prior,		'k', 'P'},
+    {XK_Next,		'k', 'N'},
+    {XK_Print,		'%', '9'},
 
     /* Keypad keys: */
 #ifdef XK_KP_Left
-    {XK_KP_Left,    'k', 'l'},
-    {XK_KP_Right,   'k', 'r'},
-    {XK_KP_Up,	    'k', 'u'},
-    {XK_KP_Down,    'k', 'd'},
-    {XK_KP_Insert,  'k', 'I'},
-    {XK_KP_Delete,  'k', 'D'},
-    {XK_KP_Home,    'k', 'h'},
-    {XK_KP_End,	    '@', '7'},
-    {XK_KP_Prior,   'k', 'P'},
-    {XK_KP_Next,    'k', 'N'},
+    {XK_KP_Left,	'k', 'l'},
+    {XK_KP_Right,	'k', 'r'},
+    {XK_KP_Up,		'k', 'u'},
+    {XK_KP_Down,	'k', 'd'},
+    {XK_KP_Insert,	'k', 'I'},
+    {XK_KP_Delete,	'k', 'D'},
+    {XK_KP_Home,	'k', 'h'},
+    {XK_KP_End,		'@', '7'},
+    {XK_KP_Prior,	'k', 'P'},
+    {XK_KP_Next,	'k', 'N'},
 
-    {XK_KP_Add,     'K', '6'},
-    {XK_KP_Subtract,'K', '7'},
-    {XK_KP_Divide,  'K', '8'},
-    {XK_KP_Multiply,'K', '9'},
-    {XK_KP_Enter,   'K', 'A'},
-    {XK_KP_Decimal, 'K', 'B'},
+    {XK_KP_Add,		'K', '6'},
+    {XK_KP_Subtract,	'K', '7'},
+    {XK_KP_Divide,	'K', '8'},
+    {XK_KP_Multiply,	'K', '9'},
+    {XK_KP_Enter,	'K', 'A'},
+    {XK_KP_Decimal,	'K', 'B'},
 
-    {XK_KP_0,       'K', 'C'},
-    {XK_KP_1,       'K', 'D'},
-    {XK_KP_2,       'K', 'E'},
-    {XK_KP_3,       'K', 'F'},
-    {XK_KP_4,       'K', 'G'},
-    {XK_KP_5,       'K', 'H'},
-    {XK_KP_6,       'K', 'I'},
-    {XK_KP_7,       'K', 'J'},
-    {XK_KP_8,       'K', 'K'},
-    {XK_KP_9,       'K', 'L'},
+    {XK_KP_0,		'K', 'C'},
+    {XK_KP_1,		'K', 'D'},
+    {XK_KP_2,		'K', 'E'},
+    {XK_KP_3,		'K', 'F'},
+    {XK_KP_4,		'K', 'G'},
+    {XK_KP_5,		'K', 'H'},
+    {XK_KP_6,		'K', 'I'},
+    {XK_KP_7,		'K', 'J'},
+    {XK_KP_8,		'K', 'K'},
+    {XK_KP_9,		'K', 'L'},
 #endif
 
     /* End of list marker: */
     {(KeySym)0,	    0, 0}
 };
 
-#define XtNboldFont	    "boldFont"
-#define XtCBoldFont	    "BoldFont"
-#define XtNitalicFont	    "italicFont"
-#define XtCItalicFont	    "ItalicFont"
-#define XtNboldItalicFont   "boldItalicFont"
-#define XtCBoldItalicFont   "BoldItalicFont"
-#define XtNscrollbarWidth   "scrollbarWidth"
-#define XtCScrollbarWidth   "ScrollbarWidth"
-#define XtNmenuHeight	    "menuHeight"
-#define XtCMenuHeight	    "MenuHeight"
+#define XtNboldFont		"boldFont"
+#define XtCBoldFont		"BoldFont"
+#define XtNitalicFont		"italicFont"
+#define XtCItalicFont		"ItalicFont"
+#define XtNboldItalicFont	"boldItalicFont"
+#define XtCBoldItalicFont	"BoldItalicFont"
+#define XtNscrollbarWidth	"scrollbarWidth"
+#define XtCScrollbarWidth	"ScrollbarWidth"
+#define XtNmenuHeight		"menuHeight"
+#define XtCMenuHeight		"MenuHeight"
+#define XtNmenuFont		"menuFont"
+#define XtCMenuFont		"MenuFont"
+
 
 /* Resources for setting the foreground and background colors of menus */
-#define XtNmenuBackground   "menuBackground"
-#define XtCMenuBackground   "MenuBackground"
-#define XtNmenuForeground   "menuForeground"
-#define XtCMenuForeground   "MenuForeground"
+#define XtNmenuBackground	"menuBackground"
+#define XtCMenuBackground	"MenuBackground"
+#define XtNmenuForeground	"menuForeground"
+#define XtCMenuForeground	"MenuForeground"
 
 /* Resources for setting the foreground and background colors of scrollbars */
-#define XtNscrollBackground "scrollBackground"
-#define XtCScrollBackground "ScrollBackground"
-#define XtNscrollForeground "scrollForeground"
-#define XtCScrollForeground "ScrollForeground"
+#define XtNscrollBackground	"scrollBackground"
+#define XtCScrollBackground	"ScrollBackground"
+#define XtNscrollForeground	"scrollForeground"
+#define XtCScrollForeground	"ScrollForeground"
 
 /*
  * X Resources:
@@ -333,6 +348,15 @@ static XtResource vim_resources[] =
 	XtOffsetOf(gui_t, menu_height),
 	XtRImmediate,
 	(XtPointer) MENU_DEFAULT_HEIGHT	    /* Should figure out at run time */
+    },
+    {
+	XtNmenuFont,
+	XtCMenuFont,
+	XtRFontStruct,
+	sizeof(XFontStruct *),
+	XtOffsetOf(gui_t, menu_font),
+	XtRString,
+	XtDefaultFont
     },
 #endif
     {
@@ -463,6 +487,8 @@ static XrmOptionDescRec cmdline_options[] =
     {"-scrollbarwidth",	".scrollbarWidth",  XrmoptionSepArg,	NULL},
     {"-mh",		".menuHeight",	    XrmoptionSepArg,	NULL},
     {"-menuheight",	".menuHeight",	    XrmoptionSepArg,	NULL},
+    {"-mf",		".menuFont",	    XrmoptionSepArg,	NULL},
+    {"-menufont",	".menuFont",	    XrmoptionSepArg,	NULL},
     {"-xrm",		NULL,		    XrmoptionResArg,	NULL}
 };
 
@@ -786,11 +812,11 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 	    if (enc_utf8) /* convert to utf-8 */
 	    {
 		string[1] = string[0] & 0xbf;
-		string[0] = (string[0] >> 6) + 0xc0;
+		string[0] = ((unsigned)string[0] >> 6) + 0xc0;
 		if (string[1] == CSI)
 		{
 		    string[2] = KS_EXTRA;
-		    string[3] = KE_CSI;
+		    string[3] = (int)KE_CSI;
 		    len = 4;
 		}
 		else
@@ -1127,14 +1153,15 @@ gui_mch_init_check()
     int
 gui_mch_init()
 {
-    Widget	AppShell;
     long_u	gc_mask;
     XGCValues	gc_vals;
     int		x, y, mask;
     unsigned	w, h;
 
+#if 0
     /* Uncomment this to enable synchronous mode for debugging */
-    /* XSynchronize(gui.dpy, True); */
+    XSynchronize(gui.dpy, True);
+#endif
 
 #if 0 /* not needed? */
     /*
@@ -1144,21 +1171,13 @@ gui_mch_init()
     XtInitializeWidgetClass(topLevelShellWidgetClass);
 #endif
 
-    /*
-     * The applicationShell is created as an unrealized
-     * parent for multiple topLevelShells.  The topLevelShells
-     * are created as popup children of the applicationShell.
-     * This is a recommendation of Paul Asente & Ralph Swick in
-     * _X_Window_System_Toolkit_ p. 677.
-     */
-    AppShell = XtVaAppCreateShell(VIM_NAME, VIM_CLASS,
-	    applicationShellWidgetClass, gui.dpy,
-	    NULL);
+    vimShell = XtVaAppCreateShell(VIM_NAME, VIM_CLASS,
+	    applicationShellWidgetClass, gui.dpy, NULL);
 
     /*
      * Get the application resources
      */
-    XtVaGetApplicationResources(AppShell, (XtPointer)&gui,
+    XtVaGetApplicationResources(vimShell, (XtPointer)&gui,
 	vim_resources, XtNumber(vim_resources), NULL);
 
     gui.scrollbar_height = gui.scrollbar_width;
@@ -1181,12 +1200,6 @@ gui_mch_init()
     /* Set default foreground and background colours */
     gui.norm_pixel = gui.def_norm_pixel;
     gui.back_pixel = gui.def_back_pixel;
-
-    /* Create shell widget to put vim in */
-    vimShell = XtVaCreatePopupShell("VIM",
-	topLevelShellWidgetClass, AppShell,
-	XtNborderWidth, 0,
-	NULL);
 
     /* Check if reverse video needs to be applied (on Sun it's done by X) */
     if (gui.rev_video && gui_mch_get_lightness(gui.back_pixel)
@@ -1354,17 +1367,13 @@ gui_mch_open()
     XSetWMProtocols(gui.dpy, XtWindow(vimShell), wm_atoms, 2);
     XtAddEventHandler(vimShell, NoEventMask, True, gui_x11_wm_protocol_handler,
 							     NULL);
-/* #define ENABLE_EDITRES */
-#ifdef ENABLE_EDITRES
+#ifdef HAVE_X11_XMU_EDITRES_H
     /*
-     * Enable editres protocol (see editres(1))
+     * Enable editres protocol (see "man editres").
      * Usually will need to add -lXmu to the linker line as well.
      */
-    {
-	extern void _XEditResCheckMessages();
-	XtAddEventHandler(vimShell, 0, True, _XEditResCheckMessages,
-		(XtPointer)NULL);
-    }
+    XtAddEventHandler(vimShell, 0, True, _XEditResCheckMessages,
+	    (XtPointer)NULL);
 #endif
 
 #if defined(FEAT_MENU) && defined(FEAT_GUI_ATHENA)
@@ -1925,7 +1934,8 @@ gui_mch_get_color(reqname)
 	{NULL, NULL}
     };
 
-    if (!gui.in_use)		    /* can't do this when GUI not running */
+    /* can't do this when GUI not running */
+    if (!gui.in_use || *reqname == NUL)
 	return (guicolor_t)-1;
 
     colormap = DefaultColormap(gui.dpy, XDefaultScreen(gui.dpy));
@@ -1969,10 +1979,10 @@ find_closest_color(colormap, colorPtr)
     Colormap	colormap;
     XColor	*colorPtr;
 {
-    double       tmp, distance, closestDistance;
-    int          i, closest, numFound, cmap_size;
-    XColor       *colortable;
-    XVisualInfo  template, *visInfoPtr;
+    double	tmp, distance, closestDistance;
+    int		i, closest, numFound, cmap_size;
+    XColor	*colortable;
+    XVisualInfo	template, *visInfoPtr;
 
     template.visualid = XVisualIDFromVisual(DefaultVisual(gui.dpy,
 						    XDefaultScreen(gui.dpy)));
@@ -2596,27 +2606,31 @@ gui_x11_check_copy_area()
  */
 
     void
-clip_mch_lose_selection()
+clip_mch_lose_selection(cbd)
+    VimClipboard	*cbd;
 {
-    clip_x11_lose_selection(vimShell);
+    clip_x11_lose_selection(vimShell, cbd);
 }
 
     int
-clip_mch_own_selection()
+clip_mch_own_selection(cbd)
+    VimClipboard	*cbd;
 {
-    return clip_x11_own_selection(vimShell);
+    return clip_x11_own_selection(vimShell, cbd);
 }
 
     void
-clip_mch_request_selection()
+clip_mch_request_selection(cbd)
+    VimClipboard	*cbd;
 {
-    clip_x11_request_selection(vimShell, gui.dpy);
+    clip_x11_request_selection(vimShell, gui.dpy, cbd);
 }
 
     void
-clip_mch_set_selection()
+clip_mch_set_selection(cbd)
+    VimClipboard	*cbd;
 {
-    clip_x11_set_selection();
+    clip_x11_set_selection(cbd);
 }
 
 #if defined(FEAT_MENU) || defined(PROTO)

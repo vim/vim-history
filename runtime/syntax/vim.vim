@@ -1,8 +1,8 @@
 " Vim syntax file
-" Language:	Vim 6.0w script
+" Language:	Vim 6.0x script
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	February 26, 2001
-" Version:	6.0w-01
+" Last Change:	March 14, 2001
+" Version:	6.0x-02
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")
@@ -289,11 +289,11 @@ syn keyword vimGroup contained	Boolean	Label	Macro	SpecialChar	Todo
 syn keyword vimGroup contained	Float	Operator	PreCondit	Tag
 
 " Default highlighting groups
-syn keyword vimHLGroup contained	Cursor	FoldColumn	ModeMsg	Scrollbar	Title
-syn keyword vimHLGroup contained	CursorIM	Folded	MoreMsg	Search	Visual
-syn keyword vimHLGroup contained	Directory	IncSearch	NonText	SpecialKey	VisualNOS
-syn keyword vimHLGroup contained	ErrorMsg	LineNr	Normal	StatusLine	WarningMsg
-syn keyword vimHLGroup contained	FillColumn	Menu	Question	StatusLineNC	WildMenu
+syn keyword vimHLGroup contained	Cursor	Folded	MoreMsg	Search	VertSplit
+syn keyword vimHLGroup contained	CursorIM	IncSearch	NonText	SpecialKey	Visual
+syn keyword vimHLGroup contained	Directory	LineNr	Normal	StatusLine	VisualNOS
+syn keyword vimHLGroup contained	ErrorMsg	Menu	Question	StatusLineNC	WarningMsg
+syn keyword vimHLGroup contained	FoldColumn	ModeMsg	Scrollbar	Title	WildMenu
 syn case match
 
 " Function Names
@@ -382,7 +382,8 @@ syn match vimSpecFileMod	"\(:[phtre]\)\+"		contained
 
 " User-Specified Commands
 syn cluster vimUserCmdList	contains=vimAddress,vimSyntax,vimHighlight,vimAutoCmd,vimCmplxRepeat,vimComment,vimCtrlChar,vimEscapeBrace,vimFilter,vimFunc,vimFunction,vimIsCommand,vimMark,vimNotation,vimNumber,vimOper,vimRegion,vimRegister,vimLet,vimSet,vimSetEqual,vimSetString,vimSpecFile,vimString,vimSubst,vimSubstRep,vimSubstRange,vimSynLine
-syn match   vimUserCmd	"\<com\%[mand]!\=\>.*$"		contains=vimUserAttrb,@vimUserCmdList
+syn keyword vimUserCommand	contained	com[mand]
+syn match   vimUserCmd	"\<com\%[mand]!\=\>.*$"		contains=vimUserAttrb,vimUserCommand,@vimUserCmdList
 syn match   vimUserAttrb	contained	"-n\%[args]=[01*?+]"	contains=vimUserAttrbKey,vimOper
 syn match   vimUserAttrb	contained	"-com\%[plete]=\(augroup\|buffer\|command\|dir\|event\|file\|help\|highlight\|menu\|option\|tag\|var\)"	contains=vimUserAttrbKey,vimUserAttrbCmplt,vimOper
 syn match   vimUserAttrb	contained	"-ra\%[nge]\(=%\|=\d\+\)\="	contains=vimNumber,vimOper,vimUserAttrbKey
@@ -448,9 +449,9 @@ syn match   vimSubst		"\(:\+\s*\|^\s*\||\s*\)\<s\%[ubstitute]\>"	nextgroup=vimSu
 syn match   vimSubst1       contained	"s\%[ubstitute]\>"		nextgroup=vimSubstPat
 syn region  vimSubstPat     contained	matchgroup=vimSubstDelim start="\z([^a-zA-Z \t[\]&]\)"rs=s+1 skip="\\\\\|\\\z1" end="\z1"re=e-1,me=e-1	 contains=@vimSubstList	nextgroup=vimSubstRep4	oneline
 syn region  vimSubstRep4    contained	matchgroup=vimSubstDelim start="\z(.\)" skip="\\\\\|\\\z1" end="\z1" matchgroup=vimNotation end="<[cC][rR]>" contains=@vimSubstRepList	nextgroup=vimSubstFlagErr
-syn region  vimCollection   contained	start="\\\@<!\[" skip="\\\[" end="\]"	contains=vimCollClass
+syn region  vimCollection   contained transparent	start="\\\@<!\[" skip="\\\[" end="\]"	contains=vimCollClass
 syn match   vimCollClassErr contained	"\[:.\{-\}:\]"
-syn match   vimCollClass    contained	"\[:\(alnum\|alpha\|blank\|cntrl\|digit\|graph\|lower\|print\|punct\|space\|upper\|xdigit\|return\|tab\|escape\|backspace\):\]"
+syn match   vimCollClass    contained transparent	"\[:\(alnum\|alpha\|blank\|cntrl\|digit\|graph\|lower\|print\|punct\|space\|upper\|xdigit\|return\|tab\|escape\|backspace\):\]"
 syn match   vimSubstSubstr  contained	"\\z\=\d"
 syn match   vimSubstTwoBS   contained	"\\\\"
 syn match   vimSubstFlagErr contained	"[^< \t]\+" contains=vimSubstFlags
@@ -464,7 +465,7 @@ syn match  vimMark	"\<norm\s'[a-zA-Z0-9]"lc=5
 syn match  vimMark	"\<normal\s'[a-zA-Z0-9]"lc=7
 syn match  vimPlainMark contained	"'[a-zA-Z0-9]"
 
-syn match  vimRegister	'[^(,;.]"[a-zA-Z0-9\-:.%#*=][^a-zA-Z_"]'lc=1,me=e-1
+syn match  vimRegister	'[^(,;.]"[a-zA-Z0-9\-:.%#*+=][^a-zA-Z_"]'lc=1,me=e-1
 syn match  vimRegister	'\<norm\s\+"[a-zA-Z0-9]'lc=5
 syn match  vimRegister	'\<normal\s\+"[a-zA-Z0-9]'lc=7
 syn match  vimPlainRegister contained	'"[a-zA-Z0-9\-:.%#*=]'
@@ -580,7 +581,7 @@ syn region  vimSynRegion	contained	matchgroup=vimGroupName start="\k\+" skip="\\
 syn match   vimSynRegOpt	contained	"\<\(transparent\|contained\|excludenl\|skipempty\|skipwhite\|display\|keepend\|oneline\|extend\|skipnl\|fold\)\>"
 syn match   vimSynReg	contained	"\(start\|skip\|end\)="he=e-1	nextgroup=vimSynRegPat
 syn match   vimSynMtchGrp	contained	"matchgroup="	nextgroup=vimGroup,vimHLGroup
-syn region  vimSynRegPat	contained	start="\z([[:punct:]]\)"  skip="\\\\\|\\\z1"  end="\z1"  end='"' contains=@vimSynRegPatGroup skipwhite nextgroup=vimSynPatMod,vimSynReg
+syn region  vimSynRegPat	contained	start="\z([[:punct:]]\)"  skip="\\\\\|\\\z1"  end="\z1"  contains=@vimSynRegPatGroup skipwhite nextgroup=vimSynPatMod,vimSynReg
 syn match   vimSynPatMod	contained	"\(hs\|ms\|me\|hs\|he\|rs\|re\)=[se]\([-+]\d\+\)\="
 syn match   vimSynPatMod	contained	"\(hs\|ms\|me\|hs\|he\|rs\|re\)=[se]\([-+]\d\+\)\=," nextgroup=vimSynPatMod
 syn match   vimSynPatMod	contained	"lc=\d\+"
@@ -608,7 +609,9 @@ syn match vimIsCommand	"<Bar>\s*\a\+"	transparent contains=vimCommand,vimNotatio
 
 " Highlighting
 " ============
-syn match   vimHighlight		"\<hi\%[ghlight]\>" skipwhite nextgroup=vimHiLink,vimHiClear,vimHiKeyList,vimComment
+syn cluster vimHighlightCluster	contains=vimHiLink,vimHiClear,vimHiKeyList,vimComment
+syn match   vimHighlight		"\<hi\%[ghlight]\>" skipwhite nextgroup=vimHiBang,@vimHighlightCluster
+syn match   vimHiBang	contained	"!"	  skipwhite nextgroup=@vimHighlightCluster
 
 syn match   vimHiGroup	contained	"\i\+"
 syn case ignore
@@ -630,7 +633,7 @@ syn match   vimHiGuiRgb	contained	"#\x\{6}"
 syn match   vimHiCtermError	contained	"[^0-9]\i*"
 
 " Highlighting: hi group key=arg ...
-syn cluster vimHiCluster contains=vimHiGroup,vimHiTerm,vimHiCTerm,vimHiStartStop,vimHiCtermFgBg,vimHiGui,vimHiGuiFont,vimHiGuiFgBg,vimHiKeyError
+syn cluster vimHiCluster contains=vimHiGroup,vimHiTerm,vimHiCTerm,vimHiStartStop,vimHiCtermFgBg,vimHiGui,vimHiGuiFont,vimHiGuiFgBg,vimHiKeyError,vimNotation
 syn region vimHiKeyList	contained oneline start="\i\+" skip="\\\\\|\\|" end="$\||"	contains=@vimHiCluster
 syn match  vimHiKeyError	contained	"\i\+="he=e-1
 syn match  vimHiTerm	contained	"[tT][eE][rR][mM]="he=e-1			nextgroup=vimHiAttribList
@@ -646,7 +649,7 @@ syn match  vimHiTermcap	contained	"\S\+"		contains=vimNotation
 syn keyword vimHiClear	contained	clear		nextgroup=vimHiGroup
 
 " Highlight: link
-syn region vimHiLink	contained oneline matchgroup=vimCommand start="\(def\s\+\)\=link" end="$"	contains=vimHiGroup,vimGroup,vimHLGroup
+syn region vimHiLink	contained oneline matchgroup=vimCommand start="\<\(def\s\+\)\=link\>\|\<def\>" end="$"	contains=vimHiGroup,vimGroup,vimHLGroup,vimNotation
 
 " Control Characters
 " ==================
@@ -744,7 +747,7 @@ hi def link vimSyncGroupName	vimGroupName
 hi def link vimUserAttrb	vimSpecial
 hi def link vimUserAttrbCmplt	vimSpecial
 hi def link vimUserAttrbKey	vimOption
-hi def link vimUserCmd	vimCommand
+hi def link vimUserCommand	vimCommand
 
 hi def link vimAutoEvent	Type
 hi def link vimBracket	Delimiter

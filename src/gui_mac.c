@@ -1423,7 +1423,7 @@ gui_mac_do_key(EventRecord *theEvent)
     {
 	/* Insert CSI as K_CSI.  Not tested! */
 	string[1] = KS_EXTRA;
-	string[2] = KE_CSI;
+	string[2] = (int)KE_CSI;
 	num = 3;
     }
 
@@ -1957,7 +1957,8 @@ gui_mch_insert_lines(row, num_lines)
      */
 
     void
-clip_mch_request_selection()
+clip_mch_request_selection(cbd)
+    VimClipboard *cbd;
 {
 
     Handle	textOfClip;
@@ -1967,22 +1968,22 @@ clip_mch_request_selection()
     char	*searchCR;
     char	*tempclip;
 
-    scrapSize = LoadScrap (); /* This seem to avoid problem with crash on first paste */
-    scrapSize = GetScrap ( nil, 'TEXT', &scrapOffset);
+    scrapSize = LoadScrap(); /* This seem to avoid problem with crash on first paste */
+    scrapSize = GetScrap(nil, 'TEXT', &scrapOffset);
 
     if (scrapSize > 0)
     {
 	textOfClip = NewHandle(0);
 	HLock (textOfClip);
-	scrapSize = GetScrap ( textOfClip, 'TEXT', &scrapOffset);
+	scrapSize = GetScrap(textOfClip, 'TEXT', &scrapOffset);
 
-	type = (strchr (*textOfClip, '\r') != NULL) ? MLINE : MCHAR;
+	type = (strchr(*textOfClip, '\r') != NULL) ? MLINE : MCHAR;
 
 	tempclip = (char *)lalloc(scrapSize+1, TRUE);
-	STRNCPY (tempclip, *textOfClip, scrapSize);
+	STRNCPY(tempclip, *textOfClip, scrapSize);
 	tempclip[scrapSize] = 0;
 
-	searchCR=tempclip;
+	searchCR = tempclip;
 	while (searchCR != NULL)
 	{
 	    searchCR = strchr(searchCR, '\r');
@@ -1992,17 +1993,18 @@ clip_mch_request_selection()
 
 	}
 
-	clip_yank_selection (type, (char_u *) tempclip, scrapSize);
+	clip_yank_selection(type, (char_u *) tempclip, scrapSize, cbd);
 
-	free (tempclip);
-	HUnlock (textOfClip);
+	free(tempclip);
+	HUnlock(textOfClip);
 
-	DisposeHandle (textOfClip);
+	DisposeHandle(textOfClip);
     }
 }
 
     void
-clip_mch_lose_selection()
+clip_mch_lose_selection(cbd)
+    VimClipboard *cbd;
 {
     /*
      * TODO: Really nothing to do?
@@ -2010,15 +2012,18 @@ clip_mch_lose_selection()
 }
 
     int
-clip_mch_own_selection()
+clip_mch_own_selection(cbd)
+    VimClipboard *cbd;
 {
     return OK;
 }
+
 /*
  * Send the current selection to the clipboard.
  */
     void
-clip_mch_set_selection()
+clip_mch_set_selection(cbd)
+    VimClipboard *cbd;
 {
     Handle	textOfClip;
     long	scrapSize;
@@ -2026,10 +2031,10 @@ clip_mch_set_selection()
 
     char_u	*str = NULL;
 
-    if (!clipboard.owned)
+    if (!cbd->owned)
 	return;
 
-    clip_get_selection();
+    clip_get_selection(cbd);
 
     /*
      * Once we set the clipboard, lose ownership.  If another application sets
@@ -2037,28 +2042,25 @@ clip_mch_set_selection()
      *
      */
 
-    clipboard.owned = FALSE;
+    cbd->owned = FALSE;
 
-    type = clip_convert_selection (&str, (long_u *) &scrapSize);
+    type = clip_convert_selection(&str, (long_u *) &scrapSize, cbd);
 
     if (type >= 0)
     {
-
-	ZeroScrap ();
+	ZeroScrap();
 
 	textOfClip = NewHandle(scrapSize);
+	HLock(textOfClip);
 
-	HLock (textOfClip);
+	STRNCPY(*textOfClip, str, scrapSize);
+	PutScrap(scrapSize, 'TEXT', *textOfClip);
 
-	    STRNCPY (*textOfClip, str, scrapSize);
-	    PutScrap (scrapSize, 'TEXT', *textOfClip);
-
-	HUnlock (textOfClip);
-
-	DisposeHandle (textOfClip);
+	HUnlock(textOfClip);
+	DisposeHandle(textOfClip);
     }
 
-    vim_free (str);
+    vim_free(str);
 }
 
     void

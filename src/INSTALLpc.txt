@@ -209,6 +209,14 @@ found at
 	http://upx.tsx.org/
 
 
+ADDITION: NLS support with Mingw
+
+(by Eduardo F. Amatria <eferna1@platea.pntic.mec.es>)
+
+If you want National Language Support, read the file src/po/README_mingw.txt.
+You need to uncomment lines in Make_ming.mak to have NLS defined.
+
+
 6. Cross compiling for Win32 from a Linux machine
 =================================================
 

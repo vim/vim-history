@@ -2010,17 +2010,12 @@ add_dialog_element(
     return p;
 }
 
-
-
 #undef add_byte
 #undef add_string
 #undef add_long
 #undef add_word
 
 #endif /* FEAT_GUI_DIALOG */
-
-
-
 
     static void
 get_dialog_font_metrics(void)
@@ -2077,50 +2072,5 @@ get_toolbar_bitmap(char_u *name)
 	    return i;
     }
     return i;
-}
-#endif
-
-
-#ifdef FEAT_MOUSESHAPE
-/* Table for shape IDCs.  Keep in sync with the mshape_names[] table in
- * misc2.c! */
-static LPCSTR mshape_idcs[] =
-{
-    MAKEINTRESOURCE(IDC_ARROW),		/* arrow */
-    MAKEINTRESOURCE(0),			/* blank */
-    MAKEINTRESOURCE(IDC_IBEAM),		/* beam */
-    MAKEINTRESOURCE(IDC_SIZENS),	/* updown */
-    MAKEINTRESOURCE(IDC_SIZENS),	/* udsizing */
-    MAKEINTRESOURCE(IDC_SIZEWE),	/* leftright */
-    MAKEINTRESOURCE(IDC_SIZEWE),	/* lrsizing */
-    MAKEINTRESOURCE(IDC_WAIT),		/* busy */
-    MAKEINTRESOURCE(IDC_ICON),		/* no */
-    MAKEINTRESOURCE(IDC_ARROW),		/* crosshair */
-    MAKEINTRESOURCE(IDC_ARROW),		/* hand1 */
-    MAKEINTRESOURCE(IDC_ARROW),		/* hand2 */
-    MAKEINTRESOURCE(IDC_ARROW),		/* pencil */
-    MAKEINTRESOURCE(IDC_ARROW),		/* question */
-    MAKEINTRESOURCE(IDC_ARROW),		/* right-arrow */
-    MAKEINTRESOURCE(IDC_UPARROW),	/* up-arrow */
-    MAKEINTRESOURCE(IDC_ARROW)		/* last one */
-};
-
-    void
-mch_set_mouse_shape(int shape)
-{
-    LPCSTR idc;
-
-    if (shape == MSHAPE_HIDE)
-	ShowCursor(FALSE);
-    else
-    {
-	if (shape >= MSHAPE_NUMBERED)
-	    idc = MAKEINTRESOURCE(IDC_ARROW);
-	else
-	    idc = mshape_idcs[shape];
-	SetClassWord(s_textArea, GCW_HCURSOR, LoadCursor(NULL, idc));
-	if (!p_mh)
-	    ShowCursor(TRUE);
-    }
 }
 #endif

@@ -2600,45 +2600,35 @@ term_bg_color(n)
 
     static void
 term_color(s, n)
-    char_u  *s;
-    int	    n;
+    char_u	*s;
+    int		n;
 {
+    char	buf[20];
     int i = 2;	/* index in s[] just after <Esc>[ or CSI */
 
     /* Special handling of 16 colors, because termcap can't handle it */
     /* Also accept "\e[3%dm" for TERMINFO, it is sometimes used */
     /* Also accept CSI instead of <Esc>[ */
-    if (n > 7 && t_colors >= 16
+    if (n >= 8 && t_colors >= 16
 	      && ((s[0] == ESC && s[1] == '[') || (s[0] == CSI && (i = 1) == 1))
 	      && s[i] != NUL
 	      && (STRCMP(s + i + 1, "%p1%dm") == 0
-		  || STRCMP(s + i + 1, "%dm") == 0))
+		  || STRCMP(s + i + 1, "%dm") == 0)
+	      && (s[i] == '3' || s[i] == '4'))
     {
-	if (s[i] == '3')	/* foreground */
-	{
+	sprintf(buf,
 #ifdef TERMINFO
-	    OUT_STR(tgoto(i == 2 ? IF_EB("\033[9%p1%dm", ESC_STR "[9%p1%dm")
-					       : "\233\071%p1%dm", 0, n - 8));
+		"%s%s%%p1%%dm",
 #else
-	    OUT_STR(tgoto(i == 2 ? IF_EB("\033[9%dm", ESC_STR "[9%dm")
-						  : "\233\071%dm", 0, n - 8));
+		"%s%s%%dm",
 #endif
-	    return;
-	}
-	if (s[i] == '4')	/* background */
-	{
-#ifdef TERMINFO
-	    OUT_STR(tgoto(i == 2 ? IF_EB("\033[10%p1%dm", ESC_STR "[10%p1%dm")
-					   : "\233\061\060%p1%dm", 0, n - 8));
-#else
-	    OUT_STR(tgoto(i == 2 ? IF_EB("\033[10%dm", ESC_STR "[10%dm")
-					      : "\233\061\060%dm", 0, n - 8));
-#endif
-	    return;
-	}
-
+		i == 2 ? IF_EB("\033[", ESC_STR "[") : "\233",
+		s[i] == '3' ? (n >= 16 ? "38;5;" : "9")
+			    : (n >= 16 ? "48;5;" : "10"));
+	OUT_STR(tgoto(buf, 0, n >= 16 ? n : n - 8));
     }
-    OUT_STR(tgoto((char *)s, 0, n));
+    else
+	OUT_STR(tgoto((char *)s, 0, n));
 }
 
 #if (defined(FEAT_TITLE) && (defined(UNIX) || defined(OS2) || defined(VMS))) || defined(PROTO)
@@ -4531,19 +4521,6 @@ replace_termcodes(from, bufp, from_part, do_lt)
 	    }
 	}
 
-	/*
-	 * If the character is K_SPECIAL, replace it with K_SPECIAL KS_SPECIAL
-	 * KE_FILLER.
-	 */
-	if (*src == K_SPECIAL)
-	{
-	    result[dlen++] = K_SPECIAL;
-	    result[dlen++] = (int)KS_SPECIAL;
-	    result[dlen++] = KE_FILLER;
-	    ++src;
-	    continue;
-	}
-
 #ifdef FEAT_EVAL
 	if (do_special)
 	{
@@ -4604,22 +4581,32 @@ replace_termcodes(from, bufp, from_part, do_lt)
 
 #ifdef FEAT_MBYTE
 	/* skip multibyte char correctly */
-	if (has_mbyte)
-	    for (i = (*mb_ptr2len_check)(src); i > 0; --i)
-	    {
-		if (*src == K_SPECIAL)
-		{
-		    result[dlen++] = K_SPECIAL;
-		    result[dlen++] = (int)KS_SPECIAL;
-		    result[dlen++] = KE_FILLER;
-		}
-		else
-		    result[dlen++] = *src;
-		++src;
-	    }
-	else
+	for (i = (*mb_ptr2len_check)(src); i > 0; --i)
 #endif
-	    result[dlen++] = *src++;
+	{
+	    /*
+	     * If the character is K_SPECIAL, replace it with K_SPECIAL
+	     * KS_SPECIAL KE_FILLER.
+	     * If compiled with the GUI replace CSI with K_CSI.
+	     */
+	    if (*src == K_SPECIAL)
+	    {
+		result[dlen++] = K_SPECIAL;
+		result[dlen++] = KS_SPECIAL;
+		result[dlen++] = KE_FILLER;
+	    }
+# ifdef FEAT_GUI
+	    else if (*src == CSI)
+	    {
+		result[dlen++] = K_SPECIAL;
+		result[dlen++] = KS_EXTRA;
+		result[dlen++] = (int)KE_CSI;
+	    }
+# endif
+	    else
+		result[dlen++] = *src;
+	    ++src;
+	}
     }
     result[dlen] = NUL;
 

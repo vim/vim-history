@@ -1318,7 +1318,7 @@ BufferMark(PyObject *self, PyObject *args)
     if (VimErrorCheck())
 	return NULL;
 
-    if (posp->lnum == 0)
+    if (posp->lnum <= 0)
     {
 	/* Or raise an error? */
 	Py_INCREF(Py_None);
