@@ -112,8 +112,20 @@ amenu 10.600 &File.-SEP4-			:
 amenu 10.610 &File.Sa&ve-Exit<Tab>:wqa		:confirm wqa<CR>
 amenu 10.620 &File.E&xit<Tab>:qa		:confirm qa<CR>
 
-" Tricky stuff to make pasting work as expected.
-nnoremap <SID>Paste "=@+.'xy'<CR>gPFx"_2x:echo<CR>
+" Pasting blockwise and linewise selections is not possible in Insert and
+" Visual mode without the +virtualedit feature.  They are pasted as if they
+" were characterwise instead.
+if has("virtualedit")
+  nnoremap <silent> <SID>Paste :call <SID>Paste()<CR>
+  func! <SID>Paste()
+    let ove = &ve
+    set ve=all
+    normal `^"+gPi
+    let &ve = ove
+  endfunc
+else
+  nnoremap <silent> <SID>Paste "=@+.'xy'<CR>gPFx"_2x
+endif
 
 " Edit menu
 amenu 20.310 &Edit.&Undo<Tab>u			u
@@ -123,10 +135,15 @@ amenu 20.335 &Edit.-SEP1-			:
 vmenu 20.340 &Edit.Cu&t<Tab>"+x			"+x
 vmenu 20.350 &Edit.&Copy<Tab>"+y		"+y
 cmenu 20.350 &Edit.&Copy<Tab>"+y		<C-Y>
-nmenu 20.360 &Edit.&Paste<Tab>"+P		<SID>Paste
-vmenu	     &Edit.&Paste<Tab>"+P		"-cx<Esc><SID>Paste"_x
-imenu	     &Edit.&Paste<Tab>"+P		x<Esc><SID>Paste"_s
+nmenu 20.360 &Edit.&Paste<Tab>"+P		"+gP
 cmenu	     &Edit.&Paste<Tab>"+P		<C-R>+
+if has("virtualedit")
+  vmenu	     &Edit.&Paste<Tab>"+P		"-c<Esc><SID>Paste
+  imenu	     &Edit.&Paste<Tab>"+P		<Esc><SID>Pastegi
+else
+  vmenu	     &Edit.&Paste<Tab>"+P		"-c<Esc>gix<Esc><SID>Paste"_x
+  imenu	     &Edit.&Paste<Tab>"+P		x<Esc><SID>Paste"_s
+endif
 nmenu 20.370 &Edit.Put\ &Before<Tab>[p		[p
 imenu	     &Edit.Put\ &Before<Tab>[p		<C-O>[p
 nmenu 20.380 &Edit.Put\ &After<Tab>]p		]p
@@ -689,16 +706,21 @@ amenu 1.15 PopUp.-SEP1-			:
 vmenu 1.20 PopUp.Cu&t			"+x
 vmenu 1.30 PopUp.&Copy			"+y
 cmenu 1.30 PopUp.&Copy			<C-Y>
-nmenu 1.40 PopUp.&Paste			<SID>Paste
-vmenu 1.40 PopUp.&Paste			"-cx<Esc><SID>Paste"_x
-imenu 1.40 PopUp.&Paste			x<Esc><SID>Paste"_s
+nmenu 1.40 PopUp.&Paste			"+gP
 cmenu 1.40 PopUp.&Paste			<C-R>+
+if has("virtualedit")
+  vmenu 1.40 PopUp.&Paste		"-c<Esc><SID>Paste
+  imenu 1.40 PopUp.&Paste		<Esc><SID>Pastegi
+else
+  vmenu 1.40 PopUp.&Paste		"-c<Esc>gix<Esc><SID>Paste"_x
+  imenu 1.40 PopUp.&Paste		x<Esc><SID>Paste"_s
+endif
 vmenu 1.50 PopUp.&Delete		x
 amenu 1.55 PopUp.-SEP2-			:
-vnoremenu 1.60 PopUp.Select\ Blockwise	<C-Q>
+vnoremenu 1.60 PopUp.Select\ Blockwise	<C-V>
 anoremenu 1.70 PopUp.Select\ &Word	vaw
 anoremenu 1.80 PopUp.Select\ &Line	V
-anoremenu 1.90 PopUp.Select\ &Block	<C-Q>
+anoremenu 1.90 PopUp.Select\ &Block	<C-V>
 anoremenu 1.100 PopUp.Select\ &All	ggVG
 
 " The GUI toolbar (for MS-Windows and GTK)
@@ -725,10 +747,15 @@ if has("toolbar")
   vmenu 1.70 ToolBar.Cut	"+x
   vmenu 1.80 ToolBar.Copy	"+y
   cmenu 1.80 ToolBar.Copy	<C-Y>
-  nmenu 1.90 ToolBar.Paste	<SID>Paste
-  vmenu      ToolBar.Paste	"-cx<Esc><SID>Paste"_x
-  imenu      ToolBar.Paste	x<Esc><SID>Paste"_s
+  nmenu 1.90 ToolBar.Paste	"+gP
   cmenu      ToolBar.Paste	<C-R>+
+  if has("virtualedit")
+    vmenu      ToolBar.Paste	"-c<Esc><SID>Paste
+    imenu      ToolBar.Paste	<Esc><SID>Pastegi
+  else
+    vmenu      ToolBar.Paste	"-c<Esc>gix<Esc><SID>Paste"_x
+    imenu      ToolBar.Paste	x<Esc><SID>Paste"_s
+  endif
 
   if !has("gui_athena")
     amenu 1.95 ToolBar.-sep3-		<nul>
