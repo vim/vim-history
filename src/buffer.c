@@ -2555,9 +2555,11 @@ chk_modeline(lnum)
 
 	    /*
 	     * Find end of set command: ':' or end of line.
+	     * Skip over "\:", replacing it with ":".
 	     */
-	    for (e = s; (*e != ':' || *(e - 1) == '\\') && *e != NUL; ++e)
-		;
+	    for (e = s; *e != ':' && *e != NUL; ++e)
+		if (e[0] == '\\' && e[1] == ':')
+		    STRCPY(e, e + 1);
 	    if (*e == NUL)
 		end = TRUE;
 
