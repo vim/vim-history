@@ -4952,15 +4952,23 @@ get_visual_text(cap, pp, lenp)
 	*pp = ml_get_curline();
 	*lenp = (int)STRLEN(*pp);
     }
-    else if (lt(curwin->w_cursor, VIsual))
-    {
-	*pp = ml_get_pos(&curwin->w_cursor);
-	*lenp = VIsual.col - curwin->w_cursor.col + 1;
-    }
     else
     {
-	*pp = ml_get_pos(&VIsual);
-	*lenp = curwin->w_cursor.col - VIsual.col + 1;
+	if (lt(curwin->w_cursor, VIsual))
+	{
+	    *pp = ml_get_pos(&curwin->w_cursor);
+	    *lenp = VIsual.col - curwin->w_cursor.col + 1;
+	}
+	else
+	{
+	    *pp = ml_get_pos(&VIsual);
+	    *lenp = curwin->w_cursor.col - VIsual.col + 1;
+	}
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	    /* Correct the length to include the whole last character. */
+	    *lenp += (*mb_ptr2len_check)(*pp + (*lenp - 1)) - 1;
+#endif
     }
     reset_VIsual_and_resel();
     return OK;
