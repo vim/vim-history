@@ -121,6 +121,9 @@ static void ins_redraw __ARGS((void));
 static void ins_ctrl_v __ARGS((void));
 static void undisplay_dollar __ARGS((void));
 static void insert_special __ARGS((int, int, int));
+#ifdef FEAT_COMMENTS
+static int  cmplen __ARGS((char_u *s1, char_u *s2));
+#endif
 static void redo_literal __ARGS((int c));
 static void start_arrow __ARGS((pos_T *end_insert_pos));
 static void stop_insert __ARGS((pos_T *end_insert_pos));
@@ -825,6 +828,7 @@ doESCkey:
 	/* insert the contents of a register */
 	case Ctrl_R:
 	    ins_reg();
+	    auto_format();
 	    inserted_space = FALSE;
 	    break;
 
@@ -919,6 +923,7 @@ doESCkey:
 	    }
 # endif
 	    ins_shift(c, lastc);
+	    auto_format();
 	    inserted_space = FALSE;
 	    break;
 
@@ -926,22 +931,26 @@ doESCkey:
 	case K_DEL:
 	case K_KDEL:
 	    ins_del();
+	    auto_format();
 	    break;
 
 	/* delete character before the cursor */
 	case K_BS:
 	case Ctrl_H:
 	    did_backspace = ins_bs(c, BACKSPACE_CHAR, &inserted_space);
+	    auto_format();
 	    break;
 
 	/* delete word before the cursor */
 	case Ctrl_W:
 	    did_backspace = ins_bs(c, BACKSPACE_WORD, &inserted_space);
+	    auto_format();
 	    break;
 
 	/* delete all inserted text in current line */
 	case Ctrl_U:
 	    did_backspace = ins_bs(c, BACKSPACE_LINE, &inserted_space);
+	    auto_format();
 	    inserted_space = FALSE;
 	    break;
 
@@ -1052,6 +1061,7 @@ doESCkey:
 	    inserted_space = FALSE;
 	    if (ins_tab())
 		goto normalchar;	/* insert TAB as a normal char */
+	    auto_format();
 	    break;
 
 	case K_KENTER:
@@ -1069,6 +1079,7 @@ doESCkey:
 #endif
 	    if (ins_eol(c) && !p_im)
 		goto doESCkey;	    /* out of memory */
+	    auto_format();
 	    inserted_space = FALSE;
 	    break;
 
@@ -1182,6 +1193,7 @@ docomplete:
 		    revins_legal++;
 #endif
 		    c = Ctrl_V;	/* pretend CTRL-V is last character */
+		    auto_format();
 		}
 	    }
 	    break;
@@ -1221,6 +1233,9 @@ normalchar:
 		revins_chars++;
 #endif
 	    }
+
+	    auto_format();
+
 #ifdef FEAT_FOLDING
 	    /* When inserting a character the cursor line must never be in a
 	     * closed fold. */
@@ -2357,6 +2372,8 @@ ins_compl_prep(c)
 		    insertchar(NUL, 0, -1);
 		curwin->w_cursor.col++;
 	    }
+
+	    auto_format();
 
 	    ins_compl_free();
 	    started_completion = FALSE;
@@ -3704,6 +3721,7 @@ insertchar(c, flags, second_indent)
     int		no_leader = FALSE;
     int		do_comments = (flags & INSCHAR_DO_COM);
 #endif
+    int		fo_white_par;
     int		first_line = TRUE;
     int		fo_ins_blank;
 #ifdef FEAT_MBYTE
@@ -3717,10 +3735,13 @@ insertchar(c, flags, second_indent)
 #ifdef FEAT_MBYTE
     fo_multibyte = has_format_option(FO_MBYTE_BREAK);
 #endif
+    fo_white_par = has_format_option(FO_WHITE_PAR);
 
     /*
      * Try to break the line in two or more pieces when:
      * - Always do this if we have been called to do formatting only.
+     * - Always do this when 'formatoptions' has the 'a' flag and the line
+     *   ends in white space.
      * - Otherwise:
      *	 - Don't do this if inserting a blank
      *	 - Don't do this if an existing character is being replaced, unless
@@ -3940,13 +3961,15 @@ insertchar(c, flags, second_indent)
 		saved_text[startcol] = NUL;
 
 		/* Backspace over characters that will move to the next line */
-		backspace_until_column(foundcol);
+		if (!fo_white_par)
+		    backspace_until_column(foundcol);
 	    }
 	    else
 #endif
 	    {
 		/* put cursor after pos. to break line */
-		curwin->w_cursor.col = foundcol;
+		if (!fo_white_par)
+		    curwin->w_cursor.col = foundcol;
 	    }
 
 	    /*
@@ -3954,6 +3977,7 @@ insertchar(c, flags, second_indent)
 	     * Only insert/delete lines, but don't really redraw the window.
 	     */
 	    open_line(FORWARD, OPENLINE_DELSPACES
+		    + (fo_white_par ? OPENLINE_KEEPTRAIL : 0)
 #ifdef FEAT_COMMENTS
 		    + (do_comments ? OPENLINE_DO_COM : 0)
 #endif
@@ -4195,6 +4219,102 @@ insertchar(c, flags, second_indent)
 	}
     }
 }
+
+/*
+ * Called after inserting or deleting text: When 'formatoptions' includes the
+ * 'a' flag format from the current line until the end of the paragraph.
+ * Keep the cursor at the same position relative to the text.
+ * The caller must have saved the cursor line for undo, following ones will be
+ * saved here.
+ */
+    void
+auto_format()
+{
+    pos_T	pos;
+    colnr_T	len;
+    char_u	*old, *pold;
+    char_u	*new, *pnew;
+
+    if (!has_format_option(FO_AUTO))
+	return;
+
+    pos = curwin->w_cursor;
+    old = ml_get_curline();
+
+    /* Don't format in Insert mode when the cursor is on a trailing blank, the
+     * user might insert normal text next. */
+    if (*old != NUL && pos.col == STRLEN(old) && vim_iswhite(old[pos.col - 1]))
+	return;
+
+    old = vim_strsave(old);
+    format_lines((linenr_T)-1);
+
+    /* Advance to the same text position again.  This is tricky, indents
+     * may have changed and comment leaders may have been inserted. */
+    curwin->w_cursor.lnum = pos.lnum;
+    curwin->w_cursor.col = 0;
+    pold = old;
+    while (1)
+    {
+	if (curwin->w_cursor.lnum >= curbuf->b_ml.ml_line_count)
+	{
+	    curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
+	    curwin->w_cursor.col = MAXCOL;
+	    break;
+	}
+	/* Make "pold" and "pnew" point to the start of the line, ignoring
+	 * indent and comment leader. */
+	pold = skipwhite(pold);
+	new = ml_get_curline();
+	pnew = skipwhite(new);
+#ifdef FEAT_COMMENTS
+	len = get_leader_len(new, NULL, FALSE);
+	if (len > 0)
+	{
+	    char_u	*p;
+
+	    /* Skip the leader if the old text matches after it, ignoring
+	     * white space.  Keep in mind that the leader may appear in
+	     * the text! */
+	    p = skipwhite(new + len);
+	    if (cmplen(pold, pnew) < cmplen(pold, p))
+		pnew = p;
+	}
+#endif
+
+	len = (colnr_T)STRLEN(pnew);
+	if ((pold - old) + len >= pos.col)
+	{
+	    curwin->w_cursor.col = pos.col - (pold - old) + (pnew - new);
+	    break;
+	}
+	/* Cursor wraps to next line */
+	++curwin->w_cursor.lnum;
+	pold += len;
+    }
+    check_cursor();
+    vim_free(old);
+}
+
+#ifdef FEAT_COMMENTS
+/*
+ * Return the number of bytes for which strings "s1" and "s2" are equal.
+ */
+    static int
+cmplen(s1, s2)
+    char_u	*s1;
+    char_u	*s2;
+{
+    char_u	*p1 = s1, *p2 = s2;
+
+    while (*p1 == *p2 && *p1 != NUL)
+    {
+	++p1;
+	++p2;
+    }
+    return (int)(p1 - s1);
+}
+#endif
 
 /*
  * Find out textwidth to be used for formatting:

@@ -834,6 +834,7 @@ extern char* (*dyn_libintl_textdomain)(const char* domainname);
 /* flags for open_line() */
 #define OPENLINE_DELSPACES  1	/* delete spaces after cursor */
 #define OPENLINE_DO_COM	    2	/* format comments */
+#define OPENLINE_KEEPTRAIL  4	/* keep trailing spaces */
 
 /*
  * There are four history tables:
