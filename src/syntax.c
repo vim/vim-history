@@ -173,6 +173,8 @@ typedef struct syn_pattern
 #define HL_DISPLAY	0x1000	/* only used for displaying, not syncing */
 #define HL_FOLD		0x2000	/* define fold */
 #define HL_EXTEND	0x4000	/* ignore a keepend */
+/* These don't fit in a short, thus can't be used for syntax items, only for
+ * si_flags and bs_flags. */
 #define HL_MATCHCONT	0x8000	/* match continued from previous line */
 #define HL_TRANS_CONT	0x10000 /* transparent item without contains arg */
 
@@ -275,7 +277,7 @@ typedef struct state_item
     int		si_end_idx;		/* group ID for end pattern or zero */
     int		si_ends;		/* if match ends before si_m_endpos */
     int		si_attr;		/* attributes in this state */
-    int		si_flags;		/* HL_HAS_EOL flag in this state, and
+    long	si_flags;		/* HL_HAS_EOL flag in this state, and
 					 * HL_SKIP* for si_next_list */
     short	*si_cont_list;		/* list of contained groups */
     short	*si_next_list;		/* nextgroup IDs after this item ends */
@@ -294,15 +296,15 @@ typedef struct state_item
  * If next_match_col == MAXCOL, no match found in this line.
  * (All end positions have the column of the char after the end)
  */
-static int next_match_col;	    /* column for start of next match */
-static lpos_T next_match_m_endpos;    /* position for end of next match */
+static int next_match_col;		/* column for start of next match */
+static lpos_T next_match_m_endpos;	/* position for end of next match */
 static lpos_T next_match_h_startpos;  /* pos. for highl. start of next match */
-static lpos_T next_match_h_endpos;    /* pos. for highl. end of next match */
-static int next_match_idx;	    /* index of matched item */
-static int next_match_flags;	    /* flags for next match */
-static lpos_T next_match_eos_pos;	    /* end of start pattern (start of region) */
-static lpos_T next_match_eoe_pos;	    /* pos. for end of end pattern */
-static int next_match_end_idx;	    /* ID of group for end pattern or zero */
+static lpos_T next_match_h_endpos;	/* pos. for highl. end of next match */
+static int next_match_idx;		/* index of matched item */
+static long next_match_flags;		/* flags for next match */
+static lpos_T next_match_eos_pos;	/* end of start pattn (start region) */
+static lpos_T next_match_eoe_pos;	/* pos. for end of end pattern */
+static int next_match_end_idx;		/* ID of group for end pattn or zero */
 static reg_extmatch_T *next_match_extmatch = NULL;
 
 /*
@@ -357,7 +359,7 @@ static int in_id_list __ARGS((stateitem_T *item, short *cont_list, struct sp_syn
 static int push_current_state __ARGS((int idx));
 static void pop_current_state __ARGS((void));
 
-static void find_endpos __ARGS((int idx, lpos_T *startpos, lpos_T *m_endpos, lpos_T *hl_endpos, int *flagsp, lpos_T *end_endpos, int *end_idx, reg_extmatch_T *start_ext));
+static void find_endpos __ARGS((int idx, lpos_T *startpos, lpos_T *m_endpos, lpos_T *hl_endpos, long *flagsp, lpos_T *end_endpos, int *end_idx, reg_extmatch_T *start_ext));
 static void clear_syn_state __ARGS((synstate_T *p));
 static void clear_current_state __ARGS((void));
 
@@ -367,7 +369,7 @@ static void syn_add_end_off __ARGS((lpos_T *result, regmmatch_T *regmatch, synpa
 static void syn_add_start_off __ARGS((lpos_T *result, regmmatch_T *regmatch, synpat_T *spp, int idx, int extra));
 static char_u *syn_getcurline __ARGS((void));
 static int syn_regexec __ARGS((regmmatch_T *rmp, linenr_T lnum, colnr_T col));
-static int check_keyword_id __ARGS((char_u *line, int startcol, int *endcol, int *flags, short **next_list, stateitem_T *cur_si));
+static int check_keyword_id __ARGS((char_u *line, int startcol, int *endcol, long *flags, short **next_list, stateitem_T *cur_si));
 static void syn_cmd_case __ARGS((exarg_T *eap, int syncing));
 static void syntax_sync_clear __ARGS((void));
 static void syn_remove_pattern __ARGS((buf_T *buf, int idx));
@@ -1703,7 +1705,7 @@ syn_current_attr(syncing, displaying)
     stateitem_T	*cur_si, *sip;
     int		startcol;
     int		endcol;
-    int		flags;
+    long	flags;
     short	*next_list;
     int		found_match;		    /* found usable match */
     static int	try_next_column = FALSE;    /* must try in next col */
@@ -2565,7 +2567,7 @@ find_endpos(idx, startpos, m_endpos, hl_endpos, flagsp, end_endpos,
     lpos_T	*startpos;	/* where to start looking for an END match */
     lpos_T	*m_endpos;	/* return: end of match */
     lpos_T	*hl_endpos;	/* return: end of highlighting */
-    int		*flagsp;	/* return: flags of matching END */
+    long	*flagsp;	/* return: flags of matching END */
     lpos_T	*end_endpos;	/* return: end of end pattern match */
     int		*end_idx;	/* return: group ID for end pat. match, or 0 */
     reg_extmatch_T *start_ext;	/* submatches from the start pattern */
@@ -2894,12 +2896,12 @@ syn_regexec(rmp, lnum, col)
  * Return it's ID if found, 0 otherwise.
  */
     static int
-check_keyword_id(line, startcol, endcol, flags, next_list, cur_si)
+check_keyword_id(line, startcol, endcolp, flagsp, next_listp, cur_si)
     char_u	*line;
     int		startcol;	/* position in line to check for keyword */
-    int		*endcol;	/* character after found keyword */
-    int		*flags;		/* flags of matching keyword */
-    short	**next_list;	/* next_list of matching keyword */
+    int		*endcolp;	/* return: character after found keyword */
+    long	*flagsp;	/* return: flags of matching keyword */
+    short	**next_listp;	/* return: next_list of matching keyword */
     stateitem_T	*cur_si;	/* item at the top of the stack */
 {
     keyentry_T	*ktab;
@@ -2971,9 +2973,9 @@ check_keyword_id(line, startcol, endcol, flags, next_list, cur_si)
 			: in_id_list(cur_si, cur_si->si_cont_list,
 				  &ktab->k_syn, ktab->flags & HL_CONTAINED))))
 	    {
-		*endcol = startcol + len;
-		*flags = ktab->flags;
-		*next_list = ktab->next_list;
+		*endcolp = startcol + len;
+		*flagsp = ktab->flags;
+		*next_listp = ktab->next_list;
 		return ktab->k_syn.id;
 	    }
     }
