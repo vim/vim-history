@@ -2454,7 +2454,6 @@ gui_mch_insert_lines(
     ScrollWindowEx(s_textArea, 0, num_lines * gui.char_height,
 				    &rc, &rc, NULL, NULL, get_scroll_flags());
 
-    gui_undraw_cursor();	/* Is this really necessary? */
     UpdateWindow(s_textArea);
 
     gui_clear_block(row, gui.scroll_region_left,
