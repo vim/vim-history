@@ -12,6 +12,7 @@ int byte2cells __ARGS((int b));
 int char2cells __ARGS((int c));
 int ptr2cells __ARGS((char_u *p));
 int vim_strsize __ARGS((char_u *s));
+int vim_strnsize __ARGS((char_u *s, int len));
 int chartabsize __ARGS((char_u *p, colnr_T col));
 int linetabsize __ARGS((char_u *s));
 int win_linetabsize __ARGS((win_T *wp, char_u *p, colnr_T len));
