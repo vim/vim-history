@@ -2212,8 +2212,8 @@ do_dialog(type, title, message, buttons, dfltbutton, textfield)
 #endif
 
 #ifdef FEAT_GUI_DIALOG
-    /* When GUI is running, use the GUI dialog */
-    if (gui.in_use)
+    /* When GUI is running and 'c' not in 'guioptions', use the GUI dialog */
+    if (gui.in_use && vim_strchr(p_go, GO_CONDIALOG) == NULL)
     {
 	c = gui_mch_dialog(type, title, message, buttons, dfltbutton,
 								   textfield);
