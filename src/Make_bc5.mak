@@ -522,7 +522,7 @@ vimwinmain = \
 !endif
 !endif
 
-vimobj = $(vimwinmain) \
+vimobj =  \
 	$(OBJDIR)\buffer.obj \
 	$(OBJDIR)\charset.obj \
 	$(OBJDIR)\diff.obj \
@@ -616,6 +616,7 @@ DLLTARGET = joebob
 
 !if ("$(GUI)"=="yes")
 vimobj = $(vimobj) \
+	$(vimwinmain) \
 	$(OBJDIR)\gui.obj \
 	$(OBJDIR)\gui_w32.obj
 !endif
