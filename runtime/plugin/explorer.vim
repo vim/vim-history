@@ -1,7 +1,7 @@
 "=============================================================================
 " File: explorer.vim
 " Author: M A Aziz Ahmed (aziz@acorn-networks.com)
-" Last Change:	2002 Feb 16
+" Last Change:	2002 Jun 12
 " Version: 2.5 + changes
 " Additions by Mark Waggoner (waggoner@aracnet.com) et al.
 "-----------------------------------------------------------------------------
@@ -332,6 +332,25 @@ function! s:EditDir()
 endfunction
 
 "---
+" Determine the number of windows open to this buffer number.
+" Care of Yegappan Lakshman.  Thanks!
+fun! s:BufInWindows(bnum)
+  let cnt = 0
+  let winnum = 1
+  while 1
+    let bufnum = winbufnr(winnum)
+    if bufnum < 0
+      break
+    endif
+    if bufnum == a:bnum
+      let cnt = cnt + 1
+    endif
+    let winnum = winnum + 1
+  endwhile
+
+  return cnt
+endfunction
+
 " If this is the only window, open file in a new window
 " Otherwise, open file in the most recently visited window
 "
@@ -344,28 +363,29 @@ function! s:OpenEntryPrevWindow()
     call s:OpenEntry()
   " Other windows exist
   else
-    " Check if the previous buffer is modified - ask if they want to
-    " save!
-    let bufname = bufname(winbufnr(winnr()))
-    if &modified
+    " Check if the previous buffer is modified - ask if they want to save!
+    " Was it modified, and is it the only window open to this file
+    if &modified && s:BufInWindows(winbufnr(winnr())) < 2
+      let bufname = bufname(winbufnr(winnr()))
+
       let action=confirm("Save Changes in " . bufname . "?","&Yes\n&No\n&Cancel")
       " Yes - try to save - if there is an error, cancel
       if action == 1
-	let v:errmsg = ""
-	silent w
-	if v:errmsg != ""
-	  echoerr "Unable to write buffer!"
-	  wincmd p
-	  return
-	endif
+        let v:errmsg = ""
+        silent w
+        if v:errmsg != ""
+          echoerr "Unable to write buffer!"
+          wincmd p
+          return
+        endif
       " No, abandon changes
       elseif action == 2
-	set nomodified
-	echomsg "Warning, abandoning changes in " . bufname
+        set nomodified
+        echomsg "Warning, abandoning changes in " . bufname
       " Cancel (or any other result), don't do the open
       else
-	wincmd p
-	return
+        wincmd p
+        return
       endif
     endif
     wincmd p
