@@ -3582,6 +3582,7 @@ extend:
 #endif
     {
 	oap->start.lnum = start_lnum;
+	oap->start.col = 0;
 	oap->motion_type = MLINE;
     }
     curwin->w_cursor.lnum = end_lnum;
