@@ -1509,6 +1509,9 @@ returncmd:
 #ifdef FEAT_MOUSE
     setmouse();
 #endif
+#ifdef CURSOR_SHAPE
+    ui_cursor_shape();		/* may show different cursor shape */
+#endif
 
     return ccline.cmdbuff;
 }
