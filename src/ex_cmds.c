@@ -4402,7 +4402,8 @@ ex_help(eap)
 	 */
 	for (arg = eap->arg; *arg; ++arg)
 	{
-	    if (*arg == '\n' || *arg == '\r' || (*arg == '|' && arg[1] != NUL))
+	    if (*arg == '\n' || *arg == '\r'
+		    || (*arg == '|' && arg[1] != NUL && arg[1] != '|'))
 	    {
 		*arg++ = NUL;
 		eap->nextcmd = arg;
