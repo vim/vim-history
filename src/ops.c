@@ -4334,8 +4334,14 @@ ends_in_white(lnum)
     linenr_T	lnum;
 {
     char_u	*s = ml_get(lnum);
+    size_t	l;
 
-    return (*s != NUL && vim_iswhite(s[STRLEN(s) - 1]));
+    if (*s == NUL)
+	return FALSE;
+    /* Don't use STRLEN() inside vim_iswhite(), SAS/C complains: "macro
+     * invocation may call function multiple times". */
+    l = STRLEN(s) - 1;
+    return vim_iswhite(s[l]);
 }
 
 /*
