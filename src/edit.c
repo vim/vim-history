@@ -742,7 +742,12 @@ edit(cmdchar, startln, count)
 	    else
 		restart_edit = 'I';
 	    o_lnum = curwin->w_cursor.lnum;
-	    o_eol = (gchar_cursor() == NUL);
+#ifdef FEAT_VIRTUALEDIT
+	    if (virtual_active())
+		o_eol = FALSE;	    /* cursor always keeps its column */
+	    else
+#endif
+		o_eol = (gchar_cursor() == NUL);
 	    goto doESCkey;
 
 #ifdef FEAT_SNIFF
@@ -5631,7 +5636,11 @@ ins_esc(count, cmdchar)
     {
 #ifdef FEAT_VIRTUALEDIT
 	if (curwin->w_cursor.coladd > 0 || ve_flags == VE_ALL)
+	{
 	    oneleft();
+	    if (restart_edit != NUL)
+		++curwin->w_cursor.coladd;
+	}
 	else
 #endif
 	    --curwin->w_cursor.col;
