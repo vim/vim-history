@@ -1822,9 +1822,21 @@ struct source_cookie
 static char_u *get_one_sourceline __ARGS((struct source_cookie *sp));
 
 #ifdef FEAT_EVAL
-/* Growarray to store the names of sourced scripts. */
-static garray_T script_names = {0, 0, sizeof(char_u *), 4, NULL};
-#define SCRIPT_NAME(id) (((char_u **)script_names.ga_data)[(id) - 1])
+/* Growarray to store the names of sourced scripts.
+ * For Unix also store the dev/ino, so that we don't have to stat() each
+ * script when going through the list. */
+struct scriptstuff
+{
+    char_u	*name;
+# ifdef UNIX
+    int		dev;
+    ino_t	ino;
+# endif
+};
+static garray_T script_names = {0, 0, sizeof(struct scriptstuff), 4, NULL};
+#define SCRIPT_NAME(id) (((struct scriptstuff *)script_names.ga_data)[(id) - 1].name)
+#define SCRIPT_DEV(id) (((struct scriptstuff *)script_names.ga_data)[(id) - 1].dev)
+#define SCRIPT_INO(id) (((struct scriptstuff *)script_names.ga_data)[(id) - 1].ino)
 #endif
 
 /*
@@ -1851,6 +1863,9 @@ do_source(fname, check_other, is_vimrc)
     static scid_T	    last_current_SID = 0;
     void		    *save_funccalp;
     int			    save_debug_break_level = debug_break_level;
+# ifdef UNIX
+    struct stat		    st;
+# endif
 #endif
 #ifdef STARTUPTIME
     struct timeval	    tv_rel;
@@ -1858,12 +1873,16 @@ do_source(fname, check_other, is_vimrc)
 #endif
 
 #ifdef RISCOS
-    fname_exp = mch_munge_fname(fname);
+    p = mch_munge_fname(fname);
 #else
-    fname_exp = expand_env_save(fname);
+    p = expand_env_save(fname);
 #endif
+    if (p == NULL)
+	return retval;
+    fname_exp = fix_fname(p);
+    vim_free(p);
     if (fname_exp == NULL)
-	goto theend;
+	return retval;
 #ifdef MACOS_CLASSIC
     slash_n_colon_adjust(fname_exp);
 #endif
@@ -1977,9 +1996,21 @@ do_source(fname, check_other, is_vimrc)
      * If it's new, generate a new SID.
      */
     save_current_SID = current_SID;
+# ifdef UNIX
+    if (mch_stat((char *)fname_exp, &st) < 0)
+	st.st_dev = -1;
+# endif
     for (current_SID = script_names.ga_len; current_SID > 0; --current_SID)
 	if (SCRIPT_NAME(current_SID) != NULL
-		&& fnamecmp(SCRIPT_NAME(current_SID), fname_exp) == 0)
+		&& (
+# ifdef UNIX
+		    /* compare dev/ino when possible, it catches symbolic
+		     * links */
+		    (st.st_dev != -1 && SCRIPT_DEV(current_SID) != -1)
+			? (SCRIPT_DEV(current_SID) == st.st_dev
+			    && SCRIPT_INO(current_SID) == st.st_ino) :
+# endif
+		fnamecmp(SCRIPT_NAME(current_SID), fname_exp) == 0))
 	    break;
     if (current_SID == 0)
     {
@@ -1994,6 +2025,11 @@ do_source(fname, check_other, is_vimrc)
 		--script_names.ga_room;
 	    }
 	    SCRIPT_NAME(current_SID) = fname_exp;
+# ifdef UNIX
+	    SCRIPT_DEV(current_SID) = st.st_dev;
+	    if (st.st_dev != -1)
+		SCRIPT_INO(current_SID) = st.st_ino;
+# endif
 	    fname_exp = NULL;
 	}
 	/* Allocate the local script variables to use for this script. */
