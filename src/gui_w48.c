@@ -2842,7 +2842,6 @@ _OnDropFiles(
     UINT    cFiles = DragQueryFile(hDrop, DRAGQVAL, szFile, BUFPATHLEN);
     UINT    i;
     char_u  **fnames;
-    char_u  redo_dirs = FALSE;
     POINT   pt;
     int_u   modifiers = 0;
 
