@@ -1473,8 +1473,11 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 
 #ifdef FEAT_CLIPBOARD
 
-/* Vim-specific selection type for X11 */
+/* VIM_ATOM_NAME is the older Vim-specific selection type for X11.  Still
+ * supported for when a mix of Vim versions is used. VIMENC_ATOM_NAME includes
+ * the encoding to support Vims using different 'encoding' values. */
 #define VIM_ATOM_NAME "_VIM_TEXT"
+#define VIMENC_ATOM_NAME "_VIMENC_TEXT"
 
 /* Selection states for modeless selection */
 # define SELECT_CLEARED		0
