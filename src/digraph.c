@@ -2175,7 +2175,7 @@ putdigraph(str)
 	str = skipwhite(str);
 	if (!isdigit(*str))
 	{
-	    EMSG(_(e_number));
+	    EMSG(_(e_number_exp));
 	    return;
 	}
 	n = getdigits(&str);
