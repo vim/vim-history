@@ -371,7 +371,13 @@ ex_menu(eap)
 	 * Add menu(s).
 	 * Replace special key codes.
 	 */
-	map_to = replace_termcodes(map_to, &map_buf, FALSE, TRUE);
+	if (STRICMP(map_to, "<nop>") == 0)	/* "<Nop>" means nothing */
+	{
+	    map_to = (char_u *)"";
+	    map_buf = NULL;
+	}
+	else
+	    map_to = replace_termcodes(map_to, &map_buf, FALSE, TRUE);
 	menuarg.modes = modes;
 #ifdef FEAT_TOOLBAR
 	menuarg.iconfile = icon;
@@ -711,10 +717,11 @@ add_menu_path(menu_path, menuarg, pri_tab, call_data
 		/* free any old menu */
 		free_menu_string(menu, i);
 
-		/* For "amenu", may insert an extra character */
-		/* Don't do this if adding a tearbar (addtearoff == FALSE) */
+		/* For "amenu", may insert an extra character.
+		 * Don't do this if adding a tearbar (addtearoff == FALSE).
+		 * Don't do this for "<Nop>". */
 		c = 0;
-		if (amenu
+		if (amenu && call_data != NULL && *call_data != NUL
 #ifdef FEAT_GUI_W32
 		       && addtearoff
 #endif
@@ -1123,7 +1130,10 @@ show_menus_recursive(menu, modes, depth)
 		else
 		    msg_putchar(' ');
 		MSG_PUTS(" ");
-		msg_outtrans_special(menu->strings[bit], FALSE);
+		if (*menu->strings[bit] == NUL)
+		    msg_puts_attr((char_u *)"<Nop>", hl_attr(HLF_8));
+		else
+		    msg_outtrans_special(menu->strings[bit], FALSE);
 	    }
     }
     else
