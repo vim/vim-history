@@ -7116,6 +7116,7 @@ ex_redraw(eap)
 
     RedrawingDisabled = 0;
     p_lz = FALSE;
+    update_topline();
     update_screen(eap->forceit ? CLEAR :
 #ifdef FEAT_VISUAL
 	    VIsual_active ? INVERTED :
