@@ -1113,10 +1113,15 @@ if test -z "$CFLAGS"; then
   test "$GCC" = yes && CFLAGS="-O2 -fno-strength-reduce -Wall"
 fi
 if test "$GCC" = yes; then
-  gccversion=`"$CC" --version`
+  gccversion=`"$CC" --version | sed -e '2,$d;s/^[^0-9]*\([0-9]\.[0-9.]*\).*$/\1/g'`
   if test "$gccversion" = "3.0.1" -o "$gccversion" = "3.0.2"; then
     echo 'GCC 3.0.x has a bug in the optimizer, disabling "-O#"'
     CFLAGS=`echo "$CFLAGS" | sed 's/-O[23456789]/-O/'`
+  else
+    if test "$gccversion" = "3.1" && `echo "$CFLAGS" | grep -v fno-strength-reduce >/dev/null`; then
+      echo 'GCC 3.1 has a bug in the optimizer, adding "-fno-strength-reduce"'
+      CFLAGS="$CFLAGS -fno-strength-reduce"
+    fi
   fi
 fi
 
