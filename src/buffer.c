@@ -2953,7 +2953,12 @@ maketitle()
 		}
 		else
 		{
-		    while (p > buf + off + 1 && vim_ispathsep(p[-1]))
+		    while (p > buf + off + 1 && vim_ispathsep(p[-1])
+#ifdef FEAT_MBYTE
+			    && (!has_mbyte
+				     || (*mb_head_off)(buf + off, p - 1) == 0)
+#endif
+			    )
 			--p;
 #ifdef VMS
 		    /* path separator is part of the path */

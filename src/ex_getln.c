@@ -496,6 +496,10 @@ getcmdline(firstc, count, indent)
 		i = (int)(xpc.xp_pattern - ccline.cmdbuff);
 		while (--j > i)
 		{
+#ifdef FEAT_MBYTE
+		    if (has_mbyte)
+			j -= (*mb_head_off)(ccline.cmdbuff, ccline.cmdbuff + j);
+#endif
 		    if (vim_ispathsep(ccline.cmdbuff[j]))
 		    {
 			found = TRUE;
