@@ -1978,7 +1978,7 @@ op_change(oap)
      * In Visual block mode, handle copying the next text to all lines of the
      * block.
      */
-    if (oap->block_mode)
+    if (oap->block_mode && oap->start.lnum != oap->end.lnum)
     {
 	firstline = ml_get(oap->start.lnum);
 	/*
@@ -1989,6 +1989,9 @@ op_change(oap)
 	{
 	    if ((ins_text = alloc_check((unsigned)(ins_len + 1))) != 0)
 	    {
+		/* put cursor at end of changed text */
+		curwin->w_cursor = oap->end;
+
 		STRNCPY(ins_text, firstline + bd.textcol, ins_len);
 		*(ins_text + ins_len) = NUL;
 		for (linenr = oap->start.lnum + 1;
@@ -2005,22 +2008,23 @@ op_change(oap)
 			    continue;
 			/* copy up to block start */
 			mch_memmove(newp, oldp, (size_t)bd.textcol);
-			for (offset = 0; offset < ins_len ; offset++)
+			for (offset = 0; offset < ins_len; offset++)
 			    *(newp + bd.textcol + offset) = *(ins_text
 								    + offset);
 			oldp += bd.textcol;
 			mch_memmove(newp + bd.textcol + offset, oldp,
 							    STRLEN(oldp) + 1);
 			ml_replace(linenr, newp, FALSE);
+			if (linenr == oap->end.lnum)
+			    curwin->w_cursor.col = bd.textcol + ins_len - 1;
 		    }
 		}
-		curwin->w_cursor.col = oap->start.col;
-		changed_cline_bef_curs();	/* recompute cursor posn. */
+		changed_line_abv_curs();	/* recompute cursor posn. */
 		approximate_botline();		/* w_botline may be wrong now */
 		adjust_cursor();
 
 		changed();
-		update_screen(VALID_TO_CURSCHAR);
+		update_screen(NOT_VALID);
 	    }
 	    vim_free(ins_text);
 	}
