@@ -5,7 +5,8 @@ APPVER=4.0
 
 all: gvimext.dll
 
-gvimext.dll:    gvimext.obj    \
+gvimext.dll:    gvimext.obj	\
+                pushkeys.obj	\
                 gvimext.res
   $(implib) -machine:$(CPU) -def:gvimext.def $** -out:gvimext.lib
   $(link) $(dlllflags) -base:0x1C000000 -out:$*.dll $** $(olelibsdll) shell32.lib gvimext.lib comctl32.lib gvimext.exp

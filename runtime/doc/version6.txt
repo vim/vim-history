@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0f.  Last change: 2000 Aug 13
+*version6.txt*  For Vim version 6.0g.  Last change: 2000 Aug 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -134,7 +134,7 @@ You can get the old behavior with CTRL-E CTRL-U: >
 Documentation					*documentation-6*
 -------------
 
-The documentation has been reorganised, an item may not be where you found it
+The documentation has been reorganized, an item may not be where you found it
 in Vim 5.x.
 - Split into a reference manual and a user manual.
 - Put the quick reference in a separate file (so that it can be printed).
@@ -150,6 +150,9 @@ mark examples ('>' and '<') and header lines ('~') are replaced with a space.
 The help window now always appears at the top of the Vim window.  Previously
 it appeared above the current window.
 
+'helpfile' is no longer used to find the help tags file.  This allows a user
+to add its own help files (e.g., for plugins).
+
 
 Small incompatibilities				*incomp-small-6*
 -----------------------
@@ -163,6 +166,9 @@ archive no longer exists.
 
 The items "[RO]", "[+]", "[help]", "[Preview]" and "[filetype]" in
 'statusline' no longer have a leading space.
+
+Non-Unix systems: When expanding wildcards for the Vim arguments, don't use
+'suffixes'.  It now works as if the shell had expanded the arguments.
 
 ==============================================================================
 NEW FEATURES
@@ -229,6 +235,12 @@ The new 'eadirection' option tells where 'equalalways' applies:
 	:set eadirection=ver		equalize window heights
 	:set eadirection=hor		equalize windows widths
 This can be used to avoid changing window sizes when you want to keep them.
+
+Since windows can become quite narrow with vertical splits, text lines will
+often not fit.  The 'sidescrolloff' has been added to keep some context left
+and right of the cursor.  The 'listchars' option has been extended with the
+"preceeds" item, to show a "<" for example, when there is text left off the
+screen. (Utz-Uwe Haus)
 
 
 Extended search patterns				*new-searchpat*
@@ -316,7 +328,14 @@ loaded.  For Unix, the directory "~/.vim/plugin" is used by default.  The
 'runtimepath' option can be set to look in other directories for plugins.
 |load-plugins| |add-plugin|
 
-The |:runtime| has been added to load one or more files in 'runtimepath'.
+The |:runtime| command has been added to load one or more files in
+'runtimepath'.
+
+Added support for local help files. |add-local-help|.
+When searching for help tags, all "doc/tags" files in 'runtimepath' are used.
+Added the ":helptags" command: Generate a tags file for a help directory.
+The first line of each help file is automagically added to the "LOCAL
+ADDITIONS" section in doc/help.txt.
 
 
 Filetype settings				*new-filetype-settings*
@@ -375,6 +394,8 @@ Buffer types						*new-buftype*
 'buftype' option: special buffer type.
 "quickfix": Shows the error list, allowing to jump to the error location.
 "nofile": A buffer that's not associated with any file.
+"scratch": A buffer thats not assiciated with any file and gets deleted as
+soon as there is no window left that displays its contents
 
 
 Ports							*ports-6*
@@ -470,6 +491,11 @@ search()	Search for a pattern.
 The ":command" command now accepts a "-bar" argument.  This allows the user
 command to be followed by "| command|.
 
+The preview window is now also used by these commands:
+|:pedit| edits the specified file in the preview window
+|:psearch| searches for a word in included files, like |:ijump|, and
+displays the found text in the preview window.
+
 ==============================================================================
 IMPROVEMENTS						*improvements-6*
 
@@ -482,9 +508,17 @@ that the error can be located.
 Allow a tags file to have CR, CR-LF or LF line separator.  Useful on the
 Macintosh.
 
+Added the 'backupcopy' option: Select whether a file is copied or renamed to
+make a backup file.  Useful on Unix to speed up writing an ordinary file.
+Useful on other systems to preserve file attributes and when editing a file on
+a Unix filesystem.
+
 The DOS/Windows install program has been enhanced.  The Vim executable is
 never moved or $PATH changed.  A small batch file is created in a directory in
 $PATH.  Less choices to be made.
+
+The window title now has "VIM" on the end.  The file name comes first, useful
+in the taskbar.  A "+" is added when the file is modified.
 
 Added "b:changedtick" variable.  Incremented at each change, also for undo.
 Can be used to take action only if the buffer has been changed.
@@ -627,11 +661,11 @@ Internal changes:
 Support for xterm with 88 or 256 colors.  The right color numbers will be used
 for the name used in a ":highlight" command. (Steve Wall)
 
-When an xterm is in 8-bit mode this is detected by the code returned for t_RV.
-All key codes are automatically converted to their 8-bit versions.
+When an xterm is in 8-bit mode this is detected by the code returned for
+|t_RV|.  All key codes are automatically converted to their 8-bit versions.
 
-The OPT_TCAP_QUERY in xterm patch level 140 and later is used to obtain the
-actual key codes used.
+The OPT_TCAP_QUERY in xterm patch level 141 and later is used to obtain the
+actual key codes used.  Only when |t_RV| is also used.
 
 ":browse set" now also works in the console mode.  ":browse edit" will give an
 error message.
@@ -695,5 +729,13 @@ file.  Now /dev/null has been added for Unix.
 
 Opening the option window twice caused trouble.  Now the cursor goes to the
 existing option window.
+
+":sview" and ":view" didn't set 'readonly' for an existing buffer.  Now do set
+'readonly', unless the buffer is also editied in another window.
+
+GTK GUI: When 'guioptions' excluded 'g', the more prompt caused the toolbar
+and menubar to disappear and resize the window (which clears the text).
+Now always grey-out the toplevel menus to avoid that the menubar changes size
+or disappears.
 
  vim:tw=78:

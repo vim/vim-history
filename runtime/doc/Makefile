@@ -80,6 +80,7 @@ DOCS = \
 	usr_06.txt \
 	usr_07.txt \
 	usr_28.txt \
+	usr_40.txt \
 	usr_43.txt \
 	usr_90.txt \
 	usr_toc.txt \
@@ -163,6 +164,7 @@ HTMLS = \
 	usr_06.html \
 	usr_07.html \
 	usr_28.html \
+	usr_40.html \
 	usr_43.html \
 	usr_90.html \
 	usr_toc.html \
@@ -180,6 +182,9 @@ HTMLS = \
 
 all: tags vim.man vimtutor.man xxd.man ctags.man
 
+# We should use Vim to generate the tags file:
+# 	vim -c "helptags ." -c quit
+#
 tags: doctags $(DOCS)
 	./doctags $(DOCS) | sort >tags
 	uniq -d -2 tags

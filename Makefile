@@ -20,7 +20,14 @@
 # up properly when config didn't run yet.  Doing "make all" before configure
 # has run can result in compiling with $(CC) empty.
 
-first all install uninstall tools config configure proto depend lint tags types test testclean clean distclean:
+first:
+	@echo "Starting make in the src directory."
+	@echo "If there are problems, cd to the src directory and run make there"
+	cd src && $(MAKE) $@
+
+# Some make programs use the last target for the $@ default; put the other
+# targets separately to always let $@ expand to "first" by default.
+all install uninstall tools config configure proto depend lint tags types test testclean clean distclean:
 	@echo "Starting make in the src directory."
 	@echo "If there are problems, cd to the src directory and run make there"
 	cd src && $(MAKE) $@
@@ -62,7 +69,7 @@ first all install uninstall tools config configure proto depend lint tags types 
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0f
+MINOR = 0g
 
 # CHECKLIST for creating a new version:
 #
@@ -71,8 +78,8 @@ MINOR = 0f
 #   runtime/doc/*.txt.
 # - Correct included_patches[] in src/version.c.
 # - Compile Vim with GTK, Perl, Python, TCL, Cscope and "huge" features.
-# - With these features: "make proto" (requires cproto, ignore warnings for
-#   missing include files).
+# - With these features: "make proto" (requires cproto; ignore warnings for
+#   missing include files, but fix problems for syntax errors).
 # - With these features: "make depend" (works best with gcc).
 # - "make lint" and check the output (ignore GTK warnings).
 # - Enable the efence library and run "make test".  May require Perl or Python
@@ -756,6 +763,7 @@ LANGUAGE = \
 		README_lang.txt \
 		src/po/Makefile \
 		src/po/*.po \
+		runtime/lang/README.txt \
 		runtime/lang/menu_*.vim \
 
 # All output is put in the "dist" directory.

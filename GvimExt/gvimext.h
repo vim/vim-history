@@ -71,7 +71,6 @@
 // {51EEE242-AD87-11d3-9C1E-0090278BBD99}  -- this is the registry format
 DEFINE_GUID(CLSID_ShellExtension, 0x51eee242, 0xad87, 0x11d3, 0x9c, 0x1e, 0x0, 0x90, 0x27, 0x8b, 0xbd, 0x99);
 
-
 // this class factory object creates context menu handlers for windows 32 shell
 class CShellExtClassFactory : public IClassFactory
 {
@@ -93,16 +92,26 @@ public:
 
 };
 typedef CShellExtClassFactory *LPCSHELLEXTCLASSFACTORY;
+#define MAX_HWND 100
 
 // this is the actual OLE Shell context menu handler
 class CShellExt : public IContextMenu,
 			 IShellExtInit
 {
-public:
-
 protected:
     ULONG	 m_cRef;
     LPDATAOBJECT m_pDataObj;
+    BOOLEAN	 m_multiFiles;
+
+    // For some reason, this callback must be static
+    static BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam);
+
+    STDMETHODIMP PushToWindow(HWND hParent,
+	    LPCSTR pszWorkingDir,
+	    LPCSTR pszCmd,
+	    LPCSTR pszParam,
+	    int iShowCmd,
+	    int idHWnd);
 
     STDMETHODIMP InvokeGvim(HWND hParent,
 	    LPCSTR pszWorkingDir,
@@ -117,6 +126,8 @@ protected:
 	    int iShowCmd);
 
 public:
+    int		 m_cntOfHWnd;
+    HWND	 m_hWnd[MAX_HWND];
     CShellExt();
     ~CShellExt();
 

@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.0f.  Last change: 2000 Aug 05
+*motion.txt*    For Vim version 6.0g.  Last change: 2000 Aug 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -886,7 +886,7 @@ bring you back to the switch statement.
 
 The above two commands assume that the file contains a class with methods.
 The class definition is surrounded in '{' and '}'.  Each method in the class
-is also surrounde with '{' and '}'.  This applies to the Java language.  The
+is also surrounded with '{' and '}'.  This applies to the Java language.  The
 file looks like this: >
 
 	// comment

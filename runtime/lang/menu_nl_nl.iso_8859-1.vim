@@ -1,8 +1,9 @@
 " Menu Translations:	Nederlands
 " Maintainer:		Bram Moolenaar
-" Last Change:	2000 jul 26
+" Last Change:	2000 Aug 19
 
 menutrans clear
+let did_menu_trans = 1
 
 " Help menu
 menutrans &Help			&Help

@@ -1,4 +1,4 @@
-*usr_28.txt*	For Vim version 6.0f.  Last change: 2000 Jul 08
+*usr_28.txt*	For Vim version 6.0g.  Last change: 2000 Aug 20
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -43,7 +43,7 @@ is affected by folding.
 
 The advantage of folding is that you can get a better overview of the
 structure of text, by folding lines of a section and replacing it with a line
-that indicates that there is a section. 
+that indicates that there is a section.
 
 ==============================================================================
 *28.2*  Manual folding

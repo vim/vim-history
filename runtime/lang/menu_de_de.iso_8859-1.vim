@@ -1,9 +1,10 @@
 " Menu Translations:	German
 " Maintainer:		Johannes Zellner <johannes@zellner.org>
 " Originally By:	Marcin Dalecki <dalecki@cs.net.pl>
-" Last Change:	2000 Jul 15
+" Last Change:	2000 Aug 19
 
 menutrans clear
+let did_menu_trans = 1
 
 " Help menu
 menutrans &Help			&Hilfe

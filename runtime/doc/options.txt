@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0f.  Last change: 2000 Aug 13
+*options.txt*   For Vim version 6.0g.  Last change: 2000 Aug 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -302,7 +302,7 @@ The environment variable "$VIMRUNTIME" is used to locate various support
 files, such as the on-line documentation and files used for syntax
 highlighting.  For example, the main help file is normally
 "$VIMRUNTIME/doc/help.txt".
-You don't normally set $VIMRUNTIME youself, but let Vim figure it out.  This
+You don't normally set $VIMRUNTIME yourself, but let Vim figure it out.  This
 is the order used to find the value of $VIMRUNTIME:
 1. If the environment variable $VIMRUNTIME is set, it is used.  You can use
    this when the runtime files are in an unusual location.
@@ -730,6 +730,51 @@ A jump table for the options with a short description can be found at |X_op|.
 	|backup-table| for more explanations.
 	NOTE: This option is reset when 'compatible' is set.
 
+						*'backupcopy'* *'bkc'*
+'backupcopy' 'bkc'	string	(default: "auto")
+			global
+			{not in Vi}
+	When writing a file and a backup is made, this option tells how it's
+	done:
+	"yes"	make a copy of the file and overwrite it
+	"no"	rename the file and write a new one
+	"auto"	one of the previous, what works best
+
+	Making a copy and overwriting the original file:
+	- Takes extra time to copy the file.
+	+ When the file has special attributes, is a (hard/symbolic) link or
+	  has a resource fork, all this is preserved.
+	- When the file is a link the backup will have the name of the link,
+	  not of the real file.
+	
+	Renaming the file and writing a new one:
+	+ It's fast.
+	- Sometimes not all attributes of the file can be copied to the new
+	  file.
+	- When the file is a link the new file will not be a link.
+
+	The "auto" value is the middle way: When Vim sees that renaming file
+	is possible without side effects (the attributes can be passed on and
+	and the file is not a link) that is used.  When problems are expected,
+	a copy will be made.
+
+	When a copy is made, the original file is truncated and then filled
+	with the new text.  This means that protection bits, owner and
+	symbolic links of the original file are unmodified.  The backup file
+	however, is a new file, owned by the user who edited the file.  The
+	group of the backup is set to the group of the original file.  If this
+	fails, the protection bits for the group are made the same as for
+	others.
+
+	When the file is renamed this is the other way around: The backup has
+	the same attributes of the original file, and the newly written file
+	is owned by the current user.  When the file was a (hard/symbolic)
+	link, the new file will not!  That's why the "auto" value doesn't
+	rename when the file is a link.  The owner and group of the newly
+	written file will be set to the same ones as the original file, but
+	the system may refuse to do this.  In that case the "auto" value will
+	again not rename the file.
+
 						*'backupdir'* *'bdir'*
 'backupdir' 'bdir'	string	(default for Amiga: ".,t:",
 				 for MS-DOS and Win32: ".,c:/tmp,c:/temp"
@@ -856,18 +901,29 @@ A jump table for the options with a short description can be found at |X_op|.
 	These values are allowed:
 	  ""		normal buffer
 	  "nofile"  	buffer without file contact.
+	  "scratch"	buffer without file that gets deleted whenever the
+			window it is in is closed or hidden.
 	  "quickfix"	quickfix buffer, contains list of errors. |:cwindow|
 	Be careful with changing this option, it can have many side effects!
 
-	Setting 'buftype' to "nofile" has the following consequences:
-	- The buffer will never be written to disk (Vim knows no associated
-	  file).
-	- The buffer name shown in the status line is no longer modified in
-	  response to a :cd (see |:cd|) command (it freezes like it was before
-	  setting the option).
-	- The swapfile option is set to off (see |'swapfile'|) and cannot be
-	  enabled.
-	- The buffer behaves as though |'hidden'| were enabled.
+	"scratch" and "nofile" buffers are similar:
+	both:		They will never be written to disk (Vim knows no
+			assiciated file).
+	both:		The buffer name shown in the status line is no longer
+			modified in response to a :cd (see |:cd|) command (it
+			freezes like it was before setting the buftype
+			option).
+	both:		The swapfile option is set to off (see |'swapfile'|)
+			and cannot be enabled.
+	both:		Both buffer types are never considered to be
+			|'modified'|.  Be careful, you can do a ':bdelete' on
+			such a buffer and lose its contents without the
+			slightest warning!
+	"nofile" only:	Buffers always behave as though |'hidden'| were
+			enabled.  Closing a window makes the buffer hidden,
+			the contents is kept.
+	"scratch" only: The buffer is deleted as soon as there is no window
+			displaying it.
 
 
 						*'cdpath'* *'cd'*
@@ -2154,7 +2210,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	Note the difference between 'guifont' and 'guifontset': In 'guifont'
 	the comma-separated names are alternative names, one of which will be
 	used.  In 'guifontset' the whole string is one fontset name,
-	includiding the commas.  It is not possible to specify alternative
+	including the commas.  It is not possible to specify alternative
 	fontset names.
 
 						*'guifontwide'* *'gfw'*
@@ -2653,6 +2709,15 @@ A jump table for the options with a short description can be found at |X_op|.
 	"echo &key".  This is to avoid showing it to someone who shouldn't
 	know.  It also means you cannot see it yourself once you have set it,
 	be careful not to make a typing error!
+					
+					*'keymap'* *'kmp'*
+'keymap' 'kmp'		string	(default "")
+			local to buffer
+			{not in Vi}
+	Name of a keyboard mapping file, consists of mappings from keyboard
+	characters to single and/or double byte (Unicode) mappings.
+
+	It is not implemented yet, this is just placeholder documentation.
 
 					*'keymodel'* *'km'*
 'keymodel' 'km'		string	(default "")
@@ -2725,6 +2790,32 @@ A jump table for the options with a short description can be found at |X_op|.
 	this option.   Note that this option can be changed at any time
 	allowing to switch between mappings for different languages/encodings.
 	Use a mapping to avoid having to type it each time!
+
+					*'langmenu'* *'lm'*
+'langmenu' 'lmenu'	string	(default "")
+			global
+			{not in Vi}
+			{only available when compiled with the |+menu| and
+			|+multi_lang| features}
+	Language to use for menu translation.  Tells which file is loaded
+	from the "lang" directory in 'runtimepath': >
+		lang/menu_ 'langmenu' .vim
+<	(without the spaces).  For example, to always use the Dutch menus, no
+	matter what $LANG is set to: >
+		:set langmenu=nl_NL.ISO_8859-1
+<	When 'langmenu' is empty, $LANG is used.
+	If your $LANG is set to a non-English language but you do want to use
+	the English menus: >
+		:set langmenu=none
+<	This option must be set before loading menus, switching on filetype
+	detection or syntax highlighting.  Once the menus are defined setting
+	this option has no effect.  But you could do this: >
+		:aunmenu *
+		:unlet did_install_default_menus
+		:unlet did_install_syntax_menu
+		:set langmenu=de_DE.ISO_8859-1
+		:source $VIMRUNTIME/menu.vim
+<	However, this deletes all menus that you defined yourself.
 
 					*'laststatus'* *'ls'*
 'laststatus' 'ls'	number	(default 1)
@@ -2820,10 +2911,15 @@ A jump table for the options with a short description can be found at |X_op|.
 	  extends:c	Character to show in the last column, when 'wrap' is
 			off and the line continues beyond the right of the
 			screen.
+	  preceeds:c	Character to show in the first column, when 'wrap'
+			is off and there is text preceeding the character
+			visible in the first column.
+
 	The characters ':' and ',' cannot be used.
 	Examples: >
 	    :set lcs=tab:>-,trail:-
 	    :set lcs=tab:>-,eol:<
+	    :set lcs=extends:>,preceeds:<
 <	The "NonText" highlighting will be used for these characters.
 
 			*'lpl'* *'nolpl'* *'loadplugins'* *'noloadplugins'*
@@ -3246,7 +3342,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	    :set pastetoggle=<F11>
 <	This will make <F10> start paste mode and <F11> stop paste mode.
 	Note that typing <F10> in paste mode inserts "<F10>", since in paste
-	mode everything is inserted literally, except the 'pasttoggle' key
+	mode everything is inserted literally, except the 'pastetoggle' key
 	sequence.
 
 						*'patchmode'* *'pm'*
@@ -3301,7 +3397,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	  2) "**" matches a subtree, up to 100 directories deep.  Example: >
 		:set path=/home/user_x/src/**
 <	     means search in the whole subtree under "/home/usr_x/src".
-	  3) If the path ends with a ';', this path is the startpoint 
+	  3) If the path ends with a ';', this path is the startpoint
 	     for upward search.
 	  See |file-searching| for more info and exact syntax.
 	  {not available when compiled without the |+path_extra| feature}
@@ -3808,7 +3904,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	  m	use "[+]" instead of "[Modified]"
 	  n	use "[New]" instead of "[New File]"
 	  r	use "[RO]" instead of "[readonly]"
-	  w	use "[w]" instead of "written" for file write message.
+	  w	use "[w]" instead of "written" for file write message
+	        and "[a]" instead of "appended" for ':w >> file' command
 	  x	use "[dos]" instead of "[dos format]", "[unix]" instead of
 		"[unix format]" and "[mac]" instead of "[mac format]".
 	  a	all of the above abbreviations
@@ -3923,6 +4020,28 @@ A jump table for the options with a short description can be found at |X_op|.
 	When using a slow terminal set it to a large number or 0.  When using
 	a fast terminal use a small number or 1.  Not used for "zh" and "zl"
 	commands.
+
+						*'sidescrolloff'* *'siso'*
+'sidescrolloff' 'siso'	number (default 0)
+			global
+			{not in Vi}
+	The minimal number of screen columns to keep to the left and to the
+	right of the cursor if 'nowrap' is set. Setting this option to a value
+	greater than 0 while having |'sidescroll'| also at a nonzero value
+	makes some context visible in the line you are scrolling in
+	horizontally (except at the end and beginning of the line).  Setting
+	this option to a large value (like 999) has the effect of keeping the
+	cursor horizontally centered in the window, as long as one does not
+	come too close to the beginning or end of the line.
+	NOTE: This option is set to 0 when 'compatible' is set.
+
+	Example: Try this together with 'sidescroll' and 'listchars' as
+		 in the following example to never allow the cursor to move
+		 onto the 'extends' character:
+
+		 :set nowrap sidescroll=1 listchars=extends:>,frontextends:<
+		 :set sidescrolloff=1
+
 
 			*'smartcase'* *'scs'* *'nosmartcase'* *'noscs'*
 'smartcase' 'scs'	boolean	(default off)
@@ -4648,7 +4767,8 @@ A jump table for the options with a short description can be found at |X_op|.
 			mouse position while the mouse is dragged.  This works
 			much faster and more precise.  Your xterm must at
 			least at patchlevel 88  / XFree 3.3.3 for this to
-			work.  Determine your version with "xterm -version".
+			work.  See below for how Vim detects this
+			automatically.
 							*netterm-mouse*
 	   netterm	NetTerm mouse handling.  The mouse generates
 			"<Esc>}r,c<CR>", where "r,c" are two decimal numbers
@@ -4669,7 +4789,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	handle xterm mouse codes.
 	The "xterm2" value will be set if the xterm version is reported to be
 	95 of higher.  This only works when compiled with the |+termresponse|
-	feature and if the t_RV is set to the escape sequence to request the
+	feature and if |t_RV| is set to the escape sequence to request the
 	xterm version number.  Otherwise "xterm2" must be set explicitly.
 	If you do not want 'ttymouse' to be set to "xterm2" automatically, set
 	t_RV to an empty string: >
@@ -4721,7 +4841,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	created for all buffers that have 'swapfile' set.  When 'updatecount'
 	is set to zero, existing swap files are not deleted.
 	Also see |'swapsync'|.
-	This option has no meaning in buffers where |'buftype'| is "nofile".
+	This option has no meaning in buffers where |'buftype'| is "nofile"
+	or "scratch".
 
 						*'updatetime'* *'ut'*
 'updatetime' 'ut'	number	(default 4000)
@@ -5103,12 +5224,17 @@ A jump table for the options with a short description can be found at |X_op|.
 'wrap'			boolean	(default on)
 			local to window
 			{not in Vi}
+	This option changes how text is displayed.  It doesn't change the text
+	in the buffer, see 'texwidth' for that.
 	When on, lines longer than the width of the window will wrap and
 	displaying continues on the next line.  When off lines will not wrap
 	and only part of long lines will be displayed.  When the cursor is
-	moved to a part that is not shown, the screen will scroll horizontally
-	(also see 'sidescroll' and 'listchars' options and |wrap-off|).  If
-	you want to break long lines, see 'textwidth'.
+	moved to a part that is not shown, the screen will scroll
+	horizontally.
+	To make scrolling horizontally a bit more useful, try this: >
+		:set sidescroll=5
+		:set listchars+=preceeds:<,extends:>
+<	See 'sidescroll', 'listchars' and |wrap-off|.
 
 						*'wrapmargin'* *'wm'*
 'wrapmargin' 'wm'	number	(default 0)

@@ -1,4 +1,4 @@
-*term.txt*      For Vim version 6.0f.  Last change: 2000 Aug 04
+*term.txt*      For Vim version 6.0g.  Last change: 2000 Aug 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -191,7 +191,7 @@ For the builtin termcap entries, Vim checks if the 'term' option contains
 mouse and a few other things.  You would normally set $TERM in your shell to
 "xterm-8bit" and Vim picks this up and adjusts to the 8-bit setting
 automatically.
-When Vim receives a response to the t_RV (request version) sequence and it
+When Vim receives a response to the |t_RV| (request version) sequence and it
 starts with CSI, it assumes that the terminal is in 8-bit mode and will
 convert all key sequences to their 8-bit variants.
 
@@ -274,6 +274,7 @@ Added by Vim (there are no standard codes for these):
 	t_WP	set window position (Y, X) in pixels		*t_WP* *'t_WP'*
 	t_WS	set window size (height, width) in characters	*t_WS* *'t_WS'*
 	t_RV	request terminal version string (for xterm)	*t_RV* *'t_RV'*
+		|xterm-8bit| |v:termresponse| |'ttymouse'| |xterm-codes|
 
 KEY CODES
 Note: Use the <> form if possible
@@ -371,6 +372,16 @@ look the same.
 
 The keypad keys, when they are not mapped, behave like the equivalent normal
 key.
+							*xterm-codes*
+There is a special trick to obtain the key codes which currently only works
+for xterm.  When |t_RV| is defined and a response is received which indicates
+an xterm with patchlevel 141 or higher, Vim uses special escape sequences to
+request the key codes directly from the xterm.  The responses are used to
+adjust the set the various t_ codes.  This avoids the problem that the xterm
+can produce different codes, depending on the mode it is in (8-bit, VT102,
+VT220, etc.).  The result is that codes like <xF1> are no longer needed.
+Note: This is only done on startup.  If the xterm options are changed after
+Vim has started, the escape sequences may not be recognized any more.
 
 							*termcap-colors*
 Note about colors: The 't_Co' option tells Vim the number of colors available.

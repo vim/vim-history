@@ -1,4 +1,4 @@
-*workshop.txt*  For Vim version 6.0f.  Last change: 2000 Aug 13
+*workshop.txt*  For Vim version 6.0g.  Last change: 2000 Aug 20
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -51,7 +51,7 @@ guaranteed with gcc!
 4. Configuring gvim for a WorkShop release tree		*workshop-configure*
 
 There are several assumptions which must be met in order to compile a gvim for
-use with Sun Visual WorkShop 6. 
+use with Sun Visual WorkShop 6.
 
     o You should use the compiler in VWS rather than gcc. We have neither built
       nor tested with gcc and cannot guarantee it will build properly.

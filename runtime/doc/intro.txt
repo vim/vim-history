@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 6.0f.  Last change: 2000 Aug 03
+*intro.txt*     For Vim version 6.0g.  Last change: 2000 Aug 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -379,7 +379,7 @@ notation	meaning		    equivalent	decimal value(s)	~
 <Enter>		same as <CR>				*<Enter>*
 <Esc>		escape			CTRL-[	 27	*escape* *<Esc>*
 <Space>		space				 32	*space*
-<lt>		less-then		<	 60	*<lt>*
+<lt>		less-than		<	 60	*<lt>*
 <Bslash>	backslash		\	 92	*backslash* *<Bslash>*
 <Bar>		vertical bar		|	124	*<Bar>*
 <Del>		delete				127
@@ -760,7 +760,7 @@ by Vim.  {Vi: not ok}
   screen		The whole area that Vim uses to work in.  This can be
 			a terminal emulator window.
   window		A view on a buffer.
-  
+
 A screen contains one or more windows, separated by status lines and with the
 command line at the bottom.
 

@@ -1,4 +1,4 @@
-*gui_w16.txt*   For Vim version 6.0f.  Last change: 2000 Jul 25
+*gui_w16.txt*   For Vim version 6.0g.  Last change: 2000 Aug 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -47,7 +47,7 @@ can use one of the DOS versions in a DOS box.
 
 The Win16 GUI has an extra menu item:  "Window/Select Font".  It brings up the
 standard Windows font selector. Note that bold and italic fonts are not
-supported in an attempt to maximise GDI drawing speed.
+supported in an attempt to maximize GDI drawing speed.
 
 Setting the menu height doesn't work for the Win16 GUI.
 

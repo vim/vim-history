@@ -3,11 +3,11 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Jul 25
+" Last Change:	2000 Aug 19
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
-let menu_cpo_save = &cpo
+let s:menu_cpo_save = &cpo
 let &cpo = ""
 
 " Avoid installing the menus twice
@@ -16,21 +16,25 @@ let did_install_default_menus = 1
 
 
 if exists("v:lang")
-  let langmenuname = expand("<sfile>:p:h") . "/lang/menu_" . v:lang . ".vim"
-  " Uncomment this for testing:
-  " let langmenuname = expand("<sfile>:p:h") . "/lang/menu_de_DE.ISO_8859-1.vim"
-  if filereadable(langmenuname)
-    exe "source " . langmenuname
+  " Try to find a menu translation file for the current language.
+  if &langmenu != ""
+    let s:lang = &langmenu
   else
-    " try to get the first long file name which matches v:lang.
-    " (e.g. menu_de_DE.ISO_8859-1.vim if v:lang == de_DE)
-    let langmenuname = substitute(glob(expand("<sfile>:p:h")."/lang/menu_".v:lang."*.vim"), "\n.*", "", "g")
-    if langmenuname != ""
-      exe "source " . langmenuname
+    let s:lang = v:lang
+  endif
+  " A language name must be at least two characters, don't accept "C"
+  if strlen(s:lang) > 1
+    let s:lang = substitute(s:lang, ".*", "\\L&", "")
+    exe "runtime lang/menu_" . s:lang . ".vim"
+    " If there is no exact match, try matching with a wildcard added.
+    " (e.g. find menu_de_DE.ISO_8859-1.vim if s:lang == de_DE)
+    if !exists("did_menu_trans")
+      " try to get the first long file name which matches v:lang.
+      exe "runtime lang/menu_" . s:lang . "*.vim"
     endif
   endif
-  unlet langmenuname
 endif
+
 
 " Help menu
 amenu 9999.10 &Help.&Overview<Tab><F1>		:help<CR>
@@ -485,7 +489,7 @@ else
 endif
 
 " Select a session to load; default to current session name if present
-fun LoadVimSesn()
+fun! LoadVimSesn()
   if exists("this_session")
     let name = this_session
   else
@@ -495,7 +499,7 @@ fun LoadVimSesn()
 endfun
 
 " Select a session to save; default to current session name if present
-fun SaveVimSesn()
+fun! SaveVimSesn()
   if !exists("this_session")
     let this_session = "session.vim"
   endif
@@ -842,5 +846,4 @@ am 50.730 &Syntax.&Convert\ to\ HTML	:so $VIMRUNTIME/syntax/2html.vim<CR>
 endif " !exists("did_install_syntax_menu")
 
 " Restore the previous value of 'cpoptions'.
-let &cpo = menu_cpo_save
-unlet menu_cpo_save
+let &cpo = s:menu_cpo_save

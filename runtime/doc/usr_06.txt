@@ -1,4 +1,4 @@
-*usr_06.txt*	For Vim version 6.0f.  Last change: 2000 Aug 12
+*usr_06.txt*	For Vim version 6.0g.  Last change: 2000 Aug 20
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -8,7 +8,8 @@
 |06.1|  The vimrc file
 |06.2|  The default vimrc file explained
 |06.3|  Adding a plugin
-|06.4|  Often used options
+|06.4|  Adding a help file
+|06.5|  Often used options
 
      Next chapter: |usr_07.txt|  Using syntax highlighting
  Previous chapter: |usr_05.txt|  Making big changes
@@ -31,21 +32,24 @@ have been included in Vim itself).
 Where can you find plugins?  Some come with Vim.  You can find them in the
 directory $VIMRUNTIME/macros and its sub-directories.  Others can be
 downloaded from the net, check out http://www.vim.org.  They are sometimes
-posted in a Vim |maillist|.
+posted in a Vim |maillist|.  Or you could write one yourself, see
+|write-plugin|.
 
 How to start using a plugin?  First read the text in the plugin itself to
 check for any special conditions.  Then copy the file to your plugin
 directory:
 
-	system		plugin directory ~
+	system		plugin directory
 	Unix		~/.vim/plugin/
 	PC and OS/2	$HOME/vimfiles/plugin or $VIM/vimfiles/plugin
 	Amiga		s:vimfiles/plugin
 	Macintosh	$VIM:vimfiles:plugin
 	RISC-OS		Choices:vimfiles.plugin
 
-Example for Unix: >
+Example for Unix (assuming you didn't have a plugin directory yet): >
 
+	mkdir ~/.vim
+	mkdir ~/.vim/plugin
 	cp /usr/local/share/vim/vim60/macros/justify.vim ~/.vim/plugin
 
 That's all!  Now you can use the commands defined in this plugin to justify
@@ -74,7 +78,7 @@ happens when Vim starts up by using the |-V| argument: >
 	vim -V1
 You will see a lot of messages, in between them is a remark about loading the
 plugins.  It starts with: >
-	Searching for "plugin/*.vim" in 
+	Searching for "plugin/*.vim" in
 There you can see where Vim looks for your plugin scripts.
 
 Further reading:
@@ -82,7 +86,42 @@ Further reading:
 	|write-plugin|	How to write a plugin script.
 
 ==============================================================================
-*06.4*  Often used options
+*06.4*  Adding a help file			*add-local-help*
+
+If you are lucky, the plugin you installed also comes with a help file.
+
+To add a help file locally (examples are for Unix): >
+1. Create a "doc" directory in one of the directories in 'runtimepath'. >
+
+	mkdir ~/.vim/doc
+
+2. Move your help file to the "doc" directory. >
+
+	mv ~/in/myhelp.txt ~/.vim/doc/myhelp.txt
+
+3. Now comes the trick, which allows you to jump to the subjects in the new
+   help file: Generate the local tags file with the |:helptags| command. >
+
+	vim
+	:helptags ~/.vim/doc
+
+Now you can use the >
+
+	:help myhelp
+
+command to find "myhelp" in your own help file.  You can see an entry for the
+local help file when you do >
+
+	:help
+
+and go down to the "LOCAL ADDITIONS" section.  The title lines from the local
+help files are automagically added to this section.  There you can see which
+local help files have been added and jump to them through the tag.
+
+For writing a local help file, see |write-local-help|.
+
+==============================================================================
+*06.5*  Often used options
 
 ==============================================================================
  vim:tw=78:

@@ -1,22 +1,9 @@
 " Menu Translations:	Japanese (for UNIX)
 " Translated By: 	Taro Muraoka  <koron@tka.att.ne.jp>
 " Last Change:		08:44:46 31-Jul-2000.
-"
-" Usage:		Set environment value $LANG to 'ja_JP.ujis'.
-"			If shell you use is a csh family:
-"			    % setenv LANG ja_JP.ujis
-"			,or one of sh families:
-"			    % export LANG=ja_JP.ujis
-"			
-"			環境変数$LANGを'ja_JP.ujis'に設定します。
-"			csh系(tcsh等)のシェルの場合:
-"			    % setenv LANG ja_JP.ujis
-"			sh系(bash等)のシェルの場合:
-"			    % export LANG=ja_JP.ujis
-"			なおVine Linuxを使用している場合デフォルトでja_JP.ujis
-"			に設定されています。
 
 menutrans clear
+let did_menu_trans = 1
 
 " Help menu
 menutrans &Help			ヘルプ(&H)

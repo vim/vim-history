@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0f.  Last change: 2000 Aug 13
+*gui.txt*       For Vim version 6.0g.  Last change: 2000 aug 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -78,7 +78,7 @@ GUI window, use the |GUIEnter| autocommand event.  Example: >
 	:autocommand GUIEnter * winpos 100 50
 
 You can use the gvimrc files to set up your own customized menus (see |:menu|)
-and initialise other things that you may want to set up differently from the
+and initialize other things that you may want to set up differently from the
 terminal version.
 
 Recommended place for your personal GUI initializations:
@@ -384,7 +384,7 @@ don't have to start from scratch.  Long-time Vim users won't use menus much.
 But the power is in adding your own menus and menu items.  They are most
 useful for things that you can't remember what the key sequence was.
 
-For creating menus in a different langauge, see |:menutrans|.
+For creating menus in a different language, see |:menutrans|.
 
 							*menu.vim*
 The default menus are read from the file "$VIMRUNTIME/menu.vim".  See
@@ -743,7 +743,7 @@ If a menu item becomes invalid (i.e. its actions in all modes are deleted) Vim
 deletes the menu tip (and the item) for you.  This means that :aunmenu deletes
 a menu item - you don't need to do a :tunmenu as well.
 
-5.8 Popup Menus						*:popup*
+5.8 Popup Menus
 In the win32 gui, you can cause a menu to popup at the cursor.  This behaves
 similarly to the PopUp menus except that any menu tree can be popped up
 

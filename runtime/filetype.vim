@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Aug 12
+" Last change:	2000 Aug 19
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -10,7 +10,7 @@ endif
 let did_load_filetypes = 1
 
 " Line continuation is used here, remove 'C' from 'cpoptions'
-let ft_cpo_save = &cpo
+let s:ft_cpo_save = &cpo
 set cpo-=C
 
 augroup filetypedetect
@@ -703,13 +703,6 @@ au BufNewFile,BufRead *.v			setf verilog
 " VHDL
 au BufNewFile,BufRead *.hdl,*.vhd,*.vhdl,*.vhdl_[0-9]*,*.vbe,*.vst  setf vhdl
 
-" Vim Help file
-if has("mac")
-  au BufNewFile,BufRead *[/:]vim*[/:]doc[/:]*.txt,*[/:]runtime[/:]doc[/:]*.txt setf help
-else
-  au BufNewFile,BufRead */vim*/doc/*.txt,*/runtime/doc/*.txt	setf help
-endif
-
 " Vim script
 au BufNewFile,BufRead *vimrc*,*.vim,.exrc,_exrc setf vim
 
@@ -813,5 +806,4 @@ if has("gui_running") && !exists("did_install_syntax_menu") && &guioptions !~# "
 endif
 
 " Restore 'cpoptions'
-let &cpo = ft_cpo_save
-unlet ft_cpo_save
+let &cpo = s:ft_cpo_save

@@ -15,6 +15,7 @@
  */
 
 #include "gvimext.h"
+#include "pushkeys.h"
 
 // Always get an error while putting the following stuff to the
 // gvimext.h file as class protected variables, give up and
@@ -278,19 +279,28 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
 
     // InsertMenu(hMenu, indexMenu++, MF_SEPARATOR|MF_BYPOSITION, 0, NULL);
 
+    // Initialize m_cntOfHWnd to 0
+    m_cntOfHWnd = 0;
+    // Retieve all the vim instances
+    EnumWindows(EnumWindowsProc, (LPARAM)this);
+
     if (cbFiles > 1)
     {
 	InsertMenu(hMenu,
 		indexMenu++,
 		MF_STRING|MF_BYPOSITION,
 		idCmd++,
-		"Edit with multiple &Vims");
+		"Edit with &multiple Vims");
 
 	InsertMenu(hMenu,
 		indexMenu++,
 		MF_STRING|MF_BYPOSITION,
 		idCmd++,
 		"Edit with single &Vim");
+
+	// set flag
+	m_multiFiles = TRUE;
+
     }
     else
     {
@@ -299,8 +309,37 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
 		MF_STRING|MF_BYPOSITION,
 		idCmd++,
 		"Edit with &Vim");
+
+	// set flag
+	m_multiFiles = FALSE;
     }
 
+    // Now display all the vim instances
+    for (int i = 0; i < m_cntOfHWnd; i++)
+    {
+	char title[MAX_PATH];
+	char temp[MAX_PATH];
+
+	// Obtain window title, continue if can not
+	if (GetWindowText(m_hWnd[i], title, MAX_PATH - 1) == 0)
+	    continue;
+	// Truncate the title before the path, keep the file name
+	char *pos = strchr(title, '(');
+	if (pos != NULL)
+	{
+	    if (pos > title && pos[-1] == ' ')
+		--pos;
+	    *pos = 0;
+	}
+	// Now concatenate
+	strncpy(temp, "Edit with existing Vim - &", MAX_PATH - 1);
+	strncat(temp, title, MAX_PATH - 1);
+	InsertMenu(hMenu,
+		indexMenu++,
+		MF_STRING|MF_BYPOSITION,
+		idCmd++,
+		temp);
+    }
     // InsertMenu(hMenu, indexMenu++, MF_SEPARATOR|MF_BYPOSITION, 0, NULL);
 
     // Must return number of menu items we added.
@@ -334,25 +373,112 @@ STDMETHODIMP CShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     {
 	UINT idCmd = LOWORD(lpcmi->lpVerb);
 
-	switch(idCmd)
+	if (m_multiFiles == TRUE)
 	{
-	    case 0:
-		hr = InvokeGvim(lpcmi->hwnd,
-			lpcmi->lpDirectory,
-			lpcmi->lpVerb,
-			lpcmi->lpParameters,
-			lpcmi->nShow);
-		break;
-	    case 1:
-		hr = InvokeSingleGvim(lpcmi->hwnd,
-			lpcmi->lpDirectory,
-			lpcmi->lpVerb,
-			lpcmi->lpParameters,
-			lpcmi->nShow);
-		break;
+	    switch (idCmd)
+	    {
+		case 0:
+		    hr = InvokeGvim(lpcmi->hwnd,
+			    lpcmi->lpDirectory,
+			    lpcmi->lpVerb,
+			    lpcmi->lpParameters,
+			    lpcmi->nShow);
+		    break;
+		case 1:
+		    hr = InvokeSingleGvim(lpcmi->hwnd,
+			    lpcmi->lpDirectory,
+			    lpcmi->lpVerb,
+			    lpcmi->lpParameters,
+			    lpcmi->nShow);
+		    break;
+		default:
+		    // Existing vim instance
+		    hr = PushToWindow(lpcmi->hwnd,
+			    lpcmi->lpDirectory,
+			    lpcmi->lpVerb,
+			    lpcmi->lpParameters,
+			    lpcmi->nShow,
+			    idCmd - 2);
+		    break;
+	    }
+	}
+	else{
+	    switch (idCmd)
+	    {
+		case 0:
+		    hr = InvokeGvim(lpcmi->hwnd,
+			    lpcmi->lpDirectory,
+			    lpcmi->lpVerb,
+			    lpcmi->lpParameters,
+			    lpcmi->nShow);
+		    break;
+		default:
+		    // Existing vim instance
+		    hr = PushToWindow(lpcmi->hwnd,
+			    lpcmi->lpDirectory,
+			    lpcmi->lpVerb,
+			    lpcmi->lpParameters,
+			    lpcmi->nShow,
+			    idCmd - 1);
+		    break;
+	    }
 	}
     }
     return hr;
+}
+
+STDMETHODIMP CShellExt::PushToWindow(HWND hParent,
+				   LPCSTR pszWorkingDir,
+				   LPCSTR pszCmd,
+				   LPCSTR pszParam,
+				   int iShowCmd,
+				   int idHWnd)
+{
+    HWND hWnd = m_hWnd[idHWnd];
+    char m_szFileUserClickedOn[MAX_PATH];
+#define CMDLEN (MAX_PATH * 4)
+    char cmdStr[CMDLEN];
+    int	 len;
+    char *p;
+
+    // Show and bring vim instance to foreground
+    ShowWindow(hWnd, SW_RESTORE);
+    SetForegroundWindow(hWnd);
+
+    // First set vim to be normal mode
+    PushKeys("^(\\N)");
+
+    // Set the command string
+    strcpy(cmdStr, ":drop ");
+    len = strlen(cmdStr);
+
+    for (UINT i = 0; i < cbFiles; i++)
+    {
+	// Find the file
+	DragQueryFile((HDROP)medium.hGlobal,
+		i,
+		m_szFileUserClickedOn,
+		sizeof(m_szFileUserClickedOn));
+
+	for (p = m_szFileUserClickedOn; *p; ++p)
+	{
+	    if (len >= CMDLEN - 15)
+	    {
+		MessageBox(hParent, "Path length too long or too many files selected!", "gvimext.dll error", MB_OK);
+
+		return NOERROR;
+	    }
+	    if (*p == ' ')
+		cmdStr[len++] = '\\';
+	    cmdStr[len++] = *p;
+	}
+	cmdStr[len++] = ' ';
+    }
+    strcat(cmdStr, "{ENTER}");
+    // Send the command
+    PushKeys(cmdStr);
+
+    return NOERROR;
 }
 
 STDMETHODIMP CShellExt::GetCommandString(UINT idCmd,
@@ -365,6 +491,31 @@ STDMETHODIMP CShellExt::GetCommandString(UINT idCmd,
 	lstrcpy(pszName, "Edits the selected file(s) with Vim");
 
     return NOERROR;
+}
+
+BOOL CALLBACK CShellExt::EnumWindowsProc(HWND hWnd, LPARAM lParam)
+{
+    char temp[MAX_PATH];
+
+    // First do a bunch of check
+    // No invisible window
+    if (!IsWindowVisible(hWnd)) return true;
+    // No child window ???
+    // if (GetParent(hWnd)) return true;
+    // Class name should be Vim, if failed to get class name, return
+    if (GetClassName(hWnd, temp, sizeof(temp)) == 0)
+	return true;
+    // Compare class name to that of vim, if not, return
+    if (_strnicmp( temp, "vim", sizeof("vim")) != 0)
+	return true;
+    // First check if the number of vim instance exceeds MAX_HWND
+    CShellExt *cs = (CShellExt*) lParam;
+    if (cs->m_cntOfHWnd >= MAX_HWND) return true;
+    // Now we get the vim window, put it into some kind of array
+    cs->m_hWnd[cs->m_cntOfHWnd] = hWnd;
+    cs->m_cntOfHWnd ++;
+
+    return true; // continue enumeration (otherwise this would be false)
 }
 
 static void
@@ -398,8 +549,8 @@ STDMETHODIMP CShellExt::InvokeGvim(HWND hParent,
 {
     char m_szFileUserClickedOn[MAX_PATH];
     char cmdStr[MAX_PATH];
-
     UINT i;
+
     for (i = 0; i < cbFiles; i++)
     {
 	DragQueryFile((HDROP)medium.hGlobal,

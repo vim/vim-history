@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.0f.  Last change: 2000 Aug 11
+*map.txt*       For Vim version 6.0g.  Last change: 2000 Aug 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -739,7 +739,7 @@ The valid escape sequences are
 	<args>	The command arguments, exactly as supplied (but as
 		noted above, any count or register can consume some
 		of the arguments, which are then not part of <args>).
-	<lt>	A single '<' (Less-Then) character.  This is needed if you
+	<lt>	A single '<' (Less-Than) character.  This is needed if you
 		want to get a literal copy of one of these escape sequences
 		into the expansion - for example, to get <bang>, use
 		<lt>bang>.

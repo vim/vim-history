@@ -1,4 +1,4 @@
-*version5.txt*  For Vim version 6.0f.  Last change: 2000 Jul 16
+*version5.txt*  For Vim version 6.0g.  Last change: 2000 Aug 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -6281,7 +6281,7 @@ Patch 5.5.051
 Problem:    Several Unix systems have a problem with the optimization limits
 	    check in configure.
 Solution:   Removed the configure check, let the user add it manually in
-	    Makefile or the enviroment.
+	    Makefile or the environment.
 Files:	    src/configure.in, src/configure, src/Makefile
 
 Patch 5.5.052
