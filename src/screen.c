@@ -3770,6 +3770,9 @@ win_line(wp, lnum, startrow, endrow)
 #ifdef FEAT_GUI
 		     && !gui.in_use
 #endif
+#ifdef FEAT_DIFF
+		     && filler_todo <= 0
+#endif
 #ifdef FEAT_MBYTE
 		     && !(has_mbyte
 			 && ((*mb_off2cells)(LineOffset[screen_row]) == 2
@@ -3786,6 +3789,8 @@ win_line(wp, lnum, startrow, endrow)
 						      + (unsigned)Columns - 1,
 					  screen_row - 1, (int)(Columns - 1));
 		out_char(' ');
+		/* force a redraw of the first char on the next line */
+		ScreenAttrs[LineOffset[screen_row]] = (sattr_T)-1;
 		screen_start();		/* don't know where cursor is now */
 	    }
 
