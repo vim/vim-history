@@ -2717,8 +2717,11 @@ gui_show_menus_recursive(menu, modes, depth)
 	}
 	else
 	    menu = menu->children;
+
+	/* recursively show all children.  Skip PopUp[nvoci]. */
 	for (; menu != NULL && !got_int; menu = menu->next)
-	    gui_show_menus_recursive(menu, modes, depth + 1);
+	    if (!gui_popup_menu(menu->dname) || menu->dname[5] == NUL)
+		gui_show_menus_recursive(menu, modes, depth + 1);
     }
 }
 
@@ -2832,6 +2835,11 @@ get_menu_name(idx)
 	menu = expand_menu;
 	get_dname = FALSE;
     }
+
+    /* Skip PopUp[nvoci]. */
+    while (menu != NULL && gui_popup_menu(menu->dname) && menu->dname[5])
+	menu = menu->next;
+
     if (menu == NULL)	    /* at end of linked list */
 	return NULL;
 
@@ -2855,8 +2863,10 @@ get_menu_name(idx)
 	get_dname = FALSE;
     }
 
+    /* Advance to next menu entry. */
     if (!get_dname)
 	menu = menu->next;
+
     return str;
 }
 

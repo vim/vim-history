@@ -1,4 +1,4 @@
-*howto.txt*	For Vim version 5.2.  Last modification: 1998 Jan 18
+*howto.txt*	For Vim version 5.3.  Last modification: 1998 Jan 18
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar

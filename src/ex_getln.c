@@ -71,6 +71,7 @@ static int	ExpandFromContext __ARGS((char_u *, int *, char_u ***, int, int));
  * firstc == ':'	    get ":" command line.
  * firstc == '/' or '?'	    get search pattern
  * firstc == '='	    get expression
+ * firstc == '@'	    get text for input() function
  * firstc == NUL	    get text for :insert command
  *
  * The line is collected in ccline.cmdbuff, which is reallocated to fit the
@@ -196,12 +197,17 @@ getcmdline(firstc, count, indent)
 	 * Ignore got_int when CTRL-C was typed here.
 	 * Don't ignore it in :global, we really need to break then, e.g., for
 	 * ":g/pat/normal /pat" (without the <CR>).
+	 * Don't ignore it for the input() function.
 	 */
 	if ((c == Ctrl('C')
 #ifdef UNIX
 		|| c == intr_char
 #endif
-				) && !global_busy)
+				)
+#ifdef WANT_EVAL
+		&& firstc != '@'
+#endif
+		&& !global_busy)
 	    got_int = FALSE;
 
 	/* free old command line when finished moving around in the history
@@ -1391,6 +1397,7 @@ gotocmdline(clr)
     int		    clr;
 {
     msg_start();
+    msg_col = 0;	    /* always start in column 0 */
     if (clr)		    /* clear the bottom line(s) */
 	msg_clr_eos();	    /* will reset clear_cmdline */
     windgoto(cmdline_row, 0);

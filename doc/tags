@@ -345,6 +345,7 @@ $VIM-use	version5.txt	/*$VIM-use*
 'nosta'	options.txt	/*'nosta'*
 'nostartofline'	options.txt	/*'nostartofline'*
 'noswapfile'	options.txt	/*'noswapfile'*
+'noswf'	options.txt	/*'noswf'*
 'nota'	options.txt	/*'nota'*
 'notagbsearch'	options.txt	/*'notagbsearch'*
 'notagrelative'	options.txt	/*'notagrelative'*
@@ -377,7 +378,6 @@ $VIM-use	version5.txt	/*$VIM-use*
 'nowriteany'	options.txt	/*'nowriteany'*
 'nowritebackup'	options.txt	/*'nowritebackup'*
 'nows'	options.txt	/*'nows'*
-'nowsf'	options.txt	/*'nowsf'*
 'nrformats'	options.txt	/*'nrformats'*
 'nu'	options.txt	/*'nu'*
 'number'	options.txt	/*'number'*
@@ -926,8 +926,8 @@ $VIM-use	version5.txt	/*$VIM-use*
 :brea	eval.txt	/*:brea*
 :break	eval.txt	/*:break*
 :brewind	windows.txt	/*:brewind*
-:bro	gui_w32.txt	/*:bro*
-:browse	gui_w32.txt	/*:browse*
+:bro	editing.txt	/*:bro*
+:browse	editing.txt	/*:browse*
 :buffer	windows.txt	/*:buffer*
 :buffer-!	windows.txt	/*:buffer-!*
 :buffers	windows.txt	/*:buffers*
@@ -1822,6 +1822,7 @@ active-buffer	windows.txt	/*active-buffer*
 add-option-flags	options.txt	/*add-option-flags*
 added-5.1	version5.txt	/*added-5.1*
 added-5.2	version5.txt	/*added-5.2*
+added-5.3	version5.txt	/*added-5.3*
 added-BeOS	version5.txt	/*added-BeOS*
 added-Mac	version5.txt	/*added-Mac*
 added-VMS	version5.txt	/*added-VMS*
@@ -1835,6 +1836,7 @@ alternate-file	editing.txt	/*alternate-file*
 amiga-window	starting.txt	/*amiga-window*
 argc()	eval.txt	/*argc()*
 arglist	editing.txt	/*arglist*
+arglist-position	editing.txt	/*arglist-position*
 arglist-quit	editing.txt	/*arglist-quit*
 argument-list	editing.txt	/*argument-list*
 argv()	eval.txt	/*argv()*
@@ -1961,6 +1963,7 @@ cc	change.txt	/*cc*
 change.txt	change.txt	/*change.txt*
 changed-5.1	version5.txt	/*changed-5.1*
 changed-5.2	version5.txt	/*changed-5.2*
+changed-5.3	version5.txt	/*changed-5.3*
 changing	change.txt	/*changing*
 char2nr()	eval.txt	/*char2nr()*
 characterwise	motion.txt	/*characterwise*
@@ -2165,6 +2168,7 @@ filereadable()	eval.txt	/*filereadable()*
 filter	change.txt	/*filter*
 fixed-5.1	version5.txt	/*fixed-5.1*
 fixed-5.2	version5.txt	/*fixed-5.2*
+fixed-5.3	version5.txt	/*fixed-5.3*
 fnamemodify()	eval.txt	/*fnamemodify()*
 fo-table	change.txt	/*fo-table*
 font-sizes	gui_x11.txt	/*font-sizes*
@@ -2625,6 +2629,7 @@ perl-compiling	if_perl.txt	/*perl-compiling*
 perl-editing	if_perl.txt	/*perl-editing*
 perl-overview	if_perl.txt	/*perl-overview*
 perl-using	if_perl.txt	/*perl-using*
+perl.vim	syntax.txt	/*perl.vim*
 popup-menu-added	version5.txt	/*popup-menu-added*
 ports-5.2	version5.txt	/*ports-5.2*
 put	change.txt	/*put*
@@ -3069,6 +3074,7 @@ various.txt	various.txt	/*various.txt*
 verbose	starting.txt	/*verbose*
 version-5.1	version5.txt	/*version-5.1*
 version-5.2	version5.txt	/*version-5.2*
+version-5.3	version5.txt	/*version-5.3*
 version-variable	eval.txt	/*version-variable*
 version4.txt	version4.txt	/*version4.txt*
 version5.txt	version5.txt	/*version5.txt*

@@ -537,6 +537,20 @@ _OnClose(
 }
 
 /*
+ * Get a message when the user switches back to vim
+ */
+    static void
+_OnActivateApp(
+    HWND hwnd,
+    BOOL fActivate,
+    DWORD dwThreadId)
+{
+    /* When activated: Check if any file was modified outside of Vim. */
+    if (fActivate)
+	check_timestamps();
+}
+
+/*
  * Get a message when the the window is being destroyed.
  */
     static void
@@ -1590,8 +1604,18 @@ _OnFindRepl(void)
 #endif
 
     static void
-HandleMouseHide(UINT uMsg)
+HandleMouseHide(UINT uMsg, LPARAM lParam)
 {
+    static LPARAM last_lParam = 0L;
+
+    /* We sometimes get a mousemove when the mouse didn't move... */
+    if (uMsg == WM_MOUSEMOVE)
+    {
+	if (lParam == last_lParam)
+	    return;
+	last_lParam = lParam;
+    }
+
     /* Handle specially, to centralise coding. We need to be sure we catch all
      * possible events which should cause us to restore the cursor (as it is a
      * shared resource, we take full responsibility for it).
@@ -1647,7 +1671,7 @@ _WndProc(
 	  hwnd, uMsg, wParam, lParam);
     */
 
-    HandleMouseHide(uMsg);
+    HandleMouseHide(uMsg, lParam);
 
     s_uMsg = uMsg;
     s_wParam = wParam;
@@ -1675,6 +1699,7 @@ _WndProc(
 	/* HANDLE_MSG(hwnd, WM_SYSKEYUP,    _OnAltKey); */
 	HANDLE_MSG(hwnd, WM_VSCROLL,	_OnScroll);
 	HANDLE_MSG(hwnd, WM_WINDOWPOSCHANGING,	_OnWindowPosChanging);
+	HANDLE_MSG(hwnd, WM_ACTIVATEAPP, _OnActivateApp);
 
 	/* HANDLE_MSG(hwnd, WM_SYSCHAR,	_OnSysChar); */
     case WM_SYSCHAR:
@@ -1788,7 +1813,7 @@ _TextAreaWndProc(
 	  hwnd, uMsg, wParam, lParam);
     */
 
-    HandleMouseHide(uMsg);
+    HandleMouseHide(uMsg, lParam);
 
     s_uMsg = uMsg;
     s_wParam = wParam;
@@ -2153,7 +2178,7 @@ gui_mch_set_scrollbar_pos(
     int		    w,
     int		    h)
 {
-    SetWindowPos(sb->id, NULL, x, y, w+1, h+1, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    SetWindowPos(sb->id, NULL, x, y, w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW);
 }
 
     void

@@ -14,10 +14,10 @@
 
 #define VIM_VERSION_MAJOR		 5
 #define VIM_VERSION_MAJOR_STR		"5"
-#define VIM_VERSION_MINOR		 2
-#define VIM_VERSION_MINOR_STR		"2"
-#define VIM_VERSION_BUILD		 40
-#define VIM_VERSION_BUILD_STR		"40"
+#define VIM_VERSION_MINOR		 3
+#define VIM_VERSION_MINOR_STR		"3"
+#define VIM_VERSION_BUILD		 41
+#define VIM_VERSION_BUILD_STR		"41"
 #define VIM_VERSION_PATCHLEVEL		 0
 #define VIM_VERSION_PATCHLEVEL_STR	"0"
 
@@ -26,7 +26,7 @@
  * VIM_VERSION_MEDIUM is used for the startup-screen.
  * VIM_VERSION_LONG is used for the ":version" command and "Vim -h".
  */
-#define VIM_VERSION_SHORT	"5.2"
-#define VIM_VERSION_MEDIUM	"5.2"
-#define VIM_VERSION_LONG	"VIM - Vi IMproved 5.2 (1998 Aug 23)"
-#define VIM_VERSION_LONG_DATE	"VIM - Vi IMproved 5.2 (1998 Aug 23, compiled "
+#define VIM_VERSION_SHORT	"5.3"
+#define VIM_VERSION_MEDIUM	"5.3"
+#define VIM_VERSION_LONG	"VIM - Vi IMproved 5.3 (1998 Aug 30)"
+#define VIM_VERSION_LONG_DATE	"VIM - Vi IMproved 5.3 (1998 Aug 30, compiled "

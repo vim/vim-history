@@ -616,18 +616,21 @@ mch_FullName(fname, buf, len, force)
     if (fname == NULL)	/* always fail */
 	return FAIL;
 
-    if ((l = Lock((UBYTE *)fname, (long)ACCESS_READ)) != (BPTR)0)/* lock the file */
+    /* Lock the file.  If it exists, we can get the exact name. */
+    if ((l = Lock((UBYTE *)fname, (long)ACCESS_READ)) != (BPTR)0)
     {
-	retval = lock2name(l, buf, (long)len);
+	retval = lock2name(l, buf, (long)len - 1);
 	UnLock(l);
+	if (mch_isdir(fname))
+	    STRCAT(buf, "/");
     }
     else if (force || !mch_isFullName(fname))	    /* not a full path yet */
     {
 	/*
-	 * If cannot lock the file, try to lock the current directory and then
-	 * concatenate the file name.  Works when file doesn't exist yet.
+	 * If the file cannot be locked (doesn't exist), try to lock the
+	 * current directory and concatenate the file name.
 	 */
-	if ((l = Lock((UBYTE *)"", (long)ACCESS_READ)) != (BPTR)NULL) /* lock current dir */
+	if ((l = Lock((UBYTE *)"", (long)ACCESS_READ)) != (BPTR)NULL)
 	{
 	    retval = lock2name(l, buf, (long)len);
 	    UnLock(l);

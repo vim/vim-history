@@ -1128,12 +1128,14 @@ mch_FullName(
     }
 
 #ifdef __BORLANDC__	/* the old Turbo C does not have this */
-    if (_fullpath((char *)buf, (char *)fname, len) == NULL)
+    if (_fullpath((char *)buf, (char *)fname, len - 1) == NULL)
     {
 	STRNCPY(buf, fname, len);   /* failed, use the relative path name */
 	slash_adjust(buf);
 	return FAIL;
     }
+    if (mch_isdir(fname))
+	STRCAT(buf, "\\");
     slash_adjust(buf);
     return OK;
 #else			/* almost the same as mch_FullName in os_unix.c */

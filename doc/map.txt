@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 5.2.  Last modification: 1998 Aug 21
+*map.txt*       For Vim version 5.3.  Last modification: 1998 Aug 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -555,17 +555,17 @@ scripts.
 			    "	Command has the -register attribute
 			(see below for details on attributes)
 
-:com[mand] <cmd>	List the user-defined commands that start with <cmd>
+:com[mand] {cmd}	List the user-defined commands that start with {cmd}
 
-:com[mand][!] [<attr>...] <cmd> <rep>
+:com[mand][!] [{attr}...] {cmd} {rep}
 			Define a user command.  The name of the command is
-			<cmd> and its replacement text is <rep>. The command's
-			attributes (see below) are <attr>. If the command
+			{cmd} and its replacement text is {rep}. The command's
+			attributes (see below) are {attr}. If the command
 			already exists, an error is reported, unless a ! is
 			specified, when the command is redefined.
 
-:delc[ommand] <cmd>					*:delc* *:delcommand*
-			Delete the user-defined command <cmd>.
+:delc[ommand] {cmd}					*:delc* *:delcommand*
+			Delete the user-defined command {cmd}.
 
 :comc[lear]						*:comc* *:comclear*
 			Delete all user-defined commands.

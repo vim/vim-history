@@ -1,4 +1,4 @@
-*if_cscope.txt* For Vim version 5.2.  Last modification: 1998 Aug 17
+*if_cscope.txt* For Vim version 5.3.  Last modification: 1998 Aug 17
 
 
 		  VIM REFERENCE MANUAL    by Andy Kahn
@@ -316,7 +316,7 @@ setup):
 	if has("cscope")
 		set csprg=/usr/local/bin/cscope
 		set csto=0
-		set cs
+		set cst
 		set nocsverb
 		cs add cscope.out
 		set csverb
@@ -332,6 +332,18 @@ shortcut to access :cstag.  For example, one could map Ctrl-_  (underscore)
 to :cstag with the following command:
 
 	map <C-_> :cstag <C-R>=expand("<cword>")<CR><CR>
+
+A couple of very commonly used cscope queries (using ":cs find") is to
+find all functions calling a certain function and to find all occurances
+of a particular C symbol.  To do this, you can use these mappings as an
+example:
+
+	map g<C-]> :cs find 3 <C-R>=expand("<cword>")<CR><CR>
+	map g<C-\> :cs find 0 <C-R>=expand("<cword>")<CR><CR>
+
+These mappings for Ctrl-] (right bracket) and Ctrl-\ (backslash) allow you to
+place your cursor over the function name or C symbol and quickly query cscope
+for any matches.
 
 ==============================================================================
 7. Cscope availability and information			*cscope-info*

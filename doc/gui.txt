@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 5.2.  Last modification: 1998 Aug 17
+*gui.txt*       For Vim version 5.3.  Last modification: 1998 Aug 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -172,7 +172,7 @@ Other options that are relevant:
 
 A quick way to set these is with the ":behave" command.
 							*:behave* *:be*
-:be[have] [model}	Set behaviour for mouse and selection.  Valid
+:be[have] {model}	Set behaviour for mouse and selection.  Valid
 			arguments are:
 			   mswin	MS-Windows behaviour
 			   xterm	Xterm behaviour
@@ -579,6 +579,8 @@ appear for the other gui platforms in the not too distant future.
 :tm[enu] {menupath} {rhs}	Define a tip for a menu or tool.  {only in
 				Win32 GUI}
 
+:tm[enu] [menupath]		List menu tips. {only in Win32 GUI}
+
 A "tip" can be defined for each menu item. For example, after defining an item
 like this:
 >	:amenu MyMenu.Hello :echo "Hello"<CR>
@@ -591,6 +593,9 @@ the status bar. (Except when Vim is in command-line mode, when of course
 nothing is displayed.)
 When a tip is defined for a toolbar item, it appears as a tooltip when the
 mouse pauses over that button, in the usual fashion.
+
+The ":tmenu" command works just like other menu commands, it uses the same
+arguments.
 
 							*:tunmenu* *:tu*
 :tu[nmenu] {menupath}		Remove a tip for a menu or tool.  {only in

@@ -1,4 +1,4 @@
-*tips.txt*      For Vim version 5.2.  Last modification: 1998 Aug 23
+*tips.txt*      For Vim version 5.3.  Last modification: 1998 Aug 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

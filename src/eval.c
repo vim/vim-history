@@ -481,6 +481,12 @@ do_call(eap)
     len = get_id_len(&arg);
     startarg = arg;
 
+    if (*startarg != '(')
+    {
+	EMSG2("Missing braces: %s", name);
+	return;
+    }
+
     /*
      * When skipping, evaluate the function once, to find the end of the
      * arguments.
@@ -1584,7 +1590,7 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange)
     while (argcount < MAX_FUNC_ARGS)
     {
 	argp = skipwhite(argp + 1);	    /* skip the '(' or ',' */
-	if (*argp == ')' || *argp == ',')
+	if (*argp == ')' || *argp == ',' || *argp == NUL)
 	    break;
 	if (eval1(&argp, &argvars[argcount]) == FAIL)
 	{
@@ -3967,7 +3973,7 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
 
 /*
  * Save the current function call pointer, and set it to NULL.
- * Used when executing autocommands.
+ * Used when executing autocommands and for ":source".
  */
     void *
 save_funccal()

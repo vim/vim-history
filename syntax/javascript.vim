@@ -2,7 +2,7 @@
 " Language:	JavaScript
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/javascript.vim
-" Last change:	1998 Jun 16
+" Last change:	1998 Aug 24
 
 
 " Remove any old syntax stuff hanging around
@@ -36,7 +36,7 @@ syn keyword javaScriptBoolean          true false
 syn match   javaScriptBraces           "[{}]"
 
 " catch errors caused by wrong parenthesis
-syn region  javaScriptParen       transparent start="(" end=")" contains=javaScript*
+syn region  javaScriptParen       transparent start="(" end=")" contains=javaScript.*
 syn match   javaScrParenError  ")"
 syn match   javaScriptInParen     contained "[{}]"
 

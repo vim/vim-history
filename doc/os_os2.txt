@@ -1,4 +1,4 @@
-*os_os2.txt*    For Vim version 5.2.  Last modification: 1998 Apr 13
+*os_os2.txt*    For Vim version 5.3.  Last modification: 1998 Apr 13
 
 
 		  VIM REFERENCE MANUAL    by Paul Slootman

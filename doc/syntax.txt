@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 5.2.  Last modification: 1998 Aug 23
+*syntax.txt*    For Vim version 5.3.  Last modification: 1998 Aug 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -528,6 +528,35 @@ choosing a variable/package from the table below and setting that variable to
 >  mv_combstruct mv_liesymm	mv_plots	mv_tensor
 >  mv_difforms	 mv_linalg	mv_plottools	mv_totorder
 >  mv_finance	 mv_logic	mv_powseries
+
+
+PERL                                                    *perl.vim*
+
+There are a number of possible options to the perl syntax highlighting.
+
+The first option will handle package references (the 'PkgName::' in
+'$PkgName::VarName') separate from normal variables.
+
+> let perl_want_scope_in_variables = 1
+
+If you want complex things like '@{${"foo"}}' to be parsed set the variable
+
+> let perl_extended_vars = 1
+
+This makes the matches being coloured like strings. By default this will be
+highlighted in the default colour.
+
+> let perl_highlight_matches = 1
+
+Below you can set the maximum distance VIM should look for starting points for
+its attempts in syntax highlighting. This should only fail in in very rare
+circumstances.
+
+> let perl_sync_dist = 100
+
+The perl.vim file is under construction because there are a number of errors
+in there. Please let me know any problems you encounter. See the syntax file
+for the mail address.
 
 
 REXX							*rexx.vim*

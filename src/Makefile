@@ -126,16 +126,18 @@
 #AIX 4.1.4	      cc	     +X11 +GUI		4.5  (5) Nico Bakker
 #AIX_4.1              gcc 2.7.2      +X11 +Motif        5.0s     Karsten Sievert
 #AIX 4.1.1	      cc	     +X11 +GUI		5.0c	 Jeff Walker
-#AIX 4.2              gcc 2.7.2.1    +X11 +GUI_Motif    5.0w     D. Rothkamp
+#AIX 4.2              gcc 2.7.2.1    +X11 +GUI_Motif    5.2      D. Rothkamp
 #AIX 4.2.1            cc                                5.2k (C) Will Fiveash
 #A/UX 3.1.1	      gcc	     +X11		4.0  (6) Jim Jagielski
 #BeOS PR	      mwcc DR3                        	5.0n (T) Olaf Seibert
 #BSDI 2.1 (x86)       shlicc2 gcc-2.6.3 -X11 X11R6	4.5  (1) Jos Backus
 #BSD/OS 3.0 (x86)     gcc gcc-2.7.2.1 -X11 X11R6	4.6c (1) Jos Backus
+#CYGWIN32_NT 19.3     egcs-2.90.27 -X11 -GUI            5.2      D. Rothkamp
 #DG/UX 5.4*           gcc 2.5.8      GUI                5.0e (H) Jonas Schlein
 #DG/UX 5.4R4.20       gcc 2.7.2      GUI                5.0s (H) Rocky Olive
 #HP-UX (most)	      c89 cc				5.1  (2) Bram Moolenaar
 #HP-UX_9.04           cc             +X11 +Motif        5.0  (2) Carton Lao
+#HP-UX_10.01          gcc 2.7.2      +X11 -GUI          5.2      D. Rothkamp
 #HP-UX_10.20          gcc 2.7.2.1    +X11 +Motif        5.0s     Karsten Sievert
 #HP-UX_10.20          gcc 2.7.2.1    +X11R6 +Motif      5.1      Kayhan Demirel
 #Irix 6.3 (O2)	      cc	     ?			4.5  (L) Edouard Poor
@@ -169,8 +171,7 @@
 #Solaris 2.5	      cc	     +X11 +GUI Athena	4.2  (9) Sonia Heimann
 #Solaris 2.5          gcc 2.5.6      +X11 Motif         5.0m (R) Ant. Colombo
 #Solaris 2.5 (Sparc)  gcc-2.7.2.3    +X11 +GUI Motif    5.2i     Ant. Colombo
-#Solaris 2.5 (sparc)  gcc 2.7.2.1 +X11 +GUI_Motif (CDE) 5.0s     D. Rothkamp
-#Solaris 2.6 (sun4u)  gcc 2.7.2.3    +X11 +GUI (CDE)    5.0w     D. Rothkamp
+#Solaris 2.6 (sun4u)  gcc 2.7.2.3    +X11 +GUI_Motif    5.2      D. Rothkamp
 #Solaris 2.6 (sun4u)  cc (SC4.2)     +X11R6 +GUI (CDE)	5.0v     Andrew Large
 #SunOS_5.5.1          gcc 2.7.2      +X11 +Motif        5.0s     Karsten Sievert
 #SunOS 4.1.x			     +X11 -GUI		5.1b (J) Bram Moolenaar
@@ -536,7 +537,7 @@ LINT_OPTIONS = -bepruxzF
 #LDFLAGS = -lw -ldl
 
 ### (S) Irix 6.4 (and later?): Uses different Olimit flag:
-#CFLAGS = -OPT:Olimit=2000 -O
+#CFLAGS = -OPT:Olimit=3000 -O
 
 ### (C)  On SCO Unix v3.2.5 (and probably other versions) the termcap library,
 ###	 which is found by configure, doesn't work correctly.  Symptom is the

@@ -33,6 +33,7 @@ main(void)
 {
     const char	*p;
     int		retval;
+    int		inquote = 0;
 
 #ifdef __BORLANDC__
     p = _oscmd;
@@ -42,8 +43,17 @@ main(void)
     /*
      * Skip the executable name
      */
-    while (*p++ != ' ')
-	;
+    while (*p)
+    {
+	if (*p == '"')
+	    inquote = !inquote;
+	else if (!inquote && *p == ' ')
+	{
+	    ++p;
+	    break;
+	}
+	++p;
+    }
 
     /* Print the command, including quotes and redirection. */
     puts(p);

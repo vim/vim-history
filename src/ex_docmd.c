@@ -1501,14 +1501,14 @@ do_one_cmd(cmdlinep, sourcing,
 		ex_behave(ea.arg);
 		break;
 
-#ifdef USE_BROWSE
 	case CMD_browse:
+#ifdef USE_BROWSE
 		/* don't browse in an xterm! */
 		if (gui.in_use)
 		    browse = TRUE;
+#endif
 		ea.nextcmd = ea.arg;
 		break;
-#endif
 #ifdef USE_GUI_WIN32
 	case CMD_simalt:
 		gui_simulate_alt_key(ea.arg);
@@ -2101,6 +2101,10 @@ do_one_cmd(cmdlinep, sourcing,
 
 	case CMD_return:
 		do_return(&ea);
+		break;
+
+	case CMD_endfunction:
+		EMSG(":endfunction not inside a function");
 		break;
 #endif /* WANT_EVAL */
 
@@ -4458,6 +4462,9 @@ do_source(fname, check_other, is_vimrc)
     char_u		    *p;
     char_u		    *fname_exp;
     int			    retval = FAIL;
+#ifdef WANT_EVAL
+    void		    *save_funccalp;
+#endif
 
 #ifdef RISCOS
     fname_exp = mch_munge_fname(fname);
@@ -4525,18 +4532,26 @@ do_source(fname, check_other, is_vimrc)
     sourcing_name = fname_exp;
     sourcing_lnum = 0;
 
+#ifdef WANT_EVAL
+    /* Don't use local function variables, if called from a function */
+    save_funccalp = save_funccal();
+#endif
+
     /*
      * Call do_cmdline, which will call getsourceline() to get the lines.
      */
     do_cmdline(NULL, getsourceline, (void *)&cookie,
 				     DOCMD_VERBOSE|DOCMD_NOWAIT|DOCMD_REPEAT);
 
+    retval = OK;
     fclose(cookie.fp);
     if (got_int)
 	emsg(e_interr);
     sourcing_name = save_sourcing_name;
     sourcing_lnum = save_sourcing_lnum;
-    retval = OK;
+#ifdef WANT_EVAL
+    restore_funccal(save_funccalp);
+#endif
 
 theend:
     vim_free(fname_exp);
@@ -5822,7 +5837,14 @@ do_normal(eap)
     int		save_msg_scroll = msg_scroll;
     int		save_restart_edit = restart_edit;
     int		save_msg_didout = msg_didout;
+    static int	depth = 0;
 
+    if (depth >= p_mmd)
+    {
+	EMSG("Recursive use of :normal too deep");
+	return;
+    }
+    ++depth;
     msg_scroll = FALSE;	    /* no msg scrolling in Normal mode */
     restart_edit = 0;	    /* don't go to Insert mode */
 
@@ -5863,6 +5885,7 @@ do_normal(eap)
     }
     while (eap->addr_count > 0 && eap->line1 <= eap->line2 && !got_int);
 
+    --depth;
     msg_scroll = save_msg_scroll;
     restart_edit = save_restart_edit;
     msg_didout |= save_msg_didout;	/* don't reset msg_didout now */

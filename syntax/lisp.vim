@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Lisp
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.Campbell@gsfc.nasa.gov>
-" Last change:	December 9, 1997
+" Last change:	Aug 27, 1997
 
 " remove any old syntax stuff hanging around
 syn clear
@@ -214,14 +214,14 @@ syn keyword	lispDeclaration	do* do-all-symbols do-external-symbols do-symbols mu
 
 syn match	lispNumber	"\d\+"
 
-syn match	lispSpecial	oneline	"\*[a-zA-Z_][a-zA-Z_0-9-]*\*"
-syn match	lispSpecial	oneline	!#|[^()'`,"; \t]\+|#!
-syn match	lispSpecial	oneline	!#x[0-9a-fA-F]\+!
-syn match	lispSpecial	oneline	!#o[0-7]\+!
-syn match	lispSpecial	oneline	!#b[01]\+!
-syn match	lispSpecial	oneline	!#\\[ -\~]!
-syn match	lispSpecial	oneline	!#[':][^()'`,"; \t]\+!
-syn match	lispSpecial	oneline	!#([^()'`,"; \t]\+)!
+syn match	lispSpecial	"\*[a-zA-Z_][a-zA-Z_0-9-]*\*"
+syn match	lispSpecial	!#|[^()'`,"; \t]\+|#!
+syn match	lispSpecial	!#x[0-9a-fA-F]\+!
+syn match	lispSpecial	!#o[0-7]\+!
+syn match	lispSpecial	!#b[01]\+!
+syn match	lispSpecial	!#\\[ -\~]!
+syn match	lispSpecial	!#[':][^()'`,"; \t]\+!
+syn match	lispSpecial	!#([^()'`,"; \t]\+)!
 
 syn match	lispConcat	"\s\.\s"
 syntax match	lispParenError	")"

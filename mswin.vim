@@ -52,12 +52,12 @@ function! SelectPaste()
       endif
    endif
 endfunction
-vmap <C-V>				""x:call SelectPaste()<CR>
-vmap <S-Insert>				""x:call SelectPaste()<CR>
+vmap <C-V>				"-x:call SelectPaste()<CR>
+vmap <S-Insert>				"-x:call SelectPaste()<CR>
 if has("gui")
-  vmenu 20.360 &Edit.&Paste<Tab>"*p	""x:call SelectPaste()<CR>
-  vmenu  1.40  PopUp.&Paste		""x:call SelectPaste()<CR>
-  vmenu        ToolBar.Paste		""x:call SelectPaste()<CR>
+  vmenu 20.360 &Edit.&Paste<Tab>"*p	"-x:call SelectPaste()<CR>
+  vmenu  1.40  PopUp.&Paste		"-x:call SelectPaste()<CR>
+  vmenu        ToolBar.Paste		"-x:call SelectPaste()<CR>
 endif
 
 " For CTRL-V to work autoselect must be off

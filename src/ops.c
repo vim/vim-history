@@ -365,7 +365,7 @@ get_yank_register(regname, writing)
     int	    i;
 
     y_append = FALSE;
-    if ((regname == 0 && !writing) && y_previous != NULL)
+    if (((regname == 0 && !writing) || regname == '"') && y_previous != NULL)
     {
 	y_current = y_previous;
 	return;
@@ -1055,7 +1055,7 @@ op_delete(oap)
 		&& !oap->is_VIsual)
 	    display_dollar(oap->end.col - !oap->inclusive);
 	n = oap->end.col - oap->start.col + 1 - !oap->inclusive;
-	(void)del_chars((long)n, TRUE);
+	(void)del_chars((long)n, restart_edit == NUL);
     }
     else				/* delete characters between lines */
     {
@@ -1076,7 +1076,8 @@ op_delete(oap)
 	    return FAIL;
 	/* delete from start of line until op_end */
 	curwin->w_cursor.col = 0;
-	(void)del_chars((long)(oap->end.col + 1 - !oap->inclusive), TRUE);
+	(void)del_chars((long)(oap->end.col + 1 - !oap->inclusive),
+							 restart_edit == NUL);
 	curwin->w_cursor = oap->start;	/* restore curwin->w_cursor */
 	(void)do_join(FALSE, TRUE);
     }
@@ -2047,7 +2048,8 @@ end:
 	if (regname == '=')
 	    vim_free(y_array);
     }
-    if ((flags & PUT_CURSEND) && gchar_cursor() == NUL && curwin->w_cursor.col)
+    if ((flags & PUT_CURSEND) && gchar_cursor() == NUL && curwin->w_cursor.col
+				       && !(restart_edit || (State & INSERT)))
 	--curwin->w_cursor.col;
 }
 

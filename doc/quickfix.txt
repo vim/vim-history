@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 5.2.  Last modification: 1998 Jun 25
+*quickfix.txt*  For Vim version 5.3.  Last modification: 1998 Jun 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

@@ -35,6 +35,7 @@ void mch_display_error __ARGS((void));
 int mch_call_shell __PARMS((char_u *cmd, int options));
 int mch_has_wildcard __PARMS((char_u *s));
 int mch_expandpath __PARMS((struct growarray *gap, char_u *path, int flags));
+int mac_expandpath __PARMS((struct growarray *gap, char_u *path, int flags, short start_at, short as_full));
 int vim_chdir __PARMS((char *path));
 int can_end_termcap_mode __PARMS((int give_msg));
 /*void mch_write __PARMS((char_u *s, int len));*/

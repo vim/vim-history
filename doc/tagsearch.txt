@@ -1,4 +1,4 @@
-*tagsearch.txt* For Vim version 5.2.  Last modification: 1998 Aug 17
+*tagsearch.txt* For Vim version 5.3.  Last modification: 1998 Aug 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -732,8 +732,8 @@ commands to see the other matches.
 7.2 Using :grep with id-utils
 You can set up :grep to work with the GNU id-utils like this:
 
->	set :grepprog=lid -Rgrep -s
->	set :grepformat=%f:%l:%m
+>	set grepprg=lid\ -Rgrep\ -s
+>	set grepformat=%f:%l:%m
 
 then
 >	:grep (regexp)

@@ -1,4 +1,4 @@
-*version5.txt*  For Vim version 5.2.  Last modification: 1998 Aug 23
+*version5.txt*  For Vim version 5.3.  Last modification: 1998 Aug 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -69,6 +69,11 @@ New Ex commands				|new-ex-commands-5.2|
 Changed					|changed-5.2|
 Added					|added-5.2|
 Fixed					|fixed-5.2|
+
+VERSION 5.3			|version-5.3|
+Changed					|changed-5.3|
+Added					|added-5.3|
+Fixed					|fixed-5.3|
 
 ==============================================================================
 				 INCOMPATIBLE
@@ -1355,7 +1360,7 @@ Under Xfree 3.2, Shift-Tab didn't work (wrong keysym is used).
 
 Mapping <S-Tab> didn't work.  Changed the key translations to use the shortest
 key code possible.  This makes the termcode translations and mappings more
-consistant.  Now all modifiers work in all combinations, not only with <Tab>,
+consistent.  Now all modifiers work in all combinations, not only with <Tab>,
 but also with <Space>, <CR>, etc.
 
 For Unix, restore three more signals.  And Vim catches SIGINT now, so CTRL-C
@@ -2123,7 +2128,7 @@ New options						*new-options-5.2*
 'cscopeverbose'	Set the |cscope| behaviour.
 'filetype'	RISC-OS specific type of file.
 'grepformat'
-'grepprog'	For the |:grep| command.
+'grepprg'	For the |:grep| command.
 'keymodel'	Tells to use shifted special keys to start a Visual or Select
 		mode selection.
 'listchars'	Set character to show in 'list' mode for end-of-line, tabs and
@@ -2193,8 +2198,8 @@ New Ex commands						*new-ex-commands-5.2*
 |:promptrepl|	Search/replace dialog (Win32 GUI).
 |:return|	Return from a user-defined function.
 |:simalt|	Win32 GUI: Simulate alt-key pressed.  (Negri)
-|:smagic|	Like ":substitute", but alwyas use 'magic'.
-|:snomagic|	Like ":substitute", but alwyas use 'nomagic'.
+|:smagic|	Like ":substitute", but always use 'magic'.
+|:snomagic|	Like ":substitute", but always use 'nomagic'.
 |:tcl|		Execute TCL command.
 |:tcldo|	Execute TCL command for a range of lines.
 |:tclfile|	Execute a TCL script file.
@@ -2967,5 +2972,99 @@ Unix: Wildcard expansion didn't handle single quotes and {} patterns.  Now
 ":file {o}{n}{e}" now results in file name "one".
 
 Memory leak when setting a string option back to its default value.
+
+==============================================================================
+VERSION 5.3						*version-5.3*
+
+Improvements made between version 5.2 and 5.3.
+
+Changed							*changed-5.3*
+-------
+
+Renamed "IDE" menu to "Tools" menu.
+
+
+Added							*added-5.3*
+-----
+
+Win32 GUI: Give a warning when Vim is activated, and one of the files changed
+since editing started. (Negri)
+
+
+Fixed							*fixed-5.3*
+-----
+
+5.2.1: Win32 GUI: space for external command was not properly allocated, could
+cause a crash. (Aaron)  This was the reason to bring out 5.3 quickly after
+5.2.
+
+5.2.2: Some commands didn't complain when used without an argument, although
+they need one: ":badd", ":browse", ":call", ":confirm", ":behave",
+":delfunction", ":delcommand" and ":tearoff".
+":endfunction" outside of a function gave wrong error message: "Command not
+implemented".  Should be ":endfunction not inside a function".
+
+5.2.3: Win32 GUI: When gvim was installed in "Program files", or another path
+with a space in it, executing external commands with vimrun didn't work.
+
+5.2.4: Pasting with the mouse in Insert mode left the cursor on the last
+pasted character, instead of behind it.
+
+5.2.5: In Insert mode, cursor after the end of the line, a shift-cursor-left
+didn't include the last character in the selection.
+
+5.2.6: When deleting text from Insert mode (with "<C-O>D" or the mouse), which
+includes the last character in the line, the cursor could be left on the last
+character in the line, instead of just after it.
+
+5.2.7: Win32 GUI: scrollbar was one pixel too big.
+
+5.2.8: Completion of "PopUp" menu showed the derivates "PopUpc", "PopUPi",
+etc.  ":menu" also showed these.
+
+5.2.9: When using two input() functions on a row, the prompt would not be
+drawn in column 0.
+
+5.2.10: A loop with input() could not be broken with CTRL-C.
+
+5.2.11: ":call asdf" and ":call asdf(" didn't give an error message.
+
+5.2.12: Recusively using ":normal" crashes Vim after a while.  E.g.:
+":map gq :normal gq<CR>"
+
+5.2.13: Syntax highlighting used 'iskeyword' from wrong buffer.  When using
+":help", then "/\k*" in another window with 'hlsearch' set.
+
+5.2.14: When using ":source" from a function, global variables would not be
+available unless "g:" was used.
+
+5.2.15: XPM files can have the extension ".pm", which is the same as for Perl
+modules.  Added "syntax/pmfile.vim" to handle this.
+
+5.2.16: On Win32 and Amiga, "echo expand("%:p:h")" removed one dirname in an
+empty buffer.  mch_Fullname() didn't append a slash at the end of a directory
+name.
+
+Should include the character under the cursor in the Visual area when using
+'selection' "exclusive".  This wasn't done for "%", "e", "E", "t" and "f".
+
+""p would always put register 0, instead of the unnamed (last used) register.
+Reverse the change that ""x doesn't write in the unnamed (last used) register.
+It would always write in register 0, which isn't very useful.  Use "-x for the
+paste mappings in Visual mode.
+
+When there is one long line on the screen, and 'showcmd' is off, "0$" didn't
+redraw the screen.
+
+Win32 GUI: When using 'mousehide', the pointer would flicker when the cursor
+shape is changed. (Negri)
+
+When cancelling Visual mode, and the cursor moves to the start, the wanted
+column wasn't set, "k" or "j" moved to the wrong column.
+
+When using ":browse" or ":confirm", was checking for a comment and separating
+bar, which can break some commands.
+
+Included fixes for Macintosh. (Kielhorn)
 
  vim:ts=8:sw=8:tw=78:

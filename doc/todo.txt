@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 5.2.  Last modification: 1998 Aug 22
+*todo.txt*      For Vim version 5.3.  Last modification: 1998 Aug 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -74,6 +74,9 @@ Win32 GUI known bugs:
 	pointer is not on the default button.
 8	install.exe, vimrun.exe and ctags are not build from Gvim_vc.mak.  When
 	added, check that this works from the command line and from the IDE.
+8	":r !mycommand" doesn't pass the environment to the external command.
+7	In compatible mode, ":set sm", cursor doesn't move to matching (.  After
+	":set cpo-=m" it works.  Need a flush-output somewhere?  (Glauber)
 
 
 Vi incompatibility:
@@ -293,7 +296,7 @@ Windows 95:
 	the way the backup file is made (copy or rename) an option, not a #define
 	(also needed for OS/2, the icon goes to the backup file).
 	Use FindFirstFile()->cAlternateFileName in fname_case() (George).
--	Doing wildcard expansion, will match the short filename, but result in the
+8	Doing wildcard expansion, will match the short filename, but result in the
 	long filename (both DJGPP and Win32).
 
 
@@ -322,6 +325,9 @@ Amiga:
 "Small" problems:
 8	CTRL-A can't handle big "long" numbers, they become negative.  Check for
 	"-" character, if not present, use unsinged long.
+8	":let a = expand("`xterm`&")" starts an xterm asynchronously, but gives an
+	error message.  ":let a = expand("`xterm&`")" runs the xterm
+	synchronously.  What is happening here?
 9	Check handling of overwriting of messages (start of edit(), in normal()).
 	Completely new policy?	Message history?
 	Wrong now: errors in c.syn cause wait_return for each message.
@@ -494,7 +500,7 @@ Problems that will (probably) not be solved:
 													*extensions-improvements*
 ---------------------  extensions and improvements ----------------------
 
-Considered for release 5.3:
+Considered for release 5.4:
 8	Include patches from wittig, for AIX and dtterm clipboard stuff.
 7	Add (some of) the 'mousepointer' patch from Ralston.
 5	Add command to jump to next defined mark (see patch from Sieger).
@@ -674,9 +680,9 @@ Built-in script language:
 8	":echo $VIM" should use the internal value of $VIM.
 7	Add synIDlist(), making the whole list of syntax items on the
 	stack available (separated with '\n').
-8	Support 'noecho' option, to disable the echoing of commands of a mapping?
-	Maybe the output (non-error messages) too?	Or use the 'silent' option for
-	that?  Also use 'noecho' for ":redir" by default.
+8	Add ":silent <cmd>", silently run a command: no echoing, no hit-return
+	prompt.  Use ":silent!" to also skip error messages.  Should work for
+	":silent !cmd" (instead of "!~cmd").  Still do the messages for ":redir"?
 9	Make last message available "msg" variable (like "errmsg")?
 8	Add autocommand-event for when a variable is changed:
 		:au VarChanged <varname> <commands>
@@ -982,7 +988,7 @@ Command line completion:
 -	Add 'wildlongest' option: Key to use to find longest common match for
 	command line completion (default CTRL-L), like 'wildchar'. (Cregut)
 	Also: when there are several matches, show them line a CTRL-D.
--	With command line completion after '%' and '#', expand current/alternate
+7	With command line completion after '%' and '#', expand current/alternate
 	file name, so it can be edited.
 7	Make `command` expansion work for non-Unix systems.
 
@@ -1284,6 +1290,8 @@ Searching:
     last used pattern. (Margo) Maybe make it accessible through a register ("/
     for search string)?  Also make "/ register writable (Maxi)
     How to take care of the flags (offset, magic)?
+7	Should notice that "\(a\|ab\|abc\|abcd\)" doesn't work, automatically
+	change it to "\(abcd\|abc\|ab\|a\)"? (Campbell)
 7	Add POSIX regexp, like Nvi, with 'extended' option?  It's like very-magic.
 7	Use T-search algorithm, to speed up searching for strings without special
 	characters.  See C't article, August 1997.
@@ -1474,6 +1482,8 @@ Multiple Windows:
 
 
 Marks:
+8	When deleting lines, don't delete uppercase marks in them.  Move the mark
+	to the nearest line.
 -	Use d"m to delete rectangular area from cursor to mark m (like Vile's \m
 	command).
 -	When replacing with a line break, like in ":s/pat/^M/", move marks after

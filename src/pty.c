@@ -322,7 +322,11 @@ OpenPTY(ttyn)
 	for (d = PTYRANGE1; (p[1] = *d) != '\0'; d++)
 	{
 	    debug1("OpenPTY tries '%s'\n", PtyName);
+#ifdef macintosh
+	    if ((f = open(PtyName, O_RDWR | O_NOCTTY | O_EXTRA)) == -1)
+#else
 	    if ((f = open(PtyName, O_RDWR | O_NOCTTY | O_EXTRA, 0)) == -1)
+#endif
 		continue;
 	    q[0] = *l;
 	    q[1] = *d;

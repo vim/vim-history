@@ -1607,10 +1607,14 @@ mch_FullName(
     if (fname == NULL)		/* always fail */
 	return FAIL;
 
-    if (_fullpath(buf, fname, len) == NULL)
+    if (_fullpath(buf, fname, len - 1) == NULL)
 	STRNCPY(buf, fname, len);   /* failed, use the relative path name */
     else
+    {
+	if (mch_isdir(fname))
+	    STRCAT(buf, "\\");
 	nResult = OK;
+    }
 
     fname_case(buf);
 
@@ -2335,7 +2339,11 @@ mch_call_shell(
 	/* we use "command" or "cmd" to start the shell; slow but easy */
 	char_u *newcmd;
 
-	newcmd = lalloc(STRLEN(p_sh) + STRLEN(p_shcf) + STRLEN(cmd) + 10, TRUE);
+	newcmd = lalloc(
+#ifdef USE_GUI_WIN32
+		STRLEN(vimrun_path) +
+#endif
+		STRLEN(p_sh) + STRLEN(p_shcf) + STRLEN(cmd) + 10, TRUE);
 	if (newcmd != NULL)
 	{
 	    if (STRNICMP(cmd, "start ", 6) == 0)

@@ -86,7 +86,9 @@ static void	nv_lineop __ARGS((CMDARG *cap));
 static void	nv_pipe __ARGS((CMDARG *cap));
 static void	nv_bck_word __ARGS((CMDARG *cap, int type));
 static void	nv_wordcmd __ARGS((CMDARG *cap, int type));
+static void	adjust_for_sel __ARGS((CMDARG *cap));
 static void	nv_goto __ARGS((OPARG *oap, long lnum));
+static void	nv_select __ARGS((CMDARG *cap));
 static void	nv_esc __ARGS((CMDARG *oap, linenr_t opnum));
 static int	nv_append __ARGS((CMDARG *cap));
 #ifdef TEXT_OBJECTS
@@ -488,9 +490,7 @@ getcount:
 		    && (seltab[i + 2] || (mod_mask & MOD_MASK_SHIFT)))
 	    {
 		ca.cmdchar = seltab[i + 1];
-		/* if 'selectmode' contains "key", start Select mode */
-		may_start_select('k');
-		n_start_visual_mode('v');
+		start_selection();
 		break;
 	    }
 	}
@@ -1198,32 +1198,7 @@ getcount:
 #endif
 
     case K_SELECT:	    /* end of Select mode mapping */
-	if (VIsual_active)
-	    VIsual_select = TRUE;
-	else if (VIsual_reselect)
-	{
-	    ca.nchar = 'v';	    /* fake "gv" command */
-	    nv_g_cmd(&ca, NULL);
-	    if (*p_sel == 'e' && VIsual_mode == 'v')
-	    {
-		FPOS	*pp;
-
-		/* exclusive mode: advance the end one character */
-		if (lt(VIsual, curwin->w_cursor))
-		    pp = &curwin->w_cursor;
-		else
-		    pp = &VIsual;
-		if (*ml_get_pos(pp) != NUL)
-		    ++pp->col;
-		else if (pp->lnum < curbuf->b_ml.ml_line_count)
-		{
-		    ++pp->lnum;
-		    pp->col = 0;
-		}
-		curwin->w_set_curswant = TRUE;
-		update_curbuf(NOT_VALID);
-	    }
-	}
+	nv_select(&ca);
 	break;
 
 #ifdef FKMAP
@@ -3695,6 +3670,8 @@ nv_csearch(cap, dir, type)
     curwin->w_set_curswant = TRUE;
     if (cap->nchar >= 0x100 || !searchc(cap->nchar, dir, type, cap->count1))
 	clearopbeep(cap->oap);
+    else
+	adjust_for_sel(cap);
 }
 
     static void
@@ -3878,6 +3855,7 @@ nv_percent(cap)
 	    setpcmark();
 	    curwin->w_cursor = *pos;
 	    curwin->w_set_curswant = TRUE;
+	    adjust_for_sel(cap);
 	}
     }
 }
@@ -4358,6 +4336,17 @@ nv_visual(cap, selectmode)
 	    n_start_visual_mode(cap->cmdchar);
 	}
     }
+}
+
+/*
+ * Start selection for Shift-movement keys.
+ */
+    void
+start_selection()
+{
+    /* if 'selectmode' contains "key", start Select mode */
+    may_start_select('k');
+    n_start_visual_mode('v');
 }
 
 /*
@@ -4938,14 +4927,32 @@ nv_wordcmd(cap, type)
 	n = end_word(cap->count1, type, flag, FALSE);
     else
 	n = fwd_word(cap->count1, type, cap->oap->op_type != OP_NOP);
-    if (n == FAIL && cap->oap->op_type == OP_NOP)
-	clearopbeep(cap->oap);
 
     /* Don't leave the cursor on the NUL past a line */
     if (curwin->w_cursor.col && gchar_cursor() == NUL)
     {
 	--curwin->w_cursor.col;
 	cap->oap->inclusive = TRUE;
+    }
+
+    if (n == FAIL && cap->oap->op_type == OP_NOP)
+	clearopbeep(cap->oap);
+    else
+	adjust_for_sel(cap);
+}
+
+/*
+ * In exclusive Visual mode, may include the last character.
+ */
+    static void
+adjust_for_sel(cap)
+    CMDARG	*cap;
+{
+    if (VIsual_active && cap->oap->inclusive && *p_sel == 'e'
+						     && gchar_cursor() != NUL)
+    {
+	++curwin->w_cursor.col;
+	cap->oap->inclusive = FALSE;
     }
 }
 
@@ -4965,6 +4972,41 @@ nv_goto(oap, lnum)
 }
 
 /*
+ * SELECT key in Normal or Visual mode: end of Select mode mapping.
+ */
+    static void
+nv_select(cap)
+    CMDARG	*cap;
+{
+    FPOS	*pp;
+
+    if (VIsual_active)
+	VIsual_select = TRUE;
+    else if (VIsual_reselect)
+    {
+	cap->nchar = 'v';	    /* fake "gv" command */
+	nv_g_cmd(cap, NULL);
+	if (*p_sel == 'e' && VIsual_mode == 'v')
+	{
+	    /* exclusive mode: advance the end one character */
+	    if (lt(VIsual, curwin->w_cursor))
+		pp = &curwin->w_cursor;
+	    else
+		pp = &VIsual;
+	    if (*ml_get_pos(pp) != NUL)
+		++pp->col;
+	    else if (pp->lnum < curbuf->b_ml.ml_line_count)
+	    {
+		++pp->lnum;
+		pp->col = 0;
+	    }
+	    curwin->w_set_curswant = TRUE;
+	    update_curbuf(NOT_VALID);
+	}
+    }
+}
+
+/*
  * ESC in Normal mode: beep, but don't flush buffers.
  * Don't even beep if we are canceling a command.
  */
@@ -4979,6 +5021,7 @@ nv_esc(cap, opnum)
 	/* leave cursor on first line/col */
 	if (lt(VIsual, curwin->w_cursor))
 	    curwin->w_cursor = VIsual;
+	curwin->w_set_curswant = TRUE;
 	update_curbuf(NOT_VALID);
     }
     else if (cap->oap->op_type == OP_NOP && opnum == 0 &&

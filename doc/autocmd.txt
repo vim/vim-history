@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 5.2.  Last modification: 1998 Aug 19
+*autocmd.txt*   For Vim version 5.3.  Last modification: 1998 Aug 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

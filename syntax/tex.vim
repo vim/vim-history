@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language   : TeX
 " Maintainer : Dr. Charles E. Campbell, Jr. <Charles.Campbell@gsfc.nasa.gov>
-" Last change: June 23, 1998
+" Last change: August 21, 1998
 "
 " Notes:
 " 1. If you have a \begin{verbatim} that appears to overrun its boundaries,
@@ -22,13 +22,13 @@
 syn clear
 
 " Try to flag {}, [], and () mismatches
-syn cluster texMatchGroup	contains=texCmdArgs,texCmdBody,texCmdName,texDefName,texError,texMathDelimBad,texMathDelimBs,texMathDelimChr,texMathDelimKey,texMathMatcher,texMathOper,texMathParen
+syn cluster texMatchGroup	contains=texCmdArgs,texCmdBody,texCmdName,texDefName,texError,texMathDelimBad,texMathDelimBs,texMathDelimChr,texMathDelimKey,texMathMatcher,texMathOper,texMathParen,texSectionMarker,texDocumentTypeArgs
 syn region texMatcher	matchgroup=Delimiter start="{" skip="\(\\\\\)*\\[{}]" end="}"	contains=ALLBUT,@texMatchGroup
 syn region texMatcher	matchgroup=Delimiter start="\["	end="]"		contains=ALLBUT,@texMatchGroup
 syn region texParen	start="("		end=")"		contains=ALLBUT,@texMatchGroup
 syn match  texError	"[}\])]"
 
-syn cluster texMathMatchGroup	contains=texAccent,texBadMath,texCmdArgs,texCmdBody,texCmdName,texDefName,texError,texMatcher,texMathDelimBad,texMathDelimBs,texMathDelimChr,texMathDelimKey,texOnlyMath,texParen
+syn cluster texMathMatchGroup	contains=texAccent,texBadMath,texCmdArgs,texCmdBody,texCmdName,texDefName,texError,texMatcher,texMathDelimBad,texMathDelimBs,texMathDelimChr,texMathDelimKey,texOnlyMath,texParen,texSectionMarker,texDocumentTypeArgs
 syn region texMathMatcher	matchgroup=Delimiter start="{"  skip="\(\\\\\)*\\}"  end="}"	contained contains=ALLBUT,@texMathMatchGroup
 syn region texMathMatcher	matchgroup=Delimiter start="\[" skip="\(\\\\\)*\\\]" end="]"	contained contains=ALLBUT,@texMathMatchGroup
 syn region texMathParen	start="("	end=")"			contained contains=ALLBUT,@texMathMatchGroup
@@ -45,6 +45,14 @@ endif
 unlet b:extfname
 syn match texDelimiter	"&"
 syn match texDelimiter	"\\\\"
+
+" \begin{}/\end{} section markers
+syn match texSectionMarker "\\begin\|\\end" nextgroup=texSectionName
+syn region texSectionName matchgroup=Delimiter start="{" end="}" contained
+
+" \documentclass, \documentstyle, \usepackage
+syn match texDocumentType "\\documentclass\|\\documentstyle\|\\usepackage" nextgroup=texSectionName,texDocumentTypeArgs
+syn region texDocumentTypeArgs matchgroup=Delimiter start="\[" end="]" contained nextgroup=texSectionName
 
 " TeX input
 syn match texInput	"\\input\s\+[a-zA-Z/.0-9]\+"hs=s+7	contains=texStatement
@@ -251,6 +259,9 @@ if !exists("did_tex_syntax_inits")
  hi link texBadMath	texError
  hi link texDefCmd	texDef
  hi link texDefName	texDef
+ hi link texDocumentType	texCmdName
+ hi link texDocumentTypeArgs	texCmdArgs
+ hi link texInput	Todo
  hi link texLigature	texSpecialChar
  hi link texMathDelimBad	texError
  hi link texMathDelimBs	texMathDelim
@@ -282,7 +293,8 @@ if !exists("did_tex_syntax_inits")
  hi link texMathZoneV	texMath
  hi link texMathZoneW	texMath
  hi link texOnlyMath	texError
- hi link texInput	Todo
+ hi link texSectionMarker	texCmdName
+ hi link texSectionName	texSection
  hi link texTypeSize	texType
  hi link texTypeStyle	texType
 
@@ -299,7 +311,7 @@ if !exists("did_tex_syntax_inits")
  hi link texMathOper	Operator
  hi link texNewCmd	Statement
  hi link texRefZone	Special
- hi link texSection	Todo
+ hi link texSection	PreCondit
  hi link texSpecialChar	SpecialChar
  hi link texStatement	Statement
  hi link texString	String

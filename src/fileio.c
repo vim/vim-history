@@ -2485,6 +2485,8 @@ check_timestamps()
 	    buf_check_timestamp(buf);
 	--no_wait_return;
 	need_check_timestamps = FALSE;
+	if (need_wait_return) /* make sure the message isn't overwritten */
+	    msg_puts((char_u *)"\n");
     }
 }
 
