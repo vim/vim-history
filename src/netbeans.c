@@ -785,6 +785,26 @@ isNetbeansBuffer(buf_T *bufp)
 }
 
 /*
+ * NetBeans and Vim have different undo models. In Vim, the file isn't
+ * changed if changes are undone via the undo command. In NetBeans, once
+ * a change has been made the file is marked as modified until saved. It
+ * doesn't matter if the change was undone.
+ *
+ * So this function is for the corner case where Vim thinks a buffer is
+ * unmodified but NetBeans thinks it IS modified.
+ */
+    int
+isNetbeansModified(buf_T *bufp)
+{
+    int bufno = nb_getbufno(bufp);
+
+    if (bufno > 0)
+	return buf_list[bufno].modified;
+    else
+	return FALSE;
+}
+
+/*
  * Given a Netbeans buffer number, return the netbeans buffer.
  * Returns NULL for 0 or a negative number. A 0 bufno means a
  * non-buffer related command has been sent.
@@ -1496,6 +1516,9 @@ nb_do_cmd(
 		return FAIL;
 	    }
 	    buf->fireChanges = 0;
+	    if (buf->bufp != NULL && !buf->bufp->b_netbeans_file)
+		EMSGN(_("E658: NetBeans connection lost for buffer %ld"),
+							   buf->bufp->b_fnum);
 /* =====================================================================*/
 	}
 	else if (streq((char *)cmd, "setTitle"))
@@ -2504,13 +2527,17 @@ netbeans_removed(
 /*
  * Send netbeans an unmodufied command.
  */
+/*ARGSUSED*/
     void
 netbeans_unmodified(buf_T *bufp)
 {
+#if 0
     char_u	buf[128];
     int		bufno;
     nbbuf_T	*nbbuf;
 
+    /* This has been disabled, because NetBeans considers a buffer modified
+     * even when all changes have been undone. */
     nbbuf = nb_bufp2nbbuf_fire(bufp, &bufno);
     if (nbbuf == NULL)
 	return;
@@ -2520,6 +2547,7 @@ netbeans_unmodified(buf_T *bufp)
     sprintf((char *)buf, "%d:unmodified=%d\n", bufno, cmdno);
     nbdebug(("EVT: %s", buf));
     nb_send((char *)buf, "netbeans_unmodified");
+#endif
 }
 
 /*

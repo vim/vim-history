@@ -189,6 +189,14 @@ Partial writes disallowed for NetBeans buffers
 		NetBeans does not support partial writes for buffers that were
 		opened from NetBeans.
 
+							*E658*
+NetBeans connection lost for this buffer
+		NetBeans has become confused about the state of this file.
+		Rather than risc data corruption, NetBeans has severed the
+		connection for this file. Vim will take over responsibility
+		for saving changes to this file and NetBeans will no longer
+		know of these changes.
+
 ==============================================================================
 9. Running Vim from NetBeans				*netbeans-run*
 
