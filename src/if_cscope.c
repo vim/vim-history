@@ -1834,8 +1834,7 @@ cs_print_tags_priv(matches, cntxts, num_matches)
     int		newsize = 0;
     char	*ptag;
     char	*fname, *lno, *extra, *tbuf;
-    int		i, j, idx, num;
-    char_u	*in_cur_file;
+    int		i, idx, num;
     char	*globalcntx = "GLOBAL";
     char	*cntxformat = " <<%s>>";
     char	*context;
@@ -1865,154 +1864,100 @@ cs_print_tags_priv(matches, cntxts, num_matches)
     msg_advance(msg_col + 2);
     MSG_PUTS_ATTR(_("filename / context / line\n"), hl_attr(HLF_T));
 
-    /*
-     * for normal tags (non-cscope tags), vim sorts the tags before printing.
-     * hence, the output from 'matches' needs to be sorted as well (but we're
-     * not actually sorting the contents of 'matches').  for sorting, we simply
-     * print all tags in the current file before any other tags.  this idea
-     * was suggested by Jeffrey George <jgeorge@texas.net>
-     */
-    in_cur_file = alloc_clear(num_matches);
-    if (in_cur_file != NULL)
-    {
-	if (curbuf->b_fname != NULL)
-	{
-	    char *f;
-	    int fname_len, ffname_len;
-
-	    fname_len = strlen((const char *)(curbuf->b_fname));
-	    ffname_len = strlen((const char *)(curbuf->b_ffname));
-
-	    for (i = 0; i < num_matches; i++)
-	    {
-		if ((f = strchr(matches[i], '\t')) != NULL)
-		{
-		    f++;
-		    if (strncmp((const char *)(curbuf->b_fname), f, fname_len)
-									  == 0
-			    || strncmp((const char *)(curbuf->b_ffname), f,
-							     ffname_len) == 0)
-			in_cur_file[i] = TRUE;
-		}
-	    }
-	}
-    }
-
-    /*
-     * if we were able to allocate 'in_cur_file', then we make two passes
-     * through 'matches'.  the first pass prints the tags in the current file,
-     * while the second prints all remaining tags.  if we were unable to
-     * allocate 'in_cur_file', we'll just make one pass through 'matches' and
-     * print them unsorted.
-     */
     num = 1;
-    for (j = (in_cur_file) ? 2 : 1; j > 0; j--)
+    for (i = 0; i < num_matches; i++)
     {
-	for (i = 0; i < num_matches; i++)
+	idx = i;
+
+	/* if we really wanted to, we could avoid this malloc and strcpy
+	 * by parsing matches[i] on the fly and placing stuff into buf
+	 * directly, but that's too much of a hassle
+	 */
+	if ((tbuf = (char *)alloc(strlen(matches[idx]) + 1)) == NULL)
+	    continue;
+	(void)strcpy(tbuf, matches[idx]);
+
+	if ((fname = strtok(tbuf, (const char *)"\t")) == NULL)
+	    continue;
+	if ((fname = strtok(NULL, (const char *)"\t")) == NULL)
+	    continue;
+	if ((lno = strtok(NULL, (const char *)"\t")) == NULL)
 	{
-	    if (in_cur_file)
-	    {
-		if (((j == 2) && (in_cur_file[i] == TRUE))
-			|| ((j == 1) && (in_cur_file[i] == FALSE)))
-		    idx = i;
-		else
-		    continue;
-	    }
-	    else
-		idx = i;
-
-	    /* if we really wanted to, we could avoid this malloc and strcpy
-	     * by parsing matches[i] on the fly and placing stuff into buf
-	     * directly, but that's too much of a hassle
+	    /* if NULL, then no "extra", although in cscope's case, there
+	     * should always be "extra".
 	     */
-	    if ((tbuf = (char *)alloc(strlen(matches[idx]) + 1)) == NULL)
-		continue;
-	    (void)strcpy(tbuf, matches[idx]);
+	    extra = NULL;
+	}
 
-	    if ((fname = strtok(tbuf, (const char *)"\t")) == NULL)
-		continue;
-	    if ((fname = strtok(NULL, (const char *)"\t")) == NULL)
-		continue;
-	    if ((lno = strtok(NULL, (const char *)"\t")) == NULL)
-	    {
-		/* if NULL, then no "extra", although in cscope's case, there
-		 * should always be "extra".
-		 */
-		extra = NULL;
-	    }
+	extra = lno + strlen(lno) + 1;
 
-	    extra = lno + strlen(lno) + 1;
+	lno[strlen(lno)-2] = '\0';  /* ignore ;" at the end */
 
-	    lno[strlen(lno)-2] = '\0';  /* ignore ;" at the end */
-
-	    /* hopefully 'num' (num of matches) will be less than 10^16 */
-	    newsize = strlen(csfmt_str) + 16 + strlen(lno);
-	    if (bufsize < newsize)
-	    {
-		buf = (char *)vim_realloc(buf, newsize);
-		if (buf == NULL)
-		    bufsize = 0;
-		else
-		    bufsize = newsize;
-	    }
-	    if (buf != NULL)
-	    {
-		/* csfmt_str = "%4d %6s  "; */
-		(void)sprintf(buf, csfmt_str, num, lno);
-		MSG_PUTS_ATTR(buf, hl_attr(HLF_CM));
-	    }
-	    MSG_PUTS_LONG_ATTR(cs_pathcomponents(fname), hl_attr(HLF_CM));
-
-	    /* compute the required space for the context */
-	    if (cntxts[idx] != NULL)
-		context = cntxts[idx];
+	/* hopefully 'num' (num of matches) will be less than 10^16 */
+	newsize = strlen(csfmt_str) + 16 + strlen(lno);
+	if (bufsize < newsize)
+	{
+	    buf = (char *)vim_realloc(buf, newsize);
+	    if (buf == NULL)
+		bufsize = 0;
 	    else
-		context = globalcntx;
-	    newsize = strlen(context) + strlen(cntxformat);
+		bufsize = newsize;
+	}
+	if (buf != NULL)
+	{
+	    /* csfmt_str = "%4d %6s  "; */
+	    (void)sprintf(buf, csfmt_str, num, lno);
+	    MSG_PUTS_ATTR(buf, hl_attr(HLF_CM));
+	}
+	MSG_PUTS_LONG_ATTR(cs_pathcomponents(fname), hl_attr(HLF_CM));
 
-	    if (bufsize < newsize)
-	    {
-		buf = (char *)vim_realloc(buf, newsize);
-		if (buf == NULL)
-		    bufsize = 0;
-		else
-		    bufsize = newsize;
-	    }
-	    if (buf != NULL )
-	    {
-		(void)sprintf(buf, cntxformat, context);
+	/* compute the required space for the context */
+	if (cntxts[idx] != NULL)
+	    context = cntxts[idx];
+	else
+	    context = globalcntx;
+	newsize = strlen(context) + strlen(cntxformat);
 
-		/* print the context only if it fits on the same line */
-		if (msg_col + (int)strlen(buf) >= (int)Columns)
-		    msg_putchar('\n');
-		msg_advance(12);
-		MSG_PUTS_LONG(buf);
+	if (bufsize < newsize)
+	{
+	    buf = (char *)vim_realloc(buf, newsize);
+	    if (buf == NULL)
+		bufsize = 0;
+	    else
+		bufsize = newsize;
+	}
+	if (buf != NULL)
+	{
+	    (void)sprintf(buf, cntxformat, context);
+
+	    /* print the context only if it fits on the same line */
+	    if (msg_col + (int)strlen(buf) >= (int)Columns)
 		msg_putchar('\n');
-	    }
-	    if (extra != NULL)
-	    {
-		msg_advance(13);
-		MSG_PUTS_LONG(extra);
-	    }
+	    msg_advance(12);
+	    MSG_PUTS_LONG(buf);
+	    msg_putchar('\n');
+	}
+	if (extra != NULL)
+	{
+	    msg_advance(13);
+	    MSG_PUTS_LONG(extra);
+	}
 
-	    vim_free(tbuf); /* only after printing extra due to strtok use */
+	vim_free(tbuf); /* only after printing extra due to strtok use */
 
-	    if (msg_col)
-		msg_putchar('\n');
+	if (msg_col)
+	    msg_putchar('\n');
 
-	    ui_breakcheck();
-	    if (got_int)
-	    {
-		got_int = FALSE;	/* don't print any more matches */
-		j = 1;
-		break;
-	    }
+	ui_breakcheck();
+	if (got_int)
+	{
+	    got_int = FALSE;	/* don't print any more matches */
+	    break;
+	}
 
-	    num++;
-	} /* for all matches */
-    } /* 1 or 2 passes through 'matches' */
+	num++;
+    } /* for all matches */
 
-    vim_free(in_cur_file);
     vim_free(buf);
 } /* cs_print_tags_priv */
 
