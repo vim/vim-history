@@ -17,4 +17,5 @@ void ex_make __ARGS((exarg_T *eap));
 void ex_cc __ARGS((exarg_T *eap));
 void ex_cnext __ARGS((exarg_T *eap));
 void ex_cfile __ARGS((exarg_T *eap));
+void ex_helpgrep __ARGS((exarg_T *eap));
 /* vim: set ft=c : */
