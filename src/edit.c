@@ -4844,6 +4844,8 @@ oneright()
 #ifdef FEAT_VIRTUALEDIT
     if (virtual_active())
     {
+	pos_T	prevpos = curwin->w_cursor;
+
 	/* Adjust for multi-wide char (excluding TAB) */
 	ptr = ml_get_cursor();
 	coladvance(getviscol() + ((*ptr != TAB && vim_isprintc(
@@ -4855,7 +4857,9 @@ oneright()
 			    ))
 		    ? ptr2cells(ptr) : 1));
 	curwin->w_set_curswant = TRUE;
-	return OK;
+	/* Return OK if the cursor moved, FAIL otherwise (at window edge). */
+	return (prevpos.col != curwin->w_cursor.col
+		    || prevpos.coladd != curwin->w_cursor.coladd) ? OK : FAIL;
     }
 #endif
 
