@@ -25,6 +25,14 @@
 
 #include "vim.h"
 
+#ifdef USE_FONTSET
+# ifdef X_LOCALE
+#  include <X11/Xlocale.h>
+# else
+#  include <locale.h>
+# endif
+#endif
+
 #ifdef HAVE_FCNTL_H
 # include <fcntl.h>
 #endif
@@ -43,7 +51,7 @@
 extern int   select __ARGS((int, fd_set *, fd_set *, fd_set *, struct timeval *));
 #endif
 
-#ifdef FEAT_MOUSE_GPM
+#ifdef GPM_MOUSE
 # include <gpm.h>
 /* <linux/keyboard.h> contains defines conflicting with "keymap.h",
  * I just copied relevant defines here. A cleaner solution would be to put gpm
@@ -84,11 +92,11 @@ static int mch_gpm_process __ARGS((void));
 # define SIGWINCH SIGWINDOW
 #endif
 
-#ifdef FEAT_X11
+#if defined(HAVE_X11) && defined(WANT_X11)
 # include <X11/Xlib.h>
 # include <X11/Xutil.h>
 # include <X11/Xatom.h>
-# ifdef FEAT_XCLIPBOARD
+# ifdef XTERM_CLIP
 #  include <X11/Intrinsic.h>
 #  include <X11/Shell.h>
 #  include <X11/StringDefs.h>
@@ -100,14 +108,14 @@ Window	    x11_window = 0;
 Display	    *x11_display = NULL;
 int	    got_x_error = FALSE;
 
-# ifdef FEAT_TITLE
+# ifdef WANT_TITLE
 static int  get_x11_windis __ARGS((void));
 static void set_x11_title __ARGS((char_u *));
 static void set_x11_icon __ARGS((char_u *));
 # endif
 #endif
 
-#ifdef FEAT_TITLE
+#ifdef WANT_TITLE
 static int get_x11_title __ARGS((int));
 static int get_x11_icon __ARGS((int));
 
@@ -126,7 +134,7 @@ int  RealWaitForChar __ARGS((int, long, int *));
 static int  RealWaitForChar __ARGS((int, long, int *));
 #endif
 
-#ifdef FEAT_XCLIPBOARD
+#ifdef XTERM_CLIP
 static int do_xterm_trace __ARGS((void));
 #define XT_TRACE_DELAY	50	/* delay for xterm tracing */
 #endif
@@ -139,8 +147,8 @@ static RETSIGTYPE sig_winch __ARGS(SIGPROTOARG);
 #if defined(SIGINT)
 static RETSIGTYPE catch_sigint __ARGS(SIGPROTOARG);
 #endif
-#if defined(SIGALRM) && defined(FEAT_X11) \
-	&& defined(FEAT_TITLE) && !defined(FEAT_GUI_GTK)
+#if defined(SIGALRM) && defined(HAVE_X11) && defined(WANT_X11) \
+	&& defined(WANT_TITLE) && !defined(USE_GUI_GTK)
 # define SET_SIG_ALARM
 static RETSIGTYPE sig_alarm __ARGS(SIGPROTOARG);
 #endif
@@ -155,7 +163,7 @@ static int  have_dollars __ARGS((int, char_u **));
 
 #ifndef NO_EXPANDPATH
 static int	pstrcmp __ARGS((const void *, const void *));
-static int	unix_expandpath __ARGS((garray_t *gap, char_u *path, int wildoff, int flags));
+static int	unix_expandpath __ARGS((struct growarray *gap, char_u *path, int wildoff, int flags));
 #endif
 
 #ifndef __EMX__
@@ -174,22 +182,6 @@ static int	show_shell_mess = TRUE;
 static int	deadly_signal = 0;	    /* The signal we caught */
 
 static int curr_tmode = TMODE_COOK;	/* contains current terminal mode */
-
-#if defined(HAVE_SETJMP_H) && (defined(HAVE_DLOPEN) || defined(HAVE_SHL_LOAD))
-# ifdef HAVE_SIGSETJMP
-static sigjmp_buf lc_jump_env;
-#  define SETJMP(x) sigsetjmp(x, 1)
-#  define LONGJMP siglongjmp
-# else
-static jmp_buf lc_jump_env;
-#  define SETJMP(x) setjmp(x)
-#  define LONGJMP longjmp
-# endif
-# ifdef FEAT_EVAL
-static int lc_signal;
-# endif
-static int lc_active = 0;
-#endif
 
 #ifdef SYS_SIGLIST_DECLARED
 /*
@@ -304,7 +296,7 @@ mch_inchar(buf, maxlen, wtime)
     long    wtime;	    /* don't use "time", MIPS cannot handle it */
 {
     int		len;
-#ifdef FEAT_AUTOCMD
+#ifdef AUTOCMD
     static int	once_already = 0;
 #endif
 
@@ -319,7 +311,7 @@ mch_inchar(buf, maxlen, wtime)
 	{
 	    if (!do_resize)	/* return if not interrupted by resize */
 	    {
-#ifdef FEAT_AUTOCMD
+#ifdef AUTOCMD
 		once_already = 0;
 #endif
 		return 0;
@@ -329,7 +321,7 @@ mch_inchar(buf, maxlen, wtime)
     }
     else	/* wtime == -1 */
     {
-#ifdef FEAT_AUTOCMD
+#ifdef AUTOCMD
 	if (once_already == 2)
 	    updatescript(0);
 	else if (once_already == 1)
@@ -347,7 +339,7 @@ mch_inchar(buf, maxlen, wtime)
 	 */
         if (WaitForChar(p_ut) == 0)
         {
-#ifdef FEAT_AUTOCMD
+#ifdef AUTOCMD
             if (has_cursorhold() && get_real_state() == NORMAL_BUSY)
             {
                 apply_autocmds(EVENT_CURSORHOLD, NULL, NULL, FALSE, curbuf);
@@ -389,7 +381,7 @@ mch_inchar(buf, maxlen, wtime)
 		if (buf[i] == 0)
 		    buf[i] = K_NUL;
 #endif
-#ifdef FEAT_AUTOCMD
+#ifdef AUTOCMD
             once_already = 0;
 #endif
 	    return len;
@@ -401,7 +393,7 @@ mch_inchar(buf, maxlen, wtime)
 handle_resize()
 {
     do_resize = FALSE;
-    shell_resized();
+    set_winsize(0, 0, FALSE);
 }
 
 /*
@@ -413,29 +405,13 @@ mch_char_avail()
     return WaitForChar(0L);
 }
 
-#if defined(HAVE_TOTAL_MEM) || defined(PROTO)
-# ifdef HAVE_SYS_RESOURCE_H
-#  include <sys/resource.h>
-# endif
-
-/*
- * Return total amount of memory available.  Doesn't change when memory has
- * been allocated.
- */
+#if defined(__EMX__) || defined(PROTO)
 /* ARGSUSED */
     long_u
-mch_total_mem(special)
+mch_avail_mem(special)
     int special;
 {
-# ifdef __EMX__
     return ulimit(3, 0L);   /* always 32MB? */
-# else
-    struct rlimit	rlp;
-
-    if (getrlimit(RLIMIT_DATA, &rlp) == 0)
-	return (long_u)rlp.rlim_cur;
-    return (long_u)0x7fffffff;
-# endif
 }
 #endif
 
@@ -556,19 +532,7 @@ deathtrap SIGDEFARG(sigarg)
     static int	    entered = 0;
 #ifdef SIGHASARG
     int	    i;
-#endif
 
-#if defined(HAVE_SETJMP_H) && (defined(HAVE_DLOPEN) || defined(HAVE_SHL_LOAD))
-    if (lc_active)
-    {
-# ifdef FEAT_EVAL
-	lc_signal = sigarg;
-# endif
-	LONGJMP(lc_jump_env, 1);
-    }
-#endif
-
-#ifdef SIGHASARG
     /* try to find the name of this signal */
     for (i = 0; signal_info[i].sig != -1; i++)
 	if (sigarg == signal_info[i].sig)
@@ -593,17 +557,17 @@ deathtrap SIGDEFARG(sigarg)
     }
     if (entered++)
     {
-	OUT_STR(_("Vim: Double signal, exiting\n"));
+	OUT_STR("Vim: Double signal, exiting\n");
 	out_flush();
 	reset_signals();	/* don't catch any signals anymore */
 	getout(1);
     }
 
-    sprintf((char *)IObuff, _("Vim: Caught %s %s\n"),
+    sprintf((char *)IObuff, "Vim: Caught %s %s\n",
 #ifdef SIGHASARG
-		    _("deadly signal"), signal_info[i].name
+		    "deadly signal", signal_info[i].name
 #else
-		    _("some"), _("deadly signal")
+		    "some", "deadly signal"
 #endif
 			    );
 
@@ -657,7 +621,7 @@ mch_suspend()
 	pause();
 # endif
 
-# ifdef FEAT_TITLE
+# ifdef WANT_TITLE
     /*
      * Set oldtitle to NULL, so the current title is obtained again.
      */
@@ -672,7 +636,7 @@ mch_suspend()
 }
 
     void
-mch_shellinit()
+mch_windinit()
 {
     Columns = 80;
     Rows = 24;
@@ -728,7 +692,7 @@ set_signals()
      */
     catch_signals(deathtrap, SIG_ERR);
 
-#if defined(FEAT_GUI) && defined(SIGHUP)
+#if defined(USE_GUI) && defined(SIGHUP)
     /*
      * When the GUI is running, ignore the hangup signal.
      */
@@ -794,7 +758,8 @@ mch_input_isatty()
     return FALSE;
 }
 
-#if defined(FEAT_X11) && (defined(FEAT_TITLE) || defined(FEAT_XCLIPBOARD))
+#if defined(HAVE_X11) && defined(WANT_X11) \
+	&& (defined(WANT_TITLE) || defined(XTERM_CLIP))
 /*
  * A few functions shared by X11 title and clipboard code.
  */
@@ -811,7 +776,7 @@ x_error_handler(dpy, error_event)
     XErrorEvent	*error_event;
 {
     XGetErrorText(dpy, error_event->error_code, (char *)IObuff, IOSIZE);
-    STRCAT(IObuff, _("\nVim: Got X error\n"));
+    STRCAT(IObuff, "\nVim: Got X error\n");
 
     /* We cannot print a message and continue, because no X calls are allowed
      * here (causes my system to hang).  Silently continuing might be an
@@ -859,9 +824,9 @@ test_x11_window(dpy)
 }
 #endif
 
-#ifdef FEAT_TITLE
+#ifdef WANT_TITLE
 
-#ifdef FEAT_X11
+#if defined(HAVE_X11) && defined(WANT_X11)
 
 static int get_x11_thing __ARGS((int get_title, int test_only));
 
@@ -889,7 +854,7 @@ get_x11_windis()
     /* X just exits if it finds an error otherwise! */
     XSetErrorHandler(x_error_handler);
 
-#if defined(FEAT_GUI_X11) || defined(FEAT_GUI_GTK)
+#if defined(USE_GUI_X11) || defined(USE_GUI_GTK)
     if (gui.in_use)
     {
 	/*
@@ -926,7 +891,7 @@ get_x11_windis()
     if (x11_window == 0 && (winid = getenv("WINDOWID")) != NULL)
 	x11_window = (Window)atol(winid);
 
-#ifdef FEAT_XCLIPBOARD
+#ifdef XTERM_CLIP
     if (xterm_dpy != NULL && x11_window != 0)
     {
 	/*
@@ -969,6 +934,10 @@ get_x11_windis()
 	alarm(2);
 #endif
 	x11_display = XOpenDisplay(NULL);
+
+#if defined(USE_FONTSET) && (defined(HAVE_LOCALE_H) || defined(X_LOCALE))
+	setlocale(LC_ALL, "");
+#endif
 
 #ifdef SET_SIG_ALARM
 	alarm(0);
@@ -1084,7 +1053,7 @@ get_x11_thing(get_title, test_only)
 	    retval = TRUE;
 	    if (!test_only)
 	    {
-#ifdef FEAT_XFONTSET
+#ifdef USE_FONTSET
 		if (text_prop.encoding == XA_STRING)
 		{
 #endif
@@ -1092,7 +1061,7 @@ get_x11_thing(get_title, test_only)
 			oldtitle = vim_strsave((char_u *)text_prop.value);
 		    else
 			oldicon = vim_strsave((char_u *)text_prop.value);
-#ifdef FEAT_XFONTSET
+#ifdef USE_FONTSET
 		}
 		else
 		{
@@ -1173,7 +1142,7 @@ set_x11_icon(icon)
     XFlush(x11_display);
 }
 
-#else  /* FEAT_X11 */
+#else  /* HAVE_X11 && WANT_X11 */
 
 /*ARGSUSED*/
     static int
@@ -1197,7 +1166,7 @@ get_x11_icon(test_only)
     return FALSE;
 }
 
-#endif /* FEAT_X11 */
+#endif /* HAVE_X11 && WANT_X11 */
 
     int
 mch_can_restore_title()
@@ -1236,11 +1205,11 @@ mch_settitle(title, icon)
     /*
      * if the window ID and the display is known, we may use X11 calls
      */
-#ifdef FEAT_X11
+#if defined(HAVE_X11) && defined(WANT_X11)
     if (get_x11_windis() == OK)
 	type = 1;
 #else
-# ifdef FEAT_GUI_BEOS
+# ifdef USE_GUI_BEOS
     /* we always have a 'window' */
     type = 1;
 # endif
@@ -1258,11 +1227,11 @@ mch_settitle(title, icon)
 
 	if (*T_TS != NUL)		/* it's OK if t_fs is empty */
 	    term_settitle(title);
-#ifdef FEAT_X11
+#if defined(HAVE_X11) && defined(WANT_X11)
 	else
 	    set_x11_title(title);		/* x11 */
 #else
-# ifdef FEAT_GUI_BEOS
+# ifdef USE_GUI_BEOS
 	else
 	    gui_mch_settitle(title, icon);
 # endif
@@ -1282,7 +1251,7 @@ mch_settitle(title, icon)
 	    out_str(T_CIE);			/* set icon end */
 	    out_flush();
 	}
-#ifdef FEAT_X11
+#if defined(HAVE_X11) && defined(WANT_X11)
 	else
 	    set_x11_icon(icon);			/* x11 */
 #endif
@@ -1308,7 +1277,7 @@ mch_restore_title(which)
 			      ((which & 2) && did_set_icon) ? oldicon : NULL);
 }
 
-#endif /* FEAT_TITLE */
+#endif /* WANT_TITLE */
 
     int
 vim_is_xterm(name)
@@ -1317,25 +1286,11 @@ vim_is_xterm(name)
     if (name == NULL)
 	return FALSE;
     return (STRNICMP(name, "xterm", 5) == 0
-		|| STRNICMP(name, "nxterm", 6) == 0
-		|| STRNICMP(name, "kterm", 5) == 0
+		|| STRNICMP(name, "kterm", 5)==0
 		|| STRCMP(name, "builtin_xterm") == 0);
 }
 
-#if defined(FEAT_MOUSE_DEC) || defined(PROTO)
-/*
- * Return non-zero when using a DEC mouse, according to 'ttymouse'.
- */
-    int
-use_dec_mouse()
-{
-    if (STRNICMP(p_ttym, "dec", 3) == 0)
-	return 1;
-    return 0;
-}
-#endif
-
-#if defined(FEAT_MOUSE) || defined(PROTO)
+#if defined(USE_MOUSE) || defined(PROTO)
 /*
  * Return non-zero when using an xterm mouse, according to 'ttymouse'.
  * Return 1 for "xterm".
@@ -1626,13 +1581,8 @@ mch_FullName(fname, buf, len, force)
 	    *buf = NUL;
 	}
 	l = STRLEN(buf);
-	if (l >= len)
-	    retval = FAIL;
-	else
-	{
-	    if (l && buf[l - 1] != '/')
-		STRCAT(buf, "/");
-	}
+	if (l && buf[l - 1] != '/')
+	    STRCAT(buf, "/");
 	if (p != NULL)
 	{
 #ifdef HAVE_FCHDIR
@@ -1646,15 +1596,11 @@ mch_FullName(fname, buf, len, force)
 		mch_chdir((char *)olddir);
 	}
     }
-    /* Catch file names which are too long. */
-    if (retval == FAIL || STRLEN(buf) + STRLEN(fname) >= len)
-	return FAIL;
-
     STRCAT(buf, fname);
 #ifdef OS2
     slash_adjust(buf);
 #endif
-    return OK;
+    return retval;
 }
 
 /*
@@ -1738,11 +1684,11 @@ mch_windexit(r)
 {
     settmode(TMODE_COOK);
     exiting = TRUE;
-#ifdef FEAT_GUI
+#ifdef USE_GUI
     if (!gui.in_use)
 #endif
     {
-#ifdef FEAT_TITLE
+#ifdef WANT_TITLE
 	mch_restore_title(3);	/* restore xterm title and icon name */
 #endif
 	stoptermcap();
@@ -1763,8 +1709,8 @@ mch_windexit(r)
     out_flush();
     ml_close_all(TRUE);		/* remove all memfiles */
     may_core_dump();
-#ifdef FEAT_GUI
-# ifndef FEAT_GUI_BEOS		/* BeOS always has GUI */
+#ifdef USE_GUI
+# ifndef USE_GUI_BEOS		/* BeOS always has GUI */
     if (gui.in_use)
 # endif
 	gui_exit(r);
@@ -1918,20 +1864,20 @@ get_stty()
 	 */
 	p = find_termcode((char_u *)"kD");
 	if (p != NULL && p[0] == buf[0] && p[1] == buf[1])
-	    do_fixdel(NULL);
+	    do_fixdel();
     }
 #if 0
     }	    /* to keep cindent happy */
 #endif
 }
 
-#if defined(FEAT_MOUSE) || defined(PROTO)
+#if defined(USE_MOUSE) || defined(PROTO)
 /*
  * set mouse clicks on or off (only works for xterms)
  */
     void
 mch_setmouse(on)
-    int		on;
+    int	    on;
 {
     static int	ison = FALSE;
     int		xterm_mouse_vers;
@@ -1944,29 +1890,13 @@ mch_setmouse(on)
     {
 	if (on)	/* enable mouse events, use mouse tracking if available */
 	    out_str_nf((char_u *)
-		       (xterm_mouse_vers > 1
-			? IF_EB("\033[?1002h", ESC_STR "[?1002h")
-			: IF_EB("\033[?1000h", ESC_STR "[?1000h")));
+		       (xterm_mouse_vers > 1 ? "\033[?1002h" : "\033[?1000h"));
 	else	/* disable mouse events, could probably always send the same */
 	    out_str_nf((char_u *)
-		       (xterm_mouse_vers > 1
-			? IF_EB("\033[?1002l", "[?1002l")
-			: IF_EB("\033[?1000l", "[?1000l")));
+		       (xterm_mouse_vers > 1 ? "\033[?1002l" : "\033[?1000l"));
 	ison = on;
     }
-
-# ifdef FEAT_MOUSE_DEC
-    else if (use_dec_mouse())
-    {
-	if (on)	/* enable mouse events */
-	    out_str_nf((char_u *)"\033[1;2'z\033[1;3'{");
-	else	/* disable mouse events */
-	    out_str_nf((char_u *)"\033['z");
-	ison = on;
-    }
-# endif
-
-# ifdef FEAT_MOUSE_GPM
+# ifdef GPM_MOUSE
     else
     {
 	if (on)
@@ -1981,44 +1911,6 @@ mch_setmouse(on)
 	}
     }
 # endif
-
-# ifdef FEAT_MOUSE_JSB
-    else
-    {
-	if (on)
-	{
-	    /* D - Enable Mouse up/down messages
-	     * L - Enable Left Button Reporting
-	     * M - Enable Middle Button Reporting
-	     * R - Enable Right Button Reporting
-	     * K - Enable SHIFT and CTRL key Reporting
-	     * + - Enable Advanced messaging of mouse moves and up/down messages
-	     * Q - Quiet No Ack
-	     * # - Numeric value of mouse pointer required
-	     *	  0 = Multiview 2000 cursor, used as standard
-	     *	  1 = Windows Arrow
-	     *	  2 = Windows I Beam
-	     *	  3 = Windows Hour Glass
-	     *	  4 = Windows Cross Hair
-	     *	  5 = Windows UP Arrow
-	     */
-#ifdef JSBTERM_MOUSE_NONADVANCED /* Disables full feedback of pointer movements */
-	    out_str_nf((char_u *)IF_EB("\033[0~ZwLMRK1Q\033\\",
-					 ESC_STR "[0~ZwLMRK1Q" ESC_STR "\\"));
-#else
-	    out_str_nf((char_u *)IF_EB("\033[0~ZwLMRK+1Q\033\\",
-					ESC_STR "[0~ZwLMRK+1Q" ESC_STR "\\"));
-#endif
-	    ison = TRUE;
-	}
-	else
-	{
-	    out_str_nf((char_u *)IF_EB("\033[0~ZwQ\033\\",
-					      ESC_STR "[0~ZwQ" ESC_STR "\\"));
-	    ison = FALSE;
-	}
-    }
-# endif
 }
 
 /*
@@ -2027,11 +1919,11 @@ mch_setmouse(on)
     void
 check_mouse_termcode()
 {
-# ifdef FEAT_MOUSE_XTERM
+# ifdef XTERM_MOUSE
     if (use_xterm_mouse())
     {
 	set_mouse_termcode(KS_MOUSE, (char_u *)(term_is_8bit(T_NAME)
-		  ? IF_EB("\233M", CSI_STR "M") : IF_EB("\033[M", ESC_STR "[M")));
+						       ? "\233M" : "\033[M"));
 	if (*p_mouse != NUL)
 	{
 	    /* force mouse off and maybe on to send possibly new mouse
@@ -2043,26 +1935,18 @@ check_mouse_termcode()
     else
 	del_mouse_termcode(KS_MOUSE);
 # endif
-# ifdef FEAT_MOUSE_GPM
+# ifdef GPM_MOUSE
     if (!use_xterm_mouse())
-	set_mouse_termcode(KS_MOUSE, (char_u *)IF_EB("\033MG", ESC_STR "MG"));
+	set_mouse_termcode(KS_MOUSE, (char_u *)"\033MG");
 # endif
-# ifdef FEAT_MOUSE_JSB
-    /* conflicts with xterm mouse: "\033[" and "\033[M" ??? */
-    if (!use_xterm_mouse())
-	set_mouse_termcode(KS_JSBTERM_MOUSE,
-			       (char_u *)IF_EB("\033[0~zw", ESC_STR "[0~zw"));
-    else
-	del_mouse_termcode(KS_JSBTERM_MOUSE);
-# endif
-# ifdef FEAT_MOUSE_NET
+# ifdef NETTERM_MOUSE
     /* can be added always, there is no conflict */
-    set_mouse_termcode(KS_NETTERM_MOUSE, (char_u *)IF_EB("\033}", ESC_STR "}"));
+    set_mouse_termcode(KS_NETTERM_MOUSE, (char_u *)"\033}");
 # endif
-# ifdef FEAT_MOUSE_DEC
+# ifdef DEC_MOUSE
     /* conflicts with xterm mouse: "\033[" and "\033[M" */
     if (!use_xterm_mouse())
-	set_mouse_termcode(KS_DEC_MOUSE, (char_u *)IF_EB("\033[", ESC_STR "["));
+	set_mouse_termcode(KS_DEC_MOUSE, (char_u *)"\033[");
     else
 	del_mouse_termcode(KS_DEC_MOUSE);
 # endif
@@ -2077,7 +1961,7 @@ check_mouse_termcode()
 mch_screenmode(arg)
     char_u   *arg;
 {
-    EMSG(_("Screen mode setting not supported"));
+    EMSG("Screen mode setting not supported");
     return FAIL;
 }
 
@@ -2090,39 +1974,41 @@ mch_screenmode(arg)
  * Return OK when size could be determined, FAIL otherwise.
  */
     int
-mch_get_shellsize()
+mch_get_winsize()
 {
-    long	rows = 0;
-    long	columns = 0;
+    int		old_Rows = Rows;
+    int		old_Columns = Columns;
     char_u	*p;
 
-    /*
-     * For OS/2 use _scrsize().
-     */
+    Columns = 0;
+    Rows = 0;
+
+/*
+ * For OS/2 use _scrsize().
+ */
 # ifdef __EMX__
     {
 	int s[2];
-
 	_scrsize(s);
-	columns = s[0];
-	rows = s[1];
+	Columns = s[0];
+	Rows = s[1];
     }
 # endif
 
-    /*
-     * 1. try using an ioctl. It is the most accurate method.
-     *
-     * Try using TIOCGWINSZ first, some systems that have it also define TIOCGSIZE
-     * but don't have a struct ttysize.
-     */
+/*
+ * 1. try using an ioctl. It is the most accurate method.
+ *
+ * Try using TIOCGWINSZ first, some systems that have it also define TIOCGSIZE
+ * but don't have a struct ttysize.
+ */
 # ifdef TIOCGWINSZ
     {
 	struct winsize	ws;
 
 	if (ioctl(1, TIOCGWINSZ, &ws) == 0)
 	{
-	    columns = ws.ws_col;
-	    rows = ws.ws_row;
+	    Columns = ws.ws_col;
+	    Rows = ws.ws_row;
 	}
     }
 # else /* TIOCGWINSZ */
@@ -2132,48 +2018,53 @@ mch_get_shellsize()
 
 	if (ioctl(1, TIOCGSIZE, &ts) == 0)
 	{
-	    columns = ts.ts_cols;
-	    rows = ts.ts_lines;
+	    Columns = ts.ts_cols;
+	    Rows = ts.ts_lines;
 	}
     }
 #  endif /* TIOCGSIZE */
 # endif /* TIOCGWINSZ */
 
-    /*
-     * 2. get size from environment
-     */
-    if (columns == 0 || rows == 0)
+/*
+ * 2. get size from environment
+ */
+    if (Columns == 0 || Rows == 0)
     {
 	if ((p = (char_u *)getenv("LINES")))
-	    rows = atoi((char *)p);
+	    Rows = atoi((char *)p);
 	if ((p = (char_u *)getenv("COLUMNS")))
-	    columns = atoi((char *)p);
+	    Columns = atoi((char *)p);
     }
 
 #ifdef HAVE_TGETENT
-    /*
-     * 3. try reading "co" and "li" entries from termcap
-     */
-    if (columns == 0 || rows == 0)
-	getlinecol(&columns, &rows);
+/*
+ * 3. try reading the termcap
+ */
+    if (Columns == 0 || Rows == 0)
+	getlinecol();	/* get "co" and "li" entries from termcap */
 #endif
 
-    /*
-     * 4. If everything fails, use the old values
-     */
-    if (columns <= 0 || rows <= 0)
+/*
+ * 4. If everything fails, use the old values
+ */
+    if (Columns <= 0 || Rows <= 0)
+    {
+	Columns = old_Columns;
+	Rows = old_Rows;
 	return FAIL;
+    }
 
-    Rows = rows;
-    Columns = columns;
+    check_winsize();
+
+/* if size changed: screenalloc will allocate new screen buffers */
     return OK;
 }
 
 /*
- * Try to set the window size to Rows and Columns.
+ * try to set the window size to Rows and Columns
  */
     void
-mch_set_shellsize()
+mch_set_winsize()
 {
     if (*T_CWS)
     {
@@ -2186,15 +2077,6 @@ mch_set_shellsize()
 	out_flush();
 	screen_start();			/* don't know where cursor is now */
     }
-}
-
-/*
- * Rows and/or Columns has changed.
- */
-    void
-mch_new_shellsize()
-{
-    /* Nothing to do. */
 }
 
     int
@@ -2242,7 +2124,7 @@ mch_call_shell(cmd, options)
 	x = system((char *)cmd);
     if (x == -1) /* system() returns -1 when error occurs in starting shell */
     {
-	MSG_PUTS(_("\nCannot execute shell "));
+	MSG_PUTS("\nCannot execute shell ");
 	msg_outtrans(p_sh);
 	msg_putchar('\n');
     }
@@ -2268,18 +2150,22 @@ mch_call_shell(cmd, options)
     }
     if (x == 127)
     {
-	MSG_PUTS(_("\nCannot execute shell sh\n"));
+	MSG_PUTS("\nCannot execute shell sh\n");
     }
 #endif	/* __EMX__ */
     else if (x && !(options & SHELL_SILENT))
     {
 	msg_putchar('\n');
 	msg_outnum((long)x);
-	MSG_PUTS(_(" returned\n"));
+	MSG_PUTS(" returned\n");
     }
 
     settmode(TMODE_RAW);		/* set to raw mode */
-#ifdef FEAT_TITLE
+#ifdef OS2
+    /* external command may change the window size in OS/2, so check it */
+    ui_get_winsize();
+#endif
+#ifdef WANT_TITLE
     resettitle();
 #endif
     return x;
@@ -2303,7 +2189,7 @@ mch_call_shell(cmd, options)
     int		i;
     char_u	*p;
     int		inquote;
-#ifdef FEAT_GUI
+#ifdef USE_GUI
     int		pty_master_fd = -1;	    /* for pty's */
     int		pty_slave_fd = -1;
     char	*tty_name;
@@ -2368,7 +2254,7 @@ mch_call_shell(cmd, options)
     }
     argv[argc] = NULL;
 
-#ifdef FEAT_GUI
+#ifdef USE_GUI
     /*
      * For the GUI: Try using a pseudo-tty to get the stdin/stdout of the
      * executed command into the Vim window.  Or use a pipe.
@@ -2407,7 +2293,7 @@ mch_call_shell(cmd, options)
 	    }
 	    if (pipe_error)
 	    {
-		MSG_PUTS(_("\nCannot create pipes\n"));
+		MSG_PUTS("\nCannot create pipes\n");
 		out_flush();
 	    }
 	}
@@ -2422,8 +2308,8 @@ mch_call_shell(cmd, options)
 #endif
 	if ((pid = fork()) == -1)	/* maybe we should use vfork() */
 	{
-	    MSG_PUTS(_("\nCannot fork\n"));
-#ifdef FEAT_GUI
+	    MSG_PUTS("\nCannot fork\n");
+#ifdef USE_GUI
 	    if (gui.in_use && show_shell_mess)
 	    {
 		if (pty_master_fd >= 0)		/* close the pseudo tty */
@@ -2481,7 +2367,7 @@ mch_call_shell(cmd, options)
 		    close(fd);
 		}
 	    }
-#ifdef FEAT_GUI
+#ifdef USE_GUI
 	    else if (gui.in_use)
 	    {
 
@@ -2568,7 +2454,7 @@ mch_call_shell(cmd, options)
 	     */
 	    catch_signals(SIG_IGN, SIG_ERR);
 
-#ifdef FEAT_GUI
+#ifdef USE_GUI
 
 	    /*
 	     * For the GUI we redirect stdin, stdout and stderr to our window.
@@ -2646,7 +2532,7 @@ mch_call_shell(cmd, options)
 			     * Send SIGINT to the child's group or all
 			     * processes in our group.
 			     */
-			    if (ta_buf[ta_len] == Ctrl_C
+			    if (ta_buf[ta_len] == Ctrl('C')
 					       || ta_buf[ta_len] == intr_char)
 # ifdef HAVE_SETSID
 				kill(-pid, SIGINT);
@@ -2655,7 +2541,7 @@ mch_call_shell(cmd, options)
 # endif
 #endif
 			    if (pty_master_fd < 0 && toshell_fd >= 0
-					       && ta_buf[ta_len] == Ctrl_D)
+					       && ta_buf[ta_len] == Ctrl('D'))
 			    {
 				close(toshell_fd);
 				toshell_fd = -1;
@@ -2675,7 +2561,7 @@ mch_call_shell(cmd, options)
 				    if (c == K_DEL || c == K_KDEL)
 					ta_buf[i] = DEL;
 				    else
-					ta_buf[i] = Ctrl_H;
+					ta_buf[i] = Ctrl('H');
 				    len -= 2;
 				}
 			    }
@@ -2771,7 +2657,7 @@ finished:
 		    close(toshell_fd);
 		close(fromshell_fd);
 	    }
-#endif /* FEAT_GUI */
+#endif /* USE_GUI */
 
 	    /*
 	     * Wait until our child has exited.
@@ -2799,6 +2685,12 @@ finished:
 	    did_settmode = TRUE;
 	    set_signals();
 
+	    /*
+	     * Check the window size, in case it changed while executing the
+	     * external command.
+	     */
+	    ui_get_winsize();
+
 	    if (WIFEXITED(status))
 	    {
 		retval = WEXITSTATUS(status);
@@ -2806,7 +2698,7 @@ finished:
 		{
 		    if (retval == EXEC_FAILED)
 		    {
-			MSG_PUTS(_("\nCannot execute shell "));
+			MSG_PUTS("\nCannot execute shell ");
 			msg_outtrans(p_sh);
 			msg_putchar('\n');
 		    }
@@ -2814,12 +2706,12 @@ finished:
 		    {
 			msg_putchar('\n');
 			msg_outnum((long)retval);
-			MSG_PUTS(_(" returned\n"));
+			MSG_PUTS(" returned\n");
 		    }
 		}
 	    }
 	    else
-		MSG_PUTS(_("\nCommand terminated\n"));
+		MSG_PUTS("\nCommand terminated\n");
 	}
     }
     vim_free(argv);
@@ -2827,7 +2719,7 @@ finished:
 error:
     if (!did_settmode)
 	settmode(TMODE_RAW);		    /* set to raw mode */
-#ifdef FEAT_TITLE
+#ifdef WANT_TITLE
     resettitle();
 #endif
     vim_free(newcmd);
@@ -2857,10 +2749,10 @@ mch_breakcheck()
 WaitForChar(msec)
     long	msec;
 {
-#ifdef FEAT_MOUSE_GPM
+#ifdef GPM_MOUSE
     int		gpm_process_wanted;
 #endif
-#ifdef FEAT_XCLIPBOARD
+#ifdef XTERM_CLIP
     int		rest;
 #endif
     int		avail;
@@ -2868,28 +2760,28 @@ WaitForChar(msec)
     if (!vim_is_input_buf_empty())	    /* something in inbuf[] */
 	return 1;
 
-#if defined(FEAT_MOUSE_DEC)
+#if defined(DEC_MOUSE)
     /* May need to query the mouse position. */
     if (WantQueryMouse)
     {
 	WantQueryMouse = 0;
-	mch_write((char_u *)IF_EB("\033[1'|", ESC_STR "[1'|"), 5);
+	mch_write((char_u *)"\033[1'|", 5);
     }
 #endif
 
     /*
-     * For FEAT_MOUSE_GPM and FEAT_XCLIPBOARD we loop here to process mouse
-     * events.  This is a bit complicated, because they might both be defined.
+     * For GPM_MOUSE and XTERM_CLIP we loop here to process mouse events.
+     * This is a bit complicated, because they might both be defined.
      */
-#if defined(FEAT_MOUSE_GPM) || defined(FEAT_XCLIPBOARD)
-# ifdef FEAT_XCLIPBOARD
+#if defined(GPM_MOUSE) || defined(XTERM_CLIP)
+# ifdef XTERM_CLIP
     rest = 0;
     if (do_xterm_trace())
 	rest = msec;
 # endif
     do
     {
-# ifdef FEAT_XCLIPBOARD
+# ifdef XTERM_CLIP
 	if (rest != 0)
 	{
 	    msec = XT_TRACE_DELAY;
@@ -2899,7 +2791,7 @@ WaitForChar(msec)
 		rest -= msec;
 	}
 # endif
-# ifdef FEAT_MOUSE_GPM
+# ifdef GPM_MOUSE
 	gpm_process_wanted = 0;
 	avail = RealWaitForChar(read_cmd_fd, msec, &gpm_process_wanted);
 # else
@@ -2909,17 +2801,17 @@ WaitForChar(msec)
 	{
 	    if (!vim_is_input_buf_empty())
 		return 1;
-# ifdef FEAT_XCLIPBOARD
+# ifdef XTERM_CLIP
 	    if (rest == 0 || !do_xterm_trace())
 # endif
 		break;
 	}
     }
     while (FALSE
-# ifdef FEAT_MOUSE_GPM
+# ifdef GPM_MOUSE
 	   || (gpm_process_wanted && mch_gpm_process() == 0)
 # endif
-# ifdef FEAT_XCLIPBOARD
+# ifdef XTERM_CLIP
 	   || (!avail && rest != 0)
 # endif
 	  );
@@ -2955,10 +2847,10 @@ RealWaitForChar(fd, msec, check_for_gpm)
 #ifndef HAVE_SELECT
 	struct pollfd   fds[4];
 	int		nfd;
-# ifdef FEAT_XCLIPBOARD
+# ifdef XTERM_CLIP
 	int		xterm_idx = -1;
 # endif
-# ifdef FEAT_MOUSE_GPM
+# ifdef GPM_MOUSE
 	int		gpm_idx = -1;
 # endif
 
@@ -2966,7 +2858,7 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	fds[0].events = POLLIN;
 	nfd = 1;
 
-# ifdef FEAT_SNIFF
+# ifdef USE_SNIFF
 #  define SNIFF_IDX 1
 	if (want_sniff_request)
 	{
@@ -2975,7 +2867,7 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	    nfd++;
 	}
 # endif
-# ifdef FEAT_XCLIPBOARD
+# ifdef XTERM_CLIP
 	if (xterm_Shell != (Widget)0)
 	{
 	    xterm_idx = nfd;
@@ -2984,7 +2876,7 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	    nfd++;
 	}
 # endif
-# ifdef FEAT_MOUSE_GPM
+# ifdef GPM_MOUSE
 	if (check_for_gpm != NULL && gpm_flag && gpm_fd >= 0)
 	{
 	    gpm_idx = nfd;
@@ -2996,7 +2888,7 @@ RealWaitForChar(fd, msec, check_for_gpm)
 
 	ret = poll(&fds, nfd, (int)msec);
 
-# ifdef FEAT_SNIFF
+# ifdef USE_SNIFF
 	if (ret < 0)
 	    sniff_disconnect(1);
 	else if (want_sniff_request)
@@ -3007,7 +2899,7 @@ RealWaitForChar(fd, msec, check_for_gpm)
 		sniff_request_waiting = 1;
 	}
 # endif
-# ifdef FEAT_XCLIPBOARD
+# ifdef XTERM_CLIP
 	if (xterm_Shell != (Widget)0 && (fds[xterm_idx].revents & POLLIN))
 	{
 	    xterm_update();      /* Maybe we should hand out clipboard */
@@ -3017,7 +2909,7 @@ RealWaitForChar(fd, msec, check_for_gpm)
 		continue;
 	}
 # endif
-# ifdef FEAT_MOUSE_GPM
+# ifdef GPM_MOUSE
 	if (gpm_idx >= 0 && (fds[gpm_idx].revents & POLLIN))
 	{
 	    *check_for_gpm = 1;
@@ -3059,7 +2951,7 @@ RealWaitForChar(fd, msec, check_for_gpm)
 # endif
 	maxfd = fd;
 
-# ifdef FEAT_SNIFF
+# ifdef USE_SNIFF
 	if (want_sniff_request)
 	{
 	    FD_SET(fd_from_sniff, &rfds);
@@ -3068,7 +2960,7 @@ RealWaitForChar(fd, msec, check_for_gpm)
 		maxfd = fd_from_sniff;
 	}
 # endif
-# ifdef FEAT_XCLIPBOARD
+# ifdef XTERM_CLIP
 	if (xterm_Shell != (Widget)0)
 	{
 	    FD_SET(ConnectionNumber(xterm_dpy), &rfds);
@@ -3076,7 +2968,7 @@ RealWaitForChar(fd, msec, check_for_gpm)
 		maxfd = ConnectionNumber(xterm_dpy);
 	}
 # endif
-# ifdef FEAT_MOUSE_GPM
+# ifdef GPM_MOUSE
 	if (check_for_gpm != NULL && gpm_flag && gpm_fd >= 0)
 	{
 	    FD_SET(gpm_fd, &rfds);
@@ -3088,7 +2980,7 @@ RealWaitForChar(fd, msec, check_for_gpm)
 
 	ret = select(maxfd + 1, &rfds, NULL, &efds, (msec >= 0) ? &tv : NULL);
 
-# ifdef FEAT_SNIFF
+# ifdef USE_SNIFF
 	if (ret < 0 )
 	    sniff_disconnect(1);
 	else if (ret > 0 && want_sniff_request)
@@ -3099,7 +2991,7 @@ RealWaitForChar(fd, msec, check_for_gpm)
 		sniff_request_waiting = 1;
 	}
 # endif
-# ifdef FEAT_XCLIPBOARD
+# ifdef XTERM_CLIP
 	if (ret > 0 && xterm_Shell != (Widget)0
 		&& FD_ISSET(ConnectionNumber(xterm_dpy), &rfds))
 	{
@@ -3110,7 +3002,7 @@ RealWaitForChar(fd, msec, check_for_gpm)
 		continue;
 	}
 # endif
-# ifdef FEAT_MOUSE_GPM
+# ifdef GPM_MOUSE
 	if (ret > 0 && gpm_flag && check_for_gpm != NULL && gpm_fd >= 0)
 	{
 	    if (FD_ISSET(gpm_fd, &efds))
@@ -3143,31 +3035,31 @@ pstrcmp(a, b)
  */
     int
 mch_expandpath(gap, path, flags)
-    garray_t	*gap;
-    char_u	*path;
-    int		flags;		/* EW_* flags */
+    struct growarray	*gap;
+    char_u		*path;
+    int			flags;		/* EW_* flags */
 {
     return unix_expandpath(gap, path, 0, flags);
 }
 
     static int
 unix_expandpath(gap, path, wildoff, flags)
-    garray_t	*gap;
-    char_u	*path;
-    int		wildoff;
-    int		flags;		/* EW_* flags */
+    struct growarray	*gap;
+    char_u		*path;
+    int			wildoff;
+    int			flags;		/* EW_* flags */
 {
-    char_u	*buf;
-    char_u	*path_end;
-    char_u	*p, *s, *e;
-    int		start_len, c;
-    char_u	*pat;
-    DIR		*dirp;
-    regmatch_t	regmatch;
-    struct dirent *dp;
-    int		starts_with_dot;
-    int		matches;
-    int		len;
+    char_u		*buf;
+    char_u		*path_end;
+    char_u		*p, *s, *e;
+    int			start_len, c;
+    char_u		*pat;
+    DIR			*dirp;
+    vim_regexp		*prog;
+    struct dirent	*dp;
+    int			starts_with_dot;
+    int			matches;
+    int			len;
 
     start_len = gap->ga_len;
     buf = alloc(STRLEN(path) + BASENAMELEN + 5);/* make room for file name */
@@ -3223,10 +3115,10 @@ unix_expandpath(gap, path, wildoff, flags)
 
     /* compile the regexp into a program */
     reg_ic = FALSE;			    /* Don't ever ignore case */
-    regmatch.regprog = vim_regcomp(pat, TRUE);
+    prog = vim_regcomp(pat, TRUE);
     vim_free(pat);
 
-    if (regmatch.regprog == NULL)
+    if (prog == NULL)
     {
 	vim_free(buf);
 	return 0;
@@ -3247,7 +3139,7 @@ unix_expandpath(gap, path, wildoff, flags)
 	    if (dp == NULL)
 		break;
 	    if ((dp->d_name[0] != '.' || starts_with_dot)
-		    && vim_regexec(&regmatch, (char_u *)dp->d_name, (colnr_t)0))
+			     && vim_regexec(prog, (char_u *)dp->d_name, TRUE))
 	    {
 		STRCPY(s, dp->d_name);
 		len = STRLEN(buf);
@@ -3274,7 +3166,7 @@ unix_expandpath(gap, path, wildoff, flags)
     }
 
     vim_free(buf);
-    vim_free(regmatch.regprog);
+    vim_free(prog);
 
     matches = gap->ga_len - start_len;
     if (matches)
@@ -3381,7 +3273,7 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
 					   sizeof(char_u **) * files_alloced);
 		    if (*file == NULL)
 		    {
-			EMSG(_(e_outofmem));
+			emsg(e_outofmem);
 			*num_file = 0;
 			return FAIL;
 		    }
@@ -3442,12 +3334,21 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
     if (!have_wildcard(num_pat, pat))
 	return save_patterns(num_pat, pat, num_file, file);
 
+    /*
+     * Don't allow the use of backticks in secure and restricted mode.
+     */
+    if (secure || restricted)
+	for (i = 0; i < num_pat; ++i)
+	    if (vim_strchr(pat[i], '`') != NULL
+		    && (check_restricted() || check_secure()))
+		return FAIL;
+
 /*
  * get a name for the temp file
  */
     if ((tempname = vim_tempname('o')) == NULL)
     {
-	EMSG(_(e_notmp));
+	emsg(e_notmp);
 	return FAIL;
     }
 
@@ -3589,7 +3490,7 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
     fd = fopen((char *)tempname, "r");
     if (fd == NULL)
     {
-	EMSG2(_(e_notopen), tempname);
+	emsg2(e_notopen, tempname);
 	vim_free(tempname);
 	return FAIL;
     }
@@ -3609,7 +3510,7 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
     mch_remove(tempname);
     if (i != len)
     {
-	EMSG2(_(e_notread), tempname);
+	emsg2(e_notread, tempname);
 	vim_free(tempname);
 	vim_free(buffer);
 	return FAIL;
@@ -3862,7 +3763,7 @@ mch_rename(src, dest)
 }
 #endif /* !HAVE_RENAME */
 
-#ifdef FEAT_MOUSE_GPM
+#ifdef GPM_MOUSE
 /*
  * Initializes connection with gpm (if it isn't already opened)
  * Return 1 if succeeded (or connection already opened), 0 if failed
@@ -3925,7 +3826,7 @@ mch_gpm_process()
 
     Gpm_GetEvent(&gpm_event);
 
-#ifdef FEAT_GUI
+#ifdef USE_GUI
     /* Don't put events in the input queue now. */
     if (hold_gui_events)
 	return 0;
@@ -3991,151 +3892,10 @@ mch_gpm_process()
     add_to_input_buf(string, 6);
     return 6;
 }
-#endif /* FEAT_MOUSE_GPM */
+#endif /* GPM_MOUSE */
 
-#if (defined(FEAT_EVAL) && (defined(HAVE_DLOPEN) || defined(HAVE_SHL_LOAD))) \
+#if (defined(HAVE_X11) && defined(WANT_X11) && defined(XTERM_CLIP)) \
 	|| defined(PROTO)
-typedef char_u * (*STRPROCSTR)__ARGS((char_u *));
-typedef char_u * (*INTPROCSTR)__ARGS((int));
-typedef int (*STRPROCINT)__ARGS((char_u *));
-typedef int (*INTPROCINT)__ARGS((int));
-
-/*
- * Call a DLL routine which takes either a string or int param
- * and returns an allocated string.
- */
-    int
-mch_libcall(libname, funcname, argstring, argint, string_result, number_result)
-    char_u	*libname;
-    char_u	*funcname;
-    char_u	*argstring;	/* NULL when using a argint */
-    int		argint;
-    char_u	**string_result;/* NULL when using number_result */
-    int		*number_result;
-{
-# if defined(HAVE_DLOPEN)
-    void	*hinstLib;
-# else
-    shl_t	hinstLib;
-    shl_t	safe_handle;	/* shl_findsym() modifies so_handle */
-# endif
-    STRPROCSTR	ProcAdd;
-    INTPROCSTR	ProcAddI;
-    char_u	*retval_str = NULL;
-    int		retval_int = 0;
-    int		success = FALSE;
-
-    /* Get a handle to the DLL module. */
-# if defined(HAVE_DLOPEN)
-    hinstLib = dlopen((char *)libname, RTLD_LAZY
-#  ifdef RTLD_LOCAL
-	    | RTLD_LOCAL
-#  endif
-	    );
-# else
-    safe_handle = so_handle = shl_load((const char*)libname,
-		BIND_IMMEDIATE|BIND_VERBOSE, 0L);
-# endif
-
-    /* If the handle is valid, try to get the function address. */
-    if (hinstLib != NULL)
-    {
-# ifdef HAVE_SETJMP_H
-	lc_signal = 0;
-	lc_active = 1;
-	if (SETJMP(lc_jump_env) == 0)
-	{
-# endif
-	    retval_str = NULL;
-	    retval_int = 0;
-
-	    if (argstring != NULL)
-	    {
-# if defined(HAVE_DLOPEN)
-		ProcAdd = (STRPROCSTR)dlsym(hinstLib, (const char *)funcname);
-# else
-		if (shl_findsym(&hinstLib, (const char *) funcname,
-			    TYPE_PROCEDURE, (void *)&ProcAdd) < 0)
-		{
-		    ProcAdd = NULL;
-		}
-# endif
-		if ((success = (ProcAdd != NULL)))
-		{
-		    if (string_result == NULL)
-			retval_int = ((STRPROCINT)ProcAdd)(argstring);
-		    else
-			retval_str = (ProcAdd)(argstring);
-		}
-	    }
-	    else
-	    {
-# if defined(HAVE_DLOPEN)
-		ProcAddI = (INTPROCSTR)dlsym(hinstLib, (const char *)funcname);
-# else
-		if (shl_findsym(&hinstLib, (const char *) funcname,
-			    TYPE_PROCEDURE, (void *)&ProcAddI) < 0)
-		{
-		    ProcAddI = NULL;
-		}
-# endif
-		if ((success = (ProcAddI != NULL)))
-		{
-		    if (string_result == NULL)
-			retval_int = ((INTPROCINT)ProcAddI)(argint);
-		    else
-			retval_str = (ProcAddI)(argint);
-		}
-	    }
-
-	    /* Save the string before we free the library. */
-	    /* Assume that a "1" or "-1" result is an illegal pointer. */
-	    if (string_result == NULL)
-		*number_result = retval_int;
-	    else if (retval_str != NULL
-		    && retval_str != (char_u *)1
-		    && retval_str != (char_u *)-1)
-		*string_result = vim_strsave(retval_str);
-# ifdef HAVE_SETJMP_H
-	}
-	else
-	    success = FALSE;
-
-	lc_active = 0;
-	if (lc_signal)
-	{
-#  ifdef SIGHASARG
-	    int i;
-
-	    /* try to find the name of this signal */
-	    for (i = 0; signal_info[i].sig != -1; i++)
-		if (lc_signal == signal_info[i].sig)
-		    break;
-	    EMSG2("got SIG%s in libcall()", signal_info[i].name);
-#  endif
-	    success = FALSE;
-	}
-# endif
-
-	/* Free the DLL module. */
-# if defined(HAVE_DLOPEN)
-	(void)dlclose(hinstLib);
-# else
-	(void)shl_unload(hinstLib);
-# endif
-    }
-
-    if (!success)
-    {
-	EMSG(_("Library call failed"));
-	return FAIL;
-    }
-
-    return OK;
-}
-#endif
-
-#if (defined(FEAT_X11) && defined(FEAT_XCLIPBOARD)) || defined(PROTO)
 static int	    xterm_trace = -1;	/* default: disabled */
 static int	    xterm_button;
 
@@ -4237,7 +3997,7 @@ do_xterm_trace()
     char_u		*strp;
     long		got_hints;
     static char_u	*mouse_code;
-    static char_u	mouse_name[2] = {KS_MOUSE, KE_FILLER};
+    static char_u	mouse_name[2] = {KS_MOUSE, K_FILLER};
     static int		prev_row = 0, prev_col = 0;
     static XSizeHints	xterm_hints;
 
@@ -4375,287 +4135,4 @@ clip_xterm_set_selection()
 {
     clip_x11_set_selection();
 }
-#endif
-
-#ifdef EBCDIC
-/* Translate character to its CTRL- value */
-char CtrlTable[] =
-{
-/* \x00 */ 0,
-/* \x01 */ 0,
-/* \x02 */ 0,
-/* \x03 */ 0,
-/* \x04 */ 0,
-/* \x05 */ 0,
-/* \x06 */ 0,
-/* \x07 */ 0,
-/* \x08 */ 0,
-/* \x09 */ 0,
-/* \x0A */ 0,
-/* \x0B */ 0,
-/* \x0C */ 0,
-/* \x0D */ 0,
-/* \x0E */ 0,
-/* \x0F */ 0,
-/* \x10 */ 0,
-/* \x11 */ 0,
-/* \x12 */ 0,
-/* \x13 */ 0,
-/* \x14 */ 0,
-/* \x15 */ 0,
-/* \x16 */ 0,
-/* \x17 */ 0,
-/* \x18 */ 0,
-/* \x19 */ 0,
-/* \x1A */ 0,
-/* \x1B */ 0,
-/* \x1C */ 0,
-/* \x1D */ 0,
-/* \x1E */ 0,
-/* \x1F */ 0,
-/* \x20 */ 0,
-/* \x21 */ 0,
-/* \x22 */ 0,
-/* \x23 */ 0,
-/* \x24 */ 0,
-/* \x25 */ 0,
-/* \x26 */ 0,
-/* \x27 */ 0,
-/* \x28 */ 0,
-/* \x29 */ 0,
-/* \x2A */ 0,
-/* \x2B */ 0,
-/* \x2C */ 0,
-/* \x2D */ 0,
-/* \x2E */ 0,
-/* \x2F */ 0,
-/* \x30 */ 0,
-/* \x31 */ 0,
-/* \x32 */ 0,
-/* \x33 */ 0,
-/* \x34 */ 0,
-/* \x35 */ 0,
-/* \x36 */ 0,
-/* \x37 */ 0,
-/* \x38 */ 0,
-/* \x39 */ 0,
-/* \x3A */ 0,
-/* \x3B */ 0,
-/* \x3C */ 0,
-/* \x3D */ 0,
-/* \x3E */ 0,
-/* \x3F */ 0,
-/*      */ 0,
-/* \x41 */ 0,
-/* \x42 */ 0,
-/* \x43 */ 0,
-/* \x44 */ 0,
-/* \x45 */ 0,
-/* \x46 */ 0,
-/* \x47 */ 0,
-/* \x48 */ 0,
-/* \x49 */ 0,
-/* \x4A */ 0,
-/* .    */ 0,
-/* <    */ 0,
-/* (    */ 0,
-/* +    */ 0,
-/* |    */ 0,
-/* &    */ 0,
-/* \x51 */ 0,
-/* \x52 */ 0,
-/* \x53 */ 0,
-/* \x54 */ 0,
-/* \x55 */ 0,
-/* \x56 */ 0,
-/* \x57 */ 0,
-/* \x58 */ 0,
-/* \x59 */ 0,
-/* !    */ 0,
-/* $    */ 0,
-/* *    */ 0,
-/* )    */ 0,
-/* ;    */ 0,
-/* ^    */ 0x1E,
-/* -    */ 0x1F,
-/* /    */ 0,
-/* \x62 */ 0,
-/* \x63 */ 0,
-/* \x64 */ 0,
-/* \x65 */ 0,
-/* \x66 */ 0,
-/* \x67 */ 0,
-/* \x68 */ 0,
-/* \x69 */ 0,
-/* \x6A */ 0,
-/* ,    */ 0,
-/* %    */ 0,
-/* _    */ 0x1F,
-/* >    */ 0,
-/* ?    */ 0,
-/* \x70 */ 0,
-/* \x71 */ 0,
-/* \x72 */ 0,
-/* \x73 */ 0,
-/* \x74 */ 0,
-/* \x75 */ 0,
-/* \x76 */ 0,
-/* \x77 */ 0,
-/* \x78 */ 0,
-/* `    */ 0,
-/* :    */ 0,
-/* #    */ 0,
-/* @    */ 0,
-/* '    */ 0,
-/* =    */ 0,
-/* "    */ 0,
-/* \x80 */ 0,
-/* a    */ 0x01,
-/* b    */ 0x02,
-/* c    */ 0x03,
-/* d    */ 0x37,
-/* e    */ 0x2D,
-/* f    */ 0x2E,
-/* g    */ 0x2F,
-/* h    */ 0x16,
-/* i    */ 0x05,
-/* \x8A */ 0,
-/* \x8B */ 0,
-/* \x8C */ 0,
-/* \x8D */ 0,
-/* \x8E */ 0,
-/* \x8F */ 0,
-/* \x90 */ 0,
-/* j    */ 0x15,
-/* k    */ 0x0B,
-/* l    */ 0x0C,
-/* m    */ 0x0D,
-/* n    */ 0x0E,
-/* o    */ 0x0F,
-/* p    */ 0x10,
-/* q    */ 0x11,
-/* r    */ 0x12,
-/* \x9A */ 0,
-/* \x9B */ 0,
-/* \x9C */ 0,
-/* \x9D */ 0,
-/* \x9E */ 0,
-/* \x9F */ 0,
-/* \xA0 */ 0,
-/* ~    */ 0,
-/* s    */ 0x13,
-/* t    */ 0x3C,
-/* u    */ 0x3D,
-/* v    */ 0x32,
-/* w    */ 0x26,
-/* x    */ 0x18,
-/* y    */ 0x19,
-/* z    */ 0x3F,
-/* \xAA */ 0,
-/* \xAB */ 0,
-/* \xAC */ 0,
-/* [    */ 0x27,
-/* \xAE */ 0,
-/* \xAF */ 0,
-/* \xB0 */ 0,
-/* \xB1 */ 0,
-/* \xB2 */ 0,
-/* \xB3 */ 0,
-/* \xB4 */ 0,
-/* \xB5 */ 0,
-/* \xB6 */ 0,
-/* \xB7 */ 0,
-/* \xB8 */ 0,
-/* \xB9 */ 0,
-/* \xBA */ 0,
-/* \xBB */ 0,
-/* \xBC */ 0,
-/* ]    */ 0x1D,
-/* \xBE */ 0,
-/* \xBF */ 0,
-/* {    */ 0,
-/* A    */ 0x01,
-/* B    */ 0x02,
-/* C    */ 0x03,
-/* D    */ 0x37,
-/* E    */ 0x2D,
-/* F    */ 0x2E,
-/* G    */ 0x2F,
-/* H    */ 0x16,
-/* I    */ 0x05,
-/* \xCA */ 0,
-/* \xCB */ 0,
-/* \xCC */ 0,
-/* \xCD */ 0,
-/* \xCE */ 0,
-/* \xCF */ 0,
-/* }    */ 0,
-/* J    */ 0x15,
-/* K    */ 0x0B,
-/* L    */ 0x0C,
-/* M    */ 0x0D,
-/* N    */ 0x0E,
-/* O    */ 0x0F,
-/* P    */ 0x10,
-/* Q    */ 0x11,
-/* R    */ 0x12,
-/* \xDA */ 0,
-/* \xDB */ 0,
-/* \xDC */ 0,
-/* \xDD */ 0,
-/* \xDE */ 0,
-/* \xDF */ 0,
-/* \    */ 0x1C,
-/* \xE1 */ 0,
-/* S    */ 0x13,
-/* T    */ 0x3C,
-/* U    */ 0x3D,
-/* V    */ 0x32,
-/* W    */ 0x26,
-/* X    */ 0x18,
-/* Y    */ 0x19,
-/* Z    */ 0x3F,
-/* \xEA */ 0,
-/* \xEB */ 0,
-/* \xEC */ 0,
-/* \xED */ 0,
-/* \xEE */ 0,
-/* \xEF */ 0,
-/* 0    */ 0,
-/* 1    */ 0,
-/* 2    */ 0,
-/* 3    */ 0,
-/* 4    */ 0,
-/* 5    */ 0,
-/* 6    */ 0,
-/* 7    */ 0,
-/* 8    */ 0,
-/* 9    */ 0,
-/* \xFA */ 0,
-/* \xFB */ 0,
-/* \xFC */ 0,
-/* \xFD */ 0,
-/* \xFE */ 0,
-/* \xFF */ 0,
-};
-
-char MetaCharTable[]=
-{/*   0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F */
-      0,  0,  0,  0,'\\', 0,'F',  0,'W','M','N',  0,  0,  0,  0,  0,
-      0,  0,  0,  0,']',  0,  0,'G',  0,  0,'R','O',  0,  0,  0,  0,
-    '@','A','B','C','D','E',  0,  0,'H','I','J','K','L',  0,  0,  0,
-    'P','Q',  0,'S','T','U','V',  0,'X','Y','Z','[',  0,  0,'^',  0
-};
-
-
-/* TODO: Use characters NOT numbers!!! */
-char CtrlCharTable[]=
-{/*   0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F */
-    124,193,194,195,  0,201,  0,  0,  0,  0,  0,210,211,212,213,214,
-    215,216,217,226,  0,209,200,  0,231,232,  0,  0,224,189, 95,109,
-      0,  0,  0,  0,  0,  0,230,173,  0,  0,  0,  0,  0,197,198,199,
-      0,  0,229,  0,  0,  0,  0,196,  0,  0,  0,  0,227,228,  0,233,
-};
-
-
 #endif
