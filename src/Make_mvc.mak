@@ -39,6 +39,10 @@
 #	  TCL_VER_LONG=[Tcl version, eg 8.3] (default is 8.3)
 #	    You must set TCL_VER_LONG when you set TCL_VER.
 #	Debug version: DEBUG=yes
+#	Mapfile: MAP=[no, yes or lines] (default is yes)
+#	  no:    Don't write a mapfile.
+#	  yes:   Write a normal mapfile.
+#	  lines: Write a mapfile with line numbers (only for VC6 and later)
 #	SNiFF+ interface: SNIFF=yes
 #	Iconv library support (always dynamically loaded):
 #	  ICONV=[yes or no]  (default is yes)
@@ -479,8 +483,15 @@ CFLAGS = $(CFLAGS) -DMSWINPS
 #
 !message
 
-# "/map /mapinfo:lines" is for debugging
-conflags = /nologo /subsystem:$(SUBSYSTEM) /incremental:no /map /mapinfo:lines
+conflags = /nologo /subsystem:$(SUBSYSTEM) /incremental:no
+
+!IF "$(MAP)" == "yes"
+# "/map" is for debugging
+conflags = $(conflags) /map
+!ELSEIF "$(MAP)" == "lines"
+# "/mapinfo:lines" is for debugging, only works for VC6 and later
+conflags = $(conflags) /map /mapinfo:lines
+!ENDIF
 
 LINKARGS1 = $(linkdebug) $(conflags) /nodefaultlib:libc
 LINKARGS2 = $(CON_LIB) $(GUI_LIB) $(LIBC) $(OLE_LIB)  user32.lib $(SNIFF_LIB) \
