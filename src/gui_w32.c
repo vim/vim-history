@@ -244,6 +244,7 @@ HINSTANCE hLibImm = NULL;
 LONG (WINAPI *pImmGetCompositionStringA)(HIMC, DWORD, LPVOID, DWORD);
 LONG (WINAPI *pImmGetCompositionStringW)(HIMC, DWORD, LPVOID, DWORD);
 HIMC (WINAPI *pImmGetContext)(HWND);
+HIMC (WINAPI *pImmAssociateContext)(HWND, HIMC);
 BOOL (WINAPI *pImmReleaseContext)(HWND, HIMC);
 BOOL (WINAPI *pImmGetOpenStatus)(HIMC);
 BOOL (WINAPI *pImmSetOpenStatus)(HIMC, BOOL);
@@ -256,6 +257,7 @@ static void dyn_imm_load(void);
 # define pImmGetCompositionStringA ImmGetCompositionStringA
 # define pImmGetCompositionStringW ImmGetCompositionStringW
 # define pImmGetContext		  ImmGetContext
+# define pImmAssociateContext	  ImmAssociateContext
 # define pImmReleaseContext	  ImmReleaseContext
 # define pImmGetOpenStatus	  ImmGetOpenStatus
 # define pImmSetOpenStatus	  ImmSetOpenStatus
@@ -1472,9 +1474,25 @@ im_set_position(int row, int col)
 im_set_active(int active)
 {
     HIMC	hImc;
+    static HIMC	hImcOld = NULL;
 
     if (p_imdisable)
+    {
+	if (hImcOld == NULL)
+	{
+	    hImcOld = pImmGetContext(s_hwnd);
+	    if (hImcOld)
+		pImmAssociateContext(s_hwnd, NULL);
+	}
 	active = FALSE;
+    }
+    else
+    if (hImcOld != NULL)
+    {
+	pImmAssociateContext(s_hwnd, hImcOld);
+	hImcOld = NULL;
+    }
+
     if (pImmGetContext && (hImc = pImmGetContext(s_hwnd)))
     {
 	pImmSetOpenStatus(hImc, active);
@@ -3338,6 +3356,9 @@ dyn_imm_load(void)
     if ((*((FARPROC*)&pImmGetContext)
 	    = GetProcAddress(hLibImm, "ImmGetContext")))
 	nImmFunc++;
+    if ((*((FARPROC*)&pImmAssociateContext)
+	    = GetProcAddress(hLibImm, "ImmAssociateContext")))
+	nImmFunc++;
     if ((*((FARPROC*)&pImmReleaseContext)
 	    = GetProcAddress(hLibImm, "ImmReleaseContext")))
 	nImmFunc++;
@@ -3360,7 +3381,7 @@ dyn_imm_load(void)
 	    = GetProcAddress(hLibImm, "ImmGetConversionStatus")))
 	nImmFunc++;
 
-    if (nImmFunc != 10)
+    if (nImmFunc != 11)
     {
 	FreeLibrary(hLibImm);
 	hLibImm = NULL;
