@@ -5779,7 +5779,7 @@ ex_sign(eap)
 	    else if (STRNCMP(arg, "buffer=", 7) == 0)
 	    {
 		arg += 7;
-		buf = buflist_findnr(getdigits(&arg));
+		buf = buflist_findnr((int)getdigits(&arg));
 		if (*skipwhite(arg) != NUL)
 		    EMSG(_(e_trailing));
 		break;
