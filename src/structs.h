@@ -1005,6 +1005,7 @@ struct file_buffer
 
     /* end of buffer options */
 
+    int		b_start_eol;	/* last line had eol when it was read */
     int		b_start_ffc;	/* first char of 'ff' when edit started */
 #ifdef FEAT_MBYTE
     char_u	*b_start_fenc;	/* 'fileencoding' when edit started or NULL */
