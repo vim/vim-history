@@ -1450,13 +1450,15 @@ op_delete(oap)
 #endif
 	    truncate_line(FALSE);   /* delete the rest of the line */
 				    /* leave cursor past last char in line */
+	    if (oap->line_count > 1)
+		u_clearline();	    /* "U" command not possible after "2cc" */
 	}
 	else
 	{
 	    del_lines(oap->line_count, TRUE, TRUE);
 	    beginline(BL_WHITE | BL_FIX);
+	    u_clearline();	/* "U" command not possible after "dd" */
 	}
-	u_clearline();	/* "U" command should not be possible after "dd" */
     }
     else if (oap->line_count == 1)	/* delete characters within one line */
     {
