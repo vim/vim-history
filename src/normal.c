@@ -1730,8 +1730,12 @@ do_pending_operator(cap, old_col, gui_yank)
 	    {
 		/* This is a new edit command, not a restart.  Need to
 		 * remember it to make 'insertmode' work with mappings for
-		 * Visual mode.  But do this only once. */
-		restart_edit_save = restart_edit;
+		 * Visual mode.  But do this only once and not when typed and
+		 * 'insertmode' isn't set. */
+		if (p_im || !KeyTyped)
+		    restart_edit_save = restart_edit;
+		else
+		    restart_edit_save = 0;
 		restart_edit = 0;
 		if (op_change(oap))	/* will call edit() */
 		    cap->retval |= CA_COMMAND_BUSY;
