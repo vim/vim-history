@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer: Bram Moolenaar <Bram@vim.org>
-" Last Change: 2003 May 31
+" Last Change: 2003 Nov 02
 "	       (modified by David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>)
 
 " Transform a file into HTML, using the current syntax highlighting.
@@ -180,26 +180,21 @@ set paste
 let s:old_magic = &magic
 set magic
 
-" The DTD
-if exists("html_use_css")
-  exe "normal a<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\"\n    \"http://www.w3.org/TR/html4/strict.dtd\">\n\e"
-endif
-
 " HTML header, with the title and generator ;-). Left free space for the CSS,
 " to be filled at the end.
-exe "normal a<html>\n<head>\n<title>\e"
-exe "normal a" . expand("%:p:~") . "</title>\n\e"
-exe "normal a<meta name=\"Generator\" content=\"Vim/" . version/100 . "." . version %100 . "\">\n\e"
+exe "normal! a<html>\n<head>\n<title>\e"
+exe "normal! a" . expand("%:p:~") . "</title>\n\e"
+exe "normal! a<meta name=\"Generator\" content=\"Vim/" . version/100 . "." . version %100 . "\">\n\e"
 if s:html_encoding != ""
-  exe "normal a<meta http-equiv=\"content-type\" content=\"text/html; charset=" . s:html_encoding . "\">\n\e"
+  exe "normal! a<meta http-equiv=\"content-type\" content=\"text/html; charset=" . s:html_encoding . "\">\n\e"
 endif
 if exists("html_use_css")
-  exe "normal a<style type=\"text/css\">\n<!--\n-->\n</style>\n\e"
+  exe "normal! a<style type=\"text/css\">\n<!--\n-->\n</style>\n\e"
 endif
 if exists("html_no_pre")
-  exe "normal a</head>\n<body>\n\e"
+  exe "normal! a</head>\n<body>\n\e"
 else
-  exe "normal a</head>\n<body>\n<pre>\n\e"
+  exe "normal! a</head>\n<body>\n<pre>\n\e"
 endif
 
 wincmd p
@@ -281,15 +276,15 @@ while s:lnum <= s:end
   if exists("html_no_pre")
     let s:new = substitute(s:new, '  ', '\&nbsp;\&nbsp;', 'g') . '<br>'
   endif
-  exe "normal \<C-W>pa" . strtrans(s:new) . "\n\e\<C-W>p"
+  exe "normal! \<C-W>pa" . strtrans(s:new) . "\n\e\<C-W>p"
   let s:lnum = s:lnum + 1
   +
 endwhile
 " Finish with the last line
 if exists("html_no_pre")
-  exe "normal \<C-W>pa\n</body>\n</html>\e"
+  exe "normal! \<C-W>pa\n</body>\n</html>\e"
 else
-  exe "normal \<C-W>pa</pre>\n</body>\n</html>\e"
+  exe "normal! \<C-W>pa</pre>\n</body>\n</html>\e"
 endif
 
 
@@ -313,12 +308,12 @@ endif
 " incorrect.
 if exists("html_use_css")
   if exists("html_no_pre")
-    execute "normal A\nbody { color: " . s:fgc . "; background-color: " . s:bgc . "; font-family: Courier, monospace; }\e"
+    execute "normal! A\nbody { color: " . s:fgc . "; background-color: " . s:bgc . "; font-family: Courier, monospace; }\e"
   else
-    execute "normal A\npre { color: " . s:fgc . "; background-color: " . s:bgc . "; }\e"
+    execute "normal! A\npre { color: " . s:fgc . "; background-color: " . s:bgc . "; }\e"
     yank
     put
-    execute "normal ^cwbody\e"
+    execute "normal! ^cwbody\e"
   endif
 else
   if exists("html_no_pre")
@@ -331,7 +326,7 @@ endif
 " Line numbering attributes
 if s:numblines
   if exists("html_use_css")
-    execute "normal A\n.lnr { " . s:CSS1(hlID("LineNr")) . "}\e"
+    execute "normal! A\n.lnr { " . s:CSS1(hlID("LineNr")) . "}\e"
   else
     execute '%s+<span class="lnr">\([^<]*\)</span>+' . s:HtmlOpening(hlID("LineNr")) . '\1' . s:HtmlClosing(hlID("LineNr")) . '+g'
   endif
@@ -350,7 +345,7 @@ while s:idlist != ""
   " its occurences to make the HTML shorter
   if s:attr != ""
     if exists("html_use_css")
-      execute "normal A\n." . s:id_name . " { " . s:attr . "}"
+      execute "normal! A\n." . s:id_name . " { " . s:attr . "}"
     else
       execute '%s+<span class="' . s:id_name . '">\([^<]*\)</span>+' . s:HtmlOpening(s:id) . '\1' . s:HtmlClosing(s:id) . '+g'
     endif
@@ -361,7 +356,12 @@ while s:idlist != ""
 endwhile
 
 " Add hyperlinks
-%s+\(http://\S\{-}\)\(\([.,;:]\=\(\s\|$\)\)\|[\\"'<>]\)+<A HREF="\1">\1</A>\2+ge
+%s+\(http://\S\{-}\)\(\([.,;:]\=\(\s\|$\)\)\|[\\"'<>]\|&gt;\|&lt;\)+<A HREF="\1">\1</A>\2+ge
+
+" The DTD
+if exists("html_use_css")
+  exe "normal! ggi<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">\n\e"
+endif
 
 " Cleanup
 %s:\s\+$::e
