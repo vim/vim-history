@@ -338,6 +338,12 @@ edit(cmdchar, startln, count)
      */
     curs_columns(TRUE);
 
+    /*
+     * Enable langmap or IME, indicated by 'iminsert'.
+     * Note that IME may enabled/disabled without us noticing here, thus the
+     * 'iminsert' value may not reflect what is actually used.  It is updated
+     * when hitting <Esc>.
+     */
     if (curbuf->b_p_iminsert == B_IMODE_LMAP)
 	State |= LANGMAP;
 #ifdef USE_IM_CONTROL
@@ -843,7 +849,7 @@ doESCkey:
 	    if (map_to_exists_mode((char_u *)"", LANGMAP))
 	    {
 		/* ":lmap" mappings exists, Toggle use of ":lmap" mappings. */
-		if (curbuf->b_p_iminsert == B_IMODE_LMAP)
+		if (State & LANGMAP)
 		{
 		    curbuf->b_p_iminsert = B_IMODE_NONE;
 		    State &= ~LANGMAP;
@@ -861,7 +867,7 @@ doESCkey:
 	    else
 	    {
 		/* There are no ":lmap" mappings, toggle IM */
-		if (curbuf->b_p_iminsert == B_IMODE_IM)
+		if (im_get_status())
 		{
 		    curbuf->b_p_iminsert = B_IMODE_NONE;
 		    im_set_active(FALSE);
@@ -5874,8 +5880,11 @@ ins_esc(count, cmdchar)
 #endif
 
 #ifdef USE_IM_CONTROL
-    /* Disable IM to allow typing English directly for Normal mode commands. */
-    im_save_status(&curbuf->b_p_iminsert);
+    /* Disable IM to allow typing English directly for Normal mode commands.
+     * When ":lmap" is enabled don't change 'iminsert' (IM can be enabled as
+     * well). */
+    if (!(State & LANGMAP))
+	im_save_status(&curbuf->b_p_iminsert);
     im_set_active(FALSE);
 #endif
 

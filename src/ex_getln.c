@@ -1526,7 +1526,7 @@ returncmd:
 
     State = save_State;
 #ifdef USE_IM_CONTROL
-    if (b_im_ptr != NULL)
+    if (b_im_ptr != NULL && *b_im_ptr != B_IMODE_LMAP)
 	im_save_status(b_im_ptr);
     im_set_active(FALSE);
 #endif
