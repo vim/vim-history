@@ -1231,12 +1231,11 @@ clip_mch_set_selection(VimClipboard *cbd)
 		SetClipboardData(CF_UNICODETEXT, hMemW);
 		hMemW = 0;
 	    }
-	    else
 # endif
-	    {
-		SetClipboardData(CF_TEXT, hMem);
-		hMem = 0;
-	    }
+	    /* Always use CF_TEXT.  On Win98 Notepad won't obtain the
+	     * CF_UNICODETEXT text, only CF_TEXT. */
+	    SetClipboardData(CF_TEXT, hMem);
+	    hMem = 0;
 	}
 	CloseClipboard();
     }
