@@ -3906,8 +3906,8 @@ gui_update_horiz_scrollbar(force)
 		    longest_lnum = lnum;
 		}
 		else if (n == (colnr_T)max
-			&& abs(lnum - curwin->w_cursor.lnum)
-				  < abs(longest_lnum - curwin->w_cursor.lnum))
+			&& abs((int)(lnum - curwin->w_cursor.lnum))
+			   < abs((int)(longest_lnum - curwin->w_cursor.lnum)))
 		    longest_lnum = lnum;
 	    }
 	}
