@@ -4597,6 +4597,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     char_u	*s, *p;
     int		did_chartab = FALSE;
     char_u	**gvarp;
+    int		free_oldval = (options[opt_idx].flags & P_ALLOCED);
 
     /* Get the global option to compare with, otherwise we would have to check
      * two values for all local options. */
@@ -5729,8 +5730,10 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 #endif
 	/*
 	 * Free string options that are in allocated memory.
+	 * Use "free_oldval", because recursiveness may change the flags under
+	 * our fingers (esp. init_highlight()).
 	 */
-	if (options[opt_idx].flags & P_ALLOCED)
+	if (free_oldval)
 	    free_string_option(oldval);
 	if (new_value_alloced)
 	    options[opt_idx].flags |= P_ALLOCED;
