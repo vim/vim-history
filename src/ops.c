@@ -3506,15 +3506,7 @@ error:
 	    {
 		curbuf->b_op_start.col = 0;
 		if (dir == FORWARD)
-		{
-#ifdef FEAT_FOLDING
-		    /* a "p" inside a closed fold is like a "p" in the last
-		     * line of the fold */
-		    (void)hasFolding(curbuf->b_op_start.lnum, NULL,
-						    &curbuf->b_op_start.lnum);
-#endif
 		    curbuf->b_op_start.lnum++;
-		}
 	    }
 	    mark_adjust(curbuf->b_op_start.lnum + (y_type == MCHAR),
 					     (linenr_T)MAXLNUM, nr_lines, 0L);
