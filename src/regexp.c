@@ -347,7 +347,8 @@ static int my_isesc(c) int c; { return c == ESC; }
  * If not: NULL is returned; If so, a function of the sort is* is returned and
  * the name is skipped.
  */
-#if defined(macintosh) || defined(__BEOS__)
+#if defined(macintosh) || defined(__BEOS__) || defined(__NeXT__) \
+	|| defined(__APPLE_CC__)
 /* the compiler doesn't understand the other one */
     static int (*
 skip_class_name(char_u **pp))__ARGS((int))
