@@ -847,7 +847,7 @@ retry:
 	 * conversion to UTF-8 except how the resulting character is put in
 	 * the buffer.
 	 */
-	else if (enc_utf8 || !has_mbyte)
+	else if (enc_utf8 || STRCMP(p_enc, "latin1") == 0)
 	    fio_flags = get_fio_flags(fenc);
 
 # ifdef USE_ICONV
@@ -3113,7 +3113,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
      * Latin1 to Unicode conversion.  This is handled in buf_write_bytes().
      * Prepare the flags for it and allocate bw_conv_buf when needed.
      */
-    if (converted && (enc_utf8 || !has_mbyte))
+    if (converted && (enc_utf8 || STRCMP(p_enc, "latin1") == 0))
     {
 	wb_flags = get_fio_flags(fenc);
 	if (wb_flags & (FIO_UCS2 | FIO_UCS4 | FIO_UTF16 | FIO_UTF8))
