@@ -7197,6 +7197,9 @@ ex_tag_cmd(eap, name)
 
 #ifdef FEAT_EVAL
 
+/*
+ * ":if".
+ */
     static void
 ex_if(eap)
     exarg_T	*eap;
@@ -7214,10 +7217,10 @@ ex_if(eap)
 	cstack->cs_flags[cstack->cs_idx] = 0;
 
 	/*
-	 * Don't do something when there is a surrounding conditional and it
-	 * was not active.
+	 * Don't do something after an error or when there is a surrounding
+	 * conditional and it was not active.
 	 */
-	skip = (cstack->cs_idx > 0
+	skip = did_emsg || (cstack->cs_idx > 0
 		&& !(cstack->cs_flags[cstack->cs_idx - 1] & CSF_ACTIVE));
 
 	result = eval_to_bool(eap->arg, &error, &eap->nextcmd, skip);
@@ -7269,10 +7272,10 @@ ex_else(eap)
     else
     {
 	/*
-	 * Don't do something when there is a surrounding conditional and it
-	 * was not active.
+	 * Don't do something after an error or when there is a surrounding
+	 * conditional and it was not active.
 	 */
-	skip = (cstack->cs_idx > 0
+	skip = did_emsg || (cstack->cs_idx > 0
 		&& !(cstack->cs_flags[cstack->cs_idx - 1] & CSF_ACTIVE));
 	if (!skip)
 	{
@@ -7332,10 +7335,10 @@ ex_while(eap)
 	cstack->cs_flags[cstack->cs_idx] = CSF_WHILE;
 
 	/*
-	 * Don't do something when there is a surrounding conditional and it
-	 * was not active.
+	 * Don't do something after an error or when there is a surrounding
+	 * conditional and it was not active.
 	 */
-	skip = (cstack->cs_idx > 0
+	skip = did_emsg || (cstack->cs_idx > 0
 		&& !(cstack->cs_flags[cstack->cs_idx - 1] & CSF_ACTIVE));
 	result = eval_to_bool(eap->arg, &error, &eap->nextcmd, skip);
 
