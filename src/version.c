@@ -612,6 +612,8 @@ static char *(features[]) =
 static int included_patches[] =
 {   /* Add new patch number below this line */
 /**/
+    384,
+/**/
     383,
 /**/
     382,
@@ -1391,6 +1393,21 @@ highest_patch()
 	if (included_patches[i] > h)
 	    h = included_patches[i];
     return h;
+}
+
+/*
+ * Return TRUE if patch "n" has been included.
+ */
+    int
+has_patch(n)
+    int		n;
+{
+    int		i;
+
+    for (i = 0; included_patches[i] != 0; ++i)
+	if (included_patches[i] == n)
+	    return TRUE;
+    return FALSE;
 }
 
     void
