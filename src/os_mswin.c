@@ -1653,7 +1653,7 @@ mch_print_cleanup(void)
     static int
 to_device_units(int idx, int dpi, int physsize, int offset, int def_number)
 {
-    int		ret;
+    int		ret = 0;
     int		u;
     int		nr;
 
@@ -2849,7 +2849,7 @@ points_to_pixels(char_u *str, char_u **end, int vertical, int pprinter_dc)
     int		pixels;
     int		points = 0;
     int		divisor = 0;
-    HWND	hwnd;
+    HWND	hwnd = (HWND)0;
     HDC		hdc;
     HDC		printer_dc = (HDC)pprinter_dc;
 
