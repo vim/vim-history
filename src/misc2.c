@@ -3532,11 +3532,36 @@ vim_findfile_init(path, filename, stopdirs, level, free_visited, need_dir,
     }
     else if (*path == NUL || !vim_isAbsName(path))
     {
-	if (mch_dirname(ff_expand_buffer, MAXPATHL) == OK)
-	    ff_search_ctx->ffsc_start_dir = vim_strsave(ff_expand_buffer);
+#ifdef BACKSLASH_IN_FILENAME
+	/* "c:dir" needs "c:" to be expanded, otherwise use current dir */
+	if (path[1] == ':')
+	{
+	    char_u  drive[3];
 
+	    drive[0] = path[0];
+	    drive[1] = ':';
+	    drive[2] = NUL;
+	    if (vim_FullName(drive, ff_expand_buffer, MAXPATHL, TRUE) == FAIL)
+		goto error_return;
+	    path += 2;
+	}
+	else
+#endif
+	if (mch_dirname(ff_expand_buffer, MAXPATHL) == FAIL)
+	    goto error_return;
+
+	ff_search_ctx->ffsc_start_dir = vim_strsave(ff_expand_buffer);
 	if (ff_search_ctx->ffsc_start_dir == NULL)
 	    goto error_return;
+
+#ifdef BACKSLASH_IN_FILENAME
+	/* A path that starts with "/dir" is relative to the drive, not to the
+	 * directory (but not for "//machine/dir").  Only use the drive name. */
+	if ((*path == '/' || *path == '\\')
+		&& path[1] != path[0]
+		&& ff_search_ctx->ffsc_start_dir[1] == ':')
+	    ff_search_ctx->ffsc_start_dir[2] = NUL;
+#endif
     }
 
 #ifdef FEAT_PATH_EXTRA
