@@ -1053,7 +1053,7 @@ EXTERN char_u e_backslash[]	INIT(=N_("E10: \\ should be followed by /, ? or &"))
 EXTERN char_u e_cmdwin[]	INIT(=N_("E11: Invalid in command-line window; <CR> executes, CTRL-C quits"));
 #endif
 EXTERN char_u e_curdir[]	INIT(=N_("E12: Command not allowed from exrc/vimrc in current dir or tag search"));
-EXTERN char_u e_exists[]	INIT(=N_("E13: File exists (use ! to override)"));
+EXTERN char_u e_exists[]	INIT(=N_("E13: File exists (add ! to override)"));
 EXTERN char_u e_failed[]	INIT(=N_("Command failed"));
 EXTERN char_u e_internal[]	INIT(=N_("Internal error"));
 EXTERN char_u e_interr[]	INIT(=N_("Interrupted"));
@@ -1107,7 +1107,7 @@ EXTERN char_u e_notcreate[]	INIT(=N_("Can't create file %s"));
 EXTERN char_u e_notmp[]		INIT(=N_("Can't get temp file name"));
 EXTERN char_u e_notopen[]	INIT(=N_("Can't open file %s"));
 EXTERN char_u e_notread[]	INIT(=N_("Can't read file %s"));
-EXTERN char_u e_nowrtmsg[]	INIT(=N_("E37: No write since last change (use ! to override)"));
+EXTERN char_u e_nowrtmsg[]	INIT(=N_("E37: No write since last change (add ! to override)"));
 EXTERN char_u e_null[]		INIT(=N_("E38: Null argument"));
 #ifdef FEAT_DIGRAPHS
 EXTERN char_u e_number[]	INIT(=N_("E39: Number expected"));
@@ -1132,7 +1132,7 @@ EXTERN char_u e_quickfix[]	INIT(=N_("E42: No Errors"));
 #endif
 EXTERN char_u e_re_damg[]	INIT(=N_("E43: Damaged match string"));
 EXTERN char_u e_re_corr[]	INIT(=N_("E44: Corrupted regexp program"));
-EXTERN char_u e_readonly[]	INIT(=N_("E45: 'readonly' option is set (use ! to override)"));
+EXTERN char_u e_readonly[]	INIT(=N_("E45: 'readonly' option is set (add ! to override)"));
 #ifdef FEAT_EVAL
 EXTERN char_u e_readonlyvar[]	INIT(=N_("E46: Cannot set read-only variable \"%s\""));
 #endif

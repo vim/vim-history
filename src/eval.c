@@ -7618,7 +7618,7 @@ ex_function(eap)
     int		indent;
     int		nesting;
     int		in_append = FALSE;
-    static char_u e_funcexts[] = N_("E122: Function %s already exists, use ! to replace");
+    static char_u e_funcexts[] = N_("E122: Function %s already exists, add ! to replace it");
 
     /*
      * ":function" without argument: list functions.

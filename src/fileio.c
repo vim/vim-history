@@ -2597,7 +2597,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    if (vim_strchr(p_cpo, CPO_FWRITE) != NULL)
 		errmsg = (char_u *)_(err_readonly);
 	    else
-		errmsg = (char_u *)_("is read-only (use ! to override)");
+		errmsg = (char_u *)_("is read-only (add ! to override)");
 	    goto fail;
 	}
 
@@ -2899,7 +2899,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 			{
 			    if (buf_write_bytes(&write_info) == FAIL)
 			    {
-				errmsg = (char_u *)_("Can't write to backup file (use ! to override)");
+				errmsg = (char_u *)_("Can't write to backup file (add ! to override)");
 				break;
 			    }
 			    ui_breakcheck();
@@ -2911,9 +2911,9 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 			}
 
 			if (close(bfd) < 0 && errmsg == NULL)
-			    errmsg = (char_u *)_("Close error for backup file (use ! to override)");
+			    errmsg = (char_u *)_("Close error for backup file (add ! to override)");
 			if (write_info.bw_len < 0)
-			    errmsg = (char_u *)_("Can't read file for backup (use ! to override)");
+			    errmsg = (char_u *)_("Can't read file for backup (add ! to override)");
 #ifdef UNIX
 			set_file_time(backup, st_old.st_atime, st_old.st_mtime);
 #endif
@@ -2929,7 +2929,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    vim_free(copybuf);
 
 	    if (backup == NULL && errmsg == NULL)
-		errmsg = (char_u *)_("Cannot create backup file (use ! to override)");
+		errmsg = (char_u *)_("Cannot create backup file (add ! to override)");
 	    /* ignore errors when forceit is TRUE */
 	    if ((some_error || errmsg != NULL) && !forceit)
 	    {
@@ -3031,7 +3031,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    }
 	    if (backup == NULL && !forceit)
 	    {
-		errmsg = (char_u *)_("Can't make backup file (use ! to override)");
+		errmsg = (char_u *)_("Can't make backup file (add ! to override)");
 		goto fail;
 	    }
 	}
@@ -3093,7 +3093,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     if (backup == NULL && overwriting && !append)
 	if (mch_has_resource_fork(fname))
 	{
-	    errmsg = (char_u *)_("The resource fork will be lost (use ! to override)");
+	    errmsg = (char_u *)_("E460: The resource fork would be lost (add ! to override)");
 	    goto restore_backup;
 	}
 #endif
@@ -3200,7 +3200,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     {
 	if (!forceit)
 	{
-	    errmsg = (char_u *)_("E213: Cannot convert (use ! to write without conversion)");
+	    errmsg = (char_u *)_("E213: Cannot convert (add ! to write without conversion)");
 	    goto restore_backup;
 	}
 	notconverted = TRUE;
