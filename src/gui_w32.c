@@ -1202,7 +1202,7 @@ gui_mch_set_bg_color(guicolor_T color)
  * Multi-byte handling, originally by Sung-Hoon Baek.
  * First static functions (no prototypes generated).
  */
-#ifdef __MSVC
+#ifdef _MSC_VER
 # include <ime.h>   /* Apparently not needed for Cygwin, MingW or Borland. */
 #endif
 #include <imm.h>
