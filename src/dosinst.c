@@ -1174,7 +1174,7 @@ install_vimrc(int idx)
 	fprintf(fd, "\n");
 	fprintf(fd, "set diffexpr=MyDiff()\n");
 	fprintf(fd, "function MyDiff()\n");
-	fprintf(fd, "  let opt = ''\n");
+	fprintf(fd, "  let opt = '-a --binary '\n");
 	fprintf(fd, "  if &diffopt =~ 'icase' | let opt = opt . '-i ' | endif\n");
 	fprintf(fd, "  if &diffopt =~ 'iwhite' | let opt = opt . '-b ' | endif\n");
 	/* Use quotes only when needed, they may cause trouble. */
@@ -1193,15 +1193,15 @@ install_vimrc(int idx)
 	     * end of the command.  Putting quotes around the whole thing
 	     * doesn't work on Win 95/98/ME.  This is mostly guessed! */
 	    fprintf(fd, "  if &sh =~ '\\<cmd'\n");
-	    fprintf(fd, "    silent execute '!\"\"%s\\diff\" -a ' . opt . arg1 . ' ' . arg2 . ' > ' . arg3 . '\"'\n", installdir);
+	    fprintf(fd, "    silent execute '!\"\"%s\\diff\" ' . opt . arg1 . ' ' . arg2 . ' > ' . arg3 . '\"'\n", installdir);
 	    fprintf(fd, "  else\n");
 	    *p = NUL;
-	    fprintf(fd, "    silent execute '!%s\" %s\\diff\" -a ' . opt . arg1 . ' ' . arg2 . ' > ' . arg3\n", installdir, p + 1);
+	    fprintf(fd, "    silent execute '!%s\" %s\\diff\" ' . opt . arg1 . ' ' . arg2 . ' > ' . arg3\n", installdir, p + 1);
 	    *p = ' ';
 	    fprintf(fd, "  endif\n");
 	}
 	else
-	    fprintf(fd, "  silent execute '!%s\\diff -a ' . opt . arg1 . ' ' . arg2 . ' > ' . arg3\n", installdir);
+	    fprintf(fd, "  silent execute '!%s\\diff ' . opt . arg1 . ' ' . arg2 . ' > ' . arg3\n", installdir);
 	fprintf(fd, "endfunction\n");
 	fprintf(fd, "\n");
     }
