@@ -137,9 +137,9 @@ static struct
     {Pk_F30,	    'F', 'K'},
     {Pk_F31,	    'F', 'L'},
     {Pk_F32,	    'F', 'M'},
-    {Pk_F33,	    'F', 'O'},
-    {Pk_F34,	    'F', 'P'},
-    {Pk_F35,	    'F', 'Q'},
+    {Pk_F33,	    'F', 'N'},
+    {Pk_F34,	    'F', 'O'},
+    {Pk_F35,	    'F', 'P'},
 
     {Pk_Help,	    '%', '1'},
     {Pk_BackSpace,  'k', 'b'},
@@ -488,10 +488,12 @@ gui_ph_handle_keyboard( PtWidget_t *widget, void *data, PtCallbackInfo_t *info )
 		{
 		    /* Detect if a keypad number key has been pressed
 		     * and change the key if Num Lock is on */
-		    if( key->key_cap >= Pk_KP_0 && key->key_cap <= Pk_KP_9
+		    if( key->key_cap >= Pk_KP_Enter && key->key_cap <= Pk_KP_9
 			    && ( key->key_mods & Pk_KM_Num_Lock ) )
 		    {
-			ch = TO_SPECIAL( 'K', key->key_cap - Pk_KP_0 + 'C' );
+			/* FIXME: For now, just map the key to a ascii value 
+			 * (see <photon/PkKeyDef.h>) */
+			ch = key->key_cap - 0xf080;
 		    }
 		    else
 			ch = TO_SPECIAL( special_keys[i].vim_code0,
@@ -924,10 +926,15 @@ gui_ph_handle_pg_change(
 }
 
     static void
-gui_ph_get_panelgroup_margins( short *top, short *bottom, short *left, short *right )
+gui_ph_get_panelgroup_margins(
+	short *top,
+	short *bottom,
+	short *left,
+	short *right )
 {
     unsigned short abs_raw_x, abs_raw_y, abs_panel_x, abs_panel_y;
-    const unsigned short *margin_top, *margin_bottom, *margin_left, *margin_right;
+    const unsigned short *margin_top, *margin_bottom;
+    const unsigned short *margin_left, *margin_right;
 
     PtGetAbsPosition( gui.vimTextArea, &abs_raw_x, &abs_raw_y );
     PtGetAbsPosition( gui.vimPanelGroup, &abs_panel_x, &abs_panel_y );
@@ -1318,32 +1325,24 @@ gui_mch_exit(int rc)
 /****************************************************************************/
 /* events */
 
+/* When no events are available, photon will call this function, working is
+ * set to FALSE, and the gui_mch_update loop will exit. */
+    static int
+exit_gui_mch_update( void *data )
+{
+    *(int *)data = FALSE;
+    return( Pt_END );
+}
+
     void
 gui_mch_update(void)
 {
-    int working = -1;
+    int working = TRUE;
 
-    while( working && !vim_is_input_buf_full())
+    PtAppAddWorkProc( NULL, exit_gui_mch_update, &working );
+    while( ( working == TRUE ) && !vim_is_input_buf_full())
     {
-	switch( PhEventPeek( gui.event_buffer, EVENT_BUFFER_SIZE ) )
-	{
-	    case 0: /* No messages */
-		working = 0;
-		break;
-
-	    case Ph_EVENT_MSG:
-		PtEventHandler( gui.event_buffer );
-		break;
-
-	    case -1:
-		perror( "gui_mch_update: PhEventPeek failed" );
-		working = 0;
-		break;
-	    default:
-		perror( "PhEventPeek default reached" );
-		working = 0;
-		break;
-	}
+	PtProcessEvent();
     }
 }
 
@@ -1357,29 +1356,14 @@ gui_mch_wait_for_chars(int wtime)
 
     while( 1 )
     {
-	switch( PhEventNext( gui.event_buffer, EVENT_BUFFER_SIZE ) )
+	PtProcessEvent();
+	if( !vim_is_input_buf_empty() )
 	{
-	    case Ph_EVENT_MSG:
-		PtEventHandler( gui.event_buffer );
-		if( !vim_is_input_buf_empty() )
-		{
-		    PtSetResource( gui_ph_timer_timeout, Pt_ARG_TIMER_INITIAL, 0, 0 );
-		    return( OK );
-		}
-		else if( is_timeout == TRUE )
-		    return( FAIL );
-
-		break;
-
-	    case Ph_RESIZE_MSG:
-		/* FIXME */
-		return( FAIL );
-		break;
-
-	    case -1:
-		perror( "PhEventNext" );
-		return( FAIL );
+	    PtSetResource( gui_ph_timer_timeout, Pt_ARG_TIMER_INITIAL, 0, 0 );
+	    return( OK );
 	}
+	else if( is_timeout == TRUE )
+	    return( FAIL );
     }
 }
 
@@ -1577,9 +1561,8 @@ gui_mch_dialog(
 		button_count, (const char **) button_array, NULL,
 		default_button, 0, Pt_MODAL );
 #else
-	/* PtPrompt doesn't work if you're not using PtMainLoop(), so create the dialog directly.
-	 * It does give us the option ofadding extra features, like trapping the escape key and
-	 * returning 0 to vim */
+	/* Writing the dialog ourselves lets us add extra features, like
+	 * trapping the escape key and returning 0 to vim */
 	{
 	    int n;
 	    PtArg_t args[5];
@@ -2384,7 +2367,8 @@ gui_mch_start_blink(void)
     /* Only turn on the timer on if none of the times are zero */
     if( blink_waittime && blink_ontime && blink_offtime && gui.in_focus)
     {
-	PtSetResource( gui_ph_timer_cursor, Pt_ARG_TIMER_INITIAL, blink_waittime, 0 );
+	PtSetResource( gui_ph_timer_cursor, Pt_ARG_TIMER_INITIAL,
+		blink_waittime, 0 );
 	blink_state = BLINK_ON;
 	gui_update_cursor(TRUE, FALSE);
     }
@@ -2792,7 +2776,7 @@ gui_mch_menu_grey(vimmenu_T *menu, int grey)
 	    PtWidgetIsClass( PtWidgetParent( menu->id ), PtMenu ) )
     {
 	fields = Pt_FALSE;
-	mask = Pt_SELECTABLE;
+	mask = Pt_SELECTABLE | Pt_HIGHLIGHTED;
     }
     else
     {

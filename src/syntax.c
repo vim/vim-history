@@ -6493,6 +6493,12 @@ do_highlight(line, forceit, init)
 						 4+8, 4+8, 2+8, 2+8,
 						 6+8, 6+8, 1+8, 1+8, 5+8,
 						 5+8, 3+8, 3+8, 7+8, -1};
+#if defined(__QNXNTO__)
+		static int *color_numbers_8_qansi = color_numbers_8;
+		/* On qnx, the 8 & 16 color arrays are the same */
+		if (STRNCMP(T_NAME, "qansi", 5) == 0)
+		    color_numbers_8_qansi = color_numbers_16;
+#endif
 
 		/* reduce calls to STRICMP a bit, it can be slow */
 		off = TO_UPPER(*arg);
@@ -6514,7 +6520,11 @@ do_highlight(line, forceit, init)
 		    if (t_colors == 8)
 		    {
 			/* t_Co is 8: use the 8 colors table */
+#if defined(__QNXNTO__)
+			color = color_numbers_8_qansi[i];
+#else
 			color = color_numbers_8[i];
+#endif
 			if (key[5] == 'F')
 			{
 			    /* set/reset bold attribute to get light foreground

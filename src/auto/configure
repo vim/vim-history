@@ -3241,7 +3241,7 @@ elif test "x$QNX" = "xyes" -a "x$with_x" = "xno" ; then
 
   case "$enable_gui" in
     no|No|NO)		echo "$ac_t""no GUI support" 1>&6
-			SKIP_QNX=YES ;;
+			SKIP_PHOTON=YES ;;
     yes|Yes|YES|"")	echo "$ac_t""yes - automatic GUI support" 1>&6 ;;
     auto|Auto|AUTO|"")	echo "$ac_t""auto - automatic GUI support" 1>&6 ;;
     photon|Photon|PHOTON)	echo "$ac_t""Photon GUI support" 1>&6 ;;

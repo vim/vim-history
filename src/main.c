@@ -167,8 +167,8 @@ main
     (void)mb_init();	/* init mb_bytelen_tab[] to ones */
 #endif
 
-#ifdef __QNX__
-    qnx_init();		/* PhAttach() for clipboard, mouse (and gui) */
+#ifdef __QNXNTO__
+    qnx_init();		/* PhAttach() for clipboard, (and gui) */
 #endif
 
 #ifdef FEAT_GUI_MAC
@@ -1424,6 +1424,10 @@ scripterror:
 	    gui_wait_for_chars(50L);
 	TIME_MSG("GUI delay");
     }
+#endif
+
+#if defined(FEAT_GUI_PHOTON) && defined(FEAT_CLIPBOARD)
+    qnx_clip_init();
 #endif
 
 #ifdef FEAT_XCLIPBOARD

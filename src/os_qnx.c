@@ -15,27 +15,32 @@
 #include "vim.h"
 
 
+#if defined(FEAT_GUI_PHOTON)
 int is_photon_available;
-
+#endif
 
 void qnx_init()
 {
-#if defined(FEAT_CLIPBOARD) || defined(FEAT_GUI)
-    is_photon_available = (PhAttach( NULL, NULL ) != NULL) ? TRUE : FALSE;
+#if defined(FEAT_GUI_PHOTON)
+    PhChannelParms_t parms;
+
+    memset( &parms, 0, sizeof( parms ) );
+    parms.flags = Ph_DYNAMIC_BUFFER;
+
+    is_photon_available = (PhAttach( NULL, &parms ) != NULL) ? TRUE : FALSE;
 #endif
 }
 
-#if defined(FEAT_CLIPBOARD) || defined(PROTO)
+#if (defined(FEAT_GUI_PHOTON) && defined(FEAT_CLIPBOARD)) || defined(PROTO)
 
-#define CLIP_TYPE_VIM "TEXTVIM"
+#define CLIP_TYPE_VIM "VIMTYPE"
 #define CLIP_TYPE_TEXT "TEXT"
 
+/* Turn on the clipboard for a console vim when photon is running */
 void qnx_clip_init()
 {
-    if( is_photon_available == TRUE )
-    {
+    if( is_photon_available == TRUE && !gui.in_use)
 	clip_init( TRUE );
-    }
 }
 
 /*****************************************************************************/
@@ -56,7 +61,7 @@ clip_mch_lose_selection( VimClipboard *cbd )
 void
 clip_mch_request_selection( VimClipboard *cbd )
 {
-    int		    type = MLINE, clip_length = 0;
+    int		    type = MLINE, clip_length = 0, is_type_set = FALSE;
     void	    *cbdata;
     PhClipHeader    *clip_header;
     char_u	    *clip_text = NULL;
@@ -66,36 +71,27 @@ clip_mch_request_selection( VimClipboard *cbd )
     {
 	/* Look for the vim specific clip first */
 	clip_header = PhClipboardPasteType( cbdata, CLIP_TYPE_VIM );
+	if( clip_header != NULL && clip_header->data != NULL )
+	{
+	    switch( *(char *) clip_header->data )
+	    {
+		default: /* fallthrough to line type */
+		case 'L': type = MLINE; break;
+		case 'C': type = MCHAR; break;
+		case 'B': type = MBLOCK; break;
+	    }
+	    is_type_set = TRUE;
+	}
+
+	/* Try for just normal text */
+	clip_header = PhClipboardPasteType( cbdata, CLIP_TYPE_TEXT );
 	if( clip_header != NULL )
 	{
 	    clip_text = clip_header->data;
-	    /* Skip past the initial type specifier */
-	    /* clip_header->length also includes the trailing NUL */
-	    clip_length  = clip_header->length - 2;
+	    clip_length  = clip_header->length - 1;
 
-	    if( clip_text != NULL )
-	    {
-		switch( *clip_text++ )
-		{
-		    default: /* fallthrough to line type */
-		    case 'L': type = MLINE; break;
-		    case 'C': type = MCHAR; break;
-		    case 'B': type = MBLOCK; break;
-		}
-	    }
-	}
-	else
-	{
-	    /* Try for just normal text */
-	    clip_header = PhClipboardPasteType( cbdata, CLIP_TYPE_TEXT );
-	    if( clip_header != NULL )
-	    {
-		clip_text = clip_header->data;
-		clip_length  = clip_header->length - 1;
-
-		if( clip_text != NULL )
-		    type = (strchr( clip_text, '\r' ) != NULL) ? MLINE : MCHAR;
-	    }
+	    if( clip_text != NULL && is_type_set == FALSE )
+		type = (strchr( clip_text, '\r' ) != NULL) ? MLINE : MCHAR;
 	}
 
 	if( (clip_text != NULL) && (clip_length > 0) )
@@ -112,7 +108,12 @@ clip_mch_set_selection( VimClipboard *cbd )
 {
     int type;
     long_u  len;
-    char_u *text_clip, *vim_clip, *str = NULL;
+    char_u *text_clip, vim_clip[2], *str = NULL;
+    PhClipHeader clip_header[2];
+
+    /* Prevent recursion from clip_get_selection() */
+    if( cbd->owned == TRUE )
+	return;
 
     cbd->owned = TRUE;
     clip_get_selection( cbd );
@@ -122,14 +123,13 @@ clip_mch_set_selection( VimClipboard *cbd )
     if( type >= 0 )
     {
 	text_clip = lalloc( len + 1, TRUE ); /* Normal text */
-	vim_clip  = lalloc( len + 2, TRUE ); /* vim specific info + text */
 
 	if( text_clip && vim_clip )
 	{
-	    PhClipHeader clip_header[2];
+	    memset( clip_header, 0, sizeof( clip_header ) );
 
 	    STRNCPY( clip_header[0].type, CLIP_TYPE_VIM, 8 );
-	    clip_header[0].length = len + 2;
+	    clip_header[0].length = sizeof( vim_clip );
 	    clip_header[0].data   = vim_clip;
 
 	    STRNCPY( clip_header[1].type, CLIP_TYPE_TEXT, 8 );
@@ -147,13 +147,11 @@ clip_mch_set_selection( VimClipboard *cbd )
 	    STRNCPY( text_clip, str, len );
 	    text_clip[ len ] = NUL;
 
-	    STRNCPY( vim_clip + 1, str, len );
-	    vim_clip[ len + 1 ] = NUL;
+	    vim_clip[ 1 ] = NUL;
 
 	    PhClipboardCopy( PhInputGroup( NULL ), 2, clip_header);
 	}
 	vim_free( text_clip );
-	vim_free( vim_clip );
     }
     vim_free( str );
 }
