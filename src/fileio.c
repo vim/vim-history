@@ -33,6 +33,10 @@
 # include <limits.h>		/* for SSIZE_MAX */
 #endif
 
+#if defined(HAVE_UTIME) && defined(HAVE_UTIME_H)
+# include <utime.h>		/* for struct utimbuf */
+#endif
+
 #define BUFSIZE		8192	/* size of normal write buffer */
 #define SMBUFSIZE	256	/* size of emergency write buffer */
 
@@ -2240,8 +2244,6 @@ set_file_time(fname, atime, mtime)
     time_t  mtime;	    /* modification time */
 {
 # if defined(HAVE_UTIME) && defined(HAVE_UTIME_H)
-#  include <utime.h>
-
     struct utimbuf  buf;
 
     buf.actime	= atime;
@@ -2249,7 +2251,6 @@ set_file_time(fname, atime, mtime)
     (void)utime((char *)fname, &buf);
 # else
 #  if defined(HAVE_UTIMES)
-
     struct timeval  tvp[2];
 
     tvp[0].tv_sec   = atime;
