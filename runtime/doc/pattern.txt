@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.0f.  Last change: 2000 Aug 12
+*pattern.txt*   For Vim version 6.0g.  Last change: 2000 Aug 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -704,7 +704,7 @@ x	A single character, with no special meaning, matches itself
 	end-of-line is also matched when the collection starts with "^"!  Thus
 	"\_[^ab]" matches the end-of-line and any character but "a" and "b".
 	This makes it Vi compatible: Without the "\_" or "\n" the collection
-	does not match an end-of-line.  
+	does not match an end-of-line.
 
 	If the sequence begins with "^", it matches any single character NOT
 	in the collection: "[^xyz]" matches anything but 'x', 'y' and 'z'.

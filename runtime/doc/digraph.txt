@@ -1,4 +1,4 @@
-*digraph.txt*   For Vim version 6.0f.  Last change: 2000 Jul 07
+*digraph.txt*   For Vim version 6.0g.  Last change: 2000 Aug 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -73,7 +73,7 @@ You may have problems using Vim with characters which have an ASCII value
 above 128.  For example: You insert ue (u-umlaut) and the editor echoes \334
 in Insert mode.  After leaving the Insert mode everything is fine.  Note that
 fmt removes all characters with ASCII codes above 128 from the text being
-formated.  On some Unix systems this means you have to define the
+formatted.  On some Unix systems this means you have to define the
 environment-variable LC_CTYPE.  If you are using csh, then put the following
 line in your .cshrc: >
 	setenv LC_CTYPE iso_8859_1

@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0f.  Last change: 2000 Aug 12
+*syntax.txt*    For Vim version 6.0g.  Last change: 2000 Aug 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1527,10 +1527,13 @@ These arguments can be used for all three commands:
 	contained
 	nextgroup
 	transparent
-	display
 	skipwhite
 	skipnl
 	skipempty
+
+And the argument that can be used for a match and regeion, but not for a
+keyword:
+	display
 
 
 contained						*:syn-contained*

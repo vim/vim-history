@@ -1,7 +1,7 @@
 " These commands create the option window.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Aug 12
+" Last Change:	2000 Aug 15
 
 " If there already is an option window, jump to that one.
 if bufwinnr("option-window") > 0
@@ -857,6 +857,9 @@ inoremap <buffer> <CR> <Esc>:call OW_CR()<CR>:echo<CR>
 noremap <buffer> <Space> :call OW_Space()<CR>:echo<CR>
 inoremap <buffer> <Space> <Esc>:call OW_Space()<CR>:echo<CR>
 
+" Make the buffer be deleted when the window is closed.
+set buftype=scratch
+
 augroup optwin
   au! BufUnload,BufHidden option-window nested
   	\ call OW_unload() | delfun OW_unload
@@ -873,7 +876,6 @@ fun! OW_unload()
   delfun OW_BinOptionL
   delfun OW_Header
   au! optwin
-  bdel! option-window
 endfun
 
 " Restore the previous value of 'title' and 'icon'.

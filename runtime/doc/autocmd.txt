@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 6.0f.  Last change: 2000 Jul 21
+*autocmd.txt*   For Vim version 6.0g.  Last change: 2000 Aug 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -338,7 +338,7 @@ WinLeave			Before leaving a window.  If the window to be
 				WinLeave autocommands (but not for ":new").
 				Not used for ":qa" or ":q" when exiting Vim.
 							*GUIEnter*
-GUIEnter			After starting the GUI succesfully, and after
+GUIEnter			After starting the GUI successfully, and after
 				opening the window.  It is triggered before
 				VimEnter when using gvim.  Can be used to
 				position the window from a .gvimrc file: >
@@ -361,7 +361,7 @@ VimLeave			Before exiting Vim, just after writing the
 				VimLeavePre.
 							*FileEncoding*
 FileEncoding			Obsolete.  It still works and is equivalent
-				to |CharCode|. 
+				to |CharCode|.
 							*CharCode*
 CharCode			Fires off when you change the 'charcode'
 				option.  Useful to set up fonts or other
@@ -587,7 +587,7 @@ Examples for reading and writing compressed files: >
   :  autocmd BufReadPost,FileReadPost	*.gz execute ":doautocmd BufReadPost " . expand("%:r")
   :  autocmd BufWritePost,FileWritePost	*.gz !mv <afile> <afile>:r
   :  autocmd BufWritePost,FileWritePost	*.gz !gzip <afile>:r
- 
+
   :  autocmd FileAppendPre		*.gz !gunzip <afile>
   :  autocmd FileAppendPre		*.gz !mv <afile>:r <afile>
   :  autocmd FileAppendPost		*.gz !mv <afile> <afile>:r
@@ -730,7 +730,7 @@ When using one of the "*Cmd" events, the matching autocommands are expected to
 do the file reading or writing.  This can be used when working with a special
 kind of file, for example on a remote system.
 CAREFUL: If you use these events in a wrong way, it may have the effect of
-making it imposible to read or write the matching files!  Make sure you test
+making it impossible to read or write the matching files!  Make sure you test
 your autocommands properly.  Best is to use a pattern that will never match a
 normal file name, for example "ftp://*".
 See the $VIMRUNTIME/netrw.vim for examples.

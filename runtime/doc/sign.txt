@@ -1,4 +1,4 @@
-*sign.txt*     For Vim version 6.0f.  Last change: 2000 Jul 07
+*sign.txt*     For Vim version 6.0g.  Last change: 2000 Aug 16
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -70,8 +70,8 @@ source of a breakpoint, and for various other uses.
 3. Compiling vim/gvim with signs		*sign-compiling*
 
 The debug sign and debug line highlights are controlled by the compile-time
-flags USE_DEBUG_GLYPH and USE_DEBUG_HIGHLIGHT. The latter is intended for
-systems without sign support. However, I've had a tight schedule and have not
-tested USE_DEBUG_HIGHLIGHT without USE_DEBUG_GLYPH enabled as well.
+flags FEAT_SIGN. The line highlighting is intended for systems without sign
+support. However, I've had a tight schedule and have not tested line
+highlighting without signs.
 
  vim:tw=78:

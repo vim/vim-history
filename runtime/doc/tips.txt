@@ -1,4 +1,4 @@
-*tips.txt*      For Vim version 6.0f.  Last change: 2000 Jul 07
+*tips.txt*      For Vim version 6.0g.  Last change: 2000 Aug 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -172,7 +172,7 @@ Switching screens in an xterm		*xterm-screens* *xterm-save-screen*
 (From comp.editors, by Juergen Weigert, in reply to a question)
 
 :> Another question is that after exiting vim, the screen is left as it
-:> was, i.e. the contents of the file I was viewing (editting) was left on
+:> was, i.e. the contents of the file I was viewing (editing) was left on
 :> the screen. The output from my previous like "ls" were lost,
 :> ie. no longer in the scrolling buffer. I know that there is a way to
 :> restore the screen after exiting vim or other vi like editors,

@@ -1,4 +1,4 @@
-*os_vms.txt*    For Vim version 6.0f.  Last change: 2000 Aug 07
+*os_vms.txt*    For Vim version 6.0g.  Last change: 2000 Aug 20
 
 
 		  VIM REFERENCE MANUAL
@@ -149,7 +149,7 @@ Note: Remember, system rc files (default for all users) does not have leading
 	VIM$:gvimrc
 	VIM$:menu.vim
 
-and user's customised rc files are: >
+and user's customized rc files are: >
 
 	sys$login:.vimrc
 	sys$login:.gvimrc
@@ -287,7 +287,7 @@ It is possible to use Vim as an internode editor.
 example: >
 	vi "pluto""zay passwd""::RF10:<USER.ZAY.WORK>TEST.C;1"
 
-Note: syntax is very important, otherwise VMS will recognise more parameters
+Note: syntax is very important, otherwise VMS will recognize more parameters
 instead of one (resulting with: file not found)
 
 2.  Set up Vim as your internode editor. If Vim is not installed on your host,
@@ -346,7 +346,7 @@ Ins, Del buttons etc. Except Backspace in GUI mode. To solve it, add to
 
 	inoremap <Del> <BS>
 
-Vim will also recognise that they are fast terminals.
+Vim will also recognize that they are fast terminals.
 
 If you have some annoying line jumping on the screen between windows add to
 your .vimrc file: >
@@ -366,8 +366,8 @@ recommended to avoid fast terminal option with: >
 A very important difference between OpenVMS and other systems is that VMS uses
 special commands to execute executables: >
 
-	RUN <path>filename             
-	MCR <path>filename <parameters> 
+	RUN <path>filename
+	MCR <path>filename <parameters>
 
 OpenVMS users always have to be aware that the Vim command :! "just" drop them
 to DCL prompt. This feature is possible to use without any problem with all
@@ -375,7 +375,7 @@ DCL commands, but if we want to execute some program as XXD, CTAGS, JTAGS etc.
 we're running into trouble if we following the Vim documentation (see: help
 xxd).
 
-Solution: Execute with the MC command and add the full path to the executable. 
+Solution: Execute with the MC command and add the full path to the executable.
 Example: Instead of :%!xxd command use: >
 
 	:%!mc vim:xxd
@@ -407,9 +407,9 @@ machine, e.g. an Xterm on Windows or telnet to Windows from VMS).
 
 8.9 Printing from Vim
 
-To be able to print from Vim (running in GUI mode) under VMS you have to set up 
-$TMP logical which should point to some temporary directory and logical SYS$PRINT
-to your default print queue. 
+To be able to print from Vim (running in GUI mode) under VMS you have to set
+up $TMP logical which should point to some temporary directory and logical
+SYS$PRINT to your default print queue.
 Example: >
 
         $define SYS$PRINT HP5ANSI
@@ -423,10 +423,10 @@ You can print out whole buffer or just the marked area.
 9. VMS related changes					*vms-changes*
 
 Version 6.0 (2000 Aug 1)
-- menu changes (fixed printing, CTAGS and XXD usage) 
-- pixmaps (toolbar) for VMS GUI. 
+- menu changes (fixed printing, CTAGS and XXD usage)
+- pixmaps (toolbar) for VMS GUI.
 - created OS_VMS_FILTER.COM - DECC->VAXC pre-processor directive convert
-  script. 
+  script.
 - updated and renamed MMS make files for Vim and CTAGS.
 - created INSTALLvms.txt - detailed compiling instructions under VMS.
 - OS_VMS.TXT updated with new features.

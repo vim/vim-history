@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0f.  Last change: 2000 Aug 07
+*editing.txt*   For Vim version 6.0g.  Last change: 2000 Aug 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -858,10 +858,10 @@ which version of the file you want to keep.
 							*backup*
 If you write to an existing file (but do not append) while the 'backup',
 'writebackup' or 'patchmode' option is on, a backup of the original file is
-made.  On Unix systems the file is copied, on other systems the file is
-renamed.  After the file has been successfully written and when the
-'writebackup' option is on and the 'backup' option is off, the backup file is
-deleted.  When the 'patchmode' option is on the backup file may be renamed.
+made.  The file is either copied or renamed (see 'backupcopy').  After the
+file has been successfully written and when the 'writebackup' option is on and
+the 'backup' option is off, the backup file is deleted.  When the 'patchmode'
+option is on the backup file may be renamed.
 
 							*backup-table*
 'backup' 'writebackup'	action	~
@@ -878,13 +878,9 @@ while the file is being written will have a different name.
 The directories given with the 'backupdir' option is used to put the backup
 file in.  (default: same directory as the written file).
 
-On Unix systems:
-When you write to an existing file, that file is truncated and then filled
-with the new text.  This means that protection bits, owner and symbolic links
-are unmodified.  The backup file however, is a new file, owned by the user who
-edited the file.  The group of the backup is set to the group of the original
-file.  If this fails, the protection bits for the group are made the same as
-for others.
+Whether the backup is a new file, which is a copy of the original file, or the
+original file renamed depends on the 'backupcopy' option.  See there for an
+explantion ofwhen the copy is made and when the file is renamed.
 
 If the creation of a backup file fails, the write is not done.  If you want
 to write anyway add a '!' to the command.

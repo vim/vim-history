@@ -1,4 +1,4 @@
-*multilang.txt* For Vim version 6.0f.  Last change: 2000 Jul 07
+*multilang.txt* For Vim version 6.0g.  Last change: 2000 Aug 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -50,7 +50,7 @@ the "did_menutrans" variable to any value.  Example: >
 
 
 It is recommended to put the translations for one language in a Vim script.
-Here is the start of "menu_de_DE.ISO_8859-1.vim": >
+Here is the start of "menu_de_de.iso_8859-1.vim": >
 
 	" Menu Translations:	German
 	" Translated By: 	Marcin Dalecki <dalecki@cs.net.pl>
@@ -65,6 +65,11 @@ Here is the start of "menu_de_DE.ISO_8859-1.vim": >
 
 Each part of a menu path is translated separately.  The result is that
 "Help.Overview" will be translated to "Hilfe.Überblick".
+
+To load this file automatically, give it the name "menu_$LANG.vim" and place
+it in a "lang" directory in 'runtimepath'.  The first one found will be loaded
+and the others ignore.  See "$VIMRUNTIME/lang" for examples.
+You can select another language to be used by setting the 'langmenu' option.
 
 ==============================================================================
 2. Scripts						*multilang-scripts*

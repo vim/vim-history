@@ -1,4 +1,4 @@
-*quickref.txt*  For Vim version 6.0f.  Last change: 2000 Aug 07
+*quickref.txt*  For Vim version 6.0g.  Last change: 2000 Aug 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -730,6 +730,7 @@ Short explanation of each option:		*option-list*
 |'showmatch'|	   |'sm'|	briefly jump to matching bracket if insert one
 |'showmode'|	   |'smd'|	message on status line to show current mode
 |'sidescroll'|	   |'ss'|	minimum number of columns to scroll horizontal
+|'sidescrolloff'|  |'siso'|	min. nr. of columns to left and right of cursor
 |'smartcase'|	   |'scs'|	no ignore case when pattern has uppercase
 |'smartindent'|    |'si'|	smart autoindenting for C programs
 |'smarttab'|	   |'sta'|	use 'shiftwidth' when inserting <Tab>

@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0f.  Last change: 2000 Aug 07
+*change.txt*    For Vim version 6.0g.  Last change: 2000 Aug 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -176,7 +176,7 @@ gR			Enter Virtual replace mode: Each character you type
 			start insert (for {Visual} see |Visual-mode|).  {not
 			in Vi}
 
-							*v_r* 
+							*v_r*
 {Visual}["x]r		Doesn't work yet, it's supposed to replace all
 			selected characters by the next typed character.
 

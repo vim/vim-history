@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0f.  Last change: 2000 Jul 31
+*starting.txt*  For Vim version 6.0g.  Last change: 2000 Aug 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -449,7 +449,7 @@ program: >
 
   #include <unistd.h>
   #include <stdio.h>
- 
+
   main(argc, argv)
       int    argc;
       char   **argv;
@@ -719,7 +719,7 @@ To avoid the intro message on startup, add the 'I' flag to 'shortmess'.
 ==============================================================================
 5. Suspending						*suspend*
 
-						*iconise* *CTRL-Z* *v_CTRL-Z*
+					*iconize* *iconise* *CTRL-Z* *v_CTRL-Z*
 CTRL-Z			Suspend Vim, like ":stop".
 			Works in Normal and in Visual mode.  In Insert and
 			Command-line mode, the CTRL-Z is inserted as a normal

@@ -1,4 +1,4 @@
-*usr_01.txt*	For Vim version 6.0f.  Last change: 2000 Jul 27
+*usr_01.txt*	For Vim version 6.0g.  Last change: 2000 Aug 20
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -85,7 +85,7 @@ FOR FREE ONLY.  No charge for production, materials, transport, etc. can be
 made.
 
 Written permission from the author is required for distributing a paper copy
-for money.
+not for free.
 
 Permission is granted to distribute the manuals as just mentioned but with
 text added which is clearly marked as such.

@@ -41,6 +41,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 'background'	options.txt	/*'background'*
 'backspace'	options.txt	/*'backspace'*
 'backup'	options.txt	/*'backup'*
+'backupcopy'	options.txt	/*'backupcopy'*
 'backupdir'	options.txt	/*'backupdir'*
 'backupext'	options.txt	/*'backupext'*
 'balloondelay'	options.txt	/*'balloondelay'*
@@ -57,6 +58,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 'biosk'	options.txt	/*'biosk'*
 'bioskey'	options.txt	/*'bioskey'*
 'bk'	options.txt	/*'bk'*
+'bkc'	options.txt	/*'bkc'*
 'breakat'	options.txt	/*'breakat'*
 'brk'	options.txt	/*'brk'*
 'browsedir'	options.txt	/*'browsedir'*
@@ -241,11 +243,14 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 'joinspaces'	options.txt	/*'joinspaces'*
 'js'	options.txt	/*'js'*
 'key'	options.txt	/*'key'*
+'keymap'	options.txt	/*'keymap'*
 'keymodel'	options.txt	/*'keymodel'*
 'keywordprg'	options.txt	/*'keywordprg'*
 'km'	options.txt	/*'km'*
+'kmp'	options.txt	/*'kmp'*
 'kp'	options.txt	/*'kp'*
 'langmap'	options.txt	/*'langmap'*
+'langmenu'	options.txt	/*'langmenu'*
 'laststatus'	options.txt	/*'laststatus'*
 'lazyredraw'	options.txt	/*'lazyredraw'*
 'lbr'	options.txt	/*'lbr'*
@@ -256,6 +261,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 'lisp'	options.txt	/*'lisp'*
 'list'	options.txt	/*'list'*
 'listchars'	options.txt	/*'listchars'*
+'lm'	options.txt	/*'lm'*
 'lmap'	options.txt	/*'lmap'*
 'loadplugins'	options.txt	/*'loadplugins'*
 'lpl'	options.txt	/*'lpl'*
@@ -555,6 +561,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 'shq'	options.txt	/*'shq'*
 'si'	options.txt	/*'si'*
 'sidescroll'	options.txt	/*'sidescroll'*
+'sidescrolloff'	options.txt	/*'sidescrolloff'*
+'siso'	options.txt	/*'siso'*
 'sj'	options.txt	/*'sj'*
 'slm'	options.txt	/*'slm'*
 'slow'	vi_diff.txt	/*'slow'*
@@ -1085,6 +1093,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 06.2	usr_06.txt	/*06.2*
 06.3	usr_06.txt	/*06.3*
 06.4	usr_06.txt	/*06.4*
+06.5	usr_06.txt	/*06.5*
 07.1	usr_07.txt	/*07.1*
 07.2	usr_07.txt	/*07.2*
 07.3	usr_07.txt	/*07.3*
@@ -1100,6 +1109,13 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 28.7	usr_28.txt	/*28.7*
 28.8	usr_28.txt	/*28.8*
 2html.vim	syntax.txt	/*2html.vim*
+40.1	usr_40.txt	/*40.1*
+40.2	usr_40.txt	/*40.2*
+40.3	usr_40.txt	/*40.3*
+40.4	usr_40.txt	/*40.4*
+40.5	usr_40.txt	/*40.5*
+40.6	usr_40.txt	/*40.6*
+40.7	usr_40.txt	/*40.7*
 43.1	usr_43.txt	/*43.1*
 43.2	usr_43.txt	/*43.2*
 43.3	usr_43.txt	/*43.3*
@@ -1317,6 +1333,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :doautoa	autocmd.txt	/*:doautoa*
 :doautoall	autocmd.txt	/*:doautoall*
 :doautocmd	autocmd.txt	/*:doautocmd*
+:dr	windows.txt	/*:dr*
+:drop	windows.txt	/*:drop*
 :ds	tagsearch.txt	/*:ds*
 :dsearch	tagsearch.txt	/*:dsearch*
 :dsp	tagsearch.txt	/*:dsp*
@@ -1390,6 +1408,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :help	various.txt	/*:help*
 :helpf	various.txt	/*:helpf*
 :helpfind	various.txt	/*:helpfind*
+:helpt	various.txt	/*:helpt*
+:helptags	various.txt	/*:helptags*
 :hi	syntax.txt	/*:hi*
 :hide	windows.txt	/*:hide*
 :highlight	syntax.txt	/*:highlight*
@@ -1556,13 +1576,14 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :pc	windows.txt	/*:pc*
 :pclose	windows.txt	/*:pclose*
 :pe	if_perl.txt	/*:pe*
+:ped	windows.txt	/*:ped*
+:pedit	windows.txt	/*:pedit*
 :perl	if_perl.txt	/*:perl*
 :perld	if_perl.txt	/*:perld*
 :perldo	if_perl.txt	/*:perldo*
 :po	tagsearch.txt	/*:po*
 :pop	tagsearch.txt	/*:pop*
 :popu	gui.txt	/*:popu*
-:popup	gui.txt	/*:popup*
 :popup	gui.txt	/*:popup*
 :pp	windows.txt	/*:pp*
 :ppop	windows.txt	/*:ppop*
@@ -1576,6 +1597,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :promptfind	change.txt	/*:promptfind*
 :promptr	change.txt	/*:promptr*
 :promptrepl	change.txt	/*:promptrepl*
+:ps	windows.txt	/*:ps*
+:psearch	windows.txt	/*:psearch*
 :ptN	tagsearch.txt	/*:ptN*
 :ptNext	tagsearch.txt	/*:ptNext*
 :pta	windows.txt	/*:pta*
@@ -2293,6 +2316,7 @@ OS390	os_390.txt	/*OS390*
 OS390-Motif	os_390.txt	/*OS390-Motif*
 OS390-building	os_390.txt	/*OS390-building*
 OS390-changes	os_390.txt	/*OS390-changes*
+OS390-ctags	os_390.txt	/*OS390-ctags*
 OS390-feedback	os_390.txt	/*OS390-feedback*
 OS390-porting	os_390.txt	/*OS390-porting*
 OS390-weaknesses	os_390.txt	/*OS390-weaknesses*
@@ -2506,6 +2530,7 @@ ab	motion.txt	/*ab*
 abandon	editing.txt	/*abandon*
 abbreviations	map.txt	/*abbreviations*
 active-buffer	windows.txt	/*active-buffer*
+add-local-help	usr_06.txt	/*add-local-help*
 add-option-flags	options.txt	/*add-option-flags*
 add-plugin	usr_06.txt	/*add-plugin*
 added-5.1	version5.txt	/*added-5.1*
@@ -3328,6 +3353,7 @@ ib	motion.txt	/*ib*
 iccf	uganda.txt	/*iccf*
 icon-changed	version4.txt	/*icon-changed*
 iconise	starting.txt	/*iconise*
+iconize	starting.txt	/*iconize*
 ident-search	tips.txt	/*ident-search*
 if_cscope.txt	if_cscope.txt	/*if_cscope.txt*
 if_ole.txt	if_ole.txt	/*if_ole.txt*
@@ -3662,6 +3688,7 @@ popup-menu-added	version5.txt	/*popup-menu-added*
 ports-5.2	version5.txt	/*ports-5.2*
 ports-6	version6.txt	/*ports-6*
 postscr.vim	syntax.txt	/*postscr.vim*
+preview-window	windows.txt	/*preview-window*
 printcap-syntax	syntax.txt	/*printcap-syntax*
 ptcap.vim	syntax.txt	/*ptcap.vim*
 put	change.txt	/*put*
@@ -4124,6 +4151,8 @@ toggle-revins	version4.txt	/*toggle-revins*
 trojan-horse	starting.txt	/*trojan-horse*
 tutor	usr_01.txt	/*tutor*
 type-mistakes	tips.txt	/*type-mistakes*
+typecorr-settings	usr_40.txt	/*typecorr-settings*
+typecorr.txt	usr_40.txt	/*typecorr.txt*
 u	undo.txt	/*u*
 uganda	uganda.txt	/*uganda*
 uganda.txt	uganda.txt	/*uganda.txt*
@@ -4152,6 +4181,7 @@ usr_04.txt	usr_04.txt	/*usr_04.txt*
 usr_06.txt	usr_06.txt	/*usr_06.txt*
 usr_07.txt	usr_07.txt	/*usr_07.txt*
 usr_28.txt	usr_28.txt	/*usr_28.txt*
+usr_40.txt	usr_40.txt	/*usr_40.txt*
 usr_43.txt	usr_43.txt	/*usr_43.txt*
 usr_90.txt	usr_90.txt	/*usr_90.txt*
 usr_toc.txt	usr_toc.txt	/*usr_toc.txt*
@@ -4389,6 +4419,8 @@ workshop-xpm	workshop.txt	/*workshop-xpm*
 workshop.txt	workshop.txt	/*workshop.txt*
 wrap-off	intro.txt	/*wrap-off*
 write-fail	editing.txt	/*write-fail*
+write-local-help	usr_40.txt	/*write-local-help*
+write-plugin	usr_40.txt	/*write-plugin*
 write-quit	editing.txt	/*write-quit*
 write-readonly	editing.txt	/*write-readonly*
 www	intro.txt	/*www*
@@ -4406,6 +4438,7 @@ xterm-8-bit	term.txt	/*xterm-8-bit*
 xterm-8bit	term.txt	/*xterm-8bit*
 xterm-blink	syntax.txt	/*xterm-blink*
 xterm-clipboard	term.txt	/*xterm-clipboard*
+xterm-codes	term.txt	/*xterm-codes*
 xterm-color	syntax.txt	/*xterm-color*
 xterm-copy-paste	term.txt	/*xterm-copy-paste*
 xterm-cursor-keys	term.txt	/*xterm-cursor-keys*
@@ -4430,6 +4463,7 @@ z.	scroll.txt	/*z.*
 z<CR>	scroll.txt	/*z<CR>*
 z<Left>	scroll.txt	/*z<Left>*
 z<Right>	scroll.txt	/*z<Right>*
+zA	fold.txt	/*zA*
 zC	fold.txt	/*zC*
 zD	fold.txt	/*zD*
 zH	scroll.txt	/*zH*

@@ -1,7 +1,7 @@
-*usr_toc.txt*	For Vim version 6.0f.  Last change: 2000 Aug 06
+*usr_toc.txt*	For Vim version 6.0g.  Last change: 2000 Aug 20
 
 		     VIM USER MANUAL - by Bram Moolenaar
-	     
+
 			      Table Of Contents			*user-manual*
 
 
@@ -39,7 +39,8 @@ Read this from start to end to learn the essential commands.
 		|06.1|  The vimrc file
 		|06.2|  The default vimrc file explained
 		|06.3|  Adding a plugin
-		|06.4|  Often used options
+		|06.4|  Adding a help file
+		|06.5|  Often used options
 
 |usr_07.txt|  Using syntax highlighting
 		|07.1|  Switching it on
@@ -115,9 +116,13 @@ Tuning Vim ~
 Make Vim work as you like it.
 
 |usr_40.txt|  Write a Vim script
-		(:if, variables, expressions, functions, autocommands,
-		|autocmd-<>|)
-		|40.2|  How to write a plugin
+		|40.1|	Introduction
+		|40.2|	Expressions
+		|40.3|	If and while
+		|40.4|	Using :execute
+		|40.5|	Functions
+		|40.6|	Autocommands
+		|40.7|	Writing a plugin
 
 |usr_41.txt|  Make new commands
 		(mappings, user commands, :normal, |restore-position|)

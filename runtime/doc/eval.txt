@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0f.  Last change: 2000 Aug 12
+*eval.txt*      For Vim version 6.0g.  Last change: 2000 Aug 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1350,7 +1350,7 @@ matchstr({expr}, {pat})
 
 							*nr2char()*
 nr2char({expr})
-		Return a string with a single chararacter, which has the ASCII
+		Return a string with a single character, which has the ASCII
 		value {expr}.  Examples: >
 			nr2char(64)		returns "@"
 			nr2char(32)		returns " "
@@ -1574,7 +1574,7 @@ visualmode()
 		used.  Initially it returns an empty string, but once Visual
 		mode has been used, it returns "v", "V", or "<CTRL-V>" (a
 		single CTRL-V character) for character-wise, line-wise, or
-		block-wise Visual mode respecively.
+		block-wise Visual mode respectively.
 		Example: >
 			:exe "normal " . visualmode()
 <		This enters the same Visual mode as before.  It is also useful
@@ -1946,7 +1946,7 @@ The file "~/vim/bufnetfuncs.vim" should then define functions that start with
 			register, "@/" for the search pattern.
 			If the result of {expr1} ends in a <CR> or <NL>, the
 			register will be linewise, otherwise it will be set to
-			charactirwise.
+			characterwise.
 			This can be used to clear the last search pattern: >
 				:let @/ = ""
 <			This is different from searching for an empty string,
@@ -2028,7 +2028,7 @@ The file "~/vim/bufnetfuncs.vim" should then define functions that start with
 			Note the difference between using ":echo", which is a
 			Vim command, and ":!echo", which is an external shell
 			command: >
-		:!echo %		--> filename 
+		:!echo %		--> filename
 <			The arguments of ":!" are expanded, see |:_%|. >
 		:!echo "%"		--> filename or "filename"
 <			Like the previous example.  Whether you see the double

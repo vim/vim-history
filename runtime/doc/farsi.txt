@@ -1,4 +1,4 @@
-*farsi.txt*     For Vim version 6.0f.  Last change: 2000 Jul 07
+*farsi.txt*     For Vim version 6.0g.  Last change: 2000 Aug 16
 
 
 		  VIM REFERENCE MANUAL    by Mortaza Ghassab Shiran
@@ -143,7 +143,7 @@ o  Farsi Keymapping Activation
    You can have 'altkeymap' or 'fkmap' set as default by appending ':set akm'
    or ':set fk' in your .vimrc file or _vimrc in case of NT/95/98 platforms.
 
-   To turn off the Farsi kemapping as a default second language keymapping,
+   To turn off the Farsi keymapping as a default second language keymapping,
    reset the 'altkeymap' by entering ':set noakm'.
 
 o  right-to-left Farsi Mode

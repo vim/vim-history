@@ -1,17 +1,9 @@
 " Menu Translations:	Japanese (for Windows)
 " Translated By: 	Taro Muraoka  <koron@tka.att.ne.jp>
 " Last Change:		08:44:52 31-Jul-2000.
-"
-" Usage:		If you want to use this menu file on Japanese Windows,
-"			you have no thing to do, except to set this file at
-"			$VIMRUNTIME/lang.
-" 
-"			日本語Windowsでこのファイルを使用する場合、
-"			$VIMRUNTIME/langディレクトリにこのファイルを置いてく
-"			ださい。日本語以外のウィンドウズでは試した事が無いの
-"			でわかりません。
 
 menutrans clear
+let did_menu_trans = 1
 
 " Help menu
 menutrans &Help			ヘルプ(&H)

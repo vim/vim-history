@@ -1,4 +1,4 @@
-*os_dos.txt*    For Vim version 6.0f.  Last change: 2000 Jul 07
+*os_dos.txt*    For Vim version 6.0g.  Last change: 2000 Aug 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -32,12 +32,16 @@ up from the runtime files.  If you want to put them somewhere else, set the
 environment variable $VIM to the directory where you keep them.  Example: >
 	set VIM=C:\user\piet
 Will find "c:\user\piet\_vimrc".
+Note: This would only be needed when the computer is used by several people.
+Otherwise it's simpler to keep your _vimrc file in the default place.
 
 If you move the executable to another location, you also need to set the $VIM
 environment variable.  The runtime files will be found in "$VIM/vim{version}".
 Example: >
 	set VIM=E:\vim
 Will find the version 5.4 runtime files in "e:\vim\vim54".
+Note: This is _not_ recommended.  The preferred way is to keep the executable
+in the runtime directory.
 
 If you move your executable AND want to put your "_vimrc" and "_gvimrc" files
 somewhere else, you must set $VIM to where you vimrc files are, and set

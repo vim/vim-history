@@ -1,4 +1,4 @@
-*fold.txt*      For Vim version 6.0f.  Last change: 2000 Jul 26
+*fold.txt*      For Vim version 6.0g.  Last change: 2000 Aug 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -68,7 +68,7 @@ this does the same: >
 
 Note that backslashes must be used to escape characters that ":set" handles
 differently (space, backslash, double quote, etc., see |option-backslash|).
-Altenatively, use ":set foldexpr@{expression}" |:set@|.
+Alternatively, use ":set foldexpr@{expression}" |:set@|.
 
 These are the conditions with which the expression is evaluated:
 - The current buffer and window are set for the line.
@@ -122,7 +122,7 @@ non-matching marker pairs.  Example: >
 	/* functions {{{1 */
 	/* funcA() {{{2 */
 	void funcA() {}
- 
+
 	/* funcB() {{{2 */
 	void funcB() {}
 
@@ -213,8 +213,14 @@ zc		Close one fold under the cursor.
 zC		Close all folds under the cursor recursively.
 
 							*za*
-za		When on a closed fold: open it.  When on an open fold: close
-		it.
+za		When on a closed fold: open it. When folds are nested, you
+		might have to use "za" several times.
+		When on an open fold: close it.  This will only close one
+		level, since using "za" again will open the fold.
+
+							*zA*
+zA		When on a closed fold: open it recursively.
+		When on an open fold: close it recursively.
 
 							*zm*
 zm		Fold more: Subtract one from 'foldlevel'.  If 'foldlevel' was
@@ -250,7 +256,7 @@ zi		Invert 'folddisable'.
 3. Fold options					*fold-options*
 
 						*fold-foldlevel*
-'foldlevel' is a number option: The higher the more folded regions are open. 
+'foldlevel' is a number option: The higher the more folded regions are open.
 When 'foldlevel' is 0, all folds are closed.
 When 'foldlevel' is positive, some folds closed.
 When 'foldlevel' is very high, all folds are open.
@@ -299,7 +305,7 @@ Other options for folding:
 'foldexpr' 'fde':	Expression used for "expr" folding.
 'foldignore' 'fdi': 	Characters used for "indent" folding.
 'foldmarker' 'fmr': 	Defined markers used for "marker" folding.
-'foldmethod' 'fd': 	Name of the current folding method.
+'foldmethod' 'fdm': 	Name of the current folding method.
 
 ==============================================================================
 4. Behavior of folds					*fold-behavior*
@@ -308,7 +314,7 @@ When moving the cursor downwards, it will move to the first line of a sequence
 of folded lines.  When the cursor is already on a folded line, it moves to the
 next unfolded line.
 
-When moving the cursor upwards, it will move to the last line of a seqyence of
+When moving the cursor upwards, it will move to the last line of a sequence of
 folded lines.  When the cursor is already on a folded line, it moves to the
 previous unfolded line.
 

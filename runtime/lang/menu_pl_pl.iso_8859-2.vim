@@ -1,8 +1,9 @@
 " Menu Translations:	Polish
 " Translated By: 	Marcin Dalecki <dalecki@cs.net.pl>
-" Last Change:		2000 Jun 01
+" Last Change:		2000 Aug 19
 
 menutrans clear
+let did_menu_trans = 1
 
 " Help menu
 menutrans &Help			Po&moc

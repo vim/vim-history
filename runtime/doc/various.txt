@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0f.  Last change: 2000 Aug 06
+*various.txt*   For Vim version 6.0g.  Last change: 2000 Aug 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -438,8 +438,13 @@ g CTRL-A		Only when Vim was compiled with MEM_PROFILING defined
 				:help so<C-V><CR>only
 <			{not in Vi}
 
-The help file name can be set with the 'helpfile' option.  The initial height
-of the help window can be set with the 'helpheight' option (default 20).
+When no argument is given the file given with the 'helpfile' option will be
+opened.  Otherwise the specified tag is searched for in all "doc/tags" files
+in the directories specified in the 'runtimepath' option.
+
+The initial height of the help window can be set with the 'helpheight' option
+(default 20).
+
 Jump to specific subjects by using tags.  This can be done in two ways:
 - Use the "CTRL-]" command while standing on the name of a command or option.
   This only works when the tag is a keyword.  "<C-Leftmouse>" and
@@ -448,6 +453,17 @@ Jump to specific subjects by using tags.  This can be done in two ways:
 
 Use "CTRL-T" to jump back.
 Use ":q" to close the help window.
+
+It is possible to add help files for plugins and other items.  You don't need
+to change the distributed help files for that.  See |add-local-help|
+
+To write a local help file, see |write-local-help|.
+
+Note that the title lines from the local help files are automagically added to
+the "LOCAL ADDITIONS" section in the "help.txt" help file.  This is done when
+viewing the file in Vim, the file itself is not changed.  It is done by going
+through all help files and obtaining the first line of each file.  The files
+in $VIMRUNTIME/doc are skipped.
 
 							*help-xterm-window*
 If you want to have the help in another xterm window, you could use this
@@ -458,5 +474,13 @@ command:
 			*:helpfind* *:helpf*
 :helpf[ind]		Like |:help|, but use a dialog to enter the argument.
 			{only when compiled with |+GUI_GTK|}
+
+							*:helpt* *:helptags*
+:helpt[ags] {dir}	Generate the help tags file for directory {dir}.  All
+			"*.txt" files in the directory are scanned for a help
+			tag definition in between stars.  The generated tags
+			file is sorted.  When there are duplicates an error
+			message is given.  An existing tags file is silently
+			overwritten.
 
  vim:tw=78:

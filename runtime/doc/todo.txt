@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0f.  Last change: 2000 Aug 13
+*todo.txt*      For Vim version 6.0g.  Last change: 2000 Aug 20
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -32,41 +32,27 @@ See |develop.txt| for development plans.
 Test3 fails, because of the change to use 'comments' for 'cindent'.
 Use the old method when there is no match in 'comments'.
 
+GTK GUI: dragging mouse above the window doesn't cause a scroll down
+('scrolloff' set to 0).
+
+GUI: :split<CR> :vs<CR> ^W <right> :new<CR> :q<CR> :q<CR> leaves the top
+window with no scrollbar. (Paul Moore)
+Can happen with the left scrollbar too. (Viart)
+
 Win32: mouseshape doesn't return to normal after a ":set" command. (Timothy)
 
 Win32 GUI: (on no file), :vs<CR>:q<CR> leaves a trail of pixels down the
 middle. (Paul Moore)
 
-Win32 GUI: :split<CR> :vs<CR> ^W <right> :new<CR> :q<CR> :q<CR> leaves the top
-window with no scrollbar. (Paul Moore)
-
 Win32 GUI: mouse wheel always scrolls rightmost window.
 
 Win32: "make test" has errors in test11 and test30.
 
-":sview" keeps 'readonly' option for an existing buffer, it should be set.
-
-GTK GUI: comma in 'guifont' not recognized and it's used for the Normal
-highlighing? (Ron Aaron)
-
 When /usr/local/share/vim/vim60a isn't found, it uses /usr/local/share/vim
 instead of ../runtime. (Sekera)
 
-when 'sbr' has a value different from '', and when syntax is off, and when you
-have a line longer than the window's width, ('wrap' being on), the whole
-continuation line is highlighted in the 'nontext' style. (Rafael
-Garcia-Suarez)
 
-When dragging the Visual selection with the mouse, the text doesn't scroll if
-only the last line is on the screen. (Nam)
-
-Displaying signs doesn't always work properly.  Should use a flag in the
-window for the sign column: it is set as soon as a sign is drawn and reset
-when editing another file.
-When drawing the first sign the display isn't updated properly.
-
-
-Main items for 6.0 (Item J first now!):
+Main items for 6.0:
 A.  Folding
 	Defining and displaying folds works properly.
 	Need to check all commands if they work well with closed folds.
@@ -89,7 +75,6 @@ G.  Edit command line with Vi commands
 H.  More automatic testing
 	Nothing done yet.
 I.  Multi-language support
-	Added gettext() stuff.  Needs to be tested.
 	":menutrans" works, but how to handle different encodings?
 J.  User Friendlier
 	Enhance Windows install program.
@@ -97,12 +82,43 @@ J.  User Friendlier
 
 A. Folding:
 -   Change 'foldtext' to an expression?
+    When the result is an empty string, display some default info (at least
+    the nesting depth and the nr of lines).
+-   ":bdel" and ":buf main.c" don't create folds (foldmethod=syntax).
+    (Stocker) ":edit" does.
+-   When opening the help window, don't use fold settings copied from the
+    current buffer.
+-   Fold problem: (Raul)
+    1) create a new buffer with just 4 lines and set scrolloff=1
+    2) fold lines 3 and 4
+    3) put the cursor on line 2
+    4) press zb
+    now the line 1 is out of sight
+-   Fold lines 3-4 then 1-3: foldcolumn shows that it's wrong.
+-   Fold three lines, on the second line do "ddu", the start of the fold has
+    now moved.
+-   When appending to the last line of a fold and typing <CR> the new line
+    should be included in the fold.
+-   'foldcolumn' not updated when doing "J" just above an open fold.
+-   Fold problem: When switching 'foldmarker' and then editing the same file
+    again while setting the foldmarker in a modeline, an old fold with the
+    other marker isn't removed. (Sylvain Viart)
+-   Execute 'foldexpr' in a sandbox.  Don't allow it to change text, external
+    commands, write files, etc.
+    Same for expression argument of ":set opt@expr".
+    Make "secure" a combination of flags?
+-   'foldtext' should catch a fold that starts with an empty line.  Always
+    show info about the fold (depth, nr of lines)
 -   Docs for "zo", "zO", "zc" and "zC" in Visual mode.
     Make "zO" not close folds before the Visual are (except one?).
     Make "zo" and "zc" work properly (open/close only one level).
     "zc" in Visual mode doesn't redraw properly.
     "za" should toggle fold open/closed?
 -   Fold column shouldn't stop at end-of-file.
+-   Add commands to go to next/previous fold boundary.
+-   Command to delete one fold only ("zd" also deletes nested folds).
+    Or change it: "zd" normally deletes only one fold (the top level fold
+    under the cursor), in Visual mode it also deletes nested folds.
 -   'foldminlines': Only close folds more than this number of window lines.
     Implement this in win_update().  Still keep the fold defined, just don't
     show it closed.
@@ -118,10 +134,6 @@ A. Folding:
     How to avoid the nesting?
 -   Make "zc", "zC", "zo" and "zO" work in Visual mode to work on all selected
     lines.
--   Execute 'foldexpr' in a sandbox.  Don't allow it to change text, external
-    commands, write files, etc.
-    Same for expression argument of ":set opt@expr".
-    Make "secure" a combination of flags?
 -   Use "vim{version}:" for modelines, only to be executed when the version is
     >= {version}.  Also "vim>{version}", "vim<{version}", "vim={version}".
 -   Folding doesn't work together with 'scrollbind'.
@@ -283,6 +295,11 @@ E. Virtual edit:
 
 
 F. Sun Visual Workshop patch from Gordon Prieur:
+-   Displaying signs doesn't always work properly.  Should use a flag in the
+    window for the sign column: it is set as soon as a sign is drawn and reset
+    when editing another file.  When drawing the first sign the display isn't
+    updated properly.  Force a redisplay when setting the new flag.  When not
+    in the GUI or no motif, only use line highlighting (later add ASCII sign).
 -   sign mixed in with highlighting, is that what we want?
 -   Check that rename from "glyph" to "sign" is correct.
 -   remove ":signs", use ":sign" without arguments to show signs
@@ -308,44 +325,26 @@ H. More automatic testing:
 I. Multi-language support:
 -   Should handle aliases for different locale settings.  "de" is "de_DE" is
     "de_DE.ISO8859-1".  Perhaps use some code from gettext()?
--   Add 'langmenu' option: language used for menus.  User could want "de"
-    locale but english menus.
-    Also 'langmessages'?
--   Move files to a separate $VIMRUNTIME/lang directory?
+-   Add 'langmessages'?
+    Yes: Especially when the translation is hard to read (e.g., Chinese).
 
 
 J. User Friendlier
-9   Make Windows install program better:
-    Test the current version in various environments.
-    Offer help choice, give explanation for each menu choice.
-    Instead of using the first directory in $PATH, always write the vim.bat in
-    the Windows directory?
-    OR: use $VIM/runtime for default version, $VIM/vim<version> for others.
-    Install should check if $VIM/runtime exists and rename it.
-    Add an icon on the Desktop, if the user wants this.
-    Add Vim to the Start/Programs menu if the user wants this.
-
-8   Write about how to write a plugin in usr_40.txt.  Require that there is
-    a "loaded_<name>_plugin" to avoid loading it (twice).
-8   Add explanation how to add local documentation files (by sysadm).  Check:
-    Are they picked up from 'runtimepath'/doc ?
+-   ":setlocal option<": reset local option to global value.
 9   Add buffer-local menu.  Should offer a choice between removing the menu or
     disabling it.  Be careful that tear-offs don't disappear (keep one empty
     item?).
+9   Make Windows install program better:
+    Add an icon on the Desktop, if the user wants this.
+    Add Vim to the Start/Programs menu if the user wants this.
+    Detect the OLE version and register it.
+-   Make Windows uninstall program better:
+    Delete the vim.bat and gvim.bat files.
+    Delete a whole tree of Vim files.
 -   Is it possible to add a "Save Settings" command?  All manual :set, :map
     etc. should be stored in a file.  Automatically set options _not_.  How do
     we know what to write and what not?
--   Use "session default" for options: use this value when opening a new
-    window or editing a new buffer.
-    original default: set at compile time or depending on terminal
-    session default: ":set!" command or ":set" in vimrc file.
-    settings from modeline don't change session default.
-    ":set option<": reset option to session default.
-    When editing another file in the same window, reset window options that
-    were set for that file type, e.g., foldmethod.
-    Use ":lset" to set option locally, ":set works as before for backwards
-    compatibility.  Use ":lset" for filetype autocommands.
-    Add mappings local to a window: ":map <window> ..."?
+-   Add mappings local to a window: ":map <window> ..."?
 
 
 Messages:
@@ -357,6 +356,7 @@ Messages:
 
 
 Various recent:
+9   'smartcase' also uses 'noignorecase' when using "\S" in a pattern.
 -   GUI: Implement ":popup" for other systems than Windows.
 -   GUI: <C--> cannot be mapped.  Should be possible to recognize this as a
     normal "-" with the Ctrl modifier.
@@ -376,8 +376,7 @@ Various recent:
 -   Include pty check for Lynx: ~/vim/patches/hahn.pty .
 -   In an xterm, look ahead for mouse drag events, merge them and use the last
     coordinates.
--   Add ":popup" from  ~/vim/patches/geddes.menus ?
-    Remove "\" shown in complete/wildmenu.
+-   Remove "\" shown in complete/wildmenu.
     Bug: <C-O>:emenu in Insert mode inserts the command.
 -   ":colder" then ":grep" should overwrite the entry in the quickfix list.
     Thus make it work like a stack.  Mention in the docs that ":cnewer" can be
@@ -412,8 +411,7 @@ Various recent:
 -   Win32 GUI bug: When inserting a /* or removing it (changing the
     highlighting) a line of the screen is deleted.
 -   Insert completion doesn't show match while searching for others.  Also try
-    with "disable cursor" removed.
--   ":syn keyword" should accept "display" as a keyword.
+    with "disable cursor" removed.  E.g., when "Back at original". (Gil)
 -   When swap file message sees that date of file is newer as date of swap
     file, add message "more recent than swap file".
 -   update_topline() is slow.  Add flag to indicate cursor and topline are OK.
@@ -461,11 +459,7 @@ Various recent:
 -   Check all places where buf_write() is called if it takes care of "buf"
     becoming invalid because of autocommands.  Also callers of
     buf_check_timestamp().
--   Generic solution: When doing something for a buffer that's not in a window
-    (e.g. writing a hidden buffer, autocommands) use a NULL curwin or window
-    argument.  Remove saving/restoring curwin/curbuf in fileio.c buf_write().
--   Add "gG": like what "gj" is to "j": go the the N'th window line.
-8   When appending to a file, say "appended" instead of "written".
+-   Add "gG": like what "gj" is to "j": go to the N'th window line.
 9   :he \^= gives an error for using \_
 9   :he ^= doesn't find tag :set^=.  Even "he :set^=" doesn't find it.
 -   xterm sends <Esc>O5F for <C-End>
@@ -476,8 +470,8 @@ Various recent:
 -   When using the arglist, use a flag for each file in it that indicates if
     it has been edited.  When using ":q" check if all flags are set.  Helps
     when using buffer commands to go to the files.
--   Add something to 'listchars' to mark the start of a line that doesn't
-    start in column 1 when scrolling horizontally ('nowrap').
+-   Windows NT: writing to aux.* makes Vim hang. (Acevedo)
+-   Problem with cscope jumping to the wrong position? (Medley)
 
 
 Considered for release 6.0:
@@ -779,6 +773,9 @@ GUI:
     is started from, causes empty lines below the cmdline. (raf)
 8   X11 GUI: When menu is disabled by excluding 'm' from 'guioptions', ALT key
     should not be used to trigger a menu (like the Win32 version).
+8   When setting 'langmenu', it should be effective immediately.  Store both
+    the English and the translated text in the menu structure.  Re-generate
+    the translation when 'langmenu' has changed.
 8   Basic flaw in the GUI code: NextScreen is updated before calling
     gui_write(), but the GUI code relies on NextScreen to represent the state
     of where it is processing the output.
@@ -1256,8 +1253,6 @@ Help:
 
 
 Syntax highlighting:
-8   Make it easier to add new or modified syntax files.  Use a search path for
-    syntax files instead of synload?
 8   Allow the user to add items to the Syntax menu sorted, without having to
     change this for each release.
 8   Add a "containedin" argument, to later add contained items (e.g., to
@@ -1267,7 +1262,7 @@ Syntax highlighting:
     Use something else than linear linked list from the hash table. (Campbell)
 8   cpp.vim: In C++ it's allowed to use {} inside ().
 8   Some syntax files set 'iskeyword'.  When switching to another filetype
-    this isn't reset.  Add "set isk&" to all syntax files?
+    this isn't reset.  Add a special keyword definition for the syntax rules?
 8   Add specific syntax item to match with parens/braces that don't have a
     "%" match.  :syntax nomatch cParenError "("
 8   Highlight the text between two matching parens (e.g., with a grey
@@ -1306,11 +1301,8 @@ Syntax highlighting:
 8   Be able to reset highlighting to its original (default) values.
 7   Be able to write current highlighting to a file as commands, similar to
     ":mkvimrc".
-8   Reduce the number of regexp in c.vim (for speed).
 8   Add check for unterminated strings in c.vim, with a variable to switch it
     on: "c_strict_ansi".
-8   Add a flag to temporarily disable highlighting.  Set it while dragging the
-    status line.
 8   Add an option to restrict the updating of syntax highlighting to the
     current line while in Insert mode.
 8   When guessing value of 'background', the syntax file has already been
@@ -1650,8 +1642,6 @@ Scrolling:
 -   Add 'search' option to 'scrollopt' to allow 'scrollbind' windows to
     be bound by regexp searches
 -   Add "z>" and "z<": scroll sideways one screenfull. (Campbell)
--   Add 'sidescrolloff' option, like 'scrolloff', to make the cursor always
-    appear in the middle of the window horizontally (Benjamin Griffin).
 -   Add option to set the number of lines when not to scroll, instead of the
     fixed number used now (for terminals that scroll slow with a large number
     of lines but not with a single line).
@@ -1731,8 +1721,6 @@ Security:
 
 Win32 GUI:
 8   Add font argument to set the lfCharSet. (Bobcik)
-8   Remove "VIM -" from title, to give more room to path?  The icon should
-    identify the Vim process.
 8   Could keep console open to run multiple commands, to avoid the need to hit
     return in every console.
     Also: Look at how Emacs does runs external commands:
@@ -2097,7 +2085,7 @@ Insert mode:
     comment after a code line.	Can 'cindent' do this automatically?
 7   Add 'j' flag to 'formatoptions': Remove comment leader when joining lines.
 -   formatting of struct/array inits:
-    The lines used to initialise the struct or array above should not be
+    The lines used to initialize the struct or array above should not be
     considered 'continuation' lines just because the previous one does not end
     with ';'.  If you go back line by line I think it should be possible to
     tell the difference.  If you find a line that ends in ';', then it's OK to
@@ -2643,13 +2631,6 @@ Writing files:
 -   In vim_rename(), should lock "from" file when deleting "to" file for
     systems other than Amiga.  Avoids problems with unexpected longname to
     shortname conversion.
-8   When writing a file, name it "foo.new". Then rename "foo" to "foo.bak" and
-    "foo.new" to "foo". If dir is not writable or on write error copy "foo" to
-    "backupdir/foo.bak" and overwrite "foo". Check for correct group/owner and
-    try to set it if not. NO: this breaks with hard links.  INSTEAD: make Amiga
-    and MSDOS work like unix: first make copy of file, then truncate and
-    overwrite original file. Use an option for this, default on for Unix, off
-    for Amiga/MSDOS (Sayre has the algorithm worked out).
 7   Support ACLs (Access Control Lists, Security Descriptor in WinNT).	Check
     with Windows NT or HPUX 10.*?  Add configure check for it, add code for
     when overwriting a file (viminfo or ":w" command) that copies the ACL to
@@ -2805,9 +2786,6 @@ Various improvements:
 5   Add an option to set the width of the 'number' column.  Eight positions is
     often more than needed.
 -   Add code to disable the CAPS key when going from Insert to Normal mode.
-8   Add the possibility to have scratch buffers.  They don't have a swap file.
-    The name is not related to a file.	Useful for the file selection macros.
-    Set 'buftype' option to "scratch"?
 -   Set date/protection/etc. of the patchfile the same as the original file.
 -   Use growarray for termcodes[] in term.c
 -   Add <window-99>, like <cword> but use filename of 99'th window.
@@ -2992,8 +2970,6 @@ Various improvements:
     entered)?
 -   Check out how screen does output optimizing.  Apparently this is possible
     as an output filter.
--   When setting the window title, check 'hs' and use minimum of 'ws' (if
-    present) and Columns to truncate the title.
 -   In dosub() regexec is called twice for the same line. Try to avoid this.
 -   Window updating from memline.c: insert/delete/replace line.
 -   Optimize ml_append() for speed, esp. for reading a file.
@@ -3142,7 +3118,7 @@ From vile:
     from /tmp to some directory before deleting files.
 
 
-Far future and "big" extentions:
+Far future and "big" extensions:
 -   Make it possible to run Vim inside a window of another program.  For
     Xwindows this can be done with XReparentWindow().
 -   Make it easy to setup Vim for groups of users: novice vi users, novice

@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.0f.  Last change: 2000 Aug 07
+*windows.txt*   For Vim version 6.0g.  Last change: 2000 Aug 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -248,7 +248,7 @@ CTRL-W CTRL-C						*CTRL-W_CTRL-C*
 		'hidden' is restored after {cmd} has been executed.
 		Example: >
 		    :hide edit Makefile
-<		This will edit "Makefile", and hide the current buffer if it
+< 		This will edit "Makefile", and hide the current buffer if it
 		has any changes.
 
 CTRL-W o						*CTRL-W_o*
@@ -545,6 +545,15 @@ can also get to them with the buffer list commands, like ":bnext".
 		argument.  But when there is no argument list, the window is
 		not split.  Also see |++opt| and |+cmd|.
 
+						*:dr* *:drop*
+:dr[op] {file} ..
+		Redefine the argument list to "{file} ..", similar to ":next".
+		Only if the current buffer can't be |abandon|ed, the window is
+		split first.
+		The purpose of this command is that it's used from the
+		MS-Windows popup menu "Edit with existing gvim".
+		{only available when compiled with the +gui feature}
+
 ==============================================================================
 10. Tag or file name under the cursor			*window-tag*
 
@@ -568,7 +577,34 @@ CTRL-W g CTRL-]	Split current window in two.  Use identifier under cursor as a
 		tag and perform ":tjump" on it in the new upper window.  Make
 		new window N high.
 
-							*:pta* *:ptag*
+CTRL-W f					*CTRL-W_f* *CTRL-W_CTRL-F*
+CTRL-W CTRL-F	Split current window in two.  Edit file name under cursor.
+		Like ":split ]f", but window isn't split if the file does not
+		exist.
+		Uses the 'path' variable as a list of directory names where to
+		look for the file.  Also the path for current file is
+		used to search for the file name.
+		If the name is a hypertext link that looks like
+		"type://machine/path", only "/path" is used.
+		If a count is given, the count'th matching file is edited.
+		{not available when the |+file_in_path| feature was disabled
+		at compile time}
+
+Also see |CTRL-W_CTRL-I|: open window for an included file that includes
+the keyword under the cursor.
+
+==============================================================================
+11. The preview window				*preview-window*
+
+The preview window is a special window to show (preview) another file.  It is
+normally a small window used to show an include file or definition of a
+function.
+
+There can be only one preview window.  It is created with one of the commands
+below.  The 'previewheight' option can be set to specify the height of the
+preview window when it's opened.
+
+						*:pta* *:ptag*
 :pta[g][!] [tagname]
 		Does ":tag[!] [tagname]" and shows the found tag in a
 		"Preview" window without changing the current buffer or cursor
@@ -608,21 +644,27 @@ CTRL-W g }						*CTRL-W_g}*
 		it. Make the new Preview window (if required) N high.  If N is
 		not given, 'previewheight' is used.
 
-CTRL-W f					*CTRL-W_f* *CTRL-W_CTRL-F*
-CTRL-W CTRL-F	Split current window in two.  Edit file name under cursor.
-		Like ":split ]f", but window isn't split if the file does not
-		exist.
-		Uses the 'path' variable as a list of directory names where to
-		look for the file.  Also the path for current file is
-		used to search for the file name.
-		If the name is a hypertext link that looks like
-		"type://machine/path", only "/path" is used.
-		If a count is given, the count'th matching file is edited.
-		Not available when the |+file_in_path| feature was disabled at
-		compile time.
-
-Also see |CTRL-W_CTRL-I|: open window for an included file that includes
-the keyword under the cursor.
+							*:ped* *:pedit*
+:ped[it][!] [++opt] [+cmd] {file}
+		Edit {file} in the preview window.  The preview window is
+		opened like with |:ptag|.  The current window and cursor
+		position isn't changed.  Useful example: >
+			:pedit +/fputc /usr/include/stdio.h
+<
+							*:ps* *:psearch*
+:[range]ps[earch][!] [count] [/]pattern[/]
+		Works like |:ijump| but shows the found match in the preview
+		window.  The preview window is opened like with |:ptag|.  The
+		current window and cursor position isn't changed.  Useful
+		example: >
+			:psearch popen
+<		Like with the |:ptag| command, you can use this to
+		automatically show information about the word under the
+		cursor.  This is less clever than using |:ptag|, but you don't
+		need a tags file and it will also find matches in system
+		include files.  Example: >
+  :au! CursorHold *.[ch] nested exe "silent! psearch " . expand("<cword>")
+<		Warning: This can be slow.
 
 ==============================================================================
 11. Using hidden buffers				*buffer-hidden*
@@ -787,7 +829,7 @@ Be careful: there may be more hidden, modified buffers!
 :[N]sbN[ext] [N]			*:sbN* *:sbNext* *:sbp* *:sbprevious*
 :[N]sbp[revious] [N]
 		Split window and go to [N]th previous buffer in buffer list.
-+		Wraps around the start of the buffer list. Uses 'switchbuf'.
+		Wraps around the start of the buffer list. Uses 'switchbuf'.
 
 							*:br* *:brewind*
 :br[ewind][!]	Go to first buffer in buffer list.  See |:buffer-!| for [!].

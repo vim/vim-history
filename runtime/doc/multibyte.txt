@@ -1,4 +1,4 @@
-*multibyte.txt* For Vim version 6.0f.  Last change: 2000 Jul 30
+*multibyte.txt* For Vim version 6.0g.  Last change: 2000 Aug 16
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -574,13 +574,13 @@ Contributions specifically for the multi-byte features by:
 {only works Windows GUI and compiled with the |+multi_byte_ime| feature}
 
 To input multibyte characters on Windows, you have to use Input Method Editor
-(IME).  In process of your editting text, you must switch status (on/off) of
+(IME).  In process of your editing text, you must switch status (on/off) of
 IME many many many times.  Because IME with status on is hooking all of your
 key inputs, you cannot input 'j', 'k', or almost all of keys to Vim directly.
 
 This |+multi_byte_ime| feature help this.  It reduce times of switch status of
 IME manually.  In normal mode, there are almost no need working IME, even
-editting multibyte text.  So exiting insert mode with ESC, Vim memorize last
+editing multibyte text.  So exiting insert mode with ESC, Vim memorize last
 status of IME and force turn off IME.  When re-enter insert mode, Vim revert
 IME status to that momorized automatically.
 
@@ -683,11 +683,6 @@ Get the latest xterm version which has now UTF-8 support:
 
 	http://www.clark.net/pub/dickey/xterm/xterm.tar.gz
 
-To be able to use double-width characters and composing characters, apply the
-patch from Robert Brady found at:
-
-	http://www.zepler.org/~rwb197/xterm
-
 Compile it with "./configure --enable-wide-chars ; make"
 
 Also get the ISO 10646-1 version of various fonts, which is available on
@@ -709,5 +704,7 @@ and you will have a working UTF-8 terminal emulator. Try both >
 
 with the demo text that comes with ucs-fonts.tar.gz in order to see
 whether there are any problems with UTF-8 in your xterm.
+
+For Vim you may need to set 'charcode' to "utf-8".
 
  vim:tw=78:

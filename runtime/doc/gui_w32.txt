@@ -1,4 +1,4 @@
-*gui_w32.txt*   For Vim version 6.0f.  Last change: 2000 Jul 07
+*gui_w32.txt*   For Vim version 6.0g.  Last change: 2000 Aug 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -125,6 +125,8 @@ selected.  If you select multiple files, you will find two gvim-related menu
 options:
 "Edit with multiple gvims"  -- one gvim for each file in the selection
 "Edit with single gvim"     -- one gvim for all the files in the selection
+And if there already is a gvim running:
+"Edit with existing gvim"   -- edit the file with the running gvim
 
 						*install-registry*
 You can add the "Edit with Vim" menu entry in an easy way by using the
@@ -394,7 +396,7 @@ simulating the keystrokes Alt, F. >
 This maps Alt-Space to pop down the system menu for the Vim window. Note that
 ~ is used by simalt to represent the <Space> character. >
 	:map <C-n> :simalt ~n<CR>
-Maps Control-N to produce the keys Alt-Space followed by N. This minimises the
+Maps Control-N to produce the keys Alt-Space followed by N. This minimizes the
 Vim window via the system menu.
 
 						*intellimouse-wheel-problems*
