@@ -1567,6 +1567,9 @@ ex_copen(eap)
 	win_goto(win);
     else
     {
+	/* The current window becomes the previous window afterwards. */
+	win = curwin;
+
 	/* Create the new window at the very bottom. */
 	win_goto(lastwin);
 	if (win_split(height, WSP_BELOW) == FAIL)
@@ -1593,6 +1596,8 @@ ex_copen(eap)
 	if (curwin->w_width == Columns)
 	    win_setheight(height);
 	curwin->w_p_wfh = TRUE;	    /* set 'winfixheight' */
+	if (win_valid(win))
+	    prevwin = win;
     }
 
     /*

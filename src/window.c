@@ -65,7 +65,6 @@ static void restore_snapshot __ARGS((int close_curwin));
 static int check_snapshot_rec __ARGS((frame_T *sn, frame_T *fr));
 static win_T *restore_snapshot_rec __ARGS((frame_T *sn, frame_T *fr));
 
-static win_T	*prevwin = NULL;	/* previous window */
 #endif /* FEAT_WINDOWS */
 static void win_setheight_win __ARGS((int height, win_T *win));
 static win_T *win_alloc __ARGS((win_T *after));
@@ -1889,7 +1888,7 @@ win_close(win, free_buf)
 	if (wp->w_p_pvw || bt_quickfix(wp->w_buffer))
 	{
 	    /*
-	     * When the cursor goes to the preview or the quickfix window, try
+	     * The cursor goes to the preview or the quickfix window, try
 	     * finding another window to go to.
 	     */
 	    for (;;)
