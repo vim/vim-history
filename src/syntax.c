@@ -383,6 +383,7 @@ static void syn_cmd_off __ARGS((exarg_T *eap, int syncing));
 static void syn_cmd_onoff __ARGS((exarg_T *eap, char *name));
 static void syn_cmd_list __ARGS((exarg_T *eap, int syncing));
 static void syn_lines_msg __ARGS((void));
+static void syn_match_msg __ARGS((void));
 static void syn_list_one __ARGS((int id, int syncing, int link_only));
 static void syn_list_cluster __ARGS((int id));
 static void put_id_list __ARGS((char_u *name, short *list, int attr));
@@ -1149,7 +1150,7 @@ syn_stack_apply_changes(buf)
     prev = NULL;
     for (p = buf->b_sst_first; p != NULL; )
     {
-	if (p->sst_lnum > buf->b_mod_top)
+	if (p->sst_lnum + syn_buf->b_syn_sync_linebreaks > buf->b_mod_top)
 	{
 	    n = p->sst_lnum + buf->b_mod_xlines;
 	    if (n <= buf->b_mod_bot)
@@ -3029,6 +3030,7 @@ syntax_clear(buf)
     buf->b_syn_sync_flags = 0;
     buf->b_syn_sync_minlines = 0;
     buf->b_syn_sync_maxlines = 0;
+    buf->b_syn_sync_linebreaks = 0;
 
     vim_free(buf->b_syn_linecont_prog);
     buf->b_syn_linecont_prog = NULL;
@@ -3059,6 +3061,7 @@ syntax_sync_clear()
     curbuf->b_syn_sync_flags = 0;
     curbuf->b_syn_sync_minlines = 0;
     curbuf->b_syn_sync_maxlines = 0;
+    curbuf->b_syn_sync_linebreaks = 0;
 
     vim_free(curbuf->b_syn_linecont_prog);
     curbuf->b_syn_linecont_prog = NULL;
@@ -3346,8 +3349,8 @@ syn_cmd_list(eap, syncing)
 	if (curbuf->b_syn_sync_flags & SF_CCOMMENT)
 	{
 	    MSG_PUTS(_("syncing on C-style comments"));
-	    if (curbuf->b_syn_sync_minlines || curbuf->b_syn_sync_maxlines)
-		syn_lines_msg();
+	    syn_lines_msg();
+	    syn_match_msg();
 	    return;
 	}
 	else if (!(curbuf->b_syn_sync_flags & SF_MATCH))
@@ -3359,14 +3362,18 @@ syn_cmd_list(eap, syncing)
 		MSG_PUTS(_("syncing starts "));
 		msg_outnum(curbuf->b_syn_sync_minlines);
 		MSG_PUTS(_(" lines before top line"));
+		syn_match_msg();
 	    }
 	    return;
 	}
 	MSG_PUTS_TITLE(_("\n--- Syntax sync items ---"));
-	if (curbuf->b_syn_sync_minlines || curbuf->b_syn_sync_maxlines)
+	if (curbuf->b_syn_sync_minlines > 0
+		|| curbuf->b_syn_sync_maxlines > 0
+		|| curbuf->b_syn_sync_linebreaks > 0)
 	{
 	    MSG_PUTS(_("\nsyncing on items"));
 	    syn_lines_msg();
+	    syn_match_msg();
 	}
     }
     else
@@ -3414,20 +3421,34 @@ syn_cmd_list(eap, syncing)
     static void
 syn_lines_msg()
 {
-    MSG_PUTS("; ");
-    if (curbuf->b_syn_sync_minlines)
+    if (curbuf->b_syn_sync_maxlines > 0 || curbuf->b_syn_sync_minlines > 0)
     {
-	MSG_PUTS(_("minimal "));
-	msg_outnum(curbuf->b_syn_sync_minlines);
-	if (curbuf->b_syn_sync_maxlines)
-	    MSG_PUTS(", ");
+	MSG_PUTS("; ");
+	if (curbuf->b_syn_sync_minlines > 0)
+	{
+	    MSG_PUTS(_("minimal "));
+	    msg_outnum(curbuf->b_syn_sync_minlines);
+	    if (curbuf->b_syn_sync_maxlines)
+		MSG_PUTS(", ");
+	}
+	if (curbuf->b_syn_sync_maxlines > 0)
+	{
+	    MSG_PUTS(_("maximal "));
+	    msg_outnum(curbuf->b_syn_sync_maxlines);
+	}
+	MSG_PUTS(_(" lines before top line"));
     }
-    if (curbuf->b_syn_sync_maxlines)
+}
+
+    static void
+syn_match_msg()
+{
+    if (curbuf->b_syn_sync_linebreaks > 0)
     {
-	MSG_PUTS(_("maximal "));
-	msg_outnum(curbuf->b_syn_sync_maxlines);
+	MSG_PUTS(_("; match "));
+	msg_outnum(curbuf->b_syn_sync_linebreaks);
+	MSG_PUTS(_(" line breaks"));
     }
-    MSG_PUTS(_(" lines before top line"));
 }
 
 static int  last_matchgroup;
@@ -5187,10 +5208,13 @@ syn_cmd_sync(eap, syncing)
 	}
 	else if (  STRNCMP(key, "LINES", 5) == 0
 		|| STRNCMP(key, "MINLINES", 8) == 0
-		|| STRNCMP(key, "MAXLINES", 8) == 0)
+		|| STRNCMP(key, "MAXLINES", 8) == 0
+		|| STRNCMP(key, "LINEBREAKS", 10) == 0)
 	{
-	    if (key[0] == 'L')
+	    if (key[4] == 'S')
 		arg_end = key + 6;
+	    else if (key[0] == 'L')
+		arg_end = key + 11;
 	    else
 		arg_end = key + 9;
 	    if (arg_end[-1] != '=' || !isdigit(*arg_end))
@@ -5201,7 +5225,9 @@ syn_cmd_sync(eap, syncing)
 	    n = getdigits(&arg_end);
 	    if (!eap->skip)
 	    {
-		if (key[1] == 'A')
+		if (key[4] == 'B')
+		    curbuf->b_syn_sync_linebreaks = n;
+		else if (key[1] == 'A')
 		    curbuf->b_syn_sync_maxlines = n;
 		else
 		    curbuf->b_syn_sync_minlines = n;
