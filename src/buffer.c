@@ -869,7 +869,7 @@ do_buffer(action, start, dir, count, forceit)
 
 	if (!forceit && bufIsChanged(buf))
 	{
-	    EMSGN(_("E89: No write since last change for buffer %ld (use ! to override)"),
+	    EMSGN(_("E89: No write since last change for buffer %ld (add ! to override)"),
 			buf->b_fnum);
 	    return FAIL;
 	}

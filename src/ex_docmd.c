@@ -3927,7 +3927,7 @@ uc_add_command(name, name_len, rep, argt, def, flags, compl, force)
 	{
 	    if (!force)
 	    {
-		EMSG(_("E174: Command already exists: use ! to redefine"));
+		EMSG(_("E174: Command already exists: add ! to replace it"));
 		goto fail;
 	    }
 
@@ -6801,7 +6801,7 @@ open_exfile(fname, forceit, mode)
 #endif
     if (!forceit && *mode != 'a' && vim_fexists(fname))
     {
-	EMSG2(_("E189: \"%s\" exists (use ! to override)"), fname);
+	EMSG2(_("E189: \"%s\" exists (add ! to override)"), fname);
 	return NULL;
     }
 
