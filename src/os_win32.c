@@ -4058,7 +4058,9 @@ mch_access(char *n, int p)
     BOOL			aclDefault;
     HANDLE			hToken;
     DWORD			bytes;
+#ifdef HAVE_ACL
     TRUSTEE			t;
+#endif
     ACCESS_MASK			am;
     ACCESS_MASK			cm;
     PACL			pacl;
