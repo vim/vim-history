@@ -2502,16 +2502,6 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     fname = sfname;
 #endif
 
-    /* make sure we have a valid backup extension to use */
-    if (*p_bex == NUL)
-#ifdef RISCOS
-	backup_ext = (char_u *)"/bak";
-#else
-	backup_ext = (char_u *)".bak";
-#endif
-    else
-	backup_ext = p_bex;
-
     if (buf->b_ffname != NULL && fnamecmp(ffname, buf->b_ffname) == 0)
 	overwriting = TRUE;
     else
@@ -2895,6 +2885,18 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    }
 	}
 #endif
+
+	/* make sure we have a valid backup extension to use */
+	if (*p_bex == NUL)
+	{
+#ifdef RISCOS
+	    backup_ext = (char_u *)"/bak";
+#else
+	    backup_ext = (char_u *)".bak";
+#endif
+	}
+	else
+	    backup_ext = p_bex;
 
 	if (backup_copy
 		&& (fd = mch_open((char *)fname, O_RDONLY | O_EXTRA, 0)) >= 0)
