@@ -1160,6 +1160,14 @@ scripterror:
 	want_full_screen = FALSE;
 #endif
 
+#if defined(FEAT_GUI_MAC) && defined(MACOS_X_UNIX)
+    /* When the GUI is started from Finder, need to display messages in a
+     * message box.  isatty(2) returns TRUE anyway, thus we need to check the
+     * name to know we're not started from a terminal. */
+    if (gui.starting && (!isatty(2) || strcmp("/dev/console", ttyname(2)) == 0))
+	want_full_screen = FALSE;
+#endif
+
     /*
      * mch_init() sets up the terminal (window) for use.  This must be
      * done after resetting full_screen, otherwise it may move the cursor
