@@ -4827,6 +4827,8 @@ gvim	starting.txt	/*gvim*
 gvimdiff	diff.txt	/*gvimdiff*
 gvimrc	gui.txt	/*gvimrc*
 gw	change.txt	/*gw*
+gwgw	change.txt	/*gwgw*
+gww	change.txt	/*gww*
 gzip	pi_gzip.txt	/*gzip*
 gzip-autocmd	pi_gzip.txt	/*gzip-autocmd*
 gzip-example	autocmd.txt	/*gzip-example*
@@ -4846,7 +4848,6 @@ hebrew	hebrew.txt	/*hebrew*
 hebrew.txt	hebrew.txt	/*hebrew.txt*
 help	various.txt	/*help*
 help-context	help.txt	/*help-context*
-help-tags	tags	1
 help-translated	various.txt	/*help-translated*
 help-xterm-window	various.txt	/*help-xterm-window*
 help.txt	help.txt	/*help.txt*
@@ -6339,6 +6340,7 @@ v_g_CTRL-]	tagsrch.txt	/*v_g_CTRL-]*
 v_gf	editing.txt	/*v_gf*
 v_gq	change.txt	/*v_gq*
 v_gv	visual.txt	/*v_gv*
+v_gw	change.txt	/*v_gw*
 v_i	motion.txt	/*v_i*
 v_i(	motion.txt	/*v_i(*
 v_i)	motion.txt	/*v_i)*

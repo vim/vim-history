@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.3.  Last change: 2004 Jun 07
+*todo.txt*      For Vim version 6.3.  Last change: 2004 Jun 16
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -1593,7 +1593,7 @@ Scrolling:
     bound windows.
 -   Add 'search' option to 'scrollopt' to allow 'scrollbind' windows to
     be bound by regexp searches
--   Add "z>" and "z<": scroll sideways one screenfull. (Campbell)
+-   Add "z>" and "z<": scroll sideways one screenful. (Campbell)
 -   Add option to set the number of lines when not to scroll, instead of the
     fixed number used now (for terminals that scroll slow with a large number
     of lines but not with a single line).
@@ -2264,7 +2264,7 @@ Visual mode:
 7   CTRL-V :s should substitute only in the block, not to whole lines. (David
     Young is working on this)
 7   Filtering a block should only apply to the block, not to the whole lines.
-    When the number of lines is increased, add lines. When decreased, padd with
+    When the number of lines is increased, add lines. When decreased, pad with
     spaces or delete? Use ":`<,`>" on the command line.
 8   After filtering the Visual area, make "gv" select the filtered text?
     Currently "gv" only selects a single line, not useful.
@@ -2867,7 +2867,7 @@ Registers:
 Debug mode:
 7   Add something to enable debugging when a remote message is received.
 8   Add breakpoints for setting an option
-8   Add breakpoits for assigning to a variable.
+8   Add breakpoints for assigning to a variable.
 7   Add a watchpoint in the debug mode: An expression that breaks execution
     when evaluating to non-zero.
 7   Store the history from debug mode in viminfo.
@@ -2942,7 +2942,7 @@ Various improvements:
 8   Support printing on Unix.  Can use "lpansi.c" as an example. (Bookout)
 8   Add put command that replaces the text under it.  Esp. for blockwise
     Visual mode.
-7   Enhance termreponse stuff: Add t_CV(?): pattern of term response, use
+7   Enhance termresponse stuff: Add t_CV(?): pattern of term response, use
     regexp: "\e\[[>?][0-9;]*c", but only check just after sending t_RV.
 7   Add "g|" command: move to N'th column from the left margin (after wrapping
     and applying 'leftcol').  Works as "|" like what "g0" is to "0".

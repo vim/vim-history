@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.3.  Last change: 2004 May 01
+*various.txt*   For Vim version 6.3.  Last change: 2004 Jun 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -321,7 +321,7 @@ m  *+ruby*		Ruby interface |ruby|, may have |/dyn|
 N  *+scrollbind*	|'scrollbind'|
 B  *+signs*		|:sign|
 N  *+smartindent*	|'smartindent'|
-m  *+sniff*		SniFF interface |sniff|
+m  *+sniff*		SNiFF interface |sniff|
 N  *+statusline*	Options 'statusline', 'rulerformat' and special
 			formats of 'titlestring' and 'iconstring'
 m  *+sun_workshop*	|workshop|
