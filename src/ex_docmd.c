@@ -6805,6 +6805,7 @@ ex_normal(eap)
     typebuf_T	saved_typebuf;
     int		save_insertmode = p_im;
     int		save_finish_op = finish_op;
+    struct buffheader save_stuffbuff;
 #ifdef FEAT_MBYTE
     char_u	*arg = NULL;
     int		l;
@@ -6894,6 +6895,10 @@ ex_normal(eap)
     saved_typebuf = typebuf;
     if (alloc_typebuf() == OK)
     {
+	/* Also save the stuff buffer and make it empty. */
+	save_stuffbuff = stuffbuff;
+	stuffbuff.bh_first.b_next = NULL;
+
 	/*
 	 * Repeat the :normal command for each line in the range.  When no
 	 * range given, execute it just once, without positioning the cursor
@@ -6927,6 +6932,8 @@ ex_normal(eap)
 	    }
 	}
 	while (eap->addr_count > 0 && eap->line1 <= eap->line2 && !got_int);
+
+	stuffbuff = save_stuffbuff;
     }
 
     /* Might not return to the main loop when in an event handler. */

@@ -38,29 +38,8 @@
  * Un-escaping is done by vgetc().
  */
 
-/*
- * structure used to store one block of the stuff/redo/recording buffers
- */
-struct buffblock
-{
-    struct buffblock	*b_next;	/* pointer to next buffblock */
-    char_u		b_str[1];	/* contents (actually longer) */
-};
-
 #define MINIMAL_SIZE 20			/* minimal size for b_str */
 
-/*
- * header used for the stuff buffer and the redo buffer
- */
-struct buffheader
-{
-    struct buffblock	bh_first;	/* first (dummy) block of list */
-    struct buffblock	*bh_curr;	/* buffblock for appending */
-    int			bh_index;	/* index for reading */
-    int			bh_space;	/* space in bh_curr for appending */
-};
-
-static struct buffheader stuffbuff = {{NULL, {NUL}}, NULL, 0, 0};
 static struct buffheader redobuff = {{NULL, {NUL}}, NULL, 0, 0};
 static struct buffheader old_redobuff = {{NULL, {NUL}}, NULL, 0, 0};
 #if defined(FEAT_AUTOCMD) || defined(FEAT_EVAL) || defined(PROTO)
