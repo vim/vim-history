@@ -819,7 +819,8 @@ extern char* (*dyn_libintl_textdomain)(const char* domainname);
 #define PUT_FIXINDENT	1	/* make indent look nice */
 #define PUT_CURSEND	2	/* leave cursor after end of new text */
 #define PUT_LINE	4	/* put register as lines */
-#define PUT_LINE_BACKWARD 8	/* put linewise register backwards */
+#define PUT_LINE_SPLIT	8	/* split line for linewise register */
+#define PUT_LINE_FORWARD 16	/* put linewise register below Visual sel. */
 
 /* flags for set_indent() */
 #define SIN_CHANGED	1	/* call changed_bytes() when line changed */
