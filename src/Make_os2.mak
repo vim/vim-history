@@ -48,6 +48,7 @@ OBJ = \
 	ex_cmds.o \
 	ex_cmds2.o \
 	ex_docmd.o \
+	ex_eval.o \
 	ex_getln.o \
 	fileio.o \
 	fold.o \
@@ -116,6 +117,7 @@ eval.o:		eval.c  $(INCL)
 ex_cmds.o:	ex_cmds.c  $(INCL)
 ex_cmds2.o:	ex_cmds2.c  $(INCL)
 ex_docmd.o:	ex_docmd.c  $(INCL) ex_cmds.h
+ex_eval.o:	ex_eval.c  $(INCL) ex_cmds.h
 ex_getln.o:	ex_getln.c  $(INCL)
 fileio.o:	fileio.c  $(INCL)
 fold.o:		fold.c  $(INCL)

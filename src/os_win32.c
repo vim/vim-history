@@ -85,45 +85,45 @@ FILE* fdDump = NULL;
  * errors disappear.  They do not need to be correct.
  */
 #ifdef PROTO
-# define HANDLE int
-# define PHANDLE int
-# define SMALL_RECT int
-# define COORD int
-# define SHORT int
-# define WORD int
-# define DWORD int
-# define PDWORD int
-# define BOOL int
-# define LPBOOL int
-# define LPSTR int
-# define LPTSTR int
-# define LPCTSTR int
-# define LPDWORD int
-# define LPVOID int
-# define KEY_EVENT_RECORD int
-# define MOUSE_EVENT_RECORD int
-# define WINAPI
-# define CONSOLE_CURSOR_INFO int
-# define LPCSTR char_u *
-# define WINBASEAPI
-# define INPUT_RECORD int
-# define SECURITY_INFORMATION int
-# define PSECURITY_DESCRIPTOR int
-# define VOID void
-# define HWND int
-# define PSID int
-# define PACL int
-# define HICON int
-# define HINSTANCE int
-# define HFONT int
-# define PRINTDLG int
-# define TEXTMETRIC int
-# define COLORREF int
-# define HDC int
-# define LOGFONT int
-# define TOKEN_INFORMATION_CLASS int
-# define TRUSTEE int
-# define ACCESS_MASK int
+#define WINAPI
+#define WINBASEAPI
+typedef char * LPCSTR;
+typedef int ACCESS_MASK;
+typedef int BOOL;
+typedef int COLORREF;
+typedef int CONSOLE_CURSOR_INFO;
+typedef int COORD;
+typedef int DWORD;
+typedef int HANDLE;
+typedef int HDC;
+typedef int HFONT;
+typedef int HICON;
+typedef int HINSTANCE;
+typedef int HWND;
+typedef int INPUT_RECORD;
+typedef int KEY_EVENT_RECORD;
+typedef int LOGFONT;
+typedef int LPBOOL;
+typedef int LPCTSTR;
+typedef int LPDWORD;
+typedef int LPSTR;
+typedef int LPTSTR;
+typedef int LPVOID;
+typedef int MOUSE_EVENT_RECORD;
+typedef int PACL;
+typedef int PDWORD;
+typedef int PHANDLE;
+typedef int PRINTDLG;
+typedef int PSECURITY_DESCRIPTOR;
+typedef int PSID;
+typedef int SECURITY_INFORMATION;
+typedef int SHORT;
+typedef int SMALL_RECT;
+typedef int TEXTMETRIC;
+typedef int TOKEN_INFORMATION_CLASS;
+typedef int TRUSTEE;
+typedef int WORD;
+typedef void VOID;
 #endif
 
 #ifndef FEAT_GUI_W32
@@ -262,7 +262,7 @@ dyn_libintl_init(char *libname)
 	if (!hLibintlDLL)
 	{
 	    if (p_verbose > 0)
-		EMSG2(_("E370: Could not load library %s"), GETTEXT_DLL);
+		EMSG2(_(e_loadlib), GETTEXT_DLL);
 	    return 0;
 	}
     }
@@ -274,8 +274,7 @@ dyn_libintl_init(char *libname)
 	{
 	    dyn_libintl_end();
 	    if (p_verbose > 0)
-		EMSG2(_("E448: Could not load library function %s"),
-						       libintl_entry[i].name);
+		EMSG2(_(e_loadfunc), libintl_entry[i].name);
 	    return 0;
 	}
     }

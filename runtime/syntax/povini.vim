@@ -2,8 +2,8 @@
 " This is a GENERATED FILE. Please always refer to source file at the URI below.
 " Language: PoV-Ray(tm) 3.5 configuration/initialization files
 " Maintainer: David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>
-" Last Change: 2001-09-24
-" URI: http://physics.muni.cz/~yeti/download/povini.vim
+" Last Change: 2002-06-01
+" URL: http://physics.muni.cz/~yeti/download/syntax/povini.vim
 " Required Vim Version: 6.0
 
 " Setup
@@ -33,7 +33,7 @@ syn keyword poviniKeyword Histogram_Type Histogram_Grid_Size Histogram_Name
 syn keyword poviniKeyword Input_File_Name Include_Header Library_Path Version
 syn keyword poviniKeyword Debug_Console Fatal_Console Render_Console Statistic_Console Warning_Console All_Console Debug_File Fatal_File Render_File Statistic_File Warning_File All_File Warning_Level
 syn keyword poviniKeyword Quality Radiosity Bounding Bounding_Threshold Light_Buffer Vista_Buffer Remove_Bounds Split_Unions Antialias Sampling_Method Antialias_Threshold Jitter Jitter_Amount Antialias_Depth
-syn keyword poviniKeyword Pre_Scene_Return Pre_Frame_Return Post_Scene_Return Post_Frame_Return User_Abort_Return Fatal_Error_Return\
+syn keyword poviniKeyword Pre_Scene_Return Pre_Frame_Return Post_Scene_Return Post_Frame_Return User_Abort_Return Fatal_Error_Return
 syn match poviniShellOut "^\s*\(Pre_Scene_Command\|Pre_Frame_Command\|Post_Scene_Command\|Post_Frame_Command\|User_Abort_Command\|Fatal_Error_Command\)\>" nextgroup=poviniShellOutEq skipwhite
 syn match poviniShellOutEq "=" nextgroup=poviniShellOutRHS skipwhite contained
 syn match poviniShellOutRHS "[^;]\+" skipwhite contained contains=poviniShellOutSpecial

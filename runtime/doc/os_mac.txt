@@ -1,4 +1,4 @@
-*os_mac.txt*    For Vim version 6.1.  Last change: 2002 Mar 02
+*os_mac.txt*    For Vim version 6.2a.  Last change: 2002 Oct 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -74,11 +74,11 @@ files.
 ==============================================================================
 4. Mac Bug Report					*mac-bug*
 
-When reporting any Mac specific bug or feature change, makes sure to include
-the following address in the "To:" or "Copy To:" field.
+When reporting any Mac specific bug or feature change, please use the vim-mac
+maillist |vim-mac|.  However, you need to be subscribed.  An alternative is to
+send a message to the current MacVim maintainers:
 
- <dany.stamant@sympatico.ca>
- <macvim@mac.com>
+	mac@vim.org
 
 ==============================================================================
 5. Compiling Vim					*mac-compile*

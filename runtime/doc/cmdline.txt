@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.1.  Last change: 2002 Jan 30
+*cmdline.txt*   For Vim version 6.2a.  Last change: 2003 Feb 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -378,9 +378,9 @@ matching files with the next.
 For file name completion you can use the 'suffixes' option to set a priority
 between files with almost the same name.  If there are multiple matches,
 those files with an extension that is in the 'suffixes' option are ignored.
-The default is ".bak,~,.o,.h,.info,.swp", which means that files ending in
-".bak", "~", ".o", ".h", ".info" and ".swp" are sometimes ignored.  It is
-impossible to ignore suffixes with two dots.  Examples:
+The default is ".bak,~,.o,.h,.info,.swp,.obj", which means that files ending
+in ".bak", "~", ".o", ".h", ".info", ".swp" and ".obj" are sometimes ignored.
+It is impossible to ignore suffixes with two dots.  Examples:
 
   pattern:	files:				match:	~
    test*	test.c test.h test.o		test.c
@@ -525,7 +525,7 @@ argument for the command, which has a different meaning.  For example:
 			"name"
 
 ==============================================================================
-4. Ex command-line ranges		*cmdline-ranges* *[range]* *E16*
+4. Ex command-line ranges	*cmdline-ranges* *[range]* *E16* *E493*
 
 Some Ex commands accept a line range in front of them.  This is noted as
 [range].  It consists of one or more line specifiers, separated with ',' or
@@ -554,6 +554,8 @@ Line numbers may be specified with:		*:range* *E14* *{address}*
 	$		the last line in the file		  *:$*
 	%		equal to 1,$ (the entire file)		  *:%*
 	't		position of mark t (lowercase)		  *:'*
+	'T		position of mark T (uppercase); when the mark is in
+			another file it cannot be used in a range
 	/{pattern}[/]	the next line where {pattern} matches	  *:/*
 	?{pattern}[?]	the previous line where {pattern} matches *:?*
 	\/		the next line where the previously used search
@@ -636,6 +638,11 @@ function expand() |expand()|.
 Note that these give the file name as it was typed.  If an absolute path is
 needed (when using the file name from a different directory), you need to add
 ":p".  See |filename-modifiers|.
+Note that backslashes are inserted before spaces, so that the command will
+correctly interpret the file name.  But this doesn't happen for shell
+commands.  For those you probably have to use quotes: >
+	:!ls "%"
+	:r !spell "%"
 
 To avoid the special meaning of '%' and '#' insert a backslash before it.
 Detail: The special meaning is always escaped when there is a backslash before
@@ -648,6 +655,7 @@ it, no matter how many backslashes.
 			       *:<cword>* *:<cWORD>* *:<cfile>* *<cfile>*
 			       *:<sfile>* *<sfile>* *:<afile>* *<afile>*
 			       *:<abuf>* *<abuf>* *:<amatch>* *<amatch>*
+			       *E495* *E496* *E497* *E498* *E499* *E500*
 Note: these are typed literally, they are not special keys!
 	<cword>    is replaced with the word under the cursor (like |star|)
 	<cWORD>    is replaced with the WORD under the cursor (see |WORD|)
@@ -667,7 +675,7 @@ Note: these are typed literally, they are not special keys!
 		   when executing a function, is replaced with
 		   "function {function-name}"; function call nesting is
 		   indicated like this:
-		   "function {function-name1}->{function-name2}".  Note that
+		   "function {function-name1}..{function-name2}".  Note that
 		   filename-modifiers are useless when <sfile> is used inside
 		   a function.
 

@@ -1582,7 +1582,7 @@ mch_FullName(
     int		len,
     int		force)
 {
-    if (!force && mch_isFullName(fname))	/* allready expanded */
+    if (!force && mch_isFullName(fname))	/* already expanded */
     {
 	STRNCPY(buf, fname, len);
 	buf[len - 1] = NUL;

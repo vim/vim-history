@@ -36,7 +36,7 @@ menutrans &Redo<Tab>^R			Z&rusit\ vraceni<Tab>^R
 menutrans Rep&eat<Tab>\.		&Opakovat<Tab>\.
 menutrans Cu&t<Tab>"+x			&Vyriznout<Tab>"+x
 menutrans &Copy<Tab>"+y			&Kopirovat<Tab>"+y
-menutrans &Paste<Tab>"+P		V&lozit<Tab>"+P
+menutrans &Paste<Tab>"+gP		V&lozit<Tab>"+gP
 menutrans Put\ &Before<Tab>[p		Vlozit\ &pred<Tab>[p
 menutrans Put\ &After<Tab>]p		Vlozi&t\ za<Tab>]p
 menutrans &Delete<Tab>x			&Smazat<Tab>x
@@ -52,7 +52,7 @@ menutrans Toggle\ &Ignore-case<Tab>:set\ ic!		Prepnout\ ignorovani\ &VERZALEK<Ta
 menutrans Toggle\ &Showmatch<Tab>:set\ sm!		Prepnout\ &Showmatch\ \{\(\[\])\}<Tab>:set\ sm!
 menutrans &Context\ lines				Zobrazit\ konte&xt\ kurzoru
 menutrans &Virtual\ Edit				Virtualni\ p&ozice\ kurzoru
-	menutrans Never					Nikdy
+	menutrans Never						Nikdy
 	menutrans Block\ Selection				Vyber\ Bloku
 	menutrans Insert\ mode					Insert\ mod
 	menutrans Block\ and\ Insert				Blok\ a\ Insert
@@ -142,6 +142,7 @@ menutrans o&ff\ (this\ file)	vyp&nout\ (pro\ tento\ soubor)
 menutrans Co&lor\ test		Test\ &barev
 menutrans &Highlight\ test	&Test\ zvyraznovani
 menutrans &Convert\ to\ HTML	Prevest\ &do\ HTML
+menutrans &Show\ individual\ choices	&Zobrazit\ vyber\ moznosti
 " }}}
 
 " {{{ Menu Buffers

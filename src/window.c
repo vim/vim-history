@@ -1857,6 +1857,10 @@ win_close(win, free_buf)
 	apply_autocmds(EVENT_WINLEAVE, NULL, NULL, FALSE, curbuf);
 	if (!win_valid(win) || firstwin == lastwin)
 	    return;
+#ifdef FEAT_EVAL
+	if (aborting())	    /* autocmds may abort script processing */
+	    return;
+#endif
     }
 #endif
 
@@ -2900,6 +2904,10 @@ win_enter_ext(wp, undo_sync, curwin_invalid)
 	apply_autocmds(EVENT_WINLEAVE, NULL, NULL, FALSE, curbuf);
 	if (!win_valid(wp))
 	    return;
+#ifdef FEAT_EVAL
+	if (aborting())	    /* autocmds may abort script processing */
+	    return;
+#endif
     }
 #endif
 

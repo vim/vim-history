@@ -29,6 +29,7 @@ SRC =	buffer.c \
 	ex_cmds.c \
 	ex_cmds2.c \
 	ex_docmd.c \
+	ex_eval.c \
 	ex_getln.c \
 	fileio.c \
 	fold.c \
@@ -68,6 +69,7 @@ OBJ =	objects/buffer.obj \
 	objects/ex_cmds.obj \
 	objects/ex_cmds2.obj \
 	objects/ex_docmd.obj \
+	objects/ex_eval.obj \
 	objects/ex_getln.obj \
 	objects/fileio.obj \
 	objects/fold.obj \
@@ -136,6 +138,9 @@ objects/ex_cmds2.obj:	ex_cmds2.c  $(INCL)
 
 objects/ex_docmd.obj:	ex_docmd.c  $(INCL) ex_cmds.h
 	$(CC) $(CFLAGS) ex_docmd.c -o objects/ex_docmd.obj
+
+objects/ex_eval.obj:	ex_eval.c  $(INCL) ex_cmds.h
+	$(CC) $(CFLAGS) ex_eval.c -o objects/ex_eval.obj
 
 objects/ex_getln.obj:	ex_getln.c  $(INCL)
 	$(CC) $(CFLAGS) ex_getln.c -o objects/ex_getln.obj

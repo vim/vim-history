@@ -56,7 +56,7 @@ static char_u *get_user_command_name __ARGS((int idx));
 #endif
 
 #ifdef FEAT_EVAL
-static void free_cmdlines __ARGS((garray_T *gap));
+static void	free_cmdlines __ARGS((garray_T *gap));
 static char_u	*do_one_cmd __ARGS((char_u **, int, struct condstack *, char_u *(*getline)(int, void *, int), void *cookie));
 #else
 static char_u	*do_one_cmd __ARGS((char_u **, int, char_u *(*getline)(int, void *, int), void *cookie));
@@ -298,18 +298,7 @@ static void	ex_psearch __ARGS((exarg_T *eap));
 #endif
 static void	ex_tag __ARGS((exarg_T *eap));
 static void	ex_tag_cmd __ARGS((exarg_T *eap, char_u *name));
-#ifdef FEAT_EVAL
-static void	ex_if __ARGS((exarg_T *eap));
-static void	ex_endif __ARGS((exarg_T *eap));
-static void	ex_else __ARGS((exarg_T *eap));
-static void	ex_while __ARGS((exarg_T *eap));
-static void	ex_continue __ARGS((exarg_T *eap));
-static void	ex_break __ARGS((exarg_T *eap));
-static void	ex_endwhile __ARGS((exarg_T *eap));
-static void	ex_endfunction __ARGS((exarg_T *eap));
-static int	has_while_cmd __ARGS((char_u *p));
-static int	did_endif = FALSE;	/* just had ":endif" */
-#else
+#ifndef FEAT_EVAL
 # define ex_scriptnames		ex_ni
 # define ex_finish		ex_ni
 # define ex_echo		ex_ni
@@ -323,6 +312,11 @@ static int	did_endif = FALSE;	/* just had ":endif" */
 # define ex_continue		ex_ni
 # define ex_break		ex_ni
 # define ex_endwhile		ex_ni
+# define ex_throw		ex_ni
+# define ex_try			ex_ni
+# define ex_catch		ex_ni
+# define ex_finally		ex_ni
+# define ex_endtry		ex_ni
 # define ex_endfunction		ex_ni
 # define ex_let			ex_ni
 # define ex_unlet		ex_ni
@@ -456,6 +450,7 @@ cmdidx_T cmdidxs[27] =
 
 static char_u dollar_command[2] = {'$', 0};
 
+
 /*
  * do_exmode(): Repeatedly get commands for the "Ex" mode, until the ":vi"
  * command is given.
@@ -524,7 +519,7 @@ do_exmode(improved)
 	    msg_clr_eos();
 	}
 	else if (ex_pressedreturn)	/* must be at EOF */
-	    EMSG(_("At end-of-file"));
+	    EMSG(_("E501: At end-of-file"));
     }
 
 #ifdef FEAT_GUI
@@ -567,10 +562,11 @@ typedef struct
  * This function can be called recursively!
  *
  * flags:
- * DOCMD_VERBOSE - The command will be included in the error message.
- * DOCMD_NOWAIT  - Don't call wait_return() and friends.
- * DOCMD_REPEAT  - Repeat execution until getline() returns NULL.
- * DOCMD_KEYTYPED - Don't reset KeyTyped
+ * DOCMD_VERBOSE  - The command will be included in the error message.
+ * DOCMD_NOWAIT   - Don't call wait_return() and friends.
+ * DOCMD_REPEAT   - Repeat execution until getline() returns NULL.
+ * DOCMD_KEYTYPED - Don't reset KeyTyped.
+ * DOCMD_EXCRESET - Reset the exception environment (used for debugging).
  *
  * return FAIL if cmdline could not be executed, OK otherwise
  */
@@ -592,14 +588,45 @@ do_cmdline(cmdline, getline, cookie, flags)
     struct condstack cstack;		/* conditional stack */
     garray_T	lines_ga;		/* keep lines for ":while" */
     int		current_line = 0;	/* active line in lines_ga */
+    int		saved_trylevel = 0;
+    int		saved_force_abort = 0;
+    except_T	*saved_caught_stack = NULL;
+    char_u	*saved_vv_exception = NULL;
+    char_u	*saved_vv_throwpoint = NULL;
+    int		saved_did_emsg = 0;
+    int		saved_got_int = 0;
+    int		saved_did_throw = 0;
+    int		saved_need_rethrow = 0;
+    int		saved_check_cstack = 0;
+    except_T	*saved_current_exception = NULL;
+    int		initial_trylevel;
+    struct msglist	**saved_msg_list = NULL;
+    struct msglist	*private_msg_list;
 #endif
     static int	call_depth = 0;		/* recursiveness */
+
+#ifdef FEAT_EVAL
+    /* For every pair of do_cmdline()/do_one_cmd() calls, use an extra memory
+     * location for storing error messages to be converted to an exception.
+     * This ensures that the do_errthrow() call in do_one_cmd() does not combine
+     * the messages stored by an earlier invocation of do_one_cmd() with the
+     * command name of the later one.  This would happen when BufWritePost
+     * autocommands are executed after a write error. */
+    saved_msg_list = msg_list;
+    msg_list = &private_msg_list;
+    private_msg_list = NULL;
+#endif
 
     /* It's possible to create an endless loop with ":execute", catch that
      * here.  The value of 200 allows nested function calls, ":source", etc. */
     if (call_depth == 200)
     {
 	EMSG(_("E169: Command too recursive"));
+#ifdef FEAT_EVAL
+	/* When converting to an exception, we do not include the command name
+	 * since this is not an error of the specific command. */
+	do_errthrow((struct condstack *)NULL, (char_u *)NULL);
+#endif
 	return FAIL;
     }
     ++call_depth;
@@ -607,19 +634,58 @@ do_cmdline(cmdline, getline, cookie, flags)
 #ifdef FEAT_EVAL
     cstack.cs_idx = -1;
     cstack.cs_whilelevel = 0;
+    cstack.cs_trylevel = 0;
     cstack.cs_had_while = FALSE;
     cstack.cs_had_endwhile = FALSE;
     cstack.cs_had_continue = FALSE;
+    cstack.cs_had_finally = FALSE;
     ga_init2(&lines_ga, (int)sizeof(wcmd_T), 10);
 
-    /* Inside a function use a higher debug level. */
-    if (getline == get_func_line)
-	++debug_level;
-#endif
+    /* Inside a function use a higher nesting level. */
+    if (getline == get_func_line && ex_nesting_level == func_level(cookie))
+	++ex_nesting_level;
 
+    /*
+     * Initialize "force_abort"  and "suppress_errthrow" at the top level.
+     */
+    if (!recursive)
+    {
+	force_abort = FALSE;
+	suppress_errthrow = FALSE;
+    }
+
+    /*
+     * If requested, store and reset the global values controlling the
+     * exception handling (used when debugging).
+     */
+    else if (flags & DOCMD_EXCRESET)
+    {
+	saved_trylevel		= trylevel;		trylevel = 0;
+	saved_force_abort	= force_abort;		force_abort = FALSE;
+	saved_caught_stack	= caught_stack;		caught_stack = NULL;
+	saved_vv_exception	= v_exception(NULL);
+	saved_vv_throwpoint	= v_throwpoint(NULL);
+	/* Necessary for debugging an inactive ":catch", ":finally", or
+	 * ":endtry": */
+	saved_did_emsg		= did_emsg,		did_emsg     = FALSE;
+	saved_got_int		= got_int,		got_int	     = FALSE;
+	saved_did_throw		= did_throw,		did_throw    = FALSE;
+	saved_need_rethrow	= need_rethrow,		need_rethrow = FALSE;
+	saved_check_cstack	= check_cstack,		check_cstack = FALSE;
+	saved_current_exception = current_exception;	current_exception=NULL;
+    }
+
+    initial_trylevel = trylevel;
+
+    /*
+     * "did_throw" will be set to TRUE when an exception is being thrown.
+     */
+    did_throw = FALSE;
+#endif
     /*
      * "did_emsg" will be set to TRUE when emsg() is used, in which case we
      * cancel the whole command line, and any if/endif while/endwhile loop.
+     * If force_abort is set, we cancel everything.
      */
     did_emsg = FALSE;
 
@@ -642,8 +708,9 @@ do_cmdline(cmdline, getline, cookie, flags)
 	/* stop skipping cmds for an error msg after all endifs and endwhiles */
 	if (next_cmdline == NULL
 #ifdef FEAT_EVAL
+		&& !force_abort
 		&& cstack.cs_idx < 0
-		&& !(getline == get_func_line && func_has_ended(cookie))
+		&& !(getline == get_func_line && func_has_abort(cookie))
 #endif
 							)
 	    did_emsg = FALSE;
@@ -663,7 +730,8 @@ do_cmdline(cmdline, getline, cookie, flags)
 	    vim_free(cmdline_copy);
 	    cmdline_copy = NULL;
 
-	    /* Check if a function has returned or aborted */
+	    /* Check if a function has returned or, unless it has an unclosed
+	     * try conditional, aborted. */
 	    if (getline == get_func_line && func_has_ended(cookie))
 	    {
 		retval = FAIL;
@@ -715,6 +783,7 @@ do_cmdline(cmdline, getline, cookie, flags)
 	    next_cmdline = vim_strsave(next_cmdline);
 	    if (next_cmdline == NULL)
 	    {
+		EMSG(_(e_outofmem));
 		retval = FAIL;
 		break;
 	    }
@@ -729,9 +798,14 @@ do_cmdline(cmdline, getline, cookie, flags)
 	 * because we need to be able to jump back to it from an :endwhile.
 	 */
 	if (	   current_line == lines_ga.ga_len
-		&& (cstack.cs_whilelevel || has_while_cmd(next_cmdline))
-		&& ga_grow(&lines_ga, 1) == OK)
+		&& (cstack.cs_whilelevel || has_while_cmd(next_cmdline)))
 	{
+	    if (ga_grow(&lines_ga, 1) == FAIL)
+	    {
+		EMSG(_(e_outofmem));
+		retval = FAIL;
+		break;
+	    }
 	    ((wcmd_T *)(lines_ga.ga_data))[current_line].line =
 						    vim_strsave(next_cmdline);
 	    ((wcmd_T *)(lines_ga.ga_data))[current_line].lnum = sourcing_lnum;
@@ -822,7 +896,8 @@ do_cmdline(cmdline, getline, cookie, flags)
 
 #ifdef FEAT_EVAL
 	/* reset did_emsg for a function that is not aborted by an error */
-	if (did_emsg && getline == get_func_line && !func_has_abort(cookie))
+	if (did_emsg && !force_abort
+		&& getline == get_func_line && !func_has_abort(cookie))
 	    did_emsg = FALSE;
 
 	if (cstack.cs_whilelevel)
@@ -844,7 +919,7 @@ do_cmdline(cmdline, getline, cookie, flags)
 		/* Jump back to the matching ":while".  Be careful not to use
 		 * a cs_line[] from an entry that isn't a ":while": It would
 		 * make "current_line" invalid and can cause a crash. */
-		if (!did_emsg
+		if (!did_emsg && !got_int && !did_throw
 			&& cstack.cs_idx >= 0
 			&& (cstack.cs_flags[cstack.cs_idx] & CSF_WHILE)
 			&& cstack.cs_line[cstack.cs_idx] >= 0
@@ -885,17 +960,61 @@ do_cmdline(cmdline, getline, cookie, flags)
 	    }
 	    current_line = 0;
 	}
+
+	/*
+	 * A ":finally" makes did_emsg, got_int, and did_throw pending for being
+	 * restored at the ":endtry".  Reset them here and set the ACTIVE and
+	 * FINALLY flags, so that the finally clause gets executed.  This
+	 * includes the case where a missing ":endif" or ":endwhile" was
+	 * detected by the ":finally" itself.
+	 */
+	if (cstack.cs_had_finally)
+	{
+	    cstack.cs_had_finally = FALSE;
+	    report_make_pending(cstack.cs_pending[cstack.cs_idx] &
+		    (CSTP_ERROR | CSTP_INTERRUPT | CSTP_THROW),
+		    did_throw ? (void *)current_exception : NULL);
+	    did_emsg = got_int = did_throw = FALSE;
+	    cstack.cs_flags[cstack.cs_idx] |= CSF_ACTIVE | CSF_FINALLY;
+	}
+
+	/* Update global "trylevel" for recursive calls to do_cmdline() from
+	 * within this loop. */
+	trylevel = initial_trylevel + cstack.cs_trylevel;
+
+	/*
+	 * If the outermost try conditional (accross function calls and sourced
+	 * files) is aborted because of an error, an interrupt, or an uncaught
+	 * exception, cancel everything.  If it is left normally, reset
+	 * force_abort to get the non-EH compatible abortion behavior for
+	 * the rest of the script.
+	 */
+	if (trylevel == 0 && !did_emsg && !got_int && !did_throw)
+	    force_abort = FALSE;
+
+	/* Convert an interrupt to an exception if appropriate. */
+	(void)do_intthrow(&cstack);
 #endif /* FEAT_EVAL */
 
     }
     /*
      * Continue executing command lines when:
-     * - no CTRL-C typed
+     * - no CTRL-C typed, no aborting error, no exception thrown or try
+     *   conditionals need to be checked for executing finally clauses or
+     *   catching an interrupt exception
      * - didn't get an error message or lines are not typed
-     * - there is a command after '|', inside a :if or :while, or looping for
-     *	 ":source" command.
+     * - there is a command after '|', inside a :if, :while, or :try, or
+     *   looping for ":source" command or function call.
      */
-    while (!got_int
+    while (!((got_int
+#ifdef FEAT_EVAL
+		    || (did_emsg && force_abort) || did_throw
+#endif
+	     )
+#ifdef FEAT_EVAL
+		&& cstack.cs_trylevel == 0
+#endif
+	    )
 	    && !(did_emsg && (getline == getexmodeline || getline == getexline))
 	    && (next_cmdline != NULL
 #ifdef FEAT_EVAL
@@ -908,30 +1027,180 @@ do_cmdline(cmdline, getline, cookie, flags)
     free_cmdlines(&lines_ga);
     ga_clear(&lines_ga);
 
-    if (cstack.cs_idx >= 0
-	    && !got_int
-	    && ((getline == getsourceline && !source_finished(cookie))
-		|| (getline == get_func_line && !func_has_ended(cookie))))
+    if (cstack.cs_idx >= 0)
     {
-	if (cstack.cs_flags[cstack.cs_idx] & CSF_WHILE)
-	    EMSG(_("E170: Missing :endwhile"));
-	else
-	    EMSG(_("E171: Missing :endif"));
+	/*
+	 * If a sourced file or executed function ran to its end, report the
+	 * unclosed conditional.
+	 */
+	if (!got_int && !did_throw
+		&& ((getline == getsourceline && !source_finished(cookie))
+		    || (getline == get_func_line && !func_has_ended(cookie))))
+	{
+	    if (cstack.cs_flags[cstack.cs_idx] & CSF_TRY)
+		EMSG(_(e_endtry));
+	    else if (cstack.cs_flags[cstack.cs_idx] & CSF_WHILE)
+		EMSG(_(e_endwhile));
+	    else
+		EMSG(_(e_endif));
+	}
+
+	/*
+	 * Reset "trylevel" in case of a ":finish" or ":return" or a missing
+	 * ":endtry" in a sourced file or executed function.  If the try
+	 * conditional is in its finally clause, ignore anything pending.
+	 * If it is in a catch clause, finish the caught exception.
+	 */
+	do
+	    cstack.cs_idx = cleanup_conditionals(&cstack, 0, TRUE);
+	while (--cstack.cs_idx >= 0);
+	trylevel = initial_trylevel;
     }
 
-    /* When leaving a function, reduce debug level. */
-    if (getline == get_func_line)
-	--debug_level;
+    /* If a missing ":endtry", ":endwhile", or ":endif" or a memory lack
+     * was reported above and the error message is to be converted to an
+     * exception, do this now after rewinding the cstack. */
+    do_errthrow(&cstack, getline == get_func_line
+				  ? (char_u *)"endfunction" : (char_u *)NULL);
+
+    if (trylevel == 0)
+    {
+	/*
+	 * When an exception is being thrown out of the outermost try
+	 * conditional, discard the uncaught exception, disable the conversion
+	 * of interrupts or errors to exceptions, and ensure that no more
+	 * commands are executed.
+	 */
+	if (did_throw)
+	{
+	    void	*p = NULL;
+	    char_u	*saved_sourcing_name;
+	    int		saved_sourcing_lnum;
+	    struct msglist	*messages = NULL, *next;
+
+	    /*
+	     * If the uncaught exception is a user exception, report it as an
+	     * error.  If it is an error exception, display the saved error
+	     * message now.  For an interrupt exception, do nothing; the
+	     * interrupt message is given elsewhere.
+	     */
+	    switch (current_exception->type)
+	    {
+		case ET_USER:
+		    sprintf((char *)IObuff, _("E605: Exception not caught: %s"),
+			    current_exception->value);
+		    p = vim_strsave(IObuff);
+		    break;
+		case ET_ERROR:
+		    messages = current_exception->messages;
+		    current_exception->messages = NULL;
+		    break;
+		case ET_INTERRUPT:
+		    break;
+		default:
+		    p = vim_strsave((char_u *)_(e_internal));
+	    }
+
+	    saved_sourcing_name = sourcing_name;
+	    saved_sourcing_lnum = sourcing_lnum;
+	    sourcing_name = current_exception->throw_name;
+	    sourcing_lnum = current_exception->throw_lnum;
+	    current_exception->throw_name = NULL;
+
+	    discard_current_exception();	/* uses IObuff if 'verbose' */
+	    suppress_errthrow = TRUE;
+	    force_abort = TRUE;
+
+	    if (messages != NULL)
+	    {
+		do
+		{
+		    next = messages->next;
+		    emsg(messages->msg);
+		    vim_free(messages->msg);
+		    vim_free(messages);
+		    messages = next;
+		}
+		while (messages != NULL);
+	    }
+	    else if (p != NULL)
+	    {
+		emsg(p);
+		vim_free(p);
+	    }
+	    sourcing_name = saved_sourcing_name;
+	    sourcing_lnum = saved_sourcing_lnum;
+	}
+
+	/*
+	 * On an interrupt or an aborting error not converted to an exception,
+	 * disable the conversion of errors to exceptions.  (Interrupts are not
+	 * converted any more, here.) This enables also the interrupt message
+	 * when force_abort is set and did_emsg unset in case of an interrupt
+	 * from a finally clause after an error.
+	 */
+	else if (got_int || (did_emsg && force_abort))
+	    suppress_errthrow = TRUE;
+    }
+
     /*
-     * Go to debug mode when returning from a function in which we are
-     * single-stepping.
+     * The current cstack will be freed when do_cmdline() returns.  An uncaught
+     * exception will have to be rethrown in the previous cstack.  If a function
+     * has just returned or a script file was just finished and the previous
+     * cstack belongs to the same function or, respectively, script file, it
+     * will have to be checked for finally clauses to be executed due to the
+     * ":return" or ":finish".  This is done in do_one_cmd().
      */
-    if ((getline == getsourceline || getline == get_func_line)
-	    && debug_level + 1 <= debug_break_level)
-	do_debug(getline == getsourceline
-		? (char_u *)_("End of sourced file")
-		: (char_u *)_("End of function"));
-#endif
+    if (did_throw)
+	need_rethrow = TRUE;
+    if ((getline == getsourceline
+		&& ex_nesting_level > source_level(cookie))
+	    || (getline == get_func_line
+		&& ex_nesting_level > func_level(cookie) + 1))
+    {
+	if (!did_throw)
+	    check_cstack = TRUE;
+    }
+    else
+    {
+	/* When leaving a function, reduce nesting level. */
+	if (getline == get_func_line)
+	    --ex_nesting_level;
+	/*
+	 * Go to debug mode when returning from a function in which we are
+	 * single-stepping.
+	 */
+	if ((getline == getsourceline || getline == get_func_line)
+		&& ex_nesting_level + 1 <= debug_break_level)
+	    do_debug(getline == getsourceline
+		    ? (char_u *)_("End of sourced file")
+		    : (char_u *)_("End of function"));
+    }
+
+    /*
+     * Restore the exception environment (done after returning from the
+     * debugger).
+     */
+    if (flags & DOCMD_EXCRESET)
+    {
+	suppress_errthrow = FALSE;
+	trylevel = saved_trylevel;
+	force_abort = saved_force_abort;
+	caught_stack = saved_caught_stack;
+	(void)v_exception(saved_vv_exception);
+	(void)v_throwpoint(saved_vv_throwpoint);
+	/* Necessary for debugging an inactive ":catch", ":finally", or
+	 * ":endtry": */
+	did_emsg = saved_did_emsg;
+	got_int = saved_got_int;
+	did_throw = saved_did_throw;
+	need_rethrow = saved_need_rethrow;
+	check_cstack = saved_check_cstack;
+	current_exception = saved_current_exception;
+    }
+
+    msg_list = saved_msg_list;
+#endif /* FEAT_EVAL */
 
     /*
      * If there was too much output to fit on the command line, ask the user to
@@ -1047,7 +1316,7 @@ do_one_cmd(cmdlinep, sourcing,
     ea.line1 = 1;
     ea.line2 = 1;
 #ifdef FEAT_EVAL
-    ++debug_level;
+    ++ex_nesting_level;
 #endif
 
 	/* when not editing the last file :q has to be typed twice */
@@ -1197,15 +1466,21 @@ do_one_cmd(cmdlinep, sourcing,
     }
 
 #ifdef FEAT_EVAL
-    ea.skip = did_emsg || (cstack->cs_idx >= 0
+    ea.skip = did_emsg || got_int || did_throw || (cstack->cs_idx >= 0
 			 && !(cstack->cs_flags[cstack->cs_idx] & CSF_ACTIVE));
 #else
     ea.skip = (if_level > 0);
 #endif
 
 #ifdef FEAT_EVAL
-    /* May go to debug mode */
+    /* May go to debug mode.  If this happens and the ">quit" debug command is
+     * used, throw an interrupt exception and skip the next command. */
     dbg_check_breakpoint(&ea);
+    if (!ea.skip && got_int)
+    {
+	ea.skip = TRUE;
+	(void)do_intthrow(cstack);
+    }
 #endif
 
 /*
@@ -1364,7 +1639,7 @@ do_one_cmd(cmdlinep, sourcing,
     {
 	if (!ea.skip)
 	{
-	    STRCPY(IObuff, _("Not an editor command"));
+	    STRCPY(IObuff, _("E492: Not an editor command"));
 	    if (!sourcing)
 	    {
 		STRCAT(IObuff, ": ");
@@ -1447,7 +1722,7 @@ do_one_cmd(cmdlinep, sourcing,
     {
 	errormsg = (char_u *)_(e_nobang);
 	if (ea.cmdidx == CMD_help)
-	    errormsg = (char_u *)_("Don't panic!");
+	    errormsg = (char_u *)_("E478: Don't panic!");
 	goto doend;
     }
 
@@ -1466,7 +1741,7 @@ do_one_cmd(cmdlinep, sourcing,
 	{
 	    if (sourcing)
 	    {
-		errormsg = (char_u *)_("Backwards range given");
+		errormsg = (char_u *)_("E493: Backwards range given");
 		goto doend;
 	    }
 	    else
@@ -1586,7 +1861,7 @@ do_one_cmd(cmdlinep, sourcing,
 	{
 	    if (*++ea.arg != '>')		/* typed wrong */
 	    {
-		errormsg = (char_u *)_("Use w or w>>");
+		errormsg = (char_u *)_("E494: Use w or w>>");
 		goto doend;
 	    }
 	    ea.arg = skipwhite(ea.arg + 1);
@@ -1770,6 +2045,10 @@ do_one_cmd(cmdlinep, sourcing,
 	    case CMD_elseif:
 	    case CMD_else:
 	    case CMD_endif:
+	    case CMD_try:
+	    case CMD_catch:
+	    case CMD_finally:
+	    case CMD_endtry:
 	    case CMD_function:
 				break;
 
@@ -1804,6 +2083,7 @@ do_one_cmd(cmdlinep, sourcing,
 	    case CMD_match:
 	    case CMD_psearch:
 	    case CMD_return:
+	    case CMD_throw:
 	    case CMD_rightbelow:
 	    case CMD_silent:
 	    case CMD_smagic:
@@ -1893,6 +2173,26 @@ do_one_cmd(cmdlinep, sourcing,
 	    errormsg = (char_u *)_(ea.errmsg);
     }
 
+#ifdef FEAT_EVAL
+    /*
+     * If the command just executed called do_cmdline(), any throw or ":return"
+     * or ":finish" encountered there must also check the cstack of the still
+     * active do_cmdline() that called this do_one_cmd().  Rethrow an uncaught
+     * exception, or reanimate a returned function or finished script file and
+     * return or finish it again.
+     */
+    if (need_rethrow)
+	do_throw(cstack);
+    else if (check_cstack)
+    {
+	if (getline == getsourceline && source_finished(cookie))
+	    do_finish(&ea, TRUE);
+	else if (getline == get_func_line && current_func_returned())
+	    do_return(&ea, TRUE, FALSE, NULL);
+    }
+    need_rethrow = check_cstack = FALSE;
+#endif
+
 doend:
     if (curwin->w_cursor.lnum == 0)	/* can happen with zero line number */
 	curwin->w_cursor.lnum = 1;
@@ -1911,6 +2211,11 @@ doend:
 	}
 	emsg(errormsg);
     }
+#ifdef FEAT_EVAL
+    do_errthrow(cstack,
+	    (ea.cmdidx != CMD_SIZE) ? cmdnames[(int)ea.cmdidx].cmd_name
+							    : (char_u *)NULL);
+#endif
 
     if (verbose_save >= 0)
 	p_verbose = verbose_save;
@@ -1936,7 +2241,7 @@ doend:
 	ea.nextcmd = NULL;
 
 #ifdef FEAT_EVAL
-    --debug_level;
+    --ex_nesting_level;
 #endif
 
     return ea.nextcmd;
@@ -6044,7 +6349,12 @@ ex_read(eap)
 
 	}
 	if (i == FAIL)
-	    EMSG2(_(e_notopen), eap->arg);
+	{
+#if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+	    if (!aborting())
+#endif
+		EMSG2(_(e_notopen), eap->arg);
+	}
 	else
 	    redraw_curbuf_later(VALID);
     }
@@ -7300,272 +7610,6 @@ ex_tag_cmd(eap, name)
 							  eap->forceit, TRUE);
 }
 
-#ifdef FEAT_EVAL
-
-/*
- * ":if".
- */
-    static void
-ex_if(eap)
-    exarg_T	*eap;
-{
-    int		error;
-    int		skip;
-    int		result;
-    struct condstack	*cstack = eap->cstack;
-
-    if (cstack->cs_idx == CSTACK_LEN - 1)
-	eap->errmsg = (char_u *)N_(":if nesting too deep");
-    else
-    {
-	++cstack->cs_idx;
-	cstack->cs_flags[cstack->cs_idx] = 0;
-
-	/*
-	 * Don't do something after an error or when there is a surrounding
-	 * conditional and it was not active.
-	 */
-	skip = did_emsg || (cstack->cs_idx > 0
-		&& !(cstack->cs_flags[cstack->cs_idx - 1] & CSF_ACTIVE));
-
-	result = eval_to_bool(eap->arg, &error, &eap->nextcmd, skip);
-
-	if (!skip)
-	{
-	    if (result)
-		cstack->cs_flags[cstack->cs_idx] = CSF_ACTIVE | CSF_TRUE;
-	    if (error)
-		--cstack->cs_idx;
-	}
-    }
-}
-
-/*
- * ":endif".
- */
-    static void
-ex_endif(eap)
-    exarg_T	*eap;
-{
-    did_endif = TRUE;
-    if (eap->cstack->cs_idx < 0
-	    || (eap->cstack->cs_flags[eap->cstack->cs_idx] & CSF_WHILE))
-	eap->errmsg = (char_u *)N_(":endif without :if");
-    else
-	--eap->cstack->cs_idx;
-}
-
-/*
- * ":else" and ":elseif".
- */
-    static void
-ex_else(eap)
-    exarg_T	*eap;
-{
-    int		error;
-    int		skip;
-    int		result;
-    struct condstack	*cstack = eap->cstack;
-
-    if (cstack->cs_idx < 0 || (cstack->cs_flags[cstack->cs_idx] & CSF_WHILE))
-    {
-	if (eap->cmdidx == CMD_else)
-	    eap->errmsg = (char_u *)N_(":else without :if");
-	else
-	    eap->errmsg = (char_u *)N_(":elseif without :if");
-    }
-    else
-    {
-	/*
-	 * Don't do something after an error or when there is a surrounding
-	 * conditional and it was not active.
-	 */
-	skip = did_emsg || (cstack->cs_idx > 0
-		&& !(cstack->cs_flags[cstack->cs_idx - 1] & CSF_ACTIVE));
-	if (!skip)
-	{
-	    /* if the ":if" was TRUE, reset active, otherwise set it */
-	    if (cstack->cs_flags[cstack->cs_idx] & CSF_TRUE)
-	    {
-		cstack->cs_flags[cstack->cs_idx] = CSF_TRUE;
-		skip = TRUE;	/* don't evaluate an ":elseif" */
-	    }
-	    else
-		cstack->cs_flags[cstack->cs_idx] = CSF_ACTIVE;
-	}
-
-	if (eap->cmdidx == CMD_elseif)
-	{
-	    result = eval_to_bool(eap->arg, &error, &eap->nextcmd, skip);
-
-	    if (!skip && (cstack->cs_flags[cstack->cs_idx] & CSF_ACTIVE))
-	    {
-		if (result)
-		    cstack->cs_flags[cstack->cs_idx] = CSF_ACTIVE | CSF_TRUE;
-		else
-		    cstack->cs_flags[cstack->cs_idx] = 0;
-		if (error)
-		    --cstack->cs_idx;
-	    }
-	}
-    }
-}
-
-/*
- * Handle ":while".
- */
-    static void
-ex_while(eap)
-    exarg_T	*eap;
-{
-    int		error;
-    int		skip;
-    int		result;
-    struct condstack	*cstack = eap->cstack;
-
-    if (cstack->cs_idx == CSTACK_LEN - 1)
-	eap->errmsg = (char_u *)N_(":while nesting too deep");
-    else
-    {
-	/*
-	 * cs_had_while is set when we have jumped back from the matching
-	 * ":endwhile".  When not set, need to init this cstack entry.
-	 */
-	if (!cstack->cs_had_while)
-	{
-	    ++cstack->cs_idx;
-	    ++cstack->cs_whilelevel;
-	    cstack->cs_line[cstack->cs_idx] = -1;
-	}
-	cstack->cs_flags[cstack->cs_idx] = CSF_WHILE;
-
-	/*
-	 * Don't do something after an error or when there is a surrounding
-	 * conditional and it was not active.
-	 */
-	skip = did_emsg || (cstack->cs_idx > 0
-		&& !(cstack->cs_flags[cstack->cs_idx - 1] & CSF_ACTIVE));
-	result = eval_to_bool(eap->arg, &error, &eap->nextcmd, skip);
-
-	if (!skip)
-	{
-	    if (result && !error)
-		cstack->cs_flags[cstack->cs_idx] |= CSF_ACTIVE | CSF_TRUE;
-	    /*
-	     * Set cs_had_while flag, so do_cmdline() will set the line
-	     * number in cs_line[].
-	     */
-	    cstack->cs_had_while = TRUE;
-	}
-    }
-}
-
-/*
- * ":continue"
- */
-    static void
-ex_continue(eap)
-    exarg_T	*eap;
-{
-    struct condstack	*cstack = eap->cstack;
-
-    if (cstack->cs_whilelevel <= 0 || cstack->cs_idx < 0)
-	eap->errmsg = (char_u *)N_(":continue without :while");
-    else
-    {
-	/* Find the matching ":while". */
-	while (cstack->cs_idx > 0
-		    && !(cstack->cs_flags[cstack->cs_idx] & CSF_WHILE))
-	    --cstack->cs_idx;
-
-	/*
-	 * Set cs_had_continue, so do_cmdline() will jump back to the matching
-	 * ":while".
-	 */
-	cstack->cs_had_continue = TRUE;	    /* let do_cmdline() handle it */
-    }
-}
-
-/*
- * ":break"
- */
-    static void
-ex_break(eap)
-    exarg_T	*eap;
-{
-    int		idx;
-    struct condstack	*cstack = eap->cstack;
-
-    if (cstack->cs_whilelevel <= 0 || cstack->cs_idx < 0)
-	eap->errmsg = (char_u *)N_(":break without :while");
-    else
-    {
-	/* Find the matching ":while". */
-	for (idx = cstack->cs_idx; idx >= 0; --idx)
-	{
-	    cstack->cs_flags[idx] &= ~CSF_ACTIVE;
-	    if (cstack->cs_flags[idx] & CSF_WHILE)
-		break;
-	}
-    }
-}
-
-/*
- * ":endwhile"
- */
-    static void
-ex_endwhile(eap)
-    exarg_T	*eap;
-{
-    struct condstack	*cstack = eap->cstack;
-
-    if (cstack->cs_whilelevel <= 0 || cstack->cs_idx < 0)
-	eap->errmsg = (char_u *)N_(":endwhile without :while");
-    else
-    {
-	if (!(cstack->cs_flags[cstack->cs_idx] & CSF_WHILE))
-	{
-	    eap->errmsg = (char_u *)N_(":endwhile without :while");
-	    while (cstack->cs_idx >= 0
-		    && !(cstack->cs_flags[cstack->cs_idx] & CSF_WHILE))
-		--cstack->cs_idx;
-	}
-	/*
-	 * Set cs_had_endwhile, so do_cmdline() will jump back to the matching
-	 * ":while".
-	 */
-	cstack->cs_had_endwhile = TRUE;
-    }
-}
-
-/*
- * ":endfunction" when not after a ":function"
- */
-/*ARGSUSED*/
-    static void
-ex_endfunction(eap)
-    exarg_T	*eap;
-{
-    EMSG(_("E193: :endfunction not inside a function"));
-}
-
-/*
- * Return TRUE if the string "p" looks like a ":while" command.
- */
-    static int
-has_while_cmd(p)
-    char_u	*p;
-{
-    p = skipwhite(p);
-    while (*p == ':')
-	p = skipwhite(p + 1);
-    if (p[0] == 'w' && p[1] == 'h')
-	return TRUE;
-    return FALSE;
-}
-
-#endif /* FEAT_EVAL */
-
 /*
  * Evaluate cmdline variables.
  *
@@ -7756,7 +7800,7 @@ eval_vars(src, usedlen, lnump, errormsg, srcstart)
 		result = autocmd_fname;
 		if (result == NULL)
 		{
-		    *errormsg = (char_u *)_("no autocommand file name to substitute for \"<afile>\"");
+		    *errormsg = (char_u *)_("E495: no autocommand file name to substitute for \"<afile>\"");
 		    return NULL;
 		}
 		break;
@@ -7764,7 +7808,7 @@ eval_vars(src, usedlen, lnump, errormsg, srcstart)
 	case SPEC_ABUF:		/* buffer number for autocommand */
 		if (autocmd_bufnr <= 0)
 		{
-		    *errormsg = (char_u *)_("no autocommand buffer number to substitute for \"<abuf>\"");
+		    *errormsg = (char_u *)_("E496: no autocommand buffer number to substitute for \"<abuf>\"");
 		    return NULL;
 		}
 		sprintf((char *)strbuf, "%d", autocmd_bufnr);
@@ -7775,7 +7819,7 @@ eval_vars(src, usedlen, lnump, errormsg, srcstart)
 		result = autocmd_match;
 		if (result == NULL)
 		{
-		    *errormsg = (char_u *)_("no autocommand match name to substitute for \"<amatch>\"");
+		    *errormsg = (char_u *)_("E497: no autocommand match name to substitute for \"<amatch>\"");
 		    return NULL;
 		}
 		break;
@@ -7785,7 +7829,7 @@ eval_vars(src, usedlen, lnump, errormsg, srcstart)
 		result = sourcing_name;
 		if (result == NULL)
 		{
-		    *errormsg = (char_u *)_("no :source file name to substitute for \"<sfile>\"");
+		    *errormsg = (char_u *)_("E498: no :source file name to substitute for \"<sfile>\"");
 		    return NULL;
 		}
 		break;
@@ -7826,9 +7870,9 @@ eval_vars(src, usedlen, lnump, errormsg, srcstart)
     {
 	if (valid != VALID_HEAD + VALID_PATH)
 	    /* xgettext:no-c-format */
-	    *errormsg = (char_u *)_("Empty file name for '%' or '#', only works with \":p:h\"");
+	    *errormsg = (char_u *)_("E499: Empty file name for '%' or '#', only works with \":p:h\"");
 	else
-	    *errormsg = (char_u *)_("Evaluates to an empty string");
+	    *errormsg = (char_u *)_("E500: Evaluates to an empty string");
 	result = NULL;
     }
     else

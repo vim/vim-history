@@ -1,10 +1,11 @@
-"  vim: set sw=4 sts=4:
-"  Maintainer	: Nikolai 'pcp' Weibull <da.box@home.se>
-"  URL		: http://www.pcppopper.org/
-"  Revised on	: Wed, 22 Aug 2001 20:48:04 +0200
-"  TODO		: is the deny-all (a la lilo.vim nice or no?)...
-"		: irritating to be wrong to the last char...
-"		: would be sweet if right until one char fails
+" Vim syntax file
+" Language:	    indent RC File
+" Maintainer:	    Nikolai 'pcp' Weibull <da.box@home.se>
+" URL:		    http://www.pcppopper.org/
+" Latest Revision:  2002-10-24
+" TODO: is the deny-all (a la lilo.vim nice or no?)...
+"	irritating to be wrong to the last char...
+"	would be sweet if right until one char fails
 
 if version < 600
     syntax clear
@@ -95,3 +96,5 @@ if version >= 508 || !exists("did_indent_syn_inits")
 endif
 
 let b:current_syntax = "indent"
+
+"  vim: set sw=4 sts=4:

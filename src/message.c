@@ -403,8 +403,21 @@ emsg(s)
     int		attr;
     int		other_sourcing_name;
     char	*p;
+#ifdef FEAT_EVAL
+    int		ignore = FALSE;
+    int		severe;
+#endif
 
     called_emsg = TRUE;
+
+    /*
+     * If "emsg_severe" is TRUE: When an error exception is to be thrown, prefer
+     * this message over previous messages for the same command.
+     */
+#ifdef FEAT_EVAL
+    severe = emsg_severe;
+    emsg_severe = FALSE;
+#endif
 
     /*
      * If "emsg_off" is set: no error messages at the moment.
@@ -421,6 +434,20 @@ emsg(s)
     if (!emsg_off)
     {
 #ifdef FEAT_EVAL
+	/*
+	 * Cause a throw of an error exception if appropriate.  Don't display
+	 * the error message in this case.  (If no matching catch clause will
+	 * be found, the message will be displayed later on.)  "ignore" is set
+	 * when the message should be ignored completely (used for the
+	 * interrupt message).
+	 */
+	if (cause_errthrow(s, severe, &ignore) == TRUE)
+	{
+	    if (!ignore)
+		did_emsg = TRUE;
+	    return TRUE;
+	}
+
 	/* set "v:errmsg", also when using ":silent! cmd" */
 	set_vim_var_string(VV_ERRMSG, s, -1);
 #endif

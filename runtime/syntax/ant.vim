@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	ANT build file (xml)
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
-" Last Change:	Sat, 03 Nov 2001 19:52:12 +0100
+" Last Change:	Mon, 08 Apr 2002 19:58:09 CEST
 " Filenames:	build.xml
 " $Id$
 
@@ -9,6 +9,9 @@
 if exists("b:current_syntax")
     finish
 endif
+
+let s:ant_cpo_save = &cpo
+set cpo&vim
 
 runtime syntax/xml.vim
 
@@ -67,5 +70,8 @@ syn keyword antElement display renameext exec apply maudit searchpath rmic sleep
 hi def link antElement Statement
 
 let b:current_syntax = "ant"
+
+let &cpo = s:ant_cpo_save
+unlet s:ant_cpo_save
 
 " vim: ts=8

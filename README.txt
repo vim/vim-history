@@ -1,4 +1,4 @@
-README.txt for version 6.1 of Vim: Vi IMproved.
+README.txt for version 6.2a of Vim: Vi IMproved.
 
 
 WHAT IS VIM
@@ -26,7 +26,7 @@ This README.txt file comes with the runtime archive.  It includes the
 documentation, syntax files and other files that are used at runtime.  To run
 Vim you must get either one of the binary archives or a source archive.
 Which one you need depends on the system you want to run it on and whether you
-want or must compile it yourself.  Check "http://vim.sf.net/download.php" for
+want or must compile it yourself.  Check "http://www.vim.org/download.php" for
 an overview of currently available distributions.
 
 
@@ -75,10 +75,10 @@ README_vms.txt		VMS
 INFORMATION
 
 The latest news about Vim can be found on the Vim home page:
-	http://vim.sf.org/
+	http://www.vim.org/
 
 If you have problems, have a look at the Vim FAQ:
-	http://www.vim.org/faq/
+	http://vimdoc.sf.net/vimfaq.html
 
 Send bug reports to:
 	Bram Moolenaar <Bram@vim.org>
@@ -104,7 +104,7 @@ There are four mailing lists for Vim:
 	For discussions about using and improving Vim on the Macintosh.
 	Archive: http://groups.yahoo.com/group/vim-mac
 
-See "http://www.vim.org/mail.html"
+See "http://www.vim.org/maillist.php"
 
 NOTE:
 - You can only send messages to these lists if you have subscribed!

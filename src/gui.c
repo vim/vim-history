@@ -13,13 +13,16 @@
 /* Structure containing all the GUI information */
 gui_T gui;
 
-#ifdef FEAT_MBYTE
+#if defined(FEAT_MBYTE) && !defined(HAVE_GTK2)
 static void set_guifontwide __ARGS((char_u *font_name));
 #endif
 static void gui_check_pos __ARGS((void));
 static void gui_position_components __ARGS((int));
 static void gui_outstr __ARGS((char_u *, int));
 static int gui_screenchar __ARGS((int off, int flags, guicolor_T fg, guicolor_T bg, int back));
+#ifdef HAVE_GTK2
+static int gui_screenstr __ARGS((int off, int len, int flags, guicolor_T fg, guicolor_T bg, int back));
+#endif
 static void gui_delete_lines __ARGS((int row, int count));
 static void gui_insert_lines __ARGS((int row, int count));
 static void gui_do_scrollbar __ARGS((win_T *wp, int which, int enable));
@@ -162,6 +165,11 @@ gui_start()
 	    close(pipefd[0]);
 	    close(pipefd[1]);
 	}
+
+# if defined(FEAT_GUI_GNOME) && defined(FEAT_SESSION)
+        /* Tell the session manager our new PID */
+        gui_mch_forked();
+# endif
     }
 #else
 # if defined(__QNXNTO__)
@@ -234,18 +242,22 @@ gui_init_check()
     gui.border_width = 0;
 
     gui.norm_font = NOFONT;
+#ifndef HAVE_GTK2
     gui.bold_font = NOFONT;
     gui.ital_font = NOFONT;
     gui.boldital_font = NOFONT;
-#ifdef FEAT_XFONTSET
+# ifdef FEAT_XFONTSET
     gui.fontset = NOFONTSET;
+# endif
 #endif
 
 #ifdef FEAT_MENU
-# ifdef FONTSET_ALWAYS
+# ifndef HAVE_GTK2
+#  ifdef FONTSET_ALWAYS
     gui.menu_fontset = NOFONTSET;
-# else
+#  else
     gui.menu_font = NOFONT;
+#  endif
 # endif
     gui.menu_is_active = TRUE;	    /* default: include menu */
 # ifndef FEAT_GUI_GTK
@@ -629,7 +641,7 @@ gui_init_font(font_list, fontset)
 		 * longer be used! */
 		if (gui_mch_init_font(font_name, FALSE) == OK)
 		{
-#ifdef FEAT_MBYTE
+#if defined(FEAT_MBYTE) && !defined(HAVE_GTK2)
 		    /* If it's a Unicode font, try setting 'guifontwide' to a
 		     * similar double-width font. */
 		    if ((p_guifontwide == NULL || *p_guifontwide == NUL)
@@ -656,13 +668,15 @@ gui_init_font(font_list, fontset)
 
     if (ret == OK)
     {
+#ifndef HAVE_GTK2
 	/* Set normal font as current font */
-#ifdef FEAT_XFONTSET
+# ifdef FEAT_XFONTSET
 	if (gui.fontset != NOFONTSET)
 	    gui_mch_set_fontset(gui.fontset);
 	else
-#endif
+# endif
 	    gui_mch_set_font(gui.norm_font);
+#endif
 	gui_set_shellsize(FALSE,
 #ifdef MSWIN
 		TRUE
@@ -676,6 +690,7 @@ gui_init_font(font_list, fontset)
 }
 
 #if defined(FEAT_MBYTE) || defined(PROTO)
+# ifndef HAVE_GTK2
 /*
  * Try setting 'guifontwide' to a font twice as wide as "name".
  */
@@ -722,6 +737,7 @@ set_guifontwide(name)
 	}
     }
 }
+# endif /* !HAVE_GTK2 */
 
 /*
  * Get the font for 'guifontwide'.
@@ -752,7 +768,17 @@ gui_get_wide_font()
     }
 
     gui_mch_free_font(gui.wide_font);
-    gui.wide_font = font;
+#ifdef HAVE_GTK2
+    /* Avoid unnecessary overhead if 'guifontwide' is equal to 'guifont'. */
+    if (font != NOFONT && gui.norm_font != NOFONT
+			 && pango_font_description_equal(font, gui.norm_font))
+    {
+	gui.wide_font = NOFONT;
+	gui_mch_free_font(font);
+    }
+    else
+#endif
+	gui.wide_font = font;
     return OK;
 }
 #endif
@@ -1075,7 +1101,7 @@ gui_position_components(total_width)
 			      text_area_y,
 			      text_area_width,
 			      text_area_height
-#ifdef FEAT_XIM
+#if defined(FEAT_XIM) && !defined(HAVE_GTK2)
 				  + xim_get_status_area_height()
 #endif
 			      );
@@ -1208,7 +1234,7 @@ again:
 
     gui_update_scrollbars(TRUE);
     gui_update_cursor(FALSE, TRUE);
-#ifdef FEAT_XIM
+#if defined(FEAT_XIM) && !defined(HAVE_GTK2)
     xim_set_status_area();
 #endif
 
@@ -1755,6 +1781,82 @@ gui_screenchar(off, flags, fg, bg, back)
 #endif
 }
 
+#ifdef HAVE_GTK2
+/*
+ * Output the string at the given screen position.  This is used in place
+ * of gui_screenchar() where possible because Pango needs as much context
+ * as possible to work nicely.  It's a lot faster as well.
+ */
+    static int
+gui_screenstr(off, len, flags, fg, bg, back)
+    int		off;	    /* Offset from start of screen */
+    int		len;	    /* string length in screen cells */
+    int		flags;
+    guicolor_T	fg, bg;	    /* colors for cursor */
+    int		back;	    /* backup this many chars when using bold trick */
+{
+    char_u  *buf;
+    int	    outlen = 0;
+    int	    i;
+    int	    retval;
+
+    if (len <= 0) /* "cannot happen"? */
+	return OK;
+
+    if (enc_utf8)
+    {
+	buf = alloc((unsigned)(len * MB_MAXBYTES + 1));
+	if (buf == NULL)
+	    return OK; /* not much we could do here... */
+
+	for (i = off; i < off + len; ++i)
+	{
+	    if (ScreenLines[i] == 0)
+		continue; /* skip second half of double-width char */
+
+	    if (ScreenLinesUC[i] == 0)
+		buf[outlen++] = ScreenLines[i];
+	    else
+		outlen += utfc_char2bytes(i, buf + outlen);
+	}
+
+	buf[outlen] = NUL; /* only to aid debugging */
+	retval = gui_outstr_nowrap(buf, outlen, flags, fg, bg, back);
+	vim_free(buf);
+
+	return retval;
+    }
+    else if (enc_dbcs == DBCS_JPNU)
+    {
+	buf = alloc((unsigned)(len * 2 + 1));
+	if (buf == NULL)
+	    return OK; /* not much we could do here... */
+
+	for (i = off; i < off + len; ++i)
+	{
+	    buf[outlen++] = ScreenLines[i];
+
+	    /* handle double-byte single-width char */
+	    if (ScreenLines[i] == 0x8e)
+		buf[outlen++] = ScreenLines2[i];
+	    else if (MB_BYTE2LEN(ScreenLines[i]) == 2)
+		buf[outlen++] = ScreenLines[++i];
+	}
+
+	buf[outlen] = NUL; /* only to aid debugging */
+	retval = gui_outstr_nowrap(buf, outlen, flags, fg, bg, back);
+	vim_free(buf);
+
+	return retval;
+    }
+    else
+    {
+	return gui_outstr_nowrap(&ScreenLines[off], len,
+				 flags, fg, bg, back);
+    }
+}
+#endif /* HAVE_GTK2 */
+
 /*
  * Output the given string at the current cursor position.  If the string is
  * too long to fit on the line, then it is truncated.
@@ -1780,7 +1882,7 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
     long_u	hl_mask_todo;
     guicolor_T	fg_color;
     guicolor_T	bg_color;
-#ifndef MSWIN16_FASTTEXT
+#if !defined(MSWIN16_FASTTEXT) && !defined(HAVE_GTK2)
     GuiFont	font = NOFONT;
 # ifdef FEAT_XFONTSET
     GuiFontset	fontset = NOFONTSET;
@@ -1834,7 +1936,7 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 	highlight_mask = gui.highlight_mask;
     hl_mask_todo = highlight_mask;
 
-#ifndef MSWIN16_FASTTEXT
+#if !defined(MSWIN16_FASTTEXT) && !defined(HAVE_GTK2)
     /* Set the font */
     if (aep != NULL && aep->ae_u.gui.font != NOFONT)
 	font = aep->ae_u.gui.font;
@@ -1940,8 +2042,9 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
     if (back != 0 && ((draw_flags & DRAW_BOLD) || (highlight_mask & HL_ITALIC)))
 	return FAIL;
 
-#ifdef RISCOS
-    /* If there's no italic font, then fake it */
+#if defined(RISCOS) || defined(HAVE_GTK2)
+    /* If there's no italic font, then fake it.
+     * For GTK2, we don't need a different font for italic style. */
     if (hl_mask_todo & HL_ITALIC)
 	draw_flags |= DRAW_ITALIC;
 
@@ -1965,7 +2068,11 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
     /*
      * Draw the text.
      */
-#ifdef FEAT_MBYTE
+#ifdef HAVE_GTK2
+    /* The value returned is the length in display cells */
+    len = gui_gtk2_draw_string(gui.row, col, s, len, draw_flags);
+#else
+# ifdef FEAT_MBYTE
     if (enc_utf8)
     {
 	int	start;		/* index of bytes to be drawn */
@@ -1988,9 +2095,9 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 	    c = utf_ptr2char(s + i);
 	    cn = utf_char2cells(c);
 	    if (cn > 1
-# ifdef FEAT_XFONTSET
+#  ifdef FEAT_XFONTSET
 		    && fontset == NOFONTSET
-# endif
+#  endif
 		    && gui.wide_font != NOFONT)
 		dowide = TRUE;
 	    else
@@ -2005,15 +2112,15 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 	    /* print the string so far if it's the last character or there is
 	     * a composing character. */
 	    if (i + cl >= len || (comping && i > start) || dowide
-#if defined(FEAT_GUI_X11) || defined(FEAT_GUI_GTK)
+#  if defined(FEAT_GUI_X11) || defined(FEAT_GUI_GTK)
 		    || (cn > 1
-# ifdef FEAT_XFONTSET
+#   ifdef FEAT_XFONTSET
 			/* No fontset: At least draw char after wide char at
 			 * right position. */
 			&& fontset == NOFONTSET
-# endif
+#   endif
 		       )
-#endif
+#  endif
 	       )
 	    {
 		if (comping || dowide)
@@ -2037,16 +2144,16 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 		    start += cl;
 		}
 
-#if defined(FEAT_GUI_X11) || defined(FEAT_GUI_GTK)
+#  if defined(FEAT_GUI_X11) || defined(FEAT_GUI_GTK)
 		/* No fontset: draw a space to fill the gap after a wide char */
 		if (cn > 1 && (draw_flags & DRAW_TRANSP) == 0
-# ifdef FEAT_XFONTSET
+#   ifdef FEAT_XFONTSET
 			&& fontset == NOFONTSET
-# endif
+#   endif
 			&& !dowide)
 		    gui_mch_draw_string(gui.row, scol - 1, (char_u *)" ",
 							       1, draw_flags);
-#endif
+#  endif
 	    }
 	    /* Draw a composing char on top of the previous char. */
 	    if (comping)
@@ -2060,10 +2167,10 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 	len = scol - col;
     }
     else
-#endif
+# endif
     {
 	gui_mch_draw_string(gui.row, col, s, len, draw_flags);
-#ifdef FEAT_MBYTE
+# ifdef FEAT_MBYTE
 	if (enc_dbcs == DBCS_JPNU)
 	{
 	    int		clen = 0;
@@ -2075,8 +2182,9 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 		clen += (*mb_ptr2cells)(s + i);
 	    len = clen;
 	}
-#endif
+# endif
     }
+#endif /* !HAVE_GTK2 */
 
     if (!(flags & (GUI_MON_IS_CURSOR | GUI_MON_TRS_CURSOR)))
 	gui.col = col + len;
@@ -2234,6 +2342,10 @@ gui_redraw_block(row1, col1, row2, col2, flags)
 	{
 	    if (ScreenLines[off + col1] == 0)
 		--col1;
+# ifdef HAVE_GTK2
+	    if (col2 + 1 < Columns && ScreenLines[off + col2 + 1] == 0)
+		++col2;
+# endif
 	}
 #endif
 	gui.col = col1;
@@ -2255,7 +2367,7 @@ gui_redraw_block(row1, col1, row2, col2, flags)
 	{
 	    first_attr = ScreenAttrs[off];
 	    gui.highlight_mask = first_attr;
-#ifdef FEAT_MBYTE
+#if defined(FEAT_MBYTE) && !defined(HAVE_GTK2)
 	    if (enc_utf8 && ScreenLinesUC[off] != 0)
 	    {
 		/* output multi-byte character separately */
@@ -2276,10 +2388,22 @@ gui_redraw_block(row1, col1, row2, col2, flags)
 	    else
 #endif
 	    {
+#ifdef HAVE_GTK2
+		for (idx = 0; idx < len; ++idx)
+		{
+		    if (enc_utf8 && ScreenLines[off + idx] == 0)
+			continue; /* skip second half of double-width char */
+		    if (ScreenAttrs[off + idx] != first_attr)
+			break;
+		}
+		/* gui_screenstr() takes care of multibyte chars */
+		nback = gui_screenstr(off, idx, flags,
+				      (guicolor_T)0, (guicolor_T)0, back);
+#else
 		for (idx = 0; idx < len && ScreenAttrs[off + idx] == first_attr;
 									idx++)
 		{
-#ifdef FEAT_MBYTE
+# ifdef FEAT_MBYTE
 		    /* Stop at a multi-byte Unicode character. */
 		    if (enc_utf8 && ScreenLinesUC[off + idx] != 0)
 			break;
@@ -2292,10 +2416,11 @@ gui_redraw_block(row1, col1, row2, col2, flags)
 							    + off + idx) == 2)
 			    ++idx;  /* skip second byte of double-byte char */
 		    }
-#endif
+# endif
 		}
 		nback = gui_outstr_nowrap(ScreenLines + off, idx, flags,
 					  (guicolor_T)0, (guicolor_T)0, back);
+#endif
 	    }
 	    if (nback == FAIL)
 	    {
@@ -2820,9 +2945,9 @@ button_set:
 
     /*
      * We need to make sure this is cleared since Athena doesn't tell us when
-     * he is done dragging.
+     * he is done dragging.  Neither does GTK+ 2 -- at least for now.
      */
-#ifdef FEAT_GUI_ATHENA
+#if defined(FEAT_GUI_ATHENA) || defined(HAVE_GTK2)
     gui.dragged_sb = SBAR_NONE;
 #endif
 }
@@ -3091,7 +3216,7 @@ gui_find_scrollbar(ident)
 /*
  * For most systems: Put a code in the input buffer for a dragged scrollbar.
  *
- * For Win32 and Macintosh:
+ * For Win32, Macintosh and GTK+ 2:
  * Scrollbars seem to grab focus and vim doesn't read the input queue until
  * you stop dragging the scrollbar.  We get here each time the scrollbar is
  * dragged another pixel, but as far as the rest of vim goes, it thinks
@@ -3115,7 +3240,9 @@ gui_drag_scrollbar(sb, value, still_dragging)
     int		sb_num;
 #ifdef USE_ON_FLY_SCROLL
     colnr_T	old_leftcol = curwin->w_leftcol;
+# ifdef FEAT_SCROLLBIND
     linenr_T	old_topline = curwin->w_topline;
+# endif
 # ifdef FEAT_DIFF
     int		old_topfill = curwin->w_topfill;
 # endif
@@ -4067,6 +4194,7 @@ gui_find_bitmap(name, buffer, ext)
     return OK;
 }
 
+# if !defined(HAVE_GTK2) || defined(PROTO)
 /*
  * Given the name of the "icon=" argument, try finding the bitmap file for the
  * icon.  If it is an absolute path name, use it as it is.  Otherwise append
@@ -4086,6 +4214,7 @@ gui_find_iconfile(name, buffer, ext)
     if (!mch_isFullName(buffer) && gui_find_bitmap(buffer, buf, ext) == OK)
 	STRCPY(buffer, buf);
 }
+# endif
 #endif
 
 #if defined(FEAT_GUI_GTK) || defined(FEAT_GUI_X11) || defined(PROTO)

@@ -1,4 +1,4 @@
-*usr_45.txt*	For Vim version 6.1.  Last change: 2001 Sep 03
+*usr_45.txt*	For Vim version 6.2a.  Last change: 2002 Oct 08
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -179,9 +179,9 @@ This applies to the text in buffers (files you are editing), registers, Vim
 script files, etc.  You can regard 'encoding' as the setting for the internals
 of Vim.
    This example assumes you have this font on your system.  The name in the
-example is for X-Windows.  This font is in a package that is used to enhance
-xterm with Unicode support.  If you don't have this font, you might find it
-here:
+example is for the X Window System.  This font is in a package that is used to
+enhance xterm with Unicode support.  If you don't have this font, you might
+find it here:
 
 	http://www.cl.cam.ac.uk/~mgk25/download/ucs-fonts.tar.gz ~
 
@@ -336,7 +336,7 @@ can use digraphs.  This was already explained in |24.9|.
 keyboard, you will want to use an Input Method (IM).  This requires learning
 the translation from typed keys to resulting character.  When you need an IM
 you probably already have one on your system.  It should work with Vim like
-with other programs.  For details see |mbyte-XIM| for X-Windows and
+with other programs.  For details see |mbyte-XIM| for the X Window system and
 |mbyte-IME| for MS-Windows.
 
 
@@ -390,8 +390,8 @@ or
 
 {name} is the name of the keymap.  Chose a name that is obvious, but different
 from existing keymaps (unless you want to replace an existing keymap file).
-The name cannot contain an underscore.  Optionally, add the encoding used.
-Examples:
+{name} cannot contain an underscore.  Optionally, add the encoding used after
+an underscore.  Examples:
 
 	keymap/hebrew.vim ~
 	keymap/hebrew_utf-8.vim ~

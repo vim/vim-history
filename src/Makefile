@@ -303,7 +303,9 @@ CClink = $(CC)
 # The automatic check will use another one that can be found
 # Gnome is disabled by default, it may cause trouble.
 #CONF_OPT_GUI = --disable-gtk-check
+#CONF_OPT_GUI = --disable-gtk2-check
 #CONF_OPT_GUI = --enable-gnome-check
+#CONF_OPT_GUI = --enable-gnome2-check
 #CONF_OPT_GUI = --disable-motif-check
 #CONF_OPT_GUI = --disable-athena-check
 
@@ -319,8 +321,10 @@ CClink = $(CC)
 #
 # If the selected GUI isn't found, the GUI is disabled automatically
 #CONF_OPT_GUI = --enable-gui=gtk
+#CONF_OPT_GUI = --enable-gui=gtk2
 #CONF_OPT_GUI = --enable-gui=gtk --disable-gtktest
 #CONF_OPT_GUI = --enable-gui=gnome
+#CONF_OPT_GUI = --enable-gui=gnome2
 #CONF_OPT_GUI = --enable-gui=motif
 #CONF_OPT_GUI = --enable-gui=motif --with-motif-lib="-static -lXm -shared"
 #CONF_OPT_GUI = --enable-gui=athena
@@ -357,7 +361,7 @@ CClink = $(CC)
 
 # NETBEANS - NetBeans interface. Only works with Motif, GTK, and gnome.
 # Motif version must have XPM libraries (see |workshop-xpm|).
-# CONF_OPT_NETBEANS = --enable-netbeans
+#CONF_OPT_NETBEANS = --enable-netbeans
 
 # SNIFF - Include support for SNiFF+.
 #CONF_OPT_SNIFF = --enable-sniff
@@ -791,7 +795,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim61
+VIMRTDIR = /vim62a
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
 SYNSUBDIR = /syntax
@@ -1089,7 +1093,7 @@ CPP_DEPEND = $(CC) -I$(srcdir) -M$(CPP_MM) $(DEPEND_CFLAGS)
 # flags for cproto
 #     This is for cproto 3 patchlevel 8 or below
 #     __inline, __attribute__ and __extension__ are not recognized by cproto
-NO_ATTR = -D__inline= -D"__attribute__\\(x\\)=" -D__extension__= \
+NO_ATTR = -D__inline= -D"__attribute__\\(x\\)=" -D"__asm__\\(x\\)=" -D__extension__= \
 -D__restrict="" -D__gnuc_va_list=char -D__builtin_va_list=char
 
 #
@@ -1123,7 +1127,7 @@ POST_DEFS = $(X_CFLAGS) $(PERL_CFLAGS) $(PYTHON_CFLAGS) $(TCL_CFLAGS) $(RUBY_CFL
 
 ALL_CFLAGS = $(PRE_DEFS) $(CFLAGS) $(PROFILE_CFLAGS) $(POST_DEFS)
 
-LINT_CFLAGS = -DLINT -I. $(PRE_DEFS) $(POST_DEFS) -Dinline= -D__extension__=
+LINT_CFLAGS = -DLINT -I. $(PRE_DEFS) $(POST_DEFS) -Dinline= -D__extension__= -Dalloca=alloca
 
 DEPEND_CFLAGS = -DPROTO -DDEPEND -DFEAT_GUI $(LINT_CFLAGS)
 
@@ -1172,6 +1176,7 @@ BASIC_SRC = \
 	ex_cmds.c \
 	ex_cmds2.c \
 	ex_docmd.c \
+	ex_eval.c \
 	ex_getln.c \
 	fileio.c \
 	fold.c \
@@ -1236,6 +1241,7 @@ OBJ = \
 	objects/ex_cmds.o \
 	objects/ex_cmds2.o \
 	objects/ex_docmd.o \
+	objects/ex_eval.o \
 	objects/ex_getln.o \
 	objects/fileio.o \
 	objects/fold.o \
@@ -1289,6 +1295,7 @@ PRO_AUTO = \
 	ex_cmds.pro \
 	ex_cmds2.pro \
 	ex_docmd.pro \
+	ex_eval.pro \
 	ex_getln.pro \
 	fileio.pro \
 	fold.pro \
@@ -2027,6 +2034,9 @@ objects/ex_cmds2.o: ex_cmds2.c
 objects/ex_docmd.o: ex_docmd.c
 	$(CCC) -o $@ ex_docmd.c
 
+objects/ex_eval.o: ex_eval.c
+	$(CCC) -o $@ ex_eval.c
+
 objects/ex_getln.o: ex_getln.c
 	$(CCC) -o $@ ex_getln.c
 
@@ -2240,6 +2250,9 @@ objects/ex_cmds2.o: ex_cmds2.c vim.h auto/config.h feature.h os_unix.h \
 objects/ex_docmd.o: ex_docmd.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h option.h ex_cmds.h proto.h globals.h farsi.h
+objects/ex_eval.o: ex_eval.c vim.h auto/config.h feature.h os_unix.h \
+ auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/ex_getln.o: ex_getln.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h option.h ex_cmds.h proto.h globals.h farsi.h
@@ -2342,23 +2355,7 @@ objects/gui.o: gui.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
 objects/gui_gtk.o: gui_gtk.c gui_gtk_f.h vim.h auto/config.h feature.h \
  os_unix.h auto/osdef.h ascii.h keymap.h term.h macros.h structs.h \
  regexp.h gui.h option.h ex_cmds.h proto.h globals.h farsi.h \
- ../pixmaps/alert.xpm ../pixmaps/error.xpm ../pixmaps/generic.xpm \
- ../pixmaps/info.xpm ../pixmaps/quest.xpm ../pixmaps/tb_new.xpm \
- ../pixmaps/tb_open.xpm ../pixmaps/tb_close.xpm ../pixmaps/tb_save.xpm \
- ../pixmaps/tb_print.xpm ../pixmaps/tb_cut.xpm ../pixmaps/tb_copy.xpm \
- ../pixmaps/tb_paste.xpm ../pixmaps/tb_find.xpm \
- ../pixmaps/tb_find_next.xpm ../pixmaps/tb_find_prev.xpm \
- ../pixmaps/tb_find_help.xpm ../pixmaps/tb_exit.xpm \
- ../pixmaps/tb_undo.xpm ../pixmaps/tb_redo.xpm ../pixmaps/tb_help.xpm \
- ../pixmaps/tb_macro.xpm ../pixmaps/tb_make.xpm \
- ../pixmaps/tb_save_all.xpm ../pixmaps/tb_jump.xpm \
- ../pixmaps/tb_ctags.xpm ../pixmaps/tb_load_session.xpm \
- ../pixmaps/tb_save_session.xpm ../pixmaps/tb_new_session.xpm \
- ../pixmaps/tb_blank.xpm ../pixmaps/tb_maximize.xpm \
- ../pixmaps/tb_split.xpm ../pixmaps/tb_minimize.xpm \
- ../pixmaps/tb_shell.xpm ../pixmaps/tb_replace.xpm \
- ../pixmaps/tb_vsplit.xpm ../pixmaps/tb_maxwidth.xpm \
- ../pixmaps/tb_minwidth.xpm
+ ../pixmaps/stock_icons.h
 objects/gui_gtk_f.o: gui_gtk_f.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h option.h ex_cmds.h proto.h globals.h farsi.h gui_gtk_f.h

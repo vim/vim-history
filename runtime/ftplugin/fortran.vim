@@ -1,9 +1,10 @@
 " Vim settings file
 " Language:	Fortran90 (and Fortran95, Fortran77, F and elf90)
-" Version:	0.41
-" Last Change:	2001 Sep 19
+" Version:	0.43
+" Last Change:	2003 Mar. 12
+" URL:		http://www.unb.ca/chem/ajit/ftplugin/fortran.vim
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
-" For the latest version of this file, see <http://www.unb.ca/chem/ajit/vim.htm>
+" Usage:	Do :help fortran-plugin from Vim
 
 " Only do these settings when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -17,7 +18,11 @@ let b:did_ftplugin = 1
 " if this hasn't been done yet
 if !exists("b:fortran_fixed_source")
   if exists("fortran_free_source")
+    " User guarantees free source form
     let b:fortran_fixed_source = 0
+  elseif exists("fortran_fixed_source")
+    " User guarantees fixed source form
+    let b:fortran_fixed_source = 1
   else
     " f90 and f95 allow both fixed and free source form
     " assume fixed source form unless signs of free source form
@@ -87,6 +92,7 @@ if !exists("b:match_words")
     \ s:notend . '\<do\>:\<end\s*do\>,'.
     \ s:notelse . '\<where\>:\<elsewhere\>:\<end\s*where\>,'.
     \ s:notend . '\<type\s*[^(]:\<end\s*type\>,'.
+    \ s:notend . '\<interface\>:\<end\s*interface\>,'.
     \ s:notend . '\<subroutine\>:\<end\s*subroutine\>,'.
     \ s:notend . '\<function\>:\<end\s*function\>,'.
     \ s:notend . '\<module\>:\<end\s*module\>,'.

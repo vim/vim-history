@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	man
 " Maintainer:	Nam SungHyun <namsh@kldp.org>
-" Last Change:	2002 May 12
+" Last Change:	2003 Mar 25
 
 " To make the ":Man" command available before editing a manual page, source
 " this script from your startup vimrc file.
@@ -15,8 +15,8 @@ if &filetype == "man"
   endif
   let b:did_ftplugin = 1
 
-  " allow dot in manual page name.
-  setlocal iskeyword+=\.
+  " allow dot and dash in manual page name.
+  setlocal iskeyword+=\.,-
 
   " Add mappings, unless the user didn't want this.
   if !exists("no_plugin_maps") && !exists("no_man_maps")
@@ -54,7 +54,7 @@ func <SID>PreGetPage(cnt)
     let old_isk = &iskeyword
     setl iskeyword+=(,)
     let str = expand("<cword>")
-    let &iskeyword = old_isk
+    let &l:iskeyword = old_isk
     let page = substitute(str, '(*\(\k\+\).*', '\1', '')
     let sect = substitute(str, '\(\k\+\)(\([^()]*\)).*', '\2', '')
     if match(sect, '^[0-9 ]\+$') == -1
@@ -136,18 +136,20 @@ func <SID>GetPage(...)
     endif
   endif
   silent exec "edit $HOME/".page.".".sect."~"
+  " Avoid warning for editing the dummy file twice
+  set buftype=nofile noswapfile
 
   set ma
   silent exec "norm 1GdG"
   let $MANWIDTH = winwidth(0)
   silent exec "r!/usr/bin/man ".s:GetCmdArg(sect, page)." | col -b"
-  " Is it OK?  It's for remove blank or message line.
-  if getline(1) =~ "^\s*$"
-    silent exec "norm 2G/^[^\s]\<cr>kd1G"
-  endif
-  if getline('$') == ''
-    silent exec "norm G?^\s*[^\s]\<cr>2jdG"
-  endif
+  " Remove blank lines from top and bottom.
+  while getline(1) =~ '^\s*$'
+    silent norm ggdd
+  endwhile
+  while getline('$') =~ '^\s*$'
+    silent norm Gdd
+  endwhile
   1
   setl ft=man nomod
   setl bufhidden=hide

@@ -1,4 +1,4 @@
-*workshop.txt*  For Vim version 6.1.  Last change: 2001 Sep 03
+*workshop.txt*  For Vim version 6.2a.  Last change: 2003 Mar 18
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -84,8 +84,8 @@ concatenated with the equivalent of version.h's VIM_VERSION_SHORT.
 ==============================================================================
 5. Obtaining the latest version of the XPM library	*workshop-xpm*
 
-The XPM library is required to show images within Vim.  Without it the toolbar
-and signs will be disabled.
+The XPM library is required to show images within Vim with Motif or Athena.
+Without it the toolbar and signs will be disabled.
 
 The XPM library is provide by Arnaud Le Hors of the French National Institute
 for Research in Computer Science and Control. It can be downloaded from

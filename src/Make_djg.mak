@@ -28,6 +28,7 @@ OBJ = \
 	obj/ex_cmds.o \
 	obj/ex_cmds2.o \
 	obj/ex_docmd.o \
+	obj/ex_eval.o \
 	obj/ex_getln.o \
 	obj/fileio.o \
 	obj/fold.o \
@@ -60,6 +61,7 @@ OBJ = \
 
 all: vim.exe install.exe uninstal.exe xxd/xxd.exe
 
+# version.c is compiled each time, so that it sets the build time.
 vim.exe: obj $(OBJ) version.c version.h
 	$(CC) $(CFLAGS) -s -o vim.exe version.c $(OBJ) -lpc
 
@@ -120,6 +122,9 @@ obj/ex_cmds2.o:	ex_cmds2.c $(INCL)
 
 obj/ex_docmd.o:	ex_docmd.c $(INCL) ex_cmds.h
 	$(CC) -c $(CFLAGS) ex_docmd.c -o obj/ex_docmd.o
+
+obj/ex_eval.o:	ex_eval.c $(INCL) ex_cmds.h
+	$(CC) -c $(CFLAGS) ex_eval.c -o obj/ex_eval.o
 
 obj/ex_getln.o:	ex_getln.c $(INCL)
 	$(CC) -c $(CFLAGS) ex_getln.c -o obj/ex_getln.o

@@ -1,8 +1,11 @@
 " Vim syntax file
 " Language:	DocBook
-" Maintainer:	Devin Weaver <ktohg@tritarget.com>
+" Maintainer:	Devin Weaver <vim@tritarget.com>
 " URL:		http://tritarget.com/pub/vim/syntax/docbk.vim
-" Last Change:	2001 May 09
+" Last Change:	2002 Sep 04
+" Version:	$Revision$
+" Thanks to Johannes Zellner <johannes@zellner.org> for the default to XML
+" suggestion.
 
 " REFERENCES:
 "   http://docbook.org/
@@ -17,18 +20,28 @@ elseif exists("b:current_syntax")
   finish
 endif
 
-if exists('b:docbk_type')
-    if 'xml' == b:docbk_type
-	doau FileType xml
-	syn cluster xmlTagHook add=docbkKeyword
-	syn case match
-    elseif 'sgml' == b:docbk_type
-	doau FileType sgml
-	syn cluster sgmlTagHook add=docbkKeyword
-	syn case ignore
-    endif
+" Auto detect added by Bram Moolenaar
+if !exists('b:docbk_type')
+  if expand('%:e') == "sgml"
+    let b:docbk_type = 'sgml'
+  else
+    let b:docbk_type = 'xml'
+  endif
+endif
+if 'xml' == b:docbk_type
+    doau FileType xml
+    syn cluster xmlTagHook add=docbkKeyword
+    syn cluster xmlRegionHook add=docbkRegion,docbkTitle,docbkRemark,docbkCite
+    syn case match
+elseif 'sgml' == b:docbk_type
+    doau FileType sgml
+    syn cluster sgmlTagHook add=docbkKeyword
+    syn cluster sgmlRegionHook add=docbkRegion,docbkTitle,docbkRemark,docbkCite
+    syn case ignore
 endif
 
+" <comment> has been removed and replace with <remark> in DocBook 4.0
+" <comment> kept for backwards compatability.
 syn keyword docbkKeyword abbrev abstract accel ackno acronym action contained
 syn keyword docbkKeyword address affiliation alt anchor answer appendix contained
 syn keyword docbkKeyword application area areaset areaspec arg artheader contained
@@ -81,7 +94,7 @@ syn keyword docbkKeyword refentrytitle reference refmeta refmiscinfo contained
 syn keyword docbkKeyword refname refnamediv refpurpose refsect1 contained
 syn keyword docbkKeyword refsect1info refsect2 refsect2info refsect3 contained
 syn keyword docbkKeyword refsect3info refsynopsisdiv refsynopsisdivinfo contained
-syn keyword docbkKeyword releaseinfo replaceable returnvalue revhistory contained
+syn keyword docbkKeyword releaseinfo remark replaceable returnvalue revhistory contained
 syn keyword docbkKeyword revision revnumber revremark row sbr screen contained
 syn keyword docbkKeyword screenco screeninfo screenshot secondary contained
 syn keyword docbkKeyword secondaryie sect1 sect1info sect2 sect2info sect3 contained
@@ -103,6 +116,13 @@ syn keyword docbkKeyword varargs variablelist varlistentry varname contained
 syn keyword docbkKeyword videodata videoobject void volumenum warning contained
 syn keyword docbkKeyword wordasword xref year contained
 
+" Add special emphasis on some regions. Thanks to Rory Hunter <roryh@dcs.ed.ac.uk> for these ideas.
+syn region docbkRegion start="<emphasis>"lc=10 end="</emphasis>"me=e-11 contains=xmlRegion,xmlEntity,sgmlRegion,sgmlEntity keepend
+syn region docbkTitle  start="<title>"lc=7     end="</title>"me=e-8	contains=xmlRegion,xmlEntity,sgmlRegion,sgmlEntity keepend
+syn region docbkRemark start="<remark>"lc=8    end="</remark>"me=e-9	contains=xmlRegion,xmlEntity,sgmlRegion,sgmlEntity keepend
+syn region docbkRemark start="<comment>"lc=9  end="</comment>"me=e-10	contains=xmlRegion,xmlEntity,sgmlRegion,sgmlEntity keepend
+syn region docbkCite   start="<citation>"lc=10 end="</citation>"me=e-11 contains=xmlRegion,xmlEntity,sgmlRegion,sgmlEntity keepend
+
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
@@ -110,11 +130,17 @@ if version >= 508 || !exists("did_docbk_syn_inits")
   if version < 508
     let did_docbk_syn_inits = 1
     command -nargs=+ HiLink hi link <args>
+    hi DocbkBold term=bold cterm=bold gui=bold
   else
     command -nargs=+ HiLink hi def link <args>
+    hi def DocbkBold term=bold cterm=bold gui=bold
   endif
 
   HiLink docbkKeyword	Statement
+  HiLink docbkRegion	DocbkBold
+  HiLink docbkTitle	Title
+  HiLink docbkRemark	Comment
+  HiLink docbkCite	Constant
 
   delcommand HiLink
 endif

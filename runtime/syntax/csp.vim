@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	CSP (Communication Sequential Processes, using FDR input syntax)
 " Maintainer:	Jan Bredereke <brederek@tzi.de>
-" Version:	0.5.0
-" Last change:	Fri May 4, 2001
+" Version:	0.6.0
+" Last change:	Mon Mar 25, 2002
 " URL:		http://www.tzi.de/~brederek/vim/
 " Copying:	You may distribute and use this file freely, in the same
 "		way as the vim editor itself.
@@ -57,7 +57,7 @@ syn match  cspOperator "\[[^>]"me=e-1
 syn match  cspOperator "\]"
 syn match  cspOperator "<->"
 syn match  cspOperator "[?:!';@]"
-syn match  cspOperator "\&"
+syn match  cspOperator "&"
 syn match  cspOperator "\."
 
 " (not on processes:)

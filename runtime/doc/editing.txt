@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.1.  Last change: 2002 Mar 21
+*editing.txt*   For Vim version 6.2a.  Last change: 2003 Apr 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -52,7 +52,7 @@ CTRL-G		or				*CTRL-G* *:f* *:fi* *:file*
 			full path.  If the count is higher than 1 the current
 			buffer number is also given.  {not in Vi}
 
-							*g_CTRL-G*
+					*g_CTRL-G* *word-count* *byte-count*
 g CTRL-G		Prints the current position of the cursor in four
 			ways: Column, Line, Word and Byte.  If there are
 			characters in the line that take more than one
@@ -334,7 +334,7 @@ This also works for most other systems, with the restriction that the
 backticks must be around the whole item.  It is not possible to have text
 directly before the first or just after the last backtick.
 
-You can have the backicks expanded as a Vim expression, instead of
+You can have the backticks expanded as a Vim expression, instead of
 an external command, by using the syntax `={expr}` e.g. >
 	:let foo='bar'
 	:e `=foo . ".c" `
@@ -373,9 +373,12 @@ file, or execute any other command:
 	+{command}	Execute {command} after opening the new file.
 			{command} is any Ex command.
 To include a white space in the {pat} or {command}, precede it with a
-backslash.  To end with a backslash, use a double backslash.
-	:edit  +/The\ book       file
-	:edit  +/dir\ dirname\\  file
+backslash.  Double the number of backslashes. >
+	:edit  +/The\ book           file
+	:edit  +/dir\ dirname\\      file
+	:edit  +set\ dir=c:\\\\temp  file
+Note that in the last example the number of backslashes is halved twice: Once
+for the "+cmd" argument and once for the ":set" command.
 
 							*file-formats*
 The 'fileformat' option sets the <EOL> style for a file:
@@ -544,7 +547,7 @@ Examples: >
 
 If you want to always use ":confirm", set the 'confirm' option.
 
-							*:browse* *:bro* *E338*
+			*:browse* *:bro* *E338* *E614* *E615* *E616* *E578*
 :bro[wse] {command}	Open a file selection dialog for an argument to
 			{command}.  At present this works for ":e", ":w",
 			":r", ":sp", ":mkexrc", ":mkvimrc" and ":mksession".
@@ -603,7 +606,7 @@ You may use the |:cd| and |:lcd| commands to change to another directory, so
 you will not have to type that directory name in front of the file names.  It
 also makes a difference for executing external commands, e.g. ":!ls".
 
-							*:cd*
+							*:cd* *E472*
 :cd			On non-Unix systems: Print the current directory
 			name.  On Unix systems: Change the current directory
 			to the home directory.  Use |:pwd| to print the
@@ -711,7 +714,7 @@ list of the current window.
 			Also see |++opt| and |+cmd|.
 			{not in Vi}
 
-:[count]arga[dd] {name} ..				*:arga* *:argadd*
+:[count]arga[dd] {name} ..			*:arga* *:argadd* *E479*
 			Add the {name}s to the argument list.
 			If [count] is omitted, the {name}s are added just
 			after the current entry in the argument list.
@@ -732,7 +735,7 @@ list of the current window.
 				:args ## x
 <			This will add the "x" item and sort the new list.
 
-:argd[elete] {pattern} ..				*:argd* *:argdelete*
+:argd[elete] {pattern} ..			*:argd* *:argdelete* *E480*
 			Delete files from the argument list that match the
 			{pattern}s.  {pattern} is used like a file pattern,
 			see |file-pattern|.  "%" can be used to delete the
@@ -909,7 +912,7 @@ change it in the other window.
 
 When a window is split the new window inherits the argument list from the
 current window.  The two windows then share this list, until one of them uses
-":argslocal" or ":argsglobal" to use another argument list.
+|:arglocal| or |:argglobal| to use another argument list.
 
 
 USING THE ARGUMENT LIST
@@ -957,6 +960,7 @@ flag is used for the ":substitute" command to avoid an error for files where
 Note: When the 'write' option is off, you are not able to write any file.
 
 							*:w* *:write*
+				*E502* *E503* *E504* *E505* *E512* *E514*
 :w[rite]		Write the whole buffer to the current file.  This is
 			the normal way to save changes to a file.  It fails
 			when the 'readonly' option is set or when there is
@@ -981,7 +985,7 @@ Note: When the 'write' option is off, you are not able to write any file.
 :[range]w[rite]! {file}	Write the specified lines to {file}.  Overwrite an
 			existing file.
 
-							*:w_a* *:write_a*
+						*:w_a* *:write_a* *E494*
 :[range]w[rite][!] >>	Append the specified lines to the current file.
 
 :[range]w[rite][!] >> {file}
@@ -1013,7 +1017,7 @@ used, for example, when the write fails and you want to try again later with
 			modified.  {not in Vi}
 
 
-Writing with multiple buffers				*buffer-write*
+WRITING WITH MULTIPLE BUFFERS				*buffer-write*
 
 							*:wa* *:wall*
 :wa[ll]			Write all changed buffers.  Buffers without a file
@@ -1028,7 +1032,7 @@ Writing with multiple buffers				*buffer-write*
 Vim will warn you if you try to overwrite a file that has been changed
 elsewhere.  See |timestamp|.
 
-							*backup* *E207*
+			    *backup* *E207* *E506* *E507* *E508* *E509* *E510*
 If you write to an existing file (but do not append) while the 'backup',
 'writebackup' or 'patchmode' option is on, a backup of the original file is
 made.  The file is either copied or renamed (see 'backupcopy').  After the
@@ -1138,11 +1142,12 @@ The names can be in upper- or lowercase.
 :q[uit]			Quit the current window.  Quit Vim if this is the last
 			window.  This fails when changes have been made and
 			Vim refuses to |abandon| the current buffer, and when
-			not editing the last file in the argument list.
+			the last file in the argument list has not been
+			edited.
 
 :conf[irm] q[uit]	Quit, but give prompt when changes have been made, or
-			not editing the last file in the argument list.  See
-			|:confirm| and 'confirm'.  {not in Vi}
+			the last file in the argument list has not been
+			edited.  See |:confirm| and 'confirm'.  {not in Vi}
 
 :q[uit]!		Quit without writing, also when visible buffers have
 			changes.  Does not exit when there are changed hidden
@@ -1153,14 +1158,16 @@ The names can be in upper- or lowercase.
 			|quickfix|).  {not in Vi}
 
 							*:wq*
-:wq			Write the current file and quit (unless editing the
-			last file in the argument list or the file is
-			read-only).
+:wq			Write the current file and quit.  Writing fails when
+			the file is read-only or the buffer does not have a
+			name.  Quitting fails when the last file in the
+			argument list has not been edited.
 
-:wq!			Write the current file and quit.
+:wq!			Write the current file and quit.  Writing fails when
+			the current buffer does not have a name.
 
-:wq {file}		Write to {file}.  Quit if not editing the last
-			file in the argument list.
+:wq {file}		Write to {file} and quit.  Quitting fails when the
+			last file in the argument list has not been edited.
 
 :wq! {file}		Write to {file} and quit.
 
@@ -1281,7 +1288,8 @@ be readable again.  If you use a wrong key, it will be a mess.
 :X	Prompt for an encryption key.  The typing is done without showing the
 	actual text, so that someone looking at the display won't see it.
 	The typed key is stored in the 'key' option, which is used to encrypt
-	the file when it is written.  See also |-x|.
+	the file when it is written.  The file will remain unchanged until you
+	write it.  See also |-x|.
 
 The value of the 'key' options is used when text is written.  When the option
 is not empty, the written file will be encrypted, using the value as the
@@ -1344,7 +1352,7 @@ compared for all buffers in a window.   Vim will run any associated
 |FileChangedShell| autocommands or display a warning for any files that have
 changed.  In the GUI this happens when Vim regains input focus.
 
-							*E321*
+							*E321* *E462*
 If you want to automatically reload a file when it has been changed outside of
 Vim, set the 'autoread' option.  This doesn't work at the moment you write the
 file though, only when the file wasn't changed inside of Vim.

@@ -42,11 +42,13 @@ static void addEventHandler __ARGS((GtkWidget *, BalloonEval *));
 static void removeEventHandler __ARGS((BalloonEval *));
 static gint target_event_cb __ARGS((GtkWidget *, GdkEvent *, gpointer));
 static gint mainwin_event_cb __ARGS((GtkWidget *, GdkEvent *, gpointer));
-static void pointer_event __ARGS((BalloonEval *, int, int, unsigned int));
+static void pointer_event __ARGS((BalloonEval *, int, int, unsigned));
 static void key_event __ARGS((BalloonEval *, unsigned, int));
 static gint timeout_cb __ARGS((gpointer));
 static gint balloon_expose_event_cb __ARGS((GtkWidget *, GdkEventExpose *, gpointer));
-static void balloon_draw_cb __ARGS((GtkWidget *, GdkRectangle *area, gpointer));
+# ifndef HAVE_GTK2
+static void balloon_draw_cb __ARGS((GtkWidget *, GdkRectangle *, gpointer));
+# endif
 #else
 static void addEventHandler __ARGS((Widget, BalloonEval *));
 static void removeEventHandler __ARGS((BalloonEval *));
@@ -382,6 +384,9 @@ target_event_cb(GtkWidget *widget, GdkEvent *event, gpointer data)
 		cancelBalloon(beval);
 	    break;
 	case GDK_BUTTON_PRESS:
+# ifdef HAVE_GTK2
+	case GDK_SCROLL:
+# endif
 	    cancelBalloon(beval);
 	    break;
 	case GDK_KEY_PRESS:
@@ -441,8 +446,7 @@ pointer_event(BalloonEval *beval, int x, int y, unsigned state)
 	    beval->x = x;
 	    beval->y = y;
 
-	    if (state & ((int)GDK_MOD1_MASK | (int)GDK_MOD2_MASK
-							| (int)GDK_MOD3_MASK))
+	    if (state & (int)GDK_MOD1_MASK)
 	    {
 		/*
 		 * Alt is pressed -- enter super-evaluate-mode,
@@ -456,8 +460,8 @@ pointer_event(BalloonEval *beval, int x, int y, unsigned state)
 	    }
 	    else
 	    {
-		beval->timerID = gtk_timeout_add((unsigned)p_bdlay,
-							  &timeout_cb, beval);
+		beval->timerID = gtk_timeout_add((guint32)p_bdlay,
+						 &timeout_cb, beval);
 	    }
 	}
     }
@@ -507,7 +511,7 @@ timeout_cb(gpointer data)
     return FALSE; /* don't call me again */
 }
 
-/*ARGSUSED*/
+/*ARGSUSED2*/
     static gint
 balloon_expose_event_cb(GtkWidget *widget, GdkEventExpose *event, gpointer data)
 {
@@ -515,10 +519,12 @@ balloon_expose_event_cb(GtkWidget *widget, GdkEventExpose *event, gpointer data)
 		       GTK_STATE_NORMAL, GTK_SHADOW_OUT,
 		       &event->area, widget, "tooltip",
 		       0, 0, -1, -1);
-    return FALSE;
+
+    return FALSE; /* continue emission */
 }
 
-/*ARGSUSED*/
+# ifndef HAVE_GTK2
+/*ARGSUSED2*/
     static void
 balloon_draw_cb(GtkWidget *widget, GdkRectangle *area, gpointer data)
 {
@@ -535,7 +541,7 @@ balloon_draw_cb(GtkWidget *widget, GdkRectangle *area, gpointer data)
     if (gtk_widget_intersect(child, area, &child_area))
 	gtk_widget_draw(child, &child_area);
 }
-
+# endif
 
 #else /* !FEAT_GUI_GTK */
 
@@ -754,6 +760,154 @@ requestBalloon(beval)
 
 #ifdef FEAT_GUI_GTK
 
+# ifdef HAVE_GTK2
+/*
+ * Convert the string to UTF-8 if 'encoding' is not "utf-8".
+ * Replace any non-printable characters and invalid bytes sequences with
+ * "^X" or "<xx>" escapes, and apply SpecialKey highlighting to them.
+ * TAB and NL are passed through unscathed.
+ */
+#  define IS_NONPRINTABLE(c) (((c) < 0x20 && (c) != TAB && (c) != NL) \
+			      || (c) == DEL)
+    static void
+set_printable_label_text(GtkLabel *label, char_u *msg)
+{
+    char_u	    *convbuf = NULL;
+    char_u	    *buf;
+    char_u	    *p;
+    char_u	    *pdest;
+    unsigned int    len;
+    int		    charlen;
+    int		    uc;
+    PangoAttrList   *attr_list;
+
+    /* Convert to UTF-8 if it isn't already */
+    if (output_conv.vc_type != CONV_NONE)
+    {
+	convbuf = string_convert(&output_conv, msg, NULL);
+	if (convbuf != NULL)
+	    msg = convbuf;
+    }
+
+    /* First let's see how much we need to allocate */
+    len = 0;
+    for (p = msg; *p != NUL; p += charlen)
+    {
+	if ((*p & 0x80) == 0)	/* be quick for ASCII */
+	{
+	    charlen = 1;
+	    len += IS_NONPRINTABLE(*p) ? 2 : 1;	/* nonprintable: ^X */
+	}
+	else
+	{
+	    charlen = utf_ptr2len_check(p);
+	    uc = utf_ptr2char(p);
+
+	    if (charlen != utf_char2len(uc))
+		charlen = 1; /* reject overlong sequences */
+
+	    if (charlen == 1 || uc < 0xa0)	/* illegal byte or    */
+		len += 4;			/* control char: <xx> */
+	    else if (!utf_printable(uc))
+		/* Note: we assume here that utf_printable() doesn't
+		 * care about characters outside the BMP. */
+		len += 6;			/* nonprintable: <xxxx> */
+	    else
+		len += charlen;
+	}
+    }
+
+    attr_list = pango_attr_list_new();
+    buf = alloc(len + 1);
+
+    /* Now go for the real work */
+    if (buf != NULL)
+    {
+	attrentry_T	*aep;
+	PangoAttribute	*attr;
+	guicolor_T	pixel;
+	GdkColor	color = { 0, 0, 0, 0 };
+
+	/* Look up the RGB values of the SpecialKey foreground color. */
+	aep = syn_gui_attr2entry(hl_attr(HLF_8));
+	pixel = (aep != NULL) ? aep->ae_u.gui.fg_color : INVALCOLOR;
+	if (pixel != INVALCOLOR)
+	    gdk_colormap_query_color(gtk_widget_get_colormap(gui.drawarea),
+				     (unsigned long)pixel, &color);
+
+	pdest = buf;
+	p = msg;
+	while (*p != NUL)
+	{
+	    /* Be quick for ASCII */
+	    if ((*p & 0x80) == 0 && !IS_NONPRINTABLE(*p))
+	    {
+		*pdest++ = *p++;
+	    }
+	    else
+	    {
+		charlen = utf_ptr2len_check(p);
+		uc = utf_ptr2char(p);
+
+		if (charlen != utf_char2len(uc))
+		    charlen = 1; /* reject overlong sequences */
+
+		if (charlen == 1 || uc < 0xa0 || !utf_printable(uc))
+		{
+		    int	outlen;
+
+		    /* Careful: we can't just use transchar_byte() here,
+		     * since 'encoding' is not necessarily set to "utf-8". */
+		    if (*p & 0x80 && charlen == 1)
+		    {
+			transchar_hex(pdest, *p);	/* <xx> */
+			outlen = 4;
+		    }
+		    else if (uc >= 0x80)
+		    {
+			/* Note: we assume here that utf_printable() doesn't
+			 * care about characters outside the BMP. */
+			transchar_hex(pdest, uc);	/* <xx> or <xxxx> */
+			outlen = (uc < 0x100) ? 4 : 6;
+		    }
+		    else
+		    {
+			transchar_nonprint(pdest, *p);	/* ^X */
+			outlen = 2;
+		    }
+		    if (pixel != INVALCOLOR)
+		    {
+			attr = pango_attr_foreground_new(
+				color.red, color.green, color.blue);
+			attr->start_index = pdest - buf;
+			attr->end_index   = pdest - buf + outlen;
+			pango_attr_list_insert(attr_list, attr);
+		    }
+		    pdest += outlen;
+		    p += charlen;
+		}
+		else
+		{
+		    do
+			*pdest++ = *p++;
+		    while (--charlen != 0);
+		}
+	    }
+	}
+	*pdest = NUL;
+    }
+
+    vim_free(convbuf);
+
+    gtk_label_set_text(label, (const char *)buf);
+    vim_free(buf);
+
+    gtk_label_set_attributes(label, attr_list);
+    pango_attr_list_unref(attr_list);
+}
+#  undef IS_NONPRINTABLE
+# endif /* HAVE_GTK2 */
+
 /*
  * Draw a balloon.
  */
@@ -767,25 +921,80 @@ drawBalloon(BalloonEval *beval)
 	int		screen_h;
 	int		x;
 	int		y;
+	int		x_offset = EVAL_OFFSET_X;
+	int		y_offset = EVAL_OFFSET_Y;
+# ifdef HAVE_GTK2
+	PangoLayout	*layout;
+# endif
+# ifdef HAVE_GTK_MULTIHEAD
+	GdkScreen	*screen;
 
+	screen = gtk_widget_get_screen(beval->target);
+	gtk_window_set_screen(GTK_WINDOW(beval->balloonShell), screen);
+	screen_w = gdk_screen_get_width(screen);
+	screen_h = gdk_screen_get_height(screen);
+# else
 	screen_w = gdk_screen_width();
 	screen_h = gdk_screen_height();
-
+# endif
 	gtk_widget_ensure_style(beval->balloonShell);
 	gtk_widget_ensure_style(beval->balloonLabel);
 
-	gtk_label_set_text(GTK_LABEL(beval->balloonLabel),
-						    (const char *)beval->msg);
+# ifdef HAVE_GTK2
+	set_printable_label_text(GTK_LABEL(beval->balloonLabel), beval->msg);
+	/*
+	 * Dirty trick:  Enable wrapping mode on the label's layout behind its
+	 * back.  This way GtkLabel won't try to constrain the wrap width to a
+	 * builtin maximum value of about 65 Latin characters.
+	 */
+	layout = gtk_label_get_layout(GTK_LABEL(beval->balloonLabel));
+#  ifdef PANGO_WRAP_WORD_CHAR
+	pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
+#  else
+	pango_layout_set_wrap(layout, PANGO_WRAP_WORD);
+#  endif
+	pango_layout_set_width(layout,
+		/* try to come up with some reasonable width */
+		PANGO_SCALE * CLAMP(gui.num_cols * gui.char_width,
+				    screen_w / 2,
+				    MAX(20, screen_w - 20)));
 
-	/* Calculate the balloon's width and height */
+	/* Calculate the balloon's width and height. */
 	gtk_widget_size_request(beval->balloonShell, &requisition);
+# else
+	gtk_label_set_line_wrap(GTK_LABEL(beval->balloonLabel), FALSE);
+	gtk_label_set_text(GTK_LABEL(beval->balloonLabel),
+			   (const char *)beval->msg);
+
+	/* Calculate the balloon's width and height. */
+	gtk_widget_size_request(beval->balloonShell, &requisition);
+	/*
+	 * Unfortunately, the dirty trick used above to get around the builtin
+	 * maximum wrap width of GtkLabel doesn't work with GTK+ 1.  Thus if
+	 * and only if it's absolutely necessary to avoid drawing off-screen,
+	 * do enable wrapping now and recalculate the size request.
+	 */
+	if (requisition.width > screen_w)
+	{
+	    gtk_label_set_line_wrap(GTK_LABEL(beval->balloonLabel), TRUE);
+	    gtk_widget_size_request(beval->balloonShell, &requisition);
+	}
+# endif
 
 	/* Compute position of the balloon area */
 	gdk_window_get_origin(beval->target->window, &x, &y);
-	x += beval->x + EVAL_OFFSET_X;
-	y += beval->y + EVAL_OFFSET_Y;
-	x  = MIN(x, screen_w - requisition.width);
-	y  = MIN(y, screen_h - requisition.height);
+	x += beval->x;
+	y += beval->y;
+
+	/* Get out of the way of the mouse pointer */
+	if (x + x_offset + requisition.width > screen_w)
+	    y_offset += 15;
+	if (y + y_offset + requisition.height > screen_h)
+	    y_offset = -requisition.height - EVAL_OFFSET_Y;
+
+	/* Sanitize values */
+	x = CLAMP(x + x_offset, 0, MAX(0, screen_w - requisition.width));
+	y = CLAMP(y + y_offset, 0, MAX(0, screen_h - requisition.height));
 
 	/* Show the balloon */
 	gtk_widget_set_uposition(beval->balloonShell, x, y);
@@ -833,15 +1042,15 @@ createBalloonEvalWindow(BalloonEval *beval)
 
     gtk_signal_connect((GtkObject*)(beval->balloonShell), "expose_event",
 		       GTK_SIGNAL_FUNC(balloon_expose_event_cb), NULL);
+# ifndef HAVE_GTK2
     gtk_signal_connect((GtkObject*)(beval->balloonShell), "draw",
 		       GTK_SIGNAL_FUNC(balloon_draw_cb), NULL);
-
+# endif
     beval->balloonLabel = gtk_label_new(NULL);
 
     gtk_label_set_line_wrap(GTK_LABEL(beval->balloonLabel), FALSE);
     gtk_label_set_justify(GTK_LABEL(beval->balloonLabel), GTK_JUSTIFY_LEFT);
-    gtk_misc_set_alignment(GTK_MISC(beval->balloonLabel),
-						      (float)0.5, (float)0.5);
+    gtk_misc_set_alignment(GTK_MISC(beval->balloonLabel), 0.5f, 0.5f);
     gtk_widget_set_name(beval->balloonLabel, "vim-balloon-label");
     gtk_widget_show(beval->balloonLabel);
 

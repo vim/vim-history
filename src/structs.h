@@ -540,28 +540,89 @@ typedef struct argentry
 #define ARGCOUNT	(ALIST(curwin)->al_ga.ga_len)
 #define WARGCOUNT(wp)	(ALIST(wp)->al_ga.ga_len)
 
-#ifdef FEAT_EVAL
 /*
  * For conditional commands a stack is kept of nested conditionals.
  * When cs_idx < 0, there is no conditional command.
  */
-# define CSTACK_LEN	50
+#define CSTACK_LEN	50
 
 struct condstack
 {
     char	cs_flags[CSTACK_LEN];	/* CSF_ flags */
+    char	cs_pending[CSTACK_LEN];	/* CSTP_: what's pending in ":finally"*/
+    union {
+	void   *cs_pend_rv[CSTACK_LEN];	/* returnval for pending return */
+	void   *cs_pend_ex[CSTACK_LEN];	/* exception for pending throw */
+    }		cs_pend;
     int		cs_line[CSTACK_LEN];	/* line number of ":while" line */
     int		cs_idx;			/* current entry, or -1 if none */
     int		cs_whilelevel;		/* number of nested ":while"s */
+    int		cs_trylevel;		/* number of nested ":try"s */
     char	cs_had_while;		/* just found ":while" */
     char	cs_had_continue;	/* just found ":continue" */
     char	cs_had_endwhile;	/* just found ":endwhile" */
+    char	cs_had_finally;		/* just found ":finally" */
 };
+# define cs_retvar	cs_pend.cs_pend_rv
+# define cs_exception	cs_pend.cs_pend_ex
 
 # define CSF_TRUE	1	/* condition was TRUE */
 # define CSF_ACTIVE	2	/* current state is active */
-# define CSF_WHILE	4	/* is a ":while" */
-#endif
+# define CSF_ELSE	4	/* ":else" has been passed */
+# define CSF_WHILE	8	/* is a ":while" */
+# define CSF_TRY	16	/* is a ":try" */
+# define CSF_FINALLY	32	/* ":finally" has been passed */
+# define CSF_THROWN	64	/* exception thrown to this try conditional */
+# define CSF_CAUGHT	128	/* exception caught by this try conditional */
+
+/*
+ * What's pending for being reactivated at the ":endtry" of this try
+ * conditional:
+ */
+# define CSTP_NONE	0	/* nothing pending in ":finally" clause */
+# define CSTP_ERROR	1	/* an error is pending */
+# define CSTP_INTERRUPT	2	/* an interrupt is pending */
+# define CSTP_THROW	4	/* a throw is pending */
+# define CSTP_BREAK	8	/* ":break" is pending */
+# define CSTP_CONTINUE	16	/* ":continue" is pending */
+# define CSTP_RETURN	24	/* ":return" is pending */
+# define CSTP_FINISH	32	/* ":finish" is pending */
+
+/*
+ * A list of error messages that can be converted to an exception.  "throw_msg"
+ * is only set in the first element of the list.  Usually, it points to the
+ * original message stored in that element, but sometimes it points to a later
+ * message in the list.  See cause_errthrow() below.
+ */
+struct msglist
+{
+    char_u		*msg;		/* original message */
+    char_u		*throw_msg;	/* msg to throw: usually original one */
+    struct msglist	*next;		/* next of several messages in a row */
+};
+
+/*
+ * Structure describing an exception.
+ * (don't use "struct exception", it's used by the math library).
+ */
+typedef struct vim_exception except_T;
+struct vim_exception
+{
+    int			type;		/* exception type */
+    char_u		*value;		/* exception value */
+    struct msglist	*messages;	/* message(s) causing error exception */
+    char_u		*throw_name;	/* name of the throw point */
+    linenr_T		throw_lnum;	/* line number of the throw point */
+    except_T		*caught;	/* next exception on the caught stack */
+};
+
+/*
+ * The exception types.
+ */
+#define ET_USER		0	/* exception caused by ":throw" command */
+#define ET_ERROR	1	/* error exception */
+#define ET_INTERRUPT	2	/* interrupt exception triggered by Ctrl-C */
+
 
 #ifdef FEAT_SYN_HL
 /* struct passed to in_id_list() */

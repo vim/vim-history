@@ -143,9 +143,12 @@ EXTERN int	info_message INIT(= FALSE); /* printing informative message */
 #ifdef FEAT_EVAL
 EXTERN int	emsg_skip INIT(= 0);	    /* don't display errors for
 					       expression that is skipped */
+EXTERN int	emsg_severe INIT(=FALSE);   /* use message of next of several
+					       emsg() calls for throw */
+EXTERN int	did_endif INIT(= FALSE);    /* just had ":endif" */
 #endif
 EXTERN int	did_emsg;		    /* set by emsg() when the message
-					       is displayed */
+					       is displayed or thrown */
 EXTERN int	called_emsg;		    /* always set by emsg() */
 EXTERN int	emsg_on_display INIT(= FALSE);	/* there is an error message */
 EXTERN int	rc_did_emsg INIT(= FALSE);  /* vim_regcomp() called emsg() */
@@ -185,10 +188,80 @@ EXTERN char_u	*sourcing_name INIT( = NULL);/* name of error message source */
 EXTERN linenr_T	sourcing_lnum INIT(= 0);    /* line number of the source file */
 
 #ifdef FEAT_EVAL
-EXTERN int	debug_level INIT(= 0);		/* nesting level */
-EXTERN int	debug_break_level INIT(= 0);	/* break below this level */
+EXTERN int	ex_nesting_level INIT(= 0);	/* nesting level */
+EXTERN int	debug_break_level INIT(= -1);	/* break below this level */
 EXTERN int	debug_did_msg INIT(= FALSE);	/* did "debug mode" message */
 EXTERN int	debug_tick INIT(= 0);		/* breakpoint change count */
+
+/*
+ * The exception currently being thrown.  Used to pass an exception to
+ * a different cstack.  Also used for discarding an exception before it is
+ * caught or made pending.  Only valid when did_throw is TRUE.
+ */
+EXTERN except_T *current_exception;
+
+/*
+ * did_throw: An exception is being thrown.  Reset when the exception is caught
+ * or as long as it is pending in a finally clause.
+ */
+EXTERN int did_throw INIT(= FALSE);
+
+/*
+ * need_rethrow: set to TRUE when a throw that cannot be handled in do_cmdline()
+ * must be propagated to the cstack of the previously called do_cmdline().
+ */
+EXTERN int need_rethrow INIT(= FALSE);
+
+/*
+ * check_cstack: set to TRUE when a ":finish" or ":return" that cannot be
+ * handled in do_cmdline() must be propagated to the cstack of the previously
+ * called do_cmdline().
+ */
+EXTERN int check_cstack INIT(= FALSE);
+
+/*
+ * Number of nested try conditionals (across function calls and ":source"
+ * commands).
+ */
+EXTERN int trylevel INIT(= 0);
+
+/*
+ * When "force_abort" is TRUE, always skip commands after an error message, even
+ * after the outermost ":endif" or ":endwhile" or for a function whithout the
+ * "abort" flag.  It is set to TRUE when "trylevel" is non-zero or an exception
+ * is being thrown at the time an error is detected.  It is set to FALSE when
+ * "trylevel" gets zero again and there was no error or interrupt or throw.
+ *
+ */
+EXTERN int force_abort INIT(= FALSE);
+
+/*
+ * "msg_list" points to a variable in the stack of do_cmdline() which keeps the
+ * list of arguments of several emsg() calls, one of which is to be converted to
+ * an error exception immediately after the failing command returns.  The
+ * message to be used for the exception value is pointed to by the "throw_msg"
+ * field of the first element in the list.  It is usually the same as the "msg"
+ * field of that element, but can be identical to the "msg" field of a later
+ * list element, when the "emsg_severe" flag was set when the emsg() call was
+ * made.
+ */
+EXTERN struct msglist **msg_list INIT(= NULL);
+
+/*
+ * suppress_errthrow: When TRUE, don't convert an error to an exception.  Used
+ * when displaying the interrupt message or reporting an exception that is still
+ * uncaught at the top level (which has already been discarded then).
+ */
+EXTERN int suppress_errthrow INIT(= FALSE);
+
+/*
+ * The stack of all caught and not finished exceptions.  The exception on the
+ * top of the stack is the one got by evaluation of v:exception.  The complete
+ * stack of all caught and pending exceptions is embedded in the various
+ * cstacks; the pending exceptions, however, are not on the caught stack.
+ */
+EXTERN except_T *caught_stack INIT(= NULL);
+
 #endif
 
 #ifdef FEAT_EVAL
@@ -625,10 +698,14 @@ EXTERN int* (*iconv_errno) (void);
 
 #ifdef FEAT_XIM
 # ifdef FEAT_GUI_GTK
+#  ifdef HAVE_GTK2
+EXTERN GtkIMContext	*xic INIT(= NULL);
+#  else
 EXTERN GdkICAttr	*xic_attr INIT(= NULL);
 EXTERN GdkIC		*xic INIT(= NULL);
-EXTERN colnr_T		preedit_start_col INIT(= MAXCOL);
 EXTERN char		*draw_feedback INIT(= NULL);
+#  endif
+EXTERN colnr_T		preedit_start_col INIT(= MAXCOL);
 # else
 EXTERN XIC		xic INIT(= NULL);
 # endif
@@ -1069,30 +1146,55 @@ int	usingNetbeans INIT(= 0);	/* set if -nb flag is used */
  * The error messages that can be shared are included here.
  * Excluded are errors that are only used once and debugging messages.
  */
-EXTERN char_u e_abort[]		INIT(=N_("Command aborted"));
-EXTERN char_u e_argreq[]	INIT(=N_("Argument required"));
+EXTERN char_u e_abort[]		INIT(=N_("E470: Command aborted"));
+EXTERN char_u e_argreq[]	INIT(=N_("E471: Argument required"));
 EXTERN char_u e_backslash[]	INIT(=N_("E10: \\ should be followed by /, ? or &"));
 #ifdef FEAT_CMDWIN
 EXTERN char_u e_cmdwin[]	INIT(=N_("E11: Invalid in command-line window; <CR> executes, CTRL-C quits"));
 #endif
 EXTERN char_u e_curdir[]	INIT(=N_("E12: Command not allowed from exrc/vimrc in current dir or tag search"));
+#ifdef FEAT_EVAL
+EXTERN char_u e_endif[]		INIT(=N_("E171: Missing :endif"));
+EXTERN char_u e_endtry[]	INIT(=N_("E600: Missing :endtry"));
+EXTERN char_u e_endwhile[]	INIT(=N_("E170: Missing :endwhile"));
+EXTERN char_u e_while[]		INIT(=N_("E588: :endwhile without :while"));
+#endif
 EXTERN char_u e_exists[]	INIT(=N_("E13: File exists (add ! to override)"));
-EXTERN char_u e_failed[]	INIT(=N_("Command failed"));
-EXTERN char_u e_internal[]	INIT(=N_("Internal error"));
+EXTERN char_u e_failed[]	INIT(=N_("E472: Command failed"));
+#if defined(FEAT_GUI) && defined(FEAT_XFONTSET)
+EXTERN char_u e_fontset[]	INIT(=N_("E234: Unknown fontset: %s"));
+#endif
+#if defined(FEAT_GUI_X11) || defined(FEAT_GUI_GTK) || defined(MACOS) \
+	|| defined(FEAT_GUI_PHOTON) || defined(FEAT_GUI_MSWIN)
+EXTERN char_u e_font[]		INIT(=N_("E235: Unknown font: %s"));
+#endif
+#if (defined(FEAT_GUI_X11) || defined(FEAT_GUI_GTK)) && !defined(HAVE_GTK2)
+EXTERN char_u e_fontwidth[]	INIT(=N_("E236: Font \"%s\" is not fixed-width"));
+#endif
+EXTERN char_u e_internal[]	INIT(=N_("E473: Internal error"));
 EXTERN char_u e_interr[]	INIT(=N_("Interrupted"));
 EXTERN char_u e_invaddr[]	INIT(=N_("E14: Invalid address"));
-EXTERN char_u e_invarg[]	INIT(=N_("Invalid argument"));
-EXTERN char_u e_invarg2[]	INIT(=N_("Invalid argument: %s"));
+EXTERN char_u e_invarg[]	INIT(=N_("E474: Invalid argument"));
+EXTERN char_u e_invarg2[]	INIT(=N_("E475: Invalid argument: %s"));
 #ifdef FEAT_EVAL
 EXTERN char_u e_invexpr2[]	INIT(=N_("E15: Invalid expression: %s"));
 #endif
 EXTERN char_u e_invrange[]	INIT(=N_("E16: Invalid range"));
-EXTERN char_u e_invcmd[]	INIT(=N_("Invalid command"));
+EXTERN char_u e_invcmd[]	INIT(=N_("E476: Invalid command"));
 #ifdef UNIX
 EXTERN char_u e_isadir2[]	INIT(=N_("E17: \"%s\" is a directory"));
 #endif
 #ifdef FEAT_EVAL
 EXTERN char_u e_letunexp[]	INIT(=N_("E18: Unexpected characters before '='"));
+#endif
+#ifdef FEAT_LIBCALL
+EXTERN char_u e_libcall[]	INIT(=N_("E364: Library call failed for \"%s()\""));
+#endif
+#if defined(DYNAMIC_PERL) || defined(DYNAMIC_PYTHON) || defined(DYNAMIC_RUBY) \
+	|| defined(DYNAMIC_TCL) || defined(DYNAMIC_ICONV) \
+	|| defined(DYNAMIC_GETTEXT)
+EXTERN char_u e_loadlib[]	INIT(=N_("E370: Could not load library %s"));
+EXTERN char_u e_loadfunc[]	INIT(=N_("E448: Could not load library function %s"));
 #endif
 EXTERN char_u e_markinval[]	INIT(=N_("E19: Mark has invalid line number"));
 EXTERN char_u e_marknotset[]	INIT(=N_("E20: Mark not set"));
@@ -1100,7 +1202,7 @@ EXTERN char_u e_modifiable[]	INIT(=N_("E21: Cannot make changes, 'modifiable' is
 EXTERN char_u e_nesting[]	INIT(=N_("E22: Scripts nested too deep"));
 EXTERN char_u e_noalt[]		INIT(=N_("E23: No alternate file"));
 EXTERN char_u e_noabbr[]	INIT(=N_("E24: No such abbreviation"));
-EXTERN char_u e_nobang[]	INIT(=N_("No ! allowed"));
+EXTERN char_u e_nobang[]	INIT(=N_("E477: No ! allowed"));
 #ifndef FEAT_GUI
 EXTERN char_u e_nogvim[]	INIT(=N_("E25: GUI cannot be used: Not enabled at compile time"));
 #endif
@@ -1116,20 +1218,23 @@ EXTERN char_u e_nogroup[]	INIT(=N_("E28: No such highlight group name: %s"));
 EXTERN char_u e_noinstext[]	INIT(=N_("E29: No inserted text yet"));
 EXTERN char_u e_nolastcmd[]	INIT(=N_("E30: No previous command line"));
 EXTERN char_u e_nomap[]		INIT(=N_("E31: No such mapping"));
-EXTERN char_u e_nomatch[]	INIT(=N_("No match"));
-EXTERN char_u e_nomatch2[]	INIT(=N_("No match: %s"));
+EXTERN char_u e_nomatch[]	INIT(=N_("E479: No match"));
+EXTERN char_u e_nomatch2[]	INIT(=N_("E480: No match: %s"));
 EXTERN char_u e_noname[]	INIT(=N_("E32: No file name"));
 EXTERN char_u e_nopresub[]	INIT(=N_("E33: No previous substitute regular expression"));
 EXTERN char_u e_noprev[]	INIT(=N_("E34: No previous command"));
 EXTERN char_u e_noprevre[]	INIT(=N_("E35: No previous regular expression"));
-EXTERN char_u e_norange[]	INIT(=N_("No range allowed"));
+EXTERN char_u e_norange[]	INIT(=N_("E481: No range allowed"));
 #ifdef FEAT_WINDOWS
 EXTERN char_u e_noroom[]	INIT(=N_("E36: Not enough room"));
 #endif
-EXTERN char_u e_notcreate[]	INIT(=N_("Can't create file %s"));
-EXTERN char_u e_notmp[]		INIT(=N_("Can't get temp file name"));
-EXTERN char_u e_notopen[]	INIT(=N_("Can't open file %s"));
-EXTERN char_u e_notread[]	INIT(=N_("Can't read file %s"));
+#ifdef FEAT_CLIENTSERVER
+EXTERN char_u e_noserver[]	INIT(=N_("E247: no registered server named \"%s\""));
+#endif
+EXTERN char_u e_notcreate[]	INIT(=N_("E482: Can't create file %s"));
+EXTERN char_u e_notmp[]		INIT(=N_("E483: Can't get temp file name"));
+EXTERN char_u e_notopen[]	INIT(=N_("E484: Can't open file %s"));
+EXTERN char_u e_notread[]	INIT(=N_("E485: Can't read file %s"));
 EXTERN char_u e_nowrtmsg[]	INIT(=N_("E37: No write since last change (add ! to override)"));
 EXTERN char_u e_null[]		INIT(=N_("E38: Null argument"));
 #ifdef FEAT_DIGRAPHS
@@ -1138,14 +1243,15 @@ EXTERN char_u e_number[]	INIT(=N_("E39: Number expected"));
 #ifdef FEAT_QUICKFIX
 EXTERN char_u e_openerrf[]	INIT(=N_("E40: Can't open errorfile %s"));
 #endif
-#if defined(FEAT_KEYMAP) || defined(__EMX__)
-EXTERN char_u e_outofmem[]	INIT(=N_("E41: Out of memory!"));
+#if defined(FEAT_GUI_GTK) || defined(FEAT_GUI_X11)
+EXTERN char_u e_opendisp[]	INIT(=N_("E233: cannot open display"));
 #endif
+EXTERN char_u e_outofmem[]	INIT(=N_("E41: Out of memory!"));
 #ifdef FEAT_INS_EXPAND
 EXTERN char_u e_patnotf[]	INIT(=N_("Pattern not found"));
 #endif
-EXTERN char_u e_patnotf2[]	INIT(=N_("Pattern not found: %s"));
-EXTERN char_u e_positive[]	INIT(=N_("Argument must be positive"));
+EXTERN char_u e_patnotf2[]	INIT(=N_("E486: Pattern not found: %s"));
+EXTERN char_u e_positive[]	INIT(=N_("E487: Argument must be positive"));
 #if defined(UNIX) || defined(FEAT_SESSION)
 EXTERN char_u e_prev_dir[]	INIT(=N_("E459: Cannot go back to previous directory"));
 #endif
@@ -1165,17 +1271,31 @@ EXTERN char_u e_readerrf[]	INIT(=N_("E47: Error while reading errorfile"));
 #ifdef HAVE_SANDBOX
 EXTERN char_u e_sandbox[]	INIT(=N_("E48: Not allowed in sandbox"));
 #endif
+EXTERN char_u e_secure[]	INIT(=N_("E523: Not allowed here"));
+#if defined(AMIGA) || defined(MACOS) || defined(MSWIN) || defined(RISCOS) \
+	|| defined(UNIX)
+EXTERN char_u e_screenmode[]	INIT(=N_("E359: Screen mode setting not supported"));
+#endif
 EXTERN char_u e_scroll[]	INIT(=N_("E49: Invalid scroll size"));
 EXTERN char_u e_shellempty[]	INIT(=N_("E91: 'shell' option is empty"));
+#if defined(FEAT_SIGN_ICONS) && !defined(HAVE_GTK2)
+EXTERN char_u e_signdata[]	INIT(=N_("E255: Couldn't read in sign data!"));
+#endif
 EXTERN char_u e_swapclose[]	INIT(=N_("E72: Close error on swap file"));
 EXTERN char_u e_tagstack[]	INIT(=N_("E73: tag stack empty"));
 EXTERN char_u e_toocompl[]	INIT(=N_("E74: Command too complex"));
 EXTERN char_u e_longname[]	INIT(=N_("E75: Name too long"));
 EXTERN char_u e_toomsbra[]	INIT(=N_("E76: Too many ["));
 EXTERN char_u e_toomany[]	INIT(=N_("E77: Too many file names"));
-EXTERN char_u e_trailing[]	INIT(=N_("Trailing characters"));
+EXTERN char_u e_trailing[]	INIT(=N_("E488: Trailing characters"));
 EXTERN char_u e_umark[]		INIT(=N_("E78: Unknown mark"));
 EXTERN char_u e_wildexpand[]	INIT(=N_("E79: Cannot expand wildcards"));
+#ifdef FEAT_WINDOWS
+EXTERN char_u e_winheight[]	INIT(=N_("E591: 'winheight' cannot be smaller than 'winminheight'"));
+# ifdef FEAT_VERTSPLIT
+EXTERN char_u e_winwidth[]	INIT(=N_("E592: 'winwidth' cannot be smaller than 'winminwidth'"));
+# endif
+#endif
 EXTERN char_u e_write[]		INIT(=N_("E80: Error while writing"));
 EXTERN char_u e_zerocount[]	INIT(=N_("Zero count"));
 #ifdef FEAT_EVAL

@@ -1,4 +1,4 @@
-*usr_41.txt*	For Vim version 6.1.  Last change: 2001 Oct 26
+*usr_41.txt*	For Vim version 6.2a.  Last change: 2003 Mar 15
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -26,7 +26,7 @@ script.  There are a lot of them, thus this is a long chapter.
 Table of contents: |usr_toc.txt|
 
 ==============================================================================
-*41.1*	Introduction			*vimrc-intro* *vim-script-intro*
+*41.1*	Introduction					*vim-script-intro*
 
 Your first experience with Vim scripts is the vimrc file.  Vim reads it when
 it starts up and executes the commands.  You can set options to values you
@@ -90,14 +90,14 @@ THREE KINDS OF NUMBERS
 Numbers can be decimal, hexadecimal or octal.  A hexadecimal number starts
 with "0x" or "0X".  For example "0x1f" is 31.  An octal number starts with a
 zero.  "017" is 15.  Careful: don't put a zero before a decimal number, it
-will be intepreted as an octal number!
+will be interpreted as an octal number!
    The ":echo" command always prints decimal numbers.  Example: >
 
 	:echo 0x7f 036
 <	127 30 ~
 
 A number is made negative with a minus sign.  This also works for hexadecimal
-and octal numbers.   A minus sign is also for substraction.  Compare this with
+and octal numbers.   A minus sign is also for subtraction.  Compare this with
 the previous example: >
 
 	:echo 0x7f -036
@@ -118,7 +118,7 @@ cannot start with a digit.  Valid variable names are:
 
 	counter
 	_aap3
-	very_long_variable_name_with_dashes
+	very_long_variable_name_with_underscores
 	FuncLength
 	LENGTH
 
@@ -258,7 +258,7 @@ Examples: >
 	:echo "Your home directory is" $HOME
 	:if @a > 5
 
-The &option form can be used to save an option value, set it to a new value,
+The &name form can be used to save an option value, set it to a new value,
 do something and restore the old value.  Example: >
 
 	:let save_ic = &ic
@@ -286,7 +286,7 @@ The usual precedence is used.  Example: >
 	:echo 10 + 5 * 2
 <	20 ~
 
-Grouping is done with braces.  No suprises here.  Example: >
+Grouping is done with braces.  No surprises here.  Example: >
 
 	:echo (10 + 5) * 2
 <	30 ~
@@ -380,9 +380,9 @@ The result is one if the condition is met and zero otherwise.  An example: >
 	:endif
 
 Here "v:version" is a variable defined by Vim, which has the value of the Vim
-version.  600 is for version 6.0.  Version 6.1 will have the value 601.
-This is very useful to write a script that works with multiple versions of
-Vim.  |v:version|
+version.  600 is for version 6.0.  Version 6.1 has the value 601.  This is
+very useful to write a script that works with multiple versions of Vim.
+|v:version|
 
 The logic operators work both for numbers and strings.  When comparing two
 strings, the mathematical difference is used.  This compares byte values,
@@ -608,7 +608,7 @@ Buffers, windows and the argument list:
 	getbufvar()		get a variable value from a specific buffer
 	setbufvar()		set a variable in a specific buffer
 	getwinvar()		get a variable value from a specific window
-	setwinvar()		set a variable in a specific buffer
+	setwinvar()		set a variable in a specific window
 
 Folding:
 	foldclosed()		check for a closed fold at a specific line
@@ -689,7 +689,7 @@ This tells Vim that the function is named "Min" and it takes two arguments:
 	:  if a:num1 < a:num2
 
 The special prefix "a:" tells Vim that the variable is a function argument.
-Let's assign the variable smaller the value of the smallest number: >
+Let's assign the variable "smaller" the value of the smallest number: >
 
 	:  if a:num1 < a:num2
 	:    let smaller = a:num1
@@ -757,6 +757,7 @@ Example: >
 	:  let count = 0
 	:  while n <= a:lastline
 	:    let count = count + Wordcount(getline(n))
+	:    let n = n + 1
 	:  endwhile
 	:  echo "found " . count . " words"
 	:endfunction
@@ -822,13 +823,10 @@ functions: >
 
 To see what a function does, use its name as an argument for ":function": >
 
-	:function Show
-<	1	   :  echo "Show is " . a:start ~
-	2	   :  let index = 1 ~
-	3	   :  while index <= a:0 ~
-	4	   :	execute 'echo "Arg " . index . " is " . a:' . index ~
-	5	   :	let index = index + 1 ~
-	6	   :  endwhile ~
+	:function SetSyn
+<	1     if &syntax == '' ~
+	2       let &syntax = a:name ~
+	3     endif ~
 	   endfunction ~
 
 
@@ -864,8 +862,8 @@ WHITE SPACE
 Blank lines are allowed and ignored.
 
 Leading whitespace characters (blanks and TABs) are always ignored.  The
-whitespaces between parameters (e.g. between the 'set' and the 'cpoptions' in the
-example below) are reduced to one blank character and plays the role of a
+whitespaces between parameters (e.g. between the 'set' and the 'cpoptions' in
+the example below) are reduced to one blank character and plays the role of a
 separator, the whitespaces after the last (visible) character may or may not
 be ignored depending on the situation, see below.
 
@@ -873,7 +871,7 @@ For a ":set" command involving the "=" (equal) sign, such as in: >
 
 	:set cpoptions    =aABceFst
 
-The whitespace immediately before the "=" sign is ignored.  But there can be
+the whitespace immediately before the "=" sign is ignored.  But there can be
 no whitespace after the "=" sign!
 
 To include a whitespace character in the value of an option, it must be
@@ -913,7 +911,7 @@ command will send everything after it to the shell, causing an error for an
 unmatched '"' character.
    There can be no comment after ":map", ":abbreviate", ":execute" and "!"
 commands (there are a few more commands with this restriction).  For the
-"map", ":abbreviate" and "execute" commands there is a trick: >
+":map", ":abbreviate" and ":execute" commands there is a trick: >
 
 	:abbrev dev development|" shorthand
 	:map <F3> o#include|" insert include
@@ -942,8 +940,8 @@ Even bigger problem arises in the following example: >
 
 Here the unmap command will not work, because it tries to unmap ",ab ".  This
 does not exist as a mapped sequence.  An error will be issued, which is very
-hard to identify, because the ending whitespace character on the 'unmap ,ab '
-is not visible.
+hard to identify, because the ending whitespace character in ":unmap ,ab " is
+not visible.
 
 And this is the same as what happens when one uses a comment after an 'unmap'
 command: >
@@ -951,9 +949,9 @@ command: >
 	:unmap ,ab     " comment
 
 Here the comment part will be ignored.  However, Vim will try to unmap
-',ab     ', which does not exist.  Rewreite it as: >
+',ab     ', which does not exist.  Rewrite it as: >
 
-	:unmap ,ab|" comment
+	:unmap ,ab|    " comment
 
 
 RESTORING THE VIEW
@@ -1042,12 +1040,12 @@ BODY
 
 Let's start with the body of the plugin, the lines that do the actual work: >
 
- 13	iabbrev teh the
- 14	iabbrev otehr other
- 15	iabbrev wnat want
- 16	iabbrev synchronisation
- 17		\ synchronization
- 18	let s:count = 4
+ 14	iabbrev teh the
+ 15	iabbrev otehr other
+ 16	iabbrev wnat want
+ 17	iabbrev synchronisation
+ 18		\ synchronization
+ 19	let s:count = 4
 
 The actual list should be much longer, of course.
 
@@ -1063,23 +1061,30 @@ know who wrote this wonderful plugin and where they can send remarks.
 Therefore, put a header at the top of your plugin: >
 
   1	" Vim global plugin for correcting typing mistakes
-  2	" Last Change: 2000 Oct 15
-  3	" Maintainer: Bram Moolenaar <Bram@vim.org>
+  2	" Last Change:	2000 Oct 15
+  3	" Maintainer:	Bram Moolenaar <Bram@vim.org>
+
+About copyright and licensing: Since plugins are very useful and it's hardly
+worth restricting their distribution, please consider making your plugin
+either public domain or use the Vim |license|.  A short note about this near
+the top of the plugin should be sufficient.  Example: >
+
+  4	" License:	This file is placed in the public domain.
 
 
 LINE CONTINUATION, AVOIDING SIDE EFFECTS
 
-In line 17 above, the line-continuation mechanism is used |line-continuation|.
+In line 18 above, the line-continuation mechanism is used |line-continuation|.
 Users with 'compatible' set will run into trouble here, they will get an error
 message.  We can't just reset 'compatible', because that has a lot of side
 effects.  To avoid this, we will set the 'cpoptions' option to its Vim default
 value and restore it later.  That will allow the use of line-continuation and
 make the script work for most people.  It is done like this: >
 
- 10	let s:save_cpo = &cpo
- 11	set cpo&vim
+ 11	let s:save_cpo = &cpo
+ 12	set cpo&vim
  ..
- 41	let &cpo = s:save_cpo
+ 42	let &cpo = s:save_cpo
 
 We first store the old value of 'cpoptions' in the s:save_cpo variable.  At
 the end of the plugin this value is restored.
@@ -1096,10 +1101,10 @@ system administrator has dropped it in the system-wide plugin directory, but a
 user has his own plugin he wants to use.  Then the user must have a chance to
 disable loading this specific plugin.  This will make it possible: >
 
-  5	if exists("loaded_typecorr")
-  6	  finish
-  7	endif
-  8	let loaded_typecorr = 1
+  6	if exists("loaded_typecorr")
+  7	  finish
+  8	endif
+  9	let loaded_typecorr = 1
 
 This also avoids that when the script is loaded twice it would cause error
 messages for redefining functions and cause trouble for autocommands that are
@@ -1114,7 +1119,7 @@ for this mapping, but the user might already use it for something else.  To
 allow the user to define which keys a mapping in a plugin uses, the <Leader>
 item can be used: >
 
- 21	  map <unique> <Leader>a  <Plug>TypecorrAdd
+ 22	  map <unique> <Leader>a  <Plug>TypecorrAdd
 
 The "<Plug>TypecorrAdd" thing will do the work, more about that further on.
 
@@ -1132,9 +1137,9 @@ already happened to exist. |:map-<unique>|
 But what if the user wants to define his own key sequence?  We can allow that
 with this mechanism: >
 
- 20	if !hasmapto('<Plug>TypecorrAdd')
- 21	  map <unique> <Leader>a  <Plug>TypecorrAdd
- 22	endif
+ 21	if !hasmapto('<Plug>TypecorrAdd')
+ 22	  map <unique> <Leader>a  <Plug>TypecorrAdd
+ 23	endif
 
 This checks if a mapping to "<Plug>TypecorrAdd" already exists, and only
 defines the mapping from "<Leader>a" if it doesn't.  The user then has a
@@ -1156,11 +1161,11 @@ prepending it with "s:".
 
 We will define a function that adds a new typing correction: >
 
- 29	function s:Add(from, correct)
- 30	  let to = input("type the correction for " . a:from . ": ")
- 31	  exe ":iabbrev " . a:from . " " . to
+ 30	function s:Add(from, correct)
+ 31	  let to = input("type the correction for " . a:from . ": ")
+ 32	  exe ":iabbrev " . a:from . " " . to
  ..
- 35	endfunction
+ 36	endfunction
 
 Now we can call the function s:Add() from within this script.  If another
 script also defines s:Add(), it will be local to that script and can only
@@ -1170,9 +1175,9 @@ function (without the "s:"), which is again another function.
 <SID> can be used with mappings.  It generates a script ID, which identifies
 the current script.  In our typing correction plugin we use it like this: >
 
- 23	noremap <unique> <script> <Plug>TypecorrAdd  <SID>Add
+ 24	noremap <unique> <script> <Plug>TypecorrAdd  <SID>Add
  ..
- 27	noremap <SID>Add  :call <SID>Add(expand("<cword>"), 1)<CR>
+ 28	noremap <SID>Add  :call <SID>Add(expand("<cword>"), 1)<CR>
 
 Thus when a user types "\a", this sequence is invoked: >
 
@@ -1192,22 +1197,22 @@ s:Add() in other places (the script itself, autocommands, user commands).
 
 We can also add a menu entry to do the same as the mapping: >
 
- 25	noremenu <script> Plugin.Add\ Correction      <SID>Add
+ 26	noremenu <script> Plugin.Add\ Correction      <SID>Add
 
 The "Plugin" menu is recommended for adding menu items for plugins.  In this
 case only one item is used.  When adding more items, creating a submenu is
 recommended.  For example, "Plugin.CVS" could be used for a plugin that offers
 CVS operations "Plugin.CVS.checkin", "Plugin.CVS.checkout", etc.
 
-Note that in line 27 ":noremap" is used to avoid that any other mappings cause
-trouble.  Someone may have remapped ":call", for example.  In line 23 we also
+Note that in line 28 ":noremap" is used to avoid that any other mappings cause
+trouble.  Someone may have remapped ":call", for example.  In line 24 we also
 use ":noremap", but we do want "<SID>Add" to be remapped.  This is why
 "<script>" is used here.  This only allows mappings which are local to the
-script. |:map-<script>|  The same is done in line 25 for ":noremenu".
+script. |:map-<script>|  The same is done in line 26 for ":noremenu".
 |:menu-<script>|
 
 
-<SID> AND <Plug>
+<SID> AND <Plug>					*using-<Plug>*
 
 Both <SID> and <Plug> are used to avoid that mappings of typed keys interfere
 with mappings that are only to be used from other mappings.  Note the
@@ -1236,9 +1241,9 @@ USER COMMAND
 
 Now let's add a user command to add a correction: >
 
- 37	if !exists(":Correct")
- 38	  command -nargs=1  Correct  :call s:Add(<q-args>, 0)
- 39	endif
+ 38	if !exists(":Correct")
+ 39	  command -nargs=1  Correct  :call s:Add(<q-args>, 0)
+ 40	endif
 
 The user command is defined only if no command with the same name already
 exists.  Otherwise we would get an error here.  Overriding the existing user
@@ -1249,7 +1254,7 @@ wonder why the command he defined himself doesn't work.  |:command|
 SCRIPT VARIABLES
 
 When a variable starts with "s:" it is a script variable.  It can only be used
-inside a script.  Outside the script it's not visible  This avoids trouble
+inside a script.  Outside the script it's not visible.  This avoids trouble
 with using the same variable name in different scripts.  The variables will be
 kept as long as Vim is running.  And the same variables are used when sourcing
 the same script again. |s:var|
@@ -1258,13 +1263,13 @@ The fun is that these variables can also be used in functions, autocommands
 and user commands that are defined in the script.  In our example we can add
 a few lines to count the number of corrections: >
 
- 18	let s:count = 4
+ 19	let s:count = 4
  ..
- 29	function s:Add(from, correct)
+ 30	function s:Add(from, correct)
  ..
- 33	  let s:count = s:count + 1
- 34	  echo s:count . " corrections now"
- 35	endfunction
+ 34	  let s:count = s:count + 1
+ 35	  echo s:count . " corrections now"
+ 36	endfunction
 
 First s:count is initialized to 4 in the script itself.  When later the
 s:Add() function is called, it increments s:count.  It doesn't matter from
@@ -1277,55 +1282,63 @@ THE RESULT
 Here is the resulting complete example: >
 
   1	" Vim global plugin for correcting typing mistakes
-  2	" Last Change: 2000 Oct 15
-  3	" Maintainer: Bram Moolenaar <Bram@vim.org>
-  4
-  5	if exists("loaded_typecorr")
-  6	  finish
-  7	endif
-  8	let loaded_typecorr = 1
-  9
- 10	let s:save_cpo = &cpo
- 11	set cpo&vim
- 12
- 13	iabbrev teh the
- 14	iabbrev otehr other
- 15	iabbrev wnat want
- 16	iabbrev synchronisation
- 17		\ synchronization
- 18	let s:count = 4
- 19
- 20	if !hasmapto('<Plug>TypecorrAdd')
- 21	  map <unique> <Leader>a  <Plug>TypecorrAdd
- 22	endif
- 23	noremap <unique> <script> <Plug>TypecorrAdd  <SID>Add
- 24
- 25	noremenu <script> Plugin.Add\ Correction      <SID>Add
- 26
- 27	noremap <SID>Add  :call <SID>Add(expand("<cword>"), 1)<CR>
- 28
- 29	function s:Add(from, correct)
- 30	  let to = input("type the correction for " . a:from . ": ")
- 31	  exe ":iabbrev " . a:from . " " . to
- 32	  if a:correct | exe "normal viws\<C-R>\" \b\e" | endif
- 33	  let s:count = s:count + 1
- 34	  echo s:count . " corrections now"
- 35	endfunction
- 36
- 37	if !exists(":Correct")
- 38	  command -nargs=1  Correct  :call s:Add(<q-args>, 0)
- 39	endif
- 40
- 41	let &cpo = s:save_cpo
+  2	" Last Change:	2000 Oct 15
+  3	" Maintainer:	Bram Moolenaar <Bram@vim.org>
+  4	" License:	This file is placed in the public domain.
+  5
+  6	if exists("loaded_typecorr")
+  7	  finish
+  8	endif
+  9	let loaded_typecorr = 1
+ 10
+ 11	let s:save_cpo = &cpo
+ 12	set cpo&vim
+ 13
+ 14	iabbrev teh the
+ 15	iabbrev otehr other
+ 16	iabbrev wnat want
+ 17	iabbrev synchronisation
+ 18		\ synchronization
+ 19	let s:count = 4
+ 20
+ 21	if !hasmapto('<Plug>TypecorrAdd')
+ 22	  map <unique> <Leader>a  <Plug>TypecorrAdd
+ 23	endif
+ 24	noremap <unique> <script> <Plug>TypecorrAdd  <SID>Add
+ 25
+ 26	noremenu <script> Plugin.Add\ Correction      <SID>Add
+ 27
+ 28	noremap <SID>Add  :call <SID>Add(expand("<cword>"), 1)<CR>
+ 29
+ 30	function s:Add(from, correct)
+ 31	  let to = input("type the correction for " . a:from . ": ")
+ 32	  exe ":iabbrev " . a:from . " " . to
+ 33	  if a:correct | exe "normal viws\<C-R>\" \b\e" | endif
+ 34	  let s:count = s:count + 1
+ 35	  echo s:count . " corrections now"
+ 36	endfunction
+ 37
+ 38	if !exists(":Correct")
+ 39	  command -nargs=1  Correct  :call s:Add(<q-args>, 0)
+ 40	endif
+ 41
+ 42	let &cpo = s:save_cpo
 
-Line 32 wasn't explained yet.  It applies the new correction to the word under
+Line 33 wasn't explained yet.  It applies the new correction to the word under
 the cursor.  The |:normal| command is used to use the new abbreviation.  Note
 that mappings and abbreviations are expanded here, even though the function
 was called from a mapping defined with ":noremap".
 
+Using "unix" for the 'fileformat' option is recommended.  The Vim scripts will
+then work everywhere.  Scripts with 'fileformat' set to "dos" do not work on
+Unix.  Also see |:source_crnl|.  To be sure it is set right, do this before
+writing the file: >
 
-DOCUMENTATION
-							*write-local-help*
+	:set fileformat=unix
+
+
+DOCUMENTATION						*write-local-help*
+
 It's a good idea to also write some documentation for your plugin.  Especially
 when its behavior can be changed by the user.  See |add-local-help| for how
 they are installed.
@@ -1352,7 +1365,8 @@ Here is a simple example for a plugin help file, called "typecorr.txt": >
 
 The first line is actually the only one for which the format matters.  It will
 be extracted from the help file to be put in the "LOCAL ADDITIONS:" section of
-help.txt.  The first "*" must be in the first column of the first line.
+help.txt |local-additions|.  The first "*" must be in the first column of the
+first line.
 
 You can add more tags inside ** in your help file.  But be careful not to use
 existing help tags.  You would probably use the name of your plugin in most of
@@ -1420,21 +1434,22 @@ This does require that the filetype plugin directory comes before $VIMRUNTIME
 in 'runtimepath'!
 
 If you do want to use the default plugin, but overrule one of the settings,
-you can make a filetype plugin like this: >
+you can write the different setting in a script: >
 
-	source $VIMRUNTIME/ftplugin/vim.vim
 	set textwidth=70
 
-This first loads the default filetype plugin to get all its settings.  Then
-the value for the 'textwidth' option is changed to "70".  Note that the
-default plugin will have set "b:did_ftplugin", thus when it's sourced later,
-it won't do anything.
+Now write this in the "after" directory, so that it gets sourced after the
+distributed "vim.vim" ftplugin |after-directory|.  For Unix this would be
+"~/.vim/after/ftplugin/vim.vim".  Note that the default plugin will have set
+"b:did_ftplugin", but it is ignored here.
 
 
 OPTIONS
 
 To make sure the filetype plugin only affects the current buffer use the >
+
 	:setlocal
+
 command to set options.  And only set options which are local to a buffer (see
 the help for the option to check that).  When using |:setlocal| for global
 options or options local to a window, the value will change for many buffers,
@@ -1444,15 +1459,18 @@ When an option has a value that is a list of flags or items, consider using
 "+=" and "-=" to keep the existing value.  Be aware that the user may have
 changed an option value already.  First resetting to the default value and
 then changing it often a good idea.  Example: >
+
 	:setlocal formatoptions& formatoptions+=ro
 
 
 MAPPINGS
 
 To make sure mappings will only work in the current buffer use the >
+
 	:map <buffer>
+
 command.  This needs to be combined with the two-step mapping explained above.
-An example of how to define funcionality in a filetype plugin: >
+An example of how to define functionality in a filetype plugin: >
 
 	if !hasmapto('<Plug>JavaImport')
 	  map <buffer> <unique> <LocalLeader>i <Plug>JavaImport
@@ -1518,6 +1536,18 @@ This construct make sure the function is only defined once: >
 	:endif
 <
 
+FILE NAME
+
+The filetype must be included in the file name |ftplugin-name|.  Use one of
+these three forms:
+
+	.../ftplugin/stuff.vim
+	.../ftplugin/stuff_foo.vim
+	.../ftplugin/stuff/bar.vim
+
+"stuff" is the filetype, "foo" and "bar" are arbitrary names.
+
+
 SUMMARY							*ftplugin-special*
 
 Summary of special things to use in a filetype plugin:
@@ -1564,7 +1594,7 @@ runtime directory, use the mechanism mentioned above.  When
 When you write a compiler plugin to overrule settings from a default plugin,
 don't check "current_compiler".  This plugin is supposed to be loaded
 last, thus it should be in a directory at the end of 'runtimepath'.  For Unix
-that could be ~/.vim/runtime/after/compiler.
+that could be ~/.vim/after/compiler.
 
 ==============================================================================
 

@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.1.  Last change: 2002 Jan 16
+*map.txt*       For Vim version 6.2a.  Last change: 2003 Apr 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -124,6 +124,7 @@ Then you can map ",w" to something else in another buffer: >
 	:map <buffer>  ,w  /[#&!]<CR>
 The local buffer mappings are used before the global ones.
 The "<buffer>" argument can also be used to clear mappings: >
+	:unmap <buffer> ,w
 	:mapclear <buffer>
 Local mappings are also cleared when a buffer is deleted, but not when it is
 unloaded.  Just like local option values.
@@ -172,7 +173,7 @@ There are five sets of mappings
 - For Normal mode: When typing commands.
 - For Visual mode: When typing commands while the Visual area is highlighted.
 - For Operator-pending mode: When an operator is pending (after "d", "y", "c",
-  etc.).  Example: ":omap { w" makes "y{" work like "yw" ad "d{" like "dw".
+  etc.).  Example: ":omap { w" makes "y{" work like "yw" and "d{" like "dw".
 - For Insert mode. These are also used in Replace mode.
 - For Command-line mode: When entering a ":" or "/" command.
 
@@ -353,7 +354,7 @@ that's local to the script.  See |<SID>| for details.
 							*<Plug>*
 The special key name "<Plug>" can be used for an internal mapping, which is
 not to be matched with any key sequence.  This is useful in plugins
-|write-plugin|.
+|using-<Plug>|.
 
 							*<Char>* *<Char->*
 To map a character by its decimal, octal or hexadecimal number the <Char>
@@ -396,8 +397,8 @@ To avoid mapping of the characters you type in insert or Command-line mode,
 type a CTRL-V first.  The mapping in Insert mode is disabled if the 'paste'
 option is on.
 
-Note that when an error is encountered (that causes an error message) the rest
-of the mapping is not executed.  This is Vi-compatible.
+Note that when an error is encountered (that causes an error message or beep)
+the rest of the mapping is not executed.  This is Vi-compatible.
 
 Note that the second character (argument) of the commands @zZtTfF[]rm'`"v
 and CTRL-X is not mapped.  This was done to be able to use all the named
@@ -625,6 +626,14 @@ It is possible to move the cursor after an abbreviation: >
    :iab if if ()<Left>
 This does not work if 'cpoptions' includes the '<' flag. |<>|
 
+You can even do more complicated things.  For example, to consume the space
+typed after an abbreviation: >
+   func Eatchar(pat)
+      let c = nr2char(getchar())
+      return (c =~ a:pat) ? '' : c
+   endfunc
+   iabbr <silent> if if ()<Left><C-R>=Eatchar('\s')<CR>
+
 There are no default abbreviations.
 
 Abbreviations are never recursive.  You can use ":ab f f-o-o" without any
@@ -799,7 +808,7 @@ is executed, it is transformed into a normal ex command and then executed.
 
 For starters: See section |40.2| in the user manual.
 
-							*E183*
+						*E183* *user-cmd-abmiguous*
 All user defined commands must start with an uppercase letter, to avoid
 confusion with builtin commands. (There are a few builtin commands, notably
 :Next, :Print and :X, which do start with an uppercase letter.  The builtin
@@ -969,6 +978,7 @@ The valid escape sequences are
 		into the expansion - for example, to get <bang>, use
 		<lt>bang>.
 
+							*<q-args>*
 If the first two characters of an escape sequence are "q-" (for example,
 <q-args>) then the value is quoted in such a way as to make it a valid value
 for use in an expression.  This uses the argument as one single value.

@@ -124,7 +124,7 @@ protected:
 	    LPCSTR pszCmd,
 	    LPCSTR pszParam,
 	    int iShowCmd,
-	    bool useDiff);
+	    int useDiff);
 
 public:
     int		 m_cntOfHWnd;

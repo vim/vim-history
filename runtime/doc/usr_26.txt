@@ -1,4 +1,4 @@
-*usr_26.txt*	For Vim version 6.1.  Last change: 2001 Sep 03
+*usr_26.txt*	For Vim version 6.2a.  Last change: 2002 Oct 29
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -118,9 +118,9 @@ substitution command on all these files: >
 The ":argdo" command takes an argument that is another command.  That command
 will be executed on all files in the argument list.
    The "%s" substitute command that follows works on all lines.  It finds the
-word "x_cnt" with "\<x_cnt\>".  the "\<" and "\>" are used to match the whole
+word "x_cnt" with "\<x_cnt\>".  The "\<" and "\>" are used to match the whole
 word only, and not "px_cnt" or "x_cnt2".
-   The flags for the substitute command include "g" to replace all occurences
+   The flags for the substitute command include "g" to replace all occurrences
 of "x_cnt" in the same line.  The "e" flag is used to avoid an error message
 when "x_cnt" does not appear in the file.  Otherwise ":argdo" would abort on
 the first file where "x_cnt" was not found.

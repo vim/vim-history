@@ -63,7 +63,7 @@ static void foldDelMarker __ARGS((linenr_T lnum, char_u *marker, int markerlen))
 static void foldUpdateIEMS __ARGS((win_T *wp, linenr_T top, linenr_T bot));
 static void parseMarker __ARGS((win_T *wp));
 
-static char *e_nofold = N_("No fold found");
+static char *e_nofold = N_("E490: No fold found");
 
 /*
  * While updating the folds lines between invalid_top and invalid_bot have an

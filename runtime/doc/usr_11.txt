@@ -1,4 +1,4 @@
-*usr_11.txt*	For Vim version 6.1.  Last change: 2001 Sep 03
+*usr_11.txt*	For Vim version 6.2a.  Last change: 2003 Apr 09
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -108,7 +108,7 @@ swap file name.  Vim will then finds out the name of the original file from
 the swap file.
 
 Example: >
-	Vim -r .help.txt.swo
+	vim -r .help.txt.swo
 
 This is also handy when the swap file is in another directory than expected.
 If this still does not work, see what file names Vim reports and rename the
@@ -177,10 +177,12 @@ something wrong.  It may be one of these two situations.
 		modified: YES ~
 
    Then you very likely have a crashed edit session that is worth recovering.
-      If the date of the file is newer than the date of the swap file, it was
-   probably changed after the crash.  Perhaps you recovered it earlier, but
-   didn't delete the swap file?  Vim will warn you for this with this extra
-   line:
+      If the date of the file is newer than the date of the swap file, then
+   either it was changed after the crash (perhaps you recovered it earlier,
+   but didn't delete the swap file?), or else the file was saved before the
+   crash but after the last write of the swap file (then you're lucky: you
+   don't even need that old swap file). Vim will warn you for this with this
+   extra line:
 
       NEWER than swap file! ~
 

@@ -1,4 +1,4 @@
-*gui_x11.txt*   For Vim version 6.1.  Last change: 2001 Sep 07
+*gui_x11.txt*   For Vim version 6.2a.  Last change: 2003 Apr 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -50,6 +50,8 @@ color.
 When using "gvim -f" and then ":gui", Vim will run in the foreground.  The
 "-f" argument will be remembered.  To force running Vim in the background use
 ":gui -b".
+
+"gvim --nofork" does the same as "gvim -f".
 
 If you want the GUI to run in the foreground always, include the 'f'
 flag in 'guioptions'.  |-f|.
@@ -166,7 +168,7 @@ The resources can also be set with arguments to vim:
    -menufontset {fontset} Use {fontset} for menu items	*-menufontset*
    -mf {font}		idem				*-mf*
    -geometry {geom}	Use {geom} for initial geometry	*-geometry*
-   -geom {geom}		idem				*-geom*
+   -geom {geom}		idem, see |-geometry-example|	*-geom*
    -borderwidth {width}	Use a border width of {width}	*-borderwidth*
    -bw {width}		idem				*-bw*
 							*-scrollbarwidth*
@@ -188,6 +190,12 @@ and some don't.  These two examples will both give yellow text on a blue
 background:
     gvim -fg Yellow -bg Blue -reverse
     gvim -bg Yellow -fg Blue -reverse
+
+							*-geometry-example*
+An example for the geometry argument: >
+	gvim -geometry 80x63+8+100
+This creates a window with 80 columns and 63 lines at position 8 pixels from
+the left and 100 pixels from the top of the screen.
 
 ==============================================================================
 3. Shell Commands					*gui-pty*
@@ -306,6 +314,8 @@ stuff like -bg, -fg, etc).  The ones that are supported are:
     -geom  or  -geometry    .geometry		size of the gvim window
     -rv  or  -reverse	    *reverseVideo	white text on black background
     -display					display to be used
+    -fg -foreground {color}			foreground color
+    -bg -background {color}			background color
 
 To set the font, see |'guifont'|.  For GTK, there's also a menu option that
 does this.
@@ -315,14 +325,19 @@ internally.  Look in the GTK documentation for how they are used:
 	--sync
 	--gdk-debug
 	--gdk-no-debug
-	--no-xshm
-	--xim-preedit
-	--xim-status
+	--no-xshm	(not in GTK+ 2)
+	--xim-preedit	(not in GTK+ 2)
+	--xim-status	(not in GTK+ 2)
 	--gtk-debug
 	--gtk-no-debug
 	--g-fatal-warnings
 	--gtk-module
 	--display	(GTK+ counterpart of -display; works the same way.)
+	--screen	(The screen number; for GTK+ 2.2 multihead support.)
+
+These arguments are ignored when the |+netbeans_intg| feature is used:
+	-xrm
+	-mf
 
 As for colors, vim's color settings (for syntax highlighting) is still
 done the traditional vim way.  See |:highlight| for more help.
@@ -331,6 +346,8 @@ If you want to set the colors of remaining gui components (e.g., the
 menubar, scrollbar, whatever), those are GTK specific settings and you
 need to set those up in some sort of gtkrc file.  you'll have to refer
 to the GTK documentation, however little there is, on how to do this.
+See http://developer.gnome.org/doc/API/2.0/gtk/gtk-Resource-Files.html
+for more information.
 
 						*gtk-tooltip-colors*
 Example, which sets the tooltip colors to black on light-yellow: >
@@ -343,9 +360,9 @@ Example, which sets the tooltip colors to black on light-yellow: >
 
 	widget "gtk-tooltips*"		style "tooltips"
 
-Write this in the file ~/.gtkrc and it will be used by GTK.  Don't forget to
-remove the ">" characters from the first column.
-
+Write this in the file ~/.gtkrc and it will be used by GTK+.  For GTK+ 2
+you might have to use the file ~/.gtkrc-2.0 instead, depending on your
+distribution.
 
 Using Vim as a GTK+ plugin				*gui-gtk-socketid*
 
@@ -365,25 +382,54 @@ application to spawn the Vim correctly.  For more details on GTK+ sockets, see
 http://www.gtk.org/api/
 
 Note that this feature requires the latest GTK version.  GTK 1.2.10 still has
-a small problem.
+a small problem.  The socket feature has not yet been tested with GTK+ 2 --
+feel free to volunteer.
 
 ==============================================================================
 6. GNOME version				*gui-gnome* *Gnome* *GNOME*
 
-The Gnome GUI works just like the GTK version.  It only looks a bit different.
-See |GTK| above for how it works.
+The GNOME GUI works just like the GTK+ version.  See |GTK+| above for how it
+works.  It looks a bit different though, and implements one important feature
+that's not available in the plain GTK+ GUI:  Interaction with the session
+manager. |gui-gnome-session|
 
 These are the different looks:
-- Uses GNOME dialogs.
+- Uses GNOME dialogs (GNOME 1 only).  The GNOME 2 GUI uses the same nice
+  dialogs as the GTK+ 2 version.
 - Uses the GNOME dock, so that the toolbar and menubar can be moved to
   different locations other than the top (e.g., the toolbar can be placed on
-  the left, right, top, or bottom).  The positioning of the menubar and
-  toolbar isn't saved right now; I think that's for GNOME session management
-  which isn't supported (yet).
+  the left, right, top, or bottom).  The placement of the menubar and
+  toolbar is only saved in the GNOME 2 version.
 - That means the menubar and toolbar handles are back!  Yeah!  And the
   resizing grid still works too.
 
-Gnome is automatically compiled with if it was found by configure.
+GNOME is automatically compiled with if it was found by configure.
+(FIXME: Is this still true?  Use --enable-gnome-check to force it to.)
+
+GNOME session support			*gui-gnome-session* *gnome-session*
+
+On logout, Vim shows the well-known exit confirmation dialog if any buffers
+are modified.  Clicking [Cancel] will stop the logout process.  Otherwise the
+current session is stored to disk by using the |:mksession| command, and
+restored the next time you log in.
+
+The GNOME session support should also work with the KDE session manager.
+If you are experiencing any problems please report them as bugs.
+
+Note: The automatic session save works entirely transparent, in order to
+avoid conflicts with your own session files, scripts and autocommands.  That
+means in detail:
+- The session file is stored to a separate directory (usually $HOME/.gnome2).
+- 'sessionoptions' is ignored, and a hardcoded set of appropriate flags is
+  used instead: >
+	blank,curdir,folds,globals,help,options,winsize
+- The internal variable |v:this_session| is not changed when storing the
+  session.  Also, it is restored to its old value when logging in again.
+
+The position and size of the GUI window is not saved by Vim since doing so
+is the window manager's job.  But if compiled with GTK+ 2 support, Vim helps
+the WM to identify the window by restoring the window role (using the |--role|
+command line argument).
 
 ==============================================================================
 7. Compiling						*gui-x11-compiling*
@@ -399,6 +445,12 @@ you can already successful compile, build, and execute a GTK+ program.  The
 reason for this is because the compiler flags (CFLAGS) and link flags
 (LDFLAGS) are obtained through the 'gtk-config' shell script.
 
+If you want to build with GTK+ 2 support pass the --enable-gtk2-check argument
+to ./configure.  Optionally, support for GNOME 2 will be compiled if the
+--enable-gnome-check option is also given.  Note that the support for GTK+ 2
+is still experimental.  However, many people have reported that it works just
+fine for them.
+
 Otherwise, if you are using Motif or Athena, when you have the Motif or Athena
 files in a directory where configure doesn't look, edit the Makefile to enter
 the names of the directories.  Search for "GUI_INC_LOC" for an example to set
@@ -411,8 +463,15 @@ if using v1.0.6.  For instance, there are no tearoff menus present in v1.0.6.
 Using a version from GTK+'s CVS tree may or may not work, and is therefore not
 supported and not recommended.
 
+For the experimental GTK+ 2 GUI, using the latest release of the GTK+ 2.0 or
+GTK+ 2.2 series is recommended.  CVS HEAD seems to work fine most of time as
+well.
+
 Lastly, although GTK+ has supposedly been ported to the Win32 platform, this
-has not been tested with Vim and is also unsupported.
+has not been tested with Vim and is also unsupported.  Also, it's unlikely to
+even compile since GTK+ GUI uses parts of the generic X11 code.  This might
+change in distant future; particularly because getting rid of the X11 centric
+code parts is also required for GTK+ framebuffer support.
 
 							*gui-x11-motif*
 For Motif, you need at least Motif version 1.2 and/or X11R5.  Motif 2.0 and

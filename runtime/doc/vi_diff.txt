@@ -1,4 +1,4 @@
-*vi_diff.txt*   For Vim version 6.1.  Last change: 2001 Sep 03
+*vi_diff.txt*   For Vim version 6.2a.  Last change: 2003 Mar 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -42,7 +42,7 @@ graphic (gr)		boolean	(default off)		*'graphic'* *'gr'*
 hardtabs (ht)		number	(default 8)		*'hardtabs'* *'ht'*
 	number of spaces that a <Tab> moves on the display
 mesg			boolean	(default on)		*'mesg'*
-novice			boolean	(default ??)		*'novice'*
+novice			boolean	(default off)		*'novice'*
 open			boolean	(default on)		*'open'*
 optimize (op)		boolean	(default off)		*'optimize'* *'op'*
 prompt			boolean	(default on)		*'prompt'*
@@ -77,7 +77,7 @@ Length of an expanded string option
 Maximum display width	   Unix and Win32: 1024 characters, otherwise 255
 			   characters
 Maximum lhs of a mapping   50 characters.
-Number of highligthing different types: 223
+Number of highlighting different types: 223
 
 Information for undo and text in registers is kept in memory, thus when making
 (big) changes the amount of (virtual) memory available limits the number of

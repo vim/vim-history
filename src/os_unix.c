@@ -1289,11 +1289,6 @@ static int get_x11_thing __ARGS((int get_title, int test_only));
  * try to get x11 window and display
  *
  * return FAIL for failure, OK otherwise
- *
- * FIXME:
- * This code is responsible for setting the window manager name of the
- * editor's window. We should provide a special version of this for usage with
- * the GTK+ widget set, which wouldn't use any direct x11 calls. (--mdcki)
  */
     static int
 get_x11_windis()
@@ -1746,12 +1741,15 @@ mch_settitle(title, icon)
 	    term_settitle(title);
 #ifdef FEAT_X11
 	else
+# ifdef FEAT_GUI_GTK
+	if (!gui.in_use)		/* don't do this if GTK+ is running */
+# endif
 	    set_x11_title(title);		/* x11 */
-#else
-# if defined(FEAT_GUI_BEOS) || defined(FEAT_GUI_PHOTON) || defined(FEAT_GUI_MAC)
+#endif
+#if defined(FEAT_GUI_GTK) || defined(FEAT_GUI_BEOS) \
+	|| defined(FEAT_GUI_PHOTON) || defined(FEAT_GUI_MAC)
 	else
 	    gui_mch_settitle(title, icon);
-# endif
 #endif
 	did_set_title = TRUE;
     }
@@ -1774,6 +1772,9 @@ mch_settitle(title, icon)
 	}
 #ifdef FEAT_X11
 	else
+# ifdef FEAT_GUI_GTK
+	if (!gui.in_use)		/* don't do this if GTK+ is running */
+# endif
 	    set_x11_icon(icon);			/* x11 */
 #endif
 	did_set_icon = TRUE;
@@ -2967,7 +2968,7 @@ check_mouse_termcode()
 mch_screenmode(arg)
     char_u   *arg;
 {
-    EMSG(_("E359: Screen mode setting not supported"));
+    EMSG(_(e_screenmode));
     return FAIL;
 }
 
@@ -5323,7 +5324,7 @@ mch_libcall(libname, funcname, argstring, argint, string_result, number_result)
 
     if (!success)
     {
-	EMSG2(_("E364: Library call failed for \"%s()\""), funcname);
+	EMSG2(_(e_libcall), funcname);
 	return FAIL;
     }
 

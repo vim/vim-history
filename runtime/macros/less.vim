@@ -1,6 +1,6 @@
 " Vim script to work like "less"
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2002 Feb 28
+" Last Change:	2002 Aug 15
 
 " If not reading from stdin, skip files that can't be read.
 " Exit if there is no file at all.
@@ -35,6 +35,9 @@ set so=0
 set hlsearch
 set incsearch
 nohlsearch
+" Don't remember file names and positions
+set viminfo=
+set nows
 
 " Used after each command: put cursor at end and display position
 if &wrap
@@ -141,8 +144,8 @@ noremap <script> % %<SID>L
 map p %
 
 " Next pattern
-noremap <script> n n<SID>L
-noremap <script> N N<SID>L
+noremap <script> n H$nzt<SID>L
+noremap <script> N HNzt<SID>L
 
 " Quitting
 noremap q :q<CR>

@@ -1,9 +1,9 @@
 " Vim syntax file
 " Language:    Lisp
-" Maintainer:  Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change: Dec 10, 2001
-" Version:     1.11
-" Latest:      http://www.erols.com/astronaut/vim/index.html#vimlinks_syntax
+" Maintainer:  Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@nasa.gov>
+" Last Change: Nov 18, 2002
+" Version:     12
+" URL:	http://www.erols.com/astronaut/vim/index.html#vimlinks_syntax
 "
 "  Thanks to F Xavier Noria for a list of 978 Common Lisp symbols
 "  taken from the HyperSpec

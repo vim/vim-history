@@ -1,4 +1,4 @@
-*fold.txt*      For Vim version 6.1.  Last change: 2002 Mar 07
+*fold.txt*      For Vim version 6.2a.  Last change: 2003 Apr 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -250,7 +250,7 @@ This does not work properly when:
   at the same time.
 
 ==============================================================================
-2. Fold commands				*fold-commands*
+2. Fold commands				*fold-commands* *E490*
 
 All folding commands start with "z".  Hint: the "z" looks like a folded piece
 of paper, if you look at it from the side.
@@ -304,9 +304,10 @@ zo		Open one fold under the cursor.  When a count is given, that
 		folds is opened for all lines in the selected area.
 
 							*zO*
-zO		Open all folds under the cursor recursively.  In Visual mode
-		it opens all folds that are in the selected area, also those
-		that are only partly selected.
+zO		Open all folds under the cursor recursively.  Folds that don't
+		contain the cursor line are unchanged.
+		In Visual mode it opens all folds that are in the selected
+		area, also those that are only partly selected.
 
 							*zc*
 zc		Close one fold under the cursor.  When a count is given, that
@@ -315,9 +316,10 @@ zc		Close one fold under the cursor.  When a count is given, that
 		'foldenable' will be set.
 
 							*zC*
-zC		Close all folds under the cursor recursively.  In Visual mode
-		it closes all folds that are in the selected area, also those
-		that are only partly selected.
+zC		Close all folds under the cursor recursively.  Folds that
+		don't contain the cursor line are unchanged.
+		In Visual mode it closes all folds that are in the selected
+		area, also those that are only partly selected.
 		'foldenable' will be set.
 
 							*za*
@@ -401,11 +403,13 @@ MOVING OVER FOLDS ~
 zj		Move downwards. to the start of the next fold.  A closed fold
 		is counted as one fold.
 		When a count is used, repeats the command N times.
+		This command can be used after an |operator|.
 
 							*zk*
 zk		Move upwards to the end of the previous fold.  A closed fold
 		is counted as one fold.
 		When a count is used, repeats the command N times.
+		This command can be used after an |operator|.
 
 
 EXECUTING COMMANDS ON FOLDS ~
@@ -520,7 +524,7 @@ fold column:
 
 OTHER OPTIONS
 
-'foldenable'  'fen':	Open all folds while set.
+'foldenable'  'fen':	Open all folds while not set.
 'foldexpr'    'fde':	Expression used for "expr" folding.
 'foldignore'  'fdi':	Characters used for "indent" folding.
 'foldmarker'  'fmr':	Defined markers used for "marker" folding.

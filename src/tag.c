@@ -87,8 +87,8 @@ static int test_for_current __ARGS((char_u *, char_u *, char_u *));
 #endif
 static int find_extra __ARGS((char_u **pp));
 
-static char_u *bottommsg = (char_u *)N_("at bottom of tag stack");
-static char_u *topmsg = (char_u *)N_("at top of tag stack");
+static char_u *bottommsg = (char_u *)N_("E555: at bottom of tag stack");
+static char_u *topmsg = (char_u *)N_("E556: at top of tag stack");
 
 static char_u	*tagmatchname = NULL;	/* name of last used tag */
 

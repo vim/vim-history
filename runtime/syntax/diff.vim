@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Diff (context or unified)
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 May 10
+" Last Change:	2003 Apr 02
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -17,6 +17,7 @@ syn match diffDiffer	"^Files .* and .* differ$"
 syn match diffBDiffer	"^Binary files .* and .* differ$"
 syn match diffIsA	"^File .* is a .* while file .* is a .*"
 syn match diffNoEOL	"^No newline at end of file .*"
+syn match diffCommon	"^Common subdirectories: .*"
 
 syn match diffRemoved	"^-.*"
 syn match diffRemoved	"^<.*"
@@ -61,6 +62,7 @@ if version >= 508 || !exists("did_diff_syntax_inits")
   HiLink diffBDiffer	Constant
   HiLink diffIsA	Constant
   HiLink diffNoEOL	Constant
+  HiLink diffCommon	Constant
   HiLink diffRemoved	Special
   HiLink diffChanged	PreProc
   HiLink diffAdded	Identifier

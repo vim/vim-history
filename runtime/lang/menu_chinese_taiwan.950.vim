@@ -54,7 +54,7 @@ menutrans Rep&eat<Tab>\.		重複上次動作(&E)<Tab>\.
 " ------------------------------------------------------------------------
 menutrans Cu&t<Tab>"+x			剪下(&T)<Tab>"+x
 menutrans &Copy<Tab>"+y			複製(&C)<Tab>"+y
-menutrans &Paste<Tab>"+P		貼上(&P)<Tab>"+P
+menutrans &Paste<Tab>"+gP		貼上(&P)<Tab>"+gP
 menutrans Put\ &Before<Tab>[p		貼到游標前(&B)<Tab>[p
 menutrans Put\ &After<Tab>]p		貼到游標後(&A)<Tab>]p
 menutrans &Delete<Tab>x			刪除(&D)<Tab>x

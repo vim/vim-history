@@ -23,7 +23,7 @@
 
 #define CS_USAGE_MSG(x) { \
     char buf[64]; \
-    (void)sprintf(buf, _("Usage: cs[cope] %s"), cs_cmds[(x)].usage); \
+    (void)sprintf(buf, _("E560: Usage: cs[cope] %s"), cs_cmds[(x)].usage); \
     (void)EMSG(buf); \
 }
 
@@ -140,7 +140,7 @@ do_cstag(eap)
 
     if (eap->arg == NULL || strlen((const char *)(eap->arg)) == 0)
     {
-	(void)EMSG(_("Usage: cstag <ident>"));
+	(void)EMSG(_("E562: Usage: cstag <ident>"));
 	return;
     }
 
@@ -404,7 +404,7 @@ cs_add_common(arg1, arg2, flags)
 staterr:
 	if (p_csverbose)
 	{
-	    (void)sprintf(buf, _("stat(%s) error: %d"), fname, errno);
+	    (void)sprintf(buf, _("E563: stat(%s) error: %d"), fname, errno);
 	    (void)EMSG(buf);
 	}
 	goto add_err;
@@ -448,7 +448,8 @@ staterr:
 	{
 	    if (p_csverbose)
 	    {
-		(void)sprintf(buf, _("stat(%s) error: %d"), fname2, errno);
+		(void)sprintf(buf, _("E563: stat(%s) error: %d"),
+			      fname2, errno);
 		(void)EMSG(buf);
 	    }
 	    vim_free(fname2);
@@ -471,7 +472,8 @@ staterr:
 	if (p_csverbose)
 	{
 	    (void)sprintf(buf,
-		_("%s is not a directory or a valid cscope database"), fname);
+		_("E564: %s is not a directory or a valid cscope database"),
+		fname);
 	    (void)EMSG(buf);
 	}
 	goto add_err;
@@ -554,7 +556,8 @@ cs_cnt_matches(idx)
 	{
 	    if (feof(csinfo[idx].fr_fp))
 		errno = EIO;
-	    (void)sprintf(buf, _("error reading cscope connection %d"), idx);
+	    (void)sprintf(buf, _("E565: error reading cscope connection %d"),
+			  idx);
 	    (void)EMSG(buf);
 	    return -1;
 	}
@@ -630,7 +633,7 @@ cs_create_cmd(csoption, pattern)
 	search = 8;
 	break;
     default :
-	(void)EMSG(_("unknown cscope search type"));
+	(void)EMSG(_("E561: unknown cscope search type"));
 	CS_USAGE_MSG(Find);
 	return NULL;
     }
@@ -677,7 +680,7 @@ err:
 	    (void)close(from_cs[0]);
 	if (from_cs[1] != -1)
 	    (void)close(from_cs[1]);
-	(void)EMSG(_("Could not create cscope pipes"));
+	(void)EMSG(_("E566: Could not create cscope pipes"));
 	return CSCOPE_FAILURE;
     case 0:				/* child: run cscope. */
 	if (dup2(to_cs[0], STDIN_FILENO) == -1)
@@ -782,7 +785,7 @@ cs_find(eap)
 
     if (cs_check_for_connections() == FALSE)
     {
-	(void)EMSG(_("no cscope connections"));
+	(void)EMSG(_("E567: no cscope connections"));
 	return FALSE;
     }
 
@@ -967,7 +970,7 @@ cs_insert_filelist(fname, ppath, flags, sb)
 	    csinfo[i].st_dev == sb->st_dev && csinfo[i].st_ino == sb->st_ino)
 	{
 	    if (p_csverbose)
-		(void)EMSG(_("duplicate cscope database not added"));
+		(void)EMSG(_("E568: duplicate cscope database not added"));
 	    return -1;
 	}
 
@@ -978,7 +981,7 @@ cs_insert_filelist(fname, ppath, flags, sb)
     if (i == CSCOPE_MAX_CONNECTIONS)
     {
 	if (p_csverbose)
-	    (void)EMSG(_("maximum number of cscope connections reached"));
+	    (void)EMSG(_("E569: maximum number of cscope connections reached"));
 	return -1;
     }
 
@@ -1287,7 +1290,7 @@ cs_manage_matches(matches, contexts, totmatches, cmd)
 	cs_print_tags_priv(mp, cp, cnt);
 	break;
     default:	/* should not reach here */
-	(void)EMSG(_("fatal error in cs_manage_matches"));
+	(void)EMSG(_("E570: fatal error in cs_manage_matches"));
 	return NULL;
     }
 

@@ -2,7 +2,7 @@
 " Language:     Java
 " Maintainer:   Claudio Fleiner <claudio@fleiner.com>
 " URL:          http://www.fleiner.com/vim/syntax/java.vim
-" Last Change:  2002 Mar 02
+" Last Change:  2002 Nov 14
 
 " Please check :help java.vim for comments on some of the options available.
 
@@ -29,7 +29,7 @@ syn match javaError "[\\@`]"
 syn match javaError "<<<\|\.\.\|=>\|<>\|||=\|&&=\|[^-]->\|\*\/"
 
 " use separate name so that it can be deleted in javacc.vim
-syn match javaError2 "#\|=<"
+syn match   javaError2 "#\|=<"
 JavaHiLink javaError2 javaError
 
 
@@ -157,12 +157,12 @@ if !exists("java_ignore_javadoc") && main_syntax != 'jsp'
   syntax include @javaHtml <sfile>:p:h/html.vim
   unlet b:current_syntax
   syn region  javaDocComment    start="/\*\*"  end="\*/" keepend contains=javaCommentTitle,@javaHtml,javaDocTags,javaTodo,@Spell
-  syn region  javaCommentTitle  contained matchgroup=javaDocComment start="/\*\*"   matchgroup=javaCommentTitle keepend end="\.$" end="\.[ \t\r<&]"me=e-1 end="@"me=s-1,he=s-1 end="\*/"me=s-1,he=s-1 contains=@javaHtml,javaCommentStar,javaTodo,@Spell
+  syn region  javaCommentTitle  contained matchgroup=javaDocComment start="/\*\*"   matchgroup=javaCommentTitle keepend end="\.$" end="\.[ \t\r<&]"me=e-1 end="[^{]@"me=s-2,he=s-1 end="\*/"me=s-1,he=s-1 contains=@javaHtml,javaCommentStar,javaTodo,@Spell,javaDocTags
 
-  syn region javaDocTags  contained start="{@link" end="}"
-  syn match  javaDocTags  contained "@\(see\|param\|exception\|throws\)\s\+\S\+" contains=javaDocParam
+  syn region javaDocTags  contained start="{@\(link\|linkplain\|inherit[Dd]oc\|doc[rR]oot\|value\)" end="}"
+  syn match  javaDocTags  contained "@\(see\|param\|exception\|throws\|since\)\s\+\S\+" contains=javaDocParam
   syn match  javaDocParam contained "\s\S\+"
-  syn match  javaDocTags  contained "@\(version\|author\|return\|deprecated\|since\)\>"
+  syn match  javaDocTags  contained "@\(version\|author\|return\|deprecated\|serial\|serialField\|serialData\)\>"
   syntax case match
 endif
 
@@ -256,9 +256,9 @@ if exists("java_mark_braces_in_parens_as_errors")
 endif
 
 " catch errors caused by wrong parenthesis
-syn region  javaParen  matchgroup=javaParen  transparent start="(" end=")" contains=@javaTop,javaParen1
-syn region  javaParen1 matchgroup=javaParen1 transparent start="(" end=")" contains=@javaTop,javaParen2 contained
-syn region  javaParen2 matchgroup=javaParen2 transparent start="(" end=")" contains=@javaTop,javaParen  contained
+syn region  javaParenT  transparent matchgroup=javaParen  start="("  end=")" contains=@javaTop,javaParenT1
+syn region  javaParenT1 transparent matchgroup=javaParen1 start="(" end=")" contains=@javaTop,javaParenT2 contained
+syn region  javaParenT2 transparent matchgroup=javaParen2 start="(" end=")" contains=@javaTop,javaParenT  contained
 syn match   javaParenError       ")"
 JavaHiLink javaParenError       javaError
 
@@ -281,7 +281,7 @@ if version >= 508 || !exists("did_java_syn_inits")
   JavaHiLink javaConditional		Conditional
   JavaHiLink javaRepeat			Repeat
   JavaHiLink javaExceptions		Exception
-  JavaHiLink javaAssert			Statement
+  JavaHiLink javaAssert 		Statement
   JavaHiLink javaStorageClass		StorageClass
   JavaHiLink javaMethodDecl		javaStorageClass
   JavaHiLink javaClassDecl		javaStorageClass

@@ -112,6 +112,7 @@ struct funccall
 {
     ufunc_T	*func;		/* function being called */
     int		linenr;		/* next line to be executed */
+    int		returned;	/* ":return" used */
     int		argcount;	/* nr of arguments */
     VAR		argvars;	/* arguments */
     var		a0_var;		/* "a:0" variable */
@@ -121,10 +122,31 @@ struct funccall
     VAR		retvar;		/* return value variable */
     linenr_T	breakpoint;	/* next line with breakpoint or zero */
     int		dbg_tick;	/* debug_tick when breakpoint was set */
+    int		level;		/* top nesting level of executed function */
 };
+
+/*
+ * Return the nesting level for a funccall cookie.
+ */
+    int
+func_level(cookie)
+    void *cookie;
+{
+    return ((struct funccall *)cookie)->level;
+}
 
 /* pointer to funccal for currently active function */
 struct funccall *current_funccal = NULL;
+
+/*
+ * Return TRUE when a function was ended by a ":return" command.
+ */
+    int
+current_func_returned()
+{
+    return current_funccal->returned;
+}
+
 
 /*
  * Array to hold the value of v: variables.
@@ -175,6 +197,8 @@ struct vimvar
     {"progname", sizeof("progname") - 1, NULL, VAR_STRING, VV_RO},
     {"servername", sizeof("servername") - 1, NULL, VAR_STRING, VV_RO},
     {"dying", sizeof("dying") - 1, NULL, VAR_NUMBER, VV_RO},
+    {"exception", sizeof("exception") - 1, NULL, VAR_STRING, VV_RO},
+    {"throwpoint", sizeof("throwpoint") - 1, NULL, VAR_STRING, VV_RO},
 };
 
 static int eval0 __ARGS((char_u *arg,  VAR retvar, char_u **nextcmd, int evaluate));
@@ -383,6 +407,93 @@ set_internal_string_var(name, value)
 }
 #endif
 
+# if defined(FEAT_MBYTE) || defined(PROTO)
+    int
+eval_charconvert(enc_from, enc_to, fname_from, fname_to)
+    char_u	*enc_from;
+    char_u	*enc_to;
+    char_u	*fname_from;
+    char_u	*fname_to;
+{
+    int		err = FALSE;
+
+    set_vim_var_string(VV_CC_FROM, enc_from, -1);
+    set_vim_var_string(VV_CC_TO, enc_to, -1);
+    set_vim_var_string(VV_FNAME_IN, fname_from, -1);
+    set_vim_var_string(VV_FNAME_OUT, fname_to, -1);
+    if (eval_to_bool(p_ccv, &err, NULL, FALSE))
+	err = TRUE;
+    set_vim_var_string(VV_CC_FROM, NULL, -1);
+    set_vim_var_string(VV_CC_TO, NULL, -1);
+    set_vim_var_string(VV_FNAME_IN, NULL, -1);
+    set_vim_var_string(VV_FNAME_OUT, NULL, -1);
+
+    if (err)
+	return FAIL;
+    return OK;
+}
+# endif
+
+# if defined(FEAT_POSTSCRIPT) || defined(PROTO)
+    int
+eval_printexpr(fname, args)
+    char_u	*fname;
+    char_u	*args;
+{
+    int		err = FALSE;
+
+    set_vim_var_string(VV_FNAME_IN, fname, -1);
+    set_vim_var_string(VV_CMDARG, args, -1);
+    if (eval_to_bool(p_pexpr, &err, NULL, FALSE))
+	err = TRUE;
+    set_vim_var_string(VV_FNAME_IN, NULL, -1);
+    set_vim_var_string(VV_CMDARG, NULL, -1);
+
+    if (err)
+    {
+	mch_remove(fname);
+	return FAIL;
+    }
+    return OK;
+}
+# endif
+
+# if defined(FEAT_DIFF) || defined(PROTO)
+    void
+eval_diff(origfile, newfile, outfile)
+    char_u	*origfile;
+    char_u	*newfile;
+    char_u	*outfile;
+{
+    int		err = FALSE;
+
+    set_vim_var_string(VV_FNAME_IN, origfile, -1);
+    set_vim_var_string(VV_FNAME_NEW, newfile, -1);
+    set_vim_var_string(VV_FNAME_OUT, outfile, -1);
+    (void)eval_to_bool(p_dex, &err, NULL, FALSE);
+    set_vim_var_string(VV_FNAME_IN, NULL, -1);
+    set_vim_var_string(VV_FNAME_NEW, NULL, -1);
+    set_vim_var_string(VV_FNAME_OUT, NULL, -1);
+}
+
+    void
+eval_patch(origfile, difffile, outfile)
+    char_u	*origfile;
+    char_u	*difffile;
+    char_u	*outfile;
+{
+    int		err;
+
+    set_vim_var_string(VV_FNAME_IN, origfile, -1);
+    set_vim_var_string(VV_FNAME_DIFF, difffile, -1);
+    set_vim_var_string(VV_FNAME_OUT, outfile, -1);
+    (void)eval_to_bool(p_pex, &err, NULL, FALSE);
+    set_vim_var_string(VV_FNAME_IN, NULL, -1);
+    set_vim_var_string(VV_FNAME_DIFF, NULL, -1);
+    set_vim_var_string(VV_FNAME_OUT, NULL, -1);
+}
+# endif
+
 /*
  * Top level evaluation function, returning a boolean.
  * Sets "error" to TRUE if there was an error.
@@ -404,10 +515,42 @@ eval_to_bool(arg, error, nextcmd, skip)
     {
 	*error = TRUE;
     }
-    else if (!skip)
+    else
     {
 	*error = FALSE;
-	retval = (get_var_number(&retvar) != 0);
+	if (!skip)
+	{
+	    retval = (get_var_number(&retvar) != 0);
+	    clear_var(&retvar);
+	}
+    }
+    if (skip)
+	--emsg_skip;
+
+    return retval;
+}
+
+/*
+ * Top level evaluation function, returning a string.  If "skip" is TRUE,
+ * only parsing to "nextcmd" is done, without reporting errors.  Return
+ * pointer to allocated memory, or NULL for failure or when "skip" is TRUE.
+ */
+    char_u *
+eval_to_string_skip(arg, nextcmd, skip)
+    char_u	*arg;
+    char_u	**nextcmd;
+    int		skip;	    /* only parse, don't execute */
+{
+    var		retvar;
+    char_u	*retval;
+
+    if (skip)
+	++emsg_skip;
+    if (eval0(arg, &retvar, nextcmd, !skip) == FAIL || skip)
+	retval = NULL;
+    else
+    {
+	retval = vim_strsave(get_var_string(&retvar));
 	clear_var(&retvar);
     }
     if (skip)
@@ -694,6 +837,7 @@ ex_let(eap)
 
 		if (!vim_iswhite(*name_end) && !ends_excmd(*name_end))
 		{
+		    emsg_severe = TRUE;
 		    EMSG(_(e_trailing));
 		    break;
 		}
@@ -706,8 +850,21 @@ ex_let(eap)
 							 expr_end, name_end);
 			if (temp_string == NULL)
 			{
-			    EMSG2(_(e_invarg2), arg);
-			    break;
+			    /*
+			     * Report an invalid expression in braces, unless
+			     * the expression evaluation has been cancelled due
+			     * to an aborting error, an interrupt, or an
+			     * exception.
+			     */
+			    if (!aborting())
+			    {
+				emsg_severe = TRUE;
+				EMSG2(_(e_invarg2), arg);
+				break;
+			    }
+			    error = TRUE;
+			    arg = skipwhite(name_end);
+			    continue;
 			}
 			arg = temp_string;
 			arg_len = STRLEN(temp_string);
@@ -874,7 +1031,15 @@ ex_let(eap)
 		    temp_string = make_expanded_name(arg, expr_start,
 								 expr_end, p);
 		    if (temp_string == NULL)
-			EMSG2(_(e_invarg2), arg);
+		    {
+			/*
+			 * Report an invalid expression in braces, unless the
+			 * expression evaluation has been cancelled due to an
+			 * aborting error, an interrupt, or an exception.
+			 */
+			if (!aborting())
+			    EMSG2(_(e_invarg2), arg);
+		    }
 		    else
 		    {
 			set_var(temp_string, &retvar);
@@ -1046,6 +1211,10 @@ ex_call(eap)
 	clear_var(&retvar);
 	if (doesrange || eap->skip)
 	    break;
+	/* Stop when immediately aborting on error, or when an interrupt
+	 * occurred or an exception was thrown but not caught. */
+	if (aborting())
+	    break;
     }
     if (eap->skip)
 	--emsg_skip;
@@ -1085,6 +1254,7 @@ ex_unlet(eap)
 
 	if (!vim_iswhite(*name_end) && !ends_excmd(*name_end))
 	{
+	    emsg_severe = TRUE;
 	    EMSG(_(e_trailing));
 	    break;
 	}
@@ -1100,8 +1270,18 @@ ex_unlet(eap)
 							 expr_end, name_end);
 		if (temp_string == NULL)
 		{
-		    EMSG2(_(e_invarg2), arg);
-		    break;
+		    /*
+		     * Report an invalid expression in braces, unless the
+		     * expression evaluation has been cancelled due to an
+		     * aborting error, an interrupt, or an exception.
+		     */
+		    if (!aborting())
+		    {
+			emsg_severe = TRUE;
+			EMSG2(_(e_invarg2), arg);
+			break;
+		    }
+		    error = TRUE;
 		}
 		else
 		{
@@ -1316,7 +1496,13 @@ eval0(arg, retvar, nextcmd, evaluate)
     {
 	if (ret != FAIL)
 	    clear_var(retvar);
-	EMSG2(_(e_invexpr2), arg);
+	/*
+	 * Report the invalid expression unless the expression evaluation has
+	 * been cancelled due to an aborting error, an interrupt, or an
+	 * exception.
+	 */
+	if (!aborting())
+	    EMSG2(_(e_invexpr2), arg);
 	ret = FAIL;
     }
     if (nextcmd != NULL)
@@ -1869,10 +2055,11 @@ eval6(arg, retvar, evaluate)
  * Handle sixth level expression:
  *  number		number constant
  *  "string"		string contstant
- *  *option-name	option value
+ *  'string'		literal string contstant
+ *  &option-name	option value
  *  @r			register contents
  *  identifier		variable value
- *  funcion()		function call
+ *  function()		function call
  *  $VAR		environment variable
  *  (expression)	nested expression
  *
@@ -2004,9 +2191,16 @@ eval7(arg, retvar, evaluate)
 		else
 		{
 		    if (**arg == '(')		/* recursive! */
+		    {
 			ret = get_func_var(s, len, retvar, arg,
 				  curwin->w_cursor.lnum, curwin->w_cursor.lnum,
 				  &len, evaluate);
+			/* Stop the expression evaluation when immediately
+			 * aborting on error, or when an interrupt occurred or
+			 * an exception was thrown but not caught. */
+			if (aborting())
+			    ret = FAIL;
+		    }
 		    else if (evaluate)
 			ret = get_var_var(s, len, retvar);
 		}
@@ -2166,7 +2360,7 @@ get_option_var(arg, retvar, evaluate)
 }
 
 /*
- * Allocate a variable for an string constant.
+ * Allocate a variable for a string constant.
  * Return OK or FAIL.
  */
     static int
@@ -2751,7 +2945,11 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
 	    fp = find_func(fname);
 #ifdef FEAT_AUTOCMD
 	    if (fp == NULL && apply_autocmds(EVENT_FUNCUNDEFINED,
-						    fname, fname, TRUE, NULL))
+						    fname, fname, TRUE, NULL)
+#ifdef FEAT_EVAL
+		    && !aborting()
+#endif
+	       )
 	    {
 		/* executed an autocommand, search for function again */
 		fp = find_func(fname);
@@ -2813,7 +3011,11 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
     while (--argcount >= 0)
 	clear_var(&argvars[argcount]);
 
-    if (error < ERROR_NONE)
+    /*
+     * Report an error unless the argument evaluation or function call has been
+     * cancelled due to an aborting error, an interrupt, or an exception.
+     */
+    if (error < ERROR_NONE && !aborting())
 	EMSG2((char_u *)_(errors[error]), name);
 
     name[len] = cc;
@@ -3540,9 +3742,7 @@ f_exists(argvars, retvar)
 	s = find_name_end(name, &expr_start, &expr_end);
 	if (expr_start != NULL)
 	{
-	    ++emsg_skip;
 	    temp_string = make_expanded_name(name, expr_start, expr_end, s);
-	    --emsg_skip;
 	    if (temp_string != NULL)
 	    {
 		len = STRLEN(temp_string);
@@ -4282,6 +4482,9 @@ f_has(argvars, retvar)
 #ifdef FEAT_DIGRAPHS
 	"digraphs",
 #endif
+#ifdef FEAT_DND
+	"dnd",
+#endif
 #ifdef FEAT_EMACS_TAGS
 	"emacs_tags",
 #endif
@@ -4324,6 +4527,9 @@ f_has(argvars, retvar)
 #endif
 #ifdef FEAT_GUI_GTK
 	"gui_gtk",
+# ifdef HAVE_GTK2
+	"gui_gtk2",
+# endif
 #endif
 #ifdef FEAT_GUI_MAC
 	"gui_mac",
@@ -7052,6 +7258,40 @@ set_vim_var_string(idx, val, len)
 	vimvars[idx].val = vim_strnsave(val, len);
 }
 
+/*
+ * Get or set v:exception.  If "oldval" == NULL, return the current value.
+ * Otherwise, restore the value to "oldval" and return NULL.
+ * Must always be called in pairs to save and restore v:exception!  Does not
+ * take care of memory allocations.
+ */
+    char_u *
+v_exception(oldval)
+    char_u	*oldval;
+{
+    if (oldval == NULL)
+	return vimvars[VV_EXCEPTION].val;
+
+    vimvars[VV_EXCEPTION].val = oldval;
+    return NULL;
+}
+
+/*
+ * Get or set v:throwpoint.  If "oldval" == NULL, return the current value.
+ * Otherwise, restore the value to "oldval" and return NULL.
+ * Must always be called in pairs to save and restore v:throwpoint!  Does not
+ * take care of memory allocations.
+ */
+    char_u *
+v_throwpoint(oldval)
+    char_u	*oldval;
+{
+    if (oldval == NULL)
+	return vimvars[VV_THROWPOINT].val;
+
+    vimvars[VV_THROWPOINT].val = oldval;
+    return NULL;
+}
+
 #if defined(FEAT_AUTOCMD) || defined(PROTO)
 /*
  * Set v:cmdarg.
@@ -7653,7 +7893,13 @@ ex_echo(eap)
 	p = arg;
 	if (eval1(&arg, &retvar, !eap->skip) == FAIL)
 	{
-	    EMSG2(_(e_invexpr2), p);
+	    /*
+	     * Report the invalid expression unless the expression evaluation
+	     * has been cancelled due to an aborting error, an interrupt, or an
+	     * exception.
+	     */
+	    if (!aborting())
+		EMSG2(_(e_invexpr2), p);
 	    break;
 	}
 	if (!eap->skip)
@@ -7749,7 +7995,13 @@ ex_execute(eap)
 	p = arg;
 	if (eval1(&arg, &retvar, !eap->skip) == FAIL)
 	{
-	    EMSG2(_(e_invexpr2), p);
+	    /*
+	     * Report the invalid expression unless the expression evaluation
+	     * has been cancelled due to an aborting error, an interrupt, or an
+	     * exception.
+	     */
+	    if (!aborting())
+		EMSG2(_(e_invexpr2), p);
 	    ret = FAIL;
 	    break;
 	}
@@ -7883,7 +8135,17 @@ ex_function(eap)
     p = eap->arg;
     name = trans_function_name(&p, eap->skip, FALSE);
     if (name == NULL && !eap->skip)
-	return;
+    {
+	/*
+	 * Return on an invalid expression in braces, unless the expression
+	 * evaluation has been cancelled due to an aborting error, an
+	 * interrupt, or an exception.
+	 */
+	if (!aborting())
+	    return;
+	else
+	    eap->skip = TRUE;
+    }
 #ifdef FEAT_MAGIC_BRACES
     /* An error in a function call during evaluation of an expression in magic
      * braces should not cause the function not to be defined. */
@@ -8071,10 +8333,12 @@ ex_function(eap)
 		break;
 	    }
 
-	    /* Increase indent inside "if" and "while", decrease at "end" */
+	    /* Increase indent inside "if", "while", and "try", decrease
+	     * at "end". */
 	    if (indent > 2 && STRNCMP(p, "end", 3) == 0)
 		indent -= 2;
-	    else if (STRNCMP(p, "if", 2) == 0 || STRNCMP(p, "wh", 2) == 0)
+	    else if (STRNCMP(p, "if", 2) == 0 || STRNCMP(p, "wh", 2) == 0
+		    || STRNCMP(p, "try", 3) == 0)
 		indent += 2;
 
 	    /* Check for defining a function inside this function. */
@@ -8207,7 +8471,15 @@ trans_function_name(pp, skip, internal)
 	temp_string = make_expanded_name(start, expr_start, expr_end, end);
 	if (temp_string == NULL)
 	{
-	    EMSG2(_(e_invarg2), start);
+	    /*
+	     * Report an invalid expression in braces, unless the expression
+	     * evaluation has been cancelled due to an aborting error, an
+	     * interrupt, or an exception.
+	     */
+	    if (!aborting())
+		EMSG2(_(e_invarg2), start);
+	    else
+		*pp = end;
 	    return NULL;
 	}
 	start = temp_string;
@@ -8238,15 +8510,10 @@ trans_function_name(pp, skip, internal)
 	    lead += (int)STRLEN(sid_buf);
 	}
     }
-    else
+    else if (!internal && !ASCII_ISUPPER(*start))
     {
-	if (!internal && !ASCII_ISUPPER(*start))
-	{
-	    EMSG2(_("E128: Function name must start with a capital: %s"),
-								       start);
-	    return NULL;
-	}
-	lead = 0;
+	EMSG2(_("E128: Function name must start with a capital: %s"), start);
+	return NULL;
     }
     name = alloc((unsigned)(len + lead + 1));
     if (name != NULL)
@@ -8507,6 +8774,8 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
     fc.retvar = retvar;
     retvar->var_val.var_number = 0;
     fc.linenr = 0;
+    fc.returned = FALSE;
+    fc.level = ex_nesting_level;
     fc.a0_var.var_type = VAR_NUMBER;
     fc.a0_var.var_val.var_number = argcount - fp->args.ga_len;
     fc.a0_var.var_name = NULL;
@@ -8594,7 +8863,9 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
     {
 	++no_wait_return;
 	msg_scroll = TRUE;	    /* always scroll up, don't overwrite */
-	if (fc.retvar->var_type == VAR_NUMBER)
+	if (aborting())
+	    smsg((char_u *)_("%s aborted"), sourcing_name);
+	else if (fc.retvar->var_type == VAR_NUMBER)
 	    smsg((char_u *)_("%s returning #%ld"), sourcing_name,
 				       (long)fc.retvar->var_val.var_number);
 	else if (fc.retvar->var_type == VAR_STRING)
@@ -8657,7 +8928,7 @@ ex_return(eap)
 {
     char_u	*arg = eap->arg;
     var		retvar;
-    char_u	*p;
+    int		returning = FALSE;
 
     if (current_funccal == NULL)
     {
@@ -8667,36 +8938,157 @@ ex_return(eap)
 
     if (eap->skip)
 	++emsg_skip;
-    else
-	current_funccal->linenr = -1;
 
-    if (*arg != NUL && *arg != '|' && *arg != '\n')
+    eap->nextcmd = NULL;
+    if ((*arg != NUL && *arg != '|' && *arg != '\n')
+	    && eval0(arg, &retvar, &eap->nextcmd, !eap->skip) != FAIL)
     {
-	p = arg;
-	if (eval1(&arg, &retvar, !eap->skip) != FAIL)
+	if (!eap->skip)
+	    returning = do_return(eap, FALSE, TRUE, &retvar);
+	else
+	    clear_var(&retvar);
+    }
+    /* It's safer to return also on error. */
+    else if (!eap->skip)
+    {
+	/*
+	 * Return unless the expression evaluation has been cancelled due to an
+	 * aborting error, an interrupt, or an exception.
+	 */
+	if (!aborting())
+	    returning = do_return(eap, FALSE, TRUE, NULL);
+    }
+
+    /* When skipping or the return gets pending, advance to the next command
+     * in this line (!returning).  Otherwise, ignore the rest of the line.
+     * Following lines will be ignored by get_func_line(). */
+    if (returning)
+	eap->nextcmd = NULL;
+    else if (eap->nextcmd == NULL)	    /* no argument */
+	eap->nextcmd = check_nextcmd(arg);
+
+    if (eap->skip)
+	--emsg_skip;
+}
+
+/*
+ * Return from a function.  Possibly makes the return pending.  Also called
+ * for a pending return at the ":endtry" or after returning from an extra
+ * do_cmdline().  "reanimate" is used in the latter case.  "is_cmd" is set
+ * when called due to a ":return" command.  "value" may point to a variable
+ * with the return value.  Returns TRUE when the return can be carried out,
+ * FALSE when the return gets pending.
+ */
+    int
+do_return(eap, reanimate, is_cmd, value)
+    exarg_T	*eap;
+    int		reanimate;
+    int		is_cmd;
+    void	*value;
+{
+    int		idx;
+    struct condstack *cstack = eap->cstack;
+
+    if (reanimate)
+	/* Undo the return. */
+	current_funccal->returned = FALSE;
+
+    /*
+     * Cleanup (and inactivate) conditionals, but stop when a try conditional
+     * not in its finally clause (which then is to be executed next) is found.
+     * In this case, make the ":return" pending for execution at the ":endtry".
+     * Otherwise, return normally.
+     */
+    idx = cleanup_conditionals(eap->cstack, 0, TRUE);
+    if (idx >= 0)
+    {
+	cstack->cs_pending[idx] = CSTP_RETURN;
+
+	if (!is_cmd && !reanimate)
+	    /* A pending return again gets pending.  "value" points to an
+	     * allocated variable with the value of the original ":return"'s
+	     * argument if present or is NULL else. */
+	    cstack->cs_retvar[idx] = value;
+	else
 	{
-	    if (!eap->skip)
+	    /* When undoing a return in order to make it pending, get the stored
+	     * return value. */
+	    if (reanimate)
+		value = current_funccal->retvar;
+
+	    if (value != NULL)
 	    {
-		clear_var(current_funccal->retvar);
-		*current_funccal->retvar = retvar;
+		/* Store the value of the pending return. */
+		if ((cstack->cs_retvar[idx] = alloc_var()) != NULL)
+		    *(VAR)cstack->cs_retvar[idx] = *(VAR)value;
+		else
+		    EMSG(_(e_outofmem));
 	    }
 	    else
-		clear_var(&retvar);
-	}
-	else
-	    EMSG2(_(e_invexpr2), p);
-    }
+		cstack->cs_retvar[idx] = NULL;
 
-    /* when skipping, advance to the next command in this line.  When not
-     * skipping, ignore the rest of the line.  Following lines will be ignored
-     * by get_func_line(). */
-    if (eap->skip)
-    {
-	--emsg_skip;
-	eap->nextcmd = check_nextcmd(arg);
+	    if (reanimate)
+	    {
+		/* The pending return value could be overwritten by a ":return"
+		 * without argument in a finally clause; reset the default
+		 * return value. */
+		current_funccal->retvar->var_type = VAR_NUMBER;
+		current_funccal->retvar->var_val.var_number = 0;
+	    }
+	}
+	report_make_pending(CSTP_RETURN, value);
     }
     else
-	eap->nextcmd = NULL;
+    {
+	current_funccal->returned = TRUE;
+
+	/* If the return is carried out now, store the return value.  For
+	 * a return immediately after reanimation, the value is already
+	 * there. */
+	if (!reanimate && value != NULL)
+	{
+	    clear_var(current_funccal->retvar);
+	    *current_funccal->retvar = *(VAR)value;
+	    if (!is_cmd)
+		vim_free(value);
+	}
+    }
+
+    return idx < 0;
+}
+
+/*
+ * Free the variable with a pending return value.
+ */
+    void
+discard_pending_return(retvar)
+    void	*retvar;
+{
+    /* The variable was copied from one with an undefined var_name.  So we can't
+     * use free_var() to clear and free it. */
+    clear_var((VAR)retvar);
+    vim_free(retvar);
+}
+
+/*
+ * Generate a return command for producing the value of "retvar".  The result
+ * is an allocated string.  Used by report_pending() for verbose messages.
+ */
+    char_u *
+get_return_cmd(retvar)
+    void	*retvar;
+{
+    char_u	*s = IObuff;
+
+    if (retvar == NULL || ((VAR)retvar)->var_type == VAR_UNKNOWN)
+	s = (char_u *)":return";
+    else if (((VAR)retvar)->var_type == VAR_STRING)
+	sprintf((char *)IObuff, ":return \"%s\"",
+		((VAR)retvar)->var_val.var_string);
+    else
+	sprintf((char *)IObuff, ":return %d",
+		((VAR)retvar)->var_val.var_number);
+    return vim_strsave(s);
 }
 
 /*
@@ -8724,9 +9116,9 @@ get_func_line(c, cookie, indent)
     }
 
     gap = &fcp->func->lines;
-    if ((fcp->func->flags & FC_ABORT) && did_emsg)
+    if ((fcp->func->flags & FC_ABORT) && did_emsg && !aborted_in_try())
 	retval = NULL;
-    else if (fcp->linenr < 0 || fcp->linenr >= gap->ga_len)
+    else if (fcp->returned || fcp->linenr >= gap->ga_len)
 	retval = NULL;
     else
     {
@@ -8757,7 +9149,10 @@ func_has_ended(cookie)
 {
     struct funccall  *fcp = (struct funccall *)cookie;
 
-    return (((fcp->func->flags & FC_ABORT) && did_emsg) || fcp->linenr < 0);
+    /* Ignore the "abort" flag if the abortion behavior has been changed due to
+     * an error inside a try conditional. */
+    return (((fcp->func->flags & FC_ABORT) && did_emsg && !aborted_in_try())
+	    || fcp->returned);
 }
 
 /*
@@ -8929,93 +9324,6 @@ store_session_globals(fd)
     return OK;
 }
 #endif
-
-# if defined(FEAT_MBYTE) || defined(PROTO)
-    int
-eval_charconvert(enc_from, enc_to, fname_from, fname_to)
-    char_u	*enc_from;
-    char_u	*enc_to;
-    char_u	*fname_from;
-    char_u	*fname_to;
-{
-    int		err = FALSE;
-
-    set_vim_var_string(VV_CC_FROM, enc_from, -1);
-    set_vim_var_string(VV_CC_TO, enc_to, -1);
-    set_vim_var_string(VV_FNAME_IN, fname_from, -1);
-    set_vim_var_string(VV_FNAME_OUT, fname_to, -1);
-    if (eval_to_bool(p_ccv, &err, NULL, FALSE))
-	err = TRUE;
-    set_vim_var_string(VV_CC_FROM, NULL, -1);
-    set_vim_var_string(VV_CC_TO, NULL, -1);
-    set_vim_var_string(VV_FNAME_IN, NULL, -1);
-    set_vim_var_string(VV_FNAME_OUT, NULL, -1);
-
-    if (err)
-	return FAIL;
-    return OK;
-}
-# endif
-
-# if defined(FEAT_POSTSCRIPT) || defined(PROTO)
-    int
-eval_printexpr(fname, args)
-    char_u	*fname;
-    char_u	*args;
-{
-    int		err = FALSE;
-
-    set_vim_var_string(VV_FNAME_IN, fname, -1);
-    set_vim_var_string(VV_CMDARG, args, -1);
-    if (eval_to_bool(p_pexpr, &err, NULL, FALSE))
-	err = TRUE;
-    set_vim_var_string(VV_FNAME_IN, NULL, -1);
-    set_vim_var_string(VV_CMDARG, NULL, -1);
-
-    if (err)
-    {
-	mch_remove(fname);
-	return FAIL;
-    }
-    return OK;
-}
-# endif
-
-# if defined(FEAT_DIFF) || defined(PROTO)
-    void
-eval_diff(origfile, newfile, outfile)
-    char_u	*origfile;
-    char_u	*newfile;
-    char_u	*outfile;
-{
-    int		err = FALSE;
-
-    set_vim_var_string(VV_FNAME_IN, origfile, -1);
-    set_vim_var_string(VV_FNAME_NEW, newfile, -1);
-    set_vim_var_string(VV_FNAME_OUT, outfile, -1);
-    (void)eval_to_bool(p_dex, &err, NULL, FALSE);
-    set_vim_var_string(VV_FNAME_IN, NULL, -1);
-    set_vim_var_string(VV_FNAME_NEW, NULL, -1);
-    set_vim_var_string(VV_FNAME_OUT, NULL, -1);
-}
-
-    void
-eval_patch(origfile, difffile, outfile)
-    char_u	*origfile;
-    char_u	*difffile;
-    char_u	*outfile;
-{
-    int		err;
-
-    set_vim_var_string(VV_FNAME_IN, origfile, -1);
-    set_vim_var_string(VV_FNAME_DIFF, difffile, -1);
-    set_vim_var_string(VV_FNAME_OUT, outfile, -1);
-    (void)eval_to_bool(p_pex, &err, NULL, FALSE);
-    set_vim_var_string(VV_FNAME_IN, NULL, -1);
-    set_vim_var_string(VV_FNAME_DIFF, NULL, -1);
-    set_vim_var_string(VV_FNAME_OUT, NULL, -1);
-}
-# endif
 
 #endif /* FEAT_EVAL */
 

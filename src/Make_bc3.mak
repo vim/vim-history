@@ -47,6 +47,7 @@ EXE_dependencies =  \
  ex_cmds.obj \
  ex_cmds2.obj \
  ex_docmd.obj \
+ ex_eval.obj \
  ex_getln.obj \
  fileio.obj \
  fold.obj \
@@ -93,6 +94,7 @@ eval.obj+
 ex_cmds.obj+
 ex_cmds2.obj+
 ex_docmd.obj+
+ex_eval.obj+
 ex_getln.obj+
 fileio.obj+
 fold.obj+
@@ -172,6 +174,8 @@ ex_cmds.obj: ex_cmds.c
 ex_cmds2.obj: ex_cmds2.c
 
 ex_docmd.obj: ex_docmd.c ex_cmds.h
+
+ex_eval.obj: ex_eval.c ex_cmds.h
 
 ex_getln.obj: ex_getln.c
 

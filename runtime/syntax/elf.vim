@@ -1,8 +1,11 @@
 " Vim syntax file
-" Language   : ELF
-" Maintainer : Christian V. J. Brüssow <cvjb@epost.de>
-" Last change: Son 06 Mai 2001 20:16:23 CEST
-
+" Language:    ELF
+" Maintainer:  Christian V. J. Brüssow <cvjb@cvjb.de>
+" Last Change: Son 22 Sep 2002 00:12:38 CEST
+" Filenames:   *.ab,*.am
+" URL:         http://www.cvjb.de/comp/vim/elf.vim
+" $Id$
+"
 " ELF: Extensible Language Facility
 "      This is the Applix Inc., Macro and Builder programming language.
 "      It has nothing in common with the binary format called ELF.

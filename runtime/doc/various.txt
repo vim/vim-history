@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.1.  Last change: 2003 Mar 28
+*various.txt*   For Vim version 6.2a.  Last change: 2003 Apr 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -36,7 +36,7 @@ CTRL-L			Clear and redraw the screen (later).
 ga			Print the ascii value of the character under the
 			cursor in decimal, hexadecimal and octal.  For
 			example, when the cursor is on a 'R':
-				<R>  82,  Hex 52,  Octal 122
+				<R>  82,  Hex 52,  Octal 122 ~
 			When the character is a non-standard ASCII character,
 			but printable according to the 'isprint' option, the
 			non-printable version is also given.  When the
@@ -128,11 +128,13 @@ g8			Print the hex values of the bytes used in the
 			If the [!] is given, mappings will not be used.
 			{commands} should be a complete command.  If
 			{commands} does not finish a command, the last one
-			will be aborted as if <Esc> was typed.  The display
-			isn't updated while doing this.  This implies that an
-			insert command must be completed (to start Insert
-			mode, see |:startinsert|).  A ":" command must be
-			completed as well.
+			will be aborted as if <Esc> or <C-C> was typed.
+			The display isn't updated while ":normal" is busy.
+			This implies that an insert command must be completed
+			(to start Insert mode, see |:startinsert|).  A ":"
+			command must be completed as well.
+			{commands} cannot start with a space. Put a 1 (one)
+			before it, 1 space is one space.
 			The 'insertmode' option is ignored for {commands}.
 			This command cannot be followed by another command,
 			since any '|' is considered part of the command.
@@ -145,8 +147,8 @@ g8			Print the hex values of the bytes used in the
 			printable characters.  Example: >
 				:exe "normal \<c-w>\<c-w>"
 <			{not in Vi, of course}
-			Not available when |+ex_extra| feature was disabled at
-			compile time.
+			{not available when the |+ex_extra| feature was
+			disabled at compile time}
 
 :{range}norm[al][!] {commands}				*:normal-range*
 			Execute Normal mode commands {commands} for each line
@@ -179,6 +181,12 @@ g8			Print the hex values of the bytes used in the
 			After the command has been executed, the timestamp of
 			the current file is checked |timestamp|.
 			There cannot be a '|' in {cmd}, see |:bar|.
+			A newline character ends {cmd}, what follows is
+			interpreted as a following ":" command.  However, if
+			there is a backslash before the newline it is removed
+			and {cmd} continues.  It doesn't matter how many
+			backslashes are before the newline, only one is
+			removed.
 			On Unix the command normally runs in a non-interactive
 			shell.  If you want an interactive shell to be used
 			(to use aliases) set 'shellcmdflag' to "-ic".
@@ -243,6 +251,7 @@ N  *+dialog_con*	Support for |:confirm| with console dialog.
 N  *+dialog_con_gui*	Support for |:confirm| with GUI and console dialog.
 N  *+diff*		|vimdiff| and 'diff'
 N  *+digraphs*		|digraphs| *E196*
+   *+dnd*		Support for DnD into the "~ register |quote_~|.
 B  *+emacs_tags*	|emacs-tags| files
 N  *+eval*		expression evaluation |eval.txt|
 N  *+ex_extra*		Vim's extra Ex commands: |:center|, |:left|,
@@ -334,7 +343,7 @@ N  *+xterm_clipboard*	Unix only: xterm clipboard handling
 m  *+xterm_save*	save and restore xterm screen |xterm-screens|
 N  *+X11*		Unix only: can restore window title |X11|
 
-							*/dyn* *E370*
+							*/dyn* *E370* *E448*
 			To some of the features "/dyn" is added when the
 			feature is only available when the related library can
 			be dynamically loaded.
@@ -374,7 +383,7 @@ N  *+X11*		Unix only: can restore window title |X11|
 
 						*:sil* *:silent*
 :sil[ent][!] {command}	Execute {command} silently.  Normal messages will not
-			be given.
+			be given or added to the message history.
 			When [!] is added, error messages will also be
 			skipped, and commands and mappings will not be aborted
 			when an error is detected.  |v:errmsg| is still set.
@@ -461,10 +470,10 @@ K			Run a program to lookup the keyword under the
 :[N]sl[eep] [N]	[m]	Do nothing for [N] seconds.  When [m] is included,
 			sleep for [N] milliseconds. The count for "gs" always
 			uses seconds.  The default is one second. >
-  :sleep	  "sleep for one second
-  :5sleep	  "sleep for five seconds
-  :sleep 100m     "sleep for a hundred milliseconds
-  10gs		  "sleep for ten seconds
+			     :sleep	     "sleep for one second
+			     :5sleep	     "sleep for five seconds
+			     :sleep 100m     "sleep for a hundred milliseconds
+			     10gs	     "sleep for ten seconds
 <			Can be interrupted with CTRL-C (CTRL-Break on MS-DOS).
 			"gs" stands for "goto sleep".  While sleeping the
 			cursor is positioned in the text (if visible).  {not
@@ -572,21 +581,21 @@ Use ":q" to close the help window.
 
 If there are several matches for an item you are looking for, this is how you
 can jump to each one of them:
-1. open a help window
+1. Open a help window
 2. Use the ":tag" command with a slash prepended to the tag.  E.g.: >
 	:tag /min
 3. Use ":tnext" to jump to the next matching tag.
 
 It is possible to add help files for plugins and other items.  You don't need
-to change the distributed help files for that.  See |add-local-help|
+to change the distributed help files for that.  See |add-local-help|.
 
 To write a local help file, see |write-local-help|.
 
 Note that the title lines from the local help files are automagically added to
-the "LOCAL ADDITIONS" section in the "help.txt" help file.  This is done when
-viewing the file in Vim, the file itself is not changed.  It is done by going
-through all help files and obtaining the first line of each file.  The files
-in $VIMRUNTIME/doc are skipped.
+the "LOCAL ADDITIONS" section in the "help.txt" help file |local-additions|.
+This is done when viewing the file in Vim, the file itself is not changed.  It
+is done by going through all help files and obtaining the first line of each
+file.  The files in $VIMRUNTIME/doc are skipped.
 
 							*help-xterm-window*
 If you want to have the help in another xterm window, you could use this
@@ -615,6 +624,10 @@ On MS-Windows Vim can print your text on any installed printer.  On other
 systems a PostScript file is produced.  This can be directly sent to a
 PostScript printer.  For other printers a program like ghostscript needs to be
 used.
+
+3.1 PostScript Printing			|postscript-printing|
+3.2 PostScript Printing Troubleshooting |postscript-print-trouble|
+3.3 PostScript Utilities		|postscript-print-util|
 
 {not in Vi}
 {only available when compiled with |+printer| feature}
@@ -665,7 +678,7 @@ considerations:
    white paper.
 
 
-3.1 PostScript Printing
+3.1 PostScript Printing					*postscript-printing*
 							*E455* *E456* *E457*
 Provided you have enough disk space there should be no problems generating a
 PostScript file.  You need to have the runtime files correctly installed (if
@@ -689,7 +702,7 @@ There are currently a number of limitations with PostScript printing:
   replaced with spaces.
 
 
-3.2 PostScript Printing Troubleshooting
+3.2 PostScript Printing Troubleshooting		*postscript-print-trouble*
 
 Usually the only sign of a problem when printing with PostScript is that your
 printout does not appear.  If you are lucky you may get a printed page that
@@ -729,7 +742,7 @@ A safe printoptions setting to try is: >
 Replace "A4" with the paper size that best matches your printer paper.
 
 
-3.3 PostScript Utilities
+3.3 PostScript Utilities			*postscript-print-util*
 
 3.3.1 Ghostscript
 
@@ -905,6 +918,6 @@ This isn't perfect.  For example, when viewing a short file Vim will still use
 the whole screen.  But it works good enough for most uses, and you get syntax
 highlighting.
 
-The "h" key will give you a short overview of the available comands.
+The "h" key will give you a short overview of the available commands.
 
  vim:tw=78:ts=8:ft=help:norl:

@@ -47,7 +47,7 @@ menutrans &Redo<Tab>^R			&Повернути<Tab>^R
 menutrans Rep&eat<Tab>\.		П&овторити<Tab>\.
 menutrans Cu&t<Tab>"+x			Ви&р╕зати<Tab>"+x
 menutrans &Copy<Tab>"+y			&Коп╕ювати<Tab>"+y
-menutrans &Paste<Tab>"+P			В&ставити<Tab>"+p
+menutrans &Paste<Tab>"+gP		В&ставити<Tab>"+gP
 menutrans Put\ &Before<Tab>[p		Вставити\ попе&реду<Tab>[p
 menutrans Put\ &After<Tab>]p		Вставити\ п&╕сля<Tab>]p
 menutrans &Select\ all<Tab>ggVG		Ви&брати\ усе<Tab>ggVG

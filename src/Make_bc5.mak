@@ -443,6 +443,7 @@ vimobj = $(vimwinmain) \
 	$(OBJDIR)\ex_cmds.obj \
 	$(OBJDIR)\ex_cmds2.obj \
 	$(OBJDIR)\ex_docmd.obj \
+	$(OBJDIR)\ex_eval.obj \
 	$(OBJDIR)\ex_getln.obj \
 	$(OBJDIR)\fileio.obj \
 	$(OBJDIR)\fold.obj \
@@ -741,6 +742,8 @@ $(OBJDIR)\ex_cmds.obj:	ex_cmds.c
 $(OBJDIR)\ex_cmds2.obj:	ex_cmds2.c
 
 $(OBJDIR)\ex_docmd.obj:  ex_docmd.c ex_cmds.h
+
+$(OBJDIR)\ex_eval.obj:  ex_eval.c ex_cmds.h
 
 $(OBJDIR)\ex_getln.obj:  ex_getln.c
 

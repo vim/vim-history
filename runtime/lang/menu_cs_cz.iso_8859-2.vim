@@ -35,7 +35,7 @@ menutrans &Redo<Tab>^R			Z&ru¹it\ vrácení<Tab>^R
 menutrans Rep&eat<Tab>\.		&Opakovat<Tab>\.
 menutrans Cu&t<Tab>"+x			&Vyøíznout<Tab>"+x
 menutrans &Copy<Tab>"+y			&Kopírovat<Tab>"+y
-menutrans &Paste<Tab>"+P		V&lo¾it<Tab>"+P
+menutrans &Paste<Tab>"+gP		V&lo¾it<Tab>"+gP
 menutrans Put\ &Before<Tab>[p		Vlo¾it\ &pøed<Tab>[p
 menutrans Put\ &After<Tab>]p		Vlo¾i&t\ za<Tab>]p
 menutrans &Delete<Tab>x			&Smazat<Tab>x
@@ -51,7 +51,7 @@ menutrans Toggle\ &Ignore-case<Tab>:set\ ic!		Pøepnout\ ignorování\ &VERZÁLEK<Ta
 menutrans Toggle\ &Showmatch<Tab>:set\ sm!		Pøepnout\ &Showmatch\ \{\(\[\])\}<Tab>:set\ sm!
 menutrans &Context\ lines				Zobrazit\ konte&xt\ kurzoru
 menutrans &Virtual\ Edit				Virtuální\ p&ozice\ kurzoru
-	menutrans Never					Nikdy
+	menutrans Never						Nikdy
 	menutrans Block\ Selection				Výbìr\ Bloku
 	menutrans Insert\ mode					Insert\ mód
 	menutrans Block\ and\ Insert				Blok\ a\ Insert
@@ -61,7 +61,7 @@ menutrans Toggle\ Vi\ C&ompatible<Tab>:set\ cp!		Pøepnout\ kompatibilní\ re¾im\ 
 menutrans Search\ &Path\.\.\.				Nastavit\ &cestu\ k\ prohledávání\.\.\.
 menutrans Ta&g\ Files\.\.\.				Ta&g\ soubory\.\.\.
 menutrans Toggle\ &Toolbar				Pøepnout\ &Toolbar
-menutrans Toggle\ &Bottom\ Scrollbar			Pø&epnout\ dolní\ rolovací\ li¹tu 
+menutrans Toggle\ &Bottom\ Scrollbar			Pø&epnout\ dolní\ rolovací\ li¹tu
 menutrans Toggle\ &Left\ Scrollbar			Pøepnout\ &levou\ rolovací\ li¹tu
 menutrans Toggle\ &Right\ Scrollbar			Pøepnout\ p&ravou\ rolovací\ li¹tu
 	" {{{2 Edit -2
@@ -141,6 +141,7 @@ menutrans o&ff\ (this\ file)	vyp&nout\ (pro\ tento\ soubor)
 menutrans Co&lor\ test		Test\ &barev
 menutrans &Highlight\ test	&Test\ zvýrazòování
 menutrans &Convert\ to\ HTML	Pøevést\ &do\ HTML
+menutrans &Show\ individual\ choices	&Zobrazit\ výbìr\ mo¾ností
 " }}}
 
 " {{{ Menu Buffers

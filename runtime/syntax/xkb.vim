@@ -3,8 +3,7 @@
 " Language: XKB (X Keyboard Extension) components
 " Maintainer: David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>
 " Last Change: 2001-04-26
-" URI: http://physics.muni.cz/~yeti/download/xkb.vim
-
+" URL: http://physics.muni.cz/~yeti/download/syntax/xkb.vim
 
 " Setup
 if version >= 600
@@ -59,32 +58,32 @@ if version >= 508 || !exists("did_xkb_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink xkbModif             xkbPreproc
-  HiLink xkbTModif            xkbPreproc
-  HiLink xkbPreproc           Preproc
+  HiLink xkbModif xkbPreproc
+  HiLink xkbTModif xkbPreproc
+  HiLink xkbPreproc Preproc
 
-  HiLink xkbIdentifier        Keyword
-  HiLink xkbAction            Function
-  HiLink xkbSect              Type
-  HiLink xkbPhysicalKey       Identifier
-  HiLink xkbKeyword           Keyword
+  HiLink xkbIdentifier Keyword
+  HiLink xkbAction Function
+  HiLink xkbSect Type
+  HiLink xkbPhysicalKey Identifier
+  HiLink xkbKeyword Keyword
 
-  HiLink xkbComment           Comment
-  HiLink xkbTodo              Todo
+  HiLink xkbComment Comment
+  HiLink xkbTodo Todo
 
-  HiLink xkbConstant          Constant
-  HiLink xkbString            String
+  HiLink xkbConstant Constant
+  HiLink xkbString String
 
-  HiLink xkbSpecialChar       xkbSpecial
-  HiLink xkbSpecial           Special
+  HiLink xkbSpecialChar xkbSpecial
+  HiLink xkbSpecial Special
 
-  HiLink xkbParenError        xkbBalancingError
-  HiLink xkbBraceError        xkbBalancingError
-  HiLink xkbBraketError       xkbBalancingError
-  HiLink xkbBalancingError    xkbError
+  HiLink xkbParenError xkbBalancingError
+  HiLink xkbBraceError xkbBalancingError
+  HiLink xkbBraketError xkbBalancingError
+  HiLink xkbBalancingError xkbError
   HiLink xkbCommentStartError xkbCommentError
-  HiLink xkbCommentError      xkbError
-  HiLink xkbError             Error
+  HiLink xkbCommentError xkbError
+  HiLink xkbError Error
 
   delcommand HiLink
 endif

@@ -1,4 +1,4 @@
-*usr_29.txt*	For Vim version 6.1.  Last change: 2001 Sep 09
+*usr_29.txt*	For Vim version 6.2a.  Last change: 2002 Aug 14
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -88,7 +88,7 @@ The ":tags" command shows the list of tags that you traversed through:
 	> ~
 >
 Now to go back.  The CTRL-T command goes to the preceding tag.  In the example
-above you get back to the "write_line" function, in the call to 'write_char".
+above you get back to the "write_line" function, in the call to "write_char".
    This command takes a count argument that indicates how many tags to jump
 back.  You have gone forward, and now back.  Let's go forward again.  The
 following command goes to the tag on top of the list: >
@@ -264,7 +264,7 @@ doesn't work if the tags file isn't sorted.
 The 'taglength' option can be used to tell Vim the number of significant
 characters in a tag.
 
-When you use the SNiFF+ program, you can use the Vim interfact to it |sniff|.
+When you use the SNiFF+ program, you can use the Vim interface to it |sniff|.
 SNiFF+ is a commercial program.
 
 Cscope is a free program.  I does not only find places where an identifier is

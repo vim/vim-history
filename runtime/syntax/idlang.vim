@@ -1,424 +1,253 @@
-" Interactive Data Language syntax file (IDL, too :-)
-" located at http://www.creaso.com
-" Maintainer:	Hermann.Rochholz@gmx.de
-" Last Change:	2001 May 10
-" Cleaned a little bit up  April 2001
-" Update to vim V6.xx 2001 May
-" Preliminary, because I do not use higher language elements of IDL until now.
+" Interactive Data Language syntax file (IDL, too  [:-)] 
+" Maintainer: Aleksandar Jelenak <ajelenak AT yahoo.com>
+" Last change: 2003-02-04
+" Created by: Hermann Rochholz <Hermann.Rochholz AT gmx.de>
 
 " Remove any old syntax stuff hanging around
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
-
-" change 6.xx -----------------------------------------------------------------
 if version < 600
   syntax clear
 elseif exists("b:current_syntax")
   finish
 endif
-" change 6.xx -----------------------------------------------------------------
 
 syntax case ignore
 
-syn keyword idlangStatement	return continue endloop
-syn keyword idlangConditional	if else goto then begin of
-syn keyword idlangConditional	endcase  endelse endfor
-syn keyword idlangConditional	endif endrep endwhile
-syn keyword idlangRepeat	for while case
-"syn match   idlangStrucvar	"[a-zA-Z][a-zA-Z0-9_]*\.[a-zA-Z0-9_]*[a-zA-Z]\ *\((\|)\|\[\)"me=e-1
-syn match   idlangStrucvar	"[a-zA-Z][a-zA-Z0-9_]*\.[a-zA-Z0-9_]*[a-zA-Z]"
-syn match   idlangSystem            "\![a-zA-Z][a-zA-Z0-9_]*\.\=[a-zA-Z0-9_]*[a-zA-Z]*"
-syn match   idlangKeyword           ",\ *\/[a-zA-Z_]\{3,}"ms=s+1
+syn match idlangStatement "^\s*pro\s"
+syn match idlangStatement "^\s*function\s"
+syn keyword idlangStatement return continue mod do break
+syn keyword idlangStatement compile_opt forward_function goto
+syn keyword idlangStatement begin common end of
+syn keyword idlangStatement inherits on_ioerror begin
 
-syn keyword idlangTodo contained	TODO
+syn keyword idlangConditional if else then for while case switch
+syn keyword idlangConditional endcase endelse endfor endswitch
+syn keyword idlangConditional endif endrep endwhile repeat until
 
-syn region  idlangString	start=+"+  end=+"+
-syn region  idlangString	start=+'+  end=+'+
+syn match idlangOperator "\ and\ "
+syn match idlangOperator "\ eq\ "
+syn match idlangOperator "\ ge\ "
+syn match idlangOperator "\ gt\ "
+syn match idlangOperator "\ le\ "
+syn match idlangOperator "\ lt\ "
+syn match idlangOperator "\ ne\ "
+syn match idlangOperator /\(\ \|(\)not\ /hs=e-3
+syn match idlangOperator "\ or\ "
+syn match idlangOperator "\ xor\ "
 
-"syn match  idlangIdentifier	"\<[a-zA-Z_][a-zA-Z0-9_]*\>"
-"syn match  idlangDelimiter	"[()]"
+syn keyword idlangStop stop pause
 
-syn match   idlangPreCondit	"^@.*[A-Z][A-Z0-9_]\+"
-syn match  idlangRealNumber	"-\=\<[0-9]\+\.[0-9]\+[eE]-\=[0-9]\+\>"
-syn match  idlangRealNumber	"-\=\<[0-9]\+\.[0-9]\+\>"
-syn match  idlangNumber	"-\=\<[0-9]\+\>"
+syn match idlangStrucvar "\h\w*\(\.\h\w*\)\+"
+syn match idlangStrucvar "[),\]]\(\.\h\w*\)\+"hs=s+1
 
-" If you don't like initial tabs in idlang
-"syn match idlangShowIniTab "\t"
+syn match idlangSystem "\!\a\w*\(\.\w*\)\="
 
-syn match  idlangComment	"[\;].*$" contains=idlangTodo
+syn match idlangKeyword "\([(,]\s*\(\$\_s*\)\=\)\@<=/\h\w*"
+syn match idlangKeyword "\([(,]\s*\(\$\_s*\)\=\)\@<=\h\w*\s*="
 
-syn match  idlangConditionll	"endif\ \+else\ \+\(if\|begin\)"
-syn match  idlangConditionll	"then\ \+begin"
+syn keyword idlangTodo contained TODO
 
-syn match  idlangContinueLine	"\$\ *\($\|;\)"he=s+1 contains=idlangComment
-syn match  idlangContinueLine	/&\ *\(\a\|;\)/he=s+1 contains=ALL
+syn region idlangString start=+"+ end=+"+
+syn region idlangString start=+'+ end=+'+
 
-syn match  idlangDblCommaError	"\,\ *\,"
-syn keyword idlangStop              stop  pause
+syn match idlangPreCondit "^\s*@\w*\(\.\a\{3}\)\="
 
-syn match idlangOperator	"\ and\ "
-syn match idlangOperator	"\ eq\ "
-syn match idlangOperator	"\ ge\ "
-syn match idlangOperator	"\ gt\ "
-syn match idlangOperator	"\ le\ "
-syn match idlangOperator	"\ lt\ "
-syn match idlangOperator	"\ ne\ "
-syn match idlangOperator	/\(\ \|(\)not\ /hs=e-3
-syn match idlangOperator	"\ or\ "
-syn match idlangOperator	"\ xor\ "
+syn match idlangRealNumber "\<\d\+\(\.\=\d*e[+-]\=\d\+\|\.\d*d\|\.\d*\|d\)"
+syn match idlangRealNumber "\.\d\+\(d\|e[+-]\=\d\+\)\="
 
-syn match idlangLogicalConstant	"\ true\ "
-syn match idlangLogicalConstant	"\ false\ "
+syn match idlangNumber "\<\.\@!\d\+\.\@!\(b\|u\|us\|s\|l\|ul\|ll\|ull\)\=\>"
 
-"syn keyword idlangType	int int2 int4
-"syn keyword idlangType	integer real real8 int4
-"syn keyword idlangType	complex
-"syn keyword idlangType	character logical
+syn match  idlangComment "[\;].*$" contains=idlangTodo
 
-syn keyword idlangStructure	common strarr bytarr  complexarr  dblarr
-syn keyword idlangStructure	dcomplexarr fltarr intarr lonarr make_array
-"syn keyword idlangStructure	external intrinsic save
+syn match idlangContinueLine "\$\s*\($\|;\)"he=s+1 contains=idlangComment
+syn match idlangContinueLine "&\s*\(\h\|;\)"he=s+1 contains=ALL
 
+syn match  idlangDblCommaError "\,\s*\,"
 
-syn keyword idlangReadWrite	openw openr readf read  printf print
-syn keyword idlangReadWrite	close rewind backspace inquire write
-syn keyword idlangUnixCmd	spawn
+" List of standard routines as of IDL version 5.4.
+syn match idlangRoutine "EOS_\a*"
+syn match idlangRoutine "HDF_\a*"
+syn match idlangRoutine "CDF_\a*"
+syn match idlangRoutine "NCDF_\a*"
+syn match idlangRoutine "QUERY_\a*"
+syn match idlangRoutine "\<MAX\s*("he=e-1
+syn match idlangRoutine "\<MIN\s*("he=e-1
 
-syn keyword idlangFormat	format unit fmt status file
-syn keyword idlangFormat	err form access iostat rec
-syn keyword idlangFormat	recl blank
-
-
-syn keyword idlangImplicit	abs acos acot atan asin cos
-syn keyword idlangImplicit	cosh cot aimag anint atan2
-syn keyword idlangImplicit	cmplx conj
-syn keyword idlangImplicit	dprod exp
-syn keyword idlangImplicit	log ln log10 ALOG ALOG10
-syn keyword idlangImplicit	max min mod
-syn keyword idlangImplicit	sin sinh sign sqrt tan tanh
-syn keyword idlangImplicit	maximum minimum modulo
-
-syn keyword idlangColor	definecolor setcolor
-
-syn keyword idlangDiagram	linewidth crosshatch addfillcurve
-syn keyword idlangDiagram	setxlabel setylabel setxscale setyscale
-syn keyword idlangDiagram	setxaxis setyaxis addgraph
-
-syn keyword idlangRoutine	A_CORRELATE ABS
-syn keyword idlangRoutine	AMOEBA ANNOTATE ARG_PRESENT ARROW
-syn keyword idlangRoutine	ASCII_TEMPLATE ASSOC AXIS
-
-syn keyword idlangRoutine	BAR_PLOT BESELI BESELJ BESELY
-syn keyword idlangRoutine	BETA BILINEAR BIN_DATE BINDGEN
-syn keyword idlangRoutine	BINOMIAL BLAS_AXPY BLK_CON BOX_CURSOR
-syn keyword idlangRoutine	BREAKPOINT BROYDEN BYTARR
-syn keyword idlangRoutine	BYTE BYTEORDER BYTSCL
-
-syn keyword idlangRoutine	C_CORRELATE CALDAT CALENDAR
-syn keyword idlangRoutine	CALL_EXTERNAL CALL_FUNCTION
-syn keyword idlangRoutine	CALL_METHOD CALL_PROCEDURE
-syn keyword idlangRoutine	CATCH CD CEIL CHEBYSHEV
-syn keyword idlangRoutine	CHECK_MATH CHISQR_CVF CHISQR_PDF
-syn keyword idlangRoutine	CHOLDC CHOLSOL CINDGEN CIR_3PNT
-"syn keyword idlangRoutine	CLOSE
-syn keyword idlangRoutine	CLUST_WTS CLUSTER COLOR_CONVERT
-syn keyword idlangRoutine	COLOR_QUAN COMFIT COMPLEX COMPLEXARR
-syn keyword idlangRoutine	COMPLEXROUND COMPUTE_MESH_NORMALS COND
-syn keyword idlangRoutine	CONGRID CONJ CONSTRAINED_MIN CONTOUR
-syn keyword idlangRoutine	CONVERT_COORD CONVOL COORD2TO3
-syn keyword idlangRoutine	CORRELATE CRAMER CREATE_STRUCT
-syn keyword idlangRoutine	CREATE_VIEW CROSSP CRVLENGTH
-syn keyword idlangRoutine	CT_LUMINANCE CTI_TEST CURSOR CURVEFIT
-syn keyword idlangRoutine	CV_COORD CW_ANIMATE CW_ANIMATE_LOAD
-syn keyword idlangRoutine	CW_ANIMATE_RUN CW_ANIMATE_GETP CW_ARCBALL
-syn keyword idlangRoutine	CW_BGROUP CW_CLR_INDEX CW_COLORSEL
-syn keyword idlangRoutine	CW_DEFROI CW_DICE CW_FIELD CW_FORM
-syn keyword idlangRoutine	CW_FSLIDER CW_ORIENT CW_PDMENU
-syn keyword idlangRoutine	CW_RGBSLIDER CW_TMPL CW_ZOOM
-
-syn keyword idlangRoutine	DAY_NAME DAY_OF_WEEK DAY_OF_YEAR
-syn keyword idlangRoutine	DBLARR DCINDGEN DCOMPLEX
-syn keyword idlangRoutine	DCOMPLEXARR DEFINE_KEY DEFROI
-"syn keyword idlangRoutine	DELETE_SYMBOL (VMS Only)
-"syn keyword idlangRoutine	DELLOG (VMS Only)
-syn keyword idlangRoutine	DEFSYSV DELETE_SYMBOL DELLOG
-syn keyword idlangRoutine	DELVAR DEMO_MODE DERIV DERIVSIG
-syn keyword idlangRoutine	DETERM DEVICE DFPMIN
-syn keyword idlangRoutine	DIALOG_MESSAGE DIALOG_PICKFILE
-syn keyword idlangRoutine	DIALOG_PRINTJOB DIALOG_PRINTERSETUP
-syn keyword idlangRoutine	DIGITAL_FILTER DILATE DINDGEN
-syn keyword idlangRoutine	DISSOLVE DIST DO_APPLE_SCRIPT
-syn keyword idlangRoutine	DOC_LIBRARY DOUBLE DT_ADD
-syn keyword idlangRoutine	DT_SUBTRACT DT_TO_VAR
-
-syn keyword idlangRoutine	EFONT EIGENQL EIGENVEC ELMHES
-syn keyword idlangRoutine	EMPTY EOF ERASE ERODE
-syn keyword idlangRoutine	ERRORF ERRPLOT EXECUTE EXIT
-syn keyword idlangRoutine	EXP EXPAND EXPAND_PATH
-syn keyword idlangRoutine	EXPINT EXTRAC EXTRACT_SLICE
-
-syn keyword idlangRoutine	F_CVF F_PDF FACTORIAL FFT
-syn keyword idlangRoutine	FILEPATH FINDFILE FINDGEN FINITE
-syn keyword idlangRoutine	FIX FLICK FLOAT FLOOR
-syn keyword idlangRoutine	FLOW3 FLTARR FLUSH
-syn keyword idlangRoutine	FORMAT_AXIS_VALUES FREE_LUN
-syn keyword idlangRoutine	FSTAT FULSTR FUNCT
-syn keyword idlangRoutine	FV_TEST FX_ROOT FZ_ROOTS
-
-syn keyword idlangRoutine	GAMMA GAMMA_CT GAUSS_CVF
-syn keyword idlangRoutine	GAUSS_PDF GAUSS2DFIT GAUSSFIT
-syn keyword idlangRoutine	GAUSSINT GET_KBRD GET_LUN
-"syn keyword idlangRoutine	GET_SYMBOL (VMS Only)
-syn keyword idlangRoutine	GET_SYMBOL GETENV GRID3 GS_ITER
-
-syn keyword idlangRoutine	H_EQ_CT H_EQ_INT HANNING
-syn keyword idlangRoutine	HDF_BROWSER HDF_READ HEAP_GC HELP
-syn keyword idlangRoutine	HILBERT HIST_2D HIST_EQUAL
-syn keyword idlangRoutine	HISTOGRAM HLS HQR HSV
-
-syn keyword idlangRoutine	IBETA IDENTITY IDLDT__DEFINE
-syn keyword idlangRoutine	IGAMMA IMAGE_CONT IMAGINARY
-syn keyword idlangRoutine	INDGEN INT_2D INT_3D
-syn keyword idlangRoutine	INT_TABULATED INTARR INTERPOL
-syn keyword idlangRoutine	INTERPOLATE INVERT IOCTL ISHFT
-
-syn keyword idlangRoutine	JOURNAL JUL_TO_DT JULDAY
-
-syn keyword idlangRoutine	KEYWORD_SET KRIG2D
-syn keyword idlangRoutine	KURTOSIS KW_TEST
-
-syn keyword idlangRoutine	LABEL_DATE LABEL_REGION
-syn keyword idlangRoutine	LADFIT LEEFILT LINBCG LINDGEN
-syn keyword idlangRoutine	LINFIT LINKIMAGE
-syn keyword idlangRoutine	LIVE_CONTOUR LIVE_CONTROL
-syn keyword idlangRoutine	LIVE_DESTROY LIVE_EXPORT
-syn keyword idlangRoutine	LIVE_IMAGE LIVE_INFO
-syn keyword idlangRoutine	LIVE_LINE LIVE_OPLOT
-syn keyword idlangRoutine	LIVE_PLOT LIVE_PRINT
-syn keyword idlangRoutine	LIVE_RECT LIVE_STYLE
-syn keyword idlangRoutine	LIVE_SURFACE LIVE_TEXT
-syn keyword idlangRoutine	LJLCT LL_ARC_DISTANCE
-syn keyword idlangRoutine	LMFIT LMGR LNGAMMA
-syn keyword idlangRoutine	LNP_TEST LOADCT LONARR
-syn keyword idlangRoutine	LONG LSODE LU_COMPLEX
-syn keyword idlangRoutine	LUDC LUMPROVE LUSOL
-
-syn keyword idlangRoutine	M_CORRELATE MACHAR
-syn keyword idlangRoutine	MAKE_ARRAY MAP_CONTINENTS
-syn keyword idlangRoutine	MAP_GRID MAP_IMAGE
-syn keyword idlangRoutine	MAP_PATCH MAP_SET MD_TEST
-syn keyword idlangRoutine	MEAN MEANABSDEV MEDIAN
-syn keyword idlangRoutine	MESH_OBJ MESSAGE MIN_CURVE_SURF
-syn keyword idlangRoutine	MK_HTML_HELP MODIFYCT
-syn keyword idlangRoutine	MOMENT MPEG_CLOSE MPEG_OPEN
-syn keyword idlangRoutine	MPEG_PUT MPEG_SAVE MULTI
-
-syn keyword idlangRoutine	N_ELEMENTS N_PARAMS
-syn keyword idlangRoutine	N_TAGS NEWTON NORM
-
-syn keyword idlangRoutine	OBJ_CLASS OBJ_DESTROY
-syn keyword idlangRoutine	OBJ_ISA OBJ_NEW OBJ_VALID
-syn keyword idlangRoutine	OBJARR ON_ERROR
-syn keyword idlangRoutine	ON_IOERROR ONLINE_HELP
-syn keyword idlangRoutine	OPEN OPLOT OPLOTERR
-
-syn keyword idlangRoutine	P_CORRELATE PCOMP PLOT
-syn keyword idlangRoutine	PLOT_3DBOX PLOT_FIELD PLOTERR
-syn keyword idlangRoutine	PLOTS PNT_LINE POINT_LUN
-syn keyword idlangRoutine	POLAR_CONTOUR POLAR_SURFACE
-syn keyword idlangRoutine	POLY POLY_2D POLY_AREA
-syn keyword idlangRoutine	POLY_FIT POLYFILL POLYFILLV
-syn keyword idlangRoutine	POLYFITW POLYSHADE POLYWARP
-syn keyword idlangRoutine	POPD POWELL PRIMES
-syn keyword idlangRoutine	PRINT PRINTF PRINTD
-syn keyword idlangRoutine	PROFILE PROFILER PROFILES
-syn keyword idlangRoutine	PROJECT_VOL PS_SHOW_FONTS
-syn keyword idlangRoutine	PSAFM PSEUDO PTR_FREE PTR_NEW
-syn keyword idlangRoutine	PTR_VALID PTRARR PUSHD
-
-syn keyword idlangRoutine	QROMB QROMO QSIMP
-
-syn keyword idlangRoutine	R_CORRELATE R_TEST
-syn keyword idlangRoutine	RANDOMN RANDOMU
-syn keyword idlangRoutine	RANKS RDPIX
-syn keyword idlangRoutine	READ READF READS READU
-syn keyword idlangRoutine	READ_ASCII READ_BMP
-syn keyword idlangRoutine	READ_GIF READ_INTERFILE
-syn keyword idlangRoutine	READ_JPEG READ_PICT
-syn keyword idlangRoutine	READ_PPM READ_SPR
-syn keyword idlangRoutine	READ_SRF READ_SYLK
-syn keyword idlangRoutine	READ_TIFF READ_WAVE
-syn keyword idlangRoutine	READ_X11_BITMAP READ_XWD
-syn keyword idlangRoutine	REBIN RECALL_COMMANDS
-syn keyword idlangRoutine	RECON3 REDUCE_COLORS REFORM
-syn keyword idlangRoutine	REGRESS REPLICATE
-syn keyword idlangRoutine	REPLICATE_INPLACE RESOLVE_ALL
-syn keyword idlangRoutine	RESOLVE_ROUTINE RESTORE
-syn keyword idlangRoutine	RETALL RETURN REVERSE REWIND
-syn keyword idlangRoutine	RIEMANN RK4 ROBERTS ROT
-syn keyword idlangRoutine	ROTATE ROUND ROUTINE_INFO
-syn keyword idlangRoutine	RS_TEST RSTRPOS
-
-syn keyword idlangRoutine	S_TEST SAVE SCALE3 SCALE3D
-syn keyword idlangRoutine	SEARCH2D SEARCH3D
-syn keyword idlangRoutine	SEC_TO_DT SET_PLOT SET_SHADING
-"syn keyword idlangRoutine	SETENV (Unix and Windows Only)
-syn keyword idlangRoutine	SET_SYMBOL SETENV
-"syn keyword idlangRoutine	SETLOG (VMS Only)
-syn keyword idlangRoutine	SETLOG SETUP_KEYS SFIT
-syn keyword idlangRoutine	SHADE_SURF SHADE_SURF_IRR
-syn keyword idlangRoutine	SHADE_VOLUME SHIFT
-syn keyword idlangRoutine	SHOW3 SHOWFONT SINDGEN
-syn keyword idlangRoutine	SIZE SKEWNESS SKIPF
-syn keyword idlangRoutine	SLICER3 SLIDE_IMAGE SMOOTH
-syn keyword idlangRoutine	SOBEL SORT SPAWN SPH_4PNT
-syn keyword idlangRoutine	SPH_SCAT SPL_INIT SPL_INTERP
-syn keyword idlangRoutine	SPLINE SPLINE_P SPRSAB
-syn keyword idlangRoutine	SPRSAX SPRSIN STANDARDIZE
-syn keyword idlangRoutine	STDDEV STR_SEP STR_TO_DT
-syn keyword idlangRoutine	STRARR STRCOMPRESS
-syn keyword idlangRoutine	STRETCH STRING STRLEN
-syn keyword idlangRoutine	STRLOWCASE STRMESSAGE
-syn keyword idlangRoutine	STRMID STRPOS STRPUT STRTRIM
-syn keyword idlangRoutine	STRUCT_ASSIGN STRUPCASE
-syn keyword idlangRoutine	SURFACE SURFR SVDC SVDFIT
-syn keyword idlangRoutine	SVSOL SWAP_ENDIAN SYSTIME
-
-syn keyword idlangRoutine	T_CVF T_PDF T3D TAG_NAMES
-syn keyword idlangRoutine	TAPRD TAPWRT TEK_COLOR
-syn keyword idlangRoutine	TEMPORARY THIN THREED
-syn keyword idlangRoutine	TIME_TEST2 TM_TEST TODAY
-syn keyword idlangRoutine	TOTAL TRACE TRANSPOSE
-syn keyword idlangRoutine	TRI_SURF TRIANGULATE TRIGRID
-syn keyword idlangRoutine	TRIQL TRIRED TRISOL TRNLOG
-syn keyword idlangRoutine	TS_COEF TS_DIFF TS_FCAST
-syn keyword idlangRoutine	TS_SMOOTH
-syn keyword idlangRoutine	TV TVCRS TVLCT TVRD TVSCL
-
-syn keyword idlangRoutine	UNIQ USERSYM
-
-syn keyword idlangRoutine	VAR_TO_DT VARIANCE
-syn keyword idlangRoutine	VAX_FLOAT VEL VELOVECT
-syn keyword idlangRoutine	VERT_T3D VOIGT
-syn keyword idlangRoutine	VORONOI VOXEL_PROJ
-
-syn keyword idlangRoutine	WAIT WARP_TRI WDELETE
-syn keyword idlangRoutine	WEOF WF_DRAW WHERE
-syn keyword idlangRoutine	WIDGET_BASE WIDGET_BUTTON
-syn keyword idlangRoutine	WIDGET_CONTROL WIDGET_DRAW
-syn keyword idlangRoutine	WIDGET_DROPLIST WIDGET_EVENT
-syn keyword idlangRoutine	WIDGET_INFO WIDGET_LABEL
-syn keyword idlangRoutine	WIDGET_LIST WIDGET_SLIDER
-syn keyword idlangRoutine	WIDGET_TABLE WIDGET_TEXT
-syn keyword idlangRoutine	WINDOW
-syn keyword idlangRoutine	WRITE_BMP WRITE_GIF
-syn keyword idlangRoutine	WRITE_JPEG WRITE_NRIF
-syn keyword idlangRoutine	WRITE_PICT WRITE_PPM
-syn keyword idlangRoutine	WRITE_SPR WRITE_SRF
-syn keyword idlangRoutine	WRITE_SYLK WRITE_TIFF
-syn keyword idlangRoutine	WRITE_WAVE WRITEU WSET WSHOW WTN
-
-syn keyword idlangRoutine	XBM_EDIT XDISPLAYFILE
-syn keyword idlangRoutine	XFONT XINTERANIMATE
-syn keyword idlangRoutine	XLOADCT XMANAGER
-syn keyword idlangRoutine	XMNG_TMPL XMTOOL
-syn keyword idlangRoutine	XPALETTE XREGISTERED
-syn keyword idlangRoutine	XSQ_TEST XSURFACE
-syn keyword idlangRoutine	XVAREDIT XYOUTS
-
-syn keyword idlangRoutine	ZOOM ZOOM_24
-
-
-"syn keyword idlangRoutine	EOS_*
-"syn keyword idlangRoutine	HDF_GR*, HDF_AN*
-syn keyword idlangRoutine	HDF_BROWSER HDF_READ
-syn keyword idlangRoutine	L64INDGEN LIVE_LOAD
-syn keyword idlangRoutine	LON64ARR LONG64
-syn keyword idlangRoutine	MAP_PROJ_INFO
-syn keyword idlangRoutine	QUERY_BMP QUERY_DICOM
-syn keyword idlangRoutine	QUERY_JPEG QUERY_PICT
-syn keyword idlangRoutine	QUERY_PNG QUERY_PPM
-syn keyword idlangRoutine	QUERY_SRF QUERY_TIFF
-syn keyword idlangRoutine	READ_DICOM READ_PNG
-syn keyword idlangRoutine	UINDGEN UINT UINTARR
-syn keyword idlangRoutine	UL64INDGEN ULINDGEN
-syn keyword idlangRoutine	ULON64ARR ULONARR
-syn keyword idlangRoutine	ULONG ULONG64
-syn keyword idlangRoutine	WRITE_PNG
-syn keyword idlangRoutine	BYTEORDER L64SWAP
-
-" overwrite LongName
-syn match  idlangContinueLine	"nomessage"
-syn match  idlangContinueLine	"insertcol"
-
-syn match idlangReadWrite	"\ *pro\ "
-syn match idlangReadWrite	"\ *function\ "
+syn keyword idlangRoutine A_CORRELATE ABS ACOS ADAPT_HIST_EQUAL ALOG ALOG10
+syn keyword idlangRoutine AMOEBA ANNOTATE ARG_PRESENT ARRAY_EQUAL ARROW
+syn keyword idlangRoutine ASCII_TEMPLATE ASIN ASSOC ATAN AXIS BAR_PLOT
+syn keyword idlangRoutine BESELI BESELJ BESELK BESELY BETA BILINEAR BIN_DATE
+syn keyword idlangRoutine BINARY_TEMPLATE BINDGEN BINOMIAL BLAS_AXPY BLK_CON
+syn keyword idlangRoutine BOX_CURSOR BREAK BREAKPOINT BROYDEN BYTARR BYTE
+syn keyword idlangRoutine BYTEORDER BYTSCL C_CORRELATE CALDAT CALENDAR
+syn keyword idlangRoutine CALL_EXTERNAL CALL_FUNCTION CALL_METHOD
+syn keyword idlangRoutine CALL_PROCEDURE CATCH CD CEIL CHEBYSHEV CHECK_MATH
+syn keyword idlangRoutine CHISQR_CVF CHISQR_PDF CHOLDC CHOLSOL CINDGEN
+syn keyword idlangRoutine CIR_3PNT CLOSE CLUST_WTS CLUSTER COLOR_CONVERT
+syn keyword idlangRoutine COLOR_QUAN COLORMAP_APPLICABLE COMFIT COMMON
+syn keyword idlangRoutine COMPLEX COMPLEXARR COMPLEXROUND
+syn keyword idlangRoutine COMPUTE_MESH_NORMALS COND CONGRID CONJ
+syn keyword idlangRoutine CONSTRAINED_MIN CONTOUR CONVERT_COORD CONVOL
+syn keyword idlangRoutine COORD2TO3 CORRELATE COS COSH CRAMER CREATE_STRUCT
+syn keyword idlangRoutine CREATE_VIEW CROSSP CRVLENGTH CT_LUMINANCE CTI_TEST
+syn keyword idlangRoutine CURSOR CURVEFIT CV_COORD CVTTOBM CW_ANIMATE
+syn keyword idlangRoutine CW_ANIMATE_GETP CW_ANIMATE_LOAD CW_ANIMATE_RUN
+syn keyword idlangRoutine CW_ARCBALL CW_BGROUP CW_CLR_INDEX CW_COLORSEL
+syn keyword idlangRoutine CW_DEFROI CW_FIELD CW_FILESEL CW_FORM CW_FSLIDER
+syn keyword idlangRoutine CW_LIGHT_EDITOR CW_LIGHT_EDITOR_GET
+syn keyword idlangRoutine CW_LIGHT_EDITOR_SET CW_ORIENT CW_PALETTE_EDITOR
+syn keyword idlangRoutine CW_PALETTE_EDITOR_GET CW_PALETTE_EDITOR_SET
+syn keyword idlangRoutine CW_PDMENU CW_RGBSLIDER CW_TMPL CW_ZOOM DBLARR
+syn keyword idlangRoutine DCINDGEN DCOMPLEX DCOMPLEXARR DEFINE_KEY DEFROI
+syn keyword idlangRoutine DEFSYSV DELETE_SYMBOL DELLOG DELVAR DERIV DERIVSIG
+syn keyword idlangRoutine DETERM DEVICE DFPMIN DIALOG_MESSAGE
+syn keyword idlangRoutine DIALOG_PICKFILE DIALOG_PRINTERSETUP
+syn keyword idlangRoutine DIALOG_PRINTJOB DIALOG_READ_IMAGE
+syn keyword idlangRoutine DIALOG_WRITE_IMAGE DIGITAL_FILTER DILATE DINDGEN
+syn keyword idlangRoutine DISSOLVE DIST DLM_LOAD DLM_REGISTER
+syn keyword idlangRoutine DO_APPLE_SCRIPT DOC_LIBRARY DOUBLE DRAW_ROI EFONT
+syn keyword idlangRoutine EIGENQL EIGENVEC ELMHES EMPTY ENABLE_SYSRTN EOF
+syn keyword idlangRoutine ERASE ERODE ERRORF ERRPLOT EXECUTE EXIT EXP EXPAND
+syn keyword idlangRoutine EXPAND_PATH EXPINT EXTRAC EXTRACT_SLICE F_CVF
+syn keyword idlangRoutine F_PDF FACTORIAL FFT FILE_CHMOD FILE_DELETE
+syn keyword idlangRoutine FILE_EXPAND_PATH FILE_MKDIR FILE_TEST FILE_WHICH
+syn keyword idlangRoutine FILEPATH FINDFILE FINDGEN FINITE FIX FLICK FLOAT
+syn keyword idlangRoutine FLOOR FLOW3 FLTARR FLUSH FOR FORMAT_AXIS_VALUES
+syn keyword idlangRoutine FORWARD_FUNCTION FREE_LUN FSTAT FULSTR FUNCT
+syn keyword idlangRoutine FV_TEST FX_ROOT FZ_ROOTS GAMMA GAMMA_CT
+syn keyword idlangRoutine GAUSS_CVF GAUSS_PDF GAUSS2DFIT GAUSSFIT GAUSSINT
+syn keyword idlangRoutine GET_DRIVE_LIST GET_KBRD GET_LUN GET_SCREEN_SIZE
+syn keyword idlangRoutine GET_SYMBOL GETENV GOTO GRID_TPS GRID3 GS_ITER
+syn keyword idlangRoutine H_EQ_CT H_EQ_INT HANNING HEAP_GC HELP HILBERT
+syn keyword idlangRoutine HIST_2D HIST_EQUAL HISTOGRAM HLS HOUGH HQR HSV
+syn keyword idlangRoutine IBETA IDENTITY IDL_Container IDLanROI
+syn keyword idlangRoutine IDLanROIGroup IDLffDICOM IDLffDXF IDLffLanguageCat
+syn keyword idlangRoutine IDLffShape IDLgrAxis IDLgrBuffer IDLgrClipboard
+syn keyword idlangRoutine IDLgrColorbar IDLgrContour IDLgrFont IDLgrImage
+syn keyword idlangRoutine IDLgrLegend IDLgrLight IDLgrModel IDLgrMPEG
+syn keyword idlangRoutine IDLgrPalette IDLgrPattern IDLgrPlot IDLgrPolygon
+syn keyword idlangRoutine IDLgrPolyline IDLgrPrinter IDLgrROI IDLgrROIGroup
+syn keyword idlangRoutine IDLgrScene IDLgrSurface IDLgrSymbol
+syn keyword idlangRoutine IDLgrTessellator IDLgrText IDLgrView
+syn keyword idlangRoutine IDLgrViewgroup IDLgrVolume IDLgrVRML IDLgrWindow
+syn keyword idlangRoutine IGAMMA IMAGE_CONT IMAGE_STATISTICS IMAGINARY
+syn keyword idlangRoutine INDGEN INT_2D INT_3D INT_TABULATED INTARR INTERPOL
+syn keyword idlangRoutine INTERPOLATE INVERT IOCTL ISHFT ISOCONTOUR
+syn keyword idlangRoutine ISOSURFACE JOURNAL JULDAY KEYWORD_SET KRIG2D
+syn keyword idlangRoutine KURTOSIS KW_TEST L64INDGEN LABEL_DATE LABEL_REGION
+syn keyword idlangRoutine LADFIT LAGUERRE LEEFILT LEGENDRE LINBCG LINDGEN
+syn keyword idlangRoutine LINFIT LINKIMAGE LIVE_CONTOUR LIVE_CONTROL
+syn keyword idlangRoutine LIVE_DESTROY LIVE_EXPORT LIVE_IMAGE LIVE_INFO
+syn keyword idlangRoutine LIVE_LINE LIVE_LOAD LIVE_OPLOT LIVE_PLOT
+syn keyword idlangRoutine LIVE_PRINT LIVE_RECT LIVE_STYLE LIVE_SURFACE
+syn keyword idlangRoutine LIVE_TEXT LJLCT LL_ARC_DISTANCE LMFIT LMGR LNGAMMA
+syn keyword idlangRoutine LNP_TEST LOADCT LOCALE_GET LON64ARR LONARR LONG
+syn keyword idlangRoutine LONG64 LSODE LU_COMPLEX LUDC LUMPROVE LUSOL
+syn keyword idlangRoutine M_CORRELATE MACHAR MAKE_ARRAY MAKE_DLL MAP_2POINTS
+syn keyword idlangRoutine MAP_CONTINENTS MAP_GRID MAP_IMAGE MAP_PATCH
+syn keyword idlangRoutine MAP_PROJ_INFO MAP_SET MATRIX_MULTIPLY MD_TEST MEAN
+syn keyword idlangRoutine MEANABSDEV MEDIAN MEMORY MESH_CLIP MESH_DECIMATE
+syn keyword idlangRoutine MESH_ISSOLID MESH_MERGE MESH_NUMTRIANGLES MESH_OBJ
+syn keyword idlangRoutine MESH_SMOOTH MESH_SURFACEAREA MESH_VALIDATE
+syn keyword idlangRoutine MESH_VOLUME MESSAGE MIN_CURVE_SURF MK_HTML_HELP
+syn keyword idlangRoutine MODIFYCT MOMENT MORPH_CLOSE MORPH_DISTANCE
+syn keyword idlangRoutine MORPH_GRADIENT MORPH_HITORMISS MORPH_OPEN
+syn keyword idlangRoutine MORPH_THIN MORPH_TOPHAT MPEG_CLOSE MPEG_OPEN
+syn keyword idlangRoutine MPEG_PUT MPEG_SAVE MSG_CAT_CLOSE MSG_CAT_COMPILE
+syn keyword idlangRoutine MSG_CAT_OPEN MULTI N_ELEMENTS N_PARAMS N_TAGS
+syn keyword idlangRoutine NEWTON NORM OBJ_CLASS OBJ_DESTROY OBJ_ISA OBJ_NEW
+syn keyword idlangRoutine OBJ_VALID OBJARR ON_ERROR ON_IOERROR ONLINE_HELP
+syn keyword idlangRoutine OPEN OPENR OPENW OPLOT OPLOTERR P_CORRELATE
+syn keyword idlangRoutine PARTICLE_TRACE PCOMP PLOT PLOT_3DBOX PLOT_FIELD
+syn keyword idlangRoutine PLOTERR PLOTS PNT_LINE POINT_LUN POLAR_CONTOUR
+syn keyword idlangRoutine POLAR_SURFACE POLY POLY_2D POLY_AREA POLY_FIT
+syn keyword idlangRoutine POLYFILL POLYFILLV POLYSHADE POLYWARP POPD POWELL
+syn keyword idlangRoutine PRIMES PRINT PRINTF PRINTD PROFILE PROFILER
+syn keyword idlangRoutine PROFILES PROJECT_VOL PS_SHOW_FONTS PSAFM PSEUDO
+syn keyword idlangRoutine PTR_FREE PTR_NEW PTR_VALID PTRARR PUSHD QROMB
+syn keyword idlangRoutine QROMO QSIMP R_CORRELATE R_TEST RADON RANDOMN
+syn keyword idlangRoutine RANDOMU RANKS RDPIX READ READF READ_ASCII
+syn keyword idlangRoutine READ_BINARY READ_BMP READ_DICOM READ_IMAGE
+syn keyword idlangRoutine READ_INTERFILE READ_JPEG READ_PICT READ_PNG
+syn keyword idlangRoutine READ_PPM READ_SPR READ_SRF READ_SYLK READ_TIFF
+syn keyword idlangRoutine READ_WAV READ_WAVE READ_X11_BITMAP READ_XWD READS
+syn keyword idlangRoutine READU REBIN RECALL_COMMANDS RECON3 REDUCE_COLORS
+syn keyword idlangRoutine REFORM REGRESS REPLICATE REPLICATE_INPLACE
+syn keyword idlangRoutine RESOLVE_ALL RESOLVE_ROUTINE RESTORE RETALL RETURN
+syn keyword idlangRoutine REVERSE REWIND RK4 ROBERTS ROT ROTATE ROUND
+syn keyword idlangRoutine ROUTINE_INFO RS_TEST S_TEST SAVE SAVGOL SCALE3
+syn keyword idlangRoutine SCALE3D SEARCH2D SEARCH3D SET_PLOT SET_SHADING
+syn keyword idlangRoutine SET_SYMBOL SETENV SETLOG SETUP_KEYS SFIT
+syn keyword idlangRoutine SHADE_SURF SHADE_SURF_IRR SHADE_VOLUME SHIFT SHOW3
+syn keyword idlangRoutine SHOWFONT SIN SINDGEN SINH SIZE SKEWNESS SKIPF
+syn keyword idlangRoutine SLICER3 SLIDE_IMAGE SMOOTH SOBEL SOCKET SORT SPAWN
+syn keyword idlangRoutine SPH_4PNT SPH_SCAT SPHER_HARM SPL_INIT SPL_INTERP
+syn keyword idlangRoutine SPLINE SPLINE_P SPRSAB SPRSAX SPRSIN SPRSTP SQRT
+syn keyword idlangRoutine STANDARDIZE STDDEV STOP STRARR STRCMP STRCOMPRESS
+syn keyword idlangRoutine STREAMLINE STREGEX STRETCH STRING STRJOIN STRLEN
+syn keyword idlangRoutine STRLOWCASE STRMATCH STRMESSAGE STRMID STRPOS
+syn keyword idlangRoutine STRPUT STRSPLIT STRTRIM STRUCT_ASSIGN STRUCT_HIDE
+syn keyword idlangRoutine STRUPCASE SURFACE SURFR SVDC SVDFIT SVSOL
+syn keyword idlangRoutine SWAP_ENDIAN SWITCH SYSTIME T_CVF T_PDF T3D
+syn keyword idlangRoutine TAG_NAMES TAN TANH TAPRD TAPWRT TEK_COLOR
+syn keyword idlangRoutine TEMPORARY TETRA_CLIP TETRA_SURFACE TETRA_VOLUME
+syn keyword idlangRoutine THIN THREED TIME_TEST2 TIMEGEN TM_TEST TOTAL TRACE
+syn keyword idlangRoutine TRANSPOSE TRI_SURF TRIANGULATE TRIGRID TRIQL
+syn keyword idlangRoutine TRIRED TRISOL TRNLOG TS_COEF TS_DIFF TS_FCAST
+syn keyword idlangRoutine TS_SMOOTH TV TVCRS TVLCT TVRD TVSCL UINDGEN UINT
+syn keyword idlangRoutine UINTARR UL64INDGEN ULINDGEN ULON64ARR ULONARR
+syn keyword idlangRoutine ULONG ULONG64 UNIQ USERSYM VALUE_LOCATE VARIANCE
+syn keyword idlangRoutine VAX_FLOAT VECTOR_FIELD VEL VELOVECT VERT_T3D VOIGT
+syn keyword idlangRoutine VORONOI VOXEL_PROJ WAIT WARP_TRI WATERSHED WDELETE
+syn keyword idlangRoutine WEOF WF_DRAW WHERE WIDGET_BASE WIDGET_BUTTON
+syn keyword idlangRoutine WIDGET_CONTROL WIDGET_DRAW WIDGET_DROPLIST
+syn keyword idlangRoutine WIDGET_EVENT WIDGET_INFO WIDGET_LABEL WIDGET_LIST
+syn keyword idlangRoutine WIDGET_SLIDER WIDGET_TABLE WIDGET_TEXT WINDOW
+syn keyword idlangRoutine WRITE_BMP WRITE_IMAGE WRITE_JPEG WRITE_NRIF
+syn keyword idlangRoutine WRITE_PICT WRITE_PNG WRITE_PPM WRITE_SPR WRITE_SRF
+syn keyword idlangRoutine WRITE_SYLK WRITE_TIFF WRITE_WAV WRITE_WAVE WRITEU
+syn keyword idlangRoutine WSET WSHOW WTN WV_APPLET WV_CW_WAVELET WV_CWT
+syn keyword idlangRoutine WV_DENOISE WV_DWT WV_FN_COIFLET WV_FN_DAUBECHIES
+syn keyword idlangRoutine WV_FN_GAUSSIAN WV_FN_HAAR WV_FN_MORLET WV_FN_PAUL
+syn keyword idlangRoutine WV_FN_SYMLET WV_IMPORT_DATA WV_IMPORT_WAVELET
+syn keyword idlangRoutine WV_PLOT3D_WPS WV_PLOT_MULTIRES WV_PWT
+syn keyword idlangRoutine WV_TOOL_DENOISE XBM_EDIT XDISPLAYFILE XDXF XFONT
+syn keyword idlangRoutine XINTERANIMATE XLOADCT XMANAGER XMNG_TMPL XMTOOL
+syn keyword idlangRoutine XOBJVIEW XPALETTE XPCOLOR XPLOT3D XREGISTERED XROI
+syn keyword idlangRoutine XSQ_TEST XSURFACE XVAREDIT XVOLUME XVOLUME_ROTATE
+syn keyword idlangRoutine XVOLUME_WRITE_IMAGE XYOUTS ZOOM ZOOM_24
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
-" change 6.xx -----------------------------------------------------------------
 if version >= 508 || !exists("did_idlang_syn_inits")
   if version < 508
     let did_idlang_syn_inits = 1
     command -nargs=+ HiLink hi link <args>
-  else
+else
     command -nargs=+ HiLink hi def link <args>
-  endif
-" change 6.xx -----------------------------------------------------------------
-
-" OLD  if !exists("did_idlang_syntax_inits")
-" OLD    let did_idlang_syntax_inits = 1
+endif
 
   HiLink idlangConditional	Conditional
-  HiLink idlangConditionll	Conditional
-  HiLink idlangRepeat	Repeat
-  HiLink idlangColor	idlangType
-  HiLink idlangCommand	idlangType
-  HiLink idlangRoutine	idlangType
-  HiLink idlangDiagram	idlangType
-  HiLink idlangIO	idlangType
+  HiLink idlangRoutine	Type
   HiLink idlangStatement	Statement
-  HiLink idlangType	Type
   HiLink idlangContinueLine	Todo
   HiLink idlangRealNumber	Float
   HiLink idlangNumber	Number
-  HiLink idlangCommentError	Error
   HiLink idlangString	String
   HiLink idlangOperator	Operator
-  HiLink idlangLogicalConstant	Constant
   HiLink idlangComment	Comment
   HiLink idlangTodo	Todo
-  HiLink idlangUnitHeader	idlangPreCondit
-  HiLink idlangFormat	idlangImplicit
-  HiLink idlangReadWrite	Statement
-  HiLink idlangImplicit	Identifier
-  HiLink idlangUnixCmd	Statement
-  HiLink idlangPreProc	PreProc
-"  HiLink idlangExtended	idlangImplicit
-  HiLink idlangPreCondit	PreCondit
-
-  " optional hiing
-  "HiLink idlangContinueError		Error
-  "HiLink idlangSpecial		Special
-  "HiLink idlangPointRealNumber	idlangNumber
-  "HiLink idlangPointDoubleNumber	idlangNumber
-"  HiLink idlangLongName	Error
+  HiLink idlangPreCondit	Identifier
   HiLink idlangDblCommaError	Error
   HiLink idlangStop	Error
-  "HiLink idlangDelimiter		Identifier
-  HiLink idlangStructure	idlangType
-  HiLink idlangStrucvar	idlangPreProc
+  HiLink idlangStrucvar	PreProc
   HiLink idlangSystem	Identifier
   HiLink idlangKeyword	Special
-
-  "HiLink idlangIdentifier	Identifier
 
   delcommand HiLink
 endif
 
 let b:current_syntax = "idlang"
-
 " vim: ts=18
-

@@ -1,9 +1,10 @@
 " Vim indent file
 " Language:	Fortran90 (and Fortran95, Fortran77, F and elf90)
-" Version:	0.33
-" Last Change:	2001 Sep 17
+" Version:	0.34
+" URL:		http://www.unb.ca/chem/ajit/indent/fortran.vim
+" Last Change: 2003 Jan. 31
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
-" For the latest version of this file, see <http://www.unb.ca/chem/ajit/vim.htm>
+" Usage:	Do :help fortran-indent from Vim
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
@@ -17,7 +18,11 @@ setlocal indentkeys+==~end,=~case,=~if,=~else,=~do,=~where,=~elsewhere,=~select
 " if this hasn't been done yet
 if !exists("b:fortran_fixed_source")
   if exists("fortran_free_source")
+    " User guarantees free source form
     let b:fortran_fixed_source = 0
+  elseif exists("fortran_fixed_source")
+    " User guarantees fixed source form
+    let b:fortran_fixed_source = 1
   else
     " f90 and f95 allow both fixed and free source form
     " assume fixed source form unless signs of free source form

@@ -1,7 +1,8 @@
 " Vim compiler file
-" Compiler:     HTML Tidy
-" Maintainer:   Doug Kearns <djkea2@mugca.cc.monash.edu.au>
-" Last Change:  2001 Sep 20
+" Compiler:	HTML Tidy
+" Maintainer:	Doug Kearns <djkea2@mugca.its.monash.edu.au>
+" URL:		http://mugca.its.monash.edu.au/~djkea2/vim/compiler/tidy.vim
+" Last Change:	2002 Nov 01
 
 " NOTE: set 'tidy_compiler_040800' if you are using the 4th August 2000 release
 "       of HTML Tidy.
@@ -19,6 +20,6 @@ else
   setlocal makeprg=tidy\ -quiet\ -errors\ --gnu-emacs\ yes\ %
 endif
 
-" sample warning:    foo.html:8:1: Warning: inserting missing 'foobar' element
-" sample error:      foo.html:9:2: Error: <foobar> is not recognized!
+" sample warning: foo.html:8:1: Warning: inserting missing 'foobar' element
+" sample error:   foo.html:9:2: Error: <foobar> is not recognized!
 setlocal errorformat=%f:%l:%c:\ Error:%m,%f:%l:%c:\ Warning:%m,%-G%.%#

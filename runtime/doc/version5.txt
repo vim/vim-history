@@ -1,4 +1,4 @@
-*version5.txt*  For Vim version 6.1.  Last change: 2001 Sep 27
+*version5.txt*  For Vim version 6.2a.  Last change: 2002 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1478,7 +1478,7 @@ After starting the GUI, searched the termcap for a "gui" term.
 When 'hls' used, search for "^$" caused a hang.
 When 'hls' was set, an error in the last regexp caused trouble.
 
-Unix: Only output an extra <EOL> on exit when outputed something in the
+Unix: Only output an extra <EOL> on exit when outputted something in the
 alternate screen, or when there is a message that needs to be cleared.
 
 "/a\{" did strange things, depending on previous search.
@@ -2284,7 +2284,7 @@ line of the current window.
 alternative for ":@".  When 'cpoptions' includes '*' this is Vi compatible.
 
 When 'insertmode' is set, using CTRL-O to execute a mapping will work like
-'inertmode' was not set.  This allows "normal" mappings to be used even when
+'insertmode' was not set.  This allows "normal" mappings to be used even when
 'insertmode' is set.
 
 When 'mouse' was set already (e.g., in the .vimrc file), don't automatically
@@ -2634,7 +2634,7 @@ Included patch for the Intellimouse (Aaron/Robinson).
 
 Could not set 'ls' to one, when last window has only one line.  (Mitterand)
 
-Fixed a memory leak when removing menues.
+Fixed a memory leak when removing menus.
 
 After ":only" the ruler could overwrite a message.
 
@@ -2941,7 +2941,7 @@ Win32 GUI: When using a shifted key with ALT, the shift modifier would remain
 set, even when it was already used by changing the used key.  E.g., "<M-S-9>"
 resulted in "<M-S-(>", but it should be "<M-(>". (Negri)
 
-A call to ga_init() was often followed by seting growsize and itemsize.
+A call to ga_init() was often followed by setting growsize and itemsize.
 Created ga_init2() for this, which looks better. (Aaron)
 
 Function filereadable() could call fopen() with an empty string, which might
@@ -3352,7 +3352,7 @@ of method in a (Java) class.
 
 |go| and |:goto| commands: Jump to byte offset in the file.
 
-|gR| and |gr| command: Virtual replace mode.  Replace characters without
+|gR| and |gr| command: Virtual Replace mode.  Replace characters without
 changing the layout. (Webb)
 
 ":cd -" changes to the directory from before the previous ":cd" command.
@@ -4049,7 +4049,7 @@ In ex mode, any CR was seen as the end of the line.  Only a NL should be
 handled that way.  broke ":s/foo/some^Mtext/".
 
 In menu.vim, a vmenu was used to override an amenu.  That didn't work, because
-the system menu file doesn't overwite existing menus.  Added explicit vunmenu
+the system menu file doesn't overwrite existing menus.  Added explicit vunmenu
 to solve this.
 
 Configure check for terminal library could find a library that doesn't work at
@@ -4209,7 +4209,7 @@ Configure tests failed when the Perl library was not in LD_LIBRARY_PATH.
 Don't use the Perl library for configure tests, add it to the linker line only
 when linking Vim.
 
-When using ncursus/terminfo, could get a 't_Sf' and 't_Sb' termcap entry that
+When using ncurses/terminfo, could get a 't_Sf' and 't_Sb' termcap entry that
 has "%d" instead of "%p1%d".  The light background colors didn't work then.
 
 GTK GUI with ncurses: Crashed when starting up in tputs().  Don't use tputs()
@@ -4377,7 +4377,7 @@ VisVim could still crash on exit. (Erhardt)
 "case a: case b:" (two case statements in one line) aligned with the second
 case.  Now it uses one 'sw' for indent. (Webb)
 
-Font intialisation wasn't right for Athena/Motif GUI.  Moved the call to
+Font initialisation wasn't right for Athena/Motif GUI.  Moved the call to
 highlight_gui_started() gui_mch_init() to gui_mch_open(). (Nam)
 
 In Replace mode, backspacing over a TAB before where the replace mode started
@@ -4712,7 +4712,7 @@ Autocommands could move the cursor in a new file, so that CTRL-W i didn't show
 the right line.  Same for when using a filemark to jump to another file.
 
 When redefining the argument list, the title used for other windows could be
-showing the wrong info about the positiion in the argument list.  Also update
+showing the wrong info about the position in the argument list.  Also update
 this for a ":split" command without arguments.
 
 When editing file 97 of 13, ":Next" didn't work.  Now it goes to the last
@@ -5295,7 +5295,7 @@ Added							*added-5.5*
 Included Exuberant Ctags version 3.3. (Darren Hiebert)
 
 In runtime/mswin.vim, map CTRL-Q to CTRL-V, so that CTRL-Q can be used
-everwhere to do what CTRL-V used to do.
+everywhere to do what CTRL-V used to do.
 
 Support for decompression of bzip2 files in vimrc_example.vim.
 
@@ -5496,7 +5496,7 @@ Files:	    src/misc1.c
 Patch 5.4.26
 Problem:    Multi-byte: a multi-byte character is never recognized in a file
 	    name, causing a backslash before it to be removed on Windows.
-Solution:   Assume that a leading-byte character is a file hame character in
+Solution:   Assume that a leading-byte character is a file name character in
 	    vim_isfilec().
 Files:	    src/charset.c
 
@@ -6178,8 +6178,8 @@ Files:	    src/fileio.c
 
 Patch 5.5.034
 Problem:    "gvim -rv" caused a crash.  Using 't_Co' before it's set.
-Solution:   Don't try to initilize the highlighting before it has been
-	    initilized from main().
+Solution:   Don't try to initialize the highlighting before it has been
+	    initialized from main().
 Files:	    src/syntax.c
 
 Patch 5.5.035

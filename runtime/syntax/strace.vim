@@ -2,17 +2,16 @@
 " This is a GENERATED FILE. Please always refer to source file at the URI below.
 " Language: strace output
 " Maintainer: David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>
-" Last Change: 2001-04-26
-" URI: http://physics.muni.cz/~yeti/download/strace.vim
-
+" Last Change: 2002-10-10
+" URL: http://trific.ath.cx/Ftp/vim/syntax/strace.vim
 
 " Setup
 if version >= 600
-  if exists("b:current_syntax")
-    finish
-  endif
+	if exists("b:current_syntax")
+		finish
+	endif
 else
-  syntax clear
+	syntax clear
 endif
 
 syn case match
@@ -28,34 +27,40 @@ syn match straceConstant "[A-Z_]\{2,}"
 syn region straceVerbosed start="(" end=")" matchgroup=Normal contained oneline
 syn region straceReturned start="\s=\s" end="$" contains=StraceEquals,straceNumberRHS,straceOtherRHS,straceConstant,straceVerbosed oneline transparent
 syn match straceEquals "\s=\s"ms=s+1,me=e-1
-syn match straceSysCall "^\w\+"
 syn match straceParenthesis "[][(){}]"
+syn match straceSysCall "^\w\+"
+syn match straceOtherPID "^\[[^]]*\]" contains=stracePID,straceNumber nextgroup=straceSysCallEmbed skipwhite
+syn match straceSysCallEmbed "\w\+" contained
+syn keyword stracePID pid contained
 syn match straceOperator "[-+=*/!%&|:,]"
 syn region straceComment start="/\*" end="\*/" oneline
 
 " Define the default highlighting
 if version >= 508 || !exists("did_strace_syntax_inits")
-  if version < 508
-    let did_strace_syntax_inits = 1
-    command -nargs=+ HiLink hi link <args>
-  else
-    command -nargs=+ HiLink hi def link <args>
-  endif
+	if version < 508
+		let did_strace_syntax_inits = 1
+		command -nargs=+ HiLink hi link <args>
+	else
+		command -nargs=+ HiLink hi def link <args>
+	endif
 
-  HiLink straceComment     Comment
-  HiLink straceVerbosed    Comment
-  HiLink straceNumber      Number
-  HiLink straceNumberRHS   Type
-  HiLink straceOtherRHS    Type
-  HiLink straceString      String
-  HiLink straceConstant    Function
-  HiLink straceEquals      Type
-  HiLink straceSysCall     Statement
-  HiLink straceParenthesis Statement
-  HiLink straceOperator    Normal
-  HiLink straceSpecialChar Special
+	HiLink straceComment Comment
+	HiLink straceVerbosed Comment
+	HiLink stracePID PreProc
+	HiLink straceNumber Number
+	HiLink straceNumberRHS Type
+	HiLink straceOtherRHS Type
+	HiLink straceString String
+	HiLink straceConstant Function
+	HiLink straceEquals Type
+	HiLink straceSysCallEmbed straceSysCall
+	HiLink straceSysCall Statement
+	HiLink straceParenthesis Statement
+	HiLink straceOperator Normal
+	HiLink straceSpecialChar Special
+	HiLink straceOtherPID PreProc
 
-  delcommand HiLink
+	delcommand HiLink
 endif
 
 let b:current_syntax = "strace"

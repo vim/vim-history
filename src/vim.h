@@ -802,6 +802,7 @@ extern char* (*dyn_libintl_textdomain)(const char* domainname);
 #define DOCMD_NOWAIT	0x02	/* don't call wait_return() and friends */
 #define DOCMD_REPEAT	0x04	/* repeat exec. until getline() returns NULL */
 #define DOCMD_KEYTYPED	0x08	/* don't reset KeyTyped */
+#define DOCMD_EXCRESET	0x10	/* reset exception environment (for debugging)*/
 
 /* flags for beginline() */
 #define BL_WHITE	1	/* cursor on first non-white in the line */
@@ -1434,7 +1435,9 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 #define VV_PROGNAME	26
 #define VV_SEND_SERVER	27
 #define VV_DYING	28
-#define VV_LEN		29	/* number of v: vars */
+#define VV_EXCEPTION	29
+#define VV_THROWPOINT	30
+#define VV_LEN		31	/* number of v: vars */
 
 #ifdef FEAT_CLIPBOARD
 
@@ -1662,10 +1665,20 @@ typedef int VimClipboard;	/* This is required for the prototypes. */
 #endif
 
 #if defined(FEAT_GUI) && defined(FEAT_XCLIPBOARD)
-# define X_DISPLAY	(gui.in_use ? gui.dpy : xterm_dpy)
+# ifdef FEAT_GUI_GTK
+   /* Avoid using a global variable for the X display.  It's ugly
+    * and is likely to cause trouble in multihead environments. */
+#  define X_DISPLAY	((gui.in_use) ? gui_mch_get_display() : xterm_dpy)
+# else
+#  define X_DISPLAY	(gui.in_use ? gui.dpy : xterm_dpy)
+# endif
 #else
 # ifdef FEAT_GUI
-#  define X_DISPLAY	gui.dpy
+#  ifdef FEAT_GUI_GTK
+#   define X_DISPLAY	((gui.in_use) ? gui_mch_get_display() : (Display *)NULL)
+#  else
+#   define X_DISPLAY	gui.dpy
+#  endif
 # else
 #  define X_DISPLAY	xterm_dpy
 # endif

@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	Vim syntax file for SNMPv1 and SNMPv2 MIB and SMI files
-" Author:	David.Pascoe@jtec.com.au
+" Author:	David Pascoe <pascoedj@spamcop.net>
 " Written:	Wed Jan 28 14:37:23 GMT--8:00 1998
-" Last Changed:	Thu Apr 26 10:39:59 WST 2001
+" Last Changed:	Thu Feb 27 10:18:16 WST 2003
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded

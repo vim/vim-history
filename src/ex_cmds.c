@@ -799,7 +799,10 @@ do_filter(line1, line2, eap, cmd, do_in, do_out)
     {
 	msg_putchar('\n');		/* keep message from buf_write() */
 	--no_wait_return;
-	(void)EMSG2(_(e_notcreate), itmp);	/* will call wait_return */
+#if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+	if (!aborting())
+#endif
+	    (void)EMSG2(_(e_notcreate), itmp);	/* will call wait_return */
 	goto filterend;
     }
 #ifdef FEAT_AUTOCMD
@@ -861,8 +864,13 @@ do_filter(line1, line2, eap, cmd, do_in, do_out)
 	if (readfile(otmp, NULL, line2, (linenr_T)0, (linenr_T)MAXLNUM, eap,
 							 READ_FILTER) == FAIL)
 	{
-	    msg_putchar('\n');
-	    EMSG2(_(e_notread), otmp);
+#if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+	    if (!aborting())
+#endif
+	    {
+		msg_putchar('\n');
+		EMSG2(_(e_notread), otmp);
+	    }
 	    goto error;
 	}
 #ifdef FEAT_AUTOCMD
@@ -1252,11 +1260,12 @@ no_viminfo()
  * Count the number of errors.	When there are more than 10, return TRUE.
  */
     int
-viminfo_error(message, line)
+viminfo_error(errnum, message, line)
+    char    *errnum;
     char    *message;
     char_u  *line;
 {
-    sprintf((char *)IObuff, _("viminfo: %s in line: "), message);
+    sprintf((char *)IObuff, _("%sviminfo: %s in line: "), errnum, message);
     STRNCAT(IObuff, line, IOSIZE - STRLEN(IObuff));
     emsg(IObuff);
     if (++viminfo_errcnt >= 10)
@@ -1718,7 +1727,8 @@ read_viminfo_up_to_marks(virp, forceit, writing)
 		eof = read_viminfo_filemark(virp, forceit);
 		break;
 	    default:
-		if (viminfo_error(_("Illegal starting char"), virp->vir_line))
+		if (viminfo_error("E575: ", _("Illegal starting char"),
+			    virp->vir_line))
 		    eof = TRUE;
 		else
 		    eof = viminfo_readline(virp);
@@ -1974,6 +1984,10 @@ ex_file(eap)
 	/* buffer changed, don't change name now */
 	if (buf != curbuf)
 	    return;
+# ifdef FEAT_EVAL
+	if (aborting())	    /* autocmds may abort script processing */
+	    return;
+# endif
 #endif
 	/*
 	 * The name of the current buffer will be changed.
@@ -2156,7 +2170,11 @@ do_write(eap)
 	    buf_T	*was_curbuf = curbuf;
 
 	    apply_autocmds(EVENT_BUFFILEPRE, NULL, NULL, FALSE, curbuf);
+# ifdef FEAT_EVAL
+	    if (curbuf != was_curbuf || aborting())
+# else
 	    if (curbuf != was_curbuf)
+# endif
 	    {
 		/* buffer changed, don't change name now */
 		retval = FAIL;
@@ -2185,7 +2203,11 @@ do_write(eap)
 		alt_buf->b_p_bl = TRUE;
 		apply_autocmds(EVENT_BUFADD, NULL, NULL, FALSE, alt_buf);
 	    }
+# ifdef FEAT_EVAL
+	    if (curbuf != was_curbuf || aborting())
+# else
 	    if (curbuf != was_curbuf)
+# endif
 	    {
 		/* buffer changed, don't write the file */
 		retval = FAIL;
@@ -2662,6 +2684,10 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 	    /* Check if autocommands made buffer invalid. */
 	    if (!buf_valid(buf))
 		goto theend;
+#ifdef FEAT_EVAL
+	    if (aborting())	    /* autocmds may abort script processing */
+		goto theend;
+#endif
 	}
 
 	/* May jump to last used line number for a loaded buffer or when asked
@@ -2701,6 +2727,13 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 		delbuf_msg(new_name);	/* frees new_name */
 		goto theend;
 	    }
+# ifdef FEAT_EVAL
+	    if (aborting())	    /* autocmds may abort script processing */
+	    {
+		vim_free(new_name);
+		goto theend;
+	    }
+# endif
 	    if (buf == curbuf)		/* already in new buffer */
 		auto_buf = TRUE;
 	    else
@@ -2714,6 +2747,13 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 				      (flags & ECMD_HIDE) ? 0 : DOBUF_UNLOAD);
 
 #ifdef FEAT_AUTOCMD
+# ifdef FEAT_EVAL
+	    if (aborting())	    /* autocmds may abort script processing */
+	    {
+		vim_free(new_name);
+		goto theend;
+	    }
+# endif
 		/* Be careful again, like above. */
 		if (!buf_valid(buf))	/* new buffer has been deleted */
 		{
@@ -2804,6 +2844,10 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
      * editing the file. */
     if (buf != curbuf)
 	goto theend;
+# ifdef FEAT_EVAL
+    if (aborting())	    /* autocmds may abort script processing */
+	goto theend;
+# endif
 
     /* Since we are starting to edit a file, consider the filetype to be
      * unset.  Helps for when an autocommand changes files and expects syntax
@@ -2849,6 +2893,10 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 	 * the autocommands changed the buffer... */
 	if (buf != curbuf)
 	    goto theend;
+# ifdef FEAT_EVAL
+	if (aborting())	    /* autocmds may abort script processing */
+	    goto theend;
+# endif
 #endif
 	buf_clear_file(curbuf);
 	curbuf->b_op_start.lnum = 0;	/* clear '[ and '] marks */
@@ -2912,7 +2960,12 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 	    /*
 	     * Open the buffer and read the file.
 	     */
+#if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+	    if (should_abort(open_buffer(FALSE, eap)))
+		retval = FAIL;
+#else
 	    (void)open_buffer(FALSE, eap);
+#endif
 
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
 	    if (swap_exists_action == SEA_QUIT)
@@ -2923,8 +2976,10 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 #ifdef FEAT_AUTOCMD
 	else
 	{
-	    apply_autocmds(EVENT_BUFENTER, NULL, NULL, FALSE, curbuf);
-	    apply_autocmds(EVENT_BUFWINENTER, NULL, NULL, FALSE, curbuf);
+	    apply_autocmds_retval(EVENT_BUFENTER, NULL, NULL, FALSE, curbuf,
+								    &retval);
+	    apply_autocmds_retval(EVENT_BUFWINENTER, NULL, NULL, FALSE, curbuf,
+								    &retval);
 	}
 	check_arg_idx(curwin);
 #endif
@@ -3580,7 +3635,11 @@ do_sub(eap)
      * Check for a match on each line.
      */
     line2 = eap->line2;
-    for (lnum = eap->line1; lnum <= line2 && !(got_int || got_quit); ++lnum)
+    for (lnum = eap->line1; lnum <= line2 && !(got_quit
+#if defined(FEAT_EVAL) && defined(FEAT_AUTOCMD)
+		|| aborting()
+#endif
+		); ++lnum)
     {
 	sub_firstlnum = lnum;
 	nmatch = vim_regexec_multi(&regmatch, curwin, curbuf, lnum, (colnr_T)0);
@@ -5265,7 +5324,7 @@ ex_sign(eap)
 				    last_sign_typenr = MAX_TYPENR;
 				if (last_sign_typenr == start)
 				{
-				    EMSG(_("E255: Too many signs defined"));
+				    EMSG(_("E612: Too many signs defined"));
 				    return;
 				}
 				lp = first_sign;

@@ -1,4 +1,4 @@
-*pi_spec.txt*   For Vim version 6.1.  Last change: 2001 Sep 03
+*pi_spec.txt*   For Vim version 6.2a.  Last change: 2002 Oct 29
 
 by Gustavo Niemeyer ~
 
@@ -7,7 +7,7 @@ This is a filetype plugin to work with rpm spec files.
 Currently, this Vim plugin allows you to easily update the %changelog
 section in RPM spec files. It will even create a section for you if it
 doesn't exist yet. If you've already inserted an entry today, it will
-give you the oportunity to just add a new item in today's entry. If you
+give you the opportunity to just add a new item in today's entry. If you
 don't provide a format string (|spec_chglog_format|), it'll ask you an
 email address and build a format string by itself.
 
@@ -100,7 +100,7 @@ Then, the first item in your changelog entry will be something like: >
 
 	+ name-1.0-1cl
 
-If you don't like the release updating feature and don't want to anwer
+If you don't like the release updating feature and don't want to answer
 "No" each time it detects an old release, you may disable it with >
 
 	let spec_chglog_never_increase_release = 1

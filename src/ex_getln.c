@@ -78,6 +78,9 @@ static void	correct_cmdspos __ARGS((int idx, int cells));
 static void	alloc_cmdbuff __ARGS((int len));
 static int	realloc_cmdbuff __ARGS((int len));
 static void	draw_cmdline __ARGS((int start, int len));
+#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
+static void	redrawcmd_preedit __ARGS((void));
+#endif
 #ifdef FEAT_WILDMENU
 static void	cmdline_del __ARGS((int from));
 #endif
@@ -1031,6 +1034,13 @@ getcmdline(firstc, count, indent)
 		redrawcmd();
 		goto cmdline_changed;
 
+#ifdef FEAT_DND
+	case K_DROP:
+		cmdline_paste('~', TRUE);
+		redrawcmd();
+		goto cmdline_changed;
+#endif
+
 	case K_LEFTDRAG:
 	case K_LEFTRELEASE:
 	case K_RIGHTDRAG:
@@ -1900,6 +1910,104 @@ cmdline_at_end()
 }
 #endif
 
+#if (defined(FEAT_XIM) && defined(FEAT_GUI_GTK)) || defined(PROTO)
+/*
+ * Return the virtual column number at the current cursor position.
+ * This is used by the IM code to obtain the start of the preedit string.
+ */
+    colnr_T
+cmdline_getvcol_cursor()
+{
+    if (ccline.cmdbuff == NULL || ccline.cmdpos > ccline.cmdlen)
+	return MAXCOL;
+
+# ifdef FEAT_MBYTE
+    if (has_mbyte)
+    {
+	colnr_T	col;
+	int	i = 0;
+
+	for (col = 0; i < ccline.cmdpos; ++col)
+	    i += (*mb_ptr2len_check)(ccline.cmdbuff + i);
+
+	return col;
+    }
+    else
+# endif
+	return ccline.cmdpos;
+}
+#endif
+
+#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
+/*
+ * If part of the command line is an IM preedit string, redraw it with
+ * IM feedback attributes.  The cursor position is restored after drawing.
+ */
+    static void
+redrawcmd_preedit()
+{
+    if ((State & CMDLINE)
+	&& xic != NULL && im_get_status() && !p_imdisable
+	&& preedit_start_col != MAXCOL)
+    {
+	int	cmdpos = 0;
+	int	cmdspos;
+	int	old_row;
+	int	old_col;
+	colnr_T	col;
+
+	old_row = msg_row;
+	old_col = msg_col;
+	cmdspos = ((ccline.cmdfirstc) ? 1 : 0) + ccline.cmdindent;
+
+# ifdef FEAT_MBYTE
+	if (has_mbyte)
+	{
+	    for (col = 0; col < preedit_start_col
+			  && cmdpos < ccline.cmdlen; ++col)
+	    {
+		cmdspos += (*mb_ptr2cells)(ccline.cmdbuff + cmdpos);
+		cmdpos  += (*mb_ptr2len_check)(ccline.cmdbuff + cmdpos);
+	    }
+	}
+	else
+# endif
+	{
+	    cmdspos += preedit_start_col;
+	    cmdpos  += preedit_start_col;
+	}
+
+	msg_row = cmdline_row + (cmdspos / (int)Columns);
+	msg_col = cmdspos % (int)Columns;
+	if (msg_row >= Rows)
+	    msg_row = Rows - 1;
+
+	for (col = 0; cmdpos < ccline.cmdlen; ++col)
+	{
+	    int char_len;
+	    int char_attr;
+
+	    char_attr = im_get_feedback_attr(col);
+	    if (char_attr < 0)
+		break; /* end of preedit string */
+
+# ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		char_len = (*mb_ptr2len_check)(ccline.cmdbuff + cmdpos);
+	    else
+# endif
+		char_len = 1;
+
+	    msg_outtrans_len_attr(ccline.cmdbuff + cmdpos, char_len, char_attr);
+	    cmdpos += char_len;
+	}
+
+	msg_row = old_row;
+	msg_col = old_col;
+    }
+}
+#endif /* FEAT_XIM && FEAT_GUI_GTK */
+
 /*
  * Allocate a new command line buffer.
  * Assigns the new buffer to ccline.cmdbuff and ccline.cmdbufflen.
@@ -2250,6 +2358,9 @@ cursorcmd()
     if (msg_row >= Rows)
 	msg_row = Rows - 1;
     windgoto(msg_row, msg_col);
+#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
+    redrawcmd_preedit();
+#endif
 #ifdef MCH_CURSOR_SHAPE
     mch_update_cursor();
 #endif
@@ -4512,6 +4623,10 @@ ex_window()
 	cmdwin_result = Ctrl_C;
 	EMSG(_("E199: Active window or buffer deleted"));
     }
+# if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+    else if (aborting())    /* autocmds may abort script processing */
+	cmdwin_result = Ctrl_C;
+# endif
     else
     {
 	/* Set the new command line from the cmdline buffer. */

@@ -1,8 +1,8 @@
-"  vim: set sw=4 sts=4:
-"  Maintainer	: Nikolai 'pcp' Weibull <da.box@home.se>
-"  URL		: http://www.pcppopper.org/
-"  Revised on	: Tue, 31 Jul 2001 00:49:03 CEST
-"  Language	: Terminfo definition
+" Vim syntax file
+" Language:	    Terminfo definition
+" Maintainer:	    Nikolai 'pcp' Weibull <da.box@home.se>
+" URL:		    http://www.pcppopper.org/
+" Latest Revision:  2002-10-24
 
 if version < 600
     syntax clear
@@ -106,7 +106,7 @@ if version >= 508 || !exists("did_terminfo_syn_inits")
     HiLink terminfoComment	Comment
     HiLink terminfoTodo		Todo
     HiLink terminfoNumbers	Number
-    HiLink terminfoSpecialChar	SpecialChar
+    HiLink terminfoSpecialChar	SpecialChar	
     HiLink terminfoDelay	Special
     HiLink terminfoBooleans	Type
     HiLink terminfoNumerics	Type
@@ -117,3 +117,5 @@ if version >= 508 || !exists("did_terminfo_syn_inits")
 endif
 
 let b:current_syntax = "terminfo"
+
+"  vim: set sw=4 sts=4:

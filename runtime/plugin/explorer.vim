@@ -1,7 +1,7 @@
 "=============================================================================
 " File: explorer.vim
 " Author: M A Aziz Ahmed (aziz@acorn-networks.com)
-" Last Change:	2002 Jun 12
+" Last Change:	2003 Apr 05
 " Version: 2.5 + changes
 " Additions by Mark Waggoner (waggoner@aracnet.com) et al.
 "-----------------------------------------------------------------------------
@@ -115,6 +115,30 @@ if !exists("g:explUseSeparators")
   let g:explUseSeparators=0
 endif
 
+" Execute file handler
+if !exists("g:explFileHandler")
+  if has("win32")
+    " for Win32 use rundll32
+    function! s:explFileHandlerWin32(fn)
+      exec 'silent !start rundll32 url.dll,FileProtocolHandler "'
+      		\ . escape(a:fn, '%#') . '"'
+    endfunction
+    let g:explFileHandler = "<SID>explFileHandlerWin32"
+  elseif has("unix") && executable("kfmclient")
+    " for KDE use kfmclient
+    function! s:explFileHandlerKDE(fn)
+      if &shellredir =~ "%s"
+	let redir = substitute(&shellredir, "%s", "/dev/null", "")
+      else
+	let redir = &shellredir . "/dev/null"
+      endif
+      " Need to escape % and # but not spaces.
+      exec "silent !kfmclient exec '" . escape(a:fn, '%#') . "'" . redir
+    endfunction
+    let g:explFileHandler = "<SID>explFileHandlerKDE"
+  endif
+endif
+
 "---
 " script variables - these are the same across all
 " explorer windows
@@ -126,7 +150,7 @@ let s:escregexp = '/*^$.~\'
 if has("dos16") || has("dos32") || has("win16") || has("win32") || has("os2")
   let s:escfilename = ' %#'
 else
-  let s:escfilename = ' \%#'
+  let s:escfilename = ' \%#[]'
 endif
 
 
@@ -194,7 +218,7 @@ function! s:EditDir()
 
   " Turn off the swapfile, set the buffer type so that it won't get
   " written, and so that it will get deleted when it gets hidden.
-  setlocal modifiable
+  setlocal noreadonly modifiable
   setlocal noswapfile
   setlocal buftype=nowrite
   setlocal bufhidden=delete
@@ -247,7 +271,7 @@ function! s:EditDir()
 
   " If directory is already loaded, don't open it again!
   if line('$') > 1
-    setlocal nomodifiable
+    setlocal readonly nomodifiable
     return
   endif
 
@@ -259,9 +283,9 @@ function! s:EditDir()
   " we are editing so that we can get a real path to the directory,
   " eliminating things like ".."
   let origdir= s:Path(getcwd())
-  exe "chdir" escape(b:completePath,s:escfilename)
+  exe "chdir" escape(b:completePath, s:escfilename)
   let b:completePath = s:Path(getcwd())
-  exe "chdir" escape(origdir,s:escfilename)
+  exe "chdir" escape(origdir, s:escfilename)
 
   " Add a slash at the end
   if b:completePath !~ '/$'
@@ -269,8 +293,8 @@ function! s:EditDir()
   endif
 
   " escape special characters for exec commands
-  let b:completePathEsc=escape(b:completePath,s:escfilename)
-  let b:parentDirEsc=substitute(b:completePathEsc, '/[^/]*/$', '/', 'g')
+  let b:completePathEsc = escape(b:completePath, s:escfilename)
+  let b:parentDirEsc = substitute(b:completePathEsc, '/[^/]*/$', '/', 'g')
 
   " Set up syntax highlighting
   " Something wrong with the evaluation of the conditional though...
@@ -312,6 +336,9 @@ function! s:EditDir()
   set cpo&vim
   nnoremap <buffer> <cr> :call <SID>EditEntry("","edit")<cr>
   nnoremap <buffer> -    :exec ("silent e "  . b:parentDirEsc)<cr>
+  if exists("g:explFileHandler")
+    nnoremap <buffer> x    :call <SID>ExecuteEntry()<cr>
+  endif
   nnoremap <buffer> o    :call <SID>OpenEntry()<cr>
   nnoremap <buffer> O    :call <SID>OpenEntryPrevWindow()<cr>
   nnoremap <buffer> p    :call <SID>EditEntry("","pedit")<cr>
@@ -325,10 +352,13 @@ function! s:EditDir()
   nnoremap <buffer> r    :call <SID>SortReverse()<cr>
   nnoremap <buffer> c    :exec "cd ".b:completePathEsc<cr>
   nnoremap <buffer> <2-leftmouse> :call <SID>DoubleClick()<cr>
+  if exists("*ExplorerCustomMap")
+    call ExplorerCustomMap()
+  endif
   let &cpo = cpo_save
 
   " prevent the buffer from being modified
-  setlocal nomodifiable
+  setlocal readonly nomodifiable
 endfunction
 
 "---
@@ -505,6 +535,21 @@ function! s:OpenEntry()
 
 endfunction
 
+function! s:ExecuteEntry()
+  " Are we on a line with a file name?
+  let l = getline(".")
+  if l =~ '^"'
+    return
+  endif
+
+  " Get the file name
+  let fn = s:GetFullFileName()
+  if has("win32") && fn =~ '^//'
+    let fn = substitute(fn, '/', '\\', 'g')
+  endif
+  exec "call " . g:explFileHandler . "(fn)"
+endfunction
+
 "---
 " Double click with the mouse
 "
@@ -590,14 +635,14 @@ function! s:ShowDirectory()
   " Display the files
 
   " Get a list of all the files
-  let files = s:Path(glob(b:completePath."*"))
-  if files != "" && files !~ '\n$'
+  let files = s:Path(glob(b:completePathEsc . "*"))
+  if files != "" && files !~ "\n$"
     let files = files . "\n"
   endif
 
   " Add the dot files now, making sure "." is not included!
-  let files = files . substitute(s:Path(glob(b:completePath.".*")), "[^\n]*/./\\=\n", '' , '')
-  if files != "" && files !~ '\n$'
+  let files = files . substitute(s:Path(glob(b:completePathEsc . ".*")), "[^\n]*/./\\=\n", '' , '')
+  if files != "" && files !~ "\n$"
     let files = files . "\n"
   endif
 
@@ -737,14 +782,18 @@ function! s:AddHeader()
     1
     if w:longhelp==1
       let @f="\" <enter> : open file or directory\n"
-           \."\" o : open new window for file/directory\n"
-           \."\" O : open file in previously visited window\n"
-           \."\" p : preview the file\n"
-           \."\" i : toggle size/date listing\n"
-           \."\" s : select sort field    r : reverse sort\n"
-           \."\" - : go up one level      c : cd to this dir\n"
-           \."\" R : rename file          D : delete file\n"
-           \."\" :help file-explorer for detailed help\n"
+	   \."\" o : open new window for file/directory\n"
+	   \."\" O : open file in previously visited window\n"
+	   \."\" p : preview the file\n"
+      if exists("g:explFileHandler")
+	let @f=@f."\" x : execute file or directory\n"
+      endif
+      let @f=@f
+	   \."\" i : toggle size/date listing\n"
+	   \."\" s : select sort field    r : reverse sort\n"
+	   \."\" - : go up one level      c : cd to this dir\n"
+	   \."\" R : rename file          D : delete file\n"
+	   \."\" :help file-explorer for detailed help\n"
     else
       let @f="\" Press ? for keyboard shortcuts\n"
     endif
@@ -827,7 +876,7 @@ function! s:DeleteFile() range
   let delAll = 0
   let currLine = a:firstline
   let lastLine = a:lastline
-  setlocal modifiable
+  setlocal noreadonly modifiable
 
   while ((currLine <= lastLine) && (stopDel==0))
     exec(currLine)
@@ -863,7 +912,7 @@ function! s:DeleteFile() range
   echo "\n".filesDeleted." files deleted"
   let &report = oldRep
   setlocal nomodified
-  setlocal nomodifiable
+  setlocal readonly nomodifiable
 endfunction
 
 "---
@@ -871,14 +920,14 @@ endfunction
 "
 function! s:RenameFile()
   let fileName=s:GetFullFileName()
-  setlocal modifiable
+  setlocal noreadonly modifiable
   if isdirectory(fileName)
     echo "Directory renaming not supported yet"
   elseif filereadable(fileName)
     let altName=input("Rename ".fileName." to : ")
     echo " "
     if altName==""
-      setlocal nomodifiable
+      setlocal readonly nomodifiable
       return
     endif
     let success=rename(fileName, b:completePath.altName)
@@ -893,7 +942,7 @@ function! s:RenameFile()
     endif
   endif
   setlocal nomodified
-  setlocal nomodifiable
+  setlocal readonly nomodifiable
 endfunction
 
 "---
@@ -908,10 +957,10 @@ function! s:ToggleHelp()
     let s:longhelp=0
   endif
   " Allow modification
-  setlocal modifiable
+  setlocal noreadonly modifiable
   call s:UpdateHeader()
   " Disallow modification
-  setlocal nomodifiable
+  setlocal readonly nomodifiable
 endfunction
 
 "---
@@ -941,7 +990,7 @@ endfunction
 " Toggle long vs. short listing
 "
 function! s:ToggleLongList()
-  setlocal modifiable
+  setlocal noreadonly modifiable
   if exists("w:longlist") && w:longlist==1
     let w:longlist=0
     let s:longlist=0
@@ -950,18 +999,18 @@ function! s:ToggleLongList()
     let s:longlist=1
   endif
   call s:AddFileInfo()
-  setlocal nomodifiable
+  setlocal readonly nomodifiable
 endfunction
 
 "---
 " Show all files - remove filtering
 "
 function! s:ShowAllFiles()
-  setlocal modifiable
+  setlocal noreadonly modifiable
   let b:filterFormula=""
   let b:filtering=""
   call s:ShowDirectory()
-  setlocal nomodifiable
+  setlocal readonly nomodifiable
 endfunction
 
 "---
@@ -1203,7 +1252,7 @@ function! s:SortListing(msg)
     let lin=line(".")
 
     " Allow modification
-    setlocal modifiable
+    setlocal noreadonly modifiable
 
     " Send a message about what we're doing
     " Don't really need this - it can cause hit return prompts
@@ -1241,7 +1290,7 @@ function! s:SortListing(msg)
 
     " Disallow modification
     setlocal nomodified
-    setlocal nomodifiable
+    setlocal readonly nomodifiable
 
 endfunction
 

@@ -43,7 +43,6 @@ popup_gvim_path(char *buf)
     long	value_type;
     long	bufsize = BUFSIZE;
     int		r;
-    char	*p;
 
     /* Open the key where the path to gvim.exe is stored. */
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\Vim\\Gvim", 0, KEY_READ,

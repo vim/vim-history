@@ -1,7 +1,7 @@
 " Menu Translations:	German / Deutsch
 " Maintainer:		Johannes Zellner <johannes@zellner.org>
 " Originally By:	Marcin Dalecki <dalecki@cs.net.pl>
-" Last Change:	Mon, 22 Oct 2001 08:47:52 W. Europe Standard Time
+" Last Change:	Sat, 20 Apr 2002 19:02:42 CEST
 " vim:set foldmethod=marker tabstop=8:
 
 " Quit when menu translations have already been done.
@@ -41,7 +41,7 @@ menutrans &Redo<Tab>^R			Vo&r<Tab>^R
 menutrans Rep&eat<Tab>\.		&Wiederholen<Tab>\.
 menutrans Cu&t<Tab>"+x			&Ausschneiden<Tab>"+x
 menutrans &Copy<Tab>"+y			&Kopieren<Tab>"+y
-menutrans &Paste<Tab>"+P		Ein&fügen<Tab>"+p
+menutrans &Paste<Tab>"+gP		Ein&fügen<Tab>"+gP
 menutrans Put\ &Before<Tab>[p		Da&vor\ Einfügen<Tab>[p
 menutrans Put\ &After<Tab>]p		Da&nach\ Einfügen<Tab>]p
 menutrans &Select\ all<Tab>ggVG		Alles\ &Markieren<Tab>ggVG
@@ -66,6 +66,7 @@ menutrans Insert\ mode					Einfüge-Modus
 menutrans Block\ and\ Insert				Block-\ und\ Einfüge-Modus
 menutrans Always					Immer
 menutrans Toggle\ Insert\ &Mode<Tab>:set\ im!		Einfüge-&Modus\ ein-\ und\ ausschalten<Tab>:set\ im!
+menutrans Toggle\ Vi\ C&ompatible<Tab>:set\ cp!		Vi-Kompatiblität\ ein-\ und\ ausschalten<Tab>:set\ cp!
 
 menutrans Search\ &Path\.\.\.				Such-&Pfad\.\.\.
 menutrans Ta&g\ Files\.\.\.				Ta&g-Dateien\.\.\.
@@ -209,7 +210,8 @@ menutrans &User\ Manual		&Handbuch
 menutrans &How-to\ links	How-to\ &Index
 menutrans &GUI			&Graphische\ Oberfläche
 menutrans &Credits		&Autoren
-menutrans Co&pying		&Copyright	" Urheberrecht ?
+menutrans Co&pying		&Urheberrecht
+menutrans O&rphans		&Waisen
 menutrans &Find\.\.\.		&Suchen\.\.\.	" conflicts with Edit.Find
 menutrans &Version		&Version
 menutrans &About		&Titelseite

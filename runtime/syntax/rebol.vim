@@ -1,11 +1,10 @@
 " Vim syntax file
 " Language:	Rebol
-" Maintainer:	Mike Williams <mrw@netcomuk.co.uk>
+" Maintainer:	Mike Williams <mrw@eandem.co.uk>
 " Filenames:	*.r
-" Last Change:	2001 May 09
-" URL:		N/A
+" Last Change:	27th June 2002
+" URL:          http://www.eandem.co.uk/mrw/vim
 "
-" Change history
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded

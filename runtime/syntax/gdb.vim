@@ -2,7 +2,7 @@
 " Language:	GDB command files
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/gdb.vim
-" Last Change:	2001 Sep 02
+" Last Change:	2003 Jan 04
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -93,16 +93,16 @@ if version >= 508 || !exists("did_gdb_syn_inits")
   else
     command -nargs=+ HiLink hi def link <args>
   endif
-  HiLink gdbFuncDef	   Function
-  HiLink gdbComment	   Comment
-  HiLink gdbStatement	   Statement
-  HiLink gdbString	   String
-  HiLink gdbCharacter	   Character
-  HiLink gdbVariable	   Identifier
-  HiLink gdbSet		   Constant
-  HiLink gdbInfo	   Type
-  HiLink gdbDocument	   Special
-  HiLink gdbNumber	   Number
+  HiLink gdbFuncDef	Function
+  HiLink gdbComment	Comment
+  HiLink gdbStatement	Statement
+  HiLink gdbString	String
+  HiLink gdbCharacter	Character
+  HiLink gdbVariable	Identifier
+  HiLink gdbSet		Constant
+  HiLink gdbInfo	Type
+  HiLink gdbDocument	Special
+  HiLink gdbNumber	Number
   delcommand HiLink
 endif
 

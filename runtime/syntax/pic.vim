@@ -1,9 +1,9 @@
 " Vim syntax file
 " Language:     PIC16F84 Assembler (Microchip's microcontroller)
-" Maintainer:   Aleksandar Veselinovic <alexa@cliffhanger.com>
-" Last Change:  2001 May 10
-" URL:          http://SOLAIR.EUnet.yu/~aleksav/vim/syntax/pic.vim
-" Revision:     1.0
+" Maintainer:   Aleksandar Veselinovic <aleksa@cs.cmu.com>
+" Last Change:  2002 Mart 29
+" URL:          http://galeb.etf.bg.ac.yu/~alexa/vim/syntax/pic.vim
+" Revision:     1.01
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -15,7 +15,6 @@ endif
 
 syn case match
 syn keyword picTodo NOTE TODO XXX contained
-
 
 syn case ignore
 
@@ -89,7 +88,6 @@ syn keyword picDirective VARIABLE WHILE INCLUDE
 syn match picDirective   "#\=UNDEFINE"
 syn match picDirective   "#\=INCLUDE"
 syn match picDirective   "#\=DEFINE"
-
 
 
 " Define the default highlighting.

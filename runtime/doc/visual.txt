@@ -1,4 +1,4 @@
-*visual.txt*    For Vim version 6.1.  Last change: 2001 Dec 14
+*visual.txt*    For Vim version 6.2a.  Last change: 2003 Apr 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -459,6 +459,11 @@ behavior as in Visual mode is effective.
 After the mapping or menu finishes, the selection is enabled again and Select
 mode entered, unless the selected area was deleted, another buffer became
 the current one or the window layout was changed.
+
+When a character was typed that causes the selection to be deleted and Insert
+mode started, Insert mode mappings are applied to this character.  This may
+cause some confusion, because it means Insert mode mappings apply to a
+character typed in Select mode.  Language mappings apply as well.
 
 							*gV* *v_gV*
 gV			Avoid the automatic reselection of the Visual area

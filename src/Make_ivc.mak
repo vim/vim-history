@@ -219,6 +219,7 @@ LINK32_OBJS= \
 	"$(INTDIR)/ex_cmds.obj" \
 	"$(INTDIR)/ex_cmds2.obj" \
 	"$(INTDIR)/ex_docmd.obj" \
+	"$(INTDIR)/ex_eval.obj" \
 	"$(INTDIR)/ex_getln.obj" \
 	"$(INTDIR)/fileio.obj" \
 	"$(INTDIR)/fold.obj" \
@@ -275,13 +276,13 @@ CLEAN :
 	-@if exist Make_ivc.plg erase Make_ivc.plg
 
 install.exe: dosinst.c
-	$(CPP) /Fe$@ /nologo -DNDEBUG -DWIN32 dosinst.c kernel32.lib shell32.lib ole32.lib advapi32.lib uuid.lib
+	$(CPP) /Fe$@ /nologo /W3 -DNDEBUG -DWIN32 dosinst.c kernel32.lib shell32.lib ole32.lib advapi32.lib uuid.lib
 
 uninstal.exe: uninstal.c
-	$(CPP) /nologo -DNDEBUG -DWIN32 uninstal.c shell32.lib advapi32.lib
+	$(CPP) /nologo /W3 -DNDEBUG -DWIN32 uninstal.c shell32.lib advapi32.lib
 
 vimrun.exe: vimrun.c
-	$(CPP) /nologo -DNDEBUG vimrun.c
+	$(CPP) /nologo /W3 -DNDEBUG vimrun.c
 
 xxd/xxd.exe: xxd/xxd.c
 	cd xxd
@@ -341,6 +342,10 @@ SOURCE=.\ex_cmds2.c
 # Begin Source File
 
 SOURCE=.\ex_docmd.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\ex_eval.c
 # End Source File
 # Begin Source File
 

@@ -1,13 +1,14 @@
 " Vim indent file
 " Language:	Ada
 " Maintainer:	Neil Bird <neil@fnxweb.com>
-" Last Change:	2001 November 6
+" Last Change:	2003 April 8
 " Version:	$Id$
 " Look for the latest version at http://vim.sourceforge.net/
 "
 " ToDo:
 "  Verify handling of multi-line exprs. and recovery upon the final ';'.
 "  Correctly find comments given '"' and "" ==> " syntax.
+"  Combine the two large block-indent functions into one?
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
@@ -24,7 +25,7 @@ if exists("*GetAdaIndent")
    finish
 endif
 
-let s:AdaBlockStart = '^\s*\(if\|while\|else\|elsif\|loop\|for\>.*\<loop\|declare\|begin\|record\|procedure\|function\|accept\|do\|task\|package\|then\|when\|is\)\>'
+let s:AdaBlockStart = '^\s*\(if\>\|while\>\|else\>\|elsif\>\|loop\>\|for\>.*\<loop\>\|declare\>\|begin\>\|type\>.*\<is\s*$\|\(type\>.*\)\=\<record\>\|procedure\>\|function\>\|accept\>\|do\>\|task\>\|package\>\|then\>\|when\>\|is\>\)'
 let s:AdaComment = "\\v^(\"[^\"]*\"|'.'|[^\"']){-}\\zs\\s*--.*"
 
 
@@ -32,6 +33,7 @@ let s:AdaComment = "\\v^(\"[^\"]*\"|'.'|[^\"']){-}\\zs\\s*--.*"
 " prev_indent = the previous line's indent
 " prev_lnum   = previous line (to start looking on)
 " blockstart  = expr. that indicates a possible start of this block
+" stop_at     = if non-null, if a matching line is found, gives up!
 " No recursive previous block analysis: simply look for a valid line
 " with a lesser or equal indent than we currently (on prev_lnum) have.
 " This shouldn't work as well as it appears to with lines that are currently
@@ -39,11 +41,11 @@ let s:AdaComment = "\\v^(\"[^\"]*\"|'.'|[^\"']){-}\\zs\\s*--.*"
 " Seems to work OK as it 'starts' with the indent of the /previous/ line.
 function s:MainBlockIndent( prev_indent, prev_lnum, blockstart, stop_at )
    let lnum = a:prev_lnum
-   let line = getline(lnum)
+   let line = substitute( getline(lnum), s:AdaComment, '', '' )
    while lnum > 1
-      if a:stop_at != ''  &&  getline(lnum) =~ '^\s*' . a:stop_at
+      if a:stop_at != ''  &&  line =~ '^\s*' . a:stop_at  &&  indent(lnum) < a:prev_indent
          return -1
-      elseif getline(lnum) =~ '^\s*' . a:blockstart
+      elseif line =~ '^\s*' . a:blockstart
          let ind = indent(lnum)
          if ind < a:prev_indent
             return ind
@@ -131,7 +133,7 @@ function s:StatementIndent( current_indent, prev_lnum )
       endwhile
       " Leave indent alone if our ';' line is part of a ';'-delineated
       " aggregate (e.g., procedure args.) or first line after a block start.
-      if line =~ s:AdaBlockStart
+      if line =~ s:AdaBlockStart || line =~ '(\s*$'
          return a:current_indent
       endif
       if line !~ '[.=(]\s*$'
@@ -151,6 +153,7 @@ function GetAdaIndent()
    " Find a non-blank line above the current line.
    let lnum = prevnonblank(v:lnum - 1)
    let ind = indent(lnum)
+   let package_line = 0
 
    " Get previous non-blank/non-comment-only/non-cpp line
    while 1
@@ -169,17 +172,21 @@ function GetAdaIndent()
 
    " Now check what's on the previous line
    if line =~ s:AdaBlockStart  ||  line =~ '(\s*$'
-      " Move indent in
-      let ind = ind + &sw
+      " Check for false matches to AdaBlockStart
+      if line !~ '^\s*package\>.*\<is\s*new\>'
+         " Move indent in
+         let ind = ind + &sw
+      endif
    elseif line =~ '^\s*\(case\|exception\)\>'
       " Move indent in twice (next 'when' will move back)
       let ind = ind + 2 * &sw
    elseif line =~ '^\s*end\s*record\>'
       " Move indent back to tallying 'type' preceeding the 'record'.
-      let ind = s:MainBlockIndent( ind, lnum, 'type\>', '' )
+      " Allow indent to be equal to 'end record's.
+      let ind = s:MainBlockIndent( ind+&sw, lnum, 'type\>', '' )
    elseif line =~ ')\s*[;,]\s*$'
       " Revert to indent of line that started this parenthesis pair
-      lnum
+      exe lnum
       exe 'normal! $F)%'
       if getline('.') =~ '^\s*('
          " Dire layout - use previous indent (could check for AdaComment here)
@@ -187,14 +194,20 @@ function GetAdaIndent()
       else
          let ind = indent('.')
       endif
-      v:lnum
+      exe v:lnum
    elseif line =~ '[.=(]\s*$'
       " A statement continuation - move in one
       let ind = ind + &sw
+   elseif line =~ '^\s*new\>'
+      " Multiple line generic instantiation ('package blah is\nnew thingy')
+      let ind = s:StatementIndent( ind - &sw, lnum )
    elseif line =~ ';\s*$'
       " Statement end - try to find current statement-start indent
       let ind = s:StatementIndent( ind, lnum )
    endif
+
+   " Check for potential argument list on next line
+   let continuation = (line =~ '[A-Za-z0-9_]\s*$')
 
 
    " Check current line; search for simplistic matching start-of-block
@@ -202,6 +215,8 @@ function GetAdaIndent()
    if line =~ '^\s*#'
       " Start of line for ada-pp
       let ind = 0
+   elseif continuation && line =~ '^\s*('
+      let ind = ind + &sw
    elseif line =~ '^\s*\(begin\|is\)\>'
       let ind = s:MainBlockIndent( ind, lnum, '\(procedure\|function\|declare\|package\|task\)\>', 'begin\>' )
    elseif line =~ '^\s*record\>'
@@ -219,7 +234,7 @@ function GetAdaIndent()
       let ind = s:EndBlockIndent( ind, lnum, '\(while\|for\)\>.*\<loop\>', 'end\>\s*\<loop\>' )
    elseif line =~ '^\s*end\>\s*\<record\>'
       " End of records
-      let ind = s:EndBlockIndent( ind, lnum, 'record\>.*\<is\>', 'end\>\s*\<record\>' )
+      let ind = s:EndBlockIndent( ind, lnum, '\(type\>.*\)\=\<record\>', 'end\>\s*\<record\>' )
    elseif line =~ '^\s*end\>\s*\<procedure\>'
       " End of procedures
       let ind = s:EndBlockIndent( ind, lnum, 'procedure\>.*\<is\>', 'end\>\s*\<procedure\>' )
@@ -228,7 +243,7 @@ function GetAdaIndent()
       let ind = s:EndBlockIndent( ind, lnum, 'case\>.*\<is\>', 'end\>\s*\<case\>' )
    elseif line =~ '^\s*end\>'
       " General case for end
-      let ind = s:MainBlockIndent( ind, lnum, '\(if\|while\|for\|loop\|accept\|begin\|record\|case\)\>', '' )
+      let ind = s:MainBlockIndent( ind, lnum, '\(if\|while\|for\|loop\|accept\|begin\|record\|case\|exception\)\>', '' )
    elseif line =~ '^\s*exception\>'
       let ind = s:MainBlockIndent( ind, lnum, 'begin\>', '' )
    elseif line =~ '^\s*then\>'

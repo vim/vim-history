@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.1.  Last change: 2002 Feb 27
+*pattern.txt*   For Vim version 6.2a.  Last change: 2003 Apr 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -14,7 +14,7 @@ explanations are in chapter 27 |usr_27.txt|.
 3. Highlighting matches		|match-highlight|
 
 ==============================================================================
-1. Search commands					*search-commands*
+1. Search commands				*search-commands* *E486*
 
 							*/*
 /{pattern}[/]<CR>	Search forward for the [count]'th occurrence of
@@ -210,6 +210,14 @@ To clear the last used search pattern: >
 This will not set the pattern to an empty string, because that would match
 everywhere.  The pattern is really cleared, like when starting Vim.
 
+The search usual skips matches that don't move the cursor.  Whether the next
+match is found at the next character or after the skipped match depends on the
+'c' flag in 'cpoptions'.  See |cpo-c|.
+	   with 'c' flag:   "/..." advances 1 to 3 characters
+	without 'c' flag:   "/..." advances 1 character
+The unpredictability with the 'c' flag is caused by starting the search in the
+first column, skipping matches until one is found past the cursor position.
+
 In Vi the ":tag" command sets the last search pattern when the tag is searched
 for.  In Vim this is not done, the previous search pattern is still remembered,
 unless the 't' flag is present in 'cpoptions'.  The search pattern is always
@@ -253,7 +261,7 @@ the "*" is under your right hand middle finger (search to the right and down).
 ==============================================================================
 2. The definition of a pattern		*search-pattern* *pattern* *[pattern]*
 					*regular-expression* *regexp* *Pattern*
-					*E76* *E361* *E363* *E383*
+					*E76* *E361* *E363* *E383* *E476*
 
 For starters, read chapter 27 of the user manual |usr_27.txt|.
 
@@ -296,10 +304,10 @@ For starters, read chapter 27 of the user manual |usr_27.txt|.
 		or  atom  multi
 
 						*/atom*
-5. An atom can be one of a long list of items.  Each atom matches a certain
-   character.  It is often an ordinary character or a character class.  Braces
-   can be used to make a pattern into an atom.  The "\z(\)" construct is only
-   for syntax highlighting.
+5. An atom can be one of a long list of items.  Many atoms match one character
+   in the text.  It is often an ordinary character or a character class.
+   Braces can be used to make a pattern into an atom.  The "\z(\)" construct
+   is only for syntax highlighting.
 
    atom    ::=	    ordinary-atom		|/ordinary-atom|
 		or  \( pattern \)		|/\(|
@@ -490,7 +498,7 @@ endless loop.  If you try it, you will get this error message: >
 	*, \+ or \{ operand could be empty
 <
 						*/star* */\star* *E56*
-*	(use \* with 'nomagic')
+*	(use \* when 'magic' is not set)
 	Matches 0 or more of the preceding atom, as many as possible.
 	Example  'nomagic'	matches ~
 	a*	   a\*		"", "a", "aa", "aaa", etc.
@@ -498,6 +506,9 @@ endless loop.  If you try it, you will get this error message: >
 	\_.*	   \_.\*	everything up to the end of the buffer
 	\_.*END	   \_.\*END	everything up to and including the last "END"
 				in the buffer
+
+	Exception: When "*" is used at the start of the pattern or just after
+	"^" it matches the star character.
 
 	Be aware that repeating "\_." can match a lot of text and take a long
 	time.  For example, "\_.*END" matches all text from the current
@@ -522,7 +533,7 @@ endless loop.  If you try it, you will get this error message: >
 \?	Just like \=.  Cannot be used when searching backwards with the "?"
 	command. {not in Vi}
 
-							*/\{* *E58* *E60*
+						*/\{* *E58* *E60* *E554*
 \{n,m}	Matches n to m of the preceding atom, as many as possible
 \{n}	Matches n of the preceding atom
 \{n,}	Matches at least n of the preceding atom, as many as possible
@@ -656,10 +667,11 @@ An ordinary atom can be:
 	^beep(		the start of the C function "beep" (probably).
 
 							*/\^*
-\^	At any position, matches literal '^'.
+\^	Matches literal '^'.  Can be used at any position in the pattern.
 
 							*/\_^*
-\_^	At any position, matches start-of-line. |/zero-width|
+\_^	Matches start-of-line. |/zero-width|  Can be used at any position in
+	the pattern.
 	Example		matches ~
 	\_s*\_^foo	white space and blank lines and then "foo" at
 			start-of-line
@@ -670,10 +682,11 @@ $	At end of pattern or in front of "\|" or "\)" ("|" or ")" after "\v"):
 	|/zero-width|
 
 							*/\$*
-\$	At any position, matches literal '$'.
+\$	Matches literal '$'.  Can be used at any position in the pattern.
 
 							*/\_$*
-\_$	At any position, matches end-of-line. |/zero-width|
+\_$	Matches end-of-line. |/zero-width|  Can be used at any position in the
+	pattern.
 	Example		matches ~
 	foo\_$\_s*	"foo" at end-of-line and following white space and
 			blank lines
@@ -846,12 +859,14 @@ match ASCII characters, as indicated by the range.
 \t	matches <Tab>					*/\t*
 \r	matches <CR>					*/\r*
 \b	matches <BS>					*/\b*
-\n	matches a end-of-line				*/\n*
+\n	matches an end-of-line				*/\n*
+	When matching in a string instead of buffer text a literal newline
+	character is matched.
 
 ~	matches the last given substitute string	*/~* */\~*
 
-\(\)	A pattern enclosed by escaped parentheses	*/\(* */\(\)* */\)*
-	(e.g., "\(^a\)") matches 'a' at the start of a line.  *E51* *E54* *E55*
+\(\)	A pattern enclosed by escaped parentheses.	*/\(* */\(\)* */\)*
+	E.g., "\(^a\)" matches 'a' at the start of a line.  *E51* *E54* *E55*
 
 \1      Matches the same string that was matched by	*/\1* *E65*
 	the first sub-expression in \( and \). {not in Vi}
@@ -864,7 +879,8 @@ match ASCII characters, as indicated by the range.
 	first.
 
 \%(\)	A pattern enclosed by escaped parentheses.	*/\%(\)* */\%(* *E53*
-	Just like \(\), but without counting it as a sub-expression
+	Just like \(\), but without counting it as a sub-expression.  This
+	allows using more groups and it's a little bit faster.
 	{not in Vi}
 
 x	A single character, with no special meaning, matches itself
@@ -1002,6 +1018,11 @@ works similar to the usage of <NL> for a <Nul>.
 When working with expression evaluation, a <NL> character in the pattern
 matches a <NL> in the string.  The use of "\n" (backslash n) to match a <NL>
 doesn't work there, it only works to match text in the buffer.
+
+						*pattern-multi-byte*
+Patters will also work with multi-byte charaters, mostly as you would expect.
+But invalid bytes may cause trouble, a pattern with an invalid byte will
+probably never match.
 
 ==============================================================================
 3. Highlighting matches					*match-highlight*

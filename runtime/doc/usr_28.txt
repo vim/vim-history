@@ -1,4 +1,4 @@
-*usr_28.txt*	For Vim version 6.1.  Last change: 2001 Oct 21
+*usr_28.txt*	For Vim version 6.2a.  Last change: 2002 Aug 01
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -71,7 +71,7 @@ And you can close the fold again with: >
 
 	zc
 
-All the folding commands start with 'z'.  With some fantasy, this looks like a
+All the folding commands start with "z".  With some fantasy, this looks like a
 folded piece of paper, seen from the side.  The letter after the "z" has a
 mnemonic meaning to make it easier to remember the commands:
 
@@ -226,6 +226,7 @@ It's easy to see on this example text:
 
 This line is not indented
 	This line is indented once
+		This line is indented twice
 		This line is indented twice
 	This line is indented once
 This line is not indented

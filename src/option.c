@@ -2028,6 +2028,11 @@ static struct vimoption
 			    (char_u *)&p_toolbar, PV_NONE,
 			    {(char_u *)"icons,tooltips", (char_u *)0L}},
 #endif
+#if defined(FEAT_TOOLBAR) && defined(FEAT_GUI_GTK) && defined(HAVE_GTK2)
+    {"toolbariconsize",	"tbis", P_STRING|P_VI_DEF,
+			    (char_u *)&p_tbis, PV_NONE,
+			    {(char_u *)"small", (char_u *)0L}},
+#endif
     {"ttimeout",    NULL,   P_BOOL|P_VI_DEF|P_VIM,
 			    (char_u *)&p_ttimeout, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)0L}},
@@ -3242,7 +3247,7 @@ do_set(arg, opt_flags)
 
 	    if (opt_idx == -1 && key == 0)	/* found a mismatch: skip */
 	    {
-		errmsg = (char_u *)N_("Unknown option");
+		errmsg = (char_u *)N_("E518: Unknown option");
 		goto skip;
 	    }
 
@@ -3255,7 +3260,7 @@ do_set(arg, opt_flags)
 		    if (vim_strchr((char_u *)"=:!&<", nextchar) == NULL
 			    && (!(options[opt_idx].flags & P_BOOL)
 				|| nextchar == '?'))
-			errmsg = (char_u *)N_("Option not supported");
+			errmsg = (char_u *)N_("E519: Option not supported");
 		    goto skip;
 		}
 
@@ -3280,7 +3285,7 @@ do_set(arg, opt_flags)
 	    /* Disallow changing some options from modelines */
 	    if ((opt_flags & OPT_MODELINE) && (flags & P_SECURE))
 	    {
-		errmsg = (char_u *)_("Not allowed in a modeline");
+		errmsg = (char_u *)_("E520: Not allowed in a modeline");
 		goto skip;
 	    }
 
@@ -3349,7 +3354,7 @@ do_set(arg, opt_flags)
 		    p = find_termcode(key_name);
 		    if (p == NULL)
 		    {
-			errmsg = (char_u *)N_("Unknown option");
+			errmsg = (char_u *)N_("E518: Unknown option");
 			goto skip;
 		    }
 		    else
@@ -3475,7 +3480,7 @@ do_set(arg, opt_flags)
 			}
 			else
 			{
-			    errmsg = (char_u *)N_("Number required after =");
+			    errmsg = (char_u *)N_("E521: Number required after =");
 			    goto skip;
 			}
 
@@ -3789,7 +3794,7 @@ do_set(arg, opt_flags)
 			if (nextchar == '&')
 			{
 			    if (add_termcap_entry(key_name, TRUE) == FAIL)
-				errmsg = (char_u *)N_("Not found in termcap");
+				errmsg = (char_u *)N_("E522: Not found in termcap");
 			}
 			else
 			{
@@ -3855,7 +3860,8 @@ illegal_char(errbuf, c)
 {
     if (errbuf == NULL)
 	return (char_u *)"";
-    sprintf((char *)errbuf, _("Illegal character <%s>"), (char *)transchar(c));
+    sprintf((char *)errbuf, _("E539: Illegal character <%s>"),
+	    (char *)transchar(c));
     return errbuf;
 }
 
@@ -4098,6 +4104,12 @@ didset_options()
 #endif
 #if defined(FEAT_MOUSE) && (defined(UNIX) || defined(VMS))
     (void)opt_strings_flags(p_ttym, p_ttym_values, &ttym_flags, FALSE);
+#endif
+#if defined(FEAT_TOOLBAR) && !defined(FEAT_GUI_W32)
+    (void)opt_strings_flags(p_toolbar, p_toolbar_values, &toolbar_flags, TRUE);
+#endif
+#if defined(FEAT_TOOLBAR) && defined(FEAT_GUI_GTK) && defined(HAVE_GTK2)
+    (void)opt_strings_flags(p_tbis, p_tbis_values, &tbis_flags, FALSE);
 #endif
 #ifdef FEAT_CMDWIN
     /* set cedit_key */
@@ -4383,22 +4395,22 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 #endif
 		) && (options[opt_idx].flags & P_SECURE))
     {
-	errmsg = (char_u *)N_("Not allowed here");
+	errmsg = e_secure;
     }
 
     /* 'term' */
     else if (varp == &T_NAME)
     {
 	if (T_NAME[0] == NUL)
-	    errmsg = (char_u *)N_("Cannot set 'term' to empty string");
+	    errmsg = (char_u *)N_("E529: Cannot set 'term' to empty string");
 #ifdef FEAT_GUI
 	if (gui.in_use)
-	    errmsg = (char_u *)N_("Cannot change term in GUI");
+	    errmsg = (char_u *)N_("E530: Cannot change term in GUI");
 	else if (term_is_gui(T_NAME))
-	    errmsg = (char_u *)N_("Use \":gui\" to start the GUI");
+	    errmsg = (char_u *)N_("E531: Use \":gui\" to start the GUI");
 #endif
 	else if (set_termname(T_NAME) == FAIL)
-	    errmsg = (char_u *)N_("Not found in termcap");
+	    errmsg = (char_u *)N_("E522: Not found in termcap");
 	else
 	    /* Screen colors may have changed. */
 	    redraw_later_clear();
@@ -4416,7 +4428,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     {
 	if (STRCMP(*p_bex == '.' ? p_bex + 1 : p_bex,
 		     *p_pm == '.' ? p_pm + 1 : p_pm) == 0)
-	    errmsg = (char_u *)N_("'backupext' and 'patchmode' are equal");
+	    errmsg = (char_u *)N_("E589: 'backupext' and 'patchmode' are equal");
     }
 
     /*
@@ -4596,6 +4608,15 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	    }
 	}
 
+# if defined(FEAT_GUI_GTK) && defined(HAVE_GTK2)
+	if (errmsg == NULL && varp == &p_tenc && gui.in_use)
+	{
+	    /* GTK+ 2 uses only a single encoding, and that is UTF-8. */
+	    if (STRCMP(p_tenc, "utf-8") != 0)
+		errmsg = (char_u *)N_("E617: Cannot be changed in the GTK+ 2 GUI");
+	}
+# endif
+
 	if (errmsg == NULL)
 	{
 # ifdef FEAT_KEYMAP
@@ -4724,9 +4745,9 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 		++s;
 	    }
 	    if (*s++ == NUL)
-		errmsg = (char_u *)N_("Missing colon");
+		errmsg = (char_u *)N_("E524: Missing colon");
 	    else if (*s == ',' || *s == NUL)
-		errmsg = (char_u *)N_("Zero length string");
+		errmsg = (char_u *)N_("E525: Zero length string");
 	    if (errmsg != NULL)
 		break;
 	    while (*s && *s != ',')
@@ -4794,7 +4815,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 		{
 		    if (errbuf != NULL)
 		    {
-			sprintf((char *)errbuf, _("Missing number after <%s>"),
+			sprintf((char *)errbuf, _("E526: Missing number after <%s>"),
 						    transchar_byte(*(s - 1)));
 			errmsg = errbuf;
 		    }
@@ -4808,14 +4829,14 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	    else if (*s)
 	    {
 		if (errbuf != NULL)
-		    errmsg = (char_u *)N_("Missing comma");
+		    errmsg = (char_u *)N_("E527: Missing comma");
 		else
 		    errmsg = (char_u *)"";
 		break;
 	    }
 	}
 	if (*p_viminfo && errmsg == NULL && get_viminfo_parameter('\'') < 0)
-	    errmsg = (char_u *)N_("Must specify a ' value");
+	    errmsg = (char_u *)N_("E528: Must specify a ' value");
     }
 #endif /* FEAT_VIMINFO */
 
@@ -4856,7 +4877,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	for (s = p_sbr; *s; )
 	{
 	    if (ptr2cells(s) != 1)
-		errmsg = (char_u *)N_("contains unprintable or wide character");
+		errmsg = (char_u *)N_("E595: contains unprintable or wide character");
 # ifdef FEAT_MBYTE
 	    if (has_mbyte)
 		s += (*mb_ptr2len_check)(s);
@@ -4873,25 +4894,25 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     {
 	if (gui.in_use)
 	{
+            p = p_guifont;
 # ifdef FEAT_GUI_GTK
-	    if (STRCMP(p_guifont, "*") == 0)
+            /*
+             * Put up a font dialog and let the user select a new value.
+             * If this is cancelled go back to the old value but don't
+             * give an error message.
+             */
+            if (STRCMP(p, "*") == 0)
 	    {
-		/*
-		 * Put up a font dialog and let the user select a new value.
-		 * If this is cancelled go back to the old value but don't
-		 * give an error message.
-		 */
-		p = gui_mch_font_dialog(oldval);
-		if (p != NULL)
-		{
-		    free_string_option(p_guifont);
-		    p_guifont = p;
-		}
-		else
-		    errmsg = (char_u *)"";
-	    }
+                p = gui_mch_font_dialog(oldval);
+
+                if (new_value_alloced)
+                    free_string_option(p_guifont);
+
+                p_guifont = (p != NULL) ? p : vim_strsave(oldval);
+                new_value_alloced = TRUE;
+            }
 # endif
-	    if (errmsg == NULL && gui_init_font(p_guifont, FALSE) != OK)
+	    if (p != NULL && gui_init_font(p_guifont, FALSE) != OK)
 	    {
 # if defined(FEAT_GUI_MSWIN) || defined(FEAT_GUI_PHOTON)
 		if (STRCMP(p_guifont, "*") == 0)
@@ -4905,7 +4926,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 		}
 		else
 # endif
-		    errmsg = (char_u *)N_("Invalid font(s)");
+		    errmsg = (char_u *)N_("E596: Invalid font(s)");
 	    }
 	}
     }
@@ -4913,18 +4934,18 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     else if (varp == &p_guifontset)
     {
 	if (STRCMP(p_guifontset, "*") == 0)
-	    errmsg = (char_u *)N_("can't select fontset");
+	    errmsg = (char_u *)N_("E597: can't select fontset");
 	else if (gui.in_use && gui_init_font(p_guifontset, TRUE) != OK)
-	    errmsg = (char_u *)N_("Invalid fontset");
+	    errmsg = (char_u *)N_("E598: Invalid fontset");
     }
 # endif
 # ifdef FEAT_MBYTE
     else if (varp == &p_guifontwide)
     {
 	if (STRCMP(p_guifontwide, "*") == 0)
-	    errmsg = (char_u *)N_("can't select wide font");
+	    errmsg = (char_u *)N_("E533: can't select wide font");
 	else if (gui_get_wide_font() == FAIL)
-	    errmsg = (char_u *)N_("Invalid wide font");
+	    errmsg = (char_u *)N_("E534: Invalid wide font");
     }
 # endif
 #endif
@@ -5194,7 +5215,8 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 		    if (errbuf != NULL)
 		    {
 			sprintf((char *)errbuf,
-				     _("Illegal character after <%c>"), *--s);
+				     _("E535: Illegal character after <%c>"),
+				     *--s);
 			errmsg = errbuf;
 		    }
 		    else
@@ -5210,11 +5232,24 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 #if defined(FEAT_TOOLBAR) && !defined(FEAT_GUI_W32)
     else if (varp == &p_toolbar)
     {
-	if (p_toolbar && (strstr((const char *)p_toolbar, "text")
-				 || strstr((const char *)p_toolbar, "icons")))
-	    gui_mch_show_toolbar(TRUE);
+	if (opt_strings_flags(p_toolbar, p_toolbar_values,
+			      &toolbar_flags, TRUE) != OK)
+	    errmsg = e_invarg;
 	else
-	    gui_mch_show_toolbar(FALSE);
+	    gui_mch_show_toolbar((toolbar_flags &
+				  (TOOLBAR_TEXT | TOOLBAR_ICONS)) != 0);
+    }
+#endif
+
+#if defined(FEAT_TOOLBAR) && defined(FEAT_GUI_GTK) && defined(HAVE_GTK2)
+    /* 'toolbariconsize': GTK+ 2 only */
+    else if (varp == &p_tbis)
+    {
+	if (opt_strings_flags(p_tbis, p_tbis_values, &tbis_flags, FALSE) != OK)
+	    errmsg = e_invarg;
+	else
+	    gui_mch_show_toolbar((toolbar_flags &
+				  (TOOLBAR_TEXT | TOOLBAR_ICONS)) != 0);
     }
 #endif
 
@@ -5284,7 +5319,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     else if (gvarp == &curwin->w_allbuf_opt.wo_fmr)
     {
 	if (vim_strchr(*varp, ',') == NULL)
-	    errmsg = (char_u *)N_("comma required");
+	    errmsg = (char_u *)N_("E536: comma required");
 	else if (foldmethodIsMarker(curwin))
 	    foldUpdateAll(curwin);
     }
@@ -5292,7 +5327,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     else if (gvarp == &p_cms)
     {
 	if (**varp != NUL && strstr((char *)*varp, "%s") == NULL)
-	    errmsg = (char_u *)N_("'commentstring' must be empty or contain %s");
+	    errmsg = (char_u *)N_("E537: 'commentstring' must be empty or contain %s");
     }
     /* 'foldopen' */
     else if (varp == &p_fdo)
@@ -5339,7 +5374,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	    p = (char_u *)MOUSE_ALL;
 #else
 	    if (*p_mouse != NUL)
-		errmsg = (char_u *)N_("No mouse support");
+		errmsg = (char_u *)N_("E538: No mouse support");
 #endif
 	}
 #if defined(FEAT_GUI)
@@ -5607,13 +5642,13 @@ check_stl_option(s)
 	    while (*s != '}' && *s)
 		s++;
 	    if (*s != '}')
-		return (char_u *)N_("Unclosed expression sequence");
+		return (char_u *)N_("E540: Unclosed expression sequence");
 	}
     }
     if (itemcnt >= STL_MAX_ITEM)
-	return (char_u *)N_("too many items");
+	return (char_u *)N_("E541: too many items");
     if (groupdepth != 0)
-	return (char_u *)N_("unbalanced groups");
+	return (char_u *)N_("E542: unbalanced groups");
     return NULL;
 }
 #endif
@@ -5705,7 +5740,7 @@ set_bool_option(opt_idx, varp, value, opt_flags)
 		|| sandbox != 0
 #endif
 		) && (options[opt_idx].flags & P_SECURE))
-	return (char_u *)N_("Not allowed here");
+	return e_secure;
 
     *(int *)varp = value;	    /* set the new value */
 #ifdef FEAT_EVAL
@@ -5834,7 +5869,7 @@ set_bool_option(opt_idx, varp, value, opt_flags)
 		if (win->w_p_pvw && win != curwin)
 		{
 		    curwin->w_p_pvw = FALSE;
-		    return (char_u *)N_("A preview window already exists");
+		    return (char_u *)N_("E590: A preview window already exists");
 		}
 	}
     }
@@ -6103,7 +6138,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 	}
 	if (p_wmh > p_wh)
 	{
-	    errmsg = (char_u *)N_("'winheight' cannot be smaller than 'winminheight'");
+	    errmsg = e_winheight;
 	    p_wh = p_wmh;
 	}
 	if (p_hh < 0)
@@ -6132,7 +6167,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 	}
 	if (p_wmh > p_wh)
 	{
-	    errmsg = (char_u *)N_("'winheight' cannot be smaller than 'winminheight'");
+	    errmsg = e_winheight;
 	    p_wmh = p_wh;
 	}
 	win_setminheight();
@@ -6148,7 +6183,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 	}
 	if (p_wmw > p_wiw)
 	{
-	    errmsg = (char_u *)N_("'winwidth' cannot be smaller than 'winminwidth'");
+	    errmsg = e_winwidth;
 	    p_wiw = p_wmw;
 	}
 
@@ -6167,7 +6202,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 	}
 	if (p_wmw > p_wiw)
 	{
-	    errmsg = (char_u *)N_("'winwidth' cannot be smaller than 'winminwidth'");
+	    errmsg = e_winwidth;
 	    p_wmw = p_wiw;
 	}
 	win_setminheight();
@@ -6308,7 +6343,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
     {
 	if (errbuf != NULL)
 	{
-	    sprintf((char *)errbuf, _("Need at least %d lines"), min_rows());
+	    sprintf((char *)errbuf, _("E593: Need at least %d lines"), min_rows());
 	    errmsg = errbuf;
 	}
 	Rows = min_rows();
@@ -6317,7 +6352,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
     {
 	if (errbuf != NULL)
 	{
-	    sprintf((char *)errbuf, _("Need at least %d columns"), MIN_COLUMNS);
+	    sprintf((char *)errbuf, _("E594: Need at least %d columns"), MIN_COLUMNS);
 	    errmsg = errbuf;
 	}
 	Columns = MIN_COLUMNS;

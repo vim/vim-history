@@ -1,4 +1,4 @@
-*filetype.txt*  For Vim version 6.1.  Last change: 2002 Mar 05
+*filetype.txt*  For Vim version 6.2a.  Last change: 2002 Sep 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -7,7 +7,7 @@
 Filetypes						*filetype* *file-type*
 
 1. Filetypes					|filetypes|
-2. Filetype plugin				|filetype-plugin|
+2. Filetype plugin				|filetype-plugins|
 3. Docs for the default filetype plugins.	|ftplugin-docs|
 
 Also see |autocmd.txt|.
@@ -139,6 +139,12 @@ can be used to overrule the filetype used for certain extensions:
 	*.i		g:filetype_i	|progress-syntax|
 	*.p		g:filetype_p	|pascal-syntax|
 	*.sh		g:bash_is_sh	|sh-syntax|
+
+							*filetype-ignore*
+To avoid that certain files are being inspected, the g:ft_ignore_pat variable
+is used.  The default value is set like this: >
+	:let g:ft_ignore_pat = '\.\(Z\|gz\|bz2\|zip\|tgz\)$'
+This means that the contents of compressed files are not inspected.
 
 							*new-filetype*
 If a file type that you want to use is not detected yet, there are two ways to
@@ -333,6 +339,92 @@ ways to change this:
 3.  Docs for the default filetype plugins.		*ftplugin-docs*
 
 
+CHANGELOG						*changelog-plugin*
+
+Allows for easy entrance of Changelog entries in Changelog files. There are
+some commands, mappings, and variables worth exploring:
+
+Options:
+'comments'		is made empty to not mess up formatting.
+'textwidth'		is set to 78, which is standard.
+'formatoptions'		the 't' flag is added to wrap when inserting text.
+
+Commands:
+NewChangelogEntry	Adds a new Changelog entry in an intelligent fashion
+			(see below).
+
+Local mappings:
+<Leader>o		Starts a new Changelog entry in an equally intelligent
+			fashion (see below).
+
+Global mappings:
+			NOTE: The global mappings are accessed by sourcing the
+			ftplugin/changelog.vim file first, e.g. with >
+				runtime ftplugin/man.vim
+<			in your |.vimrc|.
+<Leader>o		Switches to the ChangeLog buffer opened for the
+			current directory, or opens it in a new buffer if it
+			exists in the current directory.  Then it does the
+			same as the local <Leader>o described above.
+
+Variables:
+g:changelog_timeformat	The date (and time) format used in ChangeLog entries.
+			The format accepted is the same as for the
+			|strftime()| function.
+			The default is "%Y-%m-%d" which is the standard format
+			for many ChangeLog layouts.
+g:changelog_username	The name and email address of the user.
+			The default is deduced from environment variables and
+			system files.  It searches /etc/passwd for the comment
+			part of the current user, which informally contains
+			the real name of the user up to the first separating
+			comma.  then it checks the $NAME environment variable
+			and finally runs `whoami` and `hostname` to build an
+			email adress.  The final form is >
+				Full Name  <user@host>
+<
+g:changelog_new_date_format
+			The format to use when creating a new date-entry.
+			The following table describes special tokens in the
+			string:
+				%%	insert a single '%' character
+				%d	insert the date from above
+				%u	insert the user from above
+				%c	where to position cursor when done
+			The default is "%d  %u\n\n\t* %c\n\n", which produces
+			something like (| is where cursor will be, unless at
+			the start of the line where it denotes the beginning
+			of the line) >
+				|2003-01-14  Full Name  <user@host>
+				|
+				|        * |
+<
+g:changelog_new_entry_format
+			The format used when creating a new entry.
+			The following table describes special tokens in the
+			string:
+				%c	where to position cursor when done
+			The default is "\t*%c", which produces something
+			similar to >
+				|        * |
+<
+g:changelog_date_entry_search
+			The search pattern to use when searching for a
+			date-entry.
+			The same tokens that can be used for
+			g:changelog_new_date_format can be used here as well.
+			The default is '^\s*%d\_s*%u' which finds lines
+			matching the form >
+				|2003-01-14  Full Name  <user@host>
+< 			and some similar formats.
+
+The Changelog entries are inserted where they add the least amount of text.
+After figuring out the current date and user, the file is searched for an
+entry beginning with the current date and user and if found adds another item
+under it. If not found, a new entry and item is prepended to the beginning of
+the Changelog.
+
+
 FORTRAN							*fortran-plugin*
 
 Options:
@@ -363,9 +455,10 @@ Local mappings:
 	to the end of the file in Normal mode.  This means "> " is inserted in
 	each line.
 
-MAN							*man-plugin*
+MAN							*man-plugin* *:Man*
 
-Displays a manual page in a nice way.
+Displays a manual page in a nice way.  Also see the user manual
+|find-manpage|.
 
 To start using the ":Man" command before any manual page was loaded, source
 this script from your startup vimrc file: >
@@ -378,6 +471,8 @@ Options:
 
 Commands:
 Man {name}	Display the manual page for {name} in a window.
+Man {number} {name}
+		Display the manual page for {name} in a section {number}.
 
 Global mapping:
 <Leader>K	Displays the manual page for the word under the cursor.

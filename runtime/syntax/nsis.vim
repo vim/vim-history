@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	NSIS script, for version of NSIS 1.91 and later
 " Maintainer:	Alex Jakushev <Alex.Jakushev@kemek.lt>
-" Last Change:	2002 Mar 03
+" Last Change:	2002 Jul 24
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -27,13 +27,15 @@ syn match nsisGlobalLabel	"\.\S\{-1,}:"
 syn match nsisPreprocSubst	"${.\{-}}"
 syn match nsisDefine		"!define\>"
 syn match nsisDefine		"!undef\>"
-syn match nsisMacro		"!macro\>"
-syn match nsisMacro		"!macroend\>"
-syn match nsisMacro		"!insertmacro\>"
 syn match nsisPreCondit		"!ifdef\>"
 syn match nsisPreCondit		"!ifndef\>"
 syn match nsisPreCondit		"!endif\>"
 syn match nsisPreCondit		"!else\>"
+syn match nsisMacro		"!macro\>"
+syn match nsisMacro		"!macroend\>"
+syn match nsisMacro		"!insertmacro\>"
+
+"COMPILER UTILITY
 syn match nsisInclude		"!include\>"
 syn match nsisSystem		"!cd\>"
 syn match nsisSystem		"!system\>"
@@ -58,6 +60,7 @@ syn match nsisSysVar		"$QUICKLAUNCH"
 syn match nsisSysVar		"$HWNDPARENT"
 syn match nsisSysVar		"$\\r"
 syn match nsisSysVar		"$\\n"
+syn match nsisSysVar		"$\$"
 
 "STRINGS
 syn region nsisString	start=/"/ skip=/'\|`/ end=/"/ contains=nsisPreprocSubst,nsisUserVar,nsisSysVar,nsisRegistry
@@ -67,8 +70,21 @@ syn region nsisString	start=/`/ skip=/"\|'/ end=/`/ contains=nsisPreprocSubst,ns
 "CONSTANTS
 syn keyword nsisBoolean		true false on off
 
-syn keyword nsisAttribOptions	hide show nevershow auto force ifnewer normal silent silentlog
-syn keyword nsisAttribOptions	smooth colored SET CUR END
+syn keyword nsisAttribOptions	hide show nevershow auto force try ifnewer normal silent silentlog
+syn keyword nsisAttribOptions	smooth colored SET CUR END RO none listonly textonly both current all
+
+syn match nsisAttribOptions	'\/NOCUSTOM'
+syn match nsisAttribOptions	'\/CUSTOMSTRING'
+syn match nsisAttribOptions	'\/COMPONENTSONLYONCUSTOM'
+syn match nsisAttribOptions	'\/windows'
+syn match nsisAttribOptions	'\/r'
+syn match nsisAttribOptions	'\/oname'
+syn match nsisAttribOptions	'\/REBOOTOK'
+syn match nsisAttribOptions	'\/SILENT'
+syn match nsisAttribOptions	'\/FILESONLY'
+syn match nsisAttribOptions	'\/SHORT'
+
+syn keyword nsisExecShell	SW_SHOWNORMAL SW_SHOWMAXIMIZED SW_SHOWMINIMIZED
 
 syn keyword nsisRegistry	HKCR HKLM HKCU HKU HKCC HKDD HKPD
 syn keyword nsisRegistry	HKEY_CLASSES_ROOT HKEY_LOCAL_MACHINE HKEY_CURRENT_USER HKEY_USERS
@@ -147,7 +163,7 @@ syn keyword nsisInstruction	FileWrite FileReadByte FileWriteByte FileSeek
 
 "FUNCTIONS - Misc instructions
 syn keyword nsisInstruction	SetDetailsView SetDetailsPrint SetAutoClose DetailPrint
-syn keyword nsisInstruction	Sleep BringToFront HideWindow
+syn keyword nsisInstruction	Sleep BringToFront HideWindow SetShellVarContext
 
 "FUNCTIONS - String manipulation support
 syn keyword nsisInstruction	StrCpy StrLen
@@ -164,6 +180,13 @@ syn keyword nsisInstruction	Reboot IfRebootFlag SetRebootFlag
 "FUNCTIONS - Uninstaller instructions
 syn keyword nsisInstruction	WriteUninstaller
 
+"FUNCTIONS - Install logging instructions
+syn keyword nsisInstruction	LogSet LogText
+
+"FUNCTIONS - Section management instructions
+syn keyword nsisInstruction	SectionSetFlags SectionGetFlags SectionSetText
+syn keyword nsisInstruction	SectionGetText
+
 
 "SPECIAL FUNCTIONS - install
 syn match nsisCallback		"\.onInit"
@@ -173,6 +196,7 @@ syn match nsisCallback		"\.onInstFailed"
 syn match nsisCallback		"\.onVerifyInstDir"
 syn match nsisCallback		"\.onNextPage"
 syn match nsisCallback		"\.onPrevPage"
+syn match nsisCallback		"\.onSelChange"
 
 "SPECIAL FUNCTIONS - uninstall
 syn match nsisCallback		"un\.onInit"
@@ -216,6 +240,7 @@ if version >= 508 || !exists("did_nsis_syn_inits")
   HiLink nsisString			String
   HiLink nsisBoolean			Boolean
   HiLink nsisAttribOptions		Constant
+  HiLink nsisExecShell			Constant
   HiLink nsisFileAttrib			Constant
   HiLink nsisMessageBox			Constant
   HiLink nsisRegistry			Identifier

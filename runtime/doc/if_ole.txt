@@ -1,4 +1,4 @@
-*if_ole.txt*    For Vim version 6.1.  Last change: 2001 Sep 03
+*if_ole.txt*    For Vim version 6.2a.  Last change: 2002 Oct 12
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore
@@ -122,6 +122,14 @@ registry. In order to do this, Vim should be run with a single parameter of
 "-register".
 							*-register*  >
 	gvim -register
+
+If gvim with OLE support is run and notices that no Vim OLE server has been
+registered, it will present a dialog and offers you the choice to register by
+clicking "Yes".
+
+In some situations registering is not possible.  This happens when the
+registry is not writable.  If you run into this problem you need to run gvim
+as "Administrator".
 
 Once vim is registered, the application path is stored in the registry. Before
 moving, deleting, or upgrading Vim, the registry entries should be removed

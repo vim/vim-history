@@ -17,6 +17,8 @@
 
 #include "vim.h"
 
+#if defined(FEAT_NETBEANS_INTG) || defined(PROTO)
+
 /* Note: when making changes here also adjust configure.in. */
 #include <stdarg.h>
 #include <fcntl.h>
@@ -1956,7 +1958,7 @@ coloncmd(char *cmd, ...)
     out_flush();		/* make sure output has been written */
 
     gui_update_cursor(TRUE, FALSE);
-    XFlush(gui.dpy);
+    gui_mch_flush();
 }
 
 #ifdef HAVE_READLINK
@@ -2993,3 +2995,5 @@ shellRectangle(Widget shell, XRectangle *r)
 				XmNwidth, &r->width, NULL);
 }
 #endif
+
+#endif /* defined(FEAT_NETBEANS_INTG) */

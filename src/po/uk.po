@@ -5,6 +5,7 @@
 #
 # Thanks to:
 #   Dmytro Kovalov <dmytro.kovalov@nssmb.com> for useful suggestions
+#	Dmytro O. Redchuk <dor@kiev-online.net> for viminfo bug
 #
 # Please, see readme at htpp://www.vstu.edu.ua/~bohdan/vim before any
 # complains, and even if you won't complain, read it anyway.
@@ -195,7 +196,7 @@ msgid ""
 "# Buffer list:\n"
 msgstr ""
 "\n"
-"Список буфер╕в:\n"
+"# Список буфер╕в:\n"
 
 #: buffer.c:4160
 msgid "[Error List]"
@@ -5901,7 +5902,7 @@ msgid "E12: Command not allowed from exrc/vimrc in current dir or tag search"
 msgstr "E12: Команда не дозволена з м╕ркувань безпеки"
 
 #: globals.h:1035
-msgid "E13: File exists (use ! to override)"
+msgid "E13: File exists (add ! to override)"
 msgstr "E13: Файл ╕сну╓ (використайте ! щоб не зважати)"
 
 #: globals.h:1036

@@ -1,4 +1,4 @@
-*usr_25.txt*	For Vim version 6.1.  Last change: 2002 Feb 24
+*usr_25.txt*	For Vim version 6.2a.  Last change: 2002 Oct 12
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -151,9 +151,9 @@ results in the following:
 
 RIGHT ALIGNMENT
 
-Similarly, the ":right" command right-justifies the text:
+Similarly, the ":right" command right-justifies the text: >
 
-	:1,5right 30
+	:1,5right 37
 
 gives this result:
 
@@ -228,7 +228,7 @@ INCREASING INDENT
 To increase the amount of indent in a line, use the ">" operator.  Often this
 is used as ">>", which adds indent to the current line.
    The amount of indent added is specified with the 'shiftwidth' option.  The
-default value is 8.  To make ">>" insert four spaces wordth of indent, for
+default value is 8.  To make ">>" insert four spaces worth of indent, for
 example, type this: >
 
 	:set shiftwidth=4
@@ -279,7 +279,7 @@ for this.  You can now write the file.  Next time you edit it the indents will
 be right without setting an option.
    Warning: When using ":retab" on a program, it may change white space inside
 a string constant.  Therefore it's a good habit to use "\t" instead of a
-real tab
+real tab.
 
 ==============================================================================
 *25.4*	Dealing with long lines
@@ -347,7 +347,7 @@ scroll:
 		 g0  g^    gm	     g$
 
 
-BREAKING AT WORDS
+BREAKING AT WORDS				*edit-no-break*
 
 When preparing text for use by another program, you might have to make
 paragraphs without a line break.  A disadvantage of using 'nowrap' is that you
@@ -519,7 +519,7 @@ VIRTUAL REPLACE MODE
 
 The disadvantage of using 'virtualedit' is that it "feels" different.  You
 can't recognize tabs or spaces beyond the end of line when moving the cursor
-around.  Another method can be used: Virtual replace mode.
+around.  Another method can be used: Virtual Replace mode.
    Suppose you have a line in a table that contains both tabs and other
 characters.  Use "rx" on the first tab:
 
@@ -547,7 +547,7 @@ gap.  Thus what actually happens is that a tab is replaced by "x" and then
 blanks added to make the text after it keep it's place.  In this case a
 tab is inserted.
    When you need to replace more than one character, you use the "R" command
-to go to replace mode (see |04.9|).  This messes up the layout and replaces
+to go to Replace mode (see |04.9|).  This messes up the layout and replaces
 the wrong characters:
 
 	inp	0	0.534	0.693 ~
@@ -558,7 +558,7 @@ the wrong characters:
 
 	inp	0.78634	0.693 ~
 
-The "gR" command uses virtual replace mode.  This preserves the layout:
+The "gR" command uses Virtual Replace mode.  This preserves the layout:
 
 	inp	0	0.534	0.693 ~
 

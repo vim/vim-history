@@ -1222,7 +1222,7 @@ gui_mch_init_check()
     if (app_context == NULL || gui.dpy == NULL)
     {
 	gui.dying = TRUE;
-	EMSG(_("E233: cannot open display"));
+	EMSG(_(e_opendisp));
 	return FAIL;
     }
     return OK;
@@ -1862,7 +1862,7 @@ gui_mch_get_font(name, giveErrorIfMissing)
     if (font == NULL)
     {
 	if (giveErrorIfMissing)
-	    EMSG2(_("E235: Unknown font: %s"), name);
+	    EMSG2(_(e_font), name);
 	return NOFONT;
     }
 
@@ -1886,7 +1886,7 @@ gui_mch_get_font(name, giveErrorIfMissing)
 
     if (font->max_bounds.width != font->min_bounds.width)
     {
-	EMSG2(_("E236: Font \"%s\" is not fixed-width"), name);
+	EMSG2(_(e_fontwidth), name);
 	XFreeFont(gui.dpy, font);
 	return NOFONT;
     }
@@ -2026,7 +2026,7 @@ gui_mch_get_fontset(name, giveErrorIfMissing, fixed_width)
     if (fontset == NULL)
     {
 	if (giveErrorIfMissing)
-	    EMSG2(_("E234: Unknown fontset: %s"), name);
+	    EMSG2(_(e_fontset), name);
 	return NOFONTSET;
     }
 
@@ -3279,7 +3279,7 @@ gui_mch_register_sign(signfile)
 	    {
 		vim_free(sign);
 		sign = NULL;
-		EMSG(_("E255: Couldn't read in sign data!"));
+		EMSG(_(e_signdata));
 	    }
 	}
     }

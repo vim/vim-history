@@ -1,4 +1,4 @@
-*quickref.txt*  For Vim version 6.1.  Last change: 2001 Sep 10
+*quickref.txt*  For Vim version 6.2a.  Last change: 2003 Mar 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -668,7 +668,7 @@ Short explanation of each option:		*option-list*
 |'foldexpr'|	  |'fde'|    expression used when 'foldmethod' is "expr"
 |'foldignore'|	  |'fdi'|    ignore lines when 'foldmethod' is "indent"
 |'foldlevel'|	  |'fdl'|    close folds with a level higher than this
-|'foldlevelstart'| |'fdls'|  'foldlevel' when startng to edit a file
+|'foldlevelstart'| |'fdls'|  'foldlevel' when starting to edit a file
 |'foldmarker'|	  |'fmr'|    markers used when 'foldmethod' is "marker"
 |'foldmethod'|	  |'fdm'|    folding type
 |'foldminlines'|  |'fml'|    minimum number of lines for a fold to be closed
@@ -1073,7 +1073,7 @@ Context-sensitive completion on the command-line:
 |:w_c|	  :[range]w[rite] !{cmd}	Execute {cmd} with [range] lines as
 					   standard input.
 |:up|	  :[range]up[date][!]		write to current file if modified
-|:wall|	  :wall[!]			write all changed buffers
+|:wall|	  :wa[ll][!]			write all changed buffers
 
 |:q|	  :q[uit]		Quit current buffer, unless changes have been
 				   made.  Exit Vim when there are no other
@@ -1081,8 +1081,8 @@ Context-sensitive completion on the command-line:
 |:q|	  :q[uit]!		Quit current buffer always, discard any
 				   changes.  Exit Vim when there are no other
 				   non-help buffers
-|:qa|	  :qall			Exit Vim, unless changes have been made.
-|:qa|	  :qall!		Exit Vim always, discard any changes.
+|:qa|	  :qa[ll]		Exit Vim, unless changes have been made.
+|:qa|	  :qa[ll]!		Exit Vim always, discard any changes.
 |:cq|	  :cq			Quit without writing and return error code.
 
 |:wq|	  :wq[!]		Write the current file and exit.
@@ -1091,7 +1091,7 @@ Context-sensitive completion on the command-line:
 				   been made
 |ZZ|	     ZZ			Same as ":x".
 |ZQ|	     ZQ			Same as ":q!".
-|:xall|	  :xall[!]  or :wqall[!]
+|:xall|	  :xa[ll][!]  or :wqall[!]
 				Write all changed buffers and exit
 
 |:stop|	  :st[op][!]		Suspend VIM or start new shell. If 'aw' option
@@ -1283,7 +1283,7 @@ Context-sensitive completion on the command-line:
 		set foldmethod=syntax	folding by syntax regions
 		set foldmethod=marker	folding by 'foldmarkers'
 
-|zf|		{motion}zf		operator: Define a fold manually
+|zf|		zf{motion}		operator: Define a fold manually
 |:fold|		:{range}fold		define a fold for {range} lines
 |zd|		zd			delete one fold under the cursor
 |zD|		zD			delete all folds under the cursor

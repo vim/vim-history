@@ -77,46 +77,47 @@
  * Define a few things for generating prototypes.  This is just to avoid
  * syntax errors, the defines do not need to be correct.
  */
-# define HINSTANCE	void *
-# define HWND		void *
-typedef void *HDC;
-# define HMENU		void *
-# define UINT		int
-# define INT		int
-# define WPARAM		int
-# define LPARAM		int
-typedef int LOGFONT[];
-# define ENUMLOGFONT	int
-# define NEWTEXTMETRIC	int
-# define VOID		void
-# define CONST
-# define CALLBACK
-# define WORD		int
-typedef int DWORD;
-# define HBITMAP	int
-# define HDROP		int
-# define BOOL		int
-# define PWORD		int
-# define LPWORD		int
-# define LPRECT		int
-# define LRESULT	int
-# define WINAPI
 # define APIENTRY
-# define LPSTR		int
-# define LPWINDOWPOS	int
-# define RECT		int
-# define LPCREATESTRUCT int
-# define _cdecl
-# define FINDREPLACE	int
-# define LPCTSTR	int
-# define OSVERSIONINFO	int
-# define HBRUSH		int
-# define NEAR
+# define CALLBACK
+# define CONST
 # define FAR
-# define BYTE		int
-# define LPCSTR		int
+# define NEAR
+# define WINAPI
+# define _cdecl
+typedef int BOOL;
+typedef int BYTE;
+typedef int DWORD;
+typedef int ENUMLOGFONT;
+typedef int FINDREPLACE;
+typedef int HANDLE;
+typedef int HBITMAP;
+typedef int HBRUSH;
+typedef int HDROP;
+typedef int INT;
+typedef int LOGFONT[];
+typedef int LPARAM;
+typedef int LPCREATESTRUCT;
+typedef int LPCSTR;
+typedef int LPCTSTR;
+typedef int LPRECT;
+typedef int LPSTR;
+typedef int LPWINDOWPOS;
+typedef int LPWORD;
+typedef int LRESULT;
 # undef MSG
-# define MSG		int
+typedef int MSG;
+typedef int NEWTEXTMETRIC;
+typedef int OSVERSIONINFO;
+typedef int PWORD;
+typedef int RECT;
+typedef int UINT;
+typedef int WORD;
+typedef int WPARAM;
+typedef void * HINSTANCE;
+typedef void * HMENU;
+typedef void * HWND;
+typedef void *HDC;
+typedef void VOID;
 #endif
 
 #ifndef GET_X_LPARAM
@@ -1128,7 +1129,7 @@ gui_mch_get_font(
     get_logfont(&lf, name, NULL);
     font = get_font_handle(&lf);
     if (font == NOFONT && giveErrorIfMissing)
-	EMSG2(_("E235: Unknown font: %s"), name);
+	EMSG2(_(e_font), name);
     return font;
 }
     void

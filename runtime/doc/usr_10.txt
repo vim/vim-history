@@ -1,4 +1,4 @@
-*usr_10.txt*	For Vim version 6.1.  Last change: 2001 Sep 18
+*usr_10.txt*	For Vim version 6.2a.  Last change: 2002 Oct 29
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -253,7 +253,7 @@ the first to the last line.
 USING A PATTERN IN A RANGE
 
 Suppose you are editing a chapter in a book, and want to replace all
-occurences of "grey" with "gray".  But only in this chapter, not in the next
+occurrences of "grey" with "gray".  But only in this chapter, not in the next
 one.  You know that only chapter boundaries have the word "Chapter" in the
 first column.  This command will work then: >
 

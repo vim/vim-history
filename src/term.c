@@ -2124,13 +2124,13 @@ tgetent_error(tbuf, term)
 
 	if (i < 0)
 # ifdef TGETENT_ZERO_ERR
-	    return (char_u *)_("Cannot open termcap file");
+	    return (char_u *)_("E557: Cannot open termcap file");
 	if (i == 0)
 # endif
 #ifdef TERMINFO
-	    return (char_u *)_("Terminal entry not found in terminfo");
+	    return (char_u *)_("E558: Terminal entry not found in terminfo");
 #else
-	    return (char_u *)_("Terminal entry not found in termcap");
+	    return (char_u *)_("E559: Terminal entry not found in termcap");
 #endif
     }
     return NULL;
@@ -2847,7 +2847,8 @@ ttest(pairs)
     t_colors = atoi((char *)T_CCO);
 }
 
-#if defined(FEAT_GUI) || defined(PROTO)
+#if (defined(FEAT_GUI) && (defined(FEAT_MENU) || !defined(USE_ON_FLY_SCROLL))) \
+	|| defined(PROTO)
 /*
  * Represent the given long_u as individual bytes, with the most significant
  * byte first, and store them in dst.

@@ -72,7 +72,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 1
+MINOR = 2a
 
 # CHECKLIST for creating a new version:
 #
@@ -191,6 +191,7 @@ SRC_ALL =	\
 		src/ex_cmds.h \
 		src/ex_cmds2.c \
 		src/ex_docmd.c \
+		src/ex_eval.c \
 		src/ex_getln.c \
 		src/feature.h \
 		src/fileio.c \
@@ -224,6 +225,7 @@ SRC_ALL =	\
 		src/proto/ex_cmds.pro \
 		src/proto/ex_cmds2.pro \
 		src/proto/ex_docmd.pro \
+		src/proto/ex_eval.pro \
 		src/proto/ex_getln.pro \
 		src/proto/fileio.pro \
 		src/proto/fold.pro \
@@ -292,6 +294,8 @@ SRC_UNIX =	\
 		README_src.txt \
 		configure \
 		pixmaps/*.xpm \
+		pixmaps/gen-inline-pixbufs.sh \
+		pixmaps/stock_icons.h \
 		src/INSTALL \
 		src/Makefile \
 		src/auto/configure \

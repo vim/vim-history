@@ -1,4 +1,4 @@
-*netbeans.txt*  For Vim version 6.1.  Last change: 2003 Apr 02
+*netbeans.txt*  For Vim version 6.2a.  Last change: 2003 Apr 02
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur

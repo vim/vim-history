@@ -701,7 +701,7 @@ STDMETHODIMP CShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 			    lpcmi->lpVerb,
 			    lpcmi->lpParameters,
 			    lpcmi->nShow,
-			    false);
+			    0);
 		    break;
 		case 2:
 		    hr = InvokeSingleGvim(lpcmi->hwnd,
@@ -709,7 +709,7 @@ STDMETHODIMP CShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 			    lpcmi->lpVerb,
 			    lpcmi->lpParameters,
 			    lpcmi->nShow,
-			    true);
+			    1);
 		    break;
 	    }
 	}
@@ -914,7 +914,7 @@ STDMETHODIMP CShellExt::InvokeSingleGvim(HWND hParent,
 				   LPCSTR pszCmd,
 				   LPCSTR pszParam,
 				   int iShowCmd,
-				   bool useDiff)
+				   int useDiff)
 {
     char	m_szFileUserClickedOn[MAX_PATH];
     char	*cmdStr;

@@ -2,7 +2,7 @@
 " Language:	samba configuration files (smb.conf)
 " Maintainer:	Rafael Garcia-Suarez <rgarciasuarez@free.fr>
 " URL:		http://rgarciasuarez.free.fr/vim/syntax/samba.vim
-" Last change:	2001 Jul 11
+" Last change:	2002 May 06
 
 " Don't forget to run your config file through testparm(1)!
 
@@ -86,6 +86,11 @@ syn keyword sambaKeyword contained total vfs winbind wizard
 " New keywords for Samba 2.2.1
 syn keyword sambaKeyword contained large obey pam readwrite restrictions
 syn keyword sambaKeyword contained unreadable
+
+" New keywords for Samba 2.2.2 - 2.2.4
+syn keyword sambaKeyword contained acls allocate bytes count csc devmode
+syn keyword sambaKeyword contained disable dn egd entropy enum extensions mmap
+syn keyword sambaKeyword contained policy spin spoolss
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already

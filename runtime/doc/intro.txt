@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 6.1.  Last change: 2002 Feb 22
+*intro.txt*     For Vim version 6.2a.  Last change: 2003 Apr 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -320,7 +320,7 @@ and <> are part of what you type, the context should make this clear.
 
 []		Characters in square brackets are optional.
 
-							*count* *[count]*
+						    *count* *[count]* *E489*
 [count]		An optional number that may precede the command to multiply
 		or iterate the command.  If no number is given, a count of one
 		is used, unless otherwise noted.  Note that in this manual the
@@ -412,7 +412,8 @@ CTRL-{char}	{char} typed as a control character; that is, typing {char}
 
 					*key-notation* *key-codes* *keycodes*
 These names for keys are used in the documentation.  They can also be used
-with the ":map" command.
+with the ":map" command (insert the key name by pressing CTRL-K and then the
+key you want the name for).
 
 notation	meaning		    equivalent	decimal value(s)	~
 -----------------------------------------------------------------------
@@ -664,8 +665,13 @@ Additionally the command CTRL-\ CTRL-N or <C-\><C-N> can be used to go to
 Normal mode from any other mode.  This can be used to make sure Vim is in
 Normal mode, without causing a beep like <Esc> would.
 
+	*CTRL-\_CTRL-G* *i_CTRL-\_CTRL-G* *c_CTRL-\_CTRL-G* *v_CTRL-\_CTRL-G*
+The command CTRL-\ CTRL-G or <C-\><C-G> can be used to go to Insert mode when
+'insertmode' is set.  Otherwise it goes to Normal mode.  This can be used to
+make sure Vim is in the mode indicated by 'insertmode', without knowing in
+what mode Vim currently is.
 
-					*Q* *mode-Ex* *Ex-mode* *Ex* *EX*
+				    *Q* *mode-Ex* *Ex-mode* *Ex* *EX* *E501*
 Q			Switch to "Ex" mode.  This is a bit like typing ":"
 			commands one after another, except:
 			- You don't have to keep pressing ":".
@@ -679,7 +685,8 @@ Q			Switch to "Ex" mode.  This is a bit like typing ":"
 			"ex" on the command-line.
 			Use the ":vi" command |:visual| to exit "Ex" mode.
 			Note: In older versions of Vim "Q" formatted text,
-			that is now done with |gq|.
+			that is now done with |gq|.  But if you use the
+			|vimrc_example.vim| script "Q" works like "gq".
 
 					*gQ*
 gQ			Switch to "Ex" mode, but really behave like typing ":"
@@ -707,20 +714,24 @@ Lines longer than the window width will wrap, unless the 'wrap' option is off
 If the window has room after the last line of the buffer, Vim will show '~' in
 the first column of the last lines in the window, like this: >
 
-	some line
-	last line
-	~ 
-	~ 
+	+-----------------------+
+	|some line		|
+	|last line		|
+	|~ 			|
+	|~ 			|
+	+-----------------------+
 
 Thus the '~' lines indicate that the end of the buffer was reached.
 
 If the last line in a window doesn't fit, Vim will indicate this with a '@' in
 the first column of the last lines in the window, like this: >
 
-	first line
-	second line
-	@
-	@
+	+-----------------------+
+	|first line		|
+	|second line		|
+	|@			|
+	|@			|
+	+-----------------------+
 
 Thus the '@' lines indicate that there is a line that doesn't fit in the
 window.
@@ -730,10 +741,12 @@ When the "lastline" flag is present in the 'display' option, you will not see
 completely, only the part that fits is shown, and the last three characters of
 the last line are replaced with "@@@", like this: >
 
-	first line
-	second line
-	a very long line that d
-	oesn't fit in the wi@@@
+	+-----------------------+
+	|first line		|
+	|second line		|
+	|a very long line that d|
+	|oesn't fit in the wi@@@|
+	+-----------------------+
 
 If there is a single line that is too long to fit in the window, this is a
 special situation.  Vim will show only part of the line, around where the

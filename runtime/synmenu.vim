@@ -88,7 +88,7 @@ an 50.20.220 &Syntax.CD.Clever :cal SetSyn("cl")<CR>
 an 50.20.230 &Syntax.CD.Clipper :cal SetSyn("clipper")<CR>
 an 50.20.240 &Syntax.CD.Cold\ Fusion :cal SetSyn("cf")<CR>
 an 50.20.250 &Syntax.CD.Config.Cfg\ Config\ file :cal SetSyn("cfg")<CR>
-an 50.20.260 &Syntax.CD.Config.Generic Config\ file :cal SetSyn("conf")<CR>
+an 50.20.260 &Syntax.CD.Config.Generic\ Config\ file :cal SetSyn("conf")<CR>
 an 50.20.270 &Syntax.CD.Config.Configure\.in :cal SetSyn("config")<CR>
 an 50.20.280 &Syntax.CD.Ctrl-H :cal SetSyn("ctrlh")<CR>
 an 50.20.290 &Syntax.CD.Cobol :cal SetSyn("cobol")<CR>
@@ -275,28 +275,29 @@ an 50.80.160 &Syntax.R-Sg.Rebol :cal SetSyn("rebol")<CR>
 an 50.80.170 &Syntax.R-Sg.Remind :cal SetSyn("remind")<CR>
 an 50.80.180 &Syntax.R-Sg.Renderman.Renderman\ Shader\ Lang :cal SetSyn("sl")<CR>
 an 50.80.190 &Syntax.R-Sg.Renderman.Renderman\ Interface\ Bytestream :cal SetSyn("rib")<CR>
-an 50.80.200 &Syntax.R-Sg.Rexx :cal SetSyn("rexx")<CR>
-an 50.80.210 &Syntax.R-Sg.Robots\.txt :cal SetSyn("robots")<CR>
-an 50.80.220 &Syntax.R-Sg.RockLinux\ package\ desc\. :cal SetSyn("desc")<CR>
-an 50.80.230 &Syntax.R-Sg.Rpcgen :cal SetSyn("rpcgen")<CR>
-an 50.80.240 &Syntax.R-Sg.RPL/2 :cal SetSyn("rpl")<CR>
-an 50.80.250 &Syntax.R-Sg.RTF :cal SetSyn("rtf")<CR>
-an 50.80.260 &Syntax.R-Sg.Ruby :cal SetSyn("ruby")<CR>
-an 50.80.280 &Syntax.R-Sg.S-Lang :cal SetSyn("slang")<CR>
-an 50.80.290 &Syntax.R-Sg.Samba\ config :cal SetSyn("samba")<CR>
-an 50.80.300 &Syntax.R-Sg.SAS :cal SetSyn("sas")<CR>
-an 50.80.310 &Syntax.R-Sg.Sather :cal SetSyn("sather")<CR>
-an 50.80.320 &Syntax.R-Sg.Scheme :cal SetSyn("scheme")<CR>
-an 50.80.330 &Syntax.R-Sg.Scilab :cal SetSyn("scilab")<CR>
-an 50.80.340 &Syntax.R-Sg.Screen\ RC :cal SetSyn("screen")<CR>
-an 50.80.350 &Syntax.R-Sg.SDL :cal SetSyn("sdl")<CR>
-an 50.80.360 &Syntax.R-Sg.Sed :cal SetSyn("sed")<CR>
-an 50.80.370 &Syntax.R-Sg.Sendmail\.cf :cal SetSyn("sm")<CR>
-an 50.80.380 &Syntax.R-Sg.Send-pr :cal SetSyn("sendpr")<CR>
-an 50.80.390 &Syntax.R-Sg.SGML.SGML\ catalog :cal SetSyn("catalog")<CR>
-an 50.80.400 &Syntax.R-Sg.SGML.SGML\ DTD :cal SetSyn("sgml")<CR>
-an 50.80.410 &Syntax.R-Sg.SGML.SGML\ Declaration :cal SetSyn("sgmldecl")<CR>
-an 50.80.420 &Syntax.R-Sg.SGML.SGML-linuxdoc :cal SetSyn("sgmllnx")<CR>
+an 50.80.200 &Syntax.R-Sg.Resolv\.conf :cal SetSyn("resolv")<CR>
+an 50.80.210 &Syntax.R-Sg.Rexx :cal SetSyn("rexx")<CR>
+an 50.80.220 &Syntax.R-Sg.Robots\.txt :cal SetSyn("robots")<CR>
+an 50.80.230 &Syntax.R-Sg.RockLinux\ package\ desc\. :cal SetSyn("desc")<CR>
+an 50.80.240 &Syntax.R-Sg.Rpcgen :cal SetSyn("rpcgen")<CR>
+an 50.80.250 &Syntax.R-Sg.RPL/2 :cal SetSyn("rpl")<CR>
+an 50.80.260 &Syntax.R-Sg.RTF :cal SetSyn("rtf")<CR>
+an 50.80.270 &Syntax.R-Sg.Ruby :cal SetSyn("ruby")<CR>
+an 50.80.290 &Syntax.R-Sg.S-Lang :cal SetSyn("slang")<CR>
+an 50.80.300 &Syntax.R-Sg.Samba\ config :cal SetSyn("samba")<CR>
+an 50.80.310 &Syntax.R-Sg.SAS :cal SetSyn("sas")<CR>
+an 50.80.320 &Syntax.R-Sg.Sather :cal SetSyn("sather")<CR>
+an 50.80.330 &Syntax.R-Sg.Scheme :cal SetSyn("scheme")<CR>
+an 50.80.340 &Syntax.R-Sg.Scilab :cal SetSyn("scilab")<CR>
+an 50.80.350 &Syntax.R-Sg.Screen\ RC :cal SetSyn("screen")<CR>
+an 50.80.360 &Syntax.R-Sg.SDL :cal SetSyn("sdl")<CR>
+an 50.80.370 &Syntax.R-Sg.Sed :cal SetSyn("sed")<CR>
+an 50.80.380 &Syntax.R-Sg.Sendmail\.cf :cal SetSyn("sm")<CR>
+an 50.80.390 &Syntax.R-Sg.Send-pr :cal SetSyn("sendpr")<CR>
+an 50.80.400 &Syntax.R-Sg.SGML.SGML\ catalog :cal SetSyn("catalog")<CR>
+an 50.80.410 &Syntax.R-Sg.SGML.SGML\ DTD :cal SetSyn("sgml")<CR>
+an 50.80.420 &Syntax.R-Sg.SGML.SGML\ Declaration :cal SetSyn("sgmldecl")<CR>
+an 50.80.430 &Syntax.R-Sg.SGML.SGML-linuxdoc :cal SetSyn("sgmllnx")<CR>
 an 50.90.100 &Syntax.Sh-S.Shell\ script.sh\ and\ ksh :cal SetSyn("sh")<CR>
 an 50.90.110 &Syntax.Sh-S.Shell\ script.csh :cal SetSyn("csh")<CR>
 an 50.90.120 &Syntax.Sh-S.Shell\ script.zsh :cal SetSyn("zsh")<CR>
@@ -322,18 +323,19 @@ an 50.90.310 &Syntax.Sh-S.Snort\ Configuration :cal SetSyn("hog")<CR>
 an 50.90.320 &Syntax.Sh-S.SPEC\ (Linux\ RPM) :cal SetSyn("spec")<CR>
 an 50.90.330 &Syntax.Sh-S.Specman :cal SetSyn("specman")<CR>
 an 50.90.340 &Syntax.Sh-S.Spice :cal SetSyn("spice")<CR>
-an 50.90.350 &Syntax.Sh-S.Speedup :cal SetSyn("spup")<CR>
-an 50.90.360 &Syntax.Sh-S.Splint :cal SetSyn("splint")<CR>
-an 50.90.370 &Syntax.Sh-S.Squid\ config :cal SetSyn("squid")<CR>
-an 50.90.380 &Syntax.Sh-S.SQL.MySQL :cal SetSyn("mysql")<CR>
-an 50.90.390 &Syntax.Sh-S.SQL.SQL :cal SetSyn("sql")<CR>
-an 50.90.400 &Syntax.Sh-S.SQL.SQL\ Forms :cal SetSyn("sqlforms")<CR>
-an 50.90.410 &Syntax.Sh-S.SQL.SQLJ :cal SetSyn("sqlj")<CR>
-an 50.90.420 &Syntax.Sh-S.SQR :cal SetSyn("sqr")<CR>
-an 50.90.430 &Syntax.Sh-S.Standard\ ML :cal SetSyn("sml")<CR>
-an 50.90.440 &Syntax.Sh-S.Stored\ Procedures :cal SetSyn("stp")<CR>
-an 50.90.450 &Syntax.Sh-S.Strace :cal SetSyn("strace")<CR>
-an 50.90.460 &Syntax.Sh-S.Subversion\ commit :cal SetSyn("svn")<CR>
+an 50.90.350 &Syntax.Sh-S.Spyce :cal SetSyn("spyce")<CR>
+an 50.90.360 &Syntax.Sh-S.Speedup :cal SetSyn("spup")<CR>
+an 50.90.370 &Syntax.Sh-S.Splint :cal SetSyn("splint")<CR>
+an 50.90.380 &Syntax.Sh-S.Squid\ config :cal SetSyn("squid")<CR>
+an 50.90.390 &Syntax.Sh-S.SQL.MySQL :cal SetSyn("mysql")<CR>
+an 50.90.400 &Syntax.Sh-S.SQL.SQL :cal SetSyn("sql")<CR>
+an 50.90.410 &Syntax.Sh-S.SQL.SQL\ Forms :cal SetSyn("sqlforms")<CR>
+an 50.90.420 &Syntax.Sh-S.SQL.SQLJ :cal SetSyn("sqlj")<CR>
+an 50.90.430 &Syntax.Sh-S.SQR :cal SetSyn("sqr")<CR>
+an 50.90.440 &Syntax.Sh-S.Standard\ ML :cal SetSyn("sml")<CR>
+an 50.90.450 &Syntax.Sh-S.Stored\ Procedures :cal SetSyn("stp")<CR>
+an 50.90.460 &Syntax.Sh-S.Strace :cal SetSyn("strace")<CR>
+an 50.90.470 &Syntax.Sh-S.Subversion\ commit :cal SetSyn("svn")<CR>
 an 50.100.100 &Syntax.TUV.TADS :cal SetSyn("tads")<CR>
 an 50.100.110 &Syntax.TUV.Tags :cal SetSyn("tags")<CR>
 an 50.100.120 &Syntax.TUV.TAK.TAK\ compare :cal SetSyn("takcmp")<CR>
@@ -375,21 +377,22 @@ an 50.110.140 &Syntax.WXYZ.Website\ MetaLanguage :cal SetSyn("wml")<CR>
 an 50.110.160 &Syntax.WXYZ.wDiff :cal SetSyn("wdiff")<CR>
 an 50.110.180 &Syntax.WXYZ.Wget\ config :cal SetSyn("wget")<CR>
 an 50.110.190 &Syntax.WXYZ.Whitespace\ (add) :cal SetSyn("whitespace")<CR>
-an 50.110.200 &Syntax.WXYZ.WinBatch/Webbatch :cal SetSyn("winbatch")<CR>
-an 50.110.210 &Syntax.WXYZ.Windows\ Scripting\ Host :cal SetSyn("wsh")<CR>
-an 50.110.220 &Syntax.WXYZ.WvDial :cal SetSyn("wvdial")<CR>
-an 50.110.240 &Syntax.WXYZ.X\ Keyboard\ Extension :cal SetSyn("xkb")<CR>
-an 50.110.250 &Syntax.WXYZ.X\ Pixmap :cal SetSyn("xpm")<CR>
-an 50.110.260 &Syntax.WXYZ.X\ Pixmap\ (2) :cal SetSyn("xpm2")<CR>
-an 50.110.270 &Syntax.WXYZ.X\ resources :cal SetSyn("xdefaults")<CR>
-an 50.110.280 &Syntax.WXYZ.Xmodmap :cal SetSyn("xmodmap")<CR>
-an 50.110.290 &Syntax.WXYZ.Xmath :cal SetSyn("xmath")<CR>
-an 50.110.300 &Syntax.WXYZ.XML :cal SetSyn("xml")<CR>
-an 50.110.310 &Syntax.WXYZ.XML\ Schema\ (XSD) :cal SetSyn("xsd")<CR>
-an 50.110.320 &Syntax.WXYZ.Xslt :cal SetSyn("xslt")<CR>
-an 50.110.330 &Syntax.WXYZ.XXD\ hex\ dump :cal SetSyn("xxd")<CR>
-an 50.110.340 &Syntax.WXYZ.XFree86\ Config :cal SetSyn("xf86conf")<CR>
-an 50.110.360 &Syntax.WXYZ.Yacc :cal SetSyn("yacc")<CR>
+an 50.110.200 &Syntax.WXYZ.WildPackets\ EtherPeek\ Decoder :cal SetSyn("dcd")<CR>
+an 50.110.210 &Syntax.WXYZ.WinBatch/Webbatch :cal SetSyn("winbatch")<CR>
+an 50.110.220 &Syntax.WXYZ.Windows\ Scripting\ Host :cal SetSyn("wsh")<CR>
+an 50.110.230 &Syntax.WXYZ.WvDial :cal SetSyn("wvdial")<CR>
+an 50.110.250 &Syntax.WXYZ.X\ Keyboard\ Extension :cal SetSyn("xkb")<CR>
+an 50.110.260 &Syntax.WXYZ.X\ Pixmap :cal SetSyn("xpm")<CR>
+an 50.110.270 &Syntax.WXYZ.X\ Pixmap\ (2) :cal SetSyn("xpm2")<CR>
+an 50.110.280 &Syntax.WXYZ.X\ resources :cal SetSyn("xdefaults")<CR>
+an 50.110.290 &Syntax.WXYZ.Xmodmap :cal SetSyn("xmodmap")<CR>
+an 50.110.300 &Syntax.WXYZ.Xmath :cal SetSyn("xmath")<CR>
+an 50.110.310 &Syntax.WXYZ.XML :cal SetSyn("xml")<CR>
+an 50.110.320 &Syntax.WXYZ.XML\ Schema\ (XSD) :cal SetSyn("xsd")<CR>
+an 50.110.330 &Syntax.WXYZ.Xslt :cal SetSyn("xslt")<CR>
+an 50.110.340 &Syntax.WXYZ.XXD\ hex\ dump :cal SetSyn("xxd")<CR>
+an 50.110.350 &Syntax.WXYZ.XFree86\ Config :cal SetSyn("xf86conf")<CR>
+an 50.110.370 &Syntax.WXYZ.Yacc :cal SetSyn("yacc")<CR>
 
 " The End Of The Syntax Menu
 

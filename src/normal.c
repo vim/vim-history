@@ -168,6 +168,9 @@ static void	nv_sniff __ARGS((cmdarg_T *cap));
 #ifdef FEAT_NETBEANS_INTG
 static void	nv_nbcmd __ARGS((cmdarg_T *cap));
 #endif
+#ifdef FEAT_DND
+static void	nv_drop __ARGS((cmdarg_T *cap));
+#endif
 
 /*
  * Function to be called for a Normal or Visual mode command.
@@ -418,6 +421,9 @@ static const struct nv_cmd
 #endif
 #ifdef FEAT_NETBEANS_INTG
     {K_F21,	nv_nbcmd,	NV_NCH_ALW,		0},
+#endif
+#ifdef FEAT_DND
+    {K_DROP,	nv_drop,	NV_STS,			0},
 #endif
 };
 
@@ -8161,5 +8167,15 @@ nv_nbcmd(cap)
     cmdarg_T	*cap;
 {
     netbeans_keycommand(cap->nchar);
+}
+#endif
+
+#ifdef FEAT_DND
+/*ARGSUSED*/
+    static void
+nv_drop(cap)
+    cmdarg_T	*cap;
+{
+    do_put('~', BACKWARD, 1L, PUT_CURSEND);
 }
 #endif

@@ -1,6 +1,6 @@
 " Menu Translations:	Korean
 " Maintainer:		Nam SungHyun <namsh@kldp.org>
-" Last Change:		2001 Nov 01
+" Last Change:		2003 Mar 30
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -13,6 +13,7 @@ scriptencoding euc-kr
 " Help menu
 menutrans &Help			도움말(&H)
 menutrans &Overview<Tab><F1>	개관(&O)<Tab><F1>
+menutrans &User\ Manual		사용자\ 매뉴얼(&U)
 menutrans &How-to\ links	어찌하나\ 목록(&H)
 menutrans &GUI			구이(&G)
 menutrans &Find\.\.\.		찾기(&F)\.\.\.
@@ -43,7 +44,7 @@ menutrans &Redo<Tab>^R			다시 실행(&R)<Tab>^R
 menutrans Rep&eat<Tab>\.		되풀이(&e)<Tab>\.
 menutrans Cu&t<Tab>"+x			자르기(&t)<Tab>"+x
 menutrans &Copy<Tab>"+y			복사(&C)<Tab>"+y
-menutrans &Paste<Tab>"+P		붙이기(&P)<Tab>"+P
+menutrans &Paste<Tab>"+gP		붙이기(&P)<Tab>"+gP
 menutrans Put\ &Before<Tab>[p		앞에\ 붙이기(&B)<Tab>[p
 menutrans Put\ &After<Tab>]p		뒤에\ 붙이기(&A)<Tab>]p
 menutrans &Delete<Tab>x			지우기(&D)<Tab>x
@@ -140,7 +141,11 @@ menutrans &Next\ Error<Tab>:cn		다음\ 에러(&N)<Tab>:cn
 menutrans &Previous\ Error<Tab>:cp	이전\ 에러(&P)<Tab>:cp
 menutrans &Older\ List<Tab>:cold	오래된\ 목록(&O)<Tab>:cold
 menutrans N&ewer\ List<Tab>:cnew	새로운\ 목록(&e)<Tab>:cnew
-menutrans Error\ &Window<Tab>:cwin	에러\ 창(&W)<Tab>:cwin
+menutrans Error\ &Window		에러\ 창(&W)
+menutrans &Update<Tab>:cwin		갱신(&U)<Tab>:cwin
+menutrans &Open<Tab>:copen		열기(&O)<Tab>:copen
+menutrans &Close<Tab>:cclose		닫기(&C)<Tab>:cclose
+menutrans &Set\ Compiler		컴파일러\ 설정(&S)
 menutrans &Convert\ to\ HEX<Tab>:%!mc\ vim:xxd	십육진으로\ 변환<Tab>:%!mc\ vim:xxd
 menutrans &Convert\ to\ HEX<Tab>:%!xxd	십육진으로\ 변환(&C)<Tab>:%!xxd
 menutrans Conve&rt\ back<Tab>:%!mc\ vim:xxd\ -r	원래대로\ 변환(&r)<Tab>:%!mc\ vim:xxd\ -r
@@ -224,6 +229,7 @@ endif
 
 " Syntax menu
 menutrans &Syntax		문법(&S)
+menutrans &Show\ individual\ choices  모든\ 선택가능한\ 항목\ 보기(&S)
 menutrans Set\ '&syntax'\ only	'syntax'만\ 설정(&s)
 menutrans Set\ '&filetype'\ too	'filetype'도\ 설정(&f)
 menutrans &Off			끄기(&O)

@@ -1791,10 +1791,6 @@ gui_mch_draw_string(
 }
 
 
-
-
-
-
 /*
  * Output routines.
  */
@@ -1815,8 +1811,6 @@ clear_rect(RECT *rcp)
     FillRect(s_hdc, rcp, hbr);
     DeleteBrush(hbr);
 }
-
-
 
 
 #if defined(FEAT_MENU) || defined(PROTO)
@@ -3418,8 +3412,7 @@ gui_mch_register_sign(signfile)
 
     if (is_winnt_3())
     {
-	/* TODO: May be changed this message */
-	EMSG(_("E255: Couldn't read in sign data!"));
+	EMSG(_(e_signdata));
 	return NULL;
     }
 
@@ -3452,7 +3445,7 @@ gui_mch_register_sign(signfile)
     {
 	if (sign.hImage)
 	    close_signicon_image(&sign);
-	EMSG(_("E255: Couldn't read in sign data!"));
+	EMSG(_(e_signdata));
     }
     return (void *)psign;
 

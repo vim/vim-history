@@ -168,7 +168,12 @@ open_buffer(read_stdin, eap)
 	    curwin->w_cursor.lnum = 1;
 	    curwin->w_cursor.col = 0;
 #ifdef FEAT_AUTOCMD
+# ifdef FEAT_EVAL
+	    apply_autocmds_retval(EVENT_STDINREADPOST, NULL, NULL, FALSE,
+							curbuf, &retval);
+# else
 	    apply_autocmds(EVENT_STDINREADPOST, NULL, NULL, FALSE, curbuf);
+# endif
 #endif
 	}
     }
@@ -188,6 +193,9 @@ open_buffer(read_stdin, eap)
     if ((read_stdin && !readonlymode && !bufempty())
 #ifdef FEAT_AUTOCMD
 		|| modified_was_set	/* ":set modified" used in autocmd */
+# ifdef FEAT_EVAL
+		|| (aborting() && vim_strchr(p_cpo, CPO_INTMOD) != NULL)
+# endif
 #endif
 		|| (got_int && vim_strchr(p_cpo, CPO_INTMOD) != NULL))
 	changed();
@@ -196,7 +204,11 @@ open_buffer(read_stdin, eap)
     save_file_ff(curbuf);		/* keep this fileformat */
 
     /* require "!" to overwrite the file, because it wasn't read completely */
+#ifdef FEAT_EVAL
+    if (aborting())
+#else
     if (got_int)
+#endif
 	curbuf->b_flags |= BF_READERR;
 
 #ifdef FEAT_AUTOCMD
@@ -208,7 +220,11 @@ open_buffer(read_stdin, eap)
 	curwin->w_topfill = 0;
 # endif
     }
+# ifdef FEAT_EVAL
+    apply_autocmds_retval(EVENT_BUFENTER, NULL, NULL, FALSE, curbuf, &retval);
+# else
     apply_autocmds(EVENT_BUFENTER, NULL, NULL, FALSE, curbuf);
+# endif
 #endif
 
     if (retval != FAIL)
@@ -229,7 +245,12 @@ open_buffer(read_stdin, eap)
 	    curbuf->b_flags &= ~(BF_CHECK_RO | BF_NEVERLOADED);
 
 #ifdef FEAT_AUTOCMD
+# ifdef FEAT_EVAL
+	    apply_autocmds_retval(EVENT_BUFWINENTER, NULL, NULL, FALSE, curbuf,
+								    &retval);
+# else
 	    apply_autocmds(EVENT_BUFWINENTER, NULL, NULL, FALSE, curbuf);
+# endif
 
 	    /* restore curwin/curbuf and a few other things */
 	    aucmd_restbuf(&aco);
@@ -339,6 +360,10 @@ close_buffer(win, buf, action)
 	    if (!buf_valid(buf))	/* autocmds may delete the buffer */
 		return;
 	}
+# ifdef FEAT_EVAL
+	if (aborting())	    /* autocmds may abort script processing */
+	    return;
+# endif
     }
     nwindows = buf->b_nwindows;
 #endif
@@ -377,6 +402,11 @@ close_buffer(win, buf, action)
     /* Autocommands may have deleted the buffer. */
     if (!buf_valid(buf))
 	return;
+# ifdef FEAT_EVAL
+    /* Autocommands may abort script processing. */
+    if (aborting())
+	return;
+# endif
 
     /* Autocommands may have opened or closed windows for this buffer.
      * Decrement the count for the close we do here. */
@@ -502,6 +532,10 @@ buf_freeall(buf, del_buf, wipe_buf)
 	if (!buf_valid(buf))	    /* autocommands may delete the buffer */
 	    return;
     }
+# ifdef FEAT_EVAL
+    if (aborting())	    /* autocmds may abort script processing */
+	return;
+# endif
 
     /*
      * It's possible that autocommands change curbuf to the one being deleted.
@@ -760,11 +794,11 @@ do_bufdel(command, arg, addr_count, start_bnr, end_bnr, forceit)
 	if (deleted == 0)
 	{
 	    if (command == DOBUF_UNLOAD)
-		sprintf((char *)IObuff, _("No buffers were unloaded"));
+		sprintf((char *)IObuff, _("E515: No buffers were unloaded"));
 	    else if (command == DOBUF_DEL)
-		sprintf((char *)IObuff, _("No buffers were deleted"));
+		sprintf((char *)IObuff, _("E516: No buffers were deleted"));
 	    else
-		sprintf((char *)IObuff, _("No buffers were wiped out"));
+		sprintf((char *)IObuff, _("E517: No buffers were wiped out"));
 	    errormsg = IObuff;
 	}
 	else if (deleted >= p_report)
@@ -1134,6 +1168,10 @@ do_buffer(action, start, dir, count, forceit)
 
     /* Go to the other buffer. */
     set_curbuf(buf, action);
+#if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+    if (aborting())	    /* autocmds may abort script processing */
+	return FAIL;
+#endif
 
     return OK;
 }
@@ -1172,21 +1210,34 @@ set_curbuf(buf, action)
 
 #ifdef FEAT_AUTOCMD
     apply_autocmds(EVENT_BUFLEAVE, NULL, NULL, FALSE, curbuf);
+# ifdef FEAT_EVAL
+    if (buf_valid(prevbuf) && !aborting())
+# else
     if (buf_valid(prevbuf))
+# endif
 #endif
     {
 #ifdef FEAT_WINDOWS
 	if (unload)
 	    close_windows(prevbuf);
 #endif
+#if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+	if (buf_valid(prevbuf) && !aborting())
+#else
 	if (buf_valid(prevbuf))
+#endif
 	    close_buffer(prevbuf == curwin->w_buffer ? curwin : NULL, prevbuf,
 		    unload ? action : (action == DOBUF_GOTO
 			&& !P_HID(prevbuf)
 			&& !bufIsChanged(prevbuf)) ? DOBUF_UNLOAD : 0);
     }
 #ifdef FEAT_AUTOCMD
+# ifdef FEAT_EVAL
+    /* An autocommand may have deleted buf or aborted the script processing! */
+    if (buf_valid(buf) && !aborting())
+# else
     if (buf_valid(buf))	    /* an autocommand may have deleted buf! */
+# endif
 #endif
 	enter_buffer(buf);
 }
@@ -1355,6 +1406,10 @@ buflist_new(ffname, sfname, lnum, flags)
 	    apply_autocmds(EVENT_BUFDELETE, NULL, NULL, FALSE, curbuf);
 	if (buf == curbuf)
 	    apply_autocmds(EVENT_BUFWIPEOUT, NULL, NULL, FALSE, curbuf);
+# ifdef FEAT_EVAL
+	if (aborting())	    /* autocmds may abort script processing */
+	    return NULL;
+# endif
 #endif
 #ifdef FEAT_QUICKFIX
 # ifdef FEAT_AUTOCMD
@@ -1404,6 +1459,10 @@ buflist_new(ffname, sfname, lnum, flags)
 	buf_freeall(buf, FALSE, FALSE);
 	if (buf != curbuf)	 /* autocommands deleted the buffer! */
 	    return NULL;
+#if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+	if (aborting())	    /* autocmds may abort script processing */
+	    return NULL;
+#endif
 	/* buf->b_nwindows = 0; why was this here? */
 	free_buffer_stuff(buf, FALSE);	/* delete local variables et al. */
 #ifdef FEAT_KEYMAP
@@ -1476,6 +1535,10 @@ buflist_new(ffname, sfname, lnum, flags)
 	apply_autocmds(EVENT_BUFNEW, NULL, NULL, FALSE, buf);
 	if (flags & BLN_LISTED)
 	    apply_autocmds(EVENT_BUFADD, NULL, NULL, FALSE, buf);
+# ifdef FEAT_EVAL
+	if (aborting())	    /* autocmds may abort script processing */
+	    return NULL;
+# endif
     }
 #endif
 
@@ -4072,7 +4135,13 @@ ex_buffer_all(eap)
 #endif
 	    set_curbuf(buf, DOBUF_GOTO);
 #ifdef FEAT_AUTOCMD
+# ifdef FEAT_EVAL
+	    /* Autocommands deleted the buffer or aborted script
+	     * processing!!! */
+	    if (!buf_valid(buf) || aborting())
+# else
 	    if (!buf_valid(buf))	/* autocommands deleted the buffer!!! */
+# endif
 	    {
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
 		swap_exists_action = SEA_NONE;

@@ -4,7 +4,7 @@
 # This compiles Vim as a Windows application.  If you want Vim to run as a
 # Cygwin application use the Makefile (just like on Unix).
 #
-# Last updated by Dan Sharp.  Last Change: 2003 Mar 20
+# Last updated by Dan Sharp.  Last Change: 2003 Apr 21
 #
 # GUI		no or yes: set to yes if you want the GUI version (yes)
 # PERL		define to path to Perl dir to get Perl support (not defined)
@@ -230,6 +230,7 @@ OBJ = \
 	$(OUTDIR)/ex_cmds.o \
 	$(OUTDIR)/ex_cmds2.o \
 	$(OUTDIR)/ex_docmd.o \
+	$(OUTDIR)/ex_eval.o \
 	$(OUTDIR)/ex_getln.o \
 	$(OUTDIR)/fileio.o \
 	$(OUTDIR)/fold.o \
@@ -336,6 +337,9 @@ $(OUTDIR)/ex_cmds2.o:	ex_cmds2.c $(INCL)
 
 $(OUTDIR)/ex_docmd.o:	ex_docmd.c $(INCL) ex_cmds.h
 	$(CC) -c $(CFLAGS) ex_docmd.c -o $(OUTDIR)/ex_docmd.o
+
+$(OUTDIR)/ex_eval.o:	ex_eval.c $(INCL) ex_cmds.h
+	$(CC) -c $(CFLAGS) ex_eval.c -o $(OUTDIR)/ex_eval.o
 
 $(OUTDIR)/ex_getln.o:	ex_getln.c $(INCL)
 	$(CC) -c $(CFLAGS) ex_getln.c -o $(OUTDIR)/ex_getln.o

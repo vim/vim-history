@@ -1,4 +1,4 @@
-*message.txt*   For Vim version 6.1.  Last change: 2002 Feb 21
+*message.txt*   For Vim version 6.2a.  Last change: 2003 Apr 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -55,7 +55,7 @@ or view a list of recent messages with: >
 LIST OF MESSAGES
 			*E222* *E228* *E232* *E256* *E293* *E298* *E304* *E317*
 			*E318* *E356* *E438* *E439* *E440* *E316* *E320* *E322*
-			*E323* *E341*  >
+			*E323* *E341* *E473* *E570*  >
   Add to read buffer
   makemap: Illegal mode
   Cannot create BalloonEval with both message and callback
@@ -73,6 +73,8 @@ LIST OF MESSAGES
   cannot find line {N}
   line number out of range: {N} past the end
   line count wrong in block {N}
+  Internal error
+  fatal error in cs_manage_matches
 
 This is an internal error.  If you can reproduce it, please send in a bug
 report. |bugs|
@@ -139,6 +141,13 @@ A filename contains a strange combination of characters, which causes Vim to
 attempt expanding wildcards but this fails.  This does NOT mean that no
 matching file names could be found, but that the pattern was illegal.
 
+							*E459*  >
+  Cannot go back to previous directory
+
+While expanding a file name, Vim failed to go back to the previously used
+directory.  All file names being used may be invalid now!  You need to have
+execute permission on the current directory.
+
 							*E190* *E212*  >
   Cannot open "{filename}" for writing
   Can't open file for writing
@@ -163,7 +172,7 @@ can overwrite.
   Cannot set read-only variable "{name}"
 
 You are trying to assign a value to an argument of a function |a:var| or a Vim
-internal variagble |v:var| which is read-only.
+internal variable |v:var| which is read-only.
 
 							*E90*  >
   Cannot unload last buffer
@@ -499,6 +508,14 @@ This message is only given when Vim detects a problem when searching for a
 tag.  Sometimes this message is not given, even thought the tags file is not
 properly sorted.
 
+							*E460*  >
+  The resource fork would be lost (add ! to override)
+
+On the Macintosh (classic), when writing a file, Vim attempts to preserve all
+info about a file, including its resource fork.  If this is not possible you
+get this error message.  Append "!" to the command name to write anyway (and
+lose the info).
+
 							*E424*  >
   Too many different highlighting attributes in use
 
@@ -560,13 +577,17 @@ option settings and autocommands you would end up with different text).  This
 probably means that some other program changed the file.  You will have to
 find out what happened, and decide which version of the file you want to keep.
 Set the 'autoread' option if you want to do this automatically.
+This message is not given when 'buftype' is not empty.
+
 There is one situation where you get this message even though there is nothing
 wrong: If you save a file in Windows on the day the daylight saving time
-starts.  It can be fixed by adding this line in your autoexec.bat: >
+starts.  It can be fixed in one of these ways:
+- Add this line in your autoexec.bat: >
 	   SET TZ=-1
-Adjust the "-1" for your time zone.  Or just write the file again the next
-day.
-This message is not given when 'buftype' is not empty.
+< Adjust the "-1" for your time zone.
+- Disable "automatically adjust clock for daylight saving changes".
+- Just write the file again the next day.  Or set your clock to the next day,
+  write the file twice and set the clock back.
 
 							*W12*  >
   Warning: File "{filename}" has changed and the buffer was changed in Vim as well
@@ -588,7 +609,7 @@ automatically reload the file.
   Warning: File "{filename}" no longer available
 
 The file which you have started editing has disappeared, or is no longer
-accessible.  Make sure you write the buffer somewhere to avoid loosing
+accessible.  Make sure you write the buffer somewhere to avoid losing
 changes.  This message is not given when 'buftype' is not empty.
 
 							*W14*  >
@@ -623,6 +644,62 @@ A command line started with a backslash or the range of a command contained a
 backslash in a wrong place.  This is often caused by command-line continuation
 being disabled.  Remove the 'C' flag from the 'cpoptions' option to enable it.
 
+							*E471*  >
+  Argument required
+
+This happens when an Ex command with mandatory argument(s) was executed, but
+no argument has been specified.
+
+							*E474* *E475*  >
+  Invalid argument
+
+An Ex command has been executed, but an invalid argument has been specified.
+
+							*E488*  >
+  Trailing characters
+
+An argument has been added to an Ex command that does not permit one.
+
+							*E477* *E478*  >
+  No ! allowed
+  Don't panic!
+
+You have added a "!" after an Ex command that doesn't permit one.
+
+							*E481*  >
+  No range allowed
+
+A range was specified for an Ex command that doesn't permit one.  See
+|cmdline-ranges|.
+
+							*E482* *E483*  >
+  Can't create file {filename}
+  Can't get temp file name
+
+Vim cannot create a temporary file.
+
+							*E484* *E485*  >
+  Can't open file %s"
+  Can't read file %s"
+
+Vim cannot read a temporary file.
+
+							*E464*  >
+  Ambiguous use of user-defined command
+
+There are two user-defined commands with a common name prefix, and you used
+Command-line completion to execute one of them. |user-cmd-abmiguous|
+Example: >
+	:command MyCommand1 echo "one"
+	:command MyCommand2 echo "two"
+	:MyCommand
+<
+							*E492*  >
+  Not an editor command
+
+You tried to execute a command that is neither an Ex command nor
+a user-defined command.
+
 ==============================================================================
 3. Messages						*messages*
 
@@ -643,6 +720,10 @@ and the screen is about to be redrawn:
 -> Hit ":" or any other Normal mode command character to start that command.
 -> Hit <C-Y> to copy (yank) a modeless selection to the clipboard register.
 -> Use a menu.  The characters defined for Cmdline-mode are used.
+-> When 'mouse' contians the 'r' flag, clicking the left mouse button works
+   like pressing <Space>.  This makes it impossible to select text though.
+-> For the GUI clicking the left mouse button in the last line works like
+   pressing <Space>.
 {Vi: only ":" commands are interpreted}
 
 To reduce the number of hit-enter prompts:
@@ -650,10 +731,11 @@ To reduce the number of hit-enter prompts:
 - Add flags to 'shortmess'.
 - Reset 'showcmd' and/or 'ruler'.
 
-Also see 'mouse'.  It is highlighted with the |hl-Question| group.
+Also see 'mouse'.  The hit-enter message is highlighted with the |hl-Question|
+group.
 
 
-							*more-prompt*  >
+						*more-prompt* *pager*  >
   -- More --
   -- More -- (RET: line, SPACE: page, d: half page, q: quit)
   -- More -- (RET/BS: line, SPACE/b: page, d/u: half page, q: quit)
@@ -676,11 +758,16 @@ Type					effect ~
 					the clipboard ("* and "+ registers)
     {menu-entry}			what the menu is defined to in
 					Cmdline-mode.
-
+    <LeftMouse> (**)			next page
+    
 Any other key causes the meaning of the keys to be displayed.
 
 (*) backwards scrolling is only supported for these commands: >
     :clist
+(**) Clicking the left mouse button only works:
+     - For the GUI: in the last line of the screen.
+     - When 'r' is included in 'mouse' (but then selecting text won't work).
+
 
 Note: The typed key is directly obtained from the terminal, it is not mapped
 and typeahead is ignored.

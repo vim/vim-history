@@ -1,4 +1,4 @@
-*uganda.txt*    For Vim version 6.1.  Last change: 2002 Feb 04
+*uganda.txt*    For Vim version 6.2a.  Last change: 2003 Mar 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -197,7 +197,7 @@ check the progress (at our own cost).  I have visited the centre myself in
 If you have any further questions, send me e-mail: <Bram@vim.org>.
 
 The address of the centre is:
-			Kibaale Childrens Centre
+			Kibaale Children's Centre
 			p.o. box 1658
 			Masaka, Uganda, East Africa
 

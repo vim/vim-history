@@ -1,7 +1,9 @@
 " Vim syntax file
 " Language:	Inform
-" Maintainer:	Stephen Thomas (stephent@insignia.com)
-" Last Change:	2001 May 10
+" Maintainer:	Stephen Thomas (informvim@stephenthomas.uklinux.net)
+" URL:		http://www.stephenthomas.uklinux.net/informvim
+" Last Change:	2003 Apr 07
+
 
 " Quit when a syntax file was already loaded
 if version < 600
@@ -16,8 +18,9 @@ syn case ignore
 
 syn keyword informDefine Constant
 
-syn keyword informType Array Attribute Class Global Nearby
+syn keyword informType Array Attribute Class Nearby
 syn keyword informType Object Property String Routine
+syn match   informType "\<Global\>"
 
 syn keyword informInclude Import Include Link Replace System_file
 
@@ -27,6 +30,8 @@ syn keyword informPreCondit Ifnot
 syn keyword informPreProc Abbreviate Default Fake_action Lowstring
 syn keyword informPreProc Message Release Serial Statusline Stub Switches
 syn keyword informPreProc Trace Zcharacter
+
+syn region  informGlobalRegion matchgroup=informType start="\<Global\>" matchgroup=NONE skip=+!.*$\|".*"\|'.*'+ end=";" contains=ALLBUT,informGramPreProc,informPredicate,informGrammar,informAsm,informAsmObsolete
 
 syn keyword informGramPreProc contained Verb Extend
 
@@ -71,6 +76,10 @@ if !exists("inform_highlight_simple")
   syn keyword informLibRoutine InScope LookRoutine NewRoom ParseNoun
   syn keyword informLibRoutine ParseNumber ParserError PrintRank PrintVerb
   syn keyword informLibRoutine PrintTaskName TimePasses UnknownVerb
+  if exists("inform_highlight_glulx")
+     syn keyword informLibRoutine  IdentifyGlkObject HandleGlkEvent
+     syn keyword informLibRoutine  InitGlkWindow
+  endif
 
   syn keyword informLibAction  Quit Restart Restore Verify Save
   syn keyword informLibAction  ScriptOn ScriptOff Pronouns Score
@@ -96,6 +105,11 @@ if !exists("inform_highlight_simple")
   syn keyword informLibAction  Answer Buy Ask AskFor Sing Climb Wait
   syn keyword informLibAction  Sleep LetGo Receive ThrownAt Order
   syn keyword informLibAction  TheSame PluralFound Miscellany Prompt
+  syn keyword informLibAction  ChangesOn ChangesOff Showverb Showobj
+  syn keyword informLibAction  EmptyT VagueGo
+  if exists("inform_highlight_glulx")
+     syn keyword informLibAction  GlkList
+  endif
 
   syn keyword informLibVariable keep_silent deadflag action special_number
   syn keyword informLibVariable consult_from consult_words etype verb_num
@@ -168,8 +182,8 @@ syn keyword informOperator near from
 
 syn keyword informKeyword dictionary symbols objects verbs assembly
 syn keyword informKeyword expressions lines tokens linker on off alias long
-syn keyword informKeyword additive score time string table data initial
-syn keyword informKeyword initstr with private has class error fatalerror
+syn keyword informKeyword additive score time string table 
+syn keyword informKeyword with private has class error fatalerror
 syn keyword informKeyword warning self
 
 syn keyword informMetaAttrib remaining create destroy recreate copy call
@@ -182,11 +196,13 @@ syn keyword informGrammar contained multiinside creature special number
 syn keyword informGrammar contained scope topic reverse meta only replace
 syn keyword informGrammar contained first last
 
+syn keyword informKeywordObsolete contained initial data initstr
+
 syn keyword informTodo contained TODO
 
 " Assembly language mnemonics must be preceded by a '@'.
 
-syn match informAsmContainer "@\s*\k*" contains=informAsm
+syn match informAsmContainer "@\s*\k*" contains=informAsm,informAsmObsolete
 
 if exists("inform_highlight_glulx")
   syn keyword informAsm contained nop add sub mul div mod neg bitand bitor
@@ -209,12 +225,12 @@ else
   syn keyword informAsm contained insert_obj loadw loadb get_prop
   syn keyword informAsm contained get_prop_addr get_next_prop add sub mul div
   syn keyword informAsm contained mod call storew storeb put_prop sread
-  syn keyword informAsm contained print_char print_num random push pull
+  syn keyword informAsm contained print_num random push pull
   syn keyword informAsm contained split_window set_window output_stream
   syn keyword informAsm contained input_stream sound_effect jz get_sibling
   syn keyword informAsm contained get_child get_parent get_prop_len inc dec
-  syn keyword informAsm contained print_addr remove_obj print_obj ret jump
-  syn keyword informAsm contained print_paddr load not rtrue rfalse print
+  syn keyword informAsm contained remove_obj print_obj ret jump
+  syn keyword informAsm contained load not rtrue rfalse print
   syn keyword informAsm contained print_ret nop save restore restart
   syn keyword informAsm contained ret_popped pop quit new_line show_status
   syn keyword informAsm contained verify call_2s call_vs aread call_vs2
@@ -231,6 +247,7 @@ else
   syn keyword informAsm contained read_mouse mouse_window push_stack
   syn keyword informAsm contained put_wind_prop print_form make_menu
   syn keyword informAsm contained picture_table
+  syn keyword informAsmObsolete contained print_paddr print_addr print_char
 endif
 
 " Handling for different versions of VIM.
@@ -279,7 +296,9 @@ SynDisplay match informNumber "\<\$\$[01]\+\>"
 syn match informComment "!.*" contains=informTodo
 
 " Syncronization
-syn sync match informSyncRoutine grouphere NONE "\[\|\]"
+syn sync match informSyncStringEnd grouphere NONE /"[;,]\s*$/
+syn sync match informSyncRoutineEnd grouphere NONE /][;,]\s*$/
+syn sync match informSyncCommentEnd grouphere NONE /^\s!.*$/
 syn sync match informSyncRoutine groupthere informGrammarSection "\<Verb\|Extend\>"
 syn sync maxlines=500
 
@@ -294,47 +313,54 @@ if version >= 508 || !exists("did_inform_syn_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink informDefine		Define
-  HiLink informType		Type
-  HiLink informInclude		Include
-  HiLink informPreCondit	PreCondit
-  HiLink informPreProc		PreProc
-  HiLink informGramPreProc	PreProc
-  HiLink informAsm		Special
-  HiLink informPredicate	Operator
-  HiLink informSysFunc		Identifier
-  HiLink informSysConst		Identifier
-  HiLink informConditional	Conditional
-  HiLink informRepeat		Repeat
-  HiLink informStatement	Statement
-  HiLink informOperator		Operator
-  HiLink informKeyword		Keyword
-  HiLink informGrammar		Keyword
-  HiLink informDictString	String
-  HiLink informNumber		Number
-  HiLink informError		Error
-  HiLink informString		String
-  HiLink informComment		Comment
-  HiLink informAccent		Special
-  HiLink informStringUnicode	Special
-  HiLink informStringCode	Special
-  HiLink informTodo		Todo
-  if !exists("inform_highlight_simple")
-    HiLink informLibAttrib	Identifier
-    HiLink informLibProp	Identifier
-    HiLink informLibObj		Identifier
-    HiLink informLibRoutine	Identifier
-    HiLink informLibVariable	Identifier
-    HiLink informLibConst	Identifier
-    HiLink informLibAction	Identifier
+  HiLink informDefine           Define
+  HiLink informType             Type
+  HiLink informInclude          Include
+  HiLink informPreCondit        PreCondit
+  HiLink informPreProc          PreProc
+  HiLink informGramPreProc      PreProc
+  HiLink informAsm              Special
+  if !exists("inform_suppress_obsolete")
+    HiLink informAsmObsolete            informError
+    HiLink informKeywordObsolete        informError
+  else
+    HiLink informAsmObsolete            Special
+    HiLink informKeywordObsolete        Keyword
   endif
-  HiLink informBadDictString	informError
-  HiLink informBadAccent	informError
-  HiLink informBadStrUnicode	informError
+  HiLink informPredicate        Operator
+  HiLink informSysFunc          Identifier
+  HiLink informSysConst         Identifier
+  HiLink informConditional      Conditional
+  HiLink informRepeat           Repeat
+  HiLink informStatement        Statement
+  HiLink informOperator         Operator
+  HiLink informKeyword          Keyword
+  HiLink informGrammar          Keyword
+  HiLink informDictString       String
+  HiLink informNumber           Number
+  HiLink informError            Error
+  HiLink informString           String
+  HiLink informComment          Comment
+  HiLink informAccent           Special
+  HiLink informStringUnicode    Special
+  HiLink informStringCode       Special
+  HiLink informTodo             Todo
+  if !exists("inform_highlight_simple")
+    HiLink informLibAttrib      Identifier
+    HiLink informLibProp        Identifier
+    HiLink informLibObj         Identifier
+    HiLink informLibRoutine     Identifier
+    HiLink informLibVariable    Identifier
+    HiLink informLibConst       Identifier
+    HiLink informLibAction      Identifier
+  endif
+  HiLink informBadDictString    informError
+  HiLink informBadAccent        informError
+  HiLink informBadStrUnicode    informError
 
   delcommand HiLink
 endif
 
-let current_syntax = "inform"
+let b:current_syntax = "inform"
 
 " vim: ts=8

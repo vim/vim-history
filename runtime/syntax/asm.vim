@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	GNU Assembler
-" Maintainer:	Kevin Dahlhausen <ap096@po.cwru.edu>
-" Last Change:	2001 May 09
+" Maintainer:	Kevin Dahlhausen <kdahlhaus@yahoo.com>
+" Last Change:	2002 Sep 19
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded

@@ -3017,7 +3017,7 @@ gui_mch_get_font(name, giveErrorIfMissing)
     if (font == NOFONT)
     {
 	if (giveErrorIfMissing)
-	    EMSG2(_("E235: Unknown font: %s"), name);
+	    EMSG2(_(e_font), name);
 	return NOFONT;
     }
     /*

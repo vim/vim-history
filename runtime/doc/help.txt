@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 6.1.  Last change: 2003 Feb 13
+*help.txt*	For Vim version 6.2a.  Last change: 2003 Mar 17
 
 			VIM - main help file
 									 k
@@ -153,6 +153,7 @@ Interfaces ~
 |if_ruby.txt|	Ruby interface
 |debugger.txt|	Interface with a debugger
 |workshop.txt|	Sun Visual Workshop interface
+|netbeans.txt|	NetBeans External Editor interface
 |sign.txt|	debugging signs
 
 Versions ~

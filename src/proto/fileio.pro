@@ -24,6 +24,7 @@ void ex_doautoall __ARGS((exarg_T *eap));
 void aucmd_prepbuf __ARGS((aco_save_T *aco, buf_T *buf));
 void aucmd_restbuf __ARGS((aco_save_T *aco));
 int apply_autocmds __ARGS((EVENT_T event, char_u *fname, char_u *fname_io, int force, buf_T *buf));
+int apply_autocmds_retval __ARGS((EVENT_T event, char_u *fname, char_u *fname_io, int force, buf_T *buf, int *retval));
 int has_cursorhold __ARGS((void));
 int has_autocmd __ARGS((EVENT_T event, char_u *sfname));
 char_u *get_augroup_name __ARGS((expand_T *xp, int idx));

@@ -2,7 +2,7 @@
 " Language:	JavaScript
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/javascript.vim
-" Last Change:	2001 Aug 24
+" Last Change:	2002 Nov 14
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -10,29 +10,29 @@ if !exists("main_syntax")
   if version < 600
     syntax clear
   elseif exists("b:current_syntax")
-  finish
-endif
+    finish
+  endif
   let main_syntax = 'javascript'
 endif
 
 syn case ignore
 
 
-syn match   javaScriptLineComment      "\/\/.*$"
+syn keyword javaScriptCommentTodo      TODO FIXME XXX TBD contained
+syn match   javaScriptLineComment      "\/\/.*$" contains=javaScriptCommentTodo
 syn match   javaScriptCommentSkip      "^[ \t]*\*\($\|[ \t]\+\)"
-syn region  javaScriptCommentString    start=+"+  skip=+\\\\\|\\"+  end=+"+ end=+\*/+me=s-1,he=s-1 contains=javaScriptSpecial,javaScriptCommentSkip,@htmlPreproc
-syn region  javaScriptComment2String   start=+"+  skip=+\\\\\|\\"+  end=+$\|"+  contains=javaScriptSpecial,@htmlPreproc
-syn region  javaScriptComment          start="/\*"  end="\*/" contains=javaScriptCommentString,javaScriptCharacter,javaScriptNumber
+syn region  javaScriptComment          start="/\*"  end="\*/" contains=javaScriptCommentTodo
 syn match   javaScriptSpecial          "\\\d\d\d\|\\."
 syn region  javaScriptStringD          start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=javaScriptSpecial,@htmlPreproc
 syn region  javaScriptStringS          start=+'+  skip=+\\\\\|\\'+  end=+'+  contains=javaScriptSpecial,@htmlPreproc
 syn match   javaScriptSpecialCharacter "'\\.'"
 syn match   javaScriptNumber           "-\=\<\d\+L\=\>\|0[xX][0-9a-fA-F]\+\>"
+syn region  javaScriptRegexpString     start=+/+ skip=+\\\\\|\\/+ end=+/[gi]\?\s*$+ end=+/[gi]\?\s*[;,)]+me=e-1 contains=@htmlPreproc oneline
 syn keyword javaScriptConditional      if else
 syn keyword javaScriptRepeat           while for
 syn keyword javaScriptBranch           break continue switch case default
 syn keyword javaScriptOperator         new in
-syn keyword javaScriptType             this var
+syn keyword javaScriptType             this var const
 syn keyword javaScriptStatement        return with
 syn keyword javaScriptFunction         function
 syn keyword javaScriptBoolean          true false
@@ -59,6 +59,7 @@ if version >= 508 || !exists("did_javascript_syn_inits")
   endif
   HiLink javaScriptComment           Comment
   HiLink javaScriptLineComment       Comment
+  HiLink javaScriptCommentTodo       Todo
   HiLink javaScriptSpecial           Special
   HiLink javaScriptStringS           String
   HiLink javaScriptStringD           String
@@ -77,6 +78,7 @@ if version >= 508 || !exists("did_javascript_syn_inits")
   HiLink javaScrParenError           javaScriptError
   HiLink javaScriptInParen           javaScriptError
   HiLink javaScriptBoolean           Boolean
+  HiLink javaScriptRegexpString      String
   delcommand HiLink
 endif
 

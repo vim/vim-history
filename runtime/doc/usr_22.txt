@@ -1,4 +1,4 @@
-*usr_22.txt*	For Vim version 6.1.  Last change: 2001 Sep 03
+*usr_22.txt*	For Vim version 6.2a.  Last change: 2003 Mar 17
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -224,6 +224,14 @@ same as the ":edit" command, except for the use of 'path'.
 
 To open the found file in a new window use CTRL-W f instead of "gf", or use
 ":sfind" instead of ":find".
+
+
+A nice way to directly start Vim to edit a file somewhere in the 'path': >
+
+	vim "+find stdio.h"
+
+This finds the file "stdio.h" in your value of 'path'.  The quotes are
+necessary to have one argument |-+c|.
 
 ==============================================================================
 *22.4*	The buffer list

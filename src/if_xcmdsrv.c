@@ -433,7 +433,7 @@ serverSendToVim(dpy, name, cmd,  result, server, asExpr, localLoop, silent)
     if (w == None)
     {
 	if (!silent)
-	    EMSG2(_("E247: no registered server named \"%s\""), name);
+	    EMSG2(_(e_noserver), name);
 	return -1;
     }
     else if (loosename != NULL)
@@ -732,7 +732,7 @@ serverStrToWin(str)
 
     sscanf((char *)str, "0x%x", &id);
     if (id == None)
-	EMSG2(_("Invalid server id used: %s"), str);
+	EMSG2(_("E573: Invalid server id used: %s"), str);
 
     return (Window)id;
 }

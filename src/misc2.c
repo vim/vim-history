@@ -1882,6 +1882,7 @@ static struct key_name_entry
     {K_X2MOUSE,		(char_u *)"X2Mouse"},
     {K_X2DRAG,		(char_u *)"X2Drag"},
     {K_X2RELEASE,		(char_u *)"X2Release"},
+    {K_DROP,		(char_u *)"Drop"},
     {K_ZERO,		(char_u *)"Nul"},
 #ifdef FEAT_EVAL
     {K_SNR,		(char_u *)"SNR"},
@@ -2781,9 +2782,9 @@ parse_shape_opt(what)
 	{
 	    colonp = vim_strchr(modep, ':');
 	    if (colonp == NULL)
-		return (char_u *)N_("Missing colon");
+		return (char_u *)N_("E545: Missing colon");
 	    if (colonp == modep)
-		return (char_u *)N_("Illegal mode");
+		return (char_u *)N_("E546: Illegal mode");
 	    commap = vim_strchr(modep, ',');
 
 	    /*
@@ -2810,7 +2811,7 @@ parse_shape_opt(what)
 				break;
 			if (idx == SHAPE_IDX_COUNT
 				   || (shape_table[idx].used_for & what) == 0)
-			    return (char_u *)N_("Illegal mode");
+			    return (char_u *)N_("E546: Illegal mode");
 			if (len == 2 && modep[0] == 'v' && modep[1] == 'e')
 			    found_ve = TRUE;
 		    }
@@ -2849,7 +2850,7 @@ parse_shape_opt(what)
 			    if (mshape_names[i] == NULL)
 			    {
 				if (!isdigit(*p))
-				    return (char_u *)N_("Illegal mouseshape");
+				    return (char_u *)N_("E547: Illegal mouseshape");
 				if (round == 2)
 				    shape_table[idx].mshape =
 					      getdigits(&p) + MSHAPE_NUMBERED;
@@ -2889,12 +2890,12 @@ parse_shape_opt(what)
 			{
 			    p += len;
 			    if (!isdigit(*p))
-				return (char_u *)N_("digit expected");
+				return (char_u *)N_("E548: digit expected");
 			    n = getdigits(&p);
 			    if (len == 3)   /* "ver" or "hor" */
 			    {
 				if (n == 0)
-				    return (char_u *)N_("Illegal percentage");
+				    return (char_u *)N_("E549: Illegal percentage");
 				if (round == 2)
 				{
 				    if (TOLOWER_ASC(i) == 'v')
@@ -5286,7 +5287,7 @@ parse_list_options(option_str, table, table_size)
     {
 	colonp = vim_strchr(stringp, ':');
 	if (colonp == NULL)
-	    return (char_u *)N_("Missing colon");
+	    return (char_u *)N_("E550: Missing colon");
 	commap = vim_strchr(stringp, ',');
 	if (commap == NULL)
 	    commap = option_str + STRLEN(option_str);
@@ -5298,7 +5299,7 @@ parse_list_options(option_str, table, table_size)
 		break;
 
 	if (idx == table_size)
-	    return (char_u *)N_("Illegal component");
+	    return (char_u *)N_("E551: Illegal component");
 
 	p = colonp + 1;
 	table[idx].present = TRUE;
@@ -5306,7 +5307,7 @@ parse_list_options(option_str, table, table_size)
 	if (table[idx].hasnum)
 	{
 	    if (!isdigit(*p))
-		return (char_u *)N_("digit expected");
+		return (char_u *)N_("E552: digit expected");
 
 	    table[idx].number = getdigits(&p); /*advances p*/
 	}

@@ -1,7 +1,7 @@
 " Vim support file to detect file types in scripts
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2002 Apr 14
+" Last change:	2003 Apr 06
 
 " This file is called by an autocommand for every file that has just been
 " loaded into a buffer.  It checks if the type of file can be recognized by
@@ -114,6 +114,10 @@ if s:line1 =~ "^#!"
   elseif s:name =~ 'wml'
     set ft=wml
 
+    " Scheme scripts
+  elseif s:name =~ 'scheme'
+    set ft=scheme
+
   endif
   unlet s:name
 
@@ -183,7 +187,7 @@ else
     set ft=amiga
 
     " SiCAD scripts (must have procn or procd as the first line to trigger this)
-  elseif s:line1 =~ '^ *[pP][rR][oO][cC][nNdD] *$'
+  elseif s:line1 =~? '^ *proc[nd] *$'
     set ft=sicad
 
     " Purify log files start with "****  Purify"
@@ -193,6 +197,10 @@ else
     " XML
   elseif s:line1 =~ '<?\s*xml.*?>'
     set ft=xml
+
+    " XHTML (e.g.: PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN")
+  elseif s:line1 =~ '\<DTD\s\+XHTML\s'
+    set ft=xhtml
 
     " XXD output
   elseif s:line1 =~ '^\x\{7}: \x\{2} \=\x\{2} \=\x\{2} \=\x\{2} '
@@ -245,8 +253,7 @@ else
     set ft=sindacmp
 
     " DNS zone files
-  elseif s:line1 =~ '\($ORIGIN\|$TTL\|IN\s*SOA\)'
-	\ || s:line2 =~ '\($ORIGIN\|$TTL\|IN\s*SOA\)'
+  elseif s:line1.s:line2 =~ '$ORIGIN\|$TTL\|IN\s*SOA'
 	\ || s:line1.s:line2.s:line3.s:line4 =~ 'BIND.*named'
     set ft=dns
 
@@ -258,6 +265,14 @@ else
   " Valgrind
   elseif s:line1 =~ '^==\d\+== valgrind'
     set ft=valgrind
+
+  " Renderman Interface Bytestream
+  elseif s:line1 =~ '^##RenderMan'
+    set ft=rib
+
+  " Scheme scripts
+  elseif s:line1 =~ 'exec\s\+\S*scheme' || s:line2 =~ 'exec\s\+\S*scheme'
+    set ft=scheme
 
   " CVS diff
   else

@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:	Vim script
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Aug 27
+" Last Change:	2003 Apr 18
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
@@ -10,7 +10,7 @@ endif
 let b:did_indent = 1
 
 setlocal indentexpr=GetVimIndent()
-setlocal indentkeys+==end,=else,0\\
+setlocal indentkeys+==end,=else,=cat,=fina,=END,0\\
 
 " Only define the function once.
 if exists("*GetVimIndent")
@@ -34,18 +34,27 @@ function GetVimIndent()
     return 0
   endif
 
-  " Add a 'shiftwidth' after :if, :while, :function and :else.
-  " Add it three times for a line that starts with '\' after a line that
-  " doesn't.
+  " Add a 'shiftwidth' after :if, :while, :try, :catch, :finally, :function
+  " and :else.  Add it three times for a line that starts with '\' after
+  " a line that doesn't.
   let ind = indent(lnum)
   if getline(v:lnum) =~ '^\s*\\' && v:lnum > 1 && getline(lnum) !~ '^\s*\\'
     let ind = ind + &sw * 3
-  elseif getline(lnum) =~ '^\s*\(if\>\|wh\|fu\|el\)'
+  elseif getline(lnum) =~ '\(^\||\)\s*\(if\|wh\%[ile]\|try\|cat\%[ch]\|fina\%[lly]\|fu\%[nction]\|el\%[se]\)\>'
+    let ind = ind + &sw
+  elseif getline(lnum) =~ '^\s*aug\%[roup]' && getline(lnum) !~ '^\s*aug\%[roup]\s*!\=\s\+END'
     let ind = ind + &sw
   endif
 
-  " Subtract a 'shiftwidth' on a :endif, :endwhile, :endfun and :else.
-  if getline(v:lnum) =~ '^\s*\(ene\@!\|el\)'
+  " If the previous line contains an "end" following a pipe
+  if getline(lnum) =~ '|\s*\(ene\@!\)'
+    let ind = ind - &sw
+  endif
+
+
+  " Subtract a 'shiftwidth' on a :endif, :endwhile, :catch, :finally, :endtry,
+  " :endfun, :else and :augroup END.
+  if getline(v:lnum) =~ '^\s*\(ene\@!\|cat\|fina\|el\|aug\%[roup]\s*!\=\s\+END\)'
     let ind = ind - &sw
   endif
 

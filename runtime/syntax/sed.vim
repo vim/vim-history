@@ -1,10 +1,8 @@
 " Vim syntax file
 " Language:	sed
-" Maintainer:	Haakon Riiser <haakon@riiser.net>
-" Last Change:	2001 May 10
-"
-" Special thanks go to Preben "Peppe" Guldberg for a lot of help, and, in
-" particular, his clever way of matching the substitute command.
+" Maintainer:	Haakon Riiser <hakonrk@fys.uio.no>
+" URL:		http://folk.uio.no/hakonrk/vim/syntax/sed.vim
+" Last Change:	2001 May 15
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded

@@ -1,7 +1,8 @@
-"  vim: set sw=4 sts=4:
-"  Maintainer	: Nikolai 'pcp' Weibull <da.box@home.se>
-"  Revised on	: Tue, 24 Jul 2001 18:54:16 CEST
-"  Language	: BDF Font definition
+" Vim syntax file
+" Language:	    BDF Font definition
+" Maintainer:	    Nikolai 'pcp' Weibull <da.box@home.se>
+" URL:		    http://www.pcppopper.org/
+" Latest Revision:  2002-10-24
 
 if version < 600
     syntax clear
@@ -9,14 +10,14 @@ elseif exists("b:current_syntax")
     finish
 endif
 
+" numbers
+syn match   bdfNumber	    display "\<\(\x\+\|\d\+\.\d\+\)\>"
+
 " comments
 syn region  bdfComment	    start="^COMMENT\>" end="$" contains=bdfTodo
 
 " todo
 syn keyword bdfTodo	    contained TODO
-
-" numbers
-syn match   bdfNumber	    display "\<\(\x\+\|\d\+\.\d\+\)"
 
 " strings
 syn region  bdfString	    start=+"+ skip=+""+ end=+"+
@@ -80,3 +81,5 @@ if version >= 508 || !exists("did_bdf_syn_inits")
 endif
 
 let b:current_syntax = "bdf"
+
+" vim: set sw=4 sts=4:

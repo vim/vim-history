@@ -28,32 +28,20 @@ endif
 syn match	dylanSpecial		display contained "\\\(x\x\+\|\o\{1,3}\|.\|$\)"
 
 " Keywords
-syn keyword	dylanUnnamedDefs	interface
-syn keyword	dylanNamedDefs		library macro
-syn keyword	dylanParamDefs		method class function
-syn keyword	dylanBlock		cleanup block afterwards end
+syn keyword	dylanBlock		afterwards begin block cleanup end
+syn keyword	dylanClassMods		abstract concrete primary inherited virtual
+syn keyword	dylanException		exception handler signal
+syn keyword	dylanParamDefs		method class function library macro interface
 syn keyword	dylanSimpleDefs		constant variable generic primary
-syn keyword	dylanStatement		begin method
-syn keyword	dylanOther		above below from by in instance local
-syn keyword	dylanOther		slot subclass then to virtual
-syn keyword	dylanConditional	if when select case else elseif unless
-syn keyword	dylanConditional	finally otherwise then
-syn keyword	dylanRepeat		for until while from to
+syn keyword	dylanOther		above below from by in instance local slot subclass then to
+syn keyword	dylanConditional	if when select case else elseif unless finally otherwise then
+syn keyword	dylanRepeat		begin for until while from to
 syn keyword	dylanStatement		define let
-" how to match labels within select and case?
-" finally is a label for for loops
-syn keyword	dylanLabel		otherwise finally
-" signal is a method, not really a keyword
-syn keyword	dylanException		exception handler
-syn keyword	dylanException		signal
-syn keyword	dylanImport		import rename create
-syn keyword	dylanPreProc		use export exclude
-syn keyword	dylanClassMods		abstract concrete primary inherited
-syn keyword	dylanMethMods		inline
-syn keyword	dylanMiscMods		open sealed domain singleton
+syn keyword	dylanImport		use import export exclude rename create
+syn keyword	dylanMiscMods		open sealed domain singleton sideways inline functional
 
 " Matching rules for special forms
-syn match	dylanOperator		"\s[-!%&\*\+/=\?@\\^|~.]\=[-!%&\*\+=\?@\\^|~:.]\=[->!%&\*\+=\?@\\^|~:.]"
+syn match	dylanOperator		"\s[-!%&\*\+/=\?@\\^|~:]\+[-#!>%&:\*\+/=\?@\\^|~]*"
 syn match	dylanOperator		"\(\<[A-Z][a-zA-Z0-9_']*\.\)\=:[-!#$%&\*\+./=\?@\\^|~:]*"
 " Numbers
 syn match	dylanNumber		"\<[0-9]\+\>\|\<0[xX][0-9a-fA-F]\+\>\|\<0[oO][0-7]\+\>"
@@ -76,10 +64,7 @@ syn region	dylanPrecondit		start="^\s*#\s*\(if\>\|else\>\|endif\>\)" skip="\\$" 
 " These appear at the top of files (usually).  I like to highlight the whole line
 " so that the definition stands out.  They should probably really be keywords, but they
 " don't generally appear in the middle of a line of code.
-syn match	dylanHeader	"^[Mm]odule:.*$"
-syn match	dylanHeader	"^[Aa]uthor:.*$"
-syn match	dylanHeader	"^[Cc]opyright:.*$"
-syn match	dylanHeader	"^[Ss]ynopsis:.*$"
+syn region	dylanHeader	start="^[Mm]odule:" end="^$"
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
@@ -92,33 +77,29 @@ if version >= 508 || !exists("did_dylan_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink dylanComment		Comment
-  HiLink dylanConstant		Constant
-  HiLink dylanString		String
-  HiLink dylanCharacter		Character
-  HiLink dylanNumber		Number
+  HiLink dylanBlock		PreProc
   HiLink dylanBoolean		Boolean
+  HiLink dylanCharacter		Character
   HiLink dylanClass		Structure
-  HiLink dylanVariable		Identifier
-  HiLink dylanConditional	Conditional
-  HiLink dylanRepeat		Repeat
-  HiLink dylanLabel		Label
-  HiLink dylanOperator		Operator
-  HiLink dylanUnnamedDefs	Keyword
-  HiLink dylanNamedDefs		Keyword
-  HiLink dylanParamDefs		Keyword
-  HiLink dylanBlock		Structure
-  HiLink dylanSimpleDefs	Keyword
-  HiLink dylanStatement		Statement
-  HiLink dylanOther		Keyword
-  HiLink dylanException		Exception
   HiLink dylanClassMods		StorageClass
-  HiLink dylanMethMods		StorageClass
-  HiLink dylanMiscMods		StorageClass
-  HiLink dylanImport		Include
-  HiLink dylanPreProc		PreProc
-  HiLink dylanPrecondit		PreCondit
+  HiLink dylanComment		Comment
+  HiLink dylanConditional	Conditional
+  HiLink dylanConstant		Constant
+  HiLink dylanException		Exception
   HiLink dylanHeader		Macro
+  HiLink dylanImport		Include
+  HiLink dylanLabel		Label
+  HiLink dylanMiscMods		StorageClass
+  HiLink dylanNumber		Number
+  HiLink dylanOther		Keyword
+  HiLink dylanOperator		Operator
+  HiLink dylanParamDefs		Keyword
+  HiLink dylanPrecondit		PreCondit
+  HiLink dylanRepeat		Repeat
+  HiLink dylanSimpleDefs	Keyword
+  HiLink dylanStatement		Macro
+  HiLink dylanString		String
+  HiLink dylanVariable		Identifier
 
   delcommand HiLink
 endif

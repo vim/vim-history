@@ -2,7 +2,7 @@
 " Language:	Jess
 " Maintainer:	Paul Baleme <pbaleme@mail.com>
 " Last change:	September 14, 2000
-" Based on lisp.vim by : Dr. Charles E. Campbell, Jr. <cec@gryphon.gsfc.nasa.gov>
+" Based on lisp.vim by : Dr. Charles E. Campbell, Jr.
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded

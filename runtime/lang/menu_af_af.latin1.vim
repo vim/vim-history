@@ -1,6 +1,6 @@
 " Menu Translations:	Afrikaas
 " Maintainer:		Danie Roux <droux@tuks.co.za>
-" Last Change:		2002 Mar 09
+" Last Change:		2003 Mar 30
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -45,7 +45,7 @@ menutrans &Redo<Tab>^R			Voo&ruit<Tab>^R
 menutrans Rep&eat<Tab>\.			&Herhaal<Tab>\.
 menutrans Cu&t<Tab>"+x			&Knip<Tab>"+x
 menutrans &Copy<Tab>"+y			&Kopiëer<Tab>"+y
-menutrans &Paste<Tab>"+p		Plak<Tab>"+p
+menutrans &Paste<Tab>"+gP		Plak<Tab>"+gP
 menutrans Put\ &Before<Tab>[p		Voeg\ &Voor\ in<Tab>[p
 menutrans Put\ &After<Tab>]p		Voeg\ A&gter\ in<Tab>]p
 menutrans &Select\ all<Tab>ggVG		Kies\ &Alles<Tab>ggVG

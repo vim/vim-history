@@ -1,8 +1,9 @@
-" Maintainer	: Nikolai 'pcp' Weibull <da.box@home.se>
-" URL		: http://www.pcppopper.org/
-" Revised on	: Sat, 02 Feb 2002 14:35:55 +0100
-" Language	: readline configuration file
-" Variables	:
+" Vim syntax file
+" Language:	    readline configuration file
+" Maintainer:	    Nikolai 'pcp' Weibull <da.box@home.se>
+" URL:		    http://www.pcppopper.org/
+" Latest Revision:  2002-12-06
+" Variables:
 "   readline_has_bash - if defined add support for bash specific
 "			settings/functions
 
@@ -69,7 +70,7 @@ syn match   readlineInclude	"^\s*$include\>"
 syn region  readlineSet		display oneline transparent matchgroup=readlineKeyword start="^\s*set\>" end="$"me=e-1 contains=readlineNumber,readlineBoolean,readlineKeymaps,readlineBellStyles,readlineSettings
 
 syn keyword readlineSettings	contained bell-style comment-begin completion-ignore-case
-syn keyword readlineSettings	contained completion-query-items convert-meta disable-completion editing-mode enable-keypad
+syn keyword readlineSettings	contained completion-query-items convert-meta disable-completion editing-mode enable-keypad 
 syn keyword readlineSettings	contained expand-tilde horizontal-scroll-mode mark-directories keymap mark-modified-lines meta-flag
 syn keyword readlineSettings	contained input-meta output-meta print-completions-horizontally show-all-if-ambiguous visible-stats
 syn keyword readlineSettings	contained prefer-visible-bell blink-matching-paren
@@ -113,6 +114,7 @@ if exists("readline_has_bash")
     syn keyword readlineFunctions	contained complete-username possible-username-completions complete-variable possible-variable-completions complete-hostname
     syn keyword readlineFunctions	contained possible-hostname-completions complete-command possible-command-completions dynamic-complete-history complete-into-braces
     syn keyword readlineFunctions	contained glob-expand-word glob-list-expansions display-shell-version
+    syn keyword readlineFunctions	contained glob-complete-word edit-and-execute-command
 endif
 
 " Define the default highlighting.

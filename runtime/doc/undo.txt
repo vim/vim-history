@@ -1,4 +1,4 @@
-*undo.txt*      For Vim version 6.1.  Last change: 2001 Sep 03
+*undo.txt*      For Vim version 6.2a.  Last change: 2002 Jul 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -99,6 +99,7 @@ deleted text was the result of the last delete or copy operation, 'P' or 'p'
 also works as this puts the contents of the unnamed register).  You can get
 back the text of three deletes ago with '"3P'.
 
+						*redo-register*
 If you want to get back more than one part of deleted text, you can use a
 special feature of the repeat command ".".  It will increase the number of the
 register used.  So if you first do ""1P", the following "." will result in a

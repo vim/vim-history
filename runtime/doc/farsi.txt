@@ -1,4 +1,4 @@
-*farsi.txt*     For Vim version 6.1.  Last change: 2001 Sep 04
+*farsi.txt*     For Vim version 6.2a.  Last change: 2002 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Mortaza Ghassab Shiran
@@ -62,7 +62,8 @@ o  Toggling between Farsi ISIR-3342 standard encoding and VIM Farsi via F9
 Farsi Fonts					*farsi fonts*
 -----------
 
-Following files are contained in the subdirectories of 'farsi' directory:
+If the "extra" archive has been unpacked, the following files are found in the
+subdirectories of the '$VIM/farsi' directory:
 
    +  far-a01.pcf    X Windows fonts for Unix including Linux systems
    +  far-a01.bf     X Windows fonts for SunOs
@@ -77,8 +78,10 @@ Font Installation
 o  Installation of fonts for MS Window systems (NT/95/98)
 
    From 'Control Panel' folder, start the 'Fonts' program. Then from 'file'
-   menu item select 'Install New Fonts ...'. Brows and select the
+   menu item select 'Install New Fonts ...'. Browse and select the
    'far-a01.fon', then follow the installation guide.
+   NOTE: several people have reported that this does not work.  The solution
+   is unknown.
 
 o  Installation of fonts for X Window systems (Unix/Linux)
 

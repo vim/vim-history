@@ -41,6 +41,7 @@ void clip_free_selection __ARGS((VimClipboard *cbd));
 void clip_get_selection __ARGS((VimClipboard *cbd));
 void clip_yank_selection __ARGS((int type, char_u *str, long len, VimClipboard *cbd));
 int clip_convert_selection __ARGS((char_u **str, long_u *len, VimClipboard *cbd));
+void dnd_yank_drag_data __ARGS((char_u *str, long len));
 char_u *get_reg_contents __ARGS((int regname));
 void write_reg_contents __ARGS((int name, char_u *str, int must_append));
 void clear_oparg __ARGS((oparg_T *oap));

@@ -292,16 +292,19 @@ main
 # ifdef FEAT_GUI_GTK
 	else if (STRICMP(argv[i], "--socketid") == 0)
 	{
-	    int count;
+	    unsigned int    socket_id;
+	    int		    count;
 
 	    if (i == argc - 1)
 		mainerr_arg_missing((char_u *)argv[i]);
 	    if (STRNICMP(argv[i+1], "0x", 2) == 0)
-		count = sscanf(&(argv[i + 1][2]), "%x", &gtk_socket_id);
+		count = sscanf(&(argv[i + 1][2]), "%x", &socket_id);
 	    else
-		count = sscanf(argv[i+1], "%d", &gtk_socket_id);
+		count = sscanf(argv[i+1], "%u", &socket_id);
 	    if (count != 1)
 		mainerr(ME_INVALID_ARG, (char_u *)argv[i]);
+	    else
+		gtk_socket_id = socket_id;
 	    i++;
 	}
 	else if (STRICMP(argv[i], "--echo-wid") == 0)
@@ -2431,7 +2434,7 @@ usage()
     main_msg(_("-x\t\t\tEdit encrypted files"));
 #endif
 #if (defined(UNIX) || defined(VMS)) && defined(FEAT_X11)
-# ifndef FEAT_GUI_X11
+# if defined(FEAT_GUI_X11) && !defined(FEAT_GUI_GTK)
     main_msg(_("-display <display>\tConnect vim to this particular X-server"));
 # endif
     main_msg(_("-X\t\t\tDo not connect to X server"));
@@ -2488,11 +2491,14 @@ usage()
 #endif
 #ifdef FEAT_GUI_GTK
     mch_msg(_("\nArguments recognised by gvim (GTK+ version):\n"));
-    main_msg(_("--socketid <xid>\tOpen Vim inside another GTK widget"));
     main_msg(_("-font <font>\t\tUse <font> for normal text (also: -fn)"));
     main_msg(_("-geometry <geom>\tUse <geom> for initial geometry (also: -geom)"));
     main_msg(_("-reverse\t\tUse reverse video (also: -rv)"));
     main_msg(_("-display <display>\tRun vim on <display> (also: --display)"));
+# ifdef HAVE_GTK2
+    main_msg(_("--role <role>\tSet a unique role to identify the main window"));
+# endif
+    main_msg(_("--socketid <xid>\tOpen Vim inside another GTK widget"));
 # ifdef FEAT_GUI_GNOME
     main_msg(_("--help\t\tShow Gnome arguments"));
 # endif

@@ -976,7 +976,7 @@ qf_jump(dir, errornr, forceit)
     int			old_qf_fnum;
     int			old_qf_index;
     int			prev_index;
-    static char_u	*e_no_more_items = (char_u *)N_("No more items");
+    static char_u	*e_no_more_items = (char_u *)N_("E553: No more items");
     char_u		*err = e_no_more_items;
     linenr_T		i;
     buf_T		*old_curbuf;

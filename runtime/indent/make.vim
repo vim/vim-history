@@ -1,7 +1,7 @@
 "  vim: set sw=4 sts=4:
 "  Maintainer	: Nikolai 'pcp' Weibull <da.box@home.se>
 "  URL		: http://www.pcppopper.org/
-"  Revised on	: Sun, 26 Aug 2001 15:14:43 +0200
+"  Revised on	: Mon, 08 Apr 2002 23:52:55 +0200
 "  Language	: Makefile
 
 " Only load this indent file when no other was loaded.
@@ -19,6 +19,21 @@ if exists("*GetMakeIndent")
     finish
 endif
 
+function s:GetStringWidth(line, str)
+    let end = matchend(a:line, a:str)
+    let width = 0
+    let i = 0
+    while i < end
+	if a:line[i] != "\t"
+	    let width = width + 1
+	else
+	    let width = width + &ts - (width % &ts)
+	endif
+	let i = i + 1
+    endwhile
+    return width
+endfunction
+
 function GetMakeIndent()
     if v:lnum == 1
 	return 0
@@ -32,8 +47,8 @@ function GetMakeIndent()
     elseif line =~ '^[^ \t#:][^#:]*:\{1,2}\([^=:]\|$\)'
 	let ind = ind + &ts
     elseif line =~ '^\s*\h\w*\s*=\s*.\+\\$'
-	let ind = ind + matchend(line, '=\s*')
-    else
+	let ind = s:GetStringWidth(line, '=\s*')
+    elseif line !~ '\\$'
 	let ind = indent(v:lnum)
     endif
 

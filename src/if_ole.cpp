@@ -344,7 +344,7 @@ STDMETHODIMP
 CVim::Eval(BSTR expr, BSTR *result)
 {
 #ifdef FEAT_EVAL
-    unsigned len;
+    int len;
     char *buffer;
     char *str;
     wchar_t *w_buffer;
@@ -354,7 +354,7 @@ CVim::Eval(BSTR expr, BSTR *result)
     if (len == 0)
 	return E_INVALIDARG;
 
-    buffer = (char *)alloc(len);
+    buffer = (char *)alloc((unsigned)len);
 
     if (buffer == NULL)
 	return E_OUTOFMEMORY;
@@ -372,19 +372,11 @@ CVim::Eval(BSTR expr, BSTR *result)
     if (str == NULL)
 	return E_FAIL;
 
-    /* Get a suitable buffer to store the result in wide characters */
-    len = MultiByteToWideChar(CP_ACP, 0, str, -1, 0, 0);
-    w_buffer = (wchar_t *)alloc(len * sizeof(wchar_t));
-
-    if (w_buffer == NULL)
-    {
-	vim_free(str);
-	return E_OUTOFMEMORY;
-    }
-
     /* Convert the result to wide characters */
-    len = MultiByteToWideChar(CP_ACP, 0, str, -1, w_buffer, len);
+    MultiByteToWideChar_alloc(CP_ACP, 0, str, -1, &w_buffer, &len);
     vim_free(str);
+    if (w_buffer == NULL)
+	return E_OUTOFMEMORY;
 
     if (len == 0)
     {

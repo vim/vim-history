@@ -1,4 +1,4 @@
-*usr_40.txt*	For Vim version 6.1.  Last change: 2001 Sep 03
+*usr_40.txt*	For Vim version 6.2a.  Last change: 2002 Oct 29
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -281,7 +281,7 @@ commands just like any other Command-line mode command.
 
 	:command DeleteFirst 1delete
 
-Now when you execute the command ":DeleteFirst" Vim excutes ":1delete", which
+Now when you execute the command ":DeleteFirst" Vim executes ":1delete", which
 deletes the first line.
 
 	Note:
@@ -348,7 +348,7 @@ except in a format suitable for use as function call arguments.  For example:
 	:command -nargs=* DoIt :call AFunction(<f-args>)
 	:DoIt a b c
 
-Execute the following command: >
+Executes the following command: >
 
 	:call AFunction("a", "b", "c")
 
