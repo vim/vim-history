@@ -5781,6 +5781,9 @@ f_remote_peek(argvars, retvar)
 #ifdef FEAT_CLIENTSERVER
     var		v;
     char_u	*s;
+# ifdef WIN32
+    int		n = 0;
+# endif
 
     if (check_restricted() || check_secure())
     {
@@ -5788,8 +5791,6 @@ f_remote_peek(argvars, retvar)
 	return;
     }
 # ifdef WIN32
-    int		n = 0;
-
     sscanf(get_var_string(&argvars[0]), "%x", &n);
     if (n == 0)
 	retvar->var_val.var_number = -1;
