@@ -4472,7 +4472,28 @@ comp_textwidth(ff)
 
     textwidth = curbuf->b_p_tw;
     if (textwidth == 0 && curbuf->b_p_wm)
+    {
+	/* The width is the window width minus 'wrapmargin' minus all the
+	 * things that add to the margin. */
 	textwidth = W_WIDTH(curwin) - curbuf->b_p_wm;
+#ifdef FEAT_CMDWIN
+	if (cmdwin_type != 0)
+	    textwidth -= 1;
+#endif
+#ifdef FEAT_FOLDING
+	textwidth -= curwin->w_p_fdc;
+#endif
+#ifdef FEAT_SIGNS
+	if (curwin->w_buffer->b_signlist != NULL
+# ifdef FEAT_NETBEANS_INTG
+			    || usingNetbeans
+# endif
+		    )
+	    textwidth -= 1;
+#endif
+	if (curwin->w_p_nu)
+	    textwidth -= 8;
+    }
     if (textwidth < 0)
 	textwidth = 0;
     if (ff && textwidth == 0)
