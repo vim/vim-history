@@ -5533,7 +5533,7 @@ f_serverlist(argvars, retvar)
 # ifdef WIN32
     r = serverGetVimNames();
 # else
-    if (check_connection() == OK)
+    if (X_DISPLAY != NULL)
 	r = serverGetVimNames(X_DISPLAY);
 # endif
 #endif
@@ -5564,7 +5564,7 @@ f_remote_peek(argvars, retvar)
     }
 # else
     retvar->var_val.var_number = 0;
-    if (!check_connection())
+    if (check_connection() == FAIL)
 	return;
 
     retvar->var_val.var_number = serverPeekReply(X_DISPLAY,
@@ -5623,7 +5623,7 @@ f_server2client(argvars, retvar)
 
     retvar->var_val.var_number = -1;
 # ifndef WIN32
-    if (!check_connection())
+    if (check_connection() == FAIL)
 	return;
 # endif
 
@@ -5658,7 +5658,7 @@ remote_common(argvars, retvar, expr)
 # endif
 
 # ifdef FEAT_X11
-    if (!check_connection())
+    if (check_connection() == FAIL)
 	return;
 # endif
 
