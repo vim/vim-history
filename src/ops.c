@@ -1663,11 +1663,12 @@ op_delete(oap)
 		}
 	    }
 
-	    if (gchar_pos(&oap->end) == '\t')
+	    /* Break a tab only when it's included in the area. */
+	    if (gchar_pos(&oap->end) == '\t'
+					  && oap->end.coladd < oap->inclusive)
 	    {
-		/* save last line for undo if it's not also the first line */
-		if (oap->end.lnum != curwin->w_cursor.lnum
-			&& u_save((linenr_T)(oap->end.lnum - 1),
+		/* save last line for undo */
+		if (u_save((linenr_T)(oap->end.lnum - 1),
 				       (linenr_T)(oap->end.lnum + 1)) == FAIL)
 		    return FAIL;
 		curwin->w_cursor = oap->end;
