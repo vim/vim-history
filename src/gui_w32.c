@@ -2626,7 +2626,7 @@ gui_mch_dialog(
     /* Edit box */
     if (textfield != NULL)
     {
-	p = add_dialog_element(p, ES_LEFT | WS_TABSTOP | WS_BORDER,
+	p = add_dialog_element(p, ES_LEFT|ES_AUTOHSCROLL|WS_TABSTOP|WS_BORDER,
 		PixelToDialogX(2 * dlgPaddingX),
 		PixelToDialogY(2 * dlgPaddingY + msgheight),
 		PixelToDialogX(dlgwidth - 4 * dlgPaddingX),
