@@ -1470,7 +1470,7 @@ win_setheight(height)
     {
 	/* Always keep current window at least one line high, even when
 	 * 'winminheight' is zero */
-	if (height == 0)	/* need at least one line */
+	if (height <= 0)	/* need at least one line */
 	{
 	    height = 1;
 	    room = 1;
