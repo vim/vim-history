@@ -1404,6 +1404,11 @@ do_pending_operator(cap, old_col, gui_yank)
 #endif
 	    oap->end = curwin->w_cursor;
 	    curwin->w_cursor = oap->start;
+
+	    /* w_virtcol may have been updated; if the cursor goes back to its
+	     * previous position w_virtcol becomes invalid and isn't updated
+	     * automatically. */
+	    curwin->w_valid &= ~VALID_VIRTCOL;
 	}
 	else
 	{
