@@ -6891,7 +6891,7 @@ ex_pwd(eap)
 ex_equal(eap)
     exarg_T	*eap;
 {
-    smsg((char_u *)_("line %ld"), (long)eap->line2);
+    smsg((char_u *)"%ld", (long)eap->line2);
 }
 
     static void
