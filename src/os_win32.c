@@ -2361,6 +2361,20 @@ mch_dirname(
 mch_getperm(
     char_u *name)
 {
+#ifdef FEAT_MBYTE
+    if ((int)GetACP() != enc_codepage)
+    {
+	WCHAR	*p = enc_to_ucs2(name, NULL);
+	long	n;
+
+	if (p != NULL)
+	{
+	    n = (long)GetFileAttributesW(p);
+	    vim_free(p);
+	    return n;
+	}
+    }
+#endif
     return (long)GetFileAttributes((char *)name);
 }
 
@@ -2374,6 +2388,20 @@ mch_setperm(
     long perm)
 {
     perm |= FILE_ATTRIBUTE_ARCHIVE;	/* file has changed, set archive bit */
+#ifdef FEAT_MBYTE
+    if ((int)GetACP() != enc_codepage)
+    {
+	WCHAR	*p = enc_to_ucs2(name, NULL);
+	long	n;
+
+	if (p != NULL)
+	{
+	    n = (long)SetFileAttributesW(p, perm);
+	    vim_free(p);
+	    return n ? OK : FAIL;
+	}
+    }
+#endif
     return SetFileAttributes((char *)name, perm) ? OK : FAIL;
 }
 
@@ -2383,14 +2411,33 @@ mch_setperm(
     void
 mch_hide(char_u *name)
 {
-    int	perm;
+    int		perm;
+#ifdef FEAT_MBYTE
+    WCHAR	*p = NULL;
 
-    perm = GetFileAttributes((char *)name);
+    if ((int)GetACP() != enc_codepage)
+	p = enc_to_ucs2(name, NULL);
+#endif
+
+#ifdef FEAT_MBYTE
+    if (p != NULL)
+	perm = GetFileAttributesW(p);
+    else
+#endif
+	perm = GetFileAttributes((char *)name);
     if (perm >= 0)
     {
 	perm |= FILE_ATTRIBUTE_HIDDEN;
-	SetFileAttributes((char *)name, perm);
+#ifdef FEAT_MBYTE
+	if (p != NULL)
+	    SetFileAttributesW(p, perm);
+	else
+#endif
+	    SetFileAttributes((char *)name, perm);
     }
+#ifdef FEAT_MBYTE
+    vim_free(p);
+#endif
 }
 
 /*
@@ -3959,6 +4006,22 @@ mch_delay(
     int
 mch_remove(char_u *name)
 {
+#ifdef FEAT_MBYTE
+    WCHAR	*wn = NULL;
+    int		n;
+
+    if ((int)GetACP() != enc_codepage)
+    {
+	wn = enc_to_ucs2(name, NULL);
+	if (wn != NULL)
+	{
+	    SetFileAttributesW(wn, FILE_ATTRIBUTE_NORMAL);
+	    n = DeleteFileW(wn) ? 0 : -1;
+	    vim_free(wn);
+	    return n;
+	}
+    }
+#endif
     SetFileAttributes(name, FILE_ATTRIBUTE_NORMAL);
     return DeleteFile(name) ? 0 : -1;
 }
@@ -3995,6 +4058,65 @@ mch_avail_mem(
     return (long_u) (ms.dwAvailPhys + ms.dwAvailPageFile);
 }
 
+#ifdef FEAT_MBYTE
+/*
+ * Same code as below, but with wide functions and no comments.
+ * Return 0 for success, non-zero for failure.
+ */
+    int
+mch_wrename(WCHAR *wold, WCHAR *wnew)
+{
+    WCHAR	*p;
+    int		i;
+    WCHAR	szTempFile[_MAX_PATH + 1];
+    WCHAR	szNewPath[_MAX_PATH + 1];
+    HANDLE	hf;
+
+    if (!mch_windows95())
+    {
+	p = wold;
+	for (i = 0; wold[i] != NUL; ++i)
+	    if ((wold[i] == '/' || wold[i] == '\\' || wold[i] == ':')
+		    && wold[i + 1] != 0)
+		p = wold + i + 1;
+	if ((int)(wold + i - p) < 8 || p[6] != '~')
+	    return (MoveFileW(wold, wnew) == 0);
+    }
+
+    if (GetFullPathNameW(wnew, _MAX_PATH, szNewPath, &p) == 0 || p == NULL)
+	return -1;
+    *p = NUL;
+
+    if (GetTempFileNameW(szNewPath, L"VIM", 0, szTempFile) == 0)
+	return -2;
+
+    if (!DeleteFileW(szTempFile))
+	return -3;
+
+    if (!MoveFileW(wold, szTempFile))
+	return -4;
+
+    if ((hf = CreateFileW(wold, GENERIC_WRITE, 0, NULL, CREATE_NEW,
+		    FILE_ATTRIBUTE_NORMAL, NULL)) == INVALID_HANDLE_VALUE)
+	return -5;
+    if (!CloseHandle(hf))
+	return -6;
+
+    if (!MoveFileW(szTempFile, wnew))
+    {
+	(void)MoveFileW(szTempFile, wold);
+	return -7;
+    }
+
+    DeleteFileW(szTempFile);
+
+    if (!DeleteFileW(wold))
+	return -8;
+
+    return 0;
+}
+#endif
+
 
 /*
  * mch_rename() works around a bug in rename (aka MoveFile) in
@@ -4024,6 +4146,26 @@ mch_rename(
     char	szNewPath[_MAX_PATH+1];
     char	*pszFilePart;
     HANDLE	hf;
+#ifdef FEAT_MBYTE
+    WCHAR	*wold = NULL;
+    WCHAR	*wnew = NULL;
+    int		retval = 0;
+
+    if ((int)GetACP() != enc_codepage)
+    {
+	wold = enc_to_ucs2((char_u *)pszOldFile, NULL);
+	wnew = enc_to_ucs2((char_u *)pszNewFile, NULL);
+	if (wold != NULL && wnew != NULL)
+	{
+	    retval = mch_wrename(wold, wnew);
+	    vim_free(wold);
+	    vim_free(wnew);
+	    return retval;
+	}
+	vim_free(wold);
+	vim_free(wnew);
+    }
+#endif
 
     /*
      * No need to play tricks if not running Windows 95, unless the file name
@@ -4116,32 +4258,63 @@ default_shell()
     int
 mch_access(char *n, int p)
 {
-    HANDLE  hFile;
-    DWORD am;
+    HANDLE	hFile;
+    DWORD	am;
+    int		retval = -1;	    /* default: fail */
+#ifdef FEAT_MBYTE
+    WCHAR	*wn = NULL;
+
+    if ((int)GetACP() != enc_codepage)
+	wn = enc_to_ucs2(n, NULL);
+#endif
 
     if (mch_isdir(n))
     {
 	char TempName[_MAX_PATH + 16] = "";
+#ifdef FEAT_MBYTE
+	WCHAR TempNameW[_MAX_PATH + 16] = L"";
+#endif
 
 	if (p & R_OK)
 	{
 	    /* Read check is performed by seeing if we can do a find file on
-	     * the directory for any file
-	     */
-	    char *pch;
-	    WIN32_FIND_DATA d;
+	     * the directory for any file. */
+#ifdef FEAT_MBYTE
+	    if (wn != NULL)
+	    {
+		int		    i;
+		WIN32_FIND_DATAW    d;
 
-	    STRNCPY(TempName, n, _MAX_PATH);
-	    pch = TempName + STRLEN(TempName) - 1;
-	    if (*pch != '\\' && *pch != '/')
-		*pch++ = '\\';
-	    *pch++ = '*';
-	    *pch = NUL;
+		for (i = 0; i < _MAX_PATH && wn[i] != 0; ++i)
+		    TempNameW[i] = wn[i];
+		if (TempNameW[i - 1] != '\\' && TempNameW[i - 1] != '/')
+		    TempNameW[i++] = '\\';
+		TempNameW[i++] = '*';
+		TempNameW[i++] = 0;
 
-	    hFile = FindFirstFile(TempName, &d);
-	    if (hFile == INVALID_HANDLE_VALUE)
-		return -1;
-	    (void)FindClose(hFile);
+		hFile = FindFirstFileW(TempNameW, &d);
+		if (hFile == INVALID_HANDLE_VALUE)
+		    goto getout;
+		(void)FindClose(hFile);
+	    }
+	    else
+#endif
+	    {
+		char		    *pch;
+		WIN32_FIND_DATA	    d;
+
+		STRNCPY(TempName, n, _MAX_PATH);
+		pch = TempName + STRLEN(TempName) - 1;
+		if (*pch != '\\' && *pch != '/')
+		    *++pch = '\\';
+		*++pch = '*';
+		*++pch = NUL;
+
+		hFile = FindFirstFile(TempName, &d);
+		if (hFile == INVALID_HANDLE_VALUE)
+		    goto getout;
+		(void)FindClose(hFile);
+	    }
 	}
 
 	if (p & W_OK)
@@ -4149,27 +4322,97 @@ mch_access(char *n, int p)
 	    /* Trying to create a temporary file in the directory should catch
 	     * directories on read-only network shares.  However, in
 	     * directories whose ACL allows writes but denies deletes will end
-	     * up keeping the temporary file :-(
-	     */
-	    if (!GetTempFileName(n, "VIM", 0, TempName))
-		return -1;
-	    mch_remove((char_u *)TempName);
+	     * up keeping the temporary file :-(. */
+#ifdef FEAT_MBYTE
+	    if (wn != NULL)
+	    {
+		if (!GetTempFileNameW(wn, L"VIM", 0, TempNameW))
+		    goto getout;
+		DeleteFileW(TempNameW);
+	    }
+	    else
+#endif
+	    {
+		if (!GetTempFileName(n, "VIM", 0, TempName))
+		    goto getout;
+		mch_remove((char_u *)TempName);
+	    }
 	}
     }
     else
     {
 	/* Trying to open the file for the required access does ACL, read-only
-	 * network share, and file attribute checks.
-	 */
+	 * network share, and file attribute checks.  */
 	am = ((p & W_OK) ? GENERIC_WRITE : 0)
 		| ((p & R_OK) ? GENERIC_READ : 0);
-	hFile = CreateFile(n, am, 0, NULL, OPEN_EXISTING, 0, NULL);
+#ifdef FEAT_MBYTE
+	if (wn != NULL)
+	    hFile = CreateFileW(wn, am, 0, NULL, OPEN_EXISTING, 0, NULL);
+	else
+#endif
+	    hFile = CreateFile(n, am, 0, NULL, OPEN_EXISTING, 0, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
-	    return -1;
+	    goto getout;
 	CloseHandle(hFile);
     }
-    return 0;
+
+    retval = 0;	    /* success */
+getout:
+#ifdef FEAT_MBYTE
+    vim_free(wn);
+#endif
+    return retval;
 }
+
+#if defined(FEAT_MBYTE) || defined(PROTO)
+/*
+ * Version of open() that may use ucs2 file name.
+ */
+    int
+mch_open(char *name, int flags, int mode)
+{
+    WCHAR	*wn;
+    int		f;
+
+    if ((int)GetACP() != enc_codepage)
+    {
+	wn = enc_to_ucs2(name, NULL);
+	if (wn != NULL)
+	{
+	    f = _wopen(wn, flags, mode);
+	    vim_free(wn);
+	    return f;
+	}
+    }
+
+    return open(name, flags, mode);
+}
+
+/*
+ * Version of fopen() that may use ucs2 file name.
+ */
+    FILE *
+mch_fopen(char *name, char *mode)
+{
+    WCHAR	*wn, *wm;
+    FILE	*f;
+
+    if ((int)GetACP() != enc_codepage)
+    {
+	wn = enc_to_ucs2(name, NULL);
+	wm = enc_to_ucs2(mode, NULL);
+	if (wn != NULL && wm != NULL)
+	{
+	    f = _wfopen(wn, wm);
+	    return f;
+	}
+	vim_free(wn);
+	vim_free(wm);
+    }
+
+    return fopen(name, mode);
+}
+#endif
 
 /*
  * SUB STREAM:

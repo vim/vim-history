@@ -1268,31 +1268,19 @@ mf_do_open(mfp, fname, flags)
     }
     else
 #endif
-
-    /*
-     * try to open the file
-     */
-    mfp->mf_fd = open(
-#ifdef VMS
-	    vms_fixfilename(mfp->mf_fname),
-#else
-	    (char *)mfp->mf_fname,
-#endif
-	    flags | O_EXTRA
+    {
+	/*
+	 * try to open the file
+	 */
+	flags |= O_EXTRA;
 #ifdef WIN32
 	/* Prevent handle inheritance that cause problems with Cscope
 	 * (swap file may not be deleted if cscope connection was open after
-	 * the file)
-	 */
-	    |O_NOINHERIT
+	 * the file) */
+	flags |= O_NOINHERIT;
 #endif
-#if defined(UNIX) || defined(RISCOS) || defined(VMS)
-		    , (mode_t)0600		/* open in rw------- mode */
-#endif
-#if defined(MSDOS) || defined(MSWIN) || defined(__EMX__)
-		    , S_IREAD | S_IWRITE	/* open read/write */
-#endif
-		    );
+	mfp->mf_fd = mch_open_rw((char *)mfp->mf_fname, flags);
+    }
 
     /*
      * If the file cannot be opened, use memory only

@@ -3468,20 +3468,8 @@ findswapname(buf, dirp, old_fname)
 		    f1 = mch_open((char *)fname, O_RDONLY | O_EXTRA, 0);
 		    if (f1 < 0)
 		    {
-			f1 = open(
-#ifdef VMS
-				vms_fixfilename((char *)fname),
-#else
-				(char *)fname,
-#endif
-				O_RDWR|O_CREAT|O_EXCL|O_EXTRA
-#if defined(UNIX) || defined(VMS)  /* open in rw------- mode */
-							      , (mode_t)0600
-#endif
-#if defined(MSDOS) || defined(MSWIN) || defined(OS2)  /* open read/write */
-							, S_IREAD | S_IWRITE
-#endif
-									    );
+			f1 = mch_open_rw((char *)fname,
+					       O_RDWR|O_CREAT|O_EXCL|O_EXTRA);
 #if defined(OS2)
 			if (f1 < 0 && errno == ENOENT)
 			    same = TRUE;
@@ -3493,20 +3481,8 @@ findswapname(buf, dirp, old_fname)
 			f2 = mch_open((char *)fname2, O_RDONLY | O_EXTRA, 0);
 			if (f2 < 0)
 			{
-			    f2 = open(
-#ifdef VMS
-				    vms_fixfilename((char *)fname2),
-#else
-				    (char *)fname2,
-#endif
-				    O_RDWR|O_CREAT|O_EXCL|O_EXTRA
-#if defined(UNIX) || defined(VMS)  /* open in rw------- mode */
-							      , (mode_t)0600
-#endif
-#if defined(MSDOS) || defined(MSWIN) || defined(OS2)  /* open read/write */
-							, S_IREAD | S_IWRITE
-#endif
-									    );
+			    f2 = mch_open_rw((char *)fname2,
+					       O_RDWR|O_CREAT|O_EXCL|O_EXTRA);
 			    created2 = TRUE;
 			}
 			if (f2 >= 0)

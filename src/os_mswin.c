@@ -450,6 +450,20 @@ vim_stat(const char *name, struct stat *stp)
 	--p;
     if (p > buf && (*p == '\\' || *p == '/') && p[-1] != ':')
 	*p = NUL;
+#ifdef FEAT_MBYTE
+    if ((int)GetACP() != enc_codepage)
+    {
+	WCHAR	*wp = enc_to_ucs2(buf, NULL);
+	int	n;
+
+	if (wp != NULL)
+	{
+	    n = _wstat(wp, (struct _stat *)stp);
+	    vim_free(wp);
+	    return n;
+	}
+    }
+#endif
     return stat(buf, stp);
 }
 
