@@ -606,21 +606,6 @@
 #endif
 
 /*
- * XSMP - X11 Session Management Protocol
- * It may be preferred to disable this if the GUI supports it (e.g., GNOME/KDE)
- * and implement save-yourself etc. through that, but it may also be cleaner to
- * have all SM-aware vims do the same thing (libSM does not depend upon X11).
- * If your GUI wants to support SM itself, change this ifdef.
- * I'm assuming that any X11 implementation will cope with this for now.
- */
-#if defined(HAVE_X11) && defined(WANT_X11) && defined(HAVE_X11_SM_SMLIB_H)
-# define USE_XSMP
-#endif
-#if defined(USE_XSMP_INTERACT) && !defined(USE_XSMP)
-# undef USE_XSMP_INTERACT
-#endif
-
-/*
  * +xim			X Input Method.  For entering special languages like
  *			chinese and Japanese.
  * +hangul_input	Internal Hangul input method.  Must be included
@@ -946,6 +931,22 @@
  */
 #if defined(FEAT_NORMAL) || defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)
 # define WANT_X11
+#endif
+
+/*
+ * XSMP - X11 Session Management Protocol
+ * It may be preferred to disable this if the GUI supports it (e.g.,
+ * GNOME/KDE) and implement save-yourself etc. through that, but it may also
+ * be cleaner to have all SM-aware vims do the same thing (libSM does not
+ * depend upon X11).
+ * If your GUI wants to support SM itself, change this ifdef.
+ * I'm assuming that any X11 implementation will cope with this for now.
+ */
+#if defined(HAVE_X11) && defined(WANT_X11) && defined(HAVE_X11_SM_SMLIB_H)
+# define USE_XSMP
+#endif
+#if defined(USE_XSMP_INTERACT) && !defined(USE_XSMP)
+# undef USE_XSMP_INTERACT
 #endif
 
 /*
