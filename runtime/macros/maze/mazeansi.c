@@ -4,4 +4,4 @@ C)            ;--            E;J             [E            ]=M
 )    ,   A    =              39              ,C             --
 )    ;   Z    ||    printf   (T   ))T[Z]=Z[A-(E   =A[J-Z])&&!C
 &    A   ==             M[                                  A]
-|6<<11<rand()||!C&!Z?J[M[E]=M[A]]=E,J[M[A]=A-Z]=A,"_.":" |"];}
+|6<<27<rand()||!C&!Z?J[M[E]=M[A]]=E,J[M[A]=A-Z]=A,"_.":" |"];}
