@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 5.6a.  Last change: 1999 Dec 04
+*eval.txt*      For Vim version 5.6a.  Last change: 1999 Dec 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -195,7 +195,7 @@ When comparing two Strings, this is done with strcmp() or stricmp().  This
 results in the mathematical difference (comparing byte values), not
 necessarily the alphabetical difference in the local language.
 
-When using the opreators with a trailing '#", or the short version and
+When using the operators with a trailing '#", or the short version and
 'ignorecase' is off, the comparing is done with strcmp().
 
 When using the operators with a trailing '?', or the short version and
@@ -1432,9 +1432,13 @@ x11			Compiled with X11 support.
 ==============================================================================
 5. Defining functions					*user-functions*
 
-New functions can be defined.  These can be called with "Name()", just like
-builtin functions.  The name must start with an uppercase letter, to avoid
-confusion with builtin functions.
+New functions can be defined.  These can be called just like builtin
+functions.
+
+The function name must start with an uppercase letter, to avoid confusion with
+builtin functions.  To prevent from using the same name in different scripts
+avoid obvious, short names.  A good habit is to start the function name with
+the name of the script, e.g., "HTMLcolor()".
 
 							*:fu* *:function*
 :fu[nction]		List all functions and their arguments.
@@ -1461,7 +1465,8 @@ confusion with builtin functions.
 			It is also possible to define a function without any
 			arguments.  You must still supply the () then.
 			The body of the function follows in the next lines,
-			until ":endfunction".
+			until the matching |:endfunction|.  It is allowed to
+			define another function inside a function body.
 			When a function by this name already exists and [!] is
 			not used an error message is given.  When [!] is used,
 			an existing function is silently replaced.
