@@ -302,7 +302,7 @@ fun! <SID>FTchange()
       setf change
       return
     endif
-    if lnum == 1 && (getline(1)[0] == '#' || getline(1)[0] == '!'
+    if lnum == 1 && (getline(1)[0] == '#' || getline(1)[0] == '!')
       setf ch
       return
     endif
