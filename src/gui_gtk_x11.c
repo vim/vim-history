@@ -2686,7 +2686,9 @@ gui_mch_init_font(char_u *font_name, int fontset)
     {
 	gui.norm_font = NOFONT;
 	gui.fontset = (GuiFontset)font;
-	gui.char_width = gdk_string_width(font, " ");
+	/* Use two bytes, this works around the problem that the result would
+	 * be zero if no 8-bit font was found. */
+	gui.char_width = gdk_string_width(font, "xW") / 2;
     }
     else
 #endif
@@ -2698,6 +2700,10 @@ gui_mch_init_font(char_u *font_name, int fontset)
 	gui.char_width = ((XFontStruct *)
 				      GDK_FONT_XFONT(font))->max_bounds.width;
     }
+
+    /* A zero width may cause a crash.  Happens for semi-invalid fontsets. */
+    if (gui.char_width <= 0)
+	gui.char_width = 8;
 
     gui.char_height = font->ascent + font->descent + p_linespace;
     gui.char_ascent = font->ascent + p_linespace / 2;
