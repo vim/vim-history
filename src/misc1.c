@@ -20,6 +20,9 @@
 
 static char_u *vim_version_dir __ARGS((char_u *vimdir));
 static char_u *remove_tail __ARGS((char_u *p, char_u *pend, char_u *name));
+#if defined(USE_EXE_NAME) && defined(MACOS_X)
+static char_u *remove_tail_with_ext __ARGS((char_u *p, char_u *pend, char_u *ext));
+#endif
 static int get_indent_str __ARGS((char_u *ptr, int ts));
 static int copy_indent __ARGS((int size, char_u	*src));
 
@@ -3535,8 +3538,16 @@ vim_getenv(name, mustfree)
 	    /* remove "build/..." from exe_name, if present */
 	    if (p == exe_name)
 	    {
-		pend = remove_tail(p, pend, (char_u *)"Contents/MacOS");
-		pend = remove_tail(p, pend, (char_u *)"build");
+		char_u	*pend1;
+		char_u  *pend2;
+
+		pend1 = remove_tail(p, pend, (char_u *)"Contents/MacOS");
+		pend2 = remove_tail_with_ext(p, pend1, (char_u *)".app");
+		pend = remove_tail(p, pend2, (char_u *)"build");
+		/* When runnig from project builder get rid of the
+		 * build/???.app, otherwise keep the ???.app */
+		if (pend2 == pend)
+		    pend = pend1;
 	    }
 # endif
 	    /* remove "src/" from exe_name, if present */
@@ -3681,6 +3692,29 @@ remove_tail(p, pend, name)
 	return newend;
     return pend;
 }
+
+#if defined(USE_EXE_NAME) && defined(MACOS_X)
+/*
+ * If the string between "p" and "pend" ends in "???.ext/", return "pend"
+ * minus the length of "???.ext/".  Otherwise return "pend".
+ */
+    static char_u *
+remove_tail_with_ext(p, pend, ext)
+    char_u	*p;
+    char_u	*pend;
+    char_u	*ext;
+{
+    int		len = (int)STRLEN(ext) + 1;
+    char_u	*newend = pend - len;
+
+    if (newend >= p && fnamencmp(newend, ext, len - 1) == 0)
+	while (newend != p && !vim_ispathsep(*(newend - 1)))
+	    --newend;
+    if (newend == p || vim_ispathsep(*(newend - 1)))
+	return newend;
+    return pend;
+}
+#endif
 
 /*
  * Call expand_env() and store the result in an allocated string.
