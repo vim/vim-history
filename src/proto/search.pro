@@ -1,5 +1,6 @@
 /* search.c */
 vim_regexp *search_regcomp __ARGS((char_u *pat, int pat_save, int pat_use, int options));
+char_u *get_search_pat __ARGS((void));
 void save_search_patterns __ARGS((void));
 void restore_search_patterns __ARGS((void));
 void set_reg_ic __ARGS((char_u *pat));

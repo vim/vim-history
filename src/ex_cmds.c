@@ -3505,7 +3505,7 @@ outofmem:
 	else if (got_match)	/* did find something but nothing substituted */
 	    MSG("");
 	else if (do_error)	/* nothing found */
-	    emsg2(e_patnotf2, pat);
+	    emsg2(e_patnotf2, get_search_pat());
     }
 
     vim_free(prog);

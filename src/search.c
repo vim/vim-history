@@ -183,6 +183,15 @@ search_regcomp(pat, pat_save, pat_use, options)
     return vim_regcomp(pat, magic);
 }
 
+/*
+ * Get search pattern used by search_regcomp().
+ */
+    char_u *
+get_search_pat()
+{
+    return mr_pattern;
+}
+
     static void
 save_re_pat(idx, pat, magic)
     int		idx;
