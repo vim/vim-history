@@ -5122,11 +5122,11 @@ ex_helptags(eap)
 
 		    /*
 		     * Only accept a *tag* when it consists of valid
-		     * characters, there is no '-' before it and is followed
-		     * by a white character or end-of-line.
+		     * characters, there is white space before it and is
+		     * followed by a white character or end-of-line.
 		     */
 		    if (s == p2
-			    && (p1 == IObuff || p1[-1] != '-')
+			    && (p1 == IObuff || p1[-1] == ' ' || p1[-1] == '\t')
 			    && (vim_strchr((char_u *)" \t\n\r", s[1]) != NULL
 				|| s[1] == '\0'))
 		    {
