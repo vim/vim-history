@@ -4727,11 +4727,15 @@ find_help_tags(arg, num_matches, matches)
 		STRCPY(d, "CTRL-");
 		d += 5;
 		if (*s < ' ')
+		{
 #ifdef EBCDIC
 		    *d++ = CtrlChar(*s);
 #else
 		    *d++ = *s + '@';
 #endif
+		    if (d[-1] == '\\')
+			*d++ = '\\';	/* double a backslash */
+		}
 		else
 		    *d++ = *++s;
 		if (s[1] != NUL && s[1] != '_')
