@@ -1,6 +1,7 @@
 /* message.c */
 int msg __ARGS((char_u *s));
 int msg_attr __ARGS((char_u *s, int attr));
+char_u *msg_strtrunc __ARGS((char_u *s));
 int emsg __ARGS((char_u *s));
 int emsg2 __ARGS((char_u *s, char_u *a1));
 int emsgn __ARGS((char_u *s, long n));

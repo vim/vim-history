@@ -95,10 +95,6 @@ msg_attr(s, attr)
 {
     static int	entered = 0;
     int		retval;
-    int		len;
-    int		room;
-    int		half;
-    int		i;
     char_u	*buf = NULL;
 
     /*
@@ -118,6 +114,34 @@ msg_attr(s, attr)
 		&& last_msg_hist->msg != NULL
 		&& STRCMP(s, last_msg_hist->msg)))
 	add_msg_hist(s, -1, attr);
+
+    /* Truncate the message if needed. */
+    buf = msg_strtrunc(s);
+    if (buf != NULL)
+	s = buf;
+
+    msg_start();
+    msg_outtrans_attr(s, attr);
+    msg_clr_eos();
+    retval = msg_end();
+
+    vim_free(buf);
+    --entered;
+    return retval;
+}
+
+/*
+ * Truncate a string such that it can be printed without causing a scroll.
+ */
+    char_u *
+msg_strtrunc(s)
+    char_u	*s;
+{
+    char_u	*buf = NULL;
+    int		len;
+    int		room;
+    int		half;
+    int		i;
 
     /* May truncate message to avoid a hit-return prompt */
     if (!msg_scroll && !need_wait_return && shortmess(SHM_TRUNCALL)
@@ -146,19 +170,10 @@ msg_attr(s, attr)
 		if (len > room)
 		    ++i;
 		STRCAT(buf, s + i + 1);
-		s = buf;
 	    }
 	}
     }
-
-    msg_start();
-    msg_outtrans_attr(s, attr);
-    msg_clr_eos();
-    retval = msg_end();
-
-    vim_free(buf);
-    --entered;
-    return retval;
+    return buf;
 }
 
 /*

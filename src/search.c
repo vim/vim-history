@@ -755,30 +755,49 @@ do_search(oap, dirc, str, count, options)
 
 	if ((options & SEARCH_ECHO) && messaging())
 	{
-	    msg_start();
-	    msg_putchar(dirc);
-	    msg_outtrans(*searchstr == NUL ? spats[last_idx].pat : searchstr);
-	    if (spats[0].off.line || spats[0].off.end || spats[0].off.off)
-	    {
-		msg_putchar(dirc);
-		if (spats[0].off.end)
-		    msg_putchar('e');
-		else if (!spats[0].off.line)
-		    msg_putchar('s');
-		if (spats[0].off.off < 0)
-		    msg_outnum((long)spats[0].off.off);
-		else if (spats[0].off.off > 0 || spats[0].off.line)
-		{
-		    msg_putchar('+');
-		    msg_outnum((long)spats[0].off.off);
-		}
-	    }
-	    msg_clr_eos();
-	    msg_check();
+	    char_u	*msgbuf;
+	    char_u	*trunc;
 
-	    gotocmdline(FALSE);
-	    out_flush();
-	    msg_nowait = TRUE;	    /* don't wait for this message */
+	    if (*searchstr == NUL)
+		p = spats[last_idx].pat;
+	    else
+		p = searchstr;
+	    msgbuf = alloc((unsigned)(STRLEN(p) + 40));
+	    if (msgbuf != NULL)
+	    {
+		msgbuf[0] = dirc;
+		STRCPY(msgbuf + 1, p);
+		if (spats[0].off.line || spats[0].off.end || spats[0].off.off)
+		{
+		    p = msgbuf + STRLEN(msgbuf);
+		    *p++ = dirc;
+		    if (spats[0].off.end)
+			*p++ = 'e';
+		    else if (!spats[0].off.line)
+			*p++ = 's';
+		    if (spats[0].off.off > 0 || spats[0].off.line)
+			*p++ = '+';
+		    if (spats[0].off.off != 0 || spats[0].off.line)
+			sprintf(p, "%ld", spats[0].off.off);
+		}
+
+		msg_start();
+		trunc = msg_strtrunc(msgbuf);
+		if (trunc != NULL)
+		{
+		    msg_outtrans(trunc);
+		    vim_free(trunc);
+		}
+		else
+		    msg_outtrans(msgbuf);
+		msg_clr_eos();
+		msg_check();
+		vim_free(msgbuf);
+
+		gotocmdline(FALSE);
+		out_flush();
+		msg_nowait = TRUE;	    /* don't wait for this message */
+	    }
 	}
 
 	/*
