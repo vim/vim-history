@@ -5810,7 +5810,6 @@ f_resolve(argvars, retvar)
     VAR		retvar;
 {
     char_u	*p;
-    int		limit = 100;
 
     p = get_var_string(&argvars[0]);
 #ifdef FEAT_SHORTCUT
@@ -5833,6 +5832,7 @@ f_resolve(argvars, retvar)
 	char_u	*q;
 	int	is_relative_to_current = FALSE;
 	int	has_trailing_pathsep = FALSE;
+	int	limit = 100;
 
 	p = vim_strsave(p);
 
@@ -5853,7 +5853,7 @@ f_resolve(argvars, retvar)
 	    q[-1] = NUL;
 	}
 
-	for(;;)
+	for (;;)
 	{
 	    for (;;)
 	    {
@@ -5998,7 +5998,9 @@ f_resolve(argvars, retvar)
 
     simplify_filename(retvar->var_val.var_string);
 
+#ifdef HAVE_READLINK
 fail:
+#endif
     retvar->var_type = VAR_STRING;
 }
 

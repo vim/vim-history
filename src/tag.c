@@ -2936,7 +2936,7 @@ simplify_filename(filename)
 	    {
 		int		do_strip = FALSE;
 		char_u		saved_char;
-		struct stat	st, new_st;
+		struct stat	st;
 
 		/* Don't strip for an erroneous file name. */
 		if (!stripping_disabled)
@@ -2961,6 +2961,8 @@ simplify_filename(filename)
 
 		    if (!do_strip)
 		    {
+			struct stat	new_st;
+
 			/* If the component exists in the file system, check
 			 * that stripping it won't change the meaning of the
 			 * file name.  First get information about the
