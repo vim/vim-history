@@ -2871,13 +2871,6 @@ win_enter(wp, undo_sync)
     int		undo_sync;
 {
     win_enter_ext(wp, undo_sync, FALSE);
-#if defined(FEAT_NETBEANS_INTG) || defined(FEAT_SUN_WORKSHOP)
-    /* Change directories when the acd option is set on and after
-     * switching windows. */
-    if (p_acd && curbuf->b_ffname != NULL
-				     && vim_chdirfile(curbuf->b_ffname) == OK)
-	shorten_fnames(TRUE);
-#endif
 }
 
 /*
@@ -2994,6 +2987,14 @@ win_enter_ext(wp, undo_sync, curwin_invalid)
 
 #ifdef FEAT_MOUSE
     setmouse();			/* in case jumped to/from help buffer */
+#endif
+
+#if defined(FEAT_NETBEANS_INTG) || defined(FEAT_SUN_WORKSHOP)
+    /* Change directories when the acd option is set on and after
+     * switching windows. */
+    if (p_acd && curbuf->b_ffname != NULL
+				     && vim_chdirfile(curbuf->b_ffname) == OK)
+	shorten_fnames(TRUE);
 #endif
 }
 
