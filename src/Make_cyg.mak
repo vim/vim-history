@@ -4,7 +4,7 @@
 # This compiles Vim as a Windows application.  If you want Vim to run as a
 # Cygwin application use the Makefile (just like on Unix).
 #
-# Last updated by Dan Sharp.  Last Change: 2003 May 07
+# Last updated by Dan Sharp.  Last Change: 2003 Jun 22
 #
 # GUI		no or yes: set to yes if you want the GUI version (yes)
 # PERL		define to path to Perl dir to get Perl support (not defined)
@@ -235,6 +235,11 @@ else
 OPTFLAG = -O2
 endif
 endif
+
+# A bug in the GCC <= 3.2 optimizer can cause a crash.  The
+# following option removes the problem optimization.
+OPTFLAG += -fno-strength-reduce
+
 INCLUDES += -s
 
 endif
