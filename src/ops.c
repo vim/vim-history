@@ -1948,7 +1948,7 @@ op_replace(oap, c)
 #endif
 
 /*
- * Handle the (non-standard vi) tilde operator.  Also for "gu" and "gU".
+ * Handle the (non-standard vi) tilde operator.  Also for "gu", "gU" and "g?".
  */
     void
 op_tilde(oap)
@@ -2018,15 +2018,16 @@ op_tilde(oap)
     if (oap->line_count > p_report)
     {
 	if (oap->line_count == 1)
-	    MSG(_("1 line ~ed"));
+	    MSG(_("1 line changed"));
 	else
-	    smsg((char_u *)_("%ld lines ~ed"), oap->line_count);
+	    smsg((char_u *)_("%ld lines changed"), oap->line_count);
     }
 }
 
 /*
  * If op_type == OP_UPPER: make uppercase,
  * if op_type == OP_LOWER: make lowercase,
+ * if op_type == OP_ROT13: do rot13 encoding,
  * else swap case of character at 'pos'
  * returns TRUE when something actually changed.
  */
