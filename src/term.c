@@ -79,7 +79,8 @@ static void gather_termleader __ARGS((void));
     || (defined(USE_MOUSE) && (!defined(UNIX) || defined(XTERM_MOUSE)))
 static int get_bytes_from_buf __ARGS((char_u *, char_u *, int));
 #endif
-static int term_is_builtin __ARGS((char_u *));
+static int term_is_builtin __ARGS((char_u *name));
+static int term_7to8bit __ARGS((char_u *p));
 
 #ifdef HAVE_TGETENT
 static char_u *tgetent_error __ARGS((char_u *, char_u *));
@@ -1331,22 +1332,47 @@ parse_builtin_tcap(term)
 {
     struct builtin_term	    *p;
     char_u		    name[2];
+    int			    term_8bit;
 
     p = find_builtin_term(term);
+    term_8bit = term_is_8bit(term);
+
     for (++p; p->bt_entry != (int)KS_NAME && p->bt_entry != BT_EXTRA_KEYS; ++p)
     {
 	if ((int)p->bt_entry < 0x100)	/* KS_xx entry */
 	{
-	    if (term_strings[p->bt_entry] == NULL ||
-				    term_strings[p->bt_entry] == empty_option)
-		term_strings[p->bt_entry] = (char_u *)p->bt_string;
+	    /* Only set the value if it wasn't set yet. */
+	    if (term_strings[p->bt_entry] == NULL
+				 || term_strings[p->bt_entry] == empty_option)
+	    {
+		/* 8bit terminal: use CSI instead of <Esc>[ */
+		if (term_8bit && term_7to8bit(p->bt_string) != 0)
+		{
+		    char_u  *s, *t;
+
+		    s = vim_strsave(p->bt_string);
+		    if (s != NULL)
+		    {
+			for (t = s; *t; ++t)
+			    if (term_7to8bit(t))
+			    {
+				*t = term_7to8bit(t);
+				STRCPY(t + 1, t + 2);
+			    }
+			term_strings[p->bt_entry] = s;
+			set_term_option_alloced(&term_strings[p->bt_entry]);
+		    }
+		}
+		else
+		    term_strings[p->bt_entry] = (char_u *)p->bt_string;
+	    }
 	}
 	else
 	{
 	    name[0] = KEY2TERMCAP0((int)p->bt_entry);
 	    name[1] = KEY2TERMCAP1((int)p->bt_entry);
 	    if (find_termcode(name) == NULL)
-		add_termcode(name, (char_u *)p->bt_string);
+		add_termcode(name, (char_u *)p->bt_string, term_8bit);
 	}
     }
 }
@@ -1477,7 +1503,7 @@ set_termname(term)
 		{
 		    if (find_termcode((char_u *)key_names[i]) == NULL)
 			add_termcode((char_u *)key_names[i],
-						  TGETSTR(key_names[i], &tp));
+					   TGETSTR(key_names[i], &tp), FALSE);
 		}
 
 		    /* if cursor-left == backspace, ignore it (televideo 925) */
@@ -1485,7 +1511,7 @@ set_termname(term)
 		{
 		    p = TGETSTR("kl", &tp);
 		    if (p != NULL && *p != Ctrl('H'))
-			add_termcode((char_u *)"kl", p);
+			add_termcode((char_u *)"kl", p, FALSE);
 		}
 
 		if (height == 0)
@@ -1678,10 +1704,10 @@ set_termname(term)
 	bs_p = find_termcode((char_u *)"kb");
 	del_p = find_termcode((char_u *)"kD");
 	if (bs_p == NULL || *bs_p == NUL)
-	    add_termcode((char_u *)"kb", (bs_p = (char_u *)"\010"));
+	    add_termcode((char_u *)"kb", (bs_p = (char_u *)"\010"), FALSE);
 	if ((del_p == NULL || *del_p == NUL) &&
 					    (bs_p == NULL || *bs_p != '\177'))
-	    add_termcode((char_u *)"kD", (char_u *)"\177");
+	    add_termcode((char_u *)"kD", (char_u *)"\177", FALSE);
     }
 
 #ifdef USE_MOUSE
@@ -1734,7 +1760,7 @@ set_termname(term)
 
 	name[0] = (int)KS_EXTRA;
 	name[1] = (int)KE_SNIFF;
-	add_termcode(name, (char_u *)"\233sniff");
+	add_termcode(name, (char_u *)"\233sniff", FALSE);
     }
 #endif
 
@@ -1851,7 +1877,7 @@ set_mouse_termcode(n, s)
 
     name[0] = n;
     name[1] = K_FILLER;
-    add_termcode(name, s);
+    add_termcode(name, s, FALSE);
 #  ifdef NETTERM_MOUSE
     if (n == KS_NETTERM_MOUSE)
 	has_mouse_termcode |= HMT_NETTERM;
@@ -2032,7 +2058,8 @@ add_termcap_entry(name, force)
 		{
 		    if ((int)termp->bt_entry == key)
 		    {
-			add_termcode(name, (char_u *)termp->bt_string);
+			add_termcode(name, (char_u *)termp->bt_string,
+							  term_is_8bit(term));
 			return OK;
 		    }
 		    ++termp;
@@ -2051,7 +2078,7 @@ add_termcap_entry(name, force)
 		string = TGETSTR((char *)name, &tp);
 		if (string != NULL && *string != NUL)
 		{
-		    add_termcode(name, string);
+		    add_termcode(name, string, FALSE);
 		    return OK;
 		}
 	    }
@@ -2076,6 +2103,40 @@ term_is_builtin(name)
     char_u  *name;
 {
     return (STRNCMP(name, "builtin_", (size_t)8) == 0);
+}
+
+/*
+ * Return TRUE if terminal "name" uses CSI instead of <Esc>[.
+ * Assume that the terminal is using 8-bit controls when the name contains
+ * "8bit", like in "xterm-8bit".
+ */
+    int
+term_is_8bit(name)
+    char_u  *name;
+{
+    return (strstr((char *)name, "8bit") != NULL);
+}
+
+/*
+ * Translate terminal control chars from 7-bit to 8-bit:
+ * <Esc>[ -> CSI
+ * <Esc>] -> <M-C-]>
+ * <Esc>O -> <M-C-O>
+ */
+    static int
+term_7to8bit(p)
+    char_u  *p;
+{
+    if (*p == ESC)
+    {
+	if (p[1] == '[')
+	    return CSI;
+	if (p[1] == ']')
+	    return 0x9d;
+	if (p[1] == 'O')
+	    return 0x8f;
+    }
+    return 0;
 }
 
 #ifdef USE_GUI
@@ -2431,27 +2492,35 @@ term_color(s, n)
     char_u  *s;
     int	    n;
 {
+    int i = 2;	/* index in s[] just after <Esc>[ or CSI */
+
     /* Special handling of 16 colors, because termcap can't handle it */
     /* Also accept "\e[3%dm" for TERMINFO, it is sometimes used */
+    /* Also accept CSI instead of <Esc>[ */
     if (n > 7 && atoi((char *)T_CCO) == 16
-	      && s[0] == ESC && s[1] == '[' && s[2] != NUL
-	      && (STRCMP(s + 3, "%p1%dm") == 0 || STRCMP(s + 3, "%dm") == 0))
+	      && ((s[0] == ESC && s[1] == '[') || (s[0] == CSI && (i = 1)))
+	      && s[i] != NUL
+	      && (STRCMP(s + i + 1, "%p1%dm") == 0
+		  || STRCMP(s + i + 1, "%dm") == 0))
     {
-	if (s[2] == '3')	/* foreground */
+	if (s[i] == '3')	/* foreground */
 	{
 #ifdef TERMINFO
-	    OUT_STR(tgoto("\033[9%p1%dm", 0, n - 8));
+	    OUT_STR(tgoto(i == 2 ? "\033[9%p1%dm"
+					       : "\233\071%p1%dm", 0, n - 8));
 #else
-	    OUT_STR(tgoto("\033[9%dm", 0, n - 8));
+	    OUT_STR(tgoto(i == 2 ? "\033[9%dm" : "\233\071%dm", 0, n - 8));
 #endif
 	    return;
 	}
-	if (s[2] == '4')	/* background */
+	if (s[i] == '4')	/* background */
 	{
 #ifdef TERMINFO
-	    OUT_STR(tgoto("\033[10%p1%dm", 0, n - 8));
+	    OUT_STR(tgoto(i == 2 ? "\033[10%p1%dm"
+					   : "\233\061\060%p1%dm", 0, n - 8));
 #else
-	    OUT_STR(tgoto("\033[10%dm", 0, n - 8));
+	    OUT_STR(tgoto(i == 2 ? "\033[10%dm"
+					      : "\233\061\060%dm", 0, n - 8));
 #endif
 	    return;
 	}
@@ -3061,9 +3130,10 @@ clear_termcodes()
  * The list is kept alphabetical for ":set termcap"
  */
     void
-add_termcode(name, string)
-    char_u  *name;
-    char_u  *string;
+add_termcode(name, string, use_8bit)
+    char_u	*name;
+    char_u	*string;
+    int		use_8bit;	/* replace 7-bit control by 8-bit one */
 {
     struct termcode *new_tc;
     int		    i, j;
@@ -3078,6 +3148,13 @@ add_termcode(name, string)
     s = vim_strsave(string);
     if (s == NULL)
 	return;
+
+    /* Change leading <Esc>[ to CSI, change <Esc>O to <M-O>. */
+    if (use_8bit && term_7to8bit(string) != 0)
+    {
+	mch_memmove(s, s + 1, STRLEN(s));
+	s[0] = term_7to8bit(string);
+    }
 
     need_gather = TRUE;		/* need to fill termleader[] */
 
@@ -3369,22 +3446,24 @@ check_termcode(max_offset, buf, buflen)
 	{
 	    /* Check for xterm version string: "<Esc>[><x>;<vers>;<y>c".  Also
 	     * eat other possible responses to t_RV, rxvt returns
-	     * "<Esc>[?1;2c" */
-	    if (tp[0] == ESC && tp[1] == '[' && len >= 3 && *T_CRV != NUL)
+	     * "<Esc>[?1;2c".  Also accept CSI instead of <Esc>[. */
+	    if (*T_CRV != NUL && ((tp[0] == ESC && tp[1] == '[' && len >= 3)
+					       || (tp[0] == CSI && len >= 2)))
 	    {
 		j = 0;
 		extra = 0;
-		for (i = 3; i < len && (isdigit(tp[i]) || tp[i] == ';'); ++i)
+		for (i = 2 + (tp[0] != CSI);
+			     i < len && (isdigit(tp[i]) || tp[i] == ';'); ++i)
 		    if (tp[i] == ';' && ++j == 1)
 			extra = atoi((char *)tp + i + 1);
 		if (i == len)
 		    return -1;		/* not enough characters */
 
 		/* eat it when at least one digit and ending in 'c' */
-		if (i > 3 && tp[i] == 'c')
+		if (i > 2 + (tp[0] != CSI) && tp[i] == 'c')
 		{
 		    /* If xterm version is >= 95, we can use mouse dragging */
-		    if (tp[2] == '>' && j == 2 && extra >= 95)
+		    if (tp[1 + (tp[0] != CSI)] == '>' && j == 2 && extra >= 95)
 			set_option_value((char_u *)"ttymouse", 0L,
 							  (char_u *)"xterm2");
 		    key_name[0] = (int)KS_EXTRA;

@@ -2588,7 +2588,7 @@ do_set(arg, modeline)
 			    }
 			    nextchar = *p;
 			    *p = NUL;
-			    add_termcode(name, arg);
+			    add_termcode(name, arg, FALSE);
 			    *p = nextchar;
 			}
 			if (full_screen)
@@ -2875,6 +2875,24 @@ free_string_option(p)
 {
     if (p != empty_option)
 	vim_free(p);
+}
+
+/*
+ * Mark a terminal option as allocated, found by a pointer into term_strings[].
+ */
+    void
+set_term_option_alloced(p)
+    char_u **p;
+{
+    int		opt_idx;
+
+    for (opt_idx = 1; options[opt_idx].fullname != NULL; opt_idx++)
+	if (options[opt_idx].var == (char_u *)p)
+	{
+	    options[opt_idx].flags |= P_ALLOCED;
+	    return;
+	}
+    return; /* cannot happen: didn't find it! */
 }
 
 /*

@@ -1791,7 +1791,7 @@ do_fixdel()
 
     p = find_termcode((char_u *)"kb");
     add_termcode((char_u *)"kD", p != NULL && *p == 0x7f ?
-					 (char_u *)"\010" : (char_u *)"\177");
+				  (char_u *)"\010" : (char_u *)"\177", FALSE);
 }
 
     void
