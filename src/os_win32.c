@@ -2982,7 +2982,7 @@ mch_call_shell(
 	    else
 	    {
 #if defined(FEAT_GUI_W32)
-		if (!(options & SHELL_DOOUT) && need_vimrun_warning)
+		if (need_vimrun_warning)
 		{
 		    MessageBox(NULL,
 			    _("VIMRUN.EXE not found in your $PATH.\n"
@@ -2992,11 +2992,13 @@ mch_call_shell(
 			    MB_ICONWARNING);
 		    need_vimrun_warning = FALSE;
 		}
-		if (!(options & SHELL_DOOUT) && !s_dont_use_vimrun)
+		if (!s_dont_use_vimrun)
 		    /* Use vimrun to execute the command.  It opens a console
 		     * window, which can be closed without killing Vim. */
 		    sprintf((char *)newcmd, "%s%s%s %s %s",
-			    vimrun_path, msg_silent != 0 ? "-s " : "",
+			    vimrun_path,
+			    (msg_silent != 0 || (options & SHELL_DOOUT))
+								 ? "-s " : "",
 			    p_sh, p_shcf, cmd);
 		else
 #endif
