@@ -1907,20 +1907,13 @@ set_init_3()
     void
 init_gui_options()
 {
-    int	    tt;
-
     /* Set the 'background' option according to the lightness of the
      * background color. */
     if (!option_was_set((char_u *)"bg")
 			       && gui_mch_get_lightness(gui.back_pixel) < 127)
     {
-	/* Full_screen must be TRUE to get the side effect of changing the
-	 * defaults for the highlighting.  Restore it just in case. */
-	tt = full_screen;
-	full_screen = TRUE;
 	set_option_value((char_u *)"bg", 0L, (char_u *)"dark");
 	highlight_changed();
-	full_screen = tt;
     }
 }
 #endif
@@ -3040,10 +3033,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf)
     else if (varp == &p_bg)
     {
 	if (check_opt_strings(p_bg, p_bg_values, FALSE) == OK)
-	{
-	    if (full_screen)
-		init_highlight(FALSE);
-	}
+	    init_highlight(FALSE);
 	else
 	    errmsg = e_invarg;
     }
