@@ -73,7 +73,7 @@ void xim_init __ARGS((void));
 void xim_decide_input_style __ARGS((void));
 int im_get_feedback_attr __ARGS((int col));
 void xim_reset __ARGS((void));
-int xim_queue_key_press_event __ARGS((GdkEventKey *event));
+int xim_queue_key_press_event __ARGS((GdkEventKey *event, int down));
 void xim_init __ARGS((void));
 void im_shutdown __ARGS((void));
 int xim_get_status_area_height __ARGS((void));
