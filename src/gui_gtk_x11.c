@@ -342,6 +342,10 @@ visibility_event(GtkWidget * widget, GdkEventVisibility * event)
 static gint
 expose_event(GtkWidget * widget, GdkEventExpose * event)
 {
+    /* Skip this when the GUI isn't set up yet, will redraw later. */
+    if (gui.starting)
+	return FALSE;
+
     out_flush();		/* make sure all output has been processed */
     gui_redraw(event->area.x, event->area.y,
 	       event->area.width, event->area.height);
@@ -1657,21 +1661,37 @@ update_window_manager_hints(void)
 #ifdef USE_GEOMETRY_FOR_HINTS
     GdkGeometry geometry;
     GdkWindowHints geometry_mask;
+    static int old_width = 0;
+    static int old_height = 0;
+    static int old_char_width = 0;
+    static int old_char_height = 0;
 
     /* This also needs to be done when the main window isn't there yet,
      * otherwise the hints don't work. */
     width = gui_get_base_width();
     height = gui_get_base_height();
 
-    geometry_mask = GDK_HINT_BASE_SIZE|GDK_HINT_RESIZE_INC|GDK_HINT_MIN_SIZE;
-    geometry.width_inc = gui.char_width;
-    geometry.height_inc = gui.char_height;
-    geometry.base_width = width;
-    geometry.base_height = height;
-    geometry.min_width = width + MIN_COLUMNS * gui.char_width;
-    geometry.min_height = height + MIN_LINES * gui.char_height;
-    gtk_window_set_geometry_hints(GTK_WINDOW(gui.mainwin), gui.formwin,
-				  &geometry, geometry_mask);
+    /* Avoid an expose event when the size didn't change. */
+    if (width != old_width
+	    || height != old_height
+	    || gui.char_width != old_char_width
+	    || gui.char_height != old_char_height)
+    {
+	geometry_mask =
+		     GDK_HINT_BASE_SIZE|GDK_HINT_RESIZE_INC|GDK_HINT_MIN_SIZE;
+	geometry.width_inc = gui.char_width;
+	geometry.height_inc = gui.char_height;
+	geometry.base_width = width;
+	geometry.base_height = height;
+	geometry.min_width = width + MIN_COLUMNS * gui.char_width;
+	geometry.min_height = height + MIN_LINES * gui.char_height;
+	gtk_window_set_geometry_hints(GTK_WINDOW(gui.mainwin), gui.formwin,
+				      &geometry, geometry_mask);
+	old_width = width;
+	old_height = height;
+	old_char_width = gui.char_width;
+	old_char_height = gui.char_height;
+    }
 #else
     XSizeHints size_hints;
 
