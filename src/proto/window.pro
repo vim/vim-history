@@ -1,5 +1,5 @@
 /* window.c */
-void do_window __ARGS((int nchar, long Prenum));
+void do_window __ARGS((int nchar, long Prenum, int xchar));
 int win_split __ARGS((int size, int flags));
 int win_valid __ARGS((win_T *win));
 int win_count __ARGS((void));
