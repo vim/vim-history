@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.2.  Last change: 2003 Apr 25
+*gui.txt*       For Vim version 6.2.  Last change: 2004 Apr 02
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -183,19 +183,28 @@ will appear in the top of the window.
 If a window is shrunk to zero height (by the growth of another window) its
 scrollbar disappears. It reappears when the window is restored.
 
-If a window is vertically split, it will only get a scrollbar when it is the
-current window, or the middle of the current window is above or below it.
+If a window is vertically split, it will get a scrollbar when it is the
+current window and when, taking the middle of the current window and drawing a
+vertical line, this line goes through the window.
 When there are scrollbars on both sides, and the middle of the current window
 is on the left halve, the right scrollbar column will contain scrollbars for
 the rightmost windows.  The same happens on the other side.
 
 
-Horizontal Scrollbars					*gui-horiz-scroll*
+HORIZONTAL SCROLLBARS					*gui-horiz-scroll*
 
 The horizontal scrollbar (at the bottom of the Vim GUI) may be used to
 scroll text sideways when the 'wrap' option is turned off.  The
-scrollbar-thumb size is such that the text of the current cursor line may be
-scrolled as far as possible left and right.
+scrollbar-thumb size is such that the text of the longest visible line may be
+scrolled as far as possible left and right.  The cursor is moved when
+necessary, it must remain on a visible character (unless 'virtualedit' is
+set).
+
+Computing the length of the longest visible takes quite a bit of computation,
+and it has to be done every time something changes.  If this takes too much
+time or you don't like the cursor jumping to another line, include the 'h'
+flag in 'guioptions'.  Then the scrolling is limited by the text of the
+current cursor line.
 
 							*athena-intellimouse*
 If you have an Intellimouse and an X server that supports using the wheel,

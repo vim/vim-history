@@ -1,4 +1,4 @@
-*options.txt*	For Vim version 6.2.  Last change: 2004 Mar 30
+*options.txt*	For Vim version 6.2.  Last change: 2004 Apr 02
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -2909,6 +2909,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 
 	  'c'	Use console dialogs instead of popup dialogs for simple
 		choices.
+
 	  'f'	Foreground: Don't use fork() to detach the GUI from the shell
 		where it was started.  Use this for programs that wait for the
 		editor to finish (e.g., an e-mail program).  Alternatively you
@@ -2942,7 +2943,11 @@ A jump table for the options with a short description can be found at |Q_op|.
 	  'l'	Left-hand scrollbar is always present.
 	  'L'	Left-hand scrollbar is present when there is a vertically
 		split window.
-	  'b'	Bottom (horizontal) scrollbar is present.
+	  'b'	Bottom (horizontal) scrollbar is present.  Its size depends on
+	  	the longest visible line, or on the cursor line if the 'h'
+		flag is included. |gui-horiz-scroll|
+	  'h'	Limit horizontal scrollbar size to the length of the cursor
+		line.  Reduces computations. |gui-horiz-scroll|
 
 	And yes, you may even have scrollbars on the left AND the right if
 	you really want to :-).  See |gui-scrollbars| for more information.

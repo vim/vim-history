@@ -560,7 +560,7 @@ leftcol_changed()
      * advance the cursor one more char.  If this fails (last char of the
      * line) adjust the scrolling.
      */
-    getvcol(curwin, &curwin->w_cursor, &s, NULL, &e);
+    getvvcol(curwin, &curwin->w_cursor, &s, NULL, &e);
     if (e > (colnr_T)lastcol)
     {
 	retval = TRUE;
