@@ -962,6 +962,8 @@ foldMoveTo(updown, dir, count)
 	}
 	if (lnum_found != curwin->w_cursor.lnum)
 	{
+	    if (retval == FAIL)
+		setpcmark();
 	    curwin->w_cursor.lnum = lnum_found;
 	    curwin->w_cursor.col = 0;
 	    retval = OK;
