@@ -79,7 +79,7 @@ static char *(features[]) =
 #else
 	"-cmdline_info",
 #endif
-#ifdef CRYPTV
+#ifdef COMMENTS
 	"+comments",
 #else
 	"-comments",
@@ -418,6 +418,8 @@ static char *(features[]) =
 
 static int included_patches[] =
 {   /* Add new patch number below this line */
+/**/
+    35,
 /**/
     34,
 /**/
