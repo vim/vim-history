@@ -2485,8 +2485,7 @@ read_limits(minval, maxval)
 	*maxval = MAX_LIMIT;	    /* It was \{} or \{-} */
     if (*regparse == '\\')
 	regparse++;	/* Allow either \{...} or \{...\} */
-    if (       (*regparse != '}' && *regparse != NUL)
-	    || (*maxval == 0 && *minval == 0))
+    if (*regparse != '}' || (*maxval == 0 && *minval == 0))
     {
 	sprintf((char *)IObuff, _("Syntax error in %s{...}"),
 					  reg_magic == MAGIC_ALL ? "" : "\\");
