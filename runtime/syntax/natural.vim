@@ -1,11 +1,10 @@
 " Vim syntax file
 "
 " Language:		NATURAL
-" Version:		2.26.005
+" Version:		2.0.26.17
 " Maintainer:	Marko Leipert <vim@mleipert.de>
-" Last Changed:	2001-07-26 09:48:00
+" Last Changed:	2002-02-28 09:50:36
 " Support:		http://www.winconsole.de/vim/syntax.html
-
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when this syntax file was already loaded
@@ -35,14 +34,14 @@ syn keyword naturalLoop			end-all sort end-sort sorted descending ascending
 syn keyword naturalRepeat		repeat end-repeat while until for step end-for
 syn keyword naturalKeyword		in file with field starting from ending at thru by isn where
 syn keyword naturalError		on error end-error
-syn keyword naturalKeyword		accept reject end-enddata number retain as release
-syn keyword naturalKeyword		start end-start break end-break skip physical page top sequence
+syn keyword naturalKeyword		accept reject end-enddata number unique retain as release
+syn keyword naturalKeyword		start end-start break end-break physical page top sequence
 syn keyword naturalKeyword		end-toppage end-endpage end-endfile before processing
 syn keyword naturalKeyword		end-before
 
 " conditionals
-syn keyword	naturalConditional	if then else end-if end-norec
-syn keyword	naturalConditional	decide end-decide value when condition none any
+syn keyword naturalConditional	if then else end-if end-norec
+syn keyword naturalConditional	decide end-decide value when condition none any
 
 " assignment / calculation
 syn keyword naturalKeyword		reset assign move left right justified compress to into edited
@@ -52,7 +51,7 @@ syn keyword naturalKeyword		examine full replace giving separate delimiter modif
 syn keyword naturalKeyword		suspend identical suppress
 
 " program flow
-syn keyword naturalFlow			callnat fetch return escape bottom top stack formatted
+syn keyword naturalFlow			callnat fetch return enter escape bottom top stack formatted
 syn keyword naturalFlow			command call
 syn keyword naturalflow			end-subroutine routine
 
@@ -66,10 +65,10 @@ syn keyword naturalKeyword		set settime key control stop terminate
 " in-/output
 syn keyword naturalKeyword		write display input reinput notitle nohdr map newpage mark
 syn keyword naturalKeyword		alarm text help eject index
-syn keyword naturalKeyword		format printer
+syn keyword naturalKeyword		format printer skip lines
 
 " functions
-syn keyword naturalKeyword		val old
+syn keyword naturalKeyword		abs atn cos exp frac int log sgn sin sqrt tan val old
 
 " report mode keywords
 syn keyword naturalRMKeyword	same loop obtain indexed do doend
@@ -83,7 +82,7 @@ syn match	naturalObjName		"\<[a-z][-_a-z0-9]\{,7}\>"
 
 " Labels
 syn match	naturalLabel		"\<[+#a-z][-_#a-z0-9]*\."
-syn match	naturalRef			"\<[+#a-z][-_#a-z0-9]*\>\.\<[+#a-z][-_#a-z0-9]*\>"
+syn match	naturalRef			"\<[+#a-z][-_#a-z0-9]*\>\.\<[+#a-z][*]\=[-_#a-z0-9]*\>"
 
 " System variables
 syn match	naturalSysVar		"\<\*[a-z][-a-z0-9]*\>"
@@ -104,13 +103,13 @@ syn region  naturalString		start=+"+ end=+"+
 syn region	naturalString		start=+'+ end=+'+
 
 " Type definition
-syn match	naturalAttribute	"\<[-a-z][a-z]=[-a-z0-9_\.]\+\>"
-syn match	naturalType			contained "\<[ANIP]\d\+\(,\d\+\)\=\>"
+syn match	naturalAttribute	"\<[-a-z][a-z]=[-a-z0-9_\.,]\+\>"
+syn match	naturalType			contained "\<[ABINP]\d\+\(,\d\+\)\=\>"
 syn match	naturalType			contained "\<[CL]\>"
 
-" TODO / other comments
+" "TODO" / other comments
 syn keyword naturalTodo			contained todo test
-syn match	naturalCommentMark	contained "[a-z][^ \t/:|]*\(\s[^ \t/:|]\+\)*:\s"he=e-1
+syn match	naturalCommentMark	contained "[a-z][^ \t/:|]*\(\s[^ \t/:'"|]\+\)*:\s"he=e-1
 
 " comments
 syn region	naturalComment		start="/\*" end="$" contains=naturalTodo,naturalLineRef,naturalCommentMark
@@ -118,8 +117,8 @@ syn region	naturalComment		start="^\*[\ \*]" end="$" contains=naturalTodo,natura
 syn region	naturalComment		start="^\d\{4} \*[\ \*]"lc=5 end="$" contains=naturalTodo,naturalLineRef,naturalCommentMark
 syn match	naturalComment		"^*$"
 syn match	naturalComment		"^\d\{4} \*$"lc=5
-" /* is legal syntax in parentheses e.g. #ident(label./*)
-syn region	naturalPComment		contained start="/\*\s*[^)]"  end="$" contains=naturalTodo,naturalLineRef,naturalCommentMark
+" /* is legal syntax in parentheses e.g. "#ident(label./*)"
+syn region	naturalPComment		contained start="/\*\s*[^),]"  end="$" contains=naturalTodo,naturalLineRef,naturalCommentMark
 
 " operators
 syn keyword	naturalOperator		and or not eq ne gt lt ge le mask scan
@@ -140,6 +139,12 @@ syn match	naturalLineRef		"(\d\{4})"
 
 " build syntax groups
 syntax cluster naturalConstant	contains=naturalString,naturalNumber,naturalAttribute,naturalBoolean
+
+" folding
+if v:version >= 600
+	set foldignore=*
+endif
+
 
 if v:version >= 508 || !exists("did_natural_syntax_inits")
 	if v:version < 508

@@ -2,8 +2,8 @@
 " Language:		shell (sh) Korn shell (ksh) bash (sh)
 " Maintainer:		Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Previous Maintainer:	Lennart Schultz <Lennart.Schultz@ecmwf.int>
-" Last Change:	Feb 08, 2002
-" Version: 35
+" Last Change:	Mar 11, 2002
+" Version: 36
 " Latest:		http://www.erols.com/astronaut/vim/index.html#vimlinks_syntax
 "
 " Using the following VIM variables:
@@ -142,9 +142,9 @@ endif
 " ====
 syn region  shCaseEsac	matchgroup=shConditional start="\<case\>" end="\<esac\>"	contains=@shCaseEsacList
 syn keyword shCaseIn	contained skipwhite skipnl in			nextgroup=shCase,shCaseStart,shCaseBar,shComment,shCaseSingleQuote,shCaseDoubleQuote
-syn region  shCase	contained skipwhite skipnl matchgroup=shConditional start="[^$()]\{-})"ms=s,hs=e  end=";;" end="esac"me=s-1 contains=@shCaseList nextgroup=shCase,shCaseStart,shCaseBar,shComment
-syn match   shCaseStart	contained skipwhite skipnl "("		nextgroup=shCase
-syn match   shCaseBar	contained "[^|"`')]\{-}|"hs=e			nextgroup=shCase,shCaseStart,shCaseBar,shCaseSingleQuote,shCaseDoubleQuote
+syn region  shCase	contained skipwhite skipnl matchgroup=shConditional start="[^$()]\{-})"ms=s,hs=e  end=";;" end="esac"me=s-1 contains=@shCaseList nextgroup=shCaseStart,shCase,shCaseBar,shComment
+syn match   shCaseBar	contained skipwhite "[^|"`'()]\{-}|"hs=e		nextgroup=shCase,shCaseStart,shCaseBar,shComment,shCaseSingleQuote,shCaseDoubleQuote
+syn match   shCaseStart	contained skipwhite skipnl "("		nextgroup=shCase,shCaseBar
 syn region  shCaseSingleQuote	matchgroup=shOperator start=+'+ skip=+\\\\\|\\.+ end=+'+	contains=shStringSpecial		skipwhite skipnl nextgroup=shCaseBar	contained
 syn region  shCaseDoubleQuote matchgroup=shOperator start=+"+ skip=+\\\\\|\\.+ end=+"+	contains=@shDblQuoteList,shStringSpecial	skipwhite skipnl nextgroup=shCaseBar	contained
 syn region  shCaseCommandSub  start=+`+ skip=+\\\\\|\\.+ end=+`+		contains=@shCommandSubList1		skipwhite skipnl nextgroup=shCaseBar	contained

@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.1b.  Last change: 2002 Mar 02
+*eval.txt*      For Vim version 6.1.  Last change: 2002 Mar 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -2042,9 +2042,9 @@ searchpair({start}, {middle}, {end} [, {flags} [, {skip}]])
 
 		{flags} are used like with |search()|.  Additionally:
 		'n'	do Not move the cursor
-		'r'	repeat until no more matches found; will find the
+		'r'	Repeat until no more matches found; will find the
 			outer pair
-		'm'	return number of matches instead of line number with
+		'm'	return number of Matches instead of line number with
 			the match; will only be > 1 when 'r' is used.
 
 		When a match for {start}, {middle} or {end} is found, the
@@ -2299,9 +2299,8 @@ system({expr})	Get the output of the shell command {expr}.  Note: newlines
 		To make the result more system-independent, the shell output
 		is filtered to replace <CR> with <NL> for Macintosh, and
 		<CR><NL> with <NL> for DOS-like systems.
-		The command executed is build using several options:
-
-		'shell' 'shellcmdflag' 'shellxquote' {expr} 'shellredir' {tmp} 'shellxquote'
+		The command executed is constructed using several options:
+	'shell' 'shellcmdflag' 'shellxquote' {expr} 'shellredir' {tmp} 'shellxquote'
 		({tmp} is an automatically generated file name).
 		For Unix and OS/2 braces are put around {expr} to allow for
 		concatenated commands.

@@ -2865,16 +2865,16 @@ current_word(oap, count, include, bigword)
  */
     int
 current_sent(oap, count, include)
-    oparg_T   *oap;
-    long    count;
-    int	    include;
+    oparg_T	*oap;
+    long	count;
+    int		include;
 {
-    pos_T    start_pos;
-    pos_T    pos;
-    int	    start_blank;
-    int	    c;
-    int	    at_start_sent;
-    long    ncount;
+    pos_T	start_pos;
+    pos_T	pos;
+    int		start_blank;
+    int		c;
+    int		at_start_sent;
+    long	ncount;
 
     start_pos = curwin->w_cursor;
     pos = start_pos;

@@ -443,6 +443,7 @@ SOURCE=.\if_ole.idl
 # Begin Custom Build
 
 "$(INTDIR)\if_ole.h" : $(SOURCE) "$(INTDIR)"
+	if exist .\if_ole.h del .\if_ole.h
 	midl /out .\oleRel /iid iid_ole.c /tlb vim.tlb /proxy nul /header if_ole.h .\if_ole.idl
 
 # End Custom Build
@@ -453,6 +454,7 @@ SOURCE=.\if_ole.idl
 # Begin Custom Build
 
 "$(INTDIR)\if_ole.h" : $(SOURCE) "$(INTDIR)"
+	if exist .\if_ole.h del .\if_ole.h
 	midl /out .\oleDbg /iid iid_ole.c /tlb vim.tlb /proxy nul /header if_ole.h .\if_ole.idl
 
 # End Custom Build

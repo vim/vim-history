@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.1b.  Last change: 2002 Feb 24
+*syntax.txt*    For Vim version 6.1.  Last change: 2002 Mar 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -563,6 +563,7 @@ c_comment_strings	strings and numbers inside a comment
 c_space_errors		trailing white space and spaces before a <Tab>
 c_no_trail_space_error	 ... but no trailing spaces
 c_no_tab_space_error	 ... but no spaces before a <Tab>
+c_no_bracket_error	don't highlight {}; inside [] as errors
 c_no_ansi		don't do standard ANSI types and constants
 c_ansi_typedefs		 ... but do standard ANSI types
 c_ansi_constants	 ... but do standard ANSI constants
@@ -1431,32 +1432,23 @@ PHP3 and PHP4		*php.vim* *php3.vim* *php-syntax* *php3-syntax*
 [note: previously this was called "php3", but since it now also supports php4
 it has been renamed to "php"]
 
-There are the following options to the php syntax highlighting.
+There are the following options for the php syntax highlighting.
 
-If you like SQL syntax hightligthing inside Strings: >
+If you like SQL syntax hightlighting inside Strings: >
 
   let php_sql_query = 1
 
-For highligthing the Baselib methods: >
+For highlighting the Baselib methods: >
 
   let php_baselib = 1
 
-Enable HTML syntax highligthing inside strings: >
+Enable HTML syntax highlighting inside strings: >
 
   let php_htmlInStrings = 1
-
-For syncing minlines is being set default to 100. If you
-prefer another value, please make use of something like: >
-
-  let php_minlines = 200
 
 Using the old colorstyle: >
 
   let php_oldStyle = 1
-
-Enable parent error highlighting: >
-
-  let_parentError = 1
 
 Enable highlighting ASP-style short tags: >
 
@@ -1466,8 +1458,31 @@ Disable short tags: >
 
   let php_noShortTags = 1
 
+For highlighting parent error ] or ): >
 
-PPWIZARD (preprocessor for HTML and OS/2 INF files) *ppwiz.vim* *ppwiz-syntax*
+  let php_parent_error_close = 1
+
+For skipping an php end tag, if there exists an open ( or [ without a closing
+one: >
+
+  let php_parent_error_open = 1
+
+Enable folding for classes and functions: >
+
+  let php_folding = 1
+
+Selecting syncing method: >
+
+  let php_sync_method = x
+
+x = -1 to sync by search (default),
+x > 0 to sync at least x lines backwards,
+x = 0 to sync from start.
+
+
+PPWIZARD					*ppwiz.vim* *ppwiz-syntax*
+
+PPWizard is a preprocessor for HTML and OS/2 INF files
 
 This syntax file has the options:
 
@@ -1858,6 +1873,22 @@ For syncing, minlines defaults to 100.  If you prefer another value, you can
 set "tf_minlines" to the value you desire.  Example: >
 
 	:let tf_minlines = your choice
+
+
+XF86CONFIG                              *xf86conf.vim* *xf86conf-syntax*
+
+The syntax of XF86Config file differs in XFree86 v3.x and v4.x.  Both
+variants are supported.  Automatic detection is used, but is far from perfect.
+You may need to specify the version manually.  Set the variable
+xf86conf_xfree86_version to 3 or 4 according to your XFree86 version in
+your .vimrc.  Example: >
+        :let xf86conf_xfree86_version=3
+When using a mix of versions, set the b:xf86conf_xfree86_version variable.
+
+Note that spaces and underscores in option names are not supported.  Use
+"SyncOnGreen" instead of "__s yn con gr_e_e_n" if you want the option name
+highlighted.
+
 
 XML						*xml.vim* *xml-syntax*
 

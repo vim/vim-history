@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.1b.  Last change: 2002 Mar 10
+*todo.txt*      For Vim version 6.1.  Last change: 2002 Mar 22
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -99,10 +99,13 @@ GTK+ GUI known bugs:
     Without Gnome it is OK.
     Not all Gnome arguments get to gnome_init().
 9   When logging out from KDE, Vim is not told to save its files.  Catching
-    the WM_SAVE_YOURSELF event doesn't work.  Neil Bird has a patch for this
-    that uses gdk_add_client_message_filter(), but it also doesn't work.
+    the WM_SAVE_YOURSELF event doesn't work.  The code that uses
+    gdk_add_client_message_filter() also doesn't work.
 9   When selecting a font from the font selector with an embedded space it
     cannot be found. (Tsirkin)
+9   When menus are disabled, 'm' removed from 'guioptions', Alt-F still pops
+    up the File menu and gives a warning for a NULL pointer if the menu was
+    never displayed.
 8   When a font is not fixed width, the message "not fixed-width" disappears
     immediately. (Tsirkin)
 9   Can't paste a Visual selection from GTK-gvim to vim in xterm or Motif gvim
@@ -120,14 +123,21 @@ GTK+ GUI known bugs:
 
 
 Win32 GUI known bugs:
-6   Win32: With a vertical split and using ":only" has one highlighted char.
-    (Lipelis)
-7   Win32: When clicking on the gvim title bar produces a file-changed dialog,
-    after clicking on a button in that dialog the gvim window follows the
-    mouse.  The button-up event is lost.  Only with MS-Windows 98?
+6   Win32 GUI: With "-u NONE -U NONE" and doing "CTRL-W v" "CTRL-W o", the ":"
+    of ":only" is highlighted like the cursor.  (Lipelis)
+8   Win32: When clicking on the gvim title bar, which gives it focus, produces
+    a file-changed dialog, after clicking on a button in that dialog the gvim
+    window follows the mouse.  The button-up event is lost.  Only with
+    MS-Windows 98?
+    Try this: ":set sw ts", get enter-prompt, then change the file in a
+    console, go back to Vim and click "reload" in the dialog for the changed
+    file: Window moves with the cursor!
+    Put focus event in input buffer and let generic Vim code handle it?
+8   When activating the Vim window with mouse click, don't move cursor to
+    mouse position.  Catch WM_MOUSEACTIVATE. (Luevelsmeyer)
 9   The print dialog uses a font which doesn't display multi-byte messages.
     Include patch from Vipin Aravind?  Update from Yasuhiro Matsumoto.
-7   Win32: When mouse is hidden and in the toolbar, moving it won't make it
+8   Win32: When mouse is hidden and in the toolbar, moving it won't make it
     appear. (Sami Salonen)
 8   Windows NT: writing to aux.* makes Vim hang. (Acevedo)
 8   When using two monitors, the code that checks/fixes the window size and
@@ -137,14 +147,9 @@ Win32 GUI known bugs:
     comes available. (Poucet)  It works OK on Win 98 but doesn't work on Win
     NT 4.0.  Leaves a grey area where the scrollbar was.  ":set go+=r" also
     doesn't work properly.
-8   When using system() that changes the current file, a focus event causes
-    the "file changed outside of Vim" dialog, while this doesn't happen for
-    Unix.  Ignore focus events while system() is busy?
 8   When Vim is minimized and when maximizing it a file-changed dialog pops
     up, Vim isn't maximized.  It should be done before the dialog, so that it
     appears in the right position. (Webb)
-8   When activating window with mouse click, don't move cursor to mouse click.
-    Catch WM_MOUSEACTIVATE. (Luevelsmeyer)
 9   When selecting at the more-prompt or hit-enter-prompt, the right mouse
     button doesn't give popup menu.
     At the hit-enter prompt CTRL-Y doesn't work to copy the modeless
@@ -155,10 +160,6 @@ Win32 GUI known bugs:
 9   When there are more than 32767 lines, the scrollbar has a roundoff error.
     Clicking the up or down error scrolls two lines or more.  Looks like there
     is an extra event that reports the new position of the scrollbar.
-9   When file modified outside of Vim and Vim gets focus, redraw is wrong.
-    Put focus event in input buffer and let generic Vim code handle it.
-    Try this: ":set sw ts", get enter-prompt, then change the file and click
-    "reload" in the dialog for the changed file: Window moves with the cursor!
 8   When 'grepprg' doesn't execute, the error only flashes by, the
     user can hardly see what is wrong. (Moore)
     Could use vimrun with an "-nowait" argument to only wait when an error
@@ -171,11 +172,11 @@ Win32 GUI known bugs:
     Use a scrollable window.
 7   Add an option to add one pixel column to the character width?  Lucida
     Console italic is wider than the normal font ("d" overlaps with next char).
+    Opposite of 'linespace': 'columnspace'.
 7   At the hit-enter prompt scrolling now no longer works.  Need to use the
     keyboard to get around this.  Pretend <CR> was hit when the user tries to
-    scroll?
-7   'mousefocus' is disabled until the next mouse click, when trying to exit
-    by hitting the X in the title bar. (Webb)
+    scroll?  Need to be able to get out of hit-enter prompt with the mouse
+    anyway.
 7   Scrollbar width doesn't change when selecting other windows appearance.
     Also background color of Toolbar and rectangle below vert. scrollbar.
 7   "!start /min cmd" should run in a minimized window, instead of using
@@ -189,10 +190,10 @@ Win32 GUI known bugs:
 7   When scrolling, and a background color is dithered, the dither pattern
     doesn't always join correctly between the scolled area and the new drawn
     area (Koloseike).
-8   Tear-off menu causes a crash when it contains many items (>100).
-    (Pedro Gomes)  Probably because DLG_ALLOC_SIZE is a fixed number.
-6   When Vim is minimized and has a changed file, closing Vim makes the dialog
-    appear in the left-upper corner of the screen.  Should be in the middle.
+8   When gui_init_font() is called with "*", p_guifont is freed while it might
+    still be used somewhere.  This is too tricky, do the font selection first,
+    then set the new font by name (requires putting all logfont parameters in
+    the font name).
 
 
 Athena and Motif:
@@ -467,6 +468,17 @@ Macintosh:
 
 
 "Small" problems:
+9   The argument <f-args> of a user command doesn't handle backslashes
+    properly. "Cmd \ e" is one argument, "Cmd \\ e" still is one argument.
+    "Cmd \  e" is two arguments, first one ending in space. (Kontra Gergely)
+8   The Japanese message translations for MS-Windows are called ja.sjis.po,
+    but they use encoding cp932.  Rename the file and check that it still
+    works.
+9   When a syntax region does not use "keepend" and a contained item does use
+    "extend", this makes the outer region stop at the end of the contained
+    region. (Lutz Eymers)
+8   A very long message in confirm() can't be quit.  Make this possible with
+    CTRL-C.
 8   When the clipboard isn't supported: ":yank*" gives a confusing error
     message.  Specifically mention that the register name is invalid.
 8   "gf" always excludes trailing punctuation characters. file_name_in_line()
@@ -656,33 +668,13 @@ Macintosh:
 
 
 I can't reproduce these (if you can, let me know how!):
-9   NT 4: writing a file makes it disappear, reappear, disappear... happens
-    for file "kandis~1.v30".  Same for backup file. (Andre Braun)
--   With backupdir=~/tmp,/tmp nowritebackup nobackup patchmode=.smr and the
-    patchmode file exists, backup files in the tmp directory are left lying
-    around - they should be deleted! (Riehm)
+9   NT 4.0 on NTFS file system: Editing ".bashrc" (drag and drop), file
+    disappears.  Editing ".xyz" is OK.  Also, drag&drop only works for three
+    files. (McCollister)
 9   Crash when changing fonts in Athena (Hiebert).  gui_mch_set_scrollbar_pos
     gets an "sb" argument that points to all zero entries...?
-9   Crash in Motif GUI, when pasting text with middle mouse button while in
-    Insert mode.  SunOS 4.1.3 only? (Janssen).
 8   Motif: Tear-off menu item crashes Vim on some machines.  (Netherton)  It
     works fine for me, maybe it's a Motif problem.
--   On Diamond Viper 132x43 mode crash on exit (John Lange)
-9   NT 4.0: Editing ".bashrc" (drag and drop), file disappears.
-    Editing ".xyz" is OK. (McCollister)
-8   Win32 GUI: NT: When regaining focus at the more prompt, there is an extra
-    newline. (Webb)
-8   Win32 GUI: Writable File in read-only dir can be deleted but not written?
-    (Canup)
-9   GUI: Between version 5.0h and 5.0i the Home and End keys stopped working
-    for Micheal Schulz (Linux and AIX).
-9   Win32 console: <M-S-Left> causes a crash. (Geddes)
-9   In MSDOS version(s): typing ESC three or four times crashes Vim, when
-    'visualbell' is set (Kielhorn).
-
-
-[These have been reported for version 3.0, they may not appear in this version]
--   MSDOS: After writing on a network the 'w' bit for others is set.
 
 
 Problems that will (probably) not be solved:
@@ -754,6 +746,8 @@ Problems that will (probably) not be solved:
     termresponse is received.  Since the number of colors changes, the
     highlighting needs to be initialized again.  This may cause color defined
     in the vimrc file to be lost.
+-   On Windows NT 4.0 the number of files passed to Vim with drag&drop and
+    "Edit with Vim" is limited.  The maximum command line length is 255 chars.
 
 ---------------------  extensions and improvements ----------------------
 						    *extensions-improvements*
@@ -836,10 +830,14 @@ User Friendlier:
     fcntl().  This patch has advisory file locking while reading/writing the
     file: ~/vim/patches/kahn_file_locking .
 8   make a vimtutor script for Amiga and other systems.
+7   Add the arguments for configure to the ":version" output?
 
 
 Diff mode:
 8   Use diff mode to show the changes made in a buffer (compared to the file).
+7   Add cursor-binding: when moving the cursor in one diff'ed buffer, also
+    move it in other diff'ed buffers, so that CTRL-W commands go to the same
+    location.
 
 
 Folding:
@@ -873,6 +871,9 @@ Folding:
 
 
 Multi-byte characters:
+8   Add configure option to be able to disable using the iconv library. (Udo
+    Schweigert)
+8   Add patch from Muraoka Taro (Mar 16) to support input method on Mac?
 9   'aleph' should be set to 1488 for Unicode. (Zvi Har'El)
 8   Should add test for using various commands with multi-byte characters.
 -   Include flipcase patch: ~/vim/patches/wall.flipcase2 ?  Make it work for
@@ -886,6 +887,7 @@ Multi-byte characters:
     And there should be a way to ignore composing characters (e.g., for
     Hebrew).  And a way to consider combined characters equal to the
     decomposed form.
+8   Support four composing characters, needed for Hebrew. (Ron Aaron)
 8   Some UTF-8 have an ambiguous width (single or double).  Should inspect the
     font to find out what will be displayed. (Long)
 8   Should have a way to match a base character with arbitrary composing
@@ -901,6 +903,8 @@ Multi-byte characters:
     fontselector somehow.
 -   GTK and Win32: make it possible to set the font for the menu to make it
     possible to have 'encoding' different from the current locale.
+8   GTK: Include patch from Yasuhiro Matsumoto to change XIMPreeditState
+    without imactivatekey (2002 Mar 13).
 -   dbcs_class() only works for Japanese and Korean.  Implement this for
     other encodings.  The "euc-jp" and "euc-kr" choices might be wrong.
 -   Find some way to automatically select the right GUI font or fontset,
@@ -940,6 +944,8 @@ Printing:
 
 
 Syntax highlighting:
+8   C syntax: Don't highlight {} as errors inside () when used like this:
+    "({ something })", often used in GCC code.
 8   When editing a new file without a name and giving it a name (by writing
     it) and 'filetype' is not set, detect the filetype.  Avoid doing it for
     ":wq file".
@@ -1119,6 +1125,8 @@ Built-in script language:
 8   The input() function should not read mapped characters, but always get
     characters from the user (or a script).  Need to change vgetorpeek() to
     ignore mapped characters.
+7   Add "n" flag to search() function, just like searchpair(). (Alexey
+    Marinichev)
 8   Add ":n" to fnamemodify(): normalize path, remove "../" when possible.
     Aric Blumer has a patch for this.
 7   Add argument to winwidth() to subtract the space taken by 'foldcolumn',
@@ -1410,7 +1418,7 @@ Autoconf:
 Perl interface:
 8   Rename typemap file to something else?
 7   Add patch from Benoit Cerrina to integrate Vim and Perl functions better.
-    Now also works for Ruby (2001 Nov 10).
+    Now also works for Ruby (2001 Nov 10) (also at vim-online).
 7   Make buffers accessed as Perl arrays. (Clark)
 7   Make it possible to compile with non-ANSI C?
 6   Tcl/Tk has the "load" command: load a shared library (.so or .dll).
@@ -1481,6 +1489,8 @@ Win32 GUI:
 7   The Python interface only works with one version of Python, selected at
     compile time.  Can this be made to work with version 2.1 and 2.2
     dynamically?
+7   GvimExt: when there are several existing Vims, move the list to a submenu.
+    (Mike McCollister)
 8   Add font argument to set the lfCharSet. (Bobcik)
 8   Somehow automatically detect the system language and set $LANG, so that
     gettext and menus work.
@@ -2178,6 +2188,8 @@ Searching:
 8   Flags that apply to the whole pattern.
     This works for all places where a regexp is used.
     Add "\q" to not store this pattern as the last search pattern?
+8   Add an argument after ":s/pat/str/" for a range of matches.  For example,
+    ":s/pat/str/#3-4" to replace only the third and fourth "pat" in a line.
 8   Add an option not to use 'hlsearch' highlighting for ":s" and ":g"
     commands. (Kahn)  It would work like ":noh" is used after that command.
     Also: An extra flag to do this once, and a flag to keep the existing
@@ -2562,6 +2574,8 @@ Registers:
 
 
 Various improvements:
+8   Add a command to revert to the saved version of file; undo or redo until
+    all changes are gone.
 8   Make 'statusline' local, so that each window can have a different value.
     But should it also be local to a buffer? (Yegappan Lakshmanan has a patch,
     2002 feb 15)
@@ -2589,6 +2603,8 @@ Various improvements:
     94).  E.g., Control adds ";5" in "<Esc>[20;5~".  Find a generic way to
     prepend a modifier in console mode, to avoid having to specify each
     individual modified key.
+    Steve Wall has a patch (2002 Mar 12) for adding function keys up to 37,
+    with modifiers.
 7   Xterm sends <Esc>O3F for <M-End>.  Similarly for other <M-Home>, <M-Left>,
     etc.  Combinations of Alt, Ctrl and Shift are also possible.  Recognize
     these to avoid inserting the raw byte sequence, handle like the key
@@ -2816,10 +2832,13 @@ Various improvements:
     executed by it.  Also to make "." redo the whole mapping.  Basically: redo
     the last TYPED command.
 -   Support URL links for ^X^F in Insert mode, like for "gf".
--   Add 'wwwpath', used like 'path' for when "gf" used on an URL?
 -   Support %name% expansion for "gf" on Windows.
 -   Make "gf" work on "file://c:/path/name".  "file:/c:/" and "file:///c:/"
     should also work?
+-   Add 'urlpath', used like 'path' for when "gf" used on an URL?
+8   When using "gf" on an absolute file name, while editing a remote file
+    (starts with scp:// or http://) should prepend the method and machine
+    name.
 -   When finding an URL or file name, and it doesn't exist, try removing a
     trailing '.'.
 -   Add ":path" command modifier.  Should work for every command that takes a

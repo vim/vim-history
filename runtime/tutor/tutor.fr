@@ -1,5 +1,5 @@
 ===============================================================================
-= B i e n v e n u e  dans le  T u t o r i e l  de  V I M  -  Version 1.4.fr.2 =
+= B i e n v e n u e  dans le  T u t o r i e l  de  V I M  -  Version 1.5.fr.1 =
 ===============================================================================
 
      Vim est un éditeur très puissant qui a trop de commandes pour pouvoir
@@ -545,7 +545,7 @@ Note: Cette fonctionnalité est très utile lors du débogage d'un programme qui
 ---> Notez que si vous quittez Vim et y retournez avec le fichier TEST,
      celui-ci sera une copie exacte du cours au moment où vous l'avez sauvé.
 
-  5. Maintenant, effacez le fichier en tapant  :!delete TEST  ou  :!rm TEST .
+  5. Maintenant, effacez le fichier en tapant  :!del TEST  ou  :!rm TEST .
 
 
 
@@ -603,7 +603,7 @@ NOTE:  Le fichier que vous récupérez est placé là où se trouve le curseur.
 
       Quelques exemples pratiques:
 	  :!dir		      affiche le contenu du dossier courant.
-	  :!delete FICHIER    efface FICHIER.
+	  :!del FICHIER       efface FICHIER.
       Les mêmes exemples, pour les systèmes Unix:
 	  :!ls		      affiche le contenu du dossier courant.
 	  :!rm FICHIER        efface FICHIER.
@@ -736,7 +736,7 @@ Note: Ceci évite de taper  i , le dernier caractère, le texte à insérer,
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		     Leçon 7 : ACCÉDER À L'AIDE EN LIGNE
 
-		  ** Utilisez le système d'aide en ligne. **
+		  ** Utiliser le système d'aide en ligne. **
 
   Vim a un système complet d'aide en ligne.  Pour y accéder, essayez l'une de
   ces trois méthodes:
@@ -747,13 +747,36 @@ Note: Ceci évite de taper  i , le dernier caractère, le texte à insérer,
   Tapez  :q <Entrée>  pour fermer la fenêtre d'aide.
 
   Vous pouvez accéder à l'aide sur à peu près n'importe quel sujet en donnant
-  des arguments à la commande  :help . Essayez:
+  des arguments à la commande  :help . Essayez par exemple (n'oubliez pas
+  d'appuyer sur <Entrée>):
 
-  :help w <Entrée>
-  :help c_<T <Entrée>
-  :help insert-index <Entrée>
+	:help w
+	:help c_<T
+	:help insert-index
+	:help user-manual
 
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		    Leçon 8 : CRÉER UN SCRIPT DE DÉMARRAGE
+
+		  ** Activer les fonctionnalités de Vim. **
+
+  Vim a beaucoup plus de fonctionnalités que Vi, mais la plupart de celles-ci
+  sont désactivées par défaut.  Pour commencer à les utiliser, vous devez
+  créer un fichier "vimrc".
+
+  1. Commencez à éditer le fichier "vimrc". Ceci dépend de votre système:
+	:edit ~/.vimrc			pour Unix
+	:edit $VIM/_vimrc		pour MS-Windows
+
+  2. Intégrez maintenant le texte du fichier "vimrc" d'exemple:
+	:read $VIMRUNTIME/vimrc_example.vim
+
+  3. Enregistrez le fichier avec:
+	:write
+
+  La prochaine fois que vous démarrerez Vim, le surlignage syntactique sera
+  activé. Vous pouvez ajouter tous vos réglages préférés dans ce fichier.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -761,10 +784,11 @@ Note: Ceci évite de taper  i , le dernier caractère, le texte à insérer,
   Ceci conclut le Tutoriel Vim.  Le but était de vous donner un bref aperçu de
   l'éditeur Vim, juste assez pour vous permettre d'utiliser l'éditeur
   relativement facilement.  Il est loin d'être complet, vu que Vim a beaucoup
-  beaucoup plus de commandes.
+  beaucoup plus de commandes.  Un Manuel de l'utilisateur est disponible en
+  anglais:  :help user-manual .
 
   Pour continuer à découvrir et à apprendre Vim, il existe un livre traduit en
-  Français. Il parle plus de Vi que de Vim, mais pourra vous être utile.
+  français. Il parle plus de Vi que de Vim, mais pourra vous être utile.
 	L'éditeur Vi - Collection Précis et concis - par Arnold Robbins
 	Éditeur: O'Reilly France
 	ISBN: 2-84177-102-4
@@ -775,12 +799,11 @@ Note: Ceci évite de taper  i , le dernier caractère, le texte à insérer,
 
   Ce tutoriel a été écrit par Michael C. Pierce et Robert K. Ware de l'École
   des Mines du Colorado et reprend des idées fournies par Charles Smith,
-  Universté d'État du Colorado.
-  E-mail: bware@mines.colorado.edu.
+  Universté d'État du Colorado.  E-mail: bware@mines.colorado.edu.
 
   Modifié pour Vim par Bram Moolenar.
 
   Traduit en Français par Adrien Beau, en avril 2001.
   E-mail:	version.francaise@free.fr
-  Last Change:	2002 Mar 04
+  Last Change:	2002 Mar 16
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

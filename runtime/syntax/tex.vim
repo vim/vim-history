@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:    TeX
 " Maintainer:  Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change: Dec 11, 2001
-" Version:     6.0-15
+" Last Change: Mar 11, 2002
+" Version:     6.1-1
 " Latest:	http://www.erols.com/astronaut/vim/index.html#vimlinks_syntax
 "
 " Notes:
@@ -137,8 +137,10 @@ syn match texTypeStyle	"\\textsl\>"
 syn match texTypeStyle	"\\texttt\>"
 syn match texTypeStyle	"\\textup\>"
 
+syn match texTypeStyle	"\\mathbb\>"
 syn match texTypeStyle	"\\mathbf\>"
 syn match texTypeStyle	"\\mathcal\>"
+syn match texTypeStyle	"\\mathfrak\>"
 syn match texTypeStyle	"\\mathit\>"
 syn match texTypeStyle	"\\mathnormal\>"
 syn match texTypeStyle	"\\mathrm\>"

@@ -984,40 +984,41 @@ an 50.10.510 &Syntax.AB.Blank :cal SetSyn("blank")<CR>
 an 50.20.100 &Syntax.CD.C :cal SetSyn("c")<CR>
 an 50.20.110 &Syntax.CD.C++ :cal SetSyn("cpp")<CR>
 an 50.20.120 &Syntax.CD.C# :cal SetSyn("cs")<CR>
-an 50.20.130 &Syntax.CD.Crontab :cal SetSyn("crontab")<CR>
-an 50.20.140 &Syntax.CD.Cyn++ :cal SetSyn("cynpp")<CR>
-an 50.20.150 &Syntax.CD.Cynlib :cal SetSyn("cynlib")<CR>
-an 50.20.160 &Syntax.CD.Cascading\ Style\ Sheets :cal SetSyn("css")<CR>
-an 50.20.170 &Syntax.CD.Century\ Term :cal SetSyn("cterm")<CR>
-an 50.20.180 &Syntax.CD.CHILL :cal SetSyn("ch")<CR>
-an 50.20.190 &Syntax.CD.ChangeLog :cal SetSyn("changelog")<CR>
-an 50.20.200 &Syntax.CD.Clean :cal SetSyn("clean")<CR>
-an 50.20.210 &Syntax.CD.Clever :cal SetSyn("cl")<CR>
-an 50.20.220 &Syntax.CD.Clipper :cal SetSyn("clipper")<CR>
-an 50.20.230 &Syntax.CD.Cold\ Fusion :cal SetSyn("cf")<CR>
-an 50.20.240 &Syntax.CD.Config.Cfg\ Config\ file :cal SetSyn("cfg")<CR>
-an 50.20.250 &Syntax.CD.Config.Generic Config\ file :cal SetSyn("conf")<CR>
-an 50.20.260 &Syntax.CD.Config.Configure\.in :cal SetSyn("config")<CR>
-an 50.20.270 &Syntax.CD.Ctrl-H :cal SetSyn("ctrlh")<CR>
-an 50.20.280 &Syntax.CD.Cobol :cal SetSyn("cobol")<CR>
-an 50.20.290 &Syntax.CD.CSP :cal SetSyn("csp")<CR>
-an 50.20.300 &Syntax.CD.CUPL.CUPL :cal SetSyn("cupl")<CR>
-an 50.20.310 &Syntax.CD.CUPL.Simulation :cal SetSyn("cuplsim")<CR>
-an 50.20.320 &Syntax.CD.CVS\ commit :cal SetSyn("cvs")<CR>
-an 50.20.340 &Syntax.CD.Debian.Debian\ ChangeLog :cal SetSyn("debchangelog")<CR>
-an 50.20.350 &Syntax.CD.Debian.Debian\ Control :cal SetSyn("debcontrol")<CR>
-an 50.20.360 &Syntax.CD.Diff :cal SetSyn("diff")<CR>
-an 50.20.370 &Syntax.CD.Digital\ Command\ Lang :cal SetSyn("dcl")<CR>
-an 50.20.380 &Syntax.CD.DNS/BIND\ zone :cal SetSyn("dns")<CR>
-an 50.20.390 &Syntax.CD.DocBook :cal SetSyn("docbk")<CR>
-an 50.20.400 &Syntax.CD.Dot :cal SetSyn("dot")<CR>
-an 50.20.410 &Syntax.CD.Dracula :cal SetSyn("dracula")<CR>
-an 50.20.420 &Syntax.CD.DSSSL :cal SetSyn("dsl")<CR>
-an 50.20.430 &Syntax.CD.DTD :cal SetSyn("dtd")<CR>
-an 50.20.440 &Syntax.CD.DTML\ (Zope) :cal SetSyn("dtml")<CR>
-an 50.20.450 &Syntax.CD.Dylan.Dylan :cal SetSyn("dylan")<CR>
-an 50.20.460 &Syntax.CD.Dylan.Dylan\ interface :cal SetSyn("dylanintr")<CR>
-an 50.20.470 &Syntax.CD.Dylan.Dylan\ lid :cal SetSyn("dylanlid")<CR>
+an 50.20.130 &Syntax.CD.CDL :cal SetSyn("cdl")<CR>
+an 50.20.140 &Syntax.CD.Crontab :cal SetSyn("crontab")<CR>
+an 50.20.150 &Syntax.CD.Cyn++ :cal SetSyn("cynpp")<CR>
+an 50.20.160 &Syntax.CD.Cynlib :cal SetSyn("cynlib")<CR>
+an 50.20.170 &Syntax.CD.Cascading\ Style\ Sheets :cal SetSyn("css")<CR>
+an 50.20.180 &Syntax.CD.Century\ Term :cal SetSyn("cterm")<CR>
+an 50.20.190 &Syntax.CD.CHILL :cal SetSyn("ch")<CR>
+an 50.20.200 &Syntax.CD.ChangeLog :cal SetSyn("changelog")<CR>
+an 50.20.210 &Syntax.CD.Clean :cal SetSyn("clean")<CR>
+an 50.20.220 &Syntax.CD.Clever :cal SetSyn("cl")<CR>
+an 50.20.230 &Syntax.CD.Clipper :cal SetSyn("clipper")<CR>
+an 50.20.240 &Syntax.CD.Cold\ Fusion :cal SetSyn("cf")<CR>
+an 50.20.250 &Syntax.CD.Config.Cfg\ Config\ file :cal SetSyn("cfg")<CR>
+an 50.20.260 &Syntax.CD.Config.Generic Config\ file :cal SetSyn("conf")<CR>
+an 50.20.270 &Syntax.CD.Config.Configure\.in :cal SetSyn("config")<CR>
+an 50.20.280 &Syntax.CD.Ctrl-H :cal SetSyn("ctrlh")<CR>
+an 50.20.290 &Syntax.CD.Cobol :cal SetSyn("cobol")<CR>
+an 50.20.300 &Syntax.CD.CSP :cal SetSyn("csp")<CR>
+an 50.20.310 &Syntax.CD.CUPL.CUPL :cal SetSyn("cupl")<CR>
+an 50.20.320 &Syntax.CD.CUPL.Simulation :cal SetSyn("cuplsim")<CR>
+an 50.20.330 &Syntax.CD.CVS\ commit :cal SetSyn("cvs")<CR>
+an 50.20.350 &Syntax.CD.Debian.Debian\ ChangeLog :cal SetSyn("debchangelog")<CR>
+an 50.20.360 &Syntax.CD.Debian.Debian\ Control :cal SetSyn("debcontrol")<CR>
+an 50.20.370 &Syntax.CD.Diff :cal SetSyn("diff")<CR>
+an 50.20.380 &Syntax.CD.Digital\ Command\ Lang :cal SetSyn("dcl")<CR>
+an 50.20.390 &Syntax.CD.DNS/BIND\ zone :cal SetSyn("dns")<CR>
+an 50.20.400 &Syntax.CD.DocBook :cal SetSyn("docbk")<CR>
+an 50.20.410 &Syntax.CD.Dot :cal SetSyn("dot")<CR>
+an 50.20.420 &Syntax.CD.Dracula :cal SetSyn("dracula")<CR>
+an 50.20.430 &Syntax.CD.DSSSL :cal SetSyn("dsl")<CR>
+an 50.20.440 &Syntax.CD.DTD :cal SetSyn("dtd")<CR>
+an 50.20.450 &Syntax.CD.DTML\ (Zope) :cal SetSyn("dtml")<CR>
+an 50.20.460 &Syntax.CD.Dylan.Dylan :cal SetSyn("dylan")<CR>
+an 50.20.470 &Syntax.CD.Dylan.Dylan\ interface :cal SetSyn("dylanintr")<CR>
+an 50.20.480 &Syntax.CD.Dylan.Dylan\ lid :cal SetSyn("dylanlid")<CR>
 an 50.30.100 &Syntax.EFG.Eiffel :cal SetSyn("eiffel")<CR>
 an 50.30.110 &Syntax.EFG.Elm\ filter\ rules :cal SetSyn("elmfilt")<CR>
 an 50.30.120 &Syntax.EFG.Embedix\ Component\ Description :cal SetSyn("ecd")<CR>
@@ -1104,28 +1105,29 @@ an 50.60.130 &Syntax.Me-NO.Model :cal SetSyn("model")<CR>
 an 50.60.140 &Syntax.Me-NO.Modsim\ III :cal SetSyn("modsim3")<CR>
 an 50.60.150 &Syntax.Me-NO.Modula\ 2 :cal SetSyn("modula2")<CR>
 an 50.60.160 &Syntax.Me-NO.Modula\ 3 :cal SetSyn("modula3")<CR>
-an 50.60.170 &Syntax.Me-NO.MOO :cal SetSyn("moo")<CR>
-an 50.60.180 &Syntax.Me-NO.MS-DOS/Windows.4DOS\ \.bat\ file :cal SetSyn("btm")<CR>
-an 50.60.190 &Syntax.Me-NO.MS-DOS/Windows.\.bat\/\.cmd\ file :cal SetSyn("dosbatch")<CR>
-an 50.60.200 &Syntax.Me-NO.MS-DOS/Windows.\.ini\ file :cal SetSyn("dosini")<CR>
-an 50.60.210 &Syntax.Me-NO.MS-DOS/Windows.Module\ Definition :cal SetSyn("def")<CR>
-an 50.60.220 &Syntax.Me-NO.MS-DOS/Windows.Registry :cal SetSyn("registry")<CR>
-an 50.60.230 &Syntax.Me-NO.MS-DOS/Windows.Resource\ file :cal SetSyn("rc")<CR>
-an 50.60.240 &Syntax.Me-NO.Msql :cal SetSyn("msql")<CR>
-an 50.60.250 &Syntax.Me-NO.MUSHcode :cal SetSyn("mush")<CR>
-an 50.60.260 &Syntax.Me-NO.Muttrc :cal SetSyn("muttrc")<CR>
-an 50.60.280 &Syntax.Me-NO.Nastran\ input/DMAP :cal SetSyn("nastran")<CR>
-an 50.60.290 &Syntax.Me-NO.Natural :cal SetSyn("natural")<CR>
-an 50.60.300 &Syntax.Me-NO.Novell\ NCF\ batch :cal SetSyn("ncf")<CR>
-an 50.60.310 &Syntax.Me-NO.Not\ Quite\ C\ (LEGO) :cal SetSyn("nqc")<CR>
-an 50.60.320 &Syntax.Me-NO.Nroff :cal SetSyn("nroff")<CR>
-an 50.60.330 &Syntax.Me-NO.NSIS\ script :cal SetSyn("nsis")<CR>
-an 50.60.350 &Syntax.Me-NO.Objective\ C :cal SetSyn("objc")<CR>
-an 50.60.360 &Syntax.Me-NO.OCAML :cal SetSyn("ocaml")<CR>
-an 50.60.370 &Syntax.Me-NO.Omnimark :cal SetSyn("omnimark")<CR>
-an 50.60.380 &Syntax.Me-NO.OpenROAD :cal SetSyn("openroad")<CR>
-an 50.60.390 &Syntax.Me-NO.Open\ Psion\ Lang :cal SetSyn("opl")<CR>
-an 50.60.400 &Syntax.Me-NO.Oracle\ config :cal SetSyn("ora")<CR>
+an 50.60.170 &Syntax.Me-NO.Monk :cal SetSyn("monk")<CR>
+an 50.60.180 &Syntax.Me-NO.MOO :cal SetSyn("moo")<CR>
+an 50.60.190 &Syntax.Me-NO.MS-DOS/Windows.4DOS\ \.bat\ file :cal SetSyn("btm")<CR>
+an 50.60.200 &Syntax.Me-NO.MS-DOS/Windows.\.bat\/\.cmd\ file :cal SetSyn("dosbatch")<CR>
+an 50.60.210 &Syntax.Me-NO.MS-DOS/Windows.\.ini\ file :cal SetSyn("dosini")<CR>
+an 50.60.220 &Syntax.Me-NO.MS-DOS/Windows.Module\ Definition :cal SetSyn("def")<CR>
+an 50.60.230 &Syntax.Me-NO.MS-DOS/Windows.Registry :cal SetSyn("registry")<CR>
+an 50.60.240 &Syntax.Me-NO.MS-DOS/Windows.Resource\ file :cal SetSyn("rc")<CR>
+an 50.60.250 &Syntax.Me-NO.Msql :cal SetSyn("msql")<CR>
+an 50.60.260 &Syntax.Me-NO.MUSHcode :cal SetSyn("mush")<CR>
+an 50.60.270 &Syntax.Me-NO.Muttrc :cal SetSyn("muttrc")<CR>
+an 50.60.290 &Syntax.Me-NO.Nastran\ input/DMAP :cal SetSyn("nastran")<CR>
+an 50.60.300 &Syntax.Me-NO.Natural :cal SetSyn("natural")<CR>
+an 50.60.310 &Syntax.Me-NO.Novell\ NCF\ batch :cal SetSyn("ncf")<CR>
+an 50.60.320 &Syntax.Me-NO.Not\ Quite\ C\ (LEGO) :cal SetSyn("nqc")<CR>
+an 50.60.330 &Syntax.Me-NO.Nroff :cal SetSyn("nroff")<CR>
+an 50.60.340 &Syntax.Me-NO.NSIS\ script :cal SetSyn("nsis")<CR>
+an 50.60.360 &Syntax.Me-NO.Objective\ C :cal SetSyn("objc")<CR>
+an 50.60.370 &Syntax.Me-NO.OCAML :cal SetSyn("ocaml")<CR>
+an 50.60.380 &Syntax.Me-NO.Omnimark :cal SetSyn("omnimark")<CR>
+an 50.60.390 &Syntax.Me-NO.OpenROAD :cal SetSyn("openroad")<CR>
+an 50.60.400 &Syntax.Me-NO.Open\ Psion\ Lang :cal SetSyn("opl")<CR>
+an 50.60.410 &Syntax.Me-NO.Oracle\ config :cal SetSyn("ora")<CR>
 an 50.70.100 &Syntax.PQ.Palm\ resource\ compiler :cal SetSyn("pilrc")<CR>
 an 50.70.110 &Syntax.PQ.PApp :cal SetSyn("papp")<CR>
 an 50.70.120 &Syntax.PQ.Pascal :cal SetSyn("pascal")<CR>
@@ -1177,10 +1179,11 @@ an 50.80.310 &Syntax.R-Sg.Screen\ RC :cal SetSyn("screen")<CR>
 an 50.80.320 &Syntax.R-Sg.SDL :cal SetSyn("sdl")<CR>
 an 50.80.330 &Syntax.R-Sg.Sed :cal SetSyn("sed")<CR>
 an 50.80.340 &Syntax.R-Sg.Sendmail\.cf :cal SetSyn("sm")<CR>
-an 50.80.350 &Syntax.R-Sg.SGML.SGML\ catalog :cal SetSyn("catalog")<CR>
-an 50.80.360 &Syntax.R-Sg.SGML.SGML\ DTD :cal SetSyn("sgml")<CR>
-an 50.80.370 &Syntax.R-Sg.SGML.SGML\ Declaration :cal SetSyn("sgmldecl")<CR>
-an 50.80.380 &Syntax.R-Sg.SGML.SGML-linuxdoc :cal SetSyn("sgmllnx")<CR>
+an 50.80.350 &Syntax.R-Sg.Send-pr :cal SetSyn("sendpr")<CR>
+an 50.80.360 &Syntax.R-Sg.SGML.SGML\ catalog :cal SetSyn("catalog")<CR>
+an 50.80.370 &Syntax.R-Sg.SGML.SGML\ DTD :cal SetSyn("sgml")<CR>
+an 50.80.380 &Syntax.R-Sg.SGML.SGML\ Declaration :cal SetSyn("sgmldecl")<CR>
+an 50.80.390 &Syntax.R-Sg.SGML.SGML-linuxdoc :cal SetSyn("sgmllnx")<CR>
 an 50.90.100 &Syntax.Sh-S.Shell\ script.sh\ and\ ksh :cal SetSyn("sh")<CR>
 an 50.90.110 &Syntax.Sh-S.Shell\ script.csh :cal SetSyn("csh")<CR>
 an 50.90.120 &Syntax.Sh-S.Shell\ script.zsh :cal SetSyn("zsh")<CR>
@@ -1264,10 +1267,11 @@ an 50.110.270 &Syntax.WXYZ.X\ resources :cal SetSyn("xdefaults")<CR>
 an 50.110.280 &Syntax.WXYZ.Xmodmap :cal SetSyn("xmodmap")<CR>
 an 50.110.290 &Syntax.WXYZ.Xmath :cal SetSyn("xmath")<CR>
 an 50.110.300 &Syntax.WXYZ.XML :cal SetSyn("xml")<CR>
-an 50.110.310 &Syntax.WXYZ.Xslt :cal SetSyn("xslt")<CR>
-an 50.110.320 &Syntax.WXYZ.XXD\ hex\ dump :cal SetSyn("xxd")<CR>
-an 50.110.330 &Syntax.WXYZ.XFree86\ Config :cal SetSyn("xf86conf")<CR>
-an 50.110.350 &Syntax.WXYZ.Yacc :cal SetSyn("yacc")<CR>
+an 50.110.310 &Syntax.WXYZ.XML\ Schema\ (XSD) :cal SetSyn("xsd")<CR>
+an 50.110.320 &Syntax.WXYZ.Xslt :cal SetSyn("xslt")<CR>
+an 50.110.330 &Syntax.WXYZ.XXD\ hex\ dump :cal SetSyn("xxd")<CR>
+an 50.110.340 &Syntax.WXYZ.XFree86\ Config :cal SetSyn("xf86conf")<CR>
+an 50.110.360 &Syntax.WXYZ.Yacc :cal SetSyn("yacc")<CR>
 
 " The End Of The Syntax Menu
 

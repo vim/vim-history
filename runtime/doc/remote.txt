@@ -1,4 +1,4 @@
-*remote.txt*    For Vim version 6.1b.  Last change: 2002 Feb 24
+*remote.txt*    For Vim version 6.1.  Last change: 2002 Mar 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -39,7 +39,10 @@ The following command line arguments are available:
 				As --remote-wait, but don't complain if there
 				is no server.
 								*--servername*
-   --servername {name}		Send to or become the server {name}
+   --servername {name}		Become the server {name}.  When used together
+   				with one of the --remote commands: connect to
+				server {name} instead of the default (see
+				below).
 								*--remote-send*
    --remote-send {keys}		Send {keys} to server and exit.
 								*--remote-expr*
@@ -47,6 +50,26 @@ The following command line arguments are available:
 				print the result on stdout.
 								*--serverlist*
    --serverlist			Output a list of server names.
+
+
+Examples ~
+
+Edit "file.txt" in an already running GVIM server: >
+    gvim --remote file.txt
+
+Edit "file.txt" in an already running server called FOOBAR: >
+    gvim --servername FOOBAR --remote file.txt
+
+Edit "file.txt" in server "FILES" if it exists, become server "FILES"
+otherwise: >
+    gvim --servername FILES --remote-silent file.txt
+
+This doesn't work, all arguments after --remote will be used as file names: >
+    gvim --remote --servername FOOBAR file.txt
+
+Edit file "+foo" in a remote server (note the use of "./" to avoid the special
+meaning of the leading plus): >
+    vim --remote ./+foo
 
 
 SERVER NAME

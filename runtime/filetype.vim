@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2002 Mar 15
+" Last change:	2002 Mar 24
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -211,6 +211,9 @@ au BufNewFile,BufRead *.c			setf c
 
 " C#
 au BufNewFile,BufRead *.cs			setf cs
+
+" Comshare Dimension Definition Language
+au BufNewFile,BufRead *.cdl			setf cdl
 
 " Cyn++
 au BufNewFile,BufRead *.cyn			setf cynpp
@@ -662,7 +665,7 @@ au BufNewFile,BufRead .muttrc*,~/.mutt/muttrc*,Muttrc	setf muttrc
 "au BufNewFile,BufRead *.dat			setf nastran
 
 " Natural
-au BufNewFile,BufRead *.NS[CLMNPS]		setf natural
+au BufNewFile,BufRead *.NS[ACGLMNPS]		setf natural
 
 " Novell netware batch files
 au BufNewFile,BufRead *.ncf			setf ncf
@@ -1230,7 +1233,11 @@ au BufEnter *.xpm
 au BufEnter *.xpm2				setf xpm2
 
 " XFree86 config
-au BufNewFile,BufRead XF86Config		setf xf86conf
+au BufNewFile,BufRead XF86Config
+	\ if getline(1) =~ '\<XConfigurator\>' |
+	\   let b:xf86c_xfree86_version = 3 |
+	\ endif |
+	\ setf xf86conf
 
 " XS Perl extension interface language
 au BufNewFile,BufRead *.xs			setf xs
@@ -1338,7 +1345,13 @@ au BufNewFile,BufRead *vimrc*			setf vim
 au BufNewFile,BufRead Xresources*,*/app-defaults/*,*/Xresources/* setf xdefaults
 
 " XFree86 config
-au BufNewFile,BufRead XF86Config*		setf xf86conf
+au BufNewFile,BufRead XF86Config-4*
+	\ let b:xf86c_xfree86_version = 4 | setf xf86conf
+au BufNewFile,BufRead XF86Config*
+	\ if getline(1) =~ '\<XConfigurator\>' |
+	\   let b:xf86c_xfree86_version = 3 |
+	\ endif |
+	\ setf xf86conf
 
 " X11 xmodmap
 au BufNewFile,BufRead *xmodmap*			setf xmodmap

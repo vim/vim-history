@@ -1889,7 +1889,11 @@ main_loop(cmdwin)
 		check_timestamps(FALSE);
 	    if (need_wait_return)	/* if wait_return still needed ... */
 		wait_return(FALSE);	/* ... call it now */
-	    if (need_start_insertmode && goto_im())
+	    if (need_start_insertmode && goto_im()
+#ifdef FEAT_VISUAL
+		    && !VIsual_active
+#endif
+		    )
 	    {
 		need_start_insertmode = FALSE;
 		stuffReadbuff((char_u *)"i");	/* start insert mode next */

@@ -1,6 +1,6 @@
 " Script to define the syntax menu in menu.vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2002 Mar 04
+" Last Change:	2002 Mar 21
 
 " This is used by "make menu" in the src directory.
 edit <sfile>:p:h/menu.vim
@@ -93,6 +93,7 @@ SynMenu AB.Blank:blank
 SynMenu CD.C:c
 SynMenu CD.C++:cpp
 SynMenu CD.C#:cs
+SynMenu CD.CDL:cdl
 SynMenu CD.Crontab:crontab
 SynMenu CD.Cyn++:cynpp
 SynMenu CD.Cynlib:cynlib
@@ -217,6 +218,7 @@ SynMenu Me-NO.Model:model
 SynMenu Me-NO.Modsim\ III:modsim3
 SynMenu Me-NO.Modula\ 2:modula2
 SynMenu Me-NO.Modula\ 3:modula3
+SynMenu Me-NO.Monk:monk
 SynMenu Me-NO.MOO:moo
 SynMenu Me-NO.MS-DOS/Windows.4DOS\ \.bat\ file:btm
 SynMenu Me-NO.MS-DOS/Windows.\.bat\/\.cmd\ file:dosbatch
@@ -292,6 +294,7 @@ SynMenu R-Sg.Screen\ RC:screen
 SynMenu R-Sg.SDL:sdl
 SynMenu R-Sg.Sed:sed
 SynMenu R-Sg.Sendmail\.cf:sm
+SynMenu R-Sg.Send-pr:sendpr
 SynMenu R-Sg.SGML.SGML\ catalog:catalog
 SynMenu R-Sg.SGML.SGML\ DTD:sgml
 SynMenu R-Sg.SGML.SGML\ Declaration:sgmldecl
@@ -382,6 +385,7 @@ SynMenu WXYZ.X\ resources:xdefaults
 SynMenu WXYZ.Xmodmap:xmodmap
 SynMenu WXYZ.Xmath:xmath
 SynMenu WXYZ.XML:xml
+SynMenu WXYZ.XML\ Schema\ (XSD):xsd
 SynMenu WXYZ.Xslt:xslt
 SynMenu WXYZ.XXD\ hex\ dump:xxd
 SynMenu WXYZ.XFree86\ Config:xf86conf

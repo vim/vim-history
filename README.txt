@@ -1,4 +1,4 @@
-README.txt for version 6.1b of Vim: Vi IMproved.
+README.txt for version 6.1 of Vim: Vi IMproved.
 
 
 WHAT IS VIM

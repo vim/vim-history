@@ -46,11 +46,12 @@
 #if !defined(__MINGW32__) \
 	&& !defined(__CYGWIN__) \
 	&& (!defined(__BORLANDC__) || __BORLANDC__ >= 0x550) \
-	&& (!defined(_MSC_VER) || _MSC_VER > 1010)
+	&& (!defined(_MSC_VER) || _MSC_VER > 1020)
 /*
  * Access Control List (actually security info).
  * Mingw and Cygwin don't have the acl stuff.
  * Borland only in version 5.5 and later.
+ * MSVC in 5.0, not in 4.2, don't know about 4.3.
  */
 # define HAVE_ACL
 #endif

@@ -609,6 +609,12 @@ gui_init_font(font_list, fontset)
 	    {
 		/* Isolate one comma separated font name. */
 		(void)copy_option_part(&font_list, font_name, FONTLEN, ",");
+
+		/* Careful!!!  The Win32 version of gui_mch_init_font(), when
+		 * called with "*" will change p_guifont to the selected font
+		 * name, which frees the old value.  This makes font_list
+		 * invalid.  Thus when OK is returned here, font_list must no
+		 * longer be used! */
 		if (gui_mch_init_font(font_name, FALSE) == OK)
 		{
 #ifdef FEAT_MBYTE

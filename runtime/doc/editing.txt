@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.1b.  Last change: 2002 Mar 09
+*editing.txt*   For Vim version 6.1.  Last change: 2002 Mar 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -616,7 +616,9 @@ also makes a difference for executing external commands, e.g. ":!ls".
 			because its full path name is remembered.  Files from
 			the |arglist| may change though!
 			On MS-DOS this also changes the active drive.
-
+			To change to the directory of the current file: >
+				:cd %:h
+<
 							*:cd-* *E186*
 :cd -			Change to the previous current directory (before the
 			previous ":cd {path}" command). {not in Vi}

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Perl
 " Maintainer:	Nick Hibma <n_hibma@webweaving.org>
-" Last Change:	2002 Mar 03
+" Last Change:	2002 Mar 12
 " Location:	http://www.etla.net/~n_hibma/vim/syntax/perl.vim
 "
 " Please download most recent version first before mailing
@@ -388,7 +388,7 @@ if exists("perl_fold")
   syn region perlBEGINENDFold start="^\z(\s*\)\<\(BEGIN\|END\)\>.*[^};]$" end="^\z1}\s*$" transparent fold keepend
 
   if exists("perl_fold_blocks")
-    syn region perlIfFold start="^\z(\s*\)\(elsif\|if\|while\|until\|foreach\s\+\S\+\)\s*(.*)\s*{" start="^\z(\s*\)\(else\|do\|continue\)\s*{" end="^\z1}\s*;\=$" transparent fold keepend
+    syn region perlIfFold start="^\z(\s*\)\(elsif\|if\|while\|until\|for\(each\)\=\s\+\(my\s\+\|our\s+\)\=\S\+\)\s*(.*)\s*{" start="^\z(\s*\)\(else\|do\|continue\)\s*{" end="^\z1}\s*;\=$" transparent fold keepend
   endif
 
   syn sync fromstart
