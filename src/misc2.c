@@ -4189,7 +4189,7 @@ vim_findfile(search_ctx)
 	    {
 		for (i = ctx->ffs_filearray_cur; i < ctx->ffs_filearray_size; ++i)
 		{
-		    if (STRCMP(ctx->ffs_filearray[i], ctx->ffs_fix_path) == 0)
+		    if (fnamecmp(ctx->ffs_filearray[i], ctx->ffs_fix_path) == 0)
 			continue; /* don't repush same directory */
 		    if (!mch_isdir(ctx->ffs_filearray[i]))
 			continue;   /* not a directory */
@@ -4311,7 +4311,7 @@ ff_get_visited_list(filename)
 	retptr = ff_search_ctx->ffsc_visited_lists_list;
 	while (retptr != NULL)
 	{
-	    if (0 == STRCMP(filename, retptr->ffvl_filename))
+	    if (fnamecmp(filename, retptr->ffvl_filename) == 0)
 	    {
 #ifdef FF_VERBOSE
 		if (p_verbose >= 5)
@@ -4366,9 +4366,9 @@ ff_get_visited_list(filename)
 
 #ifdef FEAT_PATH_EXTRA
 /*
- * check if two wildcard pathes are equal. Returns TRUE or FALSE.
+ * check if two wildcard paths are equal. Returns TRUE or FALSE.
  * They are equal if:
- *  - both pathes are NULL
+ *  - both paths are NULL
  *  - they have the same length
  *  - char by char comparison is OK
  *  - the only differences are in the counters behind a '**', so
@@ -4392,7 +4392,11 @@ ff_wc_equal(s1, s2)
 
     for (i = 0; s1[i] != NUL && s2[i] != NUL; i++)
     {
-	if (s1[i] != s2[i])
+	if (s1[i] != s2[i]
+#ifdef CASE_INSENSITIVE_FILENAME
+		&& TO_UPPER(s1[i]) != TO_UPPER(s2[i])
+#endif
+		)
 	{
 	    if (i >= 2)
 		if (s1[i-1] == '*' && s1[i-2] == '*')
@@ -4693,13 +4697,13 @@ ff_path_in_stoplist(path, path_len, stopdirs_v)
 	     * '/home/rks'. Check for PATHSEP in stopdirs_v[i], else
 	     * '/home/r' would also match '/home/rks'
 	     */
-	    if (STRNCMP(stopdirs_v[i], path, path_len) == 0
+	    if (fnamencmp(stopdirs_v[i], path, path_len) == 0
 		    && stopdirs_v[i][path_len] == PATHSEP)
 		return TRUE;
 	}
 	else
 	{
-	    if (STRCMP(stopdirs_v[i], path) == 0)
+	    if (fnamecmp(stopdirs_v[i], path) == 0)
 		return TRUE;
 	}
     }
