@@ -759,6 +759,9 @@ fkmap(c)
     int		tempc;
     static int	revins;
 
+    if (IS_SPECIAL(c))
+	return c;
+
     if (vim_isdigit(c) || ((c == '.' || c == '+' || c == '-' ||
 	c == '^' || c == '%' || c == '#' || c == '=')  && revins))
     {
