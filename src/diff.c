@@ -609,7 +609,7 @@ ex_diffupdate(eap)
     char_u	*tmp_new;
     char_u	*tmp_diff;
     FILE	*fd;
-    int		ok = FALSE;
+    int		ok;
 
     /* Delete all diffblocks. */
     diff_clear();
@@ -644,6 +644,7 @@ ex_diffupdate(eap)
      */
     for (;;)
     {
+	ok = FALSE;
 	fd = fopen((char *)tmp_orig, "w");
 	if (fd != NULL)
 	{
@@ -691,8 +692,11 @@ ex_diffupdate(eap)
 	    continue;
 	}
 	if (!ok && diff_a_works == TRUE && diff_bin_works == TRUE)
-	    /* Tried --binary, but it failed. */
+	{
+	    /* Tried --binary, but it failed. "-a" works though. */
 	    diff_bin_works = FALSE;
+	    ok = TRUE;
+	}
 #endif
 
 	/* If we checked if "-a" works already, break here. */
