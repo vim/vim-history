@@ -339,7 +339,7 @@ static const struct nv_cmd
     {'w',	nv_wordcmd,	0,			FALSE},
     {'x',	nv_abbrev,	NV_KEEPREG,		0},
     {'y',	nv_operator,	0,			0},
-    {'z',	nv_zet,		NV_NCH_NOP,		0},
+    {'z',	nv_zet,		NV_NCH_ALW,		0},
     {'{',	nv_findpar,	0,			BACKWARD},
     {'|',	nv_pipe,	0,			0},
     {'}',	nv_findpar,	0,			FORWARD},
@@ -4126,9 +4126,11 @@ dozet:
     if (
 #ifdef FEAT_FOLDING
 	    /* "zf" and "zF" are always an operator, "zd", "zo", "zO", "zc"
-	     * and "zC" only in Visual mode. */
+	     * and "zC" only in Visual mode.  "zj" and "zk" are motion
+	     * commands. */
 	    cap->nchar != 'f' && cap->nchar != 'F'
 	    && !(VIsual_active && vim_strchr((char_u *)"dcCoO", cap->nchar))
+	    && cap->nchar != 'j' && cap->nchar != 'k'
 	    &&
 #endif
 	    checkclearop(cap->oap))
