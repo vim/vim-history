@@ -163,7 +163,6 @@ static WORD  g_attrCurrent;
 static int g_fCBrkPressed = FALSE;  /* set by ctrl-break interrupt */
 static int g_fCtrlCPressed = FALSE; /* set when ctrl-C or ctrl-break detected */
 static int g_fForceExit = FALSE;    /* set when forcefully exiting */
-static char_u g_chPending = NUL;
 
 static void termcap_mode_start(void);
 static void termcap_mode_end(void);
@@ -186,7 +185,7 @@ static void standend(void);
 static void visual_bell(void);
 static void cursor_visible(BOOL fVisible);
 static BOOL write_chars(LPCSTR pchBuf, DWORD cchToWrite);
-static char_u tgetch(void);
+static char_u tgetch(int *pmodifiers, char_u *pch2);
 static void create_conin(void);
 static int s_cursor_visible = TRUE;
 static int did_create_conin = FALSE;
@@ -596,13 +595,14 @@ static BOOL g_fJustGotFocus = FALSE;
 decode_key_event(
     KEY_EVENT_RECORD	*pker,
     char_u		*pch,
-    char_u		*pchPending,
+    char_u		*pch2,
+    int			*pmodifiers,
     BOOL		fDoPost)
 {
     int i;
     const int nModifs = pker->dwControlKeyState & (SHIFT | ALT | CTRL);
 
-    *pch = *pchPending = NUL;
+    *pch = *pch2 = NUL;
     g_fJustGotFocus = FALSE;
 
     /* ignore key up events */
@@ -649,7 +649,7 @@ decode_key_event(
     if (pker->wVirtualKeyCode == VK_TAB && (nModifs & SHIFT_PRESSED))
     {
 	*pch = K_NUL;
-	*pchPending = '\017';
+	*pch2 = '\017';
 	return TRUE;
     }
 
@@ -670,7 +670,7 @@ decode_key_event(
 	    {
 		if (VirtKeyMap[i].fAnsiKey)
 		{
-		    *pchPending = *pch;
+		    *pch2 = *pch;
 		    *pch = K_NUL;
 		}
 
@@ -685,11 +685,27 @@ decode_key_event(
 	*pch = NUL;
     else
     {
-	*pch = (i > 0)	? pker->AChar  :  NUL;
-	/* Interpret the ALT key as making the key META, but only when not
-	 * combined with CTRL (which is ALTGR). */
-	if ((nModifs & ALT) != 0 && (nModifs & CTRL) == 0)
-	    *pch |= 0x80;
+	*pch = (i > 0) ? pker->AChar : NUL;
+
+	if (pmodifiers != NULL)
+	{
+	    /* Pass on the ALT key as a modifier, but only when not combined
+	     * with CTRL (which is ALTGR). */
+	    if ((nModifs & ALT) != 0 && (nModifs & CTRL) == 0)
+		*pmodifiers |= MOD_MASK_ALT;
+
+	    /* Pass on SHIFT only for special keys, because we don't know when
+	     * it's already included with the character. */
+	    if ((nModifs & SHIFT) != 0 && *pch <= 0x20)
+		*pmodifiers |= MOD_MASK_SHIFT;
+
+	    /* Pass on CTRL only for non-special keys, because we don't know
+	     * when it's already included with the character.  And not when
+	     * combined with ALT (which is ALTGR). */
+	    if ((nModifs & CTRL) != 0 && (nModifs & ALT) == 0
+					       && *pch >= 0x20 && *pch < 0x80)
+		*pmodifiers |= MOD_MASK_CTRL;
+	}
     }
 
     return (*pch != NUL);
@@ -1079,7 +1095,7 @@ WaitForChar(long msec)
 #ifdef FEAT_CLIENTSERVER
 	serverProcessPendingMessages();
 #endif
-	if (g_chPending != NUL
+	if (0
 #ifdef FEAT_MOUSE
 		|| g_nMouseClick != -1
 #endif
@@ -1146,7 +1162,8 @@ WaitForChar(long msec)
 		    continue;
 		}
 #endif
-		if (decode_key_event(&ir.Event.KeyEvent, &ch, &ch2, FALSE))
+		if (decode_key_event(&ir.Event.KeyEvent, &ch, &ch2,
+								 NULL, FALSE))
 		    return TRUE;
 	    }
 
@@ -1202,16 +1219,9 @@ create_conin(void)
  * Get a keystroke or a mouse event
  */
     static char_u
-tgetch(void)
+tgetch(int *pmodifiers, char_u *pch2)
 {
     char_u ch;
-
-    if (g_chPending != NUL)
-    {
-	ch = g_chPending;
-	g_chPending = NUL;
-	return ch;
-    }
 
     for (;;)
     {
@@ -1237,7 +1247,8 @@ tgetch(void)
 
 	if (ir.EventType == KEY_EVENT)
 	{
-	    if (decode_key_event(&ir.Event.KeyEvent, &ch, &g_chPending, TRUE))
+	    if (decode_key_event(&ir.Event.KeyEvent, &ch, pch2,
+							    pmodifiers, TRUE))
 		return ch;
 	}
 	else if (ir.EventType == FOCUS_EVENT)
@@ -1355,7 +1366,7 @@ mch_inchar(
 	fputc('[', fdDump);
 #endif
 
-    while ((len == 0 || WaitForChar(0L)) && len < maxlen)
+    while ((len == 0 || WaitForChar(0L)) && len < maxlen - 1)
     {
 	if (typebuf_changed(tb_change_cnt))
 	{
@@ -1384,7 +1395,10 @@ mch_inchar(
 	else
 #endif /* FEAT_MOUSE */
 	{
-	    c = tgetch();
+	    char_u	ch2 = NUL;
+	    int		modifiers = 0;
+
+	    c = tgetch(&modifiers, &ch2);
 
 	    if (typebuf_changed(tb_change_cnt))
 	    {
@@ -1406,14 +1420,52 @@ mch_inchar(
 	    if (g_nMouseClick == -1)
 #endif
 	    {
-		*buf++ = c;
-		len++;
+		int	n = 1;
+
+		/* A key may have one or two bytes. */
+		buf[0] = c;
+		if (ch2 != NUL)
+		{
+		    buf[1] = ch2;
+		    ++n;
+		}
 #ifdef FEAT_MBYTE
-		/* Only convert normal characters, not special keys. */
+		/* Only convert normal characters, not special keys.  Need to
+		 * convert before applying ALT, otherwise mapping <M-x> breaks
+		 * when 'tenc' is set. */
 		if (input_conv.vc_type != CONV_NONE
-					    && (len == 1 || buf[-2] != K_NUL))
-		    len += convert_input(buf - 1, 1, maxlen - len + 1) - 1;
+						&& (ch2 == NUL || c != K_NUL))
+		    n = convert_input(buf, n, maxlen - len);
 #endif
+
+		/* Use the ALT key to set the 8th bit of the character
+		 * when it's one byte, the 8th bit isn't set yet and not
+		 * using a double-byte encoding (would become a lead
+		 * byte). */
+		if ((modifiers & MOD_MASK_ALT)
+			&& n == 1
+			&& (buf[0] & 0x80) == 0
+#ifdef FEAT_MBYTE
+			&& !enc_dbcs
+#endif
+		   )
+		{
+		    buf[0] |= 0x80;
+		    modifiers &= ~MOD_MASK_ALT;
+		}
+
+		if (modifiers != 0 && len + 4 < maxlen)
+		{
+		    /* Prepend modifiers to the character. */
+		    mch_memmove(buf + 3, buf, n);
+		    buf[0] = K_SPECIAL;
+		    buf[1] = (char_u)KS_MODIFIER;
+		    buf[2] = modifiers;
+		    n += 3;
+		}
+
+		buf += n;
+		len += n;
 
 #ifdef MCH_WRITE_DUMP
 		if (fdDump)
