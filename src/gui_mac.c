@@ -2653,6 +2653,60 @@ gui_mch_init_check(void)
 }
 #endif
 
+    static OSErr
+receiveHandler(WindowRef theWindow, void* handlerRefCon, DragRef theDrag)
+{
+    int		x, y;
+    int_u	modifiers;
+    char_u	**fnames = NULL;
+    int		count;
+    int		i, j;
+
+    /* Get drop position, modifiers and count of items */
+    {
+	Point	point;
+	SInt16	mouseUpModifiers;
+	UInt16	countItem;
+
+	GetDragMouse(theDrag, &point, NULL);
+	GlobalToLocal(&point);
+	x = point.h;
+	y = point.v;
+	GetDragModifiers(theDrag, NULL, NULL, &mouseUpModifiers);
+	modifiers = EventModifiers2VimMouseModifiers(mouseUpModifiers);
+	CountDragItems(theDrag, &countItem);
+	count = countItem;
+    }
+
+    fnames = (char_u **)alloc(count * sizeof(char_u *));
+    if (fnames == NULL)
+	return dragNotAcceptedErr;
+
+    /* Get file names dropped */
+    for (i = j = 0; i < count; ++i)
+    {
+	DragItemRef	item;
+	OSErr		err;
+	Size		size;
+	FlavorType	type = flavorTypeHFS;
+	HFSFlavor	hfsFlavor;
+
+	fnames[i] = NULL;
+	GetDragItemReferenceNumber(theDrag, i + 1, &item);
+	err = GetFlavorDataSize(theDrag, item, type, &size);
+	if (err != noErr || size > sizeof(hfsFlavor))
+	    continue;
+	err = GetFlavorData(theDrag, item, type, &hfsFlavor, &size, 0);
+	if (err != noErr)
+	    continue;
+	fnames[j++] = FullPathFromFSSpec_save(hfsFlavor.fileSpec);
+    }
+    count = j;
+
+    gui_handle_drop(x, y, modifiers, fnames, count);
+    return noErr;
+}
+
 /*
  * Initialise the GUI.  Create all the windows, set up all the call-backs
  * etc.
@@ -2721,6 +2775,8 @@ gui_mch_init()
 
     gui.VimWindow = NewCWindow(nil, &windRect, "\pgVim on Macintosh", true, documentProc,
 			(WindowPtr) -1L, false, 0);
+    InstallReceiveHandler((DragReceiveHandlerUPP)receiveHandler,
+	    gui.VimWindow, NULL);
 #ifdef USE_CARBONIZED
     SetPortWindowPort ( gui.VimWindow );
 #else

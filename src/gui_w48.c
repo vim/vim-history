@@ -2841,11 +2841,16 @@ _OnDropFiles(
     char    szFile[BUFPATHLEN];
     UINT    cFiles = DragQueryFile(hDrop, DRAGQVAL, szFile, BUFPATHLEN);
     UINT    i;
-    char_u  *fname;
     char_u  **fnames;
     char_u  redo_dirs = FALSE;
+    POINT   pt;
+    int_u   modifiers = 0;
 
     /* TRACE("_OnDropFiles: %d files dropped\n", cFiles); */
+
+    /* Obtain dropped position */
+    DragQueryPoint(hDrop, &pt);
+    MapWindowPoints(s_hwnd, s_textArea, &pt, 1);
 
 # ifdef FEAT_VISUAL
     reset_VIsual();
@@ -2853,72 +2858,28 @@ _OnDropFiles(
 
     fnames = (char_u **)alloc(cFiles * sizeof(char_u *));
 
-    for (i = 0; i < cFiles; ++i)
-    {
-	DragQueryFile(hDrop, i, szFile, BUFPATHLEN);
-
-	mch_dirname(IObuff, IOSIZE);
-	fname = shorten_fname(szFile, IObuff);
-	if (fname == NULL)
-	    fname = szFile;
-	fnames[i] = vim_strsave(fname);
-    }
-    DragFinish(hDrop);
-
-    /*
-     * When the cursor is at the command line, add the file names to the
-     * command line, don't edit the files.
-     */
-    if (State & CMDLINE)
-    {
+    if (fnames != NULL)
 	for (i = 0; i < cFiles; ++i)
 	{
-	    if (fnames[i] != NULL)
-	    {
-		if (i > 0)
-		    add_to_input_buf(" ", 1);
-		add_to_input_buf(fnames[i], (int)STRLEN(fnames[i]));
-	    }
+	    DragQueryFile(hDrop, i, szFile, BUFPATHLEN);
+	    fnames[i] = vim_strsave(szFile);
 	}
-    }
-    else
+
+    DragFinish(hDrop);
+
+    if (fnames != NULL)
     {
-	/*
-	 * Handle dropping a directory on Vim.
-	 * Change to that directory and don't open any file.
-	 */
-	if (cFiles == 1 && mch_isdir(fnames[0]))
-	{
-	    if (mch_chdir(fnames[0]) == 0)
-	    {
-		msg_str((char_u *)":cd %s", fnames[0]);
-		vim_free(fnames[0]);
-		fnames[0] = NULL;
-		redo_dirs = TRUE;
-	    }
-	}
+	if ((GetKeyState(VK_SHIFT) & 0x8000) != 0)
+	    modifiers |= MOUSE_SHIFT;
+	if ((GetKeyState(VK_CONTROL) & 0x8000) != 0)
+	    modifiers |= MOUSE_CTRL;
+	if ((GetKeyState(VK_MENU) & 0x8000) != 0)
+	    modifiers |= MOUSE_ALT;
 
-	if (fnames[0] != NULL)
-	{
-	    /* If Shift held down, change to first file's directory */
-	    if (GetKeyState(VK_SHIFT) & 0x8000)
-		if (vim_chdirfile(fnames[0]) == OK)
-		    redo_dirs = TRUE;
+	gui_handle_drop(pt.x, pt.y, modifiers, fnames, cFiles);
 
-	    /* Handle the drop, :edit or :split to get to the file */
-	    handle_drop(cFiles, fnames,
-				   ((GetKeyState(VK_CONTROL) & 0x8000) != 0));
-	}
-
-	if (redo_dirs)
-	    shorten_fnames(TRUE);
-
-	/* Update the screen display */
-	update_screen(NOT_VALID);
-	setcursor();
-	out_flush();
+	s_need_activate = TRUE;
     }
-    s_need_activate = TRUE;
 #endif
 }
 

@@ -1823,159 +1823,118 @@ button_release_event(GtkWidget *widget, GdkEventButton *event, gpointer data)
  * Drag aNd Drop support handlers.
  */
 
+/*
+ * Count how many items there may be and separate them with a NUL.
+ * Apparently the items are separated with \r\n.  This is not documented,
+ * thus be careful not to go past the end.	Also allow separation with
+ * NUL characters.
+ */
+    static int
+count_and_decode_uri_list(char_u *out, char_u *raw, int len)
+{
+    int		i;
+    char_u	*p = out;
+    int		count = 0;
+
+    for (i = 0; i < len; ++i)
+    {
+	if (raw[i] == NUL || raw[i] == '\n' || raw[i] == '\r')
+	{
+	    if (p > out && p[-1] != NUL)
+	    {
+		++count;
+		*p++ = NUL;
+	    }
+	}
+	else if (raw[i] == '%' && i + 2 < len && hexhex2nr(raw + i + 1) > 0)
+	{
+	    *p++ = hexhex2nr(raw + i + 1);
+	    i += 2;
+	}
+	else
+	    *p++ = raw[i];
+    }
+    if (p > out && p[-1] != NUL)
+    {
+	*p = NUL;	/* last item didn't have \r or \n */
+	++count;
+    }
+    return count;
+}
+
+/*
+ * Parse NUL separated "src" strings.  Make it an array "outlist" form.  On
+ * this process, URI which protocol is not "file:" are removed.  Return
+ * length of array (less than "max").
+ */
+    static int
+filter_uri_list(char_u **outlist, int max, char_u *src)
+{
+    int	i, j;
+
+    for (i = j = 0; i < max; ++i)
+    {
+	outlist[i] = NULL;
+	if (STRNCMP(src, "file:", 5) == 0)
+	{
+	    src += 5;
+	    if (STRNCMP(src, "//localhost", 11) == 0)
+		src += 11;
+	    while (src[0] == '/' && src[1] == '/')
+		++src;
+	    outlist[j++] = vim_strsave(src);
+	}
+	src += STRLEN(src) + 1;
+    }
+    return j;
+}
+
+    static char_u **
+parse_uri_list(int *count, char_u *data, int len)
+{
+    int	    n	    = 0;
+    char_u  *tmp    = NULL;
+    char_u  **array = NULL;;
+
+    if (data != NULL && len > 0 && (tmp = (char_u *)alloc(len + 1)) != NULL)
+    {
+	n = count_and_decode_uri_list(tmp, data, len);
+	if (n > 0 && (array = (char_u **)alloc(n * sizeof(char_u *))) != NULL)
+	    n = filter_uri_list(array, n, tmp);
+    }
+    vim_free(tmp);
+    *count = n;
+    return array;
+}
+
     static void
 drag_handle_uri_list(GdkDragContext	*context,
 		     GtkSelectionData	*data,
 		     guint		time_,
-		     GdkModifierType	state)
+		     GdkModifierType	state,
+		     gint		x,
+		     gint		y)
 {
     char_u  **fnames;
-    int	    redo_dirs = FALSE;
-    int	    i;
-    int	    n;
-    char_u  *start;
-    char_u  *copy;
-    char_u  *names;
     int	    nfiles = 0;
-    int	    url = FALSE;
 
-    names = data->data;
-    copy = alloc((unsigned)(data->length + 1));
-    if (copy == NULL)
-	return;
-    /*
-     * Count how many items there may be and separate them with a NUL.
-     * Apparently the items are separated with \r\n.  This is not documented,
-     * thus be careful not to go past the end.	Also allow separation with NUL
-     * characters.
-     */
-    start = copy;
-    for (i = 0; i < data->length; ++i)
-    {
-	if (names[i] == NUL || names[i] == '\n' || names[i] == '\r')
-	{
-	    if (start > copy && start[-1] != NUL)
-	    {
-		++nfiles;
-		*start++ = NUL;
-	    }
-	}
-	else if (names[i] == '%' && i + 2 < data->length
-					      && hexhex2nr(names + i + 1) > 0)
-	{
-	    *start++ = hexhex2nr(names + i + 1);
-	    i += 2;
-	}
-	else
-	    *start++ = names[i];
-    }
-    if (start > copy && start[-1] != NUL)
-    {
-	*start = NUL;	/* last item didn't have \r or \n */
-	++nfiles;
-    }
+    fnames = parse_uri_list(&nfiles, data->data, data->length);
 
-    fnames = (char_u **)alloc((unsigned)(nfiles * sizeof(char_u *)));
-    if (fnames == NULL)
+    if (fnames != NULL && nfiles > 0)
     {
-	vim_free(copy);
-	return;
-    }
-    url = FALSE;	/* Set when a non-file URL was found. */
-    start = copy;
-    for (n = 0; n < nfiles; ++n)
-    {
-	if (STRNCMP(start, "file://localhost", 16) == 0)
-	    start += 16;
-	else
-	{
-	    if (STRNCMP(start, "file:", 5) != 0)
-		url = TRUE;
-	    else
-	    {
-		start += 5;
-		while (start[0] == '/' && start[1] == '/')
-		    ++start;
-	    }
-	}
-	fnames[n] = vim_strsave(start);
-	start += STRLEN(start) + 1;
-    }
+	int_u   modifiers = 0;
 
-    /* accept */
-    gtk_drag_finish(context, TRUE, FALSE, time_);
-
-    /* Special handling when all items are real files. */
-    if (url == FALSE)
-    {
-	if (nfiles == 1)
-	{
-	    if (fnames[0] != NULL && mch_isdir(fnames[0]))
-	    {
-		/* Handle dropping a directory on Vim. */
-		if (mch_chdir((char *)fnames[0]) == 0)
-		{
-		    vim_free(fnames[0]);
-		    fnames[0] = NULL;
-		    redo_dirs = TRUE;
-		}
-	    }
-	}
-	else
-	{
-	    /* Ignore any directories */
-	    for (i = 0; i < nfiles; ++i)
-	    {
-		if (fnames[i] != NULL && mch_isdir(fnames[i]))
-		{
-		    vim_free(fnames[i]);
-		    fnames[i] = NULL;
-		}
-	    }
-	}
+	gtk_drag_finish(context, TRUE, FALSE, time_); /* accept */
 
 	if (state & GDK_SHIFT_MASK)
-	{
-	    /* Shift held down, change to first file's directory */
-	    if (fnames[0] != NULL && vim_chdirfile(fnames[0]) == OK)
-		redo_dirs = TRUE;
-	}
-	else
-	{
-	    char_u	dirname[MAXPATHL];
-	    char_u	*s;
+	    modifiers |= MOUSE_SHIFT;
+	if (state & GDK_CONTROL_MASK)
+	    modifiers |= MOUSE_CTRL;
+	if (state & GDK_MOD1_MASK)
+	    modifiers |= MOUSE_ALT;
 
-	    /* Shorten dropped file names. */
-	    if (mch_dirname(dirname, MAXPATHL) == OK)
-		for (i = 0; i < nfiles; ++i)
-		    if (fnames[i] != NULL)
-		    {
-			s = shorten_fname(fnames[i], dirname);
-			if (s != NULL && (s = vim_strsave(s)) != NULL)
-			{
-			    vim_free(fnames[i]);
-			    fnames[i] = s;
-			}
-		    }
-	}
+	gui_handle_drop(x, y, modifiers, fnames, nfiles);
     }
-    vim_free(copy);
-
-    /* Handle the drop, :edit or :split to get to the file */
-    handle_drop(nfiles, fnames, (state & GDK_CONTROL_MASK) != 0);
-
-    if (redo_dirs)
-	shorten_fnames(TRUE);
-
-    /* Update the screen display */
-    update_screen(NOT_VALID);
-# ifdef FEAT_MENU
-    gui_update_menus(0);
-# endif
-    setcursor();
-    out_flush();
-    gui_update_cursor(FALSE, FALSE);
-    gui_mch_flush();
 }
 
     static void
@@ -2071,7 +2030,7 @@ drag_data_received_cb(GtkWidget		*widget,
 
     /* Not sure about the role of "text/plain" here... */
     if (info == (guint)TARGET_TEXT_URI_LIST)
-	drag_handle_uri_list(context, data, time_, state);
+	drag_handle_uri_list(context, data, time_, state, x, y);
     else
 	drag_handle_text(context, data, time_, state);
 

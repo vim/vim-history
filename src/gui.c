@@ -4481,3 +4481,135 @@ gui_do_findrepl(flags, find_text, repl_text, down)
 }
 
 #endif
+
+#if (defined(FEAT_DND) && defined(FEAT_GUI_GTK)) \
+	|| defined(FEAT_GUI_MSWIN) \
+	|| defined(FEAT_GUI_MAC) \
+	|| defined(PROTO)
+
+#ifdef FEAT_WINDOWS
+static void gui_wingoto_xy __ARGS((int x, int y));
+
+/*
+ * Jump to the window at specified point (x, y).
+ */
+    static void
+gui_wingoto_xy(x, y)
+    int x;
+    int y;
+{
+    int		row = Y_2_ROW(y);
+    int		col = X_2_COL(x);
+    win_T	*wp;
+
+    if (row >= 0 && col >= 0)
+    {
+	wp = mouse_find_win(&row, &col);
+	if (wp != NULL && wp != curwin)
+	    win_goto(wp);
+    }
+}
+#endif
+
+/*
+ * Process file drop.  Mouse cursor position, key modifiers, name of files
+ * and count of files are given.  Argument "fnames[count]" has full pathnames
+ * of dropped files, they will be freed in this function, and caller can't use
+ * fnames after call this function.
+ */
+/*ARGSUSED*/
+    void
+gui_handle_drop(x, y, modifiers, fnames, count)
+    int		x;
+    int		y;
+    int_u	modifiers;
+    char_u	**fnames;
+    int		count;
+{
+    int		i;
+    char_u	*p;
+
+    /*
+     * When the cursor is at the command line, add the file names to the
+     * command line, don't edit the files.
+     */
+    if (State & CMDLINE)
+    {
+	shorten_filenames(fnames, count);
+	for (i = 0; i < count; ++i)
+	{
+	    if (fnames[i] != NULL)
+	    {
+		if (i > 0)
+		    add_to_input_buf((char_u*)" ", 1);
+
+		/* We don't know what command is used thus we can't be sure
+		 * about which characters need to be escaped.  Only escape the
+		 * most common ones. */
+# ifdef BACKSLASH_IN_FILENAME
+		p = vim_strsave_escaped(fnames[i], (char_u *)" \t\"|");
+# else
+		p = vim_strsave_escaped(fnames[i], (char_u *)"\\ \t\"|");
+# endif
+		if (p != NULL)
+		    add_to_input_buf(p, (int)STRLEN(p));
+		vim_free(p);
+		vim_free(fnames[i]);
+	    }
+	}
+	vim_free(fnames);
+    }
+    else
+    {
+	/* Go to the window under mouse cursor, then shorten given "fnames" by
+	 * current window, because a window can have local current dir. */
+# ifdef FEAT_WINDOWS
+	gui_wingoto_xy(x, y);
+# endif
+	shorten_filenames(fnames, count);
+
+	/* If Shift held down, remember the first item. */
+	if ((modifiers & MOUSE_SHIFT) != 0)
+	    p = vim_strsave(fnames[0]);
+	else
+	    p = NULL;
+
+	/* Handle the drop, :edit or :split to get to the file.  This also
+	 * frees fnames[].  Skip this if there is only one item it's a
+	 * directory and Shift is held down. */
+	if (count == 1 && (modifiers & MOUSE_SHIFT) != 0
+						     && mch_isdir(fnames[0]))
+	{
+	    vim_free(fnames[0]);
+	    vim_free(fnames);
+	}
+	else
+	    handle_drop(count, fnames, (modifiers & MOUSE_CTRL) != 0);
+
+	/* If Shift held down, change to first file's directory.  If the first
+	 * item is a directory, change to that directory (and let the explorer
+	 * plugin show the contents). */
+	if (p != NULL)
+	{
+	    if (mch_isdir(p))
+	    {
+		if (mch_chdir((char *)p) == 0)
+		    shorten_fnames(TRUE);
+	    }
+	    else if (vim_chdirfile(p) == OK)
+		shorten_fnames(TRUE);
+	    vim_free(p);
+	}
+
+	/* Update the screen display */
+	update_screen(NOT_VALID);
+# ifdef FEAT_MENU
+	gui_update_menus(0);
+# endif
+	setcursor();
+	out_flush();
+	gui_update_cursor(FALSE, FALSE);
+	gui_mch_flush();
+    }
+}
+#endif
