@@ -3494,6 +3494,7 @@ win_line(wp, lnum, startrow, endrow)
 
 	/* Don't override visual selection highlighting. */
 	if (n_attr > 0
+		&& draw_state == WL_LINE
 		&& (area_attr == 0 || char_attr != area_attr)
 		&& (search_attr == 0 || char_attr != search_attr))
 	    char_attr = extra_attr;
