@@ -1,7 +1,7 @@
 " These commands create the option window.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2003 May 17
+" Last Change:	2003 Jul 22
 
 " If there already is an option window, jump to that one.
 if bufwinnr("option-window") > 0
@@ -517,8 +517,10 @@ if has("gui")
   if has("gui_gtk")
     call append("$", "toolbar\t\"icons\", \"text\" and/or \"tooltips\"; how to show the toolbar")
     call <SID>OptionG("tb", &tb)
-    call append("$", "toolbariconsize\tSize of toolbar icons")
-    call <SID>OptionG("tbis", &tbis)
+    if has("gui_gtk2")
+      call append("$", "toolbariconsize\tSize of toolbar icons")
+      call <SID>OptionG("tbis", &tbis)
+    endif
     call append("$", "guiheadroom\troom (in pixels) left above/below the window")
     call append("$", " \tset ghr=" . &ghr)
   endif
@@ -530,7 +532,7 @@ if has("gui")
   endif
   if has("multi_lang")
     call append("$", "langmenu\tlanguage to be used for the menus")
-    call <SID>OptionG("lmenu", &lm)
+    call <SID>OptionG("langmenu", &lm)
   endif
   call append("$", "menuitems\tmaximum number of items in one menu")
   call append("$", " \tset mis=" . &mis)
