@@ -48,8 +48,8 @@ static int can_update_cursor = TRUE; /* can display the cursor */
 gui_start()
 {
     char_u	*old_term;
-#if defined(UNIX) && !defined(__BEOS__)
-    pid_t	pid = -1;
+#if defined(UNIX) && !defined(__BEOS__) && !defined(MACOS_X)
+# define MAY_FORK
     int		dofork = TRUE;
 #endif
     static int	recursive = 0;
@@ -72,7 +72,7 @@ gui_start()
     gui.starting = TRUE;
     full_screen = FALSE;
 
-#if defined(UNIX) && !defined(__BEOS__)
+#ifdef MAY_FORK
     if (!gui.dofork || vim_strchr(p_go, GO_FORG) || recursive)
 	dofork = FALSE;
 #endif
@@ -98,7 +98,7 @@ gui_start()
 	display_errors();
 #endif
 
-#if defined(UNIX) && !defined(__BEOS__) && !defined(__QNXNTO__) && !defined(MACOS_X)
+#if defined(MAY_FORK) && !defined(__QNXNTO__)
     /*
      * Quit the current process and continue in the child.
      * Makes "gvim file" disconnect from the shell it was started in.
@@ -110,6 +110,7 @@ gui_start()
 	int	pipefd[2];	/* pipe between parent and child */
 	int	pipe_error;
 	char	dummy;
+	pid_t	pid = -1;
 
 	/* Setup a pipe between the child and the parent, so that the parent
 	 * knows when the child has done the setsid() call and is allowed to
