@@ -183,7 +183,6 @@ static XrmOptionDescRec cmdline_options[] =
     {"-italicfont",	".italicFont",	    XrmoptionSepArg,	NULL},
     {"+reverse",	"*reverseVideo",    XrmoptionNoArg,	"False"},
     {"+rv",		"*reverseVideo",    XrmoptionNoArg,	"False"},
-    {"-display",	".display",	    XrmoptionSepArg,	NULL},
     {"-iconic",		"*iconic",	    XrmoptionNoArg,	"True"},
     {"-name",		".name",	    XrmoptionSepArg,	NULL},
     {"-bw",		".borderWidth",	    XrmoptionSepArg,	NULL},
@@ -210,6 +209,8 @@ static char *gtk_cmdline_options[] = {
     "--gtk-no-debug=",
     "--g-fatal-warnings",
     "--gtk-module=",
+    "-display",
+    "--display",
     NULL
 };
 
@@ -263,7 +264,7 @@ gui_mch_prepare(int *argc, char **argv)
 		mch_memmove(&argv[arg], &argv[arg + 1],
 			    (*argc - arg) * sizeof(char *));
 		if (cmdline_options[i].argKind != XrmoptionNoArg) {
-		    /* Move the options argument as well */
+		    /* Move the option argument as well. */
 		    gui_argv[gui_argc++] = argv[arg];
 		    if (--*argc > arg)
 			mch_memmove(&argv[arg], &argv[arg + 1],
@@ -283,16 +284,27 @@ gui_mch_prepare(int *argc, char **argv)
 	{
 	    if (strncmp(argv[arg], *gtk_option, strlen(*gtk_option)) == 0)
 	    {
-		gui_argv[gui_argc++] = argv[arg];
-		if (--*argc > arg)
-		    mch_memmove(&argv[arg], &argv[arg + 1],
-				(*argc - arg) * sizeof(char *));
-		if (strncmp(*gtk_option, "--xim", 5) == 0)
-		{
+		/* Replace the standard X argument "-display" with the GTK
+		 * argument "--display". */
+		if (strncmp(*gtk_option, "-display", 8) == 0)
+		    gui_argv[gui_argc++] =
+				   (char *)vim_strsave((char_u *)"--display");
+		else
 		    gui_argv[gui_argc++] = argv[arg];
-		    if (--*argc > arg)
-			mch_memmove(&argv[arg], &argv[arg + 1],
+		if (--*argc > arg)
+		{
+		    mch_memmove(&argv[arg], &argv[arg + 1],
+					      (*argc - arg) * sizeof(char *));
+		    /* Move the option argument as well, if there is one. */
+		    if (strncmp(*gtk_option, "--xim", 5) == 0
+			    || strncmp(*gtk_option, "-display", 8) == 0
+			    || strncmp(*gtk_option, "--display", 9) == 0)
+		    {
+			gui_argv[gui_argc++] = argv[arg];
+			if (--*argc > arg)
+			    mch_memmove(&argv[arg], &argv[arg + 1],
 				    (*argc - arg) * sizeof(char *));
+		    }
 		}
 		break;
 	    }

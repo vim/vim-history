@@ -203,6 +203,7 @@ usage()
     main_msg("-font <font>\t\tUse <font> for normal text (also: -fn)");
     main_msg("-geometry <geom>\tUse <geom> for initial geometry (also: -geom)");
     main_msg("-reverse\t\tUse reverse video (also: -rv)");
+    main_msg("-display <display>\tRun vim on <display> (also: --display)");
 #endif
     mch_windexit(1);
 }
