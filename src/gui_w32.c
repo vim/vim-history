@@ -161,6 +161,12 @@
 #define DLG_FONT_POINT_SIZE	8
 #define DLG_MIN_MAX_WIDTH	400
 
+/*
+ * Use the system font for dialogs and tear-off menus.  Remove this line to
+ * use DLG_FONT_NAME.
+ */
+#define USE_SYSMENU_FONT
+
 /* Some parameters for tearoff menus.  All in pixels. */
 #define TEAROFF_PADDING_X	2
 #define TEAROFF_BUTTON_PAD_X	8
@@ -4694,6 +4700,28 @@ static const char_u *dlg_icons[] = /* must match names in resource file */
     "IDR_VIM_QUESTION"
 };
 
+#ifdef USE_SYSMENU_FONT
+/*
+ * Get Menu Font.
+ * Return OK or FAIL.
+ */
+    static int
+gui_w32_get_menu_font(LOGFONT *lf)
+{
+    NONCLIENTMETRICS nm;
+
+    nm.cbSize = sizeof(NONCLIENTMETRICS);
+    if (!SystemParametersInfo(
+	    SPI_GETNONCLIENTMETRICS,
+	    sizeof(NONCLIENTMETRICS),
+	    &nm,
+	    0))
+	return FAIL;
+    *lf = nm.lfMenuFont;
+    return OK;
+}
+#endif
+
     int
 gui_mch_dialog(
     int		 type,
@@ -4724,6 +4752,10 @@ gui_mch_dialog(
     int		vertical;
     int		dlgPaddingX;
     int		dlgPaddingY;
+#ifdef USE_SYSMENU_FONT
+    LOGFONT	lfSysmenu;
+    int		use_lfSysmenu = FALSE;
+#endif
 
 #ifndef NO_CONSOLE
     /* Don't output anything in silent mode ("ex -s") */
@@ -4781,6 +4813,14 @@ gui_mch_dialog(
      */
     hwnd = GetDesktopWindow();
     hdc = GetWindowDC(hwnd);
+#ifdef USE_SYSMENU_FONT
+    if (gui_w32_get_menu_font(&lfSysmenu) == OK)
+    {
+	font = CreateFontIndirect(&lfSysmenu);
+	use_lfSysmenu = TRUE;
+    }
+    else
+#endif
     font = CreateFont(-DLG_FONT_POINT_SIZE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		      VARIABLE_PITCH , DLG_FONT_NAME);
     if (s_usenewlook)
@@ -4918,8 +4958,20 @@ gui_mch_dialog(
     if (s_usenewlook)
     {
 	/* do the font, since DS_3DLOOK doesn't work properly */
-	*p++ = DLG_FONT_POINT_SIZE;		//point size
-	nchar = nCopyAnsiToWideChar (p, TEXT(DLG_FONT_NAME));
+#ifdef USE_SYSMENU_FONT
+	if (use_lfSysmenu)
+	{
+	    /* point size */
+	    *p++ = -MulDiv(lfSysmenu.lfHeight, 72,
+		    GetDeviceCaps(hdc, LOGPIXELSY));
+	    nchar = nCopyAnsiToWideChar(p, TEXT(lfSysmenu.lfFaceName));
+	}
+	else
+#endif
+	{
+	    *p++ = DLG_FONT_POINT_SIZE;		// point size
+	    nchar = nCopyAnsiToWideChar (p, TEXT(DLG_FONT_NAME));
+	}
 	p += nchar;
     }
 
@@ -5263,6 +5315,10 @@ gui_mch_tearoff(
     char_u	*label, *text, *end, *acEnd = NULL;
     int		padding0, padding1, padding2 = 0;
     int		sepPadding=0;
+#ifdef USE_SYSMENU_FONT
+    LOGFONT	lfSysmenu;
+    int		use_lfSysmenu = FALSE;
+#endif
 
     /*
      * If this menu is already torn off, then don't
@@ -5296,6 +5352,14 @@ gui_mch_tearoff(
 
     hwnd = GetDesktopWindow();
     hdc = GetWindowDC(hwnd);
+#ifdef USE_SYSMENU_FONT
+    if (gui_w32_get_menu_font(&lfSysmenu) == OK)
+    {
+	font = CreateFontIndirect(&lfSysmenu);
+	use_lfSysmenu = TRUE;
+    }
+    else
+#endif
     font = CreateFont(-DLG_FONT_POINT_SIZE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		      VARIABLE_PITCH , DLG_FONT_NAME);
     if (s_usenewlook)
@@ -5396,8 +5460,20 @@ gui_mch_tearoff(
     if (s_usenewlook)
     {
 	/* do the font, since DS_3DLOOK doesn't work properly */
-	*p++ = DLG_FONT_POINT_SIZE;		//point size
-	nchar = nCopyAnsiToWideChar (p, TEXT(DLG_FONT_NAME));
+#ifdef USE_SYSMENU_FONT
+	if (use_lfSysmenu)
+	{
+	    /* point size */
+	    *p++ = -MulDiv(lfSysmenu.lfHeight, 72,
+		    GetDeviceCaps(hdc, LOGPIXELSY));
+	    nchar = nCopyAnsiToWideChar(p, TEXT(lfSysmenu.lfFaceName));
+	}
+	else
+#endif
+	{
+	    *p++ = DLG_FONT_POINT_SIZE;		// point size
+	    nchar = nCopyAnsiToWideChar (p, TEXT(DLG_FONT_NAME));
+	}
 	p += nchar;
     }
 
@@ -5425,10 +5501,8 @@ gui_mch_tearoff(
 	{
 	    len += STRLEN(menu->actext);
 	    acEnd = menu->actext + STRLEN(menu->actext);
+	    textWidth = GetTextWidth(hdc, menu->actext, acEnd - menu->actext);
 	}
-	if (menu->actext != NULL)
-	    textWidth = GetTextWidth(hdc, menu->actext,
-				     acEnd - menu->actext);
 	else
 	    textWidth = 0;
 
@@ -5528,6 +5602,9 @@ get_dialog_font_metrics(void)
     HFONT	    hfontTools = 0;
     DWORD	    dlgFontSize;
     SIZE	    size;
+#ifdef USE_SYSMENU_FONT
+    LOGFONT	    lfSysmenu;
+#endif
 
     s_usenewlook = FALSE;
 
@@ -5537,6 +5614,11 @@ get_dialog_font_metrics(void)
      */
     if (!is_winnt_3())
     {
+#ifdef USE_SYSMENU_FONT
+	if (gui_w32_get_menu_font(&lfSysmenu) == OK)
+	    hfontTools = CreateFontIndirect(&lfSysmenu);
+	else
+#endif
 	hfontTools = CreateFont(-DLG_FONT_POINT_SIZE, 0, 0, 0, 0, 0, 0, 0,
 				0, 0, 0, 0, VARIABLE_PITCH , DLG_FONT_NAME);
 
