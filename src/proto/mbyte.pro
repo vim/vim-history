@@ -80,5 +80,7 @@ int xim_get_status_area_height __ARGS((void));
 int im_get_status __ARGS((void));
 int convert_setup __ARGS((vimconv_T *vcp, char_u *from, char_u *to));
 int convert_input __ARGS((char_u *ptr, int len, int maxlen));
+int convert_input_safe __ARGS((char_u *ptr, int len, int maxlen, char_u **restp, int *restlenp));
 char_u *string_convert __ARGS((vimconv_T *vcp, char_u *ptr, int *lenp));
+char_u *string_convert_ext __ARGS((vimconv_T *vcp, char_u *ptr, int *lenp, int *unconvlenp));
 /* vim: set ft=c : */

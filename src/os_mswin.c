@@ -820,7 +820,7 @@ mch_libcall(
  * Returns the number of UCS-2 words produced.
  */
     int
-utf8_to_ucs2(char_u *instr, int inlen, short_u *outstr)
+utf8_to_ucs2(char_u *instr, int inlen, short_u *outstr, int *unconvlenp)
 {
     int		outlen = 0;
     char_u	*p = instr;
@@ -832,7 +832,12 @@ utf8_to_ucs2(char_u *instr, int inlen, short_u *outstr)
 	/* Only convert if we have a complete sequence. */
 	l = utf_ptr2len_check_len(p, todo);
 	if (l > todo)
+	{
+	    /* Return length of incomplete sequence. */
+	    if (unconvlenp != NULL)
+		*unconvlenp = todo;
 	    break;
+	}
 
 	if (outstr != NULL)
 	    *outstr++ = utf_ptr2char(p);
@@ -1038,11 +1043,11 @@ enc_to_ucs2(char_u *str, int *lenp)
 	}
 	convert_setup(&conv, NULL, NULL);
 
-	length = utf8_to_ucs2(str, *lenp, NULL);
+	length = utf8_to_ucs2(str, *lenp, NULL, NULL);
 	ret = (WCHAR *)alloc((unsigned)((length == 0 ? 1 : length)
 							    * sizeof(WCHAR)));
 	if (ret != NULL)
-	    utf8_to_ucs2(str, *lenp, (short_u *)ret);
+	    utf8_to_ucs2(str, *lenp, (short_u *)ret, NULL);
 
 	vim_free(allocbuf);
     }
@@ -1054,9 +1059,9 @@ enc_to_ucs2(char_u *str, int *lenp)
 /*
  * Convert an UCS-2 string to 'encoding'.
  * Input in "str" with length (counted in wide characters) "*lenp".  When
- * "lenp" is NULL, use strlen().
- * Output is returned as an allocated string.  "*lenp" is set to the length of
- * the result.
+ * "lenp" is NULL, use wcslen().
+ * Output is returned as an allocated string.  If "*lenp" is not NULL it is
+ * set to the length of the result.
  * Returns NULL when out of memory.
  */
     char_u *

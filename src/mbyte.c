@@ -2891,7 +2891,7 @@ encname2codepage(name)
 
 # if defined(USE_ICONV) || defined(PROTO)
 
-static char_u *iconv_string __ARGS((vimconv_T *vcp, char_u *str, int slen));
+static char_u *iconv_string __ARGS((vimconv_T *vcp, char_u *str, int slen, int *unconvlenp));
 
 /*
  * Call iconv_open() with a check if iconv() works properly (there are broken
@@ -2949,13 +2949,16 @@ my_iconv_open(to, from)
 
 /*
  * Convert the string "str[slen]" with iconv().
+ * If "unconvlenp" is not NULL handle the string ending in an incomplete
+ * sequence and set "*unconvlenp" to the length of it.
  * Returns the converted string in allocated memory.  NULL for an error.
  */
     static char_u *
-iconv_string(vcp, str, slen)
+iconv_string(vcp, str, slen, unconvlenp)
     vimconv_T	*vcp;
     char_u	*str;
     int		slen;
+    int		*unconvlenp;
 {
     const char	*from;
     size_t	fromlen;
@@ -2996,10 +2999,23 @@ iconv_string(vcp, str, slen)
 	    *to = NUL;
 	    break;
 	}
+
+	/* Check both ICONV_EINVAL and EINVAL, because the dynamically loaded
+	 * iconv library may use one of them. */
+	if (!vcp->vc_fail && unconvlenp != NULL
+		&& (ICONV_ERRNO == ICONV_EINVAL || ICONV_ERRNO == EINVAL))
+	{
+	    /* Handle an incomplete sequence at the end. */
+	    *to = NUL;
+	    *unconvlenp = fromlen;
+	    break;
+	}
+
 	/* Check both ICONV_EILSEQ and EILSEQ, because the dynamically loaded
 	 * iconv library may use one of them. */
-	if (!vcp->vc_fail && (ICONV_ERRNO == ICONV_EILSEQ
-						    || ICONV_ERRNO == EILSEQ))
+	else if (!vcp->vc_fail
+		&& (ICONV_ERRNO == ICONV_EILSEQ || ICONV_ERRNO == EILSEQ
+		    || ICONV_ERRNO == ICONV_EINVAL || ICONV_ERRNO == EINVAL))
 	{
 	    /* Can't convert: insert a '?' and skip a character.  This assumes
 	     * conversion from 'encoding' to something else.  In other
@@ -5358,16 +5374,46 @@ convert_input(ptr, len, maxlen)
     int		len;
     int		maxlen;
 {
+    return convert_input_safe(ptr, len, maxlen, NULL, NULL);
+}
+
+/*
+ * Like convert_input(), but when there is an incomplete byte sequence at the
+ * end return that as an allocated string in "restp" and set "*restlenp" to
+ * the length.  If "restp" is NULL it is not used.
+ */
+    int
+convert_input_safe(ptr, len, maxlen, restp, restlenp)
+    char_u	*ptr;
+    int		len;
+    int		maxlen;
+    char_u	**restp;
+    int		*restlenp;
+{
     char_u	*d;
     int		dlen = len;
+    int		unconvertlen = 0;
 
-    d = string_convert(&input_conv, ptr, &dlen);
+    d = string_convert_ext(&input_conv, ptr, &dlen,
+					restp == NULL ? NULL : &unconvertlen);
     if (d != NULL)
     {
 	if (dlen <= maxlen)
+	{
+	    if (unconvertlen > 0)
+	    {
+		/* Move the unconverted characters to allocated memory. */
+		*restp = alloc(unconvertlen);
+		if (*restp != NULL)
+		    mch_memmove(*restp, ptr + len - unconvertlen, unconvertlen);
+		*restlenp = unconvertlen;
+	    }
 	    mch_memmove(ptr, d, dlen);
+	}
 	else
-	    dlen = len;	    /* result is too long, keep the unconverted text */
+	    /* result is too long, keep the unconverted text (the caller must
+	     * have done something wrong!) */
+	    dlen = len;
 	vim_free(d);
     }
     return dlen;
@@ -5470,6 +5516,21 @@ string_convert(vcp, ptr, lenp)
     char_u	*ptr;
     int		*lenp;
 {
+    return string_convert_ext(vcp, ptr, lenp, NULL);
+}
+
+/*
+ * Like string_convert(), but when "unconvlenp" is not NULL and there are is
+ * an incomplete sequence at the end it is not converted and "*unconvlenp" is
+ * set to the number of remaining bytes.
+ */
+    char_u *
+string_convert_ext(vcp, ptr, lenp, unconvlenp)
+    vimconv_T	*vcp;
+    char_u	*ptr;
+    int		*lenp;
+    int		*unconvlenp;
+{
     char_u	*retval = NULL;
     char_u	*d;
     int		len;
@@ -5514,8 +5575,18 @@ string_convert(vcp, ptr, lenp)
 	    for (i = 0; i < len; ++i)
 	    {
 		l = utf_ptr2len_check(ptr + i);
-		if (l <= 1)
+		if (l == 0)
+		    *d++ = NUL;
+		else if (l == 1)
+		{
+		    if (unconvlenp != NULL && utf8len_tab[ptr[i]] > len - i)
+		    {
+			/* Incomplete sequence at the end. */
+			*unconvlenp = len - i;
+			break;
+		    }
 		    *d++ = ptr[i];
+		}
 		else
 		{
 		    c = utf_ptr2char(ptr + i);
@@ -5571,7 +5642,7 @@ string_convert(vcp, ptr, lenp)
 
 # ifdef USE_ICONV
 	case CONV_ICONV:	/* conversion with output_conv.vc_fd */
-	    retval = iconv_string(vcp, ptr, len);
+	    retval = iconv_string(vcp, ptr, len, unconvlenp);
 	    if (retval != NULL && lenp != NULL)
 		*lenp = (int)STRLEN(retval);
 	    break;
@@ -5585,7 +5656,7 @@ string_convert(vcp, ptr, lenp)
 
 	    /* 1. codepage/UTF-8  ->  ucs-2. */
 	    if (vcp->vc_cpfrom == 0)
-		tmp_len = utf8_to_ucs2(ptr, len, NULL);
+		tmp_len = utf8_to_ucs2(ptr, len, NULL, NULL);
 	    else
 		tmp_len = MultiByteToWideChar(vcp->vc_cpfrom, 0,
 							      ptr, len, 0, 0);
@@ -5593,7 +5664,7 @@ string_convert(vcp, ptr, lenp)
 	    if (tmp == NULL)
 		break;
 	    if (vcp->vc_cpfrom == 0)
-		utf8_to_ucs2(ptr, len, tmp);
+		utf8_to_ucs2(ptr, len, tmp, unconvlenp);
 	    else
 		MultiByteToWideChar(vcp->vc_cpfrom, 0, ptr, len, tmp, tmp_len);
 
