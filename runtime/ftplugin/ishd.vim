@@ -1,13 +1,14 @@
 " Vim filetype plugin file
 " Language:	InstallShield (ft=ishd)
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
-" Last Change:	Wed, 08 Aug 2001 20:48:49 +0200
+" Last Change:	Sat, 24 May 2003 11:55:36 CEST
 
 if exists("b:did_ftplugin") | finish | endif
 let b:did_ftplugin = 1
 
 setlocal nocindent
 setlocal autoindent
+setlocal foldmethod=syntax
 
 set cpo-=C
 
@@ -21,4 +22,9 @@ if exists("loaded_matchit")
     \ '\%(^\s*\)\@<=\<while\>\s*(.\{-}):\%(^\s*\)\@<=\<endwhile\>\s*;\s*$,' .
     \ '\%(^\s*\)\@<=\<for\>.\{-}\<\%(to\|downto\)\>:\%(^\s*\)\@<=\<endfor\>\s*;\s*$,' .
     \ '\%(^\s*\)\@<=\<if\>\s*(.\{-})\s*then:\%(^\s*\)\@<=\<else\s*if\>\s*([^)]*)\s*then:\%(^\s*\)\@<=\<else\>:\%(^\s*\)\@<=\<endif\>\s*;\s*$'
+endif
+
+if has("gui_win32") && !exists("b:browsefilter")
+    let b:browsefilter = "InstallShield Files (*.rul)\t*.rul\n" .
+		       \ "All Files (*.*)\t*.*\n"
 endif

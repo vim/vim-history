@@ -2232,6 +2232,7 @@ static garray_T menutrans_ga = {0, 0, 0, 0, NULL};
  * This function is also defined without the +multi_lang feature, in which
  * case the commands are ignored.
  */
+/*ARGSUSED*/
     void
 ex_menutranslate(eap)
     exarg_T	*eap;

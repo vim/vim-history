@@ -410,37 +410,6 @@ mch_rename(
 }
 
 /*
- * Special version of getenv(): use $HOME when $VIM not defined.
- */
-    char_u *
-mch_getenv(char_u *var)
-{
-    char_u  *retval;
-    char_u  *var_copy, *p;
-
-    /*
-     * Take a copy of the argument, and force it to upper case before passing
-     * to getenv().  On DOS systems, getenv() doesn't like lower-case argument
-     * (unlike Win32 et al.)
-     */
-    var_copy = vim_strsave(var);
-    if (var_copy == NULL)
-	return NULL;
-    for (p = var_copy; *p != NUL; p++)
-	*p = toupper(*p);
-
-    retval = (char_u *)getenv((char *)var_copy);
-
-    if (retval == NULL && STRCMP(var_copy, "VIM") == 0)
-	retval = (char_u *)getenv("HOME");
-
-    vim_free(var_copy);
-
-    return retval;
-}
-
-
-/*
  * Get the default shell for the current hardware platform
  */
     char*

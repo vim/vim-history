@@ -1,7 +1,7 @@
 " Vim settings file
 " Language:	Fortran90 (and Fortran95, Fortran77, F and elf90)
-" Version:	0.43
-" Last Change:	2003 Mar. 12
+" Version:	0.44
+" Last Change:	2003 May 18
 " URL:		http://www.unb.ca/chem/ajit/ftplugin/fortran.vim
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
 " Usage:	Do :help fortran-plugin from Vim
@@ -104,6 +104,9 @@ if has("gui_win32") && !exists("b:browsefilter")
   let b:browsefilter = "Fortran Files (*.f;*.F;*.for;*.f77;*.f90;*.f95;*.fpp;*.ftn)\t*.f;*.F;*.for;*.f77;*.f90;*.f95;*.fpp;*.ftn\n" .
     \ "All Files (*.*)\t*.*\n"
 endif
+
+let b:undo_ftplugin = "setl fo< com< tw< cms< et< inc<"
+	\ . "| unlet! b:match_ignorecase b:match_words b:browsefilter"
 
 let &cpoptions=s:cposet
 unlet s:cposet

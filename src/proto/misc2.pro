@@ -86,4 +86,5 @@ int get_user_name __ARGS((char_u *buf, int len));
 void sort_strings __ARGS((char_u **files, int count));
 int pathcmp __ARGS((const char *p, const char *q));
 char_u *parse_list_options __ARGS((char_u *option_str, option_table_T *table, int table_size));
+void msg_str __ARGS((char_u *s, char_u *arg));
 /* vim: set ft=c : */

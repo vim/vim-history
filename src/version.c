@@ -858,72 +858,72 @@ list_version()
 #  endif
 # endif
 #endif
-    MSG_PUTS(_("  Features included (+) or not (-):\n"));
+    version_msg(_("  Features included (+) or not (-):\n"));
 
     /* print all the features */
     for (i = 0; features[i] != NULL; ++i)
     {
 	version_msg(features[i]);
 	if (msg_col > 0)
-	    msg_putchar(' ');
+	    version_msg(" ");
     }
 
-    msg_putchar('\n');
+    version_msg("\n");
 #ifdef SYS_VIMRC_FILE
     version_msg(_("   system vimrc file: \""));
     version_msg(SYS_VIMRC_FILE);
-    version_msg(_("\"\n"));
+    version_msg("\"\n");
 #endif
 #ifdef USR_VIMRC_FILE
     version_msg(_("     user vimrc file: \""));
     version_msg(USR_VIMRC_FILE);
-    version_msg(_("\"\n"));
+    version_msg("\"\n");
 #endif
 #ifdef USR_VIMRC_FILE2
     version_msg(_(" 2nd user vimrc file: \""));
     version_msg(USR_VIMRC_FILE2);
-    version_msg(_("\"\n"));
+    version_msg("\"\n");
 #endif
 #ifdef USR_VIMRC_FILE3
     version_msg(_(" 3rd user vimrc file: \""));
     version_msg(USR_VIMRC_FILE3);
-    version_msg(_("\"\n"));
+    version_msg("\"\n");
 #endif
 #ifdef USR_EXRC_FILE
     version_msg(_("      user exrc file: \""));
     version_msg(USR_EXRC_FILE);
-    version_msg(_("\"\n"));
+    version_msg("\"\n");
 #endif
 #ifdef USR_EXRC_FILE2
     version_msg(_("  2nd user exrc file: \""));
     version_msg(USR_EXRC_FILE2);
-    version_msg(_("\"\n"));
+    version_msg("\"\n");
 #endif
 #ifdef FEAT_GUI
 # ifdef SYS_GVIMRC_FILE
     version_msg(_("  system gvimrc file: \""));
     version_msg(SYS_GVIMRC_FILE);
-    MSG_PUTS(_("\"\n"));
+    version_msg("\"\n");
 # endif
     version_msg(_("    user gvimrc file: \""));
     version_msg(USR_GVIMRC_FILE);
-    version_msg(_("\"\n"));
+    version_msg("\"\n");
 # ifdef USR_GVIMRC_FILE2
     version_msg(_("2nd user gvimrc file: \""));
     version_msg(USR_GVIMRC_FILE2);
-    version_msg(_("\"\n"));
+    version_msg("\"\n");
 # endif
 # ifdef USR_GVIMRC_FILE3
     version_msg(_("3rd user gvimrc file: \""));
     version_msg(USR_GVIMRC_FILE3);
-    version_msg(_("\"\n"));
+    version_msg("\"\n");
 # endif
 #endif
 #ifdef FEAT_GUI
 # ifdef SYS_MENU_FILE
     version_msg(_("    system menu file: \""));
     version_msg(SYS_MENU_FILE);
-    MSG_PUTS(_("\"\n"));
+    version_msg("\"\n");
 # endif
 #endif
 #ifdef HAVE_PATHDEF
@@ -931,30 +931,30 @@ list_version()
     {
 	version_msg(_("  fall-back for $VIM: \""));
 	version_msg((char *)default_vim_dir);
-	MSG_PUTS(_("\"\n"));
+	version_msg("\"\n");
     }
     if (*default_vimruntime_dir != NUL)
     {
 	version_msg(_(" f-b for $VIMRUNTIME: \""));
 	version_msg((char *)default_vimruntime_dir);
-	MSG_PUTS(_("\"\n"));
+	version_msg("\"\n");
     }
     version_msg(_("Compilation: "));
     version_msg((char *)all_cflags);
-    msg_putchar('\n');
+    version_msg("\n");
 #ifdef VMS
     if (*compiler_version != NUL)
     {
 	version_msg(_("Compiler: "));
 	version_msg((char *)compiler_version);
-	msg_putchar('\n');
+	version_msg("\n");
     }
 #endif
     version_msg(_("Linking: "));
     version_msg((char *)all_lflags);
 #endif
 #ifdef DEBUG
-    msg_putchar('\n');
+    version_msg("\n");
     version_msg(_("  DEBUG BUILD"));
 #endif
 }
@@ -969,9 +969,11 @@ version_msg(s)
 {
     int		len = (int)STRLEN(s);
 
-    if (len < (int)Columns && msg_col + len >= (int)Columns)
+    if (!got_int && len < (int)Columns && msg_col + len >= (int)Columns
+								&& *s != '\n')
 	msg_putchar('\n');
-    MSG_PUTS(s);
+    if (!got_int)
+	MSG_PUTS(s);
 }
 
 static void do_intro_line __ARGS((int row, char_u *mesg, int add_version, int attr));

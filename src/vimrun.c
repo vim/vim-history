@@ -60,7 +60,7 @@ main(void)
     p = _oscmd;
 #else
 # if defined(__MINGW32__) || defined(__CYGWIN__)
-    p = (const char *) GetCommandLine();
+    p = (const char *)GetCommandLine();
 # else
     p = _acmdln;
 # endif

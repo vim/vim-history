@@ -1901,7 +1901,7 @@ split_button_string(char_u *button_string, int *n_buttons)
 	    else if (*p == DLG_HOTKEY_CHAR)
 		*p = '_';
 #ifdef FEAT_MBYTE
-	    if (has_mbyte)
+	    else if (has_mbyte)
 		p += (*mb_ptr2len_check)(p) - 1;
 #endif
 	}
@@ -1915,9 +1915,9 @@ split_button_string(char_u *button_string, int *n_buttons)
     static char **
 split_button_translation(const char *message)
 {
-    char    **buttons  = NULL;
+    char    **buttons = NULL;
     char_u  *str;
-    int	    n_buttons;
+    int	    n_buttons = 0;
     int	    n_expected = 1;
 
     for (str = (char_u *)message; *str != NUL; ++str)

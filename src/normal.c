@@ -7728,6 +7728,7 @@ nv_esc(cap)
 	if (cmdwin_type != 0)
 	{
 	    cmdwin_result = K_IGNORE;
+	    got_int = FALSE;	/* don't stop executing autocommands et al. */
 	    return;
 	}
 #endif

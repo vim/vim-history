@@ -348,7 +348,11 @@ smsg(char_u *s, ...)
     va_list arglist;
 
     va_start(arglist, s);
+# ifdef HAVE_VSNPRINTF
+    vsnprintf((char *)IObuff, IOSIZE, (char *)s, arglist);
+# else
     vsprintf((char *)IObuff, (char *)s, arglist);
+# endif
     va_end(arglist);
     return msg(IObuff);
 }
@@ -362,7 +366,11 @@ smsg_attr(int attr, char_u *s, ...)
     va_list arglist;
 
     va_start(arglist, s);
+# ifdef HAVE_VSNPRINTF
+    vsnprintf((char *)IObuff, IOSIZE, (char *)s, arglist);
+# else
     vsprintf((char *)IObuff, (char *)s, arglist);
+# endif
     va_end(arglist);
     return msg_attr(IObuff, attr);
 }
@@ -1153,6 +1161,16 @@ msg_outtrans_len_attr(msgstr, len, attr)
 	add_msg_hist(str, len, attr);
 	attr &= ~MSG_HIST;
     }
+
+#ifdef FEAT_MBYTE
+    /* If the string starts with a composing character first draw a space on
+     * which the composing char can be drawn. */
+    if (enc_utf8 && utf_iscomposing(utf_ptr2char(msgstr)))
+    {
+	msg_puts_attr((char_u *)" ", attr);
+	retval += 1;
+    }
+#endif
 
     /*
      * Go over the string.  Special characters are translated and printed.

@@ -1034,6 +1034,9 @@ del_typebuf(len, offset)
 {
     int	    i;
 
+    if (len == 0)
+	return;		/* nothing to do */
+
     typebuf.tb_len -= len;
 
     /*

@@ -163,6 +163,7 @@
 #undef  HAVE_ICONV_H
 #undef  HAVE_ICONV
 #undef  DYNAMIC_ICONV
+#undef	HAVE_STRFTIME
 #else
 #define HAVE_SELECT
 #define HAVE_FCNTL_H
@@ -173,6 +174,7 @@
 #undef  HAVE_ICONV_H
 #undef  HAVE_ICONV
 #undef  DYNAMIC_ICONV
+#define	HAVE_STRFTIME
 #endif
 
 /* GUI support defines */

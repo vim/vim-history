@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.2e.  Last change: 2003 May 17
+*motion.txt*    For Vim version 6.2f.  Last change: 2003 May 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

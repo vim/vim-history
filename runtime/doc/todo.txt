@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.2e.  Last change: 2003 May 18
+*todo.txt*      For Vim version 6.2f.  Last change: 2003 May 25
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,9 +29,7 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Crash and/or out-of-memory error. (Luc Hermitte, Mar 1)
-
-Vim crashes with very long arguments. (Carlo Perassi, Feb 6)
+Test50 output is a Unix format file but test50.ok is normallya dos file.
 
 Hang with folding, reproducable. (Derek Wyatt, Oct 30)
 Crash with folding. (Kamil Burzynski, Apr 7)
@@ -45,6 +43,14 @@ Crash for some script which contains:
 
 Win32: Crash when adding and deleting menu items. (Klaus Bosau Dec 29)
 
+When using 'arabic' and searching for a string that starts with a composing
+character the command line isn't drawn properly.
+
+After searching for a string with composing characters, typing another command
+shows some of the composing characters, they are not cleared.
+
+Compare regexp to Perl. (Piet Delport, May 19)
+
 Redraw problem in help file after listing completions. (Jacob Lerner, Apr 27)
 
 Redraw problem: three windows, horizontal split.  HTML in top and bottom,
@@ -53,21 +59,22 @@ removes some highlighting in one of the windows. (Brett Pershing Stahlman)
 The syntax must be different in the previous current window and the window
 above the status line being dragged.
 
-Perl: cur_val() now works for Perl 5.8 but not for 5.6.  How can it be made to
-work for both?
-
 Exception handling: (Servatius Brandt)
 - Add section to user manual
 - remove the workarounds for not being able to define a function in a while
   loop.  It's not supported.
+- Check use of aborting() in functions like win_close() and close_buffer():
+  When aborting() already returned TRUE at the start of the function should
+  autocommands and other things still be executed?
 
 GTK2 patch problems:
 - ":sp" ":q" leaves cursor on the cmdline.
-- "gvim --remote file" doesn't work.
 - DND doesn't work with KDE?
 - Title leaves tail of old title behind: shows "GVIMIM" instead of "GVIM".
 - Combining UTF-8 characters not displayed properly in menus (Mikolaj
   Machowski)
+- After ":set guifont=fixed" using ":set guifont=*" goes wrong. (Erik
+  Edelmann, May 22)
 
 Check that these problems are fixed by the GTK 2 port:
 9   GTK GUI with Gnome: When $DISPLAY is wrong, ":gui" unexpectedly exits.
@@ -98,11 +105,7 @@ items to a few hundred characters?
 Translated options are not expanded, add flag and invoke _().  For 'titleold'
 and 'printheader'.
 
-Searching for a character without combining character should find that
-character with combining characters, but it doesn't. (Raphael Finkel, Feb 28)
-Define something to specify no composing characters follow?
-Item to match any combining character: [[:combining:]]. Or Perl's \pM
-Also: is order of composing characters ignored?
+When searching, is order of composing characters ignored?
 
 UTF-8: When three combining chars and 'delcombine' set, "x" deletes all the
 bytes instead of the last combining char. (Raphael Finkel)
@@ -243,10 +246,6 @@ When confirm() uses -1 for the default, there should be no default.
 Make all GUIs work the same way: <Return> ignored when there is no default.
 GTK: <Tab> changes the default, but how to obtain it?
 Motif: uses 1 for CR and 2 for ESC, that's wrong.
-
-Motif: tooltip balloon isn't removed when it's there the moment a toolbar item
-is greyed out. (Srikanth Sankaran) Put mouse on a toolbar item and type ":sh".
-Remove all balloons when greying-out a toolbar item.
 
 When cursor is first moved because of scrolling, set a mark at this position.
 (Rimon Barr)  Use '-.
@@ -1232,6 +1231,8 @@ Multi-byte characters:
     ":grep".
 8   When a file was converted from 'fileencoding' to 'encoding', a tag search
     should also do this on the search pattern. (Andrzej M. Ostruszka)
+7   When converting a file fails, mention which byte could not be converted,
+    so that the user can fix the problem.
 8   The X11 clipboard supports the Vim selection for char/line/block mode, but
     this doesn't store the encoding.  Can't copy/paste between two Vims with a
     different 'encoding'.
@@ -1244,15 +1245,7 @@ Multi-byte characters:
     multi-byte characters.
 8   'infercase' doesn't work with multi-byte characters.
 8   toupper() function doesn't handle byte count changes.
-8   Searching with UTF-8 doesn't always take care of composing characters.
-    E.g. when using "x*" where "x" has a composing character.
-    And there should be a way to ignore composing characters (e.g., for
-    Hebrew).  And a way to consider combined characters equal to the
-    decomposed form.
 8   Support four composing characters, needed for Hebrew. (Ron Aaron)
-8   Should have a way to match a base character with arbitrary composing
-    characters.  Patch with 'combineignore' option, but I prefer an item in
-    the search pattern.  (Ron Aaron)
 8   Detect overlong UTF-8 sequences and handle them like illegal bytes.
 8   ":s/x/\u\1/" doesn't work, making uppercase isn't done for multi-byte
     characters.
@@ -1438,6 +1431,8 @@ Syntax highlighting:
 -   Add line-continuation pattern for non-syncing items too?
 -   Add possibility to highlight specific columns (for Fortran).  Or put a
     line in between columns (e.g. for 'textwidth').
+    Patch to add 'hlcolumn' from Vit Stradal, 2003 May 21 (and following
+    patch).
 -   Add possibility to highlight the whole line, including the right margin
     (for comment blocks).
 -   Add 'hlmatch' option: List of flags:
@@ -2964,10 +2959,12 @@ Mouse support:
 -   When mouse click after 'r' command, get character that was pointed to.
 
 
-Crypt:
+Crypt and security:
 8   Also crypt the swapfile, each block separately.  Change mf_write() and
     mf_read().  How to get b_p_key to these functions?
 7   Support a stronger encryption.  Jason Holt implemented AES (May 6 2003).
+8   Lock all used memory so that it doesn't get swapped to disk (uncrypted).
+    Patch by Jason Holt, 2003 May 23.
 
 
 Argument list:

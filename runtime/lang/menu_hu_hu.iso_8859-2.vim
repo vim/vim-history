@@ -1,7 +1,7 @@
 " Menu Translations:	Hungarian (Magyar)
 " Original Translation:	Zoltán Árpádffy
 " Maintained By:	Kontra Gergely <kgergely@mcl.hu>
-" Last Change:		2003 Mar 30
+" Last Change:		2003 May 20
 " I'm working on defining (unaccented) hotkeys for everything.
 " I want to remove y and z hotkeys, because on the hungarian keymap they're at
 " a differrent place.
@@ -66,7 +66,7 @@ menutrans &Paste<Tab>"+gP		&Beillesztés<Tab>"+gP
 menutrans Put\ &Before<Tab>[p		Berakás\ e&lé<Tab>[p
 menutrans Put\ &After<Tab>]p		Berakás\ &mögé<Tab>]p
 menutrans &Delete<Tab>x			&Törlés<Tab>x
-menutrans &Select\ all<Tab>ggVG		Min&det\ kijelöli<Tab>ggvG
+menutrans &Select\ all<Tab>ggVG		A&z\ összes kijelölése<Tab>ggvG
 menutrans &Find\.\.\.			Ke&resés\.\.\.
 menutrans Find\ and\ Rep&lace\.\.\.	Keresés\ és\ c&sere\.\.\.
 menutrans Find\ and\ Rep&lace<Tab>:%s	Keresés\ és\ c&sere<Tab>:%s
@@ -117,7 +117,7 @@ menutrans &Tools			&Eszközök
 menutrans &Jump\ to\ this\ tag<Tab>g^]	&Ugrás\ a\ taghoz<Tab>g^]
 menutrans Jump\ &back<Tab>^T		Ugrás\ &vissza<Tab>^T
 menutrans Build\ &Tags\ File		&Tag\ fájl\ készítése
-menutrans &Folding			Be&hajtások
+menutrans &Folding			&Behajtások
 menutrans &Make<Tab>:make		&Fordítás<Tab>:make
 menutrans &List\ Errors<Tab>:cl		&Hibák\ listája<Tab>:cl
 menutrans L&ist\ Messages<Tab>:cl!	Ü&zenetek\ listája<Tab>:cl!
@@ -134,7 +134,7 @@ menutrans Conve&rt\ back<Tab>:%!xxd\ -r	HEX->Normál\ nézet<Tab>:%!xxd\ -r
 menutrans &Set\ Compiler		Fordító\ &megadása
 
 " Tools.Folding
-menutrans &Enable/Disable\ folds<Tab>zi	Behajtá&sok\ BE/KI<Tab>zi
+menutrans &Enable/Disable\ folds<Tab>zi	Behajtások\ BE&/KI<Tab>zi
 menutrans &View\ Cursor\ Line<Tab>zv	&Aktuális\ sor\ látszik<Tab>zv
 menutrans Vie&w\ Cursor\ Line\ only<Tab>zMzx	&Csak\ aktuális\ sor\ látszik<Tab>zMzx
 menutrans C&lose\ more\ folds<Tab>zm	Következõ\ szint\ be&zárása<Tab>zm
@@ -151,7 +151,7 @@ menutrans Ma&rker			&Jelölés
 menutrans Create\ &Fold<Tab>zf		Ú&j\ behajtás<Tab>zf
 menutrans &Delete\ Fold<Tab>zd		Behajtás\ &törlése<Tab>zd
 menutrans Delete\ &All\ Folds<Tab>zD	Öss&zes\ behajtás\ törlése<Tab>zD
-menutrans Fold\ column\ &width		Behajtás\ j&elölése\ x\ oszlopban
+menutrans Fold\ col&umn\ width		Behajtások\ a\ &margón\ x\ oszlopban
 
 " Tools.Diff
 menutrans &Update		&Frissítés
@@ -199,11 +199,11 @@ menutrans Cu&t			&Kivágás
 menutrans &Copy			&Másolás
 menutrans &Paste		&Beillesztés
 menutrans &Delete		&Törlés
-menutrans Select\ Blockwise	Bloc&kwise\ TODO
+menutrans Select\ Blockwise	Kijelölés\ blo&kként
 menutrans Select\ &Word		S&zó\ kijelölése
 menutrans Select\ &Line		&Sor\ kijelölése
 menutrans Select\ &Block	B&lokk\ kijelölése
-menutrans Select\ &All		&Minden\ kijelölése
+menutrans Select\ &All		A&z\ összes\ kijelölése
 
 " The GUI toolbar
 if has("toolbar")
@@ -237,9 +237,10 @@ if has("toolbar")
 endif
 
 " Syntax menu
-menutrans &Syntax			&Szintaxis
-menutrans Set\ '&syntax'\ only		Csak\ 'syntax'
-menutrans Set\ '&filetype'\ too		'filetype'\ is
+menutrans &Syntax			Sz&intaxis
+menutrans &Show\ filetypes\ in\ menu	Fájl&típusok\ menü 
+menutrans Set\ '&syntax'\ only		Csak\ '&syntax'
+menutrans Set\ '&filetype'\ too		'&filetype'\ is
 menutrans &Off				&Ki
 menutrans &Manual			Ké&zi
 menutrans A&utomatic			A&utomatikus

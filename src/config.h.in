@@ -164,6 +164,7 @@
 #undef HAVE_SIGSETJMP
 #undef HAVE_SIGSTACK
 #undef HAVE_SIGVEC
+#undef HAVE_SNPRINTF
 #undef HAVE_STRCASECMP
 #undef HAVE_STRERROR
 #undef HAVE_STRFTIME
@@ -353,3 +354,6 @@
 
 /* Define if you want XSMP interaction as well as vanilla swapfile safety */
 #undef USE_XSMP_INTERACT
+
+/* Define if vsnprintf() works */
+#undef HAVE_VSNPRINTF

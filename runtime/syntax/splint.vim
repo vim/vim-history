@@ -1,6 +1,7 @@
 " Vim syntax file
 " Language:	splint (C with lclint/splint Annotations)
 " Maintainer:	Ralf Wildenhues <Ralf.Wildenhues@gmx.de>
+" Splint Home:	http://www.splint.org/
 " Last Change:	$Date$
 " $Revision$
 
@@ -31,7 +32,7 @@ endif
 
 
 " FIXME: uses and changes several clusters defined in c.vim
-"	 so watch for changes there
+"	so watch for changes there
 
 " TODO: make a little more grammar explicit
 "	match flags with hyphen and underscore notation
@@ -41,21 +42,22 @@ endif
 syn case match
 " splint annotations (taken from 'splint -help annotations')
 syn match   splintStateAnnot	contained "\(pre\|post\):\(only\|shared\|owned\|dependent\|observer\|exposed\|isnull\|notnull\)"
+syn keyword splintSpecialAnnot  contained special
 syn keyword splintSpecTag	contained uses sets defines allocated releases
-syn keyword splintModifies	contained modifies requires ensures
+syn keyword splintModifies	contained modifies
 syn keyword splintRequires	contained requires ensures
 syn keyword splintGlobals	contained globals
 syn keyword splintGlobitem	contained internalState fileSystem
 syn keyword splintGlobannot	contained undef killed
 syn keyword splintWarning	contained warn
 
-syn keyword splintModitem	contained internalState fileSystem nothing maxSet maxRead result
+syn keyword splintModitem	contained internalState fileSystem nothing
 syn keyword splintReqitem	contained MaxSet MaxRead result
-syn keyword splintIter		contained iter
+syn keyword splintIter		contained iter yield
 syn keyword splintConst		contained constant
 syn keyword splintAlt		contained alt
 
-syn keyword splintType		contained abstract concrete mutable immutable refcounted
+syn keyword splintType		contained abstract concrete mutable immutable refcounted numabstract
 syn keyword splintGlobalType	contained unchecked checkmod checked checkedstrict
 syn keyword splintMemMgm	contained dependent keep killref only owned shared temp
 syn keyword splintAlias		contained unique returned
@@ -83,34 +85,35 @@ syn match   splintSpecType	contained "\(\|unsigned\|signed\)integraltype"
 
 " Flags taken from 'splint -help flags full' divided in local and global flags
 "				 Local Flags:
-syn keyword splintFlag contained abstract accessall accessczech accessczechoslovak accessfile
-syn keyword splintFlag contained accessmodule accessslovak aliasunique allblock allempty
-syn keyword splintFlag contained allglobs allimponly allmacros alwaysexits annotationerror
-syn keyword splintFlag contained ansi89limits assignexpose badflag bitwisesigned boolcompare
-syn keyword splintFlag contained boolfalse boolint boolops booltrue booltype
-syn keyword splintFlag contained bounds boundscompacterrormessages boundsread boundswrite branchstate
-syn keyword splintFlag contained bufferoverflow bufferoverflowhigh bugslimit casebreak castexpose
-syn keyword splintFlag contained castfcnptr charindex charint charintliteral charunsignedchar
-syn keyword splintFlag contained checkedglobalias checkmodglobalias checkpost checkstrictglobalias checkstrictglobs
-syn keyword splintFlag contained codeimponly commentchar commenterror compdef compdestroy
-syn keyword splintFlag contained compmempass constmacros constprefix constprefixexclude constuse
-syn keyword splintFlag contained continuecomment controlnestdepth cppnames czech czechconsts
-syn keyword splintFlag contained czechfcns czechmacros czechoslovak czechoslovakconsts czechoslovakfcns
-syn keyword splintFlag contained czechoslovakmacros czechoslovaktypes czechoslovakvars czechtypes czechvars
-syn keyword splintFlag contained debugfcnconstraint declundef deepbreak deparrays dependenttrans
-syn keyword splintFlag contained distinctexternalnames distinctinternalnames duplicatecases duplicatequals elseifcomplete
-syn keyword splintFlag contained enumindex enumint enummembers enummemuse enumprefix
-syn keyword splintFlag contained enumprefixexclude evalorder evalorderuncon exitarg exportany
-syn keyword splintFlag contained exportconst exportfcn exportheader exportheadervar exportiter
-syn keyword splintFlag contained exportlocal exportmacro exporttype exportvar exposetrans
-syn keyword splintFlag contained externalnamecaseinsensitive externalnamelen externalprefix externalprefixexclude fcnderef
-syn keyword splintFlag contained fcnmacros fcnpost fcnuse fielduse fileextensions
-syn keyword splintFlag contained filestaticprefix filestaticprefixexclude firstcase fixedformalarray floatdouble
-syn keyword splintFlag contained forblock forcehints forempty forloopexec formalarray
-syn keyword splintFlag contained formatcode formatconst formattype forwarddecl freshtrans
-syn keyword splintFlag contained fullinitblock globalias globalprefix globalprefixexclude globimponly
-syn keyword splintFlag contained globnoglobs globs globsimpmodsnothing globstate globuse
-syn keyword splintFlag contained gnuextensions grammar hasyield hints ifblock
+syn keyword splintFlag contained abstract abstractcompare accessall accessczech accessczechoslovak
+syn keyword splintFlag contained accessfile accessmodule accessslovak aliasunique allblock
+syn keyword splintFlag contained allempty allglobs allimponly allmacros alwaysexits
+syn keyword splintFlag contained annotationerror ansi89limits assignexpose badflag bitwisesigned
+syn keyword splintFlag contained boolcompare boolfalse boolint boolops booltrue
+syn keyword splintFlag contained booltype bounds boundscompacterrormessages boundsread boundswrite
+syn keyword splintFlag contained branchstate bufferoverflow bufferoverflowhigh bugslimit casebreak
+syn keyword splintFlag contained caseinsensitivefilenames castexpose castfcnptr charindex charint
+syn keyword splintFlag contained charintliteral charunsignedchar checkedglobalias checkmodglobalias checkpost
+syn keyword splintFlag contained checkstrictglobalias checkstrictglobs codeimponly commentchar commenterror
+syn keyword splintFlag contained compdef compdestroy compmempass constmacros constprefix
+syn keyword splintFlag contained constprefixexclude constuse continuecomment controlnestdepth cppnames
+syn keyword splintFlag contained csvoverwrite czech czechconsts czechfcns czechmacros
+syn keyword splintFlag contained czechoslovak czechoslovakconsts czechoslovakfcns czechoslovakmacros czechoslovaktypes
+syn keyword splintFlag contained czechoslovakvars czechtypes czechvars debugfcnconstraint declundef
+syn keyword splintFlag contained deepbreak deparrays dependenttrans distinctexternalnames distinctinternalnames
+syn keyword splintFlag contained duplicatecases duplicatequals elseifcomplete emptyret enumindex
+syn keyword splintFlag contained enumint enummembers enummemuse enumprefix enumprefixexclude
+syn keyword splintFlag contained evalorder evalorderuncon exitarg exportany exportconst
+syn keyword splintFlag contained exportfcn exportheader exportheadervar exportiter exportlocal
+syn keyword splintFlag contained exportmacro exporttype exportvar exposetrans externalnamecaseinsensitive
+syn keyword splintFlag contained externalnamelen externalprefix externalprefixexclude fcnderef fcnmacros
+syn keyword splintFlag contained fcnpost fcnuse fielduse fileextensions filestaticprefix
+syn keyword splintFlag contained filestaticprefixexclude firstcase fixedformalarray floatdouble forblock
+syn keyword splintFlag contained forcehints forempty forloopexec formalarray formatcode
+syn keyword splintFlag contained formatconst formattype forwarddecl freshtrans fullinitblock
+syn keyword splintFlag contained globalias globalprefix globalprefixexclude globimponly globnoglobs
+syn keyword splintFlag contained globs globsimpmodsnothing globstate globuse gnuextensions
+syn keyword splintFlag contained grammar hasyield hints htmlfileformat ifblock
 syn keyword splintFlag contained ifempty ignorequals ignoresigns immediatetrans impabstract
 syn keyword splintFlag contained impcheckedglobs impcheckedspecglobs impcheckedstatics impcheckedstrictglobs impcheckedstrictspecglobs
 syn keyword splintFlag contained impcheckedstrictstatics impcheckmodglobs impcheckmodinternals impcheckmodspecglobs impcheckmodstatics
@@ -121,36 +124,39 @@ syn keyword splintFlag contained internalglobsnoglobs internalnamecaseinsensitiv
 syn keyword splintFlag contained isoreserved isoreservedinternal iterbalance iterloopexec iterprefix
 syn keyword splintFlag contained iterprefixexclude iteryield its4low its4moderate its4mostrisky
 syn keyword splintFlag contained its4risky its4veryrisky keep keeptrans kepttrans
-syn keyword splintFlag contained legacy libmacros likelybool limit linelen
-syn keyword splintFlag contained lintcomments localprefix localprefixexclude longintegral longsignedintegral
+syn keyword splintFlag contained legacy libmacros likelyboundsread likelyboundswrite likelybool
+syn keyword splintFlag contained likelybounds limit linelen lintcomments localprefix
+syn keyword splintFlag contained localprefixexclude locindentspaces longint longintegral longsignedintegral
 syn keyword splintFlag contained longunsignedintegral longunsignedunsignedintegral loopexec looploopbreak looploopcontinue
 syn keyword splintFlag contained loopswitchbreak macroassign macroconstdecl macrodecl macroempty
 syn keyword splintFlag contained macrofcndecl macromatchname macroparams macroparens macroredef
-syn keyword splintFlag contained macrostmt macrounrecog macrovarprefix macrovarprefixexclude maintype
-syn keyword splintFlag contained matchanyintegral matchfields mayaliasunique memchecks memimp
-syn keyword splintFlag contained memtrans misplacedsharequal misscase modfilesys modglobs
-syn keyword splintFlag contained modglobsnomods modglobsunchecked modinternalstrict modnomods modobserver
-syn keyword splintFlag contained modobserveruncon mods modsimpnoglobs modstrictglobsnomods moduncon
-syn keyword splintFlag contained modunconnomods modunspec multithreaded mustdefine mustfree
-syn keyword splintFlag contained mustfreefresh mustfreeonly mustmod mustnotalias mutrep
-syn keyword splintFlag contained namechecks needspec nestcomment nestedextern newdecl
-syn keyword splintFlag contained newreftrans nextlinemacros noaccess nocomments noeffect
-syn keyword splintFlag contained noeffectuncon noparams nopp noret null
-syn keyword splintFlag contained nullassign nullderef nullpass nullptrarith nullret
-syn keyword splintFlag contained nullstate nullterminated nullterminated numenummembers numliteral
-syn keyword splintFlag contained numstructfields observertrans obviousloopexec oldstyle onlytrans
-syn keyword splintFlag contained onlyunqglobaltrans orconstraint overload ownedtrans paramimptemp
-syn keyword splintFlag contained paramuse parenfileformat partial passunknown portability
-syn keyword splintFlag contained predassign predbool predboolint predboolothers predboolptr
-syn keyword splintFlag contained preproc protoparammatch protoparamname protoparamprefix protoparamprefixexclude
-syn keyword splintFlag contained ptrarith ptrcompare ptrnegate quiet readonlystrings
-syn keyword splintFlag contained readonlytrans realcompare redecl redef redundantconstraints
-syn keyword splintFlag contained redundantsharequal refcounttrans relaxquals relaxtypes repeatunrecog
-syn keyword splintFlag contained repexpose retalias retexpose retimponly retval
-syn keyword splintFlag contained retvalbool retvalint retvalother sefparams sefuncon
-syn keyword splintFlag contained shadow sharedtrans shiftimplementation shiftnegative showallconjs
-syn keyword splintFlag contained showcolumn showconstraintlocation showconstraintparens showfunc showscan
-syn keyword splintFlag contained showsourceloc showsummary sizeofformalarray sizeoftype skipansiheaders
+syn keyword splintFlag contained macroreturn macrostmt macrounrecog macrovarprefix macrovarprefixexclude
+syn keyword splintFlag contained maintype matchanyintegral matchfields mayaliasunique memchecks
+syn keyword splintFlag contained memimp memtrans misplacedsharequal misscase modfilesys
+syn keyword splintFlag contained modglobs modglobsnomods modglobsunchecked modinternalstrict modnomods
+syn keyword splintFlag contained modobserver modobserveruncon mods modsimpnoglobs modstrictglobsnomods
+syn keyword splintFlag contained moduncon modunconnomods modunspec multithreaded mustdefine
+syn keyword splintFlag contained mustfree mustfreefresh mustfreeonly mustmod mustnotalias
+syn keyword splintFlag contained mutrep namechecks needspec nestcomment nestedextern
+syn keyword splintFlag contained newdecl newreftrans nextlinemacros noaccess nocomments
+syn keyword splintFlag contained noeffect noeffectuncon noparams nopp noret
+syn keyword splintFlag contained null nullassign nullderef nullinit nullpass
+syn keyword splintFlag contained nullptrarith nullret nullstate nullterminated
+syn keyword splintFlag contained numabstract numabstractcast numabstractindex numabstractlit numabstractprint
+syn keyword splintFlag contained numenummembers numliteral numstructfields observertrans obviousloopexec
+syn keyword splintFlag contained oldstyle onlytrans onlyunqglobaltrans orconstraint overload
+syn keyword splintFlag contained ownedtrans paramimptemp paramuse parenfileformat partial
+syn keyword splintFlag contained passunknown portability predassign predbool predboolint
+syn keyword splintFlag contained predboolothers predboolptr preproc protoparammatch protoparamname
+syn keyword splintFlag contained protoparamprefix protoparamprefixexclude ptrarith ptrcompare ptrnegate
+syn keyword splintFlag contained quiet readonlystrings readonlytrans realcompare redecl
+syn keyword splintFlag contained redef redundantconstraints redundantsharequal refcounttrans relaxquals
+syn keyword splintFlag contained relaxtypes repeatunrecog repexpose retalias retexpose
+syn keyword splintFlag contained retimponly retval retvalbool retvalint retvalother
+syn keyword splintFlag contained sefparams sefuncon shadow sharedtrans shiftimplementation
+syn keyword splintFlag contained shiftnegative shortint showallconjs showcolumn showconstraintlocation
+syn keyword splintFlag contained showconstraintparens showdeephistory showfunc showloadloc showscan
+syn keyword splintFlag contained showsourceloc showsummary sizeofformalarray sizeoftype skipisoheaders
 syn keyword splintFlag contained skipposixheaders slashslashcomment slovak slovakconsts slovakfcns
 syn keyword splintFlag contained slovakmacros slovaktypes slovakvars specglobimponly specimponly
 syn keyword splintFlag contained specmacros specretimponly specstructimponly specundecl specundef
@@ -163,18 +169,21 @@ syn keyword splintFlag contained tmpcomments toctou topuse trytorecover type
 syn keyword splintFlag contained typeprefix typeprefixexclude typeuse uncheckedglobalias uncheckedmacroprefix
 syn keyword splintFlag contained uncheckedmacroprefixexclude uniondef unixstandard unqualifiedinittrans unqualifiedtrans
 syn keyword splintFlag contained unreachable unrecog unrecogcomments unrecogdirective unrecogflagcomments
-syn keyword splintFlag contained unsignedcompare unusedspecial usedef usereleased usestderr
-syn keyword splintFlag contained usevarargs varuse voidabstract warnflags warnlintcomments
-syn keyword splintFlag contained warnmissingglobs warnmissingglobsnoglobs warnposixheaders warnrc warnsysfiles
-syn keyword splintFlag contained warnunixlib warnuse whileblock whileempty whileloopexec
-syn keyword splintFlag contained zerobool zeroptr
+syn keyword splintFlag contained unsignedcompare unusedspecial usedef usereleased usevarargs
+syn keyword splintFlag contained varuse voidabstract warnflags warnlintcomments warnmissingglobs
+syn keyword splintFlag contained warnmissingglobsnoglobs warnposixheaders warnrc warnsysfiles warnunixlib
+syn keyword splintFlag contained warnuse whileblock whileempty whileloopexec zerobool
+syn keyword splintFlag contained zeroptr
 "				       Global Flags:
-syn keyword splintGlobalFlag contained dump expect help isolib
+syn keyword splintGlobalFlag contained csv dump errorstream errorstreamstderr errorstreamstdout
+syn keyword splintGlobalFlag contained expect f help i isolib
 syn keyword splintGlobalFlag contained larchpath lclexpect lclimportdir lcs lh
-syn keyword splintGlobalFlag contained load mts neverinclude nof nolib
-syn keyword splintGlobalFlag contained posixlib posixstrictlib showalluses singleinclude skipsysheaders
-syn keyword splintGlobalFlag contained stats strictlib supcounts sysdirs timedist
-syn keyword splintGlobalFlag contained tmpdir unixlib unixstrictlib whichlib
+syn keyword splintGlobalFlag contained load messagestream messagestreamstderr messagestreamstdout mts
+syn keyword splintGlobalFlag contained neverinclude nof nolib posixlib posixstrictlib
+syn keyword splintGlobalFlag contained showalluses singleinclude skipsysheaders stats streamoverwrite
+syn keyword splintGlobalFlag contained strictlib supcounts sysdirs timedist tmpdir
+syn keyword splintGlobalFlag contained unixlib unixstrictlib warningstream warningstreamstderr warningstreamstdout
+syn keyword splintGlobalFlag contained whichlib
 syn match   splintFlagExpr contained "[\+\-\=]" nextgroup=splintFlag,splintGlobalFlag
 
 " detect missing /*@ and wrong */
@@ -183,7 +192,7 @@ syn cluster	cCommentGroup	add=splintAnnError
 syn match	splintAnnError2	"[^@]\*/"hs=s+1 contained
 syn region	splintAnnotation start="/\*@" end="@\*/" contains=@splintAnnotElem,cType keepend
 syn match	splintShortAnn	"/\*@\*/"
-syn cluster	splintAnnotElem	contains=splintStateAnnot,splintSpecTag,splintModifies,splintRequires,splintGlobals,splintGlobitem,splintGlobannot,splintWarning,splintModitem,splintIter,splintConst,splintAlt,splintType,splintGlobalType,splintMemMgm,splintAlias,splintExposure,splintDefState,splintGlobState,splintNullState,splintNullPred,splintExit,splintExec,splintSef,splintDecl,splintCase,splintBreak,splintUnreach,splintSpecFunc,splintErrSupp,splintTypeAcc,splintMacro,splintSpecType,splintAnnError2,splintFlagExpr
+syn cluster	splintAnnotElem	contains=splintStateAnnot,splintSpecialAnnot,splintSpecTag,splintModifies,splintRequires,splintGlobals,splintGlobitem,splintGlobannot,splintWarning,splintModitem,splintIter,splintConst,splintAlt,splintType,splintGlobalType,splintMemMgm,splintAlias,splintExposure,splintDefState,splintGlobState,splintNullState,splintNullPred,splintExit,splintExec,splintSef,splintDecl,splintCase,splintBreak,splintUnreach,splintSpecFunc,splintErrSupp,splintTypeAcc,splintMacro,splintSpecType,splintAnnError2,splintFlagExpr
 syn cluster	splintAllStuff	contains=@splintAnnotElem,splintFlag,splintGlobalFlag
 syn cluster	cParenGroup	add=@splintAllStuff
 syn cluster	cPreProcGroup	add=@splintAllStuff

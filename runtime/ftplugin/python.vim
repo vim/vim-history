@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	python
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
-" Last Change:	Don, 06 Jun 2002 20:30:09 CEST
+" Last Change:	Sat, 24 May 2003 12:23:01 CEST
 
 if exists("b:did_ftplugin") | finish | endif
 let b:did_ftplugin = 1
@@ -10,6 +10,8 @@ setlocal cinkeys-=0#
 setlocal indentkeys-=0#
 setlocal include=\s*\\(from\\\|import\\)
 setlocal suffixesadd=.py
+" setlocal comments-=:%
+setlocal commentstring=#%s
 
 " Python always uses a 'tabstop' of 8.
 setlocal ts=8
@@ -34,3 +36,8 @@ fun! <SID>Python_jump(motion) range
     call histdel('/', -1)
     let @/ = save    " restore last search pattern
 endfun
+
+if has("gui_win32") && !exists("b:browsefilter")
+    let b:browsefilter = "Python Files (*.py)\t*.py\n" .
+		       \ "All Files (*.*)\t*.*\n"
+endif

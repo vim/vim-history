@@ -881,8 +881,12 @@ ex_let(eap)
     char_u	*p;
     int		c1 = 0, c2;
     int		i;
+    char_u	*expr_start;
+    char_u	*expr_end;
+    char_u	*name_end;
 
-    expr = vim_strchr(arg, '=');
+    name_end = find_name_end(arg, &expr_start, &expr_end);
+    expr = vim_strchr(name_end, '=');
     if (expr == NULL)
     {
 	if (ends_excmd(*arg))
@@ -915,9 +919,6 @@ ex_let(eap)
 	     */
 	    while (!ends_excmd(*arg))
 	    {
-		char_u	*expr_start;
-		char_u	*expr_end;
-		char_u	*name_end;
 		char_u	*temp_string = NULL;
 		int	arg_len;
 
@@ -5346,7 +5347,8 @@ f_inputdialog(argvars, retvar)
 	    retvar->var_val.var_string = vim_strsave(IObuff);
 	else
 	{
-	    if (argvars[2].var_type != VAR_UNKNOWN)
+	    if (argvars[1].var_type != VAR_UNKNOWN
+					&& argvars[2].var_type != VAR_UNKNOWN)
 		retvar->var_val.var_string = vim_strsave(
 					get_var_string_buf(&argvars[2], buf));
 	    else
@@ -9094,7 +9096,7 @@ call_user_func(fp, argcount, argvars, retvar, firstline, lastline)
 	{
 	    ++no_wait_return;
 	    msg_scroll = TRUE;	    /* always scroll up, don't overwrite */
-	    smsg((char_u *)_("calling %s"), sourcing_name);
+	    msg_str((char_u *)_("calling %s"), sourcing_name);
 	    if (p_verbose >= 14)
 	    {
 		int	i;
@@ -9145,16 +9147,28 @@ call_user_func(fp, argcount, argvars, retvar, firstline, lastline)
     /* when being verbose, mention the return value */
     if (p_verbose >= 12)
     {
+	char_u	*sn, *val;
+
 	++no_wait_return;
 	msg_scroll = TRUE;	    /* always scroll up, don't overwrite */
+
+	/* Make sure the output fits in IObuff. */
+	sn = sourcing_name;
+	if (STRLEN(sourcing_name) > IOSIZE / 2 - 50)
+	    sn = sourcing_name + STRLEN(sourcing_name) - (IOSIZE / 2 - 50);
+
 	if (aborting())
-	    smsg((char_u *)_("%s aborted"), sourcing_name);
+	    smsg((char_u *)_("%s aborted"), sn);
 	else if (fc.retvar->var_type == VAR_NUMBER)
-	    smsg((char_u *)_("%s returning #%ld"), sourcing_name,
+	    smsg((char_u *)_("%s returning #%ld"), sn,
 				       (long)fc.retvar->var_val.var_number);
 	else if (fc.retvar->var_type == VAR_STRING)
-	    smsg((char_u *)_("%s returning \"%s\""), sourcing_name,
-						 get_var_string(fc.retvar));
+	{
+	    val = get_var_string(fc.retvar);
+	    if (STRLEN(val) > IOSIZE / 2 - 50)
+		val = val + STRLEN(val) - (IOSIZE / 2 - 50);
+	    smsg((char_u *)_("%s returning \"%s\""), sn, val);
+	}
 	msg_puts((char_u *)"\n");   /* don't overwrite this either */
 	cmdline_row = msg_row;
 	--no_wait_return;
@@ -9169,7 +9183,7 @@ call_user_func(fp, argcount, argvars, retvar, firstline, lastline)
     {
 	++no_wait_return;
 	msg_scroll = TRUE;	    /* always scroll up, don't overwrite */
-	smsg((char_u *)_("continuing in %s"), sourcing_name);
+	msg_str((char_u *)_("continuing in %s"), sourcing_name);
 	msg_puts((char_u *)"\n");   /* don't overwrite this either */
 	cmdline_row = msg_row;
 	--no_wait_return;
@@ -9597,9 +9611,9 @@ store_session_globals(fd)
 /*
  * Functions for ":8" filename modifier: get 8.3 version of a filename.
  */
-static int get_short_pathname __ARGS((u_char **fnamep, u_char **bufp, int *fnamelen));
+static int get_short_pathname __ARGS((char_u **fnamep, char_u **bufp, int *fnamelen));
 static int shortpath_for_invalid_fname __ARGS((char_u **fname, char_u **bufp, int *fnamelen));
-static int shortpath_for_partial __ARGS((char_u **fnamep, char_u **bufp, long *fnamelen));
+static int shortpath_for_partial __ARGS((char_u **fnamep, char_u **bufp, int *fnamelen));
 
 /*
  * Get the short pathname of a file.
@@ -9607,12 +9621,12 @@ static int shortpath_for_partial __ARGS((char_u **fnamep, char_u **bufp, long *f
  */
     static int
 get_short_pathname(fnamep, bufp, fnamelen)
-    u_char	**fnamep;
-    u_char	**bufp;
+    char_u	**fnamep;
+    char_u	**bufp;
     int		*fnamelen;
 {
     int		l,len;
-    u_char	*newbuf;
+    char_u	*newbuf;
 
     len = *fnamelen;
 
@@ -9733,11 +9747,12 @@ shortpath_for_invalid_fname(fname, bufp, fnamelen)
 shortpath_for_partial(fnamep, bufp, fnamelen)
     char_u	**fnamep;
     char_u	**bufp;
-    long	*fnamelen;
+    int		*fnamelen;
 {
-    int		sepcount,len;
+    int		sepcount, len, tflen;
     char_u	*p;
     char_u	*pbuf, *tfname;
+    int		hasTilde;
 
     /* Count up the path seperators from the RHS.. so we know which part
      * of the path to return.
@@ -9748,12 +9763,14 @@ shortpath_for_partial(fnamep, bufp, fnamelen)
 	    ++sepcount;
 
     /* Need full path first (use expand_env() to remove a "~/") */
-    if (**fnamep == '~')
+    hasTilde = (**fnamep == '~');
+    if (hasTilde)
 	pbuf = tfname = expand_env_save(*fnamep);
     else
 	pbuf = tfname = FullName_save(*fnamep, FALSE);
 
-    len = STRLEN(tfname);
+    len = tflen = STRLEN(tfname);
+
     if (!get_short_pathname(&tfname, &pbuf, &len))
 	return -1;
 
@@ -9763,6 +9780,7 @@ shortpath_for_partial(fnamep, bufp, fnamelen)
 	 * path if we can. This CAN give us invalid 8.3 filenames, but
 	 * there's not a lot of point in guessing what it might be.
 	 */
+	len = tflen;
 	if (shortpath_for_invalid_fname(&tfname, &pbuf, &len) == -1)
 	    return -1;
     }
@@ -9771,12 +9789,21 @@ shortpath_for_partial(fnamep, bufp, fnamelen)
     for (p = tfname + len - 1; p >= tfname; --p)
 	if (vim_ispathsep(*p))
 	{
-	    if (sepcount == 0)
+	    if (sepcount == 0 || (hasTilde && sepcount == 1))
 		break;
 	    else
 		sepcount --;
 	}
-    ++p;
+    if (hasTilde)
+    {
+	--p;
+	if (p >= tfname)
+	    *p = '~';
+	else
+	    return -1;
+    }
+    else
+	++p;
 
     /* Copy in the string - p indexes into tfname - allocated at pbuf */
     vim_free(*bufp);
@@ -9961,7 +9988,8 @@ repeat:
      */
     if (has_shortname)
     {
-	 /* Copy the string if it is shortened by :h */
+	pbuf = NULL;
+	/* Copy the string if it is shortened by :h */
 	if (*fnamelen < (int)STRLEN(*fnamep))
 	{
 	    p = vim_strnsave(*fnamep, *fnamelen);
@@ -9993,9 +10021,11 @@ repeat:
 	    {
 		/* Couldn't find the filename.. search the paths.
 		 */
-		if (shortpath_for_invalid_fname(fnamep, bufp, fnamelen) == -1)
+		l = *fnamelen;
+		if (shortpath_for_invalid_fname(fnamep, bufp, &l ) == -1)
 		    return -1;
 	    }
+	    *fnamelen = l;
 	}
     }
 #endif /* WIN3264 */

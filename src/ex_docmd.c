@@ -278,11 +278,13 @@ static char_u	*uc_fun_cmd __ARGS((void));
 #ifdef FEAT_EX_EXTRA
 static void	ex_normal __ARGS((exarg_T *eap));
 static void	ex_startinsert __ARGS((exarg_T *eap));
+static void	ex_stopinsert __ARGS((exarg_T *eap));
 #else
 # define ex_normal		ex_ni
 # define ex_align		ex_ni
 # define ex_retab		ex_ni
 # define ex_startinsert		ex_ni
+# define ex_stopinsert		ex_ni
 # define ex_helptags		ex_ni
 #endif
 #ifdef FEAT_FIND_ID
@@ -636,6 +638,7 @@ do_cmdline(cmdline, getline, cookie, flags)
     cstack.cs_idx = -1;
     cstack.cs_whilelevel = 0;
     cstack.cs_trylevel = 0;
+    cstack.cs_emsg_silent_list = NULL;
     cstack.cs_had_while = FALSE;
     cstack.cs_had_endwhile = FALSE;
     cstack.cs_had_continue = FALSE;
@@ -3483,7 +3486,7 @@ invalid_range(eap)
 }
 
 /*
- * Corect the range for zero line number, if required.
+ * Correct the range for zero line number, if required.
  */
     static void
 correct_range(eap)
@@ -3714,7 +3717,7 @@ expand_filename(eap, cmdlinep, errormsgp)
 /*
  * Replace part of the command line, keeping eap->cmd, eap->arg and
  * eap->nextcmd correct.
-* "src" points to the part that is to be replaced, of length "srclen".
+ * "src" points to the part that is to be replaced, of length "srclen".
  * "repl" is the replacement string.
  * Returns a pointer to the character after the replaced string.
  * Returns NULL for failure.
@@ -4204,14 +4207,20 @@ check_more(message, forceit)
 	    {
 		char_u	buff[IOSIZE];
 
-		sprintf((char *)buff, _("%d more files to edit.  Quit anyway?"),
-									   n);
+		if (n == 1)
+		    STRCPY(buff, _("1 more file to edit.  Quit anyway?"));
+		else
+		    sprintf((char *)buff,
+			      _("%d more files to edit.  Quit anyway?"), n);
 		if (vim_dialog_yesno(VIM_QUESTION, NULL, buff, 1) == VIM_YES)
 		    return OK;
 		return FAIL;
 	    }
 #endif
-	    EMSGN(_("E173: %ld more files to edit"), n);
+	    if (n == 1)
+		EMSG(_("E173: 1 more file to edit"));
+	    else
+		EMSGN(_("E173: %ld more files to edit"), n);
 	    quitmore = 2;	    /* next try to quit is allowed */
 	}
 	return FAIL;
@@ -7497,6 +7506,18 @@ ex_startinsert(eap)
     }
     else
 	restart_edit = 'i';
+}
+
+/*
+ * ":stopinsert"
+ */
+/*ARGSUSED*/
+    static void
+ex_stopinsert(eap)
+    exarg_T	*eap;
+{
+    restart_edit = 0;
+    stop_insert_mode = TRUE;
 }
 #endif
 

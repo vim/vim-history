@@ -82,11 +82,11 @@ static void toolbar_leave_cb __ARGS((Widget, XtPointer, XEvent *, Boolean *));
 static void toolbarbutton_enter_cb __ARGS((Widget, XtPointer, XEvent *, Boolean *));
 static void toolbarbutton_leave_cb __ARGS((Widget, XtPointer, XEvent *, Boolean *));
 # endif
+static void gui_mch_reset_focus __ARGS((void));
 #endif
 #ifdef FEAT_FOOTER
 static int gui_mch_compute_footer_height __ARGS((void));
 #endif
-
 #ifdef WSDEBUG
 static void attachDump(Widget, char *);
 #endif
@@ -2365,7 +2365,7 @@ gui_mch_show_toolbar(int showit)
  * such that the user can type page up/down etc. and have the
  * input go to the editor window, not the button
  */
-    void
+    static void
 gui_mch_reset_focus()
 {
     if (textArea != NULL)

@@ -1441,7 +1441,9 @@ nb_do_cmd(
 	    buf->initDone = 1;
 	    if (curbuf != buf->bufp)
 		set_curbuf(buf->bufp, DOBUF_GOTO);
+#if defined(FEAT_AUTOCMD)
 	    apply_autocmds(EVENT_BUFREADPOST, 0, 0, FALSE, buf->bufp);
+#endif
 
 	    /* handle any postponed key commands */
 	    handle_key_queue();
@@ -1525,7 +1527,9 @@ nb_do_cmd(
 	    buf->bufp = curbuf;
 	    buf->initDone = 1;
 	    doupdate = 1;
+#if defined(FEAT_TITLE)
 	    maketitle();
+#endif
 	    gui_update_menus(0);
 /* =====================================================================*/
 	}
@@ -2681,6 +2685,7 @@ netbeans_gutter_click(linenr_T lnum)
 	if (p->lnum == lnum && p->next && p->next->lnum == lnum)
 	{
 	    signlist_T *tail;
+
 	    /* remove "p" from list, reinsert it at the tail of the sublist */
 	    if (p->prev)
 		p->prev->next = p->next;
@@ -2689,12 +2694,12 @@ netbeans_gutter_click(linenr_T lnum)
 	    p->next->prev = p->prev;
 	    /* now find end of sublist and insert p */
 	    for (tail = p->next;
-		  tail->next && tail->next->lnum == lnum && tail->next->id < GUARDEDOFFSET;
+		  tail->next && tail->next->lnum == lnum
+					    && tail->next->id < GUARDEDOFFSET;
 		  tail = tail->next)
 		;
 	    /* tail now points to last entry with same lnum (except
-	     * that "guarded" annotations are always last)
-	     */
+	     * that "guarded" annotations are always last) */
 	    p->next = tail->next;
 	    if (tail->next)
 		tail->next->prev = p;

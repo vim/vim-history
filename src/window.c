@@ -425,7 +425,7 @@ do_window(nchar, Prenum, xchar)
 #endif
 
 /* jump to tag and split window if tag exists (in preview window) */
-#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
+#if defined(FEAT_QUICKFIX)
     case '}':
 		CHECK_CMDWIN
 		if (Prenum)
@@ -520,7 +520,7 @@ do_window(nchar, Prenum, xchar)
 #endif
 		switch (xchar)
 		{
-#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
+#if defined(FEAT_QUICKFIX)
 		    case '}':
 			xchar = Ctrl_RSB;
 			if (Prenum)
@@ -1862,10 +1862,11 @@ win_close(win, free_buf)
 	apply_autocmds(EVENT_WINLEAVE, NULL, NULL, FALSE, curbuf);
 	if (!win_valid(win) || firstwin == lastwin)
 	    return;
-#ifdef FEAT_EVAL
-	if (aborting())	    /* autocmds may abort script processing */
+# ifdef FEAT_EVAL
+	/* autocmds may abort script processing */
+	if (aborting())
 	    return;
-#endif
+# endif
     }
 #endif
 
@@ -2909,10 +2910,11 @@ win_enter_ext(wp, undo_sync, curwin_invalid)
 	apply_autocmds(EVENT_WINLEAVE, NULL, NULL, FALSE, curbuf);
 	if (!win_valid(wp))
 	    return;
-#ifdef FEAT_EVAL
-	if (aborting())	    /* autocmds may abort script processing */
+# ifdef FEAT_EVAL
+	/* autocmds may abort script processing */
+	if (aborting())
 	    return;
-#endif
+# endif
     }
 #endif
 

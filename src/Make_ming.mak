@@ -284,8 +284,10 @@ else  # SPEED
 CFLAGS += -O2
 endif
 endif
+CFLAGS += -s
 endif
 
+LIB = -lkernel32 -luser32 -lgdi32 -ladvapi32 -lcomdlg32 -lcomctl32
 GUIOBJ =  $(OUTDIR)/gui.o $(OUTDIR)/gui_w32.o $(OUTDIR)/os_w32exe.o
 OBJ = \
 	$(OUTDIR)/buffer.o \
@@ -352,11 +354,10 @@ ifeq ($(GUI),yes)
 TARGET := gvim$(DEBUG_SUFFIX).exe
 DEFINES += $(DEF_GUI)
 OBJ += $(GUIOBJ)
-LIB += -mwindows -lcomctl32
+LFLAGS += -mwindows
 OUTDIR = gobj$(DEBUG_SUFFIX)
 else
 TARGET := vim$(DEBUG_SUFFIX).exe
-LIB = -lkernel32 -luser32 -lgdi32 -ladvapi32 -lcomdlg32 -lcomctl32
 OUTDIR = obj$(DEBUG_SUFFIX)
 endif
 
@@ -391,7 +392,7 @@ endif
 
 ifeq (yes, $(OLE))
 LIB += -loleaut32 -lstdc++
-OBJ += if_ole.o
+OBJ += $(OUTDIR)/if_ole.o
 endif
 
 ifeq (yes, $(MBYTE))
@@ -415,19 +416,19 @@ endif
 DEFINES+=-DDYNAMIC_ICONV
 endif
 
-all: $(OUTDIR) $(TARGET) vimrun.exe xxd/xxd.exe install.exe uninstal.exe GvimExt/gvimext.dll
+all: $(TARGET) vimrun.exe xxd/xxd.exe install.exe uninstal.exe GvimExt/gvimext.dll
 
 vimrun.exe: vimrun.c
-	$(CC) $(CFLAGS) -s -o vimrun.exe vimrun.c $(LIB)
+	$(CC) $(CFLAGS) -o vimrun.exe vimrun.c $(LIB)
 
 install.exe: dosinst.c
-	$(CC) $(CFLAGS) -s -o install.exe dosinst.c $(LIB) -lole32 -luuid
+	$(CC) $(CFLAGS) -o install.exe dosinst.c $(LIB) -lole32 -luuid
 
 uninstal.exe: uninstal.c
-	$(CC) $(CFLAGS) -s -o uninstal.exe uninstal.c $(LIB)
+	$(CC) $(CFLAGS) -o uninstal.exe uninstal.c $(LIB)
 
-$(TARGET): $(OBJ)
-	$(CC) $(CFLAGS) -s -o $@ $^ $(LIB) -lole32 -luuid $(PYTHONLIB) $(RUBYLIB)
+$(TARGET): $(OUTDIR) $(OBJ)
+	$(CC) $(CFLAGS) $(LFLAGS) -o $@ $(OBJ) $(LIB) -lole32 -luuid $(PYTHONLIB) $(RUBYLIB)
 
 upx: exes
 	upx gvim.exe

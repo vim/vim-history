@@ -231,9 +231,10 @@ EXTERN int trylevel INIT(= 0);
 /*
  * When "force_abort" is TRUE, always skip commands after an error message, even
  * after the outermost ":endif" or ":endwhile" or for a function whithout the
- * "abort" flag.  It is set to TRUE when "trylevel" is non-zero or an exception
- * is being thrown at the time an error is detected.  It is set to FALSE when
- * "trylevel" gets zero again and there was no error or interrupt or throw.
+ * "abort" flag.  It is set to TRUE when "trylevel" is non-zero (and ":silent!"
+ * was not used) or an exception is being thrown at the time an error is
+ * detected.  It is set to FALSE when "trylevel" gets zero again and there
+ * was no error or interrupt or throw.
  *
  */
 EXTERN int force_abort INIT(= FALSE);
@@ -253,7 +254,8 @@ EXTERN struct msglist **msg_list INIT(= NULL);
 /*
  * suppress_errthrow: When TRUE, don't convert an error to an exception.  Used
  * when displaying the interrupt message or reporting an exception that is still
- * uncaught at the top level (which has already been discarded then).
+ * uncaught at the top level (which has already been discarded then).  Also used
+ * for the error message when no exception can be thrown.
  */
 EXTERN int suppress_errthrow INIT(= FALSE);
 
@@ -812,6 +814,7 @@ EXTERN typebuf_T typebuf		/* typeahead buffer */
 		    ;
 #ifdef FEAT_EX_EXTRA
 EXTERN int	ex_normal_busy INIT(= 0); /* recursivenes of ex_normal() */
+EXTERN int	stop_insert_mode;	/* for ":stopinsert" */
 #endif
 
 EXTERN int	KeyTyped;		/* TRUE if user typed current char */

@@ -3986,10 +3986,13 @@ RealWaitForChar(fd, msec, check_for_gpm)
     int		*check_for_gpm;
 {
     int		ret;
-# if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H) \
-	&& (defined(FEAT_XCLIPBOARD) || defined(USE_XSMP))
-    /* We may be interrupted halfway, remember at what time we started, so
-     * that we know how much longer we should wait. */
+#if defined(FEAT_XCLIPBOARD) || defined(USE_XSMP)
+    /* May retry getting characters after an event was handled. */
+# define MAY_LOOP
+
+# if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
+    /* Remember at what time we started, so that we know how much longer we
+     * should wait after being interrupted. */
 #  define USE_START_TV
     struct timeval  start_tv;
 
@@ -4005,11 +4008,14 @@ RealWaitForChar(fd, msec, check_for_gpm)
 #  endif
 	    ))
 	gettimeofday(&start_tv, NULL);
-
-    while (1)
 # endif
+#endif
+
+#ifdef MAY_LOOP
+    while (1)
+#endif
     {
-#ifdef USE_START_TV
+#ifdef MAY_LOOP
 	int		finished = TRUE; /* default is to 'loop' just once */
 #endif
 #ifndef HAVE_SELECT
@@ -4243,24 +4249,24 @@ RealWaitForChar(fd, msec, check_for_gpm)
 
 #endif /* HAVE_SELECT */
 
-#ifdef USE_START_TV
+#ifdef MAY_LOOP
 	if (finished)
 	    break;
 
 	/* We're going to loop around again, find out for how long */
 	if (msec >= 0)
 	{
-#  if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
+# ifdef USE_START_TV
 	    struct timeval  tv;
 
 	    /* Compute remaining wait time. */
 	    gettimeofday(&tv, NULL);
 	    msec -= (tv.tv_sec - start_tv.tv_sec) * 1000L
 				    + (tv.tv_usec - start_tv.tv_usec) / 1000L;
-#  else
+# else
 	    /* Guess we got interrupted halfway. */
 	    msec = msec / 2;
-#  endif
+# endif
 	    if (msec <= 0)
 		break;	/* waited long enough */
 	}

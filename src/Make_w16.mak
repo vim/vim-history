@@ -141,19 +141,22 @@ Gvim16 : BccW16.cfg $(Dep_Gvim16)
 gvim16.exe : $(Dep_gvim16dexe)
   $(TLINK)   $(LinkerLocalOptsAtW16_gvim16dexe) @&&|
 c0wl.obj $(ObjFiles)
-|,$*,,vimtbar ctl3dv2 import cwl,vim16,$(INTDIR)\vim16
+|,$*,,vimtbar ctl3dv2 import cwl, vim16.def,$(INTDIR)\vim16.res
 
 # Force objects to be built if $(BOR) changes
 $(ObjFiles) : Make_w16.mak BccW16.cfg
 
-$(INTDIR)\vim16.res :  vim16.rc
-  $(BRC) -R -fo$* $?
+$(INTDIR)\vim16.res : vim16.rc
+  $(BRC) -R @&&|
+  $(CompInheritOptsAt_gvim16dexe) -fo$*.res $?
+|
+
 
 # Compiler configuration file
 # There is no rule for $(INTDIR) as make always says it does not exist
 BccW16.cfg :
 	-@if not exist $(INTDIR)\$(NULL) mkdir $(INTDIR)
-   Copy &&|
+	Copy &&|
 -3		; Generate 80386 protected-mode compatible instructions
 -a		; Byte alignment
 -dc		; Move string literals from data segment to code segment

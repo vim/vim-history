@@ -143,8 +143,9 @@ cause_errthrow(msg, severe, ignore)
 
     /*
      * Do nothing when displaying the interrupt message or reporting an uncaught
-     * exception (which has already been discarded then) at the top level.  The
-     * message will be displayed by emsg().
+     * exception (which has already been discarded then) at the top level.  Also
+     * when no exception can be thrown.  The message will be displayed by
+     * emsg().
      */
     if (suppress_errthrow)
 	return FALSE;
@@ -168,9 +169,11 @@ cause_errthrow(msg, severe, ignore)
      * If no try conditional is active and no exception is being thrown and
      * there has not been an error in a try conditional or a throw so far, do
      * nothing (for compatibility of non-EH scripts).  The message will then be
-     * displayed by emsg().
+     * displayed by emsg().  When ":silent!" was used and we are not currently
+     * throwing an exception, do nothing.  The message text will then be stored
+     * to v:errmsg by emsg() without displaying it.
      */
-    if ((trylevel == 0 && !did_throw && !cause_abort))
+    if (((trylevel == 0 && !cause_abort) || emsg_silent) && !did_throw)
 	return FALSE;
 
     /*
@@ -497,12 +500,18 @@ throw_exception(value, type, cmdname)
 
     if (p_verbose >= 13 || debug_break_level > 0)
     {
+	int	save_msg_silent = msg_silent;
+
+	if (debug_break_level > 0)
+	    msg_silent = FALSE;		/* display messages */
 	++no_wait_return;
 	msg_scroll = TRUE;	    /* always scroll up, don't overwrite */
-	smsg((char_u *)_("Exception thrown: %s"), excp->value);
+	msg_str((char_u *)_("Exception thrown: %s"), excp->value);
 	msg_puts((char_u *)"\n");   /* don't overwrite this either */
 	cmdline_row = msg_row;
 	--no_wait_return;
+	if (debug_break_level > 0)
+	    msg_silent = save_msg_silent;
     }
 
     current_exception = excp;
@@ -536,16 +545,22 @@ discard_exception(excp, was_finished)
 
     if (p_verbose >= 13 || debug_break_level > 0)
     {
+	int	save_msg_silent = msg_silent;
+
 	saved_IObuff = vim_strsave(IObuff);
+	if (debug_break_level > 0)
+	    msg_silent = FALSE;		/* display messages */
 	++no_wait_return;
 	msg_scroll = TRUE;	    /* always scroll up, don't overwrite */
-	smsg(was_finished ?
-		(char_u *)_("Exception finished: %s") :
-		(char_u *)_("Exception discarded: %s"),
+	msg_str(was_finished
+		    ? (char_u *)_("Exception finished: %s")
+		    : (char_u *)_("Exception discarded: %s"),
 		excp->value);
 	msg_puts((char_u *)"\n");   /* don't overwrite this either */
 	cmdline_row = msg_row;
 	--no_wait_return;
+	if (debug_break_level > 0)
+	    msg_silent = save_msg_silent;
 	STRCPY(IObuff, saved_IObuff);
 	vim_free(saved_IObuff);
     }
@@ -594,12 +609,18 @@ catch_exception(excp)
 
     if (p_verbose >= 13 || debug_break_level > 0)
     {
+	int	save_msg_silent = msg_silent;
+
+	if (debug_break_level > 0)
+	    msg_silent = FALSE;		/* display messages */
 	++no_wait_return;
 	msg_scroll = TRUE;	    /* always scroll up, don't overwrite */
-	smsg((char_u *)_("Exception caught: %s"), excp->value);
+	msg_str((char_u *)_("Exception caught: %s"), excp->value);
 	msg_puts((char_u *)"\n");   /* don't overwrite this either */
 	cmdline_row = msg_row;
 	--no_wait_return;
+	if (debug_break_level > 0)
+	    msg_silent = save_msg_silent;
     }
 }
 
@@ -663,6 +684,8 @@ report_pending(action, pending, value)
 {
     char_u	*msg;
     char	*s;
+    int		save_msg_silent;
+
 
     switch (action)
     {
@@ -713,12 +736,17 @@ report_pending(action, pending, value)
 		s = _("Interrupt");
     }
 
+    save_msg_silent = msg_silent;
+    if (debug_break_level > 0)
+	msg_silent = FALSE;	/* display messages */
     ++no_wait_return;
-    msg_scroll = TRUE;	    /* always scroll up, don't overwrite */
-    smsg(msg, s);
+    msg_scroll = TRUE;		/* always scroll up, don't overwrite */
+    msg_str(msg, (char_u *)s);
     msg_puts((char_u *)"\n");   /* don't overwrite this either */
     cmdline_row = msg_row;
     --no_wait_return;
+    if (debug_break_level > 0)
+	msg_silent = save_msg_silent;
 
     if (pending == CSTP_RETURN)
 	vim_free(s);
@@ -1250,16 +1278,52 @@ ex_try(eap)
 	skip = did_emsg || got_int || did_throw || (cstack->cs_idx > 0
 		&& !(cstack->cs_flags[cstack->cs_idx - 1] & CSF_ACTIVE));
 
-	/* Set ACTVIVE and TRUE.  TRUE means that the corresponding :catch
-	 * commands should check for a match if an exception is thrown and
-	 * that the finally clause needs to be executed. */
 	if (!skip)
+	{
+	    /* Set ACTIVE and TRUE.  TRUE means that the corresponding ":catch"
+	     * commands should check for a match if an exception is thrown and
+	     * that the finally clause needs to be executed. */
 	    cstack->cs_flags[cstack->cs_idx] |= CSF_ACTIVE | CSF_TRUE;
+
+	    /*
+	     * ":silent!", even when used in a try conditional, disables
+	     * displaying of error messages and conversion of errors to
+	     * exceptions.  When the silent commands again open a try
+	     * conditional, save "emsg_silent" and reset it so that errors are
+	     * again converted to exceptions.  The value is restored when that
+	     * try conditional is left.  If it is left normally, the commands
+	     * following the ":endtry" are again silent.  If it is left by
+	     * a ":continue", ":break", ":return", or ":finish", the commands
+	     * executed next are again silent.  If it is left due to an
+	     * aborting error, an interrupt, or an exception, restoring
+	     * "emsg_silent" does not matter since we are already in the
+	     * aborting state and/or the exception has already been thrown.
+	     * The effect is then just freeing the memory that was allocated
+	     * to save the value.
+	     */
+	    if (emsg_silent)
+	    {
+		eslist_T	*elem;
+
+		elem = (eslist_T *)alloc((unsigned)sizeof(struct eslist_elem));
+		if (elem == NULL)
+		    EMSG(_(e_outofmem));
+		else
+		{
+		    elem->saved_emsg_silent = emsg_silent;
+		    elem->next = cstack->cs_emsg_silent_list;
+		    cstack->cs_emsg_silent_list = elem;
+		    cstack->cs_flags[cstack->cs_idx] |= CSF_SILENT;
+		    emsg_silent = 0;
+		}
+	    }
+	}
+
     }
 }
 
 /*
- * ":catch /{pattern}/"
+ * ":catch /{pattern}/" and ":catch"
  */
     void
 ex_catch(eap)
@@ -1308,10 +1372,11 @@ ex_catch(eap)
 	    rewind_conditionals(cstack, idx, CSF_WHILE, &cstack->cs_whilelevel);
     }
 
-    if (*eap->arg == NUL)	/* no argument, catch all errors */
+    if (ends_excmd(*eap->arg))	/* no argument, catch all errors */
     {
 	pat = (char_u *)".*";
 	end = NULL;
+	eap->nextcmd = find_nextcmd(eap->arg);
     }
     else
     {
@@ -1674,8 +1739,9 @@ ex_endtry(eap)
 	 * If an exception was caught by the last of the catch clauses and there
 	 * was no finally clause, finish the exception now.  This happens also
 	 * after errors except when this ":endtry" is not within a ":try".
+	 * Restore "emsg_silent" if it has been reset by this try conditional.
 	 */
-	cleanup_conditionals(cstack, CSF_TRY, TRUE);
+	cleanup_conditionals(cstack, CSF_TRY | CSF_SILENT, TRUE);
 
 	--cstack->cs_idx;
 	--cstack->cs_trylevel;
@@ -1737,10 +1803,15 @@ ex_endtry(eap)
  * Make conditionals inactive and discard what's pending in finally clauses
  * until the conditional type searched for or a try conditional not in its
  * finally clause is reached.  If this is in an active catch clause, finish the
- * caught exception.  Return the cstack index where the search stopped.  Used
- * values for "searched_cond" are CSF_WHILE or CSF_TRY or 0, the latter meaning
+ * caught exception.  Return the cstack index where the search stopped.  Values
+ * used for "searched_cond" are CSF_WHILE or CSF_TRY or 0, the latter meaning
  * the innermost try conditional not in its finally clause.  "inclusive" tells
- * whether the conditional searched for should be made inactive itself.
+ * whether the conditional searched for should be made inactive itself (a try
+ * conditional not in its finally claused possibly find before is always made
+ * inactive).  If "inclusive" is TRUE and "searched_cond" is CSF_TRY|CSF_SILENT,
+ * the saved former value of "emsg_silent", if reset when the try conditional
+ * finally reached was entered, is restored (unsed by ex_endtry()).  This is
+ * normally done only when such a try conditional is left.
  */
     int
 cleanup_conditionals(cstack, searched_cond, inclusive)
@@ -1813,8 +1884,7 @@ cleanup_conditionals(cstack, searched_cond, inclusive)
 	    {
 		if ((cstack->cs_flags[idx] & CSF_ACTIVE)
 			&& (cstack->cs_flags[idx] & CSF_CAUGHT))
-		    finish_exception((except_T *)
-			    cstack->cs_exception[idx]);
+		    finish_exception((except_T *)cstack->cs_exception[idx]);
 		/* Stop at this try conditional - except the try block never
 		 * got active (because of an inactive surrounding conditional
 		 * or when the ":try" appeared after an error or interrupt or
@@ -1829,7 +1899,9 @@ cleanup_conditionals(cstack, searched_cond, inclusive)
 	}
 
 	/* Stop on the searched conditional type (even when the surrounding
-	 * conditional is not active or something has been made pending). */
+	 * conditional is not active or something has been made pending).
+	 * If "inclusive" is TRUE and "searched_cond" is CSF_TRY|CSF_SILENT,
+	 * check first whether "emsg_silent" needs to be restored. */
 	if (cstack->cs_flags[idx] & searched_cond)
 	{
 	    if (!inclusive)
@@ -1837,6 +1909,25 @@ cleanup_conditionals(cstack, searched_cond, inclusive)
 	    stop = TRUE;
 	}
 	cstack->cs_flags[idx] &= ~CSF_ACTIVE;
+	if (stop && searched_cond != (CSF_TRY | CSF_SILENT))
+	    break;
+
+	/*
+	 * When leaving a try conditinal that reset "emsg_silent" on its entry
+	 * after saving the original value, restore that value here and free the
+	 * memory used to store it.
+	 */
+	if ((cstack->cs_flags[idx] & CSF_TRY)
+	    && (cstack->cs_flags[idx] & CSF_SILENT))
+	{
+	    eslist_T	*elem;
+
+	    elem = cstack->cs_emsg_silent_list;
+	    cstack->cs_emsg_silent_list = elem->next;
+	    emsg_silent = elem->saved_emsg_silent;
+	    vim_free(elem);
+	    cstack->cs_flags[idx] &= ~CSF_SILENT;
+	}
 	if (stop)
 	    break;
     }

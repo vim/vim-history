@@ -280,121 +280,96 @@ copy_indent(size, src)
     int		size;
     char_u	*src;
 {
-    char_u	*p;
-    char_u	*line;
+    char_u	*p = NULL;
+    char_u	*line = NULL;
     char_u	*s;
     int		todo;
     int		ind_len;
-    int		line_len;
+    int		line_len = 0;
     int		tab_pad;
     int		ind_done;
+    int		round;
 
-    /* First compute the numer of characters needed for the indent */
-    todo = size;
-    ind_len = 0;
-    ind_done = 0;
-    s = src;
-
-    /* Count the usable portion of the source line */
-    while (todo > 0 && vim_iswhite(*s))
+    /* Round 1: compute the number of characters needed for the indent
+     * Round 2: copy the characters. */
+    for (round = 1; round <= 2; ++round)
     {
-	if (*s == TAB)
+	todo = size;
+	ind_len = 0;
+	ind_done = 0;
+	s = src;
+
+	/* Count/copy the usable portion of the source line */
+	while (todo > 0 && vim_iswhite(*s))
 	{
-	    tab_pad = (int)curbuf->b_p_ts
+	    if (*s == TAB)
+	    {
+		tab_pad = (int)curbuf->b_p_ts
 					   - (ind_done % (int)curbuf->b_p_ts);
-	    /* Stop if this tab will overshoot the target */
-	    if (todo < tab_pad)
-		break;
+		/* Stop if this tab will overshoot the target */
+		if (todo < tab_pad)
+		    break;
+		todo -= tab_pad;
+		ind_done += tab_pad;
+	    }
+	    else
+	    {
+		--todo;
+		++ind_done;
+	    }
+	    ++ind_len;
+	    if (round == 2)
+		*p++ = *s;
+	    ++s;
+	}
+
+	/* Fill to next tabstop with a tab, if possible */
+	tab_pad = (int)curbuf->b_p_ts - (ind_done % (int)curbuf->b_p_ts);
+	if (todo >= tab_pad)
+	{
 	    todo -= tab_pad;
 	    ++ind_len;
-	    ind_done += tab_pad;
+	    if (round == 2)
+		*p++ = TAB;
 	}
-	else
+
+	/* Add tabs required for indent */
+	while (todo >= (int)curbuf->b_p_ts)
+	{
+	    todo -= (int)curbuf->b_p_ts;
+	    ++ind_len;
+	    if (round == 2)
+		*p++ = TAB;
+	}
+
+	/* Count/add spaces required for indent */
+	while (todo > 0)
 	{
 	    --todo;
 	    ++ind_len;
-	    ++ind_done;
+	    if (round == 2)
+		*p++ = ' ';
 	}
-	++s;
-    }
 
-    /* Fill to next tabstop with a tab, if possible */
-    tab_pad = (int)curbuf->b_p_ts - (ind_done % (int)curbuf->b_p_ts);
-    if (todo >= tab_pad)
-    {
-	todo -= tab_pad;
-	++ind_len;
-    }
-
-    /* Count tabs required for indent */
-    if (todo >= (int)curbuf->b_p_ts)
-    {
-	ind_len += (todo / (int)curbuf->b_p_ts);
-	todo = todo % (int)curbuf->b_p_ts;
-    }
-
-    /* Count spaces required for indent */
-    ind_len += todo;
-
-    p = ml_get_curline();
-    line_len = (int)STRLEN(p) + 1;
-    line = alloc(ind_len + line_len);
-    if (line == NULL)
-	return FALSE;
-
-    /* Put the characters in the new line */
-    s = line;
-    todo = size;
-
-    /* Copy the usable portion of the source line */
-    while (todo > 0 && vim_iswhite(*src))
-    {
-	if (*src == TAB)
+	if (round == 1)
 	{
-	    tab_pad = (int)curbuf->b_p_ts
-					   - (ind_done % (int)curbuf->b_p_ts);
-	    /* Stop if this tab will overshoot the target */
-	    if (todo < tab_pad)
-		break;
-	    todo -= tab_pad;
-	    ind_done += tab_pad;
+	    /* Allocate memory for the result: the copied indent, new indent
+	     * and the rest of the line. */
+	    line_len = (int)STRLEN(ml_get_curline()) + 1;
+	    line = alloc(ind_len + line_len);
+	    if (line == NULL)
+		return FALSE;
+	    p = line;
 	}
-	else
-	{
-	    --todo;
-	    ++ind_done;
-	}
-	*s++ = *src++;
-    }
-
-    /* Fill to next tabstop with a tab, if possible */
-    tab_pad = (int)curbuf->b_p_ts - (ind_done % (int)curbuf->b_p_ts);
-    if (todo >= tab_pad)
-    {
-	*s++ = TAB;
-	todo -= tab_pad;
-    }
-
-    /* Add tabs required for indent */
-    while (todo >= (int)curbuf->b_p_ts)
-    {
-	*s++ = TAB;
-	todo -= (int)curbuf->b_p_ts;
-    }
-
-    /* Add spaces required for indent */
-    while (todo > 0)
-    {
-	*s++ = ' ';
-	--todo;
     }
 
     /* Append the original line */
-    mch_memmove(s, p, (size_t)line_len);
+    mch_memmove(p, ml_get_curline(), (size_t)line_len);
 
     /* Replace the line */
     ml_replace(curwin->w_cursor.lnum, line, FALSE);
 
+    /* Put the cursor after the indent. */
     curwin->w_cursor.col = ind_len;
     return TRUE;
 }
@@ -4286,7 +4261,7 @@ cin_nocode(s)
 }
 
 /*
- * Check previous lines for a "//" line comment.
+ * Check previous lines for a "//" line comment, skipping over blank lines.
  */
     static pos_T *
 find_line_comment() /* XXX */
@@ -4305,6 +4280,8 @@ find_line_comment() /* XXX */
 	    pos.col = (int)(p - line);
 	    return &pos;
 	}
+	if (*p != NUL)
+	    break;
     }
     return NULL;
 }

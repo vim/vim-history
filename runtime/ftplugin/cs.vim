@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	C#
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
-" Last Change:	Fri, 15 Mar 2002 07:55:05 CET
+" Last Change:	Sat, 24 May 2003 11:53:33 CEST
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -19,3 +19,8 @@ setlocal fo-=t fo+=croql
 
 " Set 'comments' to format dashed lists in comments.
 setlocal comments=sO:*\ -,mO:*\ \ ,exO:*/,s1:/*,mb:*,ex:*/,://
+
+if has("gui_win32") && !exists("b:browsefilter")
+    let b:browsefilter = "C# Source Files (*.cs)\t*.cs\n" .
+		       \ "All Files (*.*)\t*.*\n"
+endif

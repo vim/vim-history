@@ -1,4 +1,4 @@
-*insert.txt*    For Vim version 6.2e.  Last change: 2003 Mar 15
+*insert.txt*    For Vim version 6.2f.  Last change: 2003 May 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -944,6 +944,11 @@ NOTE: ":append" and ":insert" don't work properly in between ":if" and
 			{not in Vi}
 			{not available when compiled without the +ex_extra
 			feature}
+
+:stopi[nsert]		Stop Insert mode as soon as possible.  Works like
+			typing <Esc> in Insert mode.
+			Can be used in an autocommand, example: >
+				:au BufEnter scratch stopinsert
 
 ==============================================================================
 10. Inserting a file					*inserting-file*

@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.2e.  Last change: 2003 May 13
+*pattern.txt*   For Vim version 6.2f.  Last change: 2003 May 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1047,7 +1047,8 @@ probably never match.
 			:highlight MyGroup ctermbg=green guibg=green
 			:match MyGroup /TODO/
 <		Instead of // any character can be used to mark the start and
-		end of the {pattern}.
+		end of the {pattern}.  Watch out for using special characters,
+		such as '"' and '|'.
 		{group} must exist at the moment this command is executed.
 		The match overrides the 'hlsearch' highlighting.
 		'ignorecase' does not apply, use |/\c| in the pattern to

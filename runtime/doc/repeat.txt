@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.2e.  Last change: 2003 Apr 25
+*repeat.txt*    For Vim version 6.2f.  Last change: 2003 Apr 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -419,23 +419,28 @@ the function in another Vim, search for the start of the function and do
 
 Additionally, these commands can be used:
 							*>cont*
-	cont	Continue execution until the next breakpoint is hit.
+	cont		Continue execution until the next breakpoint is hit.
 							*>quit*
-	quit	Abort execution.  This is like using CTRL-C, some things might
-		still be executed, doesn't abort everything.  Still stops at
-		the next breakpoint.
+	quit		Abort execution.  This is like using CTRL-C, some
+			things might still be executed, doesn't abort
+			everything.  Still stops at the next breakpoint.
 							*>next*
-	next	Execute the command and come back to debug mode when it's
-		finished.  This steps over user function calls and sourced
-		files.
+	next		Execute the command and come back to debug mode when
+			it's finished.  This steps over user function calls
+			and sourced files.
 							*>step*
-	step	Execute the command and come back to debug mode for the next
-		command.  This steps into called user functions and sourced
-		files.
+	step		Execute the command and come back to debug mode for
+			the next command.  This steps into called user
+			functions and sourced files.
+							*>interrupt*
+	interrupt	This is like using CTRL-C, but unlike ">quit" comes
+			back to debug mode for the next command that is
+			executed.  Useful for testing |:finally| and |:catch|
+			on interrupt exceptions.
 							*>finish*
-	finish	Finish the current script or user function and come back to
-		debug mode for the command after the one that sourced or
-		called it.
+	finish		Finish the current script or user function and come
+			back to debug mode for the command after the one that
+			sourced or called it.
 
 About the additional commands in debug mode:
 - There is no command-line completion.

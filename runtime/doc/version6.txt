@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.2e.  Last change: 2003 May 18
+*version6.txt*  For Vim version 6.2f.  Last change: 2003 May 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -6020,6 +6020,9 @@ other commands that search for defined words in included files such as
 
 Made 'keywordprg' global-local. (Christian Robinson)
 
+Enabled the Netbeans interface by default.  Reversed the configure argument
+from "--enable-netbeans" to "--disable-netbeans".
+
 
 Added							*added-6.2*
 -----
@@ -6092,6 +6095,7 @@ New tutor translations:
 	Slovak (Lubos Celko)
 	Greek (Christos Kontas)
 	German (Joachim Hofmann)
+	Norwegian (Øyvind Holm)
 
 New filetype plugins:
 	Occam (Mario Schweigler)
@@ -6112,6 +6116,9 @@ New menu translations:
 	Brazillian (José de Paula)
 	British (Mike Williams)
 	Korean in UTF-8. (Nam SungHyun)
+	Norwegian (Øyvind Holm)
+
+New message translation for Norwegian. (Øyvind Holm)
 
 New color scheme:
 	desert (Hans Fugal)
@@ -6138,7 +6145,7 @@ to all error messages, so that they can be caught by the number.
 (Servatius Brandt)
 Moved part of ex_docmd.c to the new ex_eval.c source file.
 
-Include support for GTK+ 2.0. (4 Daniel Elstner)
+Include support for GTK+ 2.2.x (Daniel Elstner)
 Adds the "~" register: drag & drop text.
 Adds the 'toolbariconsize' option.
 Add -Dalloca when running lint to work around a problem with alloca()
@@ -6197,12 +6204,18 @@ Updated Unicode tables to Unicode 4.0. (Raphael Finkel)
 
 Support for the mouse wheel in rxvt. (AIDA Shinra)
 
-Win32: Added ":8" file modifier to get short filename. (Michael Geddes)
+Win32: Added ":8" file modifier to get short filename.  Test50 tests the ":8"
+expansion on Win32 systems. (Michael Geddes)
 
 'cscopequickfix' option: Open quickfix window for Cscope commands.  Also
 cleanup the code for giving messages.  (Khorev Sergey)
 
 GUI: Support more than 222 columns for mouse positions.
+
+":stopinsert" command: Don't return to Insert mode.
+
+"interrupt" command for debug mode.  Useful for simulating CTRL-C. (Servatius
+Brandt)
 
 
 Fixed							*fixed-6.2*
@@ -6391,6 +6404,37 @@ Using the "c" flag with ":s" changed the behavior when a line break is
 replaced and "\@<=" is used.  Without "c" a following match was not found.
 
 ":%s/\vA@<=\nB@=//gce" got stuck on "A\nB" when entering "n".
+
+VMS: add HAVE_STRFTIME in the config file. (Zoltan Arpadffy)
+
+When a delete prompts if a delete should continue when yanking is not
+possible, restore msg_silent afterwards.
+
+":sign" did not complain about a missing argument.
+
+When adding or deleting a sign 'hlsearch' highlighting could disappear.
+Use the generic functions for updating signs.
+
+On MS-Windows NT, 2K and XP don't use command.com but cmd.exe for testing.
+Makes the tests work on more systems.
+
+In the DOS tests don't create "/tmp" to avoid an error.
+
+Mac classic: Problems with reading files with CR vs CR/LF.  Rely on the
+library version of fgets() to work correctly for Metrowerks 2.2. (Axel
+Kielhorn)
+
+When typing a password a "*" was shown for each byte instead of for each
+character.  Added multi-byte handling to displaying the stars. (Yasuhiro
+Matsumoto)
+
+When using Perl 5.6 accessing $curbuf doesn't work.  Add an #ifdef to use
+different code for 5.6 and 5.8.  (Dan Sharp)
+
+MingW and Cygwin: Don't strip the debug executable. (Dan Sharp)
+
+An assignment to a variable with curlies that includes "==" doesn't work.
+Skip over the curlies before searching for an "=". (Vince Negri)
 
 
 Patch 6.1.001

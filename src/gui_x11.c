@@ -50,6 +50,10 @@
 # include <X11/Xmu/Editres.h>
 #endif
 
+#ifdef FEAT_BEVAL_TIP
+# include "gui_beval.h"
+#endif
+
 #define VIM_NAME	"vim"
 #define VIM_CLASS	"Vim"
 
@@ -992,6 +996,14 @@ gui_x11_key_hit_cb(w, dud, event, dum)
     if (p_mh)
 	gui_mch_mousehide(TRUE);
 
+#if defined(FEAT_BEVAL_TIP)
+    {
+	BalloonEval *be;
+
+	if ((be = gui_mch_currently_showing_beval()) != NULL)
+	    gui_mch_unpost_balloon(be);
+    }
+#endif
 theend:
     {}	    /* some compilers need a statement here */
 #ifdef FEAT_XIM

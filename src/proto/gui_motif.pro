@@ -32,7 +32,6 @@ int gui_mch_dialog __ARGS((int type, char_u *title, char_u *message, char_u *but
 void gui_mch_enable_footer __ARGS((int showit));
 void gui_mch_set_footer __ARGS((char_u *s));
 void gui_mch_show_toolbar __ARGS((int showit));
-void gui_mch_reset_focus __ARGS((void));
 int gui_mch_compute_toolbar_height __ARGS((void));
 void gui_mch_get_toolbar_colors __ARGS((Pixel *bgp, Pixel *fgp, Pixel *bsp, Pixel *tsp, Pixel *hsp));
 void gui_mch_find_dialog __ARGS((exarg_T *eap));

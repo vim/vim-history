@@ -63,7 +63,9 @@ static XtActionsRec	pullAction[2] = {
     { "menu-popdownsubmenus", (XtActionProc)gui_athena_popdown_submenus_action}
 };
 #endif
+
 #ifdef FEAT_TOOLBAR
+static void gui_mch_reset_focus __ARGS((void));
 static Widget toolBar = (Widget)0;
 #endif
 
@@ -496,7 +498,25 @@ gui_mch_set_text_area_pos(x, y, w, h)
 		  XtNheight, h,
 		  NULL);
     XtManageChild(textArea);
+#ifdef FEAT_TOOLBAR
+    /* Give keyboard focus to the textArea instead of the toolbar. */
+    gui_mch_reset_focus();
+#endif
 }
+
+#ifdef FEAT_TOOLBAR
+/*
+ * A toolbar button has been pushed; now reset the input focus
+ * such that the user can type page up/down etc. and have the
+ * input go to the editor window, not the button
+ */
+    static void
+gui_mch_reset_focus()
+{
+    XtSetKeyboardFocus(vimForm, textArea);
+}
+#endif
+
 
     void
 gui_x11_set_back_color()
