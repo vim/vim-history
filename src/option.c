@@ -6232,7 +6232,10 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
      */
     if (old_Rows != Rows || old_Columns != Columns)
     {
-	if (full_screen
+	/* Changing the screen size is not allowed while updating the screen. */
+	if (updating_screen)
+	    *pp = old_value;
+	else if (full_screen
 #ifdef FEAT_GUI
 		&& !gui.starting
 #endif
