@@ -296,44 +296,33 @@ vms_sys_status(int status)
  *
  * Returns: input length
  */
-
     int
 vms_read(char *inbuf, size_t nbytes)
 {
-
-    static unsigned short add_esc, was_esc = 0;
-
     char    ibuf[nbytes];
     int     status, function, len;
+    float   wait = 0.05;
     TT_MODE tt_mode;
 
     /* whatever happened earlier we need an iochan here */
     if (!iochan)
-       tt_mode=get_tty();
+       tt_mode = get_tty();
 
-    function = ( IO$_READLBLK | IO$M_NOECHO | IO$M_TIMED ) ;
-    len=0;
-    add_esc=0;
+    function = (IO$_READLBLK | IO$M_NOECHO | IO$M_TIMED | IO$M_ESCAPE);
+    memset(ibuf, 0, sizeof(ibuf));
 
-    while(1) {
-        memset(ibuf,0,sizeof(ibuf));
-        status = sys$qiow(0,iochan,function,&iosb,0,0,&ibuf,nbytes-1,0,0,0,0);
-        len=strlen( ibuf );
-        if ( was_esc ) {                   /* ESC interrupts the BLOCK QIO  */
-            add_esc=1;                     /* therefore we need to handle   */
-            was_esc=0;                     /* it on special way in order to */
-            inbuf[0]=27;                   /* read ESC sequences            */
+    while (1)
+    {
+        status = sys$qiow(0,iochan,function,&iosb,0,0,&ibuf,nbytes,0,0,0,0);
+        len = strlen(ibuf);
+        if (len > 0)
+	{
+            mch_memmove(inbuf, ibuf, len);
+            break;
         }
-        if ( len>0 ){
-            if ( ibuf[len-1]==27 ){
-                was_esc=1;
-                len=len-1;
-            }
-            mch_memmove(inbuf+add_esc, ibuf, len);
-        }
-        if ((add_esc+len) > 0) break;
+	lib$wait(&wait);
     }
-    return add_esc+len;
+    return len;
 }
 
 /*
