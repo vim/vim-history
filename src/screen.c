@@ -3072,7 +3072,12 @@ win_line(wp, lnum, startrow, endrow)
 		if (attr == 0 || area_attr != attr)
 		    area_attr = diff_attr;
 		if (attr == 0 || char_attr != attr)
-		    char_attr = diff_attr;
+		{
+		    if (search_attr != 0)
+			char_attr = search_attr;
+		    else
+			char_attr = diff_attr;
+		}
 	    }
 #endif
 	}
