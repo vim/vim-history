@@ -1114,6 +1114,12 @@ vgetc()
 		continue;
 	    }
 #endif
+#ifdef USE_GUI
+	    /* Translate K_CSI to CSI.  The special key is only used to avoid
+	     * it being recognized as the start of a special key. */
+	    if (c == K_CSI)
+		c = CSI;
+#endif
 	}
 #ifdef MSDOS
 	/*

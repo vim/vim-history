@@ -633,6 +633,15 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
 	trash_input_buf();
 	got_int = TRUE;
     }
+
+    if (len == 1 && string[0] == CSI)
+    {
+	/* Turn CSI into K_CSI. */
+	string[1] = KS_EXTRA;
+	string[2] = KE_CSI;
+	len = 3;
+    }
+
     add_to_input_buf(string, len);
 
     /* blank out the pointer if necessary */
@@ -700,7 +709,7 @@ selection_received_event(GtkWidget * widget, GtkSelectionData * data)
 	for (i = 0; i < count; i++)
 	    g_string_append(str, list[i]);
 
-	p = str->str;
+	p = (char_u *)str->str;
 	len = str->len;
 	g_string_free(str, FALSE);
 	gdk_free_text_list(list);

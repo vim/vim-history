@@ -1335,6 +1335,8 @@ static struct key_name_entry
     {K_BS,		(char_u *)"BS"},
     {K_BS,		(char_u *)"BackSpace"},	/* Alternative name */
     {ESC,		(char_u *)"Esc"},
+    {CSI,		(char_u *)"CSI"},
+    {K_CSI,		(char_u *)"xCSI"},
     {'|',		(char_u *)"Bar"},
     {'\\',		(char_u *)"Bslash"},
     {K_DEL,		(char_u *)"Del"},

@@ -1613,12 +1613,22 @@ ro_insert_key(code)
 	    switch (a)
 	    {
 		case 0x1e:
-		    return ro_press('k','h', 0);	/* Home */
+		    ro_press('k','h', 0);	/* Home */
+		    return;
 		case 0x7f:
-		    return ro_press('k','D', 0);	/* Delete */
+		    ro_press('k','D', 0);	/* Delete */
+		    return;
+		case CSI:
+		    {
+			/* Turn CSI into K_CSI.  Untested! */
+			char_u string[3] = {CSI, KS_EXTRA, KE_CSI};
+
+			add_to_input_buf(string, 3);
+			return;
+		    }
 		default:
 		    add_to_input_buf(code, 1);
-		return;
+		    return;
 	    }
 	case 1:
 	    if ((a & 0xcf) == 0xcc)

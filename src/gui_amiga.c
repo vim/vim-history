@@ -379,10 +379,19 @@ D("Select UP detected\n");
 				break;
 			case IDCMP_VANILLAKEY:
 			{
-				char_u string[1];
+				char_u string[3];
+
 				string[0] = (char_u)code;
+				if (code == CSI)
+				{
+				    /* Insert CSI as K_CSI.  Untested! */
+				    string[1] = KS_EXTRA;
+				    string[2] = KE_CSI;
+				    add_to_input_buf(string, 3);
+				}
+				else
+				    add_to_input_buf(string, 1);
 				returnEvent = ev_KeyStroke;
-				add_to_input_buf(string,1);
 				break;
 			case IDCMP_RAWKEY:
 				if (msg->Qualifier & IEQUALIFIER_LSHIFT)
