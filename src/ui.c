@@ -742,20 +742,27 @@ clip_redraw_selection(x, y, w, h)
 }
 
 /*
- * Redraw the selection if character at "row,col" is inside of it.
+ * Redraw part of the selection if character at "row,col" is inside of it.
  */
     void
-clip_may_redraw_selection(row, col)
-    int	row, col;
+clip_may_redraw_selection(row, col, len)
+    int		row, col;
+    int		len;
 {
+    int		start = col;
+    int		end = col + len;
+
     if (clipboard.state != SELECT_CLEARED
-	    && ((row == clipboard.start.lnum
-		    && col >= (int)clipboard.start.col)
-		|| row > clipboard.start.lnum)
-	    && ((row == clipboard.end.lnum
-		    && col < (int)clipboard.end.col)
-		|| row < clipboard.end.lnum))
-	clip_invert_area(row, col, row, col + 1);
+	    && row >= clipboard.start.lnum
+	    && row <= clipboard.end.lnum)
+    {
+	if (row == clipboard.start.lnum && start < (int)clipboard.start.col)
+	    start = clipboard.start.col;
+	if (row == clipboard.end.lnum && end > (int)clipboard.end.col)
+	    end = clipboard.end.col;
+	if (end > start)
+	    clip_invert_area(row, start, row, end);
+    }
 }
 
 /*
