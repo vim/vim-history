@@ -26,7 +26,7 @@ typedef enum
     ShS_SHOWING				/* the balloon is being displayed */
 } BeState;
 
-typedef struct
+typedef struct BalloonEvalStruct
 {
 #ifdef FEAT_GUI_GTK
     GtkWidget		*target;	/* widget we are monitoring */
@@ -60,7 +60,7 @@ typedef struct
 #endif
     int			ts;		/* tabstop setting for this buffer */
     char_u		*msg;
-    void		(*msgCB)();
+    void		(*msgCB)__ARGS((struct BalloonEvalStruct *, int));
     void		*clientData;	/* For callback */
 #if !defined(FEAT_GUI_GTK) && !defined(FEAT_GUI_W32)
     Dimension		screen_width;	/* screen width in pixels */
