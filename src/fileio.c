@@ -2595,14 +2595,15 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     /*
      * If we are not appending or filtering, the file exists, and the
      * 'writebackup', 'backup' or 'patchmode' option is set, need a backup.
+     * When 'patchmode' is set also make a backup when appending.
      *
      * Do not make any backup, if 'writebackup' and 'backup' are both switched
      * off.  This helps when editing large files on almost-full disks.
      */
-    if (!append && !filtering && perm >= 0 && dobackup)
+    if (!(append && *p_pm == NUL) && !filtering && perm >= 0 && dobackup)
     {
 
-	if (*p_bkc == 'y')		/* "yes" */
+	if (*p_bkc == 'y' || append)	/* "yes" */
 	    backup_copy = TRUE;
 #ifdef UNIX
 	else if (*p_bkc == 'a')		/* "auto" */
