@@ -2620,8 +2620,8 @@ mch_setmouse(on)
 	else	/* disable mouse events, could probably always send the same */
 	    out_str_nf((char_u *)
 		       (xterm_mouse_vers > 1
-			? IF_EB("\033[?1002l", "[?1002l")
-			: IF_EB("\033[?1000l", "[?1000l")));
+			? IF_EB("\033[?1002l", ESC_STR "[?1002l")
+			: IF_EB("\033[?1000l", ESC_STR "[?1000l")));
 	ison = on;
     }
 
