@@ -87,7 +87,7 @@ MINOR = 1
 # - With these features: "make depend" (works best with gcc).
 # - "make lint" and check the output (ignore GTK warnings).
 # - Enable the efence library in "src/Makefile" and run "make test".
-# - Do "make menu" to update the runtime/menu.vim file.
+# - Do "make menu" to update the runtime/synmenu.vim file.
 # - Add remarks for changes to runtime/doc/version6.txt.
 # - In runtime/doc run "make" and "make html" to check for errors.
 # - Check if src/Makefile and src/feature.h don't contain any personal
@@ -602,7 +602,6 @@ RT_ALL =	\
 		runtime/macros/urm/examples \
 		runtime/macros/urm/urm \
 		runtime/macros/urm/urm.vim \
-		runtime/delmenu.vim \
 		runtime/mswin.vim \
 		runtime/evim.vim \
 		runtime/optwin.vim \
@@ -626,6 +625,8 @@ RT_SCRIPTS =	\
 		runtime/filetype.vim \
 		runtime/scripts.vim \
 		runtime/menu.vim \
+		runtime/delmenu.vim \
+		runtime/synmenu.vim \
 		runtime/makemenu.vim \
 		runtime/colors/*.vim \
 		runtime/colors/README.txt \

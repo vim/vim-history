@@ -1,9 +1,9 @@
-" Script to define the syntax menu in menu.vim
+" Script to define the syntax menu in synmenu.vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2002 Mar 21
+" Last Change:	2002 Jul 09
 
 " This is used by "make menu" in the src directory.
-edit <sfile>:p:h/menu.vim
+edit <sfile>:p:h/synmenu.vim
 
 /The Start Of The Syntax Menu/+1,/The End Of The Syntax Menu/-1d
 let s:lnum = line(".") - 1
@@ -144,11 +144,13 @@ SynMenu EFG.FORM:form
 SynMenu EFG.Forth:forth
 SynMenu EFG.Fortran:fortran
 SynMenu EFG.FoxPro:foxpro
-SynMenu EFG.Fvwm\ configuration:fvwm1
-SynMenu EFG.Fvwm2\ configuration:fvwm2
+SynMenu EFG.Fvwm.Fvwm\ configuration:fvwm1
+SynMenu EFG.Fvwm.Fvwm2\ configuration:fvwm2
+SynMenu EFG.Fvwm.Fvwm2\ configuration with M4:fvwm2m4
 SynMenu EFG.GDB\ command\ file:gdb
 SynMenu EFG.GDMO:gdmo
 SynMenu EFG.Gedcom:gedcom
+SynMenu EFG.Gkrellmrc:gkrellmrc
 SynMenu EFG.GP:gp
 SynMenu EFG.GNU\ Server\ Pages:gsp
 SynMenu EFG.GNUplot:gnuplot
@@ -172,6 +174,7 @@ SynMenu HIJK.Inittab:inittab
 SynMenu HIJK.Inno\ setup:iss
 SynMenu HIJK.InstallShield\ script:ishd
 SynMenu HIJK.Interactive\ Data\ Lang:idlang
+SynMenu HIJK.IPfilter:ipfilter
 SynMenu HIJK.JAM:jam
 SynMenu HIJK.Jargon:jargon
 SynMenu HIJK.Java.Java:java
@@ -194,6 +197,7 @@ SynMenu L-Ma.LifeLines\ script:lifelines
 SynMenu L-Ma.Lilo:lilo
 SynMenu L-Ma.Lisp:lisp
 SynMenu L-Ma.Lite:lite
+SynMenu L-Ma.Logtalk:logtalk
 SynMenu L-Ma.LOTOS:lotos
 SynMenu L-Ma.LotusScript:lscript
 SynMenu L-Ma.Lout:lout
@@ -214,6 +218,7 @@ SynMenu L-Ma.Matlab:matlab
 SynMenu Me-NO.MEL\ (for\ Maya):mel
 SynMenu Me-NO.Metafont:mf
 SynMenu Me-NO.MetaPost:mp
+SynMenu Me-NO.MMIX:mmix
 SynMenu Me-NO.Model:model
 SynMenu Me-NO.Modsim\ III:modsim3
 SynMenu Me-NO.Modula\ 2:modula2
@@ -256,6 +261,7 @@ SynMenu PQ.Pike:pike
 SynMenu PQ.Pine\ RC:pine
 SynMenu PQ.PL/M:plm
 SynMenu PQ.PL/SQL:plsql
+SynMenu PQ.PLP:plp
 SynMenu PQ.PO\ (GNU\ gettext):po
 SynMenu PQ.Postfix\ main\ config:pfmain
 SynMenu PQ.PostScript:postscr
@@ -280,6 +286,7 @@ SynMenu R-Sg.Remind:remind
 SynMenu R-Sg.Renderman\ Shader\ Lang:sl
 SynMenu R-Sg.Rexx:rexx
 SynMenu R-Sg.Robots\.txt:robots
+SynMenu R-Sg.RockLinux\ package\ desc\.:desc
 SynMenu R-Sg.Rpcgen:rpcgen
 SynMenu R-Sg.RPL/2:rpl
 SynMenu R-Sg.RTF:rtf
@@ -313,6 +320,7 @@ SynMenu Sh-S.SKILL.SKILL\ for\ Diva:diva
 SynMenu Sh-S.SLRN.Slrn\ rc:slrnrc
 SynMenu Sh-S.SLRN.Slrn\ score:slrnsc
 SynMenu Sh-S.SmallTalk:st
+SynMenu Sh-S.Smarty\ Templates:smarty
 SynMenu Sh-S.SMIL:smil
 SynMenu Sh-S.SMITH:smith
 SynMenu Sh-S.SNMP\ MIB:mib
@@ -327,6 +335,7 @@ SynMenu Sh-S.Spice:spice
 SynMenu Sh-S.Speedup:spup
 SynMenu Sh-S.Splint:splint
 SynMenu Sh-S.Squid\ config:squid
+SynMenu Sh-S.SQL.MySQL:mysql
 SynMenu Sh-S.SQL.SQL:sql
 SynMenu Sh-S.SQL.SQL\ Forms:sqlforms
 SynMenu Sh-S.SQL.SQLJ:sqlj
@@ -350,12 +359,14 @@ SynMenu TUV.TeX.TeX\ configuration:texmf
 SynMenu TUV.TeX.Texinfo:texinfo
 SynMenu TUV.TF\ mud\ client:tf
 SynMenu TUV.Tidy\ configuration:tidy
+SynMenu TUV.Tilde:tilde
 SynMenu TUV.Trasys\ input:trasys
 SynMenu TUV.TSS.Command\ Line:tsscl
 SynMenu TUV.TSS.Geometry:tssgm
 SynMenu TUV.TSS.Optics:tssop
 SynMenu TUV.UIT/UIL:uil
 SynMenu TUV.UnrealScript:uc
+SynMenu TUV.Valgrind:valgrind
 SynMenu TUV.Verilog\ HDL:verilog
 SynMenu TUV.Vgrindefs:vgrindefs
 SynMenu TUV.VHDL:vhdl
