@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:	Java
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2002 Feb 28
+" Last Change:	2002 Apr 21
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
@@ -66,7 +66,23 @@ function GetJavaIndent()
 
   " Below a line starting with "}" never indent more.  Needed for a method
   " below a method with an indented "throws" clause.
-  let lnum = prevnonblank(v:lnum - 1)
+  " First ignore comment lines.
+  let lnum = v:lnum - 1
+  while lnum > 1
+    let lnum = prevnonblank(lnum)
+    if getline(lnum) =~ '\*/\s*$'
+      while getline(lnum) !~ '/\*' && lnum > 1
+	let lnum = lnum - 1
+      endwhile
+      if getline(lnum) =~ '^\s*/\*'
+	let lnum = lnum - 1
+      endif
+    elseif getline(lnum) =~ '^\s*//'
+      let lnum = lnum - 1
+    else
+      break
+    endif
+  endwhile
   if getline(lnum) =~ '^\s*}\s*\(//.*\|/\*.*\)\=$' && indent(lnum) < theIndent
     let theIndent = indent(lnum)
   endif
