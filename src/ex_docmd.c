@@ -1880,6 +1880,21 @@ doend:
     if (curwin->w_cursor.lnum == 0)	/* can happen with zero line number */
 	curwin->w_cursor.lnum = 1;
 
+    if (errormsg != NULL && *errormsg != NUL && !did_emsg)
+    {
+	if (sourcing)
+	{
+	    if (errormsg != IObuff)
+	    {
+		STRCPY(IObuff, errormsg);
+		errormsg = IObuff;
+	    }
+	    STRCAT(errormsg, ": ");
+	    STRNCAT(errormsg, *cmdlinep, IOSIZE - STRLEN(IObuff));
+	}
+	emsg(errormsg);
+    }
+
     if (verbose_save >= 0)
 	p_verbose = verbose_save;
 
@@ -1900,20 +1915,6 @@ doend:
 	msg_scroll = save_msg_scroll;
     }
 
-    if (errormsg != NULL && *errormsg != NUL && !did_emsg)
-    {
-	if (sourcing)
-	{
-	    if (errormsg != IObuff)
-	    {
-		STRCPY(IObuff, errormsg);
-		errormsg = IObuff;
-	    }
-	    STRCAT(errormsg, ": ");
-	    STRNCAT(errormsg, *cmdlinep, IOSIZE - STRLEN(IObuff));
-	}
-	emsg(errormsg);
-    }
     if (ea.nextcmd && *ea.nextcmd == NUL)	/* not really a next command */
 	ea.nextcmd = NULL;
 
