@@ -3290,7 +3290,8 @@ restore_backup:
     }
     errmsg = NULL;
 
-#ifdef MACOS_CLASSIC /* TODO: Is it need for MACOS_X? (Dany) */
+#if defined(MACOS_CLASSIC) || defined(WIN3264)
+    /* TODO: Is it need for MACOS_X? (Dany) */
     /*
      * On macintosh copy the original files attributes (i.e. the backup)
      * This is done in order to preserve the ressource fork and the
