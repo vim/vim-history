@@ -2,7 +2,7 @@
 void win_resize_on __ARGS((void));
 void win_resize_off __ARGS((void));
 void mch_write __ARGS((char_u *p, int len));
-int mch_inchar __ARGS((char_u *buf, int maxlen, long time));
+int mch_inchar __ARGS((char_u *buf, int maxlen, long time, int tb_change_cnt));
 int mch_char_avail __ARGS((void));
 long_u mch_avail_mem __ARGS((int special));
 void mch_delay __ARGS((long msec, int ignoreinput));

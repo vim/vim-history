@@ -1268,7 +1268,8 @@ tgetch(void)
 mch_inchar(
     char_u	*buf,
     int		maxlen,
-    long	time)
+    long	time,
+    int		tb_change_cnt)
 {
 #ifndef FEAT_GUI_W32	    /* this isn't used for the GUI */
 
@@ -1356,6 +1357,13 @@ mch_inchar(
 
     while ((len == 0 || WaitForChar(0L)) && len < maxlen)
     {
+	if (typebuf_changed(tb_change_cnt))
+	{
+	    /* "buf" may be invalid now if a client put something in the
+	     * typeahead buffer and "buf" is in the typeahead buffer. */
+	    len = 0;
+	    break;
+	}
 #ifdef FEAT_MOUSE
 	if (g_nMouseClick != -1 && maxlen - len >= 5)
 	{
@@ -1378,13 +1386,13 @@ mch_inchar(
 	{
 	    c = tgetch();
 
-#ifdef FEAT_CLIENTSERVER
-	    if (input_available())
+	    if (typebuf_changed(tb_change_cnt))
 	    {
-		len = read_from_input_buf(buf, (long)maxlen);
+		/* "buf" may be invalid now if a client put something in the
+		 * typeahead buffer and "buf" is in the typeahead buffer. */
+		len = 0;
 		break;
 	    }
-#endif
 
 	    if (c == Ctrl_C && ctrl_c_interrupts)
 	    {

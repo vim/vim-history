@@ -111,10 +111,11 @@ mch_write(p, len)
  * Return number of characters read.
  */
     int
-mch_inchar(buf, maxlen, time)
+mch_inchar(buf, maxlen, time, tb_change_cnt)
     char_u  *buf;
     int	    maxlen;
     long    time;		/* milli seconds */
+    int	    tb_change_cnt;
 {
     int	    len;
     long    utime;

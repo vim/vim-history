@@ -6,7 +6,7 @@ int mch_windows95 __ARGS((void));
 void mch_setmouse __ARGS((int on));
 void mch_update_cursor __ARGS((void));
 int mch_char_avail __ARGS((void));
-int mch_inchar __ARGS((char_u *buf, int maxlen, long time));
+int mch_inchar __ARGS((char_u *buf, int maxlen, long time, int tb_change_cnt));
 void mch_init __ARGS((void));
 void mch_exit __ARGS((int r));
 int mch_check_win __ARGS((int argc, char **argv));
