@@ -2076,6 +2076,9 @@ form_configure_event(GtkWidget * widget, GdkEventConfigure * event)
     gui_resize_shell(event->width, event->height);
     gtk_form_thaw(GTK_FORM(gui.formwin));
 
+    /* because of the freeze the form still needs to get the new size */
+    gtk_form_set_size(GTK_FORM(gui.formwin), event->width, event->height);
+
     return TRUE;
 }
 
