@@ -301,6 +301,21 @@ mf_close_file(buf, getlines)
 }
 
 /*
+ * Set new size for a memfile.  Used when block 0 of a swapfile has been read
+ * and the size it indicates differs from what was guessed.
+ */
+    void
+mf_new_page_size(mfp, new_size)
+    memfile_T	*mfp;
+    unsigned	new_size;
+{
+    /* Correct the memory used for block 0 to the new size, because it will be
+     * freed with that size later on. */
+    total_mem_used += new_size - mfp->mf_page_size;
+    mfp->mf_page_size = new_size;
+}
+
+/*
  * get a new block
  *
  *   negative: TRUE if negative block number desired (data block)

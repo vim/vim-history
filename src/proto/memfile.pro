@@ -3,6 +3,7 @@ memfile_T *mf_open __ARGS((char_u *fname, int flags));
 int mf_open_file __ARGS((memfile_T *mfp, char_u *fname));
 void mf_close __ARGS((memfile_T *mfp, int del_file));
 void mf_close_file __ARGS((buf_T *buf, int getlines));
+void mf_new_page_size __ARGS((memfile_T *mfp, unsigned new_size));
 bhdr_T *mf_new __ARGS((memfile_T *mfp, int negative, int page_count));
 bhdr_T *mf_get __ARGS((memfile_T *mfp, blocknr_T nr, int page_count));
 void mf_put __ARGS((memfile_T *mfp, bhdr_T *hp, int dirty, int infile));

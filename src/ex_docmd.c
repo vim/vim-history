@@ -5474,9 +5474,12 @@ ex_preserve(eap)
 ex_recover(eap)
     exarg_T	*eap;
 {
+    /* Set recoverymode right away to avoid the ATTENTION prompt. */
+    recoverymode = TRUE;
     if (!check_changed(curbuf, p_awa, TRUE, eap->forceit, FALSE)
 		&& (*eap->arg == NUL || setfname(eap->arg, NULL, TRUE) == OK))
 	ml_recover();
+    recoverymode = FALSE;
 }
 
 /*
