@@ -1,15 +1,11 @@
 " Vim syntax file
 " Language:	JSP (Java Server Pages)
-" Maintainer:	Rafael Garcia-Suarez <garcia_suarez@hotmail.com>
-" URL:		http://altern.org/rgs/vim/syntax/jsp.vim
-" Last Change:	2000 Apr 12
+" Maintainer:	Rafael Garcia-Suarez <rgarciasuarez@free.fr>
+" URL:		http://rgarciasuarez.free.fr/vim/syntax/jsp.vim
+" Last change:	2000-08-28
 
 " Remove any old syntax stuff hanging around
 syn clear
-
-if !exists("main_syntax")
-  let main_syntax = 'jsp'
-endif
 
 " Source HTML syntax
 source <sfile>:p:h/html.vim
@@ -44,9 +40,5 @@ if !exists("did_jsp_syntax_inits")
 endif
 
 let b:current_syntax = "jsp"
-
-if main_syntax == 'jsp'
-  unlet main_syntax
-endif
 
 " vim: ts=8

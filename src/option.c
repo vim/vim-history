@@ -14,8 +14,7 @@
  * - For a buffer or window local option:
  *   - Add a PV_XX entry to the enum below.
  *   - Add a variable to the window or buffer struct in structs.h.
- *   - For a window option, add some code to win_copy_options() and
- *     copy_global_options().
+ *   - For a window option, add some code to copy_winopt().
  *   - For a buffer option, add some code to buf_copy_options().
  *   - For a buffer string option, add code to check_buf_options().
  * - If it's a numeric option, add any necessary bounds checks to do_set().
@@ -65,6 +64,7 @@ typedef enum
     , PV_FT
     , PV_INC
     , PV_INEX
+    , PV_INDE
     , PV_INF
     , PV_ISK
     , PV_KEY
@@ -141,6 +141,9 @@ static char_u	*p_inc;
 #if defined(FEAT_FIND_ID) && defined(FEAT_EVAL)
 static char_u	*p_inex;
 #endif
+#if defined(FEAT_CINDENT) && defined(FEAT_EVAL)
+static char_u	*p_inde;
+#endif
 static int	p_inf;
 static char_u	*p_isk;
 #ifdef FEAT_CRYPT
@@ -191,15 +194,6 @@ static long	p_tw_nopaste;
 static long	p_wm_nopaste;
 static long	p_sts_nopaste;
 static int	p_ai_nopaste;
-#ifdef FEAT_SMARTINDENT
-static int	p_si_nopaste;
-#endif
-#ifdef FEAT_CINDENT
-static int	p_cin_nopaste;
-#endif
-#ifdef FEAT_LISP
-static int	p_lisp_nopaste;
-#endif
 
 struct vimoption
 {
@@ -881,6 +875,15 @@ static struct vimoption options[] =
     {"incsearch",   "is",   P_BOOL|P_VI_DEF|P_VIM,
 			    (char_u *)&p_is, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)0L}},
+    {"indentexpr", "inde",  P_STRING|P_ALLOCED|P_VI_DEF|P_VIM,
+#if defined(FEAT_CINDENT) && defined(FEAT_EVAL)
+			    (char_u *)&p_inde, PV_INDE,
+			    {(char_u *)"", (char_u *)0L}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)0L, (char_u *)0L}
+#endif
+			    },
     {"infercase",   "inf",  P_BOOL|P_VI_DEF,
 			    (char_u *)&p_inf, PV_INF,
 			    {(char_u *)FALSE, (char_u *)0L}},
@@ -2233,7 +2236,7 @@ set_option_default(opt_idx, opt_flags)
 					 && options[opt_idx].indir != PV_NONE)
 		{
 		    if (options[opt_idx].var == VAR_WIN)
-			*((long *)varp + 1) = *(long *)varp;
+			*((long *)GLOBAL_WO(varp)) = *(long *)varp;
 		    else
 			*(long *)options[opt_idx].var = *(long *)varp;
 		}
@@ -2247,7 +2250,7 @@ set_option_default(opt_idx, opt_flags)
 	    if ((opt_flags & OPT_GLOBAL) && options[opt_idx].indir != PV_NONE)
 	    {
 		if (options[opt_idx].var == VAR_WIN)
-		    *((int *)varp + 1) = *(int *)varp;
+		    *((int *)GLOBAL_WO(varp)) = *(int *)varp;
 		else
 		    *(int *)options[opt_idx].var = *(int *)varp;
 	    }
@@ -3411,33 +3414,6 @@ check_options()
 }
 
 /*
- * Check string options in a window for NULL value.
- */
-/*ARGSUSED*/
-    void
-check_win_options(win)
-    win_t	*win;
-{
-#ifdef FEAT_FOLDING
-    int		i;
-
-    for (i = 0; i <= 1; ++i)
-    {
-	if (win->w_pg_fde[i] == NULL)
-	    win->w_pg_fde[i] = empty_option;
-	if (win->w_pg_fdi[i] == NULL)
-	    win->w_pg_fdi[i] = empty_option;
-	if (win->w_pg_fdm[i] == NULL)
-	    win->w_pg_fdm[i] = empty_option;
-	if (win->w_pg_fdt[i] == NULL)
-	    win->w_pg_fdt[i] = empty_option;
-	if (win->w_pg_fmr[i] == NULL)
-	    win->w_pg_fmr[i] = empty_option;
-    }
-#endif
-}
-
-/*
  * Check string options in a buffer for NULL value.
  */
     void
@@ -3461,6 +3437,10 @@ check_buf_options(buf)
     if (buf->b_p_inex == NULL)
 	buf->b_p_inex = empty_option;
 # endif
+#endif
+#if defined(FEAT_CINDENT) && defined(FEAT_EVAL)
+    if (buf->b_p_inde == NULL)
+	buf->b_p_inde = empty_option;
 #endif
 #ifdef FEAT_CRYPT
     if (buf->b_p_key == NULL)
@@ -3602,7 +3582,7 @@ set_string_option_global(opt_idx, varp)
     {
 	/* the global value is always allocated */
 	if (options[opt_idx].var == VAR_WIN)
-	    p = varp + 1;
+	    p = (char_u **)GLOBAL_WO(varp);
 	else
 	    p = (char_u **)options[opt_idx].var;
 	free_string_option(*p);
@@ -4527,7 +4507,7 @@ set_chars_option(varp)
     {
 	{&lcs_eol,	"eol"},
 	{&lcs_ext,	"extends"},
-	{&lcs_prec,	"preceeds"},
+	{&lcs_prec,	"precedes"},
 	{&lcs_tab2,	"tab"},
 	{&lcs_trail,	"trail"},
     };
@@ -4693,7 +4673,12 @@ set_bool_option(opt_idx, varp, value, local)
 #endif
 
     /* Disallow changing some options from secure mode */
-    if (p_secure && (options[opt_idx].flags & P_NOSECURE))
+    if ((p_secure
+#ifdef HAVE_SANDBOX
+		|| sandbox != 0
+#endif
+	)
+	    && (options[opt_idx].flags & P_NOSECURE))
 	return (char_u *)"Not allowed here";
 
     *(int *)varp = value;	    /* set the new value */
@@ -4702,7 +4687,7 @@ set_bool_option(opt_idx, varp, value, local)
     if (!local && options[opt_idx].indir != PV_NONE)
     {
 	if (options[opt_idx].var == VAR_WIN)
-	    *((int *)varp + 1) = value;
+	    *((int *)GLOBAL_WO(varp)) = value;
 	else
 	    *(int *)options[opt_idx].var = value;
     }
@@ -4851,6 +4836,14 @@ set_bool_option(opt_idx, varp, value, local)
 	}
     }
 #endif
+
+    /* If 'wrap' is set, set w_leftcol to zero. */
+    else if ((int *)varp == &curwin->w_p_wrap)
+    {
+	if (curwin->w_p_wrap)
+	    curwin->w_leftcol = 0;
+    }
+
 
     /*
      * End of handling side effects for bool options.
@@ -5211,7 +5204,7 @@ set_num_option(opt_idx, varp, value, errbuf, local)
     if (!local && options[opt_idx].indir != PV_NONE)
     {
 	if (options[opt_idx].var == VAR_WIN)
-	    *((long *)varp + 1) = *(long *)varp;
+	    *((long *)GLOBAL_WO(varp)) = *(long *)varp;
 	else
 	    *(long *)options[opt_idx].var = *(long *)varp;
     }
@@ -5816,7 +5809,7 @@ get_varp_global(p, global)
     if (global && p->indir != PV_NONE)
     {
 	if (p->var == VAR_WIN)
-	    return (char_u *)((char_u **)get_varp(p) + 1);
+	    return (char_u *)GLOBAL_WO(get_varp(p));
 	return p->var;
     }
     return get_varp(p);
@@ -5895,6 +5888,9 @@ get_varp(p)
 	case PV_INEX:	return (char_u *)&(curbuf->b_p_inex);
 # endif
 #endif
+#if defined(FEAT_CINDENT) && defined(FEAT_EVAL)
+	case PV_INDE:	return (char_u *)&(curbuf->b_p_inde);
+#endif
 #ifdef FEAT_CRYPT
 	case PV_KEY:	return (char_u *)&(curbuf->b_p_key);
 #endif
@@ -5941,91 +5937,111 @@ get_varp(p)
 /*
  * Copy options from one window to another.
  * Used when splitting a window.
- * The 'scroll' option is not copied, because it depends on the window height.
  */
     void
 win_copy_options(wp_from, wp_to)
     win_t	*wp_from;
     win_t	*wp_to;
 {
-    wp_to->w_pg_list[0] = wp_from->w_pg_list[0];
-    wp_to->w_pg_list[1] = wp_from->w_pg_list[1];
-    wp_to->w_pg_nu[0] = wp_from->w_pg_nu[0];
-    wp_to->w_pg_nu[1] = wp_from->w_pg_nu[1];
-#ifdef FEAT_RIGHTLEFT
-    wp_to->w_pg_rl[0] = wp_from->w_pg_rl[0];
-    wp_to->w_pg_rl[1] = wp_from->w_pg_rl[1];
-# ifdef FEAT_FKMAP
+    copy_winopt(&wp_from->w_onebuf_opt, &wp_to->w_onebuf_opt);
+    copy_winopt(&wp_from->w_allbuf_opt, &wp_to->w_allbuf_opt);
+# ifdef FEAT_RIGHTLEFT
+#  ifdef FEAT_FKMAP
+    /* Is this right? */
     wp_to->w_farsi = wp_from->w_farsi;
+#  endif
 # endif
-#endif
-    wp_to->w_pg_wrap[0] = wp_from->w_pg_wrap[0];
-    wp_to->w_pg_wrap[1] = wp_from->w_pg_wrap[1];
-#ifdef FEAT_LINEBREAK
-    wp_to->w_pg_lbr[0] = wp_from->w_pg_lbr[0];
-    wp_to->w_pg_lbr[1] = wp_from->w_pg_lbr[1];
-#endif
-#ifdef FEAT_SCROLLBIND
-    wp_to->w_pg_scb[0] = wp_from->w_pg_scb[0];
-    wp_to->w_pg_scb[1] = wp_from->w_pg_scb[1];
-#endif
-#ifdef FEAT_FOLDING
-    wp_to->w_pg_fdc[0] = wp_from->w_pg_fdc[0];
-    wp_to->w_pg_fdc[1] = wp_from->w_pg_fdc[1];
-    wp_to->w_pg_fen[0] = wp_from->w_pg_fen[0];
-    wp_to->w_pg_fen[1] = wp_from->w_pg_fen[1];
-    wp_to->w_pg_fde[0] = vim_strsave(wp_from->w_pg_fde[0]);
-    wp_to->w_pg_fde[1] = vim_strsave(wp_from->w_pg_fde[1]);
-    wp_to->w_pg_fdi[0] = vim_strsave(wp_from->w_pg_fdi[0]);
-    wp_to->w_pg_fdi[1] = vim_strsave(wp_from->w_pg_fdi[1]);
-    wp_to->w_pg_fdl[0] = wp_from->w_pg_fdl[0];
-    wp_to->w_pg_fdl[1] = wp_from->w_pg_fdl[1];
-    wp_to->w_pg_fdm[0] = vim_strsave(wp_from->w_pg_fdm[0]);
-    wp_to->w_pg_fdm[1] = vim_strsave(wp_from->w_pg_fdm[1]);
-    wp_to->w_pg_fdt[0] = vim_strsave(wp_from->w_pg_fdt[0]);
-    wp_to->w_pg_fdt[1] = vim_strsave(wp_from->w_pg_fdt[1]);
-    wp_to->w_pg_fmr[0] = vim_strsave(wp_from->w_pg_fmr[0]);
-    wp_to->w_pg_fmr[1] = vim_strsave(wp_from->w_pg_fmr[1]);
-#endif
-    check_win_options(wp_to);	    /* make sure we don't have NULLs */
 }
 #endif
 
 /*
- * Use option values global to all buffers for window "win".
- * Used when editing another buffer in a window.
+ * Copy the options from one winopt_t to another.
+ * Doesn't free the old option values in "to", use clear_winopt() for that.
+ * The 'scroll' option is not copied, because it depends on the window height.
  */
     void
-copy_global_options()
+copy_winopt(from, to)
+    winopt_t	*from;
+    winopt_t	*to;
 {
-    curwin->w_p_list = curwin->w_pg_list[1];
-    curwin->w_p_nu = curwin->w_pg_nu[1];
+    to->wo_list = from->wo_list;
+    to->wo_nu = from->wo_nu;
 #ifdef FEAT_RIGHTLEFT
-    curwin->w_p_rl = curwin->w_pg_rl[1];
+    to->wo_rl = from->wo_rl;
 #endif
-    curwin->w_p_wrap = curwin->w_pg_wrap[1];
+    to->wo_wrap = from->wo_wrap;
 #ifdef FEAT_LINEBREAK
-    curwin->w_p_lbr = curwin->w_pg_lbr[1];
+    to->wo_lbr = from->wo_lbr;
 #endif
 #ifdef FEAT_SCROLLBIND
-    curwin->w_p_scb = curwin->w_pg_scb[1];
+    to->wo_scb = from->wo_scb;
 #endif
 #ifdef FEAT_FOLDING
-    curwin->w_p_fdc = curwin->w_pg_fdc[1];
-    curwin->w_p_fen = curwin->w_pg_fen[1];
-    free_string_option(curwin->w_p_fde);
-    curwin->w_p_fde = vim_strsave(curwin->w_pg_fde[1]);
-    free_string_option(curwin->w_p_fdi);
-    curwin->w_p_fdi = vim_strsave(curwin->w_pg_fdi[1]);
-    curwin->w_p_fdl = curwin->w_pg_fdl[1];
-    free_string_option(curwin->w_p_fdm);
-    curwin->w_p_fdm = vim_strsave(curwin->w_pg_fdm[1]);
-    free_string_option(curwin->w_p_fdt);
-    curwin->w_p_fdt = vim_strsave(curwin->w_pg_fdt[1]);
-    free_string_option(curwin->w_p_fmr);
-    curwin->w_p_fmr = vim_strsave(curwin->w_pg_fmr[1]);
+    to->wo_fdc = from->wo_fdc;
+    to->wo_fen = from->wo_fen;
+    to->wo_fde = vim_strsave(from->wo_fde);
+    to->wo_fdi = vim_strsave(from->wo_fdi);
+    to->wo_fdl = from->wo_fdl;
+    to->wo_fdm = vim_strsave(from->wo_fdm);
+    to->wo_fdt = vim_strsave(from->wo_fdt);
+    to->wo_fmr = vim_strsave(from->wo_fmr);
 #endif
-    check_win_options(curwin);	    /* make sure we don't have NULLs */
+    check_winopt(to);		/* don't want NULL pointers */
+}
+
+/*
+ * Check string options in a window for a NULL value.
+ */
+    void
+check_win_options(win)
+    win_t	*win;
+{
+    check_winopt(&win->w_onebuf_opt);
+    check_winopt(&win->w_allbuf_opt);
+}
+
+/*
+ * Check for NULL pointers in a winopt_t and replace them with empty_option.
+ */
+/*ARGSUSED*/
+    void
+check_winopt(wop)
+    winopt_t	*wop;
+{
+#ifdef FEAT_FOLDING
+    if (wop->wo_fde == NULL)
+	wop->wo_fde = empty_option;
+    if (wop->wo_fdi == NULL)
+	wop->wo_fdi = empty_option;
+    if (wop->wo_fdm == NULL)
+	wop->wo_fdm = empty_option;
+    if (wop->wo_fdt == NULL)
+	wop->wo_fdt = empty_option;
+    if (wop->wo_fmr == NULL)
+	wop->wo_fmr = empty_option;
+#endif
+}
+
+/*
+ * Free the allocated memory inside a winopt_t.
+ */
+/*ARGSUSED*/
+    void
+clear_winopt(wop)
+    winopt_t	*wop;
+{
+#ifdef FEAT_FOLDING
+    free_string_option(wop->wo_fde);
+    wop->wo_fde = empty_option;
+    free_string_option(wop->wo_fdi);
+    wop->wo_fdi = empty_option;
+    free_string_option(wop->wo_fdm);
+    wop->wo_fdm = empty_option;
+    free_string_option(wop->wo_fdt);
+    wop->wo_fdt = empty_option;
+    free_string_option(wop->wo_fmr);
+    wop->wo_fmr = empty_option;
+#endif
 }
 
 /*
@@ -6137,11 +6153,9 @@ buf_copy_options(buf, flags)
 	    buf->b_p_mps = vim_strsave(p_mps);
 #ifdef FEAT_SMARTINDENT
 	    buf->b_p_si = p_si;
-	    buf->b_p_si_nopaste = p_si_nopaste;
 #endif
 #ifdef FEAT_CINDENT
 	    buf->b_p_cin = p_cin;
-	    buf->b_p_cin_nopaste = p_cin_nopaste;
 	    buf->b_p_cink = vim_strsave(p_cink);
 	    buf->b_p_cino = vim_strsave(p_cino);
 #endif
@@ -6157,7 +6171,6 @@ buf_copy_options(buf, flags)
 #endif
 #ifdef FEAT_LISP
 	    buf->b_p_lisp = p_lisp;
-	    buf->b_p_lisp_nopaste = p_lisp_nopaste;
 #endif
 #ifdef FEAT_SYN_HL
 	    /* Don't copy 'syntax', it must be set */
@@ -6168,6 +6181,9 @@ buf_copy_options(buf, flags)
 # ifdef FEAT_EVAL
 	    buf->b_p_inex = vim_strsave(p_inex);
 # endif
+#endif
+#if defined(FEAT_CINDENT) && defined(FEAT_EVAL)
+	    buf->b_p_inde = vim_strsave(p_inde);
 #endif
 #ifdef FEAT_CRYPT
 	    buf->b_p_key = vim_strsave(p_key);
@@ -6803,15 +6819,6 @@ paste_option_changed()
 		buf->b_p_wm_nopaste = buf->b_p_wm;
 		buf->b_p_sts_nopaste = buf->b_p_sts;
 		buf->b_p_ai_nopaste = buf->b_p_ai;
-#ifdef FEAT_SMARTINDENT
-		buf->b_p_si_nopaste = buf->b_p_si;
-#endif
-#ifdef FEAT_CINDENT
-		buf->b_p_cin_nopaste = buf->b_p_cin;
-#endif
-#ifdef FEAT_LISP
-		buf->b_p_lisp_nopaste = buf->b_p_lisp;
-#endif
 	    }
 
 	    /* save global options */
@@ -6828,15 +6835,6 @@ paste_option_changed()
 	    p_wm_nopaste = p_wm;
 	    p_sts_nopaste = p_sts;
 	    p_ai_nopaste = p_ai;
-#ifdef FEAT_SMARTINDENT
-	    p_si_nopaste = p_si;
-#endif
-#ifdef FEAT_CINDENT
-	    p_cin_nopaste = p_cin;
-#endif
-#ifdef FEAT_LISP
-	    p_lisp_nopaste = p_lisp;
-#endif
 	}
 
 	/*
@@ -6850,15 +6848,6 @@ paste_option_changed()
 	    buf->b_p_wm = 0;	    /* wrapmargin is 0 */
 	    buf->b_p_sts = 0;	    /* softtabstop is 0 */
 	    buf->b_p_ai = 0;	    /* no auto-indent */
-#ifdef FEAT_SMARTINDENT
-	    buf->b_p_si = 0;	    /* no smart-indent */
-#endif
-#ifdef FEAT_CINDENT
-	    buf->b_p_cin = 0;	    /* no c indenting */
-#endif
-#ifdef FEAT_LISP
-	    buf->b_p_lisp = 0;	    /* no lisp indenting */
-#endif
 	}
 
 	/* set global options */
@@ -6879,15 +6868,6 @@ paste_option_changed()
 	p_wm = 0;
 	p_sts = 0;
 	p_ai = 0;
-#ifdef FEAT_SMARTINDENT
-	p_si = 0;
-#endif
-#ifdef FEAT_CINDENT
-	p_cin = 0;
-#endif
-#ifdef FEAT_LISP
-	p_lisp = 0;
-#endif
     }
 
     /*
@@ -6902,15 +6882,6 @@ paste_option_changed()
 	    buf->b_p_wm = buf->b_p_wm_nopaste;
 	    buf->b_p_sts = buf->b_p_sts_nopaste;
 	    buf->b_p_ai = buf->b_p_ai_nopaste;
-#ifdef FEAT_SMARTINDENT
-	    buf->b_p_si = buf->b_p_si_nopaste;
-#endif
-#ifdef FEAT_CINDENT
-	    buf->b_p_cin = buf->b_p_cin_nopaste;
-#endif
-#ifdef FEAT_LISP
-	    buf->b_p_lisp = buf->b_p_lisp_nopaste;
-#endif
 	}
 
 	/* restore global options */
@@ -6931,15 +6902,6 @@ paste_option_changed()
 	p_wm = p_wm_nopaste;
 	p_sts = p_sts_nopaste;
 	p_ai = p_ai_nopaste;
-#ifdef FEAT_SMARTINDENT
-	p_si = p_si_nopaste;
-#endif
-#ifdef FEAT_CINDENT
-	p_cin = p_cin_nopaste;
-#endif
-#ifdef FEAT_LISP
-	p_lisp = p_lisp_nopaste;
-#endif
     }
 
     old_p_paste = p_paste;

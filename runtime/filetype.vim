@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Aug 19
+" Last change:	2000 Aug 27
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -21,7 +21,7 @@ au BufNewFile,BufRead *.orig,*.bak,*.old
 au BufNewFile,BufRead *~
 	\ exe "doau filetypedetect BufRead " . substitute(expand("<afile>"), '\~$', '', '')
 au BufNewFile,BufRead *.in
-	\ if expand("<afile>") != "configure.in" |
+	\ if expand("<afile>:t") != "configure.in" |
 	\   exe "doau filetypedetect BufRead " . expand("<afile>:r") |
 	\ endif
 
@@ -74,7 +74,7 @@ au BufNewFile,BufRead *.asp
 
 " Assembly (all kinds)
 " *.lst is not pure assembly, it has two extra columns (address, byte codes)
-au BufNewFile,BufRead *.asm,*.s,*.i,*.mac,*.lst	call FTCheck_asm()
+au BufNewFile,BufRead *.asm,*.[sS],*.i,*.mac,*.lst	call FTCheck_asm()
 
 " This function checks for the kind of assembly that is wanted by the user, or
 " can be detected from the first five lines of the file.
@@ -134,8 +134,11 @@ fun! FTCheck_VB(alt)
   endif
 endfun
 
-" Batch file for MSDOS
-au BufNewFile,BufRead *.bat,*.sys		setf dosbatch
+" Visual Basic Script (close to Visual Basic)
+au BufNewFile,BufRead *.vbs			setf vb
+
+" Batch file for MSDOS (*.cmd is close enough)
+au BufNewFile,BufRead *.bat,*.cmd		setf dosbatch
 
 " Batch file for 4DOS
 au BufNewFile,BufRead *.btm			setf btm
@@ -166,8 +169,8 @@ au BufNewFile,BufRead *.h
 " Cascading Style Sheets
 au BufNewFile,BufRead *.css			setf css
 
-" Century Term Command Scripts
-au BufNewFile,BufRead *.cmd,*.con		setf cterm
+" Century Term Command Scripts (*.cmd too)
+au BufNewFile,BufRead *.con			setf cterm
 
 " CHILL
 au BufNewFile,BufReadPost *..ch			setf ch
@@ -587,7 +590,7 @@ au BufNewFile,BufRead .kshrc*,*.ksh call SetFileTypeSH("ksh")
 au BufNewFile,BufRead /etc/profile,.profile*,*.sh,*.env call SetFileTypeSH(getline(1))
 au BufNewFile,BufRead .login*,.cshrc*,csh.cshrc,csh.login,csh.logout,.tcshrc*,*.csh,*.tcsh,.alias setf csh
 
-fun SetFileTypeSH(name)
+fun! SetFileTypeSH(name)
   if a:name =~ '\<ksh\>'
     let b:is_kornshell = 1
     if exists("b:is_bash")

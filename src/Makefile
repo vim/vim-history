@@ -782,7 +782,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and some things
 ### might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60g
+VIMRTDIR = /vim60h
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 LANGSUBDIR = /lang
@@ -1035,7 +1035,7 @@ BEOSGUI_TESTTARGET = gui
 
 # GUI files used for making ctags
 ALL_GUI_SRC  = gui.c gui_gtk.c gui_gtk_f.c gui_motif.c gui_athena.c gui_gtk_x11.c gui_x11.c gui_at_sb.c gui_at_fs.c pty.c
-ALL_GUI_PRO  = gui.pro gui_gtk.pro gui_motif.pro gui_athena.pro gui_gtk_x11.pro gui_x11.pro gui_w32.pro gui_amiga.pro
+ALL_GUI_PRO  = gui.pro gui_gtk.pro gui_motif.pro gui_athena.pro gui_gtk_x11.pro gui_x11.pro gui_w16.pro gui_w32.pro gui_amiga.pro
 
 ### our grand parent directory should know who we are...
 ### only used for "make tar"
@@ -1049,11 +1049,16 @@ VIMVERSION = `eval "basename \`cd ../; pwd\`"`
 CPP_DEPEND = $(CC) -I$(srcdir) -M$(CPP_MM) $(DEPEND_CFLAGS)
 
 # flags for cproto
+#     This is for cproto 3 patchlevel 8 or below
 #     __inline and __attribute__ are not recognized by cproto
-#     maybe the "/usr/bin/cc -E" has to be adjusted for some systems
-
 NO_ATTR = -D__inline= -D"__attribute__\\(x\\)="
-
+#
+#     This is for cproto 3 patchlevel 9 or above (currently 4.6)
+#     __inline and __attribute__ are now recognized by cproto
+#     -D"foo()=" is not supported by all compilers so do not use it
+# NO_ATTR=
+#
+#     maybe the "/usr/bin/cc -E" has to be adjusted for some systems
 # This is for cproto 3.5 patchlevel 3:
 # PROTO_FLAGS = -f4 -m__ARGS -d -E"$(CPP)" $(NO_ATTR)
 #
@@ -1249,8 +1254,8 @@ PRO_AUTO = \
 	$(ALL_GUI_PRO) \
 	$(TCL_PRO)
 
-PRO_MANUAL = os_amiga.pro os_msdos.pro os_win32.pro os_beos.pro os_vms.pro \
-	os_riscos.pro $(PERL_PRO)
+PRO_MANUAL = os_amiga.pro os_msdos.pro os_win16.pro os_win32.pro \
+	os_beos.pro os_vms.pro os_riscos.pro $(PERL_PRO)
 
 # Default target is making the executable and tools
 all: $(VIMTARGET) $(TOOLS) languages
@@ -1363,6 +1368,9 @@ os_amiga.pro: os_amiga.c
 
 os_msdos.pro: os_msdos.c
 	cproto $(PFLAGS) -DMSDOS -UHAVE_CONFIG_H os_msdos.c > proto/os_msdos.pro
+
+os_win16.pro: os_win16.c
+	cproto $(PFLAGS) -DWIN16 -UHAVE_CONFIG_H os_win16.c > proto/os_win16.pro
 
 os_win32.pro: os_win32.c
 	cproto $(PFLAGS) -DWIN32 -UHAVE_CONFIG_H os_win32.c > proto/os_win32.pro

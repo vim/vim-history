@@ -32,7 +32,7 @@ typedef struct tag_pointers
     char_u	*fname_end;	/* char after file name */
     char_u	*command;	/* first char of command */
     /* filled in by parse_match(): */
-    char_u	*command_end;	/* first char of command */
+    char_u	*command_end;	/* first char after command */
     char_u	*tag_fname;	/* file name of the tags file */
 #ifdef FEAT_EMACS_TAGS
     int		is_etag;	/* TRUE for emacs tag */
@@ -1248,7 +1248,7 @@ line_read_in:
 				if (fp != NULL)
 				{
 				    if (STRLEN(fullpath_ebuf) > LSIZE)
-					  EMSG2(_("Tag file path trucated for %s\n"), ebuf);
+					  EMSG2(_("Tag file path truncated for %s\n"), ebuf);
 				    STRNCPY(tag_fname, fullpath_ebuf, LSIZE);
 				    tag_fname[LSIZE] = NUL;
 				    ++incstack_idx;

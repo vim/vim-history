@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0g.  Last change: 2000 Aug 20
+*options.txt*   For Vim version 6.0h.  Last change: 2000 Aug 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -175,6 +175,11 @@ has its own copy of this option, thus can each have their own value.  This
 allows you to set 'list' in one window but not in another.  And set
 'shiftwidth' to 3 in one buffer and 4 in another.
 
+The following explains what happens to these local options in specific
+situations.  You don't really need to know all of this, since Vim mostly uses
+the option values you would expect.  Unfortunately, doing what the user
+expects is a bit complicated...
+
 When splitting a window, the local options are copied to the new window.  Thus
 right after the split the contents of the two windows look the same.
 
@@ -184,6 +189,11 @@ these are not used.  Instead, for each local buffer option there also is a
 global value, which is used for new buffers.  With ":set" both the local and
 global value is changed".  With "setlocal" only the local value is changed,
 thus this value is not used when editing a new buffer.
+
+When editing a buffer that has been edited before, the last used window
+options are used again.  If this buffer has been edited in this window, the
+values from back then are used.  Otherwise the values from the window where
+the buffer was edited last are used.
 
 It's possible to set a local window option specifically for a type of buffer.
 When you edit another buffer in the same window, you don't want to to keep
@@ -1044,11 +1054,15 @@ A jump table for the options with a short description can be found at |X_op|.
 			feature}
 	Enables automatic C program indenting  See 'cinkeys' to set the keys
 	that trigger reindenting in insert mode and 'cinoptions' to set your
-	preferred indent style.  If 'lisp' is not on and 'equalprg' is empty,
+	preferred indent style.
+	If 'indentexpr' is not empty, it overrules 'cindent'.
+	If 'lisp' is not on and both 'indentexpr' and 'equalprg' are empty,
 	the "=" operator indents using this algorithm rather than calling an
-	external program.  See |C-indenting|.  This option is switched off
-	when 'paste' is set.  When you don't like the way 'cindent' works, try
-	the 'smartindent' option.
+	external program.
+	See |C-indenting|.
+	When you don't like the way 'cindent' works, try the 'smartindent'
+	option or 'indentexpr'.
+	This option is not used when 'paste' is set.
 	NOTE: This option is reset when 'compatible' is set.
 
 'cinkeys' 'cink'	string	(default "0{,0},:,0#,!^F,o,O,e")
@@ -1057,8 +1071,8 @@ A jump table for the options with a short description can be found at |X_op|.
 			{not available when compiled without the |+cindent|
 			feature}
 	A list of keys that, when typed in Insert mode, cause reindenting of
-	the current line.  Only happens if 'cindent' is on.  See
-	|C-indenting|.
+	the current line.  Only happens if 'cindent' is on or 'indentexpr'
+	isn't empty.  See |C-indenting| and |indent-expression|.
 
 						*'cinoptions'* *'cino'*
 'cinoptions' 'cino'	string	(default "")
@@ -1195,6 +1209,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	'hkmapp'	  off		no phonetic Hebrew keyboard mapping
 	'hlsearch'	  off		no highlighting of search matches
 	'incsearch'	  off		no incremental searching
+	'indentexpr'	  ""		no indenting by expression
 	'insertmode'	  off		do not start in Insert mode
 	'iskeyword'	+ "@,48-57,_"	keywords contain alphanumeric
 						characters and '_'
@@ -1643,7 +1658,8 @@ A jump table for the options with a short description can be found at |X_op|.
 			global
 			{not in Vi}
 	External program to use for "=" command.  When this option is empty
-	the internal formatting functions are used ('lisp' or 'cindent').
+	the internal formatting functions are used ('lisp', 'cindent' or
+	'indentexpr').
 	Environment variables are expanded |:set_env|.  See |option-backslash|
 	about including spaces and backslashes.
 	When this option is set from a |modeline|, while the 'secure' option
@@ -1943,7 +1959,8 @@ A jump table for the options with a short description can be found at |X_op|.
 			{not available when compiled without the |+folding|
 			feature}
 	The expression used for when 'foldmethod' is "expr".  It is evaluated
-	for each line to obtain its fold level.  See |fold-expr|.
+	for each line to obtain its fold level.  See |fold-expr|.  Also see
+	|eval-sandbox|.
 
 						*'foldignore'* *'fdi'*
 'foldignore' 'fdi'	string (default: "#")
@@ -2550,6 +2567,29 @@ A jump table for the options with a short description can be found at |X_op|.
 	'highlight'.  See also: 'hlsearch'.
 	NOTE: This option is reset when 'compatible' is set.
 
+						*'indentexpr'* *'inde'*
+'indentexpr' 'inde'	string	(default "")
+			local to buffer
+			{not in Vi}
+			{not available when compiled without the |+cindent|
+			or |+eval| features}
+	Expression which is evaluated to obtain the proper indent for a line.
+	The 'cinkeys' option specifies when it is used.
+	When this option is not empty, it overrules the 'cindent' and
+	'smartindent' indenting.
+	When 'paste' is set this option is not used for indenting.
+	The expression is evaluated with |v:lnum| set to the line number for
+	which the indent is to be computed.
+	The expression must return the number of spaces worth of indent.  It
+	can return "-1" to keep the current indent.
+	The evaluation of the expression must not have side effects!  It must
+	not change the text, jump to another window, etc.  Afterwards the
+	cursor position is always restored, thus the cursor may be moved.
+	Normally this option would be set to call a function: >
+		:set indentexpr=GetMyIndent()
+<	See |indent-expression|.  Also see |eval-sandbox|.
+	NOTE: This option is made empty when 'compatible' is set.
+
 			*'infercase'* *'inf'* *'noinfercase'* *'noinf'*
 'infercase' 'inf'	boolean	(default off)
 			local to buffer
@@ -2880,8 +2920,9 @@ A jump table for the options with a short description can be found at |X_op|.
 	better.
 	The '-' character is included in keyword characters.  Redefines the
 	"=" operator to use this same indentation algorithm rather than
-	calling an external program if 'equalprg' is empty.  This option is
-	reset when 'paste' is set.  {Vi: Does it a little bit differently}
+	calling an external program if 'equalprg' is empty.
+	This option is not used when 'paste' is set.
+	{Vi: Does it a little bit differently}
 
 						*'list'* *'nolist'*
 'list'			boolean	(default off)
@@ -2911,7 +2952,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	  extends:c	Character to show in the last column, when 'wrap' is
 			off and the line continues beyond the right of the
 			screen.
-	  preceeds:c	Character to show in the first column, when 'wrap'
+	  precedes:c	Character to show in the first column, when 'wrap'
 			is off and there is text preceeding the character
 			visible in the first column.
 
@@ -2919,7 +2960,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	Examples: >
 	    :set lcs=tab:>-,trail:-
 	    :set lcs=tab:>-,eol:<
-	    :set lcs=extends:>,preceeds:<
+	    :set lcs=extends:>,precedes:<
 <	The "NonText" highlighting will be used for these characters.
 
 			*'lpl'* *'nolpl'* *'loadplugins'* *'noloadplugins'*
@@ -3295,8 +3336,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	Setting this option is useful when using Vim in a terminal, where Vim
 	cannot distinguish between typed text and pasted text.  In the GUI, Vim
 	knows about pasting and will mostly do the right thing without 'paste'
-	being set.  Also in a terminal where Vim handles the mouse clicks
-	itself.
+	being set.  The same is true for a terminal where Vim handles the
+	mouse clicks itself.
 	When the 'paste' option is switched on (also when it was already on):
 		- mapping in Insert mode and Command-line mode is disabled
 		- abbreviations are disabled
@@ -3304,13 +3345,15 @@ A jump table for the options with a short description can be found at |X_op|.
 		- 'wrapmargin' is set to 0
 		- 'autoindent' is reset
 		- 'smartindent' is reset
-		- 'cindent' is reset
 		- 'softtabstop' is set to 0
-		- 'lisp' is reset
 		- 'revins' is reset
 		- 'ruler' is reset
 		- 'showmatch' is reset
 		- 'formatoptions' is used like it is empty
+	These options keep there value, but their effect is disabled:
+		- 'lisp'
+		- 'indentexpr'
+		- 'cindent'
 	NOTE: When you start editing another file while the 'paste' option is
 	on, settings from the modelines or autocommands may change the
 	settings again, causing trouble when pasting text.  You might want to
@@ -3515,8 +3558,9 @@ A jump table for the options with a short description can be found at |X_op|.
 	ruler is shown there.  Otherwise it is shown in the last line of the
 	screen.  If the statusline is given by 'statusline' (ie. not empty),
 	this option takes precedence over 'ruler' and 'rulerformat'
-	If there are characters in the line that take two positions on the
-	screen, both the "real" column and the screen column are shown,
+	If the number of characters displayed is different from the number of
+	bytes in the text (e.g., for a TAB or a multi-byte character), both
+	the text column (byte number) and the screen column are shown,
 	separated with a dash.
 	For an empty line "0-1" is shown.
 	For an empty buffer the line number will also be zero: "0,0-1".
@@ -4065,6 +4109,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	programs, but can also be used for other languages.  'cindent' does
 	something like this, works better in most cases, but is more strict,
 	see |C-indenting|.  When 'cindent' is on, setting 'si' has no effect.
+	'indentexpr' is a more advanced alternative.
 	Normally 'autoindent' should also be on when using 'smartindent'.
 	An indent is automatically inserted:
 	- After a line ending in '{'.
@@ -4078,7 +4123,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	mapping: ":inoremap # X^H#", where ^H is entered with CTRL-V CTRL-H.
 	When using the ">>" command, lines starting with '#' are not shifted
 	right.
-	NOTE: 'smartindent' is reset when 'compatible' or 'paste' is set.
+	NOTE: 'smartindent' is reset when 'compatible' is set.  When 'paste'
+	is set smart indenting is disabled.
 
 				 *'smarttab'* *'sta'* *'nosmarttab'* *'nosta'*
 'smarttab' 'sta'	boolean	(default off)
@@ -5233,7 +5279,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	horizontally.
 	To make scrolling horizontally a bit more useful, try this: >
 		:set sidescroll=5
-		:set listchars+=preceeds:<,extends:>
+		:set listchars+=precedes:<,extends:>
 <	See 'sidescroll', 'listchars' and |wrap-off|.
 
 						*'wrapmargin'* *'wm'*

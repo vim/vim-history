@@ -552,6 +552,12 @@ typedef unsigned short u8char_t;
 #define SHELL_DOOUT	8	/* redirecting output */
 #define SHELL_SILENT	16	/* don't print error returned by command */
 
+/* Values returned by mch_nodetype() */
+#define NODE_NORMAL	0	/* file or directory, check with mch_isdir()*/
+#define NODE_WRITABLE	1	/* something we can write to (character
+				   device, fifo, socket, ..) */
+#define NODE_OTHER	2	/* non-writable thing (e.g., block device) */
+
 /* Values for readfile() flags */
 #define READ_NEW	0x01	/* read a file into a new buffer */
 #define READ_FILTER	0x02	/* read filter output */
@@ -984,20 +990,22 @@ enum hlf_value
 #define MSG_PUTS_LONG(s)	    msg_puts_long((char_u *)(s))
 #define MSG_PUTS_LONG_ATTR(s, a)    msg_puts_long_attr((char_u *)(s), (a))
 
-typedef long	    linenr_t;	    /* line number type */
-typedef unsigned    colnr_t;	    /* column number type */
-typedef unsigned short disptick_t;  /* display tick type */
+typedef long	    linenr_t;		/* line number type */
+typedef unsigned    colnr_t;		/* column number type */
+typedef unsigned short disptick_t;	/* display tick type */
 
-#define MAXLNUM (0x7fffffffL)	    /* maximum (invalid) line number */
+#define MAXLNUM (0x7fffffffL)		/* maximum (invalid) line number */
 
 #if SIZEOF_INT >= 4
-# define MAXCOL	(0x7fffffffL)	    /* maximum column number, 31 bits */
+# define MAXCOL	(0x7fffffffL)		/* maximum column number, 31 bits */
 #else
-# define MAXCOL	(0x7fff)	    /* maximum column number, 15 bits */
+# define MAXCOL	(0x7fff)		/* maximum column number, 15 bits */
 #endif
 
-#define SHOWCMD_COLS 10		    /* columns needed by shown command */
-#define STL_MAX_ITEM 50		    /* max count of %<flag> in statusline*/
+#define SHOWCMD_COLS 10			/* columns needed by shown command */
+#define STL_MAX_ITEM 50			/* max count of %<flag> in statusline*/
+
+typedef void	    *vim_acl_t;		/* dummy to pass an ACL to a function */
 
 /*
  * Include a prototype for mch_memmove(), it may not be in alloc.pro.

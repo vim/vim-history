@@ -28,6 +28,8 @@
 #define HAVE_LOCALE_H
 #define HAVE_FCNTL_H
 #define HAVE_QSORT
+#define HAVE_ACL		/* Access Control List (actually security
+				   info) */
 #define USE_FNAME_CASE		/* adjust case of file names */
 #ifndef FEAT_CLIPBOARD
 # define FEAT_CLIPBOARD		/* include clipboard support */

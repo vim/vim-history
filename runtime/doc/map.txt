@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.0g.  Last change: 2000 Aug 16
+*map.txt*       For Vim version 6.0h.  Last change: 2000 Aug 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -196,6 +196,13 @@ for the {rhs}.  This only works when the |<>| notation is enabled.  For
 example, to make sure that function key 8 does nothing at all: >
 	:map  <F8>  <Nop>
 	:map! <F8>  <Nop>
+<
+                                                       *<Map>*
+To define a mapping which uses the "localmapchar" variable, the special
+string "<Map>" can be used.  It is replaced with the string value of
+"localmapchar".  If "localmapchar" is not set or empty, "," is used instead.
+Example: >
+      :map <Map>A  oanother line<Esc>
 <
 							*map-comments*
 It is not possible to put a comment after these commands, because the '"'

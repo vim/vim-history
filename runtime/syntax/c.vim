@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	C
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Aug 13
+" Last Change:	2000 Aug 26
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -39,8 +39,13 @@ hi link cCppString cString
 
 syn match	cCharacter	"L\='[^\\]'"
 syn match	cCharacter	"L'[^']*'" contains=cSpecial
-syn match	cSpecialError	"L\='\\[^'\"?\\abfnrtv]'"
-syn match	cSpecialCharacter "L\='\\['\"?\\abfnrtv]'"
+if exists("c_gnu")
+  syn match	cSpecialError	"L\='\\[^'\"?\\abefnrtv]'"
+  syn match	cSpecialCharacter "L\='\\['\"?\\abefnrtv]'"
+else
+  syn match	cSpecialError	"L\='\\[^'\"?\\abfnrtv]'"
+  syn match	cSpecialCharacter "L\='\\['\"?\\abfnrtv]'"
+endif
 syn match	cSpecialCharacter display "L\='\\\o\{1,3}'"
 syn match	cSpecialCharacter display "'\\x\x\{1,2}'"
 syn match	cSpecialCharacter display "L'\\x\x\+'"
@@ -119,17 +124,29 @@ syntax match	cCommentError	display "\*/"
 syntax match	cCommentStartError display "/\*" contained
 
 syn keyword	cOperator	sizeof
+if exists("c_gnu")
+  syn keyword	cOperator	typeof __real__ __imag__
+endif
 syn keyword	cType		int long short char void
 syn keyword	cType		signed unsigned float double
 if !exists("c_no_ansi") || exists("c_ansi_typedefs")
   syn keyword   cType		size_t wchar_t ptrdiff_t sig_atomic_t fpos_t
   syn keyword   cType		clock_t time_t va_list jmp_buf FILE DIR div_t ldiv_t
 endif
+if exists("c_gnu")
+  syn keyword	cType		__label__ __complex__
+endif
 
 syn keyword	cStructure	struct union enum typedef
 syn keyword	cStorageClass	static register auto volatile extern const
+if exists("c_gnu")
+  syn keyword	cStorageClass	inline __attribute__
+endif
 
-if !exists("c_no_ansi") || exists("c_ansi_constants")
+if !exists("c_no_ansi") || exists("c_ansi_constants") || exists("c_gnu")
+  if exists("c_gnu")
+    syn keyword cConstant __GNUC__ __FUNCTION__ __PRETTY_FUNCTION__
+  endif
   syn keyword cConstant __LINE__ __FILE__ __DATE__ __TIME__ __STDC__
   syn keyword cConstant __STDC_VERSION__
   syn keyword cConstant CHAR_BIT MB_LEN_MAX MB_CUR_MAX

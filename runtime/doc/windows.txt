@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.0g.  Last change: 2000 Aug 20
+*windows.txt*   For Vim version 6.0h.  Last change: 2000 Aug 22
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -548,10 +548,11 @@ can also get to them with the buffer list commands, like ":bnext".
 						*:dr* *:drop*
 :dr[op] {file} ..
 		Redefine the argument list to "{file} ..", similar to ":next".
-		Only if the current buffer can't be |abandon|ed, the window is
+		The first file is edited in the current window if possible.
+		If the current buffer can't be |abandon|ed, the window is
 		split first.
-		The purpose of this command is that it's used from the
-		MS-Windows popup menu "Edit with existing gvim".
+		The purpose of this command is that it can be used from a
+		program that wants Vim to edit another file, e.g., a debugger.
 		{only available when compiled with the +gui feature}
 
 ==============================================================================

@@ -41,6 +41,50 @@
 /* Undocumented Windows Message - not even defined in some SDK headers */
 #define WM_EXITSIZEMOVE			0x0232
 
+#ifdef PROTO
+/*
+ * Define a few things for generating prototypes.  This is just to avoid
+ * syntax errors, the defines do not need to be correct.
+ */
+# define HINSTANCE	void *
+# define HWND		void *
+# define HDC		void *
+# define HMENU		void *
+# define UINT		int
+# define WPARAM		int
+# define LPARAM		int
+typedef int LOGFONT[];
+# define ENUMLOGFONT	int
+# define NEWTEXTMETRIC	int
+# define VOID		void
+# define CALLBACK
+# define WORD		int
+# define DWORD		int
+# define HBITMAP	int
+# define HDROP		int
+# define BOOL		int
+# define PWORD		int
+# define LPWORD		int
+# define LPRECT		int
+# define LRESULT	int
+# define WINAPI
+# define APIENTRY
+# define LPSTR		int
+# define LPWINDOWPOS	int
+# define RECT		int
+# define LPCREATESTRUCT int
+# define _cdecl
+# define FINDREPLACE	int
+# define LPCTSTR	int
+# define OSVERSIONINFO	int
+# define HBRUSH		int
+# define NEAR
+# define FAR
+# define BYTE		int
+# define LPCSTR		int
+#endif
+
+
 #ifdef FEAT_TOOLBAR
 # define CMD_TB_BASE (99)
 # include <vimtbar.h>
@@ -62,45 +106,6 @@
 #define DLG_FONT_NAME		"MS Sans Serif"
 #define DLG_FONT_POINT_SIZE	8
 #define DLG_MIN_MAX_WIDTH	400
-
-
-#ifdef PROTO
-/*
- * Define a few things for generating prototypes.  This is just to avoid
- * syntax errors, the defines do not need to be correct.
- */
-# define HINSTANCE  void *
-# define HWND	    void *
-# define HDC	    void *
-# define HMENU	    void *
-# define UINT	    int
-# define WPARAM	    int
-# define LPARAM	    int
-typedef int LOGFONT[];
-# define ENUMLOGFONT int
-# define NEWTEXTMETRIC int
-# define VOID	    void
-# define CALLBACK
-# define WORD	    int
-# define DWORD	    int
-# define HBITMAP    int
-# define HDROP	    int
-# define BOOL	    int
-# define PWORD	    int
-# define LPWORD	    int
-# define LPRECT	    int
-# define LRESULT    int
-# define WINAPI
-# define APIENTRY
-# define LPSTR	    int
-# define LPWINDOWPOS int
-# define RECT	    int
-# define LPCREATESTRUCT int
-# define _cdecl
-# define FINDREPLACE	int
-# define LPCTSTR	int
-# define OSVERSIONINFO int
-#endif
 
 
 /* Local variables: */
@@ -4397,7 +4402,8 @@ mch_set_mouse_shape(int shape)
 	ShowCursor(FALSE);
     else
     {
-	ShowCursor(TRUE);
+	if (!p_mh)
+	    ShowCursor(TRUE);
 	if (shape >= MSHAPE_NUMBERED)
 	    idc = MAKEINTRESOURCE(IDC_ARROW);
 	else

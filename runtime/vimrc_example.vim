@@ -1,7 +1,7 @@
 " An example for a vimrc file.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Jul 15
+" Last change:	2000 Aug 27
 "
 " To use it, copy it to
 "     for Unix and OS/2:  ~/.vimrc
@@ -44,12 +44,14 @@ endif
 " Only do this part when compiled with support for autocommands.
 if has("autocmd")
 
+ " Enable file type detection.
  " Use the default filetype settings, so that mail gets 'tw' set to 72,
  " 'cindent' is on in C files, etc.
- filetype settings on
+ " Also load indent files, to automatically do language-dependent indenting.
+ filetype settings indent on
 
  " For all text files set 'textwidth' to 78 characters.
- au BufReadPost *.txt setlocal tw=78
+ au FileType text setlocal tw=78
 
  augroup gzip
   " Remove all gzip autocommands

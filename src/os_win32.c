@@ -1744,7 +1744,7 @@ mch_dirname(
      * But the Win32s known bug list says that getcwd() doesn't work
      * so use the Win32 system call instead. <Negri>
      */
-    return (GetCurrentDirectory(len,buf) != 0 ? OK : FAIL);
+    return (GetCurrentDirectory(len, buf) != 0 ? OK : FAIL);
 }
 
 
@@ -1757,17 +1757,22 @@ mch_dirname(
  */
     int
 mch_FullName(
-    char_u *fname,
-    char_u *buf,
-    int len,
-    int force)
+    char_u	*fname,
+    char_u	*buf,
+    int		len,
+    int		force)
 {
     int		nResult = FAIL;
 
     if (fname == NULL)		/* always fail */
 	return FAIL;
 
-    if (_fullpath(buf, fname, len - 1) == NULL)
+#ifdef __BORLANDC__
+    if (*buf == NUL) /* Borland behaves badly here - make it consistent */
+	nResult = mch_dirname(buf, len);
+    else
+#endif
+	if (_fullpath(buf, fname, len - 1) == NULL)
 	STRNCPY(buf, fname, len);   /* failed, use the relative path name */
     else
 	nResult = OK;
@@ -1796,7 +1801,9 @@ mch_isFullName(char_u *fname)
 	    || (fname[0] == fname[1] && fname[0] == '/' || fname[0] == '\\'))
 	return TRUE;
 
-    mch_FullName(fname, szName, _MAX_PATH, FALSE);
+    /* A name that can't be made absolute probably isn't absolute. */
+    if (mch_FullName(fname, szName, _MAX_PATH, FALSE) == FAIL)
+	return FALSE;
 
     return strcoll(fname, szName) == 0;
 }
@@ -1880,6 +1887,123 @@ mch_isdir(char_u *name)
     return (f & FILE_ATTRIBUTE_DIRECTORY) != 0;
 }
 
+/*
+ * Check what "name" is:
+ * NODE_NORMAL: file or directory (or doesn't exist)
+ * NODE_WRITABLE: writable device, socket, fifo, etc.
+ * NODE_OTHER: non-writable things
+ */
+    int
+mch_nodetype(char_u *name)
+{
+    HANDLE	hFile;
+    int		type;
+
+    hFile = CreateFile(name,		/* file name */
+		GENERIC_WRITE,		/* access mode */
+		0,			/* share mode */
+		NULL,			/* security descriptor */
+		OPEN_EXISTING,		/* creation disposition */
+		0,			/* file attributes */
+		NULL);			/* handle to template file */
+
+    if (hFile == INVALID_HANDLE_VALUE)
+	return NODE_NORMAL;
+
+    type = GetFileType(hFile);
+    CloseHandle(hFile);
+    if (type == FILE_TYPE_CHAR)
+	return NODE_WRITABLE;
+    if (type == FILE_TYPE_DISK)
+	return NODE_NORMAL;
+    return NODE_OTHER;
+}
+
+#include <aclapi.h>
+
+struct my_acl
+{
+    PSECURITY_DESCRIPTOR    pSecurityDescriptor;
+    PSID		    pSidOwner;
+    PSID		    pSidGroup;
+    PACL		    pDacl;
+    PACL		    pSacl;
+};
+
+/*
+ * Return a pointer to the ACL of file "fname" in allocated memory.
+ * Return NULL if the ACL is not available for whatever reason.
+ */
+    vim_acl_t
+mch_get_acl(fname)
+    char_u	*fname;
+{
+    struct my_acl   *p;
+
+    p = (struct my_acl *)alloc_clear((unsigned)sizeof(struct my_acl));
+    if (p != NULL)
+    {
+	if (GetNamedSecurityInfo(
+		    (LPTSTR)fname,		// Abstract filename
+		    SE_FILE_OBJECT,		// File Object
+		    // Retrieve the entire security descriptor.
+		    OWNER_SECURITY_INFORMATION |
+			GROUP_SECURITY_INFORMATION |
+			DACL_SECURITY_INFORMATION |
+			SACL_SECURITY_INFORMATION,
+		    &p->pSidOwner,		// Ownership information.
+		    &p->pSidGroup,		// Group membership.
+		    &p->pDacl,			// Discretionary information.
+		    &p->pSacl,			// For auditing purposes.
+		    &p->pSecurityDescriptor
+				) != ERROR_SUCCESS)
+	{
+	    mch_free_acl((vim_acl_t)p);
+	    p = NULL;
+	}
+    }
+    return (vim_acl_t)p;
+}
+
+/*
+ * Set the ACL of file "fname" to "acl" (unless it's NULL).
+ * Errors are ignored.
+ */
+    void
+mch_set_acl(fname, acl)
+    char_u	*fname;
+    vim_acl_t	acl;
+{
+    struct my_acl   *p = (struct my_acl *)acl;
+
+    if (p != NULL)
+	(void)SetNamedSecurityInfo(
+		    (LPTSTR)fname,		// Abstract filename
+		    SE_FILE_OBJECT,		// File Object
+		    // Retrieve the entire security descriptor.
+		    OWNER_SECURITY_INFORMATION |
+			GROUP_SECURITY_INFORMATION |
+			DACL_SECURITY_INFORMATION |
+			SACL_SECURITY_INFORMATION,
+		    p->pSidOwner,		// Ownership information.
+		    p->pSidGroup,		// Group membership.
+		    p->pDacl,			// Discretionary information.
+		    p->pSacl			// For auditing purposes.
+		    );
+}
+
+    void
+mch_free_acl(acl)
+    vim_acl_t	acl;
+{
+    struct my_acl   *p = (struct my_acl *)acl;
+
+    if (p != NULL)
+    {
+	LocalFree(p->pSecurityDescriptor);	// Free the memory just in case
+	vim_free(p);
+    }
+}
 
 #ifdef FEAT_GUI_W32
     void
@@ -3837,7 +3961,7 @@ mch_libcall(
 	{
 	    /* Call with string argument */
 	    ProcAdd = (MYSTRPROCSTR) GetProcAddress(hinstLib, funcname);
-	    if ((fRunTimeLinkSuccess = (ProcAdd != NULL)))
+	    if ((fRunTimeLinkSuccess = (ProcAdd != NULL)) != 0)
 	    {
 		if (string_result == NULL)
 		    retval_int = ((MYSTRPROCINT)ProcAdd)(argstring);
@@ -3849,7 +3973,7 @@ mch_libcall(
 	{
 	    /* Call with number argument */
 	    ProcAddI = (MYINTPROCSTR) GetProcAddress(hinstLib, funcname);
-	    if ((fRunTimeLinkSuccess = (ProcAddI != NULL)))
+	    if ((fRunTimeLinkSuccess = (ProcAddI != NULL)) != 0)
 	    {
 		if (string_result == NULL)
 		    retval_int = ((MYINTPROCINT)ProcAddI)(argint);

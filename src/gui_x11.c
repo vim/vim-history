@@ -732,7 +732,7 @@ gui_x11_key_hit_cb(w, dud, event, dum)
     if (len == 1 && string[0] == CSI)
     {
 	string[1] = KS_EXTRA;
-	string[2] = KE_CSI;
+	string[2] = (int)KE_CSI;
 	len = 3;
     }
 
@@ -826,7 +826,7 @@ gui_x11_key_hit_cb(w, dud, event, dum)
     {
 	/* Turn CSI into K_CSI. */
 	string[1] = KS_EXTRA;
-	string[2] = KE_CSI;
+	string[2] = (int)KE_CSI;
 	len = 3;
     }
 
@@ -1418,6 +1418,7 @@ gui_mch_get_screen_dimensions(screen_w, screen_h)
  * If "fontset" is TRUE, load the "font_name" as a fontset.
  * Return FAIL if the font could not be loaded, OK otherwise.
  */
+/*ARGSUSED*/
     int
 gui_mch_init_font(font_name, do_fontset)
     char_u	*font_name;
@@ -1911,9 +1912,9 @@ find_closest_color(colormap, colorPtr)
     XColor       *colortable;
     XVisualInfo  template, *visInfoPtr;
 
-    template.visualid = XVisualIDFromVisual (DefaultVisual(gui.dpy,
+    template.visualid = XVisualIDFromVisual(DefaultVisual(gui.dpy,
 						    XDefaultScreen(gui.dpy)));
-    visInfoPtr = XGetVisualInfo (gui.dpy, VisualIDMask,
+    visInfoPtr = XGetVisualInfo(gui.dpy, (long)VisualIDMask,
 							&template, &numFound);
     if (numFound < 1)
 	/* FindClosestColor couldn't lookup visual */
@@ -2240,8 +2241,8 @@ gui_mch_draw_part_cursor(w, h, color)
 	    State != CMDLINE && curwin->w_p_rl ? FILL_X(gui.col + 1) - w :
 #endif
 		FILL_X(gui.col),
-	    FILL_Y(gui.row) + gui.char_height - h + p_linespace / 2, w,
-							     h - p_linespace);
+	    FILL_Y(gui.row) + gui.char_height - h + (int)p_linespace / 2,
+	    w, h - (int)p_linespace);
 }
 
 /*

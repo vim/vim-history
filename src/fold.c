@@ -1184,6 +1184,10 @@ foldUpdateIEMS(wp, top, bot)
 	bot = wp->w_buffer->b_ml.ml_line_count;
 	wp->w_foldinvalid = FALSE;
     }
+    /* When deleting lines at the end of the buffer "top" can be past the end
+     * of the buffer. */
+    if (top > wp->w_buffer->b_ml.ml_line_count)
+	top = wp->w_buffer->b_ml.ml_line_count;
 
     fold_changed = FALSE;
     fline.wp = wp;

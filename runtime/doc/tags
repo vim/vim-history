@@ -227,6 +227,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 'include'	options.txt	/*'include'*
 'includeexpr'	options.txt	/*'includeexpr'*
 'incsearch'	options.txt	/*'incsearch'*
+'inde'	options.txt	/*'inde'*
+'indentexpr'	options.txt	/*'indentexpr'*
 'inex'	options.txt	/*'inex'*
 'inf'	options.txt	/*'inf'*
 'infercase'	options.txt	/*'infercase'*
@@ -1353,7 +1355,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :else	eval.txt	/*:else*
 :elsei	eval.txt	/*:elsei*
 :elseif	eval.txt	/*:elseif*
-:eme	gui.txt	/*:eme*
+:em	gui.txt	/*:em*
 :emenu	gui.txt	/*:emenu*
 :en	eval.txt	/*:en*
 :endf	eval.txt	/*:endf*
@@ -1378,6 +1380,9 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :files	windows.txt	/*:files*
 :filet	filetype.txt	/*:filet*
 :filetype	filetype.txt	/*:filetype*
+:filetype-indent-off	filetype.txt	/*:filetype-indent-off*
+:filetype-indent-on	filetype.txt	/*:filetype-indent-on*
+:filetype-overview	filetype.txt	/*:filetype-overview*
 :filetype-settings-off	filetype.txt	/*:filetype-settings-off*
 :filetype-settings-on	filetype.txt	/*:filetype-settings-on*
 :fin	editing.txt	/*:fin*
@@ -1919,6 +1924,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :write_a	editing.txt	/*:write_a*
 :write_c	editing.txt	/*:write_c*
 :write_f	editing.txt	/*:write_f*
+:ws	workshop.txt	/*:ws*
+:wsverb	workshop.txt	/*:wsverb*
 :wv	starting.txt	/*:wv*
 :wviminfo	starting.txt	/*:wviminfo*
 :x	editing.txt	/*:x*
@@ -1985,6 +1992,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 <LeftDrag>	term.txt	/*<LeftDrag>*
 <LeftMouse>	visual.txt	/*<LeftMouse>*
 <LeftRelease>	visual.txt	/*<LeftRelease>*
+<Map>	map.txt	/*<Map>*
 <MiddleMouse>	change.txt	/*<MiddleMouse>*
 <Mouse>	term.txt	/*<Mouse>*
 <MouseDown>	scroll.txt	/*<MouseDown>*
@@ -2912,6 +2920,7 @@ escape	intro.txt	/*escape*
 escape()	eval.txt	/*escape()*
 escape-bar	version4.txt	/*escape-bar*
 eval-examples	eval.txt	/*eval-examples*
+eval-sandbox	eval.txt	/*eval-sandbox*
 eval.txt	eval.txt	/*eval.txt*
 ex	starting.txt	/*ex*
 ex-cmd-index	index.txt	/*ex-cmd-index*
@@ -3087,6 +3096,7 @@ gd	pattern.txt	/*gd*
 ge	motion.txt	/*ge*
 getbufvar()	eval.txt	/*getbufvar()*
 getcwd()	eval.txt	/*getcwd()*
+getfsize()	eval.txt	/*getfsize()*
 getftime()	eval.txt	/*getftime()*
 getline()	eval.txt	/*getline()*
 getwinposx()	eval.txt	/*getwinposx()*
@@ -3374,6 +3384,7 @@ inclusive	motion.txt	/*inclusive*
 incomp-small-6	version6.txt	/*incomp-small-6*
 incompatible-6	version6.txt	/*incompatible-6*
 indent()	eval.txt	/*indent()*
+indent-expression	change.txt	/*indent-expression*
 index.txt	index.txt	/*index.txt*
 initialization	starting.txt	/*initialization*
 input()	eval.txt	/*input()*
@@ -3460,6 +3471,7 @@ locale	change.txt	/*locale*
 locale-multibyte	multibyte.txt	/*locale-multibyte*
 locale-name	multibyte.txt	/*locale-name*
 localized	multibyte.txt	/*localized*
+localmapchar	usr_43.txt	/*localmapchar*
 localtime()	eval.txt	/*localtime()*
 long-lines	version5.txt	/*long-lines*
 lowercase	change.txt	/*lowercase*
@@ -3576,6 +3588,7 @@ new-commands-5.4	version5.txt	/*new-commands-5.4*
 new-debug-itf	version6.txt	/*new-debug-itf*
 new-encryption	version5.txt	/*new-encryption*
 new-ex-commands-5.2	version5.txt	/*new-ex-commands-5.2*
+new-file-writing	version6.txt	/*new-file-writing*
 new-filetype	filetype.txt	/*new-filetype*
 new-filetype-5.4	version5.txt	/*new-filetype-5.4*
 new-filetype-settings	version6.txt	/*new-filetype-settings*
@@ -3867,8 +3880,10 @@ static-tag	tagsearch.txt	/*static-tag*
 status-line	windows.txt	/*status-line*
 statusmsg-variable	eval.txt	/*statusmsg-variable*
 strftime()	eval.txt	/*strftime()*
+stridx()	eval.txt	/*stridx()*
 strlen()	eval.txt	/*strlen()*
 strpart()	eval.txt	/*strpart()*
+strridx()	eval.txt	/*strridx()*
 strtrans()	eval.txt	/*strtrans()*
 style-changes	develop.txt	/*style-changes*
 style-examples	develop.txt	/*style-examples*
@@ -4148,6 +4163,8 @@ todo	todo.txt	/*todo*
 todo.txt	todo.txt	/*todo.txt*
 toggle	options.txt	/*toggle*
 toggle-revins	version4.txt	/*toggle-revins*
+tolower()	eval.txt	/*tolower()*
+toupper()	eval.txt	/*toupper()*
 trojan-horse	starting.txt	/*trojan-horse*
 tutor	usr_01.txt	/*tutor*
 type-mistakes	tips.txt	/*type-mistakes*
@@ -4418,6 +4435,7 @@ workshop-support	workshop.txt	/*workshop-support*
 workshop-xpm	workshop.txt	/*workshop-xpm*
 workshop.txt	workshop.txt	/*workshop.txt*
 wrap-off	intro.txt	/*wrap-off*
+write-device	editing.txt	/*write-device*
 write-fail	editing.txt	/*write-fail*
 write-local-help	usr_40.txt	/*write-local-help*
 write-plugin	usr_40.txt	/*write-plugin*

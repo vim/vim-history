@@ -784,6 +784,7 @@ syn_sync(wp, start_lnum, last_valid)
 
 			/* syn_current_attr() will have skipped the check for
 			 * an item that ends here, need to do that now. */
+			++current_col;
 			check_state_ends();
 			--current_col;
 		    }
@@ -1067,7 +1068,7 @@ syn_stack_apply_changes(buf)
 	if (p->sst_lnum > buf->b_mod_top)
 	{
 	    n = p->sst_lnum + buf->b_mod_xlines;
-	    if (n < buf->b_mod_bot)
+	    if (n <= buf->b_mod_bot)
 	    {
 		/* this state is inside the changed area, remove it */
 		np = p->sst_next;

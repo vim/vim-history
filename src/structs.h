@@ -35,7 +35,7 @@ typedef struct
 #include "regexp.h"
 
 typedef struct window	    win_t;
-typedef struct winfpos	    winpos_t;
+typedef struct wininfo	    wininfo_t;
 typedef struct frame	    frame_t;
 
 /*
@@ -60,7 +60,7 @@ typedef struct frame	    frame_t;
  * alphabet coding.  To minimize changes to the code, I decided to just
  * increase the number of possible marks. */
 #define NMARKS		('z' - 'a' + 1)	    /* max. # of named marks */
-#define JUMPLISTSIZE	50	    /* max. # of marks in jump list */
+#define JUMPLISTSIZE	100	    /* max. # of marks in jump list */
 #define TAGSTACKSIZE	20	    /* max. # of tags in tag stack */
 
 typedef struct filemark
@@ -83,21 +83,70 @@ typedef struct taggy
 } taggy_t;
 
 /*
- * line number list
+ * Structure that contains all options that are local to a window.
+ * Used twice in a window: for the current buffer and for all buffers.
+ * Also used in wininfo_t.
  */
+typedef struct
+{
+#ifdef FEAT_FOLDING
+    int		wo_fdc;			/* 'foldcolumn' */
+#define w_p_fdc w_onebuf_opt.wo_fdc
+    int		wo_fen;			/* 'foldenable' */
+#define w_p_fen w_onebuf_opt.wo_fen
+    char_u	*wo_fde;		/* 'foldexpr' */
+#define w_p_fde w_onebuf_opt.wo_fde
+    char_u	*wo_fdi;		/* 'foldignore' */
+#define w_p_fdi w_onebuf_opt.wo_fdi
+    long	wo_fdl;			/* 'foldlevel' */
+#define w_p_fdl w_onebuf_opt.wo_fdl
+    char_u	*wo_fdm;		/* 'foldmethod' */
+#define w_p_fdm w_onebuf_opt.wo_fdm
+    char_u	*wo_fdt;		/* 'foldtext' */
+#define w_p_fdt w_onebuf_opt.wo_fdt
+    char_u	*wo_fmr;		/* 'foldmarker' */
+#define w_p_fmr w_onebuf_opt.wo_fmr
+#endif
+#ifdef FEAT_LINEBREAK
+    int		wo_lbr;			/* 'linebreak' */
+#define w_p_lbr w_onebuf_opt.wo_lbr
+#endif
+    int		wo_list;		/* 'list' */
+#define w_p_list w_onebuf_opt.wo_list
+    int		wo_nu;			/* 'number' */
+#define w_p_nu w_onebuf_opt.wo_nu
+#ifdef FEAT_RIGHTLEFT
+    int		wo_rl;			/* 'rightleft' */
+#define w_p_rl w_onebuf_opt.wo_rl
+#endif
+    long	wo_scr;			/* 'scroll' */
+#define w_p_scr w_onebuf_opt.wo_scr
+#ifdef FEAT_SCROLLBIND
+    int		wo_scb;			/* 'scrollbind' */
+#define w_p_scb w_onebuf_opt.wo_scb
+#endif
+    int		wo_wrap;		/* 'wrap' */
+#define w_p_wrap w_onebuf_opt.wo_wrap
+} winopt_t;
 
 /*
- * Each window can have a different line number associated with a buffer.
- * The window-pointer/line-number pairs are kept in the line number list.
- * The list of line numbers is kept in most-recently-used order.
+ * Window info stored with a buffer.
+ *
+ * Two types of info are kept for a buffer which are associated with a
+ * specific window:
+ * 1. Each window can have a different line number associated with a buffer.
+ * 2. The window-local options for a buffer work in a similar way.
+ * The window-info is kept in a list at b_wininfo.  It is kept in
+ * most-recently-used order.
  */
-
-struct winfpos
+struct wininfo
 {
-    winpos_t	*wl_next;	    /* next entry or NULL for last entry */
-    winpos_t	*wl_prev;	    /* previous entry or NULL for first entry */
-    win_t	*wl_win;	    /* pointer to window that did set wl_lnum */
-    pos_t	wl_fpos;	    /* last cursor position in the file */
+    wininfo_t	*wi_next;	/* next entry or NULL for last entry */
+    wininfo_t	*wi_prev;	/* previous entry or NULL for first entry */
+    win_t	*wi_win;	/* pointer to window that did set wi_lnum */
+    pos_t	wi_fpos;	/* last cursor position in the file */
+    int		wi_optset;	/* TRUE wne wi_opt has useful values */
+    winopt_t	wi_opt;		/* local window options */
 };
 
 /*
@@ -426,7 +475,7 @@ struct syn_state
     short	sst_stacksize;	/* number of states on the stack */
     disptick_t	sst_tick;	/* tick when last displayed */
     linenr_t	sst_change_lnum;/* when non-zero, change in this line
-					 * may have made the state invalid */
+				 * may have made the state invalid */
 };
 #endif /* FEAT_SYN_HL */
 
@@ -540,7 +589,7 @@ struct file_buffer
     long	b_mod_xlines;	/* number of extra buffer lines inserted;
 				   negative when lines were deleted */
 
-    winpos_t	*b_winfpos;	/* list of last used lnum for each window */
+    wininfo_t	*b_wininfo;	/* list of last used info for each window */
 
     long	b_mtime;	/* last change time of original file */
     long	b_mtime_read;	/* last change time when reading */
@@ -628,7 +677,6 @@ struct file_buffer
 #endif
 #ifdef FEAT_CINDENT
     int		b_p_cin;	/* 'cindent' */
-    int		b_p_cin_nopaste; /* b_p_cin saved for paste mode */
     char_u	*b_p_cino;	/* 'cinoptions' */
     char_u	*b_p_cink;	/* 'cinkeys' */
 #endif
@@ -660,12 +708,14 @@ struct file_buffer
     char_u	*b_p_inex;	/* 'includeexpr' */
 # endif
 #endif
+#if defined(FEAT_CINDENT) && defined(FEAT_EVAL)
+    char_u	*b_p_inde;	/* 'indentexpr' */
+#endif
 #ifdef FEAT_CRYPT
     char_u	*b_p_key;	/* 'key' */
 #endif
 #ifdef FEAT_LISP
     int		b_p_lisp;	/* 'lisp' */
-    int		b_p_lisp_nopaste; /* b_p_lisp saved for paste mode */
 #endif
     char_u	*b_p_mps;	/* 'matchpairs' */
     int		b_p_ml;		/* 'modeline' */
@@ -681,7 +731,6 @@ struct file_buffer
 #endif
 #ifdef FEAT_SMARTINDENT
     int		b_p_si;		/* 'smartindent' */
-    int		b_p_si_nopaste;	/* b_p_si saved for paste mode */
 #endif
     long	b_p_sts;	/* 'softtabstop' */
     long	b_p_sts_nopaste; /* b_p_sts saved for paste mode */
@@ -1008,49 +1057,14 @@ struct window
      * Options local to a window.
      * They are local because they influence the layout of the window or
      * depend on the window layout.
-     * There are two values: [0] is local to the buffer in this window, [1] is
-     * for all buffers in this window.
+     * There are two values: w_onebuf_opt is local to the buffer currently in
+     * this window, w_allbuf_opt is for all buffers in this window.
      */
-#ifdef FEAT_FOLDING
-    int		w_pg_fdc[2];	/* 'foldcolumn' */
-#define w_p_fdc w_pg_fdc[0]
-    int		w_pg_fen[2];	/* 'foldenable' */
-#define w_p_fen w_pg_fen[0]
-    char_u	*w_pg_fde[2];	/* 'foldexpr' */
-#define w_p_fde w_pg_fde[0]
-    char_u	*w_pg_fdi[2];	/* 'foldignore' */
-#define w_p_fdi w_pg_fdi[0]
-    long	w_pg_fdl[2];	/* 'foldlevel' */
-#define w_p_fdl w_pg_fdl[0]
-    char_u	*w_pg_fdm[2];	/* 'foldmethod' */
-#define w_p_fdm w_pg_fdm[0]
-    char_u	*w_pg_fdt[2];	/* 'foldtext' */
-#define w_p_fdt w_pg_fdt[0]
-    char_u	*w_pg_fmr[2];	/* 'foldmarker' */
-#define w_p_fmr w_pg_fmr[0]
-#endif
-#ifdef FEAT_LINEBREAK
-    int		w_pg_lbr[2];	/* 'linebreak' */
-#define w_p_lbr w_pg_lbr[0]
-#endif
-    int		w_pg_list[2];	/* 'list' */
-#define w_p_list w_pg_list[0]
-    int		w_pg_nu[2];	/* 'number' */
-#define w_p_nu w_pg_nu[0]
-#ifdef FEAT_RIGHTLEFT
-    int		w_pg_rl[2];	/* 'rightleft' */
-#define w_p_rl w_pg_rl[0]
-#endif
-    long	w_pg_scr[2];	/* 'scroll' */
-#define w_p_scr w_pg_scr[0]
-#ifdef FEAT_SCROLLBIND
-    int		w_pg_scb[2];	/* 'scrollbind' */
-#define w_p_scb w_pg_scb[0]
-#endif
-    int		w_pg_wrap[2];	/* 'wrap' */
-#define w_p_wrap w_pg_wrap[0]
+    winopt_t	w_onebuf_opt;
+    winopt_t	w_allbuf_opt;
 
-    /* end of local window options. */
+    /* transfor a pointer to a "onebuf" option to a "allbuf" option */
+#define GLOBAL_WO(p)	((char *)p + sizeof(winopt_t))
 
 #ifdef FEAT_SCROLLBIND
     long	w_scbind_pos;

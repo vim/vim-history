@@ -1,4 +1,4 @@
-*usr_40.txt*	For Vim version 6.0g.  Last change: 2000 Aug 20
+*usr_40.txt*	For Vim version 6.0h.  Last change: 2000 Aug 30
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -107,6 +107,14 @@ trouble with using the same variable name in different scripts, and makes the
 variable disappear automatically when the script is finished.  Warning: You
 can't use the "s:" variables in a function or autocommand!
 
+If your plugin adds a mapping to trigger a command, use the "localmapchar",
+like this is done for |settings|.  Example: >
+
+	if exists("localmapchar")
+  	  exe 'map ' . localmapchar . 'r :call MyStuff()<CR>'
+	endif
+
+If "localmapchar" is a comma, this will install the ",r" mapping.
 
 							*write-local-help*
 It's a good idea to also write some documentation for your plugin.  Especially

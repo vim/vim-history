@@ -1348,7 +1348,8 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     char_u	    *fname;
     char_u	    *sfname;
     linenr_t	    start, end;
-    exarg_t	    *eap;		/* for forced 'ff' and 'fcc' */
+    exarg_t	    *eap;		/* for forced 'ff' and 'fcc', can be
+					   NULL! */
     int		    append;
     int		    forceit;
     int		    reset_changed;
@@ -1376,6 +1377,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     int		    msg_save = msg_scroll;
     int		    overwriting;	    /* TRUE if writing over original */
     int		    no_eol = FALSE;	    /* no end-of-line written */
+    int		    device = FALSE;	    /* writing to a device */
 #if defined(UNIX) || defined(__EMX__XX)	    /*XXX fix me sometime? */
     struct stat	    st_old;
     int		    made_writable = FALSE;  /* 'w' bit has been set */
@@ -1396,8 +1398,19 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 #ifdef FEAT_MBYTE
     char_u	    *fcc;		/* effective 'filecharcode' */
 #endif
+#ifdef HAVE_ACL
+    vim_acl_t	    acl = NULL;		/* ACL copied from original file to
+					   backup or new file */
+#endif
 
     if (fname == NULL || *fname == NUL)	/* safety check */
+	return FAIL;
+
+    /*
+     * Disallow writing from .exrc and .vimrc in current directory for
+     * security reasons.
+     */
+    if (check_secure())
 	return FAIL;
 
     /* Avoid a crash for a long name. */
@@ -1459,13 +1472,6 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	overwriting = TRUE;
     else
 	overwriting = FALSE;
-
-    /*
-     * Disallow writing from .exrc and .vimrc in current directory for
-     * security reasons.
-     */
-    if (check_secure())
-	return FAIL;
 
     if (exiting)
 	settmode(TMODE_COOK);	    /* when exiting allow typahead now */
@@ -1623,54 +1629,90 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	newfile = TRUE;
     else
     {
+	perm = st_old.st_mode;
 	if (!S_ISREG(st_old.st_mode))		/* not a file */
 	{
 	    if (S_ISDIR(st_old.st_mode))
+	    {
 		errmsg = (char_u *)_("is a directory");
-	    else
-		errmsg = (char_u *)_("is not a file");
-	    goto fail;
+		goto fail;
+	    }
+	    if (mch_nodetype(fname) != NODE_WRITABLE)
+	    {
+		errmsg = (char_u *)_("is not a file or writable device");
+		goto fail;
+	    }
+	    /* It's a device of some kind (or a fifo) which we can write to
+	     * but for which we can't make a backup. */
+	    device = TRUE;
+	    newfile = TRUE;
+	    perm = -1;
 	}
-	if (overwriting)
+	if (overwriting && !device)
 	{
 	    retval = check_mtime(buf, &st_old);
 	    if (retval == FAIL)
 		goto fail;
 	}
-	perm = st_old.st_mode;
     }
-#else
-    perm = mch_getperm(fname);
-    if (perm < 0)
+#else /* !UNIX */
+    /*
+     * Check for a writable device name.
+     */
+    c = mch_nodetype(fname);
+    if (c == NODE_OTHER)
+    {
+	errmsg = (char_u *)_("is not a file or writable device");
+	goto fail;
+    }
+    if (c == NODE_WRITABLE)
+    {
+	device = TRUE;
 	newfile = TRUE;
-    else if (mch_isdir(fname))
-    {
-	errmsg = (char_u *)_("is a directory");
-	goto fail;
+	perm = -1;
     }
-    else if (!forceit && (
-# ifdef USE_MCH_ACCESS
-		mch_access((char *)fname, W_OK)
-# else
-		(fd = mch_open((char *)fname, O_RDWR | O_EXTRA, 0)) < 0
-			? TRUE : (close(fd), FALSE)
-# endif
-			 ))
+    else
     {
-	errmsg = (char_u *)_("is read-only (use ! to override)");
-	goto fail;
-    }
-    else if (overwriting)
-    {
-	struct stat	st;
-
-	if (mch_stat((char *)fname, &st) >= 0)
+	perm = mch_getperm(fname);
+	if (perm < 0)
+	    newfile = TRUE;
+	else if (mch_isdir(fname))
 	{
-	    retval = check_mtime(buf, &st);
-	    if (retval == FAIL)
-		goto fail;
+	    errmsg = (char_u *)_("is a directory");
+	    goto fail;
+	}
+	else if (!forceit && (
+# ifdef USE_MCH_ACCESS
+		    mch_access((char *)fname, W_OK)
+# else
+		    (fd = mch_open((char *)fname, O_RDWR | O_EXTRA, 0)) < 0
+		    ? TRUE : (close(fd), FALSE)
+# endif
+			     ))
+	{
+	    errmsg = (char_u *)_("is read-only (use ! to override)");
+	    goto fail;
+	}
+	else if (overwriting)
+	{
+	    struct stat	st;
+
+	    if (mch_stat((char *)fname, &st) >= 0)
+	    {
+		retval = check_mtime(buf, &st);
+		if (retval == FAIL)
+		    goto fail;
+	    }
 	}
     }
+#endif /* !UNIX */
+
+#ifdef HAVE_ACL
+    /*
+     * For systems that support ACL: get the ACL from the original file.
+     */
+    if (!newfile)
+	acl = mch_get_acl(fname);
 #endif
 
     /*
@@ -1925,6 +1967,9 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 #ifdef UNIX
 			set_file_time(backup, st_old.st_atime, st_old.st_mtime);
 #endif
+#ifdef HAVE_ACL
+			mch_set_acl(backup, acl);
+#endif
 			break;
 		    }
 		}
@@ -2159,7 +2204,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	if (errmsg == NULL)
 	{
 	    errmsg = (char_u *)_("Can't open file for writing");
-	    if (forceit && vim_strchr(p_cpo, CPO_FWRITE) == NULL)
+	    if (forceit && vim_strchr(p_cpo, CPO_FWRITE) == NULL && perm >= 0)
 	    {
 #ifdef UNIX
 		/* we write to the file, thus it should be marked
@@ -2384,6 +2429,10 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	/* Set the filetype after writing the file. */
 	mch_set_filetype(wfname, buf->b_p_oft);
 #endif
+#ifdef HAVE_ACL
+    if (!backup_copy)
+	mch_set_acl(wfname, acl);
+#endif
 
 #ifdef UNIX
     /* When creating a new file, set its owner/group to that of the original
@@ -2497,7 +2546,12 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    c = TRUE;
 	}
 #endif
-	if (newfile)
+	if (device)
+	{
+	    STRCAT(IObuff, _("[Device]"));
+	    c = TRUE;
+	}
+	else if (newfile)
 	{
 	    STRCAT(IObuff, shortmess(SHM_NEW) ? _("[New]") : _("[New File]"));
 	    c = TRUE;
@@ -2518,12 +2572,12 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	}
 #endif
 	msg_add_lines(c, (long)lnum, nchars);	/* add line/char count */
-	if (!shortmess(SHM_WRITE)) 
+	if (!shortmess(SHM_WRITE))
 	{
-	    if(!eap->append)
-		  STRCAT(IObuff, shortmess(SHM_WRI) ? _(" [w]") : _(" written"));
+	    if (append)
+		STRCAT(IObuff, shortmess(SHM_WRI) ? _(" [a]") : _(" appended"));
 	    else
-		  STRCAT(IObuff, shortmess(SHM_WRI) ? _(" [a]") : _(" appended"));
+		STRCAT(IObuff, shortmess(SHM_WRI) ? _(" [w]") : _(" written"));
 	}
 
 	keep_msg = msg_trunc_attr(IObuff, FALSE, 0);
@@ -2630,6 +2684,9 @@ nofail:
 	vim_free(buffer);
 #ifdef FEAT_MBYTE
     vim_free(ucs_buf);
+#endif
+#ifdef HAVE_ACL
+    mch_free_acl(acl);
 #endif
 
     if (errmsg != NULL)
@@ -5164,6 +5221,7 @@ auto_next_pat(apc, stop_at_last)
     AutoPat	*ap;
     AutoCmd	*cp;
     char_u	*name;
+    char	*msg;
 
     vim_free(sourcing_name);
     sourcing_name = NULL;
@@ -5181,12 +5239,12 @@ auto_next_pat(apc, stop_at_last)
 							      ap->allow_dirs))
 	    {
 		name = event_nr2name(apc->event);
-		sourcing_name = alloc((unsigned)(STRLEN(name)
-							  + ap->patlen + 25));
+		msg = _("%s Auto commands for \"%s\"");
+		sourcing_name = alloc((unsigned)(STRLEN(msg)
+					    + STRLEN(name) + ap->patlen + 1));
 		if (sourcing_name != NULL)
 		{
-		    sprintf((char *)sourcing_name,
-			    _("%s Auto commands for \"%s\""),
+		    sprintf((char *)sourcing_name, msg,
 					       (char *)name, (char *)ap->pat);
 		    if (p_verbose >= 8)
 			smsg((char_u *)_("Executing %s"), sourcing_name);

@@ -1,4 +1,4 @@
-*quickref.txt*  For Vim version 6.0g.  Last change: 2000 Aug 07
+*quickref.txt*  For Vim version 6.0h.  Last change: 2000 Aug 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1213,8 +1213,8 @@ Context-sensitive completion on the command-line:
 |zr|		zr			reduce folding: increase 'foldlevel'
 |zR|		zR			open all folds: make 'foldlevel' max.
 
-|zn|		zn			fold none: set 'folddisable'
-|zN|		zN			fold normal reset 'folddisable'
-|zi|		zi			invert 'folddisable'
+|zn|		zn			fold none: reset 'foldenable'
+|zN|		zN			fold normal set 'foldenable'
+|zi|		zi			invert 'foldenable'
 
  vim:tw=78:

@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0g.  Last change: 2000 Aug 20
+*starting.txt*  For Vim version 6.0h.  Last change: 2000 Aug 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -556,7 +556,7 @@ accordingly.  Vim proceeds in this order:
 		:runtime plugin/*.vim
 <	The result is that all directories in the 'runtimepath' option will be
 	searched for the "plugin" sub-directory and all files ending in ".vim"
-	will be sourced.
+	will be sourced (in alphabetial order per directory).
 	Loading plugins won't be done when:
 	- The 'loadplugins' option was reset in a vimrc file.
 	- The |--noplugins| command line argument is used.

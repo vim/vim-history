@@ -221,18 +221,7 @@ op_shift(oap, curs_top, amount)
 	    /* Move the line right if it doesn't start with '#', 'smartindent'
 	     * isn't set or 'cindent' isn't set or '#' isn't in 'cino'. */
 #if defined(FEAT_SMARTINDENT) || defined(FEAT_CINDENT)
-	    if (first_char != '#' || (
-# ifdef FEAT_SMARTINDENT
-#  ifdef FEAT_CINDENT
-			 (!curbuf->b_p_si || curbuf->b_p_cin) &&
-#  else
-			 !curbuf->b_p_si
-#  endif
-# endif
-# ifdef FEAT_CINDENT
-			 (!curbuf->b_p_cin || !in_cinkeys('#', ' ', TRUE))
-# endif
-					))
+	    if (first_char != '#' || !preprocs_left())
 #endif
 	{
 	    shift_line(oap->op_type == OP_LSHIFT, p_sr, amount);
@@ -1911,7 +1900,7 @@ op_change(oap)
     {
 	l = 0;
 #ifdef FEAT_SMARTINDENT
-	if (curbuf->b_p_si
+	if (!p_paste && curbuf->b_p_si
 # ifdef FEAT_CINDENT
 		&& !curbuf->b_p_cin
 # endif
@@ -2748,18 +2737,7 @@ do_put(regname, dir, count, flags)
 			if (cnt == count && i == y_size - 1)
 			    lendiff = STRLEN(ptr);
 #if defined(FEAT_SMARTINDENT) || defined(FEAT_CINDENT)
-			if (*ptr == '#' && (
-# ifdef FEAT_SMARTINDENT
-#  ifdef FEAT_CINDENT
-			   (curbuf->b_p_si && !curbuf->b_p_cin) ||
-#  else
-			   curbuf->b_p_si
-#  endif
-# endif
-# ifdef FEAT_CINDENT
-			   (curbuf->b_p_cin && in_cinkeys('#', ' ', TRUE))
-# endif
-					    ))
+			if (*ptr == '#' && preprocs_left())
 			    indent = 0;     /* Leave # lines at start */
 			else
 #endif
@@ -2856,6 +2834,28 @@ end:
 	    && !(restart_edit || (State & INSERT)))
 	--curwin->w_cursor.col;
 }
+
+#if defined(FEAT_SMARTINDENT) || defined(FEAT_CINDENT) || defined(PROTO)
+/*
+ * Return TRUE if lines starting with '#' should be left aligned.
+ */
+    int
+preprocs_left()
+{
+    return
+# ifdef FEAT_SMARTINDENT
+#  ifdef FEAT_CINDENT
+	(curbuf->b_p_si && !curbuf->b_p_cin) ||
+#  else
+	curbuf->b_p_si
+#  endif
+# endif
+# ifdef FEAT_CINDENT
+	(curbuf->b_p_cin && in_cinkeys('#', ' ', TRUE))
+# endif
+	;
+}
+#endif
 
 /* Return the character name of the register with the given number */
     int

@@ -15,7 +15,6 @@
  */
 
 #include "gvimext.h"
-#include "pushkeys.h"
 
 // Always get an error while putting the following stuff to the
 // gvimext.h file as class protected variables, give up and
@@ -435,48 +434,16 @@ STDMETHODIMP CShellExt::PushToWindow(HWND hParent,
 				   int idHWnd)
 {
     HWND hWnd = m_hWnd[idHWnd];
-    char m_szFileUserClickedOn[MAX_PATH];
-#define CMDLEN (MAX_PATH * 4)
-    char cmdStr[CMDLEN];
-    int	 len;
-    char *p;
 
     // Show and bring vim instance to foreground
-    ShowWindow(hWnd, SW_RESTORE);
+    if (IsIconic(hWnd) != 0)
+	ShowWindow(hWnd, SW_RESTORE);
+    else
+	ShowWindow(hWnd, SW_SHOW);
     SetForegroundWindow(hWnd);
 
-    // First set vim to be normal mode
-    PushKeys("^(\\N)");
-
-    // Set the command string
-    strcpy(cmdStr, ":drop ");
-    len = strlen(cmdStr);
-
-    for (UINT i = 0; i < cbFiles; i++)
-    {
-	// Find the file
-	DragQueryFile((HDROP)medium.hGlobal,
-		i,
-		m_szFileUserClickedOn,
-		sizeof(m_szFileUserClickedOn));
-
-	for (p = m_szFileUserClickedOn; *p; ++p)
-	{
-	    if (len >= CMDLEN - 15)
-	    {
-		MessageBox(hParent, "Path length too long or too many files selected!", "gvimext.dll error", MB_OK);
-
-		return NOERROR;
-	    }
-	    if (*p == ' ')
-		cmdStr[len++] = '\\';
-	    cmdStr[len++] = *p;
-	}
-	cmdStr[len++] = ' ';
-    }
-    strcat(cmdStr, "{ENTER}");
-    // Send the command
-    PushKeys(cmdStr);
+    // Post the selected files to the vim instance
+    PostMessage(hWnd, WM_DROPFILES, (WPARAM)medium.hGlobal, NULL);
 
     return NOERROR;
 }
@@ -654,3 +621,4 @@ STDMETHODIMP CShellExt::InvokeSingleGvim(HWND hParent,
 
     return NOERROR;
 }
+

@@ -1,7 +1,7 @@
 " Vim settings file
 " Language:	Mail
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Jul 15
+" Last Change:	2000 Aug 31
 
 " Only do these settings when not done yet for this buffer
 if exists("b:did_settings")
@@ -21,9 +21,9 @@ setlocal tw=72
 " and insert the comment leader ">" when hitting <CR> or using "o".
 setlocal fo+=tcroql
 
-" Only add mappings when the user has set "localmapchar"
-if exists("localmapchar")
+" Add mappings, unless the user didn't want this.
+if !exists("no_settings_maps") && !exists("no_mail_maps")
   " Quote text by inserting "> "
-  exe 'vmap <buffer> ' . localmapchar . 'q :s/^/> /<CR>'
-  exe 'nmap <buffer> ' . localmapchar . 'q :.,$s/^/> /<CR>'
+  vmap <buffer> <Map>q :s/^/> /<CR>
+  nmap <buffer> <Map>q :.,$s/^/> /<CR>
 endif

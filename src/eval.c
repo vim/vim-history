@@ -184,6 +184,7 @@ static void f_getbufvar __ARGS((VAR argvars, VAR retvar));
 static void f_getwinvar __ARGS((VAR argvars, VAR retvar));
 static void f_getcwd __ARGS((VAR argvars, VAR retvar));
 static void f_getftime __ARGS((VAR argvars, VAR retvar));
+static void f_getfsize __ARGS((VAR argvars, VAR retvar));
 static void f_getline __ARGS((VAR argvars, VAR retvar));
 static void f_getwinposx __ARGS((VAR argvars, VAR retvar));
 static void f_getwinposy __ARGS((VAR argvars, VAR retvar));
@@ -220,8 +221,10 @@ static void f_search __ARGS((VAR argvars, VAR retvar));
 static void f_setline __ARGS((VAR argvars, VAR retvar));
 static void f_some_match __ARGS((VAR argvars, VAR retvar, int start));
 static void f_strftime __ARGS((VAR argvars, VAR retvar));
+static void f_stridx __ARGS((VAR argvars, VAR retvar));
 static void f_strlen __ARGS((VAR argvars, VAR retvar));
 static void f_strpart __ARGS((VAR argvars, VAR retvar));
+static void f_strridx __ARGS((VAR argvars, VAR retvar));
 static void f_strtrans __ARGS((VAR argvars, VAR retvar));
 static void f_synID __ARGS((VAR argvars, VAR retvar));
 static void f_synIDattr __ARGS((VAR argvars, VAR retvar));
@@ -230,6 +233,8 @@ static void f_system __ARGS((VAR argvars, VAR retvar));
 static void f_submatch __ARGS((VAR argvars, VAR retvar));
 static void f_substitute __ARGS((VAR argvars, VAR retvar));
 static void f_tempname __ARGS((VAR argvars, VAR retvar));
+static void f_toupper __ARGS((VAR argvars, VAR retvar));
+static void f_tolower __ARGS((VAR argvars, VAR retvar));
 static void f_virtcol __ARGS((VAR argvars, VAR retvar));
 static void f_visualmode __ARGS((VAR argvars, VAR retvar));
 static void f_winbufnr __ARGS((VAR argvars, VAR retvar));
@@ -379,32 +384,25 @@ eval_arg_to_string(arg)
 }
 #endif
 
-#if 0 /* not used */
 /*
  * Top level evaluation function, returning a number.
- * Advances "arg" to the first non-blank after the evaluated expression.
- * Sets *error to TRUE if there is an error.  Doesn't give error messages.
+ * Evaluates "expr" silently.
+ * Returns -1 for an error.
  */
-    long
-eval_arg_to_number(arg, error)
-    char_u	**arg;
-    int		*error;
+    int
+eval_to_number(expr)
+    char_u	*expr;
 {
     var		retvar;
-    long	retval;
-    int		ret;
+    int		retval;
+    char_u	*p = expr;
 
     ++emsg_off;
 
-    ret = eval1(arg, &retvar, TRUE);
-    if (ret == FAIL)
-    {
-	*error = TRUE;
-	retval = 0;
-    }
+    if (eval1(&p, &retvar, TRUE) == FAIL)
+	retval = -1;
     else
     {
-	*error = FALSE;
 	retval = get_var_number(&retvar);
 	clear_var(&retvar);
     }
@@ -412,7 +410,6 @@ eval_arg_to_number(arg, error)
 
     return retval;
 }
-#endif
 
 #ifdef FEAT_FOLDING
 /*
@@ -429,6 +426,7 @@ eval_foldexpr(arg, cp)
     char_u	*s;
 
     ++emsg_off;
+    ++sandbox;
     *cp = NUL;
     if (eval0(arg, &retvar, NULL, TRUE) == FAIL)
 	retval = 0;
@@ -452,6 +450,7 @@ eval_foldexpr(arg, cp)
 	clear_var(&retvar);
     }
     --emsg_off;
+    --sandbox;
 
     return retval;
 }
@@ -2078,6 +2077,7 @@ static struct fst
     {"fnamemodify",	2, 2, f_fnamemodify},
     {"getbufvar",	2, 2, f_getbufvar},
     {"getcwd",		0, 0, f_getcwd},
+    {"getfsize",	1, 1, f_getfsize},
     {"getftime",	1, 1, f_getftime},
     {"getline",		1, 1, f_getline},
     {"getwinposx",	0, 0, f_getwinposx},
@@ -2117,8 +2117,10 @@ static struct fst
 #ifdef HAVE_STRFTIME
     {"strftime",	1, 2, f_strftime},
 #endif
+    {"stridx",		2, 2, f_stridx},
     {"strlen",		1, 1, f_strlen},
     {"strpart",		3, 3, f_strpart},
+    {"strridx",		2, 2, f_strridx},
     {"strtrans",	1, 1, f_strtrans},
     {"submatch",	1, 1, f_submatch},
     {"substitute",	4, 4, f_substitute},
@@ -2127,6 +2129,8 @@ static struct fst
     {"synIDtrans",	1, 1, f_synIDtrans},
     {"system",		1, 1, f_system},
     {"tempname",	0, 0, f_tempname},
+    {"tolower",		1, 1, f_tolower},
+    {"toupper",		1, 1, f_toupper},
     {"virtcol",		1, 1, f_virtcol},
     {"visualmode",	0, 0, f_visualmode},
     {"winbufnr",	1, 1, f_winbufnr},
@@ -3061,6 +3065,32 @@ f_getftime(argvars, retvar)
 	retvar->var_val.var_number = (var_number_type)st.st_mtime;
     else
 	retvar->var_val.var_number = -1;
+}
+
+/*
+ * "getfsize({fname})" function
+ */
+    static void
+f_getfsize(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    char_u	*fname;
+    struct stat	st;
+
+    fname = get_var_string(&argvars[0]);
+
+    retvar->var_type = VAR_NUMBER;
+
+    if (mch_stat((char *)fname, &st) >= 0)
+    {
+	if (mch_isdir(fname))
+	    retvar->var_val.var_number = 0;
+	else
+	    retvar->var_val.var_number = (var_number_type)st.st_size;
+    }
+    else
+	  retvar->var_val.var_number = -1;
 }
 
 /*
@@ -4113,14 +4143,14 @@ f_setline(argvars, retvar)
     line = get_var_string(&argvars[1]);
     retvar->var_val.var_number = 1;		/* FAIL is default */
 
-    if (lnum >= 1 && lnum <= curbuf->b_ml.ml_line_count)
+    if (lnum >= 1
+	    && lnum <= curbuf->b_ml.ml_line_count
+	    && u_savesub(lnum) == OK
+	    && ml_replace(lnum, line, TRUE) == OK)
     {
-	if (u_savesub(lnum) == OK && ml_replace(lnum, line, TRUE) == OK)
-	{
-	    changed_bytes(lnum, 0);
-	    check_cursor_col();
-	    retvar->var_val.var_number = 0;
-	}
+	changed_bytes(lnum, 0);
+	check_cursor_col();
+	retvar->var_val.var_number = 0;
     }
 }
 
@@ -4208,6 +4238,60 @@ f_strftime(argvars, retvar)
     retvar->var_val.var_string = vim_strsave(result_buf);
 }
 #endif
+
+/*
+ * "stridx()" function
+ */
+    static void
+f_stridx(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    char_u	buf[NUMBUFLEN];
+    char_u	*needle;
+    char_u	*haystack;
+    char_u	*pos;
+
+    needle = get_var_string(&argvars[1]);
+    haystack = get_var_string_buf(&argvars[0], buf);
+    pos	= (char_u *)strstr((char *)haystack, (char *)needle);
+
+    if (pos == NULL)
+	retvar->var_val.var_number = -1;
+    else
+	retvar->var_val.var_number = pos - haystack;
+}
+
+/*
+ * "strridx()" function
+ */
+    static void
+f_strridx(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    char_u	buf[NUMBUFLEN];
+    char_u	*needle;
+    char_u	*haystack;
+    char_u	*rest;
+    char_u	*lastmatch = NULL;
+
+    needle = get_var_string(&argvars[1]);
+    haystack = get_var_string_buf(&argvars[0], buf);
+    rest = haystack;
+    while (*haystack != '\0')
+    {
+	rest = (char_u *)strstr((char *)rest, (char *)needle);
+	if (rest == NULL)
+	    break;
+	lastmatch = rest++;
+    }
+
+    if (lastmatch == NULL)
+	retvar->var_val.var_number = -1;
+    else
+	retvar->var_val.var_number = lastmatch - haystack;
+}
 
 /*
  * "strlen()" function
@@ -4511,6 +4595,50 @@ f_tempname(argvars, retvar)
 #endif
 	    ++x;
     }
+}
+
+/*
+ * "tolower(string)" function
+ */
+    static void
+f_tolower(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    char_u	*p;
+
+    p = vim_strsave(get_var_string(&argvars[0]));
+    retvar->var_type = VAR_STRING;
+    retvar->var_val.var_string = p;
+
+    if (p != NULL)
+	while (*p != NUL)
+	{
+	    *p = TO_LOWER(*p);	/* note that tolower() can be a macro */
+	    ++p;
+	}
+}
+
+/*
+ * "toupper(string)" function
+ */
+    static void
+f_toupper(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    char_u	*p;
+
+    p = vim_strsave(get_var_string(&argvars[0]));
+    retvar->var_type = VAR_STRING;
+    retvar->var_val.var_string = p;
+
+    if (p != NULL)
+	while (*p != NUL)
+	{
+	    *p = TO_UPPER(*p);	/* note that toupper() can be a macro */
+	    p++;
+	}
 }
 
 /*
@@ -4960,7 +5088,7 @@ get_var_lnum(argvars)
 /*
  * Get the string value of a variable.
  * If it is a Number variable, the number is converted into a string.
- * get_var_string() uses a single, static buffer.  You can only use it once!
+ * get_var_string() uses a single, static buffer.  YOU CAN ONLY USE IT ONCE!
  * get_var_string_buf() uses a given buffer.
  * If the String variable has never been set, return an empty string.
  * Never returns NULL;
@@ -5084,6 +5212,21 @@ find_var_ga(name, varname)
     if (*name == 's')				/* script variable */
 	return script_vars;
     return NULL;
+}
+
+/*
+ * Get the string value of a global variable.
+ */
+    char_u *
+get_var_value(name)
+    char_u	*name;
+{
+    VAR		v;
+
+    v = find_var(name, FALSE);
+    if (v == NULL)
+	return NULL;
+    return get_var_string(v);
 }
 
 /*

@@ -1878,68 +1878,63 @@ ex_emenu(eap)
     /* Found the menu, so execute. */
     if (restart_edit)
     {
-	idx = get_menu_index(menu, INSERT);
 	mode = (char_u *)"Insert";
+	idx = MENU_INDEX_INSERT;
     }
     else if (eap->argt & RANGE)
     {
+	pos_t	tpos;
+
 	mode = (char_u *)"Visual";
-	idx = get_menu_index(menu, VISUAL);
+	idx = MENU_INDEX_VISUAL;
 
-	if (idx != MENU_INDEX_INVALID)
+	/* GEDDES: This is not perfect - but it is a
+	 * quick way of detecting whether we are doing this from a
+	 * selection - see if the range matches up with the visual
+	 * select start and end.
+	 */
+	if ((curbuf->b_visual_start.lnum == eap->line1)
+		&& (curbuf->b_visual_end.lnum) == eap->line2)
 	{
-	    pos_t	tpos;
 
-	    /* GEDDES: This is not perfect - but it is a
-	     * quick way of detecting whether we are doing this from a
-	     * selection - see if the range matches up with the visual
-	     * select start and end.
+	    /* Set it up for visual mode - equivalent to gv.
 	     */
-	    if ((curbuf->b_visual_start.lnum == eap->line1)
-		    && (curbuf->b_visual_end.lnum) == eap->line2)
-	    {
+	    VIsual_mode = curbuf->b_visual_mode;
+	    tpos = curbuf->b_visual_end;
+	    curwin->w_cursor = curbuf->b_visual_start;
 
-		/* Set it up for visual mode - equivalent to gv.
-		 */
-		VIsual_mode = curbuf->b_visual_mode;
-		tpos = curbuf->b_visual_end;
-		curwin->w_cursor = curbuf->b_visual_start;
-
-	    }
-	    else
-	    {
-		/* Set it up for line-wise visual mode
-		 */
-		VIsual_mode = 'V';
-		curwin->w_cursor.lnum = eap->line1;
-		curwin->w_cursor.col = 1;
-		tpos.lnum = eap->line2;
-		tpos.col = MAXCOL;
-	    }
-
-	    /* Activate visual mode
-	     */
-	    VIsual_active = TRUE;
-	    VIsual_reselect = TRUE;
-	    adjust_cursor();
-	    VIsual = curwin->w_cursor;
-	    curwin->w_cursor = tpos;
-
-	    adjust_cursor();
-
-	    /* Adjust the cursor to make sure it is in the correct pos
-	     * for exclusive mode
-	     */
-	    if (*p_sel == 'e' && gchar_cursor() != NUL)
-	    {
-		++curwin->w_cursor.col;
-	    }
 	}
+	else
+	{
+	    /* Set it up for line-wise visual mode
+	     */
+	    VIsual_mode = 'V';
+	    curwin->w_cursor.lnum = eap->line1;
+	    curwin->w_cursor.col = 1;
+	    tpos.lnum = eap->line2;
+	    tpos.col = MAXCOL;
+	}
+
+	/* Activate visual mode
+	 */
+	VIsual_active = TRUE;
+	VIsual_reselect = TRUE;
+	adjust_cursor();
+	VIsual = curwin->w_cursor;
+	curwin->w_cursor = tpos;
+
+	adjust_cursor();
+
+	/* Adjust the cursor to make sure it is in the correct pos
+	 * for exclusive mode
+	 */
+	if (*p_sel == 'e' && gchar_cursor() != NUL)
+	    ++curwin->w_cursor.col;
     }
     else
     {
-	idx = get_menu_index(menu, NORMAL);
 	mode = (char_u *)"Normal";
+	idx = MENU_INDEX_NORMAL;
     }
 
     if (idx != MENU_INDEX_INVALID)

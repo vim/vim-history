@@ -226,14 +226,7 @@ check_swap_exists_action()
 {
     if (swap_exists_action == SEA_QUIT)
 	getout(1);
-    if (swap_exists_action == SEA_RECOVER)
-    {
-	msg_scroll = TRUE;
-	ml_recover();
-	MSG_PUTS("\n");	/* don't overwrite the last message */
-	cmdline_row = msg_row;
-	do_modelines();
-    }
+    handle_swap_exists(NULL);
 }
 #endif
 
@@ -414,11 +407,7 @@ main
     set_init_1();
 
 #ifdef FEAT_EVAL
-# if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
-    set_vim_var_string(VV_LANG, (char_u *)setlocale(LC_ALL, NULL), -1);
-# else
-    set_vim_var_string(VV_LANG, (char_u *)"C", -1);
-# endif
+    set_lang_var();
 #endif
 
     /*
@@ -1293,7 +1282,6 @@ main
 	msg_didany = i;
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
 	check_swap_exists_action();
-	swap_exists_action = SEA_NONE;
 #endif
 #if !(defined(AMIGA) || defined(macintosh))
 	/*
@@ -1376,11 +1364,6 @@ main
     }
     else
     {
-#if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
-	/* When getting the ATTENTION prompt here, use a dialog */
-	swap_exists_action = SEA_DIALOG;
-#endif
-
 	/*
 	 * Open a buffer for windows that don't have one yet.
 	 * Commands in the .vimrc might have loaded a file or split the window.
@@ -1398,7 +1381,13 @@ main
 	    curbuf = curwin->w_buffer;
 	    if (curbuf->b_ml.ml_mfp == NULL)
 	    {
+#if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
+		/* When getting the ATTENTION prompt here, use a dialog */
+		swap_exists_action = SEA_DIALOG;
+#endif
+
 		(void)open_buffer(FALSE, NULL); /* create memfile, read file */
+
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
 		check_swap_exists_action();
 #endif
@@ -1416,9 +1405,6 @@ main
 #ifdef FEAT_AUTOCMD
 	--autocmd_no_enter;
 	--autocmd_no_leave;
-#endif
-#if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
-	swap_exists_action = SEA_NONE;
 #endif
 	curwin = firstwin;
 	curbuf = curwin->w_buffer;

@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0g.  Last change: 2000 Aug 20
+*version6.txt*  For Vim version 6.0h.  Last change: 2000 Aug 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -41,6 +41,7 @@ Ports					|ports-6|
 Quickfix extended			|quickfix-6|
 Operator modifiers			|new-operator-mod|
 Search Path				|new-search-path|
+Writing files				|new-file-writing|
 Various new items			|new-items-6|
 
 IMPROVEMENTS				|improvements-6|
@@ -170,6 +171,10 @@ The items "[RO]", "[+]", "[help]", "[Preview]" and "[filetype]" in
 Non-Unix systems: When expanding wildcards for the Vim arguments, don't use
 'suffixes'.  It now works as if the shell had expanded the arguments.
 
+The 'lisp', 'smartindent' and 'cindent' options are not switched off when
+'paste' is set.  The auto-indenting is disabled when 'paste' is set, but
+manual indenting with "=" still works.
+
 ==============================================================================
 NEW FEATURES
 
@@ -239,7 +244,7 @@ This can be used to avoid changing window sizes when you want to keep them.
 Since windows can become quite narrow with vertical splits, text lines will
 often not fit.  The 'sidescrolloff' has been added to keep some context left
 and right of the cursor.  The 'listchars' option has been extended with the
-"preceeds" item, to show a "<" for example, when there is text left off the
+"precedes" item, to show a "<" for example, when there is text left off the
 screen. (Utz-Uwe Haus)
 
 
@@ -360,8 +365,11 @@ To be able to make this work, several features were added:
   ":setglobal" displays the global value for a local option.  Setting only
   the global value isn't implemented yet.
 - Added mappings and abbreviations local to a buffer: ":map <buffer>".
-  When the "localmapchar" variable has been set by the user, it will be
-  prepended to mappings in the settings file.
+- When the "localmapchar" variable has been set by the user, mappings in the
+  settings file will start with the value of this variable.
+- In a mapping "<Map>" can be used to get the value of the "localmapchar"
+  variable.  This simplifies mappings that use "localmapchar".  "<Map>"
+  defaults to ",".
 
 The new ":setfiletype" command is used in the filetype detection autocommands,
 to avoid that 'filetype' is set twice.
@@ -440,6 +448,18 @@ Search Path						*new-search-path*
 - Added 'suffixesadd', suffixes to be added to a file name when searching for
   a file for the "gf", "[I", etc. commands.
 
+							*new-file-writing*
+Writing files
+-------------
+
+Added the 'backupcopy' option: Select whether a file is copied or renamed to
+make a backup file.  Useful on Unix to speed up writing an ordinary file.
+Useful on other systems to preserve file attributes and when editing a file on
+a Unix filesystem.
+
+Added support for Access Control Lists (ACL) for FreeBSD and Win32.  The ACL
+is copied from the original file to the new file (or the backup if it's
+copied).
 
 
 Various new items					*new-items-6*
@@ -486,7 +506,12 @@ New marks:
 '{ and '}: begin or end of current paragraph.  Useful in Ex commands.
 
 New functions:
+getfsize()	Return the size of a file.
 search()	Search for a pattern.
+stridx()	Search for first occurrence of one string in another.
+strridx()	Search for last occurrence of one string in another.
+toupper()	Convert string to all-upper case.
+tolower()	Convert string to all-lower case.
 
 The ":command" command now accepts a "-bar" argument.  This allows the user
 command to be followed by "| command|.
@@ -507,11 +532,6 @@ that the error can be located.
 
 Allow a tags file to have CR, CR-LF or LF line separator.  Useful on the
 Macintosh.
-
-Added the 'backupcopy' option: Select whether a file is copied or renamed to
-make a backup file.  Useful on Unix to speed up writing an ordinary file.
-Useful on other systems to preserve file attributes and when editing a file on
-a Unix filesystem.
 
 The DOS/Windows install program has been enhanced.  The Vim executable is
 never moved or $PATH changed.  A small batch file is created in a directory in
@@ -674,6 +694,8 @@ error message.
 when more than 'report'.  The message was annoying when deleting a buffer in a
 script.
 
+The number of marks kept in the jumplist has been increased from 50 to 100.
+
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
 
@@ -737,5 +759,11 @@ GTK GUI: When 'guioptions' excluded 'g', the more prompt caused the toolbar
 and menubar to disappear and resize the window (which clears the text).
 Now always grey-out the toplevel menus to avoid that the menubar changes size
 or disappears.
+
+When re-using the current buffer for a new buffer, buffer-local variables were
+not deleted.
+
+GUI: when 'scrolloff' is 0 dragging the mouse above the window didn't cause a
+down scroll.  Now pass on a mouse event with mouse_row set to -1.
 
  vim:tw=78:

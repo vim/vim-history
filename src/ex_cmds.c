@@ -2482,9 +2482,6 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 #endif
 		    buf_copy_options(buf, BCO_ENTER);
 
-		/* Reset the local window options to the global values. */
-		copy_global_options();
-
 		/* close the current buffer */
 		close_buffer(curwin, curbuf, !(flags & ECMD_HIDE), FALSE);
 
@@ -2508,6 +2505,13 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 		    if (*p_ffs && !oldbuf)
 			set_fileformat(default_fileformat(), TRUE);
 		}
+
+		/* May get the window options from the last time this buffer
+		 * was in this window (or another window).  If not used
+		 * before, reset the local window options to the global
+		 * values. */
+		get_winopts(buf);
+
 #ifdef FEAT_AUTOCMD
 	    }
 	    vim_free(new_name);
@@ -2631,26 +2635,8 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
 	    if (swap_exists_action == SEA_QUIT)
-	    {
-		/* User selected Quit at ATTENTION prompt.  Go back to
-		 * previous buffer.  If that buffer is gone or the same as the
-		 * current one, open a new, empty buffer. */
-		swap_exists_action = SEA_NONE;	/* don't want it again */
-		close_buffer(curwin, curbuf, TRUE, FALSE);
-		if (!buf_valid(old_curbuf) || old_curbuf == curbuf)
-		    old_curbuf = buflist_new(NULL, NULL, 1L, TRUE);
-		enter_buffer(old_curbuf);
 		retval = FAIL;
-	    }
-	    else if (swap_exists_action == SEA_RECOVER)
-	    {
-		/* User selected Recover at ATTENTION prompt. */
-		ml_recover();
-		MSG_PUTS("\n");	/* don't overwrite the last message */
-		cmdline_row = msg_row;
-		do_modelines();
-	    }
-	    swap_exists_action = SEA_NONE;
+	    handle_swap_exists(old_curbuf);
 #endif
 	}
 #ifdef FEAT_AUTOCMD
@@ -2998,6 +2984,17 @@ check_secure()
 	EMSG(_(e_curdir));
 	return TRUE;
     }
+#ifdef HAVE_SANDBOX
+    /*
+     * In the sandbox more things are not allowed, including the things
+     * disallowed in secure mode.
+     */
+    if (sandbox != 0)
+    {
+	EMSG(_(e_sandbox));
+	return TRUE;
+    }
+#endif
     return FALSE;
 }
 
@@ -4729,7 +4726,7 @@ ex_sign(eap)
     int		idx;			/* which mark to use */
     char_u	*filename;		/* filename which gets the mark */
     buf_t	*buf;			/* buffer to set mark in */
-    char_u	cmd[MAXPATHLEN];	/* build :edit command here */
+    char_u	cmd[MAXPATHL];		/* build :edit command here */
     win_t	*win;			/* used for warping to a sign */
 
     if (eap->cmdidx == CMD_signs)

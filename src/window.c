@@ -2940,6 +2940,7 @@ frame_setheight(curfrp, height)
 	    frame_setheight(curfrp->fr_parent, height
 		+ frame_minheight(curfrp->fr_parent, NOWIN) - (int)p_wmh - 1);
 #endif
+	    /*NOTREACHED*/
 	}
 
 

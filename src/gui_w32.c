@@ -6176,7 +6176,8 @@ mch_set_mouse_shape(int shape)
 	ShowCursor(FALSE);
     else
     {
-	ShowCursor(TRUE);
+	if (!p_mh)
+	    ShowCursor(TRUE);
 	if (shape >= MSHAPE_NUMBERED)
 	    idc = IDC_ARROW;
 	else

@@ -97,11 +97,17 @@ typedef long off_t;
 #ifndef SETTINGS_FILE
 # define SETTINGS_FILE	"settings.vim"
 #endif
+#ifndef INDENT_FILE
+# define INDENT_FILE	"indent.vim"
+#endif
 #ifndef FTOFF_FILE
 # define FTOFF_FILE	"ftoff.vim"
 #endif
 #ifndef SETSOFF_FILE
 # define SETSOFF_FILE	"setsoff.vim"
+#endif
+#ifndef INDOFF_FILE
+# define INDOFF_FILE	"indoff.vim"
 #endif
 #ifndef SYNTAX_FNAME
 # define SYNTAX_FNAME	"$VIMRUNTIME/syntax/%s.vim"

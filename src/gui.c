@@ -2377,8 +2377,14 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
      * If we are dragging and the mouse hasn't moved far enough to be on a
      * different character, then don't send an event to vim.
      */
-    if (button == MOUSE_DRAG && row == prev_row && col == prev_col)
-	return;
+    if (button == MOUSE_DRAG)
+    {
+	if (row == prev_row && col == prev_col)
+	    return;
+	/* Dragging above the window, set "row" to -1 to cause a scroll. */
+	if (y < 0)
+	    row = -1;
+    }
 
     /*
      * If topline has changed (window scrolled) since the last click, reset
@@ -2420,7 +2426,10 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
     string[5] = (char_u)(row + ' ' + 1);
     add_to_input_buf(string, 6);
 
-    prev_row = row;
+    if (row < 0)
+	prev_row = 0;
+    else
+	prev_row = row;
     prev_col = col;
 
     /*
@@ -2590,15 +2599,16 @@ gui_init_which_components(oldval)
 		else
 		{
 		    for (wp = firstwin; wp != NULL; wp = wp->w_next)
-			gui_mch_enable_scrollbar(&wp->w_scrollbars[i],
 #ifdef FEAT_VERTSPLIT
-				((i == SBAR_LEFT
-				  && wp->w_wincol != 0)
-				 || (i == SBAR_RIGHT
-				     && wp->w_wincol + wp->w_width != Columns))
-				? FALSE :
+			/* Only enable/disable scrollbars touching the window
+			 * frame. */
+			if ((i != SBAR_LEFT
+				    || wp->w_wincol == 0)
+				&& (i != SBAR_RIGHT
+				    || wp->w_wincol + wp->w_width == Columns))
 #endif
-						 gui.which_scrollbars[i]);
+			    gui_mch_enable_scrollbar(&wp->w_scrollbars[i],
+						     gui.which_scrollbars[i]);
 		}
 		need_set_size = TRUE;
 	    }
@@ -2967,9 +2977,17 @@ gui_update_scrollbars(force)
 	     * scrollbar for now.
 	     */
 	    sb->height = 0;	    /* Force update next time */
-	    if (gui.which_scrollbars[SBAR_LEFT])
+	    if (gui.which_scrollbars[SBAR_LEFT]
+#ifdef FEAT_VERTSPLIT
+		    && wp->w_wincol == 0
+#endif
+		    )
 		gui_mch_enable_scrollbar(&wp->w_scrollbars[SBAR_LEFT], FALSE);
-	    if (gui.which_scrollbars[SBAR_RIGHT])
+	    if (gui.which_scrollbars[SBAR_RIGHT]
+#ifdef FEAT_VERTSPLIT
+		    && wp->w_wincol + wp->w_width == Columns
+#endif
+		    )
 		gui_mch_enable_scrollbar(&wp->w_scrollbars[SBAR_RIGHT], FALSE);
 	    continue;
 	}
@@ -3011,10 +3029,10 @@ gui_update_scrollbars(force)
 		gui_mch_set_scrollbar_pos(&wp->w_scrollbars[SBAR_LEFT],
 					  gui.left_sbar_x, y,
 					  gui.scrollbar_width, h);
-		gui_mch_enable_scrollbar(&wp->w_scrollbars[SBAR_LEFT],
 #ifdef FEAT_VERTSPLIT
-			wp->w_wincol != 0 ? FALSE :
+		if (wp->w_wincol == 0)
 #endif
+		    gui_mch_enable_scrollbar(&wp->w_scrollbars[SBAR_LEFT],
 			TRUE);
 	    }
 	    if (gui.which_scrollbars[SBAR_RIGHT])
@@ -3022,10 +3040,10 @@ gui_update_scrollbars(force)
 		gui_mch_set_scrollbar_pos(&wp->w_scrollbars[SBAR_RIGHT],
 					  gui.right_sbar_x, y,
 					  gui.scrollbar_width, h);
-		gui_mch_enable_scrollbar(&wp->w_scrollbars[SBAR_RIGHT],
 #ifdef FEAT_VERTSPLIT
-			wp->w_wincol + wp->w_width != Columns ? FALSE :
+		if (wp->w_wincol + wp->w_width == Columns)
 #endif
+		    gui_mch_enable_scrollbar(&wp->w_scrollbars[SBAR_RIGHT],
 			TRUE);
 	    }
 	}

@@ -57,7 +57,13 @@
 
 #if HAVE_STROPTS_H
 #include <sys/types.h>
+#ifdef sinix
+#define buf_t __system_buf_t__
+#endif
 #include <stropts.h>
+#ifdef sinix
+#undef buf_t
+#endif
 # ifdef sun
 #  include <sys/conf.h>
 # endif
@@ -263,7 +269,7 @@ OpenPTY(ttyn)
 }
 #endif
 
-#if defined(HAVE_SVR4_PTYS) && !defined(PTY_DONE)
+#if defined(HAVE_SVR4_PTYS) && !defined(PTY_DONE) && !defined(hpux)
 
 /* NOTE: Even though HPUX can have /dev/ptmx, the code below doesn't work! */
 #define PTY_DONE

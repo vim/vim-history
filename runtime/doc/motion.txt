@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.0g.  Last change: 2000 Aug 16
+*motion.txt*    For Vim version 6.0h.  Last change: 2000 Aug 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -762,7 +762,7 @@ CTRL-I			Go to [count] newer cursor position in jump list
 Jumps are remembered in a jump list.  With the CTRL-O and CTRL-I command you
 can go to cursor positions before older jumps, and back again.  Thus you can
 move up and down the list.  There is a separate jump list for each window.
-The maximum number of entries is fixed at 50.
+The maximum number of entries is fixed at 100.
 
 For example, after three jump commands you have this jump list: >
 

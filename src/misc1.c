@@ -198,7 +198,7 @@ open_line(dir, del_spaces, old_indent)
     pos_t	*pos;
 #endif
 #ifdef FEAT_SMARTINDENT
-    int		do_si = (curbuf->b_p_si
+    int		do_si = (!p_paste && curbuf->b_p_si
 # ifdef FEAT_CINDENT
 					&& !curbuf->b_p_cin
 # endif
@@ -959,11 +959,12 @@ open_line(dir, del_spaces, old_indent)
     /*
      * May do lisp indenting.
      */
-    if (
+    if (!p_paste
 # ifdef FEAT_COMMENTS
-	    leader == NULL &&
+	    && leader == NULL
 # endif
-	    curbuf->b_p_lisp && curbuf->b_p_ai)
+	    && curbuf->b_p_lisp
+	    && curbuf->b_p_ai)
     {
 	fixthisline(get_lisp_indent);
 	p = ml_get_curline();
@@ -974,15 +975,20 @@ open_line(dir, del_spaces, old_indent)
     /*
      * May do indenting after opening a new line.
      */
-    if (
+    if (!p_paste
 # ifdef FEAT_COMMENTS
-	    (leader == NULL || !curbuf->b_p_ai) &&
+	    && (leader == NULL || !curbuf->b_p_ai)
 # endif
-	    curbuf->b_p_cin &&
-	    in_cinkeys(dir == FORWARD ? KEY_OPEN_FORW :
-			KEY_OPEN_BACK, ' ', linewhite(curwin->w_cursor.lnum)))
+	    && (curbuf->b_p_cin
+#  ifdef FEAT_EVAL
+		    || *curbuf->b_p_inde != NUL
+#  endif
+		)
+	    && in_cinkeys(dir == FORWARD
+		? KEY_OPEN_FORW
+		: KEY_OPEN_BACK, ' ', linewhite(curwin->w_cursor.lnum)))
     {
-	fixthisline(get_c_indent);
+	do_c_expr_indent();
 	p = ml_get_curline();
 	ai_col = skipwhite(p) - p;
     }
@@ -1826,8 +1832,8 @@ gchar_cursor()
 pchar_cursor(c)
     int c;
 {
-    *(ml_get_buf(curbuf, curwin->w_cursor.lnum, TRUE) +
-						    curwin->w_cursor.col) = c;
+    *(ml_get_buf(curbuf, curwin->w_cursor.lnum, TRUE)
+						  + curwin->w_cursor.col) = c;
 }
 
 #if 0 /* not used */
@@ -3534,6 +3540,20 @@ skip_string(p)
 #ifdef FEAT_CINDENT
 
 /*
+ * Do C or expression indenting on the current line.
+ */
+    void
+do_c_expr_indent()
+{
+# ifdef FEAT_EVAL
+    if (*curbuf->b_p_inde != NUL)
+	fixthisline(get_expr_indent);
+    else
+# endif
+	fixthisline(get_c_indent);
+}
+
+/*
  * Functions for C-indenting.
  * Most of this originally comes from Eric Fischer.
  */
@@ -4435,26 +4455,28 @@ get_c_indent()
 	    if (*p == ':')
 		++p;
 	    while (*p && p[-1] != ',')
-	    {
 		++p;
-	    }
 	}
 
-	/* if our line starts with the middle comment string, line it up
-	 * with the comment opener per the 'comments' option; otherwise,
-	 * line up with the first character of the comment text.
+	/* If our line starts with the middle comment string, line it up
+	 * with the comment opener per the 'comments' option.
 	 */
-	if (!STRNCMP(theline, lead_middle, STRLEN(lead_middle)) &&
-	    STRNCMP(theline, lead_end, STRLEN(lead_end)))
+	if (STRNCMP(theline, lead_middle, STRLEN(lead_middle)) == 0
+		&& STRNCMP(theline, lead_end, STRLEN(lead_end)) != 0)
 	{
 	    if (off != 0)
-	    {
 		amount += off;
-	    }
 	    else if (c == COM_RIGHT)
-	    {
 		amount += lead_len - STRLEN(lead_middle);
-	    }
+	}
+
+	/* If our line starts with an asterisk, line up with the
+	 * asterisk in the comment opener; otherwise, line up
+	 * with the first character of the comment text.
+	 */
+	else if (theline[0] == '*')
+	{
+	    amount += 1;
 	}
 	else
 	{
@@ -5446,6 +5468,33 @@ find_match(lookfor, ourscope, ind_maxparen, ind_maxcomment)
     return FAIL;
 }
 
+# if defined(FEAT_EVAL) || defined(PROTO)
+/*
+ * Get indent level from 'indentexpr'.
+ */
+    int
+get_expr_indent()
+{
+    int		indent;
+    pos_t	pos = curwin->w_cursor;
+
+    set_vim_var_nr(VV_LNUM, curwin->w_cursor.lnum);
+    ++sandbox;
+    indent = eval_to_number(curbuf->b_p_inde);
+    --sandbox;
+
+    /* restore the cursor position so that 'indentexpr' doesn't need to */
+    curwin->w_cursor = pos;
+    adjust_cursor();
+
+    /* If there is an error, just keep the current indent. */
+    if (indent < 0)
+	indent = get_indent();
+
+    return indent;
+}
+# endif
+
 #endif /* FEAT_CINDENT */
 
 #ifdef FEAT_LISP
@@ -5639,15 +5688,9 @@ get_lisp_indent()
 }
 #endif /* FEAT_LISP */
 
-/*
- * Preserve files and exit.
- * When called IObuff must contain a message.
- */
     void
-preserve_exit()
+prepare_to_exit()
 {
-    buf_t	*buf;
-
 #ifdef FEAT_GUI
     if (gui.in_use)
     {
@@ -5660,8 +5703,8 @@ preserve_exit()
 	windgoto((int)Rows - 1, 0);
 
 	/*
-	 * Switch terminal mode back now, so these messages end up on the
-	 * "normal" screen (if there are two screens).
+	 * Switch terminal mode back now, so messages end up on the "normal"
+	 * screen (if there are two screens).
 	 */
 	settmode(TMODE_COOK);
 #ifdef WIN32
@@ -5670,6 +5713,18 @@ preserve_exit()
 	    stoptermcap();
 	out_flush();
     }
+}
+
+/*
+ * Preserve files and exit.
+ * When called IObuff must contain a message.
+ */
+    void
+preserve_exit()
+{
+    buf_t	*buf;
+
+    prepare_to_exit();
 
     out_str(IObuff);
     screen_start();		    /* don't know where cursor is now */

@@ -838,12 +838,25 @@ mch_isdir(name)
     /*
      * TODO: Find maybe throught FileManager calls
      */
-
     struct stat statb;
 
     if (stat((char *)name, &statb))
 	return FALSE;
     return ((statb.st_mode & S_IFMT) == S_IFDIR ? TRUE : FALSE);
+}
+
+/*
+ * Check what "name" is:
+ * NODE_NORMAL: file or directory (or doesn't exist)
+ * NODE_WRITABLE: writable device, socket, fifo, etc.
+ * NODE_OTHER: non-writable things
+ */
+    int
+mch_nodetype(name)
+    char_u	*name;
+{
+    /* TODO */
+    return NODE_NORMAL;
 }
 
     void
