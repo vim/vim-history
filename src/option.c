@@ -2839,10 +2839,14 @@ set_init_3()
 # endif
 	   )
 	{
-#if defined(FEAT_QUICKFIX) && !defined(WIN3264)
+#if defined(FEAT_QUICKFIX)
 	    if (do_sp)
 	    {
+# ifdef WIN3264
+		p_sp = (char_u *)">&";
+# else
 		p_sp = (char_u *)"|& tee";
+# endif
 		options[idx_sp].def_val[VI_DEFAULT] = p_sp;
 	    }
 #endif
@@ -2869,10 +2873,14 @@ set_init_3()
 		    )
 # endif
 	    {
-#if defined(FEAT_QUICKFIX) && !defined(WIN3264)
+#if defined(FEAT_QUICKFIX)
 		if (do_sp)
 		{
+# ifdef WIN3264
+		    p_sp = (char_u *)">%s 2>&1";
+# else
 		    p_sp = (char_u *)"2>&1| tee";
+# endif
 		    options[idx_sp].def_val[VI_DEFAULT] = p_sp;
 		}
 #endif
