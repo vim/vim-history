@@ -768,12 +768,17 @@ decode_mouse_event(
     static s_dwLastClickTime = 0;
     static BOOL s_fNextIsMiddle = FALSE;
 
+    static int cButtons = 0;	/* number of buttons supported */
+
     const DWORD LEFT = FROM_LEFT_1ST_BUTTON_PRESSED;
     const DWORD MIDDLE = FROM_LEFT_2ND_BUTTON_PRESSED;
     const DWORD RIGHT = RIGHTMOST_BUTTON_PRESSED;
     const DWORD LEFT_RIGHT = LEFT | RIGHT;
 
     int nButton;
+
+    if (cButtons == 0 && !GetNumberOfConsoleMouseButtons(&cButtons))
+	cButtons = 2;
 
     if (!g_fMouseAvail || !g_fMouseActive)
     {
@@ -805,7 +810,7 @@ decode_mouse_event(
     }
 
     /* If no buttons are pressed... */
-    if (pmer->dwButtonState == 0)
+    if ((pmer->dwButtonState & ((1 << cButtons) - 1)) == 0)
     {
 	/* If the last thing returned was MOUSE_RELEASE, ignore this */
 	if (s_fReleased)
@@ -816,8 +821,6 @@ decode_mouse_event(
     }
     else    /* one or more buttons pressed */
     {
-	const int cButtons = GetSystemMetrics(SM_CMOUSEBUTTONS);
-
 	/* on a 2-button mouse, hold down left and right buttons
 	 * simultaneously to get MIDDLE. */
 
@@ -1198,7 +1201,7 @@ tgetch(void)
 
 #ifdef FEAT_CLIENTSERVER
 	(void)WaitForChar(-1L);
-	if (!vim_is_input_buf_empty())
+	if (!vim_is_input_buf_empty() || g_nMouseClick != -1)
 	    return 0;
 #endif
 	if (ReadConsoleInput(g_hConIn, &ir, 1, &cRecords) == 0)
@@ -1266,7 +1269,7 @@ mch_inchar(
 	    want_sniff_request = 0;
 	    return len;
 	}
-	else if(time < 0 || time > 250)
+	else if (time < 0 || time > 250)
 	{
 	    /* don't wait too long, a request might be pending */
 	    time = 250;
