@@ -437,17 +437,21 @@ syntax_start(wp, lnum)
     linenr_T	parsed_lnum;
     linenr_T	first_stored;
     int		dist;
+    static int	changedtick = 0;	/* remember the last change ID */
 
     reg_syn = TRUE;	/* let vim_regexec() know we're using syntax */
 
     /*
      * After switching buffers, invalidate current_state.
+     * Also do this when a change was made, the current state may be invalid
+     * then.
      */
-    if (syn_buf != wp->w_buffer)
+    if (syn_buf != wp->w_buffer || changedtick != syn_buf->b_changedtick)
     {
 	invalidate_current_state();
 	syn_buf = wp->w_buffer;
     }
+    changedtick = syn_buf->b_changedtick;
     syn_win = wp;
 
     /*
