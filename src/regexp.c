@@ -1593,6 +1593,7 @@ regatom(flagp)
 	    }
 	}
 	break;
+#endif
 
       case Magic('%'):
 	{
@@ -1718,7 +1719,6 @@ regatom(flagp)
 	    }
 	}
 	break;
-#endif
 
       case Magic('['):
 collection:

@@ -2,6 +2,12 @@ Tests for folding. vim: set ft=vim :
 
 STARTTEST
 :so small.vim
+:" We also need the +syntax feature here.
+:if !has("syntax")
+   e! test.ok
+   w! test.out
+   qa!
+:endif
 :" basic test if a fold can be created, opened, moving to the end and closed
 /^1
 zf2j:call append("$", "manual " . getline(foldclosed(".")))
