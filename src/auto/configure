@@ -5250,9 +5250,41 @@ if test $ac_cv_type_stack_t = no; then
 EOF
 fi
 
+echo $ac_n "checking whether stack_t has an ss_base field""... $ac_c" 1>&6
+echo "configure:5255: checking whether stack_t has an ss_base field" >&5
+cat > conftest.$ac_ext <<EOF
+#line 5257 "configure"
+#include "confdefs.h"
+
+#include <sys/types.h>
+#if STDC_HEADERS
+#include <stdlib.h>
+#include <stddef.h>
+#endif
+#include <signal.h>
+#include "confdefs.h"
+			
+int main() {
+stack_t sigstk; sigstk.ss_base = 0; 
+; return 0; }
+EOF
+if { (eval echo configure:5272: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6; cat >> confdefs.h <<\EOF
+#define HAVE_SS_BASE 1
+EOF
+
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  echo "$ac_t""no" 1>&6
+fi
+rm -f conftest*
+
 olibs="$LIBS"
 echo $ac_n "checking --with-tlib argument""... $ac_c" 1>&6
-echo "configure:5248: checking --with-tlib argument" >&5
+echo "configure:5288: checking --with-tlib argument" >&5
 # Check whether --with-tlib or --without-tlib was given.
 if test "${with_tlib+set}" = set; then
   withval="$with_tlib"
