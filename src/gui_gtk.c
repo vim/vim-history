@@ -1122,6 +1122,17 @@ dlg_key_press_event(GtkWidget * widget, GdkEventKey * event, CancelData *data)
     return TRUE;
 }
 
+/*
+ * Callback function for when the dialog was destroyed by a window manager.
+ */
+    static void
+dlg_destroy_cb(int *p)
+{
+    *p = TRUE;		/* set dialog_destroyed to break out of the loop */
+    if (gtk_main_level() > 0)
+	gtk_main_quit();
+}
+
 /* ARGSUSED */
     int
 gui_mch_dialog(	int	type,		/* type of dialog */
@@ -1136,6 +1147,7 @@ gui_mch_dialog(	int	type,		/* type of dialog */
     int		i;
     int		butcount;
     int		dialog_status = -1;
+    int		dialog_destroyed = FALSE;
     int		vertical;
 
     GtkWidget		*dialog;
@@ -1188,6 +1200,11 @@ gui_mch_dialog(	int	type,		/* type of dialog */
     gtk_signal_connect_after(GTK_OBJECT(dialog), "key_press_event",
 		    GTK_SIGNAL_FUNC(dlg_key_press_event),
 		    (gpointer) &cancel_data);
+    /* Catch the destroy signal, otherwise we don't notice a window manager
+     * destroying the dialog window. */
+    gtk_signal_connect_object(GTK_OBJECT(dialog), "destroy",
+		    GTK_SIGNAL_FUNC(dlg_destroy_cb),
+		    (gpointer)&dialog_destroyed);
 
     gtk_grab_add(dialog);
 
@@ -1412,7 +1429,8 @@ gui_mch_dialog(	int	type,		/* type of dialog */
     gtk_widget_show(dialog);
 
     /* loop here until the dialog goes away */
-    while (dialog_status == -1 && GTK_WIDGET_DRAWABLE(dialog))
+    while (dialog_status == -1 && !dialog_destroyed
+					       && GTK_WIDGET_DRAWABLE(dialog))
 	gtk_main_iteration_do(TRUE);
 
     if (dialog_status < 0)
