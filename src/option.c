@@ -5709,7 +5709,7 @@ set_bool_option(opt_idx, varp, value, opt_flags)
     else if ((int *)varp == &p_ea)
     {
 	if (p_ea && !old_value)
-	    win_equal(curwin, 0);
+	    win_equal(curwin, FALSE, 0);
     }
 #endif
 
