@@ -119,7 +119,18 @@ substr($0,length($0),1) == "~" { print "<B><FONT COLOR=\"PURPLE\">" substr($0,1,
 
 NR == 1 { nf=split(FILENAME,f,".")
 	print "<HTML>";
-	print "<HEAD><TITLE>Vim documentation: " f[1] "</TITLE></HEAD>";
+
+	print "<HEAD>"
+	if ( FILENAME == "mbyte.txt" ) {
+	    # needs utf-8 as uses many languages
+	    print "<META HTTP-EQUIV=\"Content-type\" content=\"text/html; charset=UTF-8\">";
+	} else {
+	    # common case - Latin1
+	    print "<META HTTP-EQUIV=\"Content-type\" content=\"text/html; charset=ISO-8859-1\">";
+	}
+	print "<TITLE>Vim documentation: " f[1] "</TITLE>";
+	print "</HEAD>";
+
 	print "<BODY BGCOLOR=\"#ffffff\">";
 	print "<H1>Vim documentation: " f[1] "</H1>";
 	print "<A NAME=\"top\"></A>";
