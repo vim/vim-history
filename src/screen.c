@@ -2923,11 +2923,11 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 		getvcol(wp, &wp->w_cursor, NULL, &virtcol, NULL);
 		wp->w_p_list = TRUE;
 	    }
-	    if (virtcol == (colnr_t)(!(State & INSERT) && empty_line
-			    ? 0 : (int)wp->w_cursor.col))
-	    {
+	    /* Don't display %V if it's the same as %c. */
+	    if (opt == STL_VIRTCOL_ALT
+		    && (virtcol == (colnr_t)(!(State & INSERT) && empty_line
+			    ? 0 : (int)wp->w_cursor.col)))
 		break;
-	    }
 	    num = (long)virtcol + 1;
 	    break;
 
