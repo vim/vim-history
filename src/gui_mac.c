@@ -416,7 +416,7 @@ EventModifiers2VimMouseModifiers(EventModifiers macModifiers)
  * Convert the modifiers of an Event into vim's modifiers (keys)
  */
 
-    int_u
+    static int_u
 EventModifiers2VimModifiers(EventModifiers macModifiers)
 {
     int_u vimModifiers = 0x00;
@@ -4507,7 +4507,7 @@ typedef struct
 
 #define MoveRectTo(r,x,y) OffsetRect(r,x-r->left,y-r->top)
 
-    void
+    static void
 macMoveDialogItem(
     DialogRef	theDialog,
     short	itemNumber,
@@ -4540,7 +4540,7 @@ macMoveDialogItem(
 #endif
 }
 
-    void
+    static void
 macSizeDialogItem(
     DialogRef	theDialog,
     short	itemNumber,
@@ -4576,7 +4576,7 @@ macSizeDialogItem(
 #endif
 }
 
-    void
+    static void
 macSetDialogItemText(
     DialogRef	theDialog,
     short	itemNumber,
