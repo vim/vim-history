@@ -62,7 +62,7 @@
 
 /* The first implementation (working only with Netbeans) returned "1.1".  The
  * protocol implemented here also supports A-A-P. */
-static char *ExtEdProtocolVersion = "2.1";
+static char *ExtEdProtocolVersion = "2.2";
 
 static long pos2off __ARGS((buf_T *, pos_T *));
 static pos_T *off2pos __ARGS((buf_T *, long));
@@ -719,6 +719,8 @@ nb_parse_cmd(char_u *cmd)
 
     cmdno = strtol((char *)q, (char **)&q, 10);
 
+    q = skipwhite(q);
+
     if (nb_do_cmd(bufno, verb, isfunc, cmdno, q) == FAIL)
     {
 	nbdebug(("nb_parse_cmd: Command error for \"%s\"\n", cmd));
@@ -771,6 +773,15 @@ nb_getbufno(buf_T *bufp)
     }
 
     return -1;
+}
+
+/*
+ * Is this a NetBeans-owned buffer?
+ */
+    int
+isNetbeansBuffer(buf_T *bufp)
+{
+    return bufp->b_netbeans_file;
 }
 
 /*
@@ -1010,7 +1021,8 @@ nb_unquote(char_u *p, char_u **endp)
 
     if (*p++ != '"')
     {
-	nbdebug(("nb_unquote called with string that doesn't start with a quote!: %s", p));
+	nbdebug(("nb_unquote called with string that doesn't start with a quote!: %s\n",
+			p));
 	result[0] = NUL;
 	return result;
     }
@@ -1311,7 +1323,7 @@ nb_do_cmd(
 	    off = strtol((char *)args, (char **)&args, 10);
 
 	    /* get text to be inserted */
-	    ++args; /* skip space */
+	    args = skipwhite(args);
 	    args = to_free = (char_u *)nb_unquote(args, NULL);
 
 	    if (buf == NULL || buf->bufp == NULL)
@@ -1494,7 +1506,7 @@ nb_do_cmd(
 		return FAIL;
 	    }
 	    vim_free(buf->displayname);
-	    buf->displayname = nb_unquote(++args, NULL);
+	    buf->displayname = nb_unquote(args, NULL);
 	    nbdebug(("    SETTITLE %d %s\n", bufno, buf->displayname));
 /* =====================================================================*/
 	}
@@ -1528,7 +1540,7 @@ nb_do_cmd(
 		EMSG("E641: null buf in setBufferNumber");
 		return FAIL;
 	    }
-	    to_free = (char_u *)nb_unquote(++args, NULL);
+	    to_free = (char_u *)nb_unquote(args, NULL);
 	    if (to_free == NULL)
 		return FAIL;
 	    bufp = buflist_findname(to_free);
@@ -1567,7 +1579,7 @@ nb_do_cmd(
 		return FAIL;
 	    }
 	    vim_free(buf->displayname);
-	    buf->displayname = nb_unquote(++args, NULL);
+	    buf->displayname = nb_unquote(args, NULL);
 	    nbdebug(("    SETFULLNAME %d %s\n", bufno, buf->displayname));
 
 	    netbeansReadFile = 0; /* don't try to open disk file */
@@ -1588,7 +1600,7 @@ nb_do_cmd(
 	    }
 	    /* Edit a file: like create + setFullName + read the file. */
 	    vim_free(buf->displayname);
-	    buf->displayname = nb_unquote(++args, NULL);
+	    buf->displayname = nb_unquote(args, NULL);
 	    nbdebug(("    EDITFILE %d %s\n", bufno, buf->displayname));
 	    do_ecmd(0, (char_u *)buf->displayname, NULL, NULL, ECMD_ONE,
 						     ECMD_HIDE + ECMD_OLDBUF);
@@ -1603,7 +1615,6 @@ nb_do_cmd(
 	}
 	else if (streq((char *)cmd, "setVisible"))
 	{
-	    ++args;
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
 /*		EMSG("E645: null bufp in setVisible"); */
@@ -1636,7 +1647,6 @@ nb_do_cmd(
 	}
 	else if (streq((char *)cmd, "setModified"))
 	{
-	    ++args;
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
 /*		EMSG("E646: null bufp in setModified"); */
@@ -1667,7 +1677,7 @@ nb_do_cmd(
 	    if (balloonEval != NULL)
 	    {
 		vim_free(text);
-		text = nb_unquote(++args, NULL);
+		text = nb_unquote(args, NULL);
 		if (text != NULL)
 		    gui_mch_post_balloon(balloonEval, (char_u *)text);
 	    }
@@ -1681,7 +1691,6 @@ nb_do_cmd(
 	    char_u *s;
 #endif
 
-	    ++args;
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
 		EMSG("E647: null bufp in setDot");
@@ -1997,6 +2006,46 @@ nb_do_cmd(
 	    }
 /* =====================================================================*/
 	}
+	else if (streq((char *)cmd, "save"))
+	{
+	    if (buf == NULL || buf->bufp == NULL)
+	    {
+		nbdebug(("    null bufp in %s command", cmd));
+		return FAIL;
+	    }
+
+	    /* the following is taken from ex_cmds.c (do_wqall function) */
+	    if (bufIsChanged(buf->bufp))
+	    {
+		/* Only write if the buffer can be written. */
+		if (p_write
+			&& !buf->bufp->b_p_ro
+			&& buf->bufp->b_ffname != NULL
+#ifdef FEAT_QUICKFIX
+			&& !bt_dontwrite(buf->bufp)
+#endif
+			)
+		{
+		    buf_write_all(buf->bufp, FALSE);
+#ifdef FEAT_AUTOCMD
+		    /* an autocommand may have deleted the buffer */
+		    if (!buf_valid(buf->bufp))
+			buf->bufp = NULL;
+#endif
+		}
+	    }
+/* =====================================================================*/
+	}
+	else if (streq((char *)cmd, "netbeansBuffer"))
+	{
+	    if (buf == NULL || buf->bufp == NULL)
+	    {
+		nbdebug(("    null bufp in %s command", cmd));
+		return FAIL;
+	    }
+	    buf->bufp->b_netbeans_file = *args == 'T' ? TRUE : FALSE;
+/* =====================================================================*/
+	}
 	else if (streq((char *)cmd, "version"))
 	{
 	    nbdebug(("    Version = %s\n", (char *) args));
@@ -2266,7 +2315,7 @@ netbeans_file_opened(char *filename)
     sprintf(buffer, "0:fileOpened=%d \"%s\" %s %s\n",
 	    0,
 	    (char *)q,
-	    "F",  /* open in NetBeans */
+	    "T",  /* open in NetBeans */
 	    "F"); /* modified */
 
     vim_free(q);
@@ -2464,6 +2513,30 @@ netbeans_unmodified(buf_T *bufp)
 }
 
 /*
+ * Send a button release event back to netbeans. Its up to netbeans
+ * to decide what to do (if anything) with this event.
+ */
+    void
+netbeans_button_release(int button)
+{
+    char	buf[128];
+    int		bufno;
+
+    bufno = nb_getbufno(curbuf);
+
+    if (bufno >= 0 && curwin != NULL && curwin->w_buffer == curbuf)
+    {
+	int lnum = curwin->w_cursor.lnum;
+	int col = mouse_col - curwin->w_wincol - (curwin->w_p_nu ? 9 : 1);
+
+	sprintf(buf, "%d:buttonRelease=%d %d %d %d\n", bufno, cmdno, button, lnum, col);
+	nbdebug(("EVT: %s", buf));
+	nb_send(buf, "netbeans_button_release");
+    }
+}
+
+
+/*
  * Send a keypress event back to netbeans. This usualy simulates some
  * kind of function key press.
  */
@@ -2532,7 +2605,7 @@ netbeans_keycommand(int key)
  * Send a save event to netbeans.
  */
     void
-netbeans_saved(buf_T *bufp)
+netbeans_save_buffer(buf_T *bufp)
 {
     char_u	buf[64];
     int		bufno;
@@ -2546,7 +2619,7 @@ netbeans_saved(buf_T *bufp)
 
     sprintf((char *)buf, "%d:save=%d\n", bufno, cmdno);
     nbdebug(("EVT: %s", buf));
-    nb_send((char *)buf, "netbeans_saved");
+    nb_send((char *)buf, "netbeans_save_buffer");
 }
 
 

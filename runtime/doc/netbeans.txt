@@ -1,4 +1,4 @@
-*netbeans.txt*  For Vim version 6.2.  Last change: 2003 Sep 12
+*netbeans.txt*  For Vim version 6.2.  Last change: 2004 Jan 17
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -14,8 +14,8 @@ NetBeans ExternalEditor Integration Features		*netbeans*
 6.  Obtaining the External Editor Module	|obtaining-exted|
 7.  Setting up NetBeans to run with Vim		|netbeans-setup|
 8.  Messages					|netbeans-messages|
-9.  Running Vim from Netbeans			|netbeans-run|
-10. Netbeans protocol				|netbeans-protocol|
+9.  Running Vim from NetBeans			|netbeans-run|
+10. NetBeans protocol				|netbeans-protocol|
 11. Known problems				|netbeans-problems|
 
 {Vi does not have any of these features}
@@ -26,7 +26,7 @@ NetBeans ExternalEditor Integration Features		*netbeans*
 
 NetBeans is an open source Integrated Development Environment developed
 jointly by Sun Microsystems, Inc. and the netbeans.org developer community.
-Initialy just a Java IDE, NetBeans has had C, C++, and Fortran support added
+Initially just a Java IDE, NetBeans has had C, C++, and Fortran support added
 in recent releases.
 
 For more information visit the main NetBeans web site http://www.netbeans.org
@@ -91,7 +91,7 @@ On MS-Windows
 
 The Win32 support is now in beta stage.
 
-To use XPM signs on Win32 (e.g. when using with Netbeans) you can compile
+To use XPM signs on Win32 (e.g. when using with NetBeans) you can compile
 XPM by yourself or use precompiled libraries from http://iamphet.nm.ru/xpm
 (for MS Visual C++) or http://gnuwin32.sourceforge.net (for MinGW).
 
@@ -137,7 +137,7 @@ is to use the NetBeans Update Center to download and install the module.
 Unfortunately, some versions do not have this module in their update
 center. If you cannot download via the update center you will need to
 download sources and build the module. I will try and get the module
-available from the NetBeans Update Center so building will be unnecesary.
+available from the NetBeans Update Center so building will be unnecessary.
 Also check http://externaleditor.netbeans.org for other availability options.
 
 To download the External Editor sources via CVS and build your own module,
@@ -156,7 +156,7 @@ External Editor. The right hand pane should contain a Properties tab and
 an Expert tab. In the Properties tab make sure the "Editor Type" is set
 to "Vim". In the Expert tab make sure the "Vim Command" is correct.
 
-You should be carefull if you change the "Vim Command". There are command
+You should be careful if you change the "Vim Command". There are command
 line options there which must be there for the connection to be properly
 set up. You can change the command name but thats about it. If your gvim
 can be found by your $PATH then the VIM Command can start with "gvim". If
@@ -172,36 +172,56 @@ Editor will only open MIME types specified in this property.
 ==============================================================================
 8. Messages						*netbeans-messages*
 
-These messages are specific for Netbeans:
+These messages are specific for NetBeans:
 
 							*E463*
 Region is guarded, cannot modify
-		Netbeans defines guarded areas in the text, which you cannot
+		NetBeans defines guarded areas in the text, which you cannot
 		change.
 
-==============================================================================
-9. Running Vim from Netbeans				*netbeans-run*
+							*E656*
+NetBeans dissallows writes of unmodified buffers
+		NetBeans does not support writes of unmodified buffers that
+		were opened from NetBeans.
 
-Netbeans starts Vim with the |-nb| argument.  The full form is: >
+							*E657*
+Partial writes disallowed for NetBeans buffers
+		NetBeans does not support partial writes for buffers that were
+		opened from NetBeans.
+
+==============================================================================
+9. Running Vim from NetBeans				*netbeans-run*
+
+NetBeans starts Vim with the |-nb| argument.  The full form is: >
 	-nb:{hostname}:{addr}:{password}
 
-{hostname} is the name of the machine where Netbeans is running.  When omitted
+{hostname} is the name of the machine where NetBeans is running.  When omitted
 the environment variable "__NETBEANS_HOST" is used or the default "localhost".
 
-{addr} is the port number for Netbeans.  When omitted the environment variable
+{addr} is the port number for NetBeans.  When omitted the environment variable
 "__NETBEANS_SOCKET" is used or the default 3219.
 
-{password} is the password for connecting to Netbeans.  When omitted the
+{password} is the password for connecting to NetBeans.  When omitted the
 environment variable "__NETBEANS_VIM_PASSWORD" is used or "changeme".
 
 ==============================================================================
-10. Netbeans protocol					*netbeans-protocol*
+10. NetBeans protocol					*netbeans-protocol*
 
-The communication between Netbeans and Vim uses plain text messages.  This
+The communication between NetBeans and Vim uses plain text messages.  This
 protocol was first designed to work with the external editor module of
-Netbeans (see http://externaleditor.netbeans.org).  Later it was extended to
+NetBeans (see http://externaleditor.netbeans.org).  Later it was extended to
 work with Agide (A-A-P GUI IDE, see http://www.a-a-p.org).  The extensions are
 marked with "version 2.1".
+
+Version 2.2 of the protocol has several minor changes which should only
+affect NetBeans users (ie, not Agide users). However, a bug was fixed which
+could cause confusion. The netbeans_saved() function sent a "save" protocol
+command. In protocol version 2.1 and earlier this was incorrectly interpreted
+as a notification that a write had taken place. In reality, it told NetBeans
+to save the file so multiple writes were being done. This caused various
+problems and has been fixed in 2.2. To decrease the likelyhood of this
+confusion happening again, netbeans_saved() has been renamed to
+netbeans_save_buffer().
 
 The messages are currently sent over a socket.  Since the messages are in
 plain UTF-8 text this protocol could also be used with any other communication
@@ -304,7 +324,7 @@ addAnno serNum typeNum off len
 		   typeNum	number	sequence number of the annotation
 					defined with defineAnnoType for this
 					buffer
-		   off		number	offset where annotion is to be placed
+		   off		number	offset where annotation is to be placed
 		   len		number	not used
 		In version 2.1 "lnum/col" can be used instead of "off".
 
@@ -316,7 +336,7 @@ close		Close the buffer.  This leaves us without current buffer, very
 
 create		Creates a buffer without a name.  Replaces the current buffer
 		(it's hidden when it was changed).
-		Netbeans uses this as the first command for a file that is
+		NetBeans uses this as the first command for a file that is
 		being opened.  The sequence of commands could be:
 			create
 			setCaretListener	(ignored)
@@ -374,10 +394,15 @@ initDone	Mark the buffer as ready for use.  Implicitly makes the buffer
 moveAnnoToFront serNum
 		Not implemented.
 
+netbeansBuffer isNetbeansBuffer
+		If "isNetbeansBuffer" is "T" then this buffer is ``owned'' by
+		NetBeans.
+		New in version 2.2.
+
 putBufferNumber pathname
 		Associate a buffer number with the Vim buffer by the name
 		"pathname", a string argument.  To be used when the editor
-		repored editing another file to the IDE and the IDE needs to
+		reported editing another file to the IDE and the IDE needs to
 		tell the editor what buffer number it will use for this file.
 		Also marks the buffer as initialized.
 		New in version 2.1.
@@ -388,6 +413,16 @@ raise		Bring the editor to the foreground.
 removeAnno serNum
 		Remove a previously place annotation for this buffer.
 		"serNum" is the same number used in addAnno.
+
+save		Save the buffer when it was modified.  The other side of the
+		interface is expected to write the buffer and invoke
+		"setModified" to reset the "changed" flag of the buffer.
+		The writing is skipped when one of these conditions is true:
+		- 'write' is not set
+		- the buffer is read-only
+		- the buffer does not have a file name
+		- 'buftype' disallows writing
+		New in version 2.2.
 
 setAsUser	Not implemented.
 
@@ -435,7 +470,7 @@ setStyle	Not implemented.
 
 setTitle name
 		Set the title for the buffer to "name", a string argument.
-		The title is only used for Netbeans functions, not by Vim.
+		The title is only used for NetBeans functions, not by Vim.
 
 setVisible visible
 		When the boolean argument "visible" is "T", goto the buffer.
@@ -550,6 +585,15 @@ balloonText text
 		the mouse pointer.
 		New in version 2.1.
 
+buttonRelease button lnum col
+		Report which button was pressed and the location of the cursor
+		at the time of the release.  Only for buffers that are owned
+		by NetBeans.  This event is not sent if the button was
+		released while the mouse was in the status line or in a
+		separator line. If col is less than 1 the button release was
+		in the sign area.
+		New in version 2.2.
+
 fileClosed	Not implemented.
 
 fileModified	Not implemented.
@@ -558,7 +602,7 @@ fileOpened pathname open modified
 		A file was opened by the user.
 		Arguments:
 		   pathname	string	  name of the file
-		   open		boolean   always "F"
+		   open		boolean   always "T"
 		   modified	boolean   always "F"
 
 geometry cols rows x y
@@ -630,7 +674,7 @@ unmodified	The buffer is now unmodified.
 		Only fired when enabled, see "startDocumentListen".
 
 version vers	Report the version of the interface implementation.  Vim
-		reports "2.1" (including the quotes).
+		reports "2.2" (including the quotes).
 
 
 10.6 Special messages					*nb-special*
