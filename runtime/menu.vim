@@ -2,7 +2,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Oct 25
+" Last Change:	2001 Oct 29
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -203,7 +203,7 @@ endfun
 
 fun! s:ToggleGuiOption(option)
     " If a:option is already set in guioptions, then we want to remove it
-    if match(&guioptions, a:option) > -1
+    if match(&guioptions, "\\C" . a:option) > -1
 	exec "set go-=" . a:option
     else
 	exec "set go+=" . a:option
