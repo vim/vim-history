@@ -4230,6 +4230,9 @@ f_has(argvars, retvar)
 #ifdef FEAT_AUTOCMD
 	"autocmd",
 #endif
+#ifdef FEAT_BEVAL
+	"balloon_eval",
+#endif
 #if defined(SOME_BUILTIN_TCAPS) || defined(ALL_BUILTIN_TCAPS)
 	"builtin_terms",
 # ifdef ALL_BUILTIN_TCAPS
@@ -4468,6 +4471,9 @@ f_has(argvars, retvar)
 #endif
 #ifdef FEAT_SUN_WORKSHOP
 	"sun_workshop",
+#endif
+#ifdef FEAT_NETBEANS_INTG
+	"netbeans_intg",
 #endif
 #ifdef FEAT_SYN_HL
 	"syntax",

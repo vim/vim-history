@@ -404,7 +404,7 @@ typedef struct Gui
     int		toolbar_height;	    /* height of the toolbar */
 #endif
 
-#ifdef FEAT_BEVAL
+#ifdef FEAT_BEVAL_TIP
     /* Tooltip properties; also used for balloon evaluation */
     char_u	*rsrc_tooltip_font_name; /* tooltip font name */
     char	*rsrc_tooltip_fg_name;	/* tooltip foreground color name */

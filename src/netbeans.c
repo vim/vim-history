@@ -57,6 +57,9 @@ static void nb_parse_cmd __ARGS((char_u *));
 static int  nb_do_cmd __ARGS((int, char_u *, int, int, char_u *));
 static void nb_send __ARGS((char *buf, char *fun));
 static void warn __ARGS((char *fmt, ...));
+#ifdef FEAT_BEVAL
+static void netbeans_beval_cb __ARGS((BalloonEval *beval, int state));
+#endif
 
 static int sd = -1;			/* socket fd for Netbeans connection */
 #ifdef FEAT_GUI_MOTIF
@@ -72,8 +75,10 @@ static int haveConnection = FALSE;	/* socket is connected and
 static int oldFire = 1;
 static int exit_delay = 2;		/* exit delay in seconds */
 
-#if defined(FEAT_BEVAL)
+#ifdef FEAT_BEVAL
+# if defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)
 extern Widget	textArea;
+# endif
 BalloonEval	*balloonEval = NULL;
 #endif
 
@@ -118,6 +123,17 @@ netbeans_disconnect(void)
     void
 netbeans_gtk_connect(void)
 {
+# ifdef FEAT_BEVAL
+    /*
+     * Set up the Balloon Expression Evaluation area.
+     * Always create it but disable it when 'ballooneval' isn't set.
+     */
+    balloonEval = gui_mch_create_beval_area(gui.drawarea, NULL,
+					    &netbeans_beval_cb, NULL);
+    if (!p_beval)
+	gui_mch_disable_beval_area(balloonEval);
+# endif
+
     netbeans_connect();
     if (sd > 0)
     {
@@ -2175,19 +2191,26 @@ netbeans_startup_done(void)
 {
     char *cmd = "0:startupDone=0\n";
 
+    if (!haveConnection)
+	return;
+
     nbdebug(("EVT: %s", cmd));
     nb_send(cmd, "netbeans_startup_done");
 
-#if defined(FEAT_BEVAL)
-    /*
-     * Set up the Balloon Expression Evaluation area.
-     * Always create it but disable it when 'ballooneval' isn't set.
-     */
-    balloonEval = gui_mch_create_beval_area(textArea, NULL,
-						     netbeans_beval_cb, NULL);
-    if (!p_beval)
-	gui_mch_disable_beval_area(balloonEval);
-#endif
+# if defined(FEAT_BEVAL) && defined(FEAT_GUI_MOTIF)
+    if (gui.in_use)
+    {
+	/*
+	 * Set up the Balloon Expression Evaluation area for Motif.
+	 * GTK can do it earlier...
+	 * Always create it but disable it when 'ballooneval' isn't set.
+	 */
+	balloonEval = gui_mch_create_beval_area(textArea, NULL,
+						    &netbeans_beval_cb, NULL);
+	if (!p_beval)
+	    gui_mch_disable_beval_area(balloonEval);
+    }
+# endif
 }
 
 #if defined(FEAT_GUI_MOTIF) || defined(PROTO)
@@ -2198,6 +2221,9 @@ netbeans_startup_done(void)
 netbeans_frame_moved(int new_x, int new_y)
 {
     char buf[128];
+
+    if (!haveConnection)
+	return;
 
     sprintf(buf, "0:geometry=%d %d %d %d %d\n",
 		    cmdno, (int)Columns, (int)Rows, new_x, new_y);
@@ -2213,6 +2239,9 @@ netbeans_frame_moved(int new_x, int new_y)
 netbeans_file_opened(char *filename)
 {
     char buffer[2*MAXPATHLEN];
+
+    if (!haveConnection)
+	return;
 
     sprintf(buffer, "0:fileOpened=%d \"%s\" %s %s\n",
 	    0,
@@ -2236,6 +2265,9 @@ netbeans_file_closed(buf_T *bufp)
     int		bufno = nb_getbufno(bufp);
     nbbuf_T	*nbbuf = nb_get_buf(bufno);
     char	buffer[2*MAXPATHLEN];
+
+    if (!haveConnection)
+	return;
 
     if (!netbeansCloseFile)
     {
@@ -2271,7 +2303,7 @@ nb_bufp2nbbuf_fire(buf_T *bufp, int *bufnop)
     int		bufno;
     nbbuf_T	*nbbuf;
 
-    if (!netbeansFireChanges)
+    if (!haveConnection || !netbeansFireChanges)
 	return NULL;		/* changes are not reported at all */
 
     bufno = nb_getbufno(bufp);

@@ -226,7 +226,12 @@ workshop_load_file(
 	 * Set up the Balloon Expression Evaluation area.
 	 * It's enabled by default.  Disable it when 'ballooneval' is off.
 	 */
+# ifdef FEAT_GUI_GTK
+	balloonEval = gui_mch_create_beval_area(gui.drawarea, NULL,
+						&bevalCB, NULL);
+# else
 	balloonEval = gui_mch_create_beval_area(textArea, NULL, bevalCB, NULL);
+# endif
 	if (!p_beval)
 	    gui_mch_disable_beval_area(balloonEval);
     }

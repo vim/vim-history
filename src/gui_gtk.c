@@ -660,6 +660,25 @@ toolbar_remove_item_by_text(GtkToolbar *tb, const char *text)
 }
 #endif
 
+
+#if defined(FEAT_TOOLBAR) || defined(PROTO)
+    void
+gui_mch_menu_set_tip(vimmenu_T *menu)
+{
+    if (menu->id != NULL && menu->parent != NULL &&
+        gui.toolbar != NULL && menu_is_toolbar(menu->parent->name))
+    {
+        char_u *tooltip;
+
+        tooltip = menu->strings[MENU_INDEX_TIP];
+
+        gtk_tooltips_set_tip(GTK_TOOLBAR(gui.toolbar)->tooltips,
+                             menu->id, (const char *)tooltip, NULL);
+    }
+}
+#endif /* FEAT_TOOLBAR */
+
+
 #if defined(FEAT_MENU) || defined(PROTO)
 /*
  * Destroy the machine specific menu widget.
@@ -1415,13 +1434,13 @@ gui_mch_dialog(	int	type,		/* type of dialog */
     if (butcount > 0)
     {
 	--def_but;		/* 1 is first button */
-	if (def_but < 0)
-	    def_but = 0;
 	if (def_but >= butcount)
-	    def_but = butcount - 1;
-
-	gtk_widget_grab_focus(button[def_but]);
-	gtk_widget_grab_default(button[def_but]);
+	    def_but = -1;
+	if (def_but >= 0)
+	{
+	    gtk_widget_grab_focus(button[def_but]);
+	    gtk_widget_grab_default(button[def_but]);
+	}
     }
 
     if (textfield != NULL)

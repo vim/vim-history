@@ -1089,14 +1089,19 @@
  *			debugger and for tooltips.
  *			Currently only for Athena and Motif.
  */
-#if (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)) \
-	&& (   defined(FEAT_TOOLBAR) \
+#if (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA) \
+                             || defined(FEAT_GUI_GTK)) \
+	&& (   (defined(FEAT_TOOLBAR) && !defined(FEAT_GUI_GTK)) \
             || defined(FEAT_SUN_WORKSHOP) \
             || defined(FEAT_NETBEANS_INTG))
 # define FEAT_BEVAL
-# ifndef FEAT_XFONTSET
+# if !defined(FEAT_XFONTSET) && !defined(FEAT_GUI_GTK)
 #  define FEAT_XFONTSET
 # endif
+#endif
+
+#if defined(FEAT_BEVAL) && (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA))
+# define FEAT_BEVAL_TIP		/* balloon eval used for toolbar tooltip */
 #endif
 
 #if defined(FEAT_SUN_WORKSHOP) || defined(FEAT_NETBEANS_INTG)

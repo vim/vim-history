@@ -629,8 +629,8 @@ gui_mch_start_blink()
 }
 
 /*ARGSUSED*/
-    static void
-enter_notify_event(GtkContainer * container, gpointer data)
+    static gint
+enter_notify_event(GtkWidget *widget, GdkEventCrossing *event, gpointer data)
 {
     if (blink_state == BLINK_NONE)
 	gui_mch_start_blink();
@@ -638,14 +638,18 @@ enter_notify_event(GtkContainer * container, gpointer data)
     /* make sure keyboard input goes there */
     if (gtk_socket_id == 0 || !GTK_WIDGET_HAS_FOCUS(gui.drawarea))
 	gtk_widget_grab_focus(gui.drawarea);
+
+    return FALSE;
 }
 
 /*ARGSUSED*/
-    static void
-leave_notify_event(GtkContainer * container, gpointer data)
+    static gint
+leave_notify_event(GtkWidget* widget, GdkEventCrossing *event, gpointer data)
 {
     if (blink_state != BLINK_NONE)
 	gui_mch_stop_blink();
+
+    return FALSE;
 }
 
 /*ARGSUSED*/
@@ -1976,6 +1980,8 @@ gui_mch_init()
 			  GDK_LEAVE_NOTIFY_MASK |
 			  GDK_BUTTON_PRESS_MASK |
 			  GDK_BUTTON_RELEASE_MASK |
+			  GDK_KEY_PRESS_MASK |
+			  GDK_KEY_RELEASE_MASK |
 			  GDK_POINTER_MOTION_MASK |
 			  GDK_POINTER_MOTION_HINT_MASK);
 
@@ -2252,8 +2258,7 @@ gui_mch_open()
 
     /* Make this run after any internal handling of the client event happened
      * to make sure that all changes implicated by it are already in place and
-     * we thus can make our own adjustments.
-     */
+     * we thus can make our own adjustments.  */
     gtk_signal_connect_after(GTK_OBJECT(gui.mainwin), "client_event",
 		    GTK_SIGNAL_FUNC(client_event_cb), NULL);
 
@@ -3744,17 +3749,19 @@ gui_mch_get_rgb(guicolor_T pixel)
     GdkVisual		*visual;
     GdkColormap		*cmap;
     GdkColorContext	*cc;
-    GdkColor		c;
+    GdkColor		color;
 
     visual = gtk_widget_get_visual(gui.mainwin);
     cmap = gtk_widget_get_colormap(gui.mainwin);
     cc = gdk_color_context_new(visual, cmap);
 
-    c.pixel = pixel;
-    gdk_color_context_query_color(cc, &c);
+    color.pixel = pixel;
+    gdk_color_context_query_color(cc, &color);
+    gdk_color_context_free(cc);
 
-    return ((c.red & 0xff00) << 8) + (c.green & 0xff00)
-						    + ((unsigned)c.blue >> 8);
+    return (((unsigned)color.red   & 0xff00) << 8)
+	 +  ((unsigned)color.green & 0xff00)
+	 + (((unsigned)color.blue  & 0xff00) >> 8);
 }
 
 /*
@@ -3882,69 +3889,121 @@ mch_set_mouse_shape(shape)
 #endif
 
 #if defined(FEAT_SIGN_ICONS) || defined(PROTO)
-
-/* Signs are currently always 2 chars wide.  Hopefully the font is big enough
- * to provide room for the bitmap! */
-# define SIGN_WIDTH (gui.char_width * 2)
+/*
+ * Signs are currently always 2 chars wide.  The pixmap will be cut off
+ * if the current font is not big enough, or centered if it's too small.
+ */
+# define SIGN_WIDTH  (2 * gui.char_width)
 # define SIGN_HEIGHT (gui.char_height)
 
-#if 0	/* not used */
-    void
-gui_mch_clearsign(row)
-    int		row;
+typedef struct
 {
-    if (gui.in_use)
-	XClearArea(gui.dpy, gui.wid, 0, TEXT_Y(row) - gui.char_height,
-		SIGN_WIDTH, gui.char_height, FALSE);
+    GdkPixmap *pixmap;
+    GdkBitmap *mask;
 }
-#endif
+signicon_T;
 
     void
-gui_mch_drawsign(row, col, typenr)
-    int		row;
-    int		col;
-    int		typenr;
+gui_mch_drawsign(int row, int col, int typenr)
 {
-    GdkPixmap	*sign = 0;
-    gint	width;
-    gint	height;
+    signicon_T *sign;
 
-    if (gui.in_use && (sign = (GdkPixmap *)sign_get_image(typenr)) != NULL)
+    sign = (signicon_T *)sign_get_image(typenr);
+
+    if (sign != NULL && sign->pixmap != NULL
+	&& gui.drawarea != NULL && gui.drawarea->window != NULL)
     {
-	gdk_window_get_size(sign, &width, &height);
-	gdk_window_clear_area(gui.drawarea->window, TEXT_X(col),
-		TEXT_Y(row) - height,
-		SIGN_WIDTH, gui.char_height);
-	gdk_draw_pixmap(gui.drawarea->window, gui.text_gc, sign, 0, 0,
-		TEXT_X(col) + (SIGN_WIDTH - width) / 2,
-		TEXT_Y(row) - (SIGN_HEIGHT - height) / 2 - height,
-		width, height);
+	int width;
+	int height;
+	int xoffset;
+	int yoffset;
+
+	gdk_window_get_size(sign->pixmap, &width, &height);
+
+	/* The origin is the upper-left corner of the pixmap.  Therefore
+	 * these offset may become negative if the pixmap is smaller than
+	 * the 2x1 cells reserved for the sign icon. */
+	xoffset = (width  - SIGN_WIDTH)  / 2;
+	yoffset = (height - SIGN_HEIGHT) / 2;
+
+	gdk_gc_set_exposures(gui.text_gc,
+			     gui.visibility != GDK_VISIBILITY_UNOBSCURED);
+	gdk_gc_set_foreground(gui.text_gc, gui.bgcolor);
+
+	gdk_draw_rectangle(gui.drawarea->window,
+			   gui.text_gc,
+			   TRUE,
+			   FILL_X(col),
+			   FILL_Y(row),
+			   SIGN_WIDTH,
+			   SIGN_HEIGHT);
+
+	/* Set the clip mask for bilevel transparency */
+	if (sign->mask != NULL)
+	{
+	    gdk_gc_set_clip_origin(gui.text_gc,
+				   FILL_X(col) - xoffset,
+				   FILL_Y(row) - yoffset);
+	    gdk_gc_set_clip_mask(gui.text_gc, sign->mask);
+	}
+
+	gdk_draw_pixmap(gui.drawarea->window,
+			gui.text_gc,
+			sign->pixmap,
+			MAX(0, xoffset),
+			MAX(0, yoffset),
+			FILL_X(col) - MIN(0, xoffset),
+			FILL_Y(row) - MIN(0, yoffset),
+			MIN(width,  SIGN_WIDTH),
+			MIN(height, SIGN_HEIGHT));
+
+	gdk_gc_set_clip_mask(gui.text_gc, NULL);
     }
 }
 
     void *
-gui_mch_register_sign(signfile)
-    char_u	    *signfile;
+gui_mch_register_sign(char_u *signfile)
 {
-    GdkPixmap	    *sign;
+    signicon_T *sign = NULL;
 
-    sign = NULL;
-    if (signfile[0] != NUL && signfile[0] != '-')
+    if (signfile[0] != NUL && signfile[0] != '-'
+	&& gui.drawarea != NULL && gui.drawarea->window != NULL)
     {
-	sign = gdk_pixmap_create_from_xpm(gui.drawarea->window, NULL, NULL,
-					   (char *)signfile);
-	if (sign == NULL)
-	    EMSG(_("E255: Couldn't read in sign data!"));
+	sign = (signicon_T *)alloc(sizeof(signicon_T));
+
+	if (sign != NULL) /* NULL == OOM == "cannot really happen" */
+	{
+	    sign->mask = NULL;
+	    sign->pixmap = gdk_pixmap_colormap_create_from_xpm(
+		    gui.drawarea->window, NULL,
+		    &sign->mask, NULL,
+		    (const char *)signfile);
+
+	    if (sign->pixmap == NULL)
+	    {
+		vim_free(sign);
+		sign = NULL;
+		EMSG(_("E255: Couldn't read in sign data!"));
+	    }
+	}
     }
-
-    return (void *)sign;
+    return sign;
 }
 
-/*ARGSUSED*/
     void
-gui_mch_destroy_sign(sign)
-    void *sign;
+gui_mch_destroy_sign(void *sign)
 {
-    /* ??? */
+    if (sign != NULL)
+    {
+	signicon_T *signicon = (signicon_T *)sign;
+
+	if (signicon->pixmap != NULL)
+	    gdk_pixmap_unref(signicon->pixmap);
+	if (signicon->mask != NULL)
+	    gdk_bitmap_unref(signicon->mask);
+
+	vim_free(signicon);
+    }
 }
+
 #endif /* FEAT_SIGN_ICONS */

@@ -253,7 +253,7 @@ gui_init_check()
 #if defined(FEAT_FOOTER) && defined(FEAT_GUI_MOTIF)
     gui.footer_height = 0;
 #endif
-#ifdef FEAT_BEVAL
+#ifdef FEAT_BEVAL_TIP
     gui.tooltip_fontset = NOFONTSET;
 #endif
 
@@ -509,6 +509,11 @@ gui_init()
 	gui_mch_update();
 	/* Now make sure the shell fits on the screen. */
 	gui_set_shellsize(FALSE, TRUE);
+#endif
+#ifdef FEAT_NETBEANS_INTG
+	if (starting == 0 && usingNetbeans)
+	    /* Tell the client that it can start sending commands. */
+	    netbeans_startup_done();
 #endif
 	return;
     }
