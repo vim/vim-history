@@ -2527,12 +2527,18 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	 * 1. the autocommands deleted or unloaded the buffer.
 	 * 2. If one of the "Cmd" autocommands was executed.
 	 */
-	if (!buf_valid(buf) || buf->b_ml.ml_mfp == NULL || did_cmd)
+	if (!buf_valid(buf))
+	    buf = NULL;
+	if (buf == NULL || buf->b_ml.ml_mfp == NULL || did_cmd)
 	{
 	    --no_wait_return;
 	    msg_scroll = msg_save;
 	    if (did_cmd)
 	    {
+		if (buf == NULL)
+		    /* The buffer was deleted.  We assume it was written
+		     * (can't retry anyway). */
+		    return OK;
 		if (overwriting)
 		{
 		    /* Assume the buffer was written, update the timestamp. */
