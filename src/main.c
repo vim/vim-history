@@ -23,7 +23,9 @@
 #endif
 
 #ifdef __CYGWIN__
-# include <sys/cygwin.h>
+# ifndef WIN32
+#  include <sys/cygwin.h>	/* for cygwin_conv_to_posix_path() */
+# endif
 # include <limits.h>
 #endif
 
@@ -994,11 +996,12 @@ scripterror:
 		}
 	    }
 #endif
-#ifdef __CYGWIN__
+#if defined(__CYGWIN32__) && !defined(WIN32)
             /*
              * If vim is invoked by non-Cygwin tools, convert away any
              * DOS paths, so things like .swp files are created correctly.
              * Look for evidence of non-Cygwin paths before we bother.
+	     * This is only for when using the Unix files.
              */
             if (strpbrk(p, "\\:") != NULL)
 	    {
