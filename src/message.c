@@ -1798,6 +1798,8 @@ msg_puts_attr(s, attr)
 		msg_screen_putchar(' ', attr);
 	    while (msg_col & 7);
 	}
+	else if (*s == BELL)	    /* beep (from ":sh") */
+	    vim_beep();
 #ifdef FEAT_MBYTE
 	else if (has_mbyte && (l = (*mb_ptr2len_check)(s)) > 1)
 	    s = screen_puts_mbyte(s, l, attr) - 1;
