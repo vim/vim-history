@@ -891,7 +891,7 @@ struct file_buffer
     int		b_dev;		/* device number (-1 if not set) */
     ino_t	b_ino;		/* inode number */
 #endif
-#ifdef MACOS
+#ifdef FEAT_CW_EDITOR
     FSSpec	b_FSSpec;	/* MacOS File Identification */
 #endif
 #ifdef VMS

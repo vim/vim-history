@@ -443,7 +443,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 		(void)mch_setperm(curbuf->b_ml.ml_mfp->mf_fname,
 					  (long)((st.st_mode & 0777) | 0600));
 #endif
-#ifdef MACOS_CLASSIC /* TODO: Is it need for MACOS_X? (Dany) */
+#ifdef FEAT_CW_EDITOR
 	    /* Get the FSSpec on MacOS
 	     * TODO: Update it properly when the buffer name changes
 	     */
