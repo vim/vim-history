@@ -2269,6 +2269,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :stj	tagsrch.txt	/*:stj*
 :stjump	tagsrch.txt	/*:stjump*
 :stop	starting.txt	/*:stop*
+:stopi	insert.txt	/*:stopi*
+:stopinsert	insert.txt	/*:stopinsert*
 :sts	tagsrch.txt	/*:sts*
 :stselect	tagsrch.txt	/*:stselect*
 :su	change.txt	/*:su*
