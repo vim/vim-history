@@ -2167,6 +2167,7 @@ diff_lnum_win(lnum, wp)
     diff_T	*dp;
     int		idx;
     int		i;
+    linenr_T	n;
 
     idx = diff_buf_idx(curbuf);
     if (idx == DB_COUNT)		/* safety check */
@@ -2190,7 +2191,10 @@ diff_lnum_win(lnum, wp)
     if (i == DB_COUNT)			/* safety check */
 	return (linenr_T)0;
 
-    return lnum + (dp->df_lnum[i] - dp->df_lnum[idx]);
+    n = lnum + (dp->df_lnum[i] - dp->df_lnum[idx]);
+    if (n > dp->df_lnum[i] + dp->df_count[i])
+	n = dp->df_lnum[i] + dp->df_count[i];
+    return n;
 }
 #endif
 
