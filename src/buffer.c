@@ -963,9 +963,24 @@ do_buffer(action, start, dir, count, forceit)
 
 	if (!forceit && bufIsChanged(buf))
 	{
-	    EMSGN(_("E89: No write since last change for buffer %ld (add ! to override)"),
-			buf->b_fnum);
-	    return FAIL;
+#if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
+	    if ((p_confirm || cmdmod.confirm) && p_write)
+	    {
+		dialog_changed(buf, FALSE);
+# ifdef FEAT_AUTOCMD
+		if (!buf_valid(buf))
+		    /* Autocommand deleted buffer, oops!  It's not changed
+		     * now. */
+		    return FAIL;
+# endif
+	    }
+	    if (bufIsChanged(buf))
+#endif
+	    {
+		EMSGN(_("E89: No write since last change for buffer %ld (add ! to override)"),
+								 buf->b_fnum);
+		return FAIL;
+	    }
 	}
 
 	/*
@@ -1162,8 +1177,22 @@ do_buffer(action, start, dir, count, forceit)
      */
     if (action == DOBUF_GOTO && !can_abandon(curbuf, forceit))
     {
-	EMSG(_(e_nowrtmsg));
-	return FAIL;
+#if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
+	if ((p_confirm || cmdmod.confirm) && p_write)
+	{
+	    dialog_changed(curbuf, FALSE);
+# ifdef FEAT_AUTOCMD
+	    if (!buf_valid(buf))
+		/* Autocommand deleted buffer, oops! */
+		return FAIL;
+# endif
+	}
+	if (bufIsChanged(curbuf))
+#endif
+	{
+	    EMSG(_(e_nowrtmsg));
+	    return FAIL;
+	}
     }
 
     /* Go to the other buffer. */
