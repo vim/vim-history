@@ -524,7 +524,7 @@ DoPythonCommand(exarg_T *eap, const char *cmd)
     else
     {
 	/* Need to make a copy, value may change when setting new locale. */
-	saved_locale = vim_strsave(saved_locale);
+	saved_locale = (char *)vim_strsave((char_u *)saved_locale);
 	(void)setlocale(LC_NUMERIC, "C");
     }
 #endif
@@ -573,13 +573,14 @@ ex_python(exarg_T *eap)
     char_u *script;
 
     script = script_get(eap, eap->arg);
-    if (script == NULL)
-	DoPythonCommand(eap, (char *)eap->arg);
-    else
+    if (!eap->skip)
     {
-	DoPythonCommand(eap, (char *)script);
-	vim_free(script);
+	if (script == NULL)
+	    DoPythonCommand(eap, (char *)eap->arg);
+	else
+	    DoPythonCommand(eap, (char *)script);
     }
+    vim_free(script);
 }
 
 #define BUFFER_SIZE 1024

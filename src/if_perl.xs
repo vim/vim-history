@@ -567,12 +567,20 @@ ex_perl(eap)
     SV		*sv;
     SV		*safe;
 
+    script = (char *)script_get(eap, eap->arg);
+    if (eap->skip)
+    {
+	vim_free(script);
+	return;
+    }
+
     if (perl_interp == NULL)
     {
 #ifdef DYNAMIC_PERL
 	if (!perl_enabled(TRUE))
 	{
 	    EMSG(_(e_noperl));
+	    vim_free(script);
 	    return;
 	}
 #endif
@@ -584,7 +592,6 @@ ex_perl(eap)
     ENTER;
     SAVETMPS;
 
-    script = (char *)script_get(eap, eap->arg);
     if (script == NULL)
 	sv = newSVpv((char *)eap->arg, 0);
     else

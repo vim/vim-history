@@ -5302,8 +5302,6 @@ ex_window()
 }
 #endif /* FEAT_CMDWIN */
 
-#if defined(FEAT_PYTHON) || defined(FEAT_RUBY) || defined(FEAT_TCL) \
-	|| defined(FEAT_PERL) || defined(PROTO)
 /*
  * Used for commands that either take a simple command string argument, or:
  *	cmd << endmarker
@@ -5349,4 +5347,3 @@ script_get(eap, cmd)
 
     return (char_u *)ga.ga_data;
 }
-#endif /* SCRIPTS */

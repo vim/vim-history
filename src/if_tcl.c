@@ -1931,20 +1931,21 @@ ex_tcl(eap)
     char_u	*script;
     int		err;
 
-    err = tclinit(eap);
-    if (err == OK)
+    script = script_get(eap, eap->arg);
+    if (!eap->skip)
     {
-	Tcl_AllowExceptions(tclinfo.interp);
-	script = script_get(eap, eap->arg);
-	if (script == NULL)
-	    err = Tcl_Eval(tclinfo.interp, (char *)eap->arg);
-	else
+	err = tclinit(eap);
+	if (err == OK)
 	{
-	    err = Tcl_Eval(tclinfo.interp, (char *)script);
-	    vim_free(script);
+	    Tcl_AllowExceptions(tclinfo.interp);
+	    if (script == NULL)
+		err = Tcl_Eval(tclinfo.interp, (char *)eap->arg);
+	    else
+		err = Tcl_Eval(tclinfo.interp, (char *)script);
+	    err = tclexit(err);
 	}
-	err = tclexit(err);
     }
+    vim_free(script);
 }
 
 /*
