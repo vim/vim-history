@@ -196,7 +196,6 @@ static boolean createTagsFromFileInput __ARGS((FILE* const fp, const boolean fil
 static boolean createTagsFromListFile __ARGS((const char* const fileName));
 static boolean createTagsForArgs __ARGS((cookedArgs* const args));
 static void printTotals __ARGS((const clock_t *const timeStamps));
-static boolean areFilesAvailable __ARGS((cookedArgs* args));
 static void makeTags __ARGS((cookedArgs* arg));
 static void setExecutableName __ARGS((const char *const path));
 
@@ -265,7 +264,7 @@ extern void *eMalloc( size )
     void *buffer = malloc(size);
 
     if (buffer == NULL)
-	error(FATAL | PERROR, "out of memory");
+	error(FATAL, "out of memory");
 
     return buffer;
 }
@@ -277,7 +276,7 @@ extern void *eRealloc( ptr, size )
     void *buffer = realloc(ptr, size);
 
     if (buffer == NULL)
-	error(FATAL | PERROR, "out of memory");
+	error(FATAL, "out of memory");
 
     return buffer;
 }
@@ -946,32 +945,14 @@ static void printTotals( timeStamps )
 #endif
 }
 
-static boolean areFilesAvailable( args )
-    cookedArgs* args;
-{
-    return (boolean)(Option.filter || Option.fileList != NULL || !cArgOff(args));
-}
-
 static void makeTags( args )
     cookedArgs* args;
 {
     boolean resize = FALSE;
+    boolean files = FALSE;
     clock_t timeStamps[3];
 
-    if (! areFilesAvailable(args))
-    {
-	if (Option.recurse)
-	{
-	    Assert(cArgOff(args));
-	    cArgDelete(args);
-	    args = cArgNewFromString(".");
-	}
-	else
-	    error(FATAL, "No files specified. Try \"%s --help\".",
-		getExecutableName());
-    }
 #define timeStamp(n) timeStamps[(n)] = (Option.printTotals ? clock():(clock_t)0)
-
     if (! Option.filter)
 	openTagFile();
 
@@ -979,23 +960,36 @@ static void makeTags( args )
 
     if (! cArgOff(args))
     {
+	files = TRUE;
 	if (Option.verbose)
 	    printf("Reading command line arguments\n");
 	resize = createTagsForArgs(args);
     }
-
     if (Option.fileList != NULL)
     {
+	files = TRUE;
 	if (Option.verbose)
 	    printf("Reading list file\n");
 	resize = (boolean)(createTagsFromListFile(Option.fileList) || resize);
     }
-
     if (Option.filter)
     {
+	files = TRUE;
 	if (Option.verbose)
-	    printf("Reading filter input");
+	    printf("Reading filter input\n");
 	resize = (boolean)(createTagsFromFileInput(stdin, TRUE) || resize);
+    }
+    if (! files)
+    {
+	if (Option.recurse)
+	{
+	    cookedArgs* const dot = cArgNewFromString(".");
+	    resize = createTagsForArgs(dot);
+	    cArgDelete(dot);
+	}
+	else
+	    error(FATAL, "No files specified. Try \"%s --help\".",
+		getExecutableName());
     }
 
     /******/  timeStamp(1);

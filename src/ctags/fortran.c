@@ -786,7 +786,10 @@ getNextChar:
 		token->type = TOKEN_OPERATOR;
 	    }
 	    else
+	    {
+		ungetChar(c);
 		token->type = TOKEN_UNDEFINED;
+	    }
 	    break;
 
 	case ':':
