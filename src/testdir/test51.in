@@ -7,7 +7,7 @@ STARTTEST
 :hi Search
 :" test setting colors.
 :" test clearing one color and all doesn't generate error or warning
-:hi NewGroup term=bold cterm=italic ctermfg=Blue ctermbg=Grey gui= guifg=#00ff00 guibg=Cyan
+:hi NewGroup term=bold cterm=italic ctermfg=DarkBlue ctermbg=Grey gui= guifg=#00ff00 guibg=Cyan
 :hi Group2 term= cterm=
 :hi Group3 term=underline cterm=bold
 :redir >test.out
