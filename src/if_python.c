@@ -380,7 +380,6 @@ static int initialised = 0;
 typedef PyObject PyThreadState;
 #endif /* Python 1.4 */
 
-#ifndef PY_CAN_RECURSE
 static PyThreadState* saved_python_thread = NULL;
 
 /*
@@ -392,6 +391,7 @@ static void Python_SaveThread(void)
     saved_python_thread = PyEval_SaveThread();
 }
 
+#ifndef PY_CAN_RECURSE
 /*
  * Restore a thread of the Python interpreter, waits for other threads to
  * block.
@@ -456,10 +456,8 @@ Python_Init(void)
 	if (PythonMod_Init())
 	    goto fail;
 
-#ifndef PY_CAN_RECURSE
-	/* the first python thread is vim's */
+	/* the first python thread is vim's, release the lock */
 	Python_SaveThread();
-#endif
 
 	initialised = 1;
     }
