@@ -2013,6 +2013,8 @@ op_replace(oap, c)
 		    State = REPLACE;
 		    ins_char(c);
 		    State = n;
+		    /* Backup to the replaced character. */
+		    dec_cursor();
 		}
 		else
 #endif
@@ -2061,7 +2063,7 @@ op_replace(oap, c)
 #endif
 
 	    /* Advance to next character, stop at the end of the file. */
-	    if (inc(&curwin->w_cursor) == -1)
+	    if (inc_cursor() == -1)
 		break;
 	}
     }
