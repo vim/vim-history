@@ -1,4 +1,4 @@
-*quickref.txt*  For Vim version 6.0e.  Last change: 2000 Jul 08
+*quickref.txt*  For Vim version 6.0f.  Last change: 2000 Aug 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -975,8 +975,8 @@ Context-sensitive completion on the command-line:
 |:next_f|    :n[ext] {arglist}	  :sn[ext] {arglist}	define new arg list
 							   and edit first file
 |:Next|	     :N[ext]		  :sN[ext]		Edit previous file
-|:rewind|    :rew[ind][!]	  :srew[ind]		Edit first file
-|:last|	     :last		  :slast		Edit last file
+|:first|     :fir[st]	  	  :sfir[st]		Edit first file
+|:last|	     :la[st]		  :sla[st]		Edit last file
 ------------------------------------------------------------------------------
 *X_wq*		Writing and quitting
 
@@ -1146,7 +1146,7 @@ Context-sensitive completion on the command-line:
 |:bnext|      :[N]bnext [N]	  :[N]sbnext [N]      to Nth next arg/buf
 |:bNext|      :[N]bNext [N]	  :[N]sbNext [N]      to Nth previous arg/buf
 |:bprevious|  :[N]bprevious [N]   :[N]sbprevious [N]  to Nth previous arg/buf
-|:brewind|    :brewind		  :sbrewind	      to first arg/buf
+|:bfirst|     :bfirst		  :sbfirst	      to first arg/buf
 |:blast|      :blast		  :sblast	      to last arg/buf
 |:bmodified|  :[N]bmod [N]	  :[N]sbmod [N]	      to Nth modified buf
 ------------------------------------------------------------------------------

@@ -5871,7 +5871,7 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
     ++RedrawingDisabled;
     save_sourcing_name = sourcing_name;
     save_sourcing_lnum = sourcing_lnum;
-    sourcing_lnum = 0;
+    sourcing_lnum = 1;
     sourcing_name = alloc((unsigned)((save_sourcing_name == NULL ? 0
 		: STRLEN(save_sourcing_name)) + STRLEN(fp->name) + 10));
     if (sourcing_name != NULL)
@@ -5882,6 +5882,16 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
 	else
 	    STRCPY(sourcing_name, "function ");
 	STRCAT(sourcing_name, fp->name);
+
+	if (p_verbose >= 12)
+	{
+	    ++no_wait_return;
+	    msg_scroll = TRUE;	    /* always scroll up, don't overwrite */
+	    smsg((char_u *)_("calling %s"), sourcing_name);
+	    msg_puts((char_u *)"\n");   /* don't overwrite this either */
+	    cmdline_row = msg_row;
+	    --no_wait_return;
+	}
     }
     save_did_emsg = did_emsg;
     did_emsg = FALSE;
@@ -5894,6 +5904,16 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
     vim_free(sourcing_name);
     sourcing_name = save_sourcing_name;
     sourcing_lnum = save_sourcing_lnum;
+
+    if (p_verbose >= 12 && sourcing_name != NULL)
+    {
+	++no_wait_return;
+	msg_scroll = TRUE;	    /* always scroll up, don't overwrite */
+	smsg((char_u *)_("continuing in %s"), sourcing_name);
+	msg_puts((char_u *)"\n");   /* don't overwrite this either */
+	cmdline_row = msg_row;
+	--no_wait_return;
+    }
 
     /* when the function was aborted because of an error, return -1 */
     if ((did_emsg && (fp->flags & FC_ABORT)) || retvar->var_type == VAR_UNKNOWN)
@@ -6003,17 +6023,19 @@ get_func_line(c, cookie, indent)
     else if (fcp->linenr < 0 || fcp->linenr >= gap->ga_len)
 	retval = NULL;
     else
-	retval = vim_strsave(((char_u **)(gap->ga_data))[fcp->linenr++]);
-
-    if (p_verbose >= 15)
     {
+	retval = vim_strsave(((char_u **)(gap->ga_data))[fcp->linenr++]);
+	sourcing_lnum = fcp->linenr;
+    }
+
+    if (p_verbose >= 12 && retval == NULL)
+    {
+	++no_wait_return;
 	msg_scroll = TRUE;	    /* always scroll up, don't overwrite */
-	if (retval == NULL)
-	    msg((char_u *)_("function returning"));
-	else
-	    smsg((char_u *)_("function line %s"), retval);
+	smsg((char_u *)_("%s returning"), sourcing_name);
 	msg_puts((char_u *)"\n");   /* don't overwrite this either */
 	cmdline_row = msg_row;
+	--no_wait_return;
     }
     return retval;
 }

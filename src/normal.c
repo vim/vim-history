@@ -2330,7 +2330,7 @@ do_mouse(oap, c, dir, count, fix_indent)
      * error under the mouse pointer.
      */
     else if (((mod_mask & MOD_MASK_CTRL) || (mod_mask & MOD_MASK_2CLICK))
-	    && qf_isqbuf(curbuf))
+	    && bt_quickfix(curbuf))
     {
 	if (State & INSERT)
 	    stuffcharReadbuff(Ctrl_O);
@@ -4432,10 +4432,10 @@ nv_gotofile(cap)
     if (ptr != NULL)
     {
 	/* do autowrite if necessary */
-	if (curbufIsChanged() && curbuf->b_nwindows <= 1 && !P_HID)
+	if (curbufIsChanged() && curbuf->b_nwindows <= 1 && !P_HID(curbuf))
 	    autowrite(curbuf, FALSE);
 	setpcmark();
-	(void)do_ecmd(0, ptr, NULL, NULL, ECMD_LAST, P_HID ? ECMD_HIDE : 0);
+	(void)do_ecmd(0, ptr, NULL, NULL, ECMD_LAST, P_HID(curbuf) ? ECMD_HIDE : 0);
 	vim_free(ptr);
     }
     else
@@ -5510,7 +5510,7 @@ nv_pcmark(cap)
 
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
     /* In a quickfix window a <Tab> jumps to the error under the cursor. */
-    if (qf_isqbuf(curbuf))
+    if (bt_quickfix(curbuf))
 	stuffReadbuff((char_u *)":.cc\n");
     else
 #endif

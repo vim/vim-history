@@ -1113,7 +1113,11 @@ u_save_line(lnum)
 bufIsChanged(buf)
     buf_t	*buf;
 {
-    return (buf->b_changed || file_ff_differs(buf));
+    return
+#ifdef FEAT_QUICKFIX
+	    !bt_nofile(buf) &&
+#endif
+	    (buf->b_changed || file_ff_differs(buf));
 }
 
     int

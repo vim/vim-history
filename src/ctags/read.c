@@ -84,7 +84,8 @@ extern char *readLine( vLine, fp )
 		if (! feof(fp))
 		    error(FATAL | PERROR, "Failure on attempt to read file");
 	    }
-	    else if (*pLastChar != '\0'  &&  *pLastChar != '\n')
+	    else if (*pLastChar != '\0'  &&
+		     *pLastChar != '\n'  &&  *pLastChar != '\r')
 	    {
 		/*  buffer overflow */
 		reReadLine = vStringAutoResize(vLine);
@@ -94,7 +95,20 @@ extern char *readLine( vLine, fp )
 		    error(FATAL | PERROR, "input line too big; out of memory");
 	    }
 	    else
+	    {
+		char* eol;
 		vStringSetLength(vLine);
+		/* canonicalize new line */
+		eol = vStringValue(vLine) + vStringLength(vLine) - 1;
+		if (*eol == '\r')
+		    *eol = '\n';
+		else if (*(eol - 1) == '\r'  &&  *eol == '\n')
+		{
+		    *(eol - 1) = '\n';
+		    *eol = '\0';
+		    --vLine->length;
+		}
+	    }
 	} while (reReadLine);
     }
     return line;

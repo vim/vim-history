@@ -926,9 +926,8 @@ static void findScopeHierarchy( string, st )
     {
 	vString *temp = vStringNew();
 	const statementInfo *s;
-	unsigned depth = 0;
 
-	for (s = st->parent  ;  s != NULL  ;  s = s->parent, ++depth)
+	for (s = st->parent  ;  s != NULL  ;  s = s->parent)
 	{
 	    if (isContextualStatement(s))
 	    {

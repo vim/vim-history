@@ -11,7 +11,7 @@
 #ifndef _READ_H
 #define _READ_H
 
-#ifdef FILE_WRITE
+#if defined(FILE_WRITE) || defined(VAXC)
 # define CONST_FILE
 #else
 # define CONST_FILE const

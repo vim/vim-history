@@ -308,7 +308,11 @@ set_last_search_pat(s, idx, magic, setlast)
     int		setlast;
 {
     vim_free(spats[idx].pat);
-    spats[idx].pat = vim_strsave(s);
+    /* An empty string means that nothing should be matched. */
+    if (*s == NUL)
+	spats[idx].pat = NULL;
+    else
+	spats[idx].pat = vim_strsave(s);
     spats[idx].magic = magic;
     spats[idx].no_scs = FALSE;
     spats[idx].off.dir = '/';
@@ -321,15 +325,17 @@ set_last_search_pat(s, idx, magic, setlast)
     {
 	vim_free(saved_spats[idx].pat);
 	saved_spats[idx] = spats[0];
-	if (spats[idx].pat != NULL)
+	if (spats[idx].pat == NULL)
+	    saved_spats[idx].pat = NULL;
+	else
 	    saved_spats[idx].pat = vim_strsave(spats[idx].pat);
 	saved_last_idx = last_idx;
     }
-#ifdef FEAT_SEARCH_EXTRA
+# ifdef FEAT_SEARCH_EXTRA
     /* If 'hlsearch' set and search pat changed: need redraw. */
     if (p_hls && idx == last_idx && !no_hlsearch)
 	redraw_all_later(NOT_VALID);
-#endif
+# endif
 }
 #endif
 

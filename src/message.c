@@ -228,7 +228,9 @@ msg_strtrunc(s)
 }
 
 /*
- * automatic prototype generation does not understand this function
+ * Automatic prototype generation does not understand this function.
+ * Note: Caller of smgs() and smsg_attr() must check the resulting string is
+ * shorter than IOSIZE!!!
  */
 #ifndef PROTO
 # ifndef __QNX__

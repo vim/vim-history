@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0e.  Last change: 2000 Jul 07
+*change.txt*    For Vim version 6.0f.  Last change: 2000 Aug 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -211,9 +211,9 @@ followed by other blanks changes only the first blank; this is probably a
 bug, because "dw" deletes all the blanks; use the 'w' flag in 'cpoptions' to
 make it work like Vi anyway}
 
-If you prefer "cw" to include the space after a word, use this mapping:
->	:map cw dwi
-
+If you prefer "cw" to include the space after a word, use this mapping: >
+	:map cw dwi
+<
 							*:c* *:ch* *:change*
 :{range}c[hange]	Replace lines of text with some different text.
 			Type a line containing only "." to stop replacing.
@@ -1097,7 +1097,7 @@ have a middle string because otherwise Vim can't recognize the middle lines.
 
 Notice the use of the "x" flag in the above three-piece comment definition.
 When you hit Return in a C-comment, Vim will insert the middle comment leader
-for the new line, eg " * ".  To close this comment you just have to type "/"
+for the new line, e.g. " * ".  To close this comment you just have to type "/"
 before typing anything else on the new line.  This will replace the
 middle-comment leader with the end-comment leader, leaving just " */".  There
 is no need to hit BackSpace first.

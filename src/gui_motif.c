@@ -441,7 +441,7 @@ gui_mch_add_menu(menu, parent, idx)
     Widget	shell;
 
 #ifdef MOTIF_POPUP
-    if (popup_menu(menu->name))
+    if (menu_is_popup(menu->name))
     {
 	Arg arg[2];
 	int n = 0;
@@ -456,7 +456,7 @@ gui_mch_add_menu(menu, parent, idx)
     }
 #endif
 
-    if (!menubar_menu(menu->name)
+    if (!menu_is_menubar(menu->name)
 	    || (parent != NULL && parent->submenu_id == (Widget)0))
 	return;
 
@@ -596,7 +596,7 @@ gui_mch_recurse_tearoffs(menu)
 {
     while (menu != NULL)
     {
-	if (!popup_menu(menu->name))
+	if (!menu_is_popup(menu->name))
 	{
 	    if (menu->submenu_id != (Widget)0)
 		toggle_tearoff(menu->submenu_id);
@@ -645,7 +645,7 @@ gui_mch_compute_menu_height(id)
     /* Find any menu Widget, to be able to call XtManageChild() */
     else
 	for (mp = root_menu; mp != NULL; mp = mp->next)
-	    if (mp->id != (Widget)0 && menubar_menu(mp->name))
+	    if (mp->id != (Widget)0 && menu_is_menubar(mp->name))
 	    {
 		id = mp->id;
 		break;
@@ -664,7 +664,7 @@ gui_mch_compute_menu_height(id)
     maxy = 0;
     for (mp = root_menu; mp != NULL; mp = mp->next)
     {
-	if (mp->id != (Widget)0 && menubar_menu(mp->name))
+	if (mp->id != (Widget)0 && menu_is_menubar(mp->name))
 	{
 	    XtVaGetValues(mp->id, XmNy, &y, NULL);
 	    if (y > maxy)
@@ -703,7 +703,7 @@ gui_mch_add_menu_item(menu, parent, idx)
 # endif
 
 # ifdef FEAT_TOOLBAR
-    if (toolbar_menu(parent->name))
+    if (menu_is_toolbar(parent->name))
     {
 	WidgetClass	type;
         XmString	xms;	    /* fallback label if pixmap not found */
@@ -711,7 +711,7 @@ gui_mch_add_menu_item(menu, parent, idx)
 	Arg		args[15];
 
 	n = 0;
-	if (is_menu_separator(menu->name))
+	if (menu_is_separator(menu->name))
 	{
 	    char	*cp;
 	    Dimension	wid;
@@ -748,9 +748,11 @@ gui_mch_add_menu_item(menu, parent, idx)
 		XtSetArg(args[n], XmNlabelPixmap, pixmap); n++;
 		XtSetArg(args[n], XmNlabelInsensitivePixmap, insensitive); n++;
 		XtSetArg(args[n], XmNlabelType, XmPIXMAP); n++;
+#ifndef FEAT_SUN_WORKSHOP
 		XtSetArg(args[n], XmNshadowThickness, 0); n++;
 		XtSetArg(args[n], XmNmarginWidth, 0); n++;
 		XtSetArg(args[n], XmNmarginHeight, 0); n++;
+#endif
 	    }
 	    type = xmPushButtonWidgetClass;
 	    XtSetArg(args[n], XmNwidth, 80); n++;
@@ -793,7 +795,7 @@ gui_mch_add_menu_item(menu, parent, idx)
     menu->submenu_id = (Widget)0;
 
     /* Add menu separator */
-    if (is_menu_separator(menu->name))
+    if (menu_is_separator(menu->name))
     {
 	menu->id = XtVaCreateWidget("subMenu",
 		xmSeparatorWidgetClass, parent->submenu_id,
@@ -1739,9 +1741,7 @@ static const char *(sunws_pixmaps[]) =
     "Refs",	"$SPRO_WSDIR/lib/locale/%L/graphics/findRefs.xpm",
     NULL,	NULL
 };
-#endif
 
-#ifdef FEAT_SUN_WORKSHOP
 static Boolean filePredicate __ARGS((String cp));
 
     static Boolean
@@ -1897,7 +1897,8 @@ createXpmImages(path, xpm, sen, insen)
 	XFreeGC(gui.dpy, back_gc);
 	XFreeGC(gui.dpy, mask_gc);
 	XFreePixmap(gui.dpy, map);
-	XFreePixmap(gui.dpy, mask);
+	/* XFreePixmap(gui.dpy, mask); causes a crash, probably XFreeGC
+	 * already freed it. */
     }
     else
 	*insen = *sen = 0;

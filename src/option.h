@@ -37,7 +37,7 @@
 #    ifdef EBCDIC
 #define DFLT_EFM	"%*[^ ] %*[^ ] %f:%l%*[ ]%m,%*[^\"]\"%f\"%*\\D%l: %m,\"%f\"%*\\D%l: %m,%f:%l:%m,\"%f\"\\, line %l%*\\D%c%*[^ ] %m,%D%*\\a[%*\\d]: Entering directory `%f',%X%*\\a[%*\\d]: Leaving directory `%f',%DMaking %*\\a in %f"
 #    else
-#define DFLT_EFM	"%*[^\"]\"%f\"%*\\D%l: %m,\"%f\"%*\\D%l: %m,%f:%l:%m,\"%f\"\\, line %l%*\\D%c%*[^ ] %m,%D%*\\a[%*\\d]: Entering directory `%f',%X%*\\a[%*\\d]: Leaving directory `%f',%DMaking %*\\a in %f"
+#define DFLT_EFM	"%*[^\"]\"%f\"%*\\D%l: %m,\"%f\"%*\\D%l: %m,%-G%f:%l: (Each undeclared identifier is reported only once,%-G%f:%l: for each function it appears in.),%f:%l:%m,\"%f\"\\, line %l%*\\D%c%*[^ ] %m,%D%*\\a[%*\\d]: Entering directory `%f',%X%*\\a[%*\\d]: Leaving directory `%f',%DMaking %*\\a in %f"
 #    endif
 #   endif
 #  endif
@@ -368,8 +368,14 @@ EXTERN char_u	*p_hf;		/* 'helpfile' */
 EXTERN long	p_hh;		/* 'helpheight' */
 #endif
 EXTERN int	p_hid;		/* 'hidden' */
-/* use P_HID to take care of ":hide" */
-#define P_HID (p_hid || cmdmod.hide)
+/* Use P_HID to take care of ":hide".
+ * If FEAT_QUICKFIX is set, a buffer that is of buftype "nofile" can always be
+ * hidden. */
+#ifndef FEAT_QUICKFIX
+# define P_HID(dummy) (p_hid || cmdmod.hide)
+#else
+# define P_HID(buf) (p_hid || cmdmod.hide || bt_nofile(buf))
+#endif
 EXTERN char_u	*p_hl;		/* 'highlight' */
 EXTERN int	p_hls;		/* 'hlsearch' */
 EXTERN long	p_hi;		/* 'history' */

@@ -317,4 +317,4 @@
 typedef struct dsc$descriptor   DESC;
 #define DFLT_ERRORFILE		"errors.err"
 #define DFLT_MAKEEF		"tmp:vim##.err"	 /* user must assign tmp: */
-#define DFLT_RUNTIMEPATH	"$VIMRUNTIME"
+#define DFLT_RUNTIMEPATH	"sys$login:vimfiles,$VIM/vimfiles,$VIMRUNTIME"

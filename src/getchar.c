@@ -1630,6 +1630,9 @@ vgetorpeek(advance)
 				 */
 				may_sync_undo();
 				del_typebuf(3, 0);
+#ifndef BRAM_DO_WE_NEED_THIS
+				msg_scroll = TRUE;
+#endif
 				idx = get_menu_index(current_menu, local_State);
 				if (idx != MENU_INDEX_INVALID)
 				{

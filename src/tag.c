@@ -1058,8 +1058,12 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
 	    fp = NULL;	    /* avoid GCC warning */
 	else
 #endif
+	{
 	    if ((fp = mch_fopen((char *)tag_fname, "r")) == NULL)
 		continue;
+	    if (p_verbose >= 5)
+		smsg((char_u *)_("Searching tags file %s"), tag_fname);
+	}
 	did_open = TRUE;    /* remember that we found at least one file */
 
 	state = TS_START;   /* we're at the start of the file */
@@ -1133,7 +1137,7 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
 #else
 		fseek(fp, (long)search_info.curr_offset, SEEK_SET);
 #endif
-		eof = vim_fgets(lbuf, LSIZE, fp);
+		eof = tag_fgets(lbuf, LSIZE, fp);
 		if (!eof && search_info.curr_offset != 0)
 		{
 		    search_info.curr_offset = ftell(fp);
@@ -1147,13 +1151,13 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
 #endif
 			search_info.curr_offset = search_info.low_offset;
 		    }
-		    eof = vim_fgets(lbuf, LSIZE, fp);
+		    eof = tag_fgets(lbuf, LSIZE, fp);
 		}
 		/* skip empty and blank lines */
 		while (!eof && vim_isblankline(lbuf))
 		{
 		    search_info.curr_offset = ftell(fp);
-		    eof = vim_fgets(lbuf, LSIZE, fp);
+		    eof = tag_fgets(lbuf, LSIZE, fp);
 		}
 		if (eof)
 		{
@@ -1178,7 +1182,7 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
 			eof = cs_fgets(lbuf, LSIZE);
 		    else
 #endif
-			eof = vim_fgets(lbuf, LSIZE, fp);
+			eof = tag_fgets(lbuf, LSIZE, fp);
 		} while (!eof && vim_isblankline(lbuf));
 
 		if (eof
@@ -1214,7 +1218,7 @@ line_read_in:
 	    {
 		is_etag = 1;		/* in case at the start */
 		state = TS_LINEAR;
-		if (!vim_fgets(ebuf, LSIZE, fp))
+		if (!tag_fgets(ebuf, LSIZE, fp))
 		{
 		    for (p = ebuf; *p && *p != ','; p++)
 			;
@@ -1852,6 +1856,7 @@ get_tagfname(first, buf)
     int		first;	/* TRUE when first file name is wanted */
     char_u	*buf;	/* pointer to buffer of MAXPATHL chars */
 {
+    static void		*search_ctx = NULL;
     static char_u	*np = NULL;
     static int		did_filefind_init;
     char_u		*fname = NULL;
@@ -1861,7 +1866,7 @@ get_tagfname(first, buf)
     if (first)
     {
 	np = p_tags;
-	vim_findfile_free_visited();
+	vim_findfile_free_visited(search_ctx);
 	did_filefind_init = FALSE;
     }
 
@@ -1895,7 +1900,7 @@ get_tagfname(first, buf)
 	{
 	    if (did_filefind_init)
 	    {
-		fname = vim_findfile();
+		fname = vim_findfile(search_ctx);
 		if (fname != NULL)
 		    break;
 
@@ -1908,7 +1913,11 @@ get_tagfname(first, buf)
 
 		/* Stop when used all parts of 'tags'. */
 		if (*np == NUL)
+		{
+		    vim_findfile_cleanup(search_ctx);
+		    search_ctx = NULL;
 		    return FAIL;
+		}
 
 		/*
 		 * Copy next file name into buf.
@@ -1932,8 +1941,11 @@ get_tagfname(first, buf)
 		    *(filename - 1) = 0;
 		}
 
-		if (vim_findfile_init(filepath, filename, r_ptr, 100, FALSE)
-									== OK)
+		search_ctx = vim_findfile_init(filepath, filename, r_ptr, 100,
+			FALSE, /* don't free visited list */
+			FALSE, /* we search for a file */
+			search_ctx);
+		if (search_ctx != NULL);
 		    did_filefind_init = TRUE;
 	    }
 	}
@@ -2660,7 +2672,7 @@ simplify_filename(filename)
 	    ++components;
 	    p = getnextcomp(p + 1);
 	}
-	/* allow remote calls as host"user passwd"::device:[path]        */
+	/* allow remote calls as host"user passwd"::device:[path] */
 	else if (p[0] == ':' && p[1] == ':' && p > filename && p[-1] == '"' )
 	{
 	    /* ":: composition: vms host/passwd component */

@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0e.  Last change: 2000 Jul 21
+*gui.txt*       For Vim version 6.0f.  Last change: 2000 Aug 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -636,12 +636,14 @@ be used to complete the name of the menu item.
 5.4 Executing Menus					*execute-menus*
 
 							*:eme*  *:emenu*
-To manually execute a menu item from the command line, use the :emenu
-command. Eg: >
+:[range]eme[enu] {menu}		Execute {menu} from the command line.
+				The default is to exectue the normal mode menu.
+				If a range is specified, it execute the visual
+				mode menu.
+				If used from <c-o>, it executes the
+				insert-mode menu Eg: >
 	:emenu File.Exit
 
-The normal mode command associated with the menu is executed (since that
-is normally the one you want.)
 If the console-mode vim has been compiled with WANT_MENU defined, you can
 use :emenu to access useful menu items you may have got used to from GUI
 mode.  See 'wildmenu' for an option that works well with this.  See
@@ -680,6 +682,7 @@ done by adding the "enable" or "disable" keyword to a ":menu" command.
 Examples: >
 	:menu disable File.Open
 	:amenu enable *
+	:amenu disable Tools.*
 
 The command applies to the modes as used with all menu commands.
 When the argument is "*", all menus are affected.  Otherwise the given menu
@@ -739,6 +742,25 @@ commands.  Example: >
 If a menu item becomes invalid (i.e. its actions in all modes are deleted) Vim
 deletes the menu tip (and the item) for you.  This means that :aunmenu deletes
 a menu item - you don't need to do a :tunmenu as well.
+
+5.8 Popup Menus						*:popup*
+In the win32 gui, you can cause a menu to popup at the cursor.  This behaves
+similarly to the PopUp menus except that any menu tree can be popped up
+
+							*:popup* *:popu*
+:pop[up] {name}			Popup the menu {name}.  The menu named must have at
+				least one subentry, but need not appear on the
+				menu-bar (see |win32-hidden-menus|).
+
+Example: >
+	:poup File
+will make the "File" menu (if there is one) appear at the cursor. >
+
+	:amenu ]Toolbar.Make	:make<CR>
+	:popup ]Toolbar
+This creates a popup menu that doesn't exist on the main menu-bar.
+
+Note that a menu that starts with ']' will not be displayed.
 
 ==============================================================================
 6. Extras						*gui-extras*

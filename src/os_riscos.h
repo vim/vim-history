@@ -114,7 +114,7 @@
 
 #define DFLT_ERRORFILE		"errors/vim"
 #define DFLT_MAKEEF		"<Wimp$ScrapDir>.vim##/err"
-#define DFLT_RUNTIMEPATH	"$VIMRUNTIME"
+#define DFLT_RUNTIMEPATH	"Choices:vimfiles,$VIMRUNTIME"
 
 /*
  * RISC PCs have plenty of memory, use large buffers

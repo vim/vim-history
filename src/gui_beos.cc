@@ -2980,7 +2980,7 @@ gui_mch_add_menu(
     vimmenu_t	*parent,
     int		idx)
 {
-    if (!menubar_menu(menu->name)
+    if (!menu_is_menubar(menu->name)
 	    || (parent != NULL && parent->submenu_id == NULL))
 	return;
 
@@ -3054,7 +3054,7 @@ gui_mch_add_menu_item(
      * richard
      */
     /* Don't add menu separator */
-    if (is_menu_separator(menu->name))
+    if (menu_is_separator(menu->name))
 	return;
 #endif
 
@@ -3067,7 +3067,7 @@ gui_mch_add_menu_item(
      */
     if (gui.vimWindow->Lock())
     {
-	if ( is_menu_separator(menu->name)) {
+	if ( menu_is_separator(menu->name)) {
 	    BSeparatorItem *item = new BSeparatorItem();
 	    parent->submenu_id->AddItem(item);
 	    menu->id = item;

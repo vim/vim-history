@@ -39,7 +39,7 @@
 # define ANCHOR_BUF_SIZE (512)
 # define ANCHOR_SIZE (sizeof(struct AnchorPath) + ANCHOR_BUF_SIZE)
 # ifdef __SASC
-extern struct DosLibrary *DOSBase;
+   extern struct DosLibrary *DOSBase;
 #  include <pragmas/dos_pragmas.h>
 # endif
 #endif
@@ -203,6 +203,17 @@ static const char *ExecutableProgram = NULL;
 static const char *ExecutableName = NULL;
 
 static struct { long files, lines, bytes; } Totals = { 0, 0, 0 };
+
+#ifdef AMIGA
+# include "ctags.h"
+  static const char *VERsion = "$VER: "PROGRAM_NAME" "PROGRAM_VERSION" "
+# ifdef __SASC
+  __AMIGADATE__
+# else
+  __DATE__
+# endif
+  " "AUTHOR_NAME" $";
+#endif
 
 /*============================================================================
 =   Function prototypes
@@ -566,6 +577,14 @@ extern const char *baseFilename( filePath )
 	tail = filePath;
     else
 	++tail;			/* step past last delimiter */
+#ifdef VAXC
+{
+    /* remove version number from filename */
+    char *p = strrchr((char *)tail, ';');
+    if (p != NULL)
+	*p = '\0';
+}
+#endif
 
     return tail;
 }
@@ -595,7 +614,7 @@ extern vString *combinePathAndFile( path, file )
 
     if (directoryId == NULL)
     {
-    	const char *const versionId = strchr(file, ';');
+	const char *const versionId = strchr(file, ';');
 
 	vStringCopyS(filePath, path);
 	if (versionId == NULL)
@@ -606,13 +625,13 @@ extern vString *combinePathAndFile( path, file )
     }
     else
     {
-    	/*  File really is a directory; append it to the path.
+	/*  File really is a directory; append it to the path.
 	 *  Gotcha: doesn't work with logical names.
 	 */
-    	vStringNCopyS(filePath, path, strlen(path) - 1);
-    	vStringPut(filePath, '.');
-    	vStringNCatS(filePath, file, directoryId - file);
-    	if (strchr(path, '[') != NULL)
+	vStringNCopyS(filePath, path, strlen(path) - 1);
+	vStringPut(filePath, '.');
+	vStringNCatS(filePath, file, directoryId - file);
+	if (strchr(path, '[') != NULL)
 	    vStringPut(filePath, ']');
 	else
 	    vStringPut(filePath, '>');
@@ -1072,6 +1091,14 @@ static void setExecutableName( path )
 {
     ExecutableProgram = path;
     ExecutableName = baseFilename(path);
+#ifdef VAXC
+{
+    /* remove filetype from executable name */
+    char *p = strrchr(ExecutableName, '.');
+    if (p != NULL)
+	*p = '\0';
+}
+#endif
 }
 
 extern const char *getExecutableName()
@@ -1084,6 +1111,11 @@ extern int main( argc, argv )
     char **argv;
 {
     cookedArgs *args;
+
+#ifdef VAXC
+    /* do wildcard expansion and I/O redirection */
+    getredirection( &argc, &argv );
+#endif
 
 #ifdef AMIGA
     /* This program doesn't work when started from the Workbench */

@@ -33,5 +33,5 @@ void handle_drop __ARGS((int filec, char_u **filev, int split));
 char_u *eval_vars __ARGS((char_u *src, int *usedlen, linenr_t *lnump, char_u **errormsg, char_u *srcstart));
 char_u *expand_sfile __ARGS((char_u *arg));
 int put_eol __ARGS((FILE *fd));
-void cmd_runtime __ARGS((char_u *name));
+void cmd_runtime __ARGS((char_u *name, int all));
 void dialog_msg __ARGS((char_u *buff, char *format, char_u *fname));

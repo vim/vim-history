@@ -517,7 +517,7 @@ update_screen(type)
     did_intro = TRUE;
 }
 
-#ifdef FEAT_LINE_HL
+#if defined(FEAT_LINE_HL) || defined(PROTO)
     static int
 lnum2row(wp, lnum)
     win_t	*wp;
@@ -3376,12 +3376,17 @@ status_match_len(s)
 {
     int	len = 0;
 
+    /* Check for menu separators - replace with '|'. */
+    if (menu_is_separator(s))
+	return 1;
+
     while (*s != NUL)
     {
 	/* Don't display backslashes used for escaping, they look ugly. */
 	if (rem_backslash(s)
-		|| (expand_context == EXPAND_MENUNAMES
-					      && s[0] == '\\' && s[1] != NUL))
+		|| ((expand_context == EXPAND_MENUNAMES
+			|| expand_context == EXPAND_MENUS)
+		    && (s[0] == '\\' && s[1] != NUL)))
 	    ++s;
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
@@ -3394,6 +3399,7 @@ status_match_len(s)
 	    len += ptr2cells(s++);
 
     }
+
     return len;
 }
 
@@ -3498,12 +3504,19 @@ win_redr_status_matches(num_matches, matches, match)
 	if (i == match)
 	    selstart = buf + len;
 
-	for (s = L_MATCH(i); *s; ++s)
+	s = L_MATCH(i);
+	/* Check for menu separators - replace with '|' */
+	if (menu_is_separator(s))
+	{
+	    STRCPY(buf+len, transchar('|'));
+	    len+= STRLEN(buf+len);
+	}
+	else for ( ; *s; ++s)
 	{
 	    /* Don't display backslashes used for escaping, they look ugly. */
-	    if (rem_backslash(s)
-		    || (expand_context == EXPAND_MENUNAMES
-					      && s[0] == '\\' && s[1] != NUL))
+	    if ( rem_backslash(s)
+		    || ((expand_context == EXPAND_MENUNAMES || expand_context == EXPAND_MENUS)
+		     && ( s[0] == '\t' || (s[0] == '\\' && s[1] != NUL))))
 		++s;
 	    STRCPY(buf + len, transchar(*s));
 	    len += STRLEN(buf + len);

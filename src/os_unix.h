@@ -277,7 +277,12 @@
 #else
 # define DFLT_MAKEEF		"/tmp/vim##.err"
 #endif
-#define DFLT_RUNTIMEPATH	"~/.vim,$VIMRUNTIME"
+
+#ifdef OS2
+# define DFLT_RUNTIMEPATH	"~/.vim,$VIM/vimfiles,$VIMRUNTIME"
+#else
+# define DFLT_RUNTIMEPATH	"$HOME/vimfiles,$VIM/vimfiles,$VIMRUNTIME"
+#endif
 
 #ifdef OS2
 /*

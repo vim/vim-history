@@ -3267,7 +3267,7 @@ gui_mch_add_menu(
     menu->id = s_menu_id++;
     menu->parent = parent;
 
-    if (menubar_menu(menu->name))
+    if (menu_is_menubar(menu->name))
     {
 	InsertMenu((parent == NULL) ? s_menuBar : parent->submenu_id,
 		(UINT)pos, MF_POPUP | MF_STRING | MF_BYPOSITION,
@@ -3321,7 +3321,7 @@ gui_mch_add_menu_item(
 	TBBUTTON newtb;
 
 	vim_memset(&newtb, 0, sizeof(newtb));
-	if (is_menu_separator(menu->name))
+	if (menu_is_separator(menu->name))
 	{
 	    newtb.iBitmap = 0;
 	    newtb.fsStyle = TBSTYLE_SEP;
@@ -3340,7 +3340,7 @@ gui_mch_add_menu_item(
     else
 #endif
     InsertMenu(parent->submenu_id, (UINT)idx,
-		(is_menu_separator(menu->name) ? MF_SEPARATOR : MF_STRING)
+		(menu_is_separator(menu->name) ? MF_SEPARATOR : MF_STRING)
 							      | MF_BYPOSITION,
 		(UINT)menu->id, menu->name);
 }
@@ -3374,7 +3374,7 @@ gui_mch_destroy_menu(vimmenu_t *menu)
 	 * item and use MF_BYPOSITION instead. :-p
 	 */
     if (menu->parent != NULL
-	    && popup_menu(menu->parent->dname)
+	    && menu_is_popup(menu->parent->dname)
 	    && menu->parent->submenu_id != NULL)
 	RemoveMenu(menu->parent->submenu_id, menu->id, MF_BYCOMMAND);
     else if (menu->submenu_id == NULL)
@@ -4157,7 +4157,7 @@ initialise_toolbar(void)
 		    s_hwnd,
 		    WS_CHILD | WS_VISIBLE,
 		    CMD_TB_BASE, /*<vn>*/
-		    28,			//number of images in inital bitmap
+		    31,			//number of images in inital bitmap
 		    s_hinst,
 		    IDR_TOOLBAR1,	// id of initial bitmap
 		    NULL,
@@ -4215,6 +4215,9 @@ static const char_u *BuiltInBitmaps[] =
     "Make",		//25
     "TagJump",		//26
     "RunCtags",		//27
+    "WinVSplit",	//28
+    "WinMaxWidth",	//29
+    "WinMinWidth",	//30
     NULL
 };
     static int

@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0e.  Last change: 2000 Jul 25
+*syntax.txt*    For Vim version 6.0f.  Last change: 2000 Aug 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -123,35 +123,25 @@ MAKING YOUR OWN SYNTAX FILES				*mysyntaxfile*
 When you create your own syntax files, and you want to have these
 automatically used with ":syntax on", do this:
 
-1. Create a file that contains the autocommands to load your syntax files when
-   the right file type is detected.  To prevent loading two syntax files (when
-   the file type is used twice), first delete other autocommands for the same
-   file type.  You can also include ":highlight" commands in this file, which
-   override the normal highlighting (because the file is sourced after setting
-   the normal highlighting).  Example: >
-     au! Syntax dosbatch    so ~/vim/batch.vim
-     au! Syntax mine	    so ~/vim/mine.vim
-     highlight Comment gui=bold
-<  Let's assume you write this file in "~/vim/mysyntax.vim".
+1. Create your user runtime directory.  You would normally use the first item
+   of the 'runtimepath' option.  Example for Unix: >
+	mkdir ~/.vim
 
-   Note that when you introduce a new file type, this must first be detected.
-   See |myfiletypefile|.
+2. Create a directory in there called "syntax".  For Unix: >
+	mkdir ~/.vim/syntax
 
-							*mysyntaxfile-file*
-2. In your .vimrc, set the "mysyntaxfile" variable to the file you just
-   created.  For example: >
-     :let mysyntaxfile = "~/vim/mysyntax.vim"
-<  Put this before ":syntax on"!
+3. Write the Vim syntax file.  Or download one from the internet.  Then write
+   it in your syntax directory.  For example, for the "mine" syntax: >
+	:w ~/.vim/syntax/mine.vim
 
-If you want to use a new file type, see |new-filetype|.
+Now you can start using your syntax file manually: >
+	:set syntax=mine
+You don't have to exit Vim to use this.
 
-Note that "mysyntaxfile" is sourced AFTER defining the default autocommands
-for the supplied syntax files, so that you can override these autocommands
-with your own.
+If you also want the type of file to be detected, see |new-filetype|.
 
 If you are setting up a system with many users, and you don't want each user
-to add the same syntax file, consider creating a vimrc file that is used for
-all everybody.  See |system-vimrc|.
+to add the same syntax file, you can use another directory from 'runtimepath'.
 
 
 ADDING TO AN EXISTING SYNTAX FILE			*mysyntaxfile-add*
@@ -159,36 +149,29 @@ ADDING TO AN EXISTING SYNTAX FILE			*mysyntaxfile-add*
 If you are mostly satisfied with an existing syntax file, but would like to
 add a few items or change the highlighting, follow these steps:
 
-1. In your vimrc file, set "mysyntaxfile": >
-	let mysyntaxfile = "/home/someone/vim/mysyntax.vim"
+1. Create your user directory from 'runtimepath', see above.
 
-2. In the "mysyntax.vim" file, put an autocommand to source your extra syntax
-   items: >
- 	" FooBar language
- 	:autocmd Syntax foobar		source /home/someone/vim/foobar.vim
-<  Check: if you do ":autocmd Syntax foobar" you wil see both the original
-   syntax file and the one you just added: >
-	Syntax
-	   foobar	so $VIMRUNTIME/syntax/foobar.vim
-	   foobar	source /home/someone/vim/foobar.vim
+2. Create a directory in there called "syntax2".  For Unix: >
+	mkdir ~/.vim/syntax2
 
-3. In the additional language file, put the items you want to add: >
-	syntax keyword foobarType	Short Long
-	hi link foobarType	Type
-	hi foobarComment guifg=Green
+3. Write a Vim script that contains the commands you want to use.  For
+   example, to change the colors for the C syntax: >
+	highlight cComment ctermfg=Green guifg=Green
+
+4. Write that file in the "syntax2" directory.  Use the name of the syntax,
+   with ".vim" added.  For our C syntax: >
+	:w ~/.vim/syntax2/c.vim
+
+That's it.  The next time you edit a C file the Comment color will be
+different.  You don't have to exit Vim.
 
 
 REPLACING AN EXISTING SYNTAX FILE			*mysyntaxfile-replace*
 
 If you don't like a distributed syntax file, or you have downloaded a new
-version, follow the same steps as above, but at the second item add a "!" to
-the autocmd: >
-	" FooBar language
-	:autocmd! Syntax foobar		source /home/someone/vim/foobar.vim
-Check: If you do ":autocmd Syntax foobar" you will only see the syntax file
-you just added: >
-	Syntax
-	   foobar	source /home/someone/vim/foobar.vim
+version, follow the same steps as for |mysyntaxfile| above.  Just make sure
+that you write the syntax file in a directory that is early in 'runtimepath'.
+Vim will only load the first syntax file found.
 
 
 NAMING CONVENTIONS
@@ -265,7 +248,7 @@ What ":syntax on" does:
 
     Source $VIMRUNTIME/syntax/syntax.vim
     |
-    +-	Clear out any old syntax.
+    +-	Clear out any old syntax by sourcing $VIMRUNTIME/syntax/nosyntax.vim
     |
     +-	Source $VIMRUNTIME/syntax/synload.vim
     |	|
@@ -275,22 +258,22 @@ What ":syntax on" does:
     |	|   the 'syntax' option is set. *synload-1*
     |	|
     |	+-  Source the user's optional file, from the |mysyntaxfile| variable.
-    |	    This is where you can add your own syntax autocommands for loading
-    |	    your syntax file when the 'syntax' option is set.  You can also
-    |	    modify the standard highlighting here. *synload-2*
+    |	    This is for backwards compatibility with Vim 5.x only. *synload-2*
     |
-    +-	Source $VIMRUNTIME/filetype.vim
+    +-	Do ":filetype on", which does ":runtime! filetype.vim".  It loads any
+    |	filetype.vim files found.  It should always Source
+    |	$VIMRUNTIME/filetype.vim, which does the following.
     |	|
     |	+-  Install autocmds based on suffix to set the 'filetype' option
     |	|   This is where the connection between file name and file type is
     |	|   made for known file types. *synload-3*
     |	|
     |	+-  Source the user's optional file, from the |myfiletypefile|
-    |	|   variable.  This is where you can add your own connections between
-    |	|   file name and file type.  Or overrule existing ones. *synload-4*
+    |	|   variable.  This is for backwards compatibility with Vim 5.x only.
+    |	|   *synload-4*
     |	|
-    |	+-  Install one autocommand which loads $VIMRUNTIME/scripts.vim when
-    |	|   no file type was detected yet. *synload-5*
+    |	+-  Install one autocommand which sources scripts.vim when no file
+    |	|   type was detected yet. *synload-5*
     |	|
     |	+-  Source $VIMRUNTIME/menu.vim, to setup the Syntax menu. |menu.vim|
     |
@@ -310,11 +293,11 @@ When a file is loaded, its syntax file is found in this way:
     |	option is set to the file type.
     |
     +-	The autocommand at |synload-5| is triggered.  If the file type was not
-    |	found yet, then $VIMRUNTIME/scripts.vim is sourced.
+    |	found yet, then scripts.vim is searched for in 'runtimepath'.  This
+    |	should always load $VIMRUNTIME/scripts.vim, which does the following.
     |	|
-    |	+-  Source the user's optional |myscriptsfile|.  This typically makes
-    |	|   checks using "getline(1) =~ pattern" to find out which file type
-    |	|   the file is, and sets 'filetype'.
+    |	+-  Source the user's optional |myscriptsfile|.  This is for backwards
+    |	|   compbatibility with Vim 5.x only.
     |	|
     |	+-  If the file type is still unknown, check the contents of the file,
     |	    again with checks like "getline(1) =~ pattern" as to whether the
@@ -325,8 +308,14 @@ When a file is loaded, its syntax file is found in this way:
     |	'syntax' to the determined file type.
     |
     +-	When the 'syntax' option was set above, this triggers an autocommand
-    |	from |synload-1| or |synload-2|.  This will source the syntax file in
-    |	the $VIMRUNTIME/syntax directory or the user's syntax file.
+    |	from |synload-1| (and |synload-2|).  This find the main syntax file in
+    |	'runtimepath', with this command:
+    |		runtime syntax/<name>.vim
+    |	Then the modification syntax files are loaded, mostly used to change
+    |	the highlighting:
+    |		runtime! syntax2/<name>.vim
+    |	Note that all files found will be sourced, while only one main syntax
+    |	file is loaded.
     |
     +-	Any other user installed FileType or Syntax autocommands are
 	triggered.  This can be used to change the highlighting for a specific
@@ -918,9 +907,9 @@ PASCAL							*pascal.vim*
 The Pascal syntax file has been extended to take into account some extensions
 provided by Turbo Pascal, Free Pascal Compiler or GNU Pascal Compiler.  If you
 prefer to stick with the standard Pascal keywords, add the following line to
-your startup file:
+your startup file: >
 
->   let pascal_traditional=1
+	:let pascal_traditional=1
 
 
 PERL							*perl.vim*

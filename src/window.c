@@ -603,7 +603,8 @@ win_split(new_size, flags)
 	if (new_size == 0)
 	{
 #ifdef FEAT_QUICKFIX
-	    if (qf_isqbuf(oldwin->w_buffer) && oldwin_height > 2 * QF_WINHEIGHT)
+	    if (bt_quickfix(oldwin->w_buffer)
+					  && oldwin_height > 2 * QF_WINHEIGHT)
 		new_size = oldwin_height - QF_WINHEIGHT;
 	    else
 #endif
@@ -1407,7 +1408,7 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
 	    {
 		/* don't count lines of quickfix window if it's full width.
 		 * Watch out for next_curwin being the quickfix window. */
-		if (fr->fr_win != NULL && qf_isqbuf(fr->fr_win->w_buffer))
+		if (fr->fr_win != NULL && bt_quickfix(fr->fr_win->w_buffer))
 		{
 		    room -= fr->fr_win->w_height - p_wmh;
 		    if (fr->fr_win == next_curwin)
@@ -1433,7 +1434,7 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
 		new_size = height;
 	    else if (dir == 'h'
 #ifdef FEAT_QUICKFIX
-		    || (fr->fr_win != NULL && qf_isqbuf(fr->fr_win->w_buffer))
+		    || (fr->fr_win != NULL && bt_quickfix(fr->fr_win->w_buffer))
 #endif
 		    )
 		new_size = fr->fr_height;
@@ -2052,7 +2053,7 @@ close_others(message, forceit)
 #endif
 		    continue;
 	    }
-	    win_close(wp, !P_HID && !bufIsChanged(wp->w_buffer));
+	    win_close(wp, !P_HID(wp->w_buffer) && !bufIsChanged(wp->w_buffer));
 	}
     }
 
@@ -2403,7 +2404,7 @@ win_enter_ext(wp, undo_sync, curwin_invalid)
     /* set window height to desired minimal value */
     if (curwin->w_height < p_wh
 #ifdef FEAT_QUICKFIX
-	    && !qf_isqbuf(curwin->w_buffer)
+	    && !bt_quickfix(curwin->w_buffer)
 #endif
 	    )
 	win_setheight((int)p_wh);

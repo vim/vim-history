@@ -31,10 +31,9 @@ Exuberant Ctags offers the following features:
     Cray. Some pre-compiled binaries are available on the web site.
 
 
-You can find Exuberant Ctags at the following locations:
+Visit the Exuberant Ctags web site:
 
-    http://darren.hiebert.com/ctags/index.html   (Official web site)
-    ftp://sunsite.unc.edu/pub/Linux/devel/lang/c/
+    http://ctags.sourceforge.net
 
 
 Which brings us to the most frequently asked question:

@@ -171,7 +171,9 @@ static void	ex_nogui __ARGS((exarg_t *eap));
 #endif
 #if defined(FEAT_GUI_W32) && defined(FEAT_MENU)
 static void	ex_tearoff __ARGS((exarg_t *eap));
+static void	ex_popup __ARGS((exarg_t *eap));
 #else
+# define ex_popup		ex_ni
 # define ex_tearoff		ex_ni
 #endif
 #ifndef FEAT_GUI_MSWIN
@@ -305,8 +307,10 @@ static void	cmd_source __ARGS((char_u *fname, int forceit));
 static void	ex_behave __ARGS((exarg_t *eap));
 #ifdef FEAT_AUTOCMD
 static void	ex_filetype __ARGS((exarg_t *eap));
+static void	ex_setfiletype  __ARGS((exarg_t *eap));
 #else
 # define ex_filetype		ex_ni
+# define ex_setfiletype		ex_ni
 #endif
 static void	ex_digraphs __ARGS((exarg_t *eap));
 static void	ex_set __ARGS((exarg_t *eap));
@@ -570,6 +574,14 @@ do_cmdline(cmdline, getline, cookie, flags)
 		retval = FAIL;
 		break;
 	    }
+
+	    /* Check if a sourced file hit a ":finish" command. */
+	    if (getline == getsourceline && source_finished(cookie))
+	    {
+		retval = FAIL;
+		break;
+	    }
+
 	    next_cmdline = ((char_u **)(lines_ga.ga_data))[current_line];
 	}
 #endif
@@ -648,6 +660,34 @@ do_cmdline(cmdline, getline, cookie, flags)
 		++RedrawingDisabled;
 		did_inc = TRUE;
 	    }
+	}
+
+	if (p_verbose >= 15 && sourcing_name != NULL)
+	{
+	    int	c = -1;
+
+	    ++no_wait_return;
+	    msg_scroll = TRUE;	    /* always scroll up, don't overwrite */
+	    /* Truncate long lines, smsg() can't handle that. */
+	    if (STRLEN(cmdline_copy) > 200)
+	    {
+		c = cmdline_copy[200];
+		cmdline_copy[200] = NUL;
+	    }
+#ifdef FEAT_EVAL
+	    if (current_line + 1 < lines_ga.ga_len)
+		smsg((char_u *)_("line ~%ld: %s"),
+		     (long)sourcing_lnum - lines_ga.ga_len + current_line + 1,
+								cmdline_copy);
+	    else
+#endif
+		smsg((char_u *)_("line %ld: %s"),
+					   (long)sourcing_lnum, cmdline_copy);
+	    msg_puts((char_u *)"\n");   /* don't overwrite this either */
+	    if (c >= 0)
+		cmdline_copy[200] = c;
+	    cmdline_row = msg_row;
+	    --no_wait_return;
 	}
 
 	/*
@@ -1753,7 +1793,7 @@ ex_bmodified(eap)
 
 /*
  * :[N]bnext [N]	to next buffer
- * :[N]sbnext [N]	to next buffer
+ * :[N]sbnext [N]	split and to next buffer
  */
     static void
 ex_bnext(eap)
@@ -1765,8 +1805,8 @@ ex_bnext(eap)
 /*
  * :[N]bNext [N]	to previous buffer
  * :[N]bprevious [N]	to previous buffer
- * :[N]sbNext [N]	to previous buffer
- * :[N]sbprevious [N]	to previous buffer
+ * :[N]sbNext [N]	split and to previous buffer
+ * :[N]sbprevious [N]	split and to previous buffer
  */
     static void
 ex_bprevious(eap)
@@ -1777,7 +1817,9 @@ ex_bprevious(eap)
 
 /*
  * :brewind		to first buffer
- * :sbrewind		to first buffer
+ * :bfirst		to first buffer
+ * :sbrewind		split and to first buffer
+ * :sbfirst		split and to first buffer
  */
     static void
 ex_brewind(eap)
@@ -1788,7 +1830,7 @@ ex_brewind(eap)
 
 /*
  * :blast		to last buffer
- * :sblast		to last buffer
+ * :sblast		split and to last buffer
  */
     static void
 ex_blast(eap)
@@ -2504,7 +2546,7 @@ set_one_cmd_context(buff)
 	case CMD_imenu:	    case CMD_inoremenu:	    case CMD_iunmenu:
 	case CMD_cmenu:	    case CMD_cnoremenu:	    case CMD_cunmenu:
 	case CMD_tmenu:				    case CMD_tunmenu:
-	case CMD_tearoff:   case CMD_exemenu:
+	case CMD_popup:	    case CMD_tearoff:	    case CMD_exemenu:
 	    return set_context_in_menu_cmd(cmd, arg, forceit);
 #endif
 
@@ -3036,7 +3078,12 @@ autowrite(buf, forceit)
     buf_t	*buf;
     int		forceit;
 {
-    if (!p_aw || !p_write || (!forceit && buf->b_p_ro) || buf->b_ffname == NULL)
+    if (!p_aw || !p_write
+#ifdef FEAT_QUICKFIX
+	/* never autowrite a nofile buffer */
+	|| bt_nofile(buf)
+#endif
+	|| (!forceit && buf->b_p_ro) || buf->b_ffname == NULL)
 	return FAIL;
     return buf_write_all(buf);
 }
@@ -3220,7 +3267,7 @@ can_abandon(buf, forceit)
     buf_t	*buf;
     int		forceit;
 {
-    return (	   P_HID
+    return (	   P_HID(buf)
 		|| !bufIsChanged(buf)
 		|| buf->b_nwindows > 1
 		|| autowrite(buf, forceit) == OK
@@ -3606,7 +3653,7 @@ get_mef_name()
 }
 
 /*
- * ":cc", ":crewind" and ":clast".
+ * ":cc", ":crewind", ":cfirst" and ":clast".
  */
     static void
 ex_cc(eap)
@@ -3617,7 +3664,7 @@ ex_cc(eap)
 	    ? (int)eap->line2
 	    : eap->cmdidx == CMD_cc
 		? 0
-		: eap->cmdidx == CMD_crewind
+		: (eap->cmdidx == CMD_crewind || eap->cmdidx == CMD_cfirst)
 		    ? 1
 		    : 32767,
 	    eap->forceit);
@@ -3997,9 +4044,9 @@ do_source(fname, check_other, is_vimrc)
 #endif
     if (p_verbose > 0)
     {
-	smsg((char_u *)_("finished sourcing \"%s\""), fname);
+	smsg((char_u *)_("finished sourcing %s"), fname);
 	if (sourcing_name != NULL)
-	    smsg((char_u *)_("continuing in \"%s\""), sourcing_name);
+	    smsg((char_u *)_("continuing in %s"), sourcing_name);
     }
 
 theend:
@@ -4094,9 +4141,6 @@ getsourceline(c, cookie, indent)
 	    vim_free(sp->nextline);
 	}
     }
-
-    if (p_verbose >= 12 && line != NULL)
-	smsg((char_u *)_("line %ld: \"%s\""), (long)sourcing_lnum, line);
 
     return line;
 }
@@ -4565,6 +4609,8 @@ uc_scan_attr(attr, len, argt, def, compl)
 	*argt |= BANG;
     else if (STRNICMP(attr, "register", len) == 0)
 	*argt |= REGSTR;
+    else if (STRNICMP(attr, "bar", len) == 0)
+	*argt |= TRLBAR;
     else
     {
 	int	i;
@@ -5161,8 +5207,9 @@ get_user_commands(idx)
 get_user_cmd_flags(idx)
     int		idx;
 {
-    static char *user_cmd_flags[] = {"nargs", "complete", "range", "count",
-				     "bang", "register"};
+    static char *user_cmd_flags[] =
+	{"bang", "bar", "complete", "count", "nargs", "range", "register"};
+
     if (idx >= sizeof(user_cmd_flags) / sizeof(user_cmd_flags[0]))
 	return NULL;
     return (char_u *)user_cmd_flags[idx];
@@ -5226,7 +5273,7 @@ ex_quit(eap)
      */
     if (check_more(FALSE, eap->forceit) == OK && only_one_window())
 	exiting = TRUE;
-    if ((!P_HID && check_changed(curbuf, FALSE, FALSE, eap->forceit, FALSE))
+    if ((!P_HID(curbuf) && check_changed(curbuf, FALSE, FALSE, eap->forceit, FALSE))
 	    || check_more(TRUE, eap->forceit) == FAIL
 	    || (only_one_window() && check_changed_any(eap->forceit)))
     {
@@ -5242,7 +5289,7 @@ ex_quit(eap)
 # ifdef FEAT_GUI
 	need_mouse_correct = TRUE;
 # endif
-	win_close(curwin, !P_HID || eap->forceit); /* may free buffer */
+	win_close(curwin, !P_HID(curwin->w_buffer) || eap->forceit); /* may free buffer */
 #endif
     }
 }
@@ -5292,7 +5339,7 @@ ex_win_close(eap, win)
     buf_t	*buf = win->w_buffer;
 
     need_hide = (bufIsChanged(buf) && buf->b_nwindows <= 1);
-    if (need_hide && !P_HID && !eap->forceit)
+    if (need_hide && !P_HID(buf) && !eap->forceit)
     {
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
 	if ((p_confirm || cmdmod.confirm) && p_write)
@@ -5312,7 +5359,7 @@ ex_win_close(eap, win)
 #ifdef FEAT_GUI
     need_mouse_correct = TRUE;
 #endif
-    win_close(win, (!need_hide) && (!P_HID));    /* may free buffer */
+    win_close(win, (!need_hide) && (!P_HID(buf)));    /* may free buffer */
 }
 
 /*
@@ -5454,7 +5501,7 @@ ex_exit(eap)
 # ifdef FEAT_GUI
 	need_mouse_correct = TRUE;
 # endif
-	win_close(curwin, !P_HID); /* quit current window, may free buffer */
+	win_close(curwin, !P_HID(curwin->w_buffer)); /* quit current window, may free buffer */
 #endif
     }
 }
@@ -5528,7 +5575,7 @@ ex_previous(eap)
 }
 
 /*
- * ":rewind" and ":srewind".
+ * ":rewind", ":first", ":sfirst" and ":srewind".
  */
     static void
 ex_rewind(eap)
@@ -5604,13 +5651,13 @@ do_argfile(eap, argn)
 	     * the same buffer
 	     */
 	    other = TRUE;
-	    if (P_HID)
+	    if (P_HID(curbuf))
 	    {
 		p = fix_fname(arg_files[argn]);
 		other = otherfile(p);
 		vim_free(p);
 	    }
-	    if ((!P_HID || !other)
+	    if ((!P_HID(curbuf) || !other)
 		  && check_changed(curbuf, TRUE, !other, eap->forceit, FALSE))
 		return;
 	}
@@ -5621,7 +5668,7 @@ do_argfile(eap, argn)
 
 	/* Edit the file; always use the last known line number. */
 	(void)do_ecmd(0, arg_files[curwin->w_arg_idx], NULL, eap, ECMD_LAST,
-		      (P_HID ? ECMD_HIDE : 0) +
+		      (P_HID(curwin->w_buffer) ? ECMD_HIDE : 0) +
 					   (eap->forceit ? ECMD_FORCEIT : 0));
     }
 }
@@ -5639,7 +5686,7 @@ ex_next(eap)
      * check for changed buffer now, if this fails the argument list is not
      * redefined.
      */
-    if (       P_HID
+    if (       P_HID(curbuf)
 	    || eap->cmdidx == CMD_snext
 	    || !check_changed(curbuf, TRUE, FALSE, eap->forceit, FALSE))
     {
@@ -5689,7 +5736,7 @@ handle_drop(filec, filev, split)
      * We don't need to check if the 'hidden' option is set, as in this
      * case the buffer won't be lost.
      */
-    if (!P_HID && !split)
+    if (!P_HID(curbuf) && !split)
     {
 	int old_emsg = emsg_off;
 
@@ -6071,7 +6118,7 @@ do_exedit(eap, old_curwin)
 	setpcmark();
 	if (do_ecmd(0, (eap->cmdidx == CMD_enew ? NULL : eap->arg),
 		    NULL, eap, eap->do_ecmd_lnum,
-		    (P_HID ? ECMD_HIDE : 0) +
+		    (P_HID(curbuf) ? ECMD_HIDE : 0) +
 		    (eap->forceit ? ECMD_FORCEIT : 0) +
 		    (eap->cmdidx == CMD_badd ? ECMD_ADDBUF : 0 )) == FAIL
 		&& (eap->cmdidx == CMD_split || eap->cmdidx == CMD_split))
@@ -6079,12 +6126,12 @@ do_exedit(eap, old_curwin)
 #ifdef FEAT_WINDOWS
 	    /* If editing failed after a split command, close the window */
 	    need_hide = (curbufIsChanged() && curbuf->b_nwindows <= 1);
-	    if (!need_hide || P_HID)
+	    if (!need_hide || P_HID(curbuf))
 	    {
 # ifdef FEAT_GUI
 		need_mouse_correct = TRUE;
 # endif
-		win_close(curwin, !need_hide && !P_HID);
+		win_close(curwin, !need_hide && !P_HID(curwin->w_buffer));
 	    }
 #endif
 	}
@@ -6176,6 +6223,12 @@ ex_tearoff(eap)
     exarg_t	*eap;
 {
     gui_make_tearoff(eap->arg);
+}
+    static void
+ex_popup(eap)
+    exarg_t	*eap;
+{
+    gui_make_popup(eap->arg);
 }
 #endif
 
@@ -7257,6 +7310,7 @@ ex_tag_cmd(eap, name)
 		  break;
 	case 'o': cmd = DT_POP;		/* ":pop" */
 		  break;
+	case 'f':			/* ":tfirst" */
 	case 'r': cmd = DT_FIRST;	/* ":trewind" */
 		  break;
 	case 'l': cmd = DT_LAST;	/* ":tlast" */
@@ -8223,16 +8277,18 @@ ex_viminfo(eap)
 ex_runtime(eap)
     exarg_t	*eap;
 {
-    cmd_runtime(eap->arg);
+    cmd_runtime(eap->arg, eap->forceit);
 }
 
 /*
  * Source the file "name" from all directories in 'runtimepath'.
  * "name" can contain wildcards.
+ * When "all" is TRUE, source all files, otherwise only the first one.
  */
     void
-cmd_runtime(name)
+cmd_runtime(name, all)
     char_u	*name;
+    int		all;
 {
     char_u	*p = p_rtp;
     char_u	*buf;
@@ -8260,8 +8316,14 @@ cmd_runtime(name)
 							       EW_FILE) == OK)
 		{
 		    for (i = 0; i < num_files; ++i)
+		    {
 			(void)do_source(files[i], FALSE, FALSE);
+			if (!all)
+			    break;
+		    }
 		    FreeWild(num_files, files);
+		    if (!all && num_files > 0)
+			break;
 		}
 	    }
 	}
@@ -8379,19 +8441,30 @@ ex_filetype(eap)
     }
     if (STRCMP(arg, "on") == 0)
     {
-	cmd_runtime((char_u *)FILETYPE_FILE);
+	cmd_runtime((char_u *)FILETYPE_FILE, TRUE);
 	if (settings)
-	    cmd_runtime((char_u *)SETTINGS_FILE);
+	    cmd_runtime((char_u *)SETTINGS_FILE, TRUE);
     }
     else if (STRCMP(arg, "off") == 0)
     {
 	if (settings)
-	    cmd_runtime((char_u *)SETSOFF_FILE);
+	    cmd_runtime((char_u *)SETSOFF_FILE, TRUE);
 	else
-	    cmd_runtime((char_u *)FTOFF_FILE);
+	    cmd_runtime((char_u *)FTOFF_FILE, TRUE);
     }
     else
 	EMSG2(_(e_invarg2), arg);
+}
+
+/*
+ * ":setfiletype {name}"
+ */
+    static void
+ex_setfiletype(eap)
+    exarg_t	*eap;
+{
+    if (!did_filetype)
+	set_option_value((char_u *)"filetype", 0L, eap->arg, TRUE);
 }
 #endif
 

@@ -1,12 +1,12 @@
 # $Id$
 #
-# Makefile for ctags on QDOS/SMS systems and C68 v4.24f
+# Makefile for ctags on QDOS/SMS systems and C68 v4.24
 # Submitted by Thierry Godefroy <godefroy@imaginet.fr>
 
 # Directories:
 
 T = ram1_
-P = win5_C68_
+P = drv1_C68_
 
 # Programs name:
 
@@ -17,10 +17,10 @@ LD  = $(P)ld
 
 # Programs flags:
 
-CCFLAGS  = -tmp$(T) -v -Y$(P) -I$C -O
+CCFLAGS  = -tmp$(T) -v -Y$(P) -I$(P)include_ -O
 ASFLAGS  = -V
 ASMFLAGS = -nolist
-LDFLAGS  = -v -L$(P)lib_ -bufp200K\
+LDFLAGS  = -v -L$(P)lib_ -bufp150K\
 
 # Target name:
 
@@ -32,7 +32,14 @@ LIBS =
 
 # Target dependencies:
 
-include source.mak
+HEADERS = \
+	args.h ctags.h debug.h entry.h general.h get.h keyword.h \
+	main.h options.h parse.h read.h sort.h strlist.h vstring.h
+
+OBJECTS = \
+	args.o asm.o awk.o eiffel.o beta.o c.o cobol.o entry.o fortran.o \
+	get.o keyword.o lisp.o main.o options.o parse.o perl.o python.o \
+	read.o scheme.o sh.o sort.o strlist.o tcl.o vim.o vstring.o qdos.o
 
 $(EXEC) : $(OBJECTS)
     $(LD) -o$(EXEC) $(LDFLAGS) $(OBJECTS) $(LIBS)

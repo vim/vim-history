@@ -355,9 +355,8 @@ SniffEmacsReadThread(void *dummy)
 	/* move incomplete message to beginning of buffer */
 	ReadThreadLen = msgCur - msgStart;
 	assert(ReadThreadLen >=0);
-	if(ReadThreadLen > 0) {
-	    memmove(ReadThreadBuffer, msgStart, ReadThreadLen);
-	}
+	if (ReadThreadLen > 0)
+	    vim_memmove(ReadThreadBuffer, msgStart, ReadThreadLen);
 
 	if(sniff_request_processed) {
 	    /* notify others that new data has arrived */

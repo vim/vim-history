@@ -1,7 +1,6 @@
 # $Id$
 #
 # Makefile for ctags on the Amiga, using Aztec/Manx C 5.0 or later
-#
 
 OBJECTS = \
 	args.o asm.o awk.o eiffel.o beta.o c.o cobol.o entry.o fortran.o \

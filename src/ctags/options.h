@@ -11,7 +11,7 @@
 #ifndef _OPTIONS_H
 #define _OPTIONS_H
 
-#ifdef OPTION_WRITE
+#if defined(OPTION_WRITE) || defined(VAXC)
 # define CONST_OPTION
 #else
 # define CONST_OPTION const

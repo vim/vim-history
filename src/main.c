@@ -1159,7 +1159,7 @@ main
 	 * Read all the plugin files.
 	 */
 	if (p_lpl)
-	    cmd_runtime((char_u *)"plugin/*.vim");
+	    cmd_runtime((char_u *)"plugin/*.vim", TRUE);
     }
 
     /*

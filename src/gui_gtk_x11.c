@@ -2294,6 +2294,19 @@ get_styled_font_variants(char_u * font_name)
     char	*sdup;
     char	*tmp;
     int		len, i;
+    GuiFont	*styled_font[3];
+
+    styled_font[0] = &gui.bold_font;
+    styled_font[1] = &gui.ital_font;
+    styled_font[2] = &gui.boldital_font;
+
+    /* First free whatever was freviously there. */
+    for (i = 0; i < 3; ++i)
+	if (*styled_font[i])
+	{
+	    gdk_font_unref(*styled_font[i]);
+	    *styled_font[i] = NULL;
+	}
 
     if ((sdup = g_strdup((const char *)font_name)) == NULL)
 	return;
@@ -2317,16 +2330,11 @@ get_styled_font_variants(char_u * font_name)
     if (i == 14)
     {
         GdkFont		*font = NULL;
-	GuiFont		*styled_font[3];
 	const char	*bold_chunk[3]	    = { "bold", NULL,	"bold" };
 	const char	*italic_chunk[3]    = { NULL,	"o",	"o" };
 
 	/* font name was complete */
 	len = strlen((const char *)font_name) + 32;
-
-	styled_font[0] = &gui.bold_font;
-	styled_font[1] = &gui.ital_font;
-	styled_font[2] = &gui.boldital_font;
 
 	for (i = 0; i < 3; ++i)
 	{
@@ -2351,14 +2359,6 @@ get_styled_font_variants(char_u * font_name)
 		    strcat(styled_name, italic_chunk[i]);
 		else
 		    strcat(styled_name, chunk[j]);
-	    }
-
-	    /* First free whatever was freviously there.
-	     */
-	    if (*styled_font[i])
-	    {
-		gdk_font_unref(*styled_font[i]);
-		*styled_font[i] = NULL;
 	    }
 
 	    font = gui_mch_get_font((char_u *)styled_name, FALSE);

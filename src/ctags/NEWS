@@ -1,4 +1,22 @@
-Current Version: 4.0
+Current Version: 4.0.3
+
+ctags-4.0.3 (Sun Jul 16 2000)
+* Fixed compiler warnings [Amiga].
+* Fixed problem in configure.in causing struct stat st_ino member test to fail.
+* Fixed problem with TAGS entries for files using DOS-style (CR-LF) new lines.
+* Improved algorithm for locating Perl functions and skipping pods.
+* Improved algorithm for locating Bourne shell functions.
+* Renamed Makefile.amiga to Makefile.manx [Amiga].
+* Added Makefile.sas for SAS C compiler [Amiga].
+* Updated Makefile.qdos [QDOS].
+* Improved support for DECC compiler [VAX].
+
+ctags-4.0.2 (Mon Jul 10 2000)
+* Now silently ignore -w option for backwards compatibility with SVR4 ctags.
+* Fixed bug resulting in no extension flags when using --kind-long option.
+
+ctags-4.0.1 (Wed Jun 28 2000)
+* Fixed segmentation violation when using --file-tags.
 
 ctags-4.0 (Thu Jun 22 2000)
 * Fixed infinite loop on certain syntactically invalid class constructs [C++].

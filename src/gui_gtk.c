@@ -266,13 +266,13 @@ menu_item_new(vimmenu_t *menu, GtkWidget *parent_widget, int sub_menu)
     void
 gui_mch_add_menu(vimmenu_t * menu, vimmenu_t * parent, int idx)
 {
-    if (popup_menu(menu->name))
+    if (menu_is_popup(menu->name))
     {
 	menu->submenu_id = gtk_menu_new();
 	return;
     }
 
-    if (menubar_menu(menu->name) == 0
+    if (menu_is_menubar(menu->name) == 0
 	    || (parent != NULL && parent->submenu_id == 0))
 	return;
 
@@ -327,9 +327,9 @@ menu_item_activate(GtkWidget * widget, gpointer data)
 gui_mch_add_menu_item(vimmenu_t *menu, vimmenu_t *parent, int idx)
 {
 # ifdef FEAT_TOOLBAR
-    if (toolbar_menu(parent->name))
+    if (menu_is_toolbar(parent->name))
     {
-	if (is_menu_separator(menu->name))
+	if (menu_is_separator(menu->name))
 	{
 	    gtk_toolbar_insert_space(GTK_TOOLBAR(gui.toolbar), idx);
 	}
@@ -364,7 +364,7 @@ gui_mch_add_menu_item(vimmenu_t *menu, vimmenu_t *parent, int idx)
 
     /* make place for the possible tearoff handle item */
     ++idx;
-    if (is_menu_separator(menu->name))
+    if (menu_is_separator(menu->name))
     {
 	/* Separator: Just add it */
 	menu->id = gtk_menu_item_new();
@@ -661,7 +661,7 @@ recurse_tearoffs(vimmenu_t *menu, int val)
 {
     while (menu != NULL)
     {
-	if (!popup_menu(menu->name))
+	if (!menu_is_popup(menu->name))
 	{
 	    if (menu->submenu_id != 0)
 	    {
@@ -737,7 +737,7 @@ toolbar_remove_item_by_text(GtkToolbar *tb, const char *text)
 gui_mch_destroy_menu(vimmenu_t *menu)
 {
 #ifdef FEAT_TOOLBAR
-    if (menu->parent && toolbar_menu(menu->parent->name))
+    if (menu->parent && menu_is_toolbar(menu->parent->name))
     {
 	toolbar_remove_item_by_text(GTK_TOOLBAR(gui.toolbar),
 					    (const char *)menu->dname);

@@ -4348,18 +4348,107 @@ get_c_indent()
     else if (!cin_iscomment(theline)
 	    && (trypos = find_start_comment(ind_maxcomment)) != NULL) /* XXX */
     {
+	int	lead_len = 2;
+	char_u	lead_middle[COM_MAX_LEN];	/* middle-comment string */
+	char_u	lead_end[COM_MAX_LEN];		/* end-comment string */
+	char_u	*p;
+	int	c = 0;
+	int	off = 0;
 
 	/* find how indented the line beginning the comment is */
 	getvcol(curwin, trypos, &col, NULL, NULL);
 	amount = col;
 
-	/* if our line starts with an asterisk, line up with the
-	 * asterisk in the comment opener; otherwise, line up
-	 * with the first character of the comment text.
-	 */
-	if (theline[0] == '*')
+	STRCPY(lead_middle, "*");
+	STRCPY(lead_end, "*/");
+	p = curbuf->b_p_com;
+	while (*p)
 	{
-	    amount += 1;
+	    int	tc = 0;
+	    int	toff = 0;
+
+	    while (*p && *p != ':')
+	    {
+		if (*p == COM_START)
+		{
+		    while (*p && p[-1] != ':')
+		    {
+			if (*p == COM_LEFT || *p == COM_RIGHT)
+			    tc = *p++;
+			else if (isdigit(*p) || *p == '-')
+			    toff = getdigits(&p);
+			else
+			    ++p;
+		    }
+		    lead_len = 0;
+		    while (*p && *p != ',')
+		    {
+			++p;
+			++lead_len;
+		    }
+		    if (tc)
+			c = tc;
+		    if (toff)
+			off = toff;
+		    break;
+		}
+		if (*p == COM_END)
+		{
+		    while (*p && p[-1] != ':')
+		    {
+			if (*p == COM_LEFT || *p == COM_RIGHT)
+			    tc = *p++;
+			else if (isdigit(*p) || *p == '-')
+			    toff = getdigits(&p);
+			else
+			    ++p;
+		    }
+		    if (tc)
+			c = tc;
+		    if (toff)
+			off = toff;
+		    (void)copy_option_part(&p, lead_end, COM_MAX_LEN, ",");
+		    break;
+		}
+
+		if (*p == COM_MIDDLE)
+		{
+		    while (*p && p[-1] != ':')
+			++p;
+		    (void)copy_option_part(&p, lead_middle, COM_MAX_LEN, ",");
+		    break;
+		}
+
+		if (*p == COM_LEFT || *p == COM_RIGHT)
+		    tc = *++p;
+		else if (isdigit(*p) || *p == '-')
+		    toff = getdigits(&p);
+		else
+		    ++p;
+	    }
+	    if (*p == ':')
+		++p;
+	    while (*p && p[-1] != ',')
+	    {
+		++p;
+	    }
+	}
+
+	/* if our line starts with the middle comment string, line it up
+	 * with the comment opener per the 'comments' option; otherwise,
+	 * line up with the first character of the comment text.
+	 */
+	if (!STRNCMP(theline, lead_middle, STRLEN(lead_middle)) &&
+	    STRNCMP(theline, lead_end, STRLEN(lead_end)))
+	{
+	    if (off != 0)
+	    {
+		amount += off;
+	    }
+	    else if (c == COM_RIGHT)
+	    {
+		amount += lead_len - STRLEN(lead_middle);
+	    }
 	}
 	else
 	{
