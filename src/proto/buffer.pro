@@ -1,11 +1,13 @@
 /* buffer.c */
 int open_buffer __PARMS((void));
+int buf_valid __PARMS((BUF *buf));
 void close_buffer __PARMS((WIN *win, BUF *buf, int free_buf, int del_buf));
 void buf_clear __PARMS((BUF *buf));
 void buf_freeall __PARMS((BUF *buf));
 char_u *do_bufdel __PARMS((int command, char_u *arg, int addr_count, int start_bnr, int end_bnr, int forceit));
 int do_buffer __PARMS((int action, int start, int dir, int count, int forceit));
 BUF *buflist_new __PARMS((char_u *fname, char_u *sfname, linenr_t lnum, int use_curbuf));
+void free_buf_options __PARMS((BUF *buf));
 int buflist_getfile __PARMS((int n, linenr_t lnum, int options));
 void buflist_getlnum __PARMS((void));
 BUF *buflist_findname __PARMS((char_u *fname));

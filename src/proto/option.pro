@@ -15,7 +15,7 @@ void clear_termoptions __PARMS((void));
 void set_term_defaults __PARMS((void));
 void comp_col __PARMS((void));
 void win_copy_options __PARMS((WIN *wp_from, WIN *wp_to));
-void buf_copy_options __PARMS((BUF *bp_from, BUF *bp_to, int entering));
+void buf_copy_options __PARMS((BUF *bp_from, BUF *bp_to, int entering, int always));
 void set_context_in_set_cmd __PARMS((char_u *arg));
 int ExpandSettings __PARMS((regexp *prog, int *num_file, char_u ***file));
 int ExpandOldSetting __PARMS((int *num_file, char_u ***file));

@@ -69,7 +69,15 @@
 =	Defines
 ============================================================================*/
 
-#define VERSION		"Exuberant Ctags, Version 1.3, by Darren Hiebert"
+#ifdef WIN32
+#define VERSION		"Exuberant Ctags, Version 1.33 (Win32), by Darren Hiebert"
+#elif defined DJGPP
+#define VERSION		"Exuberant Ctags, Version 1.33 (32 bit), by Darren Hiebert"
+#elif defined MSDOS
+#define VERSION		"Exuberant Ctags, Version 1.33 (16 bit), by Darren Hiebert"
+#else
+#define VERSION		"Exuberant Ctags, Version 1.33, by Darren Hiebert"
+#endif
 
 #if defined(__MSDOS__) && ! defined(MSDOS)
 # define MSDOS
@@ -819,7 +827,7 @@ static size_t fileCopyLine( fp, seek )
 {
 	const long oldseek = ftell(File.fp);	/* remember original position */
 	size_t	length = 0;
-	char	c;
+	int		c;
 
 	fseek(File.fp, seek, 0);
 	c = getc(File.fp);
@@ -828,7 +836,7 @@ static size_t fileCopyLine( fp, seek )
 	 */
 	while (c != NEWLINE  &&  c != EOF)
 	{
-		const char next = getc(File.fp);		/* preread next character */
+		const int next = getc(File.fp);		/* preread next character */
 
 		/*	If character is '\', or a terminal '$', then quote it.
 		 */
@@ -859,7 +867,7 @@ static size_t fileCopyLineShort( fp, seek )
 	const long oldseek = ftell(File.fp);	/* remember original position */
 	boolean	lineStarted = FALSE;
 	size_t	length = 0;
-	char	c;
+	int		c;
 
 	fseek(File.fp, seek, 0);
 	c = getc(File.fp);
@@ -868,7 +876,7 @@ static size_t fileCopyLineShort( fp, seek )
 	 */
 	while (c != NEWLINE  &&  c != EOF)
 	{
-		char next = getc(File.fp);
+		int next = getc(File.fp);
 
 		if (lineStarted  || ! isspace(c))		/* ignore leading spaces */
 		{
@@ -1547,7 +1555,7 @@ static boolean analyzeParens( st )
 			 *	closing parenthesis.
 			 */
 			c = skipToNonWhite();
-			if (st->gotName  &&  (c == '{'  ||  c == ';'))
+			if (st->gotName  &&  strchr("{;,", c) != NULL)
 				st->token = TOK_ARGS;
 			else if (isident1(c))
 			{
@@ -1666,7 +1674,7 @@ static boolean nextToken( st )
 			break;
 
 		case '{':
-			if (st->declaration == DECL_ENUM  &&  st->prev[0] != TOK_ARGS)
+			if (st->declaration == DECL_ENUM)
 			{
 				st->inEnumBody = TRUE;
 				st->token = TOK_BODY;
@@ -2238,7 +2246,7 @@ static void externalSortTags(toStdout)
 	static char cmd[MAXLINE];
 	int ret;
 
-	sprintf(cmd, "sort -u %s -o %s", TagFile.name, TagFile.name);
+	sprintf(cmd, "sort -u -o %s %s", TagFile.name, TagFile.name);
 	ret = system(cmd);
 	if (ret == 0  &&  Option.warnings)
 	{

@@ -129,7 +129,7 @@ mf_open(fname, trunc_file)
 {
 	MEMFILE			*mfp;
 	int				i;
-	long			size;
+	off_t			size;
 #ifdef UNIX
 	struct STATFS 	stf;
 #endif
@@ -344,6 +344,12 @@ mf_new(mfp, negative, page_count)
 	hp->bh_page_count = page_count;
 	mf_ins_used(mfp, hp);
 	mf_ins_hash(mfp, hp);
+
+	/*
+	 * Init the data to all zero, to avoid reading uninitialized data.
+	 * This also avoids that the passwd file ends up in the swap file!
+	 */
+	(void)vim_memset((char *)(hp->bh_data), 0, (size_t)mfp->mf_page_size);
 
 	return hp;
 }
@@ -846,7 +852,7 @@ mf_read(mfp, hp)
 	MEMFILE		*mfp;
 	BHDR		*hp;
 {
-	long_u		offset;
+	off_t		offset;
 	unsigned	page_size;
 	unsigned	size;
 
@@ -856,7 +862,7 @@ mf_read(mfp, hp)
 	page_size = mfp->mf_page_size;
 	offset = page_size * hp->bh_bnum;
 	size = page_size * hp->bh_page_count;
-	if ((long_u)lseek(mfp->mf_fd, offset, SEEK_SET) != offset)
+	if (lseek(mfp->mf_fd, offset, SEEK_SET) != offset)
 	{
 		EMSG("Seek error in swap file read");
 		return FAIL;
@@ -879,7 +885,7 @@ mf_write(mfp, hp)
 	MEMFILE		*mfp;
 	BHDR		*hp;
 {
-	long_u		offset;		/* offset in the file */
+	off_t		offset;		/* offset in the file */
 	blocknr_t	nr;			/* block nr which is being written */
 	BHDR		*hp2;
 	unsigned	page_size;	/* number of bytes in a page */
@@ -913,7 +919,7 @@ mf_write(mfp, hp)
 			hp2 = hp;
 
 		offset = page_size * nr;
-		if ((long_u)lseek(mfp->mf_fd, offset, SEEK_SET) != offset)
+		if (lseek(mfp->mf_fd, offset, SEEK_SET) != offset)
 		{
 			EMSG("Seek error in swap file write");
 			return FAIL;

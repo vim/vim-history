@@ -747,7 +747,6 @@ main(argc, argv)
 	if (gui.starting)
 	{
 		gui_start();
-		gui.starting = FALSE;
 		full_screen = TRUE;
 	}
 #endif
@@ -781,6 +780,16 @@ main(argc, argv)
 		curbuf->b_p_bin = 1;		/* binary file I/O */
 	}
 
+/*
+ * "-e errorfile": Load the error file now.
+ * If the error file can't be read, exit before doing anything else.
+ */
+	if (doqf && qf_init() == FAIL)		/* if reading error file fails: exit */
+	{
+		outchar('\n');
+		mch_windexit(3);
+	}
+
 	/* Don't set the file name if there was a command in .vimrc that already
 	 * loaded the file */
 	if (curbuf->b_filename == NULL)
@@ -802,13 +811,6 @@ main(argc, argv)
 	}
 	else
 		window_count = 1;
-
-/*
- * "-e errorfile": Load the error file now.
- * If the error file can't be read, exit before doing anything else.
- */
-	if (doqf && qf_init() == FAIL)		/* if reading error file fails: exit */
-		mch_windexit(3);
 
 /*
  * Start putting things on the screen.
@@ -866,10 +868,38 @@ main(argc, argv)
 #endif
 		do_modelines();					/* do modelines */
 	}
-	/* Only read the file if there is none for the current buffer, a command
-	 * in the .vimrc might have loaded a file */
-	else if (curbuf->b_ml.ml_mfp == NULL)
-		(void)open_buffer();			/* create memfile and read file */
+	else
+	{
+		/*
+		 * Open a buffer for windows that don't have one yet.
+		 * Commands in the .vimrc might have loaded a file or split the window.
+		 * Watch out for autocommands that delete a window.
+		 */
+#ifdef AUTOCMD
+		/*
+		 * Don't execute Win/Buf Enter/Leave autocommands here
+		 */
+		++autocmd_no_enter;
+		++autocmd_no_leave;
+#endif
+		for (curwin = firstwin; curwin != NULL; curwin = curwin->w_next)
+		{
+			curbuf = curwin->w_buffer;
+			if (curbuf->b_ml.ml_mfp == NULL)
+			{
+				(void)open_buffer();		/* create memfile and read file */
+#ifdef AUTOCMD
+				curwin = firstwin;			/* start again */
+#endif
+			}
+		}
+#ifdef AUTOCMD
+		--autocmd_no_enter;
+		--autocmd_no_leave;
+#endif
+		curwin = firstwin;
+		curbuf = curwin->w_buffer;
+	}
 
 	setpcmark();
 
@@ -883,6 +913,13 @@ main(argc, argv)
 	 * If opened more than one window, start editing files in the other windows.
 	 * Make_windows() has already opened the windows.
 	 */
+#ifdef AUTOCMD
+	/*
+	 * Don't execute Win/Buf Enter/Leave autocommands here
+	 */
+	++autocmd_no_enter;
+	++autocmd_no_leave;
+#endif
 	for (i = 1; i < window_count; ++i)
 	{
 		if (curwin->w_next == NULL)			/* just checking */
@@ -896,7 +933,7 @@ main(argc, argv)
 			curwin->w_arg_idx = arg_idx;
 			/* edit file from arg list, if there is one */
 			(void)do_ecmd(0, arg_idx < arg_count ? arg_files[arg_idx] : NULL,
-										NULL, NULL, TRUE, (linenr_t)1, FALSE);
+										  NULL, NULL, (linenr_t)1, ECMD_HIDE);
 			if (arg_idx == arg_count - 1)
 				arg_had_last = TRUE;
 			++arg_idx;
@@ -908,7 +945,13 @@ main(argc, argv)
 			break;
 		}
 	}
+#ifdef AUTOCMD
+	--autocmd_no_enter;
+#endif
 	win_enter(firstwin, FALSE);				/* back to first window */
+#ifdef AUTOCMD
+	--autocmd_no_leave;
+#endif
 	if (window_count > 1)
 		win_equal(curwin, FALSE);			/* adjust heights */
 
@@ -1064,7 +1107,9 @@ getout(r)
 		write_viminfo(NULL, FALSE);
 #endif /* VIMINFO */
 
+#if !(defined(UNIX) || defined(VMS) || defined(AMIGA))
 	outchar('\r');
+#endif
 	outchar('\n');
 	mch_windexit(r);
 }

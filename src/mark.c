@@ -676,7 +676,10 @@ read_viminfo_filemark(line, fp, force)
 	/* We only get here (hopefully) if line[0] == '\'' */
 	str = line + 1;
 	if (*str > 127 || (!isdigit(*str) && !isupper(*str)))
-		EMSG2("viminfo: Illegal file mark name in line %s", line);
+	{
+		if (viminfo_error("Illegal file mark name", line))
+			return TRUE;		/* Too many errors, pretend end-of-file */
+	}
 	else
 	{
 		if (isdigit(*str))
@@ -875,7 +878,10 @@ copy_viminfo_marks(line, fp_in, fp_out, count, eof)
 		if (line[0] != '>')
 		{
 			if (line[0] != '\n' && line[0] != '\r' && line[0] != '#')
-				EMSG2("viminfo: Illegal starting char in line %s", line);
+			{
+				if (viminfo_error("Missing '>'", line))
+					return;		/* too many errors, return now */
+			}
 			eof = vim_fgets(line, LSIZE, fp_in);
 			continue;			/* Skip this dud line */
 		}

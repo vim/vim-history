@@ -122,7 +122,7 @@ OBJ =	$(OUTDIR)\win32.obj    $(OUTDIR)\alloc.obj    $(OUTDIR)\buffer.obj   \
 	$(OUTDIR)\tables.obj   $(OUTDIR)\tag.obj      $(OUTDIR)\term.obj     \
 	$(OUTDIR)\undo.obj     $(OUTDIR)\window.obj   $(OUTDIR)\vim.res
 
-all:	$(VIM)
+all:	$(VIM) ctags/ctags.exe xxd/xxd.exe
 
 $(VIM): $(OUTDIR) $(OBJ) $(OUTDIR)\version.obj
 	$(link) $(linkdebug) $(conflags) -out:$*.exe $(OBJ) \
@@ -133,6 +133,17 @@ $(VIM).exe: $(VIM)
 
 $(OUTDIR):
 	if not exist $(OUTDIR)/nul    mkdir $(OUTDIR)
+
+ctags/ctags.exe: ctags/ctags.c
+	cd ctags
+	$(MAKE) -f Makefile.w32
+	cd ..
+
+xxd/xxd.exe: xxd/xxd.c
+	cd xxd
+	$(MAKE) -f Makefile.w32
+	cd ..
+
 
 ctags tags: notags
 	$(CTAGS) *.c *.h proto\*.pro

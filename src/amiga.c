@@ -972,7 +972,7 @@ call_shell(cmd, options)
 {
 	BPTR	mydir;
 	int		x;
-#ifndef LATTICE
+#ifdef AZTEC_C
 	int		use_execute;
 	char_u	*shellcmd = NULL;
 	char_u	*shellarg;
@@ -994,7 +994,7 @@ call_shell(cmd, options)
 		settmode(0); 				/* set to cooked mode */
 	mydir = Lock((UBYTE *)"", (long)ACCESS_READ);	/* remember current directory */
 
-#ifdef LATTICE						/* not tested very much */
+#if !defined(AZTEC_C)				/* not tested very much */
 	if (cmd == NULL)
 	{
 # ifndef NO_ARP
@@ -1051,7 +1051,7 @@ call_shell(cmd, options)
 			retval = FAIL;
 		}
 	}
-#else	/* !LATTICE */
+#else	/* else part is for AZTEC_C */
 	if (p_st >= 4 || (p_st >= 2 && options != SHELL_FILTER))
 		use_execute = 1;
 	else
@@ -1104,7 +1104,7 @@ call_shell(cmd, options)
 	else if (p_st & 1)
 		x = fexecl((char *)shellcmd, (char *)shellcmd, (char *)shellarg, (char *)cmd, NULL);
 	else
-		x = fexecl((char *)shellcmd, (char *)shellcmd, (char *)shellarg, "-c", (char *)cmd, NULL);
+		x = fexecl((char *)shellcmd, (char *)shellcmd, (char *)shellarg, (char *)p_shcf, (char *)cmd, NULL);
 # ifdef NO_ARP
 	if (x < 0)
 # else
@@ -1152,7 +1152,7 @@ call_shell(cmd, options)
 		}
 	}
 	vim_free(shellcmd);
-#endif	/* !LATTICE */
+#endif	/* AZTEC_C */
 
 	if (mydir = CurrentDir(mydir))		/* make sure we stay in the same directory */
 		UnLock(mydir);
@@ -1191,7 +1191,7 @@ void __regargs __chkabort(void)
 
 #else
 	long
-Chk_Abort()
+Chk_Abort(void)
 {
 	return(0L);
 }

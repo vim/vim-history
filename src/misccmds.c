@@ -1389,7 +1389,7 @@ set_Changed()
 {
 	if (!curbuf->b_changed)
 	{
-		change_warning();
+		change_warning(0);
 		curbuf->b_changed = TRUE;
 		check_status(curbuf);
 	}
@@ -1440,7 +1440,9 @@ check_status(buf)
  * will be TRUE.
  */
 	void
-change_warning()
+change_warning(col)
+	int		col;				/* column for message; non-zero when in insert
+								   mode and 'showmode' is on */
 {
 	if (curbuf->b_did_warn == FALSE && curbuf->b_changed == 0 &&
 #ifdef AUTOCMD
@@ -1448,9 +1450,16 @@ change_warning()
 #endif
 											  curbuf->b_p_ro)
 	{
-		curbuf->b_did_warn = TRUE;
-		MSG("Warning: Changing a readonly file");
+		/*
+		 * Do what msg() does, but with a column offset.
+		 */
+		msg_start();
+		msg_col = col;
+		MSG_OUTSTR("Warning: Changing a readonly file");
+		msg_clr_eos();
+		(void)msg_end();
 		mch_delay(1000L, TRUE);	/* give him some time to think about it */
+		curbuf->b_did_warn = TRUE;
 	}
 }
 
@@ -1983,6 +1992,38 @@ gettail(fname)
 }
 
 /*
+ * Get a pointer to one character past the head of a path name.
+ * Unix: after "/"; DOS: after "c:\"; Amiga: after "disk:/".
+ * If there is no head, path is returned.
+ */
+	char_u *
+get_past_head(path)
+	char_u	*path;
+{
+	char_u	*retval;
+
+#if defined(MSDOS) || defined(WIN32) || defined(OS2)
+	/* may skip "c:" */
+	if (isalpha(path[0]) && path[1] == ':')
+		retval = path + 2;
+	else
+		retval = path;
+#elif defined(AMIGA)
+	/* may skip "label:" */
+	retval = vim_strchr(path, ':');
+	if (retval == NULL)
+		retval = path;
+#else	/* Unix */
+	retval = path;
+#endif
+
+	while (ispathsep(*retval))
+		++retval;
+
+	return retval;
+}
+
+/*
  * return TRUE if 'c' is a path separator.
  */
 	int
@@ -2306,6 +2347,7 @@ commentorempty(s)
 
 /*
  * Recognize a line that starts with '{' or '}', or ends with ';' or '}'.
+ * Don't consider "} else" a terminated line.
  * Also consider a line terminated if it ends in ','.  This is not 100%
  * correct, but this mostly means we are in initializations and then it's OK.
  */
@@ -2315,7 +2357,7 @@ isterminated(s)
 {
 	s = skipwhite(s);
 
-	if (*s == '{' || *s == '}')
+	if (*s == '{' || (*s == '}' && !iselse(s)))
 		return TRUE;
 
 	while (*s)
@@ -2415,6 +2457,8 @@ isif(p)
 iselse(p)
 	char_u	*p;
 {
+	if (*p == '}')			/* accept "} else" */
+		p = skipwhite(p + 1);
 	return (STRNCMP(p, "else", 4) == 0 && !isidchar(p[4]));
 }
 
@@ -2441,11 +2485,19 @@ iswhileofdo(p, lnum, ind_maxparen)			/* XXX */
 	int			retval = FALSE;
 
 	p = skipwhite(p);
+	if (*p == '}')				/* accept "} while (cond);" */
+		p = skipwhite(p + 1);
 	if (STRNCMP(p, "while", 5) == 0 && !isidchar(p[5]))
 	{
 		cursor_save = curwin->w_cursor;
 		curwin->w_cursor.lnum = lnum;
 		curwin->w_cursor.col = 0;
+		p = ml_get_curline();
+		while (*p && *p != 'w')	/* skip any '}', until the 'w' of the "while" */
+		{
+			++p;
+			++curwin->w_cursor.col;
+		}
 		if ((trypos = findmatchlimit(0, 0, ind_maxparen)) != NULL)
 		{
 			p = ml_get_pos(trypos) + 1;
@@ -3253,8 +3305,9 @@ get_c_indent()
 
 					/*
 					 * Check if we are after an "if", "while", etc.
+					 * Also allow "} else".
 					 */
-					if (is_cinword(l))
+					if (is_cinword(l) || iselse(l))
 					{
 						/*
 						 * Found an unterminated line after an if (), line up
@@ -3348,7 +3401,7 @@ get_c_indent()
 
 				/*
 				 * Check if we are after a while (cond);
-				 * If so: Ignore the matching "do".
+				 * If so: Ignore until the matching "do".
 				 */
 														/* XXX */
 				else if (iswhileofdo(l, curwin->w_cursor.lnum, ind_maxparen))

@@ -54,8 +54,13 @@ gui_start()
 	old_term = strsave(term_strings[KS_NAME]);
 	mch_setmouse(FALSE);					/* first switch mouse off */
 
-	/* set_termname() will call gui_init() to start the GUI */
+	/*
+	 * Set_termname() will call gui_init() to start the GUI.
+	 * Set the "starting" flag, to indicate that the GUI will start.
+	 */
+	gui.starting = TRUE;
 	termcapinit((char_u *)"builtin_gui");
+	gui.starting = FALSE;
 
 	if (!gui.in_use)						/* failed to start GUI */
 		termcapinit(old_term);
@@ -359,7 +364,7 @@ gui_resize_window(pixel_width, pixel_height)
 	gui_reset_scroll_region();
 	/*
 	 * At the "more" prompt there is no redraw, put the cursor at the last
-	 * line here (why does it have to be one row too low???).
+	 * line here (why does it have to be one row too low?).
 	 */
 	if (State == ASKMORE)
 		gui.row = gui.num_rows;
@@ -1276,7 +1281,9 @@ gui_free_menu(menu)
 {
 	int		i;
 
-	gui_mch_destroy_menu(menu);		/* Free machine specific menu structures */
+	/* Free machine specific menu structures (only when already created) */
+	if (gui.in_use)
+		gui_mch_destroy_menu(menu);
 	vim_free(menu->name);
 	for (i = 0; i < 4; i++)
 		gui_free_menu_string(menu, i);
@@ -1627,7 +1634,7 @@ gui_init_which_components(oldval)
 	int		grey_old, grey_new;
 	char_u	*temp;
 
-	if (oldval != NULL)
+	if (oldval != NULL && gui.in_use)
 	{
 		/*
 		 * Check if the menu's go from grey to non-grey or vise versa.

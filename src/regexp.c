@@ -296,7 +296,8 @@ skip_regexp(p, dirc)
 	{
 		if (p[0] == dirc && !in_range)		/* found end of regexp */
 			break;
-		if ((p[0] == '[' && p_magic) || (p[0] == '\\' && p[1] == '[' && !p_magic))
+		if (!in_range && ((p[0] == '[' && p_magic) ||
+								   (p[0] == '\\' && p[1] == '[' && !p_magic)))
 		{
 			in_range = TRUE;
 			if (p[0] == '\\')

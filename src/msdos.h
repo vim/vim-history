@@ -51,6 +51,10 @@
 # include <unistd.h>
 #endif
 
+#ifndef DJGPP
+typedef long off_t;
+#endif
+
 /*
  * Names for the EXRC, HELP and temporary files.
  * Some of these may have been defined in the makefile.
@@ -90,9 +94,12 @@
 # define DEF_DIR		".,c:\\tmp,c:\\temp"	/* default for 'directory' */
 #endif
 
-#define TMPNAME1		"viXXXXXX"		/* put it in current dir */
-#define TMPNAME2		"voXXXXXX"		/*  is there a better place? */
-#define TMPNAMELEN		10
+/*
+ * Try several directories to put the temp files.
+ */
+#define TEMPDIRNAMES	"$TMP", "$TEMP", "c:\\TMP", "c:\\TEMP", ""
+#define TEMPNAME		"v?XXXXXX"
+#define TEMPNAMELEN		128
 
 #ifndef MAXMEM
 # define MAXMEM			256				/* use up to 256Kbyte for buffer */

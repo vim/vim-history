@@ -97,6 +97,7 @@
 #AIX 3                cc            +X11 +GUI -GUI      3.19     Ali Albayrak
 #AIX 3                cc gcc        +X11 +GUI -GUI      4.0      Stephen Riehm
 #AIX 4                cc gcc-2.7.2  +X11 -GUI           3.27 (4) Axel Kielhorn
+#AIX 4.1.4            cc            +X11 +GUI           4.2      Joey Joosten
 #A/UX 3.1.1           gcc           +X11                4.0  (6) Jim Jagielski
 #Alpha OSF1           cc gcc-2.6.3   +X11 +GUI          3.23     Robert Webb
 #Alpha OSF1 V3.2      cc            +X11                3.22     Heiko Nardmann
@@ -107,8 +108,8 @@
 #ConvexOS                cc          +X11 Motif Athena  3.29     Lennart Schultz
 #dynix/ptx 1.4.0      cc             -X11 -GUI          3.21     Juergen Weigert
 #FreeBSD 2.0.5           gcc-2.6.3   X11R6              3.17     Bram Moolenaar
-#FreeBSD 2.1.0           gcc-2.6.3   X11R6 Lesstif 0.35 4.2  (5) Bram Moolenaar
-#FreeBSD 2.1.0           gcc-2.6.3   +X11 -GUI +Athena  4.2      Bram Moolenaar
+#FreeBSD 2.1.0           gcc-2.6.3   X11R6 Lesstif 0.35 4.3  (5) Bram Moolenaar
+#FreeBSD 2.1.0           gcc-2.6.3   +X11 -GUI +Athena  4.3      Bram Moolenaar
 #HP-UX 9.00           c89 cc         X11R5 Motif 1.2    3.24 (2) Bram Moolenaar
 #HP-UX 9.01           gcc            +X11 +GUI          4.1      Mun Johl
 #HP-UX 9.01 (400)     gcc 2.7.2      +X11 +Athena       3.29     Axel Kielhorn
@@ -121,10 +122,10 @@
 #HP-UX 9.05           cc             -X11 -GUI          3.27     Juergen Weigert
 #HP-UX 9.05           cc             +X11 -GUI  X11R5   3.25     Robert Colon
 #HP-UX 9.05	      c89 gcc-2.7.2 (HP 700)            3.18 (Y) Axel Kielhorn
-#HP-UX 9.05           gcc-2.7.2      +X11R6.1 Athena3d  4.0      L.  Duperval
+#HP-UX 9.05           gcc-2.7.2      +X11R6.1 Athena3d  4.2      L.  Duperval
 #HP-UX 9.05           gcc-2.7.2      -X11 -GUI          4.0      L.  Duperval
-#HP-UX 9.05           gcc-2.7.2      +X11 -GUI          4.0      L.  Duperval
-#HP-UX 9.05 (700)     cc             X11R5 Motif 1.2    4.1      Bram Moolenaar
+#HP-UX 9.05           gcc-2.7.2      +X11 -GUI          4.2      L.  Duperval
+#HP-UX 9.05 (700)     cc             X11R5 Motif 1.2    4.3      Bram Moolenaar
 #HP-UX 9.07           c89            X11R5 Motif 1.2    3.23 (Y) Nikhil Patel
 #HP-UX 10.01A         cc gcc-2.6.3   X11R5 Motif 1.2    3.25     Kayhan Demirel
 #HP-UX 10.01          cc             X11R6  -GUI        3.20     Jiwei Wang
@@ -136,10 +137,11 @@
 #Irix 5.3             cc             -X11 -GUI          3.27     Juergen Weigert
 #Irix 5.3             cc gcc-2.7.2   +X11 +Motif        4.0      Ives Aerts
 #Irix-5.3 (IP22 mips)    gcc-2.7.2   +X11 Motif Athena  3.29     Lennart Schultz
+#IRIX 5.3                gcc-2.6.3   +X11 +GUI Motif    4.2      Eric Fischer
 #Irix 6.2             cc             +X11 +GUI (Motif)  3.24     Bruce Templeton
 #KSR OS R1.2.2        cc             -X11 -GUI          3.21     Juergen Weigert
 #Linux/LST            gcc            +X11R6 +GUI=Athena 3.27     Juergen Weigert
-#Linux 1.2.13 (x86)   cc (gcc-2.7.0) X11R6              3.17     Eric Fischer
+#Linux 1.2.13 (x86,ELF)  gcc-2.7.2)  +X11 +GUI Athena   4.1      Eric Fischer
 #Linux 1.2.13-ELF        gcc-2.7.0   X11R6 +GUI         3.29     Tony Nugent
 #Linux 1.2.13            gcc-2.7.0   +X11 -GUI X11R6    3.25     Robert Colon
 #Linux 1.2.13-ELF        gcc-2.7.0   -X11 -GUI          3.21     Juergen Weigert
@@ -157,7 +159,8 @@
 #NCR Tower 32/450 SVR3   gcc-2.4.3   -X11               3.22     Paul Slootman
 #NetBSD 1.0A             gcc-2.4.5   -X11 -GUI          3.21 (X) Juergen Weigert
 #NetBSD 1.1A             gcc-2.7.2   +X11 +GUI  Athena  3.27     Bill Foster
-#NeXTstep 3.0 (68k)      gcc-2.6.2   noX                3.17     Eric Fischer
+#NeXTstep 3.0 (68k)      gcc-2.6.3   +X11 +GUI Athena   4.2      Eric Fischer
+#QNX 4.2                 wcc386-10.6 noX                4.2  (D) G.F. Desrochers
 #SCO Unix 3.2v4.2     cc             -X11               3.22     Paul Slootman
 #SCO Unix v3.2.5      cc             +X11 Motif         3.27 (C) M. Kuperblum
 #SCO 4.0 level 3.2.4                 -X11               3.19     Glauber
@@ -172,9 +175,9 @@
 #Solaris 2.4 (x86)       gcc-2.6.0   +X11 +GUI openwin  3.29     Paul Slootman
 #Solaris 2.4 (sun4m)     gcc-2.7.2   +X11 Motif Athena  3.29     Lennart Schultz
 #Solaris 2.4 (Sparc)  cc             +X11 +GUI          3.29     Glauber
-#Solaris 2.4 sun4m    gcc 2.7.2      +X11R6 Motif       4.0      L.  Duperval
+#Solaris 2.4 sun4m    gcc 2.7.2      +X11R6 Motif       4.2      L.  Duperval
 #Solaris 2.4 sun4m    gcc 2.7.2      -X11 -GUI          4.0      L.  Duperval
-#Solaris 2.4 sun4m    gcc 2.7.2      +X11 -GUI          4.0      L.  Duperval
+#Solaris 2.4 sun4m    gcc 2.7.2      +X11 -GUI          4.2      L.  Duperval
 #Solaris 2.4          gcc-2.7.2      +X11 +GUI Motif    3.26     Iva Cabric
 #Solaris 2.4/2.5      clcc           +X11 -GUI  openwin 3.20 (7) Robert Colon
 #Solaris 2.4/2.5      cc (SUNWspro)  +X11 -GUI  openwin 3.25     Robert Colon
@@ -182,9 +185,10 @@
 #Solaris 2.5          cc        +X11=openwin +GUI=Motif 3.27     Juergen Weigert
 #Solaris 2.5          gcc-2.7.2      +X11 +GUI Motif    3.26     Iva Cabric
 #Solaris 2.5          gcc 2.7.2      +X11R6 +GUI        4.1      Renate Schmidt
-#Solaris 2.5 (sun4m)     gcc-2.7.2   +X11R6 +GUI (CDE)  4.1      Andrew Large
-#Solaris 2.5 (sun4m)   cc (SC3.0.1)  +X11R6 +GUI (CDE)  4.1      Andrew Large
+#Solaris 2.5 (sun4m)     gcc-2.7.2   +X11R6 +GUI (CDE)  4.2      Andrew Large
+#Solaris 2.5 (sun4m)   cc (SC4.0)    +X11R6 +GUI (CDE)  4.2  (E) Andrew Large
 #Solaris 2.5 (sun4u)     gcc-2.7.2   +X11 Motif Athena  3.29     Lennart Schultz
+#Solaris 2.5         cc              +X11 +GUI Athena   4.2  (9) Sonia Heimann
 #SunOS 4.1.1          gcc 2.7.2      +X11 -GUI          4.0      L.  Duperval
 #SunOS 4.1.1 (sun4c)     cc          -X11               3.29     Lennart Schultz
 #SunOS 4.1.2 (sun4c)     cc          -X11               3.29     Lennart Schultz
@@ -198,9 +202,9 @@
 #SunOS 4.1.4          cc gcc-2.6.3   +X11 +GUI          3.23     Robert Webb
 #SunOS 4.1.4 (sparc)  cc gcc-2.6.3       openwin        3.17     Eric Fischer
 #SunOS 4.1.4 (sun4c)     gcc-2.7.2   +X11 Athena        3.29     Lennart Schultz
-#SunOS 4.1.4          gcc            +X11R5 +GUI Motif  4.1      Karsten Sievert
+#SunOS 4.1.4          gcc            +X11R5 +GUI Motif  4.2      Karsten Sievert
 #SUPER-UX 6.1.r1 (SX-4)   cc         +X11 Motif         3.29     Lennart Schultz
-#Ultrix               cc             -X11 +X11          3.23 (3) Bram Moolenaar
+#Ultrix               cc             -X11 +X11          4.3      Bram Moolenaar
 #Unisys 6035          cc                 X11 Motif      3.29 (8) Glauber
 #UnixWare 4.2         cc gcc-2.6.3       X11            3.19     Robert Webb
 #UnixWare             cc             +X11 -GUI          3.23     Robert Webb
@@ -212,15 +216,18 @@
 #
 # (1)  Uncomment line below for shlicc2
 # (2)  Needs c89 on a 400 system, uncomment line below
-# (3)  Use sh5 instead of sh to run configure, uncomment line below
 # (4)  For cc the optimizer must be disabled (use CFLAGS= after running
 #      configure) (symptom: ":set termcap" output looks weird).
 # (5)  Lesstif compiles fine, but it does not really work (menus crash, etc.)
 # (6)  See below for a few lines to uncomment
 # (7)  See below for lines which enable the use of clcc
 # (8)  Needs some EXTRA_LIBS, search for Unisys below
+# (9)  Needs an extra compiler flag for gui_at_sb.c, see below.
 # (A)  needs EXTRA_LIB, see below
 # (B)  Can't compile GUI because there is no waitpid()...  Disable GUI below.
+# (C)  Force the use of curses instead of termcap, see below.
+# (D)  Uncomment lines below for QNX
+# (E)  You might want to use termlib instead of termcap, see below.
 # (X)  Need to use the .include "config.mk" line below
 # (Y)  See line with c89 below
 # (Z)  See line with c89 below
@@ -328,10 +335,6 @@ CONF_OPT_GUI = --enable-gui=yes
 ###     Will you gues at HP finally decide which options should be used?!?!
 #CC = c89 -D_INCLUDE_HPUX_SOURCE -D_INCLUDE_XOPEN_SOURCE -D_INCLUDE_XOPEN_SOURCE_EXTENDED
 
-### (3) For Ultrix, where using sh gives an error when running configure
-###     Use sh5 instead.
-#CONF_SHELL = sh5
-
 ### (7) Solaris 2.4/2.5 with Centerline compiler
 #CC = clcc
 #X_LIBS_DIR = -L/usr/openwin/lib -R/usr/openwin/lib
@@ -340,6 +343,10 @@ CONF_OPT_GUI = --enable-gui=yes
 ### (8) Unisys 6035 (use the first with GUI, the second without)
 #EXTRA_LIBS = -lsocket -lgen
 #EXTRA_LIBS = -lnsl -lsocket -lgen
+
+### (9) Solaris 2.4/2.5 with cc, using Athena.
+###     Only required for compiling gui_at_sb.c.
+#CFLAGS = $(CFLAGS) -Xs
 
 ### When builtin functions cause problems with gcc (for Sun 4.1.x)
 #CFLAGS = -O2 -Wall -traditional -Wno-implicit
@@ -387,11 +394,19 @@ CONF_OPT_GUI = --enable-gui=yes
 ###      Also use the TERM_LIB below!
 #EXTRA_LIBS = -lgen
 
+### (D)  QNX
+###	 Also change "STRIP = strip" into "STRIP = echo" below
+#CFLAGS = -g -O -mf -4
+
 ### (C)  On SCO Unix v3.2.5 (and probably other versions) the termcap library,
 ###      which is found by configure, doesn't work correctly.  Symptom is the
 ###	 error message "Termcap entry too long".  Uncomment the next line.
 ### after changing this, you need to do "make distclean; make".
 #TERM_LIB = -lcurses
+
+### (E)  If you want to use termlib library instead of the automatically found
+###      one.  After changing this, you need to do "make distclean; make".
+#TERM_LIB = -ltermlib
 
 ### If you want to use ncurses library instead of the automatically found one
 ### after changing this, you need to do "make distclean; make".
@@ -402,6 +417,9 @@ CONF_OPT_GUI = --enable-gui=yes
 ### Name of target(s)
 TARGET = vim
 GTARGET = gvim
+
+### Names of the tools that are also made
+TOOLS = ctags/ctags xxd/xxd
 
 ### Installation directory. Default from configure is "/usr/local".
 ### EXEC_PREFIX is for the executable, PREFIX is for other files (they may be
@@ -453,8 +471,9 @@ DIRMOD = 755
 HELPSOURCE = ../doc
 
 # If you are using Linux, you might want to use this to make vim the
-# default vi editor, it will create a link to Vim when doing "make install".
-#LINKIT = -ln -f -s /usr/bin/vi $(BINLOC)/$(TARGET)
+# default vi editor, it will create a link from vi to Vim when doing
+# "make install".
+#LINKIT = -ln -f -s $(BINLOC)/$(TARGET) /usr/bin/vi
 
 ###
 ### GRAPHICAL USER INTERFACE (GUI).
@@ -504,7 +523,7 @@ ALL_GUI_PRO  = gui.pro gui_motif.pro gui_athena.pro gui_x11.pro
 
 ### our grand parent directory should know who we are...
 ### only used for "make tar"
-VIMVERSION = `eval "basename \`cd ../../; pwd\`"`
+VIMVERSION = `eval "basename \`cd ../; pwd\`"`
 
 ### Command to create dependencies based on #include "..."
 ### prototype headers are ignored due to -DPROTO, system 
@@ -596,7 +615,7 @@ PRO_AUTO = unix.pro $(ALL_GUI_PRO) \
 PRO_MANUAL = amiga.pro msdos.pro win32.pro
 
 # Default target is making the executable
-all: $(TARGET)
+all: $(TARGET) $(TOOLS)
 
 # Run ./configure with all the setting above.
 config: configure
@@ -629,6 +648,12 @@ $(TARGET): $(OBJ) version.c
 debug: $(OBJ) version.c
 	$(CC) -c $(ALL_CFLAGS) version.c
 	$(CC) $(LDFLAGS) -o $(TARGET) -g $(OBJ) version.o $(ALL_LIBS) 
+
+ctags/ctags: ctags/ctags.c
+	cd ctags; $(MAKE) -f Makefile.unix
+
+xxd/xxd: xxd/xxd.c
+	cd xxd; $(MAKE) -f Makefile.unix
 
 # Generate function prototypes.  This is not needed to compile vim, but if
 # you want to use it, cproto is out there on the net somewhere -- Webb
@@ -674,7 +699,7 @@ ctags tags TAGS: notags
 # If you want to keep an older version, rename it before running "make
 # install".
 #
-install: $(TARGET) $(EXEC_PREFIX) $(BINLOC) $(PREFIX) $(MANLOC) $(MANLOC)$(MANDIR) $(HELPLOC) $(HELPSUBLOC)
+install: $(TARGET) $(TOOLS) $(EXEC_PREFIX) $(BINLOC) $(PREFIX) $(MANLOC) $(MANLOC)$(MANDIR) $(HELPLOC) $(HELPSUBLOC)
 	-mv -f $(BINLOC)/$(TARGET) $(BINLOC)/$(TARGET).old
 	-rm -f $(BINLOC)/$(TARGET).old
 	cp $(TARGET) $(BINLOC)
@@ -687,6 +712,16 @@ install: $(TARGET) $(EXEC_PREFIX) $(BINLOC) $(PREFIX) $(MANLOC) $(MANLOC)$(MANDI
 	cp $(HELPSOURCE)/vim_*.txt $(HELPSUBLOC)
 	cp $(HELPSOURCE)/vim_tags $(HELPSUBLOC)
 	chmod $(HELPMOD) $(HELPSUBLOC)/vim_*.txt $(HELPSUBLOC)/vim_tags
+	cp ctags/ctags $(BINLOC)
+	$(STRIP) $(BINLOC)/ctags
+	chmod $(BINMOD) $(BINLOC)/ctags
+	cp $(HELPSOURCE)/ctags.1 $(MANLOC)$(MANDIR)
+	chmod $(MANMOD) $(MANLOC)$(MANDIR)/ctags.1
+	cp xxd/xxd $(BINLOC)
+	$(STRIP) $(BINLOC)/xxd
+	chmod $(BINMOD) $(BINLOC)/xxd
+	cp $(HELPSOURCE)/xxd.1 $(MANLOC)$(MANDIR)
+	chmod $(MANMOD) $(MANLOC)$(MANDIR)/xxd.1
 
 $(EXEC_PREFIX) $(BINLOC) $(PREFIX_MKDIR) $(MANLOC) $(MANLOC)$(MANDIR) $(HELPLOC) $(HELPSUBLOC):
 	-mkdir $@
@@ -721,7 +756,7 @@ distclean: scratch clean
 
 tar: clean
 	echo packing $(VIMVERSION) ...
-	VIMVERSION=$(VIMVERSION); cd ../../..; set -x; \
+	VIMVERSION=$(VIMVERSION); cd ../..; set -x; \
 	  tar cvf $$VIMVERSION.tar $$VIMVERSION; \
 	  gzip -nf $$VIMVERSION.tar || gzip -f $$VIMVERSION.tar
 
@@ -888,7 +923,7 @@ undo.o: undo.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
 unix.o: unix.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
   macros.h structs.h gui.h globals.h option.h proto.h regexp.h unixunix.h
 version.o: version.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h \
-  term.h macros.h structs.h gui.h globals.h proto.h regexp.h
+  term.h macros.h structs.h gui.h globals.h proto.h regexp.h version.h
 window.o: window.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
   macros.h structs.h gui.h globals.h proto.h regexp.h option.h
 gui.o: gui.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \

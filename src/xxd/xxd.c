@@ -51,7 +51,7 @@
 #endif
 #if defined(MSDOS) || defined(WIN32) || defined(OS2)
 # include <io.h>	/* for setmode() */
-#else
+#elif defined(UNIX)
 # include <unistd.h>
 #endif
 #include <stdlib.h>
@@ -64,7 +64,15 @@
 extern long int strtol();
 extern long int ftell();
 
-char version[] = "xxd V1.4 8jun96 by Juergen Weigert";
+#ifdef WIN32
+char version[] = "xxd V1.4m 8aug96 (Win32) by Juergen Weigert";
+#elif defined DJGPP
+char version[] = "xxd V1.4m 8aug96 (32 bit) by Juergen Weigert";
+#elif defined MSDOS
+char version[] = "xxd V1.4m 8aug96 (16 bit) by Juergen Weigert";
+#else
+char version[] = "xxd V1.4m 8aug96 by Juergen Weigert";
+#endif
 
 #if defined(MSDOS) || defined(WIN32) || defined(OS2)
 # define BIN_READ(yes)  ((yes) ? "rb" : "rt")
@@ -235,7 +243,7 @@ long base_off;
     }
   fflush(fpo);
 #ifdef TRY_SEEK
-  fseek(fpo, 0, 2);
+  fseek(fpo, 0L, 2);
 #endif
   fclose(fpo);
   fclose(fpi);
@@ -305,20 +313,20 @@ char *argv[];
 
   while (argc >= 2)
     {
-      pp = argv[1] + (!strncmp(argv[1], "--", 2) && argv[1][2]);
-           if (!strncmp(pp, "-a", 2)) autoskip = 1 - autoskip;
-      else if (!strncmp(pp, "-u", 2)) hexx = hexxa + 16;
-      else if (!strncmp(pp, "-p", 2)) hextype = HEX_POSTSCRIPT;
-      else if (!strncmp(pp, "-i", 2)) hextype = HEX_CINCLUDE;
-      else if (!strncmp(pp, "-r", 2)) revert++;
-      else if (!strncmp(pp, "-v", 2)) 
+      pp = argv[1] + (!strncmp(argv[1], "--", (size_t)2) && argv[1][2]);
+           if (!strncmp(pp, "-a", (size_t)2)) autoskip = 1 - autoskip;
+      else if (!strncmp(pp, "-u", (size_t)2)) hexx = hexxa + 16;
+      else if (!strncmp(pp, "-p", (size_t)2)) hextype = HEX_POSTSCRIPT;
+      else if (!strncmp(pp, "-i", (size_t)2)) hextype = HEX_CINCLUDE;
+      else if (!strncmp(pp, "-r", (size_t)2)) revert++;
+      else if (!strncmp(pp, "-v", (size_t)2)) 
         {
 	  fprintf(stderr, "%s\n", version);
 	  exit(0);
 	}
-      else if (!strncmp(pp, "-c", 2))
+      else if (!strncmp(pp, "-c", (size_t)2))
 	{
-	  if (pp[2] && strncmp("ols", pp + 2, 3))
+	  if (pp[2] && strncmp("ols", pp + 2, (size_t)3))
 	    cols = (int)strtol(pp + 2, NULL, 0);
 	  else
 	    {
@@ -329,11 +337,11 @@ char *argv[];
 	      argc--;
 	    }
 	}
-      else if (!strncmp(pp, "-s", 2))
+      else if (!strncmp(pp, "-s", (size_t)2))
 	{
 	  relseek = 0;
 	  negseek = 0;
-	  if (pp[2] && strncmp("kip", pp+2, 3) && strncmp("eek", pp+2, 3))
+	  if (pp[2] && strncmp("kip", pp+2, (size_t)3) && strncmp("eek", pp+2, (size_t)3))
 	    {
 #ifdef TRY_SEEK
 	      if (pp[2] == '+')
@@ -358,9 +366,9 @@ char *argv[];
 	      argc--;
 	    }
 	}
-      else if (!strncmp(pp, "-l", 2))
+      else if (!strncmp(pp, "-l", (size_t)2))
 	{
-	  if (pp[2] && strncmp("en", pp + 2, 2))
+	  if (pp[2] && strncmp("en", pp + 2, (size_t)2))
 	    length = strtol(pp + 2, (char **)NULL, 0);
 	  else
 	    {

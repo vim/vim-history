@@ -72,6 +72,8 @@ EXE_dependencies =  \
  window.obj \
  version.obj
  
+all: vim.exe ctags/ctags.exe xxd/xxd.exe
+
 #		*Explicit Rules*
 #  add /v to TLINK for debugging
 vim.exe: vim.cfg $(EXE_dependencies)
@@ -119,6 +121,18 @@ spawnl.lib+
 cl.lib
 |
  
+ctags/ctags.exe: ctags/ctags.c
+	cd ctags
+	copy makefile.bcc makefile
+	$(MAKE)
+	cd ..
+
+xxd/xxd.exe: xxd/xxd.c
+	cd xxd
+	copy makefile.bcc makefile
+	$(MAKE)
+	cd ..
+
 
 # cleaning up
 clean:

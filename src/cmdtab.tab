@@ -166,7 +166,7 @@ static struct
 	{(char_u *)"only",			BANG+TRLBAR},
 	{(char_u *)"print",			RANGE+COUNT+TRLBAR},
 	{(char_u *)"pop",			RANGE+NOTADR+COUNT+TRLBAR+ZEROR},
-	{(char_u *)"put",			RANGE+BANG+REGSTR+TRLBAR},
+	{(char_u *)"put",			RANGE+BANG+REGSTR+TRLBAR+ZEROR},
 	{(char_u *)"preserve",		TRLBAR},
 	{(char_u *)"previous",		EXTRA+RANGE+NOTADR+COUNT+BANG+EDITCMD+TRLBAR},
 	{(char_u *)"pwd",			TRLBAR},

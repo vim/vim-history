@@ -2033,7 +2033,7 @@ call_shell(
 		/* we use "command" or "cmd" to start the shell; slow but easy */
 		char newcmd[CMDBUFFSIZE + 100];
 
-        sprintf(newcmd, "%s /c %s", p_sh, cmd);
+        sprintf(newcmd, "%s %s %s", p_sh, p_shcf, cmd);
         x = system(newcmd);
     }
 

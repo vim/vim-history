@@ -31,6 +31,13 @@
  */
 #define SIZEOF_INT	2
 
+/*
+ * Manx doesn't have off_t, define it here.
+ */
+#ifdef AZTEC_C
+typedef long off_t;
+#endif
+
 #ifdef LATTICE
 # define USE_TMPNAM		/* use tmpnam() instead of mktemp() */
 #endif
@@ -90,9 +97,8 @@
 # define DEF_DIR		".,t:"		/* default for 'directory' */
 #endif
 
-#define TMPNAME1		"t:viXXXXXX"
-#define TMPNAME2		"t:voXXXXXX"
-#define TMPNAMELEN		12
+#define TEMPNAME		"t:v?XXXXXX"
+#define TEMPNAMELEN		12
 
 #ifndef MAXMEM
 # define MAXMEM			256		/* use up to 256Kbyte for buffer */

@@ -4,16 +4,16 @@
 VIM(1)                                                     VIM(1)
 
 
-NNAAMMEE
+NAME
        vim - Vi IMproved, a programmers text editor
 
-SSYYNNOOPPSSIISS
-       vviimm [options] [file ..]
-       vviimm [options] -t tag
-       vviimm [options] -e [errorfile]
+SYNOPSIS
+       vim [options] [file ..]
+       vim [options] -t tag
+       vim [options] -e [errorfile]
 
-DDEESSCCRRIIPPTTIIOONN
-       VViimm is a text editor that is upwards compatible to vi.  It
+DESCRIPTION
+       Vim is a text editor that is upwards compatible to vi.  It
        can be used to edit any ASCII text.  It is especially use-
        ful for editing programs.
 
@@ -21,17 +21,17 @@ DDEESSCCRRIIPPTTIIOONN
        undo, multi windows and  buffers,  command  line  editing,
        filename completion, on-line help, visual selection, etc..
        Read vim_diff.txt for a summary of the differences between
-       VViimm and vi.
+       Vim and vi.
 
-       While  running  VViimm a lot of help can be obtained from the
+       While  running  Vim a lot of help can be obtained from the
        on-line help system.  See ON-LINE HELP below.
 
-       Most often VViimm is started to edit a single file  with  the
+       Most often Vim is started to edit a single file  with  the
        command
 
             vim file
 
-       More generally VViimm is started with:
+       More generally Vim is started with:
 
             vim [options] [filelist]
 
@@ -80,7 +80,7 @@ VIM(1)                                                     VIM(1)
                    to  with the ":cn" command.  See ":help quick-
                    fix".
 
-OOPPTTIIOONNSS
+OPTIONS
        The options, if present, must precede the  filelist.   The
        options  may be given in any order.  Options can mostly be
        combined after a single dash.
@@ -121,7 +121,7 @@ OOPPTTIIOONNSS
                    used to skip the use of the .viminfo file,  by
                    giving the name "NONE".
 
-       -g          If  VViimm  has  been  compiled with GUI support,
+       -g          If  Vim  has  been  compiled with GUI support,
                    this option turns the GUI on.  If no GUI  sup-
                    port  was  compiled  in,  an  error message is
 
@@ -136,14 +136,14 @@ OOPPTTIIOONNSS
 VIM(1)                                                     VIM(1)
 
 
-                   given and VViimm aborts.
+                   given and Vim aborts.
 
-       -H          If VViimm has been compiled with  RIGHTLEFT  sup-
+       -H          If Vim has been compiled with  RIGHTLEFT  sup-
                    port  for editing right-to-left oriented files
                    and  Hebrew  keyboard  mapping,  this   option
-                   starts  VViimm  in  Hebrew  mode,  i.e. hkmap and
+                   starts  Vim  in  Hebrew  mode,  i.e. hkmap and
                    rightleft are set.  Otherwise an error message
-                   is given and VViimm aborts.
+                   is given and Vim aborts.
 
        -n          No  swap  file will be used.  Recovery after a
                    crash will be impossible.  Handy if  you  want
@@ -172,8 +172,8 @@ VIM(1)                                                     VIM(1)
                    further characters are read from the keyboard.
 
        -T {terminal}
-                   Tells  VViimm  the  name  of the terminal you are
-                   using.  Should be  a  terminal  known  to  VViimm
+                   Tells  Vim  the  name  of the terminal you are
+                   using.  Should be  a  terminal  known  to  Vim
                    (builtin)  or  defined  in the termcap or ter-
                    minfo file.
 
@@ -209,7 +209,7 @@ VIM(1)                                                     VIM(1)
 
        -w {scriptout}
                    All the characters that you type are  recorded
-                   in  the  file {scriptout}, until you exit VViimm..
+                   in  the  file {scriptout}, until you exit Vim.
                    This is useful if you want to create a  script
                    file  to  be used with "vim -s" or ":source!".
                    If the {scriptout} file exists, characters are
@@ -218,9 +218,9 @@ VIM(1)                                                     VIM(1)
        -W {scriptout}
                    Like  -w, but an existing file is overwritten.
 
-       -x          (Amiga only) VViimm is not restarted  to  open  a
+       -x          (Amiga only) Vim is not restarted  to  open  a
                    new  window.   This option should be used when
-                   VViimm is executed by a program  that  will  wait
+                   Vim is executed by a program  that  will  wait
                    for  the  edit  session to finish (e.g. mail).
                    The ":sh" and ":!" commands will not work.
 
@@ -229,8 +229,8 @@ VIM(1)                                                     VIM(1)
                    This can be used to  edit  a  file  name  that
                    starts with a '-'.
 
-OONN--LLIINNEE HHEELLPP
-       Type  ":help" in VViimm to get started.  Type ":help subject"
+ON-LINE HELP
+       Type  ":help" in Vim to get started.  Type ":help subject"
        to get help on a specific subject.   For  example:  ":help
        ZZ" to get help for the "ZZ" command.  Use <Tab> and CTRL-
        D to complete subjects (":help cmdline_completion").  Tags
@@ -239,10 +239,10 @@ OONN--LLIINNEE HHEELLPP
        can   be   viewed   in   this   way,  for  example  ":help
        vim_ref.txt".
 
-FFIILLEESS
+FILES
        Vim documentation (in /usr/local/lib/vim).
 
-       vim_ref.txt    A complete reference of VViimm (long).
+       vim_ref.txt    A complete reference of Vim (long).
 
        vim_help.txt   File used by the on-line help (short), con-
                       tains links to all other files.
@@ -253,7 +253,7 @@ FFIILLEESS
        vim_idx.txt    Overview of all command characters  (useful
                       when adding new mappings).
 
-       vim_tips.txt   Some  useful  tips about using VViimm for spe-
+       vim_tips.txt   Some  useful  tips about using Vim for spe-
                       cific file types.
 
 
@@ -270,9 +270,9 @@ VIM(1)                                                     VIM(1)
 
        vim_digr.txt   Overview of the available digraphs.
 
-       vim_kcc.txt    About copying VViimm and Uganda.
+       vim_kcc.txt    About copying Vim and Uganda.
 
-       vim_diff.txt   Overview of the differences between VViimm and
+       vim_diff.txt   Overview of the differences between Vim and
                       vi.
 
        vim_<machine>.txt
@@ -283,11 +283,11 @@ VIM(1)                                                     VIM(1)
 
        vim_gui.txt    Specific comments about the GUI version.
 
-       vim_rlh.txt    Information about  using  VViimm  for  editing
+       vim_rlh.txt    Information about  using  Vim  for  editing
                       right-to-left oriented files.
 
        /usr/local/lib/vim/vimrc
-                      System wide VViimm initializations
+                      System wide Vim initializations
 
        /usr/local/lib/vim/gvimrc
                       System wide gvim initializations
@@ -295,12 +295,12 @@ VIM(1)                                                     VIM(1)
        For recent info read the VIM home page:
        <URL:http://www.math.fu-berlin.de/~guckes/vim/>
 
-AAUUTTHHOORR
-       Most of VViimm was made by Bram Moolenaar.
-       VViimm  is  based on Stevie, worked on by: Tim Thompson, Tony
+AUTHOR
+       Most of Vim was made by Bram Moolenaar.
+       Vim  is  based on Stevie, worked on by: Tim Thompson, Tony
        Andrews and G.R. (Fred) Walter
 
-BBUUGGSS
+BUGS
        Probably.  See the "todo" file that comes with the distri-
        bution.
 

@@ -1,0 +1,10 @@
+# The most simplistic Makefile
+
+CC = cc
+CFLAGS = -O
+
+xxd: xxd.c
+	$(CC) $(CFLAGS) xxd.c -o xxd
+
+clean:
+	rm -f xxd xxd.o

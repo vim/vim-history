@@ -135,7 +135,7 @@ static void MoveThumb __ARGS((Widget, XEvent *, String *, Cardinal *));
 static void NotifyThumb __ARGS((Widget, XEvent *, String *, Cardinal *));
 static void NotifyScroll __ARGS((Widget, XEvent *, String *, Cardinal *));
 static void EndScroll __ARGS((Widget, XEvent *, String *, Cardinal *));
-static void _Xaw3dDrawShadows __ARGS((Widget, XEvent *, Region, Boolean));
+static void _Xaw3dDrawShadows __ARGS((Widget, XEvent *, Region, int));
 static void AllocTopShadowGC __ARGS((Widget));
 static void AllocBotShadowGC __ARGS((Widget));
 
@@ -1062,7 +1062,7 @@ _Xaw3dDrawShadows(gw, event, region, out)
 	Widget	gw;
 	XEvent	*event;
 	Region	region;
-	Boolean	out;
+	int		out;
 {
 	XPoint	pt[6];
 	ScrollbarWidget sbw = (ScrollbarWidget) gw;

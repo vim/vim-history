@@ -324,8 +324,11 @@ $	vim_ref.txt	/\*$\*
 'sections'	vim_ref.txt	/\*'sections'\*
 'secure'	vim_ref.txt	/\*'secure'\*
 'sh'	vim_ref.txt	/\*'sh'\*
+'shcf'	vim_ref.txt	/\*'shcf'\*
 'shell'	vim_ref.txt	/\*'shell'\*
+'shellcmdflag'	vim_ref.txt	/\*'shellcmdflag'\*
 'shellpipe'	vim_ref.txt	/\*'shellpipe'\*
+'shellquote'	vim_ref.txt	/\*'shellquote'\*
 'shellredir'	vim_ref.txt	/\*'shellredir'\*
 'shelltype'	vim_ref.txt	/\*'shelltype'\*
 'shiftround'	vim_ref.txt	/\*'shiftround'\*
@@ -337,6 +340,7 @@ $	vim_ref.txt	/\*$\*
 'showcmd'	vim_ref.txt	/\*'showcmd'\*
 'showmatch'	vim_ref.txt	/\*'showmatch'\*
 'showmode'	vim_ref.txt	/\*'showmode'\*
+'shq'	vim_ref.txt	/\*'shq'\*
 'si'	vim_ref.txt	/\*'si'\*
 'sidescroll'	vim_ref.txt	/\*'sidescroll'\*
 'sj'	vim_ref.txt	/\*'sj'\*
@@ -374,6 +378,10 @@ $	vim_ref.txt	/\*$\*
 't_DL'	vim_ref.txt	/\*'t_DL'\*
 't_F1'	vim_ref.txt	/\*'t_F1'\*
 't_F2'	vim_ref.txt	/\*'t_F2'\*
+'t_K1'	vim_ref.txt	/\*'t_K1'\*
+'t_K3'	vim_ref.txt	/\*'t_K3'\*
+'t_K4'	vim_ref.txt	/\*'t_K4'\*
+'t_K5'	vim_ref.txt	/\*'t_K5'\*
 't_RI'	vim_ref.txt	/\*'t_RI'\*
 't_ZH'	vim_ref.txt	/\*'t_ZH'\*
 't_ZR'	vim_ref.txt	/\*'t_ZR'\*
@@ -442,6 +450,7 @@ $	vim_ref.txt	/\*$\*
 'timeout'	vim_ref.txt	/\*'timeout'\*
 'timeoutlen'	vim_ref.txt	/\*'timeoutlen'\*
 'title'	vim_ref.txt	/\*'title'\*
+'titlelen'	vim_ref.txt	/\*'titlelen'\*
 'tl'	vim_ref.txt	/\*'tl'\*
 'tm'	vim_ref.txt	/\*'tm'\*
 'to'	vim_ref.txt	/\*'to'\*
@@ -1140,6 +1149,7 @@ FileReadPost	vim_ref.txt	/\*FileReadPost\*
 FileReadPre	vim_ref.txt	/\*FileReadPre\*
 FileWritePost	vim_ref.txt	/\*FileWritePost\*
 FileWritePre	vim_ref.txt	/\*FileWritePre\*
+Filter	vim_ref.txt	/\*Filter\*
 FilterReadPost	vim_ref.txt	/\*FilterReadPost\*
 FilterReadPre	vim_ref.txt	/\*FilterReadPre\*
 FilterWritePost	vim_ref.txt	/\*FilterWritePost\*
@@ -1214,6 +1224,7 @@ X_vm	vim_help.txt	/\*X_vm\*
 X_wi	vim_help.txt	/\*X_wi\*
 X_wq	vim_help.txt	/\*X_wq\*
 Y	vim_ref.txt	/\*Y\*
+ZQ	vim_ref.txt	/\*ZQ\*
 ZZ	vim_ref.txt	/\*ZZ\*
 [	vim_idx.txt	/\*[\*
 [#	vim_ref.txt	/\*[#\*
@@ -1277,6 +1288,7 @@ author	vim_help.txt	/\*author\*
 auto_setting	vim_ref.txt	/\*auto_setting\*
 auto_shortname	vim_ref.txt	/\*auto_shortname\*
 autocommand	vim_ref.txt	/\*autocommand\*
+autocommand-events	vim_ref.txt	/\*autocommand-events\*
 b	vim_ref.txt	/\*b\*
 backspace	vim_ref.txt	/\*backspace\*
 backspace_delete	vim_40.txt	/\*backspace_delete\*
@@ -1379,8 +1391,10 @@ deleting	vim_ref.txt	/\*deleting\*
 dh	vim_ref.txt	/\*dh\*
 digraph_table	vim_digr.txt	/\*digraph_table\*
 digraphs	vim_ref.txt	/\*digraphs\*
+distribution	vim_help.txt	/\*distribution\*
 dl	vim_ref.txt	/\*dl\*
 doc_files	vim_ref.txt	/\*doc_files\*
+download	vim_help.txt	/\*download\*
 dp	vim_ref.txt	/\*dp\*
 drag_status_line	vim_ref.txt	/\*drag_status_line\*
 ds	vim_ref.txt	/\*ds\*
@@ -1407,6 +1421,7 @@ fork	vim_unix.txt	/\*fork\*
 format_bullet_list	vim_tips.txt	/\*format_bullet_list\*
 format_comments	vim_ref.txt	/\*format_comments\*
 formatting	vim_ref.txt	/\*formatting\*
+ftp	vim_help.txt	/\*ftp\*
 function-key	vim_ref.txt	/\*function-key\*
 function_key	vim_ref.txt	/\*function_key\*
 g	vim_idx.txt	/\*g\*
@@ -1560,6 +1575,7 @@ insert	vim_ref.txt	/\*insert\*
 insert_expand	vim_ref.txt	/\*insert_expand\*
 insert_index	vim_idx.txt	/\*insert_index\*
 inserting	vim_ref.txt	/\*inserting\*
+into	vim_dos.txt	/\*into\*
 intro	vim_ref.txt	/\*intro\*
 j	vim_ref.txt	/\*j\*
 jumplist	vim_ref.txt	/\*jumplist\*
@@ -1567,6 +1583,10 @@ k	vim_ref.txt	/\*k\*
 key_codes_changed	vim_40.txt	/\*key_codes_changed\*
 key_mapping	vim_ref.txt	/\*key_mapping\*
 key_notation	vim_ref.txt	/\*key_notation\*
+keypad_end	vim_ref.txt	/\*keypad_end\*
+keypad_home	vim_ref.txt	/\*keypad_home\*
+keypad_page_down	vim_ref.txt	/\*keypad_page_down\*
+keypad_page_up	vim_ref.txt	/\*keypad_page_up\*
 l	vim_ref.txt	/\*l\*
 left_right_motions	vim_ref.txt	/\*left_right_motions\*
 limits	vim_ref.txt	/\*limits\*
@@ -1705,6 +1725,10 @@ t_CS	vim_ref.txt	/\*t_CS\*
 t_DL	vim_ref.txt	/\*t_DL\*
 t_F1	vim_ref.txt	/\*t_F1\*
 t_F2	vim_ref.txt	/\*t_F2\*
+t_K1	vim_ref.txt	/\*t_K1\*
+t_K3	vim_ref.txt	/\*t_K3\*
+t_K4	vim_ref.txt	/\*t_K4\*
+t_K5	vim_ref.txt	/\*t_K5\*
 t_RI	vim_ref.txt	/\*t_RI\*
 t_ZH	vim_ref.txt	/\*t_ZH\*
 t_ZR	vim_ref.txt	/\*t_ZR\*
@@ -1888,6 +1912,7 @@ vim_unix.txt	vim_unix.txt	/\*vim_unix.txt\*
 vim_w32.txt	vim_w32.txt	/\*vim_w32.txt\*
 vim_win.txt	vim_win.txt	/\*vim_win.txt\*
 vimdev	vim_help.txt	/\*vimdev\*
+viminfo_errors	vim_ref.txt	/\*viminfo_errors\*
 viminfo_file	vim_ref.txt	/\*viminfo_file\*
 viminfo_file_marks	vim_ref.txt	/\*viminfo_file_marks\*
 vimrc	vim_ref.txt	/\*vimrc\*
@@ -1895,6 +1920,9 @@ visual_block	vim_ref.txt	/\*visual_block\*
 visual_index	vim_idx.txt	/\*visual_index\*
 vt100_cursor_keys	vim_ref.txt	/\*vt100_cursor_keys\*
 w	vim_ref.txt	/\*w\*
+win32_faq	vim_w32.txt	/\*win32_faq\*
+win32_shell	vim_w32.txt	/\*win32_shell\*
+win32_term	vim_w32.txt	/\*win32_term\*
 window_contents	vim_ref.txt	/\*window_contents\*
 window_size	vim_ref.txt	/\*window_size\*
 word	vim_ref.txt	/\*word\*
@@ -1908,6 +1936,7 @@ x	vim_ref.txt	/\*x\*
 xterm-screens	vim_tips.txt	/\*xterm-screens\*
 xterm_copy_paste	vim_ref.txt	/\*xterm_copy_paste\*
 xterm_cursor_keys	vim_ref.txt	/\*xterm_cursor_keys\*
+xterm_end_home_keys	vim_ref.txt	/\*xterm_end_home_keys\*
 y	vim_ref.txt	/\*y\*
 ye_option_gone	vim_40.txt	/\*ye_option_gone\*
 yy	vim_ref.txt	/\*yy\*

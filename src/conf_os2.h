@@ -121,9 +121,6 @@
 /* Define if you have the strtol() function.  */
 #define HAVE_STRTOL     1
 
-/* Define if you have the killpg() function.  */
-#undef HAVE_KILLPG
-
 /* Define if you have the tgetent() function.  */
 #define HAVE_TGETENT    1
 

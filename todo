@@ -1,5 +1,33 @@
 Known problems and priority improvements:
 
+Small problems:
+- CTRL-F at the end of the file, when 'so' is set, redraws twice.  When the
+  window is small (< 2 * 'so') it behaves differently.
+- in configure, put termlib before termcap?
+- tilde_replace() can only handle "~/", should also do "~user/".
+- "1000ii<Esc>" takes an awful long time.
+- If writing to the swap file fails, should try to open one in another
+  directory.  Useful in case the file system is full.
+- ":wall|make", when writing something, ":!make" echo does not have a CRLF
+  before it.
+- There are often a few <CR> on a row sent to the screen, should not be
+  necessary.
+- Text is scrolled up and down: (acevedo)
+   - set scrolloff to something >1 (i always use "set so=4")
+   - set the win. hegiht to scrolloff + 1  (i'd do ^W5_)
+   - load a file with scrolloff + 2 lines
+   - put the cursor in line scrolloff +1  (5G)
+   - if you move the cursor along the line (h, l, insert text, etc)
+     the text is crolled with each keystroke (once up, once down,...)
+     sometimes with <Esc> the text is scrolled up and down whitout stop!!!!
+
+Vi incompatibility:
+- CTRL-T in insert mode inserts 'shiftwidth' of spaces at the cursor.
+- CTRL-L is not the end of a section?  It is for Posix!  Make it an option.
+- "0;/pat" starts searching in line 2 instead of line 1.
+- "z3<CR>" should still use the whole window, but only redisplay 3 lines.
+- After ":cd", meaning of file names for existing buffers changes.
+
 GUI:
 - Motif: Scrollbar for cmdline disappears with ":set go=", ":set go=lbrm".
 - Motif: Tear-off menu item "----------" crashes Vim on some machines.
@@ -10,15 +38,10 @@ GUI:
 - Pasting in Replace mode insert the text, instead of overwriting.
 
 MSDOS:
-- Error in the DJGPP version: ":r!ls" eats file descriptors.  After a few
-  times Vim crashes with an illegal instruction under Windows 95.  Looks like
-  the system() library function of DJGPP is wrong.  Sometimes Vim gives errors
-  like "File creation error", "Can't read file volaaaaa", and when exiting:
-  "Can't write viminfo file vomaaaaa!".
-- ":n doc\*.txt" doesn't work, have to use ":n doc/*.txt" instead.
+- Hitting CTRL-P twice quickly (e.g. in keyword completion) on a 8088 machine,
+  starts printer echo! (John Mullin).
 
 Windows 95:
-- ":e $VIM/.vimrc" doesn't work.
 - When 'lines' is set in _vimrc or columns is not 80, executing external
   commands sometimes hangs or crashes Vim or the PC.  This is a Windows 95
   problem.

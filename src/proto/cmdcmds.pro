@@ -6,7 +6,7 @@ int do_move __PARMS((linenr_t line1, linenr_t line2, linenr_t n));
 void do_copy __PARMS((linenr_t line1, linenr_t line2, linenr_t n));
 void do_bang __PARMS((int addr_count, linenr_t line1, linenr_t line2, int forceit, char_u *arg, int do_in, int do_out));
 void do_shell __PARMS((char_u *cmd));
-void do_filter __PARMS((linenr_t line1, linenr_t line2, char_u *buff, int do_in, int do_out));
+int viminfo_error __PARMS((char *message, char_u *line));
 int read_viminfo __PARMS((char_u *file, int want_info, int want_marks, int force));
 void write_viminfo __PARMS((char_u *file, int force));
 void viminfo_readstring __PARMS((char_u *p));

@@ -37,7 +37,7 @@ int win_ins_lines __PARMS((WIN *wp, int row, int line_count, int invalid, int ma
 int win_del_lines __PARMS((WIN *wp, int row, int line_count, int invalid, int mayclear));
 void win_rest_invalid __PARMS((WIN *wp));
 int screen_del_lines __PARMS((int off, int row, int line_count, int end, int force));
-void showmode __PARMS((void));
+int showmode __PARMS((void));
 void delmode __PARMS((void));
 void showruler __PARMS((int always));
 void win_redr_ruler __PARMS((WIN *wp, int always));

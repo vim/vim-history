@@ -15,16 +15,8 @@
 #include "proto.h"
 #include "option.h"
 
-#ifdef USE_TMPNAM
-# define mktemp(a)	tmpnam(a)
-#endif
-
-extern char		*mktemp __ARGS((char *));
-
-#ifdef OS2
-static void check_tmpenv __ARGS((void));
-#endif
-
+static void do_filter __ARGS((linenr_t line1, linenr_t line2,
+									char_u *buff, int do_in, int do_out));
 #ifdef VIMINFO
 static char_u *viminfo_filename __ARGS((char_u 	*));
 static void do_viminfo __ARGS((FILE *fp_in, FILE *fp_out, int want_info, int want_marks, int force_read));
@@ -505,20 +497,34 @@ do_bang(addr_count, line1, line2, forceit, arg, do_in, do_out)
 		AppendToRedobuff((char_u *)"\n");
 		bangredo = FALSE;
 	}
+	/*
+	 * Add quotes around the command, for shells that need them.
+	 */
+	if (*p_shq != NUL)
+	{
+		newcmd = alloc((unsigned)(STRLEN(prevcmd) + 2 * STRLEN(p_shq) + 1));
+		if (newcmd == NULL)
+			return;
+		STRCPY(newcmd, p_shq);
+		STRCAT(newcmd, prevcmd);
+		STRCAT(newcmd, p_shq);
+	}
 	if (addr_count == 0)				/* :! */
 	{
 			/* echo the command */
 		msg_start();
 		msg_outchar(':');
 		msg_outchar('!');
-		msg_outtrans(prevcmd);
+		msg_outtrans(newcmd);
 		msg_clr_eos();
 		windgoto(msg_row, msg_col);
 
-		do_shell(prevcmd); 
+		do_shell(newcmd); 
 	}
 	else								/* :range! */
-		do_filter(line1, line2, prevcmd, do_in, do_out);
+		do_filter(line1, line2, newcmd, do_in, do_out);
+	if (newcmd != prevcmd)
+		vim_free(newcmd);
 }
 
 /*
@@ -590,7 +596,9 @@ do_shell(cmd)
 	msg_pos((int)Rows - 1, 0);
 
 #ifdef AUTOCMD
-	if (!autocmd_busy)
+	if (autocmd_busy)
+		must_redraw = CLEAR;
+	else
 #endif
 	{
 		/*
@@ -629,10 +637,6 @@ do_shell(cmd)
 		}
 #endif /* AMIGA */
 	}
-#ifdef AUTOCMD
-	else
-		must_redraw = CLEAR;
-#endif
 }
 
 /*
@@ -648,21 +652,19 @@ do_shell(cmd)
  * We use input redirection if do_in is TRUE.
  * We use output redirection if do_out is TRUE.
  */
-	void
+	static void
 do_filter(line1, line2, buff, do_in, do_out)
 	linenr_t	line1, line2;
 	char_u		*buff;
 	int			do_in, do_out;
 {
-#ifdef USE_TMPNAM
-	char_u		itmp[L_tmpnam];		/* use tmpnam() */
-	char_u		otmp[L_tmpnam];
-#else
-	char_u		itmp[TMPNAMELEN];
-	char_u		otmp[TMPNAMELEN];
-#endif
+	char_u		*itmp = NULL;
+	char_u		*otmp = NULL;
 	linenr_t 	linecount;
 	FPOS		cursor_save;
+#ifdef AUTOCMD
+	BUF			*old_curbuf = curbuf;
+#endif
 
 	/*
 	 * Disallow shell commands from .exrc and .vimrc in current directory for
@@ -699,22 +701,11 @@ do_filter(line1, line2, buff, do_in, do_out)
 	 * 6. Remove the temp files
 	 */
 
-#ifndef USE_TMPNAM		 /* tmpnam() will make its own name */
-# ifdef OS2
-	check_tmpenv();
-	expand_env(TMPNAME1, itmp, TMPNAMELEN);
-	expand_env(TMPNAME2, otmp, TMPNAMELEN);
-# else
-	STRCPY(itmp, TMPNAME1);
-	STRCPY(otmp, TMPNAME2);
-# endif
-#endif
-
-	if ((do_in && *mktemp((char *)itmp) == NUL) ||
-									 (do_out && *mktemp((char *)otmp) == NUL))
+	if ((do_in && (itmp = vim_tempname('i')) == NULL) ||
+							   (do_out && (otmp = vim_tempname('o')) == NULL))
 	{
 		emsg(e_notmp);
-		return;
+		goto filterend;
 	}
 
 /*
@@ -730,6 +721,11 @@ do_filter(line1, line2, buff, do_in, do_out)
 		(void)emsg2(e_notcreate, itmp);		/* will call wait_return */
 		goto filterend;
 	}
+#ifdef AUTOCMD
+	if (curbuf != old_curbuf)
+		goto filterend;
+#endif
+
 	if (!do_out)
 		msg_outchar('\n');
 
@@ -753,15 +749,17 @@ do_filter(line1, line2, buff, do_in, do_out)
 	{
 		char_u		*p;
 	/*
-	 * If there is a pipe, we have to put the '<' in front of it
+	 * If there is a pipe, we have to put the '<' in front of it.
+	 * Don't do this when 'shellquote' is not empty, otherwise the redirection
+	 * would be inside the quotes.
 	 */
 		p = vim_strchr(IObuff, '|');
-		if (p)
+		if (p && *p_shq == NUL)
 			*p = NUL;
 		STRCAT(IObuff, " < ");
 		STRCAT(IObuff, itmp);
 		p = vim_strchr(buff, '|');
-		if (p)
+		if (p && *p_shq == NUL)
 			STRCAT(IObuff, p);
 	}
 #endif
@@ -823,6 +821,10 @@ do_filter(line1, line2, buff, do_in, do_out)
 			emsg2(e_notread, otmp);
 			goto error;
 		}
+#ifdef AUTOCMD
+		if (curbuf != old_curbuf)
+			goto filterend;
+#endif
 
 		if (do_in)
 		{
@@ -831,6 +833,8 @@ do_filter(line1, line2, buff, do_in, do_out)
 			dellines(linecount, TRUE, TRUE);
 			curbuf->b_op_start.lnum -= linecount;		/* adjust '[ */
 			curbuf->b_op_end.lnum -= linecount;			/* adjust '] */
+			write_lnum_adjust(-linecount);				/* adjust last line
+														   for next write */
 		}
 		else
 		{
@@ -863,41 +867,52 @@ error:
 	}
 
 filterend:
-	vim_remove(itmp);
-	vim_remove(otmp);
-}
 
-#ifdef OS2
-/*
- * If $TMP is not defined, construct a sensible default.
- * This is required for TMPNAME1 and TMPNAME2 to work.
- */
-	static void
-check_tmpenv()
-{
-	char_u	*envent;
-
-	if (getenv("TMP") == NULL)
+#ifdef AUTOCMD
+	if (curbuf != old_curbuf)
 	{
-		envent = alloc(8);
-		if (envent != NULL)
-		{
-			strcpy(envent, "TMP=C:/");
-			putenv(envent);
-		}
+		--no_wait_return;
+		EMSG("*Filter* Autocommands must not change current buffer");
 	}
+#endif
+	if (itmp != NULL)
+		vim_remove(itmp);
+	if (otmp != NULL)
+		vim_remove(otmp);
+	vim_free(itmp);
+	vim_free(otmp);
 }
-#endif /* OS2 */
 
 #ifdef VIMINFO
 
 static int no_viminfo __ARGS((void));
+static int	viminfo_errcnt;
 
 	static int
 no_viminfo()
 {
 	/* "vim -i NONE" does not read or write a viminfo file */
 	return (use_viminfo != NULL && STRCMP(use_viminfo, "NONE") == 0);
+}
+
+/*
+ * Report an error for reading a viminfo file.
+ * Count the number of errors.  When there are more than 10, return TRUE.
+ */
+	int
+viminfo_error(message, line)
+	char	*message;
+	char_u	*line;
+{
+	sprintf((char *)IObuff, "viminfo: %s in line: ", message);
+	STRNCAT(IObuff, line, IOSIZE - STRLEN(IObuff));
+	emsg(IObuff);
+	if (++viminfo_errcnt >= 10)
+	{
+		EMSG("viminfo: Too many errors, skipping rest of file");
+		return TRUE;
+	}
+	return FALSE;
 }
 
 /*
@@ -920,6 +935,7 @@ read_viminfo(file, want_info, want_marks, force)
 	if ((fp = fopen((char *)file, READBIN)) == NULL)
 		return FAIL;
 
+	viminfo_errcnt = 0;
 	do_viminfo(fp, NULL, want_info, want_marks, force);
 
 	fclose(fp);
@@ -941,23 +957,10 @@ write_viminfo(file, force)
 {
 	FILE	*fp_in = NULL;
 	FILE	*fp_out = NULL;
-#ifdef USE_TMPNAM
-	char_u	tmpname[L_tmpnam];		/* use tmpnam() */
-#else
-	char_u	tmpname[TMPNAMELEN];
-#endif
+	char_u	*tempname = NULL;
 
 	if (no_viminfo())
 		return;
-
-#ifndef USE_TMPNAM		 /* tmpnam() will make its own name */
-# ifdef OS2
-	check_tmpenv();
-	expand_env(TMPNAME2, tmpname, TMPNAMELEN);
-# else
-	STRCPY(tmpname, TMPNAME2);
-# endif
-#endif
 
 	file = viminfo_filename(file);		/* may set to default if NULL */
 	file = strsave(file);				/* make a copy, don't want NameBuff */
@@ -966,29 +969,34 @@ write_viminfo(file, force)
 		fp_in = fopen((char *)file, READBIN);
 		if (fp_in == NULL)
 			fp_out = fopen((char *)file, WRITEBIN);
-		else if (*mktemp((char *)tmpname) != NUL)
-			fp_out = fopen((char *)tmpname, WRITEBIN);
+		else if ((tempname = vim_tempname('o')) != NULL)
+			fp_out = fopen((char *)tempname, WRITEBIN);
 	}
 	if (file == NULL || fp_out == NULL)
 	{
 		EMSG2("Can't write viminfo file %s!", file == NULL ? (char_u *)"" :
-											  fp_in == NULL ? file : tmpname);
+											  fp_in == NULL ? file : tempname);
 		if (fp_in != NULL)
 			fclose(fp_in);
-		vim_free(file);
-		return;
+		goto end;
 	}
 
+	viminfo_errcnt = 0;
 	do_viminfo(fp_in, fp_out, !force, !force, FALSE);
 
 	fclose(fp_out);			/* errors are ignored !? */
 	if (fp_in != NULL)
 	{
 		fclose(fp_in);
-		if (vim_rename(tmpname, file) == -1)
-			vim_remove(tmpname);
+		/*
+		 * In case of an error, don't overwrite the original viminfo file.
+		 */
+		if (viminfo_errcnt || vim_rename(tempname, file) == -1)
+			vim_remove(tempname);
 	}
+end:
 	vim_free(file);
+	vim_free(tempname);
 }
 
 	static char_u *
@@ -1101,8 +1109,10 @@ read_viminfo_up_to_marks(line, fp, force)
 				break;
 #endif
 			default:
-				EMSG2("viminfo: Illegal starting char in line %s", line);
-				eof = vim_fgets(line, LSIZE, fp);
+				if (viminfo_error("Illegal starting char", line))
+					eof = TRUE;
+				else
+					eof = vim_fgets(line, LSIZE, fp);
 				break;
 		}
 	}

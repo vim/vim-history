@@ -1,5 +1,4 @@
 extern int   kill __ARGS((int, int));
-extern int   killpg __ARGS((int, int));
 
 extern int   access __ARGS((char *, int));
 extern int   fsync __ARGS((int));
@@ -34,7 +33,7 @@ extern int   close __ARGS((int));
 extern int   read __ARGS((int, char *, size_t));
 extern int   write __ARGS((int, char *, size_t));
 extern int	 pipe __ARGS((int *));
-extern long  lseek __ARGS((int, long, int));
+extern off_t  lseek __ARGS((int, off_t, int));
 extern void  sync __ARGS((void));
 extern uid_t getuid __ARGS((void));
 extern gid_t getgid __ARGS((void));

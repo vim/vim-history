@@ -25,7 +25,6 @@ ac_cv_header_pwd_h=${ac_cv_header_pwd_h='yes'}
 ac_cv_header_stropts_h=${ac_cv_header_stropts_h='no'}
 ac_cv_header_sys_time_h=${ac_cv_header_sys_time_h='yes'}
 ac_cv_header_libc_h=${ac_cv_header_libc_h='no'}
-ac_cv_func_killpg=${ac_cv_func_killpg='yes'}
 ac_cv_header_dirent_dirent_h=${ac_cv_header_dirent_dirent_h='yes'}
 ac_cv_func_fchown=${ac_cv_func_fchown='yes'}
 ac_cv_func_tgetent=${ac_cv_func_tgetent='yes'}

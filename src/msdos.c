@@ -71,6 +71,9 @@ static int mouse_last_click = 0;	/* previous status at click */
 static int mouse_click_x = 0;		/* x of previous mouse click */
 static int mouse_click_y = 0;		/* y of previous mouse click */
 static linenr_t mouse_topline = 0;	/* topline at previous mouse click */
+static int mouse_x_div = 8;			/* column = x coord / mouse_x_div */
+static int mouse_y_div = 8;			/* line   = y coord / mouse_y_div */
+static int mouse_y_max = 199;		/* maximum mouse y coord */
 #endif
 
 #define BIOSTICK	55				/* biostime() increases one tick about
@@ -239,8 +242,8 @@ WaitForChar(msec)
 			regs.x.ax = 3;
 			int86(0x33, &regs, &regs);		/* check mouse status */
 				/* only recognize button-down and button-up event */
-			x = regs.x.cx / 8;
-			y = regs.x.dx / 8;
+			x = regs.x.cx / mouse_x_div;
+			y = regs.x.dx / mouse_y_div;
 			if ((last_status == 0) != (regs.x.bx == 0))
 			{
 				if (last_status)		/* button up */
@@ -489,6 +492,11 @@ mch_windinit()
 	regs.x.ax = 0;
 	(void)int86(0x33, &regs, &regs);
 	mouse_avail = regs.x.ax;
+	/* best guess for mouse coordinate computations */
+	if (Columns <= 40)
+		mouse_x_div = 16;
+	if (Rows == 30)
+		mouse_y_div = 4;
 #endif
 }
 
@@ -520,7 +528,7 @@ show_mouse(on)
 }
 
 /*
- * Set area where mouse can be moved to.
+ * Set area where mouse can be moved to: The whole screen.
  */
 	static void
 mouse_area()
@@ -530,11 +538,11 @@ mouse_area()
 	if (mouse_avail)
 	{	
 		regs.x.cx = 0;	/* mouse visible between cx and dx */
-		regs.x.dx = ((unsigned int)Columns - 1) * 8;
+		regs.x.dx = 639;
 		regs.x.ax = 7;
 		(void)int86(0x33, &regs, &regs);
 		regs.x.cx = 0;	/* mouse visible between cx and dx */
-		regs.x.dx = ((unsigned int)Rows - 1) * 8;
+		regs.x.dx = mouse_y_max;
 		regs.x.ax = 8;
 		(void)int86(0x33, &regs, &regs);
 	}
@@ -1028,6 +1036,28 @@ mch_screenmode(arg)
 		return FAIL;
 	}
 	textmode(mode);					/* use Borland function */
+
+	/* Screen colors may have changed. */
+	outstr(T_ME);
+#ifdef USE_MOUSE
+	if (mode == 0x10)
+		mouse_y_max = 349;
+	else if (mode == 0x11 || mode == 0x12)
+		mouse_y_max = 479;
+	else
+		mouse_y_max = 199;
+	if (mode <= 1 || mode == 4 || mode == 5 || mode == 0x13)
+		mouse_x_div = 16;
+	else
+		mouse_x_div = 8;
+	if (mode == 0x11 || mode == 0x12)
+		mouse_y_div = 16;
+	else if (mode == 0x10)
+		mouse_y_div = 14;
+	else
+		mouse_y_div = 8;
+	mouse_area();			/* set area where mouse can go */
+#endif
 	return OK;
 }
 
@@ -1104,6 +1134,10 @@ mch_set_winsize()
 #endif
 }
 
+#ifdef DJGPP
+# include <libc/system.h>		/* for __system_flags and __system_redirect */
+#endif
+
 /*
  * call shell, return FAIL for failure, OK otherwise
  */
@@ -1116,6 +1150,14 @@ call_shell(cmd, options)
 {
 	int		x;
 	char_u	*newcmd;
+
+#ifdef DJGPP
+	/*
+	 * Disable the redirection done by DJGPP's system(), because it eats file
+	 * descriptors.
+	 */
+	__system_flags &= ~__system_redirect;
+#endif
 
 	flushbuf();
 
@@ -1131,7 +1173,7 @@ call_shell(cmd, options)
 			x = 1;
 		else
 		{
-			sprintf(newcmd, "%s /c %s", p_sh, cmd);
+			sprintf(newcmd, "%s %s %s", p_sh, p_shcf, cmd);
 			x = system(newcmd);
 			vim_free(newcmd);
 		}
@@ -1221,7 +1263,7 @@ mch_has_wildcard(s)
 	char_u *s;
 {
 	for ( ; *s; ++s)
-		if (*s == '?' || *s == '*')
+		if (*s == '?' || *s == '*' || *s == '$')
 			return TRUE;
 	return FALSE;
 }
@@ -1336,16 +1378,33 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 {
 	int			i, retval = 0;
 	FileList	f;
+	char_u		*p;
 
 	f.file = NULL;
 	f.nfiles = 0;
 
 	for (i = 0; i < num_pat; i++)
 	{
-		if (!mch_has_wildcard(pat[i]))
-			addfile(&f, pat[i], files_only ? FALSE : mch_isdir(pat[i]));
+		/*
+		 * First expand environment variables.
+		 */
+		if (vim_strchr(pat[i], '$') != NULL)
+		{
+			p = alloc(MAXPATHL);
+			if (p != NULL)
+				expand_env(pat[i], p, MAXPATHL);
+			else
+				p = pat[i];
+		}
 		else
-			retval |= expandpath(&f, pat[i], files_only, 0, list_notfound);
+			p = pat[i];
+
+		if (!mch_has_wildcard(p))
+			addfile(&f, p, files_only ? FALSE : mch_isdir(p));
+		else
+			retval |= expandpath(&f, p, files_only, 0, list_notfound);
+		if (p != pat[i])
+			vim_free(p);
 	}
 
 	*num_file = f.nfiles;
@@ -1407,11 +1466,11 @@ djgpp_rename(const char *OldFile, const char *NewFile)
 	if (!_use_lfn())
 		return rename(OldFile, NewFile);
 
-	if ((TempFile = alloc((unsigned)(STRLEN(OldFile) + TMPNAMELEN))) == NULL)
+	if ((TempFile = alloc((unsigned)(STRLEN(OldFile) + 13))) == NULL)
 		return -1;
 	
 	STRCPY(TempFile, OldFile);
-	STRCPY(gettail(TempFile), TMPNAME1);
+	STRCPY(gettail(TempFile), "axlqwqhy.ba~");
 	if (rename(OldFile, TempFile))
 		retval = -1;
 	else

@@ -21,8 +21,8 @@
 #define VIM_VERSION_MAJOR			   4
 #define VIM_VERSION_MAJOR_STR		  "4"
 
-#define VIM_VERSION_MINOR			   2
-#define VIM_VERSION_MINOR_STR		  "2"
+#define VIM_VERSION_MINOR			   3
+#define VIM_VERSION_MINOR_STR		  "3"
 
 #define VIM_VERSION_BUILD			   1
 #define VIM_VERSION_BUILD_STR		  "1"

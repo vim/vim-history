@@ -642,7 +642,6 @@ debug3("RWFC(%ld) got %d (%c)\n", ticks, key, key);
  * list_notfound is ignored
  */
 
-extern char *mktemp __ARGS((char *));
 #ifndef SEEK_SET
 # define SEEK_SET 0
 #endif
@@ -659,7 +658,7 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	int				files_only;
 	int				list_notfound;
 {
-	char	tmpname[TMPNAMELEN];
+	char_u	*tempname;
 	char	*command;
 	int		i;
 	int		dir;
@@ -692,21 +691,23 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 /*
  * get a name for the temp file
  */
-	strcpy(tmpname, TMPNAME2);
-	if (*mktemp(tmpname) == NUL)
+	if ((tempname = vim_tempname('o')) == NULL)
 	{
 		emsg(e_notmp);
 	    return 1;
 	}
 
-	len = TMPNAMELEN + 10;
+	len = STRLEN(tempname) + 11;
 	for (i = 0; i < num_pat; ++i)		/* count the length of the patterns */
 		len += strlen(pat[i]) + 1;
 	command = (char *)alloc(len);
 	if (command == NULL)
+	{
+		vim_free(tempname);
 		return 1;
+	}
 	strcpy(command, "glob >");			/* built the shell command */
-	strcat(command, tmpname);
+	strcat(command, (char *)tempname);
 	for (i = 0; i < num_pat; ++i)
 	{
 		strcat(command, " ");
@@ -716,7 +717,8 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	vim_free(command);
 	if (i)									/* call_shell failed */
 	{
-		vim_remove((char_u *)tmpname);
+		vim_remove(tempname);
+		vim_free(tempname);
 		mch_delay(1000L, TRUE);				/* give the user a chance to read
 											   error messages */
 		must_redraw = CLEAR;				/* probably messed up screen */
@@ -726,9 +728,10 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 /*
  * read the names from the file into memory
  */
- 	fd = fopen(tmpname, "r");
+ 	fd = fopen((char *)tempname, "r");
 	if (fd == NULL)
 	{
+		vim_free(tempname);
 		emsg(e_notopen);
 		return 1;
 	}
@@ -739,13 +742,15 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	buffer = (char *)alloc(len + 1);
 	if (buffer == NULL)
 	{
-		vim_remove((char_u *)tmpname);
+		vim_remove(tempname);
+		vim_free(tempname);
 		fclose(fd);
 		return 1;
 	}
 	i = fread(buffer, 1, len, fd);
 	fclose(fd);
-	vim_remove((char_u *)tmpname);
+	vim_remove(tempname);
+	vim_free(tempname);
 	if (i != len)
 	{
 		emsg(e_notread);

@@ -74,20 +74,16 @@
 # define DEF_DIR		".,c:\\tmp,c:\\temp"	/* default for 'directory' */
 #endif
 
-#define TMPNAME1		"viXXXXXX"		/* put it in current dir */
-#define TMPNAME2		"voXXXXXX"		/*  is there a better place? */
-#define TMPNAMELEN		15
-
 #include <stdlib.h>
 
 /*
  * Win32 has plenty of memory, use large buffers
  */
 #define CMDBUFFSIZE	1024		/* size of the command processing buffer */
-#ifdef _MAX_FNAME				/* just in case it's not defined for Borland */
-# define MAXNAMLEN	_MAX_FNAME
-#endif
+
 #define MAXPATHL	_MAX_PATH	/* Win32 has long paths and plenty of memory */
+
+#define BASENAMELEN		(MAXPATHL-5)	/* length of base of filename */
 
 #ifndef MAXMEM
 # define MAXMEM			512			/* use up to  512 Kbyte for buffer */
@@ -96,8 +92,6 @@
 #ifndef MAXMEMTOT
 # define MAXMEMTOT		2048		/* use up to 2048 Kbyte for Vim */
 #endif
-
-#define BASENAMELEN		(MAXPATHL-5)	/* length of base of filename */
 
 /* codes for Win32 mouse event */
 #define MOUSE_LEFT		0x00

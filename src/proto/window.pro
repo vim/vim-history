@@ -1,6 +1,7 @@
 /* window.c */
 void do_window __PARMS((int nchar, long Prenum));
 int win_split __PARMS((int new_height, int redraw));
+int win_valid __PARMS((WIN *win));
 int win_count __PARMS((void));
 int make_windows __PARMS((int count));
 void win_equal __PARMS((WIN *next_curwin, int redraw));

@@ -120,6 +120,8 @@ EXTERN int		need_check_timestamps INIT(= FALSE);	/* got STOP signal */
 
 #ifdef AUTOCMD
 EXTERN int		autocmd_busy INIT(= FALSE);	/* Is apply_autocmds() busy? */
+EXTERN int		autocmd_no_enter INIT(= FALSE); /* *Enter autocmds disabled */
+EXTERN int		autocmd_no_leave INIT(= FALSE); /* *Leave autocmds disabled */
 #endif
 
 #ifdef USE_MOUSE
@@ -332,7 +334,9 @@ EXTERN int		dont_wait_return INIT(= 0);	/* no need to wait for return */
 EXTERN int		quit_more INIT(= FALSE);	/* 'q' hit at "--more--" msg */
 EXTERN char_u	*last_cmdline INIT(= NULL);	/* last command line (for ":) */
 EXTERN char_u	*new_last_cmdline INIT(= NULL);	/* new value for last_cmdline */
-EXTERN char_u	*autocmd_fname INIT(= NULL); /* fname for "^Vf" on cmdline */
+#ifdef AUTOCMD
+EXTERN char_u	*autocmd_fname INIT(= NULL); /* fname for <afile> on cmdline */
+#endif
 
 EXTERN int		postponed_split INIT(= FALSE);	/* for CTRL-W CTRL-] command */
 EXTERN int		replace_offset INIT(= 0);	/* offset for replace_push() */

@@ -198,7 +198,9 @@ EXTERN long		p_so;		/* scroll offset */
 EXTERN char_u  *p_sections;	/* sections */
 EXTERN int		p_secure;	/* do .exrc and .vimrc in secure mode */
 EXTERN char_u  *p_sh;		/* name of shell to use */
+EXTERN char_u  *p_shcf;		/* flag to shell to execute one command */
 EXTERN char_u  *p_sp;		/* string for output of make */
+EXTERN char_u  *p_shq;		/* quote character(s) for shell */
 EXTERN char_u  *p_srr;		/* string for output of filter */
 EXTERN long		p_st;		/* type of shell */
 EXTERN int		p_sr;		/* shift round off (for < and >) */
@@ -223,6 +225,7 @@ EXTERN int		p_to;		/* tilde is an operator */
 EXTERN int		p_timeout;	/* mappings entered within one second */
 EXTERN long 	p_tm;		/* timeoutlen (msec) */
 EXTERN int		p_title;	/* set window title if possible */
+EXTERN long 	p_titlelen;	/* length of window title in % of Columns */
 EXTERN int		p_ttimeout;	/* key codes entered within one second */
 EXTERN long 	p_ttm;		/* key code timeoutlen (msec) */
 EXTERN int		p_tbi;		/* 'ttybuiltin' use builtin termcap first */

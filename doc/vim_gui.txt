@@ -1,4 +1,4 @@
-*vim_gui.txt*   For Vim version 4.2.  Last modification: 1996 June 11
+*vim_gui.txt*   For Vim version 4.3.  Last modification: 1996 Aug 8
 
 
 		       Vim's Graphical User Interface
@@ -461,7 +461,7 @@ scrollbars will remain the same, because Vim has its own, which are already
 
     - Window should be redrawn when resizing at the hit-return prompt.
 
-    - Use different cursor and mouse shapes/colours for different modes.
+    - Use different cursor and mouse shapes/colors for different modes.
 
     - Scrollbars with Motif 1.1 are ordered upside down!  Do we care?
 
@@ -474,8 +474,8 @@ scrollbars will remain the same, because Vim has its own, which are already
       current Vim window.
 
     - Add a new command :highlight for specifying how various things should
-      be highlighted, allowing colours to be given.  Currently it's all hard
-      coded, the text colour, bg colour etc.
+      be highlighted, allowing colors to be given.  Currently it's all hard
+      coded, the text color, bg color etc.
 
     - We need a nice little picture to go on the icon :-)  But how do we do
       that?

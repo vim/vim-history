@@ -2952,11 +2952,13 @@ screen_del_lines(off, row, line_count, end, force)
  * If clear_cmdline is TRUE, clear the rest of the cmdline.
  * If clear_cmdline is FALSE there may be a message there that needs to be
  * cleared only if a mode is shown.
+ * Return the lenght of the message (0 if no message).
  */
-	void
+	int
 showmode()
 {
 	int		need_clear = FALSE;
+	int		length = 0;
 	int		do_mode = (p_smd &&
 						 ((State & INSERT) || restart_edit || VIsual_active));
 
@@ -3044,6 +3046,7 @@ showmode()
 		if (need_clear || clear_cmdline)
 			msg_clr_eos();
 		msg_didout = FALSE;				/* overwrite this message */
+		length = msg_col;
 		msg_col = 0;
 	}
 	else if (clear_cmdline)				/* just clear anything */
@@ -3054,6 +3057,8 @@ showmode()
 	}
 	win_redr_ruler(lastwin, TRUE);
 	redraw_cmdline = FALSE;
+
+	return length;
 }
 
 /*
@@ -3223,7 +3228,7 @@ jump_to_mouse(flags)
 			on_status_line = row - wp->w_height + 1;
 		else
 			on_status_line = 0;
-		win_enter(wp, TRUE);
+		win_enter(wp, TRUE);		/* can make wp invalid! */
 		if (on_status_line)			/* In (or below) status line */
 		{
 			/* Don't use start_arrow() if we're in the same window */

@@ -27,7 +27,7 @@
 #define puller_width	19
 #define puller_height	19
 
-static char puller_bits[] =
+static char_u puller_bits[] =
 {
 	0x00,0x00,0xf8,0x00,0x00,0xf8,0xf8,0x7f,0xf8,0x04,0x80,0xf8,0x04,0x80,0xf9,
 	0x84,0x81,0xf9,0x84,0x83,0xf9,0x84,0x87,0xf9,0x84,0x8f,0xf9,0x84,0x8f,0xf9,
@@ -561,9 +561,9 @@ gui_mch_add_menu(menu, parent)
 		XtAddCallback(menu->id, XtNcallback, gui_x11_menu_cb,
 			(XtPointer)menu);
 
-		pullright_name = strnsave(menu->name, strlen(menu->name) +
-														strlen("-pullright"));
-		strcat(pullright_name, "-pullright");
+		pullright_name = strnsave(menu->name,
+								   STRLEN(menu->name) + strlen("-pullright"));
+		strcat((char *)pullright_name, "-pullright");
 		menu->submenu_id = XtVaCreatePopupShell(pullright_name,
 			simpleMenuWidgetClass, parent->submenu_id,
 			XtNforeground, gui.menu_fg_pixel,
@@ -1015,9 +1015,9 @@ gui_athena_pullright_action(w, event, args, nargs)
 	if (event->xmotion.x < (width * 3) / 4)
 		return;
 
-	pullright_name = strnsave(XtName(menuw), strlen(XtName(menuw)) +
-													strlen("-pullright"));
-	strcat(pullright_name, "-pullright");
+	pullright_name = strnsave((char_u *)XtName(menuw),
+								strlen(XtName(menuw)) + strlen("-pullright"));
+	strcat((char *)pullright_name, "-pullright");
 	popup = XtNameToWidget(w, pullright_name);
 	vim_free(pullright_name);
 

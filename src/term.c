@@ -364,6 +364,10 @@ struct builtin_term builtin_termcaps[] =
 	{KS_MD,			"\033|63m"},
 	{KS_SE,			"\033|0m"},
 	{KS_SO,			"\033|31m"},
+	{KS_CZH,		"\033|225m"},	/* italic mode: blue text on yellow */
+	{KS_CZR,		"\033|0m"},		/* italic mode end */
+	{KS_US,			"\033|67m"},	/* underscore mode: cyan text on red */
+	{KS_UE,			"\033|0m"},		/* underscore mode end */
 	{KS_MS,			"\001"},
 #  ifdef TERMINFO
 	{KS_CM,			"\033|%i%p1%d;%p2%dH"},
@@ -632,8 +636,10 @@ struct builtin_term builtin_termcaps[] =
 	{K_HELP,		"\033[28~"},
 	{K_UNDO,		"\033[26~"},
 	{K_INS,			"\033[2~"},
-	{K_HOME,		"\033[7~"},		/* also seen: "\033[1~" */
-	{K_END,			"\033[8~"},		/* also seen: "\033[4~" */
+	{K_HOME,		"\033[7~"},
+	{K_KHOME,		"\033[1~"},
+	{K_END,			"\033[8~"},
+	{K_KEND,		"\033[4~"},
 	{K_PAGEUP,		"\033[5~"},
 	{K_PAGEDOWN,	"\033[6~"},
 	/* {K_DEL,			"\033[3~"}, not used */
@@ -831,6 +837,10 @@ struct builtin_term builtin_termcaps[] =
 	{K_END,			"[END]"},
 	{K_PAGEUP,		"[PAGEUP]"},
 	{K_PAGEDOWN,	"[PAGEDOWN]"},
+	{K_KHOME,		"[KHOME]"},
+	{K_KEND,		"[KEND]"},
+	{K_KPAGEUP,		"[KPAGEUP]"},
+	{K_KPAGEDOWN,	"[KPAGEDOWN]"},
 	{K_MOUSE,		"[MOUSE]"},
 # endif
 
@@ -1014,7 +1024,7 @@ set_termname(term)
 							"k1", "k2", "k3", "k4", "k5", "k6",
 							"k7", "k8", "k9", "k;", "F1", "F2",
 							"%1", "&8", "kb", "kI", "kD", "kh", 
-							"@7", "kP", "kN",
+							"@7", "kP", "kN", "K1", "K3", "K4", "K5",
 							NULL
 							};
 			static struct {
@@ -1050,9 +1060,9 @@ set_termname(term)
 				for (i = 0; string_names[i].name != NULL; ++i)
 				{
 					if (term_strings[string_names[i].dest] == NULL ||
-							   term_strings[string_names[i].dest] == empty_option)
+						   term_strings[string_names[i].dest] == empty_option)
 						term_strings[string_names[i].dest] =
-											   TGETSTR(string_names[i].name, &tp);
+										   TGETSTR(string_names[i].name, &tp);
 				}
 
 				if ((T_MS == NULL || T_MS == empty_option) && tgetflag("ms"))
@@ -1069,7 +1079,7 @@ set_termname(term)
 				{
 					if (find_termcode((char_u *)key_names[i]) == NULL)
 						add_termcode((char_u *)key_names[i],
-													  TGETSTR(key_names[i], &tp));
+												  TGETSTR(key_names[i], &tp));
 				}
 
 					/* if cursor-left == backspace, ignore it (televideo 925) */
@@ -1568,8 +1578,10 @@ tgoto(cm, x, y)
 termcapinit(term)
 	char_u *term;
 {
+#ifndef WIN32
 	if (!term || !*term)
 		term = vim_getenv((char_u *)"TERM");
+#endif
 	if (!term || !*term)
 		term = DEFAULT_TERM;
 	set_string_option((char_u *)"term", -1, term, TRUE);
@@ -1754,7 +1766,7 @@ setcursor()
 ttest(pairs)
 	int	pairs;
 {
-	char *t = NULL;
+	char	*t = NULL;
 
 	check_options();				/* make sure no options are NULL */
 
@@ -1973,6 +1985,7 @@ set_winsize(width, height, mustset)
 	if (!starting)
 	{
 		comp_Botline_all();
+		maketitle();
 		if (State == ASKMORE || State == EXTERNCMD)
 		{
 			screenalloc(FALSE);	/* don't redraw, just adjust screen size */
@@ -2367,7 +2380,7 @@ check_termcode(max_offset)
 	int			new_slen;
 	int			extra;
 	char_u		string[MAX_KEY_CODE_LEN + 1];
-	int			i;
+	int			i, j;
 #ifdef USE_GUI
 	long_u		val;
 #endif
@@ -2474,6 +2487,25 @@ check_termcode(max_offset)
 				{
 					if (len < slen)				/* got a partial sequence */
 						return -1;				/* need to get more chars */
+
+					/*
+					 * When found a keypad key, check if there is another key
+					 * that matches and use that one.  This makes <Home> to be
+					 * found instead of <kHome> when they produce the same
+					 * key code.
+					 */
+					if (termcodes[i].name[0] == 'K' &&
+												isdigit(termcodes[i].name[1]))
+					{
+						for (j = i + 1; j < tc_len; ++j)
+							if (termcodes[j].len == slen &&
+									STRNCMP(termcodes[i].code,
+											termcodes[j].code, slen) == 0)
+							{
+								i = j;
+								break;
+							}
+					}
 
 					key_name[0] = termcodes[i].name[0];
 					key_name[1] = termcodes[i].name[1];

@@ -1322,7 +1322,8 @@ do_put(dir, count, fix_indent)
 
 	if (y_size == 0 || y_array == NULL)
 	{
-		EMSG2("Nothing in register %s", transchar(yankbuffer));
+		EMSG2("Nothing in register %s",
+					yankbuffer == 0 ? (char_u *)"\"" : transchar(yankbuffer));
 		return;
 	}
 
@@ -1665,6 +1666,8 @@ do_dis(arg)
 				for (p = yb->y_array[j]; *p && (n -= charsize(*p)) >= 0; ++p)
 					msg_outtrans_len(p, 1);
 			}
+			if (n > 1 && yb->y_type == MLINE)
+				MSG_OUTSTR("^J");
 			flushbuf();				/* show one line at a time */
 		}
 	}
@@ -2373,7 +2376,8 @@ read_viminfo_register(line, fp, force)
 	}
 	if (!isalnum(*str) && *str != '-')
 	{
-		EMSG2("viminfo: Illegal register name in line %s", line);
+		if (viminfo_error("Illegal register name", line))
+			return TRUE;		/* too many errors, pretend end-of-file */
 		do_it = FALSE;
 	}
 	yankbuffer = *str++;

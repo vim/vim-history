@@ -489,8 +489,7 @@ putdigraph(str)
 		newtab = (char_u (*)[3])alloc(digraphcount * 3 + 3);
 		if (newtab)
 		{
-			vim_memmove((char *)newtab, (char *)digraphnew, 
-												  (size_t)(digraphcount * 3));
+			vim_memmove(newtab, digraphnew, (size_t)(digraphcount * 3));
 			vim_free(digraphnew);
 			digraphnew = newtab;
 			digraphnew[digraphcount][0] = char1;

@@ -135,22 +135,6 @@ edit(initstr, startln, count)
 #endif
 	FPOS		 tpos;
 
-	/* sleep before redrawing, needed for "CTRL-O :" that results in an
-	 * error message */
-	if (msg_scroll || emsg_on_display)	
-	{
-		mch_delay(1000L, TRUE);
-		msg_scroll = FALSE;
-		emsg_on_display = FALSE;
-	}
-#ifdef SLEEP_IN_EMSG
-	if (need_sleep)	
-	{
-		mch_delay(1000L, TRUE);
-		need_sleep = FALSE;
-	}
-#endif
-
 #ifdef USE_MOUSE
 	/*
 	 * When doing a paste with the middle mouse button, Insstart is set to
@@ -235,11 +219,17 @@ edit(initstr, startln, count)
 	can_cindent = TRUE;
 #endif
 
+	/*
+	 * If 'showmode' is set, show the current (insert/replace/..) mode.
+	 * A warning message for changing a readonly file is given here, before
+	 * actually changing anything.  It's put after the mode, if any.
+	 */
+	i = 0;
 	if (p_smd)
-		showmode();
+		i = showmode();
 
 	if (!p_im)
-		change_warning();			/* give a warning if readonly */
+		change_warning(i + 1);
 
 #ifdef DIGRAPHS
 	do_digraph(-1);					/* clear digraphs */
@@ -616,6 +606,10 @@ doESCkey:
 				else if (p_smd)
 					MSG("");
 				old_indent = 0;
+
+				/*
+				 * This is the ONLY return from edit().
+				 */
 				return (c == Ctrl('O'));
 
 			  	/*
@@ -1060,6 +1054,7 @@ redraw:
 				break;
 
 			  case K_HOME:
+			  case K_KHOME:
 				undisplay_dollar();
 				tpos = curwin->w_cursor;
 				if ((mod_mask & MOD_MASK_CTRL))
@@ -1070,6 +1065,7 @@ redraw:
 				break;
 
 			  case K_END:
+			  case K_KEND:
 				undisplay_dollar();
 				tpos = curwin->w_cursor;
 				if ((mod_mask & MOD_MASK_CTRL))
@@ -1145,6 +1141,7 @@ redraw:
 
 			  case K_S_UP:
 			  case K_PAGEUP:
+			  case K_KPAGEUP:
 				undisplay_dollar();
 				tpos = curwin->w_cursor;
 			  	if (onepage(BACKWARD, 1L) == OK)
@@ -1174,6 +1171,7 @@ redraw:
 
 			  case K_S_DOWN:
 			  case K_PAGEDOWN:
+			  case K_KPAGEDOWN:
 				undisplay_dollar();
 				tpos = curwin->w_cursor;
 			  	if (onepage(FORWARD, 1L) == OK)
@@ -1523,6 +1521,12 @@ docomplete:
 						if (ExpandWildCards(1, &complete_pat, &num_matches,
 												&matches, FALSE, FALSE) == OK)
 						{
+							/*
+							 * If the pattern starts with a '~', replace the
+							 * home directory with '~' again.
+							 */
+							if (*complete_pat == '~')
+								tilde_replace(num_matches, matches);
 							for (i = 0; i < num_matches; i++)
 								if (add_completion(matches[i], -1, NULL,
 														FORWARD) == RET_ERROR)
@@ -3075,8 +3079,16 @@ onepage(dir, count)
 		return FAIL;
 	for ( ; count > 0; --count)
 	{
-		if (dir == FORWARD ? (curwin->w_topline >=
-				   curbuf->b_ml.ml_line_count - 1) : (curwin->w_topline == 1))
+		/*
+		 * It's an error to move a page up when the first line is already on
+		 * the screen.  It's an error to move a page down when the last line
+		 * is on the screen and the topline is 'scrolloff' lines from the
+		 * last line.
+		 */
+		if (dir == FORWARD
+				? ((curwin->w_topline >= curbuf->b_ml.ml_line_count - p_so) &&
+						curwin->w_botline > curbuf->b_ml.ml_line_count)
+				: (curwin->w_topline == 1))
 		{
 			beep_flush();
 			return FAIL;
@@ -3086,12 +3098,21 @@ onepage(dir, count)
 										/* at end of file */
 			if (curwin->w_botline > curbuf->b_ml.ml_line_count)
 				curwin->w_topline = curbuf->b_ml.ml_line_count;
-										/* next line is big */
-										/* or just three lines on screen */
 			else
 			{
-				if (plines(curwin->w_botline) >= curwin->w_height - 2 ||
-								   curwin->w_botline - curwin->w_topline <= 3)
+				/*
+				 * When there are three or less lines on the screen, move them
+				 * all to above the screen.
+				 */
+				if (curwin->w_botline - curwin->w_topline <= 3)
+					off = 0;
+				/*
+				 * Make sure at least w_botline gets onto the screen, also
+				 * when 'scrolloff' is non-zero and with very long lines.
+				 */
+				else if (plines(curwin->w_botline) +
+						plines(curwin->w_botline - 1) +
+						plines(curwin->w_botline - 2) >= curwin->w_height - 2)
 					off = 0;
 				else
 					off = 2;
@@ -3139,6 +3160,11 @@ onepage(dir, count)
 	}
 	cursor_correct();
 	beginline(MAYBE);
+	/*
+	 * Avoid the screen jumping up and down when 'scrolloff' is non-zero.
+	 */
+	if (dir == FORWARD && curwin->w_cursor.lnum < curwin->w_topline + p_so)
+		scroll_cursor_top(1, FALSE);
 	updateScreen(VALID);
 	return OK;
 }

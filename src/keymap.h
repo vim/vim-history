@@ -271,6 +271,10 @@
 #define K_END			TERMCAP2KEY('@', '7')
 #define K_PAGEUP		TERMCAP2KEY('k', 'P')
 #define K_PAGEDOWN		TERMCAP2KEY('k', 'N')
+#define K_KHOME			TERMCAP2KEY('K', '1')	/* keypad home (upper left) */
+#define K_KEND			TERMCAP2KEY('K', '4')	/* keypad end (lower left) */
+#define K_KPAGEUP		TERMCAP2KEY('K', '3')	/* keypad pageup (upper R.) */
+#define K_KPAGEDOWN		TERMCAP2KEY('K', '5')	/* keypad pagedown (lower R.) */
 
 #define K_MOUSE			TERMCAP2KEY(KS_MOUSE, K_FILLER)
 #define K_MENU			TERMCAP2KEY(KS_MENU, K_FILLER)

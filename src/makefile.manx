@@ -55,6 +55,8 @@ PRO =	proto/alloc.pro proto/buffer.pro proto/charset.pro proto/cmdcmds.pro \
 	proto/term.pro proto/termlib.pro proto/undo.pro proto/window.pro \
 	proto/amiga.pro
 
+all: Vim ctags/Ctags xxd/Xxd
+
 Vim: objects $(OBJ) version.c
 	cc $(CFLAGS) version.c -o objects/version.o
 	ln +q -m -o Vim $(OBJ) objects/version.o $(LIBS)
@@ -62,6 +64,12 @@ Vim: objects $(OBJ) version.c
 debug: objects $(OBJ) version.c
 	cc $(CFLAGS) version.c -o objects/version.o
 	ln +q -m -g -o Vim $(OBJ) objects/version.o $(LIBS)
+
+ctags/Ctags: ctags/ctags.c
+	csh -c cd ctags; make -f Makefile.amiga; cd ..
+
+xxd/Xxd: xxd/xxd.c
+	csh -c cd xxd; make -f Makefile.amiga; cd ..
 
 proto: $(SYMS) $(PRO)
 
@@ -73,7 +81,7 @@ ctags:
 
 # can't use delete here, too many file names
 clean:
-	csh -c rm -f $(OBJ) objects/version.o objects/mkcmdtab.o objects/termlib.o Vim $(SYMS) mkcmdtab cmdtab.h
+	csh -c rm -f $(OBJ) objects/version.o objects/mkcmdtab.o objects/termlib.o Vim $(SYMS) mkcmdtab cmdtab.h ctags/Ctags xxd/Xxd
 
 $(SYMS)  : vim.h keymap.h macros.h ascii.h term.h structs.h amiga.h
 	cc $(CFLAGS) -ho$(SYMS) vim.h

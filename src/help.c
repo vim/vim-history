@@ -97,7 +97,8 @@ do_help(arg)
 			 * open help file (do_ecmd() will set b_help flag, readfile() will
 			 * set b_p_ro flag)
 			 */
-			(void)do_ecmd(0, fnamep, NULL, NULL, TRUE, (linenr_t)0, TRUE);
+			(void)do_ecmd(0, fnamep, NULL, NULL, (linenr_t)0,
+												   ECMD_HIDE + ECMD_SET_HELP);
 
 			/* save the values of the options we change */
 			vim_free(help_save_isk);

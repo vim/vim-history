@@ -8,3 +8,5 @@ int vim_fgets __PARMS((char_u *buf, int size, FILE *fp));
 int vim_rename __PARMS((char_u *from, char_u *to));
 void check_timestamps __PARMS((void));
 void buf_check_timestamp __PARMS((BUF *buf));
+void write_lnum_adjust __PARMS((linenr_t offset));
+char_u *vim_tempname __PARMS((int extra_char));

@@ -28,8 +28,20 @@ OBJ =	objects/alloc.o objects/buffer.o objects/charset.o objects/cmdcmds.o \
 	objects/term.o objects/undo.o objects/window.o objects/msdos.o \
 	$(TERMLIB)
 
+all: vim.exe ctags/ctags.exe xxd/xxd.exe
+
 vim.exe: objects $(OBJ) version.c
 	$(CC) $(CFLAGS) -s -o vim.exe version.c $(OBJ) -lpc
+
+ctags/ctags.exe: ctags/ctags.c
+	cd ctags
+	$(MAKE) -f Makefile.djg
+	cd ..
+
+xxd/xxd.exe: xxd/xxd.c
+	cd xxd
+	$(MAKE) -f Makefile.djg
+	cd ..
 
 objects:
 	mkdir objects

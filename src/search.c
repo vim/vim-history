@@ -322,11 +322,10 @@ searchit(pos, dir, str, count, options, which_pat)
 						/*
 						 * When *match == NUL the cursor will be put one back
 						 * afterwards, compare with that position, otherwise
-						 * "/$" will get stuck on end of line.  Same for
-						 * matchend.
+						 * "/$" will get stuck on end of line.
 						 */
 						while ((options & SEARCH_END) ?
-						((int)(matchend - ptr) - 1 - (int)(*matchend == NUL) <
+												 ((int)(matchend - ptr) - 1  <
 											 (int)start_pos.col + extra_col) :
 								  ((int)(match - ptr) - (int)(*match == NUL) <
 											  (int)start_pos.col + extra_col))
@@ -499,6 +498,7 @@ searchit(pos, dir, str, count, options, which_pat)
  *	  If 'options & SEARCH_NOOF': don't add offset to position
  *	  If 'options & SEARCH_MARK': set previous context mark
  *	  If 'options & SEARCH_KEEP': keep previous search pattern
+ *    If 'options & SEARCH_START': accept match at curpos itself
  *
  * Careful: If lastoffline == TRUE and lastoff == 0 this makes the
  * movement linewise without moving the match position.
@@ -698,7 +698,7 @@ do_search(dirc, str, count, options)
 
 		c = searchit(&pos, dirc == '/' ? FORWARD : BACKWARD, searchstr, count,
 				lastend + (options &
-					   (SEARCH_KEEP + SEARCH_HIS + SEARCH_MSG +
+					   (SEARCH_KEEP + SEARCH_HIS + SEARCH_MSG + SEARCH_START +
 						   ((str != NULL && *str == ';') ? 0 : SEARCH_NOOF))),
 				2);
 		if (dircp != NULL)
