@@ -16,6 +16,7 @@
     defined(FEAT_RUBY) || \
     defined(FEAT_TCL) || \
     defined(DYNAMIC_GETTEXT) || \
+    defined(DYNAMIC_ICONV) || \
     defined(DYNAMIC_IME)
 #  pragma option -pc
 # else
@@ -687,6 +688,8 @@ extern char* (*dyn_libintl_textdomain)(const char* domainname);
 #define FNAME_EXP	2	/* expand to path */
 #define FNAME_HYP	4	/* check for hypertext link */
 #define FNAME_INCL	8	/* apply 'includeexpr' */
+#define FNAME_REL	16	/* ".." and "./" are relative to the (current)
+				   file instead of the current directory */
 
 /* Values for buflist_getfile() */
 #define GETF_SETMARK	0x01	/* set pcmark before jumping */

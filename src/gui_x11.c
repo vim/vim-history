@@ -1261,8 +1261,8 @@ gui_mch_init()
 	gui.def_back_pixel = gui.back_pixel;
     }
 
-    /* Get the colors from the "Normal" and "Menu" group (set in syntax.c or
-     * in a vimrc file) */
+    /* Get the colors from the "Normal", "Tooltip", "Scrollbar" and "Menu"
+     * group (set in syntax.c or in a vimrc file) */
     set_normal_colors();
 
     /*
@@ -2964,7 +2964,7 @@ gui_x11_send_event_handler(w, client_data, event, dum)
     XPropertyEvent *e = (XPropertyEvent *) event;
 
     if (e->type == PropertyNotify && e->window == commWindow
-	&& e->atom == commProperty &&  e->state == PropertyNewValue)
+	    && e->atom == commProperty &&  e->state == PropertyNewValue)
     {
 	serverEventProc(gui.dpy, event);
     }
@@ -3588,12 +3588,15 @@ createXpmImages(path, xpm, sen, insen)
 #if (defined(FEAT_TOOLBAR) && defined(FEAT_BEVAL)) || defined(PROTO)
 /*
  * Set the balloon-eval used for the tooltip of a toolbar menu item.
+ * The check for a non-toolbar item was added, because there is a crash when
+ * passing a normal menu item here.  Can't explain that, but better avoid it.
  */
     void
 gui_mch_menu_set_tip(menu)
     vimmenu_T	*menu;
 {
-    if (menu->id != NULL)
+    if (menu->id != NULL && menu->parent != NULL
+				       && menu_is_toolbar(menu->parent->name))
     {
 	/* Always destroy and create the balloon, in case the string was
 	 * changed. */

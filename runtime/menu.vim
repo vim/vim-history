@@ -1017,9 +1017,9 @@ am 50.40.280 &Syntax.HIJK.Jam :cal SetSyn("jam")<CR>
 am 50.40.290 &Syntax.HIJK.Jargon :cal SetSyn("jargon")<CR>
 am 50.40.300 &Syntax.HIJK.Java.Java :cal SetSyn("java")<CR>
 am 50.40.310 &Syntax.HIJK.Java.JavaCC :cal SetSyn("javacc")<CR>
-am 50.40.320 &Syntax.HIJK.Java.JavaScript :cal SetSyn("javascript")<CR>
-am 50.40.330 &Syntax.HIJK.Java.Java\ Server\ Pages :cal SetSyn("jsp")<CR>
-am 50.40.340 &Syntax.HIJK.Java.Java\ Properties :cal SetSyn("jproperties")<CR>
+am 50.40.320 &Syntax.HIJK.Java.Java\ Server\ Pages :cal SetSyn("jsp")<CR>
+am 50.40.330 &Syntax.HIJK.Java.Java\ Properties :cal SetSyn("jproperties")<CR>
+am 50.40.340 &Syntax.HIJK.JavaScript :cal SetSyn("javascript")<CR>
 am 50.40.350 &Syntax.HIJK.Jess :cal SetSyn("jess")<CR>
 am 50.40.360 &Syntax.HIJK.Jgraph :cal SetSyn("jgraph")<CR>
 am 50.40.380 &Syntax.HIJK.KDE\ script :cal SetSyn("kscript")<CR>
@@ -1037,16 +1037,17 @@ am 50.50.180 &Syntax.L-Ma.LOTOS :cal SetSyn("lotos")<CR>
 am 50.50.190 &Syntax.L-Ma.Lout :cal SetSyn("lout")<CR>
 am 50.50.200 &Syntax.L-Ma.Lua :cal SetSyn("lua")<CR>
 am 50.50.210 &Syntax.L-Ma.Lynx\ Style :cal SetSyn("lss")<CR>
-am 50.50.230 &Syntax.L-Ma.M4 :cal SetSyn("m4")<CR>
-am 50.50.240 &Syntax.L-Ma.MaGic\ Point :cal SetSyn("mgp")<CR>
-am 50.50.250 &Syntax.L-Ma.Mail :cal SetSyn("mail")<CR>
-am 50.50.260 &Syntax.L-Ma.Makefile :cal SetSyn("make")<CR>
-am 50.50.270 &Syntax.L-Ma.MakeIndex :cal SetSyn("ist")<CR>
-am 50.50.280 &Syntax.L-Ma.Man\ page :cal SetSyn("man")<CR>
-am 50.50.290 &Syntax.L-Ma.Maple :cal SetSyn("maple")<CR>
-am 50.50.300 &Syntax.L-Ma.Mason :cal SetSyn("mason")<CR>
-am 50.50.310 &Syntax.L-Ma.Mathematica :cal SetSyn("mma")<CR>
-am 50.50.320 &Syntax.L-Ma.Matlab :cal SetSyn("matlab")<CR>
+am 50.50.220 &Syntax.L-Ma.Lynx\ config :cal SetSyn("lynx")<CR>
+am 50.50.240 &Syntax.L-Ma.M4 :cal SetSyn("m4")<CR>
+am 50.50.250 &Syntax.L-Ma.MaGic\ Point :cal SetSyn("mgp")<CR>
+am 50.50.260 &Syntax.L-Ma.Mail :cal SetSyn("mail")<CR>
+am 50.50.270 &Syntax.L-Ma.Makefile :cal SetSyn("make")<CR>
+am 50.50.280 &Syntax.L-Ma.MakeIndex :cal SetSyn("ist")<CR>
+am 50.50.290 &Syntax.L-Ma.Man\ page :cal SetSyn("man")<CR>
+am 50.50.300 &Syntax.L-Ma.Maple :cal SetSyn("maple")<CR>
+am 50.50.310 &Syntax.L-Ma.Mason :cal SetSyn("mason")<CR>
+am 50.50.320 &Syntax.L-Ma.Mathematica :cal SetSyn("mma")<CR>
+am 50.50.330 &Syntax.L-Ma.Matlab :cal SetSyn("matlab")<CR>
 am 50.60.100 &Syntax.Me-NO.MEL\ (for\ Maya) :cal SetSyn("mel")<CR>
 am 50.60.110 &Syntax.Me-NO.Metafont :cal SetSyn("mf")<CR>
 am 50.60.120 &Syntax.Me-NO.MetaPost :cal SetSyn("mp")<CR>
@@ -1101,30 +1102,31 @@ am 50.70.340 &Syntax.PQ.Purify\ log :cal SetSyn("purifylog")<CR>
 am 50.70.350 &Syntax.PQ.Python :cal SetSyn("python")<CR>
 am 50.80.100 &Syntax.R-Sg.R :cal SetSyn("r")<CR>
 am 50.80.110 &Syntax.R-Sg.Radiance :cal SetSyn("radiance")<CR>
-am 50.80.120 &Syntax.R-Sg.Readline\ config :cal SetSyn("readline")<CR>
-am 50.80.130 &Syntax.R-Sg.RCS\ log\ output :cal SetSyn("rcslog")<CR>
-am 50.80.140 &Syntax.R-Sg.Rebol :cal SetSyn("rebol")<CR>
-am 50.80.150 &Syntax.R-Sg.Registry\ of\ MS-Windows :cal SetSyn("registry")<CR>
-am 50.80.160 &Syntax.R-Sg.Remind :cal SetSyn("remind")<CR>
-am 50.80.170 &Syntax.R-Sg.Renderman\ Shader\ Lang :cal SetSyn("sl")<CR>
-am 50.80.180 &Syntax.R-Sg.Rexx :cal SetSyn("rexx")<CR>
-am 50.80.190 &Syntax.R-Sg.Robots\.txt :cal SetSyn("robots")<CR>
-am 50.80.200 &Syntax.R-Sg.Rpcgen :cal SetSyn("rpcgen")<CR>
-am 50.80.210 &Syntax.R-Sg.RTF :cal SetSyn("rtf")<CR>
-am 50.80.220 &Syntax.R-Sg.Ruby :cal SetSyn("ruby")<CR>
-am 50.80.240 &Syntax.R-Sg.S-lang :cal SetSyn("slang")<CR>
-am 50.80.250 &Syntax.R-Sg.Samba\ config :cal SetSyn("samba")<CR>
-am 50.80.260 &Syntax.R-Sg.SAS :cal SetSyn("sas")<CR>
-am 50.80.270 &Syntax.R-Sg.Sather :cal SetSyn("sather")<CR>
-am 50.80.280 &Syntax.R-Sg.Scheme :cal SetSyn("scheme")<CR>
-am 50.80.290 &Syntax.R-Sg.Screen\ RC :cal SetSyn("screen")<CR>
-am 50.80.300 &Syntax.R-Sg.SDL :cal SetSyn("sdl")<CR>
-am 50.80.310 &Syntax.R-Sg.Sed :cal SetSyn("sed")<CR>
-am 50.80.320 &Syntax.R-Sg.Sendmail\.cf :cal SetSyn("sm")<CR>
-am 50.80.330 &Syntax.R-Sg.SGML.SGML\ catalog :cal SetSyn("catalog")<CR>
-am 50.80.340 &Syntax.R-Sg.SGML.SGML\ DTD :cal SetSyn("sgml")<CR>
-am 50.80.350 &Syntax.R-Sg.SGML.SGML\ Declarations :cal SetSyn("sgmldecl")<CR>
-am 50.80.360 &Syntax.R-Sg.SGML.SGML\ linuxdoc :cal SetSyn("sgmllnx")<CR>
+am 50.80.120 &Syntax.R-Sg.Ratpoison :cal SetSyn("ratpoison")<CR>
+am 50.80.130 &Syntax.R-Sg.Readline\ config :cal SetSyn("readline")<CR>
+am 50.80.140 &Syntax.R-Sg.RCS\ log\ output :cal SetSyn("rcslog")<CR>
+am 50.80.150 &Syntax.R-Sg.Rebol :cal SetSyn("rebol")<CR>
+am 50.80.160 &Syntax.R-Sg.Registry\ of\ MS-Windows :cal SetSyn("registry")<CR>
+am 50.80.170 &Syntax.R-Sg.Remind :cal SetSyn("remind")<CR>
+am 50.80.180 &Syntax.R-Sg.Renderman\ Shader\ Lang :cal SetSyn("sl")<CR>
+am 50.80.190 &Syntax.R-Sg.Rexx :cal SetSyn("rexx")<CR>
+am 50.80.200 &Syntax.R-Sg.Robots\.txt :cal SetSyn("robots")<CR>
+am 50.80.210 &Syntax.R-Sg.Rpcgen :cal SetSyn("rpcgen")<CR>
+am 50.80.220 &Syntax.R-Sg.RTF :cal SetSyn("rtf")<CR>
+am 50.80.230 &Syntax.R-Sg.Ruby :cal SetSyn("ruby")<CR>
+am 50.80.250 &Syntax.R-Sg.S-lang :cal SetSyn("slang")<CR>
+am 50.80.260 &Syntax.R-Sg.Samba\ config :cal SetSyn("samba")<CR>
+am 50.80.270 &Syntax.R-Sg.SAS :cal SetSyn("sas")<CR>
+am 50.80.280 &Syntax.R-Sg.Sather :cal SetSyn("sather")<CR>
+am 50.80.290 &Syntax.R-Sg.Scheme :cal SetSyn("scheme")<CR>
+am 50.80.300 &Syntax.R-Sg.Screen\ RC :cal SetSyn("screen")<CR>
+am 50.80.310 &Syntax.R-Sg.SDL :cal SetSyn("sdl")<CR>
+am 50.80.320 &Syntax.R-Sg.Sed :cal SetSyn("sed")<CR>
+am 50.80.330 &Syntax.R-Sg.Sendmail\.cf :cal SetSyn("sm")<CR>
+am 50.80.340 &Syntax.R-Sg.SGML.SGML\ catalog :cal SetSyn("catalog")<CR>
+am 50.80.350 &Syntax.R-Sg.SGML.SGML\ DTD :cal SetSyn("sgml")<CR>
+am 50.80.360 &Syntax.R-Sg.SGML.SGML\ Declarations :cal SetSyn("sgmldecl")<CR>
+am 50.80.370 &Syntax.R-Sg.SGML.SGML\ linuxdoc :cal SetSyn("sgmllnx")<CR>
 am 50.90.100 &Syntax.Sh-S.Sh\ shell\ script :cal SetSyn("sh")<CR>
 am 50.90.110 &Syntax.Sh-S.SiCAD :cal SetSyn("sicad")<CR>
 am 50.90.120 &Syntax.Sh-S.Simula :cal SetSyn("simula")<CR>

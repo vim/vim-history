@@ -4286,7 +4286,7 @@ cmd_gchar(offset)
  * the window.  Returns when the window is closed.
  * Returns:
  *	CR	 if the command is to be executed
- *	ESC	 if it is to be abandoned
+ *	Ctrl_C	 if it is to be abandoned
  *	K_IGNORE if editing continues
  */
     static int
@@ -4423,7 +4423,7 @@ ex_window()
      * this happens! */
     if (!win_valid(old_curwin) || !buf_valid(old_curbuf))
     {
-	cmdwin_result = ESC;
+	cmdwin_result = Ctrl_C;
 	EMSG(_("E199: Active window or buffer deleted"));
     }
     else
@@ -4443,7 +4443,7 @@ ex_window()
 	else
 	    ccline.cmdbuff = vim_strsave(ml_get_curline());
 	if (ccline.cmdbuff == NULL)
-	    cmdwin_result = ESC;
+	    cmdwin_result = Ctrl_C;
 	else
 	{
 	    ccline.cmdlen = (int)STRLEN(ccline.cmdbuff);

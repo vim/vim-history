@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0av.  Last change: 2001 Sep 09
+*version6.txt*  For Vim version 6.0aw.  Last change: 2001 Sep 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1095,6 +1095,7 @@ Added support for Access Control Lists (ACL) for FreeBSD and Win32.  The ACL
 is copied from the original file to the new file (or the backup if it's
 copied).
 ACL is also supported for AIX, Solaris and generic POSIX. (Tomas Ogren)
+And on SGI.
 
 
 Argument list						*new-argument-list*
@@ -1388,25 +1389,28 @@ New Syntax files: ~
 
 bdf		BDF font definition (Nikolai Weibull)
 catalog		SGML catalog (Johannes Zellner)
-debcontrol	Debian Control (Wichert Akkerman)
 debchangelog	Debian Changelog (Wichert Akkerman)
+debcontrol	Debian Control (Wichert Akkerman)
 dot		dot (Markus Mottl)
 dsl		DSSSL syntax (Johannes Zellner)
 eterm		Eterm configuration (Nikolai Weibull)
 indent		Indent profile (Nikolai Weibull)
+lftp	    	LFTP (Nikolai Weibull)
+lynx		Lynx config (Doug Kearns)
+mush	    	mush sourcecode (Bek Oberin)
 natural		Natural (Marko Leipert)
 pilrc		Pal resource compiler (Brian Schau)
 plm		PL/M (Philippe Coulonges)
 povini		Povray configuration (David Necas)
+ratpoison	Ratpoison config/command (Doug Kearns)
+readline    	readline config (Nikolai Weibull)
 screen		Screen RC (Nikolai Weibull)
 specman		Specman (Or Freund)
+sqlforms    	SQL*Forms (Austin Ziegler)
 terminfo	terminfo (Nikolai Weibull)
 tidy		Tidy configuration (Doug Kearns)
-lftp	    	LFTP (Nikolai Weibull)
-readline    	readline config (Nikolai Weibull)
-mush	    	mush sourcecode (Bek Oberin)
 wget	    	Wget configuration (Doug Kearns)
-sqlforms    	SQL*Forms (Austin Ziegler)
+
 
 Updated many syntax files to work both with Vim 5.7 and 6.0.
 
@@ -3302,7 +3306,8 @@ ignore it.
 
 Some help files did not use a 8.3 names, which causes problems when using
 MS-DOS unzip.  Renamed "multibyte.txt" to "mbyte.txt", "rightleft.txt" to
-"rileft.txt", "tagsearch.txt" to "tags.txt", "os_riscos.txt" to "os_risc.txt".
+"rileft.txt", "tagsearch.txt" to "tagsrch.txt", "os_riscos.txt" to
+"os_risc.txt".
 
 When Visual mode is blockwise, using "iw" or "aw" made it characterwise.  That
 doesn't seem right, only do this when in linewise mode.  But then do it
@@ -3339,5 +3344,57 @@ Win32: crashed when tearing off a menu with over 300 items.
 
 GUI: A menu or toolbar item would appear when only a tooltip was defined for
 it.
+
+When 'scrolloff' is non-zero and "$" is in 'cpoptions', using "s" while the
+last line of the file is the first line on screen, the text wasn't displayed.
+
+When running "autoconf", delete the configure cache to force starting cleanly
+when configure is run again.
+
+When changing the Normal colors for cterm, the value of 'background' was
+changed even when the GUI was used.
+
+The warning for a missing vimrun.exe was always given on startup, but some
+people just editing a file don't need to be bothered by it.  Only show it when
+vimrun would be used.
+
+When using "%" in a multibyte text it could get confused by trailbytes that
+match. (Muraoka Taro)
+
+Termcap entry for RiscOS was wrong, using 7 and 8 in octal codes.
+
+Athena: The title of a dialog window and the file selector window were not
+set. (David Harrison)
+
+The "htmlLink" highlight group specified colors, which gives problems when
+using a color scheme.  Added the "Underlined" highlight group for this.
+
+After using ":insert" or ":change" the '[ mark would be one line too low.
+
+When looking for the file name after a match with 'include' one character was
+skipped.  Same for 'define'.
+
+Win32 and DJGPP: When editing a file with a short name in a directory, and
+editing the same file but using the long name, would end up with two buffers
+on the same file.
+
+"gf" on a filename that starts with "../" only worked when the file being
+edited is in the current directory.  An include file search didn't work
+properly for files starting with "../" or ".".  Now search both relative to
+the file and to the current directory.
+
+When 'printheader', 'titlestring', 'iconstring', 'rulerformat' or 'statusline'
+contained "%{" but no following "}" memory was corrupted and a crash could
+happen.
+
+":0append" and then inserting two lines did not redraw the blank lines that
+were scrolled back down.
+
+When using insert mode completion in a narrow window, the message caused a
+scroll up.  Now shorten the message if it doesn't fit and avoid writing the
+ruler over the message.
+
+XIM still didn't work correctly on some systems, especially SGI/IRIX.  Added
+the 'imdisable' option, which is set by default for that system.
 
  vim:tw=78:ts=8:ft=help:norl:

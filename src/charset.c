@@ -1576,7 +1576,7 @@ backslash_halve_save(p)
  * The first 64 entries have been added to map control characters defined in
  * ascii.h
  */
-static char_u ebcdic2ascii[256] =
+static char_u ebcdic2ascii_tab[256] =
 {
     0000, 0001, 0002, 0003, 0004, 0011, 0006, 0177,
     0010, 0011, 0012, 0013, 0014, 0015, 0016, 0017,
@@ -1624,6 +1624,6 @@ ebcdic2ascii(buffer, len)
     int		i;
 
     for (i = 0; i < len; i++)
-	buffer[i] = ebcdic2ascii(buffer[i]);
+	buffer[i] = ebcdic2ascii_tab(buffer[i]);
 }
 #endif

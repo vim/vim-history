@@ -1,4 +1,4 @@
-*pi_netrw.txt*   For Vim version 6.0av.  Last change: 2001 Sep 03
+*pi_netrw.txt*   For Vim version 6.0aw.  Last change: 2001 Sep 11
 
 
 		  VIM REFERENCE MANUAL    by Charles E. Campbell, Jr.
@@ -54,11 +54,10 @@ without additional prompting.
 <     :Nread rcp://machine/path	   :Nwrite rcp://machine/path	  rcp
 >
     * scp://machine/path	 * scp://machine/path		  scp
-<     :Nread scp://machine/path	   :Nwrite scp://machine/path	  scp
-
+<     :Nread scp://machine/path	   :Nwrite scp://machine/path	  scp (**)
 >
     * ftp://machine/path	 * ftp://machine/path		  ftp
-<     :Nread ftp://machine/path	   :Nwrite ftp://machine/path	  ftp+(**)
+<     :Nread ftp://machine/path	   :Nwrite ftp://machine/path	  ftp+(***)
       :Nread machine path	   :Nwrite machine path		  ftp+.netrc
       :Nread machine uid pass path :Nwrite machine uid pass path  ftp
 
@@ -72,10 +71,12 @@ without additional prompting.
 					    :r	ftp://machine/path
 					    :w	ftp://machine/path
 
-	(**) if <.netrc> is present, it is assumed that it will
+	(**) For an absolute path use scp://machine//path.
+
+	(***) if <.netrc> is present, it is assumed that it will
 	     work with your ftp client.  Otherwise the script will
 	     prompt for user-id and pasword.
-
+	
 Both the :Nread and the :Nwrite ex-commands can accept multiple filenames: >
 
 	:Nread rcp://machine/path1 rcp://machine/path2

@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0av.  Last change: 2001 Sep 03
+*starting.txt*  For Vim version 6.0aw.  Last change: 2001 Sep 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -297,7 +297,7 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		use this to get 'nocompatible', when there is no .vimrc file.
 		Also see |compatible-default|.  {not in Vi}
 
-							*-y*
+							*-y* *easy*
 -y		Easy mode.  Implied for |evim| and |eview|.  Starts with
 		'insertmode' set and behaves like a click-and-type editor.
 		This sources the script $VIMRUNTIME/evim.vim.  Mappings are

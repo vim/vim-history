@@ -1539,7 +1539,12 @@ findmatchlimit(oap, initc, flags, maxtravel)
 		    }
 		    if (findc)
 			break;
-		    ++pos.col;
+#ifdef FEAT_MBYTE
+		    if (has_mbyte)
+			pos.col += (*mb_ptr2len_check)(linep + pos.col);
+		    else
+#endif
+			++pos.col;
 		}
 		if (!findc)
 		{
@@ -3443,8 +3448,10 @@ find_pattern_in_path(ptr, dir, len, whole, skip_comments,
 	if (incl_regmatch.regprog != NULL
 		&& vim_regexec(&incl_regmatch, line, (colnr_T)0))
 	{
-	    new_fname = file_name_in_line(incl_regmatch.endp[0] + 1,
-						 0, FNAME_EXP|FNAME_INCL, 1L);
+	    new_fname = file_name_in_line(incl_regmatch.endp[0],
+		    0, FNAME_EXP|FNAME_INCL|FNAME_REL, 1L,
+		    curr_fname == curbuf->b_fname
+					     ? curbuf->b_ffname : curr_fname);
 	    already_searched = FALSE;
 	    if (new_fname != NULL)
 	    {
@@ -3606,7 +3613,7 @@ search_line:
 		 * to that position before checking for match of pattern.  Also
 		 * don't let it match beyond the end of this identifier.
 		 */
-		p = def_regmatch.endp[0] + 1;
+		p = def_regmatch.endp[0];
 		while (*p && !vim_isIDc(*p))
 		    p++;
 		define_matched = TRUE;

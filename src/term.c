@@ -218,7 +218,7 @@ struct builtin_term builtin_termcaps[] =
 
     {(int)KS_VI,	"\016"},		/* Cursor invisible */
     {(int)KS_VE,	"\017"},		/* Cursor visible */
-    {(int)KS_VS,	"\018"},		/* Cursor very visible */
+    {(int)KS_VS,	"\020"},		/* Cursor very visible */
 
     {(int)KS_CS,	"\001%d\001%d\003"},	/* Set scroll region */
     {(int)KS_SR,	"\023"},		/* Scroll text down */
@@ -238,8 +238,8 @@ struct builtin_term builtin_termcaps[] =
     {K_F5,		"\205"},
     {K_F6,		"\206"},
     {K_F7,		"\207"},
-    {K_F8,		"\208"},
-    {K_F9,		"\209"},
+    {K_F8,		"\210"},
+    {K_F9,		"\211"},
     {K_F10,		"\312"},
     {K_F11,		"\313"},
     {K_F12,		"\314"},
@@ -250,8 +250,8 @@ struct builtin_term builtin_termcaps[] =
     {K_S_F5,		"\225"},
     {K_S_F6,		"\226"},
     {K_S_F7,		"\227"},
-    {K_S_F8,		"\228"},
-    {K_S_F9,		"\229"},
+    {K_S_F8,		"\230"},
+    {K_S_F9,		"\231"},
     {K_S_F10,		"\332"},
     {K_S_F11,		"\333"},
     {K_S_F12,		"\334"},
@@ -758,7 +758,7 @@ struct builtin_term builtin_termcaps[] =
     {K_PAGEUP,		"\316I"},
     {K_KPLUS,		"\316N"},
     {K_KMINUS,		"\316J"},
-    {K_KMULTIPLY,	"\3167"},
+    {K_KMULTIPLY,	"\316\067"},
     {K_K0,		"\316\332"},
     {K_K1,		"\316\336"},
     {K_K2,		"\316\342"},

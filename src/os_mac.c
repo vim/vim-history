@@ -477,8 +477,9 @@ mch_expandpath(
 }
 
     void
-fname_case(name)
-    char_u  *name;
+fname_case(name, len)
+    char_u	*name;
+    int		len;	    /* buffer size, ignored here */
 {
     /*
      * TODO: get the real casing for the file

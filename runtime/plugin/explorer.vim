@@ -1,6 +1,6 @@
 "=============================================================================
 " File: explorer.vim
-" Author: M A Aziz Ahmed (aziz@123india.com)
+" Author: M A Aziz Ahmed (aziz@acorn-networks.com)
 " Last Change:	Thu, 21 Jun 2001 07:42:08
 " Version: 2.5
 " Additions by Mark Waggoner (waggoner@aracnet.com) et al.
@@ -688,12 +688,12 @@ function! s:ExtractFileSize(line)
 endfunction
 
 "---
-" Get the date of the file - dates must be displayed!
+" Get the date of the file as a number
 function! s:ExtractFileDate(line)
   if w:longlist==0
     return getftime(s:ExtractFileName(a:line))
   else
-    return strpart(matchstr(strpart(a:line,b:maxFileLen+b:maxFileSizeLen+4),"«.*"),1)
+    return strpart(matchstr(strpart(a:line,b:maxFileLen+b:maxFileSizeLen+4),"«.*"),1) + 0
   endif
 endfunction
 

@@ -256,6 +256,9 @@ dyn_gettext_load(void)
 	    if (_strnicmp(szBuff, "cht", 3) == 0
 					  || _strnicmp(szBuff, "zht", 3) == 0)
 		strcpy(szBuff, "zh_TW");
+	    else if (_strnicmp(szBuff, "chs", 3) == 0
+					  || _strnicmp(szBuff, "zhc", 3) == 0)
+		strcpy(szBuff, "zh_CN");
 	    else if (_strnicmp(szBuff, "jp", 2) == 0)
 		strcpy(szBuff, "ja");
 	    else
@@ -308,19 +311,34 @@ DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
     case DLL_PROCESS_ATTACH:
 	// Extension DLL one-time initialization
 	g_hmodThisDll = hInstance;
-#ifdef FEAT_GETTEXT
-	dyn_gettext_load();
-#endif
 	break;
 
     case DLL_PROCESS_DETACH:
-#ifdef FEAT_GETTEXT
-	dyn_gettext_free();
-#endif
 	break;
     }
 
     return 1;   // ok
+}
+
+    static void
+inc_cRefThisDLL()
+{
+#ifdef FEAT_GETTEXT
+    if (g_cRefThisDll == 0)
+	dyn_gettext_load();
+#endif
+    InterlockedIncrement((LPLONG)&g_cRefThisDll);
+}
+
+    static void
+dec_cRefThisDLL()
+{
+#ifdef FEAT_GETTEXT
+    if (InterlockedDecrement((LPLONG)&g_cRefThisDll) == 0)
+	dyn_gettext_free();
+#else
+    InterlockedDecrement((LPLONG)&g_cRefThisDll);
+#endif
 }
 
 //---------------------------------------------------------------------------
@@ -350,12 +368,12 @@ CShellExtClassFactory::CShellExtClassFactory()
 {
     m_cRef = 0L;
 
-    g_cRefThisDll++;
+    inc_cRefThisDLL();
 }
 
 CShellExtClassFactory::~CShellExtClassFactory()
 {
-    g_cRefThisDll--;
+    dec_cRefThisDLL();
 }
 
 STDMETHODIMP CShellExtClassFactory::QueryInterface(REFIID riid,
@@ -379,12 +397,12 @@ STDMETHODIMP CShellExtClassFactory::QueryInterface(REFIID riid,
 
 STDMETHODIMP_(ULONG) CShellExtClassFactory::AddRef()
 {
-    return ++m_cRef;
+    return InterlockedIncrement((LPLONG)&m_cRef);
 }
 
 STDMETHODIMP_(ULONG) CShellExtClassFactory::Release()
 {
-    if (--m_cRef)
+    if (InterlockedDecrement((LPLONG)&m_cRef))
 	return m_cRef;
 
     delete this;
@@ -427,7 +445,7 @@ CShellExt::CShellExt()
     m_cRef = 0L;
     m_pDataObj = NULL;
 
-    g_cRefThisDll++;
+    inc_cRefThisDLL();
 }
 
 CShellExt::~CShellExt()
@@ -435,7 +453,7 @@ CShellExt::~CShellExt()
     if (m_pDataObj)
 	m_pDataObj->Release();
 
-    g_cRefThisDll--;
+    dec_cRefThisDLL();
 }
 
 STDMETHODIMP CShellExt::QueryInterface(REFIID riid, LPVOID FAR *ppv)
@@ -463,13 +481,13 @@ STDMETHODIMP CShellExt::QueryInterface(REFIID riid, LPVOID FAR *ppv)
 
 STDMETHODIMP_(ULONG) CShellExt::AddRef()
 {
-    return ++m_cRef;
+    return InterlockedIncrement((LPLONG)&m_cRef);
 }
 
 STDMETHODIMP_(ULONG) CShellExt::Release()
 {
 
-    if (--m_cRef)
+    if (InterlockedDecrement((LPLONG)&m_cRef))
 	return m_cRef;
 
     delete this;

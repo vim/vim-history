@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0av.  Last change: 2001 Sep 03
+*syntax.txt*    For Vim version 6.0aw.  Last change: 2001 Sep 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -236,6 +236,8 @@ These are the suggested group names:
 	 Delimiter	character that needs attention
 	 SpecialComment	special things inside a comment
 	 Debug		debugging statements
+
+	*Underlined	text that stands out, HTML links
 
 	*Ignore		left blank, hidden
 
@@ -736,7 +738,7 @@ rest in fixed source form, add the following code to your ftplugin file >
     if s:extfname ==? "f90"
 	let fortran_free_source=1
     else
-	unlet fortran_free_source
+	unlet! fortran_free_source
     endif
 
 When you edit an existing fortran file, the syntax script will assume free
@@ -771,12 +773,17 @@ subprograms, block data subprograms, and modules. If you also set the variable
 fortran_fold_conditionals with a command such as >
     :let fortran_fold_conditionals=1
 then fold regions will also be defined for do loops, if blocks, and select
-case constructs. Note that defining fold regions can be slow for large files.
+case constructs. If you also set the variable
+fortran_fold_multilinecomments with a command such as >
+    :let fortran_fold_multilinecomments=1
+then fold regions will also be defined for three or more consecutive comment
+lines. Note that defining fold regions can be slow for large files.
 
-If fortran_fold and possibly fortran_fold_conditionals have been set, then vim
-will fold your file if you set foldmethod=syntax. Comments or blank lines
-placed between two program units are not folded because they are seen as not
-belonging to any program unit.
+If fortran_fold, and possibly fortran_fold_conditionals and/or
+fortran_fold_multilinecomments, have been set, then vim will fold your file if
+you set foldmethod=syntax. Comments or blank lines placed between two program
+units are not folded because they are seen as not belonging to any program
+unit.
 
 More precise fortran syntax ~
 If you set the variable fortran_more_precise with a command such as >
@@ -819,7 +826,7 @@ ftplugin file should contain the code >
     if s:extfname ==? "f90"
 	let fortran_dialect="elf"
     else
-	unlet fortran_dialect
+	unlet! fortran_dialect
     endif
 
 Finer control is necessary if the file extension does not uniquely identify
@@ -920,7 +927,6 @@ following syntax groups:
     - htmlUnderline
     - htmlUnderlineItalic
     - htmlItalic
-    - htmlLink for links
     - htmlTitle for titles
     - htmlH1 - htmlH6 for headings
 
@@ -955,7 +961,7 @@ written such that it should be trivial to include it. To do so add the
 following two lines to the syntax coloring file for that language
 (the example comes from the asp.vim file):
 
-    source <sfile>:p:h/html.vim
+    runtime! syntax/html.vim
     syn cluster htmlPreproc add=asp
 
 Now you just need to make sure that you add all regions that contain

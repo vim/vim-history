@@ -2,7 +2,7 @@
 # Makefile for Vim on OpenVMS
 #
 # Maintainer:   Zoltan Arpadffy <arpadffy@altavista.net>
-# Last change:  2001 Jul 28
+# Last change:  2001 Sep 16
 #
 # This has script been tested on VMS 6.2 to 7.2 on DEC Alpha and VAX
 # with MMS and MMK
@@ -176,7 +176,7 @@ LDFLAGS	  =
 
 # These go into pathdef.c
 VIMUSER = "''f$extract(f$locate(",",f$user())+1,f$length(f$user())-f$locate(",",f$user())-2,f$user())'"
-VIMHOST = "''f$extract(0,f$length(f$trnlnm("sys$node"))-2,f$trnlnm("sys$node"))' (''f$trnlnm("ucx$inet_host")'.''f$trnlnm("ucx$inet_domain")')"
+VIMHOST = "''f$trnlnm("sys$node")'''f$trnlnm("ucx$inet_host")'.''f$trnlnm("ucx$inet_domain")'"
 
 .SUFFIXES : .obj .c
 
@@ -201,12 +201,17 @@ OBJ =	buffer.obj charset.obj diff.obj digraph.obj edit.obj eval.obj ex_cmds.obj 
 	$(GUI_OBJ) $(PERL_OBJ) $(PYTHON_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) $(RUBY_OBJ) $(HANGULIN_OBJ)
 
 # Default target is making the executable
-all : [.auto]config.h $(TARGET)
+all : [.auto]config.h mmk_compat $(TARGET)
 	! $@
 
 [.auto]config.h : $(CONFIG_H)
 	copy/nolog $(CONFIG_H) [.auto]config.h
 
+mmk_compat :
+        -@ open/write pd pathdef.c
+        -@ write pd "/* Empty file to satisfy MMK depend.  */"        
+        -@ write pd "/* It will be owerwritten later on... */"
+        -@ close pd
 clean :
         -@ if "''F$SEARCH("*.exe")'" .NES. "" then delete/noconfirm/nolog *.exe;*
 	-@ if "''F$SEARCH("*.obj")'" .NES. "" then delete/noconfirm/nolog *.obj;*

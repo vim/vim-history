@@ -277,12 +277,13 @@ static void f_resolve __ARGS((VAR argvars, VAR retvar));
 static void f_search __ARGS((VAR argvars, VAR retvar));
 static void f_searchpair __ARGS((VAR argvars, VAR retvar));
 static int get_search_arg __ARGS((VAR varp, int *flagsp));
-static void f_serverlist __ARGS((VAR argvars, VAR retvar));
+static void f_remote_expr __ARGS((VAR argvars, VAR retvar));
+static void f_remote_foreground __ARGS((VAR argvars, VAR retvar));
 static void f_remote_peek __ARGS((VAR argvars, VAR retvar));
 static void f_remote_read __ARGS((VAR argvars, VAR retvar));
-static void f_server2client __ARGS((VAR argvars, VAR retvar));
 static void f_remote_send __ARGS((VAR argvars, VAR retvar));
-static void f_remote_expr __ARGS((VAR argvars, VAR retvar));
+static void f_server2client __ARGS((VAR argvars, VAR retvar));
+static void f_serverlist __ARGS((VAR argvars, VAR retvar));
 static void f_setline __ARGS((VAR argvars, VAR retvar));
 static void find_some_match __ARGS((VAR argvars, VAR retvar, int start));
 static void f_strftime __ARGS((VAR argvars, VAR retvar));
@@ -2381,6 +2382,7 @@ static struct fst
     {"nr2char",		1, 1, f_nr2char},
     {"prevnonblank",	1, 1, f_prevnonblank},
     {"remote_expr",	2, 3, f_remote_expr},
+    {"remote_foreground", 1, 1, f_remote_foreground},
     {"remote_peek",	1, 2, f_remote_peek},
     {"remote_read",	1, 1, f_remote_read},
     {"remote_send",	2, 3, f_remote_send},
@@ -3599,6 +3601,10 @@ f_foreground(argvars, retvar)
 #ifdef FEAT_GUI
     if (gui.in_use)
 	gui_mch_set_foreground();
+#else
+# ifdef WIN32
+    win32_set_foreground();
+# endif
 #endif
 }
 
@@ -5677,6 +5683,25 @@ remote_common(argvars, retvar, expr)
 }
 #endif
 
+/*
+ * "remote_expr()" function
+ */
+/*ARGSUSED*/
+    static void
+f_remote_expr(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    retvar->var_type = VAR_STRING;
+    retvar->var_val.var_string = NULL;
+#ifdef FEAT_CLIENTSERVER
+    remote_common(argvars, retvar, TRUE);
+#endif
+}
+
+/*
+ * "remote_send()" function
+ */
 /*ARGSUSED*/
     static void
 f_remote_send(argvars, retvar)
@@ -5690,16 +5715,26 @@ f_remote_send(argvars, retvar)
 #endif
 }
 
+/*
+ * "remote_foreground()" function
+ */
 /*ARGSUSED*/
     static void
-f_remote_expr(argvars, retvar)
+f_remote_foreground(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
-    retvar->var_type = VAR_STRING;
-    retvar->var_val.var_string = NULL;
 #ifdef FEAT_CLIENTSERVER
+# ifdef WIN32
+    /* On Win32 it's done in this application. */
+    serverForeground(get_var_string(&argvars[0]));
+# else
+    /* Send a foreground() expression to the server. */
+    argvars[1].var_type = VAR_STRING;
+    argvars[1].var_val.var_string = vim_strsave((char_u *)"foreground()");
     remote_common(argvars, retvar, TRUE);
+    vim_free(argvars[1].var_val.var_string);
+# endif
 #endif
 }
 

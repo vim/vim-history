@@ -2173,6 +2173,7 @@ SFcreateWidgets(toplevel, prompt, ok, cancel)
     selFile = XtVaAppCreateShell("selFile", "SelFile",
 		transientShellWidgetClass, SFdisplay,
 		XtNtransientFor, toplevel,
+		XtNtitle, prompt,
 		NULL);
 
     /* Add WM_DELETE_WINDOW protocol */

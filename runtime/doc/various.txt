@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0av.  Last change: 2001 Sep 08
+*various.txt*   For Vim version 6.0aw.  Last change: 2001 Sep 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -182,6 +182,7 @@ g8			Print the hex values of the bytes used in the
 			On Unix the command normally runs in a non-interactive
 			shell.  If you want an interactive shell to be used
 			(to use aliases) set 'shellcmdflag' to "-ic".
+			For Win32 also see |:!start|.
 			Vim redraws the screen after the command is finished,
 			because it may have printed any text.  This requires a
 			hit-enter prompt, so that you can read any messages.
@@ -596,7 +597,7 @@ used.
 {only available when compiled with |+printer| feature}
 
 					*:ha* *:hardcopy* *E237* *E238* *E324*
-:[range]ha[hardcopy][!] [arguments]
+:[range]ha[rdcopy][!] [arguments]
 			Send [range] lines (default whole file) to the
 			printer.
 
@@ -613,7 +614,7 @@ used.
 			is ignored.  'printoptions' can be used to specify
 			paper size, duplex, etc.
 
-:[range]ha[hardcopy][!] >{filename}
+:[range]ha[rdcopy][!] >{filename}
 			As above, but write the resulting PostScript in file
 			{filename}.  Careful: An existing file is silently
 			overwritten.
@@ -687,6 +688,7 @@ There are a number of possible causes as to why the printing may have failed:
 - Two-sided printing (duplex).  Normally a PostScript printer that does not
   support two-sided printing will ignore any request to do it.  However, some
   printers may abort the job altogether.  Try printing with duplex turned off.
+  Note: Duplex prints can be achieved manually using PS utils - see below.
 
 - Collated printing.  As with Duplex printing, most PostScript printers that
   do not support collating printouts will ignore a request to do so.  Some may
@@ -799,10 +801,22 @@ the full source.  PSUtils can be found at:
 
   http://www.dcs.ed.ac.uk/home/ajcd/psutils/
 
-Of particular interest in the collection is the psnup utility, which can take
-an existing PostScript file generated from VIM and convert it to an n-up
-version.  The simplest way to create a 2-up printout is to first create a
-PostScript file with: >
+The utilities of interest include:
+
+- psnup.     Convert PS files for N-up printing.
+- psselect.  Select page range and order of printing.
+- psresize.  Change the page size.
+- psbook.    Reorder and lay out pages ready for making a book.
+
+The output of one program can be used as the input to the next, allowing for
+complex print document creation.
+
+
+N-UP PRINTING
+
+The psnup utility takes an existing PostScript file generated from VIM and
+convert it to an n-up version.  The simplest way to create a 2-up printout is
+to first create a PostScript file with: >
 
 	:hardcopy > test.ps
 
@@ -813,19 +827,44 @@ Then on your command line execute: >
 Note: You may get warnings from some Ghostscript previewers for files produced
 by psnup - these may safely be ignored.
 
-Finally print the file final.ps to your PostScript printer with yout
+Finally print the file final.ps to your PostScript printer with your
 platform's print command.  (You will need to delete the two PostScript files
 afterwards yourself.)  'printexpr' could be modified to perform this extra
 step before printing.
 
-Other utilities on interest include:
 
-- psselect.  Print defined pages or page ranges.
-- psresize.  Change the page size.
-- psbook.    Reorder and lay out pages ready for making a book.
+ALTERNATE DUPLEX PRINTING
 
-The output of one program can be used as the input to the next, allowing for
-complex print document creation.
+It is possible to achieve a poor man's version of duplex printing using the PS
+utility psselect.  This utility has options -e and -o for printing just the
+even or odd pages of a PS file respectively.
+
+First generate a PS file with the 'hardcopy' command, then generate a new
+files with all the odd and even numbered pages with: >
+
+	psselect -o test.ps odd.ps
+	psselect -e test.ps even.ps
+
+Next print odd.ps with your platform's normal print command.  Then take the
+print output, turn it over and place it back in the paper feeder.  Now print
+even.ps with your platform's print command.  All the even pages should now
+appear on the back of the odd pages.
+
+There a couple of points to bear in mind:
+
+1. Position of the first page.  If the first page is on top of the printout
+   when printing the odd pages then you need to reverse the order that the odd
+   pages are printed.  This can be done with the -r option to psselect.  This
+   will ensure page 2 is printed on the back of page 1.
+   Note: it is better to reverse the odd numbered pages rather than the even
+   numbered in case there are an odd number of pages in the original PS file.
+
+2. Paper flipping.  When turning over the paper with the odd pages printed on
+   them you may have to either flip them horizontally (along the long edge) or
+   vertically (along the short edge), as well as possibly rotating them 180
+   degrees.  All this depends on the printer - it will be more obvious for
+   desktop ink jets than for small office laser printers where the paper path
+   is hidden from view.
 
 
 ==============================================================================

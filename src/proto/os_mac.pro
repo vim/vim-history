@@ -5,7 +5,7 @@ void mch_windexit __ARGS((int r));
 int mch_check_win __ARGS((int argc, char **argv));
 int mch_input_isatty __ARGS((void));
 
-void fname_case __ARGS((char_u *name));
+void fname_case __ARGS((char_u *name, int len));
 void mch_early_init __ARGS((void));
 void mch_exit __ARGS((int r));
 void mch_settitle __ARGS((char_u *title, char_u *icon));
@@ -42,7 +42,7 @@ void mch_delay __ARGS((long msec, int ignoreinput));
 void mch_breakcheck __ARGS((void));
 long_u mch_avail_mem __ARGS((int special));
 int mch_screenmode __ARGS((char_u *arg));
-
+int mch_has_exp_wildcard __ARGS((char_u *p));
 
 void slash_n_colon_adjust __ARGS((char_u *buf));
 char_u *FullPathFromFSSpec_save (FSSpec file);

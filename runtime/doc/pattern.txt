@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.0av.  Last change: 2001 Sep 08
+*pattern.txt*   For Vim version 6.0aw.  Last change: 2001 Sep 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -997,6 +997,8 @@ doesn't work there, it only works to match text in the buffer.
 		end of the {pattern}.
 		{group} must exist at the moment this command is executed.
 		The match overrides the 'hlsearch' highlighting.
+		'ignorecase' does not apply, use |/\c| in the pattern to
+		ignore case.  Otherwise case is not ignored.
 		Note that highlighting the last used search pattern with
 		'hlsearch' is used in all windows, while the pattern defined
 		with ":match" only exists in the current window.  It is kept

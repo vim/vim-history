@@ -354,6 +354,7 @@ update_topline()
 #endif
 	    )
     {
+	dollar_vcol = 0;
 	if (curwin->w_skipcol)
 	{
 	    curwin->w_skipcol = 0;
@@ -752,6 +753,7 @@ curs_rows(wp, do_botline)
     if (!(wp->w_valid & VALID_CHEIGHT))
     {
 	if (all_invalid
+		|| i == wp->w_lines_valid
 		|| (i < wp->w_lines_valid
 		    && (!wp->w_lines[i].wl_valid
 			|| wp->w_lines[i].wl_lnum != wp->w_cursor.lnum)))

@@ -1937,7 +1937,7 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton, textfield)
     /* The shell is created each time, to make sure it is resized properly */
     dialogshell = XtVaCreatePopupShell("dialogShell",
 	    transientShellWidgetClass, vimShell,
-	    XtNlabel, title,
+	    XtNtitle, title,
 	    NULL);
     if (dialogshell == (Widget)0)
 	goto error;

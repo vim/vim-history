@@ -3,8 +3,10 @@
 " Language:     Wget configuration file ( /etc/wgetrc ~/.wgetrc )
 " Maintainer:   Doug Kearns <djkea2@mugca.cc.monash.edu.au>
 " URL:          http://mugca.cc.monash.edu.au/~djkea2/vim/syntax/wget.vim
-" Last Change:  2001 Aug 31
-" TODO: all commands are actually underscore-insensitive as well as case-insensitive
+" Last Change:  2001 Sep 05
+
+" TODO: all commands are actually underscore-insensitive as well as
+"       case-insensitive, though they are normally named as listed below
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -14,17 +16,11 @@ elseif exists("b:current_syntax")
   finish
 endif
 
-if version < 600
-  set iskeyword=@,48-57,_
-else
-  setlocal iskeyword=@,48-57,_
-endif
-
 syn match   wgetComment    "^\s*#.*$" contains=wgetTodo
 
 syn keyword wgetTodo       TODO NOTE FIXME XXX contained
 
-syn match   wgetAssignment "^\s*[a-zA-Z_]\+\s*=\s*.*$" contains=wgetCommand,wgetAssignmentOperator,wgetString,wgetBoolean,wgetNumber,wgetValue,wgetQuota
+syn match   wgetAssignment "^\s*\h\+\s*=\s*.*$" contains=wgetCommand,wgetAssignmentOperator,wgetString,wgetBoolean,wgetNumber,wgetValue,wgetQuota
 
 syn match   wgetAssignmentOperator "=" contained
 
@@ -46,13 +42,14 @@ syn case match
 syn case ignore
 syn match wgetCommand      "^\s*accept" contained
 syn match wgetCommand      "^\s*add_hostdir" contained
-syn match wgetCommand      "^\s*continue" contained
 syn match wgetCommand      "^\s*background" contained
 syn match wgetCommand      "^\s*backup_converted" contained
 syn match wgetCommand      "^\s*base" contained
 syn match wgetCommand      "^\s*bind_address" contained
 syn match wgetCommand      "^\s*cache" contained
+syn match wgetCommand      "^\s*continue" contained
 syn match wgetCommand      "^\s*convert_links" contained
+syn match wgetCommand      "^\s*cookies" contained
 syn match wgetCommand      "^\s*cut_dirs" contained
 syn match wgetCommand      "^\s*debug" contained
 syn match wgetCommand      "^\s*delete_after" contained
@@ -72,14 +69,17 @@ syn match wgetCommand      "^\s*ftp_proxy" contained
 syn match wgetCommand      "^\s*glob" contained
 syn match wgetCommand      "^\s*header" contained
 syn match wgetCommand      "^\s*html_extension" contained
+syn match wgetCommand      "^\s*http_keep_alive" contained
 syn match wgetCommand      "^\s*http_passwd" contained
 syn match wgetCommand      "^\s*http_proxy" contained
+syn match wgetCommand      "^\s*https_proxy" contained
 syn match wgetCommand      "^\s*http_user" contained
 syn match wgetCommand      "^\s*ignore_length" contained
 syn match wgetCommand      "^\s*ignore_tags" contained
 syn match wgetCommand      "^\s*include_directories" contained
 syn match wgetCommand      "^\s*input" contained
 syn match wgetCommand      "^\s*kill_longer" contained
+syn match wgetCommand      "^\s*load_cookies" contained
 syn match wgetCommand      "^\s*logfile" contained
 syn match wgetCommand      "^\s*login" contained
 syn match wgetCommand      "^\s*mirror" contained
@@ -91,21 +91,24 @@ syn match wgetCommand      "^\s*output_document" contained
 syn match wgetCommand      "^\s*page_requisites" contained
 syn match wgetCommand      "^\s*passive_ftp" contained
 syn match wgetCommand      "^\s*passwd" contained
-syn match wgetCommand      "^\s*proxy_user" contained
 syn match wgetCommand      "^\s*proxy_passwd" contained
-syn match wgetCommand      "^\s*referer" contained
+syn match wgetCommand      "^\s*proxy_user" contained
 syn match wgetCommand      "^\s*quiet" contained
 syn match wgetCommand      "^\s*quota" contained
 syn match wgetCommand      "^\s*reclevel" contained
 syn match wgetCommand      "^\s*recursive" contained
+syn match wgetCommand      "^\s*referer" contained
 syn match wgetCommand      "^\s*reject" contained
 syn match wgetCommand      "^\s*relative_only" contained
 syn match wgetCommand      "^\s*remove_listing" contained
 syn match wgetCommand      "^\s*retr_symlinks" contained
 syn match wgetCommand      "^\s*robots" contained
+syn match wgetCommand      "^\s*save_cookies" contained
 syn match wgetCommand      "^\s*server_response" contained
 syn match wgetCommand      "^\s*simple_host_check" contained
 syn match wgetCommand      "^\s*span_hosts" contained
+syn match wgetCommand      "^\s*sslcertfile" contained
+syn match wgetCommand      "^\s*sslcertkey" contained
 syn match wgetCommand      "^\s*timeout" contained
 syn match wgetCommand      "^\s*timestamping" contained
 syn match wgetCommand      "^\s*tries" contained
@@ -126,15 +129,15 @@ if version >= 508 || !exists("did_wget_syn_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink wgetBoolean    	Boolean
-  HiLink wgetCommand    	Identifier
-  HiLink wgetComment    	Comment
   HiLink wgetAssignmentOperator Special
-  HiLink wgetNumber     	Number
-  HiLink wgetQuota      	Number
-  HiLink wgetString     	String
-  HiLink wgetTodo       	Todo
-  HiLink wgetValue      	Constant
+  HiLink wgetBoolean            Boolean
+  HiLink wgetCommand            Identifier
+  HiLink wgetComment            Comment
+  HiLink wgetNumber             Number
+  HiLink wgetQuota              Number
+  HiLink wgetString             String
+  HiLink wgetTodo               Todo
+  HiLink wgetValue              Constant
 
   delcommand HiLink
 endif

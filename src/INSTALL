@@ -76,7 +76,11 @@ want, but maybe not!
 The advantage of running configure separately, is that you can write a script
 to build Vim, without changing the Makefile or feature.h.  Example (using sh):
 
-	CFLAGS=-DUSE_CSCOPE ./configure --enable-gui=motif
+	CFLAGS=-DCOMPILER_FLAG ./configure --enable-gui=motif
+
+One thing to watch out for: If the configure script itself changes, running
+"make" will execute it again, but without your arguments.  Do "make clean" and
+run configure again.
 
 
 Unix: COMPILING WITH/WITHOUT GUI

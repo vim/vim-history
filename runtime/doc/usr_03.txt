@@ -1,4 +1,4 @@
-*usr_03.txt*	For Vim version 6.0av.  Last change: 2001 Sep 03
+*usr_03.txt*	For Vim version 6.0aw.  Last change: 2001 Sep 03
 
 		     VIM USER MANUAL - by Bram Moolenaar
 

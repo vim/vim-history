@@ -1,6 +1,6 @@
 " Menu Translations:	Traditional Chinese (for Big5 UNIX/Windows)
 " Translated By:	Hung-teh, Lin	<piaip@csie.ntu.edu.tw>
-" Last Change:		Tue Apr 24 19:40:17 2001
+" Last Change:		Mon Sep 10 17:33:01 CST 2001
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -12,7 +12,8 @@ scriptencoding cp950
 
 " Help menu
 menutrans &Help			輔助說明(&H)
-menutrans &Overview<Tab><F1>	說明手冊總覽(&O)<Tab><F1>
+menutrans &Overview<Tab><F1>	說明文件總覽(&O)<Tab><F1>
+menutrans &User\ Manual		使用者手冊(&U)
 menutrans &GUI			圖型界面(&G)
 menutrans &How-to\ links	如何作\.\.\.(&H)
 menutrans &Credits		感謝(&C)
@@ -28,8 +29,8 @@ menutrans &New<Tab>:enew		編輯新檔案(&N)<Tab>:enew
 menutrans &Close<Tab>:close		關閉檔案(&C)<Tab>:close
 menutrans &Save<Tab>:w			儲存(&S)<Tab>:w
 menutrans Save\ &As\.\.\.<Tab>:sav	另存新檔(&A)\.\.\.<Tab>:sav
-menutrans Show\ &Diff\ with\.\.\.	比較(&Diff)\.\.\.
-menutrans Show\ &Patched\ by\.\.\.	執行&Patch\.\.\.
+menutrans Split\ &Diff\ with\.\.\.	比較(&Diff)\.\.\.
+menutrans Split\ &Patched\ by\.\.\.	執行&Patch\.\.\.
 menutrans &Print			列印(&P)
 menutrans Sa&ve-Exit<Tab>:wqa		儲存並離開(&V)<Tab>:wqa
 menutrans E&xit<Tab>:qa			離開(&X)<Tab>:qa
@@ -49,24 +50,47 @@ menutrans &Select\ all<Tab>ggVG		全選(&S)<Tab>ggvG
 menutrans &Find\.\.\.			尋找(&F)\.\.\.
 menutrans Find\ and\ Rep&lace\.\.\.	尋找並取代(&L)\.\.\.
 menutrans Settings\ &Window		設定視窗(&W)
-menutrans Se&ttings			設定(&T)
+menutrans &Global\ Settings		全域設定(&G)
+menutrans F&ile\ Settings		設定此檔案(&I)
+menutrans C&olor\ Scheme		配色設定(&O)
+menutrans &Keymap			鍵盤對應(&K)
+menutrans Select\ Fo&nt\.\.\.		設定字型(&F)\.\.\.
+
+" {{{ EDIT / Settings
+"
+" Boolean options
+menutrans Toggle\ Line\ &Numbering<Tab>:set\ nu!	切換顯示行號(&N)<Tab>:set\ nu!
+menutrans Toggle\ &List\ Mode<Tab>:set\ list!		切換List\ Mode(&L)<Tab>:set\ list!
+menutrans Toggle\ Line\ &Wrap<Tab>:set\ wrap!		切換自動捲繞行(&W)<Tab>:set\ wrap!
+menutrans Toggle\ W&rap\ at\ word<Tab>:set\ lbr!	切換依字捲繞(&R)<Tab>:set\ lbr!
+menutrans Toggle\ &expand-tab<Tab>:set\ et!	切換展開TAB(&E)<Tab>:set\ et!
+menutrans Toggle\ &auto-indent<Tab>:set\ ai!	切換自動縮排(&A)<Tab>:set\ ai!
+menutrans Toggle\ &C-indenting<Tab>:set\ cin!	切換Ｃ語言縮排(&C)<Tab>:set\ cin!
+
+" }}} EDIT / Settings
+
+" Build Global boolean options
+menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls!	切換高亮度搜尋字串(&H)<Tab>:set\ hls!
+menutrans Toggle\ &Ignore-case<Tab>:set\ ic!	切換忽略大小寫(&I)<Tab>:set\ ic!
+menutrans Toggle\ &Showmatch<Tab>:set\ sm!	切換顯示對應括號(&S)<Tab>:set\ sm!
+menutrans Toggle\ Insert\ &Mode<Tab>:set\ im!	切換插入模式(&M)<Tab>:set\ im!
 
 " Build boolean options
 menutrans Toggle\ Line\ Numbering<Tab>:set\ nu!	切換顯示行號<Tab>:set\ nu!
 menutrans Toggle\ Line\ Wrap<Tab>:set\ wrap!	切換自動折行<Tab>:set\ wrap!
-menutrans Toggle\ hlsearch<Tab>:set\ hlsearch!	切換搜尋字串高亮度顯示<Tab>:set\ hlsearch!
-menutrans Toggle\ expand-tab<Tab>:set\ et!	切換展開TAB<Tab>:set\ et!
-menutrans Toggle\ auto-indent<Tab>:set\ ai!	切換自動縮排<Tab>:set\ ai!
+"menutrans Toggle\ hlsearch<Tab>:set\ hlsearch!	切換搜尋字串高亮度顯示<Tab>:set\ hlsearch!
 
 " Build GUI options
-menutrans Toggle\ Toolbar		切換使用工具列
-menutrans Toggle\ Bottom\ Scrollbar	切換使用底端捲動軸
-menutrans Toggle\ Left\ Scrollbar	切換使用左端捲動軸
-menutrans Toggle\ Right\ Scrolbar	切換使用右端捲動軸
+menutrans Toggle\ &Toolbar		切換使用工具列(&T)
+menutrans Toggle\ &Bottom\ Scrollbar	切換使用底端捲動軸(&B)
+menutrans Toggle\ &Left\ Scrollbar	切換使用左端捲動軸(&L)
+menutrans Toggle\ &Right\ Scrollbar	切換使用右端捲動軸(&R)
 
 " Build variable options
-menutrans Text\ Width\.\.\.		文字頁面寬度\.\.\.
-menutrans Shiftwidth			縮排寬度(Shiftwidth)
+menutrans Te&xt\ Width\.\.\.		文字頁面寬度(textwidth)(&X)\.\.\.
+menutrans &Shiftwidth			縮排寬度(shiftwidth)(&S)
+menutrans Search\ &Path\.\.\.		搜尋路徑(&P)\.\.\.
+menutrans Tag\ Files\.\.\.		Tag\ 標籤檔案\.\.\.
 
 " Programming menu
 menutrans &Tools			工具(&T)
@@ -81,9 +105,10 @@ menutrans &Next\ Error<Tab>:cn		下一個編譯錯誤處(&N)<Tab>:cn
 menutrans &Previous\ Error<Tab>:cp	上一個編譯錯誤處(&P)<Tab>:cp
 menutrans &Older\ List<Tab>:cold	檢視舊錯誤列表(&O)<Tab>:cold
 menutrans N&ewer\ List<Tab>:cnew	檢視新錯誤列表(&E)<Tab>:cnew
-menutrans Error\ &Window<Tab>:cwin	錯誤訊息視窗(&W)<Tab>:cwin
-menutrans Convert\ to\ HEX<Tab>:%!xxd	轉換成16進位碼<Tab>:%!xxd
-menutrans Convert\ back<Tab>:%!xxd\ -r	從16進位碼轉換回文字<Tab>:%!xxd\ -r
+menutrans Error\ &Window		錯誤訊息視窗(&W)
+menutrans &Set\ Compiler		設定編譯器Compiler(&S)
+menutrans &Convert\ to\ HEX<Tab>:%!xxd	轉換成16進位碼(&C)<Tab>:%!xxd
+menutrans Conve&rt\ back<Tab>:%!xxd\ -r	從16進位碼轉換回文字(&R)<Tab>:%!xxd\ -r
 
 " Tools.Fold Menu
 menutrans &Enable/Disable\ folds<Tab>zi		使用/不使用Folding(&E)<Tab>zi
@@ -105,7 +130,7 @@ menutrans Fold\ column\ &width			設定Fold欄寬(&W)
 menutrans &Buffers		緩衝區(&B)
 menutrans &Refresh\ menu	更新(&R)
 menutrans &Delete		刪除(&D)
-menutrans A&lternate		替換(&L)
+menutrans &Alternate		替換(&A)
 menutrans &Next			下一個(&N)
 menutrans &Previous		前一個(&P)
 menutrans [No\ File]		[無檔案]
@@ -130,10 +155,9 @@ menutrans Rotate\ &Up<Tab>^WR		上移視窗(&U)<Tab>^WR
 menutrans Rotate\ &Down<Tab>^Wr		下移視窗(&D)<Tab>^Wr
 menutrans &Equal\ Size<Tab>^W=		所有視窗等高(&E)<Tab>^W=
 menutrans &Max\ Height<Tab>^W_		最大高度(&M)<Tab>^W
-menutrans M&in\ Height<Tab>^W1_		最小高度(&i)<Tab>^W1_
-menutrans Max\ Width<Tab>^W\|		最大寬度<Tab>^W\|
-menutrans Min\ Width<Tab>^W1\|		最小寬度<Tab>^W1\|
-menutrans Select\ Fo&nt\.\.\.		設定字型(&F)\.\.\.
+menutrans M&in\ Height<Tab>^W1_		最小高度(&I)<Tab>^W1_
+menutrans Max\ &Width<Tab>^W\|		最大寬度(&W)<Tab>^W\|
+menutrans Min\ Widt&h<Tab>^W1\|		最小寬度(&H)<Tab>^W1\|
 "
 " The popup menu
 menutrans &Undo			復原(&U)
@@ -180,13 +204,12 @@ endif
 
 " Syntax menu
 menutrans &Syntax		語法(&S)
-menutrans Set\ 'syntax'\ only	只設定\ 'syntax'
-menutrans Set\ 'filetype'\ too	也設定\ 'filetype'
+menutrans Set\ '&syntax'\ only	只設定\ 'syntax'(&S)
+menutrans Set\ '&filetype'\ too	也設定\ 'filetype'(&F)
 menutrans &Off			關閉(&O)
-menutrans &Manual		手動設定(&M)
+menutrans &Manual		手動設定(&M/關閉效果)
 menutrans A&utomatic		自動設定(&U)
-menutrans o&n\ (this\ file)	只對這個檔開啟(&N)
-menutrans o&ff\ (this\ file)	只對這個檔關閉(&F)
+menutrans on/off\ for\ &This\ file	只對這個檔開啟/關閉效果(&t)
 menutrans Co&lor\ test		色彩顯示測試(&L)
 menutrans &Highlight\ test	語法效果測試(&H)
 menutrans &Convert\ to\ HTML	轉換成\ HTML\ 格式(&C)

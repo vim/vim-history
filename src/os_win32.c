@@ -187,6 +187,7 @@ static int s_cursor_visible = TRUE;
 static int did_create_conin = FALSE;
 #else
 static int s_dont_use_vimrun = TRUE;
+static int need_vimrun_warning = FALSE;
 static char *vimrun_path = "vimrun ";
 #endif
 
@@ -1468,13 +1469,11 @@ mch_init()
 	else if (executable_exists("vimrun.exe"))
 	    s_dont_use_vimrun = FALSE;
 
+	/* Don't give the warning for a missing vimrun.exe right now, but only
+	 * when vimrun was supposed to be used.  Don't bother people that do
+	 * not need vimrun.exe. */
 	if (s_dont_use_vimrun)
-	    MessageBox(NULL,
-			_("VIMRUN.EXE not found in your $PATH.\n"
-			"External commands will not pause after completion.\n"
-			"See  :help win32-vimrun  for more information."),
-			_("Vim Warning"),
-			MB_ICONWARNING);
+	    need_vimrun_warning = TRUE;
     }
 
     /*
@@ -2071,73 +2070,106 @@ mch_check_win(
 
 /*
  * fname_case(): Set the case of the file name, if it already exists.
+ * When "len" is > 0, also expand short to long filenames.
  */
     void
 fname_case(
-    char_u *name)
+    char_u	*name,
+    int		len)
 {
-    char szTrueName[_MAX_PATH + 2];
-    char szOrigElem[_MAX_PATH + 2];
-    char *psz, *pszPrev;
-    const int len = (name != NULL) ? (int)STRLEN(name) : 0;
+    char		szTrueName[_MAX_PATH + 2];
+    char		*ptrue, *ptruePrev;
+    char		*porig, *porigPrev;
+    int			flen;
+    WIN32_FIND_DATA	fb;
+    HANDLE		hFind;
+    int			c;
 
-    if (len == 0)
+    flen = (name != NULL) ? (int)STRLEN(name) : 0;
+    if (flen == 0 || flen > _MAX_PATH)
 	return;
 
-    STRNCPY(szTrueName, name, _MAX_PATH);
-    szTrueName[_MAX_PATH] = NUL;   /* ensure it's sealed off! */
+    slash_adjust(name);
 
-    slash_adjust(szTrueName);
+    /* Build the new name in szTrueName[] one component at a time. */
+    porig = name;
+    ptrue = szTrueName;
 
-    psz = szTrueName;
-
-    /* Skip leading \\ in UNC name or drive letter */
-    if (len > 2 && ((psz[0] == psepc && psz[1] == psepc)
-				       || (isalpha(psz[0]) && psz[1] == ':')))
-	psz = szTrueName + 2;
-
-    while (*psz != NUL)
+    if (isalpha(porig[0]) && porig[1] == ':')
     {
-	WIN32_FIND_DATA	fb;
-	HANDLE		hFind;
-	int		c;
+	/* copy leading drive letter */
+	*ptrue++ = *porig++;
+	*ptrue++ = *porig++;
+    }
 
-	pszPrev = psz;
-	while (*psz != NUL && (*psz != psepc || psz == pszPrev))
+    while (*porig != NUL)
+    {
+	/* copy \ characters */
+	while (*porig == psepc)
+	    *ptrue++ = *porig++;
+
+	ptruePrev = ptrue;
+	porigPrev = porig;
+	while (*porig != NUL && *porig != psepc)
 	{
 #ifdef FEAT_MBYTE
+	    int l;
+
 	    if (enc_dbcs)
-		psz += (*mb_ptr2len_check)(psz);
+	    {
+		l = (*mb_ptr2len_check)(ptrue);
+		while (--l >= 0)
+		    *ptrue++ = *porig++;
+	    }
 	    else
 #endif
-		psz++;
+		*ptrue++ = *porig++;
 	}
-	c = *psz;
-	*psz = NUL;
+	*ptrue = NUL;
 
-	if ((hFind = FindFirstFile(szTrueName, &fb)) != INVALID_HANDLE_VALUE)
+	/* Skip "", "." and "..". */
+	if (ptrue > ptruePrev
+		&& (ptruePrev[0] != '.'
+		    || (ptruePrev[1] != NUL
+			&& (ptruePrev[1] != '.' || ptruePrev[2] != NUL)))
+		&& (hFind = FindFirstFile(szTrueName, &fb))
+						      != INVALID_HANDLE_VALUE)
 	{
-	    /* avoid ".." and ".", etc */
-	    if (_stricoll(pszPrev, fb.cFileName) == 0)
+	    c = *porig;
+	    *porig = NUL;
+
+	    /* Only use the match when it's the same name (ignoring case) or
+	     * expansion is allowed and there is a match with the short name
+	     * and there is enough room. */
+	    if (_stricoll(porigPrev, fb.cFileName) == 0
+		    || (len > 0
+			&& (_stricoll(porigPrev, fb.cAlternateFileName) == 0
+			    && (int)(ptruePrev - szTrueName)
+					   + (int)strlen(fb.cFileName) < len)))
 	    {
-		STRCPY(szOrigElem, pszPrev);
-		STRCPY(pszPrev, fb.cFileName);
-		/* Look for exact match and prefer it if found */
+		STRCPY(ptruePrev, fb.cFileName);
+
+		/* Look for exact match and prefer it if found.  Must be a
+		 * long name, otherwise there would be only one match. */
 		while (FindNextFile(hFind, &fb))
 		{
-		    if (strcoll(szOrigElem, fb.cFileName) == 0)
+		    if (*fb.cAlternateFileName != NUL
+			    && (strcoll(porigPrev, fb.cFileName) == 0
+				|| (len > 0
+				    && (_stricoll(porigPrev,
+						   fb.cAlternateFileName) == 0
+				    && (int)(ptruePrev - szTrueName)
+					 + (int)strlen(fb.cFileName) < len))))
 		    {
-			STRCPY(pszPrev, fb.cFileName);
+			STRCPY(ptruePrev, fb.cFileName);
 			break;
 		    }
 		}
 	    }
 	    FindClose(hFind);
+	    *porig = c;
+	    ptrue = ptruePrev + strlen(ptruePrev);
 	}
-
-	if (c == NUL)
-	    break;
-	*psz++ = c;
     }
 
     STRCPY(name, szTrueName);
@@ -2950,6 +2982,16 @@ mch_call_shell(
 	    else
 	    {
 #if defined(FEAT_GUI_W32)
+		if (!(options & SHELL_DOOUT) && need_vimrun_warning)
+		{
+		    MessageBox(NULL,
+			    _("VIMRUN.EXE not found in your $PATH.\n"
+				"External commands will not pause after completion.\n"
+				"See  :help win32-vimrun  for more information."),
+			    _("Vim Warning"),
+			    MB_ICONWARNING);
+		    need_vimrun_warning = FALSE;
+		}
 		if (!(options & SHELL_DOOUT) && !s_dont_use_vimrun)
 		    /* Use vimrun to execute the command.  It opens a console
 		     * window, which can be closed without killing Vim. */

@@ -221,7 +221,9 @@ typedef struct GuiScrollbar
 #endif
 } scrollbar_T;
 
-typedef long	    guicolor_T;	/* handle for a GUI color */
+typedef long	    guicolor_T;	/* handle for a GUI color; for X11 this should
+				   be "Pixel", but that's an unsigned and we
+				   need a signed value */
 
 #ifdef FEAT_GUI_GTK
   typedef GdkFont	*GuiFont;	/* handle for a GUI font */

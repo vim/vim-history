@@ -1,4 +1,4 @@
-*message.txt*   For Vim version 6.0av.  Last change: 2001 Sep 03
+*message.txt*   For Vim version 6.0aw.  Last change: 2001 Sep 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -183,6 +183,15 @@ messages or grep output cannot be opened.  This can have several causes:
 - 'makeef' has a wrong value.
 - The 'grepprg' or 'makeprg' could not be executed.  This cannot always be
   detected (especially on MS-Windows).  Check your $PATH.
+
+ >
+  Can't open file C:\TEMP\VIoD243.TMP
+
+On MS-Windows, this message appears when the output of an external command was
+to be read, but the command didn't run successfully.  This can be caused by
+many things.  Check the 'shell', 'shellquote', 'shellxquote', 'shellslash' and
+related options.  It might also be that the external command was not found,
+there is no different error message for that.
 
 							*E12*  >
   Command not allowed from exrc/vimrc in current dir or tag search

@@ -2,7 +2,8 @@
 " Language:     LambdaProlog (Teyjus)
 " Maintainer:   Markus Mottl  <markus@oefai.at>
 " URL:          http://www.ai.univie.ac.at/~markus/vim/ftplugin/lprolog.vim
-" Last Change:  2001 Sep 02 - initial release  (MM)
+" Last Change:  2001 Sep 16 - fixed 'no_mail_maps'-bug (MM)
+"               2001 Sep 02 - initial release  (MM)
 
 " Only do these settings when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -19,7 +20,7 @@ setlocal efm=%+A./%f:%l.%c:\ %m formatprg=fmt\ -w75\ -p\\%
 setlocal formatprg=fmt\ -w75\ -p\\%
 
 " Add mappings, unless the user didn't want this.
-if !exists("no_plugin_maps") && !exists("no_mail_maps")
+if !exists("no_plugin_maps") && !exists("no_lprolog_maps")
   " Uncommenting
   if !hasmapto('<Plug>Comment')
     nmap <buffer> <LocalLeader>c <Plug>LUncomOn

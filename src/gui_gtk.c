@@ -674,7 +674,7 @@ gui_mch_destroy_menu(vimmenu_T *menu)
 static int did_ask_for_change = FALSE;
 
     void
-gui_mch_set_scrollbar_thumb(scrollbar_T * sb, long val, long size, long max)
+gui_mch_set_scrollbar_thumb(scrollbar_T *sb, long val, long size, long max)
 {
     if (sb->id != 0)
     {
@@ -692,7 +692,7 @@ gui_mch_set_scrollbar_thumb(scrollbar_T * sb, long val, long size, long max)
 }
 
     void
-gui_mch_set_scrollbar_pos(scrollbar_T * sb, int x, int y, int w, int h)
+gui_mch_set_scrollbar_pos(scrollbar_T *sb, int x, int y, int w, int h)
 {
     if (!sb->id)
 	return;
@@ -703,10 +703,11 @@ gui_mch_set_scrollbar_pos(scrollbar_T * sb, int x, int y, int w, int h)
  * Take action upon scrollbar dragging.
  */
     static void
-adjustment_value_changed(GtkAdjustment * adjustment, gpointer data)
+adjustment_value_changed(GtkAdjustment *adjustment, gpointer data)
 {
     scrollbar_T *sb;
     long	value;
+    int		dragging = FALSE;
 
     if (did_ask_for_change)
 	return;
@@ -714,11 +715,14 @@ adjustment_value_changed(GtkAdjustment * adjustment, gpointer data)
     sb = gui_find_scrollbar((long) data);
     value = adjustment->value;
 
-    /*
-     * We just ignore the dragging argument, since otherwise the scrollbar
-     * size will not be adjusted properly in synthetic scrolls.
-     */
-    gui_drag_scrollbar(sb, value, FALSE);
+    /* The dragging argument must be right for the scrollbar to work with
+     * closed folds.  This isn't documented, hopefully this will keep on
+     * working in later GTK versions. */
+    if (sb != NULL)
+	dragging = GTK_RANGE((GtkScrollbar *)sb->id)->scroll_type
+							   == GTK_SCROLL_NONE;
+    gui_drag_scrollbar(sb, value, dragging);
+
     if (gtk_main_level() > 0)
 	gtk_main_quit();
 }
@@ -746,8 +750,8 @@ gui_mch_create_scrollbar(scrollbar_T * sb, int orient)
 	adjustment = gtk_range_get_adjustment(
 		GTK_RANGE((GtkScrollbar *)sb->id));
 	gtk_signal_connect(GTK_OBJECT(adjustment), "value_changed",
-		(GtkSignalFunc) adjustment_value_changed,
-			   (gpointer) sb->ident);
+		(GtkSignalFunc)adjustment_value_changed,
+			   (gpointer)sb->ident);
     }
     gui_mch_update();
 }

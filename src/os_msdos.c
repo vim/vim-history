@@ -1462,9 +1462,11 @@ mch_input_isatty(void)
 #if defined(USE_FNAME_CASE) || defined(PROTO)
 /*
  * fname_case(): Set the case of the file name, if it already exists.
+ * TODO: should expand short to long file names.  Need to use DOS interrupts,
+ * see DJGPP sources libc/dos/dir/findfirs.c.
  */
     void
-fname_case(char_u *name)
+fname_case(char_u *name, int len)
 {
     char_u	    *tail;
     struct ffblk    fb;
@@ -1473,7 +1475,8 @@ fname_case(char_u *name)
     if (findfirst(name, &fb, 0) == 0)
     {
 	tail = gettail(name);
-	if (STRLEN(tail) == STRLEN(fb.ff_name))
+	if (len == 0 ? STRLEN(tail) == STRLEN(fb.ff_name)
+		: (tail - name) + STRLEN(fb.ff_name) < len)
 	    STRCPY(tail, fb.ff_name);
     }
 }
@@ -1640,6 +1643,52 @@ mch_FullName(
 	    retval = FAIL;
 	    *buf = NUL;
 	}
+#ifdef USE_FNAME_CASE
+	else
+	{
+	    char_u	*head;
+	    char_u	*tail;
+	    struct ffblk fb;
+	    int		c;
+	    int		added;
+
+	    /* Apparently "longna~1" isn't expanded by getcwd(), at least not
+	     * for DJGPP.  Expand it here.  Have to do each dirname
+	     * separately. */
+	    slash_adjust(buf);
+	    head = buf;
+	    if (isalpha(*head) && head[1] == ':')
+		head += 2;	/* skip "c:" */
+	    while (*head != NUL)
+	    {
+		/* Advance "head" to the start of a dirname and "tail" to just
+		 * after it. */
+		while (*head == '/' || *head == '\\')
+		    ++head;
+		for (tail = head; *tail != NUL; ++tail)
+		    if (*tail == '/' || *tail == '\\')
+			break;
+		c = *tail;
+		*tail = NUL;
+
+		if (findfirst(buf, &fb, FA_DIREC) == 0)
+		{
+		    added = STRLEN(fb.ff_name);
+		    if ((head - buf) + added + STRLEN(tail + 1) + 2 < len)
+		    {
+			added -= (tail - head);
+			if (added != 0)
+			    mch_memmove(tail + 1 + added, tail + 1,
+							STRLEN(tail + 1) + 1);
+			STRCPY(head, fb.ff_name);
+			tail += added;
+		    }
+		}
+		*tail = c;
+		head = tail;
+	    }
+	}
+#endif
 	if (p != NULL)
 	    mch_chdir(olddir);
 	/*

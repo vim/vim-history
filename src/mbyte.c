@@ -2600,16 +2600,13 @@ static XIMStyle	input_style;
 static int	status_area_enabled = TRUE;
 #endif
 
-#ifdef FEAT_GUI_GTK
+#if defined(FEAT_GUI_GTK) || defined(PROTO)
 static int	xim_preediting INIT(= FALSE);	/* XIM in showmode() */
 static int	xim_input_style;
 static gboolean	use_status_area = 0;
-#endif
 
 static int im_xim_str2keycode __ARGS((unsigned int *code, unsigned int *state));
-#ifdef FEAT_GUI_GTK
 static void im_xim_send_event_imactivate __ARGS((void));
-#endif
 
 /*
  * Convert string to keycode and state for XKeyEvent.
@@ -2690,7 +2687,6 @@ im_xim_str2keycode(code, state)
     return retval;
 }
 
-#ifdef FEAT_GUI_GTK
     static void
 im_xim_send_event_imactivate()
 {
@@ -2712,7 +2708,6 @@ im_xim_send_event_imactivate()
     if (im_xim_str2keycode(&ev.keycode, &ev.state) == OK)
 	XSendEvent(ev.display, ev.window, 1, KeyPressMask, (XEvent*)&ev);
 }
-#endif
 
 /*
  * Return TRUE if 'imactivatekey' has a valid value.
@@ -2722,6 +2717,7 @@ im_xim_isvalid_imactivate()
 {
     return im_xim_str2keycode(NULL, NULL) == OK;
 }
+#endif /* FEAT_GUI_GTK */
 
 /*
  * Switch using XIM on/off.  This is used by the code that changes "State".
@@ -2733,16 +2729,19 @@ im_set_active(active)
     if (xic == NULL)
 	return;
 
+    if (p_imdisable)
+	active = FALSE;
+
     /* Remember the active state, it is needed when Vim gets keyboard focus. */
     xim_is_active = active;
 
+#ifdef FEAT_GUI_GTK
     /* When 'imactivatekey' has valid key-string, try to control XIM preedit
      * state.  When 'imactivatekey' has no or invalid string, try old XIM
      * focus control.
      */
     if (*p_imak != NUL)
     {
-#ifdef FEAT_GUI_GTK
 	/* BASIC STRATEGY:
 	 * Destroy old Input Context (XIC), and create new one.  New XIC
 	 * would have a state of preedit that is off.  When argument:active
@@ -2791,6 +2790,7 @@ im_set_active(active)
 		xim_preediting = TRUE;
 	    }
 	}
+    }
 #else
 # if 0
 	/* When had tested kinput2 + canna + Athena GUI version with
@@ -2814,7 +2814,6 @@ im_set_active(active)
 	    im_xim_send_event_imactivate();
 # endif
 #endif
-    }
     xim_set_focus(TRUE);
 }
 
@@ -3275,11 +3274,9 @@ xim_real_init(x11_window, x11_display)
 
 	    if (strlen(s) <= IMLEN_MAX)
 	    {
-		strcpy(buf, "{@im=");
+		strcpy(buf, "@im=");
 		strcat(buf, s);
-		strcat(buf, "}");
-		if ((p = XSetLocaleModifiers(buf)) != NULL
-			&& *p != NUL
+		if ((p = XSetLocaleModifiers(buf)) != NULL && *p != NUL
 			&& (xim = XOpenIM(x11_display, NULL, NULL, NULL))
 								      != NULL)
 		    break;
@@ -3289,12 +3286,12 @@ xim_real_init(x11_window, x11_display)
 	}
     }
 
-    if (xim == NULL && (p = XSetLocaleModifiers("")) != NULL)
+    if (xim == NULL && (p = XSetLocaleModifiers("")) != NULL && *p != NUL)
 	xim = XOpenIM(x11_display, NULL, NULL, NULL);
 
     /* This is supposed to be useful to obtain characters through
      * XmbLookupString() without really using a XIM. */
-    if (xim == NULL && (p = XSetLocaleModifiers("{@im=none}")) != NULL
+    if (xim == NULL && (p = XSetLocaleModifiers("@im=none")) != NULL
 								 && *p != NUL)
 	xim = XOpenIM(x11_display, NULL, NULL, NULL);
 

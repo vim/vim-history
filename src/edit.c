@@ -4647,7 +4647,7 @@ stuff_inserted(c, count, no_esc)
 	/* a trailing "0" is inserted as "<C-V>048", "^" as "<C-V>^" */
 	if (last)
 	    stuffReadbuff((char_u *)(last == '0'
-			? IF_EB("\026048", CTRL_V_STR "xf0")
+			? IF_EB("\026\060\064\070", CTRL_V_STR "xf0")
 			: IF_EB("\026^", CTRL_V_STR "^")));
     }
     while (--count > 0);

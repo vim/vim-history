@@ -49,6 +49,7 @@ void clip_x11_lose_selection __ARGS((Widget myShell, VimClipboard *cbd));
 int clip_x11_own_selection __ARGS((Widget myShell, VimClipboard *cbd));
 void clip_x11_set_selection __ARGS((VimClipboard *cbd));
 int jump_to_mouse __ARGS((int flags, int *inclusive, int which_button));
+int mouse_comp_pos __ARGS((win_T *win, int *rowp, int *colp, linenr_T *lnump));
 win_T *mouse_find_win __ARGS((int *rowp, int *colp));
 int get_fpos_of_mouse __ARGS((pos_T *mpos));
 void ui_focus_change __ARGS((int in_focus));

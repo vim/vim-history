@@ -13,7 +13,7 @@ int mch_inchar __ARGS((char_u *buf, int maxlen, long time));
 void mch_init __ARGS((void));
 void mch_exit __ARGS((int r));
 int mch_check_win __ARGS((int argc, char **argv));
-void fname_case __ARGS((char_u *name));
+void fname_case __ARGS((char_u *name, int len));
 int mch_get_user_name __ARGS((char_u *s, int len));
 void mch_get_host_name __ARGS((char_u *s, int len));
 long mch_get_pid __ARGS((void));

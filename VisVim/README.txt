@@ -37,11 +37,10 @@ GNU General Public License for more details.
 Requirements
 ------------
 
-VisVim works with the *OLE-enabled* version of Vim version 5.0 and higher only!!!
-You must download the extra archive containing the OLE-enabled executable from
-your Vim download site.
-When building your own Vim executable, use the if_ole_vc.mak makefile (Vim 5.1
-and higher).
+VisVim works with the *OLE-enabled* version of Vim version 5.0 and higher
+only!!!  You must download the extra archive containing the OLE-enabled
+executable from your Vim download site.  When building your own Vim
+executable, use the if_ole_vc.mak makefile (Vim 5.1 and higher).
 VisVim needs DevStudio 5.0 or higher. It does not work with DevStudio 4.2.
 
 
@@ -85,9 +84,11 @@ Compiling VisVim
 
 Two Options:
 
-1) Use the pre-compiled version of the DLL in the Release\ directory.
+1) Load the VisVim.mak file as a Workspace in Visual Studio and compile
 
-2) Open the VisVim Workspace in Visual Studio and compile
+2) Use the MSVC command line compiler:
+	vcvars32
+	nmake -f VisVim.mak
 
 
 Using VisVim

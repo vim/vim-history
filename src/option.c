@@ -1038,12 +1038,30 @@ static struct vimoption
 			    (char_u *)&p_ic, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)0L}},
     {"imactivatekey","imak",P_STRING|P_VI_DEF,
-#ifdef FEAT_XIM
+#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
 			    (char_u *)&p_imak, PV_NONE,
 #else
 			    (char_u *)NULL, PV_NONE,
 #endif
 			    {(char_u *)"", (char_u *)0L}},
+    {"imcmdline",   "imc",  P_BOOL|P_VI_DEF,
+#ifdef USE_IM_CONTROL
+			    (char_u *)&p_imcmdline, PV_NONE,
+#else
+			    (char_u *)NULL, PV_NONE,
+#endif
+			    {(char_u *)FALSE, (char_u *)0L}},
+    {"imdisable",   "imd",  P_BOOL|P_VI_DEF,
+#ifdef USE_IM_CONTROL
+			    (char_u *)&p_imdisable, PV_NONE,
+#else
+			    (char_u *)NULL, PV_NONE,
+#endif
+#ifdef __sgi
+			    {(char_u *)TRUE, (char_u *)0L}},
+#else
+			    {(char_u *)FALSE, (char_u *)0L}},
+#endif
     {"iminsert",    "imi",  P_NUM|P_VI_DEF,
 			    (char_u *)&p_iminsert, PV_IMI,
 #ifdef B_IMODE_IM
@@ -1060,13 +1078,6 @@ static struct vimoption
 			    {(char_u *)B_IMODE_NONE, (char_u *)0L}
 #endif
 			    },
-    {"imcmdline",   "imc",  P_BOOL|P_VI_DEF,
-#ifdef USE_IM_CONTROL
-			    (char_u *)&p_imcmdline, PV_NONE,
-#else
-			    (char_u *)NULL, PV_NONE,
-#endif
-			    {(char_u *)FALSE, (char_u *)0L}},
     {"include",	    "inc",  P_STRING|P_ALLOCED|P_VI_DEF,
 #ifdef FEAT_FIND_ID
 			    (char_u *)&p_inc, OPT_BOTH(PV_INC),
@@ -2605,6 +2616,9 @@ set_init_1()
 	    /* There are a few exceptions (probably more) */
 	    if (STRNICMP(buf, "cht", 3) == 0 || STRNICMP(buf, "zht", 3) == 0)
 		STRCPY(buf, "zh_TW");
+	    else if (STRNICMP(buf, "chs", 3) == 0
+					      || STRNICMP(buf, "zhc", 3) == 0)
+		STRCPY(buf, "zh_CN");
 	    else if (STRNICMP(buf, "jp", 2) == 0)
 		STRCPY(buf, "ja");
 	    else
@@ -4476,7 +4490,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     }
 #endif
 
-#ifdef FEAT_XIM
+#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
     else if (varp == &p_imak)
     {
 	if (!im_xim_isvalid_imactivate())
@@ -5748,6 +5762,16 @@ set_bool_option(opt_idx, varp, value, opt_flags)
     }
 #endif
 
+#ifdef USE_IM_CONTROL
+    /* 'imdisable' */
+    else if ((int *)varp == &p_imdisable)
+    {
+	/* Only de-activate it here, it will be enabled when changing mode. */
+	if (p_imdisable)
+	    im_set_active(FALSE);
+    }
+#endif
+
 #ifdef FEAT_FKMAP
     else if ((int *)varp == &p_altkeymap)
     {
@@ -5980,7 +6004,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 	}
     }
 
-    /* 'shiftwidth' */
+    /* 'shiftwidth' or 'tabstop' */
     else if (pp == &curbuf->b_p_sw || pp == &curbuf->b_p_ts)
     {
 	if (foldmethodIsIndent(curwin))
@@ -6010,7 +6034,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 	    errmsg = e_invarg;
 	    curbuf->b_p_imsearch = B_IMODE_NONE;
 	}
-	p_iminsert = curbuf->b_p_imsearch;
+	p_imsearch = curbuf->b_p_imsearch;
     }
 
 #ifdef FEAT_TITLE
@@ -6850,10 +6874,11 @@ clear_termoptions()
 #ifdef FEAT_TITLE
     mch_restore_title(3);	    /* restore window titles */
 #endif
-#ifdef FEAT_XCLIPBOARD
-    /* close the display opened for the clipboard.  After restoring the title,
-     * because that will need the display. */
-    clear_xterm_clip();
+#if defined(FEAT_XCLIPBOARD) && defined(FEAT_GUI)
+    /* When starting the GUI close the display opened for the clipboard.
+     * After restoring the title, because that will need the display. */
+    if (gui.starting)
+	clear_xterm_clip();
 #endif
 #ifdef WIN3264
     /*

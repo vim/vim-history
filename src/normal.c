@@ -5056,11 +5056,12 @@ nv_gotofile(cap)
 	if (get_visual_text(cap, &ptr, &len) == FAIL)
 	    return;
 	ptr = find_file_name_in_path(ptr, len,
-					   FNAME_MESS|FNAME_EXP, cap->count1);
+	       FNAME_MESS|FNAME_EXP|FNAME_REL, cap->count1, curbuf->b_ffname);
     }
     else
 # endif
-	ptr = file_name_at_cursor(FNAME_MESS|FNAME_HYP|FNAME_EXP, cap->count1);
+	ptr = file_name_at_cursor(FNAME_MESS|FNAME_HYP|FNAME_EXP|FNAME_REL,
+								 cap->count1);
 
     if (ptr != NULL)
     {
@@ -7438,7 +7439,7 @@ nv_normal(cap)
 	restart_edit = 0;
 #ifdef FEAT_CMDWIN
 	if (cmdwin_type != 0)
-	    cmdwin_result = ESC;
+	    cmdwin_result = Ctrl_C;
 #endif
 #ifdef FEAT_VISUAL
 	if (VIsual_active)

@@ -1159,8 +1159,8 @@ enter_buffer(buf)
 #endif
 	scroll_cursor_halfway(FALSE);	/* redisplay at correct position */
 #ifdef FEAT_SUN_WORKSHOP
-    if (usingSunWorkShop)
-	vim_chdirfile(buf->b_ffname);
+    if (usingSunWorkShop && vim_chdirfile(buf->b_ffname) == OK)
+	shorten_fnames(TRUE);
 #endif
 #ifdef FEAT_KEYMAP
     if (curbuf->b_kmap_state & KEYMAP_INIT)
@@ -2194,7 +2194,7 @@ setfname(ffname, sfname, message)
 # ifdef USE_LONG_FNAME
 	if (USE_LONG_FNAME)
 # endif
-	    fname_case(sfname);	    /* set correct case for short file name */
+	    fname_case(sfname, 0);    /* set correct case for short file name */
 #endif
 	vim_free(curbuf->b_ffname);
 	vim_free(curbuf->b_sfname);
@@ -2994,8 +2994,10 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	case STL_VIM_EXPR: /* '{' */
 	    itemisflag = TRUE;
 	    t = p;
-	    while (*s != '}')
+	    while (*s != '}' && *s != NUL)
 		*p++ = *s++;
+	    if (*s == NUL)	/* missing '}' */
+		break;
 	    s++;
 	    *p = 0;
 	    p = t;
@@ -3020,8 +3022,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 		t = str;
 		if (*t == '-')
 		    t++;
-		while (*t && isdigit(*t))
-		    t++;
+		t = skipdigits(t);
 		if (*t == 0)
 		{
 		    num = atoi((char *) str);
@@ -3430,11 +3431,16 @@ fix_fname(fname)
      * mess up the full path name, even though it starts with a '/'.
      * Also expand when there is ".." in the file name, try to remove it,
      * because "c:/src/../README" is equal to "c:/README".
+     * For MS-Windows also expand names like "longna~1" to "longname".
      */
 #ifdef UNIX
     return FullName_save(fname, TRUE);
 #else
-    if (!vim_isAbsName(fname) || strstr((char *)fname, "..") != NULL)
+    if (!vim_isAbsName(fname) || strstr((char *)fname, "..") != NULL
+#if defined(MSWIN) || defined(DJGPP)
+	    || vim_strchr(fname, '~') != NULL
+#endif
+	    )
 	return FullName_save(fname, FALSE);
 
     fname = vim_strsave(fname);
@@ -3445,7 +3451,7 @@ fix_fname(fname)
 # endif
     {
 	if (fname != NULL)
-	    fname_case(fname);		/* set correct case for file name */
+	    fname_case(fname, 0);	/* set correct case for file name */
     }
 #endif
 

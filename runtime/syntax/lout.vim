@@ -1,6 +1,6 @@
 " Vim syntax file
 " Language   : Lout
-" Maintainer : Christian V. J. Brüssow <cvjb@bigfoot.de>
+" Maintainer : Christian V. J. Brüssow <cvjb@epost.de>
 " Last change: Son 06 Mai 2001 20:33:13 CEST
 
 " Lout: Basser Lout document formatting system.

@@ -1,4 +1,4 @@
-*gui_x11.txt*   For Vim version 6.0av.  Last change: 2001 Sep 07
+*gui_x11.txt*   For Vim version 6.0aw.  Last change: 2001 Sep 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -96,8 +96,9 @@ the user has specified one via a resource.  No attempt is made to guess what
 fonts should be used for these based on the normal text font at the moment.
 
 Note that the colors can also be set with the ":highlight" command, using the
-"Normal", "Menu" and "Scrollbar" groups.  Example: >
+"Normal", "Menu", "Tooltip", and "Scrollbar" groups.  Example: >
 	:highlight Menu guibg=lightblue
+	:highlight Tooltip guibg=yellow
 	:highlight Scrollbar guibg=lightblue guifg=blue
 	:highlight Normal guibg=grey90
 <

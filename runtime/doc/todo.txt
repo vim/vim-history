@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0av.  Last change: 2001 Sep 09
+*todo.txt*      For Vim version 6.0aw.  Last change: 2001 Sep 16
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,11 +29,11 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Check all readme files.
+9   "./vim -c "call remote_foreground('gvim')" sometimes hangs.  Race
+    condition?  CTRL-C breaks out of it.
 
-9   When XIM is being used, sometimes one character is lost.  Probably when
-    XIM has just been enabled.  For Irix this can be fixed by avoiding
-    "@im=none", but then Ctrl keys stop working.  Disable XIM for SGI?
+9   XIM is disabled by default for SGI/IRIX.  Fix XIM so that 'imdisable' can
+    be off by default.
 
 
 Vi incompatibility:
@@ -437,6 +437,10 @@ VMS:
 
 
 "Small" problems:
+9   When editing a file with 'readonly' set, there is no check for an existing
+    swap file.  Then using ":write" (without making any changes) doesn't give
+    a warning either.  Should check for an existing swap file without creating
+    one.
 7   When 'showbreak' is set, the amount of space a Tab occupies changes.
     Should work like 'showbreak' is inserted without changing the Tabs.
 7   When there is a "help.txt" window in a session file, restoring that
@@ -460,10 +464,6 @@ VMS:
 8   When 'virtualedit' is set, should "I" in blockwise visual mode also insert
     in lines that don't extend into the block?
 8   ":hardcopy": Using the cterm_color[] table is wrong when t_colors is > 16.
-8   A nested include file should also be found relative to the file that
-    includes it.  "lev1/foo.h" includes "lev2/bar.h" which is
-    "lev1/lev2/bar.h".  Should pass current file name on from
-    find_pattern_in_path() to get_file_name_in_path(). (Angus Mackay)
 9   When jumping to a tag, the search pattern is put in the history.  When
     'magic' is on, the pattern may not work.  Translate the pattern depending
     on p_magic when putting it in the history?  Alternative: Store value of
@@ -557,6 +557,8 @@ VMS:
     is made (unless 'clipboard' tells not to).  Quitting the X server then
     kills Vim.  How to detect a broken connection to the X server when running
     in a console?  Catching WM_SAVE_YOURSELF doesn't seem to work.
+7   When joining lines in an Asian language, should not insert a space between
+    two double-wide characters.  Both for "J" and formatting with "gq".
 
 
 I can't reproduce these (if you can, let me know how!):
@@ -940,6 +942,8 @@ Syntax highlighting:
     messages.  And external commands?
 8   Make a version that works like less, but with highlighting: read stdin for
     text, exit at end of file, don't allow editing, etc.  moreim?  lessim?
+7   SpecialKey highlighting overrules syntax highlighting.  Can't give an
+    unprintable char another color.  Would be useful for ^M at end of line.
 
 
 Built-in script language:
@@ -1155,6 +1159,10 @@ Code size:
 -   Put getline() and cookie in a struct, so only one argument has to be
     passed to do_cmdline() and other functions.
 8   Make a GUI-only version for Unix?
+7   When compiling with a GUI-only version, the code for cterm colors can be
+    left out.
+8   When compiled with a GUI-only version, the termcap entries for terminals
+    can be removed.
 
 
 Messages:
@@ -1269,6 +1277,8 @@ Tags:
 8   Scope arguments for ":tag", e.g.: ":tag class:cPage open", like Elvis.
 8   When output of ":tselect" is long, getting the more-prompt, should be able
     to type the tag number directly.
+7   Add the possibility to use the "-t {tag}" argument multiple times.  Open a
+    window for each tag.
 7   Add 'tagignorecase' option from Vile: ignore case for tags.
 7   Make output of ":tselect" a bit nicer.  Use highlighting?
 7   Highlight the "tag 1 of >2" message.  New highlight group, or same as "hit
@@ -1410,6 +1420,7 @@ GUI:
     simple enough). Terminal codes to/from shell should be translated.
 -   Would it be useful to be able to quit the GUI and go back to the terminal
     where it was started from?
+7   Support "-visual <type>" command line argument.
 
 
 Autocommands:
@@ -1481,6 +1492,8 @@ Autocommands:
 		      the position and number of inserted/deleted lines, so
 		      that marks can be updated.  HierAssist has patch to add
 		      BufChangePre, BufChangePost and RevertBuf. (Shah)
+    WinResized	    - When a window has been resized
+    VimResized	    - When the Vim window has been resized
 -   Add autocommand to be executed every so many seconds?  For writing the
     file now and then ('autosave').
 				  *'autosave'* *'as'* *'noautosave'* *'noas'*
@@ -1705,8 +1718,6 @@ Insert mode:
 -   Make a command to line up a comment after a code line with a previous
     comment after a code line.	Can 'cindent' do this automatically?
 7   Add 'j' flag to 'formatoptions': Remove comment leader when joining lines.
-8   Add flag in 'formatoptions' to format Asian languages: Don't insert a
-    space when joining lines.
 -   formatting of struct/array inits:
     The lines used to initialize the struct or array above should not be
     considered 'continuation' lines just because the previous one does not end
@@ -2321,6 +2332,12 @@ Registers:
 
 
 Various improvements:
+8   Add the possibility to set 'fileformats' to force a format and strip other
+    CR characters.  For example, for "dos" files remove CR characters at the
+    end of the line, so that a file with mixed line endings is cleaned up.
+    To just not display the CR characters: Add a flag to 'display'?
+7   Add a "-@ filelist" argument: read file names from a file. (David Kotchan
+    has a patch for it)
 7   Include patch to support Netbeans ingegration? (Dave Weatherford)
 7   Some compilers give error messages in which the file name does not have a
     path.  Be able to specify that 'path' is used for these files.
@@ -2647,7 +2664,6 @@ Various improvements:
 -   Make it possible for a user to define a new operator.  Implementation with
     internal scripting language or Perl?
 -   Add command to ":read" a file at a certain column (blockwise read?).
--   Add 'resizecmd' option: vi command to be executed when window is resized.
 -   Add sort of replace mode where case is taken from the old text (Goldfarb).
 -   Allow multiple arguments for ":read", read all the files.
 -   Support for tabs in specific columns: ":set tabcol=8,20,34,56" (Demirel).
@@ -2764,12 +2780,11 @@ Far future and "big" extensions:
 -   Add open mode, use it when terminal has no cursor positioning.
 -   Special "drawing mode": a line is drawn where the cursor is moved to.
     Backspace deletes along the line (from jvim).
--   Perform commands on multiple windows (:W%s/foo/bar/g), multiple arguments
-    (:A) or multiple buffers (:B). Implement ":Bset", set option in all
-    buffers.  Also ":Wset", set in all windows, ":Aset, set in all arguments
-    and ":Tset", set in all files mentioned in the tags file.  Add buffer/arg
-    range, like in ":2,5B%s/..." (do we really need this???) Add search
-    string: "B/*.c/%s/.."?  Or ":F/*.c/%s/.."?
+-   Implement ":Bset", set option in all buffers.  Also ":Wset", set in all
+    windows, ":Aset, set in all arguments and ":Tset", set in all files
+    mentioned in the tags file.
+    Add buffer/arg range, like in ":2,5B%s/..." (do we really need this???)
+    Add search string: "B/*.c/%s/.."?  Or ":F/*.c/%s/.."?
 -   Support for underlining (underscore-BS-char), bold (char-BS-char) and other
     standout modes switched on/off with , 'overstrike' option (Reiter).
 -   Add vertical mode (Paul Jury, Demirel): "5vdw" deletes a word in five

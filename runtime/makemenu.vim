@@ -1,6 +1,6 @@
 " Script to define the syntax menu in menu.vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Aug 31
+" Last Change:	2001 Sep 16
 
 " This is used by "make menu" in the src directory.
 edit <sfile>:p:h/menu.vim
@@ -169,9 +169,9 @@ SynMenu HIJK.Jam:jam
 SynMenu HIJK.Jargon:jargon
 SynMenu HIJK.Java.Java:java
 SynMenu HIJK.Java.JavaCC:javacc
-SynMenu HIJK.Java.JavaScript:javascript
 SynMenu HIJK.Java.Java\ Server\ Pages:jsp
 SynMenu HIJK.Java.Java\ Properties:jproperties
+SynMenu HIJK.JavaScript:javascript
 SynMenu HIJK.Jess:jess
 SynMenu HIJK.Jgraph:jgraph
 SynMenu HIJK.KDE\ script:kscript
@@ -190,6 +190,7 @@ SynMenu L-Ma.LOTOS:lotos
 SynMenu L-Ma.Lout:lout
 SynMenu L-Ma.Lua:lua
 SynMenu L-Ma.Lynx\ Style:lss
+SynMenu L-Ma.Lynx\ config:lynx
 SynMenu L-Ma.M4:m4
 SynMenu L-Ma.MaGic\ Point:mgp
 SynMenu L-Ma.Mail:mail
@@ -257,6 +258,7 @@ SynMenu PQ.Python:python
 
 SynMenu R-Sg.R:r
 SynMenu R-Sg.Radiance:radiance
+SynMenu R-Sg.Ratpoison:ratpoison
 SynMenu R-Sg.Readline\ config:readline
 SynMenu R-Sg.RCS\ log\ output:rcslog
 SynMenu R-Sg.Rebol:rebol

@@ -2762,3 +2762,100 @@ gui_mch_browse(
     return vim_strsave(p);
 }
 #endif /* FEAT_BROWSE */
+
+    static void
+_OnDropFiles(
+    HWND hwnd,
+    HDROP hDrop)
+{
+#ifdef FEAT_WINDOWS
+#ifdef WIN3264
+# define BUFPATHLEN _MAX_PATH
+# define DRAGQVAL 0xFFFFFFFF
+#else
+# define BUFPATHLEN MAXPATHL
+# define DRAGQVAL 0xFFFF
+#endif
+    char    szFile[BUFPATHLEN];
+    UINT    cFiles = DragQueryFile(hDrop, DRAGQVAL, szFile, BUFPATHLEN);
+    UINT    i;
+    char_u  *fname;
+    char_u  **fnames;
+    char_u  redo_dirs = FALSE;
+
+    /* TRACE("_OnDropFiles: %d files dropped\n", cFiles); */
+
+# ifdef FEAT_VISUAL
+    reset_VIsual();
+# endif
+
+    fnames = (char_u **)alloc(cFiles * sizeof(char_u *));
+
+    for (i = 0; i < cFiles; ++i)
+    {
+	DragQueryFile(hDrop, i, szFile, BUFPATHLEN);
+
+	mch_dirname(IObuff, IOSIZE);
+	fname = shorten_fname(szFile, IObuff);
+	if (fname == NULL)
+	    fname = szFile;
+	fnames[i] = vim_strsave(fname);
+    }
+    DragFinish(hDrop);
+
+    /*
+     * When the cursor is at the command line, add the file names to the
+     * command line, don't edit the files.
+     */
+    if (State & CMDLINE)
+    {
+	for (i = 0; i < cFiles; ++i)
+	{
+	    if (fnames[i] != NULL)
+	    {
+		if (i > 0)
+		    add_to_input_buf(" ", 1);
+		add_to_input_buf(fnames[i], (int)STRLEN(fnames[i]));
+	    }
+	}
+    }
+    else
+    {
+	/*
+	 * Handle dropping a directory on Vim.
+	 * Change to that directory and don't open any file.
+	 */
+	if (cFiles == 1 && mch_isdir(fnames[0]))
+	{
+	    if (mch_chdir(fnames[0]) == 0)
+	    {
+		smsg((char_u *)":cd %s", fnames[0]);
+		vim_free(fnames[0]);
+		fnames[0] = NULL;
+		redo_dirs = TRUE;
+	    }
+	}
+
+	if (fnames[0] != NULL)
+	{
+	    /* If Shift held down, change to first file's directory */
+	    if (GetKeyState(VK_SHIFT) & 0x8000)
+		if (vim_chdirfile(fnames[0]) == OK)
+		    redo_dirs = TRUE;
+
+	    /* Handle the drop, :edit or :split to get to the file */
+	    handle_drop(cFiles, fnames,
+				   ((GetKeyState(VK_CONTROL) & 0x8000) != 0));
+	}
+
+	if (redo_dirs)
+	    shorten_fnames(TRUE);
+
+	/* Update the screen display */
+	update_screen(NOT_VALID);
+	setcursor();
+	out_flush();
+    }
+    s_need_activate = TRUE;
+#endif
+}

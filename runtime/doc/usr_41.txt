@@ -1,4 +1,4 @@
-*usr_41.txt*	For Vim version 6.0av.  Last change: 2001 Sep 03
+*usr_41.txt*	For Vim version 6.0aw.  Last change: 2001 Sep 11
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -644,6 +644,7 @@ Vim server:
 	remote_peek()		check if there is a reply from a Vim server
 	remote_read()		read a reply from a Vim server
 	foreground()		move the Vim window to the foreground
+	remote_foreground()	move the Vim server window to the foreground
 
 Various:
 	mode()			get current editing mode

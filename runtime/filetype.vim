@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Sep 07
+" Last change:	2001 Sep 16
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -309,6 +309,9 @@ au BufNewFile,BufRead *enlightenment/*.cfg	setf c
 
 " Eterm
 au BufNewFile,BufRead *Eterm/*.cfg		setf eterm
+
+" Lynx config files
+au BufNewFile,BufRead lynx.cfg			setf lynx
 
 " Configure files
 au BufNewFile,BufRead *.cfg			setf cfg
@@ -869,6 +872,9 @@ au BufNewFile,BufRead *.py			setf python
 " Radiance
 au BufNewFile,BufRead *.rad,*.mat		setf radiance
 
+" Ratpoison config/command files
+au BufNewFile,BufRead .ratpoisonrc,ratpoisonrc	setf ratpoison
+
 " Readline
 au BufNewFile,BufRead .inputrc			setf readline
 
@@ -952,7 +958,7 @@ fun! SetFileTypeSH(name)
       unlet b:is_bash
     endif
     if exists("b:is_sh")
-      unlet b:is_bash
+      unlet b:is_sh
     endif
   elseif exists("g:bash_is_sh") || a:name =~ '\<bash\>' || a:name =~ '\<bash2\>'
     let b:is_bash = 1
@@ -963,7 +969,7 @@ fun! SetFileTypeSH(name)
       unlet b:is_sh
     endif
   elseif a:name =~ '\<sh\>'
-	let b:is_sh = 1
+    let b:is_sh = 1
     if exists("b:is_kornshell")
       unlet b:is_kornshell
     endif

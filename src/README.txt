@@ -18,6 +18,7 @@ To jump to a file, move the cursor on its name and use the "gf" command.
 
 Most code can be found in a file with an obvious name (incomplete list):
 	buffer.c	manipulating buffers (loaded files)
+	diff.c		diff mode (vimdiff)
 	eval.c		expression evaluation
 	fileio.c	reading and writing files
 	fold.c		folding
@@ -36,7 +37,7 @@ Most code can be found in a file with an obvious name (incomplete list):
 	tag.c		tags
 	term.c		terminal handling, termcap codes
 	undo.c		undo and redo
-	window.c	splitting windows
+	window.c	handling split windows
 
 
 IMPORTANT VARIABLES

@@ -2,7 +2,7 @@
 " Language:	HTML
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/html.vim
-" Last Change:  2001 May 10
+" Last Change:  2001 Sep 16
 
 " Please check :help html.vim for some comments and a description of the options
 
@@ -146,7 +146,7 @@ if !exists("html_no_rendering")
   syn region htmlItalicUnderlineBold contained start="<b\>" end="</b>"me=e-4 contains=@htmlTop
   syn region htmlItalicUnderlineBold contained start="<strong\>" end="</strong>"me=e-9 contains=@htmlTop
 
-  syn region htmlLink start="<a\>[^>]*href\>" end="</a>"me=e-4 contains=@Spell,htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,javaScript,@htmlPreproc
+  syn region htmlLink start="<a\>\_[^>]*\<href\>" end="</a>"me=e-4 contains=@Spell,htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,javaScript,@htmlPreproc
   syn region htmlH1 start="<h1\>" end="</h1>"me=e-5 contains=@htmlTop
   syn region htmlH2 start="<h2\>" end="</h2>"me=e-5 contains=@htmlTop
   syn region htmlH3 start="<h3\>" end="</h3>"me=e-5 contains=@htmlTop
@@ -244,12 +244,8 @@ if !exists("html_no_rendering")
     HtmlHiLink htmlItalicBold              htmlBoldItalic
     HtmlHiLink htmlItalicBoldUnderline     htmlBoldUnderlineItalic
     HtmlHiLink htmlItalicUnderlineBold     htmlBoldUnderlineItalic
+    HtmlHiLink htmlLink			   Underlined
   if !exists("html_my_rendering")
-    if &background == "dark"
-      hi def htmlLink              term=underline cterm=underline ctermfg=cyan gui=underline guifg=#80a0ff
-    else
-      hi def htmlLink              term=underline cterm=underline ctermfg=DarkBlue gui=underline guifg=Blue
-    endif
     hi def htmlBold                term=bold cterm=bold gui=bold
     hi def htmlBoldUnderline       term=bold,underline cterm=bold,underline gui=bold,underline
     hi def htmlBoldItalic          term=bold,italic cterm=bold,italic gui=bold,italic

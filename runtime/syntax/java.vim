@@ -2,7 +2,7 @@
 " Language:     Java
 " Maintainer:   Claudio Fleiner <claudio@fleiner.com>
 " URL:          http://www.fleiner.com/vim/syntax/java.vim
-" Last Change:  2001 Aug 27
+" Last Change:  2001 Sept 11
 
 " Please check :help java.vim for comments on some of the options available.
 
@@ -299,7 +299,7 @@ if version >= 508 || !exists("did_java_syn_inits")
   JavaHiLink javaComment		Comment
   JavaHiLink javaDocComment		Comment
   JavaHiLink javaLineComment		Comment
-  JavaHiLink javaConstant		javaBoolean
+  JavaHiLink javaConstant		Constant
   JavaHiLink javaTypedef		Typedef
   JavaHiLink javaTodo			Todo
 

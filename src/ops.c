@@ -73,7 +73,6 @@ struct block_def
 #ifdef FEAT_VISUALEXTRA
     int		is_short;	/* TRUE if line is too short to fit in block */
     int		is_MAX;		/* TRUE if curswant==MAXCOL when starting */
-    int		is_EOL;		/* TRUE if cursor is on NUL when starting */
     int		is_oneChar;	/* TRUE if block within one character */
     int		pre_whitesp;	/* screen cols of ws before block */
     int		pre_whitesp_c;	/* chars of ws before block */
@@ -2101,8 +2100,6 @@ op_insert(oap, count1)
 
     /* edit() changes this - record it for OP_APPEND */
     bd.is_MAX = (curwin->w_curswant == MAXCOL);
-    /* beyond EOL allowed in VIsual mode */
-    bd.is_EOL = (linetabsize(ml_get_curline()) == (int)oap->end_vcol);
 
     /* vis block is still marked. Get rid of it now. */
     curwin->w_cursor.lnum = oap->start.lnum;
@@ -2115,12 +2112,15 @@ op_insert(oap, count1)
 	 * doing block_prep().  When only "block" is used, virtual edit is
 	 * already disabled, but still need it when calling
 	 * coladvance_force(). */
-	if (curwin->w_cursor.coladd > 0 && oap->op_type != OP_APPEND)
+	if (curwin->w_cursor.coladd > 0)
 	{
-	    int old_ve_flags = ve_flags;
+	    int		old_ve_flags = ve_flags;
 
 	    ve_flags = VE_ALL;
-	    coladvance_force(getviscol());
+	    coladvance_force(oap->op_type == OP_APPEND
+					   ? oap->end_vcol + 1 : getviscol());
+	    if (oap->op_type == OP_APPEND)
+		--curwin->w_cursor.col;
 	    ve_flags = old_ve_flags;
 	}
 #endif
@@ -2134,7 +2134,7 @@ op_insert(oap, count1)
 
     if (oap->op_type == OP_APPEND)
     {
-	if (oap->block_mode)
+	if (oap->block_mode && curwin->w_cursor.coladd == 0)
 	{
 	    /* this lil bit if code adapted from nv_append() */
 	    curwin->w_set_curswant = TRUE;
@@ -2958,19 +2958,17 @@ do_put(regname, dir, count, flags)
     {
 	if (gchar_cursor() == TAB)
 	{
-	    if (dir == FORWARD || curwin->w_cursor.coladd > 0)
+	    /* Don't need to insert spaces when "p" on the last position of a
+	     * tab or "P" on the first position. */
+	    if (dir == FORWARD
+		    ? (int)curwin->w_cursor.coladd < curbuf->b_p_ts - 1
+						: curwin->w_cursor.coladd > 0)
 		coladvance_force(getviscol());
+	    else
+		curwin->w_cursor.coladd = 0;
 	}
 	else if (curwin->w_cursor.coladd > 0 || gchar_cursor() == NUL)
-	{
-	    if (dir == FORWARD)
-		coladvance_force(getviscol() + 1);
-	    else
-	    {
-		coladvance_force(getviscol());
-		curwin->w_cursor.col++;
-	    }
-	}
+	    coladvance_force(getviscol() + (dir == FORWARD));
     }
 #endif
 
@@ -3180,7 +3178,7 @@ do_put(regname, dir, count, flags)
 	 * Line mode: BACKWARD is the same as FORWARD on the previous line
 	 */
 	else if (dir == BACKWARD)
-		--lnum;
+	    --lnum;
 
 	/*
 	 * simple case: insert into current line
@@ -3208,7 +3206,7 @@ do_put(regname, dir, count, flags)
 	    }
 	    curbuf->b_op_end = curwin->w_cursor;
 	    /* For "CTRL-O p" in Insert mode, put cursor after last char */
-	    if (totlen && (restart_edit || (flags & PUT_CURSEND)))
+	    if (totlen && (restart_edit != 0 || (flags & PUT_CURSEND)))
 		++curwin->w_cursor.col;
 	    changed_bytes(lnum, col);
 	}

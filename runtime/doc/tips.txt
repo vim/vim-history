@@ -1,4 +1,4 @@
-*tips.txt*      For Vim version 6.0av.  Last change: 2001 Sep 03
+*tips.txt*      For Vim version 6.0aw.  Last change: 2001 Sep 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -213,6 +213,7 @@ number of substitutions is the number of items.  Examples: >
 	:%s/\<the\>/&/g		"the" as a word
 
 You might want to reset 'hlsearch' or do ":nohlsearch".
+An alternative is using |v_g_CTRL-G| in Visual mode.
 
 ==============================================================================
 Restoring the cursor position				*restore-position*

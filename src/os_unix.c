@@ -5188,7 +5188,7 @@ xterm_update()
 	    XPropertyEvent *e = (XPropertyEvent *)&event;
 
 	    if (e->type == PropertyNotify && e->window == commWindow
-		  && e->atom == commProperty &&  e->state == PropertyNewValue)
+		   && e->atom == commProperty && e->state == PropertyNewValue)
 		serverEventProc(xterm_dpy, &event);
 	}
 #endif

@@ -1,4 +1,4 @@
-README_extra.txt for version 6.0av of Vim: Vi IMproved.
+README_extra.txt for version 6.0aw of Vim: Vi IMproved.
 
 The extra archive of Vim is to be used in combination with the source archive
 (vim-6.0-src.tar.gz).  The extra archive is useless without it.
@@ -51,6 +51,10 @@ rgb.txt		File with color definitions for the Win32 GUI.
 if_ole		OLE automation interface, for MS Windows 95 and NT.
 
 VisVim		Integration of Win32 GUI with MS Visual Developer Studio.
+
+GvimExt		DLL for the "Edit with Vim" context menu entry
+
+nsis		NSIS script to build the self-installing MS-Windows exe
 
 *.man		Preprocessed manual pages.
 

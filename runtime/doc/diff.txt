@@ -1,4 +1,4 @@
-*diff.txt*      For Vim version 6.0av.  Last change: 2001 Sep 07
+*diff.txt*      For Vim version 6.0aw.  Last change: 2001 Sep 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -58,6 +58,11 @@ In each of the edited files these options are set:
 
 These options are set local to the window.  Thus when splitting the window or
 editing another file they are reset to the global value.
+
+The differences shown are actually the differences in the buffer.  Thus if you
+make changes after loading a file, these will be included in the displayed
+diffs.  You might have to do ":diffupdate" now and then, not all changes are
+immediately taken into account.
 
 In your .vimrc file you could do something special when Vim was started in
 diff mode.  You could use a construct like this: >
@@ -132,9 +137,16 @@ the diff.  This is also possible for hidden buffers.  They must have been
 edited in a window first for this to be possible.
 
 Since 'diff' is a window-local option, it's possible to view the same buffer
-in diff mode in one window and "normal" in another window.
+in diff mode in one window and "normal" in another window.  It is also
+possible to view the changes you made to a buffer, but since Vim doesn't allow
+having two buffers for he same file, you need to make a copy the original file
+and diff with that.  For example: >
+	:!cp % tempfile
+	:diffsplit tempfile
 
-A buffer that is unloaded cannot be used for the diff.
+A buffer that is unloaded cannot be used for the diff.  But it does work for
+hidden buffers.  You can use ":hide" to close a window without unloading the
+buffer.
 
 
 							*:diffu* *:diffupdate*
@@ -189,7 +201,7 @@ Two commands can be used to jump to diffs:
 	]c		Jump forwards to the next start of a change.
 			When a count is used, do it that many times.
 
-It is an error if there is no change to move to.
+It is an error if there is no change for the cursor to move to.
 
 ==============================================================================
 4. Diff copying			*copy-diffs* *E99* *E100* *E101* *E102* *E103*

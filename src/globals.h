@@ -605,8 +605,8 @@ EXTERN GdkIC		*xic INIT(= NULL);
 # else
 EXTERN XIC		xic INIT(= NULL);
 # endif
-EXTERN guicolor_T	xim_fg_color INIT(= -1);
-EXTERN guicolor_T	xim_bg_color INIT(= -1);
+EXTERN guicolor_T	xim_fg_color INIT(= (guicolor_T)-1);
+EXTERN guicolor_T	xim_bg_color INIT(= (guicolor_T)-1);
 #endif
 
 #ifdef FEAT_HANGULIN

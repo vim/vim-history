@@ -1,6 +1,6 @@
 keymap files for Vim
 
-These files are loaded when the 'keymap' option is set.
+One of these files is loaded when the 'keymap' option is set.
 
 The name of the file consists of these parts:
 

@@ -1512,6 +1512,10 @@ win_update(wp)
 			    if (win_ins_lines(wp, row + old_rows,
 					     xtra_rows, FALSE, FALSE) == FAIL)
 				mod_bot = MAXLNUM;
+			    else if (top_end > row + old_rows)
+				/* Scrolled the part at the top that requires
+				 * updating down. */
+				top_end += xtra_rows;
 			}
 		    }
 
@@ -3774,12 +3778,14 @@ win_line(wp, lnum, startrow, endrow)
 #endif
 		     && W_WIDTH(wp) == Columns)
 	    {
+		/* First make sure we are at the end of the screen line, then
+		 * output an arbitrary character to let the terminal know
+		 * about the wrap. */
 		if (screen_cur_col != W_WIDTH(wp))
 		    screen_char(LineOffset[screen_row - 1]
 						      + (unsigned)Columns - 1,
 					  screen_row - 1, (int)(Columns - 1));
-		screen_char(LineOffset[screen_row],
-						screen_row - 1, (int)Columns);
+		out_char(' ');
 		screen_start();		/* don't know where cursor is now */
 	    }
 
@@ -7365,18 +7371,32 @@ showmode()
 #ifdef FEAT_INS_EXPAND
 	    if (edit_submode != NULL)		/* CTRL-X in Insert mode */
 	    {
-		if (edit_submode_pre != NULL)
-		    msg_puts_attr(edit_submode_pre, attr);
-		msg_puts_attr(edit_submode, attr);
+		/* These messages can get long, avoid a wrap in a narrow
+		 * window.  Prefer showing edit_submode_extra. */
+		length = (Rows - msg_row) * Columns - 3;
 		if (edit_submode_extra != NULL)
+		    length -= vim_strsize(edit_submode_extra);
+		if (length > 0)
 		{
-		    MSG_PUTS_ATTR(" ", attr);	/* add a space in between */
-		    if ((int)edit_submode_highl < (int)HLF_COUNT)
-			sub_attr = hl_attr(edit_submode_highl);
-		    else
-			sub_attr = attr;
-		    msg_puts_attr(edit_submode_extra, sub_attr);
+		    if (edit_submode_pre != NULL)
+			length -= vim_strsize(edit_submode_pre);
+		    if (length - vim_strsize(edit_submode) > 0)
+		    {
+			if (edit_submode_pre != NULL)
+			    msg_puts_attr(edit_submode_pre, attr);
+			msg_puts_attr(edit_submode, attr);
+		    }
+		    if (edit_submode_extra != NULL)
+		    {
+			MSG_PUTS_ATTR(" ", attr);  /* add a space in between */
+			if ((int)edit_submode_highl < (int)HLF_COUNT)
+			    sub_attr = hl_attr(edit_submode_highl);
+			else
+			    sub_attr = attr;
+			msg_puts_attr(edit_submode_extra, sub_attr);
+		    }
 		}
+		length = 0;
 	    }
 	    else
 #endif
@@ -7430,11 +7450,15 @@ showmode()
 			MSG_PUTS_ATTR(_(" LINE"), attr);
 		}
 #endif
+		MSG_PUTS_ATTR(" --", attr);
 	    }
-	    MSG_PUTS_ATTR(" --", attr);
 	    need_clear = TRUE;
 	}
-	if (Recording)
+	if (Recording
+#ifdef FEAT_INS_EXPAND
+		&& edit_submode == NULL	    /* otherwise it gets too long */
+#endif
+		)
 	{
 	    MSG_PUTS_ATTR(_("recording"), attr);
 	    need_clear = TRUE;
@@ -7629,6 +7653,16 @@ win_redr_ruler(wp, always)
      */
     if (wp->w_cursor.lnum > wp->w_buffer->b_ml.ml_line_count)
 	return;
+
+#ifdef FEAT_INS_EXPAND
+    /* Don't draw the ruler while doing insert-completion, it might overwrite
+     * the (long) mode message. */
+# ifdef FEAT_WINDOWS
+    if (wp == lastwin && lastwin->w_status_height == 0)
+# endif
+	if (edit_submode != NULL)
+	    return;
+#endif
 
 #ifdef FEAT_STL_OPT
     if (*p_ruf)

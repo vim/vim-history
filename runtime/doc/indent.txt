@@ -1,4 +1,4 @@
-*indent.txt*    For Vim version 6.0av.  Last change: 2001 Sep 03
+*indent.txt*    For Vim version 6.0aw.  Last change: 2001 Sep 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -390,10 +390,12 @@ Vim puts a line in column 1 if:
 ==============================================================================
 2. Indenting by expression				*indent-expression*
 
-The basics for flexible indenting are explained in section |30.3| of the user
-manual.
+The basics for using flexible indenting are explained in section |30.3| of the
+user manual.
 
-Other relevant links: |:filetype-indent-on|  'indentexpr' and 'indentkeys'.
+If you want to write your own indent file, it must set the 'indentexpr'
+option.  Setting the 'indentkeys' option is often useful.  See the
+$VIMRUNTIME/indent directory for examples.
 
 
 REMARKS ABOUT SPECIFIC INDENT FILES ~

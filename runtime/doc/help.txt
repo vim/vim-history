@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 6.0av.  Last change: 2001 Sep 05
+*help.txt*	For Vim version 6.0aw.  Last change: 2001 Sep 14
 
 			VIM - main help file
 									 k
@@ -117,7 +117,7 @@ Advanced editing ~
 |options.txt|	description of all options
 |pattern.txt|	regexp patterns and search commands
 |map.txt|	key mapping and abbreviations
-|tags.txt|	tags and special searches
+|tagsrch.txt|	tags and special searches
 |quickfix.txt|	commands for a quick edit-compile-fix cycle
 |windows.txt|	commands for using multiple windows and buffers
 |syntax.txt|	syntax highlighting

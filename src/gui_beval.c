@@ -148,47 +148,26 @@ gui_mch_get_beval_info(beval, filename, line, text, idx)
 {
     win_T	*wp;
     int		row, col;
-    int		row_off;
     int		i;
-    int		top_off;
     char_u	*lbuf;
+    linenr_T	lnum;
 
-    top_off = Y_2_ROW(beval->y);
-    for (wp = firstwin; wp != NULL; wp = W_NEXT(wp))
-	if (W_WINROW(wp) <= top_off && top_off < (W_WINROW(wp) + wp->w_height))
-	    break;
-
-    if (wp != NULL)
+    row = Y_2_ROW(beval->y);
+    col = X_2_COL(beval->x);
+    wp = mouse_find_win(&row, &col);
+    if (wp != NULL && row < wp->w_height && col < wp->w_width)
     {
-	row_off = top_off - W_WINROW(wp) + 1;
-	i = 0;
-	row = 0;
-	while (i < row_off && row < wp->w_lines_valid)
+	/* Found a window and the cursor is in the text.  Now find the line
+	 * number. */
+	if (!mouse_comp_pos(wp, &row, &col, &lnum))
 	{
-	    i += wp->w_lines[row].wl_size;
-	    row++;
-	}
-
-	if (wp->w_lines[row - 1].wl_size > 1)
-	    col = ((top_off - (i - (int)(wp->w_lines[row - 1]).wl_size)) *
-		    gui.num_cols) + X_2_COL(beval->x) + 1;
-	else
-	    col = X_2_COL(beval->x) + 1;
-	if (wp->w_p_nu)
-	    col -= 8;
-
-	if (!wp->w_p_wrap)
-	    col += wp->w_leftcol;
-
-	row += wp->w_topline - 1;
-	if (col > 0)
-	{
-	    lbuf = ml_get_buf(wp->w_buffer, (linenr_T)row, FALSE);
-	    win_linetabsize(wp, lbuf, (colnr_T)MAXCOL);
-	    if (i >= col)		/* don't send if past end of line */
+	    /* Not past end of the file. */
+	    lbuf = ml_get_buf(wp->w_buffer, lnum, FALSE);
+	    if (col <= win_linetabsize(wp, lbuf, (colnr_T)MAXCOL))
 	    {
+		/* Not past end of line. */
 		*filename = wp->w_buffer->b_ffname;
-		*line = row;
+		*line = (int)lnum;
 		*text = lbuf;
 		*idx = col;
 		beval->ts = wp->w_buffer->b_p_ts;
@@ -417,13 +396,13 @@ requestBalloon(beval)
     if (beval->showState != ShS_PENDING)
     {
 	/* Determine the beval to display */
-	if (beval->msg != NULL)
-	    drawBalloon(beval);
-	else if (beval->msgCB != NULL)
+	if (beval->msgCB != NULL)
 	{
 	    beval->showState = ShS_PENDING;
 	    (*beval->msgCB)(beval, beval->state);
 	}
+	else if (beval->msg != NULL)
+	    drawBalloon(beval);
     }
 }
 

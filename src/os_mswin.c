@@ -148,7 +148,10 @@ typedef int LOGFONT;
 #ifdef FEAT_GUI
 extern HWND s_hwnd;
 #else
-# if defined(FEAT_PRINTER) && !defined(FEAT_POSTSCRIPT)
+# if (defined(FEAT_PRINTER) && !defined(FEAT_POSTSCRIPT)) \
+	|| defined(FEAT_CLIENTSERVER) \
+	|| (defined(FEAT_EVAL) && !defined(FEAT_GUI))
+#  define HAVE_GETCONSOLEHWND
 static HWND s_hwnd = 0;	    /* console window handle, set by GetConsoleHwnd() */
 # endif
 #endif
@@ -359,7 +362,7 @@ mch_FullName(
 	nResult = OK;
 
 #ifdef USE_FNAME_CASE
-    fname_case(buf);
+    fname_case(buf, len);
 #endif
 
     return nResult;
@@ -1023,7 +1026,7 @@ AbortProc(HDC hdcPrn, int iCode)
 extern HWND g_hWnd;	/* This is in os_win32.c. */
 # endif
 
-# if (defined(FEAT_PRINTER) && !defined(FEAT_POSTSCRIPT)) || defined(PROTO)
+# if defined(HAVE_GETCONSOLEHWND) || defined(PROTO)
 /*
  * Showing the printer dialog is tricky since we have no GUI
  * window to parent it. The following routines are needed to
@@ -1347,6 +1350,10 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
     psettings->has_color = (GetDeviceCaps(prt_dlg.hDC, BITSPIXEL) > 1
 				   || GetDeviceCaps(prt_dlg.hDC, PLANES) > 1
 				   || i > 2 || i == -1);
+
+    /* Ensure all font styles are baseline aligned */
+    SetTextAlign(prt_dlg.hDC, TA_BASELINE|TA_LEFT);
+
     /*
      * On some windows systems the nCopies parameter is not
      * passed back correctly. It must be retrieved from the
@@ -1523,26 +1530,30 @@ mch_print_start_line(margin, page_line)
 	prt_pos_x = -prt_number_width;
     else
 	prt_pos_x = 0;
-    prt_pos_y = page_line * prt_line_height;
+    prt_pos_y = page_line * prt_line_height
+				 + prt_tm.tmAscent + prt_tm.tmExternalLeading;
 }
 
     int
 mch_print_text_out(char_u *p, int len)
 {
+#ifdef FEAT_PROPORTIONAL_FONTS
     SIZE	sz;
+#endif
 
     TextOut(prt_dlg.hDC, prt_pos_x + prt_left_margin,
 					  prt_pos_y + prt_top_margin, p, len);
-#ifdef WIN16
-    GetTextExtentPoint(prt_dlg.hDC, p, len, &sz);
-#else
-    GetTextExtentPoint32(prt_dlg.hDC, p, len, &sz);
-#endif
-    prt_pos_x += (sz.cx - prt_tm.tmOverhang);
 #ifndef FEAT_PROPORTIONAL_FONTS
+    prt_pos_x += len * prt_tm.tmAveCharWidth;
     return (prt_pos_x + prt_left_margin + prt_tm.tmAveCharWidth
 				     + prt_tm.tmOverhang > prt_right_margin);
 #else
+# ifdef WIN16
+    GetTextExtentPoint(prt_dlg.hDC, p, len, &sz);
+# else
+    GetTextExtentPoint32(prt_dlg.hDC, p, len, &sz);
+# endif
+    prt_pos_x += (sz.cx - prt_tm.tmOverhang);
     /* This is wrong when printing spaces for a TAB. */
     if (p[len] == NUL)
 	return FALSE;
@@ -1657,6 +1668,21 @@ shortcut_error:
 }
 #endif
 
+#if (defined(FEAT_EVAL) && !defined(FEAT_GUI)) || defined(PROTO)
+/*
+ * Bring ourselves to the foreground.  Does work if the OS doesn't allow it.
+ */
+    void
+win32_set_foreground()
+{
+# ifndef FEAT_GUI
+    GetConsoleHwnd();	    /* get value of s_hwnd */
+# endif
+    if (s_hwnd != 0)
+	SetForegroundWindow(s_hwnd);
+}
+#endif
+
 #if defined(FEAT_CLIENTSERVER) || defined(PROTO)
 /*
  * Client-server code for Vim
@@ -1694,6 +1720,9 @@ struct server_id
  * Clean up on exit. This destroys the hidden message window.
  */
     static void
+#ifdef __BORLANDC__
+    _RTLENTRYF
+#endif
 CleanUpMessaging(void)
 {
     if (message_window != 0)
@@ -1796,6 +1825,20 @@ Messaging_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	}
 
 	return 0;
+    }
+
+    else if (msg == WM_ACTIVATE && wParam == WA_ACTIVE)
+    {
+	/* When the message window is activated (brought to the foreground),
+	 * this actually applies to the text window. */
+#ifndef FEAT_GUI
+	GetConsoleHwnd();	    /* get value of s_hwnd */
+#endif
+	if (s_hwnd != 0)
+	{
+	    SetForegroundWindow(s_hwnd);
+	    return 0;
+	}
     }
 
     return DefWindowProc(hwnd, msg, wParam, lParam);
@@ -2037,6 +2080,19 @@ serverSendToVim(name, cmd, result, ptarget, asExpr)
 	*result = retval; /* Caller assumes responsibility for freeing */
 
     return 0;
+}
+
+/*
+ * Bring the server to the foreground.
+ */
+    void
+serverForeground(name)
+    char_u	*name;
+{
+    HWND	target = findServer(name);
+
+    if (target != 0)
+	SetForegroundWindow(target);
 }
 
 /* Replies from server need to be stored until the client picks them up via

@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0av.  Last change: 2001 Sep 09
+*quickfix.txt*  For Vim version 6.0aw.  Last change: 2001 Sep 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -219,7 +219,7 @@ list.
 
 
 What this command actually does is:
-- delete the "did_load_compiler" variable
+- delete the "current_compiler" variable
 - execute ":runtime! compiler/{name}.vim"
 
 For writing a compiler plugin, see |write-compiler-plugin|.
