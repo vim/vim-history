@@ -86,7 +86,12 @@ STDAPI DllRegisterServer (void)
 	// Registers object, typelib and all interfaces in typelib
 	hRes = _Module.RegisterServer (TRUE);
 	if (FAILED (hRes))
-		return hRes;
+		// Hack: When this fails we might be a normal user, while the
+		// admin already registered the module.  Returning S_OK then
+		// makes it work.  When the module was never registered it
+		// will soon fail in another way.
+		// old code: return hRes;
+		return S_OK;
 
 	_ATL_OBJMAP_ENTRY *pEntry = _Module.m_pObjMap;
 	CRegKey key;
