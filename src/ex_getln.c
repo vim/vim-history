@@ -35,9 +35,6 @@ struct cmdline_info
 
 static struct cmdline_info ccline;	/* current cmdline_info */
 
-static int	cmd_numfiles = -1;	/* number of files found by
-						    file name completion */
-static char_u	**cmd_files = NULL;	/* list of files */
 static int	cmd_showtail;		/* Only show path tail in lists ? */
 
 
@@ -207,6 +204,8 @@ getcmdline(firstc, count, indent)
     ccline.cmdlen = ccline.cmdpos = 0;
     ccline.cmdbuff[0] = NUL;
 
+    ExpandInit(&xpc);
+
 #ifdef FEAT_RIGHTLEFT
     if (curwin->w_p_rl && *curwin->w_p_rlc == 's'
 					  && (firstc == '/' || firstc == '?'))
@@ -339,7 +338,7 @@ getcmdline(firstc, count, indent)
 		&& c != K_PAGEDOWN && c != K_PAGEUP
 		&& c != K_KPAGEDOWN && c != K_KPAGEUP
 		&& c != K_LEFT && c != K_RIGHT
-		&& (cmd_numfiles > 0 || (c != Ctrl_P && c != Ctrl_N)))
+		&& (xpc.xp_numfiles > 0 || (c != Ctrl_P && c != Ctrl_N)))
 	{
 	    vim_free(lookfor);
 	    lookfor = NULL;
@@ -349,7 +348,7 @@ getcmdline(firstc, count, indent)
 	/*
 	 * <S-Tab> works like CTRL-P (unless 'wc' is <S-Tab>).
 	 */
-	if (c != p_wc && c == K_S_TAB && cmd_numfiles != -1)
+	if (c != p_wc && c == K_S_TAB && xpc.xp_numfiles != -1)
 	    c = Ctrl_P;
 
 #ifdef FEAT_WILDMENU
@@ -371,7 +370,7 @@ getcmdline(firstc, count, indent)
 #endif
 
 	/* free expanded names when finished walking through matches */
-	if (cmd_numfiles != -1
+	if (xpc.xp_numfiles != -1
 		&& !(c == p_wc && KeyTyped) && c != p_wcm
 		&& c != Ctrl_N && c != Ctrl_P && c != Ctrl_A
 		&& c != Ctrl_L)
@@ -629,10 +628,10 @@ getcmdline(firstc, count, indent)
 	 */
 	if ((c == p_wc && !gotesc && KeyTyped) || c == p_wcm)
 	{
-	    if (cmd_numfiles > 0)   /* typed p_wc at least twice */
+	    if (xpc.xp_numfiles > 0)   /* typed p_wc at least twice */
 	    {
 		/* if 'wildmode' contains "list" may still need to list */
-		if (cmd_numfiles > 1
+		if (xpc.xp_numfiles > 1
 			&& !did_wild_list
 			&& (wim_flags[wim_index] & WIM_LIST))
 		{
@@ -673,7 +672,7 @@ getcmdline(firstc, count, indent)
 		/* when more than one match, and 'wildmode' first contains
 		 * "list", or no change and 'wildmode' contains "longest,list",
 		 * list all matches */
-		if (res == OK && cmd_numfiles > 1)
+		if (res == OK && xpc.xp_numfiles > 1)
 		{
 		    /* a "longest" that didn't do anything is skipped (but not
 		     * "list:longest") */
@@ -713,7 +712,7 @@ getcmdline(firstc, count, indent)
 			vim_beep();
 		}
 #ifdef FEAT_WILDMENU
-		else if (cmd_numfiles == -1)
+		else if (xpc.xp_numfiles == -1)
 		    xpc.xp_context = EXPAND_NOTHING;
 #endif
 	    }
@@ -1207,7 +1206,7 @@ getcmdline(firstc, count, indent)
 
 	case Ctrl_N:	    /* next match */
 	case Ctrl_P:	    /* previous match */
-		if (cmd_numfiles > 0)
+		if (xpc.xp_numfiles > 0)
 		{
 		    if (nextwild(&xpc, (c == Ctrl_P) ? WILD_PREV : WILD_NEXT, 0)
 								      == FAIL)
@@ -1528,6 +1527,8 @@ returncmd:
 #ifdef FEAT_FKMAP
     cmd_fkmap = 0;
 #endif
+
+    ExpandCleanup(&xpc);
 
 #ifdef FEAT_SEARCH_EXTRA
     if (did_incsearch)
@@ -2590,7 +2591,7 @@ nextwild(xp, type, options)
     int		difflen;
     int		v;
 
-    if (cmd_numfiles == -1)
+    if (xp->xp_numfiles == -1)
     {
 	set_expand_context(xp);
 	cmd_showtail = !glob_in_path_prefix(xp);
@@ -2678,9 +2679,9 @@ nextwild(xp, type, options)
     if (xp->xp_context == EXPAND_MAPPINGS && p2 == NULL)
 	return FAIL;
 
-    if (cmd_numfiles <= 0 && p2 == NULL)
+    if (xp->xp_numfiles <= 0 && p2 == NULL)
 	beep_flush();
-    else if (cmd_numfiles == 1)
+    else if (xp->xp_numfiles == 1)
 	/* free expanded pattern */
 	(void)ExpandOne(xp, NULL, NULL, 0, WILD_FREE);
 
@@ -2693,7 +2694,7 @@ nextwild(xp, type, options)
  * Return a pointer to alloced memory containing the new string.
  * Return NULL for failure.
  *
- * Results are cached in cmd_files and cmd_numfiles.
+ * Results are cached in xp->xp_files and xp->xp_numfiles.
  *
  * mode = WILD_FREE:	    just free previously expanded matches
  * mode = WILD_EXPAND_FREE: normal expansion, do not keep matches
@@ -2734,12 +2735,12 @@ ExpandOne(xp, str, orig, options, mode)
      */
     if (mode == WILD_NEXT || mode == WILD_PREV)
     {
-	if (cmd_numfiles > 0)
+	if (xp->xp_numfiles > 0)
 	{
 	    if (mode == WILD_PREV)
 	    {
 		if (findex == -1)
-		    findex = cmd_numfiles;
+		    findex = xp->xp_numfiles;
 		--findex;
 	    }
 	    else    /* mode == WILD_NEXT */
@@ -2752,11 +2753,11 @@ ExpandOne(xp, str, orig, options, mode)
 	    if (findex < 0)
 	    {
 		if (orig_save == NULL)
-		    findex = cmd_numfiles - 1;
+		    findex = xp->xp_numfiles - 1;
 		else
 		    findex = -1;
 	    }
-	    if (findex >= cmd_numfiles)
+	    if (findex >= xp->xp_numfiles)
 	    {
 		if (orig_save == NULL)
 		    findex = 0;
@@ -2765,22 +2766,22 @@ ExpandOne(xp, str, orig, options, mode)
 	    }
 #ifdef FEAT_WILDMENU
 	    if (p_wmnu)
-		win_redr_status_matches(xp, cmd_numfiles, cmd_files, findex,
-					cmd_showtail);
+		win_redr_status_matches(xp, xp->xp_numfiles, xp->xp_files,
+							findex, cmd_showtail);
 #endif
 	    if (findex == -1)
 		return vim_strsave(orig_save);
-	    return vim_strsave(cmd_files[findex]);
+	    return vim_strsave(xp->xp_files[findex]);
 	}
 	else
 	    return NULL;
     }
 
 /* free old names */
-    if (cmd_numfiles != -1 && mode != WILD_ALL && mode != WILD_LONGEST)
+    if (xp->xp_numfiles != -1 && mode != WILD_ALL && mode != WILD_LONGEST)
     {
-	FreeWild(cmd_numfiles, cmd_files);
-	cmd_numfiles = -1;
+	FreeWild(xp->xp_numfiles, xp->xp_files);
+	xp->xp_numfiles = -1;
 	vim_free(orig_save);
 	orig_save = NULL;
     }
@@ -2789,7 +2790,7 @@ ExpandOne(xp, str, orig, options, mode)
     if (mode == WILD_FREE)	/* only release file name */
 	return NULL;
 
-    if (cmd_numfiles == -1)
+    if (xp->xp_numfiles == -1)
     {
 	vim_free(orig_save);
 	orig_save = orig;
@@ -2797,7 +2798,7 @@ ExpandOne(xp, str, orig, options, mode)
 	/*
 	 * Do the expansion.
 	 */
-	if (ExpandFromContext(xp, str, &cmd_numfiles, &cmd_files,
+	if (ExpandFromContext(xp, str, &xp->xp_numfiles, &xp->xp_files,
 							     options) == FAIL)
 	{
 #ifdef FNAME_ILLEGAL
@@ -2809,7 +2810,7 @@ ExpandOne(xp, str, orig, options, mode)
 		EMSG2(_(e_nomatch2), str);
 #endif
 	}
-	else if (cmd_numfiles == 0)
+	else if (xp->xp_numfiles == 0)
 	{
 	    if (!(options & WILD_SILENT))
 		EMSG2(_(e_nomatch2), str);
@@ -2817,20 +2818,20 @@ ExpandOne(xp, str, orig, options, mode)
 	else
 	{
 	    /* Escape the matches for use on the command line. */
-	    ExpandEscape(xp, str, cmd_numfiles, cmd_files, options);
+	    ExpandEscape(xp, str, xp->xp_numfiles, xp->xp_files, options);
 
 	    /*
 	     * Check for matching suffixes in file names.
 	     */
 	    if (mode != WILD_ALL && mode != WILD_LONGEST)
 	    {
-		if (cmd_numfiles)
-		    non_suf_match = cmd_numfiles;
+		if (xp->xp_numfiles)
+		    non_suf_match = xp->xp_numfiles;
 		else
 		    non_suf_match = 1;
 		if ((xp->xp_context == EXPAND_FILES
 			    || xp->xp_context == EXPAND_DIRECTORIES)
-			&& cmd_numfiles > 1)
+			&& xp->xp_numfiles > 1)
 		{
 		    /*
 		     * More than one match; check suffix.
@@ -2839,7 +2840,7 @@ ExpandOne(xp, str, orig, options, mode)
 		     */
 		    non_suf_match = 0;
 		    for (i = 0; i < 2; ++i)
-			if (match_suffix(cmd_files[i]))
+			if (match_suffix(xp->xp_files[i]))
 			    ++non_suf_match;
 		}
 		if (non_suf_match != 1)
@@ -2855,33 +2856,33 @@ ExpandOne(xp, str, orig, options, mode)
 			beep_flush();
 		}
 		if (!(non_suf_match != 1 && mode == WILD_EXPAND_FREE))
-		    ss = vim_strsave(cmd_files[0]);
+		    ss = vim_strsave(xp->xp_files[0]);
 	    }
 	}
     }
 
     /* Find longest common part */
-    if (mode == WILD_LONGEST && cmd_numfiles > 0)
+    if (mode == WILD_LONGEST && xp->xp_numfiles > 0)
     {
-	for (len = 0; cmd_files[0][len]; ++len)
+	for (len = 0; xp->xp_files[0][len]; ++len)
 	{
-	    for (i = 0; i < cmd_numfiles; ++i)
+	    for (i = 0; i < xp->xp_numfiles; ++i)
 	    {
 #ifdef CASE_INSENSITIVE_FILENAME
 		if (xp->xp_context == EXPAND_DIRECTORIES
 			|| xp->xp_context == EXPAND_FILES
 			|| xp->xp_context == EXPAND_BUFFERS)
 		{
-		    if (TOLOWER_LOC(cmd_files[i][len]) !=
-					       TOLOWER_LOC(cmd_files[0][len]))
+		    if (TOLOWER_LOC(xp->xp_files[i][len]) !=
+					    TOLOWER_LOC(xp->xp_files[0][len]))
 			break;
 		}
 		else
 #endif
-		     if (cmd_files[i][len] != cmd_files[0][len])
+		     if (xp->xp_files[i][len] != xp->xp_files[0][len])
 		    break;
 	    }
-	    if (i < cmd_numfiles)
+	    if (i < xp->xp_numfiles)
 	    {
 		if (!(options & WILD_NO_BEEP))
 		    vim_beep();
@@ -2891,38 +2892,61 @@ ExpandOne(xp, str, orig, options, mode)
 	ss = alloc((unsigned)len + 1);
 	if (ss)
 	{
-	    STRNCPY(ss, cmd_files[0], len);
+	    STRNCPY(ss, xp->xp_files[0], len);
 	    ss[len] = NUL;
 	}
 	findex = -1;			    /* next p_wc gets first one */
     }
 
     /* Concatenate all matching names */
-    if (mode == WILD_ALL && cmd_numfiles > 0)
+    if (mode == WILD_ALL && xp->xp_numfiles > 0)
     {
 	len = 0;
-	for (i = 0; i < cmd_numfiles; ++i)
-	    len += (long_u)STRLEN(cmd_files[i]) + 1;
+	for (i = 0; i < xp->xp_numfiles; ++i)
+	    len += (long_u)STRLEN(xp->xp_files[i]) + 1;
 	ss = lalloc(len, TRUE);
 	if (ss != NULL)
 	{
 	    *ss = NUL;
-	    for (i = 0; i < cmd_numfiles; ++i)
+	    for (i = 0; i < xp->xp_numfiles; ++i)
 	    {
-		STRCAT(ss, cmd_files[i]);
-		if (i != cmd_numfiles - 1)
+		STRCAT(ss, xp->xp_files[i]);
+		if (i != xp->xp_numfiles - 1)
 		    STRCAT(ss, (options & WILD_USE_NL) ? "\n" : " ");
 	    }
 	}
     }
 
     if (mode == WILD_EXPAND_FREE || mode == WILD_ALL)
-    {
-	FreeWild(cmd_numfiles, cmd_files);
-	cmd_numfiles = -1;
-    }
+	ExpandCleanup(xp);
 
     return ss;
+}
+
+/*
+ * Prepare an expand structure for use.
+ */
+    void
+ExpandInit(xp)
+    expand_T	*xp;
+{
+    xp->xp_backslash = XP_BS_NONE;
+    xp->xp_numfiles = -1;
+    xp->xp_files = NULL;
+}
+
+/*
+ * Cleanup an expand structure after use.
+ */
+    void
+ExpandCleanup(xp)
+    expand_T	*xp;
+{
+    if (xp->xp_numfiles >= 0)
+    {
+	FreeWild(xp->xp_numfiles, xp->xp_files);
+	xp->xp_numfiles = -1;
+    }
 }
 
     void
@@ -3078,7 +3102,7 @@ showmatches(xp, wildmenu)
     int		attr;
     int		showtail;
 
-    if (cmd_numfiles == -1)
+    if (xp->xp_numfiles == -1)
     {
 	set_expand_context(xp);
 	i = expand_cmdline(xp, ccline.cmdbuff, ccline.cmdpos,
@@ -3090,8 +3114,8 @@ showmatches(xp, wildmenu)
     }
     else
     {
-	num_files = cmd_numfiles;
-	files_found = cmd_files;
+	num_files = xp->xp_numfiles;
+	files_found = xp->xp_files;
 	showtail = cmd_showtail;
     }
 
@@ -3215,7 +3239,7 @@ showmatches(xp, wildmenu)
 	cmdline_row = msg_row;	/* will put it back later */
     }
 
-    if (cmd_numfiles == -1)
+    if (xp->xp_numfiles == -1)
 	FreeWild(num_files, files_found);
 
     return EXPAND_OK;

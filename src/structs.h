@@ -376,6 +376,9 @@ typedef struct expand
     char_u	*xp_pattern;		/* start of item to expand */
     char_u	*xp_arg;		/* generic expansion argument */
     int		xp_backslash;		/* one of the XP_BS_ values */
+    int		xp_numfiles;		/* number of files found by
+						    file name completion */
+    char_u	**xp_files;		/* list of files */
 } expand_T;
 
 /* values for xp_backslash */
