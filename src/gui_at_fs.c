@@ -2568,7 +2568,10 @@ vim_SelFile(toplevel, prompt, init_path, show_entry, x, y, fg, bg)
 	SFcreateWidgets(toplevel, prompt, _("OK"), _("Cancel"));
     }
     else
+    {
 	XtVaSetValues(selFilePrompt, XtNlabel, prompt, NULL);
+	XtVaSetValues(selFile, XtNtitle, prompt, NULL);
+    }
 
     XtVaSetValues(selFile, XtNx, x, XtNy, y, NULL);
     XtMapWidget(selFile);
