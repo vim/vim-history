@@ -1405,7 +1405,32 @@ AC_TYPE_UID_T
 AC_HEADER_TIME
 AC_CHECK_TYPE(ino_t, long)
 AC_CHECK_TYPE(dev_t, unsigned)
-AC_CHECK_TYPE(rlim_t, unsigned long)
+
+AC_MSG_CHECKING(for rlim_t)
+if eval "test \"`echo '$''{'ac_cv_type_rlim_t'+set}'`\" = set"; then
+  AC_MSG_RESULT([(cached) $ac_cv_type_rlim_t])
+else
+  AC_EGREP_CPP(dnl
+changequote(<<,>>)dnl
+<<(^|[^a-zA-Z_0-9])rlim_t[^a-zA-Z_0-9]>>dnl
+changequote([,]),
+  [
+#include <sys/types.h>
+#if STDC_HEADERS
+#include <stdlib.h>
+#include <stddef.h>
+#endif
+#ifdef HAVE_SYS_RESOURCE_H
+#include <sys/resource.h>
+#endif
+	  ], ac_cv_type_rlim_t=yes, ac_cv_type_rlim_t=no)
+	  AC_MSG_RESULT($ac_cv_type_rlim_t)
+fi
+if test $ac_cv_type_rlim_t = no; then
+  cat >> confdefs.h <<\EOF
+#define rlim_t unsigned long
+EOF
+fi
 
 AC_MSG_CHECKING(for stack_t)
 if eval "test \"`echo '$''{'ac_cv_type_stack_t'+set}'`\" = set"; then
@@ -1413,7 +1438,6 @@ if eval "test \"`echo '$''{'ac_cv_type_stack_t'+set}'`\" = set"; then
 else
   AC_EGREP_CPP(stack_t,
   [
-#include "confdefs.h"
 #include <sys/types.h>
 #if STDC_HEADERS
 #include <stdlib.h>
