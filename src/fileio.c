@@ -939,9 +939,10 @@ retry:
 
 # ifdef WIN3264
 	/*
-	 * Conversion from an MS-Windows codepage to UTF-8 is handled here.
+	 * Conversion from an MS-Windows codepage to UTF-8 or another codepage
+	 * is handled with MultiByteToWideChar().
 	 */
-	if (fio_flags == 0 && enc_utf8)
+	if (fio_flags == 0)
 	    fio_flags = get_win_fio_flags(fenc);
 # endif
 
@@ -1329,60 +1330,133 @@ retry:
 	    if (fio_flags & FIO_CODEPAGE)
 	    {
 		/*
-		 * Conversion from an MS-Windows codepage to UTF-8, using
-		 * standard MS-Windows functions.
+		 * Conversion from an MS-Windows codepage or UTF-8 to UTF-8 or
+		 * a codepage, using standard MS-Windows functions.
+		 * 1. find out how many ucs-2 characters there are.
+		 * 2. convert from 'fileencoding' to ucs-2
+		 * 3. convert from ucs-2 to 'encoding'
 		 */
 		char_u	*ucsp;
-		size_t	from_size;
+		size_t	from_size = size;
 		int	needed;
 		char_u	*p;
 		int	u8c;
+		int	l, len;
 
 		/*
-		 * We can't tell if the last byte of an MBCS string is valid
-		 * and MultiByteToWideChar() returns zero if it isn't.
-		 * Try the whole string, and if that fails, bump the last byte
-		 * into conv_rest and try again.
+		 * 1. find out how many ucs-2 characters there are.
 		 */
-		from_size = size;
-		needed = MultiByteToWideChar(FIO_GET_CP(fio_flags),
-			       MB_ERR_INVALID_CHARS, (LPCSTR)ptr, from_size,
-								     NULL, 0);
-		if (needed == 0)
+		if (FIO_GET_CP(fio_flags) == CP_UTF8)
 		{
-		    conv_rest[0] = ptr[from_size - 1];
-		    conv_restlen = 1;
-		    --from_size;
+		    /* Handle CP_UTF8 ourselves to be able to handle trailing
+		     * bytes properly.  First find out the number of
+		     * characters and check for trailing bytes. */
+		    needed = 0;
+		    p = ptr;
+		    for (len = from_size; len > 0; len -= l)
+		    {
+			l = utf_ptr2len_check_len(p, len);
+			if (l > len)			/* incomplete char */
+			{
+			    if (l > CONV_RESTLEN)
+				/* weird overlong byte sequence */
+				goto rewind_retry;
+			    mch_memmove(conv_rest, p, len);
+			    conv_restlen = len;
+			    from_size -= len;
+			    break;
+			}
+			if (l == 1 && *p >= 0x80)	/* illegal byte */
+			    goto rewind_retry;
+			++needed;
+			p += l;
+		    }
+		}
+		else
+		{
+		    /* We can't tell if the last byte of an MBCS string is
+		     * valid and MultiByteToWideChar() returns zero if it
+		     * isn't.  Try the whole string, and if that fails, bump
+		     * the last byte into conv_rest and try again. */
 		    needed = MultiByteToWideChar(FIO_GET_CP(fio_flags),
-			       MB_ERR_INVALID_CHARS, (LPCSTR)ptr, from_size,
+				 MB_ERR_INVALID_CHARS, (LPCSTR)ptr, from_size,
 								     NULL, 0);
+		    if (needed == 0)
+		    {
+			conv_rest[0] = ptr[from_size - 1];
+			conv_restlen = 1;
+			--from_size;
+			needed = MultiByteToWideChar(FIO_GET_CP(fio_flags),
+				 MB_ERR_INVALID_CHARS, (LPCSTR)ptr, from_size,
+								     NULL, 0);
+		    }
+
+		    /* If there really is a conversion error, try using another
+		     * conversion. */
+		    if (needed == 0)
+			goto rewind_retry;
 		}
 
-		/* If there really is a conversion error, try using another
-		 * conversion. */
-		if (needed == 0)
-		    goto rewind_retry;
-
-		/* Put the result of conversion to UCS-2 at the end of the
-		 * buffer, then convert from UCS-2 to UTF-8 into the start of
-		 * the buffer.  If there is not enough space just fail, there
-		 * is probably something wrong. */
+		/*
+		 * 2. convert from 'fileencoding' to ucs-2
+		 *
+		 * Put the result of conversion to UCS-2 at the end of the
+		 * buffer, then convert from UCS-2 to UTF-8 or "enc_codepage"
+		 * into the start of the buffer.  If there is not enough space
+		 * just fail, there is probably something wrong.
+		 */
 		ucsp = ptr + real_size - (needed * sizeof(WCHAR));
 		if (ucsp < ptr + size)
 		    goto rewind_retry;
-		needed = MultiByteToWideChar(FIO_GET_CP(fio_flags),
+
+		if (FIO_GET_CP(fio_flags) == CP_UTF8)
+		{
+		    /* Convert from utf-8 to ucs-2. */
+		    needed = 0;
+		    p = ptr;
+		    for (len = from_size; len > 0; len -= l)
+		    {
+			l = utf_ptr2len_check_len(p, len);
+			u8c = utf_ptr2char(p);
+			ucsp[needed * 2] = (u8c & 0xff);
+			ucsp[needed * 2 + 1] = (u8c >> 8);
+			++needed;
+			p += l;
+		    }
+		}
+		else
+		    needed = MultiByteToWideChar(FIO_GET_CP(fio_flags),
 					    MB_ERR_INVALID_CHARS, (LPCSTR)ptr,
 					     from_size, (LPWSTR)ucsp, needed);
 
-		/* Now go from UCS-2 to UTF-8. */
-		p = ptr;
-		for (; needed > 0; --needed)
+		/*
+		 * 3. convert from ucs-2 to 'encoding'
+		 */
+		if (enc_utf8)
 		{
-		    u8c = *ucsp++;
-		    u8c += (*ucsp++ << 8);
-		    p += utf_char2bytes(u8c, p);
+		    /* From UCS-2 to UTF-8.  Cannot fail. */
+		    p = ptr;
+		    for (; needed > 0; --needed)
+		    {
+			u8c = *ucsp++;
+			u8c += (*ucsp++ << 8);
+			p += utf_char2bytes(u8c, p);
+		    }
+		    size = p - ptr;
 		}
-		size = p - ptr;
+		else
+		{
+		    BOOL	bad = FALSE;
+
+		    /* From UCS-2 to "enc_codepage". If the conversion uses
+		     * the default character "?", the data doesn't fit in this
+		     * encoding, so fail (unless forced). */
+		    size = WideCharToMultiByte(enc_codepage, 0,
+							(LPCWSTR)ucsp, needed,
+					    (LPSTR)ptr, real_size, "?", &bad);
+		    if (bad && !keep_dest_enc)
+			goto rewind_retry;
+		}
 	    }
 	    else
 # endif
@@ -3442,10 +3516,8 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     }
 
 # ifdef WIN3264
-    if (converted && wb_flags == 0 && get_win_fio_flags(fenc))
+    if (converted && wb_flags == 0 && (wb_flags = get_win_fio_flags(fenc)) != 0)
     {
-	wb_flags = get_win_fio_flags(fenc);
-
 	/* Convert UTF-8 -> UCS-2 and UCS-2 -> DBCS.  Worst-case * 4: */
 	write_info.bw_conv_buflen = bufsize * 4;
 	write_info.bw_conv_buf
@@ -4474,13 +4546,15 @@ buf_write_bytes(ip)
 	else if (flags & FIO_CODEPAGE)
 	{
 	    /*
-	     * Convert UTF-8 to UCS-2 and then to MS-Windows codepage.
+	     * Convert UTF-8 or codepage to UCS-2 and then to MS-Windows
+	     * codepage.
 	     */
 	    char_u	*from;
 	    size_t	fromlen;
 	    char_u	*to;
 	    int		u8c;
 	    BOOL	bad = FALSE;
+	    int		needed;
 
 	    if (ip->bw_restlen > 0)
 	    {
@@ -4498,38 +4572,104 @@ buf_write_bytes(ip)
 		fromlen = len;
 	    }
 
-	    /* Convert from UTF-8 to UCS-2, to the start of the buffer.
-	     * The buffer has been allocated to be big enough. */
 	    to = ip->bw_conv_buf;
-	    while (fromlen > 0)
+	    if (enc_utf8)
 	    {
-		n = utf_ptr2len_check_len(from, fromlen);
-		if (n > (int)fromlen)
-		    break;
-		u8c = utf_ptr2char(from);
-		*to++ = (u8c & 0xff);
-		*to++ = (u8c >> 8);
-		fromlen -= n;
-		from += n;
+		/* Convert from UTF-8 to UCS-2, to the start of the buffer.
+		 * The buffer has been allocated to be big enough. */
+		while (fromlen > 0)
+		{
+		    n = utf_ptr2len_check_len(from, fromlen);
+		    if (n > (int)fromlen)	/* incomplete byte sequence */
+			break;
+		    u8c = utf_ptr2char(from);
+		    *to++ = (u8c & 0xff);
+		    *to++ = (u8c >> 8);
+		    fromlen -= n;
+		    from += n;
+		}
+
+		/* Copy remainder to ip->bw_rest[] to be used for the next
+		 * call. */
+		if (fromlen > CONV_RESTLEN)
+		{
+		    /* weird overlong sequence */
+		    ip->bw_conv_error = TRUE;
+		    return FAIL;
+		}
+		mch_memmove(ip->bw_rest, from, fromlen);
+		ip->bw_restlen = fromlen;
+	    }
+	    else
+	    {
+		/* Convert from enc_codepage to UCS-2, to the start of the
+		 * buffer.  The buffer has been allocated to be big enough. */
+		ip->bw_restlen = 0;
+		needed = MultiByteToWideChar(enc_codepage,
+				  MB_ERR_INVALID_CHARS, (LPCSTR)from, fromlen,
+								     NULL, 0);
+		if (needed == 0)
+		{
+		    /* When conversion fails there may be a trailing byte. */
+		    ip->bw_restlen = 1;
+		    needed = MultiByteToWideChar(enc_codepage,
+				  MB_ERR_INVALID_CHARS, (LPCSTR)from, fromlen,
+								     NULL, 0);
+		    if (needed == 0)
+		    {
+			/* Conversion doesn't work. */
+			ip->bw_conv_error = TRUE;
+			return FAIL;
+		    }
+		    /* Save the trailing byte for the next call. */
+		    *ip->bw_rest = from[fromlen - 1];
+		}
+		needed = MultiByteToWideChar(enc_codepage, MB_ERR_INVALID_CHARS,
+				       (LPCSTR)from, fromlen - ip->bw_restlen,
+							  (LPWSTR)to, needed);
+		if (needed == 0)
+		{
+		    /* Safety check: Conversion doesn't work. */
+		    ip->bw_conv_error = TRUE;
+		    return FAIL;
+		}
+		to += needed * 2;
 	    }
 
-	    /* copy remainder to ip->bw_rest[] to be used for the next call. */
-	    mch_memmove(ip->bw_rest, from, fromlen);
-	    ip->bw_restlen = fromlen;
-
-	    /* Convert from UCS-2 to the codepage, using the remainder of the
-	     * conversion buffer.  If the conversion uses the default
-	     * character "0", the data doesn't fit in this encoding, so fail. */
 	    fromlen = to - ip->bw_conv_buf;
-	    len = WideCharToMultiByte(FIO_GET_CP(flags), 0,
-		    (LPCWSTR)ip->bw_conv_buf, (int)fromlen / sizeof(WCHAR),
-		    (LPSTR)to, ip->bw_conv_buflen - fromlen, 0, &bad);
-	    if (bad)
-	    {
-		ip->bw_conv_error = TRUE;
-		return FAIL;
-	    }
 	    buf = to;
+	    if (FIO_GET_CP(flags) == CP_UTF8)
+	    {
+		/* Convert from UCS-2 to UTF-8, using the remainder of the
+		 * conversion buffer.  Fails when out of space. */
+		for (from = ip->bw_conv_buf; fromlen > 1; fromlen -= 2)
+		{
+		    u8c = *from++;
+		    u8c += (*from++ << 8);
+		    to += utf_char2bytes(u8c, to);
+		    if (to + 6 >= ip->bw_conv_buf + ip->bw_conv_buflen)
+		    {
+			ip->bw_conv_error = TRUE;
+			return FAIL;
+		    }
+		}
+		len = to - buf;
+	    }
+	    else
+	    {
+		/* Convert from UCS-2 to the codepage, using the remainder of
+		 * the conversion buffer.  If the conversion uses the default
+		 * character "0", the data doesn't fit in this encoding, so
+		 * fail. */
+		len = WideCharToMultiByte(FIO_GET_CP(flags), 0,
+			(LPCWSTR)ip->bw_conv_buf, (int)fromlen / sizeof(WCHAR),
+			(LPSTR)to, ip->bw_conv_buflen - fromlen, 0, &bad);
+		if (bad)
+		{
+		    ip->bw_conv_error = TRUE;
+		    return FAIL;
+		}
+	    }
 	}
 # endif
 
@@ -4775,15 +4915,28 @@ get_fio_flags(ptr)
 #ifdef WIN3264
 /*
  * Check "ptr" for a MS-Windows codepage name and return the FIO_ flags needed
- * for the conversion MS-Windows can do for us.
+ * for the conversion MS-Windows can do for us.  Also accept "utf-8".
+ * Used for conversion between 'encoding' and 'fileencoding'.
  */
     static int
 get_win_fio_flags(ptr)
     char_u	*ptr;
 {
-    if (ptr[0] == 'c' && ptr[1] == 'p' && VIM_ISDIGIT(ptr[2]))
-	return FIO_PUT_CP(atoi(ptr + 2)) | FIO_CODEPAGE;
-    return 0;
+    int		cp;
+
+    /* Cannot do this when 'encoding' is not utf-8 and not a codepage. */
+    if (!enc_utf8 && enc_codepage <= 0)
+	return 0;
+
+    cp = encname2codepage(ptr);
+    if (cp == 0)
+    {
+	if (STRCMP(ptr, "utf-8") == 0)
+	    cp = CP_UTF8;
+	else
+	    return 0;
+    }
+    return FIO_PUT_CP(cp) | FIO_CODEPAGE;
 }
 #endif
 
