@@ -1227,6 +1227,58 @@ mb_ptr2char_adv(pp)
     return c;
 }
 
+#if defined(FEAT_ARABIC) || defined(PROTO)
+/*
+ * Check whether we are dealing with Arabic combining characters.
+ * Note: these are NOT really composing characters!
+ */
+    int
+arabic_combine(one, two)
+    int		one;	    /* first character */
+    int		two;	    /* character just after "one" */
+{
+    if (one == a_LAM)
+	return arabic_maycombine(two);
+    return FALSE;
+}
+
+/*
+ * Check whether we are dealing with a character that could be regarded as an
+ * Arabic combining character, need to check the character before this.
+ */
+    int
+arabic_maycombine(two)
+    int		two;
+{
+    if (p_arshape && !p_tbidi)
+	return (two == a_ALEF_MADDA
+		    || two == a_ALEF_HAMZA_ABOVE
+		    || two == a_ALEF_HAMZA_BELOW
+		    || two == a_ALEF);
+    return FALSE;
+}
+
+/*
+ * Check if the character pointed to by "p2" is a composing character when it
+ * comes after "p1".  For Arabic sometimes "ab" is replaced with "c", which
+ * behaves like a composing character.
+ */
+    int
+utf_composinglike(p1, p2)
+    char_u	*p1;
+    char_u	*p2;
+{
+    int		c2;
+
+    c2 = utf_ptr2char(p2);
+    if (utf_iscomposing(c2))
+	return TRUE;
+    if (!arabic_maycombine(c2))
+	return FALSE;
+    return arabic_combine(utf_ptr2char(p1), c2);
+}
+#endif
+
 /*
  * Convert a UTF-8 byte string to a wide chararacter.  Also get up to two
  * composing characters.
@@ -1245,9 +1297,10 @@ utfc_ptr2char(p, p1, p2)
     len = utf_ptr2len_check(p);
     /* Only accept a composing char when the first char isn't illegal. */
     if ((len > 1 || *p < 0x80)
-	    && p[len] >= 0x80 && utf_iscomposing(cc = utf_ptr2char(p + len)))
+            && p[len] >= 0x80
+	    && UTF_COMPOSINGLIKE(p, p + len))
     {
-	*p1 = cc;
+	*p1 = utf_ptr2char(p + len);
 	len += utf_ptr2len_check(p + len);
 	if (p[len] >= 0x80 && utf_iscomposing(cc = utf_ptr2char(p + len)))
 	    *p2 = cc;
@@ -1370,7 +1423,7 @@ utfc_ptr2len_check(p)
      */
     for (;;)
     {
-	if (p[len] < 0x80 || !utf_iscomposing(utf_ptr2char(p + len)))
+	if (p[len] < 0x80 || !UTF_COMPOSINGLIKE(p, p + len))
 	    return len;
 
 	/* Skip over composing char */
@@ -2107,6 +2160,10 @@ utf_head_off(base, p)
 {
     char_u	*q;
     char_u	*s;
+    int		c;
+#ifdef FEAT_ARABIC
+    char_u	*j;
+#endif
 
     if (*p < 0x80)		/* be quick for ASCII */
 	return 0;
@@ -2124,8 +2181,28 @@ utf_head_off(base, p)
 	/* Check for illegal sequence. */
 	if (utf8len_tab[*q] != (int)(s - q + 1))
 	    return 0;
-	if (q <= base || !utf_iscomposing(utf_ptr2char(q)))
+
+	if (q <= base)
 	    break;
+
+	c = utf_ptr2char(q);
+	if (utf_iscomposing(c))
+	    continue;
+
+#ifdef FEAT_ARABIC
+	if (arabic_maycombine(c))
+	{
+	    /* Advance to get a sneak-peak at the next char */
+	    j = q;
+	    --j;
+	    /* Move j to the first byte of this char. */
+	    while (j > base && (*j & 0xc0) == 0x80)
+		--j;
+	    if (arabic_combine(utf_ptr2char(j), c))
+		continue;
+	}
+#endif
+	break;
     }
 
     return (int)(p - q);
@@ -2968,6 +3045,25 @@ im_commit_cb(GtkIMContext *context, const gchar *str, gpointer data)
 }
 
 /*
+ * Callback invoked after start to the preedit.
+ */
+/*ARGSUSED*/
+    static void
+im_preedit_start_cb(GtkIMContext *context, gpointer data)
+{
+    im_is_active = TRUE;
+}
+/*
+ * Callback invoked after end to the preedit.
+ */
+/*ARGSUSED*/
+    static void
+im_preedit_end_cb(GtkIMContext *context, gpointer data)
+{
+    im_is_active = FALSE;
+}
+
+/*
  * Callback invoked after changes to the preedit string.  If the preedit
  * string was empty before, remember the preedit start column so we know
  * where to apply feedback attributes.  Delete the previous preedit string
@@ -3180,6 +3276,10 @@ xim_init(void)
 					    G_CALLBACK(&im_commit_cb), NULL);
     g_signal_connect(G_OBJECT(xic), "preedit_changed",
 		     G_CALLBACK(&im_preedit_changed_cb), NULL);
+    g_signal_connect(G_OBJECT(xic), "preedit_start",
+		     G_CALLBACK(&im_preedit_start_cb), NULL);
+    g_signal_connect(G_OBJECT(xic), "preedit_end",
+		     G_CALLBACK(&im_preedit_end_cb), NULL);
 
     gtk_im_context_set_client_window(xic, gui.drawarea->window);
 }
@@ -3318,8 +3418,13 @@ xim_reset(void)
 	 * recreate it.  But that means loading/unloading the IM module on
 	 * every mode switch, which causes a quite noticable delay even on
 	 * my rather fast box...
+	 * *
+	 * Moreover, there are some XIM which cannot respond to
+	 * im_synthesize_keypress(). we hope that they reset by
+	 * xim_shutdown().
 	 */
-	im_synthesize_keypress(GDK_Escape, 0U);
+	if (im_activatekey_keyval != GDK_VoidSymbol && im_is_active)
+	    im_synthesize_keypress(GDK_Escape, 0U);
 
 	gtk_im_context_reset(xic);
 	/*
@@ -3337,6 +3442,12 @@ xim_reset(void)
 	    g_signal_handler_block(xic, im_commit_handler_id);
 	    im_synthesize_keypress(im_activatekey_keyval, im_activatekey_state);
 	    g_signal_handler_unblock(xic, im_commit_handler_id);
+	}
+	else
+	{
+	    im_shutdown();
+	    xim_init();
+	    xim_set_focus(gui.in_focus);
 	}
     }
 
@@ -3378,13 +3489,13 @@ xim_queue_key_press_event(GdkEventKey *event)
 		if (gtk_main_level() > 0)
 		    gtk_main_quit();
 	    }
-	    return TRUE;
+	    return FALSE;
 	}
 
 	/* Don't filter events through the IM context if IM isn't active
 	 * right now.  Unlike with GTK+ 1.2 we cannot rely on the IM module
 	 * not doing anything before the activation key was sent. */
-	if (im_is_active)
+	if (im_activatekey_keyval == GDK_VoidSymbol || im_is_active)
 	    return gtk_im_context_filter_keypress(xic, event);
     }
 

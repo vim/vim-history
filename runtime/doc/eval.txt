@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.2a.  Last change: 2003 Apr 19
+*eval.txt*      For Vim version 6.2b.  Last change: 2003 Apr 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -2529,6 +2529,7 @@ There are three types of features:
 
 all_builtin_terms	Compiled with all builtin terminals enabled.
 amiga			Amiga version of Vim.
+arabic			Compiled with Arabic support |arabic|.
 arp			Compiled with ARP support (Amiga).
 autocmd			Compiled with autocommands support.
 balloon_eval		Compiled with |balloon-eval| support.
@@ -2779,7 +2780,7 @@ instead of "s:" when the mapping is expanded outside of the script.
 			the number 0 is returned.
 			Note that there is no check for unreachable lines,
 			thus there is no warning if commands follow ":return".
-			
+
 			If the ":return" is used after a |:try| but before the
 			matching |:finally| (if present), the commands
 			following the ":finally" up to the matching |:endtry|
@@ -3093,6 +3094,7 @@ This would call the function "my_func_whizz(parameter)".
 			matching {pattern} is being thrown and has not yet
 			been caught by a previous ":catch".  Otherwise, these
 			commands are skipped.
+			When {pattern} is omitted all errors are caught.
 			Examples: >
 		:catch /^Vim:Interrupt$/	" catch interrupts (CTRL-C)
 		:catch /^Vim\%((\a\+)\)\=:E/	" catch all Vim errors
@@ -3101,6 +3103,7 @@ This would call the function "my_func_whizz(parameter)".
 		:catch /^Vim\%((\a\+)\)\=:E123/	" catch error E123
 		:catch /my-exception/		" catch user exception
 		:catch /.*/			" catch everything
+		:catch				" same as /.*/
 <
 			NOTE: It is not reliable to ":catch" the TEXT of
 			an error message because it may vary in different

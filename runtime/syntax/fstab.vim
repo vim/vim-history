@@ -2,7 +2,7 @@
 " Language:     fstab file
 " Maintaner:    Radu Dineiu <littledragon@altern.org>
 " URL:          http://ld.yi.org/vim/fstab.vim
-" Last Change:  2003 Jan 24
+" Last Change:  2003 Apr 25
 " Version:      0.5
 
 if version < 600
@@ -158,7 +158,7 @@ if version >= 508 || !exists("did_config_syntax_inits")
 	else
 		command! -nargs=+ HiLink hi def link <args>
 	endif
-	
+
 	HiLink fsOperator Operator
 	HiLink fsComment Comment
 	HiLink fsCommentLine Comment

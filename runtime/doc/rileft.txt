@@ -1,4 +1,4 @@
-*rileft.txt*    For Vim version 6.2a.  Last change: 2002 Oct 29
+*rileft.txt*    For Vim version 6.2b.  Last change: 2002 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Avner Lottem
@@ -70,9 +70,11 @@ o  No special terminal with right-to-left capabilities is required.  The
    To create a Hebrew font for a DOS box under MS-Windows, refer to a hack on
    ftp://tochna.technion.ac.il/pub/staff/lottem/doswin-0.1.tgz.
 
-o  It should be quite easy to adjust this support to handle other right-to
-   left languages, such as Arabic, by simply changing the keyboard mapping
-   according to the character encoding.
+o  Many other languages that use and require right-to-left support can
+   quite easily be supported given the inclusion of their required keyboard
+   mappings and some possible minor code change.  Some of these languages
+   (such as |arabic| and |farsi|) have already added their required code
+   and mappings.
 
 
 Change details

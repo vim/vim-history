@@ -1,6 +1,7 @@
 " Menu Translations:	Español
-" Maintainer:		Eduardo F. Amatria <eferna1@platea.pntic.mec.es>
-" Last Change:		2003 Mar 30
+" Maintainer:		Alejandro López-Valencia <dradul@yahoo.com>
+" Last Change:		2003 Apr 26
+"
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -8,7 +9,7 @@ if exists("did_menu_trans")
 endif
 let did_menu_trans = 1
 
-" The translations below are in latin1, but they work for cp1252 and
+" The translations below are in latin1, but they work for cp1252,
 " iso-8859-15 without conversion as well.
 if &enc != "cp1252" && &enc != "iso-8859-15"
   scriptencoding latin1
@@ -17,15 +18,15 @@ endif
 
 " Help menu
 menutrans &Help			Ay&uda
-menutrans &Overview<Tab><F1>	&Principal<Tab><F1>
+menutrans &Overview<Tab><F1>	Tabla\ de\ &contenidos<Tab><F1>
 menutrans &User\ Manual		&Manual\ del\ usuario
-menutrans &How-to\ links	&Enlaces\ a\ ¿Cómo\.\.\.?
-menutrans &Find\.\.\.		&Buscar\.\.\.
+menutrans &How-to\ links	&Enlaces\ a\ ¿Cómo\ hago\.\.\.?
+menutrans &Find\.\.\.		&Buscar\ en\ la\ ayuda
 menutrans &Credits		&Reconocimientos
-menutrans O&rphans		&Huérfanos
-menutrans Co&pying		&Copyright
-menutrans &Version		&Versión
-menutrans &About		&Acerca\ de\.\.\.
+menutrans O&rphans		Ayude\ a\ los\ niños\ &huérfanos
+menutrans Co&pying		&Términos\ de\ Licencia
+menutrans &Version		&Versión\ e\ \información\ de\ configuración
+menutrans &About		&Acerca\ de\ Vim.
 
 " File menu
 menutrans &File				&Archivo
@@ -67,7 +68,7 @@ menutrans Settings\ &Window		&Ventana\ de\ opciones
 menutrans &Global\ Settings		Opciones\ &globales
 
 menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls!	Activar/Desactivar\ &realzado\ de\ sintaxis<Tab>:set\ hls!
-menutrans Toggle\ &Ignore-case<Tab>:set\ ic!		Activar/Desactivar\ &ignorar\ mayúsculas\y\ minúsculas<Tab>:set\ ic!
+menutrans Toggle\ &Ignore-case<Tab>:set\ ic!		Activar/Desactivar\ &ignorar\ mayúsculas\ y\ minúsculas<Tab>:set\ ic!
 menutrans Toggle\ &Showmatch<Tab>:set\ sm!		Activar/Desactivar\ &mostrar\ coincidencias<Tab>:set\ sm!
 
 menutrans &Context\ lines		Líneas\ de\ &contexto
@@ -101,9 +102,9 @@ menutrans F&ile\ Settings		Opciones\ del\ &fichero
 " Boolean options
 menutrans Toggle\ Line\ &Numbering<Tab>:set\ nu!	Activar/Desactivar\ &numeración\ de\ líneas<Tab>:set\ nu!
 menutrans Toggle\ &List\ Mode<Tab>:set\ list!		Activar/Desactivar\ modo\ «&list»<Tab>:set\ list!
-menutrans Toggle\ Line\ &Wrap<Tab>:set\ wrap!		Activar/Desactivar\ &doblado\ de\ líneas<Tab>:set\ wrap!
-menutrans Toggle\ W&rap\ at\ word<Tab>:set\ lbr!	Activar/Desactivar\ doblado\ en\ &palabra<Tab>:set\ lbr!
-menutrans Toggle\ &expand-tab<Tab>:set\ et!		Activar/Desactivar\ &expansión\ de\ tabs<Tab>:set\ et!
+menutrans Toggle\ Line\ &Wrap<Tab>:set\ wrap!		Activar/Desactivar\ &quiebre\ de\ líneas<Tab>:set\ wrap!
+menutrans Toggle\ W&rap\ at\ word<Tab>:set\ lbr!	Activar/Desactivar\ quiebre\ entre\ &palabras<Tab>:set\ lbr!
+menutrans Toggle\ &expand-tab<Tab>:set\ et!		Activar/Desactivar\ &expansión\ de\ marcas\ de\ \tabulado<Tab>:set\ et!
 menutrans Toggle\ &auto-indent<Tab>:set\ ai!		Activar/Desactivar\ &auto-sangrado<Tab>:set\ ai!
 menutrans Toggle\ &C-indenting<Tab>:set\ cin!		Activar/Desactivar\ sangrado\ &C<Tab>:set\ cin!
 
@@ -121,7 +122,8 @@ let g:menutrans_fileformat_dialog = "Seleccione el formato para escribir el fich
 menutrans C&olor\ Scheme		Esquema\ de\ c&olores
 menutrans blue		azul
 menutrans darkblue	azul\ oscuro
-menutrans default	normal
+menutrans default	original
+menutrans desert	desierto
 menutrans evening	vespertino
 menutrans morning	matutino
 menutrans peachpuff	melocotón
@@ -129,17 +131,29 @@ menutrans shine		brillante
 
 menutrans Select\ Fo&nt\.\.\.		Seleccionar\ fue&nte\.\.\.
 
-menutrans &Keymap	Asociación\ de\ teclas
+menutrans &Keymap	Asociación\ de\ teclados
 menutrans None		Ninguna
 menutrans accents	acentos
+menutrans arabic	árabe
+menutrans czech		checo
 menutrans greek		griego
 menutrans hebrew	hebreo
+menutrans hebrewp	hebreo\ fonético
+menutrans lithuanian-baltic	lituano-báltico
+menutrans russian-jcuken	ruso-«jcuken»
+menutrans russian-jcukenwin	ruso-«jcuken»\ Windows
+menutrans russian-yawerty	ruso-«yawerty»
+menutrans serbian-latin		serbio-latino
+menutrans serbian	serbio
+menutrans slovak	eslovaco
+
 
 " Programming menu
 menutrans &Tools			&Herramientas
 menutrans &Jump\ to\ this\ tag<Tab>g^]	&Saltar\ a\ este\ «tag»<Tab>g^]
 menutrans Jump\ &back<Tab>^T		Saltar\ &atrás<Tab>^T
-menutrans Build\ &Tags\ File		&Generar\ fichero\ de\ «tags»\
+menutrans Build\ &Tags\ File		Crear\ fichero\ de\ «&tags»\
+menutrans &Diff				Modo\ de\ &diferencias
 menutrans &Folding			&Plegado
 menutrans &Make<Tab>:make		Ejecutar\ «&Make»<Tab>:make
 menutrans &List\ Errors<Tab>:cl		&Lista\ de\ errores<Tab>:cl
@@ -149,9 +163,9 @@ menutrans &Previous\ Error<Tab>:cp	Error\ p&revio<Tab>:cp
 menutrans &Older\ List<Tab>:cold	Lista\ de\ &viejos\ a\ nuevos<Tab>:cold
 menutrans N&ewer\ List<Tab>:cnew	Lista\ de\ &nuevos\ a\ viejos<Tab>:cnew
 menutrans Error\ &Window		Ven&tana\ de\ errores
-menutrans &Set\ Compiler		Fi&jar\ el\ compilador
-menutrans &Convert\ to\ HEX<Tab>:%!xxd	Convertir\ a\ &HEX<Tab>:%!xxd
-menutrans Conve&rt\ back<Tab>:%!xxd\ -r	&Convertir\ al\ anterior<Tab>:%!xxd\ -r
+menutrans &Set\ Compiler		Esco&ger\ el\ compilador
+menutrans &Convert\ to\ HEX<Tab>:%!xxd	Convertir\ a\ formato\ &hexadecimal<Tab>:%!xxd
+menutrans Conve&rt\ back<Tab>:%!xxd\ -r	&Convertir\ al\ formato\ original<Tab>:%!xxd\ -r
 
 " Tools.Fold Menu
 menutrans &Enable/Disable\ folds<Tab>zi		&Activar/Desactivar\ pliegues<Tab>zi
@@ -168,7 +182,7 @@ menutrans Create\ &Fold<Tab>zf			Crear\ &pliegue<Tab>zf
 menutrans &Delete\ Fold<Tab>zd			&Suprimir\ pliegue<Tab>zd
 menutrans Delete\ &All\ Folds<Tab>zD		Suprimir\ &todos\ los\ pligues<Tab>zD
 " moving around in folds
-menutrans Fold\ column\ &width			A&nchura\ de\ columna\ del\ pliegue
+menutrans Fold\ col&umn\ width			A&nchura\ de\ columna\ del\ pliegue
 
 " Tools.Diff Menu
 menutrans &Update	&Actualizar
@@ -191,13 +205,13 @@ let g:menutrans_no_file = "[Sin fichero]"
 
 " Window menu
 menutrans &Window			&Ventana
-menutrans &New<Tab>^Wn			&Nueva<Tab>^Wn
-menutrans S&plit<Tab>^Ws		&Dividir<Tab>^Ws
-menutrans Sp&lit\ To\ #<Tab>^W^^	D&ividir\ a\ #<Tab>^W^^
+menutrans &New<Tab>^Wn			Ventana\ &nueva<Tab>^Wn
+menutrans S&plit<Tab>^Ws		&Dividir\ la\ ventana<Tab>^Ws
+menutrans Sp&lit\ To\ #<Tab>^W^^	D&ividir\ en\ el\ marcador\ (#)<Tab>^W^^
 menutrans Split\ &Vertically<Tab>^Wv    Dividir\ &verticalmente<Tab>^Wv
-menutrans Split\ File\ E&xplorer	&Abrir\ Explorador\ de\ ficheros
-menutrans &Close<Tab>^Wc		&Cerrar<Tab>^Wc
-menutrans Close\ &Other(s)<Tab>^Wo	Cerrar\ &otra(s)<Tab>^Wo
+menutrans Split\ File\ E&xplorer	&Abrir\ el\ «Explorador\ de\ ficheros»
+menutrans &Close<Tab>^Wc		&Cerrar\ esta\ ventana<Tab>^Wc
+menutrans Close\ &Other(s)<Tab>^Wo	Cerrar\ &otra(s)\ ventana(s)<Tab>^Wo
 menutrans Move\ &To			Mov&er\ a
 menutrans &Top<Tab>^WK			&Arriba<Tab>^WK
 menutrans &Bottom<Tab>^WJ		A&bajo<Tab>^WJ
@@ -266,11 +280,12 @@ endif
 
 " Syntax menu
 menutrans &Syntax			&Sintaxis
+menutrans &Show\ filetypes\ in\ menu	&Mostrar\ listas\ de\ «tipo\ de\ fichero»
 menutrans Set\ '&syntax'\ only		Activar\ sólo\ «sintaxis»
 menutrans Set\ '&filetype'\ too		Activar\ también\ «tipo\ de\ fichero»
-menutrans &Off				&Desactivar
-menutrans &Manual			&Manual
-menutrans A&utomatic			A&utomática
+menutrans &Off				&Desactivar\ «sintaxis»
+menutrans &Manual			«sintaxis»\ &manual
+menutrans A&utomatic			«sintaxis»\ a&utomática
 menutrans on/off\ for\ &This\ file	Activar/Desactivar\ en\ es&te\ fichero
 menutrans Co&lor\ test			&Prueba\ de\ colores
 menutrans &Highlight\ test		Prueba\ de\ &realzado

@@ -42,6 +42,9 @@
 #  include "os_msdos.pro"
 # endif
 # ifdef WIN16
+#  typedef LPSTR LPWSTR;
+#  typedef LPCSTR LPCWSTR;
+#  typedef int LPBOOL;
 #  include "os_win16.pro"
 #  include "os_mswin.pro"
 # endif
@@ -177,7 +180,7 @@ extern char_u *vimpty_getenv __ARGS((const char_u *string));	/* from pty.c */
 #  ifdef FEAT_GUI_ATHENA
 #   include "gui_athena.pro"
 #ifdef FEAT_BROWSE
-extern char *vim_SelFile __ARGS((Widget toplevel, char *prompt, char *init_path, int (*show_entry)(), int x, int y, guicolor_T fg, guicolor_T bg));
+extern char *vim_SelFile __ARGS((Widget toplevel, char *prompt, char *init_path, int (*show_entry)(), int x, int y, guicolor_T fg, guicolor_T bg, guicolor_T scroll_fg, guicolor_T scroll_bg));
 #endif
 #  endif
 #  ifdef FEAT_GUI_BEOS

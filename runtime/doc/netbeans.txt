@@ -1,4 +1,4 @@
-*netbeans.txt*  For Vim version 6.2a.  Last change: 2003 Apr 02
+*netbeans.txt*  For Vim version 6.2b.  Last change: 2003 Apr 25
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -199,7 +199,7 @@ mechanism.
 10.3 Commands			|nb-commands|
 10.4 Functions and Replies	|nb-functions|
 10.5 Events			|nb-events|
-10.6 Special messages 		|nb-special|
+10.6 Special messages		|nb-special|
 
 
 10.1 Kinds of messages					*nb-messages*
@@ -281,10 +281,10 @@ addAnno serNum typeNum off len
 		Place an annotation in this buffer.
 		Arguments:
 		   serNum	number	serial number of this placed
-		   			annotation, used to be able to remove
+					annotation, used to be able to remove
 					it
 		   typeNum	number	sequence number of the annotation
-		   			defined with defineAnnoType for this
+					defined with defineAnnoType for this
 					buffer
 		   off		number	offset where annotion is to be placed
 		   len		number	not used
@@ -301,9 +301,9 @@ create		Creates a buffer without a name.  Replaces the current buffer
 		Netbeans uses this as the first command for a file that is
 		being opened.  The sequence of commands could be:
 			create
-			setCaretListener 	(ignored)
+			setCaretListener	(ignored)
 			setModified		(no effect)
-			setContentType 		(ignored)
+			setContentType		(ignored)
 			startDocumentListen
 			setTitle
 			setFullName
@@ -614,7 +614,7 @@ version vers	Report the version of the interface implementation.  Vim
 		reports "2.1" (including the quotes).
 
 
-10.6 Special messages 					*nb-special*
+10.6 Special messages					*nb-special*
 
 These messages do not follow the style of the messages above.  They are
 terminated by a newline character.

@@ -1,4 +1,4 @@
-*gui_x11.txt*   For Vim version 6.2a.  Last change: 2003 Apr 13
+*gui_x11.txt*   For Vim version 6.2b.  Last change: 2003 Apr 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -486,6 +486,9 @@ version, you might want to link with Xaw3d instead.  This will make the
 menus look a bit better.  Edit the Makefile and look for "XAW_LIB".  The
 scrollbars will remain the same, because Vim has its own, which are already
 3D (in fact, they look more like Motif).
+
+							*gui-x11-neXtaw*
+The neXtaw version is mostly like Athena, but uses different widgets.
 
 							*gui-x11-misc*
 In general, do not try to mix files from different GTK+, Motif, Athena and X11

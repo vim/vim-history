@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.2a.  Last change: 2003 Apr 18
+*quickfix.txt*  For Vim version 6.2b.  Last change: 2003 Apr 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -560,7 +560,7 @@ error message (line numbers are not part of the actual output):
      8	 failUnlessEqual
      9	    raise self.failureException, \
     10	AssertionError: 34 != 33
-    11	
+    11
     12	--------------------------------------------------------------
     13	Ran 27 tests in 0.063s
 
@@ -594,9 +594,9 @@ leading line numbers):
      2	(1,17)  error: ';' missing
      3	(21,2)  warning: variable 'z' not defined
      4	(67,3)  error: end of file found before string ended
-     5	
+     5
      6	[a2.tt]
-     7	
+     7
      8	[a3.tt]
      9	NEW compiler v1.1
     10	(2,2)   warning: variable 'x' not defined

@@ -1,7 +1,7 @@
 " Vim filetype plugin
 " Language:	Vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2003 Mar 20
+" Last Change:	2003 Apr 25
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -38,6 +38,6 @@ if exists("loaded_matchit")
 	\ '(:)'
   " Ignore ":syntax region" commands, the 'end' argument clobbers if-endif
   let b:match_skip = 'getline(".") =~ "^\\s*sy\\%[ntax]\\s\\+region" ||
-  	\ synIDattr(synID(line("."),col("."),1),"name") =~? "comment\\|string"'
+	\ synIDattr(synID(line("."),col("."),1),"name") =~? "comment\\|string"'
 endif
 

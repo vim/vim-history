@@ -165,6 +165,13 @@ SNIFF_DEFS  = -DFEAT_SNIFF
 MULTITHREADED = yes
 !endif
 
+!if "$(CSCOPE)" == "yes"
+# CSCOPE - Include support for Cscope
+CSCOPE_INCL  = if_cscope.h
+CSCOPE_OBJ   = $(OBJDIR)/if_cscope.obj
+CSCOPE_DEFS  = -DFEAT_CSCOPE
+!endif
+
 !if defined(USE_MSVCRT)
 CVARS = $(cvarsdll)
 !elseif defined(MULTITHREADED)
@@ -193,7 +200,7 @@ WINVER = -DWINVER=0x400
 #VIMRUNTIMEDIR = somewhere
 
 CFLAGS = -c /W3 /nologo $(CVARS) -I. -Iproto -DHAVE_PATHDEF -DWIN32 \
-		$(WINVER) $(SNIFF_DEFS) $(DEFINES)
+		$(WINVER) $(SNIFF_DEFS) $(CSCOPE_DEFS) $(DEFINES)
 
 #>>>>> end of choices
 ###########################################################################
@@ -247,7 +254,7 @@ LIBC = $(LIBC) msvcrtd.lib
 !endif # DEBUG
 
 INCL =	vim.h os_win32.h ascii.h feature.h globals.h keymap.h macros.h \
-	proto.h option.h structs.h term.h $(SNIFF_INCL)
+	proto.h option.h structs.h term.h $(SNIFF_INCL) $(CSCOPE_INCL)
 
 OBJ = \
 	$(OUTDIR)\buffer.obj \
@@ -512,11 +519,11 @@ LINKARGS1 = $(linkdebug) $(conflags) /nodefaultlib:libc
 LINKARGS2 = $(CON_LIB) $(GUI_LIB) $(LIBC) $(OLE_LIB)  user32.lib $(SNIFF_LIB) \
 		$(PERL_LIB) $(PYTHON_LIB) $(RUBY_LIB) $(TCL_LIB) $(LINK_PDB)
 
-all:	$(VIM) vimrun.exe install.exe uninstal.exe xxd/xxd.exe
+all:	$(VIM) vimrun.exe install.exe uninstal.exe xxd/xxd.exe GvimExt/gvimext.dll
 
-$(VIM): $(OUTDIR) $(OBJ) $(GUI_OBJ) $(OLE_OBJ) $(OLE_IDL) $(PERL_OBJ) $(PYTHON_OBJ) $(RUBY_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) $(OUTDIR)\version.obj
+$(VIM): $(OUTDIR) $(OBJ) $(GUI_OBJ) $(OLE_OBJ) $(OLE_IDL) $(PERL_OBJ) $(PYTHON_OBJ) $(RUBY_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) $(CSCOPE_OBJ) $(OUTDIR)\version.obj
 	$(link) $(LINKARGS1) -out:$*.exe $(OBJ) $(GUI_OBJ) $(OLE_OBJ) \
-		$(PERL_OBJ) $(PYTHON_OBJ) $(RUBY_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) \
+		$(PERL_OBJ) $(PYTHON_OBJ) $(RUBY_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) $(CSCOPE_OBJ) \
 		$(OUTDIR)\version.obj $(LINKARGS2)
 	if exist $(OUTDIR)\version.obj del $(OUTDIR)\version.obj
 	if exist auto\pathdef.c del auto\pathdef.c
@@ -540,6 +547,11 @@ vimrun.exe: vimrun.c
 xxd/xxd.exe: xxd/xxd.c
 	cd xxd
 	$(MAKE) /NOLOGO -f Make_mvc.mak
+	cd ..
+
+GvimExt/gvimext.dll: GvimExt/gvimext.cpp GvimExt/gvimext.rc GvimExt/gvimext.h
+	cd GvimExt
+	$(MAKE) /NOLOGO -f Makefile
 	cd ..
 
 

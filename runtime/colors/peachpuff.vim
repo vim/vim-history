@@ -1,20 +1,23 @@
 " Vim color file
 " Maintainer: David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>
-" Last Change: 2001-05-12
-" URL: http://physics.muni.cz/~yeti/download/color/peachpuff.vim
+" Last Change: 2003-04-23
+" URL: http://trific.ath.cx/Ftp/vim/colors/peachpuff.vim
 
 " This color scheme uses a peachpuff background (what you've expected when it's
 " called peachpuff?).
 "
 " Note: Only GUI colors differ from default, on terminal it's just `light'.
 
+" First remove all existing highlighting.
+set background=light
+hi clear
+if exists("syntax_on")
+  syntax reset
+endif
+
 let colors_name = "peachpuff"
 
-" First remove all existing highlighting.
-hi clear
-
 hi Normal guibg=PeachPuff guifg=Black
-set background=light
 
 hi SpecialKey term=bold ctermfg=4 guifg=Blue
 hi NonText term=bold cterm=bold ctermfg=4 gui=bold guifg=Blue
@@ -42,6 +45,8 @@ hi DiffDelete term=bold cterm=bold ctermfg=4 ctermbg=6 gui=bold guifg=LightBlue 
 hi DiffText term=reverse cterm=bold ctermbg=1 gui=bold guibg=#ff8060
 hi Cursor guifg=bg guibg=fg
 hi lCursor guifg=bg guibg=fg
+
+" Colors for syntax highlighting
 hi Comment term=bold ctermfg=4 guifg=#406090
 hi Constant term=underline ctermfg=1 guifg=#c00058
 hi Special term=bold ctermfg=5 guifg=SlateBlue

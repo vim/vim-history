@@ -2,7 +2,7 @@
 " Author:	Johannes Zellner <johannes@zellner.org>
 " Updated By:	Bram Moolenaar
 " URL:		http://www.zellner.org/vim/indent/html.vim
-" Last Change:	2003 Mar 14
+" Last Change:	2003 Apr 25
 " Globals:	g:html_indent_tags         -- indenting tags
 "		g:html_indent_strict       -- inhibit 'O O' elements
 "		g:html_indent_strict_table -- inhibit 'O -' elements
@@ -149,7 +149,7 @@ endfun
 " [-- return the sum of indents respecting the syntax of a:lnum --]
 fun! <SID>HtmlIndentSum(lnum, style)
     if a:style == match(getline(a:lnum), '^\s*</')
-	if a:style == match(getline(a:lnum), '^\s*</\<\('.g:html_indent_tags.'\)\>') 
+	if a:style == match(getline(a:lnum), '^\s*</\<\('.g:html_indent_tags.'\)\>')
 	    let open = <SID>HtmlIndentOpen(a:lnum, g:html_indent_tags)
 	    let close = <SID>HtmlIndentClose(a:lnum, g:html_indent_tags)
 	    if 0 != open || 0 != close

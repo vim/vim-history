@@ -2,7 +2,7 @@
 " This is a GENERATED FILE. Please always refer to source file at the URI below.
 " Language: lilo configuration (lilo.conf)
 " Maintainer: David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>
-" Last Change: 2002-03-09
+" Last Change: 2003 Apr 25
 " URL: http://physics.muni.cz/~yeti/download/syntax/lilo.vim
 
 " Setup
@@ -74,7 +74,7 @@ syn keyword liloDiskOpt bios normal hidden nextgroup=liloEqNumber,liloEqNumberCo
 syn keyword liloOption bmp-colors bmp-timer nextgroup=liloEqNumberList,liloEqNumberListComment,liloError skipwhite skipempty
 
 " Number list, some of the numbers followed by p
-syn keyword liloOption bmp-table nextgroup=liloEqDecNumberPList,liloEqDecNumberPListComment,liloError skipwhite skipempty 
+syn keyword liloOption bmp-table nextgroup=liloEqDecNumberPList,liloEqDecNumberPListComment,liloError skipwhite skipempty
 
 " Flag
 syn keyword liloOption compact fix-table geometric ignore-table lba32 linear mandatory nowarn prompt

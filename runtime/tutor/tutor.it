@@ -770,11 +770,11 @@ NOTA: Eviti così di battere   i   , l'ultimo carattere, il testo da aggiungere,
 
   2. Ora inserisci il file "vimrc" d'esempio:
 
-  	:read $VIMRUNTIME/vimrc_example.vim
+	:read $VIMRUNTIME/vimrc_example.vim
 
   3. Scrivi il file con:
 
-  	:write
+	:write
 
   La prossima volta che apri Vim, vedrai in uso la colorazione sintattica.
   Puoi aggiungere a questo file "vimrc" tutte le tue impostazioni preferite.

@@ -1,7 +1,7 @@
 "=============================================================================
 " File: explorer.vim
 " Author: M A Aziz Ahmed (aziz@acorn-networks.com)
-" Last Change:	2003 Apr 05
+" Last Change:	2003 Apr 25
 " Version: 2.5 + changes
 " Additions by Mark Waggoner (waggoner@aracnet.com) et al.
 "-----------------------------------------------------------------------------
@@ -121,7 +121,7 @@ if !exists("g:explFileHandler")
     " for Win32 use rundll32
     function! s:explFileHandlerWin32(fn)
       exec 'silent !start rundll32 url.dll,FileProtocolHandler "'
-      		\ . escape(a:fn, '%#') . '"'
+		\ . escape(a:fn, '%#') . '"'
     endfunction
     let g:explFileHandler = "<SID>explFileHandlerWin32"
   elseif has("unix") && executable("kfmclient")

@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:	occam
-" Maintainer:	Mario Schweigler <ms44@ukc.ac.uk>
-" Last Change:	15 September 2002
+" Maintainer:	Mario Schweigler <ms44@kent.ac.uk>
+" Last Change:	23 April 2003
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
@@ -76,18 +76,18 @@ function GetOccamIndent()
     while found < 1
 
       if line =~ s:ColonStart
-        let found = found - 1
+	let found = found - 1
       elseif line =~ s:ColonIndent || (line =~ s:ColonNonColonEndIndent && line !~ s:ColonEnd)
-        let found = found + 1
+	let found = found + 1
       endif
 
       if found < 1
-        let linenum = prevnonblank(linenum - 1)
-        if linenum > 0
-          let line = getline(linenum)
-        else
-          let found = 1
-        endif
+	let linenum = prevnonblank(linenum - 1)
+	if linenum > 0
+	  let line = getline(linenum)
+	else
+	  let found = 1
+	endif
       endif
 
     endwhile
@@ -98,7 +98,7 @@ function GetOccamIndent()
       let colonline = getline(v:lnum)
       let tabstr = ''
       while strlen(tabstr) < &tabstop
-        let tabstr = ' ' . tabstr
+	let tabstr = ' ' . tabstr
       endwhile
       let colonline = substitute(colonline, '\t', tabstr, 'g')
       let curindent = match(colonline, ':')
@@ -127,8 +127,8 @@ function GetOccamIndent()
 
   " Carriage return indenat
   if line =~ s:FirstLevelIndent || (line =~ s:FirstLevelNonColonEndIndent && line !~ s:ColonEnd)
-        \ || (line !~ s:ColonStart && (prevline =~ s:SecondLevelIndent
-        \ || (prevline =~ s:SecondLevelNonColonEndIndent && prevline !~ s:ColonEnd)))
+	\ || (line !~ s:ColonStart && (prevline =~ s:SecondLevelIndent
+	\ || (prevline =~ s:SecondLevelNonColonEndIndent && prevline !~ s:ColonEnd)))
     let curindent = curindent + &shiftwidth
 
     " Restore magic
@@ -158,10 +158,10 @@ function GetOccamIndent()
     if !found
       let prevlinenum = prevnonblank(prevlinenum - 1)
       while prevlinenum > 0 && getline(prevlinenum) =~ s:CommentLine
-        let prevlinenum = prevnonblank(prevlinenum - 1)
+	let prevlinenum = prevnonblank(prevlinenum - 1)
       endwhile
       if prevlinenum == 0
-        let found = 1
+	let found = 1
       endif
     endif
 
@@ -180,4 +180,3 @@ function GetOccamIndent()
 
 endfunction
 "}}}
-

@@ -1,14 +1,15 @@
 " Vim syntax file
-" Language:	Virata Configuration Script
+" Language:	Virata AConfig Configuration Script
 " Maintainer:	Manuel M.H. Stol	<mmh.stol@gmx.net>
-" Last Change:	2001-08-24
+" Last Change:	2002-09-10
 " Vim URL:	http://www.vim.org/lang.html
-" Virata URL:	http://www.virata.com/
+" Virata URL:	http://www.globespanvirata.com/
 
 
-" Virata Configuration Script syntax
-"  Might be detected by: 1) Extension .hw, .pkg and .module (and .cfg)
-"                        2) The word "Virata" in the first 5 lines
+" Virata AConfig Configuration Script syntax
+"  Can be detected by: 1) Extension .hw, .sw, .pkg and .module
+"                      2) The file name pattern "mk.*\.cfg"
+"                      3) The string "Virata" in the first 5 lines
 
 
 " Setup Syntax:
@@ -27,7 +28,7 @@ syn case ignore
 " Virata comments start with %, but % is not a keyword character
 syn region  virataComment	start="^%" start="\s%"lc=1 keepend end="$" contains=@virataGrpInComments
 syn region  virataSpclComment	start="^%%" start="\s%%"lc=1 keepend end="$" contains=@virataGrpInComments
-syn keyword virataInCommentTodo	contained TODO FIXME XXX[XXXXX] REVIEW
+syn keyword virataInCommentTodo	contained TODO FIXME XXX[XXXXX] REVIEW TBD
 syn cluster virataGrpInComments	contains=virataInCommentTodo
 syn cluster virataGrpComments	contains=@virataGrpInComments,virataComment,virataSpclComment
 
@@ -57,31 +58,39 @@ syn cluster virataGrpFileIdents	contains=virataFileIdent,virataIdentError
 
 
 " Statements:
-syn match   virataStatement	"^\s*Config\(\.\(hs\=\|s\)\)\=\>"
+syn match   virataStatement	"^\s*Config\(\(/Kernel\)\=\.\(hs\=\|s\)\)\=\>"
 syn match   virataStatement	"^\s*Config\s\+\I\i\{-}\(\-\i\{-1,}\)*\.\(hs\=\|s\)\>"
-syn match   virataStatement	"^\s*Undefine\>"
 syn match   virataStatement	"^\s*Make\.\I\i\{-}\(\-\i\{-1}\)*\>" skipwhite nextgroup=@virataGrpIdents
 syn match   virataStatement	"^\s*Make\.c\(at\)\=++\s"me=e-1 skipwhite nextgroup=@virataGrpIdents
-syn match   virataStatement	"^\s*\(Architecture\|Colour\|Reserved\)\>" skipwhite nextgroup=@virataGrpIdents
-syn match   virataStatement	"^\s*\(Hardware\|ModuleSource\|Path\)\>" skipwhite nextgroup=@virataGrpFileIdents
-syn match   virataStatement	"^\s*\(DefaultPri\(ority\)\=\|Hydrogen\)\>" skipwhite nextgroup=virataDecNumber,virataNumberError
-syn match   virataStatement	"^\s*\(Allow\s\+ModuleConfig\|NoInit\|PCI\|SysLink\)\>"
+syn match   virataStatement	"^\s*\(Architecture\|GetEnv\|Reserved\|\(Un\)\=Define\|Version\)\>" skipwhite nextgroup=@virataGrpIdents
+syn match   virataStatement	"^\s*\(Hardware\|ModuleSource\|\(Release\)\=Path\|Software\)\>" skipwhite nextgroup=@virataGrpFileIdents
+syn match   virataStatement	"^\s*\(DefaultPri\|Hydrogen\)\>" skipwhite nextgroup=virataDecNumber,virataNumberError
+syn match   virataStatement	"^\s*\(NoInit\|PCI\|SysLink\)\>"
+syn match   virataStatement	"^\s*Allow\s\+\(ModuleConfig\)\>"
+syn match   virataStatement	"^\s*NoWarn\s\+\(Export\|Parse\=able\|Relative]\)\>"
+syn match   virataStatement	"^\s*Debug\s\+O\(ff\|n\)\>"
 
 " Import (Package <exec>|Module <name> from <dir>)
 syn region  virataImportDef	transparent matchgroup=virataStatement start="^\s*Import\>" keepend end="$" contains=virataInImport,virataModuleDef,virataNumberError,virataStringError,@virataGrpDefSubsts
+syn match   virataInImport	contained "\<\(Module\|Package\|from\)\>" skipwhite nextgroup=@virataGrpFileIdents
 " Export (Header <header file>|SLibrary <obj file>)
 syn region  virataExportDef	transparent matchgroup=virataStatement start="^\s*Export\>" keepend end="$" contains=virataInExport,virataNumberError,virataStringError,@virataGrpDefSubsts
 syn match   virataInExport	contained "\<\(Header\|[SU]Library\)\>" skipwhite nextgroup=@virataGrpFileIdents
-" Process <name> Is <dir/exec>
+" Process <name> is <dir/exec>
 syn region  virataProcessDef	transparent matchgroup=virataStatement start="^\s*Process\>" keepend end="$" contains=virataInProcess,virataInExec,virataNumberError,virataStringError,@virataGrpDefSubsts,@virataGrpIdents
 syn match   virataInProcess	contained "\<is\>"
-" Instance <name> from <module>
+" Instance <name> of <module>
 syn region  virataInstanceDef	transparent matchgroup=virataStatement start="^\s*Instance\>" keepend end="$" contains=virataInInstance,virataNumberError,virataStringError,@virataGrpDefSubsts,@virataGrpIdents
 syn match   virataInInstance	contained "\<of\>"
 " Module <name> from <dir>
-syn region  virataModuleDef	transparent matchgroup=virataStatement start="^\s*\(Module\|Package\)\>" keepend end="$" contains=virataInModule,virataNumberError,virataStringError,@virataGrpDefSubsts
-syn match   virataInModule	contained "^\s*\(Module\|Package\)\>" skipwhite nextgroup=@virataGrpIdents
+syn region  virataModuleDef	transparent matchgroup=virataStatement start="^\s*\(Package\|Module\)\>" keepend end="$" contains=virataInModule,virataNumberError,virataStringError,@virataGrpDefSubsts
+syn match   virataInModule	contained "^\s*Package\>"hs=e-7 skipwhite nextgroup=@virataGrpIdents
+syn match   virataInModule	contained "^\s*Module\>"hs=e-6 skipwhite nextgroup=@virataGrpIdents
 syn match   virataInModule	contained "\<from\>" skipwhite nextgroup=@virataGrpFileIdents
+" Colour <name> from <dir>
+syn region  virataColourDef	transparent matchgroup=virataStatement start="^\s*Colour\>" keepend end="$" contains=virataInColour,virataNumberError,virataStringError,@virataGrpDefSubsts
+syn match   virataInColour	contained "^\s*Colour\>"hs=e-6 skipwhite nextgroup=@virataGrpIdents
+syn match   virataInColour	contained "\<from\>" skipwhite nextgroup=@virataGrpFileIdents
 " Link {<link cmds>}
 " Object {Executable [<ExecOptions>]}
 syn match   virataStatement	"^\s*\(Link\|Object\)"
@@ -104,10 +113,11 @@ syn match   virataStatement	"^\s*\(Append\|Copy\|Edit\)Rule\>"
 syn region  virataAlterDef	transparent matchgroup=virataStatement start="^\s*AlterRules\>" keepend end="$" contains=virataInAlter,@virataGrpDefSubsts
 syn match   virataInAlter	contained "\<in\>" skipwhite nextgroup=@virataGrpIdents
 " Clustering
-syn cluster virataGrpInStatmnts	contains=virataInImport,virataInExport,virataInExec,virataInProcess,virataInAlter,virataInInstance,virataInModule
-syn cluster virataGrpStatements	contains=@virataGrpInStatmnts,virataStatement,virataImportDef,virataExportDef,virataExecDef,virataProcessDef,virataAlterDef,virataInstanceDef,virataModuleDef
+syn cluster virataGrpInStatmnts	contains=virataInImport,virataInExport,virataInExec,virataInProcess,virataInAlter,virataInInstance,virataInModule,virataInColour
+syn cluster virataGrpStatements	contains=@virataGrpInStatmnts,virataStatement,virataImportDef,virataExportDef,virataExecDef,virataProcessDef,virataAlterDef,virataInstanceDef,virataModuleDef,virataColourDef
 
-" Cfg File Statements:
+
+" MkFlash.Cfg File Statements:
 syn region  virataCfgFileDef	transparent matchgroup=virataCfgStatement start="^\s*Dir\>" start="^\s*\a\{-}File\>" start="^\s*OutputFile\d\d\=\>" start="^\s*\a\w\{-}[NP]PFile\>" keepend end="$" contains=@virataGrpFileIdents
 syn region  virataCfgSizeDef	transparent matchgroup=virataCfgStatement start="^\s*\a\{-}Size\>" start="^\s*ConfigInfo\>" keepend end="$" contains=@virataGrpNumbers,@virataGrpDefSubsts,virataIdentError
 syn region  virataCfgNumberDef	transparent matchgroup=virataCfgStatement start="^\s*FlashchipNum\(b\(er\=\)\=\)\=\>" start="^\s*Granularity\>" keepend end="$" contains=@virataGrpNumbers,@virataGrpDefSubsts
@@ -121,11 +131,12 @@ syn cluster virataGrpCfgs	contains=virataCfgStatement,virataCfgFileDef,virataCfg
 
 " PreProcessor Instructions:
 "  Defines
-syn match   virataDefine	"^\s*\(Un\)\=Set\>"
-syn match   virataDefSubstError	"[^$]$"lc=1
-syn match   virataDefSubstError	"$\(\w\|{\(.\{-}}\)\=\)"
+syn match   virataDefine	"^\s*\(Un\)\=Set\>" skipwhite nextgroup=@virataGrpIdents
+syn match   virataInclude	"^\s*Include\>" skipwhite nextgroup=@virataGrpFileIdents
+syn match   virataDefSubstError	"[^$]\$"lc=1
+syn match   virataDefSubstError	"\$\(\w\|{\(.\{-}}\)\=\)"
 syn case match
-syn match   virataDefSubst	"$\(\d\|[DINORS]\|{\I\i\{-}\(\-\i\{-1,}\)*}\)"
+syn match   virataDefSubst	"\$\(\d\|[DINORS]\|{\I\i\{-}\(\-\i\{-1,}\)*}\)"
 syn case ignore
 "  Conditionals
 syn cluster virataGrpCntnPreCon	contains=ALLBUT,@virataGrpInComments,@virataGrpFileIdents,@virataGrpInStatmnts
@@ -133,9 +144,9 @@ syn region  virataPreConDef	transparent matchgroup=virataPreCondit start="^\s*If
 syn match   virataPreCondit	contained "^\s*Else\(\s\+If\)\=\>"
 syn region  virataPreConDef	transparent matchgroup=virataPreCondit start="^\s*ForEach\>" end="^\s*Done\>" contains=@virataGrpCntnPreCon
 "  Pre-Processors
-syn region  virataPreProc	start="^\s*Error\>" oneline end="$" contains=@virataGrpConstants,@virataGrpDefSubsts
+syn region  virataPreProc	start="^\s*Error\>" start="^\s*Warning\>" oneline end="$" contains=@virataGrpConstants,@virataGrpDefSubsts
 syn cluster virataGrpDefSubsts	contains=virataDefSubstError,virataDefSubst
-syn cluster virataGrpPreProcs	contains=@virataGrpDefSubsts,virataDefine,virataPreConDef,virataPreCondit
+syn cluster virataGrpPreProcs	contains=@virataGrpDefSubsts,virataDefine,virataInclude,virataPreConDef,virataPreCondit,virataPreProc
 
 
 " Synchronize Syntax:

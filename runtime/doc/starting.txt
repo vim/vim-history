@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.2a.  Last change: 2003 Apr 19
+*starting.txt*  For Vim version 6.2b.  Last change: 2003 Apr 26
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -275,6 +275,12 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 
 							*-l*
 -l		Lisp mode.  Sets the 'lisp' and 'showmatch' options on.
+
+							*-A*
+-A		Arabic mode.  Sets the 'arabic' option on.  (Only when
+		compiled with the |+arabic| features (which include
+		|+rightleft|), otherwise Vim gives an error message
+		and exits.  {not in Vi}
 
 							*-F*
 -F		Farsi mode.  Sets the 'fkmap' and 'rightleft' options on.

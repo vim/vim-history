@@ -522,6 +522,10 @@ gui_init()
 	resettitle();
 #endif
 	init_gui_options();
+#ifdef FEAT_ARABIC
+	/* Our GUI can't do bidi. */
+	p_tbidi = FALSE;
+#endif
 #ifdef FEAT_GUI_GTK
 	/* Give GTK+ a chance to put all widget's into place. */
 	gui_mch_update();
@@ -1125,11 +1129,7 @@ gui_get_base_width()
 {
     int	    base_width;
 
-#ifdef FEAT_FOOTER
-    base_width = 4 * gui.border_offset;
-#else
     base_width = 2 * gui.border_offset;
-#endif
     if (gui.which_scrollbars[SBAR_LEFT])
 	base_width += gui.scrollbar_width;
     if (gui.which_scrollbars[SBAR_RIGHT])

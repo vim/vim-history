@@ -213,7 +213,7 @@ serverRegisterName(dpy, name)
 	    if (res < -1 || i >= 1000)
 	    {
 		MSG_ATTR(_("Unable to register a command server name"),
-			 hl_attr(HLF_W));
+							      hl_attr(HLF_W));
 		return FAIL;
 	    }
 	    if (p == NULL)

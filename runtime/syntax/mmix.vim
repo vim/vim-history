@@ -6,7 +6,7 @@
 " URL: http://homepages.uni-tuebingen.de/student/dirk.huesken/vim/syntax/mmix.vim
 
 " Limitations:	Comments must start with either % or //
-" 		(preferrably %, Knuth-Style)
+"		(preferrably %, Knuth-Style)
 
 if version < 600
   syntax clear
@@ -129,7 +129,7 @@ if version >= 508 || !exists("did_mmix_syntax_inits")
   endif
 
   " The default methods for highlighting.  Can be overridden later
-  HiLink mmixAt 	Type
+  HiLink mmixAt		Type
   HiLink mmixPseudo	Type
   HiLink mmixRegister	Special
   HiLink mmixSegments	Type

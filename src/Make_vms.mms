@@ -2,7 +2,7 @@
 # Makefile for Vim on OpenVMS
 #
 # Maintainer:   Zoltan Arpadffy <arpadffy@polarfox.com>
-# Last change:  2003 Mar 07
+# Last change:  2003 Apr 25
 #
 # This has script been tested on VMS 6.2 to 7.3 on DEC Alpha and VAX
 # with MMS and MMK
@@ -179,7 +179,7 @@ PERL	 = perl
 PERL_DEF = ,"FEAT_PERL"
 PERL_SRC = if_perlsfio.c if_perl.xs
 PERL_OBJ = if_perlsfio.obj if_perl.obj
-PERL_LIB = ,OS_VMS_PERL.OPT/OPT 
+PERL_LIB = ,OS_VMS_PERL.OPT/OPT
 PERL_INC = ,dka0:[perlbuild.perl.lib.vms_axp.5_6_1.core]
 .ENDIF
 
@@ -261,8 +261,8 @@ ALL_CFLAGS = /def=($(MODEL_DEF)$(DEFS)$(VMS_DEF)$(DEBUG_DEF)$(PERL_DEF)$(PYTHON_
  /include=($(C_INC)$(GUI_INC_DIR)$(GUI_INC)$(PERL_INC)$(PYTHON_INC)$(TCL_INC))
 
 # CFLAGS displayed in :ver information
-# It is specially formated for correct display of unix like includes 
-# as $(GUI_INC) - replaced with $(GUI_INC_VER) 
+# It is specially formated for correct display of unix like includes
+# as $(GUI_INC) - replaced with $(GUI_INC_VER)
 # Otherwise should not be any other difference.
 ALL_CFLAGS_VER = /def=($(MODEL_DEF)$(DEFS)$(VMS_DEF)$(DEBUG_DEF)$(PERL_DEF)$(PYTHON_DEF) -
  $(TCL_DEF)$(SNIFF_DEF)$(RUBY_DEF)$(XIM_DEF)$(HANGULIN_DEF)$(TAG_DEF)) -
@@ -334,7 +334,7 @@ pathdef.c : check_ccver $(CONFIG_H)
 	-@ write pd "char_u *compiled_sys = (char_u *) "$(VIMHOST)";"
 	-@ close pd
 
-if_perl.c : if_perl.xs 
+if_perl.c : if_perl.xs
 	-@ $(PERL) PERL_ROOT:[LIB.ExtUtils]xsubpp -prototypes -typemap -
  PERL_ROOT:[LIB.ExtUtils]typemap if_perl.xs >> $@
 
@@ -385,7 +385,7 @@ gtk_env :
         -@ write opt_file "gtk_root:[gtk.gdk]libgdk.exe /share,-"
 	-@ write opt_file "gtk_root:[gtk.gtk]libgtk.exe /share,-"
 	-@ write opt_file "sys$share:decw$xmlibshr12.exe/share,-"
-        -@ write opt_file "sys$share:decw$xtlibshrr5.exe/share,-" 
+        -@ write opt_file "sys$share:decw$xtlibshrr5.exe/share,-"
         -@ write opt_file "sys$share:decw$xlibshr.exe/share"
         -@ close opt_file
 .ELSE

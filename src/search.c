@@ -101,6 +101,9 @@ static int	    saved_no_hlsearch = 0;
 #endif
 
 static char_u	    *mr_pattern = NULL;	/* pattern used by search_regcomp() */
+#ifdef FEAT_RIGHLEFT
+static int	    mr_pattern_alloced = FALSE; /* mr_pattern was allocated */
+#endif
 
 #ifdef FEAT_FIND_ID
 /*
@@ -171,7 +174,53 @@ search_regcomp(pat, pat_save, pat_use, options, regmatch)
 	add_to_history(HIST_SEARCH, pat, TRUE);
 #endif
 
-    mr_pattern = pat;
+#ifdef FEAT_RIGHLEFT
+    if (mr_pattern_alloced)
+    {
+	vim_free(mr_pattern);
+	mr_pattern_alloced = FALSE;
+    }
+
+    if (curwin->w_p_rl && *curwin->w_p_rlc == 's')
+    {
+	unsigned	cmd_len;
+	int		j, k;
+	int		out_len;
+	char_u		*rev_pattern;
+
+	/*
+	 * Reverse the pattern.
+	 */
+	cmd_len = (unsigned)STRLEN(pat);
+	rev_pattern = alloc(cmd_len + 1);
+	if (rev_pattern == NULL)    /* out of memory */
+	    mr_pattern = pat;
+	else
+	{
+	    k = cmd_len;
+	    for (j = 0; j < cmd_len; ++j)
+	    {
+# ifdef FEAT_MBYTE
+		if (has_mbyte)
+		{
+		    out_len = (*mb_ptr2len_check)(pat + j);
+		    k -= out_len;
+		    mch_memmove(rev_pattern + k, pat + j, out_len);
+		    j += out_len - 1;
+		}
+		else
+# endif
+		    rev_pattern[j] = pat[--k];
+
+	    }
+	    rev_pattern[cmd_len] = NUL;
+	    mr_pattern = rev_pattern;
+	    mr_pattern_alloced = TRUE;
+	}
+    }
+    else
+#endif
+	mr_pattern = pat;
 
     /*
      * Save the currently used pattern in the appropriate place,
@@ -779,9 +828,11 @@ searchit(win, buf, pos, dir, str, count, options, pat_use)
 	    if (p_ws)
 		EMSG2(_(e_patnotf2), mr_pattern);
 	    else if (lnum == 0)
-		EMSG2(_("E384: search hit TOP without match for: %s"), mr_pattern);
+		EMSG2(_("E384: search hit TOP without match for: %s"),
+								  mr_pattern);
 	    else
-		EMSG2(_("E385: search hit BOTTOM without match for: %s"), mr_pattern);
+		EMSG2(_("E385: search hit BOTTOM without match for: %s"),
+								  mr_pattern);
 	}
 	return FAIL;
     }
@@ -1032,10 +1083,31 @@ do_search(oap, dirc, str, count, options)
 		    vim_free(trunc);
 		}
 		else
+		{
+#ifdef FEAT_RIGHTLEFT
+		    /* the search pattern when found should be shown
+		     * on right in rightleft mode - ugly hack I know */
+		    cmdmsg_rl = (curwin->w_p_rl && *curwin->w_p_rlc == 's'
+				   && (msgbuf[0] == '/' || msgbuf[0] == '?'));
+		    if (cmdmsg_rl)
+			msg_start();
+#endif
 		    msg_outtrans(msgbuf);
+#ifdef FEAT_ARABIC
+		    if (cmdmsg_rl)
+			redraw_msg(msgbuf + 1, STRLEN(msgbuf) - 1);
+#endif
+		}
 		msg_clr_eos();
 		msg_check();
 		vim_free(msgbuf);
+#ifdef FEAT_RIGHTLEFT
+		if (cmdmsg_rl)
+		{
+		    cmdmsg_rl = FALSE;
+		    msg_start();
+		}
+#endif
 
 		gotocmdline(FALSE);
 		out_flush();

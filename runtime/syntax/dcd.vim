@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	WildPackets EtherPeek Decoder (.dcd) file
 " Maintainer:	Christopher Shinn <christopher@lucent.com>
-" Last Change:	2003 Mar 08
+" Last Change:	2003 Apr 25
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -15,7 +15,7 @@ endif
 syn keyword dcdFunction		DCod TRTS TNXT CRLF
 syn match   dcdFunction		display "\(STR\)\#"
 syn keyword dcdLabel		LABL
-syn region  dcdLabel		start="[A-Z]" end=";" 
+syn region  dcdLabel		start="[A-Z]" end=";"
 syn keyword dcdConditional	CEQU CNEQ CGTE CLTE CBIT CLSE
 syn keyword dcdConditional	LSTS LSTE LSTZ
 syn keyword dcdConditional	TYPE TTST TEQU TNEQ TGTE TLTE TBIT TLSE TSUB SKIP

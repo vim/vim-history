@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.2a.  Last change: 2003 Apr 21
+*version6.txt*  For Vim version 6.2b.  Last change: 2003 Apr 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -5983,6 +5983,13 @@ Changed							*changed-6.2*
 
 Removed the scheme indent file, the internal Lisp indenting works well now.
 
+Moved the GvimEXt, OleVim and VisVim directories into the "src" directory.
+This is more consistent with how xxd is handled.
+
+The VisVim.dll file is installed in the top directory, next to gvimext.dll,
+instead of in a subdirectory "VisVim".  Fixes that NSIS was uninstalling it
+from the wrong directory.
+
 
 Added							*added-6.2*
 -----
@@ -6055,10 +6062,18 @@ New compiler plugins:
 
 New menu translations:
 	Brazillian (José de Paula)
-	Britisch (Mike Williams)
+	British (Mike Williams)
+	Korean in UTF-8. (Nam SungHyun)
 
 New color scheme:
 	desert (Hans Fugal)
+
+Arabic specific features. 'arabicshape', 'termbidi', 'arabic' and
+'righleftcmd' options.  (Nadim Shaikli & Isam Bayazidi)
+
+Support for neXtaw GUI toolkit.  Mostly like Athena. (Alexey Froloff)
+
+Win32: cscope support. (Khorev Sergey)
 
 VMS: various improvements to documentation and makefiles.  (Zoltan Arpadffy)
 
@@ -6081,6 +6096,9 @@ Adds the 'toolbariconsize' option.
 Add -Dalloca when running lint to work around a problem with alloca()
 prototype.
 
+When selecting an item in the error window to jump to, take some effort to
+find an ordinary window to show the file in (not a preview window).
+
 
 Fixed							*fixed-6.2*
 -----
@@ -6102,6 +6120,39 @@ When 'virtualedit' is set can't move to halfway an unprintable character.
 Cripples CTRL-V selection. (Taro Muraoka)
 Allow moving to halfway an unprintable character.  Don't let getvvcol() change
 the pos->coladd argument.
+
+When a tab wraps to the next line, 'listchars' is set and 'foldcolumn' is
+non-zero, only one character of the foldcolumn is highlighted. (Muraoka Taro)
+
+When using ":catch" without an argument Vim crashes. (Yasuhiro Matsumoto)
+When no argument given use the ".*" pattern.
+
+Win32: When gvim.exe is started from a shortcut with the window style property
+set to maximize Vim doesn't start with a maximized window. (Yasuhiro
+Matsumoto)  Open the window with the default size and don't call ShowWindow()
+again when it's already visible. (Helmut Stiegler)
+
+gui_gtk.c used MAX, but it's undefined to avoid a conflict with system header
+files.
+
+Win32: When closing a window from a mapping some pixels remain on the
+statusline. (Yasuhiro Matsumoto)
+
+A column number in an errorformat that goes beyond the end of the line may
+cause a crash.
+
+":throw 'test'" crashes Vim. (Yasuhiro Matsumoto)
+
+The file selector's scrollbar colors are not set after doing a ":hi Scrollbar
+guifg=color".  And the file selector's colors are not changed by the
+colorscheme command.  (David Harrison)
+
+Motif: When compiling with FEAT_FOOTER defined, the text area gets a few
+pixels extra space on the right.  Remove the special case in
+gui_get_base_width(). (David Harrison)
+
+Using CTRL-R CTRL-P in Insert mode puts the '] mark in the wrong position.
+(Helmut Stiegler)
 
 
 Patch 6.1.001
@@ -7499,7 +7550,7 @@ Files:	    src/fileio.c, src/mbyte.c, src/vim.h
 Patch 6.1.217
 Problem:    When sourcing the same Vim script using a different name (symbolic
 	    link or MS-Windows 8.3 name) it is listed twice with
-	    ":scriptnames".  (Tony Mechelynck) 
+	    ":scriptnames".  (Tony Mechelynck)
 Solution:   Turn the script name into a full path before using it.  On Unix
 	    compare inode/device numbers.
 Files:	    src/ex_cmds2.c
@@ -8462,7 +8513,7 @@ Solution:   Check tgetflag() for returning a positive value.  Add an autoconf
 Files:	    src/auto/configure, src/config.h.in, src/configure.in, src/term.c
 
 Patch 6.1.363
-Problem:    byte2line() can return one more than the number of lines. 
+Problem:    byte2line() can return one more than the number of lines.
 Solution:   Return -1 if the offset is one byte past the end.
 Files:	    src/memline.c
 

@@ -2,10 +2,10 @@
 " Language:		Ruby
 " Maintainer:		Doug Kearns
 " Previous Maintainer:	Mirko Nasato
-" Last Change:		2002 July 29
+" Last Change:		2003 Apr 25
 " Location:		http://mugca.its.monash.edu.au/~djkea2/vim/syntax/ruby.vim
 
-" $Id$ 
+" $Id$
 
 " Thanks to perl.vim authors, and to Reimer Behrends. :-) (MN)
 

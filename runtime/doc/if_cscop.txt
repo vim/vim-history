@@ -1,4 +1,4 @@
-*if_cscop.txt*  For Vim version 6.2a.  Last change: 2003 Jan 16
+*if_cscop.txt*  For Vim version 6.2b.  Last change: 2003 Apr 25
 
 
 		  VIM REFERENCE MANUAL    by Andy Kahn
@@ -313,13 +313,12 @@ Cscope support for Vim is only available on systems that support these four
 system calls: fork(), pipe(), execl(), waitpid().  This means it is mostly
 limited to Unix systems.
 
-Libraries are available for Win95 (win32) which translate a lot of Unix
-system calls to the Win32 API.  You can try the GNU-Win32 Project from Cygnus
-(http://www.cygnus.com/misc/gnu-win32) or the DJGPP suite of tools
-(http://www.delorie.com/djgpp/).  I do not know the status of using these with
-Vim, so they may or may not work.
+Additionally Cscope support works for Win32.  For more information and a
+cscope version for Win32 see:
 
-Additionally, there are a couple of hard-coded limitations:
+	http://iamphet.nm.ru/cscope/index.html
+	
+There are a couple of hard-coded limitations:
 
     1. The maximum number of cscope connections allowed is 8.  Do you
     really need more?
@@ -392,6 +391,9 @@ SGI developers can also get it.  Currently a tardist file can be found at:
 	ftp://ftp.openage.com/pub/Sgi/Binaries/Cscope-13_3_tardist.gz
 	https://toolbox.sgi.com/toolbox/utilities/cscope/
 The second one is for those who have a password for the SGI toolbox.
+
+							*cscope-win32*
+For a cscope version for Win32 see: http://iamphet.nm.ru/cscope/index.html
 
 There is source to an older version of a cscope clone (called "cs") available
 on the net.  Due to various reasons, this is not supported with Vim.

@@ -3456,14 +3456,13 @@ do_put(regname, dir, count, flags)
 		    i = 1;
 		}
 
-		while (i < y_size)
+		for (; i < y_size; ++i)
 		{
 		    if ((y_type != MCHAR || i < y_size - 1)
 			    && ml_append(lnum, y_array[i], (colnr_T)0, FALSE)
 								      == FAIL)
 			    goto error;
 		    lnum++;
-		    i++;
 		    ++nr_lines;
 		    if (flags & PUT_FIXINDENT)
 		    {

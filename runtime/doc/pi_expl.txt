@@ -1,4 +1,4 @@
-*pi_expl.txt*   For Vim version 6.2a.  Last change: 2002 Nov 08
+*pi_expl.txt*   For Vim version 6.2b.  Last change: 2002 Nov 08
 
 
 		  VIM REFERENCE MANUAL    by M A Aziz Ahmed

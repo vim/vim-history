@@ -2,7 +2,7 @@
 " Language:     LaTeX (ft=tex)
 " Maintainer:   Benji Fisher, Ph.D. <benji@member.AMS.org>
 " Version:	1.0
-" Last Change:  2002 April 4
+" Last Change:  2003 Apr 25
 "  URL:		http://www.vim.org/script.php?script_id=411
 
 " Only do this when not done yet for this buffer
@@ -79,9 +79,9 @@ setlocal cms=%%s
 " Recognize plain TeX \def as well as LaTeX \newcommand and \renewcommand .
 " I may as well add the AMS-LaTeX DeclareMathOperator as well.
 let &l:define='\([egx]\|char\|mathchar\|count\|dimen\|muskip\|skip\|toks\)\='
-	\ . 	'\\def\|\\font\|\(future\)\=let'
+	\ .	'\\def\|\\font\|\(future\)\=let'
 	\ . '\new\(count\|dimen\|skip\|muskip\|box\|toks\|read\|write'
-	\ . 	'\|fam\|insert\)'
+	\ .	'\|fam\|insert\)'
 	\ . '\|\\\(re\)\=new\(boolean\|command\|counter\|environment\|font'
 	\ . '\|if\|length\|savebox\|theorem\(style\)\=\)\s*\*\=\s*{\='
 	\ . '\|DeclareMathOperator\s*{\=\s*'

@@ -3900,11 +3900,11 @@ win_line(wp, lnum, startrow, endrow)
 	    ++vcol;
 
 	/* restore attributes after "predeces" in 'listchars' */
-	if (n_attr3 && --n_attr3 == 0)
+	if (draw_state > WL_NR && n_attr3 > 0 && --n_attr3 == 0)
 	    char_attr = saved_attr3;
 
 	/* restore attributes after last 'listchars' or 'number' char */
-	if (n_attr && --n_attr == 0)
+	if (n_attr > 0 && draw_state == WL_LINE && --n_attr == 0)
 	    char_attr = saved_attr2;
 
 	/*
@@ -4291,6 +4291,31 @@ screen_line(row, coloff, endcol, clear_width
 		{
 		    ScreenLinesC1[off_to] = ScreenLinesC1[off_from];
 		    ScreenLinesC2[off_to] = ScreenLinesC2[off_from];
+#ifdef FEAT_ARABIC
+		    /* Do this only in non-bidi supported windows */
+		    if (p_arshape && !p_tbidi && col + 1 != endcol)
+		    {
+			/* PROBLEM: need next char to make shaping decisions.
+			 * IDEAL fix - the screenlines should be completely
+			 *	       updated before a call to display is made
+			 *	*OR*
+			 *	the loop should be made from
+			 *	right-to-left in rightleft mode; the
+			 *	current variables redraw_this and
+			 *	redraw_next simply aren't correct in
+			 *	rightleft mode
+			 */
+			ScreenLines[off_to+1] = ScreenLines[off_from+1];
+			ScreenAttrs[off_to+1] = ScreenAttrs[off_from+1];
+			ScreenLinesUC[off_to+1] = ScreenLinesUC[off_from+1];
+			ScreenLinesC1[off_to+1] = ScreenLinesC1[off_from+1];
+			ScreenLinesC2[off_to+1] = ScreenLinesC2[off_from+1];
+
+			/* Now we don't know if the next character is to be
+			 * redrawn or not, redraw it always. */
+			redraw_next = TRUE;
+		    }
+#endif
 		}
 	    }
 	    if (char_cells == 2)
@@ -5860,7 +5885,12 @@ screen_char(off, row, col)
 
     /* Outputting the last character on the screen may scrollup the screen.
      * Don't to it!  Mark the character invalid (update it when scrolled up) */
-    if (row == screen_Rows - 1 && col == screen_Columns - 1)
+    if (row == screen_Rows - 1 && col == screen_Columns - 1
+#ifdef FEAT_RIGHTLEFT
+	    /* account for first command-line character in rightleft mode */
+	    && !cmdmsg_rl
+#endif
+       )
     {
 	ScreenAttrs[off] = (sattr_T)-1;
 	return;
@@ -5889,7 +5919,32 @@ screen_char(off, row, col)
 	char_u	    buf[MB_MAXBYTES + 1];
 
 	/* Convert UTF-8 character to bytes and write it. */
+
 	buf[utfc_char2bytes(off, buf)] = NUL;
+
+# ifdef FEAT_ARABIC
+	/* Do this only in non-bidi supported windows */
+	if (p_arshape && !p_tbidi)
+	{
+	    int c, oldc, oldc1, clen;
+
+	    /* intercept character and shape it (only if its Arabic) */
+	    oldc = ScreenLinesUC[off];
+	    oldc1 = ScreenLinesC1[off];
+	    c = arabic_shape(off, oldc);
+	    if (c != oldc || ScreenLinesC1[off] != oldc1)
+	    {
+		/* Turn the shaped character to bytes. */
+		clen = (*mb_char2bytes)(c, buf);
+
+		/* Account for any Tanween/Harakat */
+		if (ScreenLinesC1[off] != 0)
+		    clen += (*mb_char2bytes)(ScreenLinesC1[off], buf + clen);
+
+		buf[clen] = NUL;
+	    }
+	}
+# endif
 	out_str(buf);
 	if (utf_char2cells(ScreenLinesUC[off]) > 1)
 	    ++screen_cur_col;
@@ -7811,7 +7866,14 @@ showmode()
 #endif
 #ifdef FEAT_KEYMAP
 		if (State & LANGMAP)
-		    MSG_PUTS_ATTR(_(" (lang)"), attr);
+		{
+# ifdef FEAT_ARABIC
+		    if (curwin->w_p_arab)
+			MSG_PUTS_ATTR(_(" Arabic"), attr);
+		    else
+# endif
+			MSG_PUTS_ATTR(_(" (lang)"), attr);
+		}
 #endif
 		if ((State & INSERT) && p_paste)
 		    MSG_PUTS_ATTR(_(" (paste)"), attr);

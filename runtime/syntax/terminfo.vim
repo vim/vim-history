@@ -106,7 +106,7 @@ if version >= 508 || !exists("did_terminfo_syn_inits")
     HiLink terminfoComment	Comment
     HiLink terminfoTodo		Todo
     HiLink terminfoNumbers	Number
-    HiLink terminfoSpecialChar	SpecialChar	
+    HiLink terminfoSpecialChar	SpecialChar
     HiLink terminfoDelay	Special
     HiLink terminfoBooleans	Type
     HiLink terminfoNumerics	Type

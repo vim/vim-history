@@ -304,13 +304,28 @@
 
 /*
  * +farsi		Farsi (Persian language) Keymap support.
- *			Needs FEAT_RIGHTLEFT.
+ *			Requires FEAT_RIGHTLEFT.
  */
 #ifdef FEAT_BIG
-# ifndef FEAT_RIGHTLEFT
-#  define FEAT_RIGHTLEFT
-# endif
 # define FEAT_FKMAP
+#endif
+#ifdef FEAT_FKMAP
+# ifndef FEAT_RIGHTLEFT
+#   define FEAT_RIGHTLEFT
+# endif
+#endif
+
+/*
+ * +arabic		Arabic keymap and shaping support.
+ *			Requires FEAT_RIGHTLEFT.
+ */
+#ifdef FEAT_BIG
+# define FEAT_ARABIC
+#endif
+#ifdef FEAT_ARABIC
+# ifndef FEAT_RIGHTLEFT
+#   define FEAT_RIGHTLEFT
+# endif
 #endif
 
 /*

@@ -1,6 +1,6 @@
-" Interactive Data Language syntax file (IDL, too  [:-)] 
+" Interactive Data Language syntax file (IDL, too  [:-)]
 " Maintainer: Aleksandar Jelenak <ajelenak AT yahoo.com>
-" Last change: 2003-02-04
+" Last change: 2003 Apr 25
 " Created by: Hermann Rochholz <Hermann.Rochholz AT gmx.de>
 
 " Remove any old syntax stuff hanging around

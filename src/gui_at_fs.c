@@ -52,15 +52,23 @@
 # undef FMT8BIT
 #endif
 
-#include "gui_at_sb.h"
+#ifndef FEAT_GUI_NEXTAW
+# include "gui_at_sb.h"
+#endif
 
 /***************** SFinternal.h */
 
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
 #include <X11/Xos.h>
-#include <X11/Xaw/Text.h>
-#include <X11/Xaw/AsciiText.h>
+#ifdef FEAT_GUI_NEXTAW
+# include <X11/neXtaw/Text.h>
+# include <X11/neXtaw/AsciiText.h>
+# include <X11/neXtaw/Scrollbar.h>
+#else
+# include <X11/Xaw/Text.h>
+# include <X11/Xaw/AsciiText.h>
+#endif
 
 #define SEL_FILE_CANCEL		-1
 #define SEL_FILE_OK		0
@@ -103,6 +111,7 @@ static Widget	selFile,
 		selFileHScrolls[3],
 		selFileLists[3],
 		selFileOK,
+		selFileCancel,
 		selFilePrompt,
 		selFileVScrolls[3];
 
@@ -192,6 +201,7 @@ static Boolean SFworkProc __ARGS((void));
 static int SFcompareEntries __ARGS((const void *p, const void *q));
 static void SFprepareToReturn __ARGS((void));
 static void SFcreateWidgets __ARGS((Widget toplevel, char *prompt, char *ok, char *cancel));
+static void SFsetColors __ARGS((guicolor_T bg, guicolor_T fg, guicolor_T scroll_bg, guicolor_T scrollfg));
 
 /***************** xstat.h */
 
@@ -763,11 +773,18 @@ SFupdatePath()
 
     if ((SFdirPtr != SFdirPtrSave) || (SFdirEnd != SFdirEndSave))
     {
+#ifdef FEAT_GUI_NEXTAW
+	XawScrollbarSetThumb( selFileHScroll,
+		(float) (((double) SFdirPtr) / SFdirEnd),
+		(float) (((double) ((SFdirEnd < 3) ? SFdirEnd : 3)) /
+			 SFdirEnd));
+#else
 	vim_XawScrollbarSetThumb( selFileHScroll,
 		(float) (((double) SFdirPtr) / SFdirEnd),
 		(float) (((double) ((SFdirEnd < 3) ? SFdirEnd : 3)) /
 			 SFdirEnd),
 		(double)SFdirEnd);
+#endif
     }
 
     if (SFdirPtr != SFdirPtrSave)
@@ -1038,7 +1055,11 @@ SFstatChar(statBuf)
 
 /***************** Draw.c */
 
-#include <X11/Xaw/Cardinals.h>
+#ifdef FEAT_GUI_NEXTAW
+# include <X11/neXtaw/Cardinals.h>
+#else
+# include <X11/Xaw/Cardinals.h>
+#endif
 
 #ifdef FEAT_XFONTSET
 # define SF_DEFAULT_FONT "-misc-fixed-medium-r-normal--14-*"
@@ -1209,6 +1230,15 @@ SFclearList(n, doScroll)
 
 	if ((SFdirPtr + n < SFdirEnd) && dir->nEntries && dir->nChars)
 	{
+#ifdef FEAT_GUI_NEXTAW
+	    XawScrollbarSetThumb(
+		    selFileVScrolls[n],
+		    (float) (((double) dir->vOrigin) /
+			     dir->nEntries),
+		    (float) (((double) ((dir->nEntries < SFlistSize)
+					? dir->nEntries : SFlistSize)) /
+			     dir->nEntries));
+#else
 	    vim_XawScrollbarSetThumb(
 		    selFileVScrolls[n],
 		    (float) (((double) dir->vOrigin) /
@@ -1217,7 +1247,16 @@ SFclearList(n, doScroll)
 					? dir->nEntries : SFlistSize)) /
 			     dir->nEntries),
 		    (double)dir->nEntries);
+#endif
 
+#ifdef FEAT_GUI_NEXTAW
+	    XawScrollbarSetThumb(
+		    selFileHScrolls[n],
+		    (float) (((double) dir->hOrigin) / dir->nChars),
+		    (float) (((double) ((dir->nChars <
+					 SFcharsPerEntry) ? dir->nChars :
+					SFcharsPerEntry)) / dir->nChars));
+#else
 	    vim_XawScrollbarSetThumb(
 		    selFileHScrolls[n],
 		    (float) (((double) dir->hOrigin) / dir->nChars),
@@ -1225,13 +1264,24 @@ SFclearList(n, doScroll)
 					 SFcharsPerEntry) ? dir->nChars :
 					SFcharsPerEntry)) / dir->nChars),
 		    (double)dir->nChars);
+#endif
 	}
 	else
 	{
+#ifdef FEAT_GUI_NEXTAW
+	    XawScrollbarSetThumb(selFileVScrolls[n], (float) 0.0,
+		    (float) 1.0);
+#else
 	    vim_XawScrollbarSetThumb(selFileVScrolls[n], (float) 0.0,
 		    (float) 1.0, 1.0);
+#endif
+#ifdef FEAT_GUI_NEXTAW
+	    XawScrollbarSetThumb(selFileHScrolls[n], (float) 0.0,
+		    (float) 1.0);
+#else
 	    vim_XawScrollbarSetThumb(selFileHScrolls[n], (float) 0.0,
 		    (float) 1.0, 1.0);
+#endif
 	}
     }
 }
@@ -1274,12 +1324,20 @@ SFdeleteEntry(dir, entry)
     if ((n < 0) || (n > 2))
 	return;
 
+#ifdef FEAT_GUI_NEXTAW
+    XawScrollbarSetThumb(
+	    selFileVScrolls[n],
+	    (float) (((double) dir->vOrigin) / dir->nEntries),
+	    (float) (((double) ((dir->nEntries < SFlistSize) ?
+				dir->nEntries : SFlistSize)) / dir->nEntries));
+#else
     vim_XawScrollbarSetThumb(
 	    selFileVScrolls[n],
 	    (float) (((double) dir->vOrigin) / dir->nEntries),
 	    (float) (((double) ((dir->nEntries < SFlistSize) ?
 				dir->nEntries : SFlistSize)) / dir->nEntries),
 	    (double)dir->nEntries);
+#endif
 }
 
 static void SFwriteStatChar __ARGS((char *name, int last, struct stat *statBuf));
@@ -1568,12 +1626,20 @@ SFscrollTimer(p, id)
     {
 	if (dir->nEntries)
 	{
+#ifdef FEAT_GUI_NEXTAW
+	    XawScrollbarSetThumb(
+		    selFileVScrolls[n],
+		    (float) (((double) dir->vOrigin) / dir->nEntries),
+		    (float) (((double) ((dir->nEntries < SFlistSize) ?
+				dir->nEntries : SFlistSize)) / dir->nEntries));
+#else
 	    vim_XawScrollbarSetThumb(
 		    selFileVScrolls[n],
 		    (float) (((double) dir->vOrigin) / dir->nEntries),
 		    (float) (((double) ((dir->nEntries < SFlistSize) ?
 				dir->nEntries : SFlistSize)) / dir->nEntries),
 		    (double)dir->nEntries);
+#endif
 	}
     }
 
@@ -1799,6 +1865,22 @@ SFvAreaSelectedCallback(w, n, pnew)
 
     dir = &(SFdirs[SFdirPtr + (int)(long)n]);
 
+#ifdef FEAT_GUI_NEXTAW
+    if ((int)(long)pnew < 0)
+    {
+	if ((int)(long)pnew > -SFvScrollHeight)
+	    (int)(long)pnew = -1;
+	else
+	    (int)(long)pnew = -SFlistSize;
+    }
+    else if ((int)(long)pnew > 0)
+    {
+	if ((int)(long)pnew < SFvScrollHeight)
+	    (int)(long)pnew = 1;
+	else
+	    (int)(long)pnew = SFlistSize;
+    }
+#endif
     nw = dir->vOrigin + (int)(long)pnew;
 
     if (nw > dir->nEntries - SFlistSize)
@@ -1813,12 +1895,20 @@ SFvAreaSelectedCallback(w, n, pnew)
 
 	f = ((double) nw) / dir->nEntries;
 
+#ifdef FEAT_GUI_NEXTAW
+	XawScrollbarSetThumb(
+		w,
+		f,
+		(float) (((double) ((dir->nEntries < SFlistSize) ?
+				dir->nEntries : SFlistSize)) / dir->nEntries));
+#else
 	vim_XawScrollbarSetThumb(
 		w,
 		f,
 		(float) (((double) ((dir->nEntries < SFlistSize) ?
 				dir->nEntries : SFlistSize)) / dir->nEntries),
 		(double)dir->nEntries);
+#endif
     }
 
     SFvSliderMovedCallback(w, (int)(long)n, nw);
@@ -1855,6 +1945,22 @@ SFhAreaSelectedCallback(w, n, pnew)
 
     dir = &(SFdirs[SFdirPtr + (int)(long)n]);
 
+#ifdef FEAT_GUI_NEXTAW
+    if ((int)(long)pnew < 0)
+    {
+	if ((int)(long)pnew > -SFhScrollWidth)
+	    (int)(long)pnew = -1;
+	else
+	    (int)(long)pnew = -SFcharsPerEntry;
+    }
+    else if ((int)(long)pnew > 0)
+    {
+	if ((int)(long)pnew < SFhScrollWidth)
+	    (int)(long)pnew = 1;
+	else
+	    (int)(long)pnew = SFcharsPerEntry;
+    }
+#endif
     nw = dir->hOrigin + (int)(long)pnew;
 
     if (nw > dir->nChars - SFcharsPerEntry)
@@ -1869,12 +1975,20 @@ SFhAreaSelectedCallback(w, n, pnew)
 
 	f = ((double) nw) / dir->nChars;
 
+#ifdef FEAT_GUI_NEXTAW
+	XawScrollbarSetThumb(
+		w,
+		f,
+		(float) (((double) ((dir->nChars < SFcharsPerEntry) ?
+			       dir->nChars : SFcharsPerEntry)) / dir->nChars));
+#else
 	vim_XawScrollbarSetThumb(
 		w,
 		f,
 		(float) (((double) ((dir->nChars < SFcharsPerEntry) ?
 			       dir->nChars : SFcharsPerEntry)) / dir->nChars),
 		(double)dir->nChars);
+#endif
 
 	SFhSliderMovedCallback(w, n, (XtPointer)&f);
     }
@@ -1927,6 +2041,22 @@ SFpathAreaSelectedCallback(w, client_data, pnew)
     int		nw;
     float	f;
 
+#ifdef FEAT_GUI_NEXTAW
+    if ((int)(long)pnew < 0)
+    {
+	if ((int)(long)pnew > -SFpathScrollWidth)
+	    (int)(long)pnew = -1;
+	else
+	    (int)(long)pnew = -3;
+    }
+    else if ((int)(long)pnew > 0)
+    {
+	if ((int)(long)pnew < SFpathScrollWidth)
+	    (int)(long)pnew = 1;
+	else
+	    (int)(long)pnew = 3;
+    }
+#endif
     nw = SFdirPtr + (int)(long)pnew;
 
     if (nw > SFdirEnd - 3)
@@ -1937,11 +2067,18 @@ SFpathAreaSelectedCallback(w, client_data, pnew)
 
     f = ((double) nw) / SFdirEnd;
 
+#ifdef FEAT_GUI_NEXTAW
+    XawScrollbarSetThumb(
+	    w,
+	    f,
+	    (float) (((double) ((SFdirEnd < 3) ? SFdirEnd : 3)) / SFdirEnd));
+#else
     vim_XawScrollbarSetThumb(
 	    w,
 	    f,
 	    (float) (((double) ((SFdirEnd < 3) ? SFdirEnd : 3)) / SFdirEnd),
 	    (double)SFdirEnd);
+#endif
 
     SFpathSliderMovedCallback(w, (XtPointer) NULL, (XtPointer)&f);
 }
@@ -2052,9 +2189,15 @@ SFgetDir(dir)
 #include <X11/cursorfont.h>
 #include <X11/Composite.h>
 #include <X11/Shell.h>
+#ifdef FEAT_GUI_NEXTAW
+# include <X11/neXtaw/Form.h>
+# include <X11/neXtaw/Command.h>
+# include <X11/neXtaw/Label.h>
+#else
 #include <X11/Xaw/Form.h>
 #include <X11/Xaw/Command.h>
 #include <X11/Xaw/Label.h>
+#endif
 
 static char *oneLineTextEditTranslations = "\
 	<Key>Return:	redraw-display()\n\
@@ -2155,6 +2298,89 @@ static XtActionsRec actions[] =
 {
     {"SelFileDismiss",	SFdismissAction},
 };
+
+    static void
+SFsetColors(bg, fg, scroll_bg, scroll_fg)
+    guicolor_T	bg;
+    guicolor_T	fg;
+    guicolor_T	scroll_bg;
+    guicolor_T	scroll_fg;
+{
+    if (selFileForm)
+    {
+	XtVaSetValues(selFileForm, XtNbackground,  bg,
+				   XtNforeground,  fg,
+				   XtNborderColor, bg,
+				   NULL);
+    }
+    {
+	int i;
+
+	for (i = 0; i < 3; ++i)
+	{
+	    if (selFileLists[i])
+	    {
+		XtVaSetValues(selFileLists[i], XtNbackground,  bg,
+ 					       XtNforeground,  fg,
+ 					       XtNborderColor, fg,
+ 					       NULL);
+	
+	    }
+	}
+    }
+    if (selFileOK)
+    {
+	XtVaSetValues(selFileOK, XtNbackground,  bg,
+				 XtNforeground,  fg,
+				 XtNborderColor, fg,
+				 NULL);
+    }
+    if (selFileCancel)
+    {
+	XtVaSetValues(selFileCancel, XtNbackground, bg,
+				     XtNforeground, fg,
+				     XtNborderColor, fg,
+				     NULL);
+    }
+    if (selFilePrompt)
+    {
+	XtVaSetValues(selFilePrompt, XtNbackground, bg,
+				     XtNforeground, fg,
+				     NULL);
+    }
+    if (gui.dpy)
+    {
+	XSetBackground(gui.dpy, SFtextGC, bg);
+	XSetForeground(gui.dpy, SFtextGC, fg);
+	XSetForeground(gui.dpy, SFlineGC, fg);
+
+	/* This is an xor GC, so combine the fg and background */
+	XSetBackground(gui.dpy, SFinvertGC, fg ^ bg);
+	XSetForeground(gui.dpy, SFinvertGC, fg ^ bg);
+    }
+    if (selFileHScroll)
+    {
+	XtVaSetValues(selFileHScroll, XtNbackground, scroll_bg,
+				      XtNforeground, scroll_fg,
+				      XtNborderColor, fg,
+				      NULL);
+    }
+    {
+	int i;
+
+	for (i = 0; i < 3; i++)
+	{
+	    XtVaSetValues(selFileVScrolls[i], XtNbackground, scroll_bg,
+					      XtNforeground, scroll_fg,
+					      XtNborderColor, fg,
+					      NULL);
+	    XtVaSetValues(selFileHScrolls[i], XtNbackground, scroll_bg,
+					      XtNforeground, scroll_fg,
+					      XtNborderColor, fg,
+					      NULL);
+	}
+    }
+}
 
     static void
 SFcreateWidgets(toplevel, prompt, ok, cancel)
@@ -2282,7 +2508,11 @@ SFcreateWidgets(toplevel, prompt, ok, cancel)
     XtSetKeyboardFocus(selFileForm, selFileField);
 
     selFileHScroll = XtVaCreateManagedWidget("selFileHScroll",
+#ifdef FEAT_GUI_NEXTAW
+		scrollbarWidgetClass, selFileForm,
+#else
 		vim_scrollbarWidgetClass, selFileForm,
+#endif
 		XtNorientation, XtorientHorizontal,
 		XtNwidth, SFpathScrollWidth,
 		XtNheight, scrollThickness,
@@ -2295,7 +2525,9 @@ SFcreateWidgets(toplevel, prompt, ok, cancel)
 		XtNright, XtChainLeft,
 		XtNforeground, gui.scroll_fg_pixel,
 		XtNbackground, gui.scroll_bg_pixel,
+#ifndef FEAT_GUI_NEXTAW
 		XtNlimitThumb, 1,
+#endif
 		NULL);
 
     XtAddCallback(selFileHScroll, XtNjumpProc,
@@ -2355,7 +2587,11 @@ SFcreateWidgets(toplevel, prompt, ok, cancel)
     for (n = 0; n < 3; n++)
     {
 	selFileVScrolls[n] = XtVaCreateManagedWidget("selFileVScroll",
+#ifdef FEAT_GUI_NEXTAW
+		    scrollbarWidgetClass, selFileLists[n],
+#else
 		    vim_scrollbarWidgetClass, selFileLists[n],
+#endif
 		    XtNx, vScrollX,
 		    XtNy, vScrollY,
 		    XtNwidth, scrollThickness,
@@ -2363,7 +2599,9 @@ SFcreateWidgets(toplevel, prompt, ok, cancel)
 		    XtNborderColor, SFfore,
 		    XtNforeground, gui.scroll_fg_pixel,
 		    XtNbackground, gui.scroll_bg_pixel,
+#ifndef FEAT_GUI_NEXTAW
 		    XtNlimitThumb, 1,
+#endif
 		    NULL);
 
 	XtAddCallback(selFileVScrolls[n], XtNjumpProc,
@@ -2372,7 +2610,11 @@ SFcreateWidgets(toplevel, prompt, ok, cancel)
 		(XtCallbackProc)SFvAreaSelectedCallback, (XtPointer)n);
 
 	selFileHScrolls[n] = XtVaCreateManagedWidget("selFileHScroll",
+#ifdef FEAT_GUI_NEXTAW
+		    scrollbarWidgetClass, selFileLists[n],
+#else
 		    vim_scrollbarWidgetClass, selFileLists[n],
+#endif
 		    XtNorientation, XtorientHorizontal,
 		    XtNx, hScrollX,
 		    XtNy, hScrollY,
@@ -2381,7 +2623,9 @@ SFcreateWidgets(toplevel, prompt, ok, cancel)
 		    XtNborderColor, SFfore,
 		    XtNforeground, gui.scroll_fg_pixel,
 		    XtNbackground, gui.scroll_bg_pixel,
+#ifndef FEAT_GUI_NEXTAW
 		    XtNlimitThumb, 1,
+#endif
 		    NULL);
 
 	XtAddCallback(selFileHScrolls[n], XtNjumpProc,
@@ -2407,7 +2651,7 @@ SFcreateWidgets(toplevel, prompt, ok, cancel)
 		XtNright, XtChainLeft,
 		NULL);
 
-    (void)XtVaCreateManagedWidget("selFileCancel",
+    selFileCancel = XtVaCreateManagedWidget("selFileCancel",
 		commandWidgetClass, selFileForm,
 		XtNlabel, cancel,
 		XtNresizable, True,
@@ -2541,13 +2785,14 @@ SFprepareToReturn()
 }
 
     char *
-vim_SelFile(toplevel, prompt, init_path, show_entry, x, y, fg, bg)
+vim_SelFile(toplevel, prompt, init_path, show_entry, x, y, fg, bg, scroll_fg, scroll_bg)
     Widget	toplevel;
     char	*prompt;
     char	*init_path;
     int		(*show_entry)();
     int		x, y;
     guicolor_T	fg, bg;
+    guicolor_T	scroll_fg, scroll_bg; /* The "Scrollbar" group colors */
 {
     static int	firstTime = 1;
     XEvent	event;
@@ -2574,6 +2819,7 @@ vim_SelFile(toplevel, prompt, init_path, show_entry, x, y, fg, bg)
     {
 	XtVaSetValues(selFilePrompt, XtNlabel, prompt, NULL);
 	XtVaSetValues(selFile, XtNtitle, prompt, NULL);
+	SFsetColors(bg, fg, scroll_bg, scroll_fg);
     }
 
     XtVaSetValues(selFile, XtNx, x, XtNy, y, NULL);

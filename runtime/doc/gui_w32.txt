@@ -1,4 +1,4 @@
-*gui_w32.txt*   For Vim version 6.2a.  Last change: 2002 Feb 03
+*gui_w32.txt*   For Vim version 6.2b.  Last change: 2002 Feb 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

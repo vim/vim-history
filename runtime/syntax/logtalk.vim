@@ -2,7 +2,7 @@
 "
 " Language:	Logtalk
 " Maintainer:	Paulo Moura <pmoura@noe.ubi.pt>
-" Last Change:	2002 May 11
+" Last Change:	2003 Apr 25
 
 
 " Quit when a syntax file was already loaded:
@@ -360,7 +360,7 @@ if version >= 508 || !exists("did_logtalk_syn_inits")
 	else
 		command -nargs=+ HiLink hi def link <args>
 	endif
-	
+
 	HiLink	logtalkBlockComment	Comment
 	HiLink	logtalkLineComment	Comment
 

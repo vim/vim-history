@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2003 Apr 06
+" Last Change:	2003 Apr 27
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -591,6 +591,9 @@ au BufNewFile,BufRead inittab			setf inittab
 " Inno Setup
 au BufNewFile,BufRead *.iss			setf iss
 
+" JAL
+au BufNewFile,BufRead *.jal,*.JAL		setf jal
+
 " Jam
 au BufNewFile,BufRead *.jpl,*.jpr		setf jam
 
@@ -791,7 +794,7 @@ au BufNewFile,BufRead *.me
 	\ if expand("<afile>") != "read.me" && expand("<afile>") != "click.me" |
 	\   setf nroff |
 	\ endif
-au BufNewFile,BufRead *.tr,*.nr,*.roff		setf nroff
+au BufNewFile,BufRead *.tr,*.nr,*.roff,*.tmac,*.mom	setf nroff
 au BufNewFile,BufRead *.[1-9]			call <SID>FTnroff()
 
 " This function checks if one of the first five lines start with a dot.  In
@@ -918,8 +921,8 @@ au BufNewFile,BufRead *.po			setf po
 " Postfix main config
 au BufNewFile,BufRead main.cf			setf pfmain
 
-" PostScript
-au BufNewFile,BufRead *.ps,*.eps		setf postscr
+" PostScript (+ font files, encapsulated PostScript, Adobe Illustrator)
+au BufNewFile,BufRead *.ps,*.pfa,*.afm,*.eps,*.epsf,*.epsi,*.ai	  setf postscr
 
 " PostScript Printer Description
 au BufNewFile,BufRead *.ppd			setf ppd

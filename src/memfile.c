@@ -1273,6 +1273,12 @@ mf_do_open(mfp, fname, flags)
 	    (char *)mfp->mf_fname,
 #endif
 	    flags | O_EXTRA
+#ifdef WIN32
+	/* Prevent handle inheritance that cause problems with Cscope 
+	 * (swap file may not be deleted if cscope connection was open after the file)
+	 */
+	    |O_NOINHERIT
+#endif
 #if defined(UNIX) || defined(RISCOS) || defined(VMS)
 		    , (mode_t)0600		/* open in rw------- mode */
 #endif

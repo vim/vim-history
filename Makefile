@@ -51,7 +51,6 @@ all install uninstall tools config configure proto depend lint tags types test t
 #
 # dossrc	vim##src.zip		sources for MS-DOS
 # dosrt		vim##rt.zip		runtime for MS-DOS
-#		vim##rt[12].zip		runtime for MS-DOS in two parts
 # dosbin	vim##d16.zip		binary for MS-DOS 16 bits
 #		vim##d32.zip		binary for MS-DOS 32 bits
 #		vim##w32.zip		binary for Win32
@@ -72,13 +71,16 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 2a
+MINOR = 2b
+
+# Uncomment this line if the Win32s version is to be included.
+#DOSBIN_S =  dosbin_s
 
 # CHECKLIST for creating a new version:
 #
 # - Update Vim version number.  For a test version in: src/version.h, Contents,
 #   MAJOR/MINOR above, VIMRTDIR in src/Makefile, README*.txt, runtime/doc/*.txt
-#   and nsis/gvim.nsi.  For a minor/major version: GvimExt/GvimExt.reg,
+#   and nsis/gvim.nsi.  For a minor/major version: src/GvimExt/GvimExt.reg,
 #   src/vim16.def.
 # - Correct included_patches[] in src/version.c.
 # - Compile Vim with GTK, Perl, Python, TCL, Ruby, Cscope and "huge" features.
@@ -157,8 +159,8 @@ MINOR = 2a
 # - rename installw32.exe to install.exe
 # - rename uninstalw32.exe to uninstal.exe
 # - rename xxdw32.exe to xxd/xxd.exe
-# - put gvimext.dll in GvimExt and VisVim.dll in VisVim (get them from a binary
-#   archive or build them)
+# - put gvimext.dll in src/GvimExt and VisVim.dll in src/VisVim (get them
+#   from a binary archive or build them)
 # - make sure there is a diff.exe two levels up
 # - go to ../nsis and do "makensis gvim.nsi".
 # - Copy gvim##.exe to the dist directory.
@@ -281,6 +283,8 @@ SRC_ALL =	\
 # more source files
 SRC_MORE =	\
 		src/diff.c \
+		src/arabic.c \
+		src/arabic.h \
 		src/farsi.c \
 		src/farsi.h \
 		src/fold.c \
@@ -373,7 +377,7 @@ SRC_DOS_UNIX =	\
 
 # source files for DOS (also in the extra archive)
 SRC_DOS =	\
-		GvimExt \
+		src/GvimExt \
 		README_srcdos.txt \
 		src/INSTALLpc.txt \
 		src/Make_bc3.mak \
@@ -436,30 +440,30 @@ SRC_DOS =	\
 		nsis/gvim.nsi \
 		nsis/README.txt \
 		uninstal.txt \
-		VisVim/Commands.cpp \
-		VisVim/Commands.h \
-		VisVim/DSAddIn.cpp \
-		VisVim/DSAddIn.h \
-		VisVim/OleAut.cpp \
-		VisVim/OleAut.h \
-		VisVim/README.txt \
-		VisVim/Reg.cpp \
-		VisVim/Register.bat \
-		VisVim/Resource.h \
-		VisVim/StdAfx.cpp \
-		VisVim/StdAfx.h \
-		VisVim/UnRegist.bat \
-		VisVim/VisVim.cpp \
-		VisVim/VisVim.def \
-		VisVim/VisVim.mak \
-		VisVim/VisVim.h \
-		VisVim/VisVim.odl \
-		VisVim/VisVim.rc \
-		VisVim/VsReadMe.txt \
+		src/VisVim/Commands.cpp \
+		src/VisVim/Commands.h \
+		src/VisVim/DSAddIn.cpp \
+		src/VisVim/DSAddIn.h \
+		src/VisVim/OleAut.cpp \
+		src/VisVim/OleAut.h \
+		src/VisVim/README_VisVim.txt \
+		src/VisVim/Reg.cpp \
+		src/VisVim/Register.bat \
+		src/VisVim/Resource.h \
+		src/VisVim/StdAfx.cpp \
+		src/VisVim/StdAfx.h \
+		src/VisVim/UnRegist.bat \
+		src/VisVim/VisVim.cpp \
+		src/VisVim/VisVim.def \
+		src/VisVim/VisVim.mak \
+		src/VisVim/VisVim.h \
+		src/VisVim/VisVim.odl \
+		src/VisVim/VisVim.rc \
+		src/VisVim/VsReadMe.txt \
 
 # source files for DOS without CR/LF translation (also in the extra archive)
 SRC_DOS_BIN =	\
-		VisVim/Res \
+		src/VisVim/Res \
 		src/tearoff.bmp \
 		src/tools.bmp \
 		src/tools16.bmp \
@@ -618,7 +622,8 @@ RT_ALL =	\
 		runtime/indent.vim \
 		runtime/indoff.vim \
 		runtime/termcap \
-		runtime/tools \
+		runtime/tools/README.txt \
+		runtime/tools/[a-z]* \
 		runtime/tutor/README.txt \
 		runtime/tutor/tutor \
 		runtime/tutor/tutor.vim \
@@ -773,7 +778,7 @@ EXTRA =		\
 		$(RT_EXTRA) \
 		$(SRC_EXTRA) \
 		README_extra.txt \
-		VisVim/VisVim.dll \
+		src/VisVim/VisVim.dll \
 		farsi \
 		runtime/vimlogo.cdr \
 		runtime/vimlogo.gif \
@@ -1036,7 +1041,7 @@ amisrc: dist prepare
 no_title.vim: Makefile
 	echo "set notitle noicon nocp nomodeline viminfo=" >no_title.vim
 
-dosrtbase: dist prepare no_title.vim dist/$(COMMENT_RT)
+dosrt: dist prepare no_title.vim dist/$(COMMENT_RT)
 	-rm -rf dist/vim$(VERSION)rt.zip
 	-rm -rf dist/vim
 	mkdir dist/vim
@@ -1056,27 +1061,7 @@ dosrtbase: dist prepare no_title.vim dist/$(COMMENT_RT)
 	cp $(RT_DOS_BIN) dist/vim/$(VIMRTDIR)
 	cd dist && zip -9 -rD -z vim$(VERSION)rt.zip vim <$(COMMENT_RT)
 
-dosrt: dosrtbase dist/$(COMMENT_RT1) dist/$(COMMENT_RT2)
-	-rm -rf dist/vim$(VERSION)rt1.zip
-	-rm -rf dist/vim$(VERSION)rt2.zip
-	-rm -rf dist/vim
-	-rm -rf dist/vimsyntax
-	-rm -rf dist/vimindent
-	-rm -rf dist/vimftplugin
-	cd dist && unzip vim$(VERSION)rt.zip
-	mv dist/vim/$(VIMRTDIR)/syntax dist/vimsyntax
-	mv dist/vim/$(VIMRTDIR)/indent dist/vimindent
-	mv dist/vim/$(VIMRTDIR)/ftplugin dist/vimftplugin
-	cd dist && zip -9 -rD -z vim$(VERSION)rt1.zip vim <$(COMMENT_RT1)
-	-rm -rf dist/vim
-	mkdir dist/vim
-	mkdir dist/vim/$(VIMRTDIR)
-	mv dist/vimsyntax dist/vim/$(VIMRTDIR)/syntax
-	mv dist/vimindent dist/vim/$(VIMRTDIR)/indent
-	mv dist/vimftplugin dist/vim/$(VIMRTDIR)/ftplugin
-	cd dist && zip -9 -rD -z vim$(VERSION)rt2.zip vim <$(COMMENT_RT2)
-
-dosbin: prepare dosbin_gvim dosbin_w32 dosbin_d32 dosbin_d16 dosbin_ole dosbin_s
+dosbin: prepare dosbin_gvim dosbin_w32 dosbin_d32 dosbin_d16 dosbin_ole $(DOSBIN_S)
 
 # make Win32 gvim
 dosbin_gvim: dist no_title.vim dist/$(COMMENT_GVIM)
@@ -1153,7 +1138,6 @@ dosbin_ole: dist no_title.vim dist/$(COMMENT_OLE)
 	mkdir dist/vim/$(VIMRTDIR)
 	tar cf - \
 		$(BIN_DOS) \
-		VisVim/README.txt \
 		| (cd dist/vim/$(VIMRTDIR); tar xf -)
 	find dist/vim/$(VIMRTDIR) -type f -exec $(VIM) -u no_title.vim -c ":set tx|wq" {} \;
 	cp gvim_ole.exe dist/vim/$(VIMRTDIR)/gvim.exe
@@ -1163,7 +1147,8 @@ dosbin_ole: dist no_title.vim dist/$(COMMENT_OLE)
 	cp uninstalw32.exe dist/vim/$(VIMRTDIR)/uninstal.exe
 	cp gvimext.dll dist/vim/$(VIMRTDIR)/gvimext.dll
 	cp README_ole.txt dist/vim/$(VIMRTDIR)
-	cp VisVim/VisVim.dll dist/vim/$(VIMRTDIR)/VisVim
+	cp src/VisVim/VisVim.dll dist/vim/$(VIMRTDIR)/VisVim.dll
+	cp src/VisVim/README_VisVim.txt dist/vim/$(VIMRTDIR)
 	cd dist && zip -9 -rD -z gvim$(VERSION)ole.zip vim <$(COMMENT_OLE)
 
 # make Win32s gvim

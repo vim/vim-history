@@ -477,6 +477,9 @@ EXTERN int	p_hkmapp;	/* 'hkmapp' */
 EXTERN int	p_fkmap;	/* 'fkmap' */
 EXTERN int	p_altkeymap;	/* 'altkeymap' */
 # endif
+# ifdef FEAT_ARABIC
+EXTERN int	p_arshape;	/* 'arabicshape' */
+# endif
 #endif
 #ifdef FEAT_TITLE
 EXTERN int	p_icon;		/* 'icon' */
@@ -656,6 +659,9 @@ EXTERN long	p_tl;		/* 'taglength' */
 EXTERN int	p_tr;		/* 'tagrelative' */
 EXTERN char_u	*p_tags;	/* 'tags' */
 EXTERN int	p_tgst;		/* 'tagstack' */
+#ifdef FEAT_ARABIC
+EXTERN int	p_tbidi;	/* 'termbidi' */
+#endif
 #ifdef FEAT_MBYTE
 EXTERN char_u	*p_tenc;	/* 'termencoding' */
 #endif
@@ -683,10 +689,10 @@ EXTERN unsigned toolbar_flags;
 # ifdef IN_OPTION_C
 static char *(p_toolbar_values[]) = {"text", "icons", "tooltips", "horiz", NULL};
 # endif
-# define TOOLBAR_TEXT	    0x01
-# define TOOLBAR_ICONS	    0x02
-# define TOOLBAR_TOOLTIPS   0x04
-# define TOOLBAR_HORIZ	    0x08
+# define TOOLBAR_TEXT		0x01
+# define TOOLBAR_ICONS		0x02
+# define TOOLBAR_TOOLTIPS	0x04
+# define TOOLBAR_HORIZ		0x08
 #endif
 #if defined(FEAT_TOOLBAR) && defined(FEAT_GUI_GTK) && defined(HAVE_GTK2)
 EXTERN char_u	*p_tbis;	/* 'toolbariconsize' */
@@ -694,10 +700,10 @@ EXTERN unsigned tbis_flags;
 # ifdef IN_OPTION_C
 static char *(p_tbis_values[]) = {"tiny", "small", "medium", "large", NULL};
 # endif
-# define TBIS_TINY	0x01
-# define TBIS_SMALL	0x02
-# define TBIS_MEDIUM	0x04
-# define TBIS_LARGE	0x08
+# define TBIS_TINY		0x01
+# define TBIS_SMALL		0x02
+# define TBIS_MEDIUM		0x04
+# define TBIS_LARGE		0x08
 #endif
 EXTERN long	p_ttyscroll;	/* 'ttyscroll' */
 #if defined(FEAT_MOUSE) && (defined(UNIX) || defined(VMS))
@@ -706,12 +712,12 @@ EXTERN unsigned ttym_flags;
 # ifdef IN_OPTION_C
 static char *(p_ttym_values[]) = {"xterm", "xterm2", "dec", "netterm", "jsbterm", "pterm", NULL};
 # endif
-# define TTYM_XTERM	0x01
-# define TTYM_XTERM2	0x02
-# define TTYM_DEC	0x04
-# define TTYM_NETTERM	0x08
-# define TTYM_JSBTERM	0x10
-# define TTYM_PTERM	0x20
+# define TTYM_XTERM		0x01
+# define TTYM_XTERM2		0x02
+# define TTYM_DEC		0x04
+# define TTYM_NETTERM		0x08
+# define TTYM_JSBTERM		0x10
+# define TTYM_PTERM		0x20
 #endif
 EXTERN long	p_ul;		/* 'undolevels' */
 EXTERN long	p_uc;		/* 'updatecount' */

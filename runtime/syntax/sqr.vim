@@ -3,9 +3,9 @@
 "  Maintainer: Nathan Stratton Treadway (nathanst at ontko dot com)
 "         URL: http://www.ontko.com/sqr/#editor_config_files
 "
-" Modification History: 
+" Modification History:
 "     2002-Apr-12: Updated for SQR v6.x
-"     2002-Jul-30: Added { and } to iskeyword definition 
+"     2002-Jul-30: Added { and } to iskeyword definition
 "
 "  Thanks to the previous maintainer of this file, Jeff Lanzarotta:
 "    http://lanzarotta.tripod.com/vim.html

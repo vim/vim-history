@@ -1,4 +1,4 @@
-*remote.txt*    For Vim version 6.2a.  Last change: 2003 Feb 27
+*remote.txt*    For Vim version 6.2b.  Last change: 2003 Apr 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -44,7 +44,7 @@ The following command line arguments are available:
 				is no server.
 								*--servername*
    --servername {name}		Become the server {name}.  When used together
-   				with one of the --remote commands: connect to
+				with one of the --remote commands: connect to
 				server {name} instead of the default (see
 				below).
 								*--remote-send*

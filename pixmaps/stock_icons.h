@@ -1,6 +1,6 @@
 /* GdkPixbuf RGBA C-Source image dump */
 
-static const guint8 stock_vim_build_tags[] = 
+static const guint8 stock_vim_build_tags[] =
 { ""
   /* Pixbuf magic (0x47646b50) */
   "GdkP"
@@ -118,7 +118,7 @@ static const guint8 stock_vim_build_tags[] =
 
 /* GdkPixbuf RGBA C-Source image dump */
 
-static const guint8 stock_vim_find_help[] = 
+static const guint8 stock_vim_find_help[] =
 { ""
   /* Pixbuf magic (0x47646b50) */
   "GdkP"
@@ -230,7 +230,7 @@ static const guint8 stock_vim_find_help[] =
 
 /* GdkPixbuf RGBA C-Source image dump */
 
-static const guint8 stock_vim_save_all[] = 
+static const guint8 stock_vim_save_all[] =
 { ""
   /* Pixbuf magic (0x47646b50) */
   "GdkP"
@@ -352,7 +352,7 @@ static const guint8 stock_vim_save_all[] =
 
 /* GdkPixbuf RGBA C-Source image dump */
 
-static const guint8 stock_vim_session_load[] = 
+static const guint8 stock_vim_session_load[] =
 { ""
   /* Pixbuf magic (0x47646b50) */
   "GdkP"
@@ -463,7 +463,7 @@ static const guint8 stock_vim_session_load[] =
 
 /* GdkPixbuf RGBA C-Source image dump */
 
-static const guint8 stock_vim_session_new[] = 
+static const guint8 stock_vim_session_new[] =
 { ""
   /* Pixbuf magic (0x47646b50) */
   "GdkP"
@@ -586,7 +586,7 @@ static const guint8 stock_vim_session_new[] =
 
 /* GdkPixbuf RGBA C-Source image dump */
 
-static const guint8 stock_vim_session_save[] = 
+static const guint8 stock_vim_session_save[] =
 { ""
   /* Pixbuf magic (0x47646b50) */
   "GdkP"
@@ -700,7 +700,7 @@ static const guint8 stock_vim_session_save[] =
 
 /* GdkPixbuf RGBA C-Source image dump */
 
-static const guint8 stock_vim_shell[] = 
+static const guint8 stock_vim_shell[] =
 { ""
   /* Pixbuf magic (0x47646b50) */
   "GdkP"
@@ -1039,7 +1039,7 @@ static const guint8 stock_vim_shell[] =
 
 /* GdkPixbuf RGBA C-Source image dump */
 
-static const guint8 stock_vim_window_maximize[] = 
+static const guint8 stock_vim_window_maximize[] =
 { ""
   /* Pixbuf magic (0x47646b50) */
   "GdkP"
@@ -1147,7 +1147,7 @@ static const guint8 stock_vim_window_maximize[] =
 
 /* GdkPixbuf RGBA C-Source image dump */
 
-static const guint8 stock_vim_window_maximize_width[] = 
+static const guint8 stock_vim_window_maximize_width[] =
 { ""
   /* Pixbuf magic (0x47646b50) */
   "GdkP"
@@ -1256,7 +1256,7 @@ static const guint8 stock_vim_window_maximize_width[] =
 
 /* GdkPixbuf RGBA C-Source image dump */
 
-static const guint8 stock_vim_window_minimize[] = 
+static const guint8 stock_vim_window_minimize[] =
 { ""
   /* Pixbuf magic (0x47646b50) */
   "GdkP"
@@ -1363,7 +1363,7 @@ static const guint8 stock_vim_window_minimize[] =
 
 /* GdkPixbuf RGBA C-Source image dump */
 
-static const guint8 stock_vim_window_minimize_width[] = 
+static const guint8 stock_vim_window_minimize_width[] =
 { ""
   /* Pixbuf magic (0x47646b50) */
   "GdkP"
@@ -1470,7 +1470,7 @@ static const guint8 stock_vim_window_minimize_width[] =
 
 /* GdkPixbuf RGBA C-Source image dump */
 
-static const guint8 stock_vim_window_split[] = 
+static const guint8 stock_vim_window_split[] =
 { ""
   /* Pixbuf magic (0x47646b50) */
   "GdkP"
@@ -1585,7 +1585,7 @@ static const guint8 stock_vim_window_split[] =
 
 /* GdkPixbuf RGBA C-Source image dump */
 
-static const guint8 stock_vim_window_split_vertical[] = 
+static const guint8 stock_vim_window_split_vertical[] =
 { ""
   /* Pixbuf magic (0x47646b50) */
   "GdkP"

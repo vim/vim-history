@@ -149,6 +149,17 @@ Like using "-c", but the command is executed just before
 processing any vimrc file.
 You can use up to 10 of these commands, independently from "-c" commands.
 .TP
+-A
+If
+.B Vim
+has been compiled with ARABIC support for editing right-to-left
+oriented files and Arabic keyboard mapping, this option starts
+.B Vim
+in Arabic mode, i.e. 'arabic' is set.  Otherwise an error
+message is given and
+.B Vim
+aborts.
+.TP
 -b
 Binary mode.
 A few options will be set that makes it possible to edit a binary or

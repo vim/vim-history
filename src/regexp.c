@@ -2020,6 +2020,7 @@ collection:
 		    if (enc_utf8)
 		    {
 			int	off;
+			int	len;
 
 			/* Need to get composing character too, directly
 			 * access regparse for that, because skipchr() skips
@@ -2031,11 +2032,12 @@ collection:
 			    off = 0;
 			for (;;)
 			{
-			    off += utf_ptr2len_check(regparse + off);
-			    c = utf_ptr2char(regparse + off);
-			    if (!utf_iscomposing(c))
+			    len = utf_ptr2len_check(regparse + off);
+			    if (!UTF_COMPOSINGLIKE(regparse + off,
+							regparse + off + len))
 				break;
-			    regmbc(c);
+			    off += len;
+			    regmbc(utf_ptr2char(regparse + off));
 			}
 			skipchr();
 		    }
@@ -3473,8 +3475,7 @@ regmatch(scan)
 			return FALSE;
 #ifdef FEAT_MBYTE
 		    /* Check for following composing character. */
-		    if (enc_utf8 && utf_iscomposing(
-					       utf_ptr2char(reginput + len)))
+		    if (enc_utf8 && UTF_COMPOSINGLIKE(reginput, reginput + len))
 			return FALSE;
 #endif
 		    reginput += len;

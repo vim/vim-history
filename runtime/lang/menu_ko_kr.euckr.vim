@@ -1,6 +1,6 @@
 " Menu Translations:	Korean
 " Maintainer:		Nam SungHyun <namsh@kldp.org>
-" Last Change:		2003 Mar 30
+" Last Change:		2003 Apr 25
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -165,7 +165,7 @@ menutrans &New<Tab>^Wn			새\ 창(&N)<Tab>^Wn
 menutrans S&plit<Tab>^Ws		나누기(&p)<Tab>^Ws
 menutrans Sp&lit\ To\ #<Tab>^W^^	#으로\ 나누기(&l)<Tab>^W^^
 menutrans Split\ &Vertically<Tab>^Wv	세로로\ 나누기(&V)<Tab>^Wv
-menutrans Split\ File\ E&xplorer	파일\ 익스플로러\ 나누기 
+menutrans Split\ File\ E&xplorer	파일\ 익스플로러\ 나누기
 
 menutrans &Close<Tab>^Wc		닫기(&C)<Tab>^Wc
 menutrans Close\ &Other(s)<Tab>^Wo	다른\ 창\ 닫기(&O)<Tab>^Wo
@@ -220,7 +220,7 @@ if has("toolbar")
     tmenu ToolBar.RunScript	스크립트 실행
     tmenu ToolBar.Make		Make
     tmenu ToolBar.Shell		쉘
-    tmenu ToolBar.RunCtags	꼬리표 만들기 
+    tmenu ToolBar.RunCtags	꼬리표 만들기
     tmenu ToolBar.TagJump	꼬리표로 가기
     tmenu ToolBar.Help		도움말
     tmenu ToolBar.FindHelp	도움말 찾기...

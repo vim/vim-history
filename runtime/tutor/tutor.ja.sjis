@@ -771,11 +771,11 @@ NOTE: これは最後の文字にてテキストを挿入し、<ESC> をタイプしてカーソルを右に
 
   2. ここでサンプルの "vimrc" を読み込みます。
 
-  	:read $VIMRUNTIME/vimrc_example.vim
+	:read $VIMRUNTIME/vimrc_example.vim
 
   3. 以下のようにファイルへ書き込みます。
 
-  	:write
+	:write
 
   次回 Vim を起動すると、色づけ構文が使えるようになるでしょう。
   この "vimrc" ファイルへ、お好みの設定を追加することができます。

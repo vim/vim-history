@@ -15,11 +15,11 @@ set cpo-=C
 " Note: The errorformat assumes GNU make
 
 " sample multiline errors (besides gcc backend one-liners):
-" gev.f:14: 
+" gev.f:14:
 "          parameter UPLO = 'Upper-triangle'
 "          ^
 " Unsupported VXT statement at (^)
-" gev.f:6: 
+" gev.f:6:
 "          integer         desca( * ), descb( * )
 "                          1
 " gev.f:19: (continued):

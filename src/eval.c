@@ -4520,7 +4520,11 @@ f_has(argvars, retvar)
 	"gui",
 #endif
 #ifdef FEAT_GUI_ATHENA
+# ifdef FEAT_GUI_NEXTAW
+	"gui_neXtaw",
+# else
 	"gui_athena",
+# endif
 #endif
 #ifdef FEAT_GUI_BEOS
 	"gui_beos",
@@ -8033,7 +8037,7 @@ ex_execute(eap)
     if (ret != FAIL && ga.ga_data != NULL)
     {
 	if (eap->cmdidx == CMD_echomsg)
-	    MSG_ATTR((char_u *)ga.ga_data, echo_attr);
+	    MSG_ATTR(ga.ga_data, echo_attr);
 	else if (eap->cmdidx == CMD_echoerr)
 	{
 	    /* We don't want to abort following commands, restore did_emsg. */

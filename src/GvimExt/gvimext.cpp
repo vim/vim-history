@@ -734,7 +734,7 @@ STDMETHODIMP CShellExt::PushToWindow(HWND hParent,
     SetForegroundWindow(hWnd);
 
     // Post the selected files to the vim instance
-    PostMessage(hWnd, WM_DROPFILES, (WPARAM)medium.hGlobal, NULL);
+    PostMessage(hWnd, WM_DROPFILES, (WPARAM)medium.hGlobal, 0);
 
     return NOERROR;
 }

@@ -1,15 +1,19 @@
 # Project: gvimext
-# Generates gvimext.dll with mingw
+# Generates gvimext.dll with Cygwin's -mno-cygwin
 #
-
-CPP  := g++.exe
-CC   := gcc.exe
-WINDRES := windres.exe
-RES  := gvimext.res
-OBJ  := gvimext.o $(RES)
+CPP  := g++ -mno-cygwin
+CC   := gcc -mno-cygwin
+CXXFLAGS := -O2
 LIBS :=  -luuid
+WINDRES := windres
+DLLWRAP = dllwrap.exe
+RES  := gvimext.res
+DEFFILE = gvimext_ming.def
+STATICLIB = gvimext.a
+EXPLIB = gvimext.exp
+OBJ  := gvimext.o $(RES)
 
-INCS :=  
+INCS :=
 DLL  := gvimext.dll
 
 .PHONY: all all-before all-after clean clean-custom
@@ -18,15 +22,12 @@ all: all-before $(DLL) all-after
 
 
 clean: clean-custom
-	${RM}  $(OBJ) $(DLL) ${RES} ${EXPLIB} $(STATICLIB) 
+	${RM}  $(OBJ) $(DLL) ${RES} ${EXPLIB} $(STATICLIB)
 
-DLLWRAP=dllwrap.exe
-DEFFILE=gvimext_ming.def
-STATICLIB=gvimext.a
-EXPLIB=gvimext.exp
 
 $(DLL): $(OBJ)
-	$(DLLWRAP)  --def $(DEFFILE) \
+	$(DLLWRAP) \
+		--def $(DEFFILE) \
 		--output-exp ${EXPLIB} \
 		--image-base 0x1C000000 \
 		--driver-name c++ \
@@ -38,5 +39,6 @@ $(DLL): $(OBJ)
 gvimext.o: gvimext.cpp
 	$(CPP) -c $? -o $@ $(CXXFLAGS) -DFEAT_GETTEXT
 
-${RES}: gvimext_ming.rc 
+${RES}: gvimext_ming.rc
 	$(WINDRES) $? -I rc -o $@ -O coff  -DMING
+

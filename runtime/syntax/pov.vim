@@ -2,7 +2,7 @@
 " This is a GENERATED FILE. Please always refer to source file at the URI below.
 " Language: PoV-Ray(tm) 3.5 Scene Description Language
 " Maintainer: David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>
-" Last Change: 2002-08-25
+" Last Change: 2003 Apr 25
 " URL: http://physics.muni.cz/~yeti/download/syntax/pov.vim
 " Required Vim Version: 6.0
 
@@ -25,7 +25,7 @@ syn keyword povCommands global_settings
 syn keyword povObjects array atmosphere background bicubic_patch blob box camera component cone cubic cylinder disc fog height_field isosurface julia_fractal lathe light_group light_source mesh mesh2 object parametric pattern photons plane poly polygon prism quadric quartic rainbow sky_sphere smooth_triangle sor sphere sphere_sweep spline superellipsoid text torus triangle
 syn keyword povCSG clipped_by composite contained_by difference intersection merge union
 syn keyword povAppearance interior material media texture interior_texture texture_list
-syn keyword povGlobalSettings ambient_light assumed_gamma charset hf_gray_16 irid_wavelength max_intersections max_trace_level number_of_waves radiosity noise_generator 
+syn keyword povGlobalSettings ambient_light assumed_gamma charset hf_gray_16 irid_wavelength max_intersections max_trace_level number_of_waves radiosity noise_generator
 syn keyword povTransform inverse matrix rotate scale translate transform
 
 " Descriptors
@@ -47,7 +47,7 @@ syn keyword povDescriptors target
 syn keyword povModifiers caustics dispersion dispersion_samples fade_color fade_colour fade_distance fade_power ior
 syn keyword povModifiers bounded_by double_illuminate hierarchy hollow no_shadow open smooth sturm threshold water_level
 syn keyword povModifiers hypercomplex max_iteration precision quaternion slice
-syn keyword povModifiers conic_sweep linear_sweep 
+syn keyword povModifiers conic_sweep linear_sweep
 syn keyword povModifiers flatness type u_steps v_steps
 syn keyword povModifiers aa_level aa_threshold adaptive falloff jitter looks_like media_attenuation media_interaction method point_at radius tightness
 syn keyword povModifiers angle aperture blur_samples confidence direction focal_point h_angle location look_at right sky up v_angle variance

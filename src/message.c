@@ -970,7 +970,11 @@ msg_start()
     if (!msg_scroll && full_screen)	/* overwrite last message */
     {
 	msg_row = cmdline_row;
-	msg_col = 0;
+	msg_col =
+#ifdef FEAT_RIGHTLEFT
+	    cmdmsg_rl ? Columns - 1 :
+#endif
+	    0;
     }
     else if (msg_didout)		    /* start message on next line */
     {
@@ -1463,7 +1467,11 @@ screen_puts_mbyte(s, l, attr)
 
     msg_didout = TRUE;		/* remember that line is not empty */
     cw = (*mb_ptr2cells)(s);
-    if (cw > 1 && msg_col == Columns - 1)
+    if (cw > 1 && (
+#ifdef FEAT_RIGHTLEFT
+		cmdmsg_rl ? msg_col <= 1 :
+#endif
+		msg_col == Columns - 1))
     {
 	/* Doesn't fit, print a highlighted '>' to fill it up. */
 	msg_screen_putchar('>', hl_attr(HLF_AT));
@@ -1473,10 +1481,25 @@ screen_puts_mbyte(s, l, attr)
     mch_memmove(buf, s, (size_t)l);
     buf[l] = NUL;
     screen_puts(buf, msg_row, msg_col, attr);
-    if ((msg_col += cw) >= Columns)
+#ifdef FEAT_RIGHTLEFT
+    if (cmdmsg_rl)
     {
-	msg_col = 0;
-	++msg_row;
+	msg_col -= cw;
+	if (msg_col == 0)
+	{
+	    msg_col = Columns;
+	    ++msg_row;
+	}
+    }
+    else
+#endif
+    {
+	msg_col += cw;
+	if (msg_col >= Columns)
+	{
+	    msg_col = 0;
+	    ++msg_row;
+	}
     }
     return s + l;
 }
@@ -1622,10 +1645,22 @@ msg_puts_attr(s, attr)
 	    }
 
 	    /* primitive way to compute the current column */
-	    if (*s == '\r' || *s == '\n')
-		msg_col = 0;
+#ifdef FEAT_RIGHTLEFT
+	    if (cmdmsg_rl)
+	    {
+		if (*s == '\r' || *s == '\n')
+		    msg_col = Columns - 1;
+		else
+		    --msg_col;
+	    }
 	    else
-		++msg_col;
+#endif
+	    {
+		if (*s == '\r' || *s == '\n')
+		    msg_col = 0;
+		else
+		    ++msg_col;
+	    }
 	    ++s;
 	}
 	msg_didout = TRUE;	    /* assume that line is not empty */
@@ -1649,13 +1684,25 @@ msg_puts_attr(s, attr)
 	 */
 	if (msg_row >= Rows - 1
 		&& (*s == '\n'
-		    || msg_col >= Columns - 1
-		    || (*s == TAB && msg_col >= ((Columns - 1) & ~7))
-#ifdef FEAT_MBYTE
-		    || (has_mbyte && (*mb_ptr2cells)(s) > 1
-						    && msg_col >= Columns - 2)
+		    || (
+#ifdef FEAT_RIGHTLEFT
+		    cmdmsg_rl
+		    ? (
+			msg_col <= 1
+			|| (*s == TAB && msg_col <= 7)
+# ifdef FEAT_MBYTE
+			|| (has_mbyte && (*mb_ptr2cells)(s) > 1 && msg_col <= 2)
+# endif
+		      )
+		    :
 #endif
-			      ))
+		      (msg_col >= Columns - 1
+		       || (*s == TAB && msg_col >= ((Columns - 1) & ~7))
+# ifdef FEAT_MBYTE
+		       || (has_mbyte && (*mb_ptr2cells)(s) > 1
+						    && msg_col >= Columns - 2)
+# endif
+		      ))))
 	{
 	    /* When no more prompt an no more room, truncate here */
 	    if (msg_no_more && lines_left == 0)
@@ -1841,6 +1888,10 @@ msg_puts_attr(s, attr)
 		    msg_col = 0;
 		    return;	    /* the string is not displayed! */
 		}
+#ifdef FEAT_RIGHTLEFT
+		if (cmdmsg_rl)
+		    msg_col = Columns - 1;
+#endif
 	    }
 	}
 	if (*s == '\n')		    /* go to next line */
@@ -2004,17 +2055,34 @@ mch_msg(str)
 }
 #endif /* USE_MCH_ERRMSG */
 
+/*
+ * Put a character on the screen at the current message position and advance
+ * to the next position.  Only for printable ASCII!
+ */
     static void
 msg_screen_putchar(c, attr)
-    int	    c;
-    int	    attr;
+    int		c;
+    int		attr;
 {
     msg_didout = TRUE;		/* remember that line is not empty */
     screen_putchar(c, msg_row, msg_col, attr);
-    if (++msg_col >= Columns)
+#ifdef FEAT_RIGHTLEFT
+    if (cmdmsg_rl)
     {
-	msg_col = 0;
-	++msg_row;
+	if (--msg_col == 0)
+	{
+	    msg_col = Columns;
+	    ++msg_row;
+	}
+    }
+    else
+#endif
+    {
+	if (++msg_col >= Columns)
+	{
+	    msg_col = 0;
+	    ++msg_row;
+	}
     }
 }
 
@@ -2102,8 +2170,19 @@ msg_clr_eos()
     }
     else
     {
-	screen_fill(msg_row, msg_row + 1, msg_col, (int)Columns, ' ', ' ', 0);
-	screen_fill(msg_row + 1, (int)Rows, 0, (int)Columns, ' ', ' ', 0);
+#ifdef FEAT_RIGHTLEFT
+	if (cmdmsg_rl)
+	{
+	    screen_fill(msg_row, msg_row + 1, 0, msg_col + 1, ' ', ' ', 0);
+	    screen_fill(msg_row + 1, (int)Rows, 0, (int)Columns, ' ', ' ', 0);
+	}
+	else
+#endif
+	{
+	    screen_fill(msg_row, msg_row + 1, msg_col, (int)Columns,
+								 ' ', ' ', 0);
+	    screen_fill(msg_row + 1, (int)Rows, 0, (int)Columns, ' ', ' ', 0);
+	}
     }
 }
 

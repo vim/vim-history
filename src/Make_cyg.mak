@@ -4,7 +4,7 @@
 # This compiles Vim as a Windows application.  If you want Vim to run as a
 # Cygwin application use the Makefile (just like on Unix).
 #
-# Last updated by Dan Sharp.  Last Change: 2003 Apr 21
+# Last updated by Dan Sharp.  Last Change: 2003 Apr 26
 #
 # GUI		no or yes: set to yes if you want the GUI version (yes)
 # PERL		define to path to Perl dir to get Perl support (not defined)
@@ -130,7 +130,7 @@ endif
 # DYNAMIC_TCL=yes and no both work.
 ##############################
 ifdef TCL
-DEFINES += -DFEAT_TCL 
+DEFINES += -DFEAT_TCL
 TCL_OBJ = $(OUTDIR)/if_tcl.o
 ifndef TCL_VER
 TCL_VER = 83
@@ -269,16 +269,19 @@ OBJ = \
 	$(RUBY_OBJ) \
 	$(TCL_OBJ)
 
-all: $(EXE) xxd/xxd.exe vimrun.exe install.exe uninstal.exe
+all: $(EXE) xxd/xxd.exe vimrun.exe install.exe uninstal.exe GvimExt/gvimext.dll
 
 # According to the Cygwin doc 1.2 FAQ, kernel32 should not be specified for
-# linking unless calling ld directly.  
+# linking unless calling ld directly.
 # See /usr/doc/cygwin-doc-1.2/html/faq_toc.html#TOC93 for more information.
 $(EXE): $(OUTDIR) $(OBJ)
 	$(CC) $(CFLAGS) -s -o $(EXE) $(OBJ) $(LIBS) -luuid -lole32 $(EXTRA_LIBS)
 
 xxd/xxd.exe: xxd/xxd.c
-	cd xxd ; $(MAKE) -f Make_cyg.mak USEDLL=$(USEDLL); cd ..
+	cd xxd; $(MAKE) -f Make_cyg.mak USEDLL=$(USEDLL); cd ..
+
+GvimExt/gvimext.dll: GvimExt/gvimext.cpp GvimExt/gvimext.rc GvimExt/gvimext.h
+	cd GvimExt; $(MAKE) -f Make_cyg.mak; cd ..
 
 vimrun.exe: vimrun.c
 	$(CC) $(CFLAGS) -s -o vimrun.exe vimrun.c  $(LIBS)

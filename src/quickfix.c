@@ -988,6 +988,7 @@ qf_jump(dir, errornr, forceit)
 #ifdef FEAT_WINDOWS
     int			opened_window = FALSE;
     win_T		*win;
+    win_T		*altwin;
 #endif
     int			print_message = TRUE;
     int			len;
@@ -1112,26 +1113,36 @@ qf_jump(dir, errornr, forceit)
 	     * Try to find a window that shows the right buffer.
 	     * Default to the window just above the quickfix buffer.
 	     */
-	    win = curwin->w_prev;
+	    win = curwin;
+	    altwin = NULL;
 	    for (;;)
 	    {
-		if (win == NULL || bt_quickfix(win->w_buffer))
-		{
-		    /* Didn't find it, go to the window above the quickfix
-		     * window. */
-		    if (curwin->w_prev == NULL)
-			win = curwin->w_next;
-		    else
-			win = curwin->w_prev;
-		    break;
-		}
 		if (win->w_buffer->b_fnum == qf_ptr->qf_fnum)
 		    break;
 		if (win->w_prev == NULL)
 		    win = lastwin;	/* wrap around the top */
 		else
 		    win = win->w_prev;	/* go to previous window */
+
+		if (bt_quickfix(win->w_buffer))
+		{
+		    /* Didn't find it, go to the window before the quickfix
+		     * window. */
+		    if (altwin != NULL)
+			win = altwin;
+		    else if (curwin->w_prev != NULL)
+			win = curwin->w_prev;
+		    else
+			win = curwin->w_next;
+		    break;
+		}
+
+		/* Remember a usable window. */
+		if (altwin == NULL && !win->w_p_pvw
+					   && win->w_buffer->b_p_bt[0] == NUL)
+		    altwin = win;
 	    }
+
 	    win_goto(win);
 	}
     }
@@ -1175,6 +1186,8 @@ qf_jump(dir, errornr, forceit)
 		screen_col = 0;
 		for (char_col = 0; char_col < curwin->w_cursor.col; ++char_col)
 		{
+		    if (*line == NUL)
+			break;
 		    if (*line++ == '\t')
 		    {
 			curwin->w_cursor.col -= 7 - (screen_col % 8);

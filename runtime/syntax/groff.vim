@@ -1,8 +1,8 @@
 " VIM syntax file
 " Language:	groff
-" Maintainer:	Jérôme Plût <Jerome.Plut@ens.fr>
-" URL:		http://www.eleves.ens.fr:8080/home/plut/nroff.vim
-" Last Change:	2001 Apr 24
+" Maintainer:	Alejandro López-Valencia <dradul@yahoo.com>
+" URL:		http://dradul.tripod.com/vim
+" Last Change:	2003 Apr 26
 
 " This uses the nroff.vim syntax file.
 let b:main_syntax = "nroff"

@@ -1,6 +1,6 @@
 " Menu Translations: Português
 " Maintainer: José de Paula <jose_rodrigues@ibest.com.br>
-" Last Change: 2003 Mar 30
+" Last Change: 2003 Apr 25
 "
 
 " Quit when menu translations have already been done.
@@ -236,7 +236,7 @@ if has("toolbar")
 	  if 0	" disable; these are in the Windoze menu
 		  tmenu ToolBar.New	Nova Janela
 		  tmenu ToolBar.WinSplit	Dividir Janela
-		  tmenu ToolBar.WinMax		Janela Máxima	
+		  tmenu ToolBar.WinMax		Janela Máxima
 		  tmenu ToolBar.WinMin		Janela Mínima
 		  tmenu ToolBar.WinVSplit	Dividir Verticalmente
 		  tmenu ToolBar.WinMaxWidth	Largura Máxima

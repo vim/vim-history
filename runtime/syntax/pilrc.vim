@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	pilrc - a resource compiler for Palm OS development
 " Maintainer:	Brian Schau <brian@schau.com>
-" Last change:	2003 Apr 19
+" Last change:	2003 Apr 25
 " Available on:	http://www.schau.com/pilrcvim/pilrc.vim
 
 " Remove any old syntax
@@ -16,7 +16,7 @@ syn case ignore
 " Notes: TRANSPARENT, FONT and FONT ID are defined in the specials
 "        section below.   Beware of the order of the specials!
 "        Look in the syntax.txt and usr_27.txt files in vim\vim{version}\doc
-"        directory for regexps etc. 
+"        directory for regexps etc.
 
 " Keywords - basic
 syn keyword pilrcKeyword ALERT APPLICATION APPLICATIONICONNAME AREA
@@ -27,7 +27,7 @@ syn keyword pilrcKeyword BOOTSCREENFAMILY BUTTON BUTTONS BYTELIST
 syn keyword pilrcKeyword CATEGORIES CHECKBOX COUNTRYLOCALISATION
 syn keyword pilrcKeyword DATA
 syn keyword pilrcKeyword FEATURE FIELD FONTINDEX FORM FORMBITMAP
-syn keyword pilrcKeyword GADGET GENERATEHEADER 
+syn keyword pilrcKeyword GADGET GENERATEHEADER
 syn keyword pilrcKeyword GRAFFITIINPUTAREA GRAFFITISTATEINDICATOR
 syn keyword pilrcKeyword HEX
 syn keyword pilrcKeyword ICON ICONFAMILY ICONFAMILYEX INTEGER

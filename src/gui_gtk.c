@@ -28,6 +28,8 @@
 # include "gui_gtk_f.h"
 #endif
 
+/* GTK defines MAX and MIN, but some system header files as well.  Undefine
+ * them and don't use them. */
 #ifdef MIN
 # undef MIN
 #endif
@@ -1045,7 +1047,7 @@ gui_mch_set_scrollbar_thumb(scrollbar_T *sb, long val, long size, long max)
 	adjustment->value = val;
 	adjustment->upper = max + 1;
 	adjustment->page_size = size;
-	adjustment->page_increment = MAX(1L, size - 2);
+	adjustment->page_increment = size < 3L ? 1L : size - 2L;
 	adjustment->step_increment = 1.0;
 
 #ifdef HAVE_GTK2
@@ -1562,10 +1564,10 @@ gui_mch_dialog(	int	type,		/* type of dialog */
 
     if ((type < 0) || (type > VIM_LAST_TYPE))
 	type = VIM_GENERIC;
-    
+
     /* Check 'v' flag in 'guioptions': vertical button placement. */
     vertical = (vim_strchr(p_go, GO_VERTICAL) != NULL);
-    
+
     dialog = gtk_window_new(GTK_WINDOW_DIALOG);
     gtk_window_set_title(GTK_WINDOW(dialog), (const gchar *)title);
     gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(gui.mainwin));
@@ -2122,7 +2124,7 @@ gui_mch_dialog(int	type,	    /* type of dialog */
 	gtk_widget_destroy(dialog);
     }
 
-    return MAX(0, response);
+    return response > 0 ? response : 0;
 }
 
 #endif /* FEAT_GUI_DIALOG && HAVE_GTK2 */

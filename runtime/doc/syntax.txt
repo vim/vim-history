@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.2a.  Last change: 2003 Apr 07
+*syntax.txt*    For Vim version 6.2b.  Last change: 2003 Apr 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -396,6 +396,13 @@ By default, HTML optimized for old browsers is generated.  If you prefer using
 cascading style sheets (CSS1) for the attributes (resulting in considerably
 shorter and valid HTML 4 file), use: >
    :let html_use_css = 1
+
+By default "<pre>" and "</pre>" is used around the text.  This makes it show
+up as you see it in Vim, but without wrapping.  If you prefer wrapping, at the
+risc of making some things look a bit different, use: >
+   :let html_no_pre = 1
+This will use <br> at the end of each line and use "&nbsp;" for repeated
+spaces.
 
 The current value of 'encoding' is used to specify the charset of the HTML
 file.  This only works for those values of 'encoding' that have an equivalent
@@ -1011,6 +1018,14 @@ The backticks for inline java are highlighted according to the htmlError
 group to make them easier to see.
 
 
+GROFF						*groff.vim* *groff-syntax*
+
+The groff syntax file is a wrapper for |nroff.vim|. See the notes under
+that heading.  You can use this wrapper to create a filetype mapping
+that uses groff syntax features by default, instead of the mappings
+defined in filetype.vim. 
+
+
 HTML						*html.vim* *html-syntax*
 
 The coloring scheme for tags in the HTML file works as follows.
@@ -1263,7 +1278,7 @@ set "lite_minlines" to the value you desire.  Example: >
 
 LPC						*lpc.vim* *lpc-syntax*
 
-LPC stands for a simple, memory-efficient language: Lars Pensj| C. The 
+LPC stands for a simple, memory-efficient language: Lars Pensj| C. The
 file name of LPC is usually *.c.  Recognizing these files as LPC would bother
 users writing only C programs.  If you want to use LPC syntax in Vim, you
 should set a variable in your .vimrc file: >
@@ -1282,7 +1297,7 @@ For a C file that is recognized as LPC:
 If you don't want to set the variable, use the modeline in EVERY LPC file.
 
 There are several implementations for LPC, we intend to support most widely
-used ones. Here the default LPC syntax is for MudOS series, for MudOS v22 
+used ones. Here the default LPC syntax is for MudOS series, for MudOS v22
 and before, you should turn off the sensible modifiers, and this will also
 asserts the new efuns after v22 to be invalid, don't set this variable when
 you are using the latest version of MudOS: >
@@ -1298,7 +1313,7 @@ For LPC4 series of LPC: >
 	:let lpc_use_lpc4_syntax = 1
 
 For uLPC series of LPC:
-uLPC has been developed to Pike, so you should use Pike syntax 
+uLPC has been developed to Pike, so you should use Pike syntax
 instead, and the name of your source file shoud be *.pike
 
 
@@ -1401,12 +1416,55 @@ If you don't want to highlight these errors, leave it unset.
 
 NROFF						*nroff.vim* *nroff-syntax*
 
-To mark trailing spaces as an error, use this: >
+The nroff syntax file works with AT&T n/troff out of the box, but you
+will notice that GNU groff's highlighting does not.  You will need to
+activate the extra features included in the syntax file.
 
-  let nroff_space_errors = 1
+If you are using GNU groff, which is the case in all distributions of
+Linux and BSD, use: >
+
+  :let b:nroff_is_groff = 1
+
+to activate these extra features.
+
+groff is different to old AT&T n/troff. Unlike the latter, macro and
+request names can be longer than 2 characters and there are extensions
+to the language primitives. For example, in AT&T troff you may access
+the year as a 2-digit number with the request \(yr. In groff you can
+use the same request, recognized for compatibility, or you can use
+groff's native syntax, \[yr]. Or, you can use a 4-digit year directly:
+\[year]. Macro requests can be longer than 2 characters, for example,
+GNU mm accepts the requests ".VERBON" and ".VERBOFF" for creating
+verbatim environments.
+
+You should not leave empty spaces at the end of lines nor more than
+one space after a end-of-sentence period, exclamation mark, etc., in
+text that will be processed by any version of n/troff because it
+interferes with the line breaking algorithm. Unlike TeX, troff fills
+text line-by-line, not paragraph-by-paragraph and furthermore, it does
+not have a concept of glue or stretch, all space input will be output
+as is, thus you should be careful of not using more space between
+sentences than you intend to have in your final document.  To mark
+trailing spaces as an error, use: >
+
+  :let nroff_space_errors = 1
+
+If you want to mark all the spaces in your text, to detect where you
+have inserted two spaces after a period instead of one, and other
+errors that will interfere with correct typesetting of your file,
+you could use an eye-catching highliting definition for the syntax
+groups nroffDefinition and nroffDefSpecial in your configuration
+files. For example: >
+
+  hi def nroffDefinition term=italic cterm=italic gui=reverse
+  hi def nroffDefSpecial term=italic,bold cterm=italic,bold
+                         \ gui=reverse,bold
+
+Finally, there is a |groff.vim| syntax file that can be used for
+enabling groff syntax highlighting globally by default.
 
 
-OCAML   					*ocaml.vim* *ocaml-syntax*
+OCAML						*ocaml.vim* *ocaml-syntax*
 
 The OCaml syntax file handles files having the following prefixes: .ml,
 .mli, .mll and .mly.  By setting the following variable >

@@ -33,7 +33,11 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'ambw'	options.txt	/*'ambw'*
 'ap'	vi_diff.txt	/*'ap'*
 'ar'	options.txt	/*'ar'*
+'arab'	options.txt	/*'arab'*
+'arabic'	options.txt	/*'arabic'*
+'arabicshape'	options.txt	/*'arabicshape'*
 'ari'	options.txt	/*'ari'*
+'arshape'	options.txt	/*'arshape'*
 'as'	todo.txt	/*'as'*
 'autochdir'	options.txt	/*'autochdir'*
 'autoindent'	options.txt	/*'autoindent'*
@@ -370,7 +374,11 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'noallowrevins'	options.txt	/*'noallowrevins'*
 'noaltkeymap'	options.txt	/*'noaltkeymap'*
 'noar'	options.txt	/*'noar'*
+'noarab'	options.txt	/*'noarab'*
+'noarabic'	options.txt	/*'noarabic'*
+'noarabicshape'	options.txt	/*'noarabicshape'*
 'noari'	options.txt	/*'noari'*
+'noarshape'	options.txt	/*'noarshape'*
 'noas'	todo.txt	/*'noas'*
 'noatuochdir'	options.txt	/*'noatuochdir'*
 'noautoindent'	options.txt	/*'noautoindent'*
@@ -479,7 +487,9 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'norevins'	options.txt	/*'norevins'*
 'nori'	options.txt	/*'nori'*
 'norightleft'	options.txt	/*'norightleft'*
+'norightleftcmd'	options.txt	/*'norightleftcmd'*
 'norl'	options.txt	/*'norl'*
+'norlc'	options.txt	/*'norlc'*
 'noro'	options.txt	/*'noro'*
 'nors'	options.txt	/*'nors'*
 'noru'	options.txt	/*'noru'*
@@ -520,7 +530,9 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'notagrelative'	options.txt	/*'notagrelative'*
 'notagstack'	options.txt	/*'notagstack'*
 'notbi'	options.txt	/*'notbi'*
+'notbidi'	options.txt	/*'notbidi'*
 'notbs'	options.txt	/*'notbs'*
+'notermbidi'	options.txt	/*'notermbidi'*
 'noterse'	options.txt	/*'noterse'*
 'notextauto'	options.txt	/*'notextauto'*
 'notextmode'	options.txt	/*'notextmode'*
@@ -596,7 +608,9 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'revins'	options.txt	/*'revins'*
 'ri'	options.txt	/*'ri'*
 'rightleft'	options.txt	/*'rightleft'*
+'rightleftcmd'	options.txt	/*'rightleftcmd'*
 'rl'	options.txt	/*'rl'*
+'rlc'	options.txt	/*'rlc'*
 'ro'	options.txt	/*'ro'*
 'rs'	options.txt	/*'rs'*
 'rtp'	options.txt	/*'rtp'*
@@ -812,10 +826,12 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'tagstack'	options.txt	/*'tagstack'*
 'tb'	options.txt	/*'tb'*
 'tbi'	options.txt	/*'tbi'*
+'tbidi'	options.txt	/*'tbidi'*
 'tbis'	options.txt	/*'tbis'*
 'tbs'	options.txt	/*'tbs'*
 'tenc'	options.txt	/*'tenc'*
 'term'	options.txt	/*'term'*
+'termbidi'	options.txt	/*'termbidi'*
 'termencoding'	options.txt	/*'termencoding'*
 'terse'	options.txt	/*'terse'*
 'textauto'	options.txt	/*'textauto'*
@@ -930,7 +946,9 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 +GUI_GTK	various.txt	/*+GUI_GTK*
 +GUI_Motif	various.txt	/*+GUI_Motif*
 +GUI_Photon	various.txt	/*+GUI_Photon*
++GUI_neXtaw	various.txt	/*+GUI_neXtaw*
 +X11	various.txt	/*+X11*
++arabic	various.txt	/*+arabic*
 +autocmd	various.txt	/*+autocmd*
 +balloon_eval	various.txt	/*+balloon_eval*
 +browse	various.txt	/*+browse*
@@ -1058,6 +1076,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 --servername	remote.txt	/*--servername*
 --socketid	starting.txt	/*--socketid*
 --version	starting.txt	/*--version*
+-A	starting.txt	/*-A*
 -C	starting.txt	/*-C*
 -D	starting.txt	/*-D*
 -E	starting.txt	/*-E*
@@ -2621,6 +2640,7 @@ ATTENTION	usr_11.txt	/*ATTENTION*
 Abbreviations	map.txt	/*Abbreviations*
 Aleph	options.txt	/*Aleph*
 Amiga	os_amiga.txt	/*Amiga*
+Arabic	arabic.txt	/*Arabic*
 Atari	os_mint.txt	/*Atari*
 Athena	gui_x11.txt	/*Athena*
 B	motion.txt	/*B*
@@ -3350,6 +3370,7 @@ E77	message.txt	/*E77*
 E78	motion.txt	/*E78*
 E79	message.txt	/*E79*
 E80	message.txt	/*E80*
+E800	arabic.txt	/*E800*
 E81	map.txt	/*E81*
 E82	message.txt	/*E82*
 E83	message.txt	/*E83*
@@ -3568,6 +3589,7 @@ W13	message.txt	/*W13*
 W14	message.txt	/*W14*
 W15	repeat.txt	/*W15*
 W16	message.txt	/*W16*
+W17	arabic.txt	/*W17*
 WORD	motion.txt	/*WORD*
 Win32	os_win32.txt	/*Win32*
 WinEnter	autocmd.txt	/*WinEnter*
@@ -3739,6 +3761,8 @@ ap	motion.txt	/*ap*
 apache-syntax	syntax.txt	/*apache-syntax*
 apache.vim	syntax.txt	/*apache.vim*
 append()	eval.txt	/*append()*
+arabic	arabic.txt	/*arabic*
+arabic.txt	arabic.txt	/*arabic.txt*
 argc()	eval.txt	/*argc()*
 argidx()	eval.txt	/*argidx()*
 arglist	editing.txt	/*arglist*
@@ -4020,6 +4044,7 @@ cscope-intro	if_cscop.txt	/*cscope-intro*
 cscope-limitations	if_cscop.txt	/*cscope-limitations*
 cscope-options	if_cscop.txt	/*cscope-options*
 cscope-suggestions	if_cscop.txt	/*cscope-suggestions*
+cscope-win32	if_cscop.txt	/*cscope-win32*
 cscope_connection()	eval.txt	/*cscope_connection()*
 cscopepathcomp	if_cscop.txt	/*cscopepathcomp*
 cscopeprg	if_cscop.txt	/*cscopeprg*
@@ -4477,6 +4502,8 @@ gr	change.txt	/*gr*
 graphic-option-gone	version4.txt	/*graphic-option-gone*
 greek	options.txt	/*greek*
 grep	quickfix.txt	/*grep*
+groff-syntax	syntax.txt	/*groff-syntax*
+groff.vim	syntax.txt	/*groff.vim*
 group-name	syntax.txt	/*group-name*
 gs	various.txt	/*gs*
 gsp.vim	syntax.txt	/*gsp.vim*
@@ -4528,6 +4555,7 @@ gui-x11-compiling	gui_x11.txt	/*gui-x11-compiling*
 gui-x11-gtk	gui_x11.txt	/*gui-x11-gtk*
 gui-x11-misc	gui_x11.txt	/*gui-x11-misc*
 gui-x11-motif	gui_x11.txt	/*gui-x11-motif*
+gui-x11-neXtaw	gui_x11.txt	/*gui-x11-neXtaw*
 gui-x11-printing	gui_x11.txt	/*gui-x11-printing*
 gui-x11-start	gui_x11.txt	/*gui-x11-start*
 gui-x11-various	gui_x11.txt	/*gui-x11-various*
@@ -5053,6 +5081,7 @@ netbeans-support	netbeans.txt	/*netbeans-support*
 netbeans.txt	netbeans.txt	/*netbeans.txt*
 netrw	pi_netrw.txt	/*netrw*
 netrw-activate	pi_netrw.txt	/*netrw-activate*
+netrw-debug	pi_netrw.txt	/*netrw-debug*
 netrw-ex	pi_netrw.txt	/*netrw-ex*
 netrw-netrc	pi_netrw.txt	/*netrw-netrc*
 netrw-options	pi_netrw.txt	/*netrw-options*

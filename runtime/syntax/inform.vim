@@ -2,7 +2,7 @@
 " Language:	Inform
 " Maintainer:	Stephen Thomas (informvim@stephenthomas.uklinux.net)
 " URL:		http://www.stephenthomas.uklinux.net/informvim
-" Last Change:	2003 Apr 07
+" Last Change:	2003 Apr 25
 
 
 " Quit when a syntax file was already loaded
@@ -182,7 +182,7 @@ syn keyword informOperator near from
 
 syn keyword informKeyword dictionary symbols objects verbs assembly
 syn keyword informKeyword expressions lines tokens linker on off alias long
-syn keyword informKeyword additive score time string table 
+syn keyword informKeyword additive score time string table
 syn keyword informKeyword with private has class error fatalerror
 syn keyword informKeyword warning self
 

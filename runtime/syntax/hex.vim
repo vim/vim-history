@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Intel hex MCS51
 " Maintainer:	Sams Ricahrd <sams@ping.at>
-" Last Change:	2002 Oct 26
+" Last Change:	2003 Apr 25
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -41,10 +41,10 @@ if version >= 508 || !exists("did_hex_syntax_inits")
   " The default methods for highlighting.  Can be overridden later
   HiLink hexStart		SpecialKey
   HiLink hexDataByteCount	Constant
-  HiLink hexAdress      	Comment
-  HiLink hexRecType     	WarningMsg
-  HiLink hexChecksum		Search  
-  HiLink hexExtAdrRec   	hexAdress
+  HiLink hexAdress		Comment
+  HiLink hexRecType		WarningMsg
+  HiLink hexChecksum		Search
+  HiLink hexExtAdrRec		hexAdress
   HiLink hexEOF			hexSpecRec
   HiLink hexExtLinAdrRec	hexAdress
   HiLink hexSpecRec		DiffAdd
