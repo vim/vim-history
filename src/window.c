@@ -4701,9 +4701,6 @@ vim_FullName(fname, buf, len, force)
     int
 min_rows()
 {
-#ifdef FEAT_WINDOWS
-    win_T	*wp;
-#endif
     int		total;
 
     if (firstwin == NULL)	/* not initialized yet */
@@ -4711,11 +4708,10 @@ min_rows()
 
     total = 1;		/* count the room for the command line */
 #ifdef FEAT_WINDOWS
-    for (wp = firstwin; wp != NULL; wp = wp->w_next)
-	total += p_wmh + W_STATUS_HEIGHT(wp);
-    if (p_wmh == 0)
+    total += frame_minheight(topframe, NULL);
+#else
+    total += 1;		/* at least one window should have a line! */
 #endif
-	total += 1;	/* at least one window should have a line! */
     return total;
 }
 
