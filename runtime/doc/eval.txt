@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0u.  Last change: 2001 Feb 01
+*eval.txt*      For Vim version 6.0v.  Last change: 2001 Feb 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -548,9 +548,9 @@ v:charconvert_out
 
 					*v:cmdarg* *cmdarg-variable*
 v:cmdarg	The extra arguments given to a file read/write command.
-		Currently these are "++cc=" and "++ff=".  This variable is set
-		before an autocommand event for a file read/write command is
-		triggered.  There is a leading space to make it possible to
+		Currently these are "++enc=" and "++ff=".  This variable is
+		set before an autocommand event for a file read/write command
+		is triggered.  There is a leading space to make it possible to
 		append this variable directly after the read/write command.
 		Note: The "+cmd" argument isn't included here, because it will
 		be executed anyway.
@@ -794,10 +794,13 @@ browse({save}, {title}, {initdir}, {default})
 
 bufexists({expr})					*bufexists()*
 		The result is a Number, which is non-zero if a buffer called
-		{expr} exists.  If the {expr} argument is a string it must
-		match a buffer name exactly.  If the {expr} argument is a
-		number buffer numbers are used.  Use "bufexists(0)" to test
-		for the existence of an alternate file name.
+		{expr} exists.
+		If the {expr} argument is a string it must match a buffer name
+		exactly.  Unlisted buffers will not be found.
+		If the {expr} argument is a number buffer numbers are used.
+		Unlisted buffers will be found.
+		Use "bufexists(0)" to test for the existence of an alternate
+		file name.
 							*buffer_exists()*
 		Obsolete name: buffer_exists().
 
@@ -1397,6 +1400,24 @@ hostname()						*hostname()*
 		The result is a String, which is the name of the machine on
 		which Vim is currently running. Machine names greater than
 		256 characters long are truncated.
+
+iconv({expr}, {from}, {to})				*iconv()*
+		The result is a String, which is the text {expr} converted
+		from encoding {from} to encoding {to}.
+		When the conversion fails an empty string is returned.
+		The encoding names are whatever the iconv() library function
+		can accept, see ":!man 3 iconv".
+		Most conversions require Vim to be compiled with the |+iconv|
+		feature.  Otherwise only UTF-8 to latin1 conversion and back
+		can be done.
+		This can be used to display messages with special characters,
+		no matter what 'encoding' is set to.  Write the message in
+		UTF-8 and use: >
+			echo iconv(utf8_str, "utf-8", &enc)
+<		Note that Vim uses UTF-8 for all Unicode encodings, conversion
+		from/to UCS-2 is automatically changed to use UTF-8.  You
+		cannot use UCS-2 in a string anyway, because of the NUL bytes.
+		{only available when compiled with the +multi_byte feature}
 
 							*indent()*
 indent({lnum})	The result is a Number, which is indent of line {lnum} in the

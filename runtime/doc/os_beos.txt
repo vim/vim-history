@@ -1,4 +1,4 @@
-*os_beos.txt*	For Vim version 6.0u.  Last change: 2000 Jul 07
+*os_beos.txt*	For Vim version 6.0v.  Last change: 2001 Feb 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -15,7 +15,7 @@ matters not discussed in this file, Vim behaves very much like the Unix
  1. General			|beos-general|
  2. Compiling Vim		|beos-compiling|
  3. Timeout in the Terminal	|beos-timeout|
- 4. Unicode vs. Latin-1		|beos-unicode|
+ 4. Unicode vs. Latin1		|beos-unicode|
  5. The BeOS GUI		|beos-gui|
  6. The $VIM directory		|beos-vimdir|
  7. Drag & Drop			|beos-dragndrop|
@@ -116,17 +116,17 @@ settings do not seem to work properly. This has been the case since DR7 at
 least and still has not been fixed as of PR2.
 
 							*beos-unicode*
-Unicode vs. Latin-1					*beos-utf8*
+Unicode vs. Latin1					*beos-utf8*
 
 BeOS uses Unicode and UTF-8 for text strings (16-bit characters encoded to
-8-bit characters). Vim assumes ISO-Latin-1 or other 8-bit character codes.
+8-bit characters). Vim assumes ISO-Latin1 or other 8-bit character codes.
 This does not produce the desired results for non-ASCII characters. Try the
 command :digraphs to see. If they look messed up, use :set isprint=@ to
-(slightly) improve the display of ISO-Latin-1 characters 128-255.  This works
+(slightly) improve the display of ISO-Latin1 characters 128-255.  This works
 better in the GUI, depending on which font you use (below).
 
 You may also use the /boot/bin/xtou command to convert UTF-8 files from (xtou
--f iso1 filename) or to (xtou -t iso1 filename) ISO-Latin-1 characters.
+-f iso1 filename) or to (xtou -t iso1 filename) ISO-Latin1 characters.
 
 Some remarks about the GUI:				*beos-gui*
 

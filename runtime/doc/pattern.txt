@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.0u.  Last change: 2001 Feb 04
+*pattern.txt*   For Vim version 6.0v.  Last change: 2001 Feb 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -583,10 +583,10 @@ endless loop.  If you try it, you will get this error message: >
 An ordinary atom can be:
 
 							*/^*
-^	At beginning of pattern or after "\|", "\(", or "\n": matches
+^	At beginning of pattern or after "\|", "\(", "\%(" or "\n": matches
 	start-of-line; at other positions, matches literal '^'. |/zero-width|
 	Example		matches ~
-	^beep(		Probably the start of the C function "beep".
+	^beep(		the start of the C function "beep" (probably).
 
 							*/\^*
 \^	At any position, matches literal '^'.
@@ -594,11 +594,11 @@ An ordinary atom can be:
 							*/\_^*
 \_^	At any position, matches start-of-line. |/zero-width|
 	Example		matches ~
-	\_s*\_^lbl	white space and blank lines and then "lbl" at
+	\_s*\_^foo	white space and blank lines and then "foo" at
 			start-of-line
 
 							*/$*
-$	At end of pattern or in front of "\|" or "\)", matches end-of-line
+$	At end of pattern or in front of "\|" or "\)": matches end-of-line
 	<EOL>; at other positions, matches literal '$'. |/zero-width|
 
 							*/\$*
@@ -607,7 +607,7 @@ $	At end of pattern or in front of "\|" or "\)", matches end-of-line
 							*/\_$*
 \_$	At any position, matches end-of-line. |/zero-width|
 	Example		matches ~
-	lbl\_$\_s*	"lbl" at end-of-line and following white space and
+	foo\_$\_s*	"foo" at end-of-line and following white space and
 			blank lines
 
 .	(with 'nomagic': \.)				*/.* */\.*
@@ -651,11 +651,14 @@ $	At end of pattern or in front of "\|" or "\)", matches end-of-line
 							*/\%$*
 \%$	Matches end of the file.  When matching with a string, matches the
 	end of the string. {not in Vi}
-	Note that this does NOT find the last "VIM" in a file:
+	Note that this does NOT find the last "VIM" in a file: >
 		/VIM\_.\{-}\%$
-	It will find the next VIM, because the part after it will always
+<	It will find the next VIM, because the part after it will always
 	match.  This one will find the last "VIM" in the file: >
 		/VIM\ze\(\(VIM\)\@!\_.\)*\%$
+<	This uses |/\@!| to ascertain that "VIM" does NOT match in any
+	position after the first "VIM".
+	Searching from the end of the file backwards is easier!
 
 Character classes: {not in Vi}
 \i	identifier character (see 'isident' option)	*/\i*
@@ -705,7 +708,7 @@ Character classes: {not in Vi}
 ~	matches the last given substitute string	*/~* */\~*
 
 \(\)	A pattern enclosed by escaped parentheses	*/\(* */\(\)* */\)*
-	(e.g., "\(^a\)") matches ^a
+	(e.g., "\(^a\)") matches 'a' at the start of a line.
 
 \1      Matches the same string that was matched by	*/\1*
 	the first sub-expression in \( and \). {not in Vi}

@@ -94,8 +94,8 @@ win_resize_off()
 
     void
 mch_write(p, len)
-    char_u  *p;
-    int	    len;
+    char_u	*p;
+    int		len;
 {
     Write(raw_out, (char *)p, (long)len);
 }
@@ -175,6 +175,11 @@ mch_inchar(buf, maxlen, time)
 	{
 #ifdef FEAT_AUTOCMD
             once_already = 0;
+#endif
+#ifdef FEAT_MBYTE
+	    /* Convert from 'termencoding' to 'encoding'. */
+	    if (input_conv.vc_type != CONV_NONE)
+		len = convert_input(buf, len, maxlen);
 #endif
 	    return len;
 	}

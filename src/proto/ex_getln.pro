@@ -28,7 +28,7 @@ void remove_key_from_history __ARGS((void));
 int get_list_range __ARGS((char_u **str, int *num1, int *num2));
 void ex_history __ARGS((exarg_t *eap));
 void prepare_viminfo_history __ARGS((int asklen));
-int read_viminfo_history __ARGS((char_u *line, FILE *fp));
+int read_viminfo_history __ARGS((vir_t *virp));
 void finish_viminfo_history __ARGS((void));
 void write_viminfo_history __ARGS((FILE *fp));
 void cmd_pchar __ARGS((int c, int offset));

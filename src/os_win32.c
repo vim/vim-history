@@ -1184,7 +1184,9 @@ mch_inchar(
 	else
 #endif /* FEAT_MOUSE */
 	{
-	    if ((c = tgetch()) == Ctrl_C)
+	    c = tgetch();
+
+	    if (c == Ctrl_C)
 		g_fCBrkPressed = TRUE;
 
 #ifdef FEAT_MOUSE
@@ -1193,6 +1195,12 @@ mch_inchar(
 	    {
 		*buf++ = c;
 		len++;
+#ifdef FEAT_MBYTE
+		/* Only convert normal characters, not special keys. */
+		if (input_conv.vc_type != CONV_NONE
+					    && (len == 1 || buf[-2] != K_NUL))
+		    len += convert_input(buf - 1, 1, maxlen - len + 1) - 1;
+#endif
 
 #ifdef MCH_WRITE_DUMP
 		if (fdDump)

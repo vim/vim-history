@@ -46,4 +46,7 @@ void clip_x11_request_selection __ARGS((Widget myShell, Display *dpy));
 void clip_x11_lose_selection __ARGS((Widget myShell));
 int clip_x11_own_selection __ARGS((Widget myShell));
 void clip_x11_set_selection __ARGS((void));
+int jump_to_mouse __ARGS((int flags, int *inclusive));
+win_t *mouse_find_win __ARGS((int *rowp, int *colp));
+int get_fpos_of_mouse __ARGS((pos_t *mpos));
 /* vim: set ft=c : */

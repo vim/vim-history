@@ -95,6 +95,7 @@ SRC = \
 	edit.c \
 	eval.c \
 	ex_cmds.c \
+	ex_cmds2.c \
 	ex_docmd.c \
 	ex_getln.c \
 	fileio.c \
@@ -108,6 +109,7 @@ SRC = \
 	message.c \
 	misc1.c \
 	misc2.c \
+	move.c \
 	multibyte.c \
 	normal.c \
 	ops.c \
@@ -132,6 +134,7 @@ OBJ = \
 	edit.o \
 	eval.o \
 	ex_cmds.o \
+	ex_cmds2.o \
 	ex_docmd.o \
 	ex_getln.o \
 	fileio.o \
@@ -145,6 +148,7 @@ OBJ = \
 	message.o \
 	misc1.o \
 	misc2.o \
+	move.o \
 	multibyte.o \
 	normal.o \
 	ops.o \
@@ -169,6 +173,7 @@ PRO = \
 	proto/edit.pro \
 	proto/eval.pro \
 	proto/ex_cmds.pro \
+	proto/ex_cmds2.pro \
 	proto/ex_docmd.pro \
 	proto/ex_getln.pro \
 	proto/fileio.pro \
@@ -182,6 +187,7 @@ PRO = \
 	proto/message.pro \
 	proto/misc1.pro \
 	proto/misc2.pro \
+	proto/move.pro \
 	proto/multibyte.pro \
 	proto/normal.pro \
 	proto/ops.pro \
@@ -264,8 +270,10 @@ edit.o:			edit.c
 proto/edit.pro:		edit.c
 eval.o:			eval.c
 proto/eval.pro:		eval.c
-ex_cmds.o:		ex_cmds.c  ex_cmds.h
-proto/ex_cmds.pro:	ex_cmds.c  ex_cmds.h
+ex_cmds.o:		ex_cmds.c
+proto/ex_cmds.pro:	ex_cmds.c
+ex_cmds2.o:		ex_cmds2.c
+proto/ex_cmds2.pro:	ex_cmds2.c
 ex_docmd.o:		ex_docmd.c ex_cmds.h
 proto/ex_docmd.pro:	ex_docmd.c ex_cmds.h
 ex_getln.o:		ex_getln.c
@@ -292,6 +300,8 @@ misc1.o:		misc1.c
 proto/misc1.pro:	misc1.c
 misc2.o:		misc2.c
 proto/misc2.pro:	misc2.c
+move.o:			move.c
+proto/move.pro:		move.c
 multibyte.o:		multibyte.c
 proto/multibyte.pro:	multibyte.c
 normal.o:		normal.c

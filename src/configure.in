@@ -612,6 +612,9 @@ else
     X_LIB="-lXt -lX11";
     AC_SUBST(X_LIB)
 
+    ac_save_LDFLAGS="$LDFLAGS"
+    LDFLAGS="-L$x_libraries $LDFLAGS"
+
     dnl Check for -lXdmcp (needed on SunOS 4.1.4)
     dnl For HP-UX 10.20 it must be before -lSM -lICE
     AC_CHECK_LIB(Xdmcp, _XdmcpAuthDoIt, [X_EXTRA_LIBS="$X_EXTRA_LIBS -lXdmcp"],,
@@ -621,20 +624,15 @@ else
     dnl The check above doesn't do this, try here (again).  Also needed to get
     dnl them after Xdmcp.  link.sh will remove them when not needed.
     dnl Check for other function than above to avoid the cached value
-    ac_save_LDFLAGS="$LDFLAGS"
-    LDFLAGS="$LDFLAGS -L$x_libraries"
     AC_CHECK_LIB(ICE, IceOpenConnection,
 		  [X_EXTRA_LIBS="$X_EXTRA_LIBS -lSM -lICE"],, [$X_EXTRA_LIBS])
-    LDFLAGS="$ac_save_LDFLAGS"
-
-    ldflags_save=$LDFLAGS
-    LDFLAGS="$LDFLAGS $X_LIBS"
 
     dnl Check for -lXpm (needed for some versions of Motif)
+    LDFLAGS="$X_LIBS $ac_save_LDFLAGS"
     AC_CHECK_LIB(Xpm, XpmCreatePixmapFromData, [X_PRE_LIBS="$X_PRE_LIBS -lXpm"],,
 		[-lXt $X_PRE_LIBS -lXpm -lX11 $X_EXTRA_LIBS])
 
-    LDFLAGS=$ldflags_save
+    LDFLAGS="$ac_save_LDFLAGS"
   fi
 fi
 
@@ -1102,7 +1100,7 @@ fi
 if test -z "$SKIP_ATHENA" -o -z "$SKIP_MOTIF"; then
   dnl Check for -lXext and then for -lXmu
   ldflags_save=$LDFLAGS
-  LDFLAGS="$LDFLAGS $X_LIBS"
+  LDFLAGS="$X_LIBS $LDFLAGS"
   AC_CHECK_LIB(Xext, XShapeQueryExtension, [GUI_X_LIBS="-lXext"],,
 		[-lXt $X_PRE_LIBS -lX11 $X_EXTRA_LIBS])
   AC_CHECK_LIB(Xmu, XmuCreateStippledPixmap, [GUI_X_LIBS="-lXmu $GUI_X_LIBS"],,
@@ -1224,7 +1222,7 @@ fi
 
 AC_CHECK_HEADERS(stdlib.h string.h sys/select.h sys/utsname.h termcap.h \
 	fcntl.h sgtty.h sys/ioctl.h sys/time.h termio.h \
-	iconv.h unistd.h stropts.h errno.h strings.h \
+	iconv.h langinfo.h unistd.h stropts.h errno.h strings.h \
 	sys/resource.h sys/systeminfo.h locale.h \
 	sys/stream.h sys/ptem.h termios.h libc.h sys/statfs.h \
 	poll.h sys/poll.h pwd.h utime.h sys/param.h libintl.h \
@@ -1569,6 +1567,15 @@ AC_TRY_LINK([
 	AC_MSG_RESULT(yes; with -liconv); AC_DEFINE(HAVE_ICONV),
 	LIBS="$save_LIBS"; AC_MSG_RESULT(no)))
 
+AC_MSG_CHECKING(for nl_langinfo(CODESET))
+AC_TRY_LINK([
+#ifdef HAVE_LANGINFO_H
+# include <langinfo.h>
+#endif
+], [char *cs = nl_langinfo(CODESET);],
+	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_NL_LANGINFO_CODESET),
+	AC_MSG_RESULT(no))
+
 dnl Link with posix1e for ACL stuff
 AC_CHECK_LIB(posix1e, acl_get_file, [LIBS="$LIBS -lposix1e"],,)
 
@@ -1674,7 +1681,7 @@ if test "$enable_multibyte" = "yes"; then
   ldflags_save=$LDFLAGS
   if test -n "$x_includes" ; then
     CFLAGS="$CFLAGS -I$x_includes"
-    LDFLAGS="$LDFLAGS $X_LIBS -lX11"
+    LDFLAGS="$X_LIBS $LDFLAGS -lX11"
     AC_MSG_CHECKING(whether X_LOCALE needed)
     AC_TRY_COMPILE([#include <X11/Xlocale.h>],,
 	AC_TRY_LINK_FUNC([_Xsetlocale], [AC_MSG_RESULT(yes)

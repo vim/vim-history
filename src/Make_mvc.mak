@@ -205,6 +205,7 @@ OBJ = \
 	$(OUTDIR)\edit.obj \
 	$(OUTDIR)\eval.obj \
 	$(OUTDIR)\ex_cmds.obj \
+	$(OUTDIR)\ex_cmds2.obj \
 	$(OUTDIR)\ex_docmd.obj \
 	$(OUTDIR)\ex_getln.obj \
 	$(OUTDIR)\fileio.obj \
@@ -218,6 +219,7 @@ OBJ = \
 	$(OUTDIR)\message.obj \
 	$(OUTDIR)\misc1.obj \
 	$(OUTDIR)\misc2.obj \
+	$(OUTDIR)\move.obj \
 	$(OUTDIR)\multibyte.obj \
 	$(OUTDIR)\normal.obj \
 	$(OUTDIR)\option.obj \
@@ -458,8 +460,11 @@ $(OUTDIR)/edit.obj:	$(OUTDIR) edit.c  $(INCL)
 $(OUTDIR)/eval.obj:	$(OUTDIR) eval.c  $(INCL)
 	$(CC) $(CFLAGS) eval.c /Fo$(OUTDIR)/eval.obj $(PDB)
 
-$(OUTDIR)/ex_cmds.obj:	$(OUTDIR) ex_cmds.c  $(INCL) ex_cmds.h
+$(OUTDIR)/ex_cmds.obj:	$(OUTDIR) ex_cmds.c  $(INCL)
 	$(CC) $(CFLAGS) ex_cmds.c /Fo$(OUTDIR)/ex_cmds.obj $(PDB)
+
+$(OUTDIR)/ex_cmds2.obj:	$(OUTDIR) ex_cmds2.c  $(INCL)
+	$(CC) $(CFLAGS) ex_cmds2.c /Fo$(OUTDIR)/ex_cmds2.obj $(PDB)
 
 $(OUTDIR)/ex_docmd.obj:	$(OUTDIR) ex_docmd.c  $(INCL) ex_cmds.h
 	$(CC) $(CFLAGS) ex_docmd.c /Fo$(OUTDIR)/ex_docmd.obj $(PDB)
@@ -526,6 +531,9 @@ $(OUTDIR)/misc1.obj:	$(OUTDIR) misc1.c  $(INCL)
 
 $(OUTDIR)/misc2.obj:	$(OUTDIR) misc2.c  $(INCL)
 	$(CC) $(CFLAGS) misc2.c /Fo$(OUTDIR)/misc2.obj $(PDB)
+
+$(OUTDIR)/move.obj:	$(OUTDIR) move.c  $(INCL)
+	$(CC) $(CFLAGS) move.c /Fo$(OUTDIR)/move.obj $(PDB)
 
 $(OUTDIR)/multibyte.obj: $(OUTDIR) multibyte.c  $(INCL)
 	$(CC) $(CFLAGS) multibyte.c /Fo$(OUTDIR)/multibyte.obj $(PDB)
@@ -621,6 +629,7 @@ proto.h: \
 	proto/edit.pro \
 	proto/eval.pro \
 	proto/ex_cmds.pro \
+	proto/ex_cmds2.pro \
 	proto/ex_docmd.pro \
 	proto/ex_getln.pro \
 	proto/fileio.pro \
@@ -633,6 +642,7 @@ proto.h: \
 	proto/message.pro \
 	proto/misc1.pro \
 	proto/misc2.pro \
+	proto/move.pro \
 	proto/multibyte.pro \
 	proto/normal.pro \
 	proto/ops.pro \

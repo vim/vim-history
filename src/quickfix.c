@@ -34,6 +34,7 @@ static buf_t	*qf_find_buf __ARGS((void));
 static void	qf_update_buffer __ARGS((void));
 static void	qf_fill_buffer __ARGS((void));
 #endif
+static char_u	*get_mef_name __ARGS((void));
 
 static struct dir_stack_t   *dir_stack = NULL;
 
@@ -1670,4 +1671,156 @@ buf_hide(buf)
     }
     return (p_hid || cmdmod.hide);
 }
+
+/*
+ * Used for ":make" and ":grep".
+ */
+    void
+ex_make(eap)
+    exarg_t	*eap;
+{
+    char_u	*name;
+
+    autowrite_all();
+    name = get_mef_name();
+    if (name == NULL)
+	return;
+    mch_remove(name);	    /* in case it's not unique */
+
+    /*
+     * If 'shellpipe' empty: don't redirect to 'errorfile'.
+     */
+    if (*p_sp == NUL)
+	sprintf((char *)IObuff, "%s%s%s", p_shq, eap->arg, p_shq);
+    else
+	sprintf((char *)IObuff, "%s%s%s %s %s", p_shq, eap->arg, p_shq,
+								  p_sp, name);
+    /*
+     * Output a newline if there's something else than the :make command that
+     * was typed (in which case the cursor is in column 0).
+     */
+    if (msg_col != 0)
+	msg_putchar('\n');
+    MSG_PUTS(":!");
+    msg_outtrans(IObuff);		/* show what we are doing */
+
+    /* let the shell know if we are redirecting output or not */
+    do_shell(IObuff, *p_sp ? SHELL_DOOUT : 0);
+
+#ifdef AMIGA
+    out_flush();
+		/* read window status report and redraw before message */
+    (void)char_avail();
+#endif
+
+    if (qf_init(name, eap->cmdidx == CMD_grep ? p_gefm : p_efm) > 0)
+	qf_jump(0, 0, FALSE);		/* display first error */
+
+    mch_remove(name);
+    vim_free(name);
+}
+
+/*
+ * Return the name for the errorfile, in allocated memory.
+ * Find a new unique name when 'makeef' contains "##".
+ * Returns NULL for error.
+ */
+    static char_u *
+get_mef_name()
+{
+    char_u	*p;
+    char_u	*name;
+    static int	start = -1;
+    static int	off = 0;
+#ifdef HAVE_LSTAT
+    struct stat	sb;
+#endif
+
+    if (*p_mef == NUL)
+    {
+	name = vim_tempname('e');
+	if (name == NULL)
+	    EMSG(_(e_notmp));
+	return name;
+    }
+
+    for (p = p_mef; *p; ++p)
+	if (p[0] == '#' && p[1] == '#')
+	    break;
+
+    if (*p == NUL)
+	return vim_strsave(p_mef);
+
+    /* Keep trying until the name doesn't exist yet. */
+    for (;;)
+    {
+	if (start == -1)
+	    start = mch_get_pid();
+	else
+	    off += 19;
+
+	name = alloc((unsigned)STRLEN(p_mef) + 30);
+	if (name == NULL)
+	    break;
+	STRCPY(name, p_mef);
+	sprintf((char *)name + (p - p_mef), "%d%d", start, off);
+	STRCAT(name, p + 2);
+	if (mch_getperm(name) < 0
+#ifdef HAVE_LSTAT
+		    /* Don't accept a symbolic link, its a security risk. */
+		    && mch_lstat((char *)name, &sb) < 0
+#endif
+		)
+	    break;
+	vim_free(name);
+    }
+    return name;
+}
+
+/*
+ * ":cc", ":crewind", ":cfirst" and ":clast".
+ */
+    void
+ex_cc(eap)
+    exarg_t	*eap;
+{
+    qf_jump(0,
+	    eap->addr_count > 0
+	    ? (int)eap->line2
+	    : eap->cmdidx == CMD_cc
+		? 0
+		: (eap->cmdidx == CMD_crewind || eap->cmdidx == CMD_cfirst)
+		    ? 1
+		    : 32767,
+	    eap->forceit);
+}
+
+/*
+ * ":cnext", ":cnfile", ":cNext" and ":cprevious".
+ */
+    void
+ex_cnext(eap)
+    exarg_t	*eap;
+{
+    qf_jump(eap->cmdidx == CMD_cnext
+	    ? FORWARD
+	    : eap->cmdidx == CMD_cnfile
+		? FORWARD_FILE
+		: BACKWARD,
+	    eap->addr_count > 0 ? (int)eap->line2 : 1, eap->forceit);
+}
+
+/*
+ * ":cfile" command.
+ */
+    void
+ex_cfile(eap)
+    exarg_t	*eap;
+{
+    if (*eap->arg != NUL)
+	set_string_option_direct((char_u *)"ef", -1, eap->arg, OPT_FREE);
+    if (qf_init(p_ef, p_efm) > 0)
+	qf_jump(0, 0, eap->forceit);		/* display first error */
+}
+
 #endif /* FEAT_QUICKFIX */

@@ -1,12 +1,14 @@
 " Menu Translations:	Korean
 " Maintainer:		Sung-Hyun Nam <namsh@kldp.org>
-" Last Change:		2001 Jan 15
+" Last Change:		2001 Feb 11
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
   finish
 endif
 let did_menu_trans = 1
+
+scriptencoding euc-kr
 
 " Help menu
 menutrans &Help			µµ¿ò¸»(&H)

@@ -792,29 +792,10 @@ _OnDeadChar(
     static void
 _OnChar(
     HWND hwnd,
-    UINT ch,	/* Careful: CSI arrives as 0xffffff9b */
+    UINT ch,
     int cRepeat)
 {
-    char_u	string[3];
-
-    /* TRACE("OnChar(%d, %c)\n", ch, ch); */
-
-    string[0] = ch;
-    if (string[0] == Ctrl_C && !mapped_ctrl_c)
-    {
-	trash_input_buf();
-	got_int = TRUE;
-    }
-
-    if (string[0] == CSI)
-    {
-	/* Insert CSI as K_CSI. */
-	string[1] = KS_EXTRA;
-	string[2] = KE_CSI;
-	add_to_input_buf(string, 3);
-    }
-    else
-	add_to_input_buf(string, 1);
+    key_hit(ch);
 }
 
     static void
@@ -823,59 +804,7 @@ _OnSysChar(
     UINT ch,
     int cRepeat)
 {
-    char_u	string[6]; /* Enough for maximum key sequence - see below */
-    int		len;
-    int		modifiers;
-
-    /* TRACE("OnSysChar(%d, %c)\n", ch, ch); */
-
-    /* OK, we have a character key (given by ch) which was entered with the
-     * ALT key pressed. Eg, if the user presses Alt-A, then ch == 'A'. Note
-     * that the system distinguishes Alt-a and Alt-A (Alt-Shift-a unless
-     * CAPSLOCK is pressed) at this point.
-     */
-    modifiers = MOD_MASK_ALT;
-    if (GetKeyState(VK_SHIFT) & 0x8000)
-	modifiers |= MOD_MASK_SHIFT;
-    if (GetKeyState(VK_CONTROL) & 0x8000)
-	modifiers |= MOD_MASK_CTRL;
-
-    ch = simplify_key(ch, &modifiers);
-    /* remove the SHIFT modifier for keys where it's already included, e.g.,
-     * '(' and '*' */
-    if (ch < 0x100 && (!isalpha(ch)) && isprint(ch))
-	modifiers &= ~MOD_MASK_SHIFT;
-    /* Interpret the ALT key as making the key META */
-    if (modifiers & MOD_MASK_ALT)
-    {
-	ch |= 0x80;
-	modifiers &= ~MOD_MASK_ALT;
-    }
-
-    len = 0;
-    if (modifiers)
-    {
-	string[len++] = CSI;
-	string[len++] = KS_MODIFIER;
-	string[len++] = modifiers;
-    }
-
-    if (IS_SPECIAL((int)ch))
-    {
-	string[len++] = CSI;
-	string[len++] = K_SECOND((int)ch);
-	string[len++] = K_THIRD((int)ch);
-    }
-    else if (ch == CSI)
-    {
-	string[len++] = CSI;
-	string[len++] = KS_EXTRA;
-	string[len++] = KE_CSI;
-    }
-    else
-	string[len++] = ch;
-
-    add_to_input_buf(string, len);
+    sys_key_hit(ch);
 }
 
     static void
@@ -2859,12 +2788,12 @@ gui_mch_draw_part_cursor(
     static void
 process_message(void)
 {
-    MSG	    msg;
-    UINT    vk;		/* Virtual key */
-    char_u  string[3];
-    int	    i;
-    int	    modifiers = 0;
-    int	    key;
+    MSG		msg;
+    UINT	vk;		/* Virtual key */
+    char_u	string[40];
+    int		i;
+    int		modifiers = 0;
+    int		key;
 
     GetMessage(&msg, NULL, 0, 0);
 
@@ -2946,6 +2875,8 @@ process_message(void)
 		    key = TO_SPECIAL(special_keys[i].vim_code0,
 						   special_keys[i].vim_code1);
 		key = simplify_key(key, &modifiers);
+		if (key == CSI)
+		    key = K_CSI;
 
 		if (modifiers)
 		{
@@ -2964,8 +2895,14 @@ process_message(void)
 		}
 		else
 		{
+		    int	len = 1;
+
 		    string[0] = key;
-		    add_to_input_buf(string, 1);
+#ifdef FEAT_MBYTE
+		    if (input_conv.vc_type != CONV_NONE)
+			len = convert_input(string, len, sizeof(string));
+#endif
+		    add_to_input_buf(string, len);
 		}
 		break;
 	    }

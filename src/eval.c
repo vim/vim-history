@@ -232,6 +232,7 @@ static void f_histnr __ARGS((VAR argvars, VAR retvar));
 static void f_hlexists __ARGS((VAR argvars, VAR retvar));
 static void f_hlID __ARGS((VAR argvars, VAR retvar));
 static void f_hostname __ARGS((VAR argvars, VAR retvar));
+static void f_iconv __ARGS((VAR argvars, VAR retvar));
 static void f_indent __ARGS((VAR argvars, VAR retvar));
 static void f_isdirectory __ARGS((VAR argvars, VAR retvar));
 static void f_input __ARGS((VAR argvars, VAR retvar));
@@ -2181,6 +2182,7 @@ static struct fst
     {"hlID",		1, 1, f_hlID},
     {"hlexists",	1, 1, f_hlexists},
     {"hostname",	0, 0, f_hostname},
+    {"iconv",		3, 3, f_iconv},
     {"indent",		1, 1, f_indent},
     {"input",		1, 1, f_input},
     {"inputsecret",	1, 1, f_inputsecret},
@@ -2685,7 +2687,7 @@ get_buf_var(avar)
     save_cpo = p_cpo;
     p_cpo = (char_u *)"";
 
-    buf = buflist_findnr(buflist_findpat(name, name + STRLEN(name)));
+    buf = buflist_findnr(buflist_findpat(name, name + STRLEN(name), FALSE));
 
     p_magic = save_magic;
     p_cpo = save_cpo;
@@ -3712,6 +3714,9 @@ f_has(argvars, retvar)
 #ifdef FEAT_FIND_ID
 	"find_in_path",
 #endif
+#ifdef FEAT_FOLDING
+	"folding",
+#endif
 #if !defined(USE_SYSTEM) && defined(UNIX)
 	"fork",
 #endif
@@ -4133,6 +4138,43 @@ f_hostname(argvars, retvar)
     mch_get_host_name(hostname, 256);
     retvar->var_type = VAR_STRING;
     retvar->var_val.var_string = vim_strsave(hostname);
+}
+
+/*
+ * iconv() function
+ */
+/*ARGSUSED*/
+    static void
+f_iconv(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+#ifdef FEAT_MBYTE
+    char_u	buf1[NUMBUFLEN];
+    char_u	buf2[NUMBUFLEN];
+    char_u	*from, *to, *str;
+    vimconv_t	vimconv;
+#endif
+
+    retvar->var_type = VAR_STRING;
+    retvar->var_val.var_string = NULL;
+
+#ifdef FEAT_MBYTE
+    str = get_var_string(&argvars[0]);
+    from = enc_canonize(enc_skip(get_var_string_buf(&argvars[1], buf1)));
+    to = enc_canonize(enc_skip(get_var_string_buf(&argvars[2], buf2)));
+    convert_setup(&vimconv, from, to);
+
+    /* If the encodings are equal, no conversion needed. */
+    if (vimconv.vc_type == CONV_NONE)
+	retvar->var_val.var_string = vim_strsave(str);
+    else
+	retvar->var_val.var_string = string_convert(&vimconv, str, NULL);
+
+    convert_setup(&vimconv, (char_u *)"", (char_u *)"");
+    vim_free(from);
+    vim_free(to);
+#endif
 }
 
 /*
@@ -5722,8 +5764,8 @@ set_cmdarg(eap, oldarg)
 	else
 	    len = 0;
 # ifdef FEAT_MBYTE
-	if (eap->force_fcc != 0)
-	    len += STRLEN(eap->cmd + eap->force_fcc) + 6;
+	if (eap->force_enc != 0)
+	    len += STRLEN(eap->cmd + eap->force_enc) + 7;
 # endif
 	newval = alloc(len + 1);
 	if (newval == NULL)
@@ -5733,9 +5775,9 @@ set_cmdarg(eap, oldarg)
 	else
 	    *newval = NUL;
 # ifdef FEAT_MBYTE
-	if (eap->force_fcc != 0)
-	    sprintf((char *)newval + STRLEN(newval), " ++cc=%s",
-						   eap->cmd + eap->force_fcc);
+	if (eap->force_enc != 0)
+	    sprintf((char *)newval + STRLEN(newval), " ++enc=%s",
+						   eap->cmd + eap->force_enc);
 # endif
 	vimvars[VV_CMDARG].val = newval;
 	return oldval;
@@ -7301,9 +7343,8 @@ var_flavour(varname)
  * Restore global vars that start with a capital from the viminfo file
  */
     int
-read_viminfo_varlist(line, fp, writing)
-    char_u	*line;
-    FILE	*fp;
+read_viminfo_varlist(virp, writing)
+    vir_t	*virp;
     int		writing;
 {
     char_u	*tab;
@@ -7313,7 +7354,7 @@ read_viminfo_varlist(line, fp, writing)
 
     if (!writing && (find_viminfo_parameter('!') != NULL))
     {
-	tab = vim_strchr(line + 1, '\t');
+	tab = vim_strchr(virp->vir_line + 1, '\t');
 	if (tab != NULL)
 	{
 	    *tab++ = '\0';	/* isolate the variable name */
@@ -7326,7 +7367,8 @@ read_viminfo_varlist(line, fp, writing)
 		/* create a nameless variable to hold the value */
 		if (is_string)
 		{
-		    val = viminfo_readstring(tab + 1, fp);
+		    val = viminfo_readstring(virp,
+				       (int)(tab - virp->vir_line + 1), TRUE);
 		    if (val != NULL)
 			varp = alloc_string_var(val);
 		}
@@ -7342,14 +7384,14 @@ read_viminfo_varlist(line, fp, writing)
 		/* assign the value to the variable */
 		if (varp != NULL)
 		{
-		    set_var(line + 1, varp);
+		    set_var(virp->vir_line + 1, varp);
 		    free_var(varp);
 		}
 	    }
 	}
     }
 
-    return vim_fgets(line, LSIZE, fp);
+    return viminfo_readline(virp);
 }
 
 /*
@@ -7421,16 +7463,16 @@ store_session_globals(fd)
 
 # if defined(FEAT_MBYTE) || defined(PROTO)
     int
-eval_charconvert(cc_from, cc_to, fname_from, fname_to)
-    char_u	*cc_from;
-    char_u	*cc_to;
+eval_charconvert(enc_from, enc_to, fname_from, fname_to)
+    char_u	*enc_from;
+    char_u	*enc_to;
     char_u	*fname_from;
     char_u	*fname_to;
 {
     int		err = FALSE;
 
-    set_vim_var_string(VV_CC_FROM, cc_from, -1);
-    set_vim_var_string(VV_CC_TO, cc_to, -1);
+    set_vim_var_string(VV_CC_FROM, enc_from, -1);
+    set_vim_var_string(VV_CC_TO, enc_to, -1);
     set_vim_var_string(VV_CC_IN, fname_from, -1);
     set_vim_var_string(VV_CC_OUT, fname_to, -1);
     if (eval_to_bool(p_ccv, &err, NULL, FALSE))

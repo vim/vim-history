@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0u.  Last change: 2001 Feb 04
+*options.txt*   For Vim version 6.0v.  Last change: 2001 Feb 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -819,7 +819,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	Also, 'fileformat' and 'fileformats' options will not be used, the
 	file is read and written like 'fileformat' was "unix" (a single <NL>
 	separates lines).
-	The 'filecharcode' and 'filecharcodes' options will not be used, the
+	The 'fileencoding' and 'fileencodings' options will not be used, the
 	file is read without conversion.
 	NOTE: When you start editing a(nother) file while the 'bin' option is
 	on, settings from autocommands may change the settings again (e.g.,
@@ -852,13 +852,13 @@ A jump table for the options with a short description can be found at |X_op|.
 	Order Mark) is prepended to the file:
 	- this option is on
 	- the 'binary' option is off
-	- 'filecharcode' is "utf-8", "ucs-2", "ucs-4" or one of the little/big
+	- 'fileencoding' is "utf-8", "ucs-2", "ucs-4" or one of the little/big
 	  endian variants.
 	Some applications use the BOM to recognize the encoding of the file.
 	Often used for UCS-2 files on MS-Windows.  For other applications it
 	causes trouble, for example: "cat file1 file2" makes the BOM of file2
 	appear halfway the file.
-	When Vim reads a file and 'filecharcodes' starts with "ucs-bom", a
+	When Vim reads a file and 'fileencodings' starts with "ucs-bom", a
 	check for the presence of the BOM is done and 'bomb' set accordingly.
 	Unless 'binary' is set, it is removed from the first line, so that you
 	don't see it when editing.  When you don't change the options, the BOM
@@ -982,77 +982,55 @@ A jump table for the options with a short description can be found at |X_op|.
 	NOTE: This option is set to the Vi default value when 'compatible' is
 	set and to the Vim default value when 'compatible' is reset.
 
-					*'charcode'* *'cc'*
-'charcode' 'cc'		string (default: "latin-1")
+					*'encoding'* *'enc'*
+'encoding' 'enc'	string (default: "latin1" or value from $LANG)
 			global
 			{only available when compiled with the |+multi_byte|
 			feature}
 			{not in Vi}
-	Sets the character encoding used in Vim.  This should match the
-	encoding used by the keyboard and display.
-	When you set this option, it fires the 'CharCode' autocommand event so
-	you can set up fonts if necessary.
-	The character encoding of files can be different.  This is set with
-	'filecharcode'.  The conversion is done with iconv() or as specified
-	with 'charconvert'.
+	Sets the character encoding used inside Vim.  It applies to text in
+	the buffers, registers, Strings in expressions, text stored in the
+	viminfo file, etc.  It sets the kind of characters which Vim can work
+	with.  See |encoding-names| for the possible values.
 
-	See |multibyte|.
+	NOTE: Changing this option will not change the encoding of the
+	existing text in Vim.  It may cause multi-byte text to become invalid.
+	It should normally be kept at its default value, or set when Vim
+	starts up.  See |multibyte|.
 
-	Possible values are:
-	    latin-1	8-bit characters (ISO 8859-1)
-	    ansi	same as latin-1 (obsolete, for backward compatibility)
-	    ucs-2	16 bit UCS-2 encoded Unicode (ISO/IEC 10646-1)
-	    ucs-2le	like ucs-2, little endian
-	    ucs-2be	same as ucs-2 (big endian)
-	    ucs-4	32 bit UCS-4 encoded Unicode (ISO/IEC 10646-1)
-	    ucs-4le	like ucs-4, little endian
-	    ucs-4be	same as ucs-4 (big endian)
-	    ucs-4lb	like ucs-4, little-big endian
-	    ucs-4bl	like ucs-4, big-little endian
-	    unicode	same as ucs-2
-	    utf-8	32 bit UTF-8 encoded Unicode (ISO/IEC 10646-1)
-	    japan	set to use Japanese DBCS encoding; on Unix: "euc-jp",
-			on Windows: shift-JIS (Windows CP 932)
-	    korea	set to use Korean DBCS
-	    prc		use simplified Chinese encoding
-	    taiwan	use traditional Chinese encoding
+	The character encoding of files can be different from 'encoding'.
+	This is specified with 'fileencoding'.  The conversion is done with
+	iconv() or as specified with 'charconvert'.
+
+	Normally 'encoding' will be equal to your current locale.  This will
+	be the default if Vim recognizes your environment settings.  If
+	'encoding' is not set to the current locale, 'termencoding' must be
+	set to convert typed and displayed text.  See |encoding-table|.
+
+	When you set this option, it fires the |EncodingChanged| autocommand
+	event so that you can set up fonts if necessary.
+
 	When the option is set, the value is converted to lower case.  Thus
-	you can set it with upper case values too.
+	you can set it with upper case values too.  Underscores are translated
+	to '-' signs.
+	When the encoding is recognized, it is changed to the standard name.
+	For example "Latin-1" becomes "latin1", "ISO_88592" becomes
+	"iso-8859-2" and "utf8" becomes "utf-8".
 
-	On Windows systems you probably want to use "ucs-2le", because it uses
-	little endian UCS-2.
-
-	Note: "latin-1" is also used for other 8-bit character encodings.
+	Note: "latin1" is also used when the encoding could not be detected.
 	This only works when editing files in the same encoding!  When the
-	actual characterset is not latin-1, Make sure 'filecharcode' and
-	'filecharcodes' are empty.  When conversion is needed, switch to using
+	actual characterset is not latin1, make sure 'fileencoding' and
+	'fileencodings' are empty.  When conversion is needed, switch to using
 	utf-8.
-
-	This lets you view, for example, a Japanese S-JIS encoded file
-	(provided you have a suitable font).  Characters that occupy two
-	display cells (double-width) are treated as a unit, i.e. you cursor
-	past them or delete them as a unit, rather than deleting half a
-	character.
 
 	When "unicode", "ucs-2" or "ucs-4" is used, Vim internally uses utf-8.
 	You don't notice this while editing, but it does matter for the
-	|viminfo-file|.
+	|viminfo-file|.  And Vim expects the terminal to use utf-8 too.  Thus
+	setting 'encoding' to one of these values instead of utf-8 only has
+	effect for encoding used for files when 'fileencoding' is empty.
 
-	For the UCS codes the byte order matters.  This is tricky, use UTF-8
-	whenever you can.  The default is to use big-endian (most significant
-	byte comes first).  For the Unicode character 0x11223344:
-	    name	bytes		char ~
-	    ucs-2	      33 44	3344
-	    ucs-2be	      33 44	3344
-	    ucs-2le	      33 44	4433
-	    ucs-4	11 22 33 44	11223344
-	    ucs-4be	11 22 33 44	11223344
-	    ucs-4le	11 22 33 44	44332211
-	    ucs-4bl	11 22 33 44	22114433
-	    ucs-4lb	11 22 33 44	33441122
-
-	 When 'charcode' is set to a Unicode encoding, and 'filecharcodes' was
-	 not set yet, the default for 'filecharcodes' is changed.
+	 When 'encoding' is set to a Unicode encoding, and 'fileencodings' was
+	 not set yet, the default for 'fileencodings' is changed.
 
 					*'charconvert'* *'ccv'*
 'charconvert' 'ccv'	string (default "")
@@ -1066,13 +1044,17 @@ A jump table for the options with a short description can be found at |X_op|.
 	'charconvert' is not used when the internal iconv() function is
 	supported and is able to do the conversion.  Using iconv() is
 	preferred, because it is much faster.
+	'charconvert' is not used when reading stdin |--|, because there is no
+	file to convert from.  You will have to save the text in a file first.
 	The expression must return zero or an empty string for success,
 	non-zero for failure.
-	The possible charcode names encountered are in 'charcode'.
-	Additionally, names given in 'filecharcodes' and 'filecharcode' are
+	The possible encoding names encountered are in 'encoding'.
+	Additionally, names given in 'fileencodings' and 'fileencoding' are
 	used.
 	Conversion between "unicode", "ucs-2", "ucs-4" and "utf-8" is done
 	internally by Vim, 'charconvert' is not used for this.
+	'charconvert' is also used to convert the viminfo file, if the 'c'
+	flag is present in 'viminfo'.  Also used for Unicode conversion.
 	Example: >
 		set charconvert=CharConvert()
 		fun CharConvert()
@@ -1089,7 +1071,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	Note that v:charconvert_in and v:charconvert_out will never be the
 	same.
 	Note that v:charconvert_from and v:charconvert_to may be different
-	from 'charcode'.  Vim internally uses UTF-8 instead of UCS-2 or UCS-4.
+	from 'encoding'.  Vim internally uses UTF-8 instead of UCS-2 or UCS-4.
 	Encryption is not done by Vim when using 'charconvert'.  If you want
 	to encrypt the file after conversion, 'charconvert' should take care
 	of this.
@@ -1848,32 +1830,40 @@ A jump table for the options with a short description can be found at |X_op|.
 	also see |.vimrc| and |gui-init|.
 	This option cannot be set from a |modeline|, for security reasons.
 
-					*'filecharcode'* *'fcc'*
-'filecharcode' 'fcc'	string (default: "")
+					*'fileencoding'* *'fenc'*
+'fileencoding' 'fenc'	string (default: "")
 			local to buffer
 			{only available when compiled with the |+multi_byte|
 			feature}
 			{not in Vi}
 	Sets the character encoding for the file of this buffer.
-	When 'filecharcode' is different from 'charcode', conversion will be
+	When 'fileencoding' is different from 'encoding', conversion will be
 	done when reading and writing the file.
-	When 'filecharcode' is empty, the same value as 'charcode' will be
+	When 'fileencoding' is empty, the same value as 'encoding' will be
 	used (no conversion when reading or writing a file).
 		WARNING: Conversion can cause loss of information!  When
-		'charcode' is "utf-8" conversion is most likely done in a way
+		'encoding' is "utf-8" conversion is most likely done in a way
 		that the reverse conversion results in the same text.  When
-		'charcode' is not "utf-8" special characters may be lost!
-	See 'charcode' for the possible values.  Additionally, values may be
+		'encoding' is not "utf-8" some characters may be lost!
+	See 'encoding' for the possible values.  Additionally, values may be
 	specified that can be handled by the converter (either iconv() or
 	specified with 'charconvert').
+	Prepending "8bit-" and "2byte-" has no meaning here, they are ignored.
 	When the option is set, the value is converted to lower case.  Thus
-	you can set it with upper case values too.
+	you can set it with upper case values too.  '_' characters are
+	replaced with '-'.  If a name is recognized from the list for
+	'encoding', it is replaced by the standard name.  For example
+	"ISO8859-2" becomes "iso-8859-2".
 	When this option is set, after starting to edit a file, the 'modified'
 	option is set, because the file would be different when written.
 
-					*'filecharcodes'* *'fccs'*
-'filecharcodes' 'fccs'	string (default: "ucs-bom", "ucs-bom,utf-8,latin-1"
-				    when 'charcode' is set to a Unicode value)
+	NOTE: Before version 6.0 this option specified the encoding for the
+	whole of Vim, this was a mistake.  Now use 'encoding' instead.
+
+
+					*'fileencodings'* *'fencs'*
+'fileencodings' 'fencs'	string (default: "ucs-bom", "ucs-bom,utf-8,latin1"
+				    when 'encoding' is set to a Unicode value)
 			global
 			{only available when compiled with the |+multi_byte|
 			feature}
@@ -1881,35 +1871,22 @@ A jump table for the options with a short description can be found at |X_op|.
 	This is a list of character encodings considered when editing a file.
 	When a file is read, Vim tries to use the first mentioned character
 	encoding.  If an error is detected, the next one in the list is tried.
-	When an encoding is found that works, 'filecharcode' is set to it.
-	If all fail, 'filecharcode' is set to an empty string, which means
-	the value of 'charcode' is used.
+	When an encoding is found that works, 'fileencoding' is set to it.
+	If all fail, 'fileencoding' is set to an empty string, which means
+	the value of 'encoding' is used.
 		WARNING: Conversion can cause loss of information!  When
-		'charcode' is "utf-8" (or one of the other Unicode variants)
+		'encoding' is "utf-8" (or one of the other Unicode variants)
 		conversion is most likely done in a way that the reverse
-		conversion results in the same text.  When 'charcode' is not
+		conversion results in the same text.  When 'encoding' is not
 		"utf-8" special characters may be lost!
 	The special value "ucs-bom" can be used to check for a Unicode BOM
 	(Byte Order Mark) at the start of the file.  It must not be preceded
 	by "utf-8" or another Unicode encoding for this to work properly.
-	If 'filecharcodes' is empty, 'filecharcode' is not modified.
-	See 'charcode' for the possible values.  Additionally, values may be
+	If 'fileencodings' is empty, 'fileencoding' is not modified.
+	See 'encoding' for the possible values.  Additionally, values may be
 	specified that can be handled by the converter (either iconv() or
 	specified with 'charconvert').
-	When the option is set, the value is converted to lower case.  Thus
-	you can set it with upper case values too.
-
-					*'fileencoding'* *'fe'*
-'fileencoding' 'fe'	string (default: "latin-1")
-			global
-			{only available when compiled with the |+multi_byte|
-			feature}
-			{not in Vi}
-	Before version 6.0 this option was used to set the encoding of files.
-	It was local to a buffer.  Actually it set the encoding for the whole
-	of Vim, thus this was a mistake.  It has now been replaced with the
-	'charcode' option.  Since the meaning is similar, setting
-	'fileencoding' sets 'charcode' for backwards compatibility.
+	Unlike 'filecharcode' there is no conversion when the option is set.
 
 					*'fileformat'* *'ff'*
 'fileformat' 'ff'	string (MS-DOS, MS-Windows, OS/2 default: "dos",
@@ -1924,7 +1901,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	    mac	    <CR>
 	When "dos" is used, CTRL-Z at the end of a file is ignored.
 	See |file-formats| and |file-read|.
-	For the character encoding of the file see 'filecharcode'.
+	For the character encoding of the file see 'fileencoding'.
 	When 'binary' is set, the value of 'fileformat' is ignored, file I/O
 	works like it was set to "unix'.
 	This option is set automatically when starting to edit a file and
@@ -2430,7 +2407,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	used.
 	Note: The size of these fonts must be exactly twice as wide as the one
 	specified with 'guifont' and the same height.
-	Only used when 'charcode' is set to "utf-8" and 'guifontset' is empty
+	Only used when 'encoding' is set to "utf-8" and 'guifontset' is empty
 	or invalid.
 	When 'guifont' is set and a valid font is found in it and
 	'guifontwide' is empty Vim will attempt to find a matching
@@ -4032,7 +4009,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	   buffers	hidden and unloaded buffers, not just those in windows
 	   curdir	the current directory
 	   folds	manually created folds, opened/closed folds and local
-	   		fold options
+			fold options
 	   globals	global variables that start with an uppercase letter
 			and contain at least one lowercase letter.
 	   help		the help window
@@ -4854,6 +4831,29 @@ A jump table for the options with a short description can be found at |X_op|.
 		:set term=$TERM
 <	See |termcap|.
 
+						*'termencoding'* *'tenc'*
+'termencoding' 'tenc'	string	(default "")
+			global
+			{only available when compiled with the |+multi_byte|
+			feature}
+			{not in Vi}
+	Encoding used for the terminal.  This specifies what character
+	encoding the keyboard produces and the display will understand.  For
+	the GUI it only applies to the keyboard ('encoding' is used for the
+	display).
+	When empty, the same encoding is used as for the 'encoding' option.
+	This is the normal value.
+	Not all combinations for 'termencoding' and 'encoding' are valid.  See
+	|encoding-table|.
+	The value for this option must be supported by iconv().  When iconv()
+	cannot handle the value, no conversion will be done and you will
+	probably experience problems with non-ASCII characters.
+	Example: You are working with the locale set to euc-jp (Japanese) and
+	want to edit a UTF-8 file: >
+		:let &termencoding = &encoding
+		:set encoding=utf-8
+<	You need to do this when your system has no locale support for UTF-8.
+
 						*'terse'* *'noterse'*
 'terse'			boolean	(default off)
 			global
@@ -5261,7 +5261,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	   word		save and restore ~
 	   cursor	cursor position in file and in window
 	   folds	manually created folds, opened/closed folds and local
-	   		fold options
+			fold options
 	   options	options and mappings local to a window or buffer (not
 			global values for local options)
 	   unix		with Unix end-of-line format (single <NL>), even when
@@ -5290,15 +5290,47 @@ A jump table for the options with a short description can be found at |X_op|.
 	parameter.  The following is a list of the identifying characters and
 	the effect of their value.
 	CHAR	VALUE	~
+	!	When included, save and restore global variables that start
+		with an uppercase letter, and don't contain a lowercase
+		letter.
+	"	Maximum number of lines saved for each register.  If zero then
+		registers are not saved.  When not included, all lines are
+		saved.  Dont forget to put a backslash before the ", otherwise
+		it will be recognized as the start of a comment!
+	%	When included, save and restore the buffer list.  If Vim is
+		started with a file name argument, the buffer list is not
+		restored.  If Vim is started without a file name argument, the
+		buffer list is restored from the viminfo file.  Buffers
+		without a file name and buffers for help files are not written
+		to the viminfo file.
 	'	Maximum number of previously edited files for which the marks
 		are remembered.  This parameter must always be included when
 		'viminfo' is non-empty.
 		Including this item also means that the |jumplist| is stored
 		in the viminfo file.
+	/	Maximum number of items in the search pattern history to be
+		saved.  If non-zero, then the previous search and substitute
+		patterns are also saved.  When not included, the value of
+		'history' is used.
+	:	Maximum number of items in the command-line history to be
+		saved.  When not included, the value of 'history' is used.
+	@	Maximum number of items in the input-line history to be
+		saved.  When not included, the value of 'history' is used.
+	c	When included, convert the text in the viminfo file from the
+		'encoding' used when writing the file to the current
+		'encoding'. See |viminfo-encoding|.
 	f	Whether file marks need to be stored.  If zero, file marks ('0
 		to '9, 'A to 'Z) are not stored.  When not present or when
 		non-zero, they are all stored.  '0 is used for the current
 		cursor position (when exiting or when doing ":wviminfo").
+	h	Disable the effect of 'hlsearch' when loading the viminfo
+		file.  When not included, it depends on whether ":nohlsearch"
+		has been used since the last search command.
+	n	Name of the viminfo file.  The name must immediately follow
+		the 'n'.  Must be the last one!  If the "-i" argument was
+		given when starting Vim, that file name overrides the one
+		given here with 'viminfo'.  Environment variables are expanded
+		when opening the file, not when setting the option.
 	r	Removable media.  The argument is a string (up to the next
 		',').  This parameter can be given several times.  Each
 		specifies the start of a path for which no marks will be
@@ -5306,35 +5338,6 @@ A jump table for the options with a short description can be found at |X_op|.
 		could use "ra:,rb:", for Amiga "rdf0:,rdf1:,rdf2:".  Case is
 		ignored.  Maximum length of each 'r' argument is 50
 		characters.
-	"	Maximum number of lines saved for each register.  If zero then
-		registers are not saved.  When not included, all lines are
-		saved.  Dont forget to put a backslash before the ", otherwise
-		it will be recognized as the start of a comment!
-	:	Maximum number of items in the command-line history to be
-		saved.  When not included, the value of 'history' is used.
-	/	Maximum number of items in the search pattern history to be
-		saved.  If non-zero, then the previous search and substitute
-		patterns are also saved.  When not included, the value of
-		'history' is used.
-	h	Disable the effect of 'hlsearch' when loading the viminfo
-		file.  When not included, it depends on whether ":nohlsearch"
-		has been used since the last search command.
-	@	Maximum number of items in the input-line history to be
-		saved.  When not included, the value of 'history' is used.
-	n	Name of the viminfo file.  The name must immediately follow
-		the 'n'.  Must be the last one!  If the "-i" argument was
-		given when starting Vim, that file name overrides the one
-		given here with 'viminfo'.  Environment variables are expanded
-		when opening the file, not when setting the option.
-	%	When included, save and restore the buffer list.  If Vim is
-		started with a file name argument, the buffer list is not
-		restored.  If Vim is started without a file name argument, the
-		buffer list is restored from the viminfo file.  Buffers
-		without a file name and buffers for help files are not written
-		to the viminfo file.
-	!	When included, save and restore global variables that start
-		with an uppercase letter, and don't contain a lowercase
-		letter.
 
 	Example: >
 	    :set viminfo='50,\"1000,:0,n~/vim/viminfo

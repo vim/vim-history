@@ -44,6 +44,7 @@ EXE_dependencies =  \
  edit.obj \
  eval.obj \
  ex_cmds.obj \
+ ex_cmds2.obj \
  ex_docmd.obj \
  ex_getln.obj \
  fileio.obj \
@@ -57,6 +58,7 @@ EXE_dependencies =  \
  message.obj \
  misc1.obj \
  misc2.obj \
+ move.obj \
  os_msdos.obj \
  normal.obj \
  ops.obj \
@@ -87,6 +89,7 @@ digraph.obj+
 edit.obj+
 eval.obj+
 ex_cmds.obj+
+ex_cmds2.obj+
 ex_docmd.obj+
 ex_getln.obj+
 fileio.obj+
@@ -100,6 +103,7 @@ menu.obj+
 message.obj+
 misc1.obj+
 misc2.obj+
+move.obj+
 os_msdos.obj+
 normal.obj+
 ops.obj+
@@ -156,7 +160,9 @@ edit.obj: edit.c
 
 eval.obj: eval.c
 
-ex_cmds.obj: ex_cmds.c ex_cmds.h
+ex_cmds.obj: ex_cmds.c
+
+ex_cmds2.obj: ex_cmds2.c
 
 ex_docmd.obj: ex_docmd.c ex_cmds.h
 
@@ -183,6 +189,8 @@ message.obj: message.c
 misc1.obj: misc1.c
 
 misc2.obj: misc2.c
+
+move.obj: move.c
 
 os_msdos.obj: os_msdos.c
 

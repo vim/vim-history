@@ -9,6 +9,8 @@ if exists("did_menu_trans")
 endif
 let did_menu_trans = 1
 
+scriptencoding iso-8859-1
+
 " Help menu
 menutrans &Help			&Hilfe
 menutrans &Overview<Tab><F1>	&Überblick<Tab><F1>

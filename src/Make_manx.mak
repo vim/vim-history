@@ -40,6 +40,7 @@ SRC =	buffer.c \
 	edit.c \
 	eval.c \
 	ex_cmds.c \
+	ex_cmds2.c \
 	ex_docmd.c \
 	ex_getln.c \
 	fileio.c \
@@ -53,6 +54,7 @@ SRC =	buffer.c \
 	message.c \
 	misc1.c \
 	misc2.c \
+	move.c \
 	multibyte.c \
 	normal.c \
 	ops.c \
@@ -78,6 +80,7 @@ OBJ =	obj/buffer.o \
 	obj/edit.o \
 	obj/eval.o \
 	obj/ex_cmds.o \
+	obj/ex_cmds2.o \
 	obj/ex_docmd.o \
 	obj/ex_getln.o \
 	obj/fileio.o \
@@ -91,6 +94,7 @@ OBJ =	obj/buffer.o \
 	obj/message.o \
 	obj/misc1.o \
 	obj/misc2.o \
+	obj/move.o \
 	obj/multibyte.o \
 	obj/normal.o \
 	obj/ops.o \
@@ -114,6 +118,7 @@ PRO =	proto/buffer.pro \
 	proto/edit.pro \
 	proto/eval.pro \
 	proto/ex_cmds.pro \
+	proto/ex_cmds2.pro \
 	proto/ex_docmd.pro \
 	proto/ex_getln.pro \
 	proto/fileio.pro \
@@ -127,6 +132,7 @@ PRO =	proto/buffer.pro \
 	proto/message.pro \
 	proto/misc1.pro \
 	proto/misc2.pro \
+	proto/move.pro \
 	proto/multibyte.pro \
 	proto/normal.pro \
 	proto/ops.pro \
@@ -203,12 +209,15 @@ obj/edit.o:	edit.c
 obj/eval.o:	eval.c
 	$(CCSYM) $@ eval.c
 
-obj/ex_cmds.o:	ex_cmds.c ex_cmds.h
+obj/ex_cmds.o:	ex_cmds.c
 	$(CCSYM) $@ ex_cmds.c
+
+obj/ex_cmds2.o:	ex_cmds2.c
+	$(CCSYM) $@ ex_cmds2.c
 
 # Don't use $(SYMS) here, because ex_docmd.c defines DO_DECLARE_EXCMD
 obj/ex_docmd.o:	ex_docmd.c ex_cmds.h
-	$(CCNOSYM) $@ -mc ex_docmd.c
+	$(CCNOSYM) $@ ex_docmd.c
 
 obj/ex_getln.o:	ex_getln.c
 	$(CCSYM) $@ ex_getln.c
@@ -248,6 +257,9 @@ obj/misc1.o:	misc1.c
 obj/misc2.o:	misc2.c
 	$(CCSYM) $@ misc2.c
 
+obj/move.o:	move.c
+	$(CCSYM) $@ move.c
+
 obj/multibyte.o: multibyte.c
 	$(CCSYM) $@ multibyte.c
 
@@ -271,7 +283,7 @@ obj/regexp.o:	regexp.c
 	$(CCSYM) $@ regexp.c
 
 obj/screen.o:	screen.c
-	$(CCSYM) $@ -mc screen.c
+	$(CCSYM) $@ screen.c
 
 obj/search.o:	search.c
 	$(CCSYM) $@ search.c

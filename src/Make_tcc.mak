@@ -26,6 +26,7 @@ SRC =	buffer.c \
 	edit.c \
 	eval.c \
 	ex_cmds.c \
+	ex_cmds2.c \
 	ex_docmd.c \
 	ex_getln.c \
 	fileio.c \
@@ -39,6 +40,7 @@ SRC =	buffer.c \
 	message.c \
 	misc1.c \
 	misc2.c \
+	move.c \
 	multibyte.c \
 	normal.c \
 	ops.c \
@@ -62,6 +64,7 @@ OBJ =	objects/buffer.obj \
 	objects/edit.obj \
 	objects/eval.obj \
 	objects/ex_cmds.obj \
+	objects/ex_cmds2.obj \
 	objects/ex_docmd.obj \
 	objects/ex_getln.obj \
 	objects/fileio.obj \
@@ -75,6 +78,7 @@ OBJ =	objects/buffer.obj \
 	objects/message.obj \
 	objects/misc1.obj \
 	objects/misc2.obj \
+	objects/move.obj \
 	objects/multibyte.obj \
 	objects/normal.obj \
 	objects/ops.obj \
@@ -119,8 +123,11 @@ objects/edit.obj:	edit.c  $(INCL)
 objects/eval.obj:	eval.c  $(INCL)
 	$(CC) $(CFLAGS) eval.c -o objects/eval.obj
 
-objects/ex_cmds.obj:	ex_cmds.c  $(INCL) ex_cmds.h
+objects/ex_cmds.obj:	ex_cmds.c  $(INCL)
 	$(CC) $(CFLAGS) ex_cmds.c -o objects/ex_cmds.obj
+
+objects/ex_cmds2.obj:	ex_cmds2.c  $(INCL)
+	$(CC) $(CFLAGS) ex_cmds2.c -o objects/ex_cmds2.obj
 
 objects/ex_docmd.obj:	ex_docmd.c  $(INCL) ex_cmds.h
 	$(CC) $(CFLAGS) ex_docmd.c -o objects/ex_docmd.obj
@@ -160,6 +167,9 @@ objects/misc1.obj:	misc1.c  $(INCL)
 
 objects/misc2.obj:	misc2.c  $(INCL)
 	$(CC) $(CFLAGS) misc2.c -o objects/misc2.obj
+
+objects/move.obj:	move.c  $(INCL)
+	$(CC) $(CFLAGS) move.c -o objects/move.obj
 
 objects/multibyte.obj:	multibyte.c  $(INCL)
 	$(CC) $(CFLAGS) multibyte.c -o objects/multibyte.obj

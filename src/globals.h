@@ -58,7 +58,7 @@ EXTERN unsigned	*LineOffset INIT(= NULL);
  * ScreenLinesUC[] contains the Unicode for the character at this position, or
  * NUL when the character in ScreenLines[] is to be used (ASCII char).
  * The composing characters are to be drawn on top of the original character.
- * Note: These three are only allocated when cc_utf8 is set!
+ * Note: These three are only allocated when enc_utf8 is set!
  */
 EXTERN u8char_t	*ScreenLinesUC INIT(= NULL);	/* decoded UTF-8 characters */
 EXTERN u8char_t	*ScreenLinesC1 INIT(= NULL);	/* first composing char */
@@ -513,29 +513,46 @@ EXTERN int lc_active INIT(= FALSE); /* TRUE when lc_jump_env is valid. */
 #ifdef FEAT_MBYTE
 /*
  * These flags are set based upon 'fileencoding'.
- * Note that "cc_utf8" is also set for "unicode", because the characters are
+ * Note that "enc_utf8" is also set for "unicode", because the characters are
  * internally stored as UTF-8 (to avoid trouble with NUL bytes).
  */
-# define DBCS_JPN    932
-# define DBCS_KOR    949
-# define DBCS_CHS    936
-# define DBCS_CHT    950
-EXTERN int	cc_dbcs INIT(= 0);		/* One of DBCS_xxx values if
+# define DBCS_JPN	932	/* japan */
+# define DBCS_KOR	949	/* korea */
+# define DBCS_CHS	936	/* chinese */
+# define DBCS_CHT	950	/* taiwan */
+# define DBCS_2BYTE	1	/* 2byte- */
+# define DBCS_DEBUG	-1
+
+EXTERN int	enc_dbcs INIT(= 0);		/* One of DBCS_xxx values if
 						   DBCS encoding */
-EXTERN int	cc_unicode INIT(= 0);		/* 2: UCS-2, 4: UCS-4 */
-EXTERN int	cc_utf8 INIT(= FALSE);		/* UTF-8 encoded Unicode */
+EXTERN int	enc_unicode INIT(= 0);		/* 2: UCS-2, 4: UCS-4 */
+EXTERN int	enc_utf8 INIT(= FALSE);		/* UTF-8 encoded Unicode */
 # ifdef FEAT_GUI_W32
 EXTERN int	is_funky_dbcs INIT(= FALSE);	/* if DBCS encoding, but not
-						   CP of system */
+						   current codepage */
 # endif
 EXTERN int	has_mbyte INIT(= 0);		/* any multi-byte encoding */
 
 /*
  * To speed up BYTELEN() we fill a table with the byte lengths whenever
- * cc_utf8 or cc_dbcs changes.
+ * enc_utf8 or enc_dbcs changes.
  */
 EXTERN char	mb_bytelen_tab[256];
-#endif
+
+# if defined(USE_ICONV) && defined(DYNAMIC_ICONV)
+/* Pointers to functions and variables to be loaded at runtime */
+EXTERN size_t (*iconv) (iconv_t cd, const char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft);
+EXTERN iconv_t (*iconv_open) (const char *tocode, const char *fromcode);
+EXTERN int (*iconv_close) (iconv_t cd);
+EXTERN int (*iconvctl) (iconv_t cd, int request, void *argument);
+EXTERN int *iconv_errno INIT(= 0);
+# endif
+
+/* Variables that tell what conversion is used for keyboard input and display
+ * output. */
+EXTERN vimconv_t input_conv;			/* type of input conversion */
+EXTERN vimconv_t output_conv;			/* type of output conversion */
+#endif /* FEAT_MBYTE */
 
 #ifdef FEAT_XIM
 # ifdef FEAT_GUI_GTK

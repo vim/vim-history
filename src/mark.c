@@ -1008,9 +1008,8 @@ set_last_cursor(win)
 
 #if defined(FEAT_VIMINFO) || defined(PROTO)
     int
-read_viminfo_filemark(line, fp, force)
-    char_u	*line;
-    FILE	*fp;
+read_viminfo_filemark(virp, force)
+    vir_t	*virp;
     int		force;
 {
     char_u	*str;
@@ -1019,13 +1018,13 @@ read_viminfo_filemark(line, fp, force)
 
     /* We only get here if line[0] == '\'' or '-'.
      * Illegal mark names are ignored (for future expansion). */
-    str = line + 1;
+    str = virp->vir_line + 1;
     if (
 #ifndef EBCDIC
 	    *str <= 127 &&
 #endif
-	    ((*line == '\'' && (isdigit(*str) || isupper(*str)))
-	     || (*line == '-' && *str == '\'')))
+	    ((*virp->vir_line == '\'' && (isdigit(*str) || isupper(*str)))
+	     || (*virp->vir_line == '-' && *str == '\'')))
     {
 	if (*str == '\'')
 	{
@@ -1059,10 +1058,10 @@ read_viminfo_filemark(line, fp, force)
 	    fm->fmark.fnum = 0;
 	    str = skipwhite(str);
 	    vim_free(fm->fname);
-	    fm->fname = viminfo_readstring(str, fp);
+	    fm->fname = viminfo_readstring(virp, str - virp->vir_line, FALSE);
 	}
     }
-    return vim_fgets(line, LSIZE, fp);
+    return vim_fgets(virp->vir_line, LSIZE, virp->vir_fd);
 }
 
     void
@@ -1265,13 +1264,13 @@ write_one_mark(fp_out, c, pos)
  * fp_out != NULL   copy marks for buffers not in buffer list
  */
     void
-copy_viminfo_marks(line, fp_in, fp_out, count, eof)
-    char_u	*line;
-    FILE	*fp_in;
+copy_viminfo_marks(virp, fp_out, count, eof)
+    vir_t	*virp;
     FILE	*fp_out;
     int		count;
     int		eof;
 {
+    char_u	*line = virp->vir_line;
     buf_t	*buf;
     int		num_marked_files;
     int		load_marks;
@@ -1294,7 +1293,7 @@ copy_viminfo_marks(line, fp_in, fp_out, count, eof)
 		if (viminfo_error(_("Missing '>'"), line))
 		    break;	/* too many errors, return now */
 	    }
-	    eof = vim_fgets(line, LSIZE, fp_in);
+	    eof = vim_fgets(line, LSIZE, virp->vir_fd);
 	    continue;		/* Skip this dud line */
 	}
 
@@ -1304,7 +1303,7 @@ copy_viminfo_marks(line, fp_in, fp_out, count, eof)
 	 * Ignore leading and trailing white space.
 	 */
 	str = skipwhite(line + 1);
-	str = viminfo_readstring(str, fp_in);
+	str = viminfo_readstring(virp, (int)(str - virp->vir_line), FALSE);
 	if (str == NULL)
 	    continue;
 	p = str + STRLEN(str);
@@ -1352,7 +1351,7 @@ copy_viminfo_marks(line, fp_in, fp_out, count, eof)
 	}
 	vim_free(str);
 
-	while (!(eof = vim_fgets(line, LSIZE, fp_in)) && line[0] == TAB)
+	while (!(eof = viminfo_readline(virp)) && line[0] == TAB)
 	{
 	    if (load_marks)
 	    {

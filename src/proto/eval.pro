@@ -33,10 +33,10 @@ void ex_return __ARGS((exarg_t *eap));
 char_u *get_func_line __ARGS((int c, void *cookie, int indent));
 int func_has_ended __ARGS((void *cookie));
 int func_has_abort __ARGS((void *cookie));
-int read_viminfo_varlist __ARGS((char_u *line, FILE *fp, int writing));
+int read_viminfo_varlist __ARGS((vir_t *virp, int writing));
 void write_viminfo_varlist __ARGS((FILE *fp));
 int store_session_globals __ARGS((FILE *fd));
-int eval_charconvert __ARGS((char_u *cc_from, char_u *cc_to, char_u *fname_from, char_u *fname_to));
+int eval_charconvert __ARGS((char_u *enc_from, char_u *enc_to, char_u *fname_from, char_u *fname_to));
 int modify_fname __ARGS((char_u *src, int *usedlen, char_u **fnamep, char_u **bufp, int *fnamelen));
 char_u *do_string_sub __ARGS((char_u *str, char_u *pat, char_u *sub, char_u *flags));
 /* vim: set ft=c : */

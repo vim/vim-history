@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0u.  Last change: 2001 Jan 29
+*starting.txt*  For Vim version 6.0v.  Last change: 2001 Feb 08
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1428,7 +1428,9 @@ In (c)sh, you could make an alias for it: >
 
 	alias lvim vim -c '"'normal "'"0'"'
 
-Viminfo file name:					*viminfo-file-name*
+
+VIMINFO FILE NAME					*viminfo-file-name*
+
 - The default name of the viminfo file is "$HOME/.viminfo" for Unix and OS/2,
   "s:.viminfo" for Amiga, "$HOME\_viminfo" for MS-DOS and Win32.  For the last
   two, when $HOME is not set, "$VIM\_viminfo" is used.  When $VIM is also not
@@ -1441,6 +1443,24 @@ Viminfo file name:					*viminfo-file-name*
   written.  Also not for the commands below!
 - For the commands below, another file name can be given, overriding the
   default and the name given with 'viminfo' or "-i" (unless it's NONE).
+
+
+CHARACTER ENCODING					*viminfo-encoding*
+
+The text in the viminfo file is encoded as specified with the 'encoding'
+option.  Normally you will always work with the same 'encoding' value, and
+this works just fine.  However, if you read the viminfo file with another
+value for 'encoding' than what it was written with, some of the text
+(non-ASCII characters) may be invalid.  If this is unacceptable, add the 'c'
+flag to the 'viminfo' option: >
+	:set viminfo+=c
+Vim will then attempt to convert the text in the viminfo file from the
+'encoding' value it was written with to the current 'encoding' value.  This
+requires Vim to be compiled with the |+iconv| feature.  Filenames are not
+converted.
+
+
+MANUALLY READING AND WRITING
 
 Two commands can be used to read and write the viminfo file manually.  This
 can be used to exchange registers between two running Vim programs: First

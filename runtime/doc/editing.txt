@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0u.  Last change: 2001 Feb 04
+*editing.txt*   For Vim version 6.0v.  Last change: 2001 Feb 08
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -358,22 +358,22 @@ current file name.
 
 							*++opt* *[++opt]*
 The [++opt] argument can be used to force the value of 'fileformat' or
-'filecharcode' to a value for one command.  The form is: >
+'fileencoding' to a value for one command.  The form is: >
 	++{optname}={value}
 
 Where {optname} is one of:
     ff  or  fileformat	    overrides 'fileformat'
-    cc  or  charcode	    overrides 'filecharcode'
+    enc  or  encoding	    overrides 'fileencoding'
 
 {value} cannot contain white space.  It can be any valid value for these
 options.  Examples: >
 	:e ++ff=unix
 This edits the same file again with 'fileformat' set to "unix". >
 
-	:w ++cc=latin-1 newfile
-This writes the current buffer to "newfile" in latin-1 format.
+	:w ++enc=latin1 newfile
+This writes the current buffer to "newfile" in latin1 format.
 
-Note that when reading, the 'fileformat' and 'filecharcode' options will be
+Note that when reading, the 'fileformat' and 'fileencoding' options will be
 set to the used format.  When writing this doesn't happen, thus a next write
 will use the old value of the option.
 
@@ -677,6 +677,14 @@ list of the current window.
 			current entry.
 			This command keeps the currently edited file, also
 			when it's deleted from the argument list.
+			{not in Vi} {not available when compiled without the
+			|+listcmds| feature}
+
+:{range}argd[elete]	Delete the {range} files from the argument list.
+			When the last number in the range is too high, up to
+			the last argument is deleted.  Example: >
+				:10,1000argdel
+<			Deletes arguments 10 and further, keeping 1-9.
 			{not in Vi} {not available when compiled without the
 			|+listcmds| feature}
 
@@ -1187,6 +1195,8 @@ Notes:
 - The algorithm used is breakable.  A 4 character key in about one hour, a 6
   character key in one day (on a Pentium 133 PC).  This requires that you know
   some text that must appear in the file.  An expert can break it for any key.
+  When the text has been decrypted, this also means that the key can be
+  revealed, and other files encrypted with the same key can be decrypted.
 - Pkzip uses the same encryption, and US Govt has no objection to its export.
   Pkzip's public file APPNOTE.TXT describes this algorithm in detail.
 - Vim originates from the Netherlands.  That is where the sources come from.

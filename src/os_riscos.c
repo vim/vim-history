@@ -211,6 +211,8 @@ mch_write(s, len)
  * If wtime == 0 do not wait for characters.
  * If wtime == n wait n msecs for characters.
  * If wtime == -1 wait forever for characters.
+ *
+ * TODO: call convert_input() for 'fileencoding' to 'encoding' conversion.
  */
     int
 mch_inchar(buf, maxlen, wtime)

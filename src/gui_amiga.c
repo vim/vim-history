@@ -266,6 +266,7 @@ EventHandler(void)
     int			class, code;
     static int		dragging = 0;
     static int		mouseX, mouseY;
+    char_u		string[40];
 
     msg = (struct IntuiMessage *)GetMsg(gui.window->UserPort);
 
@@ -382,8 +383,6 @@ EventHandler(void)
 		   break;
 	    case IDCMP_VANILLAKEY:
 		   {
-		       char_u string[3];
-
 		       string[0] = (char_u)code;
 		       if (code == CSI)
 		       {
@@ -393,7 +392,13 @@ EventHandler(void)
 			   add_to_input_buf(string, 3);
 		       }
 		       else
-			   add_to_input_buf(string, 1);
+		       {
+			   int	len = 1;
+
+			   if (input_conv.vc_type != CONV_NONE)
+			       len = convert_input(string, 1, sizeof(string));
+			   add_to_input_buf(string, len);
+		       }
 		       returnEvent = ev_KeyStroke;
 		       break;
 		       case IDCMP_RAWKEY:
@@ -412,22 +417,30 @@ EventHandler(void)
 		       }
 		       else if (msg->Code == KEYUP)
 		       {
-			   char_u string[2] = "k";
-			   add_to_input_buf(string, 1);
+			   string[0] = CSI;
+			   string[1] = 'k';
+			   string[2] = 'u';
+			   add_to_input_buf(string, 3);
 		       }
 		       else if (msg->Code == KEYLEFT)
 		       {
-			   char_u string[2] = "h";
+			   string[0] = CSI;
+			   string[1] = 'k';
+			   string[2] = 'l';
 			   add_to_input_buf(string, 1);
 		       }
 		       else if (msg->Code == KEYRIGHT)
 		       {
-			   char_u string[2] = "l";
+			   string[0] = CSI;
+			   string[1] = 'k';
+			   string[2] = 'r';
 			   add_to_input_buf(string, 1);
 		       }
 		       else if (msg->Code == KEYDOWN)
 		       {
-			   char_u string[2] = "j";
+			   string[0] = CSI;
+			   string[1] = 'k';
+			   string[2] = 'd';
 			   add_to_input_buf(string, 1);
 		       }
 		       returnEvent = ev_KeyStroke;

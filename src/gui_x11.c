@@ -608,6 +608,12 @@ gui_x11_leave_cb(w, data, event, dum)
     gui_focus_change(FALSE);
 }
 
+#if defined(X_HAVE_UTF8_STRING) && defined(FEAT_MBYTE)
+# if X_HAVE_UTF8_STRING
+#  define USE_UTF8LOOKUP
+# endif
+#endif
+
 /* ARGSUSED */
     void
 gui_x11_key_hit_cb(w, dud, event, dum)
@@ -620,7 +626,7 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 #ifdef FEAT_XIM
     char_u		string2[256];
     char_u		string_shortbuf[256];
-    char_u		*string=string_shortbuf;
+    char_u		*string = string_shortbuf;
     Boolean		string_alloced = False;
     Status		status;
 #else
@@ -637,15 +643,13 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 #ifdef FEAT_XIM
     if (xic)
     {
-# if defined(X_HAVE_UTF8_STRING) && defined(FEAT_MBYTE)
-#  if X_HAVE_UTF8_STRING
-	/* XFree86 4.0.2 or newer: Be able to get UTF-8 characers even when
+# ifdef USE_UTF8LOOKUP
+	/* XFree86 4.0.2 or newer: Be able to get UTF-8 charatcers even when
 	 * the locale isn't utf-8.  */
-	if (cc_utf8)
+	if (enc_utf8)
 	    len = Xutf8LookupString(xic, ev_press, (char *)string,
 				  sizeof(string_shortbuf), &key_sym, &status);
 	else
-#  endif
 # endif
 	    len = XmbLookupString(xic, ev_press, (char *)string,
 				  sizeof(string_shortbuf), &key_sym, &status);
@@ -653,11 +657,58 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 	{
 	    string = (char_u *)XtMalloc(len + 1);
 	    string_alloced = True;
-	    len = XmbLookupString(xic, ev_press, (char *)string, len,
-		    &key_sym, &status);
+# ifdef USE_UTF8LOOKUP
+	    /* XFree86 4.0.2 or newer: Be able to get UTF-8 characters even
+	     * when the locale isn't utf-8.  */
+	    if (enc_utf8)
+		len = Xutf8LookupString(xic, ev_press, (char *)string,
+						      len, &key_sym, &status);
+	    else
+# endif
+		len = XmbLookupString(xic, ev_press, (char *)string,
+						      len, &key_sym, &status);
 	}
 	if (status == XLookupNone || status == XLookupChars)
 	    key_sym = XK_VoidSymbol;
+
+# ifdef FEAT_MBYTE
+	/* Do conversion from 'termencoding' to 'encoding'.  When using
+	 * Xutf8LookupString() it has already been done. */
+	if (len > 0 && input_conv.vc_type != CONV_NONE
+#  ifdef USE_UTF8LOOKUP
+		&& !enc_utf8
+#  endif
+		)
+	{
+	    int		maxlen = len * 4 + 40;  /* guessed */
+	    char_u	*p = (char_u *)XtMalloc(maxlen);
+
+	    mch_memmove(p, string, len);
+	    if (string_alloced)
+		XtFree((char *)string);
+	    string = p;
+	    string_alloced = True;
+	    len = convert_input(p, len, maxlen);
+	}
+# endif
+
+	/* Translate CSI to K_CSI, otherwise it could be recognized as the
+	 * start of a special key. */
+	for (i = 0; i < len; ++i)
+	    if (string[i] == CSI)
+	    {
+		char_u	*p = (char_u *)XtMalloc(len + 3);
+
+		mch_memmove(p, string, i);
+		p[i + 1] = KS_EXTRA;
+		p[i + 2] = (int)KE_CSI;
+		mch_memmove(p + i + 3, string + i + 1, len - i);
+		if (string_alloced)
+		    XtFree((char *)string);
+		string = p;
+		string_alloced = True;
+		i += 2;
+	    }
     }
     else
 #endif
@@ -775,7 +826,7 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 	    modifiers |= MOD_MASK_ALT;
 
 #if defined(FEAT_XIM) && defined(FEAT_MBYTE)
-	if (!cc_dbcs || key_sym != XK_VoidSymbol)
+	if (!enc_dbcs || key_sym != XK_VoidSymbol)
 #endif
 	{
 	    /*
@@ -788,6 +839,8 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 	    else
 		key = string[0];
 	    key = simplify_key(key, &modifiers);
+	    if (key == CSI)
+		key = K_CSI;
 	    if (IS_SPECIAL(key))
 	    {
 		string[0] = CSI;
@@ -818,14 +871,6 @@ gui_x11_key_hit_cb(w, dud, event, dum)
     {
 	trash_input_buf();
 	got_int = TRUE;
-    }
-
-    if (len == 1 && string[0] == CSI)
-    {
-	/* Turn CSI into K_CSI. */
-	string[1] = KS_EXTRA;
-	string[2] = (int)KE_CSI;
-	len = 3;
     }
 
     add_to_input_buf(string, len);
@@ -2031,7 +2076,7 @@ gui_mch_draw_string(row, col, s, len, flags)
     int			wlen = 0;
     int			c;
 
-    if (cc_utf8)
+    if (enc_utf8)
     {
 	/* Convert UTF-8 byte sequence to 16 bit characters for the X functions.
 	 * Need a buffer for the 16 bit characters.  Keep it between calls,
@@ -2076,7 +2121,7 @@ gui_mch_draw_string(row, col, s, len, flags)
     if (flags & DRAW_TRANSP)
     {
 #ifdef FEAT_MBYTE
-	if (cc_utf8)
+	if (enc_utf8)
 	    XDrawString16(gui.dpy, gui.wid, gui.text_gc, TEXT_X(col),
 		    TEXT_Y(row), buf, wlen);
 	else
@@ -2095,7 +2140,7 @@ gui_mch_draw_string(row, col, s, len, flags)
 		FILL_Y(row), gui.char_width * len, gui.char_height);
 	XSetForeground(gui.dpy, gui.text_gc, prev_fg_color);
 #ifdef FEAT_MBYTE
-	if (cc_utf8)
+	if (enc_utf8)
 	    XDrawString16(gui.dpy, gui.wid, gui.text_gc, TEXT_X(col),
 		    TEXT_Y(row), buf, wlen);
 	else
@@ -2107,7 +2152,7 @@ gui_mch_draw_string(row, col, s, len, flags)
     {
 	/* XmbDrawImageString has bug, don't use it for fontset. */
 #ifdef FEAT_MBYTE
-	if (cc_utf8)
+	if (enc_utf8)
 	    XDrawImageString16(gui.dpy, gui.wid, gui.text_gc, TEXT_X(col),
 		    TEXT_Y(row), buf, wlen);
 	else
@@ -2120,7 +2165,7 @@ gui_mch_draw_string(row, col, s, len, flags)
     if (flags & DRAW_BOLD)
     {
 #ifdef FEAT_MBYTE
-	if (cc_utf8)
+	if (enc_utf8)
 	    XDrawString16(gui.dpy, gui.wid, gui.text_gc, TEXT_X(col) + 1,
 		    TEXT_Y(row), buf, wlen);
 	else

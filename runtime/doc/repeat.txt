@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.0u.  Last change: 2001 Jan 30
+*repeat.txt*    For Vim version 6.0v.  Last change: 2001 Feb 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -157,6 +157,24 @@ q			Stops recording.  (Implementation note: The 'q' that
 			When 'verbose' is two or higher, there is a message
 			about each searched file.
 			{not in Vi}
+
+:scripte[ncoding] [encoding]			*:scripte* *:scriptencoding*
+			Specify the character encoding used in the script.
+			The following lines will be converted from [encoding]
+			to the value of the 'encoding' option, if necessary.
+			When [encoding] is empty, no conversion is done.
+			When conversion isn't supported by the system, there
+			is no error message and no conversion is done.
+
+			Don't use "ucs-2" or "ucs-4", scripts cannot be in
+			these encodings.
+
+			Examples: >
+				scriptencoding iso-8859-5
+				scriptencoding cp932
+<
+			{not in Vi} {only available when compiled with the
+			|+multi_byte| feature}
 
 						*:scrip* *:scriptnames*
 :scrip[tnames]		List all sourced script names, in the order they were

@@ -10,4 +10,8 @@ int bt_nofile __ARGS((buf_t *buf));
 int bt_dontwrite __ARGS((buf_t *buf));
 int bt_dontwrite_msg __ARGS((buf_t *buf));
 int buf_hide __ARGS((buf_t *buf));
+void ex_make __ARGS((exarg_t *eap));
+void ex_cc __ARGS((exarg_t *eap));
+void ex_cnext __ARGS((exarg_t *eap));
+void ex_cfile __ARGS((exarg_t *eap));
 /* vim: set ft=c : */

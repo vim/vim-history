@@ -28,6 +28,6 @@ int current_block __ARGS((oparg_t *oap, long count, int include, int what, int o
 int current_par __ARGS((oparg_t *oap, long count, int include, int type));
 int linewhite __ARGS((linenr_t lnum));
 void find_pattern_in_path __ARGS((char_u *ptr, int dir, int len, int whole, int skip_comments, int type, long count, int action, linenr_t start_lnum, linenr_t end_lnum));
-int read_viminfo_search_pattern __ARGS((char_u *line, FILE *fp, int force));
+int read_viminfo_search_pattern __ARGS((vir_t *virp, int force));
 void write_viminfo_search_pattern __ARGS((FILE *fp));
 /* vim: set ft=c : */

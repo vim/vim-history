@@ -2185,11 +2185,17 @@ foldUpdateIEMSRecurse(gap, level, startlnum, flp, getlevel, bot, topflags)
 		    fp->fd_len = bot - firstlnum + 1;
 		    /* When the containing fold is open, the new fold is open.
 		     * The new fold is closed if the fold above it is closed.
-		     * The first fold is always open. */
-		    if (topflags == FD_OPEN || i <= 0)
+		     * The first fold depends on the containing fold. */
+		    if (topflags == FD_OPEN)
 		    {
 			flp->wp->w_fold_manual = TRUE;
 			fp->fd_flags = FD_OPEN;
+		    }
+		    else if (i <= 0)
+		    {
+			fp->fd_flags = topflags;
+			if (topflags != FD_LEVEL)
+			    flp->wp->w_fold_manual = TRUE;
 		    }
 		    else
 			fp->fd_flags = (fp - 1)->fd_flags;
@@ -2776,7 +2782,8 @@ foldlevelMarker(flp)
 	    else
 		--flp->lvl_next;
 	}
-	++s;
+	else
+	    ++s;
     }
 }
 

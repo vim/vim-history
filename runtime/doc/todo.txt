@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0u.  Last change: 2001 Feb 04
+*todo.txt*      For Vim version 6.0v.  Last change: 2001 Feb 11
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,7 +29,7 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-ex_docmd.c is getting too large, can't compile it on the Amiga.  Split it.
+DJGPP: When moving around the cursor can't be seen.
 
 Backtick expansion in expressions and ":let"?  Or use {}, because it's hard to
 see the difference between a backtick and a single quote. (Vince Negri)
@@ -66,49 +66,12 @@ J.  User Friendlier
 
 
 B. UTF-8 support:
--   When reading stdin, it's not possible to rewind and try another
-    conversion.  Read the file with a one-to-one conversion (binary) and use
-    the current buffer contents to convert from?
--   make 'charcode' accept "euc-jp" and "shift_jis" directly.
-    'charcode' option should be changed to be able to specify locale or
-    machine dependent encoding information such as SJIS, EUC, etc. (Nagano)
-    Use MIME names, like Emacs and Java.
     See ASCII graphics in multibyte.c.
--   Setting 'charcode' to "latin-1" is used for all 8bit encodings.  Allow
-    setting to another value and assume it's an 8-bit encoding?  Would at
-    least handle conversions much better.  But how to give a warning for a
-    multi-byte encoding name that's not recognized?
-    IDEA: use "8bit-name" for any 8-bit encoding.  "name" is passed to
-    iconv().  Use "dbcs-name" for double byte encodings.
--   Init 'charcode' from $LANG for non-UTF-8?
--   Use nl_langinfo(), when it's available, to get the encoding from the
-    current locale. (Kubota)
-    libiconv 1.5.1 has "libcharset.h" which can be used for this. (Haible)
--   Support a 'inputcharcode' option: convert from this to 'charcode' when
-    obtaining characters from the user.  Useful for Japan: XIM only supports
-    euc-jp, needs to be converted to utf-8 with iconv().
-    See patch from Takuhiro Nishioka for using iconv() from euc-jp to UTF-8.
-    However, XIM should produce characters in the charset of the current
-    locale (Kubota).  Perhaps always translate from locale to 'charcode'?
-    How does yudit get characters from the keyboard?
+-   ":menutrans" commands are translated as specified with ":scriptencoding"
+    OK.  But how to set the font used for the menus to match 'encoding'?
 -   Support ++cc=name for ":w".
--   Big change: Support editing UTF-8 text while the terminal only supports
-    Latin-1.  Show the chars up to 0xff correctly, others with 0xa4 (twice for
-    wide characters).  Use 'displaycode' option?
--   When using strings in a Vim script, they are assumed to be encoded like
-    'charcode'.
-    - Let the Vim script tell what encoding is used and convert strings to
-      'charcode' when necessary.
-    - Supply a function like iconv() to have the user do the conversion.
--   GUI: Cursor is sometimes not removed.
--   show other non-printable as <xx>.
+-   show other non-printable characters as <xx>.
 -   Check mbyte with 'fontset'.
--   Shouldn't the choice between "cp932" and "euc-jp" in alt_charset() be done
-    at runtime instead of compile time?  Consider using telnet from a Unix
-    machine to a MS-Windows machine.
--   When deleting characters with "x", only delete the last composing
-    character or both the base character and the composing characters?  Add
-    an option to chose.  Also for <BS> in Insert mode.
 -   When inserting a UTF-8 byte sequence in the input stream, does a K_SPECIAL
     byte (0x80) get inserted as one byte or as K_SPECIAL - KS_SPECIAL -
     KE_FILLER?  See cmdline_paste_str().  Check all occurences of
@@ -118,8 +81,6 @@ B. UTF-8 support:
 -   prep_redo() should handle mbyte (at least for last arg)
 -   set_last_insert() should handle mbyte.
 -   Visual-block delete doesn't work properly (Marinichev)
--   Add mnemonics from RFC1345 longer than two characters.
-    Support CTRL-K _{mnemonic}_
 -   out_char() doesn't handle mbyte, check callers.
 -   cls() should work for UTF-8 chars.  Use class table function from Markus
     Kuhn: ~/info/utf8-classtab or charclass.c from xterm patch.  With
@@ -129,12 +90,11 @@ B. UTF-8 support:
 -   Also support UTF-16 and convert it to UTF-8? (like mined)
 -   readfile(): When reading UCS-2 or UCS-4 and the number of bytes returned
     by read() isn't a multiple of 2 or 4, what to do?
--   When 'charcode' is "ucs-2" or "ucs-4", do we need to convert when sending
-    characters to the terminal?  Is there any terminal for ucs?  Otherwise
-    this is just used as the default for 'filecharcode'.
 -   Handle mbyte in clip_yank_non_visual_selection().
--   Check MBYTE code in regexp.c to add UTF-8 support.  Make "/\w" and "/\<"
-    work.
+-   Check MBYTE code in regexp.c to add UTF-8 support.  Make "/\w" work.
+-   Substitute doesn't work well on multibyte characters:
+    ":s/\(.\)/\1\1/g" replaces each byte instead of each multi-byte.
+    Requires regexp code that sees a multibyte character as one char.
 -   Check replace stack for mbyte.
 -   Check if "gR" (virtual replace) works with mbyte.
 -   init_chartab(): which UTF-8 characters are file name characters?
@@ -142,12 +102,11 @@ B. UTF-8 support:
     List of encodings: ftp://ftp.ora.com/pub/examples/nutshell/ujip/doc/cjk.inf
     and http://czyborra.com/charsets/cjk.html
     Unicode-HOWTO: ftp://ftp.ilog.fr/pub/Users/haible/utf8/Unicode-HOWTO.html
+-   Win32: make gui_mch_draw_string() output several chars at a time for
+    speed.  Only break at composing characters?
 -   Put MB_DEBUG in feature.h in comments!
 -   GTK GUI: Should allow the user to disble XIM input style which don't work
     for him.  (Nam)
--   Substitute doesn't work well on multibyte characters:
-    ":s/\(.\)/\1\1/g" replaces each byte instead of each multi-byte.
-    Requires regexp code that sees a multibyte character as one char.
 9   Check "gR" for proper working of backspacing.
 9   With Athena and Motif the status line overwrites a bottom scrollbar?
 -   When wrapping words, allow splitting at each multibyte character, not only
@@ -155,12 +114,15 @@ B. UTF-8 support:
 -   Support "overstrike" characters.  E.g., vowel points for Hebrew. (Aaron)
 -   Check "yudit" for its Unicode handling.  But its keyboard translation
     files are not powerful enough.
+-   Add mnemonics from RFC1345 longer than two characters.
+    Support CTRL-K _{mnemonic}_
 -   Use OTP files from Omega. http://www/ens.fr/omega/  (Vidal)
     Or use input software like xkinput.
+-   Keyboard conversion from 'termencoding' to 'encoding' with convert_input()
+    for Mac GUI, RiscOS GUI, BeOS GUI, VMS.
 
 
 D. Vertical window split:
--   ":vertical resize" for width.
 -   Make window-rotate commands also work with vertically split windows.  Be
     able to move the preview window to a vertically split window.
 -   When there is not enough room, remove the ruler from the status line of
@@ -184,32 +146,22 @@ D. Vertical window split:
 
 E. Virtual edit:
 -   Still a lot of work to do.  Test various commands.
+-   "x" at the end of a line doesn't work.
 -   Bugs: (Mark Waggoner)
     See patches in ~/Mail/oldmail/waggoner/in.00132.
-    "P" leaves a space at the end of the line.
-
-    4. Start a rectangular visual select with Ctrl-V, move down a few lines
-       and then use $ to select to the end of the line. It will behave
-       differently with virtualedit on than with it off.  With virtualedit on,
-       The selection will not include intervening lines that are longer than
-       the current line.
 
     5. 'v' selection is kind of strange.  When in virtual space, pressing 'v'
        will select the last character on the line, though the cursor remains
        in virtual space.
 	Should set the start of the Visual area in virtual space.
 
-    6.  yank a word, move to virtual space and do "p": word is appended to the
-	end of the line instead of put at the cursor position.
-
-    8.  Using "R" in virtual space moves back one character before starting
-	the replacement.
-
     9.	Using "C" in virtual space moves back to the end of the current
 	line to start changing rather than inserting spaces up to the current
 	point and then changing.
 	And when the cursor is in a TAB somewhere, it also doesn't work right.
 
+-   Leaving Insert mode when 'virtualedit' is "insert" should move the cursor
+    to a valid character.
 -   In Visual-block mode "x" doesn't delete part of a tab correctly.
     Deleting a whole tab also doesn't work properly (deletes to much).
 -   b_op_start and b_op_end also need coladd.
@@ -328,6 +280,9 @@ Messages:
 
 
 Various recent:
+8   gui_w16.c and gui_w32.c have much code in common.  Move this to os_mswin.c
+9   What happens with :execute "normal a\<Up>\200\<Esc>"?
+    How to distinguish a special key from a 0x80 byte?  CSI too.
 9   This pattern in syntax/java.vim causes a recursive call of regmatch():
 	syn match   javaStringError      +"\([^"\\]\|\\.\)*$+
     A long line with a " in it can cause a crash when it runs out of stack
@@ -338,7 +293,8 @@ Various recent:
 	    {
 9   Number output of ":function <name>", so that the line of an error message
     can be located?
-8   For a "/*" "**" "*/" comment the end isn't aligned properly.
+8   Motif GUI: Add tooltips, using the gui_beval.c code.
+8   Implement ":tearoff".
 8   ":let @" = "val" should not have side effects for other registers (after
     "ayy). (Raul Acevedo)
     ""yy should probably not change the last used register from "ayy.
@@ -352,7 +308,6 @@ Various recent:
     Juhas).
 8   Windows NT/2000: LCTranslateMessage() doesn't work properly.  It's
     disabled for now.  What is the right solution?
-9   'smartcase' also uses 'noignorecase' when using "\S" in a pattern.
 -   GUI: Implement ":popup" for other systems than Windows.
 -   GUI: <C--> cannot be mapped.  Should be possible to recognize this as a
     normal "-" with the Ctrl modifier.
@@ -464,6 +419,11 @@ Various recent:
 
 
 Considered for release 6.0:
+8   Add a function that returns the line in the tags file for a matching tag.
+    Can be used to extract more info (class name, inheritance, etc.) (Rico
+    Hendriks)
+    Add a command to jump to a certain kind of tag.  Allow the user to specify
+    values for the optional fields.  E.g., ":tag size type=m".
 8   Add file locking.  Lock a file when starting to edit it with flock() or
     fcntl().  This patch has advisory file locking while reading/writing the
     file: ~/vim/patches/kahn_file_locking .
@@ -484,8 +444,6 @@ Considered for release 6.0:
     console used to execute external commands.  Pass a flag to vimrun.exe.
 8   Add command like ":normal" that accepts <Key> notation like ":map".
 8   Make clipboard work for Dos32 version. (Negri)
-8   Adjust colortest.vim: Include colors on normal background (Szalai).
-    Reduce the size by using a while loop.
 8   ">>" with 'softtabstop' set should work like 'tabstop' is set to
     'softtabstop'. (Zivkov)  But what about when there is a string?
 9   Install vim32x32.xpm in /usr/local/share/icons/ or ~/.kde/share/icons/ for
@@ -697,7 +655,6 @@ Motif GUI:
     sequences are split up.  Motif version crashes.
 9   Motif 1.2: Adding many menu items, making two rows, still doesn't work
     properly on HPUX.
-8   Implement ":tearoff".
 8   Popup menu ordering is wrong.
 8   Dialog: Pointer should be moved to the default button.  Accelerators don't
     work yet.
@@ -709,8 +666,8 @@ Motif GUI:
 
 
 GUI:
-9   When using a very small font, 'columns' can be very big.  Either handle a
-    large value everywhere, or set a maximum MAX_COLUMNS.
+9   When using a very small font, 'columns' can be very big.  Pass mouse
+    events with 16 bits.
 9   On Solaris, creating the popup menu causes the right mouse button no
     longer to work for extending the selection. (Halevy)
 9   When running an external program, it can't always be killed with CTRL-C.
@@ -905,6 +862,7 @@ VMS:
 
 
 "Small" problems:
+8   For a "/*" "**" "*/" comment the end isn't aligned properly.
 8   A nested include file should also be found relative to the file that
     includes it.  "lev1/foo.h" includes "lev2/bar.h" which is
     "lev1/lev2/bar.h".  Should pass current file name on from
@@ -1847,6 +1805,8 @@ Autocommands:
     BufModified	    - When a buffer becomes modified, or unmodified (for
 		      putting a [+] in the window title or checking out the
 		      file from CVS).
+    BufFirstChange  - When making a change, when 'modified' is set.  Can be
+		      used to do a :preserve for remote files.
     BufChange	    - after a change was made.  Set some variables to indicate
 		      the position and number of inserted/deleted lines, so
 		      that marks can be updated.  HierAssist has patch to add
@@ -2294,8 +2254,8 @@ Searching:
     commands. (Kahn)  It would work like ":noh" is used after that command.
     Also: An extra flag to do this once, and a flag to keep the existing
     search pattern.
--   Add {group-name} flag for search string, to restrict the search to a
-    specific highlight group.  Use "/./<Group>" to find the start of a group.
+-   Add \%h{group-name}; to search for a specific highlight group.
+    Add \%s{syntax-group}; to search for a specific syntax group.
 -   Support Perl regexp.  Use PCRE (Perl Compatible RE) package. (Shade)
     Or translate pattern to a Vim one.
     Don't switch on with an option for typed commands/mappings/functions, it's
@@ -2574,7 +2534,7 @@ Digraphs:
     characters?
 -   Add command to remove (all) digraphs. (Brown)
 7   Support different sets of digraphs (depending on the character set?).  At
-    least Latin-1/Unicode, Latin-2, MS-DOS (esp. for Win32).
+    least Latin1/Unicode, Latin-2, MS-DOS (esp. for Win32).
 
 
 Writing files:

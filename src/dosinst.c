@@ -882,7 +882,10 @@ install_bat_choice(int idx)
 	    strcpy(buf, installdir);
 	    add_pathsep(buf);
 	    strcat(buf, exename);
-	    fprintf(fd, "%s %%VIMARGS%%\n", buf);
+	    if (strchr(buf, ' ') != NULL)
+		fprintf(fd, "\"%s\" %%VIMARGS%%\n", buf);
+	    else
+		fprintf(fd, "%s %%VIMARGS%%\n", buf);
 	    fprintf(fd, "set VIMARGS=\n");
 
 	    fclose(fd);

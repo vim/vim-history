@@ -649,6 +649,8 @@ static int	one_exactly = FALSE;	/* only do one char for EXACTLY */
 
 static char_u META[] = "%&()*+.123456789<=>@ACDFHIKLMOPSUWX[_acdfhiklmnopsuwxz{|~";
 
+static int	curchr;
+
 /* arguments for reg() */
 #define REG_NOPAREN	0	/* toplevel reg() */
 #define REG_PAREN	1	/* \(\) */
@@ -662,7 +664,6 @@ static void	initchr __ARGS((char_u *));
 static int	getchr __ARGS((void));
 static void	skipchr_keepstart __ARGS((void));
 static int	peekchr __ARGS((void));
-static int	curchr;
 static void	skipchr __ARGS((void));
 static void	ungetchr __ARGS((void));
 static char_u	*reg __ARGS((int, int *));
@@ -693,7 +694,7 @@ re_ismultibytecode(c)
 {
     int		lead;
 
-    if (!cc_dbcs)
+    if (!enc_dbcs)
 	return 0;
     lead = ((unsigned)c >> 8) & 0xff;
     return MB_BYTE2LEN(lead) > 1 ? lead : 0;
@@ -711,7 +712,7 @@ mbyte_exactly(flagp)
     char_u	*ret;
     int		chr;
 
-    if (cc_utf8 && (len = utf_byte2len(peekchr())) > 1)
+    if (enc_utf8 && (len = utf_byte2len(peekchr())) > 1)
     {
 	ret = regnode(MULTIBYTECODE);
 	while (len--)
@@ -1676,7 +1677,7 @@ collection:
 			    start = UCHARAT(regparse - 2) + 1;
 			    end = UCHARAT(regparse);
 #ifdef FEAT_MBYTE
-			    if (cc_dbcs && mb_head_off(base, regparse - 2) > 0)
+			    if (enc_dbcs && mb_head_off(base, regparse - 2) > 0)
 			    {
 				int	lead;
 
@@ -1697,7 +1698,7 @@ collection:
 #endif
 			    {
 #ifdef FEAT_MBYTE
-				if (cc_dbcs && MB_BYTE2LEN(end) > 1)
+				if (enc_dbcs && MB_BYTE2LEN(end) > 1)
 				    EMSG_RET_NULL(_(e_invrange));
 #endif
 				if (start > end + 1)
@@ -2029,6 +2030,7 @@ regoptail(p, val)
  */
 
 /* static int	    curchr; */
+static int	prevprevchr;
 static int	prevchr;
 static int	nextchr;    /* used for ungetchr() */
 /*
@@ -2047,7 +2049,7 @@ initchr(str)
 #ifdef FEAT_MBYTE
     skip_multi = FALSE;
 #endif
-    curchr = prevchr = nextchr = -1;
+    curchr = prevprevchr = prevchr = nextchr = -1;
     at_start = TRUE;
     prev_at_start = FALSE;
 }
@@ -2060,8 +2062,6 @@ peekchr()
 	switch (curchr = regparse[0])
 	{
 	case '.':
-    /*	case '+':*/
-    /*	case '=':*/
 	case '[':
 	case '~':
 	    if (reg_magic)
@@ -2078,7 +2078,9 @@ peekchr()
 	    /* '^' is only magic as the very first character and if it's after
 	     * "\(", "\|", "\&' or "\n" */
 	    if (at_start || prevchr == Magic('(') || prevchr == Magic('|')
-		    || prevchr == Magic('&') || prevchr == Magic('n'))
+		    || prevchr == Magic('&') || prevchr == Magic('n')
+		    || ((prevchr == '(' || prevchr == Magic('('))
+			    && prevprevchr == Magic('%')))
 	    {
 		curchr = Magic('^');
 		at_start = TRUE;
@@ -2145,7 +2147,7 @@ peekchr()
 
 #ifdef FEAT_MBYTE
 	default:
-	    if (cc_dbcs && MB_BYTE2LEN(curchr) > 1 && regparse[1] != NUL)
+	    if (enc_dbcs && MB_BYTE2LEN(curchr) > 1 && regparse[1] != NUL)
 		curchr = (curchr << 8) | regparse[1];
 #endif
 	}
@@ -2158,7 +2160,7 @@ peekchr()
 skipchr()
 {
 #ifdef FEAT_MBYTE
-    if (cc_dbcs && mb_ptr2len_check(regparse) > 1)
+    if (enc_dbcs && mb_ptr2len_check(regparse) > 1)
     {
 	skip_multi = TRUE;
 	regparse++;
@@ -2169,6 +2171,7 @@ skipchr()
     regparse++;
     prev_at_start = at_start;
     at_start = FALSE;
+    prevprevchr = prevchr;
     prevchr = curchr;
     curchr = nextchr;	    /* use previously unget char, or -1 */
     nextchr = -1;
@@ -2205,6 +2208,7 @@ ungetchr()
 {
     nextchr = curchr;
     curchr = prevchr;
+    prevchr = prevprevchr;
     at_start = prev_at_start;
     prev_at_start = FALSE;
     /*
@@ -2753,6 +2757,7 @@ regtry(prog, col)
 # define ADVANCE_REGINPUT() advance_reginput()
 
 static void advance_reginput __ARGS((void));
+static int reg_prev_class __ARGS((void));
 
     static void
 advance_reginput()
@@ -2762,6 +2767,21 @@ advance_reginput()
     else
 	++reginput;
 }
+
+    static int
+reg_prev_class()
+{
+    int prev_off;
+
+    if (reginput - 1 > regline)
+    {
+	prev_off = mb_head_off(regline, reginput - 1) + 1;
+	if (regline <= reginput - prev_off)
+	    return mb_get_class(reginput - prev_off);
+    }
+    return 0;
+}
+
 #else
 /* No multi-byte: It's too simple to make a function for. */
 # define ADVANCE_REGINPUT() ++reginput
@@ -2883,47 +2903,60 @@ regmatch(scan)
 	    break;
 
 	  case BOW:	/* \<word; reginput points to w */
+	    if (reginput[0] == NUL)	/* Can't match at end of line */
+		return FALSE;
 #ifdef FEAT_MBYTE
-	    if (cc_dbcs && reginput[0] != NUL)
+	    if (has_mbyte)
 	    {
 		int this_class, prev_class = 0;
 
+		/* Get class of current and previous char (if it exists). */
                 this_class = mb_get_class(reginput);
-		if (reginput != regline
-			&& regline < reginput - 1
-			&& mb_head_off(regline, reginput - 1))
-		    prev_class = mb_get_class(&reginput[-2]);
+		prev_class = reg_prev_class();
+
 		if (this_class != prev_class)
-		    break;
-		else if (this_class)
+		{
+		    if (this_class == 0 && !vim_iswordc(reginput[0]))
+			return FALSE;
+		    break; /* Wow! Matched with BOW! */
+		}
+		else if (this_class != 0) /* this_class and prev_class != 0 */
 		    return FALSE;
+		/* If this_class and prev_class == 0 then it means there are
+		 * no mbyte chars, use original logic */
 	    }
 #endif
 	    if (reginput > regline && vim_iswordc(reginput[-1]))
 		return FALSE;
-	    if (!reginput[0] || !vim_iswordc(reginput[0]))
+	    if (!vim_iswordc(reginput[0]))
 		return FALSE;
 	    break;
 
 	  case EOW:	/* word\>; reginput points after d */
+	    if (reginput == regline)    /* Can't match at start of line */
+		return FALSE;
 #ifdef FEAT_MBYTE
-	    if (cc_dbcs)
+	    if (has_mbyte)
 	    {
-		int this_class, prev_class = 0;
+		int this_class, prev_class;
 
+		/* Get class of current and previous char (if it exists). */
                 this_class = mb_get_class(reginput);
-		if (reginput == regline)
-		    return FALSE;
-		if (regline < reginput - 1
-			&& mb_head_off(regline, reginput - 1))
-		    prev_class = mb_get_class(&reginput[-2]);
+		prev_class = reg_prev_class();
+
 		if (this_class != prev_class)
-		    break;
-		else if (this_class)
+		{
+		    if (prev_class == 0 && !vim_iswordc(reginput[-1]))
+			return FALSE;
+		    break; /* Matched with EOW */
+		}
+		else if (this_class != 0) /* this_class and prev_class != 0 */
 		    return FALSE;
+		/* If this_class and prev_class == 0 then it means there are
+		 * no mbyte chars, use original logic */
 	    }
 #endif
-	    if (reginput == regline || !vim_iswordc(reginput[-1]))
+	    if (!vim_iswordc(reginput[-1]))
 		return FALSE;
 	    if (reginput[0] && vim_iswordc(reginput[0]))
 		return FALSE;
@@ -3113,14 +3146,14 @@ regmatch(scan)
 	    if (*reginput == NUL)
 		return FALSE;
 #ifdef FEAT_MBYTE
-	    if (cc_utf8 && mb_ptr2len_check(reginput) > 1)
+	    if (enc_utf8 && mb_ptr2len_check(reginput) > 1)
 	    {
 		if ((vim_strchr(OPERAND(scan), utf_ptr2char(reginput))
 						    == NULL) == (op == ANYOF))
 		    return FALSE;
 		reginput += mb_ptr2len_check(reginput) - 1;
 	    }
-	    else if (cc_dbcs && mb_ptr2len_check(reginput) > 1)
+	    else if (enc_dbcs && mb_ptr2len_check(reginput) > 1)
 	    {
 		if ((cstrchr(OPERAND(scan), *reginput << 8 | reginput[1])
 						    == NULL) == (op == ANYOF))
@@ -3143,7 +3176,7 @@ regmatch(scan)
 
 		opnd = OPERAND(scan);
 
-		if (cc_utf8 && (len = utf_byte2len(*opnd)) > 1)
+		if (enc_utf8 && (len = utf_byte2len(*opnd)) > 1)
 		{
 		    int	    i;
 
@@ -4058,7 +4091,7 @@ do_class:
 		    break;
 	    }
 #ifdef FEAT_MBYTE
-	    else if (cc_dbcs && mb_ptr2len_check(scan) > 1)
+	    else if (enc_dbcs && mb_ptr2len_check(scan) > 1)
 	    {
 		if ((cstrchr(opnd, *scan << 8 | scan[1]) == NULL) == testval)
 		    break;
@@ -5099,7 +5132,7 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 #ifdef FEAT_MBYTE
 		int	l;
 
-		if (cc_dbcs && (l = mb_ptr2len_check(src - 1)) > 1)
+		if (enc_dbcs && (l = mb_ptr2len_check(src - 1)) > 1)
 		{
 		    mch_memmove(dst, src - 1, l);
 		    dst += l - 1;

@@ -35,7 +35,6 @@ int copy_option_part __ARGS((char_u **option, char_u *buf, int maxlen, char *sep
 void vim_free __ARGS((void *x));
 int vim_stricmp __ARGS((char *s1, char *s2));
 int vim_strnicmp __ARGS((char *s1, char *s2, size_t len));
-char_u *vim_stristr __ARGS((char_u *s1, char_u *s2));
 char_u *vim_strchr __ARGS((char_u *string, int c));
 char_u *vim_strrchr __ARGS((char_u *string, int c));
 int vim_isspace __ARGS((int x));
@@ -71,7 +70,7 @@ int decrypt_byte __ARGS((void));
 int update_keys __ARGS((int c));
 void crypt_init_keys __ARGS((char_u *passwd));
 char_u *get_crypt_key __ARGS((int store, int twice));
-void *vim_findfile_init __ARGS((char_u *path, char_u *filename, char_u *stopdirs, int level, int free_visited, int need_dir, void *search_ctx));
+void *vim_findfile_init __ARGS((char_u *path, char_u *filename, char_u *stopdirs, int level, int free_visited, int need_dir, void *search_ctx, int tagfile));
 char_u *vim_findfile_stopdir __ARGS((char_u *buf));
 void vim_findfile_cleanup __ARGS((void *ctx));
 char_u *vim_findfile __ARGS((void *search_ctx));

@@ -1523,9 +1523,9 @@ gui_screenchar(off, flags, fg, bg, back)
     char_u	buf[MB_MAXBYTES + 1];
 
     /* Don't draw right halve of a double-width UTF-8 char. "cannot happen" */
-    if (cc_utf8 && ScreenLines[off] == 0)
+    if (enc_utf8 && ScreenLines[off] == 0)
 	return;
-    if (cc_utf8 && ScreenLinesUC[off] != 0)
+    if (enc_utf8 && ScreenLinesUC[off] != 0)
 	/* Draw UTF-8 multi-byte character. */
 	gui_outstr_nowrap(buf,
 		utfc_char2bytes(off, buf),
@@ -1533,7 +1533,7 @@ gui_screenchar(off, flags, fg, bg, back)
     else
 	/* Draw non-multi-byte character or DBCS character. */
 	gui_outstr_nowrap(ScreenLines + off,
-		cc_dbcs ? mb_ptr2len_check(ScreenLines + off) : 1,
+		enc_dbcs ? mb_ptr2len_check(ScreenLines + off) : 1,
 		flags, fg, bg, back);
 #else
 	gui_outstr_nowrap(ScreenLines + off,
@@ -1721,7 +1721,7 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
      * Draw the text.
      */
 #ifdef FEAT_MBYTE
-    if (cc_utf8)
+    if (enc_utf8)
     {
 	int	start;		/* index of bytes to be drawn */
 	int	cells;		/* cellwidth of bytes to be drawn */
@@ -1967,14 +1967,14 @@ gui_redraw_block(row1, col1, row2, col2, flags)
 #ifdef FEAT_MBYTE
 	col1 = orig_col1;
 	col2 = orig_col2;
-	if (cc_dbcs)
+	if (enc_dbcs)
 	{
 	    col1 -= mb_head_off(ScreenLines + LineOffset[gui.row],
 				    ScreenLines + LineOffset[gui.row] + col1);
 	    col2 += mb_tail_off(ScreenLines + LineOffset[gui.row],
 				    ScreenLines + LineOffset[gui.row] + col2);
 	}
-	else if (cc_utf8)
+	else if (enc_utf8)
 	{
 	    if (ScreenLines[LineOffset[gui.row] + col1] == 0)
 		--col1;
@@ -1999,7 +1999,7 @@ gui_redraw_block(row1, col1, row2, col2, flags)
 	    first_attr = ScreenAttrs[off];
 	    gui.highlight_mask = first_attr;
 #ifdef FEAT_MBYTE
-	    if (cc_utf8 && ScreenLinesUC[off] != 0)
+	    if (enc_utf8 && ScreenLinesUC[off] != 0)
 	    {
 		gui_screenchar(off, flags, (guicolor_t)0, (guicolor_t)0, back);
 		++off;
@@ -2018,7 +2018,7 @@ gui_redraw_block(row1, col1, row2, col2, flags)
 									idx++)
 		{
 #ifdef FEAT_MBYTE
-		    if (cc_utf8 && ScreenLinesUC[off + idx] != 0)
+		    if (enc_utf8 && ScreenLinesUC[off + idx] != 0)
 			break;
 #endif
 		    --len;
@@ -2437,8 +2437,9 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
 	string[3] = (char_u)button;
 
     string[3] |= modifiers;
-    string[4] = (char_u)(col + ' ' + 1);
-    string[5] = (char_u)(row + ' ' + 1);
+    /* Can't encode numbers above 222... */
+    string[4] = (char_u)((col > 222 ? 222 : col) + ' ' + 1);
+    string[5] = (char_u)((row > 222 ? 222 : row) + ' ' + 1);
     add_to_input_buf(string, 6);
 
     if (row < 0)
@@ -2473,8 +2474,8 @@ gui_xy2colrow(x, y, colp)
 #ifdef FEAT_MBYTE
     if (ScreenLines != NULL
 	    && col > 0
-	    && ((cc_dbcs && mb_isbyte1(ScreenLines + LineOffset[row], col))
-		|| (cc_utf8 && ScreenLines[LineOffset[row] + col] == 0)))
+	    && ((enc_dbcs && mb_isbyte1(ScreenLines + LineOffset[row], col))
+		|| (enc_utf8 && ScreenLines[LineOffset[row] + col] == 0)))
 	--col;
 #endif
     *colp = col;
@@ -3537,4 +3538,69 @@ xy2win(x, y)
 #else
     return firstwin;
 #endif
+}
+
+/*
+ * ":gui" and ":gvim": Change from the terminal version to the GUI version.
+ * File names may be given to redefine the args list.
+ */
+    void
+ex_gui(eap)
+    exarg_t	*eap;
+{
+    char_u	*arg = eap->arg;
+
+    /*
+     * Check for "-f" argument: foreground, don't fork.
+     * Also don't fork when started with "gvim -f".
+     * Do fork when using "gui -b".
+     */
+    if (arg[0] == '-'
+	    && (arg[1] == 'f' || arg[1] == 'b')
+	    && (arg[2] == NUL || vim_iswhite(arg[2])))
+    {
+	gui.dofork = (arg[1] == 'b');
+	eap->arg = skipwhite(eap->arg + 2);
+    }
+    if (!gui.in_use)
+    {
+	/* Clear the command.  Needed for when forking+exiting, to avoid part
+	 * of the argument ending up after the shell prompt. */
+	msg_clr_eos();
+	gui_start();
+    }
+    if (!ends_excmd(*eap->arg))
+	ex_next(eap);
+}
+
+/*
+ * ":drop"
+ */
+    void
+ex_drop(eap)
+    exarg_t	*eap;
+{
+    int		split = FALSE;
+
+    /* Check whether the current buffer is changed. If so, we will need
+     * to split the current window or data could be lost.
+     * We don't need to check if the 'hidden' option is set, as in this
+     * case the buffer won't be lost.
+     */
+    if (!P_HID(curbuf))
+    {
+	++emsg_off;
+	split = check_changed(curbuf, TRUE, FALSE, FALSE, FALSE);
+	--emsg_off;
+    }
+
+    /* Fake a ":snext" or ":next" command. */
+    if (split)
+    {
+	eap->cmdidx = CMD_snext;
+	eap->cmd[0] = 's';
+    }
+    else
+	eap->cmdidx = CMD_next;
+    ex_next(eap);
 }

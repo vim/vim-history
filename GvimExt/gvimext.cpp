@@ -485,13 +485,76 @@ BOOL CALLBACK CShellExt::EnumWindowsProc(HWND hWnd, LPARAM lParam)
     return true; // continue enumeration (otherwise this would be false)
 }
 
+#ifdef WIN32
+/* This symbol is not defined in older versions of the SDK or Visual C++ */
+
+#ifndef VER_PLATFORM_WIN32_WINDOWS
+# define VER_PLATFORM_WIN32_WINDOWS 1
+#endif
+
+static DWORD g_PlatformId;
+
+/*
+ * Set g_PlatformId to VER_PLATFORM_WIN32_NT (NT) or
+ * VER_PLATFORM_WIN32_WINDOWS (Win95).
+ */
+    static void
+PlatformId(void)
+{
+    static int done = FALSE;
+
+    if (!done)
+    {
+	OSVERSIONINFO ovi;
+
+	ovi.dwOSVersionInfoSize = sizeof(ovi);
+	GetVersionEx(&ovi);
+
+	g_PlatformId = ovi.dwPlatformId;
+	done = TRUE;
+    }
+}
+
+# ifndef __BORLANDC__
+    static char *
+searchpath(char *name)
+{
+    static char widename[2 * MAX_PATH];
+    static char location[2 * MAX_PATH + 2];
+
+    /* There appears to be a bug in FindExecutableA() on Windows NT.
+     * Use FindExecutableW() instead... */
+    PlatformId();
+    if (g_PlatformId == VER_PLATFORM_WIN32_NT)
+    {
+	MultiByteToWideChar(CP_ACP, 0, (LPCTSTR)name, -1,
+		(LPWSTR)widename, MAX_PATH);
+	if (FindExecutableW((LPCWSTR)widename, (LPCWSTR)"",
+		    (LPWSTR)location) > (HINSTANCE)32)
+	{
+	    WideCharToMultiByte(CP_ACP, 0, (LPWSTR)location, -1,
+		    (LPSTR)widename, 2 * MAX_PATH, NULL, NULL);
+	    return widename;
+	}
+    }
+    else
+    {
+	if (FindExecutableA((LPCTSTR)name, (LPCTSTR)"",
+		    (LPTSTR)location) > (HINSTANCE)32)
+	    return location;
+    }
+    return "";
+}
+# endif
+#endif
+
 static void
 getGvimName(char *name)
 {
     HKEY keyhandle;
     DWORD hlen;
 
-    /* Get the location of gvim.exe from the registry. */
+    /* Get the location of gvim from the registry. */
     name[0] = 0;
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\Vim\\Gvim", 0,
 				       KEY_READ, &keyhandle) == ERROR_SUCCESS)
@@ -505,7 +568,11 @@ getGvimName(char *name)
 	RegCloseKey(keyhandle);
     }
     if (name[0] == 0)
-	strcpy(name, "gvim.exe");
+	strcpy(name, searchpath("gvim.exe"));
+    if (name[0] == 0)
+	strcpy(name, searchpath("gvim.bat"));
+    if (name[0] == 0)
+	strcpy(name, "gvim");		/* finds gvim.bat or gvim.exe */
 }
 
 STDMETHODIMP CShellExt::InvokeGvim(HWND hParent,
@@ -552,7 +619,7 @@ STDMETHODIMP CShellExt::InvokeGvim(HWND hParent,
 			&pi)		// Pointer to PROCESS_INFORMATION structure.
 	       )
 	    {
-		MessageBox(hParent, "Error creating process: Check if gvim.exe is in your path!", "gvimext.dll error", MB_OK);
+		MessageBox(hParent, "Error creating process: Check if gvim is in your path!", "gvimext.dll error", MB_OK);
 	    }
             else
             {
@@ -621,7 +688,7 @@ STDMETHODIMP CShellExt::InvokeSingleGvim(HWND hParent,
 		&pi)		// Pointer to PROCESS_INFORMATION structure.
        )
     {
-	MessageBox(hParent, "Error creating process: Check if gvim.exe is in your path!", "gvimext.dll error", MB_OK);
+	MessageBox(hParent, "Error creating process: Check if gvim is in your path!", "gvimext.dll error", MB_OK);
     }
     else
     {

@@ -1,4 +1,4 @@
-*quickref.txt*  For Vim version 6.0u.  Last change: 2000 Oct 15
+*quickref.txt*  For Vim version 6.0v.  Last change: 2001 Feb 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -609,6 +609,7 @@ Short explanation of each option:		*option-list*
 |'directory'|	   |'dir'|	list of directory names for the swap file
 |'display'|	   |'dy'|	list of flags for how to display text
 |'edcompatible'|   |'ed'|	toggle flags of ":substitute" command
+|'encoding'|   	   |'enc'|	encoding used internally
 |'endofline'|	   |'eol'|	write <EOL> for last line in file
 |'equalalways'|    |'ea'|	windows are automatically made the same size
 |'equalprg'|	   |'ep'|	external program to use for "=" command
@@ -619,7 +620,7 @@ Short explanation of each option:		*option-list*
 |'eventignore'|	   |'ei'|	autocommand events that are ignored
 |'expandtab'|	   |'et'|	use spaces when <Tab> is inserted
 |'exrc'|	   |'ex'|	read .vimrc and .exrc in the current directory
-|'fileencoding'|   |'fe'|	file encoding for multi-byte text
+|'fileencoding'|   |'fenc'|	file encoding for multi-byte text
 |'fileformat'|	   |'ff'|	file format used for file I/O
 |'fileformats'|	   |'ffs'|	automatically detected values for 'fileformat'
 |'filetype'|	   |'ft'|	type of file, used for autocommands

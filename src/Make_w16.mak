@@ -67,6 +67,7 @@ Dep_gvim16dexe = \
    message.obj\
    misc1.obj\
    misc2.obj\
+   move.obj\
    normal.obj\
    ops.obj\
    option.obj\
@@ -89,6 +90,7 @@ Dep_gvim16dexe = \
    edit.obj\
    eval.obj\
    ex_cmds.obj\
+   ex_cmds2.obj\
    ex_docmd.obj\
    ex_getln.obj\
    fileio.obj
@@ -109,6 +111,7 @@ menu.obj+
 message.obj+
 misc1.obj+
 misc2.obj+
+move.obj+
 normal.obj+
 ops.obj+
 option.obj+
@@ -131,6 +134,7 @@ digraph.obj+
 edit.obj+
 eval.obj+
 ex_cmds.obj+
+ex_cmds2.obj+
 ex_docmd.obj+
 ex_getln.obj+
 fileio.obj
@@ -207,6 +211,11 @@ misc1.obj :  misc1.c
 misc2.obj :  misc2.c
   $(BCC)   -P- -c @&&|
  $(CompOptsAt_gvim16dexe) $(CompInheritOptsAt_gvim16dexe) -o$@ misc2.c
+|
+
+move.obj :  move.c
+  $(BCC)   -P- -c @&&|
+ $(CompOptsAt_gvim16dexe) $(CompInheritOptsAt_gvim16dexe) -o$@ move.c
 |
 
 normal.obj :  normal.c
@@ -317,6 +326,11 @@ eval.obj :  eval.c
 ex_cmds.obj :  ex_cmds.c
   $(BCC)   -P- -c @&&|
  $(CompOptsAt_gvim16dexe) $(CompInheritOptsAt_gvim16dexe) -o$@ ex_cmds.c
+|
+
+ex_cmds2.obj :  ex_cmds2.c
+  $(BCC)   -P- -c @&&|
+ $(CompOptsAt_gvim16dexe) $(CompInheritOptsAt_gvim16dexe) -o$@ ex_cmds2.c
 |
 
 ex_docmd.obj :  ex_docmd.c

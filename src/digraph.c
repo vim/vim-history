@@ -2263,7 +2263,7 @@ printdigraph(dp)
 	if (has_mbyte)
 	{
 	    /* add a space to draw a composing char on */
-	    if (cc_utf8 && utf_iscomposing(dp->result))
+	    if (enc_utf8 && utf_iscomposing(dp->result))
 		*p++ = ' ';
 	    p += mb_char2bytes(dp->result, p);
 	}

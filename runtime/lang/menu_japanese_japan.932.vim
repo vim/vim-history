@@ -8,6 +8,8 @@ if exists("did_menu_trans")
 endif
 let did_menu_trans = 1
 
+scriptencoding cp932
+
 " Help menu
 menutrans &Help			ƒwƒ‹ƒv(&H)
 menutrans &Overview<Tab><F1>	ŠT—ª(&O)<Tab><F1>

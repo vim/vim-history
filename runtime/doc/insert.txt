@@ -1,4 +1,4 @@
-*insert.txt*    For Vim version 6.0u.  Last change: 2001 Feb 04
+*insert.txt*    For Vim version 6.0v.  Last change: 2001 Feb 08
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -969,11 +969,11 @@ self explanatory.  Using the long or the short version depends on the
 	[NL found]			reading with "mac" 'fileformat' and a
 					NL was found (could be "unix" format)
 	[long lines split]		at least one line was split in two
-	[NOT converted]			conversion from 'filecharcode' to
-					'charcode' was desired but not
+	[NOT converted]			conversion from 'fileencoding' to
+					'encoding' was desired but not
 					possible
-	[converted]			conversion from 'filecharcode' to
-					'charcode' done
+	[converted]			conversion from 'fileencoding' to
+					'encoding' done
 	[crypted]			file was decrypted
 	[READ ERRORS]			not all of the file could be read
 

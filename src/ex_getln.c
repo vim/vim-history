@@ -3736,17 +3736,16 @@ prepare_viminfo_history(asklen)
  * new.
  */
     int
-read_viminfo_history(line, fp)
-    char_u  *line;
-    FILE    *fp;
+read_viminfo_history(virp)
+    vir_t	*virp;
 {
-    int	    type;
-    char_u  *val;
+    int		type;
+    char_u	*val;
 
-    type = hist_char2type(line[0]);
+    type = hist_char2type(virp->vir_line[0]);
     if (viminfo_hisidx[type] < viminfo_hislen[type])
     {
-	val = viminfo_readstring(line + 1, fp);
+	val = viminfo_readstring(virp, 1, TRUE);
 	if (val != NULL)
 	{
 	    if (!in_history(type, val, viminfo_add_at_front))
@@ -3755,7 +3754,7 @@ read_viminfo_history(line, fp)
 		vim_free(val);
 	}
     }
-    return vim_fgets(line, LSIZE, fp);
+    return viminfo_readline(virp);
 }
 
     void

@@ -81,6 +81,7 @@ static void gather_termleader __ARGS((void));
 static void req_codes_from_term __ARGS((void));
 static void req_more_codes_from_term __ARGS((void));
 static void got_code_from_term __ARGS((char_u *code, int len));
+static void check_for_codes_from_term __ARGS((void));
 #endif
 #if defined(FEAT_GUI) \
     || (defined(FEAT_MOUSE) && (!defined(UNIX) || defined(FEAT_MOUSE_XTERM)))
@@ -106,8 +107,11 @@ static char_u *tgetent_error __ARGS((char_u *, char_u *));
 char		*tgetstr __ARGS((char *, char **));
 
 # ifdef FEAT_TERMRESPONSE
-/* When set: Get terminal version when switched to RAW mode */
-static int need_get_crv = TRUE;
+/* Request Terminal Version status: */
+#  define CRV_GET	1	/* send T_CRV when switched to RAW mode */
+#  define CRV_SENT	2	/* did send T_CRV, waiting for answer */
+#  define CRV_GOT	3	/* received T_CRV response */
+static int crv_status = CRV_GET;
 # endif
 
 /*
@@ -1871,7 +1875,7 @@ set_termname(term)
     full_screen = TRUE;		/* we can use termcap codes from now on */
     set_term_defaults();	/* use current values as defaults */
 #ifdef FEAT_TERMRESPONSE
-    need_get_crv = TRUE;	/* Get terminal version later */
+    crv_status = CRV_GET;	/* Get terminal version later */
 #endif
 
     /*
@@ -3022,6 +3026,13 @@ settmode(tmode)
 	 */
 	if (tmode != TMODE_COOK || cur_tmode != TMODE_COOK)
 	{
+#ifdef FEAT_TERMRESPONSE
+	    /* May need to check for T_CRV response and termcodes, it doesn't
+	     * work in Cooked mode, an external program may get them. */
+	    if (tmode != TMODE_RAW && crv_status == CRV_SENT)
+		(void)vpeekc_nomap();
+	    check_for_codes_from_term();
+#endif
 #ifdef FEAT_MOUSE
 	    if (tmode != TMODE_RAW)
 		mch_setmouse(FALSE);		/* switch mouse off */
@@ -3069,6 +3080,9 @@ stoptermcap()
     if (termcap_active)
     {
 #ifdef FEAT_TERMRESPONSE
+	/* May need to check for T_CRV response. */
+	if (crv_status == CRV_SENT)
+	    (void)vpeekc_nomap();
 	/* Check for termcodes first, otherwise an external program may get
 	 * them. */
 	check_for_codes_from_term();
@@ -3095,10 +3109,11 @@ stoptermcap()
     static void
 may_req_termresponse()
 {
-    if (need_get_crv && cur_tmode == TMODE_RAW && termcap_active && *T_CRV)
+    if (crv_status == CRV_GET && cur_tmode == TMODE_RAW
+						  && termcap_active && *T_CRV)
     {
 	out_str(T_CRV);
-	need_get_crv = FALSE;
+	crv_status = CRV_SENT;
 	/* check for the characters now, otherwise they might be eaten by
 	 * get_keystroke() */
 	out_flush();
@@ -3700,6 +3715,8 @@ check_termcode(max_offset, buf, buflen)
 		/* eat it when at least one digit and ending in 'c' */
 		if (i > 2 + (tp[0] != CSI) && tp[i] == 'c')
 		{
+		    crv_status = CRV_GOT;
+
 		    /* If this code starts with CSI, you can bet that the
 		     * terminal uses 8-bit codes. */
 		    if (tp[0] == CSI)
@@ -4800,7 +4817,7 @@ show_one_termcode(name, code, printit)
 /*
  * For Xterm >= 140 compiled with OPT_TCAP_QUERY: Obtain the actually used
  * termcap codes from the terminal itself.
- * We get them one by one to avoid a very long response.
+ * We get them one by one to avoid a very long response string.
  */
 static int xt_index_in = 0;
 static int xt_index_out = 0;
@@ -4818,6 +4835,10 @@ req_more_codes_from_term()
 {
     char	buf[11];
     int		old_idx = xt_index_out;
+
+    /* Don't do anything when going to exit. */
+    if (exiting)
+	return;
 
     /* Send up to 10 more requests out than we received.  Avoid sending too
      * many, there can be a buffer overflow somewhere. */
@@ -4907,7 +4928,7 @@ got_code_from_term(code, len)
  * keyboard input.  We don't want responses to be send to that program or
  * handled as typed text.
  */
-    void
+    static void
 check_for_codes_from_term()
 {
     int		c;

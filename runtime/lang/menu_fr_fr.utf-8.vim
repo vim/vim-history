@@ -1,12 +1,14 @@
 " Menu Translations:	Françaisè
 " Maintainer:	François Thunus (thunus@systran.fr)
-" Last Change:	2001 Jan 15
+" Last Change:	2001 Feb 11
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
   finish
 endif
 let did_menu_trans = 1
+
+scriptencoding utf-8
 
 " Help menu
 menutrans &Help			&Aide

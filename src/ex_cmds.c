@@ -7,7 +7,7 @@
  */
 
 /*
- * ex_cmds.c: functions for command line commands
+ * ex_cmds.c: some functions for command line commands
  */
 
 #include "vim.h"
@@ -15,14 +15,12 @@
 #ifdef FEAT_EX_EXTRA
 static int linelen __ARGS((int *has_tab));
 #endif
-static void do_filter __ARGS((linenr_t line1, linenr_t line2, exarg_t *eap,
-				    char_u *cmd, int do_in, int do_out));
+static void do_filter __ARGS((linenr_t line1, linenr_t line2, exarg_t *eap, char_u *cmd, int do_in, int do_out));
 #ifdef FEAT_VIMINFO
 static char_u *viminfo_filename __ARGS((char_u	*));
-static void do_viminfo __ARGS((FILE *fp_in, FILE *fp_out, int want_info,
-					     int want_marks, int force_read));
-static int read_viminfo_up_to_marks __ARGS((char_u *line, FILE *fp,
-						   int forceit, int writing));
+static void do_viminfo __ARGS((FILE *fp_in, FILE *fp_out, int want_info, int want_marks, int force_read));
+static int viminfo_encoding __ARGS((vir_t *virp));
+static int read_viminfo_up_to_marks __ARGS((vir_t *virp, int forceit, int writing));
 #endif
 
 static int check_overwrite __ARGS((exarg_t *eap, buf_t *buf, char_u *fname, char_u *ffname, int other));
@@ -54,7 +52,7 @@ do_ascii(eap)
     int		c2 = 0;
     int		len;
 
-    if (cc_utf8)
+    if (enc_utf8)
 	c = utfc_ptr2char(ml_get_cursor(), &c1, &c2);
     else
 #endif
@@ -67,7 +65,7 @@ do_ascii(eap)
 
 #ifdef FEAT_MBYTE
     IObuff[0] = NUL;
-    if (!has_mbyte || (cc_dbcs && c < 0x100) || c < 0x80)
+    if (!has_mbyte || (enc_dbcs && c < 0x100) || c < 0x80)
 #endif
     {
 	if (c == NL)	    /* NUL is stored as NL */
@@ -100,7 +98,7 @@ do_ascii(eap)
 
 #ifdef FEAT_MBYTE
     /* Repeat for combining characters. */
-    while (has_mbyte && (c >= 0x100 || (cc_utf8 && c >= 0x80)))
+    while (has_mbyte && (c >= 0x100 || (enc_utf8 && c >= 0x80)))
     {
 	len = STRLEN(IObuff);
 	/* This assumes every multi-byte char is printable... */
@@ -129,7 +127,7 @@ do_ascii(eap)
     msg(IObuff);
 }
 
-#ifdef FEAT_EX_EXTRA
+#if defined(FEAT_EX_EXTRA) || defined(PROTO)
 /*
  * ":left", ":center" and ":right": align text.
  */
@@ -737,7 +735,7 @@ do_bang(addr_count, eap, forceit, do_in, do_out)
     static void
 do_filter(line1, line2, eap, cmd, do_in, do_out)
     linenr_t	line1, line2;
-    exarg_t	*eap;		/* for forced 'ff' and 'fcc' */
+    exarg_t	*eap;		/* for forced 'ff' and 'fenc' */
     char_u	*cmd;
     int		do_in, do_out;
 {
@@ -1225,18 +1223,23 @@ viminfo_error(message, line)
  */
     int
 read_viminfo(file, want_info, want_marks, forceit)
-    char_u  *file;
-    int	    want_info;
-    int	    want_marks;
-    int	    forceit;
+    char_u	*file;
+    int		want_info;
+    int		want_marks;
+    int		forceit;
 {
-    FILE    *fp;
+    FILE	*fp;
+    char_u	*fname;
 
     if (no_viminfo())
 	return FAIL;
 
-    file = viminfo_filename(file);	    /* may set to default if NULL */
-    if ((fp = mch_fopen((char *)file, READBIN)) == NULL)
+    fname = viminfo_filename(file);	    /* may set to default if NULL */
+    if (fname == NULL)
+	return FAIL;
+    fp = mch_fopen((char *)fname, READBIN);
+    vim_free(fname);
+    if (fp == NULL)
 	return FAIL;
 
     if (p_verbose > 0)
@@ -1261,209 +1264,208 @@ read_viminfo(file, want_info, want_marks, forceit)
  */
     void
 write_viminfo(file, forceit)
-    char_u  *file;
-    int	    forceit;
+    char_u	*file;
+    int		forceit;
 {
-    FILE	    *fp_in = NULL;	/* input viminfo file, if any */
-    FILE	    *fp_out = NULL;	/* output viminfo file */
-    char_u	    *tempname = NULL;	/* name of temp viminfo file */
-    struct stat	    st_new;		/* mch_stat() of potential new file */
-    char_u	    *wp;
+    char_u	*fname;
+    FILE	*fp_in = NULL;	/* input viminfo file, if any */
+    FILE	*fp_out = NULL;	/* output viminfo file */
+    char_u	*tempname = NULL;	/* name of temp viminfo file */
+    struct stat	st_new;		/* mch_stat() of potential new file */
+    char_u	*wp;
 #if defined(UNIX) || defined(VMS)
-     mode_t	    umask_save;
+     mode_t	umask_save;
 #endif
 #ifdef UNIX
-    int		    shortname = FALSE;	/* use 8.3 file name */
-    struct stat	    st_old;		/* mch_stat() of existing viminfo file */
+    int		shortname = FALSE;	/* use 8.3 file name */
+    struct stat	st_old;		/* mch_stat() of existing viminfo file */
 #endif
 
     if (no_viminfo())
 	return;
 
-    file = viminfo_filename(file);	/* may set to default if NULL */
-    file = vim_strsave(file);		/* make a copy, don't want NameBuff */
+    fname = viminfo_filename(file);	/* may set to default if NULL */
+    if (fname == NULL)
+	return;
 
-    if (file != NULL)
+    fp_in = mch_fopen((char *)fname, READBIN);
+    if (fp_in == NULL)
     {
-	fp_in = mch_fopen((char *)file, READBIN);
-	if (fp_in == NULL)
+	/* if it does exist, but we can't read it, don't try writing */
+	if (mch_stat((char *)fname, &st_new) == 0)
+	    goto end;
+#if defined(UNIX) || defined(VMS)
+	/*
+	 * For Unix we create the .viminfo non-accessible for others,
+	 * because it may contain text from non-accessible documents.
+	 */
+	umask_save = umask(077);
+#endif
+	fp_out = mch_fopen((char *)fname, WRITEBIN);
+#if defined(UNIX) || defined(VMS)
+	(void)umask(umask_save);
+#endif
+    }
+    else
+    {
+	/*
+	 * There is an existing viminfo file.  Create a temporary file to
+	 * write the new viminfo into, in the same directory as the
+	 * existing viminfo file, which will be renamed later.
+	 */
+#ifdef UNIX
+	/*
+	 * For Unix we check the owner of the file.  It's not very nice to
+	 * overwrite a user's viminfo file after a "su root", with a
+	 * viminfo file that the user can't read.
+	 */
+	st_old.st_dev = st_old.st_ino = 0;
+	st_old.st_mode = 0600;
+	if (mch_stat((char *)fname, &st_old) == 0 && getuid() &&
+		!(st_old.st_uid == getuid()
+			? (st_old.st_mode & 0200)
+			: (st_old.st_gid == getgid()
+				? (st_old.st_mode & 0020)
+				: (st_old.st_mode & 0002))))
 	{
-	    /* if it does exist, but we can't read it, don't try writing */
-	    if (mch_stat((char *)file, &st_new) == 0)
-		goto end;
-#if defined(UNIX) || defined(VMS)
-	    /*
-	     * For Unix we create the .viminfo non-accessible for others,
-	     * because it may contain text from non-accessible documents.
-	     */
-	    umask_save = umask(077);
-#endif
-	    fp_out = mch_fopen((char *)file, WRITEBIN);
-#if defined(UNIX) || defined(VMS)
-	    (void)umask(umask_save);
-#endif
+	    int	tt;
+
+	    /* avoid a wait_return for this message, it's annoying */
+	    tt = msg_didany;
+	    EMSG2(_("Viminfo file is not writable: %s"), fname);
+	    msg_didany = tt;
+	    goto end;
 	}
-	else
-	{
-	    /*
-	     * There is an existing viminfo file.  Create a temporary file to
-	     * write the new viminfo into, in the same directory as the
-	     * existing viminfo file, which will be renamed later.
-	     */
-#ifdef UNIX
-	    /*
-	     * For Unix we check the owner of the file.  It's not very nice to
-	     * overwrite a user's viminfo file after a "su root", with a
-	     * viminfo file that the user can't read.
-	     */
-	    st_old.st_dev = st_old.st_ino = 0;
-	    st_old.st_mode = 0600;
-	    if (mch_stat((char *)file, &st_old) == 0 && getuid() &&
-		    !(st_old.st_uid == getuid()
-			    ? (st_old.st_mode & 0200)
-			    : (st_old.st_gid == getgid()
-				    ? (st_old.st_mode & 0020)
-				    : (st_old.st_mode & 0002))))
-	    {
-		int	tt;
-
-		/* avoid a wait_return for this message, it's annoying */
-		tt = msg_didany;
-		EMSG2(_("Viminfo file is not writable: %s"), file);
-		msg_didany = tt;
-		goto end;
-	    }
 #endif
 
-	    /*
-	     * Make tempname.
-	     * May try twice: Once normal and once with shortname set, just in
-	     * case somebody puts his viminfo file in an 8.3 filesystem.
-	     */
-	    for (;;)
-	    {
-		tempname = buf_modname(
+	/*
+	 * Make tempname.
+	 * May try twice: Once normal and once with shortname set, just in
+	 * case somebody puts his viminfo file in an 8.3 filesystem.
+	 */
+	for (;;)
+	{
+	    tempname = buf_modname(
 #ifdef UNIX
-					shortname,
+				    shortname,
 #else
 # ifdef SHORT_FNAME
-					TRUE,
+				    TRUE,
 # else
 #  ifdef FEAT_GUI_W32
-					gui_is_win32s(),
+				    gui_is_win32s(),
 #  else
-					FALSE,
+				    FALSE,
 #  endif
 # endif
 #endif
-					file,
+				    fname,
 #ifdef VMS
-					(char_u *)"-tmp",
+				    (char_u *)"-tmp",
 #else
 # ifdef RISCOS
-					(char_u *)"/tmp",
+				    (char_u *)"/tmp",
 # else
-					(char_u *)".tmp",
+				    (char_u *)".tmp",
 # endif
 #endif
-					FALSE);
-		if (tempname == NULL)		/* out of memory */
-		    break;
+				    FALSE);
+	    if (tempname == NULL)		/* out of memory */
+		break;
 
-		/*
-		 * Check if tempfile already exists.  Never overwrite an
-		 * existing file!
-		 */
-		if (mch_stat((char *)tempname, &st_new) == 0)
-		{
+	    /*
+	     * Check if tempfile already exists.  Never overwrite an
+	     * existing file!
+	     */
+	    if (mch_stat((char *)tempname, &st_new) == 0)
+	    {
 #ifdef UNIX
+		/*
+		 * Check if tempfile is same as original file.  May happen
+		 * when modname() gave the same file back.  E.g.  silly
+		 * link, or file name-length reached.  Try again with
+		 * shortname set.
+		 */
+		if (!shortname && st_new.st_dev == st_old.st_dev &&
+			st_new.st_ino == st_old.st_ino)
+		{
+		    vim_free(tempname);
+		    tempname = NULL;
+		    shortname = TRUE;
+		    continue;
+		}
+#endif
+		/*
+		 * Try another name.  Change one character, just before
+		 * the extension.  This should also work for an 8.3
+		 * file name, when after adding the extension it still is
+		 * the same file as the original.
+		 */
+		wp = tempname + STRLEN(tempname) - 5;
+		if (wp < gettail(tempname))	    /* empty file name? */
+		    wp = gettail(tempname);
+		for (*wp = 'z'; mch_stat((char *)tempname, &st_new) == 0;
+								    --*wp)
+		{
 		    /*
-		     * Check if tempfile is same as original file.  May happen
-		     * when modname() gave the same file back.  E.g.  silly
-		     * link, or file name-length reached.  Try again with
-		     * shortname set.
+		     * They all exist?  Must be something wrong! Don't
+		     * write the viminfo file then.
 		     */
-		    if (!shortname && st_new.st_dev == st_old.st_dev &&
-			    st_new.st_ino == st_old.st_ino)
+		    if (*wp == 'a')
 		    {
 			vim_free(tempname);
 			tempname = NULL;
-			shortname = TRUE;
-			continue;
-		    }
-#endif
-		    /*
-		     * Try another name.  Change one character, just before
-		     * the extension.  This should also work for an 8.3
-		     * file name, when after adding the extension it still is
-		     * the same file as the original.
-		     */
-		    wp = tempname + STRLEN(tempname) - 5;
-		    if (wp < gettail(tempname))	    /* empty file name? */
-			wp = gettail(tempname);
-		    for (*wp = 'z'; mch_stat((char *)tempname, &st_new) == 0;
-									--*wp)
-		    {
-			/*
-			 * They all exist?  Must be something wrong! Don't
-			 * write the viminfo file then.
-			 */
-			if (*wp == 'a')
-			{
-			    vim_free(tempname);
-			    tempname = NULL;
-			    break;
-			}
+			break;
 		    }
 		}
-		break;
 	    }
+	    break;
+	}
 
-	    if (tempname != NULL)
+	if (tempname != NULL)
+	{
+	    fp_out = mch_fopen((char *)tempname, WRITEBIN);
+
+	    /*
+	     * If we can't create in the same directory, try creating a
+	     * "normal" temp file.
+	     */
+	    if (fp_out == NULL)
 	    {
-		fp_out = mch_fopen((char *)tempname, WRITEBIN);
-
-		/*
-		 * If we can't create in the same directory, try creating a
-		 * "normal" temp file.
-		 */
-		if (fp_out == NULL)
-		{
-		    vim_free(tempname);
-		    if ((tempname = vim_tempname('o')) != NULL)
-			fp_out = mch_fopen((char *)tempname, WRITEBIN);
-		}
-#ifdef UNIX
-		/*
-		 * Set file protection same as original file, but strip s-bit
-		 * and make sure the owner can read/write it.
-		 */
-		if (fp_out != NULL)
-		{
-		    (void)mch_setperm(tempname,
-				      (long)((st_old.st_mode & 0777) | 0600));
-		    /* this only works for root: */
-		    (void)chown((char *)tempname, st_old.st_uid, st_old.st_gid);
-		}
-#endif
+		vim_free(tempname);
+		if ((tempname = vim_tempname('o')) != NULL)
+		    fp_out = mch_fopen((char *)tempname, WRITEBIN);
 	    }
+#ifdef UNIX
+	    /*
+	     * Set file protection same as original file, but strip s-bit
+	     * and make sure the owner can read/write it.
+	     */
+	    if (fp_out != NULL)
+	    {
+		(void)mch_setperm(tempname,
+				  (long)((st_old.st_mode & 0777) | 0600));
+		/* this only works for root: */
+		(void)chown((char *)tempname, st_old.st_uid, st_old.st_gid);
+	    }
+#endif
 	}
     }
 
     /*
      * Check if the new viminfo file can be written to.
      */
-    if (file == NULL || fp_out == NULL)
+    if (fp_out == NULL)
     {
-	EMSG2(_("Can't write viminfo file %s!"), file == NULL ? (char_u *)"" :
-					      fp_in == NULL ? file : tempname);
+	EMSG2(_("Can't write viminfo file %s!"),
+					    fp_in == NULL ? fname : tempname);
 	if (fp_in != NULL)
 	    fclose(fp_in);
 	goto end;
     }
 
     if (p_verbose > 0)
-	smsg((char_u *)_("Writing viminfo file \"%s\""), file);
+	smsg((char_u *)_("Writing viminfo file \"%s\""), fname);
 
     viminfo_errcnt = 0;
     do_viminfo(fp_in, fp_out, !forceit, !forceit, FALSE);
@@ -1475,11 +1477,11 @@ write_viminfo(file, forceit)
 	/*
 	 * In case of an error, don't overwrite the original viminfo file.
 	 */
-	if (viminfo_errcnt || vim_rename(tempname, file) == -1)
+	if (viminfo_errcnt || vim_rename(tempname, fname) == -1)
 	    mch_remove(tempname);
     }
 end:
-    vim_free(file);
+    vim_free(fname);
     vim_free(tempname);
 }
 
@@ -1489,6 +1491,7 @@ end:
  * cmdline functions).
  * Otherwise use "-i file_name", value from 'viminfo' or the default, and
  * expand environment variables.
+ * Returns an allocated string.  NULL when out of memory.
  */
     static char_u *
 viminfo_filename(file)
@@ -1520,9 +1523,9 @@ viminfo_filename(file)
 		file = (char_u *)VIMINFO_FILE;
 	}
 	expand_env(file, NameBuff, MAXPATHL);
-	return NameBuff;
+	file = NameBuff;
     }
-    return file;
+    return vim_strsave(file);
 }
 
 /*
@@ -1530,27 +1533,34 @@ viminfo_filename(file)
  */
     static void
 do_viminfo(fp_in, fp_out, want_info, want_marks, force_read)
-    FILE    *fp_in;
-    FILE    *fp_out;
-    int	    want_info;
-    int	    want_marks;
-    int	    force_read;
+    FILE	*fp_in;
+    FILE	*fp_out;
+    int		want_info;
+    int		want_marks;
+    int		force_read;
 {
-    int	    count = 0;
-    int	    eof = FALSE;
-    char_u  *line;
+    int		count = 0;
+    int		eof = FALSE;
+    vir_t	vir;
 
-    if ((line = alloc(LSIZE)) == NULL)
+    if ((vir.vir_line = alloc(LSIZE)) == NULL)
 	return;
+    vir.vir_fd = fp_in;
+#ifdef FEAT_MBYTE
+    vir.vir_conv.vc_type = CONV_NONE;
+# ifdef USE_ICONV
+    vir.vir_conv.vc_fd = (iconv_t)-1;
+# endif
+#endif
 
     if (fp_in != NULL)
     {
 	if (want_info)
-	    eof = read_viminfo_up_to_marks(line, fp_in, force_read,
-							      fp_out != NULL);
+	    eof = read_viminfo_up_to_marks(&vir, force_read, fp_out != NULL);
 	else
 	    /* Skip info, find start of marks */
-	    while (!(eof = vim_fgets(line, LSIZE, fp_in)) && line[0] != '>')
+	    while (!(eof = viminfo_readline(&vir))
+		    && vir.vir_line[0] != '>')
 		;
     }
     if (fp_out != NULL)
@@ -1558,6 +1568,10 @@ do_viminfo(fp_in, fp_out, want_info, want_marks, force_read)
 	/* Write the info: */
 	fprintf(fp_out, _("# This viminfo file was generated by vim\n"));
 	fprintf(fp_out, _("# You may edit it if you're careful!\n\n"));
+#ifdef FEAT_MBYTE
+	fprintf(fp_out, _("# Value of 'encoding' when this file was written\n"));
+	fprintf(fp_out, "*encoding=%s\n\n", p_enc);
+#endif
 	write_viminfo_search_pattern(fp_out);
 	write_viminfo_sub_string(fp_out);
 	write_viminfo_history(fp_out);
@@ -1570,8 +1584,13 @@ do_viminfo(fp_in, fp_out, want_info, want_marks, force_read)
 	count = write_viminfo_marks(fp_out);
     }
     if (fp_in != NULL && want_marks)
-	copy_viminfo_marks(line, fp_in, fp_out, count, eof);
-    vim_free(line);
+	copy_viminfo_marks(&vir, fp_out, count, eof);
+
+    vim_free(vir.vir_line);
+#ifdef FEAT_MBYTE
+    if (vir.vir_conv.vc_type != CONV_NONE)
+	convert_setup(&vir.vir_conv, (char_u *)"", (char_u *)"");
+#endif
 }
 
 /*
@@ -1580,9 +1599,8 @@ do_viminfo(fp_in, fp_out, want_info, want_marks, force_read)
  * are local to a file.  Returns TRUE when end-of-file is reached. -- webb
  */
     static int
-read_viminfo_up_to_marks(line, fp, forceit, writing)
-    char_u	*line;
-    FILE	*fp;
+read_viminfo_up_to_marks(virp, forceit, writing)
+    vir_t	*virp;
     int		forceit;
     int		writing;
 {
@@ -1590,60 +1608,62 @@ read_viminfo_up_to_marks(line, fp, forceit, writing)
     buf_t	*buf;
 
     prepare_viminfo_history(forceit ? 9999 : 0);
-    eof = vim_fgets(line, LSIZE, fp);
-    while (!eof && line[0] != '>')
+    eof = viminfo_readline(virp);
+    while (!eof && virp->vir_line[0] != '>')
     {
-	switch (line[0])
+	switch (virp->vir_line[0])
 	{
 		/* Characters reserved for future expansion, ignored now */
 	    case '+': /* "+40 /path/dir file", for running vim without args */
 	    case '|': /* to be defined */
 	    case '^': /* to be defined */
-	    case '*': /* to be defined */
 	    case '<': /* long line - ignored */
-		/* A comment */
+		/* A comment or empty line. */
 	    case NUL:
 	    case '\r':
 	    case '\n':
 	    case '#':
-		eof = vim_fgets(line, LSIZE, fp);
+		eof = viminfo_readline(virp);
+		break;
+	    case '*': /* "*encoding=value" */
+		eof = viminfo_encoding(virp);
 		break;
 	    case '!': /* global variable */
 #ifdef FEAT_EVAL
-		eof = read_viminfo_varlist(line, fp, writing);
+		eof = read_viminfo_varlist(virp, writing);
 #else
-		eof = vim_fgets(line, LSIZE, fp);
+		eof = viminfo_readline(virp);
 #endif
 		break;
 	    case '%': /* entry for buffer list */
-		eof = read_viminfo_bufferlist(line, fp, writing);
+		eof = read_viminfo_bufferlist(virp, writing);
 		break;
 	    case '"':
-		eof = read_viminfo_register(line, fp, forceit);
+		eof = read_viminfo_register(virp, forceit);
 		break;
 	    case '/':	    /* Search string */
 	    case '&':	    /* Substitute search string */
 	    case '~':	    /* Last search string, followed by '/' or '&' */
-		eof = read_viminfo_search_pattern(line, fp, forceit);
+		eof = read_viminfo_search_pattern(virp, forceit);
 		break;
 	    case '$':
-		eof = read_viminfo_sub_string(line, fp, forceit);
+		eof = read_viminfo_sub_string(virp, forceit);
 		break;
 	    case ':':
 	    case '?':
 	    case '=':
 	    case '@':
-		eof = read_viminfo_history(line, fp);
+		eof = read_viminfo_history(virp);
 		break;
 	    case '-':
 	    case '\'':
-		eof = read_viminfo_filemark(line, fp, forceit);
+		eof = read_viminfo_filemark(virp, forceit);
 		break;
 	    default:
-		if (viminfo_error(_("Illegal starting char"), line))
+		if (viminfo_error(_("Illegal starting char"), virp->vir_line))
 		    eof = TRUE;
 		else
-		    eof = vim_fgets(line, LSIZE, fp);
+		    eof = viminfo_readline(virp);
 		break;
 	}
     }
@@ -1659,6 +1679,48 @@ read_viminfo_up_to_marks(line, fp, forceit, writing)
 }
 
 /*
+ * Compare the 'encoding' value in the viminfo file with the current value of
+ * 'encoding'.  If different and the 'c' flag is in 'viminfo', setup for
+ * conversion of text with iconv() in viminfo_readstring().
+ */
+    static int
+viminfo_encoding(virp)
+    vir_t	*virp;
+{
+#ifdef FEAT_MBYTE
+    char_u	*p;
+    int		i;
+
+    if (get_viminfo_parameter('c') != 0)
+    {
+	p = vim_strchr(virp->vir_line, '=');
+	if (p != NULL)
+	{
+	    /* remove trailing newline */
+	    ++p;
+	    for (i = 0; vim_isprintc(p[i]); ++i)
+		;
+	    p[i] = NUL;
+
+	    convert_setup(&virp->vir_conv, p, p_enc);
+	}
+    }
+#endif
+    return viminfo_readline(virp);
+}
+
+/*
+ * Read a line from the viminfo file.
+ * Returns TRUE for end-of-file;
+ */
+    int
+viminfo_readline(virp)
+    vir_t	*virp;
+{
+    return vim_fgets(virp->vir_line, LSIZE, virp->vir_fd);
+}
+
+/*
  * check string read from viminfo file
  * remove '\n' at the end of the line
  * - replace CTRL-V CTRL-V with CTRL-V
@@ -1668,31 +1730,33 @@ read_viminfo_up_to_marks(line, fp, forceit, writing)
  *
  * Return the string in allocated memory (NULL when out of memory).
  */
+/*ARGSUSED*/
     char_u *
-viminfo_readstring(p, fp)
-    char_u	*p;
-    FILE	*fp;
+viminfo_readstring(virp, off, convert)
+    vir_t	*virp;
+    int		off;		    /* offset for virp->vir_line */
+    int		convert;	    /* convert the string */
 {
     char_u	*retval;
     char_u	*s, *d;
     long	len;
 
-    if (p[0] == Ctrl_V && isdigit(p[1]))
+    if (virp->vir_line[off] == Ctrl_V && isdigit(virp->vir_line[off + 1]))
     {
-	len = atol((char *)p + 1);
+	len = atol((char *)virp->vir_line + off + 1);
 	retval = lalloc(len, TRUE);
 	if (retval == NULL)
 	{
 	    /* Line too long?  File messed up?  Skip next line. */
-	    (void)vim_fgets(p, 10, fp);
+	    (void)vim_fgets(virp->vir_line, 10, virp->vir_fd);
 	    return NULL;
 	}
-	(void)vim_fgets(retval, (int)len, fp);
+	(void)vim_fgets(retval, (int)len, virp->vir_fd);
 	s = retval + 1;	    /* Skip the leading '<' */
     }
     else
     {
-	retval = vim_strsave(p);
+	retval = vim_strsave(virp->vir_line + off);
 	if (retval == NULL)
 	    return NULL;
 	s = retval;
@@ -1714,6 +1778,19 @@ viminfo_readstring(p, fp)
 	    *d++ = *s++;
     }
     *d = NUL;
+
+#ifdef FEAT_MBYTE
+    if (convert && virp->vir_conv.vc_type != CONV_NONE)
+    {
+	d = string_convert(&virp->vir_conv, retval, NULL);
+	if (d != NULL)
+	{
+	    vim_free(retval);
+	    retval = d;
+	}
+    }
+#endif
+
     return retval;
 }
 
@@ -2275,7 +2352,7 @@ theend:
  *		- NULL to start an empty buffer
  *   sfname: the short file name (or NULL)
  *	eap: contains the command to be executed after loading the file and
- *	     forced 'ff' and 'fcc'
+ *	     forced 'ff' and 'fenc'
  *  newlnum: if > 0: put cursor on this line number (if possible)
  *	     if ECMD_LASTL: use last position in loaded file
  *	     if ECMD_LAST: use last position in all files
@@ -3512,10 +3589,12 @@ do_sub(eap)
 			    do_ask = FALSE;
 			    break;
 			}
+#ifdef FEAT_INS_EXPAND
 			else if (i == Ctrl_E)
 			    scrollup_clamp();
 			else if (i == Ctrl_Y)
 			    scrolldown_clamp();
+#endif
 		    }
 		    State = save_State;
 #ifdef FEAT_MOUSE
@@ -4023,16 +4102,15 @@ global_exe(cmd)
 
 #ifdef FEAT_VIMINFO
     int
-read_viminfo_sub_string(line, fp, force)
-    char_u  *line;
-    FILE    *fp;
-    int	    force;
+read_viminfo_sub_string(virp, force)
+    vir_t	*virp;
+    int		force;
 {
     if (old_sub != NULL && force)
 	vim_free(old_sub);
     if (force || old_sub == NULL)
-	old_sub = viminfo_readstring(line + 1, fp);
-    return vim_fgets(line, LSIZE, fp);
+	old_sub = viminfo_readstring(virp, 1, TRUE);
+    return viminfo_readline(virp);
 }
 
     void
@@ -4325,12 +4403,12 @@ find_help_tags(arg, num_matches, matches)
 			       "/*", "/\\*", "\"*", "/\\(\\)",
 			       "?", ":?", "?<CR>", "g?", "g?g?", "g??",
 			       "[count]", "[quotex]", "[range]",
-			       "[pattern]", "\\|"};
+			       "[pattern]", "\\|", "\\%$"};
     static char *(rtable[]) = {"star", "gstar", "[star", "]star", ":star",
 			       "/star", "/\\\\star", "quotestar", "/\\\\(\\\\)",
 			       "?", ":?", "?<CR>", "g?", "g?g?", "g??",
 			       "\\[count]", "\\[quotex]", "\\[range]",
-			       "\\[pattern]", "\\\\bar"};
+			       "\\[pattern]", "\\\\bar", "/\\\\%\\$"};
 
     d = IObuff;		    /* assume IObuff is long enough! */
 
@@ -4347,16 +4425,21 @@ find_help_tags(arg, num_matches, matches)
 
     if (i < 0)	/* no match in table */
     {
-	/* Replace "\S" with "/\\S", etc.  Otherwise every tag is matched. */
-	if (arg[0] == '\\' && arg[1] != NUL && arg[2] == NUL)
+	/* Replace "\S" with "/\\S", etc.  Otherwise every tag is matched.
+	 * Also replace "\%^" and "\%(", they match every tag too. */
+
+	if (arg[0] == '\\'
+		&& ((arg[1] != NUL && arg[2] == NUL)
+		    || (arg[1] == '%' && arg[2] != NUL && arg[3] == NUL)))
 	{
-	    STRCPY(d, "/\\\\x");
-	    d[3] = arg[1];
+	    STRCPY(d, "/\\\\");
+	    STRCPY(d + 3, arg + 1);
 	}
 	else
 	{
-	  /* replace "[:...:]" with "\[:...:]" */
-	  if (arg[0] == '[' && arg[1] == ':')
+	  /* replace "[:...:]" with "\[:...:]"; "[+...]" with "\[++...]" */
+	    if (arg[0] == '[' && (arg[1] == ':'
+					 || (arg[1] == '+' && arg[2] == '+')))
 	      *d++ = '\\';
 
 	  for (s = arg; *s; ++s)

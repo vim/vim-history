@@ -107,7 +107,7 @@ EX(CMD_args,		"args",		ex_args,
 EX(CMD_argadd,		"argadd",	ex_argadd,
 			BANG|NEEDARG|RANGE|NOTADR|COUNT|FILES|TRLBAR),
 EX(CMD_argdelete,	"argdelete",	ex_argdelete,
-			BANG|NEEDARG|RANGE|NOTADR|COUNT|FILES|TRLBAR),
+			BANG|RANGE|NOTADR|COUNT|FILES|TRLBAR),
 EX(CMD_argdo,		"argdo",	ex_listdo,
 			BANG|NEEDARG|EXTRA|NOTRLCOM),
 EX(CMD_argedit,		"argedit",	ex_argedit,
@@ -608,6 +608,8 @@ EX(CMD_sbrewind,	"sbrewind",	ex_brewind,
 			TRLBAR),
 EX(CMD_scriptnames,	"scriptnames",	ex_scriptnames,
 			TRLBAR|CMDWIN),
+EX(CMD_scriptencoding,	"scriptencoding", ex_scriptencoding,
+			WORD1|TRLBAR|CMDWIN),
 EX(CMD_set,		"set",		ex_set,
 			TRLBAR|EXTRA|CMDWIN),
 EX(CMD_setfiletype,	"setfiletype",	ex_setfiletype,
@@ -855,7 +857,7 @@ struct exarg
     int		regname;	/* register name (NUL if none) */
     int		force_ff;	/* forced 'fileformat' (index in cmd[]) */
 #ifdef FEAT_MBYTE
-    int		force_fcc;	/* forced 'filecharcode' (index in cmd[]) */
+    int		force_enc;	/* forced 'encoding' (index in cmd[]) */
 #endif
 #ifdef FEAT_USR_CMDS
     int		useridx;	/* user command index */

@@ -119,6 +119,7 @@ SRC = \
 	edit.c \
 	eval.c \
 	ex_cmds.c \
+	ex_cmds2.c \
 	ex_docmd.c \
 	ex_getln.c \
 	fileio.c \
@@ -132,6 +133,7 @@ SRC = \
 	message.c \
 	misc1.c \
 	misc2.c \
+	move.c \
 	normal.c \
 	ops.c \
 	option.c \
@@ -150,8 +152,8 @@ SRC = \
 	gui_amiga.c \
 	gui.c
 
-OBJ = buffer.o charset.o digraph.o edit.o eval.o ex_cmds.o ex_docmd.o ex_getln.o \
-	fileio.o fold.o getchar.o main.o mark.o memfile.o memline.o menu.o message.o misc1.o misc2.o \
+OBJ = buffer.o charset.o digraph.o edit.o eval.o ex_cmds.o ex_cmds2.o ex_docmd.o ex_getln.o \
+	fileio.o fold.o getchar.o main.o mark.o memfile.o memline.o menu.o message.o misc1.o misc2.o move.o \
 	normal.o ops.o option.o os_amiga.o quickfix.o regexp.o screen.o search.o syntax.o \
 	tag.o term.o ui.o undo.o window.o gui_amiga.o gui.o  $(TERMLIB)
 
@@ -162,6 +164,7 @@ PRO = \
 	edit.pro \
 	eval.pro \
 	ex_cmds.pro \
+	ex_cmds2.pro \
 	ex_docmd.pro \
 	ex_getln.pro \
 	fileio.pro \
@@ -175,6 +178,7 @@ PRO = \
 	message.pro \
 	misc1.pro \
 	misc2.pro \
+	move.pro \
 	normal.pro \
 	ops.pro \
 	option.pro \
@@ -274,8 +278,10 @@ edit.o:		edit.c  $(DEP)
 edit.pro:	edit.c   $(DEP)
 eval.o:		eval.c  $(DEP)
 eval.pro:	eval.c  $(DEP)
-ex_cmds.o:	ex_cmds.c ex_cmds.h $(DEP)
-ex_cmds.pro:	ex_cmds.c ex_cmds.h  $(DEP)
+ex_cmds.o:	ex_cmds.c $(DEP)
+ex_cmds.pro:	ex_cmds.c  $(DEP)
+ex_cmds2.o:	ex_cmds2.c $(DEP)
+ex_cmds2.pro:	ex_cmds2.c $(DEP)
 ex_docmd.o:	ex_docmd.c ex_cmds.h  $(DEP)
 ex_docmd.pro:	ex_docmd.c ex_cmds.h $(DEP)
 ex_getln.o:	ex_getln.c  $(DEP)
@@ -286,8 +292,8 @@ fold.o:		fold.c  $(DEP)
 fold.pro:	fold.c   $(DEP)
 getchar.o:	getchar.c  $(DEP)
 getchar.pro:	getchar.c $(DEP)
-main.o:		main.c  $(DEP)
-main.pro:	main.c  $(DEP)
+main.o:		main.c globals.h $(DEP)
+main.pro:	main.c globals.h $(DEP)
 mark.o:		mark.c  $(DEP)
 mark.pro:	mark.c $(DEP)
 memfile.o:	memfile.c  $(DEP)
@@ -302,6 +308,8 @@ misc1.o:	misc1.c  $(DEP)
 misc1.pro:	misc1.c  $(DEP)
 misc2.o:	misc2.c  $(DEP)
 misc2.pro:	misc2.c $(DEP)
+move.o:		move.c  $(DEP)
+move.pro:	move.c $(DEP)
 normal.o:	normal.c  $(DEP)
 normal.pro:	normal.c $(DEP)
 ops.o:		ops.c  $(DEP)
