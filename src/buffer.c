@@ -921,7 +921,7 @@ buflist_new(ffname, sfname, lnum, use_curbuf)
     buf_setino(buf);
 #endif
     buf->b_u_synced = TRUE;
-    buf->b_flags |= BF_CHECK_RO | BF_NEVERLOADED;
+    buf->b_flags = BF_CHECK_RO | BF_NEVERLOADED;
     buf_clear(buf);
     clrallmarks(buf);		    /* clear marks */
     fmarks_check_names(buf);	    /* check file marks for this file */
