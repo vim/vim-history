@@ -2625,10 +2625,10 @@ static unsigned	reg_tofreelen;
  */
 static regmatch_T	*reg_match;
 static regmmatch_T	*reg_mmatch;
-static char_u		**reg_startp;
-static char_u		**reg_endp;
-static lpos_T		*reg_startpos;
-static lpos_T		*reg_endpos;
+static char_u		**reg_startp = NULL;
+static char_u		**reg_endp = NULL;
+static lpos_T		*reg_startpos = NULL;
+static lpos_T		*reg_endpos = NULL;
 static win_T		*reg_win;
 static buf_T		*reg_buf;
 static linenr_T		reg_firstlnum;
