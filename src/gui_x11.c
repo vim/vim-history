@@ -719,7 +719,7 @@ gui_x11_key_hit_cb(w, dud, event, dum)
     }
     if (len == 1 && (string[0] == Ctrl('C')
 #ifdef UNIX
-	    || string[0] == intr_char
+	    || (intr_char != 0 && string[0] == intr_char)
 #endif
 	    ))
     {
