@@ -2952,6 +2952,8 @@ win_enter_ext(wp, undo_sync, curwin_invalid)
     /* set window height to desired minimal value */
     if (curwin->w_height < p_wh && !curwin->w_p_wfh)
 	win_setheight((int)p_wh);
+    else if (curwin->w_height == 0)
+	win_setheight(1);
 
 #ifdef FEAT_VERTSPLIT
     /* set window width to desired minimal value */
