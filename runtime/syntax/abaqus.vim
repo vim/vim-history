@@ -18,14 +18,14 @@ syn match abaqusComment	"^\*\*.*$"
 syn match abaqusKeywordLine "^\*\h.*" contains=abaqusKeyword,abaqusParameter,abaqusValue display
 syn match abaqusKeyword "^\*\h[^,]*" contained display
 syn match abaqusParameter ",[^,=]\+"lc=1 contained display
-syn match abaqusValue 	"=\s*[^,]*"lc=1 contained display
+syn match abaqusValue	"=\s*[^,]*"lc=1 contained display
 
 " Illegal syntax
 syn match abaqusBadLine	"^\s\+\*.*" display
 
 " Folding
 if version >= 600
-  syn region foldData start="^\*\h" end="^\*\h"me=s-1 transparent fold 
+  syn region foldData start="^\*\h" end="^\*\h"me=s-1 transparent fold
   syn sync fromstart
   set foldmethod=syntax
 endif
@@ -40,7 +40,7 @@ if version >= 508 || !exists("did_abaqus_syn_inits")
 	else
 		command -nargs=+ HiLink hi def link <args>
 	endif
-	
+
 	" The default methods for highlighting.  Can be overridden later
 	HiLink abaqusComment	Comment
 	HiLink abaqusKeyword	Statement

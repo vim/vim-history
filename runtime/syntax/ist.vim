@@ -18,14 +18,14 @@ else
 endif
 
 syn case ignore
-syn keyword IstInpSpec  actual  arg_close arg_open encap       escape 
+syn keyword IstInpSpec  actual  arg_close arg_open encap       escape
 syn keyword IstInpSpec  keyword level     quote    range_close range_open
 syn keyword IstInpSpec  page_compositor
 
 syn keyword IstOutSpec  preamble         postamble        setpage_prefix   setpage_suffix   group_skip
-syn keyword IstOutSpec  headings_flag    heading_prefix   heading_suffix   
-syn keyword IstOutSpec  lethead_flag     lethead_prefix   lethead_suffix   
-syn keyword IstOutSpec  symhead_positive symhead_negative numhead_positive numhead_negative 
+syn keyword IstOutSpec  headings_flag    heading_prefix   heading_suffix
+syn keyword IstOutSpec  lethead_flag     lethead_prefix   lethead_suffix
+syn keyword IstOutSpec  symhead_positive symhead_negative numhead_positive numhead_negative
 syn keyword IstOutSpec  item_0           item_1           item_2           item_01
 syn keyword IstOutSpec  item_x1          item_12          item_x2
 syn keyword IstOutSpec  delim_0          delim_1          delim_2

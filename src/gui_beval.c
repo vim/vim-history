@@ -66,7 +66,7 @@ gui_mch_create_beval_area(target, msg, msgCB, clientData)
 
     if (msg != NULL && msgCB != NULL)
     {
-	EMSG(_("(ei6) Cannot create BalloonEval with both message and callback"));
+	EMSG(_("E232: Cannot create BalloonEval with both message and callback"));
 	return NULL;
     }
 

@@ -1,4 +1,4 @@
-*if_sniff.txt*	For Vim version 6.0ae.  Last change: 2001 May 05
+*if_sniff.txt*	For Vim version 6.0af.  Last change: 2001 May 12
 
 
 		  VIM REFERENCE MANUAL
@@ -11,7 +11,7 @@ SNiFF+ and Vim				    *sniff*
 2. Commands				    |sniff-commands|
 3. Compiling Vim with SNiFF+ interface	    |sniff-compiling|
 
-{Vi does not have any of these commands}  *se0* *se1* *se2* *se3* *se4* *se5*
+{Vi does not have any of these commands}  *E275* *E274* *E276* *E277* *E278* *E279*
 
 The SNiFF+ interface only works, when Vim was compiled with the |+sniff|
 feature.

@@ -890,6 +890,11 @@ EXTERN int	no_hlsearch INIT(= FALSE);
 extern cursorentry_T shape_table[SHAPE_IDX_COUNT];
 #endif
 
+#ifdef FEAT_PRINTER
+/* the table is in misc2.c, because of initializations */
+extern option_table_T printer_opts[OPT_PRINT_NUM_OPTIONS];
+#endif
+
 #ifdef FEAT_XCLIPBOARD
 EXTERN char	*xterm_display INIT(= NULL);	/* xterm display name */
 EXTERN Display	*xterm_dpy INIT(= NULL);	/* xterm display pointer */
@@ -945,109 +950,109 @@ EXTERN garray_T error_ga
  */
 EXTERN char_u e_abort[]		INIT(=N_("Command aborted"));
 EXTERN char_u e_argreq[]	INIT(=N_("Argument required"));
-EXTERN char_u e_backslash[]	INIT(=N_("(eb1) \\ should be followed by /, ? or &"));
+EXTERN char_u e_backslash[]	INIT(=N_("E10: \\ should be followed by /, ? or &"));
 #ifdef FEAT_CMDWIN
-EXTERN char_u e_cmdwin[]	INIT(=N_("(ec4) Invalid in command-line window; <CR> executes, CTRL-C quits"));
+EXTERN char_u e_cmdwin[]	INIT(=N_("E11: Invalid in command-line window; <CR> executes, CTRL-C quits"));
 #endif
-EXTERN char_u e_curdir[]	INIT(=N_("(ea2) Command not allowed from exrc/vimrc in current dir or tag search"));
-EXTERN char_u e_exists[]	INIT(=N_("(ee2) File exists (use ! to override)"));
+EXTERN char_u e_curdir[]	INIT(=N_("E12: Command not allowed from exrc/vimrc in current dir or tag search"));
+EXTERN char_u e_exists[]	INIT(=N_("E13: File exists (use ! to override)"));
 EXTERN char_u e_failed[]	INIT(=N_("Command failed"));
 EXTERN char_u e_internal[]	INIT(=N_("Internal error"));
 EXTERN char_u e_interr[]	INIT(=N_("Interrupted"));
-EXTERN char_u e_invaddr[]	INIT(=N_("(er3) Invalid address"));
+EXTERN char_u e_invaddr[]	INIT(=N_("E14: Invalid address"));
 EXTERN char_u e_invarg[]	INIT(=N_("Invalid argument"));
 EXTERN char_u e_invarg2[]	INIT(=N_("Invalid argument: %s"));
 #ifdef FEAT_EVAL
-EXTERN char_u e_invexpr2[]	INIT(=N_("(ee3) Invalid expression: %s"));
+EXTERN char_u e_invexpr2[]	INIT(=N_("E15: Invalid expression: %s"));
 #endif
-EXTERN char_u e_invrange[]	INIT(=N_("(er4) Invalid range"));
+EXTERN char_u e_invrange[]	INIT(=N_("E16: Invalid range"));
 EXTERN char_u e_invcmd[]	INIT(=N_("Invalid command"));
 #ifdef UNIX
-EXTERN char_u e_isadir2[]	INIT(=N_("(we7) \"%s\" is a directory"));
+EXTERN char_u e_isadir2[]	INIT(=N_("E17: \"%s\" is a directory"));
 #endif
 #ifdef FEAT_EVAL
-EXTERN char_u e_letunexp[]	INIT(=N_("(el1) Unexpected characters before '='"));
+EXTERN char_u e_letunexp[]	INIT(=N_("E18: Unexpected characters before '='"));
 #endif
-EXTERN char_u e_markinval[]	INIT(=N_("(em1) Mark has invalid line number"));
-EXTERN char_u e_marknotset[]	INIT(=N_("(em5) Mark not set"));
-EXTERN char_u e_modifiable[]	INIT(=N_("(ec5) Cannot make changes, 'modifiable' is off"));
-EXTERN char_u e_nesting[]	INIT(=N_("(es4) Scripts nested too deep"));
-EXTERN char_u e_noalt[]		INIT(=N_("(en2) No alternate file"));
-EXTERN char_u e_noabbr[]	INIT(=N_("(eb0) No such abbreviation"));
+EXTERN char_u e_markinval[]	INIT(=N_("E19: Mark has invalid line number"));
+EXTERN char_u e_marknotset[]	INIT(=N_("E20: Mark not set"));
+EXTERN char_u e_modifiable[]	INIT(=N_("E21: Cannot make changes, 'modifiable' is off"));
+EXTERN char_u e_nesting[]	INIT(=N_("E22: Scripts nested too deep"));
+EXTERN char_u e_noalt[]		INIT(=N_("E23: No alternate file"));
+EXTERN char_u e_noabbr[]	INIT(=N_("E24: No such abbreviation"));
 EXTERN char_u e_nobang[]	INIT(=N_("No ! allowed"));
 #ifndef FEAT_GUI
-EXTERN char_u e_nogvim[]	INIT(=N_("(eg1) GUI cannot be used: Not enabled at compile time"));
+EXTERN char_u e_nogvim[]	INIT(=N_("E25: GUI cannot be used: Not enabled at compile time"));
 #endif
 #ifndef FEAT_RIGHTLEFT
-EXTERN char_u e_nohebrew[]	INIT(=N_("(eh2) Hebrew cannot be used: Not enabled at compile time\n"));
+EXTERN char_u e_nohebrew[]	INIT(=N_("E26: Hebrew cannot be used: Not enabled at compile time\n"));
 #endif
 #ifndef FEAT_FKMAP
-EXTERN char_u e_nofarsi[]	INIT(=N_("(ef3) Farsi cannot be used: Not enabled at compile time\n"));
+EXTERN char_u e_nofarsi[]	INIT(=N_("E27: Farsi cannot be used: Not enabled at compile time\n"));
 #endif
 #if defined(FEAT_SEARCH_EXTRA) || defined(FEAT_SYN_HL)
-EXTERN char_u e_nogroup[]	INIT(=N_("(eh3) No such highlight group name: %s"));
+EXTERN char_u e_nogroup[]	INIT(=N_("E28: No such highlight group name: %s"));
 #endif
-EXTERN char_u e_noinstext[]	INIT(=N_("(ei1) No inserted text yet"));
-EXTERN char_u e_nolastcmd[]	INIT(=N_("(ec6) No previous command line"));
-EXTERN char_u e_nomap[]		INIT(=N_("(em3) No such mapping"));
+EXTERN char_u e_noinstext[]	INIT(=N_("E29: No inserted text yet"));
+EXTERN char_u e_nolastcmd[]	INIT(=N_("E30: No previous command line"));
+EXTERN char_u e_nomap[]		INIT(=N_("E31: No such mapping"));
 EXTERN char_u e_nomatch[]	INIT(=N_("No match"));
 EXTERN char_u e_nomatch2[]	INIT(=N_("No match: %s"));
-EXTERN char_u e_noname[]	INIT(=N_("(ef1) No file name"));
-EXTERN char_u e_nopresub[]	INIT(=N_("(es3) No previous substitute regular expression"));
-EXTERN char_u e_noprev[]	INIT(=N_("(ep3) No previous command"));
-EXTERN char_u e_noprevre[]	INIT(=N_("(ep1) No previous regular expression"));
+EXTERN char_u e_noname[]	INIT(=N_("E32: No file name"));
+EXTERN char_u e_nopresub[]	INIT(=N_("E33: No previous substitute regular expression"));
+EXTERN char_u e_noprev[]	INIT(=N_("E34: No previous command"));
+EXTERN char_u e_noprevre[]	INIT(=N_("E35: No previous regular expression"));
 EXTERN char_u e_norange[]	INIT(=N_("No range allowed"));
 #ifdef FEAT_WINDOWS
-EXTERN char_u e_noroom[]	INIT(=N_("(er5) Not enough room"));
+EXTERN char_u e_noroom[]	INIT(=N_("E36: Not enough room"));
 #endif
 EXTERN char_u e_notcreate[]	INIT(=N_("Can't create file %s"));
 EXTERN char_u e_notmp[]		INIT(=N_("Can't get temp file name"));
 EXTERN char_u e_notopen[]	INIT(=N_("Can't open file %s"));
 EXTERN char_u e_notread[]	INIT(=N_("Can't read file %s"));
-EXTERN char_u e_nowrtmsg[]	INIT(=N_("(ew2) No write since last change (use ! to override)"));
-EXTERN char_u e_null[]		INIT(=N_("(en5) Null argument"));
+EXTERN char_u e_nowrtmsg[]	INIT(=N_("E37: No write since last change (use ! to override)"));
+EXTERN char_u e_null[]		INIT(=N_("E38: Null argument"));
 #ifdef FEAT_DIGRAPHS
-EXTERN char_u e_number[]	INIT(=N_("(ed1) Number expected"));
+EXTERN char_u e_number[]	INIT(=N_("E39: Number expected"));
 #endif
 #ifdef FEAT_QUICKFIX
-EXTERN char_u e_openerrf[]	INIT(=N_("(ee1) Can't open errorfile %s"));
+EXTERN char_u e_openerrf[]	INIT(=N_("E40: Can't open errorfile %s"));
 #endif
-EXTERN char_u e_outofmem[]	INIT(=N_("(em4) Out of memory!"));
+EXTERN char_u e_outofmem[]	INIT(=N_("E41: Out of memory!"));
 #ifdef FEAT_INS_EXPAND
-EXTERN char_u e_patnotf[]	INIT(=N_("(ep2) Pattern not found"));
+EXTERN char_u e_patnotf[]	INIT(=N_("Pattern not found"));
 #endif
-EXTERN char_u e_patnotf2[]	INIT(=N_("(ep2) Pattern not found: %s"));
+EXTERN char_u e_patnotf2[]	INIT(=N_("Pattern not found: %s"));
 EXTERN char_u e_positive[]	INIT(=N_("Argument must be positive"));
 #ifdef FEAT_QUICKFIX
-EXTERN char_u e_quickfix[]	INIT(=N_("(ee4) No Errors"));
+EXTERN char_u e_quickfix[]	INIT(=N_("E42: No Errors"));
 #endif
-EXTERN char_u e_re_damg[]	INIT(=N_("(ed2) Damaged match string"));
-EXTERN char_u e_re_corr[]	INIT(=N_("(ed2) Corrupted regexp program"));
-EXTERN char_u e_readonly[]	INIT(=N_("(er1) 'readonly' option is set (use ! to override)"));
+EXTERN char_u e_re_damg[]	INIT(=N_("E43: Damaged match string"));
+EXTERN char_u e_re_corr[]	INIT(=N_("E44: Corrupted regexp program"));
+EXTERN char_u e_readonly[]	INIT(=N_("E45: 'readonly' option is set (use ! to override)"));
 #ifdef FEAT_EVAL
-EXTERN char_u e_readonlyvar[]	INIT(=N_("(er6) Cannot set read-only variable \"%s\""));
+EXTERN char_u e_readonlyvar[]	INIT(=N_("E46: Cannot set read-only variable \"%s\""));
 #endif
 #ifdef FEAT_QUICKFIX
-EXTERN char_u e_readerrf[]	INIT(=N_("(er2) Error while reading errorfile"));
+EXTERN char_u e_readerrf[]	INIT(=N_("E47: Error while reading errorfile"));
 #endif
 #ifdef HAVE_SANDBOX
-EXTERN char_u e_sandbox[]	INIT(=N_("(es5) Not allowed in sandbox"));
+EXTERN char_u e_sandbox[]	INIT(=N_("E48: Not allowed in sandbox"));
 #endif
-EXTERN char_u e_scroll[]	INIT(=N_("(es2) Invalid scroll size"));
-EXTERN char_u e_shellempty[]	INIT(=N_("(es1) 'shell' option is empty"));
-EXTERN char_u e_swapclose[]	INIT(=N_("(el4) Close error on swap file"));
-EXTERN char_u e_tagstack[]	INIT(=N_("(et1) tag stack empty"));
-EXTERN char_u e_toocompl[]	INIT(=N_("(ec3) Command too complex"));
-EXTERN char_u e_longname[]	INIT(=N_("(en1) Name too long"));
-EXTERN char_u e_toomsbra[]	INIT(=N_("(ep4) Too many ["));
-EXTERN char_u e_toomany[]	INIT(=N_("(et3) Too many file names"));
+EXTERN char_u e_scroll[]	INIT(=N_("E49: Invalid scroll size"));
+EXTERN char_u e_shellempty[]	INIT(=N_("E91: 'shell' option is empty"));
+EXTERN char_u e_swapclose[]	INIT(=N_("E72: Close error on swap file"));
+EXTERN char_u e_tagstack[]	INIT(=N_("E73: tag stack empty"));
+EXTERN char_u e_toocompl[]	INIT(=N_("E74: Command too complex"));
+EXTERN char_u e_longname[]	INIT(=N_("E75: Name too long"));
+EXTERN char_u e_toomsbra[]	INIT(=N_("E76: Too many ["));
+EXTERN char_u e_toomany[]	INIT(=N_("E77: Too many file names"));
 EXTERN char_u e_trailing[]	INIT(=N_("Trailing characters"));
-EXTERN char_u e_umark[]		INIT(=N_("(em6) Unknown mark"));
-EXTERN char_u e_wildexpand[]	INIT(=N_("(ew3) Cannot expand wildcards"));
-EXTERN char_u e_write[]		INIT(=N_("(ew4) Error while writing"));
+EXTERN char_u e_umark[]		INIT(=N_("E78: Unknown mark"));
+EXTERN char_u e_wildexpand[]	INIT(=N_("E79: Cannot expand wildcards"));
+EXTERN char_u e_write[]		INIT(=N_("E80: Error while writing"));
 EXTERN char_u e_zerocount[]	INIT(=N_("Zero count"));
 #ifdef FEAT_EVAL
-EXTERN char_u e_usingsid[]	INIT(=N_("(ev7) Using <SID> not in a script context"));
+EXTERN char_u e_usingsid[]	INIT(=N_("E81: Using <SID> not in a script context"));
 #endif
 
 /*

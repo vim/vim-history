@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	SiCAD (procedure language)
 " Maintainer:	Zsolt Branyiczky <zbranyiczky@lmark.mgx.hu>
-" Last Change:	2001 May 04
+" Last Change:	2001 May 10
 " URL:		http://lmark.mgx.hu:81/download/vim/sicad.vim
 
 " For version 5.x: Clear all syntax items
@@ -22,7 +22,7 @@ else
   set expandtab
 endif
 
-" ignore case 
+" ignore case
 syn case ignore
 
 " most important commands - not listed by ausku
@@ -108,7 +108,7 @@ syn match sicadLabel2	"\<goto \.\=[a-z][a-z0-9]\{0,7}\>" contains=sicadGoto
 syn match sicadLabel2	"\<goto\.[a-z][a-z0-9]\{0,7}\>" contains=sicadGoto
 
 " boolean
-syn match sicadBoolean	"\.[ft]\." 
+syn match sicadBoolean	"\.[ft]\."
 " integer without sign
 syn match sicadNumber	"\<[0-9]\+\>"
 " floating point number, with dot, optional exponent
@@ -129,7 +129,7 @@ syn region sicadString start=+'+ end=+'+ oneline
 syn region sicadComment	start="^ *\*" skip='\\ *$' end=";"me=e-1 end="$" contains=sicadString_
 " - ' .LABEL03 *  blabla' or ' .LABEL03 *  blabla;'
 syn region sicadComment start="^ *\.[a-z][a-z0-9]\{0,7} *\*" skip='\\ *$' end=";"me=e-1 end="$" contains=sicadLabel1,sicadString_
-" - '; * blabla' or '; * blabla;' 
+" - '; * blabla' or '; * blabla;'
 syn region sicadComment start="; *\*"ms=s+1 skip='\\ *$' end=";"me=e-1 end="$" contains=sicadString_
 " - comments between docbeg and docend
 syn region sicadComment	matchgroup=sicadStatement start="\<docbeg\>" end="\<docend\>"

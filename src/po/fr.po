@@ -1146,8 +1146,8 @@ msgstr "S'évalue en une chaîne vide"
 # }}}
 # {{{1 fileio.c
 #: ex_docmd.c:8236 globals.h:957
-msgid "(ef1) No file name"
-msgstr "(ef1) Pas de nom de fichier"
+msgid "E32: No file name"
+msgstr "E32: Pas de nom de fichier"
 
 #: ex_docmd.c:8346
 msgid "Cannot open viminfo file for reading"
@@ -2137,8 +2137,8 @@ msgstr "writelines() requiet une liste de chaînes"
 # }}}
 # {{{1 globals.h
 #: globals.h:977 if_python.c:672
-msgid "(em4) Out of memory!"
-msgstr "(em4) Plus de mémoire !"
+msgid "E41: Out of memory!"
+msgstr "E41: Plus de mémoire !"
 
 #: if_python.c:757
 msgid "Python: Error initialising I/O objects"
@@ -5314,20 +5314,20 @@ msgid "Argument required"
 msgstr "Argument requis"
 
 #: globals.h:910
-msgid "(eb1) \\ should be followed by /, ? or &"
-msgstr "(eb1) \\ doit être suivit par /, ? ou &"
+msgid "E10: \\ should be followed by /, ? or &"
+msgstr "E10: \\ doit être suivit par /, ? ou &"
 
 #: globals.h:912
-msgid "(ec4) Invalid in command-line window; <CR> executes, CTRL-C quits"
-msgstr "(ec4) "
+msgid "E11: Invalid in command-line window; <CR> executes, CTRL-C quits"
+msgstr "E11: "
 
 #: globals.h:914
-msgid "(ea2) Command not allowed from exrc/vimrc in current dir or tag search"
-msgstr "(ea2) "
+msgid "E12: Command not allowed from exrc/vimrc in current dir or tag search"
+msgstr "E12: "
 
 #: globals.h:915
-msgid "(ee2) File exists (use ! to override)"
-msgstr "(ee2) Le fichier existe (utilisez ! pour forcer)"
+msgid "E13: File exists (use ! to override)"
+msgstr "E13: Le fichier existe (utilisez ! pour forcer)"
 
 #: globals.h:916
 msgid "Command failed"
@@ -5342,8 +5342,8 @@ msgid "Interrupted"
 msgstr "Interrompu"
 
 #: globals.h:919
-msgid "(er3) Invalid address"
-msgstr "(er3) Adresse invalide"
+msgid "E14: Invalid address"
+msgstr "E14: Adresse invalide"
 
 #: globals.h:920
 msgid "Invalid argument"
@@ -5356,81 +5356,81 @@ msgstr "Argument invalide : %s"
 
 #: globals.h:923
 #, c-format
-msgid "(ee3) Invalid expression: %s"
-msgstr "(ee3) Expression invalide : %s"
+msgid "E15: Invalid expression: %s"
+msgstr "E15: Expression invalide : %s"
 
 #: globals.h:925
-msgid "(er4) Invalid range"
-msgstr "(er4) Étendu invalide"
+msgid "E16: Invalid range"
+msgstr "E16: Étendu invalide"
 
 #: globals.h:926
 msgid "Invalid command"
 msgstr "Commande invalide"
 
 #: globals.h:928
-msgid "(el1) Unexpected characters before '='"
-msgstr "(el1) Caractères inattendu avant '='"
+msgid "E18: Unexpected characters before '='"
+msgstr "E18: Caractères inattendu avant '='"
 
 #: globals.h:930
-msgid "(em1) Mark has invalid line number"
-msgstr "(em1) La marque à un numéro de ligne invalide"
+msgid "E19: Mark has invalid line number"
+msgstr "E19: La marque à un numéro de ligne invalide"
 
 #: globals.h:931
-msgid "(em5) Mark not set"
-msgstr "(em5) Marque non positionnée"
+msgid "E20: Mark not set"
+msgstr "E20: Marque non positionnée"
 
 #: globals.h:932
-msgid "(ec5) Cannot make changes, 'modifiable' is off"
-msgstr "(ec5) "
+msgid "E21: Cannot make changes, 'modifiable' is off"
+msgstr "E21: "
 
 #: globals.h:934
 msgid "GUI is not running"
 msgstr ""
 
 #: globals.h:936
-msgid "(es4) Scripts nested too deep"
-msgstr "(es4) Scripts imbriqués trop profondémment"
+msgid "E22: Scripts nested too deep"
+msgstr "E22: Scripts imbriqués trop profondémment"
 
 #: globals.h:937
-msgid "(en2) No alternate file"
-msgstr "(en2) "
+msgid "E23: No alternate file"
+msgstr "E23: "
 
 #: globals.h:938
-msgid "(ea2) No such abbreviation"
-msgstr "(ea2) Pas de telle abbréviation"
+msgid "E12: No such abbreviation"
+msgstr "E12: Pas de telle abbréviation"
 
 #: globals.h:939
 msgid "No ! allowed"
 msgstr ""
 
 #: globals.h:941
-msgid "(eg1) GUI cannot be used: Not enabled at compile time"
-msgstr "(eg1) "
+msgid "E25: GUI cannot be used: Not enabled at compile time"
+msgstr "E25: "
 
 #: globals.h:944
-msgid "(eh2) Hebrew cannot be used: Not enabled at compile time\n"
+msgid "E26: Hebrew cannot be used: Not enabled at compile time\n"
 msgstr ""
 
 #: globals.h:947
-msgid "(ef3) Farsi cannot be used: Not enabled at compile time\n"
+msgid "E27: Farsi cannot be used: Not enabled at compile time\n"
 msgstr ""
 
 #: globals.h:950
 #, c-format
-msgid "(eh3) No such highlight group name: %s"
-msgstr "(eh3) Pas de tel nom de groupe de surbrillance : %s"
+msgid "E28: No such highlight group name: %s"
+msgstr "E28: Pas de tel nom de groupe de surbrillance : %s"
 
 #: globals.h:952
-msgid "(ei1) No inserted text yet"
-msgstr "(ei1) "
+msgid "E29: No inserted text yet"
+msgstr "E29: "
 
 #: globals.h:953
-msgid "(ec6) No previous command line"
-msgstr "(ec6) "
+msgid "E30: No previous command line"
+msgstr "E30: "
 
 #: globals.h:954
-msgid "(em3) No such mapping"
-msgstr "(em3) "
+msgid "E31: No such mapping"
+msgstr "E31: "
 
 #: globals.h:955
 msgid "No match"
@@ -5442,24 +5442,24 @@ msgid "No match: %s"
 msgstr "Pas de correspondance : %s"
 
 #: globals.h:958
-msgid "(es3) No previous substitute regular expression"
-msgstr "(es3) "
+msgid "E33: No previous substitute regular expression"
+msgstr "E33: "
 
 #: globals.h:959
-msgid "(ep3) No previous command"
-msgstr "(ep3) Pas de commande précédente"
+msgid "E34: No previous command"
+msgstr "E34: Pas de commande précédente"
 
 #: globals.h:960
-msgid "(ep1) No previous regular expression"
-msgstr "(ep1) "
+msgid "E35: No previous regular expression"
+msgstr "E35: "
 
 #: globals.h:961
 msgid "No range allowed"
 msgstr ""
 
 #: globals.h:963
-msgid "(er5) Not enough room"
-msgstr "(er5) Pas assez de place"
+msgid "E36: Not enough room"
+msgstr "E36: Pas assez de place"
 
 #: globals.h:965
 #, c-format
@@ -5481,104 +5481,104 @@ msgid "Can't read file %s"
 msgstr "Impossible de lire le fichier « %s »"
 
 #: globals.h:969
-msgid "(ew2) No write since last change (use ! to override)"
-msgstr "(ew2) "
+msgid "E37: No write since last change (use ! to override)"
+msgstr "E37: "
 "Pas d'écriture depuis les derniers changements (utiliser ! pour forcer)"
 
 #: globals.h:970
-msgid "(en5) Null argument"
-msgstr "(en5) Argument nul"
+msgid "E38: Null argument"
+msgstr "E38: Argument nul"
 
 #: globals.h:972
-msgid "(ed1) Number expected"
-msgstr "(ed1) Nombre attendu"
+msgid "E104: Number expected"
+msgstr "E104: Nombre attendu"
 
 #: globals.h:975
 #, c-format
-msgid "(ee1) Can't open errorfile %s"
-msgstr "(ee1) Impossible d'ouvrir le fichier d'erreurs « %s »"
+msgid "E40: Can't open errorfile %s"
+msgstr "E40: Impossible d'ouvrir le fichier d'erreurs « %s »"
 
 #: globals.h:979
-msgid "(ep2) Pattern not found"
-msgstr "(ep2) Motif non trouvé"
+msgid "Pattern not found"
+msgstr "Motif non trouvé"
 
 #: globals.h:981
 #, c-format
-msgid "(ep2) Pattern not found: %s"
-msgstr "(ep2) Motif non trouvé : %s"
+msgid "Pattern not found: %s"
+msgstr "Motif non trouvé : %s"
 
 #: globals.h:982
 msgid "Argument must be positive"
 msgstr "L'argument doit être positif"
 
 #: globals.h:984
-msgid "(ee4) No Errors"
-msgstr "(ee4) Pas d'erreur"
+msgid "E42: No Errors"
+msgstr "E42: Pas d'erreur"
 
 #: globals.h:986
-msgid "(ed2) Damaged match string"
-msgstr "(ed2) "
+msgid "E43: Damaged match string"
+msgstr "E43: "
 
 #: globals.h:987
-msgid "(ed2) Corrupted regexp program"
-msgstr "(ed2) "
+msgid "E43: Corrupted regexp program"
+msgstr "E43: "
 
 #: globals.h:988
-msgid "(er1) 'readonly' option is set (use ! to override)"
-msgstr "(er1) "
+msgid "E45: 'readonly' option is set (use ! to override)"
+msgstr "E45: "
 
 #: globals.h:990
 #, c-format
-msgid "(er6) Cannot set read-only variable \"%s\""
-msgstr "(er6) "
+msgid "E46: Cannot set read-only variable \"%s\""
+msgstr "E46: "
 
 #: globals.h:993
-msgid "(er2) Error while reading errorfile"
-msgstr "(er2) Erreur pendant la lecture du fichier d'erreurs"
+msgid "E47: Error while reading errorfile"
+msgstr "E47: Erreur pendant la lecture du fichier d'erreurs"
 
 # }}}
 # {{{1 option.c
 #: globals.h:996
 #, fuzzy
-msgid "(es5) Not allowed in sandbox"
-msgstr "(es5) Interdit dans une 'modeline'"
+msgid "E48: Not allowed in sandbox"
+msgstr "E48: Interdit dans une 'modeline'"
 
 #: globals.h:998
-msgid "(es2) Invalid scroll size"
-msgstr "(es2) "
+msgid "E49: Invalid scroll size"
+msgstr "E49: "
 
 #: globals.h:999
 #, fuzzy
-msgid "(es1) 'shell' option is empty"
-msgstr "(es1) L'option 'thesaurus' est vide"
+msgid "E71: 'shell' option is empty"
+msgstr "E71: L'option 'thesaurus' est vide"
 
 #: globals.h:1000
-msgid "(et1) tag stack empty"
-msgstr "(et1) "
+msgid "E73: tag stack empty"
+msgstr "E73: "
 
 #: globals.h:1001
-msgid "(ec3) Command too complex"
-msgstr "(ec3) Commande trop complexe"
+msgid "E74: Command too complex"
+msgstr "E74: Commande trop complexe"
 
 #: globals.h:1002
-msgid "(en1) Name too long"
-msgstr "(en1) Nom trop long"
+msgid "E75: Name too long"
+msgstr "E75: Nom trop long"
 
 #: globals.h:1003
-msgid "(ep4) Too many ["
-msgstr "(ep4) Trop de ["
+msgid "E76: Too many ["
+msgstr "E76: Trop de ["
 
 #: globals.h:1005
 msgid "Command too long"
 msgstr "Commande trop long"
 
 #: globals.h:1007
-msgid "(et3) Too many file names"
-msgstr "(et3) Trop de noms de fichiers"
+msgid "E77: Too many file names"
+msgstr "E77: Trop de noms de fichiers"
 
 #: globals.h:1009
-msgid "(em6) Unknown mark"
-msgstr "(em6) Marque inconnue"
+msgid "E78: Unknown mark"
+msgstr "E78: Marque inconnue"
 
 # }}}
 # {{{1 main.c
@@ -5587,12 +5587,12 @@ msgid "Unknown"
 msgstr "Inconnu"
 
 #: globals.h:1011
-msgid "(ew3) Cannot expand wildcards"
-msgstr "(ew3) "
+msgid "E79: Cannot expand wildcards"
+msgstr "E79: "
 
 #: globals.h:1012
-msgid "(ew4) Error while writing"
-msgstr "(ew4) Erreur pendant l'écriture"
+msgid "E80: Error while writing"
+msgstr "E80: Erreur pendant l'écriture"
 
 #: globals.h:1013
 msgid "Zero count"

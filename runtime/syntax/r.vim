@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	R (GNU S)
 " Maintainer:	Tom Payne <tom@tompayne.org>
-" Last Change:  2001 April 28
+" Last Change:  2001 May 10
 " Filenames:	*.r
 " URL:		http://www.tompayne.org/vim/syntax/r.vim
 
@@ -51,7 +51,7 @@ syn keyword rRepeat      for in repeat while
 
 " Constant
 syn keyword rConstant LETTERS letters month.ab month.name pi
-syn keyword rConstant NULL 
+syn keyword rConstant NULL
 syn keyword rBoolean  FALSE TRUE
 syn keyword rNumber   NA
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	sed
 " Maintainer:	Haakon Riiser <haakon@riiser.net>
-" Last Change:	2001 Apr 25
+" Last Change:	2001 May 10
 "
 " Special thanks go to Preben "Peppe" Guldberg for a lot of help, and, in
 " particular, his clever way of matching the substitute command.
@@ -94,8 +94,8 @@ if version >= 508 || !exists("did_sed_syntax_inits")
     HiLink sedFlag		Type
     HiLink sedFlagwrite		Constant
     HiLink sedFunction		Function
-    HiLink sedLabel	    	Label
-    HiLink sedLineCont	    	Special
+    HiLink sedLabel		Label
+    HiLink sedLineCont		Special
     HiLink sedPutHoldspc	Function
     HiLink sedReplaceMeta	Special
     HiLink sedRegexpMeta	Special

@@ -947,7 +947,7 @@ reg(paren, flagp)
     {
 	/* Make a ZOPEN node. */
 	if (regnzpar >= NSUBEXP)
-	    EMSG_RET_NULL("Too many \\z(");
+	    EMSG_RET_NULL("E50: Too many \\z(");
 	parno = regnzpar;
 	regnzpar++;
 	ret = regnode(ZOPEN + parno);
@@ -958,7 +958,7 @@ reg(paren, flagp)
     {
 	/* Make a MOPEN node. */
 	if (regnpar >= NSUBEXP)
-	    EMSG_M_RET_NULL("Too many %s(", reg_magic == MAGIC_ALL);
+	    EMSG_M_RET_NULL("E51: Too many %s(", reg_magic == MAGIC_ALL);
 	parno = regnpar;
 	++regnpar;
 	ret = regnode(MOPEN + parno);
@@ -1015,18 +1015,18 @@ reg(paren, flagp)
     {
 #ifdef FEAT_SYN_HL
 	if (paren == REG_ZPAREN)
-	    EMSG_RET_NULL("Unmatched \\z(")
+	    EMSG_RET_NULL("E52: Unmatched \\z(")
 	else
 #endif
 	    if (paren == REG_NPAREN)
-	    EMSG_M_RET_NULL("Unmatched %s%%(", reg_magic == MAGIC_ALL)
+	    EMSG_M_RET_NULL("E53: Unmatched %s%%(", reg_magic == MAGIC_ALL)
 	else
-	    EMSG_M_RET_NULL("Unmatched %s(", reg_magic == MAGIC_ALL)
+	    EMSG_M_RET_NULL("E54: Unmatched %s(", reg_magic == MAGIC_ALL)
     }
     else if (paren == REG_NOPAREN && peekchr() != NUL)
     {
 	if (curchr == Magic(')'))
-	    EMSG_M_RET_NULL("Unmatched %s)", reg_magic == MAGIC_ALL)
+	    EMSG_M_RET_NULL("E55: Unmatched %s)", reg_magic == MAGIC_ALL)
 	else
 	    EMSG_RET_NULL(e_trailing)	/* "Can't happen". */
 	/* NOTREACHED */
@@ -1185,12 +1185,13 @@ regpiece(flagp)
     if (!(flags & HASWIDTH) && re_multi_type(op) == MULTI_MULT)
     {
 	if (op == Magic('*'))
-	    EMSG_M_RET_NULL("%s* operand could be empty",
+	    EMSG_M_RET_NULL("E56: %s* operand could be empty",
 						       reg_magic >= MAGIC_ON);
 	if (op == Magic('+'))
-	    EMSG_M_RET_NULL("%s+ operand could be empty",
+	    EMSG_M_RET_NULL("E57: %s+ operand could be empty",
 						       reg_magic == MAGIC_ALL);
-	EMSG_M_RET_NULL("%s{ operand could be empty", reg_magic == MAGIC_ALL);
+	EMSG_M_RET_NULL("E58: %s{ operand could be empty",
+						      reg_magic == MAGIC_ALL);
     }
     *flagp = (WORST | SPSTART | (flags & HASNL));	/* default flags */
 
@@ -1242,7 +1243,7 @@ regpiece(flagp)
 			      }
 		}
 		if (op == END)
-		    EMSG_M_RET_NULL("invalid character after %s@",
+		    EMSG_M_RET_NULL("E59: invalid character after %s@",
 						      reg_magic == MAGIC_ALL);
 		regtail(ret, regnode(END)); /* operand ends */
 		reginsert(op, ret);
@@ -1270,7 +1271,7 @@ regpiece(flagp)
 	    else
 	    {
 		if (num_complex_braces >= 10)
-		    EMSG_M_RET_NULL("Too many complex %s{...}s",
+		    EMSG_M_RET_NULL("E60: Too many complex %s{...}s",
 						      reg_magic == MAGIC_ALL);
 		reginsert(BRACE_COMPLEX + num_complex_braces, ret);
 		regoptail(ret, regnode(BACK));
@@ -1286,10 +1287,10 @@ regpiece(flagp)
     {
 	/* Can't have a multi follow a multi. */
 	if (peekchr() == Magic('*'))
-	    sprintf((char *)IObuff, _("Nested %s*"),
+	    sprintf((char *)IObuff, _("E61: Nested %s*"),
 					    reg_magic >= MAGIC_ON ? "" : "\\");
 	else
-	    sprintf((char *)IObuff, _("Nested %s%c"),
+	    sprintf((char *)IObuff, _("E62: Nested %s%c"),
 		reg_magic == MAGIC_ALL ? "" : "\\", no_Magic(peekchr()));
 	EMSG_RET_NULL(IObuff);
     }
@@ -1407,7 +1408,7 @@ regatom(flagp)
       case Magic('U'):
 	p = vim_strchr(classchars, no_Magic(c));
 	if (p == NULL)
-	    EMSG_RET_NULL("invalid use of \\_");
+	    EMSG_RET_NULL("E63: invalid use of \\_");
 	ret = regnode(classcodes[p - classchars] + extra);
 	*flagp |= HASWIDTH | SIMPLE;
 	break;
@@ -1438,7 +1439,7 @@ regatom(flagp)
       case Magic('{'):
       case Magic('*'):
 	c = no_Magic(c);
-	sprintf((char *)IObuff, _("%s%c follows nothing"),
+	sprintf((char *)IObuff, _("E64: %s%c follows nothing"),
 		(c == '*' ? reg_magic >= MAGIC_ON : reg_magic == MAGIC_ALL)
 		? "" : "\\", c);
 	EMSG_RET_NULL(IObuff);
@@ -1488,7 +1489,7 @@ regatom(flagp)
 		if (had_endbrace[refnum])
 		    ret = regnode(BACKREF + refnum);
 		else
-		    EMSG_RET_NULL("Illegal back reference");
+		    EMSG_RET_NULL("E65: Illegal back reference");
 	    }
 	    break;
 
@@ -1499,7 +1500,7 @@ regatom(flagp)
 	    switch (c)
 	    {
 		case '(': if (reg_do_extmatch != REX_SET)
-			      EMSG_RET_NULL("\\z( not allowed here");
+			      EMSG_RET_NULL("E66: \\z( not allowed here");
 			  ret = reg(REG_ZPAREN, &flags);
 			  if (ret == NULL)
 			      return NULL;
@@ -1516,7 +1517,7 @@ regatom(flagp)
 		case '7':
 		case '8':
 		case '9': if (reg_do_extmatch != REX_USE)
-			      EMSG_RET_NULL("\\z1 et al. not allowed here");
+			      EMSG_RET_NULL("E67: \\z1 et al. not allowed here");
 			  ret = regnode(ZREF + c - '0');
 			  re_has_z = REX_USE;
 			  break;
@@ -1527,7 +1528,7 @@ regatom(flagp)
 		case 'e': ret = regnode(MCLOSE + 0);
 			  break;
 
-		default:  EMSG_RET_NULL("Invalid character after \\z");
+		default:  EMSG_RET_NULL("E68: Invalid character after \\z");
 	    }
 	}
 	break;
@@ -1572,7 +1573,7 @@ regatom(flagp)
 							  ? Magic(']') : ']'))
 			      {
 				  if (c == NUL)
-				      EMSG_M_RET_NULL("Missing ] after %s%%[",
+				      EMSG_M_RET_NULL("E69: Missing ] after %s%%[",
 						      reg_magic == MAGIC_ALL);
 				  br = regnode(BRANCH);
 				  if (ret == NULL)
@@ -1588,7 +1589,7 @@ regatom(flagp)
 				      return NULL;
 			      }
 			      if (ret == NULL)
-				  EMSG_M_RET_NULL("Empty %s%%[]",
+				  EMSG_M_RET_NULL("E70: Empty %s%%[]",
 						      reg_magic == MAGIC_ALL);
 			      lastbranch = regnode(BRANCH);
 			      br = regnode(NOTHING);
@@ -1648,7 +1649,7 @@ regatom(flagp)
 			      }
 			  }
 
-			  EMSG_M_RET_NULL("Invalid character after %s%%",
+			  EMSG_M_RET_NULL("E71: Invalid character after %s%%",
 						      reg_magic == MAGIC_ALL);
 	    }
 	}

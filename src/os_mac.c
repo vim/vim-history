@@ -947,7 +947,7 @@ mch_setmouse(on)
 mch_screenmode(arg)
     char_u	 *arg;
 {
-    EMSG(_("(et8) Screen mode setting not supported"));
+    EMSG(_("E359: Screen mode setting not supported"));
     return FAIL;
 }
 

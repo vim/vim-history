@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0ae.  Last change: 2001 May 06
+*todo.txt*      For Vim version 6.0af.  Last change: 2001 May 13
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,15 +29,13 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Win32: Add patch for printing (vipin aravind, Vince Negri).
+Add an option for the langmap state.  Also use it for IME and XIM state?
+Use one flag instead of two (Insert mode and typing search pattern).
 
 GUI: Make inputdialog() work for Win16, Win32, Photon, Amiga, Mac, RiscOS.
 
 Athena: using a fontset for menus doesn't work.  Check code for menu_fontset
 marked with EXPERIMENTAL.  Perhaps use fontsets for everything?
-
-May 6: Adjust the syntax files that didn't get updated by the maintainer, to
-make them portable between 5.x and 6.0.
 
 
 Main items for 6.0:
@@ -56,7 +54,7 @@ F.  Sun Visual workshop (debugger) interface
 G.  Edit command line with Vi commands
 	The command-line window works.
 H.  More automatic testing
-	Nothing done yet.
+	Test have been added (could be a bit more though)
 I.  Multi-language support
 	Works.
 J.  User Friendlier
@@ -79,11 +77,12 @@ E. Virtual edit:
 -   In Visual-block mode highlighting part of a tab is wrong.
 -   Add more documentation.
 -   Use vpos_T instead of fpos_T for positions that can have a coladd?
--   coladvance2() can be a bit slow.
+-   coladvance2() can be a bit slow.  Check with profiling.
 -   Should not insert spaces for yank or filter.
 -   Add a mode where the cursor is only allowed to go one character after the
     end of the line?
 -   Allow specifying it separately for Tabs and beyond end-of-line?
+-   Add test for various virtualedit operations that went wrong in the past.
 
 
 F. Sun Visual Workshop patch from Gordon Prieur:
@@ -103,27 +102,13 @@ F. Sun Visual Workshop patch from Gordon Prieur:
 -   Add code to handle folding.
 
 
-H. More automatic testing:
--   Check all commands for:
-    - Handling folds (moving vertically, updating folds)
-    - Vertical splits (displaying with w_wincol, updating w_width and other
-      windows)
-    - Use with virtualedit.
-    - Working with filler lines.
-    - Use of multi-byte characters.
-    - Make test for multi-line regexp and ":s".
-
-
 J. User Friendlier
 9   Printing:
-    -	On Win32, use conversion to HTML and "rundll" (Dan Sharp)  At least
-	mention this in the text.  Or use ShellExecute("print").
     -	Make conversion to html faster (Write it in C).
     -	Add "page width" to wrap long lines.
-    -	On Win32, use GDI functions to print directly
     -	On Unix convert to PostScript?
     -	Use some dialog box to do the obvious settings (paper size, printer
-	name, portrait/landscane, etc).
+	name, portrait/landscape, etc).
 9   Make Windows install program better:
     - Add an icon on the Desktop, if the user wants this.
     - Add Vim to the Start/Programs menu if the user wants this.
@@ -135,21 +120,10 @@ J. User Friendlier
     - Also create an evim.bat and vimdiff.bat file.  How about view.bat?
     - Delete a whole tree of Vim files.
 9   Extend the User Manual.  Use portions of the Reference Manual.
-    Use portions of the Vim book (check if OPL really applies!).
+    Use portions of the Vim book.
 
 
 Various recent:
-9   These places need to be fixed for EBCDIC:
-    -   AppendToRedobuffLit().
-    -   stuffescaped().
-    -   set_last_insert()
-8   ":let @" = "val" should not have side effects for other registers (after
-    "ayy). (Raul Acevedo)
-    ""yy should probably not change the last used register from "ayy.
--   Remove "\" shown in complete/wildmenu.
-    Bug: <C-O>:emenu in Insert mode inserts the command.
--   When accidentally hitting Shift-R instead of Ctrl-R, further Ctrl-R is not
-    possible, also when typing <Esc> immediately. (Grahn)
 8   Use $install_prefix? (Cabric)
 8   Test if it possible for a skip pattern to include "\n", so that it can
     skip over newlines for a "oneline" region.
@@ -335,6 +309,9 @@ GTK+ GUI known bugs:
 
 
 Win32 GUI known bugs:
+-   glob() matches "foo.vimarg" when looking for "foo.vim".  (Ron Aaron)  It's
+    probably matching the short filename of a long filename.  Try expanding a
+    file name from short filename to long file name, skip it if it changes?
 8   Win32: cannot tearoff a menu with "nmap n /^M". (Pritesh Mistry)
 8   Windows NT: writing to aux.* makes Vim hang. (Acevedo)
 -   Check libcall() and libcallnr() for Win32.  No crash when function returns
@@ -416,10 +393,24 @@ Athena GUI:
 9   Because destroying a menu can cause a crash, it is not destroyed but
     unmanaged.  The destoyed Widgets are remembered, this list is never
     cleaned up.
+    David Harrison Notes: Athena now destroys its menus and this widget list
+    doesn't exist anymore.  It does still cause a crash ONLY when you delete
+    a menu under the following conditions:
+    1) Select a menu that has a submenu attached to it and select an item
+       from the submenu.  Selection in this case means making a menu item
+       highlighted by moving the mouse over it.
+       For example: "Window.Move To.Top" or "Help.GUI".
+    2) Delete any menu item that is a parent of the item you selected.
+       For example: "Window.Move To" or "Window".  If you selected "Help.GUI",
+       then deleting "Help" will cause a crash.
+    Basically, as long as you haven't looked at a menu, you can delete it.
 9   When closing the confirm() dialog, Vim exits.
 9   When using "menu a.b.c.d lll", the "b" submenu does not disappear.
-9   When dragging the scrollbar thum very fast, focus is only obtained in
-    scrollbar itself.
+9   When dragging the scrollbar thumb very fast, focus is only obtained in
+    the scrollbar itself.
+9   The pullright pixmap isn't changed when the menubar's foreground or
+    background color is changed.
+9   The pullright pixmap seems to be a pixel too high.
 8   When "j" or "k" repeated quickly, display is messed up (Lauther).
 8   Has extra stripes here and there. (Zeitlin).
     When dragging last status line with the mouse, small black lines appear in
@@ -428,6 +419,16 @@ Athena GUI:
     read long file names. (Schroeder)
 7   The file selector's scrollbar colors are not set after doing a
     ":hi Scrollbar guifg=color". (David Harrison)
+7   The file selector's colors are not changed by the colorscheme command.
+    Related to the above problem.
+7   Check menu.vim for the "no_buffers_menu" variable.  If Athena can delete
+    menus (which it can in most cases now), then set the variable to a 0.
+    This should be done just before the 6.0 release.
+7   Two callbacks can be generated when selecting a menu item.  For example,
+    when selecting "Syntax.AB.Assembly.680x0", you get a callback for the
+    "680x0" menu item and the "Syntax.AB" item.  The translations for the
+    menus are modified on-the-fly and is possibly the problem.  Is this really
+    what we want?  Look at Motif's more robust solution.
 
 
 Motif GUI:
@@ -941,6 +942,7 @@ Folding:
 
 
 Multi-byte characters:
+8   Should add test for using various commands with multi-byte characters.
 -   Include flipcase patch: ~/vim/patches/wall.flipcase2 ?  Make it work for
     multi-byte characters.
 8   UTF-8: When there is a precomposed character in the font, use it instead
@@ -2166,6 +2168,9 @@ Searching:
 
 
 Undo:
+-   When accidentally hitting "R" instead of Ctrl-R, further Ctrl-R is not
+    possible, even when typing <Esc> immediately. (Grahn)  Also for "i", "a",
+    etc.  Postpone saving for undo until something is really inserted?
 8   Make undo more memory-efficient: Compare text before and after change,
     only remember the lines that really changed.
 7   Add an undo tree: When making a change, instead of clearing any future
@@ -2330,6 +2335,8 @@ External commands:
 
 
 Multiple Windows:
+8   Diff mode: add a command like ":diffput" that only moves part of a diff
+    block.
 6   Add an option to resize the shell when splitting and/or closing a window.
     ":vsp" would make the shell wider by as many columns as needed for the new
     window.  Specify a maximum size (or use the screen size). ":close" would

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Inform
 " Maintainer:	Stephen Thomas (stephent@insignia.com)
-" Last Change:	2001 Apr 26
+" Last Change:	2001 May 10
 
 " Quit when a syntax file was already loaded
 if version < 600
@@ -202,7 +202,7 @@ if exists("inform_highlight_glulx")
   syn keyword informAsm contained restore saveundo restoreundo protect glk
   syn keyword informAsm contained getstringtbl setstringtbl getiosys setiosys
   syn keyword informAsm contained linearsearch binarysearch linkedsearch
-  syn keyword informAsm contained callf callfi callfii callfiii 
+  syn keyword informAsm contained callf callfi callfii callfiii
 else
   syn keyword informAsm contained je jl jg dec_chk inc_chk jin test or and
   syn keyword informAsm contained test_attr set_attr clear_attr store

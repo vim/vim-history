@@ -3,8 +3,11 @@
 " Maintainer:   Rafal M. Sulejman <unefunge@friko2.onet.pl>
 " Last change:  21 Jul 2000
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -21,10 +24,23 @@ syn match blankNumber "\[[0-9]\+\]"
 
 syn case match
 
-" The default highlighting.
-hi def link blankInstruction      Statement
-hi def link blankNumber           Number
-hi def link blankString           String
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_blank_syntax_inits")
+  if version < 508
+    let did_blank_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink blankInstruction      Statement
+  HiLink blankNumber           Number
+  HiLink blankString           String
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "blank"
 " vim: ts=8

@@ -1712,12 +1712,13 @@ do_pending_operator(cap, old_col, gui_yank)
 	    {
 		/* This is a new edit command, not a restart.  Need to
 		 * remember it to make 'insertmode' work with mappings for
-		 * Visual mode. */
+		 * Visual mode.  But do this only once. */
 		restart_edit_save = restart_edit;
 		restart_edit = 0;
 		if (op_change(oap))	/* will call edit() */
 		    cap->retval |= CA_COMMAND_BUSY;
-		restart_edit = restart_edit_save;
+		if (restart_edit == 0)
+		    restart_edit = restart_edit_save;
 	    }
 	    break;
 
@@ -1789,12 +1790,13 @@ do_pending_operator(cap, old_col, gui_yank)
 	    {
 		/* This is a new edit command, not a restart.  Need to
 		 * remember it to make 'insertmode' work with mappings for
-		 * Visual mode. */
+		 * Visual mode.  But do this only once. */
 		restart_edit_save = restart_edit;
 		restart_edit = 0;
 		op_insert(oap, cap->count1);/* handles insert & append
 					     * will call edit() */
-		restart_edit = restart_edit_save;
+		if (restart_edit == 0)
+		    restart_edit = restart_edit_save;
 	    }
 #endif
 	    break;
@@ -2026,20 +2028,22 @@ do_mouse(oap, c, dir, count, fix_indent)
 	}
 
     which_button = get_mouse_button(KEY2TERMCAP1(c), &is_click, &is_drag);
+
 #ifdef FEAT_MOUSESHAPE
-    /* May have stopped dragging the status or separator line. */
-    if (!is_drag && (drag_status_line
-# ifdef FEAT_VERTSPLIT
-		|| drag_sep_line
-# endif
-		))
+    /* May have stopped dragging the status or separator line.  The pointer is
+     * most likely still on the status or separator line. */
+    if (!is_drag && drag_status_line)
     {
 	drag_status_line = FALSE;
-# ifdef FEAT_VERTSPLIT
-	drag_sep_line = FALSE;
-# endif
-	update_mouseshape(-1);
+	update_mouseshape(SHAPE_IDX_STATUS);
     }
+# ifdef FEAT_VERTSPLIT
+    if (!is_drag && drag_sep_line)
+    {
+	drag_sep_line = FALSE;
+	update_mouseshape(SHAPE_IDX_VSEP);
+    }
+# endif
 #endif
 
     /*
@@ -2974,9 +2978,9 @@ find_ident_under_cursor(string, find_type)
 	 * didn't find an identifier or string
 	 */
 	if (find_type & FIND_STRING)
-	    EMSG(_("(eq1) No string under cursor"));
+	    EMSG(_("E348: No string under cursor"));
 	else
-	    EMSG(_("(eq2) No identifier under cursor"));
+	    EMSG(_("E349: No identifier under cursor"));
 	return 0;
     }
     ptr += col;
@@ -4118,7 +4122,7 @@ dozet:
 		}
 		else
 		{
-		    EMSG(_("(ef9) Cannot create fold with current 'foldmethod'"));
+		    EMSG(_("E350: Cannot create fold with current 'foldmethod'"));
 		    clearopbeep(cap->oap);
 		}
 		break;
@@ -4136,7 +4140,7 @@ dozet:
 				  curwin->w_cursor.lnum, nchar == 'D', FALSE);
 		}
 		else
-		    EMSG(_("(ef0) Cannot delete fold with current 'foldmethod'"));
+		    EMSG(_("E351: Cannot delete fold with current 'foldmethod'"));
 		break;
 
 		/* "zE": erease all folds */
@@ -4149,7 +4153,7 @@ dozet:
 		    deleteFold((linenr_T)1, curbuf->b_ml.ml_line_count,
 								 TRUE, FALSE);
 		else
-		    EMSG(_("(ez6) Cannot erase folds with current 'foldmethod'"));
+		    EMSG(_("E352: Cannot erase folds with current 'foldmethod'"));
 		break;
 
 		/* "zn": fold none: reset 'foldenable' */
@@ -5113,6 +5117,13 @@ nv_dollar(cap)
 {
     cap->oap->motion_type = MCHAR;
     cap->oap->inclusive = TRUE;
+#ifdef FEAT_VIRTUALEDIT
+    /* In virtual mode when off the edge of a line and an operator 
+     * is pending (whew!) keep the cursor where it is.
+     * Otherwise, send it to the end of the line. */
+    if (!virtual_active() || gchar_cursor() != NUL ||
+	    cap->oap->op_type == OP_NOP)
+#endif
     curwin->w_curswant = MAXCOL;	/* so we stay at the end */
     if (cursor_down((long)(cap->count1 - 1),
 					 cap->oap->op_type == OP_NOP) == FAIL)
@@ -7519,6 +7530,13 @@ nv_edit(cap)
 		    /* Pretent Insert mode here to allow the cursor on the
 		     * character past the end of the line */
 		    State = INSERT;
+#ifdef FEAT_VIRTUALEDIT
+		    /* If past the end of the line in virtualedit move,
+		     * just move forward one. */
+		    if (virtual_active() && gchar_cursor() == NUL)
+			curwin->w_cursor.coladd++;
+		    else
+#endif
 		    coladvance((colnr_T)MAXCOL);
 		    State = save_State;
 		}

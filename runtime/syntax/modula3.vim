@@ -1,13 +1,16 @@
 " Vim syntax file
 " Language:	Modula-3
 " Maintainer:	Timo Pedersen <dat97tpe@ludat.lth.se>
-" Last Change:	2001 Jan 15
+" Last Change:	2001 May 10
 
 " Basic things only...
 " Based on the modula 2 syntax file
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -42,11 +45,25 @@ syn region modula3Comment start="(\*" end="\*)"
 syn region modula3String start=+"+ end=+"+
 syn region modula3String start=+'+ end=+'+
 
-" The default highlighting.
-hi def link modula3Keyword	Statement
-hi def link modula3Block	PreProc
-hi def link modula3Comment	Comment
-hi def link modula3String	String
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_modula3_syntax_inits")
+  if version < 508
+    let did_modula3_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  " The default methods for highlighting.  Can be overridden later
+  HiLink modula3Keyword	Statement
+  HiLink modula3Block		PreProc
+  HiLink modula3Comment	Comment
+  HiLink modula3String		String
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "modula3"
 

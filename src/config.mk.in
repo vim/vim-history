@@ -86,19 +86,19 @@ INSTALLVIMDIFF	= @dovimdiff@
 NL   		= @line_break@
 
 ### Top directory for everything
-prefix		= $(DESTDIR)@prefix@
+prefix		= @prefix@
 
 ### Top directory for the binary
-exec_prefix	= $(DESTDIR)@exec_prefix@
+exec_prefix	= @exec_prefix@
 
 ### Prefix for location of data files
-BINDIR		= $(DESTDIR)@bindir@
+BINDIR		= @bindir@
 
 ### Prefix for location of data files
-DATADIR		= $(DESTDIR)@datadir@
+DATADIR		= @datadir@
 
 ### Prefix for location of man pages
-MANDIR		= $(DESTDIR)@mandir@
+MANDIR		= @mandir@
 
 ### Do we have a GUI
 GUI_INC_LOC	= @GUI_INC_LOC@

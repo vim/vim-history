@@ -1,6 +1,6 @@
 " Script to define the syntax menu in menu.vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 May 05
+" Last Change:	2001 May 13
 
 " This is used by "make menu" in the src directory.
 edit <sfile>:p:h/menu.vim
@@ -87,7 +87,6 @@ SynMenu AB.Blank:blank
 
 SynMenu CD.C:c
 SynMenu CD.C++:cpp
-SynMenu CD.C#:cs
 SynMenu CD.Crontab:crontab
 SynMenu CD.Cyn++:cynpp
 SynMenu CD.Cynlib:cynlib
@@ -145,6 +144,7 @@ SynMenu EFG.Gedcom:gedcom
 SynMenu EFG.GP:gp
 SynMenu EFG.GNU\ Server\ Pages:gsp
 SynMenu EFG.GNUplot:gnuplot
+SynMenu EFG.GTKrc:gtkrc
 
 SynMenu HIJK.Haskell:haskell
 SynMenu HIJK.Haskell-literal:lhaskell
@@ -158,6 +158,7 @@ SynMenu HIJK.IDL:idl
 SynMenu HIJK.Interactive\ Data\ Lang:idlang
 SynMenu HIJK.Inform:inform
 SynMenu HIJK.Informix\ 4GL:fgl
+SynMenu HIJK.Inittab:inittab
 SynMenu HIJK.Inno\ Setup:iss
 SynMenu HIJK.InstallShield\ Rules:ishd
 SynMenu HIJK.Jam:jam

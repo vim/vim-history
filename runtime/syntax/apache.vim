@@ -1,11 +1,12 @@
 " Vim syntax file
 " Language: Apache configuration (httpd.conf, srm.conf, access.conf, .htaccess)
-" Maintainer: David Ne\{c}as (Yeti) <yeti@physics.muni.cz>
-" Last Change: 2001-04-26
+" Maintainer: David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>
+" Last Change: 2001-05-13
 " URI: http://physics.muni.cz/~yeti/download/apache.vim
-"
+
 " Notes: Last synced with apache-1.3.14.
 " TODO: see particular FIXME's scattered through the file
+"       make it really linewise?
 "       + add `display' where appropriate
 
 " Setup {{{
@@ -24,20 +25,21 @@ endif
 " For version 5.x: Set it globally
 " For version 6.x: Set it locally
 if version >= 600
-  command -nargs=1 SetIsk setlocal iskeyword=<args>
+  setlocal iskeyword=@,48-57,-,+,_
 else
-  command -nargs=1 SetIsk set iskeyword=<args>
+  set iskeyword=@,48-57,-,+,_
 endif
-SetIsk @,48-57,-,+,_
-delcommand SetIsk
 
 syn case ignore
 " }}}
 " Base constructs {{{
-syn match apacheComment "^\s*#.*$"
+syn match apacheComment "^\s*#.*$" contains=apacheFixme
+syn case match
+syn keyword apacheFixme FIXME TODO XXX NOT
+syn case ignore
 syn match apacheAnything "\s[^>]*" contained
 syn match apacheError "\w\+" contained
-syn region apacheString start=+"+ end=+"+ skip=+\\\"+
+syn region apacheString start=+"+ end=+"+ skip=+\\\\\|\\\"+
 " }}}
 " Core {{{
 syn keyword apacheDeclaration AccessConfig AccessFileName AddDefaultCharset AddModule AuthName AuthType BindAddress BS2000Account ClearModuleList ContentDigest CoreDumpDirectory DefaultType DocumentRoot ErrorDocument ErrorLog Group HostNameLookups IdentityCheck Include KeepAlive KeepAliveTimeout LimitRequestBody LimitRequestFields LimitRequestFieldsize LimitRequestLine Listen ListenBacklog LockFile LogLevel MaxClients MaxKeepAliveRequests MaxRequestsPerChild MaxSpareServers MinSpareServers NameVirtualHost Options PidFile Port require ResourceConfig RLimitCPU RLimitMEM RLimitNPROC Satisfy ScoreBoardFile ScriptInterpreterSource SendBufferSize ServerAdmin ServerAlias ServerName ServerPath ServerRoot ServerSignature ServerTokens ServerType StartServers ThreadsPerChild ThreadStackSize TimeOut UseCanonicalName User
@@ -114,9 +116,10 @@ syn keyword apacheOption set unset append add
 " mod_imap
 syn keyword apacheDeclaration ImapMenu ImapDefault ImapBase
 syn keyword apacheOption none formatted semiformatted unformatted
-syn keyword apacheOption error nocontent map refer URL
+syn keyword apacheOption nocontent
 " mod_include
 syn keyword apacheDeclaration XBitHack
+syn keyword apacheOption on off full
 " mod_info
 syn keyword apacheDeclaration AddModuleInfo
 " mod_isapi
@@ -195,6 +198,7 @@ if version >= 508 || !exists("did_apache_syntax_inits")
   HiLink apacheAnything            apacheOption
   HiLink apacheOption              Number
   HiLink apacheComment             Comment
+  HiLink apacheFixme               Todo
   HiLink apacheLimitSectionKeyword apacheLimitSection
   HiLink apacheLimitSection        apacheSection
   HiLink apacheSection             Label

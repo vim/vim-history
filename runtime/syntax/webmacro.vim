@@ -2,7 +2,7 @@
 " Language:     WebMacro
 " Maintainer:   Claudio Fleiner <claudio@fleiner.com>
 " URL:          http://www.fleiner.com/vim/syntax/webmacro.vim
-" Last Change:  2001 Apr 26
+" Last Change:  2001 May 10
 
 " webmacro is a nice little language that you should
 " check out if you use java servlets.
@@ -20,12 +20,16 @@ endif
 endif
 
 
-runtime! syntax/html.vim
-unlet b:current_syntax
+if version < 600
+  source <sfile>:p:h/html.vim
+else
+  runtime! syntax/html.vim
+  unlet b:current_syntax
+endif
 
 syn cluster htmlPreProc add=webmacroIf,webmacroUse,webmacroBraces,webmacroParse,webmacroInclude,webmacroSet,webmacroForeach,webmacroComment
 
-syn match webmacroVariable "\$[a-zA-Z0-9.()]*;\=" 
+syn match webmacroVariable "\$[a-zA-Z0-9.()]*;\="
 syn match webmacroNumber "[-+]\=\d\+[lL]\=" contained
 syn keyword webmacroBoolean true false contained
 syn match webmacroSpecial "\\." contained
@@ -41,7 +45,7 @@ syn match webmacroParse "#parse .*$" contains=webmacroVariable,webmacroNumber,we
 syn region webmacroUse matchgroup=PreProc start="#use .*" matchgroup=PreProc end="^-.*" contains=webmacroHash,@HtmlTop
 syn region webmacroBraces matchgroup=Structure start="{" matchgroup=Structure end="}" contained transparent
 syn match webmacroBracesError "[{}]"
-syn match webmacroComment "##.*$" 
+syn match webmacroComment "##.*$"
 syn match webmacroHash "[#{}\$]" contained
 
 " Define the default highlighting.

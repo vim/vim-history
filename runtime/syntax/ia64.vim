@@ -4,7 +4,7 @@
 " URL:          http://www.geocities.com/pmalwankar (Home Page with link to my Vim page)
 "               http://www.geocities.com/pmalwankar/vim.htm (for VIM)
 " File Version: 0.5
-" Last Change:  2001 May 3
+" Last Change:  2001 May 10
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -47,7 +47,7 @@ syn match ia64Float             "[0-9_]*\.[0-9_]*\([eE][+-]\=[0-9_]*\)\=\>"
 "simple instructions
 syn keyword ia64opcode add adds addl addp4 alloc and andcm cover epc
 syn keyword ia64opcode fabs fand fandcm fc flushrs fneg fnegabs for
-syn keyword ia64opcode fpabs fpack fpneg fpnegabs fselect fand fabdcm 
+syn keyword ia64opcode fpabs fpack fpneg fpnegabs fselect fand fabdcm
 syn keyword ia64opcode fc fwb fxor loadrs movl mux1 mux2 or padd4
 syn keyword ia64opcode pavgsub1 pavgsub2 popcnt psad1 pshl2 pshl4 pshladd2
 syn keyword ia64opcode pshradd2 psub4 rfi rsm rum shl shladd shladdp4

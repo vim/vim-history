@@ -2,7 +2,7 @@
 " Language:	nroff / groff
 " Maintainer:	Jérôme Plût <Jerome.Plut@ens.fr>
 " URL:		http://www.eleves.ens.fr:8080/home/plut/nroff.vim
-" Last Change:	2001 Apr 23
+" Last Change:	2001 May 10
 "
 " {{{1 Preamble
 " groff (GNU troff) behaves slightly differently from groff; it allows
@@ -43,7 +43,7 @@ syn region nroffEscCharArg start=/'/ end=/'/ contained
 syn region nroffEscArg start=/'/ end=/'/ contained contains=nroffEscape,@nroffSpecial
 
 if exists("b:nroff_is_groff")
-  syn region nroffEscRegArg matchgroup=nroffEscape start=/\[/ end=/\]/ contained oneline 
+  syn region nroffEscRegArg matchgroup=nroffEscape start=/\[/ end=/\]/ contained oneline
   syn region nroffSize matchgroup=nroffEscape start=/\[/ end=/\]/ contained
 endif
 
@@ -71,7 +71,7 @@ syn region nroffString start=/'/ end=/'/ skip=/\\$/ contains=nroffEscape,@nroffS
 
 
 " {{{1 Numbers and units
-" ------------------------------------------------------------ 
+" ------------------------------------------------------------
 syn match nroffNumBlock /[0-9.]\a\=/ contained contains=nroffNumber
 syn match nroffNumber /\d\+\(\.\d*\)\=/ contained nextgroup=nroffUnit,nroffBadChar
 syn match nroffNumber /\.\d\+)/ contained nextgroup=nroffUnit,nroffBadChar
@@ -80,7 +80,7 @@ syn match nroffUnit /[icpPszmnvMu]/ contained
 
 
 " {{{1 Requests
-" ------------------------------------------------------------ 
+" ------------------------------------------------------------
 
 " Requests begin with . or ' at the beginning of a line, or after .if or
 " .ie.
@@ -126,7 +126,7 @@ endif
 
 
 " {{{1 eqn/tbl/pic
-" ------------------------------------------------------------ 
+" ------------------------------------------------------------
 " XXX: write proper syntax highlight for eqn / tbl / pic ?
 
 syn region nroffEquation start=/^\.\s*EQ/ end=/^\.\s*EN/
@@ -134,7 +134,7 @@ syn region nroffTable start=/^\.\s*TB/ end=/^\.\s*TE/
 syn region nroffPicture start=/^\.\s*PB/ end=/^\.\s*PE/
 
 " {{{1 Comments
-" ------------------------------------------------------------ 
+" ------------------------------------------------------------
 
 syn region nroffIgnore start=/^[.']\s*ig/ end=/^['.]\s*\./
 syn match nroffComment /\(^[.']\s*\)\=\\".*/ contains=nroffTodo
@@ -145,7 +145,7 @@ endif
 syn keyword nroffTodo TODO XXX FIXME contained
 
 " {{{1 Hilighting
-" ------------------------------------------------------------ 
+" ------------------------------------------------------------
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
@@ -207,7 +207,7 @@ endif
 " hi def nroffDefSpecial term=italic,bold cterm=italic,bold gui=reverse,bold
 
 let b:current_syntax = "nroff"
- 
+
 " }}}1
 " vim: set ts=8 sw=2:
 " vim600: set fdm=marker fdl=2:

@@ -5,8 +5,11 @@
 " Filenames:    *.gsp
 " URL:          http://www.constructicon.com/~nharward/vim/syntax/gsp.vim
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -15,14 +18,21 @@ if !exists("main_syntax")
 endif
 
 " Source HTML syntax
-runtime! syntax/html.vim
+if version < 600
+  source <sfile>:p:h/html.vim
+else
+  runtime! syntax/html.vim
+endif
 unlet b:current_syntax
 
 syn case match
 
 " Include Java syntax
-syn include @gspJava <sfile>:p:h/java.vim
-unlet b:current_syntax
+if version < 600
+  syn include @gspJava <sfile>:p:h/java.vim
+else
+  syn include @gspJava syntax/java.vim
+endif
 
 " Add <java> as an HTML tag name along with its args
 syn keyword htmlTagName contained java

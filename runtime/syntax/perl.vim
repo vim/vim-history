@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Perl
 " Maintainer:	Nick Hibma <n_hibma@webweaving.org>
-" Last Change:	2001 Apr 29
+" Last Change:	2001 May 10
 " Location:	http://www.etla.net/~n_hibma/vim/syntax/perl.vim
 "
 " Please download most recent version first before mailing
@@ -407,7 +407,7 @@ if version >= 508 || !exists("did_perl_syn_inits")
     HiLink perlUntilEOFSQ	perlString
     HiLink perlUntilEmptyDQ	perlString
     HiLink perlUntilEmptySQ	perlString
-    HiLink perlUntilEOF		perlString		
+    HiLink perlUntilEOF		perlString
   endif
   HiLink perlStringUnexpanded	perlString
   HiLink perlSubstitutionSQ	perlString
@@ -415,7 +415,7 @@ if version >= 508 || !exists("did_perl_syn_inits")
   HiLink perlSubstitutionSlash	perlString
   HiLink perlSubstitutionHash	perlString
   HiLink perlSubstitutionBracket perlString
-  HiLink perlSubstitutionCurly 	perlString
+  HiLink perlSubstitutionCurly	perlString
   HiLink perlSubstitutionPling	perlString
   HiLink perlTranslationSlash	perlString
   HiLink perlTranslationHash	perlString
@@ -462,9 +462,9 @@ if version >= 508 || !exists("did_perl_syn_inits")
   HiLink perlSpecialMatch	perlSpecial
   HiLink perlSpecialBEOM	perlSpecial
   HiLink perlDATA		perlComment
-  
+
   HiLink perlBrackets		Error
-  
+
   " Possible errors
   HiLink perlNotEmptyLine	Error
   HiLink perlElseIfError	Error

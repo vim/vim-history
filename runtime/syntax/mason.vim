@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:    Mason (Perl embedded in HTML)
 " Maintainer:  Andrew Smith <andrewdsmith@yahoo.com>
-" Last change: 2001 May 01
+" Last change: 2001 May 04
 " URL:         http://www.masonhq.com/editors/mason.vim
 "
 " This seems to work satisfactorily with html.vim and perl.vim for version 5.5.
@@ -28,16 +28,24 @@ if !exists("main_syntax")
 	let main_syntax = 'mason'
 endif
 
+" First pull in the HTML syntax.
+"
 if version < 600
-  so <sfile>:p:h/html.vim
+	so <sfile>:p:h/html.vim
 else
-  runtime! syntax/html.vim
-  unlet b:current_syntax
+	runtime! syntax/html.vim
+	unlet b:current_syntax
 endif
 
 syn cluster htmlPreproc add=@masonTop
 
-syn include @perlTop <sfile>:p:h/perl.vim
+" Now pull in the Perl syntax.
+"
+if version < 600
+	syn include @perlTop <sfile>:p:h/perl.vim
+else
+	syn include @perlTop syntax/perl.vim
+endif
 
 " It's hard to reduce down to the correct sub-set of Perl to highlight in some
 " of these cases so I've taken the safe option of just using perlTop in all of

@@ -225,6 +225,12 @@ u_savecommon(top, bot, newbot)
 	    curbuf->b_u_newhead->uh_prev = uhp;
 	uhp->uh_entry = NULL;
 	uhp->uh_cursor = curwin->w_cursor;	/* save cursor pos. for undo */
+#ifdef FEAT_VIRTUALEDIT
+	if (virtual_active() && curwin->w_cursor.coladd > 0)
+	    uhp->uh_cursor_vcol = getviscol();
+	else
+	    uhp->uh_cursor_vcol = -1;
+#endif
 
 	/* save changed and buffer empty flag for undo */
 	uhp->uh_flags = (curbuf->b_changed ? UH_CHANGED : 0) +
@@ -496,7 +502,7 @@ u_undoredo()
 	    bot = curbuf->b_ml.ml_line_count + 1;
 	if (top > curbuf->b_ml.ml_line_count || top >= bot || bot > curbuf->b_ml.ml_line_count + 1)
 	{
-	    EMSG(_("(ue1) u_undo: line numbers wrong"));
+	    EMSG(_("E438: u_undo: line numbers wrong"));
 	    changed();		/* don't want UNCHANGED now */
 	    return;
 	}
@@ -625,7 +631,15 @@ u_undoredo()
 						 && curwin->w_cursor.lnum > 1)
 	--curwin->w_cursor.lnum;
     if (curbuf->b_u_curhead->uh_cursor.lnum == curwin->w_cursor.lnum)
+    {
 	curwin->w_cursor.col = curbuf->b_u_curhead->uh_cursor.col;
+#ifdef FEAT_VIRTUALEDIT
+	if (curbuf->b_u_curhead->uh_cursor_vcol >= 0)
+	    coladvance((colnr_T)curbuf->b_u_curhead->uh_cursor_vcol);
+	else
+	    curwin->w_cursor.coladd = 0;
+#endif
+    }
     else if (curwin->w_cursor.lnum <= curbuf->b_ml.ml_line_count)
 	beginline(BL_SOL | BL_FIX);
     else
@@ -635,6 +649,9 @@ u_undoredo()
 	 * check_cursor() will move the cursor to the last line.  Move it to
 	 * the first column here. */
 	curwin->w_cursor.col = 0;
+#ifdef FEAT_VIRTUALEDIT
+	curwin->w_cursor.coladd = 0;
+#endif
     }
 
     /* Make sure the cursor is on an existing line and column. */
@@ -696,7 +713,7 @@ u_get_headentry()
 {
     if (curbuf->b_u_newhead == NULL || curbuf->b_u_newhead->uh_entry == NULL)
     {
-	EMSG(_("(ue2) undo list corrupt"));
+	EMSG(_("E439: undo list corrupt"));
 	return NULL;
     }
     return curbuf->b_u_newhead->uh_entry;
@@ -726,7 +743,7 @@ u_getbot()
 				(curbuf->b_ml.ml_line_count - uep->ue_lcount);
 	if (uep->ue_bot < 1 || uep->ue_bot > curbuf->b_ml.ml_line_count)
 	{
-	    EMSG(_("(ue3) undo line missing"));
+	    EMSG(_("E440: undo line missing"));
 	    uep->ue_bot = uep->ue_top + 1;  /* assume all lines deleted, will
 					     * get all the old lines back
 					     * without deleting the current

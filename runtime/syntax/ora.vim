@@ -2,7 +2,7 @@
 " Language:	Oracle config files (.ora) (Oracle 8i, ver. 8.1.5)
 " Maintainer:	Sandor Kopanyi <sandor.kopanyi@mailbox.hu>
 " Url:          <->
-" Last Change:	2001 Apr 30
+" Last Change:	2001 May 10
 
 " * the keywords are listed by file (sqlnet.ora, listener.ora, etc.)
 " * the parathesis-checking is made at the beginning for all keywords
@@ -457,7 +457,7 @@ if version >= 508 || !exists("did_ora_syn_inits")
   HiLink oraValue         Identifier            "values, like true or false
   HiLink oraModifier      oraValue              "modifies values
   HiLink oraString        String                "strings
- 
+
   HiLink oraSpecial       Special               "special characters
   HiLink oraError         Error                 "errors
   HiLink oraParenError    oraError              "errors caused by mismatching parantheses

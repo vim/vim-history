@@ -5,8 +5,11 @@
 " Option:
 "   yacc_uses_cpp : if this variable exists, then C++ is loaded rather than C
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -52,27 +55,40 @@ syn match	yaccSep	"^[ \t]*%}"
 syn match	yaccCurlyError	"[{}]"
 syn region	yaccAction	matchgroup=yaccCurly start="{" end="}" contains=ALLBUT,@yaccActionGroup
 
-" The default highlighting.
+
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_yacc_syn_inits")
+  if version < 508
+    let did_yacchdl_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
   " Internal yacc highlighting links
-hi def link yaccBrkt	yaccStmt
-hi def link yaccKey	yaccStmt
-hi def link yaccOper	yaccStmt
-hi def link yaccUnionStart	yaccKey
+  HiLink yaccBrkt	yaccStmt
+  HiLink yaccKey	yaccStmt
+  HiLink yaccOper	yaccStmt
+  HiLink yaccUnionStart	yaccKey
 
   " External yacc highlighting links
-hi def link yaccCurly	Delimiter
-hi def link yaccCurlyError	Error
-hi def link yaccDefinition	Function
-hi def link yaccDelim	Function
-hi def link yaccKeyActn	Special
-hi def link yaccSectionSep	Todo
-hi def link yaccSep	Delimiter
-hi def link yaccStmt	Statement
-hi def link yaccType	Type
+  HiLink yaccCurly	Delimiter
+  HiLink yaccCurlyError	Error
+  HiLink yaccDefinition	Function
+  HiLink yaccDelim	Function
+  HiLink yaccKeyActn	Special
+  HiLink yaccSectionSep	Todo
+  HiLink yaccSep	Delimiter
+  HiLink yaccStmt	Statement
+  HiLink yaccType	Type
 
   " since Bram doesn't like my Delimiter :|
-hi def link Delimiter	Type
+  HiLink Delimiter	Type
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "yacc"
 

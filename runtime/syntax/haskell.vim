@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Haskell
 " Maintainer:	John Williams <jrw@pobox.com>
-" Last Change:	2001 May 4
+" Last Change:	2001 May 10
 " Thanks to Ryan Crumley for suggestions and John Meacham for
 " pointing out bugs.
 "
@@ -137,7 +137,7 @@ if version >= 508 || !exists("did_hs_syntax_inits")
   hi link hsOrdering                      hsEnumConst
   hi link hsEnumConst                     Constant
   hi link hsDebug                         Debug
-  
+
   delcommand HiLink
 endif
 

@@ -2,15 +2,18 @@
 " Language:	DocBook
 " Maintainer:	Devin Weaver <ktohg@tritarget.com>
 " URL:		http://tritarget.com/pub/vim/syntax/docbk.vim
-" Last Change:	2001 May 03
+" Last Change:	2001 May 09
 
 " REFERENCES:
 "   http://docbook.org/
 "   http://www.open-oasis.org/docbook/
 "
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 

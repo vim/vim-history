@@ -1,13 +1,13 @@
 " Vim color file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 May 02
+" Last Change:	2001 May 09
 
 " This color scheme uses a dark grey background.
 
-let colors_name = "evening"
-
 " First remove all existing highlighting.
 hi clear
+
+let colors_name = "evening"
 
 hi Normal ctermbg=DarkGrey ctermfg=White guifg=White guibg=grey20
 set background=dark

@@ -2,7 +2,7 @@
 " Warning: This also deletes all menus defined by the user!
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Apr 26
+" Last Change:	2001 May 10
 
 aunmenu *
 
@@ -19,5 +19,12 @@ endif
 if exists("find_help_dialog")
   unlet find_help_dialog
 endif
+
+silent! unlet g:menutrans_help_dialog
+silent! unlet g:menutrans_path_dialog
+silent! unlet g:menutrans_tags_dialog
+silent! unlet g:menutrans_textwidth_dialog
+silent! unlet g:menutrans_fileformat_dialog
+silent! unlet g:menutrans_no_file
 
 " vim: set sw=2 :

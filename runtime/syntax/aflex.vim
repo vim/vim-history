@@ -2,7 +2,7 @@
 " Vim syntax file
 " Language:	AfLex (from Lex syntax file)
 " Maintainer:	Mathieu Clabaut <mathieu.clabaut@free.fr>
-" LastChange:	02 May 2001 
+" LastChange:	02 May 2001
 " Original:	Lex, maintained by Dr. Charles E. Campbell, Jr.
 "				<Charles.Campbell@gsfc.nasa.gov>
 " Comment:          Replaced sourcing c.vim file by ada.vim and rename lex*

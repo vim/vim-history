@@ -2,7 +2,7 @@
 " Language:	HTML
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/html.vim
-" Last Change:  2001 Apr 26
+" Last Change:  2001 May 10
 
 " Please check :help html.vim for some comments and a description of the options
 
@@ -277,7 +277,7 @@ endif
   HtmlHiLink htmlTagError           htmlError
   HtmlHiLink htmlEvent              javaScript
   HtmlHiLink htmlError              Error
-  
+
   HtmlHiLink javaScript             Special
   HtmlHiLink javaScriptExpression   javaScript
   HtmlHiLink htmlCssStyleComment    Comment

@@ -122,7 +122,7 @@ diff_buf_add(buf)
 	    return;
 	}
 
-    EMSG2(_("(de3) Can not diff more than %ld buffers"), DB_COUNT);
+    EMSG2(_("E96: Can not diff more than %ld buffers"), DB_COUNT);
 }
 
 /*
@@ -593,7 +593,7 @@ ex_diffupdate(eap)
     }
     if (!ok)
     {
-	EMSG(_("(de7) Cannot create diffs"));
+	EMSG(_("E97: Cannot create diffs"));
 	goto theend;
     }
 
@@ -894,7 +894,7 @@ diff_read(idx_orig, idx_new, fname)
     fd = fopen((char *)fname, "r");
     if (fd == NULL)
     {
-	EMSG(_("(ed3) Cannot read diff output"));
+	EMSG(_("E98: Cannot read diff output"));
 	return;
     }
 
@@ -1589,7 +1589,7 @@ ex_diffgetput(eap)
     idx_cur = diff_buf_idx(curbuf);
     if (idx_cur == DB_COUNT)
     {
-	EMSG(_("(ed4) Current buffer is not in diff mode"));
+	EMSG(_("E99: Current buffer is not in diff mode"));
 	return;
     }
 
@@ -1601,7 +1601,7 @@ ex_diffgetput(eap)
 		break;
 	if (idx_other == DB_COUNT)
 	{
-	    EMSG(_("(ed5) No other buffer in diff mode"));
+	    EMSG(_("E100: No other buffer in diff mode"));
 	    return;
 	}
 
@@ -1609,7 +1609,7 @@ ex_diffgetput(eap)
 	for (i = idx_other + 1; i < DB_COUNT; ++i)
 	    if (diffbuf[i] != curbuf && diffbuf[i] != NULL)
 	    {
-		EMSG(_("(ed6) More than two buffers in diff mode, don't know which one to use"));
+		EMSG(_("E101: More than two buffers in diff mode, don't know which one to use"));
 		return;
 	    }
     }
@@ -1632,13 +1632,13 @@ ex_diffgetput(eap)
 	buf = buflist_findnr(i);
 	if (buf == NULL)
 	{
-	    EMSG2(_("(de4) Can't find buffer \"%s\""), eap->arg);
+	    EMSG2(_("E102: Can't find buffer \"%s\""), eap->arg);
 	    return;
 	}
 	idx_other = diff_buf_idx(buf);
 	if (idx_other == DB_COUNT)
 	{
-	    EMSG2(_("(de5) Buffer \"%s\" is not in diff mode"), eap->arg);
+	    EMSG2(_("E103: Buffer \"%s\" is not in diff mode"), eap->arg);
 	    return;
 	}
     }

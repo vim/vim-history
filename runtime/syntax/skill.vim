@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:		SKILL
 " Maintainer:	Toby Schaffer <jtschaff@eos.ncsu.edu>
-" Last Change:	2001 Jan 15
+" Last Change:	2001 May 09
 " Comments:		SKILL is a Lisp-like programming language for use in EDA
 "				tools from Cadence Design Systems. It allows you to have
 "				a programming environment within the Cadence environment
@@ -9,8 +9,11 @@
 "				database. This file also defines syntax highlighting for
 "				certain Design Framework II interface functions.
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -521,26 +524,38 @@ syn match skillCommentError         "\*/"
 
 syn sync ccomment skillComment minlines=10
 
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_skill_syntax_inits")
+  if version < 508
+    let did_skill_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-" The default highlighting.
-hi def link skillcdfFunctions       Function
-hi def link skillgeFunctions        Function
-hi def link skillhiFunctions        Function
-hi def link skillleFunctions        Function
-hi def link skilldbefFunctions      Function
-hi def link skillddFunctions        Function
-hi def link skillpcFunctions        Function
-hi def link skilltechFunctions      Function
-hi def link skillConstants          Constant
-hi def link skillFunction           Function
-hi def link skillKeywords           Statement
-hi def link skillConditional        Conditional
-hi def link skillRepeat             Repeat
-hi def link skillString             String
-hi def link skillTodo               Todo
-hi def link skillNote               Todo
-hi def link skillComment            Comment
-hi def link skillCommentError       Error
+    HiLink skillcdfFunctions       Function
+    HiLink skillgeFunctions        Function
+    HiLink skillhiFunctions        Function
+    HiLink skillleFunctions        Function
+    HiLink skilldbefFunctions      Function
+    HiLink skillddFunctions        Function
+    HiLink skillpcFunctions        Function
+    HiLink skilltechFunctions      Function
+    HiLink skillConstants          Constant
+    HiLink skillFunction           Function
+    HiLink skillKeywords           Statement
+    HiLink skillConditional        Conditional
+    HiLink skillRepeat             Repeat
+    HiLink skillString             String
+    HiLink skillTodo               Todo
+    HiLink skillNote               Todo
+    HiLink skillComment            Comment
+    HiLink skillCommentError       Error
+
+	delcommand HiLink
+endif
 
 let b:current_syntax = "skill"
 

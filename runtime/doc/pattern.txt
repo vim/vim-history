@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.0ae.  Last change: 2001 May 05
+*pattern.txt*   For Vim version 6.0af.  Last change: 2001 May 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -53,7 +53,7 @@ n			Repeat the latest "/" or "?" [count] times.
 N			Repeat the latest "/" or "?" [count] times in
 			opposite direction. |last-pattern| {Vi: no count}
 
-							*star* *eq1* *eq2*
+							*star* *E348* *E349*
 *			Search forward for the [count]'th occurrence of the
 			word nearest to the cursor.  The word used for the
 			search is the first of:
@@ -169,7 +169,7 @@ with another word: >
 	beep<Esc>	type another replacement
 			etc.
 <
-							*//;* *se8*
+							*//;* *E386*
 A very special offset is ';' followed by another search command.  For example: >
 
    /test 1/;/test
@@ -247,7 +247,7 @@ the "*" is under your right hand middle finger (search to the right and down).
 ==============================================================================
 2. The definition of a pattern		*search-pattern* *pattern* *[pattern]*
 					*regular-expression* *regexp* *Pattern*
-						*ep2* *ep4* *ey8* *ey9* *ie1*
+						*ep2* *E76* *ey8* *ey9* *E383*
 						*/bar* */\bar* */pattern*
 1. A pattern is one or more branches, separated by "\|".  It matches anything
    that matches one of the branches.  Example: "foo\|beep" matches "foo" and
@@ -298,8 +298,8 @@ the "*" is under your right hand middle finger (search to the right and down).
 		or  \z( pattern \)		|/\z(|
 
 
-Overview of multi items.				*/multi*
-More explanation and examples below, follow the links.
+Overview of multi items.				*/multi* *E61* *E62*
+More explanation and examples below, follow the links.			*E64*
 
 	  multi ~
      'magic' 'nomagic'	matches of the preceding atom ~
@@ -320,6 +320,7 @@ More explanation and examples below, follow the links.
 	\{-,m}	\{-,m}	0 to m		as few as possible (*)
 	\{-}	\{-}	0 or more	as few as possible (*)
 
+							*E59*
 |/\@>|	\@>	\@>	1, like matching a whole pattern (*)
 |/\@=|	\@=	\@=	nothing, requires a match |/zero-width| (*)
 |/\@!|	\@!	\@!	nothing, requires NO match |/zero-width| (*)
@@ -346,7 +347,7 @@ More explanation and examples below, follow the links.
 |/\>|	\>	\>	end of a word |/zero-width|
 |/\zs|	\zs	\zs	anything, sets start of match
 |/\ze|	\ze	\ze	anything, sets end of match
-|/\%^|	\%^	\%^	beginning of file |/zero-width|
+|/\%^|	\%^	\%^	beginning of file |/zero-width|		*E71*
 |/\%$|	\%$	\%$	end of file |/zero-width|
 |/\%#|	\%#	\%#	cursor position |/zero-width|
 |/\%l|	\%23l	\%23l	line number |/zero-width|
@@ -394,7 +395,7 @@ Character classes {not in Vi}:
 |/\2|	\2	\2	Like "\1", but uses second \(\)
 	   ...
 |/\9|	\9	\9	Like "\1", but uses ninth \(\)
-
+								*E68*
 |/\z1|	\z1	\z1	only for syntax highlighting, see |:syn-ext-match|
 	   ...
 |/\z1|	\z9	\z9	only for syntax highlighting, see |:syn-ext-match|
@@ -479,7 +480,7 @@ atom that can match an empty string.  That's because this could result in an
 endless loop.  If you try it, you will get this error message: >
  	*, \+ or \{ operand could be empty
 <
-							*/star* */\star*
+						*/star* */\star* *E56*
 *	(use \* with 'nomagic')
 	Matches 0 or more of the preceding atom, as many as possible.
 	Example  'nomagic'	matches ~
@@ -496,7 +497,7 @@ endless loop.  If you try it, you will get this error message: >
 	the end of the file and then tries matching "END", backing up one
 	character at a time.
 
-							*/\+*
+							*/\+* *E57*
 \+	Matches 1 or more of the preceding atom, as many as possible. {not in
 	Vi}
 	Example		matches ~
@@ -512,7 +513,7 @@ endless loop.  If you try it, you will get this error message: >
 \?	Just like \=.  Cannot be used when searching backwards with the "?"
 	command. {not in Vi}
 
-							*/\{*
+							*/\{* *E58* *E60*
 \{n,m}	Matches n to m of the preceding atom, as many as possible
 \{n}	Matches n of the preceding atom
 \{n,}	Matches at least n of the preceding atom, as many as possible
@@ -807,7 +808,7 @@ match ASCII characters, as indicated by the range.
 
 	NOTE: 'ignorecase', "\c" and "\C" are not used by character classes.
 
-							*/\_*
+							*/\_* *E63*
 \_x	Where "x" is any of the characters above: The character class with
 	end-of-line added
 (end of character classes)
@@ -821,9 +822,9 @@ match ASCII characters, as indicated by the range.
 ~	matches the last given substitute string	*/~* */\~*
 
 \(\)	A pattern enclosed by escaped parentheses	*/\(* */\(\)* */\)*
-	(e.g., "\(^a\)") matches 'a' at the start of a line.
+	(e.g., "\(^a\)") matches 'a' at the start of a line.  *E51* *E54* *E55*
 
-\1      Matches the same string that was matched by	*/\1*
+\1      Matches the same string that was matched by	*/\1* *E65*
 	the first sub-expression in \( and \). {not in Vi}
 	Example: "\([a-z]\).\1" matches "ata", "ehe", "tot", etc.
 \2      Like "\1", but uses second sub-expression,	*/\2*
@@ -833,7 +834,7 @@ match ASCII characters, as indicated by the range.
 	in the pattern (going left to right), NOT based on what is matched
 	first.
 
-\%(\)	A pattern enclosed by escaped parentheses.	*/\%(\)* */\%(*
+\%(\)	A pattern enclosed by escaped parentheses.	*/\%(\)* */\%(* *E53*
 	Just like \(\), but without counting it as a sub-expression
 	{not in Vi}
 
@@ -916,7 +917,7 @@ x	A single character, with no special meaning, matches itself
 	  Use one of the other atoms above when possible.  Example: "\d" is
 	  much faster than "[0-9]" and matches the same characters.
 
-						*/\%[]*
+						*/\%[]* *E69* *E70*
 \%[]	A list of optionally matched atoms.  This always matches.
 	It matches as much of the list of atoms it contains as possible.  Thus
 	it stops at the first atom that doesn't match.  For example: >

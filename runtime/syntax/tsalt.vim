@@ -1,11 +1,14 @@
 " Vim syntax file
 " Language:	Telix (Modem Comm Program) SALT Script
 " Maintainer:	Sean M. McKee <mckee@misslink.net>
-" Last Change:	2001 Jan 15
+" Last Change:	2001 May 09
 " Version Info: @(#)tsalt.vim	1.5	97/12/16 08:11:15
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -131,8 +134,8 @@ syn region tsaltParen		transparent start='(' end=')' contains=ALLBUT,tsaltParenE
 syn match tsaltParenError		")"
 syn match tsaltInParen		contained "[{}]"
 
-hi def link tsaltParenError		tsaltError
-hi def link tsaltInParen		tsaltError
+hi link tsaltParenError		tsaltError
+hi link tsaltInParen		tsaltError
 
 "integer number, or floating point number without a dot and with "f".
 syn match  tsaltNumber		"\<\d\+\(u\=l\=\|lu\|f\)\>"
@@ -164,34 +167,47 @@ syn region tsaltMulti	transparent start='?' end=':' contains=ALLBUT,tsaltInclude
 syn sync ccomment tsaltComment
 
 
-" The default highlighting.
-hi def link tsaltFunction		Statement
-hi def link tsaltSysVar			Type
-"hi def link tsaltLibFunc		UserDefFunc
-"hi def link tsaltConstants		Type
-"hi def link tsaltFuncArg		Type
-"hi def link tsaltOperator		Operator
-"hi def link tsaltLabel			Label
-"hi def link tsaltUserLabel		Label
-hi def link tsaltConditional		Conditional
-hi def link tsaltRepeat			Repeat
-hi def link tsaltCharacter		SpecialChar
-hi def link tsaltSpecialCharacter	SpecialChar
-hi def link tsaltNumber			Number
-hi def link tsaltFloat			Float
-hi def link tsaltCommentError		tsaltError
-hi def link tsaltInclude		Include
-hi def link tsaltPreProc		PreProc
-hi def link tsaltDefine			Macro
-hi def link tsaltIncluded		tsaltString
-hi def link tsaltError			Error
-hi def link tsaltStatement		Statement
-hi def link tsaltPreCondit		PreCondit
-hi def link tsaltType			Type
-hi def link tsaltString			String
-hi def link tsaltComment		Comment
-hi def link tsaltSpecial		Special
-hi def link tsaltTodo			Todo
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_tsalt_syntax_inits")
+  if version < 508
+    let did_tsalt_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+	HiLink tsaltFunction		Statement
+	HiLink tsaltSysVar		Type
+	"HiLink tsaltLibFunc		UserDefFunc
+	"HiLink tsaltConstants		Type
+	"HiLink tsaltFuncArg		Type
+	"HiLink tsaltOperator		Operator
+	"HiLink tsaltLabel		Label
+	"HiLink tsaltUserLabel		Label
+	HiLink tsaltConditional		Conditional
+	HiLink tsaltRepeat		Repeat
+	HiLink tsaltCharacter		SpecialChar
+	HiLink tsaltSpecialCharacter	SpecialChar
+	HiLink tsaltNumber		Number
+	HiLink tsaltFloat		Float
+	HiLink tsaltCommentError	tsaltError
+	HiLink tsaltInclude		Include
+	HiLink tsaltPreProc		PreProc
+	HiLink tsaltDefine		Macro
+	HiLink tsaltIncluded		tsaltString
+	HiLink tsaltError		Error
+	HiLink tsaltStatement		Statement
+	HiLink tsaltPreCondit		PreCondit
+	HiLink tsaltType		Type
+	HiLink tsaltString		String
+	HiLink tsaltComment		Comment
+	HiLink tsaltSpecial		Special
+	HiLink tsaltTodo		Todo
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "tsalt"
 

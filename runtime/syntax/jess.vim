@@ -4,12 +4,19 @@
 " Last change:	September 14, 2000
 " Based on lisp.vim by : Dr. Charles E. Campbell, Jr. <cec@gryphon.gsfc.nasa.gov>
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
-setlocal iskeyword=42,43,45,47-58,60-62,64-90,97-122,_
+if version < 600
+  set iskeyword=42,43,45,47-58,60-62,64-90,97-122,_
+else
+  setlocal iskeyword=42,43,45,47-58,60-62,64-90,97-122,_
+endif
 
 " Lists
 syn match	jessSymbol	![^()'`,"; \t]\+!	contained
@@ -28,15 +35,15 @@ syn match	jessAtomNmbr	"\<[0-9]\+"			contained
 
 " Standard jess Functions and Macros
 syn keyword jessFunc    *   +   **  -   /   <   >   <=  >=  <>  =
-syn keyword jessFunc    long            longp   
-syn keyword jessFunc    abs             agenda              and         
+syn keyword jessFunc    long            longp
+syn keyword jessFunc    abs             agenda              and
 syn keyword jessFunc    assert          assert-string       bag
 syn keyword jessFunc    batch           bind                bit-and
 syn keyword jessFunc    bit-not         bit-or              bload
 syn keyword jessFunc    bsave           build               call
 syn keyword jessFunc    clear           clear-storage       close
 syn keyword jessFunc    complement$     context             count-query-results
-syn keyword jessFunc    create$         
+syn keyword jessFunc    create$
 syn keyword jessFunc    delete$             div
 syn keyword jessFunc    do-backward-chaining                e
 syn keyword jessFunc    engine          eq                  eq*
@@ -86,7 +93,7 @@ syn match   jessFunc	"\<c[ad]\+r\>"
 " jess Keywords (modifiers)
 syn keyword jessKey	    defglobal       deffunction         defrule
 syn keyword jessKey	    deffacts
-syn keyword jessKey	    defadvice       defclass            definstance     
+syn keyword jessKey	    defadvice       defclass            definstance
 
 " Standard jess Variables
 syn region	jessVar	start="?"         end="[^a-zA-Z0-9]"me=e-1
@@ -95,7 +102,7 @@ syn region	jessVar	start="?"         end="[^a-zA-Z0-9]"me=e-1
 syn region	jessString	start=+"+	skip=+\\"+ end=+"+
 
 " Shared with Declarations, Macros, Functions
-"syn keyword	jessDeclaration	
+"syn keyword	jessDeclaration
 
 syn match	jessNumber	"[0-9]\+"
 
@@ -117,24 +124,37 @@ syn match	jessComment	";.*$"
 " synchronization
 syn sync lines=100
 
-" The default highlighting.
-hi def link jessAtomNmbr	jessNumber
-hi def link jessAtomMark	jessMark
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_jess_syntax_inits")
+  if version < 508
+    let did_jess_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-hi def link jessAtom	Identifier
-hi def link jessAtomBarSymbol	Special
-hi def link jessBarSymbol	Special
-hi def link jessComment	Comment
-hi def link jessConcat	Statement
-hi def link jessDeclaration	Statement
-hi def link jessFunc	Statement
-hi def link jessKey	Type
-hi def link jessMark	Delimiter
-hi def link jessNumber	Number
-hi def link jessParenError	Error
-hi def link jessSpecial	Type
-hi def link jessString	String
-hi def link jessVar                 Identifier
+  HiLink jessAtomNmbr	jessNumber
+  HiLink jessAtomMark	jessMark
+
+  HiLink jessAtom		Identifier
+  HiLink jessAtomBarSymbol	Special
+  HiLink jessBarSymbol	Special
+  HiLink jessComment	Comment
+  HiLink jessConcat	Statement
+  HiLink jessDeclaration	Statement
+  HiLink jessFunc		Statement
+  HiLink jessKey		Type
+  HiLink jessMark		Delimiter
+  HiLink jessNumber	Number
+  HiLink jessParenError	Error
+  HiLink jessSpecial	Type
+  HiLink jessString	String
+  HiLink jessVar	                  Identifier
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "jess"
 

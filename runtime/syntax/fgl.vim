@@ -3,8 +3,11 @@
 " Maintainer:	rms@poczta.onet.pl
 " Last change:  21 Jul 2000
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -43,13 +46,13 @@ syn keyword fglKeyword GRANT GREEN GROUP HAVING HEADER HELP HEX HIDE HIGH HOLD H
 syn keyword fglKeyword IDATA IF ILENGTH IMMEDIATE IN INCLUDE INDEX INDEXES INDICATOR
 syn keyword fglKeyword INFIELD INIT INITIALIZE INPUT INSERT INSTRUCTIONS INT INTEGER
 syn keyword fglKeyword INTERRUPT INTERVAL INTO INT_FLAG INVISIBLE IS ISAM ISOLATION
-syn keyword fglKeyword ITYPE 
-syn keyword fglKeyword KEY LABEL 
+syn keyword fglKeyword ITYPE
+syn keyword fglKeyword KEY LABEL
 syn keyword fglKeyword LANGUAGE LAST LEADING LEFT LENGTH LET LIKE LINE
 syn keyword fglKeyword LINENO LINES LOAD LOCATE LOCK LOG LOG10 LOGN LONG LOW
 syn keyword fglKeyword MAGENTA MAIN MARGIN MATCHES MAX MDY MEDIUM MEMORY MENU MESSAGE
 syn keyword fglKeyword MESSAGE_LENGTH MESSAGE_TEXT MIN MINUTE MOD MODE MODIFY MODULE
-syn keyword fglKeyword MONEY MONTH MORE 
+syn keyword fglKeyword MONEY MONTH MORE
 syn keyword fglKeyword NAME NCHAR NEED NEW NEXT NEXTPAGE NO NOCR NOENTRY NONE NORMAL
 syn keyword fglKeyword NOT NOTFOUND NULL NULLABLE NUMBER NUMERIC NUM_ARGS NVARCHAR
 syn keyword fglKeyword OCTET_LENGTH OF OFF OLD ON ONLY OPEN OPTIMIZATION OPTION OPTIONS
@@ -70,7 +73,7 @@ syn keyword fglKeyword SHORT SHOW SITENAME SIZE SIZEOF SKIP SLEEP SMALLFLOAT SMA
 syn keyword fglKeyword SOME SPACE SPACES SQL SQLAWARN SQLCA SQLCODE SQLERRD SQLERRM
 syn keyword fglKeyword SQLERROR SQLERRP SQLSTATE SQLWARNING SQRT STABILITY START
 syn keyword fglKeyword STARTLOG STATIC STATISTICS STATUS STDEV STEP STOP STRING STRUCT
-syn keyword fglKeyword SUBCLASS_ORIGIN SUM SWITCH SYNONYM SYSTEM 
+syn keyword fglKeyword SUBCLASS_ORIGIN SUM SWITCH SYNONYM SYSTEM
 syn keyword fglKeyword SysBlobs SysChecks SysColAuth SysColDepend SysColumns
 syn keyword fglKeyword SysConstraints SysDefaults SysDepend SysDistrib SysFragAuth
 syn keyword fglKeyword SysFragments SysIndexes SysObjState SysOpClstr SysProcAuth
@@ -83,7 +86,7 @@ syn keyword fglKeyword TRIGGERS TRIM TRUE TRUNC TYPE TYPEDEF
 syn keyword fglKeyword UNCOMMITTED UNCONSTRAINED UNDERLINE UNION UNIQUE UNITS UNLOAD
 syn keyword fglKeyword UNLOCK UNSIGNED UP UPDATE UPSHIFT USER USING
 syn keyword fglKeyword VALIDATE VALUE VALUES VARCHAR VARIABLES VARIANCE VARYING
-syn keyword fglKeyword VERIFY VIEW VIOLATIONS 
+syn keyword fglKeyword VERIFY VIEW VIOLATIONS
 syn keyword fglKeyword WAIT WAITING WARNING WEEKDAY WHEN WHENEVER WHERE WHILE WHITE
 syn keyword fglKeyword WINDOW WITH WITHOUT WORDWRAP WORK WRAP WRITE
 syn keyword fglKeyword YEAR YELLOW
@@ -103,16 +106,29 @@ syn match fglComment	"#.*"
 
 syn sync ccomment fglComment
 
-" The default highlighting.
-hi def link fglComment	Comment
-hi def link fglKeyword	fglSpecial
-"hi def link fglKeyword	fglStatement
-hi def link fglNumber	Number
-hi def link fglOperator	fglStatement
-hi def link fglSpecial	Special
-hi def link fglStatement Statement
-hi def link fglString	String
-hi def link fglType	Type
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_fgl_syntax_inits")
+  if version < 508
+    let did_fgl_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink fglComment	Comment
+  HiLink fglKeyword	fglSpecial
+  "HiLink fglKeyword	fglStatement
+  HiLink fglNumber	Number
+  HiLink fglOperator	fglStatement
+  HiLink fglSpecial	Special
+  HiLink fglStatement	Statement
+  HiLink fglString	String
+  HiLink fglType	Type
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "fgl"
 

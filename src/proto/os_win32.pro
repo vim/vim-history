@@ -43,4 +43,14 @@ void mch_breakcheck __ARGS((void));
 long_u mch_avail_mem __ARGS((int special));
 int mch_rename __ARGS((const char *pszOldFile, const char *pszNewFile));
 char *default_shell __ARGS((void));
+void mch_print_cleanup __ARGS((void));
+int mch_print_init __ARGS((prt_settings_T *psettings, char_u *jobname, int forceit));
+int mch_print_begin __ARGS((prt_settings_T *psettings));
+void mch_print_end __ARGS((void));
+int mch_print_end_page __ARGS((void));
+int mch_print_begin_page __ARGS((void));
+int mch_print_text_out __ARGS((int x, int y, char_u *p, int len, int *must_break));
+void mch_print_setfont __ARGS((int iBold, int iItalic, int iUnderline));
+void mch_print_set_bg __ARGS((long bgcol));
+void mch_print_set_fg __ARGS((long fgcol));
 /* vim: set ft=c : */

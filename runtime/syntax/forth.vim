@@ -1,84 +1,136 @@
 " Vim syntax file
-" Language:		FORTH
-" Maintainer:	Christian V. J. Br=FCssow <cvjb@bigfoot.de>
-" Last Change:	Fre 18 Jun 1999 13:44:14 MEST
+" Language   : FORTH
+" Maintainer : Christian V. J. Brüssow <cvjb@bigfoot.de>
+" Last change: Son 06 Mai 2001 20:16:25 CEST
+
+" Thanks to...
+"
+" John Providenza <john@probo.com> made some improvements
+" for the highlighting of strings, and added the code for
+" highlighting hex numbers.
+
 
 " The list of keywords is incomplete, compared with the offical ANS
 " wordlist. If you use this language, please improve it, and send me
 " the patches.
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
-  finish
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+	syntax clear
+elseif exists("b:current_syntax")
+	finish
 endif
 
 " Synchronization method
 syn sync ccomment maxlines=200
 
-" Forth is not case sensitive
+" I use gforth, so I set this to case ignore
 syn case ignore
 
 " Some special, non-FORTH keywords
-syn keyword forthTodo contained TODO FIXME XXX FSF
-syn match forthTodo contained 'Copyright\(\s([Cc])\)\=\(\s[0-9]\{2,4}\)\=\s\='
-syn match forthTodo contained 'Free\sSoftware\sFoundation\(,\sInc[.]\=\)\='
+syn keyword forthTodo contained TODO FIXME
+syn match forthTodo contained 'Copyright\(\s([Cc])\)\=\(\s[0-9]\{2,4}\)\='
 
 " Characters allowed in keywords
 " I don't know if 128-255 are allowed in ANS-FORHT
-setlocal iskeyword=!,@,33-64,A-Z,91-96,a-z,123-126,128-255
+if version >= 600
+	setlocal iskeyword=!,@,33-64,A-Z,91-96,a-z,123-126,128-255
+else
+	set iskeyword=!,@,33-64,A-Z,91-96,a-z,123-126,128-255
+endif
+
 
 " Keywords
 
-" * basic (return)stack manipulation and control words
-syn keyword forthStack -ROT . .R .S 2DROP 2DUP 2OVER 2ROT 2SWAP 3DUP 4DUP
-syn keyword forthStack ?DUP D. D.R DEPTH DROP DUP F. FDEPTH FDUP FDROP FE. FLIP
-syn keyword forthStack FOVER FROT FS. FSWAP NIP OVER PICK ROLL ROT SP0 SP@
-syn keyword forthStack SWAP TOS TUCK U. U.R UD. UD.R
-syn keyword forthRStack 2>R 2R> 2R@ >R R> R@ RP0 RP@ TOR
+" basic mathematical and logical operators
+syn keyword forthOperators + - * / MOD /MOD NEGATE ABS MIN MAX
+syn keyword forthOperators AND OR XOR NOT INVERT 2* 2/ 1+ 1- 2+ 2- 8*
+syn keyword forthOperators M+ */ */MOD M* UM* M*/ UM/MOD FM/MOD SM/REM
+syn keyword forthOperators D+ D- DNEGATE DABS DMIN DMAX
+syn keyword forthOperators F+ F- F* F/ FNEGATE FABS FMAX FMIN FLOOR FROUND
+syn keyword forthOperators F** FSQRT FEXP FEXPM1 FLN FLNP1 FLOG FALOG FSIN
+syn keyword forthOperators FCOS FSINCOS FTAN FASIN FACOS FATAN FATAN2 FSINH
+syn keyword forthOperators FCOSH FTANH FASINH FACOSH FATANH
+syn keyword forthOperators 0< 0<= 0<> 0= 0> 0>= <= <> = > >=
 
-" * basic character operations
-syn keyword forthCharOps (.) -TRAILING /STRING ?UPPERCASE ASCII BL CAPS CAPS-COMP
-syn keyword forthCharOps CHAR CHAR+ CHARS COMP COMPARE CONTROL COUNT CR EMIT EMIT?
-syn keyword forthCharOps EXPECT FIND KEY KEY? LENGTH SPACE SPACES TYPE UPC UPPER
-syn keyword forthCharOps WORD
+" stack manipulations
+syn keyword forthStack DROP NIP DUP OVER TUCK SWAP ROT -ROT ?DUP PICK ROLL
+syn keyword forthStack 2DROP 2NIP 2DUP 2OVER 2TUCK 2SWAP 2ROT
+syn keyword forthStack 3DUP 4DUP
+syn keyword forthRStack >R R> R@ RDROP 2>R 2R> 2R@ 2RDROP
+syn keyword forthFStack FDROP FNIP FDUP FOVER FTUCK FSWAP FROT
 
-" * char-number converion
-syn keyword forthConversion <# # #> #S (NUMBER) (NUMBER?) CONVERT D>F D>S DIGIT DPL
-syn keyword forthConversion F>D HLD HOLD NUMBER S>D SIGN
+" stack pointer manipulations
+syn keyword forthSP SP@ SP! FP@ FP! RP@ RP! LP@ LP!
 
-" * Interptreter, Wordbook, Compiler
-syn keyword forthForth ABORT ALLOCATE ASSEMBLER BASE BYE COLD DECIMAL DEBUG
-syn keyword forthForth DUMP EXECUTE EXIT HERE HEX INTERPRET NOOP PAD PERFORM QUERY
-syn keyword forthForth QUIT SEARCH SEE VIEW WORDS
-syn region forthForth start=+ABORT"+ skip=+\\"+ end=+"+
+" address operations
+syn keyword forthMemory @ ! +! C@ C! 2@ 2! F@ F! SF@ SF! DF@ DF!
+syn keyword forthAdrArith CHARS CHAR+ CELLS CELL+ CELL ALIGN ALIGNED FLOATS
+syn keyword forthAdrArith FLOAT+ FLOAT FALIGN FALIGNED SFLOATS SFLOAT+
+syn keyword forthAdrArith SFALIGN SFALIGNED DFLOATS DFLOAT+ DFALIGN DFALIGNED
+syn keyword forthAdrArith MAXALIGN MAXALIGNED CFALIGN CFALIGNED
+syn keyword forthAdrArith ADDRESS-UNIT-BITS ALLOT ALLOCATE HERE
+syn keyword forthMemBlks MOVE ERASE CMOVE CMOVE> FILL BLANK
 
-" * Vocabularies
-syn keyword forthVocs ALSO FORTH ONLY ORDER ROOT SEAL USER VOCS
+" conditionals
+syn keyword forthCond IF ELSE ENDIF THEN CASE OF ENDOF ENDCASE ?DUP-IF
+syn keyword forthCond ?DUP-0=-IF AHEAD CS-PICK CS-ROLL CATCH THROW
 
-" * basic mathematical and logical operators
-syn keyword forthOperators = * */ */MOD *D + - / /MOD 1+ 1- 2* 2+ 2- 2/ 8* ABS AND
-syn keyword forthOperators D+ D- D2* D2/ DABS F* F** F+ F- F/ FABS FM/MOD LSHIFT
-syn keyword forthOperators M* M*/ M+ M/MOD MOD NOT OR RSHIFT U*D D2/ UM* UM/MOD XOR
+" iterations
+syn keyword forthLoop BEGIN WHILE REPEAT UNTIL AGAIN
+syn keyword forthLoop ?DO LOOP I J K +DO U+DO -DO U-DO DO +LOOP -LOOP
+syn keyword forthLoop UNLOOP LEAVE ?LEAVE EXIT DONE FOR NEXT
 
-" * basic address operations
-syn keyword forthAdrOps ! ' +! , .ID 2! 2@ >BODY >FLOAT >IN >LINK >NAME >NEXT
-syn keyword forthAdrOps >NUMBER >VIEW @ ALLOT BLANK BODY> BOUNDS C! C, C@ CMOVE
-syn keyword forthAdrOps CMOVE> CRESET CSET CTOGGLE ERASE DF! DF@ F! F@ FILL L>NAME
-syn keyword forthAdrOps LINK> MOVE N>LINK SF! SF@ VIEW>
+" new words
+syn match forthColonDef '\<:\s*[^ \t]\+\>'
+syn keyword forthEndOfColonDef ;
+syn keyword forthDefine CONSTANT 2CONSTANT FCONSTANT VARIABLE 2VARIABLE CREATE
+syn keyword forthDefine USER VALUE TO DEFER IS DOES> IMMEDIATE COMPILE-ONLY
+syn keyword forthDefine COMPILE RESTRICT INTERPRET POSTPONE EXECUTE LITERAL
+syn keyword forthDefine CREATE-INTERPRET/COMPILE INTERPRETATION> <INTERPRETATION
+syn keyword forthDefine COMPILATION> <COMPILATION ] LASTXT COMP' POSTPONE,
+syn keyword forthDefine FIND-NAME NAME>INT NAME?INT NAME>COMP NAME>STRING STATE
+syn match forthDefine "\[COMP']"
+syn match forthDefine "'"
+syn match forthDefine '\<\[\>'
+syn match forthDefine "\[']"
+syn match forthDefine '\[COMPILE]'
 
-" * Iterations
-syn keyword forthIteration +LOOP ?DO ?LEAVE AGAIN BEGIN DO ENDOF I J LEAVE LOOP OF
-syn keyword forthIteration RECURSE RECURSIVE REPEAT UNLOOP UNTIL WHILE
+" debugging
+syn keyword forthDebug PRINTDEBUGDATA PRINTDEBUGLINE
+syn match forthDebug "\<\~\~\>"
 
-" * Conditionals
-syn keyword forthConditional ?BRANCH BRANCH CASE ELSE ENDCASE ENDIF IF THEN
-syn keyword forthConditional 0< 0<= 0<> 0= 0> 0>= < <= <> > >= BETWEEN D0< D0=
-syn keyword forthConditional D< D= D> DU< F0< F0= F< FALSE OFF ON TRUE
-syn keyword forthConditional U< U<= U> U>=
+" Assembler
+syn keyword forthAssembler ASSEMBLER CODE END-CODE ;CODE FLUSH-ICACHE C,
 
-" Numbers
-syn match forthInteger '\<-\=[0-9.]*[0-9]\+\>'
+" basic character operations
+syn keyword forthCharOps (.) CHAR EXPECT FIND WORD TYPE -TRAILING EMIT KEY
+syn keyword forthCharOps KEY? TIB CR
+syn region forthCharOps start=+."\s+ skip=+\\"+ end=+"+
+
+" char-number conversion
+syn keyword forthConversion <# # #> #S (NUMBER) (NUMBER?) CONVERT D>F D>S DIGIT
+syn keyword forthConversion DPL F>D HLD HOLD NUMBER S>D SIGN >NUMBER
+
+" interptreter, wordbook, compiler
+syn keyword forthForth (LOCAL) BYE COLD ABORT >BODY >NEXT >LINK CFA >VIEW HERE
+syn keyword forthForth PAD WORDS VIEW VIEW> N>LINK NAME> LINK> L>NAME FORGET
+syn keyword forthForth BODY>
+syn region forthForth start=+ABORT"\s+ skip=+\\"+ end=+"+
+
+" vocabularies
+syn keyword forthVocs ONLY FORTH ALSO ROOT SEAL VOCS ORDER CONTEXT #VOCS
+syn keyword forthVocs VOCABULARY DEFINITIONS
+
+" numbers
+syn keyword forthMath DECIMAL HEX BASE
+syn match forthInteger '\<-\=[0-9.]*[0-9.]\+\>'
+syn match forthHex '\<[0-9a-fA-F]*[0-9][0-9a-fA-F]*\>'
 syn match forthFloat '\<-\=[0-9]*[.]\=[0-9]\+[Ee][0-9]\+\>'
+
+" Strings
+syn region forthString start=+\.*\"+ end=+"+ end=+$+
 
 " Comments
 syn match forthComment '\\\s.*$' contains=forthTodo
@@ -90,41 +142,46 @@ syn region forthComment start='(\s' skip='\\)' end=')' contains=forthTodo
 " Include files
 syn match forthInclude '^INCLUDE\s\+\k\+'
 
-" Definition of new words
-syn match forthColonDef '\<:\s*[^ \t]\+\>'
-syn keyword forthEndOfColonDef ;
-syn keyword forthDefine ;CODE ;USES 2CONSTANT 2VARIABLE 2LITERAL ACTIVATE
-syn keyword forthDefine ASSOCIATIVE: BACKGROUND: CASE: CODE COMPILE COMPILE,
-syn keyword forthDefine CONSTANT CREATE DEFER DEFINITIONS DLITERAL DOES>
-syn keyword forthDefine FCONSTANT FLITERAL FORGET FVARIABLE IMMEDIATE IS
-syn keyword forthDefine LITERAL SLITERAL TASK: VARIABLE VOCABULARY ]
-syn match forthDefine '\<\[\>'
-syn match forthDefine "\[']"
-syn match forthDefine '\[COMPILE]'
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_forth_syn_inits")
+	if version < 508
+		let did_forth_syn_inits = 1
+		command -nargs=+ HiLink hi link <args>
+	else
+		command -nargs=+ HiLink hi def link <args>
+	endif
 
-" Strings
-syn region forthString start=+\.\"+ skip=+\\"+ end=+"+
+	" The default methods for highlighting. Can be overriden later.
+	HiLink forthTodo Todo
+	HiLink forthOperators Operator
+	HiLink forthMath Number
+	HiLink forthInteger Number
+	HiLink forthFloat Float
+	HiLink forthStack Special
+	HiLink forthRstack Special
+	HiLink forthFStack Special
+	HiLink forthSP Special
+	HiLink forthMemory Function
+	HiLink forthAdrArith Function
+	HiLink forthMemBlks Function
+	HiLink forthCond Conditional
+	HiLink forthLoop Repeat
+	HiLink forthColonDef Define
+	HiLink forthEndOfColonDef Define
+	HiLink forthDefine Define
+	HiLink forthDebug Debug
+	HiLink forthAssembler Include
+	HiLink forthCharOps Character
+	HiLink forthConversion String
+	HiLink forthForth Statement
+	HiLink forthVocs Statement
+	HiLink forthString String
+	HiLink forthComment Comment
 
-" The default highlighting.
-hi def link forthTodo Todo
-hi def link forthInteger Number
-hi def link forthFloat Float
-hi def link forthComment Comment
-hi def link forthInclude Include
-hi def link forthString String
-hi def link forthStack Number
-hi def link forthRStack Number
-hi def link forthCharOps Character
-hi def link forthConversion SpecialChar
-hi def link forthForth Special
-hi def link forthVocs Special
-hi def link forthOperators Operator
-hi def link forthAdrOps Operator
-hi def link forthIteration Repeat
-hi def link forthConditional Conditional
-hi def link forthColonDef Define
-hi def link forthEndOfColonDef forthColonDef
-hi def link forthDefine forthColonDef
+	delcommand HiLink
+endif
 
 let b:current_syntax = "forth"
 

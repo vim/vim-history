@@ -82,7 +82,7 @@ if version >= 508 || !exists("did_sqr_syn_inits")
   else
     command -nargs=+ HiLink hi def link <args>
   endif
-  
+
   HiLink sqrComment Comment
   HiLink sqrNumber Number
   HiLink sqrOperator Operator

@@ -120,8 +120,6 @@ typedef struct
 # define w_p_fdc w_onebuf_opt.wo_fdc	/* 'foldcolumn' */
     int		wo_fen;
 # define w_p_fen w_onebuf_opt.wo_fen	/* 'foldenable' */
-    char_u	*wo_fde;
-# define w_p_fde w_onebuf_opt.wo_fde	/* 'foldexpr' */
     char_u	*wo_fdi;
 # define w_p_fdi w_onebuf_opt.wo_fdi	/* 'foldignore' */
     long	wo_fdl;
@@ -132,8 +130,12 @@ typedef struct
 # define w_p_fml w_onebuf_opt.wo_fml	/* 'foldminlines' */
     long	wo_fdn;
 # define w_p_fdn w_onebuf_opt.wo_fdn	/* 'foldnextmax' */
+# ifdef FEAT_EVAL
+    char_u	*wo_fde;
+# define w_p_fde w_onebuf_opt.wo_fde	/* 'foldexpr' */
     char_u	*wo_fdt;
-# define w_p_fdt w_onebuf_opt.wo_fdt	/* 'foldtext' */
+#  define w_p_fdt w_onebuf_opt.wo_fdt	/* 'foldtext' */
+# endif
     char_u	*wo_fmr;
 # define w_p_fmr w_onebuf_opt.wo_fmr	/* 'foldmarker' */
 #endif
@@ -222,6 +224,9 @@ struct u_header
     u_header_T	*uh_prev;	/* pointer to previous header in list */
     u_entry_T	*uh_entry;	/* pointer to first entry */
     pos_T	uh_cursor;	/* cursor position before saving */
+#ifdef FEAT_VIRTUALEDIT
+    long	uh_cursor_vcol;
+#endif
     int		uh_flags;	/* see below */
     pos_T	uh_namedm[NMARKS];	/* marks before undo/after redo */
 };
@@ -1580,3 +1585,44 @@ typedef struct
     int		save_topfill;	/* saved topfill of save_curwin */
 #endif
 } aco_save_T;
+
+/*
+ * Generic option table item, only used for printer at the moment.
+ */
+typedef struct {
+    const char_u    *name;
+    int		    hasnum;
+
+    long	    number;
+    char_u	    *string;	/* points into option string */
+    int		    strlen;
+    int		    present;
+} option_table_T;
+
+
+#ifdef FEAT_PRINTER
+/*
+ * Structure passed back to the generic printer code.
+ */
+typedef struct
+{
+    int		n_collated_copies;
+    int		n_uncollated_copies;
+    int		line_height;
+    int		chars_per_line;
+    int		lines_per_page;
+    int		number_width;
+    char_u	*jobname;
+} prt_settings_T;
+
+#define OPT_PRINT_TOP		0
+#define OPT_PRINT_BOT		1
+#define OPT_PRINT_LEFT		2
+#define OPT_PRINT_RIGHT		3
+#define OPT_PRINT_HEADERHEIGHT	4
+#define OPT_PRINT_MONO		5
+#define OPT_PRINT_NUMBER	6
+
+#define OPT_PRINT_NUM_OPTIONS	7
+
+#endif

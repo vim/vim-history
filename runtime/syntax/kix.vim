@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	KixTart 95, Kix2001 Windows script language http://kixtart.org/
 " Maintainer:	Richard Howarth <rhowarth@sgb.co.uk>
-" Last Change:	2001 April 26 08:20 BST
+" Last Change:	2001 May 10
 " URL:		http://www.howsoft.demon.co.uk/
 
 " KixTart files identified by *.kix extension.
@@ -106,24 +106,24 @@ syn cluster kixForNextBut	contains=kixForNextError,kixSelectOK,kixIfOK,kixDoOK,k
 " Condtional construct errors.
 syn match   kixIfError		"\<if\>\|\<else\>\|\<endif\>"
 syn match   kixIfOK		contained "\<if\>\|\<else\>\|\<endif\>"
-syn region  kixIf           	transparent matchgroup=kixIfOK start="\<if\>" end="\<endif\>" contains=ALLBUT,@kixIfBut
+syn region  kixIf		transparent matchgroup=kixIfOK start="\<if\>" end="\<endif\>" contains=ALLBUT,@kixIfBut
 syn match   kixSelectError	"\<select\>\|\<case\>\|\<endselect\>"
 syn match   kixSelectOK		contained "\<select\>\|\<case\>\|\<endselect\>"
-syn region  kixSelect          	transparent matchgroup=kixSelectOK start="\<select\>" end="\<endselect\>" contains=ALLBUT,@kixSelectBut
+syn region  kixSelect		transparent matchgroup=kixSelectOK start="\<select\>" end="\<endselect\>" contains=ALLBUT,@kixSelectBut
 
 " Program control constructs.
 syn match   kixDoError		"\<do\>\|\<until\>"
 syn match   kixDoOK		contained "\<do\>\|\<until\>"
-syn region  kixDo           	transparent matchgroup=kixDoOK start="\<do\>" end="\<until\>" contains=ALLBUT,@kixDoBut
+syn region  kixDo		transparent matchgroup=kixDoOK start="\<do\>" end="\<until\>" contains=ALLBUT,@kixDoBut
 syn match   kixWhileError	"\<while\>\|\<loop\>"
 syn match   kixWhileOK		contained "\<while\>\|\<loop\>"
-syn region  kixWhile           	transparent matchgroup=kixWhileOK start="\<while\>" end="\<loop\>" contains=ALLBUT,@kixWhileBut
+syn region  kixWhile		transparent matchgroup=kixWhileOK start="\<while\>" end="\<loop\>" contains=ALLBUT,@kixWhileBut
 syn match   kixForNextError	"\<for\>\|\<to\>\|\<step\>\|\<next\>"
 syn match   kixForNextOK	contained "\<for\>\|\<to\>\|\<step\>\|\<next\>"
-syn region  kixForNext         	transparent matchgroup=kixForNextOK start="\<for\>" end="\<next\>" contains=ALLBUT,@kixForBut
+syn region  kixForNext		transparent matchgroup=kixForNextOK start="\<for\>" end="\<next\>" contains=ALLBUT,@kixForBut
 syn match   kixForEachError	"\<for each\>\|\<in\>\|\<next\>"
 syn match   kixForEachOK	contained "\<for each\>\|\<in\>\|\<next\>"
-syn region  kixForEach         	transparent matchgroup=kixForEachOK start="\<for each\>" end="\<next\>" contains=ALLBUT,@kixForEachBut
+syn region  kixForEach		transparent matchgroup=kixForEachOK start="\<for each\>" end="\<next\>" contains=ALLBUT,@kixForEachBut
 
 " Expressions
 syn match   kixExpression	"<\|>\|<=\|>=\|<>"

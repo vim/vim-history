@@ -4170,7 +4170,7 @@ cmd_pchar(c, offset)
 {
     if (ccline.cmdpos + offset >= ccline.cmdlen || ccline.cmdpos + offset < 0)
     {
-	EMSG(_("(ep6) cmd_pchar beyond the command length"));
+	EMSG(_("E198: cmd_pchar beyond the command length"));
 	return;
     }
     ccline.cmdbuff[ccline.cmdpos + offset] = (char_u)c;
@@ -4334,7 +4334,7 @@ ex_window()
     if (!win_valid(old_curwin) || !buf_valid(old_curbuf))
     {
 	cmdwin_result = ESC;
-	EMSG(_("(ew9) Active window or buffer deleted"));
+	EMSG(_("E199: Active window or buffer deleted"));
     }
     else
     {

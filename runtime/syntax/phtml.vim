@@ -3,7 +3,7 @@
 " Maintainer:	Lutz Eymers <ixtab@polzin.com>
 " URL:		http://www.isp.de/data/phtml.vim
 " Email:	Subject: send syntax_vim.tgz
-" Last change:	2001 Mai 02
+" Last change:	2001 May 10
 "
 " Options	phtml_sql_query = 1 for SQL syntax highligthing inside strings
 "		phtml_minlines = x     to sync at least x lines backwards
@@ -22,9 +22,9 @@ endif
 
 if version < 600
   so <sfile>:p:h/html.vim
-else 
+else
   runtime! syntax/html.vim
-  unlet b:current_syntax  
+  unlet b:current_syntax
 endif
 
 syn cluster htmlPreproc add=phtmlRegionInsideHtmlTags
@@ -214,9 +214,9 @@ if version >= 508 || !exists("did_phtml_syn_inits")
   HiLink phtmlString		String
   HiLink phtmlNumber		Number
   HiLink phtmlFloat		Float
-  HiLink phtmlIdentifier	Identifier 
-  HiLink phtmlIntVar		Identifier 
-  HiLink phtmlEnvVar		Identifier 
+  HiLink phtmlIdentifier	Identifier
+  HiLink phtmlIntVar		Identifier
+  HiLink phtmlEnvVar		Identifier
   HiLink phtmlFunctions	Function
   HiLink phtmlRepeat		Repeat
   HiLink phtmlConditional	Conditional
@@ -229,7 +229,7 @@ if version >= 508 || !exists("did_phtml_syn_inits")
   HiLink phtmlParentError	Error
   HiLink phtmlOctalError	Error
   HiLink phtmlTodo		Todo
-  HiLink phtmlOperator		Operator 
+  HiLink phtmlOperator		Operator
   HiLink phtmlRelation         Operator
 
   delcommand HiLink

@@ -2,7 +2,7 @@
 " Language:	JavaCC, a Java Compiler Compiler written by JavaSoft
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/javacc.vim
-" Last Change:	2001 Apr 26
+" Last Change:	2001 May 10
 
 " Uses java.vim, and adds a few special things for JavaCC Parser files.
 " Those files usually have the extension  *.jj
@@ -16,8 +16,11 @@ elseif exists("b:current_syntax")
 endif
 
 " source the java.vim file
-runtime! syntax/java.vim
-unlet b:current_syntax
+if version < 600
+  source <sfile>:p:h/java.vim
+else
+  runtime! syntax/java.vim
+endif
 
 "remove catching errors caused by wrong parenthesis (does not work in javacc
 "files) (first define them in case they have not been defined in java)

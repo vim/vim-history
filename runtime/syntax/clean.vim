@@ -4,8 +4,11 @@
 " Co-Author:	Arthur van Leeuwen <arthurvl@sci.kun.nl>
 " Last Change:	Fri Sep 29 11:35:34 CEST 2000
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -41,37 +44,50 @@ syn match cleanComment "//.*"
 " Now for some useful typedefinitionrecognition
 syn match cleanFuncTypeDef "\([a-zA-Z].*\|(\=[-~@#$%^?!+*<>\/|&=:]\+)\=\)[ \t]*\(infix[lr]\=\)\=[ \t]*\d\=[ \t]*::.*->.*" contains=cleanSpecial
 
-" The default highlighting.
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_clean_syntax_init")
+  if version < 508
+    let did_clean_syntax_init = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
    " Comments
-hi def link cleanComment      Comment
+   HiLink cleanComment      Comment
    " Constants and denotations
-hi def link cleanCharsDenot   String
-hi def link cleanStringDenot  String
-hi def link cleanCharDenot    Character
-hi def link cleanIntegerDenot Number
-hi def link cleanBoolDenot    Boolean
-hi def link cleanRealDenot    Float
+   HiLink cleanCharsDenot   String
+   HiLink cleanStringDenot  String
+   HiLink cleanCharDenot    Character
+   HiLink cleanIntegerDenot Number
+   HiLink cleanBoolDenot    Boolean
+   HiLink cleanRealDenot    Float
    " Identifiers
    " Statements
-hi def link cleanTypeClass    Keyword
-hi def link cleanConditional  Conditional
-hi def link cleanLabel        Label
-hi def link cleanKeyword      Keyword
+   HiLink cleanTypeClass    Keyword
+   HiLink cleanConditional  Conditional
+   HiLink cleanLabel        Label
+   HiLink cleanKeyword      Keyword
    " Generic Preprocessing
-hi def link cleanInclude      Include
-hi def link cleanModuleSystem PreProc
+   HiLink cleanInclude      Include
+   HiLink cleanModuleSystem PreProc
    " Type
-hi def link cleanBasicType    Type
-hi def link cleanSpecialType  Type
-hi def link cleanFuncTypeDef  Typedef
+   HiLink cleanBasicType    Type
+   HiLink cleanSpecialType  Type
+   HiLink cleanFuncTypeDef  Typedef
    " Special
-hi def link cleanSpecial      Special
-hi def link cleanList         Special
-hi def link cleanArray        Special
-hi def link cleanRecord       Special
-hi def link cleanTuple        Special
+   HiLink cleanSpecial      Special
+   HiLink cleanList         Special
+   HiLink cleanArray        Special
+   HiLink cleanRecord       Special
+   HiLink cleanTuple        Special
    " Error
    " Todo
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "clean"
 

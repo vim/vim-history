@@ -388,6 +388,10 @@ static char *(p_fdo_values[]) = {"all", "block", "hor", "mark", "percent",
 #endif
 EXTERN char_u	*p_fp;		/* 'formatprg' */
 EXTERN int	p_gd;		/* 'gdefault' */
+#ifdef FEAT_PRINTER
+EXTERN char_u	*p_prtfont;	/* 'printerfont' */
+EXTERN char_u	*p_prtsettings;	/* 'printersettings' */
+#endif
 #ifdef FEAT_GUI
 EXTERN char_u	*p_guifont;	/* 'guifont' */
 # ifdef FEAT_XFONTSET

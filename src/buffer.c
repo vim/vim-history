@@ -95,10 +95,10 @@ open_buffer(read_stdin, eap)
 	 */
 	if (curbuf == NULL)
 	{
-	    EMSG(_("(eb2) Cannot allocate any buffer, exiting..."));
+	    EMSG(_("E82: Cannot allocate any buffer, exiting..."));
 	    getout(2);
 	}
-	EMSG(_("(eb3) Cannot allocate buffer, using other one..."));
+	EMSG(_("E83: Cannot allocate buffer, using other one..."));
 	enter_buffer(curbuf);
 	return FAIL;
     }
@@ -588,7 +588,7 @@ handle_swap_exists(old_curbuf)
 	swap_exists_action = SEA_NONE;	/* don't want it again */
 	close_buffer(curwin, curbuf, DOBUF_UNLOAD);
 	if (!buf_valid(old_curbuf) || old_curbuf == curbuf)
-	    old_curbuf = buflist_new(NULL, NULL, 1L, TRUE, TRUE);
+	    old_curbuf = buflist_new(NULL, NULL, 1L, BLN_CURBUF | BLN_LISTED);
 	enter_buffer(old_curbuf);
     }
     else if (swap_exists_action == SEA_RECOVER)
@@ -779,7 +779,7 @@ do_buffer(action, start, dir, count, forceit)
 	}
 	if (!bufIsChanged(buf))
 	{
-	    EMSG(_("(eb4) No modified buffer found"));
+	    EMSG(_("E84: No modified buffer found"));
 	    return FAIL;
 	}
     }
@@ -818,7 +818,7 @@ do_buffer(action, start, dir, count, forceit)
 	    if (bp == buf)
 	    {
 		/* back where we started, didn't find anything. */
-		EMSG(_("(eb5) There is no listed buffer"));
+		EMSG(_("E85: There is no listed buffer"));
 		return FAIL;
 	    }
 	}
@@ -830,12 +830,12 @@ do_buffer(action, start, dir, count, forceit)
 	{
 	    /* don't warn when deleting */
 	    if (!unload)
-		EMSGN(_("(eb6) Cannot go to buffer %ld"), count);
+		EMSGN(_("E86: Cannot go to buffer %ld"), count);
 	}
 	else if (dir == FORWARD)
-	    EMSG(_("(eb7) Cannot go beyond last buffer"));
+	    EMSG(_("E87: Cannot go beyond last buffer"));
 	else
-	    EMSG(_("(eb8) Cannot go before first buffer"));
+	    EMSG(_("E88: Cannot go before first buffer"));
 	return FAIL;
     }
 
@@ -859,7 +859,7 @@ do_buffer(action, start, dir, count, forceit)
 
 	if (!forceit && bufIsChanged(buf))
 	{
-	    EMSGN(_("(ew5) No write since last change for buffer %ld (use ! to override)"),
+	    EMSGN(_("E89: No write since last change for buffer %ld (use ! to override)"),
 			buf->b_fnum);
 	    return FAIL;
 	}
@@ -875,7 +875,7 @@ do_buffer(action, start, dir, count, forceit)
 	{
 	    if (action == DOBUF_UNLOAD)
 	    {
-		EMSG(_("(eu2) Cannot unload last buffer"));
+		EMSG(_("E90: Cannot unload last buffer"));
 		return FAIL;
 	    }
 
@@ -1162,18 +1162,19 @@ enter_buffer(buf)
  * Add a file name to the buffer list.  Return a pointer to the buffer.
  * If the same file name already exists return a pointer to that buffer.
  * If it does not exist, or if fname == NULL, a new entry is created.
- * If use_curbuf is TRUE, may use current buffer.
+ * If (flags & BLN_CURBUF) is TRUE, may use current buffer.
+ * If (flags & BLN_LISTED) is TRUE, add new buffer to buffer list.
+ * If (flags & BLN_DUMMY) is TRUE, don't count it as a real buffer.
  * This is the ONLY way to create a new buffer.
  */
 static int  top_file_num = 1;		/* highest file number */
 
     buf_T *
-buflist_new(ffname, sfname, lnum, use_curbuf, listed)
+buflist_new(ffname, sfname, lnum, flags)
     char_u	*ffname;	/* full path of fname or relative */
     char_u	*sfname;	/* short fname or NULL */
     linenr_T	lnum;		/* preferred cursor line */
-    int		use_curbuf;	/* re-use curbuf if it's empty and unnamed */
-    int		listed;		/* when the buffer is new, add to buffer list */
+    int		flags;		/* BLN_ defines */
 {
     buf_T	*buf;
 #ifdef UNIX
@@ -1191,7 +1192,7 @@ buflist_new(ffname, sfname, lnum, use_curbuf, listed)
     if (sfname == NULL || mch_stat((char *)sfname, &st) < 0)
 	st.st_dev = (dev_T)-1;
 #endif
-    if (ffname != NULL && (buf =
+    if (ffname != NULL && !(flags & BLN_DUMMY) && (buf =
 #ifdef UNIX
 		buflist_findname_stat(ffname, &st)
 #else
@@ -1214,7 +1215,7 @@ buflist_new(ffname, sfname, lnum, use_curbuf, listed)
      *
      * This is the ONLY place where a new buffer structure is allocated!
      */
-    if (use_curbuf
+    if ((flags & BLN_CURBUF)
 	    && curbuf != NULL
 	    && curbuf->b_ffname == NULL
 	    && curbuf->b_nwindows <= 1
@@ -1295,7 +1296,7 @@ buflist_new(ffname, sfname, lnum, use_curbuf, listed)
 	buf->b_fnum = top_file_num++;
 	if (top_file_num < 0)		/* wrap around (may cause duplicates) */
 	{
-	    EMSG(_("(wo1) Warning: List of file names overflow"));
+	    EMSG(_("W14: Warning: List of file names overflow"));
 	    if (emsg_silent == 0)
 	    {
 		out_flush();
@@ -1332,11 +1333,14 @@ buflist_new(ffname, sfname, lnum, use_curbuf, listed)
     buf_clear_file(buf);
     clrallmarks(buf);			/* clear marks */
     fmarks_check_names(buf);		/* check file marks for this file */
-    buf->b_p_bl = listed;		/* init 'buflisted' */
+    buf->b_p_bl = (flags & BLN_LISTED) ? TRUE : FALSE;	/* init 'buflisted' */
 #ifdef FEAT_AUTOCMD
-    apply_autocmds(EVENT_BUFNEW, NULL, NULL, FALSE, buf);
-    if (listed)
-	apply_autocmds(EVENT_BUFADD, NULL, NULL, FALSE, buf);
+    if (!(flags & BLN_DUMMY))
+    {
+	apply_autocmds(EVENT_BUFNEW, NULL, NULL, FALSE, buf);
+	if (flags & BLN_LISTED)
+	    apply_autocmds(EVENT_BUFADD, NULL, NULL, FALSE, buf);
+    }
 #endif
 
     return buf;
@@ -1459,7 +1463,7 @@ buflist_getfile(n, lnum, options, forceit)
 	if ((options & GETF_ALT) && n == 0)
 	    EMSG(_(e_noalt));
 	else
-	    EMSGN(_("(eb9) Buffer %ld not found"), n);
+	    EMSGN(_("E92: Buffer %ld not found"), n);
 	return FAIL;
     }
 
@@ -1670,9 +1674,9 @@ buflist_findpat(pattern, pattern_end, unlisted, diffmode)
     }
 
     if (match == -2)
-	EMSG2(_("(be1) More than one match for %s"), pattern);
+	EMSG2(_("E93: More than one match for %s"), pattern);
     else if (match < 0)
-	EMSG2(_("(be2) No matching buffer for %s"), pattern);
+	EMSG2(_("E94: No matching buffer for %s"), pattern);
     return match;
 }
 #endif
@@ -2144,7 +2148,7 @@ setfname(ffname, sfname, message)
 	    if (buf->b_ml.ml_mfp != NULL)	/* it's loaded, fail */
 	    {
 		if (message)
-		    EMSG(_("(ez1) Buffer with this name already exists"));
+		    EMSG(_("E95: Buffer with this name already exists"));
 		vim_free(ffname);
 		return FAIL;
 	    }
@@ -2226,7 +2230,7 @@ setaltfname(ffname, sfname, lnum)
     buf_T	*buf;
 
     /* Create a buffer.  'buflisted' is not set if it's a new buffer */
-    buf = buflist_new(ffname, sfname, lnum, FALSE, FALSE);
+    buf = buflist_new(ffname, sfname, lnum, 0);
     if (buf != NULL)
 	curwin->w_alt_fnum = buf->b_fnum;
     return buf;
@@ -2254,19 +2258,18 @@ getaltfname(errmsg)
 
 /*
  * Add a file name to the buflist and return its number.
- * If it's a new buffer, 'buflisted' will be set to "listed".
+ * Uses same flags as buflist_new(), except BLN_DUMMY.
  *
  * used by qf_init(), main() and doarglist()
  */
     int
-buflist_add(fname, use_curbuf, listed)
+buflist_add(fname, flags)
     char_u	*fname;
-    int		use_curbuf;	/* re-use curbuf if it's empty and unnamed */
-    int		listed;		/* value for 'buflisted' of new buffer */
+    int		flags;
 {
     buf_T	*buf;
 
-    buf = buflist_new(fname, NULL, (linenr_T)0, use_curbuf, listed);
+    buf = buflist_new(fname, NULL, (linenr_T)0, flags);
     if (buf != NULL)
 	return buf->b_fnum;
     return 0;
@@ -2511,7 +2514,7 @@ col_print(buf, col, vcol)
 	sprintf((char *)buf, "%d-%d", col, vcol);
 }
 
-#ifdef FEAT_TITLE
+#if defined(FEAT_TITLE) || defined(PROTO)
 /*
  * put file name in title bar of window and in icon title
  */
@@ -4009,7 +4012,7 @@ read_viminfo_bufferlist(virp, writing)
 	if (sfname == NULL)
 	    sfname = NameBuff;
 
-	buf = buflist_new(NameBuff, sfname, (linenr_T)0, FALSE, TRUE);
+	buf = buflist_new(NameBuff, sfname, (linenr_T)0, BLN_LISTED);
 	if (buf != NULL)	/* just in case... */
 	{
 	    buf->b_last_cursor.lnum = lnum;
@@ -4320,4 +4323,92 @@ set_buflisted(on)
 	    apply_autocmds(EVENT_BUFDELETE, NULL, NULL, FALSE, curbuf);
 #endif
     }
+}
+
+/*
+ * Read the file for "buf" again and check if the contents changed.
+ * Return TRUE if it changed or this could not be checked.
+ */
+    int
+buf_contents_changed(buf)
+    buf_T	*buf;
+{
+    buf_T	*newbuf;
+    int		differ = TRUE;
+    linenr_T	lnum;
+#ifdef FEAT_AUTOCMD
+    aco_save_T	aco;
+#else
+    buf_T	*old_curbuf = curbuf;
+#endif
+    exarg_T	ea;
+
+    /* Allocate a buffer without putting it in the buffer list. */
+    newbuf = buflist_new(NULL, NULL, (linenr_T)1, BLN_DUMMY);
+    if (newbuf == NULL)
+	return TRUE;
+
+    /* Force the 'fileencoding' and 'fileformat' to be equal. */
+    ea.cmd = alloc((unsigned)(STRLEN(buf->b_p_ff)
+#ifdef FEAT_MBYTE
+		+ STRLEN(buf->b_p_fenc)
+#endif
+						 + 15));
+    if (ea.cmd == NULL)
+    {
+	close_buffer(NULL, newbuf, DOBUF_WIPE);
+	return TRUE;
+    }
+#ifdef FEAT_MBYTE
+    sprintf((char *)ea.cmd, "e ++ff=%s ++enc=%s", buf->b_p_ff, buf->b_p_fenc);
+    ea.force_enc = 14 + STRLEN(buf->b_p_ff);
+#else
+    sprintf((char *)ea.cmd, "e ++ff=%s", buf->b_p_ff);
+#endif
+    ea.force_ff = 7;
+
+#ifdef FEAT_AUTOCMD
+    /* set curwin/curbuf to buf and save a few things */
+    aucmd_prepbuf(&aco, newbuf);
+#else
+    curbuf = newbuf;
+    curwin->w_buffer = newbuf;
+#endif
+
+    if (ml_open() == OK
+	    && readfile(buf->b_ffname, buf->b_fname,
+				  (linenr_T)0, (linenr_T)0, (linenr_T)MAXLNUM,
+					    &ea, READ_NEW | READ_DUMMY) == OK)
+    {
+	/* compare the two files line by line */
+	if (buf->b_ml.ml_line_count == curbuf->b_ml.ml_line_count)
+	{
+	    differ = FALSE;
+	    for (lnum = 1; lnum <= curbuf->b_ml.ml_line_count; ++lnum)
+		if (STRCMP(ml_get_buf(buf, lnum, FALSE), ml_get(lnum)) != 0)
+		{
+		    differ = TRUE;
+		    break;
+		}
+	}
+    }
+    vim_free(ea.cmd);
+
+#ifdef FEAT_AUTOCMD
+    /* restore curwin/curbuf and a few other things */
+    aucmd_restbuf(&aco);
+#else
+    curbuf = old_curbuf;
+    curwin->w_buffer = old_curbuf;
+#endif
+
+    if (curbuf != newbuf)	/* safety check */
+    {
+	/* Don't increase the last buffer number. */
+	if (newbuf->b_fnum == top_file_num - 1)
+	    --top_file_num;
+	close_buffer(NULL, newbuf, DOBUF_WIPE);
+    }
+
+    return differ;
 }

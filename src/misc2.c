@@ -109,9 +109,6 @@ coladvance2(addspaces, finetune, wcol)
     colnr_T	col = 0;
     int		csize = 0;
     int		one_more;
-#ifdef FEAT_VIRTUALEDIT
-    int		need_spaces = FALSE;
-#endif
 
     one_more = (State & INSERT) || restart_edit != NUL
 #ifdef FEAT_VISUAL
@@ -125,14 +122,9 @@ coladvance2(addspaces, finetune, wcol)
      */
     if (wcol >= MAXCOL)
     {
-#ifdef FEAT_VIRTUALEDIT
-	/* Move to the end of the line */
-	if(!virtual_active() || line[curwin->w_cursor.col] != NUL)
-	{
-#endif
 	    idx = STRLEN(line) - 1 + one_more;
 	    col = wcol;
-	    
+
 #ifdef FEAT_VIRTUALEDIT
 	    if ((addspaces || finetune) && !VIsual_active)
 	    {
@@ -140,24 +132,9 @@ coladvance2(addspaces, finetune, wcol)
 		if (curwin->w_curswant > 0)
 		    --curwin->w_curswant;
 	    }
-	}
-	/* Off the end of the line in virtual mode -- stay put. */
-	else 
-	{
-	    idx = curwin->w_cursor.col;
-	    /* HACK: Can't use one_more here, because then using '$'
-	     * in virtual space with visual mode will move the cursor
-	     * forward an extra (incorect) column.  (phew!)
-	     */
-	    wcol = curwin->w_cursor.coladd + 
-		((State & INSERT) || restart_edit != NUL);
-
-	    need_spaces = TRUE;
-	    curwin->w_curswant = wcol;
-	}
 #endif
     }
-    else 
+    else
     {
 #ifdef FEAT_VIRTUALEDIT
 	if ((addspaces || finetune)
@@ -206,13 +183,7 @@ coladvance2(addspaces, finetune, wcol)
 	}
 
 #ifdef FEAT_VIRTUALEDIT
-	if (col != wcol + 1 || csize > 1)
-	    need_spaces = TRUE;
-#endif
-    }
-
-#ifdef FEAT_VIRTUALEDIT
-    if (addspaces && need_spaces) 
+	if (addspaces && (col != wcol + 1 || csize > 1))
     {
 	if (virtual_active() && line[idx] == NUL)
 	{
@@ -271,6 +242,7 @@ coladvance2(addspaces, finetune, wcol)
     }
 
 #endif
+    }
 
     if (idx < 0)
 	curwin->w_cursor.col = 0;
@@ -282,10 +254,10 @@ coladvance2(addspaces, finetune, wcol)
 
     if (finetune)
     {
-	int a = col;	
+	int a = col;
 	int b = wcol - a;
 
-	/* modify the real cursor position to make the cursor appear at 
+	/* modify the real cursor position to make the cursor appear at
 	 * the wanted column */
 	if (b > 0 && b < (MAXCOL - 2 * W_WIDTH(curwin)))
 	    curwin->w_cursor.coladd = b;
@@ -456,6 +428,9 @@ check_cursor_col()
 	if (State & INSERT || restart_edit
 #ifdef FEAT_VISUAL
 		|| (VIsual_active && *p_sel != 'o')
+#endif
+#ifdef FEAT_VIRTUALEDIT
+		|| virtual_active()
 #endif
 		)
 	    curwin->w_cursor.col = len;
@@ -720,7 +695,7 @@ alloc_check(size)
 	/* Don't hide this message */
 	emsg_silent = 0;
 	msg_silent = 0;
-	EMSG(_("(el0) Line is becoming too long"));
+	EMSG(_("E340: Line is becoming too long"));
 	return NULL;
     }
 #endif
@@ -765,7 +740,7 @@ lalloc(size, message)
 	/* Don't hide this message */
 	emsg_silent = 0;
 	msg_silent = 0;
-	EMSGN(_("(me9) Internal error: lalloc(%ld, )"), size);
+	EMSGN(_("E341: Internal error: lalloc(%ld, )"), size);
 	return NULL;
     }
 
@@ -874,7 +849,7 @@ do_outofmem_msg(size)
 	/* Don't hide this message */
 	emsg_silent = 0;
 	msg_silent = 0;
-	EMSG2(_("(me4) Out of memory!  (allocating %lu bytes)"), size);
+	EMSG2(_("E342: Out of memory!  (allocating %lu bytes)"), size);
 	did_outofmem_msg = TRUE;
     }
 }
@@ -1980,9 +1955,11 @@ get_special_key_name(c, modifiers)
      * When not a known special key, and not a printable character, try to
      * extract modifiers.
      */
+    if (c > 0
 #ifdef FEAT_MBYTE
-    if ((*mb_char2len)(c) == 1)
+	    && (*mb_char2len)(c) == 1
 #endif
+       )
     {
 	if (table_idx < 0
 		&& (!vim_isprintc(c) || (c & 0x7f) == ' ')
@@ -3575,7 +3552,7 @@ vim_findfile_init(path, filename, stopdirs, level, free_visited, need_dir,
 		wc_part = errpt;
 		if (*wc_part != PATHSEP && *wc_part != NUL)
 		{
-		    EMSG2(_("(pe2) Invalid path: '**[number]' must be at the end of the path or be followed by '%s'."), PATHSEPSTR);
+		    EMSG2(_("E343: Invalid path: '**[number]' must be at the end of the path or be followed by '%s'."), PATHSEPSTR);
 		    goto error_return;
 		}
 	    }
@@ -4802,19 +4779,19 @@ find_file_in_path_option(ptr, len, options, first, path_option, need_dir)
 	if (first == TRUE)
 	{
 	    if (need_dir)
-		EMSG2(_("(pe3) Can't find directory \"%s\" in cdpath"),
+		EMSG2(_("E344: Can't find directory \"%s\" in cdpath"),
 			file_to_find);
 	    else
-		EMSG2(_("(pe4) Can't find file \"%s\" in path"),
+		EMSG2(_("E345: Can't find file \"%s\" in path"),
 			file_to_find);
 	}
 	else
 	{
 	    if (need_dir)
-		EMSG2(_("(pe5) No more directory \"%s\" found in cdpath"),
+		EMSG2(_("E346: No more directory \"%s\" found in cdpath"),
 			file_to_find);
 	    else
-		EMSG2(_("(pe6) No more file \"%s\" found in path"),
+		EMSG2(_("E347: No more file \"%s\" found in path"),
 			file_to_find);
 	}
     }
@@ -5008,4 +4985,90 @@ pathcmp(p, q)
 	return -1;	    /* no match */
     return 1;
 }
+#endif
+
+#if defined(FEAT_PRINTER) || defined(PROTO)
+/*
+ * Parse a list of options in the form
+ * option:value,option:value,option:value
+ *
+ * "value" can start with a number which is parsed out, e.g.
+ * margin:12mm
+ *
+ * Returns error message for an illegal option, NULL otherwise.
+ * Only used for the printer at the moment...
+ */
+    char_u *
+parse_list_options(option_str, table, table_size)
+    char_u 		*option_str;
+    option_table_T	*table;
+    int			table_size;
+{
+    char_u	*stringp;
+    char_u	*colonp;
+    char_u	*commap;
+    char_u	*p;
+    int		idx = 0;		/* init for GCC */
+    int		len;
+
+    for (idx = 0; idx < table_size; ++idx)
+	table[idx].present = FALSE;
+
+    /*
+     * Repeat for all comma separated parts.
+     */
+    stringp = option_str;
+    while (*stringp)
+    {
+	colonp = vim_strchr(stringp, ':');
+	if (colonp == NULL)
+	    return (char_u *)N_("Missing colon");
+	commap = vim_strchr(stringp, ',');
+	if (commap == NULL)
+		commap = option_str + STRLEN(option_str);
+
+	len = colonp - stringp;
+
+	for (idx = 0; idx < table_size; ++idx)
+	    if (STRNICMP(stringp, table[idx].name, len) == 0)
+		break;
+
+	if (idx == table_size)
+	    return (char_u *)N_("Illegal component");
+
+	p = colonp + 1;
+	table[idx].present = TRUE;
+
+	if (table[idx].hasnum)
+	{
+	    if (!isdigit(*p))
+		return (char_u *)N_("digit expected");
+
+	    table[idx].number = getdigits(&p); /*advances p*/
+	}
+
+	table[idx].string = p;
+	table[idx].strlen = commap - p;
+
+	stringp = commap;
+	if (*stringp == ',')
+	    ++stringp;
+    }
+
+    return NULL;
+}
+
+/*---printersettings------*/
+
+
+option_table_T printer_opts[OPT_PRINT_NUM_OPTIONS] = {
+    {"top",	TRUE, 0, NULL, 0, FALSE},
+    {"bottom",	TRUE, 0, NULL, 0, FALSE},
+    {"left",	TRUE, 0, NULL, 0, FALSE},
+    {"right",	TRUE, 0, NULL, 0, FALSE},
+    {"header",	TRUE, 0, NULL, 0, FALSE},
+    {"mono",	FALSE, 0, NULL, 0, FALSE},
+    {"number",	FALSE, 0, NULL, 0, FALSE},
+};
+
 #endif

@@ -1,4 +1,4 @@
-*if_tcl.txt*    For Vim version 6.0ae.  Last change: 2001 mei 04
+*if_tcl.txt*    For Vim version 6.0af.  Last change: 2001 May 12
 
 
 		  VIM REFERENCE MANUAL    by Ingo Wilken
@@ -15,7 +15,7 @@ The Tcl Interface to Vim				*tcl* *Tcl* *TCL*
 7. Known bugs & problems		|tcl-bugs|
 8. Examples				|tcl-examples|
 
-{Vi does not have any of these commands} *te1* *te2*
+{Vi does not have any of these commands} *E280* *E281*
 
 The Tcl interface only works when Vim was compiled with the |+tcl| feature.
 

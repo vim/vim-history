@@ -4,17 +4,17 @@
 " Maintainers:   Markus Mottl     <mottl@miss.wu-wien.ac.at>
 "                Karl-Heinz Sylla <Karl-Heinz.Sylla@gmd.de>
 " URL:           http://miss.wu-wien.ac.at/~mottl/vim/syntax/ocaml.vim
-" Last Change:   2001 Apr 26 - upgraded for new Vim version
+" Last Change:   2001 May 10
 "                2001 Feb 19 - small fix for functors
 "                2000 May 05 - small fix for optional arguments
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
-if version < 600                                             
-  syntax clear                                               
-elseif exists("b:current_syntax")                            
-  finish                                                     
-endif                                                        
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " OCAML is case sensitive.
 syn case match
@@ -202,14 +202,14 @@ syn sync match ocamlStructSync  groupthere ocamlStruct  "\<end\>"
 syn sync match ocamlSigSync     grouphere  ocamlSig     "\<sig\>"
 syn sync match ocamlSigSync     groupthere ocamlSig     "\<end\>"
 
-" Define the default highlighting.                                          
-" For version 5.7 and earlier: only when not done already                   
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
 if version >= 508 || !exists("did_ocaml_syntax_inits")
-  if version < 508                            
-    let did_ocaml_syntax_inits = 1                   
-    command -nargs=+ HiLink hi link <args>    
-  else                                        
+  if version < 508
+    let did_ocaml_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
     command -nargs=+ HiLink hi def link <args>
   endif
 

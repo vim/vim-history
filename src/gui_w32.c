@@ -874,7 +874,7 @@ _WndProc(
     static void
 gui_w32_oleerr(char *arg)
 {
-    EMSG2(_("(oe1) Argument not supported: \"-%s\"; Use the OLE version."),
+    EMSG2(_("E243: Argument not supported: \"-%s\"; Use the OLE version."),
 									 arg);
 }
 

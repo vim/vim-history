@@ -725,7 +725,7 @@ mch_setmouse(on)
 mch_screenmode(arg)
     char_u   *arg;
 {
-    EMSG(_("(et8) Screen mode setting not supported"));
+    EMSG(_("E359: Screen mode setting not supported"));
     return FAIL;
 }
 
@@ -1108,13 +1108,13 @@ ro_buflist_add(old_name)
     int	    retval;
 
     if (old_name == NULL)
-	return buflist_add(NULL, FALSE, FALSE);
+	return buflist_add(NULL, 0);
 
     /* Copy the name so we can mess around with it. */
     fname = vim_strsave(old_name);
     if (fname == NULL)
 	/* Out of memory - can't modify name */
-	return buflist_add(old_name, FALSE, FALSE);
+	return buflist_add(old_name, 0);
 
     /* Change `dir/main.c' into `dir.c.main' */
     leaf = fname;
@@ -1142,7 +1142,7 @@ ro_buflist_add(old_name)
 		leaf - fname + old_name);
     }
 
-    retval = buflist_add(fname, FALSE, FALSE);
+    retval = buflist_add(fname, 0);
     free(fname);
     return retval;
 }
@@ -1210,7 +1210,7 @@ mch_set_filetype(file, type)
 {
     if (xswi(OS_FSControl, 31, type) & v_flag)
     {
-	EMSG(_("(eq4) Invalid 'osfiletype' option - using Text"));
+	EMSG(_("E366: Invalid 'osfiletype' option - using Text"));
 	r2 = 0xfff;
     }
 

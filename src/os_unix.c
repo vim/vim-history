@@ -2635,7 +2635,7 @@ check_mouse_termcode()
 mch_screenmode(arg)
     char_u   *arg;
 {
-    EMSG(_("(et8) Screen mode setting not supported"));
+    EMSG(_("E359: Screen mode setting not supported"));
     return FAIL;
 }
 
@@ -4761,7 +4761,7 @@ mch_libcall(libname, funcname, argstring, argint, string_result, number_result)
 	    for (i = 0; signal_info[i].sig != -1; i++)
 		if (lc_signal == signal_info[i].sig)
 		    break;
-	    EMSG2("(ge6) got SIG%s in libcall()", signal_info[i].name);
+	    EMSG2("E368: got SIG%s in libcall()", signal_info[i].name);
 	}
 #  endif
 # endif
@@ -4776,7 +4776,7 @@ mch_libcall(libname, funcname, argstring, argint, string_result, number_result)
 
     if (!success)
     {
-	EMSG(_("(eq5) Library call failed"));
+	EMSG2(_("E364: Library call failed for \"%s()\""), funcname);
 	return FAIL;
     }
 

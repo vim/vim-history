@@ -176,7 +176,7 @@ gui_init_check()
     if (result != MAYBE)
     {
 	if (result == FAIL)
-	    EMSG(_("(eg4) Cannot start the GUI"));
+	    EMSG(_("E229: Cannot start the GUI"));
 	return result;
     }
 
@@ -294,7 +294,7 @@ gui_init()
 	    if (STRCMP(use_gvimrc, "NONE") != 0
 		    && STRCMP(use_gvimrc, "NORC") != 0
 		    && do_source(use_gvimrc, FALSE, FALSE) != OK)
-		EMSG2(_("(ge5) Cannot read from \"%s\""), use_gvimrc);
+		EMSG2(_("E230: Cannot read from \"%s\""), use_gvimrc);
 	}
 	else
 	{
@@ -419,7 +419,7 @@ gui_init()
 	goto error2;
 #ifdef FEAT_MBYTE
     if (gui_get_wide_font() == FAIL)
-	EMSG(_("(eg5) 'guifontwide' invalid"));
+	EMSG(_("E231: 'guifontwide' invalid"));
 #endif
 
     gui.num_cols = Columns;
@@ -1836,9 +1836,7 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 	int	cl;		/* byte length of current char */
 	int	comping;	/* current char is composing */
 	int	scol = col;	/* screen column */
-#ifdef FEAT_MBYTE
 	int	dowide;		/* use 'guifontwide' */
-#endif
 
 	/* Break the string at a composing character, it has to be drawn on
 	 * top of the previous character. */
@@ -1848,7 +1846,6 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 	{
 	    c = utf_ptr2char(s + i);
 	    cn = utf_char2cells(c);
-#ifdef FEAT_MBYTE
 	    if (cn > 1
 # ifdef FEAT_XFONTSET
 		    && fontset == NOFONTSET
@@ -1857,7 +1854,6 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 		dowide = TRUE;
 	    else
 		dowide = FALSE;
-#endif
 	    comping = utf_iscomposing(c);
 	    if (!comping)	/* count cells from non-composing chars */
 		cells += cn;
@@ -1879,11 +1875,7 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 #endif
 	       )
 	    {
-		if (comping
-#ifdef FEAT_MBYTE
-			|| dowide
-#endif
-			)
+		if (comping || dowide)
 		    thislen = i - start;
 		else
 		    thislen = i - start + cl;
@@ -1895,7 +1887,6 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 		}
 		scol += cells;
 		cells = 0;
-#ifdef FEAT_MBYTE
 		if (dowide)
 		{
 		    gui_mch_set_font(gui.wide_font);
@@ -1904,17 +1895,14 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 		    gui_mch_set_font(font);
 		    start += cl;
 		}
-#endif
+
 #if defined(FEAT_GUI_X11) || defined(FEAT_GUI_GTK)
 		/* No fontset: draw a space to fill the gap after a wide char */
 		if (cn > 1 && (draw_flags & DRAW_TRANSP) == 0
 # ifdef FEAT_XFONTSET
 			&& fontset == NOFONTSET
 # endif
-# ifdef FEAT_MBYTE
-			&& !dowide
-# endif
-		       )
+			&& !dowide)
 		    gui_mch_draw_string(gui.row, scol - 1, (char_u *)" ",
 							       1, draw_flags);
 #endif
@@ -2281,6 +2269,9 @@ gui_wait_for_chars(wtime)
 #endif
 	return FAIL;
     }
+
+    /* Before waiting, flush any output to the screen. */
+    gui_mch_flush();
 
     if (wtime > 0)
     {

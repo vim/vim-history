@@ -6,8 +6,11 @@
 "  Thanks to F Xavier Noria for a list of 978 Common Lisp symbols
 "  taken from the HyperSpec
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -438,52 +441,37 @@ syn case match
 " synchronization
 syn sync lines=100
 
-if version >= 600
-  " The default highlighting.
-  hi def link lispAtomNmbr	lispNumber
-  hi def link lispAtomMark	lispMark
-  
-  hi def link lispAtom	Identifier
-  hi def link lispAtomBarSymbol	Special
-  hi def link lispBarSymbol	Special
-  hi def link lispComment	Comment
-  hi def link lispConcat	Statement
-  hi def link lispDecl	Statement
-  hi def link lispFunc	Statement
-  hi def link lispKey	Type
-  hi def link lispMark	Delimiter
-  hi def link lispNumber	Number
-  hi def link lispParenError	Error
-  hi def link lispSpecial	Type
-  hi def link lispString	String
-  hi def link lispTodo	Todo
-  hi def link lispVar	Statement
-
-else
-
-  if !exists("did_lisp_syntax_inits")
-    let did_lisp_syntax_inits= 1
-    " The default highlighting.
-    hi link lispAtomNmbr	lispNumber
-    hi link lispAtomMark	lispMark
-    
-    hi link lispAtom	Identifier
-    hi link lispAtomBarSymbol	Special
-    hi link lispBarSymbol	Special
-    hi link lispComment	Comment
-    hi link lispConcat	Statement
-    hi link lispDecl	Statement
-    hi link lispFunc	Statement
-    hi link lispKey	Type
-    hi link lispMark	Delimiter
-    hi link lispNumber	Number
-    hi link lispParenError	Error
-    hi link lispSpecial	Type
-    hi link lispString	String
-    hi link lispTodo	Todo
-    hi link lispVar	Statement
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_lisp_syntax_inits")
+  if version < 508
+    let did_lisp_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
   endif
-  let b:current_syntax = "lisp"
+
+  HiLink lispAtomNmbr	lispNumber
+  HiLink lispAtomMark	lispMark
+
+  HiLink lispAtom	Identifier
+  HiLink lispAtomBarSymbol	Special
+  HiLink lispBarSymbol	Special
+  HiLink lispComment	Comment
+  HiLink lispConcat	Statement
+  HiLink lispDecl	Statement
+  HiLink lispFunc	Statement
+  HiLink lispKey	Type
+  HiLink lispMark	Delimiter
+  HiLink lispNumber	Number
+  HiLink lispParenError	Error
+  HiLink lispSpecial	Type
+  HiLink lispString	String
+  HiLink lispTodo	Todo
+  HiLink lispVar	Statement
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "lisp"

@@ -1,4 +1,4 @@
-*if_cscope.txt* For Vim version 6.0ae.  Last change: 2001 mei 04
+*if_cscope.txt* For Vim version 6.0af.  Last change: 2001 May 12
 
 
 		  VIM REFERENCE MANUAL    by Andy Kahn
@@ -90,7 +90,7 @@ suggested use.)
 ==============================================================================
 2. Cscope related commands				*cscope-commands*
 
-				*:cscope* *:cs* *eo1* *eo2* *eo5*
+				*:cscope* *:cs* *E258* *E259* *E262*
 All cscope commands are accessed through suboptions to the main cscope
 command, |:cscope|.  The available subcommands are:
 
@@ -183,7 +183,7 @@ command, |:cscope|.  The available subcommands are:
 
 	    USAGE   :cs help
 
-    						*eo3* *eo4*
+    						*E260* *E261*
     kill  : Kill a cscope connection (or kill all cscope connections).
 
 	    USAGE   :cs kill {num|partial_name}
@@ -204,7 +204,7 @@ command, |:cscope|.  The available subcommands are:
 
 	    USAGE   :cs show
 
-							*:cstag* *et6*
+							*:cstag* *E257*
 If you use cscope as well as ctags, |:cstag| allows you to search one or
 the other before making a jump.  For example, you can choose to first
 search your cscope database(s) for a match, and if one is not found, then

@@ -136,7 +136,8 @@ CVARS = $(cvars)
 
 # need advapi32.lib for GetUserName()
 # need shell32.lib for ExtractIcon()
-CON_LIB = advapi32.lib shell32.lib
+# gdi32.lib and comdlg32.lib for printing support
+CON_LIB = advapi32.lib shell32.lib gdi32.lib comdlg32.lib
 
 # If you have a fixed directory for $VIM or $VIMRUNTIME, other than the normal
 # default, use these lines.
@@ -162,8 +163,10 @@ OUTDIR=$(OBJDIR)
 
 !ifdef NODEBUG
 VIM = vim
-CFLAGS = $(CFLAGS) -DNDEBUG /Ox
+CFLAGS = $(CFLAGS) -DNDEBUG /Ox /Zi
 RCFLAGS = $(rcflags) $(rcvars) -DNDEBUG
+PDB = /Fd$(OUTDIR)/
+LINK_PDB = /PDB:$(OUTDIR)/
 ! ifndef USE_MSVCRT
 LIBC = libc.lib
 ! else
@@ -411,7 +414,7 @@ CFLAGS = $(CFLAGS) -DDYNAMIC_RUBY -DDYNAMIC_RUBY_DLL=\"$(RUBY_INSTALL_NAME).dll\
 
 conflags = /nologo /subsystem:$(SUBSYSTEM) /incremental:no
 
-LINKARGS1 = $(linkdebug) $(conflags) /nodefaultlib:libc
+LINKARGS1 = /debug $(linkdebug) $(conflags) /nodefaultlib:libc
 LINKARGS2 = $(CON_LIB) $(GUI_LIB) $(LIBC) $(OLE_LIB)  user32.lib $(SNIFF_LIB) \
 		$(PERL_LIB) $(PYTHON_LIB) $(RUBY_LIB) $(TCL_LIB) $(LINK_PDB)
 

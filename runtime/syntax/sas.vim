@@ -23,10 +23,10 @@ syn region sasComment    start="/\*"  end="\*/"
 syn match sasComment  "^\s*\*.*;"
 
 " This line defines macro variables in code.  HiLink at end of file
-" defines the color scheme. Begin region with ampersand and end with 
-" any non-word character offset by -1; put ampersand in the skip list 
+" defines the color scheme. Begin region with ampersand and end with
+" any non-word character offset by -1; put ampersand in the skip list
 " just in case it is used to concatenate macro variable values.
-syn region sasMacroVar   start="\&" skip="[_&]" end="\W"he=e-1 
+syn region sasMacroVar   start="\&" skip="[_&]" end="\W"he=e-1
 
 syn keyword sasStep           RUN QUIT
 syn match   sasStep        "^\s*DATA\s"

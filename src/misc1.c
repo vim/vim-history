@@ -2430,7 +2430,7 @@ change_warning(col)
 	msg_start();
 	if (msg_row == Rows - 1)
 	    msg_col = col;
-	MSG_PUTS_ATTR(_("Warning wc1: Changing a readonly file"),
+	MSG_PUTS_ATTR(_("W10: Warning: Changing a readonly file"),
 						   hl_attr(HLF_W) | MSG_HIST);
 	msg_clr_eos();
 	(void)msg_end();
@@ -6638,7 +6638,11 @@ gen_expand_wildcards(num_pat, pat, num_file, file, flags)
 	{
 	    char_u	*t = backslash_halve_save(p);
 
-	    if ((flags & EW_NOTFOUND) || mch_getperm(t) >= 0)
+	    /* When EW_NOTFOUND is used, always add files and dirs.  Makes
+	     * "vim c:/" work. */
+	    if (flags & EW_NOTFOUND)
+		addfile(&ga, t, flags | EW_DIR | EW_FILE);
+	    else if (mch_getperm(t) >= 0)
 		addfile(&ga, t, flags);
 	    vim_free(t);
 	}

@@ -1,4 +1,4 @@
-*farsi.txt*     For Vim version 6.0ae.  Last change: 2001 Apr 29
+*farsi.txt*     For Vim version 6.0af.  Last change: 2001 May 12
 
 
 		  VIM REFERENCE MANUAL    by Mortaza Ghassab Shiran
@@ -8,7 +8,7 @@ Right to Left and Farsi Mapping for Vim		*farsi* *Farsi*
 
 {Vi does not have any of these commands}
 
-						*ef3*
+						*E27*
 In order to use right-to-left and Farsi mapping support, it is necessary to
 compile Vim with the |+farsi| feature.
 

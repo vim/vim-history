@@ -1,4 +1,4 @@
-*usr_01.txt*	For Vim version 6.0ae.  Last change: 2001 Jan 20
+*usr_01.txt*	For Vim version 6.0af.  Last change: 2001 May 12
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -118,33 +118,27 @@ On non-Unix systems, you have to do a little work:
 	del TUTORCOPY
 <
 ==============================================================================
-*01.3*  Copyright
+*01.3*  Copyright					*manual-copyright*
 
-The Vim user manual and reference manual are copyrighted by Bram Moolenaar.
+The Vim user manual and reference manual are Copyright (c) 1988-2001 by Bram
+Moolenaar. This material may be distributed only subject to the terms and
+conditions set forth in the Open Publication License, v1.0 or later.  The
+latest version is presently available at:
+	     http://www.opencontent.org/openpub/
 
-Permission is granted to copy and distribute the manuals in unmodified
-electronic form in any way (on a CD-ROM, on the WWW, etc.).  This can be done
-for free or not.
+People who contribute to the manuals must agree with the above copyright
+notice.
+							*frombook*
+Parts of the user manual come from the Book "Vi IMproved - Vim" by Steve
+Oualline (published by New Riders Publishing, ISBN: 0735710015).  The Open
+Publication License applies to this book.  Only selected parts are included
+and these have been modified (e.g., by removing the pictures and updating the
+text for Vim 6.0).
+The |frombook| tag only appears in places where most of the text comes from
+this book.
 
-Permission is granted to print and distribute the unmodified manuals on paper
-FOR FREE ONLY.  No charge for production, materials, transport, etc. can be
-made.
-
-Permission from the author is required for distributing a paper copy not for
-free.
-
-Permission is granted to distribute the manuals as just mentioned but with
-text added which is clearly marked as such.
-
-People who contribute text to the manuals must agree with these conditions.
-
-Rationale:
-This limitation avoids the situation that somebody would bring out a book
-with this text and charge money for it without paying the people who spent
-their valuable time to write it.
-I will allow publishing a book with this text if the publisher guarantees that
-the profits go to the right place (to be judged by me).
-It also disallows changing the text and pretending that I wrote it.
+If you make money through distributing the manuals, you are strongly
+encouraged to donate part of the profit to |Uganda|.
 
 ==============================================================================
  vim:tw=78:

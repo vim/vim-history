@@ -1695,13 +1695,15 @@ syn_current_attr(syncing, displaying)
     reg_extmatch_T *cur_extmatch = NULL;
     char_u	*line;		/* current line.  NOTE: becomes invalid after
 				   looking for a pattern match! */
+    int		keep_next_list;
+    int		zero_width_next_list = FALSE;
 
     /*
      * No character, no attributes!  Past end of line?
      * Do try matching with an empty line (could be the start of a region).
      */
     line = syn_getcurline();
-    if (*(line + current_col) == NUL && current_col != 0)
+    if (line[current_col] == NUL && current_col != 0)
     {
 	/*
 	 * If we found a match after the last column, use it.
@@ -1746,6 +1748,7 @@ syn_current_attr(syncing, displaying)
     do
     {
 	found_match = FALSE;
+	keep_next_list = FALSE;
 	syn_id = 0;
 
 	/*
@@ -2012,7 +2015,23 @@ syn_current_attr(syncing, displaying)
 		 */
 		if (next_match_idx >= 0 && next_match_col == (int)current_col)
 		{
-		    cur_si = push_next_match(cur_si);
+		    synpat_T	*spp;
+
+		    /* When a zero-width item matched which has a nextgroup,
+		     * don't push the item but set nextgroup. */
+		    spp = &(SYN_ITEMS(syn_buf)[next_match_idx]);
+		    if (next_match_m_endpos.lnum == current_lnum
+			    && next_match_m_endpos.col == current_col
+			    && spp->sp_next_list != NULL)
+		    {
+			current_next_list = spp->sp_next_list;
+			current_next_flags = spp->sp_flags;
+			keep_next_list = TRUE;
+			zero_width_next_list = TRUE;
+			next_match_idx = -1;
+		    }
+		    else
+			cur_si = push_next_match(cur_si);
 		    found_match = TRUE;
 		}
 	    }
@@ -2021,7 +2040,7 @@ syn_current_attr(syncing, displaying)
 	/*
 	 * Handle searching for nextgroup match.
 	 */
-	if (current_next_list != NULL)
+	if (current_next_list != NULL && !keep_next_list)
 	{
 	    /*
 	     * If a nextgroup was not found, continue looking for one if:
@@ -2043,10 +2062,13 @@ syn_current_attr(syncing, displaying)
 	     * contained matches.
 	     * If a nextgroup was not found: Continue looking for a normal
 	     * match.
+	     * When did set current_next_list for a zero-width item and no
+	     * match was found don't loop (would get stuck).
 	     */
 	    current_next_list = NULL;
 	    next_match_idx = -1;
-	    found_match = TRUE;
+	    if (!zero_width_next_list)
+		found_match = TRUE;
 	}
 
     } while (found_match);
@@ -2933,7 +2955,7 @@ syn_cmd_case(eap, syncing)
     else if (STRNICMP(arg, "ignore", 6) == 0 && next - arg == 6)
 	curbuf->b_syn_ic = TRUE;
     else
-	EMSG2(_("(ce4) Illegal argument: %s"), arg);
+	EMSG2(_("E390: Illegal argument: %s"), arg);
 }
 
 /*
@@ -3110,7 +3132,7 @@ syn_cmd_clear(eap, syncing)
 		id = syn_scl_namen2id(arg + 1, (int)(arg_end - arg - 1));
 		if (id == 0)
 		{
-		    EMSG2(_("(ce5) No such syntax cluster: %s"), arg);
+		    EMSG2(_("E391: No such syntax cluster: %s"), arg);
 		    break;
 		}
 		else
@@ -3326,7 +3348,7 @@ syn_cmd_list(eap, syncing)
 	    {
 		id = syn_scl_namen2id(arg + 1, (int)(arg_end - arg - 1));
 		if (id == 0)
-		    EMSG2(_("(ce6) No such syntax cluster: %s"), arg);
+		    EMSG2(_("E392: No such syntax cluster: %s"), arg);
 		else
 		    syn_list_cluster(id - SYNID_CLUSTER);
 	    }
@@ -3972,7 +3994,7 @@ get_syn_options(arg, flagsp, keyword, sync_idx, cont_list,
 		{
 		    if (sync_idx == NULL)
 		    {
-			EMSG(_("(sx1) group[t]here not accepted here"));
+			EMSG(_("E393: group[t]here not accepted here"));
 			return NULL;
 		    }
 		    gname_start = arg;
@@ -3996,7 +4018,7 @@ get_syn_options(arg, flagsp, keyword, sync_idx, cont_list,
 			    }
 			if (i < 0)
 			{
-			    EMSG2(_("(ce7) Didn't find region item for %s"), gname);
+			    EMSG2(_("E394: Didn't find region item for %s"), gname);
 			    vim_free(gname);
 			    return NULL;
 			}
@@ -4024,7 +4046,7 @@ get_syn_options(arg, flagsp, keyword, sync_idx, cont_list,
 	{
 	    if (cont_list == NULL)
 	    {
-		EMSG(_("(sx2) contains argument not accepted here"));
+		EMSG(_("E395: contains argument not accepted here"));
 		return NULL;
 	    }
 	    if (get_id_list(&arg, 8, cont_list) == FAIL)
@@ -4035,7 +4057,7 @@ get_syn_options(arg, flagsp, keyword, sync_idx, cont_list,
 	{
 	    if (cont_in_list == NULL)
 	    {
-		EMSG(_("(sx3) containedin argument not accepted here"));
+		EMSG(_("E396: containedin argument not accepted here"));
 		return NULL;
 	    }
 	    if (get_id_list(&arg, 11, cont_in_list) == FAIL)
@@ -4113,7 +4135,7 @@ syn_cmd_include(eap, syncing)
 	rest = get_group_name(arg, &group_name_end);
 	if (rest == NULL)
 	{
-	    EMSG((char_u *)_("(sx4) Filename required"));
+	    EMSG((char_u *)_("E397: Filename required"));
 	    return;
 	}
 	sgl_id = syn_check_cluster(arg, (int)(group_name_end - arg));
@@ -4127,10 +4149,11 @@ syn_cmd_include(eap, syncing)
      */
     eap->argt |= (XFILE | NOSPC);
     separate_nextcmd(eap);
-    if (*eap->arg == '<' || mch_isFullName(eap->arg))
+    if (*eap->arg == '<' || *eap->arg == '$' || mch_isFullName(eap->arg))
     {
-	/* For an absolute path or "<sfile>.." we ":source" the file.  Need to
-	 * expand the file name first.  In other cases ":runtime!" is used. */
+	/* For an absolute path, "$VIM/..." or "<sfile>.." we ":source" the
+	 * file.  Need to expand the file name first.  In other cases
+	 * ":runtime!" is used. */
 	source = TRUE;
 	if (expand_filename(eap, syn_cmdlinep, &errormsg) == FAIL)
 	{
@@ -4448,7 +4471,7 @@ syn_cmd_region(eap, syncing)
 	if (*rest != '=')
 	{
 	    rest = NULL;
-	    EMSG2(_("(ce8) Missing '=': %s"), arg);
+	    EMSG2(_("E398: Missing '=': %s"), arg);
 	    break;
 	}
 	rest = skipwhite(rest + 1);
@@ -4604,7 +4627,7 @@ syn_cmd_region(eap, syncing)
 	vim_free(cont_in_list);
 	vim_free(next_list);
 	if (not_enough)
-	    EMSG2(_("(ce9) Not enough arguments: syntax region %s"), arg);
+	    EMSG2(_("E399: Not enough arguments: syntax region %s"), arg);
 	else if (illegal || rest == NULL)
 	    EMSG2(_(e_invarg2), arg);
     }
@@ -4935,7 +4958,7 @@ syn_cmd_cluster(eap, syncing)
     }
 
     if (!got_clstr)
-	EMSG(_("(sx5) No cluster specified"));
+	EMSG(_("E400: No cluster specified"));
     if (rest == NULL || !ends_excmd(*rest))
 	EMSG2(_(e_invarg2), arg);
 }
@@ -4972,7 +4995,7 @@ get_syn_pattern(arg, ci)
     end = skip_regexp(arg + 1, *arg, TRUE);
     if (*end != *arg)			    /* end delimiter not found */
     {
-	EMSG2(_("(pe9) Pattern delimiter not found: %s"), arg);
+	EMSG2(_("E401: Pattern delimiter not found: %s"), arg);
 	return NULL;
     }
     /* store the pattern and compiled regexp program */
@@ -5047,7 +5070,7 @@ get_syn_pattern(arg, ci)
 
     if (!ends_excmd(*end) && !vim_iswhite(*end))
     {
-	EMSG2(_("(pe0) Garbage after pattern: %s"), arg);
+	EMSG2(_("E402: Garbage after pattern: %s"), arg);
 	return NULL;
     }
     return skipwhite(end);
@@ -5129,7 +5152,7 @@ syn_cmd_sync(eap, syncing)
 	{
 	    if (curbuf->b_syn_linecont_pat != NULL)
 	    {
-		EMSG(_("(sx6) syntax sync: line continuations pattern specified twice"));
+		EMSG(_("E403: syntax sync: line continuations pattern specified twice"));
 		finished = TRUE;
 		break;
 	    }
@@ -5186,7 +5209,7 @@ syn_cmd_sync(eap, syncing)
     }
     vim_free(key);
     if (illegal)
-	EMSG2(_("(sx7) Illegal arguments: %s"), arg_start);
+	EMSG2(_("E404: Illegal arguments: %s"), arg_start);
     else if (!finished)
     {
 	eap->nextcmd = check_nextcmd(arg_start);
@@ -5236,13 +5259,13 @@ get_id_list(arg, keylen, list)
 	p = skipwhite(*arg + keylen);
 	if (*p != '=')
 	{
-	    EMSG2(_("(sx8) Missing equal sign: %s"), *arg);
+	    EMSG2(_("E405: Missing equal sign: %s"), *arg);
 	    break;
 	}
 	p = skipwhite(p + 1);
 	if (ends_excmd(*p))
 	{
-	    EMSG2(_("(sx9) Empty argument: %s"), *arg);
+	    EMSG2(_("E406: Empty argument: %s"), *arg);
 	    break;
 	}
 
@@ -5269,14 +5292,14 @@ get_id_list(arg, keylen, list)
 	    {
 		if (TO_UPPER(**arg) != 'C')
 		{
-		    EMSG2(_("(sx0) %s not allowed here"), name + 1);
+		    EMSG2(_("E407: %s not allowed here"), name + 1);
 		    failed = TRUE;
 		    vim_free(name);
 		    break;
 		}
 		if (count != 0)
 		{
-		    EMSG2(_("(sy1) %s must be first in contains list"), name + 1);
+		    EMSG2(_("E408: %s must be first in contains list"), name + 1);
 		    failed = TRUE;
 		    vim_free(name);
 		    break;
@@ -5346,7 +5369,7 @@ get_id_list(arg, keylen, list)
 	    vim_free(name);
 	    if (id == 0)
 	    {
-		EMSG2(_("(sy2) Unknown group name: %s"), p);
+		EMSG2(_("E409: Unknown group name: %s"), p);
 		failed = TRUE;
 		break;
 	    }
@@ -5559,7 +5582,7 @@ ex_syntax(eap)
 	{
 	    if (subcommands[i].name == NULL)
 	    {
-		EMSG2(_("(sy3) Invalid :syntax subcommand: %s"), subcmd_name);
+		EMSG2(_("E410: Invalid :syntax subcommand: %s"), subcmd_name);
 		break;
 	    }
 	    if (STRCMP(subcmd_name, (char_u *)subcommands[i].name) == 0)
@@ -5652,7 +5675,7 @@ get_syntax_name(xp, idx)
 
 #endif /* FEAT_CMDL_COMPL */
 
-#if defined(FEAT_EVAL) || defined(PROTO)
+#if defined(FEAT_EVAL) || defined(FEAT_PRINTER) || defined(PROTO)
 /*
  * Function called for expression evaluation: get syntax ID at file position.
  */
@@ -5782,8 +5805,6 @@ init_highlight(both)
     static int	had_both = FALSE;
 #ifdef FEAT_EVAL
     char_u	*p;
-
-    set_vim_var_nr(VV_ALL_COLORS, (long)both);
 
     /*
      * Try finding the color file.  Used when a color file was loaded and
@@ -5934,7 +5955,7 @@ do_highlight(line, forceit, init)
     {
 	id = syn_namen2id(line, (int)(name_end - line));
 	if (id == 0)
-	    EMSG2(_("(he9) highlight group not found: %s"), line);
+	    EMSG2(_("E411: highlight group not found: %s"), line);
 	else
 	    highlight_list_one(id);
 	return;
@@ -5958,14 +5979,14 @@ do_highlight(line, forceit, init)
 
 	if (ends_excmd(*from_start) || ends_excmd(*to_start))
 	{
-	    EMSG2(_("(hl1) Not enough arguments: \":highlight link %s\""),
+	    EMSG2(_("E412: Not enough arguments: \":highlight link %s\""),
 								  from_start);
 	    return;
 	}
 
 	if (!ends_excmd(*skipwhite(to_end)))
 	{
-	    EMSG2(_("(hl2) Too many arguments: \":highlight link %s\""), from_start);
+	    EMSG2(_("E413: Too many arguments: \":highlight link %s\""), from_start);
 	    return;
 	}
 
@@ -5985,7 +6006,7 @@ do_highlight(line, forceit, init)
 				   && hl_has_settings(from_id - 1, dodefault))
 	    {
 		if (sourcing_name == NULL && !dodefault)
-		    EMSG(_("(he1) group has settings, highlight link ignored"));
+		    EMSG(_("E414: group has settings, highlight link ignored"));
 	    }
 	    else
 	    {
@@ -6014,7 +6035,34 @@ do_highlight(line, forceit, init)
 	     * Clear all highlight groups and load the defaults.
 	     */
 	    for (idx = 0; idx < highlight_ga.ga_len; ++idx)
+	    {
 		highlight_clear(idx);
+		HL_TABLE()[idx].sg_set = 0;
+	    }
+#ifdef FEAT_EVAL
+	    do_unlet((char_u *)"colors_name");
+#endif
+#ifdef FEAT_GUI
+	    /* need to get the value of 'background' */
+	    if (gui.in_use)
+	    {
+		set_normal_colors();
+		set_option_value((char_u *)"bg", 0L,
+			gui_mch_get_lightness(gui.back_pixel) < 127
+				   ? (char_u *)"dark" : (char_u *)"light", 0);
+	    }
+#endif
+#if defined(MSDOS) || (defined(WIN32) && !defined(FEAT_GUI_W32))
+	    /* Since t_me has been set, this probably means that the user
+	     * wants to use this as default colors.  Need to reset default
+	     * background/foreground colors. */
+	    mch_set_normal_colors();
+#else
+	    cterm_normal_fg_color = 0;
+	    cterm_normal_fg_bold = 0;
+	    cterm_normal_bg_color = 0;
+#endif
+
 	    init_highlight(TRUE);
 #ifdef FEAT_GUI
 	    if (gui.in_use)
@@ -6028,7 +6076,8 @@ do_highlight(line, forceit, init)
 	    if (gui.in_use)
 		gui_new_scrollbar_colors();
 #endif
-	    redraw_all_later(CLEAR);
+	    highlight_changed();
+	    redraw_later_clear();
 	    return;
 	}
 	name_end = skiptowhite(line);
@@ -6064,7 +6113,7 @@ do_highlight(line, forceit, init)
 	key_start = linep;
 	if (*linep == '=')
 	{
-	    EMSG2(_("(hl3) unexpected equal sign: %s"), key_start);
+	    EMSG2(_("E415: unexpected equal sign: %s"), key_start);
 	    error = TRUE;
 	    break;
 	}
@@ -6100,7 +6149,7 @@ do_highlight(line, forceit, init)
 	 */
 	if (*linep != '=')
 	{
-	    EMSG2(_("(hl4) missing equal sign: %s"), key_start);
+	    EMSG2(_("E416: missing equal sign: %s"), key_start);
 	    error = TRUE;
 	    break;
 	}
@@ -6122,7 +6171,7 @@ do_highlight(line, forceit, init)
 	}
 	if (linep == arg_start)
 	{
-	    EMSG2(_("(hl5) missing argument: %s"), key_start);
+	    EMSG2(_("E417: missing argument: %s"), key_start);
 	    error = TRUE;
 	    break;
 	}
@@ -6159,7 +6208,7 @@ do_highlight(line, forceit, init)
 		}
 		if (i < 0)
 		{
-		    EMSG2(_("(hl9) Illegal value: %s"), arg);
+		    EMSG2(_("E418: Illegal value: %s"), arg);
 		    error = TRUE;
 		    break;
 		}
@@ -6272,18 +6321,18 @@ do_highlight(line, forceit, init)
 		    color = cterm_normal_fg_color - 1;
 		else
 		{
-		    EMSG(_("(he2) FG color unknown"));
+		    EMSG(_("E419: FG color unknown"));
 		    error = TRUE;
 		    break;
 		}
 	    }
 	    else if (STRICMP(arg, "bg") == 0)
 	    {
-		if (cterm_normal_bg_color)
+		if (cterm_normal_bg_color > 0)
 		    color = cterm_normal_bg_color - 1;
 		else
 		{
-		    EMSG(_("(he3) BG color unknown"));
+		    EMSG(_("E420: BG color unknown"));
 		    error = TRUE;
 		    break;
 		}
@@ -6338,7 +6387,7 @@ do_highlight(line, forceit, init)
 			break;
 		if (i < 0)
 		{
-		    EMSG2(_("(hl8) Color name or number not recognized: %s"), key_start);
+		    EMSG2(_("E421: Color name or number not recognized: %s"), key_start);
 		    error = TRUE;
 		    break;
 		}
@@ -6516,7 +6565,7 @@ do_highlight(line, forceit, init)
 		    /* Append it to the already found stuff */
 		    if ((int)(STRLEN(buf) + STRLEN(p)) >= 99)
 		    {
-			EMSG2(_("(hl7) terminal code too long: %s"), arg);
+			EMSG2(_("E422: terminal code too long: %s"), arg);
 			error = TRUE;
 			break;
 		    }
@@ -6583,7 +6632,7 @@ do_highlight(line, forceit, init)
 	}
 	else
 	{
-	    EMSG2(_("(hl6) Illegal argument: %s"), key_start);
+	    EMSG2(_("E423: Illegal argument: %s"), key_start);
 	    error = TRUE;
 	    break;
 	}
@@ -7070,7 +7119,7 @@ get_attr_entry(table, aep)
 	 */
 	if (recursive)
 	{
-	    EMSG(_("(eh1) Too many different highlighting attributes in use"));
+	    EMSG(_("E424: Too many different highlighting attributes in use"));
 	    return 0;
 	}
 	recursive = TRUE;
@@ -7263,7 +7312,7 @@ highlight_list_arg(id, didh, type, iarg, sarg, name)
     return didh;
 }
 
-#if (defined(FEAT_EVAL) && defined(FEAT_SYN_HL)) || defined(PROTO)
+#if (((defined(FEAT_EVAL) || defined(FEAT_PRINTER))) && defined(FEAT_SYN_HL)) || defined(PROTO)
 /*
  * Return "1" if highlight group "id" has attribute "flag".
  * Return NULL otherwise.
@@ -7348,6 +7397,32 @@ highlight_color(id, what, modec)
     }
     /* term doesn't have color */
     return NULL;
+}
+#endif
+
+#if (defined(FEAT_SYN_HL) && defined(FEAT_GUI) && defined(FEAT_PRINTER)) || defined(PROTO)
+/*
+ * Return color name of highlight group "id".
+ */
+    unsigned long
+highlight_gui_color_rgb(id, fg)
+    int		id;
+    int	fg;	/* TRUE = fg, FALSE = bg */
+{
+    guicolor_T	color;
+
+    if (id <= 0 || id > highlight_ga.ga_len)
+	return 0L;
+
+    if (fg)
+	color = HL_TABLE()[id - 1].sg_gui_fg;
+    else
+	color = HL_TABLE()[id - 1].sg_gui_bg;
+
+    if (color == 0)
+	return 0L;
+
+    return gui_mch_get_rgb_long(color - 1);
 }
 #endif
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:     TSS (Thermal Synthesizer System) Command Line
 " Maintainer:   Adrian Nagle, anagle@ball.com
-" Last Change:  2001-05-02 10:19:13 Mountain Daylight Time
+" Last Change:  2001 May 10
 " Filenames:    *.tsscl
 " URL:          http://www.naglenet.org/vim/syntax/tsscl.vim
 " MAIN URL:     http://www.naglenet.org/vim/
@@ -70,7 +70,7 @@ syn match  tssclComment     "#.*$"
 "  +       Addition
 "  -       Subtraction
 "
-syn match  tssclOper      "||\||\|&&\|&\|!=\|!\|>=\|<=\|>\|<\|+\|-\|^\|\*\*\|\*\|/\|\%\|==\|=\|\." skipwhite
+syn match  tssclOper      "||\||\|&&\|&\|!=\|!\|>=\|<=\|>\|<\|+\|-\|^\|\*\*\|\*\|/\|%\|==\|=\|\." skipwhite
 
 " CLI Directive Commands, with arguments
 "

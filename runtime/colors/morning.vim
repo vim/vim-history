@@ -1,13 +1,13 @@
 " Vim color file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Apr 29
+" Last Change:	2001 May 09
 
 " This color scheme uses a light grey background.
 
-let colors_name = "morning"
-
 " First remove all existing highlighting.
 hi clear
+
+let colors_name = "morning"
 
 hi Normal ctermfg=Black ctermbg=LightGrey guifg=Black guibg=grey90
 set background=light

@@ -262,7 +262,7 @@ add_buff(buf, s, slen)
     }
     else if (buf->bh_curr == NULL)	/* buffer has already been read */
     {
-	EMSG(_("(ei4) Add to read buffer"));
+	EMSG(_("E222: Add to read buffer"));
 	return;
     }
     else if (buf->bh_index != 0)
@@ -536,9 +536,13 @@ AppendToRedobuffLit(s)
     while (*s != NUL)
     {
 	/* Put a string of normal characters in the redo buffer (that's
-	 * faster).  TODO: EBCDIC */
+	 * faster). */
 	start = s;
-	while (*s >= ' ' && *s < DEL)
+	while (*s >= ' '
+#ifndef EBCDIC
+		&& *s < DEL	/* EBCDIC: all chars above space are normal */
+#endif
+		)
 	    ++s;
 
 	/* Don't put '0' or '^' as last character, just in case a CTRL-D is
@@ -2045,7 +2049,7 @@ vgetorpeek(advance)
 			 */
 			if (++mapdepth >= p_mmd)
 			{
-			    EMSG(_("(er9) recursive mapping"));
+			    EMSG(_("E223: recursive mapping"));
 			    if (State & CMDLINE)
 				redrawcmdline();
 			    else
@@ -2831,10 +2835,10 @@ do_map(maptype, arg, mode, abbrev)
 			&& STRNCMP(mp->m_keys, keys, (size_t)len) == 0)
 		{
 		    if (abbrev)
-			EMSG2(_("(ge1) global abbreviation already exists for %s"),
+			EMSG2(_("E224: global abbreviation already exists for %s"),
 				mp->m_keys);
 		    else
-			EMSG2(_("(ge2) global mapping already exists for %s"),
+			EMSG2(_("E225: global mapping already exists for %s"),
 				mp->m_keys);
 		    retval = 5;
 		    goto theend;
@@ -2961,10 +2965,10 @@ do_map(maptype, arg, mode, abbrev)
 			else if (unique)
 			{
 			    if (abbrev)
-				EMSG2(_("(ge3) abbreviation already exists for %s"),
+				EMSG2(_("E226: abbreviation already exists for %s"),
 									   p);
 			    else
-				EMSG2(_("(ge4) mapping already exists for %s"), p);
+				EMSG2(_("E227: mapping already exists for %s"), p);
 			    retval = 5;
 			    goto theend;
 			}
@@ -3841,7 +3845,7 @@ makemap(fd, buf)
 			c1 = 'l';
 			break;
 		    default:
-			EMSG(_("(ei5) makemap: Illegal mode"));
+			EMSG(_("E228: makemap: Illegal mode"));
 			return FAIL;
 		}
 		do	/* may do this twice if c2 is set */

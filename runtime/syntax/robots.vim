@@ -3,10 +3,8 @@
 " Robots.txt files indicate to WWW robots which parts of a web site should not be accessed.
 " Maintainer:	Dominique Stéphan (dominique@mggen.com)
 " URL: http://www.mggen.com/vim/syntax/robots.zip
-" Last change:	2001 May 02
+" Last change:	2001 May 09
 
-" clear any unwanted syntax defs
-syn clear
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
 if version < 600

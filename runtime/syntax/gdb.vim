@@ -2,7 +2,7 @@
 " Language:	GDB command files
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/gdb.vim
-" Last Change:	2001 Apr 26
+" Last Change:	2001 May 10
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -22,18 +22,18 @@ syn match gdbInfo contained "all-registers"
 
 syn keyword gdbStatement contained actions apply attach awatch backtrace break bt call catch cd clear collect commands
 syn keyword gdbStatement contained complete condition continue delete detach directory disable disassemble display down
-syn keyword gdbStatement contained echo else enable end file finish frame handle hbreak help if ignore 
+syn keyword gdbStatement contained echo else enable end file finish frame handle hbreak help if ignore
 syn keyword gdbStatement contained inspect jump kill list load maintenance make next nexti ni output overlay
 syn keyword gdbStatement contained passcount path print printf ptype pwd quit rbreak remote return run rwatch
 syn keyword gdbStatement contained search section set sharedlibrary shell show si signal source step stepi stepping
 syn keyword gdbStatement contained stop target tbreak tdump tfind thbreak thread tp trace tstart tstatus tstop
-syn keyword gdbStatement contained tty undisplay unset until up watch whatis where while ws x 
+syn keyword gdbStatement contained tty undisplay unset until up watch whatis where while ws x
 syn match gdbFuncDef "\<define\>.*"
 syn match gdbStatmentContainer "^\s*\S\+" contains=gdbStatement,gdbFuncDef
 syn match gdbStatement "^\s*info" nextgroup=gdbInfo skipwhite skipempty
 
 " some commonly used abreviations
-syn keyword gdbStatement c disp undisp disas p 
+syn keyword gdbStatement c disp undisp disas p
 
 syn region gdbDocument matchgroup=gdbFuncDef start="\<document\>.*$" matchgroup=gdbFuncDef end="^end$"
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:     TSS (Thermal Synthesizer System) Geometry
 " Maintainer:   Adrian Nagle, anagle@ball.com
-" Last Change:  2001-05-02 10:18:25 Mountain Daylight Time
+" Last Change:  2001 May 10
 " Filenames:    *.tssgm
 " URL:          http://www.naglenet.org/vim/syntax/tssgm.vim
 " MAIN URL:     http://www.naglenet.org/vim/

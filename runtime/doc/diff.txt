@@ -1,4 +1,4 @@
-*diff.txt*      For Vim version 6.0ae.  Last change: 2001 May 06
+*diff.txt*      For Vim version 6.0af.  Last change: 2001 May 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -62,7 +62,7 @@ diff mode.  You could use a construct like this: >
 
 While already in Vim you can start diff mode in two ways.
 
-							*ed3*
+							*E98*
 :diffsplit {filename}					*:diffs* *:diffsplit*
 		Open a new window on the file {filename}.  The options are set
 		as for "vimdiff" for the current and the newly opened window.
@@ -87,7 +87,7 @@ To make these commands use a vertical split, prepend |:vertical|.  Examples: >
 	:vert diffsplit main.c~
 	:vert diffpatch /tmp/diff
 <
-							*de3*
+							*E96*
 There can be up to four buffers with 'diff' set.
 
 ==============================================================================
@@ -157,7 +157,7 @@ The diffs are highlighted with these groups:
 				buffer.
 
 ==============================================================================
-3. Diff copying			*copy-diffs* *ed4* *ed5* *ed6* *de4* *de5*
+3. Diff copying			*copy-diffs* *E99* *E100* *E101* *E102* *E103*
 
 There are two commands to copy text from one buffer to another.  The result is
 that the buffers will be equal within the specified range.
@@ -170,8 +170,9 @@ that the buffers will be equal within the specified range.
 		mode.
 		[range] specifies the lines in the current buffer for which
 		differences are removed.  When omitted, the diff at the cursor
-		position and in the line above it is affected.  Partly
-		included diffs are handled like they were included completely.
+		position and in the line above it is affected.
+		Partly included diffs are handled like they were included
+		completely.
 
 							*:diffpu* *:diffput*
 :[range]diffpu[t] [bufspec]
@@ -186,6 +187,16 @@ name or a part of a buffer name.  Examples:
 	:diffget 3		Use buffer 3
 	:diffget v2		Use the buffer which matches "v2" and is in
 				diff mode (e.g., "file.c.v2")
+
+Note that deleted lines are displayed, but not counted as text lines.  You
+can't move the cursor into them.  To fill the deleted lines with the lines
+from another buffer use ":diffget" on the line below them.
+
+There can be deleted lines below the last line of the buffer.  To be able to
+get those lines from another buffer it's allowed to use the last line number
+plus one.  This command gets all diffs from the other buffer: >
+
+	:1,$+1diffget
 
 ==============================================================================
 4. Diff options						*diff-options*
@@ -246,7 +257,7 @@ Example (this does the same as 'diffexpr' being empty): >
 	   	\  " > " . v:fname_out
 	endfunction
 <
-						*de7*
+						*E97*
 Vim will do a test if the diff output looks alright.  If it doesn't, you will
 get an error message.  Possible causes:
 -  The "diff" program cannot be executed.

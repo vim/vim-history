@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0ae.  Last change: 2001 mei 04
+*quickfix.txt*  For Vim version 6.0af.  Last change: 2001 May 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -10,7 +10,7 @@ The quickfix commands are not available when the |+quickfix| feature was
 disabled at compile time.
 
 
-Using the QuickFix mode				*quickfix* *Quickfix* *ee4*
+Using the QuickFix mode				*quickfix* *Quickfix* *E42*
 
 Vim has a special mode to speedup the edit-compile-edit cycle.  This is
 inspired by the quickfix option of the Manx's Aztec C compiler on the Amiga.
@@ -201,7 +201,7 @@ The format of the file from the Aztec compiler is:
 	errornumber	number of the error (for lookup in the manual)
 	errormessage	description of the error
 
-			*errorformat* *eq7* *eq8* *eq9* *eq0* *ey1* *ey2* *ey3*
+			*errorformat* *E372* *E373* *E374* *E375* *E376* *E377* *E378*
 Another compiler is likely to use a different format.  You should set the
 'errorformat' option to a scanf-like string that describes the format.
 First, you need to know how scanf works.  Look in the documentation of your
@@ -225,7 +225,7 @@ of a single comma-separated format pattern.
 Some compilers produce messages that consist of directory names that have to
 be prepended to each file name read by %f (example: GNU make). The following
 codes can be used to scan these directory names; they will be stored in an
-internal directory stack.					*ey4*
+internal directory stack.					*E379*
 	%D		"enter directory" format string; expects a following
 			  %f that finds the directory name
 	%X		"leave directory" format string; expects following %f
@@ -569,12 +569,12 @@ ten last used lists are remembered.  When starting a new list, the previous
 ones are automatically kept.  Two commands can be used to access older error
 lists.  They set one of the existing error lists as the current one.
 
-						*:colder* *:col* *ey5*
+						*:colder* *:col* *E380*
 :col[der] [count]	Go to older error list.  When [count] is given, do
 			this [count] times.  When already at the oldest error
 			list, an error message is given.
 
-						*:cnewer* *:cnew* *ey6*
+						*:cnewer* *:cnew* *E381*
 :cnew[er] [count]	Go to newer error list.  When [count] is given, do
 			this [count] times.  When already at the newest error
 			list, an error message is given.

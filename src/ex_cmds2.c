@@ -368,7 +368,7 @@ ex_breakdel(eap)
     }
 
     if (todel < 0)
-	EMSG2(_("(be3) Breakpoint not found: %s"), eap->arg);
+	EMSG2(_("E161: Breakpoint not found: %s"), eap->arg);
     else
     {
 	vim_free(BREAKP(todel).dbg_name);
@@ -740,7 +740,7 @@ check_changed_any(hidden)
 	    msg_col = 0;
 	    msg_didout = FALSE;
 	}
-	if (EMSG2(_("(we8) No write since last change for buffer \"%s\""),
+	if (EMSG2(_("E162: No write since last change for buffer \"%s\""),
 		    buf_spname(buf) != NULL ? (char_u *)buf_spname(buf) :
 		    buf->b_fname))
 	{
@@ -1185,11 +1185,11 @@ do_argfile(eap, argn)
     if (argn < 0 || argn >= ARGCOUNT)
     {
 	if (ARGCOUNT <= 1)
-	    EMSG(_("(ea3) There is only one file to edit"));
+	    EMSG(_("E163: There is only one file to edit"));
 	else if (argn < 0)
-	    EMSG(_("(ea4) Cannot go before first file"));
+	    EMSG(_("E164: Cannot go before first file"));
 	else
-	    EMSG(_("(ea5) Cannot go beyond last file"));
+	    EMSG(_("E165: Cannot go beyond last file"));
     }
     else
     {
@@ -1281,7 +1281,7 @@ ex_argedit(eap)
     char_u	*s;
 
     /* Add the argument to the buffer list and get the buffer number. */
-    fnum = buflist_add(eap->arg, FALSE, TRUE);
+    fnum = buflist_add(eap->arg, BLN_LISTED);
 
     /* Check if this argument is already in the argument list. */
     for (i = 0; i < ARGCOUNT; ++i)
@@ -1373,7 +1373,7 @@ ex_listdo(eap)
     win_T	*win;
 #endif
     buf_T	*buf;
-#ifdef FEAT_AUTOCMD
+#if defined(FEAT_AUTOCMD) && defined(FEAT_SYN_HL)
     char_u	*save_ei = vim_strsave(p_ei);
     char_u	*new_ei;
 #endif
@@ -1386,7 +1386,7 @@ ex_listdo(eap)
     }
 #endif
 
-#ifdef FEAT_AUTOCMD
+#if defined(FEAT_AUTOCMD) && defined(FEAT_SYN_HL)
     new_ei = vim_strnsave(p_ei, (int)STRLEN(p_ei) + 8);
     if (new_ei != NULL)
     {
@@ -1446,7 +1446,7 @@ ex_listdo(eap)
 	    }
 	}
     }
-#ifdef FEAT_AUTOCMD
+#if defined(FEAT_AUTOCMD) && defined(FEAT_SYN_HL)
     if (new_ei != NULL)
     {
 	set_string_option_direct((char_u *)"ei", -1, save_ei, OPT_FREE);
@@ -1483,7 +1483,7 @@ alist_add_list(count, files, after)
 	for (i = 0; i < count; ++i)
 	{
 	    ARGLIST[after + i].ae_fname = files[i];
-	    ARGLIST[after + i].ae_fnum = buflist_add(files[i], FALSE, TRUE);
+	    ARGLIST[after + i].ae_fnum = buflist_add(files[i], BLN_LISTED);
 	}
 	ALIST(curwin)->al_ga.ga_len += count;
 	ALIST(curwin)->al_ga.ga_room -= count;
@@ -2023,7 +2023,7 @@ get_one_sourceline(sp)
 		else	    /* lines like ":map xx yy^M" will have failed */
 		{
 		    if (!sp->error)
-			EMSG(_("(ws1) Warning: Wrong line separator, ^M may be missing"));
+			EMSG(_("W15: Warning: Wrong line separator, ^M may be missing"));
 		    sp->error = TRUE;
 		    sp->fileformat = EOL_UNIX;
 		}
@@ -2072,7 +2072,7 @@ ex_scriptencoding(eap)
 
     if (eap->getline != getsourceline)
     {
-	EMSG(_("(ee5) :scriptencoding used outside of a sourced file"));
+	EMSG(_("E167: :scriptencoding used outside of a sourced file"));
 	return;
     }
 
@@ -2105,7 +2105,7 @@ ex_finish(eap)
     if (eap->getline == getsourceline)
 	((struct source_cookie *)eap->cookie)->finished = TRUE;
     else
-	EMSG(_("(ef5) :finish used outside of a sourced file"));
+	EMSG(_("E168: :finish used outside of a sourced file"));
 }
 
 /*

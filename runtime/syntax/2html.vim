@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Mar 23
+" Last Change:	2001 May 10
 
 " Transform a file into HTML, using the current syntax highlighting.
 
@@ -197,10 +197,10 @@ let id = 0
 unlet uline bld itl lnum end col startcol line len new id
 unlet old_title old_icon old_paste old_et did_retab bg fg
 unlet cterm_color0 cterm_color1 cterm_color2 cterm_color3
-unlet cterm_color4 cterm_color5 cterm_color6 cterm_color7 
+unlet cterm_color4 cterm_color5 cterm_color6 cterm_color7
 if &t_Co != 8
   unlet cterm_color8 cterm_color9 cterm_color10 cterm_color11
-  unlet cterm_color12 cterm_color13 cterm_color14 cterm_color15 
+  unlet cterm_color12 cterm_color13 cterm_color14 cterm_color15
 endif
 delfunc HTMLPutText
 delfunc HTMLColor

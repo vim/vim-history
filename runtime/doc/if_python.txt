@@ -1,4 +1,4 @@
-*if_python.txt* For Vim version 6.0ae.  Last change: 2001 mei 04
+*if_python.txt* For Vim version 6.0af.  Last change: 2001 May 12
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore
@@ -20,7 +20,7 @@ The Python interface is available only when Vim was compiled with the
 ==============================================================================
 1. Commands						*python-commands*
 
-						*:python* *:py* *ep7* *ep8*
+					*:python* *:py* *E205* *E263* *E264*
 :[range]py[thon] {stmt}
 			Execute Python statement {stmt}.
 

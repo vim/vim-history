@@ -1,4 +1,4 @@
-*multilang.txt* For Vim version 6.0ae.  Last change: 2001 May 05
+*multilang.txt* For Vim version 6.0af.  Last change: 2001 May 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -21,7 +21,7 @@ multi-byte text see |multibyte|.
 
 Set the locale in your shell and Vim picks it up.
 
-					    *:lan* *:lang* *:language* *le4*
+					    *:lan* *:lang* *:language* *E197*
 :lan[guage]
 :lan[guage] mes[sages]
 :lan[guage] cty[pe]

@@ -1880,14 +1880,26 @@ mch_errmsg(str)
 mch_msg(str)
     char	*str;
 {
-#ifdef UNIX
-    /* On Unix use stdout if it's a tty. */
-    if (isatty(1))
+# if defined(UNIX) || defined(FEAT_GUI)
+    /* On Unix use stdout if we have a tty.  This allows "vim -h | more" and
+     * uses mch_errmsg() when started from the desktop.
+     * When not going to start the GUI also use stdout. */
+    if (
+#  ifdef UNIX
+	    isatty(2)
+#   ifdef FEAT_GUI
+	    ||
+#   endif
+#  endif
+#  ifdef FEAT_GUI
+	    !(gui.in_use || gui.starting)
+#  endif
+	    )
     {
 	printf("%s", str);
 	return;
     }
-#endif
+# endif
     mch_errmsg(str);
 }
 #endif /* USE_MCH_ERRMSG */
@@ -2499,8 +2511,11 @@ do_browse(saving, title, dflt, ext, initdir, filter, buf)
     if (gui.in_use)		/* when this changes, also adjust f_has()! */
     {
 	if (filter == NULL
+#  ifdef FEAT_EVAL
 		&& (filter = get_var_value((char_u *)"b:browsefilter")) == NULL
-		&& (filter = get_var_value((char_u *)"g:browsefilter")) == NULL)
+		&& (filter = get_var_value((char_u *)"g:browsefilter")) == NULL
+#  endif
+	)
 	    filter = BROWSE_FILTER_DEFAULT;
 	fname = gui_mch_browse(saving, title, dflt, ext, initdir, filter);
 
@@ -2513,7 +2528,7 @@ do_browse(saving, title, dflt, ext, initdir, filter, buf)
 # endif
     {
 	/* TODO: non-GUI file selector here */
-	EMSG(_("(ez5) Sorry, no file browser in console mode"));
+	EMSG(_("E338: Sorry, no file browser in console mode"));
 	fname = NULL;
     }
 

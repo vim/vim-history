@@ -1,14 +1,14 @@
 " Vim syntax file
 " Language:     Cyn++
 " Maintainer:   Phil Derrick <phild@forteds.com>
-" Last change:  2001 May 02
+" Last change:  2001 May 10
 "
 " Language Information
 "
-"               Cynpp (Cyn++) is a macro language to ease coding in Cynlib. 
+"               Cynpp (Cyn++) is a macro language to ease coding in Cynlib.
 "               Cynlib is a library of C++ classes to allow hardware
-"               modelling in C++. Combined with a simulation kernel, 
-"               the compiled and linked executable forms a hardware 
+"               modelling in C++. Combined with a simulation kernel,
+"               the compiled and linked executable forms a hardware
 "               simulation of the described design.
 "
 "               Cyn++ is designed to be HDL-like.
@@ -40,11 +40,11 @@ unlet b:current_syntax
 
 " Cyn++ extensions
 
-syn keyword     cynppMacro      Always EndAlways 
+syn keyword     cynppMacro      Always EndAlways
 syn keyword     cynppMacro      Module EndModule
 syn keyword     cynppMacro      Initial EndInitial
 syn keyword     cynppMacro      Posedge Negedge Changed
-syn keyword     cynppMacro      At 
+syn keyword     cynppMacro      At
 syn keyword     cynppMacro      Thread EndThread
 syn keyword     cynppMacro      Instantiate
 

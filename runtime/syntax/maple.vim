@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Maple V (based on release 4)
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	April 20, 2001
+" Last Change:	October 16, 1998
 "
 " Because there are a lot of packages, and because of the potential for namespace
 " clashes, this version of <maple.vim> needs the user to select which, if any,
@@ -15,15 +15,18 @@
 " *OR* let mvpkg_all=1
 
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
-if version >= 600
-  setlocal iskeyword=$,48-57,_,a-z,@-Z
-else
+if version < 600
   set iskeyword=$,48-57,_,a-z,@-Z
+else
+  setlocal iskeyword=$,48-57,_,a-z,@-Z
 endif
 
 " allow user to simply select all packages for highlighting
@@ -59,7 +62,7 @@ if exists("mvpkg_all")
   let mv_sumtools   = 1
   let mv_tensor     = 1
   let mv_totorder   = 1
-  endif
+endif
 
 " parenthesis/curly/brace sanity checker
 syn region mvZone	matchgroup=Delimiter start="(" matchgroup=Delimiter end=")" transparent contains=ALLBUT,mvError,mvBraceError,mvCurlyError
@@ -236,16 +239,16 @@ if exists("mv_DEtools")
   syn keyword mvPkg_DEtools	DEnormal	Dchangevar	autonomous	dfieldplot	reduceOrder	untranslate
   syn keyword mvPkg_DEtools	DEplot	PDEchangecoords	convertAlg	indicialeq	regularsp	varparam
   syn keyword mvPkg_DEtools	DEplot3d	PDEplot	convertsys	phaseportrait	translate
-  endif
+endif
 
 " Package: Domains: create domains of computation
 if exists("mv_Domains")
-  endif
+endif
 
 " Package: GF: Galois Fields
 if exists("mv_GF")
   syn keyword mvPkg_Galois	galois
-  endif
+endif
 
 " Package: GaussInt: Gaussian Integers
 if exists("mv_GaussInt")
@@ -254,14 +257,14 @@ if exists("mv_GaussInt")
   syn keyword mvPkg_GaussInt	GIdivisor	GIgcd	GImcmbine	GIorder	GIrem	GIsqrt
   syn keyword mvPkg_GaussInt	GIfacpoly	GIgcdex	GInearest	GIphi	GIroots	GIunitnormal
   syn keyword mvPkg_GaussInt	GIfacset	GIhermite	GInodiv	GIprime	GIsieve
-  endif
+endif
 
 " Package: LREtools: manipulate linear recurrence relations
 if exists("mv_LREtools")
   syn keyword mvPkg_LREtools	REcontent	REprimpart	REtodelta	delta	hypergeomsols	ratpolysols
   syn keyword mvPkg_LREtools	REcreate	REreduceorder	REtoproc	dispersion	polysols	shift
   syn keyword mvPkg_LREtools	REplot	REtoDE	constcoeffsol
-  endif
+endif
 
 " Package: combinat: combinatorial functions
 if exists("mv_combinat")
@@ -271,44 +274,44 @@ if exists("mv_combinat")
   syn keyword mvPkg_combinat	cartprod	encodepart	multinomial	numbperm	randcomb	subsets
   syn keyword mvPkg_combinat	character	fibonacci	nextpart	partition	randpart	vectoint
   syn keyword mvPkg_combinat	choose	firstpart
-  endif
+endif
 
 " Package: combstruct: combinatorial structures
 if exists("mv_combstruct")
   syn keyword mvPkg_combstruct	allstructs	draw	iterstructs	options	specification	structures
   syn keyword mvPkg_combstruct	count	finished	nextstruct
-  endif
+endif
 
 " Package: difforms: differential forms
 if exists("mv_difforms")
   syn keyword mvPkg_difforms	const	defform	formpart	parity	scalarpart	wdegree
   syn keyword mvPkg_difforms	d	form	mixpar	scalar	simpform	wedge
-  endif
+endif
 
 " Package: finance: financial mathematics
 if exists("mv_finance")
   syn keyword mvPkg_finance	amortization	cashflows	futurevalue	growingperpetuity	mv_finance	presentvalue
   syn keyword mvPkg_finance	annuity	effectiverate	growingannuity	levelcoupon	perpetuity	yieldtomaturity
   syn keyword mvPkg_finance	blackscholes
-  endif
+endif
 
 " Package: genfunc: rational generating functions
 if exists("mv_genfunc")
   syn keyword mvPkg_genfunc	rgf_charseq	rgf_expand	rgf_hybrid	rgf_pfrac	rgf_sequence	rgf_term
   syn keyword mvPkg_genfunc	rgf_encode	rgf_findrecur	rgf_norm	rgf_relate	rgf_simp	termscale
-  endif
+endif
 
 " Package: geometry: Euclidean geometry
 if exists("mv_geometry")
   syn keyword mvPkg_geometry	circle	dsegment	hyperbola	parabola	segment	triangle
   syn keyword mvPkg_geometry	conic	ellipse	line	point	square
-  endif
+endif
 
 " Package: grobner: Grobner bases
 if exists("mv_grobner")
   syn keyword mvPkg_grobner	finduni	gbasis	leadmon	normalf	solvable	spoly
   syn keyword mvPkg_grobner	finite	gsolve
-  endif
+endif
 
 " Package: group: permutation and finitely-presented groups
 if exists("mv_group")
@@ -317,13 +320,13 @@ if exists("mv_group")
   syn keyword mvPkg_group	NormalClosure	centralizer	derived	invperm	normalizer	subgrel
   syn keyword mvPkg_group	RandElement	convert	grelgroup	isabelian	orbit	type
   syn keyword mvPkg_group	Sylow	core	groupmember	isnormal	permgroup
-  endif
+endif
 
 " Package: inttrans: integral transforms
 if exists("mv_inttrans")
   syn keyword mvPkg_inttrans	addtable	fouriercos	hankel	invfourier	invlaplace	mellin
   syn keyword mvPkg_inttrans	fourier	fouriersin	hilbert	invhilbert	laplace
-  endif
+endif
 
 " Package: liesymm: Lie symmetries
 if exists("mv_liesymm")
@@ -332,7 +335,7 @@ if exists("mv_liesymm")
   syn keyword mvPkg_liesymm	Eta	autosimp	dvalue	hook	reduce	wdegree
   syn keyword mvPkg_liesymm	Lie	close	extvars	indepvars	setup	wedgeset
   syn keyword mvPkg_liesymm	Lrank	d	getcoeff	makeforms	translate	wsubs
-  endif
+endif
 
 " Package: linalg: Linear algebra
 if exists("mv_linalg")
@@ -354,13 +357,13 @@ if exists("mv_linalg")
   syn keyword mvPkg_linalg	charpoly	eigenval	hilbert	minor	rowspan	vector
   syn keyword mvPkg_linalg	cholesky	eigenvect	htranspose	minpoly	scalarmul	wronskian
   syn keyword mvPkg_linalg	col	entermatrix	ihermite
-  endif
+endif
 
 " Package: logic: Boolean logic
 if exists("mv_logic")
   syn keyword mvPkg_logic	MOD2	bsimp	distrib	environ	randbool	tautology
   syn keyword mvPkg_logic	bequal	canon	dual	frominert	satisfy	toinert
-  endif
+endif
 
 " Package: networks: graph networks
 if exists("mv_networks")
@@ -377,14 +380,14 @@ if exists("mv_networks")
   syn keyword mvPkg_networks	complement	delete	fundcyc	isplanar	rankpoly	void
   syn keyword mvPkg_networks	complete	departures	getlabel	maxdegree	shortpathtree	vweight
   syn keyword mvPkg_networks	components	diameter	girth
-  endif
+endif
 
 " Package: numapprox: numerical approximation
 if exists("mv_numapprox")
   syn keyword mvPkg_numapprox	chebdeg	chebsort	fnorm	laurent	minimax	remez
   syn keyword mvPkg_numapprox	chebmult	chebyshev	hornerform	laurent	pade	taylor
   syn keyword mvPkg_numapprox	chebpade	confracform	infnorm	minimax
-  endif
+endif
 
 " Package: numtheory: number theory
 if exists("mv_numtheory")
@@ -398,18 +401,18 @@ if exists("mv_numtheory")
   syn keyword mvPkg_numtheory	bigomega	ifactors	kronecker	msqrt	pprimroot	tau
   syn keyword mvPkg_numtheory	cfrac	imagunit	lambda	nearestp	prevprime	thue
   syn keyword mvPkg_numtheory	cfracpol	index	legendre	nextprime
-  endif
+endif
 
 " Package: orthopoly: orthogonal polynomials
 if exists("mv_orthopoly")
   syn keyword mvPkg_orthopoly	G	H	L	P	T	U
-  endif
+endif
 
 " Package: padic: p-adic numbers
 if exists("mv_padic")
   syn keyword mvPkg_padic	evalp	function	orderp	ratvaluep	rootp	valuep
   syn keyword mvPkg_padic	expansion	lcoeffp	ordp
-  endif
+endif
 
 " Package: plots: graphics package
 if exists("mv_plots")
@@ -422,7 +425,7 @@ if exists("mv_plots")
   syn keyword mvPkg_plots	contourplot	fieldplot3d	listdensityplot	pointplot	semilogplot	textplot3d
   syn keyword mvPkg_plots	contourplot3d	gradplot	listplot	pointplot3d	setoptions	tubeplot
   syn keyword mvPkg_plots	coordplot
-  endif
+endif
 
 " Package: plottools: basic graphical objects
 if exists("mv_plottools")
@@ -431,7 +434,7 @@ if exists("mv_plottools")
   syn keyword mvPkg_plottools	circle	cutout	ellipticArc	line	polygon	tetrahedron
   syn keyword mvPkg_plottools	cone	cylinder	hemisphere	octahedron	rectangle	torus
   syn keyword mvPkg_plottools	cuboid	disk	hexahedron
-  endif
+endif
 
 " Package: powseries: formal power series
 if exists("mv_powseries")
@@ -439,25 +442,25 @@ if exists("mv_powseries")
   syn keyword mvPkg_powseries	evalpow	negative	powdiff	powpoly	powsqrt	subtract
   syn keyword mvPkg_powseries	inverse	powadd	powexp	powseries	quotient	tpsform
   syn keyword mvPkg_powseries	multconst	powcos	powint	powsin
-  endif
+endif
 
 " Package: process: (Unix)-multi-processing
 if exists("mv_process")
   syn keyword mvPkg_process	block	fork	pclose	pipe	popen	wait
   syn keyword mvPkg_process	exec	kill
-  endif
+endif
 
 " Package: simplex: linear optimization
 if exists("mv_simplex")
   syn keyword mvPkg_simplex	NONNEGATIVE	cterm	dual	maximize	pivoteqn	setup
   syn keyword mvPkg_simplex	basis	define_zero	equality	minimize	pivotvar	standardize
   syn keyword mvPkg_simplex	convexhull	display	feasible	pivot	ratio
-  endif
+endif
 
 " Package: stats: statistics
 if exists("mv_stats")
   syn keyword mvPkg_stats	anova	describe	fit	random	statevalf	statplots
-  endif
+endif
 
 " Package: student: student calculus
 if exists("mv_student")
@@ -468,13 +471,13 @@ if exists("mv_student")
   syn keyword mvPkg_student	Limit	combine	intercept	maximize	powsubs	trapezoid
   syn keyword mvPkg_student	Lineint	completesquare	intparts	middlebox	rightbox	value
   syn keyword mvPkg_student	Point
-  endif
+endif
 
 " Package: sumtools: indefinite and definite sums
 if exists("mv_sumtools")
   syn keyword mvPkg_sumtools	Hypersum	extended_gosper	hyperrecursion	hyperterm	sumrecursion	sumtohyper
   syn keyword mvPkg_sumtools	Sumtohyper	gosper	hypersum	simpcomb
-  endif
+endif
 
 " Package: tensor: tensor computations and General Relativity
 if exists("mv_tensor")
@@ -487,76 +490,88 @@ if exists("mv_tensor")
   syn keyword mvPkg_tensor	Lie_diff	commutator	d2metric	geodesic_eqns	npcurve	tensorsGR
   syn keyword mvPkg_tensor	Ricci	compare	directional_diff	get_char	npspin	transform
   syn keyword mvPkg_tensor	Ricciscalar	conj	displayGR
-  endif
+endif
 
 " Package: totorder: total orders on names
 if exists("mv_totorder")
   syn keyword mvPkg_totorder	forget	init	ordering	tassume	tis
-  endif
+endif
 
 " ==  PACKAGES  =======================================================
 
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_maplev_syntax_inits")
+  if version < 508
+    let did_maplev_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-" The default highlighting.
   " Maple->Maple Links
-hi def link mvBraceError	mvError
-hi def link mvCurlyError	mvError
-hi def link mvDebug		mvTodo
-hi def link mvParenError	mvError
-hi def link mvPkg_DEtools	mvPkgFunc
-hi def link mvPkg_Galois	mvPkgFunc
-hi def link mvPkg_GaussInt	mvPkgFunc
-hi def link mvPkg_LREtools	mvPkgFunc
-hi def link mvPkg_combinat	mvPkgFunc
-hi def link mvPkg_combstruct	mvPkgFunc
-hi def link mvPkg_difforms	mvPkgFunc
-hi def link mvPkg_finance	mvPkgFunc
-hi def link mvPkg_genfunc	mvPkgFunc
-hi def link mvPkg_geometry	mvPkgFunc
-hi def link mvPkg_grobner	mvPkgFunc
-hi def link mvPkg_group	mvPkgFunc
-hi def link mvPkg_inttrans	mvPkgFunc
-hi def link mvPkg_liesymm	mvPkgFunc
-hi def link mvPkg_linalg	mvPkgFunc
-hi def link mvPkg_logic	mvPkgFunc
-hi def link mvPkg_networks	mvPkgFunc
-hi def link mvPkg_numapprox	mvPkgFunc
-hi def link mvPkg_numtheory	mvPkgFunc
-hi def link mvPkg_orthopoly	mvPkgFunc
-hi def link mvPkg_padic	mvPkgFunc
-hi def link mvPkg_plots	mvPkgFunc
-hi def link mvPkg_plottools	mvPkgFunc
-hi def link mvPkg_powseries	mvPkgFunc
-hi def link mvPkg_process	mvPkgFunc
-hi def link mvPkg_simplex	mvPkgFunc
-hi def link mvPkg_stats	mvPkgFunc
-hi def link mvPkg_student	mvPkgFunc
-hi def link mvPkg_sumtools	mvPkgFunc
-hi def link mvPkg_tensor	mvPkgFunc
-hi def link mvPkg_totorder	mvPkgFunc
-hi def link mvRange		mvOper
-hi def link mvSemiError	mvError
+  HiLink mvBraceError	mvError
+  HiLink mvCurlyError	mvError
+  HiLink mvDebug		mvTodo
+  HiLink mvParenError	mvError
+  HiLink mvPkg_DEtools	mvPkgFunc
+  HiLink mvPkg_Galois	mvPkgFunc
+  HiLink mvPkg_GaussInt	mvPkgFunc
+  HiLink mvPkg_LREtools	mvPkgFunc
+  HiLink mvPkg_combinat	mvPkgFunc
+  HiLink mvPkg_combstruct	mvPkgFunc
+  HiLink mvPkg_difforms	mvPkgFunc
+  HiLink mvPkg_finance	mvPkgFunc
+  HiLink mvPkg_genfunc	mvPkgFunc
+  HiLink mvPkg_geometry	mvPkgFunc
+  HiLink mvPkg_grobner	mvPkgFunc
+  HiLink mvPkg_group	mvPkgFunc
+  HiLink mvPkg_inttrans	mvPkgFunc
+  HiLink mvPkg_liesymm	mvPkgFunc
+  HiLink mvPkg_linalg	mvPkgFunc
+  HiLink mvPkg_logic	mvPkgFunc
+  HiLink mvPkg_networks	mvPkgFunc
+  HiLink mvPkg_numapprox	mvPkgFunc
+  HiLink mvPkg_numtheory	mvPkgFunc
+  HiLink mvPkg_orthopoly	mvPkgFunc
+  HiLink mvPkg_padic	mvPkgFunc
+  HiLink mvPkg_plots	mvPkgFunc
+  HiLink mvPkg_plottools	mvPkgFunc
+  HiLink mvPkg_powseries	mvPkgFunc
+  HiLink mvPkg_process	mvPkgFunc
+  HiLink mvPkg_simplex	mvPkgFunc
+  HiLink mvPkg_stats	mvPkgFunc
+  HiLink mvPkg_student	mvPkgFunc
+  HiLink mvPkg_sumtools	mvPkgFunc
+  HiLink mvPkg_tensor	mvPkgFunc
+  HiLink mvPkg_totorder	mvPkgFunc
+  HiLink mvRange		mvOper
+  HiLink mvSemiError	mvError
 
   " Maple->Standard Links
-hi def link mvAssign	Delimiter
-hi def link mvBool		Boolean
-hi def link mvComma		Delimiter
-hi def link mvComment	Comment
-hi def link mvCond		Conditional
-hi def link mvConstant	Number
-hi def link mvDelayEval	Label
-hi def link mvError		Error
-hi def link mvLibrary	Statement
-hi def link mvNumber	Number
-hi def link mvOper		Operator
-hi def link mvPackage	Type
-hi def link mvPkgFunc	Function
-hi def link mvPktOption	Special
-hi def link mvRepeat	Repeat
-hi def link mvSpecial	Special
-hi def link mvStatement	Statement
-hi def link mvString	String
-hi def link mvTodo		Todo
+  HiLink mvAssign		Delimiter
+  HiLink mvBool		Boolean
+  HiLink mvComma		Delimiter
+  HiLink mvComment		Comment
+  HiLink mvCond		Conditional
+  HiLink mvConstant		Number
+  HiLink mvDelayEval	Label
+  HiLink mvError		Error
+  HiLink mvLibrary		Statement
+  HiLink mvNumber		Number
+  HiLink mvOper		Operator
+  HiLink mvPackage		Type
+  HiLink mvPkgFunc		Function
+  HiLink mvPktOption	Special
+  HiLink mvRepeat		Repeat
+  HiLink mvSpecial		Special
+  HiLink mvStatement	Statement
+  HiLink mvString		String
+  HiLink mvTodo		Todo
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "maple"
 

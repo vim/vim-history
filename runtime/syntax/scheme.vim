@@ -9,12 +9,15 @@
 
 " Suggestions and bug reports are solicited by the author.
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" Initializing:
+
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
-
-" Initializing:
 
 syn case ignore
 
@@ -44,7 +47,11 @@ syn region schemeUnquote matchgroup=Delimiter start=",@#(" end=")" contains=ALLB
 
 " R5RS Scheme Functions and Syntax:
 
-setlocal iskeyword=33,35-39,42-58,60-90,94,95,97-122,126,_
+if version < 600
+  set iskeyword=33,35-39,42-58,60-90,94,95,97-122,126,_
+else
+  setlocal iskeyword=33,35-39,42-58,60-90,94,95,97-122,126,_
+endif
 
 syn keyword schemeSyntax lambda and or if cond case define let let* letrec
 syn keyword schemeSyntax begin do delay set! else =>
@@ -151,20 +158,32 @@ syn match	schemeComment	";.*$"
 syn sync match matchPlace grouphere NONE "^[^ \t]"
 " ... i.e. synchronize on a line that starts at the left margin
 
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_scheme_syntax_inits")
+  if version < 508
+    let did_scheme_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-" The default highlighting.
-hi def link schemeSyntax	Statement
-hi def link schemeFunc		Function
+  HiLink schemeSyntax		Statement
+  HiLink schemeFunc		Function
 
-hi def link schemeString	String
-hi def link schemeChar		Character
-hi def link schemeNumber	Number
-hi def link schemeBoolean	Boolean
+  HiLink schemeString		String
+  HiLink schemeChar		Character
+  HiLink schemeNumber		Number
+  HiLink schemeBoolean		Boolean
 
-hi def link schemeDelimiter	Delimiter
-hi def link schemeConstant	Constant
+  HiLink schemeDelimiter	Delimiter
+  HiLink schemeConstant	Constant
 
-hi def link schemeComment	Comment
-hi def link schemeError		Error
+  HiLink schemeComment		Comment
+  HiLink schemeError		Error
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "scheme"

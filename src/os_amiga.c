@@ -928,7 +928,7 @@ mch_settmode(tmode)
 mch_screenmode(arg)
     char_u	*arg;
 {
-    EMSG(_("(et8) Screen mode setting not supported"));
+    EMSG(_("E359: Screen mode setting not supported"));
     return FAIL;
 }
 
@@ -1132,7 +1132,7 @@ mch_call_shell(cmd, options)
     if (close_win)
     {
 	/* if Vim opened a window: Executing a shell may cause crashes */
-	EMSG(_("(et0) Cannot execute shell with -f option"));
+	EMSG(_("E360: Cannot execute shell with -f option"));
 	return -1;
     }
 

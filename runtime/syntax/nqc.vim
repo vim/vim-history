@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	NQC - Not Quite C, for LEGO mindstorms
-" 		NQC homepage: http://www.enteract.com/~dbaum/nqc/
+"		NQC homepage: http://www.enteract.com/~dbaum/nqc/
 " Maintainer:	Stefan Scherer <stefan@enotes.de>
-" Last Change:	2001 Mar 18
+" Last Change:	2001 May 10
 " URL:		http://www.enotes.de/twiki/pub/Home/LegoMindstorms/nqc.vim
 " Filenames:	.nqc
 
@@ -85,7 +85,7 @@ syn keyword     nqcConstant	OUT_LOW OUT_HALF OUT_FULL
 " Functions - All
 syn keyword	nqcFunction	SetOutput SetDirection SetPower OutputStatus
 syn keyword	nqcFunction	On Off Float Fwd Rev Toggle
-syn keyword	nqcFunction	OnFwd OnRev OnFor 
+syn keyword	nqcFunction	OnFwd OnRev OnFor
 
 " Functions - RXC2, Scout
 syn keyword	nqcFunction	SetGlobalOutput SetGlobalDirection SetMaxPower
@@ -232,7 +232,7 @@ syn keyword	nqcFunction	SetEventFeedback EventFeedback SetLight
 " additional CyberMaster defines
 syn keyword     nqcConstant	OUT_L OUT_R OUT_X
 syn keyword     nqcConstant	SENSOR_L SENSOR_M SENSOR_R
-" Functions - CyberMaster 
+" Functions - CyberMaster
 syn keyword	nqcFunction	Drive OnWait OnWaitDifferent
 syn keyword	nqcFunction	ClearTachoCounter TachoCount TachoSpeed
 syn keyword	nqcFunction	ExternalMotorRunning AGC

@@ -26,7 +26,7 @@ syn match	snnsresNoHeader	"startpattern\s*:\s*" contained
 syn match	snnsresNoHeader "endpattern\s*:\s*" contained
 syn match	snnsresNoHeader "input patterns included" contained
 syn match	snnsresNoHeader "teaching output included" contained
-syn match 	snnsresGen	"generated at.*" contained contains=snnsresNumbers
+syn match	snnsresGen	"generated at.*" contained contains=snnsresNumbers
 syn match	snnsresGen	"SNNS result file [Vv]\d\.\d" contained contains=snnsresNumbers
 
 " the header, what is not an accepted field, is an error

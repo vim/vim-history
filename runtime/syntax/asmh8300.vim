@@ -1,10 +1,13 @@
 " Vim syntax file
 " Language:	Hitachi H-8300h specific syntax for GNU Assembler
 " Maintainer:	Kevin Dahlhausen <ap096@po.cwru.edu>
-" Last Change:	2001 Jan 15
+" Last Change:	2001 May 09
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -49,17 +52,33 @@ syn case match
 
 
 " Read the general asm syntax
-runtime! syntax/asm.vim
-unlet b:current_syntax
+if version < 600
+  source <sfile>:p:h/asm.vim
+else
+  runtime! syntax/asm.vim
+endif
 
 
-" The default highlighting.
-hi def link asmOpcode	Statement
-hi def link asmRegister Identifier
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_hitachi_syntax_inits")
+  if version < 508
+    let did_hitachi_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-" My default-color overrides:
-hi def asmOpcode	ctermfg=yellow
-hi def asmReg		ctermfg=lightmagenta
+  HiLink asmOpcode  Statement
+  HiLink asmRegister  Identifier
+
+  " My default-color overrides:
+  "hi asmOpcode ctermfg=yellow
+  "hi asmReg	ctermfg=lightmagenta
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "asmh8300"
 

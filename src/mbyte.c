@@ -2452,7 +2452,7 @@ xim_set_preedit()
 					    XNLineSpace, line_space,
 					    NULL);
 	    if (XSetICValues(xic, XNPreeditAttributes, attr_list, NULL))
-		EMSG(_("(ex2) Cannot set IC values"));
+		EMSG(_("E284: Cannot set IC values"));
 	    XFree(attr_list);
 	}
     }
@@ -2603,12 +2603,17 @@ xim_set_status_area()
 #endif
 }
 
+#if defined(FEAT_GUI_X11) || defined(FEAT_GUI_GTK)
+static char e_xim[] = N_("E285: Failed to create input context");
+#endif
+
 #if defined(FEAT_GUI_X11) || defined(PROTO)
 # if defined(XtSpecificationRelease) && XtSpecificationRelease >= 6 && !defined(sun)
 #  define USE_X11R6_XIM
 # endif
 
 static int xim_real_init __ARGS((Window x11_window, Display *x11_display));
+
 
 #ifdef USE_X11R6_XIM
 static void xim_instantiate_cb __ARGS((Display *display, XPointer client_data, XPointer	call_data));
@@ -2746,7 +2751,7 @@ xim_real_init(x11_window, x11_display)
 	/* Only give this message when verbose is set, because too many people
 	 * got this message when they didn't want to use a XIM. */
 	if (p_verbose > 0)
-	    EMSG(_("(ex3) Failed to open input method"));
+	    EMSG(_("E286: Failed to open input method"));
 	return FALSE;
     }
 
@@ -2757,13 +2762,13 @@ xim_real_init(x11_window, x11_display)
 	destroy_cb.callback = xim_destroy_cb;
 	destroy_cb.client_data = NULL;
 	if (XSetIMValues(xim, XNDestroyCallback, &destroy_cb, NULL))
-	    EMSG(_("(ex4) Warning: Could not set destroy callback to IM"));
+	    EMSG(_("E287: Warning: Could not set destroy callback to IM"));
     }
 #endif
 
     if (XGetIMValues(xim, XNQueryInputStyle, &xim_styles, NULL) || !xim_styles)
     {
-	EMSG(_("(ex5) input method doesn't support any style"));
+	EMSG(_("E288: input method doesn't support any style"));
 	XCloseIM(xim);
 	return FALSE;
     }
@@ -2820,7 +2825,7 @@ xim_real_init(x11_window, x11_display)
 	/* Only give this message when verbose is set, because too many people
 	 * got this message when they didn't want to use a XIM. */
 	if (p_verbose > 0)
-	    EMSG(_("(ex6) input method doesn't support my preedit type"));
+	    EMSG(_("E289: input method doesn't support my preedit type"));
 	XCloseIM(xim);
 	return FALSE;
     }
@@ -2881,7 +2886,7 @@ xim_real_init(x11_window, x11_display)
     }
     else
     {
-	EMSG(_("(ex7) Failed to create input context"));
+	EMSG(_(e_xim));
 	XCloseIM(xim);
 	return FALSE;
     }
@@ -2892,6 +2897,10 @@ xim_real_init(x11_window, x11_display)
 #endif /* FEAT_GUI_X11 */
 
 #if defined(FEAT_GUI_GTK) || defined(PROTO)
+
+# ifdef FEAT_XFONTSET
+static char e_overthespot[] = N_("E290: over-the-spot style requires fontset");
+# endif
 
 void
 xim_decide_input_style()
@@ -2918,7 +2927,7 @@ xim_decide_input_style()
 	    use_status_area = TRUE;
 	else
 	{
-	    EMSG(_("(ex8) Your GTK+ is older than 1.2.3. Status area disabled"));
+	    EMSG(_("E291: Your GTK+ is older than 1.2.3. Status area disabled"));
 	    use_status_area = FALSE;
 	}
 #ifdef FEAT_XFONTSET
@@ -2948,6 +2957,7 @@ xim_decide_input_style()
 preedit_start_cbproc(XIC xic, XPointer client_data, XPointer call_data)
 {
     xim_preediting = TRUE;
+    gui_update_cursor(TRUE, FALSE);
     if (showmode() > 0)
     {
 	setcursor();
@@ -3072,6 +3082,7 @@ preedit_caret_cbproc(XIC xic, XPointer client_data, XPointer call_data)
 preedit_done_cbproc(XIC xic, XPointer client_data, XPointer call_data)
 {
     xim_preediting = FALSE;
+    gui_update_cursor(TRUE, FALSE);
     if (showmode() > 0)
     {
 	setcursor();
@@ -3153,7 +3164,7 @@ xim_init(void)
     if (!gdk_im_ready())
     {
 	if (p_verbose > 0)
-	    EMSG(_("(ex9) Input Method Server is not running"));
+	    EMSG(_("E292: Input Method Server is not running"));
 	return;
     }
     if ((xic_attr = gdk_ic_attr_new()) != NULL)
@@ -3188,7 +3199,7 @@ xim_init(void)
 	    if (gui.fontset == NOFONTSET
 		    || gui.fontset->type != GDK_FONT_FONTSET)
 	    {
-		EMSG(_("(ex0) over-the-spot style requires fontset"));
+		EMSG(_(e_overthespot));
 	    }
 	    else
 	    {
@@ -3211,7 +3222,7 @@ xim_init(void)
 	    if (gui.fontset == NOFONTSET
 		    || gui.fontset->type != GDK_FONT_FONTSET)
 	    {
-		EMSG(_("(ez3) over-the-spot style requires fontset"));
+		EMSG(_(e_overthespot));
 	    }
 	    else
 	    {
@@ -3234,7 +3245,7 @@ xim_init(void)
 	xic = gdk_ic_new(attr, (GdkICAttributesType)attrmask);
 
 	if (xic == NULL)
-	    EMSG(_("(ez4) Can't create input context."));
+	    EMSG(_(e_xim));
 	else
 	{
 	    mask = (int)gdk_window_get_events(widget->window);
@@ -3264,7 +3275,7 @@ xim_get_status_area_height(void)
     int
 input_method_active()
 {
-    return xim_preediting;
+    return xim_preediting && xim_has_focus;
 }
 
 #endif /* FEAT_XIM */

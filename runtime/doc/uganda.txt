@@ -1,4 +1,4 @@
-*uganda.txt*    For Vim version 6.0ae.  Last change: 2000 Nov 12
+*uganda.txt*    For Vim version 6.0af.  Last change: 2001 May 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -36,9 +36,16 @@ It is not allowed to remove these restrictions from the distribution of the
 Vim sources or parts of it.  These restrictions may also be used for previous
 Vim releases instead of the text that was included with it.
 
+The Open Publication License applies to the Vim documentation, see
+|manual-copyright|.
+
 							*iccf*
 If you are happy with Vim, please express that by reading the rest of this
-file.  You can also have a look at http://www.vim.org/iccf/ .
+file.  You can also have a look here (these are mirrors):
+
+		http://www.vim.org/iccf/
+		http://www.iccf.nl/
+		http://iccf-holland.org/
 
 							*kcc*
 Kibaale Children's Centre (KCC) is located in Kibaale, a small town in the
@@ -147,6 +154,15 @@ Europe:		To avoid banking costs the best thing is to send me a
 		NOTE: Eurocheques cannot be used after December 2001.
 		Any other method should work.  Ask for information about
 		sponsorship.
+
+Credit Card:	You can use PayPal to send money with a Credit card.  This is
+		the most widely used Internet based payment system.  It's
+		really simple to use.  Use this link to find more info:
+			https://www.paypal.com/affil/pal=Bram%40moolenaar.net
+		The e-mail address for sending the money to is:
+			Bram@iccf-holland.org
+		Unfortunately, the extra cost is a bit high.  The other
+		methods are preferred.
 
 Others:		Transfer to one of these accounts if possible:
 		    Postbank, account 4548774

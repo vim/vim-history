@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:		configure.in script: M4 with sh
 " Maintainer:	Christian Hammesr <ch@lathspell.westend.com>
-" Last Change:	2001 Jan 15
+" Last Change:	2001 May 09
 
 " Well, I actually even do not know much about m4. This explains why there
 " is probably very much missing here, yet !
@@ -9,8 +9,11 @@
 " script, so I wrote this quick and dirty patch.
 
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -26,15 +29,28 @@ syn region  configstring    start=+"+ skip=+\\"+ end=+"+
 syn region  configstring    start=+`+ skip=+\\'+ end=+'+
 syn region  configstring    start=+`+ skip=+\\'+ end=+`+
 
-" The default highlighting.
-hi def link configdelimiter Delimiter
-hi def link configoperator  Operator
-hi def link configcomment   Comment
-hi def link configfunction  Function
-hi def link confignumber    Number
-hi def link configkeyword   Keyword
-hi def link configspecial   Special
-hi def link configstring    String
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_config_syntax_inits")
+  if version < 508
+    let did_config_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink configdelimiter Delimiter
+  HiLink configoperator  Operator
+  HiLink configcomment   Comment
+  HiLink configfunction  Function
+  HiLink confignumber    Number
+  HiLink configkeyword   Keyword
+  HiLink configspecial   Special
+  HiLink configstring    String
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "config"
 

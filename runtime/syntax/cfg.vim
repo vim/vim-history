@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Good old CFG files
 " Maintainer:	Igor N. Prischepoff (igor@tyumbit.ru, pri_igor@mail.ru)
-" Last change:	2001 May 05
+" Last change:	2001 May 10
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -17,7 +17,7 @@ syn keyword CfgOnOff  ON OFF YES NO TRUE FALSE  contained
 syn match UncPath "\\\\\p*" contained
 "Dos Drive:\Path
 syn match CfgDirectory "[a-zA-Z]:\\\p*" contained
-"Parameters 
+"Parameters
 syn match   CfgParams    ".*="me=e-1 contains=CfgComment
 "... and their values (don't want to highlight '=' sign)
 syn match   CfgValues    "=.*"hs=s+1 contains=CfgDirectory,UncPath,CfgComment,CfgString,CfgOnOff
@@ -31,7 +31,7 @@ syn match  CfgString	"\".*\"" contained
 syn match  CfgString    "'.*'"   contained
 
 " Comments (Everything before '#' or '//' or ';')
-syn match  CfgComment	"#.*" 
+syn match  CfgComment	"#.*"
 syn match  CfgComment	";.*"
 syn match  CfgComment	"\/\/.*"
 
@@ -51,8 +51,8 @@ if version >= 508 || !exists("did_cfg_syn_inits")
     HiLink CfgString	String
     HiLink CfgParams    Keyword
     HiLink CfgValues    Constant
-    HiLink CfgDirectory Directory 
-    HiLink UncPath      Directory 
+    HiLink CfgDirectory Directory
+    HiLink UncPath      Directory
 
     delcommand HiLink
 endif

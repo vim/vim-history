@@ -63,9 +63,9 @@ static char_u *menutrans_lookup __ARGS((char_u *name, int len));
 /* The character for each menu mode */
 static char_u	menu_mode_chars[] = {'n', 'v', 'o', 'i', 'c', 't'};
 
-static char_u e_notsubmenu[] = N_("(eu5) Part of menu-item path is not sub-menu");
-static char_u e_othermode[] = N_("(eu0) Menu only exists in another mode");
-static char_u e_nomenu[] = N_("(en9) No menu of that name");
+static char_u e_notsubmenu[] = N_("E327: Part of menu-item path is not sub-menu");
+static char_u e_othermode[] = N_("E328: Menu only exists in another mode");
+static char_u e_nomenu[] = N_("E329: No menu of that name");
 
 /*
  * Do the :menu command and relatives.
@@ -407,7 +407,7 @@ add_menu_path(menu_path, modes, pri_tab,
 		if (*next_name == NUL && menu->children != NULL)
 		{
 		    if (!sys_menu)
-			EMSG(_("(eu4) Menu path must not lead to a sub-menu"));
+			EMSG(_("E330: Menu path must not lead to a sub-menu"));
 		    goto erret;
 		}
 		if (*next_name != NUL && menu->children == NULL
@@ -446,13 +446,13 @@ add_menu_path(menu_path, modes, pri_tab,
 	{
 	    if (*next_name == NUL && parent == NULL)
 	    {
-		EMSG(_("(eu6) Must not add menu items directly to menu bar"));
+		EMSG(_("E331: Must not add menu items directly to menu bar"));
 		goto erret;
 	    }
 
 	    if (menu_is_separator(dname) && *next_name != NUL)
 	    {
-		EMSG(_("(eu7) Separator cannot be part of a menu path"));
+		EMSG(_("E332: Separator cannot be part of a menu path"));
 		goto erret;
 	    }
 
@@ -1901,7 +1901,7 @@ ex_emenu(eap)
 	    {
 		if (*p == NUL && menu->children != NULL)
 		{
-		    EMSG(_("(eu9) Menu path must lead to a menu item"));
+		    EMSG(_("E333: Menu path must lead to a menu item"));
 		    menu = NULL;
 		}
 		else if (*p != NUL && menu->children == NULL)
@@ -1921,7 +1921,7 @@ ex_emenu(eap)
     vim_free(saved_name);
     if (menu == NULL)
     {
-	EMSG2(_("(me2) Menu not found: %s"), eap->arg);
+	EMSG2(_("E334: Menu not found: %s"), eap->arg);
 	return;
     }
 
@@ -1990,7 +1990,7 @@ ex_emenu(eap)
     if (idx != MENU_INDEX_INVALID && menu->strings[idx] != NULL)
 	ins_typebuf(menu->strings[idx], menu->noremap[idx], 0, TRUE);
     else
-	EMSG2(_("(me3) Menu not defined for %s mode"), mode);
+	EMSG2(_("E335: Menu not defined for %s mode"), mode);
 }
 
 #if defined(FEAT_GUI_MSWIN) || defined(PROTO)
@@ -2026,7 +2026,7 @@ gui_find_menu(path_name)
 		{
 		    /* found a menu item instead of a sub-menu */
 		    if (*p == NUL)
-			EMSG(_("(eu8) Menu path must lead to a sub-menu"));
+			EMSG(_("E336: Menu path must lead to a sub-menu"));
 		    else
 			EMSG(_(e_notsubmenu));
 		    menu = NULL;
@@ -2047,7 +2047,7 @@ gui_find_menu(path_name)
     }
 
     if (menu == NULL)
-	EMSG(_("(en0) Menu not found - check menu names"));
+	EMSG(_("E337: Menu not found - check menu names"));
 theend:
     vim_free(saved_name);
     return menu;

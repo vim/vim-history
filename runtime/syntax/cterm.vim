@@ -1,11 +1,14 @@
 " Vim syntax file
 " Language:	Century Term Command Script
 " Maintainer:	Sean M. McKee <mckee@misslink.net>
-" Last Change:	2001 Jan 15
+" Last Change:	2001 May 09
 " Version Info: @(#)cterm.vim	1.7	97/12/15 09:23:14
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -138,36 +141,49 @@ syn region  ctermString			start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=ctermSp
 syn match   ctermCharacter		"'[^\\]'"
 syn match   ctermSpecialCharacter	"'\\.'"
 
-" The default highlighting.
-hi def link ctermStatement		Statement
-hi def link ctermFunction		Statement
-hi def link ctermStrFunction		Statement
-hi def link ctermIntFunction		Statement
-hi def link ctermLabel			Statement
-hi def link ctermConditional		Statement
-hi def link ctermRepeat			Statement
-hi def link ctermLibFunc		UserDefFunc
-hi def link ctermType			Type
-hi def link ctermFuncArg		PreCondit
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_cterm_syntax_inits")
+  if version < 508
+    let did_cterm_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-hi def link ctermPreVarRO		PreCondit
-hi def link ctermPreVarRW		PreConditBold
-hi def link ctermVar			Type
+	HiLink ctermStatement		Statement
+	HiLink ctermFunction		Statement
+	HiLink ctermStrFunction	Statement
+	HiLink ctermIntFunction	Statement
+	HiLink ctermLabel		Statement
+	HiLink ctermConditional	Statement
+	HiLink ctermRepeat		Statement
+	HiLink ctermLibFunc		UserDefFunc
+	HiLink ctermType		Type
+	HiLink ctermFuncArg		PreCondit
 
-hi def link ctermComment		Comment
+	HiLink ctermPreVarRO		PreCondit
+	HiLink ctermPreVarRW		PreConditBold
+	HiLink ctermVar		Type
 
-hi def link ctermCharacter		SpecialChar
-hi def link ctermSpecial		Special
-hi def link ctermSpecialCharacter	SpecialChar
-hi def link ctermSymbols		Special
-hi def link ctermString			String
-hi def link ctermTodo			Todo
-hi def link ctermOperator		Statement
-hi def link ctermNumber			Number
+	HiLink ctermComment		Comment
 
-" redefine the colors
-"hi def PreConditBold	term=bold ctermfg=1 cterm=bold guifg=Purple gui=bold
-"hi def Special	term=bold ctermfg=6 guifg=SlateBlue gui=underline
+	HiLink ctermCharacter		SpecialChar
+	HiLink ctermSpecial		Special
+	HiLink ctermSpecialCharacter	SpecialChar
+	HiLink ctermSymbols		Special
+	HiLink ctermString		String
+	HiLink ctermTodo		Todo
+	HiLink ctermOperator		Statement
+	HiLink ctermNumber		Number
+
+	" redefine the colors
+	"hi PreConditBold	term=bold ctermfg=1 cterm=bold guifg=Purple gui=bold
+	"hi Special	term=bold ctermfg=6 guifg=SlateBlue gui=underline
+
+	delcommand HiLink
+endif
 
 let b:current_syntax = "cterm"
 

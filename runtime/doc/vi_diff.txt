@@ -1,4 +1,4 @@
-*vi_diff.txt*   For Vim version 6.0ae.  Last change: 2001 mei 04
+*vi_diff.txt*   For Vim version 6.0af.  Last change: 2001 May 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -59,7 +59,7 @@ w9600			number	(default 23)		*'w9600'*
 Vim has only a few limits for the files that can be edited {Vi: can not handle
 <Nul> characters and characters above 128, has limited line length, many other
 limits}.
-							*el0*
+							*E340*
 Maximum line length	   On machines with 16-bit ints (Amiga and MS-DOS real
 			   mode): 32767, otherwise 2147483647 characters.
 			   Longer lines are split.
@@ -67,7 +67,7 @@ Maximum number of lines	   2147483647 lines.
 Maximum file size	   2147483647 bytes (2 Gbyte) when a long integer is
 			   32 bits.  Much more for 64 bit longs.  Also limited
 			   by available disk space for the |swap-file|.
-							*en1*
+							*E75*
 Length of a file path	   Unix and Win32: 1024 characters, otherwise 256
 			   characters (or as much as the system supports).
 Length of an expanded string option

@@ -1,13 +1,12 @@
 " Vim syntax file
 " Language:	Perl POD format
 " Maintainer:	Scott Bigham <dsb@cs.duke.edu>
-" Last Change:	2001 Jan 15
+" Last Change:	2001 May 09
 
 " To add embedded POD documentation highlighting to your syntax file, add
 " the commands:
 "
 "   syn include @Pod <sfile>:p:h/pod.vim
-"   unlet b:current_syntax
 "   syn region myPOD start="^=pod" start="^=head" end="^=cut" keepend contained contains=@Pod
 "
 " and add myPod to the contains= list of some existing region, probably a
@@ -15,8 +14,13 @@
 " pattern in its own right.
 
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" Remove any old syntax stuff hanging around (this is suppressed
+" automatically by ":syn include" if necessary).
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -50,14 +54,27 @@ syn match podSpecial	"[$@%]\I\i*\(::\I\i*\)*\>"
 " Special formatting sequences
 syn region podFormat	start="[IBSCLFXEZ]<" end=">" oneline contains=podFormat
 
-" The default highlighting.
-hi def link podCommand		Statement
-hi def link podCmdText		String
-hi def link podOverIndent	Number
-hi def link podForKeywd		Identifier
-hi def link podFormat		Identifier
-hi def link podVerbatimLine	PreProc
-hi def link podSpecial		Identifier
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_pod_syntax_inits")
+  if version < 508
+    let did_pod_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink podCommand		Statement
+  HiLink podCmdText		String
+  HiLink podOverIndent		Number
+  HiLink podForKeywd		Identifier
+  HiLink podFormat		Identifier
+  HiLink podVerbatimLine	PreProc
+  HiLink podSpecial		Identifier
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "pod"
 

@@ -2,7 +2,7 @@
 " Language:    PROLOG
 " Maintainers: Ralph Becket <rwab1@cam.sri.co.uk>,
 "              Thomas Koehler <jean-luc@picard.franken.de>
-" Last Change: 2001 Apr 26
+" Last Change: 2001 May 10
 
 " There are two sets of highlighting in here:
 " If the "prolog_highlighting_clean" variable exists, it is rather sparse.
@@ -90,14 +90,14 @@ if version >= 508 || !exists("did_prolog_syn_inits")
   HiLink prologComment            Comment
   HiLink prologCComment           Comment
   HiLink prologCharCode           Special
-  
+
   if exists ("prolog_highlighting_clean")
-  
+
     HiLink prologKeyword          Statement
     HiLink prologClauseHead       Statement
-  
+
   else
-  
+
     HiLink prologKeyword          Keyword
     HiLink prologClauseHead       Constant
     HiLink prologQuestion         PreProc
@@ -108,7 +108,7 @@ if version >= 508 || !exists("did_prolog_syn_inits")
     HiLink prologAtom             String
     HiLink prologString           String
     HiLink prologOperator         Operator
-  
+
   endif
 
   delcommand HiLink

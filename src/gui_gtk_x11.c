@@ -1025,7 +1025,7 @@ gui_mch_init_check(void)
 #endif
     {
 	gui.dying = TRUE;
-	EMSG(_("(eg6) cannot open display"));
+	EMSG(_("E233: cannot open display"));
 	return FAIL;
     }
     vim_free(gui_argv);
@@ -2305,7 +2305,7 @@ gui_mch_get_fontset(char_u *name, int report_error)
     if (font == NULL)
     {
 	if (report_error)
-	    EMSG2(_("(fe9) Unknown fontset: %s"), name);
+	    EMSG2(_("E234: Unknown fontset: %s"), name);
 	return NOFONT;
     }
 
@@ -2573,7 +2573,7 @@ gui_mch_get_font(char_u *name, int report_error)
     if (font == NULL)
     {
 	if (report_error)
-	    EMSG2(_("(fe0) Unknown font: %s"), name);
+	    EMSG2(_("E235: Unknown font: %s"), name);
 	return NOFONT;
     }
 
@@ -2584,7 +2584,7 @@ gui_mch_get_font(char_u *name, int report_error)
     if (((XFontStruct *)GDK_FONT_XFONT(font))->max_bounds.width
 	    != ((XFontStruct *)GDK_FONT_XFONT(font))->min_bounds.width)
     {
-	EMSG2(_("(ne1) Font \"%s\" is not fixed-width"), name);
+	EMSG2(_("E236: Font \"%s\" is not fixed-width"), name);
 	gdk_font_unref(font);
 
 	return NOFONT;
@@ -2714,7 +2714,7 @@ gui_mch_get_color(char_u * name)
 	{
 	    if (vimnames[i][0] == NULL)
 	    {
-		EMSG2(_("(ce2) Color name not recognized: %s"), name);
+		EMSG2(_("E242: Color name not recognized: %s"), name);
 		name = NULL;
 		break;
 	    }

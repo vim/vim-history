@@ -41,9 +41,9 @@ syn keyword sdlExported		remote exported export
 
 if !exists("sdl_no_96")
     syn keyword sdlStatement	all axioms constant endgenerator endrefinement endservice
-    syn keyword sdlStatement	error fpar generator literal map noequality ordering 
+    syn keyword sdlStatement	error fpar generator literal map noequality ordering
     syn keyword sdlStatement	refinement returns revealed reverse service signalroute
-    syn keyword sdlStatement	view viewed 
+    syn keyword sdlStatement	view viewed
     syn keyword sdlExported	imported
 endif
 

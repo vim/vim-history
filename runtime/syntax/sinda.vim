@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:     sinda85, sinda/fluint input file
 " Maintainer:   Adrian Nagle, anagle@ball.com
-" Last Change:  2001-05-02 16:08:21 Mountain Daylight Time
+" Last Change:  2001 May 10
 " Filenames:    *.sin
 " URL:          http://www.naglenet.org/vim/syntax/sinda.vim
 " MAIN URL:     http://www.naglenet.org/vim/
@@ -37,7 +37,8 @@ endif
 unlet b:current_syntax
 
 " Delete fortran syntax definition for line error format.
-syn clear fortranCommentError
+"syn clear fortranCommentError
+"syn clear fortranNoLabelNumber
 
 
 

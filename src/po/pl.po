@@ -1879,8 +1879,8 @@ msgid "writelines() requires list of strings"
 msgstr "writelines() wymaga listy ci±gów"
 
 #: globals.h:861 if_python.c:401
-msgid "(em4) Out of memory!"
-msgstr "(em4) Pamiêæ wyczerpana!"
+msgid "E41: Out of memory!"
+msgstr "E41: Pamiêæ wyczerpana!"
 
 #: if_python.c:486
 msgid "Python: Error initialising I/O objects"
@@ -4331,8 +4331,8 @@ msgstr "Nie ma takiego zbiórca sk³adni: %s"
 
 #: syntax.c:3033 syntax.c:3203
 #, c-format
-msgid "(eh3) No such highlight group name: %s"
-msgstr "(eh3) Brak takiej nazwy grupy podkre¶leñ: %s"
+msgid "E28: No such highlight group name: %s"
+msgstr "E28: Brak takiej nazwy grupy podkre¶leñ: %s"
 
 #: syntax.c:3144
 msgid "No Syntax items defined for this buffer"
@@ -4991,17 +4991,17 @@ msgid "Argument required"
 msgstr "argument wymagany przez uzupe³nianie"
 
 #: globals.h:803
-#~ msgid "(eb1) \\ should be followed by /, ? or &"
+#~ msgid "E10: \\ should be followed by /, ? or &"
 #~ msgstr ""
 
 #: globals.h:804
-#~ msgid "(ea2) Command not allowed from exrc/vimrc in current dir or tag search"
+#~ msgid "E12: Command not allowed from exrc/vimrc in current dir or tag search"
 #~ msgstr ""
 
 #: globals.h:805
 #, fuzzy
-msgid "(ee2) File exists (use ! to override)"
-msgstr "(ee2) \"%s\" istnieje (wymu¶ poprzez !)"
+msgid "E13: File exists (use ! to override)"
+msgstr "E13: \"%s\" istnieje (wymu¶ poprzez !)"
 
 #: globals.h:806
 #, fuzzy
@@ -5020,8 +5020,8 @@ msgstr "(Przerwane)"
 
 #: globals.h:809
 #, fuzzy
-msgid "(er3) Invalid address"
-msgstr "(er3) Niew³a¶ciwy atrybut: %s"
+msgid "E14: Invalid address"
+msgstr "E14: Niew³a¶ciwy atrybut: %s"
 
 #: globals.h:810
 #, fuzzy
@@ -5035,13 +5035,13 @@ msgstr "Niedozwolony argument: %s"
 
 #: globals.h:813
 #, fuzzy, c-format
-msgid "(ee3) Invalid expression: %s"
-msgstr "(ee3) nieporpawne wyra¿enie"
+msgid "E15: Invalid expression: %s"
+msgstr "E15: nieporpawne wyra¿enie"
 
 #: globals.h:815
 #, fuzzy
-msgid "(er4) Invalid range"
-msgstr "(er4) Niew³a¶ciwa nazwa komendy"
+msgid "E16: Invalid range"
+msgstr "E16: Niew³a¶ciwa nazwa komendy"
 
 #: globals.h:816
 #, fuzzy
@@ -5050,18 +5050,18 @@ msgstr "Niew³a¶ciwa nazwa komendy"
 
 #: globals.h:818
 #, fuzzy
-msgid "(el1) Unexpected characters before '='"
-msgstr "(el1) Nieoczekiwany czarodziejski symbol; sprawd¼ META."
+msgid "E18: Unexpected characters before '='"
+msgstr "E18: Nieoczekiwany czarodziejski symbol; sprawd¼ META."
 
 #: globals.h:820
 #, fuzzy
-msgid "(em1) Mark has invalid line number"
-msgstr "(em1) niew³a¶ciwy numer bufora"
+msgid "E19: Mark has invalid line number"
+msgstr "E19: niew³a¶ciwy numer bufora"
 
 #: globals.h:821
 #, fuzzy
-msgid "(em5) Mark not set"
-msgstr "(em5) znacznik nienastawiony"
+msgid "E20: Mark not set"
+msgstr "E20: znacznik nienastawiony"
 
 #: globals.h:823
 #, fuzzy
@@ -5070,18 +5070,18 @@ msgstr " (dalej w akcji)"
 
 #: globals.h:825
 #, fuzzy
-msgid "(es4) Scripts nested too deep"
-msgstr "(es4) zbyt g³êbokie zagnie¿d¿enie :if"
+msgid "E22: Scripts nested too deep"
+msgstr "E22: zbyt g³êbokie zagnie¿d¿enie :if"
 
 #: globals.h:826
 #, fuzzy
-msgid "(en2) No alternate file"
-msgstr "(en2) Brak pliku tag-ów"
+msgid "E23: No alternate file"
+msgstr "E23: Brak pliku tag-ów"
 
 #: globals.h:827
 #, fuzzy
-msgid "(ea2) No such abbreviation"
-msgstr "(ea2) Nie znaleziono skrótu"
+msgid "E12: No such abbreviation"
+msgstr "E12: Nie znaleziono skrótu"
 
 #: globals.h:828
 #, fuzzy
@@ -5090,32 +5090,32 @@ msgstr "niedozwolone w tym miejscu"
 
 #: globals.h:830
 #, fuzzy
-msgid "(eg1) GUI cannot be used: Not enabled at compile time"
-msgstr "(eg1)  nie mo¿e byæ stosowany na tym komputerze.\n"
+msgid "E25: GUI cannot be used: Not enabled at compile time"
+msgstr "E25:  nie mo¿e byæ stosowany na tym komputerze.\n"
 
 #: globals.h:833
 #, fuzzy
-msgid "(eh2) Hebrew cannot be used: Not enabled at compile time\n"
-msgstr "(eh2)  nie mo¿e byæ stosowany na tym komputerze.\n"
+msgid "E26: Hebrew cannot be used: Not enabled at compile time\n"
+msgstr "E26:  nie mo¿e byæ stosowany na tym komputerze.\n"
 
 #: globals.h:836
 #, fuzzy
-msgid "(ef3) Farsi cannot be used: Not enabled at compile time\n"
-msgstr "(ef3)  nie mo¿e byæ stosowany na tym komputerze.\n"
+msgid "E27: Farsi cannot be used: Not enabled at compile time\n"
+msgstr "E27:  nie mo¿e byæ stosowany na tym komputerze.\n"
 
 #: globals.h:838
-#~ msgid "(ei1) No inserted text yet"
+#~ msgid "E29: No inserted text yet"
 #~ msgstr ""
 
 #: globals.h:839
 #, fuzzy
-msgid "(ec6) No previous command line"
-msgstr "(ec6) Nie ma poprzedniego katalogu"
+msgid "E30: No previous command line"
+msgstr "E30: Nie ma poprzedniego katalogu"
 
 #: globals.h:840
 #, fuzzy
-msgid "(em3) No such mapping"
-msgstr "(em3) Nie znaleziono przyporz±dkowania"
+msgid "E31: No such mapping"
+msgstr "E31: Nie znaleziono przyporz±dkowania"
 
 #: globals.h:841
 #, fuzzy
@@ -5129,20 +5129,20 @@ msgstr "¯adne zaznaczenie nie pasuje pod \"%s\""
 
 #: globals.h:843
 #, fuzzy
-msgid "(ef1) No file name"
-msgstr "(ef1) Niedopuszczalna nazwa pliku"
+msgid "E32: No file name"
+msgstr "E32: Niedopuszczalna nazwa pliku"
 
 #: globals.h:844
-#~ msgid "(es3) No previous substitute regular expression"
+#~ msgid "E33: No previous substitute regular expression"
 #~ msgstr ""
 
 #: globals.h:845
 #, fuzzy
-msgid "(ep3) No previous command"
-msgstr "(ep3) Nie jest komend± edytora"
+msgid "E34: No previous command"
+msgstr "E34: Nie jest komend± edytora"
 
 #: globals.h:846
-#~ msgid "(ep1) No previous regular expression"
+#~ msgid "E35: No previous regular expression"
 #~ msgstr ""
 
 #: globals.h:847
@@ -5150,7 +5150,7 @@ msgstr "(ep3) Nie jest komend± edytora"
 #~ msgstr ""
 
 #: globals.h:848
-#~ msgid "(er5) Not enough room"
+#~ msgid "E36: Not enough room"
 #~ msgstr ""
 
 #: globals.h:849
@@ -5177,33 +5177,33 @@ msgstr "Nie mogê znale¼æ pliku \"%s\""
 
 #: globals.h:853
 #, fuzzy
-msgid "(ew2) No write since last change (use ! to override)"
-msgstr "(ew2) Nie by³o zapisu od ostatniej zmiany w buforze %ls (wymu¶ przez !)"
+msgid "E37: No write since last change (use ! to override)"
+msgstr "E37: Nie by³o zapisu od ostatniej zmiany w buforze %ls (wymu¶ przez !)"
 
 #: globals.h:854
 #, fuzzy
-msgid "(en5) Null argument"
-msgstr "(en5) Niedozwolony argument: %s"
+msgid "E38: Null argument"
+msgstr "E38: Niedozwolony argument: %s"
 
 #: globals.h:856
 #, fuzzy
-msgid "(ed1) Number expected"
-msgstr "(ed1) oczekiwana cyfra"
+msgid "E104: Number expected"
+msgstr "E104: oczekiwana cyfra"
 
 #: globals.h:859
 #, fuzzy, c-format
-msgid "(ee1) Can't open errorfile %s"
-msgstr "(ee1) Nie mogê znale¼æ pliku \"%s\""
+msgid "E40: Can't open errorfile %s"
+msgstr "E40: Nie mogê znale¼æ pliku \"%s\""
 
 #: globals.h:863
 #, fuzzy
-msgid "(ep2) Pattern not found"
-msgstr "(ep2) Brak ogranicznika wzorca: %s"
+msgid "Pattern not found"
+msgstr "Brak ogranicznika wzorca: %s"
 
 #: globals.h:865
 #, fuzzy, c-format
-msgid "(ep2) Pattern not found: %s"
-msgstr "(ep2) Brak ogranicznika wzorca: %s"
+msgid "Pattern not found: %s"
+msgstr "Brak ogranicznika wzorca: %s"
 
 #: globals.h:866
 #, fuzzy
@@ -5212,36 +5212,36 @@ msgstr "Brak argumentu po"
 
 #: globals.h:868
 #, fuzzy
-msgid "(ee4) No Errors"
-msgstr "(ee4) VIM B³±d"
+msgid "E42: No Errors"
+msgstr "E42: VIM B³±d"
 
 #: globals.h:870
 #, fuzzy
-msgid "(ed2) Damaged match string"
-msgstr "(ed2) Ci±g Szukany"
+msgid "E43: Damaged match string"
+msgstr "E43: Ci±g Szukany"
 
 #: globals.h:871
-#~ msgid "(ed2) Corrupted regexp program"
+#~ msgid "E43: Corrupted regexp program"
 #~ msgstr ""
 
 #: globals.h:872
 #, fuzzy
-msgid "(er1) 'readonly' option is set (use ! to override)"
-msgstr "(er1) \"%s\" istnieje (wymu¶ poprzez !)"
+msgid "E45: 'readonly' option is set (use ! to override)"
+msgstr "E45: \"%s\" istnieje (wymu¶ poprzez !)"
 
 #: globals.h:874
 #, fuzzy, c-format
-msgid "(er6) Cannot set read-only variable \"%s\""
-msgstr "(er6) Nie mogê czytaæ z \"%s\""
+msgid "E46: Cannot set read-only variable \"%s\""
+msgstr "E46: Nie mogê czytaæ z \"%s\""
 
 #: globals.h:877
-#~ msgid "(er2) Error while reading errorfile"
+#~ msgid "E47: Error while reading errorfile"
 #~ msgstr ""
 
 #: globals.h:879
 #, fuzzy
-msgid "(es2) Invalid scroll size"
-msgstr "(es2) Niew³a¶ciwa nazwa komendy"
+msgid "E49: Invalid scroll size"
+msgstr "E49: Niew³a¶ciwa nazwa komendy"
 
 #: globals.h:880
 #, fuzzy, c-format
@@ -5249,18 +5249,18 @@ msgid "Format error in tags file \"%s\""
 msgstr "B³±d w zapisie do pliku wydzielania"
 
 #: globals.h:881
-#~ msgid "(et1) tag stack empty"
+#~ msgid "E73: tag stack empty"
 #~ msgstr ""
 
 #: globals.h:882
 #, fuzzy
-msgid "(ec3) Command too complex"
-msgstr "(ec3) Nieznaleziono komendy"
+msgid "E74: Command too complex"
+msgstr "E74: Nieznaleziono komendy"
 
 #: globals.h:883
 #, fuzzy
-msgid "(en1) Name too long"
-msgstr "(en1) Nieznaleziono komendy"
+msgid "E75: Name too long"
+msgstr "E75: Nieznaleziono komendy"
 
 #: globals.h:884
 #, fuzzy
@@ -5274,8 +5274,8 @@ msgstr "zbyt wiele cz³onków"
 
 #: globals.h:886
 #, fuzzy
-msgid "(ep4) Too many ["
-msgstr "(ep4) zbyt wiele cz³onków"
+msgid "E76: Too many ["
+msgstr "E76: zbyt wiele cz³onków"
 
 #: globals.h:888
 #~ msgid "Too many \\z\\("
@@ -5288,13 +5288,13 @@ msgstr "Nieznaleziono komendy"
 
 #: globals.h:893
 #, fuzzy
-msgid "(et3) Too many file names"
-msgstr "(et3) zbyt wiele cz³onków"
+msgid "E77: Too many file names"
+msgstr "E77: zbyt wiele cz³onków"
 
 #: globals.h:895
 #, fuzzy
-msgid "(em6) Unknown mark"
-msgstr "(em6) nieznana flaga: "
+msgid "E78: Unknown mark"
+msgstr "E78: nieznana flaga: "
 
 #: globals.h:896
 #, fuzzy
@@ -5302,7 +5302,7 @@ msgid "Unknown"
 msgstr "Nieznana opcja"
 
 #: globals.h:897
-#~ msgid "(ew4) Error while writing"
+#~ msgid "E80: Error while writing"
 #~ msgstr ""
 
 #: globals.h:898

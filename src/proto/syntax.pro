@@ -27,6 +27,7 @@ attrentry_T *syn_term_attr2entry __ARGS((int attr));
 attrentry_T *syn_cterm_attr2entry __ARGS((int attr));
 char_u *highlight_has_attr __ARGS((int id, int flag, int modec));
 char_u *highlight_color __ARGS((int id, char_u *what, int modec));
+unsigned long highlight_gui_color_rgb __ARGS((int id, int fg));
 int syn_name2id __ARGS((char_u *name));
 int highlight_exists __ARGS((char_u *name));
 int syn_namen2id __ARGS((char_u *linep, int len));

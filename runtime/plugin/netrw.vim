@@ -498,7 +498,7 @@ function! s:NetMethod(choice)  " globals: method machine id passwd fname
   let s:netrw_port   = substitute(a:choice,ftpurm,'\2',"")
   let s:netrw_fname  = substitute(a:choice,ftpurm,'\3',"")
   if s:netrw_port != ""
-    let s:netrw_port = substitute(s:netrw_port,"#","","");
+    let s:netrw_port = substitute(s:netrw_port,"#","","")
   endif
   if exists("g:netrw_uid") && exists("g:netrw_passwd")
    let s:netrw_method = 3

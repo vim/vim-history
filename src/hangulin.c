@@ -9,8 +9,6 @@
 
 #include "vim.h"
 
-#include <X11/Xlib.h>
-
 #ifndef HANGUL_DEFAULT_KEYBOARD
 # define HANGUL_DEFAULT_KEYBOARD 3
 #endif
@@ -601,7 +599,7 @@ hangul_automata2(buf, c)
 	    return AUTOMATA_CORRECT_NEW;
 
 	default:
-	    EMSG(_("(ei7) Hangul automata ERROR"));
+	    EMSG(_("E256: Hangul automata ERROR"));
 	    break;
     }
     return AUTOMATA_ERROR; /* RrEeAaLlLlYy EeRrRrOoRr */
@@ -818,7 +816,7 @@ hangul_input_process(s, len)
     }
     else if (n == AUTOMATA_ERROR)
     {
-	gui_mch_beep();
+	vim_beep();
 	return 0;
     }
     return len;

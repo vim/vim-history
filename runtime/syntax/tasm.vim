@@ -1,10 +1,13 @@
 " Vim syntax file
 " Language: TASM: turbo assembler by Borland
 " Maintaner: FooLman of United Force <foolman@bigfoot.com>
-" Last change: 22 aug 2000 
+" Last change: 22 aug 2000
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -79,7 +82,7 @@ syn region tasmComment start=";" end="$"
 "HACK! comment ? ... selection
 syn region tasmComment start="comment \+\$" end="\$"
 syn region tasmComment start="comment \+\~" end="\~"
-syn region tasmComment start="comment \+#" end="#" 
+syn region tasmComment start="comment \+#" end="#"
 syn region tasmString start="'" end="'"
 syn region tasmString start='"' end='"'
 
@@ -88,19 +91,32 @@ syn match tasmHex "\<[0-9][0-9A-F]*H\>"
 syn match tasmOct "\<[0-7]\+O\>"
 syn match tasmBin "\<[01]\+B\>"
 
-" The default highlighting.
-hi def link tasmString String
-hi def link tasmDec Number
-hi def link tasmHex Number
-hi def link tasmOct Number
-hi def link tasmBin Number
-hi def link tasmInstruction Keyword
-hi def link tasmCoprocInstr Keyword
-hi def link tasmMMXInst	Keyword
-hi def link tasmDirective PreProc
-hi def link tasmRegister Identifier
-hi def link tasmProctype PreProc
-hi def link tasmComment Comment
-hi def link tasmLabel Label
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_tasm_syntax_inits")
+  if version < 508
+    let did_tasm_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink tasmString String
+  HiLink tasmDec Number
+  HiLink tasmHex Number
+  HiLink tasmOct Number
+  HiLink tasmBin Number
+  HiLink tasmInstruction Keyword
+  HiLink tasmCoprocInstr Keyword
+  HiLink tasmMMXInst	Keyword
+  HiLink tasmDirective PreProc
+  HiLink tasmRegister Identifier
+  HiLink tasmProctype PreProc
+  HiLink tasmComment Comment
+  HiLink tasmLabel Label
+
+  delcommand HiLink
+endif
 
 let b:curret_syntax = "tasm"

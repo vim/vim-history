@@ -2,7 +2,7 @@
 " Language:	Ada (95)
 " Maintainer:	David A. Wheeler <dwheeler@dwheeler.com>
 " URL: http://www.dwheeler.com/vim
-" Last Change:	2001-04-25
+" Last Change:	2001 May 10
 
 " Former Maintainer:	Simon Bradley <simon.bradley@pitechnology.com>
 "			(was <sib93@aber.ac.uk>)
@@ -54,7 +54,7 @@ syn keyword adaException Tag_Error
 syn keyword adaException Picture_Error
 " Interfaces
 syn keyword adaException Terminator_Error Conversion_Error
-syn keyword adaException Pointer_Error Dereference_Error Update_Error 
+syn keyword adaException Pointer_Error Dereference_Error Update_Error
 " This isn't in the Ada spec, but a GNAT extension.
 syn keyword adaException Assert_Failure
 " We don't list ALL exceptions defined in particular compilers (e.g., GNAT),
@@ -242,7 +242,7 @@ if version >= 508 || !exists("did_ada_syn_inits")
   HiLink adaKeyword	Keyword
   HiLink adaLabel	Label
   HiLink adaNumber	Number
-  HiLink adaSign  	Number
+  HiLink adaSign	Number
   HiLink adaOperator	Operator
   HiLink adaPreproc	PreProc
   HiLink adaRepeat	Repeat

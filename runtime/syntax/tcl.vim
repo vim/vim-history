@@ -7,8 +7,11 @@
 "
 " Keywords TODO: format clock click anchor
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -181,34 +184,47 @@ syn region  tclComment		start=/;\s*\#/hs=s+1 end="$" contains=tclTodo
 
 "syn sync ccomment tclComment
 
-" The default highlighting.
-hi def link tcltkSwitch		Special
-hi def link tclLabel		Label
-hi def link tclConditional	Conditional
-hi def link tclRepeat		Repeat
-hi def link tclNumber		Number
-hi def link tclError		Error
-hi def link tclStatement	Statement
-" hi def link tclStatementColor	Statement
-hi def link tclString		String
-hi def link tclComment		Comment
-hi def link tclSpecial		Special
-hi def link tclTodo		Todo
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_tcl_syntax_inits")
+  if version < 508
+    let did_tcl_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink tcltkSwitch		Special
+  HiLink tclLabel		Label
+  HiLink tclConditional		Conditional
+  HiLink tclRepeat		Repeat
+  HiLink tclNumber		Number
+  HiLink tclError		Error
+  HiLink tclStatement		Statement
+  "HiLink tclStatementColor	Statement
+  HiLink tclString		String
+  HiLink tclComment		Comment
+  HiLink tclSpecial		Special
+  HiLink tclTodo		Todo
   " Below here are the commands and their options.
-hi def link tcltkCommandColor	Statement
-hi def link tcltkWidgetColor    Structure
-hi def link tclLineContinue     WarningMsg
-hi def link tcltkStringSwitch	Special
-hi def link tcltkArraySwitch	Special
-hi def link tcltkLsortSwitch	Special
-hi def link tcltkPackSwitch	Special
-hi def link tcltkPackConfSwitch	Special
-hi def link tcltkMaths		Special
-hi def link tcltkNamespaceSwitch Special
-hi def link tcltkWidgetSwitch	Special
-hi def link tcltkPackConfColor	Identifier
-"hi def link tcltkLsort		Statement
-hi def link tclVarRef           Identifier
+  HiLink tcltkCommandColor	Statement
+  HiLink tcltkWidgetColor      Structure
+  HiLink tclLineContinue       WarningMsg
+  HiLink tcltkStringSwitch	Special
+  HiLink tcltkArraySwitch	Special
+  HiLink tcltkLsortSwitch	Special
+  HiLink tcltkPackSwitch	Special
+  HiLink tcltkPackConfSwitch	Special
+  HiLink tcltkMaths		Special
+  HiLink tcltkNamespaceSwitch	Special
+  HiLink tcltkWidgetSwitch	Special
+  HiLink tcltkPackConfColor	Identifier
+  "HiLink tcltkLsort		Statement
+  HiLink tclVarRef             Identifier
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "tcl"
 

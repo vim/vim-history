@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 May 05
+" Last change:	2001 May 13
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -96,7 +96,7 @@ au BufNewFile,BufRead *.asp
 
 " Assembly (all kinds)
 " *.lst is not pure assembly, it has two extra columns (address, byte codes)
-au BufNewFile,BufRead *.asm,*.[sS],*.mac,*.lst	call <SID>FTasm()
+au BufNewFile,BufRead *.asm,*.[sS],*.[aA],*.mac,*.lst	call <SID>FTasm()
 
 " This function checks for the kind of assembly that is wanted by the user, or
 " can be detected from the first five lines of the file.
@@ -394,6 +394,9 @@ au BufNewFile,BufRead *.gpi			setf gnuplot
 " GNU Server Pages
 au BufNewFile,BufRead *.gsp			setf gsp
 
+" GTK RC
+au BufNewFile,BufRead gtkrc			setf gtkrc
+
 " Haskell
 au BufNewFile,BufRead *.hs			setf haskell
 au BufNewFile,BufRead *.lhs			setf lhaskell
@@ -430,6 +433,9 @@ au BufNewFile,BufRead *.4gl,*.4gh,*.m4gl	setf fgl
 
 " .INI file for MSDOS
 au BufNewFile,BufRead *.ini			setf dosini
+
+" SysV Inittab
+au BufNewFile,BufRead inittab			setf inittab
 
 " Inno Setup
 au BufNewFile,BufRead *.iss			setf iss
@@ -1136,6 +1142,9 @@ au BufNewFile,BufRead *fvwmrc*,*fvwm95*.hook
 	\ let b:fvwm_version = 1 | setf fvwm
 au BufNewFile,BufRead *fvwm2rc*
 	\ let b:fvwm_version = 2 | setf fvwm
+
+" GTK RC
+au BufNewFile,BufRead gtkrc*			setf gtkrc
 
 " Jam
 au BufNewFile,BufRead Prl*.*,JAM*.*		setf jam

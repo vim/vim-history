@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.0ae.  Last change: 2001 May 05
+*motion.txt*    For Vim version 6.0af.  Last change: 2001 May 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -596,7 +596,7 @@ deletes from the cursor position to the start of the next word, "da" deletes
 the word under the cursor and the space after or before it.
 
 ==============================================================================
-7. Marks					*mark-motions* *em5* *em6*
+7. Marks					*mark-motions* *E20* *E78*
 
 Jumping to a mark can be done in two ways:
 1. With ` (backtick):	  The cursor is positioned at the specified location
@@ -613,7 +613,7 @@ m'  or  m`		Set the previous context mark.  This can be jumped to
 			with the "''" or "``" command (does not move the
 			cursor, this is not a motion command).
 
-						*:ma* *:mark* *em8*
+						*:ma* *:mark* *E191*
 :[range]ma[rk] {a-zA-Z}	Set mark {a-zA-Z} at last line number in [range],
 			column 0.  Default is cursor line.
 
@@ -640,7 +640,7 @@ g'{mark}  g`{mark}
 :marks			List all the current marks (not a motion command).
 			The |'(|, |')|, |'{| and |'}| marks are not listed.
 			{not in Vi}
-						*me1*
+						*E283*
 :marks {arg}		List the marks that are mentioned in {arg} (not a
 			motion command).  For example: >
 				:marks aB
