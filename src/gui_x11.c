@@ -1223,6 +1223,7 @@ gui_mch_prepare(argc, argv)
 	    if (strcmp("-ws", argv[arg]) == 0)
 	{
 	    usingSunWorkShop++;
+	    p_acd = TRUE;
 	    gui.dofork = FALSE;	/* don't fork() when starting GUI */
 	    mch_memmove(&argv[arg], &argv[arg + 1],
 					    (--*argc - arg) * sizeof(char *));
