@@ -4841,27 +4841,28 @@ else
 fi
 rm -f conftest*
 
+
 echo $ac_n "checking size of int""... $ac_c" 1>&6
-echo "configure:4846: checking size of int" >&5
+echo "configure:4847: checking size of int" >&5
 if eval "test \"`echo '$''{'ac_cv_sizeof_int'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   if test "$cross_compiling" = yes; then
-    { echo "configure: error: can not run test program while cross compiling" 1>&2; exit 1; }
+  { echo "configure: error: failed to compile test program" 1>&2; exit 1; }
 else
   cat > conftest.$ac_ext <<EOF
-#line 4854 "configure"
+#line 4855 "configure"
 #include "confdefs.h"
 #include <stdio.h>
-main()
-{
-  FILE *f=fopen("conftestval", "w");
-  if (!f) exit(1);
-  fprintf(f, "%d\n", sizeof(int));
-  exit(0);
-}
+		main()
+		{
+		  FILE *f=fopen("conftestval", "w");
+		  if (!f) exit(1);
+		  fprintf(f, "%d\n", (int)sizeof(int));
+		  exit(0);
+		}
 EOF
-if { (eval echo configure:4865: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:4866: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   ac_cv_sizeof_int=`cat conftestval`
 else
