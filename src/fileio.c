@@ -293,6 +293,10 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, flags)
 	    curbuf->b_mtime = 0;
 	    curbuf->b_mtime_read = 0;
 	}
+
+	/* Reset the "new file" flag.  It will be set again below when the
+	 * file doesn't exist. */
+	curbuf->b_flags &= ~(BF_NEW | BF_NEW_W);
     }
 
 /*
