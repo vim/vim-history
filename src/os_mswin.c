@@ -2983,7 +2983,7 @@ points_to_pixels(char_u *str, char_u **end, int vertical, int pprinter_dc)
 	}
 	else
 	{
-	    if (!isdigit(*str))
+	    if (!VIM_ISDIGIT(*str))
 		break;
 
 	    points *= 10;

@@ -1188,7 +1188,7 @@ gui_mch_free_font(GuiFont font)
     static int
 hex_digit(int c)
 {
-    if (vim_isdigit(c))
+    if (VIM_ISDIGIT(c))
 	return c - '0';
     c = TOLOWER_ASC(c);
     if (c >= 'a' && c <= 'f')
