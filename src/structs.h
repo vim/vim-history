@@ -691,13 +691,13 @@ typedef struct
 #endif
 } vir_T;
 
-#define CONV_NONE	0
-#define CONV_TO_UTF8	1
-#define CONV_TO_LATIN1	2
-#define CONV_ICONV	3
+#define CONV_NONE		0
+#define CONV_TO_UTF8		1
+#define CONV_TO_LATIN1		2
+#define CONV_ICONV		3
 #ifdef FEAT_WINDOWS
-# define CONV_DBCS	4	/* ucs-2 -> dbcs */
-# define CONV_CODEPAGE	5	/* current codepage -> ucs-2 */
+# define CONV_UCS2_TO_DBCS	4	/* ucs-2 -> dbcs */
+# define CONV_DBCS_TO_UCS2	5	/* current codepage -> ucs-2 */
 #endif
 
 /*
