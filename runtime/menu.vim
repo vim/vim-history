@@ -2,7 +2,10 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Oct 29
+" Last Change:	Tue, 15 Jan 2002 21:56:21 +0100
+
+" Note that ":an" (short for ":anoremenu") is often used to make a menu work
+" in all modes and avoid side effects from mappings defined by the user.
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
