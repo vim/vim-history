@@ -2207,10 +2207,8 @@ jump_to_mouse(flags, inclusive, which_button)
 #endif
     static int	prev_row = -1;
     static int	prev_col = -1;
-#ifdef FEAT_CMDWIN
-    static int  drag_prev_win = FALSE;	/* dragging status line above
-					   command-line window */
-#endif
+    static win_T *dragwin = NULL;	/* window being dragged */
+    static int	did_drag = FALSE;	/* drag was noticed */
 
     win_T	*wp, *old_curwin;
     pos_T	old_cursor;
@@ -2224,6 +2222,16 @@ jump_to_mouse(flags, inclusive, which_button)
 
     mouse_past_bottom = FALSE;
     mouse_past_eol = FALSE;
+
+    if (flags & MOUSE_RELEASED)
+    {
+	/* On button release we may change window focus if positioned on a
+	 * status line and no dragging happened. */
+	if (dragwin != NULL && !did_drag)
+	    flags &= ~(MOUSE_FOCUS | MOUSE_DID_MOVE);
+	dragwin = NULL;
+	did_drag = FALSE;
+    }
 
     if ((flags & MOUSE_DID_MOVE)
 	    && prev_row == mouse_row
@@ -2282,16 +2290,23 @@ retnomove:
 #else
 	wp = firstwin;
 #endif
+	dragwin = NULL;
 	/*
 	 * winpos and height may change in win_enter()!
 	 */
 	if (row >= wp->w_height)		/* In (or below) status line */
+	{
 	    on_status_line = row - wp->w_height + 1;
+	    dragwin = wp;
+	}
 	else
 	    on_status_line = 0;
 #ifdef FEAT_VERTSPLIT
 	if (col >= wp->w_width)		/* In separator line */
+	{
 	    on_sep_line = col - wp->w_width + 1;
+	    dragwin = wp;
+	}
 	else
 	    on_sep_line = 0;
 
@@ -2333,19 +2348,21 @@ retnomove:
 	}
 #endif
 #ifdef FEAT_CMDWIN
-	drag_prev_win = FALSE;
 	if (cmdwin_type != 0 && wp != curwin)
 	{
 	    /* A click outside the command-line window: Use modeless
 	     * selection if possible.  Allow dragging the status line of the
 	     * window just above the command-line window. */
-	    if (wp == curwin->w_prev)
-		drag_prev_win = TRUE;
-	    else
+	    if (wp != curwin->w_prev)
+	    {
 		on_status_line = 0;
+		dragwin = NULL;
+	    }
+# ifdef FEAT_VERTSPLIT
 	    on_sep_line = 0;
+# endif
 # ifdef FEAT_CLIPBOARD
-	    if (drag_prev_win)
+	    if (on_status_line)
 		return IN_STATUS_LINE;
 	    return IN_OTHER_WIN;
 # else
@@ -2356,7 +2373,11 @@ retnomove:
 	}
 #endif
 #ifdef FEAT_WINDOWS
-	win_enter(wp, TRUE);			/* can make wp invalid! */
+	/* Only change window focus when not clicking on or dragging the
+	 * status line.  Do change focus when releasing the mouse button
+	 * (MOUSE_FOCUS was set above if we dragged first). */
+	if (dragwin == NULL || (flags & MOUSE_RELEASED))
+	    win_enter(wp, TRUE);		/* can make wp invalid! */
 # ifdef CHECK_DOUBLE_CLICK
 	/* set topline, to be able to check for double click ourselves */
 	if (curwin != old_curwin)
@@ -2394,29 +2415,28 @@ retnomove:
     else if (on_status_line && which_button == MOUSE_LEFT)
     {
 #ifdef FEAT_WINDOWS
-	wp = curwin;
-# ifdef FEAT_CMDWIN
-	if (cmdwin_type != 0 && drag_prev_win && curwin->w_prev != NULL)
-	    /* Drag the status line of the window above the command-line
-	     * window. */
-	    curwin = curwin->w_prev;
-# endif
-	/* Drag the status line */
-	count = row - curwin->w_winrow - curwin->w_height + 1 - on_status_line;
-	win_drag_status_line(count);
-
-# ifdef FEAT_CMDWIN
-	curwin = wp;
-# endif
+	if (dragwin != NULL)
+        {
+	    /* Drag the status line */
+	    count = row - dragwin->w_winrow - dragwin->w_height + 1
+							     - on_status_line;
+	    win_drag_status_line(dragwin, count);
+	    did_drag |= count;
+	}
 #endif
 	return IN_STATUS_LINE;			/* Cursor didn't move */
     }
 #ifdef FEAT_VERTSPLIT
     else if (on_sep_line && which_button == MOUSE_LEFT)
     {
-	/* Drag the separator column */
-	count = col - curwin->w_wincol - curwin->w_width + 1 - on_sep_line;
-	win_drag_vsep_line(count);
+	if (dragwin != NULL)
+	{
+	    /* Drag the separator column */
+	    count = col - dragwin->w_wincol - dragwin->w_width + 1
+								- on_sep_line;
+	    win_drag_vsep_line(dragwin, count);
+	    did_drag |= count;
+	}
 	return IN_SEP_LINE;			/* Cursor didn't move */
     }
 #endif
