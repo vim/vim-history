@@ -30,6 +30,8 @@ do_debug(cmd)
     int		save_State = State;
     int		save_did_emsg = did_emsg;
     int		save_cmd_silent = cmd_silent;
+    int		save_msg_silent = msg_silent;
+    int		save_emsg_silent = emsg_silent;
     tasave_T	typeaheadbuf;
 # ifdef FEAT_EX_EXTRA
     int		save_ex_normal_busy;
@@ -60,10 +62,12 @@ do_debug(cmd)
     settmode(TMODE_RAW);
     starttermcap();
 
-    ++RedrawingDisabled;	    /* don't redisplay the window */
-    ++no_wait_return;		    /* don't wait for return */
-    did_emsg = FALSE;		    /* don't use error from debugged stuff */
-    cmd_silent = FALSE;		    /* display commands */
+    ++RedrawingDisabled;	/* don't redisplay the window */
+    ++no_wait_return;		/* don't wait for return */
+    did_emsg = FALSE;		/* don't use error from debugged stuff */
+    cmd_silent = FALSE;		/* display commands */
+    msg_silent = FALSE;		/* display messages */
+    emsg_silent = FALSE;	/* display error messages */
 
     State = NORMAL;
 #ifdef FEAT_SNIFF
@@ -71,7 +75,7 @@ do_debug(cmd)
 #endif
 
     if (!debug_did_msg)
-	MSG(_("Entering Debug mode.  Type \"cont\" to leave."));
+	MSG(_("Entering Debug mode.  Type \"cont\" to continue."));
     if (sourcing_name != NULL)
 	msg(sourcing_name);
     if (sourcing_lnum != 0)
@@ -196,6 +200,8 @@ do_debug(cmd)
     State = save_State;
     did_emsg = save_did_emsg;
     cmd_silent = save_cmd_silent;
+    msg_silent = save_msg_silent;
+    emsg_silent = save_emsg_silent;
 
     /* Only print the message again when typing a command before coming back
      * here. */
