@@ -286,7 +286,8 @@ static void f_foreground __ARGS((VAR argvars, VAR retvar));
 static void f_getbufvar __ARGS((VAR argvars, VAR retvar));
 static void f_getchar __ARGS((VAR argvars, VAR retvar));
 static void f_getcharmod __ARGS((VAR argvars, VAR retvar));
-static void f_getwinvar __ARGS((VAR argvars, VAR retvar));
+static void f_getcmdline __ARGS((VAR argvars, VAR retvar));
+static void f_getcmdpos __ARGS((VAR argvars, VAR retvar));
 static void f_getcwd __ARGS((VAR argvars, VAR retvar));
 static void f_getfsize __ARGS((VAR argvars, VAR retvar));
 static void f_getftime __ARGS((VAR argvars, VAR retvar));
@@ -295,6 +296,7 @@ static void f_getreg __ARGS((VAR argvars, VAR retvar));
 static void f_getregtype __ARGS((VAR argvars, VAR retvar));
 static void f_getwinposx __ARGS((VAR argvars, VAR retvar));
 static void f_getwinposy __ARGS((VAR argvars, VAR retvar));
+static void f_getwinvar __ARGS((VAR argvars, VAR retvar));
 static void f_glob __ARGS((VAR argvars, VAR retvar));
 static void f_globpath __ARGS((VAR argvars, VAR retvar));
 static void f_has __ARGS((VAR argvars, VAR retvar));
@@ -333,6 +335,7 @@ static void f_nextnonblank __ARGS((VAR argvars, VAR retvar));
 static void f_nr2char __ARGS((VAR argvars, VAR retvar));
 static void f_prevnonblank __ARGS((VAR argvars, VAR retvar));
 static void f_setbufvar __ARGS((VAR argvars, VAR retvar));
+static void f_setcmdpos __ARGS((VAR argvars, VAR retvar));
 static void f_setwinvar __ARGS((VAR argvars, VAR retvar));
 static void f_rename __ARGS((VAR argvars, VAR retvar));
 static void f_resolve __ARGS((VAR argvars, VAR retvar));
@@ -2805,6 +2808,8 @@ static struct fst
     {"getbufvar",	2, 2, f_getbufvar},
     {"getchar",		0, 1, f_getchar},
     {"getcharmod",	0, 0, f_getcharmod},
+    {"getcmdline",	0, 0, f_getcmdline},
+    {"getcmdpos",	0, 0, f_getcmdpos},
     {"getcwd",		0, 0, f_getcwd},
     {"getfsize",	1, 1, f_getfsize},
     {"getftime",	1, 1, f_getftime},
@@ -2863,6 +2868,7 @@ static struct fst
     {"server2client",	2, 2, f_server2client},
     {"serverlist",	0, 0, f_serverlist},
     {"setbufvar",	3, 3, f_setbufvar},
+    {"setcmdpos",	1, 1, f_setcmdpos},
     {"setline",		2, 2, f_setline},
     {"setreg",		2, 3, f_setreg},
     {"setwinvar",	3, 3, f_setwinvar},
@@ -4315,6 +4321,31 @@ f_getcharmod(argvars, retvar)
     VAR		retvar;
 {
     retvar->var_val.var_number = mod_mask;
+}
+
+/*
+ * "getcmdline()" function
+ */
+/*ARGSUSED*/
+    static void
+f_getcmdline(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    retvar->var_type = VAR_STRING;
+    retvar->var_val.var_string = get_cmdline_str();
+}
+
+/*
+ * "getcmdpos()" function
+ */
+/*ARGSUSED*/
+    static void
+f_getcmdpos(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    retvar->var_val.var_number = get_cmdline_pos() + 1;
 }
 
 /*
@@ -6352,6 +6383,18 @@ f_setbufvar(argvars, retvar)
 }
 
 /*
+ * "setcmdpos()" function
+ */
+    static void
+f_setcmdpos(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    retvar->var_val.var_number = set_cmdline_pos(
+					(int)get_var_number(&argvars[0]) - 1);
+}
+
+/*
  * "setline()" function
  */
     static void
@@ -6376,6 +6419,7 @@ f_setline(argvars, retvar)
 	retvar->var_val.var_number = 0;
     }
 }
+
 /*
  * "setreg()" function
  */

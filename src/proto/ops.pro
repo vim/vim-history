@@ -8,6 +8,7 @@ void shift_line __ARGS((int left, int round, int amount));
 void op_reindent __ARGS((oparg_T *oap, int (*how)(void)));
 int get_expr_register __ARGS((void));
 void set_expr_line __ARGS((char_u *new_line));
+char_u *get_expr_line __ARGS((void));
 int valid_yank_reg __ARGS((int regname, int writing));
 void *get_register __ARGS((int name, int copy));
 void put_register __ARGS((int name, void *reg));
