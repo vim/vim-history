@@ -2861,7 +2861,8 @@ build_drop_cmd(filec, filev, sendReply)
     }
     /* The :drop commands goes to Insert mode when 'insertmode' is set, use
      * CTRL-\ CTRL-N again. */
-    ga_concat(&ga, (char_u *)"<CR><C-\\><C-N>:if exists('*inputrestore')|call inputrestore()|endif|cd -");
+    ga_concat(&ga, (char_u *)"|if exists('*inputrestore')|call inputrestore()|endif<CR>");
+    ga_concat(&ga, (char_u *)"<C-\\><C-N>:cd -");
     if (sendReply)
 	ga_concat(&ga, (char_u *)"<CR>:call SetupRemoteReplies()");
     if (inicmd != NULL)
