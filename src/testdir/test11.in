@@ -10,10 +10,13 @@ Tests for autocommands:
 
 Note: This test will fail if "gzip" is not available.
 $GZIP is made empty, "-v" would cause trouble.
+Use a FileChangedShell autocommand to avoid a prompt for "Xtestfile.gz" being
+modified outside of Vim (noticed on Solaris).
 
 STARTTEST
 :so small.vim
 :let $GZIP = ""
+:au FileChangedShell * echo "caught FileChangedShell"
 :set bin
 :au FileWritePre    *.gz   '[,']!gzip
 :au FileWritePost   *.gz   undo
@@ -47,6 +50,10 @@ gg/^end of testfile
 :au! FileReadPost   *.gz   '[,']s/l/L/
 :$r Xtestfile.gz             " Read compressed file
 :w                           " write it, after filtering
+:au!             " remove all autocommands
+:e               " Edit test.out again
+:set nobin ff&   " use the default fileformat for writing
+:w
 :qa!
 ENDTEST
 
