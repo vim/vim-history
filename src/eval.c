@@ -1315,8 +1315,13 @@ ex_call(eap)
      * call, and the loop is broken.
      */
     if (eap->skip)
+    {
 	++emsg_skip;
-    for (lnum = eap->line1; lnum <= eap->line2; ++lnum)
+	lnum = eap->line2;	/* do it once, also with an invalid range */
+    }
+    else
+	lnum = eap->line1;
+    for ( ; lnum <= eap->line2; ++lnum)
     {
 	if (!eap->skip && eap->addr_count > 0)
 	{
