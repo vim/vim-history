@@ -1162,7 +1162,6 @@ pascal OSErr HandleODocAE (const AppleEvent *theAEvent, AppleEvent *theReply, lo
       return (error);
     }
 
-#ifdef MACOS_X_UNIX
     if (starting > 0)
     {
 	int i;
@@ -1179,7 +1178,6 @@ pascal OSErr HandleODocAE (const AppleEvent *theAEvent, AppleEvent *theReply, lo
 	}
 	goto finished;
     }
-#endif
 
     /* Handle the drop, :edit to get to the file */
     handle_drop(numFiles, fnames, FALSE);
@@ -1208,10 +1206,7 @@ pascal OSErr HandleODocAE (const AppleEvent *theAEvent, AppleEvent *theReply, lo
     setcursor();
     out_flush();
 
-#ifdef MACOS_X_UNIX
   finished:
-#endif
-
     AEDisposeDesc(&theList); /* dispose what we allocated */
 
     error = HandleUnusedParms (theAEvent);
