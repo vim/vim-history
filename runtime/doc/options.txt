@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 5.5.  Last change: 1999 Oct 02
+*options.txt*   For Vim version 5.5.  Last change: 1999 Dec 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -357,14 +357,15 @@ a Trojan horse text file with modelines).
 			directory).  {not in Vi}
 
 							*:mkv* *:mkvimrc*
-:mkv[imrc][!] [file]	Like as :mkexrc, but default is ".vimrc" in the
+:mkv[imrc][!] [file]	Like ":mkexrc", but the default is ".vimrc" in the
 			current directory.  The ":version" command is also
 			written to the file.  {not in Vi}
 
 							*:mks* *:mksession*
-:mks[ession][!] [file]	Like :mkvimrc, but write commands to the end of the
+:mks[ession][!] [file]	Like ":mkvimrc", but write commands to the end of the
 			file that reload the files being edited at the time of
 			the command.  |session-file|
+			The default file name is "Session.vim".
 			The created file can be loaded with a |:source|
 			command to recreate the current edit session.
 			{not in Vi} {only when compiled with the |+mksession|
@@ -436,10 +437,10 @@ resulting file, when executed with a ":source" command:
    such as creating menu items in the GUI version.
 
 The full filename of your current session is available in the internal
-variable "this_session".  See |this_session-variable|.
+variable "v:this_session".  See |this_session-variable|.
 
 So an example mapping might be (all one line):
->  :nmap <S-F1> :wa | execute("mksession " . this_session)<CR>:so $VIM/sessions/
+>  :nmap <S-F1> :wa<Bar>exe "mksession! " . v:this_session<CR>:so $VIM/sessions/
 which saves the files and session, and starts off the command to load another.
 
 ==============================================================================
