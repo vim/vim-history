@@ -45,6 +45,8 @@
 #   TCL_VER	define to version of TCL being used (83)
 #   DYNAMIC_TCL no or yes: use yes to load the TCL DLL dynamically (no)
 # RUBY		define to path to Ruby dir to get Ruby support (not defined)
+#		NOTE: You may have to remove the defines for uid_t and gid_t
+#		from the Ruby config.h header file.
 #   RUBY_VER	define to version of Ruby being used (16)
 #		NOTE: compilation on WinNT/2K/XP requires
 #		at least version 1.6.5 of Ruby.  Earlier versions
@@ -320,15 +322,29 @@ RUBY_VER = 16
 !ifndef RUBY_VER_LONG
 RUBY_VER_LONG = 1.6
 !endif
+
+!if "$(RUBY_VER)" == "16"
 !ifndef RUBY_PLATFORM
 RUBY_PLATFORM = i586-mswin32
 !endif
+!ifndef RUBY_INSTALL_NAME
+RUBY_INSTALL_NAME = mswin32-ruby$(RUBY_VER)
+!endif
+!else
+!ifndef RUBY_PLATFORM
+RUBY_PLATFORM = i386-mswin32
+!endif
+!ifndef RUBY_INSTALL_NAME
+RUBY_INSTALL_NAME = msvcrt-ruby$(RUBY_VER)
+!endif
+!endif
+
 INTERP_DEFINES = $(INTERP_DEFINES) -DFEAT_RUBY
 INCLUDE = $(RUBY)\lib\ruby\$(RUBY_VER_LONG)\$(RUBY_PLATFORM);$(INCLUDE)
-RUBY_INSTALL_NAME = mswin32-ruby$(RUBY_VER)
 
 !if "$(DYNAMIC_RUBY)" == "yes"
 INTERP_DEFINES = $(INTERP_DEFINES) -DDYNAMIC_RUBY -DDYNAMIC_RUBY_DLL=\"$(RUBY_INSTALL_NAME).dll\"
+INTERP_DEFINES = $(INTERP_DEFINES) -DDYNAMIC_RUBY_VER=$(RUBY_VER)
 RUBY_LIB_FLAG = /nodefaultlib:
 !endif
 !endif
