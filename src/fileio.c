@@ -2539,6 +2539,10 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		    ml_timestamp(buf);
 		    buf->b_flags &= ~BF_WRITE_MASK;
 		}
+		if (reset_changed && buf->b_changed)
+		    /* Buffer still changed, the autocommands didn't work
+		     * properly. */
+		    return FAIL;
 		return OK;
 	    }
 	    EMSG(_("E203: Autocommands deleted or unloaded buffer to be written"));
