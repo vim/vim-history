@@ -1432,8 +1432,10 @@ fi
 
   if test "X$vi_cv_path_perl" != "X"; then
     echo $ac_n "checking Perl version""... $ac_c" 1>&6
-echo "configure:1419: checking Perl version" >&5
+echo "configure:1436: checking Perl version" >&5
     if $vi_cv_path_perl -e 'require 5.003_01' >/dev/null 2>/dev/null; then
+     eval `$vi_cv_path_perl -V:usethreads`
+     if test "X$usethreads" = "XUNKNOWN" -o "X$usethreads" = "Xundef"; then
       echo "$ac_t""OK" 1>&6
       eval `$vi_cv_path_perl -V:shrpenv`
       if test "X$shrpenv" = "XUNKNOWN"; then # pre 5.003_04
@@ -1462,8 +1464,11 @@ echo "configure:1419: checking Perl version" >&5
 #define FEAT_PERL 1
 EOF
 
+     else
+      echo "$ac_t"">>> Perl with threads cannot be used <<<" 1>&6
+     fi
     else
-      echo "$ac_t""too old; need Perl version 5.003_01 or later" 1>&6
+      echo "$ac_t"">>> too old; need Perl version 5.003_01 or later <<<" 1>&6
     fi
   fi
 fi

@@ -236,6 +236,8 @@ if test "$enable_perlinterp" = "yes"; then
   if test "X$vi_cv_path_perl" != "X"; then
     AC_MSG_CHECKING(Perl version)
     if $vi_cv_path_perl -e 'require 5.003_01' >/dev/null 2>/dev/null; then
+     eval `$vi_cv_path_perl -V:usethreads`
+     if test "X$usethreads" = "XUNKNOWN" -o "X$usethreads" = "Xundef"; then
       AC_MSG_RESULT(OK)
       eval `$vi_cv_path_perl -V:shrpenv`
       if test "X$shrpenv" = "XUNKNOWN"; then # pre 5.003_04
@@ -264,8 +266,11 @@ if test "$enable_perlinterp" = "yes"; then
       PERL_OBJ="objects/if_perl.o objects/if_perlsfio.o"
       PERL_PRO="if_perl.pro if_perlsfio.pro"
       AC_DEFINE(FEAT_PERL)
+     else
+      AC_MSG_RESULT(>>> Perl with threads cannot be used <<<)
+     fi
     else
-      AC_MSG_RESULT(too old; need Perl version 5.003_01 or later)
+      AC_MSG_RESULT(>>> too old; need Perl version 5.003_01 or later <<<)
     fi
   fi
 fi
