@@ -26,7 +26,12 @@ To build the installable .exe:
 5.  Go to the OleVim directory and build OpenWithVim.exe and SendToVim.exe (or
     get them from a binary archive).
 
-6.  Do "make uganda.nsis.txt" in runtime/doc.  This requires sed, you may have
+6.  Get a "diff.exe" program and put it in the "../.." directory (above the
+    "vim60" directory, it's the same for all Vim versions).
+    You can find one in previous Vim versions or in this archive:
+		http://www.mossbayeng.com/~ron/vim/diffutils.tar.gz
+
+7.  Do "make uganda.nsis.txt" in runtime/doc.  This requires sed, you may have
     to do this on Unix.  Make sure the file is in DOS file format!
 
 Install NSIS if you didn't do that already.
