@@ -1885,6 +1885,7 @@ buflist_findnr(nr)
 
 /*
  * Get name of file 'n' in the buffer list.
+ * When the file has no name an empty string is returned.
  * home_replace() is used to shorten the file name (used for marks).
  * Returns a pointer to allocated memory, of NULL when failed.
  */
@@ -4545,12 +4546,21 @@ buf_contents_changed(buf)
 #endif
 
     if (curbuf != newbuf)	/* safety check */
-    {
-	/* Don't increase the last buffer number. */
-	if (newbuf->b_fnum == top_file_num - 1)
-	    --top_file_num;
-	close_buffer(NULL, newbuf, DOBUF_WIPE);
-    }
+	wipe_buffer(newbuf);
 
     return differ;
+}
+
+/*
+ * Wipe out a buffer and decrement the last buffer number if it was used for
+ * this buffer.  Call this to wipe out a temp buffer that does not contain any
+ * marks.
+ */
+    void
+wipe_buffer(buf)
+    buf_T	*buf;
+{
+    if (buf->b_fnum == top_file_num - 1)
+	--top_file_num;
+    close_buffer(NULL, buf, DOBUF_WIPE);
 }

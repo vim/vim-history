@@ -4376,6 +4376,8 @@ ex_help(eap)
     char_u	**matches;
     int		need_free = FALSE;
     char_u	*p;
+    int		empty_fnum = 0;
+    buf_T	*buf;
 
     if (eap != NULL)
     {
@@ -4442,7 +4444,7 @@ ex_help(eap)
 #endif
 	{
 	    /*
-	     * There is no help buffer yet.
+	     * There is no help window yet.
 	     * Try to open the file specified by the "helpfile" option.
 	     */
 	    if ((helpfd = mch_fopen((char *)p_hf, READBIN)) == NULL)
@@ -4479,6 +4481,7 @@ ex_help(eap)
 	     */
 	    (void)do_ecmd(0, NULL, NULL, NULL, ECMD_LASTL,
 						   ECMD_HIDE + ECMD_SET_HELP);
+	    empty_fnum = curbuf->b_fnum;
 	}
     }
 
@@ -4491,6 +4494,14 @@ ex_help(eap)
 	need_free = FALSE;
     }
     do_tag(arg, DT_HELP, 1, FALSE, TRUE);
+
+    /* Delete the empty buffer if we're not using it. */
+    if (empty_fnum != 0 && curbuf->b_fnum != empty_fnum)
+    {
+	buf = buflist_findnr(empty_fnum);
+	if (buf != NULL)
+	    wipe_buffer(buf);
+    }
 
     /*
      * Always set these options after jumping to a help tag, because the user
