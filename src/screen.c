@@ -1171,6 +1171,10 @@ win_update(wp)
 		    from = wp->w_old_cursor_lnum;
 		if (wp->w_old_cursor_lnum > to)
 		    to = wp->w_old_cursor_lnum;
+		if (wp->w_old_visual_lnum < from)
+		    from = wp->w_old_visual_lnum;
+		if (wp->w_old_visual_lnum > to)
+		    to = wp->w_old_visual_lnum;
 	    }
 	    else
 	    {
