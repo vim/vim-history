@@ -420,6 +420,7 @@ buf_clear_file(buf)
     buf->b_shortname = FALSE;
 #endif
     buf->b_p_eol = TRUE;
+    buf->b_start_eol = TRUE;
 #ifdef FEAT_MBYTE
     buf->b_p_bomb = FALSE;
 #endif
