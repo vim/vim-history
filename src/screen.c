@@ -1068,7 +1068,7 @@ win_line(wp, lnum, startrow, endrow)
     int		    row;		/* row in the window, excl w_winpos */
     int		    screen_row;		/* row on the screen, incl w_winpos */
     char_u	    *ptr;
-#ifdef SYNTAX_HL
+#if defined(SYNTAX_HL) || defined(EXTRA_SEARCH)
     char_u	    *line;
 #endif
     char_u	    extra[16];		/* "%ld" must fit in here */
@@ -1251,8 +1251,10 @@ win_line(wp, lnum, startrow, endrow)
 #ifdef EXTRA_SEARCH
     matchp = ptr;
 #endif
-#ifdef SYNTAX_HL
+#if defined(SYNTAX_HL) || defined(EXTRA_SEARCH)
     line = ptr;
+#endif
+#ifdef SYNTAX_HL
     rcol = 0;
 #endif
 #ifdef MULTI_BYTE
@@ -2572,8 +2574,10 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
     char_u	*s;
     char_u	*t;
     char_u	*linecont;
+#ifdef WANT_EVAL
     WIN		*o_curwin;
     BUF		*o_curbuf;
+#endif
     int		empty_line;
     colnr_t	virtcol;
     long	l;
@@ -2797,14 +2801,6 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	    break;
 
 	case STL_VIM_EXPR: /* '{' */
-	    sprintf((char *) tmp, "%d", curbuf->b_fnum);
-	    set_internal_string_var((char_u *)"actual_curbuf", tmp);
-
-	    o_curbuf = curbuf;
-	    o_curwin = curwin;
-	    curwin = wp;
-	    curbuf = wp->w_buffer;
-
 	    itemisflag = TRUE;
 	    t = p;
 	    while (*s != '}')
@@ -2812,8 +2808,19 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	    s++;
 	    *p = 0;
 	    p = t;
+
+#ifdef WANT_EVAL
 	    if (RedrawingDisabled)
 		break; /* Might be executing a function */
+
+	    sprintf((char *)tmp, "%d", curbuf->b_fnum);
+	    set_internal_string_var((char_u *)"actual_curbuf", tmp);
+
+	    o_curbuf = curbuf;
+	    o_curwin = curwin;
+	    curwin = wp;
+	    curbuf = wp->w_buffer;
+
 	    str = eval_to_string(p, &t);
 	    if (str != NULL && *str != 0)
 	    {
@@ -2834,6 +2841,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	    curbuf = o_curbuf;
 	    STRCPY(tmp, "g:actual_curbuf");
 	    do_unlet(tmp, TRUE);
+#endif
 	    break;
 
 	case STL_LINE:
