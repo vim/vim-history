@@ -7523,6 +7523,12 @@ showmode()
 	msg_clr_cmdline();		/* will reset clear_cmdline */
 
 #ifdef FEAT_CMDL_INFO
+# ifdef FEAT_VISUAL
+    /* In Visual mode the size of the selected area must be redrawn. */
+    if (VIsual_active)
+	clear_showcmd();
+# endif
+
     /* If the last window has no status line, the ruler is after the mode
      * message and must be redrawn */
 # ifdef FEAT_WINDOWS
