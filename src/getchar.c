@@ -3749,7 +3749,11 @@ check_abbr(c, ptr, col, mincol)
     int		len;
     int		scol;		/* starting column of the abbr. */
     int		j;
+#ifdef FEAT_MBYTE
+    char_u	tb[MB_MAXBYTES + 4];
+#else
     char_u	tb[4];
+#endif
     mapblock_T	*mp;
 #ifdef FEAT_LOCALMAP
     mapblock_T	*mp2;
@@ -3867,11 +3871,19 @@ check_abbr(c, ptr, col, mincol)
 		{
 		    tb[j++] = K_SPECIAL;
 		    tb[j++] = K_SECOND(c);
-		    c = K_THIRD(c);
+		    tb[j++] = K_THIRD(c);
 		}
-		else if (c < ABBR_OFF && (c < ' ' || c > '~'))
-		    tb[j++] = Ctrl_V;	/* special char needs CTRL-V */
-		tb[j++] = c;
+		else
+		{
+		    if (c < ABBR_OFF && (c < ' ' || c > '~'))
+			tb[j++] = Ctrl_V;	/* special char needs CTRL-V */
+#ifdef FEAT_MBYTE
+		    if (has_mbyte)
+			j += (*mb_char2bytes)(c, tb + j);
+		    else
+#endif
+			tb[j++] = c;
+		}
 		tb[j] = NUL;
 					/* insert the last typed char */
 		(void)ins_typebuf(tb, 1, 0, TRUE, mp->m_silent);
