@@ -24,10 +24,10 @@ otestje2
 otestje3
 :w
 
-:au WinLeave testje bdel
+:au WinLeave Xtestje2 bdel
 
 :w! test.out
-:au WinLeave testje bdel testje3
+:au WinLeave Xtestje1 bdel Xtestje3
 :close
 :w >>test.out
 :e Xtestje1
