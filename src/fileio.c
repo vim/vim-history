@@ -708,7 +708,15 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
     }
     else if (curbuf->b_help)
     {
-	fenc = (char_u *)"latin1";	/* help files are latin1 */
+	/* Help files are either utf-8 or latin1.  Try utf-8 first, if this
+	 * fails it must be latin1.  Only do this when 'encoding' is utf-8 to
+	 * avoid [converted] remarks all the time. */
+	fenc = (char_u *)"latin1";
+	if (enc_utf8)
+	{
+	    fenc_next = fenc;
+	    fenc = (char_u *)"utf-8";
+	}
 	fenc_alloced = FALSE;
     }
     else if (*p_fencs == NUL)
