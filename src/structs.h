@@ -1049,6 +1049,7 @@ struct file_buffer
     short	b_syn_sync_id;		/* group to sync on */
     long	b_syn_sync_minlines;	/* minimal sync lines offset */
     long	b_syn_sync_maxlines;	/* maximal sync lines offset */
+    long	b_syn_sync_linebreaks;	/* offset for multi-line pattern */
     char_u	*b_syn_linecont_pat;	/* line continuation pattern */
     regprog_T	*b_syn_linecont_prog;	/* line continuation program */
     int		b_syn_linecont_ic;	/* ignore-case flag for above */

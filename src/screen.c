@@ -823,7 +823,15 @@ win_update(wp)
 	if (buf->b_mod_set)
 	{
 	    if (mod_top == 0 || mod_top > buf->b_mod_top)
+	    {
 		mod_top = buf->b_mod_top;
+#ifdef FEAT_SYN_HL
+		/* Need to redraw lines above the change that may be included
+		 * in a pattern match. */
+		if (syntax_present(buf))
+		    mod_top -= buf->b_syn_sync_linebreaks;
+#endif
+	    }
 	    if (mod_bot == 0 || mod_bot < buf->b_mod_bot)
 		mod_bot = buf->b_mod_bot;
 

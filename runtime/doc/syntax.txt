@@ -1895,7 +1895,7 @@ DEFINING MATCHES					*:syn-match*
 				need to make sure syncing takes care of this.
 
 	Example (match a character constant): >
-  :syntax match Character /'.'/s+1e-1
+  :syntax match Character /'.'/hs=s+1,he=e-1
 <
 
 DEFINING REGIONS	*:syn-region* *:syn-start* *:syn-skip* *:syn-end*
@@ -2594,10 +2594,10 @@ two different ways:
 	  include".
 
 ==============================================================================
-10. Synchronizing					*:syn-sync* *E403* *E404*
+10. Synchronizing				*:syn-sync* *E403* *E404*
 
 Vim wants to be able to start redrawing in any position in the document.  To
-make this possible it needs to know the syntax item at the position where
+make this possible it needs to know the syntax state at the position where
 redrawing starts.
 
 :sy[ntax] sync [ccomment [group-name] | minlines={N} | ...]
@@ -2626,6 +2626,17 @@ for a comment or syncing pattern is restricted to N lines backwards (after
 adding "minlines".  This is useful if you have few things to sync on and a
 slow machine.  Example: >
    :syntax sync ccomment maxlines=500
+<
+						*:syn-sync-linebreaks*
+When using a pattern that matches multiple lines, a change in one line may
+cause a pattern to no longer match in a previous line.  This means has to
+start above where the change was made.  How many lines can be specified with
+the "linebreaks" argument.  For example, when a pattern may include one line
+break use this: >
+   :syntax sync linebreaks=1
+The result is that redrawing always starts at least one line before where a
+change was made.  The default value for "linebreaks" is zero.  Usually the
+value for "minlines" is bigger than "linebreaks".
 
 
 First syncing method:			*:syn-sync-first*
