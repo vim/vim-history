@@ -1558,7 +1558,8 @@ hex2nr(c)
     return c - '0';
 }
 
-#if defined(FEAT_TERMRESPONSE) || defined(PROTO)
+#if defined(FEAT_TERMRESPONSE) \
+	|| (defined(FEAT_GUI_GTK) && defined(FEAT_WINDOWS)) || defined(PROTO)
 /*
  * Convert two hex characters to a byte.
  * Return -1 if one of the characters is not hex.

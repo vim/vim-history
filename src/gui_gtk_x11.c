@@ -1400,9 +1400,9 @@ drag_data_received(GtkWidget *widget, GdkDragContext *context,
     int		redo_dirs = FALSE;
     int		i;
     int		n;
-    char	*start;
-    char	*stop;
-    char	*copy;
+    char_u	*start;
+    char_u	*copy;
+    char_u	*names = data->data;
     int		nfiles;
     int		url = FALSE;
     GdkModifierType current_modifiers;
@@ -1415,81 +1415,71 @@ drag_data_received(GtkWidget *widget, GdkDragContext *context,
     /* guard against trash */
     if (data->length <= 0
 	    || data->format != 8
-	    || ((char *)data->data)[data->length] != '\0')
+	    || names[data->length] != '\0')
     {
 	gtk_drag_finish(context, FALSE, FALSE, time);
 	return;
     }
 
-    /* Count how many items there may be and normalize delimiters. */
-    n = 1;
-    copy = strdup((char *)data->data);
+    /* Count how many items there may be and separate them with a NUL.
+     * Apparently the items are separated with \r\n.  This is not documented,
+     * thus be careful not to go past the end.  Also allow separation with NUL
+     * characters. */
+    nfiles = 0;
+    copy = alloc((unsigned)(data->length + 1));
+    start = copy;
     for (i = 0; i < data->length; ++i)
     {
-	if (copy[i] == '\n')
-	    ++n;
-	else if (copy[i] == '\r')
+	if (names[i] == NUL || names[i] == '\n' || names[i] == '\r')
 	{
-	    copy[i] = '\n';
-	    ++n;
+	    if (start > copy && start[-1] != NUL)
+	    {
+		++nfiles;
+		*start++ = NUL;
+	    }
 	}
-    }
-
-    fnames = (char_u **)alloc((n + 1) * sizeof(char_u *));
-
-    start = copy;
-    stop = copy;
-    nfiles = 0;
-    for (i = 0; i < n; ++i)
-    {
-	stop = strchr(start, '\n');
-	if (stop != NULL)
-	    *stop = '\0';
-
-	if (strlen(start) == 0)
-	    continue;
-
-	if (strncmp(start, "http://", 7) == 0
-		|| strncmp(start, "ftp://", 6) == 0)
+	else if (names[i] == '%' && i + 2 < data->length
+					      && hexhex2nr(names + i + 1) > 0)
 	{
-	    url = TRUE;
-	}
-	else if (strncmp(start, "file:", 5) != 0)
-	{
-	    int j;
-
-	    free(copy);
-	    for (j = 0; j < nfiles; ++j)
-		free(fnames[j]);
-	    gtk_drag_finish(context, FALSE, FALSE, time);
-
-	    return;
-	}
-
-	if (strncmp(start, "file://localhost", 16) == 0)
-	{
-	    fnames[nfiles] = (char_u *)strdup(start + 16);
-	    ++nfiles;
+	    *start++ = hexhex2nr(names + i + 1);
+	    i += 2;
 	}
 	else
+	    *start++ = names[i];
+    }
+    if (start > copy && start[-1] != NUL)
+    {
+	*start = NUL;   /* last item didn't have \r or \n */
+	++nfiles;
+    }
+
+    fnames = (char_u **)alloc((unsigned)(nfiles * sizeof(char_u *)));
+
+    url = FALSE;	/* Set when a non-file URL was found. */
+    start = copy;
+    for (n = 0; n < nfiles; ++n)
+    {
+	if (STRNCMP(start, "file://localhost", 16) == 0)
+	    start += 16;
+	else
 	{
-	    if (url == FALSE)
+	    if (STRNCMP(start, "file:", 5) != 0)
+		url = TRUE;
+	    else
 	    {
 		start += 5;
 		while (start[0] == '/' && start[1] == '/')
 		    ++start;
 	    }
-	    fnames[nfiles] = (char_u *)strdup(start);
-	    ++nfiles;
 	}
-	start = stop + 2;
+	fnames[n] = vim_strsave(start);
+	start += STRLEN(start) + 1;
     }
-    free(copy);
 
     /* accept */
     gtk_drag_finish(context, TRUE, FALSE, time);
 
-    /* Real files (i.e. not http and not ftp) */
+    /* Special handling when all items are real files. */
     if (url == FALSE)
     {
 	if (nfiles == 1)
@@ -1499,7 +1489,7 @@ drag_data_received(GtkWidget *widget, GdkDragContext *context,
 		/* Handle dropping a directory on Vim. */
 		if (mch_chdir((char *)fnames[0]) == 0)
 		{
-		    free(fnames[0]);
+		    vim_free(fnames[0]);
 		    fnames[0] = NULL;
 		    redo_dirs = TRUE;
 		}
@@ -1543,6 +1533,7 @@ drag_data_received(GtkWidget *widget, GdkDragContext *context,
 		    }
 	}
     }
+    vim_free(copy);
 
     /* Handle the drop, :edit or :split to get to the file */
     handle_drop(nfiles, fnames, current_modifiers & GDK_CONTROL_MASK);
@@ -1552,9 +1543,9 @@ drag_data_received(GtkWidget *widget, GdkDragContext *context,
 
     /* Update the screen display */
     update_screen(NOT_VALID);
-#ifdef FEAT_MENU
+# ifdef FEAT_MENU
     gui_update_menus(0);
-#endif
+# endif
     setcursor();
     out_flush();
     gui_update_cursor(FALSE, FALSE);
