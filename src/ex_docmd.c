@@ -2428,7 +2428,12 @@ set_one_cmd_context(xp, buff)
 		    return NULL;    /* It's a comment */
 		}
 	    }
-	    ++p;
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		p += (*mb_ptr2len_check)(p);
+	    else
+#endif
+		++p;
 	}
     }
 
