@@ -20,7 +20,7 @@ main(argc, argv)
 		{
 			if (strncmp(p, "charset=euc-jp", 14) == 0)
 			{
-				fputs("charset=sjis", stdout);
+				fputs("charset=cp932", stdout);
 				p += 13;
 			}
 			else if (strncmp(p, "ja.po - Japanese message file", 29) == 0)
