@@ -2832,6 +2832,15 @@ get_keystroke()
 		continue;
 	    }
 	}
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	{
+	    if (MB_BYTE2LEN(n) > len)
+		continue;	/* more bytes to get */
+	    buf[len >= CBUFLEN ? CBUFLEN - 1 : len] = NUL;
+	    n = (*mb_ptr2char)(buf);
+	}
+#endif
 #ifdef UNIX
 	if (n == intr_char)
 	    n = ESC;
