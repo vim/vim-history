@@ -3196,10 +3196,15 @@ expand_filename(eap, cmdlinep, errormsgp)
 	    continue;
 	}
 
-#ifdef UNIX
-	/* For Unix there is a check for a single file name below.  Need to
-	 * escape white space et al. with a backslash. */
-	if ((eap->argt & NOSPC) && !eap->usefilter)
+	/* Need to escape white space et al. with a backslash.  Don't do this
+	 * for shell commands (may have to use quotes instead).  Don't do this
+	 * for non-unix systems when there is a single argument (spaces don't
+	 * separate arguments then). */
+	if (!eap->usefilter
+#ifndef UNIX
+		&& !(eap->argt & NOSPC)
+#endif
+		)
 	{
 	    char_u	*l;
 
@@ -3215,7 +3220,6 @@ expand_filename(eap, cmdlinep, errormsgp)
 		    break;
 		}
 	}
-#endif
 
 	/* For a shell command a '!' must be escaped. */
 	if ((eap->usefilter || eap->cmdidx == CMD_bang)
@@ -4590,6 +4594,11 @@ uc_check_code(code, len, buf, cmd, eap, split_buf, split_len)
 		result = 0;
 	    break;
 	}
+
+	/* When specified there is a single argument don't split it.
+	 * Works for ":Cmd %" when % is "a b c". */
+	if ((eap->argt & NOSPC) && quote == 2)
+	    quote = 1;
 
 	switch (quote)
 	{
