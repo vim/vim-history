@@ -5614,7 +5614,7 @@ gui_mch_show_toolbar(int showit)
 /*
  * Find a bitmap by name.
  * If the name is one of the built-in bitmaps, return the index to that bitmap.
- * Otherwise, look for $vim/bitmaps/<name>.bmp, load it, add it to the toolbar
+ * Otherwise, look for $VIM/bitmaps/<name>.bmp, load it, add it to the toolbar
  * bitmap list and return the resulting index on failure return -1, which will
  * result in a blank (but still functional) button
  */
@@ -5675,7 +5675,7 @@ get_toolbar_bitmap(char_u *name)
 	HANDLE hbitmap;
 
 	fname = alloc(_MAX_PATH);
-	STRCPY(fname, "$VIMRUNTIME\\bitmaps\\");
+	STRCPY(fname, "$VIM\\bitmaps\\");
 	strcat(fname, name);
 	strcat(fname, ".bmp");
 	ffname = expand_env_save(fname);
