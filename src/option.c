@@ -4833,12 +4833,22 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 		    errmsg = (char_u *)"";
 	    }
 # endif
-	    if (errmsg == NULL && gui_init_font(p_guifont, FALSE) != OK
+	    if (errmsg == NULL && gui_init_font(p_guifont, FALSE) != OK)
+	    {
 # if defined(FEAT_GUI_MSWIN) || defined(FEAT_GUI_PHOTON)
-		    && STRCMP(p_guifont, "*") != 0
+		if (STRCMP(p_guifont, "*") == 0)
+		{
+		    /* Dialog was cancelled: Keep the old value without giving
+		     * an error message. */
+		    if (new_value_alloced)
+			free_string_option(p_guifont);
+		    p_guifont = vim_strsave(oldval);
+		    new_value_alloced = TRUE;
+		}
+		else
 # endif
-	       )
-		errmsg = (char_u *)N_("Invalid font(s)");
+		    errmsg = (char_u *)N_("Invalid font(s)");
+	    }
 	}
     }
 # ifdef FEAT_XFONTSET
