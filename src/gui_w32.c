@@ -2012,7 +2012,11 @@ gui_mch_destroy_menu(vimmenu_T *menu)
 	if (menu->parent != NULL
 		&& menu->parent->children != NULL
 		&& IsWindow(menu->parent->tearoff_handle))
+	{
+	    /* This menu must not show up when rebuilding the tearoff window. */
+	    menu->modes = 0;
 	    rebuild_tearoff(menu->parent);
+	}
 #endif
     }
 }
@@ -3049,6 +3053,8 @@ gui_mch_tearoff(
 
     for ( ; menu != NULL; menu = menu->next)
     {
+	if (menu->modes == 0)	/* this menu has just been deleted */
+	    continue;
 	if (menu_is_separator(menu->dname))
 	{
 	    sepPadding += 3;
