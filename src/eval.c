@@ -6265,9 +6265,11 @@ f_tolower(argvars, retvar)
 	while (*p != NUL)
 	{
 #ifdef FEAT_MBYTE
+	    int		l;
+
 	    if (enc_utf8)
 	    {
-		int c, lc, l;
+		int c, lc;
 
 		c = utf_ptr2char(p);
 		lc = utf_tolower(c);
@@ -6277,6 +6279,8 @@ f_tolower(argvars, retvar)
 		    utf_char2bytes(lc, p);
 		p += l;
 	    }
+	    else if (has_mbyte && (l = (*mb_ptr2len_check)(p)) > 1)
+		p += l;		/* skip multi-byte character */
 	    else
 #endif
 	    {
@@ -6304,9 +6308,11 @@ f_toupper(argvars, retvar)
 	while (*p != NUL)
 	{
 #ifdef FEAT_MBYTE
+	    int		l;
+
 	    if (enc_utf8)
 	    {
-		int c, uc, l;
+		int c, uc;
 
 		c = utf_ptr2char(p);
 		uc = utf_toupper(c);
@@ -6316,6 +6322,8 @@ f_toupper(argvars, retvar)
 		    utf_char2bytes(uc, p);
 		p += l;
 	    }
+	    else if (has_mbyte && (l = (*mb_ptr2len_check)(p)) > 1)
+		p += l;		/* skip multi-byte character */
 	    else
 #endif
 	    {
