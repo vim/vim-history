@@ -2115,7 +2115,7 @@ redrawcmd_preedit()
 	    && xic != NULL
 	    && im_get_status()
 	    && !p_imdisable
-	    && preedit_start_col != MAXCOL)
+	    && im_is_preediting())
     {
 	int	cmdpos = 0;
 	int	cmdspos;

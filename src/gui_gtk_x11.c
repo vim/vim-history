@@ -1095,6 +1095,12 @@ key_press_event(GtkWidget *widget, GdkEventKey *event, gpointer data)
     if (len == 0)   /* Unrecognized key */
 	return TRUE;
 
+#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK) && !defined(HAVE_GTK2)
+    /* Cancel or type backspace. For GTK2, im_commit_cb() does the same. */
+    preedit_start_col = MAXCOL;
+    xim_changed_while_preediting = TRUE;
+#endif
+
     /* Special keys (and a few others) may have modifiers. Also when using a
      * double-byte encoding (can't set the 8th bit). */
     if (len == -3 || key_sym == GDK_space || key_sym == GDK_Tab
@@ -1786,7 +1792,7 @@ button_press_event(GtkWidget *widget, GdkEventButton *event, gpointer data)
 
 #ifdef FEAT_XIM
     /* cancel any preediting */
-    if (preedit_start_col != MAXCOL)
+    if (im_is_preediting())
 	xim_reset();
 #endif
 
@@ -1834,7 +1840,7 @@ scroll_event(GtkWidget *widget, GdkEventScroll *event, gpointer data)
 
 # ifdef FEAT_XIM
     /* cancel any preediting */
-    if (preedit_start_col != MAXCOL)
+    if (im_is_preediting())
 	xim_reset();
 # endif
 
