@@ -662,6 +662,10 @@ main
 		break;
 
 	    case 'h':		/* "-h" give help message */
+#ifdef FEAT_GUI_GNOME
+		/* Tell usage() to exit for "gvim". */
+		gui.starting = FALSE;
+#endif
 		usage();
 		break;
 
@@ -2558,11 +2562,15 @@ usage()
     main_msg(_("--role <role>\tSet a unique role to identify the main window"));
 # endif
     main_msg(_("--socketid <xid>\tOpen Vim inside another GTK widget"));
-# ifdef FEAT_GUI_GNOME
-    main_msg(_("--help\t\tShow Gnome arguments"));
-# endif
 #endif
-    mch_exit(0);
+
+#ifdef FEAT_GUI_GNOME
+    /* Gnome gives extra messages for --help if we continue, but not for -h. */
+    if (gui.starting)
+	mch_msg("\n");
+    else
+#endif
+	mch_exit(0);
 }
 
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
