@@ -2256,6 +2256,20 @@ do_source(fname, check_other, is_vimrc)
 #endif
 #ifdef FEAT_MBYTE
     cookie.conv.vc_type = CONV_NONE;		/* no conversion */
+
+    /* Try reading the first few bytes to check for a UTF-8 BOM. */
+    {
+	char_u	    buf[3];
+
+	if (fread((char *)buf, sizeof(char_u), (size_t)3, cookie.fp)
+								  == (size_t)3
+		&& buf[0] == 0xef && buf[1] == 0xbb && buf[2] == 0xbf)
+	    /* Found BOM, setup conversion and skip over it. */
+	    convert_setup(&cookie.conv, (char_u *)"utf-8", p_enc);
+	else
+	    /* No BOM found, rewind. */
+	    fseek(cookie.fp, (off_t)0L, SEEK_SET);
+    }
 #endif
 
     /*
@@ -2332,6 +2346,10 @@ do_source(fname, check_other, is_vimrc)
     retval = OK;
     fclose(cookie.fp);
     vim_free(cookie.nextline);
+#ifdef FEAT_MBYTE
+    convert_setup(&cookie.conv, NULL, NULL);
+#endif
+
     if (got_int)
 	EMSG(_(e_interr));
     sourcing_name = save_sourcing_name;
