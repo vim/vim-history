@@ -2527,6 +2527,8 @@ set_one_cmd_context(xp, buff)
     {
 	case CMD_cd:
 	case CMD_chdir:
+	case CMD_lcd:
+	case CMD_lchdir:
 	    if (xp->xp_context == EXPAND_FILES)
 		xp->xp_context = EXPAND_DIRECTORIES;
 	    break;
