@@ -4525,6 +4525,8 @@ in_id_list(list, id, inctag, contained)
     int		retval;
     short	scl_id;
     short	*scl_list;
+    static int	depth = 0;
+    int		r;
 
     /*
      * If list is ID_LIST_ALL, we are in a transparent item that isn't
@@ -4559,8 +4561,16 @@ in_id_list(list, id, inctag, contained)
 	if (scl_id >= 0)
 	{
 	    scl_list = SYN_CLSTR(syn_buf)[scl_id].scl_list;
-	    if (scl_list != NULL && in_id_list(scl_list, id, inctag, contained))
-		return retval;
+	    /* restrict recursiveness to 30 to avoid an endless loop for a
+	     * cluster that includes itself (indirectly) */
+	    if (scl_list != NULL && depth < 30)
+	    {
+		++depth;
+		r = in_id_list(scl_list, id, inctag, contained);
+		--depth;
+		if (r)
+		    return retval;
+	    }
 	}
     }
     return !retval;
