@@ -1444,9 +1444,9 @@ delete_event_cb(GtkWidget *wgt, gpointer cbdata)
 #define VIM_ATOM_NAME "_VIM_TEXT"
 static const GtkTargetEntry primary_targets[] = {
     {VIM_ATOM_NAME, 0, SELECTION_CLIPBOARD},
-    {"STRING", 0, SELECTION_STRING},
+    {"COMPOUND_TEXT", 0, SELECTION_COMPOUND_TEXT},
     {"TEXT", 0, SELECTION_TEXT},
-    {"COMPOUND_TEXT", 0, SELECTION_COMPOUND_TEXT}
+    {"STRING", 0, SELECTION_STRING}
 };
 
 /*
@@ -3129,6 +3129,26 @@ clip_mch_request_selection()
     while (received_selection == RS_NONE)
 	gtk_main();		/* wait for selection_received_event */
 
+    if (received_selection == RS_FAIL)
+    {
+	/* Now try to get it out of the usual string selection. */
+	received_selection = RS_NONE;
+	(void)gtk_selection_convert(gui.drawarea, GDK_SELECTION_PRIMARY,
+				    gdk_atom_intern("COMPOUND_TEXT", FALSE),
+				    (guint32)GDK_CURRENT_TIME);
+	while (received_selection == RS_NONE)
+	    gtk_main();		/* wait for selection_received_event */
+    }
+    if (received_selection == RS_FAIL)
+    {
+	/* Now try to get it out of the usual string selection. */
+	received_selection = RS_NONE;
+	(void)gtk_selection_convert(gui.drawarea, GDK_SELECTION_PRIMARY,
+				    gdk_atom_intern("TEXT", FALSE),
+				    (guint32)GDK_CURRENT_TIME);
+	while (received_selection == RS_NONE)
+	    gtk_main();		/* wait for selection_received_event */
+    }
     if (received_selection == RS_FAIL)
     {
 	/* Now try to get it out of the usual string selection. */
