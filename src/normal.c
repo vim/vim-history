@@ -7760,8 +7760,26 @@ nv_normal(cap)
 nv_esc(cap)
     cmdarg_T	*cap;
 {
+    int		no_reason;
+
+    no_reason = (cap->oap->op_type == OP_NOP
+		&& cap->opcount == 0
+		&& cap->count0 == 0
+		&& cap->oap->regname == 0
+		&& !p_im);
+
     if (cap->arg)		/* TRUE for CTRL-C */
     {
+	if (restart_edit == 0
+#ifdef FEAT_CMDWIN
+		&& cmdwin_type == 0
+#endif
+#ifdef FEAT_VISUAL
+		&& !VIsual_active
+#endif
+		&& no_reason)
+	    msg(_("Type  :quit<Enter>  to exit Vim"));
+
 	restart_edit = 0;
 #ifdef FEAT_CMDWIN
 	if (cmdwin_type != 0)
@@ -7783,12 +7801,8 @@ nv_esc(cap)
     }
     else
 #endif
-	if (cap->oap->op_type == OP_NOP
-	    && cap->opcount == 0
-	    && cap->count0 == 0
-	    && cap->oap->regname == 0
-	    && !p_im)
-	vim_beep();
+	if (no_reason)
+	    vim_beep();
     clearop(cap->oap);
 
     /* A CTRL-C is often used at the start of a menu.  When 'insertmode' is
