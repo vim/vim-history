@@ -268,6 +268,9 @@ static void dyn_imm_load(void);
 #ifndef ETO_IGNORELANGUAGE
 # define ETO_IGNORELANGUAGE  0x1000
 #endif
+#ifndef ETO_PDY
+# define ETO_PDY             0x2000
+#endif
 
 /*
  * Return TRUE when running under Windows NT 3.x or Win32s, both of which have
@@ -1601,6 +1604,7 @@ gui_mch_draw_string(
     UINT	foptions = 0;
 #ifdef FEAT_MBYTE
     static WCHAR *unicodebuf = NULL;
+    static int   *unicodepdy = NULL;
     int		unibuflen = 0;
     int		n;
 #endif
@@ -1736,6 +1740,15 @@ gui_mch_draw_string(
     {
 	vim_free(unicodebuf);
 	unicodebuf = (WCHAR *)alloc(len * sizeof(WCHAR));
+
+	vim_free(unicodepdy);
+	unicodepdy = (int *)alloc(len * sizeof(int) * 2);
+	if (unicodepdy == NULL)
+	{
+	    vim_free(unicodebuf);
+	    unicodebuf = NULL;
+	}
+
 	unibuflen = len;
     }
 
@@ -1746,17 +1759,24 @@ gui_mch_draw_string(
 	int		i = 0;
 	int		clen;	/* string length up to composing char */
 	int		cells;	/* cell width of string up to composing char */
+	int		cw;	/* width of current cell */
 
 	cells = 0;
+	/* Add ETO_PDY to make characters fit as we expect, even when the font
+	 * uses different widths (e.g., bold character is wider). */
+	foptions |= ETO_PDY;
 	for (clen = 0; i < len; )
 	{
 	    unicodebuf[clen] = utf_ptr2char(text + i);
-	    cells += utf_char2cells(unicodebuf[clen]);
+	    cw = utf_char2cells(unicodebuf[clen]);
+	    unicodepdy[clen * 2] = cw * gui.char_width;
+	    unicodepdy[clen * 2 + 1] = 0;
+	    cells += cw;
 	    i += utfc_ptr2len_check_len(text + i, len - i);
 	    ++clen;
 	}
 	ExtTextOutW(s_hdc, TEXT_X(col), TEXT_Y(row),
-			     foptions, pcliprect, unicodebuf, clen, NULL);
+			     foptions, pcliprect, unicodebuf, clen, unicodepdy);
 	len = cells;	/* used for underlining */
     }
     else if (is_funky_dbcs)
