@@ -146,7 +146,7 @@ static void	nv_wordcmd __ARGS((cmdarg_T *cap));
 static void	nv_beginline __ARGS((cmdarg_T *cap));
 #ifdef FEAT_VISUAL
 static void	adjust_for_sel __ARGS((cmdarg_T *cap));
-static void	unadjust_for_sel __ARGS((void));
+static int	unadjust_for_sel __ARGS((void));
 static void	nv_select __ARGS((cmdarg_T *cap));
 #endif
 static void	nv_goto __ARGS((cmdarg_T *cap));
@@ -1225,6 +1225,9 @@ do_pending_operator(cap, old_col, gui_yank)
     static linenr_T redo_VIsual_line_count; /* number of lines */
     static colnr_T  redo_VIsual_col;	    /* number of cols or end column */
     static long	    redo_VIsual_count;	    /* count for Visual operator */
+# ifdef FEAT_VIRTUALEDIT
+    int		include_line_break = FALSE;
+# endif
 #endif
 
 #if defined(FEAT_CLIPBOARD)
@@ -1366,7 +1369,12 @@ do_pending_operator(cap, old_col, gui_yank)
 	    /* If 'selection' is "exclusive", backup one character for
 	     * charwise selections. */
 	    else if (VIsual_mode == 'v')
-		unadjust_for_sel();
+	    {
+# ifdef FEAT_VIRTUALEDIT
+		include_line_break =
+# endif
+		    unadjust_for_sel();
+	    }
 
 	    oap->start = VIsual;
 	    if (VIsual_mode == 'V')
@@ -1528,7 +1536,10 @@ do_pending_operator(cap, old_col, gui_yank)
 	    {
 		oap->motion_type = MCHAR;
 		if (VIsual_mode != Ctrl_V && *ml_get_pos(&(oap->end)) == NUL
-			&& !virtual_active())
+# ifdef FEAT_VIRTUALEDIT
+			&& (include_line_break || !virtual_active())
+# endif
+			)
 		{
 		    oap->inclusive = FALSE;
 		    /* Try to include the newline, unless it's an operator
@@ -1539,9 +1550,9 @@ do_pending_operator(cap, old_col, gui_yank)
 		    {
 			++oap->end.lnum;
 			oap->end.col = 0;
-#ifdef FEAT_VIRTULEDIT
+# ifdef FEAT_VIRTUALEDIT
 			oap->end.coladd = 0;
-#endif
+# endif
 			++oap->line_count;
 		    }
 		}
@@ -7361,8 +7372,9 @@ adjust_for_sel(cap)
 /*
  * Exclude last character at end of Visual area for 'selection' == "exclusive".
  * Should check VIsual_mode before calling this.
+ * Returns TRUE when backed up to the previous line.
  */
-    static void
+    static int
 unadjust_for_sel()
 {
     pos_T	*pp;
@@ -7379,8 +7391,10 @@ unadjust_for_sel()
 	{
 	    --pp->lnum;
 	    pp->col = (colnr_T)STRLEN(ml_get(pp->lnum));
+	    return TRUE;
 	}
     }
+    return FALSE;
 }
 
 /*
