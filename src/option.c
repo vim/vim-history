@@ -2590,7 +2590,7 @@ set_init_1()
     {
 	if ((options[opt_idx].flags & P_GETTEXT)
 					      && options[opt_idx].var != NULL)
-	    p = _(*(char_u **)options[opt_idx].var);
+	    p = (char_u *)_(*(char **)options[opt_idx].var);
 	else
 	    p = option_expand(opt_idx, NULL);
 	if (p != NULL && (p = vim_strsave(p)) != NULL)
