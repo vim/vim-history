@@ -930,7 +930,7 @@ curs_columns(scroll)
 {
     int		diff;
     int		extra;		/* offset for first screen line */
-    int		off;
+    int		off_left, off_right;
     int		n;
     int		p_lines;
     int		width = 0;
@@ -1024,24 +1024,25 @@ curs_columns(scroll)
 	 * If we get closer to the edge than 'sidescrolloff', scroll a little
 	 * extra
 	 */
-	if ((off = (int)startcol - (int)curwin->w_leftcol - p_siso) < 0
-		|| (off = (int)endcol
-			 - (int)(curwin->w_leftcol + W_WIDTH(curwin) - p_siso)
-			 + 1) > 0)
+	off_left = (int)startcol - (int)curwin->w_leftcol - p_siso;
+	off_right = (int)endcol - (int)(curwin->w_leftcol + W_WIDTH(curwin)
+								- p_siso) + 1;
+	if (off_left < 0 || off_right > 0)
 	{
-	    if (off < 0)
-		diff = -off;
+	    if (off_left < 0)
+		diff = -off_left;
 	    else
-		diff = off;
+		diff = off_right;
 
-	    /* far off, put cursor in middle of window */
-	    if (p_ss == 0 || diff >= textwidth / 2)
+	    /* When far off or not enough room on either side, put cursor in
+	     * middle of window. */
+	    if (p_ss == 0 || diff >= textwidth / 2 || off_right >= off_left)
 		new_leftcol = curwin->w_wcol - extra - textwidth / 2;
 	    else
 	    {
 		if (diff < p_ss)
 		    diff = p_ss;
-		if (off < 0)
+		if (off_left < 0)
 		    new_leftcol = curwin->w_leftcol - diff;
 		else
 		    new_leftcol = curwin->w_leftcol + diff;
