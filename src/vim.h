@@ -576,6 +576,15 @@ typedef unsigned long	long_u;
 #define SEA_RECOVER	3	/* recover the file */
 
 /*
+ * Minimal size for block 0 of a swap file.
+ * NOTE: This depends on size of struct block0! It's not done with a sizeof(),
+ * because struct block0 is defined in memline.c (Sorry).
+ * The maximal block size is arbitrary.
+ */
+#define MIN_SWAP_PAGE_SIZE 1048
+#define MAX_SWAP_PAGE_SIZE 50000
+
+/*
  * Events for autocommands.
  */
 enum auto_event

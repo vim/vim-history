@@ -170,14 +170,14 @@ mf_open(fname, trunc_file)
     /*
      * Try to set the page size equal to the block size of the device.
      * Speeds up I/O a lot.
-     * NOTE: minimal block size depends on size of block 0 data! It's not done
-     * with a sizeof(), because block 0 is defined in memline.c (Sorry).
-     * The maximal block size is arbitrary.
+     * When recovering, the actual block size will be retrieved from block 0
+     * in ml_recover().  The size used here may be wrong, therefore
+     * mf_blocknr_max must be rounded up.
      */
     if (mfp->mf_fd >= 0
 	    && fstatfs(mfp->mf_fd, &stf, sizeof(struct statfs), 0) == 0
-	    && stf.F_BSIZE >= 1048
-	    && stf.F_BSIZE <= 50000)
+	    && stf.F_BSIZE >= MIN_SWAP_PAGE_SIZE
+	    && stf.F_BSIZE <= MAX_SWAP_PAGE_SIZE)
 	mfp->mf_page_size = stf.F_BSIZE;
 #endif
 
