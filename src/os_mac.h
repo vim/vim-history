@@ -18,7 +18,7 @@
 #include <Memory.h>
 #include <OSUtils.h>
 #include <Files.h>
-#ifdef FEAT_MBYTE
+#ifdef MULTI_BYTE
 #include <Script.h>
 #endif
 
@@ -38,19 +38,18 @@
  */
 # define malloc(x) NewPtr(x)
 # define free(x)   DisposePtr((char *) x)
-# define realloc() something
 #endif
 
 /* This will go away when CMD_KEY fully tested */
 #define USE_CMD_KEY
 #if defined (__POWERPC__) /* Got problem trying to use shared library in 68k */
-# undef FEAT_PYTHON
+# undef HAVE_PYTHON
 #else
-# undef FEAT_PYTHON
+# undef HAVE_PYTHON
 #endif
-#define FEAT_BROWSE
+#define USE_BROWSE
 #define GUI_DIALOGUE
-#define FEAT_RIGHTLEFT
+#define RIGHTLEFT
 #define DONT_ADD_PATHSEP_TO_DIR
 #define USE_EXE_NAME		    /* to find  $VIM */
 #define CASE_INSENSITIVE_FILENAME   /* ignore case when comparing file names */
@@ -75,10 +74,16 @@
 #endif
 #define BREAKCHECK_SKIP	    1	    /* call mch_breakcheck() each time, it's
 				       quite fast */
-#ifdef FEAT_NORMAL
+#ifndef MIN_FEAT
 # define VIM_BACKTICK		    /* internal backtick expansion */
 #endif
 #define HAVE_STRFTIME
+
+#if defined(__POWERPC__) || defined (__fourbyteints__)
+# define SIZEOF_INT 4
+#else
+# define SIZEOF_INT 2
+#endif
 
 #ifndef __POWERPC__
 # if !defined(__fourbyteints__) || !__option(enumsalwaysint)
@@ -104,7 +109,7 @@
 # define SYS_OPTWIN_FILE "$VIMRUNTIME:optwin.vim"
 #endif
 
-#ifdef FEAT_GUI
+#ifdef USE_GUI
 # ifndef USR_GVIMRC_FILE
 #  define USR_GVIMRC_FILE "$VIM:.gvimrc"
 # endif
@@ -133,27 +138,21 @@
 #endif
 
 #ifndef FILETYPE_FILE
-# define FILETYPE_FILE	"filetype.vim"
-#endif
-#ifndef SETTINGS_FILE
-# define SETTINGS_FILE	"settings.vim"
+# define FILETYPE_FILE	"$VIMRUNTIME:filetype.vim"
 #endif
 #ifndef FTOFF_FILE
-# define FTOFF_FILE	"ftoff.vim"
-#endif
-#ifndef SETSOFF_FILE
-# define SETSOFF_FILE	"setsoff.vim"
+# define FTOFF_FILE	"$VIMRUNTIME:ftoff.vim"
 #endif
 
 #ifndef SYNTAX_FNAME
 # define SYNTAX_FNAME	"$VIMRUNTIME:syntax:%s.vim"
 #endif
 
-#ifdef FEAT_VIMINFO
+#ifdef VIMINFO
 # ifndef VIMINFO_FILE
 #  define VIMINFO_FILE	"$VIM:viminfo"
 # endif
-#endif /* FEAT_VIMINFO */
+#endif /* VIMINFO */
 
 #ifndef DEF_BDIR
 # define DEF_BDIR	".,c:\\tmp,c:\\temp"	/* default for 'backupdir' */
