@@ -1275,12 +1275,14 @@ do_pending_operator(cap, old_col, gui_yank)
 	     * Use "exclusive" to be consistent.  Makes "dvj" work nice. */
 	    if (oap->motion_type == MLINE)
 		oap->inclusive = FALSE;
+	    /* If the motion already was characterwise, toggle "inclusive" */
+	    else if (oap->motion_type == MCHAR)
+		oap->inclusive = !oap->inclusive;
 	    oap->motion_type = MCHAR;
 	}
 	else if (oap->motion_force == Ctrl_V)
 	{
-	    /* Change linewise or characterwise motion into Visual block mode.
-	     * */
+	    /* Change line- or characterwise motion into Visual block mode. */
 	    VIsual_active = TRUE;
 	    VIsual = oap->start;
 	    VIsual_mode = Ctrl_V;
