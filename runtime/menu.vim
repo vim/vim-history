@@ -839,20 +839,20 @@ endif
 
 " Select a session to load; default to current session name if present
 fun! s:LoadVimSesn()
-  if exists("this_session")
-    let name = this_session
+  if strlen(v:this_session) > 0
+    let name = v:this_session
   else
-    let name = "session.vim"
+    let name = "Session.vim"
   endif
   execute "browse so " . name
 endfun
 
 " Select a session to save; default to current session name if present
 fun! s:SaveVimSesn()
-  if !exists("this_session")
-    let this_session = "session.vim"
+  if strlen(v:this_session) == 0
+    let v:this_session = "Session.vim"
   endif
-  execute "browse mksession! " . this_session
+  execute "browse mksession! " . v:this_session
 endfun
 
 endif
