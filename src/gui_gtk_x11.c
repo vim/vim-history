@@ -60,6 +60,7 @@ enum {
 };
 
 static GtkTargetEntry target_table[] = {
+    { "text/uri-list", 0, TARGET_STRING },
     { "STRING",     0, TARGET_STRING },
     { "text/plain", 0, TARGET_STRING }
 };
@@ -1216,7 +1217,8 @@ drag_data_received(GtkWidget *widget, GdkDragContext *context,
     gdk_window_get_pointer(NULL, NULL, NULL, &current_modifiers);
 
     /* guard against trash */
-    if (((data->length <=  0) && (data->format != 8))
+    if ((data->length <=  0)
+	    || (data->format != 8)
 	    || (((char *)data->data)[data->length] != '\0')) {
 	gtk_drag_finish(context, FALSE, FALSE, time);
 
