@@ -5682,11 +5682,12 @@ handle_drop(filec, filev, split)
     int		split;		/* force splitting the window */
 {
     exarg_T	ea;
+    int		save_msg_scroll = msg_scroll;
 
-#ifdef FEAT_CMDWIN
+# ifdef FEAT_CMDWIN
     if (cmdwin_type != 0)
 	return;
-#endif
+# endif
 
     /* Check whether the current buffer is changed. If so, we will need
      * to split the current window or data could be lost.
@@ -5735,6 +5736,11 @@ handle_drop(filec, filev, split)
     /* do_ecmd() may set need_start_insertmode, but since we never left Insert
      * mode that is not needed here. */
     need_start_insertmode = FALSE;
+
+    /* Restore msg_scroll, otherwise a following command may cause scrolling
+     * unexpectedly.  The screen will be redrawn by the caller, thus
+     * msg_scroll being set by displaying a message is irrelevant. */
+    msg_scroll = save_msg_scroll;
 }
 #endif
 
