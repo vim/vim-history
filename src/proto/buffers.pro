@@ -17,5 +17,5 @@ void stop_redo_ins __PARMS((void));
 int ins_mapbuf __PARMS((char *str));
 unsigned char vgetc __PARMS((void));
 unsigned char vpeekc __PARMS((void));
-int domap __PARMS((int unmap, char *arg, int mode));
+int domap __PARMS((int maptype, char *keys, int mode));
 int makemap __PARMS((struct __stdio *fd));

@@ -17,6 +17,8 @@
 #include "proto.h"
 #include "param.h"
 
+char *tgoto __PARMS((char *cm, int col, int line));
+
 static u_char 	*Nextscreen = NULL; 	/* What's to be put on the screen. */
 static int		 NumLineSizes = 0;		/* # of active LineSizes */
 static linenr_t *LineNumbers = NULL;	/* Pointer to the line for LineSizes */
@@ -68,15 +70,20 @@ updateline()
 
 	outstr(T_CV);				/* enable cursor again */
 
-	n = row - Cline_row;
-	if (n != Cline_size)		/* line changed size */
-	{
-		if (n < Cline_size) 	/* got smaller: delete lines */
-				s_del(row, Cline_size - n, FALSE);
-		else					/* got bigger: insert lines */
-				s_ins(Cline_row + Cline_size, n - Cline_size, FALSE);
-
+	if (row == Rows)			/* line too long for screen */
 		updateScreen(VALID_TO_CURSCHAR);
+	else
+	{
+		n = row - Cline_row;
+		if (n != Cline_size)		/* line changed size */
+		{
+			if (n < Cline_size) 	/* got smaller: delete lines */
+					s_del(row, Cline_size - n, FALSE);
+			else					/* got bigger: insert lines */
+					s_ins(Cline_row + Cline_size, n - Cline_size, FALSE);
+
+			updateScreen(VALID_TO_CURSCHAR);
+		}
 	}
 }
 
@@ -102,6 +109,7 @@ updateScreen(type)
 	int 			i;
 	long 			j;
 	static int		postponed_not_valid = FALSE;
+	register u_char *screenp;
 
 	screenalloc();		/* allocate screen buffers if size changed */
 
@@ -375,12 +383,32 @@ updateScreen(type)
 	 */
 	if (!done && !didline)
 	{
-		/*
-		 * Clear the rest of the screen and mark the unused lines.
-		 */
-		screenfill(srow, '@');
-
-		Botline = lnum;
+		if (lnum == Topline)
+		{
+			/*
+			 * Single line that does not fit!
+			 * Fill last line with '@' characters.
+			 */
+			screenp = LinePointers[Rows - 2];
+			for (i = 0; i < Columns; ++i)
+			{
+				if (*screenp != '@')
+				{
+					*screenp = '@';
+					screenchar(screenp, (int)(Rows - 2), i);
+				}
+				++screenp;
+			}
+			Botline = lnum + 1;
+		}
+		else
+		{
+			/*
+			 * Clear the rest of the screen and mark the unused lines.
+			 */
+			screenfill(srow, '@');
+			Botline = lnum;
+		}
 	}
 	else
 	{
@@ -728,36 +756,59 @@ screenfill(srow, c)
 }
 
 /*
- * prt_line() - print the given line
+ * compute Botline. Can be called after Topline or Rows changed.
  */
 	void
+comp_Botline()
+{
+	linenr_t	lnum;
+	int			done = 0;
+
+	for (lnum = Topline; lnum <= line_count; ++lnum)
+	{
+		if ((done += plines(lnum)) >= Rows)
+			break;
+	}
+	Botline = lnum;		/* Botline is the line that is just below the window */
+}
+
+/*
+ * prt_line() - print the given line
+ * returns the number of characters written.
+ */
+	int
 prt_line(s)
 	char		   *s;
 {
 	register int	si = 0;
-	register char	 c;
+	register char	c;
 	register int	col = 0;
 
 	char			extra[16];
 	int 			n_extra = 0;
 	int 			n;
 
-	for (;;) {
-
+	for (;;)
+	{
 		if (n_extra > 0)
 			c = extra[--n_extra];
 		else {
 			c = s[si++];
-			if (c == TAB && !p_list) {
+			if (c == TAB && !p_list)
+			{
 				strcpy(extra, "                ");
 				/* tab amount depends on current column */
 				n_extra = (p_ts - 1) - col % p_ts;
 				c = ' ';
-			} else if (c == NUL && p_list) {
+			}
+			else if (c == NUL && p_list)
+			{
 				extra[0] = NUL;
 				n_extra = 1;
 				c = '$';
-			} else if (c != NUL && (n = charsize(c)) > 1) {
+			}
+			else if (c != NUL && (n = charsize(c)) > 1)
+			{
 				char			 *p;
 
 				n_extra = 0;
@@ -775,6 +826,7 @@ prt_line(s)
 		outchar(c);
 		col++;
 	}
+	return col;
 }
 
 	void
@@ -833,7 +885,7 @@ screenclear()
 	register u_char  *np;
 	register u_char  *end;
 
-	if (Nextscreen == NULL)
+	if (starting || Nextscreen == NULL)
 		return;
 
 	outstr(T_ED);				/* clear the display */
@@ -878,8 +930,9 @@ cursupdate()
 	else if (Curpos.lnum < Topline)
 	{
 		/*
-		 * if the cursor is above the top of the screen, put it at the top of
-		 * the screen, and if we weren't very close to begin with, we scroll so that
+		 * If the cursor is above the top of the screen, scroll the screen to
+		 * put it at the top of the screen.
+		 * If we weren't very close to begin with, we scroll more, so that
 		 * the line is close to the middle.
 		 */
 		temp = Rows / 3;
@@ -919,7 +972,7 @@ cursupdate()
 					/* scroll minimal number of lines */
 				if (temp < p_sj)
 					temp = p_sj;
-				for (i = 0, p = Topline; i < temp && p <= line_count; ++p)
+				for (i = 0, p = Topline; i < temp && p < Botline; ++p)
 					i += plines(p);
 				nlines = p - Topline;
 			}
@@ -993,6 +1046,8 @@ curs_columns()
 		Curscol -= Columns;
 		Cursrow++;
 	}
+	if (Cursrow > Rows - 2)		/* Cursor past end of screen */
+		Cursrow = Rows - 2;		/* happens with line that does not fit on screen */
 }
 
 /*
@@ -1306,11 +1361,12 @@ showruler(always)
 	if (p_ru && (redraw_msg || always || Curpos.lnum != oldlnum || Cursvcol != oldcol))
 	{
 		windgoto((int)Rows - 1, (int)Columns - 22);
-#if defined(SYSV) || defined(linux) || defined(MSDOS) || defined(AMIGA)
-		newlen = sprintf(buffer, "%ld,%d", Curpos.lnum, Cursvcol + 1);
-#else
-		newlen = strlen(sprintf(buffer, "%ld,%d", Curpos.lnum, Cursvcol + 1));
-#endif
+		/*
+		 * Some sprintfs return the lenght, some return a pointer.
+		 * To avoid portability problems we use strlen here.
+		 */
+		sprintf(buffer, "%ld,%d", Curpos.lnum, Cursvcol + 1);
+		newlen = strlen(buffer);
 		outstrn(buffer);
 		while (newlen < oldlen)
 		{

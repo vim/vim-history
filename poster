@@ -1,0 +1,39 @@
+Vim - Vi IMitation. A clone of the UNIX text editor Vi. Very useful for 
+editing programs and other plain ASCII text. Full Vi compatibility (except Q 
+command) and includes most Ex commands.
+
+Extra features above Vi: Multilevel undo, command line history, improved 
+command line editing, command typeahead display, command to display yank 
+buffers, possibility to edit binary files, file name stack, support for Manx 
+QuickFix, shows current file name in window title, on-line help, etc. 
+
+Version 1.27, update to 1.24. Most important changes:
+- 'ignorecase' did not work with UNIX, fixed
+- ":s/a/b/ did not work with MSDOS, fixed
+- all other reported bugs fixed
+- portability for UNIX improved for linux, hpux, pyramid, SCO Xenix, etc.
+- improved security for .exrc and .vimrc in current directory
+- a few Ex commands added and a few compatibility problems fixed
+- added 'compatible' option to switch off a few vi incompatible extentions
+- Vim now works on more terminals (e.g. Sun cmdtool)
+- with Amiga DOS 2.0 arp.library is no longer needed
+- help file is now displayed using terminal codes
+- support for locale() with UNIX
+
+Portability: Runs on Amiga, MSDOS and several UNIX versions.
+
+Distribution:
+   comp.sources.misc: Sources and documentation (shell archive)
+ comp.binaries.amiga: AMIGA binaries and documentation (lha archive)
+comp.binaries.ibm.pc: MSDOS binaries and documentation (lha archive)
+(Sorry to post the documentation three times. It is the only way to guarantee 
+that everybody gets it. Otherwise people will start asking me for it).
+
+The shell archive contains a few uuencoded files and the reference.doc file
+is split up in three. To get the original files back you can use the
+"execute.me" script.
+
+Vim is public domain. You are encouraged to put it on ftp servers. I will ask 
+Fred Fish to put it on one of his disks. 
+
+-------------8<----------------8<----------------8<---------------8<--------

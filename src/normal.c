@@ -111,12 +111,14 @@ normal()
 	c = vgetc();
 
 	/* Pick up any leading digits and compute 'Prenum' */
-	while ((c >= '1' && c <= '9') || (Prenum > 0 && (c == DEL || c == '0')))
+	while ((c >= '1' && c <= '9') || (Prenum != 0 && (c == DEL || c == '0')))
 	{
 		if (c == DEL)
 				Prenum /= 10;
 		else
 				Prenum = Prenum * 10 + (c - '0');
+		if (Prenum < 0)			/* got too large! */
+			Prenum = 999999999;
 		premsg(' ', NUL);
 		c = vgetc();
 	}
@@ -188,44 +190,52 @@ normal()
 /*
  * 1: Screen positioning commands
  */
-	  case CTRL('D'):
+	  case Ctrl('D'):
 		flag = TRUE;
 
-	  case CTRL('U'):
+	  case Ctrl('U'):
 		CHECKCLEAROP;
 		if (Prenum)
 			p_scroll = (Prenum > Rows - 1) ? Rows - 1 : Prenum;
 		n = (p_scroll < Rows) ? p_scroll : Rows - 1;
 		if (flag)
 		{
-				scrollup(n);
+				Topline += n;
+				if (Topline > line_count)
+					Topline = line_count;
+				comp_Botline();		/* compute Botline */
 				onedown(n);
 		}
 		else
 		{
+				if (n >= Curpos.lnum)
+					n = Curpos.lnum - 1;
+				Prenum1 = Curpos.lnum - n;
 				scrolldown(n);
-				oneup(n);
+				if (Prenum1 < Curpos.lnum)
+					Curpos.lnum = Prenum1;
 		}
+		beginline(TRUE);
 		updateScreen(VALID);
 		break;
 
-	  case CTRL('B'):
+	  case Ctrl('B'):
 	  case K_SUARROW:
 		dir = BACKWARD;
 
-	  case CTRL('F'):
+	  case Ctrl('F'):
 	  case K_SDARROW:
 		CHECKCLEAROP;
 		onepage(dir, Prenum1);
 		break;
 
-	  case CTRL('E'):
+	  case Ctrl('E'):
 		CHECKCLEAROP;
 		scrollup(Prenum1);
 		updateScreen(VALID);
 		break;
 
-	  case CTRL('Y'):
+	  case Ctrl('Y'):
 		CHECKCLEAROP;
 		scrolldown(Prenum1);
 		updateScreen(VALID);
@@ -268,6 +278,7 @@ normal()
 
 		if (Prenum)		/* line number given */
 		{
+			setpcmark();
 			if (Prenum > line_count)
 				Curpos.lnum = line_count;
 			else
@@ -279,12 +290,12 @@ normal()
 		{
 		  case NL:				/* put Curpos at top of screen */
 		  case CR:
-			Topline = Prenum;
+			Topline = Curpos.lnum;
 			updateScreen(VALID);
 			break;
 
-		  case '.': 			/* put Curspos in middle of screen */
-			n = Rows / 2;
+		  case '.': 			/* put Curpos in middle of screen */
+			n = (Rows + plines(Curpos.lnum)) / 2;
 			goto dozcmd;
 
 		  case '-': 			/* put Curpos at bottom of screen */
@@ -293,15 +304,16 @@ normal()
 
 	dozcmd:
 			{
-				register linenr_t	lp = Prenum;
-				register long		l = 0;
+				register linenr_t	lp = Curpos.lnum;
+				register long		l = plines(lp);
 
-				while ((l < n) && (lp != 0))
+				do
 				{
-					l += plines(lp);
 					Topline = lp;
-					--lp;
-				}
+					if (--lp == 0)
+						break;
+					l += plines(lp);
+				} while (l <= n);
 			}
 			updateScreen(VALID);
 			break;
@@ -326,12 +338,12 @@ normal()
 		help();
 		break;
 
-	  case CTRL('L'):
+	  case Ctrl('L'):
 		CHECKCLEAROP;
 		updateScreen(CLEAR);
 		break;
 
-	  case CTRL('G'):
+	  case Ctrl('G'):
 		CHECKCLEAROP;
 		fileinfo();
 		break;
@@ -352,7 +364,7 @@ normal()
 		stuffReadbuff(":x\n");
 		break;
 
-	  case CTRL(']'):			/* :ta to current identifier */
+	  case Ctrl(']'):			/* :ta to current identifier */
 		CHECKCLEAROPQ;
 	  case '*': 				/* / to current identifier */
 	  case '#': 				/* ? to current identifier */
@@ -414,7 +426,7 @@ normal()
 		}
 		break;
 
-	  case CTRL('T'):		/* backwards in tag stack */
+	  case Ctrl('T'):		/* backwards in tag stack */
 			CHECKCLEAROPQ;
 	  		dotag("", 2, (int)Prenum1);
 			break;
@@ -484,7 +496,7 @@ normal()
 
 	  case 'h':
 	  case K_LARROW:
-	  case CTRL('H'):
+	  case Ctrl('H'):
 	  case DEL:
 		mtype = MCHAR;
 		mincl = FALSE;
@@ -509,7 +521,7 @@ normal()
 
 	  case 'k':
 	  case K_UARROW:
-	  case CTRL('P'):
+	  case Ctrl('P'):
 		mtype = MLINE;
 		if (!oneup(Prenum1))
 			CLEAROPBEEP;
@@ -524,7 +536,7 @@ normal()
 
 	  case 'j':
 	  case K_DARROW:
-	  case CTRL('N'):
+	  case Ctrl('N'):
 	  case NL:
 		mtype = MLINE;
 		if (!onedown(Prenum1))
@@ -650,7 +662,7 @@ dowrdcmd:
 
 	  case '0':
 		mtype = MCHAR;
-		mincl = TRUE;
+		mincl = FALSE;
 		beginline(flag);
 		break;
 
@@ -668,7 +680,7 @@ dowrdcmd:
 		mincl = FALSE;
 		set_want_col = TRUE;
 
-		n = dosearch(c == '/' ? FORWARD : BACKWARD, searchbuff, FALSE, Prenum1);
+		n = dosearch(c == '/' ? FORWARD : BACKWARD, searchbuff, FALSE, Prenum1, TRUE);
 		if (n == 0)
 				CLEAROPBEEP;
 		else if (n == 2)
@@ -682,7 +694,7 @@ dowrdcmd:
 		mtype = MCHAR;
 		mincl = FALSE;
 		set_want_col = TRUE;
-		if (!dosearch(0, NULL, flag, Prenum1))
+		if (!dosearch(0, NULL, flag, Prenum1, TRUE))
 			CLEAROPBEEP;
 		break;
 
@@ -825,7 +837,7 @@ docsearch:
 		set_want_col = TRUE;
 		break;
 
-	  case CTRL('R'):
+	  case Ctrl('R'):
 		CHECKCLEAROPQ;
 	  	u_redo((int)Prenum1);
 		set_want_col = TRUE;
@@ -853,9 +865,20 @@ docsearch:
 			break;
 		}
 
-		prep_redo(Prenum1, 'r', NUL, nchar);
+		if (nchar == Ctrl('V'))		/* get another character */
+		{
+			c = Ctrl('V');
+			State = NOMAPPING;
+			nchar = vgetc();		/* no macro mapping for this char */
+			State = NORMAL;
+		}
+		else
+			c = NUL;
+		prep_redo(Prenum1, 'r', c, nchar);
 		stuffnumReadbuff(Prenum1);
 		stuffReadbuff("R");
+		if (c)
+			stuffReadbuff(mkstr(c));
 		stuffReadbuff(mkstr(nchar));
 		stuffReadbuff("\033");
 		break;
@@ -895,102 +918,11 @@ docsearch:
 		doput(dir, Prenum1);
 		break;
 
-	  case CTRL('A'):			/* add to number */
-	  case CTRL('S'):			/* subtract from number */
+	  case Ctrl('A'):			/* add to number */
+	  case Ctrl('S'):			/* subtract from number */
 		CHECKCLEAROPQ;
-		{
-			register int 	col;
-			char			buf[30];
-			int				hex;		/* 'x' or 'X': hexadecimal; '0': octal */
-			static int		hexupper = FALSE;	/* 0xABC */
-
-			ptr = nr2ptr(Curpos.lnum);
-			col = Curpos.col;
-
-				/* first check if we are on a hexadecimal number */
-			while (col > 0 && isxdigit(ptr[col]))
-				--col;
-			if (col > 0 && toupper(ptr[col]) == 'X' && ptr[col - 1] == '0' && isxdigit(ptr[col + 1]))
-				--col;		/* found hexadecimal number */
-			else
-			{
-				/* first search forward and then backward for start of number */
-				col = Curpos.col;
-
-				while (ptr[col] != NUL && !isdigit(ptr[col]))
-					++col;
-
-				while (col > 0 && isdigit(ptr[col - 1]))
-					--col;
-			}
-
-			if (isdigit(ptr[col]) && u_saveCurpos())
-			{
-				set_want_col = TRUE;
-				prep_redo(Prenum1, c, NUL, NUL);
-
-				if (ptr[col] != '0')
-					hex = 0;				/* decimal */
-				else
-				{
-					hex = toupper(ptr[col + 1]);		/* assume hexadecimal */
-					if (hex != 'X' || !isxdigit(ptr[col + 2]))
-					{
-						if (isdigit(hex))
-							hex = '0';		/* octal */
-						else
-							hex = 0;		/* 0 by itself is decimal */
-					}
-				}
-
-				if (!hex && col > 0 && ptr[col - 1] == '-')
-					--col;
-
-				ptr += col;
-				if (hex == '0')
-					sscanf(ptr, "%lo", &n);
-				else if (hex)
-					sscanf(ptr, "%lx", &n);	/* "%X" doesn't work! */
-				else
-					n = atol(ptr);
-
-				if (c == CTRL('A'))
-					n += Prenum1;
-				else
-					n -= Prenum1;
-
-				if (hex == 'X')					/* skip the '0x' */
-					col += 2;
-				Curpos.col = col;
-				do								/* delete the old number */
-				{
-					if (isalpha(c))
-					{
-						if (isupper(c))
-							hexupper = TRUE;
-						else
-							hexupper = FALSE;
-					}
-					delchar(FALSE);
-					c = gcharCurpos();
-				}
-				while (hex ? (hex == '0' ? c >= '0' && c <= '7' : isxdigit(c)) : isdigit(c));
-
-				if (hex == '0')
-					sprintf(buf, "0%lo", n);
-				else if (hexupper)
-					sprintf(buf, "%lX", n);
-				else if (hex)
-					sprintf(buf, "%lx", n);
-				else
-					sprintf(buf, "%ld", n);
-				insstr(buf);					/* insert the new number */
-				--Curpos.col;
-				updateline();
-			}
-			else
-				beep();
-		}
+		if (doaddsub((int)c, Prenum1))
+			prep_redo(Prenum1, c, NUL, NUL);
 		break;
 
 /*
@@ -1207,11 +1139,11 @@ cursormark:
 		set_want_col = TRUE;
 		break;
 
-	case CTRL('O'):			/* goto older pcmark */
+	case Ctrl('O'):			/* goto older pcmark */
 		Prenum1 = -Prenum1;
 		/* FALLTHROUGH */
 
-	case CTRL('I'):			/* goto newer pcmark */
+	case Ctrl('I'):			/* goto newer pcmark */
 		CHECKCLEAROPQ;
 		pos = movemark((int)Prenum1);
 		if (pos == (FPOS *)-1)	/* jump to other file */
@@ -1240,7 +1172,7 @@ cursormark:
  */
  	  case 'q':
 	  case 'Q':
-	  case CTRL('Q'):
+	  case Ctrl('Q'):
 		CHECKCLEAROP;
 		Quote_block = FALSE;
 		if (Quote.lnum)					/* stop quoting */
@@ -1253,7 +1185,7 @@ cursormark:
 			Quote = Curpos;
 			if (c == 'Q')				/* linewise */
 				Quote.col = QUOTELINE;
-			else if (c == CTRL('Q'))	/* blockwise */
+			else if (c == Ctrl('Q'))	/* blockwise */
 				Quote_block = TRUE;
 			updateline();				/* start the inversion */
 		}
@@ -1263,7 +1195,7 @@ cursormark:
  * 12. Suspend
  */
 
- 	case CTRL('Z'):
+ 	case Ctrl('Z'):
 		CLEAROP;
 		Quote.lnum = 0;					/* stop quoting */
 		stuffReadbuff(":st!\r");		/* no autowrite */
@@ -1316,7 +1248,7 @@ cursormark:
 			case 'Q':	Quote.col = QUOTELINE;
 						break;
 
-			case CTRL('Q'):
+			case Ctrl('Q'):
 						Quote_block = TRUE;
 						break;
 
@@ -1336,6 +1268,25 @@ cursormark:
 		else if (Quote.lnum)
 			startop = Quote;
 
+		/*
+		 * imitate the strange behaviour of vi:
+		 * When doing }, while standing on an indent, the indent is
+		 * included in the operated text.
+		 */
+		if (c == '}' && !Quote.lnum)
+		{
+			n = 0;
+			for (ptr = nr2ptr(startop.lnum); *ptr; ++ptr)
+			{
+				if (!isspace(*ptr))
+					break;
+				if (++n == startop.col)
+				{
+					startop.col = 0;
+					break;
+				}
+			}
+		}
 
 		if (lt(startop, Curpos))
 		{
@@ -1384,11 +1335,11 @@ cursormark:
 	 * prepare to redo quoting: this is based on the size
 	 * of the quoted text
 	 */
-			if (operator != YANK)		/* can't redo yank */
+			if (operator != YANK && operator != COLON)	/* can't redo yank and : */
 			{
 				prep_redo(0L, 'q', opchars[operator - 1], NUL);
 				if (Quote_block)
-					redo_Quote_type = CTRL('Q');
+					redo_Quote_type = Ctrl('Q');
 				else if (Quote.col == QUOTELINE)
 					redo_Quote_type = 'Q';
 				else
@@ -1414,11 +1365,11 @@ cursormark:
 			/*
 			 * Switch quoting off now, so screen updating does
 			 * not show inverted text when the screen is redrawn.
-			 * With YANK and sometimes with COLON there is no screen redraw, so
-			 * it is done here to remove the inverted part.
+			 * With YANK and sometimes with COLON and FILTER there is no screen
+			 * redraw, so it is done here to remove the inverted part.
 			 */
 			Quote.lnum = 0;
-			if (operator == YANK || operator == COLON)
+			if (operator == YANK || operator == COLON || operator == FILTER)
 				updateScreen(NOT_VALID);
 		}
 
@@ -1449,7 +1400,7 @@ cursormark:
 			break;
 
 		  case FILTER:
-			AppendToRedobuff("!\n");	/* strange but necessary */
+		  	bangredo = TRUE;			/* dobang() will put cmd in redo buffer */
 
 		  case INDENT:
 		  case COLON:
@@ -1571,7 +1522,7 @@ premsg(c1, c2)
 		else
 		{
 			if (opnum)
-				outnum((int)opnum);
+				outnum((long)opnum);
 			if (yankbuffer)
 			{
 				outchar('"');
@@ -1582,7 +1533,7 @@ premsg(c1, c2)
 			else if (operator)
 				outchar(opchars[operator - 1]);
 			if (Prenum)
-				outnum((int)Prenum);
+				outnum((long)Prenum);
 			if (c1)
 			{
 				c = c1;

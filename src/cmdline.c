@@ -65,12 +65,13 @@ static int		check_readonly __ARGS((void));
 static int		check_changed __ARGS((int));
 static int		check_fname __ARGS((void));
 static int		check_more __ARGS((void));
+static void		setaltfname __ARGS((char *, linenr_t, int));
 #ifdef WILD_CARDS
 static char		*ExpandOne __ARGS((u_char *, int, int));
 static void		showmatches __ARGS((char *, int));
 static char		*addstar __ARGS((char *, int));
 #endif
-static linenr_t get_address __ARGS((u_char **, linenr_t));
+static linenr_t get_address __ARGS((u_char **));
 
 extern char		*mktemp __ARGS((char *));
 
@@ -131,33 +132,41 @@ getcmdline(firstc, buff)
 	newlen = p_hi;
 	if (newlen != hislen)						/* history length changed */
 	{
-		temp = (char **)alloc((int)(newlen * sizeof(char *)));
-		if (temp != NULL)
+		if (newlen)
+			temp = (char **)alloc((int)(newlen * sizeof(char *)));
+		else
+			temp = NULL;
+		if (newlen == 0 || temp != NULL)
 		{
-				if (newlen > hislen)			/* array becomes bigger */
+			if (newlen > hislen)			/* array becomes bigger */
+			{
+				for (i = 0; i <= hisidx; ++i)
+					temp[i] = history[i];
+				j = i;
+				for ( ; i <= newlen - (hislen - hisidx); ++i)
+					temp[i] = NULL;
+				for ( ; j < hislen; ++i, ++j)
+					temp[i] = history[j];
+			}
+			else							/* array becomes smaller */
+			{
+				j = hisidx;
+				for (i = newlen - 1; ; --i)
 				{
-						for (i = 0; i <= hisidx; ++i)
-								temp[i] = history[i];
-						j = i;
-						for ( ; i <= newlen - (hislen - hisidx); ++i)
-								temp[i] = NULL;
-						for ( ; j < hislen; ++i, ++j)
-								temp[i] = history[j];
+					if (i >= 0)
+						temp[i] = history[j];	/* copy newest entries */
+					else
+						free(history[j]);		/* remove older entries */
+					if (--j < 0)
+						j = hislen - 1;
+					if (j == hisidx)
+						break;
 				}
-				else							/* array becomes smaller */
-				{
-						j = hisidx;
-						hisidx = newlen - 1;
-						for (i = hisidx; i >= 0; --i)
-						{
-								temp[i] = history[j];
-								if (--j < 0)
-										j = hislen - 1;
-						}
-				}
-				free(history);
-				history = temp;
-				hislen = newlen;
+				hisidx = newlen - 1;
+			}
+			free(history);
+			history = temp;
+			hislen = newlen;
 		}
 	}
 	hiscnt = hislen;			/* set hiscnt to impossible history value */
@@ -175,7 +184,7 @@ getcmdline(firstc, buff)
 			c = vgetc();
 
 #ifdef WILD_CARDS
-		if (c != ESC && c != CTRL('N') && c != CTRL('P') && gotesc)
+		if (c != ESC && c != Ctrl('N') && c != Ctrl('P') && gotesc)
 		{
 			(void)ExpandOne(NULL, FALSE, -2);	/* may free expanded file names */
 			gotesc = FALSE;
@@ -216,7 +225,7 @@ getcmdline(firstc, buff)
 				continue;
 
 /*		case '@':	only in very old vi */
-		case CTRL('U'):
+		case Ctrl('U'):
 clearline:
 				cmdpos = 0;
 				cmdlen = 0;
@@ -276,7 +285,7 @@ doexpand:
 			redrawcmd();
 			continue;
 
-		case CTRL('D'):
+		case Ctrl('D'):
 			{
 				for (i = cmdpos; i > 0 && buff[i - 1] != ' '; --i)
 						;
@@ -311,51 +320,55 @@ doexpand:
 				while (c == K_SLARROW && buff[cmdpos - 1] != ' ');
 				continue;
 
-		case CTRL('N'):		/* next match */
-		case CTRL('P'):		/* previous match */
+		case Ctrl('N'):		/* next match */
+		case Ctrl('P'):		/* previous match */
+#ifdef WILD_CARDS
 				if (gotesc)
 				{
-					findex = (c == CTRL('P')) ? 2 : 1;
+					findex = (c == Ctrl('P')) ? 2 : 1;
 					goto doexpand;
 				}
-
+#endif
 		case K_UARROW:
 		case K_DARROW:
+				if (hislen == 0)		/* no history */
+					continue;
+
 				i = hiscnt;
-				if (c == K_UARROW || c == CTRL('P'))
+				if (c == K_UARROW || c == Ctrl('P'))
 				{
-						if (hiscnt == hislen)
-								hiscnt = hisidx;
-						else if (hiscnt == 0 && hisidx != hislen - 1)
-								hiscnt = hislen - 1;
-						else if (hiscnt != hisidx + 1)
-								--hiscnt;
+					if (hiscnt == hislen)
+						hiscnt = hisidx;
+					else if (hiscnt == 0 && hisidx != hislen - 1)
+						hiscnt = hislen - 1;
+					else if (hiscnt != hisidx + 1)
+						--hiscnt;
 				}
 				else
 				{
-						if (hiscnt == hisidx)	/* on last entry, clear the line */
-						{
-								hiscnt = hislen;
-								goto clearline;
-						}
-						if (hiscnt == hislen)	/* not on a history line, nothing to do */
-								continue;
-						if (hiscnt == hislen - 1)
-								hiscnt = 0;
-						else
-								++hiscnt;
+					if (hiscnt == hisidx)	/* on last entry, clear the line */
+					{
+						hiscnt = hislen;
+						goto clearline;
+					}
+					if (hiscnt == hislen)	/* not on a history line, nothing to do */
+						continue;
+					if (hiscnt == hislen - 1)
+						hiscnt = 0;
+					else
+						++hiscnt;
 				}
 				if (hiscnt < 0 || history[hiscnt] == NULL)
-						hiscnt = i;
+					hiscnt = i;
 				else
 				{
-						strcpy((char *)buff, history[hiscnt]);
-						cmdpos = cmdlen = strlen((char *)buff);
-						redrawcmd();
+					strcpy((char *)buff, history[hiscnt]);
+					cmdpos = cmdlen = strlen((char *)buff);
+					redrawcmd();
 				}
 				continue;
 
-		case CTRL('V'):
+		case Ctrl('V'):
 				outchar('^');
 				outtrans((char *)(buff + cmdpos), cmdlen - cmdpos);
 				++cmdslen;
@@ -381,10 +394,13 @@ doexpand:
 	}
 	buff[cmdlen] = NUL;
 
-	if (++hisidx == hislen)
-		hisidx = 0;
-	free(history[hisidx]);
-	history[hisidx] = strsave((char *)buff);
+	if (hislen != 0)
+	{
+		if (++hisidx == hislen)
+			hisidx = 0;
+		free(history[hisidx]);
+		history[hisidx] = strsave((char *)buff);
+	}
 	retval = TRUE;
 
 returncmd:
@@ -472,7 +488,7 @@ docmdline(cmdline)
 	}
 	else
 	{
-		if (strlen((char *)cmdline) > CMDBUFFSIZE - 2)
+		if (strlen((char *)cmdline) > (size_t)(CMDBUFFSIZE - 2))
 		{
 				emsg(e_toolong);
 				return;
@@ -559,7 +575,7 @@ DoOneCmd(buff)
 		line1 = line2;
 		line2 = Curpos.lnum;			/* default is current line number */
 		skipspace((char **)&cmd);
-		lnum = get_address(&cmd, Curpos.lnum);
+		lnum = get_address(&cmd);
 		if (lnum == INVLNUM)
 		{
 			if (*cmd == '%')            /* '%' - all lines */
@@ -684,8 +700,13 @@ DoOneCmd(buff)
 	{
 		while (*p)
 		{
-			if (*p == CTRL('V'))
-				strcpy((char *)p, (char *)p + 1);
+			if (*p == Ctrl('V'))
+			{
+				if (argt & USECTRLV)	/* skip the CTRL-V and next char */
+					++p;
+				else					/* remove CTRL-V and skip next char */
+					strcpy((char *)p, (char *)p + 1);
+			}
 			else if ((*p == '"' && !(argt & NOTRLCOM)) || *p == '|')
 			{						/* remove the backslash or ^V */
 				if (*(p - 1) == '\\')
@@ -767,7 +788,7 @@ DoOneCmd(buff)
 			if (c == '%')
 			{
 				if (check_fname())
-						goto doend;
+					goto doend;
 				q = Filename;
 			}
 			else
@@ -813,14 +834,7 @@ DoOneCmd(buff)
 #ifdef WILD_CARDS
 		if (argt & NOSPC)		/* one file argument: expand wildcards */
 		{
-			for (p = arg; *p; ++p)
-#ifdef UNIX
-				if (strchr("*?[{}`~$", *p) != NULL)
-#else
-				if (strchr("*?[{}`", *p) != NULL)
-#endif
-					break;
-			if (*p)					/* has a wildcard */
+			if (has_wildcard((char *)arg))
 			{
 				if ((p = (u_char *)ExpandOne(arg, TRUE, -1)) == NULL)
 					goto doend;
@@ -863,13 +877,9 @@ DoOneCmd(buff)
 		case CMD_wq:
 				exiting = TRUE;
 				settmode(0);		/* allows typeahead */
-				if ((cmdidx == CMD_wq || Changed) && (check_readonly() || !dowrite(arg, FALSE)))
-				{
-					exiting = FALSE;
-					settmode(1);
-					break;
-				}
-				if (check_more())
+				if (((cmdidx == CMD_wq || Changed) &&
+				     (check_readonly() || !dowrite(arg, FALSE))) ||
+					check_more())
 				{
 					exiting = FALSE;
 					settmode(1);
@@ -956,17 +966,19 @@ donextfile:		if (i < 0 || i >= numfiles)
 
 		case CMD_file:
 				if (*arg == NUL)
-						fileinfo();
+					fileinfo();
 				else
 				{
-						setfname((char *)arg);
-						filemess(Filename, "");
-						maketitle();
+					setfname((char *)arg);
+					filemess(Filename, "");
+					maketitle();
 				}
 				break;
 
 		case CMD_files:
-				settmode(0);
+#ifdef AMIGA
+				settmode(0);			/* set cooked mode, so output can be halted */
+#endif
 				for (i = 0; i < NUMALTFILES; ++i)
 				{
 					if (altfiles[i])
@@ -976,7 +988,9 @@ donextfile:		if (i < 0 || i >= numfiles)
 					}
 					flushbuf();
 				}
+#ifdef AMIGA
 				settmode(1);
+#endif
 				wait_return(TRUE);
 				break;
 
@@ -1017,25 +1031,45 @@ donextfile:		if (i < 0 || i >= numfiles)
 				smsg("line %ld", (long)line2);
 				break;
 
+		case CMD_list:
+				i = p_list;
+				p_list = 1;
+		case CMD_number:
 		case CMD_print:
+#ifdef AMIGA
 				settmode(0);			/* set cooked mode, so output can be halted */
-				do
+#endif
+				gotocmdline(TRUE, NUL);	/* clear command line */
+				n = 0;
+				for (;;)
 				{
-					if (p_nu)
+					if (p_nu || cmdidx == CMD_number)
 					{
 						sprintf(IObuff, "%7ld ", (long)line1);
 						outstrn(IObuff);
 					}
-					prt_line(nr2ptr(line1));
+					n += prt_line(nr2ptr(line1));
+					if (++line1 > line2)
+						break;
 					outchar('\n');
 					flushbuf();
-				} while (++line1 <= line2);
+					n = Columns;
+				}
+#ifdef AMIGA
 				settmode(1);
+#endif
 
-				if (global_busy)
-					global_wait = 1;
-				else
-					wait_return(TRUE);
+				if (cmdidx == CMD_list)
+					p_list = i;
+
+				if (n >= Columns - (p_ru ? 22 : p_sc ? 12 : 0))
+				{
+					outchar('\n');
+					if (global_busy)
+						global_wait = 1;
+					else
+						wait_return(TRUE);
+				}
 				break;
 
 		case CMD_shell:
@@ -1078,8 +1112,20 @@ donextfile:		if (i < 0 || i >= numfiles)
 				break;
 
 		case CMD_map:
+		case CMD_noremap:
+				/*
+				 * If we are sourcing .exrc or .vimrc in current directory we
+				 * print the mappings for security reasons.
+				 */
+				if (secure)
+				{
+					secure = 2;
+					outtrans((char *)cmd, -1);
+					outchar('\n');
+				}
 		case CMD_unmap:
-				switch (domap(*cmd == 'u', (char *)arg, forceit ? INSERT : NORMAL))
+				switch (domap((*cmd == 'n') ? 2 : (*cmd == 'u'), (char *)arg,
+									forceit ? INSERT : NORMAL))
 				{
 					case 1: emsg(e_invarg);
 							break;
@@ -1145,40 +1191,59 @@ donextfile:		if (i < 0 || i >= numfiles)
 		case CMD_t:
 		case CMD_copy:		/* copy: first yank, then put */
 		case CMD_move:		/* move: first delete, then put */
-				n = get_address(&arg, line2);
+				n = get_address(&arg);
 				if (n == INVLNUM)
 				{
 					emsg(e_invaddr);
 					break;
 				}
 
-				yankbuffer = 0;		/* use default yank buffer */
-				startop.lnum = line1;
-				endop.lnum = line2;
-				nlines = line2 - line1 + 1;
-				mtype = MLINE;
-				Curpos.lnum = line1;
 				if (cmdidx == CMD_move)
 				{
-					if (n > line2)		/* correct n for the deleted lines */
-						n -= nlines;
-					else if (n >= line1)
-						n = line1 - 1;
-					dodelete();
+					if (n >= line1)
+					{
+						--n;
+						Curpos.lnum = n - (line2 - line1) + 1;
+					}
+					else
+						Curpos.lnum = n + 1;
+					while (line1 <= line2)
+					{
+							/* this undo is not efficient, but it works */
+						u_save(line1 - 1, line1 + 1);
+						q = delsline(line1, FALSE);
+						u_save(n, n + 1);
+						appendline(n, q);
+						if (n < line1)
+						{
+							++n;
+							++line1;
+						}
+						else
+							--line2;
+					}
 				}
 				else
-					doyank(FALSE);
-
-				if (n == 0)				/* put in above first line */
 				{
-					Curpos.lnum = 1;
-					doput(BACKWARD, -1L);
+					u_save(n, n + 1);
+					Curpos.lnum = n + 1;
+					lnum = line2 - line1 + 1;
+					while (line1 <= line2)
+					{
+						appendline(n, save_line(nr2ptr(line1)));
+						++n;
+						++line1;
+						if (n < line1)
+						{
+							++line1;
+							++line2;
+						}
+					}
+					msgmore((long)lnum);
 				}
-				else
-				{
-					Curpos.lnum = n;
-					doput(FORWARD, -1L);
-				}
+				u_clearline();
+				Curpos.col = 0;
+				updateScreen(NOT_VALID);
 				break;
 
 		case CMD_and:
@@ -1230,12 +1295,17 @@ donextfile:		if (i < 0 || i >= numfiles)
 					emsg(e_notopen);
 				break;
 
+		case CMD_mkvimrc:
+				if (*arg == NUL)
+					arg = (u_char *)VIMRC_FILE;
+				/*FALLTHROUGH*/
+
 		case CMD_mkexrc:
 				{
 					FILE	*fd;
 
 					if (*arg == NUL)
-						arg = (u_char *)".exrc";
+						arg = (u_char *)EXRC_FILE;
 					if (!forceit && (fd = fopen((char *)arg, "r")) != NULL)
 					{
 						fclose(fd);
@@ -1319,6 +1389,16 @@ dobang(addr_count, arg)
 	char			*trailarg;
 	int 			len;
 
+	/*
+	 * Disallow shell commands from .exrc and .vimrc in current directory for
+	 * security reasons.
+	 */
+	if (secure)
+	{
+		secure = 2;
+		emsg(e_curdir);
+		return;
+	}
 	len = strlen((char *)arg) + 1;
 
 	if (Changed)
@@ -1327,8 +1407,8 @@ dobang(addr_count, arg)
 	 * try to find an embedded bang, like in :!<cmd> ! [args]
 	 * (:!! is indicated by the 'forceit' variable)
 	 */
-	for (trailarg = (char *)arg; *trailarg && !isspace(*trailarg); ++trailarg)
-		;
+	trailarg = (char *)arg;
+	skiptospace(&trailarg);
 	skipspace(&trailarg);
 	if (*trailarg == '!')
 		*trailarg++ = NUL;
@@ -1364,6 +1444,12 @@ dobang(addr_count, arg)
 	free(prevcmd);
 	prevcmd = t;
 
+	if (bangredo)			/* put cmd in redo buffer for ! command */
+	{
+		AppendToRedobuff(prevcmd);
+		AppendToRedobuff("\n");
+		bangredo = FALSE;
+	}
 	if (addr_count == 0)
 	{
 		smsg(":!%s", prevcmd);
@@ -1389,16 +1475,35 @@ dowrite(arg, append)
 	u_char	*arg;
 	int		append;
 {
-	FILE *f;
+	FILE	*f;
+	int		other;
 
-	if ((*arg == NUL || (Filename && !strcmp((char *)arg, Filename))) && check_readonly())
+	/*
+	 * if we have a new file name put it in the list of alternate file names
+	 */
+	other = otherfile((char *)arg);
+	if (*arg != NUL && other)
+		setaltfname(strsave((char *)arg), (linenr_t)1, TRUE);
+
+	/*
+	 * writing to the current file is not allowed in readonly mode
+	 */
+	if ((*arg == NUL || !other) && check_readonly())
 		return FALSE;
+
+	/*
+	 * write to current file
+	 */
 	if (*arg == NUL)
 	{
 		if (check_fname())
 			return FALSE;
 		return (writeit(Filename, line1, line2, append, forceit));
 	}
+
+	/*
+	 * write to other file; overwriting only allowed with '!'
+	 */
 	if (!forceit && !append && !p_wa && (f = fopen((char *)arg, "r")) != NULL)
 	{								/* don't overwrite existing file */
 			fclose(f);
@@ -1414,7 +1519,7 @@ doecmd(arg)
 {
 	int			setalt;
 	char		*command = NULL;
-	int			i;
+	int			redraw_save;
 	linenr_t	newlnum;
 
 	newlnum = doecmdlnum;
@@ -1423,20 +1528,6 @@ doecmd(arg)
 	if (*arg == '+')
 	{
 		++arg;
-#if 0
-		if (isdigit(*arg))				/* :e +num file */
-			newlnum = getdigits(&arg);
-		else if (*arg == NUL || isspace(*arg))			/* :e + file */
-			newlnum = INVLNUM;
-		else							/* :e +command file */
-		{
-			command = arg;
-			while (*arg && !isspace(*arg))
-				++arg;
-			if (*arg)
-				*arg++ = NUL;
-		}
-#endif
 		if (isspace(*arg))
 			command = "$";
 		else
@@ -1454,35 +1545,17 @@ doecmd(arg)
 #ifdef AMIGA
 	fname_case(arg);		/* set correct case for filename */
 #endif
-	FullName(arg, IObuff, IOSIZE);
-	setalt = (*arg != NUL && (Filename == NULL || fnamecmp(IObuff, Filename)));
-	if (setalt)
-	{
-		free(altfiles[NUMALTFILES - 1]);
-		for (i = NUMALTFILES - 1; i > 0; --i)
-		{
-			altfiles[i] = altfiles[i - 1];
-			altlnum[i] = altlnum[i - 1];
-		}
-		incrmarks();		/* increment file number for all jumpmarks */
-		incrtags();			/* increment file number for all tags */
-	}
+	setalt = (*arg != NUL && otherfile(arg));
 	if (check_changed(FALSE))
 	{
 		if (setalt)
-		{
-			altfiles[0] = strsave(arg);
-			altlnum[0] = 1;
-		}
-		decrmarks();		/* decrement file number for jumpmarks in current file */
-		decrtags();			/* decrement file number for tags in current file */
+			setaltfname(strsave(arg), (linenr_t)1, TRUE);
 		return FALSE;
 	}
 	if (setalt)
 	{
-		altfiles[0] = Filename;
+		setaltfname(Filename, Curpos.lnum, FALSE);
 		Filename = NULL;
-		altlnum[0] = Curpos.lnum;
 		setfname(arg);
 	}
 	else if (newlnum == 0)
@@ -1496,8 +1569,10 @@ doecmd(arg)
 	filealloc();
 	UNCHANGED;
 	startscript();		/* re-start auto script file */
+	startop.lnum = 0;	/* clear '[ and '] marks */
+	endop.lnum = 0;
 
-	i = RedrawingDisabled;
+	redraw_save = RedrawingDisabled;
 	RedrawingDisabled = TRUE;		/* don't redraw until the cursor is in
 									 * the right line */
 	readfile(Filename, (linenr_t)0, TRUE);
@@ -1511,7 +1586,7 @@ doecmd(arg)
 	}
 	if (command)
 		docmdline((u_char *)command);
-	RedrawingDisabled = i;			/* cursupdate() will redraw the screen */
+	RedrawingDisabled = redraw_save;			/* cursupdate() will redraw the screen */
 	if (p_im)
 		stuffReadbuff("i");			/* start editing in insert mode */
 	return TRUE;
@@ -1521,8 +1596,19 @@ doecmd(arg)
 doshell(cmd)
 	char	*cmd;
 {
+	/*
+	 * Disallow shell commands from .exrc and .vimrc in current directory for
+	 * security reasons.
+	 */
+	if (secure)
+	{
+		secure = 2;
+		emsg(e_curdir);
+		return;
+	}
 	gotocmdline(FALSE, '\n');
 
+	stoptermcap();
 	call_shell(cmd, 0);
 
 	if (global_busy)
@@ -1533,6 +1619,7 @@ doshell(cmd)
 #else
 		wait_return(TRUE);
 #endif
+	starttermcap();
 
 	/* in an Amiga window redrawing is caused by asking the window size */
 #ifdef AMIGA
@@ -1559,95 +1646,135 @@ dofilter(buff, do_in, do_out)
 	u_char		*buff;
 	int			do_in, do_out;
 {
-		char		itmp[TMPNAMELEN];
-		char		otmp[TMPNAMELEN];
-		linenr_t 	linecount;
+#ifdef LATTICE
+	char		itmp[L_tmpnam];		/* use tmpnam() */
+	char		otmp[L_tmpnam];
+#else
+	char		itmp[TMPNAMELEN];
+	char		otmp[TMPNAMELEN];
+#endif
+	linenr_t 	linecount;
+	char		*p;
 
-		if (*buff == NUL)		/* no filter command */
-				return;
-		linecount = line2 - line1 + 1;
-		Curpos.lnum = line1;
-		Curpos.col = 0;
-		cursupdate();
-		gotocmdline(FALSE, '\n');
+	/*
+	 * Disallow shell commands from .exrc and .vimrc in current directory for
+	 * security reasons.
+	 */
+	if (secure)
+	{
+		secure = 2;
+		emsg(e_curdir);
+		return;
+	}
+	if (*buff == NUL)		/* no filter command */
+		return;
+	linecount = line2 - line1 + 1;
+	Curpos.lnum = line1;
+	Curpos.col = 0;
+	cursupdate();
+	gotocmdline(FALSE, NUL);
 
-		/*
-		 * 1. Form temp file names
-		 * 2. Write the lines to a temp file
-		 * 3. Run the filter command on the temp file
-		 * 4. Read the output of the command into the buffer
-		 * 5. Delete the original lines to be filtered
-		 * 6. Remove the temp files
-		 */
+	/*
+	 * 1. Form temp file names
+	 * 2. Write the lines to a temp file
+	 * 3. Run the filter command on the temp file
+	 * 4. Read the output of the command into the buffer
+	 * 5. Delete the original lines to be filtered
+	 * 6. Remove the temp files
+	 */
 
-		strcpy(itmp, TMPNAME1);
-		strcpy(otmp, TMPNAME2);
+#ifndef LATTICE
+	/* for lattice we use tmpnam(), which will make its own name */
+	strcpy(itmp, TMPNAME1);
+	strcpy(otmp, TMPNAME2);
+#endif
 
-		if ((do_in && *mktemp(itmp) == NUL) || (do_out && *mktemp(otmp) == NUL))
-		{
-				emsg(e_notmp);
-				return;
-		}
+	if ((do_in && *mktemp(itmp) == NUL) || (do_out && *mktemp(otmp) == NUL))
+	{
+		emsg(e_notmp);
+		return;
+	}
 
-		if (do_in && !writeit(itmp, line1, line2, FALSE, 0))
-		{
-				emsg(e_notcreate);
-				return;
-		}
-		if (!do_out)
-			outchar('\n');
+	outchar('\n');				/* ! command not overwritten by next mesages */
+	if (do_in && !writeit(itmp, line1, line2, FALSE, 0))
+	{
+		outchar ('\n');
+		emsg(e_notcreate);
+		updateScreen(CLEAR);	/* screen has been shifted up one line */
+		return;
+	}
+	if (!do_out)
+		outchar('\n');
 
-		sprintf(IObuff, "%s %c %s %c %s", buff,
-						do_in ? '<' : ' ', do_in ? itmp : "",
-						do_out ? '>' : ' ', do_out ? otmp : "");
+	strcpy(IObuff, (char *)buff);
+	if (do_in)
+	{
+	/*
+	 * If there is a pipe, we have to put the '<' in front of it
+	 */
+		p = strchr(IObuff, '|');
+		if (p)
+			*p = NUL;
+		strcat(IObuff, " < ");
+		strcat(IObuff, itmp);
+		p = strchr((char *)buff, '|');
+		if (p)
+			strcat(IObuff, p);
+	}
+	if (do_out)
+	{
+		strcat(IObuff, " > ");
+		strcat(IObuff, otmp);
+	}
 
-		if (call_shell(IObuff, 1))
+	if (call_shell(IObuff, 1))
+	{
+		linecount = 0;
+		goto error;
+	}
+
+	if (do_out)
+	{
+		if (!u_save((linenr_t)(line1 - 1), (linenr_t)(line2 + 1)))
 		{
 			linecount = 0;
 			goto error;
 		}
-
-		if (do_out)
+		if (readfile(otmp, line2, FALSE))
 		{
-				if (!u_save((linenr_t)(line1 - 1), (linenr_t)(line2 + 1)))
-				{
-					linecount = 0;
-					goto error;
-				}
-				if (readfile(otmp, line2, FALSE))
-				{
-					emsg(e_notread);
-					linecount = 0;
-					goto error;
-				}
+			outchar ('\n');
+			emsg(e_notread);
+			linecount = 0;
+			goto error;
+		}
 
-				if (do_in)
-				{
-					Curpos.lnum = line1;
-					dellines(linecount, TRUE);
-				}
-		}
-		else
+		if (do_in)
 		{
-error:
-				if (global_busy)
-					global_wait = 1;
-				else
-					wait_return(FALSE);
+			Curpos.lnum = line1;
+			dellines(linecount, TRUE);
 		}
-		updateScreen(CLEAR);
-
-		if (linecount > p_report)
-		{
-				if (!do_in && do_out)
-						msgmore(linecount);
-				else
-						smsg("%ld lines filtered", (long)linecount);
-		}
-		remove(itmp);
-		remove(otmp);
-		return;
 	}
+	else
+	{
+error:
+		if (global_busy)
+			global_wait = 1;
+		else
+			wait_return(FALSE);
+	}
+	updateScreen(CLEAR);
+
+	if (linecount > p_report)
+	{
+		if (!do_in && do_out)
+			msgmore(linecount);
+		else
+			smsg("%ld lines filtered", (long)linecount);
+	}
+	remove(itmp);
+	remove(otmp);
+	return;
+}
 
 /* 
  * Redefine the argument list to 'str'.
@@ -1707,10 +1834,7 @@ doarglist(str)
 	
 #ifdef WILD_CARDS
 	if (ExpandWildCards(new_numfiles, new_files, &exp_numfiles, &exp_files, FALSE, TRUE) != 0)
-	{
-		emsg((char *)exp_files);
 		return TRUE;
-	}
 	else if (exp_numfiles == 0)
 	{
 		emsg(e_nomatch);
@@ -1872,7 +1996,7 @@ getaltfile(n, lnum, setpm)
 }
 
 /*
- * get name of alternate file
+ * get name of "n"th alternate file
  */
  	char *
 getaltfname(n)
@@ -1881,6 +2005,38 @@ getaltfname(n)
 	if (n >= NUMALTFILES)
 		return NULL;
 	return altfiles[n];
+}
+
+/*
+ * put name "arg" in the list of alternate files.
+ * "arg" must have been allocated
+ * "lnum" is the default line number when jumping to the file
+ * "newfile" must be TRUE when "arg" != current file
+ */
+	static void
+setaltfname(arg, lnum, newfile)
+	char		*arg;
+	linenr_t	lnum;
+	int			newfile;
+{
+	int i;
+
+	free(altfiles[NUMALTFILES - 1]);
+	for (i = NUMALTFILES - 1; i > 0; --i)
+	{
+		altfiles[i] = altfiles[i - 1];
+		altlnum[i] = altlnum[i - 1];
+	}
+	incrmarks();		/* increment file number for all jumpmarks */
+	incrtags();			/* increment file number for all tags */
+	if (newfile)
+	{
+		decrmarks();		/* decrement file number for jumpmarks in current file */
+		decrtags();			/* decrement file number for tags in current file */
+	}
+
+	altfiles[0] = arg;
+	altlnum[0] = lnum;
 }
 
 #ifdef WILD_CARDS
@@ -1904,7 +2060,7 @@ ExpandOne(str, list_notfound, mode)
 	char		*ss = NULL;
 	static char **cmd_files = NULL;	  /* list of input files */
 	static int  cmd_numfiles = -1;	  /* number of input files */
-	static int	index;
+	static int	findex;
 	int			i, found = 0;
 	char		*filesuf, *setsuf, *nextsetsuf;
 	int			filesuflen, setsuflen;
@@ -1917,14 +2073,14 @@ ExpandOne(str, list_notfound, mode)
 		if (cmd_numfiles > 0)
 		{
 			if (mode == 1)
-				++index;
+				++findex;
 			else	/* mode == 2 */
-				--index;
-			if (index < 0)
-				index = 0;
-			if (index > cmd_numfiles - 1)
-				index = cmd_numfiles - 1;
-			return strsave(cmd_files[index]);
+				--findex;
+			if (findex < 0)
+				findex = 0;
+			if (findex > cmd_numfiles - 1)
+				findex = cmd_numfiles - 1;
+			return strsave(cmd_files[findex]);
 		}
 		else
 			return NULL;
@@ -1934,13 +2090,13 @@ ExpandOne(str, list_notfound, mode)
 	if (cmd_numfiles != -1)
 		FreeWild(cmd_numfiles, cmd_files);
 	cmd_numfiles = -1;
-	index = -1;
+	findex = -1;
 
 	if (mode == -2)		/* only release file name */
 		return NULL;
 
 	if (ExpandWildCards(1, (char **)&str, &cmd_numfiles, &cmd_files, FALSE, list_notfound) != 0)
-		emsg((char *)cmd_files);
+		/* error: do nothing */;
 	else if (cmd_numfiles == 0)
 		emsg(e_nomatch);
 	else
@@ -2029,7 +2185,9 @@ showmatches(file, len)
 		lines = (num_files + columns - 1) / columns;
 
 		/* list the files line by line */
+#ifdef AMIGA
 		settmode(0);		/* allow output to be halted */
+#endif
 		for (i = 0; i < lines; ++i)
 		{
 			for (k = i; k < num_files; k += lines)
@@ -2063,7 +2221,9 @@ showmatches(file, len)
 		}
 		free(file_str);
 		FreeWild(num_files, files_found);
+#ifdef AMIGA
 		settmode(1);
+#endif
 
 		wait_return(TRUE);
 	}
@@ -2115,18 +2275,24 @@ addstar(fname, len)
 dosource(fname)
 	register char *fname;
 {
-	register FILE *fp;
-	register char *s;
+	register FILE	*fp;
+	register int	len;
 
 	expand_env(fname, IObuff, IOSIZE);		/* use IObuff for expanded name */
-	if ((fp = fopen(IObuff, "r")) == NULL)
+	if ((fp = fopen(IObuff, READBIN)) == NULL)
 		return 1;
 
 	while (fgets(IObuff, IOSIZE, fp) != NULL && !got_int)
 	{
-		s = IObuff + strlen(IObuff) - 1;
-		if (*s == '\n')	/* remove trailing newline */
-			*s = NUL;
+		len = strlen(IObuff) - 1;
+		if (len >= 0 && IObuff[len] == '\n')	/* remove trailing newline */
+		{
+#ifdef MSDOS
+			if (len > 0 && IObuff[len - 1] == '\r') /* trailing CR-LF */
+				--len;
+#endif
+			IObuff[len] = NUL;
+		}
 		docmdline((u_char *)IObuff);
 		breakcheck();
 	}
@@ -2140,14 +2306,13 @@ dosource(fname)
  * get single EX address
  */
 	static linenr_t
-get_address(ptr, curpos_lnum)
+get_address(ptr)
 	u_char		**ptr;
-	linenr_t	curpos_lnum;
 {
+	linenr_t	curpos_lnum = Curpos.lnum;
 	int			c;
 	int			i;
 	long		n;
-	u_char		*p;
 	u_char  	*cmd;
 	FPOS		pos;
 	FPOS		*fp;
@@ -2182,25 +2347,16 @@ get_address(ptr, curpos_lnum)
 			case '/':
 			case '?':						/* '/' or '?' - search */
 						c = *cmd++;
-
-						for (p = cmd; *p && (*p != c || *(p - 1) == '\\'); ++p)
-							;
-						i = *p;
-						*p = NUL;	/* put a '\0' at the end of the pattern */
-				
-						/* search for the pattern */
-						pos.lnum = curpos_lnum;
-						pos.col = -1;	/* searchit() will increment the col */
+						pos = Curpos;		/* save Curpos */
+						Curpos.col = -1;	/* searchit() will increment the col */
 						if (c == '/')
-							++pos.lnum;
-						if (searchit(&pos, c == '/' ? FORWARD : BACKWARD, (char *)cmd, (long)1, 0))
-							lnum = pos.lnum;
+							++Curpos.lnum;
+						searchcmdlen = 0;
+						if (dosearch(c == '/' ? FORWARD : BACKWARD, (char *)cmd, FALSE, (long)1, FALSE))
+							lnum = Curpos.lnum;
+						Curpos = pos;
 				
-						/* adjust command string pointer */
-						cmd = p;
-						if (i != NUL)
-							++cmd;
-
+						cmd += searchcmdlen;	/* adjust command string pointer */
 						break;
 
 			default:

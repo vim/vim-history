@@ -1,6 +1,6 @@
-README for version 1.24 of VIM: Vi IMitation.
+README for version 1.27 of Vim: Vi IMitation.
 
-VIM is an almost compatible version of the UNIX editor vi. Only the 'Q' 
+Vim is an almost compatible version of the UNIX editor vi. Only the 'Q' 
 command is missing. Many new features have been added: multi level undo, 
 command line history, filename completion, quoting, etc. See difference.doc.
 
@@ -13,17 +13,17 @@ should not be very difficult.
 
 Documentation:
 	  tutor/readme - one hour training course for beginners
-	 reference.doc - complete reference of all VIM commands
+	 reference.doc - complete reference of all Vim commands
 	difference.doc - summarizes the differences with UNIX vi
 		 index - alfabetical list of commands
 	      unix.doc - remarks for unix
-	     msdos.doc - remarks for MSdos
+	     msdos.doc - remarks for MSDOS
 
 Vim is Public Domain. You can copy it as much as you like. If you want to 
 distribute a modified version of the source code please contact me first.
 
 Installation on the Amiga:
-- Put "arp.library" in "libs:" (always required).
+- Put "arp.library" in "libs:" (not required for Amiga DOS 2.0 and later)
 - Assign "vim:" to the directory where the vim.hlp file is (for the help 
   command).
 - With DOS 1.3 or earlier: make sure that newcli and run are in "c:" (for 
@@ -39,7 +39,8 @@ version 0.5.
 
 If you do not use digraphs, you can save some memory by recompiling without 
 the DIGRAPHS option. If you want to use Vim with other terminals you can 
-recompile with the TERMCAP option. See the makefiles.
+recompile with the TERMCAP option. Vim compiles with Manx 5.x and SAS 6.x.
+See the makefiles.
 
 Please send comments, bug reports and suggestions to:
 
@@ -49,7 +50,3 @@ Please send comments, bug reports and suggestions to:
 	The Netherlands
 
 UUCP E-mail:	mool@oce.nl
-
-Note: The files may have been placed in zoo files to save disk space.
-      Unzoo with the command "zoo x// vim_src.zoo". Be sure to have enough
-      disk space.

@@ -53,8 +53,15 @@ EXTERN int		set_want_col;	/* If set, then update Curswant the next time
 								 * through cursupdate() to the current
 								 * virtual column. */
 
+EXTERN int		starting INIT(= TRUE);
+								/* set to FALSE when starting up finished */
 EXTERN int		exiting INIT(= FALSE);
-								/* set to TRUE when abandoning the file */
+								/* set to TRUE when abandoning Vim */
+
+EXTERN int		secure INIT(= FALSE);
+								/* set to TRUE when only "safe" commands are 
+								 * allowed, e.g. when sourcing .exrc or .vimrc
+								 * in current directory */
 
 EXTERN FPOS 	Quote; 			/* start position of quotation
 								 * (Quote.lnum == 0 when not active) */
@@ -99,6 +106,9 @@ EXTERN char 	*IObuff;				/* sprintf's are done into this buffer */
 
 EXTERN int		RedrawingDisabled INIT(= FALSE);
 										/* Set to TRUE if doing :g */
+#ifndef MSDOS
+EXTERN int		thisfile_sn INIT(= FALSE);	/* this file uses shortname */
+#endif
 
 EXTERN int		readonlymode INIT(= FALSE); /* Set to TRUE for "view" */
 EXTERN int		recoverymode INIT(= FALSE); /* Set to TRUE for "-r" option */
@@ -115,11 +125,9 @@ EXTERN FILE 	*scriptout	INIT(= NULL); /* stream to write script to */
 
 EXTERN int		got_int INIT(= FALSE);	/* set to TRUE when interrupt
 										   signal occurred */
-#ifdef AMIGA
-EXTERN int		term_console INIT(= TRUE);	/* set to TRUE when amiga window used */
-#else
-EXTERN int		term_console INIT(= FALSE);
-#endif
+EXTERN int		term_console INIT(= FALSE);	/* set to TRUE when amiga window used */
+EXTERN int		bangredo INIT(= FALSE);	/* set to TRUE whith ! command */
+EXTERN int		searchcmdlen;			/* length of previous search command */
 
 #ifdef DEBUG
 EXTERN FILE *debugfp INIT(=NULL);
@@ -138,6 +146,7 @@ EXTERN char spaces[]		INIT(= "               ");
 EXTERN char e_abort[]		INIT(="Command aborted");
 EXTERN char e_ambmap[]		INIT(="Ambiguous mapping");
 EXTERN char e_argreq[]		INIT(="Argument required");
+EXTERN char e_curdir[]		INIT(="No write or shell from .exrc/.vimrc in current dir");
 EXTERN char e_errorf[]		INIT(="No errorfile name");
 EXTERN char e_exists[]		INIT(="File exists (use ! to override)");
 EXTERN char e_failed[] 		INIT(="Command failed");
@@ -175,7 +184,7 @@ EXTERN char e_re_damg[]		INIT(="Damaged match string");
 EXTERN char e_re_corr[]		INIT(="Corrupted regexp program");
 EXTERN char e_readonly[]	INIT(="File is readonly");
 EXTERN char e_readerrf[]	INIT(="Error while reading errorfile");
-EXTERN char e_setparam[]	INIT(="Invalid 'set' parameter");
+EXTERN char	e_setarg[]		INIT(="Invalid argument: ");	/* must be 16 chars */
 EXTERN char e_scroll[]		INIT(="Invalid scroll size");
 EXTERN char e_tabsize[]		INIT(="Invalid tab size");
 EXTERN char e_toocompl[]	INIT(="Command too complex");
@@ -187,6 +196,5 @@ EXTERN char e_toomany[]		INIT(="Too many file names");
 EXTERN char e_trailing[]	INIT(="Trailing characters");
 EXTERN char e_umark[]		INIT(="Unknown mark");
 EXTERN char e_unknown[]		INIT(="Unknown");
-EXTERN char e_unrset[]		INIT(="Unrecognized 'set' option");
 EXTERN char e_write[]		INIT(="Error while writing");
 EXTERN char e_zerocount[] 	INIT(="Zero count");

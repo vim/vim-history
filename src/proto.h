@@ -51,4 +51,3 @@ void smsg __PARMS((char *, ...));	/* cannot be produced automatically */
 #include "proto/tag.pro"
 #include "proto/term.pro"
 #include "proto/undo.pro"
-#include "proto/version.pro"

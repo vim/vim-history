@@ -1,0 +1,1200 @@
+
+
+
+			VIM reference manual
+
+			 By Bram Moolenaar
+
+			   version 1.27
+
+
+ 1. Introduction
+ 2. Notation
+ 3. Starting VIM
+ 4. Modes
+ 5. Editing files
+ 6. Cursor motions
+ 7. Scrolling
+ 8. Tags
+ 9. Inserting text
+10. Deleting text
+11. Changing text
+12. Copying and moving text
+13. Quoting
+14. Various commands
+15. Repeating commands
+16. Undo and redo
+17. Key mapping
+18. Recovery after a crash
+19. Options
+20. Terminal information
+21. Differences from Vi and Ex
+22. Credits
+
+
+	1. Introduction
+
+VIM stands for Vi Imitation. VIM is a text editor which includes almost all 
+the commands from the Unix program "Vi". It is very useful for editing 
+programs and other ASCII text. All commands are given with the keyboard. 
+There is no mouse support and there are no menus. This gives the advantage 
+that you can keep your fingers on the keyboard and your eyes on the screen.
+
+Throughout this manual the differences between Vi and Vim are mentioned in 
+curly braces. Read the file "difference.doc" for a summary of the 
+differences.
+
+This manual refers to VIM on the Commodore Amiga computer. On other 
+computers and on terminals there may be small differences. For MSDOS this 
+is documented in msdos.doc. For UNIX this is in unix.doc.
+
+This manual is a reference for all the VIM commands and options. A basic
+knowledge of "Vi" is assumed. A summary of this manual can be found in the 
+file vim.hlp. It can be accessed from within VIM with the <HELP> key (in 
+MSDOS <F1>) and with the command ":help". The 'helpfile' option can be 
+set to the name of the help file, so you can put it in any place you like.
+
+
+	2. Notation
+
+[]		Characters in square brackets are optional.
+
+[cnt]		An optional number that may precede the command to multiply
+		or iterate the command. If no number is given a count of one 
+		is used, unless otherwise noted. Note that in this manual 
+		the [cnt] is not mentioned in the description of the 
+		command, but only in the explanation. This was done to make 
+		the commands more easy to lookup. If the "sc" option is on, 
+		the (partially) entered count is shown at the bottom of the 
+		window. You can use <DEL> to erase the last digit.
+
+["x]		An optional named register designation where text can be 
+		stored. The x is a single character between <a> and <z> or 
+		<A> and <Z> and in some cases (with the put command) between 
+		<0> and <9> or <.>. The uppercase and lower case letter
+		designate the same register, but the lower case letter is 
+		used to overwrite the previous register contents, while the 
+		uppercase letter is used to append to the previous register 
+		contents. Without the ""x" the deleted text is put into the 
+		unnamed register.
+
+{}		Curly braces denote parts of the command which must appear, 
+		but can take a number of different values. The differences 
+		between VIM and Vi are also given in curly braces (this will 
+		be clear from the context).
+
+{motion}	A command that moves the cursor. They are listed in chapter 
+		6. This is used after an "operator" command to move over the 
+		text that is to be operated upon. If the motion includes a 
+		count and the operator also had a count, the two counts are 
+		multiplied. For example: "2d3w" deletes six words.
+
+{quote}		A piece of text that is started with the 'q' or 'Q' command
+		and ended by the cursor position. This is used before an 
+		"operator" to highlight the text that is to be operated 
+		upon. See the chapter on quoting.
+
+<character>	A special character from the table below or a single ASCII
+		character.
+
+<char1-char2>	A single character from the range <char1> to <char2>. For
+		example: <a-z> is a lower case letter. Multiple ranges may be
+		concatenated. For example: <a-zA-Z0-9> is any alphanumeric
+		character.
+
+CTRL-<char>	<char> typed as a control character, that is, typing <char>
+		while holding the CTRL key down. The case of <char> does not
+		matter, thus CTRL-A and CTRL-a are equivalent.
+
+
+notation	meaning		     equivalent hex value
+-----------------------------------------------------------------------
+<NUL>		zero			CTRL_@  0x00 (or 0x9e)
+<BELL>  	bell			CTRL-G	0x07
+<BS>    	backspace		CTRL-H	0x08
+<TAB>   	tab			CTRL-I	0x09
+<LF>    	linefeed		CTRL-J	0x0a
+<NL>    	newline			CTRL-J	0x0a (same as linefeed)
+<FF>    	formfeed		CTRL-L	0x0c
+<CR>    	carriage return		CTRL-M	0x0d
+<ESC>   	escape			CTRL-[	0x1b
+<SPACE>    	space				0x20
+<DEL>   	delete				0x7f
+<C_UP>		cursor-up			0x80
+<C_DOWN>	cursor-down			0x81
+<C_LEFT>	cursor-left			0x82
+<C_RIGHT>	cursor-right			0x83
+<SC_UP>		shift-cursor-up			0x84
+<SC_DOWN>	shift-cursor-down		0x85
+<SC_LEFT>	shift-cursor-left		0x86
+<SC_RIGHT>	shift-cursor-right		0x87
+<F1> - <F10>	function keys 1 to 10		0x88 - 0x91
+<SF1> - <SF10>	shift-function keys 1 to 10	0x92 - 0x9b
+<HELP>		help key			0x9c
+<UNDO>		undo key			0x9d
+-----------------------------------------------------------------------
+
+
+	3. Starting VIM
+
+3.1 Command line
+
+Most often VIM is started to edit a single file with the command
+
+	vim file
+
+More generally VIM is started with:
+
+	vim [options] [filelist]
+
+If the filelist is missing, the editor will start with an empty buffer.
+Otherwise exactly one out of the following six may be used to choose one or
+more files to be edited.
+
+file ..		A list of file names. The first one will be the current file 
+		and read into the buffer. The cursor will be positioned on 
+		the first line of the buffer.
+
++[num] file ..	Same as the above, but the cursor will be positioned on line
+		"num". If "num" is missing, the cursor will be positioned on
+		the last line.
+
++/{pat} file ..	Same as the above, but the cursor will be positioned on the
+		first line containing "pat" in the current file (see the 
+		section "pattern searches" for the available search 
+		patterns).
+
++{command} file ..
+-c {command} file ..
+		Same as the above, but "command" will be executed after the 
+		file has been read. "command" is interpreted as an Ex 
+		command. If the "command" contains spaces it must be 
+		enclosed in double quotes (this depends on the shell that is 
+		used). Example: Vim "+set si" main.c
+
+-t {tag}	A tag. "tag" is looked up in the tags file, the associated 
+		file becomes the current file and the associated command is 
+		executed. Mostly this is used for C programs. In that case 
+		"tag" should be a function name. The effect is that the file 
+		containing that function becomes the current file and the 
+		cursor is positioned on the start of the function (see the 
+		section "tag searches").
+
+-e		QuickFix mode. The error file "AztecC.Err" is read and the 
+		first error is displayed. See the section "using the 
+		QuickFix option".
+
+The options, if present, must precede the filelist. The options may be given 
+in any order.
+
+-r		Recovery mode. The autoscript file is read to recover a 
+		crashed editing session. It has almost the same effect as 
+		"-s file.vim". See the chapter "Recovery after a crash".
+
+-v		View mode. The 'readonly' option will be set and no 
+		autoscript file will be written (see -n below). You can 
+		still edit the buffer, but will be prevented from 
+		accidentally overwriting a file. If you forgot that you are 
+		in view mode and did make some changes, you can overwrite 
+		a file by adding an exclamation mark to the Ex command, as in 
+		":w!". The 'readonly' option can be reset with ":set noro" 
+		(see the options chapter). It is suggested to make an alias: 
+		"alias view vim -v".
+
+-n		No autoscript file will be written. Recovery after a crash 
+		will be impossible. Handy if you want to edit a file on a 
+		very slow medium (e.g. floppy). Can also be done with ":set 
+		uc=0". You can switch it on again by setting the 'uc' option 
+		to some value, e.g. ":set uc=100" (only do this if the 
+		buffer was not changed yet).
+
+-T {terminal}	Set the terminal type to "terminal". This influences the 
+		codes that Vim will send to your terminal. This is normally 
+		not needed, because Vim will be able to find out what type 
+		of terminal you are using (See chapter 20).
+
+-d {device}	The "device" is opened to be used for editing. Normally you 
+		would use this to set the window position and size:
+		"-d con:x/y/width/height", e.g. "-d con:30/10/600/150". But 
+		you can also use it to start editing on another device, e.g. 
+		AUX:. This only works on the Amiga.
+
+-s {scriptin}	The script file "scriptin" is read. The characters in the 
+		file are interpreted as if you had typed them. The same can 
+		be done with the command ":source! {scriptin}". If the end 
+		of the file is reached before the editor exits, further 
+		characters are read from the keyboard. See also the section 
+		"complex repeats".
+
+-w {scriptout}	All the characters that you type are recorded in the file
+		"scriptout", until you exit VIM. This is useful if you want 
+		to create a script file to be used with "vim -s" or 
+		":source!". See also the section "complex repeats".
+
+Example for using a script file to change a name in several files:
+	Create a file "subs.vi" containing substitute commands and a :wq
+	command:
+
+		:%s/Jones/Smith/g
+		:%s/Allen/Peter/g
+		:wq
+
+	Execute VIM on all files you want to change:
+
+		foreach i ( *.let ) vim -s subs.vi $i
+
+
+3.2 Workbench (Amiga only)
+
+Vim can be started from the workbench by clicking on its icon twice. It will
+then start with an empty buffer.
+
+Vim can be started to edit one or more files by using a "Project" icon. The
+"Default Tool" of the icon must be the full pathname of the Vim executable. 
+The name of the ".info" file must be the same as the name of the text file. 
+By clicking on this icon twice, Vim will be started with the filename as 
+current filename, which will be read into the buffer (if it exists). You can 
+edit multiple files by pressing the shift key while clicking on icons, and 
+clicking twice on the last one. The "Default Tool" for all these icons must 
+be the same.
+
+It is not possible to give arguments to Vim, other than filenames, from the
+workbench.
+
+
+3.3 Vim window
+
+VIM will run in the CLI window where it was started. If VIM was started with 
+the "run" or "runback" command, or if VIM was started from the workbench, it 
+will open a window of its own.
+
+Technical detail:
+	To open the new window a little trick is used. As soon as VIM 
+	recognizes that it does not run in a normal CLI window, it will 
+	create a script file in t:. This script file contains the same 
+	command as how VIM was started, and an "endcli" command. This script 
+	file is then executed with a "newcli" command (the "c:run" and 
+	"c:newcli" commands are required for this to work). The script file 
+	will hang around until reboot, or until you delete it. This method 
+	is required to get the ":sh" and ":!" commands to work correctly. 
+	But when Vim was started with the -e option (quickfix mode), this 
+	method is not used. The reason for this is that when a compiler 
+	starts Vim with the -e option it will wait for a return code. With 
+	the script trick the compiler cannot get the return code. As a 
+	consequence the ":sh" and ":!" commands are not available when the 
+	-e option is used.
+
+VIM will automatically recognize the window size and react to window 
+resizing. Under Amiga DOS 1.3 it is advised to use the fastfonts program 
+"FF" to speed up display redrawing.
+
+
+3.4 Initialization
+
+When VIM starts running it does initializations in this order:
+
+1.  Four places are searched for initializations. The first that exists is 
+    used, the others are ignored.
+     1. The environment variable VIMINIT
+     2. The file "s:.vimrc" (for Unix: "$HOME/.vimrc")
+     3. The environment variable EXINIT
+     4. The file "s:.exrc" (for Unix: "$HOME/.exrc")
+
+2.  The current directory is searched for two files. The first that exists 
+    is used, the other is ignored.
+     1. The file ".vimrc"
+     2. The file ".exrc"
+
+    If an environment variable is used, it is executed as a single Ex 
+    command line. Multiple commands must be separated with '|'. If a file is 
+    used, each line is executed as an Ex command line.
+
+3.  The environment variable SHELL, if it exists, is used to set the 
+    'shell' option.
+
+4.  The environment variable TERM, if it exists, is used to set the 'term'
+    option.
+
+The first can be used to set your default settings and mappings for all edit 
+sessions. The second one for sessions in a certain directory. See the 
+section "Saving settings" for how to create a file with commands to recreate 
+the current settings.
+
+If the VIMINIT environment variable or ".vimrc" exist the EXINIT and ".exrc" 
+are skipped. This can be used to initialize Vim without interfering with 
+another version of Vi.
+
+On the Amiga two types of environment variables exist. The ones set with the
+DOS 1.3 (or later) setenv command are recognized. See the AmigaDos 1.3 
+manual. The environment variables set with the old Manx Set command (before 
+version 5.0) are not recognized.
+
+While reading the ".vimrc" and the ".exrc" file some commands are disabled 
+for security reasons. Otherwise it would be possible to create a .exrc that 
+contains nasty commands, which another user may automatically execute when 
+he starts Vim it that directory. The disabled commands are the ones that 
+start a shell and the ones that write to a file. The ":map" commands are 
+echoed, so you can see which keys are being mapped. (On unix systems this 
+only happens if you are not the owner of the ".vimrc" or ".exrc" file.)
+
+
+3.5 Suspending
+
+CTRL-Z				Suspend the editor. Same as ":stop!".
+
+:st[op][!]			Suspend the editor. If the "!" is not given,
+				the buffer was changed, autowrite is set and 
+				a filename is known, the buffer will be 
+				written.
+
+On BSD-UNIX systems it is possible to suspend Vim with CTRL-Z. This is only 
+possible in command mode (see next chapter). Vim will restart if you make it 
+the foreground job again. On other systems CTRL-Z will start a new shell. 
+This is the same as the ":sh" command. Vim will restart if you exit from the 
+shell.
+
+
+	4. Modes
+
+4.1 Introduction
+
+VIM has four basic modes:
+
+command mode		In command mode you can enter all the editor
+			commands. If you start the editor you are in this 
+			mode (unless you have set the 'insertmode' option, 
+			see below).
+
+insert mode		In insert mode the text you type is inserted into the
+			buffer. If the 'showmode' option is set (which is
+			default), the string "-- INSERT --" is shown at the
+			bottom of the window.
+
+replace mode		Replace mode is a special case of insert mode. You
+			can do the same things as in insert mode, but for 
+			each character you enter (except some special 
+			characters) one character of the existing text is 
+			deleted. If the 'showmode' option is set (which is 
+			default), the string "-- REPLACE --" is shown at the 
+			bottom of the window.
+
+command line mode	In command line mode you can enter one line of text
+			at the bottom of the window. This is for the Ex 
+			commands, the pattern search commands and the filter 
+			command.
+
+More explanation on the insert, replace and command line mode is further on 
+in this chapter.
+
+
+4.2 Switching from mode to mode
+
+If for any reason you do not know in which mode you are, you can always get
+back to command mode by typing <ESC> twice. You will know you are back in
+command mode when you see the screen flash or hear the bell after you type
+<ESC>.
+
+- go from command mode to insert mode by giving one of the commands
+  "iIaAoOcCsS".
+- go from command mode to replace mode with the "R" command (not the "r"
+  command!).
+- go from command mode to command line mode with the one of the commands
+  ":/?!".
+
+- go from insert or replace mode to command mode with <ESC> (twice in some
+  rare cases).
+- go from command line mode to command mode with <CR> (which causes the
+  entered command to be executed), by deleting the complete line (e.g. with 
+  CTRL-U) and giving a final <BS>, or by hitting <ESC> twice. In the last 
+  case the first <ESC> will also be used to start filename completion, but 
+  you can ignore that.
+
+If the 'insertmode' option is set, editing a file will start in insert mode.
+
+
+4.3 Insert and replace mode
+
+In insert and replace mode the following characters have a special meaning,
+other characters are inserted directly. To insert one of these special
+characters into the buffer, precede it with CTRL-V. To insert a <NUL> 
+character use CTRL-V CTRL-J (the <NUL> is actually stored as a <LF> in 
+memory, but replaced with a <NUL> when written to a file). To insert a 
+CTRL-C use "CTRL-V003".
+
+char		action
+-----------------------------------------------------------------------
+CTRL-@		Insert previously inserted text and stop insert. {Vi: only
+		when typed as first char, only upto 128 chars}
+CTRL-A		Insert previously inserted text. {not in Vi}
+CTRL-B <0-9a-z>
+		Insert the contents of a numbered or named register (see 
+		chapter on copying and moving text). 'B' stands for buffer, 
+		which is called register in this document. {not in Vi}
+CTRL-D		Delete one shiftwidth of indent at the start of the current 
+		line. See also 'shiftround' option. {Vi: only after 
+		auto-indent; also accepts preceding <^> and <0>}
+CTRL-E		Insert the character which is below the cursor. {not in Vi}
+CTRL-H <BS>	Delete the character before the cursor (see below). {Vi: 
+		does not delete autoindents}
+CTRL-J <LF>	Begin new line.
+CTRL-K {char1} {char2}
+		Enter digraph (see below). {not in Vi}
+CTRL-M <CR>	Begin new line.
+CTRL-O		See below. {not in Vi}
+CTRL-R		Insert the character which is above the cursor. {not in Vi}
+CTRL-T		Insert one shiftwidth of indent at the start of the current 
+		line. See also 'shiftround' option. {Vi: only when in 
+		autoindent}
+CTRL-U		Delete all entered characters in the current line (see 
+		below).
+CTRL-V		Insert next non-digit literally. Up to three digits form the 
+		decimal value of a single byte. All this without mapping. 
+		{Vi: no decimal byte entry}
+CTRL-W		Delete the word before the cursor (see below). See the 
+		section "word motions" for the definition of a word.
+CTRL-[ <ESC>	End insert or replace mode, back to command mode.
+<DEL>		Same as CTRL-H <BS>
+-----------------------------------------------------------------------
+
+The effect of the <BS>, <DEL>, CTRL-W and CTRL-U depends on the 'backspace' 
+option:
+
+backspace	action
+ option
+   0	   delete stops in column 1 and start position of insert
+   1	   delete stops at start position of insert
+   2	   delete always, CTRL-W and CTRL-U stop once at start position of 
+   	   insert
+
+If the 'backspace' option is non-zero and the cursor is in column 1 when one 
+of the three keys is used, the current line is joined with the previous 
+line. This effectively deletes the newline in front of the cursor. {Vi: does 
+not cross lines, does not delete past start position of insert}
+
+With CTRL-V followed by one, two or three digits you can enter the decimal 
+value of a byte, except 10. Normally CTRL-V is followed by three digits. The 
+formed byte is inserted as soon as you type the third digit. If you type 
+only one or two digits and then a non-digit, the decimal value of those one 
+or two digits form the byte. After that the non-digit is dealt with in the 
+normal way.
+
+If you enter a value of 10, it will be interpreted as a 0. The 10 is a <LF>, 
+which is used internally to represent the NUL character. When writing the 
+buffer to a file the <LF> character is translated into <NUL>. The <LF> 
+character is written at the end of each line. Thus if you want to insert a 
+<LF> character in a file you will have to make a line break.
+
+
+special keys
+
+The following keys are special. They stop the current insert, do something 
+and then restart insertion. This means you can do something without getting 
+out of insert mode. This is very handy if you prefer to use the insert mode 
+all the time, just like editors that don't have a separate command mode. You 
+may also want to set the 'backspace' option to 2 and set the 'insertmode' 
+option. You can map often used commands to function keys by preceding them 
+with a CTRL-O.
+
+The changes (inserted or deleted characters) before and after these keys can 
+be undone separately. Only the last change can be redone and always behaves 
+like an 'i' command.
+
+char		action
+-----------------------------------------------------------------------
+<C_UP>		cursor one line up
+<C_DOWN>	cursor one line down
+<C_LEFT>	cursor one character left
+<C_RIGHT>	cursor one character right
+<SC_UP>		move window one page up
+<SC_DOWN>	move window one page down
+<SC_LEFT>	cursor one word back (like 'b' command)
+<SC_RIGHT>	cursor one word forward (like 'w' command)
+CTRL-O		execute one command and return to insert mode
+-----------------------------------------------------------------------
+
+The CTRL-O command has one side effect: If the cursor was beyond the end of 
+the line it will be put on the last character in the line.
+
+
+'textwidth' option
+
+The 'textwidth' option can be used to automatically break a line before it 
+is getting too long. Set the 'textwidth' option to the maximum line length. 
+If you then type more characters (not being spaces or tabs), the last word 
+will be put on a new line (unless it is the only word on the line). {Vi has 
+the 'wrapmargin' option, but it does not do what you want}.
+
+If you want to format a block of text you can use the 'V' operator. Type 'V' 
+and a movement command to move the cursor to the end of the block. In many 
+cases the command "V}" will do what you want (format until the next empty 
+line). Or you can use quoting: hit 'q', move to the end of the block and hit 
+'V'.
+
+
+'expandtab' option
+
+If the 'expandtab' option is set, spaces will be used to fill the amount of
+whitespace of the tab. If you want to enter a real <TAB> use CTRL-V. The
+'expandtab' option is normally off.
+
+
+digraphs
+
+:dig[raph]		show currently defined digraphs. {not in Vi}
+
+:dig[raph] {char1}{char2} {number} ...
+			Add digraph {char1}{char2} to the list. {number} is 
+			the decimal representation of the entered character.
+
+Digraphs are used to enter characters that normally cannot be entered by 
+an ordinary keyboard. These are mostly accented characters which have the 
+eighth bit set. The digraphs are more easy to remember than the decimal 
+number that can be entered with CTRL-V (see above).
+
+Vim must have been compiled with the 'digraphs' option enabled. If not, the 
+":digraph" command will display an error message.
+
+There are two methods to enter digraphs:
+	CTRL-K {char1} {char2}		or
+	{char1} <BS> {char2}
+The first is always available. The second only when the 'digraph' option is 
+set.
+
+Once you have entered the digraph the character is treated like a normal 
+character, taking up only one character in the file and on the screen. 
+Example:
+	<|> <BS> <|>	will enter the double <|> character (166)
+	<a> <BS> <^>	will enter an 'a' with a hat (226)
+	CTRL-K <-> <->	will enter a minus sign (173)
+
+The default digraphs are listed in the file digraph.doc. They are meant for 
+the Amiga character set, which is some international standard. With another 
+character set they may be illogical.
+
+If you accidently typed an <a> that should be an <e>, you will type <a> <BS> 
+<e>. But that is a digraph, so you will not get wat you want. To avoid this, 
+use <DEL> instead of <BS>.
+
+
+replace mode
+
+In replace mode one character in the line is deleted for every character you 
+type. If there are no characters to delete (at the end of the line), the 
+typed character is appended (as in insert mode). Thus the number of 
+characters in a line stays the same until you get to the end of the line.
+
+Be careful with <TAB> characters. If you type a normal printing character in 
+its place, the number of characters is still the same, but the number of 
+columns will become smaller.
+
+The 'repdel' option influences what happens if you delete characters in 
+replace mode (with <BS>, <DEL>, CTRL-W or CTRL-U). If 'repdel' is on (the 
+default) the characters are really deleted. For example: If you made a 
+typing error and hit <BS> to correct it, the number of characters in the 
+line will be one less. This is sometimes illogical, because replace mode was 
+made to keep the number of characters the same. If you reset 'repdel', the 
+characters are not deleted but only the cursor is moved, so you can then 
+correct your typing error.
+
+
+4.4 Command line mode
+
+Command line mode is used to enter Ex commands, search patterns and <!>
+commands.
+
+
+4.4.1 Command line editing
+
+Normal characters are inserted in front of the cursor position. You can move
+around in the command line with the left and right cursor keys. {Vi: can 
+only alter the last character in the line}
+
+The command lines that you enter are remembered in a history table. You can
+recall them with the up and down cursor keys. Use the 'history' option to 
+set the number of lines that are remembered (default 20).
+
+CTRL-V		Insert next non-digit literally. Up to three digits form the 
+		decimal value of a single byte. All this without mapping. 
+		This works the same way as in insert mode (see above). {Vi: 
+		type the CTRL-V twice to get one}
+<C_LEFT>	cursor left
+<C_RIGHT>	cursor right
+<SC_LEFT>	cursor one word left
+<SC_RIGHT>	cursor one word right
+
+<BS>		delete the character in front of the cursor
+<DEL>		delete the character under the cursor (at end of line:
+		character in front of the cursor)
+CTRL-U		remove all characters
+
+<C_UP>		recall older command line from history
+<C_DOWN>	recall more recent command line from history
+
+CTRL-D		list filenames that match the pattern in front of the cursor
+<ESC>		do filename completion on the pattern in front of the cursor
+CTRL-N		after <ESC> with multiple matches: go to next match;
+		otherwise: recall more recent command line from history
+CTRL-P		after <ESC> with multiple matches: go to previous match;
+		otherwise: recall older command line from history
+
+In the pattern for CTRL-D and <ESC> standard Amiga wildcards are accepted, 
+plus the <*> and <?> characters.
+
+For filename completion you can use the 'suffixes' option to set a priority 
+between files with almost the same name. If there are multiple matches, 
+those files with a file extension that is in the 'suffixes' option are 
+ignored. The default is ".bak.o.h.info.vim", which means that files with the 
+extensions ".bak", ".o", ".h", ".info" and ".vim" are sometimes ignored. It 
+is impossible to ignore suffixes with two dots. Examples:
+
+pattern:	files:				match:
+test*		test.c test.h test.o		test.c
+test*		test.h test.o			test.h and test.o
+test*		test.i test.h test.c		test.i and test.c
+
+
+4.4.2 Ex command lines
+
+The Ex commands have a few specialities:
+
+<"> or <#> at the start of a line causes the whole line to be ignored. <"> 
+after a command causes the rest of the line to be ignored. This can be used 
+to add comments.
+
+<|> can be used to separate commands, so you can give multiple commands in 
+one line. The commands ":global", ":vglobal" and ":!" see the <|> as their 
+argument, and can therefore not be followed by another command.
+
+When the character <%> or <#> is used where a filename is expected, they are 
+expanded to the current and alternate filename (see the chapter "editing 
+files").
+
+Embedded and trailing spaces in filenames are allowed if one filename is
+expected as argument (":next {file..}" uses the space to separate filenames).
+
+When you want to use the special characters <"> or  <|> in a command, or want
+to use <%> or <#> in a filename, precede them with a backslash. The backslash
+is not required in a range and in the ":substitute" command.
+
+
+4.4.3 Ex command line ranges
+
+Some Ex commands accept a line range in front of them. This is noted as
+[range]. It consists of one or more line specifiers, separated with ',' or 
+';'. When separated with ';' the cursor position will be set to that line 
+before interpreting the next line specifier. The default line specifier for 
+most commands is the cursor position, but the commands ":write" and 
+":global" have the whole file (1,$) as default. If more line specifiers are 
+given than required for the command, the first one(s) will be ignored.
+
+Line numbers may be specified with:
+	{number}	an absolute line number
+	.		the current line
+	$		the last line in the file
+	%		equal to 1,$ (the entire file)
+	't		position of mark t (lower case)
+	/{pattern}[/]	the next line where {pattern} matches
+	?{pattern}[?]	the previous line where {pattern} matches
+
+Each may be followed (several times) by '+' or '-' and an optional number. 
+This number is added or subtracted from the preceding line number. If the 
+number is omitted, 1 is used.
+
+The '/' and '?' may be preceded with another address. The search starts from
+there. The '/' and '?' after {pattern} are required to separate the pattern
+from anything that follows.
+
+The {number} must be between 0 and the number of lines in the file. A 0 is 
+interpreted as a 1, except with the commands tag, pop and read.
+
+Examples:
+	.+3		three lines below the cursor
+	/that/+1	the line below the next line containing "that"
+	.,$		from current line until end of file
+	0/that		the first line that containing "that"
+
+Some commands allow for a count after the command. This count is used as the
+number of lines to be used, starting with the line given in the last line
+specifier (the default is the cursor line).
+
+Examples:
+	:s/x/X/g 5	substitute <x> by <X> in the current line and four
+			following lines
+	:23d 4		delete lines 23, 24, 25 and 26
+
+
+4.5 The window contents
+
+In command and insert/replace mode the screen window will show the current
+contents of the buffer: What You See Is What You Get. {Vi: when changing 
+text a <$> is placed on the last changed character; The window is not always 
+updated on slow terminals} Lines longer than the window width will wrap. The 
+bottom lines in the window may start with one of these two characters:
+
+<@> 	The next line is too long to fit in the window.
+<~>	Below the last line in the buffer.
+
+If the bottom line is completely filled with <@>, the line that is at the 
+top of the window is too long to fit in the window. If the cursor is on this 
+line you can't see what you are doing, because this part of the line is not 
+shown. However, the part of the line before the <@>s can be edited normally. 
+{Vi: gives an "internal error" on lines that do not fit in the window}
+
+All normal ASCII characters are displayed directly on the screen. The <TAB> 
+is replaced by the number of spaces that it represents. Other non-printing 
+characters are replaced by "^<char>", where <char> is the non-printing 
+character with 64 added. Thus character 7 (bell) will be shown as "^G". 
+Characters between 127 and 160 are replaced by "~<char>", where <char> is 
+the character with 64 subtracted. These characters occupy more than one 
+position on the screen. The cursor can only be positioned on the first one.
+
+If you set the 'number' option, all lines will be preceded with their 
+number.
+
+If you set the 'list' option, <TAB> characters will not be shown as several
+spaces, but as "^I". A <$> will be placed at the end of the line, so you can
+find trailing blanks.
+
+In command line mode only the command line itself is shown correctly. The
+display of the buffer contents is updated as soon as you go back to command
+mode.
+
+Some commands hand over the window to external commands (e.g. ":shell" and
+"="). After these commands are finished the window may be clobbered with 
+output from the external command, so it needs to be redrawn. This is also 
+the case if something is displayed on the status line that is longer than 
+the width of the window. If you are expected to have a look at the screen 
+before it is redrawn, you get this message:
+
+		Press RETURN or enter command to continue
+
+After you type a key the screen will be redrawn and Vim continues. If you 
+type <CR>, <SP> or <NL> nothing else happens. If you type any other key, it 
+will be interpreted as (the start of) a new command. {Vi: only <:> commands 
+are interpreted}
+
+The last line of the window is used for status and other messages. The 
+status messages will only be used if an option is on:
+
+status message			option		default
+current mode 			'showmode'	on
+command characters		'showcmd'	on
+cursor position			'ruler'		off
+
+The current mode is "-- INSERT --" or "-- REPLACE --". The command 
+characters are those that you typed but were not used yet. {Vi: does not show the characters you 
+typed or the cursor position}
+
+If you have a slow terminal you can switch off the status messages to speed 
+up editing:
+	:set nosc noru nosm
+
+If there is an error, an error message will be shown for at least one second 
+(in reverse video). {Vi: error messages may be overwritten with other 
+messages before you have a chance to read them}
+
+Some commands show how many lines were affected. Above which threshold this
+happens can be controlled with the 'report' option (default 2).
+
+On the Amiga VIM will run in a CLI window. The name VIM and the full name of
+the current filename will be shown in the title bar. When the window is
+resized, VIM will automatically redraw the window. You may make the window as
+small as you like, but if it gets too small not a single line will fit in it.
+Make it at least 40 characters wide to be able to read most messages on the
+last line.
+
+
+	5. Editing files
+
+5.1 Introduction
+
+Editing a file with VIM means:
+
+1. reading the file into the internal buffer
+2. changing the buffer with editor commands
+3. writing the buffer into a file
+
+As long as you don't write the buffer, the original file remains unchanged. 
+If you start editing a file (read a file into the buffer), the file name is 
+remembered as the "current filename".
+
+If there already was a current filename, then that one becomes the alternate 
+file name. Up to 20 older alternate filenames are remembered in a list. When 
+you enter a filename, for editing (e.g. with ":e filename") or writing (e.g. 
+with (:w filename"), the filenames shift one down in this list. You can use 
+this list to remember which files you edited and to quickly switch from one 
+file to another with the CTRL-^ command (e.g. to copy text). {Vi: only one 
+alternate filename}
+
+In Ex commands (the ones that start with a colon) you can refer to the 
+current filename with <%> and refer to the alternate filename with <#> or 
+"#0". The older alternate filenames are "#1", "#2", ..., "#20".
+
+CTRL-G		or
+:f[ile]			Prints the current filename and the cursor position.
+
+:f[ile] {name}		Sets the current filename to {name}.
+
+:files			Lists the alternate filenames.
+
+When writing the buffer, the default is to use the current filename. Thus 
+when you give the "ZZ" or ":wq" command, the original file will be 
+overwritten. If you do not want this, the buffer can be written into another 
+file by giving a filename argument to the ":write" command. For example:
+	
+	vim testfile
+	[change the buffer with editor commands]
+	:w newfile
+	:q
+
+This will create a file "newfile", that is a modified copy of "testfile". 
+The file "testfile" will remain unchanged. Anyway, if the 'backup' option is 
+set, VIM renames the original file before it will be overwritten. You can 
+use this file if you discover that you need the original file. The name of 
+the backup file is the same as the original file with ".bak" appended. Any 
+'.' is replaced by '_' on MSDOS machines, when Vim has detected that an 
+MSDOS-like filesystem is being used (e.g. messydos or crossdos) and when the 
+'shortname' option is set.
+
+Technical: On the Amiga you can use 30 characters for a file name. But on an 
+	   MSDOS-compatible filesystem only 8 plus 3 characters are 
+	   available. Vim tries to detect the type of filesystem when it is 
+	   creating the .vim file. If an MSDOS-like filesystem is suspected, 
+	   a flag is set that has the same effect as setting the 'shortname' 
+	   option. This flag will be reset as soon as you start editing a 
+	   new file. The flag will be used when making the filename for the 
+	   ".vim" and ".bak" files for the current file. But when you are 
+	   editing a file in a normal filesystem and write to an MSDOS-like 
+	   filesystem the flag will not have been set. In that case the 
+	   creation of the ".bak" file may fail and you will get an error 
+	   message. Use the 'shortname' option.
+
+VIM remembers whether you have changed the buffer. You are protected from
+loosing the changes you made. If you try to quit without writing, or want to
+start editing another file, this will be refused. In order to overrule this
+protection add a <!> to the command. The changes will then be lost. For
+example: ":q" will not work if the buffer was changed, but ":q!" will. To see
+whether the buffer was changed use the "CTRL-G" command. The message includes
+the string "[Modified]" if the buffer has been changed.
+
+
+5.2 Editing a file
+
+:e [+pat]		Edit the current file, unless changes have been made.
+
+:e! [+pat]		Edit the current file always. Discard any changes to
+			the buffer.
+
+:e[dit] [+pat] {file}	Edit {file}, unless changes have been made.
+
+:e[dit]! [+pat] {file}	Edit {file} always. Discard any changes to the
+			buffer.
+
+:ex [+pat] [file]	Same as :edit.
+
+:vi[sual] [+pat] [file]	Same as :edit. {Vi: go from Ex to visual mode}
+
+CTRL-^			Edit [cnt]th (default 0) alternate file (equivalent
+			to ":e #[cnt]"). If the 'autowrite' option is set 
+			and the buffer was changed, write it. This is a 
+			quick way to toggle between two (or more) files.
+
+:cd			Print the current directory name. {Vi: go to home 
+			directory}
+
+:cd {path}		Change the current directory to {path}.
+
+:chd[ir] [path]		Same as :cd.
+
+These commands are used to start editing a single file. This means that the
+file is read into the buffer and the current filename is set. You may use the
+":cd" command to get to another directory, so you will not have to type that 
+directory name in front of the filenames.
+
+You can use the ":e!" command if you messed up the buffer and want to start 
+all over again. The ":e" command is only useful if you have changed the 
+current filename.
+
+The [+pat] can be used to position the cursor in the newly opened file:
+	+		Start at the last line.
+	+{num}		Start at line {num}.
+	+/{pat}		Start at first line containing {pat}. {pat} must not
+			contain any spaces.
+	+{command}	Execute {command} after opening the new file.
+			{command} is an Ex command. It must not contain 
+			spaces.
+
+
+5.3 The file list
+
+If you give more than one filename when starting VIM, this list is remembered
+as the file list. You can use this list with the following commands:
+
+:ar[gs]			Print the file list, with the current file in "[]".
+
+:[count]n[ext]		Edit [count] next file, unless changes have been 
+			made and the 'autowrite' option is off {Vi: no 
+			count}.
+
+:[count]n[ext]!		Edit [count] next file, discard any changes to the 
+			buffer {Vi: no count}.
+
+:n[ext] [+pat] {filelist}
+			Define {filelist} as the new list of files and edit
+			the first one, unless changes have been made and the
+			'autowrite' option is off.
+
+:n[ext]! [+pat] {filelist}
+			Define {filelist} as the new list of files and edit
+			the first one. Discard any changes to the buffer.
+
+:[count]N[ext]		Edit [count] previous file in file list, unless 
+			changes have been made and the 'autowrite' option is 
+			off {Vi: no count}.
+
+:[count]N[ext]!		Edit [count] previous file in file list. Discard any 
+			changes to the buffer {Vi: no count}.
+
+:[count]pre[vious]	Same as :Next {Vi: no count}.
+
+:rew[ind]		Start editing the first file in the file list, unless
+			changes have been made and the 'autowrite' option is
+			off.
+
+:rew[ind]!		Start editing the first file in the file list.
+			Discard any changes to the buffer.
+
+:[count]wn[ext]		Write current file and start editing the [count] 
+			next file. {not in Vi}
+
+:[count]wn[ext] {file}	Write current file to {file} and start editing the 
+			[count] next file, unless {file} already exists and 
+			the 'writeany' option is off. 
+			{not in Vi}
+
+:[count]wn[ext]! {file}	Write current file to {file} and start editing the 
+			[count] next file. {not in Vi}
+
+The [count] in the commands above defaults to one.
+
+The wildcards in the file list are expanded and the filenames are sorted.
+Thus you can use the command "vim *.c" to edit all the C files. From within 
+VIM the command ":n *.c" does the same.
+
+You are protected from leaving VIM if you are not editing the last file in 
+the file list. This prevents you from forgetting that you were editing one 
+out of several files. You can exit anyway, and save any changes, with the 
+":wq!" command. To loose any changes use the ":q!" command.
+
+
+5.4 Writing and quitting
+
+:[range]w[rite][!]	Write the specified lines to the current file.
+
+:[range]w[rite]	{file}	Write the specified lines to {file}, unless it
+			already exists and the 'writeany' option is off.
+
+:[range]w[rite]! {file}	Write the specified lines to {file}. Overwrite an
+			existing file.
+
+:[range]w[rite][!] >>	Append the specified lines to the current file.
+
+:[range]w[rite][!] >> {file}
+			Append the specified lines to {file}.
+
+:[range]w[rite] !{cmd}	Execute {cmd} with [range] lines as standard input
+			(note the space in front of the <!>).
+
+The default [range] for the ":w" command is the whole buffer (1,$).
+
+
+:q[uit] 		Quit, unless changes have been made or not editing 
+			the last file in the file list.
+
+:q[uit]!		Quit always, without writing.
+
+:cq			Quit always, without writing, and return an error 
+			code. Used for Manx's QuickFix option (see 5.5).
+
+:wq			Write the current file. Exit if not editing the
+			last file in the file list.
+
+:wq!			Write the current file and exit.
+
+:wq {file}		Write to {file}. Exit if not editing the last
+			file in the file list.
+
+:wq! {file}		Write to {file} and exit.
+
+:x[it][!] [file]	Like ":wq", but write only when changes have been
+			made.
+
+ZZ			Store current file, if modified, and exit (same as
+			":x").
+
+If you write to an existing file (but do not append) while the 'backup' or 
+'writebackup' option is on, a backup of the original file is made. On Unix 
+systems the file is copied, on other systems the file is renamed. After the 
+file has been successfully written and when the 'writebackup' option is on 
+and the 'backup' option is off, the backup file is deleted.
+
+'backup'	'writebackup'		action
+   off		     off		no backup made
+   off		     on			backup made, deleted afterwards
+   on		     off		backup made, not deleted
+   on		     on			backup made, not deleted
+
+On Unix systems:
+When you write to an existing file, that file is truncated and then filled 
+with the new text. This means that protection bits, owner and symbolic links 
+are unmodified. The backup file however, is a new file, owned by the user 
+who edited the file. If it is not possible to create the backup file in the 
+same directory as the original file, the directory given with the 
+'backupdir' option is used (default: home directory).
+
+If the creation of a backup file fails, the write is not done. If you want 
+to write anyway add a <!> to the command.
+
+
+5.5 Using the QuickFix option
+
+Manx's Aztec C compiler on the Amiga has a speciality to speedup the
+edit-compile-edit cycle. This is called the QuickFix option. VIM includes
+support for this handy feature which is almost identical to Manx's editor 
+"Z". What you should do is:
+
+- Set the CCEDIT environment variable with the command
+	mset "CCEDIT=vim -e"
+
+- Compile with the -qf option. If the compiler finds any errors, Vim is 
+started and the cursor is positioned on the first error. The error message 
+will be displayed on the last line. You can go to other errors with the 
+commands mentioned below. You can fix the errors and write the file(s).
+
+- If you exit Vim normally the compiler will re-compile the same file. If you
+exit with the :cq command, the compiler will terminate. Do this if you cannot
+fix the error, or if another file needs to be compiled first.
+
+The following commands can be used if you are in QuickFix mode:
+
+:cc [nr]		Display error [nr]. If [nr] is omitted, the same
+			error is displayed again.
+
+:cn			Display the next error in the list.
+
+:cp			Display the previous error in the list.
+
+:cq			Quit Vim with an error code, so that the compiler
+			will not compile the same file again.
+
+:cf			Read the error file. This is done automatically when
+			Vim is started with the -e option.
+
+:cl			List all errors.
+
+The name of the file can be set with the 'errorfile' option. The default is 
+"AztecC.Err". The format of the file is:
+
+	filename>linenumber:columnnumber:errortype:errornumber:errormessage
+
+	filename	name of the file in which the error was detected
+	linenumber	line number where the error was detected
+	columnnumber	column number where the error was detected
+	errortype	type of the error, normally a single 'E'
+	errornumber	number of the error
+	errormessage	description of the error
+
+If you have a different compiler you could write a program that translates 
+the error messages into this format. Even better, it could start the 
+compiler (with make), interpret the output and, when there are any errors, 
+start Vim and recompile.
+
+There are some restrictions to the Quickfix option. The compiler only writes 
+the first 25 errors to the errorfile (Manx's documentation does not say how 
+to get more). If you want to find the others, you will have to fix a few 
+errors and exit the editor. After recompiling, upto 25 remaining errors 
+will be found.
+
+If Vim was started from the compiler the :sh and :! commands will not work, 
+because Vim is then running in the same process as the compiler and these 
+two commands may guru the machine then.
+
+If you insert or delete lines, mostly the correct error location is still 
+found because hidden marks are used (Manx's Z editor does not do this). 
+Sometimes, when the mark has been deleted for some reason, the message "line 
+changed" is shown to warn you that the error location may not be correct. If 
+you edit another file the marks are lost and the error locations may not be 
+correct anymore.
+
+
+	6. Cursor motions
+
+These commands move the cursor position. If the new position is off of the
+screen, the screen is scrolled to show the cursor (see also 'scrolljump' 
+option).
+
+The motion commands can be used after other commands, called operators, to
+have the command operate on the text that was moved over. That is the text
+between the cursor position before and after the motion. If the motion
+includes a count and the operator also had a count, the two counts are
+multiplied. For example: "2d3w" deletes six words.
+	The operator either affects whole lines, or the characters between 
+the cursor positions. Generally, motions that move between lines affect 
+lines, and motions that move within a line affect characters. However, there 
+are some exceptions.
+	The motion is either inclusive or exclusive. When inclusive, the 
+start and end positions of the motion are included in the operation. When 
+exclusive, the last character towards the end of the buffer is not included. 
+Linewise motions are always inclusive.
+	Which motions are linewise, inclusive or exclusive is mentioned 
+below.
+
+Instead of first giving the operator and then a motion you can use quoting: 
+mark the start of the text with <q>, move the cursor to the end of the text 
+that is to be affected and then hit the operator. The text between the start 
+and the cursor position is highlighted, so you can see what text will be 
+operated upon. This allows much more freedom, but requires more key strokes 
+and has limited redo functionality. See the chapter on quoting.
+
+If you want to know where you are in the file use the "CTRL-G" command. If 
+you set the 'ruler' option, the cursor position is continuously shown in the 
+status line (which slows down Vim a little).
+
+NOTE: Experienced users prefer the hjkl keys because they are always right
+under their fingers. Beginners often prefer the arrow keys, since they do not
+require memorization of which hjkl key is which. The mnemonic value of hjkl 
+is clear from looking at the keyboard. Think of j as an arrow pointing 
+downwards.
+
+6.1 Left-right motions
+
+h		or
+<C_LEFT>	or
+CTRL-H		or
+<BS>			[cnt] characters to the left (exclusive).
+
+l		or
+<C_RIGHT>	or
+<SPACE>			[cnt] characters to the right (exclusive).
+
+0			To the first character of the line (exclusive).
+
+^			To the first non-blank character of the line
+			(exclusive).
+
+$			To the end of line [cnt] from the cursor (inclusive).
+
+|			To column [cnt] (inclusive).
+
+f<char>			To [cnt]'th occurrence of <char> to the right. The
+			cursor is placed on <char> (inclusive).
+
+F<char>			To the [cnt]'th occurrence of <char> to the left. The
+			cursor is placed on <char> (inclusive).
+
+t<char>			Till before [cnt]'th occurrence of <char> to the
+			right. The cursor is placed on the character left of 
+			<char> (inclusive).
+
+T<char>			Till after [cnt]'th occurrence of <char> to the left.
+			The cursor is placed on the character right of <char>

@@ -3,8 +3,11 @@
 #
 
 #>>>>> choose options:
+### -DUSE_KBHIT		use kbhit() and getch() instead of bioskey()
 ### -DDIGRAPHS		digraph support (at the cost of 1.6 Kbyte code)
 ### -DWILD_CARDS	wildcard expansion code
+### -DCOMPATIBLE	start in vi-compatible mode
+### -DNOBACKUP		default is no backup file
 ### -DDEBUG		output a lot of debugging garbage
 ### -DTERMCAP		include termcap file support
 ### -DNO_BUILTIN_TCAPS	do not include builtin termcap entries
@@ -13,6 +16,12 @@
 ###				(use only without -DNO_BUILTIN_TCAPS)
 ### -DALL_BUILTIN_TCAPS	include all builtin termcap entries
 ###				(use only without -DNO_BUILTIN_TCAPS)
+### -DVIMRC_FILE	name of the .vimrc file in current dir
+### -DEXRC_FILE		name of the .exrc file in current dir
+### -DSYSVIMRC_FILE	name of the global .vimrc file
+### -DSYSEXRC_FILE	name of the global .exrc file
+### -DDEFVIMRC_FILE	name of the system-wide .vimrc file
+### -DVIM_HLP		name of the help file
 DEFINES = -DWILD_CARDS
 
 #>>>>> name of the compiler and linker, name of lib directory

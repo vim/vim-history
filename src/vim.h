@@ -24,7 +24,11 @@
 
 #include <ctype.h>
 
-#include <string.h>
+#ifdef BSD
+# include <strings.h>
+#else
+# include <string.h>
+#endif
 
 #include "ascii.h"
 #include "keymap.h"
@@ -41,10 +45,12 @@
 #   include <sys\stat.h>
 #  else
 #   ifdef UNIX
+#	 ifndef linux
 #	  define volatile		/* needed for gcc */
 #	  define signed			/* needed for gcc */
-#     include <sys/types.h>
-#     include <sys/stat.h>
+#    endif
+#    include <sys/types.h>
+#    include <sys/stat.h>
 #   else
 #     include <stat.h>
 #   endif
@@ -63,6 +69,13 @@
  * break signal handling.
  */
 #include <signal.h>
+#endif
+
+#ifndef AMIGA
+/*
+ * For the Amiga we use a version of getenv that does local variables under 2.0
+ */
+#define vimgetenv(x) getenv(x)
 #endif
 
 #ifdef AZTEC_C
@@ -90,6 +103,16 @@
 #ifdef MSDOS
 # include <dos.h>
 # include <dir.h>
+#endif
+
+#ifdef UNIX
+# include <sys/dir.h>		/* for MAXNAMLEN */
+# if defined(UFS_MAXNAMLEN) && !defined(MAXNAMLEN)
+#  define MAXNAMLEN UFS_MAXNAMLEN		/* for dynix/ptx */
+# endif
+# if defined(NAME_MAX) && !defined(MAXNAMLEN)
+#  define MAXNAMLEN NAME_MAX			/* for Linux befor .99p3 */
+# endif
 #endif
 
 #if defined(__STDC__) || defined(__GNUC__)
@@ -123,12 +146,14 @@
  * for systems that do not allow free(NULL)
  */
 #ifdef NO_FREE_NULL
-# define free(x)	{if ((x) != NULL) free(x);}
+# define free(x)	nofreeNULL(x)
+  extern void nofreeNULL __ARGS((void *));
 #endif
 
 /*
  * fnamecmp() is used to compare filenames.
  * On some systems case in a filename does not matter, on others it does.
+ * (this does not account for maximum name lengths, thus it is not 100% accurate!)
  */
 #if defined(AMIGA) || defined(MSDOS)
 # define fnamecmp(x, y) stricmp((x), (y))
@@ -169,14 +194,23 @@
 
 /*
  * Names for the EXRC, HELP and temporary files.
- * This may be redefined by machine dependent header files
- * that are included below.
+ * Some of these may have been defined in the makefile.
  */
-#define SYSVIMRC_FILE	"s:.vimrc"
-#define SYSEXRC_FILE	"s:.exrc"
-#define VIMRC_FILE		".vimrc"
-#define EXRC_FILE		".exrc"
-#define VIM_HLP			"vim:vim.hlp"
+#ifndef SYSVIMRC_FILE
+# define SYSVIMRC_FILE	"s:.vimrc"
+#endif
+#ifndef SYSEXRC_FILE
+# define SYSEXRC_FILE	"s:.exrc"
+#endif
+#ifndef VIMRC_FILE
+# define VIMRC_FILE		".vimrc"
+#endif
+#ifndef EXRC_FILE
+# define EXRC_FILE		".exrc"
+#endif
+#ifndef VIM_HLP
+# define VIM_HLP		"vim:vim.hlp"
+#endif
 #define TMPNAME1		"t:viXXXXXX"
 #define TMPNAME2		"t:voXXXXXX"
 #define TMPNAMELEN		12
@@ -203,6 +237,14 @@
 
 #define IOSIZE	   (1024+1) 	/* file i/o and sprintf buffer size */
 
+#define	TERMBUFSIZE	1024
+
+#ifdef linux
+# define TBUFSZ 2048			/* buffer size for termcap entry */
+#else
+# define TBUFSZ 1024			/* buffer size for termcap entry */
+#endif
+
 /*
  * maximum length of a file name path
  */
@@ -210,6 +252,24 @@
 # define MAXPATHL	1024		/* Unix has long paths and plenty of memory */
 #else
 # define MAXPATHL	128			/* not too long to put name on stack */
+#endif
+
+#ifdef MSDOS
+# define BASENAMELEN	8		/* length of base of file name */
+#else
+# ifdef UNIX
+#  define BASENAMELEN	(MAXNAMLEN - 5)
+# else
+#  define BASENAMELEN	26		/* Amiga */
+# endif
+#endif
+
+#ifdef MSDOS
+# define WRITEBIN	"wb"		/* no CR-LF translation */
+# define READBIN	"rb"
+#else
+# define WRITEBIN	"w"
+# define READBIN	"r"
 #endif
 
 #define CHANGED   set_Changed()
@@ -220,6 +280,13 @@ typedef unsigned char	u_char;		/* shorthand */
 typedef unsigned short	u_short;	/* shorthand */
 typedef unsigned int	u_int;		/* shorthand */
 typedef unsigned long	u_long;		/* shorthand */
+#endif
+
+#ifdef BSD
+#define strchr(ptr, c)			index(ptr, c)
+#define strrchr(ptr, c)			rindex(ptr, c)
+#define memset(ptr, c, size)	bsdmemset(ptr, c, size)
+char *bsdmemset __ARGS((char *, int, long));
 #endif
 
 typedef long			linenr_t;	/* line number type */

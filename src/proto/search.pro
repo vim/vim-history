@@ -1,7 +1,7 @@
 /* search.c */
 struct regexp *myregcomp __PARMS((char *pat));
 int searchit __PARMS((struct fpos *pos, int dir, char *str, long count, int end));
-int dosearch __PARMS((int dir, char *str, int reverse, long count));
+int dosearch __PARMS((int dir, char *str, int reverse, long count, int echo));
 int searchc __PARMS((int c, int dir, int type, long count));
 struct fpos *showmatch __PARMS((void));
 int findfunc __PARMS((int dir, int what, long count));

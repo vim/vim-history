@@ -212,7 +212,7 @@ int 			reg_ic = 0; 	/* set by callers to ignore case */
  * The following allows empty REs, meaning "the same as the previous RE".
  * per the ed(1) manual.
  */
-/* #define EMPTY_RE */
+/* #define EMPTY_RE */			/* this is done outside of regexp */
 #ifdef EMTY_RE
 char		   *reg_prev_re;
 #endif
@@ -240,22 +240,22 @@ static long 	regsize;		/* Code size. */
 static char   **regendp;		/* Ditto for endp. */
 
 /*
- * META contains all characters that may be magic.
+ * META contains all characters that may be magic, except '^' and '$'.
  * This depends on the configuration options TILDE, BACKREF.
  * (could be done simpler for compilers that know string concatenation)
  */
 
 #ifdef TILDE
 # ifdef BACKREF
-       static char META[] = "^$.[()|?+*<>~123456789";
+       static char META[] = ".[()|?+*<>~123456789";
 # else
-       static char META[] = "^$.[()|?+*<>~";
+       static char META[] = ".[()|?+*<>~";
 # endif
 #else
 # ifdef BACKREF
-       static char META[] = "^$.[()|?+*<>123456789";
+       static char META[] = ".[()|?+*<>123456789";
 # else
-       static char META[] = "^$.[()|?+*<>";
+       static char META[] = ".[()|?+*<>";
 # endif
 #endif
 
@@ -265,6 +265,7 @@ static char   **regendp;		/* Ditto for endp. */
 static void		initchr __ARGS((unsigned char *));
 static int		getchr __ARGS((void));
 static int		peekchr __ARGS((void));
+static int		peekpeekchr __ARGS((void));
 #define PeekChr() curchr	/* shortcut only when last action was peekchr() */
 static int 		curchr;
 static void		skipchr __ARGS((void));
@@ -317,7 +318,7 @@ regcomp(exp)
 		FAIL(e_null);
 	}
 
-#ifdef EMPTY_RE
+#ifdef EMPTY_RE			/* this is done outside of regexp */
 	if (*exp == '\0') {
 		if (reg_prev_re) {
 			exp = reg_prev_re;
@@ -347,7 +348,7 @@ regcomp(exp)
 	if (r == NULL)
 		FAIL(e_outofmem);
 
-#ifdef EMPTY_RE
+#ifdef EMPTY_RE			/* this is done outside of regexp */
 	if (exp != reg_prev_re) {
 		free(reg_prev_re);
 		if (reg_prev_re = alloc(strlen(exp) + 1))
@@ -393,7 +394,7 @@ regcomp(exp)
 			longest = NULL;
 			len = 0;
 			for (; scan != NULL; scan = regnext(scan))
-				if (OP(scan) == EXACTLY && strlen(OPERAND(scan)) >= len) {
+				if (OP(scan) == EXACTLY && strlen(OPERAND(scan)) >= (size_t)len) {
 					longest = OPERAND(scan);
 					len = strlen(OPERAND(scan));
 				}
@@ -740,6 +741,13 @@ regatom(flagp)
 			len = 0;
 			ret = regnode(EXACTLY);
 			while ((chr = peekchr()) != '\0' && (chr < Magic(0))) {
+		/*
+		 * We have to check for a following '*', '+' or '?'.
+		 * In those cases we must have a node with a single character
+		 * (added by mool)
+		 */
+				if (len != 0 && peekpeekchr())
+					break;
 				regc(chr);
 				skipchr();
 				len++;
@@ -928,16 +936,22 @@ peekchr()
 			break;
 		case '\\':
 			regparse++;
-			if (regparse[0] && strchr(META, regparse[0])) {
+			if (regparse[0] == NUL)
+				curchr = '\\';	/* trailing '\' */
+			else if (strchr(META, regparse[0]))
+			{
 				/*
-				 * META contains everything that may be magic sometimes.
+				 * META contains everything that may be magic sometimes, except
+				 * ^ and $ ("\^" and "\$" are never magic).
 				 * We now fetch the next character and toggle its magicness.
 				 * Therefore, \ is so meta-magic that it is not in META.
 				 */
 				curchr = -1;
 				peekchr();
 				curchr ^= Magic(0);
-			} else {
+			}
+			else
+			{
 				/*
 				 * Next character can never be (made) magic?
 				 * Then backslashing it won't do anything.
@@ -949,6 +963,22 @@ peekchr()
 	}
 
 	return curchr;
+}
+
+/*
+ * return 1 if the character returned by peekchr() is followed by a '*', '+' or '?'
+ */
+static int
+peekpeekchr()
+{
+	if (regparse[1] == '\\')
+	{
+		if ((!reg_magic && regparse[2] == '*') || regparse[2] == '+' || regparse[2] == '?')
+			return 1;
+	}
+	else if (reg_magic && regparse[1] == '*')
+		return 1;
+	return 0;
 }
 
 static void
@@ -1587,6 +1617,10 @@ strcspn(s1, s2)
 }
 #endif
 
+/*
+ * Compare two strings, ignore case if reg_ic set.
+ * Return 0 if strings match, non-zero otherwise.
+ */
 	static int
 cstrncmp(s1, s2, n)
 	char		   *s1, *s2;
@@ -1598,35 +1632,35 @@ cstrncmp(s1, s2, n)
 #ifndef UNIX
 	return strnicmp(s1, s2, (size_t)n);
 #else
+# ifdef STRNCASECMP
+	return strncasecmp(s1, s2, (size_t)n);
+# else
+	while (n && *s1 && *s2)
 	{
-		int				c1, c2;
-
-		while (*s1 && *s2) {
-			c1 = mkup(*s1);
-			c2 = mkup(*s2);
-
-			if (c1 != c2)
-				return c1 - c2;
-			s1++;
-			s2++;
-		}
-		if (!*s1)
-			return -1;
-		return 1;
+		if (mkup(*s1) != mkup(*s2))
+			return 1;
+		s1++;
+		s2++;
+		n--;
 	}
-#endif
+	if (n)
+		return 1;
+	return 0;
+# endif	/* STRNCASECMP */
+#endif	/* UNIX */
 }
 
-char		   *
+	char *
 cstrchr(s, c)
 	char		   *s;
-	int			c;
+	int				c;
 {
 	char		   *p;
 
 	c = mkup(c);
 
-	for (p = s; *p; p++) {
+	for (p = s; *p; p++)
+	{
 		if (mkup(*p) == c)
 			return p;
 	}

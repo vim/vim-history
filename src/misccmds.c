@@ -312,17 +312,33 @@ fileinfo()
 setfname(s)
 	char *s;
 {
-		if (Filename != NULL)
-				free(Filename);
-		if (s == NULL || *s == NUL)
-				Filename = NULL;
-		else
-		{
-				FullName(s, IObuff, IOSIZE);
-				Filename = (char *)strsave(IObuff);
-		}
+	if (Filename != NULL)
+		free(Filename);
+	if (s == NULL || *s == NUL)
+		Filename = NULL;
+	else
+	{
+		FullName(s, IObuff, IOSIZE);
+		Filename = (char *)strsave(IObuff);
+	}
+#ifndef MSDOS
+	thisfile_sn = FALSE;
+#endif
 }
 
+/*
+ * return nonzero if "s" is not the same file as current file
+ */
+	int
+otherfile(s)
+	char *s;
+{
+	if (s == NULL || *s == NUL || Filename == NULL)		/* no name is different */
+		return TRUE;
+	FullName(s, IObuff, IOSIZE);
+	return fnamecmp(IObuff, Filename);
+}
+	
 /*
  * put filename in title bar of window
  */
@@ -487,7 +503,7 @@ dellines(nlines, can_update)
 		if (doscreen)
 			num_plines += plines(Curpos.lnum);
 
-		free_line(delsline(Curpos.lnum));
+		free_line(delsline(Curpos.lnum, TRUE));
 
 		CHANGED;
 
@@ -608,10 +624,7 @@ plural(n)
 set_Changed()
 {
 	if (Changed == 0 && p_ro)
-	{
 		emsg("Warning: Changing a readonly file");
-		sleep(2);		/* give the user some time to think about it */
-	}
 	Changed = 1;
 	Updated = 1;
 }
@@ -644,7 +657,8 @@ msgmore(n)
 		pn = -n;
 
 	if (pn > p_report)
-		smsg("%ld %s lines %s", pn, n > 0 ? "more" : "fewer", got_int ? "(Interrupted)" : "");
+		smsg("%ld %s line%s %s", pn, n > 0 ? "more" : "fewer", plural(pn),
+											got_int ? "(Interrupted)" : "");
 }
 
 /*
@@ -687,22 +701,58 @@ expand_env(src, dst, dstlen)
 
 	if (*src == '$')
 	{
-		for (tail = src + 1; *tail; ++tail)
-			if (*tail == PATHSEP)
-				break;
-		c = *tail;
-		*tail = NUL;
-		var = getenv(src + 1);
-		*tail = c;
+/*
+ * The variable name is copied into dst temporarily, because it may be
+ * a string in read-only memory.
+ */
+		tail = src + 1;
+		var = dst;
+		c = dstlen;
+		while (c-- > 0 && *tail && *tail != PATHSEP)
+			*var++ = *tail++;
+		*var = NUL;
+		var = (char *)vimgetenv(dst);
 		if (*tail)
 			++tail;
-		if (var && strlen(var) + strlen(tail) + 1 < dstlen)
+		if (var && (strlen(var) + strlen(tail) + 1 < dstlen))
 		{
-			strcpy(dst, var);
-			strcat(dst, PATHSEPSTR);
-			strcat(dst, tail);
+			sprintf(dst, "%s%c%s", var, PATHSEP, tail);
 			return;
 		}
 	}
 	strncpy(dst, src, (size_t)dstlen);
+}
+
+/*
+ * Compare two file names and return TRUE if they are different files.
+ * For the first name environment variables are expanded
+ */
+	int
+fullpathcmp(s1, s2)
+	char *s1, *s2;
+{
+#ifdef UNIX
+	struct stat st1, st2;
+	char buf1[MAXPATHL];
+
+	expand_env(s1, buf1, MAXPATHL);
+	st1.st_dev = 99;		/* if stat fails, st1 and st2 will be different */
+	st2.st_dev = 100;
+	stat(buf1, &st1);
+	stat(s2, &st2);
+	if (st1.st_dev == st2.st_dev && st1.st_ino == st2.st_ino)
+		return FALSE;
+	return TRUE;
+#else
+	char buf1[MAXPATHL];
+	char buf2[MAXPATHL];
+
+	expand_env(s1, buf2, MAXPATHL);
+	if (FullName(buf2, buf1, MAXPATHL) && FullName(s2, buf2, MAXPATHL))
+		return strcmp(buf1, buf2);
+	/*
+	 * one of the FullNames() failed, file probably doesn't exist.
+	 */
+	return TRUE;
+#endif
 }

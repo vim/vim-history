@@ -1,0 +1,1200 @@
+			(inclusive).
+
+;			Repeat latest f, t, F or T [cnt] times.
+
+,			Repeat latest f, t, F or T in opposite direction
+			[cnt] times.
+
+These commands move the cursor to the specified column in the current line.
+They stop at the first column and at the end of the line, except '$', which 
+may move to one of the next lines.
+
+
+6.2 Up-down motions
+
+k		or
+<C_UP>		or
+CTRL-P			[cnt] lines upward (linewise).
+
+j		or
+<C_DOWN>	or
+CTRL-J		or
+<LF>		or
+CTRL-N			[cnt] lines downward (linewise).
+
+-  <minus>		[cnt] lines upward, on the first non-blank character
+			(linewise).
+
++		or
+CTRL-M		or
+<CR>			[cnt] lines downward, on the first non-blank
+			character (linewise).
+
+_  <underscore>		[cnt] - 1 lines downward, on the first non-blank
+			character (linewise).
+
+G			Goto line [cnt], default last line, on the first
+			non-blank character (linewise).
+
+:[range]		Set the cursor on the (last) specified line number
+			(cannot be used with an operator).
+
+{cnt}%			Go to {cnt} percentage in the file, column 1 
+			(linewise). To compute the new line number this 
+			formula is used: {cnt} * number-of-lines / 100. {not 
+			in Vi}
+
+These commands move to the specified line. They stop when reaching the first 
+or the last line. The first two commands put the cursor in the same column 
+(if possible) as it was after the last command that changed the column, 
+except after the '$' command, then the cursor will be put on the last 
+character of the line.
+
+
+6.3 Word motions
+
+<SC_RIGHT>	or
+w			[cnt] words forward (exclusive).
+
+W			[cnt] WORDS forward (exclusive).
+
+e			Forward to the end of word [cnt] (inclusive).
+
+E			Forward to the end of WORD [cnt] (inclusive).
+
+<SC_LEFT>	or
+b			[cnt] words backward (exclusive).
+
+B			[cnt] WORDS backward (exclusive).
+
+These commands move over words or WORDS. A word consists of a sequence of 
+letters, digits and underscores, or a sequence of other non-blank 
+characters, separated with blank space. A WORD consists of a sequence of 
+non-blank characters, separated with blank space. The end of a line is also 
+considered to be blank space. An empty line is also considered to be a word 
+and a WORD.
+
+Special case: "cw" and "cW" are treated like "ce" and "cE" if the cursor is 
+on a non-blank. This is because "cw" is interpreted as change-word, and a 
+word does not include the following blank space. {Vi: "cw" when on a blank 
+followed by other blanks changes only the first blank; this is probably a 
+bug, because "dw" deletes all the blanks}
+
+
+6.4 Text object motions
+
+(			[cnt] sentences backward (exclusive).
+
+)			[cnt] sentences forward (exclusive).
+
+{			[cnt] paragraphs backward (exclusive).
+
+}			[cnt] paragraphs forward (exclusive).
+
+]]			[cnt] sections forward, except when used after an
+			operator, then [cnt] SECTIONS forward (linewise).
+
+][			[cnt] SECTIONS forward (linewise).
+
+[[			[cnt] sections backward (linewise).
+
+[]			[cnt] SECTIONS backward (linewise).
+
+These commands move over three kinds of text objects.
+
+A sentence is defined as ending at a '.', '!' or '?' followed by either the 
+end of a line, or by a space. {Vi: two spaces} Any number of closing ')', 
+']', '"' and ''' characters my appear after the '.', '!' or '?' before the 
+spaces or end of line. A paragraph and section boundary is also a sentence 
+boundary.
+
+A paragraph begins after each empty line, and also at each of a set of 
+paragraph macros, specified by the pairs of characters in the 'paragraphs' 
+option. The default is "IPLPPPQPP LIpplpipbp", which corresponds to the 
+macros ".IP", ".LP", etc. (these are nroff macros, the dot must be in the 
+first column). A section boundary is also a paragraph boundary.
+
+A section begins after a form-feed in the first column, a '{' in the first 
+column, and also at each of a set of section macros, specified by the pairs 
+of characters in the 'sections' option. The default is "SHNHH HUnhsh". A 
+SECTION is the same as a section, except that a '}' replaces the '{'. This 
+is useful to find the end of C-language functions.
+
+
+6.5 Pattern searches
+
+/{pattern}[/]		Search forward for the [cnt]'th occurrence of
+			{pattern} (exclusive).
+
+/{pattern}/{offset}	Search forward for the [cnt]'th occurrence of
+			{pattern} and go {offset} lines up or down (see 
+			below). (linewise).
+
+/			Search forward for the [cnt]'th latest used pattern 
+			with latest used {offset}.
+
+//{offset}		Search forward for the [cnt]'th latest used pattern 
+			with new {offset}. If {offset} is empty no offset is 
+			used.
+
+*			Search forward for the [cnt]'th occurrence of the
+			ident after or under the cursor (exclusive). {not in 
+			Vi}
+
+#			Search backward for the [cnt]'th occurrence of the
+			ident after or under the cursor (exclusive). {not in 
+			Vi}
+
+?{pattern}[?]		Search backward for the [cnt]'th previous
+			occurrence of {pattern} (exclusive).
+
+?{pattern}?{offset}	Search backward for the [cnt]'th previous occurrence
+			of {pattern} and go {offset} lines up or down (see 
+			below) (linewise).
+
+?			Search backward for the [cnt]'th latest used pattern 
+			with latest used {offset}.
+
+??{offset}		Search backward for the [cnt]'th latest used pattern 
+			with new {offset}. If {offset} is empty no offset is 
+			used.
+
+n			Repeat the latest '/' or '?' [cnt] times. {Vi: no
+			count}
+
+N			Repeat the latest '/' or '?' [cnt] times in opposite
+			direction. {Vi: no count}
+
+CTRL-C			Interrupt current (search) command.
+
+These commands search for the specified pattern. With "/" and "?" an 
+additional offset may be given. There are two types of offsets: line offsets 
+and character offsets. {the character offsets are not in Vi}
+
+The offset gives the cursor positition relative to the found match:
+    +[num]	[num] lines downwards, in column 1
+    -[num]	[num] lines upwards, in column 1
+    e[+num]	[num] characters to the right of the end of the match
+    e[-num]	[num] characters to the left of the end of the match
+    s[+num]	[num] characters to the right of the start of the match
+    s[-num]	[num] characters to the left of the start of the match
+    n		not an offset: search without setting the current position
+    		of the cursor (used for the :tags command)
+
+If [num] is omitted it is assumed to be zero.
+
+Examples:
+
+pattern			cursor position
+/test/+1		one line below "test", in column 1
+/test/e			on the last t of "test"
+/test/s+2		on the "s" of "test"
+
+If one of these commands is used after an operator, the characters between 
+the cursor position before and after the search is affected. However, if a 
+line offset is given, the whole lines between the two cursor positions are 
+affected.
+
+The last used <pattern> and <offset> are remembered. They can be used to
+repeat the search, possibly in another direction or with another count. Note
+that only one <pattern> is remembered for all searches, including :s
+(substitute). Each time an empty <pattern> is given, the previously used
+<pattern> is used.
+
+If the 'wrapscan' option is set (which is the default), searches wrap around 
+the end of the buffer. If 'wrapscan' is not set, the backward search stops 
+at the beginning and the forward search stops at the end of the buffer. If 
+the pattern was not found the error message "pattern not found" is given, 
+and the cursor will not be moved.
+
+Patterns may contain special characters, depending on the setting of the
+'magic' option. The '*' and '#' commands search for the identifier currently
+under the cursor. If there is no indentifier under the cursor, the first one 
+to the right is used. This identifier may only contain letters, digits and 
+underscores. Note that if you type with ten fingers, the characters are easy 
+to remember: the '#' is under your left hand middle finger and the '*' is 
+under your right hand middle finger.
+
+The definition of a pattern:
+
+1.  A pattern is one or more branches, separated by '\|'. It matches anything
+    that matches one of the branches.
+
+2.  A branch is one or more pieces, concatenated. It matches a match for the
+    first, followed by a match for the second, etc.
+
+3.  A piece is an atom, possibly followed by:
+      magic	nomagic
+	*	  \*		matches 0 or more of the preceding atom
+	\+	  \+		matches 1 or more of the preceding atom {not
+				in Vi}
+	\?	  \?		matches 0 or 1 of the preceding atom {not in
+				Vi}
+
+4.  An atom can be:
+    - One of these five:
+      magic	nomagic
+	.	  \.		matches any single character
+	\<	  \<		matches the beginning of a word
+	\>	  \>		matches the end of a word
+	^	  ^		at beginning of pattern, matches start of
+				line
+	$	  $		at end of pattern, matches end of line
+    - A pattern enclosed by escaped parentheses (e.g. "\(^a\)").
+    - A single character, with no special meaning, matches itself
+    - A backslash followed by a single character, with no special meaning,
+      matches the single character.
+    - A range. This is a sequence of characters enclosed in '[]' with the 
+      'magic' option, or enclosed in '\[]' with the 'nomagic' option. It 
+      normally matches any single character from the sequence. If the 
+      sequence begins with '^', it matches any single character NOT in the 
+      sequence. If two characters in the sequence are separated by '-', this 
+      is shorthand for the full list of ASCII characters between them (e.g. 
+      '[0-9]' matches any decimal digit). To include a literal ']' in the 
+      sequence, make it the first character (following a possible '^'). To 
+      include a literal '\-', make it the first or last character.
+
+If the 'ignorecase' option is set, the case of letters is ignored.
+
+<NUL> characters in the file are stored as <LF> in memory. To match them use
+<LF>, which can be typed with CTRL_V CTRL_J. Note that the <NUL> character is
+displayed as "^@".
+
+Examples:
+^beep(			Probably the start of the C function "beep".
+
+[a-zA-Z]$		Any alphabetic character at the end of a line.
+
+\(^\|[^a-zA-Z0-9_]\)[a-zA-Z_]\+[a-zA-Z0-9_]*
+			A C identifier (will stop in front of it).
+
+[.!?][])"']*\($\|[ ]\)	A search pattern that finds the end of a sentence,
+			with almost the same definition as the <)> command.
+
+
+
+6.6 Various motions
+
+m<a-zA-Z>		Set mark <a-zA-Z> at cursor position (does not move 
+			the cursor, this is not a motion command).
+
+:[range]mar[k] <a-zA-Z>	Set mark <a-zA-Z> at last line number in [range], 
+			column 0. Default is cursor line.
+
+:[range]k<a-zA-Z>	Same as :mark, but the space before the mark name can
+			be omitted.
+
+'<a-z>			To the first non-blank character on the line with
+			mark <a-z> (linewise).
+
+'<A-Z>			To the first non-blank character on the line with
+			mark <A-Z> in the correct file (linewise when in 
+			same file, not a motion command when in other file). 
+			{not in Vi}
+
+`<a-z>			To the mark <a-z> (exclusive).
+
+`<A-Z>			To the mark <A-Z> in the correct file (exclusive 
+			when in same file, not a motion command when in 
+			other file). {not in Vi}
+
+:marks			List the current marks (not a motion command). {not 
+			in Vi}
+
+A mark is not visible in any way. It is just a position in the file that is
+remembered. Do not confuse marks with named registers, they are totally 
+unrelated.
+
+Lowercase marks are only remembered as long as you stay in the current
+file. If you start editing another file, change a character in a line or 
+delete a line that contains a mark, that mark is erased. Lowercase marks can 
+be used in combination with operators. For example: "d't" deletes the lines 
+from the cursor position to mark a. Hint: Use mark <t> for Top, <b> for 
+Bottom, etc..
+
+Uppercase marks include the file name. {Vi: no uppercase marks} You can use 
+them to jump from file to file. You can only use an uppercase mark with 
+an operator if the mark is in the current file. As long as you stay in the 
+current file the line number of the mark remains correct, even if you 
+insert/delete lines. After changing files the line number may be wrong 
+(keeping them correct would take too much time). To avoid this use a 
+":marks" command before abandoning a file, this will update the line numbers 
+in the current file.
+
+
+'[			To the first non-blank character on the first line 
+			of the previously operated text or start of the last 
+			putted text. {not in Vi}
+
+`[			To the first character of the previously operated 
+			text or start of the last putted text. {not in Vi}
+
+']			To the first non-blank character on the last line of 
+			the previously operated text or end of the last 
+			putted text. {not in Vi}
+
+`]			To the last character of the previously operated 
+			text or end of the last putted text. {not in Vi}
+
+After executing an operator the Cursor is put at the beginning of the text 
+that was operated upon. After a put command ("p" or "P") the cursor is 
+sometimes placed at the first inserted line and somtimes on the last 
+inserted character. The four commands above put the cursor at either
+end. Example: After yanking 10 lines you want to go to the last one of them: 
+"10Y']". After inserting several lines with the "p" command you want to jump 
+to the lowest inserted line: "p']".
+
+Note: After deleting text, the start and end positions are the same, except 
+when using blockwise quoting. These commands do not work when no operator 
+or put command has been used yet in the current file. The position may be 
+incorrect after inserting text and ".p.
+
+
+''			To the first non-blank character of the line where
+			the cursor was before the latest jump (linewise).
+
+``			To the position before latest jump (exclusive).
+
+A "jump" is one of the following commands: "'", "`", "G", "/", "?", "n", 
+"N", "%", "(", ")", "[[", "]]", "{", "}", ":s", ":tag" and the commands that 
+start editing a new file. If you make the cursor "jump" with one of these 
+commands, the position of the cursor before the jump is remembered. You can 
+return to that position with the "''" and "``" command, unless the line 
+containing that position was changed or deleted.
+
+CTRL-O			Go to [cnt] Older cursor position in jump list
+			(not a motion command). {not in Vi}
+
+CTRL-I			Go to [cnt] newer cursor position in jump list
+			(not a motion command). {not in Vi}
+
+:jumps			Print the jump list (not a motion command). {not in 
+			Vi} 
+
+Jumps are remembered in a jump list. With the CTRL-O and CTRL-I command you 
+can go to cursor positions before older jumps, and back again. Thus you can 
+move up and down the list.
+
+For example, after three jump commands you have this jump list:
+
+ jump line  file
+   1     1  -current-
+   2    70  -current-
+   3  1154  -current-
+>
+
+You are currently in line 1167. If you then use the CTRL-O command, the 
+cursor is put in line 1154. This results in:
+
+ jump line  file
+   1     1  -current-
+   2    70  -current-
+>  3  1154  -current-
+   4  1167  -current-
+
+The pointer will be set at the last used jump position. The next CTRL-O 
+command will use the entry above it, the next CTRL-I command will use the 
+entry below it. If the pointer is below the last entry, this indicates that 
+you did not use a CTRL-I or CTRL-O before. In this case the CTRL-O command 
+will cause the cursor position to be added to the jump list, so you can get 
+back to the postition before the CTRL-O. In this case this is line 1167.
+
+With more CTRL-O commands you will go to lines 70 and 1. If you use CTRL-I 
+you can go back to 1154 and 1167 again.
+
+If you use a jump command, the current line number is inserted at the end of 
+the jump list. If you used CTRL-O or CTRL-I just before that, the same line 
+may be in the list twice. This may be a bit strange. Just try it and look at 
+the jump list with the :jumps command. Note that this behaviour is different 
+from the tag stack.
+
+After the CTRL-O command that got you into line 1154 you could give another 
+jump command (e.g. 'G'). The jump list would then become:
+
+ jump line  file
+   1     1  -current-
+   2    70  -current-
+   3  1154  -current-
+   4  1167  -current-
+   5  1154  -current-
+>
+
+As long as you stay in the same file, the line numbers will be adjusted for 
+deleted and inserted lines. If you go to another file the line numbers may 
+be wrong (keeping them correct would take too much time). If you want to 
+avoid this use a :jumps command before changing files. This will update the 
+line numbers in the current file.
+
+%			Find the next parenthesis or (curly/square) bracket
+			on this line and go to its match (inclusive). No 
+			count is allowed.
+
+H			To line [cnt] from top (Home) of screen (default:
+			first line on the screen) on the first non-blank 
+			character (linewise).
+
+M			To Middle line of screen, on the first non-blank
+			character (linewise).
+
+L			To line [cnt] from bottom of screen (default: Last
+			line on the screen) on the first non-blank character 
+			(linewise).
+
+
+	7. Scrolling
+
+Upwards scrolling, window goes downwards:
+
+CTRL-E			Window [cnt] lines downwards in the buffer ([cnt]
+			lines Extra).
+
+CTRL-D			Window [cnt] lines Downwards in the buffer (default:
+			previous [cnt] or half a screen).
+
+<SC_DOWN>	or
+CTRL-F			Window [cnt] pages Forwards (downwards) in the
+			buffer.
+
+Downwards scrolling, window goes upwards:
+
+CTRL-Y			Window [cnt] lines upwards in the buffer.
+
+CTRL-U			Window [cnt] lines Upwards in the buffer (default:
+			previous [cnt] or half a screen).
+
+<SC_UP>		or
+CTRL-B			Window [cnt] pages Backwards (upwards) in the buffer.
+
+z<CR>			Redraw, line [cnt] at top of window (default cursor 
+			line).
+
+z{height}<CR>		Redraw, make window {height} lines tall (if the 
+			height is different from the number of lines for the 
+			current terminal, this may cause problems with 
+			screen updating).
+
+z.			Redraw, line [cnt] at center of window (default 
+			cursor line).
+
+z-			Redraw, line [cnt] at bottom of window (default 
+			cursor line).
+
+These commands move the contents of the window. If the cursor position is 
+moved off of the window, the cursor is moved onto the window. A page is the 
+number of lines in the window minus two. The mnemonics for these commands 
+may be a bit confusing. Remember that the commands refer to moving the 
+window upwards or downwards in the buffer. But when the window moves upwards 
+in the buffer, the text in the window moves downwards on your screen.
+
+
+	8. Tags
+
+:ta[g][!] {ident}	Jump to the definition of {ident}, using the
+			information in the tags file. Put {ident} in the tag
+			stack. See below for [!].
+
+CTRL-]			":ta" to the identifier under or after cursor. Put 
+			the identifier in the tag stack. {Vi: identifier 
+			after the cursor}
+
+CTRL-T			Jump to [cnt] older entry in the tag stack (default
+			1). {not in Vi}
+
+:[count]po[p][!]	Jump to [count] older entry in tag stack (default 1).
+			See below for [!]. {not in Vi}
+
+:[count]ta[g][!]	Jump to [count] newer entry in tag stack (default 1).
+			See below for [!]. {not in Vi}
+
+:tags			Show the contents of the tag stack. The active
+			entry is marked with a '>'. {not in Vi}
+
+A tag is an identifier that appears in the "tags" file. It is a sort of label
+that can be jumped to. For example: In C programs each function name can be 
+used as a tag.
+
+With the ":tag" command the cursor will be positioned on the tag. With the
+CTRL-] command, the identifier on which the cursor is standing is used as the
+tag. If the cursor is not on an identifier, the first identifier rightwards 
+of the cursor is used.
+
+If the tag is in the current file this will always work. Otherwise the
+performed actions depend on whether the current file was changed, whether a !
+is added to the command and on the 'autowrite' option:
+
+  tag in       file        autowrite
+current file  changed   !   option	  action
+-----------------------------------------------------------------------------
+    yes		 x	x     x	  goto tag
+    no		 no	x     x	  read other file, goto tag
+    no		yes    yes    x   abondon current file, read other file, goto
+    				  tag
+    no		yes	no    on  write current file, read other file, goto
+    				  tag
+    no		yes	no   off  fail
+-----------------------------------------------------------------------------
+
+- If the tag is in the current file, the command will always work.
+- If the tag is in another file and the current file was not changed, the 
+  other file will be made the current file and read into the buffer.
+- If the tag is in another file, the current file was changed and a ! is 
+  added to the command, the changes to the current file are lost, the other 
+  file will be made the current file and read into the buffer.
+- If the tag is in another file, the current file was changed and the 
+  'autowrite' option is set, the current file will be written, the other 
+  file will be made the current file and read into the buffer.
+- If the tag is in another file, the current file was changed and the 
+  'autowrite' option is not set, the command will fail. If you want to save 
+  the changes, use the ":w" command and then use ":tag" without an argument. 
+  This works because the tag is put on the stack anyway. If you want loose 
+  the changes you can use the ":tag!" command.
+
+The ":tag" command works very well for C programs. If you see a call to a
+function and wonder what that function does, position the cursor inside of 
+the function name and hit CTRL-]. This will bring you to the function 
+definition. An easy way back is with the CTRL-T command. Also read about the 
+tag stack below.
+
+A tags file can be created with the external command 'ctags'. It will 
+contain a tag for each function. Some versions of 'ctags' will also make a 
+tag for each "#defined" macro.
+
+The lines in the tags file should have this format:
+
+	{tag}{separator}{filename}{separator}{command}
+
+{tag}		the identifier
+{separator}	a single <TAB> or space character
+{filename}	the file that contains the definition of {tag}
+{command}	the Ex command that positions the cursor on the tag (it can
+		be any Ex command, but normally it is a search command like 
+		"/^main").
+
+The 'tags' option is a list of file names separated by spaces. Each of these 
+files is searched for the tag. This can be used to use a different file than 
+the default file "tags". It can also be used to access a common tags file. 
+For example:
+
+:set tags=tags\ s:commontags
+
+The tag will first be searched for in the file "tags" in the current 
+directory. If it is not found there the file "s:commontags" will be searched 
+for the tag. The backslash is required for the space to be included in the 
+string option.
+
+
+The tags that you use are remembered in the tag stack. You can print this 
+stack with the ":tags" command. The result looks like this:
+
+  # TO tag      FROM line in file
+  1 main               1  harddisk2:text/vim/test
+> 2 FuncA             58  -current-
+  3 FuncC            357  harddisk2:text/vim/src/amiga.c
+
+This list shows the tags that you jumped to and the cursor position before that 
+jump. The older tags are at the top, the newer at the bottom.
+
+The '>' points to the active entry. This is the tag that will be used by the 
+next ":tag" command. The CTRL-T and ":pop" command will use the position 
+above the active entry.
+
+The line number and file name are remembered to be able to get back to where 
+you were before the tag command. As long as you stay within one file the 
+line number will be correct, also when deleting/inserting lines. When you go 
+to another file the line number may not always be correct (keeping them 
+correct all the time would take too much time). To avoid this use the 
+":tags" command before abondoning a file, which will update the line numbers 
+in the current file.
+
+You can jump to previously used tags with several commands. Some examples:
+
+	":pop" or CTRL-T 	to position before previous tag
+	{count}CTRL_T		to position before {count} older tag
+	":tag"			to newer tag
+	":0tag" 		to last used tag
+
+The most obvious way to use this is while browsing through the call graph of 
+a program. Consider the following call graph:
+
+	main  --->  FuncA  --->  FuncC
+	      --->  FuncB
+
+(Explanation: main calls FuncA and FuncB; FuncA calls FuncC).
+You can get from main to FuncA by using CTRL-] on the call to FuncA. Then 
+you can CTRL-] to get to FuncC. If you now want to go back to main you can 
+use CTRL-T twice. Then you can CTRL-] to FuncB.
+
+If you issue a ":ta {ident}" or CTRL-] command, this tag is inserted at the 
+bottom of the stack. If the stack was full (it can hold upto 20 entries), the 
+oldest entry is deleted and the older entries shift one position up (their 
+index number is decremented by one). If the last used entry was not at the 
+bottom, the entries below the last used one are moved to the top. This means 
+that an old branch in the call graph is not lost, but moved to another place 
+on the tag stack. The stack above would change to:
+
+  # TO tag      FROM line in file
+  1 FuncA             58  harddisk2:text/vim/src/main.c
+  2 FuncC            357  harddisk2:text/vim/src/amiga.c
+  3 main               1  harddisk2:text/vim/test
+  4 FuncB             59  harddisk2:text/vim/src/main.c
+>
+
+In the call graph example: You can use this to go back from FuncB to FuncC 
+by hitting CTRL-T twice. This may be a bit strange. Use the :tags command to 
+find out what will happen with CTRL-T commands.
+
+
+	9. Inserting text
+
+a			Append text after the cursor [cnt] times.
+
+A			Append text at the end of the line [cnt] times.
+
+i			Insert text before the cursor [cnt] times.
+
+I			Insert text before the first CHAR on the line [cnt]
+			times.
+
+o			Begin a new line below the cursor and insert text,
+			repeat [cnt] times. {Vi: blank [cnt] screen lines}
+
+O			Begin a new line above the cursor and insert text,
+			repeat [cnt] times. {Vi: blank [cnt] screen lines}
+
+These commands are used to start inserting text. They can be undone and
+repeated. You can end insert mode with <ESC>. See the section "Insert and
+replace mode" for the other special characters in insert mode. The effect of
+[cnt] takes place after insert mode is exited.
+
+:r[ead] {name}		Insert the file {name} below the cursor.
+
+:{range}r[ead] {name}	Insert the file {name} below the specified line.
+
+:r[ead]!{cmd}		Execute {cmd} and insert its standard output below
+			the cursor.
+
+These commands insert the contents of a file, or the output of a command, 
+into the buffer. They can be undone. They cannot be repeated with the "." 
+command. They work on a line basis, insertion starts below the line in which 
+the cursor is, or below the specified line. To insert text above the first 
+line use the command ":0r {name}".
+
+
+	10. Deleting text
+
+["x]x			Delete [cnt] characters under and after the cursor
+			[into register x] (not linewise).
+
+["x]X			Delete [cnt] characters before the cursor [into
+			register x] (not linewise).
+
+["x]d{motion}		Delete text that is moved over [into register x].
+
+["x]dd			Delete [cnt] lines [into register x] (linewise).
+
+["x]D			Delete the characters under the cursor until the end
+			of the line and [cnt]-1 more lines [into register 
+			x]; synonym for d$ (not linewise).
+
+{quote}["x]x	or
+{quote}["x]d		Delete the quoted text [into register x] (see the 
+			chapter on quoting). {not in Vi}
+
+{quote}["x]X	or
+{quote}["x]D		Delete the quoted lines [into register x] (see the 
+			chapter on quoting). {not in Vi}
+
+:[range]d[elete] [x]	Delete [range] lines (default: current line) [into
+			register x].
+
+:[range]d[elete] [x] {count}
+			Delete {count} lines, starting with [range] (default:
+			current line, see 4.4.3) [into register x].
+
+These commands delete text. They can be repeated (except ":d") and undone. 
+Use quoting to delete blocks of text. See "copying" for an explanation of 
+registers.
+
+
+J			Join [cnt] lines, with a minimum of two lines.
+
+{quote}J		Join the quoted lines, with a minimum of two lines.
+			{not in Vi}
+
+:[range]j[oin][!]	Join [range] lines. Same as 'J', except when [!] is
+			given, then no spaces will be inserted or deleted.
+
+:[range]j[oin][!] {count}
+			Join {count} lines, starting with [range] (default:
+			current line, see 4.4.3). Same as 'J', except when
+			[!] is given, then no spaces will be inserted or 
+			deleted.
+
+These commands delete the newline between lines. This has the effect of 
+joining them into one line. They can be repeated (except ":j") and undone. 
+
+One space is inserted in place of the <NL>, unless the line ended with a 
+space, <TAB> or the next line started with a ')'. If the next line has 
+leading blank space it is deleted first. If the 'joinspaces' option is set, 
+two spaces are inserted after a period.
+
+
+	11. Changing text
+
+The following commands can be used to change text, that is delete some text 
+and insert something else, with one command. They can all be undone. The 
+non-Ex commands can be repeated with the "." command.
+
+
+11.1 Delete and insert
+
+R			Enter replace mode: Each character you type replaces
+			an existing character, starting with the character
+			under the cursor. Repeat the entered text [cnt]-1
+			times.
+
+["x]c{motion}		Delete {motion} text [into register x] and start
+			insert.
+
+["x]cc			Delete [cnt] lines [into register x] and start insert
+			(linewise).
+
+["x]C			Delete from the cursor position to the end of the
+			line and [cnt]-1 more lines [into register x], and 
+			start insert. Synonym for c$ (not linewise).
+
+["x]s			Delete [cnt] characters [into register x] and start
+			insert (s stands for Substitute). Synonym for "cl"
+			(not linewise).
+
+["x]S			Delete [cnt] lines [into register x] and start 
+			insert. Synonym for "^cc" with 'autoindent' option 
+			or "0cc" with 'noautoindent' option (not linewise).
+
+{quote}["x]c	or
+{quote}["x]r	or
+{quote}["x]s		Delete the quoted text [into register x] and start 
+			insert (see the chapter on quoting). {not in Vi}
+
+{quote}["x]C	or
+{quote}["x]R	or
+{quote}["x]S		Delete the quoted lines [into register x] and start 
+			insert (see the chapter on quoting). {not in Vi}
+
+You can end insert and replace mode with <ESC>. See the section "Insert and
+replace mode" for the other special characters in these modes. The effect of
+[cnt] takes place after insert or replace mode is exited. {Vi: does not
+directly delete the text, but puts a '$' at the last deleted character}
+See "copying" for an explanation of registers.
+
+Replace mode is just like insert mode, except that for every character you 
+enter, one character is deleted. If the end of a line is reached, further 
+characters are appended (just like insert mode). In replace mode the 
+backspace key only moves the cursor positition, no characters are deleted, 
+unless the 'repdel' option is set (see section "insert and replace mode").
+
+Special case: "cw" and "cW" are treated like "ce" and "cE" if the cursor is 
+on a non-blank. This is because "cw" is interpreted as change-word, and a 
+word does not include the following blank space. {Vi: "cw" when on a blank 
+followed by other blanks changes only the first blank; this is probably a 
+bug, because "dw" deletes all the blanks}
+
+
+11.2 Simple changes
+
+r<char>			Replace [cnt] characters by <char>.
+
+~			'notildeop' option: switch case of [cnt] characters
+			under the cursor and move the cursor [cnt] 
+			characters to the right. {Vi: no count}
+
+~{motion}		'tildeop' option: switch case of {motion} text. {Vi: 
+			tilde cannot be used as an operator}
+
+{quote}~		switch case of quoted text (see the chapter on 
+			quoting). {not in Vi}
+
+{quote}u		Make quoted text uppercase (see the chapter on 
+			quoting). {not in Vi}
+
+{quote}U		Make quoted text lowercase (see the chapter on 
+			quoting). {not in Vi}
+
+CTRL-A			Add [cnt] to the number at or after the cursor. {not 
+			in Vi}
+
+CTRL-S			Subtract [cnt] from the number at or after the 
+			cursor. {not in Vi}
+
+The CTRL-A and CTRL-S commands work for (signed) decimal numbers and 
+unsigned octal and hexadecimal numbers. Numbers starting with '0x' or '0X' 
+are assumed to be hexadecimal. To decide whether the hexadecimal number 
+should be printed uppercase or not, the case of the rightmost letter in the 
+number is considered. If there is no letter in the current number, the 
+previously detected case is used. Numbers starting with a '0' are considered 
+to be octal. Other numbers are decimal and may be preceded with a minus 
+sign. If the cursor is on a number, that one will be used. Otherwise the 
+number right of the cursor will be used.
+
+The CTRL-A command is very useful in a macro. Example: How to make a 
+numbered list.
+
+1. Make the first entry. The entry should start with a number.
+2. Start recording: "va".
+3. Yank the entry into a buffer: "Y".
+4. Put a copy of the entry below the first one: "p". 
+5. Increment the number: CTRL-A.
+6. Stop recording: "v".
+7. Repeat all this with "<count>@a".
+
+
+<{motion}		Shift the {motion} lines one shiftwidth leftwards.
+
+<<			Shift [cnt] lines one shiftwidth leftwards.
+
+{quote}<		Shift the quoted lines one shiftwidth leftwards (see 
+			the chapter on quoting). {not in Vi}
+
+>{motion}		Shift {motion} lines one shiftwidth rightwards.
+
+>>			Shift [cnt] lines one shiftwidth rightwards.
+
+{quote}>		Shift the quoted lines one shiftwidth rightwards 
+			(see the chapter on quoting). {not in Vi}
+
+:[range]<		Shift [range] lines left.
+
+:[range]< {count}	Shift {count} lines left, starting with [range]
+			(default current line, see 4.4.3).
+
+:[range]>		Shift {count} [range] lines right.
+
+:[range]> {count}	Shift {count} lines right, starting with [range]
+			(default current line, see 4.4.3).
+
+The ">" and "<" commands are handy for changing the indent within programs. 
+The size of the blank space which is inserted or deleted can be set with the 
+'shiftwidth' option. Normally the 'shiftwidth' option is set to 8, but you 
+can set it to e.g. 3 to make smaller indents. The shift leftwards stops when 
+there is no indent. The shift right does not do anything with empty lines. 
+If the 'shiftround' option is set, the indent is rounded to a multiple of 
+'shiftwidth'.
+
+V{motion}		Format the lines that were moved over. The length of 
+			each line will be restricted to the width set with 
+			the 'textwidth' option. If you did not set the 
+			'textwidth' option, all lines will be joined 
+			together. If the 'autoindent' option is set, use the 
+			indent of the first line. {not in Vi}
+
+
+11.3 Complex changes
+
+!{motion}{filter}	Filter {motion} text through the external program
+			{filter}.
+
+!!{filter}		Filter [cnt] lines through the external program
+			{filter}.
+
+{quote}!{filter}	Filter the quoted lines through the external program 
+			{filter} (see the chapter on quoting). {not in Vi}
+
+:{range}![!]{filter} [!][arg]
+			Filter {range} lines through the external program
+			{filter}. The optional bangs are replaced with the
+			latest given command. The optional [arg] is appended.
+
+={motion}		Filter {motion} lines through the external program 
+			given with the 'equalprg' option (default: 
+			"indent"). {Vi: when 'lisp' option is set, autoindent 
+			{motion} lines}
+
+==			Filter [cnt] lines through the external program given 
+			with the 'equalprg' option (default: indent). {not 
+			in Vi}
+
+{quote}=		Filter the quoted lines through the external program 
+			given with the 'equalprg' option (default: indent) 
+			(see the chapter on quoting). {not in Vi}
+
+A filter is a program that accepts text at standard input, changes it in some
+way, and sends it to standard output. The commands above can be used to send
+some text through a filter. An example of a filter is "sort", which sorts 
+lines alphabetically. The "indent" program is used to pretty indent C 
+programs (you need a version of indent that works like a filter, not all 
+versions do that). The shell, given with the 'shell' option, is used to 
+execute the command (See also the 'shelltype' option).
+The filter commands can be redone with '.'.
+
+:[range]s[ubstitute]/{pattern}/{string}/[g][c] [count]
+			For each line in [range] replace the first occurrence
+			of {pattern} by {string}. With option [g] all 
+			occurrences in the line are replaced. With option 
+			[c] each replace has to be confirmed (<y> to 
+			replace, <q> to quit replacing, anything else to 
+			skip). With [count] that many lines are are 
+			searched, starting with the last line number in 
+			[range] (default current line, see 4.4.3).
+
+:[range]s[ubstitute] [g][c] [count]
+			Repeat last :substitute with new options and possibly
+			on other lines.
+
+:[range]&[/{pattern}/{string}/][g][c] [count]
+			Same as for :substitute.
+
+&			Synonym for ":s".
+
+If the {pattern} for the substitute command is empty, the previously given
+pattern is used (from any search, including '/' and ":g").
+
+For the definition of a pattern see 6.5, "Pattern searches".
+
+Some characters in {string} have a special meaning:
+
+magic	nomagic	  action
+  &	  \&	  replaced by the whole matched pattern
+ \&	   &	  replaced by &
+      \0	  replaced by the whole matched pattern
+      \1	  replaced by the matched pattern in the first pair of ()
+      \2	  replaced by the matched pattern in the second pair of ()
+      ..	  ..
+      \9	  replaced by the matched pattern in the ninth pair of ()
+  ~	  \~	  replaced by the {string} of the previous substitute
+ \~	   ~	  replaced by ~
+      \u	  next character made uppercase
+      \U	  following characters made uppercase
+      \l	  next character made uppercase
+      \L	  following characters made uppercase
+      \e	  end of /u, /U, /l and /L
+      \E	  end of /u, /U, /l and /L
+
+Examples:
+:s/a\|b/xxx\0xxx/g	      modifies "a b"	  in "xxxaxxx xxxbxxx"
+:s/\([abc]\)\([efg]\)/\2\1/g  modifies "af fa bg" in "fa fa gb"
+
+When using parentheses in combination with '|', like in \([ab]\)\|\([cd]\), 
+either the first or second pattern in parentheses did not match, so either 
+\1 or \2 is empty. Example:
+:s/\([ab]\)\|\([cd]\)/\1x/g   modifies "a b c d"  in "ax bx x x"
+
+
+	12. Copying and moving text
+
+"<a-zA-Z0-9.>		Use register <a-zA-Z0-9.> for next delete, yank or put
+			(uppercase to append) (<.> only works with put).
+
+:di[splay]		Display the contents of numbered and named registers.
+			{Vi: no such command}
+
+["x]y{motion}		Yank {motion} text [into register x].
+
+["x]yy			Yank [cnt] lines [into register x] (linewise).
+
+["x]Y			With 'noyankendofline' option: yank [cnt] lines 
+			[into register x] (synonym for yy, linewise); with 
+			'yankendofline' option: yank until end of line 
+			(synonym for y$, not linewise).
+
+{quote}["x]y		Yank the quoted text [into register x] (see the 
+			chapter on quoting). {not in Vi}
+
+{quote}["x]Y		Yank the quoted lines [into register x] (see the 
+			chapter on quoting). {not in Vi}
+
+:[range]y[ank] [x]	Yank [range] lines [into register x].
+
+:[range]y[ank] [x] {count}
+			Yank {count} lines, starting with last line number 
+			in [range] (default: current line, see 4.4.3), [into 
+			register x].
+
+["x]p			Put the text [from register x] after the cursor [cnt]
+			times. {Vi: no count}
+
+["x]P			Put the text [from register x] before the cursor
+			[cnt] times. {Vi: no count}
+
+:[line]pu[t] [x]	Put the text [from register x] after [line] (default
+			current line).
+
+:[line]pu[t]! [x]	Put the text [from register x] before [line] (default
+			current line).
+
+These commands can be used to copy text from one place to another. This is 
+done by first getting the text into a register with a yank, delete or change 
+command. The register can then be inserted with a put command. All registers 
+are kept when changing files. Thus you can also use this to move text from 
+one file to another (the CTRL-^ command is a quick way to toggle between two 
+files).
+
+The put commands can be repeated (except for :put) and undone. If the
+command that was used to get the text into the register was linewise, the 
+text will be inserted below or above the line where the cursor is. Otherwise 
+the text will be inserted before or after the cursor. With the ":put" 
+command the text will always be inserted in the next line. You can exchange 
+two characters with the command sequence "xp". You can exchange two lines 
+with the command sequence "ddp". The "']" or "`]" command can be used after 
+the put command to move the cursor to the end of the inserted text, "'[" or 
+"`[" to move the cursor to the start.
+
+If the command that was used to get the text into the register used 
+blockwise quoting, the block of text will be inserted before ('P') or after 
+('p') the cursor column, in the current and next lines. Vim will make the 
+whole block of text start in the same column. Thus the inserted text looks 
+the same as when it was yanked or deleted. Some <TAB> characters may be 
+replaced by spaces to make this happen. However, if the width of the block 
+is not a multiple of a <TAB> width and the text after the inserted block 
+contains <TAB>s, that text may be misaligned.
+
+There are three types of registers: 10 numbered registers, 26 named 
+registers and one insert register.
+	The numbered registers are filled with yank and delete commands. 
+Numbered register "0" is filled with the last yank command, unless another 
+register was specified with ["x]. Numbered register "1" is filled with the 
+text that was deleted by each delete or change command, unless another 
+register was specified. The contents of register "1" is put in "2", "2" in 
+"3", and so forth. The contents of register "9" is lost. {Vi: numbered 
+register contents is lost when changing files; register 0 does not exist}
+	The named registers are only filled when you say so. They are named 
+'a' to 'z' normally. If you use an uppercase letter, the same registers as 
+with the lower case letter is used, but the text is appended to the previous 
+register contents. With a lower case letter the previous contents is lost.
+	The insert register "." contains the last inserted text. It can only 
+be used with the commands 'p', 'P' and ':put'.
+
+If you use a put command without specifying a register, the register that 
+was last written to is used. If you are confused, use the ":dis" command to 
+find out what will be put.
+
+The next three commands always work on whole lines.
+
+:[range]co[py] {address}
+			Copy the lines given by [range] to below the line
+			given by {address}.
+
+:t			Synonym for copy.
+
+:[range]m[ove] {address}
+			Move the lines given by [range] to below the line
+			given by {address}.
+
+
+	13. Quoting
+
+Quoting is a flexible and easy way to select a piece of text for an 
+operator. It is the only way to select a block of text.
+
+q			start/stop quoting per character. {not in Vi}
+
+Q			start/stop quoting linewise. {not in Vi}
+
+CTRL-Q			start/stop quoting blockwise. {not in Vi}
+
+o			go to Other end of quoted text: The current cursor 
+			position becomes the start of the quoted text and 
+			the cursor is moved to the Other end of the quoted 
+			text. {not in Vi} 
+
+To apply an operator on a piece of text:
+	1. mark the start of the text with 'q', 'Q' or CTRL-Q
+		The character under the cursor will be used as the start.
+	2. move to the end of the text
+		The text from the start of the quoting up to and including 
+		the character under the cursor is highlighted.
+	3. hit an operator
+		The highlighted characters will be operated upon.
+
+The quoted text includes the character under the cursor. Vim tries to invert 
+the cursor, but on some terminals the inverted cursor looks strange or 
+cannot been seen at all.
+
+With 'q' the text before the start positition and after the end position will 
+not be highlighted. However, All uppercase and non-alpha operators, except 
+'~', will work on whole lines anyway. See the list of operators below.
+
+With CTRL-Q (blockwise quoting) the quoted text will be a rectangle between 
+start position and the cursor. However, some operators work on whole lines 
+anyway (see the list below). The change and substitute operators will delete 
+the quoted text and then start insertion at the top left position.
+
+When the '$' command is used with blockwise quoting, the right end of the 
+quoted text will be determined by the longest quoted line. This stops when a 
+motion command is used that does not move straight up or down.
+
+If 'q', 'Q', CTRL-Q or ESC is typed while quoting, the quoting stops and no 
+text is affected. If you hit CTRL-Z quoting stops and the editor is 
+suspended or a new shell is started.
+
+For moving the end of the block many commands can be used, but you cannot 
+use Ex commands, commands that make changes or abandon the file. Commands 
+(starting with) ".pPiIaAO&", CTRL_^, "ZZ", CTRL-], CTRL-T, CTRL-R, CTRL-I 
+and CTRL-O. If you try to use one of these commands a beep is given and 
+quoting continues. 
+
+The operators that can be used are:
+	~	switch case
+	d	delete
+	c	change
+	y	yank
+	>	shift right (1)
+	<	shift left (1)
+	!	filter through external command (1)
+	=	filter through 'equalprg' option command (1)
+	V	format lines to 'textwidth' length (1)
+
+Additionally the following commands can be used:
+	:	start ex command for quoted lines (1)
+	r	change
+	s	change
+	C	change (2)
+	R	change (2)
+	S	change (2)
+	x	delete
+	D	delete (2)
+	X	delete (2)
+	Y	yank (2)
+	J	join (1)
+	u	make uppercase
+	U	make lowercase
+
+(1): always whole lines
+(2): whole lines when not using CTRL-Q
+
+If you want to give a buffer name using the '"' command, do this just before 
+typing the operator character.
+
+When repeating a quoted operator, the operator will be applied to the same 
+amount of text as the last time:
+- Linewise quoting: The same number of lines.
+- Blockwise quoting: The same number of lines and columns.
+- Normal quoting within one line: The same number of characters.
+- Normal quoting with several lines: The same number of lines, in the last 
+  line the same number of characters as in the last line the last time.
+The start of the text is the Cursor position. If the '$' command was used as 
+one of the last commands to extend the quoted text, the repeating will be 
+applied upto the rightmost column of the longest line.
+
+
+	14. Various commands
+
+CTRL-L			Clear and redraw the screen.
+
+CTRL-Z			On Unix systems: Suspend Vim. On other systems: 
+			start a new shell (like ":sh").
+
+<HELP>		or
+:h[elp]			Show the help file page by page. The help file name 
+			can be set with the 'helpfile' option. {Vi: no help}
+
+<DEL>			When entering a number: remove the last digit.
+
+:[range]p[rint]		Print [range] lines (default current line).
+
+:[range]p[rint] {count}
+			Print {count} lines, starting with [range] (default
+			current line, see 4.4.3).
+
+:=			Print the line number.
+
+:sh[ell]		Escape to a shell (name from 'shell' option).

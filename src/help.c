@@ -17,10 +17,6 @@
 #include "proto.h"
 #include "param.h"
 
-#ifdef MSDOS
-# include <dir.h>
-#endif
-
 static long helpfilepos;		/* position in help file */
 static FILE *helpfd;			/* file descriptor of help file */
 
@@ -41,7 +37,7 @@ help()
  * try to open the file specified by the "helpfile" option
  */
 	expand_env(p_hf, fnamebuf, MAXPATHL);
-	if ((helpfd = fopen(fnamebuf, "r")) == NULL)
+	if ((helpfd = fopen(fnamebuf, READBIN)) == NULL)
 	{
 #ifdef MSDOS
 	/*
@@ -49,7 +45,7 @@ help()
      */
 		strcpy(fnamebuf, "vim.hlp");
 		fnamep = searchpath(fnamebuf);
-		if (fnamep == NULL || (helpfd = fopen(fnamep, "r")) == NULL)
+		if (fnamep == NULL || (helpfd = fopen(fnamep, READBIN)) == NULL)
 		{
 #endif
 			smsg("Sorry, help file %s not found", fnamebuf);
@@ -123,7 +119,14 @@ redrawhelp()
 				col = 0;
 		outstr(T_ED);
 		while ((nextc = getc(helpfd)) != -1 && nextc != '\f')
+		{
+			if (nextc == Ctrl('B'))		/* begin of invert */
+				outstr(T_TI);
+			else if (nextc == Ctrl('E'))	/* end of invert */
+				outstr(T_TP);
+			else
 				outchar((char)nextc);
+		}
 		windgoto(0, (int)(Columns - strlen(Version) - 1));
 		outstrn(Version);
 		windgoto((int)Rows - 1, col);

@@ -143,6 +143,8 @@ dotag(tag, type, count)
 	}
 	if (findtag(tagstack[tagstackidx].tagname) > 0)
 		++tagstackidx;
+	else if (bufempty())		/* "vim -t tag" failed, start script now */
+		startscript();
 }
 
 /*
@@ -200,7 +202,9 @@ dotags()
 	int			i;
 	char		*name;
 
-	settmode(0);
+#ifdef AMIGA
+	settmode(0);		/* set cooked mode so output can be halted */
+#endif
 	outstrn("\n  # TO tag      FROM line in file\n");
 	for (i = 0; i < tagstacklen; ++i)
 	{
@@ -222,7 +226,9 @@ dotags()
 	}
 	if (tagstackidx == tagstacklen)		/* idx at top of stack */
 		outstrn(">\n");
+#ifdef AMIGA
 	settmode(1);
+#endif
 	wait_return(TRUE);
 }
 
@@ -244,6 +250,7 @@ findtag(tag)
 	char		*np;					/* pointer into file name string */
 	char		sbuf[CMDBUFFSIZE + 1];	/* tag file name */
 	int			i;
+	int			save_secure;
 
 	if (tag == NULL)		/* out of memory condition */
 		return 0;
@@ -290,46 +297,58 @@ findtag(tag)
 				fclose(tp);
 				/*
 				 * Tag found!
-				 * Form a string like "+/^function fname".
-				 * Scan through the search string. If we see a magic
+				 * If the command is a string like "/^function fname"
+				 * scan through the search string. If we see a magic
 				 * char, we have to quote it. This lets us use "real"
 				 * implementations of ctags.
 				 */
-				p = pbuf;
-				*p++ = *str++;			/* copy the '/' or '?' */
-				*p++ = *str++;			/* copy the '^' */
-
-				while (*str)
+				if (*str == '/' || *str == '?')
 				{
-					switch (*str)
+					p = pbuf;
+					*p++ = *str++;			/* copy the '/' or '?' */
+					if (*str == '^')
+						*p++ = *str++;			/* copy the '^' */
+
+					while (*str)
 					{
-					case '\\':	if (str[1] == '(')	/* remove '\' before '(' */
-									++str;
-								else
-									*p++ = *str++;
-								break;
+						switch (*str)
+						{
+						case '\\':	if (str[1] == '(')	/* remove '\' before '(' */
+										++str;
+									else
+										*p++ = *str++;
+									break;
 
-					case '\n':	*p++ = pbuf[0];	/* copy '/' or '?' */
-								*p++ = 'n';		/* no setpcmark() for search */
-								break;
+						case '\n':	*p++ = pbuf[0];	/* copy '/' or '?' */
+									*str = 'n';		/* no setpcmark() for search */
+									break;
 
-								/*
-								 * if string ends in search character: skip it
-								 * else escape it with '\'
-								 */
-					case '/':
-					case '?':	if (*str == pbuf[0] && str[1] == '\n')
-								{
-									++str;
-									continue;
-								}
-					case '^':
-					case '*':
-					case '.':	*p++ = '\\';
-								break;
+									/*
+									 * if string ends in search character: skip it
+									 * else escape it with '\'
+									 */
+						case '/':
+						case '?':	if (*str != pbuf[0])	/* not a search char */
+										break;
+									if (str[1] == '\n')		/* last char */
+									{
+										++str;
+										continue;
+									}
+						case '[':
+									if (!p_magic)
+										break;
+						case '^':
+						case '*':
+						case '.':	*p++ = '\\';
+									break;
+						}
+						*p++ = *str++;
 					}
-					*p++ = *str++;
 				}
+				else		/* not a search command, just copy it */
+					for (p = pbuf; *str && *str != '\n'; )
+						*p++ = *str++;
 				*p = NUL;
 
 				RedrawingDisabled = TRUE;
@@ -338,7 +357,14 @@ findtag(tag)
 					set_want_col = TRUE;
 
 					RedrawingDisabled = FALSE;
-					dosearch(pbuf[0] == '/' ? FORWARD : BACKWARD, pbuf + 1, FALSE, 1L);
+					/* dosearch(pbuf[0] == '/' ? FORWARD : BACKWARD, pbuf + 1, FALSE, 1L); */
+					save_secure = secure;
+					secure = 1;
+					docmdline((u_char *)pbuf);
+					if (secure == 2)		/* done something that is not allowed */
+						wait_return(TRUE);
+					secure = save_secure;
+
 					if (p_im && i == -1)
 						stuffReadbuff("\033\007i");	/* ESC CTRL-G i */
 					else

@@ -1,0 +1,520 @@
+index of vim commands for
+ 1. insert mode
+ 2. VI commands (normal mode)
+ 3. command line editing
+ 4. EX commands
+
+(for an overview of options see the end of reference.doc)
+
+1. INSERT MODE
+==============
+
+char		action
+-----------------------------------------------------------------------
+^@		insert previously inserted text and stop insert {vi: up to 128
+		chars}
+^A		insert previously inserted text {vi: no ^A}
+^B <0-9a-z>	insert contents of register <0-9a-z> {not in vi}
+^D		delete one shiftwidth of indent in the current line {vi: 
+		only after auto-indent}
+^E		insert the character which is below the cursor
+^H <BS>		delete character before the cursor {vi: does not cross lines,
+		does not delete autoindents}
+^J <LF>		begin new line
+^K {char1} {char2} enter digraph (only when compiled with it) {vi: no digraphs}
+^O		execute a single command and return to insert mode
+^M <CR>		begin new line
+^R		insert the character which is above the cursor
+^T		insert one shiftwidth of indent in current line {vi: only in 
+		autoindent}
+^U		delete all entered characters in the current line
+^V		insert next non-digit literally, insert three digit decimal 
+		number as a single byte.
+^W		delete word before the cursor
+^[ <ESC>	end insert mode
+<DEL>		same as ^H <BS>
+<C_UP>		cursor one line up
+<C_DOWN>	cursor one line down
+<C_LEFT>	cursor one character left
+<C_RIGHT>	cursor one character right
+<SC_UP>		one screenfull backward
+<SC_DOWN>	one screenfull forward
+<SC_LEFT>	cursor one word left
+<SC_RIGHT>	cursor one word right
+{char1}<BS>{char2} enter digraph (only when compiled with it and 'digraph' 
+		option set) {vi: no digraphs}
+
+
+2. VI COMMANDS
+==============
+
+CHAR means non-blank char
+WORD means sequences of non-blank chars
+N is number entered before the command
+<move> is a cursor movement command
+Nmove is the text that is moved over with a cursor movement command
+SECTION is a section that possibly starts with '}' instead of '{'
+
+note: 1 = cursor movement command; 2 = can be undone/redone
+
+char		note	vim normal mode (vi: what the unix vi does)
+------------------------------------------------------------------------------
+^@			error
+^A		2	add N to number at/after cursor {vi: no ^A}
+^B		1	scroll N screens Backwards
+^C			interrupt current (search) command
+^D			scroll Down N lines (default: half a screen)
+^E			scroll N lines upwards (N lines Extra)
+^F		1	scroll N screens Forward
+^G			display current file name and position
+^H <BS>		1	cursor N chars to the left
+^I <TAB>	1	go to N newer entry in jump list
+^J <LF>		1	cursor N lines downward
+^K			error
+^L			redraw screen
+^M <CR>		1	cursor to the first CHAR N lines lower
+^N		1	cursor N lines downward
+^O		1	go to N older entry in jump list
+^P		1	cursor N lines upward
+^Q			start blockwise quoting (vi: no quoting)
+^R		2	redo changes which were undone with 'u' (vi: no redo)
+^S		2	subtract N from number at/after cursor {vi: no ^S}
+^T			jump to N older Tag in tag list
+^U			scroll N lines Upwards (default: half a screen)
+^V			error
+^W			error
+^X			error
+^Y			scroll N lines downwards
+^Z			suspend program (or start new shell)
+^[ <ESC>		error
+^\			error
+^]			:ta to ident under cursor
+^^			edit Nth alternate file (equivalent to :e #N)
+^_			error
+
+<SPACE>		1	cursor N chars to the right
+!<move><filter>		filter Nmove text through the "filter" command
+!!<filter>		filter N lines through the "filter" command
+"<a-zA-Z0-9.>		use buffer <a-zA-Z0-9.> for next delete, yank or put
+			(upper case to append)(<.> only works for put)
+#		1	search backward for the Nth occurrence of the ident under
+			the cursor {not in vi}
+$		1	cursor to the end of line N from the cursor
+%		1	find the next (curly/square) bracket on this line and go
+			to its match. With count: go to N percentage in the file.
+&		2	repeat last :s
+'<a-zA-Z>	1	cursor to the first CHAR on the line with mark <a-zA-Z>
+'[		1	cursor to the first CHAR on the line of the start of 
+			last operated text or start of putted text
+']		1	cursor to the first CHAR on the line of the end of 
+			last operated text or end of putted text
+''		1	cursor to the first CHAR of the line where the cursor was
+			before the latest jump.
+(		1	cursor N sentences backward
+)		1	cursor N sentences forward
+*		1	search forward for the Nth occurrence of the ident under
+			the cursor {not in vi}
++		1	cursor to the first CHAR N lines lower
+,		1	repeat latest f, t, F or T in opposite direction N times
+-		1	cursor to the first CHAR N lines higher
+.		2	repeat last change with count replaced by N
+/<pattern>	1	search forward for the Nth occurrence of <pattern>
+0		1	cursor to the first char of the line
+1			prepend to command to give a count
+2			"
+3			"
+4			"
+5			"
+6			"
+7			"
+8			"
+9			"
+:			Ex command (see below)		
+;		1	repeat latest f, t, F or T N times
+<<move>		2	shift the Nmove lines one shiftwidth leftwards
+<<		2	shift N lines one shiftwidth leftwards
+=<move>		2	filter Nmove lines through "indent" (vi: when option
+			'lisp' is set autoindent Nmove lines)
+==		2	filter N lines through "indent"
+><move>		2	shift Nmove lines one shiftwidth rightwards
+>>		2	shift N lines one shiftwidth rightwards
+?<pattern>	1	search backward for the Nth previous occurrence of
+			<pattern>
+@<a-z>		2	execute the contents of named buffer <a-z> N times
+@@		2	repeat the previous @<a-z> N times
+A		2	append text at the end of the line N times
+B		1	cursor N WORDS backward
+<"x>C		2	change from the cursor position to the end of the line,
+			and N-1 more lines [into buffer x]; synonym for c$
+<"x>D		2	delete the characters under the cursor until the end of
+			the line and N-1 more lines [into buffer x]; synonym for d$
+E		1	cursor forward to the end of WORD N
+F<char>			cursor to the Nth occurrence of <char> to the left
+G		1	cursor to line N, default last line
+H		1	cursor to line N from top of screen
+I		2	insert text before the first CHAR on the line N times
+J		2	Join N lines; default is 2
+K			lookup Keyword under the cursor with "keywordprg"
+L		1	cursor to line N from bottom of screen
+M		1	cursor to middle line of screen
+N		1	repeat the latest '/' or '?' N times in opposite
+			direction
+O		2	begin a new line above the cursor and insert text, repeat
+			N times (vi: blank N screen lines)
+<"x>P		2	put the text [from buffer x] before the cursor N times
+Q			start quoting lines (vi: go to Ex mode)
+R		2	enter replace mode: overtype existing characters, repeat the
+			entered text N-1 times
+<"x>S		2	delete N lines [into buffer x] and start insert; synonym
+			for ^cc or 0cc, depending on autoindent
+T<char>		1	cursor till after Nth occurrence of <char> to the left
+U		2	undo all latest changes on one line (vi: while not moved
+			off of it)
+			While quoting: make lowercase
+V<move>		2	Join N lines and re-format them
+W		1	cursor N WORDS forward
+<"x>X		2	delete N characters before the cursor [into buffer x]
+<"x>Y			yank N lines [into buffer x]; synonym for yy
+ZZ			store current file, if modified, and exit		
+[[		1	cursor N sections backward
+[]		1	cursor N SECTIONS backward
+\			error
+]]		1	cursor N sections forward
+][		1	cursor N SECTIONS forward
+^		1	cursor to the first CHAR of the line
+_		1	cursor to the first CHAR N - 1 lines lower
+`<a-zA-Z>	1	cursor to the mark <a-zA-Z>
+`[		1	cursor to the start of last operated text or start of 
+			putted text
+`]		1	cursor to the end of last operated text or end of 
+			putted text
+``		1	cursor to the position before latest jump
+a		2	append text after the cursor N times
+b		1	cursor N words backward
+<"x>c<move>	2	delete Nmove text [into buffer x] and start insert
+<"x>cc		2	delete N lines [into buffer x] and start insert
+<"x>d<move>	2	delete Nmove text [into buffer x]
+<"x>dd		2	delete N lines [into buffer x]
+e		1	cursor forward to the end of word N
+f<char>		1	cursor to Nth occurrence of <char> to the right
+g			error
+h		1	cursor N chars to the left
+i		2	insert text before the cursor N times
+j		1	cursor N lines downward
+k		1	cursor N lines upward
+l		1	cursor N chars to the right
+m<a-z>			set mark <a-z> at cursor position		
+n		1	repeat the latest '/' or '?' N times
+o		2	begin a new line below the cursor and insert text, repeat
+			N times (vi: blank N screen lines)
+			While quoting: cursor moves other end
+<"x>p		2	put the text [from buffer x] after the cursor N times
+q			start quoting characters
+r<char>		2	replace N chars by <char>
+<"x>s		2	(substitute) delete N characters [into buffer x] and
+			start insert
+t<char>		1	cursor till before Nth occurrence of <char> to the right
+u		2	undo changes (vi: only one level)
+			While quoting: make uppercase
+v<a-zA-Z>		record typed characters into named buffer <a-zA-Z>
+			(upper case to append)
+v			stops recording (vi: no recording)
+w		1	cursor N words forward
+<"x>x		2	delete N characters under and after the cursor [into
+			buffer x]
+<"x>y<move>		yank Nmove text [into buffer x]
+<"x>yy			yank N lines [into buffer x]
+z<CR>			redraw, cursor line to top of window		
+z.			redraw, cursor line to center of window
+z-			redraw, cursor line at bottom of window
+{		1	cursor N paragraphs backward
+|		1	cursor to column N
+}		1	cursor N paragraphs forward
+~		2	option notildeop: switch case of N characters under
+			cursor and move the cursor N characters to the right
+			(vi: no count)
+~<move>			option tildeop: switch case of Nmove text (vi: no tildeop
+			option)
+<DEL>			when entering a number: remove the last digit
+<HELP>			show the file vim:vim.hlp page by page (vi: no help)
+<C_UP>		1	move cursor N lines upwards
+<C_DOWN>	1	move cursor N lines downwards
+<C_LEFT>	1	move cursor N chars to the left
+<C_RIGHT>	1	move cursor N chars to the right
+<SC_UP>		1	scroll N screens Backwards (same as ^B)
+<SC_DOWN>	1	scroll N screens Forwards (same as ^F)
+<SC_LEFT>	1	cursor N words backward (same as b)
+<SC_RIGHT>	1	cursor N words forward (same as w)
+
+
+3. command line editing
+=======================
+
+Get to the command line with the ':', '!', '/' or '?' commands.
+Normal characters are inserted at the current cursor position.
+(vi: can only alter last character in the line)
+
+^D		list filenames that match the pattern in front of the cursor
+^H		delete the character in front of the cursor
+^N		only after an <ESC> with multiple matches: go to next match
+^P		only after an <ESC> with multiple matches: go to previous match
+^V		insert next non-digit literally, insert three digit decimal 
+		number as a single byte. {Vi: type the CTRL-V twice to get one}
+<ESC>           do filename completion on the pattern in front of the cursor
+@		remove all characters
+<DEL>		delete the character under the cursor
+<C_UP>		recall previous command line from history
+<C_DOWN>	recall next command line from history
+<C_LEFT>	cursor left
+<C_RIGHT>	cursor right
+<SC_LEFT>	cursor one word left
+<SC_RIGHT>	cursor one word right
+
+
+4. EX commands
+==============
+
+lines that start with " or # are ignored
+
+<range> stands for a series of line specifiers, separated with ',' or ';'.
+When separated with ';' the cursor position will be set to that line before
+interpreting the next line specifier.
+The default line specifier (for most commands) is the Cursor position.
+line numbers may be specified with:
+	<number>	the absolute line number
+	.		the current line
+	$		the last line in the file
+	%		equal to 1,$ (the entire file)
+	't		position of mark t
+	/<pattern>	the next line where <pattern> matches
+	?<pattern>	the previous line where <pattern> matches
+Each may be followed (several times) by '+' or '-' and an optional number.
+This number is added or subtracted from the preceding line number.
+if the number is omitted, 1 is used.
+Examples:
+	.+3		three lines below the cursor
+	/that+1		the line below the next line containing "that"
+	.,$		from current line until end of file
+
+In the commands below the characters in square brackets are optional.
+
+:<range>		set the cursor on the (last) specified line number
+
+:a[ppend]		{vi: append text}
+
+:ar[gs]			print the file list, with the current file in []
+
+:cc [nr]		Display error [nr] (default is same error)
+
+:cd			print the current directory name {vi: no such command}
+:cd <path>		change the current directory to <path>
+
+:cf			read error file (from errorfile option)
+
+:c[hange]		{vi: replace lines}
+
+:ch[dir]		same as :cd
+
+:cn			display next error
+
+:[range]co[py] {address} copy lines from [range] to {address}
+
+:cp			display previous error
+
+:cq			Quit without writing and return an error code
+
+:[<range>]d[elete] [x] [count]
+			delete <range> lines (default: current line)
+
+:dig[raph]		display currently defined digraphs {not in vi}
+
+:dig[raph] {char1}{char2} {number} ...
+			define the character pair {char1} {char2} to be the 
+			digraph for character {number}. {number} is entered 
+			as digits.
+
+:di[splay]		display the contents of numbered and named buffers
+			{vi: no such command}
+
+:e[dit] [file]		edit 'file' (default: current file), unless changes have
+			been made {vi: allow +n to start at certain position}
+:e[dit]! [file]		edit 'file' (default: current file) always
+
+:ex			same as :edit
+
+:f[ile]			prints the current file name and some more info
+:f[ile] <name>		sets current file name to <name>
+:files			lists the alternate file names
+
+:<range>g[lobal]/<pattern>/<cmd>
+			execute the EX command <cmd> on the lines where <pattern>
+			matches
+:<range>g[lobal]!/<pattern>/<cmd>
+			execute the EX command <cmd> on the lines where <pattern>
+			does not match
+
+:h[elp]			show the help file page by page {vi: no help}
+
+:i[nsert]		{vi: insert text}
+
+:<range>j[oin]		join <range> lines
+
+:ju[mps]		print jump list {vi: no such command}
+
+:[range]k<a-z>		set mark without a space
+
+:l[ist]			{vi: list lines}
+
+:map <lhs> <rhs>	map the key sequence <lhs> to <rhs> in normal mode
+:map! <lhs> <rhs>	map the key sequence <lhs> to <rhs> in insert mode
+
+:[range]ma[rk] <a-z>	set mark
+
+:marks			list all marks {vi: no such command}
+
+:mk[exrc]		write options to .exrc file
+:mkv[imrc]		write options to .vimrc file {not in vi}
+
+:[range]m[ove] {address} move lines from [range] to {address}
+
+:n[ext]			edit next file, unless changes have been made
+:n[ext]!		edit next file
+:n[ext] <filelist>	define <filelist> as the new list of files and edit
+			the first one, unless changes have been made
+:n[ext]! <filelist>	define <filelist> as the new list of files and edit
+			the first one {vi: +command to start editing at a
+			specified position}
+
+:noremap <lhs> <rhs>	map the key sequence <lhs> to <rhs> in normal mode, 
+			disallow remapping of <rhs> {not in vi}
+:noremap! <lhs> <rhs>	map the key sequence <lhs> to <rhs> in insert mode,
+			disallow remapping of <rhs> {not in vi}
+
+:nu[mber]		{vi: print specified lines with their line number}
+
+:N[ext]			edit previous file in file list, unless changes have
+			been made
+:N[ext]!		edit previous file in file list
+
+:o[pen]			{vi: start editing in open mode}
+
+:[count]po[p][!]	jump to [count] older tag in tag list {vi: no such command}
+
+:pres[erve]		{vi: emergency exit}
+
+:<range>p[rint]		print the specified lines
+
+:pu[t] [x]		insert text from buffer [x] below current line
+:pu[t]! [x]		insert text from buffer [x] above current line
+
+:pr[evious]		same as :Next
+
+:q[uit] 		quit, unless changes have been made
+:q[uit]!		quit always, without writing
+
+:r[ead] <name>		insert the file <name> below the cursor
+:r[ead]!<cmd>		excute <cmd> and insert its standard output below the
+			cursor
+
+:rec[over]		{vi: recover a file after a crash or :preserve}
+
+:rew[ind]		start editing the first file in the file list, unless
+			changes have been made
+:rew[ind]!		start editing the first file in the file list
+
+:se[t]			show all modified options {vi: non-default options}
+:se[t] all		show all options
+:se[t] <option>		set toggle option on, show value of string or number
+			option
+:se[t] no<option>	set toggle option off
+:se[t] inv<option>	invert toggle option
+:se[t] <option>=<value> set string or number option to <value>
+:se[t] <option>?	show value of <option>
+
+:sh[ell]		escape to a shell {vi: shell name from option 'shell'}
+
+:so[urce] <file>	read EX commands from <file>
+:so[urce]! <file>	read VI commands from <file> {vi: no such command}
+
+:st[op][!]		suspend the editor
+
+:<range>s[ubstitute]/<pattern>/<string>/<option>
+			for each line in <range> replace the first occurrence of
+			<pattern> by <string>; with <option> 'g' all occurrences
+			on the line are replaced; with <option> 'c' each
+			replace has to be confirmed
+:<range>s[ubstitute]	repeat last :substitute
+
+:t			synonym for copy
+
+:ta[g] <ident>		search for <indent> in the tags file and execute
+			the accompanying command, unless changes have been made
+:ta[g]! <ident>		search for <indent> in the tags file and execute
+			the accompanying command
+
+:[count]ta[g][!]	jump to [count] newer tag in tag list {vi: no such command}
+
+:tags			print the tag list {vi: no such command}
+
+:una[bbreviate]		{vi: remove from abbreviation list}
+
+:u[ndo]			undo last change
+
+:unm[ap] <lhs>		remove the mapping of <lhs> for normal mode
+:unm[ap]! <lhs>		remove the mapping of <lhs> for insert mode
+
+:ve[rsion]		print the version number of the editor
+
+:<range>v[global]/<pattern>/<cmd>
+			execute the EX command <cmd> on the lines where <pattern>
+			does not match
+
+:vi[sual]		{vi: switch from EX or open to visual mode}
+
+:wi[nsize] <width> <height>
+			Set effective window size to <width> columns and <height>
+			rows. Does not change actual window size. Should only be
+			used from script files. {vi: no such command}
+
+:<range>w[rite][!]	write the specified lines to the current file
+:<range>w[rite]	<file>	write the specified lines to <file>, unless it
+			already exists
+:<range>w[rite]! <file>	write the specified lines to <file>
+:<range>w[rite][!] >>	append the specified lines to the current file
+:<range>w[rite][!] >> <file>
+			append the specified lines to <file>
+:<range>w[rite] !<cmd>	execute <cmd> with <range> lines as standard input
+
+:wq			write the current file and exit if no more files
+:wq!			write the current file and exit
+:wq <file>		write to <file> and exit if no more files
+:wq! <file>		write to <file> and exit
+
+:x[it][!] [file]	same as :wq, but write only when changes have been made
+
+:y[ank] [x]		copy lines into buffer [x]
+
+:z			{vi: print some lines}
+
+:@<reg>			execute contents of buffer <reg> as an Ex command 
+			{only in some versions of vi}
+
+:@@			repeat last :@<reg> command.
+
+:![!]<cmd> [!][<arg>]	execute <cmd> with the shell, replace the optional bangs
+			with the previously given command, append the optional
+			<arg>
+:<range>![!]<cmd> [!][<arg>]
+			filter <range> lines through <cmd>, replace the optional bangs
+			with the previously given command, append the optional
+			<arg>
+
+:<			shift left
+
+:>			shift right
+
+:=			print the line number
+
+:&			same as :substitute
+
+:~			{vi: do a substitute on the previous regular expression}

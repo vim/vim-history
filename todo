@@ -1,0 +1,39 @@
+Bugs, VI compatibility:
+
+Setting the size of the window does not always work as expected.
+With quickfix we only get the first 25 errors. How do we get the rest?
+The ":cq" command does not always abort the compiler.
+When editing multiple files, typing :q twice should exit Vim.
+
+
+Further extentions:
+
+History stack for . command?
+When there are "Too many files", possibility to insert them all (CTRL-A).
+Use insert/delete char when terminal supports it.
+"edit" option: when off changing the buffer is not possible.
+Add "-d null" for editing with a script file without a display.
+For MSDOS use memory mapped screen output (ansi.sys not needed).
+For MSDOS search for _exrc in the directory where the binary is, instead
+	of using $VIM\_exrc.
+In insert mode: Remember the characters that were removed with backspace and
+	re-insert them one at a time with CTRL-x, all together with CTRL-x.
+Add possibility to set a keymap. The code in amiga.c does not work yet.
+Add recognition of CR-LF files and correctly write them automatically.
+Add to quoting: Center, right-adjust, left-adjust, function (e.g. add).
+Add possibility to re-select previously quoted part.
+
+From Elvis:
+fontchanges recognized "\\fB" etc.
+parse error messages from many compilers
+
+
+Far future extentions:
+
+Option verbose; when on keep the screen uptodate, when off only redisplay when
+	input needed.
+Remember message line for redraw.
+Use disk swap file when editing very large files.
+Mode to keep text formatted while inserting/deleting.
+Mode to keep C-code formatted (sort of on-line indent)
+Option to choose between line wrap and horizontal scrolling

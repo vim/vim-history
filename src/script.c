@@ -28,7 +28,9 @@ extern int global_busy;			/* this is in csearch.c */
  * for Amiga Dos 2.0x we use Open/Close/Flush instead of fopen/fclose
  */
 #ifdef AMIGA
+# ifndef NO_ARP
 extern int dos2;					/* this is in amiga.c */
+# endif
 # ifdef SASC
 #  include <proto/dos.h>
 # endif
@@ -46,84 +48,148 @@ static int script_started = FALSE;
 	void
 startscript()
 {
-	int		n = 0;
+	int		n;
 	char	buf[25];
+#ifdef AMIGA
+	int		r;
+	FILE	*dummyfd = NULL;
+#endif
 
 	script_started = TRUE;
-#if AMIGA
+
+#ifdef AMIGA
 /*
  * With Amiga DOS 2.0 the system may lockup with the sequence: write to .vim
  * file, close it, delete it, create a new .vim file and write to it.
+ * This is a problem in the filesystem hash chains (solved in version 39.xx).
  * The Delay seems to solve this problem, maybe because DOS gets a chance to
- * finish the close and delete of the old .vim file.
+ * finish closing and deleting the old .vim file. Also do this for DOS 1.3,
+ * just in case.
  */
-	if (stopscript() && dos2)
-		Delay(2L);		/* This should fix the lockup bug */
+	if (stopscript())
+		Delay(10L);		/* This should fix the lockup bug */
 #else
 	stopscript();		/* stop any old script */
 #endif
-	if (p_uc == 0)	/* no auto script wanted */
+
+	if (p_uc == 0 || exiting)	/* no auto script wanted/needed */
 		return;
 	if (Changed)
 		emsg("Warning: buffer already changed, auto script file will be incomplete");
-	scriptname = makescriptname();
-	if (scriptname)
-	{
-		while (
+
 #ifdef AMIGA
-			dos2 ? ((autoscriptfd = (FILE *)Open((UBYTE *)scriptname, (long)MODE_OLDFILE)) != NULL) :
+/*
+ * If we start editing a new file, e.g. "test.doc", which resides on an MSDOS
+ * compatible filesystem, it is possible that the file "test.doc.vim" which we
+ * create will be exactly the same file. To avoid this problem we temporarily
+ * create "test.doc".
+ */
+	if (!(p_sn || thisfile_sn) && Filename && getperm(Filename) < 0)
+		dummyfd = fopen(Filename, "w");
 #endif
-			((autoscriptfd = fopen(scriptname,
-#ifdef MSDOS
-												"rb"
-#else
-												"r"
+
+/*
+ * we try different names until we find one that does not exist yet
+ */
+	scriptname = makescriptname();
+	for (;;)
+	{
+		if (scriptname == NULL)		/* must be out of memory */
+			break;
+		if ((n = strlen(scriptname)) == 0)	/* safety check */
+		{
+			free(scriptname);
+			break;
+		}
+		
+		/*
+		 * check if the scriptfile already exists
+		 */
+		if (getperm(scriptname) < 0)		/* it does not exist */
+		{
+				/*
+				 * Create the autoscript file.
+				 */
+#ifdef AMIGA
+# ifndef NO_ARP
+			if (dos2)
+# endif
+				autoscriptfd = (FILE *)Open((UBYTE *)scriptname, (long)MODE_NEWFILE);
+# ifndef NO_ARP
+			else
+				autoscriptfd = fopen(scriptname, "w");
+# endif
+#else	/* !AMIGA */
+				autoscriptfd = fopen(scriptname, WRITEBIN);
+#endif	/* AMIGA */
+
+#ifdef AMIGA
+			/*
+			 * on the Amiga getperm() will return -1 when the file exists but
+			 * is being used by another program. This happens if you edit
+			 * a file twice.
+			 */
+			if (autoscriptfd != NULL || (IoErr() != ERROR_OBJECT_IN_USE && IoErr() != ERROR_OBJECT_EXISTS))
 #endif
-													)) != 0))
-							/* file already exists */
+				break;
+		}
+	/*
+	 * get here when file already exists
+	 */
+		if (scriptname[n - 1] == 'm')		/* first try */
 		{
 #ifdef AMIGA
-			if (dos2)
-				Close((BPTR)autoscriptfd);
-			else
-#endif
-				fclose(autoscriptfd);
-			autoscriptfd = NULL;
-			if (n == 0)				/* first time; give error message */
-				emsg(".vim file exists: an edit of this file has not been finished");
-			n = strlen(scriptname);
-			/*
-			 * If we are not able to find a name with the last character changed
-			 * we probably have a device with shorter file names (e.g. MSDOS
-			 * compatible). We should try with another change.
-			 */
-			if (n == 0 || scriptname[n-1] == 'a')
+		/*
+		 * on MS-DOS compatible filesystems (e.g. messydos) file.doc.vim
+		 * and file.doc are the same file. To guess if this problem is
+		 * present try if file.doc.vix exists. If it does, we set thisfile_sn
+		 * and try file_doc.vim (dots replaced by underscores for this file),
+		 * and try again. If it doesn't we assume that "file.doc.vim" already
+		 * exists.
+		 */
+			if (!(p_sn || thisfile_sn))		/* not tried yet */
 			{
-				free(scriptname);
-				return;
+				scriptname[n - 1] = 'x';
+				r = getperm(scriptname);	/* try "file.vix" */
+				scriptname[n - 1] = 'm';
+				if (r >= 0)					/* it seems to exist */
+				{
+					thisfile_sn = TRUE;
+					free(scriptname);
+					scriptname = makescriptname();	/* '.' replaced by '_' */
+					continue;						/* try again */
+				}
 			}
-			--scriptname[n-1];				/* change last char of the name */
+#endif
+			/* if we get here ".vim" file really exists */
+			emsg(".vim file exists: an edit of this file has not been finished");
 		}
-#ifdef AMIGA
-		if (dos2)
-			autoscriptfd = (FILE *)Open((UBYTE *)scriptname, (long)MODE_NEWFILE);		/* errors are ignored */
-		else
-#endif
-			autoscriptfd = fopen(scriptname,
-#ifdef MSDOS
-												"wb"
-#else
-												"w"
-#endif
-													);		/* errors are ignored */
+
+		if (scriptname[n - 1] == 'a')	/* tried enough names, give up */
+		{
+			free(scriptname);
+			break;
+		}
+		--scriptname[n - 1];				/* change last char of the name */
+	}
+	if (autoscriptfd != NULL)		/* ".vim" file has been created */
+	{
 		script_winsize();			/* always start with a :win command */
+									/* output cursor position if neccessary */
 		if (Curpos.lnum > 1 || Curpos.col > 0)
 		{
 			sprintf(buf, "%ldG0%dl", (long)Curpos.lnum, (int)Curpos.col);
 			Supdatescript(buf);
 		}
-
 	}
+
+#ifdef AMIGA
+	if (dummyfd)		/* file has been created temporarily */
+	{
+		fclose(dummyfd);
+		remove(Filename);
+	}
+#endif
 }
 
 	int
@@ -133,11 +199,17 @@ stopscript()
 		return FALSE;		/* nothing to stop */
 
 #ifdef AMIGA
+# ifndef NO_ARP
 	if (dos2)
+# endif
 		Close((BPTR)autoscriptfd);
+# ifndef NO_ARP
 	else
-#endif
 		fclose(autoscriptfd);
+# endif
+#else
+	fclose(autoscriptfd);
+#endif
 	remove(scriptname);		/* delete the file */
 	autoscriptfd = NULL;
 	free(scriptname);
@@ -163,13 +235,7 @@ openscript(name)
 	{
 		if (scriptin[curscript] != NULL)	/* already reading script */
 			++curscript;
-		if ((scriptin[curscript] = fopen((char *)name,
-#ifdef MSDOS
-													"rb"
-#else
-													"r"
-#endif
-														)) == NULL)
+		if ((scriptin[curscript] = fopen((char *)name, READBIN)) == NULL)
 		{
 			emsg(e_notopen);
 			if (curscript)
@@ -213,11 +279,17 @@ updatescript(c)
 	if (c)
 	{
 #ifdef AMIGA
+# ifndef NO_ARP
 		if (dos2)
+# endif
 			FPutC((BPTR)autoscriptfd, (unsigned long)c);
+# ifndef NO_ARP
 		else
-#endif
 			putc(c, autoscriptfd);
+# endif
+#else
+		putc(c, autoscriptfd);
+#endif
 		++count;
 	}
 	if ((c == 0 || count >= p_uc) && Updated)
@@ -228,20 +300,25 @@ updatescript(c)
 		 * With DOS 2.0x Flush() can be used for that
 		 */
 #ifdef AMIGA
+# ifndef NO_ARP
 		if (dos2)
+# endif
 			Flush((BPTR)autoscriptfd);
+# ifndef NO_ARP
 		else
-#endif
 		{
 			fclose(autoscriptfd);
-			autoscriptfd = fopen(scriptname,
-#ifdef MSDOS
-												"ab"
-#else
-												"a"
-#endif
-													 );
+			autoscriptfd = fopen(scriptname, "a");
 		}
+# endif
+#else 	/* !AMIGA */
+		fclose(autoscriptfd);
+# ifdef MSDOS
+		autoscriptfd = fopen(scriptname, "ab");
+# else
+		autoscriptfd = fopen(scriptname, "a");
+# endif
+#endif
 		count = 0;
 		Updated = 0;
 	}
@@ -332,27 +409,33 @@ makescriptname()
 	return s;
 }
 
-#ifndef MSDOS		/* MSDOS has only one extention, see msdos.c */
 /*
- * add extention to filename - change path/fo.o.h to path/fo.o.h.ext
- *	Space for the new name is allocated.
+ * add extention to filename - change path/fo.o.h to path/fo.o.h.ext or
+ * fo_o_h.ext for MSDOS or when dotfname option reset.
+ *
+ * Assumed that fname is a valid name found in the filesystem we assure that
+ * the return value is a different name and ends in ".ext".
+ * "ext" MUST start with a "." and MUST be at most 4 characters long.
+ * Space for the returned name is allocated, must be freed later.
  */
+
 	char *
 modname(fname, ext)
 	char *fname, *ext;
 {
-	register char	*retval;
+	char			*retval;
 	register char   *s;
 	register char   *ptr;
 	register int	fnamelen, extlen;
-			 char	currentdir[512];
+	char			currentdir[512];
 
 	extlen = strlen(ext);
+
 	/*
 	 * if there is no filename we must get the name of the current directory
 	 * (we need the full path in case :cd is used)
 	 */
-	if (fname == NULL || *fname == NUL)	
+	if (fname == NULL || *fname == NUL)
 	{
 		(void)dirname(currentdir, 511);
 		strcat(currentdir, PATHSEPSTR);
@@ -367,31 +450,63 @@ modname(fname, ext)
 			strcpy(retval, currentdir);
 		else
 			strcpy(retval, fname);
-		for (ptr = s = retval; *s; s++)
-		{
-#ifdef UNIX
-			if (*s == '/')		/* UNIX has ':' inside file names */
-#else
-			if (*s == ':' || *s == PATHSEP)
-#endif
-				ptr = s + 1;
-		}
-		if (s - ptr > 30 - extlen)			/* if filename too long, truncate it */
-			s = ptr + 30 - extlen;
 		/*
-		 * Replace all '.' by '_' in filename. This avoids problems with
-		 * MSDOS-like filesystems.
+		 * search backwards until we hit a '\' or ':' replacing all '.' by '_'
+		 * for MSDOS or when dotfname option reset.
+		 * Then truncate what is after the '\' or ':' to 8 characters for MSDOS
+		 * and 26 characters for AMIGA and UNIX.
 		 */
-		for ( ; *ptr; ++ptr)
-			if (*ptr == '.')
-				*ptr = '_';
+		for (ptr = retval + fnamelen; ptr >= retval; ptr--)
+		{
+#ifndef MSDOS
+			if (p_sn || thisfile_sn)
+#endif
+				if (*ptr == '.')	/* replace '.' by '_' */
+					*ptr = '_';
+#ifdef UNIX
+			if (*ptr == '/')		/* UNIX has ':' inside file names */
+#else
+			if (*ptr == ':' || *ptr == PATHSEP)
+#endif
+				break;
+		}
+		ptr++;
+
+		/* the filename has at most BASENAMELEN characters. */
+		if (strlen(ptr) > BASENAMELEN)
+			ptr[BASENAMELEN] = '\0';
+#ifndef MSDOS
+		if ((p_sn || thisfile_sn) && strlen(ptr) > 8)
+			ptr[8] = '\0';
+#endif
+		s = ptr + strlen(ptr);
+
+		/*
+		 * Append the extention.
+		 * ext must start with '.' and cannot exceed 3 more characters.
+		 */
 		strcpy(s, ext);
 		if (fname != NULL && strcmp(fname, retval) == 0)
-			*s = '_';				/* filename already ended in ext */
+		{
+			/* after modification still the same name? */
+			/* we search for a character that can be replaced by '_' */
+			while (--s >= ptr)
+			{
+				if (*s != '_')
+				{
+					*s = '_';
+					break;
+				}
+			}
+			if (s < ptr)
+			{
+				/* fname was "________.<ext>" how tricky! */
+				*ptr = 'v';
+			}
+		}
 	}
 	return retval;
 }
-#endif	/* MSDOS */
 
 /*
  * the new window size must be used in scripts;

@@ -1,0 +1,23 @@
+#execute this script while standing in the 'vim' directory
+cd macros
+uudecode center.uue
+rm center.uue
+cd maze
+uudecode maze.mac.uue
+rm maze.mac.uue
+cd ../hanoi
+uudecode hanoi.mac.uue
+rm hanoi.mac.uue
+cd ../../src
+uudecode digraph.c.uue
+uudecode tcconfig.tc.uue
+uudecode termlib.fix.uue
+rm digraph.c.uue tcconfig.tc.uue termlib.fix.uue
+cd ../doc
+uudecode vim.hlp.uue
+uudecode digraph.doc.uue
+uudecode vim.man.uue
+uudecode vim132.uue
+rm vim.hlp.uue digraph.doc.uue vim.man.uue vim132.uue
+cat reference.doc1 reference.doc2 reference.doc3 >reference.doc
+rm reference.doc1 reference.doc2 reference.doc3

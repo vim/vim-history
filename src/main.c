@@ -58,8 +58,10 @@ main(argc, argv)
 	char		   *term = NULL;	/* specified terminal name */
 	char		   *fname = NULL;	/* file name from command line */
 	char		   *command = NULL;	/* command from + option */
+	char		   *tagname = NULL;	/* tag from -t option */
 	int 			c;
 	int				doqf = 0;
+	int				i;
 
 #ifdef DEBUG
 # ifdef MSDOS
@@ -114,13 +116,7 @@ main(argc, argv)
 			switch (c)
 			{
 			case 's':
-				if ((scriptin[0] = fopen(argv[0],
-#ifdef MSDOS
-													"rb"
-#else
-													"r"
-#endif
-														)) == NULL)
+				if ((scriptin[0] = fopen(argv[0], READBIN)) == NULL)
 				{
 						fprintf(stderr, "cannot open %s for reading\n", argv[0]);
 						mch_windexit(2);
@@ -196,9 +192,7 @@ main(argc, argv)
 				if (argc > 3)
 					usage(1);
 				++argv;
-				stuffReadbuff(":ta ");
-				stuffReadbuff(argv[0]);
-				stuffReadbuff("\n");
+				tagname = argv[0];
 				break;
 
 			default:
@@ -244,6 +238,11 @@ getfiles:
 	init_yank();				/* init yank buffers */
 	termcapinit(term);			/* get terminal capabilities */
 
+#ifdef USE_LOCALE
+#include <locale.h>
+	setlocale(LC_ALL, "");		/* for ctype() and the like */
+#endif
+
 #ifdef MSDOS /* default mapping for some often used keys */
 	domap(0, "#1 :help\r", 0);				/* F1 is help key */
 	domap(0, "\236R i", 0);					/* INSERT is 'i' */
@@ -257,10 +256,10 @@ getfiles:
 	domap(0, "\236Q \006", 0);				/* PageDown is '^F' */
 	domap(0, "\236v G", 0);					/* CTRL-PageDown is 'G' */
 			/* insert mode */
-	domap(0, "\236S \177", INSERT);			/* DELETE is <DEL> */
-	domap(0, "\236G \017H", INSERT);		/* HOME is '^OH' */
+	domap(0, "\236S \017x", INSERT);			/* DELETE is '^Ox' */
+	domap(0, "\236G \017""0", INSERT);		/* HOME is '^O0' */
 	domap(0, "\236w \017H", INSERT);		/* CTRL-HOME is '^OH' */
-	domap(0, "\236O \017L", INSERT);		/* END is '^OL' */
+	domap(0, "\236O \017$", INSERT);		/* END is '^O$' */
 	domap(0, "\236u \017L", INSERT);		/* CTRL-END is '^OL' */
 	domap(0, "\236I \017\002", INSERT);		/* PageUp is '^O^B' */
 	domap(0, "\236\204 \017\061G", INSERT);	/* CTRL-PageUp is '^O1G' */
@@ -269,39 +268,101 @@ getfiles:
 #endif
 
 /*
- * Read the VIMINIT or EXINIT environment variable
- *		(commands are to be separated with '|').
- * If there is none, read initialization commands from "s:.vimrc" or "s:.exrc".
+ * get system wide defaults (for unix)
  */
-	if ((initstr = getenv("VIMINIT")) != NULL || (initstr = getenv("EXINIT")) != NULL)
-		docmdline((u_char *)initstr);
-	else if (dosource(SYSVIMRC_FILE))
-		dosource(SYSEXRC_FILE);
+#ifdef DEFVIMRC_FILE
+	dosource(DEFVIMRC_FILE);
+#endif
 
 /*
- * read initialization commands from ".vimrc" or ".exrc" in current directory
+ * Try to read initialization commands from the following places:
+ * - environment variable VIMINIT
+ * - file s:.vimrc ($HOME/.vimrc for Unix)
+ * - environment variable EXINIT
+ * - file s:.exrc ($HOME/.exrc for Unix)
+ * The first that exists is used, the rest is ignored.
  */
-	if (dosource(VIMRC_FILE))
+	if ((initstr = (char *)vimgetenv("VIMINIT")) != NULL)
+		docmdline((u_char *)initstr);
+	else if (dosource(SYSVIMRC_FILE))
+	{
+		if ((initstr = (char *)vimgetenv("EXINIT")) != NULL)
+			docmdline((u_char *)initstr);
+		else
+			dosource(SYSEXRC_FILE);
+	}
+
+/*
+ * Read initialization commands from ".vimrc" or ".exrc" in current directory.
+ * Because of security reasons we disallow shell and write commands now,
+ * except for unix if the file is owned by the user.
+ * Only do this if VIMRC_FILE is not the same as SYSVIMRC_FILE or DEFVIMRC_FILE.
+ */
+#ifdef UNIX
+	{
+		struct stat s;
+
+		stat(VIMRC_FILE, &s);
+		if (s.st_uid != getuid())	/* ".vimrc" file is not owned by user */
+			secure = 1;
+	}
+#else
+	secure = 1;
+#endif
+
+	i = 1;
+	if (fullpathcmp(SYSVIMRC_FILE, VIMRC_FILE)
+#ifdef DEFVIMRC_FILE
+			&& fullpathcmp(DEFVIMRC_FILE, VIMRC_FILE)
+#endif
+			)
+		i = dosource(VIMRC_FILE);
+#ifdef UNIX
+	if (i)
+	{
+		struct stat s;
+
+		stat(EXRC_FILE, &s);
+		if (s.st_uid != getuid())	/* ".exrc" file is not owned by user */
+			secure = 1;
+		else
+			secure = 0;
+	}
+#endif
+	if (i && fullpathcmp(SYSEXRC_FILE, EXRC_FILE))
 		dosource(EXRC_FILE);
 
 /*
- * Call settmode here, so the T_KS may be defined by termcapinit and
- * redifined in .exrc.
+ * Call settmode and starttermcap here, so the T_KS and T_TS may be defined
+ * by termcapinit and redifined in .exrc.
  */
 	settmode(1);
+	starttermcap();
+
+	if (secure == 2)		/* done something that is not allowed */
+		wait_return(TRUE);		/* must be called after settmode(1) */
+	secure = 0;
 
 #ifdef AMIGA
 	fname_case(fname);		/* set correct case for file name */
 #endif
 	setfname(fname);
 	maketitle();
+
+/*
+ * start putting things on the screen
+ */
+	starting = FALSE;
+	screenalloc();
+	screenclear();
 	if (Filename != NULL)
 		readfile(Filename, (linenr_t)0, TRUE);
 	else
 		msg("Empty Buffer");
 
 	setpcmark();
-	startscript();				/* start writing to auto script file */
+	if (!tagname)
+		startscript();				/* start writing to auto script file */
 
 	if (recoverymode && !scriptin[curscript])	/* first do script file, then recover */
 		openrecover();
@@ -321,6 +382,16 @@ getfiles:
 
 	if (command)
 		docmdline((u_char *)command);
+	/*
+	 * put the :ta command in the stuff buffer here, so that it will not
+	 * be erased by an emsg().
+	 */
+	if (tagname)
+	{
+		stuffReadbuff(":ta ");
+		stuffReadbuff(tagname);
+		stuffReadbuff("\n");
+	}
 
 	RedrawingDisabled = FALSE;
 	updateScreen(NOT_VALID);

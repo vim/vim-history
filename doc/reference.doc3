@@ -1,0 +1,1034 @@
+
+:![!]{cmd} [!][arg]	Execute {cmd} with the shell. The optional bangs are
+			replaced with the previously given command. The 
+			optional [arg] is appended. See also the 'shell' and 
+			'shelltype' option.
+
+:ve[rsion]		Print the version number of the editor.
+
+K			Run a program to lookup the identifier under the 
+			cursor. The name of the program is given with the 
+			'keywordprg' (kp) option. The identifier is formed 
+			of letters, numbers and the underscore. The 
+			identifier under or right of the cursor is used. The 
+			same can be done with the command
+				":!{program} {identifier}". 
+			{not in Vi}
+
+
+	15. Repeating commands
+
+15.1 Single repeats
+
+.			Repeat last change with count replaced by [cnt].
+
+Simple changes can be repeated with the '.' command. Without a count, the 
+count of the last change is used. If you enter a count, it will replace the 
+last one. If the last change included a specification of a numbered 
+register, the register number will be incremented. See the section on undo 
+and redo for an example how to use this.
+
+
+15.2 Multiple repeats
+
+:[range]g[lobal]/{pattern}/[cmd]
+			Execute the Ex command [cmd] (default ":p") on the
+			lines within [range] where {pattern} matches.
+
+:[range]g[lobal]!/{pattern}/[cmd]
+			Execute the Ex command [cmd] (default ":p") on the
+			lines within [range] where {pattern} does NOT match.
+
+:[range]v[global]/{pattern}/[cmd]
+			Same as :g!.
+
+The global commands work by first scanning through the [range] lines and
+marking each line where a match occurs. In a second scan the [cmd] is 
+executed for each marked line with its line number prepended. If a line is 
+changed or deleted its mark disappears. The default for [range] is the whole 
+buffer (1,$). Use "CTRL-C" to interrupt the command.
+
+To repeat a non-Ex command, you will have to put the command in a file and 
+use "source!". For example:
+	:g/pat/so! scriptfile
+Make sure that the scriptfile ends with a whole command, otherwise Vim will 
+wait for you to type the rest of the command for each match. The screen will 
+not have been updated, so you don't know what you are doing.
+	
+The undo/redo command will undo/redo the whole global command at once.
+
+
+15.3 Complex repeats
+
+v<a-zA-Z>		Record typed characters into named register <a-zA-Z>
+			(uppercase to append).
+
+v			Stops recording. {Vi: no recording}
+
+@<a-z>			Execute the contents of named register <a-z> [cnt]
+			times.
+
+@@			Repeat the previous @<a-z> [cnt] times.
+
+:@<a-z>			Execute the contents of named register <a-z> as an 
+			Ex command. {Vi: only in some versions}
+
+:@@			Repeat the previous :@<a-z>. {Vi: only in some 
+			versions}
+
+:so[urce] {file}	Read Ex commands from {file}.
+
+:so[urce]! {file}	Read VIM commands from {file}. {not in Vi}
+
+All commands and command sequences can be repeated by putting them in a named
+register and then executing it. There are two ways to get the commands in the
+register:
+- Use the record command. You type the commands once, and while they are 
+  being executed they are stored in a register. Easy, because you can see 
+  what you are doing. If you make a mistake, 'put' the register into the 
+  file, edit the command sequence, and then delete it into the register 
+  again. You can continue recording by appending to the register (use an 
+  uppercase letter).
+- Delete or yank the command sequence into the register.
+
+Often used command sequences can be put under a function key with the ':map'
+command.
+
+An alternative is to put the commands in a file, and execute them with the
+':source!' command. Useful for long command sequences. Can be combined with 
+the ':map' command to put complicated commands under a funcion key.
+
+The ':source' command reads Ex commands from a file line by line. You will 
+have to type any needed keyboard input. The ':source!' command reads from a 
+script file character by character, interpreting each character as if you 
+typed it.
+
+Example: When you give the ":!ls" command you are asked to "hit return to
+continue". If you ':source' a file with the line "!ls" in it, you will have 
+to type the return yourself. But if you ':source!' a file with the line 
+":!ls" in it, the next characters from that file are read until a <CR> is 
+found. You will not have to type <CR> yourself, unless ":!ls" was the last 
+line in the file.
+
+It is possible to put ':source[!]' commands in the script file, so you can 
+make a top-down hierachy of script files. The ':source' command can be 
+nested as deep as the number of files that can be opened at one time (about 
+15). The ':source!' command can be nested up to 15 levels deep.
+
+In script files terminal-dependent key codes are represented by 
+terminal-independent single character codes:
+
+	code	hex	meaning
+
+	128	0x80	up-arrow
+	129	0x81	down-arrow
+	130	0x82	left-arrow
+	131	0x83	right-arrow
+	132	0x84	shift up-arrow
+	133	0x85	shift down-arrow
+	134	0x86	shift left-arrow
+	135	0x87	shift right-arrow
+
+	136	0x88	function key 1
+	137	0x89	function key 2
+	138	0x8a	function key 3
+	139	0x8b	function key 4
+	140	0x8c	function key 5
+	141	0x8d	function key 6
+	142	0x8e	function key 7
+	143	0x8f	function key 8
+	144	0x90	function key 9
+	145	0x91	function key 10
+
+	146	0x92	shifted function key 1
+	147	0x93	shifted function key 2
+	148	0x94	shifted function key 3
+	149	0x95	shifted function key 4
+	150	0x96	shifted function key 5
+	151	0x97	shifted function key 6
+	152	0x98	shifted function key 7
+	153	0x99	shifted function key 8
+	154	0x9a	shifted function key 9
+	155	0x9b	shifted function key 10
+
+	156	0x9c	help key
+	157	0x9d	undo key
+	158	0x9e	CTRL-@
+
+
+	16. Undo and redo
+
+<UNDO>		or
+u			Undo [cnt] changes. {Vi: only one level}
+
+:u[ndo]			Undo one change. {Vi: only one level}
+
+CTRL-R			Redo [cnt] changes which were undone with 'u'. {Vi: 
+			redraw screen}
+
+U			Undo all latest changes on one line. {Vi: while not
+			moved off of it}
+
+The last changes are remembered. You can go back in time with the 'u' 
+command. You can then go forward again with the 'CTRL-R' command. If you 
+make a new change after the 'u' command, the 'CTRL-R' will not be possible 
+anymore. The number of changes that are remembered is set with the 
+'undolevels' option. If it is zero, the old fashioned Vi undo is present: 
+one level of undo and undo undoes itself.
+
+The 'U' command is treated by undo/redo just like any other command. Thus a 
+'u' command undos a 'U' command and a 'CTRL-R' command redoes it again. When 
+mixing 'U', 'u' and 'CTRL-R' you will notice that the 'U' command will 
+restore the situation of a line to before the previous 'U' command. This may 
+be confusing. Try it out to get used to it.
+
+The numbered registers can also be used for undoing deletes. Each time you 
+delete text, it is put into register "1. The contents of register "1 is 
+shifted to "2, etc. The contents of register "9 is lost. You can now get 
+back the most recent deleted text with the put command: '"1P'. You can get 
+back the text of three deletes ago with '"3P'.
+
+If you want to get back more than one part of deleted text, you can use a
+special feature of the repeat command '.'. It will increase the number of the
+register used. So if you first do '"1P', the following '.' will result in a
+'"2P'. Repeating this will result in all numbered registers to be inserted.
+
+Example:	If you deleted text with 'dd....' it can be restored with
+		'"1P....'.
+
+If you don't know in which register the deleted text is, you can use the
+:display command. An alternative is to try the first register with '"1P', and
+if it is not what you want do 'u.'. This will result in the contents of the
+first put to be removed, and a repeat of the put command for the second
+register. Repeat the 'u.' until you got what you want.
+
+
+	17. Key mapping
+
+:map {lhs} {rhs}	Map the key sequence {lhs} to {rhs} in normal mode.
+
+:map! {lhs} {rhs}	Map the key sequence {lhs} to {rhs} in insert and
+			command line mode.
+
+:noremap {lhs} {rhs}	Map the key sequence {lhs} to {rhs} in normal mode. 
+			Disallow remapping of {rhs}. {not in Vi}
+
+:noremap! {lhs} {rhs}	Map the key sequence {lhs} to {rhs} in insert and
+			command line mode. Disallow remapping of {rhs}. {not 
+			in Vi}
+
+:unm[ap] {lhs}		Remove the mapping of {lhs} for normal mode.
+
+:unm[ap]! {lhs}		Remove the mapping of {lhs} for insert and command
+			line mode.
+
+:map			List all key mappings for normal mode.
+
+:map!			List all key mappings for insert and command line
+			mode.
+
+:map {lhs}		List the key mappings for the key sequences starting
+			with {lhs} in normal mode.
+
+:map! {lhs}		List the key mappings for the key sequences starting
+			with {lhs} in insert and command line mode.
+
+These commands are used to map a key or key sequence to a string of 
+characters. You can use this to put command sequences under function keys, 
+translate one key into another, etc. See the "Options" chapter below for how 
+to save and restore the current mapping.
+
+Everything from the first non-blank after {lhs} upto the end of the line (or 
+<|>) is considered to be part of {rhs}. This allows the {rhs} to end with a 
+space.
+
+To include a space in {lhs} precede it with a CTRL-V (type two CTRL-Vs for 
+each space). If you want a {rhs} that starts with a space, precede {rhs} 
+with a single CTRL-V (You have to type CTRL-V two times). You can create an 
+empty {rhs} by typing nothing after the two CTRL-Vs.
+
+It is not possible to put a comment after this command, because the <"> 
+character is considered to be part of the {rhs}. To put a <|> in {rhs} 
+escape it with a backslash or a CTRL-V (to get one CTRL-V you have to type 
+it twice).
+
+To avoid mapping of the characters you type in insert or comand line mode, 
+type a CTRL-V first.
+
+Note that the second character (argument) of the commands @zZtTfF[]rm'`"v is
+not mapped. This was probably done to be able to use all the named registers
+and marks, even when the command with the same name has been mapped.
+
+Some examples (given as you type them; e.g. the "^V" is CTRL-V which you 
+type, but will not show up on the screen):
+
+	:map g /foo^V^Mcwbar^V^[	(replace next "foo" by "bar")
+	:map! qq quadrillion questions
+
+Vim will compare what you type with the start of a mapped sequence. If there 
+is an incomplete match, it will get more characters until there either is a 
+complete match or until there is no match at all. Example: If you map! "qq", 
+the first <q> will not appear on the screen until you type another 
+character. This is because Vim cannot know if the next character will be a 
+<q> or not. If you set the 'timeout' option (which is the default) Vim will 
+only wait for one second. After that it assumes that the "q" is to be 
+interpreted as such. If type slowly, or your system is slow, reset the 
+'timeout' option. Then you might want to set the 'ttimeout' option. See the 
+"Options" chapter.
+
+If you want to exchange the meaning of two keys you should use the :noremap 
+command. For example:
+	:noremap k j
+	:noremap j k
+This will exchange the cursor up and down commands. With the normal :map 
+command, when the 'remap' option is set, mapping takes place until the text 
+is found not to be a part of a {lhs}. For example, if you use:
+	:map x y
+	:map y x
+Vim will replace x by y, and then y by x, etc. When this has happened 1000 
+times, Vim will give an error message.
+
+See the file "index" for keys that are not used and thus can be mapped 
+without loosing any builtin function.
+
+
+	18. Recovery after a crash.
+
+You have spent several hours typing in that text that has to be finished
+next morning, and then disaster strikes: Your computer crashes.
+
+			DON'T PANIC!
+
+
+18.1 The autoscript file
+
+Vim keeps track of everything you type. Using the original file you started
+from and the autoscript file you can recover (almost) all of your work.
+
+The name of the autoscript file is the same as the file you are editing, 
+with the extension ".vim". On MSDOS machines and when the 'shortname' option 
+is set, any '.' is replaced by '_'. If this file already exists (e.g. when 
+you are recovering from a crash) a warning is given and another extention is 
+used, ".vil", ".vik", etc. An existing file will never be overwritten. The 
+file is deleted as soon as the edited text is successfully written to disk.
+
+Technical: The replacement of '.' by '_' is done to avoid problems with 
+	   MSDOS compatible filesystems (e.g. crossdos, multidos). If Vim is 
+	   able to detect that the file is on an MSDOS-like filesystem, a 
+	   flag is set that has the same effect as the 'shortname' option. 
+	   This flag is reset when you start editing another file.
+
+	   If the ".vim" filename already exists, the last character is 
+	   decremented until there is no file with that name or ".via" is 
+	   reached. In the last case, no autoscript file is created.
+
+By setting the 'directory' option you can place the file in another 
+place than where the edited file is. It is adviced to put the autoscript 
+files on a "scratch" partition. This reduces the risc of damaging the
+partition where the edited file is. You can also use a recoverable ram disk, 
+but there is no 100% guarantee that this works. Putting it in RAM: makes no 
+sense, you will loose it in a crash. Put a command resembling the following 
+one in s:.exrc:
+	:set dir=dh2:tmp/
+This is also very handy when editing files on floppy.
+
+The autoscript file is updated after typing 100 characters or when you have 
+not typed anything for two seconds. This only happens if the buffer was 
+changed, not when you only moved around. The reason why it is not kept up to 
+date all the time is that this would slow down normal work too much. You can 
+change the 100 character count with the 'updatecount' option. You can set 
+the time with the 'updatetime' option. The time is given in milliseconds.
+
+If the writing to the autoscript file is not wanted, it can be switched off 
+by setting the 'updatecount' option to 0. The same is done when starting Vim 
+with the "-n" or "-v" option. Writing can be switched back on by setting the 
+'updatecount' option to non-zero. If you have changed the buffer when 
+switching on, the autoscript file will be incomplete and recovery will 
+probably fail. To avoid this write out the buffer with ":w" before switching 
+on the autoscript file.
+
+
+18.2 Recovery
+
+In most cases recovery is quite easy: start Vim on the same file you were
+editing when the crash happened, with the "-r" option added. Vim will start
+editing the file using the key strokes in the autoscript file. Be sure that 
+the recovery was successful before overwriting the original file or deleting 
+the autoscript file.
+
+Example:	vim -r reference.doc
+
+Important: The .exrc file must be the same as with the original edit session,
+because some options have effect on the editing. Also the window size must be
+exactly the same, because the cursor movement resulting from some commands
+depends on the window size (e.g. CTRL-F). To help you with that the window
+resizing events are written into the script file with ":winsize" commands. 
+The result of this command is that Vim will resize the used part of the 
+window, but the window itself will remain the same size. The commands will 
+be executed correctly, but the window contents may look disturbed. During 
+normal editing you should not use the ":winsize" command. Use the window 
+resizing gadget in the lower right corner of the window. Do not resize the 
+window during recovery!
+
+In some cases the "-r" option does not result in successful recovery. This
+happens when you executed a command that cannot be reproduced anymore. For
+example: Reading a file which does not exist anymore. In such a case the
+succeeding commands probably only make things worse. To solve this you will 
+have to edit the autoscript file and remove the commands that cause errors. 
+If this becomes difficult try splitting up the autoscript file in small 
+pieces. {Vi: recovers in another way that has a larger change to succeed but 
+causes more overhead}
+
+If the autoscript file is not ending in ".vim" but in something else, you can
+use the script reading option "-s {filename}". This will have (almost) the 
+same effect as the "-r" option. This is also handy when the script file is 
+in another directory than expected.
+
+You can give the "-r" option in combination with the "-s scriptin" option. 
+The scriptin file will be read first, then the autoscript file for recovery.
+
+The difference between using the "-r" option and the "-s" option is that with
+the "-r" option the name of the script file is made from the file name, and 
+the last modification date is checked to see if the autoscript file is 
+newer. This prevents the wrong autoscript file to be used for a recovery.
+
+
+	19. Options
+
+Vi has a number of internal variables and switches which can be set to 
+achieve special effects. These options come in three forms, those that are 
+switches, which toggle from off to on and back, those that require a numeric 
+value, and those that require an alphanumeric string value.
+
+
+19.1 Setting options
+
+:se[t]			Show all modified options. {Vi: non-default options}
+
+:se[t] all		Show all but terminal options.
+
+:se[t] termcap		Show all terminal options.
+
+:se[t] {option}		Set toggle option on, show value of string or number
+			option.
+
+:se[t] no{option}	Set toggle option off.
+
+:se[t] inv{option}	Invert toggle option. {not in Vi}
+
+:se[t] {option}={value} Set string or number option to {value}.
+
+:se[t] {option}?	Show value of {option}.
+
+The arguments to ":set" may be repeated. For example:
+":set ai nosi sw=3 ts=3". If you make an error in one of the arguments an 
+error message will be given and the text upto the next space will be 
+skipped. Thus following arguments will be processed.
+
+Besides changing options with the ":set" command, there are four 
+alternatives to set options automatically for one or more files. The first 
+and second ones are used for all files. The third is used to set options for 
+the files in one directory. The last is used to set options for a single 
+file. The first three are done when you start VIM, in the given order. The 
+last is done whenever you start editing a new file.
+
+1. The environment variable VIMINIT is read for an Ex command. You can set
+   VIMINIT to something like "set noai sw=3" to set options.
+2. Only if there is no VIMINIT environment variable, the file 
+   "s:.vimrc" is read for Ex commands. You can include set commands in this 
+   file. (see below for how to automatically create a file with set commands).
+3. If VIMINIT is not found and "s:.vimrc" does not exist, EXINIT is used, 
+   in the same way as VIMINIT.
+4. If VIMINIT is not found, "s:.vimrc" does not exist and EXINIT is not found, 
+   the file "s:.exrc" is read for Ex commands.
+5. The file ".vimrc" in the current directory is read for Ex commands. You 
+   can include set commands in this file. If this file is not found the file 
+   ".exrc" is tried.
+6. If you start editing a new file, a number of lines at the beginning and
+   end of the file are checked for the string "vi:" or "ex:". The text after 
+   it is considered to be the arguments for a ":set" command, separated with 
+   colons. For example: "vi:noai:sw=3".
+   How many lines are checked depends on the 'modelines' option.
+   The string "vi:" or "ex:" must be preceded with a blank or begin at the 
+   start of a line. This minimizes the chance that a normal word like "lex:" 
+   is catched. Note that all of the rest of the line is used, thus a line 
+   like: "/* vi:ts=4: */" will give an error message for the trailing "*/".
+
+
+19.2 Saving settings
+
+:mkexrc [file]		Write current key mappings and changed options to 
+			[file] (default ".exrc"), unless it already exists. 
+			{not in Vi}
+
+:mkexrc! [file]		Always write current key mappings and changed 
+			options to [file] (default ".exrc"). {not in Vi}
+
+:mkvimrc[!] [file]	Same as :mkexrc, but default is ".vimrc". {not in 
+			Vi}
+
+These commands will write ":map" and ":set" commands to a file, in such a 
+way that when these commands are executed, the current key mappings and 
+options will be set again. A common method is to use a default ".exrc" file 
+by first reading one in with ":source s:.exrc.Cprogs", change the settings 
+and then save them in the current directory with ":mkexrc!".
+
+
+19.3 Options summary
+
+In the list below all the options are mentioned with their full name and some
+with an abbreviation between brackets. Both forms may be used.
+
+autoindent (ai)		toggle	(default off)
+	Copy indent from current line when starting a new line (typing <CR> 
+	in insert mode or when using the 'o' or 'O' command). If you do not 
+	type anything on the new line except <BS> and then type <ESC> or 
+	<CR>, the indent is deleted again. When autoindent is set, 
+	formatting (with the 'V' command or when you reach 'textwidth' in 
+	insert mode) uses the indent of the first line.
+
+autowrite (aw)		toggle	(default off)
+	Write the contents of the file, if it has been modified, on each
+	:next, :rewind, :previous, :stop, :tag, :!, CTRL-] and CTRL-^ 
+	command.
+
+backspace (bs)		number	(default 0)
+	Influences the working of <BS>, <DEL>, CTRL-W and CTRL-U in insert 
+	mode. If set to 0 Vi compatible backspacing is used. When 1 allow 
+	backspacing over newlines. When larger than 1 allow backspacing over 
+	the start of insert. In the last case CTRL-W and CTRL-U stop once at 
+	the start of insert. {not in Vi}
+
+backup (bk)		toggle	(default on)
+	Make a backup before overwriting a file. Leave it around after the 
+	file has been succesfully written. If you do not want to keep the 
+	backup file, but you do want a backup while it is being written, use 
+	the 'writebackup' option. If you do not want a backup file at all 
+	reset both options. {not in Vi}
+
+backupdir (bdir)	string	(default "~/")
+	For Unix systems only. Name of the directory where the backup file 
+	is put when it cannot be created in the same directory as the 
+	original file. {not in Vi}
+
+columns			number	(default 80)
+	Number of columns in the display. Normally this is set by the 
+	terminal initialization and does not have to be set by hand. {not in 
+	Vi}
+
+compatible (cp)		toggle	(default off)
+	At the moment this option is set, several other options will be set 
+	or reset to make Vim vi-compatible. Switching this option off has no 
+	effect. {not in Vi}
+
+	option		new value	effect
+
+	backspace	0		normal backspace
+	backup		off		no backup file
+	digraph		off		no digraphs
+	expandtab	off		tabs not expanded to spaces
+	history		0		no commandline history
+	insertmode	off		do not start in insert mode
+	joinspaces	on		insert 2 spaces after period
+	modelines	0		no modelines
+	repdel		on		in replace mode del deletes a char
+	ruler		off		no ruler
+	scrolljump	0		no jump scroll
+	shiftround	off		indent not rounded to shiftwidth
+	showcommand	off		command characters not shown
+	showmode	off		current mode not shown
+	smartindent	off		no smart indentation
+	textwidth	9999		maximum text width
+	tildeop		off		tilde is not an operator
+	ttimeout	off		no terminal timeout
+	undolevels	0		no multilevel undo
+	updatecount	0		no autoscript file
+	writebackup	off		no backup file written
+	yankendofline	off		do not Yank to end of line
+
+digraph (dg)		toggle	(default off)
+	Enable the entering of digraphs in input mode with {char1} <BS> 
+	{char2}. Only works if Vim was compiled with digraphs enabled. {not 
+	in Vi}
+
+directory (dir)		string	(default "")
+	Directory for the autoscript file. Empty means in same directory as 
+	the edited file. The name must end in an ':' or '/'. {Vi: directory 
+	to put temp file in, defaults to "/tmp"}
+
+equalprg (ep)		string	(default "indent")
+	External program to use for '=' command. {not in Vi}
+
+errorbells (eb)		toggle	(default off)
+	Ring the bell for error messages. Does not work on the Amiga, you 
+	always get a screen flash.
+
+errorfile (ef)		string	(default "AztecC.Err")
+	Name of the error file for the QuickFix option (see 5.5). {not in 
+	Vi}
+
+expandtab (et)		toggle	(default off)
+	In insert mode: Use the appropriate number of spaces to insert a 
+	<TAB>. {not in Vi}
+
+graphic (gr)		toggle	(default off, MSDOS: on)
+	When off characters between '~' and 0xa0 are displayed as "~?", 
+	"~@", "~A", etc.. When on the characters are sent to the display 
+	directly. This will allow for graphic characters to be shown on some 
+	terminals (e.g. MSDOS console) and mess up the display on others 
+	(e.g. Amiga).
+
+helpfile (hf)		string	(default "vim:vim.hlp")
+	Name of the help file. It may start with an environment variable. 
+	For example: "$VIM/doc/vim.hlp". {not in Vi}
+
+history (hi)		number	(default 20)
+	Number of command lines that are remembered. {not in Vi}
+
+ignorecase (ic)		toggle	(default off)
+	Ignore case in search patterns.
+
+insertmode (im)		toggle	(default off)
+	Start the edit of a file in insert mode. {not in Vi}
+
+joinspaces (js)		toggle	(default on)
+	Insert two spaces after a period with a join command. {not in Vi}
+
+keywordprg (kp)		string	(default "ref")
+	Program to use for the 'K' command. {not in Vi}
+
+lines			number	(default 25)
+	Number of lines in the display. Normally you don't need to set this. 
+	That is done automatically by the terminal initialization code.
+
+list			toggle	(default off)
+	List mode: Show tabs as CTRL-I, show end of line with $. Useful to 
+	see the difference between tabs and spaces and for trailing blanks.
+
+magic			toggle	(default on)
+	Changes the special characters that can be used in search patterns. 
+	See section "Pattern searches".
+
+modelines (ml)		number	(default 5)
+	The number of lines that is checked for set commands. See 19.1. {not 
+	in Vi}
+
+number (nu)		toggle	(default off)
+	Print the line number in front of each line.
+
+paragraphs (para)	string	(default "IPLPPPQPP LIpplpipbp")
+	Specifies the nroff macros that separate paragraphs. These are pairs 
+	of two letters.
+
+readonly (ro)		toggle	(default off)
+	If set, writes fail unless you use an !. Affects anything that writes
+	to protect you from accidental overwriting a file. Default on when 
+	vim is started in view mode ("vim -v").
+
+remap			toggle	(default on)
+	Allows for :map command to work recursively. If you do not want this 
+	for a single entry, use the :noremap command.
+
+repdel (rd)		toggle	(default on)
+	When on, <DEL>, <BS>, CTRL-W and CTRL-U in replace mode delete 
+	characters. When off, only the cursor is moved, and no characters 
+	are deleted. {not in Vi}
+
+report			number	(default 2)
+	Threshold for reporting number of lines changed.
+
+ruler (ru)		toggle	(default off)
+	Show the line number and column of the cursor in the status line, 
+	separated by a comma. {not in Vi}
+
+scroll			number	(default 12)
+	Number of lines to scroll with CTRL-U and CTRL-D commands.
+
+scrolljump		number	(default 1)
+	Minimal number of lines to scroll when the cursor gets off the 
+	screen (e.g. with 'j'). Not used for scroll commands (e.g. CTRL-E, 
+	CTRL-D). Useful if your terminal scrolls very slow. {not in Vi}
+
+sections		string	(default "SHNHH HUnhsh")
+	Specifies the nroff macros that separate sections. These are pairs of
+	two letters.
+
+shell (sh)		string	(default "sh", MSDOS: "command")
+	Name of the shell to use for ! and :! commands. See also the
+	'shelltype' option. It is allowed to give an argument to the 
+	command, e.g. "csh -f". If you type this in the command line you 
+	will have to put a backslash in front of the space.
+
+shelltype (st)		number	(default 0)
+	On the Amiga this option influences the way how the commands work 
+	which use a shell.
+	0 and 1: always use the shell
+	2 and 3: use the shell only to filter lines
+	4 and 5: use shell only for ':sh' command
+	When not using the shell, the command is executed directly.
+
+	0 and 2: use 'shell -c cmd' to start external commands
+	1 and 3: use 'shell cmd' to start external commands
+
+shiftround (sr)		toggle	(default off)
+	Round indent to multiple of shiftwidth. Applies to > and < commands 
+	and to CTRL-T and CTRL-D in insert mode. {not in Vi}
+
+shiftwidth (sw)		number	(default 8)
+	Number of spaces to use for (auto)indent.
+
+shortname (sn)		toggle	(default off)
+	Filenames can be 8 characters plus one extention of 3 characters. 
+	Multiple dots in file names are not allowed. When this option is on, 
+	dots in filenames are replaced by underscores when adding an 
+	extention (".bak" or ".vim"). This option is not available for 
+	MSDOS, because then it would always be on. This option is useful 
+	when editing files on an MSDOS compatible filesystem, e.g. messydos 
+	or crossdos. {not in Vi}
+
+showcmd (sc)		toggle	(default on)
+	show command in status line. Set this option off if your terminal 
+	is slow. {not in Vi}
+
+showmatch (sm)		toggle	(default off)
+	When a bracket is inserted, briefly jump to the matching one.
+
+showmode (mo)		toggle	(default on)
+	If in insert or replace mode, put a message on the last line.
+
+smartindent (si)	toggle	(default off)
+	Do smart autoindenting in insert mode for C programs. Insert or 
+	delete indents at appropriate places. {not in Vi}
+
+suffixes (su)		string	(default ".bak.o.h.info.vim")
+	Files with these suffixes are ignored when multiple files match a
+	wildcard.
+
+tabstop (ts)		number	(default 8)
+	Number of spaces that a <TAB> in the file counts for.
+
+taglength (tl)		number	(default 0)
+	If non-zero, tags are significant upto this number of characters.
+
+tags			string	(default "tags")
+	Filenames for the tag command, separated by spaces. {Vi: default is 
+	"tags /usr/lib/tags"}
+
+term			string	(default "amiga")
+	Name of the terminal. Used for choosing the terminal control 
+	characters.
+
+terse			toggle	(default on)
+	Ignored. {Vi: shorten the error messages}
+
+tildeop (to)		toggle	(default off)
+	The tilde command <~> behaves like an operator. {not in Vi}
+
+timeout			toggle (default on)
+ttimeout		toggle (default off)
+	These two options together determine the behaviour when part of a 
+	mapped key sequence or keyboard code has been received:
+
+	timeout		ttimeout	action
+	off		off		no time out
+	on		on or off	time out on :mappings and key codes
+	off		on		time out on key codes
+
+	If there is no time out, Vim will wait until either the complete 
+	mapping or key sequence has been received, or it is clear that there 
+	is no mapping or key sequence for the received characters. For 
+	example: if you have mapped "vl" and Vim has received "v", the next 
+	character is needed to see if the "v" is followed by an "l". With a 
+	time out Vim will wait for about 1 second for the next character to 
+	arrive. After that the already received characters are interpreted
+	as single characters.
+	On slow terminals or very busy systems time out may cause 
+	malfunctioning cursor keys. If both options are off, Vim waits 
+	forever after an entered <ESC> if there are key codes that start 
+	with <ESC>. You will have to type <ESC> twice. If you do not have 
+	problems with key codes, but would like to have :mapped key 
+	sequences not time out in 1 second, set the ttimeout option and 
+	reset the timeout option. {the ttimeout option is not in Vi}
+
+textwidth		number	(default 9999)
+	Maximum width of text that is being inserted. A longer line will be
+	broken after white space to get this width. {not in Vi}
+
+undolevels (ul)		number	(default 100)
+	Maximum number of changes that can be undone (set to 0 for Vi 
+	compatibility). {not in Vi}
+
+updatecount (uc)	number	(default 100)
+	After this many characters typed the auto script file will be written
+	to disk. When zero the auto script will not be written to at all (see
+	chapter on recovery). {not in Vi}
+
+updatetime (ut)		number	(default 2000)
+	If this many milliseconds nothing is typed the auto script file will 
+	be written to disk (see chapter on recovery). {not in Vi}
+
+visualbell (vb)		toggle	(default off)
+	Use (sort of) visual bell for AUX device. {not in Vi}
+
+wrapmargin (wm)		number	(default 0)
+	Number of characters from the right window border where wrapping
+	starts. In Vim this is implemented by setting textwidth to the window
+	width minus the wrapmargin. {Vi: works differently and less useful}
+
+wrapscan (ws)		toggle	(default on)
+	Searches wrap around the end of the file.
+
+writeany (wa)		toggle	(default off)
+	Do not check for allowance when writing files.
+
+writebackup (wb)	toggle	(default on)
+	Make a backup before overwriting a file. The backup is removed after 
+	the file was succesfully written, unless the 'backup' option is also 
+	on. {not in Vi}
+
+yankendofline (ye)	toggle	(default off)
+	The Y command yanks from the cursor until the end of the line instead
+	of whole lines. {not in Vi}
+
+
+	20. Terminal information
+
+Vim uses information about the terminal you are using to fill the screen and 
+recognize what keys you hit. If this information is not correct the screen 
+may be messed up or keys may not be recognized. The actions which have to be 
+performed on the screen are accomplished by outputting a string of 
+characters. Special keys produce a string of characters. These strings are 
+stored in the terminal options, see section 20.2.
+
+
+20.1 startup
+
+When Vim is started a default terminal type is assumed. For the Amiga this 
+is a standard CLI window, for MSDOS the pc terminal, for Unix an ansi 
+terminal. A few other terminal types are always available. Use the command 
+"set term=xxx" to find out which ones are builtin.
+
+You can give the terminal name with the '-T' command line option. If it is 
+not given Vim will try to get the name from the TERM environment variable.
+
+On Unix the termcap file is used. On Amiga and MSDOS this is only available 
+if Vim was compiled with TERMCAP defined. If the termcap code is included 
+Vim will try to get the strings for the terminal you are using from the 
+termcap file.
+
+For normal editing the terminal will be put into "raw" mode. The strings 
+defined with "t_ts" and "t_ks" will be sent to the terminal. Normally this 
+puts the terminal in a state where the termcap codes are valid and activates 
+the cursor and function keys. When Vim exits the terminal will be put back 
+into the mode it was before Vim started. The strings defined with "t_te" and 
+"t_ke" will be sent to the terminal. On the Amiga with commands that print 
+multiple lines at the bottom of the screen or execute an external command 
+(e.g. "!!", ":files") the terminal will be put into normal mode for a 
+moment. This means that you can stop the output to the screen by hitting a 
+printing key. Output resumes when you hit <BS>.
+
+Some termcap entries are wrong in the sense that after sending t_ks the 
+cursor keys send codes different from the codes defined in the termcap. To 
+avoid this you can set t_ks (and t_ke) to empty strings. This must be done 
+during initialization (see 3.4), otherwise its too late.
+
+Some termcap entries assume that the highest bit is always reset. For 
+example: The cursor-up entry for the amiga could be ":ku=\EA:". But the 
+Amiga really sends "\233A". This works fine if the highest bit is reset, 
+e.g. when using an Amiga over a serial line. If the cursor keys don't work, 
+try the entry ":ku=\233A:".
+
+Some termcap entries have the entry ":ku=\E[A:". But the Amiga really sends 
+"\233A". On output "\E[" and "\233" are often equivalent, on input they 
+aren't. You will have to change the termcap entry, or change the key code 
+with the :set command to fix this.
+
+Many cursor key codes start with an <ESC>. Vim must find out if this a 
+single hit of the <ESC> key or the start of a cursor key sequence. It waits 
+for a next character to arrive. If it does not arrive within one second a 
+single <ESC> is assumed. On very slow systems this may fail, causing cursor 
+keys not to work sometimes. If you discover this problem reset the 'timeout' 
+option. Vim will wait for the next character to arrive after an <ESC>. If 
+you want to enter a single <ESC> you must type it twice.
+
+On the Amiga the regcognition of window resizing is activated only when the 
+terminal name is "amiga" or "builtin_amiga".
+
+
+20.2 terminal options
+
+It is always possible to change individual strings by setting the 
+appropriate option. For example:
+
+	:set t_el=^V^[[K	(CTRL-V, ESC, [, K)
+
+The options are listed below along with the used termcap code. Two of them 
+are required: Cursor positioning and clear screen. The others are used to 
+minimize the screen updating overhead.
+
+You can view the current codes with the command
+
+	:set termcap
+
+
+	option	termcap		meaning
+
+OUTPUT CODES
+	t_name	(name)	name of current terminal entry
+	t_el	ce	clear to end of line
+	t_il	al	add new blank line
+	t_cil	AL	add number of blank lines
+	t_dl	dl	delete line
+	t_cdl	DL	delete number of lines
+	t_ed	cl	clear screen (required!)
+	t_ci	ci	highlight color
+	t_cv	cv	normal color
+	t_tp	me	normal mode
+	t_ti	mr	reverse mode
+	t_cm	cm	cursor motion (required!)
+	t_sr	sr	scroll reverse (backward)
+	t_cri	RI	cursor number of chars right
+	t_vb	vb	visual bell
+	t_ks	ks	put terminal in "keypad transmit" mode
+	t_ke	ke	out of "keypad transmit" mode
+	t_ts	ti	put terminal in "termcap" mode
+	t_te	te	out of "termcap" mode
+
+KEY CODES
+	t_ku	ku	arrow up
+	t_kd	kd	arrow down
+	t_kr	kr	arrow right
+	t_kl	kl	arrow left
+	t_sku	(none)	shift arrow up
+	t_skd	(none)	shift arrow down
+	t_skr	%i	shift arrow right
+	t_skl	#4	shift arrow left
+	t_f1	k1	function key 1
+	t_f2	k2	function key 2
+	t_f3	k3	function key 3
+	t_f4	k4	function key 4
+	t_f5	k5	function key 5
+	t_f6	k6	function key 6
+	t_f7	k7	function key 7
+	t_f8	k8	function key 8
+	t_f9	k9	function key 9
+	t_f10	k;	function key 10
+	t_sf1	F1	function key 11 or shifted function key 1
+	t_sf2	F2	function key 12 or shifted function key 2
+	t_sf3	F3	function key 13 or shifted function key 3
+	t_sf4	F4	function key 14 or shifted function key 4
+	t_sf5	F5	function key 15 or shifted function key 5
+	t_sf6	F6	function key 16 or shifted function key 6
+	t_sf7	F7	function key 17 or shifted function key 7
+	t_sf8	F8	function key 18 or shifted function key 8
+	t_sf9	F9	function key 19 or shifted function key 9
+	t_sf10	FA	function key 20 or shifted function key 10
+	t_help	%1	help key
+	t_undo	&8	undo key
+
+
+20.3 Window size
+
+If you are running Vim on an Amiga and the terminal name is "amiga" or 
+"builtin_amiga", the amiga-specific window resizing will be enabled. On Unix 
+systems three methods are tried to get the window size:
+
+- the environment variables "LINES" and "COLUMNS"
+- an ioctl call (TIOCGSIZE or TIOCGWINSZ, depends on your system)
+- from the termcap entries "li" and "co"
+
+If everything fails a default size of 24 lines and 80 columns is assumed. If 
+a window-resize signal is received the size will be set again. If the window 
+size is wrong you can use the 'lines' and 'columns' options to set the 
+correct values.
+
+
+20.4 slow and fast terminals
+
+If you have a fast terminal you may like to set the 'ruler' option. The 
+cursor position is shown in the status line.
+
+If you have a slow terminal you may want to reset the 'showcommand' option. 
+The command characters will not be shown in the status line. If the terminal 
+scrolls very slow, set the 'scrolljump' to 5 or so. If the cursor is moved 
+off the screen (e.g. with 'j') Vim will scroll 5 lines at a time.
+
+If the characters from the terminal are arriving with more than 1 second 
+between them you might want to set the 'timeout' and/or 'ttimeout' option. 
+See the "Options" chapter.
+
+
+	21. Differences from Vi and Ex
+
+This chapter only lists what has not been mentioned in previous chapters.
+
+21.1 Missing commands
+
+A large number of the "Ex" commands (the commands that start with a colon) 
+are included. However, there is no Ex mode. 
+
+These commands are in Vi, but not in Vim.
+
+Q			{Vi: go to Ex mode}
+
+:a[ppend]		{Vi: append text}
+:c[hange]		{Vi: replace lines}
+:i[nsert]		{Vi: insert text}
+:l[ist]			{Vi: list lines}
+:nu[mber]		{Vi: print specified lines with their line number}
+:o[pen]			{Vi: start editing in open mode}
+:pres[erve]		{Vi: emergency exit}
+:rec[over]		{Vi: recover a file after a crash or :preserve}
+:una[bbreviate]		{Vi: remove from abbreviation list}
+:vi[sual]		{Vi: switch from Ex or open to visual mode}
+:z			{Vi: print some lines}
+:~			{Vi: do a substitute on the previous regular
+			expression}
+
+
+21.2 Missing options
+
+These options are in the unix Vi, but not in VIM.
+
+autoprint (ap)		toggle	(default on)
+beautify (bf)		toggle	(default off)
+edcompatible		toggle	(default off)
+hardtabs (ht)		number	(default 8)
+	number of spaces that a <TAB> moves on the display
+lisp			toggle	(default off)
+mesg			toggle	(default on)
+open			toggle	(default on)
+optimize (op)		toggle	(default on)
+prompt			toggle	(default on)
+redraw			toggle	(default off)
+slowopen (slow)		toggle	(default off)
+warn			toggle	(default on)
+	warn when the file has changed before a ! command
+window			number	(default 24)
+w300			number	(default 24)
+w1200			number	(default 24)
+w9600			number	(default 24)
+
+
+	22. Credits
+
+Parts of this manual comes from several Vi manuals, written by:
+	W.N. Joy
+	Alan P.W. Hewett
+	Mark Horton
+
+The editor VIM is based on Stevie and includes (ideas from) other software,
+worked on by:
+	Tim Thompson		Stevie
+	Tony Andrews		Stevie
+	G. R. (Fred) Walter	Stevie
+	Henry Spencer		regular expressions
+	Steve Kirkendall	Elvis
+	Juergen Weigert		Lattice version, AUX improvements, UNIX and 
+				MSDOS ports
+	Olaf Seibert		DICE version and regexp improvements
+	Peter da Silva		termlib
+
+I must thank all the people that sent me bug reports and suggestions. 
+They keep Vim alive!
+vi:tw=76

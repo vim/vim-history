@@ -37,7 +37,6 @@ typedef struct filelist
 
 static void		addfile __ARGS((FileList *, char *));
 static int		pstrcmp __ARGS((char **, char **));
-static int		no_wildcard __ARGS((char *));
 static void		strlowcpy __ARGS((char *, char *));
 static int		expandpath __ARGS((FileList *, char *, int, int, int));
 #endif
@@ -97,7 +96,7 @@ flushbuf()
 {
 	if (bpos != 0)
 	{
-		write(0, (char *)outbuf, (long)bpos);
+		write(1, (char *)outbuf, (long)bpos);
 		bpos = 0;
 	}
 }
@@ -157,9 +156,11 @@ outstr(s)
 #define POLL_SPEED 10	/* milliseconds between polls */
 
 /*
- * simulate WaitForChar() by slowly polling with bioskey(1).
- * this even works through the serial line after a 'ctty com1' (jw).
- * kbhit() is not used, because then CTRL-C will be catched by DOS (mool).
+ * Simulate WaitForChar() by slowly polling with bioskey(1).
+ *
+ * If Vim should work over the serial line after a 'ctty com1' we must use
+ * kbhit() and getch(). (jw)
+ * Usually kbhit() is not used, because then CTRL-C will be catched by DOS (mool).
  */
 
 	static int
@@ -168,7 +169,11 @@ WaitForChar(msec)
 {
 	do
 	{
+#ifdef USE_KBHIT
+		if (kbhit() || cbrk_pressed)
+#else
 		if (bioskey(1) || cbrk_pressed)
+#endif
 			return 1;
 		delay(POLL_SPEED);
 		msec -= POLL_SPEED;
@@ -192,7 +197,6 @@ GetChars(buf, maxlen, type)
 {
 	int 		len = 0;
 	int 		time = 1000;	/* one second */
-	int 		i;
 	int			c;
 
 /*
@@ -228,8 +232,8 @@ GetChars(buf, maxlen, type)
 	}
 
 /*
- * try to read as many characters as there are
- * works for the controlling tty only.
+ * Try to read as many characters as there are.
+ * Works for the controlling tty only.
  */
 	--maxlen;		/* may get two chars at once */
 	/*
@@ -240,6 +244,23 @@ GetChars(buf, maxlen, type)
 	 * implies a key hit.
 	 */
 	cbrk_pressed = FALSE;
+#ifdef USE_KBHIT
+	while ((len == 0 || kbhit()) && len < maxlen)
+	{
+		switch (c = getch())
+		{
+		case 0:
+				*buf++ = K_NUL;
+				break;
+		case 3:
+				cbrk_pressed = TRUE;
+				/*FALLTHROUGH*/
+		default:
+				*buf++ = c;
+		}
+		len++;
+	}
+#else
 	while ((len == 0 || bioskey(1)) && len < maxlen)
 	{
 		c = bioskey(0);			/* get the key */
@@ -249,7 +270,7 @@ GetChars(buf, maxlen, type)
 		{
 			if (c == 0x0300)		/* CTRL-@ is 0x0300, translated into K_ZERO */
 				c = K_ZERO;
-			else		/* extended key code 0xnn00 translated into K_NUl, nn */
+			else		/* extended key code 0xnn00 translated into K_NUL, nn */
 			{
 				c >>= 8;
 				*buf++ = K_NUL;
@@ -260,6 +281,7 @@ GetChars(buf, maxlen, type)
 		*buf++ = c;
 		len++;
 	}
+#endif
 	return len;
 }
 
@@ -270,9 +292,7 @@ textfile(on)
 	int on;
 {
 	/*
-	 * in O_TEXT mode we were surprised by reading a shorter file,
-	 * as the ^M characters magically disappear in the read() system call.
-	 * grrr.
+	 * in O_TEXT mode we read and write files with CR/LF translation.
 	 */
 	_fmode = on ? O_TEXT : O_BINARY;
 }
@@ -284,7 +304,9 @@ textfile(on)
 mch_suspend()
 {
 	outstr("new shell started\n");
+	stoptermcap();
 	call_shell(NULL, 0);
+	starttermcap();
 }
 
 /*
@@ -402,9 +424,9 @@ isdir(name)
 mch_windexit(r)
 	int r;
 {
-	flushbuf();
-
 	settmode(0);
+	stoptermcap();
+	flushbuf();
 	stopscript(); 				/* remove autoscript file */
 	exit(r);
 }
@@ -460,27 +482,27 @@ extern void interrupt CINT_FUNC();
 mch_settmode(raw)
 	int  raw;
 {
-	 static int saved_cbrk;
-	 static void interrupt (*old_cint)();
-	 static void interrupt (*old_cbrk)();
+	static int saved_cbrk;
+	static void interrupt (*old_cint)();
+	static void interrupt (*old_cbrk)();
 
-	 if (raw)
-	 {
-	 	saved_cbrk = getcbrk();			/* save old ctrl-break setting */
-	 	setcbrk(0);						/* do not check for ctrl-break */
-	 	old_cint = getvect(0x24); 		/* save old critical error interrupt */
-	 	setvect(0x24, catch_cint);		/* install our critical error interrupt */
-	 	old_cbrk = getvect(0x1B); 		/* save old ctrl-break interrupt */
-	 	setvect(0x1B, catch_cbrk);		/* install our ctrl-break interrupt */
-	 	ctrlbrk(cbrk_handler);			/* vim's ctrl-break handler */
-	 }
-	 else
-	 {
-	 	setcbrk(saved_cbrk);			/* restore ctrl-break setting */
-	 	setvect(0x24, old_cint);		/* restore critical error interrupt */
-	 	setvect(0x1B, old_cbrk);		/* restore ctrl-break interrupt */
-	 	/* restore ctrl-break handler, how ??? */
-	 }
+	if (raw)
+	{
+		saved_cbrk = getcbrk();			/* save old ctrl-break setting */
+		setcbrk(0);						/* do not check for ctrl-break */
+		old_cint = getvect(0x24); 		/* save old critical error interrupt */
+		setvect(0x24, catch_cint);		/* install our critical error interrupt */
+		old_cbrk = getvect(0x1B); 		/* save old ctrl-break interrupt */
+		setvect(0x1B, catch_cbrk);		/* install our ctrl-break interrupt */
+		ctrlbrk(cbrk_handler);			/* vim's ctrl-break handler */
+	}
+	else
+	{
+		setcbrk(saved_cbrk);			/* restore ctrl-break setting */
+		setvect(0x24, old_cint);		/* restore critical error interrupt */
+		setvect(0x1B, old_cbrk);		/* restore ctrl-break interrupt */
+		/* restore ctrl-break handler, how ??? */
+	}
 }
 
 	int
@@ -558,99 +580,6 @@ breakcheck()
 	}
 }
 
-/*
- * add extention to filename - change path/fo.o to path/fo_o.ext
- *
- * The general case is in script.c, but MS-DOS has a restricted namespace.
- * Assumed that fname is a valid name found in the filesystem we assure that
- * the return value is a different name and ends in ".ext".
- */
-
-	char *
-modname(fname, ext)
-	char *fname, *ext;
-{
-	char			*retval;
-	register char   *s;
-	register char   *ptr;
-	register int	fnamelen, extlen;
-	char			currentdir[512];
-
-	extlen = strlen(ext);
-
-	/*
-	 * if there is no filename we must get the name of the current directory
-	 * (we need the full path in case :cd is used)
-	 */
-	if (fname == NULL || *fname == NUL)
-	{
-		(void)dirname(currentdir, 511);
-		strcat(currentdir, "\\");
-		fnamelen = strlen(currentdir);
-	}
-	else
-		fnamelen = strlen(fname);
-	retval = alloc((unsigned) (fnamelen + extlen + 1));
-	if (retval != NULL)
-	{
-		if (fname == NULL || *fname == NUL)
-			strcpy(retval, currentdir);
-		else
-			strcpy(retval, fname);
-		/*
-		 * search backwards until we hit a '\' or ':' replacing all '.' by '_'
-		 * Then truncate what is after the '\' or ':' to 8 characters and append
-		 * the 3 letter ext seperated with a '.'.
-		 */
-		for (ptr = retval + fnamelen; ptr >= retval; ptr--)
-		{
-			if (*ptr == '.')
-				*ptr = '_';
-			if (*ptr == '\\' || *ptr == ':')
-				break;
-		}
-		ptr++;
-		/* the filename has at most 8 characters. */
-		if (strlen(ptr) > 8)
-			ptr[8] = '\0';
-		s = ptr + strlen(ptr);
-		/* ext must start with '.' and cannot exceed 3 more characters. */
-		strncpy(s, ext, 4);
-		s[4] = '\0';
-		*s = '.';
-		if (fname != NULL && strcmp(fname, retval) == 0)
-		{
-			/* after modification still the same name? */
-			/* if basename has less then 8 characters append '_' */
-			if (s < ptr + 8)
-			{
-				*s++ = '_';
-				strncpy(s, ext, 4);
-				s[4] = '\0';
-				*s = '.';
-			}
-			else
-			{
-				/* we must search for a character that can be replaced by '_' */
-				while (--s >= ptr)
-				{
-					if (*s != '_')
-					{
-						*s = '_';
-						break;
-					}
-				}
-			}
-			if (s < ptr)
-			{
-				/* fname was "________.<ext>" how tricky! */
-				*ptr = 'v';
-			}
-		}
-	}
-	return retval;
-}
-
 #ifdef WILD_CARDS
 #define FL_CHUNK 32
 
@@ -691,20 +620,15 @@ pstrcmp(a, b)
 	return (strcmp(*a, *b));
 }
 
-	static int
-no_wildcard(s)
+	int
+has_wildcard(s)
 	char *s;
 {
 	if (s)
-	{
-		while (*s)
-		{
+		for ( ; *s; ++s)
 			if (*s == '?' || *s == '*')
-				return 0;
-			s++;
-		}
-	}
-	return 1;
+				return 1;
+	return 0;
 }
 
 	static void
@@ -772,7 +696,7 @@ expandpath(fl, path, fonly, donly, notf)
 		if (*s != '.' || (s[1] != '\0' && (s[1] != '.' || s[2] != '\0')))
 		{
 			strcat(buf, path);
-			if (no_wildcard(path))
+			if (!has_wildcard(path))
 				addfile(fl, strsave(buf));
 			else
 				r |= expandpath(fl, buf, fonly, donly, notf);
@@ -803,13 +727,16 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	f.nfiles = 0;
 	for (i = 0; i < num_pat; i++)
 	{
-		if (no_wildcard(pat[i]))
+		if (!has_wildcard(pat[i]))
 			addfile(&f, strsave(pat[i]));
 		else
-			expandpath(&f, pat[i], files_only, 0, list_notfound);
+			r |= expandpath(&f, pat[i], files_only, 0, list_notfound);
 	}
-	*num_file = f.nfiles;
-	*file = f.file;
+	if (r == 0)
+	{
+		*num_file = f.nfiles;
+		*file = f.file;
+	}
 	return r;
 }
 

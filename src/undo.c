@@ -50,6 +50,7 @@
 #include "globals.h"
 #include "proto.h"
 #include "param.h"
+#include "ops.h"		/* for endop and startop */
 
 struct u_entry
 {
@@ -248,6 +249,8 @@ nomem:
 u_undo(count)
 	int count;
 {
+	startop.lnum = 0;				/* unset '[ mark */
+	endop.lnum = 0;				/* unset '] mark */
 	while (count--)
 	{
 		if (u_curhead == NULL)						/* first undo */
@@ -300,7 +303,7 @@ u_undoredo()
 	linenr_t	lnum = 0;
 	linenr_t	newlnum = INVLNUM;
 	long		i;
-	long		count = 0;
+	long		newcount = 0, oldcount = 0;
 	struct u_entry *uep, *nuep;
 	struct u_entry *newlist = NULL;
 
@@ -351,7 +354,7 @@ u_undoredo()
 				}
 				/* delete backwards, it goes faster in some cases */
 				for (lnum = bot - 1, i = oldsize; --i >= 0; --lnum)
-					newarray[i] = delsline(lnum);
+					newarray[i] = delsline(lnum, TRUE);
 			}
 			/* insert the lines in u_array between top and bot */
 			if (newsize)
@@ -360,7 +363,8 @@ u_undoredo()
 					appendline(lnum, uep->ue_array[i]);
 				free_line((char *)uep->ue_array);
 			}
-			count += newsize - oldsize;
+			newcount += newsize;
+			oldcount += oldsize;
 			uep->ue_size = oldsize;
 			uep->ue_array = newarray;
 			uep->ue_bot = lnum + 1;
@@ -375,7 +379,15 @@ u_undoredo()
 
 	u_curhead->uh_entry = newlist;
 
-	msgmore(count);
+	/*
+	 * If we deleted or added lines, report the number of less/more lines.
+	 * Otherwise, report the number of changed lines (this may be incorrect
+	 * in some cases, but it's better than nothing).
+	 */
+	if ((oldcount -= newcount) != 0)
+		msgmore(-oldcount);
+	else if (newcount > p_report)
+		smsg("%ld line%s changed", newcount, plural(newcount));
 
 	if (u_curhead->uh_curpos.lnum == Curpos.lnum)
 		Curpos.col = u_curhead->uh_curpos.col;

@@ -30,10 +30,15 @@
 EXTERN int	p_ai	INIT(= FALSE);		/* auto-indent */
 EXTERN int	p_aw	INIT(= FALSE);		/* auto-write */
 EXTERN long	p_bs	INIT(= 0);			/* backspace over newlines in insert mode */
+#if defined(COMPATIBLE) || defined(NOBACKUP)
+EXTERN int	p_bk	INIT(= FALSE);		/* make backups when writing out files */
+#else
 EXTERN int	p_bk	INIT(= TRUE);		/* make backups when writing out files */
+#endif
 #ifdef UNIX
 EXTERN char *p_bdir	INIT(= BACKUPDIR);	/* directory for backups */
 #endif
+EXTERN int	p_cp	INIT(= FALSE);		/* vi-compatible */
 #ifdef DIGRAPHS
 EXTERN int	p_dg	INIT(= FALSE);		/* enable digraphs */
 #endif /* DIGRAPHS */
@@ -78,9 +83,20 @@ EXTERN char *p_sh 	INIT(= "sh");		/* name of shell to use */
 EXTERN long	p_st	INIT(= 0);			/* type of shell */
 EXTERN int	p_sr	INIT(= FALSE);		/* shift round off (for < and >) */
 EXTERN long	p_sw	INIT(= 8);			/* shiftwidth (for < and >) */
+#ifdef COMPATIBLE
+EXTERN int	p_sc	INIT(= FALSE);		/* show command in status line */
+#else
 EXTERN int	p_sc	INIT(= TRUE);		/* show command in status line */
+#endif
+#ifndef MSDOS
+EXTERN int	p_sn	INIT(= FALSE);		/* short names in file system */
+#endif
 EXTERN int	p_sm	INIT(= FALSE);		/* showmatch */
+#ifdef COMPATIBLE
+EXTERN int	p_mo	INIT(= FALSE);		/* show mode */
+#else
 EXTERN int	p_mo	INIT(= TRUE);		/* show mode */
+#endif
 EXTERN int	p_si	INIT(= FALSE);		/* smart-indent for c programs */
 EXTERN char *p_su	INIT(= ".bak.o.h.info.vim");	/* suffixes for wildcard expansion */
 EXTERN long p_ts	INIT(= 8);			/* tab size in the file */
@@ -93,13 +109,23 @@ EXTERN int	p_tx	INIT(= TRUE);		/* textmode for file I/O */
 EXTERN long p_tw	INIT(= 9999);		/* textwidth */
 EXTERN int	p_to	INIT(= FALSE);		/* tilde is an operator */
 EXTERN int	p_timeout	INIT(= TRUE);	/* mappings entered within one second */
+EXTERN int	p_ttimeout	INIT(= FALSE);	/* key codes entered within one second */
+#ifdef COMPATIBLE
+EXTERN long p_ul	INIT(= 0);			/* number of Undo Levels */
+EXTERN long p_uc	INIT(= 0);			/* update count for auto script file */
+#else
 EXTERN long p_ul	INIT(= 100);		/* number of Undo Levels */
 EXTERN long p_uc	INIT(= 100);		/* update count for auto script file */
+#endif
 EXTERN long p_ut	INIT(= 2000);		/* update time for auto script file */
 EXTERN int	p_vb	INIT(= FALSE);		/* visual bell only (no beep) */
 EXTERN int	p_warn	INIT(= TRUE);		/* warn for changes at shell command */
 EXTERN int	p_ws	INIT(= TRUE);		/* wrap scan */
 EXTERN long p_wm	INIT(= 0);			/* wrapmargin */
 EXTERN int	p_wa	INIT(= FALSE);		/* write any */
+#if defined(COMPATIBLE) || defined(NOBACKUP)
+EXTERN int	p_wb	INIT(= FALSE);		/* write backup files */
+#else
 EXTERN int	p_wb	INIT(= TRUE);		/* write backup files */
+#endif
 EXTERN int	p_ye	INIT(= FALSE);		/* Y yanks to end of line */

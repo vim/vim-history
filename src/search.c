@@ -43,7 +43,6 @@ static int cls __ARGS((void));
  *
  * The actual string matching is done using a heavily modified version of
  * Henry Spencer's regular expression library.
- *
  */
 
 static char 	*search_pattern = NULL;  /* previous search pattern */
@@ -134,7 +133,7 @@ searchit(pos, dir, str, count, end)
 				s = ptr = nr2ptr(lnum);
 				if (dir == FORWARD && i > 0)    /* first line for forward search */
 				{
-					if (want_start || strlen(s) <= i)   /* match not possible */
+					if (want_start || strlen(s) <= (size_t)i)   /* match not possible */
 						continue;
 					s += i;
 				}
@@ -212,13 +211,15 @@ searchit(pos, dir, str, count, end)
  *					 If 'dir' is 0: use previous dir.
  * If 'str' is 0 or 'str' is empty: use previous string.
  *			  If 'reverse' is TRUE: go in reverse of previous dir.
+ *				 If 'echo' is TRUE: echo the search command
  */
 	int
-dosearch(dir, str, reverse, count)
+dosearch(dir, str, reverse, count, echo)
 	int				dir;
 	char		   *str;
 	int				reverse;
 	long			count;
+	int				echo;
 {
 	FPOS			pos;		/* position of the last match */
 	int				dirc;
@@ -270,6 +271,7 @@ dosearch(dir, str, reverse, count)
 		switch (*p)
 		{
 			case 'n':   nosetpm = TRUE; /* do not call setpcmark() */
+						++p;
 						break;
 			case '+':
 			case '-':                   /* got a line offset */
@@ -277,37 +279,47 @@ dosearch(dir, str, reverse, count)
 						break;
 			case 'e':                   /* position cursor at end */
 						lastend = TRUE;
-			case 's':                   /* got a character offset */
+			case 's':                   /* got a character offset from start */
 						++p;
 		}
-		if (*p == '+' || *p == '-')     /* got a line offset */
+		if (*p == '+' || *p == '-')     /* got an offset */
+		{
 			lastoff = atol(p);
+			++p;						/* skip number */
+			while (isdigit(*p))
+				++p;
+		}
+		searchcmdlen = p - str;			/* compute lenght of search command
+														for get_address() */
 	}
 
-	smsg("%c%s", dirc, *str == NUL ? search_pattern : str);
-	if (lastoffline || lastend || lastoff || nosetpm)
+	if (echo)
 	{
-		outchar(dirc);
-		if (nosetpm)
-			outchar('n');
-		else if (lastend)
-			outchar('e');
-		else if (!lastoffline)
-			outchar('s');
-		if (lastoff < 0)
+		smsg("%c%s", dirc, *str == NUL ? search_pattern : str);
+		if (lastoffline || lastend || lastoff || nosetpm)
 		{
-			outchar('-');
-			outnum((int)-lastoff);
+			outchar(dirc);
+			if (nosetpm)
+				outchar('n');
+			else if (lastend)
+				outchar('e');
+			else if (!lastoffline)
+				outchar('s');
+			if (lastoff < 0)
+			{
+				outchar('-');
+				outnum((long)-lastoff);
+			}
+			else if (lastoff > 0 || lastoffline)
+			{
+				outchar('+');
+				outnum((long)lastoff);
+			}
 		}
-		else if (lastoff > 0 || lastoffline)
-		{
-			outchar('+');
-			outnum((int)lastoff);
-		}
-	}
 
-	gotocmdline(FALSE, NUL);
-	flushbuf();
+		gotocmdline(FALSE, NUL);
+		flushbuf();
+	}
 
 	pos = Curpos;
 

@@ -91,7 +91,7 @@
 
 #pragma	amicall(ArpBase, 0x1CE, FindTaskResList())
 #pragma	amicall(ArpBase, 0x1D4, CreateTaskResList())
-#pragma	amicall(ArpBase, 0x1DA, FreeResList())
+#pragma	amicall(ArpBase, 0x1DA, FreeResList(a1))
 #pragma	amicall(ArpBase, 0x1E0, FreeTrackedItem(a1))
 /*	amicall(ArpBase, 0x1E6, GetTracker())	Stores the ID in the tracker */
 

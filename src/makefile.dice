@@ -5,6 +5,9 @@
 #>>>>> choose options:
 ### -DDIGRAPHS		digraph support (at the cost of 1.6 Kbyte code)
 ### -DWILD_CARDS	wildcard expansion code
+### -DNO_ARP		do not use arp.library, DOS 2.0 required
+### -DCOMPATIBLE	start in vi-compatible mode
+### -DNOBACKUP		default is no backup file
 ### -DDEBUG		output a lot of debugging garbage
 ### -DTERMCAP		include termcap file support
 ### -DNO_BUILTIN_TCAPS	do not include builtin termcap entries

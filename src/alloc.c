@@ -50,7 +50,7 @@ lalloc(size, message)
 {
 	register char   *p;			/* pointer to new storage space */
 
-	if ((p = malloc(size)) != NULL)
+	if ((p = (char *)malloc(size)) != NULL)
 	{
 #ifdef AMIGA
 		if (AvailMem((long)MEMF_CHIP) < PANIC_FACTOR_CHIP)
@@ -135,3 +135,32 @@ mkstr(c)
 
 	return s;
 }
+
+#ifdef NO_FREE_NULL
+#undef free
+/*
+ * replacement for free() that cannot handle NULL pointers
+ */
+	void
+nofreeNULL(x)
+	void *x;
+{
+	if (x != NULL)
+		free(x);
+}
+#endif
+
+#ifdef BSD
+	char *
+bsdmemset(ptr, c, size)
+	char	*ptr;
+	int		c;
+	long	size;
+{
+	register char *p = ptr;
+
+	while (size-- > 0)
+		*p++ = c;
+	return ptr;
+}
+#endif

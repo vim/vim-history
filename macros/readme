@@ -1,0 +1,7 @@
+The macros in these directories can be used to test Vim for vi compatibility.
+They have been written for vi to show its unlimited possibilities.
+
+HANOI are macros that solve the tower of hanoi problem.
+MAZE  are macros that solve a maze (amazing!).
+
+They are unmodified.

@@ -1,9 +1,8 @@
 /*
  * debug.h -- my debug header for just any program.
  * use:
- * place the statement OPENDEBUG; inside main.
- * nothing will happen, unless you compile the source with
- * -DDEBUG="/tmp/programdebug"
+ * place the statement OPENDEBUG("/tmp/programdebug"); inside main.
+ * Nothing will happen, unless you compile the source with -DDEBUG.
  * 
  * jw. 13.4.91.
  */
@@ -28,17 +27,5 @@
 #	define debug1(x,a)
 #	define debug2(x,a,b)
 #	define debug3(x,a,b,c)
-#	define OPENDEBUG
-#endif
-
-#undef NOASSERT
-
-#ifndef NOASSERT
-# if defined(__STDC__)
-#  define ASSERT(lousy_cpp) {if (!(lousy_cpp)) {debug2("ASSERT("#lousy_cpp")ion failed file %s line %d\n", __FILE__, __LINE__);abort();}}
-# else
-#  define ASSERT(lousy_cpp) {if (!(lousy_cpp)) {debug2("ASSERT(lousy_cpp)ion failed file %s line %d\n", __FILE__, __LINE__);abort();}}
-# endif
-#else
-# define ASSERT(lousy_cpp) {;}
+#	define OPENDEBUG(file)
 #endif

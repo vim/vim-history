@@ -21,6 +21,8 @@ extern int ioctl(int, int, ...);
 extern int unlink(char *);
 
 extern char *getenv(char *);
+extern int getuid(void);
+extern int getgid(void);
 
 #ifdef _NFILE /* stdio.h */
 extern int _filbuf(FILE *);

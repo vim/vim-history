@@ -1,7 +1,8 @@
 /* screen.c */
 void updateline __PARMS((void));
 void updateScreen __PARMS((int type));
-void prt_line __PARMS((char *s));
+void comp_Botline __PARMS((void));
+int prt_line __PARMS((char *s));
 void screenalloc __PARMS((void));
 void screenclear __PARMS((void));
 void cursupdate __PARMS((void));

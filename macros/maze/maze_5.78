@@ -1,0 +1,17 @@
+._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._
+| ._| . . ._| | |_._._. . ._|_._._._._. ._|_. ._|_._. ._| . ._|_. | . ._._. |
+| ._|_| |_. | | | | ._._|_._|_._. . |_. | | | ._._| |_._._| | ._. ._| . . |_|
+|_._._._. | ._|_. ._._._. | | ._. |_._. . | ._._| |_. | ._._._. |_. | |_|_| |
+| | . |_._| . ._._._| ._._. ._._| | | |_| . | |_. . ._|_| ._._. |_._|_| . | |
+|_._|_._._._|_._._._|_|_._._._|_._|_._._._|_._._._|_._._._|_._._._._._._|_._|
+
+See Vim solve a maze!
+
+   type ":so maze<DOT>mac<RETURN>" to load the macros
+   		(replace <DOT> by a real dot; can't type it here because the
+		macros use the last dot in the file as the goal in the maze)
+   type "g" to start
+
+to interrupt type "<CTRL-C>"
+     to quit type ":q!<RETURN>"
+

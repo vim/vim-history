@@ -37,8 +37,13 @@
 #  include <proto/exec.h>
 #endif
 
-#include <libraries/arpbase.h>
-#if defined(LATTICE) && !defined(SASC)
+#ifndef NO_ARP
+#include <libraries/arpbase.h>		/* for arp.library */
+#endif
+#include <dos/dostags.h>			/* for 2.0 functions */
+#include <dos/dosasl.h>
+
+#if defined(LATTICE) && !defined(SASC) && !defined(NO_ARP)
 # include <libraries/arp_pragmas.h>
 #endif
 
@@ -61,17 +66,30 @@ static BPTR				raw_out = (BPTR)NULL;
 static int				close_win = FALSE;	/* set if Vim opened the window */
 
 struct IntuitionBase	*IntuitionBase = NULL;
+#ifndef NO_ARP
 struct ArpBase			*ArpBase = NULL;
+#endif
 
 static struct Window	*wb_window;
 static char				*oldwindowtitle = NULL;
 static int				quickfix = FALSE;
 
+#ifndef NO_ARP
 int						dos2 = FALSE;		/* Amiga DOS 2.0x or higher */
+#endif
 int						size_set = FALSE;	/* set to TRUE if window size was set */
 
-static char				win_resize_on[]  = "\033[12{";
-static char				win_resize_off[] = "\033[12}";
+	void
+win_resize_on()
+{
+	outstrn("\033[12{");
+}
+
+	void
+win_resize_off()
+{
+	outstrn("\033[12}");
+}
 
 /*
  * the number of calls to Write is reduced by using the buffer "outbuf"
@@ -174,7 +192,9 @@ void
 mch_suspend()
 {
 	outstr("new shell started\n");
+	stoptermcap();
 	call_shell(NULL, 0);
+	starttermcap();
 }
 
 #define DOS_LIBRARY     ((UBYTE *) "dos.library")
@@ -183,22 +203,12 @@ mch_suspend()
 mch_windinit()
 {
 	static char		intlibname[] = "intuition.library";
-	struct Library	*DosBase;
 
 #ifdef AZTEC_C
 	Enable_Abort = 0;			/* disallow vim to be aborted */
 #endif
 	Columns = 80;
 	Rows = 24;
-
-/*
- * check if we are running under DOS 2.0x or higher
- */
-    if (DosBase = OpenLibrary(DOS_LIBRARY, 37L))
-    {
-		CloseLibrary(DosBase);
-		dos2 = TRUE;
-    }
 
 	/*
 	 * Set input and output channels, unless we have opened our own window
@@ -209,8 +219,6 @@ mch_windinit()
 		raw_out = Output();
 	}
 
-	if (term_console)
-		outstr(win_resize_on); 			/* window resize events activated */
 	flushbuf();
 
 	wb_window = NULL;
@@ -254,11 +262,31 @@ check_win(argc, argv)
 	char			*av;
 	char			*device = NULL;
 	int				exitval = 4;
+	struct Library	*DosBase;
 
-	if (!(ArpBase = (struct ArpBase *) OpenLibrary((UBYTE *)ArpName, ArpVersion)))
+/*
+ * check if we are running under DOS 2.0x or higher
+ */
+    if (DosBase = OpenLibrary(DOS_LIBRARY, 37L))
+    {
+		CloseLibrary(DosBase);
+#ifndef NO_ARP
+		dos2 = TRUE;
+#endif
+    }
+	else			/* without arp functions we NEED 2.0 */
 	{
-		fprintf(stderr, "Need %s version %ld\n", ArpName, ArpVersion);
+#ifdef NO_ARP
+		fprintf(stderr, "Need Amigados version 2.04 or later\n");
 		exit(3);
+#else
+					/* need arp functions for dos 1.x */
+		if (!(ArpBase = (struct ArpBase *) OpenLibrary((UBYTE *)ArpName, ArpVersion)))
+		{
+			fprintf(stderr, "Need %s version %ld\n", ArpName, ArpVersion);
+			exit(3);
+		}
+#endif
 	}
 
 /*
@@ -347,7 +375,14 @@ check_win(argc, argv)
 			argp = &(((struct WBStartup *)argv)->sm_ArgList[i]);
 			if (argp->wa_Lock)
 				lock2name(argp->wa_Lock, buf2, (long)(BUF2SIZE - 1));
-			TackOn(buf2, argp->wa_Name);
+#ifndef NO_ARP
+			if (dos2)		/* use 2.0 function */
+#endif
+				AddPart((UBYTE *)buf2, (UBYTE *)argp->wa_Name, (long)(BUF2SIZE - 1));
+#ifndef NO_ARP
+			else			/* use arp function */
+				TackOn(buf2, argp->wa_Name);
+#endif
 			av = buf2;
 		}
 		else
@@ -380,8 +415,20 @@ check_win(argc, argv)
 		else if (device == NULL)
 			continue;
 		sprintf(buf2, "newcli <nil: >nil: %s from %s", device, buf1);
-		if (Execute((UBYTE *)buf2, nilfh, nilfh))
-			break;
+#ifndef NO_ARP
+		if (dos2)
+		{
+#endif
+			if (!SystemTags((UBYTE *)buf2, SYS_UserShell, TRUE, TAG_DONE))
+				break;
+#ifndef NO_ARP
+		}
+		else
+		{
+			if (Execute((UBYTE *)buf2, nilfh, nilfh))
+				break;
+		}
+#endif
 	}
 	if (i == 3)		/* all three failed */
 	{
@@ -392,7 +439,10 @@ check_win(argc, argv)
 	exitval = 0;	/* The Execute succeeded: exit this program */
 
 exit:
-	CloseLibrary((struct Library *) ArpBase);
+#ifndef NO_ARP
+	if (ArpBase)
+		CloseLibrary((struct Library *) ArpBase);
+#endif
 	exit(exitval);
 }
 
@@ -518,10 +568,14 @@ lock2name(lock, buf, len)
 	char	*buf;
 	long	len;
 {
-	if (dos2)
+#ifndef NO_ARP
+	if (dos2)				/* use 2.0 function */
+#endif
 		return (int)NameFromLock(lock, (UBYTE *)buf, len);
-	else
-		return (int)PathName(lock, buf, (long)(len/32));		/* call arp function */
+#ifndef NO_ARP
+	else				/* use arp function */
+		return (int)PathName(lock, buf, (long)(len/32));
+#endif
 }
 
 /*
@@ -542,32 +596,6 @@ getperm(name)
 	}
 	return retval;
 }
-
-#ifdef DEBUG
-/*
- * check for write lock
- */
-	long
-writelock(name)
-	char		*name;
-{
-	BPTR			lock;
-
-	lock = Lock(name, (long)ACCESS_READ);
-	if (lock)
-	{
-		UnLock(lock);
-		lock = Lock(name, (long)ACCESS_WRITE);
-		if (lock)
-		{
-			UnLock(lock);
-			return TRUE;		/* can write-lock */
-		}
-		return FALSE;			/* can read-lock but not write-lock */
-	}
-	return TRUE;				/* file does not exist */
-}
-#endif
 
 /*
  * set file permission for 'name' to 'perm'
@@ -605,11 +633,16 @@ isdir(name)
 mch_windexit(r)
 	int 			r;
 {
+	if (raw_in)						/* put terminal in 'normal' mode */
+	{
+		settmode(0);
+		stoptermcap();
+	}
 	if (raw_out)
 	{
 		if (term_console)
 		{
-			outstr(win_resize_off);		/* window resize events de-activated */
+			win_resize_off();		/* window resize events de-activated */
 			if (size_set)
 				outstr("\233t\233u");		/* reset window size (CSI t CSI u) */
 		}
@@ -618,11 +651,11 @@ mch_windexit(r)
 
 	if (wb_window != NULL)			/* disable window title */
 		SetWindowTitles(wb_window, (UBYTE *)oldwindowtitle, (UBYTE *)-1L);
-	if (raw_in)
-		settmode(0);
 	stopscript();					/* remove autoscript file */
+#ifndef NO_ARP
 	if (ArpBase)
 		CloseLibrary((struct Library *) ArpBase);
+#endif
 	if (close_win)
 		Close(raw_in);
 	if (r)
@@ -744,10 +777,10 @@ mch_set_winsize()
 	{
 		size_set = TRUE;
 		outchar(CSI);
-		outnum((int)Rows);
+		outnum((long)Rows);
 		outchar('t');
 		outchar(CSI);
-		outnum((int)Columns);
+		outnum((long)Columns);
 		outchar('u');
 		flushbuf();
 	}
@@ -884,18 +917,21 @@ set_keymap(name)
 
 	static long
 dos_packet(pid, action, arg)
-	struct MsgPort *pid;		/* process indentifier ... (handlers message
-								 * port ) */
-	long			action, 	/* packet type ... (what you want handler to
-								 * do )   */
-					arg;		/* single argument */
+	struct MsgPort *pid;	/* process indentifier ... (handlers message port) */
+	long			action, /* packet type ... (what you want handler to do)   */
+					arg;	/* single argument */
 {
-	struct MsgPort *replyport;
-	struct StandardPacket *packet;
+# ifndef NO_ARP
+	struct MsgPort			*replyport;
+	struct StandardPacket	*packet;
+	long					res1;
 
-	long			res1;
+	if (dos2)
+# endif
+		return DoPkt(pid, action, arg, 0L, 0L, 0L, 0L);	/* use 2.0 function */
+# ifndef NO_ARP
 
-	replyport = (struct MsgPort *) CreatePort(NULL, 0);
+	replyport = (struct MsgPort *) CreatePort(NULL, 0);	/* use arp function */
 	if (!replyport)
 		return (0);
 
@@ -923,6 +959,7 @@ dos_packet(pid, action, arg)
 	DeletePort(replyport);
 
 	return (res1);
+# endif
 }
 #endif
 
@@ -938,6 +975,8 @@ call_shell(cmd, filter)
 	int x;
 #ifndef LATTICE
 	int	use_execute;
+	char *shellcmd = NULL;
+	char *shellarg;
 #endif
 	int	retval = 0;
 
@@ -949,18 +988,40 @@ call_shell(cmd, filter)
 	}
 
 	if (term_console)
-		outstr(win_resize_off); 	/* window resize events de-activated */
+		win_resize_off(); 	/* window resize events de-activated */
 	flushbuf();
 
 	settmode(0); 				/* set to cooked mode */
 	mydir = Lock((UBYTE *)"", (long)ACCESS_READ);	/* remember current directory */
 
-#ifdef LATTICE		/* not tested yet */
+#ifdef LATTICE		/* not tested very much */
 	if (cmd == NULL)
-		x = Execute(p_sh, raw_in, raw_out);
+	{
+#ifndef NO_ARP
+		if (dos2)
+#endif
+			x = SystemTags(p_sh, SYS_UserShell, TRUE, TAG_DONE);
+#ifndef NO_ARP
+		else
+			x = Execute(p_sh, raw_in, raw_out);
+#endif
+	}
 	else
-		x = Execute(cmd, 0L, raw_out);
-	if (!x)
+	{
+#ifndef NO_ARP
+		if (dos2)
+#endif
+			x = SystemTags(cmd, SYS_UserShell, TRUE, TAG_DONE);
+#ifndef NO_ARP
+		else
+			x = Execute(cmd, 0L, raw_out);
+#endif
+	}
+#ifdef NO_ARP
+	if (x < 0)
+#else
+	if ((dos2 && x < 0) || (!dos2 && !x))
+#endif
 	{
 		if (cmd == NULL)
 			smsg("Cannot execute shell %s", p_sh);
@@ -969,7 +1030,11 @@ call_shell(cmd, filter)
 		outchar('\n');
 		retval = 1;
 	}
-	else
+#ifdef NO_ARP
+	else if (x)
+#else
+	else if (!dos2 || x)
+#endif
 	{
 		if (x = IoErr())
 		{
@@ -983,30 +1048,77 @@ call_shell(cmd, filter)
 		use_execute = 1;
 	else
 		use_execute = 0;
+	if (!use_execute)
+	{
+		/*
+		 * separate shell name from argument
+		 */
+		shellcmd = strsave(p_sh);
+		if (shellcmd == NULL)		/* out of memory, use Execute */
+			use_execute = 1;
+		else
+		{
+			shellarg = shellcmd;
+			skiptospace(&shellarg);
+			*shellarg = NUL;
+			skipspace(&shellarg);
+		}
+	}
 	if (cmd == NULL)
 	{
-		use_execute = 0;
-		x = fexecl(p_sh, p_sh, NULL);
+		if (use_execute)
+		{
+#ifndef NO_ARP
+			if (dos2)
+#endif
+				x = SystemTags((UBYTE *)p_sh, SYS_UserShell, TRUE, TAG_DONE);
+#ifndef NO_ARP
+			else
+				x = !Execute((UBYTE *)p_sh, raw_in, raw_out);
+#endif
+		}
+		else
+			x = fexecl(shellcmd, shellcmd, shellarg, NULL);
 	}
 	else if (use_execute)
-		x = !Execute((UBYTE *)cmd, 0L, raw_out);
+	{
+#ifndef NO_ARP
+		if (dos2)
+#endif
+			x = SystemTags((UBYTE *)cmd, SYS_UserShell, TRUE, TAG_DONE);
+#ifndef NO_ARP
+		else
+			x = !Execute((UBYTE *)cmd, 0L, raw_out);
+#endif
+	}
 	else if (p_st & 1)
-		x = fexecl(p_sh, p_sh, cmd, NULL);
+		x = fexecl(shellcmd, shellcmd, shellarg, cmd, NULL);
 	else
-		x = fexecl(p_sh, p_sh, "-c", cmd, NULL);
-	if (x)
+		x = fexecl(shellcmd, shellcmd, shellarg, "-c", cmd, NULL);
+#ifdef NO_ARP
+	if (x < 0)
+#else
+	if ((dos2 && x < 0) || (!dos2 && x))
+#endif
 	{
 		if (use_execute)
-			smsg("Cannot execute %s", cmd);
+			smsg("Cannot execute %s", cmd == NULL ? p_sh : cmd);
 		else
-			smsg("Cannot execute shell %s", p_sh);
+			smsg("Cannot execute shell %s", shellcmd);
 		outchar('\n');
 		retval = 1;
 	}
 	else
 	{
 		if (use_execute)
-			x = IoErr();
+		{
+#ifdef NO_ARP
+			if (x)
+#else
+			if (!dos2 || x)
+#endif
+				x = IoErr();
+		}
 		else
 			x = wait();
 		if (x)
@@ -1016,6 +1128,7 @@ call_shell(cmd, filter)
 			retval = 1;
 		}
 	}
+	free(shellcmd);
 #endif
 
 	if (mydir = CurrentDir(mydir))		/* make sure we stay in the same directory */
@@ -1023,7 +1136,7 @@ call_shell(cmd, filter)
 	settmode(1); 						/* set to raw mode */
 	resettitle();
 	if (term_console)
-		outstr(win_resize_on); 			/* window resize events activated */
+		win_resize_on(); 			/* window resize events activated */
 	return retval;
 }
 
@@ -1082,9 +1195,56 @@ Chk_Abort()
 
 /* #include <arpfunctions.h> */
 extern void *malloc __ARGS((size_t)), *calloc __ARGS((size_t, size_t));
+static int insfile __ARGS((char *));
+static void freefiles __ARGS((void));
 
 #define ANCHOR_BUF_SIZE (512)
 #define ANCHOR_SIZE (sizeof(struct AnchorPath) + ANCHOR_BUF_SIZE)
+
+/*
+ * we use this structure to built a list of file names
+ */
+struct onefile
+{
+	struct onefile	*next;
+	char			name[1];	/* really longer */
+} *namelist = NULL;
+
+/*
+ * insert one file into the list of file names
+ * return -1 for failure
+ * return 0 for success
+ */
+	static int
+insfile(name)
+	char *name;
+{
+	struct onefile *new;
+
+	new = (struct onefile *)alloc((unsigned)(sizeof(struct onefile) + strlen(name)));
+	if (new == NULL)
+		return -1;
+	strcpy(&(new->name[0]), name);
+	new->next = namelist;
+	namelist = new;
+	return 0;
+}
+
+/*
+ * free a whole list of file names
+ */
+	static void
+freefiles()
+{
+	struct onefile *p;
+
+	while (namelist)
+	{
+		p = namelist->next;
+		free(namelist);
+		namelist = p;
+	}
+}
 
 ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	int 			num_pat;
@@ -1094,13 +1254,13 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	int			files_only;
 	int			list_notfound;
 {
-	int 		i;
-	int 		retval = 0;
-
-	struct DirectoryEntry *FileList = NULL;
-	struct DirectoryEntry *de;
-	struct AnchorPath *Anchor;
-	LONG			Result;
+	int 					i;
+	struct AnchorPath		*Anchor;
+	int						domatchend = FALSE;
+	LONG					Result;
+	struct onefile			*p;
+	char					*errmsg = NULL;
+	char					*starbuf, *sp, *dp;
 
 	*num_file = 0;
 	*file = (char **)"";
@@ -1108,87 +1268,114 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	/* Get our AnchorBase */
 	Anchor = (struct AnchorPath *) calloc((size_t)1, (size_t)ANCHOR_SIZE);
 	if (!Anchor)
-	{
-OUT_OF_MEMORY:
-		retval = 1;
-		*file = (char **)"Out of memory";
-		goto Return;
-	}
-#ifdef LATTICE
-	Anchor->ap_Length = ANCHOR_BUF_SIZE;
+		goto OUT_OF_MEMORY;
+	Anchor->ap_StrLen = ANCHOR_BUF_SIZE;	/* ap_Length not supported anymore */
+#ifdef APF_DODOT
+	Anchor->ap_Flags = APF_DODOT | APF_DOWILD;		/* allow '.' for current dir */
 #else
-	Anchor->ap_StrLen = ANCHOR_BUF_SIZE;
+	Anchor->ap_Flags = APF_DoDot | APF_DoWild;		/* allow '.' for current dir */
 #endif
 
-	if (num_pat > 0)
+	for (i = 0; i < num_pat; i++)
 	{
-		for (i = 0; i < num_pat; i++)
+#ifndef NO_ARP
+		if (dos2)
 		{
+#endif
+				/* hack to replace '*' by '#?' */
+			starbuf = alloc((unsigned)(2 * strlen(pat[i]) + 1));	/* maximum required */
+			if (starbuf == NULL)
+				goto OUT_OF_MEMORY;
+			for (sp = pat[i], dp = starbuf; *sp; ++sp)
+			{
+				if (*sp == '*')
+				{
+					*dp++ = '#';
+					*dp++ = '?';
+				}
+				else
+					*dp++ = *sp;
+			}
+			*dp = NUL;
+			Result = MatchFirst((UBYTE *)starbuf, Anchor);
+			free(starbuf);
+#ifndef NO_ARP
+		}
+		else
 			Result = FindFirst(pat[i], Anchor);
-			while (Result == 0)
+#endif
+		domatchend = TRUE;
+		while (Result == 0)
+		{
+			if (!files_only || Anchor->ap_Info.fib_DirEntryType < 0)
 			{
-				if (!files_only || Anchor->ap_Info.fib_DirEntryType < 0)
+				(*num_file)++;
+				if (insfile(Anchor->ap_Buf))
 				{
-					(*num_file)++;
-					if (!AddDANode(Anchor->ap_Buf, &FileList, 0L, (long)i))
-					{
-						FreeAnchorChain(Anchor);
-						FreeDAList(FileList);
-						goto OUT_OF_MEMORY;
-					}
-				}
-				Result = FindNext(Anchor);
-			}
-			if (Result == ERROR_BUFFER_OVERFLOW)
-			{
-				FreeAnchorChain(Anchor);
-				FreeDAList(FileList);
-				retval = 1;
-				*file = (char **)"ANCHOR_BUF_SIZE too small.";
-				goto Return;
-			}
-			if (Result != ERROR_NO_MORE_ENTRIES)
-			{
-				if (list_notfound)	/* put object with error in list */
-				{
-					(*num_file)++;
-					if (!AddDANode(pat[i], &FileList, 0L, (long)i))
-					{
-						FreeAnchorChain(Anchor);
-						FreeDAList(FileList);
-						goto OUT_OF_MEMORY;
-					}
-				}
-				else if (Result != ERROR_OBJECT_NOT_FOUND)
-				{
-					FreeAnchorChain(Anchor);
-					FreeDAList(FileList);
-					retval = 1;
-					*file = (char **)"I/O ERROR";
+OUT_OF_MEMORY:
+					errmsg = "Out of memory";
 					goto Return;
 				}
 			}
+#ifndef NO_ARP
+			if (dos2)
+#endif
+				Result = MatchNext(Anchor);
+#ifndef NO_ARP
+			else
+				Result = FindNext(Anchor);
+#endif
 		}
-		FreeAnchorChain(Anchor);
-
-		de = FileList;
-		if (de)
+		if (Result == ERROR_BUFFER_OVERFLOW)
 		{
-			*file = (char **) malloc(sizeof(char *) * (*num_file));
-			if (*file == NULL)
-				goto OUT_OF_MEMORY;
-			for (i = 0; de; de = de->de_Next, i++)
+			errmsg = "ANCHOR_BUF_SIZE too small.";
+			goto Return;
+		}
+		if (Result != ERROR_NO_MORE_ENTRIES)
+		{
+			if (list_notfound)	/* put object with error in list */
 			{
-				(*file)[i] = (char *) malloc(strlen(de->de_Name) + 1);
-				if ((*file)[i] == NULL)
+				(*num_file)++;
+				if (insfile(pat[i]))
 					goto OUT_OF_MEMORY;
-				strcpy((*file)[i], de->de_Name);
+			}
+			else if (Result != ERROR_OBJECT_NOT_FOUND)
+			{
+				errmsg = "I/O ERROR";
+				goto Return;
 			}
 		}
-		FreeDAList(FileList);
+		MatchEnd(Anchor);
+		domatchend = FALSE;
+	}
+
+	p = namelist;
+	if (p)
+	{
+		*file = (char **) malloc(sizeof(char *) * (*num_file));
+		if (*file == NULL)
+			goto OUT_OF_MEMORY;
+		for (i = *num_file - 1; p; p = p->next, --i)
+		{
+			(*file)[i] = (char *) malloc(strlen(p->name) + 1);
+			if ((*file)[i] == NULL)
+				goto OUT_OF_MEMORY;
+			strcpy((*file)[i], p->name);
+		}
 	}
 Return:
-	return retval;
+	if (domatchend)
+		MatchEnd(Anchor);
+	if (Anchor)
+		free(Anchor);
+	freefiles();
+	if (errmsg)
+	{
+		emsg(errmsg);
+		*num_file = 0;
+		return 1;
+	}
+	return 0;
 }
 
 void
@@ -1202,4 +1389,37 @@ FreeWild(num, file)
 				free(file[num]);
 		free(file);
 }
+
+	int
+has_wildcard(p)
+	char *p;
+{
+	for ( ; *p; ++p)
+		if (strchr("*?[(~#", *p) != NULL)
+			return 1;
+	return 0;
+}
+#endif /* WILD_CARDS */
+
+/*
+ * With 2.0 support for reading local environment variables
+ */
+
+	char *
+vimgetenv(var)
+	char *var;
+{
+  int len;
+
+#ifndef NO_ARP
+  if (!dos2)
+		return getenv(var);
 #endif
+
+  len = GetVar((UBYTE *)var, (UBYTE *)IObuff, (long)(IOSIZE - 1), (long)0);
+
+  if (len == -1)
+      return NULL;
+  else
+      return IObuff;
+}

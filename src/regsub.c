@@ -226,35 +226,22 @@ regsub(prog, source, dest, copy, magic)
 				no = *src++ - '0';
 			}
 #ifdef CASECONVERT
-			else if (*src == 'u')
+			else if (strchr("uUlLeE", *src))
 			{
-				src++;
-				func = (fptr)do_upper;
-				continue;
-			}
-			else if (*src == 'U')
-			{
-				src++;
-				func = (fptr)do_Upper;
-				continue;
-			}
-			else if (*src == 'l')
-			{
-				src++;
-				func = (fptr)do_lower;
-				continue;
-			}
-			else if (*src == 'L')
-			{
-				src++;
-				func = (fptr)do_Lower;
-				continue;
-			}
-			else if (*src == 'e' || *src == 'E')
-			{
-				src++;
-				func = (fptr)do_copy;
-				continue;
+				switch (*src++)
+				{
+				case 'u':	func = (fptr)do_upper;
+							continue;
+				case 'U':	func = (fptr)do_Upper;
+							continue;
+				case 'l':	func = (fptr)do_lower;
+							continue;
+				case 'L':	func = (fptr)do_Lower;
+							continue;
+				case 'e':
+				case 'E':	func = (fptr)do_copy;
+							continue;
+				}
 			}
 #endif
 		}
@@ -283,14 +270,14 @@ regsub(prog, source, dest, copy, magic)
 					newsub = alloc((unsigned)(strlen(source) + strlen(reg_prev_sub)));
 					if (newsub)
 					{
-						/* copy prefix */
+							/* copy prefix */
 						len = (src - source) - 1;	/* not including ~ */
 						if (!magic)
 							len--;					/* back off \ */
 						strncpy(newsub, source, (size_t)len);
-						/* interpolate tilde */
+							/* interpretate tilde */
 						strcpy(newsub + len, reg_prev_sub);
-						/* copy postfix */
+							/* copy postfix */
 						strcat(newsub + len, src);
 
 						if (tmp_sub)
@@ -361,9 +348,14 @@ regsub(prog, source, dest, copy, magic)
 
 #ifdef TILDE
 # ifdef VITILDE
-	if (copy) {
-		if (reg_prev_sub)
-			free(reg_prev_sub);
+	/*
+	 * Save the substitute string for future ~.
+	 * if reg_prev_sub == source, then regsub was called with reg_prev_sub,
+	 * so we don't have to save it again.
+	 */
+	if (copy && reg_prev_sub != source)
+	{
+		free(reg_prev_sub);
 		if (tmp_sub)
 			reg_prev_sub = tmp_sub;		/* tmp_sub == source */
 		else
@@ -371,8 +363,7 @@ regsub(prog, source, dest, copy, magic)
 	}
 # else
 	if (copy) {
-		if (reg_prev_sub)
-			free(reg_prev_sub);
+		free(reg_prev_sub);
 		reg_prev_sub = strsave(dest);
 	}
 # endif

@@ -72,6 +72,7 @@ edit(count)
 		if (arrow_used)		/* don't repeat insert when arrow key used */
 			count = 0;
 
+		set_want_col = TRUE;	/* set Curswant in case of K_DARROW or K_UARROW */
 		cursupdate();		/* Figure out where the cursor is based on Curpos. */
 		setcursor();
 		if (nextc)			/* character remaining from CTRL-V */
@@ -82,7 +83,6 @@ edit(count)
 		else
 			c = vgetc();
 
-nextchar:
 #ifdef DIGRAPHS
 		if (p_dg)
 		{
@@ -96,7 +96,7 @@ nextchar:
 		}
 #endif /* DIGRAPHS */
 
-		if (c == CTRL('V'))
+		if (c == Ctrl('V'))
 		{
 				outchar('^');
 				AppendToRedobuff("\026");	/* CTRL-V */
@@ -116,7 +116,7 @@ nextchar:
 		}
 		switch (c)		/* handle character in insert mode */
 		{
-			  case CTRL('O'):		/* execute one command */
+			  case Ctrl('O'):		/* execute one command */
 			  	count = 0;
 				restart_edit = TRUE;
 				/*FALLTHROUGH*/
@@ -157,14 +157,14 @@ nextchar:
 				 * For ^@ the trailing ESC will end the insert.
 				 */
 			  case K_ZERO:
-			  case CTRL('A'):
-				stuff_inserted(NUL, 1L, (c == CTRL('A')));
+			  case Ctrl('A'):
+				stuff_inserted(NUL, 1L, (c == Ctrl('A')));
 				break;
 
 			  	/*
 				 * insert the contents of a register
 				 */
-			  case CTRL('B'):
+			  case Ctrl('B'):
 			  	if (!insertbuf(vgetc()))
 					beep();
 				break;
@@ -177,8 +177,8 @@ nextchar:
 				 * mix ^D/backspace and ^T/TAB without thinking about which one
 				 * must be used.
 				 */
-			  case CTRL('T'):		/* make indent one shiftwidth greater */
-			  case CTRL('D'): 		/* make indent one shiftwidth smaller */
+			  case Ctrl('T'):		/* make indent one shiftwidth greater */
+			  case Ctrl('D'): 		/* make indent one shiftwidth smaller */
 				stop_arrow();
 				AppendToRedobuff(mkstr(c));
 
@@ -187,7 +187,7 @@ nextchar:
 				beginline(TRUE);
 				temp -= Curpos.col;
 
-		  		shift_line(c == CTRL('D'));
+		  		shift_line(c == Ctrl('D'));
 
 					/* try to put cursor on same character */
 				temp += Curpos.col;
@@ -234,7 +234,7 @@ dodel:
 						temp = gcharCurpos();		/* remember current char */
 						--Curpos.lnum;
 						dojoin(FALSE);
-						if (temp == NUL)
+						if (temp == NUL && gcharCurpos() != NUL)
 							++Curpos.col;
 					}
 					else
@@ -286,12 +286,12 @@ redraw:
 				updateline();
 				break;
 
-			  case CTRL('W'):
+			  case Ctrl('W'):
 			  	/* delete word before cursor */
 			  	mode = 1;
 			  	goto dodel;
 
-			  case CTRL('U'):
+			  case Ctrl('U'):
 				mode = 3;
 			  	goto dodel;
 
@@ -383,14 +383,26 @@ redraw:
 					goto doESCkey;		/* out of memory */
 				break;
 
-			  case CTRL('R'):
+#ifdef DIGRAPHS
+			  case Ctrl('K'):
+				outchar('?');
+				AppendToRedobuff("\026");	/* CTRL-V */
+				setcursor();
+			  	c = vgetc();
+				outstrn(transchar(c));
+				setcursor();
+				c = getdigraph(c, vgetc());
+				goto normalchar;
+#endif /* DIGRAPHS */
+
+			  case Ctrl('R'):
 				/*
 				 * addition by mool: copy from previous line
 				 */
 				lnum = Curpos.lnum - 1;
 				goto copychar;
 
-			  case CTRL('E'):
+			  case Ctrl('E'):
 				lnum = Curpos.lnum + 1;
 copychar:
 				if (lnum < 1 || lnum > line_count)

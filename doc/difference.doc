@@ -1,0 +1,354 @@
+This is a summary of the differences between VIM and vi.
+
+
+The most interesting additions:
+
+Multi level undo.
+'u' goes backward in time, 'ctrl-R' goes forward again. Set option 
+'undolines' to the number of changes to be remembered (default 100). Set 
+'undolines' to 0 for vi-compatible one level undo.
+
+
+Repeat a series of commands.
+'v'<c> starts recording typed characters into named buffer <c> (append to the 
+buffer if buffer name is upper case). A subsequent 'v' stops recording. The 
+buffer can then be executed with the '@'<c> command. This is very useful to 
+repeat a complex action.
+
+
+Flexible insert mode.
+The arrow keys can be used in insert mode to move around in the file. This 
+breaks the insert in two parts as far as undo and redo is concerned.
+
+CTRL-O can be used to execute a single command-mode command. This is almost 
+the same as hitting ESC, typing the command and hitting 'a'. For undo/redo 
+only those inserts are remembered where something was actually inserted.
+
+
+Quoting.
+Quoting can be used to first choose a piece of text and then give a command 
+to do something with it. This is an (easy to use) alternative to first giving 
+the operator and then moving to the end of the text to be operated upon. 'q' 
+and 'Q' are used to start quoting a piece of text. 'q' works on characters 
+and 'Q' on lines. Move the cursor to extend the quoted part. It is shown 
+highlighted on the screen. By typing 'o' the other end of the quoted text can 
+be moved. The quoted text can be affected by an operator:
+	d	delete
+	c	change
+	y	yank
+	> or <	insert or delete indent
+	!	filter through external program
+	=	filter through indent
+	:	start ":" command for the quoted lines.
+	V	format text to 'textwidth' columns
+	J	join lines
+	~	swap case
+	u	make uppercase
+	U	make lowercase
+
+
+Block operators.
+With quoting a rectangular block of text can be selected. Start quoting with 
+CTRL-Q. The block can be deleted ('d'), yanked ('d') or its case can be 
+swapped ('~'). A deleted or yanked block can be put into the text with the 
+'p' and 'P' commands.
+
+
+Online help.
+':help' command and help key (F1 for MSDOS) display several pages of concise 
+help. The name of the help file can be set with the "helpfile" option.
+
+
+Command line editing.
+You can insert or delete at any place in the command line using the cursor 
+keys. The right/left cursor keys can be used to move forward/backward one 
+character. The shifted right/left cursor keys can be used to move 
+forward/backward one word.
+
+The command lines are remembered. The up/down cursor keys can be used to 
+recall previous command lines. The 'history' option can be set to the number 
+of lines that will be remembered.
+
+
+Filename completion.
+While entering a command line (on the bottom line of the screen) <ESC> can be 
+typed after an (incomplete) file name wildcard; the wildcard will be 
+expanded. If there are multiple matches, CTRL-N (next) and CTRL-P (previous) 
+will walk through the matches. CTRL-D can be typed after an (incomplete) file 
+name wildcard; all matching files will be listed.
+
+
+Text formatting.
+The 'textwidth' (tw) option can be used to automatically limit the line 
+length. This replaces the 'wrapmargin' option of Vi, which was not very 
+useful. The 'V' operator can be used to format a piece of text ("V}" formats 
+a paragraph).
+
+
+Command line options:
+
+When Vim is started with "-v" (View) then readonly mode is used (includes 
+"-n").
+
+When Vim is started with "-s scriptfile", the characters read from 
+"scriptfile" are treated as if you typed them. If end of file is reached 
+before the editor exits, further characters are read from the console.
+
+The "-w" option can be used to record all typed characters in a script file. 
+This file can then be used to redo the editing, possibly on another file or 
+after changing some commands in the script file.
+
+The "-n" option disables the writing of a ".vim" file (see below).
+
+The "-c command" option does the same as the the "+command" option.
+
+The "-T terminal" option sets the terminal type.
+
+
+In command mode:
+
+Missing command: 'Q' (go to Ex mode).
+Missing Ex commands: append, change, insert, open, preserve, recover, 
+(un)abbreviate, visual, z and ~.
+
+The command characters are shown in the last line of the screen. They are 
+removed when the command is finished. If you do not want this (on a slow 
+terminal) reset the 'showcmd' option.
+
+If the 'ruler' option is set, the current cursor position is shown in the 
+last line of the screen.
+
+'u' and CTRL-R accept a count for the number of undos/redos.
+
+'U' still works after having moved off of the last changed line and after 
+'u'.
+
+Nulls in the file are replaced by newlines internally. This allows editing of 
+binary files (more or less). When searching for nulls, use a newline in the 
+search pattern.
+
+Characters with the 8th bit set are displayed. The characters between '~' and 
+0xa0 are displayed as "~?", "~@", "~A", etc., unless the "graphic' option is 
+set.
+
+'=' is an operator to filter lines through an external command (vi: lisp 
+stuff). The name of the command can be set with the 'equalprg' option. The 
+default is "indent".
+
+'][' goes to the next ending of a C function ('}' in column 1).
+'[]' goes to the previous ending of a C function ('}' in column 1).
+
+'*' searches forward for the identifier under the cursor, '#' backward.
+'K' runs the program defined by the "keywordprg" option, with the identifier 
+under the cursor as argument.
+
+'%' can be preceded with a count. The cursor jumps to the line that 
+percentage down in the file.
+
+With the CTRL-] command, the cursor may be in the middle of the identifier.
+
+The used tags are remembered. Commands that can be used with the tag stack 
+are CTRL-T, ':pop' and ':tag'. ':tags' lists the tag stack.
+
+The 'tags' option can be set to a list of tag file names. Thus multiple 
+tag files can be used.
+
+Previously used file names are remembered in the alternate file name list.
+CTRL-^ accepts a count, which is an index in this list.
+
+Search patterns have more features.
+
+Searches can find the end of a match and may include a character offset.
+
+Count added to '~', ':next', ':Next', 'n' and 'N'.
+
+Added :wnext command. Same as ":write" followed by ":next".
+
+If option "tildeop" has been set, '~' is an operator (must be followed by a 
+movement command).
+
+With the 'J' (join) command you can reset the 'joinspaces' (js) option to 
+have only one space after a period (Vi inserts two spaces).
+
+'cw' can be used to change white space formed by several characters (Vi is 
+confusing: 'cw' only changes one space, while 'dw' deletes all white space).
+
+'o' and 'O' accept a count for repeating the insert (Vi clears a part of 
+display).
+
+':dis' command shows the contents of the yank buffers.
+
+Previously used file names are remembered in the alternate file name list.
+':files' command shows the list of alternate filenames.
+'#'<N> means <N>th alternate filename in the list.
+
+Flags after command not supported (no plans to include it).
+
+QuickFix commands included, almost the same as with Manx's Z editor.
+The 'errorfile' option has the name of the file with error messages.
+
+":cd" command shows current directory instead of going to the home directory.
+":cd ~" goes to home directory.
+
+':source!' command reads Vi commands from a file.
+
+':mkexrc' command writes current modified options and mappings to a ".exrc" 
+file. ':mkvimrc' writes to a ".vimrc" file.
+
+The :put! command inserts the contents of a register above the current line.
+
+The named register '.' can be used with commands p, P and :put. The contents 
+of the register is the last inserted text.
+
+':noremap' command can be used to enter a mapping that will not be remapped.
+This is useful to exchange the meaning of two keys.
+
+':@r' command executes buffer r (is in some versions of vi).
+
+CTRL-O/CTRL-I can be used to jump to older/newer positions. These are the 
+same positions as used with the '' command, but may be in another file. The 
+':jumps' command lists the older positions.
+
+If the 'shiftround' option is set, an indent is rounded to a multiple of 
+'shiftwidth' with '>' and '<' commands.
+
+The 'scrolljump' option can be set to the minimal number of lines to scroll 
+when the cursor gets off the screen. Use this when scrolling is slow.
+
+Uppercase marks can be used to jump between files. The ':marks' command lists 
+all currently set marks. The commands "']" and "`]" jump to the end of the 
+previous operator or end of the text inserted with the put command. "'[" and 
+"`[" do jump to the start.
+
+The 'shelltype' option can be set to reflect the type of shell used.
+
+The CTRL-A (add) and CTRL-S (subtract) commands are new. The count to the 
+command (default 1) is added to/subtracted from the number at or after the 
+cursor. That number may be decimal, octal (starts with a '0') or hexadecimal 
+(starts with '0x'). Very useful in macros.
+
+With the :set command the prefix "inv" can be used to invert toggle options.
+
+
+In insert mode:
+
+The backspace key can be used just like CTRL-D to remove auto-indents.
+
+You can backspace, ctrl-U and CTRL-W over newlines if the 'backspace' (bs) 
+option is set to non-zero. You can backspace over the start of insert if the 
+'backspace' option is set to 2.
+
+If the 'repdel' option is reset, a <BS> in replace mode will not delete a 
+character.
+
+CTRL-T/CTRL-D always insert/delete an indent in the current line, no matter 
+what column the cursor is in. '0' and '^' before CTRL-D are ignored.
+
+CTRL-@ (insert previously inserted text) works always (Vi: only when typed as 
+first character).
+
+CTRL-A works like CTRL-@ but does not leave insert mode.
+
+CTRL-B <0-9a-z> can be used to insert the contents of a register.
+
+When the 'smartindent' (si) option is set, C programs will be better 
+auto-indented.
+
+CTRL-R and CTRL-E can be used to copy a character from above/below the 
+current cursor position.
+
+After CTRL-V you can enter a three digit decimal number. This byte value is 
+inserted in the text as a single character. Useful for international 
+characters that are not on your keyboard.
+
+When the 'expandtab' (et) option is set, a <TAB> is expanded to the 
+appropriate number of spaces.
+
+The window always reflects the contents of the buffer (Vi does not do this 
+when changing text and in some other cases).
+
+If Vim is compiled with DIGRAPHS defined, digraphs are supported. A set of 
+normal Amiga digraphs is included. They are shown with the :digraph" command. 
+More can be added with ":digraph {char1}{char2} {number}". A digraph is 
+entered with "CTRL-K {char1} {char2}" or "{char1} BS {char2}" (only when 
+'digraph' option is set).
+
+
+general:
+
+Missing options: autoprint (ap), beautify (bf), edcompatible, hardtabs (ht), 
+lisp, mesg, open, optimize (op), prompt, redraw, slowopen (slow),
+warn, window, w300, w1200 and w9600. Terse option ignored.
+
+When the 'compatible' option is set, all options are set for maximum 
+vi-compatibility
+
+The 'ttimeout' option is like 'timeout', but only works for cursor and 
+function keys, not for ordinary mapped characters.
+
+There is an option for each terminal string. Can be used when termcap is not 
+supported or to change individual strings.
+
+On systems that have no job control (most systems but BSD-UNIX) the CTRL-Z 
+and ":stop" command starts a new shell.
+
+If Vim is started on the Amiga without an interactive window for output, a 
+window is opened (and :sh still works). You can give a device to use for 
+editing with the '-d' argument, e.g. "-d con:20/20/600/150".
+
+On startup the VIMINIT or EXINIT environment variables, the file s:.vimrc or 
+s:.exrc and .vimrc or .exrc are read for initialization commands. When 
+reading .vimrc and .exrc some commands are not allowed because of security 
+reasons (shell commands and writing to a file, :map commands are echoed).
+
+Line lenght can be upto 32767 characters, file length upto 2147483646 lines. 
+If a line is larger than the screen, the last line is filled with <@>s and 
+only the part of the line before that is shown.
+
+The 'columns' option is used to set or get the width of the display.
+
+The name of the current file name is shown in the title bar of the window.
+
+Wildcards in file names are expanded.
+
+Option settings are read from the first and last few lines of the file. 
+Option 'modelines' determines how many lines are tried (default is 5). Note 
+that this is different from the Vi versions that can execute any Ex command 
+in a modeline (a major security problem).
+
+If the 'insertmode' option is set (e.g. in .exrc), Vim starts in insert mode.
+
+All text is kept in memory. Available memory limits the file size (and other 
+things such as undo). This may be a problem with MSDOS, is hardly a problem 
+ont the Amiga and almost never with Unix.
+
+If the "backup" or "writebackup" option is set: Before a file is overwritten, 
+a backup file (.bak) is made. If the "backup" option is set it is left 
+behind.
+
+All entered commands and text is written into a script file, ending in 
+".vim". This can be used to recover your work if the machine crashes during 
+an edit session. This can be switched off by setting the 'updatecount' option 
+to 0 or starting Vim with the "-n" option. Use the 'directory' option for 
+placing the .vim file somewhere else.
+
+The 'shortname' (sn) option, when set, tells Vim that ".bak" and ".vim" 
+filenames are to be MSDOS-like: 8 characters plus 3 for extention. This 
+should be used on messydos or crossdos filesystems on the Amiga. If this 
+option is off, Vim tries to guess if MSDOS filename restrictions are 
+effective.
+
+Recovery after a crash has a smaller chance for success, because there is no 
+temporary file.
+
+Error messages are shown at least one second (Vi overwrites error messages).
+
+If Vim asks to "Hit RETURN to continue", you can hit any key. Characters 
+other than <CR>, <NL> and <SPACE> are interpreted as the (start of) a 
+command. (Vi only accepts a command starting with ':').
+
+The contents of the numbered registers is remembered when changing files.
+
+The AUX: device of the Amiga is supported.
+
+vi:tw=77:

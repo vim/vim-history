@@ -16,6 +16,7 @@
 #include "globals.h"
 #include "proto.h"
 #include "mark.h"
+#include "ops.h"		/* for endop and startop */
 
 /*
  * This file contains routines to maintain and manipulate marks.
@@ -177,6 +178,16 @@ getmark(c, changefile)
 	posp = NULL;
 	if (c == '\'' || c == '`')			/* previous context mark */
 		posp = mark2pos(&pcmark);
+	else if (c == '[')					/* to start of previous operator */
+	{
+		if (startop.lnum > 0 && startop.lnum <= line_count)
+			posp = &startop;
+	}
+	else if (c == ']')					/* to end of previous operator */
+	{
+		if (endop.lnum > 0 && endop.lnum <= line_count)
+			posp = &endop;
+	}
 	else if (islower(c))				/* normal named mark */
 		posp = mark2pos(&(namedm[c - 'a']));
 	else if (isupper(c))				/* named file mark */
@@ -318,7 +329,9 @@ fm_getname(fmark)
 	if (fmark->fnum != 0)						/* maybe not current file */
 	{
 		name = getaltfname(fmark->fnum - 1);
-		if (fnamecmp(name, Filename) != 0)		/* not current file */
+		if (name == NULL)
+			return "-none-";
+		if (Filename == NULL || fnamecmp(name, Filename) != 0)	/* not current file */
 			return name;
 		fmark->fnum = 0;
 	}
@@ -330,7 +343,7 @@ fm_getname(fmark)
 		if (nr != 0)
 			fmark->lnum = nr;					/* update lnum */
 	}
-	return "current";
+	return "-current-";
 }
 
 /*
@@ -342,7 +355,9 @@ domarks()
 	int			i;
 	char		*name;
 
-	settmode(0);
+#ifdef AMIGA
+	settmode(0);		/* set cooked mode, so output can be halted */
+#endif
 	outstrn("\nmark line  file\n");
 	for (i = 0; i < NMARKS; ++i)
 	{
@@ -371,7 +386,9 @@ domarks()
 		}
 		flushbuf();
 	}
+#ifdef AMIGA
 	settmode(1);
+#endif
 	wait_return(TRUE);
 }
 
@@ -384,7 +401,9 @@ dojumps()
 	int			i;
 	char		*name;
 
-	settmode(0);
+#ifdef AMIGA
+	settmode(0);		/* set cooked mode, so output can be halted */
+#endif
 	outstrn("\n jump line  file\n");
 	for (i = 0; i < jumplistlen; ++i)
 	{
@@ -405,6 +424,8 @@ dojumps()
 	}
 	if (jumplistidx == jumplistlen)
 		outstrn(">\n");
+#ifdef AMIGA
 	settmode(1);
+#endif
 	wait_return(TRUE);
 }

@@ -192,12 +192,65 @@
 			Made :so! work with :global. Added writing of cursor postition to 
 			startscript(). Minimized terminal requirements. Fixed problem 
 			with line in tags file with mixed spaces and tabs. Fixed problem 
-			with pattern "\\" in :s and :g.
+			with pattern "\\" in :s and :g. This version posted on Usenet.
+
+ VIM 1.25	Improved error messages for :set. Open helpfile in binary mode 
+			for MSDOS. Fixed ignorecase for Unix in cstrncmp(). Fixed read 
+			from NULL with :tags after vim -t. Repaired 'z' command. Changed 
+			outnum() for >32767. In msdos.c flushbuf did write(1, .. instead 
+			of write(0, .. Added secure to fix security. Fixed pointer 
+			use after free() bug in regsub() (made :s fail under MSDOS). 
+			Added nofreeNULL(), needed for some UNIXes. Improved window 
+			resizing for Unix. Fixed messages for report == 0. Added 
+			bsdmemset(). Changed a few small things for portability. Added 
+			:list. Made '0' and '^' exclusive. Fixed regexp for /pattern* 
+			(did /(pattern)* instead of /pattern(n)*). Added "']" and "'[". 
+			Changed Delay(2L) into Delay(10L). Made 'timeout' option 
+			vi-compatible, added 'ttimeout' option. Changed TIOCSETP to 
+			TIOCSETN in unix.c. Added "ti" and "te" termcap entries, makes 
+			sun cmdtool work. Added stop- and starttermcap(). Use cooked 
+			output for listings on Amiga only. Added "starting" flag, no ~s 
+			anymore with every startup. Modname made portable; Added 
+			'shortname' option, Fixed problems with .vim file on messydos. 
+			Global .exrc/.vimrc for Unix added. Added patches for SCO Xenix. 
+			Add :w argument to list of alternate file names. Applied a few 
+			changes for HPUX. Added Flock in writeit() for safety. Command 
+			":'a,'bm." moved to 'b instead of current line. Argument in 
+			'shell' option allowed. Re-implemented :copy and :move. Fixed 
+			BS-CR-BS on empty line bug in edit.c. -t option was ignored if 
+			there is a file ".vim". Changed amiga.c to work without 
+			arp.library for dos 2.0. Fixed "\$" and "\^" in regexp. Fixed 
+			pipe in filter command. Fixed CTRL-U and CTRL-D. With '}' indent 
+			in front of the cursor is included in the operated text. Fixed 
+			tag with '[' in search pattern. Added CTRL-V to 'r'. Fixed "tc" 
+			entry in termlib.c. term_console now default off. Added :noremap 
+			and ^V in :map argument. Replaced CTRL by Ctrl because some 
+			unixes have this already. Fixed "Empty file" message disappearing 
+			when there is no .exrc file. Added CTRL-K for entering digraphs. 
+			Removed escape codes from vim.hlp, added handling of inversion to 
+			help().
+
+ VIM 1.26	For Unix: Removed global .exrc; renamed global .vimrc to vimrc.
+ 			Moved names of *rc and help files to makefile. Added various 
+			little changes for different kinds of Unix. Changed CR-LF 
+			handling in dosource() for MSDOS. Added :mkvimrc. Fixed 
+			WildExpand in unix.c for empty file. Fixed incompatibility with 
+			msdos share program (removed setperm(fname, 0) from fileio.c).
+			Added ":set compatible". Fixed 'history=0'.
+
+ VIM 1.27	Added USE_LOCALE. Changed swapchar() to use toupper() and 
+			tolower(). Changed init order: .vimrc before EXINIT. Half-fixed 
+			lines that do not fit on screen. A few minor bug fixes. Fixed 
+			typehead bug in Read() in unix.c. Added :number. Reset IXON flag 
+			in unix.c for CTRL-Q. In tags file any Ex command can be used. Ex 
+			search command accepts same flags as normal search command. Fixed 
+			'?' in tag search pattern. 'New file' message was wrong when 'bk' 
+			and 'wb' options were both off.
 */
 
-char		   *Version = "VIM v1.24";
+char		   *Version = "VIM 1.27";
 #if !defined(linux) && defined(BSD) || defined(SYSV)
-char		   *longVersion = "Vi IMitation v1.24 (5 Jan 1993) by Bram Moolenaar";
+char		   *longVersion = "Vi IMitation 1.27 (1993 April 6) by Bram Moolenaar";
 #else
-char		   *longVersion = "Vi IMitation v1.24 (" __DATE__ " " __TIME__ ") by Bram Moolenaar";
+char		   *longVersion = "Vi IMitation 1.27 (" __DATE__ " " __TIME__ ") by Bram Moolenaar";
 #endif

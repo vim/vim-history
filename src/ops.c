@@ -70,7 +70,8 @@ doshift(op)
 	updateScreen(CURSUPD);
 
 	if (nlines > p_report)
-		smsg("%ld lines %ced", nlines, (op == RSHIFT) ? '>' : '<');
+		smsg("%ld line%s %ced", nlines, plural(nlines),
+									(op == RSHIFT) ? '>' : '<');
 }
 
 /*
@@ -419,7 +420,15 @@ dodelete()
 	else
 		updateScreen(CURSUPD);
 
+	if (mtype == MCHAR)
+		--nlines;
 	msgmore(-nlines);
+
+		/* correct endop for deleted text (for "']" command) */
+	if (Quote_block)
+		endop.col = startop.col;
+	else
+		endop = startop;
 }
 
 /*
@@ -428,45 +437,48 @@ dodelete()
 	void
 dotilde()
 {
-		if (!u_save((linenr_t)(startop.lnum - 1), (linenr_t)(endop.lnum + 1)))
-				return;
+	FPOS pos;
 
-		if (Quote_block)		/* block mode */
+	if (!u_save((linenr_t)(startop.lnum - 1), (linenr_t)(endop.lnum + 1)))
+		return;
+
+	pos = startop;
+	if (Quote_block)		/* block mode */
+	{
+		for (; pos.lnum <= endop.lnum; ++pos.lnum)
 		{
-			for (; startop.lnum <= endop.lnum; ++startop.lnum)
-			{
-				block_prep(startop.lnum, FALSE);
-				startop.col = textcol;
-				for (; --textlen >= 0; inc(&startop))
-					swapchar(&startop);
-			}
+			block_prep(pos.lnum, FALSE);
+			pos.col = textcol;
+			for (; --textlen >= 0; inc(&pos))
+				swapchar(&pos);
 		}
-		else			/* not block mode */
+	}
+	else			/* not block mode */
+	{
+		if (mtype == MLINE)
 		{
-			if (mtype == MLINE)
-			{
-					startop.col = 0;
-					endop.col = strlen(nr2ptr(endop.lnum));
-					if (endop.col)
-							--endop.col;
-			}
-			else if (oneless)
-				dec(&endop);
-
-			for ( ; ltoreq(startop, endop); inc(&startop))
-				swapchar(&startop);
+				pos.col = 0;
+				endop.col = strlen(nr2ptr(endop.lnum));
+				if (endop.col)
+						--endop.col;
 		}
+		else if (oneless)
+			dec(&endop);
 
-		if (mtype == MCHAR && nlines == 1 && !Quote_block)
-		{
-			cursupdate();
-			updateline();
-		}
-		else
-			updateScreen(CURSUPD);
+		for ( ; ltoreq(pos, endop); inc(&pos))
+			swapchar(&pos);
+	}
 
-		if (nlines > p_report)
-				smsg("%ld lines ~ed", nlines);
+	if (mtype == MCHAR && nlines == 1 && !Quote_block)
+	{
+		cursupdate();
+		updateline();
+	}
+	else
+		updateScreen(CURSUPD);
+
+	if (nlines > p_report)
+			smsg("%ld line%s ~ed", nlines, plural(nlines));
 }
 
 /*
@@ -481,11 +493,14 @@ swapchar(pos)
 	int		c;
 
 	c = gchar(pos);
-	if (operator == UPPER ? islower(c) :
-			(operator == LOWER ? isupper(c) :
-				isalpha(c)))
+	if (islower(c) && operator != LOWER)
 	{
-		pchar(*pos, c ^ 0x20);	/* Change current character */
+		pchar(*pos, toupper(c));
+		CHANGED;
+	}
+	else if (isupper(c) && operator != UPPER)
+	{
+		pchar(*pos, tolower(c));
 		CHANGED;
 	}
 }
@@ -695,10 +710,15 @@ success:
 		free(y_current->y_array);
 		y_current = curr;
 	}
-	if (operator == YANK && nlines > p_report)
+	if (operator == YANK)		/* don't do this when deleting */
 	{
-		cursupdate();		/* redisplay now, so message is not deleted */
-		smsg("%ld lines yanked", (long)(y_current->y_size));
+		if (mtype == MCHAR)
+			--nlines;
+		if (nlines > p_report)
+		{
+			cursupdate();		/* redisplay now, so message is not deleted */
+			smsg("%ld line%s yanked", nlines, plural(nlines));
+		}
 	}
 
 	return TRUE;
@@ -711,7 +731,7 @@ doput(dir, count)
 {
 	char		*ptr, *ep;
 	int 		newlen;
-	int			totlen;
+	int			totlen = 0;		/* init for gcc */
 	linenr_t	lnum;
 	int			col;
 	long 		i;		/* index in y_array[] */
@@ -725,6 +745,10 @@ doput(dir, count)
 	long		j;
 	FPOS		newCurpos;
 
+	startop = Curpos;			/* default for "'[" command */
+	if (dir == FORWARD)
+		startop.col++;
+	endop = Curpos;				/* default for "']" command */
 	if (yankbuffer == '.')		/* use inserted text */
 	{
 		stuff_inserted(dir == FORWARD ? (count == -1 ? 'o' : 'a') : (count == -1 ? 'O' : 'i'), count, FALSE);
@@ -838,6 +862,8 @@ doput(dir, count)
 			if (i == 0)
 				Curpos.col += startspaces;
 		}
+		endop.lnum = Curpos.lnum - 1;		/* for "']" command */
+		endop.col = textcol + totlen - 1;
 		Curpos.lnum = lnum;
 		cursupdate();
 		updateScreen(VALID_TO_CURSCHAR);
@@ -851,13 +877,21 @@ doput(dir, count)
 			{
 				++col;
 				if (newlen)
+				{
 					++Curpos.col;
+					++endop.col;
+				}
 			}
 			newCurpos = Curpos;
 		}
 		else if (dir == BACKWARD)
 	/* if type is MLINE, BACKWARD is the same as FORWARD on the previous line */
 			--lnum;
+		else	/* type == MLINE, dir == FORWARD */
+		{
+			startop.col = 0;
+			startop.lnum++;
+		}
 
 /*
  * simple case: insert into current line
@@ -875,6 +909,7 @@ doput(dir, count)
 					strncpy(ep, y_array[0], (size_t)newlen);
 					ep += newlen;
 			}
+			endop = Curpos;
 			updateline();
 		}
 		else
@@ -920,9 +955,11 @@ doput(dir, count)
 					++lnum; 	/* lnum is now number of line below inserted lines */
 			}
 
+			endop.lnum = lnum;		/* for "']" command */
 			if (y_type == MLINE)
 			{
 				Curpos.col = 0;
+				endop.col = 0;
 				if (dir == FORWARD)
 				{
 					updateScreen(NOT_VALID);		/* recompute Botline */
@@ -932,7 +969,13 @@ doput(dir, count)
 				beginline(TRUE);
 			}
 			else		/* put cursor on first inserted character */
+			{
+				if (col > 1)
+					endop.col = col - 1;
+				else
+					endop.col = 0;
 				Curpos = newCurpos;
+			}
 
 error:
 			updateScreen(CURSUPD);
@@ -954,7 +997,9 @@ dodis()
 	register char *p;
 	register struct yankbuf *yb;
 
+#ifdef AMIGA
 	settmode(0);			/* set cooked mode so output can be halted */
+#endif
 	for (i = -1; i < 36; ++i)
 	{
 		if (i == -1)
@@ -998,7 +1043,9 @@ dodis()
 			flushbuf();
 		}
 	}
+#ifdef AMIGA
 	settmode(1);
+#endif
 	wait_return(TRUE);
 }
 
@@ -1231,5 +1278,108 @@ block_prep(lnum, delete)
 			--textcol;
 		}
 		textlen = pend - textstart;
+	}
+}
+
+	int
+doaddsub(c, Prenum1)
+	int			c;
+	linenr_t	Prenum1;
+{
+	register int 	col;
+	char			buf[30];
+	int				hex;		/* 'x' or 'X': hexadecimal; '0': octal */
+	static int		hexupper = FALSE;	/* 0xABC */
+	long			n;
+	char			*ptr;
+
+	ptr = nr2ptr(Curpos.lnum);
+	col = Curpos.col;
+
+		/* first check if we are on a hexadecimal number */
+	while (col > 0 && isxdigit(ptr[col]))
+		--col;
+	if (col > 0 && toupper(ptr[col]) == 'X' && ptr[col - 1] == '0' && isxdigit(ptr[col + 1]))
+		--col;		/* found hexadecimal number */
+	else
+	{
+		/* first search forward and then backward for start of number */
+		col = Curpos.col;
+
+		while (ptr[col] != NUL && !isdigit(ptr[col]))
+			++col;
+
+		while (col > 0 && isdigit(ptr[col - 1]))
+			--col;
+	}
+
+	if (isdigit(ptr[col]) && u_saveCurpos())
+	{
+		set_want_col = TRUE;
+
+		if (ptr[col] != '0')
+			hex = 0;				/* decimal */
+		else
+		{
+			hex = toupper(ptr[col + 1]);		/* assume hexadecimal */
+			if (hex != 'X' || !isxdigit(ptr[col + 2]))
+			{
+				if (isdigit(hex))
+					hex = '0';		/* octal */
+				else
+					hex = 0;		/* 0 by itself is decimal */
+			}
+		}
+
+		if (!hex && col > 0 && ptr[col - 1] == '-')
+			--col;
+
+		ptr += col;
+		if (hex == '0')
+			sscanf(ptr, "%lo", &n);
+		else if (hex)
+			sscanf(ptr, "%lx", &n);	/* "%X" doesn't work! */
+		else
+			n = atol(ptr);
+
+		if (c == Ctrl('A'))
+			n += Prenum1;
+		else
+			n -= Prenum1;
+
+		if (hex == 'X')					/* skip the '0x' */
+			col += 2;
+		Curpos.col = col;
+		do								/* delete the old number */
+		{
+			if (isalpha(c))
+			{
+				if (isupper(c))
+					hexupper = TRUE;
+				else
+					hexupper = FALSE;
+			}
+			delchar(FALSE);
+			c = gcharCurpos();
+		}
+		while (hex ? (hex == '0' ? c >= '0' && c <= '7' : isxdigit(c)) : isdigit(c));
+
+		if (hex == '0')
+			sprintf(buf, "0%lo", n);
+		else if (hexupper)
+			sprintf(buf, "%lX", n);
+		else if (hex)
+			sprintf(buf, "%lx", n);
+		else
+			sprintf(buf, "%ld", n);
+		insstr(buf);					/* insert the new number */
+		--Curpos.col;
+		updateline();
+		return TRUE;
+	}
+	else
+	{
+		beep();
+		return FALSE;
 	}
 }

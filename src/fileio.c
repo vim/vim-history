@@ -24,6 +24,10 @@
 #include "param.h"
 #include "fcntl.h"
 
+#ifdef LATTICE
+# include <proto/dos.h>		/* for Lock() and UnLock() */
+#endif
+
 #define BUFSIZE 4096
 static void do_mlines __ARGS((void));
 
@@ -237,9 +241,6 @@ readfile(fname, from, newfile)
 /*
  * writeit - write to file 'fname' lines 'start' through 'end'
  *
- * If either 'start' or 'end' contain null line pointers, the default is to use
- * the start or end of the file respectively.
- *
  * We do our own buffering here because fwrite() is so slow.
  *
  * If forceit is true, we don't care for errors when attempting backups (jw).
@@ -265,31 +266,42 @@ writeit(fname, start, end, append, forceit)
 	char				*buffer;
 	long 				perm = -1;			/* file permissions */
 	int					retval = TRUE;
+	int					newfile = FALSE;	/* TRUE if file does not exist yet */
 #ifdef UNIX
 	struct stat			old;
+	int					made_writable = FALSE;	/* 'w' bit has been set */
+#endif
+#ifdef AMIGA
+	BPTR				flock;
 #endif
 
-#ifdef DEBUG
-# ifdef AMIGA
-	if (writelock(fname) == FALSE)	/* file is locked, so what? */
+	if (fname == NULL || *fname == NUL)		/* safety check */
+		return FALSE;
+
+	/*
+	 * Disallow writing from .exrc and .vimrc in current directory for
+	 * security reasons.
+	 */
+	if (secure)
 	{
-		emsg("File is locked");
+		secure = 2;
+		emsg(e_curdir);
 		return FALSE;
 	}
-# endif
-#endif
 
-	filemess(fname, "");
+	filemess(fname, "");		/* show that we are busy */
 
 	buffer = alloc(BUFSIZE);
 	if (buffer == NULL)
 		return FALSE;
 
 #ifdef UNIX
-		/* get information about original file */
+		/* get information about original file (if there is one) */
 	old.st_dev = old.st_ino = 0;
-	stat(fname, &old);
-	perm = getperm(fname);
+	if (stat(fname, &old))
+		newfile = TRUE;
+	else
+		perm = old.st_mode;
 /*
  * If we are not appending, the file exists, and the 'writebackup' or
  * 'backup' option is set, try to make a backup copy of the file.
@@ -346,7 +358,8 @@ writeit(fname, start, end, append, forceit)
 				if (*wp == '/')
 					break;
 			++wp;
-			if (p_bdir[0] == '~' && p_bdir[1] == '/' && (home = getenv("HOME")) != NULL)
+			if (p_bdir[0] == '~' && p_bdir[1] == '/' &&
+							(home = (char *)vimgetenv("HOME")) != NULL)
 				sprintf(buf, "%s/%s/%s", home, p_bdir + 2, wp);
 			else
 				sprintf(buf, "%s/%s", p_bdir, wp);
@@ -410,6 +423,7 @@ nobackup:
 	if (forceit && (old.st_uid == getuid()) && perm >= 0 && !(perm & 0200))
  	{
 		perm |= 0200;	
+		made_writable = TRUE;
 		setperm(fname, perm);
  	}
 #else /* UNIX */
@@ -421,7 +435,10 @@ nobackup:
  * both switched off. This helps when editing large files on
  * almost-full disks. (jw)
  */
-	if (!append && (perm = getperm(fname)) >= 0 && (p_wb || p_bk))
+	perm = getperm(fname);
+	if (perm < 0)
+		newfile = TRUE;
+	if (!append && perm >= 0 && (p_wb || p_bk))
 	{
 		/*
 		 * Form the backup file name - change path/fo.o.h to path/fo.o.h.bak
@@ -439,8 +456,28 @@ nobackup:
 			 * For safety, we don't remove the backup until the write has finished
 			 * successfully. And if the 'backup' option is set, leave it around.
 			 */
+#ifdef AMIGA
+			/*
+			 * With MSDOS-compatible filesystems (crossdos, messydos) it is
+			 * possible that the name of the backup file is the same as the
+			 * original file. To avoid the chance of accidently deleting the
+			 * original file (horror!) we lock it during the remove.
+			 * This should not happen with ":w", because startscript() should
+			 * detect this problem and set thisfile_sn, causing modname to
+			 * return a correct ".bak" filename. This problem does exist with
+			 * ":w filename", but then the original file will be somewhere else
+			 * so the backup isn't really important. If autoscripting is off
+			 * the rename may fail.
+			 */
+			flock = Lock((UBYTE *)fname, (long)ACCESS_READ);
+#endif
 			remove(backup);
-			if (rename(fname, backup) != 0)
+#ifdef AMIGA
+			if (flock)
+				UnLock(flock);
+#endif
+			len = rename(fname, backup);
+			if (len != 0)
 			{
 				if (forceit)
 				{
@@ -460,7 +497,8 @@ nobackup:
 		/* 
 		 * We may try to open the file twice: If we can't write to the
 		 * file and forceit is TRUE we delete the existing file and try to create
-		 * a new one. If this still fails we lost the original file!
+		 * a new one. If this still fails we may have lost the original file!
+		 * (this may happen when the user reached his quotum for number of files).
 		 */
 	while ((fd = open(fname, O_WRONLY | (append ? O_APPEND : (O_CREAT | O_TRUNC)), 0666)) < 0)
  	{
@@ -478,7 +516,8 @@ nobackup:
 				/* we write to the file, thus it should be marked
 													writable after all */
 				perm |= 0200;		
-				if (perm >= 0 && ((old.st_uid != getuid()) || (old.st_gid != getgid())))
+				made_writable = TRUE;
+				if (old.st_uid != getuid() || old.st_gid != getgid())
 					perm &= 0777;
 #endif /* UNIX */
 				remove(fname);
@@ -486,32 +525,31 @@ nobackup:
 			}
 		}
 /*
- * If we failed to open the file, we don't need a backup.
+ * If we failed to open the file, we don't need a backup. Throw it away.
  * If we moved or removed the original file try to put the backup in its place.
  */
-#ifdef UNIX
  		if (backup)
 		{
-			if (forceit)
-				rename(backup, fname);	/* we removed the original, move
-												the copy in its place */
-			else
-				remove(backup);			/* it was a copy, throw away */
-		}
+#ifdef UNIX
+			struct stat st;
+
+			/*
+			 * There is a small chance that we removed the original, try
+			 * to move the copy in its place.
+			 * This won't work if the backup is in another file system!
+			 * In that case we leave the copy around.
+			 */
+			if (stat(fname, &st) < 0)	/* file does not exist */
+				rename(backup, fname);	/* put the copy in its place */
+			if (stat(fname, &st) >= 0)	/* original file does exist */
+				remove(backup);			/* throw away the copy */
 #else
- 		if (backup)
  			rename(backup, fname);	/* try to put the original file back */
 #endif
+		}
  		goto fail;
  	}
 	errmsg = NULL;
-
-#ifdef MSDOS
-	setperm(fname, 0); 
-	/* 
-	 * Just to be sure we can write it next time. 
-	 */
-#endif
 
 	len = 0;
 	s = buffer;
@@ -564,6 +602,10 @@ nobackup:
 		errmsg = "Close failed";
 		goto fail;
 	}
+#ifdef UNIX
+	if (made_writable)
+		perm &= ~0200;			/* reset 'w' bit for security reasons */
+#endif
 	if (perm >= 0)
 		setperm(fname, perm);	/* set permissions of new file same as old file */
 
@@ -581,7 +623,7 @@ nobackup:
 	lnum -= start;		/* compute number of written lines */
 	smsg("\"%s\"%s %ld line%s, %ld character%s",
 			fname,
-			(backup == NULL && !append) ? " [New File]" : " ",
+			newfile ? " [New File]" : " ",
 			(long)lnum, plural((long)lnum),
 			nchars, plural(nchars));
 	if (start == 1 && end == line_count)		/* when written everything */

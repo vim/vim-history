@@ -24,10 +24,7 @@
 #define DEL 					0x7f
 #define CSI 					0x9b
 
-#ifdef CTRL
-# undef CTRL
-#endif
-#define CTRL(x) ((x) & 0x1f)
+#define Ctrl(x) ((x) & 0x1f)
 
 /*
  * character that separates dir names in a path

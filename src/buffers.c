@@ -42,9 +42,9 @@ struct buffheader
 		int 			bh_space;		/* space in bh_curr for appending */
 };
 
-static struct buffheader stuffbuff = {{NULL, NUL}, NULL, 0, 0};
-static struct buffheader redobuff = {{NULL, NUL}, NULL, 0, 0};
-static struct buffheader recordbuff = {{NULL, NUL}, NULL, 0, 0};
+static struct buffheader stuffbuff = {{NULL, {NUL}}, NULL, 0, 0};
+static struct buffheader redobuff = {{NULL, {NUL}}, NULL, 0, 0};
+static struct buffheader recordbuff = {{NULL, {NUL}}, NULL, 0, 0};
 
 	/*
 	 * when block_redo is TRUE redo buffer will not be changed
@@ -58,6 +58,7 @@ struct mapblock
 	char			*m_keys;		/* mapped from */
 	char			*m_str; 		/* mapped to */
 	int 			 m_mode;		/* valid mode */
+	int				 m_noremap;		/* no re-mapping for this one */
 };
 
 /* variables used by vgetorpeek() and flush_buffers */
@@ -462,6 +463,7 @@ ins_mapbuf(str)
 	if (newlen < 0)				/* string is getting too long */
 	{
 		emsg(e_toocompl);		/* also calls flush_buffers */
+		setcursor();
 		return -1;
 	}
 	s = alloc(newlen);
@@ -498,6 +500,11 @@ vgetorpeek(advance)
 	int				len;
 	struct mapblock *mp;
 	int				mode = State;
+	static int		nomapping = 0;		/* number of characters that should
+											not be mapped */
+	int				timedout = FALSE;	/* waited for more than 1 second
+												for mapping to complete */
+	int				mapdepth = 0;		/* check for recursive mapping */
 
 	if (mode == REPLACE || mode == CMDLINE)
 		mode = INSERT;			/* treat replace mode just like insert mode */
@@ -533,23 +540,32 @@ vgetorpeek(advance)
 			for (;;)		/* loop until we got a character */
 			{
 				breakcheck();				/* check for CTRL-C */
-				if (!got_int && len > 0)	/* see if we have a mapped key sequence */
+				if (got_int)
+				{
+					typelen = 0;			/* flush all typeahead */
+					maplen = 0;
+					len = 0;
+				}
+				else if (len > 0)	/* see if we have a mapped key sequence */
 				{
 					/*
 					 * walk through the maplist until we find an
-					 * entry that matches.
+					 * entry that matches (if not timed out).
 					 */
-					for (mp = maplist.m_next; mp; mp = mp->m_next)
+					mp = NULL;
+					if (!timedout && (str != mapstr || (p_remap && nomapping == 0)))
 					{
-						if (mp->m_mode != mode)
-							continue;
-						n = strlen(mp->m_keys);
-						if (!strncmp(mp->m_keys, str, (size_t)(n > len ? len : n)))
-							break;
+						for (mp = maplist.m_next; mp; mp = mp->m_next)
+						{
+							if (mp->m_mode != mode)
+								continue;
+							n = strlen(mp->m_keys);
+							if (!strncmp(mp->m_keys, str, (size_t)(n > len ? len : n)))
+								break;
+						}
 					}
-					if (mp == NULL || (str == mapstr && (n > len ||
-								p_remap == FALSE))) /* no match found */
-					{
+					if (mp == NULL || (str == mapstr && n > len))
+					{								/* no match found */
 						c = str[0] & 255;
 						if (str == mapstr)
 							KeyTyped = FALSE;
@@ -562,6 +578,8 @@ vgetorpeek(advance)
 								--maplen;
 							else
 								--typelen;
+							if (nomapping)
+								--nomapping;
 						}
 						break;
 					}
@@ -577,22 +595,39 @@ vgetorpeek(advance)
 
 						/*
 						 * Put the replacement string in front of mapstr.
+						 * The depth check catches ":map x y" and ":map y x".
 						 */
+						if (++mapdepth == 1000)
+						{
+							emsg("recursive mapping");
+							setcursor();
+							maplen = 0;
+							c = -1;
+							break;
+						}
 						if (ins_mapbuf(mp->m_str) < 0)
 						{
 							c = -1;
 							break;
 						}
+						if (mp->m_noremap)
+							nomapping += strlen(mp->m_str);
 						str = mapstr;
 						len = maplen;
 						continue;
 					}
 				}
-				c = inchar(!advance);
+											/* inchar() will reset got_int */
+				c = inchar(!advance, len == 0 || !p_timeout);
 				if (c <= NUL || !advance)	/* no character available or async */
 				{
 					if (!advance)
 						break;
+					if (len)				/* timed out */
+					{
+						timedout = TRUE;
+						continue;
+					}
 				}
 				else
 				{
@@ -608,11 +643,6 @@ vgetorpeek(advance)
 				}
 				len = typelen;
 				str = typeahead;
-			}
-			if (got_int)		/* interrupted: remove all chars */
-			{
-				c = -1;
-				continue;
 			}
 		}
 	} while (c < 0 || (advance && c == NUL));
@@ -634,12 +664,13 @@ vpeekc()
 }
 
 /*
- * unmap[!] {lhs}		: remove key mapping for {lhs}
- * map[!]				: show all key mappings
- * map[!] {lhs}			: show key mapping for {lhs}
- * map[!] {lhs} {rhs}	: set key mapping for {lhs} to {rhs}
+ * unmap[!] {lhs}			: remove key mapping for {lhs}
+ * map[!]					: show all key mappings
+ * map[!] {lhs}				: show key mapping for {lhs}
+ * map[!] {lhs} {rhs}		: set key mapping for {lhs} to {rhs}
+ * noremap[!] {lhs} {rhs}	: same, but no remapping for {rhs}
  *
- * unmap == 1 for unmap command.
+ * maptype == 1 for unmap command, 2 for noremap command.
  * arg is pointer to any arguments.
  * mode is INSERT if [!] is present.
  * 
@@ -650,41 +681,59 @@ vpeekc()
  *		  4 for out of mem
  */
 	int
-domap(unmap, arg, mode)
-	int		unmap;
-	char	*arg;
+domap(maptype, keys, mode)
+	int		maptype;
+	char	*keys;
 	int		mode;
 {
-		struct mapblock *mp, *mprev;
-		char *p;
-		int n = 0;			/* init for GCC */
-		int len = 0;		/* init for GCC */
-		char *newstr;
+		struct mapblock		*mp, *mprev;
+		char				*arg;
+		char				*p;
+		int					n = 0;			/* init for GCC */
+		int					len = 0;		/* init for GCC */
+		char				*newstr;
+		int					hasarg;
 
 /*
- * find end of keys
+ * find end of keys and remove CTRL-Vs in it
  */
-		p = arg;
-		skiptospace(&p);
+		p = keys;
+		while (*p && *p != ' ' && *p != '\t')
+		{
+			if (*p == Ctrl('V') && p[1] != NUL)
+				strcpy(p, p + 1);			/* remove CTRL-V */
+			++p;
+		}
 		if (*p != NUL)
 			*p++ = NUL;
 		skipspace(&p);
+		hasarg = (*p != NUL);
+		arg = p;
+/*
+ * remove CTRL-Vs from argument
+ */
+		while (*p)
+		{
+			if (*p == Ctrl('V') && p[1] != NUL)
+				strcpy(p, p + 1);			/* remove CTRL-V */
+			++p;
+		}
 
 /*
  * check arguments and translate function keys
  */
-		if (*arg != NUL)
+		if (*keys != NUL)
 		{
-				if (unmap && *p != NUL)				/* unmap has no arguments */
+				if (maptype == 1 && hasarg)			/* unmap has no arguments */
 					return 1;
-				if (*arg == '#' && isdigit(*(arg + 1)))	/* function key */
+				if (*keys == '#' && isdigit(*(keys + 1)))	/* function key */
 				{
-					if (*++arg == '0')
-						*(u_char *)arg = K_F10;
+					if (*++keys == '0')
+						*(u_char *)keys = K_F10;
 					else
-						*arg += K_F1 - '1';
+						*keys += K_F1 - '1';
 				}
-				len = strlen(arg);
+				len = strlen(keys);
 				if (len > MAXMAPLEN)			/* maximum lenght of 10 chars */
 					return 2;
 		}
@@ -692,41 +741,45 @@ domap(unmap, arg, mode)
 /*
  * Find an entry in the maplist that matches.
  */
-		if (*arg == NUL || (!unmap && *p == NUL))
+#ifdef AMIGA
+		if (*keys == NUL || (maptype != 1 && !hasarg))
 			settmode(0);				/* set cooked mode so output can be halted */
+#endif
 		for (mp = maplist.m_next, mprev = &maplist; mp; mprev = mp, mp = mp->m_next)
 		{
 			if (mp->m_mode != mode)
 				continue;
 			n = strlen(mp->m_keys);
-			if (*arg == NUL)
+			if (*keys == NUL)
 				showmap(mp);
-			else if (!strncmp(mp->m_keys, arg, (size_t)(n < len ? n : len)))
+			else if (!strncmp(mp->m_keys, keys, (size_t)(n < len ? n : len)))
 			{
-				if (!unmap && *p == NUL)
+				if (maptype != 1 && !hasarg)
 					showmap(mp);
 				else
 					break;
 			}
 		}
-		if (*arg == NUL || (!unmap && *p == NUL))
+		if (*keys == NUL || (maptype != 1 && !hasarg))
 		{
+#ifdef AMIGA
 				settmode(1);
+#endif
 				wait_return(TRUE);
 				return 0;				/* listing finished */
 		}
 
 		if (mp == NULL) 		/* new entry or nothing to remove */
 		{
-				if (unmap)
+				if (maptype == 1)
 						return 2;		/* no match */
 
 				/* allocate a new entry for the maplist */
 				mp = (struct mapblock *)alloc((unsigned)sizeof(struct mapblock));
 				if (mp == NULL)
 						return 4;		/* no mem */
-				mp->m_keys = strsave(arg);
-				mp->m_str = strsave(p);
+				mp->m_keys = strsave(keys);
+				mp->m_str = strsave(arg);
 				if (mp->m_keys == NULL || mp->m_str == NULL)
 				{
 						free(mp->m_keys);
@@ -734,6 +787,7 @@ domap(unmap, arg, mode)
 						free(mp);
 						return 4;		/* no mem */
 				}
+				mp->m_noremap = maptype;
 
 				/* add the new entry in front of the maplist */
 				mp->m_next = maplist.m_next;
@@ -744,7 +798,7 @@ domap(unmap, arg, mode)
 		if (n != len)
 			return 3;					/* ambigious */
 
-		if (unmap)
+		if (maptype == 1)
 		{
 				free(mp->m_keys);
 				free(mp->m_str);
@@ -756,11 +810,12 @@ domap(unmap, arg, mode)
 /*
  * replace existing entry
  */
-		newstr = strsave(p);
+		newstr = strsave(arg);
 		if (newstr == NULL)
 				return 4;				/* no mem */
 		free(mp->m_str);
 		mp->m_str = newstr;
+		mp->m_noremap = maptype;
 
 		return 0;						/* replaced OK */
 }
@@ -777,6 +832,10 @@ showmap(mp)
 		outchar(' ');				/* padd with blanks */
 		++len;
 	}
+	if (mp->m_noremap)
+		outchar('*');
+	else
+		outchar(' ');
 	outtrans(mp->m_str, -1);
 	outchar('\n');
 	flushbuf();

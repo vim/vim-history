@@ -20,25 +20,53 @@
 #include "proto.h"
 
 #include <fcntl.h>
-#include <time.h>
+#if !defined(pyr) && !defined(NOT_BOTH_TIME)
+# include <time.h>			/* on some systems time.h should not be
+							   included together with sys/time.h */
+#endif
 #include <sys/ioctl.h>
-#include <sys/types.h>
+#ifndef M_XENIX
+# include <sys/types.h>
+#endif
 #include <signal.h>
 
 #ifdef SYSV
-# include <poll.h>
+# ifdef M_XENIX
+#  include <sys/select.h>
+#  define bzero(a, b)	memset((a), 0, (b))
+# else
+#  include <poll.h>
+# endif
 # include <termio.h>
-#else
-# include <sgtty.h>
+#else	/* SYSV */
 # include <sys/time.h>
+# ifdef hpux
+#  include <termio.h>
+#  define SIGWINCH SIGWINDOW
+# else
+#  include <sgtty.h>
+# endif	/* hpux */
+#endif	/* SYSV */
+
+#if (defined(pyr) || defined(NO_FD_ZERO)) && defined(SYSV) && defined(FD_ZERO)
+# undef FD_ZERO
 #endif
 
+#ifdef ESIX
+# ifdef SIGWINCH
+#  undef SIGWINCH
+# endif
+# ifdef TIOCGWINSZ
+#  undef TIOCGWINSZ
+# endif
+#endif
 
-static int	Read __ARGS((int, char *, long));
+static int	Read __ARGS((char *, long));
 static int	WaitForChar __ARGS((int));
 static int	RealWaitForChar __ARGS((int));
-#ifndef linux
-static void sig_winch __ARGS((void));
+static void fill_inbuf __ARGS((void));
+#if defined(SIGWINCH) && !defined(linux)
+static void sig_winch __ARGS((int, int, struct sigcontext *));
 #endif
 
 static int do_resize = FALSE;
@@ -98,7 +126,7 @@ GetChars(buf, maxlen, type)
 	int		type;
 {
 	int		len;
-	int		time = 1000;
+	int		time = 1000;	/* one second */
 
 	switch (type)
 	{
@@ -131,7 +159,7 @@ GetChars(buf, maxlen, type)
 			do_resize = FALSE;
 			continue;
 		}
-		len = Read(0, buf, (long)maxlen);
+		len = Read(buf, (long)maxlen);
 		if (len > 0)
 			return len;
 	}
@@ -140,8 +168,8 @@ GetChars(buf, maxlen, type)
 	void
 vim_delay()
 {
-#ifdef SYSV
-	poll(0,0, 500);
+#if defined(SYSV) && !defined(M_XENIX)
+	poll(0, 0, 500);
 #else
 	struct timeval tv;
 
@@ -152,9 +180,12 @@ vim_delay()
 }
 
 	static void
-sig_winch()
+sig_winch(sig, code, scp)
+	int		sig;
+	int		code;
+	struct sigcontext *scp;
 {
-#if defined(SYSV) || defined(linux)
+#if defined(SIGWINCH) && (defined(SYSV) || defined(linux) || defined(hpux))
 	signal(SIGWINCH, sig_winch);
 #endif
 	do_resize = TRUE;
@@ -169,11 +200,15 @@ mch_suspend()
 {
 #ifdef SIGTSTP
 	settmode(0);
+	stoptermcap();
 	kill(0, SIGTSTP);		/* send ourselves a STOP signal */
 	settmode(1);
+	starttermcap();
 #else
 	outstr("new shell started\n");
+	stoptermcap();
 	call_shell(NULL, 0);
+	starttermcap();
 #endif
 }
 
@@ -186,7 +221,9 @@ mch_windinit()
 	flushbuf();
 
 	mch_get_winsize();
+#if defined(SIGWINCH)
 	signal(SIGWINCH, sig_winch);
+#endif
 }
 
 /*
@@ -242,7 +279,7 @@ dirname(buf, len)
 	char *buf;
 	int len;
 {
-#ifdef SYSV
+#if defined(SYSV) || defined(hpux)
 	extern int		errno;
 	extern char		*sys_errlist[];
 
@@ -272,7 +309,7 @@ FullName(fname, buf, len)
 
     	if (*fname != '/')
 		{
-#ifdef SYSV
+#if defined(SYSV) || defined(hpux)
 			(void)getcwd(buf,len);
 #else
 			(void)getwd(buf);
@@ -330,9 +367,9 @@ isdir(name)
 mch_windexit(r)
 	int r;
 {
-	flushbuf();
-
 	settmode(0);
+	stoptermcap();
+	flushbuf();
 	stopscript();					/* remove autoscript file */
 	exit(r);
 }
@@ -351,12 +388,18 @@ mch_settmode(raw)
 		ioctl(0, TCGETA, &told);
 		tnew = told;
 		tnew.c_iflag &= ~ICRNL;			/* enables typing ^V^M */
-		tnew.c_lflag = ~(ICANON | ECHO | ISIG | ECHOE);
+		tnew.c_iflag &= ~IXON;			/* enables typing ^Q */
+		tnew.c_lflag &= ~(ICANON | ECHO | ISIG | ECHOE);
+		tnew.c_cc[VMIN] = 1;			/* return after 1 char */
+		tnew.c_cc[VTIME] = 0;			/* don't wait */
 		ioctl(0, TCSETA, &tnew);
 	}
 	else
 		ioctl(0, TCSETA, &told);
 #else
+# ifndef TIOCSETN
+#  define TIOCSETN TIOCSETP		/* for hpux 9.0 */
+# endif
 	/* for "old" tty systems */
 	static struct sgttyb ttybold;
 		   struct sgttyb ttybnew;
@@ -367,10 +410,10 @@ mch_settmode(raw)
 		ttybnew = ttybold;
 		ttybnew.sg_flags &= ~(CRMOD | ECHO);
 		ttybnew.sg_flags |= RAW;
-		ioctl(0, TIOCSETP, &ttybnew);
+		ioctl(0, TIOCSETN, &ttybnew);
 	}
 	else
-		ioctl(0, TIOCSETP, &ttybold);
+		ioctl(0, TIOCSETN, &ttybold);
 #endif
 }
 
@@ -380,38 +423,69 @@ mch_get_winsize()
 	int				old_Rows = Rows;
 	int				old_Columns = Columns;
 	char			*p;
-	struct winsize	ws;
 
 	Columns = 0;
 	Rows = 0;
+
+/*
+ * when called without a signal, get winsize from environment
+ */
 	if (!do_resize)
 	{
-	    if (p = getenv("LINES"))
+	    if ((p = (char *)getenv("LINES")))
 			Rows = atoi(p);
-	    if (p = getenv("COLUMNS"))
+	    if ((p = (char *)getenv("COLUMNS")))
 			Columns = atoi(p);
 	    if (Columns <= 0 || Rows <= 0)
 			do_resize = TRUE;
 	}
+
+/*
+ * when got a signal, or no size in environment, try using an ioctl
+ */
 	if (do_resize)
 	{
-# ifdef TIOCGWINSZ
-#  ifdef DEBUG
-	    extern int errno;
-#  endif /* DEBUG */
+# ifdef TIOCGSIZE
+		struct ttysize	ts;
 
-	    if (ioctl(0, TIOCGWINSZ, &ws))
+	    if (ioctl(0, TIOCGSIZE, &ts) == 0)
 	    {
-			debug1("TIOCGWINSZ ioctl errno %d\n", errno);
+			if (Columns == 0)
+				Columns = ts.ts_cols;
+			if (Rows == 0)
+				Rows = ts.ts_lines;
 	    }
-	    else
+# else /* TIOCGSIZE */
+#  ifdef TIOCGWINSZ
+		struct winsize	ws;
+
+	    if (ioctl(0, TIOCGWINSZ, &ws) == 0)
 	    {
-			Columns = ws.ws_col;
-			Rows = ws.ws_row;
+			if (Columns == 0)
+				Columns = ws.ws_col;
+			if (Rows == 0)
+				Rows = ws.ws_row;
 	    }
-# endif /* TIOCGWINSZ */
+#  endif /* TIOCGWINSZ */
+# endif /* TIOCGSIZE */
 	    do_resize = FALSE;
 	}
+
+#ifdef TERMCAP
+/*
+ * if previous work fails, try reading the termcap
+ */
+	if (Columns == 0 || Rows == 0)
+	{
+		extern void getlinecol();
+
+		getlinecol();	/* get "co" and "li" entries from termcap */
+	}
+#endif
+
+/*
+ * If everything fails, use the old values
+ */
 	if (Columns <= 0 || Rows <= 0)
 	{
 		Columns = old_Columns;
@@ -474,54 +548,62 @@ call_shell(cmd, dummy)
  */
 
 #define INBUFLEN 50
-static char		inbuf[INBUFLEN];
-static int		inbufcount = 0;
+static char		inbuf[INBUFLEN];	/* internal typeahead buffer */
+static int		inbufcount = 0;		/* number of chars in inbuf[] */
 
 	static int
-Read(fd, buf, maxlen)
-	int		fd;
+Read(buf, maxlen)
 	char	*buf;
 	long	maxlen;
 {
-	if (inbufcount)		/* characters in inbuf[] */
-	{
-		if (maxlen > inbufcount)
-			maxlen = inbufcount;
-		memmove(buf, inbuf, maxlen);
-		inbufcount -= maxlen;
-		if (inbufcount)
-				memmove(inbuf, inbuf + maxlen, inbufcount);
-		return (int)maxlen;
-	}
-	return read(fd, buf, maxlen);
+	if (inbufcount == 0)		/* if the buffer is empty, fill it */
+		fill_inbuf();
+	if (maxlen > inbufcount)
+		maxlen = inbufcount;
+	memmove(buf, inbuf, maxlen);
+	inbufcount -= maxlen;
+	if (inbufcount)
+			memmove(inbuf, inbuf + maxlen, inbufcount);
+	return (int)maxlen;
 }
 
 	void
 breakcheck()
 {
-	int len;
-
 /*
  * check for CTRL-C typed by reading all available characters
  */
 	if (RealWaitForChar(0))		/* if characters available */
+		fill_inbuf();
+}
+
+	static void
+fill_inbuf()
+{
+	int		len;
+
+	if (inbufcount >= INBUFLEN)		/* buffer full */
+		return;
+	len = read(0, inbuf + inbufcount, (long)(INBUFLEN - inbufcount));
+	if (len <= 0)	/* cannot read input??? */
 	{
-		len = read(0, inbuf + inbufcount, (long)(INBUFLEN - inbufcount));
-		while (len-- > 0)
+		fprintf(stderr, "Vim: Error reading input, exiting...\n");
+		exit(1);
+	}
+	while (len-- > 0)
+	{
+		/*
+		 * if a CTRL-C was typed, remove it from the buffer and set got_int
+		 */
+		if (inbuf[inbufcount] == 3)
 		{
-			/*
-			 * if a CTRL-C was typed, remove it from the buffer and set got_int
-			 */
-			if (inbuf[inbufcount++] == 3)
-			{
-				/* remove everything typed before the CTRL-C */
-				if (len)
-					memmove(inbuf, inbuf + inbufcount, len);
-				inbufcount = 0;
-				got_int = TRUE;
-				flush_buffers();		/* remove all typeahead */
-			}
+			/* remove everything typed before the CTRL-C */
+			memmove(inbuf, inbuf + inbufcount, len + 1);
+			inbufcount = 0;
+			got_int = TRUE;
+			flush_buffers();		/* remove all typeahead */
 		}
+		++inbufcount;
 	}
 }
 
@@ -547,7 +629,7 @@ WaitForChar(ticks)
 RealWaitForChar(ticks)
 	int ticks;
 {
-#ifdef SYSV
+#ifndef FD_ZERO
 	struct pollfd fds;
 
 	fds.fd = 0;
@@ -565,7 +647,7 @@ RealWaitForChar(ticks)
 
 	FD_ZERO(&fdset);
 	FD_SET(0, &fdset);
-	return (select(1, &fdset, 0, 0, (ticks >= 0) ? &tv : 0));
+	return (select(1, &fdset, NULL, NULL, (ticks >= 0) ? &tv : NULL));
 #endif
 }
 
@@ -628,7 +710,7 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	strcpy(tmpname, TMPNAME2);
 	if (*mktemp(tmpname) == NUL)
 	{
-		*file = (char **)e_notmp;
+		emsg(e_notmp);
 	    return 1;
 	}
 
@@ -665,7 +747,7 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
  	fd = fopen(tmpname, "r");
 	if (fd == NULL)
 	{
-		*file = (char **)e_notopen;
+		emsg(e_notopen);
 		return 1;
 	}
 	fseek(fd, 0L, SEEK_END);
@@ -683,22 +765,18 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	remove(tmpname);
 	if (i != len)
 	{
-		*file = (char **)e_notread;
+		emsg(e_notread);
 		free(buffer);
 		return 1;
 	}
+	buffer[len] = '\n';				/* make sure the buffers ends in NL */
 
 	p = buffer;
-	for (i = 0; *p; ++i)		/* get number of entries */
+	for (i = 0; *p != '\n'; ++i)		/* get number of entries */
 	{
-		while (*p != ' ' && *p != '\n')
+		while (*p != ' ' && *p != '\n')	/* skip entry */
 			++p;
-		if (*p == '\n')
-		{
-			++i;
-			break;
-		}
-		skipspace(&p);
+		skipspace(&p);					/* skip to next entry */
 	}
 	*num_file = i;
 	*file = (char **)alloc(sizeof(char *) * i);
@@ -735,4 +813,36 @@ FreeWild(num, file)
 	free(file[0]);
 	free(file);
 }
+
+	int
+has_wildcard(p)
+	char *p;
+{
+	for ( ; *p; ++p)
+		if (strchr("*?[{`~$", *p) != NULL)
+			return 1;
+	return 0;
+}
 #endif	/* WILD_CARDS */
+
+#ifdef M_XENIX
+/*
+ * Scaled-down version of rename, which is missing in Xenix.
+ * This version can only move regular files and will fail if the
+ * destination exists.
+ */
+	int
+rename(src, dst)
+	char *src, *dst;
+{
+	struct stat		st;
+
+	if (stat(dest, &st) >= 0)	/* fail if destination exists */
+		return -1;
+	if (link(src, dest) != 0)	/* link file to new name */
+		return -1;
+	if (unlink(src) == 0)		/* delete link to old name */
+		return 0;
+	return -1;
+}
+#endif /* M_XENIX */

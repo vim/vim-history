@@ -40,6 +40,8 @@ typedef struct _tcarr
   char *t_vb;		/* flash    vb	visual bell */
   char *t_ks;		/* smkx     ks	put terminal in "keypad transmit" mode */
   char *t_ke;		/* rmkx     ke	out of "keypad transmit" mode */
+  char *t_ts;		/*          ti	put terminal in termcap mode */
+  char *t_te;		/*          te	out of termcap mode */
 
 /* key codes */
   char *t_ku;		/* kcuu1    ku	arrow up */
@@ -72,7 +74,7 @@ typedef struct _tcarr
   char *t_sf10;		/* kf20     FA	shifted function key 10 */
   char *t_help;		/* khlp     %1	help key */
   char *t_undo;		/* kund     &8	undo key */
-  /* adjust inchar() for last entry */
+  /* adjust inchar() for last entry! */
 } Tcarr;
 
 extern Tcarr term_strings;	/* currently used terminal strings */
@@ -96,6 +98,8 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 #define T_VB	(term_strings.t_vb)
 #define T_KS	(term_strings.t_ks)
 #define T_KE	(term_strings.t_ke)
+#define T_TS	(term_strings.t_ts)
+#define T_TE	(term_strings.t_te)
 
 
 #ifndef NO_BUILTIN_TCAPS
@@ -121,7 +125,7 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0\033[7m\0\
 \0\033[%i%d;%dH\0\
 \1\033[%dC\0\
-\3\233A\0\
+\5\233A\0\
 \0\233B\0\
 \0\233D\0\
 \0\233C\0\
@@ -129,26 +133,26 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0\233S\0\
 \0\233 A\0\
 \0\233 @\0\
-\0\2330~\0\
-\0\2331~\0\
-\0\2332~\0\
-\0\2333~\0\
-\0\2334~\0\
-\0\2335~\0\
-\0\2336~\0\
-\0\2337~\0\
-\0\2338~\0\
-\0\2339~\0\
-\0\23310~\0\
-\0\23311~\0\
-\0\23312~\0\
-\0\23313~\0\
-\0\23314~\0\
-\0\23315~\0\
-\0\23316~\0\
-\0\23317~\0\
-\0\23318~\0\
-\0\23319~\0\
+\0\233\060~\0\
+\0\233\061~\0\
+\0\233\062~\0\
+\0\233\063~\0\
+\0\233\064~\0\
+\0\233\065~\0\
+\0\233\066~\0\
+\0\233\067~\0\
+\0\233\070~\0\
+\0\233\071~\0\
+\0\233\061\060~\0\
+\0\233\061\061~\0\
+\0\233\061\062~\0\
+\0\233\061\063~\0\
+\0\233\061\064~\0\
+\0\233\061\065~\0\
+\0\233\061\066~\0\
+\0\233\061\067~\0\
+\0\233\061\070~\0\
+\0\233\061\071~\0\
 \0\233?~\0\
 \0\0"
 
@@ -175,6 +179,7 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0\0"
 
 /*
+ * These codes are valid when ansi.sys or equivalent has been installed.
  * Function keys on a PC are preceded with a NUL. These are converted into
  * K_ZERO '\236' in GetChars(), because we cannot handle NULs in key codes.
  * CTRL-arrow is used instead of SHIFT-arrow.
@@ -188,7 +193,7 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0\033[7m\0\
 \0\033[%i%d;%dH\0\
 \1\033[%dC\0\
-\3\236H\0\
+\5\236H\0\
 \0\236P\0\
 \0\236K\0\
 \0\236M\0\
@@ -240,7 +245,7 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0\033[%dC\0\
 \1\033[?1h\0\
 \0\033[?0h\0\
-\0\033[OA\0\
+\2\033[OA\0\
 \0\033[OB\0\
 \0\033[OD\0\
 \0\033[OC\0\
@@ -281,6 +286,8 @@ extern Tcarr term_strings;	/* currently used terminal strings */
 \0[VB]\0\
 \0[KS]\0\
 \0[KE]\0\
+\0[TI]\0\
+\0[TE]\0\
 \0[KU]\0\
 \0[KD]\0\
 \0[KL]\0\

@@ -56,6 +56,8 @@ extern char *getcwd(char *, int);
 extern char *getwd(char *);
 
 extern int chdir(char *);
+extern int getuid(void);
+extern int getgid(void);
 
 extern int atoi (char *);
 extern long atol(char *);
@@ -67,11 +69,8 @@ extern void bzero(char *, int);
 
 extern char *memccpy(char *, char *, int, int);
 extern char *memchr(char *, int, int);
-extern int memcmp(char *, char *, int);
-extern char *memcpy(char *, char *, int);
 extern char *memset(char *, int, int);
 
-extern int strcmp(char *, char *);
 extern int strncmp(char *, char *, int);
 extern int strcasecmp(char *, char *);
 

@@ -1,6 +1,7 @@
-AppendNumberToRedobuff	buffers.c	/^char	AppendNumberToRedobuff(n)$/
-AppendToRedobuff	buffers.c /^AppendToRedobuff(s)$/
+AppendNumberToRedobuff	buffers.c	/^AppendNumberToRedobuff(n)$/
+AppendToRedobuff	buffers.c	/^AppendToRedobuff(s)$/
 Chk_Abort	amiga.c	/^Chk_Abort()$/
+Ctrl	ascii.h	/^#define Ctrl(x) ((x) & 0x1f)$/
 DoOneCmd	cmdline.c	/^DoOneCmd(buff)$/
 ExpandOne	cmdline.c	/^ExpandOne(str, list_notfound, mode)$/
 ExpandWildCards	amiga.c	/^ExpandWildCards(num_pat, pat, num_file, file, file/
@@ -17,14 +18,19 @@ Mmain	main.c	/^main(argc, argv)$/
 Mmkcmdtab	mkcmdtab.c	/^main(argc, argv)$/
 NEXT	regexp.c	/^#define NEXT(p) (((*((p)+1)&0377)<<8) + (*((p)+2)&/
 OP	regexp.c	/^#define OP(p)	(*(p))$/
+OPENDEBUG	debug.h	/^#	define OPENDEBUG(file)\\$/
 OPERAND	regexp.c	/^#define OPERAND(p)		((p) + 3)$/
 Opencmd	misccmds.c	/^Opencmd(dir, redraw)$/
 PeekChr	regexp.c	/^#define PeekChr() curchr	\/* shortcut only when las/
+Read	unix.c	/^Read(buf, maxlen)$/
+RealWaitForChar	unix.c	/^RealWaitForChar(ticks)$/
 ResetBuffers	buffers.c	/^ResetBuffers()$/
+Supdatescript	script.c	/^Supdatescript(str)$/
 TTEST	term.c	/^# define TTEST(a) debug1("%s: ", "a"); if (a) {deb/
 UCHARAT	regexp.c	/^#define UCHARAT(p)		((int)*(unsigned char *)(p))$/
 WaitForChar	msdos.c	/^WaitForChar(msec)$/
 __ARGS	regsub.c	/^# define __ARGS(a)	a$/
+__PARMS	vim.h	/^# define __PARMS(x)	x$/
 _addfmt	termlib.c	/^_addfmt(buf, fmt, val)             \/* add val to b/
 _find	termlib.c	/^_find(s, set)   \/* finds next c in s that's a memb/
 _match	termlib.c	/^_match(s1, s2)                 \/* returns length o/
@@ -47,6 +53,10 @@ beginline	edit.c	/^beginline(flag)$/
 blink	msdos.c	/^blink(n)$/
 block_prep	ops.c	/^block_prep(lnum, delete)$/
 breakcheck	amiga.c	/^breakcheck()$/
+bsdmemset	alloc.c	/^bsdmemset(ptr, c, size)$/
+buf1line	macros.h	/^#define buf1line() (line_count == 1)$/
+bufempty	macros.h	/^#define bufempty() (buf1line() && lineempty((linen/
+bzero	unix.c	/^#  define bzero(a, b)	memset((a), 0, (b))$/
 call_shell	amiga.c	/^call_shell(cmd, filter)$/
 canincrease	storage.c	/^canincrease(n)$/
 catch_cbrk	msdos.c	/^catch_cbrk()$/
@@ -64,6 +74,7 @@ check_winsize	term.c	/^check_winsize()$/
 checkclearop	normal.c	/^checkclearop()$/
 checkclearopq	normal.c	/^checkclearopq()$/
 chk_mline	fileio.c	/^chk_mline(lnum)$/
+clear_line	screen.c	/^clear_line()$/
 clear_termparam	param.c	/^clear_termparam()$/
 clearmarked	storage.c	/^clearmarked()$/
 clearopbeep	normal.c	/^clearopbeep()$/
@@ -72,6 +83,7 @@ clrtags	tag.c	/^clrtags()$/
 cls	search.c	/^cls()$/
 cmdchecklen	cmdline.c	/^cmdchecklen()$/
 coladvance	linefunc.c	/^coladvance(wcol)$/
+comp_Botline	screen.c	/^comp_Botline()$/
 copy_redo	buffers.c	/^copy_redo()$/
 copy_spaces	alloc.c	/^copy_spaces(ptr, count)$/
 cstrchr	regexp.c	/^cstrchr(s, c)$/
@@ -79,6 +91,10 @@ cstrncmp	regexp.c	/^cstrncmp(s1, s2, n)$/
 curs_columns	screen.c	/^curs_columns()$/
 cursorcmd	cmdline.c	/^cursorcmd()$/
 cursupdate	screen.c	/^cursupdate()$/
+debug	debug.h	/^#	define debug(x) {fprintf(debugfp,x);fflush(debug/
+debug1	debug.h	/^#	define debug1(x,a) {fprintf(debugfp,x,a);fflush(/
+debug2	debug.h	/^#	define debug2(x,a,b) {fprintf(debugfp,x,a,b);ffl/
+debug3	debug.h	/^#	define debug3(x,a,b,c) {fprintf(debugfp,x,a,b,c)/
 dec	linefunc.c	/^dec(lp)$/
 decCurpos	linefunc.c	/^decCurpos()$/
 decl	linefunc.c	/^decl(lp)$/
@@ -87,7 +103,7 @@ decrtags	tag.c	/^decrtags()$/
 delchar	misccmds.c	/^delchar(fixpos)$/
 dellines	misccmds.c	/^dellines(nlines, can_update)$/
 delmode	screen.c	/^delmode()$/
-delsline	storage.c	/^delsline(nr)$/
+delsline	storage.c	/^delsline(nr, delmarks)$/
 dirname	amiga.c	/^dirname(buf, len)$/
 do_Lower	regsub.c	/^do_Lower(d, c)$/
 do_Upper	regsub.c	/^do_Upper(d, c)$/
@@ -95,6 +111,7 @@ do_copy	regsub.c	/^do_copy(d, c)$/
 do_lower	regsub.c	/^do_lower(d, c)$/
 do_mlines	fileio.c	/^do_mlines()$/
 do_upper	regsub.c	/^do_upper(d, c)$/
+doaddsub	ops.c	/^doaddsub(c, Prenum1)$/
 doarglist	cmdline.c	/^doarglist(str)$/
 dobang	cmdline.c	/^dobang(addr_count, arg)$/
 dochange	ops.c	/^dochange()$/
@@ -109,12 +126,12 @@ doformat	ops.c	/^doformat()$/
 doglob	csearch.c	/^doglob(type, lp, up, cmd)$/
 dojoin	ops.c	/^dojoin(insert_space)$/
 dojumps	mark.c	/^dojumps()$/
-domap	buffers.c	/^domap(unmap, arg, mode)$/
+domap	buffers.c	/^domap(maptype, keys, mode)$/
 domarks	mark.c	/^domarks()$/
 doput	ops.c	/^doput(dir, count)$/
 dorecord	ops.c	/^dorecord(c)$/
 dos_packet	amiga.c	/^dos_packet(pid, action, arg)$/
-dosearch	search.c	/^dosearch(dir, str, reverse, count)$/
+dosearch	search.c	/^dosearch(dir, str, reverse, count, echo)$/
 doset	param.c	/^doset(arg)$/
 doshell	cmdline.c	/^doshell(cmd)$/
 doshift	ops.c	/^doshift(op)$/
@@ -128,29 +145,36 @@ doyank	ops.c	/^doyank(deleting)$/
 edit	edit.c	/^edit(count)$/
 emsg	message.c	/^emsg(s)$/
 end_word	search.c	/^end_word(count, type, stop)$/
+equal	macros.h	/^#define equal(a, b) (((a).lnum == (b).lnum) && ((a/
 expand_env	misccmds.c	/^expand_env(src, dst, dstlen)$/
 expandpath	msdos.c	/^expandpath(fl, path, fonly, donly, notf)$/
 filealloc	storage.c	/^filealloc()$/
 fileinfo	misccmds.c	/^fileinfo()$/
 filemess	fileio.c	/^filemess(name, s)$/
+fill_inbuf	unix.c	/^fill_inbuf()$/
 findfunc	search.c	/^findfunc(dir, what, count)$/
 findpar	search.c	/^findpar(dir, count, what)$/
 findsent	search.c	/^findsent(dir, count)$/
 findtag	tag.c	/^findtag(tag)$/
 firstmarked	storage.c	/^firstmarked()$/
+firsttaborspace	tag.c	/^firsttaborspace(str)$/
 flush_buffers	buffers.c	/^flush_buffers()$/
 flushbuf	amiga.c	/^flushbuf()$/
 fm_getname	mark.c	/^fm_getname(fmark)$/
 fname_case	amiga.c	/^fname_case(name)$/
+fnamecmp	vim.h	/^# define fnamecmp(x, y) stricmp((x), (y))$/
+free	vim.h	/^# define free(x)	nofreeNULL(x)$/
 free_buff	buffers.c	/^free_buff(buf)$/
 free_line	storage.c	/^free_line(ptr)$/
 free_yank	ops.c	/^free_yank(n)$/
 free_yank_all	ops.c	/^free_yank_all()$/
 freeall	storage.c	/^freeall()$/
+freefiles	amiga.c	/^freefiles()$/
+fullpathcmp	misccmds.c	/^fullpathcmp(s1, s2)$/
 fwd_word	search.c	/^fwd_word(count, type)$/
 gchar	misccmds.c	/^gchar(pos)$/
 gcharCurpos	misccmds.c	/^gcharCurpos()$/
-get_address	cmdline.c	/^get_address(ptr, curpos_lnum)$/
+get_address	cmdline.c	/^get_address(ptr)$/
 get_bufcont	buffers.c	/^get_bufcont(buffer)$/
 get_fib	amiga.c	/^get_fib(fname)$/
 get_indent	misccmds.c	/^get_indent()$/
@@ -164,17 +188,19 @@ getchr	regexp.c	/^getchr()$/
 getcmdline	cmdline.c	/^getcmdline(firstc, buff)$/
 getdigits	misccmds.c	/^getdigits(pp)$/
 getdigraph	digraph.c	/^getdigraph(char1, char2)$/
-getent	termlib.c	/^getent(tbuf, term, termcap)$/
+getent	termlib.c	/^getent(tbuf, term, termcap, buflen)$/
 getfile	cmdline.c	/^getfile(fname, setpm)$/
+getlinecol	term.c	/^getlinecol()$/
 getmark	mark.c	/^getmark(c, changefile)$/
 getout	main.c	/^getout(r)$/
 getperm	amiga.c	/^getperm(name)$/
 getvcol	screen.c	/^getvcol(pos, type)$/
 gotocmdline	cmdline.c	/^gotocmdline(clr, firstc)$/
+has_wildcard	amiga.c	/^has_wildcard(p)$/
 help	help.c	/^help()$/
 inc	linefunc.c	/^inc(lp)$/
 incCurpos	linefunc.c	/^incCurpos()$/
-inchar	term.c	/^inchar(async)$/
+inchar	term.c	/^inchar(async, waitforever)$/
 incl	linefunc.c	/^incl(lp)$/
 incrmarks	mark.c	/^incrmarks()$/
 incrtags	tag.c	/^incrtags()$/
@@ -186,14 +212,18 @@ ins_mapbuf	buffers.c	/^ins_mapbuf(str)$/
 inschar	misccmds.c	/^inschar(c)$/
 insertbuf	ops.c	/^insertbuf(c)$/
 insertchar	edit.c	/^insertchar(c)$/
+insfile	amiga.c	/^insfile(name)$/
 insstr	misccmds.c	/^insstr(s)$/
 isdir	amiga.c	/^isdir(name)$/
 isidchar	charset.c	/^isidchar(c)$/
 ismult	regexp.c	/^ismult(c)$/
 istermparam	param.c	/^istermparam(p)$/
 lalloc	alloc.c	/^lalloc(size, message)$/
+lineempty	macros.h	/^#define lineempty(p) (*nr2ptr(p) == NUL)$/
 listdigraphs	digraph.c	/^listdigraphs()$/
 lock2name	amiga.c	/^lock2name(lock, buf, len)$/
+lt	macros.h	/^#define lt(a, b) (((a).lnum != (b).lnum) \\$/
+ltoreq	macros.h	/^#define ltoreq(a, b) (((a).lnum != (b).lnum) \\$/
 m_blockalloc	storage.c	/^m_blockalloc(size, message)$/
 m_blockfree	storage.c	/^m_blockfree()$/
 m_error	storage.c	/^m_error()$/
@@ -208,16 +238,18 @@ mch_settmode	amiga.c	/^mch_settmode(raw)$/
 mch_suspend	amiga.c	/^mch_suspend()$/
 mch_windexit	amiga.c	/^mch_windexit(r)$/
 mch_windinit	amiga.c	/^mch_windinit()$/
+memmove	unix.h	/^#define memmove(to, from, len) memcpy(to, from, le/
+memset	vim.h	/^#define memset(ptr, c, size)	bsdmemset(ptr, c, siz/
 mkstr	alloc.c	/^mkstr(c)$/
 mktemp	cmdline.c	/^# define mktemp(a)	tmpnam(a)$/
 mkup	regexp.c	/^#define mkup(c) 		(reg_ic ? toupper(c) : (c))$/
-modname	msdos.c	/^modname(fname, ext)$/
+modname	script.c	/^modname(fname, ext)$/
 movemark	mark.c	/^movemark(count)$/
 msg	message.c	/^msg(s)$/
 msgmore	misccmds.c	/^msgmore(n)$/
 myregcomp	search.c	/^myregcomp(pat)$/
-nextent	termlib.c	/^nextent(tbuf, termcap)                     \/* Read/
-no_wildcard	msdos.c	/^no_wildcard(s)$/
+nextent	termlib.c	/^nextent(tbuf, termcap, buflen)         \/* Read 1 e/
+nofreeNULL	alloc.c	/^nofreeNULL(x)$/
 normal	normal.c	/^normal()$/
 nr2ptr	storage.c	/^nr2ptr(nr)$/
 onedown	edit.c	/^onedown(n)$/
@@ -227,13 +259,16 @@ oneright	edit.c	/^oneright()$/
 oneup	edit.c	/^oneup(n)$/
 openrecover	script.c	/^openrecover()$/
 openscript	script.c	/^openscript(name)$/
+otherfile	misccmds.c	/^otherfile(s)$/
 outchar	amiga.c	/^outchar(c)$/
 outnum	term.c	/^outnum(n)$/
 outstr	msdos.c	/^outstr(s)$/
 outstrn	term.c	/^outstrn(s)$/
 outtrans	charset.c	/^outtrans(str, len)$/
 parse_builtin_tcap	term.c	/^parse_builtin_tcap(tc, s)$/
+pchar	macros.h	/^#define pchar(lp, c) (*(nr2ptr((lp).lnum) + (lp).c/
 peekchr	regexp.c	/^peekchr()$/
+peekpeekchr	regexp.c	/^peekpeekchr()$/
 plines	misccmds.c	/^plines(p)$/
 plines_m	misccmds.c	/^plines_m(first, last)$/
 plural	misccmds.c	/^plural(n)$/
@@ -276,6 +311,7 @@ regsub	regsub.c	/^regsub(prog, source, dest, copy, magic)$/
 regtail	regexp.c	/^regtail(p, val)$/
 regtry	regexp.c	/^regtry(prog, string)$/
 remove	msdos.c	/^remove(name)$/
+rename	unix.c	/^rename(src, dst)$/
 replaceline	storage.c	/^replaceline(lnum, new)$/
 resettitle	amiga.c	/^resettitle()$/
 s_del	screen.c	/^s_del(row, nlines, invalid)$/
@@ -300,6 +336,7 @@ set_keymap	amiga.c	/^set_keymap(name)$/
 set_redo_ins	buffers.c	/^set_redo_ins()$/
 set_term	term.c	/^set_term(term)$/
 set_winsize	term.c	/^set_winsize(width, height, mustset)$/
+setaltfname	cmdline.c	/^setaltfname(arg, lnum, newfile)$/
 setcursor	term.c	/^setcursor()$/
 setfname	misccmds.c	/^setfname(s)$/
 setmark	mark.c	/^setmark(c)$/
@@ -316,6 +353,7 @@ showmode	screen.c	/^showmode()$/
 showonep	param.c	/^showonep(p)$/
 showparams	param.c	/^showparams(all)$/
 showruler	screen.c	/^showruler(always)$/
+sig_winch	unix.c	/^sig_winch(sig, code, scp)$/
 skip_chars	search.c	/^skip_chars(class, dir)$/
 skipchr	regexp.c	/^skipchr()$/
 skipspace	misccmds.c	/^skipspace(pp)$/
@@ -329,14 +367,18 @@ start_redo_ins	buffers.c	/^start_redo_ins()$/
 start_stuff	buffers.c	/^start_stuff()$/
 startinsert	ops.c	/^startinsert(initstr, startln, count)$/
 startscript	script.c	/^startscript()$/
+starttermcap	term.c	/^starttermcap()$/
 stop_arrow	edit.c	/^stop_arrow()$/
 stop_insert	edit.c	/^stop_insert()$/
 stop_redo_ins	buffers.c	/^stop_redo_ins()$/
 stopscript	script.c	/^stopscript()$/
+stoptermcap	term.c	/^stoptermcap()$/
+strchr	vim.h	/^#define strchr(ptr, c)			index(ptr, c)$/
 strcspn	regexp.c	/^strcspn(s1, s2)$/
 strlowcpy	msdos.c	/^strlowcpy(d, s)$/
 strnfcpy	regsub.c	/^strnfcpy(f, d, s, n)$/
 strnsave	alloc.c	/^strnsave(string, len)$/
+strrchr	vim.h	/^#define strrchr(ptr, c)			rindex(ptr, c)$/
 strsave	alloc.c	/^strsave(string)$/
 strsize	charset.c	/^strsize(s)$/
 stuffReadbuff	buffers.c	/^stuffReadbuff(s)$/
@@ -353,10 +395,26 @@ tgetnum	termlib.c	/^tgetnum(id)$/
 tgetstr	termlib.c	/^tgetstr(id, buf)$/
 tgoto	term.c	/^tgoto(cm, x, y)$/
 tinit	termlib.c	/^tinit(name)$/
-titoa	term.c	/^titoa(i)$/
+tltoa	term.c	/^tltoa(i)$/
 tputs	termlib.c	/^tputs(cp, affcnt, outc)$/
 transchar	charset.c	/^transchar(c)$/
 ttest	term.c	/^ttest(pairs)$/
+u_clearall	undo.c	/^u_clearall()$/
+u_clearline	undo.c	/^u_clearline()$/
+u_freeentry	undo.c	/^u_freeentry(uep, n)$/
+u_freelist	undo.c	/^u_freelist(uhp)$/
+u_getbot	undo.c	/^u_getbot()$/
+u_redo	undo.c	/^u_redo(count)$/
+u_save	undo.c	/^u_save(top, bot)$/
+u_saveCurpos	undo.c	/^u_saveCurpos()$/
+u_savecommon	undo.c	/^u_savecommon(top, bot, flag, ptr)$/
+u_savedel	undo.c	/^u_savedel(lnum, ptr)$/
+u_saveline	undo.c	/^u_saveline(lnum)$/
+u_savesub	undo.c	/^u_savesub(lnum, ptr)$/
+u_sync	undo.c	/^u_sync()$/
+u_undo	undo.c	/^u_undo(count)$/
+u_undoline	undo.c	/^u_undoline()$/
+u_undoredo	undo.c	/^u_undoredo()$/
 ungetchr	regexp.c	/^ungetchr()$/
 unregc	regexp.c	/^unregc()$/
 updateScreen	screen.c	/^updateScreen(type)$/
@@ -366,8 +424,10 @@ usage	main.c	/^usage(n)$/
 vgetc	buffers.c	/^vgetc()$/
 vgetorpeek	buffers.c	/^vgetorpeek(advance)$/
 vim_delay	amiga.c	/^vim_delay()$/
+vimgetenv	amiga.c	/^vimgetenv(var)$/
 vpeekc	buffers.c	/^vpeekc()$/
 wait_return	message.c	/^wait_return(redraw)$/
+win_resize_off	amiga.c	/^win_resize_off()$/
+win_resize_on	amiga.c	/^win_resize_on()$/
 windgoto	term.c	/^windgoto(row, col)$/
 writeit	fileio.c	/^writeit(fname, start, end, append, forceit)$/
-writelock	amiga.c	/^writelock(name)$/

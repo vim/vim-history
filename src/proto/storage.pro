@@ -13,6 +13,6 @@ long firstmarked __PARMS((void));
 void clearmarked __PARMS((void));
 long ptr2nr __PARMS((char *ptr, long start));
 int appendline __PARMS((long after, char *s));
-char *delsline __PARMS((long nr));
+char *delsline __PARMS((long nr, int delmarks));
 char *replaceline __PARMS((long lnum, char *new));
 int canincrease __PARMS((int n));

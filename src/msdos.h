@@ -71,5 +71,8 @@ void	mch_set_winsize __ARGS((void));
 int	call_shell __ARGS((char *, int));
 void	breakcheck __ARGS((void));
 char	*modname __ARGS((char *, char *));
+#ifdef WILD_CARDS
+int	has_wildcard __ARGS((char *));
 int	ExpandWildCards __ARGS((int, char **, int *, char ***, int, int));
 void	FreeWild __ARGS((int, char **));
+#endif

@@ -11,19 +11,7 @@
 /*
  * Unix system-dependent filenames
  */
-#ifdef SYSEXRC_FILE
-# undef SYSEXRC_FILE
-# undef SYSVIMRC_FILE
-#endif /* SYSEXRC_FILE */
-#define SYSEXRC_FILE "$HOME/.exrc"
-#define SYSVIMRC_FILE "$HOME/.vimrc"
-
 #define BACKUPDIR "~/"
-
-#ifdef VIM_HLP
-# undef VIM_HLP
-#endif /* VIM_HLP */
-#define VIM_HLP "/usr/local/doc/vim.hlp"
 
 #ifdef TMPNAME1
 # undef TMPNAME1
@@ -74,6 +62,7 @@ int		rename __ARGS((char *, char *));
 int		stricmp __ARGS((char *, char *));
 
 #ifdef WILD_CARDS
+int		has_wildcard __ARGS((char *));
 int		ExpandWildCards __ARGS((int, char **, int *, char ***, int, int));
 void	FreeWild __ARGS((int, char **));
 #endif

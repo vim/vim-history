@@ -16,3 +16,4 @@ void dodojoin __PARMS((long count, int flag, int redraw));
 int dojoin __PARMS((int insert_space));
 void doformat __PARMS((void));
 void startinsert __PARMS((int initstr, int startln, long count));
+int doaddsub __PARMS((int c, long Prenum1));

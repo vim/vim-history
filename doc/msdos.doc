@@ -1,0 +1,60 @@
+This file contains the particularities for the MSDOS version of Vim.
+
+If Vim produces all kinds of garbage on the screen you need to install
+ansi.sys (or equivalent).
+
+If the "tx" (textmode) option is set (which is the default), Vim will accept a 
+single <LF> or a <CR><LF> pair for end-of-line. When writing a file Vim will 
+use <CR><LF>. Thus if you edit a file and write it, <LF> is replaced with 
+<CR><LF>. Single <CR> characters are lost. If the "tx" option is not set the 
+single <LF> will be used for end-of-line. A <CR> will be shown as ^M.
+You can use Vim to replace <LF> by <CR><LF> by reading in any mode and 
+writing in text mode. You can use Vim to replace <CR><LF> by <LF> by reading 
+in text mode and writing in non-text mode.
+
+Script files contain single <CR> characters. If you want to edit a script file 
+you should reset the textmode option before loading the file.
+
+The default help filename is "$VIM\vim.hlp". If the environment variable $VIM 
+is not defined or the file is not found, the DOS search path is used to 
+search for the file "vim.hlp". If you do not want to put "vim.hlp" in your 
+search path, use the command ":set helpfile=pathname" to tell Vim where the 
+help file is.
+
+The files "_vimrc" and "_exrc" are used instead of ".vimrc" and ".exrc".
+The files "$VIM\_vimrc" and "$VIM\_exrc" are used instead of "s:.vimrc" and 
+"s:.exrc".
+
+Use CTRL-break instead of CTRL-C to interrupt searches. The CTRL-C is not
+detected until a key is read.
+
+Use CTRL-arrow-left and CTRL-arrow-right instead of SHIFT-arrow-left and 
+SHIFT-arrow-right. The arrow-up and arrow-down cannot be used with SHIFT or 
+CTRL.
+
+Temporary files (for filtering) are put in the current directory.
+
+The default for the sh (shell) option is "command". External commands are 
+started with "command /c <command_name>". Typing CTRL-Z starts a new command 
+shell. Return to Vim with "exit".
+
+
+MS-DOS allows for only one filename extention. Therefore, in the original 
+filename the '.' is replaced by a '_', the name is truncated to 8 characters 
+and the new extention ".vim" or ".bak" is appended. Two examples: "test.c" 
+becomes "test_c.bak", "ditiseen.tst" becomes "ditiseen.bak". The 'shortname' 
+option is not available.
+
+The MS-DOS binary was compiled with Turbo-C version 2.0 (yes, it's old). You 
+may get some "argument never used" warning messages. They can be ignored. If 
+you get all kinds of strange error messages when compiling, you have to add 
+<CR> characters at the end of each line. This can be done with the addcr 
+program: "make addcr". This will compile addcr.c to addcr.exe and execute 
+the addcr.bat file.
+
+All text is kept in memory. This limits the size of the file you can edit,
+the number of undo levels that can be remembered, etc.. If Vim gives an "Out 
+of memory" warning you should stop editing. Result of further editing actions 
+is unpredictable.
+
+The *.info files are for the Amiga. You don't need them with MSDOS.

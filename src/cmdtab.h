@@ -25,6 +25,7 @@
 #define COUNT	0x400			/* allow count in argument */
 #define NOTRLCOM 0x800			/* no trailing comment allowed */
 #define ZEROR	0x1000			/* zero line number allowed */
+#define USECTRLV 0x2000			/* do not remove CTRL-V from argument */
 #define FILES	(XFILE + EXTRA)	/* multiple extra files allowed */
 #define WORD1	(EXTRA + NOSPC)	/* one extra word allowed */
 #define FILE1	(FILES + NOSPC)	/* 1 file allowed, defaults to current file */
@@ -96,7 +97,7 @@ static struct
 #define CMD_jumps 24
 	{"k",			RANGE+WORD1+TRLBAR},
 #define CMD_k 25
-	{"list",		RANGE+COUNT+TRLBAR},		/* not supported */
+	{"list",		RANGE+COUNT+TRLBAR},
 #define CMD_list 26
 	{"move",		RANGE+EXTRA+TRLBAR},
 #define CMD_move 27
@@ -104,90 +105,94 @@ static struct
 #define CMD_mark 28
 	{"marks",		TRLBAR},
 #define CMD_marks 29
-	{"map",			BANG+EXTRA+TRLBAR+NOTRLCOM},
+	{"map",			BANG+EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
 #define CMD_map 30
 	{"mkexrc",		BANG+FILE1+TRLBAR},
 #define CMD_mkexrc 31
+	{"mkvimrc",		BANG+FILE1+TRLBAR},
+#define CMD_mkvimrc 32
 	{"next",		RANGE+BANG+NAMEDFS+TRLBAR},
-#define CMD_next 32
-	{"number",		RANGE+COUNT+TRLBAR},		/* not supported */
-#define CMD_number 33
+#define CMD_next 33
+	{"number",		RANGE+COUNT+TRLBAR},
+#define CMD_number 34
+	{"noremap",		BANG+EXTRA+TRLBAR+NOTRLCOM+USECTRLV},
+#define CMD_noremap 35
 	{"Next",		RANGE+BANG+TRLBAR},
-#define CMD_Next 34
+#define CMD_Next 36
 	{"print",		RANGE+COUNT+TRLBAR},
-#define CMD_print 35
+#define CMD_print 37
 	{"pop",			RANGE+TRLBAR+ZEROR},
-#define CMD_pop 36
+#define CMD_pop 38
 	{"put",			RANGE+BANG+REGSTR+TRLBAR},
-#define CMD_put 37
+#define CMD_put 39
 	{"previous",	RANGE+BANG+TRLBAR},
-#define CMD_previous 38
+#define CMD_previous 40
 	{"quit",		BANG+TRLBAR},
-#define CMD_quit 39
+#define CMD_quit 41
 	{"read",		RANGE+NAMEDF+NEEDARG+TRLBAR+ZEROR},
-#define CMD_read 40
+#define CMD_read 42
 	{"rewind",		BANG+TRLBAR},
-#define CMD_rewind 41
+#define CMD_rewind 43
 	{"recover",		FILE1+TRLBAR},				/* not supported */
-#define CMD_recover 42
+#define CMD_recover 44
 	{"substitute",	RANGE+EXTRA},
-#define CMD_substitute 43
+#define CMD_substitute 45
 	{"set",			EXTRA+TRLBAR},
-#define CMD_set 44
+#define CMD_set 46
 	{"setkeymap",	NAMEDF+TRLBAR},
-#define CMD_setkeymap 45
+#define CMD_setkeymap 47
 	{"shell",		TRLBAR},
-#define CMD_shell 46
+#define CMD_shell 48
 	{"source",		NAMEDF+NEEDARG+TRLBAR},
-#define CMD_source 47
+#define CMD_source 49
 	{"stop",		TRLBAR+BANG},
-#define CMD_stop 48
+#define CMD_stop 50
 	{"t",			RANGE+EXTRA+TRLBAR},
-#define CMD_t 49
+#define CMD_t 51
 	{"tag",			RANGE+BANG+WORD1+TRLBAR+ZEROR},
-#define CMD_tag 50
+#define CMD_tag 52
 	{"tags",		TRLBAR},
-#define CMD_tags 51
+#define CMD_tags 53
 	{"undo",		TRLBAR},
-#define CMD_undo 52
+#define CMD_undo 54
 	{"unabbreviate", EXTRA+TRLBAR},				/* not supported */
-#define CMD_unabbreviate 53
+#define CMD_unabbreviate 55
 	{"unmap",		BANG+EXTRA+TRLBAR},
-#define CMD_unmap 54
+#define CMD_unmap 56
 	{"vglobal",		RANGE+EXTRA+DFLALL},
-#define CMD_vglobal 55
+#define CMD_vglobal 57
 	{"version",		TRLBAR},
-#define CMD_version 56
+#define CMD_version 58
 	{"visual",		RANGE+BANG+FILE1+TRLBAR},
-#define CMD_visual 57
+#define CMD_visual 59
 	{"write",		RANGE+BANG+FILE1+DFLALL+TRLBAR},
-#define CMD_write 58
+#define CMD_write 60
 	{"wnext",		RANGE+BANG+FILE1+TRLBAR},
-#define CMD_wnext 59
+#define CMD_wnext 61
 	{"winsize",		EXTRA+NEEDARG+TRLBAR},
-#define CMD_winsize 60
+#define CMD_winsize 62
 	{"wq",			BANG+FILE1+DFLALL+TRLBAR},
-#define CMD_wq 61
+#define CMD_wq 63
 	{"xit",			BANG+FILE1+DFLALL+TRLBAR},
-#define CMD_xit 62
+#define CMD_xit 64
 	{"yank",		RANGE+REGSTR+COUNT+TRLBAR},
-#define CMD_yank 63
+#define CMD_yank 65
 	{"z",			RANGE+COUNT+TRLBAR},		/* not supported */
-#define CMD_z 64
+#define CMD_z 66
 	{"@",			RANGE+EXTRA+TRLBAR},
-#define CMD_at 65
+#define CMD_at 67
 	{"!",			RANGE+NAMEDFS},
-#define CMD_bang 66
+#define CMD_bang 68
 	{"<",			RANGE+COUNT+TRLBAR},
-#define CMD_lshift 67
+#define CMD_lshift 69
 	{">",			RANGE+COUNT+TRLBAR},
-#define CMD_rshift 68
+#define CMD_rshift 70
 	{"=",			RANGE+TRLBAR},
-#define CMD_equal 69
+#define CMD_equal 71
 	{"&",			RANGE+EXTRA},
-#define CMD_and 70
+#define CMD_and 72
 	{"~",			RANGE+TRLBAR}				/* not supported */
-#define CMD_tilde 71
-#define CMD_SIZE 72
+#define CMD_tilde 73
+#define CMD_SIZE 74
 
 };

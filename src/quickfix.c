@@ -196,7 +196,9 @@ qf_list()
 	}
 	qfp = qf_start;
 	gotocmdline(TRUE, NUL);
-	settmode(0);
+#ifdef AMIGA
+	settmode(0);		/* set cooked mode so output can be halted */
+#endif
 	for (i = 1; i <= qf_count; ++i)
 	{
 		sprintf(IObuff, "%2d line %ld col %2d %s %3d: %s",
@@ -211,7 +213,9 @@ qf_list()
 		qfp = qfp->qf_next;
 		flushbuf();
 	}
+#ifdef AMIGA
 	settmode(1);
+#endif
 	wait_return(TRUE);
 }
 

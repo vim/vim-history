@@ -58,7 +58,7 @@ dosub(lp, up, cmd, nextcommand)
 	linenr_t		nlines = 0;
 	int				do_all; 		/* do multiple substitutions per line */
 	int				do_ask; 		/* ask for confirmation */
-	char		   *pat, *sub;
+	char		   *pat, *sub = NULL;
 	static char    *old_sub = NULL;
 	int 			delimiter;
 	int 			sublen;
@@ -289,7 +289,7 @@ outofmem:
 		CHANGED;
 		updateScreen(CURSUPD); /* need this to update LineSizes */
 		beginline(TRUE);
-		if (nsubs >= p_report)
+		if (nsubs > p_report)
 			smsg("%s%ld substitution%s on %ld line%s",
 								got_int ? "(Interrupted) " : "",
 								nsubs, plural(nsubs),

@@ -1,0 +1,33 @@
+This file contains the particularities for the UNIX version of Vim.
+
+The default help filename is "/usr/local/doc/vim.hlp"
+The files "$HOME/.vimrc" and "$HOME/.exrc" are used instead of "s:.vimrc" and 
+"s:.exrc". Additionally "/usr/etc/.vimrc" is used first.
+
+Temporary files (for filtering) are put in "/tmp".
+
+In some rare cases the terminal may have a problem with CTRL-Q or CTRL-S. To 
+get around this you can map another key to CTRL-Q and CTRL-S, and remap 
+CTRL-Q and CTRL-S to nothing. You could use CTRL-W and CTRL-X:
+	:noremap! ^W ^V017
+	:noremap! ^X ^V019
+	:noremap! ^V017 ^V^V
+	:noremap! ^V019 ^V^V
+	:noremap ^W ^V017
+	:noremap ^X ^V019
+	:noremap ^V017 ^V^V
+	:noremap ^V019 ^V^V
+(^V is the single character CTRL-V. Do not use the '^' character. You have to 
+type CTRL-V twice to get one. What is shown above is what you have to type, 
+it will look different on the screen or in the .exrc file.)
+
+With wildcard expansion you can use <~> (home directory) and <$> 
+(environment variable).
+
+If terminal updating is slow, try resetting the 'showcommand' and the 
+'ruler' option (e.g. in a shell window in suntools).
+
+The file Vim132 is a shell script that can be used to put Vim in 132 column 
+mode on a vt100 and lookalikes.
+
+The *.info files are for the Amiga. You don't need them with unix.

@@ -1,4 +1,6 @@
 /* amiga.c */
+void win_resize_on __PARMS((void));
+void win_resize_off __PARMS((void));
 void flushbuf __PARMS((void));
 void outchar __PARMS((unsigned int c));
 int GetChars __PARMS((char *buf, int maxlen, int type));
@@ -24,3 +26,5 @@ void breakcheck __PARMS((void));
 long Chk_Abort __PARMS((void));
 int ExpandWildCards __PARMS((int num_pat, char **pat, int *num_file, char ***file, int files_only, int list_notfound));
 void FreeWild __PARMS((int num, char **file));
+int has_wildcard __PARMS((char *p));
+char *vimgetenv __PARMS((char *var));

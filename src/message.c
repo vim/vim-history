@@ -88,7 +88,7 @@ emsg(s)
 	msg(s);
 	flushbuf();
 	if (got_int)		/* remove typeahead now, allow typeadhead during sleep */
-		inchar(TRUE);
+		inchar(TRUE, FALSE);
 	sleep(1);	/* give the user a chance to read the message */
 }
 

@@ -235,7 +235,7 @@ free_line(ptr)
 		/* we must be able to store size, pointer and a trailing NUL */
 		/* otherwise we can't fit it in the free list */
 		if (len <= (long)sizeof(info_t))
-			return;
+			return;			/* these bytes are not used until you quit the file */
 		mp = (info_t *)ptr;
 		mp->m_size = len;
 	}
@@ -783,8 +783,9 @@ appendline(after, s)
  * the line is turned over to the caller
  */
 	char *
-delsline(nr)
-	linenr_t nr;
+delsline(nr, delmarks)
+	linenr_t	nr;
+	int			delmarks;
 {
 	char	*ptr;
 	register block_t	*bp;
@@ -798,7 +799,8 @@ delsline(nr)
 		return (alloc_line(0));
 	}
 	ptr = nr2ptr(nr);
-	adjustmark(ptr, NULL);			/* remove marks for this line */
+	if (delmarks)
+		adjustmark(ptr, NULL);			/* remove marks for this line */
 	bp = curr_block;
 	if (line_count == 1)	/* don't delete the last line in the file */
 	{

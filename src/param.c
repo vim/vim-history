@@ -52,6 +52,7 @@ struct param params[] =
 #endif
 /*		{"beautify",	"bf",	P_BOOL,		(char *)&p_bf}, */
 		{"columns",		"co",	P_NUM,		(char *)&Columns},
+		{"compatible",	"cp",	P_BOOL,		(char *)&p_cp},
 #ifdef DIGRAPHS
 		{"digraph",		"dg",	P_BOOL,		(char *)&p_dg},
 #endif /* DIGRAPHS */
@@ -91,6 +92,9 @@ struct param params[] =
 		{"shelltype",	"st",	P_NUM,		(char *)&p_st},
 		{"shiftround",	"sr",	P_BOOL,		(char *)&p_sr},
 		{"shiftwidth",	"sw",	P_NUM,		(char *)&p_sw},
+#ifndef MSDOS
+		{"shortname",	"sn",	P_BOOL,		(char *)&p_sn},
+#endif
 		{"showcmd",		"sc",	P_BOOL,		(char *)&p_sc},
 		{"showmatch",	"sm",	P_BOOL,		(char *)&p_sm},
 		{"showmode",	"mo",	P_BOOL,		(char *)&p_mo},
@@ -108,6 +112,7 @@ struct param params[] =
 		{"textwidth",	"tw",	P_NUM,		(char *)&p_tw},
 		{"tildeop", 	"to",	P_BOOL,		(char *)&p_to},
 		{"timeout", 	NULL,	P_BOOL,		(char *)&p_timeout},
+		{"ttimeout", 	NULL,	P_BOOL,		(char *)&p_ttimeout},
 		{"undolevels",	"ul",	P_NUM,		(char *)&p_ul},
 		{"updatecount",	"uc",	P_NUM,		(char *)&p_uc},
 		{"updatetime",	"ut",	P_NUM,		(char *)&p_ut},
@@ -140,6 +145,8 @@ struct param params[] =
 		{"t_vb",		NULL,	P_STRING,	(char *)&term_strings.t_vb},
 		{"t_ks",		NULL,	P_STRING,	(char *)&term_strings.t_ks},
 		{"t_ke",		NULL,	P_STRING,	(char *)&term_strings.t_ke},
+		{"t_ts",		NULL,	P_STRING,	(char *)&term_strings.t_ts},
+		{"t_te",		NULL,	P_STRING,	(char *)&term_strings.t_te},
 
 /* terminal key codes */
 		{"t_ku",		NULL,	P_STRING,	(char *)&term_strings.t_ku},
@@ -187,7 +194,7 @@ set_init()
 {
 		char *p;
 
-		if ((p = getenv("SHELL")) != NULL)
+		if ((p = (char *)vimgetenv("SHELL")) != NULL)
 			p_sh = strsave(p);
 		p_scroll = (Rows >> 1);
 }
@@ -198,6 +205,8 @@ doset(arg)
 {
 	register int i;
 	char		*s;
+	char		*errmsg;
+	char		*startarg;
 	int			prefix;	/* 0: nothing, 1: "no", 2: "inv" in front of name */
 	int 		nextchar;
 	int 		len = 0;
@@ -212,6 +221,8 @@ doset(arg)
 
 	while (*arg)		/* loop to process all parameters */
 	{
+		errmsg = NULL;
+		startarg = arg;		/* remember for error message */
 		if (strncmp(arg, "all", (size_t)3) == 0)
 				showparams(1);
 		else if (strncmp(arg, "termcap", (size_t)7) == 0)
@@ -247,8 +258,8 @@ doset(arg)
 
 			if (s == NULL)		/* found a mismatch: skip the rest */
 			{
-				emsg(e_unrset);
-				break;
+				errmsg = "Unknown option:   ";	/* must be 18 chars */
+				goto skip;
 			}
 
 			flags = params[i].flags;
@@ -258,35 +269,62 @@ doset(arg)
 			 * '=' character per "set" command line. grrr. (jw)
 			 */
 			if (nextchar == '?' || 
-			    ((nextchar != '=' && nextchar != ':') &&
-			    !(flags & P_BOOL)))
+			    (prefix == 1 && nextchar != '=' &&
+				 nextchar != ':' && !(flags & P_BOOL)))
 			{										/* print value */
 				gotocmdline(TRUE, NUL);
 				showonep(&params[i]);
 			}
 			else if (nextchar != NUL && strchr("=: \t", nextchar) == NULL)
 			{
-				emsg(e_setparam);
-				break;
+				errmsg = e_setarg;
+				goto skip;
 			}
 			else if (flags & P_BOOL)					/* boolean */
 			{
 					if (nextchar == '=' || nextchar == ':')
 					{
-						emsg(e_setparam);
-						break;
+						errmsg = e_setarg;
+						goto skip;
 					}
 					if (prefix == 2)
 						*(int *)(params[i].var) ^= 1;	/* invert it */
 					else
 						*(int *)(params[i].var) = prefix;
+					if ((int *)params[i].var == &p_cp && p_cp)	/* handle cp here */
+					{
+						p_bs = 0;		/* normal backspace */
+						p_bk = 0;		/* no backup file */
+#ifdef DIGRAPHS
+						p_dg = 0;		/* no digraphs */
+#endif /* DIGRAPHS */
+						p_et = 0;		/* no expansion of tabs */
+						p_hi = 0;		/* no history */
+						p_im = 0;		/* do not start in insert mode */
+						p_js = 1;		/* insert 2 spaces after period */
+						p_ml = 0;		/* no modelines */
+						p_rd = 1;		/* del replaces char */
+						p_ru = 0;		/* no ruler */
+						p_sj = 1;		/* no scrolljump */
+						p_sr = 0;		/* do not round indent to shiftwidth */
+						p_sc = 0;		/* no showcommand */
+						p_mo = 0;		/* no showmode */
+						p_si = 0;		/* no smartindent */
+						p_tw = 9999;	/* maximum textwidth */
+						p_to = 0;		/* no tilde operator */
+						p_ttimeout = 0;	/* no terminal timeout */
+						p_ul = 0;		/* no multilevel undo */
+						p_uc = 0;		/* no autoscript file */
+						p_wb = 0;		/* no backup file */
+						p_ye = 0;		/* no yank to end of line */
+					}
 			}
 			else								/* numeric or string */
 			{
 				if ((nextchar != '=' && nextchar != ':') || prefix != 1)
 				{
-					emsg(e_setparam);
-					break;
+					errmsg = e_setarg;
+					goto skip;
 				}
 				if (flags & P_NUM)				/* numeric */
 				{
@@ -329,6 +367,18 @@ doset(arg)
 			params[i].flags |= P_CHANGED;
 		}
 
+skip:
+		if (errmsg)
+		{
+			strcpy(IObuff, errmsg);
+			s = IObuff + 18;
+			while (*startarg && !isspace(*startarg))
+				*s++ = *startarg++;
+			*s = NUL;
+			emsg(IObuff);
+			arg = startarg;		/* skip to next argument */
+		}
+
 		skiptospace(&arg);				/* skip to next white space */
 		skipspace(&arg);				/* skip spaces */
 	}
@@ -336,6 +386,11 @@ doset(arg)
 	/*
 	 * Check the bounds for numeric parameters here
 	 */
+	if (Rows < 2)
+	{
+		Rows = 2;
+		emsg("Need at least 2 lines");
+	}
 	if (p_ts <= 0 || p_ts > 16)
 	{
 		emsg(e_tabsize);
@@ -345,6 +400,11 @@ doset(arg)
 	{
 		emsg(e_scroll);
 		p_scroll = Rows >> 1;
+	}
+	if (p_report < 0)
+	{
+		emsg(e_positive);
+		p_report = 1;
 	}
 	if (p_sj < 0 || p_sj >= Rows)
 	{
@@ -398,7 +458,9 @@ showparams(all)
 	gotocmdline(TRUE, NUL);
 	outstrn("Parameters:\n");
 
+#ifdef AMIGA
 	settmode(0);				/* set cooked mode so output can be halted */
+#endif
 	for (p = &params[0]; p->fullname != NULL; p++)
 	{
 		isterm = istermparam(p);
@@ -432,7 +494,9 @@ showparams(all)
 
 	if (col)
 		outchar('\n');
+#ifdef AMIGA
 	settmode(1);
+#endif
 	wait_return(TRUE);
 }
 
@@ -485,7 +549,7 @@ makeset(fd)
 					for ( ; *s; ++s)
 					{
 						if (*s < ' ' || *s > '~')
-							putc(CTRL('V'), fd);
+							putc(Ctrl('V'), fd);
 						putc(*s, fd);
 					}
 				e = putc('\n', fd);

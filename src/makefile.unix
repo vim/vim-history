@@ -2,7 +2,7 @@
 # Makefile for Vim on Unix, using gcc or standard cc
 #
 
-#>>>>> choose bsd (Sun, Linux) or system V (Dynix/PTX)
+#>>>>> choose bsd (Sun, Linux, HPUX) or system V (Dynix/PTX)
 MACHINE = -DBSD
 #MACHINE = -DSYSV
 
@@ -19,19 +19,35 @@ CC=cc -O
 
 #>>>>> choose options:
 ### -DDIGRAPHS		digraph support
-### -DTERMCAP		full termcap file support
+### -DNO_FREE_NULL	do not call free() with a null pointer
 ### -DWILD_CARDS	wildcard expansion code
+### -DCOMPATIBLE	start in vi-compatible mode
+### -DNOBACKUP		default is no backup file
 ### -DDEBUG		output a lot of debugging garbage
+### -DSTRNCASECMP	use strncasecmp() instead of internal function
+### -DUSE_LOCALE	use setlocale() to change ctype() and others
+### -DTERMCAP		full termcap file support
 ### -DNO_BUILTIN_TCAPS	do not include builtin termcap entries
 ###				(use only with -DTERMCAP)
 ### -DSOME_BUILTIN_TCAPS include most useful builtin termcap entries
 ###				(use only without -DNO_BUILTIN_TCAPS)
 ### -DALL_BUILTIN_TCAPS	include all builtin termcap entries
 ###				(use only without -DNO_BUILTIN_TCAPS)
-DEFS = -DDIGRAPHS -DTERMCAP -DWILD_CARDS -DSOME_BUILTIN_TCAPS
+### -DMAXNAMLEN 31	maximum length of a file name (if not defined in sys/dir.h)
+### -DVIMRC_FILE	name of the .vimrc file in current dir
+### -DEXRC_FILE		name of the .exrc file in current dir
+### -DSYSVIMRC_FILE	name of the global .vimrc file
+### -DSYSEXRC_FILE	name of the global .exrc file
+### -DDEFVIMRC_FILE	name of the system-wide .vimrc file
+### -DVIM_HLP		name of the help file
+DEFS = -DDIGRAPHS -DTERMCAP -DWILD_CARDS -DSOME_BUILTIN_TCAPS -DNO_FREE_NULL \
+	-DSYSVIMRC_FILE=\"\$$HOME/.vimrc\" -DSYSEXRC_FILE=\"\$$HOME/.exrc\" \
+	-DDEFVIMRC_FILE=\"/etc/vimrc\" -DVIM_HLP=\"/usr/local/doc/vim.hlp\"
 
-#>>>>> link with termlib only if TERMCAP is defined
+#>>>>> link with termlib or termcap only if TERMCAP is defined
+# termcap is for linux, HPUX, etc.
 LIBS = -ltermlib
+#LIBS = -ltermcap
 #LIBS = 
 
 #>>>>> end of choices
@@ -162,7 +178,7 @@ undo.o:	undo.c  $(INCL)
 	$(CC) $(CFLAGS) undo.c
 
 cmdtab.h: cmdtab.tab mkcmdtab
-	mkcmdtab cmdtab.tab cmdtab.h
+	./mkcmdtab cmdtab.tab cmdtab.h
 
 mkcmdtab: mkcmdtab.o
 	$(CC) -o mkcmdtab mkcmdtab.o
