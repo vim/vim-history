@@ -3539,6 +3539,7 @@ do_set(arg, opt_flags)
 			     * file name characters are not removed, and keep
 			     * backslash at start, for "\\machine\path", but
 			     * do remove it for "\\\\machine\\path".
+			     * The reverse is found in ExpandOldSetting().
 			     */
 			    while (*arg && !vim_iswhite(*arg))
 			    {
@@ -3551,8 +3552,19 @@ do_set(arg, opt_flags)
 							&& arg[2] != '\\')))
 #endif
 								    )
-				    ++arg;
-				*s++ = *arg++;
+				    ++arg;	/* remove backslash */
+#ifdef FEAT_MBYTE
+				if (has_mbyte
+					&& (i = (*mb_ptr2len_check)(arg)) > 1)
+				{
+				    /* copy multibyte char */
+				    mch_memmove(s, arg, (size_t)i);
+				    arg += i;
+				    s += i;
+				}
+				else
+#endif
+				    *s++ = *arg++;
 			    }
 			    *s = NUL;
 
@@ -8002,7 +8014,8 @@ ExpandOldSetting(num_file, file)
     else if (var == NULL)
 	var = (char_u *)"";
 
-    /* A backslash is required before some characters */
+    /* A backslash is required before some characters.  This is the reverse of
+     * what happens in do_set(). */
     buf = vim_strsave_escaped(var, escape_chars);
 
     if (buf == NULL)
@@ -8011,6 +8024,25 @@ ExpandOldSetting(num_file, file)
 	*file = NULL;
 	return FAIL;
     }
+
+#ifdef BACKSLASH_IN_FILENAME
+    /* For MS-Windows et al. we don't double backslashes at the start and
+     * before a file name character. */
+    for (var = buf; *var != NUL; )
+    {
+	if (var[0] == '\\' && var[1] == '\\'
+		&& expand_option_idx >= 0
+		&& (options[expand_option_idx].flags & P_EXPAND)
+		&& vim_isfilec(var[2])
+		&& (var[2] != '\\' || (var == buf && var[4] != '\\')))
+	    mch_memmove(var, var + 1, STRLEN(var));
+#ifdef FEAT_MBYTE
+	else if (has_mbyte)
+	    var += (*mb_ptr2len_check)(var) - 1;
+#endif
+	++var;
+    }
+#endif
 
     *file[0] = buf;
     *num_file = 1;
