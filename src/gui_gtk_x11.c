@@ -68,7 +68,11 @@
 #else
 # include <gdk/gdkkeysyms.h>
 # include <gdk/gdk.h>
-# include <gdk/gdkx.h>
+# ifdef WIN3264
+#  include <gdk/gdkwin32.h>
+# else
+#  include <gdk/gdkx.h>
+# endif
 
 # include <gtk/gtk.h>
 # include "gui_gtk_f.h"

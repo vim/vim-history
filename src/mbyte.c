@@ -102,7 +102,11 @@
 
 #if defined(FEAT_XIM) && defined(HAVE_GTK2)
 # include <gdk/gdkkeysyms.h>
-# include <gdk/gdkx.h>
+# ifdef WIN3264
+#  include <gdk/gdkwin32.h>
+# else
+#  include <gdk/gdkx.h>
+# endif
 #endif
 
 #if defined(FEAT_MBYTE) || defined(PROTO)
@@ -3620,7 +3624,11 @@ static int	status_area_enabled = TRUE;
 #endif
 
 #ifdef FEAT_GUI_GTK
-# include <gdk/gdkx.h>
+# ifdef WIN3264
+#  include <gdk/gdkwin32.h>
+# else
+#  include <gdk/gdkx.h>
+# endif
 #else
 # ifdef PROTO
 /* Define a few things to be able to generate prototypes while not configured
