@@ -134,12 +134,15 @@ char osver[] = "";
 # endif
 #endif
 
-#if defined(MSDOS) || defined(WIN32) || defined(OS2) || defined(CYGWIN) || defined(CYGWIN32)
+#if !defined(CYGWIN) && (defined(CYGWIN32) || defined(__CYGWIN__) || defined(__CYGWIN32__))
+# define CYGWIN
+#endif
+#if defined(MSDOS) || defined(WIN32) || defined(OS2) || defined(CYGWIN)
 # define BIN_READ(yes)  ((yes) ? "rb" : "rt")
 # define BIN_WRITE(yes) ((yes) ? "wb" : "wt")
 # define BIN_CREAT(yes) ((yes) ? (O_CREAT|O_BINARY) : O_CREAT)
 # define BIN_ASSIGN(fp, yes) setmode(fileno(fp), (yes) ? O_BINARY : O_TEXT)
-# if defined(CYGWIN) || defined(CYGWIN32)
+# if defined(CYGWIN)
 #  define PATH_SEP '/'
 # else
 #  define PATH_SEP '\\'
