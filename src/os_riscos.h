@@ -9,9 +9,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
-#include <termio.h>
+#include <termios.h>
 #include <stdlib.h>
-#include <unistd.h>
+#include <unixlib/local.h>
+#include <errno.h>
 #include <fcntl.h>
 
 #define CASE_INSENSITIVE_FILENAME
@@ -21,9 +22,9 @@
 #define USE_TERM_CONSOLE
 #define HAVE_AVAIL_MEM
 
-/* 10, but 4 char margin for extension. */
+/* Longer filenames now accessible to all */
 #ifndef BASENAMELEN
-# define BASENAMELEN 6
+# define BASENAMELEN 64 /* Same length as unzip */
 #endif
 
 #ifndef TEMNAME
@@ -45,7 +46,7 @@
 #endif
 
 #ifndef DFLT_VDIR
-# define DFLT_VDIR	"Choices:vimfiles/view"	/* default for 'viewdir' */
+# define DFLT_VDIR	"Choices:Vim.vimfiles/view"	/* default for 'viewdir' */
 #endif
 
 #ifndef TERMCAPFILE
@@ -57,13 +58,17 @@
 # define SYNTAX_FNAME	"Vim:Syntax.%s"
 #endif
 
+#ifndef EVIM_FILE
+# define EVIM_FILE	"Vim:Evim"
+#endif
+
 #define FEAT_VIMINFO
 
 #ifndef VIMINFO_FILE
-# define VIMINFO_FILE	"<Choices$Write>.VimInfo"
+# define VIMINFO_FILE	"<Choices$Write>.Vim.VimInfo"
 #endif
 #ifndef VIMINFO_FILE2
-# define VIMINFO_FILE2	"Choices:VimInfo"
+# define VIMINFO_FILE2	"Choices:Vim.VimInfo"
 #endif
 
 #ifndef VIMRC_FILE
@@ -76,7 +81,7 @@
 # define GVIMRC_FILE	"/gvimrc"
 #endif
 #ifndef VIEW_FILE
-# define VIEW_FILE	"/View.vim"
+# define VIEW_FILE	"/View"
 #endif
 #ifndef USR_VIMRC_FILE
 # define USR_VIMRC_FILE	"Vim:Evim"
@@ -85,13 +90,13 @@
 # define SESSION_FILE	"/Session.vim"
 #endif
 #ifndef USR_VIMRC_FILE
-# define USR_VIMRC_FILE	"Choices:UserVimRC"
+# define USR_VIMRC_FILE	"Choices:Vim.VimRC"
 #endif
 #ifndef USR_GVIMRC_FILE
-# define USR_GVIMRC_FILE    "Choices:GVimRC"
+# define USR_GVIMRC_FILE    "Choices:Vim.GVimRC"
 #endif
 #ifndef USR_EXRC_FILE
-# define USR_EXRC_FILE    "Choices:ExRC"
+# define USR_EXRC_FILE    "Choices:Vim.ExRC"
 #endif
 #ifndef SYS_VIMRC_FILE
 # define SYS_VIMRC_FILE	    "Vim:VimRC"
@@ -106,26 +111,26 @@
 # define SYS_OPTWIN_FILE    "Vim:Optwin"
 #endif
 #ifndef FILETYPE_FILE
-# define FILETYPE_FILE	    "Filetype"
+# define FILETYPE_FILE	    "Vim:Filetype"
 #endif
 #ifndef FTPLUGIN_FILE
-# define FTPLUGIN_FILE	    "Ftplugin"
+# define FTPLUGIN_FILE	    "Vim:Ftplugin/vim"
 #endif
 #ifndef INDENT_FILE
-# define INDENT_FILE	    "Indent"
+# define INDENT_FILE	    "Vim:Indent/vim"
 #endif
 #ifndef FTOFF_FILE
-# define FTOFF_FILE	    "Ftoff"
+# define FTOFF_FILE	    "Vim:Ftoff"
 #endif
 #ifndef FTPLUGOF_FILE
-# define FTPLUGOF_FILE	    "Ftplugof"
+# define FTPLUGOF_FILE	    "Vim:Ftplugof"
 #endif
 #ifndef INDOFF_FILE
-# define INDOFF_FILE	    "Indoff"
+# define INDOFF_FILE	    "Vim:Indoff"
 #endif
 
 #define DFLT_ERRORFILE		"errors/vim"
-#define DFLT_RUNTIMEPATH	"Choices:vimfiles,$VIMRUNTIME,Choices:vimfiles/after"
+#define DFLT_RUNTIMEPATH	"Choices:Vim.vimfiles,$VIMRUNTIME,Choices:Vim.vimfiles/after"
 
 /*
  * RISC PCs have plenty of memory, use large buffers
@@ -155,7 +160,8 @@ void swi(int swinum, ...);      /* Handles errors itself */
 int xswi(int swinum, ...);      /* Returns errors using v flag */
 extern int r0, r1, r2, r3, r4, r5, r6, r7;  /* For return values */
 
-#include <sys/swis.h>
+#include <kernel.h>
+#include <swis.h>
 
 #define mch_memmove(to, from, len) memmove((char *)(to), (char *)(from), len)
 #define mch_rename(src, dst) rename(src, dst)

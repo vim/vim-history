@@ -635,6 +635,34 @@ mch_isdir(name)
     return FALSE;
 }
 
+#if defined(FEAT_EVAL) || defined(PROTO)
+/*
+ * Return 1 if "name" can be executed, 0 if not.
+ * Return -1 if unknown. Requires which to work.
+ */
+    int
+mch_can_exe(name)
+    char_u	*name;
+{
+    char_u	*buf;
+    char_u	*p;
+    int		retval;
+
+    buf = alloc((unsigned)STRLEN(name) + 7);
+    if (buf == NULL)
+	return -1;
+    sprintf((char *)buf, "which %s", name);
+    p = get_cmd_output(buf, SHELL_SILENT);
+    vim_free(buf);
+    if (p == NULL)
+	return -1;
+    /* result can be: "name: Command not found" */
+    retval = (*p != NUL && strstr((char *)p, "not found") == NULL);
+    vim_free(p);
+    return retval;
+}
+#endif
+
 /*
  * Check what "name" is:
  * NODE_NORMAL: file or directory (or doesn't exist)
@@ -653,7 +681,7 @@ mch_nodetype(name)
 mch_early_init()
 {
     /* Turn off all the horrible filename munging in UnixLib. */
-    __uname_control = __UNAME_NO_PROCESS;
+    __riscosify_control = __RISCOSIFY_NO_PROCESS;
 }
 
     void
@@ -853,7 +881,7 @@ mch_expandpath(gap, path, flags)
  *
  * Returns number of items added to gap.
  */
-    static int
+    int
 expand_section(gap, root, rest, flags)
     garray_T	*gap;
     char_u	*root;	/* Non-wildcarded path to search */
