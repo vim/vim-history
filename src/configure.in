@@ -611,6 +611,9 @@ if test "$enable_tclinterp" = "yes"; then
 	    . $try/tclConfig.sh
 	    dnl use eval, because tcl 8.2 includes ${TCL_DBGX}
 	    TCL_LIBS=`eval echo "$TCL_LIB_SPEC $TCL_LIBS"`
+	    dnl Use $TCL_DEFS for -D_THREAD_SAFE et al.  But only use the
+	    dnl "-D_ABC" items.
+	    TCL_DEFS=`echo $TCL_DEFS | tr ' ' '\012' | sed -e '/^-[[^D]]/d' -e '/-D[[^_]]/d' -e 's/-D_/ -D_/' | tr -d '\012'`
 	    break
 	  fi
 	done
@@ -644,7 +647,7 @@ if test "$enable_tclinterp" = "yes"; then
 	  TCL_SRC=if_tcl.c
 	  TCL_OBJ=objects/if_tcl.o
 	  TCL_PRO=if_tcl.pro
-	  TCL_CFLAGS="-I$TCL_INC"
+	  TCL_CFLAGS="-I$TCL_INC $TCL_DEFS"
 	fi
       fi
     else
