@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0.  Last change: 2002 Feb 18
+*starting.txt*  For Vim version 6.0.  Last change: 2002 Feb 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -483,6 +483,13 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		GTK+ GUI Vim only.  Make gvim try to use GtkPlug mechanism, so
 		that it runs inside another window.  See |gui-gtk-socketid|
 		for details. {not in Vi}
+
+--echo-wid						*--echo-wid*
+		GTK+ GUI Vim only.  Make gvim echo the Window ID on stdout,
+		which can be used to run gvim in a kpart widget.  The format
+		of the output is:
+			WID: 12345\n
+		{not in Vi}
 
 
 Example for using a script file to change a name in several files:
