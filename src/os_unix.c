@@ -4108,7 +4108,7 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	}
 # endif
 # ifdef USE_XSMP
-	if (xsmp_idx >= 0 && (fds[gpm_idx].revents & (POLLIN | POLLHUP)))
+	if (xsmp_idx >= 0 && (fds[xsmp_idx].revents & (POLLIN | POLLHUP)))
 	{
 	    if (fds[xsmp_idx].revents & POLLIN)
 		xsmp_handle_requests();
