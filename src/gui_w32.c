@@ -1473,6 +1473,34 @@ _OnCreate (HWND hwnd, LPCREATESTRUCT lpcs)
 }
 
 #ifdef WIN32_FIND_REPLACE
+    static void
+fr_setwhat(char_u *cmd)
+{
+    if (s_findrep_struct.Flags & FR_WHOLEWORD)
+	STRCAT(cmd, "\\<");
+    STRCAT(cmd, s_findrep_struct.lpstrFindWhat);
+    if (s_findrep_struct.Flags & FR_WHOLEWORD)
+	STRCAT(cmd, "\\>");
+}
+
+    static void
+fr_setreplcmd(char_u *cmd)
+{
+    STRCAT(cmd, ":%sno/");
+    fr_setwhat(cmd);
+    STRCAT(cmd, "/");
+    STRCAT(cmd, s_findrep_struct.lpstrReplaceWith);
+    if (s_findrep_struct.Flags & FR_REPLACE)
+	STRCAT(cmd, "/gc");
+    else
+	STRCAT(cmd, "/g");
+    if (s_findrep_struct.Flags & FR_MATCHCASE)
+	STRCAT(cmd, "I");
+    else
+	STRCAT(cmd, "i");
+    STRCAT(cmd, "\r");
+}
+
 /*
  * Handle a Find/Replace window message.
  */
@@ -1484,7 +1512,7 @@ _OnFindRepl(void)
     /* Add a char before the command if needed */
     if (State & INSERT)
 	cmd[0] = Ctrl('O');
-    else if ((State | NORMAL) == 0 && State != CONFIRM)
+    else if ((State & NORMAL) == 0 && State != CONFIRM)
 	cmd[0] = ESC;
     else
 	cmd[0] = NUL;
@@ -1507,18 +1535,31 @@ _OnFindRepl(void)
 	}
 	else
 	{
+	    /* Set 'ignorecase' just for this search command. */
+	    if (!(s_findrep_struct.Flags & FR_MATCHCASE) == !p_ic)
+	    {
+		if (p_ic)
+		    STRCAT(cmd, ":set noic\r");
+		else
+		    STRCAT(cmd, ":set ic\r");
+		if (State & INSERT)
+		    STRCAT(cmd, "\017");	/* CTRL-O */
+	    }
 	    if (s_findrep_struct.Flags & FR_DOWN)
 		STRCAT(cmd, "/");
 	    else
 		STRCAT(cmd, "?");
-
-	    if (s_findrep_struct.Flags & FR_WHOLEWORD)
-		STRCAT(cmd, "\\<");
-	    STRCAT(cmd, s_findrep_struct.lpstrFindWhat);
-	    if (s_findrep_struct.Flags & FR_WHOLEWORD)
-		STRCAT(cmd, "\\>");
-
+	    fr_setwhat(cmd);
 	    STRCAT(cmd, "\r");
+	    if (!(s_findrep_struct.Flags & FR_MATCHCASE) == !p_ic)
+	    {
+		if (State & INSERT)
+		    STRCAT(cmd, "\017");	/* CTRL-O */
+		if (p_ic)
+		    STRCAT(cmd, ":set ic\r");
+		else
+		    STRCAT(cmd, ":set noic\r");
+	    }
 	}
 	/*
 	 * Give main window the focus back: this is so
@@ -1529,17 +1570,9 @@ _OnFindRepl(void)
     else if (s_findrep_struct.Flags & FR_REPLACE)
     {
 	if (State == CONFIRM)
-	{
 	    STRCAT(cmd, "y");
-	}
 	else
-	{
-	    STRCAT(cmd, ":%sno/");
-	    STRCAT(cmd, s_findrep_struct.lpstrFindWhat);
-	    STRCAT(cmd, "/");
-	    STRCAT(cmd, s_findrep_struct.lpstrReplaceWith);
-	    STRCAT(cmd, "/gc\r");
-	}
+	    fr_setreplcmd(cmd);
 	/*
 	 * Give main window the focus back: this is to allow
 	 * handling of the confirmation y/n/a/q stuff.
@@ -1549,17 +1582,9 @@ _OnFindRepl(void)
     else if (s_findrep_struct.Flags & FR_REPLACEALL)
     {
 	if (State == CONFIRM)
-	{
 	    STRCAT(cmd, "a");
-	}
 	else
-	{
-	    STRCAT(cmd, ":%sno/");
-	    STRCAT(cmd, s_findrep_struct.lpstrFindWhat);
-	    STRCAT(cmd, "/");
-	    STRCAT(cmd, s_findrep_struct.lpstrReplaceWith);
-	    STRCAT(cmd, "/g\r");
-	}
+	    fr_setreplcmd(cmd);
     }
     if (*cmd)
 	add_to_input_buf(cmd, STRLEN(cmd));
@@ -5664,11 +5689,15 @@ gui_mch_replace_dialog(char_u *arg)
 initialise_findrep(char_u *initial_string)
 {
     s_findrep_struct.hwndOwner = s_hwnd;
-    s_findrep_struct.Flags = FR_HIDEMATCHCASE | FR_DOWN;
+    s_findrep_struct.Flags = FR_DOWN;
+    if (p_ic)
+	s_findrep_struct.Flags &= ~FR_MATCHCASE;
+    else
+	s_findrep_struct.Flags |= FR_MATCHCASE;
     if (initial_string != NULL && *initial_string != NUL)
     {
 	STRCPY(s_findrep_struct.lpstrFindWhat, initial_string);
-    s_findrep_struct.lpstrReplaceWith[0] = NUL;
+	s_findrep_struct.lpstrReplaceWith[0] = NUL;
     }
 }
 #endif
