@@ -3290,14 +3290,15 @@ win_line(wp, lnum, startrow, endrow)
 	    if (extra_check)
 	    {
 #ifdef FEAT_SYN_HL
-		if (has_syntax)
+		/* Get syntax attribute, unless still at the start of the line
+		 * (double-wide char that doesn't fit). */
+		if (has_syntax && (v = (long)(ptr - line)) > 0)
 		{
 		    /* Get the syntax attribute for the character.  If there
 		     * is an error, disable syntax highlighting. */
 		    save_did_emsg = did_emsg;
 		    did_emsg = FALSE;
 
-		    v = (long)(ptr - line);
 		    syntax_attr = get_syntax_attr((colnr_T)v - 1);
 
 		    if (did_emsg)
