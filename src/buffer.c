@@ -4545,7 +4545,7 @@ buf_contents_changed(buf)
     /* Force the 'fileencoding' and 'fileformat' to be equal. */
     if (prep_exarg(&ea, buf) == FAIL)
     {
-	close_buffer(NULL, newbuf, DOBUF_WIPE);
+	wipe_buffer(newbuf, FALSE);
 	return TRUE;
     }
 
@@ -4585,7 +4585,7 @@ buf_contents_changed(buf)
 #endif
 
     if (curbuf != newbuf)	/* safety check */
-	wipe_buffer(newbuf);
+	wipe_buffer(newbuf, FALSE);
 
     return differ;
 }
@@ -4595,11 +4595,22 @@ buf_contents_changed(buf)
  * this buffer.  Call this to wipe out a temp buffer that does not contain any
  * marks.
  */
+/*ARGSUSED*/
     void
-wipe_buffer(buf)
+wipe_buffer(buf, aucmd)
     buf_T	*buf;
+    int		aucmd;	    /* When TRUE trigger autocommands. */
 {
     if (buf->b_fnum == top_file_num - 1)
 	--top_file_num;
+
+#ifdef FEAT_AUTOCMD
+    if (!aucmd)		    /* Don't trigger BufDelete autocommands here. */
+	++autocmd_block;
+#endif
     close_buffer(NULL, buf, DOBUF_WIPE);
+#ifdef FEAT_AUTOCMD
+    if (!aucmd)
+	--autocmd_block;
+#endif
 }

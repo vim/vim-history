@@ -4518,7 +4518,7 @@ ex_help(eap)
     {
 	buf = buflist_findnr(empty_fnum);
 	if (buf != NULL)
-	    wipe_buffer(buf);
+	    wipe_buffer(buf, TRUE);
     }
 
     /* keep the previous alternate file */
