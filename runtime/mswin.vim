@@ -1,7 +1,7 @@
 " Set options and add mapping such that Vim behaves a lot like MS-Windows
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2002 Mar 05
+" Last change:	2002 Aug 28
 
 " set the 'cpoptions' to its Vim default
 if 1	" only do this when compiled with expression evaluation
@@ -44,7 +44,7 @@ if has("virtualedit")
     normal `^"+gPi
     let &ve = ove
   endfunc
-  imap <C-V>		<Esc><SID>Pastegi
+  imap <C-V>		x<BS><Esc><SID>Pastegi
   vmap <C-V>		"-c<Esc><SID>Paste
 else
   nnoremap <silent> <SID>Paste "=@+.'xy'<CR>gPFx"_2x
