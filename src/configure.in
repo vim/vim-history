@@ -738,7 +738,7 @@ elif test "x$QNX" = "xyes" -a "x$with_x" = "xno" ; then
 
   case "$enable_gui" in
     no|No|NO)		AC_MSG_RESULT(no GUI support)
-			SKIP_QNX=YES ;;
+			SKIP_PHOTON=YES ;;
     yes|Yes|YES|"")	AC_MSG_RESULT(yes - automatic GUI support) ;;
     auto|Auto|AUTO|"")	AC_MSG_RESULT(auto - automatic GUI support) ;;
     photon|Photon|PHOTON)	AC_MSG_RESULT(Photon GUI support) ;;

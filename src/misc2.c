@@ -1829,6 +1829,7 @@ static struct key_name_entry
     {K_NETTERM_MOUSE,	(char_u *)"NetMouse"},
     {K_DEC_MOUSE,	(char_u *)"DecMouse"},
     {K_JSBTERM_MOUSE,	(char_u *)"JsbMouse"},
+    {K_PTERM_MOUSE,	(char_u *)"PtermMouse"},
     {K_LEFTMOUSE,	(char_u *)"LeftMouse"},
     {K_LEFTMOUSE_NM,	(char_u *)"LeftMouseNM"},
     {K_LEFTDRAG,	(char_u *)"LeftDrag"},
