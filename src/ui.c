@@ -2750,8 +2750,15 @@ ui_focus_change(in_focus)
 im_save_status(psave)
     long *psave;
 {
-    /* Don't save when 'imdisable' is set, IM is always disabled then. */
-    if (!p_imdisable)
+    /* Don't save when 'imdisable' is set or "xic" is NULL, IM is always
+     * disabled then (but might start later).
+     * Also don't save when inside a mapping, vgetc_im_active has not been set
+     * then. */
+    if (!p_imdisable && KeyTyped
+# ifdef FEAT_XIM
+	    && xic != NULL
+# endif
+	)
     {
 	/* Do save when IM is on, or IM is off and saved status is on. */
 	if (vgetc_im_active)

@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0ax.  Last change: 2001 Sep 18
+*options.txt*   For Vim version 6.0.  Last change: 2001 Sep 26
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -73,7 +73,9 @@ achieve special effects.  These options come in three forms:
 			Add the {value} to a number option, or append the
 			{value} to a string option.  When the option is a
 			comma separated list, a comma is added, unless the
-			value was empty.  There is no check for doubled
+			value was empty.
+			If the option is a list of flags, superfluous flags
+			are removed.  Otherwise there is no check for doubled
 			values.  You can avoid this by removing a value first.
 			Example: >
 				:set guioptions-=T guioptions+=T
@@ -95,6 +97,9 @@ achieve special effects.  These options come in three forms:
 			is no error or warning.  When the option is a comma
 			separated list, a comma is deleted, unless the option
 			becomes empty.
+			When the option is a list of flags, {value} must be
+			exactly as they appear in the option.  Remove flags
+			one by one to avoid problems.
 			Also see |:set-args| above.
 			{not in Vi}
 
@@ -713,6 +718,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	options (use this if your file system is almost full).  See the
 	|backup-table| for more explanations.
 	When the 'backupskip' pattern matches, a backup is not made anyway.
+	When 'patchmode' is set, the backup may be renamed to become the
+	oldest version of a file.
 	NOTE: This option is reset when 'compatible' is set.
 
 						*'backupcopy'* *'bkc'*
@@ -1460,7 +1467,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			being mapped to:
 				'k' included:   "^[OA"   (3 characters)
 				'k' excluded:   "<Key>"  (one key code)
-			Also see the '<' flag above.
+			Also see the '<' flag below.
 		K	Don't wait for a key code to complete when it is
 			halfway a mapping.  This breaks mapping <F1><F1> when
 			only part of the second <F1> has been read.  It
@@ -2972,6 +2979,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	|i_CTRL-^|.
 	The value is set to 1 when defining a new |:lmap| mapping.
 	It is also used for the argument of commands like "r" and "f".
+	The value 0 may not work correctly with Athena and Motif with some XIM
+	methods.  Use 'imdisable' to disable XIM then.
 
 						*'imsearch'* *'ims'*
 'imsearch' 'ims'	number (default 0, 2 when an input method is supported)
@@ -2987,6 +2996,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	Note that this option changes when using CTRL-^ in Insert mode
 	|c_CTRL-^|.
 	The value is set to 1 when defining a new |:lmap| mapping.
+	The value 0 may not work correctly with Athena and Motif with some XIM
+	methods.  Use 'imdisable' to disable XIM then.
 
 						*'include'* *'inc'*
 'include' 'inc'		string	(default "^#\s*include")
@@ -3950,6 +3961,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 	backup file).  If there was no file to be backed up, an empty file is
 	created.
 	When the 'backupskip' pattern matches, a patchmode file is not made.
+	Using 'patchmode' for compressed files appends the extension at the
+	end (e.g., "file.gz.orig"), thus the resulting name isn't always
+	recognized as a compressed file.
 
 					*'path'* *'pa'* *E343* *E345* *E347*
 'path' 'pa'		string	(default on Unix: ".,/usr/include,,"
@@ -4819,6 +4833,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	line).  The characters are highlighted according to the '@' flag in
 	'highlight'.
 	Note that tabs after the showbreak will be displayed differently.
+	If you want the 'showbreak' to appear in between line numbers, add the
+	"n" flag to 'cpoptions'.
 
 				     *'showcmd'* *'sc'* *'noshowcmd'* *'nosc'*
 'showcmd' 'sc'		boolean	(Vim default: on, off for Unix, Vi default:
@@ -4866,6 +4882,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 	If in Insert, Replace or Visual mode put a message on the last line.
 	Use the 'M' flag in 'highlight' to set the type of highlighting for
 	this message.
+	When |XIM| may be used the message will include "XIM".  But this
+	doesn't mean XIM is really active, especially when 'imactivatekey' is
+	not set.
 	NOTE: This option is set to the Vi default value when 'compatible' is
 	set and to the Vim default value when 'compatible' is reset.
 
@@ -5823,9 +5842,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 						*'viminfo'* *'vi'*
 
 'viminfo' 'vi'		string	(Vi default: "", Vim default for MS-DOS,
-					Windows and OS/2: '50,"50,h,rA:,rB:,
-					for Amiga: '50,"50,h,rdf0:,rdf1:,rdf2:
-					for others: '50,"50,h)
+					Windows and OS/2: '20,"50,h,rA:,rB:,
+					for Amiga: '20,"50,h,rdf0:,rdf1:,rdf2:
+					for others: '20,"50,h)
 			global
 			{not in Vi}
 			{not available when compiled without the  |+viminfo|

@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0ax.  Last change: 2001 Sep 19
+*version6.txt*  For Vim version 6.0.  Last change: 2001 Sep 26
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -3411,5 +3411,65 @@ Problem:    Win32: ":browse edit dir/dir" didn't work. (Vikas)
 Solution:   Change slashes to backslashes in the directory passed to the file
 	    browser.
 Files:	    src/gui_w48.c
+
+Athena file browser: On some systems wcstombs() can't be used to get the
+length of a multi-byte string.  Use the maximum length then. (Yasuhiro
+Matsumoto)
+
+Patch 6.0ax.001
+Problem:    When 'patchmode' is set, appending to a file gives an empty
+	    original file. (Ed Ralston)
+Solution:   Also make a backup copy when appending and 'patchmode' is set.
+Files:	    src/fileio.c
+
+Patch 6.0ax.002
+Problem:    When 'patchmode' is set, appending to a compressed file gives an
+	    uncompressed original file. (Ed Ralston)
+Solution:   Create the original file before decompressing.
+Files:	    runtime/plugin/gzip.vim
+
+Patch 6.0ax.005
+Problem:    Athena file selector keeps the title of the first invocation.
+Solution:   Set the title each time the file selector is opened. (David
+	    Harrison)
+Files:	    src/gui_at_fs.c
+
+Patch 6.0ax.007
+Problem:    When using GPM (mouse driver in a Linux console) a double click is
+	    interpreted as a scroll wheel click.
+Solution:   Check if GPM is being used when deciding if a mouse event is for
+	    the scroll wheel.
+Files:	    src/term.c
+
+Patch 6.0ax.010
+Problem:    The Edit.Save menu and the Save toolbar button didn't work when
+	    the buffer has no file name.
+Solution:   Use a file browser to ask for a file name.  Also fix the toolbar
+	    Find item in Visual mode.
+Files:	    runtime/menu.vim
+
+Patch 6.0ax.012
+Problem:    When 'cpoptions' contains "$", breaking a line for 'textwidth'
+	    doesn't redraw properly. (Stefan Schulze)
+Solution:   Remove the dollar before breaking the line.
+Files:	    src/edit.c
+
+Patch 6.0ax.014
+Problem:    Win32: On Windows 98 ":make -f file" doesn't work when 'shell' is
+	    "command.com" and 'makeprg' is "nmake".  The environment isn't
+	    passed on to "nmake".
+Solution:   Also use vimrun.exe when redirecting the output of a command.
+Files:	    src/os_win32.c
+
+Patch 6.0ax.016
+Problem:    The version number was reported wrong in the intro screen.
+Solution:   Check for a version number with two additional letters.
+Files:	    src/version.c
+
+Patch 6.0ax.019
+Problem:    When scrolling a window with folds upwards, switching to another
+	    vertically split window and back may not update the scrollbar.
+Solution:   Limit w_botline to the number of lines in the buffer plus one.
+Files:	    src/move.c
 
  vim:tw=78:ts=8:ft=help:norl:

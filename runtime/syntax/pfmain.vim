@@ -1,10 +1,10 @@
 " Vim syntax file
 " Language:	Postfix main.cf configuration
 " Maintainer:	KELEMEN Peter <fuji@elte.hu>
-" Last Change:	2001 Jun 2
-" Version:	0.07
+" Last Change:	2001 Sep 23
+" Version:	0.08
 " URL:		http://people.inf.elte.hu/~fuji/vim/syntax/pfmain.vim
-" Comment:	Based on Postfix snapshot-20010502 defaults. (+TLS)
+" Comment:	Based on Postfix snapshot-20010808 defaults. (+TLS)
 
 if version < 600
 	syntax clear
@@ -33,6 +33,7 @@ syntax keyword pfmainConf allow_untrusted_routing
 syntax keyword pfmainConf always_bcc
 syntax keyword pfmainConf append_at_myorigin
 syntax keyword pfmainConf append_dot_mydomain
+syntax keyword pfmainConf auth_mx_backup_networks
 syntax keyword pfmainConf best_mx_transport
 syntax keyword pfmainConf biff
 syntax keyword pfmainConf body_checks
@@ -60,12 +61,14 @@ syntax keyword pfmainConf default_privs
 syntax keyword pfmainConf default_process_limit
 syntax keyword pfmainConf default_recipient_limit
 syntax keyword pfmainConf default_transport
+syntax keyword pfmainConf default_verp_delimiters
 syntax keyword pfmainConf defer_transports
 syntax keyword pfmainConf delay_notice_recipient
 syntax keyword pfmainConf delay_warning_time
 syntax keyword pfmainConf deliver_lock_attempts
 syntax keyword pfmainConf deliver_lock_delay
 syntax keyword pfmainConf disable_dns_lookups
+syntax keyword pfmainConf disable_verp_bounces
 syntax keyword pfmainConf disable_vrfy_command
 syntax keyword pfmainConf dont_remove
 syntax keyword pfmainConf double_bounce_sender
@@ -92,6 +95,7 @@ syntax keyword pfmainConf home_mailbox
 syntax keyword pfmainConf hopcount_limit
 syntax keyword pfmainConf ignore_mx_lookup_error
 syntax keyword pfmainConf import_environment
+syntax keyword pfmainConf in_flow_delay
 syntax keyword pfmainConf inet_interfaces
 syntax keyword pfmainConf initial_destination_concurrency
 syntax keyword pfmainConf invalid_hostname_reject_code
@@ -129,6 +133,7 @@ syntax keyword pfmainConf mailbox_size_limit
 syntax keyword pfmainConf mailbox_transport
 syntax keyword pfmainConf maps_rbl_domains
 syntax keyword pfmainConf maps_rbl_reject_code
+syntax keyword pfmainConf masquerade_classes
 syntax keyword pfmainConf masquerade_domains
 syntax keyword pfmainConf masquerade_exceptions
 syntax keyword pfmainConf max_idle
@@ -155,6 +160,9 @@ syntax keyword pfmainConf qmgr_message_active_limit
 syntax keyword pfmainConf qmgr_message_recipient_limit
 syntax keyword pfmainConf qmgr_message_recipient_minimum
 syntax keyword pfmainConf qmgr_site_hog_factor
+syntax keyword pfmainConf qmqpd_authorized_clients
+syntax keyword pfmainConf qmqpd_error_delay
+syntax keyword pfmainConf qmqpd_timeout
 syntax keyword pfmainConf queue_directory
 syntax keyword pfmainConf queue_minfree
 syntax keyword pfmainConf queue_run_delay
@@ -170,6 +178,7 @@ syntax keyword pfmainConf sender_canonical_maps
 syntax keyword pfmainConf service_throttle_time
 syntax keyword pfmainConf smtp_always_send_ehlo
 syntax keyword pfmainConf smtp_bind_address
+syntax keyword pfmainConf smtp_break_lines
 syntax keyword pfmainConf smtp_connect_timeout
 syntax keyword pfmainConf smtp_data_done_timeout
 syntax keyword pfmainConf smtp_data_init_timeout
@@ -220,6 +229,7 @@ syntax keyword pfmainConf undisclosed_recipients_header
 syntax keyword pfmainConf unknown_address_reject_code
 syntax keyword pfmainConf unknown_client_reject_code
 syntax keyword pfmainConf unknown_hostname_reject_code
+syntax keyword pfmainConf verp_delimiter_filter
 syntax keyword pfmainConf virtual_gid_maps
 syntax keyword pfmainConf virtual_mailbox_base
 syntax keyword pfmainConf virtual_mailbox_limit
@@ -240,6 +250,7 @@ syntax match pfmainRef "$\<allow_untrusted_routing\>"
 syntax match pfmainRef "$\<always_bcc\>"
 syntax match pfmainRef "$\<append_at_myorigin\>"
 syntax match pfmainRef "$\<append_dot_mydomain\>"
+syntax match pfmainRef "$\<auth_mx_backup_networks\>"
 syntax match pfmainRef "$\<best_mx_transport\>"
 syntax match pfmainRef "$\<biff\>"
 syntax match pfmainRef "$\<body_checks\>"
@@ -267,12 +278,14 @@ syntax match pfmainRef "$\<default_privs\>"
 syntax match pfmainRef "$\<default_process_limit\>"
 syntax match pfmainRef "$\<default_recipient_limit\>"
 syntax match pfmainRef "$\<default_transport\>"
+syntax match pfmainRef "$\<default_verp_delimiters\>"
 syntax match pfmainRef "$\<defer_transports\>"
 syntax match pfmainRef "$\<delay_notice_recipient\>"
 syntax match pfmainRef "$\<delay_warning_time\>"
 syntax match pfmainRef "$\<deliver_lock_attempts\>"
 syntax match pfmainRef "$\<deliver_lock_delay\>"
 syntax match pfmainRef "$\<disable_dns_lookups\>"
+syntax match pfmainRef "$\<disable_verp_bounces\>"
 syntax match pfmainRef "$\<disable_vrfy_command\>"
 syntax match pfmainRef "$\<dont_remove\>"
 syntax match pfmainRef "$\<double_bounce_sender\>"
@@ -299,6 +312,7 @@ syntax match pfmainRef "$\<home_mailbox\>"
 syntax match pfmainRef "$\<hopcount_limit\>"
 syntax match pfmainRef "$\<ignore_mx_lookup_error\>"
 syntax match pfmainRef "$\<import_environment\>"
+syntax match pfmainRef "$\<in_flow_delay\>"
 syntax match pfmainRef "$\<inet_interfaces\>"
 syntax match pfmainRef "$\<initial_destination_concurrency\>"
 syntax match pfmainRef "$\<invalid_hostname_reject_code\>"
@@ -336,6 +350,7 @@ syntax match pfmainRef "$\<mailbox_size_limit\>"
 syntax match pfmainRef "$\<mailbox_transport\>"
 syntax match pfmainRef "$\<maps_rbl_domains\>"
 syntax match pfmainRef "$\<maps_rbl_reject_code\>"
+syntax match pfmainRef "$\<masquerade_classes\>"
 syntax match pfmainRef "$\<masquerade_domains\>"
 syntax match pfmainRef "$\<masquerade_exceptions\>"
 syntax match pfmainRef "$\<max_idle\>"
@@ -362,6 +377,9 @@ syntax match pfmainRef "$\<qmgr_message_active_limit\>"
 syntax match pfmainRef "$\<qmgr_message_recipient_limit\>"
 syntax match pfmainRef "$\<qmgr_message_recipient_minimum\>"
 syntax match pfmainRef "$\<qmgr_site_hog_factor\>"
+syntax match pfmainRef "$\<qmqpd_authorized_clients\>"
+syntax match pfmainRef "$\<qmqpd_error_delay\>"
+syntax match pfmainRef "$\<qmqpd_timeout\>"
 syntax match pfmainRef "$\<queue_directory\>"
 syntax match pfmainRef "$\<queue_minfree\>"
 syntax match pfmainRef "$\<queue_run_delay\>"
@@ -377,6 +395,7 @@ syntax match pfmainRef "$\<sender_canonical_maps\>"
 syntax match pfmainRef "$\<service_throttle_time\>"
 syntax match pfmainRef "$\<smtp_always_send_ehlo\>"
 syntax match pfmainRef "$\<smtp_bind_address\>"
+syntax match pfmainRef "$\<smtp_break_lines\>"
 syntax match pfmainRef "$\<smtp_connect_timeout\>"
 syntax match pfmainRef "$\<smtp_data_done_timeout\>"
 syntax match pfmainRef "$\<smtp_data_init_timeout\>"
@@ -427,6 +446,7 @@ syntax match pfmainRef "$\<undisclosed_recipients_header\>"
 syntax match pfmainRef "$\<unknown_address_reject_code\>"
 syntax match pfmainRef "$\<unknown_client_reject_code\>"
 syntax match pfmainRef "$\<unknown_hostname_reject_code\>"
+syntax match pfmainRef "$\<verp_delimiter_filter\>"
 syntax match pfmainRef "$\<virtual_gid_maps\>"
 syntax match pfmainRef "$\<virtual_mailbox_base\>"
 syntax match pfmainRef "$\<virtual_mailbox_limit\>"

@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0ax.  Last change: 2001 Sep 19
+*todo.txt*      For Vim version 6.0.  Last change: 2001 Sep 26
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -28,21 +28,6 @@ See |develop.txt| for development plans.
 
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
-
-Win32: On Windows 98 ":make -f file" doesn't work when 'shell' is
-"command.com" and 'makeprg' is "nmake".  Environment isn't passed on?
-Workaround: Always use vimrun.exe with the -s flag.
-
-Unverified:
-- Win32: vertical split and then :only has one highlighted char (Aeoo)
-- Dos32: Pressing CTRL-C often crashes Vim. (Ken Liao)
-
-9   "./vim -c "call remote_foreground('gvim')" sometimes hangs.  Race
-    condition?  CTRL-C breaks out of it.
-
-9   XIM is disabled by default for SGI/IRIX.  Fix XIM so that 'imdisable' can
-    be off by default.
-
 
 Vi incompatibility:
 8   ":edit" without argument moves cursor to line 1.
@@ -142,22 +127,24 @@ GTK+ GUI known bugs:
 
 
 Win32 GUI known bugs:
+6   Win32: With a vertical split and using ":only" has one highlighted char.
+    (Lipelis)
 7   Win32: When clicking on the gvim title bar produces a file-changed dialog,
     after clicking on a button in that dialog the gvim window follows the
     mouse.  The button-up event is lost.  Only with MS-Windows 98?
 9   The print dialog uses a font which doesn't display multi-byte messages.
-    Include patch from Vipin Aravind?
+    Include patch from Vipin Aravind?  Update from Yasuhiro Matsumoto.
 7   Win32: When mouse is hidden and in the toolbar, moving it won't make it
     appear. (Sami Salonen)
 8   Windows NT: writing to aux.* makes Vim hang. (Acevedo)
+8   IME isn't working properly.  OnImeComposition() isn't used at all.  Glenn
+    F. Maynard has a patch for this.  Muraoka Taro has another one.
 8   When using two monitors, the code that checks/fixes the window size and
     position (e.g. when a font changes) doesn't work properly. (George Reilly)
 8   Win32 GUI: With maximized window, ":set go-=r" doesn't use the space that
     comes available. (Poucet)  It works OK on Win 98 but doesn't work on Win
     NT 4.0.  Leaves a grey area where the scrollbar was.  ":set go+=r" also
     doesn't work properly.
-8   The dialog boxes don't have an indication of which button is the default.
-    E.g., the dialog for a changed file. (Webb)
 8   When Vim is minimized and when maximizing it a file-changed dialog pops
     up, Vim isn't maximized.  It should be done before the dialog, so that it
     appears in the right position. (Webb)
@@ -214,6 +201,11 @@ Win32 GUI known bugs:
 
 
 Athena and Motif:
+9   XIM is disabled by default for SGI/IRIX.  Fix XIM so that 'imdisable' can
+    be off by default.
+9   XIM doesn't work properly for Athena/Motif. (Yasuhiro Matsumoto) For now,
+    keep XIM active at all times when the input method has the preediting
+    flag.
 8   X11: A menu that contains an umlaut is truncated at that character.
     Happens when the locale is "C", which uses ASCII instead of IS0-8859-1.
     Is there a way to use latin1 by default?  Gnome_init() seems to do this.
@@ -231,7 +223,7 @@ Athena GUI:
 7   The file selector is not resizable.  With a big font it is difficult to
     read long file names. (Schroeder)
 7   The file selector's scrollbar colors are not set after doing a
-    ":hi Scrollbar guifg=color". (David Harrison)
+    ":hi Scrollbar guifg=color".  David Harrison has a patch for this.
 7   The file selector's colors are not changed by the colorscheme command.
     Related to the above problem.  Actually, the file selector gets it's
     colors from the menu's background color upon creation.  Is this what we
@@ -257,11 +249,16 @@ Motif GUI:
 8   Lesstif: When deleting a menu that's torn off, the torn off menu becomes
     very small instead of disappearing.  When closing it, Vim crashes.
     (Phillipps)
+8   When compiling with FEAT_FOOTER defined, the text area gets a few pixels
+    extra space on the right.  Remove the special case in
+    gui_get_base_width(). (David Harrison)
 
 
 GUI:
 9   When using a very small font, 'columns' can be very big.  Pass mouse
     events with 16 bits.
+7   When setting 'guifont' to "*" and selecting "Cancel", should restore the
+    old value of 'guifont'.
 9   On Solaris, creating the popup menu causes the right mouse button no
     longer to work for extending the selection. (Halevy)
 9   When running an external program, it can't always be killed with CTRL-C.
@@ -322,10 +319,17 @@ GUI:
 
 
 MSDOS/DJGPP:
+9   Pressing CTRL-C often crashes the console Vim runs in. (Ken Liao)
+    When 'bioskey' isn't set it doesn't happen.  Could be a problem with the
+    BIOS emulation of the console.  Version 5.6 already had this problem.
 8   DJGPP: "cd c:" doesn't work.  Works OK in 16-bit version.  mch_getperm()
     returns -1 for "c:".
 9   The 16 bit version runs out of memory very quickly.  Should find unused
     code and reduce static data.
+9   Crash when running on Windows 98 in a console window and pressing CTRL-C.
+    Happens now and then.  When debugging Vim in gdb this also happens.  Since
+    the console crashes, might be a bug in the DOS console.  Resetting
+    'bioskey' avoids it, but then CTRL-C doesn't work.
 9   DOS: Make CTRL-Fx and ALT-Fx work.
     CTRL-F1 = CE-5E, CTRL-F2 = CE-5F, .., CTRL-F10 = CE-67
     ALT-F1 = CE-68, ALT-F2 = CE-69, .., ALT-F10 = CE-71
@@ -458,6 +462,22 @@ VMS:
 
 
 "Small" problems:
+9   When "$" is in 'cpoptions' and folding is active, a "C" command changes
+    the folds and resets w_lines_valid.  The display updating doesn't work
+    then. (Pritesh Mistry)
+8   ":s!from!to!" works, but ":smagic!from!to!" doesn't.  It sees the "!" as a
+    flag to to the command.  Same for ":snomagic". (Johan Spetz)
+8   When appending to a file and 'patchmode' isn't empty, a backup file is
+    always written, even when the original file already exists.
+7   When using "daw" on the last word in a file and this is a single letter,
+    nothing is deleted.  Should delete the letter and preceding white space.
+9   When getting focus while writing a large file, could warn for this file
+    being changed outside of Vim.  Avoid checking this while the file is being
+    written.
+8   When doing ":browse source" the dialog has the title "Run Macro".  Better
+    would be "Source Vim script".
+9   The "Error detected while processing modelines" message should have an
+    error number.
 7   The message in bt_dontwrite_msg() could be clearer.
 8   Unix: When libcall() fails there is no clear error message.  Johannes
     Zellner has a patch for this.
@@ -475,7 +495,8 @@ VMS:
 7   On MS-DOS or MS-Windows, when editing the same file over a network, the
     drive letter is different, thus an existing swap file doesn't generate a
     warning.  Use some flag to indicate the swap file is in the same directory
-    as the original file?
+    as the original file?  Could make b0_fname[] start with a special
+    character like ">".
 7   When 'showbreak' is set, the amount of space a Tab occupies changes.
     Should work like 'showbreak' is inserted without changing the Tabs.
 7   When there is a "help.txt" window in a session file, restoring that
@@ -568,6 +589,10 @@ VMS:
 8   When dragging status line with mouse, sometimes a jump when first clicking
     on the status line (caused by 'winheight').  Select window on button up,
     instead of on button down.
+9   Evaluating 'statusline' in build_stl_str_hl() does not properly check for
+    reaching the end of the available buffer.
+7   When using "%P" in 'statusline' and the fillchar is "-", a percentage
+    of 3% can result in "-3%". (Pritesh Mistry)
 8   When performing incremental search, should abort searching as soon as a
     character is typed.
 8   When the value of $MAKE contains a path, configure can't handle this.
@@ -593,6 +618,9 @@ VMS:
     in a console?  Catching WM_SAVE_YOURSELF doesn't seem to work.
 7   When joining lines in an Asian language, should not insert a space between
     two double-wide characters.  Both for "J" and formatting with "gq".
+7   When an include file starts with "../", the check for already visiting
+    this file doesn't work.  Need to simplify the file name.
+8   On Sinix SYS_NMLN isn't defined.  Include patch from Cristiano De Michele.
 
 
 I can't reproduce these (if you can, let me know how!):
@@ -703,7 +731,7 @@ Documentation:
 9   In change.txt, remark about Javadoc isn't right.  Right alignment would
     work too.
 8   Spread the windows commands over the other files.  For example, ":stag"
-    should be with ":tag".  cross-link with tags to avoid too much double
+    should be with ":tag".  Cross-link with tags to avoid too much double
     text.
 7   Windows: When a wrong command is typed with an ALT key, give a hint to
     look at the help for 'winaltkeys'.
@@ -723,9 +751,8 @@ Help:
     displayed in a window with fixed height. (Guckes)  Use "~/.vimhelp" file,
     user can edit it to insert his favorite commands, new account can contain a
     default contents.
--   When entering the help window, don't resize to 'helpheight' if the user has
-    reduced the size before (Webb). Keep the window height that the user set
-    the window to in a "preferred window height" entry for each window.
+-   Make 'winminheight' a local option, so that the user can set a minimal
+    height for the help window (and other windows).
 -   ":help :s^I" should expand to ":help :substitute".
 -   Make the help key (<F1>) context sensitive?
 -   Learn mode: show short help while typing commands.
@@ -797,6 +824,8 @@ Multi-byte characters:
 8   Should add test for using various commands with multi-byte characters.
 -   Include flipcase patch: ~/vim/patches/wall.flipcase2 ?  Make it work for
     multi-byte characters.
+8   Win32: Can use WideCharToMultiByte() to convert if iconv() isn't
+    available.  Glenn F. Maynard has a patch for this.
 8   'infercase' doesn't work with multi-byte characters.
 8   toupper() function doesn't handle byte count changes.
 8   Searching with UTF-8 doesn't always take care of composing characters.
@@ -1743,6 +1772,8 @@ Insert mode:
 9   Wrong indent for cino=(4, removing the (void) fixes it: (Zellner)
 	(void) MyFancyFunction(
 			       argument);
+8   Add 'cinoptions' flag "T" for dangling throws clause in Java.  Patch from
+    William Webber.
 -   Make smartindenting configurable. Add 'sioptions', e.g. '#' setting the
     indent to 0 should be switched on/off.
 7   Support ANSI style function header, with each argument on its own line.
@@ -2366,6 +2397,8 @@ Registers:
 
 
 Various improvements:
+8   In the gzip plugin, also recognize *.gz.orig, *.gz.bak, etc.  Like it's
+    done for filetype detection.
 8   Add "--remote-fail": When contacting the server fails, exit Vim.
     Add "--remote-self": When contacting the server fails, do it in this Vim.
     Overrules the defaulf of "--remote-send" to fail and "--remote" to do it

@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Sep 16
+" Last change:	2001 Sep 21
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -536,9 +536,9 @@ au BufNewFile,BufRead lilo.conf*		setf lilo
 
 " Lisp (*.el = ELisp, *.cl = Common Lisp, *.jl = librep Lisp)
 if has("fname_case")
-  au BufNewFile,BufRead *.lsp,*.lisp,*.el,*.cl,*.jl,*.L	setf lisp
+  au BufNewFile,BufRead *.lsp,*.lisp,*.el,*.cl,*.jl,*.L,.emacs	setf lisp
 else
-  au BufNewFile,BufRead *.lsp,*.lisp,*.el,*.cl,*.jl	setf lisp
+  au BufNewFile,BufRead *.lsp,*.lisp,*.el,*.cl,*.jl,.emacs	setf lisp
 endif
 
 " Lite

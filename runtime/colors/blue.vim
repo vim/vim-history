@@ -3,7 +3,8 @@
 " Vim color file
 " Maintainer:	Steven Vertigan <steven@vertigan.wattle.id.au>
 " Last Change:	2001 Sep 10
-" Revision #3: Improved formatting, fixed html formatting
+" Revision #4: Support for new "Underline" group. Removed superfluous html
+"              formatting.
 
 set background=dark
 hi clear
@@ -22,6 +23,8 @@ hi statement	guifg=yellow	gui=none	ctermfg=yellow
 hi preproc		guifg=green		ctermfg=green
 hi type			guifg=orange	ctermfg=darkYellow
 hi special		guifg=magenta	ctermfg=lightMagenta
+hi Underlined	guifg=cyan 		ctermfg=cyan
+hi Underlined	gui=underline	cterm=underline
 
 hi ErrorMsg		guifg=orange	guibg=darkBlue	
 hi ErrorMsg		ctermfg=lightRed
@@ -71,19 +74,4 @@ hi Folded		ctermbg=yellow		ctermfg=black
 hi FoldColumn	guibg=gray30		guifg=black
 hi FoldColumn	ctermbg=gray		ctermfg=black
 hi cIf0			guifg=gray			ctermfg=gray
-
-" HTML Specific stuff
-hi htmlLink					guifg=cyan	gui=underline	guibg=darkBlue
-hi htmlLink					ctermfg=cyan		cterm=underline
-hi htmlBold					term=bold 			cterm=bold				gui=bold
-hi htmlBoldUnderline		term=bold,underline cterm=bold,underline	gui=bold
-hi htmlBoldItalic          	term=bold,italic 	cterm=bold,italic	
-hi htmlBoldItalic			gui=bold,italic
-hi htmlBoldUnderlineItalic	gui=bold,italic,underline
-hi htmlBoldUnderlineItalic	term=bold,italic,underline
-hi htmlBoldUnderlineItalic	cterm=bold,italic,underline
-hi htmlUnderline           	term=underline	cterm=underline		gui=underline
-hi htmlUnderlineItalic     	term=italic,underline	cterm=italic,underline
-hi htmlUnderlineItalic		gui=italic,underline 
-hi htmlItalic              	term=italic		cterm=italic		gui=italic
 

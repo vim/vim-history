@@ -1,4 +1,4 @@
-*mbyte.txt*     For Vim version 6.0ax.  Last change: 2001 Sep 09
+*mbyte.txt*     For Vim version 6.0.  Last change: 2001 Sep 24
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -786,8 +786,8 @@ Wnn 4.2 can be found at:
     window specific to the input method.
 
 
-USING XIM			*multibyte-input* *E284* *E286* *E287* *E288* *E289*
-				*E285* *E291* *E292* *E290* *ez4*
+USING XIM			*multibyte-input* *E284* *E286* *E287* *E288*
+				*E285* *E291* *E292* *E290* *ez4* *E289*
 
 Note that Display and Input are independent.  It is possible to see your
 language even though you have no input method for it.  But when your Display

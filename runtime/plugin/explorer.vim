@@ -247,6 +247,7 @@ function! s:EditDir()
 
   " If directory is already loaded, don't open it again!
   if line('$') > 1
+    setlocal nomodifiable
     return
   endif
 
@@ -307,6 +308,8 @@ function! s:EditDir()
   call s:ShowDirectory()
 
   " Set up mappings for this buffer
+  let cpo_save = &cpo
+  set cpo&vim
   nnoremap <buffer> <cr> :call <SID>EditEntry("","edit")<cr>
   nnoremap <buffer> -    :exec ("silent e "  . b:parentDirEsc)<cr>
   nnoremap <buffer> o    :call <SID>OpenEntry()<cr>
@@ -322,6 +325,7 @@ function! s:EditDir()
   nnoremap <buffer> r    :call <SID>SortReverse()<cr>
   nnoremap <buffer> c    :exec ("cd ".b:completePathEsc)<cr>
   nnoremap <buffer> <2-leftmouse> :call <SID>DoubleClick()<cr>
+  let &cpo = cpo_save
 
   " prevent the buffer from being modified
   setlocal nomodifiable
@@ -847,6 +851,7 @@ function! s:RenameFile()
     let altName=input("Rename ".fileName." to : ")
     echo " "
     if altName==""
+      setlocal nomodifiable
       return
     endif
     let success=rename(fileName, b:completePath.altName)

@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	man
 " Maintainer:	Nam SungHyun <namsh@kldp.org>
-" Last Change:	2001 Sep 17
+" Last Change:	2001 Sep 20
 
 " To make the ":Man" command available before editing a manual page, source
 " this script from your startup vimrc file.
@@ -137,6 +137,7 @@ func <SID>GetPage(...)
   endif
   silent exec "edit $HOME/".page.".".sect."~"
 
+  set ma
   silent exec "norm 1GdG"
   let $MANWIDTH = winwidth(0)
   silent exec "r!/usr/bin/man ".s:GetCmdArg(sect, page)." | col -b"

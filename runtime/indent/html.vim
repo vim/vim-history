@@ -1,8 +1,8 @@
 " Description:	html indenter
 " Author:	Johannes Zellner <johannes@zellner.org>
 " URL:		http://www.zellner.org/vim/indent/html.vim
-" Last Change:	Mon, 09 Apr 2001 14:31:56 +0200
-" Globals:	g:html_indent_tags	   -- indenting tags
+" Last Change:	Tue, 25 Sep 2001 13:22:27 +0200
+" Globals:	g:html_indent_tags         -- indenting tags
 "		g:html_indent_strict       -- inhibit 'O O' elements
 "		g:html_indent_strict_table -- inhibit 'O -' elements
 
@@ -147,17 +147,13 @@ endfun
 " [-- return the sum of indents respecting the syntax of a:lnum --]
 fun! <SID>HtmlIndentSum(lnum, style)
     if a:style == match(getline(a:lnum), '^\s*</')
-	let ic = &ic
-	set ic " ignore the case of the tags
-	if a:style == match(getline(a:lnum), '^\s*</\<\('.g:html_indent_tags.'\)\>')
+	if a:style == match(getline(a:lnum), '^\s*</\<\('.g:html_indent_tags.'\)\>') 
 	    let open = <SID>HtmlIndentOpen(a:lnum)
 	    let close = <SID>HtmlIndentClose(a:lnum)
 	    if 0 != open || 0 != close
-		let &ic = ic " restore case
 		return open - close
 	    endif
 	endif
-	let &ic = ic " restore case
     endif
     if '' != &syntax &&
 	\ synIDattr(synID(a:lnum, 1, 1), 'name') =~ '\(css\|java\).*' &&
@@ -179,13 +175,13 @@ fun! HtmlIndentGet(lnum)
 	return 0
     endif
 
-    let restore_ic = 'let &ic='.&ic
-    set noic
+    let restore_ic=&ic
+    let &ic=1 " ignore case
 
     let ind = <SID>HtmlIndentSum(lnum, -1)
     let ind = ind + <SID>HtmlIndentSum(a:lnum, 0)
 
-    exe restore_ic
+    let &ic=restore_ic
 
     return indent(lnum) + (&sw * ind)
 endfun

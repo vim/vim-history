@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.0ax.  Last change: 2001 Sep 13
+*repeat.txt*    For Vim version 6.0.  Last change: 2001 Sep 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

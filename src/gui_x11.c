@@ -3065,7 +3065,8 @@ gui_x11_blink_cb(timed_out, interval_id)
  * Return the RGB value of a pixel as a long.
  */
     long_u
-gui_mch_get_rgb(guicolor_T pixel)
+gui_mch_get_rgb(pixel)
+    guicolor_T	pixel;
 {
     XColor	xc;
     Colormap	colormap;
@@ -3526,9 +3527,11 @@ createXpmImages(path, xpm, sen, insen)
 
     /* Create the "sensitive" pixmap */
     if (xpm != NULL)
-	status = XpmCreatePixmapFromData(gui.dpy, rootWindow, xpm, &map, &mask, &attrs);
+	status = XpmCreatePixmapFromData(gui.dpy, rootWindow, xpm,
+							 &map, &mask, &attrs);
     else
-	status = XpmReadFileToPixmap(gui.dpy, rootWindow, (char *)path, &map, &mask, &attrs);
+	status = XpmReadFileToPixmap(gui.dpy, rootWindow, (char *)path,
+							 &map, &mask, &attrs);
     if (status == XpmSuccess && map != 0)
     {
 	XGCValues   gcvalues;

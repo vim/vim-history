@@ -82,9 +82,11 @@ make  -f Make_cyg.mak		console   Cygnus gcc
 See the specific files for comments and options.
 
 These files have been supplied by George V. Reilly, Ben Singer, Ken Scott and
-Ron Aaron; they have been tested.  The Cygnus one doesn't fully work yet.
-With Cygnus gcc you can also use the Unix Makefile instead (you need to get
-the Unix archive then).
+Ron Aaron; they have been tested.  The Cygnus one many not fully work yet.
+With Cygnus gcc you can use the Unix Makefile instead (you need to get the
+Unix archive then).  Then you get a Cygwin application (feels like Vim is
+runnin on Unix), while with Make_cyg.mak you get a Windows application (like
+with the other makefiles).
 
 You can also use the Visual C++ IDE: use File/Open workspace, select the
 Make_ivc.mak file, then select Build/Build all.  This builds the GUI version

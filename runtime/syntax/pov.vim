@@ -1,8 +1,8 @@
 " Vim syntax file
 " This is a GENERATED FILE. Please always refer to source file at the URI below.
-" Language: POV-Ray(tm) 3.1 Screen Description Language
+" Language: PoV-Ray(tm) 3.5 Screen Description Language
 " Maintainer: David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>
-" Last Change: 2001-07-25
+" Last Change: 2001-09-25
 " URI: http://physics.muni.cz/~yeti/download/pov.vim
 " Required Vim Version: 6.0
 
@@ -22,52 +22,55 @@ syn case match
 
 " Top level stuff
 syn keyword povCommands global_settings
-syn keyword povObjects array atmosphere background bicubic_patch blob box camera cone cubic cylinder disc fog height_field julia_fractal lathe light_source mesh object plane poly polygon prism quadric quartic rainbow sky_sphere smooth_triangle sor sphere superellipsoid text torus triangle
-syn keyword povCSG clipped_by difference intersection merge union
-syn keyword povAppearance interior material media texture
-syn keyword povGlobalSettings adc_bailout ambient_light assumed_gamma hf_gray_16 irid_wavelength max_intersections max_trace_level number_of_waves Number radiosity
-syn keyword povTransform matrix rotate scale translate transform
+syn keyword povObjects array atmosphere background bicubic_patch blob box camera cone cubic cylinder disc fog height_field isosurface julia_fractal lathe light_group light_source mesh mesh2 object parametric pattern photons plane poly polygon prism quadric quartic rainbow sky_sphere smooth_triangle sor sphere sphere_sweep spline superellipsoid text torus triangle
+syn keyword povCSG clipped_by contained_by difference intersection merge union
+syn keyword povAppearance interior material media texture interior_texture texture_list
+syn keyword povGlobalSettings ambient_light assumed_gamma charset hf_gray_16 irid_wavelength max_intersections max_trace_level number_of_waves radiosity noise_generator 
+syn keyword povTransform inverse matrix rotate scale translate transform
 
 " Descriptors
-syn keyword povDescriptors finish normal pigment
-syn keyword povDescriptors color colour rgb rgbt rgbf rgbft red green blue
-syn keyword povDescriptors bump_map color_map colour_map image_map material_map pigment_map quick_color quick_colour normal_map texture_map
-syn keyword povDescriptors ambient brilliance crand diffuse irid metallic phong phong_size reflection reflection_exponent roughness specular
-syn keyword povDescriptors cylinder fisheye omnimax orthographic panoramic perspective ultra_wide_angle
-syn keyword povDescriptors agate average brick boxed bozo bumps checker crackle cylindrical dents gradient granite hexagon leopard mandel marble onion planar quilted radial ripples spherical spiral1 spiral2 spotted waves wood wrinkles
-syn keyword povDescriptors density_file nextgroup=povDensityType skipwhite skipnl
-syn keyword povDescriptors area_light shadowless spotlight
+syn keyword povDescriptors finish normal pigment uv_mapping uv_vectors vertex_vectors
+syn keyword povDescriptors adc_bailout always_sample brightness count error_bound distance_maximum gray_threshold load_file low_error_factor max_sample media minimum_reuse nearest_count normal pretrace_end pretrace_start recursion_limit save_file
+syn keyword povDescriptors color colour gray rgb rgbt rgbf rgbft red green blue
+syn keyword povDescriptors bump_map color_map colour_map image_map material_map pigment_map quick_color quick_colour normal_map texture_map image_pattern pigment_pattern
+syn keyword povDescriptors ambient brilliance conserve_energy crand diffuse fresnel irid metallic phong phong_size refraction reflection reflection_exponent roughness specular
+syn keyword povDescriptors cylinder fisheye omnimax orthographic panoramic perspective spherical ultra_wide_angle
+syn keyword povDescriptors agate average brick boxed bozo bumps cells checker crackle cylindrical dents facets function gradient granite hexagon julia leopard magnet mandel marble onion planar quilted radial ripples slope spherical spiral1 spiral2 spotted toroidal waves wood wrinkles
+syn keyword povDescriptors density_file
+syn keyword povDescriptors area_light shadowless spotlight parallel
 syn keyword povDescriptors absorption confidence density emission intervals ratio samples scattering variance
 syn keyword povDescriptors distance fog_alt fog_offset fog_type turb_depth
-syn keyword povDescriptors brightness count distance_maximum error_bound gray_threshold low_error_factor minimum_reuse nearest_count recursion_limit
+syn keyword povDescriptors b_spline bezier_spline catmull_rom_spline cubic_spline evaluate face_indices form linear_spline max_gradient normal_indices normal_vectors quadratic_spline uv_indices
+syn keyword povDescriptors target
 
 " Modifiers
-syn keyword povModifiers caustics fade_distance fade_power ior
-syn keyword povModifiers bounded_by hierarchy hollow no_shadow open smooth sturm threshold water_level
+syn keyword povModifiers caustics dispersion dispersion_samples fade_color fade_colour fade_distance fade_power ior
+syn keyword povModifiers bounded_by double_illuminate hierarchy hollow no_shadow open smooth sturm threshold water_level
 syn keyword povModifiers hypercomplex max_iteration precision quaternion slice
-syn keyword povModifiers bezier_spline conic_sweep cubic_spline linear_spline linear_sweep quadratic_spline
+syn keyword povModifiers conic_sweep linear_sweep 
 syn keyword povModifiers flatness type u_steps v_steps
-syn keyword povModifiers adaptive falloff jitter looks_like media_attenuation media_interaction point_at radius tightness
-syn keyword povModifiers angle aperture blur_samples confidence direction focal_point location look_at right sky up variance
-syn keyword povModifiers all bump_size filter interpolate map_type once slope_map transmit use_color use_colour use_index
-syn keyword povModifiers black_hole agate_turb brick_size control0 control1 cubic_wave density_map flip frequency interpolate inverse lambda mortar octaves offset omega phase poly_wave ramp_wave repeat scallop_wave sine_wave strength triangle_wave thickness turbulence type warp
+syn keyword povModifiers aa_level aa_threshold adaptive falloff jitter looks_like media_attenuation media_interaction method point_at radius tightness
+syn keyword povModifiers angle aperture blur_samples confidence direction focal_point h_angle location look_at right sky up v_angle variance
+syn keyword povModifiers all bump_size filter interpolate map_type once slope_map transmit use_alpha use_color use_colour use_index
+syn keyword povModifiers black_hole agate_turb brick_size control0 control1 cubic_wave density_map flip frequency interpolate inverse lambda mortar octaves offset omega phase poly_wave ramp_wave repeat scallop_wave sine_wave strength triangle_wave thickness turbulence turb_depth type warp
 syn keyword povModifiers eccentricity extinction
 syn keyword povModifiers arc_angle falloff_angle width
+syn keyword povModifiers accuracy all_intersections altitude autostop circular collect coords cutaway_textures dist_exp expand_thresholds exponent exterior gather global_lights major_radius max_trace no_bump_scale no_image no_reflection orient orientation pass_through precompute projected_through range_divider solid spacing split_union tolerance
 
 " Words not marked `reserved' in documentation, but...
-syn keyword povHFType gif iff pgm png pot ppm sys tga contained
+syn keyword povHFType gif iff jpeg pgm png pot ppm sys tga tiff contained
 syn keyword povFontType ttf contained
 syn keyword povDensityType df3 contained
-syn cluster povPRIVATE add=povDensityType
+syn keyword povCharset ascii utf8 contained
 
 " Math functions on floats, vectors and strings
-syn keyword povFunctions abs acos asc asin atan2 ceil cos defined degrees dimensions dimension_size div exp file_exists floor int log max min mod pow radians rand seed sin sqrt strcmp strlen tan val vdot vlength
+syn keyword povFunctions abs acos asc asin atan2 ceil cos defined degrees dimensions dimension_size div exp file_exists floor inside int internal ln log max max_extent min min_extent mod pow radians rand seed select sin sqrt strcmp strlen tan trace val vdot vlength vstr vturbulence
 syn keyword povFunctions vaxis_rotate vcross vnormalize vrotate
 syn keyword povFunctions chr concat substr str strupr strlwr
 syn keyword povJuliaFunctions acosh asinh atan cosh cube pwr reciprocal sinh sqr tanh
 
 " Specialities
-syn keyword povConsts clock clock_delta false no off on pi t true u v version x y yes z
+syn keyword povConsts clock clock_delta clock_on final_clock final_frame frame_number initial_clock initial_frame image_width image_height false no off on pi t true u v version x y yes z
 syn match povDotItem "\.\@<=\(blue\|green\|filter\|red\|transmit\|t\|u\|v\|x\|y\|z\)\>" display
 
 " Comments
@@ -111,6 +114,7 @@ hi def link povFileOpen       Constant
 hi def link povConsts         Constant
 hi def link povDotItem        Constant
 hi def link povHFType         povSpecial
+hi def link povCharset        povSpecial
 hi def link povDensityType    povSpecial
 hi def link povFontType       povSpecial
 hi def link povOpenType       povSpecial

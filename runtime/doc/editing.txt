@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0ax.  Last change: 2001 Sep 19
+*editing.txt*   For Vim version 6.0.  Last change: 2001 Sep 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -565,7 +565,7 @@ unmodified.
 For MS Windows, you can modify the filters that are used in the browse dialog.
 By setting the g:browsefilter or b:browsefilter variables, you can change the
 filters globally or locally to the buffer.  The variable is set to a string in
-the format "{filter label}\t{patter};{pattern}>\n" where {filter label} is the
+the format "{filter label}\t{pattern};{pattern}\n" where {filter label} is the
 text that appears in the "Files of Type" comboBox, and {pattern} is the
 pattern which filters the filenames.  Several patterns can be given, separated
 by ';'.
@@ -582,7 +582,9 @@ You can override the filter setting on a per-buffer basis by setting the
 b:browsefilter variable.  You would most likely set b:browsefilter in a
 filetype plugin, so that the browse dialog would contain entries related to
 the type of file you are currently editing.  Disadvantage: This makes it
-difficult to start editing a file of a different type.
+difficult to start editing a file of a different type.  To overcome this, you
+may want to add "All Files\t*.*\n" as the final filter, so that the user can
+still access any desired file.
 
 ==============================================================================
 4. The current directory				*current-directory*

@@ -1,17 +1,24 @@
 " Vim compiler file
 " Compiler:     HTML Tidy
 " Maintainer:   Doug Kearns <djkea2@mugca.cc.monash.edu.au>
-" Last Change:  2001 Sep 02
+" Last Change:  2001 Sep 20
+
+" NOTE: set 'tidy_compiler_040800' if you are using the 4th August 2000 release
+"       of HTML Tidy.
 
 if exists("current_compiler")
   finish
 endif
 let current_compiler = "tidy"
 
-setlocal makeprg=tidy\ -quiet\ -errors\ %
+" this is needed to work around a bug in the 04/08/00 release of tidy which
+" failed to set the filename if the -quiet option was used
+if exists("tidy_compiler_040800")
+  setlocal makeprg=tidy\ -errors\ --gnu-emacs\ yes\ %
+else
+  setlocal makeprg=tidy\ -quiet\ -errors\ --gnu-emacs\ yes\ %
+endif
 
-" sample error:   line 5 column 1 - Error: <body> missing '>' for end of tag
-" sample warning: line 22 column 3 - Warning: unknown attribute "alig"
-setlocal errorformat=line\ %l\ column\ %c\ -\ Error:%m,
-		    \line\ %l\ column\ %c\ -\ Warning:%m,
-		    \%-G%.%# " ignore any lines that didn't match one of the patterns above
+" sample warning:    foo.html:8:1: Warning: inserting missing 'foobar' element
+" sample error:      foo.html:9:2: Error: <foobar> is not recognized!
+setlocal errorformat=%f:%l:%c:\ Error:%m,%f:%l:%c:\ Warning:%m,%-G%.%#

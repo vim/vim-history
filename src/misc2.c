@@ -466,8 +466,11 @@ check_cursor_col()
 
 #ifdef FEAT_VIRTUALEDIT
     /* If virtual editing is on, we can leave the cursor on the old position,
-       only we must set it to virtual */
-    if (ve_flags == VE_ALL)
+     * only we must set it to virtual.  But don't do it when at the end of the
+     * line. */
+    if (oldcol == MAXCOL)
+	curwin->w_cursor.coladd = 0;
+    else if (ve_flags == VE_ALL)
 	curwin->w_cursor.coladd = oldcol - curwin->w_cursor.col;
 #endif
 }
@@ -3738,7 +3741,8 @@ vim_findfile_stopdir(buf)
 
 /* Clean up the given search context. Can handle a NULL pointer */
     void
-vim_findfile_cleanup(void *ctx)
+vim_findfile_cleanup(ctx)
+    void	*ctx;
 {
     if (NULL == ctx)
 	return;
@@ -3764,7 +3768,8 @@ vim_findfile_cleanup(void *ctx)
  * top of the list).
  */
     char_u *
-vim_findfile(void *search_ctx)
+vim_findfile(search_ctx)
+    void	*search_ctx;
 {
     char_u	*file_path;
 #ifdef FEAT_PATH_EXTRA
@@ -4201,7 +4206,8 @@ vim_findfile(void *search_ctx)
  * Can handle it if the passed search_context is NULL;
  */
     void
-vim_findfile_free_visited(void *search_ctx)
+vim_findfile_free_visited(search_ctx)
+    void	*search_ctx;
 {
     ff_visited_list_hdr_T *vp;
 

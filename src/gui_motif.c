@@ -2583,12 +2583,12 @@ typedef struct _SharedFindReplace
 static SharedFindReplace find_widgets = { NULL };
 static SharedFindReplace repl_widgets = { NULL };
 
-static void find_replace_destroy_callback(Widget w, XtPointer client_data, XtPointer call_data);
-static void find_replace_dismiss_callback(Widget w, XtPointer client_data, XtPointer call_data);
-static void entry_activate_callback(Widget w, XtPointer client_data, XtPointer call_data);
-static void find_replace_callback(Widget w, XtPointer client_data, XtPointer call_data);
-static void find_replace_keypress(Widget w, SharedFindReplace * frdp, XKeyEvent * event);
-static void find_replace_dialog_create(char_u *entry_text, int do_replace);
+static void find_replace_destroy_callback __ARGS((Widget w, XtPointer client_data, XtPointer call_data));
+static void find_replace_dismiss_callback __ARGS((Widget w, XtPointer client_data, XtPointer call_data));
+static void entry_activate_callback __ARGS((Widget w, XtPointer client_data, XtPointer call_data));
+static void find_replace_callback __ARGS((Widget w, XtPointer client_data, XtPointer call_data));
+static void find_replace_keypress __ARGS((Widget w, SharedFindReplace * frdp, XKeyEvent * event));
+static void find_replace_dialog_create __ARGS((char_u *entry_text, int do_replace));
 
 /*ARGSUSED*/
     static void
@@ -3019,7 +3019,8 @@ find_replace_dialog_create(arg, do_replace)
 }
 
    void
-gui_mch_find_dialog(exarg_T *eap)
+gui_mch_find_dialog(eap)
+    exarg_T	*eap;
 {
     if (!gui.in_use)
 	return;
@@ -3029,7 +3030,8 @@ gui_mch_find_dialog(exarg_T *eap)
 
 
     void
-gui_mch_replace_dialog(exarg_T *eap)
+gui_mch_replace_dialog(eap)
+    exarg_T	*eap;
 {
     if (!gui.in_use)
 	return;

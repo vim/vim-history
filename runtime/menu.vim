@@ -1002,7 +1002,7 @@ am 50.30.320 &Syntax.EFG.GNU\ Server\ Pages :cal SetSyn("gsp")<CR>
 am 50.30.330 &Syntax.EFG.GNUplot :cal SetSyn("gnuplot")<CR>
 am 50.30.340 &Syntax.EFG.GTKrc :cal SetSyn("gtkrc")<CR>
 am 50.40.100 &Syntax.HIJK.Haskell :cal SetSyn("haskell")<CR>
-am 50.40.110 &Syntax.HIJK.Haskell-literal :cal SetSyn("lhaskell")<CR>
+am 50.40.110 &Syntax.HIJK.Haskell-literate :cal SetSyn("lhaskell")<CR>
 am 50.40.120 &Syntax.HIJK.Hercules :cal SetSyn("hercules")<CR>
 am 50.40.130 &Syntax.HIJK.HTML :cal SetSyn("html")<CR>
 am 50.40.140 &Syntax.HIJK.HTML\ with\ M4 :cal SetSyn("htmlm4")<CR>

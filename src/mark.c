@@ -315,6 +315,9 @@ getmark(c, changefile)
 		pos_copy.col = 0;
 	    else
 		pos_copy.col = MAXCOL;
+#ifdef FEAT_VIRTUALEDIT
+	    pos_copy.coladd = 0;
+#endif
 	}
     }
 #endif
@@ -371,7 +374,9 @@ getnextmark(startpos, dir, begin_line)
 {
     int		i;
     pos_T	*result = NULL;
-    pos_T	pos = *startpos;
+    pos_T	pos;
+
+    pos = *startpos;
 
     /* When searching backward and leaving the cursor on the first non-blank,
      * position must be in a previous line.

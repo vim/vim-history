@@ -27,6 +27,9 @@ else
   set iskeyword=.,-,48-58,A-Z,a-z,_
 endif
 
+let s:save_cpo = &cpo
+set cpo-=C
+
 " BIND configuration file
 
 syn match	namedComment	"//.*"
@@ -222,6 +225,9 @@ if version >= 508 || !exists("did_named_syn_inits")
 
   delcommand HiLink
 endif
+
+let &cpo = s:save_cpo
+unlet s:save_cpo
 
 let b:current_syntax = "named"
 
