@@ -448,6 +448,10 @@ vim_stat(const char *name, struct stat *stp)
     p = buf + strlen(buf);
     if (p > buf)
 	--p;
+#ifdef FEAT_MBYTE
+    if (p > buf && has_mbyte)
+	p -= (*mb_head_off)(buf, p);
+#endif
     if (p > buf && (*p == '\\' || *p == '/') && p[-1] != ':')
 	*p = NUL;
 #ifdef FEAT_MBYTE
