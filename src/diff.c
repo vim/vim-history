@@ -962,6 +962,11 @@ diff_win_options(wp, addbuf)
 	changed_window_setting(); /* make sure topline is not halfway a fold */
     }
 # endif
+#ifdef FEAT_SCROLLBIND
+    if (vim_strchr(p_sbo, 'h') == NULL)
+	do_cmdline_cmd("set sbo+=hor");
+#endif
+
     if (addbuf)
 	diff_buf_add(wp->w_buffer);
     redraw_win_later(wp, NOT_VALID);
