@@ -969,7 +969,7 @@ ucs2_to_enc(WCHAR *str, int *len)
 
 	utf8_str = alloc((unsigned)length);
 	if (utf8_str != NULL)
-	    WideCharToMultiByte(enc_dbcs, 0, str, *len, utf8_str, length, 0,0);
+	    WideCharToMultiByte(enc_dbcs, 0, str, *len, utf8_str, length, 0, 0);
 	*len = length;
         return utf8_str;
     }
@@ -1018,6 +1018,7 @@ clip_mch_request_selection(VimClipboard *cbd)
     VimClipType_t	metadata = { -1, -1, -1 };
     HGLOBAL		hMem = NULL;
     char_u		*str = NULL;
+    char_u		*to_free = NULL;
     char_u		*hMemStr = NULL;
     int			str_size = 0;
     int			maxlen;
@@ -1072,7 +1073,7 @@ clip_mch_request_selection(VimClipboard *cbd)
 		    if (hMemWstr[str_size] == NUL)
 			break;
 	    }
-	    str = ucs2_to_enc(hMemWstr, &str_size);
+	    to_free = str = ucs2_to_enc(hMemWstr, &str_size);
 	    GlobalUnlock(hMemW);
 	}
     }
@@ -1101,6 +1102,23 @@ clip_mch_request_selection(VimClipboard *cbd)
 		    if (str[str_size] == NUL)
 			break;
 	    }
+
+	    /* The text is now in the active codepage.  Convert to 'encoding',
+	     * going through UCS-2. */
+	    maxlen = MultiByteToWideChar(CP_ACP, 0, str, str_size, NULL, 0);
+	    to_free = alloc((unsigned)(maxlen * sizeof(WCHAR)));
+	    if (to_free != NULL)
+	    {
+		MultiByteToWideChar(CP_ACP, 0, str, str_size,
+						    (WCHAR *)to_free, maxlen);
+		str_size = maxlen;
+		str = ucs2_to_enc((WCHAR *)to_free, &str_size);
+		if (str != NULL)
+		{
+		    vim_free(to_free);
+		    to_free = str;
+		}
+	    }
 	}
     }
 
@@ -1125,6 +1143,7 @@ clip_mch_request_selection(VimClipboard *cbd)
     if (hMemStr != NULL)
 	GlobalUnlock(hMem);
     CloseClipboard();
+    vim_free(to_free);
 }
 
 /*
@@ -1134,7 +1153,6 @@ clip_mch_request_selection(VimClipboard *cbd)
 clip_mch_set_selection(VimClipboard *cbd)
 {
     char_u		*str = NULL;
-    long_u		str_len;
     VimClipType_t	metadata;
     HGLOBAL		hMem = NULL;
     HGLOBAL		hMemVim = NULL;
@@ -1148,16 +1166,15 @@ clip_mch_set_selection(VimClipboard *cbd)
     cbd->owned = FALSE;
 
     /* Get the text to be put on the clipboard, with CR-LF. */
-    metadata.type = clip_convert_selection(&str, &str_len, cbd);
+    metadata.type = clip_convert_selection(&str, &metadata.txtlen, cbd);
     if (metadata.type < 0)
 	return;
-    metadata.txtlen = str_len;
     metadata.ucslen = 0;
 
 # if defined(FEAT_MBYTE) && defined(WIN3264)
     {
         WCHAR		*out;
-        int		len = str_len;
+        int		len = metadata.txtlen;
 
 	/* Convert the text to UCS-2. This is put on the clipboard as
 	 * CF_UNICODETEXT. */
@@ -1165,6 +1182,20 @@ clip_mch_set_selection(VimClipboard *cbd)
 	if (out != NULL)
 	{
 	    WCHAR *lpszMemW;
+
+	    /* Convert the text for CF_TEXT to ANSI codepage. Otherwise it's
+	     * p_enc, which has no relation to the ANSI codepage. */
+	    metadata.txtlen = WideCharToMultiByte(CP_ACP, 0, out, len,
+							       NULL, 0, 0, 0);
+	    vim_free(str);
+	    str = (char_u *)alloc((unsigned)metadata.txtlen);
+	    if (str == NULL)
+	    {
+		vim_free(out);
+		return;		/* out of memory */
+	    }
+	    WideCharToMultiByte(CP_ACP, 0, out, len,
+						  str, metadata.txtlen, 0, 0);
 
 	    /* Allocate memory for the UCS-2 text, add one NUL word to
 	     * terminate the string. */
@@ -1185,14 +1216,14 @@ clip_mch_set_selection(VimClipboard *cbd)
 
     /* Allocate memory for the text, add one NUL byte to terminate the string.
      */
-    hMem = GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE, str_len + 1);
+    hMem = GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE, metadata.txtlen + 1);
     {
 	LPSTR lpszMem = (LPSTR)GlobalLock(hMem);
 
 	if (lpszMem)
 	{
-	    STRNCPY(lpszMem, str, str_len);
-	    lpszMem[str_len] = NUL;
+	    STRNCPY(lpszMem, str, metadata.txtlen);
+	    lpszMem[metadata.txtlen] = NUL;
 	    GlobalUnlock(hMem);
 	}
     }
@@ -1226,8 +1257,8 @@ clip_mch_set_selection(VimClipboard *cbd)
 # if defined(FEAT_MBYTE) && defined(WIN3264)
 	    if (hMemW != NULL)
 	    {
-		SetClipboardData(CF_UNICODETEXT, hMemW);
-		hMemW = 0;
+		if (SetClipboardData(CF_UNICODETEXT, hMemW) != NULL)
+		    hMemW = NULL;
 	    }
 # endif
 	    /* Always use CF_TEXT.  On Win98 Notepad won't obtain the
