@@ -782,23 +782,23 @@ do_tag(tag, type, count, forceit, verbose)
 		&& !skip_msg)
 	    {
 		/* Give an indication of the number of matching tags */
-		sprintf((char *)msg_buf, _("tag %d of %d%s"),
+		sprintf((char *)IObuff, _("tag %d of %d%s"),
 				cur_match + 1,
 				num_matches,
 				max_num_matches != MAXCOL ? _(" or more") : "");
 		if (ic)
-		    STRCAT(msg_buf, _("  Using tag with different case!"));
+		    STRCAT(IObuff, _("  Using tag with different case!"));
 		if ((num_matches > prev_num_matches || new_tag)
 							   && num_matches > 1)
 		{
 		    if (ic)
-			msg_attr(msg_buf, hl_attr(HLF_W));
+			msg_attr(IObuff, hl_attr(HLF_W));
 		    else
-			msg(msg_buf);
+			msg(IObuff);
 		    msg_scroll = TRUE;	/* don't overwrite this message */
 		}
 		else
-		    give_warning(msg_buf, ic);
+		    give_warning(IObuff, ic);
 		if (ic && !msg_scrolled && msg_silent == 0)
 		{
 		    out_flush();
