@@ -1743,7 +1743,6 @@ scripterror:
     {
 	msg_scroll = TRUE;		/* scroll message up */
 	ml_recover();
-	msg_scroll = FALSE;
 	if (curbuf->b_ml.ml_mfp == NULL) /* failed */
 	    getout(1);
 	do_modelines();			/* do modelines */
