@@ -2699,7 +2699,7 @@ jumpto_tag(lbuf, forceit, keep_help)
 #if 0	/* disabled for now */
 #ifdef FEAT_CMDHIST
 	    /* put pattern in search history */
-	    add_to_history(HIST_SEARCH, pbuf + 1, TRUE);
+	    add_to_history(HIST_SEARCH, pbuf + 1, TRUE, pbuf[0]);
 #endif
 #endif
 	    save_lnum = curwin->w_cursor.lnum;
