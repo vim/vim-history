@@ -3856,6 +3856,9 @@ insertchar(c, flags, second_indent)
 		break;
 	    }
 
+	    /* Going to break the line, remove any "$" now. */
+	    undisplay_dollar();
+
 	    /*
 	     * Offset between cursor position and line break is used by replace
 	     * stack functions.  VREPLACE does not use this, and backspaces
