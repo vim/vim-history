@@ -1877,6 +1877,7 @@ do_in_runtimepath(name, all, callback)
     char_u	*rtp;
     char_u	*np;
     char_u	*buf;
+    char_u	*rtp_copy;
     char_u	*tail;
     int		num_files;
     char_u	**files;
@@ -1890,14 +1891,17 @@ do_in_runtimepath(name, all, callback)
     proc->pr_WindowPtr = (APTR)-1L;
 #endif
 
+    /* Make a copy of 'runtimepath'.  Invoking the callback may change the
+     * value. */
+    rtp_copy = vim_strsave(p_rtp);
     buf = alloc(MAXPATHL);
-    if (buf != NULL)
+    if (buf != NULL && rtp_copy != NULL)
     {
 	if (p_verbose > 1)
 	    smsg((char_u *)_("Searching for \"%s\" in \"%s\""),
 						 (char *)name, (char *)p_rtp);
 	/* Loop over all entries in 'runtimepath'. */
-	rtp = p_rtp;
+	rtp = rtp_copy;
 	while (*rtp != NUL && (all || !did_one))
 	{
 	    /* Copy the path from 'runtimepath' to buf[]. */
@@ -1934,8 +1938,9 @@ do_in_runtimepath(name, all, callback)
 		}
 	    }
 	}
-	vim_free(buf);
     }
+    vim_free(buf);
+    vim_free(rtp_copy);
     if (p_verbose > 0 && !did_one)
 	msg_str((char_u *)_("not found in 'runtimepath': \"%s\""), name);
 
