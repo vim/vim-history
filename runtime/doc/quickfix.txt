@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.2.  Last change: 2003 May 30
+*quickfix.txt*  For Vim version 6.2.  Last change: 2004 Feb 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -68,6 +68,13 @@ The following quickfix commands can be used:
 			the list that includes a file name.  If there are no
 			file names at all or if there is no next file, go to
 			the [count] next error.  See |:cc| for [!] and
+			'switchbuf'.
+
+:[count]cNf[ile][!]			*:cpf* *:cpfile* *:cNf* *:cNfile*
+:[count]cpf[ile][!]	Display the last error in the [count] previous file in
+			the list that includes a file name.  If there are no
+			file names at all or if there is no next file, go to
+			the [count] previous error.  See |:cc| for [!] and
 			'switchbuf'.
 
 							*:crewind* *:cr*
