@@ -831,20 +831,23 @@ endif
 endif " !exists("did_install_default_menus")
 
 " Define these items always, so that syntax can be switched on when it wasn't.
-am 50.212 &Syntax.&Manual		:syn manual<CR>
-am 50.214 &Syntax.A&utomatic		:syn on<CR>
-am <silent> 50.216 &Syntax.on/off\ for\ &This\ file :call <SID>SynOnOff()<CR>
-if !exists("*s:SynOnOff")
-  fun s:SynOnOff()
-    if has("syntax_items")
-      syn clear
-    else
-      if !exists("g:syntax_on")
-	syn manual
+" But skip them when the Syntax menu was disabled by the user.
+if !exists("did_install_syntax_menu")
+  am 50.212 &Syntax.&Manual		:syn manual<CR>
+  am 50.214 &Syntax.A&utomatic		:syn on<CR>
+  am <silent> 50.216 &Syntax.on/off\ for\ &This\ file :call <SID>SynOnOff()<CR>
+  if !exists("*s:SynOnOff")
+    fun s:SynOnOff()
+      if has("syntax_items")
+	syn clear
+      else
+	if !exists("g:syntax_on")
+	  syn manual
+	endif
+	set syn=ON
       endif
-      set syn=ON
-    endif
-  endfun
+    endfun
+  endif
 endif
 
 
