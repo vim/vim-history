@@ -682,14 +682,14 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 	fenc = enc_canonize(eap->cmd + eap->force_enc);
 	fenc_alloced = TRUE;
     }
-    else if (curbuf->b_help)
-    {
-	fenc = (char_u *)"latin1";	/* help files are latin1 */
-	fenc_alloced = FALSE;
-    }
     else if (curbuf->b_p_bin)
     {
 	fenc = (char_u *)"";		/* binary: don't convert */
+	fenc_alloced = FALSE;
+    }
+    else if (curbuf->b_help)
+    {
+	fenc = (char_u *)"latin1";	/* help files are latin1 */
 	fenc_alloced = FALSE;
     }
     else if (*p_fencs == NUL)
