@@ -72,6 +72,16 @@ static char *e_nofold = N_("E490: No fold found");
 static linenr_T invalid_top = (linenr_T)0;
 static linenr_T invalid_bot = (linenr_T)0;
 
+/*
+ * When using 'foldexpr' we sometimes get the level of the next line, which
+ * calls foldlevel() to get the level of the current line, which hasn't been
+ * stored yet.  To get around this chicken-egg problem the level of the
+ * previous line is stored here when available.  prev_lnum is zero when the
+ * level is not available.
+ */
+static linenr_T prev_lnum = 0;
+static int prev_lnum_lvl = -1;
+
 /* Flags used for "done" argument of setManualFold. */
 #define DONE_NOTHING	0
 #define DONE_ACTION	1	/* did close or open a fold */
@@ -247,6 +257,8 @@ foldLevel(lnum)
      * an undefined fold level.  Otherwise update the folds first. */
     if (invalid_top == (linenr_T)0)
 	checkupdate(curwin);
+    else if (lnum == prev_lnum && prev_lnum_lvl >= 0)
+	return prev_lnum_lvl;
     else if (lnum >= invalid_top && lnum <= invalid_bot)
 	return -1;
 
@@ -2450,6 +2462,10 @@ foldUpdateIEMSRecurse(gap, level, startlnum, flp, getlevel, bot, topflags)
 	    ll = flp->lnum + 1;
 	    while (!got_int)
 	    {
+		/* Make the previous level available to foldlevel(). */
+		prev_lnum = flp->lnum;
+		prev_lnum_lvl = flp->lvl;
+
 		if (++flp->lnum > linecount)
 		    break;
 		flp->lvl = flp->lvl_next;
@@ -2457,6 +2473,7 @@ foldUpdateIEMSRecurse(gap, level, startlnum, flp, getlevel, bot, topflags)
 		if (flp->lvl >= 0 || flp->had_end <= MAX_LEVEL)
 		    break;
 	    }
+	    prev_lnum = 0;
 	    if (flp->lnum > linecount)
 		break;
 
