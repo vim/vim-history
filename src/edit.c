@@ -866,6 +866,11 @@ doESCkey:
 #endif
 	    set_iminsert_global();
 	    showmode();
+#ifdef FEAT_GUI
+	    /* may show different cursor shape or color */
+	    if (gui.in_use)
+		gui_update_cursor(TRUE, FALSE);
+#endif
 #if defined(FEAT_WINDOWS) && defined(FEAT_KEYMAP)
 	    /* Show/unshow value of 'keymap' in status lines. */
 	    status_redraw_curbuf();
