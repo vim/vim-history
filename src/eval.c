@@ -4805,7 +4805,8 @@ f_inputdialog(argvars, retvar)
     VAR		retvar;
 {
 #if defined(FEAT_GUI_TEXTDIALOG)
-    if (gui.in_use)
+    /* Use a GUI dialog if the GUI is running and 'c' is not in 'guioptions' */
+    if (gui.in_use && vim_strchr(p_go, GO_CONDIALOG) == NULL)
     {
 	char_u	*message;
 	char_u	buf[NUMBUFLEN];
