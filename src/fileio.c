@@ -2800,6 +2800,9 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     prev_got_int = got_int;
     got_int = FALSE;
 
+    /* Mark the buffer as 'being saved' to prevent changed buffer warnings */
+    buf->b_saving = TRUE;
+
     /*
      * If we are not appending or filtering, the file exists, and the
      * 'writebackup', 'backup' or 'patchmode' option is set, need a backup.
@@ -3959,6 +3962,9 @@ restore_backup:
 fail:
     --no_wait_return;		/* may wait for return now */
 nofail:
+
+    /* Done saving, we accept changed buffer warnings again */
+    buf->b_saving = FALSE;
 
     vim_free(backup);
     if (buffer != smallbuf)
@@ -5387,13 +5393,14 @@ buf_check_timestamp(buf, focus)
     int		save_mouse_correct = need_mouse_correct;
 #endif
 
-    /* If there is no file name, the buffer is not loaded, or 'buftype' is
-     * set: ignore this buffer. */
+    /* If there is no file name, the buffer is not loaded, 'buftype' is
+     * set, or we are in the middle of a save: ignore this buffer. */
     if (buf->b_ffname == NULL
 	    || buf->b_ml.ml_mfp == NULL
 #if defined(FEAT_QUICKFIX)
 	    || *buf->b_p_bt != NUL
 #endif
+	    || buf->b_saving
 	    )
 	return 0;
 
