@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.1.  Last change: 2003 Jan 28
+*eval.txt*      For Vim version 6.1.  Last change: 2003 Mar 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -730,6 +730,11 @@ v:version	Version number of Vim: Major version number times 100 plus
 		minor version number.  Version 5.0 is 500.  Version 5.1 (5.01)
 		is 501.  Read-only.  "version" also works, for backwards
 		compatibility.
+		Use |has()| to check if a certain patch was included, e.g.: >
+			if has("patch123")
+<		Note that patch numbers are specific to the version, thus both
+		version 5.0 and 5.1 may have a patch 123, but these are
+		completely different.
 
 					*v:warningmsg* *warningmsg-variable*
 v:warningmsg	Last given warning message.  It's allowed to set this variable.
@@ -2451,13 +2456,16 @@ winwidth({nr})						*winwidth()*
 <
 
 							*feature-list*
-There are two types of features:
+There are three types of features:
 1.  Features that are only supported when they have been enabled when Vim
     was compiled |+feature-list|.  Example: >
 	:if has("cindent")
 2.  Features that are only supported when certain conditions have been met.
     Example: >
 	:if has("gui_running")
+3.  Included patches.  First check |v:version| for the version of Vim.
+    Then the "patch123" feature means that patch 123 has been included for
+    this version.
 
 all_builtin_terms	Compiled with all builtin terminals enabled.
 amiga			Amiga version of Vim.
