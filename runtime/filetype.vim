@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2002 Mar 01
+" Last change:	2002 Mar 15
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -637,6 +637,9 @@ au BufNewFile,BufRead *.m2,*.DEF,*.MOD,*.md,*.mi setf modula2
 " Modula 3 (.m3, .i3, .mg, .ig)
 au BufNewFile,BufRead *.[mi][3g]		setf modula3
 
+" Monk
+au BufNewFile,BufRead *.isc,*.monk,*.ssc,*.tsc	setf monk
+
 " MOO
 au BufNewFile,BufRead *.moo			setf moo
 
@@ -1241,7 +1244,6 @@ au BufNewFile,BufRead *.ms
 	\ if !<SID>FTnroff() | setf xmath | endif
 
 " XML
-au BufNewFile,BufRead *.xsl			setf xml
 au BufNewFile,BufRead *.xml
 	\ if getline(1) . getline(2) . getline(3) =~ '<!DOCTYPE.*DocBook' |
 	\   let b:docbk_type="xml" |
@@ -1249,6 +1251,9 @@ au BufNewFile,BufRead *.xml
 	\ else |
 	\   setf xml |
 	\ endif
+
+" XSD
+au BufNewFile,BufRead *.xsd			setf xsd
 
 " Xslt
 au BufNewFile,BufRead *.xsl			setf xslt
