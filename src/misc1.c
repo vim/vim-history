@@ -6520,16 +6520,17 @@ namelowcpy(
  * in `path'.  Called by expand_wildcards().
  * Return the number of matches found.
  * "path" has backslashes before chars that are not to be expanded, starting
- * at "wildc".
+ * at "path[wildoff]".
  */
     static int
 dos_expandpath(
     garray_T	*gap,
     char_u	*path,
-    char_u	*wildc,
+    int		wildoff,
     int		flags)		/* EW_* flags */
 {
     char_u		*buf;
+    char_u		*path_end;
     char_u		*p, *s, *e;
     int			start_len = gap->ga_len;
     int			ok;
@@ -6558,35 +6559,47 @@ dos_expandpath(
     p = buf;
     s = buf;
     e = NULL;
-    while (*path != NUL)
+    path_end = path;
+    while (*path_end != NUL)
     {
-	if (path >= wildc && rem_backslash(path))	/* remove a backslash */
-	    ++path;
-	else if (*path == '\\' || *path == ':' || *path == '/')
+	/* May ignore a wildcard that has a backslash before it; it will
+	 * be removed by rem_backslash() or file_pat_to_reg_pat() below. */
+	if (path_end >= path + wildoff && rem_backslash(path_end))
+	    *p++ = *path_end++;
+	else if (*path_end == '\\' || *path_end == ':' || *path_end == '/')
 	{
 	    if (e != NULL)
 		break;
-	    else
-		s = p + 1;
+	    s = p + 1;
 	}
-	else if (path >= wildc && (*path == '*' || *path == '?'
-					     || *path == '[' || *path == '~'))
+	else if (path_end >= path + wildoff
+			 && vim_strchr((char_u *)"*?[~", *path_end) != NULL)
 	    e = p;
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
 	{
-	    len = (*mb_ptr2len_check)(path);
-	    STRNCPY(p, path, len);
+	    len = (*mb_ptr2len_check)(path_end);
+	    STRNCPY(p, path_end, len);
 	    p += len;
-	    path += len;
+	    path_end += len;
 	}
 	else
 #endif
-	    *p++ = *path++;
+	    *p++ = *path_end++;
     }
     e = p;
     *e = NUL;
+
     /* now we have one wildcard component between s and e */
+    /* Remove backslashes between "wildoff" and the start of the wildcard
+     * component. */
+    for (p = buf + wildoff; p < s; ++p)
+	if (rem_backslash(p))
+	{
+	    STRCPY(p, p + 1);
+	    --e;
+	    --s;
+	}
 
     starts_with_dot = (*s == '.');
     pat = file_pat_to_reg_pat(s, e, NULL, FALSE);
@@ -6618,7 +6631,7 @@ dos_expandpath(
 #else
     /* If we are expanding wildcards we try both files and directories */
     ok = (findfirst((char *)buf, &fb,
-			    (*path || (flags & EW_DIR)) ? FA_DIREC : 0) == 0);
+		(*path_end != NUL || (flags & EW_DIR)) ? FA_DIREC : 0) == 0);
 #endif
 
     while (ok)
@@ -6640,18 +6653,18 @@ dos_expandpath(
 	    namelowcpy(s, p);
 #endif
 	    len = (int)STRLEN(buf);
-	    STRCPY(buf + len, path);
-	    if (mch_has_exp_wildcard(path))
+	    STRCPY(buf + len, path_end);
+	    if (mch_has_exp_wildcard(path_end))
 	    {
 		/* need to expand another component of the path */
 		/* remove backslashes for the remaining components only */
-		(void)dos_expandpath(gap, buf, buf + len + 1, flags);
+		(void)dos_expandpath(gap, buf, len + 1, flags);
 	    }
 	    else
 	    {
 		/* no more wildcards, check if there is a match */
 		/* remove backslashes for the remaining components only */
-		if (*path)
+		if (*path_end != 0)
 		    backslash_halve(buf + len + 1);
 		if (mch_getperm(buf) >= 0)	/* add existing file */
 		    addfile(gap, buf, flags);
@@ -6674,7 +6687,7 @@ dos_expandpath(
 	    ok = (hFind != INVALID_HANDLE_VALUE);
 #else
 	    ok = (findfirst((char *)buf, &fb,
-			    (*path || (flags & EW_DIR)) ? FA_DIREC : 0) == 0);
+		 (*path_end != NUL || (flags & EW_DIR)) ? FA_DIREC : 0) == 0);
 #endif
 	    vim_free(matchname);
 	    matchname = NULL;
@@ -6689,7 +6702,7 @@ dos_expandpath(
     vim_free(matchname);
 
     matches = gap->ga_len - start_len;
-    if (matches)
+    if (matches > 0)
 	qsort(((char_u **)gap->ga_data) + start_len, (size_t)matches,
 						   sizeof(char_u *), pstrcmp);
     return matches;
@@ -6701,9 +6714,9 @@ mch_expandpath(
     char_u	*path,
     int		flags)		/* EW_* flags */
 {
-    return dos_expandpath(gap, path, path, flags);
+    return dos_expandpath(gap, path, 0, flags);
 }
-# endif /* MSDOS || FEAT_GUI_W16 */
+# endif /* MSDOS || FEAT_GUI_W16 || WIN3264 */
 
 /*
  * Generic wildcard expansion code.

@@ -3916,9 +3916,10 @@ unix_expandpath(gap, path, wildoff, flags)
     s = buf;
     e = NULL;
     path_end = path;
-    while (*path_end)
+    while (*path_end != NUL)
     {
-	/* May ignore a wildcard that has a backslash before it */
+	/* May ignore a wildcard that has a backslash before it; it will
+	 * be removed by rem_backslash() or file_pat_to_reg_pat() below. */
 	if (path_end >= path + wildoff && rem_backslash(path_end))
 	    *p++ = *path_end++;
 	else if (*path_end == '/')
@@ -3927,7 +3928,8 @@ unix_expandpath(gap, path, wildoff, flags)
 		break;
 	    s = p + 1;
 	}
-	else if (vim_strchr((char_u *)"*?[{~$", *path_end) != NULL)
+	else if (path_end >= path + wildoff
+			 && vim_strchr((char_u *)"*?[{~$", *path_end) != NULL)
 	    e = p;
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
@@ -4009,7 +4011,7 @@ unix_expandpath(gap, path, wildoff, flags)
 		{
 		    /* no more wildcards, check if there is a match */
 		    /* remove backslashes for the remaining components only */
-		    if (*path_end)
+		    if (*path_end != NUL)
 			backslash_halve(buf + len + 1);
 		    if (mch_getperm(buf) >= 0)	/* add existing file */
 			addfile(gap, buf, flags);
@@ -4024,7 +4026,7 @@ unix_expandpath(gap, path, wildoff, flags)
     vim_free(regmatch.regprog);
 
     matches = gap->ga_len - start_len;
-    if (matches)
+    if (matches > 0)
 	qsort(((char_u **)gap->ga_data) + start_len, matches,
 						   sizeof(char_u *), pstrcmp);
     return matches;
