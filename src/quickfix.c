@@ -1863,6 +1863,7 @@ buf_hide(buf)
     switch (buf->b_p_bh[0])
     {
 	case 'u':		    /* "unload" */
+	case 'w':		    /* "wipe" */
 	case 'd': return FALSE;	    /* "delete" */
 	case 'h': return TRUE;	    /* "hide" */
     }
