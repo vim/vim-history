@@ -268,12 +268,16 @@ getcount:
 	  case Ctrl('E'):
 		CHECKCLEAROP;
 		scrollup(Prenum1);
+				/* We may have moved to another line -- webb */
+		coladvance(curwin->w_curswant);
 		updateScreen(VALID);
 		break;
 
 	  case Ctrl('Y'):
 		CHECKCLEAROP;
 		scrolldown(Prenum1);
+				/* We may have moved to another line -- webb */
+		coladvance(curwin->w_curswant);
 		updateScreen(VALID);
 		break;
 

@@ -1,7 +1,10 @@
-This file contains an overview of changes from Vim version 2.0 to 2.5
+This file contains an overview of changes from Vim version 2.0 to 2.8
 The changes new in version 2.4 are marked with (2.4).
 The changes new in version 2.5 are marked with (2.5).
-The changes from Robert Webb are marked with (Webb 2.5).
+The changes new in version 2.6 are marked with (2.6).
+The changes new in version 2.7 are marked with (2.7).
+The changes new in version 2.8 are marked with (2.8).
+Some changes from Robert Webb are marked with (Webb 2.5).
 
 Big improvements
 ================
@@ -367,6 +370,13 @@ search is done for a non-identifier string. (2.5)
 Made the ":buffers" listing nicer by putting the "line" string in column 40.
 (2.7)
 
+Updated error messages for keyword completion. (2.8)
+
+If 'winheight' set spread extra lines over other windows. (2.8)
+
+When 'updatecount' changed from zero to non-zero, create swap file for all
+loaded buffers. (2.8)
+
 
 New and changed options
 =======================
@@ -573,6 +583,9 @@ With change command put deleted text in "1, even with text within one line.
 When deleting and a register is specified, also yank into buffer "1. (2.4)
 
 ":3|" prints line 3 instead of jumping to it. (2.4)
+
+Separated 'wrapmargin' and 'textwidth'. Both can be used, if textwidth is set
+it overrides 'wrapmargin'. (2.8)
 
 
 Bug fixes
@@ -833,6 +846,19 @@ Fixed .swp files not deleted when starting to edit a file when the current
 buffer is empty and has no name. This also fixes the problem which happens
 when starting vim without a file name and the starting to edit a file that
 does not exist. (2.6)
+
+When error encountered while loading files for "-o" option or ":all", continue
+loading the other files. (2.8)
+
+If cursor is in column 0, always reset horizontal scrolling. Makes tabs
+completely visible. (2.8)
+
+Fixed problem in mf_release_all, empty used list not detected properly. (2.8)
+
+Fixed crash with command ":@:", repeat last command line. (2.8)
+
+Fixed cursor in wrong column when matched string from search was just one line
+below the window. (2.8)
 
 
 Internals

@@ -484,8 +484,8 @@ returncmd:
 		}
 		if (firstc == ':')
 		{
-			free(last_cmdline);
-			last_cmdline = strsave(buff);
+			free(new_last_cmdline);
+			new_last_cmdline = strsave(buff);
 		}
 	}
 
@@ -598,7 +598,7 @@ docmdline(cmdline)
  */
 	if (cmdline == NULL)
 	{
-		if (!getcmdline(':', buff))
+		if (getcmdline(':', buff) == FAIL)
 			return FAIL;
 	}
 	else
@@ -622,6 +622,16 @@ docmdline(cmdline)
 		if (nextcomm == NULL)
 			break;
 		STRCPY(buff, nextcomm);
+	}
+/*
+ * If the command was typed, remember it for register :
+ * Do this AFTER executing the command to make :@: work.
+ */
+	if (cmdline == NULL && new_last_cmdline != NULL)
+	{
+		free(last_cmdline);
+		last_cmdline = new_last_cmdline;
+		new_last_cmdline = NULL;
 	}
 	return OK;
 }
@@ -1501,7 +1511,7 @@ doargument:
 				editcmd = getargcmd(&arg);		/* get +command argument */
 				nextcomm = checknextcomm(arg);	/* check for trailing command */
 				if ((cmdidx == CMD_new) && *arg == NUL)
-					(void)doecmd(NULL, NULL, editcmd, TRUE, doecmdlnum);
+					(void)doecmd(NULL, NULL, editcmd, TRUE, (linenr_t)1);
 				else if (cmdidx != CMD_split || *arg != NUL)
 					(void)doecmd(arg, NULL, editcmd, p_hid, doecmdlnum);
 				else

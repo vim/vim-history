@@ -218,7 +218,7 @@ findfunc	search.c	/^findfunc(dir, what, count)$/
 findpar	search.c	/^findpar(dir, count, what, both)$/
 findparam	param.c	/^findparam(arg)$/
 findsent	search.c	/^findsent(dir, count)$/
-findswapname	memline.c	/^findswapname(second_try)$/
+findswapname	memline.c	/^findswapname(buf, second_try)$/
 findtag	tag.c	/^findtag(tag)$/
 fix_fname	buffer.c	/^fix_fname(fname)$/
 flush_buffers	getchar.c	/^flush_buffers(typeahead)$/
@@ -309,7 +309,7 @@ ltoreq	macros.h	/^#define ltoreq(a, b) (((a).lnum != (b).lnum) \\$/
 make_windows	window.c	/^make_windows(count)$/
 makemap	getchar.c	/^makemap(fd)$/
 makeset	param.c	/^makeset(fd)$/
-makeswapname	memline.c	/^makeswapname(second_try)$/
+makeswapname	memline.c	/^makeswapname(buf, second_try)$/
 maketitle	buffer.c	/^maketitle()$/
 mark_adjust	mark.c	/^mark_adjust(line1, line2, inc)$/
 mch_avail_mem	amiga.c	/^mch_avail_mem(special)$/
@@ -328,6 +328,7 @@ memmove	alloc.c	/^memmove(desti, source, len)$/
 memset	unix.h	/^# define memset(ptr, c, size)	bsdmemset((ptr), (c)/
 mf_alloc_bhdr	memfile.c	/^mf_alloc_bhdr(mfp, page_count)$/
 mf_close	memfile.c	/^mf_close(mfp, delete)$/
+mf_do_open	memfile.c	/^mf_do_open(mfp, fname, new)$/
 mf_find_hash	memfile.c	/^mf_find_hash(mfp, nr)$/
 mf_free	memfile.c	/^mf_free(mfp, hp)$/
 mf_free_bhdr	memfile.c	/^mf_free_bhdr(hp)$/
@@ -339,6 +340,7 @@ mf_ins_used	memfile.c	/^mf_ins_used(mfp, hp)$/
 mf_need_trans	memfile.c	/^mf_need_trans(mfp)$/
 mf_new	memfile.c	/^mf_new(mfp, negative, page_count)$/
 mf_open	memfile.c	/^mf_open(fname, new, fail_nofile)$/
+mf_open_file	memfile.c	/^mf_open_file(mfp, fname)$/
 mf_put	memfile.c	/^mf_put(mfp, hp, dirty, infile)$/
 mf_read	memfile.c	/^mf_read(mfp, hp)$/
 mf_release	memfile.c	/^mf_release(mfp, page_count)$/
@@ -372,7 +374,8 @@ ml_line_alloced	memline.c	/^ml_line_alloced()$/
 ml_lineadd	memline.c	/^ml_lineadd(buf, count)$/
 ml_new_data	memline.c	/^ml_new_data(mfp, negative, page_count)$/
 ml_new_ptr	memline.c	/^ml_new_ptr(mfp)$/
-ml_open	memline.c	/^ml_open(buf)$/
+ml_open	memline.c	/^ml_open()$/
+ml_open_files	memline.c	/^ml_open_files()$/
 ml_preserve	memline.c	/^ml_preserve(buf, message)$/
 ml_recover	memline.c	/^ml_recover()$/
 ml_replace	memline.c	/^ml_replace(lnum, line, copy)$/

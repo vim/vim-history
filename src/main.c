@@ -427,6 +427,7 @@ main(argc, argv)
 	{
 		curbuf->b_p_bin = 1;		/* binary file I/O */
 		curbuf->b_p_tw = 0;			/* no automatic line wrap */
+		curbuf->b_p_wm = 0;			/* no automatic line wrap */
 		curbuf->b_p_tx = 0;			/* no text mode */
 		p_ta = 0;					/* no text auto */
 		curbuf->b_p_ml = 0;			/* no modelines */
@@ -458,7 +459,7 @@ main(argc, argv)
 
 	if (recoverymode)					/* do recover */
 	{
-		if (ml_open(curbuf) == FAIL)	/* Initialize storage structure */
+		if (ml_open() == FAIL)			/* Initialize storage structure */
 			getout(1);
 		ml_recover();
 	}
@@ -475,21 +476,17 @@ main(argc, argv)
 	 * Make_windows() has already opened the windows.
 	 * This is all done by putting commands in the stuff buffer.
 	 */
-	if (win_count > 1)
+	for (i = 1; i < win_count; ++i)
 	{
-		for (i = 1; i < win_count; ++i)
-		{
-			stuffReadbuff((char_u *)"\027\027:");	/* CTRL-W CTRL-W */
-			if (i < arg_count)
-			{
-				stuffnumReadbuff((long)i);
-				stuffReadbuff((char_u *)"next\n");	/* edit Nth file */
-			}
-			else
-				stuffReadbuff((char_u *)"buf\n");	/* edit empty buffer */
-		}
-		stuffReadbuff((char_u *)"100\027k");		/* back to first window */
+		if (curwin->w_next == NULL)			/* just checking */
+			break;
+		win_enter(curwin->w_next, FALSE);
+											/* edit file i, if there is one */
+		(void)doecmd(i < arg_count ? arg_files[i] : NULL,
+											NULL, NULL, TRUE, (linenr_t)1);
+		curwin->w_arg_idx = i;
 	}
+	win_enter(firstwin, FALSE);				/* back to first window */
 
 	/*
 	 * If there are more file names in the argument list than windows,

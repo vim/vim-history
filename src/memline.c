@@ -169,23 +169,22 @@ static linenr_t	lowest_marked = 0;
 
 static int ml_append_int __ARGS((BUF *, linenr_t, char_u *, colnr_t, int));
 static int ml_delete_int __ARGS((BUF *, linenr_t));
-static char_u *findswapname __ARGS((int));
+static char_u *findswapname __ARGS((BUF *, int));
 static void ml_flush_line __ARGS((BUF *));
 static BHDR *ml_new_data __ARGS((MEMFILE *, int, int));
 static BHDR *ml_new_ptr __ARGS((MEMFILE *));
 static BHDR *ml_find_line __ARGS((BUF *, linenr_t, int));
 static int ml_add_stack __ARGS((BUF *));
-static char_u *makeswapname __ARGS((int));
+static char_u *makeswapname __ARGS((BUF *, int));
 static void ml_lineadd __ARGS((BUF *, int));
 
 /*
- * open a new memline for 'buf'
+ * open a new memline for 'curbuf'
  *
  * return FAIL for failure, OK otherwise
  */
 	int
-ml_open(buf)
-	BUF		*buf;
+ml_open()
 {
 	MEMFILE		*mfp = NULL;
 	char_u		*fname = NULL;
@@ -197,11 +196,11 @@ ml_open(buf)
 /*
  * init fields in memline struct
  */
-	buf->b_ml.ml_stack_size = 0;		/* no stack yet */
-	buf->b_ml.ml_stack = NULL;			/* no stack yet */
-	buf->b_ml.ml_stack_top = 0;			/* nothing in the stack */
-	buf->b_ml.ml_locked = NULL;			/* no cached block */
-	buf->b_ml.ml_line_lnum = 0;			/* no cached line */
+	curbuf->b_ml.ml_stack_size = 0;		/* no stack yet */
+	curbuf->b_ml.ml_stack = NULL;		/* no stack yet */
+	curbuf->b_ml.ml_stack_top = 0;		/* nothing in the stack */
+	curbuf->b_ml.ml_locked = NULL;		/* no cached block */
+	curbuf->b_ml.ml_line_lnum = 0;		/* no cached line */
 
 /*
  * make fname for swap file
@@ -212,7 +211,7 @@ ml_open(buf)
 	if (p_uc == 0)
 		fname = NULL;
 	else
-		fname = findswapname(FALSE);		/* NULL detected below */
+		fname = findswapname(curbuf, FALSE);		/* NULL detected below */
 
 /*
  * open the memfile
@@ -226,12 +225,12 @@ ml_open(buf)
 		i = 1;		/* try once */
 	for ( ; i < 2 && (mfp = mf_open(fname, TRUE, i == 0)) == NULL; ++i)
 	{
-		fname = findswapname(TRUE);		/* NULL detected below */
+		fname = findswapname(curbuf, TRUE);		/* NULL detected below */
 	}
 	if (mfp == NULL)
 		goto error;
-	buf->b_ml.ml_mfp = mfp;
-	buf->b_neverloaded = FALSE;
+	curbuf->b_ml.ml_mfp = mfp;
+	curbuf->b_neverloaded = FALSE;
 	if (p_uc != 0 && mfp->mf_fname == NULL)
 	{
 				/* call wait_return if not done by emsg() */
@@ -278,7 +277,7 @@ ml_open(buf)
 		goto error;
 	}
 	mf_put(mfp, hp, TRUE, FALSE);
-	buf->b_ml.ml_flags = ML_EMPTY;
+	curbuf->b_ml.ml_flags = ML_EMPTY;
 
 	return OK;
 
@@ -291,8 +290,61 @@ error:
 	}
 	else
 		free(fname);
-	buf->b_ml.ml_mfp = NULL;
+	curbuf->b_ml.ml_mfp = NULL;
 	return FAIL;
+}
+
+/*
+ * Open a file for the memfile for all buffers.
+ * Used when 'updatecount' changes from zero to non-zero.
+ */
+	void
+ml_open_files()
+{
+	BUF			*buf;
+	MEMFILE		*mfp;
+	char_u		*fname;
+	int			i;
+
+	for (buf = firstbuf; buf != NULL; buf = buf->b_next)
+	{
+		mfp = buf->b_ml.ml_mfp;
+		if (mfp == NULL || mfp->mf_fd >= 0)			/* nothing to do */
+			continue;
+
+	/*
+	 * make fname for swap file
+	 * If we are unable to find a file name, ml_fname will be NULL
+	 * and the memfile will remain in memory only (no recovery possible).
+	 */
+		fname = findswapname(buf, FALSE);		/* NULL detected below */
+
+	/*
+	 * open the memfile
+	 *
+	 * If a file name given, 'directory' option is set and does not start with '>'
+	 * may try twice: first in current dir and if that fails in 'directory'.
+	 */
+		if (fname != NULL && *p_dir != NUL && *p_dir != '>')
+			i = 0;		/* try twice */
+		else
+			i = 1;		/* try once */
+		for ( ; i < 2 && mf_open_file(mfp, fname) == FAIL; ++i)
+		{
+			fname = findswapname(buf, TRUE);		/* NULL detected below */
+		}
+		if (mfp->mf_fname == NULL)
+		{
+					/* call wait_return if not done by emsg() */
+			if (EMSG2("Unable to open swap file for \"%s\", recovery impossible",
+					buf->b_xfilename == NULL ? (char_u *)"No File"
+											 : buf->b_xfilename))
+			{
+				msg_outchar('\n');
+				wait_return(FALSE);
+			}
+		}
+	}
 }
 
 /*
@@ -398,7 +450,7 @@ ml_recover()
 	}
 	else
 	{
-		fname = makeswapname(FALSE);
+		fname = makeswapname(curbuf, FALSE);
 		directly = FALSE;
 	}
 	if (fname == NULL)
@@ -434,7 +486,7 @@ ml_recover()
 		i = 1;		/* try once */
 	for ( ; i < 2 && (mfp = mf_open(fname, FALSE, i == 0)) == NULL; i++)
 	{
-		fname = makeswapname(TRUE);
+		fname = makeswapname(curbuf, TRUE);
 		if (fname == NULL)
 			goto theend;
 	}
@@ -2203,7 +2255,8 @@ ml_lineadd(buf, count)
  * make swap file name out of the filename
  */
 	static char_u *
-makeswapname(second_try)
+makeswapname(buf, second_try)
+	BUF		*buf;
 	int		second_try;
 {
 	char_u		*r, *s, *fname;
@@ -2237,13 +2290,14 @@ makeswapname(second_try)
 }
 
 /*
- * Find out what name to use for the swap file.
+ * Find out what name to use for the swap file for buffer 'buf'.
  *
  * Several names are tried to find one that does not exist
  */
 	static char_u *
-findswapname(second_try)
-	int second_try;
+findswapname(buf, second_try)
+	BUF		*buf;
+	int		second_try;
 {
 	char_u		*fname;
 	int			n;
@@ -2259,15 +2313,15 @@ findswapname(second_try)
  * create will be exactly the same file. To avoid this problem we temporarily
  * create "test.doc".
  */
-	if (!(curbuf->b_p_sn || curbuf->b_shortname) && curbuf->b_xfilename &&
-											getperm(curbuf->b_xfilename) < 0)
-		dummyfd = fopen((char *)curbuf->b_xfilename, "w");
+	if (!(buf->b_p_sn || buf->b_shortname) && buf->b_xfilename &&
+											getperm(buf->b_xfilename) < 0)
+		dummyfd = fopen((char *)buf->b_xfilename, "w");
 #endif
 
 /*
  * we try different names until we find one that does not exist yet
  */
-	fname = makeswapname(second_try);
+	fname = makeswapname(buf, second_try);
 	for (;;)
 	{
 		if (fname == NULL)		/* must be out of memory */
@@ -2310,20 +2364,20 @@ findswapname(second_try)
 		 * on MS-DOS compatible filesystems (e.g. messydos) file.doc.swp
 		 * and file.doc are the same file. To guess if this problem is
 		 * present try if file.doc.swx exists. If it does, we set
-		 * curbuf->b_shortname and try file_doc.swp (dots replaced by
+		 * buf->b_shortname and try file_doc.swp (dots replaced by
 		 * underscores for this file), and try again. If it doesn't we
 		 * assume that "file.doc.swp" already exists.
 		 */
-			if (!(curbuf->b_p_sn || curbuf->b_shortname))		/* not tried yet */
+			if (!(buf->b_p_sn || buf->b_shortname))		/* not tried yet */
 			{
 				fname[n - 1] = 'x';
 				r = getperm(fname);	/* try "file.swx" */
 				fname[n - 1] = 'p';
 				if (r >= 0)					/* it seems to exist */
 				{
-					curbuf->b_shortname = TRUE;
+					buf->b_shortname = TRUE;
 					free(fname);
-					fname = makeswapname(second_try);	/* '.' replaced by '_' */
+					fname = makeswapname(buf, second_try);	/* '.' replaced by '_' */
 					continue;						/* try again */
 				}
 			}
@@ -2332,10 +2386,10 @@ findswapname(second_try)
 			 * If we get here ".swp" file really exists.
 			 * Give an error message, unless recovering or no file name.
 			 */
-			if (!recoverymode && curbuf->b_xfilename != NULL)
+			if (!recoverymode && buf->b_xfilename != NULL)
 			{
 						/* call wait_return if not done by emsg() */
-				if (EMSG(".swp file exists: An edit of this file may not have been finished"))
+				if (EMSG2(".swp file exists: An edit of file \"%s\" may not have been finished", buf->b_xfilename))
 				{
 					msg_outchar('\n');
 					wait_return(FALSE);		/* do call wait_return now */
@@ -2356,7 +2410,7 @@ findswapname(second_try)
 	if (dummyfd)		/* file has been created temporarily */
 	{
 		fclose(dummyfd);
-		remove((char *)curbuf->b_xfilename);
+		remove((char *)buf->b_xfilename);
 	}
 #endif
 	return fname;

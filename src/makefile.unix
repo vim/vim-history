@@ -2,13 +2,13 @@
 # Makefile for Vim on Unix
 #
 
-# Note: You MUST uncomment the hardware dependend lines!
+# Note: You MUST uncomment three hardware dependend lines!
 
 # There are three types of defines:
 #
 # 1. configuration dependend
 #	Used for "make install". Adjust the path names and protections
-#	to your desire (not required). Also defines the root for the X11 files.
+#	to your desire. Also defines the root for the X11 files (not required).
 #
 # 2. various choices
 #	Can be changed to match your compiler or your preferences (not
@@ -17,23 +17,33 @@
 # 3. hardware dependend
 #	If you machine is in the list, remove one '#' in front of the defines
 #	following it. Otherwise: Find a machine that is similar and change the
-#	defines to make it work (REQUIRED).
+#	defines to make it work. Normally you can just try and see what error
+#	messages you get. (REQUIRED).
 
-# tested configurations:
-# Sun 4.1.x with cc and gcc	(jw)
-# Sun 4.1.3_U1 with gcc 2.5.8
-# ULTRIX 4.2A with cc and gcc
-# NetBSD and FreeBSD with cc or gcc
-# HPUX with cc and gcc		(jw)
-# SINIX-L with cc
-# Linux with gcc		(jw)
-# IRIX 4.0			(jw)
-# AIX on rs6000			(jw)
-# Sun OS 5.3 (Solaris)		(jw)
-# RISCos - MIPS			(jw)
-# SVR3 (on MOT188)		(jw)
-# Sequent/ptx			(jw)
-# Unisys 6035
+# The following systems have entries below. They have been tested and should
+# work without modification. But later code changes may cause small problems.
+# There are entries for other systems, but these have not been tested recently.
+
+#system:		tested configurations:		tested by:
+
+#Sun 4.1.x		cc	gcc	X11	no X11	(jw) (mool)
+#FreeBSD		cc	gcc	X11	no X11	(mool)
+#linux 1.0		cc		X11
+#Linux 1.0.9			gcc		no X11	(jw)
+#ULTRIX 4.2A on MIPS	cc	gcc		no X11	(mool)
+#HPUX			cc	gcc	X11	no X11	(jw) (mool)
+#irix 4.0.5H		cc		X11
+#IRIX 4.0  SGI		cc		X11		(jw)
+#SINIX-L 5.41		cc			no X11
+#MOT188			cc			no X11
+#Sequent/ptx 1.3	cc			no X11	(jw)
+#osf1			cc			no X11	(jw)
+#Unisys 6035		cc			no X11
+#SCO 3.2		cc	gcc		no X11	jos@oce.nl
+#Solaris		cc		X11
+#Solaris/Sun OS 5.3	cc			no X11	(jw)
+#AIX (rs6000)		cc			no X11	(jw)
+#RISCos on MIPS		cc		X11	no X11	(jw)
 
 # configurations marked by (jw) have been tested by Juergen Weigert:
 #    jnweiger@uni-erlangen.de
@@ -133,8 +143,8 @@ DEFS = -DDIGRAPHS -DTERMCAP -DSOME_BUILTIN_TCAPS -DNO_FREE_NULL -DVIM_ISSPACE \
 # standard cc with optimizer
 #
 #MACHINE = -DBSD_UNIX -DUSE_LOCALE -DUSE_X11
-#CC=cc -O -L$(X11LIBDIR) -I$(X11INCDIR)
-#LIBS = -ltermlib -lX11
+#CC=cc -O -I$(X11INCDIR)
+#LIBS = -ltermlib -L$(X11LIBDIR) -lX11
 
 # generic for Sun, FreeBSD, NetBSD, NeXT, POSIX and SYSV R4 (?) without x11 code
 #	(TESTED for Sun 4.1.x and FreeBSD)
@@ -155,8 +165,8 @@ DEFS = -DDIGRAPHS -DTERMCAP -DSOME_BUILTIN_TCAPS -DNO_FREE_NULL -DVIM_ISSPACE \
 # gcc with optimizer
 #
 #MACHINE = -DBSD_UNIX -DUSE_LOCALE -DUSE_X11
-#CC=gcc -O -Wall -traditional -Dconst= -L/usr/X386/lib -I/usr/X386/include
-#LIBS = -ltermlib -lX11
+#CC=gcc -O -Wall -traditional -Dconst= -I/usr/X386/include
+#LIBS = -ltermlib -L/usr/X386/lib -lX11
 
 # like generic, but with termcap, for Linux, NeXT and others (NOT TESTED YET)
 # standard cc with optimizer
@@ -164,6 +174,12 @@ DEFS = -DDIGRAPHS -DTERMCAP -DSOME_BUILTIN_TCAPS -DNO_FREE_NULL -DVIM_ISSPACE \
 #MACHINE = -DBSD_UNIX
 #CC=cc -O
 #LIBS = -ltermcap
+
+# linux 1.0 with X11 (TESTED)
+#
+#MACHINE = -DBSD_UNIX -DUSE_LOCALE -DUSE_X11
+#CC=cc -O -I/usr/X11/include
+#LIBS = -ltermcap -L/usr/X11/lib -lX11
 
 # like generic, but with debugging (NOT TESTED YET)
 #
@@ -207,17 +223,11 @@ DEFS = -DDIGRAPHS -DTERMCAP -DSOME_BUILTIN_TCAPS -DNO_FREE_NULL -DVIM_ISSPACE \
 #CC=cc -O -A systype,bsd4.3
 #LIBS = -ltermlib
 
-# IRIX 4.0 (Silicon Graphics Indigo, __sgi will be defined) (TESTED)
-#
-#MACHINE = -DBSD_UNIX -DUSE_X11                         
-#CC=cc -O -Olimit 1500
-#LIBS = -ltermlib -lX11 -lmalloc -lc_s
-
 # HPUX with X11 (TESTED) (hpux is defined)
 #
 #MACHINE = -DBSD_UNIX -DTERMINFO -DUSE_X11
-#CC=cc -O -I$(X11INCDIR) -L$(X11LIBDIR)
-#LIBS = -ltermcap -lX11
+#CC=cc -O -I$(X11INCDIR)
+#LIBS = -ltermcap -L$(X11LIBDIR) -lX11
 
 # HPUX (TESTED) (hpux is defined)
 #
@@ -231,6 +241,19 @@ DEFS = -DDIGRAPHS -DTERMCAP -DSOME_BUILTIN_TCAPS -DNO_FREE_NULL -DVIM_ISSPACE \
 #CC=gcc -O
 #LIBS = -ltermcap
 
+# hpux 9.01 (with termlib instead of termcap) (TESTED)
+# irix 4.0.5H (TESTED)
+#
+#MACHINE = -DBSD_UNIX -DUSE_LOCALE -DUSE_X11
+#CC=cc -O -I$(X11INCDIR)
+#LIBS = -ltermlib -L$(X11LIBDIR) -lX11
+
+# IRIX 4.0 (Silicon Graphics Indigo, __sgi will be defined) (TESTED)
+#
+#MACHINE = -DBSD_UNIX -DUSE_X11                         
+#CC=cc -O -Olimit 1500
+#LIBS = -ltermlib -lX11 -lmalloc -lc_s
+
 # Convex (NOT TESTED YET)
 #
 #MACHINE = -DBSD_UNIX -DCONVEX
@@ -238,8 +261,10 @@ DEFS = -DDIGRAPHS -DTERMCAP -DSOME_BUILTIN_TCAPS -DNO_FREE_NULL -DVIM_ISSPACE \
 #LIBS = -ltermcap
 
 # generic SYSV_UNIX for Dynix/PTX and SYSV R3 (and R4?) (TESTED on SINIX-L 5.41)
-# (TESTED on MOT188) (TESTED on Sequent/ptx)
+# (TESTED on MOT188) (TESTED on Sequent/ptx 1.3) (TESTED on osf1)
+# First try the line with locale. If this gives error messages try the other one.
 #
+#MACHINE = -DSYSV_UNIX -DUSE_LOCALE
 #MACHINE = -DSYSV_UNIX
 #CC=cc -O
 #LIBS = -ltermlib
@@ -317,11 +342,17 @@ DEFS = -DDIGRAPHS -DTERMCAP -DSOME_BUILTIN_TCAPS -DNO_FREE_NULL -DVIM_ISSPACE \
 #CC=cc -O
 #LIBS = -ltermlib
 
-# RISCos on MIPS (TESTED)
+# RISCos on MIPS without X11 (TESTED)
 #
 #MACHINE = -DSYSV_UNIX -DMIPS
 #CC=cc -O
 #LIBS = -ltermlib
+
+# RISCos on MIPS with X11 (TESTED)
+#
+#MACHINE=-DSYSV_UNIX -DUSE_LOCALE -DUSE_X11
+#CC=cc -O -I$(X11INCDIR)
+#LIBS=-ltermlib -L$(X11LIBDIR) -lX11 -lsun
 
 ################################################
 ##   no changes required below this line      ##

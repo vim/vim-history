@@ -89,6 +89,10 @@ static BHDR *mf_rem_free __ARGS((MEMFILE *));
 static int	mf_read __ARGS((MEMFILE *, BHDR *));
 static int	mf_write __ARGS((MEMFILE *, BHDR *));
 static int	mf_trans_add __ARGS((MEMFILE *, BHDR *));
+#ifdef UNIX
+static void mf_get_page_size __ARGS((MEMFILE *));
+#endif
+static void mf_do_open __ARGS((MEMFILE *, char_u *, int));
 
 /*
  * The functions for using a memfile:
@@ -142,48 +146,7 @@ mf_open(fname, new, fail_nofile)
 		mfp->mf_fd = -1;
 	}
 	else
-	{
-		mfp->mf_fname = fname;
-		/*
-		 * get the full path name before the open, because this is
-		 * not possible after the open on the Amiga.
-		 * If fname == NameBuff it has already been expanded, mf_xfname does not
-		 * have to be set.
-		 */
-		if (fname == NameBuff || FullName(fname, NameBuff, MAXPATHL) == FAIL)
-			mfp->mf_xfname = NULL;
-		else
-			mfp->mf_xfname = strsave(NameBuff);
-
-		/*
-		 * try to open the file
-		 */
-		mfp->mf_fd = open((char *)fname, new ? (O_CREAT | O_RDWR | O_TRUNC) : (O_RDONLY)
-
-#ifdef AMIGA				/* Amiga has no mode argument */
-						);
-#endif
-#ifdef UNIX					/* open in rw------- mode */
-# ifdef SCO
-						, (mode_t)0600);
-# else
-						, 0600);
-# endif
-#endif
-#ifdef MSDOS				/* open read/write */
-						, S_IREAD | S_IWRITE);
-#endif
-		/*
-		 * If the file cannot be opened, use memory only
-		 */
-		if (mfp->mf_fd < 0)
-		{
-			free(fname);
-			free(mfp->mf_xfname);
-			mfp->mf_fname = NULL;
-			mfp->mf_xfname = NULL;
-		}
-	}
+		mf_do_open(mfp, fname, new);		/* try to open the file */
 
 	/*
 	 * if fail_nofile is set and there is no file, return here
@@ -232,6 +195,29 @@ mf_open(fname, new, fail_nofile)
 		mfp->mf_used_count_max = p_mm * 1024 / mfp->mf_page_size;
 
 	return mfp;
+}
+
+/*
+ * mf_open_file: open a file for an existing memfile. Used when updatecount
+ *				 set from 0 to some value.
+ *
+ *	fname:		name of file to use (NULL means no file at all)
+ *				Note: fname must have been allocated, it is not copied!
+ *						If opening the file fails, fname is freed.
+ *
+ * return value: FAIL if file could not be opened, OK otherwise
+ */
+	int
+mf_open_file(mfp, fname)
+	MEMFILE		*mfp;
+	char_u		*fname;
+{
+	mf_do_open(mfp, fname, TRUE);				/* try to open the file */
+
+	if (mfp->mf_fd < 0)
+		return FAIL;
+
+	return OK;
 }
 
 /*
@@ -738,7 +724,8 @@ mf_release_all()
 	{
 		mfp = buf->b_ml.ml_mfp;
 		if (mfp != NULL && mfp->mf_fd >= 0)		/* only if there is a memfile with a file */
-			for (hp = mfp->mf_used_last; hp != NULL; hp = hp->bh_prev)
+			for (hp = mfp->mf_used_last; hp != NULL; )
+			{
 				if (!(hp->bh_flags & BH_LOCKED) &&
 						(!(hp->bh_flags & BH_DIRTY) || mf_write(mfp, hp) != FAIL))
 				{
@@ -748,6 +735,9 @@ mf_release_all()
 					hp = mfp->mf_used_last;		/* re-start, list was changed */
 					retval = TRUE;
 				}
+				else
+					hp = hp->bh_prev;
+			}
 	}
 	return retval;
 }
@@ -1085,3 +1075,53 @@ mf_statistics()
 	}
 }
 #endif
+
+/*
+ * open a file for a memfile
+ */
+	static void
+mf_do_open(mfp, fname, new)
+	MEMFILE		*mfp;
+	char_u		*fname;
+	int			new;
+{
+	mfp->mf_fname = fname;
+	/*
+	 * get the full path name before the open, because this is
+	 * not possible after the open on the Amiga.
+	 * fname cannot be NameBuff, because it has been allocated.
+	 */
+	if (FullName(fname, NameBuff, MAXPATHL) == FAIL)
+		mfp->mf_xfname = NULL;
+	else
+		mfp->mf_xfname = strsave(NameBuff);
+
+	/*
+	 * try to open the file
+	 */
+	mfp->mf_fd = open((char *)fname, new ? (O_CREAT | O_RDWR | O_TRUNC) : (O_RDONLY)
+
+#ifdef AMIGA				/* Amiga has no mode argument */
+					);
+#endif
+#ifdef UNIX					/* open in rw------- mode */
+# ifdef SCO
+					, (mode_t)0600);
+# else
+					, 0600);
+# endif
+#endif
+#ifdef MSDOS				/* open read/write */
+					, S_IREAD | S_IWRITE);
+#endif
+	/*
+	 * If the file cannot be opened, use memory only
+	 */
+	if (mfp->mf_fd < 0)
+	{
+		free(fname);
+		free(mfp->mf_xfname);
+		mfp->mf_fname = NULL;
+		mfp->mf_xfname = NULL;
+	}
+}

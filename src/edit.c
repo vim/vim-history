@@ -130,28 +130,26 @@ edit(count)
 				got_int = FALSE;
 		}
 #ifdef WEBB_KEYWORD_COMPL
-		if (found_error)
+		if (previous_c == Ctrl('N') || previous_c == Ctrl('P'))
 		{
 			/* Show error message from attempted keyword completion (probably
 			 * 'Pattern not found') until another key is hit, then go back to
 			 * showing what mode we are in.
 			 */
 			showmode();
-			found_error = FALSE;
-		}
-		if ((previous_c == Ctrl('N') || previous_c == Ctrl('P')) &&
-										c != Ctrl('N') && c != Ctrl('P'))
-		{
-			/* Get here when we have finished typing a sequence of ^N & ^P's.
-			 * Free up memory that was used, and make sure we can redo the
-			 * insert.
-			 */
-			if (completion_str != NULL)
-				AppendToRedobuff(completion_str);
-			free(complete_pat);
-			free(completion_str);
-			free(last_completion_str);
-			complete_pat = completion_str = last_completion_str = NULL;
+			if (c != Ctrl('N') && c != Ctrl('P'))
+			{
+				/* Get here when we have finished typing a sequence of ^N and
+				 * ^P. Free up memory that was used, and make sure we can redo
+				 * the insert.
+				 */
+				if (completion_str != NULL)
+					AppendToRedobuff(completion_str);
+				free(complete_pat);
+				free(completion_str);
+				free(last_completion_str);
+				complete_pat = completion_str = last_completion_str = NULL;
+			}
 		}
 #endif /* WEBB_KEYWORD_COMPL */
 		if (c != Ctrl('D'))			/* remember to detect ^^D and 0^D */
@@ -741,7 +739,8 @@ redraw:
 					while (*ptr != NUL && isidchar(*ptr))
 						*(tmp_ptr++) = *(ptr++);
 					*tmp_ptr = NUL;
-					if (STRCMP(completion_str, last_completion_str) != 0)
+					if (completion_str[0] != NUL &&
+							STRCMP(completion_str, last_completion_str) != 0)
 						done = TRUE;
 					else if (first_match.lnum == 0)
 					{
@@ -751,9 +750,10 @@ redraw:
 					else if (complete_pos.lnum == first_match.lnum
 						 && complete_pos.col == first_match.col)
 					{
-						EMSG("No other matches");
-						found_error = TRUE;		/* So that we showmode again */
-						insstr(completion_str);
+						if (completion_str[0] == NUL)
+							EMSG("Exact match only");
+						else
+							EMSG("No other matches");
 						done = TRUE;
 					}
 				}
@@ -896,17 +896,31 @@ insertchar(c)
 	unsigned	c;
 {
 	int		haveto_redraw = FALSE;
+	int		textwidth;
 
 	stop_arrow();
+
+	/*
+	 * find out textwidth to be used:
+	 *	if 'textwidth' option is set, use it
+	 *	else if 'wrapmargin' option is set, use Columns - 'wrapmargin'
+	 *	if invalid value, us 0.
+	 */
+	textwidth = curbuf->b_p_tw;
+	if (textwidth == 0 && curbuf->b_p_wm)
+		textwidth = Columns - curbuf->b_p_wm;
+	if (textwidth < 0)
+		textwidth = 0;
+
 	/*
 	 * If the cursor is past 'textwidth' and we are inserting a non-space,
 	 * try to break the line in two or more pieces. If c == NUL then we have
-	 * been called to do formatting only. If p_tw == 0 it does nothing.
+	 * been called to do formatting only. If textwidth == 0 it does nothing.
 	 * Don't do this if an existing character is being replaced.
 	 */
 	if (c == NUL || !(isspace(c) || (State == REPLACE && *ml_get_cursor() != NUL)))
 	{
-		while (curbuf->b_p_tw && curwin->w_virtcol >= curbuf->b_p_tw)
+		while (textwidth && curwin->w_virtcol >= textwidth)
 		{
 			int		startcol;		/* Cursor column at entry */
 			int		wantcol;		/* column at textwidth border */
@@ -914,7 +928,7 @@ insertchar(c)
 
 			if ((startcol = curwin->w_cursor.col) == 0)
 				break;
-			coladvance((int)curbuf->b_p_tw);			/* find column of textwidth border */
+			coladvance(textwidth);			/* find column of textwidth border */
 			wantcol = curwin->w_cursor.col;
 
 			curwin->w_cursor.col = startcol - 1;
@@ -981,7 +995,7 @@ insertchar(c)
 		p[0] = c;
 		i = 1;
 		while ((c = vpeekc()) != NUL && !ISSPECIAL(c) && i < MAX_COLUMNS &&
-					(!curbuf->b_p_tw || (curwin->w_virtcol += charsize(p[i - 1])) < curbuf->b_p_tw) &&
+					(textwidth == 0 || (curwin->w_virtcol += charsize(p[i - 1])) < textwidth) &&
 					!(!no_abbr && !isidchar(c) && isidchar(p[i - 1])))
 			p[i++] = vgetc();
 #ifdef DIGRAPHS

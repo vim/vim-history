@@ -356,12 +356,12 @@ doset(arg)
 	int 		len;
 	int 		flags;				/* flags for current option */
 	char_u		*varp;				/* pointer to variable for current option */
-	long		value;
 	int			errcnt = 0;			/* number of errornous entries */
 	long		oldRows = Rows;		/* remember old Rows */
 	int			oldpaste = p_paste;	/* remember old paste option */
 	long		oldch = p_ch;		/* remember old command line height */
 	int			oldea = p_ea;		/* remember old 'equalalways' */
+	long		olduc = p_uc;		/* remember old 'updatecount' */
 	static int	save_sm = 0;		/* saved options for 'paste' */
 	static int	save_ru = 0;
 	static int	save_ri = 0;
@@ -502,6 +502,7 @@ doset(arg)
 				if ((int *)varp == &curbuf->b_p_bin && curbuf->b_p_bin)	/* handle bin */
 				{
 					curbuf->b_p_tw = 0;		/* no automatic line wrap */
+					curbuf->b_p_wm = 0;		/* no automatic line wrap */
 					curbuf->b_p_tx = 0;		/* no text mode */
 					p_ta = 0;				/* no text auto */
 					curbuf->b_p_ml = 0;		/* no modelines */
@@ -517,9 +518,11 @@ doset(arg)
 						for (buf = firstbuf; buf != NULL; buf = buf->b_next)
 						{
 							buf->b_p_tw_save = buf->b_p_tw;
+							buf->b_p_wm_save = buf->b_p_wm;
 							buf->b_p_ai_save = buf->b_p_ai;
 							buf->b_p_si_save = buf->b_p_si;
 							buf->b_p_tw = 0;		/* textwidth is 0 */
+							buf->b_p_wm = 0;		/* wrapmargin is 0 */
 							buf->b_p_ai = 0;		/* no auto-indent */
 							buf->b_p_si = 0;		/* no smart-indent */
 						}
@@ -564,20 +567,7 @@ doset(arg)
 				}
 				if (flags & P_NUM)				/* numeric */
 				{
-					value = atol((char *)arg + len + 1);
-						/* wrapmargin is translated into textwidth */
-					if ((long *)varp == &(curbuf->b_p_wm))
-					{
-						if (value == 0)		/* switch it off */
-							curbuf->b_p_tw = 0;
-						else
-						{
-							if (value >= (int)Columns)
-								value = (int)Columns - 1;
-							curbuf->b_p_tw = Columns - value;
-						}
-					}
-					*(long *)(varp) = value;
+					*(long *)(varp) = atol((char *)arg + len + 1);
 
 					if ((long *)varp == &p_wh)
 					{
@@ -587,8 +577,11 @@ doset(arg)
 							p_wh = 0;
 						}
 							/* Change window height NOW */
-						if (p_wh && lastwin != firstwin && curwin->w_height < p_wh)
-							win_setheight((int)p_wh);
+						if (p_wh && lastwin != firstwin)
+						{
+							win_equal(curwin, FALSE);
+							must_redraw = CLEAR;
+						}
 					}
 					if ((long *)varp == &p_ls)
 						last_status();		/* (re)set last window status line */
@@ -716,6 +709,12 @@ skip:
 		skiptospace(&arg);				/* skip to next white space */
 		skipspace(&arg);				/* skip spaces */
 	}
+
+	/*
+	 * when 'updatecount' changes from zero to non-zero, open swap files
+	 */
+	if (p_uc && !olduc)
+		ml_open_files();
 
 	if (p_ch != oldch)					/* p_ch changed value */
 		command_height();

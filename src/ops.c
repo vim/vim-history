@@ -298,7 +298,12 @@ doexecbuf(c)
 			EMSG(e_nolastcmd);
 			return FAIL;
 		}
-		docmdline(last_cmdline);
+		free(new_last_cmdline);		/* don't keep the command line containing @: */
+		new_last_cmdline = NULL;
+		if (ins_typestr((char_u *)"\n", FALSE) == FAIL)
+			return FAIL;
+		if (ins_typestr(last_cmdline, FALSE) == FAIL)
+			return FAIL;
 	}
 	else
 	{

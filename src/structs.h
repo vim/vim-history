@@ -358,7 +358,7 @@ struct buffer
 	int				 b_p_bin, b_p_eol, b_p_et, b_p_ml, b_p_sn, b_p_tx;
 	long			 b_p_sw, b_p_ts, b_p_tw, b_p_wm;
 	int				 b_p_ai_save, b_p_si_save;
-	long			 b_p_tw_save;
+	long			 b_p_tw_save, b_p_wm_save;
 
 	char			 b_did_warn;		/* Set to 1 if user has been warned on
 										 * first change of a read-only file */

@@ -46,9 +46,16 @@ do_align(start, end, width, type)
 	}
 	else
 	{
+		/*
+		 * if 'textwidth' set, use it
+		 * else if 'wrapmargin' set, use it
+		 * if invalid value, use 80
+		 */
 		if (width <= 0)
 			width = curbuf->b_p_tw;
-		if (width == 0)
+		if (width == 0 && curbuf->b_p_wm > 0)
+			width = Columns - curbuf->b_p_wm;
+		if (width <= 0)
 			width = 80;
 	}
 

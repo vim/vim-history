@@ -1,4 +1,4 @@
-README for version 2.7 of Vim: Vi IMproved.
+README for version 2.8 of Vim: Vi IMproved.
 
 Vim is an almost compatible version of the UNIX editor vi. Only the 'Q'
 command is missing (you don't need it). Many new features have been added:

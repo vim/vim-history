@@ -1,5 +1,6 @@
 /* memfile.c */
 struct memfile *mf_open __PARMS((unsigned char *fname, int new, int fail_nofile));
+int mf_open_file __PARMS((struct memfile *mfp, unsigned char *fname));
 void mf_close __PARMS((struct memfile *mfp, int delete));
 struct block_hdr *mf_new __PARMS((struct memfile *mfp, int negative, int page_count));
 struct block_hdr *mf_get __PARMS((struct memfile *mfp, long nr, int page_count));

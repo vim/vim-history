@@ -1367,9 +1367,18 @@ curs_columns(scroll)
 	else if (scroll)	/* no line wrapping, compute curwin->w_leftcol if scrolling is on */
 						/* if scrolling is off, curwin->w_leftcol is assumed to be 0 */
 	{
+						/* If Cursor is in columns 0, start in column 0 */
 						/* If Cursor is left of the screen, scroll rightwards */
 						/* If Cursor is right of the screen, scroll leftwards */
-		if (((diff = curwin->w_leftcol + (curwin->w_p_nu ? 8 : 0) - curwin->w_col) > 0 ||
+		if (curwin->w_cursor.col == 0)
+		{
+						/* screen has to be redrawn with new curwin->w_leftcol */
+			if (curwin->w_leftcol != 0 && must_redraw < NOT_VALID)
+				must_redraw = NOT_VALID;
+			curwin->w_leftcol = 0;
+		}
+		else if (((diff = curwin->w_leftcol + (curwin->w_p_nu ? 8 : 0)
+					- curwin->w_col) > 0 ||
 					(diff = curwin->w_col - (curwin->w_leftcol + Columns) + 1) > 0))
 		{
 			if (p_ss == 0 || diff >= Columns / 2)
@@ -1457,9 +1466,6 @@ scrolldown(nlines)
 		curwin->w_row += plines(curwin->w_cursor.lnum) - 1 - curwin->w_virtcol / Columns;
 	while (curwin->w_row >= curwin->w_height && curwin->w_cursor.lnum > 1)
 		curwin->w_row -= plines(curwin->w_cursor.lnum--);
-
-	/* We may have moved to another line -- webb */
-	coladvance(curwin->w_curswant);
 }
 
 	void
@@ -1486,9 +1492,6 @@ scrollup(nlines)
 		curwin->w_topline = curbuf->b_ml.ml_line_count;
 	if (curwin->w_cursor.lnum < curwin->w_topline)
 		curwin->w_cursor.lnum = curwin->w_topline;
-
-	/* We may have moved to another line -- webb */
-	coladvance(curwin->w_curswant);
 }
 
 /*

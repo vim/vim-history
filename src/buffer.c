@@ -44,7 +44,7 @@ open_buffer()
 {
 	if (readonlymode && curbuf->b_filename != NULL)
 		curbuf->b_p_ro = TRUE;
-	if (ml_open(curbuf) == FAIL)
+	if (ml_open() == FAIL)
 	{
 		/*
 		 * There MUST be a memfile, otherwise we can't do anything
@@ -945,14 +945,16 @@ do_arg_all()
 	close_others(FALSE);
 	curwin->w_arg_idx = 0;
 	win_count = make_windows(arg_count);
-	(void)doecmd(arg_files[0], NULL, NULL, TRUE, (linenr_t)1);
-	for (i = 1; i < win_count; ++i)
+	for (i = 0; i < win_count; ++i)
 	{
-		stuffReadbuff((char_u *)"\027\027:");	/* CTRL-W CTRL-W */
-		stuffnumReadbuff((long)i);
-		stuffReadbuff((char_u *)"next\n");		/* edit Nth file */
+												/* edit file i */
+		(void)doecmd(arg_files[i], NULL, NULL, TRUE, (linenr_t)1);
+		curwin->w_arg_idx = i;
+		if (curwin->w_next == NULL)				/* just checking */
+			break;
+		win_enter(curwin->w_next, FALSE);
 	}
-	stuffReadbuff((char_u *)"100\027k");		/* back to first window */
+	win_enter(firstwin, FALSE);					/* back to first window */
 }
 
 /*

@@ -185,6 +185,8 @@ EXTERN int		did_msg;					/* set in msg_start, used for :global */
 EXTERN int		no_wait_return INIT(= 0);	/* don't wait for return now */
 EXTERN int		need_wait_return INIT(= 0);	/* need to wait for return later */
 EXTERN char_u	*last_cmdline INIT(= NULL);	/* last command line (for ':' register) */
+EXTERN char_u	*new_last_cmdline INIT(= NULL);	/* new value for last_cmdline */
+
 EXTERN int		postponed_split INIT(= FALSE);	/* for CTRL-W CTRL-] command */
 EXTERN int		keep_old_search_pattern INIT(= FALSE);	/* for myregcomp() */
 

@@ -843,13 +843,13 @@ vgetorpeek(advance)
 					 * - timed out
 					 * - typestr[0] should not be remapped
 					 * - in insert or cmdline mode and 'paste' option set
-					 * - waiting for "hit return to continue" and CR typed
+					 * - waiting for "hit return to continue" and CR or SPACE typed
 					 */
 					mp = NULL;
 					if (!timedout && (typemaplen == 0 || (p_remap &&
 							(noremaplist.nr_len == 0 || noremaplist.nr_off != 0)))
 							&& !((State & (INSERT + CMDLINE)) && p_paste)
-							&& !(State == HITRETURN && typestr[0] == CR))
+							&& !(State == HITRETURN && (typestr[0] == CR || typestr[0] == ' ')))
 					{
 						for (mp = maplist.m_next; mp; mp = mp->m_next)
 						{
