@@ -86,7 +86,7 @@ nbdebug_log_init(
 	if (log_var && (file = getenv(log_var)) != NULL) {
 		time_t now;
 
-		nb_debug = fopen(file, "w");
+		nb_debug = fopen(file, "a");
 		time(&now);
 		fprintf(nb_debug, "%s", asctime(localtime(&now)));
 		if (level_var && (cp = getenv(level_var)) != NULL) {
