@@ -364,8 +364,9 @@ EXTERN VimClipboard clip_plus;	/* CLIPBOARD selection in X11 */
  * Without the FEAT_WINDOWS they are all equal.
  */
 #ifdef FEAT_WINDOWS
-EXTERN win_T	*firstwin;	/* first window */
-EXTERN win_T	*lastwin;	/* last window */
+EXTERN win_T	*firstwin;		/* first window */
+EXTERN win_T	*lastwin;		/* last window */
+EXTERN win_T	*prevwin INIT(= NULL);	/* previous window */
 # define W_NEXT(wp) ((wp)->w_next)
 # define FOR_ALL_WINDOWS(wp) for (wp = firstwin; wp != NULL; wp = wp->w_next)
 #else
