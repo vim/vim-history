@@ -4031,7 +4031,7 @@ prepare_tagpreview()
 
 
 /*
- * ":help": open a read-only window on the help.txt file
+ * ":help": open a read-only window on a help file
  */
     void
 ex_help(eap)
@@ -4147,7 +4147,7 @@ ex_help(eap)
 	     * open help file (do_ecmd() will set b_help flag, readfile() will
 	     * set b_p_ro flag)
 	     */
-	    (void)do_ecmd(0, p_hf, NULL, NULL, ECMD_LASTL,
+	    (void)do_ecmd(0, NULL, NULL, NULL, ECMD_LASTL,
 						   ECMD_HIDE + ECMD_SET_HELP);
 	}
     }

@@ -65,6 +65,7 @@ static garray_t highlight_ga;	/* highlight groups for 'highlight' option */
 #define HL_TABLE() ((struct hl_group *)((highlight_ga.ga_data)))
 
 #ifdef FEAT_CMDL_COMPL
+static int include_default = FALSE;	/* include "default" for expansion */
 static int include_link = FALSE;	/* include "link" for expansion */
 #endif
 
@@ -85,6 +86,7 @@ static void highlight_list_one __ARGS((int id));
 static int highlight_list_arg __ARGS((int id, int didh, int type, int iarg, char_u *sarg, char *name));
 static int syn_add_group __ARGS((char_u *name));
 static int syn_list_header __ARGS((int did_header, int outlen, int id));
+static int hl_has_settings __ARGS((int idx, int check_link));
 static void highlight_clear __ARGS((int idx));
 
 #ifdef FEAT_GUI
@@ -133,22 +135,21 @@ static char *(spo_name_tab[SPO_COUNT]) =
  */
 typedef struct syn_pattern
 {
-    char	 sp_type;	    /* see SPTYPE_ defines below */
-    char	 sp_syncing;	    /* this item used for syncing */
-    short	 sp_flags;	    /* see HL_ defines below */
-    int		 sp_syn_inc_tag;    /* ":syn include" unique tag */
-    short	 sp_syn_id;	    /* highlight group ID of item */
-    short	 sp_syn_match_id;   /* highlight group ID of pattern */
-    char_u	*sp_pattern;	    /* regexp to match, pattern */
-    regprog_t	*sp_prog;	    /* regexp to match, program */
-    int		 sp_ic;		    /* ignore-case flag for sp_prog */
-    short	 sp_off_flags;	    /* see below */
+    char	 sp_type;		/* see SPTYPE_ defines below */
+    char	 sp_syncing;		/* this item used for syncing */
+    short	 sp_flags;		/* see HL_ defines below */
+    struct sp_syn sp_syn;		/* struct passed to in_id_list() */
+    short	 sp_syn_match_id;	/* highlight group ID of pattern */
+    char_u	*sp_pattern;		/* regexp to match, pattern */
+    regprog_t	*sp_prog;		/* regexp to match, program */
+    int		 sp_ic;			/* ignore-case flag for sp_prog */
+    short	 sp_off_flags;		/* see below */
     int		 sp_offsets[SPO_COUNT];	/* offsets */
-    short	*sp_cont_list;	    /* cont. group IDs, if non-zero */
-    short	*sp_next_list;	    /* next group IDs, if non-zero */
-    int		 sp_sync_idx;	    /* sync item index (syncing only) */
-    int		 sp_line_id;	    /* ID of last line where tried */
-    int		 sp_startcol;	    /* next match in sp_line_id line */
+    short	*sp_cont_list;		/* cont. group IDs, if non-zero */
+    short	*sp_next_list;		/* next group IDs, if non-zero */
+    int		 sp_sync_idx;		/* sync item index (syncing only) */
+    int		 sp_line_id;		/* ID of last line where tried */
+    int		 sp_startcol;		/* next match in sp_line_id line */
 } synpat_t;
 
 /* The sp_off_flags are computed like this:
@@ -346,7 +347,7 @@ static void update_si_attr __ARGS((int idx));
 static void check_keepend __ARGS((void));
 static void update_si_end __ARGS((stateitem_t *sip, int startcol, int force));
 static short *copy_id_list __ARGS((short *list));
-static int in_id_list __ARGS((short *cont_list, int id, int inclvl, int contained));
+static int in_id_list __ARGS((short *cont_list, struct sp_syn *ssp, int contained));
 static int push_current_state __ARGS((int idx));
 static void pop_current_state __ARGS((void));
 
@@ -652,16 +653,29 @@ syn_sync(wp, start_lnum, last_valid)
     /*
      * Start at least "minlines" back.  Default starting point for parsing is
      * there.
-     * Add ten lines, to avoid that scrolling backwards will result in
-     * resyncing for every line.  Now it resyncs only one out of ten lines.
-     * But don't add more than "minlines".
+     * Start further back, to avoid that scrolling backwards will result in
+     * resyncing for every line.  Now it resyncs only one out of N lines,
+     * where N is minlines * 1.5, or minlines * 2 if minlines is small.
+     * Watch out for overflow when minlines is MAXLNUM.
      */
-    if (syn_buf->b_syn_sync_minlines < 10)
-	start_lnum -= syn_buf->b_syn_sync_minlines * 2;
-    else
-	start_lnum -= syn_buf->b_syn_sync_minlines + 10;
-    if (start_lnum < 1)
+    if (syn_buf->b_syn_sync_minlines > start_lnum)
 	start_lnum = 1;
+    else
+    {
+	if (syn_buf->b_syn_sync_minlines == 1)
+	    lnum = 1;
+	else if (syn_buf->b_syn_sync_minlines < 10)
+	    lnum = syn_buf->b_syn_sync_minlines * 2;
+	else
+	    lnum = syn_buf->b_syn_sync_minlines * 3 / 2;
+	if (syn_buf->b_syn_sync_maxlines != 0
+				       && lnum > syn_buf->b_syn_sync_maxlines)
+	    lnum = syn_buf->b_syn_sync_maxlines;
+	if (lnum >= start_lnum)
+	    start_lnum = 1;
+	else
+	    start_lnum -= lnum;
+    }
     current_lnum = start_lnum;
 
     /*
@@ -700,7 +714,7 @@ syn_sync(wp, start_lnum, last_valid)
 	if (find_start_comment((int)syn_buf->b_syn_sync_maxlines) != NULL)
 	{
 	    for (idx = syn_buf->b_syn_patterns.ga_len; --idx >= 0; )
-		if (SYN_ITEMS(syn_buf)[idx].sp_syn_id == syn_buf->b_syn_sync_id
+		if (SYN_ITEMS(syn_buf)[idx].sp_syn.id == syn_buf->b_syn_sync_id
 			&& SYN_ITEMS(syn_buf)[idx].sp_type == SPTYPE_START)
 		{
 		    validate_current_state();
@@ -1774,15 +1788,13 @@ syn_current_attr(syncing, displaying)
 				    || spp->sp_type == SPTYPE_START)
 				&& ((current_next_list != 0
 					&& in_id_list(current_next_list,
-						spp->sp_syn_id,
-						spp->sp_syn_inc_tag, 0))
+							     &spp->sp_syn, 0))
 				    || (current_next_list == 0
 					&& ((cur_si == NULL
 					    && !(spp->sp_flags & HL_CONTAINED))
 						|| (cur_si != NULL
 					 && in_id_list(cur_si->si_cont_list,
-						spp->sp_syn_id,
-						spp->sp_syn_inc_tag,
+					     &spp->sp_syn,
 					     spp->sp_flags & HL_CONTAINED))))))
 			{
 			    /* If we already tried matching in this line, and
@@ -2228,7 +2240,7 @@ update_si_attr(idx)
     if (sip->si_flags & HL_MATCH)
 	sip->si_id = spp->sp_syn_match_id;
     else
-	sip->si_id = spp->sp_syn_id;
+	sip->si_id = spp->sp_syn.id;
     sip->si_attr = syn_id2attr(sip->si_id);
     sip->si_trans_id = sip->si_id;
     if (sip->si_flags & HL_MATCH)
@@ -2577,7 +2589,7 @@ find_endpos(idx, startpos, m_endpos, hl_endpos, flagsp, end_endpos,
 	/*
 	 * If the end group is highlighted differently, adjust the pointers.
 	 */
-	if (spp->sp_syn_match_id != spp->sp_syn_id && spp->sp_syn_match_id != 0)
+	if (spp->sp_syn_match_id != spp->sp_syn.id && spp->sp_syn_match_id != 0)
 	{
 	    *end_idx = best_idx;
 	    if (spp->sp_off_flags & (1 << (SPO_RE_OFF + SPO_COUNT)))
@@ -2816,20 +2828,18 @@ check_keyword_id(line, startcol, endcol, flags, next_list, cur_si)
 	for ( ; ktab != NULL; ktab = ktab->next)
 	    if (   STRCMP(keyword, ktab->keyword) == 0
 		&& (   (current_next_list != 0
-			&& in_id_list(current_next_list, ktab->syn_id,
-				      ktab->syn_inc_tag, 0))
+			&& in_id_list(current_next_list, &ktab->k_syn, 0))
 		    || (current_next_list == 0
 			&& ((cur_si == NULL && !(ktab->flags & HL_CONTAINED))
 			    || (cur_si != NULL
 				&& in_id_list(cur_si->si_cont_list,
-					ktab->syn_id,
-					ktab->syn_inc_tag,
+					&ktab->k_syn,
 					ktab->flags & HL_CONTAINED))))))
 	    {
 		*endcol = startcol + len;
 		*flags = ktab->flags;
 		*next_list = ktab->next_list;
-		return ktab->syn_id;
+		return ktab->k_syn.id;
 	    }
     }
     return 0;
@@ -3085,7 +3095,7 @@ syn_clear_one(id, syncing)
     for (idx = curbuf->b_syn_patterns.ga_len; --idx >= 0; )
     {
 	spp = &(SYN_ITEMS(curbuf)[idx]);
-	if (spp->sp_syn_id != id || spp->sp_syncing != syncing)
+	if (spp->sp_syn.id != id || spp->sp_syncing != syncing)
 	    continue;
 	syn_remove_pattern(curbuf, idx);
     }
@@ -3284,7 +3294,7 @@ syn_list_one(id, syncing, link_only)
     for (idx = 0; idx < curbuf->b_syn_patterns.ga_len && !got_int; ++idx)
     {
 	spp = &(SYN_ITEMS(curbuf)[idx]);
-	if (spp->sp_syn_id != id || spp->sp_syncing != syncing)
+	if (spp->sp_syn.id != id || spp->sp_syncing != syncing)
 	    continue;
 
 	(void)syn_list_header(did_header, 999, id);
@@ -3374,7 +3384,7 @@ syn_list_one(id, syncing, link_only)
 	    msg_putchar(' ');
 	    if (spp->sp_sync_idx >= 0)
 		msg_outtrans(HL_TABLE()[SYN_ITEMS(curbuf)
-				   [spp->sp_sync_idx].sp_syn_id - 1].sg_name);
+				   [spp->sp_sync_idx].sp_syn.id - 1].sg_name);
 	    else
 		MSG_PUTS("NONE");
 	    msg_putchar(' ');
@@ -3556,7 +3566,7 @@ syn_list_keywords(id, ktabp, did_header, attr)
     {
 	for (ktab = ktabp[i]; ktab != NULL && !got_int; ktab = ktab->next)
 	{
-	    if (ktab->syn_id == id)
+	    if (ktab->k_syn.id == id)
 	    {
 		if (prev_contained != (ktab->flags & HL_CONTAINED)
 			|| prev_skipnl != (ktab->flags & HL_SKIPNL)
@@ -3632,7 +3642,7 @@ syn_clear_keyword(id, ktabp)
 	ktab_prev = NULL;
 	for (ktab = ktabp[i]; ktab != NULL; )
 	{
-	    if (ktab->syn_id == id)
+	    if (ktab->k_syn.id == id)
 	    {
 		ktab_next = ktab->next;
 		if (ktab_prev == NULL)
@@ -3694,8 +3704,8 @@ add_keyword(name, id, flags, next_list)
     if (ktab == NULL)
 	return;
     STRCPY(ktab->keyword, name);
-    ktab->syn_id = id;
-    ktab->syn_inc_tag = current_syn_inc_tag;
+    ktab->k_syn.id = id;
+    ktab->k_syn.inc_tag = current_syn_inc_tag;
     ktab->flags = flags;
     ktab->next_list = copy_id_list(next_list);
 
@@ -3854,7 +3864,7 @@ get_syn_options(arg, flagsp, nodisplay, sync_idx, cont_list, next_list)
 		    {
 			syn_id = syn_name2id(gname);
 			for (i = curbuf->b_syn_patterns.ga_len; --i >= 0; )
-			    if (SYN_ITEMS(curbuf)[i].sp_syn_id == syn_id
+			    if (SYN_ITEMS(curbuf)[i].sp_syn.id == syn_id
 				&& SYN_ITEMS(curbuf)[i].sp_type == SPTYPE_START)
 			    {
 				*sync_idx = i;
@@ -4148,8 +4158,8 @@ syn_cmd_match(eap, syncing)
 	    SYN_ITEMS(curbuf)[idx] = item;
 	    SYN_ITEMS(curbuf)[idx].sp_syncing = syncing;
 	    SYN_ITEMS(curbuf)[idx].sp_type = SPTYPE_MATCH;
-	    SYN_ITEMS(curbuf)[idx].sp_syn_id = syn_id;
-	    SYN_ITEMS(curbuf)[idx].sp_syn_inc_tag = current_syn_inc_tag;
+	    SYN_ITEMS(curbuf)[idx].sp_syn.id = syn_id;
+	    SYN_ITEMS(curbuf)[idx].sp_syn.inc_tag = current_syn_inc_tag;
 	    SYN_ITEMS(curbuf)[idx].sp_flags = flags;
 	    SYN_ITEMS(curbuf)[idx].sp_sync_idx = sync_idx;
 	    SYN_ITEMS(curbuf)[idx].sp_cont_list = cont_list;
@@ -4382,8 +4392,8 @@ syn_cmd_region(eap, syncing)
 			    (item == ITEM_START) ? SPTYPE_START :
 			    (item == ITEM_SKIP) ? SPTYPE_SKIP : SPTYPE_END;
 		    SYN_ITEMS(curbuf)[idx].sp_flags |= flags;
-		    SYN_ITEMS(curbuf)[idx].sp_syn_id = syn_id;
-		    SYN_ITEMS(curbuf)[idx].sp_syn_inc_tag = current_syn_inc_tag;
+		    SYN_ITEMS(curbuf)[idx].sp_syn.id = syn_id;
+		    SYN_ITEMS(curbuf)[idx].sp_syn.inc_tag = current_syn_inc_tag;
 		    SYN_ITEMS(curbuf)[idx].sp_syn_match_id =
 							ppp->pp_matchgroup_id;
 		    if (item == ITEM_START)
@@ -5239,17 +5249,18 @@ copy_id_list(list)
 
 /*
  * Check if "id" is in the "contains" or "nextgroup" list of pattern "idx".
+ * This function is called very often, keep it fast!!
  */
     static int
-in_id_list(list, id, inctag, contained)
+in_id_list(list, ssp, contained)
     short	*list;		/* id list */
-    int		id;		/* group id */
-    int		inctag;		/* ":syn include" tag of group id */
+    struct sp_syn *ssp;		/* group id and ":syn include" tag of group */
     int		contained;	/* group id is contained */
 {
     int		retval;
-    short	scl_id;
     short	*scl_list;
+    short	item;
+    short	id = ssp->id;
 
     /*
      * If list is ID_LIST_ALL, we are in a transparent item that isn't
@@ -5263,11 +5274,12 @@ in_id_list(list, id, inctag, contained)
      * list.  We also require that id is at the same ":syn include" level
      * as the list.
      */
-    if (*list >= CONTAINS_ALLBUT && *list < CLUSTER_ID_MIN)
+    item = *list;
+    if (item >= CONTAINS_ALLBUT && item < CLUSTER_ID_MIN)
     {
-	if (*list - CONTAINS_ALLBUT != inctag)
+	if (item - CONTAINS_ALLBUT != ssp->inc_tag)
 	    return FALSE;
-	++list;
+	item = *++list;
 	retval = FALSE;
     }
     else
@@ -5276,17 +5288,17 @@ in_id_list(list, id, inctag, contained)
     /*
      * Return "retval" if id is in the contains list.
      */
-    for (; *list; ++list)
+    while (item != 0)
     {
-	if (*list == id)
+	if (item == id)
 	    return retval;
-	scl_id = *list - CLUSTER_ID_MIN;
-	if (scl_id >= 0)
+	if (item >= CLUSTER_ID_MIN)
 	{
-	    scl_list = SYN_CLSTR(syn_buf)[scl_id].scl_list;
-	    if (scl_list != NULL && in_id_list(scl_list, id, inctag, contained))
+	    scl_list = SYN_CLSTR(syn_buf)[item - CLUSTER_ID_MIN].scl_list;
+	    if (scl_list != NULL && in_id_list(scl_list, ssp, contained))
 		return retval;
 	}
+	item = *++list;
     }
     return !retval;
 }
@@ -5392,6 +5404,7 @@ set_context_in_syntax_cmd(arg)
     expand_what = EXP_SUBCMD;
     expand_pattern = arg;
     include_link = FALSE;
+    include_default = FALSE;
 
     /* (part of) subcommand already typed */
     if (*arg != NUL)
@@ -5592,6 +5605,7 @@ do_highlight(line, forceit, init)
     int		attr;
     int		id;
     int		idx;
+    int		dodefault = FALSE;
     int		doclear = FALSE;
     int		dolink = FALSE;
     int		error = FALSE;
@@ -5619,6 +5633,20 @@ do_highlight(line, forceit, init)
     name_end = skiptowhite(line);
     linep = skipwhite(name_end);
 
+    /*
+     * Check for "default" argument.
+     */
+    if (STRNCMP(line, "default", name_end - line) == 0)
+    {
+	dodefault = TRUE;
+	line = linep;
+	name_end = skiptowhite(line);
+	linep = skipwhite(name_end);
+    }
+
+    /*
+     * Check for "clear" or "link" argument.
+     */
     if (STRNCMP(line, "clear", name_end - line) == 0)
 	doclear = TRUE;
     if (STRNCMP(line, "link", name_end - line) == 0)
@@ -5655,7 +5683,8 @@ do_highlight(line, forceit, init)
 
 	if (ends_excmd(*from_start) || ends_excmd(*to_start))
 	{
-	    EMSG2(_("Not enough arguments: \":highlight link %s\""), from_start);
+	    EMSG2(_("Not enough arguments: \":highlight link %s\""),
+								  from_start);
 	    return;
 	}
 
@@ -5678,14 +5707,9 @@ do_highlight(line, forceit, init)
 	     * for the group, unless '!' is used
 	     */
 	    if (to_id > 0 && !forceit && !init
-		    &&	  (HL_TABLE()[from_id - 1].sg_term_attr != 0
-			|| HL_TABLE()[from_id - 1].sg_cterm_attr != 0
-#ifdef FEAT_GUI
-			|| HL_TABLE()[from_id - 1].sg_gui_attr != 0
-#endif
-		       ))
+				   && hl_has_settings(from_id - 1, dodefault))
 	    {
-		if (sourcing_name == NULL)
+		if (sourcing_name == NULL && !dodefault)
 		    EMSG(_("group has settings, highlight link ignored"));
 	    }
 	    else
@@ -5693,10 +5717,10 @@ do_highlight(line, forceit, init)
 		if (!init)
 		    HL_TABLE()[from_id - 1].sg_set |= SG_LINK;
 		HL_TABLE()[from_id - 1].sg_link = to_id;
+		redraw_all_later(NOT_VALID);
 	    }
 	}
 
-	redraw_curbuf_later(NOT_VALID);
 	return;
     }
 
@@ -5722,6 +5746,11 @@ do_highlight(line, forceit, init)
     if (id == 0)			/* failed (out of memory) */
 	return;
     idx = id - 1;			/* index is ID minus one */
+
+    /* Return if "default" was used and the group already has settings. */
+    if (dodefault && hl_has_settings(idx, TRUE))
+	return;
+
     if (STRCMP(HL_TABLE()[idx].sg_name_u, "NORMAL") == 0)
 	is_normal_group = TRUE;
 #ifdef FEAT_GUI_X11
@@ -6275,6 +6304,23 @@ do_highlight(line, forceit, init)
 
     /* Only call highlight_changed() once, after sourcing a syntax file */
     need_highlight_changed = TRUE;
+}
+
+/*
+ * Return if highlight group "idx" has any settings.
+ * When "check_link" is TRUE also check for an existing link.
+ */
+    static int
+hl_has_settings(idx, check_link)
+    int		idx;
+    int		check_link;
+{
+    return (   HL_TABLE()[idx].sg_term_attr != 0
+	    || HL_TABLE()[idx].sg_cterm_attr != 0
+#ifdef FEAT_GUI
+	    || HL_TABLE()[idx].sg_gui_attr != 0
+#endif
+	    || (check_link && (HL_TABLE()[idx].sg_set & SG_LINK)));
 }
 
 /*
@@ -7525,29 +7571,40 @@ set_context_in_highlight_cmd(arg)
     expand_context = EXPAND_HIGHLIGHT;
     expand_pattern = arg;
     include_link = TRUE;
+    include_default = TRUE;
 
     /* (part of) subcommand already typed */
     if (*arg != NUL)
     {
 	p = skiptowhite(arg);
-	if (*p != NUL)			/* past group name */
+	if (*p != NUL)			/* past "default" or group name */
 	{
-	    include_link = FALSE;
-	    if (arg[1] == 'i' && arg[0] == 'N')
-		highlight_list();
-	    if (STRNCMP("link", arg, p - arg) == 0
-		    || STRNCMP("clear", arg, p - arg) == 0)
+	    include_default = FALSE;
+	    if (STRNCMP("default", arg, p - arg) == 0)
 	    {
-		expand_pattern = skipwhite(p);
-		p = skiptowhite(expand_pattern);
-		if (*p != NUL)			/* past first group name */
+		arg = skipwhite(p);
+		expand_pattern = arg;
+		p = skiptowhite(arg);
+	    }
+	    if (*p != NUL)			/* past group name */
+	    {
+		include_link = FALSE;
+		if (arg[1] == 'i' && arg[0] == 'N')
+		    highlight_list();
+		if (STRNCMP("link", arg, p - arg) == 0
+			|| STRNCMP("clear", arg, p - arg) == 0)
 		{
 		    expand_pattern = skipwhite(p);
 		    p = skiptowhite(expand_pattern);
+		    if (*p != NUL)		/* past first group name */
+		    {
+			expand_pattern = skipwhite(p);
+			p = skiptowhite(expand_pattern);
+		    }
 		}
+		if (*p != NUL)			/* past group name(s) */
+		    expand_context = EXPAND_NOTHING;
 	    }
-	    if (*p != NUL)			/* past group name(s) */
-		expand_context = EXPAND_NOTHING;
 	}
     }
 }
@@ -7601,6 +7658,12 @@ get_highlight_name(idx)
 #endif
 	    )
 	return (char_u *)"clear";
+    if (idx == highlight_ga.ga_len + 2
+#ifdef FEAT_CMDL_COMPL
+	    && include_default
+#endif
+	    )
+	return (char_u *)"default";
     if (idx < 0 || idx >= highlight_ga.ga_len)
 	return NULL;
     return HL_TABLE()[idx].sg_name;

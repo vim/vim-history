@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	M$ Resource files (*.rc)
 " Maintainer:	Heiko Erhardt <Heiko.Erhardt@munich.netsurf.de>
-" Last Change:	1998 Feb 16
+" Last Change:	2000 Nov 04
 
 " This file is based on the c.vim
 
@@ -139,46 +139,43 @@ syn region rcPreProc		start="^\s*#\s*\(pragma\>\|line\>\|warning\>\|warn\>\|erro
 
 syn sync ccomment rcComment minlines=10
 
-if !exists("did_rc_syntax_inits")
-  let did_rc_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link rcCharacter	Character
-  hi link rcSpecialCharacter rcSpecial
-  hi link rcNumber	Number
-  hi link rcFloat	Float
-  hi link rcOctalError	rcError
-  hi link rcParenError	rcError
-  hi link rcInParen	rcError
-  hi link rcCommentError	rcError
-  hi link rcInclude	Include
-  hi link rcPreProc	PreProc
-  hi link rcDefine	Macro
-  hi link rcIncluded	rcString
-  hi link rcError	Error
-  hi link rcPreCondit	PreCondit
-  hi link rcCommentString rcString
-  hi link rcComment2String rcString
-  hi link rcCommentSkip	rcComment
-  hi link rcString	String
-  hi link rcComment	Comment
-  hi link rcSpecial	SpecialChar
-  hi link rcTodo	Todo
+" The default highlighting.
+hi def link rcCharacter		Character
+hi def link rcSpecialCharacter	rcSpecial
+hi def link rcNumber		Number
+hi def link rcFloat		Float
+hi def link rcOctalError	rcError
+hi def link rcParenError	rcError
+hi def link rcInParen		rcError
+hi def link rcCommentError	rcError
+hi def link rcInclude		Include
+hi def link rcPreProc		PreProc
+hi def link rcDefine		Macro
+hi def link rcIncluded		rcString
+hi def link rcError		Error
+hi def link rcPreCondit		PreCondit
+hi def link rcCommentString	rcString
+hi def link rcComment2String	rcString
+hi def link rcCommentSkip	rcComment
+hi def link rcString		String
+hi def link rcComment		Comment
+hi def link rcSpecial		SpecialChar
+hi def link rcTodo		Todo
 
-  hi link rcAttribute	rcCommonAttribute
-  hi link rcStdId	rcStatement
-  hi link rcStatement	Statement
+hi def link rcAttribute		rcCommonAttribute
+hi def link rcStdId		rcStatement
+hi def link rcStatement		Statement
 
   " Default color overrides
-  hi rcLanguage		term=reverse ctermbg=Red ctermfg=Yellow guibg=Red guifg=Yellow
-  hi rcMainObject	term=underline ctermfg=Blue guifg=Blue
-  hi rcSubObject	ctermfg=Green guifg=Green
-  hi rcCaptionParam	term=underline ctermfg=DarkGreen guifg=Green
-  hi rcParam		ctermfg=DarkGreen guifg=DarkGreen
-  hi rcStatement	ctermfg=DarkGreen guifg=DarkGreen
-  hi rcCommonAttribute	ctermfg=Brown guifg=Brown
+hi def rcLanguage		term=reverse ctermbg=Red ctermfg=Yellow guibg=Red guifg=Yellow
+hi def rcMainObject		term=underline ctermfg=Blue guifg=Blue
+hi def rcSubObject		ctermfg=Green guifg=Green
+hi def rcCaptionParam		term=underline ctermfg=DarkGreen guifg=Green
+hi def rcParam			ctermfg=DarkGreen guifg=DarkGreen
+hi def rcStatement		ctermfg=DarkGreen guifg=DarkGreen
+hi def rcCommonAttribute	ctermfg=Brown guifg=Brown
 
-  "hi link rcIdentifier	Identifier
-endif
+"hi link rcIdentifier	Identifier
 
 let b:current_syntax = "rc"
 

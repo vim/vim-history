@@ -3281,7 +3281,7 @@ makemap(fd)
 		do	/* may do this twice if c2 is set */
 		{
 		    /* When outputting <> form, need to make sure that 'cpo'
-		     * is almost empty. */
+		     * is set to the Vim default. */
 		    if (!did_cpo)
 		    {
 			if (*mp->m_str == NUL)		/* will use <Nop> */
@@ -3293,9 +3293,9 @@ makemap(fd)
 					did_cpo = TRUE;
 			if (did_cpo)
 			{
-			    if (fprintf(fd, "let cpo_save=&cpo") < 0
+			    if (fprintf(fd, "let s:cpo_save=&cpo") < 0
 				    || put_eol(fd) < 0
-				    || fprintf(fd, "set cpo=B") < 0
+				    || fprintf(fd, "set cpo&vim") < 0
 				    || put_eol(fd) < 0)
 				return FAIL;
 			}
@@ -3321,9 +3321,9 @@ makemap(fd)
 	}
 
     if (did_cpo)
-	if (fprintf(fd, "let &cpo=cpo_save") < 0
+	if (fprintf(fd, "let &cpo=s:cpo_save") < 0
 		|| put_eol(fd) < 0
-		|| fprintf(fd, "unlet cpo_save") < 0
+		|| fprintf(fd, "unlet s:cpo_save") < 0
 		|| put_eol(fd) < 0)
 	    return FAIL;
     return OK;

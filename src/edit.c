@@ -4522,7 +4522,7 @@ ins_replace_pop(cc)
 	ins_char(cc);
 
     if (cc_utf8)
-	/* Handle composing chars.  There can be up to two. */
+	/* Handle composing chars. */
 	for (;;)
 	{
 	    cc = replace_pop();

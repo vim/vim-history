@@ -33,11 +33,13 @@ ARCH=i386
 CROSS=0
 
 # uncomment 'PERL' if you want a perl-enabled version
-# Not working just yet.  I'm not sure that the ActiveState perl port can be made
-# to work if you aren't useing VisualC.  Shame...
-#PERL=perl.exe
-PERLLIB=c:/perl/lib
-PERLLIBS=$(PERLLIB)/core
+#PERL=perl
+ACTIVEPERL=perl56.dll
+# on Linux, for cross-compile, it's here:
+#PERLLIB=/home/ron/ActivePerl/lib/
+# on NT, it's here:
+PERLLIB=c:/perl/lib/
+PERLLIBS=$(PERLLIB)/Core
 
 # Python support -- works with the ActiveState python 2.0 release (and others
 # too, probably)
@@ -50,10 +52,25 @@ PERLLIBS=$(PERLLIB)/core
 #   cd $PYTHON/libs
 #   pexports python20.dll > python20.def
 #   dlltool -d python20.def -l libpython20.a
-#PYTHON=c:/Python20
+# on my Linux box, I put the Python stuff here:
+#PYTHON=/home/ron/ActivePython-2.0.0-202/src/Core
+# on my NT box, it's here:
+#PYTHON=c:/python20
+
+# to make a vim version that autoloads python if available.  You do want this!
+DYNAMICPYTHON=python20.dll
+
 ifdef PYTHON
+ifndef DYNAMICPYTHON
 PYTHONLIB=-L$(PYTHON)/libs -lpython20
+endif
+# my include files are in 'win32inc' on Linux, and 'include' in the standard
+# NT distro (ActiveState)
+ifeq ($(CROSS),0)
 PYTHONINC=-I $(PYTHON)/include
+else
+PYTHONINC=-I $(PYTHON)/win32inc
+endif
 endif
 
 # See feature.h for a list of options.
@@ -76,15 +93,21 @@ endif
 #>>>>> end of choices
 ###########################################################################
 
-CFLAGS = -Iproto $(DEFINES) -pipe -malign-double -mwide-multiply
+CFLAGS = -Iproto $(DEFINES) -pipe -malign-double -mwide-multiply -w
 CFLAGS += -march=$(ARCH) -mcpu=$(CPU) -Wall
 
 ifdef PERL
 CFLAGS += -I$(PERLLIBS) -DFEAT_PERL -L$(PERLLIBS)
+ifdef ACTIVEPERL
+CFLAGS += -DACTIVE_PERL 
+endif
 endif
 
 ifdef PYTHON
 CFLAGS += -DFEAT_PYTHON $(PYTHONINC)
+ifdef DYNAMICPYTHON
+CFLAGS += -DDYNAMIC_PYTHON 
+endif
 endif
 
 ifeq ($(DEBUG),1)
@@ -125,7 +148,9 @@ GUIOBJ = $(GUISRC:.c=.o)
 OBJ    = $(SRC:.c=.o)
 LIB = -lkernel32 -luser32 -lgdi32 -ladvapi32 -lcomdlg32 -lcomctl32
 ifdef PERL
-LIB += -lperlcapi -lperlcore
+ifndef ACTIVEPERL
+LIB += -lperl
+endif
 endif
 all: $(TARGET) vimrun.exe xxd/xxd.exe
 
@@ -161,5 +186,29 @@ vimres.res: vim.rc
 vimres.o: vimres.res
 	$(WINDRES) vimres.res vimres.o
 
-if_perl.c: if_perl.xs typemap
-	$(PERL) $(PERLLIB)\ExtUtils\xsubpp -prototypes -typemap $(PERLLIB)\ExtUtils\typemap if_perl.xs > $@
+if_python.c: dyn-ming.h
+
+if_perl.c: dyn-ming.h if_perl.xs typemap
+	$(PERL) $(PERLLIB)/ExtUtils/xsubpp -prototypes -typemap $(PERLLIB)/ExtUtils/typemap if_perl.xs > $@
+
+dyn-ming.h:
+ifeq ($(CROSS),1)
+	@echo \/\* created by make \*\/ > dyn-ming.h
+else
+	@echo /* created by make */ > dyn-ming.h
+endif
+ifdef ACTIVEPERL
+ifeq ($(CROSS),1)
+	@echo \#define ACTIVE_PERL_W32 \"$(ACTIVEPERL)\" >> dyn-ming.h
+else
+	@echo #define ACTIVE_PERL_W32 "$(ACTIVEPERL)" >> dyn-ming.h
+endif
+endif
+
+ifdef DYNAMICPYTHON
+ifeq ($(CROSS),1)
+	@echo \#define DYNAMIC_PYTHON_W32 \"$(DYNAMICPYTHON)\" >> dyn-ming.h
+else
+	@echo #define DYNAMIC_PYTHON_W32 "$(DYNAMICPYTHON)" >> dyn-ming.h
+endif
+endif

@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0k.  Last change: 2000 Oct 29
+*change.txt*    For Vim version 6.0l.  Last change: 2000 Nov 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -237,13 +237,20 @@ r{char}			Replace the character under the cursor with {char}.
 			Vim performs autoindenting.  This works just like
 			deleting the characters that are replaced and then
 			doing "i<CR><Esc>".
+			{char} can be entered as a digraph |digraph-arg|.
 
 							*gr*
 gr{char}		Replace the virtual characters under the cursor with
 			{char}.  This replaces in screen space, not file
 			space.  See |gR| and |Virtual-replace-mode| for more
 			details.  As with |r| a count may be given.
+			{char} can be entered as a digraph |digraph-arg|.
 
+						*digraph-arg*
+The argument for Normal mode commands like |r| and |t| is a single character.
+When 'cpo' doesn't contain the 'D' flag, this character can also be entered
+like |digraphs|.  First type CTRL-K and then the two digraph characters.
+{not available when compiled without the |+digraphs| feature}
 
 						*case* *locale* *$LANG*
 The following commands change the case of letters.  The currently active

@@ -49,11 +49,8 @@ syntax region webRestrictedTeX start="@[\^\.:t=q]" end="@>" oneline
 " address <someone@@fsf.org> without going into C/C++ mode.)
 syntax match webIgnoredStuff "@@"
 
-if !exists("did_cweb_syntax_inits")
-  let did_cweb_syntax_inits = 1
-  " The default method for highlighting. Can be overridden later.
-  hi link webRestrictedTeX String
-endif
+" The default highlighting.
+hi def link webRestrictedTeX String
 
 let b:current_syntax = "cweb"
 

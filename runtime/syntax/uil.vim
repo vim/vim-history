@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Motif UIL (User Interface Language)
 " Maintainer:	Thomas Koehler <jean-luc@picard.franken.de>
-" Last Change:	1998 February 17
+" Last Change:	2000 Nov 04
 
 syn clear
 
@@ -40,27 +40,24 @@ syn region uilDefine		start="^#\s*\(define\>\|undef\>\)" end="$" contains=uilLin
 
 syn sync ccomment uilComment
 
-if !exists("did_uil_syntax_inits")
-  let did_uil_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link uilCharacter		uilString
-  hi link uilSpecialCharacter	uilSpecial
-  hi link uilNumber		uilString
-  hi link uilCommentError	uilError
-  hi link uilInclude		uilPreCondit
-  hi link uilDefine		uilPreCondit
-  hi link uilIncluded		uilString
-  hi link uilSpecialFunction	uilRessource
-  hi link uilRessource		Identifier
-  hi link uilSpecialStatement	Keyword
-  hi link uilError		Error
-  hi link uilPreCondit		PreCondit
-  hi link uilType		Type
-  hi link uilString		String
-  hi link uilComment		Comment
-  hi link uilSpecial		Special
-  hi link uilTodo		Todo
-endif
+" The default highlighting.
+hi def link uilCharacter	uilString
+hi def link uilSpecialCharacter	uilSpecial
+hi def link uilNumber		uilString
+hi def link uilCommentError	uilError
+hi def link uilInclude		uilPreCondit
+hi def link uilDefine		uilPreCondit
+hi def link uilIncluded		uilString
+hi def link uilSpecialFunction	uilRessource
+hi def link uilRessource	Identifier
+hi def link uilSpecialStatement	Keyword
+hi def link uilError		Error
+hi def link uilPreCondit	PreCondit
+hi def link uilType		Type
+hi def link uilString		String
+hi def link uilComment		Comment
+hi def link uilSpecial		Special
+hi def link uilTodo		Todo
 
 let b:current_syntax = "uil"
 

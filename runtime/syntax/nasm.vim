@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	NASM - The Netwide Assembler (v0.98)
 " Maintainer:	Manuel M.H. Stol	<mmh.stol@gmx.net>
-" Last Change:	2000 Jul 06
+" Last Change:	2000 Nov 04
 " Vim URL:	http://www.vim.org/lang.html
 " NASM Home:	http://www.cryogen.com/Nasm/
 " Orig. Maint.:	C. Laurence Gonsalves	<clgonsal@kami.com>
@@ -123,14 +123,14 @@ if exists("nasm_loose_syntax")
   if !exists("nasm_no_warn")
     syn match nasmInMacLblWarn	contained "%\(%[$\.]\k*\>\|{%[$\.]\k*}\)"
     syn match nasmInMacLblWarn	contained "%\($\+\(\d\|[#\.@~]\)\k*\|{\$\+\(\d\|[#\.@~]\)\k*}\)"
-    hi link nasmInMacCatLabel	nasmInMacLblWarn
+    hi def link nasmInMacCatLabel	nasmInMacLblWarn
   else
-    hi link nasmInMacCatLabel	nasmInMacLabel
+    hi def link nasmInMacCatLabel	nasmInMacLabel
   endif
 else
   syn match  nasmInMacLabel	contained "%\(%\(\w\|[#?@~]\)\k*\>\|{%\(\w\|[#?@~]\)\k*}\)"
   syn match  nasmInMacLabel	contained "%\($\+\(\h\|?\)\k*\>\|{$\+\(\h\|?\)\k*}\)"
-  hi link nasmInMacCatLabel	nasmLabelError
+  hi def link nasmInMacCatLabel	nasmLabelError
 endif
 syn match   nasmInMacCatLabel	contained "\d\K\k*"lc=1
 syn match   nasmInMacLabel	contained "\d}\k\+"lc=2
@@ -175,13 +175,13 @@ if exists("nasm_ctx_outside_macro")
   syn match nasmCtxPreCondit	contained "^\s*%elifctx\>"hs=e-7 skipwhite nextgroup=@nasmGrpNxtCtx
   syn match nasmCtxPreCondit	contained "^\s*%elifnctx\>"hs=e-8 skipwhite nextgroup=@nasmGrpNxtCtx
   if exists("nasm_no_warn")
-    hi link nasmCtxPreCondit	nasmPreCondit
-    hi link nasmCtxPreProc	nasmPreProc
-    hi link nasmCtxLocLabel	nasmLocalLabel
+    hi def link nasmCtxPreCondit	nasmPreCondit
+    hi def link nasmCtxPreProc	nasmPreProc
+    hi def link nasmCtxLocLabel	nasmLocalLabel
   else
-    hi link nasmCtxPreCondit	nasmPreProcWarn
-    hi link nasmCtxPreProc	nasmPreProcWarn
-    hi link nasmCtxLocLabel	nasmLabelWarn
+    hi def link nasmCtxPreCondit	nasmPreProcWarn
+    hi def link nasmCtxPreProc	nasmPreProcWarn
+    hi def link nasmCtxLocLabel	nasmLabelWarn
   endif
 endif
 
@@ -410,89 +410,86 @@ syn sync match	nasmSync	grouphere NONE		"^\s*%endmacro\>"
 
 
 
-if !exists("did_nasm_syntax_inits")
-  let did_nasm_syntax_inits = 1
 
+" The default highlighting.
   " Sub Links:
-  hi link nasmInMacDirective	nasmDirective
-  hi link nasmInMacLabel	nasmLocalLabel
-  hi link nasmInMacLblWarn	nasmLabelWarn
-  hi link nasmInMacMacro	nasmMacro
-  hi link nasmInMacParam	nasmMacro
-  hi link nasmInMacParamNum	nasmDecNumber
-  hi link nasmInMacPreCondit	nasmPreCondit
-  hi link nasmInMacPreProc	nasmPreProc
-  hi link nasmInPreCondit	nasmPreCondit
-  hi link nasmInStructure	nasmStructure
-  hi link nasmStructureLabel	nasmStructure
+hi def link nasmInMacDirective	nasmDirective
+hi def link nasmInMacLabel	nasmLocalLabel
+hi def link nasmInMacLblWarn	nasmLabelWarn
+hi def link nasmInMacMacro	nasmMacro
+hi def link nasmInMacParam	nasmMacro
+hi def link nasmInMacParamNum	nasmDecNumber
+hi def link nasmInMacPreCondit	nasmPreCondit
+hi def link nasmInMacPreProc	nasmPreProc
+hi def link nasmInPreCondit	nasmPreCondit
+hi def link nasmInStructure	nasmStructure
+hi def link nasmStructureLabel	nasmStructure
 
 
   " Comment Group:
-  hi link nasmComment		Comment
-  hi link nasmSpecialComment	SpecialComment
-  hi link nasmInCommentTodo	Todo
+hi def link nasmComment		Comment
+hi def link nasmSpecialComment	SpecialComment
+hi def link nasmInCommentTodo	Todo
 
   " Constant Group:
-  hi link nasmString		String
-  hi link nasmStringError	Error
-  hi link nasmBinNumber		Number
-  hi link nasmOctNumber		Number
-  hi link nasmDecNumber		Number
-  hi link nasmHexNumber		Number
-  hi link nasmFltNumber		Float
-  hi link nasmNumberError	Error
+hi def link nasmString		String
+hi def link nasmStringError	Error
+hi def link nasmBinNumber	Number
+hi def link nasmOctNumber	Number
+hi def link nasmDecNumber	Number
+hi def link nasmHexNumber	Number
+hi def link nasmFltNumber	Float
+hi def link nasmNumberError	Error
 
   " Identifier Group:
-  hi link nasmLabel		Identifier
-  hi link nasmLocalLabel	Identifier
-  hi link nasmSpecialLabel	Special
-  hi link nasmLabelError	Error
-  hi link nasmLabelWarn		Todo
+hi def link nasmLabel		Identifier
+hi def link nasmLocalLabel	Identifier
+hi def link nasmSpecialLabel	Special
+hi def link nasmLabelError	Error
+hi def link nasmLabelWarn	Todo
 
   " PreProc Group:
-  hi link nasmPreProc		PreProc
-  hi link nasmDefine		Define
-  hi link nasmInclude		Include
-  hi link nasmMacro		Macro
-  hi link nasmPreCondit		PreCondit
-  hi link nasmPreProcError	Error
-  hi link nasmPreProcWarn	Todo
+hi def link nasmPreProc		PreProc
+hi def link nasmDefine		Define
+hi def link nasmInclude		Include
+hi def link nasmMacro		Macro
+hi def link nasmPreCondit	PreCondit
+hi def link nasmPreProcError	Error
+hi def link nasmPreProcWarn	Todo
 
   " Type Group:
-  hi link nasmType		Type
-  hi link nasmStorage		StorageClass
-  hi link nasmStructure		Structure
-  hi link nasmTypeError		Error
+hi def link nasmType		Type
+hi def link nasmStorage		StorageClass
+hi def link nasmStructure	Structure
+hi def link nasmTypeError	Error
 
   " Directive Group:
-  hi link nasmConstant		Constant
-  hi link nasmInstrModifier	Operator
-  hi link nasmRepeat		Repeat
-  hi link nasmDirective		Keyword
-  hi link nasmStdDirective	Operator
-  hi link nasmFmtDirective	Keyword
+hi def link nasmConstant	Constant
+hi def link nasmInstrModifier	Operator
+hi def link nasmRepeat		Repeat
+hi def link nasmDirective	Keyword
+hi def link nasmStdDirective	Operator
+hi def link nasmFmtDirective	Keyword
 
   " Register Group:
-  hi link nasmCtrlRegister	Special
-  hi link nasmDebugRegister	Debug
-  hi link nasmTestRegister	Special
-  hi link nasmRegisterError	Error
-  hi link nasmMemRefError	Error
+hi def link nasmCtrlRegister	Special
+hi def link nasmDebugRegister	Debug
+hi def link nasmTestRegister	Special
+hi def link nasmRegisterError	Error
+hi def link nasmMemRefError	Error
 
   " Instruction Group:
-  hi link nasmStdInstruction	Statement
-  hi link nasmSysInstruction	Statement
-  hi link nasmDbgInstruction	Debug
-  hi link nasmFpuInstruction	Statement
-  hi link nasmMmxInstruction	Statement
-  hi link nasmSseInstruction	Statement
-  hi link nasmNowInstruction	Statement
-  hi link nasmAmdInstruction	Special
-  hi link nasmCrxInstruction	Special
-  hi link nasmUndInstruction	Todo
-  hi link nasmInstructnError	Error
-
-endif
+hi def link nasmStdInstruction	Statement
+hi def link nasmSysInstruction	Statement
+hi def link nasmDbgInstruction	Debug
+hi def link nasmFpuInstruction	Statement
+hi def link nasmMmxInstruction	Statement
+hi def link nasmSseInstruction	Statement
+hi def link nasmNowInstruction	Statement
+hi def link nasmAmdInstruction	Special
+hi def link nasmCrxInstruction	Special
+hi def link nasmUndInstruction	Todo
+hi def link nasmInstructnError	Error
 
 let b:current_syntax = "nasm"
 

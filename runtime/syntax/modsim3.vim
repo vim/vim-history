@@ -2,7 +2,7 @@
 " Language:	Modsim III, by CACI Products Co. (www.caci.com)
 " Maintainer:	Philipp Jocham <flip@sbox.tu-graz.ac.at>
 " Extension:	*.mod
-" Last Change:	1999 Jun 14
+" Last Change:	2000 Nov 04
 
 " 1999 Apr 22 : Changed modsim3Literal from region to match
 
@@ -67,21 +67,18 @@ syn region modsim3String start=+"+ end=+"+
 "syn region modsim3Literal start=+'+ end=+'+
 syn match modsim3Literal "'[^']'\|''''"
 
-if !exists("did_modsim3_syntax_inits")
-  let did_modsim3_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link modsim3Keyword	Statement
-  hi link modsim3Block		Statement
-  hi link modsim3Comment1	Comment
-  hi link modsim3Comment2	Comment
-  hi link modsim3String		String
-  hi link modsim3Literal	Character
-  hi link modsim3Include	Statement
-  hi link modsim3Type		Type
-  hi link modsim3ParenError	Error
-  hi link modsim3Builtin	Function
-  hi link modsim3BuiltinNoParen	Function
-endif
+" The default highlighting.
+hi def link modsim3Keyword		Statement
+hi def link modsim3Block		Statement
+hi def link modsim3Comment1		Comment
+hi def link modsim3Comment2		Comment
+hi def link modsim3String		String
+hi def link modsim3Literal		Character
+hi def link modsim3Include		Statement
+hi def link modsim3Type			Type
+hi def link modsim3ParenError		Error
+hi def link modsim3Builtin		Function
+hi def link modsim3BuiltinNoParen	Function
 
 let b:current_syntax = "modsim3"
 

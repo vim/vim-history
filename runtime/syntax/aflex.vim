@@ -58,22 +58,19 @@ syn sync match aflexSyncPat	grouphere  aflexPatBlock	"^%[a-zA-Z]"
 syn sync match aflexSyncPat	groupthere aflexPatBlock	"^<$"
 syn sync match aflexSyncPat	groupthere aflexPatBlock	"^%%$"
 
-if !exists("did_aflex_syntax_inits")
-  let did_aflex_synax_inits = 1
-  hi link	aflexSlashQuote	aflexPat
-  hi link	aflexBrace		aflexPat
-  hi link aflexAbbrvComment	aflexPatComment
-
-  hi link	aflexAbbrv		SpecialChar
-  hi link	aflexAbbrvRegExp	Macro
-  hi link	aflexCFunctions	Function
-  hi link	aflexMorePat	SpecialChar
-  hi link	aflexPat		Function
-  hi link	aflexPatComment	Comment
-  hi link	aflexPatString	Function
-  hi link	aflexPatTag		Special
-  hi link	aflexSep		Delimiter
-endif
+" The default highlighting.
+hi def link aflexSlashQuote	aflexPat
+hi def link aflexBrace	aflexPat
+hi def link aflexAbbrvComment	aflexPatComment
+hi def link aflexAbbrv	SpecialChar
+hi def link aflexAbbrvRegExp	Macro
+hi def link aflexCFunctions	Function
+hi def link aflexMorePat	SpecialChar
+hi def link aflexPat	Function
+hi def link aflexPatComment	Comment
+hi def link aflexPatString	Function
+hi def link aflexPatTag	Special
+hi def link aflexSep	Delimiter
 
 let b:current_syntax = "aflex"
 

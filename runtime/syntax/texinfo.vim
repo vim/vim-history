@@ -2,7 +2,7 @@
 " Language:	Texinfo (macro package for TeX)
 " Maintainer:	Sandor Kopanyi <sandor.kopanyi@altavista.net>
 " URL:		<->
-" Last Change:	2000 Jun 14
+" Last Change:	2000 Nov 04
 "
 " the file follows the Texinfo manual structure; this file is based
 " on manual for Texinfo version 4.0, 28 September 1999
@@ -352,39 +352,35 @@ syn cluster texinfoReducedAll contains=texinfoSpecialChar,texinfoBrcPrmAtCmd
 "==============================================================================
 " highlighting
 
-if !exists("did_texinfo_syntax_inits")
-  let did_texinfo_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
+" The default highlighting.
+hi def link texinfoSpecialChar		Special
+hi def link texinfoHFSpecialChar	Special
 
-  hi link texinfoSpecialChar	Special
-  hi link texinfoHFSpecialChar	Special
-
-  hi link texinfoError		Error
-  hi link texinfoIdent		Identifier
-  hi link texinfoAssignment	Identifier
-  hi link texinfoSinglePar	Identifier
-  hi link texinfoIndexPar	Identifier
-  hi link texinfoSIPar		Identifier
-  hi link texinfoDIEPar		Identifier
-  hi link texCommand		PreProc
+hi def link texinfoError		Error
+hi def link texinfoIdent		Identifier
+hi def link texinfoAssignment		Identifier
+hi def link texinfoSinglePar		Identifier
+hi def link texinfoIndexPar		Identifier
+hi def link texinfoSIPar		Identifier
+hi def link texinfoDIEPar		Identifier
+hi def link texCommand			PreProc
 
 
-  hi link texinfoAtCmd		Statement	"@-command
-  hi link texinfoPrmAtCmd	String		"@-command in one line with unknown nr. of parameters
+hi def link texinfoAtCmd	Statement	"@-command
+hi def link texinfoPrmAtCmd	String		"@-command in one line with unknown nr. of parameters
 						"is String because is found as a region and is 'matchgroup'-ed
 						"to texinfoAtCmd
-  hi link texinfoBrcPrmAtCmd	String		"@-command with parameter(s) in braces ({})
+hi def link texinfoBrcPrmAtCmd	String		"@-command with parameter(s) in braces ({})
 						"is String because is found as a region and is 'matchgroup'-ed to texinfoAtCmd
-  hi link texinfoMltlnAtCmdFLine  texinfoAtCmd	"repeated embedded First lines in @-commands
-  hi link texinfoMltlnAtCmd	String		"@-command in multiple lines
+hi def link texinfoMltlnAtCmdFLine  texinfoAtCmd	"repeated embedded First lines in @-commands
+hi def link texinfoMltlnAtCmd	String		"@-command in multiple lines
 						"is String because is found as a region and is 'matchgroup'-ed to texinfoAtCmd
-  hi link texinfoMltln2AtCmd	PreProc		"@-command in multiple lines (same as texinfoMltlnAtCmd, just with other colors)
-  hi link texinfoMltlnDMAtCmd	PreProc		"@-command in multiple lines (same as texinfoMltlnAtCmd, just with other colors; used for @detailmenu, which can be included in @menu)
-  hi link texinfoMltlnNAtCmd	Normal		"@-command in multiple lines (same as texinfoMltlnAtCmd, just with other colors)
-  hi link texinfoThisAtCmd	Statement	"@-command used in headers and footers (@this... series)
+hi def link texinfoMltln2AtCmd	PreProc		"@-command in multiple lines (same as texinfoMltlnAtCmd, just with other colors)
+hi def link texinfoMltlnDMAtCmd	PreProc		"@-command in multiple lines (same as texinfoMltlnAtCmd, just with other colors; used for @detailmenu, which can be included in @menu)
+hi def link texinfoMltlnNAtCmd	Normal		"@-command in multiple lines (same as texinfoMltlnAtCmd, just with other colors)
+hi def link texinfoThisAtCmd	Statement	"@-command used in headers and footers (@this... series)
 
-  hi link texinfoComment	Comment
-endif
+hi def link texinfoComment	Comment
 
 let b:current_syntax = "texinfo"
 

@@ -103,29 +103,26 @@ syn match forthDefine '\[COMPILE]'
 " Strings
 syn region forthString start=+\.\"+ skip=+\\"+ end=+"+
 
-if !exists("did_forth_syntax")
-	let did_forth_syntax = 1
-	" The default methods for highlighting. Can be overriden later.
-	hi link forthTodo Todo
-	hi link forthInteger Number
-	hi link forthFloat Float
-	hi link forthComment Comment
-	hi link forthInclude Include
-	hi link forthString String
-	hi link forthStack Number
-	hi link forthRStack Number
-	hi link forthCharOps Character
-	hi link forthConversion SpecialChar
-	hi link forthForth Special
-	hi link forthVocs Special
-	hi link forthOperators Operator
-	hi link forthAdrOps Operator
-	hi link forthIteration Repeat
-	hi link forthConditional Conditional
-	hi link forthColonDef Define
-	hi link forthEndOfColonDef forthColonDef
-	hi link forthDefine forthColonDef
-endif
+" The default highlighting.
+hi def link forthTodo Todo
+hi def link forthInteger Number
+hi def link forthFloat Float
+hi def link forthComment Comment
+hi def link forthInclude Include
+hi def link forthString String
+hi def link forthStack Number
+hi def link forthRStack Number
+hi def link forthCharOps Character
+hi def link forthConversion SpecialChar
+hi def link forthForth Special
+hi def link forthVocs Special
+hi def link forthOperators Operator
+hi def link forthAdrOps Operator
+hi def link forthIteration Repeat
+hi def link forthConditional Conditional
+hi def link forthColonDef Define
+hi def link forthEndOfColonDef forthColonDef
+hi def link forthDefine forthColonDef
 
 let b:current_syntax = "forth"
 

@@ -114,20 +114,16 @@ syn match   jpropertiesSpecial		"\\$" contained
 syn match   jpropertiesComment		"^\s*[#!].*$" contains=jpropertiesTODO
 syn keyword jpropertiesTodo		TODO FIXME XXX contained
 
-" link highlighting for properties files
-if !exists("did_jproperties_syntax_inits")
-	let did_jproperties_syntax_inits = 1
-	" The default methods for highlighting.  Can be overridden later
-	hi link jpropertiesComment	Comment
-	hi link jpropertiesTodo		Todo
-	hi link jpropertiesIdentifier	Identifier
-	hi link jpropertiesString	String
-	hi link jpropertiesExtendString	String
-	hi link jpropertiesCharacter	Character
-	hi link jpropertiesSpecial	Special
-	hi link jpropertiesSpecialChar	SpecialChar
-	hi link jpropertiesError	Error
-endif
+" The default highlighting.
+hi def link jpropertiesComment		Comment
+hi def link jpropertiesTodo		Todo
+hi def link jpropertiesIdentifier	Identifier
+hi def link jpropertiesString		String
+hi def link jpropertiesExtendString	String
+hi def link jpropertiesCharacter	Character
+hi def link jpropertiesSpecial		Special
+hi def link jpropertiesSpecialChar	SpecialChar
+hi def link jpropertiesError		Error
 
 let b:current_syntax = "jproperties"
 

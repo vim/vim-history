@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	po (GNU gettext)
 " Maintainer:	Sung-Hyun Nam <namsh@kldp.org>
-" Last Change:	1999/12/14
+" Last Change:	2000 Nov 04
 
 " remove any old syntax stuff hanging around
 syn clear
@@ -15,16 +15,13 @@ syn match  poFormat	"%%" contained
 syn region poString	start=+"+ skip=+\\\\\|\\"+ end=+"+
 			\ contains=poSpecial,poFormat
 
-if !exists("did_po_syntax_inits")
-  let did_po_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later.
-  hi link poComment	Comment
-  hi link poSources	PreProc
-  hi link poStatement	Statement
-  hi link poSpecial	Special
-  hi link poFormat	poSpecial
-  hi link poString	String
-endif
+" The default highlighting.
+hi def link poComment	Comment
+hi def link poSources	PreProc
+hi def link poStatement	Statement
+hi def link poSpecial	Special
+hi def link poFormat	poSpecial
+hi def link poString	String
 
 let b:current_syntax = "po"
 

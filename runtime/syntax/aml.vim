@@ -2,7 +2,7 @@
 " Language:	AML (ARC/INFO Arc Macro Language)	
 " Written By:	Nikki Knuit <Nikki.Knuit@gems3.gov.bc.ca>
 " Maintainer:	Todd Glover <todd.glover@gems9.gov.bc.ca>
-" Last Change:	1999-November-04 
+" Last Change:	2000 Nov 04
 
 " FUTURE CODING:  Bold application commands after &sys, &tty
 "		  Only highlight aml Functions at the beginning
@@ -117,26 +117,21 @@ syn region amlSkip matchgroup=amlOutput start="&ty" end="$" contains=amlVar
 syn region amlSkip matchgroup=amlOutput start="&typ" end="$" contains=amlVar
 syn region amlSkip matchgroup=amlOutput start="&type" end="$" contains=amlVar
 
-if !exists("did_aml_syntax_inits")
-  let did_aml_syntax_inits = 1
-
-" The default methods for highlighting. Can be overridden later.
-  hi link amlComment	 Comment
-  hi link amlNumber	 Number
-  hi link amlQuote       String
-  hi link amlVar         Identifier
-  hi link amlVar2        Identifier
-  hi link amlFunction    PreProc
-  hi link amlDir         Statement 
-  hi link amlDir2        Statement 
-  hi link amlDirSym      Statement 
-  hi link amlOutput      Statement 
-  hi link amlArcCmd      ModeMsg
-  hi link amlFormedCmd  amlArcCmd
-  hi link amlTabCmd     amlArcCmd
-  hi link amlInfoCmd    amlArcCmd
-  hi link amlVtrCmd     amlArcCmd 
-  hi link amlFormed      amlArcCmd
-  hi link amlTab         amlArcCmd
-
-endif
+" The default highlighting.
+hi def link amlComment	 Comment
+hi def link amlNumber	 Number
+hi def link amlQuote	 String
+hi def link amlVar	 Identifier
+hi def link amlVar2	 Identifier
+hi def link amlFunction  PreProc
+hi def link amlDir	 Statement
+hi def link amlDir2	 Statement
+hi def link amlDirSym	 Statement
+hi def link amlOutput	 Statement
+hi def link amlArcCmd	 ModeMsg
+hi def link amlFormedCmd amlArcCmd
+hi def link amlTabCmd	 amlArcCmd
+hi def link amlInfoCmd	 amlArcCmd
+hi def link amlVtrCmd	 amlArcCmd
+hi def link amlFormed	 amlArcCmd
+hi def link amlTab	 amlArcCmd

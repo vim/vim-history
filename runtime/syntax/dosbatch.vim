@@ -87,40 +87,37 @@ syn keyword dosbatchImplicit    ren rename replace restore rmdir set setlocal sh
 syn keyword dosbatchImplicit    sort start subst time title tree type ver verify
 syn keyword dosbatchImplicit    vol xcopy
 
-if !exists("did_dosbatch_syntax_inits")
-  let did_dosbatch_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link dosbatchTodo			Todo
+" The default highlighting.
+hi def link dosbatchTodo		Todo
 
-  hi link dosbatchStatement		Statement
-  hi link dosbatchCommands		dosbatchStatement
-  hi link dosbatchLabel			Label
-  hi link dosbatchConditional		Conditional
-  hi link dosbatchRepeat		Repeat
+hi def link dosbatchStatement		Statement
+hi def link dosbatchCommands		dosbatchStatement
+hi def link dosbatchLabel		Label
+hi def link dosbatchConditional		Conditional
+hi def link dosbatchRepeat		Repeat
 
-  hi link dosbatchOperator              Operator
-  hi link dosbatchEchoOperator          dosbatchOperator
-  hi link dosbatchIfOperator            dosbatchOperator
+hi def link dosbatchOperator            Operator
+hi def link dosbatchEchoOperator        dosbatchOperator
+hi def link dosbatchIfOperator          dosbatchOperator
 
-  hi link dosbatchArgument		Identifier
-  hi link dosbatchIdentifier            Identifier
-  hi link dosbatchVariable		dosbatchIdentifier
+hi def link dosbatchArgument		Identifier
+hi def link dosbatchIdentifier          Identifier
+hi def link dosbatchVariable		dosbatchIdentifier
 
-  hi link dosbatchSpecialChar		SpecialChar
-  hi link dosbatchString		String
-  hi link dosbatchNumber		Number
-  hi link dosbatchInteger		dosbatchNumber
-  hi link dosbatchHex			dosbatchNumber
-  hi link dosbatchBinary		dosbatchNumber
-  hi link dosbatchOctal			dosbatchNumber
+hi def link dosbatchSpecialChar		SpecialChar
+hi def link dosbatchString		String
+hi def link dosbatchNumber		Number
+hi def link dosbatchInteger		dosbatchNumber
+hi def link dosbatchHex			dosbatchNumber
+hi def link dosbatchBinary		dosbatchNumber
+hi def link dosbatchOctal		dosbatchNumber
 
-  hi link dosbatchComment		Comment
-  hi link dosbatchImplicit		Function
+hi def link dosbatchComment		Comment
+hi def link dosbatchImplicit		Function
 
-  hi link dosbatchSwitch                Special
+hi def link dosbatchSwitch              Special
 
-  hi link dosbatchCmd                   PreProc
-endif
+hi def link dosbatchCmd                 PreProc
 
 let b:current_syntax = "dosbatch"
 

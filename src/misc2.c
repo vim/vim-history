@@ -253,8 +253,10 @@ coladvance2(addspaces, finetune, wcol)
  * inc(p)
  *
  * Increment the line pointer 'p' crossing line boundaries as necessary.
- * Return 1 when crossing a line (position points to NUL at the end of the
- * line), -1 when at end of file, 0 otherwise.
+ * Return 1 when going to the next line.
+ * Return 2 when moving forward onto a NUL at the end of the line).
+ * Return -1 when at the end of file.
+ * Return 0 otherwise.
  */
     int
 inc_cursor()
@@ -276,11 +278,11 @@ inc(lp)
 	    int l = mb_ptr2len_check(p);
 
 	    lp->col += l;
-	    return ((p[l] != NUL) ? 0 : 1);
+	    return ((p[l] != NUL) ? 0 : 2);
 	}
 #endif
 	lp->col++;
-	return ((p[1] != NUL) ? 0 : 1);
+	return ((p[1] != NUL) ? 0 : 2);
     }
     if (lp->lnum != curbuf->b_ml.ml_line_count)     /* there is a next line */
     {
@@ -300,7 +302,7 @@ incl(lp)
 {
     int	    r;
 
-    if ((r = inc(lp)) == 1 && lp->col)
+    if ((r = inc(lp)) >= 1 && lp->col)
 	r = inc(lp);
     return r;
 }
@@ -590,11 +592,9 @@ vim_mem_profile_dump()
 	printf("[>%d / %4lu-%-4lu]", i, mem_allocs[i], mem_frees[i]);
     }
 
-    printf("\r\n\n%s\r\n",
-	    _("[bytes] total alloc-freed %lu-%lu, in use %lu, peak use %lu"),
+    printf(_("\n[bytes] total alloc-freed %lu-%lu, in use %lu, peak use %lu\n"),
 	    mem_allocated, mem_freed, mem_allocated - mem_freed, mem_peak);
-    printf("%s\r\n\n",
-	    _("[calls] total re/malloc()'s %lu, total free()'s %lu"),
+    printf(_("[calls] total re/malloc()'s %lu, total free()'s %lu\n\n"),
 	    num_alloc, num_freed);
 }
 
@@ -2318,8 +2318,8 @@ get_fileformat_force(buf, eap)
 {
     int		c;
 
-    if (eap != NULL && eap->force_ff != NULL)
-	c = *eap->force_ff;
+    if (eap != NULL && eap->force_ff != 0)
+	c = eap->cmd[eap->force_ff];
     else
     {
 	if (buf->b_p_bin)

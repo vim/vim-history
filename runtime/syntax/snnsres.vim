@@ -23,7 +23,7 @@ syn match	snnsresNoHeader	"startpattern\s*:\s*" contained
 syn match	snnsresNoHeader "endpattern\s*:\s*" contained
 syn match	snnsresNoHeader "input patterns included" contained
 syn match	snnsresNoHeader "teaching output included" contained
-syn match 	snnsresGen	"generated at.*" contained contains=snnsresNumbers
+syn match	snnsresGen	"generated at.*" contained contains=snnsresNumbers
 syn match	snnsresGen	"SNNS result file [Vv]\d\.\d" contained contains=snnsresNumbers
 
 " the header, what is not an accepted field, is an error
@@ -34,16 +34,13 @@ syn match	snnsresNumbers	"\d" contained
 syn match	snnsresComment	"#.*$" contains=snnsresTodo
 syn keyword	snnsresTodo	TODO XXX FIXME contained
 
-if !exists("did_snnsres_syntax_inits")
-  let did_snnsres_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link snnsresGen		Statement
-  hi link snnsresHeader		Statement
-  hi link snnsresNoHeader	Define
-  hi link snnsresNumbers	Number
-  hi link snnsresComment	Comment
-  hi link snnsresTodo		Todo
-endif
+" The default highlighting.
+hi def link snnsresGen		Statement
+hi def link snnsresHeader	Statement
+hi def link snnsresNoHeader	Define
+hi def link snnsresNumbers	Number
+hi def link snnsresComment	Comment
+hi def link snnsresTodo		Todo
 
 let b:current_syntax = "snnsres"
 

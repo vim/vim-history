@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Pike
 " Maintainer:	Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>
-" Last Change:	1998 Feb 16
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -98,42 +98,39 @@ syn match	pikeBitField	";\s*\I\i*\s*:\s*[1-9]"me=e-1
 
 syn sync ccomment pikeComment minlines=10
 
-if !exists("did_pike_syntax_inits")
-  let did_pike_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link pikeLabel	Label
-  hi link pikeUserLabel	Label
-  hi link pikeConditional	Conditional
-  hi link pikeRepeat	Repeat
-  hi link pikeCharacter	Character
-  hi link pikeSpecialCharacter pikeSpecial
-  hi link pikeNumber	Number
-  hi link pikeFloat	Float
-  hi link pikeOctalError	pikeError
-  hi link pikeParenError	pikeError
-  hi link pikeInParen	pikeError
-  hi link pikeCommentError	pikeError
-  hi link pikeOperator	Operator
-  hi link pikeInclude	Include
-  hi link pikePreProc	PreProc
-  hi link pikeDefine	Macro
-  hi link pikeIncluded	pikeString
-  hi link pikeError	Error
-  hi link pikeStatement	Statement
-  hi link pikePreCondit	PreCondit
-  hi link pikeType		Type
-  hi link pikeCommentError	pikeError
-  hi link pikeCommentString pikeString
-  hi link pikeComment2String pikeString
-  hi link pikeCommentSkip	pikeComment
-  hi link pikeString	String
-  hi link pikeComment	Comment
-  hi link pikeSpecial	SpecialChar
-  hi link pikeTodo		Todo
-  hi link pikeException	pikeStatement
-  hi link pikeCompoundType	Constant
-  "hi link pikeIdentifier	Identifier
-endif
+" The default highlighting.
+hi def link pikeLabel		Label
+hi def link pikeUserLabel	Label
+hi def link pikeConditional	Conditional
+hi def link pikeRepeat		Repeat
+hi def link pikeCharacter	Character
+hi def link pikeSpecialCharacter pikeSpecial
+hi def link pikeNumber		Number
+hi def link pikeFloat		Float
+hi def link pikeOctalError	pikeError
+hi def link pikeParenError	pikeError
+hi def link pikeInParen		pikeError
+hi def link pikeCommentError	pikeError
+hi def link pikeOperator	Operator
+hi def link pikeInclude		Include
+hi def link pikePreProc		PreProc
+hi def link pikeDefine		Macro
+hi def link pikeIncluded	pikeString
+hi def link pikeError		Error
+hi def link pikeStatement	Statement
+hi def link pikePreCondit	PreCondit
+hi def link pikeType		Type
+hi def link pikeCommentError	pikeError
+hi def link pikeCommentString	pikeString
+hi def link pikeComment2String	pikeString
+hi def link pikeCommentSkip	pikeComment
+hi def link pikeString		String
+hi def link pikeComment		Comment
+hi def link pikeSpecial		SpecialChar
+hi def link pikeTodo		Todo
+hi def link pikeException	pikeStatement
+hi def link pikeCompoundType	Constant
+"hi def link pikeIdentifier	Identifier
 
 let b:current_syntax = "pike"
 

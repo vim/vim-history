@@ -634,7 +634,8 @@ EXTERN int	KeyTyped;		/* TRUE if user typed current char */
 EXTERN int	KeyStuffed;		/* TRUE if current char from stuffbuf */
 EXTERN int	maptick INIT(= 0);	/* tick for each non-mapped char */
 
-EXTERN char_u	chartab[256];		/* table used in charset.c */
+EXTERN char_u	chartab[256];		/* table used in charset.c; See
+					   init_chartab() for explanation */
 
 EXTERN int	must_redraw INIT(= 0);	    /* type of redraw necessary */
 EXTERN int	skip_redraw INIT(= FALSE);  /* skip redraw once */
@@ -949,6 +950,7 @@ EXTERN char_u e_toomany[]	INIT(=N_("Too many file names"));
 EXTERN char_u e_trailing[]	INIT(=N_("Trailing characters"));
 EXTERN char_u e_umark[]		INIT(=N_("Unknown mark"));
 EXTERN char_u e_unknown[]	INIT(=N_("Unknown"));
+EXTERN char_u e_wildexpand[]	INIT(=N_("Cannot expand wildcards"));
 EXTERN char_u e_write[]		INIT(=N_("Error while writing"));
 EXTERN char_u e_zerocount[]	INIT(=N_("Zero count"));
 

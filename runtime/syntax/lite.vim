@@ -3,7 +3,7 @@
 " Maintainer:	Lutz Eymers <ixtab@polzin.com>
 " URL:		http://www-public.rz.uni-duesseldorf.de/~eymers/vim/syntax
 " Email:	Subject: send syntax_vim.tgz
-" Last Change:	2000 Jan 05
+" Last Change:	2000 Nov 04
 "
 " Options	lite_sql_query = 1 for SQL syntax highligthing inside strings
 "		lite_minlines = x     to sync at least x lines backwards
@@ -130,30 +130,27 @@ if main_syntax == 'lite'
   endif
 endif
 
-if !exists("did_lite_syntax_inits")
-  let did_lite_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link liteComment		Comment
-  hi link liteString		String
-  hi link liteNumber		Number
-  hi link liteFloat		Float
-  hi link liteIdentifier	Identifier
-  hi link liteGlobalIdentifier	Identifier
-  hi link liteIntVar		Identifier
-  hi link liteFunctions		Function
-  hi link liteRepeat		Repeat
-  hi link liteConditional	Conditional
-  hi link liteStatement		Statement
-  hi link liteType		Type
-  hi link liteInclude		Include
-  hi link liteDefine		Define
-  hi link liteSpecialChar	SpecialChar
-  hi link liteParentError	liteError
-  hi link liteError		Error
-  hi link liteTodo		Todo
-  hi link liteOperator		Operator
-  hi link liteRelation		Operator
-endif
+" The default highlighting.
+hi def link liteComment		Comment
+hi def link liteString		String
+hi def link liteNumber		Number
+hi def link liteFloat		Float
+hi def link liteIdentifier	Identifier
+hi def link liteGlobalIdentifier Identifier
+hi def link liteIntVar		Identifier
+hi def link liteFunctions	Function
+hi def link liteRepeat		Repeat
+hi def link liteConditional	Conditional
+hi def link liteStatement	Statement
+hi def link liteType		Type
+hi def link liteInclude		Include
+hi def link liteDefine		Define
+hi def link liteSpecialChar	SpecialChar
+hi def link liteParentError	liteError
+hi def link liteError		Error
+hi def link liteTodo		Todo
+hi def link liteOperator	Operator
+hi def link liteRelation	Operator
 
 let b:current_syntax = "lite"
 

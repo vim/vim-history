@@ -55,25 +55,23 @@ syn keyword sdlException	catch new
 
 syn sync ccomment sdlComment
 
-if !exists("did_sdl_syntax_inits")
-  let did_sdl_syntax_inits = 1
-  hi link sdlException	Label
-  hi link sdlConditional	sdlStatement
-  hi link sdlVirtual	sdlStatement
-  hi link sdlExported	sdlFlag
-  hi link sdlCommentError	sdlError
-  hi link sdlOperator	Operator
-  hi link sdlStructure	sdlType
-  hi sdlStatement	term=bold ctermfg=4 guifg=Blue
-  hi sdlFlag		term=bold ctermfg=4 guifg=Blue gui=italic
-  hi sdlNewState	term=italic ctermfg=2 guifg=Magenta gui=underline
-  hi sdlInput		term=bold guifg=Red
-  hi link sdlType	Type
-  hi link sdlString	String
-  hi link sdlComment	Comment
-  hi link sdlSpecial	Special
-  hi link sdlError	Error
-endif
+" The default highlighting.
+hi def link sdlException	Label
+hi def link sdlConditional	sdlStatement
+hi def link sdlVirtual		sdlStatement
+hi def link sdlExported		sdlFlag
+hi def link sdlCommentError	sdlError
+hi def link sdlOperator		Operator
+hi def link sdlStructure	sdlType
+hi def sdlStatement		term=bold ctermfg=4 guifg=Blue
+hi def sdlFlag			term=bold ctermfg=4 guifg=Blue gui=italic
+hi def sdlNewState		term=italic ctermfg=2 guifg=Magenta gui=underline
+hi def sdlInput			term=bold guifg=Red
+hi def link sdlType		Type
+hi def link sdlString		String
+hi def link sdlComment		Comment
+hi def link sdlSpecial		Special
+hi def link sdlError		Error
 
 let b:current_syntax = "sdl"
 

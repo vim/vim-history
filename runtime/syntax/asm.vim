@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	GNU Assembler
 " Maintainer:	Kevin Dahlhausen <ap096@po.cwru.edu>
-" Last Change:	2000 Feb 09
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -55,34 +55,29 @@ syn match asmDirective		"\.[a-z][a-z]\+"
 
 syn case match
 
-if !exists("did_asm_syntax_inits")
-  let did_asm_syntax_inits = 1
+" The default highlighting.
+hi def link asmSection		Special
+hi def link asmLabel		Label
+hi def link asmComment		Comment
+hi def link asmDirective	Statement
 
-  " The default methods for highlighting.  Can be overridden later
-  hi link asmSection	Special
-  hi link asmLabel	Label
-  hi link asmComment	Comment
-  hi link asmDirective	Statement
+hi def link asmInclude		Include
+hi def link asmCond		PreCondit
+hi def link asmMacro		Macro
 
-  hi link asmInclude	Include
-  hi link asmCond	PreCondit
-  hi link asmMacro	Macro
+hi def link hexNumber		Number
+hi def link decNumber		Number
+hi def link octNumber		Number
+hi def link binNumber		Number
 
-  hi link hexNumber	Number
-  hi link decNumber	Number
-  hi link octNumber	Number
-  hi link binNumber	Number
+hi def link asmSpecialComment	Comment
+hi def link asmIdentifier	Identifier
+hi def link asmType		Type
 
-  hi link asmSpecialComment Comment
-  hi link asmIdentifier Identifier
-  hi link asmType	Type
-
-  " My default color overrides:
-  " hi asmSpecialComment ctermfg=red
-  " hi asmIdentifier ctermfg=lightcyan
-  " hi asmType ctermbg=black ctermfg=brown
-
-endif
+" My default color overrides:
+" hi def asmSpecialComment ctermfg=red
+" hi def asmIdentifier ctermfg=lightcyan
+" hi def asmType ctermbg=black ctermfg=brown
 
 let b:current_syntax = "asm"
 

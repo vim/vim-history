@@ -38,39 +38,37 @@ syn match cleanComment "//.*"
 " Now for some useful typedefinitionrecognition
 syn match cleanFuncTypeDef "\([a-zA-Z].*\|(\=[-~@#$%^?!+*<>\/|&=:]\+)\=\)[ \t]*\(infix[lr]\=\)\=[ \t]*\d\=[ \t]*::.*->.*" contains=cleanSpecial
 
-if !exists("did_clean_syntax_init")
-   let did_clean_syntax_init = 1
+" The default highlighting.
    " Comments
-   hi link cleanComment      Comment
+hi def link cleanComment      Comment
    " Constants and denotations
-   hi link cleanCharsDenot   String
-   hi link cleanStringDenot  String
-   hi link cleanCharDenot    Character
-   hi link cleanIntegerDenot Number
-   hi link cleanBoolDenot    Boolean
-   hi link cleanRealDenot    Float
+hi def link cleanCharsDenot   String
+hi def link cleanStringDenot  String
+hi def link cleanCharDenot    Character
+hi def link cleanIntegerDenot Number
+hi def link cleanBoolDenot    Boolean
+hi def link cleanRealDenot    Float
    " Identifiers
    " Statements
-   hi link cleanTypeClass    Keyword
-   hi link cleanConditional  Conditional
-   hi link cleanLabel        Label
-   hi link cleanKeyword      Keyword
+hi def link cleanTypeClass    Keyword
+hi def link cleanConditional  Conditional
+hi def link cleanLabel        Label
+hi def link cleanKeyword      Keyword
    " Generic Preprocessing
-   hi link cleanInclude      Include
-   hi link cleanModuleSystem PreProc
+hi def link cleanInclude      Include
+hi def link cleanModuleSystem PreProc
    " Type
-   hi link cleanBasicType    Type
-   hi link cleanSpecialType  Type
-   hi link cleanFuncTypeDef  Typedef
+hi def link cleanBasicType    Type
+hi def link cleanSpecialType  Type
+hi def link cleanFuncTypeDef  Typedef
    " Special
-   hi link cleanSpecial      Special
-   hi link cleanList         Special
-   hi link cleanArray        Special
-   hi link cleanRecord       Special
-   hi link cleanTuple        Special
+hi def link cleanSpecial      Special
+hi def link cleanList         Special
+hi def link cleanArray        Special
+hi def link cleanRecord       Special
+hi def link cleanTuple        Special
    " Error
    " Todo
-endif
 
 let b:current_syntax = "clean"
 

@@ -1967,7 +1967,7 @@ static char *(p_fdm_values[]) = {"manual", "expr", "marker", "indent", "syntax",
 static char *(p_ve_values[]) = {"block", "all", "insert", NULL};
 #endif
 
-static void set_option_default __ARGS((int, int opt_flags));
+static void set_option_default __ARGS((int, int opt_flags, int compatible));
 static void set_options_default __ARGS((int opt_flags));
 static char_u *illegal_char __ARGS((char_u *, int));
 #ifdef FEAT_TITLE
@@ -2207,11 +2207,13 @@ set_init_1()
 
 /*
  * Set an option to its default value.
+ * This does not take care of side effects!
  */
     static void
-set_option_default(opt_idx, opt_flags)
+set_option_default(opt_idx, opt_flags, compatible)
     int		opt_idx;
     int		opt_flags;	/* OPT_FREE and/or OPT_GLOBAL */
+    int		compatible;	/* use Vi default value */
 {
     char_u	*varp;		/* pointer to variable for current option */
     int		dvi;		/* index in def_val[] */
@@ -2221,7 +2223,7 @@ set_option_default(opt_idx, opt_flags)
     flags = options[opt_idx].flags;
     if (varp != NULL)	    /* nothing to do for hidden option */
     {
-	if ((flags & P_VI_DEF) || p_cp)
+	if ((flags & P_VI_DEF) || compatible)
 	    dvi = VI_DEFAULT;
 	else
 	    dvi = VIM_DEFAULT;
@@ -2286,7 +2288,7 @@ set_options_default(opt_flags)
 
     for (i = 0; !istermoption(&options[i]); i++)
 	if (!(options[i].flags & P_NODEFAULT))
-	    set_option_default(i, opt_flags);
+	    set_option_default(i, opt_flags, p_cp);
 
     /* The 'scroll' option must be computed for all windows. */
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
@@ -2605,6 +2607,7 @@ do_set(arg, opt_flags)
     int		removing;	    /* "opt-=arg" */
     int		global = (opt_flags & OPT_GLOBAL); /* ":setglobal" */
     int		local = (opt_flags & OPT_LOCAL);   /* ":setlocal" or modeline */
+    int		cp_val = 0;
 
     if (*arg == NUL)
     {
@@ -2767,7 +2770,20 @@ do_set(arg, opt_flags)
 	    if (vim_strchr((char_u *)"?=:!&", nextchar) != NULL)
 	    {
 		arg += len;
-		len = 0;
+		cp_val = p_cp;
+		if (nextchar == '&' && arg[1] == 'v' && arg[2] == 'i')
+		{
+		    if (arg[3] == 'm')	/* "opt&vim": set to Vim default */
+		    {
+			cp_val = FALSE;
+			arg += 3;
+		    }
+		    else		/* "opt&vi": set to Vi default */
+		    {
+			cp_val = TRUE;
+			arg += 2;
+		    }
+		}
 		if (vim_strchr((char_u *)"?!&", nextchar) != NULL
 			&& arg[1] != NUL && !vim_iswhite(arg[1]))
 		{
@@ -2838,7 +2854,7 @@ do_set(arg, opt_flags)
 			/* Use a trick here to get the default value,
 			 * without setting the actual value yet. */
 			i = *(int *)varp;
-			set_option_default(opt_idx, 0);
+			set_option_default(opt_idx, 0, cp_val);
 			value = *(int *)varp;
 			*(int *)varp = i;
 		    }
@@ -2888,7 +2904,7 @@ do_set(arg, opt_flags)
 			    /* Use a trick here to get the default value,
 			     * without setting the actual value yet. */
 			    temp = *(long *)varp;
-			    set_option_default(opt_idx, 0);
+			    set_option_default(opt_idx, 0, cp_val);
 			    value = *(long *)varp;
 			    *(long *)varp = temp;
 			}
@@ -2970,7 +2986,7 @@ do_set(arg, opt_flags)
 			     * did_set_string_option().  Don't change the
 			     * flags now, but do remember if the new value is
 			     * allocated. */
-			    set_option_default(opt_idx, 0);
+			    set_option_default(opt_idx, 0, cp_val);
 			    new_value_alloced =
 					 (options[opt_idx].flags & P_ALLOCED);
 			    options[opt_idx].flags = flags;
@@ -6972,7 +6988,7 @@ vimrc_found()
 	p_cp = FALSE;
 	for (opt_idx = 0; !istermoption(&options[opt_idx]); opt_idx++)
 	    if (!(options[opt_idx].flags & (P_WAS_SET|P_VI_DEF)))
-		set_option_default(opt_idx, OPT_FREE|OPT_GLOBAL);
+		set_option_default(opt_idx, OPT_FREE|OPT_GLOBAL, FALSE);
 	(void)init_chartab();		/* make new 'iskeyword' take effect */
     }
 }
@@ -7025,7 +7041,7 @@ compatible_set()
     for (opt_idx = 0; !istermoption(&options[opt_idx]); opt_idx++)
 	if (	   ((options[opt_idx].flags & P_VIM) && p_cp)
 		|| (!(options[opt_idx].flags & P_VI_DEF) && !p_cp))
-	    set_option_default(opt_idx, OPT_FREE|OPT_GLOBAL);
+	    set_option_default(opt_idx, OPT_FREE|OPT_GLOBAL, p_cp);
     (void)init_chartab();		/* make new 'iskeyword' take effect */
 }
 

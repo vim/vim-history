@@ -118,29 +118,26 @@ syn keyword dtdTodo contained TODO FIXME XXX
 
 syn sync lines=250
 
-if !exists("did_dtd_syntax_inits")
-  let did_dtd_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link dtdFunction		Function
-  hi link dtdTag		Normal
-  hi link dtdType		Type
-  hi link dtdAttrType		dtdType
-  hi link dtdAttrDef		dtdType
-  hi link dtdConstant		Constant
-  hi link dtdString		dtdConstant
-  hi link dtdEnum		dtdConstant
-  hi link dtdCard		dtdFunction
+" The default highlighting.
+hi def link dtdFunction		Function
+hi def link dtdTag		Normal
+hi def link dtdType		Type
+hi def link dtdAttrType		dtdType
+hi def link dtdAttrDef		dtdType
+hi def link dtdConstant		Constant
+hi def link dtdString		dtdConstant
+hi def link dtdEnum		dtdConstant
+hi def link dtdCard		dtdFunction
 
-  hi link dtdParamEntityInst	dtdConstant
-  hi link dtdParamEntityPunct	dtdType
-  hi link dtdParamEntityDecl	dtdType
-  hi link dtdParamEntityDPunct	dtdComment
+hi def link dtdParamEntityInst	dtdConstant
+hi def link dtdParamEntityPunct	dtdType
+hi def link dtdParamEntityDecl	dtdType
+hi def link dtdParamEntityDPunct dtdComment
 
-  hi link dtdComment		Comment
-  hi link dtdTagName		Statement
-  hi link dtdError		Error
-  hi link dtdTodo		Todo
-endif
+hi def link dtdComment		Comment
+hi def link dtdTagName		Statement
+hi def link dtdError		Error
+hi def link dtdTodo		Todo
 
 let b:current_syntax = "dtd"
 

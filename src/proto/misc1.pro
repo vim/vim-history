@@ -7,7 +7,7 @@ int open_line __ARGS((int dir, int del_spaces, int old_indent));
 int get_leader_len __ARGS((char_u *line, char_u **flags, int backward));
 int plines __ARGS((linenr_t lnum));
 int plines_check __ARGS((linenr_t lnum));
-int plines_win __ARGS((win_t *wp, linenr_t lnum));
+int plines_win __ARGS((win_t *wp, linenr_t lnum, int winheight));
 int plines_win_col __ARGS((win_t *wp, linenr_t lnum, long column));
 int plines_m_win __ARGS((win_t *wp, linenr_t first, linenr_t last));
 void ins_bytes __ARGS((char_u *p));

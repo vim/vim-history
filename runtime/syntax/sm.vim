@@ -50,24 +50,21 @@ syn match smElse		contained	"\$|"
 syn match smClauseCont	contained	"^\t"
 syn region smClause	matchgroup=Delimiter start="\$?." matchgroup=Delimiter end="\$\." contains=smElse,smClause,smVar,smClauseCont
 
-if !exists("did_sm_syntax_inits")
-  let did_sm_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link smClause	Special
-  hi link smClauseError	Error
-  hi link smComment	Comment
-  hi link smDefine	Statement
-  hi link smElse		Delimiter
-  hi link smHeader	Statement
-  hi link smHeaderSep	String
-  hi link smRewrite	Statement
-  hi link smRewriteComment	Comment
-  hi link smRewriteLhsToken	String
-  hi link smRewriteLhsUser	Statement
-  hi link smRewriteRhsToken	String
-  hi link smRuleset	Statement
-  hi link smVar		String
-  endif
+" The default highlighting.
+hi def link smClause	Special
+hi def link smClauseError	Error
+hi def link smComment	Comment
+hi def link smDefine	Statement
+hi def link smElse	Delimiter
+hi def link smHeader	Statement
+hi def link smHeaderSep	String
+hi def link smRewrite	Statement
+hi def link smRewriteComment	Comment
+hi def link smRewriteLhsToken	String
+hi def link smRewriteLhsUser	Statement
+hi def link smRewriteRhsToken	String
+hi def link smRuleset	Statement
+hi def link smVar		String
 
 let b:current_syntax = "sm"
 

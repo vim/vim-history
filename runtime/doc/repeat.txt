@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.0k.  Last change: 2000 Oct 29
+*repeat.txt*    For Vim version 6.0l.  Last change: 2000 Nov 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -257,10 +257,11 @@ To avoid this, add the 'C' flag to the 'cpoptions' option: >
    .
    :set cpo-=C
 
-Rationale: Most programs work with a trailing backslash to indicate line
-continuation.  Using this in Vim would cause incompatibility with Vi.  For
-example for this Vi mapping: >
-	:map xx  asdf\
-Therefore the unusual leading backslash is used.
+Rationale:
+	Most programs work with a trailing backslash to indicate line
+	continuation.  Using this in Vim would cause incompatibility with Vi.
+	For example for this Vi mapping: >
+		:map xx  asdf\
+<	Therefore the unusual leading backslash is used.
 
  vim:tw=78:

@@ -276,80 +276,74 @@ syn sync match shForSync      groupthere shFor      "\<in\>"
 syn sync match shCaseEsacSync grouphere  shCaseEsac "\<case\>"
 syn sync match shCaseEsacSync groupthere shCaseEsac "\<esac\>"
 
-" Highlighting
-" ============
-if !exists("did_sh_syntax_inits")
- " The default methods for highlighting. Can be overridden later
- let did_sh_syntax_inits = 1
+" The default highlighting.
+hi def link shArithRegion		shShellVariables
+hi def link shCaseBar		shConditional
+hi def link shCaseIn		shConditional
+hi def link shCaseStart		shConditional
+hi def link shCmdSubRegion		shShellVariables
+hi def link shColon		shStatement
+hi def link shDeref		shShellVariables
+hi def link shDerefOp		shOperator
+hi def link shDerefVar		shShellVariables
+hi def link shDoubleQuote		shString
+hi def link shEcho		shString
+hi def link shEmbeddedEcho		shString
+hi def link shHereDoc		shString
+hi def link shOption		shCommandSub
+hi def link shPattern		shString
+hi def link shPosnParm		shShellVariables
+hi def link shRedir		shOperator
+hi def link shSinglequote		shString
+hi def link shSource		shOperator
+hi def link shStringSpecial		shSpecial
+hi def link shSubShRegion		shOperator
+hi def link shTestOpr		shConditional
+hi def link shVariable		shSetList
+hi def link shWrapLineOperator	shOperator
 
- hi link shArithRegion		shShellVariables
- hi link shCaseBar		shConditional
- hi link shCaseIn		shConditional
- hi link shCaseStart		shConditional
- hi link shCmdSubRegion		shShellVariables
- hi link shColon		shStatement
- hi link shDeref		shShellVariables
- hi link shDerefOp		shOperator
- hi link shDerefVar		shShellVariables
- hi link shDoubleQuote		shString
- hi link shEcho		shString
- hi link shEmbeddedEcho		shString
- hi link shHereDoc		shString
- hi link shOption		shCommandSub
- hi link shPattern		shString
- hi link shPosnParm		shShellVariables
- hi link shRedir		shOperator
- hi link shSinglequote		shString
- hi link shSource		shOperator
- hi link shStringSpecial		shSpecial
- hi link shSubShRegion		shOperator
- hi link shTestOpr		shConditional
- hi link shVariable		shSetList
- hi link shWrapLineOperator		shOperator
-
- if exists("b:is_bash")
-  hi link bashAdminStatement		shStatement
-  hi link bashSpecialVariables	shShellVariables
-  hi link bashStatement		shStatement
- endif
- if exists("b:is_kornshell")
-  hi link kshSpecialVariables		shShellVariables
-  hi link kshStatement		shStatement
- endif
-
- hi link shCaseError		Error
- hi link shCurlyError		Error
- hi link shDerefError		Error
- hi link shDerefOpError		Error
- hi link shDerefTextError		Error
- hi link shDoError		Error
- hi link shEsacError		Error
- hi link shIfError		Error
- hi link shInError		Error
- hi link shParenError		Error
- hi link shTestError		Error
- if exists("b:is_kornshell")
-  hi link shDTestError		Error
- endif
-
- hi link shArithmetic		Special
- hi link shCharClass		Identifier
- hi link shCommandSub		Special
- hi link shComment		Comment
- hi link shConditional		Conditional
- hi link shExprRegion		Delimiter
- hi link shFunction		Function
- hi link shFunctionName		Function
- hi link shNumber		Number
- hi link shOperator		Operator
- hi link shRepeat		Repeat
- hi link shSetList		Identifier
- hi link shShellVariables		PreProc
- hi link shSpecial		Special
- hi link shStatement		Statement
- hi link shString		String
- hi link shTodo		Todo
+if exists("b:is_bash")
+  hi def link bashAdminStatement	shStatement
+  hi def link bashSpecialVariables	shShellVariables
+  hi def link bashStatement		shStatement
 endif
+if exists("b:is_kornshell")
+  hi def link kshSpecialVariables	shShellVariables
+  hi def link kshStatement		shStatement
+endif
+
+hi def link shCaseError		Error
+hi def link shCurlyError		Error
+hi def link shDerefError		Error
+hi def link shDerefOpError		Error
+hi def link shDerefTextError		Error
+hi def link shDoError		Error
+hi def link shEsacError		Error
+hi def link shIfError		Error
+hi def link shInError		Error
+hi def link shParenError		Error
+hi def link shTestError		Error
+if exists("b:is_kornshell")
+  hi def link shDTestError		Error
+endif
+
+hi def link shArithmetic		Special
+hi def link shCharClass		Identifier
+hi def link shCommandSub		Special
+hi def link shComment		Comment
+hi def link shConditional		Conditional
+hi def link shExprRegion		Delimiter
+hi def link shFunction		Function
+hi def link shFunctionName		Function
+hi def link shNumber		Number
+hi def link shOperator		Operator
+hi def link shRepeat		Repeat
+hi def link shSetList		Identifier
+hi def link shShellVariables		PreProc
+hi def link shSpecial		Special
+hi def link shStatement		Statement
+hi def link shString		String
+hi def link shTodo		Todo
 
 " Current Syntax
 " ==============

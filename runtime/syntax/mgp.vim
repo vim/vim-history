@@ -35,25 +35,22 @@ syn match mgpHash      +^#.*$+
 syn match mgpPage      +^%page$+
 syn match mgpNoDefault +^%nodefault$+
 
-if !exists("did_mgp_syntax_inits")
-  let did_mgp_syntax_hints = 1
-  hi link mgpLineSkip   Special
+hi def link mgpLineSkip   Special
 
-  hi link mgpHash       mgpComment
-  hi link mgpPercent    mgpComment
-  hi link mgpComment    Comment
+hi def link mgpHash       mgpComment
+hi def link mgpPercent    mgpComment
+hi def link mgpComment    Comment
 
-  hi link mgpCommand    Identifier
+hi def link mgpCommand    Identifier
 
-  hi link mgpLine       Type
+hi def link mgpLine       Type
 
-  hi link mgpFile       String
-  hi link mgpSize       Number
-  hi link mgpValue      Number
+hi def link mgpFile       String
+hi def link mgpSize       Number
+hi def link mgpValue      Number
 
-  hi link mgpPage       mgpDefine
-  hi link mgpNoDefault  mgpDefine
-  hi link mgpDefine     Define
-endif
+hi def link mgpPage       mgpDefine
+hi def link mgpNoDefault  mgpDefine
+hi def link mgpDefine     Define
 
 let b:current_syntax = "mgp"

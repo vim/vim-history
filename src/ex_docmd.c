@@ -3546,7 +3546,7 @@ getargopt(eap)
     exarg_t	*eap;
 {
     char_u	*arg = eap->arg + 2;
-    char_u	**pp = NULL;
+    int		*pp = NULL;
     char_u	*p;
 
     if (STRNCMP(arg, "ff", 2) == 0)
@@ -3575,22 +3575,27 @@ getargopt(eap)
     if (pp == NULL || *arg != '=')
 	return FAIL;
 
-    *pp = ++arg;
+    ++arg;
+    *pp = arg - eap->cmd;
     arg = skip_cmd_arg(arg);
     eap->arg = skipwhite(arg);
     *arg = NUL;
 
+#ifdef FEAT_MBYTE
     if (pp == &eap->force_ff)
     {
-	if (check_ff_value(*pp) == FAIL)
+#endif
+	if (check_ff_value(eap->cmd + eap->force_ff) == FAIL)
 	    return FAIL;
+#ifdef FEAT_MBYTE
     }
     else
     {
 	/* Make 'filecharcode' lower case. */
-	for (p = *pp; *p != NUL; ++p)
+	for (p = eap->cmd + eap->force_fcc; *p != NUL; ++p)
 	    *p = TO_LOWER(*p);
     }
+#endif
 
     return OK;
 }
@@ -5995,9 +6000,9 @@ handle_drop(filec, filev, split)
     ea.forceit = FALSE;
     ea.do_ecmd_cmd = NULL;
     ea.do_ecmd_lnum = 0;
-    ea.force_ff = NULL;
+    ea.force_ff = 0;
 #ifdef FEAT_MBYTE
-    ea.force_fcc = NULL;
+    ea.force_fcc = 0;
 #endif
 
     do_argfile(&ea, 0);

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Man page
 " Maintainer:	Gautam H. Mudunuri <gmudunur@informatica.com>
-" Last Change:	2000 Oct 15
+" Last Change:	2000 Nov 04
 " Version Info:
 
 " clear any unwanted syntax defs
@@ -17,15 +17,12 @@ syn match  manSectionHeading  "^[a-z][a-z ]*[a-z]$"
 syn match  manOptionDesc      "^\s*[+-][a-z0-9]\S*"
 " syn match  manHistory         "^[a-z].*last change.*$"
 
-if !exists("did_man_syntax_inits")
-        let did_man_syntax_inits = 1
-        " The default methods for highlighting.  Can be overridden later
-        hi link manTitle           Title
-        hi link manSectionHeading  Statement
-        hi link manOptionDesc      Constant
-        " hi link manHistory         Comment
-        hi link manReference       PreProc
-endif
+" The default highlighting.
+hi def link manTitle           Title
+hi def link manSectionHeading  Statement
+hi def link manOptionDesc      Constant
+" hi def link manHistory       Comment
+hi def link manReference       PreProc
 
 let b:current_syntax = "man"
 

@@ -1,6 +1,6 @@
 " Interactive Data Language syntax file (IDL, too :-)
 " Maintainer:	Hermann.Rochholz@faidor.com
-" Last Change:	1999 Jun 14
+" Last Change:	2000 Nov 04
 " Preliminary, because I do not use higher language elements of IDL until now.
 
 " Remove any old syntax stuff hanging around
@@ -344,54 +344,50 @@ syn match  idlangContinueLine	"insertcol"
 syn match idlangReadWrite	"\ *pro\ "
 syn match idlangReadWrite	"\ *function\ "
 
-if !exists("did_idlang_syntax_inits")
-  let did_idlang_syntax_inits = 1
-" The default methods for highlighting.  Can be overridden later
+" The default highlighting.
+hi def link idlangConditional	Conditional
+hi def link idlangConditionll	Conditional
+hi def link idlangRepeat	Repeat
+hi def link idlangColor	idlangType
+hi def link idlangCommand	idlangType
+hi def link idlangRoutine	idlangType
+hi def link idlangDiagram	idlangType
+hi def link idlangIO	idlangType
+hi def link idlangStatement	Statement
+hi def link idlangType	Type
+hi def link idlangContinueLine	Todo
+hi def link idlangRealNumber	Float
+hi def link idlangNumber	Number
+hi def link idlangCommentError	Error
+hi def link idlangString	String
+hi def link idlangOperator	Operator
+hi def link idlangLogicalConstant	Constant
+hi def link idlangComment	Comment
+hi def link idlangTodo	Todo
+hi def link idlangUnitHeader	idlangPreCondit
+hi def link idlangFormat	idlangImplicit
+hi def link idlangReadWrite	Statement
+hi def link idlangImplicit	Identifier
+hi def link idlangUnixCmd	Statement
+hi def link idlangPreProc	PreProc
+"hi def link idlangExtended	idlangImplicit
+hi def link idlangPreCondit	PreCondit
 
-  hi link idlangConditional	Conditional
-  hi link idlangConditionll	Conditional
-  hi link idlangRepeat	Repeat
-  hi link idlangColor	idlangType
-  hi link idlangCommand	idlangType
-  hi link idlangRoutine	idlangType
-  hi link idlangDiagram	idlangType
-  hi link idlangIO	idlangType
-  hi link idlangStatement	Statement
-  hi link idlangType	Type
-  hi link idlangContinueLine	Todo
-  hi link idlangRealNumber	Float
-  hi link idlangNumber	Number
-  hi link idlangCommentError	Error
-  hi link idlangString	String
-  hi link idlangOperator	Operator
-  hi link idlangLogicalConstant	Constant
-  hi link idlangComment	Comment
-  hi link idlangTodo	Todo
-  hi link idlangUnitHeader	idlangPreCondit
-  hi link idlangFormat	idlangImplicit
-  hi link idlangReadWrite	Statement
-  hi link idlangImplicit	Identifier
-  hi link idlangUnixCmd	Statement
-  hi link idlangPreProc	PreProc
-"  hi link idlangExtended	idlangImplicit
-  hi link idlangPreCondit	PreCondit
+" optional hiing
+"hi def link idlangContinueError	Error
+"hi def link idlangSpecial	Special
+"hi def link idlangPointRealNumber	idlangNumber
+"hi def link idlangPointDoubleNumber idlangNumber
+"hi def link idlangLongName	Error
+hi def link idlangDblCommaError	Error
+hi def link idlangStop	Error
+"hi def link idlangDelimiter	Identifier
+hi def link idlangStructure	idlangType
+hi def link idlangStrucvar	idlangPreProc
+hi def link idlangSystem	Identifier
+hi def link idlangKeyword	Special
 
-  " optional hiing
-  "hi link idlangContinueError		Error
-  "hi link idlangSpecial		Special
-  "hi link idlangPointRealNumber	idlangNumber
-  "hi link idlangPointDoubleNumber	idlangNumber
-"  hi link idlangLongName	Error
-  hi link idlangDblCommaError	Error
-  hi link idlangStop	Error
-  "hi link idlangDelimiter		Identifier
-  hi link idlangStructure	idlangType
-  hi link idlangStrucvar	idlangPreProc
-  hi link idlangSystem	Identifier
-  hi link idlangKeyword	Special
-
-  "hi link idlangIdentifier	Identifier
-endif
+"hi def link idlangIdentifier	Identifier
 
 let current_syntax = "idlang"
 

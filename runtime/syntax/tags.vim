@@ -14,15 +14,12 @@ syn match	tagComment	";.*$"	contained contains=tagField
 syn match	tagComment	"^!_TAG_.*$"
 syn match	tagField	contained "[a-z]*:"
 
-if !exists("did_drchip_tags_inits")
-  let did_drchip_tags_inits = 1
-  hi link tagBaseFile	PreProc
-  hi link tagComment	Comment
-  hi link tagDelim	Delimiter
-  hi link tagField	Number
-  hi link tagName	Identifier
-  hi link tagPath	PreProc
-endif
+hi def link tagBaseFile	PreProc
+hi def link tagComment	Comment
+hi def link tagDelim	Delimiter
+hi def link tagField	Number
+hi def link tagName	Identifier
+hi def link tagPath	PreProc
 
 let b:current_syntax = "tags"
 

@@ -16,21 +16,30 @@ static int win_chartabsize __ARGS((win_t *wp, char_u *p, colnr_t col));
 static int nr2hex __ARGS((int c));
 #endif
 
-/*
- * chartab[] is used
- * - to quickly recognize ID characters
- * - to quickly recognize file name characters
- * - to quickly recognize printable characters
- * - to store the size of a character on the screen: Printable is 1 position,
- *   2 otherwise
- */
 static int    chartab_initialized = FALSE;
 
 /*
- * init_chartab(): Fill chartab[] with flags for ID and file name characters
- * and the size of characters on the screen (1 or 2 positions).
- * Also fills curbuf->b_chartab[] with flags for keyword characters for
- * current buffer.
+ * Fill chartab[].  Also fills curbuf->b_chartab[] with flags for keyword
+ * characters for current buffer.
+ *
+ * Depends on the option settings 'iskeyword', 'isident', 'isfname',
+ * 'isprint' and 'charcode'.
+ *
+ * The index in chartab[] depends on 'charcode':
+ * - For non-multi-byte index with the byte (same as the character).
+ * - For DBCS index with the first byte.
+ * - For UTF-8 index with the character (when first byte is up to 0x80 it is
+ *   the same as the character, if the first byte is 0x80 and above it depends
+ *   on further bytes).
+ *
+ * The contents of chartab[]:
+ * - The lower two bits, masked by CT_CELL_MASK, give the number of display
+ *   cells the character occupies (1 or 2).  Not valid for UTF-8 above 0x80.
+ * - CT_PRINT_CHAR bit is set when the character is printable (no need to
+ *   translate the character before displaying it).  Note that only DBCS
+ *   characters can have 2 display cells and still be printable.
+ * - CT_FNAME_CHAR bit is set when the character can be in a file name.
+ * - CT_ID_CHAR bit is set when the character can be in an identifier.
  *
  * Return FAIL if 'iskeyword', 'isident', 'isfname' or 'isprint' option has an
  * error, OK otherwise.
@@ -85,9 +94,9 @@ buf_init_chartab(buf, global)
 	    /* UTF-8: can't tell width from first byte unless it's ASCII */
 	    if (cc_utf8 && c >= 0xa0)
 		chartab[c++] = CT_PRINT_CHAR + 1;
-	    /* double-byte chars are either unprintable or double-width */
+	    /* double-byte chars can be printable AND double-width */
 	    else if (cc_dbcs && MB_BYTE2LEN(c) == 2)
-		chartab[c++] = 2;
+		chartab[c++] = CT_PRINT_CHAR + 2;
 	    else
 #endif
 		/* the rest is unprintable by default */
@@ -198,15 +207,21 @@ buf_init_chartab(buf, global)
 		    }
 		    else if (i == 1)		/* (re)set printable */
 		    {
-			if (c < ' '
+			if ((c < ' '
 #ifndef EBCDIC
-				|| c > '~'
+				    || c > '~'
 #endif
 #ifdef FEAT_FKMAP
-				|| (p_altkeymap
-				    && (F_isalpha(c) || F_isdigit(c)))
+				    || (p_altkeymap
+					&& (F_isalpha(c) || F_isdigit(c)))
 #endif
 			    )
+#ifdef FEAT_MBYTE
+				/* For double-byte we keep the cell width, so
+				 * that we can detect it from the first byte. */
+				&& !(cc_dbcs && MB_BYTE2LEN(c) == 2)
+#endif
+			   )
 			{
 			    if (tilde)
 			    {
@@ -321,6 +336,7 @@ transstr(s)
  * Catch 22: chartab[] can't be initialized before the options are
  * initialized, and initializing options may cause transchar() to be called!
  * When chartab_initialized == FALSE don't use chartab[].
+ * Does NOT work for multi-byte characters, c must be <= 255.
  */
     char_u *
 transchar(c)
@@ -361,6 +377,7 @@ transchar(c)
 /*
  * Convert non-printable character to two or more printable characters in
  * "buf[]".  "buf" needs to be able to hold five bytes.
+ * Does NOT work for multi-byte characters, c must be <= 255.
  */
     void
 transchar_nonprint(buf, c)

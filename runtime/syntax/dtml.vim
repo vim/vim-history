@@ -1,7 +1,7 @@
 " DTML syntax file
 " Language:	        Zope's Dynamic Template Markup Language
 " Maintainer:	    Jean Jordaan <jean@mosaicsoftware.com> (njj)
-" Last change:	    2000 Aug 15
+" Last change:	    2000 Nov 04
 
 " These are used with Claudio Fleiner's html.vim in the standard distribution.
 "
@@ -178,14 +178,12 @@ syn region  htmlString   contained start=+"+ end=+"+ contains=htmlSpecialChar,ja
 syn match   htmlTagN     contained +<\s*[-a-zA-Z0-9]\++hs=s+1 contains=htmlTagName,htmlSpecialTagName,dtmlIsTag,dtmlAttribute,dtmlMethod,@htmlTagNameCluster
 syn match   htmlTagN     contained +</\s*[-a-zA-Z0-9]\++hs=s+2 contains=htmlTagName,htmlSpecialTagName,dtmlIsTag,dtmlAttribute,dtmlMethod,@htmlTagNameCluster
 
-if !exists("did_dtml_syntax_inits")
-  let did_dtml_syntax_inits = 1
-  hi link dtmlIsTag	        PreProc
-  hi link dtmlAttribute	    Identifier 
-  hi link dtmlMethod	    Function
-  hi link dtmlComment	    Comment
-  hi link dtmlTODO          Todo
-endif
+" The default highlighting.
+hi def link dtmlIsTag		PreProc
+hi def link dtmlAttribute	Identifier
+hi def link dtmlMethod		Function
+hi def link dtmlComment		Comment
+hi def link dtmlTODO		Todo
 
 let b:current_syntax = "dtml"
 

@@ -2,7 +2,7 @@
 " Language:    WML
 " Maintainer:  Gerfried Fuchs <alfie@innocent.com>
 " URL:         http://alfie.ist.org/vim/syntax/wml.vim
-" Last Change: 2000 Sep 21
+" Last Change: 2000 Nov 04
 "
 " Comments are very welcome - but please make sure that you are commenting on
 " the latest version of this file.
@@ -91,8 +91,8 @@ if main_syntax != 'perl'
   "syn match   wmlPerlTag  contained "</perl>" contains=wmlPerlTagN
   syn keyword  wmlPerlTagN contained perl 
 
-  hi link   wmlPerlTag  htmlTag
-  hi link   wmlPerlTagN htmlStatement
+  hi def link   wmlPerlTag  htmlTag
+  hi def link   wmlPerlTagN htmlStatement
 endif
 
 if main_syntax == "html"
@@ -102,20 +102,18 @@ if main_syntax == "html"
   syn sync minlines=10
 endif
 
-if !exists("did_wml_syntax_inits")
-  let did_wml_syntax_hints = 1
-  hi link wmlUse         Include
-  hi link wmlUsed        String
-  hi link wmlBody        Special
-  hi link wmlDiverted    Label
-  hi link wmlDivert      Delimiter
-  hi link wmlDivertEnd   Delimiter
-  hi link wmlLocationed  Label
-  hi link wmlLocation    Delimiter
-  hi link wmlDefineName  String
-  hi link wmlComment     Comment
-  hi link wmlInclude     Include
-  hi link wmlSharpBang   PreProc
-endif
+" The default highlighting.
+hi def link wmlUse         Include
+hi def link wmlUsed        String
+hi def link wmlBody        Special
+hi def link wmlDiverted    Label
+hi def link wmlDivert      Delimiter
+hi def link wmlDivertEnd   Delimiter
+hi def link wmlLocationed  Label
+hi def link wmlLocation    Delimiter
+hi def link wmlDefineName  String
+hi def link wmlComment     Comment
+hi def link wmlInclude     Include
+hi def link wmlSharpBang   PreProc
 
 let b:current_syntax = "wml"

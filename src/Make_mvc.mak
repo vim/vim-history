@@ -17,7 +17,11 @@
 #	IME support: IME=yes	(requires GUI=yes)
 #	Global IME support: GIME=yes (requires GUI=yes)
 #	Perl interface: PERL=[Path to Perl directory]
+#	Active Perl (dynamic link) interface:
+#	  ACTIVEPERL=[Path to Active Perl directory]
 #	Python interface: PYTHON=[Path to Python directory]
+#	Python (dynamic link) interface:
+#	  DYNAMICPYTHON=[Path to Python directory]
 #	Debug version: DEBUG=1
 #	SNiFF+ interface: SNIFF=yes
 #
@@ -272,6 +276,14 @@ CFLAGS    = $(CFLAGS) -DFEAT_PYTHON
 PYTHON_OBJ = $(OUTDIR)\if_python.obj
 PYTHON_INC = /I "$(PYTHON)\Include" /I "$(PYTHON)\PC"
 PYTHON_LIB = $(PYTHON)\libs\python15.lib
+# Dynamic (linked) PYTHON interface
+!elseifdef DYNAMICPYTHON
+!message Dynamic Python detected - root dir is "$(DYNAMICPYTHON)"
+CFLAGS    = $(CFLAGS) -DFEAT_PYTHON \
+	-DDYNAMIC_PYTHON -DDYNAMIC_PYTHON_W32=\"python15.dll\"
+PYTHON_OBJ = $(OUTDIR)\if_python.obj
+PYTHON_INC = /I "$(DYNAMICPYTHON)\Include" /I "$(DYNAMICPYTHON)\PC"
+PYTHON_LIB =
 !endif
 
 # Perl interface
@@ -286,6 +298,18 @@ PERL_LIB = $(PERL)\Lib\Core\perl.lib
 #PERL_LIB = $(PERL)\Lib\Core\perl56.lib
 XSUBPP	 = $(PERL)\lib\ExtUtils\xsubpp
 XSUBPP_TYPEMAP = $(PERL)\lib\ExtUtils\typemap
+# ActivePerl interface
+!elseifdef ACTIVEPERL
+!message ActivePerl detected - root dir is "$(ACTIVEPERL)"
+!message
+CFLAGS	 = $(CFLAGS) -DFEAT_PERL \
+	-DACTIVE_PERL -DACTIVE_PERL_W32=\"perl56.dll\" -DPERL_CAPI
+PERL_EXE = $(ACTIVEPERL)\Bin\perl
+PERL_OBJ = $(OUTDIR)\if_perl.obj $(OUTDIR)\if_perlsfio.obj
+PERL_INC = /I $(ACTIVEPERL)\Lib\Core
+PERL_LIB =
+XSUBPP	 = $(ACTIVEPERL)\lib\ExtUtils\xsubpp
+XSUBPP_TYPEMAP = $(ACTIVEPERL)\lib\ExtUtils\typemap
 !endif
 
 conflags = /nologo /subsystem:$(SUBSYSTEM) /incremental:no

@@ -555,9 +555,9 @@ mch_stackcheck(p)
 #endif
 
 # ifdef HAVE_SIGALTSTACK
-static stack_t sigstk;	/* for sigaltstack() */
+static struct sigaltstack sigstk;	/* for sigaltstack() */
 # else
-static sigstack sigstk;	/* for sigstack() */
+static struct sigstack sigstk;		/* for sigstack() */
 # endif
 
 static void init_signal_stack __ARGS((void));
@@ -2530,9 +2530,9 @@ mch_call_shell(cmd, options)
 #endif	/* __EMX__ */
     else if (x && !(options & SHELL_SILENT))
     {
-	msg_putchar('\n');
+	MSG_PUTS(_("\nshell returned "));
 	msg_outnum((long)x);
-	MSG_PUTS(_(" returned\n"));
+	msg_putchar('\n');
     }
 
     settmode(TMODE_RAW);		/* set to raw mode */
@@ -3069,9 +3069,9 @@ finished:
 		    }
 		    else if (!(options & SHELL_SILENT))
 		    {
-			msg_putchar('\n');
+			MSG_PUTS(_("\nshell returned "));
 			msg_outnum((long)retval);
-			MSG_PUTS(_(" returned\n"));
+			msg_putchar('\n');
 		    }
 		}
 	    }
@@ -3710,21 +3710,21 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
     if (!have_wildcard(num_pat, pat))
 	return save_patterns(num_pat, pat, num_file, file);
 
-/*
- * get a name for the temp file
- */
+    /*
+     * get a name for the temp file
+     */
     if ((tempname = vim_tempname('o')) == NULL)
     {
 	EMSG(_(e_notmp));
 	return FAIL;
     }
 
-/*
- * Let the shell expand the patterns and write the result into the temp file.
- * if expanding `cmd` execute it directly.
- * If we use csh, glob will work better than echo.
- * If we use zsh, print -N will work better than glob.
- */
+    /*
+     * Let the shell expand the patterns and write the result into the temp
+     * file.  if expanding `cmd` execute it directly.
+     * If we use csh, glob will work better than echo.
+     * If we use zsh, print -N will work better than glob.
+     */
     if (num_pat == 1 && *pat[0] == '`'
 	    && (len = STRLEN(pat[0])) > 2
 	    && *(pat[0] + len - 1) == '`')
@@ -3744,6 +3744,7 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
     command = alloc(len);
     if (command == NULL)
     {
+	/* out of memory */
 	vim_free(tempname);
 	return FAIL;
     }
@@ -3788,8 +3789,8 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
 	for (i = 0; i < num_pat; ++i)
 	{
 #ifdef USE_SYSTEM
-	    STRCAT(command, " \"");	    /* need extra quotes because we */
-	    STRCAT(command, pat[i]);	    /*	 start the shell twice */
+	    STRCAT(command, " \"");	/* need extra quotes because we */
+	    STRCAT(command, pat[i]);	/*	 start the shell twice */
 	    STRCAT(command, "\"");
 #else
 	    STRCAT(command, " ");
@@ -3799,8 +3800,8 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
     if (flags & EW_SILENT)
 	show_shell_mess = FALSE;
     if (ampersent)
-	STRCAT(command, "&");		    /* put the '&' back after the
-					       redirection */
+	STRCAT(command, "&");		/* put the '&' back after the
+					   redirection */
 
     /*
      * Using zsh -G: If a pattern has no matches, it is just deleted from
@@ -3821,8 +3822,7 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
     /*
      * execute the shell command
      */
-    i = call_shell(command,
-		     SHELL_EXPAND | ((flags & EW_SILENT) ? SHELL_SILENT : 0));
+    i = call_shell(command, SHELL_EXPAND | SHELL_SILENT);
 
     /* When running in the background, give it some time to create the temp
      * file, but don't wait for it to finish. */
@@ -3849,8 +3849,19 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
 	    must_redraw = CLEAR;	/* probably messed up screen */
 	    msg_putchar('\n');		/* clear bottom line quickly */
 	    cmdline_row = Rows - 1;	/* continue on last line */
+#ifdef USE_SYSTEM
+	    if (!(flags & EW_SILENT))
+#endif
+	    {
+		MSG(_(e_wildexpand));
+		msg_start();		/* don't overwrite this message */
+	    }
 	}
-	return FAIL;
+	/* If a `cmd` expansion failed, don't list `cmd` as a match, even when
+	 * EW_NOTFOUND is given */
+	if (shell_style == STYLE_BT)
+	    return FAIL;
+	goto notfound;
     }
 
     /*
@@ -3859,16 +3870,22 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
     fd = fopen((char *)tempname, "r");
     if (fd == NULL)
     {
-	EMSG2(_(e_notopen), tempname);
+	/* Something went wrong, perhaps a file name with a special char. */
+	if (!(flags & EW_SILENT))
+	{
+	    MSG(_(e_wildexpand));
+	    msg_start();		/* don't overwrite this message */
+	}
 	vim_free(tempname);
-	return FAIL;
+	goto notfound;
     }
     fseek(fd, 0L, SEEK_END);
-    len = ftell(fd);		    /* get size of temp file */
+    len = ftell(fd);			/* get size of temp file */
     fseek(fd, 0L, SEEK_SET);
     buffer = alloc(len + 1);
     if (buffer == NULL)
     {
+	/* out of memory */
 	mch_remove(tempname);
 	vim_free(tempname);
 	fclose(fd);
@@ -3879,6 +3896,7 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
     mch_remove(tempname);
     if (i != len)
     {
+	/* unexpected read error */
 	EMSG2(_(e_notread), tempname);
 	vim_free(tempname);
 	vim_free(buffer);
@@ -3965,6 +3983,7 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
     *file = (char_u **)alloc(sizeof(char_u *) * i);
     if (*file == NULL)
     {
+	/* out of memory */
 	vim_free(buffer);
 	return FAIL;
     }

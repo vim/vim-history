@@ -151,21 +151,17 @@ syn keyword winbatchImplicit xbaseconvert xcursorset xdisklabelget xdriveready x
 syn keyword winbatchImplicit xgetchildhwnd xgetelapsed xhex xmemcompact xmessagebox
 syn keyword winbatchImplicit xsendmessage xverifyccard yield
 
-if !exists("did_winbatch_syntax_inits")
-  let did_winbatch_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link winbatchLabel			PreProc
-  hi link winbatchCtl			Operator
-  hi link winbatchStatement		Statement
-  hi link winbatchTodo			Todo
-  hi link winbatchString		String
-  hi link winbatchVar			Type
-  hi link winbatchComment		Comment
-  hi link winbatchImplicit		Special
-  hi link winbatchNumber		Number
-  hi link winbatchConstant		StorageClass
-
-endif
+" The default highlighting.
+hi def link winbatchLabel		PreProc
+hi def link winbatchCtl			Operator
+hi def link winbatchStatement		Statement
+hi def link winbatchTodo		Todo
+hi def link winbatchString		String
+hi def link winbatchVar			Type
+hi def link winbatchComment		Comment
+hi def link winbatchImplicit		Special
+hi def link winbatchNumber		Number
+hi def link winbatchConstant		StorageClass
 
 let b:current_syntax = "winbatch"
 

@@ -1,4 +1,4 @@
-*usr_06.txt*	For Vim version 6.0k.  Last change: 2000 Oct 29
+*usr_06.txt*	For Vim version 6.0l.  Last change: 2000 Oct 31
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -63,7 +63,7 @@ switches on three very clever mechanisms:
    items below.
    See |filetypes|.
 
-2. Using plugin files
+2. Using filetype plugin files
    Many different filetypes are edited with different options.  For example,
    when you edit a "c" file, it's very useful to set the 'cindent' option to
    automatically indent the lines.  These commonly useful option settings are
@@ -80,27 +80,36 @@ switches on three very clever mechanisms:
 ==============================================================================
 *06.3*  Adding a plugin						*add-plugin*
 
-Vim's functionality can be extended by adding plugins.  They usually add a
-nice feature for a limited audience (if it was for everybody it would have
-been included in Vim itself).  A plugin is nothing more than a Vim script file
-that is loaded automatically. {not available when Vim was compiled without the
-|+eval| feature}
+Vim's functionality can be extended by adding plugins.  A plugin is nothing
+more than a Vim script file that is loaded automatically when Vim starts.  You
+can add a plugin very easy by dropping it in a plugin directory.
+{not available when Vim was compiled without the |+eval| feature}
 
 There are two types of plugins:
 
-    global: Used for all kinds of files
-  filetype: Only used for a specific type of file
+    global plugin: Used for all kinds of files
+  filetype plugin: Only used for a specific type of file
 
 The global plugins will be discussed first, then the filetype ones
 |add-filetype-plugin|.
 
+
+GLOBAL PLUGINS
+							*standard-plugin*
+When you start Vim, it will automatically load a number of global plugins.
+You don't have to do anything for this.  They add functionality that most
+people will want to use, but which was implemented as a Vim script instead of
+being compiled into Vim.  You can find them listed in the help index
+|standard-plugin-list|.  Also see |load-plugins|.
+
 							*add-global-plugin*
-There are only two steps for using a global plugin:
+You can add a global plugin to add functionality that will always be present
+when you use Vim.  There are only two steps for adding a global plugin:
 1. Get a copy of the plugin.
 2. Drop it in the right directory.
 
 
-Getting a global plugin
+GETTING A GLOBAL PLUGIN
 
 Where can you find plugins?
 - Some come with Vim.  You can find them in the directory $VIMRUNTIME/macros
@@ -110,7 +119,7 @@ Where can you find plugins?
 - You could write one yourself, see |write-plugin|.
 
 
-Using a global plugin
+USING A GLOBAL PLUGIN
 
 First read the text in the plugin itself to check for any special conditions.
 Then copy the file to your plugin directory:
@@ -131,18 +140,21 @@ Example for Unix (assuming you didn't have a plugin directory yet): >
 That's all!  Now you can use the commands defined in this plugin to justify
 text.
 
+
+FILETYPE PLUGINS
 							*add-filetype-plugin*
 The Vim distribution comes with a set of plugins for different filetypes that
 you can start using with this command: >
 	:filetype plugin on
 That's all!  See |vimrc-filetype|.
 
+If you are missing a plugin for a filetype you are using, you can add it.
 There are two steps for adding another filetype plugin:
 1. Get a copy of the plugin.
 2. Drop it in the right directory.
 
 
-Getting a filetype plugin
+GETTING A FILETYPE PLUGIN
 
 You can find them in the same places as the global plugins.  Watch out if the
 type of file is mentioned, then you know if the plugin is a global or a
@@ -150,7 +162,7 @@ filetype one.  The scripts in $VIMRUNTIME/macros are global ones, the filetype
 plugins are in $VIMRUNTIME/ftplugin.
 
 
-Using a filetype plugin
+USING A FILETYPE PLUGIN
 
 You can add more filetype plugins by dropping them in the right directory.
 The name of this directory is in the same directory mentioned above for
@@ -164,8 +176,8 @@ Example for Unix: >
 
 The <filetype> part is the name of the filetype the plugin is to be used for.
 In this case it's "cpp".  Only files of this filetype will use the settings
-from the plugin.  The name of the plugin doesn't matter, but it must end in
-".vim".
+from the plugin.  The name of the plugin file doesn't matter, but it must end
+in ".vim".
 
 
 Further reading:

@@ -104,27 +104,24 @@ syn keyword xdefaultsSymbol contained PLANES
 syn keyword xdefaultsSymbol contained X_RESOLUTION
 syn keyword xdefaultsSymbol contained Y_RESOLUTION
 
-if !exists("did_xdefaults_syntax_inits")
-    let did_xdefaults_syntax_inits = 1
-    " The default methods for highlighting.  Can be overridden later
-    hi link xdefaultsLabel		Type
-    hi link xdefaultsValue		Constant
-    hi link xdefaultsComment		Comment
-    hi link xdefaultsCommentH		xdefaultsComment
-    hi link xdefaultsPreProc		PreProc
-    hi link xdefaultsInclude		xdefaultsPreProc
-    hi link xdefaultsCppSkip		xdefaultsCppOut
-    hi link xdefaultsCppOut2		xdefaultsCppOut
-    hi link xdefaultsCppOut		Comment
-    hi link xdefaultsIncluded		String
-    hi link xdefaultsDefine		Macro
-    hi link xdefaultsSymbol		Statement
-    hi link xdefaultsSpecial		Statement
-    hi link xdefaultsErrorLine		Error
-    hi link xdefaultsCommentError	Error
-    hi link xdefaultsPunct		Normal
-    hi link xdefaultsLineEnd		Special
-endif
+" The default highlighting.
+hi def link xdefaultsLabel		Type
+hi def link xdefaultsValue		Constant
+hi def link xdefaultsComment		Comment
+hi def link xdefaultsCommentH		xdefaultsComment
+hi def link xdefaultsPreProc		PreProc
+hi def link xdefaultsInclude		xdefaultsPreProc
+hi def link xdefaultsCppSkip		xdefaultsCppOut
+hi def link xdefaultsCppOut2		xdefaultsCppOut
+hi def link xdefaultsCppOut		Comment
+hi def link xdefaultsIncluded		String
+hi def link xdefaultsDefine		Macro
+hi def link xdefaultsSymbol		Statement
+hi def link xdefaultsSpecial		Statement
+hi def link xdefaultsErrorLine		Error
+hi def link xdefaultsCommentError	Error
+hi def link xdefaultsPunct		Normal
+hi def link xdefaultsLineEnd		Special
 
 let b:current_syntax = "xdefaults"
 

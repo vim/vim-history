@@ -3,7 +3,7 @@
 " Maintainer:	Lutz Eymers <ixtab@polzin.com>
 " URL:		http://www-public.rz.uni-duesseldorf.de/~eymers/vim/syntax
 " Email:	Subject: send syntax_vim.tgz
-" Last Change:	2000 Jan 05
+" Last Change:	2000 Nov 04
 "
 " Options	msql_sql_query = 1 for SQL syntax highligthing inside strings
 "		msql_minlines = x     to sync at least x lines backwards
@@ -45,30 +45,27 @@ else
   syn sync minlines=100
 endif
 
-if !exists("did_msql_syntax_inits")
-  let did_msql_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link msqlComment		Comment
-  hi link msqlString		String
-  hi link msqlNumber		Number
-  hi link msqlFloat		Float
-  hi link msqlIdentifier	Identifier
-  hi link msqlGlobalIdentifier	Identifier
-  hi link msqlIntVar		Identifier
-  hi link msqlEnvVar		Identifier
-  hi link msqlFunctions		Function
-  hi link msqlRepeat		Repeat
-  hi link msqlConditional	Conditional
-  hi link msqlStatement		Statement
-  hi link msqlType		Type
-  hi link msqlInclude		Include
-  hi link msqlDefine		Define
-  hi link msqlSpecialChar	SpecialChar
-  hi link msqlParentError	Error
-  hi link msqlTodo		Todo
-  hi link msqlOperator		Operator
-  hi link msqlRelation		Operator
-endif
+" The default highlighting.
+hi def link msqlComment		Comment
+hi def link msqlString		String
+hi def link msqlNumber		Number
+hi def link msqlFloat		Float
+hi def link msqlIdentifier	Identifier
+hi def link msqlGlobalIdentifier Identifier
+hi def link msqlIntVar		Identifier
+hi def link msqlEnvVar		Identifier
+hi def link msqlFunctions	Function
+hi def link msqlRepeat		Repeat
+hi def link msqlConditional	Conditional
+hi def link msqlStatement	Statement
+hi def link msqlType		Type
+hi def link msqlInclude		Include
+hi def link msqlDefine		Define
+hi def link msqlSpecialChar	SpecialChar
+hi def link msqlParentError	Error
+hi def link msqlTodo		Todo
+hi def link msqlOperator	Operator
+hi def link msqlRelation	Operator
 
 let b:current_syntax = "msql"
 

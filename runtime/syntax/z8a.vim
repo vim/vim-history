@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Z80 assembler asz80
 " Maintainer:	Milan Pikula <www@fornax.elf.stuba.sk>
-" Last Change:	1999 January 7
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax
 syn clear
@@ -78,23 +78,19 @@ syn match z8aComment		";.*"
 
 syn case match
 
-if !exists("did_z8a_syntax_inits")
-  let did_z8a_syntax_inits = 1
 
-  " The default methods for highlighting
-  hi link z8aSection		Special
-  hi link z8aLabel		Label
-  hi link z8aSpecialLabel	Label
-  hi link z8aComment		Comment
-  hi link z8aInstruction	Statement
-  hi link z8aSpecInst		Statement
-  hi link z8aInclude		Include
-  hi link z8aPreCondit		PreCondit
-  hi link z8aPreProc		PreProc
-  hi link z8aNumber		Number
-  hi link z8aString		String
-
-endif
+" The default highlighting.
+hi def link z8aSection		Special
+hi def link z8aLabel		Label
+hi def link z8aSpecialLabel	Label
+hi def link z8aComment		Comment
+hi def link z8aInstruction	Statement
+hi def link z8aSpecInst		Statement
+hi def link z8aInclude		Include
+hi def link z8aPreCondit	PreCondit
+hi def link z8aPreProc		PreProc
+hi def link z8aNumber		Number
+hi def link z8aString		String
 
 let b:current_syntax = "z8a"
 " vim: ts=8

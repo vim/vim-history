@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Expect
 " Maintainer:	Ralph Jennings <knowbudy@oro.net>
-" Last Change:	1999 Jun 16
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -73,25 +73,22 @@ syn region  expectString	start=+"+  end=+"+  contains=expectVariables,expectSpec
 syn keyword expectTodo		contained TODO
 syn match   expectComment		"#.*$" contains=expectTodo
 
-if !exists("did_expect_syntax_inits")
-  let did_expect_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link expectVariables	Special
-  hi link expectCommand		Function
-  hi link expectStatement	Statement
-  hi link expectConditional	Conditional
-  hi link expectRepeat		Repeat
-  hi link expectExpectOpts	Keyword
-  hi link expectOutVar		Special
-  hi link expectSpecial		Special
-  hi link expectNumber		Number
+" The default highlighting.
+hi def link expectVariables	Special
+hi def link expectCommand	Function
+hi def link expectStatement	Statement
+hi def link expectConditional	Conditional
+hi def link expectRepeat	Repeat
+hi def link expectExpectOpts	Keyword
+hi def link expectOutVar	Special
+hi def link expectSpecial	Special
+hi def link expectNumber	Number
 
-  hi link expectString		String
+hi def link expectString	String
 
-  hi link expectComment		Comment
-  hi link expectTodo		Todo
-  "hi link expectIdentifier	Identifier
-endif
+hi def link expectComment	Comment
+hi def link expectTodo		Todo
+"hi def link expectIdentifier	Identifier
 
 let b:current_syntax = "expect"
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	ATLAS
 " Maintainer:	Inaki Saez <jisaez@sfe.indra.es>
-" Last Change:	1998-03-31
+" Last Change:	2000 Nov 04
 
 syn clear
 
@@ -54,28 +54,25 @@ syn sync match atlasTerminator	groupthere NONE "\$"
 syn sync maxlines=100
 
 
-if !exists("did_atlas_syntax_inits")
-  let did_atlas_syntax_inits = 1
-
-  hi link atlasConditional	Conditional
-  hi link atlasRepeat		Repeat
-  hi link atlasStatement	Statement
-  hi link atlasNumber		Number
-  hi link atlasHexNumber	Number
-  hi link atlasOctalNumber	Number
-  hi link atlasBinNumber	Number
-  hi link atlasDecimalNumber	Float
-  hi link atlasFormatString	String
-  hi link atlasString		String
-  hi link atlasComment		Comment
-  hi link atlasComment2		Comment
-  hi link atlasInclude		Include
-  hi link atlasDefine		Macro
-  hi link atlasReserved		PreCondit
-  hi link atlasStorageClass	StorageClass
-  hi link atlasIdentifier	NONE
-  hi link atlasSpecial		Special
-endif
+" The default highlighting.
+hi def link atlasConditional	Conditional
+hi def link atlasRepeat		Repeat
+hi def link atlasStatement	Statement
+hi def link atlasNumber		Number
+hi def link atlasHexNumber	Number
+hi def link atlasOctalNumber	Number
+hi def link atlasBinNumber	Number
+hi def link atlasDecimalNumber	Float
+hi def link atlasFormatString	String
+hi def link atlasString		String
+hi def link atlasComment	Comment
+hi def link atlasComment2	Comment
+hi def link atlasInclude	Include
+hi def link atlasDefine		Macro
+hi def link atlasReserved	PreCondit
+hi def link atlasStorageClass	StorageClass
+hi def link atlasIdentifier	NONE
+hi def link atlasSpecial	Special
 
 let b:current_syntax = "atlas"
 

@@ -2,7 +2,7 @@
 " Language:     WebMacro
 " Maintainer:   Claudio Fleiner <claudio@fleiner.com>
 " URL:          http://www.fleiner.com/vim/syntax/webmacro.vim
-" Last Change:  2000 Feb 13
+" Last Change:  2000 Nov 04
 
 " webmacro is a nice little language that you should
 " check out if you use java servlets.
@@ -39,21 +39,20 @@ syn match webmacroBracesError "[{}]"
 syn match webmacroComment "##.*$" 
 syn match webmacroHash "[#{}\$]" contained
 
-if !exists("did_webmacro_syntax_inits")
-  hi link webmacroComment CommentTitle
-  hi link webmacroVariable PreProc
-  hi link webmacroIf webmacroStatement
-  hi link webmacroForeach webmacroStatement
-  hi link webmacroSet webmacroStatement
-  hi link webmacroInclude webmacroStatement
-  hi link webmacroParse webmacroStatement
-  hi link webmacroStatement Function
-  hi link webmacroNumber Number
-  hi link webmacroBoolean Boolean
-  hi link webmacroSpecial Special
-  hi link webmacroString String
-  hi link webmacroBracesError Error
-endif
+" The default highlighting.
+hi def link webmacroComment CommentTitle
+hi def link webmacroVariable PreProc
+hi def link webmacroIf webmacroStatement
+hi def link webmacroForeach webmacroStatement
+hi def link webmacroSet webmacroStatement
+hi def link webmacroInclude webmacroStatement
+hi def link webmacroParse webmacroStatement
+hi def link webmacroStatement Function
+hi def link webmacroNumber Number
+hi def link webmacroBoolean Boolean
+hi def link webmacroSpecial Special
+hi def link webmacroString String
+hi def link webmacroBracesError Error
 
 let b:current_syntax = "webmacro"
 

@@ -41,16 +41,14 @@ syn match  mibComment           "\ *--.*$"
 syn match  mibNumber		"\<['0-9a-fA-FhH]*\>"
 syn region mibDescription start="\"" end="\"" contains=DEFAULT
 
-if !exists("did_mib_syntax_inits")
-  let did_mib_syntax_inits = 1
-  hi link mibImplicit		Statement
-  hi link mibComment            Comment
-  hi link mibConstants          String
-  hi link mibNumber             Number
-  hi link mibDescription        Identifier
-  hi link mibEpilogue           SpecialChar
-  hi link mibValue              Structure
-endif
+" The default highlighting.
+hi def link mibImplicit		Statement
+hi def link mibComment          Comment
+hi def link mibConstants        String
+hi def link mibNumber           Number
+hi def link mibDescription      Identifier
+hi def link mibEpilogue         SpecialChar
+hi def link mibValue            Structure
 
 let b:current_syntax = "mib"
 

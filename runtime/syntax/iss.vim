@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	Inno Setup File (*.iss) 
 " Maintainer:	Dominique Stéphan (stephan@my-deja.com)
-" URL: 		http://www.geocities.com/SiliconValley/Bit/1809/vim/syntax/iss.vim
-" Last change:	2000 Aug 05
+" URL:		http://www.geocities.com/SiliconValley/Bit/1809/vim/syntax/iss.vim
+" Last change:	2000 Nov 04
 
 " clear any unwanted syntax defs
 syn clear
@@ -67,31 +67,26 @@ syn keyword issRegFlags uninsclearvalue uninsdeletekey uninsdeletekeyifempty uni
 syn keyword issRunFlags nowait shellexec skipifdoesntexist runminimized waituntilidle 
 
 
+" The default highlighting.
+hi def link issHeader		Special
+hi def link issComment		Comment
+hi def link issLabel		Type
+hi def link issName		Type
+hi def link issFolder		Special
+hi def link issString		String
+hi def link issValue		String
+hi def link issURL		Include
 
-if !exists("did_iss_syntax_inits")
-	let did_iss_syntax_inits = 1
-	" The default methods for highlighting.  Can be overridden later
-	hi link issHeader	Special
-	hi link issComment	Comment
-	hi link issLabel	Type
-	hi link issName		Type
-	hi link issFolder	Special
-	hi link issString	String
-	hi link issValue	String
-	hi link issURL		Include
-
-	hi link issDirsFlags	Keyword
-	hi link issFilesCopyMode Keyword
-	hi link issFilesAttribs Keyword
-	hi link issFilesFlags 	Keyword
-	hi link issIconsFlags	Keyword
-	hi link issINIFlags	Keyword
-	hi link issRegRootKey	Keyword
-	hi link issRegValueType	Keyword
-	hi link issRegFlags	Keyword
-	hi link issRunFlags	Keyword
-
-endif
+hi def link issDirsFlags	Keyword
+hi def link issFilesCopyMode	Keyword
+hi def link issFilesAttribs	Keyword
+hi def link issFilesFlags	Keyword
+hi def link issIconsFlags	Keyword
+hi def link issINIFlags		Keyword
+hi def link issRegRootKey	Keyword
+hi def link issRegValueType	Keyword
+hi def link issRegFlags		Keyword
+hi def link issRunFlags		Keyword
 
 let b:current_syntax = "iss"
 

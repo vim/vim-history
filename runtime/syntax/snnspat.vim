@@ -27,7 +27,7 @@ syn match	snnspatNoHeader	"No\. of variable input dimensions\s*:\s*" contained
 syn match	snnspatNoHeader	"No\. of variable output dimensions\s*:\s*" contained
 syn match	snnspatNoHeader	"Maximum input dimensions\s*:\s*" contained
 syn match	snnspatNoHeader	"Maximum output dimensions\s*:\s*" contained
-syn match 	snnspatGen	"generated at.*" contained contains=snnspatNumbers
+syn match	snnspatGen	"generated at.*" contained contains=snnspatNumbers
 syn match	snnspatGen	"SNNS pattern definition file [Vv]\d\.\d" contained contains=snnspatNumbers
 
 " the header, what is not an accepted field, is an error
@@ -38,19 +38,16 @@ syn match	snnspatNumbers	"\d" contained
 syn match	snnspatComment	"#.*$" contains=snnspatTodo
 syn keyword	snnspatTodo	TODO XXX FIXME contained
 
-if !exists("did_snnspat_syntax_inits")
-  let did_snnspat_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link snnspatGen		Statement
-  hi link snnspatHeader		Error
-  hi link snnspatNoHeader	Define
-  hi link snnspatNumbers	Number
-  hi link snnspatComment	Comment
-  hi link snnspatError		Error
-  hi link snnspatTodo		Todo
-  hi link snnspatAccepted	NONE
-  hi link snnspatBrac		NONE
-endif
+" The default highlighting.
+hi def link snnspatGen		Statement
+hi def link snnspatHeader	Error
+hi def link snnspatNoHeader	Define
+hi def link snnspatNumbers	Number
+hi def link snnspatComment	Comment
+hi def link snnspatError	Error
+hi def link snnspatTodo		Todo
+hi def link snnspatAccepted	NONE
+hi def link snnspatBrac		NONE
 
 let b:current_syntax = "snnspat"
 

@@ -2,7 +2,7 @@
 " Language:	JavaScript
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/javascript.vim
-" Last Change:	1999 Apr 20
+" Last Change:	2000 Nov 04
 
 
 " Remove any old syntax stuff hanging around
@@ -44,29 +44,26 @@ if main_syntax == "javascript"
   syn sync ccomment javaScriptComment
 endif
 
-if !exists("did_javascript_syntax_inits")
-  let did_javascript_syntax_inits = 1
-  hi link javaScriptComment           Comment
-  hi link javaScriptLineComment       Comment
-  hi link javaScriptSpecial           Special
-  hi link javaScriptStringS           String
-  hi link javaScriptStringD           String
-  hi link javaScriptCharacter         Character
-  hi link javaScriptSpecialCharacter  javaScriptSpecial
-  hi link javaScriptNumber            javaScriptValue
-  hi link javaScriptConditional       Conditional
-  hi link javaScriptRepeat            Repeat
-  hi link javaScriptBranch            Conditional
-  hi link javaScriptOperator          Operator
-  hi link javaScriptType              Type
-  hi link javaScriptStatement         Statement
-  hi link javaScriptFunction          Function
-  hi link javaScriptBraces            Function
-  hi link javaScriptError             Error
-  hi link javaScrParenError           javaScriptError
-  hi link javaScriptInParen           javaScriptError
-  hi link javaScriptBoolean           Boolean
-endif
+hi def link javaScriptComment           Comment
+hi def link javaScriptLineComment       Comment
+hi def link javaScriptSpecial           Special
+hi def link javaScriptStringS           String
+hi def link javaScriptStringD           String
+hi def link javaScriptCharacter         Character
+hi def link javaScriptSpecialCharacter  javaScriptSpecial
+hi def link javaScriptNumber            javaScriptValue
+hi def link javaScriptConditional       Conditional
+hi def link javaScriptRepeat            Repeat
+hi def link javaScriptBranch            Conditional
+hi def link javaScriptOperator          Operator
+hi def link javaScriptType              Type
+hi def link javaScriptStatement         Statement
+hi def link javaScriptFunction          Function
+hi def link javaScriptBraces            Function
+hi def link javaScriptError             Error
+hi def link javaScrParenError           javaScriptError
+hi def link javaScriptInParen           javaScriptError
+hi def link javaScriptBoolean           Boolean
 
 let b:current_syntax = "javascript"
 if main_syntax == 'javascript'

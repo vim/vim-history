@@ -106,23 +106,20 @@ syn keyword masmOpFloat		FUCOMPP FWAIT FXAM FXCH FXTRACT FYL2X FYL2XP1
 syn match   masmOpFloat		"FSTSW[ \t]\+AX"
 syn match   masmOpFloat		"FNSTSW[ \t]\+AX"
 
-if !exists("did_masm_syntax_inits")
-  let did_masm_syntax_inits = 1
 
-  " The default methods for highlighting.  Can be overridden later
-  hi link masmLabel	Label
-  hi link masmComment	Comment
-  hi link masmDirective	Statement
-  hi link masmOperator	Statement
-  hi link masmString	String
+" The default highlighting.
+hi def link masmLabel		Label
+hi def link masmComment		Comment
+hi def link masmDirective	Statement
+hi def link masmOperator	Statement
+hi def link masmString		String
 
-  hi link masmHexadecimal Number
-  hi link masmDecimal	Number
-  hi link masmBinary	Number
-  hi link masmFloat	Number
+hi def link masmHexadecimal Number
+hi def link masmDecimal		Number
+hi def link masmBinary		Number
+hi def link masmFloat		Number
 
-  hi link masmIdentifier Identifier
-endif
+hi def link masmIdentifier	Identifier
 
 let b:current_syntax = "masm"
 

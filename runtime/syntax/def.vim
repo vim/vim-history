@@ -25,16 +25,13 @@ syn region  defString	start=+'+ end=+'+
 syn match   defNumber	"\d+"
 syn match   defNumber	"0x\x\+"
 
-
-if !exists("did_def_syntax_inits")
-  let did_def_syntax_inits = 1
-  hi link defComment	Comment
-  hi link defKeyword	Keyword
-  hi link defStorage	StorageClass
-  hi link defString	String
-  hi link defNumber	Number
-  hi link defOrdinal	Operator
-endif
+" The default highlighting.
+hi def link defComment	Comment
+hi def link defKeyword	Keyword
+hi def link defStorage	StorageClass
+hi def link defString	String
+hi def link defNumber	Number
+hi def link defOrdinal	Operator
 
 let b:current_syntax = "def"
 

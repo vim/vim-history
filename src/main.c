@@ -165,6 +165,9 @@ usage()
 #ifdef FEAT_CRYPT
     main_msg(_("-x\t\t\tEdit encrypted files"));
 #endif
+#if (defined(UNIX) || defined(VMS)) && defined(FEAT_X11)
+    main_msg(_("-X\t\t\tDo not connect to X server"));
+#endif
 #ifdef FEAT_VIMINFO
     main_msg(_("-i <viminfo>\t\tUse <viminfo> instead of .viminfo"));
 #endif
@@ -1156,16 +1159,16 @@ main
 	if (secure == 2)
 	    need_wait_return = TRUE;
 	secure = 0;
+    }
 
 #ifdef FEAT_EVAL
-	/*
-	 * Read all the plugin files.
-	 * Only when compiled with +eval, since most plugins need it.
-	 */
-	if (p_lpl)
-	    cmd_runtime((char_u *)"plugin/*.vim", TRUE);
+    /*
+     * Read all the plugin files.
+     * Only when compiled with +eval, since most plugins need it.
+     */
+    if (p_lpl)
+	cmd_runtime((char_u *)"plugin/*.vim", TRUE);
 #endif
-    }
 
     /*
      * Recovery mode without a file name: List swap files.
@@ -1751,6 +1754,9 @@ getout(r)
 	windgoto((int)Rows - 1, 0);
 #endif
 
+#ifdef FEAT_PYTHON
+    python_end();
+#endif
 #ifdef FEAT_PERL
     perl_end();
 #endif

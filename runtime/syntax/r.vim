@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	R
 " Maintainer:	Tom Payne <tom@tompayne.org>
-" Last change:  2000 September 11
+" Last change:  2000 Nov 04
 " Filenames:	*.r
 " URL:		http://www.tompayne.org/vim/syntax/r.vim
 
@@ -60,25 +60,23 @@ syn match rBraceError /[)}]/ contained
 syn match rCurlyError /[)\]]/ contained
 syn match rParenError /[\]}]/ contained
 
-if !exists("did_r_syntax_inits")
-  let did_r_syntax_inits=1
-  hi link rComment     Comment
-  hi link rConstant    Constant
-  hi link rString      String
-  hi link rNumber      Number
-  hi link rBoolean     Boolean
-  hi link rFloat       Float
-  hi link rStatement   Statement
-  hi link rConditional Conditional
-  hi link rRepeat      Repeat
-  hi link rIdentifier  Identifier
-  hi link rType        Type
-  hi link rDelimiter   Delimiter
-  hi link rError       Error
-  hi link rBraceError  Error
-  hi link rCurlyError  Error
-  hi link rParenError  Error
-endif
+" The default highlighting.
+hi def link rComment     Comment
+hi def link rConstant    Constant
+hi def link rString      String
+hi def link rNumber      Number
+hi def link rBoolean     Boolean
+hi def link rFloat       Float
+hi def link rStatement   Statement
+hi def link rConditional Conditional
+hi def link rRepeat      Repeat
+hi def link rIdentifier  Identifier
+hi def link rType        Type
+hi def link rDelimiter   Delimiter
+hi def link rError       Error
+hi def link rBraceError  Error
+hi def link rCurlyError  Error
+hi def link rParenError  Error
 
 let b:current_syntax="r"
 " vim: ts=8

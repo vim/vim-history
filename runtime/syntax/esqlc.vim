@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	ESQL-C
 " Maintainer:	Jonathan A. George <jageorge@tel.gte.com>
-" Last Change:	1998 Aug 12
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syntax clear
@@ -42,14 +42,12 @@ syntax keyword esqlcStatement	delete drop explain grant insert lock noaudit
 syntax keyword esqlcStatement	rename revoke rollback savepoint select set
 syntax keyword esqlcStatement	truncate update
 
-if !exists("did_esqlc_syntax_inits")
-  let did_esqlc_syntax_inits = 1
-  highlight link esqlcOperator	Operator
-  highlight link esqlcStatement	Statement
-  highlight link esqlcKeyword	esqlcSpecial
-  highlight link esqlcSpecial	Special
-  highlight link esqlcPreProc	PreProc
-endif
+" The default highlighting.
+hi def link esqlcOperator	Operator
+hi def link esqlcStatement	Statement
+hi def link esqlcKeyword	esqlcSpecial
+hi def link esqlcSpecial	Special
+hi def link esqlcPreProc	PreProc
 
 let b:current_syntax = "esqlc"
 

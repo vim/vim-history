@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	none; used to see highlighting
 " Maintainer:	Ronald Schild <rs@scutum.de>
-" Last Change:	1999 Jul 07
+" Last Change:	2000 Nov 04
 " Version:	5.4n.1
 
 " To see your current highlight settings, do
@@ -40,6 +40,9 @@ let &textwidth=&columns
 " insert highlight settings
 % delete
 put a
+
+" remove the colored xxx items
+g/xxx /s///e
 
 " remove color settings (not needed here)
 global! /links to/ substitute /\s.*$//e

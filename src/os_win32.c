@@ -1307,8 +1307,6 @@ mch_shellinit()
     extern int _fmode;
 #endif
 
-    PlatformId();
-
     /* Let critical errors result in a failure, not in a dialog box.  Required
      * for the timestamp test to work on removed floppies. */
     SetErrorMode(SEM_FAILCRITICALERRORS);
@@ -1361,21 +1359,6 @@ mch_shellinit()
      */
     clipboard.format = RegisterClipboardFormat("VimClipboard");
 #endif
-}
-
-/*
- * Init the tables for toupper() and tolower().
- */
-    void
-mch_init(void)
-{
-    int		i;
-
-    /* Init the tables for toupper() and tolower() */
-    for (i = 0; i < 256; ++i)
-	toupper_tab[i] = tolower_tab[i] = i;
-    CharUpperBuff(toupper_tab, 256);
-    CharLowerBuff(tolower_tab, 256);
 }
 
 /*
@@ -1799,8 +1782,6 @@ mch_shellinit()
     extern int _fmode;
 #endif
 
-    PlatformId();
-
     /* Let critical errors result in a failure, not in a dialog box.  Required
      * for the timestamp test to work on removed floppies. */
     SetErrorMode(SEM_FAILCRITICALERRORS);
@@ -1933,6 +1914,22 @@ mch_windexit(
 }
 #endif /* FEAT_GUI_W32 */
 
+/*
+ * Init the tables for toupper() and tolower().
+ */
+    void
+mch_init(void)
+{
+    int		i;
+
+    PlatformId();
+
+    /* Init the tables for toupper() and tolower() */
+    for (i = 0; i < 256; ++i)
+	toupper_tab[i] = tolower_tab[i] = i;
+    CharUpperBuff(toupper_tab, 256);
+    CharLowerBuff(tolower_tab, 256);
+}
 
 /*
  * Do we have an interactive window?
@@ -2805,7 +2802,7 @@ mch_close_console(int wait_key, DWORD ret)
 
 	if (ret)
 	{
-	    sprintf(err_buf, _("\n%ld returned."), ret);
+	    sprintf(err_buf, _("\nshell returned %ld."), ret);
 	    WriteConsole(hStderr, err_buf, strlen(err_buf), &number, NULL);
 	}
 	/* Write a message to the user */
@@ -3167,7 +3164,7 @@ mch_call_shell(
 #endif
        )
     {
-	smsg(_("%d returned"), x);
+	smsg(_("shell returned %d"), x);
 	msg_putchar('\n');
     }
 #ifdef FEAT_TITLE

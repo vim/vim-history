@@ -2,7 +2,7 @@
 " Language:    PROLOG
 " Maintainers: Ralph Becket <rwab1@cam.sri.co.uk>,
 "              Thomas Koehler <jean-luc@picard.franken.de>
-" Last Change: 1997 December 28
+" Last Change: 2000 Nov 04
 
 " There are two sets of highlighting in here:
 " If the "prolog_highlighting_clean" variable exists, it is rather sparse.
@@ -70,35 +70,30 @@ endif
 
 syn sync ccomment maxlines=50
 
-if !exists("did_prolog_syntax_inits")
 
-  let did_prolog_syntax_inits = 1
 
-  " The default methods for highlighting.  Can be overridden later
+" The default highlighting.
+hi def link prologComment            Comment
+hi def link prologCComment           Comment
+hi def link prologCharCode           Special
 
-  hi link prologComment    Comment
-  hi link prologCComment   Comment
-  hi link prologCharCode   Special
+if exists ("prolog_highlighting_clean")
 
-  if exists ("prolog_highlighting_clean")
+  hi def link prologKeyword          Statement
+  hi def link prologClauseHead       Statement
 
-    hi link prologKeyword      Statement
-    hi link prologClauseHead   Statement
+else
 
-  else
-
-    hi link prologKeyword          Keyword
-    hi link prologClauseHead       Constant
-    hi link prologQuestion         PreProc
-    hi link prologSpecialCharacter Special
-    hi link prologNumber           Number
-    hi link prologAsIs             Normal
-    hi link prologCommentError     Error
-    hi link prologAtom             String
-    hi link prologString           String
-    hi link prologOperator         Operator
-
-  endif
+  hi def link prologKeyword          Keyword
+  hi def link prologClauseHead       Constant
+  hi def link prologQuestion         PreProc
+  hi def link prologSpecialCharacter Special
+  hi def link prologNumber           Number
+  hi def link prologAsIs             Normal
+  hi def link prologCommentError     Error
+  hi def link prologAtom             String
+  hi def link prologString           String
+  hi def link prologOperator         Operator
 
 endif
 

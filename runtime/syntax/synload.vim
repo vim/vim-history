@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Sep 20
+" Last Change:	2000 Nov 05
 
 " This file sets up for syntax highlighting.
 " It is loaded from "syntax.vim" and "manual.vim".
@@ -71,8 +71,8 @@ hi link SpecialComment	Special
 hi link Debug		Special
 
 " Line continuation is used here, remove 'C' from 'cpoptions'
-let s:sl_cpo_save = &cpo
-set cpo-=C
+let s:cpo_save = &cpo
+set cpo&vim
 
 " First remove all old syntax autocommands.
 au! Syntax
@@ -105,4 +105,5 @@ if exists("mysyntaxfile") && filereadable(expand(mysyntaxfile))
 endif
 
 " Restore 'cpoptions'
-let &cpo = s:sl_cpo_save
+let &cpo = s:cpo_save
+unlet s:cpo_save

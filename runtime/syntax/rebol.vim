@@ -2,7 +2,7 @@
 " Language:	Rebol
 " Maintainer:	Mike Williams <mrw@netcomuk.co.uk>
 " Filenames:	*.r
-" Last Change:	20th October 1998
+" Last Change:	2000 Nov 04
 " URL:		N/A
 "
 " Change history
@@ -136,57 +136,54 @@ syn keyword     rebolStatement  func function free
 syn keyword     rebolConstant   none
 
 
-if !exists("did_rebol_syntax_inits")
-  let did_rebol_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link rebolTodo     Todo
+" The default highlighting.
+hi def link rebolTodo	Todo
 
-  hi link rebolStatement Statement
-  hi link rebolLabel	Label
-  hi link rebolConditional Conditional
-  hi link rebolRepeat	Repeat
+hi def link rebolStatement	Statement
+hi def link rebolLabel		Label
+hi def link rebolConditional	Conditional
+hi def link rebolRepeat		Repeat
 
-  hi link rebolOperator	Operator
-  hi link rebolLogicOperator rebolOperator
-  hi link rebolLogicFunction rebolLogicOperator
-  hi link rebolMathOperator rebolOperator
-  hi link rebolMathFunction rebolMathOperator
-  hi link rebolBinaryOperator rebolOperator
-  hi link rebolBinaryFunction rebolBinaryOperator
+hi def link rebolOperator	Operator
+hi def link rebolLogicOperator	rebolOperator
+hi def link rebolLogicFunction	rebolLogicOperator
+hi def link rebolMathOperator	rebolOperator
+hi def link rebolMathFunction	rebolMathOperator
+hi def link rebolBinaryOperator rebolOperator
+hi def link rebolBinaryFunction rebolBinaryOperator
 
-  hi link rebolType     Type
-  hi link rebolTypeFunction rebolOperator
+hi def link rebolType		Type
+hi def link rebolTypeFunction	rebolOperator
 
-  hi link rebolWord     Identifier
-  hi link rebolWordPath rebolWord
-  hi link rebolFunction	Function
+hi def link rebolWord		Identifier
+hi def link rebolWordPath	rebolWord
+hi def link rebolFunction	Function
 
-  hi link rebolCharacter Character
-  hi link rebolSpecialCharacter SpecialChar
-  hi link rebolString	String
+hi def link rebolCharacter	Character
+hi def link rebolSpecialCharacter SpecialChar
+hi def link rebolString		String
 
-  hi link rebolNumber   Number
-  hi link rebolInteger  rebolNumber
-  hi link rebolDecimal  rebolNumber
-  hi link rebolTime     rebolNumber
-  hi link rebolDate     rebolNumber
-  hi link rebolMoney    rebolNumber
-  hi link rebolBinary   rebolNumber
-  hi link rebolEmail    rebolString
-  hi link rebolFile     rebolString
-  hi link rebolURL      rebolString
-  hi link rebolIssue    rebolNumber
-  hi link rebolTuple    rebolNumber
-  hi link rebolFloat    Float
-  hi link rebolBoolean  Boolean
+hi def link rebolNumber		Number
+hi def link rebolInteger	rebolNumber
+hi def link rebolDecimal	rebolNumber
+hi def link rebolTime		rebolNumber
+hi def link rebolDate		rebolNumber
+hi def link rebolMoney		rebolNumber
+hi def link rebolBinary		rebolNumber
+hi def link rebolEmail		rebolString
+hi def link rebolFile		rebolString
+hi def link rebolURL		rebolString
+hi def link rebolIssue		rebolNumber
+hi def link rebolTuple		rebolNumber
+hi def link rebolFloat		Float
+hi def link rebolBoolean	Boolean
 
-  hi link rebolConstant Constant
+hi def link rebolConstant	Constant
 
-  hi link rebolComment	Comment
+hi def link rebolComment	Comment
 
-  hi link rebolError	Error
+hi def link rebolError		Error
 
-endif
 
 if exists("my_rebol_file")
   if file_readable(expand(my_rebol_file))

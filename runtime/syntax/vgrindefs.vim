@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Vgrindefs
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	1997 Sep 14
+" Last Change:	2000 Nov 04
 
 " The Vgrindefs file is used to specify a language for vgrind
 
@@ -33,12 +33,9 @@ syn match vgrindefsField ":\\$"
 syn match vgrindefsField ":$"
 syn match vgrindefsField "\\$"
 
-if !exists("did_vgrindefs_syntax_inits")
-  let did_vgrindefs_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link vgrindefsField		Statement
-  hi link vgrindefsComment	Comment
-endif
+" The default highlighting.
+hi def link vgrindefsField	Statement
+hi def link vgrindefsComment	Comment
 
 let b:current_syntax = "vgrindefs"
 

@@ -64,19 +64,17 @@ syn match	amiComment	";.*$" contains=amiCommentGroup
 " sync
 syn sync lines=50
 
-if !exists("did_amiga_syntax_inits")
-  let did_amiga_synax_inits = 1
-  hi link amiAlias	Type
-  hi link amiComment	Comment
-  hi link amiDev	Type
-  hi link amiEcho	String
-  hi link amiElse	Statement
-  hi link amiError	Error
-  hi link amiKey	Statement
-  hi link amiNumber	Number
-  hi link amiString	String
-  hi link amiTest	Special
-endif
+" The default highlighting.
+hi def link amiAlias	Type
+hi def link amiComment	Comment
+hi def link amiDev	Type
+hi def link amiEcho	String
+hi def link amiElse	Statement
+hi def link amiError	Error
+hi def link amiKey	Statement
+hi def link amiNumber	Number
+hi def link amiString	String
+hi def link amiTest	Special
 
 let b:current_syntax = "amiga"
 

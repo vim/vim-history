@@ -1290,7 +1290,7 @@ win_update(wp)
 			    ++new_rows;
 			else
 #endif
-			    new_rows += plines_win(wp, l);
+			    new_rows += plines_win(wp, l, TRUE);
 			++j;
 			if (new_rows > wp->w_height - row - 2)
 			{
@@ -1475,7 +1475,7 @@ win_update(wp)
 	    {
 		/* we may need the size of that too long line later on */
 		if (dollar_vcol == 0)
-		    wp->w_lines[idx].wl_size = plines_win(wp, lnum);
+		    wp->w_lines[idx].wl_size = plines_win(wp, lnum, TRUE);
 		++idx;
 		break;
 	    }
@@ -2232,6 +2232,9 @@ win_line(wp, lnum, startrow, endrow)
 		    if (row == startrow)
 		    {
 			sprintf((char *)extra, "%7ld ", (long)lnum);
+			if (wp->w_skipcol > 0)
+			    for (p_extra = extra; *p_extra == ' '; ++p_extra)
+				*p_extra = '-';
 #ifdef FEAT_RIGHTLEFT
 			if (wp->w_p_rl)		    /* reverse line numbers */
 			{
@@ -5296,7 +5299,7 @@ comp_botline(wp)
 	}
 	else
 #endif
-	    n = plines_win(wp, lnum);
+	    n = plines_win(wp, lnum, TRUE);
 	if (
 #ifdef FEAT_FOLDING
 		lnum <= wp->w_cursor.lnum
@@ -7008,7 +7011,7 @@ curs_rows(wp, do_botline)
 	    }
 	    else
 #endif
-		wp->w_cline_row += plines_win(wp, lnum++);
+		wp->w_cline_row += plines_win(wp, lnum++, TRUE);
 	}
     }
 
@@ -7017,7 +7020,7 @@ curs_rows(wp, do_botline)
     {
 	if (all_invalid || (i < wp->w_lines_valid && !wp->w_lines[i].wl_valid))
 	{
-	    wp->w_cline_height = plines_win(wp, wp->w_cursor.lnum);
+	    wp->w_cline_height = plines_win(wp, wp->w_cursor.lnum, TRUE);
 #ifdef FEAT_FOLDING
 	    wp->w_cline_folded = hasFoldingWin(wp, wp->w_cursor.lnum,
 						      NULL, NULL, TRUE, NULL);
@@ -7178,7 +7181,7 @@ curs_columns(scroll)
     int		diff;
     int		extra;		/* offset for first screen line */
     int		n;
-    int		width;
+    int		width = 0;
     int		new_leftcol;
     colnr_t	startcol;
     colnr_t	endcol;
@@ -7239,6 +7242,8 @@ curs_columns(scroll)
 #endif
 	    )
     {
+	width = W_WIDTH(curwin) - extra + curwin_col_off2();
+
 	/* long line wrapping, adjust curwin->w_wrow */
 	if (curwin->w_wcol >= W_WIDTH(curwin))
 	{
@@ -7250,7 +7255,6 @@ curs_columns(scroll)
 	    }
 	    else
 	    {
-		width = W_WIDTH(curwin) - extra + curwin_col_off2();
 		n = (curwin->w_wcol - W_WIDTH(curwin)) / width + 1;
 		curwin->w_wcol -= n * width;
 		curwin->w_wrow += n;
@@ -7284,7 +7288,8 @@ curs_columns(scroll)
 	 */
 	if ((extra = (int)startcol - (int)curwin->w_leftcol - p_siso) < 0
 		|| (extra = (int)endcol
-			- (int)(curwin->w_leftcol + W_WIDTH(curwin) - p_siso) + 1) > 0)
+			 - (int)(curwin->w_leftcol + W_WIDTH(curwin) - p_siso)
+			 + 1) > 0)
 	{
 	    if (extra < 0)
 		diff = -extra;
@@ -7321,9 +7326,12 @@ curs_columns(scroll)
 
     prev_skipcol = curwin->w_skipcol;
 
-    if ((curwin->w_wrow > curwin->w_height - 1
-		|| (prev_skipcol
-		    && plines(curwin->w_cursor.lnum) > curwin->w_height))
+    n = 0;
+    if ((curwin->w_wrow >= curwin->w_height
+		|| ((prev_skipcol > 0
+			|| curwin->w_wrow + p_so >= curwin->w_height)
+		    && (n = plines_win(curwin, curwin->w_cursor.lnum, FALSE)
+						    - 1) >= curwin->w_height))
 	    && curwin->w_height != 0
 	    && curwin->w_cursor.lnum == curwin->w_topline
 #ifdef FEAT_VERTSPLIT
@@ -7334,31 +7342,69 @@ curs_columns(scroll)
 	/* Cursor past end of screen.  Happens with a single line that does
 	 * not fit on screen.  Find a skipcol to show the text around the
 	 * cursor.  Avoid scrolling all the time. */
-	if (curwin->w_skipcol > curwin->w_virtcol
+	extra = 0;
+	if (curwin->w_skipcol + p_so * width > curwin->w_virtcol
 #ifdef FEAT_VIRTUALEDIT
-					+ curwin->w_coladd
+							    + curwin->w_coladd
 #endif
 		)
+	    extra = 1;
+	/* Compute last display line of the buffer line that we want at the
+	 * bottom of the window. */
+	if (n == 0)
+	    n = plines_win(curwin, curwin->w_cursor.lnum, FALSE) - 1;
+	if (curwin->w_wrow + p_so < n)
+	    n = curwin->w_wrow + p_so;
+	if ((colnr_t)n >= curwin->w_height + curwin->w_skipcol / width)
+	    extra += 2;
+
+	if (extra == 3)
 	{
-	    extra = (curwin->w_skipcol - curwin->w_virtcol
+	    /* not enough room for 'scrolloff', put cursor in the middle */
+	    n = (curwin->w_virtcol
 #ifdef FEAT_VIRTUALEDIT
-				+ curwin->w_coladd
+		    + curwin->w_coladd
 #endif
-				     + W_WIDTH(curwin) - 1) / W_WIDTH(curwin);
-	    win_ins_lines(curwin, 0, extra, FALSE, FALSE);
-	    curwin->w_skipcol -= extra * W_WIDTH(curwin);
+				     ) / width;
+	    if (n > curwin->w_height / 2)
+		n -= curwin->w_height / 2;
+	    else
+		n = 0;
+	    curwin->w_skipcol = n * width;
+	    extra = (curwin->w_skipcol - prev_skipcol) / width;
+	    if (extra > 0)
+		win_ins_lines(curwin, 0, extra, FALSE, FALSE);
+	    else if (extra < 0)
+		win_del_lines(curwin, 0, -extra, FALSE, FALSE);
 	}
-	else if (curwin->w_wrow > curwin->w_height - 1)
+	else if (extra == 1)
 	{
-	    endcol = (curwin->w_wrow - curwin->w_height + 1) * W_WIDTH(curwin);
+	    /* less then 'scrolloff' lines above, decrease skipcol */
+	    extra = (curwin->w_skipcol + p_so * width - curwin->w_virtcol
+#ifdef FEAT_VIRTUALEDIT
+							    + curwin->w_coladd
+#endif
+				     + width - 1) / width;
+	    if (extra > 0)
+	    {
+		if ((colnr_t)(extra * width) > curwin->w_skipcol)
+		    extra = curwin->w_skipcol / width;
+		win_ins_lines(curwin, 0, extra, FALSE, FALSE);
+		curwin->w_skipcol -= extra * width;
+	    }
+	}
+	else if (extra == 2)
+	{
+	    /* less then 'scrolloff' lines below, increase skipcol */
+	    endcol = (n - curwin->w_height + 1) * width;
 	    if (endcol > curwin->w_skipcol)
 	    {
-		win_del_lines(curwin, 0, (endcol - prev_skipcol)
-					/ (int)W_WIDTH(curwin), FALSE, FALSE);
+		win_del_lines(curwin, 0, (endcol - prev_skipcol) / width,
+								FALSE, FALSE);
 		curwin->w_skipcol = endcol;
 	    }
 	}
-	curwin->w_wrow -= curwin->w_skipcol / W_WIDTH(curwin);
+	curwin->w_wrow -= curwin->w_skipcol / width;
     }
     else
 	curwin->w_skipcol = 0;
@@ -8969,6 +9015,8 @@ mouse_comp_pos(rowp, colp, lnump)
 		if (col < off)
 		    col = off;
 		col += row * (W_WIDTH(curwin) - off);
+		/* add skip column (for long wrapping line) */
+		col += curwin->w_skipcol;
 		break;
 	    }
 	    if (lnum == curbuf->b_ml.ml_line_count)

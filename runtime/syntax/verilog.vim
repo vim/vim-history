@@ -59,24 +59,20 @@ syn region  verilogDirective   start="//\s*\$s dc_script_begin\>" end="//\s*\$s 
 "functionality.
 syn sync lines=50
 
-if !exists("did_verilog_syntax_inits")
-  let did_verilog_syntax_inits = 1
- " The default methods for highlighting.  Can be overridden later
-
-  hi link verilogCharacter       Character
-  hi link verilogConditional     Conditional
-  hi link verilogRepeat          Repeat
-  hi link verilogString          String
-  hi link verilogTodo            Todo
-  hi link verilogComment         Comment
-  hi link verilogConstant        Constant
-  hi link verilogLabel           Label
-  hi link verilogNumber          Number
-  hi link verilogOperator        Special
-  hi link verilogStatement       Statement
-  hi link verilogGlobal          Define
-  hi link verilogDirective       SpecialComment
-endif
+" The default highlighting.
+hi def link verilogCharacter       Character
+hi def link verilogConditional     Conditional
+hi def link verilogRepeat          Repeat
+hi def link verilogString          String
+hi def link verilogTodo            Todo
+hi def link verilogComment         Comment
+hi def link verilogConstant        Constant
+hi def link verilogLabel           Label
+hi def link verilogNumber          Number
+hi def link verilogOperator        Special
+hi def link verilogStatement       Statement
+hi def link verilogGlobal          Define
+hi def link verilogDirective       SpecialComment
 
 let b:current_syntax = "verilog"
 

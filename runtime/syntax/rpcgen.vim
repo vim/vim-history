@@ -21,21 +21,19 @@ syn match   rpcProcNmbr	contained	"=\s*\d\+;"me=e-1
 syn match   rpcProgNmbrErr contained	"=\s*0x[^23]\x*"ms=s+1
 syn match   rpcPassThru			"^\s*%.*$"
 
-if !exists("did_rpcgen_syntax_inits")
- let did_rpcgen_syntax_inits = 1
- hi link rpcProgName	rpcName
- hi link rpcProgram	rpcStatement
- hi link rpcVersName	rpcName
- hi link rpcVersion	rpcStatement
+" The default highlighting.
+hi def link rpcProgName		rpcName
+hi def link rpcProgram		rpcStatement
+hi def link rpcVersName		rpcName
+hi def link rpcVersion		rpcStatement
 
- hi link rpcDecl	cType
- hi link rpcPassThru	cComment
+hi def link rpcDecl		cType
+hi def link rpcPassThru		cComment
 
- hi link rpcName	Special
- hi link rpcProcNmbr	Delimiter
- hi link rpcProgNmbrErr	Error
- hi link rpcStatement	Statement
-endif
+hi def link rpcName		Special
+hi def link rpcProcNmbr		Delimiter
+hi def link rpcProgNmbrErr	Error
+hi def link rpcStatement	Statement
 
 let b:current_syntax = "rpcgen"
 

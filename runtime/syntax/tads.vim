@@ -92,43 +92,43 @@ if !exists("tads_minlines")
 endif
 exec "syn sync ccomment tadsComment minlines=" . tads_minlines
 
-  " The default methods for highlighting.  Can be overridden later
-  hi link tadsFunctionDef Function
-  hi link tadsFunction  Structure
-  hi link tadsClass     Structure
-  hi link tadsClassDef  Identifier
-  hi link tadsObjectDef Identifier
+" The default highlighting.
+hi def link tadsFunctionDef	Function
+hi def link tadsFunction	Structure
+hi def link tadsClass		Structure
+hi def link tadsClassDef	Identifier
+hi def link tadsObjectDef	Identifier
 " no highlight for tadsEmbedded, so it prints as normal text w/in the string
 
-  hi link tadsOperator	Operator
-  hi link tadsStructure	Structure
-  hi link tadsTodo	Todo
-  hi link tadsLabel	Label
-  hi link tadsConditional	Conditional
-  hi link tadsRepeat	Repeat
-  hi link tadsStatement	Statement
-  hi link tadsStorageClass	StorageClass
-  hi link tadsKeyWord   Keyword
-  hi link tadsSpecial	SpecialChar
-  hi link tadsNumber	Number
-  hi link tadsBoolean	Boolean
-  hi link tadsDoubleString	tadsString
-  hi link tadsSingleString	tadsString
+hi def link tadsOperator	Operator
+hi def link tadsStructure	Structure
+hi def link tadsTodo		Todo
+hi def link tadsLabel		Label
+hi def link tadsConditional	Conditional
+hi def link tadsRepeat		Repeat
+hi def link tadsStatement	Statement
+hi def link tadsStorageClass	StorageClass
+hi def link tadsKeyWord		Keyword
+hi def link tadsSpecial		SpecialChar
+hi def link tadsNumber		Number
+hi def link tadsBoolean		Boolean
+hi def link tadsDoubleString	tadsString
+hi def link tadsSingleString	tadsString
 
-  hi link tadsOctalError	tadsError
-  hi link tadsCommentError	tadsError
-  hi link tadsBraceError	tadsError
-  hi link tadsInBrace	tadsError
-  hi link tadsError	Error
+hi def link tadsOctalError	tadsError
+hi def link tadsCommentError	tadsError
+hi def link tadsBraceError	tadsError
+hi def link tadsInBrace		tadsError
+hi def link tadsError		Error
 
-  hi link tadsInclude	Include
-  hi link tadsPreProc	PreProc
-  hi link tadsDefine	Macro
-  hi link tadsIncluded	tadsString
-  hi link tadsPreCondit	PreCondit
+hi def link tadsInclude		Include
+hi def link tadsPreProc		PreProc
+hi def link tadsDefine		Macro
+hi def link tadsIncluded	tadsString
+hi def link tadsPreCondit	PreCondit
 
-  hi link tadsString	String
-  hi link tadsComment	Comment
+hi def link tadsString		String
+hi def link tadsComment		Comment
 
 let b:current_syntax = "tads"
 

@@ -299,74 +299,72 @@ syn sync match texSyncMathZoneS	groupthere NONE	"\\end{table}"
 syn sync match texSyncMathZoneS	groupthere NONE	"\\end{tabular}"
 syn sync match texSyncMathZoneS	groupthere NONE	"\\\(sub\)*section\>"
 
-if !exists("did_tex_syntax_inits")
- let did_tex_syntax_inits = 1
 
- " TeX highlighting groups which should share similar highlighting
- hi link texBadMath	texError
- hi link texDefCmd	texDef
- hi link texDefName	texDef
- hi link texDocumentType	texCmdName
- hi link texDocumentTypeArgs	texCmdArgs
- hi link texInput	Todo
- hi link texInputCurlies	texDelimiter
- hi link texLigature	texSpecialChar
- hi link texMathDelimBad	texError
- hi link texMathDelimSet1	texMathDelim
- hi link texMathDelimSet2	texMathDelim
- hi link texMathDelimKey	texMathDelim
- hi link texMathError	texError
- hi link texMathMatcher	texMath
- hi link texMathZoneA	texMath
- hi link texMathZoneB	texMath
- hi link texMathZoneC	texMath
- hi link texMathZoneD	texMath
- hi link texMathZoneE	texMath
- hi link texMathZoneF	texMath
- hi link texMathZoneG	texMath
- hi link texMathZoneH	texMath
- hi link texMathZoneI	texMath
- hi link texMathZoneJ	texMath
- hi link texMathZoneK	texMath
- hi link texMathZoneL	texMath
- hi link texMathZoneM	texMath
- hi link texMathZoneN	texMath
- hi link texMathZoneO	texMath
- hi link texMathZoneP	texMath
- hi link texMathZoneQ	texMath
- hi link texMathZoneR	texMath
- hi link texMathZoneS	texMath
- hi link texMathZoneT	texMath
- hi link texMathZoneU	texMath
- hi link texMathZoneV	texMath
- hi link texMathZoneW	texMath
- hi link texOnlyMath	texError
- hi link texSectionMarker	texCmdName
- hi link texSectionName	texSection
- hi link texTypeSize	texType
- hi link texTypeStyle	texType
+" The default highlighting.
+" TeX highlighting groups which should share similar highlighting
+hi def link texBadMath	texError
+hi def link texDefCmd	texDef
+hi def link texDefName	texDef
+hi def link texDocumentType	texCmdName
+hi def link texDocumentTypeArgs texCmdArgs
+hi def link texInput	Todo
+hi def link texInputCurlies	texDelimiter
+hi def link texLigature	texSpecialChar
+hi def link texMathDelimBad	texError
+hi def link texMathDelimSet1	texMathDelim
+hi def link texMathDelimSet2	texMathDelim
+hi def link texMathDelimKey	texMathDelim
+hi def link texMathError	texError
+hi def link texMathMatcher	texMath
+hi def link texMathZoneA	texMath
+hi def link texMathZoneB	texMath
+hi def link texMathZoneC	texMath
+hi def link texMathZoneD	texMath
+hi def link texMathZoneE	texMath
+hi def link texMathZoneF	texMath
+hi def link texMathZoneG	texMath
+hi def link texMathZoneH	texMath
+hi def link texMathZoneI	texMath
+hi def link texMathZoneJ	texMath
+hi def link texMathZoneK	texMath
+hi def link texMathZoneL	texMath
+hi def link texMathZoneM	texMath
+hi def link texMathZoneN	texMath
+hi def link texMathZoneO	texMath
+hi def link texMathZoneP	texMath
+hi def link texMathZoneQ	texMath
+hi def link texMathZoneR	texMath
+hi def link texMathZoneS	texMath
+hi def link texMathZoneT	texMath
+hi def link texMathZoneU	texMath
+hi def link texMathZoneV	texMath
+hi def link texMathZoneW	texMath
+hi def link texOnlyMath	texError
+hi def link texSectionMarker	texCmdName
+hi def link texSectionName	texSection
+hi def link texTypeSize	texType
+hi def link texTypeStyle	texType
 
  " Basic TeX highlighting groups
- hi link texCmdArgs	Number
- hi link texCmdName	Statement
- hi link texComment	Comment
- hi link texDef	Statement
- hi link texDelimiter	Delimiter
- hi link texError	Error
- hi link texLength	Number
- hi link texMath	Special
- hi link texMathDelim	Statement
- hi link texMathOper	Operator
- hi link texNewCmd	Statement
- hi link texNewEnv	Statement
- hi link texRefZone	Special
- hi link texSection	PreCondit
- hi link texSpecialChar	SpecialChar
- hi link texStatement	Statement
- hi link texString	String
- hi link texType	Type
- hi link texZone	PreCondit
-endif
+hi def link texCmdArgs	Number
+hi def link texCmdName	Statement
+hi def link texComment	Comment
+hi def link texDef	Statement
+hi def link texDelimiter	Delimiter
+hi def link texError	Error
+hi def link texLength	Number
+hi def link texMath	Special
+hi def link texMathDelim	Statement
+hi def link texMathOper	Operator
+hi def link texNewCmd	Statement
+hi def link texNewEnv	Statement
+hi def link texRefZone	Special
+hi def link texSection	PreCondit
+hi def link texSpecialChar	SpecialChar
+hi def link texStatement	Statement
+hi def link texString	String
+hi def link texType	Type
+hi def link texZone	PreCondit
 
 unlet b:extfname
 let   b:current_syntax = "tex"

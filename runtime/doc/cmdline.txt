@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.0k.  Last change: 2000 Oct 15
+*cmdline.txt*   For Vim version 6.0l.  Last change: 2000 Oct 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

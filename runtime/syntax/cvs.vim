@@ -12,13 +12,11 @@ syn match cvsFile contained "\s\t.*"
 syn match cvsDir  contained "Committing in.*$"
 syn match cvsFiles contained "\S\+ Files:"
 
-if !exists("did_cvs_syntax_inits")
-  let did_cvs_syntax_inits = 1
-  " hi link cvsText String
-  hi link cvsLine Comment
-  hi link cvsFile Identifier
-  hi link cvsFiles cvsDir
-  hi link cvsDir Statement
-endif
+" The default highlighting.
+" hi def link cvsText String
+hi def link cvsLine Comment
+hi def link cvsFile Identifier
+hi def link cvsFiles cvsDir
+hi def link cvsDir Statement
 
 let b:current_syntax = "cvs"

@@ -1,7 +1,7 @@
 " These commands create the option window.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Oct 21
+" Last Change:	2000 Nov 05
 
 " If there already is an option window, jump to that one.
 if bufwinnr("option-window") > 0
@@ -20,7 +20,7 @@ endif
 " Make sure the '<' flag is not included in 'cpoptions', otherwise <CR> would
 " not be recognized.  See ":help 'cpoptions'".
 let s:cpo_save = &cpo
-let &cpo = ""
+set cpo&vim
 
 " function to be called when <CR> is hit in the option-window
 fun! <SID>CR()
@@ -828,7 +828,7 @@ if has("viminfo")
   call <SID>OptionL("vi", &vi)
 endif
 
-let &cpo = ""
+set cpo&vim
 
 " go to first line
 1

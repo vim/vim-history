@@ -55,6 +55,17 @@ esac
 AC_SUBST(OS_EXTRA_SRC)
 AC_SUBST(OS_EXTRA_OBJ)
 
+dnl Add /usr/local/lib to $LDFLAGS and /usr/local/include to CFLAGS.
+dnl Only when the directory exists and add it only once.
+if test -d /usr/local/lib; then
+  LDFLAGS=`echo "$LDFLAGS" | sed 's+-L/usr/local/lib++'`
+  LDFLAGS="$LDFLAGS -L/usr/local/lib"
+fi
+if test -d /usr/local/include; then
+  CPPFLAGS=`echo "$CPPFLAGS" | sed 's+-I/usr/local/include++'`
+  CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+fi
+
 AC_MSG_CHECKING(--with-vim-name argument)
 AC_ARG_WITH(vim-name, [  --with-vim-name=NAME    what to call the Vim executable],
 	VIMNAME="$withval"; AC_MSG_RESULT($VIMNAME),
@@ -89,10 +100,10 @@ cf_cv_ebcdic=no])
 # end of CacheVal CvEbcdic
 AC_MSG_RESULT($cf_cv_ebcdic)
 case "$cf_cv_ebcdic" in  #(vi
-    yes) AC_DEFINE(EBCDIC)
-         line_break='"\\n"'
-         ;;
-    *)   line_break='"\\012"';;
+    yes)	AC_DEFINE(EBCDIC)
+		line_break='"\\n"'
+		;;
+    *)		line_break='"\\012"';;
 esac
 AC_SUBST(line_break)
 
@@ -100,13 +111,13 @@ if test "$cf_cv_ebcdic" = "yes"; then
 dnl If we have EBCDIC we most likley have OS390 Unix, let's test it!
 AC_MSG_CHECKING(for OS/390 Unix)
 case `uname` in
-    OS/390) OS390Unix="yes";
-            CFLAGS="$CFLAGS -D_ALL_SOURCE"; LDFLAGS="$LDFLAGS -Wl,EDIT=NO"
-            AC_MSG_RESULT(yes)
-            ;;
-    *)      OS390Unix="no";
-            AC_MSG_RESULT(no)
-            ;;
+    OS/390)	OS390Unix="yes";
+		CFLAGS="$CFLAGS -D_ALL_SOURCE"; LDFLAGS="$LDFLAGS -Wl,EDIT=NO"
+		AC_MSG_RESULT(yes)
+		;;
+    *)		OS390Unix="no";
+		AC_MSG_RESULT(no)
+		;;
 esac
 fi
 
@@ -177,7 +188,7 @@ AC_SUBST(PERL_CFLAGS)
 
 AC_MSG_CHECKING(--enable-pythoninterp argument)
 AC_ARG_ENABLE(pythoninterp,
-        [  --enable-pythoninterp   Include Python interpreter.], ,
+	[  --enable-pythoninterp   Include Python interpreter.], ,
 	[enable_pythoninterp="no"])
 AC_MSG_RESULT($enable_pythoninterp)
 if test "$enable_pythoninterp" = "yes"; then
@@ -240,7 +251,7 @@ if test "$enable_pythoninterp" = "yes"; then
       PYTHON_CONFDIR="${vi_cv_path_python_conf}"
 
       if test "X$PYTHON_CONFDIR" = "X"; then
-	  AC_MSG_RESULT([can't find it!])
+	AC_MSG_RESULT([can't find it!])
       else
 
 	dnl -- we need to examine Python's config/Makefile too
@@ -323,92 +334,92 @@ AC_MSG_RESULT($enable_tclinterp)
 
 if test "$enable_tclinterp" = "yes"; then
 
-	dnl on FreeBSD tclsh is a silly script, look for tclsh8.0 or tclsh8.2
-	AC_MSG_CHECKING(--with-tclsh argument)
-	AC_ARG_WITH(tclsh, [  --with-tclsh=PATH       which tclsh to use (default: tclsh8.0)],
-		tclsh_name="$withval"; AC_MSG_RESULT($tclsh_name),
-        	tclsh_name="tclsh8.0"; AC_MSG_RESULT(no))
-	AC_PATH_PROG(vi_cv_path_tcl, $tclsh_name)
-	AC_SUBST(vi_cv_path_tcl)
+  dnl on FreeBSD tclsh is a silly script, look for tclsh8.0 or tclsh8.2
+  AC_MSG_CHECKING(--with-tclsh argument)
+  AC_ARG_WITH(tclsh, [  --with-tclsh=PATH       which tclsh to use (default: tclsh8.0)],
+	tclsh_name="$withval"; AC_MSG_RESULT($tclsh_name),
+	tclsh_name="tclsh8.0"; AC_MSG_RESULT(no))
+  AC_PATH_PROG(vi_cv_path_tcl, $tclsh_name)
+  AC_SUBST(vi_cv_path_tcl)
 
-	dnl when no specific version specified, also try 8.2
-	if test "X$vi_cv_path_tcl" = "X" -a $tclsh_name = "tclsh8.0"; then
-	  tclsh_name="tclsh8.2"
-	  AC_PATH_PROG(vi_cv_path_tcl, $tclsh_name)
-	fi
-	dnl still didn't find it, try without version number
-	if test "X$vi_cv_path_tcl" = "X"; then
-	  tclsh_name="tclsh"
-	  AC_PATH_PROG(vi_cv_path_tcl, $tclsh_name)
-	fi
-	if test "X$vi_cv_path_tcl" != "X"; then
-		AC_MSG_CHECKING(Tcl version)
-		if echo 'exit [[expr [info tclversion] < 8.0]]' | $vi_cv_path_tcl - ; then
-			tclver=`echo 'puts [[info tclversion]]' | $vi_cv_path_tcl -`
-			AC_MSG_RESULT($tclver - OK);
-			tclloc=`echo 'set l [[info library]];set i [[string last lib $l]];incr i -2;puts [[string range $l 0 $i]]' | $vi_cv_path_tcl -`
+  dnl when no specific version specified, also try 8.2
+  if test "X$vi_cv_path_tcl" = "X" -a $tclsh_name = "tclsh8.0"; then
+    tclsh_name="tclsh8.2"
+    AC_PATH_PROG(vi_cv_path_tcl, $tclsh_name)
+  fi
+  dnl still didn't find it, try without version number
+  if test "X$vi_cv_path_tcl" = "X"; then
+    tclsh_name="tclsh"
+    AC_PATH_PROG(vi_cv_path_tcl, $tclsh_name)
+  fi
+  if test "X$vi_cv_path_tcl" != "X"; then
+    AC_MSG_CHECKING(Tcl version)
+    if echo 'exit [[expr [info tclversion] < 8.0]]' | $vi_cv_path_tcl - ; then
+      tclver=`echo 'puts [[info tclversion]]' | $vi_cv_path_tcl -`
+      AC_MSG_RESULT($tclver - OK);
+      tclloc=`echo 'set l [[info library]];set i [[string last lib $l]];incr i -2;puts [[string range $l 0 $i]]' | $vi_cv_path_tcl -`
 
-			AC_MSG_CHECKING(for location of Tcl include)
-			tclinc="$tclloc/include $tclloc/include/tcl $tclloc/include/tcl$tclver /usr/local/include"
-			for try in $tclinc; do
-				if test -f "$try/tcl.h"; then
-					AC_MSG_RESULT($try/tcl.h)
-					TCL_INC=$try
-					break
-				fi
-			done
-			if test -z "$TCL_INC"; then
-				AC_MSG_RESULT(<not found>)
-				SKIP_TCL=YES
-			fi
-			if test -z "$SKIP_TCL"; then
-				AC_MSG_CHECKING(for location of tclConfig.sh script)
-				tclcnf=`echo $tclinc | sed s/include/lib/g`
-				for try in $tclcnf; do
-					if test -f $try/tclConfig.sh; then
-						AC_MSG_RESULT($try/tclConfig.sh)
-						. $try/tclConfig.sh
-						TCL_LIBS="$TCL_LIB_SPEC $TCL_LIBS"
-						break
-					fi
-				done
-				if test -z "$TCL_LIBS"; then
-					AC_MSG_RESULT(<not found>)
-					AC_MSG_CHECKING(for Tcl library by myself)
-					tcllib=`echo $tclinc | sed s/include/lib/g`
-					for ext in .so .a ; do
-						for ver in "" $tclver ; do
-							for try in $tcllib ; do
-								trylib=tcl$ver$ext
-								if test -f $try/lib$trylib ; then
-									AC_MSG_RESULT($try/lib$trylib)
-									TCL_LIBS="-L$try -ltcl$ver -ldl -lm"
-									if test "`(uname) 2>/dev/null`" = SunOS &&
-									  uname -r | grep '^5' >/dev/null; then
-										TCL_LIBS="$TCL_LIBS -R $try"
-									fi
-									break 3
-								fi
-							done
-						done
-					done
-					if test -z "$TCL_LIBS"; then
-						AC_MSG_RESULT(<not found>)
-						SKIP_TCL=YES
-					fi
-				fi
-				if test -z "$SKIP_TCL"; then
-					AC_DEFINE(FEAT_TCL)
-					TCL_SRC=if_tcl.c
-					TCL_OBJ=objects/if_tcl.o
-					TCL_PRO=if_tcl.pro
-					TCL_CFLAGS="-I$TCL_INC"
-				fi
-			fi
-		else
-			AC_MSG_RESULT(too old; need Tcl version 8.0 or later)
+      AC_MSG_CHECKING(for location of Tcl include)
+      tclinc="$tclloc/include $tclloc/include/tcl $tclloc/include/tcl$tclver /usr/local/include"
+      for try in $tclinc; do
+	if test -f "$try/tcl.h"; then
+	  AC_MSG_RESULT($try/tcl.h)
+	  TCL_INC=$try
+	  break
+	fi
+      done
+      if test -z "$TCL_INC"; then
+	AC_MSG_RESULT(<not found>)
+	SKIP_TCL=YES
+      fi
+      if test -z "$SKIP_TCL"; then
+	AC_MSG_CHECKING(for location of tclConfig.sh script)
+	tclcnf=`echo $tclinc | sed s/include/lib/g`
+	for try in $tclcnf; do
+	  if test -f $try/tclConfig.sh; then
+	    AC_MSG_RESULT($try/tclConfig.sh)
+	    . $try/tclConfig.sh
+	    TCL_LIBS="$TCL_LIB_SPEC $TCL_LIBS"
+	    break
+	  fi
+	done
+	if test -z "$TCL_LIBS"; then
+	  AC_MSG_RESULT(<not found>)
+	  AC_MSG_CHECKING(for Tcl library by myself)
+	  tcllib=`echo $tclinc | sed s/include/lib/g`
+	  for ext in .so .a ; do
+	    for ver in "" $tclver ; do
+	      for try in $tcllib ; do
+		trylib=tcl$ver$ext
+		if test -f $try/lib$trylib ; then
+		  AC_MSG_RESULT($try/lib$trylib)
+		  TCL_LIBS="-L$try -ltcl$ver -ldl -lm"
+		  if test "`(uname) 2>/dev/null`" = SunOS &&
+					 uname -r | grep '^5' >/dev/null; then
+		    TCL_LIBS="$TCL_LIBS -R $try"
+		  fi
+		  break 3
 		fi
+	      done
+	    done
+	  done
+	  if test -z "$TCL_LIBS"; then
+	    AC_MSG_RESULT(<not found>)
+	    SKIP_TCL=YES
+	  fi
 	fi
+	if test -z "$SKIP_TCL"; then
+	  AC_DEFINE(FEAT_TCL)
+	  TCL_SRC=if_tcl.c
+	  TCL_OBJ=objects/if_tcl.o
+	  TCL_PRO=if_tcl.pro
+	  TCL_CFLAGS="-I$TCL_INC"
+	fi
+      fi
+    else
+      AC_MSG_RESULT(too old; need Tcl version 8.0 or later)
+    fi
+  fi
 fi
 AC_SUBST(TCL_SRC)
 AC_SUBST(TCL_OBJ)
@@ -432,7 +443,7 @@ if test "$enable_rubyinterp" = "yes"; then
       RUBY_CFLAGS="-I$rubyhdrdir"
       rubylibs=`$vi_cv_path_ruby -r rbconfig -e 'print Config::CONFIG[["LIBS"]]'`
       if test "X$rubylibs" != "X"; then
-        RUBY_LIBS="$rubylibs"
+	RUBY_LIBS="$rubylibs"
       fi
       librubyarg=`$vi_cv_path_ruby -r rbconfig -e 'print Config.expand(Config::CONFIG[["LIBRUBYARG"]])'`
       if test "`$vi_cv_path_ruby -r rbconfig -e 'print Config::CONFIG[[\"ENABLE_SHARED\"]]'`" = "yes"; then
@@ -442,7 +453,7 @@ if test "$enable_rubyinterp" = "yes"; then
       fi
 
       if test "X$librubyarg" != "X"; then
-        RUBY_LIBS="$librubyarg $RUBY_LIBS"
+	RUBY_LIBS="$librubyarg $RUBY_LIBS"
       fi
       rubyldflags=`$vi_cv_path_ruby -r rbconfig -e 'print Config::CONFIG[["LDFLAGS"]]'`
       if test "X$rubyldflags" != "X"; then
@@ -483,6 +494,19 @@ if test "$enable_workshop" = "yes"; then
   AC_SUBST(WORKSHOP_SRC)
   WORKSHOP_OBJ="objects/gui_beval.o objects/workshop.o objects/integration.o"
   AC_SUBST(WORKSHOP_OBJ)
+fi
+
+AC_MSG_CHECKING(--enable-sniff argument)
+AC_ARG_ENABLE(sniff,
+	[  --enable-sniff          Include Sniff interface.], ,
+	[enable_sniff="no"])
+AC_MSG_RESULT($enable_sniff)
+if test "$enable_sniff" = "yes"; then
+  AC_DEFINE(FEAT_SNIFF)
+  SNIFF_SRC="if_sniff.c"
+  AC_SUBST(SNIFF_SRC)
+  SNIFF_OBJ="objects/if_sniff.o"
+  AC_SUBST(SNIFF_OBJ)
 fi
 
 AC_MSG_CHECKING(--enable-multibyte argument)
@@ -535,8 +559,8 @@ else
   dnl On OS390Unix the X libraries are DLLs. To use them the code must
   dnl be compiled with a special option.
   if test "$OS390Unix" = "yes"; then
-      CFLAGS="$CFLAGS -W c,dll"
-      LDFLAGS="$LDFLAGS -W l,dll"
+    CFLAGS="$CFLAGS -W c,dll"
+    LDFLAGS="$LDFLAGS -W l,dll"
   fi
  
   dnl On my HPUX system the X include dir is found, but the lib dir not.
@@ -547,7 +571,7 @@ else
     AC_MSG_RESULT(Corrected X libraries to $x_libraries)
     X_LIBS="$X_LIBS -L$x_libraries"
     if test "`(uname) 2>/dev/null`" = SunOS &&
-	  uname -r | grep '^5' >/dev/null; then
+					 uname -r | grep '^5' >/dev/null; then
       X_LIBS="$X_LIBS -R $x_libraries"
     fi
   fi
@@ -566,13 +590,13 @@ else
 
   dnl Check if the X11 header files are correctly installed. On some systems
   dnl Xlib.h includes files that don't exist
-    AC_MSG_CHECKING(if X11 header files can be found)
-    cflags_save=$CFLAGS
-    CFLAGS="$CFLAGS $X_CFLAGS"
-    AC_TRY_COMPILE([#include <X11/Xlib.h>], ,
-	  AC_MSG_RESULT(yes),
-	  AC_MSG_RESULT(no); no_x=yes)
-    CFLAGS=$cflags_save
+  AC_MSG_CHECKING(if X11 header files can be found)
+  cflags_save=$CFLAGS
+  CFLAGS="$CFLAGS $X_CFLAGS"
+  AC_TRY_COMPILE([#include <X11/Xlib.h>], ,
+	AC_MSG_RESULT(yes),
+	AC_MSG_RESULT(no); no_x=yes)
+  CFLAGS=$cflags_save
 
   if test "${no_x-no}" = yes; then
     with_x=no
@@ -581,34 +605,30 @@ else
     X_LIB="-lXt -lX11";
     AC_SUBST(X_LIB)
 
-    dnl Some systems need -lnsl -lsocket when testing for ICE.
-    dnl The check above doesn't do this, try here (again) if X_PRE_LIBS is empty
-    dnl and X_EXTRA_LIBS is not empty.  Check for other function than above to
-    dnl avoid the cached value
+    dnl Check for -lXdmcp (needed on SunOS 4.1.4)
+    dnl For HP-UX 10.20 it must be before -lSM -lICE
+    AC_CHECK_LIB(Xdmcp, _XdmcpAuthDoIt, [X_EXTRA_LIBS="$X_EXTRA_LIBS -lXdmcp"],,
+		[-lXt $X_PRE_LIBS -lX11 $X_EXTRA_LIBS -lXdmcp])
 
-    if test -z "$X_PRE_LIBS" -a -n "$X_EXTRA_LIBS"; then
-      ac_save_LDFLAGS="$LDFLAGS"
-      LDFLAGS="$LDFLAGS -L$x_libraries"
-      AC_CHECK_LIB(ICE, IceOpenConnection,
-	[X_PRE_LIBS="$X_PRE_LIBS -lSM -lICE"],, [$X_EXTRA_LIBS])
-      LDFLAGS="$ac_save_LDFLAGS"
-    fi
+    dnl Some systems need -lnsl -lsocket when testing for ICE.
+    dnl The check above doesn't do this, try here (again).  Also needed to get
+    dnl them after Xdmcp.  link.sh will remove them when not needed.
+    dnl Check for other function than above to avoid the cached value
+    ac_save_LDFLAGS="$LDFLAGS"
+    LDFLAGS="$LDFLAGS -L$x_libraries"
+    AC_CHECK_LIB(ICE, IceOpenConnection,
+		  [X_EXTRA_LIBS="$X_EXTRA_LIBS -lSM -lICE"],, [$X_EXTRA_LIBS])
+    LDFLAGS="$ac_save_LDFLAGS"
 
     ldflags_save=$LDFLAGS
     LDFLAGS="$LDFLAGS $X_LIBS"
-
-    dnl Check for -lXdmcp (needed on SunOS 4.1.4)
-    AC_CHECK_LIB(Xdmcp, _XdmcpAuthDoIt, [X_EXTRA_LIBS="$X_EXTRA_LIBS -lXdmcp"],,
-		[-lXt $X_PRE_LIBS -lX11 $X_EXTRA_LIBS -lXdmcp])
 
     dnl Check for -lXpm (needed for some versions of Motif)
     AC_CHECK_LIB(Xpm, XpmCreatePixmapFromData, [X_PRE_LIBS="$X_PRE_LIBS -lXpm"],,
 		[-lXt $X_PRE_LIBS -lXpm -lX11 $X_EXTRA_LIBS])
 
     LDFLAGS=$ldflags_save
-
   fi
-
 fi
 
 test "x$with_x" = xno -a "x$BEOS" != "xyes" && enable_gui=no
@@ -619,90 +639,90 @@ AC_ARG_ENABLE(gui,
 
 if test "x$BEOS" = "xyes"; then
 
-SKIP_GTK=YES
-SKIP_GNOME=YES
-SKIP_MOTIF=YES
-SKIP_ATHENA=YES
-SKIP_BEOS=
-GUITYPE=NONE
+  SKIP_GTK=YES
+  SKIP_GNOME=YES
+  SKIP_MOTIF=YES
+  SKIP_ATHENA=YES
+  SKIP_BEOS=
+  GUITYPE=NONE
 
-case "$enable_gui" in
-  no|No|NO)		AC_MSG_RESULT(no GUI support)
+  case "$enable_gui" in
+    no|No|NO)		AC_MSG_RESULT(no GUI support)
 			SKIP_BEOS=YES ;;
-  yes|Yes|YES|"")	AC_MSG_RESULT(yes - automatic GUI support) ;;
-  auto|Auto|AUTO|"")	AC_MSG_RESULT(auto - automatic GUI support) ;;
-  beos|BeOS|BEOS)	AC_MSG_RESULT(BeOS GUI support) ;;
-  *)			AC_MSG_RESULT(Sorry, $enable_gui GUI is not supported) ;;
-esac
+    yes|Yes|YES|"")	AC_MSG_RESULT(yes - automatic GUI support) ;;
+    auto|Auto|AUTO|"")	AC_MSG_RESULT(auto - automatic GUI support) ;;
+    beos|BeOS|BEOS)	AC_MSG_RESULT(BeOS GUI support) ;;
+    *)			AC_MSG_RESULT(Sorry, $enable_gui GUI is not supported) ;;
+  esac
 
 else
 
-SKIP_GTK=
-SKIP_GNOME=
-SKIP_MOTIF=
-SKIP_ATHENA=
-SKIP_BEOS=YES
-GUITYPE=NONE
+  SKIP_GTK=
+  SKIP_GNOME=
+  SKIP_MOTIF=
+  SKIP_ATHENA=
+  SKIP_BEOS=YES
+  GUITYPE=NONE
 
-case "$enable_gui" in
-  no|No|NO)		AC_MSG_RESULT(no GUI support)
+  case "$enable_gui" in
+    no|No|NO)		AC_MSG_RESULT(no GUI support)
 			SKIP_GTK=YES; SKIP_GNOME=YES; SKIP_MOTIF=YES; SKIP_ATHENA=YES ;;
-  yes|Yes|YES|"")	AC_MSG_RESULT(yes - automatic GUI support) ;;
-  auto|Auto|AUTO|"")	AC_MSG_RESULT(auto - automatic GUI support) ;;
-  gtk|Gtk|GTK)		AC_MSG_RESULT(GTK GUI support)
+    yes|Yes|YES|"")	AC_MSG_RESULT(yes - automatic GUI support) ;;
+    auto|Auto|AUTO|"")	AC_MSG_RESULT(auto - automatic GUI support) ;;
+    gtk|Gtk|GTK)		AC_MSG_RESULT(GTK GUI support)
 			SKIP_GNOME=YES; SKIP_MOTIF=YES; SKIP_ATHENA=YES ;;
-  motif|Motif|MOTIF)	AC_MSG_RESULT(Motif GUI support)
+    motif|Motif|MOTIF)	AC_MSG_RESULT(Motif GUI support)
 			SKIP_GTK=YES; SKIP_GNOME=YES; SKIP_ATHENA=YES ;;
-  athena|Athena|ATHENA)	AC_MSG_RESULT(Athena GUI support)
+    athena|Athena|ATHENA)	AC_MSG_RESULT(Athena GUI support)
 			SKIP_GTK=YES; SKIP_GNOME=YES; SKIP_MOTIF=YES ;;
-  *)			AC_MSG_RESULT(Sorry, $enable_gui GUI is not supported) ;;
-esac
+    *)			AC_MSG_RESULT(Sorry, $enable_gui GUI is not supported) ;;
+  esac
 
 fi
 
 if test "x$SKIP_GTK" != "xYES" -a "$enable_gui" != "gtk"; then
-    AC_MSG_CHECKING(whether or not to look for GTK)
-    AC_ARG_ENABLE(gtk-check,
+  AC_MSG_CHECKING(whether or not to look for GTK)
+  AC_ARG_ENABLE(gtk-check,
 	[  --enable-gtk-check      If auto-select GUI, check for GTK [default=yes]],
 	, enable_gtk_check="yes")
-    AC_MSG_RESULT($enable_gtk_check);
-    if test "x$enable_gtk_check" = "xno"; then
-	SKIP_GTK=YES
-	SKIP_GNOME=YES
-    fi
+  AC_MSG_RESULT($enable_gtk_check);
+  if test "x$enable_gtk_check" = "xno"; then
+    SKIP_GTK=YES
+    SKIP_GNOME=YES
+  fi
 fi
 
 if test "x$SKIP_GNOME" != "xYES" -a "$enable_gui" != "gnome"; then
-    AC_MSG_CHECKING(whether or not to look for GNOME)
-    AC_ARG_ENABLE(gnome-check,
+  AC_MSG_CHECKING(whether or not to look for GNOME)
+  AC_ARG_ENABLE(gnome-check,
 	[  --enable-gnome-check    If GTK GUI, check for GNOME [default=yes]],
 	, enable_gnome_check="yes")
-    AC_MSG_RESULT($enable_gnome_check);
-    if test "x$enable_gnome_check" = "xno"; then
-	SKIP_GNOME=YES
-    fi
+  AC_MSG_RESULT($enable_gnome_check);
+  if test "x$enable_gnome_check" = "xno"; then
+    SKIP_GNOME=YES
+  fi
 fi
 
 if test "x$SKIP_MOTIF" != "xYES" -a "$enable_gui" != "motif"; then
-    AC_MSG_CHECKING(whether or not to look for Motif)
-    AC_ARG_ENABLE(motif-check,
+  AC_MSG_CHECKING(whether or not to look for Motif)
+  AC_ARG_ENABLE(motif-check,
 	[  --enable-motif-check    If auto-select GUI, check for Motif [default=yes]],
 	, enable_motif_check="yes")
-    AC_MSG_RESULT($enable_motif_check);
-    if test "x$enable_motif_check" = "xno"; then
-	SKIP_MOTIF=YES
-    fi
+  AC_MSG_RESULT($enable_motif_check);
+  if test "x$enable_motif_check" = "xno"; then
+    SKIP_MOTIF=YES
+  fi
 fi
 
 if test "x$SKIP_ATHENA" != "xYES" -a "$enable_gui" != "athena"; then
-    AC_MSG_CHECKING(whether or not to look for Athena)
-    AC_ARG_ENABLE(athena-check,
+  AC_MSG_CHECKING(whether or not to look for Athena)
+  AC_ARG_ENABLE(athena-check,
 	[  --enable-athena-check   If auto-select GUI, check for Athena [default=yes]],
 	, enable_athena_check="yes")
-    AC_MSG_RESULT($enable_athena_check);
-    if test "x$enable_athena_check" = "xno"; then
-	SKIP_ATHENA=YES
-    fi
+  AC_MSG_RESULT($enable_athena_check);
+  if test "x$enable_athena_check" = "xno"; then
+    SKIP_ATHENA=YES
+  fi
 fi
 
 
@@ -729,22 +749,23 @@ AC_DEFUN(AM_PATH_GTK,
       GTK_CFLAGS=`$GTK_CONFIG $gtk_config_args --cflags`
       GTK_LIBS=`$GTK_CONFIG $gtk_config_args --libs`
       gtk_config_major_version=`$GTK_CONFIG $gtk_config_args --version | \
-             sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
+	     sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
       gtk_config_minor_version=`$GTK_CONFIG $gtk_config_args --version | \
-             sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\2/'`
+	     sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\2/'`
       gtk_config_micro_version=`$GTK_CONFIG $gtk_config_args --version | \
-             sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\3/'`
+	     sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\3/'`
       if test "x$enable_gtktest" = "xyes" ; then
-        ac_save_CFLAGS="$CFLAGS"
-        ac_save_LIBS="$LIBS"
-        CFLAGS="$CFLAGS $GTK_CFLAGS"
-        LIBS="$LIBS $GTK_LIBS"
-dnl
-dnl Now check if the installed GTK is sufficiently new. (Also sanity
-dnl checks the results of gtk-config to some extent
-dnl
-        rm -f conf.gtktest
-        AC_TRY_RUN([
+	ac_save_CFLAGS="$CFLAGS"
+	ac_save_LIBS="$LIBS"
+	CFLAGS="$CFLAGS $GTK_CFLAGS"
+	LIBS="$LIBS $GTK_LIBS"
+
+	dnl
+	dnl Now check if the installed GTK is sufficiently new. (Also sanity
+	dnl checks the results of gtk-config to some extent
+	dnl
+	rm -f conf.gtktest
+	AC_TRY_RUN([
 #include <gtk/gtk.h>
 #include <stdio.h>
 
@@ -766,29 +787,29 @@ main ()
   if ((gtk_major_version > major) ||
       ((gtk_major_version == major) && (gtk_minor_version > minor)) ||
       ((gtk_major_version == major) && (gtk_minor_version == minor) &&
-                                       (gtk_micro_version >= micro)))
+				       (gtk_micro_version >= micro)))
   {
       return 0;
   }
   return 1;
 }
 ],, no_gtk=yes,[echo $ac_n "cross compiling; assumed OK... $ac_c"])
-         CFLAGS="$ac_save_CFLAGS"
-         LIBS="$ac_save_LIBS"
-       fi
+	CFLAGS="$ac_save_CFLAGS"
+	LIBS="$ac_save_LIBS"
+      fi
     fi
     if test "x$no_gtk" = x ; then
-       AC_MSG_RESULT(yes)
-       ifelse([$2], , :, [$2])
+      AC_MSG_RESULT(yes)
+      ifelse([$2], , :, [$2])
     else
-       AC_MSG_RESULT(no)
-       if test "$GTK_CONFIG" = "no" ; then
-         :
-       else
-         if test -f conf.gtktest ; then
-          :
-         fi
-       fi
+      AC_MSG_RESULT(no)
+      if test "$GTK_CONFIG" = "no" ; then
+	:
+      else
+	if test -f conf.gtktest ; then
+	  :
+	fi
+      fi
 
       GTK_CFLAGS=""
       GTK_LIBS=""
@@ -830,12 +851,12 @@ AC_DEFUN([GNOME_INIT_HOOK],
       ifelse([$1], [], :, [$1])
     else
       if test "x$withval" = xno; then
-        want_gnome=no
+	want_gnome=no
       else
-        want_gnome=yes
-        LDFLAGS="$LDFLAGS -L$withval/lib"
-        CFLAGS="$CFLAGS -I$withval/include"
-        gnome_prefix=$withval/lib
+	want_gnome=yes
+	LDFLAGS="$LDFLAGS -L$withval/lib"
+	CFLAGS="$CFLAGS -I$withval/include"
+	gnome_prefix=$withval/lib
       fi
     fi,
     want_gnome=yes)
@@ -847,22 +868,22 @@ AC_DEFUN([GNOME_INIT_HOOK],
     else
       AC_MSG_CHECKING(if $GNOME_CONFIG works)
       if $GNOME_CONFIG --libs-only-l gnome >/dev/null 2>&1; then
-        AC_MSG_RESULT(yes)
-        GNOME_LIBS="`$GNOME_CONFIG --libs-only-l gnome gnomeui`"
-        GNOME_LIBDIR="`$GNOME_CONFIG --libs-only-L gnorba gnomeui`"
-        GNOME_INCLUDEDIR="`$GNOME_CONFIG --cflags gnorba gnomeui`"
-        $1
+	AC_MSG_RESULT(yes)
+	GNOME_LIBS="`$GNOME_CONFIG --libs-only-l gnome gnomeui`"
+	GNOME_LIBDIR="`$GNOME_CONFIG --libs-only-L gnorba gnomeui`"
+	GNOME_INCLUDEDIR="`$GNOME_CONFIG --cflags gnorba gnomeui`"
+	$1
       else
-        AC_MSG_RESULT(no)
-        no_gnome_config="yes"
+	AC_MSG_RESULT(no)
+	no_gnome_config="yes"
       fi
     fi
 
     if test x$exec_prefix = xNONE; then
       if test x$prefix = xNONE; then
-        gnome_prefix=$ac_default_prefix/lib
+	gnome_prefix=$ac_default_prefix/lib
       else
-        gnome_prefix=$prefix/lib
+	gnome_prefix=$prefix/lib
       fi
     else
       gnome_prefix=`eval echo \`echo $libdir\``
@@ -871,16 +892,16 @@ AC_DEFUN([GNOME_INIT_HOOK],
     if test "$no_gnome_config" = "yes"; then
       AC_MSG_CHECKING(for gnomeConf.sh file in $gnome_prefix)
       if test -f $gnome_prefix/gnomeConf.sh; then
-        AC_MSG_RESULT(found)
-        echo "loading gnome configuration from" \
-          "$gnome_prefix/gnomeConf.sh"
-        . $gnome_prefix/gnomeConf.sh
-        $1
+	AC_MSG_RESULT(found)
+	echo "loading gnome configuration from" \
+	  "$gnome_prefix/gnomeConf.sh"
+	. $gnome_prefix/gnomeConf.sh
+	$1
       else
-        AC_MSG_RESULT(not found)
-        if test x$2 = xfail; then
-          AC_MSG_ERROR(Could not find the gnomeConf.sh file that is generated by gnome-libs install)
-        fi
+	AC_MSG_RESULT(not found)
+	if test x$2 = xfail; then
+	  AC_MSG_ERROR(Could not find the gnomeConf.sh file that is generated by gnome-libs install)
+	fi
       fi
     fi
   fi
@@ -911,37 +932,37 @@ if test -z "$SKIP_GTK"; then
   AC_MSG_CHECKING(--disable-gtktest argument)
   AC_ARG_ENABLE(gtktest, [  --disable-gtktest       Do not try to compile and run a test GTK program],
 	, enable_gtktest=yes)
-    if test "x$enable_gtktest" = "xyes" ; then
-	AC_MSG_RESULT(gtk test enabled)
-    else
-	AC_MSG_RESULT(gtk test disabled)
-    fi
+  if test "x$enable_gtktest" = "xyes" ; then
+    AC_MSG_RESULT(gtk test enabled)
+  else
+    AC_MSG_RESULT(gtk test disabled)
+  fi
 
   if test "x$gtk_config_prefix" != "x" ; then
-     gtk_config_args="$gtk_config_args --prefix=$gtk_config_prefix"
-     GTK_CONFIG=$gtk_config_prefix/bin/gtk-config
+    gtk_config_args="$gtk_config_args --prefix=$gtk_config_prefix"
+    GTK_CONFIG=$gtk_config_prefix/bin/gtk-config
   fi
   if test "x$gtk_config_exec_prefix" != "x" ; then
-     gtk_config_args="$gtk_config_args --exec-prefix=$gtk_config_exec_prefix"
-     GTK_CONFIG=$gtk_config_exec_prefix/bin/gtk-config
+    gtk_config_args="$gtk_config_args --exec-prefix=$gtk_config_exec_prefix"
+    GTK_CONFIG=$gtk_config_exec_prefix/bin/gtk-config
   fi
   if test "X$GTK_CONFIG" = "X"; then
     AC_PATH_PROG(GTK_CONFIG, gtk-config, no)
     if test "X$GTK_CONFIG" = "Xno"; then
-	dnl Some distributions call it gtk12-config, annoying!
-	AC_PATH_PROG(GTK12_CONFIG, gtk12-config, no)
-	GTK_CONFIG="$GTK12_CONFIG"
+      dnl Some distributions call it gtk12-config, annoying!
+      AC_PATH_PROG(GTK12_CONFIG, gtk12-config, no)
+      GTK_CONFIG="$GTK12_CONFIG"
     fi
   else
-     AC_MSG_RESULT(Using GTK configuration program $GTK_CONFIG)
+    AC_MSG_RESULT(Using GTK configuration program $GTK_CONFIG)
   fi
 
   dnl We require at least GTK 1.1.16.  1.0.6 doesn't work.  1.1.1 to 1.1.15
   dnl were test versions.
   if test "X$GTK_CONFIG" != "X"; then
     AM_PATH_GTK(1.1.16,
-                [GTK_LIBNAME="$GTK_LIBS"
-                GUI_INC_LOC="$GTK_CFLAGS"], )
+		[GTK_LIBNAME="$GTK_LIBS"
+		GUI_INC_LOC="$GTK_CFLAGS"], )
     if test "x$GTK_CFLAGS" != "x"; then
       SKIP_ATHENA=YES
       SKIP_MOTIF=YES
@@ -952,18 +973,18 @@ if test -z "$SKIP_GTK"; then
   dnl Give a warning if GTK is older than 1.2.3
   if test "x$GUITYPE" = "xGTK"; then
     if test $gtk_config_major_version = 1 -a $gtk_config_minor_version -lt 2 -o $gtk_config_major_version = 1 -a $gtk_config_minor_version = 2 -a $gtk_config_micro_version -lt 3; then
-	AC_MSG_RESULT(this GTK version is old; version 1.2.3 or later is recommended)
+      AC_MSG_RESULT(this GTK version is old; version 1.2.3 or later is recommended)
     else
       dnl
       dnl if GTK exists, and it's not the 1.0.x series, then check for GNOME.
       dnl
       if test -z "$SKIP_GNOME"; then
-        GNOME_INIT_HOOK([have_gnome=yes])
-        if test x$have_gnome = xyes ; then
-          AC_DEFINE(FEAT_GUI_GNOME)
-          GUI_INC_LOC="$GUI_INC_LOC $GNOME_INCLUDEDIR"
-          GTK_LIBNAME="$GTK_LIBNAME $GNOME_LIBDIR $GNOME_LIBS"
-        fi
+	GNOME_INIT_HOOK([have_gnome=yes])
+	if test x$have_gnome = xyes ; then
+	  AC_DEFINE(FEAT_GUI_GNOME)
+	  GUI_INC_LOC="$GUI_INC_LOC $GNOME_INCLUDEDIR"
+	  GTK_LIBNAME="$GTK_LIBNAME $GNOME_LIBDIR $GNOME_LIBS"
+	fi
       fi
     fi
   fi
@@ -1012,25 +1033,25 @@ if test -z "$SKIP_MOTIF"; then
     GUI_LIB_LOC=
     for try in $gui_libs; do
       for libtry in "$try"/libXm.a "$try"/libXm.so* "$try"/libXm.sl; do
-        if test -f "$libtry"; then
-          GUI_LIB_LOC=$try
-        fi
+	if test -f "$libtry"; then
+	  GUI_LIB_LOC=$try
+	fi
       done
     done
     if test -n "$GUI_LIB_LOC"; then
       dnl Remove /usr/lib, causes trouble on some systems
       if test "$GUI_LIB_LOC" = /usr/lib; then
-        GUI_LIB_LOC=.
+	GUI_LIB_LOC=.
       else
-        if test "`(uname) 2>/dev/null`" = SunOS &&
-  	    uname -r | grep '^5' >/dev/null; then
-  	GUI_LIB_LOC="$GUI_LIB_LOC -R $GUI_LIB_LOC"
-        fi
+	if test "`(uname) 2>/dev/null`" = SunOS &&
+					 uname -r | grep '^5' >/dev/null; then
+	  GUI_LIB_LOC="$GUI_LIB_LOC -R $GUI_LIB_LOC"
+	fi
       fi
       AC_MSG_RESULT($GUI_LIB_LOC)
       MOTIF_LIBNAME=-lXm
       AC_CHECK_LIB(Xp, XpEndJob, [MOTIF_LIBNAME="-lXm -lXp"],,
-  		[-lXm -lXt $X_PRE_LIBS -lX11 $X_EXTRA_LIBS])
+		[-lXm -lXt $X_PRE_LIBS -lX11 $X_EXTRA_LIBS])
     else
       AC_MSG_RESULT(<not found>)
       SKIP_MOTIF=YES
@@ -1055,8 +1076,8 @@ if test -z "$SKIP_ATHENA"; then
   AC_TRY_COMPILE([
 #include <X11/Intrinsic.h>
 #include <X11/Xaw/Paned.h>], ,
-    AC_MSG_RESULT(yes),
-    AC_MSG_RESULT(no); SKIP_ATHENA=YES )
+	AC_MSG_RESULT(yes),
+	AC_MSG_RESULT(no); SKIP_ATHENA=YES )
   CFLAGS=$cflags_save
 fi
 
@@ -1145,8 +1166,8 @@ dnl Checks for libraries.
 AC_MSG_CHECKING(quality of toupper)
 AC_TRY_RUN([#include <ctype.h>
 main() { exit(toupper('A') == 'A' && tolower('z') == 'z'); }],
- AC_DEFINE(BROKEN_TOUPPER) AC_MSG_RESULT(bad),
- AC_MSG_RESULT(good), AC_MSG_ERROR(failed to compile test program))
+	AC_DEFINE(BROKEN_TOUPPER) AC_MSG_RESULT(bad),
+	AC_MSG_RESULT(good), AC_MSG_ERROR(failed to compile test program))
 
 AC_MSG_CHECKING(whether __DATE__ and __TIME__ work)
 AC_TRY_COMPILE(, [printf("(" __DATE__ " " __TIME__ ")");],
@@ -1156,7 +1177,9 @@ AC_TRY_COMPILE(, [printf("(" __DATE__ " " __TIME__ ")");],
 dnl Checks for header files.
 AC_CHECK_HEADER(elf.h, SVR4=1)
 dnl AC_CHECK_HEADER(dwarf.h, SVR4=1)
-if test "$SVR4" = 1; then AC_DEFINE(SVR4) AC_CHECK_LIB(elf, main) fi
+if test "$SVR4" = 1; then
+  AC_DEFINE(SVR4) AC_CHECK_LIB(elf, main)
+fi
 
 AC_HEADER_DIRENT
 
@@ -1168,8 +1191,8 @@ AC_HEADER_SYS_WAIT
 dnl If sys/wait.h is not found it might still exist but not be POSIX
 dnl compliant. In that case we define HAVE_UNION_WAIT (for NeXT)
 if test $ac_cv_header_sys_wait_h = no; then
-   AC_MSG_CHECKING([for sys/wait.h that defines union wait])
-   AC_TRY_COMPILE([#include <sys/wait.h>],
+  AC_MSG_CHECKING([for sys/wait.h that defines union wait])
+  AC_TRY_COMPILE([#include <sys/wait.h>],
 			[union wait xx, yy; xx = yy],
 		AC_MSG_RESULT(yes)
 			AC_DEFINE(HAVE_SYS_WAIT_H)
@@ -1179,7 +1202,7 @@ fi
 
 AC_CHECK_HEADERS(stdlib.h string.h sys/select.h sys/utsname.h termcap.h \
 	fcntl.h sgtty.h sys/ioctl.h sys/time.h termio.h \
-	unistd.h stropts.h errno.h strings.h \
+	iconv.h unistd.h stropts.h errno.h strings.h \
 	sys/resource.h sys/systeminfo.h locale.h \
 	sys/stream.h sys/ptem.h termios.h libc.h sys/statfs.h \
 	poll.h sys/poll.h pwd.h utime.h sys/param.h libintl.h \
@@ -1221,38 +1244,38 @@ olibs="$LIBS"
 AC_MSG_CHECKING(--with-tlib argument)
 AC_ARG_WITH(tlib, [  --with-tlib=library     terminal library to be used ],)
 if test -n "$with_tlib"; then
-	AC_MSG_RESULT($with_tlib)
-	LIBS="$LIBS -l$with_tlib"
+  AC_MSG_RESULT($with_tlib)
+  LIBS="$LIBS -l$with_tlib"
 else
-	AC_MSG_RESULT([automatic terminal library selection])
-	dnl  On HP-UX 10.10 termcap or termlib should be used instead of
-	dnl  curses, because curses is much slower.
-	dnl  Newer versions of ncurses are preferred over anything.
-	dnl  Older versions of ncurses have bugs, get a new one!
-	dnl  Digital Unix (OSF1) should use curses (Ronald Schild).
-	case "`uname -s 2>/dev/null`" in
-	  OSF1) tlibs="ncurses curses termlib termcap";;
-	  *)    tlibs="ncurses termlib termcap curses";;
-	esac
-	for libname in $tlibs; do
-	  AC_CHECK_LIB($libname, tgetent,,)
-	  if test "x$olibs" != "x$LIBS"; then
-	    dnl It's possible that a library is found but it doesn't work
-	    dnl e.g., shared library that cannot be found
-	    dnl compile and run a test program to be sure
-	    AC_TRY_RUN([
+  AC_MSG_RESULT([automatic terminal library selection])
+  dnl  On HP-UX 10.10 termcap or termlib should be used instead of
+  dnl  curses, because curses is much slower.
+  dnl  Newer versions of ncurses are preferred over anything.
+  dnl  Older versions of ncurses have bugs, get a new one!
+  dnl  Digital Unix (OSF1) should use curses (Ronald Schild).
+  case "`uname -s 2>/dev/null`" in
+	OSF1)	tlibs="ncurses curses termlib termcap";;
+	*)	tlibs="ncurses termlib termcap curses";;
+  esac
+  for libname in $tlibs; do
+    AC_CHECK_LIB($libname, tgetent,,)
+    if test "x$olibs" != "x$LIBS"; then
+      dnl It's possible that a library is found but it doesn't work
+      dnl e.g., shared library that cannot be found
+      dnl compile and run a test program to be sure
+      AC_TRY_RUN([
 #ifdef HAVE_TERMCAP_H
 # include <termcap.h>
 #endif
 main() {char *s; s=(char *)tgoto("%p1%d", 0, 1); exit(0); }],
 			  res="OK", res="FAIL", res="FAIL")
-	    if test "$res" = "OK"; then
-	      break
-	    fi
-	    AC_MSG_RESULT($libname library is not usable)
-	    LIBS="$olibs"
-	  fi
-	done
+      if test "$res" = "OK"; then
+	break
+      fi
+      AC_MSG_RESULT($libname library is not usable)
+      LIBS="$olibs"
+    fi
+  done
 fi
 if test "x$olibs" != "x$LIBS"; then
   AC_MSG_CHECKING(whether we talk terminfo)
@@ -1328,7 +1351,7 @@ AC_TRY_COMPILE([
 
 dnl AC_DECL_SYS_SIGLIST
 
-dnl Checks for pty.c (stolen from screen) ==========================
+dnl Checks for pty.c (copied from screen) ==========================
 AC_MSG_CHECKING(for /dev/ptc)
 if test -r /dev/ptc; then
   AC_DEFINE(HAVE_DEV_PTC)
@@ -1348,29 +1371,29 @@ fi
 
 AC_MSG_CHECKING(for ptyranges)
 if test -d /dev/ptym ; then
-pdir='/dev/ptym'
+  pdir='/dev/ptym'
 else
-pdir='/dev'
+  pdir='/dev'
 fi
 dnl SCO uses ptyp%d
 AC_EGREP_CPP(yes,
 [#ifdef M_UNIX
    yes;
 #endif
-], ptys=`echo /dev/ptyp??`, ptys=`echo $pdir/pty??`)
+	], ptys=`echo /dev/ptyp??`, ptys=`echo $pdir/pty??`)
 dnl if test -c /dev/ptyp19; then
 dnl ptys=`echo /dev/ptyp??`
 dnl else
 dnl ptys=`echo $pdir/pty??`
 dnl fi
 if test "$ptys" != "$pdir/pty??" ; then
-p0=`echo $ptys | tr ' ' '\012' | sed -e 's/^.*\(.\).$/\1/g' | sort -u | tr -d '\012'`
-p1=`echo $ptys | tr ' ' '\012' | sed -e 's/^.*\(.\)$/\1/g'  | sort -u | tr -d '\012'`
-AC_DEFINE_UNQUOTED(PTYRANGE0,"$p0")
-AC_DEFINE_UNQUOTED(PTYRANGE1,"$p1")
-AC_MSG_RESULT([$p0 / $p1])
+  p0=`echo $ptys | tr ' ' '\012' | sed -e 's/^.*\(.\).$/\1/g' | sort -u | tr -d '\012'`
+  p1=`echo $ptys | tr ' ' '\012' | sed -e 's/^.*\(.\)$/\1/g'  | sort -u | tr -d '\012'`
+  AC_DEFINE_UNQUOTED(PTYRANGE0,"$p0")
+  AC_DEFINE_UNQUOTED(PTYRANGE1,"$p1")
+  AC_MSG_RESULT([$p0 / $p1])
 else
-AC_MSG_RESULT([don't know])
+  AC_MSG_RESULT([don't know])
 fi
 
 dnl    ****  pty mode/group handling ****
@@ -1426,9 +1449,9 @@ AC_TYPE_SIGNAL
 
 dnl find out what to use at the end of a signal function
 if test $ac_cv_type_signal = void; then
-   AC_DEFINE(SIGRETURN, [return])
+  AC_DEFINE(SIGRETURN, [return])
 else
-   AC_DEFINE(SIGRETURN, [return 0])
+  AC_DEFINE(SIGRETURN, [return 0])
 fi
 
 dnl check if struct sigcontext is defined (used for SGI only)
@@ -1483,6 +1506,9 @@ AC_TRY_COMPILE(
 	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_ST_BLKSIZE),
 	AC_MSG_RESULT(no))
 
+dnl Link with iconv for charset translation.
+AC_CHECK_LIB(iconv, iconv, [LIBS="$LIBS -liconv"],,)
+
 dnl Link with posix1e for ACL stuff
 AC_CHECK_LIB(posix1e, acl_get_file, [LIBS="$LIBS -lposix1e"],,)
 
@@ -1500,28 +1526,28 @@ acl_t acl;], [acl = acl_get_file("foo", ACL_TYPE_DEFAULT);
 
 AC_MSG_CHECKING(--enable-gpm argument)
 AC_ARG_ENABLE(gpm,
-        [  --disable-gpm           Don't use gpm (Linux mouse daemon).], ,
+	[  --disable-gpm           Don't use gpm (Linux mouse daemon).], ,
 	[enable_gpm="yes"])
 AC_MSG_RESULT($enable_gpm)
 
 if test "$enable_gpm" = "yes"; then
-dnl Checking if gpm support can be compiled
-    AC_CACHE_CHECK([for gpm], vi_cv_have_gpm,
-        [olibs="$LIBS" ; LIBS="-lgpm"]
-        AC_TRY_LINK(
-            [#include <gpm.h>
-            #include <linux/keyboard.h>],
-            [Gpm_GetLibVersion(NULL);],
-            dnl Configure defines HAVE_GPM, if it is defined feature.h defines
-            dnl FEAT_MOUSE_GPM if mouse support is included
-            [vi_cv_have_gpm=yes],
-            [vi_cv_have_gpm=no])
-        [LIBS="$olibs"]
+  dnl Checking if gpm support can be compiled
+  AC_CACHE_CHECK([for gpm], vi_cv_have_gpm,
+	[olibs="$LIBS" ; LIBS="-lgpm"]
+	AC_TRY_LINK(
+	    [#include <gpm.h>
+	    #include <linux/keyboard.h>],
+	    [Gpm_GetLibVersion(NULL);],
+	    dnl Configure defines HAVE_GPM, if it is defined feature.h defines
+	    dnl FEAT_MOUSE_GPM if mouse support is included
+	    [vi_cv_have_gpm=yes],
+	    [vi_cv_have_gpm=no])
+	[LIBS="$olibs"]
     )
-    if test $vi_cv_have_gpm = yes; then
-          LIBS="$LIBS -lgpm"
-          AC_DEFINE(HAVE_GPM)
-    fi
+  if test $vi_cv_have_gpm = yes; then
+    LIBS="$LIBS -lgpm"
+    AC_DEFINE(HAVE_GPM)
+  fi
 fi
 
 dnl rename needs to be checked separately to work on Nextstep with cc
@@ -1568,14 +1594,14 @@ dnl Check for memmove() before bcopy(), makes memmove() be used when both are
 dnl present, fixes problem with incompatibility between Solaris 2.4 and 2.5.
 
 AC_TRY_RUN([#define mch_memmove(s,d,l) memmove(d,s,l) $bcopy_test_prog],
- AC_DEFINE(USEMEMMOVE) AC_MSG_RESULT(memmove does),
-AC_TRY_RUN([#define mch_memmove(s,d,l) bcopy(d,s,l) $bcopy_test_prog],
- AC_DEFINE(USEBCOPY) AC_MSG_RESULT(bcopy does),
-AC_TRY_RUN([#define mch_memmove(s,d,l) memcpy(d,s,l) $bcopy_test_prog],
- AC_DEFINE(USEMEMCPY) AC_MSG_RESULT(memcpy does), AC_MSG_RESULT(no),
-  AC_MSG_ERROR(failed to compile test program)),
-  AC_MSG_ERROR(failed to compile test program)),
-  AC_MSG_ERROR(failed to compile test program))
+    AC_DEFINE(USEMEMMOVE) AC_MSG_RESULT(memmove does),
+    AC_TRY_RUN([#define mch_memmove(s,d,l) bcopy(d,s,l) $bcopy_test_prog],
+	AC_DEFINE(USEBCOPY) AC_MSG_RESULT(bcopy does),
+	AC_TRY_RUN([#define mch_memmove(s,d,l) memcpy(d,s,l) $bcopy_test_prog],
+	    AC_DEFINE(USEMEMCPY) AC_MSG_RESULT(memcpy does), AC_MSG_RESULT(no),
+	    AC_MSG_ERROR(failed to compile test program)),
+	AC_MSG_ERROR(failed to compile test program)),
+    AC_MSG_ERROR(failed to compile test program))
 
 dnl Check for multibyte locale functions
 dnl Find out if _Xsetlocale() is supported by libX11.
@@ -1589,9 +1615,9 @@ if test "$enable_multibyte" = "yes"; then
     LDFLAGS="$LDFLAGS $X_LIBS -lX11"
     AC_MSG_CHECKING(whether X_LOCALE needed)
     AC_TRY_COMPILE([#include <X11/Xlocale.h>],,
-      AC_TRY_LINK_FUNC([_Xsetlocale], [AC_MSG_RESULT(yes)
-	AC_DEFINE(X_LOCALE)], AC_MSG_RESULT(no)),
-      AC_MSG_RESULT(no))
+	AC_TRY_LINK_FUNC([_Xsetlocale], [AC_MSG_RESULT(yes)
+		AC_DEFINE(X_LOCALE)], AC_MSG_RESULT(no)),
+	AC_MSG_RESULT(no))
   fi
   CFLAGS=$cflags_save
   LDFLAGS=$ldflags_save
@@ -1601,23 +1627,23 @@ dnl Link with xpg4, it is said to make Korean locale working
 AC_CHECK_LIB(xpg4, _xpg4_setrunelocale, [LIBS="$LIBS -lxpg4"],,)
 
 dnl Check how we can run ctags
-dnl --version for Exuberant ctags (preferred and included with Vim)
+dnl --version for Exuberant ctags (preferred)
 dnl -t for typedefs (many ctags have this)
 dnl -s for static functions (Elvis ctags only?)
 dnl -v for variables. Dangerous, most ctags take this for 'vgrind style'.
 dnl -i+m to test for older Exuberant ctags
 AC_MSG_CHECKING(how to create tags)
 test -f tags && mv tags tags.save
-if ctags --version | grep Exuberant >/dev/null; then
-   TAGPRG="ctags"
+if (eval ctags --version /dev/null | grep Exuberant) < /dev/null 1>&AC_FD_CC 2>&1; then
+  TAGPRG="ctags"
 else
-(eval etags	  /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && TAGPRG="etags"
-(eval etags -c	  /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && TAGPRG="etags -c"
-(eval ctags	  /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && TAGPRG="ctags"
-(eval ctags -t	  /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && TAGPRG="ctags -t"
-(eval ctags -ts   /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && TAGPRG="ctags -ts"
-(eval ctags -tvs  /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && TAGPRG="ctags -tvs"
-(eval ctags -i+m  /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && TAGPRG="ctags -i+m"
+  (eval etags	   /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && TAGPRG="etags"
+  (eval etags -c   /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && TAGPRG="etags -c"
+  (eval ctags	   /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && TAGPRG="ctags"
+  (eval ctags -t   /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && TAGPRG="ctags -t"
+  (eval ctags -ts  /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && TAGPRG="ctags -ts"
+  (eval ctags -tvs /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && TAGPRG="ctags -tvs"
+  (eval ctags -i+m /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && TAGPRG="ctags -i+m"
 fi
 test -f tags.save && mv tags.save tags
 AC_MSG_RESULT($TAGPRG) AC_SUBST(TAGPRG)
@@ -1628,7 +1654,7 @@ MANDEF="man"
 (eval man -s 2 read) < /dev/null > /dev/null 2>&AC_FD_CC && MANDEF="man -s"
 AC_MSG_RESULT($MANDEF)
 if test "$MANDEF" = "man -s"; then
-	AC_DEFINE(USEMAN_S)
+  AC_DEFINE(USEMAN_S)
 fi
 
 dnl Check if gettext() is working and if it needs -lintl
@@ -1731,3 +1757,5 @@ AC_CHECK_HEADERS(setjmp.h)
 
 dnl write output files
 AC_OUTPUT(auto/config.mk:config.mk.in)
+
+dnl vim: set sw=2 tw=78 :

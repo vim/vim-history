@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:     PIC16F84 Assembler (Microchip's microcontroller)
 " Maintainer:   Aleksandar Veselinovic <alexa@cliffhanger.com>
-" Last Change:  2000/08/28
+" Last Change:  2000 Nov 04
 " URL:          http://SOLAIR.EUnet.yu/~aleksav/vim/syntax/pic.vim
 " Revision:     1.0
 
@@ -86,29 +86,24 @@ syn match picDirective   "#\=INCLUDE"
 syn match picDirective   "#\=DEFINE"
 
 
+" The default highlighting.
+hi def link picTodo               Todo
+hi def link picComment            Comment
+hi def link picDirective          Statement
+hi def link picLabel              Label
+hi def link picString             String
 
+"hi def link picOpcode            Keyword
+"hi def link picRegister          Structure
+"hi def link picRegisterPart      Special
 
-if !exists("did_pic16f84_syntax_inits")
-  let did_pic16f84_syntax_inits = 1
+hi def link picASCII              String
+hi def link picBinary             Number
+hi def link picDecimal            Number
+hi def link picHexadecimal        Number
+hi def link picOctal              Number
 
-  hi link picTodo               Todo
-  hi link picComment            Comment
-  hi link picDirective          Statement
-  hi link picLabel              Label
-  hi link picString             String
-
-  "hi link picOpcode            Keyword
-  "hi link picRegister          Structure
-  "hi link picRegisterPart      Special
-
-  hi link picASCII              String
-  hi link picBinary             Number
-  hi link picDecimal            Number
-  hi link picHexadecimal        Number
-  hi link picOctal              Number
-
-  hi link picIdentifier         Identifier
-endif
+hi def link picIdentifier         Identifier
 
 let b:current_syntax = "pic"
 

@@ -2,7 +2,7 @@
 " Language:	Windows Registry Export with regedit (*.reg)
 " Maintainer:	Dominique Stéphan (dstephan@my-deja.com)
 " URL: http://www.geocities.com/SiliconValley/Bit/1809/vim/syntax/registry.zip
-" Last change:	2000 Jul 26
+" Last change:	2000 Nov 04
 
 " clear any unwanted syntax defs
 syn clear
@@ -88,22 +88,19 @@ syn match registryHex		"^\s*\([0-9a-fA-F]\{2},\)*\([0-9a-fA-F]\{2}\|\\\)$" conta
 syn match registryDword		"dword:[0-9a-fA-F]\{1,8}$" contains=registryDelimiter
 
 
-if !exists("did_registry_syntax_inits")
-	let did_registry_syntax_inits = 1
-	" The default methods for highlighting.  Can be overridden later
-	hi link registryComment	Comment
-	hi link registryHead	Constant
-	hi link registryHKEY	Constant
-	hi link registryPath	Special
-	hi link registryRemove	PreProc
-	hi link registryGUID	Identifier
-	hi link registrySpecial	Special
-	hi link registryDelimiter	Delimiter
-	hi link registrySubKey	Type
-	hi link registryString	String
-	hi link registryHex	Number
-	hi link registryDword	Number
-endif
+" The default highlighting.
+hi def link registryComment	Comment
+hi def link registryHead	Constant
+hi def link registryHKEY	Constant
+hi def link registryPath	Special
+hi def link registryRemove	PreProc
+hi def link registryGUID	Identifier
+hi def link registrySpecial	Special
+hi def link registryDelimiter	Delimiter
+hi def link registrySubKey	Type
+hi def link registryString	String
+hi def link registryHex		Number
+hi def link registryDword	Number
 
 let b:current_syntax = "registry"
 

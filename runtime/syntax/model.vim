@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Model
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	1997 Sep 14
+" Last Change:	2000 Nov 04
 
 " very basic things only (based on the vgrindefs file).
 " If you use this language, please improve it, and send me the patches!
@@ -30,14 +30,11 @@ syn region modelString start=+"+ end=+"+
 " Character constant (is this right?)
 syn match modelString "'."
 
-if !exists("did_model_syntax_inits")
-  let did_model_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link modelKeyword	Statement
-  hi link modelBlock	PreProc
-  hi link modelComment	Comment
-  hi link modelString	String
-endif
+" The default highlighting.
+hi def link modelKeyword	Statement
+hi def link modelBlock		PreProc
+hi def link modelComment	Comment
+hi def link modelString		String
 
 let b:current_syntax = "model"
 

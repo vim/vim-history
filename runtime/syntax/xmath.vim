@@ -185,33 +185,30 @@ syn region  xmathCommentBlock	start="#{" end="}#"	contains=xmathString,xmathTodo
 syn sync match xmathSyncComment	grouphere xmathCommentBlock "#{"
 syn sync match xmathSyncComment	groupthere NONE "}#"
 
-if !exists("did_xmath_syntax_inits")
-  let did_xmath_syntax_inits = 1
 
-  hi link xmathBraceError	xmathError
-  hi link xmathCmd	xmathStatement
-  hi link xmathCommentBlock	xmathComment
-  hi link xmathCurlyError	xmathError
-  hi link xmathFuncCmd	xmathStatement
-  hi link xmathParenError	xmathError
+" The default highlighting.
+hi def link xmathBraceError	xmathError
+hi def link xmathCmd	xmathStatement
+hi def link xmathCommentBlock	xmathComment
+hi def link xmathCurlyError	xmathError
+hi def link xmathFuncCmd	xmathStatement
+hi def link xmathParenError	xmathError
 
-  " The default methods for highlighting.  Can be overridden later
-  hi link xmathCharacter	Character
-  hi link xmathComma	Delimiter
-  hi link xmathComment	Comment
-  hi link xmathCommentBlock	Comment
-  hi link xmathConditional	Conditional
-  hi link xmathError	Error
-  hi link xmathFunc	Function
-  hi link xmathLabel	PreProc
-  hi link xmathNumber	Number
-  hi link xmathRepeat	Repeat
-  hi link xmathSpecial	Type
-  hi link xmathSpecialChar	SpecialChar
-  hi link xmathStatement	Statement
-  hi link xmathString	String
-  hi link xmathTodo	Todo
-endif
+hi def link xmathCharacter	Character
+hi def link xmathComma	Delimiter
+hi def link xmathComment	Comment
+hi def link xmathCommentBlock	Comment
+hi def link xmathConditional	Conditional
+hi def link xmathError	Error
+hi def link xmathFunc	Function
+hi def link xmathLabel	PreProc
+hi def link xmathNumber	Number
+hi def link xmathRepeat	Repeat
+hi def link xmathSpecial	Type
+hi def link xmathSpecialChar	SpecialChar
+hi def link xmathStatement	Statement
+hi def link xmathString	String
+hi def link xmathTodo	Todo
 
 let b:current_syntax = "xmath"
 

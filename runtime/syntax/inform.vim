@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Inform
 " Maintainer:	Stephen Thomas (stephent@insignia.com)
-" Last Change:	2000 March 5th
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -103,7 +103,7 @@ if !exists("inform_highlight_simple")
   syn keyword informLibAction1a LMode2 LMode3 NotifyOn NotifyOff Version
   syn keyword informLibAction1a Places Objects
 
-  hi link informLibAction1a informLibAction
+  hi def link informLibAction1a informLibAction
 
   syn keyword informLibAction1b TraceOn TraceOff TraceLevel ActionsOn
   syn keyword informLibAction1b ActionsOff RoutinesOn RoutinesOff TimersOn
@@ -111,7 +111,7 @@ if !exists("inform_highlight_simple")
   syn keyword informLibAction1b CommandsRead Predictable XPurloin XAbstract
   syn keyword informLibAction1b XTree Scope Goto Gonear
 
-  hi link informLibAction1b informLibAction
+  hi def link informLibAction1b informLibAction
 
   syn keyword informLibAction2 Inv InvTall InvWide Take Drop Remove PutOn
   syn keyword informLibAction2 Insert Transfer Empty Enter Exit GetOff Go
@@ -119,7 +119,7 @@ if !exists("inform_highlight_simple")
   syn keyword informLibAction2 Lock SwitchOn SwitchOff Open Close Disrobe
   syn keyword informLibAction2 Wear Eat
 
-  hi link informLibAction2 informLibAction
+  hi def link informLibAction2 informLibAction
 
   syn keyword informLibAction3 Yes No Burn Pray Wake WakeOther Consult Kiss
   syn keyword informLibAction3 Think Smell Listen Taste Touch Dig Cut Jump
@@ -129,12 +129,12 @@ if !exists("inform_highlight_simple")
   syn keyword informLibAction3 Squeeze LookUnder ThrowAt Tell Answer Buy
   syn keyword informLibAction3 Ask AskFor Sing Climb Wait Sleep
 
-  hi link informLibAction3 informLibAction
+  hi def link informLibAction3 informLibAction
 
   syn keyword informLibActionFake LetGo Receive ThrownAt Order TheSame
   syn keyword informLibActionFake PluralFound Miscellany Prompt
 
-  hi link informLibActionFake informLibAction
+  hi def link informLibActionFake informLibAction
 
   syn keyword informLibVariable keep_silent deadflag action special_number
   syn keyword informLibVariable consult_from consult_words etype verb_num
@@ -248,49 +248,46 @@ syn sync match informSyncRoutine grouphere NONE "\[\|\]"
 syn sync match informSyncRoutine groupthere informGrammarSection "\<Verb\|Extend\>"
 syn sync maxlines=500
 
-if !exists("did_inform_syntax_inits")
-  let did_inform_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link informDefine		Define
-  hi link informType		Type
-  hi link informInclude		Include
-  hi link informPreCondit	PreCondit
-  hi link informPreProc		PreProc
-  hi link informGramPreProc	PreProc
-  hi link informAsm		Special
-  hi link informPredicate	Operator
-  hi link informSysFunc		Identifier
-  hi link informSysConst	Identifier
-  hi link informConditional	Conditional
-  hi link informRepeat		Repeat
-  hi link informStatement	Statement
-  hi link informOperator	Operator
-  hi link informKeyword		Keyword
-  hi link informGrammar		Keyword
-  hi link informDictString	String
-  hi link informNumber		Number
-  hi link informError		Error
-  hi link informString		String
-  hi link informComment		Comment
-  hi link informAccent		Special
-  hi link informStringUnicode	Special
-  hi link informStringCode	Special
-  hi link informTodo		Todo
-  if !exists("inform_highlight_simple")
-    hi link informLibAttrib	Identifier
-    hi link informLibProp	Identifier
-    hi link informLibObj	Identifier
-    hi link informLibRoutine	Identifier
-    hi link informLibVariable	Identifier
-    hi link informLibConst	Identifier
-    hi link informLibAction	Statement
-  endif
-  hi link informParenError	informError
-  hi link informInParen		informError
-  hi link informBadDictString	informError
-  hi link informBadAccent	informError
-  hi link informBadStrUnicode	informError
+" The default highlighting.
+hi def link informDefine	Define
+hi def link informType		Type
+hi def link informInclude	Include
+hi def link informPreCondit	PreCondit
+hi def link informPreProc	PreProc
+hi def link informGramPreProc	PreProc
+hi def link informAsm		Special
+hi def link informPredicate	Operator
+hi def link informSysFunc	Identifier
+hi def link informSysConst	Identifier
+hi def link informConditional	Conditional
+hi def link informRepeat	Repeat
+hi def link informStatement	Statement
+hi def link informOperator	Operator
+hi def link informKeyword	Keyword
+hi def link informGrammar	Keyword
+hi def link informDictString	String
+hi def link informNumber	Number
+hi def link informError		Error
+hi def link informString	String
+hi def link informComment	Comment
+hi def link informAccent	Special
+hi def link informStringUnicode	Special
+hi def link informStringCode	Special
+hi def link informTodo		Todo
+if !exists("inform_highlight_simple")
+  hi def link informLibAttrib	Identifier
+  hi def link informLibProp	Identifier
+  hi def link informLibObj	Identifier
+  hi def link informLibRoutine	Identifier
+  hi def link informLibVariable	Identifier
+  hi def link informLibConst	Identifier
+  hi def link informLibAction	Statement
 endif
+hi def link informParenError	informError
+hi def link informInParen	informError
+hi def link informBadDictString	informError
+hi def link informBadAccent	informError
+hi def link informBadStrUnicode	informError
 
 let current_syntax = "inform"
 

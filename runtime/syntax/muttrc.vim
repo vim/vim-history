@@ -198,39 +198,36 @@ syn keyword muttrcVarStr	contained pgp_v3_secring sendmail_bounce
 syn keyword muttrcMenu		contained url
 syn keyword muttrcCommand	alternates localsite unlocalsite
 
-if !exists("did_muttrc_syntax_inits")
-  let did_muttrc_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link muttrcComment		Comment
-  hi link muttrcEscape		SpecialChar
-  hi link muttrcString		String
-  hi link muttrcSpecial		Special
-  hi link muttrcNumber		Number
-  hi link muttrcQuadopt		Boolean
-  hi link muttrcEmail		Special
-  hi link muttrcHeader		Type
-  hi link muttrcKeySpecial	SpecialChar
-  hi link muttrcKey		Type
-  hi link muttrcKeyName		Macro
-  hi link muttrcVarBool		Identifier
-  hi link muttrcVarQuad		Identifier
-  hi link muttrcVarNum		Identifier
-  hi link muttrcVarStr		Identifier
-  hi link muttrcMenu		Identifier
-  hi link muttrcCommand		Keyword
-  hi link muttrcSet		muttrcCommand
-  hi link muttrcUnset		muttrcCommand
-  hi link muttrcBind		muttrcCommand
-  hi link muttrcMacro		muttrcCommand
-  hi link muttrcAlias		muttrcCommand
-  hi link muttrcAliasLine	Identifier
-  hi link muttrcColorField	Identifier
-  hi link muttrcColorFG		String
-  hi link muttrcColorBG		muttrcColorFG
-  hi link muttrcColor		muttrcCommand
-  hi link muttrcMonoAttrib	muttrcColorFG
-  hi link muttrcMono		muttrcCommand
-endif
+" The default highlighting.
+hi def link muttrcComment	Comment
+hi def link muttrcEscape	SpecialChar
+hi def link muttrcString	String
+hi def link muttrcSpecial	Special
+hi def link muttrcNumber	Number
+hi def link muttrcQuadopt	Boolean
+hi def link muttrcEmail		Special
+hi def link muttrcHeader	Type
+hi def link muttrcKeySpecial	SpecialChar
+hi def link muttrcKey		Type
+hi def link muttrcKeyName	Macro
+hi def link muttrcVarBool	Identifier
+hi def link muttrcVarQuad	Identifier
+hi def link muttrcVarNum	Identifier
+hi def link muttrcVarStr	Identifier
+hi def link muttrcMenu		Identifier
+hi def link muttrcCommand	Keyword
+hi def link muttrcSet		muttrcCommand
+hi def link muttrcUnset		muttrcCommand
+hi def link muttrcBind		muttrcCommand
+hi def link muttrcMacro		muttrcCommand
+hi def link muttrcAlias		muttrcCommand
+hi def link muttrcAliasLine	Identifier
+hi def link muttrcColorField	Identifier
+hi def link muttrcColorFG	String
+hi def link muttrcColorBG	muttrcColorFG
+hi def link muttrcColor		muttrcCommand
+hi def link muttrcMonoAttrib	muttrcColorFG
+hi def link muttrcMono		muttrcCommand
 
 let b:current_syntax = "muttrc"
 

@@ -4,7 +4,7 @@
 " Maintainers:   Markus Mottl            <mottl@miss.wu-wien.ac.at>
 "                Fabrizio Zeno Cornelli  <zeno@filibusta.crema.unimi.it>
 " URL:           http://miss.wu-wien.ac.at/~mottl/vim/syntax/sml.vim
-" Last Change:   2000 Oct  01 - integrated Fabrizio's syntax file and
+" Last Change:   2000 Nov 04
 "                               cleaned up for distribution
 
 " Remove any old syntax stuff hanging around.
@@ -161,54 +161,50 @@ syn sync match smlStructSync  groupthere smlStruct  "\<end\>"
 syn sync match smlSigSync     grouphere  smlSig     "\<sig\>"
 syn sync match smlSigSync     groupthere smlSig     "\<end\>"
 
-if !exists("did_sml_syntax_inits")
-  " The default methods for highlighting.  Can be overridden later
-  let did_sml_syntax_inits = 1
+" The default highlighting.
+hi def link smlBraceErr     Error
+hi def link smlBrackErr     Error
+hi def link smlParenErr     Error
 
-  hi link smlBraceErr     Error
-  hi link smlBrackErr     Error
-  hi link smlParenErr     Error
+hi def link smlCommentErr   Error
 
-  hi link smlCommentErr   Error
+hi def link smlEndErr       Error
+hi def link smlThenErr      Error
 
-  hi link smlEndErr       Error
-  hi link smlThenErr      Error
+hi def link smlCharErr      Error
 
-  hi link smlCharErr      Error
+hi def link smlComment      Comment
 
-  hi link smlComment      Comment
+hi def link smlModPath      Include
+hi def link smlModule       Include
+hi def link smlModParam1    Include
+hi def link smlModType      Include
+hi def link smlMPRestr3     Include
+hi def link smlFullMod      Include
+hi def link smlModTypeRestr Include
+hi def link smlWith         Include
+hi def link smlMTDef        Include
 
-  hi link smlModPath      Include
-  hi link smlModule       Include
-  hi link smlModParam1    Include
-  hi link smlModType      Include
-  hi link smlMPRestr3     Include
-  hi link smlFullMod      Include
-  hi link smlModTypeRestr Include
-  hi link smlWith         Include
-  hi link smlMTDef        Include
+hi def link smlConstructor  Constant
 
-  hi link smlConstructor  Constant
+hi def link smlModPreRHS    Keyword
+hi def link smlMPRestr2     Keyword
+hi def link smlKeyword      Keyword
+hi def link smlFunDef       Keyword
+hi def link smlRefAssign    Keyword
+hi def link smlKeyChar      Keyword
+hi def link smlAnyVar       Keyword
+hi def link smlTopStop      Keyword
+hi def link smlOperator     Keyword
 
-  hi link smlModPreRHS    Keyword
-  hi link smlMPRestr2     Keyword
-  hi link smlKeyword      Keyword
-  hi link smlFunDef       Keyword
-  hi link smlRefAssign    Keyword
-  hi link smlKeyChar      Keyword
-  hi link smlAnyVar       Keyword
-  hi link smlTopStop      Keyword
-  hi link smlOperator     Keyword
-
-  hi link smlBoolean      Boolean
-  hi link smlCharacter    Character
-  hi link smlNumber       Number
-  hi link smlReal         Float
-  hi link smlString       String
-  hi link smlType         Type
-  hi link smlTodo         Todo
-  hi link smlEncl         Keyword
-endif
+hi def link smlBoolean      Boolean
+hi def link smlCharacter    Character
+hi def link smlNumber       Number
+hi def link smlReal         Float
+hi def link smlString       String
+hi def link smlType         Type
+hi def link smlTodo         Todo
+hi def link smlEncl         Keyword
 
 let b:current_syntax = "sml"
 

@@ -1,13 +1,13 @@
 " Set options and add mapping such that Vim behaves a lot like MS-Windows
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Oct 07
+" Last change:	2000 Nov 05
 
-" make 'cpoptions' empty
+" set the 'cpoptions' to its Vim default
 if 1	" only do this when compiled with expression evaluation
   let s:save_cpo = &cpoptions
 endif
-set cpoptions=
+set cpo&vim
 
 " set 'selection', 'selectmode', 'mousemodel' and 'keymodel' for MS-Windows
 behave mswin
@@ -94,7 +94,8 @@ inoremap <C-F4> <C-O><C-W>c
 cnoremap <C-F4> <C-C><C-W>c
 
 " restore 'cpoptions'
-set cpoptions&
+set cpo&
 if 1
   let &cpoptions = s:save_cpo
+  unlet s:save_cpo
 endif

@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0k.  Last change: 2000 Oct 29
+*options.txt*   For Vim version 6.0l.  Last change: 2000 Nov 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -43,7 +43,11 @@ achieve special effects.  These options come in three forms:
 :se[t] {option}!   or
 :se[t] inv{option}	Toggle option: Invert value. {not in Vi}
 
-:se[t] {option}&	Reset option to its default value. {not in Vi}
+				*:set-default* *:set-&* *:set-&vi* *:set-&vim*
+:se[t] {option}&	Reset option to its default value.  May Depend on the
+			current value of 'compatible'. {not in Vi}
+:se[t] {option}&vi	Reset option to its Vi default value. {not in Vi}
+:se[t] {option}&vim	Reset option to its Vim default value. {not in Vi}
 
 :se[t] all&		Set all options, except terminal options, to their
 			default value.  The values of 'term', 'lines' and
@@ -506,9 +510,9 @@ dependent.  Note that the options 'binary', 'paste' and 'readonly' are
 included, this might not always be what you want.
 
 When special keys are used in mappings, The 'cpoptions' option will be
-temporarily made empty, to avoid the mappings to be misinterpreted.  This
-makes the file incompatible with Vi, but makes sure it can be used with
-different terminals.
+temporarily set to its Vim default, to avoid the mappings to be
+misinterpreted.  This makes the file incompatible with Vi, but makes sure it
+can be used with different terminals.
 
 Only global mappings are stored, not mappings local to a buffer.
 
@@ -879,6 +883,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	Also, 'fileformat' and 'fileformats' options will not be used, the
 	file is read and written like 'fileformat' was "unix" (a single <NL>
 	separates lines).
+	The 'filecharcode' and 'filecharcodes' options will not be used, the
+	file is read without conversion.
 	NOTE: When you start editing a(nother) file while the 'bin' option is
 	on, settings from autocommands may change the settings again (e.g.,
 	'textwidth'), causing trouble when editing.  You might want to set
@@ -982,12 +988,13 @@ A jump table for the options with a short description can be found at |X_op|.
 	When you set this option, it fires the 'CharCode' autocommand event so
 	you can set up fonts if necessary.
 	The character encoding of files can be different.  This is set with
-	'filecharcode'.  The conversion is specified with 'charconvert'.
+	'filecharcode'.  The conversion is done with iconv() or as specified
+	with 'charconvert'.
 
 	See |multibyte|.
 
 	Possible values are:
-	    latin-1	8-bit characters (ISO 8859-1 or another)
+	    latin-1	8-bit characters (ISO 8859-1)
 	    ansi	same as latin-1 (obsolete, for backward compatibility)
 	    ucs-2	16 bit UCS-2 encoded Unicode (ISO/IEC 10646-1)
 	    ucs-2l	like ucs-2, little endian
@@ -1005,6 +1012,12 @@ A jump table for the options with a short description can be found at |X_op|.
 	    taiwan	use traditional Chinese encoding
 	When the option is set, the value is converted to lower case.  Thus
 	you can set it with upper case values too.
+
+	Note: "latin-1" is also used for other 8-bit character encodings.
+	This only works when editing files in the same encoding!  When the
+	actual characterset is not latin-1, Make sure 'filecharcode' and
+	'filecharcodes' are empty.  When conversion is needed, switch to using
+	utf-8.
 
 	This lets you view, for example, a Japanese S-JIS encoded file
 	(provided you have a suitable font).  Characters that occupy two
@@ -1038,6 +1051,9 @@ A jump table for the options with a short description can be found at |X_op|.
 	An expression that is used for character encoding conversion.  It is
 	evaluated when a file that is to be read or has been written has a
 	different encoding from what is desired.
+	'charconvert' is not used when the internal iconv() function is
+	supported and is able to do the conversion.  Using iconv() is
+	preferred, because it is much faster.
 	The expression must return zero or an empty string for success,
 	non-zero for failure.
 	The possible charcode names encountered are in 'charcode'.
@@ -1373,6 +1389,9 @@ A jump table for the options with a short description can be found at |X_op|.
 		d	Using "./" in the 'tags' option doesn't mean to use
 			the tags file relative to the current file, but the
 			tags file in the current directory.
+		D	Can't use CTRL-K to enter a digraph after Normal mode
+			commands with a character argument, like |r|, |f| and
+			|t|.
 		e	When executing a register with ":@r", always add a
 			<CR> to the last line, also when the register is not
 			linewise.  If this flag is not present, the register
@@ -1780,9 +1799,13 @@ A jump table for the options with a short description can be found at |X_op|.
 	done when reading and writing the file.
 	When 'filecharcode' is empty, the same value as 'charcode' will be
 	used (no conversion when reading or writing a file).
+		WARNING: Conversion can cause loss of information!  When
+		'charcode' is "utf-8" conversion is most likely done in a way
+		that the reverse conversion results in the same text.  When
+		'charcode' is not "utf-8" special characters may be lost!
 	See 'charcode' for the possible values.  Additionally, values may be
-	specified that can be handled by the converter, specified with
-	'charconvert'.
+	specified that can be handled by the converter (either iconv() or
+	specified with 'charconvert').
 	When the option is set, the value is converted to lower case.  Thus
 	you can set it with upper case values too.
 	When this option is set, after starting to edit a file, the 'modified'
@@ -1800,10 +1823,17 @@ A jump table for the options with a short description can be found at |X_op|.
 	When an encoding is found that works, 'filecharcode' is set to it.
 	If all fail, 'filecharcode' is set to an empty string, which means
 	the value of 'charcode' is used.
-	If 'filecharcodes' is empty, 'filecharcode' is not modified.
+		WARNING: Conversion can cause loss of information!  When
+		'charcode' is "utf-8" conversion is most likely done in a way
+		that the reverse conversion results in the same text.  When
+		'charcode' is not "utf-8" special characters may be lost!
+	When 'charcode' is set to "utf-8", you can use this command to
+	automatically handle latin-1 files: >
+		:set filecharcodes=utf-8,latin-1
+<	If 'filecharcodes' is empty, 'filecharcode' is not modified.
 	See 'charcode' for the possible values.  Additionally, values may be
-	specified that can be handled by the converter, specified with
-	'charconvert'.
+	specified that can be handled by the converter (either iconv() or
+	specified with 'charconvert').
 	When the option is set, the value is converted to lower case.  Thus
 	you can set it with upper case values too.
 
@@ -3345,6 +3375,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	Print the line number in front of each line.  When the 'n' option is
 	excluded from 'cpoptions' a wrapped line will not use the column of
 	line numbers (this is the default when 'compatible' isn't set).
+	When a long, wrapped line doesn't start with the first character, '-'
+	characters are put before the number.
 
 					*'osfiletype'* *'oft'*
 'osfiletype' 'oft'	string (RISC-OS default: "Text",

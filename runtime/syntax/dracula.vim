@@ -53,16 +53,12 @@ syn match   draculaPreProc "^#.*"
 "functionality.
 syn sync lines=50
 
-if !exists("did_dracula_syntax_inits")
-  let did_dracula_syntax_inits = 1
- " The default methods for highlighting.  Can be overridden later
-
-  hi link draculaIdentifier Identifier
-  hi link draculaStatement  Statement
-  hi link draculaType       Type
-  hi link draculaComment    Comment
-  hi link draculaPreProc    PreProc
-endif
+" The default highlighting.
+hi def link draculaIdentifier Identifier
+hi def link draculaStatement  Statement
+hi def link draculaType       Type
+hi def link draculaComment    Comment
+hi def link draculaPreProc    PreProc
 
 let b:current_syntax = "dracula"
 

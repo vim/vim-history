@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	SQL, PL/SQL (Oracle 8i)
 " Maintainer:	Paul Moore <gustav@morpheus.demon.co.uk>
-" Last Change:	2000 Jan 04
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -52,18 +52,15 @@ syn match sqlComment	"--.*"
 
 syn sync ccomment sqlComment
 
-if !exists("did_sql_syntax_inits")
-  let did_sql_syntax_inits = 1
-  " The default methods for highlighting. Can be overridden later.
-  hi link sqlComment	Comment
-  hi link sqlKeyword	sqlSpecial
-  hi link sqlNumber	Number
-  hi link sqlOperator	sqlStatement
-  hi link sqlSpecial	Special
-  hi link sqlStatement	Statement
-  hi link sqlString	String
-  hi link sqlType	Type
-endif
+" The default highlighting.
+hi def link sqlComment		Comment
+hi def link sqlKeyword		sqlSpecial
+hi def link sqlNumber		Number
+hi def link sqlOperator		sqlStatement
+hi def link sqlSpecial		Special
+hi def link sqlStatement	Statement
+hi def link sqlString		String
+hi def link sqlType		Type
 
 let b:current_syntax = "sql"
 

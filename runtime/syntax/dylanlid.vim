@@ -11,13 +11,11 @@ syn case ignore
 syn region	dylanlidInfo		matchgroup=Statement start="^" end=":" oneline
 syn region	dylanlidEntry		matchgroup=Statement start=":%" end="$" oneline
 
-syn sync 	lines=50
+syn sync	lines=50
 
-if !exists("did_dylan_lid_syntax_inits")
-  let did_dylan_lid_syntax_inits = 1
-  hi link dylanlidInfo		Type
-  hi link dylanlidEntry		String
-endif
+" The default highlighting.
+hi def link dylanlidInfo		Type
+hi def link dylanlidEntry		String
 
 let b:current_syntax = "dylan-lid"
 

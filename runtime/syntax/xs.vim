@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	XS (Perl extension interface language)
 " Maintainer:	Michael W. Dodge <sarge@pobox.com>
-" Last Change:	1999 Mar 08
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -22,12 +22,10 @@ syn keyword xsVariable	RETVAL NO_INIT
 "syn match xsCast	"\<\(const\|static\|dynamic\|reinterpret\)_cast\s*<"me=e-1
 "syn match xsCast	"\<\(const\|static\|dynamic\|reinterpret\)_cast\s*$"
 
-if !exists("did_xs_syntax_inits")
-  let did_xs_syntax_inits = 1
-  hi link xsKeyword	Keyword
-  hi link xsMacro	Macro
-  hi link xsVariable	Identifier
-endif
+" The default highlighting.
+hi def link xsKeyword	Keyword
+hi def link xsMacro	Macro
+hi def link xsVariable	Identifier
 
 let b:current_syntax = "xs"
 

@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0k.  Last change: 2000 Oct 29
+*todo.txt*      For Vim version 6.0l.  Last change: 2000 Nov 05
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,18 +29,34 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-":help stl" still opens help.txt first.  Can this be avoided?
+Win32: Compiling the Python interface with MSVC doesn't work.
 
-":r `" says "1 returned".  Should say "cannot open file `".
-vim 6.0: can't open file /tmp/asdf". (Akkerman)
+"gk" doesn't work when there is a broken double-width multi-byte character.
+
+Enable "viminfo" by default?
+
+Message deleted now: (Campbell)
+    :set ch=2
+    :inorea Beta Beta<Esc>ma:echo "double Beta(double z,double w)"<CR>`aa
+
+Check how performance of loading the wordlist can be imrpoved (adding a lot of
+abbreviations).
+
+Select Visual block with three clicks (VIsual linewise), a single click
+doesn't remove the highlighting, only the first line.
+
+Selecting Visual block, end partly on a Tab, "sfred<Esc>" doesn't work
+properly (Zellner)
 
 For 'backupcopy': add possibility to switch to "copy" when file name matches
 "\<tmp\>" or "/crontab/".
 
-Dos 16 bit: "make text" doesn't work: stack overflow.
+Dos 16 bit: "make test" doesn't work: stack overflow.
 
-doing c%() with $ in 'cpo' doesn't display the ) because of a showmatch.
+Doing c%() with $ in 'cpo' doesn't display the ) because of a showmatch.
 (Sievert)
+
+Compile distributed executable with dynamic Perl/Python loading?
 
 
 Main items for 6.0:
@@ -72,6 +88,11 @@ J.  User Friendlier
 
 
 A. Folding:
+-   Change foldcolumn:
+    - Use a "+" for a closed fold, "-" for an open fold.  Click on the "+" to
+      open a fold and click on a "-" to close a fold.
+      When an open fold contains another fold at the same line, show "+-".
+    - color closed folds differently.
 -   Change 'foldtext' to an expression?
     When the result is an empty string, display some default info (at least
     the nesting depth and the nr of lines).
@@ -197,11 +218,6 @@ A. Folding:
 
 
 B. UTF-8 support:
--   Displaying digraphs with ":dig" doesn't work properly.
-    Make vim_isprintc() work for characters, not bytes.  Fill chartab for it.
-    'isprint' specifies chars up to 255, chars above are always printable.
-    Also for transchar(), char2cells(), etc.
-    Check: ":digraphs" works correctly when 'charcode' is "utf-8".
 -   Big change: Support editing UTF-8 text while the terminal only supports
     Latin-1.  Show the chars up to 0xff correctly, others with 0xa4 (twice for
     wide characters).  Use 'displaycode' option?
@@ -234,12 +250,6 @@ B. UTF-8 support:
     use 'charconvert'.
     Add configure check for iconv(), also in libiconv (libutf8?).
 -   Also support UTF-16 and convert it to UTF-8? (like mined)
--   Set default for 'charconvert' to "charconvert()".  Should use "recode" in
-    the obvious way.
--   Check for proper UTF-8 codes.  If not, fall back to Latin-1 (or next item
-    from 'filecharcodes').
-    Alternative: handle illegal UTF-8 codes in a way that the bytes are
-    preserved when writing?
 -   Init 'charcode' from $LANG for non-UTF-8?
 -   Combination of 'charconvert' and encryption requires decrypting before
     reading and encryption after writing a file.  Use temp files, make sure
@@ -332,6 +342,7 @@ E. Virtual edit:
 	And when the cursor is in a TAB somewhere, it also doesn't work right.
 
 -   In Visual-block mode "x" doesn't delete part of a tab correctly.
+    Deleting a whole tab also doesn't work properly (deletes to much).
 -   b_op_start and b_op_end also need coladd.
 -   Add more documentation.
 -   Use vpos_t instead of fpos_t for positions that can have a coladd?
@@ -385,9 +396,6 @@ J. User Friendlier
 9   Add buffer-local menu.  Should offer a choice between removing the menu or
     disabling it.  Be careful that tear-offs don't disappear (keep one empty
     item?).
-8   Add ":highlight default ...": Only set if not present yet.  For use in all
-    syntax files, so that user can specify highlighting before loading syntax
-    file.
 9   Make Windows install program better:
     Add an icon on the Desktop, if the user wants this.
     Add Vim to the Start/Programs menu if the user wants this.
@@ -416,7 +424,8 @@ Various recent:
 8   Using "gf" in Visual mode should use the selected text as a file name.
 9   This pattern in syntax/java.vim causes a recursive call of regmatch():
 	syn match   javaStringError      +"\([^"\\]\|\\.\)*$+
-    A long line with a " in it causes a crash when it runs out of stack space.
+    A long line with a " in it can cause a crash when it runs out of stack
+    space (on non-Unix systems)
 9   Number output of ":function <name>", so that the line of an error message
     can be located?
 8   For a "/*" "**" "*/" comment the end isn't aligned properly.
@@ -1044,8 +1053,6 @@ VMS:
     should include it already.
 8   When in Insert mode with 'scrolloff' set, inserting text at the end of the
     file, "!" lines will stay there while they could be used. (Park)
-8   When writing an encryption file the extra 12 bytes are not reported, but
-    when reading they are.  Be consistent! (Colombo)
 8   Unix in an xterm: Select something on the cmdline; go back to text; now
     <S-MiddleMouse> pastes the selection, but <MiddleMouse> doesn't.  Xterm
     first tries getting the primary selection, and if that doesn't work it
@@ -1312,7 +1319,7 @@ Syntax highlighting:
     "%" match.  :syntax nomatch cMatchError (,{,[,),},] [contained]
 8   Highlight the text between two matching parens (e.g., with a grey
     background) when on one of the parens or in between them.
-8   Add a command to jump to the next characterw highlighted with "Error".
+8   Add a command to jump to the next character highlighted with "Error".
 8   When using a cterm, and no ctermfg or ctermbg are defined, use start/stop
     sequences.	Add remark in docs that :if 'term' == "term-name" should be
     used.
@@ -1576,7 +1583,6 @@ Performance:
 8   Dragging the status line doesn't scroll but redraw.
 8   Syntax highlighting is slow when deleting lines.  Try in
     $VIMRUNTIME/filetype.vim.
-8   "p" and "P" redraw everything after the put text.  Should insert lines.
 -   "out of memory" after deleting (1,$d) and changing (:%s/^/> /) a lot of
     lines (27000) a few times.  Memory fragmentation?
 -   Have a look at how pdksh does memory allocation (alloc.c). (Dalecki)
@@ -2208,9 +2214,7 @@ Visual mode:
     the text to short lines too, with padding where needed.
 8   "p" should replace the Visual area with the contents of a register (swap
     register contents with Visual text).
-8   In non-blockwise Visual mode, "r" should replace all characters with the
-    typed one, like in blockwise Visual mode.
-    What is "R" supposed to do?
+8   What is "R" supposed to do in Visual mode?
 8   Make Visual mode local to the buffer.  Allow changing to another buffer.
     When starting a new Visual selection, remove the Visual selection in any
     other buffer. (Ron Aaron)
@@ -2263,7 +2267,7 @@ More advanced repeating commands:
 -   Add "." command after operator: repeat last command of same operator. E.g.
     "c." will repeat last change, also when "x" used since then (Webb).
     "y." will repeat last yank.
-    "2gc." will repeat the last but one change?
+    "c2." will repeat the last but one change?
     Also: keep history of Normal mode commands, add command to list the history
     and/or pick an older command.
 -   History stack for . command?  Use "g." command.
@@ -2439,8 +2443,7 @@ Searching:
 
 Undo:
 8   Make undo more memory-efficient: Compare text before and after change,
-    only remember the lines that really changed. When calling u_save with a
-    single line, don't save it if line was already saved for undo.
+    only remember the lines that really changed.
 7   Add an undo tree: When making a change, instead of clearing any future
     undo (thus redo) info, make a new branch.  How to navigate through the
     undo tree?
@@ -2452,7 +2455,8 @@ Undo:
     When undoing to before the last write, change this to a negative number:
     [-99].
 7   Make it possible to jump to the location of the last change.  Like doing
-    "u" "CTRL-R". (Lange)
+    "u" "CTRL-R". (Lange)  Keep a list of the 10 last changes or so. Use
+    g_CTRL-O and g_CTRL-I?
 -   With undo with simple line delete/insert: optimize screen updating.
 -   When executing macro's: Save each line for undo only once.
 -   Store undo info in a file that survives until the next edit.  Then it's
@@ -2645,9 +2649,6 @@ Marks:
 
 
 Digraphs:
-8   Make it possible to enter a digraph after "r" (with CTRL-K).
-    Also for "f" and "t" movement commands?
-    Need a flag in 'cpo' to switch it off, to enter CTRL-K directly.
 -   Make it possible to enter "r<C-E>" and "r<C-Y>" (get character from line
     below/above).
 -   Use digraph table to tell Vim about the collating sequence of special

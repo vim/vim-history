@@ -13,13 +13,11 @@ syn match xxdSep	contained	":"
 syn match xxdAscii				"  .\{,16\}\r\=$"hs=s+2	contains=xxdDot
 syn match xxdDot	contained	"[.\r]"
 
-if !exists("did_xxd_syntax_inits")
- let did_xxd_syntax_inits = 1
 
- hi link xxdAddress	Constant
- hi link xxdSep		Identifier
- hi link xxdAscii	Statement
-endif
+" The default highlighting.
+hi def link xxdAddress	Constant
+hi def link xxdSep		Identifier
+hi def link xxdAscii	Statement
 
 let b:current_syntax = "xxd"
 

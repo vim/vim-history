@@ -2,7 +2,7 @@
 " Language:	Microsoft VBScript Web Content (ASP)
 " Maintainer:	Devin Weaver <ktohg@tritarget.com>
 " URL:		http://www.tritarget.com/vim/syntax
-" Last Change:	2000 May 01
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -122,22 +122,19 @@ syn sync match AspVBSSyncGroup grouphere AspVBScriptInsideHtmlTags "<%"
 " This is a kludge so the HTML will sync properly
 syn sync match htmlHighlight groupthere htmlTag "%>"
 
-if !exists("did_asp_syntax_inits")
-  let did_asp_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  "hi link AspVBScript		Special
-  hi link AspVBSLineNumber	Comment
-  hi link AspVBSNumber		Number
-  hi link AspVBSError		Error
-  hi link AspVBSStatement	Statement
-  hi link AspVBSString		String
-  hi link AspVBSComment		Comment
-  hi link AspVBSTodo		Todo
-  hi link AspVBSFunction	Identifier
-  hi link AspVBSMethods		PreProc
-  hi link AspVBSEvents		Special
-  hi link AspVBSTypeSpecifier	Type
-endif
+" The default highlighting.
+"hi def link AspVBScript	Special
+hi def link AspVBSLineNumber	Comment
+hi def link AspVBSNumber	Number
+hi def link AspVBSError		Error
+hi def link AspVBSStatement	Statement
+hi def link AspVBSString	String
+hi def link AspVBSComment	Comment
+hi def link AspVBSTodo		Todo
+hi def link AspVBSFunction	Identifier
+hi def link AspVBSMethods	PreProc
+hi def link AspVBSEvents	Special
+hi def link AspVBSTypeSpecifier	Type
 
 let b:current_syntax = "aspvbs"
 

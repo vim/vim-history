@@ -13,19 +13,16 @@ syn match abaqusComment	"^\*\*.*$"
 syn match abaqusKeywordLine "^\*\h.*" contains=abaqusKeyword,abaqusParameter,abaqusValue
 syn match abaqusKeyword "^\*\h[^,]*" contained
 syn match abaqusParameter ",[^,=]\+"lc=1 contained
-syn match abaqusValue 	"=\s*[^,]*"lc=1 contained
+syn match abaqusValue	"=\s*[^,]*"lc=1 contained
 
 " Illegal syntax
 syn match abaqusBadLine	"^\s\+\*.*"
 
-if !exists("did_abaqus_syntax_inits")
-	let did_abaqus_syntax_inits = 1
-	" The default methods for highlighting.  Can be overridden later
-	hi link abaqusComment	Comment
-	hi link abaqusKeyword	Statement
-	hi link abaqusParameter	Identifier
-	hi link abaqusValue	Constant
-	hi link abaqusBadLine Error
-endif
+" The default highlighting.
+hi def link abaqusComment	Comment
+hi def link abaqusKeyword	Statement
+hi def link abaqusParameter	Identifier
+hi def link abaqusValue		Constant
+hi def link abaqusBadLine	Error
 
 let b:current_syntax = "abaqus"

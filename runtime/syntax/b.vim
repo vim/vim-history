@@ -76,48 +76,45 @@ syn region bPreProc		start="^\s*#\s*\(pragma\>\|line\>\|warning\>\|warn\>\|error
 
 syn sync ccomment bComment minlines=10
 
-if !exists("did_b_syntax_inits")
-  let did_b_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link bLabel	Label
-  hi link bUserLabel	Label
-  hi link bConditional	Conditional
-  hi link bRepeat	Repeat
-  hi link bLogic	Special
-  hi link bCharacter	Character
-  hi link bSpecialCharacter bSpecial
-  hi link bNumber	Number
-  hi link bFloat	Float
-  hi link bOctalError	bError
-  hi link bParenError	bError
-"  hi link bInParen	bError
-  hi link bCommentError	bError
-  hi link bBoolean	Identifier
-  hi link bConstant	Identifier
-  hi link bGuard	Identifier
-  hi link bOperator	Operator
-  hi link bKeywords	Operator
-  hi link bOps		Identifier
-  hi link bStructure	Structure
-  hi link bStorageClass	StorageClass
-  hi link bInclude	Include
-  hi link bPreProc	PreProc
-  hi link bDefine	Macro
-  hi link bIncluded	bString
-  hi link bError	Error
-  hi link bStatement	Statement
-  hi link bPreCondit	PreCondit
-  hi link bType		Type
-  hi link bCommentError	bError
-  hi link bCommentString bString
-  hi link bComment2String bString
-  hi link bCommentSkip	bComment
-  hi link bString	String
-  hi link bComment	Comment
-  hi link bSpecial	SpecialChar
-  hi link bTodo		Todo
-  "hi link bIdentifier	Identifier
-endif
+" The default highlighting.
+hi def link bLabel		Label
+hi def link bUserLabel		Label
+hi def link bConditional	Conditional
+hi def link bRepeat		Repeat
+hi def link bLogic		Special
+hi def link bCharacter		Character
+hi def link bSpecialCharacter	bSpecial
+hi def link bNumber		Number
+hi def link bFloat		Float
+hi def link bOctalError		bError
+hi def link bParenError		bError
+"  hi def link bInParen		bError
+hi def link bCommentError	bError
+hi def link bBoolean		Identifier
+hi def link bConstant		Identifier
+hi def link bGuard		Identifier
+hi def link bOperator		Operator
+hi def link bKeywords		Operator
+hi def link bOps		Identifier
+hi def link bStructure		Structure
+hi def link bStorageClass	StorageClass
+hi def link bInclude		Include
+hi def link bPreProc		PreProc
+hi def link bDefine		Macro
+hi def link bIncluded		bString
+hi def link bError		Error
+hi def link bStatement		Statement
+hi def link bPreCondit		PreCondit
+hi def link bType		Type
+hi def link bCommentError	bError
+hi def link bCommentString	bString
+hi def link bComment2String	bString
+hi def link bCommentSkip	bComment
+hi def link bString		String
+hi def link bComment		Comment
+hi def link bSpecial		SpecialChar
+hi def link bTodo		Todo
+"hi def link bIdentifier	Identifier
 
 let current_syntax = "b"
 

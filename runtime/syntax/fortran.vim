@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Fortran90 (and Fortran95, Fortran77, F and elf90)
 " Version:	0.74
-" Last Change:	2000 July 25
+" Last Change:	2000 Nov 04
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
 " For the latest version of this file, see <http://www.unb.ca/chem/ajit/vim.htm>
 " Credits:
@@ -262,7 +262,7 @@ else
     syn keyword fortranType		inout
   endif
   syn match   fortranConditional	"end\s*if"
-  syn match   fortranI_O        	"end\s*="
+  syn match   fortranI_O		"end\s*="
   syn match   fortranConditional	"else\s*if"
 endif
 
@@ -347,51 +347,48 @@ syn region	cIncluded		contained start=+"+ skip=+\\\\\|\\"+ end=+"+
 syn match	cIncluded		contained "<[^>]*>"
 syn match	cInclude		"^\s*#\s*include\>\s*["<]" contains=cIncluded
 
-if !exists("did_fortran_syntax_inits")
-  let did_fortran_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link fortranStatement		Statement
-  hi link fortranConstructName		Special
-  hi link fortranConditional		Conditional
-  hi link fortranRepeat			Repeat
-  hi link fortranTodo			Todo
-  hi fortranLeftMargin			NONE
-  hi link fortranContinueMark		Todo
-  hi link fortranString			String
-  hi link fortranNumber			Number
-  hi link fortranFloat			Float
-  hi link fortranOperator		Operator
-  hi link fortran77Operator		Operator
-  hi link fortranBoolean		Boolean
-  hi link fortranLabelNumber		Special
-  hi link fortranLabelError		Error
-  hi link fortranObsolete		Todo
-  hi link fortranType			Type
-  hi link fortranStructure		Type
-  hi link fortranStorageClass		StorageClass
-  hi link fortranUnitHeader		fortranPreCondit
-  hi link fortranReadWrite		fortranIntrinsic
-  hi link fortranI_O			fortranIntrinsic
-  hi link fortranIntrinsic		Special
-  hi link fortran66Specific		Special
-  hi link fortran77Intrinsic		Special
-  hi link fortranIdentifier		Identifier
-  hi link fortranFormatSpec		Identifier
-  hi link fortranSpecial		Special
-  hi link fortranPreCondit		PreCondit
-  hi link fortrancPreCondit		PreCondit
-  hi link fortranInclude		Include
-  hi link cIncluded			fortranString
-  hi link cInclude			Include
-  hi link cPreProc			PreProc
-  hi link fortranParenError		Error
-  hi link fortranComment		Comment
-  hi link fortSerialNumber		Todo
-  hi link fortranTab			Error
+" The default highlighting.
+hi def link fortranStatement		Statement
+hi def link fortranConstructName	Special
+hi def link fortranConditional		Conditional
+hi def link fortranRepeat		Repeat
+hi def link fortranTodo			Todo
+hi def fortranLeftMargin		NONE
+hi def link fortranContinueMark		Todo
+hi def link fortranString		String
+hi def link fortranNumber		Number
+hi def link fortranFloat		Float
+hi def link fortranOperator		Operator
+hi def link fortran77Operator		Operator
+hi def link fortranBoolean		Boolean
+hi def link fortranLabelNumber		Special
+hi def link fortranLabelError		Error
+hi def link fortranObsolete		Todo
+hi def link fortranType			Type
+hi def link fortranStructure		Type
+hi def link fortranStorageClass		StorageClass
+hi def link fortranUnitHeader		fortranPreCondit
+hi def link fortranReadWrite		fortranIntrinsic
+hi def link fortranI_O			fortranIntrinsic
+hi def link fortranIntrinsic		Special
+hi def link fortran66Specific		Special
+hi def link fortran77Intrinsic		Special
+hi def link fortranIdentifier		Identifier
+hi def link fortranFormatSpec		Identifier
+hi def link fortranSpecial		Special
+hi def link fortranPreCondit		PreCondit
+hi def link fortrancPreCondit		PreCondit
+hi def link fortranInclude		Include
+hi def link cIncluded			fortranString
+hi def link cInclude			Include
+hi def link cPreProc			PreProc
+hi def link fortranParenError		Error
+hi def link fortranComment		Comment
+hi def link fortSerialNumber		Todo
+hi def link fortranTab			Error
 
-  "For future versions
-  "hi link fortranExtended		Special
-endif
+"For future versions
+"hi def link fortranExtended		Special
 
 let b:current_syntax = "fortran"
 

@@ -3567,10 +3567,14 @@ f_has(argvars, retvar)
 	"path_extra",
 #endif
 #ifdef FEAT_PERL
+#ifndef ACTIVE_PERL
 	"perl",
 #endif
+#endif
 #ifdef FEAT_PYTHON
+#ifndef DYNAMIC_PYTHON
 	"python",
+#endif
 #endif
 #ifdef FEAT_QUICKFIX
 	"quickfix",
@@ -3697,6 +3701,14 @@ f_has(argvars, retvar)
     {
 	if (STRICMP(name, "vim_starting") == 0)
 	    n = (starting != 0);
+#ifdef DYNAMIC_PYTHON
+	else if (STRICMP(name, "python") == 0)
+	    n = python_enabled() ? TRUE : FALSE;
+#endif
+#ifdef ACTIVE_PERL
+	else if (STRICMP(name, "perl") == 0)
+	    n = perl_enabled() ? TRUE : FALSE;
+#endif
 #ifdef FEAT_GUI
 	else if (STRICMP(name, "gui_running") == 0)
 	    n = (gui.in_use || gui.starting);

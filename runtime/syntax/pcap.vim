@@ -1,7 +1,8 @@
 " Vim syntax file
 " Config file:	printcap
-" Maintainer:	Lennart Schultz <Lennart.Schultz@ecmwf.int>
-" Last Change:	1999 Jun 14
+" Maintainer:	Lennart Schultz <Lennart.Schultz@ecmwf.int> (defunct)
+"		Modified by Bram
+" Last Change:	2000 Nov 04
 
 "define keywords
 se isk=@,46-57,_,-,#,=,192-255
@@ -22,21 +23,18 @@ syn match pcapKeyword contained ':\(af\|cf\|df\|ff\|gf\|if\|lf\|lo\|lp\|nd\|nf\|
 " allow continuation
 syn match pcapEnd ':\\$' contained
 "
-syn match pcapDefineLast '^\s\+.\+$' contains=pcapBadword,pcapKeyword
-syn match pcapDefine '^\s\+.\+$' contains=pcapBadword,pcapKeyword,pcapEnd
-syn match pcapHeader '^\k.\+\(|\k.\+\)*:\\$'
+syn match pcapDefineLast '^\s.\+$' contains=pcapBadword,pcapKeyword
+syn match pcapDefine '^\s.\+$' contains=pcapBadword,pcapKeyword,pcapEnd
+syn match pcapHeader '^\k[^|]\+\(|\k[^|]\+\)*:\\$'
 syn match pcapComment "#.*$"
 
 syn sync minlines=50
 
 
-if !exists("did_pcap_syntax_inits")
-  let did_pcap_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link pcapBad WarningMsg
-  hi link pcapBadword WarningMsg
-  hi link pcapComment Comment
-endif
+" The default highlighting.
+hi def link pcapBad WarningMsg
+hi def link pcapBadword WarningMsg
+hi def link pcapComment Comment
 
 let b:current_syntax = "pcap"
 

@@ -1,0 +1,30 @@
+*pi_gzip.txt*    For Vim version 6.0l.  Last change: 2000 Oct 31
+
+
+		  VIM REFERENCE MANUAL    by Bram Moolenaar
+
+
+Editing compressed files with Vim		*gzip* *bzip2* *compress*
+
+1. Autocomands			|gzip-autocmd|
+
+The functionality mentioned here is a |standard-plugin|.
+This plugin is only available if 'compatible' is not set.
+You can avoid loading this plugin by setting the "loaded_gzip" variable: >
+	:let loaded_gzip = 1
+
+{Vi does not have any of this}
+
+==============================================================================
+1. Autocomands						*gzip-autocmd*
+
+The plugin installs autocommands to intercept reading and writing of files
+with these extensions:
+
+	extension	compression ~
+	*.Z		compress (Lempel-Ziv)
+	*.gz		gzip
+	*.bz2		bzip2
+
+==============================================================================
+ vim:tw=78:

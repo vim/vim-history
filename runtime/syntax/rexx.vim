@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Rexx
 " Maintainer:	Thomas Geulig <geulig@nentec.de>
-" Last Change:	2000 Apr 19
+" Last Change:	2000 Nov 04
 " URL:		http://www.linuxstart.com/~vimuser/vim/syntax/rexx.vim
 "
 " Special Thanks to Dan Sharp <dwsharp@hotmail.com> for comments and additions
@@ -74,24 +74,21 @@ if !exists("rexx_minlines")
 endif
 exec "syn sync ccomment rexxComment minlines=" . rexx_minlines
 
-if !exists("did_rexx_syntax_inits")
-  let did_rexx_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link rexxUserLabel		Function
-  hi link rexxCharacter		Character
-  hi link rexxParenError	rexxError
-  hi link rexxInParen		rexxError
-  hi link rexxCommentError	rexxError
-  hi link rexxError		Error
-  hi link rexxKeyword		Statement
-  hi link rexxKeyword2		rexxKeyword
-  hi link rexxFunction		Function
-  hi link rexxString		String
-  hi link rexxComment		Comment
-  hi link rexxTodo		Todo
-  hi link rexxSpecialVariable	Special
-  hi link rexxConditional	rexxKeyword
-endif
+" The default highlighting.
+hi def link rexxUserLabel	Function
+hi def link rexxCharacter	Character
+hi def link rexxParenError	rexxError
+hi def link rexxInParen		rexxError
+hi def link rexxCommentError	rexxError
+hi def link rexxError		Error
+hi def link rexxKeyword		Statement
+hi def link rexxKeyword2	rexxKeyword
+hi def link rexxFunction	Function
+hi def link rexxString		String
+hi def link rexxComment		Comment
+hi def link rexxTodo		Todo
+hi def link rexxSpecialVariable	Special
+hi def link rexxConditional	rexxKeyword
 
 let b:current_syntax = "rexx"
 

@@ -14,10 +14,8 @@ syn region wdiffOld start=+\[-+ end=+-]+
 syn region wdiffNew start="{+" end="+}"
 
 
-if !exists("did_wdiff_syntax_inits")
-  let did_wdiff_syntax_inits = 1
-  hi link wdiffOld      Special
-  hi link wdiffNew      Identifier
-endif
+" The default highlighting.
+hi def link wdiffOld      Special
+hi def link wdiffNew      Identifier
 
 let b:current_syntax = "wdiff"

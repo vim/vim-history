@@ -3,7 +3,7 @@
 " Maintainer:	Reimer Behrends <behrends@cse.msu.edu>
 "		With much input from Jocelyn Fiat <fiat@eiffel.com>
 " See http://www.cse.msu.edu/~behrends/vim/ for the most current version.
-" Last Change:	1999 Sep 19
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 
@@ -125,57 +125,54 @@ syn region eiffelParen		transparent start="(" end=")" contains=ALLBUT,eiffelPare
 " Should suffice for even very long strings and expressions
 syn sync lines=40
 
-if !exists("did_eiffel_syntax_inits")
-  let did_eiffel_syntax_inits = 1
-  " The default methods for hilighting.  Can be overridden later
-  hi link eiffelKeyword		Statement
-  hi link eiffelProperty	Statement
-  hi link eiffelInheritClause	Statement
-  hi link eiffelStatement	Statement
-  hi link eiffelDeclaration	Statement
-  hi link eiffelAssertion	Statement
-  hi link eiffelDebug		Statement
-  hi link eiffelException	Statement
-  hi link eiffelGenericCreate	Statement
+" The default highlighting.
+hi def link eiffelKeyword	Statement
+hi def link eiffelProperty	Statement
+hi def link eiffelInheritClause	Statement
+hi def link eiffelStatement	Statement
+hi def link eiffelDeclaration	Statement
+hi def link eiffelAssertion	Statement
+hi def link eiffelDebug		Statement
+hi def link eiffelException	Statement
+hi def link eiffelGenericCreate	Statement
 
 
-  hi link eiffelTopStruct	PreProc
+hi def link eiffelTopStruct	PreProc
 
-  hi link eiffelAll		Special
-  hi link eiffelAnchored	Special
-  hi link eiffelBitType		Special
+hi def link eiffelAll		Special
+hi def link eiffelAnchored	Special
+hi def link eiffelBitType	Special
 
 
-  hi link eiffelBool		Boolean
-  hi link eiffelString		String
-  hi link eiffelCharacter	Character
-  hi link eiffelClassName	Type
-  hi link eiffelNumber		Number
+hi def link eiffelBool		Boolean
+hi def link eiffelString	String
+hi def link eiffelCharacter	Character
+hi def link eiffelClassName	Type
+hi def link eiffelNumber	Number
 
-  hi link eiffelStringEscape	Special
+hi def link eiffelStringEscape	Special
 
-  hi link eiffelOperator	Special
-  hi link eiffelArray		Special
-  hi link eiffelExport		Special
-  hi link eiffelCreation	Special
-  hi link eiffelBrackets	Special
-  hi link eiffelGeneric		Special
-  hi link eiffelGenericDecl	Special
-  hi link eiffelConstraint	Special
-  hi link eiffelCreate		Special
+hi def link eiffelOperator	Special
+hi def link eiffelArray		Special
+hi def link eiffelExport	Special
+hi def link eiffelCreation	Special
+hi def link eiffelBrackets	Special
+hi def link eiffelGeneric	Special
+hi def link eiffelGenericDecl	Special
+hi def link eiffelConstraint	Special
+hi def link eiffelCreate	Special
 
-  hi link eiffelPredefined	Constant
+hi def link eiffelPredefined	Constant
 
-  hi link eiffelComment		Comment
+hi def link eiffelComment	Comment
 
-  hi link eiffelError		Error
-  hi link eiffelBadConstant	Error
-  hi link eiffelStringError	Error
-  hi link eiffelParenError	Error
-  hi link eiffelBracketError	Error
+hi def link eiffelError		Error
+hi def link eiffelBadConstant	Error
+hi def link eiffelStringError	Error
+hi def link eiffelParenError	Error
+hi def link eiffelBracketError	Error
 
-  hi link eiffelTodo		Todo
-endif
+hi def link eiffelTodo		Todo
 
 let b:current_syntax = "eiffel"
 

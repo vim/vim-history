@@ -16,9 +16,6 @@ syn include @wshJavaScript <sfile>:p:h/javascript.vim
 syn region wshVBScript matchgroup=xmlTag start="<script[^>]*VBScript[^>]*>" end="</script>" contains=@wshVBScript
 syn region wshJavaScript matchgroup=xmlTag start="<script[^>]*J\(ava\)\=Script[^>]*>" end="</script>" contains=@wshJavaScript
 
-if !exists("did_wsh_syntax_inits")
-  let did_wsh_syntax_inits = 1
-  " No type-specific highlighting -- it's all reused from other files
-endif
+" No type-specific highlighting -- it's all reused from other files
 
 let b:current_syntax = "wsh"

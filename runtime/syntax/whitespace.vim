@@ -6,9 +6,9 @@
 syn match Space " "
 syn match Tab "\t"
 if &background == "dark"
-  hi Space ctermbg=darkred guibg=#500000
-  hi Tab ctermbg=darkgreen guibg=#003000
+  hi def Space ctermbg=darkred guibg=#500000
+  hi def Tab ctermbg=darkgreen guibg=#003000
 else
-  hi Space ctermbg=lightred guibg=#ffd0d0
-  hi Tab ctermbg=lightgreen guibg=#d0ffd0
+  hi def Space ctermbg=lightred guibg=#ffd0d0
+  hi def Tab ctermbg=lightgreen guibg=#d0ffd0
 endif

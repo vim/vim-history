@@ -707,45 +707,42 @@ if exists("postscr_ghostscript")
 endif " GhostScript highlighting
 
 
-if !exists("did_postscr_syntax_inits")
-  let did_postscr_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link postscrComment        Comment
+" The default highlighting.
+hi def link postscrComment        Comment
 
-  hi link postscrConstant       Constant
-  hi link postscrString         String
-  hi link postscrASCIIString    postscrString
-  hi link postscrHexString      postscrString
-  hi link postscrASCII85String  postscrString
-  hi link postscrNumber         Number
-  hi link postscrInteger        postscrNumber
-  hi link postscrHex            postscrNumber
-  hi link postscrRadix          postscrNumber
-  hi link postscrFloat          Float
-  hi link postscrBoolean        Boolean
+hi def link postscrConstant       Constant
+hi def link postscrString         String
+hi def link postscrASCIIString    postscrString
+hi def link postscrHexString      postscrString
+hi def link postscrASCII85String  postscrString
+hi def link postscrNumber         Number
+hi def link postscrInteger        postscrNumber
+hi def link postscrHex            postscrNumber
+hi def link postscrRadix          postscrNumber
+hi def link postscrFloat          Float
+hi def link postscrBoolean        Boolean
 
-  hi link postscrIdentifier     Identifier
-  hi link postscrProcedure      Function
+hi def link postscrIdentifier     Identifier
+hi def link postscrProcedure      Function
 
-  hi link postscrName           Statement
-  hi link postscrConditional    Conditional
-  hi link postscrRepeat         Repeat
-  hi link postscrOperator       Operator
-  hi link postscrMathOperator  postscrOperator
-  hi link postscrLogicalOperator  postscrOperator
-  hi link postscrBinaryOperator postscrOperator
+hi def link postscrName           Statement
+hi def link postscrConditional    Conditional
+hi def link postscrRepeat         Repeat
+hi def link postscrOperator       Operator
+hi def link postscrMathOperator  postscrOperator
+hi def link postscrLogicalOperator  postscrOperator
+hi def link postscrBinaryOperator postscrOperator
 
-  hi link postscrDSCComment     SpecialComment
-  hi link postscrSpecialChar    SpecialChar
+hi def link postscrDSCComment     SpecialComment
+hi def link postscrSpecialChar    SpecialChar
 
-  hi link postscrTodo           Todo
+hi def link postscrTodo           Todo
 
-  hi link postscrError          Error
-  hi link postscrSpecialCharError postscrError
-  hi link postscrASCII85CharError postscrError
-  hi link postscrHexCharError   postscrError
-  hi link postscrIdentifierError postscrError
-endif
+hi def link postscrError          Error
+hi def link postscrSpecialCharError postscrError
+hi def link postscrASCII85CharError postscrError
+hi def link postscrHexCharError   postscrError
+hi def link postscrIdentifierError postscrError
 
 let b:current_syntax = "postscr"
 

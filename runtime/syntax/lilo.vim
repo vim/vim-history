@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	lilo
 " Maintainer:	Klaus Muth <mh@hagos.de>
-" Last Change:	1999 Jun 14
+" Last Change:	2000 Nov 04
 " URL:		http://unitopia.mud.de/~monty/vim/syntax/lilo.vim
 "
 " Sorry, not much different colors in it. Any line without color must be
@@ -38,15 +38,12 @@ syn match	liloImage	"\s*\(image\|other\)\s*=.*$"
 syn match	liloPath	"\/.*"
 syn match	liloNumber	"\d\+"
 
-if !exists("did_lilo_syntax_inits")
-  let did_lilo_syntax_inits = 1
-  " The default methods for highlighting. Can be overridden later.
-  hi link liloPOption	Keyword
-  hi link liloOption	Keyword
-  hi link liloPath	Constant
-  hi link liloNumber	Number
-  hi link liloImage	Title
-endif
+" The default highlighting.
+hi def link liloPOption	Keyword
+hi def link liloOption	Keyword
+hi def link liloPath	Constant
+hi def link liloNumber	Number
+hi def link liloImage	Title
 
 let b:current_syntax = "lilo"
 

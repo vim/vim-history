@@ -105,23 +105,20 @@ syntax match clipperCommentError	"\*/"
 syntax match clipperComment		"^\*.*"
 
 
-if !exists("did_clipper_syntax_inits")
-  let did_clipper_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link clipperConditional		Conditional
-  hi link clipperRepeat			Repeat
-  hi link clipperNumber			Number
-  hi link clipperInclude		Include
-  hi link clipperComment		Comment
-  hi link clipperOperator		Operator
-  hi link clipperStorageClass		StorageClass
-  hi link clipperStatement		Statement
-  hi link clipperString			String
-  hi link clipperFunction		Function
-  hi link clipperLineContinuation	Special
-  hi link clipperDelimiters		Delimiter
-  hi link clipperUserVariable		Identifier
-endif
+" The default highlighting.
+hi def link clipperConditional		Conditional
+hi def link clipperRepeat			Repeat
+hi def link clipperNumber			Number
+hi def link clipperInclude			Include
+hi def link clipperComment			Comment
+hi def link clipperOperator			Operator
+hi def link clipperStorageClass		StorageClass
+hi def link clipperStatement		Statement
+hi def link clipperString			String
+hi def link clipperFunction			Function
+hi def link clipperLineContinuation	Special
+hi def link clipperDelimiters		Delimiter
+hi def link clipperUserVariable		Identifier
 
 let b:current_syntax = "clipper"
 

@@ -151,31 +151,28 @@ syn match mfComment	"%.*$"
 " synchronizing
 syn sync maxlines=50
 
-if !exists("did_mf_syntax_inits")
-  let did_mf_syntax_inits = 1
-  " The default methods for highlighting. Can be overridden later
-  hi link mfBoolExp	Statement
-  hi link mfNumExp	Statement
-  hi link mfInternal	Identifier
-  hi link mfPairExp	Statement
-  hi link mfPathExp	Statement
-  hi link mfPenExp	Statement
-  hi link mfPicExp	Statement
-  hi link mfStringExp	Statement
-  hi link mfCommand	Statement
-  hi link mfType	Type
-  hi link mfStatement	Statement
-  hi link mfDefinition	Statement
-  hi link mfCondition	Conditional
-  hi link mfPrimitive	Statement
-  hi link mfMacro	Macro
-  hi link mfCoord	Identifier
-  hi link mfPoint	Identifier
-  hi link mfNumeric	Number
-  hi link mfLength	Number
-  hi link mfComment	Comment
-  hi link mfString	String
-endif
+" The default highlighting.
+hi def link mfBoolExp		Statement
+hi def link mfNumExp		Statement
+hi def link mfInternal		Identifier
+hi def link mfPairExp		Statement
+hi def link mfPathExp		Statement
+hi def link mfPenExp		Statement
+hi def link mfPicExp		Statement
+hi def link mfStringExp		Statement
+hi def link mfCommand		Statement
+hi def link mfType		Type
+hi def link mfStatement		Statement
+hi def link mfDefinition	Statement
+hi def link mfCondition		Conditional
+hi def link mfPrimitive		Statement
+hi def link mfMacro		Macro
+hi def link mfCoord		Identifier
+hi def link mfPoint		Identifier
+hi def link mfNumeric		Number
+hi def link mfLength		Number
+hi def link mfComment		Comment
+hi def link mfString		String
 
 let b:current_syntax = "mf"
 

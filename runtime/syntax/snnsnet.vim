@@ -51,16 +51,13 @@ syn match	snnsnetNumbers	"\d" contained
 syn match	snnsnetComment	"#.*$" contains=snnsnetTodo
 syn keyword	snnsnetTodo	TODO XXX FIXME contained
 
-if !exists("did_snnsnet_syntax_inits")
-  let did_snnsnet_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link snnsnetType		Type
-  hi link snnsnetComment	Comment
-  hi link snnsnetNumbers	Number
-  hi link snnsnetSection	Statement
-  hi link snnsnetTitle		Label
-  hi link snnsnetTodo		Todo
-endif
+" The default highlighting.
+hi def link snnsnetType		Type
+hi def link snnsnetComment	Comment
+hi def link snnsnetNumbers	Number
+hi def link snnsnetSection	Statement
+hi def link snnsnetTitle	Label
+hi def link snnsnetTodo		Todo
 
 let b:current_syntax = "snnsnet"
 

@@ -3,7 +3,7 @@
 " Maintainer:	Lutz Eymers <ixtab@polzin.com>
 " URL:		http://www-public.rz.uni-duesseldorf.de/~eymers/vim/syntax
 " Email:	Subject: send syntax_vim.tgz
-" Last Change:	1999 Dec 27
+" Last Change:	2000 Nov 04
 "
 " Options	phtml_sql_query = 1 for SQL syntax highligthing inside strings
 "		phtml_minlines = x     to sync at least x lines backwards
@@ -187,31 +187,28 @@ else
   syn sync minlines=100
 endif
 
-if !exists("did_phtml_syntax_inits")
-  let did_phtml_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link phtmlComment		Comment
-  hi link phtmlString		String
-  hi link phtmlNumber		Number
-  hi link phtmlFloat		Float
-  hi link phtmlIdentifier	Identifier
-  hi link phtmlIntVar		Identifier
-  hi link phtmlEnvVar		Identifier
-  hi link phtmlFunctions	Function
-  hi link phtmlRepeat		Repeat
-  hi link phtmlConditional	Conditional
-  hi link phtmlLabel		Label
-  hi link phtmlStatement	Statement
-  hi link phtmlType		Type
-  hi link phtmlInclude		Include
-  hi link phtmlDefine		Define
-  hi link phtmlSpecialChar	SpecialChar
-  hi link phtmlParentError	Error
-  hi link phtmlOctalError	Error
-  hi link phtmlTodo		Todo
-  hi link phtmlOperator		Operator
-  hi link phtmlRelation         Operator
-endif
+" The default highlighting.
+hi def link phtmlComment	Comment
+hi def link phtmlString		String
+hi def link phtmlNumber		Number
+hi def link phtmlFloat		Float
+hi def link phtmlIdentifier	Identifier
+hi def link phtmlIntVar		Identifier
+hi def link phtmlEnvVar		Identifier
+hi def link phtmlFunctions	Function
+hi def link phtmlRepeat		Repeat
+hi def link phtmlConditional	Conditional
+hi def link phtmlLabel		Label
+hi def link phtmlStatement	Statement
+hi def link phtmlType		Type
+hi def link phtmlInclude	Include
+hi def link phtmlDefine		Define
+hi def link phtmlSpecialChar	SpecialChar
+hi def link phtmlParentError	Error
+hi def link phtmlOctalError	Error
+hi def link phtmlTodo		Todo
+hi def link phtmlOperator	Operator
+hi def link phtmlRelation       Operator
 
 let b:current_syntax = "phtml"
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Objective C
 " Maintainer:	Valentino Kyriakides <1kyriaki@informatik.uni-hamburg.de>
-" Last Change:	1999 Jun 14
+" Last Change:	2000 Nov 04
 
 " Read the C syntax to start with
 source <sfile>:p:h/c.vim
@@ -39,17 +39,15 @@ syn match objcInstMethod  "^[\t\s]*-[\s]*"
 syn match objcFactMethod  "^[\t\s]*+[\s]*"
 
 
-if !exists("did_objc_syntax_inits")
-  let did_objc_syntax_inits = 1
-  hi link objcImport	Include
-  hi link objcImported	cString
-  hi link objcType	Type
-  hi link objcScopeDecl	Statement
-  hi link objcInstMethod	Function
-  hi link objcFactMethod	Function
-  hi link objcStatement	Statement
-  hi link objcDirective	Statement
-endif
+" The default highlighting.
+hi def link objcImport		Include
+hi def link objcImported	cString
+hi def link objcType		Type
+hi def link objcScopeDecl	Statement
+hi def link objcInstMethod	Function
+hi def link objcFactMethod	Function
+hi def link objcStatement	Statement
+hi def link objcDirective	Statement
 
 let b:current_syntax = "objc"
 

@@ -1,0 +1,87 @@
+*pi_expl.txt*    For Vim version 6.0l.  Last change: 2000 Nov 05
+
+
+		  VIM REFERENCE MANUAL    by M A Aziz Ahmed
+
+
+						*file-explorer* *file-browser*
+Plugin for exploring (or browsing) directories and files
+
+1. Starting the file explorer		|expl-starting|
+
+The functionality mentioned here is a |standard-plugin|.
+This plugin is only available if 'compatible' is not set.
+You can avoid loading this plugin by setting the "loaded_explorer" variable: >
+	:let loaded_explorer = 1
+
+{Vi does not have any of this}
+
+==============================================================================
+1. Starting the file explorer				*expl-starting*
+
+This plugin is to explore directories and files inside Vim. The file explorer
+is launched whenever the user tries to edit a directory. It can also be
+launched through the mapped key sequence <Leader>e. To open the file
+explorer in a new window use the key sequence <Leader>s. |<Leader>|
+
+							*explorer-settings*
+If the explorer is launched using the command <Leader>e or <Leader>s, the
+directory which will be opened will depend on the 'browsedir' option.
+|'browsedir'|
+
+							*g:explVertical*
+The file explorer by splitting the current window horizontally or vertically.
+To split the window vertically, inside explorer.vim, set the following: >
+  let g:explVertical=1
+Setting it to zero will cause the window to split horizontally.
+
+>From inside the explorer, pressing <enter> on a filename will close the
+explorer and open the file chosen. To open the file in a new window, press e.
+The new window will be split horizontally or vertically based on the value of
+the variable g:explVertical.
+
+							*g:explWinSize*
+After opening a file with the e command, you might want to resize the explorer
+window. This can be done by setting the variable >
+  let g:explWinSize=N
+N is the number of rows (when the window is split horizontally) or the number
+of columns (when the window is split vertically). If you don't want to use this
+feature, use >
+  let g:explWinSize=""
+<
+							*g:explShowFileSize*
+							*g:explShowFileDate*
+Extra information about the files (size in bytes and modified time) can also
+be displayed inside the file explorer window. By pressing 'v', you can
+increase the 'verbosity' of the information. If you want this information to
+be always displayed set >
+  let g:explShowFileSize=1
+  let g:explShowFileDate=1
+Doing this may slightly slow down explorer. The difference may or may not be
+noticeable depending on your system and whether the directory is local or on
+the network and on the size of the directory.
+
+							*g:explDateFormat*
+The format of date displayed is configurable using the variable
+g:explDateFormat.  explorer uses this variable to pass to strftime() to fetch
+the date information. |strftime()|
+
+							*g:explShowDotFiles*
+On some systems, files beginning with "." are hidden files. If you would like
+explorer to show these files, you can set the following option >
+  let g:explShowDotFiles
+<
+							*g:explDetailedHelp*
+The help information spanning a few lines can be turned off (and just a single
+help message enabled) using the option >
+  let g:explDetailedHelp=0
+You can anytime switch to the detailed help format by pressing h.
+
+							*explorer-delete*
+Pressing 'd' inside explorer deletes the file under the cursor. You can delete
+many files by visually selecting them and using 'd'. The deletion is
+interactive in the form y/n/a/q. Directory deletion is not supported (mainly
+because there is no way to delete a directory using a vim built-in function).
+
+==============================================================================
+ vim:tw=78:

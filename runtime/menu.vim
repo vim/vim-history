@@ -3,12 +3,12 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Oct 28
+" Last Change:	2000 Nov 05
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
 let s:cpo_save = &cpo
-let &cpo = ""
+set cpo&vim
 
 " Avoid installing the menus twice
 if !exists("did_install_default_menus")
@@ -236,9 +236,9 @@ func! <SID>BMShow(...)
     let g:bmenu_priority = a:1
   endif
 
-  " create new menu; make 'cpo' empty to include the <CR>
+  " create new menu; set 'cpo' to include the <CR>
   let cpo_save = &cpo
-  let &cpo = ""
+  set cpo&vim
   exe 'am ' . g:bmenu_priority . ".2 &Buffers.Refresh :call <SID>BMShow()<CR>"
   exe 'am ' . g:bmenu_priority . ".4 &Buffers.Delete :bd<CR>"
   exe 'am ' . g:bmenu_priority . ".6 &Buffers.Alternate :b #<CR>"
@@ -316,9 +316,9 @@ func! <SID>BMFilename(name, num)
   else
     let name = 'am ' . g:bmenu_priority . '.' . hash . '.' . hash . ' &Buffers.' . <SID>BMHash2(munge) . munge
   endif
-  " make 'cpo' empty to include the <CR>
+  " set 'cpo' to include the <CR>
   let cpo_save = &cpo
-  let &cpo = ""
+  set cpo&vim
   exe name . ' :b' . a:num . '<CR>'
   let &cpo = cpo_save
 endfunc
@@ -881,5 +881,6 @@ endif " !exists("did_install_syntax_menu")
 
 " Restore the previous value of 'cpoptions'.
 let &cpo = s:cpo_save
+unlet s:cpo_save
 
 " vim: set sw=2 :

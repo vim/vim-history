@@ -1296,30 +1296,30 @@ findmatch(oap, initc)
 
     pos_t *
 findmatchlimit(oap, initc, flags, maxtravel)
-    oparg_t   *oap;
-    int	    initc;
-    int	    flags;
-    int	    maxtravel;
+    oparg_t	*oap;
+    int		initc;
+    int		flags;
+    int		maxtravel;
 {
-    static pos_t	    pos;		/* current search position */
-    int		    findc = 0;		/* matching brace */
-    int		    c;
-    int		    count = 0;		/* cumulative number of braces */
-    int		    backwards = FALSE;	/* init for gcc */
-    int		    inquote = FALSE;	/* TRUE when inside quotes */
-    char_u	    *linep;		/* pointer to current line */
-    char_u	    *ptr;
-    int		    do_quotes;		/* check for quotes in current line */
-    int		    at_start;		/* do_quotes value at start position */
-    int		    hash_dir = 0;	/* Direction searched for # things */
-    int		    comment_dir = 0;	/* Direction searched for comments */
-    pos_t	    match_pos;		/* Where last slash-star was found */
-    int		    start_in_quotes;	/* start position is in quotes */
-    int		    traveled = 0;	/* how far we've searched so far */
-    int		    ignore_cend = FALSE;    /* ignore comment end */
-    int		    cpo_match;		/* vi compatible matching */
-    int		    dir;		/* Direction to search */
-    int		    comment_col = MAXCOL;   /* start of / / comment */
+    static pos_t pos;			/* current search position */
+    int		findc = 0;		/* matching brace */
+    int		c;
+    int		count = 0;		/* cumulative number of braces */
+    int		backwards = FALSE;	/* init for gcc */
+    int		inquote = FALSE;	/* TRUE when inside quotes */
+    char_u	*linep;			/* pointer to current line */
+    char_u	*ptr;
+    int		do_quotes;		/* check for quotes in current line */
+    int		at_start;		/* do_quotes value at start position */
+    int		hash_dir = 0;		/* Direction searched for # things */
+    int		comment_dir = 0;	/* Direction searched for comments */
+    pos_t	match_pos;		/* Where last slash-star was found */
+    int		start_in_quotes;	/* start position is in quotes */
+    int		traveled = 0;		/* how far we've searched so far */
+    int		ignore_cend = FALSE;    /* ignore comment end */
+    int		cpo_match;		/* vi compatible matching */
+    int		dir;			/* Direction to search */
+    int		comment_col = MAXCOL;   /* start of / / comment */
 
     pos = curwin->w_cursor;
     linep = ml_get(pos.lnum);
@@ -2246,7 +2246,7 @@ fwd_word(count, type, eol)
 	 */
 	last_line = (curwin->w_cursor.lnum == curbuf->b_ml.ml_line_count);
 	i = inc_cursor();
-	if (i == -1 || (i == 1 && last_line)) /* started at last char in file */
+	if (i == -1 || (i >= 1 && last_line)) /* started at last char in file */
 	    return FAIL;
 	if (i == 1 && eol && count == 0)      /* started at last char in line */
 	    return OK;
@@ -2258,7 +2258,7 @@ fwd_word(count, type, eol)
 	    while (cls() == sclass)
 	    {
 		i = inc_cursor();
-		if (i == -1 || (i == 1 && eol && count == 0))
+		if (i == -1 || (i >= 1 && eol && count == 0))
 		    return OK;
 	    }
 
@@ -2274,7 +2274,7 @@ fwd_word(count, type, eol)
 		break;
 
 	    i = inc_cursor();
-	    if (i == -1 || (i == 1 && eol && count == 0))
+	    if (i == -1 || (i >= 1 && eol && count == 0))
 		return OK;
 	}
     }

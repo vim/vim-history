@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	IDL (Interface Description Language)
 " Maintainer:	Jody Goldberg <jodyg@idt.net>
-" Last Change:	2000 Oct 03
+" Last Change:	2000 Nov 04
 
 " This is an experiment.  IDL's structure is simple enough to permit a full
 " grammar based approach to rather than using a few heuristics.  The result
@@ -123,65 +123,62 @@ syn keyword idlUnion		union				skipempty skipwhite nextgroup=idlUnionName
 
 syn sync lines=200
 
-if !exists("did_idl_syntax_inits")
-  let did_idl_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link idlInclude	Include
-  hi link idlPreProc	PreProc
-  hi link idlPreCondit	PreCondit
-  hi link idlDefine	Macro
-  hi link idlIncluded	String
-  hi link idlString	String
-  hi link idlComment	Comment
-  hi link idlTodo	Todo
-  hi link idlLiteral	Number
+" The default highlighting.
+hi def link idlInclude		Include
+hi def link idlPreProc		PreProc
+hi def link idlPreCondit	PreCondit
+hi def link idlDefine		Macro
+hi def link idlIncluded		String
+hi def link idlString		String
+hi def link idlComment		Comment
+hi def link idlTodo		Todo
+hi def link idlLiteral		Number
 
-  hi link idlModule	Keyword
-  hi link idlInterface	Keyword
-  hi link idlEnum	Keyword
-  hi link idlStruct	Keyword
-  hi link idlUnion	Keyword
-  hi link idlTypedef	Keyword
-  hi link idlException	Keyword
+hi def link idlModule		Keyword
+hi def link idlInterface	Keyword
+hi def link idlEnum		Keyword
+hi def link idlStruct		Keyword
+hi def link idlUnion		Keyword
+hi def link idlTypedef		Keyword
+hi def link idlException	Keyword
 
-  hi link idlModuleName		Typedef
-  hi link idlInterfaceName	Typedef
-  hi link idlEnumName		Typedef
-  hi link idlStructName		Typedef
-  hi link idlUnionName		Typedef
+hi def link idlModuleName	Typedef
+hi def link idlInterfaceName	Typedef
+hi def link idlEnumName		Typedef
+hi def link idlStructName	Typedef
+hi def link idlUnionName	Typedef
 
-  hi link idlBaseTypeInt	idlType
-  hi link idlBaseType		idlType
-  hi link idlSeqType		idlType
-  hi link idlD1			Paren
-  hi link idlD2			Paren
-  hi link idlD3			Paren
-  hi link idlD4			Paren
-  "hi link idlArraySize		Paren
-  "hi link idlArraySize1	Paren
-  hi link idlModuleContent	Paren
-  hi link idlUnionContent	Paren
-  hi link idlStructContent	Paren
-  hi link idlEnumContents	Paren
-  hi link idlInterfaceContent	Paren
+hi def link idlBaseTypeInt	idlType
+hi def link idlBaseType		idlType
+hi def link idlSeqType		idlType
+hi def link idlD1		Paren
+hi def link idlD2		Paren
+hi def link idlD3		Paren
+hi def link idlD4		Paren
+"hi def link idlArraySize	Paren
+"hi def link idlArraySize1	Paren
+hi def link idlModuleContent	Paren
+hi def link idlUnionContent	Paren
+hi def link idlStructContent	Paren
+hi def link idlEnumContents	Paren
+hi def link idlInterfaceContent	Paren
 
-  hi link idlSimpDecl		Identifier
-  hi link idlROAttr		StorageClass
-  hi link idlAttr		Keyword
-  hi link idlConst		StorageClass
+hi def link idlSimpDecl		Identifier
+hi def link idlROAttr		StorageClass
+hi def link idlAttr		Keyword
+hi def link idlConst		StorageClass
 
-  hi link idlOneWayOp	StorageClass
-  hi link idlOp		idlType
-  hi link idlParmType	idlType
-  hi link idlOpName	Function
-  hi link idlOpParms	StorageClass
-  hi link idlParmName	Identifier
-  hi link idlInheritFrom	Identifier
+hi def link idlOneWayOp		StorageClass
+hi def link idlOp		idlType
+hi def link idlParmType		idlType
+hi def link idlOpName		Function
+hi def link idlOpParms		StorageClass
+hi def link idlParmName		Identifier
+hi def link idlInheritFrom	Identifier
 
-  hi link idlId		Constant
-  "hi link idlCase	Keyword
-  hi link idlCaseLabel	Constant
-endif
+hi def link idlId		Constant
+"hi def link idlCase		Keyword
+hi def link idlCaseLabel	Constant
 
 let b:current_syntax = "idl"
 

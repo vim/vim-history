@@ -45,19 +45,16 @@ syn match spiceParenError ")"
 " =====
 syn sync minlines=50
 
-if !exists("did_spice_syntax_inits")
-  let did_spice_syntax_inits = 1
-" The default methods for highlighting.  Can be overridden later
-  hi link spiceTodo	Todo
-  hi link spiceWrapLineOperator spiceOperator
-  hi link spiceSinglequote      spiceExpr
-  hi link spiceExpr             Function
-  hi link spiceParenError       Error
-  hi link spiceStatement        Statement
-  hi link spiceNumber           Number
-  hi link spiceComment          Comment
-  hi link spiceOperator         Operator
-endif
+" The default highlighting.
+hi def link spiceTodo		Todo
+hi def link spiceWrapLineOperator spiceOperator
+hi def link spiceSinglequote	spiceExpr
+hi def link spiceExpr		Function
+hi def link spiceParenError	Error
+hi def link spiceStatement	Statement
+hi def link spiceNumber		Number
+hi def link spiceComment	Comment
+hi def link spiceOperator	Operator
 
 let b:current_syntax = "spice"
 

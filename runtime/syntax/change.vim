@@ -15,12 +15,9 @@ syn clear
 syn region changeFromMaterial start="^@x.*$"ms=e+1 end="^@y.*$"me=s-1
 syn region changeToMaterial start="^@y.*$"ms=e+1 end="^@z.*$"me=s-1
 
-if !exists("did_change_syntax_inits")
-  let did_change_syntax_inits = 1
-  " The default methods for highlighting. Can be overridden later.
-  hi link changeFromMaterial String
-  hi link changeToMaterial Statement
-endif
+" The default highlighting.
+hi def link changeFromMaterial String
+hi def link changeToMaterial Statement
 
 let b:current_syntax = "change"
 

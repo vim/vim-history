@@ -102,44 +102,41 @@ else
   syn region cshHereDoc matchgroup=cshRedir start="<<-\=\s*\**\z(\h\w*\)\**" matchgroup=cshRedir end="^\z1$"
 endif
 
-if !exists("did_csh_syntax_inits")
-  let did_csh_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link cshArgv		cshVariables
-  hi link cshBckQuote	cshCommand
-  hi link cshDblQuote	cshString
-  hi link cshExprUsing	cshStatement
-  hi link cshExtVar	cshVariables
-  hi link cshHereDoc	cshString
-  hi link cshNoEndlineBQ	cshNoEndline
-  hi link cshNoEndlineDQ	cshNoEndline
-  hi link cshNoEndlineSQ	cshNoEndline
-  hi link cshQtyWord	cshVariables
-  hi link cshRedir	cshOperator
-  hi link cshSelector	cshVariables
-  hi link cshSetStmt	cshStatement
-  hi link cshSetVariables	cshVariables
-  hi link cshSnglQuote	cshString
-  hi link cshSubst	cshVariables
+" The default highlighting.
+hi def link cshArgv	cshVariables
+hi def link cshBckQuote	cshCommand
+hi def link cshDblQuote	cshString
+hi def link cshExprUsing	cshStatement
+hi def link cshExtVar	cshVariables
+hi def link cshHereDoc	cshString
+hi def link cshNoEndlineBQ	cshNoEndline
+hi def link cshNoEndlineDQ	cshNoEndline
+hi def link cshNoEndlineSQ	cshNoEndline
+hi def link cshQtyWord	cshVariables
+hi def link cshRedir	cshOperator
+hi def link cshSelector	cshVariables
+hi def link cshSetStmt	cshStatement
+hi def link cshSetVariables	cshVariables
+hi def link cshSnglQuote	cshString
+hi def link cshSubst	cshVariables
 
-  hi link cshCommand	Statement
-  hi link cshComment	Comment
-  hi link cshConditional	Conditional
-  hi link cshIdentifier	Error
-  hi link cshModifier	Special
-  hi link cshNoEndline	Error
-  hi link cshNumber	Number
-  hi link cshOperator	Operator
-  hi link cshRedir	Statement
-  hi link cshRepeat	Repeat
-  hi link cshShellVariables	Special
-  hi link cshSpecial	Special
-  hi link cshStatement	Statement
-  hi link cshString	String
-  hi link cshSubstError	Error
-  hi link cshTodo		Todo
-  hi link cshVariables	Type
-endif
+hi def link cshCommand	Statement
+hi def link cshComment	Comment
+hi def link cshConditional	Conditional
+hi def link cshIdentifier	Error
+hi def link cshModifier	Special
+hi def link cshNoEndline	Error
+hi def link cshNumber	Number
+hi def link cshOperator	Operator
+hi def link cshRedir	Statement
+hi def link cshRepeat	Repeat
+hi def link cshShellVariables	Special
+hi def link cshSpecial	Special
+hi def link cshStatement	Statement
+hi def link cshString	String
+hi def link cshSubstError	Error
+hi def link cshTodo	Todo
+hi def link cshVariables	Type
 
 let b:current_syntax = "csh"
 

@@ -70,32 +70,28 @@ syn sync match xmlHighlight groupthere NONE "<[/a-zA-Z]"
 syn sync match xmlHighlightSkip "^.*['\"].*$"
 syn sync minlines=10
 
-if !exists("did_xml_syntax_inits")
-  let did_xml_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
+" The default highlighting.
   "
-  hi link xmlTodo                      Todo
-  hi link xmlTag                       Function
-  hi link xmlEndTag                    Identifier
-  hi link xmlSpecial                   Special
-  hi link xmlSpecialChar               Special
-  hi link xmlString                    String
-  hi link xmlComment                   Comment
-  hi link xmlCommentPart               Comment
-  hi link xmlCommentError              xmlError
-  hi link xmlTagError                  xmlError
-  hi link xmlError                     Error
+hi def link xmlTodo                      Todo
+hi def link xmlTag                       Function
+hi def link xmlEndTag                    Identifier
+hi def link xmlSpecial                   Special
+hi def link xmlSpecialChar               Special
+hi def link xmlString                    String
+hi def link xmlComment                   Comment
+hi def link xmlCommentPart               Comment
+hi def link xmlCommentError              xmlError
+hi def link xmlTagError                  xmlError
+hi def link xmlError                     Error
 
-  hi link xmlProcessingDelim           Comment
-  hi link xmlProcessing                Type
-  hi link xmlCdata                     Normal
-  hi link xmlCdataDecl                 String
-  hi link xmlDocType                   Normal
-  hi link xmlDocTypeDecl               Function
-  hi link xmlDocTypeKeyword            Statement
-  hi link xmlInlineDTD                 Function
-
-endif
+hi def link xmlProcessingDelim           Comment
+hi def link xmlProcessing                Type
+hi def link xmlCdata                     Normal
+hi def link xmlCdataDecl                 String
+hi def link xmlDocType                   Normal
+hi def link xmlDocTypeDecl               Function
+hi def link xmlDocTypeKeyword            Statement
+hi def link xmlInlineDTD                 Function
 
 let b:current_syntax = "xml"
 

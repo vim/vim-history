@@ -1,7 +1,7 @@
 " Vim syntax file
 " Antlr:	ANTLR, Another Tool For Language Recognition <www.antlr.org>
 " Maintainer:	Mathieu Clabaut <mathieu.clabaut@free.fr>
-" Last change:	2000 Jul 11
+" Last change:	2000 Nov 04
 " Original:	Comes from JavaCC.vim
 
 
@@ -15,14 +15,14 @@ source <sfile>:p:h/java.vim
 
 "remove catching errors caused by wrong parenthesis (does not work in antlr
 "files) (first define them in case they have not been defined in java)
-syn match 	javaParen "--"
-syn match 	javaParenError "--"
-syn match 	javaInParen "--"
-syn match 	javaError2 "--"
+syn match	javaParen "--"
+syn match	javaParenError "--"
+syn match	javaInParen "--"
+syn match	javaError2 "--"
 syn clear	javaParen
 syn clear	javaParenError
-syn clear 	javaInParen
-syn clear 	javaError2
+syn clear	javaInParen
+syn clear	javaError2
 
 " remove function definitions (they look different) (first define in
 " in case it was not defined in java.vim)
@@ -41,8 +41,9 @@ syn match antlrSep "[|:]\|\.\."
 syn keyword antlrActionToken TOKEN SKIP MORE SPECIAL_TOKEN
 syn keyword antlrError DEBUG IGNORE_IN_BNF
 
-hi link antlrSep Statement
-hi link antlrPackages Statement
+" The default highlighting.
+hi def link antlrSep Statement
+hi def link antlrPackages Statement
 
 let b:current_syntax = "antlr"
 

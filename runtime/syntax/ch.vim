@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	CHILL
 " Maintainer:	YoungSang Yoon <image@lgic.co.kr>
-" Last change:	2000 May 7
+" Last change:	2000 Nov 04
 "
 
 " first created by image@lgic.co.kr & modified by paris@lgic.co.kr 
@@ -20,8 +20,8 @@ syn keyword	chLabel		CASE case ESAC esac
 syn keyword	chConditional	if IF else ELSE elsif ELSIF switch SWITCH THEN then FI fi
 syn keyword	chLogical	NOT not
 syn keyword	chRepeat	while WHILE for FOR do DO od OD TO to
-syn keyword 	chProcess	START start STACKSIZE stacksize PRIORITY priority THIS this STOP stop 
-syn keyword 	chBlock		PROC proc PROCESS process
+syn keyword	chProcess	START start STACKSIZE stacksize PRIORITY priority THIS this STOP stop 
+syn keyword	chBlock		PROC proc PROCESS process
 syn keyword	chSignal	RECEIVE receive SEND send NONPERSISTENT nonpersistent PERSISTENT peristent SET set EVER ever
 
 syn keyword	chTodo		contained TODO FIXME XXX
@@ -84,9 +84,9 @@ syn keyword	chType		dcl DCL int INT char CHAR bool BOOL REF ref LOC loc INSTANCE
 syn keyword	chStructure	struct STRUCT enum ENUM newmode NEWMODE synmode SYNMODE
 "syn keyword	chStorageClass	
 syn keyword	chBlock		PROC proc END end
-syn keyword 	chScope		GRANT grant SEIZE seize
-syn keyword 	chEDML		select SELECT delete DELETE update UPDATE in IN seq SEQ WHERE where INSERT insert include INCLUDE exclude EXCLUDE
-syn keyword 	chBoolConst	true TRUE false FALSE
+syn keyword	chScope		GRANT grant SEIZE seize
+syn keyword	chEDML		select SELECT delete DELETE update UPDATE in IN seq SEQ WHERE where INSERT insert include INCLUDE exclude EXCLUDE
+syn keyword	chBoolConst	true TRUE false FALSE
 
 syn region	chPreCondit	start="^\s*#\s*\(if\>\|ifdef\>\|ifndef\>\|elif\>\|else\>\|endif\>\)" skip="\\$" end="$" contains=chComment,chString,chCharacter,chNumber,chCommentError,chSpaceError
 syn region	chIncluded	contained start=+"+ skip=+\\\\\|\\"+ end=+"+
@@ -118,58 +118,55 @@ if !exists("ch_minlines")
 endif
 exec "syn sync ccomment chComment minlines=" . ch_minlines
 
-if !exists("did_ch_syntax_inits")
-  let did_ch_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link chLabel	Label
-  hi link chUserLabel	Label
-  hi link chConditional	Conditional
-"  hi chConditional	term=bold ctermfg=red guifg=red gui=bold
+" The default highlighting.
+hi def link chLabel		Label
+hi def link chUserLabel		Label
+hi def link chConditional	Conditional
+"hi def chConditional		term=bold ctermfg=red guifg=red gui=bold
 
-  hi link chRepeat	Repeat
-  hi link chProcess	Repeat
-  hi link chSignal	Repeat
-  hi link chCharacter	Character
-  hi link chSpecialCharacter chSpecial
-  hi link chNumber	Number
-  hi link chFloat	Float
-  hi link chOctalError	chError
-  hi link chParenError	chError
-  hi link chInParen	chError
-  hi link chCommentError	chError
-  hi link chSpaceError	chError
-  hi link chOperator	Operator
-  hi link chStructure	Structure
-  hi link chBlock 	Operator
-  hi link chScope 	Operator
-  "hi chEDML     term=underline ctermfg=DarkRed guifg=Red
-  hi link chEDML	PreProc
-  "hi chBoolConst	term=bold ctermfg=brown guifg=brown
-  hi link chBoolConst	Constant
-  "hi chLogical	term=bold ctermfg=brown guifg=brown
-  hi link chLogical	Constant
-  hi link chStorageClass	StorageClass
-  hi link chInclude	Include
-  hi link chPreProc	PreProc
-  hi link chDefine	Macro
-  hi link chIncluded	chString
-  hi link chError	Error
-  hi link chStatement	Statement
-  hi link chPreCondit	PreCondit
-  hi link chType	Type
-  hi link chCommentError	chError
-  hi link chCommentString chString
-  hi link chComment2String chString
-  hi link chCommentSkip	chComment
-  hi link chString	String
-  hi link chComment	Comment
-"  hi chComment	term=None ctermfg=lightblue guifg=lightblue
-  hi link chSpecial	SpecialChar
-  hi link chTodo	Todo
-  hi link chBlock	Statement
-  "hi link chIdentifier	Identifier
-  hi link chBracket 	Delimiter
-endif
+hi def link chRepeat		Repeat
+hi def link chProcess		Repeat
+hi def link chSignal		Repeat
+hi def link chCharacter		Character
+hi def link chSpecialCharacter	chSpecial
+hi def link chNumber		Number
+hi def link chFloat		Float
+hi def link chOctalError	chError
+hi def link chParenError	chError
+hi def link chInParen		chError
+hi def link chCommentError	chError
+hi def link chSpaceError	chError
+hi def link chOperator		Operator
+hi def link chStructure		Structure
+hi def link chBlock		Operator
+hi def link chScope		Operator
+"hi def chEDML			term=underline ctermfg=DarkRed guifg=Red
+hi def link chEDML		PreProc
+"hi def chBoolConst		term=bold ctermfg=brown guifg=brown
+hi def link chBoolConst		Constant
+"hi def chLogical		term=bold ctermfg=brown guifg=brown
+hi def link chLogical		Constant
+hi def link chStorageClass	StorageClass
+hi def link chInclude		Include
+hi def link chPreProc		PreProc
+hi def link chDefine		Macro
+hi def link chIncluded		chString
+hi def link chError		Error
+hi def link chStatement		Statement
+hi def link chPreCondit		PreCondit
+hi def link chType		Type
+hi def link chCommentError	chError
+hi def link chCommentString	chString
+hi def link chComment2String	chString
+hi def link chCommentSkip	chComment
+hi def link chString		String
+hi def link chComment		Comment
+"hi def chComment		term=None ctermfg=lightblue guifg=lightblue
+hi def link chSpecial		SpecialChar
+hi def link chTodo		Todo
+hi def link chBlock		Statement
+"hi def link chIdentifier	Identifier
+hi def link chBracket		Delimiter
 
 let b:current_syntax = "ch"
 

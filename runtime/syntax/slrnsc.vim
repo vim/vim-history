@@ -37,23 +37,20 @@ syn match slrnscScoreItem	contained "^\s*%.*$" skipempty nextgroup=slrnscScoreIt
 syn keyword slrnscScore		contained Score
 syn match slrnScoreLine		"^\s*Score::\=\s\+=\=-\=\d\+\s*$" skipempty nextgroup=slrnscScoreItem contains=slrnscScore,slrnscDelim,slrnscOper,slrnscNumber
 
-if !exists("did_slrnsc_syntax_inits")
-  let did_slrnsc_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link slrnscComment		Comment
-  hi link slrnscSectionCom	slrnscComment
-  hi link slrnscGroup		String
-  hi link slrnscNumber		Number
-  hi link slrnscDate		Special
-  hi link slrnscDelim		Delimiter
-  hi link slrnscComma		SpecialChar
-  hi link slrnscOper		SpecialChar
-  hi link slrnscEsc		String
-  hi link slrnscSectionStd	Type
-  hi link slrnscSectionNot	Delimiter
-  hi link slrnscItem		Statement
-  hi link slrnscScore		Keyword
-endif
+" The default highlighting.
+hi def link slrnscComment	Comment
+hi def link slrnscSectionCom	slrnscComment
+hi def link slrnscGroup		String
+hi def link slrnscNumber	Number
+hi def link slrnscDate		Special
+hi def link slrnscDelim		Delimiter
+hi def link slrnscComma		SpecialChar
+hi def link slrnscOper		SpecialChar
+hi def link slrnscEsc		String
+hi def link slrnscSectionStd	Type
+hi def link slrnscSectionNot	Delimiter
+hi def link slrnscItem		Statement
+hi def link slrnscScore		Keyword
 
 let b:current_syntax = "slrnsc"
 

@@ -42,30 +42,27 @@ syn match	ayaccSep	"^[ \t]*%}"
 syn match	ayaccCurlyError	"[{}]"
 syn region	ayaccAction	matchgroup=ayaccCurly start="{" end="}" contains=ALLBUT,@ayaccActionGroup
 
-if !exists("did_ayacc_syntax_inits")
-  " The default methods for highlighting.  Can be overridden later
-  let did_ayacc_syntax_inits = 1
+" The default highlighting.
 
-  " Internal ayacc highlighting links
-  hi link ayaccBrkt	ayaccStmt
-  hi link ayaccKey	ayaccStmt
-  hi link ayaccOper	ayaccStmt
-  hi link ayaccUnionStart	ayaccKey
+" Internal ayacc highlighting links
+hi def link ayaccBrkt	ayaccStmt
+hi def link ayaccKey	ayaccStmt
+hi def link ayaccOper	ayaccStmt
+hi def link ayaccUnionStart	ayaccKey
 
-  " External ayacc highlighting links
-  hi link ayaccCurly	Delimiter
-  hi link ayaccCurlyError	Error
-  hi link ayaccDefinition	Function
-  hi link ayaccDelim	Function
-  hi link ayaccKeyActn	Special
-  hi link ayaccSectionSep	Todo
-  hi link ayaccSep	Delimiter
-  hi link ayaccStmt	Statement
-  hi link ayaccType	Type
+" External ayacc highlighting links
+hi def link ayaccCurly	Delimiter
+hi def link ayaccCurlyError	Error
+hi def link ayaccDefinition	Function
+hi def link ayaccDelim	Function
+hi def link ayaccKeyActn	Special
+hi def link ayaccSectionSep	Todo
+hi def link ayaccSep	Delimiter
+hi def link ayaccStmt	Statement
+hi def link ayaccType	Type
 
-  " since Bram doesn't like my Delimiter :|
-  hi link Delimiter	Type
-endif
+" since Bram doesn't like my Delimiter :|
+hi def link Delimiter	Type
 
 let b:current_syntax = "ayacc"
 

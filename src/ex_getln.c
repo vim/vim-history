@@ -71,7 +71,6 @@ static void	set_cmdspos __ARGS((void));
 static void	set_cmdspos_cursor __ARGS((void));
 static void	alloc_cmdbuff __ARGS((int len));
 static int	realloc_cmdbuff __ARGS((int len));
-static void	putcmdline __ARGS((int));
 #ifdef FEAT_WILDMENU
 static void	cmdline_del __ARGS((int from));
 #endif
@@ -110,9 +109,6 @@ getcmdline(firstc, count, indent)
     int		indent;		/* indent for inside conditionals */
 {
     int		c;
-#ifdef FEAT_DIGRAPHS
-    int		cc;
-#endif
     int		i;
     int		j;
     char_u	*p;
@@ -1062,28 +1058,10 @@ getcmdline(firstc, count, indent)
 #ifdef USE_ON_FLY_SCROLL
 		dont_scroll = TRUE;	    /* disallow scrolling here */
 #endif
-		++no_mapping;
-		++allow_keys;
-		c = safe_vgetc();
-		--no_mapping;
-		--allow_keys;
-		if (c != ESC)		    /* ESC cancels CTRL-K */
-		{
-		    if (IS_SPECIAL(c))	    /* insert special key code */
-			break;
-		    if (char2cells(c) == 1)
-			putcmdline(c);
-		    ++no_mapping;
-		    ++allow_keys;
-		    cc = safe_vgetc();
-		    --no_mapping;
-		    --allow_keys;
-		    if (cc != ESC)	    /* ESC cancels CTRL-K */
-		    {
-			c = getdigraph(c, cc, TRUE);
-			break;
-		    }
-		}
+		c = get_digraph(TRUE);
+		if (c != NUL)
+		    break;
+
 		redrawcmd();
 		goto cmdline_not_changed;
 #endif /* FEAT_DIGRAPHS */
@@ -1681,7 +1659,7 @@ realloc_cmdbuff(len)
  * put a character on the command line.
  * Used for CTRL-V and CTRL-K
  */
-    static void
+    void
 putcmdline(c)
     int	    c;
 {

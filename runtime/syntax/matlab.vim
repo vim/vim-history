@@ -58,36 +58,33 @@ syn keyword matlabImplicit		log10 max min sign sin sqrt tan reshape
 syn match matlabError	"-\=\<\d\+\.\d\+\.[^*/\\^]"
 syn match matlabError	"-\=\<\d\+\.\d\+[eEdD][-+]\=\d\+\.\([^*/\\^]\)"
 
-if !exists("did_matlab_syntax_inits")
-  let did_matlab_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link matlabTransposeOperator	matlabOperator
-  hi link matlabOperator		Operator
-  hi link matlabLineContinuation	Special
-  hi link matlabLabel			Label
-  hi link matlabConditional		Conditional
-  hi link matlabRepeat			Repeat
-  hi link matlabTodo			Todo
-  hi link matlabString			String
-  hi link matlabDelimiter		Identifier
-  hi link matlabTransposeOther		Identifier
-  hi link matlabNumber			Number
-  hi link matlabFloat			Float
-  hi link matlabFunction		Function
-  hi link matlabError			Error
-  hi link matlabImplicit		matlabStatement
-  hi link matlabStatement		Statement
-  hi link matlabSemicolon		SpecialChar
-  hi link matlabComment			Comment
+" The default highlighting.
+hi def link matlabTransposeOperator	matlabOperator
+hi def link matlabOperator		Operator
+hi def link matlabLineContinuation	Special
+hi def link matlabLabel			Label
+hi def link matlabConditional		Conditional
+hi def link matlabRepeat		Repeat
+hi def link matlabTodo			Todo
+hi def link matlabString		String
+hi def link matlabDelimiter		Identifier
+hi def link matlabTransposeOther	Identifier
+hi def link matlabNumber		Number
+hi def link matlabFloat			Float
+hi def link matlabFunction		Function
+hi def link matlabError			Error
+hi def link matlabImplicit		matlabStatement
+hi def link matlabStatement		Statement
+hi def link matlabSemicolon		SpecialChar
+hi def link matlabComment		Comment
 
-  hi link matlabArithmeticOperator	matlabOperator
-  hi link matlabRelationalOperator	matlabOperator
-  hi link matlabLogicalOperator		matlabOperator
+hi def link matlabArithmeticOperator	matlabOperator
+hi def link matlabRelationalOperator	matlabOperator
+hi def link matlabLogicalOperator	matlabOperator
 
 "optional highlighting
-  "hi link matlabIdentifier		Identifier
-  "hi link matlabTab			Error
-endif
+"hi def link matlabIdentifier		Identifier
+"hi def link matlabTab			Error
 
 let b:current_syntax = "matlab"
 

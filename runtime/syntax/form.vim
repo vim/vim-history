@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	FORM
 " Maintainer:	Michael M. Tung <michael.tung@uni-mainz.de>
-" Last Change:	2000 May 17
+" Last Change:	2000 Nov 04
 
 " First public release based on 'Symbolic Manipulation with FORM'
 " by J.A.M. Vermaseren, CAN, Netherlands, 1991.  
@@ -50,37 +50,34 @@ syn match   formDirective	"^\=\.[a-zA-z][a-zA-Z0-9]*\>"
 " hi User Labels
 syn sync ccomment formComment minlines=10
 
-if !exists("did_form_syn_inits")
-  let did_form_syn_inits = 1
-  " The default methods for hi-ing.  Can be overridden later
-  hi link formConditional	Conditional
-  hi link formNumber		Number
-  hi link formStatement		Statement
-  hi link formComment		Comment
-  hi link formPreProc		PreProc
-  hi link formDirective		PreProc
-  hi link formType		Type
-  hi link formString		String
+" The default highlighting.
+hi def link formConditional	Conditional
+hi def link formNumber		Number
+hi def link formStatement	Statement
+hi def link formComment		Comment
+hi def link formPreProc		PreProc
+hi def link formDirective	PreProc
+hi def link formType		Type
+hi def link formString		String
 
-  if !exists("form_enhanced_color") 
-    hi link formHeaderStatement	Statement
-  else
+if !exists("form_enhanced_color") 
+  hi def link formHeaderStatement	Statement
+else
   " enhanced color mode
-    hi link formHeaderStatement	HeaderStatement
-    " dark and a light background for local types 
-    if &background == "dark"
-      hi HeaderStatement term=underline ctermfg=LightGreen guifg=LightGreen gui=bold
-    else
-      hi HeaderStatement term=underline ctermfg=DarkGreen guifg=SeaGreen gui=bold
-    endif
-    " change slightly the default for dark gvim
-    if has("gui_running") && &background == "dark"
-      hi Conditional guifg=LightBlue gui=bold
-      hi Statement guifg=LightYellow 
-    endif
+  hi def link formHeaderStatement	HeaderStatement
+  " dark and a light background for local types 
+  if &background == "dark"
+    hi def HeaderStatement term=underline ctermfg=LightGreen guifg=LightGreen gui=bold
+  else
+    hi def HeaderStatement term=underline ctermfg=DarkGreen guifg=SeaGreen gui=bold
+  endif
+  " change slightly the default for dark gvim
+  if has("gui_running") && &background == "dark"
+    hi def Conditional guifg=LightBlue gui=bold
+    hi def Statement guifg=LightYellow 
   endif
 endif
 
-  let b:current_syntax = "form"
+let b:current_syntax = "form"
 
 " vim: ts=8

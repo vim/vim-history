@@ -1576,10 +1576,9 @@ mb_adjust_opend(oap)
     int
 op_replace(oap, c)
     oparg_t   *oap;
-    int     c;
+    int		c;
 {
     int			n;
-    linenr_t		lnum;
     char_u		*newp, *oldp;
     struct block_def	bd;
 
@@ -1591,18 +1590,16 @@ op_replace(oap, c)
 	mb_adjust_opend(oap);
 #endif
 
+    if (u_save((linenr_t)(oap->start.lnum - 1),
+				       (linenr_t)(oap->end.lnum + 1)) == FAIL)
+	return FAIL;
+
     /*
      * block mode replace
      */
     if (oap->block_mode)
     {
-	if (u_save((linenr_t)(oap->start.lnum - 1),
-			       (linenr_t)(oap->end.lnum + 1)) == FAIL)
-	    return FAIL;
-
-	for (lnum = curwin->w_cursor.lnum;
-			       curwin->w_cursor.lnum <= oap->end.lnum;
-						      ++curwin->w_cursor.lnum)
+	for ( ; curwin->w_cursor.lnum <= oap->end.lnum; ++curwin->w_cursor.lnum)
 	{
 	    block_prep(oap, &bd, curwin->w_cursor.lnum, TRUE);
 	    if (bd.textlen == 0)	/* nothing to delete */
@@ -1640,17 +1637,52 @@ op_replace(oap, c)
 	    /* replace the line */
 	    ml_replace(curwin->w_cursor.lnum, newp, FALSE);
 	}
+    }
+    else
+    {
+	/*
+	 * MCHAR and MLINE motion replace.
+	 */
+	if (oap->motion_type == MLINE)
+	{
+	    oap->start.col = 0;
+	    curwin->w_cursor.col = 0;
+	    oap->end.col = STRLEN(ml_get(oap->end.lnum));
+	    if (oap->end.col)
+		--oap->end.col;
+	}
+	else if (!oap->inclusive)
+	    dec(&(oap->end));
 
-	curwin->w_cursor.lnum = lnum;
-	adjust_cursor();
-	changed_lines(lnum, 0, oap->end.lnum + 1, 0L);
+	while (ltoreq(curwin->w_cursor, oap->end))
+	{
+	    n = gchar_cursor();
+	    if (n != NUL)
+	    {
+#ifdef FEAT_MBYTE
+		if (mb_char2len(c) > 1 || mb_char2len(n) > 1)
+		{
+		    /* This is slow, but it handles replacing a single-byte
+		     * with a multi-byte and the other way around. */
+		    n = State;
+		    State = REPLACE;
+		    ins_char(c);
+		    State = n;
+		}
+		else
+#endif
+		    pchar(curwin->w_cursor, c);
+	    }
 
-	oap->line_count = 0;	    /* no lines deleted */
+	    /* Advance to next character, stop at the end of the file. */
+	    if (inc(&curwin->w_cursor) == -1)
+		break;
+	}
     }
 
-    /*
-     * TODO: MCHAR and MLINE motion replace!
-     */
+    curwin->w_cursor = oap->start;
+    adjust_cursor();
+    changed_lines(oap->start.lnum, oap->start.col, oap->end.lnum + 1, 0L);
 
     /* Set "'[" and "']" marks. */
     curbuf->b_op_start = oap->start;

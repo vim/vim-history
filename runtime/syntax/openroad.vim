@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	CA-OpenROAD
 " Maintainer:	Luis Moreno <lmoreno@retemail.es>
-" Last Change:	2000 Oct 04 
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 "
@@ -46,7 +46,7 @@ syntax keyword openroadTodo contained	TODO
 syntax cluster	openroadParenGroup	contains=openroadParenError,openroadTodo
 syntax region	openroadParen		transparent start='(' end=')' contains=ALLBUT,@openroadParenGroup
 syntax match	openroadParenError	")"
-highlight link	openroadParenError	cError
+hi def link	openroadParenError	cError
 
 " Numbers
 "
@@ -87,26 +87,23 @@ if exists("openroad_comment_strings")
 	syntax match openroadCommentSkip	contained "^\s*\*\($\|\s\+\)"
 	syntax region openroadCommentString	contained start=+"+ skip=+\\\\\|\\"+ end=+"+ end="$"
 	syntax region openroadComment		start="/\*" end="\*/" contains=openroadCommentString,openroadCharacter,openroadNumber
-	syntax match openroadComment 		"//.*" contains=openroadComment2String,openroadCharacter,openroadNumber
+	syntax match openroadComment		"//.*" contains=openroadComment2String,openroadCharacter,openroadNumber
 else
-	syn region openroadComment     		start="/\*" end="\*/"
-	syn match openroadComment      		"//.*"
+	syn region openroadComment		start="/\*" end="\*/"
+	syn match openroadComment		"//.*"
 endif
 
-if !exists("did_openroad_syntax_inits")
-  let did_openroad_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  highlight link openroadKeyword	Statement
-  highlight link openroadEvent		Statement
-  highlight link openroadNumber		Number
-  highlight link openroadString		String
-  highlight link openroadComment	Comment
-  highlight link openroadOperator	Operator
-  highlight link openroadType		Type
-  highlight link openroadClass		Type
-  highlight link openroadConst		Constant
-  highlight link openroadIdent		Identifier
-  highlight link openroadTodo		Todo
-endif
+" The default highlighting.
+hi def link openroadKeyword	Statement
+hi def link openroadEvent	Statement
+hi def link openroadNumber	Number
+hi def link openroadString	String
+hi def link openroadComment	Comment
+hi def link openroadOperator	Operator
+hi def link openroadType	Type
+hi def link openroadClass	Type
+hi def link openroadConst	Constant
+hi def link openroadIdent	Identifier
+hi def link openroadTodo	Todo
 
 let b:current_syntax = "openroad"

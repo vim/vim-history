@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Renderman shader language
 " Maintainer:	Dan Piponi <dan@tanelorn.demon.co.uk>
-" Last Change:	1999 Jun 16
+" Last Change:	2000 Nov 04
 
 " Reset
 syn clear
@@ -69,36 +69,33 @@ syn keyword slVariable dtime dPdtime
 
 syn sync ccomment slComment minlines=10
 
-if !exists("did_sl_syntax_inits")
-  let did_sl_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link slLabel	Label
-  hi link slUserLabel	Label
-  hi link slConditional	Conditional
-  hi link slRepeat	Repeat
-  hi link slCharacter	Character
-  hi link slSpecialCharacter slSpecial
-  hi link slNumber	Number
-  hi link slFloat	Float
-  hi link slParenError	slError
-  hi link slInParen	slError
-  hi link slCommentError	slError
-  hi link slOperator	Operator
-  hi link slStorageClass	StorageClass
-  hi link slError	Error
-  hi link slStatement	Statement
-  hi link slType		Type
-  hi link slCommentError	slError
-  hi link slCommentString slString
-  hi link slComment2String slString
-  hi link slCommentSkip	slComment
-  hi link slString	String
-  hi link slComment	Comment
-  hi link slSpecial	SpecialChar
-  hi link slTodo	Todo
-  hi link slVariable	Identifier
-  "hi link slIdentifier	Identifier
-endif
+" The default highlighting.
+hi def link slLabel		Label
+hi def link slUserLabel		Label
+hi def link slConditional	Conditional
+hi def link slRepeat		Repeat
+hi def link slCharacter		Character
+hi def link slSpecialCharacter	slSpecial
+hi def link slNumber		Number
+hi def link slFloat		Float
+hi def link slParenError	slError
+hi def link slInParen		slError
+hi def link slCommentError	slError
+hi def link slOperator		Operator
+hi def link slStorageClass	StorageClass
+hi def link slError		Error
+hi def link slStatement		Statement
+hi def link slType		Type
+hi def link slCommentError	slError
+hi def link slCommentString	slString
+hi def link slComment2String	slString
+hi def link slCommentSkip	slComment
+hi def link slString		String
+hi def link slComment		Comment
+hi def link slSpecial		SpecialChar
+hi def link slTodo		Todo
+hi def link slVariable		Identifier
+"hi def link slIdentifier	Identifier
 
 let b:current_syntax = "sl"
 

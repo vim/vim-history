@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0k.  Last change: 2000 Oct 29
+*syntax.txt*    For Vim version 6.0l.  Last change: 2000 Nov 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -360,7 +360,7 @@ Unix shell: >
    $ for f in *.[ch]; do gvim -f +"syn on" +"so \$VIMRUNTIME/syntax/2html.vim" +"wq" +"q" $f; done
 
 
-Assembly			*asm.vim* *asmh8300.vim* *nasm.vim* *masm.vim*
+Assembly	*asm-syntax* *asmh8300-syntax* *nasm-syntax* *masm-syntax*
 
 There are many types of assembly languages that all use the same file name
 extensions.  Therefore you will have to select the type yourself, or add a
@@ -405,7 +405,7 @@ nasm_ctx_outside_macro	contexts outside macro not as Error
 nasm_no_warn		potentially risky syntax not as ToDo
 
 
-							*basic.vim* *vb.vim*
+						*basic-syntax* *vb-syntax*
 Both Visual Basic and "normal" basic use the extension ".bas".  To detect
 which one should be used, Vim checks for the string "VB_Name" in the first
 five lines of the file.  If it is not found, filetype will be "basic",
@@ -413,7 +413,7 @@ otherwise "vb".  Files with the ".frm" extension will always be seen as Visual
 Basic.
 
 
-C							*c.vim*
+C							*c-syntax*
 
 A few things in C highlighting are optional.  To enable them assign any value
 to the respective value.  Example: >
@@ -466,7 +466,7 @@ If you see '{' and '}' highlighted as an error where they are OK, reset the
 highlighting for cErrInParen and cErrInBracket.
 
 
-COBOL							*cobol.vim*
+COBOL							*cobol-syntax*
 
 COBOL highlighting for legacy code has different needs than fresh development.
 This is due both to differences in what is being done (maintenance versus
@@ -477,7 +477,7 @@ To disable it again, use this: >
 	:unlet cobol_legacy_code
 
 
-DTD							*dtd.vim*
+DTD							*dtd-syntax*
 
 The DTD syntax highlighting is case sensitive by default. To disable
 case-sensitive highlighting, add the following line to your startup file: >
@@ -501,7 +501,7 @@ delimiters % and ;. This can be turned off by setting: >
 The DTD syntax file is also included by xml.vim to highlight included dtd's.
 
 
-EIFFEL							*eiffel.vim*
+EIFFEL							*eiffel-syntax*
 
 While Eiffel is not case-sensitive, its style guidelines are, and the
 syntax highlighting file encourages their use. This also allows to
@@ -544,7 +544,7 @@ Finally, some vendors support hexadecimal constants. To handle them, add >
 to your startup file.
 
 
-ERLANG							*erlang.vim*
+ERLANG							*erlang-syntax*
 
 The erlang highlighting supports Erlang (ERicsson LANGuage).
 Erlang is case sensitive and default extension is ".erl".
@@ -556,7 +556,7 @@ your .vimrc: >
 	:let erlang_characters=1
 
 
-FORM                                                 *form.vim*
+FORM                                                 *form-syntax*
 
 The coloring scheme for syntax elements in the FORM file uses the default
 modes Conditional, Number, Statement, Comment, PreProc, Type, and String,
@@ -590,7 +590,7 @@ gvim display. Here, statements are colored LightYellow instead of Yellow, and
 conditionals are LightBlue for better distinction.
 
 
-FORTRAN							*fortran.vim*
+FORTRAN							*fortran-syntax*
 
 Five dialects of Fortran are recognized by the fortran.vim script: f95,
 f90, f77, the Lahey subset elf90, and the Imagine1 subset F.
@@ -642,7 +642,7 @@ parentheses. Hollerith strings are not recognized. Some keywords may be
 highlighted incorrectly because Fortran90 has no reserved words.
 
 
-FVWM CONFIGURATION FILES				*fvwm.vim*
+FVWM CONFIGURATION FILES				*fvwm-syntax*
 
 In order for Vim to recognize Fvwm configuration files that do not match
 the patterns *fvwmrc* or *fvwm2rc*, you must put additional patterns
@@ -666,7 +666,7 @@ in /usr/X11/lib/X11/, you should add the line >
 to your .vimrc file.
 
 
-HTML							*html.vim*
+HTML							*html-syntax*
 
 The coloring scheme for tags in the HTML file works as follows.
 
@@ -740,7 +740,7 @@ Now you just need to make sure that you add all regions that contain
 the preprocessor language to the cluster htmlPreproc.
 
 
-JAVA							*java.vim*
+JAVA							*java-syntax*
 
 The java.vim syntax highlighting file offers several options:
 
@@ -827,7 +827,7 @@ displayed line.  The default value is 10.  The disadvantage of using a larger
 number is that redrawing can become slow.
 
 
-LACE							*lace.vim*
+LACE							*lace-syntax*
 
 Lace (Language for Assembly of Classes in Eiffel) is case insensitive, but the
 style guide lines are not.  If you prefer case insensitive highlighting, just
@@ -835,7 +835,7 @@ define the vim variable 'lace_case_insensitive' in your startup file: >
 	:let lace_case_insensitive=1
 
 
-LEX							*lex.vim*
+LEX							*lex-syntax*
 
 Lex uses brute-force synchronizing as the "^%%$" section delimiter
 gives no clue as to what section follows.  Consequently, the value for >
@@ -844,7 +844,7 @@ may be changed by the user if s/he is experiencing synchronization
 difficulties (such as may happen with large lex files).
 
 
-LITE							*lite.vim*
+LITE							*lite-syntax*
 
 There are two options for the lite syntax highlighting.
 
@@ -858,7 +858,7 @@ set "lite_minlines" to the value you desire.  Example: >
 	:let lite_minlines = 200
 
 
-MAPLE							*maple.vim*
+MAPLE							*maple-syntax*
 
 Maple V, by Waterloo Maple Inc, supports symbolic algebra.  The language
 supports many packages of functions which are selectively loaded by the user.
@@ -883,7 +883,7 @@ $VIMRUNTIME/syntax/syntax.vim).
   mv_finance	 mv_logic	mv_powseries
 
 
-MSQL							*msql.vim*
+MSQL							*msql-syntax*
 
 There are two options for the msql syntax highlighting.
 
@@ -897,7 +897,7 @@ set "msql_minlines" to the value you desire.  Example: >
 	:let msql_minlines = 200
 
 
-NCF							*ncf.vim*
+NCF							*ncf-syntax*
 
 There is one option for NCF syntax highlighting.
 
@@ -909,14 +909,14 @@ errors, use this: >
 If you don't want to highlight these errors, leave it unset.
 
 
-NROFF							*nroff.vim*
+NROFF							*nroff-syntax*
 
 To mark trailing spaces as an error, use this:
 
 >  let nroff_space_errors = 1
 
 
-PASCAL							*pascal.vim*
+PASCAL							*pascal-syntax*
 
 The Pascal syntax file has been extended to take into account some extensions
 provided by Turbo Pascal, Free Pascal Compiler or GNU Pascal Compiler.  If you
@@ -926,7 +926,7 @@ your startup file: >
 	:let pascal_traditional=1
 
 
-PERL							*perl.vim*
+PERL							*perl-syntax*
 
 There are a number of possible options to the perl syntax highlighting.
 
@@ -970,7 +970,7 @@ its attempts in syntax highlighting. >
 	:let perl_sync_dist = 100
 
 
-PHP3 and PHP4					*php.vim* *php3.vim*
+PHP3 and PHP4					*php-syntax* *php3-syntax*
 
 [note: previously this was called "php3", but since it now also supports php4
 it has been renamed to "php"]
@@ -999,7 +999,7 @@ Enable parent error highlighting: >
   let_parentError = 1
 
 
-PHTML							*phtml.vim*
+PHTML							*phtml-syntax*
 
 There are two options for the phtml syntax highlighting.
 
@@ -1013,7 +1013,7 @@ set "phtml_minlines" to the value you desire.  Example: >
 	:let phtml_minlines = 200
 
 
-POSTSCRIPT						*postscr.vim*
+POSTSCRIPT						*postscr-syntax*
 
 There are several options when it comes to highlighting PostScript.
 
@@ -1068,7 +1068,7 @@ postscr_andornot_binary as follows: >
 	:let postscr_andornot_binary=1
 
 
-PRINTCAP + TERMCAP		*ptcap.vim* *termcap-syntax* *printcap-syntax*
+PRINTCAP + TERMCAP	*ptcap-syntax* *termcap-syntax* *printcap-syntax*
 
 This syntax file applies to the printcap and termcap databases.
 
@@ -1092,7 +1092,7 @@ internal variable to a larger number:
 
 (The default is 20 lines.)
 
-PYTHON							*python.vim*
+PYTHON							*python-syntax*
 
 There are four options to control Python syntax highlighting.
 
@@ -1110,7 +1110,7 @@ preceding three options): >
 	:let python_highlight_all = 1
 
 
-REXX							*rexx.vim*
+REXX							*rexx-syntax*
 
 If you notice highlighting errors while scrolling backwards, which are fixed
 when redrawing with CTRL-L, try setting the "rexx_minlines" internal variable
@@ -1121,7 +1121,7 @@ displayed line.  The default value is 10.  The disadvantage of using a larger
 number is that redrawing can become slow.
 
 
-RUBY							*ruby.vim*
+RUBY							*ruby-syntax*
 
 There are a few options to the Ruby syntax highlighting.
 
@@ -1146,7 +1146,7 @@ This will prevent highlighting of special identifiers like "ConstantName",
 "$global_var", "@instace_var", "| iterator |", and ":symbol".
 
 
-SED							*sed.vim*
+SED							*sed-syntax*
 
 To make tabs stand out from regular blanks (accomplished by using Todo
 highlighting on the tabs), define "highlight_sedtabs" by putting >
@@ -1169,7 +1169,7 @@ Bugs:
   each plausible pattern delimiter).
 
 
-SH							*sh.vim*
+SH							*sh-syntax*
 
 This covers the "normal" Unix sh, bash and the korn shell.  If you're working
 on a system where bash is called sh, you will benefit to define the vim
@@ -1208,7 +1208,7 @@ The default is to use the double of "sh_minlines".  Set it to a smaller number
 to speed up displaying.  The disadvantage is that highlight errors may appear.
 
 
-SPEEDUP (AspenTech plant simulator)				*spup.vim*
+SPEEDUP (AspenTech plant simulator)			*spup-syntax*
 
 The Speedup syntax file has some options:
 
@@ -1237,7 +1237,7 @@ fast enough, you can increase minlines and/or maxlines near the end of
 the syntax file.
 
 
-TEX							*tex.vim*
+TEX							*tex-syntax*
 
 The tex highlighting supports TeX, LaTeX, and some AmsTeX.  The
 highlighting supports three primary zones: normal, texZone, and texMathZone.
@@ -1257,7 +1257,7 @@ increase them.  This primarily affects synchronizing (ie. just what group,
 if any, is the text at the top of the screen supposed to be in?).
 
 
-TF							*tf.vim*
+TF							*tf-syntax*
 
 There is one option for the tf syntax highlighting.
 
@@ -1267,7 +1267,7 @@ set "tf_minlines" to the value you desire.  Example: >
 	:let tf_minlines = your choice
 
 
-X Pixmaps (XPM)						*xpm.vim*
+X Pixmaps (XPM)						*xpm-syntax*
 
 xpm.vim creates its syntax items dynamically based upon the contents of the
 XPM file.  Thus if you make changes e.g. in the color specification strings,

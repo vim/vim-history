@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Vim help file
 " Maintainer:	Bram Moolenaar (Bram@vim.org)
-" Last Change:	2000 Oct 15
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -53,23 +53,21 @@ syn match helpLeadBlank		"^\s\+" contained
 
 syn sync minlines=40
 
-if !exists("did_help_syntax_inits")
-  let did_help_syntax_inits = 1
 
-  hi link helpIgnore		Ignore
-  hi link helpHyperTextJump	Subtitle
-  hi link helpHyperTextEntry	String
-  hi link helpHeadline		Statement
-  hi link helpHeader		PreProc
-  hi link helpSectionDelim	PreProc
-  hi link helpVim		Identifier
-  hi link helpExample		Comment
-  hi link helpOption		Type
-  hi link helpNotVi		Special
-  hi link helpSpecial		Special
-  hi link helpNote		Todo
-  hi link Subtitle		Identifier
-endif
+" The default highlighting.
+hi def link helpIgnore		Ignore
+hi def link helpHyperTextJump	Subtitle
+hi def link helpHyperTextEntry	String
+hi def link helpHeadline	Statement
+hi def link helpHeader		PreProc
+hi def link helpSectionDelim	PreProc
+hi def link helpVim		Identifier
+hi def link helpExample		Comment
+hi def link helpOption		Type
+hi def link helpNotVi		Special
+hi def link helpSpecial		Special
+hi def link helpNote		Todo
+hi def link Subtitle		Identifier
 
 let b:current_syntax = "help"
 

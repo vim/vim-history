@@ -12,7 +12,7 @@
 
 #include "vim.h"
 
-#ifdef FEAT_DIGRAPHS
+#if defined(FEAT_DIGRAPHS) || defined(PROTO)
 
 #ifdef FEAT_MBYTE
 typedef int result_t;
@@ -2014,6 +2014,46 @@ do_digraph(c)
     }
     lastchar = c;
     return c;
+}
+
+/*
+ * Get a digraph.  Used after typing CTRL-K on the command line or in normal
+ * mode.
+ * Returns composed character, or NUL when ESC was used.
+ */
+    int
+get_digraph(cmdline)
+    int		cmdline;	/* TRUE when called from the cmdline */
+{
+    int		c, cc;
+
+    ++no_mapping;
+    ++allow_keys;
+    c = safe_vgetc();
+    --no_mapping;
+    --allow_keys;
+    if (c != ESC)		/* ESC cancels CTRL-K */
+    {
+	if (IS_SPECIAL(c))	/* insert special key code */
+	    return c;
+	if (cmdline)
+	{
+	    if (char2cells(c) == 1)
+		putcmdline(c);
+	}
+#ifdef FEAT_CMDL_INFO
+	else
+	    add_to_showcmd(c);
+#endif
+	++no_mapping;
+	++allow_keys;
+	cc = safe_vgetc();
+	--no_mapping;
+	--allow_keys;
+	if (cc != ESC)	    /* ESC cancels CTRL-K */
+	    return getdigraph(c, cc, TRUE);
+    }
+    return NUL;
 }
 
 /*

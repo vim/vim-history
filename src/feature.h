@@ -412,11 +412,6 @@
 #endif
 
 /*
- * +sniff		Sniff interface.  This needs to be defined in the
- *			Makefile.
- */
-
-/*
  * +builtin_terms	Choose one out of the following four:
  *
  * NO_BUILTIN_TCAPS	Do not include any builtin termcap entries (used only
@@ -518,7 +513,7 @@
  *			chars.  Not tested much!
  */
 #if defined(FEAT_GUI_W32) && !defined(FEAT_MBYTE_IME)
-/* #  define FEAT_MBYTE_IME */
+/* #define FEAT_MBYTE_IME */
 # endif
 
 #if defined(FEAT_MBYTE_IME) && !defined(FEAT_MBYTE)
@@ -673,6 +668,11 @@
  * DEBUG		Output a lot of debugging garbage.
  */
 /* #define DEBUG */
+
+/*
+ * MEM_PROFILE		Debugging of memory allocation and freeing.
+ */
+/* #define MEM_PROFILE */
 
 /*
  * VIMRC_FILE		Name of the .vimrc file in current dir.
@@ -905,6 +905,7 @@
  * +perl		Perl interface: "--enable-perlinterp"
  * +python		Python interface: "--enable-pythoninterp"
  * +tcl			TCL interface: "--enable-tclinterp"
+ * +sniff		Sniff interface: "--enable-sniff"
  */
 
 /*

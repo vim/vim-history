@@ -1204,7 +1204,7 @@ get_leader_len(line, flags, backward)
 plines(lnum)
     linenr_t	lnum;
 {
-    return plines_win(curwin, lnum);
+    return plines_win(curwin, lnum, TRUE);
 }
 
 /*
@@ -1216,13 +1216,14 @@ plines_check(lnum)
 {
     if (lnum < 1 || lnum > curbuf->b_ml.ml_line_count)
 	return MAXCOL;
-    return plines_win(curwin, lnum);
+    return plines_win(curwin, lnum, TRUE);
 }
 
     int
-plines_win(wp, lnum)
+plines_win(wp, lnum, winheight)
     win_t	*wp;
     linenr_t	lnum;
+    int		winheight;	/* when TRUE limit to window height */
 {
     long	col;
     char_u	*s;
@@ -1261,7 +1262,9 @@ plines_win(wp, lnum)
      * Add column offset for 'number' and 'foldcolumn'.
      */
     width = W_WIDTH(wp) - win_col_off(wp);
-    if (width > 0)
+    if (width <= 0)
+	lines = 32000;
+    else
     {
 	if (col <= width)
 	    return 1;
@@ -1272,12 +1275,14 @@ plines_win(wp, lnum)
 	    return lines;
     }
     /* window is too small, line does not fit */
-    return (int)(wp->w_height);
+    if (winheight)
+	return (int)(wp->w_height);
+    return lines;
 }
 
 /*
- * Like plines_win(), but only reports the number of physical screen lines used
- * from the start of the line to the given column number.
+ * Like plines_win(), but only reports the number of physical screen lines
+ * used from the start of the line to the given column number.
  */
     int
 plines_win_col(wp, lnum, column)
@@ -1371,7 +1376,7 @@ plines_m_win(wp, first, last)
 	}
 	else
 #endif
-	    count += plines_win(wp, first++);
+	    count += plines_win(wp, first++, TRUE);
     }
     return (count);
 }
@@ -1873,13 +1878,11 @@ gchar_pos(pos)
     int
 gchar_cursor()
 {
-    char_u	*ptr = ml_get_cursor();
-
 #ifdef FEAT_MBYTE
     if (has_mbyte)
-	return mb_ptr2char(ptr);
+	return mb_ptr2char(ml_get_cursor());
 #endif
-    return (int)*ptr;
+    return (int)*ml_get_cursor();
 }
 
 /*

@@ -31,22 +31,20 @@ syn match exportsSeparator	"[,:]"
 " comments
 syn match exportsComment	"^\s*#.*$"
 
-if !exists("did_exports_syntax_inits")
-  let did_exports_syntax_inits = 1
-  hi link exportsKeyOptSet	exportsKeySettings
-  hi link exportsOptSet	exportsSettings
+" The default highlighting.
+hi def link exportsKeyOptSet		exportsKeySettings
+hi def link exportsOptSet		exportsSettings
 
-  hi link exportsComment	Comment
-  hi link exportsKeyOptions	Type
-  hi link exportsKeySettings	Keyword
-  hi link exportsOptions	Constant
-  hi link exportsSeparator	Constant
-  hi link exportsSettings	Constant
+hi def link exportsComment		Comment
+hi def link exportsKeyOptions		Type
+hi def link exportsKeySettings	Keyword
+hi def link exportsOptions		Constant
+hi def link exportsSeparator		Constant
+hi def link exportsSettings		Constant
 
-  hi link exportsOptError	Error
-  hi link exportsOptSetError	Error
-  hi link exportsSetError	Error
-endif
+hi def link exportsOptError		Error
+hi def link exportsOptSetError	Error
+hi def link exportsSetError		Error
 
 let b:current_syntax = "exports"
 " vim: ts=10

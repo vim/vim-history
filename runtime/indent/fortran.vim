@@ -1,27 +1,81 @@
 " Vim indent file
 " Language:	Fortran90 (and Fortran95, Fortran77, F and elf90)
-" Version:	0.2
-" Last Change:	2000 Sep 30
+" Version:	0.30
+" Last Change:	2000 Nov 03
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
 " For the latest version of this file, see <http://www.unb.ca/chem/ajit/vim.htm>
 
-setlocal nosmartindent
-setlocal indentkeys+==end,=case,=if,=else,=do,=where,=elsewhere,=select
+setlocal indentkeys+==~end,=~case,=~if,=~else,=~do,=~where,=~elsewhere,=~select
 
-"Define the appropriate indent function but only once
+" Determine whether this is a fixed or free format source file
+" if this hasn't been done yet
+if !exists("b:fortran_fixed_source")
+  let b:fortran_fixed_source = 1
+  let s:ln=1
+  while s:ln < 25
+    let s:test = strpart(getline(s:ln),0,5)
+    if s:test[0] !~ '[Cc*]' && s:test !~ '^\s*!' && s:test =~ '[^ 0-9\t]'
+      let b:fortran_fixed_source = 0
+      break
+    endif
+    let s:ln = s:ln + 1
+  endwhile
+endif
+
+" Define the appropriate indent function but only once
 if (b:fortran_fixed_source == 1)
-  setlocal indentexpr=GetFortranFixedIndent()
-  if exists("*GetFortranFixedIndent")
+  setlocal indentexpr=FortranGetFixedIndent()
+  if exists("*FortranGetFixedIndent")
     finish
   endif
 else
-  setlocal indentexpr=GetFortranFreeIndent()
-  if exists("*GetFortranFreeIndent")
+  setlocal indentexpr=FortranGetFreeIndent()
+  if exists("*FortranGetFreeIndent")
     finish
   endif
 endif
 
-function GetFortranFreeIndent()
+function FortranGetIndent(lnum)
+  let ind = indent(a:lnum)
+  let prevline=getline(a:lnum)
+  " Strip tail comment
+  let prevstat=substitute(prevline, '!.*$', '', '')
+
+  "Indent do loops only if they are all guaranteed to be of do/end do type
+  if exists("b:fortran_do_enddo")
+    if prevstat =~? '^\s*\(\d\+\s\)\=\s*\(\a\w*\s*:\)\=\s*do\>'
+      let ind = ind + &sw
+    endif
+    if getline(v:lnum) =~? '^\s*\(\d\+\s\)\=\s*end\s*do\>'
+      let ind = ind - &sw
+    endif
+  endif
+
+  "Add a shiftwidth to statements following if, else, do, case,
+  "where and elsewhere statements
+  if prevstat =~? '^\s*\(\d\+\s\)\=\s*\(else\|case\|where\|elsewhere\)\>' ||
+   \ prevstat =~? '^\s*\(\d\+\s\)\=\s*\(\a\w*\s*:\)\=\s*if\>'
+     let ind = ind + &sw
+    " Remove unwanted indent after logical and arithmetic ifs
+    if prevstat =~? '\<if\>' && prevstat !~? '\<then\>'
+      let ind = ind - &sw
+    endif
+  endif
+
+  "Subtract a shiftwidth from else, elsewhere, case, end if, end do,
+  " end where and end select statements
+  if getline(v:lnum) =~? '^\s*\(\d\+\s\)\=\s*\(else\|elsewhere\|case\|end\s*\(if\|where\|select\)\)\>'
+    let ind = ind - &sw
+    " Fix indent for case statement immediately after select
+    if prevstat =~? '\<select\>'
+      let ind = ind + &sw
+    endif
+  endif
+
+  return ind
+endfunction
+
+function FortranGetFreeIndent()
   "Find the previous non-blank line
   let lnum = v:lnum - 1
   while lnum > 0
@@ -37,23 +91,11 @@ function GetFortranFreeIndent()
     return 0
   endif
 
-  let ind = indent(lnum)
-  "Add a shiftwidth to statements following if, else, do, case,
-  "where and elsewhere statements
-  if prevline =~ '^\s*\(if\|else\|do\|case\|where\|elsewhere\)\>'
-    let ind = ind + &sw
-  endif
-
-  "Subtract a shiftwidth from else, elsewhere, case, end if, end do,
-  " end where and end select statements
-  if getline(v:lnum) =~ '^\s*\(else\|elsewhere\|case\|end\s*\(if\|do\|where\|select\)\)\>'
-    let ind = ind - &sw
-  endif
-
+  let ind=FortranGetIndent(lnum)
   return ind
 endfunction
 
-function GetFortranFixedIndent()
+function FortranGetFixedIndent()
   let currline=getline(v:lnum)
   "Don't indent comments, continuation lines and labelled lines
   if strpart(currline,0,6) =~ '[^ \t]'
@@ -66,12 +108,18 @@ function GetFortranFixedIndent()
   let lnum = v:lnum - 1
   while lnum > 0
     let prevline=getline(lnum)
-    if prevline !~ '^\([C*!]\|\s*$\)'
-      if !(strpart(prevline,0,6) =~ '[^ \t]') 
+    if (prevline =~ "^[C*!]") || (prevline =~ "^\s*$") || (strpart(prevline,5,1) !~ "[ 0]")
+      " Skip comments, blank lines and continuation lines
+      let lnum = lnum - 1
+    else
+      let test=strpart(prevline,0,5)
+      if test =~ "[0-9]"
+        " Skip lines with statement numbers
+	let lnum = lnum - 1
+      else
         break
       endif
     endif
-    let lnum = lnum - 1
   endwhile
 
   "First line must begin at column 7
@@ -79,19 +127,7 @@ function GetFortranFixedIndent()
     return 6
   endif
 
-  "Add a shiftwidth to statements following if, else, do, case,
-  "where and elsewhere statements
-  let ind = indent(lnum)
-  if getline(lnum) =~ '^\s*\(if\|else\|do\|case\|where\|elsewhere\)\>'
-    let ind = ind + &sw
-  endif
-
-  "Subtract a shiftwidth from else, elsewhere, case, end if, end do,
-  " end where and end select statements
-  if getline(v:lnum) =~ '^\s*\(else\|elsewhere\|case\|end\s*\(if\|do\|where\|select\)\)\>'
-    let ind = ind - &sw
-  endif
-
+  let ind=FortranGetIndent(lnum)
   return ind
 endfunction
 

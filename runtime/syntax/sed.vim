@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	sed
 " Maintainer:	Haakon Riiser <hakonrk@fys.uio.no>
-" Last Change:	2000 Aug 24
+" Last Change:	2000 Nov 04
 
 " Clear old syntax defs
 syn clear
@@ -67,36 +67,34 @@ syn region sedReplacement64 matchgroup=Special start=+@\(\\\\\|\\@\)*+ skip=+[^\
 " (y) does not allow any flags.  To save memory, I ignore this problem.
 syn match sedST	"[sy]" nextgroup=sedRegexp\d\+
 
-if !exists("did_sed_syntax_inits")
-    let did_sed_syntax_inits = 1
-    hi link sedAddress		Macro
-    hi link sedACI		NONE
-    hi link sedBranch		Label
-    hi link sedComment		Comment
-    hi link sedDelete		Function
-    hi link sedError		Error
-    hi link sedFlag		Type
-    hi link sedFlagwrite	Constant
-    hi link sedFunction		Function
-    hi link sedLabel	    	Label
-    hi link sedLineCont	    	Special
-    hi link sedPutHoldspc	Function
-    hi link sedReplaceMeta	Special
-    hi link sedRegexpMeta	Special
-    hi link sedRW		Constant
-    hi link sedSemicolon	Special
-    hi link sedST		Function
-    hi link sedSpecial		Special
-    if exists("highlight_sedtabs")
-        hi link sedTab		Todo
-    endif
-    let __sed_i = 32
-    while __sed_i <= 126
-	exe "hi link sedRegexp".__sed_i		"Macro"
-	exe "hi link sedReplacement".__sed_i	"NONE"
-	let __sed_i = __sed_i + 1
-    endwhile
+" The default highlighting.
+hi def link sedAddress		Macro
+hi def link sedACI		NONE
+hi def link sedBranch		Label
+hi def link sedComment		Comment
+hi def link sedDelete		Function
+hi def link sedError		Error
+hi def link sedFlag		Type
+hi def link sedFlagwrite	Constant
+hi def link sedFunction		Function
+hi def link sedLabel		Label
+hi def link sedLineCont		Special
+hi def link sedPutHoldspc	Function
+hi def link sedReplaceMeta	Special
+hi def link sedRegexpMeta	Special
+hi def link sedRW		Constant
+hi def link sedSemicolon	Special
+hi def link sedST		Function
+hi def link sedSpecial		Special
+if exists("highlight_sedtabs")
+  hi def link sedTab		Todo
 endif
+let __sed_i = 32
+while __sed_i <= 126
+  exe "hi def link sedRegexp".__sed_i		"Macro"
+  exe "hi def link sedReplacement".__sed_i	"NONE"
+  let __sed_i = __sed_i + 1
+endwhile
 
 unlet __sed_i __sed_delimiter __sed_metacharacters
 

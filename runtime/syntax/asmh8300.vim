@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Hitachi H-8300h specific syntax for GNU Assembler
 " Maintainer:	Kevin Dahlhausen <ap096@po.cwru.edu>
-" Last Change:	1997 April 20
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -50,17 +50,13 @@ syn case match
 source <sfile>:p:h/asm.vim
 
 
-if !exists("did_hitachi_syntax_inits")
-  let did_hitachi_syntax_inits = 1
+" The default highlighting.
+hi def link asmOpcode	Statement
+hi def link asmRegister Identifier
 
-  hi link asmOpcode  Statement
-  hi link asmRegister  Identifier
-
-  " My default-color overrides:
-  hi asmOpcode ctermfg=yellow
-  hi asmReg	ctermfg=lightmagenta
-
-endif
+" My default-color overrides:
+hi def asmOpcode	ctermfg=yellow
+hi def asmReg		ctermfg=lightmagenta
 
 let b:current_syntax = "asmh8300"
 

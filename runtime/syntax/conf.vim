@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	generic configure file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Feb 11
+" Last Change:	2000 Nov 04
 
 " remove any old syntax stuff hanging around
 syn clear
@@ -13,13 +13,10 @@ syn match	confComment	"\s#.*"ms=s+1 contains=confTodo
 syn region	confString	start=+"+ skip=+\\\\\|\\"+ end=+"+ oneline
 syn region	confString	start=+'+ skip=+\\\\\|\\'+ end=+'+ oneline
 
-if !exists("did_conf_syntax_inits")
-  let did_conf_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link confComment	Comment
-  hi link confTodo	Todo
-  hi link confString	String
-endif
+" The default highlighting.
+hi def link confComment	Comment
+hi def link confTodo	Todo
+hi def link confString	String
 
 let b:current_syntax = "conf"
 

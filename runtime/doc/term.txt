@@ -1,4 +1,4 @@
-*term.txt*      For Vim version 6.0k.  Last change: 2000 Oct 29
+*term.txt*      For Vim version 6.0l.  Last change: 2000 Nov 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -696,11 +696,14 @@ Double, triple and quadruple clicks are supported when the GUI is active,
 for MS-DOS and Win32, and for an xterm (if the gettimeofday() function is
 available).  For selecting text, extra clicks extend the selection:
 	click		select ~
-	double		word			*<2-LeftMouse>*
+	double		word or % match		*<2-LeftMouse>*
 	triple		line			*<3-LeftMouse>*
 	quadruple	rectangular block	*<4-LeftMouse>*
 Exception: In a Help window a double click jumps to help for the word that is
 clicked on.
+A double click on a word selects that word.  A double click on a character
+that has a match selects until that match (like using "v%").  If the match is
+a #if/#else/#endif block, the selection becomes linewise.
 For MS-DOS and xterm the time for double clicking can be set with the
 'mousetime' option.  For the other systems this time is defined outside of
 Vim.

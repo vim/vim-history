@@ -114,26 +114,24 @@ syn match	jessComment	";.*$"
 " synchronization
 syn sync lines=100
 
-if !exists("did_jess_syntax_inits")
-  let did_jess_syntax_inits= 1
-  hi link jessAtomNmbr	jessNumber
-  hi link jessAtomMark	jessMark
+" The default highlighting.
+hi def link jessAtomNmbr	jessNumber
+hi def link jessAtomMark	jessMark
 
-  hi link jessAtom	Identifier
-  hi link jessAtomBarSymbol	Special
-  hi link jessBarSymbol	Special
-  hi link jessComment	Comment
-  hi link jessConcat	Statement
-  hi link jessDeclaration	Statement
-  hi link jessFunc	Statement
-  hi link jessKey		Type
-  hi link jessMark	Delimiter
-  hi link jessNumber	Number
-  hi link jessParenError	Error
-  hi link jessSpecial	Type
-  hi link jessString	String
-  hi link jessVar	                  Identifier
-  endif
+hi def link jessAtom	Identifier
+hi def link jessAtomBarSymbol	Special
+hi def link jessBarSymbol	Special
+hi def link jessComment	Comment
+hi def link jessConcat	Statement
+hi def link jessDeclaration	Statement
+hi def link jessFunc	Statement
+hi def link jessKey	Type
+hi def link jessMark	Delimiter
+hi def link jessNumber	Number
+hi def link jessParenError	Error
+hi def link jessSpecial	Type
+hi def link jessString	String
+hi def link jessVar                 Identifier
 
 let b:current_syntax = "jess"
 

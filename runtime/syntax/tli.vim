@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	TealInfo source files (*.tli)
 " Maintainer:	Kurt W. Andrews <kandrews@fastrans.net>        
-" Last Change:	2000 Mar 22
+" Last Change:	2000 Nov 04
 " Version:      1.0
 
 " Remove any old syntax stuff hanging around
@@ -34,23 +34,20 @@ syn region tliString	start=+"+ end=+"+
 "TealInfo Numbers, identifiers and comments
 
 syn case ignore
-syn match tliNumber 	"\d*"
+syn match tliNumber	"\d*"
 syn match tliIdentifier	"\<\h\w*\>"
-syn match tliComment 	"#.*"
+syn match tliComment	"#.*"
 syn case match
 
-if !exists("did_tli_syntax_inits")
-  let did_tli_syntax_inits = 1
-
-  hi link tliNumber	Number
-  hi link tliString	String
-  hi link tliComment	Comment
-  hi link tliSpecial	SpecialChar
-  hi link tliIdentifier Identifier
-  hi link tliObject     Statement
-  hi link tliField      Type
-  hi link tliStyle      PreProc
-endif
+" The default highlighting.
+hi def link tliNumber		Number
+hi def link tliString		String
+hi def link tliComment		Comment
+hi def link tliSpecial		SpecialChar
+hi def link tliIdentifier	Identifier
+hi def link tliObject		Statement
+hi def link tliField		Type
+hi def link tliStyle		PreProc
 
 let b:current_syntax = "tli"
    

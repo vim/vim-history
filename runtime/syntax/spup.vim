@@ -2,7 +2,7 @@
 " Language:		Speedup, plant simulator from AspenTech
 " Maintainer:	Stefan.Schwarzer <Stefan.Schwarzer@tu-clausthal.de>
 " URL:			http://home.tu-clausthal.de/~svss/vim/spup.vim
-" Last Change:	1999 Jul 7
+" Last Change:	2000 Nov 04
 " Filename:		spup.vim
 
 " Bugs
@@ -191,65 +191,63 @@ syn sync match spupSyncReport     grouphere spupReport     "^REPORT"
 syn sync match spupSyncTitle      grouphere spupTitle      "^TITLE"
 syn sync match spupSyncUnit       grouphere spupUnit       "^UNIT"
 
-if !exists( "did_spup_syntax_inits" )
-    let did_spup_syntax_inits = 1
 
-    hi link spupCdi        spupSection
-    hi link spupConditions spupSection
-    hi link spupDeclare    spupSection
-    hi link spupEstimation spupSection
-    hi link spupExternal   spupSection
-    hi link spupFlowsheet  spupSection
-    hi link spupFunction   spupSection
-    hi link spupGlobal     spupSection
-    hi link spupHomotopy   spupSection
-    hi link spupMacro      spupSection
-    hi link spupModel      spupSection
-    hi link spupOperation  spupSection
-    hi link spupOptions    spupSection
-    hi link spupProcedure  spupSection
-    hi link spupProfiles   spupSection
-    hi link spupReport     spupSection
-    hi link spupTitle      spupConstant  " this is correct, truly ;)
-    hi link spupUnit       spupSection
+" The default highlighting.
+hi def link spupCdi        spupSection
+hi def link spupConditions spupSection
+hi def link spupDeclare    spupSection
+hi def link spupEstimation spupSection
+hi def link spupExternal   spupSection
+hi def link spupFlowsheet  spupSection
+hi def link spupFunction   spupSection
+hi def link spupGlobal     spupSection
+hi def link spupHomotopy   spupSection
+hi def link spupMacro      spupSection
+hi def link spupModel      spupSection
+hi def link spupOperation  spupSection
+hi def link spupOptions    spupSection
+hi def link spupProcedure  spupSection
+hi def link spupProfiles   spupSection
+hi def link spupReport     spupSection
+hi def link spupTitle      spupConstant  " this is correct, truly ;)
+hi def link spupUnit       spupSection
 
-    hi link spupCdiSubs        spupSubs
-    hi link spupConditionsSubs spupSubs
-    hi link spupDeclareSubs    spupSubs
-    hi link spupEstimationSubs spupSubs
-    hi link spupExternalSubs   spupSubs
-    hi link spupFlowsheetSubs  spupSubs
-    hi link spupFunctionSubs   spupSubs
-    hi link spupHomotopySubs   spupSubs
-    hi link spupMacroSubs      spupSubs
-    hi link spupModelSubs      spupSubs
-    hi link spupOperationSubs  spupSubs
-    hi link spupOptionsSubs    spupSubs
-    hi link spupProcedureSubs  spupSubs
-    hi link spupReportSubs     spupSubs
-    hi link spupUnitSubs       spupSubs
+hi def link spupCdiSubs        spupSubs
+hi def link spupConditionsSubs spupSubs
+hi def link spupDeclareSubs    spupSubs
+hi def link spupEstimationSubs spupSubs
+hi def link spupExternalSubs   spupSubs
+hi def link spupFlowsheetSubs  spupSubs
+hi def link spupFunctionSubs   spupSubs
+hi def link spupHomotopySubs   spupSubs
+hi def link spupMacroSubs      spupSubs
+hi def link spupModelSubs      spupSubs
+hi def link spupOperationSubs  spupSubs
+hi def link spupOptionsSubs    spupSubs
+hi def link spupProcedureSubs  spupSubs
+hi def link spupReportSubs     spupSubs
+hi def link spupUnitSubs       spupSubs
 
-    hi link spupCode            Normal
-    hi link spupComment         Comment
-    hi link spupComment2        spupComment
-    hi link spupConditional     Statement
-    hi link spupConstant        Constant
-    hi link spupError           Error
-    hi link spupHelp            Normal
-    hi link spupIdentifier      Identifier
-    hi link spupNumber          Constant
-    hi link spupOperator        Special
-    hi link spupOpenBrace       spupError
-    hi link spupSection         Statement
-    hi link spupSpecial         spupTextprocGeneric
-    hi link spupStreams         Type
-    hi link spupString          Constant
-    hi link spupSubs            Statement
-    hi link spupSymbol          Special
-    hi link spupTextprocError   Normal
-    hi link spupTextprocGeneric PreProc
-    hi link spupTypes           Type
-endif
+hi def link spupCode            Normal
+hi def link spupComment         Comment
+hi def link spupComment2        spupComment
+hi def link spupConditional     Statement
+hi def link spupConstant        Constant
+hi def link spupError           Error
+hi def link spupHelp            Normal
+hi def link spupIdentifier      Identifier
+hi def link spupNumber          Constant
+hi def link spupOperator        Special
+hi def link spupOpenBrace       spupError
+hi def link spupSection         Statement
+hi def link spupSpecial         spupTextprocGeneric
+hi def link spupStreams         Type
+hi def link spupString          Constant
+hi def link spupSubs            Statement
+hi def link spupSymbol          Special
+hi def link spupTextprocError   Normal
+hi def link spupTextprocGeneric PreProc
+hi def link spupTypes           Type
 
 let b:current_syntax = "spup"
 
