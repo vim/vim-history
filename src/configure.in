@@ -85,7 +85,8 @@ have_local_include=''
 have_local_lib=''
 if test "$GCC" = yes; then
   echo 'void f(){}' > conftest.c
-  have_local_include=`${CC-cc} -c -v conftest.c 2>&1 | grep '/usr/local/include'`
+  dnl -no-cpp-precomp is needed for OS X 10.2 (Ben Fowler)
+  have_local_include=`${CC-cc} -no-cpp-precomp -c -v conftest.c 2>&1 | grep '/usr/local/include'`
   have_local_lib=`${CC-cc} -c -v conftest.c 2>&1 | grep '/usr/local/lib'`
   rm -f conftest.c conftest.o
 fi
