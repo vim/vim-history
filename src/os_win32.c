@@ -3835,7 +3835,13 @@ mch_rename(
 
     /* rename the temp file to the new file */
     if (!MoveFile(szTempFile, pszNewFile))
+    {
+	/* Renaming failed.  Rename the file back to its old name, so that it
+	 * looks like nothing happened. */
+	(void)MoveFile(szTempFile, pszOldFile);
+
 	return -7;
+    }
 
     /* Seems to be left around on Novell filesystems */
     DeleteFile(szTempFile);
