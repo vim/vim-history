@@ -122,7 +122,7 @@ static void	str_to_reg __ARGS((struct yankreg *y_ptr, int type, char_u *str, lon
 #endif
 static int	ends_in_white __ARGS((linenr_T lnum));
 #ifdef FEAT_COMMENTS
-static int	same_leader __ARGS((int, char_u *, int, char_u *));
+static int	same_leader __ARGS((linenr_T lnum, int, char_u *, int, char_u *));
 static int	fmt_check_par __ARGS((linenr_T, int *, char_u **, int do_comments));
 #else
 static int	fmt_check_par __ARGS((linenr_T));
@@ -4082,12 +4082,13 @@ do_join(insert_space)
 
 #ifdef FEAT_COMMENTS
 /*
- * Return TRUE if the two comment leaders given are the same.  The cursor is
- * in the first line.  White-space is ignored.	Note that the whole of
+ * Return TRUE if the two comment leaders given are the same.  "lnum" is
+ * the first line.  White-space is ignored.  Note that the whole of
  * 'leader1' must match 'leader2_len' characters from 'leader2' -- webb
  */
     static int
-same_leader(leader1_len, leader1_flags, leader2_len, leader2_flags)
+same_leader(lnum, leader1_len, leader1_flags, leader2_len, leader2_flags)
+    linenr_T lnum;
     int	    leader1_len;
     char_u  *leader1_flags;
     int	    leader2_len;
@@ -4118,7 +4119,7 @@ same_leader(leader1_len, leader1_flags, leader2_len, leader2_flags)
 		return FALSE;
 	    if (*p == COM_START)
 	    {
-		if (*(ml_get_curline() + leader1_len) == NUL)
+		if (*(ml_get(lnum) + leader1_len) == NUL)
 		    return FALSE;
 		if (leader2_flags == NULL || leader2_len == 0)
 		    return FALSE;
@@ -4134,12 +4135,12 @@ same_leader(leader1_len, leader1_flags, leader2_len, leader2_flags)
      * Get current line and next line, compare the leaders.
      * The first line has to be saved, only one line can be locked at a time.
      */
-    line1 = vim_strsave(ml_get_curline());
+    line1 = vim_strsave(ml_get(lnum));
     if (line1 != NULL)
     {
 	for (idx1 = 0; vim_iswhite(line1[idx1]); ++idx1)
 	    ;
-	line2 = ml_get(curwin->w_cursor.lnum + 1);
+	line2 = ml_get(lnum + 1);
 	for (idx2 = 0; idx2 < leader2_len; ++idx2)
 	{
 	    if (!vim_iswhite(line2[idx2]))
@@ -4379,7 +4380,8 @@ format_lines(line_count)
 	     */
 	    if (curwin->w_cursor.lnum >= curbuf->b_ml.ml_line_count
 #ifdef FEAT_COMMENTS
-		    || !same_leader(leader_len, leader_flags,
+		    || !same_leader(curwin->w_cursor.lnum,
+					leader_len, leader_flags,
 					  next_leader_len, next_leader_flags)
 #endif
 		    )
@@ -4576,7 +4578,7 @@ paragraph_start(lnum)
 	return TRUE;		/* numbered item starts in "lnum". */
 
 #ifdef FEAT_COMMENTS
-    if (!same_leader(leader_len, leader_flags,
+    if (!same_leader(lnum - 1, leader_len, leader_flags,
 					  next_leader_len, next_leader_flags))
 	return TRUE;		/* change of comment leader. */
 #endif
