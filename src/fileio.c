@@ -1109,6 +1109,10 @@ retry:
 				read_buf_col = 0;
 				if (++read_buf_lnum > from)
 				{
+				    /* When the last line didn't have an
+				     * end-of-line don't add it now either. */
+				    if (!curbuf->b_p_eol)
+					--tlen;
 				    size = tlen;
 				    break;
 				}
