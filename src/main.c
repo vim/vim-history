@@ -91,6 +91,7 @@ usage(n, str)
 	fprintf(stderr, "   -W <scriptout>\tWrite commands to script file <scriptout>\n");
 	fprintf(stderr, "   -u <vimrc>\t\tUse <vimrc> instead of any .vimrc\n");
 	fprintf(stderr, "   -i <viminfo>\t\tUse <viminfo> instead of .viminfo\n");
+	fprintf(stderr, "   --\t\t\tEnd of options\n");
 
 #ifdef USE_GUI_X11
 # ifdef USE_GUI_MOTIF

@@ -204,9 +204,15 @@
 # endif
 #endif
 
+#ifdef OS2
+#define TMPNAME1		"$TMP/viXXXXXX"
+#define TMPNAME2		"$TMP/voXXXXXX"
+#define TMPNAMELEN		128
+#else
 #define TMPNAME1		"/tmp/viXXXXXX"
 #define TMPNAME2		"/tmp/voXXXXXX"
 #define TMPNAMELEN		15
+#endif
 
 /*
  * Unix has plenty of memory, use large buffers

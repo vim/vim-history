@@ -7,6 +7,7 @@ GUI:
 - When font shape changes, but not the size, doing ":set font=" does not
   redraw the screen with the new font.
 - Horizontal scrollbar doesn't work in rightleft mode.
+- Pasting in Replace mode insert the text, instead of overwriting.
 
 MSDOS:
 - Error in the DJGPP version: ":r!ls" eats file descriptors.  After a few

@@ -9,7 +9,7 @@ Vim		Vi IMproved.  A clone of the UNIX text editor Vi.  Very useful
 		current file name in window title, on-line help, rectangular
 		cut/paste, etc., etc., etc...
 
-		Version 4.1.  Also runs under UNIX, MSDOS and other systems.
+		Version 4.2.  Also runs under UNIX, MSDOS and other systems.
 		vim41bin.lha contains the binary and documentation.
 		vim41src.lha contains the sources.
 		Author: Bram Moolenaar, et. al.

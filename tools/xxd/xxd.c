@@ -32,6 +32,8 @@
  * MAC support added: CodeWarrior already uses ``outline'' in Types.h which is
  *     included by MacHeaders (Axel Kielhorn 1996/05/25). Renamed to xxdline().
  *     jw.
+ * -i printed 'int' instead of 'char'. *blush* 7.6.96
+ * added bram's OS2 ifdefs...
  *
  * (c) 1990-1996 by Juergen Weigert (jnweiger@informatik.uni-erlangen.de)
  *
@@ -62,7 +64,7 @@
 extern long int strtol();
 extern long int ftell();
 
-char version[] = "xxd V1.3m 30may96 by Juergen Weigert";
+char version[] = "xxd V1.4 8jun96 by Juergen Weigert";
 
 #if defined(MSDOS) || defined(WIN32) || defined(OS2)
 # define BIN_READ(yes)  ((yes) ? "rb" : "rt")
@@ -469,7 +471,7 @@ char *argv[];
     {
       if (fp != stdin)
 	{
-	  fprintf(fpo, "unsigned int %s", isdigit(argv[1][0]) ? "__" : "");
+	  fprintf(fpo, "unsigned char %s", isdigit(argv[1][0]) ? "__" : "");
 	  for (e = 0; (c = argv[1][e]); e++)
 	    putc(isalnum(c) ? c : '_', fpo);
 	  fputs("[] = {\n", fpo);

@@ -1,4 +1,4 @@
-*vim_gui.txt*   For Vim version 4.1.  Last modification: 1996 June 11
+*vim_gui.txt*   For Vim version 4.2.  Last modification: 1996 June 11
 
 
 		       Vim's Graphical User Interface

@@ -1,4 +1,4 @@
-*vim_idx.txt*   For Vim version 4.1.  Last modification: 1996 June 9
+*vim_idx.txt*   For Vim version 4.2.  Last modification: 1996 June 16
 
 This file contains a list of all commands for each mode, with a tag and a
 short description.  The list is sorted on ASCII value.
@@ -275,7 +275,7 @@ tag		char	      note action in Normal mode
 				   insert text, repeat N times
 |P|		["x]P		2  put the text [from buffer x] before the
 				   cursor N times
-|Q|		Q{motion}	2  format Nmove lines
+|Q|		Q{motion}	2  format Nmove lines (obsolete)
 |R|		R		2  enter replace mode: overtype existing
 				   characters, repeat the entered text N-1
 				   times
@@ -587,6 +587,7 @@ tag		char	      note action in Normal mode
 				   lines down
 |gk|		gk		1  like "k", but when 'wrap' on go N screen
 				   lines up
+|gq|		gq{motion}	2  format Nmove text (same as "Q")
 |gs|		gs		   goto sleep for N seconds (default 1)
 |gu|		gu{motion}	2  make Nmove text lowercase
 |gv|		gv		   reselect the previous Visual area
@@ -628,7 +629,7 @@ tag		command	      note action in Visual mode
 |v_J|		J		2  join the highlighted lines
 |v_K|		K		   run 'keywordprg' on the highlighted text
 |v_P|		P		   extend the highlighted text with a {} block
-|v_Q|		Q		2  format the highlighted lines
+|v_Q|		Q		2  format the highlighted lines (obsolete)
 |v_R|		R		2  delete the highlighted lines and start
 				   insert
 |v_S|		S		   extend the highlighted text with a () block
@@ -640,6 +641,7 @@ tag		command	      note action in Visual mode
 |v_a|		a		   extend the highlighted area with a word
 |v_c|		c		2  delete the highlighted text and start insert
 |v_d|		d		2  delete the highlighted text
+|v_gq|		gq		2  format the highlighted lines
 |v_gv|		gv		   exchange current and previous highlighted
 				   text
 |v_o|		o		   move cursor to other end of hightlighted

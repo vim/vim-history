@@ -3009,10 +3009,13 @@ doabbr:
 		case CMD_normal:
 				/*
 				 * Stuff the argument into the typeahead buffer.
-				 * Execute normal() until there is no more typeahead.
+				 * Execute normal() until there is no more typeahead than
+				 * there was before this command.
 				 */
+				len = typelen;
 				ins_typebuf(arg, forceit ? -1 : 0, 0, TRUE);
-				while ((!stuff_empty() || !typebuf_typed()) && !got_int)
+				while ((!stuff_empty() ||
+							 (!typebuf_typed() && typelen > len)) && !got_int)
 				{
 					adjust_cursor();	/* put cursor on an existing line */
 					cursupdate();		/* update cursor position */
@@ -3384,6 +3387,10 @@ do_ecmd(fnum, fname, sfname, command, hide, newlnum, set_help)
 
 	if (!oldbuf)						/* need to read the file */
 		(void)open_buffer();
+#ifdef AUTOCMD
+	else
+		apply_autocmds(EVENT_BUFENTER, NULL, NULL);
+#endif
 	win_init(curwin);
 	maketitle();
 
@@ -5032,13 +5039,17 @@ set_one_cmd_context(firstc, buff)
 			delim = *arg;
 			if (delim)
 				++arg;
-			for (i = 0; i < 2; i++, arg++)
+			for (i = 0; i < 2; i++)
+			{
 				while (arg[0] != NUL && arg[0] != delim)
 				{
 					if (arg[0] == '\\' && arg[1] != NUL)
 						++arg;
 					++arg;
 				}
+				if (arg[0] != NUL)		/* skip delimiter */
+					++arg;
+			}
 			while (arg[0] && vim_strchr((char_u *)"|\"#", arg[0]) == NULL)
 				++arg;
 			if (arg[0] != NUL)

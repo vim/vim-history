@@ -1,4 +1,4 @@
-*vim_tips.txt*  For Vim version 4.1.  Last modification: 1996 June 11
+*vim_tips.txt*  For Vim version 4.2.  Last modification: 1996 June 16
 
 Contents:
 
@@ -14,6 +14,7 @@ Speeding up external commands				|speed-up|
 Useful mappings						|useful-mappings|
 Compressing the help files				|gzip-helpfile|
 Executing shell commands in a window			|shell_window|
+Pseudo-Ex mode						|pseudo-Q|
 
 
 Editing C programs					*C-editing*
@@ -234,7 +235,7 @@ For Emacs-style editing on the command-line:
 This mapping will format any bullet list.  It requires that there is an empty
 line above and below each list entry:
 
-	:map _f   :set ai<CR>{O<Esc>}{)^Wi     <CR>     <Esc>Q}{dd5lDJ
+	:map _f   :set ai<CR>{O<Esc>}{)^Wi     <CR>     <Esc>gq}{dd5lDJ
 
 (<> notation |<>|.  Note that ^W is "^" "W", not CTRL-W.  You can copy/paste
 this into Vim if '<' is not included in 'cpoptions')
@@ -245,7 +246,7 @@ You also need to set 'textwidth' to a non-zero value, e.g.,
 A mapping that does about the same, but takes the indent for the list from the
 first line (Note: this mapping is a single long line):
 
-	:map _f :set ai<CR>}{a                                                          <Esc>WWmmkD`mi<CR><Esc>kkddpJQ}'mJO<Esc>j
+	:map _f :set ai<CR>}{a                                                          <Esc>WWmmkD`mi<CR><Esc>kkddpJgq}'mJO<Esc>j
 
 
 Compressing the help files				*gzip-helpfile*
@@ -285,5 +286,22 @@ you might try splitting your terminal screen or display window with the
 "splitvt" program.  You can probably find it on some ftp server.  The person
 that knows more about this is Sam Lantinga (slouken@cs.ucdavis.edu).
 
+
+Pseudo-Ex mode						*pseudo-Q*
+==============
+
+If you really miss the "Q" command from Vi a lot, you might want to try this
+mapping.  It is far from a real Ex mode, but it looks like it.  The "Q"
+command can still be used for formatting if you use Visual mode.
+You need to type "visual<CR><CR>" to get out of Ex mode.  Unfortunately, any
+error message does that too.
+
+nnoremap Q :cnoremap <C-V><CR> <C-V><CR>:<CR>:
+cabbrev visual cunmap <C-V><CR><NL>
+
+(<> notation |<>|.  You should enter this literally.)
+
+In a following version of Vim the "Q" command will be made Vi compatible.  Use
+"gq" for formatting text.
 
  vim:ts=8:sw=8:js:tw=78:

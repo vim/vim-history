@@ -1,4 +1,4 @@
-*vim_help.txt*	For Vim version 4.1.  Last modification: 1996 June 11
+*vim_help.txt*	For Vim version 4.2.  Last modification: 1996 June 16
 
 			VIM help file
 
@@ -462,7 +462,7 @@ matches 1 or more of the preceding atom      \+		  \+
 |>|	  N  >{motion}	move the lines that are moved over with {motion} one
 			   shiftwidth right
 |>>|	  N  >>		move N lines one shiftwidth right
-|Q|	  N  Q{motion}	format the lines that are moved over with {motion} to
+|gq|	  N  gq{motion}	format the lines that are moved over with {motion} to
 			   'textwidth' length
 |:ce|	  :[range]ce[nter] [width]
 			center the lines in [range]
@@ -646,7 +646,7 @@ Short explanation of each option:		*option_list*
 |'expandtab'|	   |'et'|	use spaces when <Tab> is inserted
 |'exrc'|			read .vimrc and .exrc in the current directory
 |'formatoptions'|  |'fo'|	how automatic formatting is to be done
-|'formatprg'|	   |'fp'|	name of external program used with "Q" command
+|'formatprg'|	   |'fp'|	name of external program used with "gq" command
 |'gdefault'|	   |'gd'|	the ":substitute" flag 'g' is default on
 |'guifont'|	   |'gfn'|	GUI: Name(s) of font(s) to be used
 |'guioptions'|	   |'go'|	GUI: Which components and options are used

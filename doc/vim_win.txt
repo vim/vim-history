@@ -1,4 +1,4 @@
-*vim_win.txt*   For Vim version 4.1.  Last modification: 1996 June 9
+*vim_win.txt*   For Vim version 4.2.  Last modification: 1996 June 16
 
 Editing with multiple windows and buffers.
 
@@ -82,7 +82,7 @@ CTRL-W CTRL-S						*CTRL-W_CTRL-S*
 		the same file.  Make new window N high (default is to use half
 		the height of the current window).  Reduces the current window
 		height to create room (and others, if the 'equalalways' option
-		is set).
+		is set).  (Note: CTRL-S does not work on all terminals).
 
 CTRL-W n						*CTRL-W_n*
 CTRL-W CTRL_N						*CTRL-W_CTRL-N*
@@ -115,7 +115,8 @@ CTRL-W q						*CTRL-W_q*
 CTRL-W CTRL-Q						*CTRL-W_CTRL-Q*
 :quit		Quit current window, unless the buffer was changed and there
 		are no other windows for this buffer.  When quitting the last
-		window (not counting help windows), exit Vim.
+		window (not counting help windows), exit Vim. (Note: CTRL-Q
+		does not work on all terminals)
 
 :quit!		Quit current window.  If this was the last window for a buffer,
 		any changes to that buffer are lost.  When quitting the last

@@ -30,9 +30,6 @@
 #ifdef HAVE_FCNTL_H
 # include <fcntl.h>
 #endif
-#ifdef __EMX__
-# include <glob.h>
-#endif
 
 #include "unixunix.h"		/* unix includes for unix.c only */
 
@@ -2003,6 +2000,7 @@ call_shell(cmd, options)
 				char_u		buffer[BUFLEN];
 				int			len;
 				int			p_more_save;
+				int			old_State;
 				int			read_count;
 				int			c;
 				int			toshell_fd;
@@ -2040,6 +2038,9 @@ call_shell(cmd, options)
 				 */
 				p_more_save = p_more;
 				p_more = FALSE;
+				old_State = State;
+				State = EXTERNCMD;		/* don't redraw at window resize */
+
 				for (;;)
 				{
 					/*
@@ -2048,7 +2049,7 @@ call_shell(cmd, options)
 					 * wild cards (would eat typeahead).
 					 */
 					if (!(options & SHELL_EXPAND) &&
-							  (len = mch_inchar(buffer, BUFLEN - 1, 10) != 0))
+							  (len = mch_inchar(buffer, BUFLEN - 1, 10)) != 0)
 					{
 						/*
 						 * For pipes:
@@ -2156,25 +2157,37 @@ call_shell(cmd, options)
 				}
 finished:
 				p_more = p_more_save;
+				State = old_State;
 				if (toshell_fd >= 0)
 					close(toshell_fd);
 				close(fromshell_fd);
 			}
 #endif /* USE_GUI */
+
 			/*
 			 * Wait until child has exited.
 			 */
-#ifdef EINTR
-			/* Don't stop waiting when a signal is received */
-			while (wait(&status) == -1 && errno == EINTR)
+#ifdef ECHILD
+			/* Don't stop waiting when a signal (e.g. SIGWINCH) is received. */
+			while (wait(&status) == -1 && errno != ECHILD)
 				;
 #else
 			wait(&status);
 #endif
-			settmode(1); 		/* set to raw mode right now, otherwise a
-								   CTRL-C after catch_signals will kill Vim */
+			/*
+			 * Set to raw mode right now, otherwise a CTRL-C after
+			 * catch_signals will kill Vim.
+			 */
+			settmode(1);
 			did_settmode = TRUE;
 			catch_signals(deathtrap);
+
+			/*
+			 * Check the window size, in case it changed while executing the
+			 * external command.
+			 */
+			mch_get_winsize();
+
 			if (WIFEXITED(status))
 			{
 				i = WEXITSTATUS(status);
@@ -2449,74 +2462,121 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	int				list_notfound;
 {
 	int		i;
+	size_t	len;
 	char_u	*p;
 #ifdef __EMX__
-	char_u	expandbuf[512];
-	char_u  **mypat;
-	glob_t  globinfo;
-	int		rc;
+# define EXPL_ALLOC_INC	16
+	char_u	**expl_files;
+	size_t	files_alloced, files_free;
 
 	*num_file = 0;		/* default: no files found */
-	*file = (char_u **)"";
-
-	mypat = (char_u **)alloc(sizeof(char_u *) * (num_pat + 1));
-	if (!mypat)
+	files_alloced = EXPL_ALLOC_INC;	/* how much space is allocated */
+	files_free = EXPL_ALLOC_INC;	/* how much space is not used  */
+	*file = (char_u **) alloc(sizeof(char_u **) * files_alloced);
+	if (!*file)
 	{
 		emsg(e_outofmem);
 		return FAIL;
 	}
-	/* first copy pat into mypat, expanding any $VAR or ~/ */
-	for (i = 0; i < num_pat; i++)
+
+	for (; num_pat > 0; num_pat--, pat++)
 	{
-		if (vim_strchr(pat[i], '$') || vim_strchr(pat[i], '~'))
+		expl_files = NULL;
+		if (vim_strchr(*pat, '$') || vim_strchr(*pat, '~'))
 		{
 			/* expand environment var or home dir */
-			expand_env(pat[i], expandbuf, sizeof(expandbuf));
-			mypat[i] = strsave(expandbuf);
+			char_u	*buf = alloc(1024);
+			if (!buf)
+			{
+				emsg(e_outofmem);
+				return FAIL;
+			}
+			expand_env(*pat, buf, 1024);
+			if (mch_has_wildcard(buf))	/* still wildcards in there? */
+			{
+				expl_files = (char_u **)_fnexplode(buf);
+			}
+			if (expl_files == NULL)
+			{
+				/*
+				 * If no wildcard still remaining, simply add
+				 * the pattern to the results.
+				 * If wildcard did not match, add the pattern to
+				 * the list of results anyway. This way, doing
+				 * :n exist.c notexist*
+				 * will at least edits exist.c and then say
+				 * notexist* [new file]
+				 */
+				expl_files = (char_u **)alloc(sizeof(char_u **) * 2);
+				expl_files[0] = strsave(buf);
+				expl_files[1] = NULL;
+			}
+			vim_free(buf);
 		}
 		else
 		{
-			mypat[i] = strsave(pat[i]);
+			expl_files = (char_u **)_fnexplode(*pat);
+			if (expl_files == NULL)
+			{
+				/* see above for explanation */
+				expl_files = (char_u **)alloc(sizeof(char_u **) * 2);
+				expl_files[0] = strsave(*pat);
+				expl_files[1] = NULL;
+			}
 		}
-	}
-	mypat[i] = NULL;	/* NULL terminated */
-
-	/* now handle each pattern in turn. Emx has the handy glob() function. */
-	for (i = 0; i < num_pat; i++)
-	{
-		/*
-		 * First time, don't pass GLOB_APPEND as a flag.
-		 * GLOB_MARK means add a trailing slash to directory names.
-		 * GLOB_NOESCAPE means that a backslash doesn't escape glob chars.
-		 * GLOB_NOCHECK means add non-matching pattern to results.
-		 * The NULL could also be an error-handling function for unreadable
-		 * directories.
-		 */
-		rc = glob(mypat[i],
-				  (i?GLOB_APPEND:0) | GLOB_MARK | GLOB_NOESCAPE | GLOB_NOCHECK,
-				  NULL, &globinfo);
-	}
-
-	*num_file = globinfo.gl_pathc;
-	*file = (char_u **)alloc(*num_file * sizeof(char_u *));
-
-	for (i = 0; i < globinfo.gl_pathc; i++)
-	{
-		p = strsave(globinfo.gl_pathv[i]);
-		if (p)
+		if (!expl_files)
 		{
-			slash_adjust(p);
-			(*file)[i] = p;
+			/* Can't happen */
+			char_u msg[128];
+			sprintf(msg, "%s (unix.c:%d)", e_internal, __LINE__);
+			emsg(msg);
+			*file = (char_u **)"";
+			*num_file = 0;
+			return OK;
 		}
+		/*
+		 * Count number of names resulting from expansion,
+		 * At the same time add a backslash to the end of names that happen to be
+		 * directories, and replace slashes with backslashes.
+		 */
+		for (i = 0; (p = expl_files[i]) != NULL; i++, (*num_file)++)
+		{
+			if (--files_free == 0)
+			{
+				/* need more room in table of pointers */
+				files_alloced += EXPL_ALLOC_INC;
+				*file = (char_u **) realloc(*file,
+											sizeof(char_u **) * files_alloced);
+				files_free = EXPL_ALLOC_INC;
+			}
+			slash_adjust(p);
+			if (mch_isdir(p))
+			{
+				len = strlen(p);
+				p = realloc(p, len + 2);
+				if (!p)
+				{
+					emsg(e_outofmem);
+					return FAIL;
+				}
+				(*file)[*num_file] = p;
+				p += len;
+				*p++ = '\\';
+				*p = 0;
+			}
+			else
+			{
+				(*file)[*num_file] = strsave(p);
+			}
+		}
+		_fnexplodefree(expl_files);
 	}
-	globfree(&globinfo);
 	return OK;
 
 #else /* __EMX__ */
 
 	int		dir;
 	char_u	tmpname[TMPNAMELEN];
-	size_t	len;
 	char_u	*command;
 	FILE	*fd;
 	char_u	*buffer;

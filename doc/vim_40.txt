@@ -1,4 +1,4 @@
-*vim_40.txt*    For Vim version 4.1.  Last modification: 1996 June 11
+*vim_40.txt*    For Vim version 4.2.  Last modification: 1996 June 16
 
 
 Welcome to Vim Version 4.0!
@@ -1129,6 +1129,9 @@ this command used to crash Vim.  			|-r|.
 Removed reverse replace mode (can we call this a new feature?).  It is too
 complicated to do right and nobody will probably use it anyway.  Reverse
 insert is still possible.  				|'revins'|
+
+Added "gq" as an alias to "Q".  The "Q" command will be changed in a following
+version of Vim, to make it Vi compatible (start Ex mode).	|gq|
 
 The "Q" operator no longer affects empty lines.  You can now format a lot of
 paragraphs without losing the separating blank lines.  Use "Qp..." to format a

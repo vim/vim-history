@@ -27,11 +27,12 @@
 #define UPPER	11				/* make upper case */
 #define LOWER	12				/* make lower case */
 #define JOIN	13				/* only for visual mode */
+#define GFORMAT 14				/* "gq" */
 
 /*
  * operator characters; the order must correspond to the defines above!
  */
-EXTERN char_u *opchars INIT(= (char_u *)"dyc<>!~=Q:UuJ");
+EXTERN char_u *opchars INIT(= (char_u *)"dyc<>!~=Q:UuJq");
 
 /*
  * When a cursor motion command is made, it is marked as being a character or

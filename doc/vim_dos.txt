@@ -1,4 +1,4 @@
-*vim_dos.txt*   For Vim version 4.1.  Last modification: 1996 June 9
+*vim_dos.txt*   For Vim version 4.2.  Last modification: 1996 June 13
 
 This file contains the particularities for the MS-DOS version of Vim.
 
@@ -144,6 +144,9 @@ Vim with the "-b" (binary) option.
 You should set the environment variable "VIM" to the directory where the Vim
 documentation files are.  If "VIM" is used but not defined, "HOME" is tried
 too.
+
+If the HOME environment variable is not set, the value "C:/" is used as a
+default.
 
 The default help filename is "$VIM\vim_help.txt".  If the environment variable
 $VIM is not defined or the file is not found, the DOS search path is used to

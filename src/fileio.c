@@ -107,7 +107,7 @@ readfile(fname, sfname, from, newfile, lines_to_skip, lines_to_read, filtering)
 #ifdef UNIX
 	int					perm;
 #endif
-	int					textmode = curbuf->b_p_tx;	/* accept CR-LF linebreak */
+	int					textmode;				/* accept CR-LF linebreak */
 	struct stat			st;
 	int					file_readonly;
 	linenr_t			skip_count = lines_to_skip;
@@ -328,6 +328,12 @@ readfile(fname, sfname, from, newfile, lines_to_skip, lines_to_read, filtering)
 
 	msg_scroll = FALSE;							/* overwrite the file message */
 
+	/*
+	 * Set textmode now, before the "retry" caused by 'textauto' and after the
+	 * autocommands, that may reset it.
+	 */
+	textmode = curbuf->b_p_tx;
+
 retry:
 	while (!error && !got_int)
 	{
@@ -472,23 +478,19 @@ retry:
 		mch_breakcheck();
 	}
 
-	if (error && read_count == 0)	/* not an error, max. number of lines reached */
+	/* not an error, max. number of lines reached */
+	if (error && read_count == 0)
 		error = FALSE;
 
-	if (!error && !got_int && linerest != 0
-#ifdef USE_CRNL
 	/*
-	 * in MSDOS textmode ignore a trailing CTRL-Z
+	 * If we get EOF in the middle of a line, note the fact and
+	 * complete the line ourselves.
+	 * In textmode ignore a trailing CTRL-Z, unless 'binary' set.
 	 */
-		&& !(!curbuf->b_p_bin && *line_start == Ctrl('Z') &&
-											ptr == line_start + 1)
-#endif
-									)
+	if (!error && !got_int && linerest != 0 &&
+			!(!curbuf->b_p_bin && textmode &&
+					*line_start == Ctrl('Z') && ptr == line_start + 1))
 	{
-		/*
-		 * If we get EOF in the middle of a line, note the fact and
-		 * complete the line ourselves.
-		 */
 		if (newfile)				/* remember for when writing */
 			curbuf->b_p_eol = FALSE;
 		*ptr = NUL;
@@ -1902,7 +1904,7 @@ vim_rename(from, to)
 	fd_in = open((char *)from, O_RDONLY | O_EXTRA);
 	if (fd_in == -1)
 		return -1;
-	fd_out = creat((char *)to, 0666);
+	fd_out = open((char *)to, O_CREAT | O_TRUNC | O_WRONLY | O_EXTRA, 0666);
 	if (fd_out == -1)
 	{
 		close(fd_in);

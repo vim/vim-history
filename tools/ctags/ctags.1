@@ -1,4 +1,4 @@
-.TH CTAGS 1 "3 June 1996" "Darren Hiebert"
+.TH CTAGS 1 "16 June 1996" "Darren Hiebert"
 
 .SH NAME
 ctags \- Generate C language tag files for use with
@@ -7,7 +7,7 @@ ctags \- Generate C language tag files for use with
 .TP 6
 .B ctags
 [
-.B \-aBdFlsStTuwWx
+.B \-aBdFnsStTuwWx
 ] [
 .BI \-f " tagfile"
 ] [
@@ -98,6 +98,11 @@ a search pattern (either /pattern/ or ?pattern?) or line number with which
 to locate the tag within the file
 .RE
 .PD 1
+.PP
+Note that, unless changed via
+.BR \-n ,
+line number are only used for tags for macro definitions, while patterns are
+used for all other tags.
 .PP
 Note that the name of each source file will be recorded in the tag file
 exactly as it appears on the command line. Therefore, if the path you
@@ -264,6 +269,35 @@ If
 .I listfile
 is specified as "-", then file names are read from standard input.
 .TP 5
+.B \-n
+Places places the line numbers in the source file where tags are located
+rather than patterns to be searched for. This has two advantages:
+.RS 5
+.PD 0
+.TP 4
+1.
+Significantly reduces the size of the resulting tag file.
+.TP 4
+2.
+Eliminates failures to find tags because the line defining the tag has
+changed, causing the pattern match to fail (note that some editors, such as
+.BR vim ,
+are able to recover in many such instances).
+.TP 4
+3.
+Eliminates finding identical matching, but incorrect, source lines (see
+.BR BUGS ,
+below).
+.PP
+However, this option has one significant drawback: changes to the source files
+can cause the line numbers recorded in the tag file to no longer correspond
+to the lines in the source file, causing jumps to some tags to miss the target
+definition by one or more lines. Selecting this option causes the following
+options to be ignored:
+.BR \-F " and " \-B "."
+.PD 1
+.RE
+.TP 5
 .BI \-o " tagfile"
 Alternative for
 .BR -f "."
@@ -323,7 +357,7 @@ output. The information contained in the output includes: the tag name; the
 tag type; the line number, file name, and source line (with extra white space
 condensed) of the file which defines the tag. No tag file is written and the
 following options will be ignored:
-.BR \-a ", " \-f ", " \-i+P ", " \-o ", " \-B " and " \-F .
+.BR \-a ", " \-f ", " \-i+P ", " \-n ", " \-o ", " \-B " and " \-F .
 Example applications for this feature are generating a listing of all
 functions (including statics) located in a source file (e.g.
 .B "ctags -xi=fS "
@@ -363,6 +397,41 @@ Control-T
 Return to previous location before jump to tag (not widely implemented).
 .SH BUGS
 Support for C++ features is quite limited.
+.PP
+Because
+.B ctags
+does not presently look inside brace enclosed blocks, nested declarations
+for class/enum/struct/union tags and enumeration values (i.e. declared within
+another class, structure or union) will not have tags generated for them.
+.PP
+Note that because
+.B ctags
+generates search patterns for non-macro tags, it is entirely possible that
+the wrong line may be found by your editor if there exists another, identical,
+line (whose context prevents it from generating a tag) which is identical to
+the line containing the tag. The following example demonstrates this
+condition:
+.PP
+.RS
+int variable;
+
+/* ... */
+.br
+void foo(variable)
+.br
+int variable;
+.br
+{
+.RS 4
+/* ... */
+.RE
+}
+.RE
+.PP
+Depending upon which editor you use and where in the code you happen to be, it
+is possible that the search pattern may locate the local parameter declaration
+in foo() before it finds the actual global variable definition, since the
+lines (and therefore their search patterns are identical).
 .PP
 Because
 .B ctags
@@ -427,7 +496,8 @@ see the VIM Pages web site at:
 http://www.math.fu-berlin.de/~guckes/vim/
 .RE
 .SH AUTHOR
-Darren Hiebert, (darren@sirsi.com, darren@hiwaay.net)
+Darren Hiebert, (darren@sirsi.com, darren@hiwaay.net, 
+http://fly.hiwaay.net/~darren)
 .SH MOTIVATION
 "Think ye at all times of rendering some service to every member of the human
 race."

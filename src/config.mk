@@ -40,9 +40,9 @@ EXEC_PREFIX = ${prefix}
 HELPDIR = /share
 
 ### Do we have a GUI
-GUI_INC_LOC = .
-GUI_LIB_LOC = .
-MOTIF_COMMENT = ZZZ
-ATHENA_COMMENT = 
+GUI_INC_LOC = /usr/local/include
+GUI_LIB_LOC = /usr/local/lib
+MOTIF_COMMENT = 
+ATHENA_COMMENT = ZZZ
 NARROW_PROTO = -DFUNCPROTO=15 -DNARROWPROTO
 GUI_X_LIBS = -lXext

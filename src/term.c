@@ -1953,7 +1953,7 @@ set_winsize(width, height, mustset)
 		State = SETWSIZE;
 		return;
 	}
-	if (State != ASKMORE)
+	if (State != ASKMORE && State != EXTERNCMD)
 		screenclear();
 	else
 		screen_start();					/* don't know where cursor is now */
@@ -1973,11 +1973,16 @@ set_winsize(width, height, mustset)
 	if (!starting)
 	{
 		comp_Botline_all();
-		if (State == ASKMORE)	/* don't redraw, just adjust screen size */
+		if (State == ASKMORE || State == EXTERNCMD)
 		{
-			screenalloc(FALSE);
-			msg_moremsg(FALSE);	/* display --more-- message again */
-			msg_row = Rows - 1;
+			screenalloc(FALSE);	/* don't redraw, just adjust screen size */
+			if (State == ASKMORE)
+			{
+				msg_moremsg(FALSE);	/* display --more-- message again */
+				msg_row = Rows - 1;
+			}
+			else
+				windgoto(msg_row, msg_col);	/* put cursor back */
 		}
 		else
 		{

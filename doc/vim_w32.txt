@@ -1,4 +1,4 @@
-*vim_w32.txt*   For Vim version 4.1.  Last modification: 1996 June 11
+*vim_w32.txt*   For Vim version 4.2.  Last modification: 1996 June 13
 
 This file documents the idiosyncrasies of the Win32 version of Vim.
 
@@ -119,6 +119,9 @@ You should set the environment variable "VIM" to the directory where the Vim
 documentation files are.  If "VIM" is used but not defined, "HOME" is tried
 too.
 
+If the HOME environment variable is not set, the value "C:/" is used as a
+default.
+
 The default help filename is "$VIM\vim_help.txt".  If the environment variable
 $VIM is not defined or the file is not found, the Win32 search path is used to
 search for the file "vim_help.txt".  If you do not want to put "vim_help.txt"
@@ -141,7 +144,7 @@ The only kind of terminal type that the Win32 version of Vim understands is
 anything else, you will probably get very strange behaviour from Vim.  This is
 most likely to happen when running a non-standard shell such as Cygnus's
 GNU-Win32 bash (http://www.cygnus.com/misc/gnu-win32) or the one in the MKS
-toolkit.
+toolkit.  Use "unset TERM" before starting Vim!
 
 The ":cd" command recognizes the drive specifier and changes the current
 drive.  Use ":cd c:" to make drive C the active drive.  Use ":cd d:\foo" to go

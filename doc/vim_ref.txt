@@ -1,4 +1,4 @@
-*vim_ref.txt*   For Vim version 4.1.  Last modification: 1996 June 12
+*vim_ref.txt*   For Vim version 4.2.  Last modification: 1996 June 17
 
 
 			     VIM REFERENCE MANUAL
@@ -768,10 +768,10 @@ Replace mode		Replace mode is a special case of Insert mode.  You
 			(which is the default), the string "-- REPLACE --" is
 			shown at the bottom of the window.  |replace_mode|
 
-Insert command mode	Entered when CTRL-O given in Insert mode.  This is like
-			Normal mode, but after executing one command Vim
-			returns to Insert mode. The string "-- INSERT COMMAND
-			--" is shown at the bottom of the window.
+Insert command mode	Entered when CTRL-O given in Insert mode.  This is
+			like Normal mode, but after executing one command Vim
+			returns to Insert mode.  The string "-- (insert) --"
+			is shown at the bottom of the window.
 
 4.2 Switching from mode to mode				*mode_switching*
 
@@ -1079,12 +1079,12 @@ characters to the 'formatoptions' option:
      current insert command.  Only differs from "l" when entering non-white
      characters while crossing the 'textwidth' boundary.
 
-If you want to format a block of text, you can use the "Q" operator.  Type "Q"
-and a movement command to move the cursor to the end of the block.  In many
-cases, the command "Q}" will do what you want (format until the end of
-paragraph).  Alternatively, you can use "Qp", which will format the whole
+If you want to format a block of text, you can use the "gq" operator.  Type
+"gq" and a movement command to move the cursor to the end of the block.  In
+many cases, the command "gq}" will do what you want (format until the end of
+paragraph).  Alternatively, you can use "gqp", which will format the whole
 paragraph, no matter where the cursor currently is.  Or you can use Visual
-mode: hit "v", move to the end of the block, and hit "Q".  See also |Q|.
+mode: hit "v", move to the end of the block, and hit "gq".  See also |gq|.
 
 
 4.3.4 'expandtab' and 'smarttab' options		*ins_expandtab*
@@ -3459,7 +3459,8 @@ or change text.  The following operators are available:
 	|gU|	gU	make upper case
 	|!|	!	filter through an external program
 	|=|	=	filter through 'equalprg' or C-indenting if empty
-	|Q|	Q	text formatting
+	|Q|	Q	text formatting (obsolete)
+	|gq|	gq	text formatting
 	|>|	>	shift right
 	|<|	<	shift left
 If the motion includes a count and the operator also had a count before it,
@@ -3905,6 +3906,13 @@ g*			Like "*", but don't put "\<" and "\>" around the word.
 g#			Like "#", but don't put "\<" and "\>" around the word.
 			This makes the search also find matches that are not a
 			whole word.  {not in Vi}
+
+			HINT: If you want to search for something else than a
+			whole word, you could use these mappings, to search
+			for Visually highlighted text:
+				:vmap / y/<C-R>"<CR>
+				:vmap ? y?<C-R>"<CR>
+			(<> notation, see |<>|).
 
 							*gd*
 gd			Goto local Declaration.  When the cursor is on a local
@@ -5555,22 +5563,26 @@ either the first or second pattern in parentheses did not match, so either
 :[range]le[ft] [indent]	left align lines in [range].  Sets the indent in the
 			lines to [indent] (default 0).  {not in Vi}
 
-							*Q*
+gq{motion}						*Q* *gq*
 Q{motion}		Format the lines that were moved over.  The length of
 			each line will be restricted to the width given with
 			the 'textwidth' option.  See below.  If the
 			'textwidth' option is 0, the width of the screen is
 			used (with a maximum of 79).  {not in Vi}
+			NOTE: The "Q" command is used in Vi to go to Ex mode.
+			In a future version of Vim this will be made
+			compatible.  Use "gq" for formatting now, to avoid
+			problems when upgrading to a newer version of Vim.
 
-							*v_Q*
+{Visual}gq							*v_Q* *v_gq*
 {Visual}Q		Format the highlighted text.  (see the chapter on
 			Visual mode |Visual_mode|).  {not in Vi}
 
-Example: To format the current paragraph use "Qp".
+Example: To format the current paragraph use "gqp".
 
-After the "Q" command the cursor is left in the line where the motion command
+After the "gq" command the cursor is left in the line where the motion command
 would take the cursor.  This allows for the formatting to be repeated with
-".".  This works fine with "Qj" (format current and next line) and "Q}"
+".".  This works fine with "gqj" (format current and next line) and "gq}"
 (format until end of paragraph).  Note: When 'formatprg' is set, the cursor is
 left on the first formatted line (like when using a filter command).
 
@@ -5667,10 +5679,10 @@ r	Automatically insert the current comment leader after hitting
 	<return> in insert mode.
 o	Automatically insert the current comment leader after hitting 'o' or
 	'O' in Normal mode.
-q	Allow formatting of comments with Q.  Note that blank lines, or
-	lines containing only the comment leader will be left untouched.  A
-	new paragraph starts after such a line, or when the comment leader
-	changes.
+q	Allow formatting of comments with "gq" (or "Q", which is obsolete).
+	Note that blank lines, or lines containing only the comment leader
+	will be left untouched.  A new paragraph starts after such a line, or
+	when the comment leader changes.
 2	When formatting text the indent of the second line of a paragraph is
 	used for the rest of the paragraph.  This allows for paragraphs with
 	a different indent for the first line.
@@ -5689,7 +5701,7 @@ l	Long lines are not broken in insert mode: When a line was longer than
 
 With 't' and 'c' you can decide when auto-wrapping is done:
 value	action
-""	no automatic formatting, "Q" can be used for manual formatting
+""	no automatic formatting, "gq" can be used for manual formatting
 "t"	automatic formatting of text, not for comments
 "c"	automatic formatting for comments, not for text (good for C code)
 "tc"	automatic formatting for text and comments
@@ -5699,7 +5711,7 @@ leader is inserted).
 Note that when 'paste' is on, no formatting is done at all.
 Note that 'textwidth' can be non-zero even though auto-wrapping never occurs.
 This is good because it can be used for formatting only in this case (with
-"Q").
+"gq").
 
 If "/*", "*" and/or "*/" are in the 'comments' variable, then Vim has some
 built in stuff to treat these types of comments a bit more cleverly.
@@ -6284,7 +6296,8 @@ The operators that can be used are:
 	<	shift left (1)(*)				|v_<|
 	!	filter through external command (1)		|v_!|
 	=	filter through 'equalprg' option command (1)	|v_=|
-	Q	format lines to 'textwidth' length (1)		|v_Q|
+	Q	format lines to 'textwidth' length (1)(obsolete)|v_Q|
+	gq	format lines to 'textwidth' length (1)		|v_gq|
 
 The objects that can be used are:
 	a	word						|v_a|
@@ -7400,7 +7413,7 @@ autoindent (ai)		toggle	(default off)
 	in Insert mode or when using the "o" or "O" command).  If you do not
 	type anything on the new line except <BS> and then type <Esc> or
 	<CR>, the indent is deleted again.  When autoindent is on,
-	formatting (with the "Q" command or when you reach 'textwidth' in
+	formatting (with the "gq" command or when you reach 'textwidth' in
 	Insert mode) uses the indentation of the first line.   When
 	'smartindent' or 'cindent' is on the indent is changed in specific
 	cases.  The 'autoindent' option is reset when the 'paste' option is
@@ -7916,7 +7929,7 @@ formatprg (fp)		string (default "")
 			global
 			{not in Vi}
 	The name of an external program that will be used to format the lines
-	selected with the "Q" command.  The program must take the input on
+	selected with the "gq" command.  The program must take the input on
 	stdin and produce the output on stdout.  The Unix program 'fmt' is
 	such a program.  If this option is an empty string, the internal
 	format function will be used |C_indenting|.  Environment variables are
@@ -9689,7 +9702,7 @@ are included.  However, there is no Ex mode.
 
 These commands are in Vi, but not in Vim.
 
-Q			{Vi: go to Ex mode}
+Q			{Vi: go to Ex mode} See |pseudo-Q|.
 
 :a[ppend]		{Vi: append text}		*:a* *:append*
 :c[hange]		{Vi: replace lines}		*:c* *:change*

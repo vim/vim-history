@@ -1,4 +1,3 @@
-Makefile.w32
 # The most simplistic Makefile for Win32 (NT and Windows 95)
 
 xxd: xxd.exe

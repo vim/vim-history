@@ -1616,6 +1616,14 @@ init_homedir()
 	char_u	*var;
 
 	var = vim_getenv((char_u *)"HOME");
+#if defined(OS2) || defined(MSDOS) || defined(WIN32)
+	/*
+	 * Default home dir is C:/
+	 * Best assumption we can make in such a situation.
+	 */
+	if (var == NULL)
+		var = "C:/";
+#endif
 	if (var != NULL)
 	{
 #ifdef UNIX
@@ -1686,7 +1694,13 @@ expand_env(src, dst, dstlen)
 					*var++ = *tail++;
 #endif
 				*var = NUL;
-				var = vim_getenv(dst);
+#if defined(OS2) || defined(MSDOS) || defined(WIN32)
+				/* use "C:/" when $HOME is not set */
+				if (STRCMP(dst, "HOME") == 0)
+					var = homedir;
+				else
+#endif
+					var = vim_getenv(dst);
 #if defined(UNIX) || defined(OS2)
 			}
 														/* home directory */

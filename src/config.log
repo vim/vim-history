@@ -14,7 +14,6 @@ ld: -lnsl: no match
 configure:1304: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -lsocket   1>&5
 ld: -lsocket: no match
 configure:1358: gcc -c -O2 -fno-strength-reduce -Wall -Wshadow -I/usr/X11R6/include   conftest.c 1>&5
-configure:1509: gcc -c -O2 -fno-strength-reduce -Wall -Wshadow -I/usr/X11R6/include   conftest.c 1>&5
 configure:1555: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow    -L/usr/X11R6/lib conftest.c -lXext -lX11   1>&5
 configure:1645: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap   1>&5
 configure:1812: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
@@ -100,7 +99,7 @@ configure:2959: warning: return-type defaults to `int'
 configure: In function `main':
 configure:2963: warning: implicit declaration of function `getcwd'
 configure:3011: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
-/var/tmp/cc0015651.o: Undefined symbol `_sigset' referenced from text segment
+/var/tmp/cc0036001.o: Undefined symbol `_sigset' referenced from text segment
 configure:3011: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
 configure:3011: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
 configure:3011: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
@@ -129,22 +128,23 @@ configure:3223: warning: implicit declaration of function `memmove'
 configure:3224: warning: implicit declaration of function `strncmp'
 etags: not found
 etags: not found
-Ctags, Ver. 1.0, by Darren Hiebert
-Usage: ctags [-aBdFsStTuwWx] [-{f|o} name] [-h list] [-i [+-=]types]
+Exuberant Ctags, Version 1.3, by Darren Hiebert
+Usage: ctags [-aBdFnsStTuwWx] [-{f|o} name] [-h list] [-i [+-=]types]
              [-L file] [--help] file(s)
-    --help     Prints a more detailed help message
-    -a         Append tags to existing tag file
-    -B         Use backward searching patterns (?...?)
-    -f <name>  Name for output tag file (default "tags")
-    -F         Use forward searching patterns (/.../) (default)
-    -h <list>  List of header file extensions (default ".h.H.hpp.hxx.h++")
-    -i <types> List of tag types to include [defgptvPS] (default "=defgtvS")
-    -L <file>  List of source file names are read from specified file
-    -o <name>  Alternative for -f
-    -u         Unsorted. Do not sort tags.
-    -w         Exclude warnings about duplicate tags (default)
-    -W         Generate warnings about duplicate tags
-    -x         Print tabular cross reference file to standard output
+    --help     Prints a more detailed help message.
+    -a         Append tags to existing tag file.
+    -B         Use backward searching patterns (?...?).
+    -f <name>  Name for output tag file (default "tags").
+    -F         Use forward searching patterns (/.../) (default).
+    -h <list>  List of header file extensions (default ".h.H.hpp.hxx.h++").
+    -i <types> List of tag types to include [defgptvPS] (default "=defgtvS").
+    -L <file>  List of source file names are read from specified file.
+    -n         Use line numbers in tag file instead of search patterns.
+    -o <name>  Alternative for -f.
+    -u         Unsorted; do not sort tags. Disables duplicate tag warnings.
+    -w         Exclude warnings about duplicate tags (default).
+    -W         Generate warnings about duplicate tags.
+    -x         Print tabular cross reference file to standard output.
     -[dsStT]   Backward compatibility options. See --help for more info.
 
 Error: Invalid option character: 'v'

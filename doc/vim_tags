@@ -1432,6 +1432,7 @@ gf	vim_ref.txt	/\*gf\*
 gg	vim_ref.txt	/\*gg\*
 gj	vim_ref.txt	/\*gj\*
 gk	vim_ref.txt	/\*gk\*
+gq	vim_ref.txt	/\*gq\*
 graphic_option_gone	vim_40.txt	/\*graphic_option_gone\*
 greek	vim_ref.txt	/\*greek\*
 gs	vim_ref.txt	/\*gs\*
@@ -1630,6 +1631,7 @@ page_down	vim_ref.txt	/\*page_down\*
 page_up	vim_ref.txt	/\*page_up\*
 paragraph	vim_ref.txt	/\*paragraph\*
 pattern_searches	vim_ref.txt	/\*pattern_searches\*
+pseudo-Q	vim_tips.txt	/\*pseudo-Q\*
 q	vim_ref.txt	/\*q\*
 quickfix	vim_ref.txt	/\*quickfix\*
 quote	vim_ref.txt	/\*quote\*
@@ -1845,6 +1847,7 @@ v_Y	vim_ref.txt	/\*v_Y\*
 v_a	vim_ref.txt	/\*v_a\*
 v_c	vim_ref.txt	/\*v_c\*
 v_d	vim_ref.txt	/\*v_d\*
+v_gq	vim_ref.txt	/\*v_gq\*
 v_gv	vim_ref.txt	/\*v_gv\*
 v_o	vim_ref.txt	/\*v_o\*
 v_p	vim_ref.txt	/\*v_p\*

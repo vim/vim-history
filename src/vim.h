@@ -209,6 +209,7 @@ typedef unsigned long	long_u;
 #define ASKMORE					0x70	/* Asking if you want --more-- */
 #define SETWSIZE				0x80	/* window size has changed */
 #define ABBREV					0x90	/* abbreviation instead of mapping */
+#define EXTERNCMD				0xa0	/* executing an external command */
 
 /* directions */
 #define FORWARD 				1

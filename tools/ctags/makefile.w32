@@ -1,72 +1,13 @@
-# Makefile for ctags on Win32 (Windows NT and Windows 95), using the
-# Microsoft Visual C++ 2.x and MSVC 4.x compilers.  It builds on Windows 95
-# and all four NT platforms: i386, Alpha, MIPS, and PowerPC.  The NT/i386
-# binary and the Windows 95 binary are identical.  To build using Borland C++,
-# use Makefile.b32.
-#
+# The most simplistic Makefile for Win32 (NT and Windows 95)
 
-# to build the retail version
-#  nmake -f Makefile.w32
-# to build the debug version
-#  nmake DEBUG=1 -f Makefile.w32
+ctags: ctags.exe
 
-# Build on both Windows NT and Windows 95
-
-TARGETOS = BOTH
-
-
-# ntwin32.mak requires that CPU be set appropriately
-
-!ifdef PROCESSOR_ARCHITECTURE
-# We're on Windows NT
-CPU = $(PROCESSOR_ARCHITECTURE)
-! if "$(CPU)" == "x86"
-CPU = i386
-! endif
-!else  # !PROCESSOR_ARCHITECTURE
-# We're on Windows 95
-CPU = i386
-!endif # !PROCESSOR_ARCHITECTURE
-
-
-# Build a retail version by default
-
-!ifndef DEBUG
-NODEBUG = 1
-!endif
-
-
-# Get all sorts of useful, standard macros from the SDK.  (Note that
-# MSVC 2.2 does not install <ntwin32.mak> in the \msvc20\include
-# directory, but you can find it in \msvc20\include on the CD-ROM.
-# You may also need <win32.mak> from the same place.)
-
-!include <ntwin32.mak>
-
-
-#>>>>> path of the compiler and linker; name of include and lib directories
-#      Only needed if your environment is not correctly set up
-# PATH = c:\msvc20\bin;$(PATH)
-# INCLUDE = c:\msvc20\include
-# LIB = c:\msvc20\lib
-
-CFLAGS = -c /W3 /nologo $(cvars) $(cflags) $(DEFINES)
-
-#>>>>> end of choices
-###########################################################################
-
-!ifdef NODEBUG
-CFLAGS = $(CFLAGS) -DNDEBUG
-!else
-CFLAGS = $(CFLAGS) -D_DEBUG -DDEBUG
-!endif
-
-ctags.exe: ctags.obj
-	$(link) $(linkdebug) $(conflags) -out:$*.exe $** setargv.obj $(conlibs)
-
-ctags.obj: ctags.c
-	$(CC) $(CFLAGS) ctags.c /Foctags.obj
+ctags.exe: ctags.c
+# if using Microsoft Visual C++
+	cl ctags.c -DWIN32 /link setargv.obj
+# if using Borland C++
+#	bcc32 -DWIN32 ctags.c c:\bc45\lib\32bit\wildargs.obj
 
 clean:
-	del ctags.obj
-	del ctags.exe
+	- del ctags.obj
+	- del ctags.exe

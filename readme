@@ -1,10 +1,9 @@
-README for version 4.1 of Vim: Vi IMproved.
+README for version 4.2 of Vim: Vi IMproved.
 
 Vim is an almost compatible version of the UNIX editor vi.  Only the "Q"
-command is missing (you don't need it).  Many new features have been added:
-multi level undo, command line history, filename completion, block operations,
-etc.  There is also a Graphical User Interface (GUI) available.  See
-doc/vim_diff.doc.
+command is missing.  Many new features have been added: multi level undo,
+command line history, filename completion, block operations, etc.  There is
+also a Graphical User Interface (GUI) available.  See doc/vim_diff.doc.
 
 This editor is very useful for editing programs and other plain ASCII files.
 All commands are given with normal keyboard characters, so those who can type
@@ -22,13 +21,15 @@ read doc/vim_help.txt.  It contains pointers to the other documentation files.
 
 "tutor/readme" is a one hour training course for beginners.
 
+Copying:
 Vim is Charityware.  You can copy it as much as you like, but you are
 encouraged to make a donation to orphans in Uganda.  Please read the file
 "doc/vim_kcc.txt" for details.  You are allowed to include Vim on a CD-ROM if
 you send me one.
 
-Compiling: All stuff for compiling Vim is in the "src" directory.  See
-src/INSTALL for instructions.
+Compiling:
+All stuff for compiling Vim is in the "src" directory.  See src/INSTALL for
+instructions.
 
 
 The latest news about Vim can be found in the Vim home page:

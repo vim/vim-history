@@ -21,6 +21,10 @@
 
 extern char		*mktemp __ARGS((char *));
 
+#ifdef OS2
+static void check_tmpenv __ARGS((void));
+#endif
+
 #ifdef VIMINFO
 static char_u *viminfo_filename __ARGS((char_u 	*));
 static void do_viminfo __ARGS((FILE *fp_in, FILE *fp_out, int want_info, int want_marks, int force_read));
@@ -696,8 +700,14 @@ do_filter(line1, line2, buff, do_in, do_out)
 	 */
 
 #ifndef USE_TMPNAM		 /* tmpnam() will make its own name */
+# ifdef OS2
+	check_tmpenv();
+	expand_env(TMPNAME1, itmp, TMPNAMELEN);
+	expand_env(TMPNAME2, otmp, TMPNAMELEN);
+# else
 	STRCPY(itmp, TMPNAME1);
 	STRCPY(otmp, TMPNAME2);
+# endif
 #endif
 
 	if ((do_in && *mktemp((char *)itmp) == NUL) ||
@@ -857,6 +867,28 @@ filterend:
 	vim_remove(otmp);
 }
 
+#ifdef OS2
+/*
+ * If $TMP is not defined, construct a sensible default.
+ * This is required for TMPNAME1 and TMPNAME2 to work.
+ */
+	static void
+check_tmpenv()
+{
+	char_u	*envent;
+
+	if (getenv("TMP") == NULL)
+	{
+		envent = alloc(8);
+		if (envent != NULL)
+		{
+			strcpy(envent, "TMP=C:/");
+			putenv(envent);
+		}
+	}
+}
+#endif /* OS2 */
+
 #ifdef VIMINFO
 
 static int no_viminfo __ARGS((void));
@@ -909,12 +941,24 @@ write_viminfo(file, force)
 {
 	FILE	*fp_in = NULL;
 	FILE	*fp_out = NULL;
+#ifdef USE_TMPNAM
+	char_u	tmpname[L_tmpnam];		/* use tmpnam() */
+#else
 	char_u	tmpname[TMPNAMELEN];
+#endif
 
 	if (no_viminfo())
 		return;
 
+#ifndef USE_TMPNAM		 /* tmpnam() will make its own name */
+# ifdef OS2
+	check_tmpenv();
+	expand_env(TMPNAME2, tmpname, TMPNAMELEN);
+# else
 	STRCPY(tmpname, TMPNAME2);
+# endif
+#endif
+
 	file = viminfo_filename(file);		/* may set to default if NULL */
 	file = strsave(file);				/* make a copy, don't want NameBuff */
 	if (file != NULL)
@@ -927,7 +971,8 @@ write_viminfo(file, force)
 	}
 	if (file == NULL || fp_out == NULL)
 	{
-		EMSG2("Can't write viminfo file %s!", tmpname);
+		EMSG2("Can't write viminfo file %s!", file == NULL ? (char_u *)"" :
+											  fp_in == NULL ? file : tmpname);
 		if (fp_in != NULL)
 			fclose(fp_in);
 		vim_free(file);

@@ -1573,7 +1573,7 @@ insert_command:
 	  case '<':
 	  case '!':
 	  case '=':
-	  case 'Q':
+	  case 'Q':					/* should start Ex mode */
 dooperator:
 		n = vim_strchr(opchars, c) - opchars + 1;
 		if (n == op_type)		/* double operator works on lines */
@@ -2041,12 +2041,15 @@ goto_line_one:
 				goto goto_line;
 
 			/*
+			 * Operater to format text:
+			 *   gq		same as 'Q' operator.
 			 * Operators to change the case of text:
 			 *   g~		Toggle the case of the text.
 			 *   gu		Change text to lower case.
 			 *   gU		Change text to upper case.
 			 *									--webb
 			 */
+			case 'q':
 			case '~':
 			case 'u':
 			case 'U':
@@ -2277,6 +2280,8 @@ do_pending_operator(c, nchar, finish_op, searchbuff, command_busy,
 		{
 			curbuf->b_op_start = curwin->w_cursor;
 			curwin->w_cursor.lnum += redo_VIsual_line_count - 1;
+			if (curwin->w_cursor.lnum > curbuf->b_ml.ml_line_count)
+				curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
 			VIsual_mode = redo_VIsual_mode;
 			if (VIsual_mode == 'v')
 			{
@@ -2321,11 +2326,14 @@ do_pending_operator(c, nchar, finish_op, searchbuff, command_busy,
 				op_block_mode = TRUE;
 				getvcol(curwin, &(curbuf->b_op_start),
 										  &op_start_vcol, NULL, &op_end_vcol);
-				getvcol(curwin, &(curbuf->b_op_end), &start, NULL, &end);
-				if (start < op_start_vcol)
-					op_start_vcol = start;
-				if (end > op_end_vcol)
-					op_end_vcol = end;
+				if (!redo_VIsual_busy)
+				{
+					getvcol(curwin, &(curbuf->b_op_end), &start, NULL, &end);
+					if (start < op_start_vcol)
+						op_start_vcol = start;
+					if (end > op_end_vcol)
+						op_end_vcol = end;
+				}
 
 				/* if '$' was used, get op_end_vcol from longest line */
 				if (curwin->w_curswant == MAXCOL)
@@ -2347,25 +2355,28 @@ do_pending_operator(c, nchar, finish_op, searchbuff, command_busy,
 				coladvance(op_start_vcol);
 			}
 
-			/*
-			 * Prepare to reselect and redo Visual: this is based on the size
-			 * of the Visual text
-			 */
-			resel_VIsual_mode = VIsual_mode;
-			if (curwin->w_curswant == MAXCOL)
-				resel_VIsual_col = MAXCOL;
-			else if (VIsual_mode == Ctrl('V'))
-				resel_VIsual_col = op_end_vcol - op_start_vcol + 1;
-			else if (op_line_count > 1)
-				resel_VIsual_col = curbuf->b_op_end.col;
-			else
-				resel_VIsual_col = curbuf->b_op_end.col -
-											curbuf->b_op_start.col + 1;
-			resel_VIsual_line_count = op_line_count;
+			if (!redo_VIsual_busy)
+			{
+				/*
+				 * Prepare to reselect and redo Visual: this is based on the
+				 * size of the Visual text
+				 */
+				resel_VIsual_mode = VIsual_mode;
+				if (curwin->w_curswant == MAXCOL)
+					resel_VIsual_col = MAXCOL;
+				else if (VIsual_mode == Ctrl('V'))
+					resel_VIsual_col = op_end_vcol - op_start_vcol + 1;
+				else if (op_line_count > 1)
+					resel_VIsual_col = curbuf->b_op_end.col;
+				else
+					resel_VIsual_col = curbuf->b_op_end.col -
+												curbuf->b_op_start.col + 1;
+				resel_VIsual_line_count = op_line_count;
+			}
 												/* can't redo yank and : */
 			if (op_type != YANK && op_type != COLON)
 			{
-				prep_redo(0L, prechar, 'v', opchars[op_type - 1], NUL);
+				prep_redo(0L, NUL, 'v', prechar, opchars[op_type - 1]);
 				redo_VIsual_mode = resel_VIsual_mode;
 				redo_VIsual_col = resel_VIsual_col;
 				redo_VIsual_line_count = resel_VIsual_line_count;
@@ -2539,7 +2550,7 @@ dofilter:
 					stuffReadbuff(p_ep);
 				stuffReadbuff((char_u *)"\n");
 			}
-			else if (op_type == FORMAT)
+			else if (op_type == FORMAT || op_type == GFORMAT)
 			{
 				if (*p_fp == NUL)
 					stuffReadbuff((char_u *)"fmt");
@@ -2558,6 +2569,7 @@ dofilter:
 			break;
 
 		  case FORMAT:
+		  case GFORMAT:
 			if (*p_fp != NUL)
 				goto dofilter;		/* use external command */
 			do_format();			/* use internal function */

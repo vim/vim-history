@@ -18,6 +18,45 @@
  * interesting.  Differences between version 3.0 and 4.0 can be found in
  * "../doc/vim_40.txt".
  *
+ * Changes between version 4.1 and 4.2:
+ * - Included ctags version 1.3.
+ * - Included xxd.c version 1.4 (only one change since 1.3m)
+ * - Unix: Adjusted check for child finished again.  Now use != ECHILD
+ *   instead of == EINTR.
+ * - Fixed: loading compressed files (with autocommands) didn't work when
+ *   'textmode' was previously set.
+ * - Fixed: When executing a shell, a window resize was not recognized for
+ *   Unix.
+ * - Fixed: For GUI, when executing an external command, a window resize
+ *   caused the buffer to be redrawn.
+ * - Fixed: Error message for not being able to open the .viminfo file could
+ *   report the wrong filename.
+ * - MS-DOS, Win32, OS/2: When $HOME is not set, use "C:/".
+ * - OS/2: Improved handling of wildcards again.  Didn't ignore case, didn't
+ *   work with backslashes.
+ * - Fixed: ":s/pat<Tab>" could cause a core dump or other problems.
+ * - Fixed: When entering a hidden buffer with ":e", the BufEnter autocommands
+ *   were not executed.
+ * - Fixed: Ignoring a CTRL-Z at end-of-file was only done on MS-DOS.  Now it
+ *   also works on other systems, but only in textmode.
+ * - Fixed: In the GUI special characters were not passed on to external
+ *   commands, typeahead was truncated.
+ * - Added "gq" as an alias to "Q".  Should be used when "Q" is made to be Vi
+ *   compatible: go to Ex mode.
+ * - Fixed: "gu" in Visual mode could not be redone with "." correctly.
+ * - Fixed: ":normal" command made any typeahead executed right away, causing
+ *   unpredictable problems.
+ * - Fixed: ":normal atest^[" didn't update the screen.
+ * - Fixed: Redoing blockwise visual delete at the end of the file could cause
+ *   "invalid line number" errors.
+ * - Fixed: vim_rename() didn't open the output file in binary mode, could
+ *   cause the .viminfo file to contain CR-LF on OS/2.
+ * - Fixed: OS/2 was using /tmp/xxx for temporary file name, would fail if
+ *   there is no /tmp directory.  Now use $TMP/xxx, defaulting to c:/ if $TMP
+ *   is not set.
+ * - Fixed: When USE_TMPNAM was defined, was using the wrong array size for
+ *   the viminfo temporary file.
+ *
  * Changes between version 4.0 and 4.1:
  *
  * - Included xxd.c version 1.3m.
@@ -94,11 +133,11 @@
  * Don't forget to update the numbers in version.h for Win32!!!
  */
 
-char		   *Version = "VIM 4.1";
+char		   *Version = "VIM 4.2";
 #ifdef HAVE_DATE_TIME
-char		   *longVersion = "VIM - Vi IMproved 4.1 BETA (1996 June 12, compiled " __DATE__ " " __TIME__ ")";
+char		   *longVersion = "VIM - Vi IMproved 4.2 (1996 June 17, compiled " __DATE__ " " __TIME__ ")";
 #else
-char		   *longVersion = "VIM - Vi IMproved 4.1 BETA (1996 June 12)";
+char		   *longVersion = "VIM - Vi IMproved 4.2 (1996 June 17)";
 #endif
 
 static void version_msg __ARGS((char *s));

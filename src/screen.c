@@ -48,14 +48,17 @@ updateline()
 	if (!screen_valid(TRUE))
 		return;
 
-	if (must_redraw)		/* must redraw whole screen */
+	if (must_redraw)					/* must redraw whole screen */
 	{
 		updateScreen(must_redraw);
 		return;
 	}
 
 	if (RedrawingDisabled)
+	{
+		must_redraw = NOT_VALID;		/* remember to update later */
 		return;
+	}
 
 	cursor_off();
 
@@ -63,7 +66,7 @@ updateline()
 	row = win_line(curwin, curwin->w_cursor.lnum,
 									   curwin->w_cline_row, curwin->w_height);
 
-	if (row == curwin->w_height + 1)			/* line too long for window */
+	if (row == curwin->w_height + 1)	/* line too long for window */
 	{
 			/* window needs to be scrolled up to show the cursor line */
 		if (curwin->w_topline < curwin->w_cursor.lnum)
@@ -1642,8 +1645,8 @@ screenalloc(clear)
 			/*
 			 * If the screen is not going to be cleared, copy as much as
 			 * possible from the old screen to the new one and clear the rest
-			 * (used when resizing the window at the "--more--" prompt for the
-			 * GUI).
+			 * (used when resizing the window at the "--more--" prompt or when
+			 * executing an external command, for the GUI).
 			 */
 			if (!clear)
 			{
@@ -1675,7 +1678,19 @@ screenalloc(clear)
 
 #ifdef USE_GUI
 	else if (gui.in_use && NextScreen != NULL && Rows != screen_Rows)
+	{
 		gui_redraw_block(0, 0, Rows - 1, Columns - 1);
+		/*
+		 * Adjust the position of the cursor, for when executing an external
+		 * command.
+		 */
+		if (msg_row >= Rows)				/* Rows got smaller */
+			msg_row = Rows - 1;				/* put cursor at last row */
+		else if (Rows > screen_Rows)		/* Rows got bigger */
+			msg_row += Rows - screen_Rows;	/* put cursor in same place */
+		if (msg_col >= Columns)				/* Columns got smaller */
+			msg_col = Columns - 1;			/* put cursor at last column */
+	}
 #endif
 
 	screen_Rows = Rows;

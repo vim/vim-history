@@ -107,10 +107,10 @@
 #ConvexOS                cc          +X11 Motif Athena  3.29     Lennart Schultz
 #dynix/ptx 1.4.0      cc             -X11 -GUI          3.21     Juergen Weigert
 #FreeBSD 2.0.5           gcc-2.6.3   X11R6              3.17     Bram Moolenaar
-#FreeBSD 2.1.0           gcc-2.6.3   X11R6 Lesstif 0.35 4.0  (5) Bram Moolenaar
-#FreeBSD 2.1.0           gcc-2.6.3   +X11 -GUI +Athena  4.0      Bram Moolenaar
+#FreeBSD 2.1.0           gcc-2.6.3   X11R6 Lesstif 0.35 4.2  (5) Bram Moolenaar
+#FreeBSD 2.1.0           gcc-2.6.3   +X11 -GUI +Athena  4.2      Bram Moolenaar
 #HP-UX 9.00           c89 cc         X11R5 Motif 1.2    3.24 (2) Bram Moolenaar
-#HP-UX 9.01           gcc            +X11 +GUI          4.0      Mun Johl
+#HP-UX 9.01           gcc            +X11 +GUI          4.1      Mun Johl
 #HP-UX 9.01 (400)     gcc 2.7.2      +X11 +Athena       3.29     Axel Kielhorn
 #HP-UX 9.01 (400)     cc89           +X11 +Motif 1.2    3.27     Axel Kielhorn
 #HP-UX 9.01 (700)     gcc            +X11 +Motif 1.2    3.27     Axel Kielhorn
@@ -124,7 +124,7 @@
 #HP-UX 9.05           gcc-2.7.2      +X11R6.1 Athena3d  4.0      L.  Duperval
 #HP-UX 9.05           gcc-2.7.2      -X11 -GUI          4.0      L.  Duperval
 #HP-UX 9.05           gcc-2.7.2      +X11 -GUI          4.0      L.  Duperval
-#HP-UX 9.05 (700)     cc             X11R5 Motif 1.2    3.27     Bram Moolenaar
+#HP-UX 9.05 (700)     cc             X11R5 Motif 1.2    4.1      Bram Moolenaar
 #HP-UX 9.07           c89            X11R5 Motif 1.2    3.23 (Y) Nikhil Patel
 #HP-UX 10.01A         cc gcc-2.6.3   X11R5 Motif 1.2    3.25     Kayhan Demirel
 #HP-UX 10.01          cc             X11R6  -GUI        3.20     Jiwei Wang
@@ -181,13 +181,14 @@
 #Solaris 2.5          cc             -X11 -GUI          3.27     Juergen Weigert
 #Solaris 2.5          cc        +X11=openwin +GUI=Motif 3.27     Juergen Weigert
 #Solaris 2.5          gcc-2.7.2      +X11 +GUI Motif    3.26     Iva Cabric
-#Solaris 2.5          gcc 2.7.2      +X11R6 +GUI        4.0      Renate Schmidt
-#Solaris 2.5 (sun4m)     gcc-2.7.2   +X11R6 +GUI (CDE)  4.0      Andrew Large
-#Solaris 2.5 (sun4m)   cc (SC3.0.1)  +X11R6 +GUI (CDE)  4.0      Andrew Large
+#Solaris 2.5          gcc 2.7.2      +X11R6 +GUI        4.1      Renate Schmidt
+#Solaris 2.5 (sun4m)     gcc-2.7.2   +X11R6 +GUI (CDE)  4.1      Andrew Large
+#Solaris 2.5 (sun4m)   cc (SC3.0.1)  +X11R6 +GUI (CDE)  4.1      Andrew Large
 #Solaris 2.5 (sun4u)     gcc-2.7.2   +X11 Motif Athena  3.29     Lennart Schultz
 #SunOS 4.1.1          gcc 2.7.2      +X11 -GUI          4.0      L.  Duperval
 #SunOS 4.1.1 (sun4c)     cc          -X11               3.29     Lennart Schultz
 #SunOS 4.1.2 (sun4c)     cc          -X11               3.29     Lennart Schultz
+#SunOS 4.1.2 (sun4)   gcc 2.7.2      +X11R6 -GUI        4.1      Renate Schmidt
 #SunOS 4.1.3 (sun4c)     cc          -X11               3.29     Lennart Schultz
 #SunOS4.1.3_U1           gcc-2.3.3   X11 openwin Motif  3.18     Ashwin Kumar
 #SunOS4.1.3u1            gcc-2.7.0   ?X openwin         3.16     Bob Cmelik
@@ -197,7 +198,7 @@
 #SunOS 4.1.4          cc gcc-2.6.3   +X11 +GUI          3.23     Robert Webb
 #SunOS 4.1.4 (sparc)  cc gcc-2.6.3       openwin        3.17     Eric Fischer
 #SunOS 4.1.4 (sun4c)     gcc-2.7.2   +X11 Athena        3.29     Lennart Schultz
-#SunOS 4.1.4          gcc            +X11 +GUI Motif    4.0      Karsten Sievert
+#SunOS 4.1.4          gcc            +X11R5 +GUI Motif  4.1      Karsten Sievert
 #SUPER-UX 6.1.r1 (SX-4)   cc         +X11 Motif         3.29     Lennart Schultz
 #Ultrix               cc             -X11 +X11          3.23 (3) Bram Moolenaar
 #Unisys 6035          cc                 X11 Motif      3.29 (8) Glauber

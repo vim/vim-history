@@ -1,4 +1,4 @@
-*vim_diff.txt*  For Vim version 4.1.  Last modification: 1996 June 11
+*vim_diff.txt*  For Vim version 4.2.  Last modification: 1996 June 16
 
 This is a summary of the differences between VIM and vi. It is not complete.
 see also |vim_ref.txt|, look for comments in {}, like "{not in Vi}".
@@ -77,7 +77,8 @@ Visual mode.						|Visual_mode|
 		!	filter through external program
 		=	filter through indent
 		:	start ":" command for the Visual lines.
-		Q	format text to 'textwidth' columns
+		Q	format text to 'textwidth' columns (obsolete)
+		gq	format text to 'textwidth' columns
 		J	join lines
 		~	swap case
 		u	make lowercase
@@ -141,8 +142,8 @@ Horizontal scrolling.					|'wrap'|
 Text formatting.					|formatting|
 	The 'textwidth' option can be used to automatically limit the line
 	length.  This supplements the 'wrapmargin' option of Vi, which was not
-	very useful.  The "Q" operator can be used to format a piece of text
-	(for example, "Qp" formats the current paragraph).  Commands for text
+	very useful.  The "gq" operator can be used to format a piece of text
+	(for example, "gqp" formats the current paragraph).  Commands for text
 	alignment: ":center", ":left" and ":right".
 
 Edit-compile-edit speedup.				|quickfix|
@@ -379,7 +380,7 @@ The "-o" option opens a window for each argument.  "-o4" opens four windows.
 
 In command mode:
 
-Missing command: 'Q' (go to Ex mode).
+Missing command: "Q" (go to Ex mode) (but see |pseudo-Q|).
 Missing Ex commands: append, change, insert, open and z.
 
 The command characters are shown in the last line of the screen.  They are
