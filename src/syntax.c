@@ -6360,6 +6360,12 @@ do_highlight(line, forceit, init)
 	{
 	    arg_start = ++linep;
 	    linep = vim_strchr(linep, '\'');
+	    if (linep == NULL)
+	    {
+		EMSG2(_(e_invarg2), key_start);
+		error = TRUE;
+		break;
+	    }
 	}
 	else
 	{
