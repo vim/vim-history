@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 6.3.  Last change: 2004 May 01
+*intro.txt*     For Vim version 6.3.  Last change: 2004 Jun 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -357,7 +357,7 @@ and <> are part of what you type, the context should make this clear.
 			/The<CR>	to next occurrence of "The"
 		This is used after an |operator| command to move over the text
 		that is to be operated upon.
-		- If the motion includes a count and the operator also had a
+		- If the motion includes a count and the operator also has a
 		  count, the two counts are multiplied.  For example: "2d3w"
 		  deletes six words.
 		- The motion can be backwards, e.g. "db" to delete to the
@@ -373,7 +373,7 @@ and <> are part of what you type, the context should make this clear.
 		  include the last character of a line without the line break
 		  (unless 'virtualedit' is set).
 		  If the Ex command changes the text before where the operator
-		  start or jumps to another buffer the result is
+		  starts or jumps to another buffer the result is
 		  unpredictable.  It is possible to change the text further
 		  down.  Jumping to another buffer is possible if the current
 		  buffer is not unloaded.
@@ -486,10 +486,10 @@ values have the same effect.  Also see |:fixdel|.
 
 Note: The keypad keys are used in the same way as the corresponding "normal"
 keys.  For example, <kHome> has the same effect as <Home>.  If a keypad key
-sends the same raw key code as it non-keypad equivalent, it will be recognized
-as the non-keypad code.  For example, when <kHome> sends the same code as
-<Home>, when pressing <kHome> Vim will think <Home> was pressed.  Mapping
-<kHome> will not work then.
+sends the same raw key code as its non-keypad equivalent, it will be
+recognized as the non-keypad code.  For example, when <kHome> sends the same
+code as <Home>, when pressing <kHome> Vim will think <Home> was pressed.
+Mapping <kHome> will not work then.
 
 								*<>*
 Examples are often given in the <> notation.  Sometimes this is just to make

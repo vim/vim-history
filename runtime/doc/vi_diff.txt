@@ -750,7 +750,7 @@ Only Vim is able to accept options in between and after the file names.
 
 --remote-wait	Vim: edit the files in another Vim server and wait for it
 
---remote-wait-silent	Vim: like --remote-wait, no complaits if not possible
+--remote-wait-silent	Vim: like --remote-wait, no complaints if not possible
 
 --role {role}	Vim: GTK+ 2: set role of main window
 

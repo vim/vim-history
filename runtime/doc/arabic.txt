@@ -29,7 +29,7 @@ Arabic also requires shaping of its characters, meaning the same
 character has a different visual form based on its relative location
 within a word (initial, medial, final or stand-alone).	Arabic also
 requires two different forms of combining and the ability, in
-certain instances, to either superimpose upto two characters on top
+certain instances, to either superimpose up to two characters on top
 of another (composing) or the actual substitution of two characters
 into one (combining).  Lastly, to display Arabic properly one will
 require not only ISO-8859-6 (U+0600-U+06FF) fonts, but will also
@@ -183,7 +183,7 @@ o  Enable Arabic settings [short-cut]
 
    +  Arabic Keymapping Activation
 
-      To activate the Arabic keymap (ie. to remap your english/latin
+      To activate the Arabic keymap (ie. to remap your English/Latin
       keyboard to look-n-feel like a standard Arabic one), set the
       'keymap' command to "arabic".  This is done by entering
 >
@@ -194,7 +194,7 @@ o  Enable Arabic settings [short-cut]
       to your .vimrc file.
 
       To turn toggle (or switch) your keymapping between Arabic and the
-      default mapping (english), its advised that users use the 'CTRL-^'
+      default mapping (English), it is advised that users use the 'CTRL-^'
       key press while in insert (or add/replace) mode.	The command-line
       will display your current mapping by displaying an "Arabic" string
       next to your insertion mode (eg. -- INSERT Arabic --) indicating

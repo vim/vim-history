@@ -166,7 +166,7 @@ insert some more lines of text.  Then use the hjkl keys to move around and
 insert a word somewhere.  Don't forget to press <Esc> to go back to Normal
 mode.  The |vimtutor| is also a nice way to learn by doing.
 
-For Japanse users, Hiroshi Iwatani suggested using this:
+For Japanese users, Hiroshi Iwatani suggested using this:
 
 			Komsomolsk
 			    ^

@@ -1,4 +1,4 @@
-*syntax.txt*	For Vim version 6.3.  Last change: 2004 Jun 04
+*syntax.txt*	For Vim version 6.3.  Last change: 2004 Jun 09
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -400,7 +400,7 @@ shorter and valid HTML 4 file), use: >
 
 By default "<pre>" and "</pre>" is used around the text.  This makes it show
 up as you see it in Vim, but without wrapping.	If you prefer wrapping, at the
-risc of making some things look a bit different, use: >
+risk of making some things look a bit different, use: >
    :let html_no_pre = 1
 This will use <br> at the end of each line and use "&nbsp;" for repeated
 spaces.
@@ -544,7 +544,7 @@ files are included:
 	asm68k		Motorola 680x0 assembly
 	asmh8300	Hitachi H-8300 version of GNU assembly
 	ia64		Intel Itanium 64
-	fasm		Flat assemlby (http://flatassembler.net)
+	fasm		Flat assembly (http://flatassembler.net)
 	masm		Microsoft assembly (probably works for any 80x86)
 	nasm		Netwide assembly
 	tasm		Turbo Assembly (with opcodes 80x86 up to Pentium, and
@@ -718,7 +718,7 @@ CSH						*csh.vim* *csh-syntax*
 This covers the shell named "csh".  Note that on some systems tcsh is actually
 used.
 
-Detecting wether a file is csh or tcsh is notoriously hard.  Some systems
+Detecting whether a file is csh or tcsh is notoriously hard.  Some systems
 symlink /bin/csh to /bin/tcsh, making it almost impossible to distinguish
 between csh and tcsh.  In case VIM guesses wrong you can set the
 "filetype_csh" variable.  For using csh: >
@@ -1473,7 +1473,7 @@ For LPC4 series of LPC: >
 
 For uLPC series of LPC:
 uLPC has been developed to Pike, so you should use Pike syntax
-instead, and the name of your source file shoud be *.pike
+instead, and the name of your source file should be *.pike
 
 
 LUA						*lua.vim* *lua-syntax*
@@ -1495,11 +1495,11 @@ whitespaces and end with a newline.
 
 Vim treats lines beginning with ']', '}', '|', '>' or a word followed by '>'
 as quoted text. However Vim highlights headers and signatures in quoted text
-only if the text is quoted with '>' (optionaly followed by one space).
+only if the text is quoted with '>' (optionally followed by one space).
 
-By default mail.vim syncronises syntax to 100 lines before the first displayed
-line. If you have a slow machine, and generally deal with emails with short
-headers, you can change this to a smaller value: >
+By default mail.vim synchronises syntax to 100 lines before the first
+displayed line. If you have a slow machine, and generally deal with emails
+with short headers, you can change this to a smaller value: >
 
     :let mail_minlines = 30
 
@@ -1607,8 +1607,8 @@ activate the GNU groff extra features included in the syntax file before you
 can use them.
 
 For example, Linux and BSD distributions use groff as their default text
-processing package. In order to activate the extra syntax highliting features
-for groff, add the following option to your start-up files: >
+processing package. In order to activate the extra syntax highlighting
+features for groff, add the following option to your start-up files: >
 
   :let b:nroff_is_groff = 1
 
@@ -1630,7 +1630,7 @@ follow a few simple rules about spacing and punctuation.
 2. Leave one space and one space only after an end-of-sentence period,
    exclamation mark, etc.
 
-3. For reasont stated below, it is best to follow all period marks with a
+3. For reasons stated below, it is best to follow all period marks with a
    carriage return.
 
 The reason behind these unusual tips is that g/n/troff have a line breaking
@@ -1651,7 +1651,7 @@ spaces and two or more spaces after a punctuation as an error, use: >
 
 Another technique to detect extra spacing and other errors that will interfere
 with the correct typesetting of your file, is to define an eye-catching
-highliting definition for the syntax groups "nroffDefinition" and
+highlighting definition for the syntax groups "nroffDefinition" and
 "nroffDefSpecial" in your configuration files. For example: >
 
   hi def nroffDefinition term=italic cterm=italic gui=reverse
@@ -3000,7 +3000,7 @@ Example: >
   :syn match ifline  "endif"	contained
 Note that the "[^ \t].*" match matches all non-white text.  Thus it would also
 match "endif".	Therefore the "endif" match is put last, so that it takes
-precendence.
+precedence.
 Note that this example doesn't work for nested "if"s.  You need to add
 "contains" arguments to make that work (omitted for simplicity of the
 example).
@@ -3519,7 +3519,7 @@ in their own color.
 			See |:highlight-default| for the optional [default]
 			argument.
 
-Normally a highlight group is added once when starging up.  This sets the
+Normally a highlight group is added once when starting up.  This sets the
 default values for the highlighting.  After that, you can use additional
 highlight commands to change the arguments that you want to set to non-default
 values.  The value "NONE" can be used to switch the value off or go back to
@@ -3975,7 +3975,7 @@ syntax/syncolor.vim files are loaded:
 		don't have highlighting yet.  Use ":syntax default".
    "reset"	":syntax reset" command or loading a color scheme.  Define all
 		the colors.
-   "skip"	Dont' define colors.  Used to skip the default settings when a
+   "skip"	Don't define colors.  Used to skip the default settings when a
 		syncolor.vim file earlier in 'runtimepath' has already set
 		them.
 

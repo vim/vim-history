@@ -368,7 +368,7 @@ The following modeline settings are assumed ":ts=8:sw=4:".
 It will be helpful to
 :set hls
 /<TAB>
-where <TAB> ia a real TAB. This helps visualise the operations.
+where <TAB> is a real TAB. This helps visualise the operations.
 
 The test text is:
 

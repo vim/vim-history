@@ -333,7 +333,7 @@ for the change operator, and "y" was still available.  Calling this
 operator "yank" made it easier to remember to use the "y" key.
 
 Since "y" is an operator, you use "yw" to yank a word.  A count is possible as
-usual.  To yank two workds use "y2w".  Example:
+usual.  To yank two words use "y2w".  Example:
 
 	let sqr = LongVariable * ~
 		 -------------->
