@@ -1097,7 +1097,10 @@ ex_unlet(eap)
 		temp_string = make_expanded_name(arg, expr_start,
 							 expr_end, name_end);
 		if (temp_string == NULL)
+		{
 		    EMSG2(_(e_invarg2), arg);
+		    break;
+		}
 		else
 		{
 		    if (do_unlet(temp_string) == FAIL && !eap->forceit)
@@ -8049,7 +8052,7 @@ trans_function_name(pp, skip)
      * Accept <SNR>123_name() outside a script.
      */
     if (skip)
-	/* do nothing */;
+	lead = 0;	/* do nothing */
     else if (lead > 0)
     {
 	lead = 3;
@@ -8365,7 +8368,8 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
 	    smsg((char_u *)_("calling %s"), sourcing_name);
 	    if (p_verbose >= 14)
 	    {
-		int i;
+		int	i;
+		char_u	buf[MSG_BUF_LEN];
 
 		msg_puts((char_u *)"(");
 		for (i = 0; i < argcount; ++i)
@@ -8376,8 +8380,10 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
 			msg_outnum((long)argvars[i].var_val.var_number);
 		    else
 		    {
+			trunc_string(get_var_string(&argvars[i]),
+							    buf, MSG_BUF_LEN);
 			msg_puts((char_u *)"\"");
-			msg_puts(get_var_string(&argvars[i]));
+			msg_puts(buf);
 			msg_puts((char_u *)"\"");
 		    }
 		}
