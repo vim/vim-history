@@ -2972,11 +2972,11 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	    s++;
 	    l = -1;
 	}
-	while (*s && isdigit(*s))
+	if (isdigit(*s))
 	{
-	    minwid *= 10;
-	    minwid += *s - '0';
-	    s++;
+	    minwid = (int)getdigits(&s);
+	    if (minwid < 0)	/* overflow */
+		minwid = 0;
 	}
 	if (*s == STL_HIGHLIGHT)
 	{
@@ -2991,15 +2991,11 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	{
 	    s++;
 	    if (isdigit(*s))
-		maxwid = 0;
-	    while (*s && isdigit(*s))
 	    {
-		maxwid *= 10;
-		maxwid += *s - '0';
-		s++;
+		maxwid = (int)getdigits(&s);
+		if (maxwid <= 0)	/* overflow */
+		    maxwid = 50;
 	    }
-	    if (maxwid <= 0)	/* overflow */
-		maxwid = 50;
 	}
 	minwid = (minwid > 50 ? 50 : minwid) * l;
 	if (*s == '(')
