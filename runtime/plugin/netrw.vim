@@ -1,7 +1,7 @@
 " netrw.vim: (global plugin) Handles file transfer across a network
-" Last Change:	Apr 16, 2002
+" Last Change:	Jun 12, 2002
 " Maintainer:	Charles E. Campbell, Jr. PhD   <cec@NgrOyphSon.gPsfAc.nMasa.gov>
-" Version:	22
+" Version:	23
 
 " Credits:
 "  Vim editor   by Bram Moolenaar (Thanks, Bram!)
@@ -231,7 +231,7 @@ function! s:NetRead(...)
   " ftp + <.netrc>:  Method #2
   elseif b:netrw_method  == 2		" read with ftp + <.netrc>
 "	Decho "DBG: read via ftp+.netrc (method #2)\n"
-   exe "norm! mzo.".g:netrw_ftpmode."\<cr>get ".b:netrw_fname." ".tmpfile."\<esc>"
+   exe "norm! mzo".g:netrw_ftpmode."\<cr>get ".b:netrw_fname." ".tmpfile."\<esc>"
    exe "'z+1,.!ftp -i " . g:netrw_machine
    let result = s:NetGetFile(readcmd, tmpfile)
    let b:netrw_lastfile = choice
@@ -284,7 +284,7 @@ function! s:NetRead(...)
   elseif     b:netrw_method  == 4	" read with scp
 "	Decho "DBG: read via scp (method #4)"
    if g:netrw_cygwin == 1
-    let cygtmpfile=substitute(tmpfile,'^\(\a\):','//\1/','e')
+    let cygtmpfile=substitute(tmpfile,'^\(\a\):','/cygdrive/\1/','e')
     exe "!scp " . g:netrw_machine . ":" . b:netrw_fname . " " . cygtmpfile
    else
     exe "!scp " . g:netrw_machine . ":" . b:netrw_fname . " " . tmpfile
@@ -295,14 +295,16 @@ function! s:NetRead(...)
   elseif     b:netrw_method  == 5	" read with http (wget)
 "	Decho "DBG: read via http (method #5)"
    if match(b:netrw_fname,"#") == -1
-    exe "!wget -O " . tmpfile . " http://" . g:netrw_machine . "/" . b:netrw_fname
+    exe "!wget -O " . tmpfile . " http://" . g:netrw_machine . b:netrw_fname
     let result = s:NetGetFile(readcmd, tmpfile)
    else
     let netrw_html= substitute(b:netrw_fname,"#.*$","","")
     let netrw_tag = substitute(b:netrw_fname,"^.*#","","")
-    exe "!wget -O " . tmpfile . " http://" . g:netrw_machine . "/" . netrw_html
+"    	call Decho("DBG: netrw_html<".netrw_html.">")
+"    	call Decho("DBG: netrw_tag <".netrw_tag.">")
+    exe "!wget -O " . tmpfile . " http://" . g:netrw_machine . netrw_html
     let result = s:NetGetFile(readcmd, tmpfile)
-    exe 'norm! 1G/<\s*a\s*name=\s*"'.netrw_tag.'"'
+    exe 'norm! 1G/<\s*a\s\+name=\s*"'.netrw_tag.'"/\<CR>'
    endif
    set ft=html
    redraw!
@@ -313,7 +315,7 @@ function! s:NetRead(...)
   elseif     b:netrw_method  == 6	" read with cadaver
 "	Decho "DBG: read via cadaver (method #6)"
    if g:netrw_cygwin == 1
-    let cygtmpfile=substitute(tmpfile,'^\(\a\):','//\1/','e')
+    let cygtmpfile=substitute(tmpfile,'^\(\a\):','/cygdrive/\1/','e')
     exe "!cadaver http://" . g:netrw_machine . "/" . b:netrw_fname . " " . cygtmpfile
    else
 "	call Decho("DBG: !cadaver http://" . g:netrw_machine . "/" . b:netrw_fname . " " . tmpfile)
@@ -487,7 +489,7 @@ function! s:NetWrite(...) range
   " scp: Method #4
   elseif     b:netrw_method == 4	" write with scp
    if g:netrw_cygwin == 1
-    let cygtmpfile=substitute(tmpfile,'^\(\a\):','//\1/','e')
+    let cygtmpfile=substitute(tmpfile,'^\(\a\):','/cygdrive/\1/','e')
     exe "!scp " . cygtmpfile . " " . g:netrw_machine . ":" . b:netrw_fname
    else
     exe "!scp " . tmpfile . " " . g:netrw_machine . ":" . b:netrw_fname
@@ -498,7 +500,7 @@ function! s:NetWrite(...) range
   " dav: Method #6
   elseif     b:netrw_method == 6	" write with cadaver
    if g:netrw_cygwin == 1
-    let cygtmpfile=substitute(tmpfile,'^\(\a\):','//\1/','e')
+    let cygtmpfile=substitute(tmpfile,'^\(\a\):','/cygdrive/\1/','e')
     exe "!cadaver " . cygtmpfile . " http://" . g:netrw_machine . "/" . b:netrw_fname
    else
     exe "!cadaver " . tmpfile . " http://" . g:netrw_machine . "/" . b:netrw_fname
