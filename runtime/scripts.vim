@@ -254,6 +254,21 @@ else
   elseif s:line1 =~ '|\*\{1,80}' && s:line2 =~ 'VRC '
 	\ || s:line2 =~ '|\*\{1,80}' && s:line3 =~ 'VRC '
     set ft=baan
+
+  " Valgrind
+  elseif s:line1 =~ '^==\d\+== valgrind'
+    set ft=valgrind
+
+  " CVS diff
+  else
+    let lnum = 1
+    while getline(lnum) =~ "^? " && lnum < line("$")
+      let lnum = lnum + 1
+    endwhile
+    if getline(lnum) =~ '^Index:\s\+\f\+$'
+      set ft=diff
+    endif
+
   endif
 
   unlet s:line2 s:line3 s:line4 s:line5
