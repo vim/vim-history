@@ -685,6 +685,12 @@ init_signal_stack()
     if (signal_stack != NULL)
     {
 # ifdef HAVE_SIGALTSTACK
+#  ifdef __APPLE__
+	/* missing prototype.  Adding it to osdef?.h.in doesn't work, because
+	 * "struct sigaltstack" needs to be declared. */
+	extern int sigaltstack __ARGS((const struct sigaltstack *ss, struct sigaltstack *oss));
+#  endif
+
 #  ifdef HAVE_SS_BASE
 	sigstk.ss_base = signal_stack;
 #  else
