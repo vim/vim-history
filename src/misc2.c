@@ -2316,7 +2316,11 @@ extract_modifiers(key, modp)
     /* Command-key really special, No fancynest */
     if (!(modifiers & MOD_MASK_CMD))
 #endif
-    if ((modifiers & MOD_MASK_ALT) && key < 0x80)
+    if ((modifiers & MOD_MASK_ALT) && key < 0x80
+#ifdef FEAT_MBYTE
+	    && !enc_dbcs		/* avoid creating a lead byte */
+#endif
+	    )
     {
 	key |= 0x80;
 	modifiers &= ~MOD_MASK_ALT;	/* remove the META modifier */

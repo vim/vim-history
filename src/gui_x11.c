@@ -897,11 +897,17 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 #endif
 
     /* Check for Alt/Meta key (Mod1Mask), but not for a BS, DEL or character
-     * that already has the 8th bit set. */
+     * that already has the 8th bit set.  And not when using a double-byte
+     * encoding, setting the 8th bit may make it the lead byte of a
+     * double-byte character. */
     if (len == 1
 	    && (ev_press->state & Mod1Mask)
 	    && !(key_sym == XK_BackSpace || key_sym == XK_Delete)
-	    && (string[0] & 0x80) == 0)
+	    && (string[0] & 0x80) == 0
+#ifdef FEAT_MBYTE
+	    && !enc_dbcs
+#endif
+	    )
     {
 #if defined(FEAT_MENU) && defined(FEAT_GUI_MOTIF)
 	/* Ignore ALT keys when they are used for the menu only */
@@ -975,10 +981,15 @@ gui_x11_key_hit_cb(w, dud, event, dum)
     if (len == 0)
 	goto theend;
 
-    /* Special keys (and a few others) may have modifiers */
+    /* Special keys (and a few others) may have modifiers.  Also when using a
+     * double-byte encoding (can't set the 8th bit). */
     if (len == -3 || key_sym == XK_space || key_sym == XK_Tab
-	|| key_sym == XK_Return || key_sym == XK_Linefeed
-	|| key_sym == XK_Escape)
+	    || key_sym == XK_Return || key_sym == XK_Linefeed
+	    || key_sym == XK_Escape
+#ifdef FEAT_MBYTE
+	    || (enc_dbcs && len == 1 && (ev_press->state & Mod1Mask))
+#endif
+       )
     {
 	modifiers = 0;
 	if (ev_press->state & ShiftMask)
