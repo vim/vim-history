@@ -25,7 +25,7 @@
 #else
 # define SHORT_FNAME		/* always 8.3 file name */
 #endif
-#ifndef MIN_FEAT
+#ifdef DOS_MOUSE
 # define USE_MOUSE		/* include mouse support */
 #endif
 #define HAVE_STDLIB_H

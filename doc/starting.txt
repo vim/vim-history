@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 5.0.  Last modification: 1998 Jan 28
+*starting.txt*  For Vim version 5.1.  Last modification: 1998 Apr 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -10,7 +10,8 @@ Starting Vim						*starting*
 2. Vim on the Amiga		|starting-amiga|
 3. Initialization		|initialization|
 4. Suspending			|suspend|
-5. The viminfo file		|viminfo-file|
+5. The vimrc file		|vimrc-intro|
+6. The viminfo file		|viminfo-file|
 
 ==============================================================================
 1. Vim arguments					*vim-arguments*
@@ -414,7 +415,7 @@ accordingly.  Vim proceeds in this order:
 	Each line in a vimrc file is executed as an Ex command line.  It is
 	sometimes also referred to as "exrc" file.  They are the same type of
 	file, but "exrc" is what Vi always used, "vimrc" is a Vim specific
-	name.
+	name.  Also see |vimrc-intro|.
 
 	If Vim was started with "-u filename", the file "filename" is used.
 	All following initializations until 4. are skipped.
@@ -425,7 +426,10 @@ accordingly.  Vim proceeds in this order:
 	interpreted.
 
      a. For Unix the system vimrc file is read for initializations.  The path
-	of this file is shown with the ":version" command.
+	of this file is shown with the ":version" command.  Note that this
+	file is ALWAYS read in 'compatible' mode, since the automatic
+	resetting of 'compatible' is only done later.  Add a ":set nocp"
+	command if you like.
 
 			  *VIMINIT* *.vimrc* *_vimrc* *EXINIT* *.exrc* *_exrc*
      b. Four places are searched for initializations.  The first that exists
@@ -470,18 +474,35 @@ accordingly.  Vim proceeds in this order:
 
 5. Set 'updatecount' to zero, if "-n" command argument used
 
-6. Perform GUI initializations
+6. Set binary options
+	If the "-b" flag was given to Vim, the options for binary editing will
+	be set now.  See |-b|.
+
+7. Perform GUI initializations
 	Only when starting "gvim", the GUI initializations will be done.  See
 	|gui-init|.
 
-7. Read the viminfo file
+8. Read the viminfo file
 	If the 'viminfo' option is not empty, the viminfo file is read.  The
 	default is empty, so 'viminfo' must have been set by one of the
 	previous initializations.  See |viminfo-file|.
 
-8. Set binary options
-	If the "-b" flag was given to Vim, the options for binary editing will
-	be set now.  See |-b|.
+9. Read the quickfix file
+	If the "-q" flag was given to Vim, the quickfix file is read.  If this
+	fails, Vim exits.
+
+10. Open all windows
+	When the |-o| flag was given, windows will be opened (but not
+	displayed yet).
+	When switching screens, it happens now.  Redrawing starts.
+	If the "-q" flag was given to Vim, the first error is jumped to.
+	Buffers for all windows will be loaded.
+
+11. Execute startup commands
+	If a "-t" flag was given to Vim, the tag is jumped to.
+	The commands given with the |-c| and |+cmd| arguments are executed.
+	If the 'insertmode' option is set, Insert mode is entered.
+	The |VimEnter| autocommands are executed.
 
 Some hints on using initializations:
 
@@ -617,7 +638,91 @@ will start a new shell.  This is the same as the ":sh" command.  Vim will
 continue if you exit from the shell.
 
 ==============================================================================
-5. The viminfo file					*viminfo-file*
+5. The vimrc file					*vimrc-intro*
+
+A vimrc file can be used for settings you intend to use more-or-less for every
+of your Vim sessions.  Normally the file is called $HOME/.vimrc, but other
+files can also be used, see |vimrc|.  Vim will read it (them) when starting
+and interpret the commands in them.
+
+The vimrc file can contain anything that can be typed on the Vim command line.
+The recommended practice is not to include the preceding colon sign ":", thus
+if one would type
+>	:set number
+on the Vim command line, the same can appear in the vimrc file simply as
+>	set number
+
+The end-of-line character depends on the system.  For Unix a single <NL>
+character is used.  For MS-DOS, Windows, OS/2 and the like, <CR><LF> is used.
+This is important when using mappings that end in a <CR>.  See |:source_crnl|.
+
+Blank lines are allowed and ignored.
+
+Leading whitespace characters (blanks and TABs) are always ignored.  The
+whitespaces between parameters (e.g. between the 'set' and the 'number' in the
+example above) are reduced to one blank character and plays the role of a
+separator, the whitespaces after the last (visible) character may or may not
+be ignored depending on the situation, see below.
+
+For a ":set" command involving the "=" (equal) sign, such as in
+>	set cpoptions    =aABceFst
+the whitespace immediately before the "=" sign is ignored.  But there can be
+no whitespace after the "=" sign!
+
+To include a whitespace character in the value of an option, it must be
+escaped by a "\" (backslash)  as in the following example:
+>	set tags=my\ nice\ file
+The same example written as
+>	set tags=my nice file
+will issue an error, because it is interpreted as:
+>	set tags=my
+>	set nice
+>	set file
+
+The character " (the double quote mark) starts a comment.  Everything after
+and including this character until the end-of-line is considered a comment and
+is ignored, except for commands that don't consider comments, as shown in
+examples below.  A comment can start on any character position on the line.
+
+There is a little "catch" with comments:
+>	ab dev development		" shorthand 
+>	map <F3> o#include		" insert include
+>	!ls *.c				" list C files
+The abbreviation 'dev' will be expand to 'development     " shorthand'.  The
+mapping of <F3> will actually be the whole line after the 'o# ....' including
+the '" insert include'.  The "!" command will send everything after it to the
+shell, causing an error for an unmatched '"' character.
+There can be no comments after ":map", ":ab" and "!" commands.
+
+For these commands, any character until the end-of-line is included.  As a
+consequence of this behaviour, you don't always see that trailing whitespace
+is included:
+>	map <F4> o#include    
+To avoid these problems, you can set the 'list' option when editing vimrc
+files.
+
+Even bigger problem arises in the following example:
+>	map ,ab o#include
+>	unmap ,ab 
+Here the mapping of ,ab will be ',ab', no trailing whitespaces is included.
+However, the "unmap" does not end directly with the end-of-line, Vim will try
+to unmap ',ab ', which does not exist as a mapped sequence.  An error will be
+issued, which is very hard to identify, because the ending whitespace
+character on the 'unmap ,ab ' are not visible.
+
+And this is exactly the same what happens when one uses a comment after an
+'unmap' command:
+>	unmap ,ab     " comment
+Here the comment part will be ignored.  However, Vim will try to unmap
+',ab     ', which does not exist,  Deleting the comment as well as all the
+whitespaces up the ending 'b' character will cure the problem.
+
+Except for the situations as above, it is legal to put a comment on the same
+line as the Vim definitions, such as 
+>	set number	" display line numbers
+
+==============================================================================
+6. The viminfo file					*viminfo-file*
 
 The viminfo file is used to store:
 - The command line history.

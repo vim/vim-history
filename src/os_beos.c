@@ -4,12 +4,6 @@
  *		 BeBox port Copyright 1997 by Olaf Seibert.
  *		 All Rights Reserved.
  *
- * This file is made available to you only for compilation for and/or
- * execution on non-Intel target CPUs. You are expressly forbidden to
- * compile this code with the intent, effect or purpose to run it on
- * Intel-designed and/or 80x86 compatible CPUs. You are also expressly
- * forbidden to modify this code with that intent, effect or purpose.
- *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
  */
@@ -22,52 +16,46 @@
 #include <kernel/OS.h>
 #include "vim.h"
 
-#if __INTEL__
-
-#error "I told you that you were not permitted to compile this code for this CPU!"
-
-#else
-
-    int
+    void
 check_for_bebox(void)
 {
     static int checked = 0;
-    static int is_bebox = 0;
 
-    if (!checked) {
+    if (checked == 0) {
 	system_info si;
 
-	checked = 1;
+	checked++;
 
 	get_system_info(&si);
-#if 0
-	printf("\r\ncpu_count = %d\r\n", si.cpu_count);
-	printf("cpu_type = %d\r\n", si.cpu_type);
-	printf("cpu_clock_speed = %f\r\n", si.cpu_clock_speed);
-	printf("bus_clock_speed = %f\r\n", si.bus_clock_speed);
-#endif
-	/*
-	 * Measured values on my machine at some time were:
-	 * cpu_clock_speed = 66434214
-	 * bus_clock_speed = 33238632
-	 */
-	if (si.cpu_count == 2 &&
-	    ((si.cpu_type == B_CPU_PPC_603  && si.cpu_clock_speed <=  66666666) ||
-	     (si.cpu_type == B_CPU_PPC_603e && si.cpu_clock_speed <= 133333333)) &&
-	    si.bus_clock_speed <= 33333333) {
-	    is_bebox = 1;
-	}
-	if (si.platform_type == B_AT_CLONE_PLATFORM ||
-		si.cpu_type == B_CPU_PPC_686 ||
-		si.cpu_type == B_CPU_X86) {
-	    emsg((char_u *)"This program does not work on this CPU type.");
-	    getout(1);
-	}
-	if (!is_bebox) {
-	    msg((char_u *)"This program works better on a real BeBox.");
+
+	if (si.platform_type != B_BEBOX_PLATFORM) {
+	    /*
+	     * For your personal use *ONLY*, you are allowed to remove
+	     * these nagware messages. However, you are not allowed to pass on
+	     * the resulting source or binaries. See doc/os_beos.txt.
+	     */
+
+	    char *m;
+
+	    if (si.platform_type == B_AT_CLONE_PLATFORM ||
+		    si.cpu_type == B_CPU_PPC_686 ||
+		    si.cpu_type == B_CPU_X86) {
+		char *list[] = {
+		    "WARNING: Intel \"architecture\" detected!",
+		    "PPC is much better!",
+		    "Waiter, there is a fly in my soup!",
+		    "\"Intel Inside\" is a governmental health warning."
+		};
+		m = list[real_time_clock() % 4];
+	    } else {
+		m = "This program works better on a real BeBox.";
+	    }
+	    msg((char_u *)m);
+	    /* put cursor back where it was (don't be TOO unfriendly) */
+	    setcursor();
+	    out_flush();
 	}
     }
-    return is_bebox;
 }
 
 #if USE_THREAD_FOR_INPUT_WITH_TIMEOUT
@@ -77,12 +65,13 @@ check_for_bebox(void)
 #define thread_id int
 #endif
 
-int charbuf;
+char_u charbuf;
+signed char charcount;
 sem_id character_present;
 sem_id character_wanted;
 thread_id read_thread_id;
 
-#define TRY_ABORT	0
+#define TRY_ABORT	0	/* This code does not work so turn it off. */
 
 #if TRY_ABORT
     static void
@@ -103,9 +92,7 @@ read_thread(void *dummy)
     for (;;) {
 	if (acquire_sem(character_wanted) != B_NO_ERROR)
 	    break;
-	charbuf = 0;
-	if (read(read_cmd_fd, &charbuf, 1) > 0)
-	    charbuf++;		// insure non-zero to indicate valid
+	charcount = read(read_cmd_fd, &charbuf, 1);
 	release_sem(character_present);
     }
 
@@ -127,7 +114,8 @@ beos_cleanup_read_thread(void)
 
 /*
  * select() emulation. Hopefully, in DR9 there will be something
- * useful supplied by the system. ... Alas, not.
+ * useful supplied by the system. ... Alas, not. Not in AAPR, nor
+ * in PR or even PR2... R3 then maybe? I don't think so!
  */
 
     int
@@ -139,7 +127,6 @@ beos_select(int nbits,
 {
     double tmo;
 
-    check_for_bebox();
     if (nbits == 0) {
 	/* select is purely being used for delay */
 	snooze(timeout->tv_sec * 1e6 + timeout->tv_usec);
@@ -199,15 +186,16 @@ beos_select(int nbits,
 	    if (tmo == 0)
 		tmo = 1.0;
 	} else {
-	    tmo = FLT_MAX;
+	    tmo = B_INFINITE_TIMEOUT;
+	    check_for_bebox();
 	}
 #if TRY_ABORT
 	release_sem(character_wanted);
 #endif
 	acquired = acquire_sem_etc(character_present, 1, B_TIMEOUT, tmo);
 	if (acquired == B_NO_ERROR) {
-	    if (charbuf) {
-		add_to_input_buf((char_u *)&charbuf, 1);
+	    if (charcount > 0) {
+		add_to_input_buf(&charbuf, 1);
 #if !TRY_ABORT
 		release_sem(character_wanted);
 #endif
@@ -236,8 +224,8 @@ beos_select(int nbits,
 	     */
 	    if (acquired == B_TIMED_OUT)
 		acquire_sem(character_present);
-	    if (charbuf) {
-		add_to_input_buf((char_u *)&charbuf, 1);
+	    if (charcount > 0) {
+		add_to_input_buf(&charbuf, 1);
 		return 1;
 	    }
 	    return 0;
@@ -258,4 +246,3 @@ beos_select(int nbits,
     return 0;
 }
 
-#endif

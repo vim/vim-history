@@ -1,81 +1,142 @@
 " Vim syntax file
 " Language: COBOL
-" Maintainer:   Sitaram Chamarty <sitaram@diac.com>
-" Last change:  1998 January 29
-" For a fully commented version please see http://www.diac.com/~sitaram/vim
+" Maintainers:  Sitaram Chamarty <sitaram@diac.com> and
+"               James Mitchell <james_mitchell@acm.org>
+
+" Last change:  1998 March 29
 
 " MOST important - else most of the keywords wont work!
 set isk=@,48-57,-
-" ...the usual :-)
+" set up other basic parameters
 syn clear
-" COBOL syntax is case insensitive
 syn case ignore
 
-syn match   cobolTodo         "todo" contained    " can appear in comments only
-" many legacy sources have junk in columns 1-6
-syn match   cobolJunk         "^......"           " must be before cobolComment
-syn match   cobolComment      "^......\*.*"hs=s+6 contains=cobolTodo
+syn keyword cobolReserved contained ACCEPT ACCESS ADD ADDRESS ADVANCING AFTER ALPHABET ALPHABETIC
+syn keyword cobolReserved ALPHABETIC-LOWER ALPHABETIC-UPPER ALPHANUMERIC ALPHANUMERIC-EDITED ALS
+syn keyword cobolReserved ALTERNATE AND ANY ARE AREA AREAS ASCENDING ASSIGN AT AUTHOR BEFORE BINARY
+syn keyword cobolReserved BLANK BLOCK BOTTOM BY CANCEL CBLL CD CF CH CHARACTER CHARACTERS CLASS
+syn keyword cobolReserved CLOCK-UNITS CLOSE COBOL CODE CODE-SET COLLATING COLUMN COMMA COMMON
+syn keyword cobolReserved COMMUNICATIONS COMPUTATIONAL COMPUTE CONFIGURATION CONTENT CONTINUE
+syn keyword cobolReserved CONTROL CONVERTING CORR CORRESPONDING COUNT CURRENCY DATA DATE DATE-COMPILED
+syn keyword cobolReserved DATE-WRITTEN DAY DAY-OF-WEEK DE DEBUG-CONTENTS DEBUG-ITEM DEBUG-LINE
+syn keyword cobolReserved DEBUG-NAME DEBUG-SUB-1 DEBUG-SUB-2 DEBUG-SUB-3 DEBUGGING DECIMAL-POINT
+syn keyword cobolReserved DELARATIVES DELETE DELIMITED DELIMITEER DEPENDING DESCENDING DESTINATION
+syn keyword cobolReserved DETAIL DISABLE DISPLAY DIVIDE DIVISION DOWN DUPLICATES DYNAMIC EGI ELSE EMI
+syn keyword cobolReserved ENABLE END-ADD END-COMPUTE END-DELETE END-DIVIDE END-EVALUATE END-IF
+syn keyword cobolReserved END-MULTIPLY END-OF-PAGE END-PERFORM END-READ END-RECEIVE END-RETURN
+syn keyword cobolReserved END-REWRITE END-SEARCH END-START END-STRING END-SUBTRACT END-UNSTRING
+syn keyword cobolReserved END-WRITE ENVIRONMENT EQUAL ERROR ESI EVALUATE EVERY EXCEPTION EXIT
+syn keyword cobolReserved EXTEND EXTERNAL FALSE FD FILE FILE-CONTROL FILLER FINAL FIRST FOOTING FOR FROM
+syn keyword cobolReserved GENERATE GIVING GLOBAL GREATER GROUP HEADING HIGH-VALUE HIGH-VALUES I-O
+syn keyword cobolReserved I-O-CONTROL IDENTIFICATION IN INDEX INDEXED INDICATE INITIAL INITIALIZE
+syn keyword cobolReserved INITIATE INPUT INPUT-OUTPUT INSPECT INSTALLATION INTO IS JUST
+syn keyword cobolReserved JUSTIFIED KEY LABEL LAST LEADING LEFT LENGTH LOCK MEMORY
+syn keyword cobolReserved MERGE MESSAGE MODE MODULES MOVE MULTIPLE MULTIPLY NATIVE NEGATIVE NEXT NO NOT
+syn keyword cobolReserved NUMBER NUMERIC NUMERIC-EDITED OBJECT-COMPUTER OCCURS OF OFF OMITTED ON OPEN
+syn keyword cobolReserved OPTIONAL OR ORDER ORGANIZATION OTHER OUTPUT OVERFLOW PACKED-DECIMAL PADDING
+syn keyword cobolReserved PAGE PAGE-COUNTER PERFORM PF PH PIC PICTURE PLUS POINTER POSITION POSITIVE
+syn keyword cobolReserved PRINTING PROCEDURE PROCEDURES PROCEDD PROGRAM PROGRAM-ID PURGE QUEUE QUOTES
+syn keyword cobolReserved RANDOM RD READ RECEIVE RECORD RECORDS REDEFINES REEL REFERENCE REFERENCES
+syn keyword cobolReserved RELATIVE RELEASE REMAINDER REMOVAL REPLACE REPLACING REPORT REPORTING
+syn keyword cobolReserved REPORTS RERUN RESERVE RESET RETURN RETURNING REVERSED REWIND REWRITE RF RH
+syn keyword cobolReserved RIGHT ROUNDED RUN SAME SD SEARCH SECTION SECURITY SEGMENT SEGMENT-LIMITED
+syn keyword cobolReserved SELECT SEND SENTENCE SEPARATE SEQUENCE SEQUENTIAL SET SIGN SIZE SORT
+syn keyword cobolReserved SORT-MERGE SOURCE SOURCE-COMPUTER SPECIAL-NAMES STANDARD
+syn keyword cobolReserved STANDARD-1 STANDARD-2 START STATUS STOP STRING SUB-QUEUE-1 SUB-QUEUE-2
+syn keyword cobolReserved SUB-QUEUE-3 SUBTRACT SUM SUPPRESS SYMBOLIC SYNC SYNCHRONIZED TABLE TALLYING
+syn keyword cobolReserved TAPE TERMINAL TERMINATE TEST TEXT THAN THEN THROUGH THRU TIME TIMES TO TOP
+syn keyword cobolReserved TRAILING TRUE TYPE UNIT UNSTRING UNTIL UP UPON USAGE USE USING VALUE VALUES
+syn keyword cobolReserved VARYING WHEN WITH WORDS WORKING-STORAGE WRITE 
+syn match   cobolReserved "\<CONTAINS\>"
+syn match   cobolReserved "\<\(IF\|INVALID\|END\|EOP\)\>"
+syn match   cobolReserved "\<ALL\>"
+
+syn keyword cobolConstant SPACE SPACES NULL ZERO ZEROES ZEROS LOW-VALUE LOW-VALUES
+
+syn match   cobolTodo         "todo" contained
+syn match   cobolComment      "^.\{6}\*.*"hs=s+6 contains=cobolTodo
+syn match   cobolComment      "^.\{6}/.*"hs=s+6 contains=cobolTodo
+syn region  cobolComment      start="*>" end="$" contains=cobolTodo
+syn match   cobolCompiler     "^.\{6}$.*"hs=s+6
+syn match   cobolContinue     "^.\{6}-"
+
+syn match   cobolBadLine      "^.\{6}[^ D*$/].*"hs=s+6
 
 syn keyword cobolGoTo         GO GOTO
 syn keyword cobolCopy         COPY
+" cobolBAD: things that are BAD NEWS!
 syn keyword cobolBAD          ALTER ENTER RENAMES
 
-syn keyword cobolCondFlow     ELSE    " IF INVALID END interfere with the region
-
-" the next should really be a list of keywords like END-IF END-READ, etc...
-" someday... :-) (TODO)
-syn match   cobolCondFlow     "\<END-[A-Z]\+\>"
 " cobolWatch: things that are important when trying to understand a program
 syn keyword cobolWatch        OCCURS DEPENDING VARYING BINARY COMP REDEFINES
 syn keyword cobolWatch        REPLACING RUN
 syn match   cobolWatch        "COMP-[123456XN]"
 syn keyword cobolEXECs        EXEC END-EXEC
 
-syn match   cobolParas        "^...... \{1,4}[A-Z0-9][^"]\{-}\."hs=s+7
-syn match   cobolDecl         "^...... \{1,4}[0-9]\+ "
+syn match   cobolParas        "^.\{6} \{1,4}[A-Z0-9][^"]\{-}\."hs=s+7
 
-syn keyword cobolStmts        ACCEPT ADD CLOSE COMPUTE CONTINUE DELETE DISPLAY
-syn keyword cobolStmts        DIVIDE EVALUATE EXIT INSPECT MERGE MOVE MULTIPLY
-syn keyword cobolStmts        OPEN READ REWIND REWRITE SEARCH SELECT SET SORT
-syn keyword cobolStmts        START STOP STRING SUBTRACT WRITE
-" TODO: add more.  Eventually, add all "standard" ones.
+syn match   cobolDecl         "^.\{6} \{1,4}\(0\=1\|77\|78\) "hs=s+7,he=e-1
+syn match   cobolDecl         "^.\{6} \+[1-4][0-9] "hs=s+7,he=e-1
+syn match   cobolDecl         "^.\{6} \+0\=[2-9] "hs=s+7,he=e-1
+syn match   cobolDecl         "^.\{6} \+66 "hs=s+7,he=e-1
 
-syn keyword cobolExtras       PERFORM
-syn keyword cobolExtras       CALL CANCEL CORR CORRESPONDING GOBACK
-syn match   cobolExtras       "EXIT \+PROGRAM"
+syn match   cobolWatch        "^.\{6} \+88 "hs=s+7,he=e-1
+
+syn match   cobolBadID        "\k\+-\($\|[^A-Z0-9]\)"
+syn match   cobolBadID        "[^A-Z0-9]-[0-9]*[A-Z-]\+"hs=s+1
+
+syn keyword cobolCALLs        CALL CANCEL GOBACK PERFORM INVOKE 
+syn match   cobolCALLs        "EXIT \+PROGRAM"
 syn match   cobolExtras       /\<VALUE \+[0-9]\+\./hs=s+6,he=e-1
+
+syn match   cobolNumber       "\<-\=[0-9]*\.\=[0-9]\+\>"
 
 syn match   cobolString       /".\{-}"/
 syn match   cobolString       /'.\{-}'/
 
-" All REGIONS come last...
+syn region  cobolLine       start="^.\{6} " end="$" contains=ALL
+if exists("cobol_legacy_code")
+    syn region  cobolCondFlow     contains=ALLBUT,cobolLine start="\<\(IF\|INVALID\|END\|EOP\)\>" skip=/"[^"]\+"/ end="\."
+endif
 
-syn region  cobolCondFlow     contains=ALL start="\<\(IF\|INVALID\|END\|EOP\)\>" skip=/"[^"]\+"/ end="\."
+if ! exists("cobol_legacy_code")
+    " catch junk in columns 1-6 for modern code
+    syn match cobolBAD      "^ \{0,5\}[^ ].*"
+endif
+
+" many legacy sources have junk in columns 1-6: must be before others
+" Stuff after column 72 is in error - must be after all other "match" entries
+if exists("cobol_legacy_code")
+    syn match   cobolBadLine      "^.\{6}[^*/].\{66,\}"
+else
+    syn match   cobolBadLine      "^.\{6}.\{67,\}"
+endif
 
 if !exists("did_cobol_syntax_inits")
   let did_cobol_syntax_inits = 1
-  " syntax groups to "levels"
-  hi link cobolGoTo     cobolSevere
-  hi link cobolCopy     cobolSevere
-  hi link cobolBAD      cobolSevere
-
-  hi link cobolCondFlow cobolWatchpts
-  hi link cobolWatch    cobolWatchpts
-  hi link cobolEXECs    cobolWatchpts
-
-  hi link cobolParas    cobolMarginA
-
-  " cobol* highlights -> "standard" (syntax.vim) highlight groups
-  hi link cobolComment  Comment
-  hi link cobolSevere   Error
-  hi link cobolTodo     Todo
-  hi link cobolWatchpts Special
-  hi link cobolMarginA  Constant
-  hi link cobolStmts    Statement
-  hi link cobolExtras   Special
-  hi link cobolString   Constant
+"    hi link cobolJunk     Error
+    hi link cobolBAD      Error
+    hi link cobolBadID    Error
+    hi link cobolBadLine  Error
+    hi link cobolCALLs    Function
+    hi link cobolComment  Comment
+    hi link cobolAreaB              Special
+    hi link cobolCompiler PreProc
+    hi link cobolCondFlow Special
+    hi link cobolCopy     PreProc
+    hi link cobolDecl     Type
+    hi link cobolEXECs    Special
+    hi link cobolExtras   Special
+    hi link cobolGoTo     Special
+    hi link cobolConstant Constant
+    hi link cobolNumber   Constant
+    hi link cobolParas    Function
+    hi link cobolReserved Statement
+    hi link cobolString   Constant
+    hi link cobolTodo     Todo
+    hi link cobolWatch    Special
 endif
 
 let b:current_syntax = "cobol"
 
-" vim: ts=8
+" vim: ts=6 nowrap

@@ -451,7 +451,7 @@ clip_process_selection(button, x, y, repeated_click, modifiers)
 	{
 #ifdef USE_GUI
 	    if (gui.in_use)
-		gui_update_cursor(FALSE);
+		gui_update_cursor(FALSE, FALSE);
 #endif
 	    cb->state = SELECT_CLEARED;
 	    return;
@@ -468,7 +468,7 @@ clip_process_selection(button, x, y, repeated_click, modifiers)
 	clip_mch_set_selection();
 #ifdef USE_GUI
 	if (gui.in_use)
-	    gui_update_cursor(FALSE);
+	    gui_update_cursor(FALSE, FALSE);
 #endif
 
 	cb->state = SELECT_DONE;
@@ -657,6 +657,23 @@ clip_redraw_selection(x, y, w, h)
 }
 
 /*
+ * Redraw the selection if character at "row,col" is inside of it.
+ */
+    void
+clip_may_redraw_selection(row, col)
+    int	row, col;
+{
+    if (clipboard.state != SELECT_CLEARED
+	    && ((row == clipboard.start.lnum
+		    && col >= (int)clipboard.start.col)
+		|| row > clipboard.start.lnum)
+	    && ((row == clipboard.end.lnum
+		    && col < (int)clipboard.end.col)
+		|| row < clipboard.end.lnum))
+	clip_invert_area(row, col, row, col + 1);
+}
+
+/*
  * Called from outside to clear selected region from the display
  */
     void
@@ -670,6 +687,19 @@ clip_clear_selection()
     clip_invert_area((int)cb->start.lnum, cb->start.col, (int)cb->end.lnum,
 	    cb->end.col);
     cb->state = SELECT_CLEARED;
+}
+
+/*
+ * Clear the selection if any lines from "row1" to "row2" are inside of it.
+ */
+    void
+clip_may_clear_selection(row1, row2)
+    int	row1, row2;
+{
+    if (clipboard.state == SELECT_DONE
+	    && row2 >= clipboard.start.lnum
+	    && row1 <= clipboard.end.lnum)
+	clip_clear_selection();
 }
 
 /*

@@ -29,7 +29,11 @@ library VisVim
 	{
 		// methods
 		[id(1)]
-		HRESULT VisVimMethod();
+		HRESULT VisVimDialog();
+		HRESULT VisVimEnable();
+		HRESULT VisVimDisable();
+		HRESULT VisVimToggle();
+		HRESULT VisVimLoad();
 	};
 
 	//  Class information for CCommands

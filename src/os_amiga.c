@@ -1375,25 +1375,36 @@ vim_getenv(var)
 {
     int		    len;
     UBYTE	    *buf;		/* buffer to expand in */
-    static char_u   *retval = NULL;	/* return value */
+    char_u	    *retval;		/* return value */
+    static char_u   *alloced = NULL;	/* allocated memory */
 
 #ifndef NO_ARP
     if (!dos2)
-	return (char_u *)getenv((char *)var);
+	retval = (char_u *)getenv((char *)var);
+    else
 #endif
+    {
+	vim_free(alloced);
+	alloced = NULL;
+	retval = NULL;
 
-    vim_free(retval);
-    retval = NULL;
+	buf = alloc(IOSIZE);
+	if (buf == NULL)
+	    return NULL;
 
-    buf = alloc(IOSIZE);
-    if (buf == NULL)
-	return NULL;
+	len = GetVar((UBYTE *)var, buf, (long)(IOSIZE - 1), (long)0);
+	if (len >= 0)
+	{
+	    retval = vim_strsave((char_u *)buf);
+	    alloced = retval;
+	}
 
-    len = GetVar((UBYTE *)var, buf, (long)(IOSIZE - 1), (long)0);
-    if (len >= 0)
-	retval = vim_strsave((char_u *)buf);
+	vim_free(buf);
+    }
 
-    vim_free(buf);
+    /* if $VIM is not defined, use "vim:" instead */
+    if (retval == NULL && STRCMP(var, "VIM") == 0)
+	retval = (char_u *)"vim:";
 
     return retval;
 }

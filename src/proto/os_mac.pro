@@ -1,4 +1,4 @@
-/* win32.c */
+/* os_mac.c */
 void mch_setmouse __PARMS((int on));
 /*int mch_inchar __PARMS((char_u *buf, int maxlen, long time));*/
 
@@ -62,3 +62,4 @@ void add_to_input_buf __PARMS((char_u *s, int len));
 void slash_n_colon_adjust __PARMS((char_u *buf));
 int mch_check_input __PARMS((void));
 int ExpandWildCards __PARMS((int num_pat, char_u **pat, int *num_file, char_u ***file, int files_only, int list_notfound));
+void GetFullPathFromFSSpec (char_u *fname, FSSpec file);

@@ -1,4 +1,4 @@
-*index.txt*     For Vim version 5.0.  Last modification: 1998 Feb 18
+*index.txt*     For Vim version 5.1.  Last modification: 1998 Mar 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -414,15 +414,15 @@ These can be used after an operator or in Visual mode to select an object
 
 tag		command	      	   action in Normal mode	~
 ------------------------------------------------------------------------------
-|v_aB|		aB		   "a Block" from "[(" and "])" (with brackets)
+|v_aB|		aB		   "a Block" from "[{" and "]}" (with brackets)
 |v_aW|		aW		   "a WORD" (with white space)
-|v_ab|		ab		   "a block" from "[{" to "]}" (with braces)
+|v_ab|		ab		   "a block" from "[(" to "])" (with braces)
 |v_ap|		ap		   "a paragraph" (with white space)
 |v_as|		as		   "a sentence" (with white space)
 |v_aw|		aw		   "a word" (with white space)
-|v_iB|		iB		   "inner Block" from "[(" and "])"
+|v_iB|		iB		   "inner Block" from "[{" and "]}"
 |v_iW|		iW		   "inner WORD"
-|v_ib|		ib		   "inner block" from "[{" to "]}"
+|v_ib|		ib		   "inner block" from "[(" to "])"
 |v_ip|		ip		   "inner paragraph"
 |v_is|		is		   "inner sentence"
 |v_iw|		iw		   "inner word"
@@ -468,6 +468,10 @@ tag		command	      	   action in Normal mode	~
 				   the cursor
 |CTRL-W_f|	CTRL-W f	   split window and edit file name under the
 				   cursor
+|CTRL-W_g_CTRL-]| CTRL-W g CTRL-]  split window and do ":tjump" to tag under
+				   cursor
+|CTRL-W_g]|	CTRL-W g ]	   split window and do ":tselect" for tag
+				   under cursor
 |CTRL-W_i|	CTRL-W i	   split window and jump to declaration of
 				   identifier under the cursor
 |CTRL-W_j|	CTRL-W j	   go to N next window (stop at last window)
@@ -836,6 +840,7 @@ arguments.
 |:dsplit|	:dsp[lit]	split window and jump to #define
 |:edit|		:e[dit]		edit a file
 |:echo|		:ec[ho]		echoes the result of expressions
+|:echohl|	:echoh[l]	set highlighting for echo commands
 |:echon|	:echon		same as :echo, but without <EOL>
 |:else|		:el[se]		part of an :if command
 |:elseif|	:elsei[f]	part of an :if command
@@ -973,7 +978,8 @@ arguments.
 				argument list
 |:stop|		:st[op]		suspend the editor or escape to a shell
 |:stag|		:sta[g]		split window and jump to a tag
-|:stselect|	:sts[elect]	list matching tags, select one, split window
+|:stjump|	:stj[ump]	do ":tjump" and split window
+|:stselect|	:sts[elect]	do ":tselect" and split window
 |:sunhide|	:sun[hide]	same as ":unhide"
 |:suspend|	:sus[pend]	same as ":stop"
 |:sview|	:sv[iew]	split window and edit file read-only
@@ -982,6 +988,8 @@ arguments.
 |:t|		:t		same as ":copy"
 |:tag|		:ta[g]		jump to tag
 |:tags|		:tags		show the contents of the tag stack
+|:tjump|	:tj[ump]	like ":tselect", but jump directly when there
+				is only one match
 |:tlast|	:tl[ast]	jump to last matching tag
 |:tnext|	:tn[ext]	jump to next matching tag
 |:tNext|	:tN[ext]	jump to previous matching tag

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	gp (version 2.0)
 " Maintainer:	Karim Belabas <karim@mpim-bonn.mpg.de>
-" Last change:	1998 January 12
+" Last change:	1998 February 23
 
 syntax clear
 " some control statements
@@ -20,14 +20,15 @@ syntax keyword gpInterface	default
 syntax keyword gpInput		read input
 
 " functions
-syntax region  gpFunRegion oneline transparent start="^ *[a-zA-Z][_a-zA-Z0-9]*(" end=") *=" contains=gpFunction,gpArgs
+syntax match gpFunRegion "^\s*[a-zA-Z][_a-zA-Z0-9]*(.*)\s*=\s*[^ \t=]"me=e-1 contains=gpFunction,gpArgs
+syntax match gpFunRegion "^\s*[a-zA-Z][_a-zA-Z0-9]*(.*)\s*=\s*$" contains=gpFunction,gpArgs
+syntax match gpArgs contained "[a-zA-Z][_a-zA-Z0-9]*"
 syntax match gpFunction contained "^\s*[a-zA-Z][_a-zA-Z0-9]*("me=e-1
-syntax match gpArgs contained "[a-zA-Z][a-zA-Z0-9]*"
 
-" String and Character contstants
-" Highlight special characters (those which have a backslash) differently
+" String and Character constants
+" Highlight special (backslash'ed) characters differently
 syntax match  gpSpecial contained "\\[ent\\]"
-syntax region gpString	 start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=gpSpecial
+syntax region gpString  start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=gpSpecial
 
 "comments
 syntax region gpComment	start="/\*"  end="\*/" contains=gpTodo
@@ -61,5 +62,4 @@ if !exists("did_gp_syntax_inits")
 endif
 
 let b:current_syntax = "gp"
-
 " vim: ts=8

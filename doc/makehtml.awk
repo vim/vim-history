@@ -20,6 +20,13 @@ BEGIN   {
 # from htmlchek, metachar.awk, protects special chars.
 #
 /[><&]/ {gsub(/&/,"\\&amp;");gsub(/>/,"\\&gt;");gsub(/</,"\\&lt;")}
+
+# sample lines printed bold
+substr($0,1,4) == "&gt;" { print "<B>" substr($0,5,length($0)-4) "</B>"; next; }
+
+# header lines printed bold, blue
+substr($0,length($0),1) == "~" { print "<B><FONT COLOR=\"PURPLE\">" substr($0,1,length($0)-1) "</FONT></B>"; next; }
+
 #ad hoc code
 /^"\|\& / {gsub(/\|/,"\\&\#124;"); }
 / = b / {gsub(/ b /," \\&\#98; "); }

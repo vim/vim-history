@@ -61,7 +61,7 @@ DESCRIPTION
 
 
 
-                         1998 February 19                       1
+                           1998 April 7                         1
 
 
 
@@ -127,7 +127,7 @@ OPTIONS
 
 
 
-                         1998 February 19                       2
+                           1998 April 7                         2
 
 
 
@@ -193,7 +193,7 @@ VIM(1)                                                     VIM(1)
 
 
 
-                         1998 February 19                       3
+                           1998 April 7                         3
 
 
 
@@ -259,7 +259,7 @@ VIM(1)                                                     VIM(1)
 
 
 
-                         1998 February 19                       4
+                           1998 April 7                         4
 
 
 
@@ -325,7 +325,7 @@ VIM(1)                                                     VIM(1)
 
 
 
-                         1998 February 19                       5
+                           1998 April 7                         5
 
 
 
@@ -360,6 +360,12 @@ FILES
                       The tags file used for finding  information
                       in the documentation files.
 
+       /usr/local/lib/vim/syntax/syntax.vim
+                      System wide syntax initializations.
+
+       /usr/local/lib/vim/syntax/*.vim
+                      Syntax files for various languages.
+
        /usr/local/lib/vim/vimrc
                       System wide Vim initializations.
 
@@ -369,11 +375,9 @@ FILES
        /usr/local/lib/vim/menu.vim
                       System  wide menu initializations for gvim.
 
-       /usr/local/lib/vim/syntax/syntax.vim
-                      System wide syntax initializations.
-
-       /usr/local/lib/vim/syntax/*.vim
-                      Syntax files for various languages.
+       /usr/local/lib/vim/bugreport.vim
+                      Script  to  generate  a  bug  report.   See
+                      ":help bugs".
 
        For recent info read the VIM home page:
        <URL:http://www.vim.org/>
@@ -381,17 +385,13 @@ FILES
 AUTHOR
        Most of Vim was made by Bram Moolenaar, with a lot of help
        from others.  See ":help credits".
-       Vim  is  based on Stevie, worked on by: Tim Thompson, Tony
-       Andrews and G.R. (Fred) Walter.  Although  hardly  any  of
+       Vim is based on Stevie, worked on by: Tim  Thompson,  Tony
+       Andrews  and  G.R.  (Fred) Walter.  Although hardly any of
        the original code remains.
 
-BUGS
-       Probably.  See the "todo" file that comes with the distri-
-       bution.
 
 
-
-                         1998 February 19                       6
+                           1998 April 7                         6
 
 
 
@@ -400,13 +400,17 @@ BUGS
 VIM(1)                                                     VIM(1)
 
 
-       Note that a number of things that may be regarded as  bugs
+BUGS
+       Probably.  See the "todo" file that comes with the distri-
+       bution.
+
+       Note  that a number of things that may be regarded as bugs
        by some, are in fact caused by a too-faithful reproduction
-       of Vi's behaviour.  Other people may  think  other  things
-       are  bugs  "because Vi does it differently".  Those people
-       should take a closer look at the vi_diff.txt file (or type
-       :help  vi_diff.txt  when in Vim).  Also have a look at the
-       'compatible' option.
+       of Vi's behaviour.  And if you think other things are bugs
+       "because Vi does it differently", you should take a closer
+       look  at  the  vi_diff.txt file (or type :help vi_diff.txt
+       when in Vim).  Also have a look at  the  'compatible'  and
+       'cpoptions' options.
 
 
 
@@ -453,10 +457,6 @@ VIM(1)                                                     VIM(1)
 
 
 
-
-
-
-
-                         1998 February 19                       7
+                           1998 April 7                         7
 
 

@@ -1,11 +1,11 @@
-*os_beos.txt*  	For Vim version 5.0.  Last modification: 1998 Feb 14
+*os_beos.txt*  	For Vim version 5.1.  Last modification: 1998 Mar 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
-This is a port of Vim 5.0 to the BeOS Preview Release 2 (also known as PR2)
-for non-Intel CPUs ONLY.
+This is a port of Vim 5.1 to the BeOS Preview Release 2 (also known as PR2)
+or later.
 
 This file contains the particularities for the BeBox/BeOS version of Vim.  For
 matters not discussed in this file, Vim behaves very much like the Unix
@@ -18,11 +18,15 @@ matters not discussed in this file, Vim behaves very much like the Unix
  5. The BeOS GUI		|beos-gui|
  6. The $VIM directory		|beos-vimdir|
  7. Drag & Drop			|beos-dragndrop|
- 8. Fonts			|beos-fonts|
- 9. The meta key modifier	|beos-meta|
-10. Mouse key mappings		|beos-mouse|
-11. Colour names		|beos-colours|
-12. Compiling with Perl		|beos-perl|
+ 8. Single Launch vs. Multiple
+    Launch			|beos-launch|
+ 9. Fonts			|beos-fonts|
+10. The meta key modifier	|beos-meta|
+11. Mouse key mappings		|beos-mouse|
+12. Colour names		|beos-colours|
+13. Compiling with Perl		|beos-perl|
+14. WARNING: Intel
+    "architecture" detected!	|beos-ppc|
 
 
 							*beos-general*
@@ -44,7 +48,7 @@ Compiling Vim						*beos-compiling*
 
 From the Advanced Access Preview Release (AAPR) on, Vim can be configured with
 the standard configure script. To get the compiler and its flags right, use
-the following command line in the shell:
+the following command line in the shell (you can cut and paste it in one go):
 
 CC=$BE_C_COMPILER CFLAGS="$BE_DEFAULT_C_FLAGS -O7" \
     ./configure --prefix=/boot/home/config \
@@ -56,17 +60,15 @@ When configure has run, and you wish to enable GUI support, you must edit the
 config.mk file so that the lines with GUI_xxx refer to $(BEOSGUI_xxx) instead
 of $(NONE_xxx).
 Alternatively you can make this change in the Makefile; it will have a
-more permanent effect.
+more permanent effect. Search for "NONE_".
 
-After compilation you need to add the resources to the binary. Use the script
-os_beos.link:
+After compilation you need to add the resources to the binary. Add the
+following few lines near the end (before the line with "exit $exit_value") of
+the link.sh script to do this automatically.
 
-    #!/bin/sh
     rmattr BEOS:TYPE vim
     copyres os_beos.rsrc vim
     mimeset vim
-
-Or add those lines to the link.sh script.
 
 Also, create a dummy file "strip":
 
@@ -74,12 +76,15 @@ Also, create a dummy file "strip":
     mimeset $1
     exit 0
 
-You will need it when using "make install" to install Vim. If you want to do
-it by hand, you must copy Vim to $HOME/config/bin, and create a bunch of
-symlinks to it ({g,r,rg}{vim,ex,view}). Furthermore you must copy Vims
-configuration files to $HOME/config/share/vim: vim-5.0s/{*.vim,doc,syntax}.
-For completeness, you should also copy the nroff manual pages to
-$HOME/config/man/man1. Don't forget ctags/ctags and xxd/xxd!
+You will need it when using "make install" to install Vim.
+
+Now type "make" to compile Vim, then "make install" to install it.
+
+If you want to install Vim by hand, you must copy Vim to $HOME/config/bin, and
+create a bunch of symlinks to it ({g,r,rg}{vim,ex,view}). Furthermore you must
+copy Vims configuration files to $HOME/config/share/vim:
+vim-5.0s/{*.vim,doc,syntax}.  For completeness, you should also copy the nroff
+manual pages to $HOME/config/man/man1. Don't forget ctags/ctags and xxd/xxd!
 
 Obviously, you need the unlimited linker to actually link Vim. See
 http://www.metrowerks.com for purchasing the CodeWarrior compiler for BeOS.
@@ -109,7 +114,8 @@ indistinctive character sequences.
 These problems do not exist in the GUI.
 
 [1]: there is no select() on file descriptors; also the termios VMIN and VTIME
-settings do not seem to work properly.
+settings do not seem to work properly. This has been the case since DR7 at
+least and still has not been fixed as of PR2.
 
 							*beos-unicode*
 Unicode vs. Latin-1					*beos-utf8*
@@ -145,10 +151,10 @@ Stuff that does not work yet:
   # 971215-083826.
 - The window title.
 - Starting the GUI from the Terminal version with :gui always acts as if
-  :gui -f were used.
+  :gui -f were used. There is no way to fix this that I can see.
 - There are some small display glitches here and there that I hope to clean up
   later. Most of them occur when the window is partially obscured. Some of
-  them seem to be bugs in BeOS.
+  them seem to be bugs in BeOS, because the Terminal has similar glitches.
 - Mouse up events are not generated when outside the window. This is a bug in
   BeOS. You can notice this when selecting text and moving the cursor outside
   the window, then letting go of the mouse button.  Another way is when you
@@ -187,6 +193,17 @@ that contains the first item dropped. When starting Vim, there is no need to
 press shift: Vim behaves as if you do.
 
 Files dropped set the current argument list. |argument-list|
+
+Single Launch vs. Multiple Launch			*beos-launch*
+
+As distributed Vim's Application Flags (as seen in the FileTypes preference)
+are set to Multiple Launch. If you prefer, you can set them to Single Launch
+instead.  Attempts to start a second copy of Vim will cause the first Vim to
+open the files instead. This works from the Tracker but also from the command
+line. In the latter case, non-file (option) arguments are not supported.
+
+NB: Only the GUI version has a BApplication (and hence Application Flags).
+This section does not apply to the GUI-less version, should you compile one.
 
 Fonts							*beos-fonts*
 
@@ -256,7 +273,8 @@ reality. Vim uses this mapping:
     Button 3 -> MiddleMouse.
 
 If your mouse has fewer than 3 buttons you can provide your own mapping from
-mouse clicks with modifier(s) to other mouse buttons. |gui-mouse-mapping|
+mouse clicks with modifier(s) to other mouse buttons. See the file
+vim-5.x/macros/swapmous.vim for an example.		|gui-mouse-mapping|
 
 Colour names						*beos-colours*
 
@@ -284,8 +302,7 @@ script while in the vim-5.0/src directory:
     sub doinclude
     {
 	my $filename = $_[0];
-	my $fh;
-	$fh = new IO::File $filename, "r";
+	my $fh = new IO::File($filename, "r");
 	if (defined $fh) {
 	    print "/* Start of $filename */\n";
 
@@ -315,6 +332,20 @@ Now you can configure & make Vim without the --disable-perlinterp option.
 Be warned though that this adds about 616 kilobytes to the size of Vim!
 Without Perl, Vim with default features and GUI is about 575K, with Perl
 it is about 1191K.
+
+WARNING: Intel "architecture" detected!			*beos-ppc*
+or, Waiter, there is a fly in my soup!
+
+This means that you have made a poor choice of hardware platform.
+You'll be pleased to know that the Intel (compatibe) CPU that's inside
+your computer is nothing more than a souped-up 8-bit machine. Or perhaps I
+should not say that: it's an insult to other 8-bit CPUs.
+
+However, apart from the occasional derisory remark, you have nothing to fear
+from Vim. If you don't like them, "Use The Source, Luke!", and remove them.
+However, the copyright that I claim on the files os_beos* and gui_beos*
+prevents you from making your changed version available to others.
+I don't think this is an unreasonable limitation.
 
 -Olaf Seibert
 rhialto@polder.ubc.kun.nl

@@ -1,4 +1,4 @@
-*if_perl.txt*   For Vim version 5.0.  Last modification: 1998 Feb 14
+*if_perl.txt*   For Vim version 5.1.  Last modification: 1998 Mar 28
 
 
 		  VIM REFERENCE MANUAL    by Sven Verdoolaege
@@ -58,13 +58,15 @@ Here are some things you can try:
 >  :perl $a=1
 >  :perldo $_=reverse($_);1
 >  :perl VIM::Msg("hello")
->  :perl $line = $curwin->Buffer->Get(42)
+>  :perl $line = $curbuf->Get(42)
 
 
 							*perl-overview*
 Here is an overview of the functions that are available to Perl:
 
 >  :perl VIM::Msg("Text")		# displays a message
+>  :perl VIM::Msg("Error", "ErrorMsg")	# displays an error message
+>  :perl VIM::Msg("remark", "Comment")	# displays a highlighted message
 >  :perl VIM::SetOption("ai")		# sets a vim option
 >  :perl ($v, $success) = VIM::Eval('&path') # $v=option 'path', $success=1
 >  :perl ($v, $success) = VIM::Eval('&xyz')  # $v='' and $success=0 (no option)
@@ -74,23 +76,24 @@ Here is an overview of the functions that are available to Perl:
 >  :perl @pos = (10, 10)
 >  :perl $curwin->Cursor(@pos)		# sets cursor to @pos
 >  :perl $curwin->Cursor(10,10)		# sets cursor to row 10 col 10
->  :perl $b = $curwin->Buffer
->  :perl $b->Name()			# returns buffer name
->  :perl $b->Count()			# returns the number of lines
->  :perl $l = $b->Get(10)		# returns line 10
->  :perl @l = $b->Get(1 .. 5)		# returns lines 1 through 5
->  :perl $b->Delete(10)			# deletes line 10
->  :perl $b->Delete(10, 20)		# delete lines 10 through 20
->  :perl $b->Append(10, "Line")		# appends a line
->  :perl $b->Append(10, "Line1", "Line2", "Line3") # appends 3 lines
+>  :perl $curbuf->Name()		# returns buffer name
+>  :perl $curbuf->Count()		# returns the number of lines
+>  :perl $l = $curbuf->Get(10)		# returns line 10
+>  :perl @l = $curbuf->Get(1 .. 5)	# returns lines 1 through 5
+>  :perl $curbuf->Delete(10)		# deletes line 10
+>  :perl $curbuf->Delete(10, 20)	# delete lines 10 through 20
+>  :perl $curbuf->Append(10, "Line")	# appends a line
+>  :perl $curbuf->Append(10, "Line1", "Line2", "Line3") # appends 3 lines
 >  :perl @l = ("L1", "L2", "L3")
->  :perl $b->Append(10, @l)		# appends L1, L2 and L3
->  :perl $b->Set(10, "Line")		# replaces line 10
->  :perl $b->Set(10, "Line1", "Line2")	# replaces lines 10 and 11
->  :perl $b->Set(10, @l)		# replaces 3 lines
+>  :perl $curbuf->Append(10, @l)	# appends L1, L2 and L3
+>  :perl $curbuf->Set(10, "Line")	# replaces line 10
+>  :perl $curbuf->Set(10, "Line1", "Line2")	# replaces lines 10 and 11
+>  :perl $curbuf->Set(10, @l)		# replaces 3 lines
 
 							*perl-Msg*
-VIM::Msg({message})	Displays the message {message}.
+VIM::Msg({msg}, {group}?)
+			Displays the message {msg}.  When {group} is supplied
+			the message will get the highlighting of that group.
 
 							*perl-SetOption*
 VIM::SetOption({arg})	Sets a vim option.  {arg} can be any argument that the
@@ -98,24 +101,26 @@ VIM::SetOption({arg})	Sets a vim option.  {arg} can be any argument that the
 			spaces are allowed in the argument!  See |:set|.
 
 							*perl-Buffers*
-VIM::Buffers({bn}?)	If {bn} is not specified the function will return
+VIM::Buffers([{bn}...])	If no arguments are specified the function will return
 			a list of all the buffers in an array context and will
 			return the number of buffers in a scalar context.
-			If {bn} is given, it will return the buffer number
-			{bn} if it exists or undef if not.
+			If a list of buffer names or numbers {bn} is given,
+			a list of the buffers matching {bn} will be returned,
+			using the same rules as Vim's internal |buffer_name()|
+			function.
 
 							*perl-Windows*
-VIM::Windows({wn}?)	If {bn} is not specified the function will return
+VIM::Windows([{wn}...])	If no arguments are specified the function will return
 			a list of all the windows in an array context and will
 			return the number of windows in a scalar context.
-			If {bn} is given, it will return the window number
-			{wn} if it exists or undef if not.
+			If a list of window numbers {wn} is given, a list of
+			the windows with those numbers will be returned.
 
 							*perl-DoCommand*
 VIM::DoCommand({cmd})	Executes Ex command {cmd}.
 
 							*perl-Eval*
-VIM::Eval({expr})    	Evaluates {expr} and returns (val, success).
+VIM::Eval({expr})    	Evaluates {expr} and returns (success, val).
 			success=1 indicates that val contains the value of
 			{expr}; success=0 indicates a failure to evaluation
 			the expression.  '@x' returns the contents of register
@@ -175,6 +180,9 @@ Buffer->Set({lnum}, {line}, {line}?, ...)
 
 $main::curwin
 			The current window object.
+
+$main::curbuf
+			The current buffer object.
 
 
  vim:tw=78:ts=8:sw=8:

@@ -76,7 +76,7 @@ STDAPI DllCanUnloadNow (void)
 		? S_OK : S_FALSE;
 }
 
-// by exporting DllRegisterServer, you can use regsvr32.exe
+// By exporting DllRegisterServer, you can use regsvr32.exe
 //
 STDAPI DllRegisterServer (void)
 {

@@ -104,6 +104,7 @@
 #		make installvimhelp	only installs the Vim help files
 #		make installlinks	only installs the Vim binary links
 #		make installhelplinks	only installs the Vim manpage links
+#		make installmacros	only installs the Vim macros
 #		make installtools	only installs the tools ctags and xxd
 
 ### This Makefile has been succesfully tested on these systems.
@@ -125,21 +126,21 @@
 #BSD/OS 3.0 (x86)     gcc gcc-2.7.2.1 -X11 X11R6	4.6c (1) Jos Backus
 #DG/UX 5.4*           gcc 2.5.8      GUI                5.0e (H) Jonas Schlein
 #DG/UX 5.4R4.20       gcc 2.7.2      GUI                5.0s (H) Rocky Olive
-#HP-UX (most)	      c89 cc				5.0v (2) Bram Moolenaar
+#HP-UX (most)	      c89 cc				5.1b (2) Bram Moolenaar
 #HP-UX_10.20          gcc 2.7.2.1    +X11 +Motif        5.0s     Karsten Sievert
 #Irix 6.3 (O2)	      cc	     ?			4.5  (L) Edouard Poor
 #Irix 6.4             cc             ?                  5.0m (S) Rick Sayre
 #Irix 64 bit						4.5  (K) Jon Wright
 #FreeBSD 2.1.6	      gcc-2.6.3      X11R6 Moo-Tiff	5.0c	 Bram Moolenaar
 #FreeBSD 2.1.6	      gcc-2.6.3      +X11 -GUI Athena	5.0c	 Bram Moolenaar
-#FreeBSD 2.2.1	      gcc-2.7.2.1    X11R6 Moo-Tiff	5.0s	 Bram Moolenaar
-#FreeBSD 2.2.1	      gcc-2.7.2.1    +X11 -GUI Athena	5.0s	 Bram Moolenaar
-#FreeBSD 2.2.5	      gcc-2.7.2.1    X11R6 Moo-Tiff	5.0v	 Bram Moolenaar
-#FreeBSD 2.2.5	      gcc-2.7.2.1    +X11 -GUI Athena	5.0v	 Bram Moolenaar
+#FreeBSD 2.2.5	      gcc-2.7.2.1    X11R6 Moo-Tiff	5.1	 Bram Moolenaar
+#FreeBSD 2.2.5	      gcc-2.7.2.1    +X11 -GUI Athena	5.1	 Bram Moolenaar
 #Linux 2.0	      gcc-2.7.2      Infomagic Motif	4.3  (3) Ronald Rietman
 #Linux 2.0.29	      gcc-2.7.2.1    +X11 +GUI Athena	5.0x     Ant. Colombo
 #Linux 2.0.31         gcc            +X11 +GUI Athena   5.0w (U) Darren Hiebert
 #Linux 2.0.33	      gcc-2.7.2.1    X11R6, Lesstif	5.0s	 Tony Nugent
+#LynxOS 2.5.0         gcc-2.7-96q1   +X11 +GUI Athena   5.0  (O) Lorenz Hahn
+#LynxOS 2.5.0         gcc-2.7-96q1   +X11 -GUI Athena   5.0  (O) Lorenz Hahn
 #NEC UP4800 UNIX_SV 4.2MP  cc	     +X11R6 Motif,Athena4.6b (Q) Lennart Schultz
 #NetBSD 1.0A	      gcc-2.4.5      -X11 -GUI		3.21 (X) Juergen Weigert
 #NetBSD 1.2.1	      gcc-2.7.2.2    +X11 +GUI Athena	5.0n     Olaf Seibert
@@ -160,7 +161,7 @@
 #Solaris 2.6 (sun4u)  gcc 2.7.2.3    +X11 +GUI (CDE)    5.0w     D. Rothkamp
 #Solaris 2.6 (sun4u)  cc (SC4.2)     +X11R6 +GUI (CDE)	5.0v     Andrew Large
 #SunOS_5.5.1          gcc 2.7.2      +X11 +Motif        5.0s     Karsten Sievert
-#SunOS 4.1.x			     +X11 -GUI		5.0v (J) Bram Moolenaar
+#SunOS 4.1.x			     +X11 -GUI		5.1b (J) Bram Moolenaar
 #SunOS 4.1.3_U1 (sun4c) gcc          +X11 +GUI Athena   5.0w (J) Darren Hiebert
 #SUPER-UX 6.2 (NEC SX-4) cc	     +X11R6 Motif,Athena4.6b (P) Lennart Schultz
 #Unisys 6035	      cc	     +X11 Motif		3.29 (8) Glauber
@@ -192,6 +193,7 @@
 # (M)  gcc version cygnus-2.0.1 does NOT work (symptom: "dl" deletes two
 #      characters instead of one).
 # (N)  SCO with decmouse.
+# (O)  LynxOS needs EXTRA_LIBS, see below.
 # (P)  For SuperUX 6.2 on NEC SX-4 see a few lines below to uncomment.
 # (Q)  For UNIXSVR 4.2MP on NEC UP4800 see below for lines to uncomment.
 # (R)  For Solaris 2.5 (or 2.5.1) with gcc > 2.5.6, uncomment line below.
@@ -259,6 +261,8 @@ include config.mk
 # to the command line.  If you see strange flags during compilation, check in
 # config.mk where they come from.  If it's PERL_CFLAGS, try uncommenting the
 # next line.
+# When you get an error for a missing "perl.exp" file, try creating an emtpy
+# one: "touch perl.exp".
 #CONF_OPT_PERL = --disable-perlinterp
 
 ### For creating Vim with Python interface
@@ -354,6 +358,14 @@ LINT_OPTIONS = -bepruxzF
 ###	After changing this do "touch digraph.c; make".
 #EXTRA_DEFS = -DHPUX_DIGRAPHS
 
+### (2) For HP-UX 10.20 using the HP cc, with X11R6 and Motif 1.2, with
+###	libraries in /usr/lib instead of /lib (avoiding transition links).
+###	Information provided by: David Green
+#XROOT = /usr
+#ONF_OPT_X = --x-include=$(XROOT)/include/X11R6 --x-libraries=$(XROOT)/lib/X11R6
+#GUI_INC_LOC = /usr/include/Motif1.2
+#GUI_LIB_LOC = /usr/lib/Motif1.2_R6
+
 ### (5) AIX 4.1.4 with cc
 #CFLAGS = -O -qmaxmem=8092
 
@@ -416,11 +428,10 @@ LINT_OPTIONS = -bepruxzF
 #EXTRA_LIBS = -lposix -lbsd -ltermcap -lX11
 
 ### (A)  SCO Open Server 5 (Jan Christiaan van Winkel)
-###	 Also use the TERM_LIB below!
+###	 Also use the CONF_TERM_LIB below!
 #EXTRA_LIBS = -lgen
 
 ### (D)  QNX (by G.F. Desrochers)
-###	 Also change "STRIP = strip" into "STRIP = echo" below
 #CFLAGS = -g -O -mf -4
 
 ### (F)  QNX (by John Oleynick)
@@ -487,18 +498,21 @@ LINT_OPTIONS = -bepruxzF
 ###	 which is found by configure, doesn't work correctly.  Symptom is the
 ###	 error message "Termcap entry too long".  Uncomment the next line.
 ### after changing this, you need to do "make distclean; make".
-#TERM_LIB = -lcurses
+#CONF_TERM_LIB = --with-tlib=curses
 
 ### (E)  If you want to use termlib library instead of the automatically found
 ###	 one.  After changing this, you need to do "make distclean; make".
-#TERM_LIB = -ltermlib
+#CONF_TERM_LIB = --with-tlib=termlib
 
 ### If you want to use ncurses library instead of the automatically found one
 ### after changing this, you need to do "make distclean; make".
-#TERM_LIB = -lncurses
+#CONF_TERM_LIB = --with-tlib=ncurses
 
 ### For GCC on MSDOS, the ".exe" suffix will be added.
 #SUFFIX = .exe
+
+### (O)  For LynxOS 2.5.0, tested on PC.
+#EXTRA_LIBS = -lXext -lSM -lICE -lbsd
 
 ##################### end of system specific lines ###################
 
@@ -549,10 +563,12 @@ MANSUBDIR = $(MANDIR)/man1
 VIMDIR = /vim
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
+MACROSUBDIR = /macros
 
 ### VIMLOC	common root of the Vim files
 ### HELPSUBLOC	location for help files
 ### SYNSUBLOC	location for syntax files
+### MACROSUBLOC	location for macro files
 ### SCRIPTLOC	location for script files (menu.vim, bugreport.vim)
 ### You can override these if you want to install them somewhere else.
 ### Edit feature.h for compile-time settings.
@@ -560,12 +576,18 @@ VIMLOC		= $(DATADIR)$(VIMDIR)
 HELPSUBLOC	= $(VIMLOC)$(HELPSUBDIR)
 SCRIPTLOC	= $(VIMLOC)
 SYNSUBLOC	= $(VIMLOC)$(SYNSUBDIR)
+MACROSUBLOC	= $(VIMLOC)$(MACROSUBDIR)
 
 ### Added for the Debian GNU/Linux packaged version of Vim, to get around
 ### some sed trickery. (the files are installed into a temporary directory
 ### for building the package, but they eventually end up in /usr/... . This
 ### ensures that the correct path is put into the man page.)
 HELPENDLOC = $(HELPSUBLOC)
+#HELPENDLOC = /usr/doc/vim
+SYNTAXENDLOC = $(SYNSUBLOC)
+#SYNTAXENDLOC = /usr/lib/vim/syntax
+SCRIPTENDLOC = $(SCRIPTLOC)
+#SCRIPTENDLOC = /etc
 
 ### Name of the menu file target.
 SYS_MENU_FILE	= $(SCRIPTLOC)/menu.vim
@@ -574,7 +596,7 @@ SYS_MENU_FILE	= $(SCRIPTLOC)/menu.vim
 SYS_BUGR_FILE	= $(SCRIPTLOC)/bugreport.vim
 
 ### Program to run on installed binary
-STRIP = strip
+#STRIP = strip
 
 ### Permissions for vim binary
 BINMOD = 755
@@ -599,6 +621,9 @@ SCRIPTSOURCE = ..
 
 # Where to copy the syntax files from
 SYNSOURCE = ../syntax
+
+# Where to copy the macro files from
+MACROSOURCE = ../macros
 
 # If you are using Linux, you might want to use this to make vim the
 # default vi editor, it will create a link from vi to Vim when doing
@@ -910,9 +935,9 @@ tools: $(TOOLS)
 # Run ./configure with all the setting above.
 config: configure
 	GUI_INC_LOC="$(GUI_INC_LOC)" GUI_LIB_LOC="$(GUI_LIB_LOC)" \
-		CC="$(CC)" CFLAGS="$(CFLAGS)" TERM_LIB="$(TERM_LIB)" \
+		CC="$(CC)" CFLAGS="$(CFLAGS)" \
 	$(CONF_SHELL) ./configure $(CONF_OPT_GUI) $(CONF_OPT_X) \
-	$(CONF_OPT_PERL) $(CONF_OPT_PYTHON) $(CONF_ARGS)
+	$(CONF_OPT_PERL) $(CONF_OPT_PYTHON) $(CONF_TERM_LIB) $(CONF_ARGS)
 
 # When configure.in has changed, run autoconf to produce configure
 # If you don't have autoconf, use the configure that's there
@@ -1017,11 +1042,11 @@ testclean:
 #
 install: installvim installtools
 
-installvim: installvimbin installvimhelp installlinks installhelplinks
+installvim: installvimbin installvimhelp installlinks installhelplinks installmacros
 
 installvimbin: $(VIMTARGET) $(exec_prefix) $(BINDIR)
-	-mv -f $(BINDIR)/$(VIMTARGET)$(SUFFIX) $(BINDIR)/$(VIMTARGET).old
-	-rm -f $(BINDIR)/$(VIMTARGET).old
+	-mv -f $(BINDIR)/$(VIMTARGET)$(SUFFIX) $(BINDIR)/$(VIMTARGET).rm
+	-rm -f $(BINDIR)/$(VIMTARGET).rm
 	cp $(VIMTARGET)$(SUFFIX) $(BINDIR)
 	$(STRIP) $(BINDIR)/$(VIMTARGET)$(SUFFIX)
 	chmod $(BINMOD) $(BINDIR)/$(VIMTARGET)$(SUFFIX)
@@ -1030,8 +1055,14 @@ installvimbin: $(VIMTARGET) $(exec_prefix) $(BINDIR)
 
 # install the help files; first adjust the contents for the location
 installvimhelp: $(MANSUBDIR) $(VIMLOC) $(HELPSUBLOC) $(SYNSUBLOC)
-	sed -e s+/usr/local/lib/vim+$(HELPENDLOC)+ $(HELPSOURCE)/vim.1 \
-			> $(MANSUBDIR)/$(VIMTARGET).1
+	sed -e s+/usr/local/lib/vim+$(VIMLOC)+ \
+		-e s+$(VIMLOC)/doc+$(HELPENDLOC)+ \
+		-e s+$(VIMLOC)/syntax+$(SYNTAXENDLOC)+ \
+		-e s+$(VIMLOC)/vimrc+$(SCRIPTENDLOC)/vimrc+ \
+		-e s+$(VIMLOC)/gvimrc+$(SCRIPTENDLOC)/gvimrc+ \
+		-e s+$(VIMLOC)/menu.vim+$(SCRIPTENDLOC)/menu.vim+ \
+		-e s+$(VIMLOC)/bugreport.vim+$(SCRIPTENDLOC)/bugreport.vim+ \
+		$(HELPSOURCE)/vim.1 > $(MANSUBDIR)/$(VIMTARGET).1
 	chmod $(MANMOD) $(MANSUBDIR)/$(VIMTARGET).1
 	cp $(HELPSOURCE)/*.txt $(HELPSOURCE)/tags $(HELPSUBLOC)
 	chmod $(HELPMOD) $(HELPSUBLOC)/*.txt $(HELPSUBLOC)/tags
@@ -1045,19 +1076,22 @@ installvimhelp: $(MANSUBDIR) $(VIMLOC) $(HELPSUBLOC) $(SYNSUBLOC)
 	cp $(SYNSOURCE)/*.vim $(SYNSUBLOC)
 	chmod $(HELPMOD) $(SYNSUBLOC)/*.vim
 
+installmacros: $(VIMLOC) $(MACROSUBLOC)
+	cp -r $(MACROSOURCE)/* $(MACROSUBLOC)
+
 # install helper programs ctags and xxd
 installtools: $(TOOLS) $(exec_prefix) $(BINDIR) $(MANSUBDIR)
 	cd ctags; mandir="$(MANDIR)" exec_prefix="$(exec_prefix)" \
 		bindir="$(BINDIR)" $(MAKE) -e -f Makefile install
-	-mv -f $(BINDIR)/xxd$(SUFFIX) $(BINDIR)/xxd.old
-	-rm -f $(BINDIR)/xxd.old
+	-mv -f $(BINDIR)/xxd$(SUFFIX) $(BINDIR)/xxd.rm
+	-rm -f $(BINDIR)/xxd.rm
 	cp xxd/xxd$(SUFFIX) $(BINDIR)
 	$(STRIP) $(BINDIR)/xxd$(SUFFIX)
 	chmod $(BINMOD) $(BINDIR)/xxd$(SUFFIX)
 	cp $(HELPSOURCE)/xxd.1 $(MANSUBDIR)
 	chmod $(MANMOD) $(MANSUBDIR)/xxd.1
 
-$(exec_prefix) $(BINDIR) $(MANSUBDIR) $(VIMLOC) $(HELPSUBLOC) $(SYNSUBLOC):
+$(exec_prefix) $(BINDIR) $(MANSUBDIR) $(VIMLOC) $(HELPSUBLOC) $(SYNSUBLOC) $(MACROSUBLOC):
 	-ctags/mkinstalldirs $@
 	-chmod $(DIRMOD) $@
 
@@ -1132,6 +1166,7 @@ uninstall:
 	-rm -f $(MANSUBDIR)/$(RGVIMTARGET).1 $(MANSUBDIR)/$(RGVIEWTARGET).1
 	-rm -f $(HELPSUBLOC)/*.txt $(HELPSUBLOC)/tags
 	-rm -f $(SYNSUBLOC)/*.vim
+	-rm -rf $(MACROSUBLOC)
 	-rm -f $(SYS_MENU_FILE) $(SYS_BUGR_FILE)
 	-rmdir $(HELPSUBLOC) $(SYNSUBLOC) $(VIMLOC)
 
@@ -1145,7 +1180,7 @@ clean celan: testclean
 		cd ctags; $(MAKE) -f Makefile clean; \
 	fi
 
-shadow:	doc menu.vim bugreport.vim syntax
+shadow:	doc menu.vim bugreport.vim syntax macros
 	mkdir shadow
 	cd shadow; ln -s ../*.[ch] ../*.in ../*.sh ../*.xs ../toolcheck ../proto ../configure .
 	cd shadow; rm -f osdef.h config.h pathdef.c link.sed
@@ -1171,6 +1206,9 @@ bugreport.vim:
 
 syntax:
 	-ln -s ../syntax .
+
+macros:
+	-ln -s ../macros .
 
 # Start configure from scratch
 scrub scratch:

@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1998 Jan 12
+" Last change:	1998 Feb 20
 
 " Transform a file into HTML, using the current syntax highlighting.
 " Does NOT support background colors.
@@ -34,14 +34,14 @@ if bg == ""
    endif
 endif
 
+" Insert HTML header, with the background color.  Add the foreground color
+" only when it is defined.
+exec "normal a<HTML>\n<HEAD>\n<TITLE>".expand("%:t")."</TITLE>\n</HEAD>\n<BODY BGCOLOR=".bg."\e"
 if fg != ""
-  let norm = "<FONT COLOR=" . fg . ">"
-else
-  let norm = ""
+  exec "normal a TEXT=".fg."\e"
 endif
+exec "normal a>\n<PRE>\n\e"
 
-" Insert HTML header.  First find out the background color.
-exec "normal a<HTML>\n<HEAD>\n<TITLE>".expand("%:t")."</TITLE>\n</HEAD>\n<BODY BGCOLOR=".bg.">\n<PRE>\n\e"
 exec "normal \<C-W>p"
 
 " Loop over all lines in the buffer
@@ -122,9 +122,6 @@ while lnum <= line("$")
       let color = synIDattr(synIDtrans(id), "fg#")
       if color != ""
 	let new = new . "<FONT COLOR=" . color . ">"
-      elseif norm != ""
-        let new = new . norm
-	let color = fg
       endif
     endif
     let col = col + 1

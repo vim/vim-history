@@ -2,28 +2,16 @@
 " Language:	HTML
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/html.vim
-" Last change:	1998 Jan 12
+" Last change:	1998 Mar 28
 
-" This syntax file will highlight all known html tags and arguments.
-" Unknwon tag names and unknown argument names are colored differently
-" so that the error is immediatly visible.
-" Javascript snippets are also colored in a way similar to java, however,
-" instead of black text the normal text is colored as 'Special' which makes
-" it easy to spot javascript inside html pages. Errors caused by wrong parens
-" are flagged too, though for some reason the coloring does not work
-" correctly.
+" Please check :help html.vim for some comments and a description of the options
 
 " Remove any old syntax stuff hanging around
 syn clear
 syn case ignore
 
-" Only tags and special chars (&auml;) are highlighted
-" Known tag names and arg names are colored the same way
-" as statements and types, while unknwon ones as function.
-
 " mark illegal characters
 syn match htmlError "[<>&]"
-
 
 " tags
 syn match   htmlSpecial  contained "\\[0-9][0-9][0-9]\|\\."
@@ -36,13 +24,14 @@ syn match   htmlTagError contained "[^>]<"ms=s+1
 
 " tag names
 syn keyword htmlTagName contained address applet area a base basefont
-syn keyword htmlTagName contained big blockquote body br b caption center
-syn keyword htmlTagName contained cite code dd dfn dir div dl dt em font
-syn keyword htmlTagName contained form h1 h2 h3 h4 h5 h6 head hr html img
-syn keyword htmlTagName contained input isindex i kbd link li link map menu
-syn keyword htmlTagName contained meta ol option param pre p samp
-syn keyword htmlTagName contained select small strike strong style sub sup
-syn keyword htmlTagName contained table td textarea th title tr tt ul u var
+syn keyword htmlTagName contained big blockquote br caption center
+syn keyword htmlTagName contained cite code dd dfn dir div dl dt font
+syn keyword htmlTagName contained form hr html img
+syn keyword htmlTagName contained input isindex kbd li link map menu
+syn keyword htmlTagName contained meta ol option param pre p samp span
+syn keyword htmlTagName contained select small strike style sub sup
+syn keyword htmlTagName contained table td textarea th tr tt ul var
+syn match htmlTagName contained "\<\(b\|i\|u\|h[1-6]\|em\|strong\|head\|body\|title\)\>"
 
 " legal arg names
 syn keyword htmlArg contained action
@@ -50,26 +39,24 @@ syn keyword htmlArg contained align alink alt archive background bgcolor
 syn keyword htmlArg contained border bordercolor cellpadding
 syn keyword htmlArg contained cellspacing checked clear code codebase color
 syn keyword htmlArg contained cols colspan content coords enctype face
-syn keyword htmlArg contained gutter height href hspace
+syn keyword htmlArg contained gutter height hspace
 syn keyword htmlArg contained link lowsrc marginheight
 syn keyword htmlArg contained marginwidth maxlength method name prompt
 syn keyword htmlArg contained rel rev rows rowspan scrolling selected shape
 syn keyword htmlArg contained size src start target text type url
 syn keyword htmlArg contained usemap ismap valign value vlink vspace width wrap
 syn match   htmlArg contained "http-equiv"
+syn match   htmlArg contained "href"
+
 " Netscape extensions
-syn keyword htmlTagName contained frame frameset nobr span
+syn keyword htmlTagName contained frame frameset nobr 
 syn keyword htmlTagName contained layer ilayer nolayer spacer
 syn keyword htmlArg     contained frameborder noresize pagex pagey above below
 syn keyword htmlArg     contained left top visibility clip id noshade
 syn match   htmlArg     contained "z-index"
 
-
 " special characters
 syn match htmlSpecialChar "&[^;]*;"
-
-" server-parsed commands
-syn region htmlPreProc start=+<!--#+ end=+-->+
 
 " The real comments (this implements the comments as defined by html,
 " but not all html pages actually conform to it. Errors are flagged.
@@ -77,6 +64,50 @@ syn region htmlComment                start=+<!+        end=+>+ contains=htmlCom
 syn region htmlComment                start=+<!DOCTYPE+ end=+>+
 syn match  htmlCommentError contained "[^><!]"
 syn region htmlCommentPart  contained start=+--+        end=+--+
+
+" server-parsed commands
+syn region htmlPreProc start=+<!--#+ end=+-->+
+
+if !exists("html_no_rendering")
+  " rendering
+  syn region htmlBold start="<b\>" end="</b>"me=e-4 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript,htmlBoldUnderline,htmlBoldItalic
+  syn region htmlBold start="<strong\>" end="</strong>"me=e-9 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript,htmlBoldUnderline,htmlBoldItalic
+  syn region htmlBoldUnderline contained start="<u\>" end="</u>"me=e-4 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript,htmlBoldUnderlineItalic
+  syn region htmlBoldItalic contained start="<i\>" end="</i>"me=e-4 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript,htmlBoldItalicUnderline
+  syn region htmlBoldItalic contained start="<em\>" end="</em>"me=e-5 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript,htmlBoldItalicUnderline
+  syn region htmlBoldUnderlineItalic contained start="<i\>" end="</i>"me=e-4 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript
+  syn region htmlBoldUnderlineItalic contained start="<em\>" end="</em>"me=e-5 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript
+  syn region htmlBoldItalicUnderline contained start="<u\>" end="</u>"me=e-4 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript,htmlBoldUnderlineItalic
+  
+  syn region htmlUnderline start="<u\>" end="</u>"me=e-4 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript,htmlUnderlineBold,htmlUnderlineItalic
+  syn region htmlUnderlineBold contained start="<b\>" end="</b>"me=e-4 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript,htmlUnderlineBoldItalic
+  syn region htmlUnderlineBold contained start="<strong\>" end="</strong>"me=e-9 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript,htmlUnderlineBoldItalic
+  syn region htmlUnderlineItalic contained start="<i\>" end="</i>"me=e-4 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript,htmUnderlineItalicBold
+  syn region htmlUnderlineItalic contained start="<em\>" end="</em>"me=e-5 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript,htmUnderlineItalicBold
+  syn region htmlUnderlineItalicBold contained start="<b\>" end="</b>"me=e-4 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript
+  syn region htmlUnderlineItalicBold contained start="<strong\>" end="</strong>"me=e-9 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript
+  syn region htmlUnderlineBoldItalic contained start="<i\>" end="</i>"me=e-4 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript
+  syn region htmlUnderlineBoldItalic contained start="<em\>" end="</em>"me=e-5 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript
+  
+  syn region htmlItalic start="<i\>" end="</i>"me=e-4 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript,htmlItalicBold,htmlItalicUnderline
+  syn region htmlItalic start="<em\>" end="</em>"me=e-5 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript
+  syn region htmlItalicBold contained start="<b\>" end="</b>"me=e-4 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript,htmlItalicBoldUnderline
+  syn region htmlItalicBold contained start="<strong\>" end="</strong>"me=e-9 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript,htmlItalicBoldUnderline
+  syn region htmlItalicBoldUnderline contained start="<u\>" end="</u>"me=e-4 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript
+  syn region htmlItalicUnderline contained start="<u\>" end="</u>"me=e-4 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript,htmlItalicUnderlineBold
+  syn region htmlItalicUnderlineBold contained start="<b\>" end="</b>"me=e-4 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript
+  syn region htmlItalicUnderlineBold contained start="<strong\>" end="</strong>"me=e-9 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript
+  
+  syn region htmlLink start="<a\>[^>]*href\>" end="</a>"me=e-4 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,javaScript
+  syn region htmlH1 start="<h1\>" end="</h1>"me=e-5 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript
+  syn region htmlH2 start="<h2\>" end="</h2>"me=e-5 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript
+  syn region htmlH3 start="<h3\>" end="</h3>"me=e-5 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript
+  syn region htmlH4 start="<h4\>" end="</h4>"me=e-5 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript
+  syn region htmlH5 start="<h5\>" end="</h5>"me=e-5 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript
+  syn region htmlH6 start="<h6\>" end="</h6>"me=e-5 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript
+  syn region htmlHead start="<head\>" end="</head>"me=e-7 end="<body\>"me=e-5 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,htmlTitle,javaScript
+  syn region htmlTitle start="<title\>" end="</title>"me=e-8 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,javaScript
+endif
 
 " JAVA SCRIPT
 syn keyword htmlTagName                contained noscript
@@ -125,12 +156,41 @@ syn sync minlines=10
 if !exists("did_html_syntax_inits")
   let did_html_syntax_inits = 1
   " The default methods for highlighting.  Can be overridden later
-  hi link htmlTag                       Function
-  hi link htmlEndTag                    Identifier
-  hi link htmlArg                       Type
-  hi link htmlTagName                   htmlStatement
-  hi link htmlValue                     Value
-  hi link htmlSpecialChar               Special
+  hi link htmlTag                 Function
+  hi link htmlEndTag              Identifier
+  hi link htmlArg                 Type
+  hi link htmlTagName             htmlStatement
+  hi link htmlValue               Value
+  hi link htmlSpecialChar         Special
+
+  if !exists("html_no_rendering") 
+    hi link htmlH1                  Title
+    hi link htmlH2                  htmlH1
+    hi link htmlH3                  htmlH2
+    hi link htmlH4                  htmlH3
+    hi link htmlH5                  htmlH4
+    hi link htmlH6                  htmlH5
+    hi link htmlHead                PreProc
+    hi link htmlTitle               Title
+    hi link htmlBoldItalicUnderline htmlBoldUnderlineItalic
+    hi link htmlUnderlineBold       htmlBoldUnderline 
+    hi link htmlUnderlineItalicBold htmlBoldUnderlineItalic
+    hi link htmlUnderlineBoldItalic htmlBoldUnderlineItalic
+    hi link htmlItalicUnderline     htmlUnderlineItalic
+    hi link htmlItalicBold          htmlBoldItalic
+    hi link htmlItalicBoldUnderline htmlBoldUnderlineItalic
+    hi link htmlItalicUnderlineBold htmlBoldUnderlineItalic
+    if !exists("html_my_rendering")
+      hi htmlLink                term=underline cterm=underline ctermfg=blue gui=underline guifg=blue
+      hi htmlBold                term=bold cterm=bold gui=bold
+      hi htmlBoldUnderline       term=bold,underline cterm=bold,underline gui=bold,underline
+      hi htmlBoldItalic          term=bold,italic cterm=bold,italic gui=bold,italic
+      hi htmlBoldUnderlineItalic term=bold,italic,underline cterm=bold,italic,underline gui=bold,italic,underline
+      hi htmlUnderline           term=underline cterm=underline gui=underline
+      hi htmlUnderlineItalic     term=italic,underline cterm=italic,underline gui=italic,underline
+      hi htmlItalic              term=italic cterm=italic gui=italic
+    endif
+  endif
 
   hi link htmlSpecial                   Special
   hi link htmlSpecialChar               Special

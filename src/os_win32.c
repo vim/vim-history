@@ -16,7 +16,7 @@
  * Portions lifted from the Win32 SDK samples, the MSDOS-dependent code,
  * NetHack 3.1.3, GNU Emacs 19.30, and Vile 5.5.
  *
- * George V. Reilly <gvr@halcyon.com> wrote most of this.
+ * George V. Reilly <georgere@microsoft.com> wrote most of this.
  * Roger Knobbe <rogerk@wonderware.com> did the initial port of Vim 3.0.
  */
 
@@ -85,7 +85,7 @@ FILE* fdDump = NULL;
 #if defined(__BORLANDC__) || defined(__GNUC__)
 typedef BOOL (*PFNGCKLN)(LPSTR);
 #else
-typedef WINBASEAPI BOOL (*PFNGCKLN)(LPSTR);
+typedef WINBASEAPI BOOL (WINAPI *PFNGCKLN)(LPSTR);
 #endif
 PFNGCKLN    s_pfnGetConsoleKeyboardLayoutName = NULL;
 #endif
@@ -365,6 +365,12 @@ win32_kbd_patch_key(
  * decode_key_event() may crash (e.g. when hitting caps-lock) */
 #pragma optimize("", on)
 
+#if (_MSC_VER < 1100)
+/* MUST turn off global optimisation for this next function, or
+ * pressing ctrl-minus in insert mode crashes Vim when built with
+ * VC4.1. -- negri. */
+#pragma optimize("g", off)
+#endif
 
 static BOOL g_fJustGotFocus = FALSE;
 
@@ -470,6 +476,7 @@ decode_key_event(
 
     return (*pch != NUL);
 }
+#pragma optimize("", on)
 #endif /* USE_GUI_WIN32 */
 
 
@@ -1093,6 +1100,9 @@ mch_windinit()
     g_attrCurrent = g_attrDefault = csbi.wAttributes;
     GetConsoleCursorInfo(g_hSavOut, &g_cci);
 
+    /* set termcap codes to current text attributes */
+    update_tcap(csbi.wAttributes);
+
     GetConsoleMode(g_hConIn,  &g_cmodein);
     GetConsoleMode(g_hSavOut, &g_cmodeout);
 
@@ -1274,14 +1284,15 @@ canonicalize_filename(
 fname_case(
     char_u *name)
 {
-    char szTrueName[_MAX_PATH + 1];
+    char szTrueName[_MAX_PATH + 2];
     char *psz, *pszPrev;
     const int len = (name != NULL)  ?  STRLEN(name)  :	0;
 
     if (len == 0)
 	return;
 
-    STRCPY(szTrueName, name);
+    STRNCPY(szTrueName, name, _MAX_PATH);
+    szTrueName[_MAX_PATH] = '\0';   /* ensure it's sealed off! */
     STRCAT(szTrueName, "\\");	/* sentinel */
 
     for (psz = szTrueName;  *psz != NUL;  psz++)
@@ -1440,7 +1451,13 @@ mch_dirname(
     char_u	*buf,
     int		len)
 {
-    return (getcwd(buf, len) != NULL ? OK : FAIL);
+    /*
+     * Originally this was:
+     *    return (getcwd(buf, len) != NULL ? OK : FAIL);
+     * But the Win32s known bug list says that getcwd() doesn't work
+     * so use the Win32 system call instead. <Negri>
+     */
+    return (GetCurrentDirectory(len,buf) != 0 ? OK : FAIL);
 }
 
 
@@ -1479,7 +1496,7 @@ mch_FullName(
 mch_isFullName(
     char_u *fname)
 {
-    char szName[_MAX_PATH];
+    char szName[_MAX_PATH+1];
 
     mch_FullName(fname, szName, _MAX_PATH, FALSE);
 
@@ -1826,25 +1843,32 @@ ConsoleCtrlHandler(DWORD what)
     static void
 mch_open_console(void)
 {
-   COORD size;
-   SMALL_RECT window_size;
-   HANDLE console_handle;
+    COORD	size;
+    SMALL_RECT	window_size;
+    HANDLE	console_handle;
 
-   AllocConsole();
+    AllocConsole();
 
-   size.X = 80;
-   size.Y = 25;
-   window_size.Left = 0;
-   window_size.Top = 0;
-   window_size.Right = 79;
-   window_size.Bottom = 25;
+    /* On windows 95, we must use a 25x80 console size, to avoid trouble with
+     * some DOS commands */
+    if (g_PlatformId != VER_PLATFORM_WIN32_NT)
+    {
+	console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
 
-   console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
-   SetConsoleScreenBufferSize(console_handle, size);
-   /* Force the console window to be of the same size as the screen
-    * buffer, otherwise it might be too small on Windows NT. */
-   SetConsoleWindowInfo(console_handle, TRUE, &window_size);
-   SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleCtrlHandler, TRUE);
+	size.X = 80;
+	size.Y = 25;
+	window_size.Left = 0;
+	window_size.Top = 0;
+	window_size.Right = 79;
+	window_size.Bottom = 24;
+
+	/* First set the window size, then also resize the screen buffer, to
+	 * avoid a scrollbar */
+	SetConsoleWindowInfo(console_handle, TRUE, &window_size);
+	SetConsoleScreenBufferSize(console_handle, size);
+    }
+
+    SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleCtrlHandler, TRUE);
 }
 
     static void
@@ -1930,6 +1954,8 @@ mch_display_error()
  *    3. Wait for the subprocess to terminate and get its exit code
  *    4. Prompt the user to press a key to close the console window
  */
+static BOOL fUseConsole = TRUE;
+
     static int
 mch_system(char * cmd, int options)
 {
@@ -1949,17 +1975,21 @@ mch_system(char * cmd, int options)
      * message at the end, and wait for the user to close the console
      * window manually...
      */
-    mch_open_console();
-
-    /*
-     * Write the command to the console, so the user can see what is going on.
-     */
+    if (fUseConsole)
     {
-	HANDLE hStderr = GetStdHandle(STD_ERROR_HANDLE);
-	DWORD number;
+	mch_open_console();
 
-	WriteConsole(hStderr, cmd, STRLEN(cmd), &number, NULL);
-	WriteConsole(hStderr, "\n", 1, &number, NULL);
+	/*
+	 * Write the command to the console, so the user can see what is going
+	 * on.
+	 */
+	{
+	    HANDLE hStderr = GetStdHandle(STD_ERROR_HANDLE);
+	    DWORD number;
+
+	    WriteConsole(hStderr, cmd, STRLEN(cmd), &number, NULL);
+	    WriteConsole(hStderr, "\n", 1, &number, NULL);
+	}
     }
 
     /* Now, run the command */
@@ -1976,10 +2006,13 @@ mch_system(char * cmd, int options)
 
 
     /* Wait for the command to terminate before continuing */
-    WaitForSingleObject(pi.hProcess, INFINITE);
+    if (fUseConsole)
+    {
+	WaitForSingleObject(pi.hProcess, INFINITE);
 
-    /* Get the command exit code */
-    GetExitCodeProcess(pi.hProcess, &ret);
+	/* Get the command exit code */
+	GetExitCodeProcess(pi.hProcess, &ret);
+    }
 
     /* Close the handles to the subprocess, so that it goes away */
     CloseHandle(pi.hThread);
@@ -1988,7 +2021,8 @@ mch_system(char * cmd, int options)
     /* Close the console window. If we are not redirecting output, wait for
      * the user to press a key.
      */
-    mch_close_console(!(options & SHELL_DOOUT));
+    if (fUseConsole)
+	mch_close_console(!(options & SHELL_DOOUT));
 
     return ret;
 }
@@ -2062,6 +2096,9 @@ mch_call_shell(
 	/* we use "command" or "cmd" to start the shell; slow but easy */
 	char_u *newcmd;
 
+#ifdef USE_GUI_WIN32
+	fUseConsole = (STRNICMP(cmd, "start ", 6) != 0);
+#endif
 	newcmd = lalloc(STRLEN(p_sh) + STRLEN(p_shcf) + STRLEN(cmd) + 3, TRUE);
 	if (newcmd != NULL)
 	{
@@ -2137,12 +2174,13 @@ mch_expandpath(
     char_u		*path,
     int			flags)
 {
-    char		buf[_MAX_PATH];
+    char		buf[_MAX_PATH+1];
     char		*p, *s, *e;
     int			start_len, c = 1;
     WIN32_FIND_DATA	fb;
     HANDLE		hFind;
     int			matches;
+    int			start_dot_ok;
 
     start_len = gap->ga_len;
 
@@ -2172,8 +2210,27 @@ mch_expandpath(
     else
 	s = buf;
 
+#ifdef USE_GUI_WIN32
+    if (gui_is_win32s())
+    {
+	/* It appears the Win32s FindFirstFile() call doesn't like a pattern
+	 * such as \sw\rel1.0\cod* because of the dot in the directory name.
+	 * It doesn't match files with extensions.
+	 * if the file name ends in "*" and does not contain a "." after the
+	 * last \ , add ".*"
+	 */
+	if (e[-1] == '*' && vim_strchr(s, '.') == NULL)
+	{
+	    *e++ = '.';
+	    *e++ = '*';
+	}
+    }
+#endif
+
     /* now we have one wildcard component between `s' and `e' */
     *e = NUL;
+
+    start_dot_ok = (buf[0] == '.' || buf[0] == '*');
 
     /* If we are expanding wildcards, we try both files and directories */
     if ((hFind = FindFirstFile(buf, &fb)) != INVALID_HANDLE_VALUE)
@@ -2182,13 +2239,18 @@ mch_expandpath(
 	    STRCPY(s, fb.cFileName);
 
 	    /*
-	     * Ignore "." and "..".
-	     * When more follows, this must be a directory.
+	     * Ignore "." and "..".  When more follows, this must be a
+	     * directory.
+	     * Find*File() returns matches that start with a '.', even though
+	     * the pattern doesn't start with '.'.  Filter them out manually.
 	     */
-	    if ((s[0] != '.' || (s[1] != NUL && (s[1] != '.' || s[2] != NUL)))
+	    if ((s[0] != '.'
+			|| (start_dot_ok
+			    && s[1] != NUL
+			    && (s[1] != '.' || s[2] != NUL)))
 		    && (*path == NUL || mch_isdir(buf)))
 	    {
-		strcat(buf, path);
+		STRCAT(buf, path);
 		if (mch_has_wildcard(path))	    /* handle more wildcards */
 		    (void)mch_expandpath(gap, buf, flags);
 		else if (mch_getperm(buf) >= 0)	    /* add existing file */
@@ -3183,8 +3245,8 @@ win95rename(
     const char	*pszOldFile,
     const char	*pszNewFile)
 {
-    char	szTempFile[_MAX_PATH];
-    char	szNewPath[_MAX_PATH];
+    char	szTempFile[_MAX_PATH+1];
+    char	szNewPath[_MAX_PATH+1];
     char	*pszFilePart;
     HANDLE	hf;
 

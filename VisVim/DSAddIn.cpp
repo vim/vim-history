@@ -44,43 +44,27 @@ STDMETHODIMP CDSAddIn::OnConnection (IApplication * pApp, VARIANT_BOOL bFirstTim
 		m_dwCookie));
 
 	// Inform DevStudio of the commands we implement
-
-	// The command name should not be localized to other languages.  The
-	// tooltip, command description, and other strings related to this
-	// command are stored in the string table (IDS_CMD_STRING) and should
-	// be localized.
-	LPCTSTR szCommand = _T ("VisVim");
-	VARIANT_BOOL bRet;
-	CString strCmdString;
-
-	strCmdString.LoadString (IDS_CMD_STRING);
-	strCmdString = szCommand + strCmdString;
-	CComBSTR bszCmdString (strCmdString);
-	CComBSTR bszMethod (_T ("VisVimMethod"));
-	CComBSTR bszCmdName (szCommand);
-
-	VERIFY_OK (pApplication->AddCommand (bszCmdString, bszMethod, 0,
-					     m_dwCookie, &bRet));
-	if (bRet == VARIANT_FALSE)
-	{
-		// AddCommand failed because a command with this name already
-		// exists. You may try adding your command under a different name.
-		// Or, you can fail to load as we will do here.
-		*OnConnection = VARIANT_FALSE;
-		return S_OK;
-	}
-
-	// Add toolbar buttons only if this is the first time the add-in
-	// is being loaded.  Toolbar buttons are automatically remembered
-	// by Developer Studio from session to session, so we should only
-	// add the toolbar buttons once.
-	if (bFirstTime == VARIANT_TRUE)
-	{
-		VERIFY_OK (pApplication->
-		       AddCommandBarButton (dsGlyph, bszCmdName, m_dwCookie));
-	}
+	if (! AddCommand (pApplication, "VisVimDialog", "VisVimDialogCmd",
+			  IDS_CMD_DIALOG, 0, bFirstTime))
+		goto Error;
+	if (! AddCommand (pApplication, "VisVimEnable", "VisVimEnableCmd",
+			  IDS_CMD_ENABLE, 1, bFirstTime))
+		goto Error;
+	if (! AddCommand (pApplication, "VisVimDisable", "VisVimDisableCmd",
+			  IDS_CMD_DISABLE, 2, bFirstTime))
+		goto Error;
+	if (! AddCommand (pApplication, "VisVimToggle", "VisVimToggleCmd",
+			  IDS_CMD_TOGGLE, 3, bFirstTime))
+		goto Error;
+	if (! AddCommand (pApplication, "VisVimLoad", "VisVimLoadCmd",
+			  IDS_CMD_LOAD, 4, bFirstTime))
+		goto Error;
 
 	*OnConnection = VARIANT_TRUE;
+	return S_OK;
+
+   Error:
+	*OnConnection = VARIANT_FALSE;
 	return S_OK;
 }
 
@@ -94,4 +78,42 @@ STDMETHODIMP CDSAddIn::OnDisconnection (VARIANT_BOOL bLastTime)
 	m_pCommands = NULL;
 
 	return S_OK;
+}
+
+// Add a command to DevStudio
+// Creates a toolbar button for the command also.
+// 'MethodName' is the name of the methode specified in the .odl file
+// 'StrResId' the resource id of the descriptive string
+// 'GlyphIndex' the image index into the command buttons bitmap
+// Return true on success
+//
+bool CDSAddIn::AddCommand (IApplication* pApp, char* MethodName, char* CmdName,
+			   UINT StrResId, UINT GlyphIndex, VARIANT_BOOL bFirstTime)
+{
+	CString CmdString;
+	CString CmdText;
+
+	CmdText.LoadString (StrResId);
+	CmdString = CmdName;
+	CmdString += CmdText;
+
+	CComBSTR bszCmdString (CmdString);
+	CComBSTR bszMethod (MethodName);
+	CComBSTR bszCmdName (CmdName);
+
+	VARIANT_BOOL bRet;
+	VERIFY_OK (pApp->AddCommand (bszCmdString, bszMethod, GlyphIndex,
+				     m_dwCookie, &bRet));
+	if (bRet == VARIANT_FALSE)
+		// AddCommand failed because a command with this name already exists.
+		return FALSE;
+
+	// Add toolbar buttons only if this is the first time the add-in
+	// is being loaded.  Toolbar buttons are automatically remembered
+	// by Developer Studio from session to session, so we should only
+	// add the toolbar buttons once.
+	if (bFirstTime == VARIANT_TRUE)
+		VERIFY_OK (pApp->AddCommandBarButton (dsGlyph, bszCmdName, m_dwCookie));
+
+	return TRUE;
 }

@@ -1,6 +1,19 @@
 Exuberant Ctags
 ===============
 
+2.0.3 (98-Mar-12):
+------------------
+Added new sub-flag 'C' to the -i option to allow adding extra tags to
+the tag filei for class methods and members in the form "class::member".
+
+Corrected lack of error message when external sort failed because of
+lack of temp space.
+
+Added configure check for "strip" program.
+
+Cosmetic changes to Makefile.os2
+
+
 2.0.2 (98-Feb-25):
 ------------------
 Cleanup of types which generated compiler warnings on some systems.

@@ -8,7 +8,7 @@ T_VIOBJNOMUNGE
 	    IV tmp = SvIV((SV*)SvRV($arg));
 	    $var = ($type) tmp;
 	    if (!tmp)
-		croak(\"screen no longer exists\");
+		croak(\"$ntype no longer exists\");
 	}
 	else
 	    croak(\"$var is not of type ${ntype}\")

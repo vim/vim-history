@@ -128,13 +128,6 @@ SOURCE=.\VisVim.odl
 # Begin Source File
 
 SOURCE=.\VisVim.rc
-
-!IF  "$(CFG)" == "VisVim - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "VisVim - Win32 Debug"
-
-!ENDIF 
-
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -166,6 +159,38 @@ SOURCE=.\VisVim.h
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe"
 # Begin Source File
 
+SOURCE=.\Res\DisableL.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Res\DisableM.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Res\DlgL.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Res\DlgM.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Res\EnableL.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Res\EnableM.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Res\GotoL.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Res\GotoM.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\TBarLrge.bmp
 # End Source File
 # Begin Source File
@@ -174,10 +199,19 @@ SOURCE=.\res\TBarMedm.bmp
 # End Source File
 # Begin Source File
 
-SOURCE=.\res\VisVim.rc2
-# PROP Exclude_From_Scan -1
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
+SOURCE=.\Res\ToggleL.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Res\ToggleM.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Res\ToolbarL.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Res\ToolbarM.bmp
 # End Source File
 # End Group
 # End Target

@@ -107,7 +107,7 @@
 {
 	if (asdfasdf;asldkfj asdlkfj as;ldkfj sal;d
 			aal;sdkjf  ( ;asldfkja;sldfk
-					al;sdjfka ;slkdf ) sa;ldkjfsa dlk;)
+				al;sdjfka ;slkdf ) sa;ldkjfsa dlk;)
 		line up here;
 }
 
@@ -182,9 +182,9 @@
 
 {
 	if (alskdfj ;alsdkfjal;skdjf (;sadlkfsa ;dlkf j;alksdfj ;alskdjf
-			alsdkfj (asldk;fj
+				alsdkfj (asldk;fj
 					awith cino=(0 ;lf this one goes to below the paren with ==
-							;laksjfd ;lsakdjf ;alskdf asd)
+						;laksjfd ;lsakdjf ;alskdf asd)
 					asdfasdf;)))
 		asdfasdf;
 }
@@ -195,7 +195,7 @@ func(a, b)
 	int c;
 {
 	if (c1 && (c2 ||
-			c3))
+				c3))
 		foo;
 	if (c1 &&
 			(c2 || c3)
@@ -432,6 +432,12 @@ main()
 	misplacedline;
 }
 
+{
+	if (clipboard.state == SELECT_DONE
+			&& ((row == clipboard.start.lnum
+					&& col >= clipboard.start.col)
+				|| row > clipboard.start.lnum))
+}
 
 /* end of AUTO */
 

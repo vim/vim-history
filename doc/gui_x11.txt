@@ -1,4 +1,4 @@
-*gui_x11.txt*   For Vim version 5.0.  Last modification: 1998 Feb 18
+*gui_x11.txt*   For Vim version 5.1.  Last modification: 1998 Apr 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -138,6 +138,13 @@ The resources can also be set with arguments to vim:
    +rv			idem				*-+rv*
    -xrm <resource>	Set the specified resource	*-xrm*
 
+Note about reverse video: Vim checks that the result is actually a light text
+on a dark background.  The reason is that some X11 versions swap the colors,
+and some don't.  These two examples will both give yellow text on a blue
+background:
+    gvim -fg Yellow -bg Blue -reverse
+    gvim -bg Yellow -fg Blue -reverse
+
 ==============================================================================
 3. Shell Commands					*gui-pty*
 
@@ -189,6 +196,27 @@ For example:
 
 >  :10amenu File.Print :w !lpr -Php3
 >  :10vmenu File.Print :w !lpr -Php3
+
+							*X11-icon*
+A Vim icon is included as $VIM/vim32x32.xpm.  Unfortunately, how you should
+install it depends on your window manager.
+
+If you use one of the fvwm* family of window managers simply add this line to
+your .fvwm2rc configuration file:
+
+> Style "vim"		Icon vim32x32.xpm
+
+Make sure the icon file's location is consistent with the window manager's
+IconPath statement.  Either modify the IconPath from within your .fvwm2rc or
+drop the icon into one the pre-defined directories:
+
+> IconPath /usr/X11R6/include/X11/pixmaps:/usr/X11R6/include/X11/bitmaps
+
+For CDE "dtwm" (a derivative of Motif) add this line in the .Xdefaults:
+>  Dtwm*Vim*iconImage: /usr/local/share/vim/vim32x32.xpm
+
+For "mwm" (Motif window manager) the line would be:
+>  Mwm*Vim*iconImage: /usr/local/share/vim/vim32x32.xpm
 
 ==============================================================================
 5. Compiling						*gui-x11-compiling*

@@ -249,7 +249,7 @@ set_reg_ic(pat)
     char_u *p;
 
     reg_ic = p_ic;
-    if (!no_smartcase && p_scs
+    if (reg_ic && !no_smartcase && p_scs
 #ifdef INSERT_EXPAND
 				&& !(ctrl_x_mode && curbuf->b_p_inf)
 #endif
@@ -535,7 +535,7 @@ searchit(buf, pos, dir, str, count, options, pat_use)
 	else if ((options & SEARCH_MSG) == SEARCH_MSG)
 	{
 	    if (p_ws)
-		EMSG2("Pattern not found: %s", mr_pattern);
+		emsg2(e_patnotf2, mr_pattern);
 	    else if (lnum == 0)
 		EMSG2("search hit TOP without match for: %s", mr_pattern);
 	    else
@@ -583,7 +583,6 @@ do_search(oap, dirc, str, count, options)
     char_u	    *p;
     long	    c;
     char_u	    *dircp;
-    int		    i = 0;	/* init for GCC */
 
     /*
      * A line offset is not remembered, this is vi compatible.
@@ -729,23 +728,21 @@ do_search(oap, dirc, str, count, options)
 	{
 	    if (spats[0].off.off > 0)
 	    {
-		c = spats[0].off.off;
-		while (c--)
-		    if ((i = dec(&pos)) != 0)
+		for (c = spats[0].off.off; c; --c)
+		    if (decl(&pos) == -1)
 			break;
-		if (i == -1)		    /* at start of buffer */
+		if (c)			/* at start of buffer */
 		{
-		    pos.lnum = 0;	    /* allow lnum == 0 here */
+		    pos.lnum = 0;	/* allow lnum == 0 here */
 		    pos.col = MAXCOL;
 		}
 	    }
 	    else
 	    {
-		c = -spats[0].off.off;
-		while (c--)
-		    if ((i = inc(&pos)) != 0)
+		for (c = spats[0].off.off; c; ++c)
+		    if (incl(&pos) == -1)
 			break;
-		if (i == -1)		    /* at end of buffer */
+		if (c)			/* at end of buffer */
 		{
 		    pos.lnum = curbuf->b_ml.ml_line_count + 1;
 		    pos.col = 0;
@@ -795,19 +792,22 @@ do_search(oap, dirc, str, count, options)
 	    }
 	    else
 	    {
-				    /* to the right, check for end of line */
+		/* to the right, check for end of file */
 		if (spats[0].off.off > 0)
 		{
-		    p = ml_get_pos(&pos) + 1;
-		    c = spats[0].off.off;
-		    while (c-- && *p++ != NUL)
-			++pos.col;
+		    for (c = spats[0].off.off; c; --c)
+			if (incl(&pos) == -1)
+			    break;
 		}
-		else		    /* to the left, check for start of line */
+		/* to the left, check for start of file */
+		else
 		{
-		    if ((c = pos.col + spats[0].off.off) < 0)
-			c = 0;
-		    pos.col = c;
+		    if ((c = pos.col + spats[0].off.off) >= 0)
+			pos.col = c;
+		    else
+			for (c = spats[0].off.off; c; ++c)
+			    if (decl(&pos) == -1)
+				break;
 		}
 	    }
 	}

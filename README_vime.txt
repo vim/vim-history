@@ -1,6 +1,6 @@
-README for version 5.0 extra files of Vim: Vi IMproved.
+README_vime.txt for version 5.1 extra files of Vim: Vi IMproved.
 
-See the README in the main distribution for an explanation of what Vim is,
+See the README.txt in the main distribution for an explanation of what Vim is,
 www and e-mail adresses, and restrictions for distributing.
 The vime (vim-extra) distribution is useless without the main distribution.
 
@@ -36,7 +36,9 @@ os_win32	Files for Win32 port.
 
 gui_w32		Files for Win32 GUI.
 Gvim_vc.mak	MS Visual C++ makefile for the Win32 GUI.
+rgb.txt		File with color definitions for the Win32 GUI
 
 if_ole		OLE automation interface, for MS Windows 95 and NT.
 
 VisVim		Integration of Win32 GUI with MS Visual Developer Studio.
+

@@ -1,4 +1,4 @@
-*os_msdos.txt*  For Vim version 5.0.  Last modification: 1998 Feb 08
+*os_msdos.txt*  For Vim version 5.1.  Last modification: 1998 Feb 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -7,7 +7,7 @@
 						*msdos* *ms-dos*
 This file contains the particularities for the MS-DOS version of Vim.
 
-1. Three versions for MS-DOS	|msdos-versions|
+1. Two versions for MS-DOS	|msdos-versions|
 2. Known problems		|msdos-problems|
 3. Long file names		|msdos-longfname|
 4. Termcap codes		|msdos-termcap|

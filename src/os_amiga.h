@@ -92,7 +92,7 @@ typedef long off_t;
 #endif
 
 #ifndef VIM_HLP
-# define VIM_HLP	"vim:doc/help.txt"
+# define VIM_HLP	"$VIM/doc/help.txt"
 #endif
 
 #ifndef DEF_BDIR

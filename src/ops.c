@@ -67,6 +67,7 @@ static char_u	*get_expr_line __ARGS((void));
 static void	get_yank_register __ARGS((int regname, int writing));
 static int	stuff_yank __ARGS((int, char_u *));
 static int	put_in_typebuf __ARGS((char_u *s, int colon));
+static void	stuffescaped __ARGS((char_u *arg));
 static int	get_spec_reg __ARGS((int regname, char_u **argp, int *allocated));
 static void	free_yank __ARGS((long));
 static void	free_yank_all __ARGS((void));
@@ -75,7 +76,7 @@ static void	block_prep __ARGS((OPARG *oap, struct block_def *, linenr_t, int));
 static void	str_to_reg __ARGS((struct yankreg *y_ptr, int type, char_u *str, long len));
 #endif
 static int	same_leader __ARGS((int, char_u *, int, char_u *));
-static int	fmt_end_block __ARGS((linenr_t, int *, char_u **));
+static int	fmt_check_par __ARGS((linenr_t, int *, char_u **));
 
 /*
  * op_shift - handle a shift operation
@@ -602,8 +603,9 @@ put_in_typebuf(s, colon)
  * return FAIL for failure, OK otherwise
  */
     int
-insert_reg(regname)
+insert_reg(regname, literally)
     int regname;
+    int literally;	/* insert literally, not as if typed */
 {
     long    i;
     int	    retval = OK;
@@ -634,7 +636,10 @@ insert_reg(regname)
     {
 	if (arg == NULL)
 	    return FAIL;
-	stuffReadbuff(arg);
+	if (literally)
+	    stuffescaped(arg);
+	else
+	    stuffReadbuff(arg);
 	if (allocated)
 	    vim_free(arg);
     }
@@ -647,18 +652,37 @@ insert_reg(regname)
 	{
 	    for (i = 0; i < y_current->y_size; ++i)
 	    {
-		stuffReadbuff(y_current->y_array[i]);
+		if (literally)
+		    stuffescaped(y_current->y_array[i]);
+		else
+		    stuffReadbuff(y_current->y_array[i]);
 		/*
 		 * Insert a newline between lines and after last line if
 		 * y_type is MLINE.
 		 */
 		if (y_current->y_type == MLINE || i < y_current->y_size - 1)
-		    stuffReadbuff((char_u *)"\n");
+		    stuffcharReadbuff('\n');
 	    }
 	}
     }
 
     return retval;
+}
+
+/*
+ * Stuff a string into the typeahead buffer, such that edit() will insert it
+ * literally.
+ */
+    static void
+stuffescaped(arg)
+    char_u	*arg;
+{
+    while (*arg)
+    {
+	if ((*arg < ' ' && *arg != TAB) || *arg > '~')
+	    stuffcharReadbuff(Ctrl('V'));
+	stuffcharReadbuff(*arg++);
+    }
 }
 
 /*
@@ -1141,7 +1165,14 @@ op_change(oap)
 #endif
     }
 
-    if (op_delete(oap) == FAIL)
+    /* First delete the text in the region.  In an empty buffer only need to
+     * save for undo */
+    if (curbuf->b_ml.ml_flags & ML_EMPTY)
+    {
+	if (u_save_cursor() == FAIL)
+	    return FALSE;
+    }
+    else if (op_delete(oap) == FAIL)
 	return FALSE;
 
     if ((l > curwin->w_cursor.col) && !lineempty(curwin->w_cursor.lnum))
@@ -2206,23 +2237,36 @@ op_format(oap)
     OPARG	*oap;
 {
     long	old_line_count = curbuf->b_ml.ml_line_count;
-    int		prev_is_blank = FALSE;
-    int		is_end_block = TRUE;
-    int		next_is_end_block;
-    int		leader_len = 0;	    /* init for gcc */
-    int		next_leader_len;
-    char_u	*leader_flags = NULL;
-    char_u	*next_leader_flags;
+    int		is_not_par;		/* current line not part of parag. */
+    int		next_is_not_par;	/* next line not part of paragraph */
+    int		is_end_par;		/* at end of paragraph */
+    int		prev_is_end_par = FALSE;/* prev. line not part of parag. */
+    int		leader_len = 0;		/* leader len of current line */
+    int		next_leader_len;	/* leader len of next line */
+    char_u	*leader_flags = NULL;	/* flags for leader of current line */
+    char_u	*next_leader_flags;	/* flags for leader of next line */
     int		advance = TRUE;
     int		second_indent = -1;
     int		do_second_indent;
     int		first_par_line = TRUE;
     int		smd_save;
     long	count;
+    int		need_set_indent = TRUE;	/* set indent of next paragraph */
+    int		force_format = FALSE;
+    int		max_len;
+    int		screenlines = -1;
 
     if (u_save((linenr_t)(oap->start.lnum - 1),
 				       (linenr_t)(oap->end.lnum + 1)) == FAIL)
 	return;
+
+    /* When formatting less than a screenfull, will try to speed up redrawing
+     * by inserting/deleting screen lines */
+    if (oap->end.lnum - oap->start.lnum < Rows)
+	screenlines = plines_m(oap->start.lnum, oap->end.lnum);
+
+    /* length of a line to force formatting: 3 * 'tw' */
+    max_len = comp_textwidth(TRUE) * 3;
 
     /* Set '[ mark at the start of the formatted area */
     curbuf->b_op_start = oap->start;
@@ -2232,25 +2276,28 @@ op_format(oap)
     do_second_indent = has_format_option(FO_Q_SECOND);
 
     /*
-     * get info about the previous and current line.
+     * Get info about the previous and current line.
      */
     if (curwin->w_cursor.lnum > 1)
-	is_end_block = fmt_end_block(curwin->w_cursor.lnum - 1,
+	is_not_par = fmt_check_par(curwin->w_cursor.lnum - 1,
+						  &leader_len, &leader_flags);
+    else
+	is_not_par = TRUE;
+    next_is_not_par = fmt_check_par(curwin->w_cursor.lnum,
 					&next_leader_len, &next_leader_flags);
-    next_is_end_block = fmt_end_block(curwin->w_cursor.lnum,
-					&next_leader_len, &next_leader_flags);
+    is_end_par = (is_not_par || next_is_not_par);
 
     curwin->w_cursor.lnum--;
-    for (count = oap->line_count; count > 0; --count)
+    for (count = oap->line_count; count > 0 && !got_int; --count)
     {
 	/*
-	 * Advance to next block.
+	 * Advance to next paragraph.
 	 */
 	if (advance)
 	{
 	    curwin->w_cursor.lnum++;
-	    prev_is_blank = is_end_block;
-	    is_end_block = next_is_end_block;
+	    prev_is_end_par = is_end_par;
+	    is_not_par = next_is_not_par;
 	    leader_len = next_leader_len;
 	    leader_flags = next_leader_flags;
 	}
@@ -2260,80 +2307,119 @@ op_format(oap)
 	 */
 	if (count == 1)
 	{
-	    next_is_end_block = TRUE;
+	    next_is_not_par = TRUE;
 	    next_leader_len = 0;
 	    next_leader_flags = NULL;
 	}
 	else
-	    next_is_end_block = fmt_end_block(curwin->w_cursor.lnum + 1,
+	    next_is_not_par = fmt_check_par(curwin->w_cursor.lnum + 1,
 					&next_leader_len, &next_leader_flags);
 	advance = TRUE;
+	is_end_par = (is_not_par || next_is_not_par);
 
 	/*
-	 * For the first line of a paragraph, check indent of second line.
-	 * Don't do this for comments and empty lines.
+	 * Skip lines that are not in a paragraph.
 	 */
-	if (first_par_line && do_second_indent &&
-		prev_is_blank && !is_end_block &&
-		curwin->w_cursor.lnum < curbuf->b_ml.ml_line_count &&
-		leader_len == 0 && next_leader_len == 0 &&
-		!lineempty(curwin->w_cursor.lnum + 1))
-	    second_indent = get_indent_lnum(curwin->w_cursor.lnum + 1);
-
-	/*
-	 * Skip end-of-block (blank) lines
-	 */
-	if (is_end_block)
-	{
-	}
-	/*
-	 * If we have got to the end of a paragraph, format it.
-	 */
-	else if (next_is_end_block || !same_leader(leader_len, leader_flags,
-					  next_leader_len, next_leader_flags))
-	{
-	    /* replace indent in first line with minimal number of tabs and
-	     * spaces, according to current options */
-	    set_indent(get_indent(), TRUE);
-
-	    /* put cursor on last non-space */
-	    coladvance(MAXCOL);
-	    while (curwin->w_cursor.col && vim_isspace(gchar_cursor()))
-		dec_cursor();
-
-	    /* do the formatting, without 'showmode' */
-	    State = INSERT;	/* for open_line() */
-	    smd_save = p_smd;
-	    p_smd = FALSE;
-	    insertchar(NUL, TRUE, second_indent, FALSE);
-	    State = NORMAL;
-	    p_smd = smd_save;
-	    first_par_line = TRUE;
-	    second_indent = -1;
-	}
-	else
+	if (!is_not_par)
 	{
 	    /*
-	     * Still in same paragraph, so join the lines together.
-	     * But first delete the comment leader from the second line.
+	     * For the first line of a paragraph, check indent of second line.
+	     * Don't do this for comments and empty lines.
 	     */
-	    advance = FALSE;
-	    curwin->w_cursor.lnum++;
-	    curwin->w_cursor.col = 0;
-	    (void)del_chars((long)next_leader_len, FALSE);
-	    curwin->w_cursor.lnum--;
-	    if (do_join(TRUE, FALSE) == FAIL)
+	    if (first_par_line
+		    && do_second_indent
+		    && prev_is_end_par
+		    && curwin->w_cursor.lnum < curbuf->b_ml.ml_line_count
+		    && leader_len == 0
+		    && next_leader_len == 0
+		    && !lineempty(curwin->w_cursor.lnum + 1))
+		second_indent = get_indent_lnum(curwin->w_cursor.lnum + 1);
+
+	    /*
+	     * When the comment leader changes, it's the end of the paragraph.
+	     */
+	    if (curwin->w_cursor.lnum >= curbuf->b_ml.ml_line_count
+		    || !same_leader(leader_len, leader_flags,
+					  next_leader_len, next_leader_flags))
+		is_end_par = TRUE;
+
+	    /*
+	     * If we have got to the end of a paragraph, or the line is
+	     * getting long, format it.
+	     */
+	    if (is_end_par || force_format)
 	    {
-		beep_flush();
-		break;
+		if (need_set_indent)
+		    /* replace indent in first line with minimal number of
+		     * tabs and spaces, according to current options */
+		    set_indent(get_indent(), TRUE);
+
+		/* put cursor on last non-space */
+		coladvance(MAXCOL);
+		while (curwin->w_cursor.col && vim_isspace(gchar_cursor()))
+		    dec_cursor();
+
+		/* do the formatting, without 'showmode' */
+		State = INSERT;	/* for open_line() */
+		smd_save = p_smd;
+		p_smd = FALSE;
+		insertchar(NUL, TRUE, second_indent, FALSE);
+		State = NORMAL;
+		p_smd = smd_save;
+		second_indent = -1;
+		/* at end of par.: need to set indent of next par. */
+		need_set_indent = is_end_par;
+		if (is_end_par)
+		    first_par_line = TRUE;
+		force_format = FALSE;
 	    }
-	    first_par_line = FALSE;
+
+	    /*
+	     * When still in same paragraph, join the lines together.  But
+	     * first delete the comment leader from the second line.
+	     */
+	    if (!is_end_par)
+	    {
+		advance = FALSE;
+		curwin->w_cursor.lnum++;
+		curwin->w_cursor.col = 0;
+		(void)del_chars((long)next_leader_len, FALSE);
+		curwin->w_cursor.lnum--;
+		if (do_join(TRUE, FALSE) == FAIL)
+		{
+		    beep_flush();
+		    break;
+		}
+		first_par_line = FALSE;
+		/* If the line is getting long, format it next time */
+		if (STRLEN(ml_get_curline()) > (size_t)max_len)
+		    force_format = TRUE;
+		else
+		    force_format = FALSE;
+	    }
 	}
+	line_breakcheck();
     }
     fo_do_comments = FALSE;
+
+    /*
+     * Try to correct the number of lines on the screen, to speed up
+     * displaying.
+     */
+    if (screenlines > 0)
+    {
+	screenlines -= plines_m(oap->start.lnum, curwin->w_cursor.lnum);
+	if (screenlines > 0)
+	    win_del_lines(curwin, curwin->w_cline_row, screenlines,
+								 FALSE, TRUE);
+	else if (screenlines < 0)
+	    win_ins_lines(curwin, curwin->w_cline_row, screenlines,
+								 FALSE, TRUE);
+    }
+
     /*
      * Leave the cursor at the first non-blank of the last formatted line.
-     * If the cursor was move one line back (e.g. with "Q}") go to the next
+     * If the cursor was moved one line back (e.g. with "Q}") go to the next
      * line, so "." will do the next lines.
      */
     if (oap->end_adjusted && curwin->w_cursor.lnum < curbuf->b_ml.ml_line_count)
@@ -2355,7 +2441,7 @@ op_format(oap)
  * comment leader changes -- webb.
  */
     static int
-fmt_end_block(lnum, leader_len, leader_flags)
+fmt_check_par(lnum, leader_len, leader_flags)
     linenr_t	lnum;
     int		*leader_len;
     char_u	**leader_flags;

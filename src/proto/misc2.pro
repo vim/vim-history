@@ -50,3 +50,4 @@ int get_fileformat __ARGS((BUF *buf));
 void set_fileformat __ARGS((int t));
 int default_fileformat __ARGS((void));
 int call_shell __ARGS((char_u *cmd, int opt));
+int get_real_state __ARGS((void));

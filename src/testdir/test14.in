@@ -1,8 +1,14 @@
 Tests for "vaBiB", end could be wrong.
+Also test ":s/pat/sub/" with different ~s in sub.
 
 STARTTEST
 /Start cursor here
 vaBiBD:?Bug?,$w! test.out
+/^- Bug
+:s/u/~u~/
+:s/i/~u~/
+:s/o/~~~/
+:.w >>test.out
 :qa!
 ENDTEST
 

@@ -1221,6 +1221,10 @@ redrawcmd()
      * in cmdline mode we can reset them now.
      */
     msg_scroll = FALSE;		/* next message overwrites cmdline */
+    
+    /* Typing ':' at the more prompt may set skip_redraw.  We don't want this
+     * in cmdline mode */
+    skip_redraw = FALSE;
 }
 
     void
@@ -1374,6 +1378,7 @@ nextwild(type)
  *
  * options = WILD_LIST_NOTFOUND:    list entries without a match
  * options = WILD_HOME_REPLACE:	    do home_replace() for buffer names
+ * options = WILD_USE_NL:	    Use '\n' for WILD_ALL
  */
     char_u *
 ExpandOne(str, orig, options, mode)
@@ -1453,13 +1458,14 @@ ExpandOne(str, orig, options, mode)
     {
 	vim_free(orig_save);
 	orig_save = orig;
+
 	if (ExpandFromContext(str, &cmd_numfiles, &cmd_files, FALSE,
 							     options) == FAIL)
 	    /* error: do nothing */;
 	else if (cmd_numfiles == 0)
 	{
 	    if (!expand_interactively)
-		emsg(e_nomatch);
+		emsg2(e_nomatch2, str);
 	}
 	else
 	{
@@ -1480,6 +1486,25 @@ ExpandOne(str, orig, options, mode)
 	    {
 		for (i = 0; i < cmd_numfiles; ++i)
 		{
+		    /* for ":set path=" we need to escape spaces twice */
+		    if (expand_set_path)
+		    {
+			p = vim_strsave_escaped(cmd_files[i], (char_u *)" ");
+			if (p != NULL)
+			{
+			    vim_free(cmd_files[i]);
+			    cmd_files[i] = p;
+#if defined(BACKSLASH_IN_FILENAME) || defined(COLON_AS_PATHSEP)
+			    p = vim_strsave_escaped(cmd_files[i],
+							       (char_u *)" ");
+			    if (p != NULL)
+			    {
+				vim_free(cmd_files[i]);
+				cmd_files[i] = p;
+			    }
+#endif
+			}
+		    }
 		    p = vim_strsave_escaped(cmd_files[i],
 #ifdef BACKSLASH_IN_FILENAME
 						    (char_u *)" *?[{`$%#"
@@ -1497,6 +1522,7 @@ ExpandOne(str, orig, options, mode)
 			cmd_files[i] = p;
 		    }
 		}
+		expand_set_path = FALSE;
 	    }
 
 	    if (mode != WILD_ALL && mode != WILD_LONGEST)
@@ -1599,7 +1625,7 @@ ExpandOne(str, orig, options, mode)
 	    {
 		STRCAT(ss, cmd_files[i]);
 		if (i != cmd_numfiles - 1)
-		    STRCAT(ss, " ");
+		    STRCAT(ss, (options & WILD_USE_NL) ? "\n" : " ");
 	    }
 	}
     }
@@ -1609,6 +1635,7 @@ ExpandOne(str, orig, options, mode)
 	FreeWild(cmd_numfiles, cmd_files);
 	cmd_numfiles = -1;
     }
+
     return ss;
 }
 
@@ -1740,6 +1767,7 @@ showmatches()
 	    }
 	    lastlen = msg_outtrans_attr(p, j ? attr : 0);
 	}
+	msg_clr_eos();
 	msg_putchar('\n');
 	out_flush();		    /* show one line at a time */
 	if (got_int)
@@ -1838,7 +1866,10 @@ addstar(fname, len)
 	{
 	    STRNCPY(retval, fname, len);
 	    retval[len] = NUL;
-	    backslash_halve(retval, TRUE);	/* remove some backslashes */
+#ifndef macintosh
+	    if (!expand_set_path)
+		backslash_halve(retval, TRUE);	/* remove some backslashes */
+#endif
 	    len = STRLEN(retval);
 
 	    /*
@@ -1946,7 +1977,6 @@ ExpandFromContext(pat, num_file, file, files_only, options)
     vim_regexp	*prog;
     int		ret;
     int		flags;
-
     flags = 0;
     if (!files_only)
 	flags |= EW_DIR;
@@ -1956,8 +1986,27 @@ ExpandFromContext(pat, num_file, file, files_only, options)
     if (!expand_interactively || expand_context == EXPAND_FILES)
 	return expand_wildcards(1, &pat, num_file, file, flags|EW_FILE);
     else if (expand_context == EXPAND_DIRECTORIES)
-	return expand_wildcards(1, &pat, num_file, file,
+    {
+	int	free_pat = FALSE;
+	int	i;
+
+	/* for ":set path=" we need to remove backslashes for escaped space */
+	if (expand_set_path)
+	{
+	    free_pat = TRUE;
+	    pat = vim_strsave(pat);
+	    for (i = 0; pat[i]; ++i)
+		if (pat[i] == '\\' && pat[i + 1] == '\\' &&
+				      pat[i + 2] == '\\' && pat[i + 3] == ' ')
+		    STRCPY(pat + i, pat + i + 3);
+	}
+
+	ret = expand_wildcards(1, &pat, num_file, file,
 						 (flags | EW_DIR) & ~EW_FILE);
+	if (free_pat)
+	    vim_free(pat);
+	return ret;
+    }
 
     *file = (char_u **)"";
     *num_file = 0;
@@ -1972,7 +2021,7 @@ ExpandFromContext(pat, num_file, file, files_only, options)
     if (expand_context == EXPAND_BUFFERS)
 	return ExpandBufnames(pat, num_file, file, options);
     else if (expand_context == EXPAND_TAGS)
-	return find_tags(pat, num_file, file, TAG_WILD | TAG_NAMES, MAXCOL);
+	return find_tags(pat, num_file, file, TAG_REGEXP | TAG_NAMES, MAXCOL);
 
     prog = vim_regcomp(pat, (int)p_magic);
     if (prog == NULL)

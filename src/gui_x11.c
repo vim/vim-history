@@ -461,7 +461,8 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 #endif
 
     /* Check for Alt/Meta key (Mod1Mask) */
-    if (len == 1 && (ev_press->state & Mod1Mask))
+    if (len == 1 && (ev_press->state & Mod1Mask)
+			&& !(key_sym == XK_BackSpace || key_sym == XK_Delete))
     {
 	/*
 	 * Before we set the 8th bit, check to make sure the user doesn't
@@ -803,25 +804,25 @@ gui_mch_init()
     if (gui.menu_height != MENU_DEFAULT_HEIGHT)
 	gui.menu_height_fixed = TRUE;
 
-    /* For reverse video, swap foreground and background colours */
-    if (gui.rev_video)
-    {
-	gui.norm_pixel = gui.def_back_pixel;
-	gui.back_pixel = gui.def_norm_pixel;
-	gui.def_norm_pixel = gui.norm_pixel;
-	gui.def_back_pixel = gui.back_pixel;
-    }
-    else
-    {
-	gui.norm_pixel = gui.def_norm_pixel;
-	gui.back_pixel = gui.def_back_pixel;
-    }
+    /* Set default foreground and background colours */
+    gui.norm_pixel = gui.def_norm_pixel;
+    gui.back_pixel = gui.def_back_pixel;
 
     /* Create shell widget to put vim in */
     vimShell = XtVaCreatePopupShell("VIM",
 	topLevelShellWidgetClass, AppShell,
 	XtNborderWidth, 0,
 	NULL);
+
+    /* Check if reverse video needs to be applied (on Sun it's done by X) */
+    if (gui.rev_video && gui_mch_get_lightness(gui.back_pixel)
+				      > gui_mch_get_lightness(gui.norm_pixel))
+    {
+	gui.norm_pixel = gui.def_back_pixel;
+	gui.back_pixel = gui.def_norm_pixel;
+	gui.def_norm_pixel = gui.norm_pixel;
+	gui.def_back_pixel = gui.back_pixel;
+    }
 
     /* Get the colors from the "Normal" and "Menu" group (set in syntax.c or
      * in a vimrc file) */
@@ -968,24 +969,24 @@ gui_mch_exit(rc)
     void
 gui_mch_set_winsize(width, height, min_width, min_height,
 		    base_width, base_height)
-    int	    width;
-    int	    height;
-    int	    min_width;
-    int	    min_height;
-    int	    base_width;
-    int	    base_height;
+    int		width;
+    int		height;
+    int		min_width;
+    int		min_height;
+    int		base_width;
+    int		base_height;
 {
     XtVaSetValues(vimShell,
-	XtNwidthInc,   gui.char_width,
-	XtNheightInc,  gui.char_height,
+	XtNwidthInc,	gui.char_width,
+	XtNheightInc,	gui.char_height,
 #if defined(XtSpecificationRelease) && XtSpecificationRelease >= 4
-	XtNbaseWidth,  base_width,
-	XtNbaseHeight, base_height,
+	XtNbaseWidth,	base_width,
+	XtNbaseHeight,	base_height,
 #endif
-	XtNminWidth,   min_width,
-	XtNminHeight,  min_height,
-	XtNwidth,      width,
-	XtNheight,     height,
+	XtNminWidth,	min_width,
+	XtNminHeight,	min_height,
+	XtNwidth,	width,
+	XtNheight,	height,
 	NULL);
 }
 
@@ -1741,6 +1742,9 @@ clip_x11_convert_selection_cb(w, selection, target, type, value, length, format)
     if (!clipboard.owned)
 	return False;	    /* Shouldn't ever happen */
 
+    if (*target != clipboard.atom && *target != XA_STRING)
+	return False;
+
     clip_get_selection();
     motion_type = clip_convert_selection(&string, length);
     if (motion_type < 0)
@@ -1749,13 +1753,14 @@ clip_x11_convert_selection_cb(w, selection, target, type, value, length, format)
     /* For our own format, the first byte contains the motion type */
     if (*target == clipboard.atom)
 	(*length)++;
-    else if (*target != XA_STRING)
-	return False;
 
     *value = XtMalloc((Cardinal)*length);
     result = (char_u *)*value;
     if (result == NULL)
+    {
+	vim_free(string);
 	return False;
+    }
     if (*target == XA_STRING)
 	vim_memmove(result, string, (size_t)(*length));
     else
@@ -1765,6 +1770,7 @@ clip_x11_convert_selection_cb(w, selection, target, type, value, length, format)
     }
     *type = *target;
     *format = 8;	    /* 8 bits per char */
+    vim_free(string);
     return True;
 }
 
@@ -1954,7 +1960,7 @@ gui_mch_stop_blink()
 	blink_timer = (XtIntervalId)0;
     }
     if (blink_state == BLINK_OFF)
-	gui_update_cursor(TRUE);
+	gui_update_cursor(TRUE, FALSE);
     blink_state = BLINK_NONE;
 }
 
@@ -1973,7 +1979,7 @@ gui_mch_start_blink()
 	blink_timer = XtAppAddTimeOut(app_context, blink_waittime,
 						      gui_x11_blink_cb, NULL);
 	blink_state = BLINK_ON;
-	gui_update_cursor(TRUE);
+	gui_update_cursor(TRUE, FALSE);
     }
 }
 
@@ -1992,7 +1998,7 @@ gui_x11_blink_cb(timed_out, interval_id)
     }
     else
     {
-	gui_update_cursor(TRUE);
+	gui_update_cursor(TRUE, FALSE);
 	blink_state = BLINK_ON;
 	blink_timer = XtAppAddTimeOut(app_context, blink_ontime,
 						      gui_x11_blink_cb, NULL);

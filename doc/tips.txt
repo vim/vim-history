@@ -1,4 +1,4 @@
-*tips.txt*      For Vim version 5.0.  Last modification: 1998 Feb 18
+*tips.txt*      For Vim version 5.1.  Last modification: 1998 Mar 26
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -346,15 +346,20 @@ files a bit slower.
 
 (1) Compress all the help files: "gzip doc/*.txt".
 
-(2) Edit "doc/tags" and do
->	:%s=\.txt\t/=.txt.gz\t/=
+(2) Edit "doc/tags" and change the ".txt" to ".txt.gz":
+>	:%s=\(\t.*\.txt\)\t=\1.gz\t=
 
 (3) Add these lines to your vimrc:
->	set helpfile=<dirname>/help.txt.gz
+>	augroup helpgzip
+>	autocmd!
 >	autocmd BufReadPre  *.txt.gz set bin
+>	autocmd BufReadPost *.txt.gz let ch_save = &ch|set ch=2
 >	autocmd BufReadPost *.txt.gz '[,']!gunzip
 >	autocmd BufReadPost *.txt.gz set nobin
->	set cmdheight=2
+>	autocmd BufReadPost *.txt.gz let &ch = ch_save|unlet ch_save
+>	autocmd BufReadPost *.txt.gz execute ":doautocmd BufReadPost " . expand("%:r")
+>	augroup END
+>	set helpfile=<dirname>/help.txt.gz
 
 Where <dirname> is the directory where the help files are.  If you have
 already included autocommands to edit ".gz" files, you should omit the three

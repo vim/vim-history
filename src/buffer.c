@@ -29,9 +29,10 @@
 static void	enter_buffer __ARGS((BUF *));
 static char_u	*buflist_match __ARGS((vim_regexp *prog, BUF *buf));
 static char_u	*buflist_match_try __ARGS((vim_regexp *prog, char_u *name));
-static void	buflist_setlnum __ARGS((BUF *, linenr_t));
-static void	free_buf_winlnum __ARGS((BUF *buf));
+static void	buflist_setlnum __ARGS((BUF *, linenr_t, colnr_t));
+static WINLNUM	*buflist_findwlp __ARGS((BUF *buf));
 static int	append_arg_number __ARGS((char_u *, int, int));
+static void	free_buffer __ARGS((BUF *));
 
 /*
  * Open current buffer, that is: open the memfile and read the file into memory
@@ -190,21 +191,23 @@ close_buffer(win, buf, free_buf, del_buf)
 	return;
     }
 
-    /*
-     * Free all things allocated for this buffer.
-     */
-    buf_freeall(buf);
+    /* Always remove the buffer when there is no file name. */
+    if (buf->b_ffname == NULL)
+	del_buf = TRUE;
 
     /*
-     * Remove the buffer from the list.  Always when there is no file name.
+     * Free all things allocated for this buffer.
+     * Also calls the "BufDelete" autocommands when del_buf is TRUE.
      */
-    if (buf->b_ffname == NULL || del_buf)
+    buf_freeall(buf, del_buf);
+    if (!buf_valid(buf))	    /* autocommands may delete the buffer */
+	return;
+
+    /*
+     * Remove the buffer from the list.
+     */
+    if (del_buf)
     {
-#ifdef AUTOCMD
-	apply_autocmds(EVENT_BUFDELETE, buf->b_ffname, buf->b_ffname, FALSE);
-	if (!buf_valid(buf))	    /* autocommands may delete the buffer */
-	    return;
-#endif
 	vim_free(buf->b_ffname);
 	vim_free(buf->b_sfname);
 	if (buf->b_prev == NULL)
@@ -215,9 +218,7 @@ close_buffer(win, buf, free_buf, del_buf)
 	    lastbuf = buf->b_prev;
 	else
 	    buf->b_next->b_prev = buf->b_prev;
-	free_buf_options(buf, TRUE);
-	free_buf_winlnum(buf);
-	vim_free(buf);
+	free_buffer(buf);
     }
     else
 	buf_clear(buf);
@@ -245,19 +246,20 @@ buf_clear(buf)
  * buf_freeall() - free all things allocated for the buffer
  */
     void
-buf_freeall(buf)
+buf_freeall(buf, del_buf)
     BUF	    *buf;
+    int	    del_buf;	/* buffer is going to be deleted */
 {
 #ifdef AUTOCMD
-    apply_autocmds(EVENT_BUFUNLOAD, buf->b_ffname, buf->b_ffname, FALSE);
+    apply_autocmds(EVENT_BUFUNLOAD, buf->b_fname, buf->b_fname, FALSE);
     if (!buf_valid(buf))	    /* autocommands may delete the buffer */
 	return;
-#endif
-#ifdef HAVE_PERL_INTERP
-    perl_buf_free(buf);
-#endif
-#ifdef HAVE_PYTHON
-    python_buffer_free(buf);
+    if (del_buf)
+    {
+	apply_autocmds(EVENT_BUFDELETE, buf->b_fname, buf->b_fname, FALSE);
+	if (!buf_valid(buf))	    /* autocommands may delete the buffer */
+	    return;
+    }
 #endif
     u_blockfree(buf);		    /* free the memory allocated for undo */
     ml_close(buf, TRUE);	    /* close and delete the memline/memfile */
@@ -269,6 +271,34 @@ buf_freeall(buf)
 #ifdef WANT_EVAL
     var_clear(&buf->b_vars);	    /* free all internal variables */
 #endif
+}
+
+/*
+ * Free a buffer structure and some of the things it contains.
+ */
+    static void
+free_buffer(buf)
+    BUF	    *buf;
+{
+    WINLNUM	*wlp;
+
+    /* Free the b_winlnum list for buffer "buf". */
+    while (buf->b_winlnum != NULL)
+    {
+	wlp = buf->b_winlnum;
+	buf->b_winlnum = wlp->wl_next;
+	vim_free(wlp);
+    }
+
+#ifdef HAVE_PERL_INTERP
+    perl_buf_free(buf);
+#endif
+#ifdef HAVE_PYTHON
+    python_buffer_free(buf);
+#endif
+
+    free_buf_options(buf, TRUE);
+    vim_free(buf);
 }
 
 /*
@@ -590,7 +620,7 @@ do_buffer(action, start, dir, count, forceit)
 	if (action == DOBUF_UNLOAD || action == DOBUF_DEL)
 	    close_windows(delbuf);
 	if (buf_valid(delbuf))
-	    close_buffer(NULL, delbuf,
+	    close_buffer(delbuf == curwin->w_buffer ? curwin : NULL, delbuf,
 		    (action == DOBUF_GOTO && !p_hid && !buf_changed(delbuf))
 			     || action == DOBUF_UNLOAD || action == DOBUF_DEL,
 		      action == DOBUF_DEL);
@@ -662,7 +692,7 @@ buflist_new(ffname, sfname, lnum, use_curbuf)
     {
 	vim_free(ffname);
 	if (lnum != 0)
-	    buflist_setlnum(buf, lnum);
+	    buflist_setlnum(buf, lnum, 0);
 	/* copy the options now, if 'cpo' doesn't have 's' and not done
 	 * already */
 	buf_copy_options(curbuf, buf, 0);
@@ -704,17 +734,13 @@ buflist_new(ffname, sfname, lnum, use_curbuf)
 	vim_free(buf->b_sfname);
 	buf->b_sfname = NULL;
 	if (buf != curbuf)
-	{
-	    vim_free(buf->b_winlnum);
-	    free_buf_options(buf, TRUE);
-	    vim_free(buf);
-	}
+	    free_buffer(buf);
 	return NULL;
     }
 
     if (buf == curbuf)
     {
-	buf_freeall(buf);	/* free all things allocated for this buffer */
+	buf_freeall(buf, FALSE); /* free all things allocated for this buffer */
 	buf->b_nwindows = 0;
     }
     else
@@ -744,6 +770,7 @@ buflist_new(ffname, sfname, lnum, use_curbuf)
 	}
 
 	buf->b_winlnum->wl_lnum = lnum;
+	buf->b_winlnum->wl_col = 0;
 	buf->b_winlnum->wl_next = NULL;
 	buf->b_winlnum->wl_prev = NULL;
 	buf->b_winlnum->wl_win = curwin;
@@ -854,13 +881,18 @@ buflist_getfile(n, lnum, options, forceit)
     void
 buflist_getlnum()
 {
-    linenr_t	lnum;
+    WINLNUM	*wlp;
 
     curwin->w_cursor.lnum = 1;
     curwin->w_cursor.col = 0;
-    lnum = buflist_findlnum(curbuf);
-    if (lnum != 0 && lnum <= curbuf->b_ml.ml_line_count)
-	curwin->w_cursor.lnum = lnum;
+    wlp = buflist_findwlp(curbuf);
+    if (wlp != NULL && wlp->wl_lnum != 0
+				&& wlp->wl_lnum <= curbuf->b_ml.ml_line_count)
+    {
+	curwin->w_cursor.lnum = wlp->wl_lnum;
+	curwin->w_cursor.col = wlp->wl_col;
+	adjust_cursor();
+    }
 }
 
 /*
@@ -1131,9 +1163,10 @@ buflist_nr2name(n, fullname, helptail)
  * set the lnum for the buffer 'buf' and the current window
  */
     static void
-buflist_setlnum(buf, lnum)
+buflist_setlnum(buf, lnum, col)
     BUF		*buf;
     linenr_t	lnum;
+    colnr_t	col;
 {
     WINLNUM	*wlp;
 
@@ -1157,9 +1190,9 @@ buflist_setlnum(buf, lnum)
 	    wlp->wl_next->wl_prev = wlp->wl_prev;
     }
     wlp->wl_lnum = lnum;
-/*
- * insert entry in front of the list
- */
+    wlp->wl_col = col;
+
+    /* insert entry in front of the list */
     wlp->wl_next = buf->b_winlnum;
     buf->b_winlnum = wlp;
     wlp->wl_prev = NULL;
@@ -1170,11 +1203,11 @@ buflist_setlnum(buf, lnum)
 }
 
 /*
- * find the lnum for the buffer 'buf' for the current window
+ * find the wlp for the buffer 'buf' for the current window
  */
-    linenr_t
-buflist_findlnum(buf)
-    BUF	    *buf;
+    static WINLNUM *
+buflist_findwlp(buf)
+    BUF		*buf;
 {
     WINLNUM	*wlp;
 
@@ -1185,27 +1218,24 @@ buflist_findlnum(buf)
     if (wlp == NULL)	/* if no lnum for curwin, use the first in the list */
 	wlp = buf->b_winlnum;
 
-    if (wlp)
-	return wlp->wl_lnum;
-    else
-	return (linenr_t)1;
+    return wlp;
 }
 
 /*
- * Free the b_winlnum list for buffer "buf".
+ * find the lnum for the buffer 'buf' for the current window
  */
-    static void
-free_buf_winlnum(buf)
-    BUF	    *buf;
+    linenr_t
+buflist_findlnum(buf)
+    BUF		*buf;
 {
     WINLNUM	*wlp;
 
-    while (buf->b_winlnum != NULL)
-    {
-	wlp = buf->b_winlnum;
-	buf->b_winlnum = wlp->wl_next;
-	vim_free(wlp);
-    }
+    wlp = buflist_findwlp(buf);
+
+    if (wlp != NULL)
+	return wlp->wl_lnum;
+    else
+	return (linenr_t)1;
 }
 
 /*
@@ -1417,7 +1447,7 @@ buflist_add(fname)
     void
 buflist_altlnum()
 {
-    buflist_setlnum(curbuf, curwin->w_cursor.lnum);
+    buflist_setlnum(curbuf, curwin->w_cursor.lnum, curwin->w_cursor.col);
 }
 
 /*
@@ -2200,7 +2230,7 @@ read_viminfo_bufferlist(line, fp, writing)
 	{
 	    buf->b_last_cursor.lnum = lnum;
 	    buf->b_last_cursor.col = col;
-	    buflist_setlnum(buf, lnum);
+	    buflist_setlnum(buf, lnum, col);
 	}
     }
 
@@ -2223,7 +2253,7 @@ write_viminfo_bufferlist(fp)
     fprintf(fp, "\n# Buffer list:\n");
     for (buf = firstbuf; buf != NULL ; buf = buf->b_next)
     {
-	if (buf->b_fname == NULL || buf->b_help)
+	if (buf->b_fname == NULL || buf->b_help || removable(buf->b_ffname))
 	    continue;
 
 	home_replace(NULL, buf->b_ffname, NameBuff, MAXPATHL);

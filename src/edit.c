@@ -1949,7 +1949,7 @@ get_expansion(ini, dir)
 	    /* set reg_ic according to p_ic, p_scs and pat */
 	    set_reg_ic(complete_pat);
 	    if (find_tags(complete_pat, &temp, &matches,
-			      TAG_WILD | TAG_NAMES, MAXCOL) == OK && temp > 0)
+			    TAG_REGEXP | TAG_NAMES, MAXCOL) == OK && temp > 0)
 	    {
 		int	add_r = OK;
 		int	ldir = dir;
@@ -2305,8 +2305,7 @@ ins_complete(c)
 		tmp_ptr += ++temp;
 		if ((temp = (int)complete_col - temp) == 1)
 		{
-		    /* Only match word with at least two
-		     * chars -- webb
+		    /* Only match word with at least two chars -- webb
 		     * there's no need to call quote_meta,
 		     * alloc(7) is enough  -- Acevedo
 		     */
@@ -2575,9 +2574,11 @@ quote_meta(dest, src, len)
 	    case '~':
 		if (!p_magic)	/* quote these only if magic is set */
 		    break;
+	    case '\\':
+		if (ctrl_x_mode == CTRL_X_DICTIONARY)
+		    break;
 	    case '^':		/* currently it's not needed. */
 	    case '$':
-	    case '\\':
 		m++;
 		if (dest)
 		    *dest++ = '\\';
@@ -2730,25 +2731,7 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 
     stop_arrow();
 
-    /*
-     * find out textwidth to be used:
-     *	if 'textwidth' option is set, use it
-     *	else if 'wrapmargin' option is set, use Columns - 'wrapmargin'
-     *	if invalid value, use 0.
-     *	Set default to window width (maximum 79) for "Q" command.
-     */
-    textwidth = curbuf->b_p_tw;
-    if (textwidth == 0 && curbuf->b_p_wm)
-	textwidth = Columns - curbuf->b_p_wm;
-    if (textwidth < 0)
-	textwidth = 0;
-    if (force_formatting && textwidth == 0)
-    {
-	textwidth = Columns - 1;
-	if (textwidth > 79)
-	    textwidth = 79;
-    }
-
+    textwidth = comp_textwidth(force_formatting);
     fo_ins_blank = has_format_option(FO_INS_BLANK);
 
     /*
@@ -2791,7 +2774,7 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 	/*
 	 * Repeat breaking lines, until the current line is not too long.
 	 */
-	for (;;)
+	while (!got_int)
 	{
 	    int		startcol;		/* Cursor column at entry */
 	    int		wantcol;		/* column at textwidth border */
@@ -2882,14 +2865,15 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 	    if (startcol < 0)
 		startcol = 0;
 
-		/* put cursor after pos. to break line */
+	    /* put cursor after pos. to break line */
 	    curwin->w_cursor.col = foundcol;
 
 	    /*
 	     * Split the line before just the margin.
 	     * Only insert/delete lines, but don't really redraw the window.
 	     */
-	    open_line(FORWARD, redrawing() ? -1 : 0, TRUE, old_indent);
+	    open_line(FORWARD, (redrawing() && !force_formatting) ? -1 : 0,
+							    TRUE, old_indent);
 	    old_indent = 0;
 
 	    replace_offset = 0;
@@ -2910,6 +2894,7 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 #ifdef CINDENT
 	    can_cindent = TRUE;
 #endif
+	    line_breakcheck();
 	}
 
 	if (save_char)			/* put back space after cursor */
@@ -3008,6 +2993,33 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 	else
 	    AppendCharToRedobuff(c);
     }
+}
+
+/*
+ * Find out textwidth to be used for formatting:
+ *	if 'textwidth' option is set, use it
+ *	else if 'wrapmargin' option is set, use Columns - 'wrapmargin'
+ *	if invalid value, use 0.
+ *	Set default to window width (maximum 79) for "Q" command.
+ */
+    int
+comp_textwidth(ff)
+    int		ff;	/* force formatting (for "Q" command) */
+{
+    int		textwidth;
+
+    textwidth = curbuf->b_p_tw;
+    if (textwidth == 0 && curbuf->b_p_wm)
+	textwidth = Columns - curbuf->b_p_wm;
+    if (textwidth < 0)
+	textwidth = 0;
+    if (ff && textwidth == 0)
+    {
+	textwidth = Columns - 1;
+	if (textwidth > 79)
+	    textwidth = 79;
+    }
+    return textwidth;
 }
 
 /*
@@ -3696,12 +3708,12 @@ hkmap(c)
 	enum {hALEF=0, BET, GIMEL, DALET, HEI, VAV, ZAIN, HET, TET, IUD,
 	    KAFsofit, hKAF, LAMED, MEMsofit, MEM, NUNsofit, NUN, SAMEH, AIN,
 	    PEIsofit, PEI, ZADIsofit, ZADI, KOF, RESH, hSHIN, TAV};
-	static unsigned char map[26] =
-	    {hALEF/*a*/, BET/*b*/, hKAF/*c*/, DALET/*d*/, -1/*e*/, PEIsofit/*f*/,
-	     GIMEL/*g*/, HEI/*h*/, IUD/*i*/, HET/*j*/, KOF/*k*/, LAMED/*l*/,
-	     MEM/*m*/, NUN/*n*/, SAMEH/*o*/, PEI/*p*/, -1/*q*/, RESH/*r*/,
-	     ZAIN/*s*/, TAV/*t*/, TET/*u*/, VAV/*v*/, hSHIN/*w*/, -1/*x*/,
-	     AIN/*y*/, ZADI/*z*/};
+	static char_u map[26] =
+	    {hALEF/*a*/, BET/*b*/, hKAF/*c*/, DALET/*d*/, (char_u)-1/*e*/,
+	     PEIsofit/*f*/, GIMEL/*g*/, HEI/*h*/, IUD/*i*/, HET/*j*/, KOF/*k*/,
+	     LAMED/*l*/, MEM/*m*/, NUN/*n*/, SAMEH/*o*/, PEI/*p*/,
+	     (char_u)-1/*q*/, RESH/*r*/, ZAIN/*s*/, TAV/*t*/, TET/*u*/,
+	     VAV/*v*/, hSHIN/*w*/, (char_u)-1/*x*/, AIN/*y*/, ZADI/*z*/};
 
 	if (c == 'N' || c == 'M' || c == 'P' || c == 'C' || c == 'Z')
 	    return map[tolower(c) - 'a'] - 1 + p_aleph; /* '-1'='sofit' */
@@ -3754,6 +3766,7 @@ ins_reg()
 {
     int	    need_redraw = FALSE;
     int	    cc;
+    int	    literally = FALSE;
 
     /*
      * If we are going to wait for a character, show a '"'.
@@ -3771,11 +3784,16 @@ ins_reg()
 #endif
 
     /*
-     * don't map the register name. This also prevents the mode message to be
-     * deleted when ESC is hit
+     * Don't map the register name. This also prevents the mode message to be
+     * deleted when ESC is hit.
      */
     ++no_mapping;
     cc = vgetc();
+    if (cc == Ctrl('R'))
+    {
+	literally = TRUE;
+	cc = vgetc();
+    }
     --no_mapping;
 #ifdef HAVE_LANGMAP
     LANGMAP_ADJUST(cc, TRUE);
@@ -3794,7 +3812,7 @@ ins_reg()
     else
     {
 #endif
-	if (insert_reg(cc) == FAIL)
+	if (insert_reg(cc, literally) == FAIL)
 	{
 	    beep_flush();
 	    need_redraw = TRUE;	/* remove the '"' */

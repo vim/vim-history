@@ -2,9 +2,9 @@
 
 
 /* File created by MIDL compiler version 3.01.75 */
-/* at Fri Feb 13 03:01:38 1998
+/* at Fri Mar 27 01:42:59 1998
  */
-/* Compiler settings for D:\Src2\VisVim\VisVIM.odl:
+/* Compiler settings for D:\Src2\VisVim\VisVim.odl:
     Os (OptLev=s), W1, Zp8, env=Win32, ms_ext, c_ext
     error checks: none
 */
@@ -72,7 +72,7 @@ void __RPC_USER MIDL_user_free( void __RPC_FAR * );
 
 /****************************************
  * Generated header for library: VisVim
- * at Fri Feb 13 03:01:38 1998
+ * at Fri Mar 27 01:42:59 1998
  * using MIDL 3.01.75
  ****************************************/
 /* [helpstring][version][uuid] */ 
@@ -86,7 +86,7 @@ DEFINE_GUID(LIBID_VisVim,0xAC726707,0x2977,0x11D1,0xB2,0xF3,0x00,0x60,0x08,0x04,
 
 /****************************************
  * Generated header for interface: ICommands
- * at Fri Feb 13 03:01:38 1998
+ * at Fri Mar 27 01:42:59 1998
  * using MIDL 3.01.75
  ****************************************/
 /* [object][dual][oleautomation][uuid] */ 
@@ -101,7 +101,15 @@ DEFINE_GUID(IID_ICommands,0xAC726703,0x2977,0x11D1,0xB2,0xF3,0x00,0x60,0x08,0x04
     ICommands : public IDispatch
     {
     public:
-        virtual /* [id] */ HRESULT STDMETHODCALLTYPE VisVimMethod( void) = 0;
+        virtual /* [id] */ HRESULT STDMETHODCALLTYPE VisVimDialog( void) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE VisVimEnable( void) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE VisVimDisable( void) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE VisVimToggle( void) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE VisVimLoad( void) = 0;
         
     };
     
@@ -151,7 +159,19 @@ DEFINE_GUID(IID_ICommands,0xAC726703,0x2977,0x11D1,0xB2,0xF3,0x00,0x60,0x08,0x04
             /* [out] */ EXCEPINFO __RPC_FAR *pExcepInfo,
             /* [out] */ UINT __RPC_FAR *puArgErr);
         
-        /* [id] */ HRESULT ( STDMETHODCALLTYPE __RPC_FAR *VisVimMethod )( 
+        /* [id] */ HRESULT ( STDMETHODCALLTYPE __RPC_FAR *VisVimDialog )( 
+            ICommands __RPC_FAR * This);
+        
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *VisVimEnable )( 
+            ICommands __RPC_FAR * This);
+        
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *VisVimDisable )( 
+            ICommands __RPC_FAR * This);
+        
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *VisVimToggle )( 
+            ICommands __RPC_FAR * This);
+        
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *VisVimLoad )( 
             ICommands __RPC_FAR * This);
         
         END_INTERFACE
@@ -190,8 +210,20 @@ DEFINE_GUID(IID_ICommands,0xAC726703,0x2977,0x11D1,0xB2,0xF3,0x00,0x60,0x08,0x04
     (This)->lpVtbl -> Invoke(This,dispIdMember,riid,lcid,wFlags,pDispParams,pVarResult,pExcepInfo,puArgErr)
 
 
-#define ICommands_VisVimMethod(This)	\
-    (This)->lpVtbl -> VisVimMethod(This)
+#define ICommands_VisVimDialog(This)	\
+    (This)->lpVtbl -> VisVimDialog(This)
+
+#define ICommands_VisVimEnable(This)	\
+    (This)->lpVtbl -> VisVimEnable(This)
+
+#define ICommands_VisVimDisable(This)	\
+    (This)->lpVtbl -> VisVimDisable(This)
+
+#define ICommands_VisVimToggle(This)	\
+    (This)->lpVtbl -> VisVimToggle(This)
+
+#define ICommands_VisVimLoad(This)	\
+    (This)->lpVtbl -> VisVimLoad(This)
 
 #endif /* COBJMACROS */
 
@@ -200,11 +232,55 @@ DEFINE_GUID(IID_ICommands,0xAC726703,0x2977,0x11D1,0xB2,0xF3,0x00,0x60,0x08,0x04
 
 
 
-/* [id] */ HRESULT STDMETHODCALLTYPE ICommands_VisVimMethod_Proxy( 
+/* [id] */ HRESULT STDMETHODCALLTYPE ICommands_VisVimDialog_Proxy( 
     ICommands __RPC_FAR * This);
 
 
-void __RPC_STUB ICommands_VisVimMethod_Stub(
+void __RPC_STUB ICommands_VisVimDialog_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE ICommands_VisVimEnable_Proxy( 
+    ICommands __RPC_FAR * This);
+
+
+void __RPC_STUB ICommands_VisVimEnable_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE ICommands_VisVimDisable_Proxy( 
+    ICommands __RPC_FAR * This);
+
+
+void __RPC_STUB ICommands_VisVimDisable_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE ICommands_VisVimToggle_Proxy( 
+    ICommands __RPC_FAR * This);
+
+
+void __RPC_STUB ICommands_VisVimToggle_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE ICommands_VisVimLoad_Proxy( 
+    ICommands __RPC_FAR * This);
+
+
+void __RPC_STUB ICommands_VisVimLoad_Stub(
     IRpcStubBuffer *This,
     IRpcChannelBuffer *_pRpcChannelBuffer,
     PRPC_MESSAGE _pRpcMessage,

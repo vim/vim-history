@@ -2,19 +2,9 @@
 " Language:	Java
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/java.vim
-" Last change:	1998 Feb 6
+" Last change:	1998 Mar 31
 
-" Note: In Java 1.0.2 it was never possible to have braces inside parens,
-" so this was flagged as an error. Now this is possible (with anonymous
-" classes), and therefore is no longer marked as an error. If you prefer
-" the old way, put the following line into your vim startup file:
-"     let java_mark_braces_in_parens_as_errors=1
-
-" Functions are no longer highlighted, as the way to find functions depends
-" on how you write java code. To enable it again put the following line
-" in your startup file:
-"     let java_highlight_functions=1
-" This will only work if you either use two spaces for indentation or tabs.
+" Please check :help java.vim for comments on some of the options available.
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -185,15 +175,16 @@ if exists("java_highlight_debug")
   hi link javaDebugSpecialCharacter DebugSpecial
   hi link javaDebugCharacter DebugString
 
-  " the following lines should actually be in syntax.vim
   hi link DebugString String
   hi link DebugSpecial Special
   hi link DebugBoolean Boolean
   hi link DebugType Type
 endif
 
-syn sync ccomment javaComment
-
+if !exists("java_minlines")
+  let java_minlines = 10
+endif
+exec "syn sync ccomment javaComment minlines=" . java_minlines
 
 if !exists("did_java_syntax_inits")
   let did_java_syntax_inits = 1

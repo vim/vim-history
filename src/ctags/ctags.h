@@ -1,5 +1,5 @@
 /*****************************************************************************
-*   $Id: ctags.h,v 5.3 1998/02/26 05:32:07 darren Exp $
+*   $Id: ctags.h,v 5.4 1998/03/13 04:19:11 darren Exp $
 *
 *   Copyright (c) 1996-1997, Darren Hiebert
 *
@@ -51,7 +51,7 @@
 =   General defines
 ============================================================================*/
 #ifndef PROGRAM_VERSION
-# define PROGRAM_VERSION	"2.0.2"
+# define PROGRAM_VERSION	"2.0.3"
 #endif
 #define PROGRAM_NAME	"Exuberant Ctags"
 #define PROGRAM_URL	"http://home.hiwaay.net/~darren/ctags"
@@ -178,6 +178,7 @@ typedef struct _optionValues {
 	boolean	unionNames;	/* -iu  include tags for unions */
 	boolean	variables;	/* -iv  include tags for variables */
 
+	boolean classPrefix;	/* -iC  include tag entries of class::member */
 	boolean sourceFiles;	/* -iF  include tags for source files */
 	boolean	statics;	/* -iS  include static tags */
     } include;

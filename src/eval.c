@@ -64,12 +64,16 @@ static int get_lit_string_var __ARGS((char_u **arg, VAR retvar));
 static int get_env_var __ARGS((char_u **arg, VAR retvar));
 static int get_func_var __ARGS((char_u *name, int len, VAR retvar, char_u **arg));
 static void f_buffer_exists __ARGS((VAR argvars, VAR retvar));
+static BUF *get_buf_var __ARGS((VAR avar));
+static void f_buffer_name __ARGS((VAR argvars, VAR retvar));
+static void f_buffer_number __ARGS((VAR argvars, VAR retvar));
 static void f_char2nr __ARGS((VAR argvars, VAR retvar));
 static void f_col __ARGS((VAR argvars, VAR retvar));
 static void f_delete __ARGS((VAR argvars, VAR retvar));
 static void f_exists __ARGS((VAR argvars, VAR retvar));
 static void f_expand __ARGS((VAR argvars, VAR retvar));
 static void f_file_readable __ARGS((VAR argvars, VAR retvar));
+static void f_getcwd __ARGS((VAR argvars, VAR retvar));
 static void f_getline __ARGS((VAR argvars, VAR retvar));
 static void f_has __ARGS((VAR argvars, VAR retvar));
 static void f_highlight_exists __ARGS((VAR argvars, VAR retvar));
@@ -91,6 +95,7 @@ static void f_synIDtrans __ARGS((VAR argvars, VAR retvar));
 static void f_substitute __ARGS((VAR argvars, VAR retvar));
 static void f_tempname __ARGS((VAR argvars, VAR retvar));
 static void f_virtcol __ARGS((VAR argvars, VAR retvar));
+static void f_winheight __ARGS((VAR argvars, VAR retvar));
 static FPOS *var2fpos __ARGS((VAR varp));
 static int get_env_len __ARGS((char_u **arg));
 char_u *get_env_string __ARGS((char_u **arg));
@@ -1306,12 +1311,15 @@ get_func_var(name, len, retvar, arg)
 	void	(*f_func) __ARGS((VAR args, VAR rvar));    /* impl. function */
     } functions[] =
     {{"buffer_exists",	    1, f_buffer_exists},
+     {"buffer_name",	    1, f_buffer_name},
+     {"buffer_number",	    1, f_buffer_number},
      {"char2nr",	    1, f_char2nr},
      {"col",		    1, f_col},
      {"delete",		    1, f_delete},
      {"exists",		    1, f_exists},
      {"expand",		    1, f_expand},
      {"file_readable",	    1, f_file_readable},
+     {"getcwd",		    0, f_getcwd},
      {"getline",	    1, f_getline},
      {"has",		    1, f_has},
      {"highlight_exists",   1, f_highlight_exists},
@@ -1334,6 +1342,7 @@ get_func_var(name, len, retvar, arg)
      {"substitute",	    4, f_substitute},
      {"tempname",	    0, f_tempname},
      {"virtcol",	    1, f_virtcol},
+     {"winheight",	    1, f_winheight},
     };
 
     cc = name[len];
@@ -1398,6 +1407,59 @@ get_func_var(name, len, retvar, arg)
     name[len] = cc;
 
     return ret;
+}
+
+    static BUF *
+get_buf_var(avar)
+    VAR		avar;
+{
+    char_u	*name = avar->var_val.var_string;
+
+    if (avar->var_type == VAR_NUMBER)
+	return buflist_findnr((int)avar->var_val.var_number);
+    else if (name == NULL || *name == NUL)
+	return curbuf;
+    else
+	return buflist_findnr(buflist_findpat(name, name + STRLEN(name)));
+}
+
+/*
+ * "buffer_name()" function.
+ */
+    static void
+f_buffer_name(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    BUF		*buf;
+
+    ++emsg_off;
+    buf = get_buf_var(&argvars[0]);
+    retvar->var_type = VAR_STRING;
+    if (buf != NULL && buf->b_fname != NULL)
+	retvar->var_val.var_string = vim_strsave(buf->b_fname);
+    else
+	retvar->var_val.var_string = NULL;
+    --emsg_off;
+}
+
+/*
+ * "buffer_number()" function.
+ */
+    static void
+f_buffer_number(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    BUF		*buf;
+
+    ++emsg_off;
+    buf = get_buf_var(&argvars[0]);
+    if (buf != NULL)
+	retvar->var_val.var_number = buf->b_fnum; 
+    else
+	retvar->var_val.var_number = -1;
+    --emsg_off;
 }
 
 /*
@@ -1519,7 +1581,7 @@ f_expand(argvars, retvar)
     if (*s == '%' || *s == '#' || *s == '<')
 	retvar->var_val.var_string = eval_vars(s, &len, NULL, &errormsg);
     else
-	retvar->var_val.var_string = ExpandOne(s, NULL, 0, WILD_ALL);
+	retvar->var_val.var_string = ExpandOne(s, NULL, WILD_USE_NL, WILD_ALL);
 }
 
 /*
@@ -1544,6 +1606,24 @@ f_file_readable(argvars, retvar)
 	n = FALSE;
 
     retvar->var_val.var_number = n;
+}
+
+/*
+ * "getcwd()" function
+ */
+/*ARGSUSED*/
+    static void
+f_getcwd(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    char_u	cwd[MAXPATHL];
+
+    retvar->var_type = VAR_STRING;
+    if (mch_dirname(cwd, MAXPATHL) == FAIL)
+	retvar->var_val.var_string = NULL;
+    else
+	retvar->var_val.var_string = vim_strsave(cwd);
 }
 
 /*
@@ -1682,6 +1762,9 @@ f_has(argvars, retvar)
 #ifdef LISPINDENT
 	"lispindent",
 #endif
+#ifdef USE_MOUSE
+	"mouse",
+#endif
 #ifdef UNIX
 # ifdef DEC_MOUSE
 	"mouse_dec",
@@ -1766,9 +1849,14 @@ f_has(argvars, retvar)
 #ifdef USE_GUI
 	if (STRICMP(name, "gui_running") == 0)
 	{
-	    if (gui.in_use || gui.starting)
-		n = TRUE;
+	    n = (gui.in_use || gui.starting);
 	}
+# ifdef USE_GUI_WIN32
+	else if (STRICMP(name, "gui_win32s") == 0)
+	{
+	    n = gui_is_win32s();
+	}
+# endif
 #endif
 #ifdef SYNTAX_HL
 # ifdef USE_GUI
@@ -1776,8 +1864,7 @@ f_has(argvars, retvar)
 # endif
 	    if (STRICMP(name, "syntax_items") == 0)
 	{
-	    if (syntax_present(curbuf))
-		n = TRUE;
+	    n = syntax_present(curbuf);
 	}
 #endif
     }
@@ -2132,23 +2219,33 @@ f_substitute(argvars, retvar)
     char_u		*str;
     char_u		*pat;
     char_u		*sub;
-    char_u		*result = NULL;
     int			sublen;
     vim_regexp		*prog;
     int			i;
     char_u		patbuf[NUMBUFLEN];
     char_u		subbuf[NUMBUFLEN];
+    char_u		flagsbuf[NUMBUFLEN];
+    char_u		*flags;
+    int			do_all;
+    char_u		*tail = NULL;
+    struct growarray	ga;
+
+    ga.ga_itemsize = 1;
+    ga.ga_growsize = 200;
+    ga_init(&ga);
 
     str = get_var_string(&argvars[0]);
     pat = get_var_string_buf(&argvars[1], patbuf);
     sub = get_var_string_buf(&argvars[2], subbuf);
-    /* flags = get_var_string_buf(&argvars[3], flagsbuf); */
+    flags = get_var_string_buf(&argvars[3], flagsbuf);
+    do_all = (flags[0] == 'g');
 
     reg_ic = p_ic;
     prog = vim_regcomp(pat, TRUE);
     if (prog != NULL)
     {
-	if (vim_regexec(prog, str, TRUE))
+	tail = str;
+	while (vim_regexec(prog, tail, tail == str))
 	{
 	    /*
 	     * Get some space for a temporary buffer to do the substitution
@@ -2157,20 +2254,49 @@ f_substitute(argvars, retvar)
 	     * - The substituted text.
 	     * - The text after the match.
 	     */
-	    sublen = vim_regsub(prog, sub, str, FALSE, TRUE);
-	    if ((result = alloc_check((unsigned)(STRLEN(str) + sublen
-			       - (prog->endp[0] - prog->startp[0])))) != NULL)
+	    sublen = vim_regsub(prog, sub, tail, FALSE, TRUE);
+	    if (ga_grow(&ga, (int)(STRLEN(tail) + sublen -
+				  (prog->endp[0] - prog->startp[0]))) == FAIL)
 	    {
-		i = prog->startp[0] - str;
-		vim_memmove(result, str, (size_t)i);
-		(void)vim_regsub(prog, sub, result + i, TRUE, TRUE);
-		STRCAT(result, prog->endp[0]);
+		ga_clear(&ga);
+		break;
 	    }
+
+	    /* copy the text up to where the match is */
+	    i = prog->startp[0] - tail;
+	    vim_memmove((char_u *)ga.ga_data + ga.ga_len, tail, (size_t)i);
+	    /* add the substituted text */
+	    (void)vim_regsub(prog, sub, (char_u *)ga.ga_data + ga.ga_len + i,
+								  TRUE, TRUE);
+	    ga.ga_len += i + sublen - 1;
+	    ga.ga_room -= i + sublen - 1;
+	    /* avoid getting stuck on a match with an empty string */
+	    if (tail == prog->endp[0])
+	    {
+		*((char_u *)ga.ga_data + ga.ga_len) = *tail++;
+		++ga.ga_len;
+		--ga.ga_room;
+	    }
+	    else
+	    {
+		tail = prog->endp[0];
+		if (*tail == NUL)
+		    break;
+	    }
+	    if (!do_all)
+		break;
 	}
+
+	if (ga.ga_data != NULL)
+	    STRCPY((char *)ga.ga_data + ga.ga_len, tail);
+
 	vim_free(prog);
     }
+
     retvar->var_type = VAR_STRING;
-    retvar->var_val.var_string = (result == NULL ? vim_strsave(str) : result);
+    retvar->var_val.var_string = vim_strsave(ga.ga_data == NULL
+						? str : (char_u *)ga.ga_data);
+    ga_clear(&ga);
 }
 
 /*
@@ -2182,8 +2308,15 @@ f_tempname(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
+    static int	x = 'A';
+
     retvar->var_type = VAR_STRING;
-    retvar->var_val.var_string = vim_tempname('X');
+    retvar->var_val.var_string = vim_tempname(x);
+    /* advance 'x', so that there are at least 26 different names */
+    if (x == 'Z')
+	x = 'A';
+    else
+	++x;
 }
 
 /*
@@ -2205,6 +2338,35 @@ f_virtcol(argvars, retvar)
     }
 
     retvar->var_val.var_number = vcol;
+}
+
+/*
+ * "winheight(nr)" function
+ */
+    static void
+f_winheight(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    int		nr;
+    WIN		*wp;
+
+    nr = get_var_number(&argvars[0]);
+
+    if (nr == 0)
+	retvar->var_val.var_number = curwin->w_height;
+    else
+    {
+	retvar->var_val.var_number = 0;
+	for (wp = firstwin; wp != NULL; wp = wp->w_next)
+	{
+	    if (--nr <= 0)
+	    {
+		retvar->var_val.var_number = wp->w_height;
+		break;
+	    }
+	}
+    }
 }
 
 /*
@@ -2337,6 +2499,11 @@ get_var_var(name, len, retvar)
     {
 	type = VAR_NUMBER;
 	number = global_opnum;
+    }
+    else if (len == 11 && STRCMP(name, "shell_error") == 0)
+    {
+	type = VAR_NUMBER;
+	number = (call_shell_retval == FAIL);
     }
 
     /*
@@ -2651,6 +2818,8 @@ set_var(name, varp)
 	v->var_val.var_number = varp->var_val.var_number;
 }
 
+static int echo_attr = 0;   /* attributes used for ":echo" */
+
 /*
  * Implementation of
  * ":echo expr1 .."	print each argument separated with a space, add a
@@ -2678,7 +2847,7 @@ do_echo(eap, echo)
 	if (!eap->skip)
 	{
 	    if (arg != eap->arg && echo)
-		msg_putchar(' ');
+		msg_puts_attr((char_u *)" ", echo_attr);
 	    for (p = get_var_string(&retvar); *p != NUL; ++p)
 		if (*p == '\n' || *p == '\r' || *p == TAB)
 		{
@@ -2688,10 +2857,10 @@ do_echo(eap, echo)
 			msg_clr_eos();
 			first = FALSE;
 		    }
-		    msg_putchar(*p);
+		    msg_putchar_attr(*p, echo_attr);
 		}
 		else
-		    msg_puts(transchar(*p));
+		    (void)msg_outtrans_len_attr(p, 1, echo_attr);
 	}
 	clear_var(&retvar);
 	arg = skipwhite(arg);
@@ -2708,6 +2877,22 @@ do_echo(eap, echo)
 	if (echo)
 	    msg_end();
     }
+}
+
+/*
+ * Implementation of ":echohl {name}".
+ */
+    void
+do_echohl(arg)
+    char_u	*arg;
+{
+    int		id;
+
+    id = syn_name2id(arg);
+    if (id == 0)
+	echo_attr = 0;
+    else
+	echo_attr = syn_id2attr(id);
 }
 
 /*

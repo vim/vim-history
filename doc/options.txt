@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 5.0.  Last modification: 1998 Feb 15
+*options.txt*   For Vim version 5.1.  Last modification: 1998 Apr 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -391,9 +391,11 @@ A jump table for the options with a short description can be found at |X_op|.
 	When starting the GUI, the default value for 'background' will be
 	"light".  When the value is not set in the .gvimrc, and Vim detects
 	that the background is actually quite dark, 'background' is set to
-	"dark".  But this happens only after the .gvimrc file has been read
+	"dark".  But this happens only AFTER the .gvimrc file has been read
 	(because the window needs to be opened to find the actual background
-	color).
+	color).  To get around this, force the GUI window to be opened by
+	putting a ":gui" command in the .gvimrc file, before where the value
+	of 'background' is used (e.g., before ":syntax on").
 	For the Win32 GUI, setting 'background' before starting the GUI, will
 	change the background and foreground colors to lightgrey on black or
 	black on white.  On other systems setting 'background' does not
@@ -406,10 +408,10 @@ A jump table for the options with a short description can be found at |X_op|.
 	When this option is set, the default settings for the highlight groups
 	will change.  To use other settings, place ":highlight" commands AFTER
 	the setting of the 'background' option.
-	This option is also used in the "$VIM/syntax/syntax.vim" file to set
-	the colors for syntax highlighting.  After changing this option, you
-	must load syntax.vim again to see the result.  This can be done with
-	":syntax on".
+	This option is also used in the "$VIM/syntax/syntax.vim" file to
+	select the colors for syntax highlighting.  After changing this
+	option, you must load syntax.vim again to see the result.  This can be
+	done with ":syntax on".
 
 							*'backspace'* *'bs'*
 'backspace' 'bs'	number	(default 0)
@@ -804,6 +806,7 @@ A jump table for the options with a short description can be found at |X_op|.
 		x	<Esc> on the command line executes the command line.
 			The default in Vim is to abandon the command line,
 			because <Esc> normally aborts a command.  |c_<Esc>|
+		y	A yank command can be redone with ".".
 		$	When making a change to one line, don't redisplay the
 			line, but put a '$' at the end of the changed text.
 			The changed text will be overwritten when you type the
@@ -1318,11 +1321,11 @@ A jump table for the options with a short description can be found at |X_op|.
 	|windows.txt|.
 
 						*'highlight'* *'hl'*
-'highlight' 'hl'	string	(default (split in pieces):
+'highlight' 'hl'	string	(default (as a single string):
 				     "8:SpecialKey,@:NonText,d:Directory,
 				     e:ErrorMsg,i:IncSearch,l:Search,m:MoreMsg,
 				     M:ModeMsg,n:LineNr,r:Question,
-				     s:StatusLine,t:Title,
+				     s:StatusLine,S:StatusLineNC,t:Title,
 				     v:Visual,w:WarningMsg")
 			global
 			{not in Vi}
@@ -1330,7 +1333,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	occasions.  It is a comma separated list of character pairs.  The
 	first character in a pair gives the occasion, the second the mode to
 	use for that occasion.  The occasions are:
-	|hl-SpecialKey|	 8  Meta & special keys listed with ":map"
+	|hl-SpecialKey|	 8  Meta and special keys listed with ":map"
 	|hl-NonText|	 @  '~' and '@' at the end of the window and
 			    characters from 'showbreak'
 	|hl-Directory|	 d  directories in CTRL-D listing and other special
@@ -1343,7 +1346,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	|hl-ModeMsg|	 M  Mode (e.g., "-- INSERT --")
 	|hl-LineNr|	 n  line number for ":number" and ":#" commands
 	|hl-Question|	 r  |hit-return| prompt and yes/no questions
-	|hl-StatusLine|	 s  status lines
+	|hl-StatusLine|	 s  status line of current window |status-line|
+	|hl-StatusLineNC| S  status lines of not-current windows
 	|hl-Title|	 t  Titles for output from ":set all", ":autocmd" etc.
 	|hl-Visual|	 v  Visual mode
 	|hl-WarningMsg|	 w  warning messages
@@ -1416,12 +1420,13 @@ A jump table for the options with a short description can be found at |X_op|.
 'icon'			toggle	(default off, on when title can be restored)
 			global
 			{not in Vi}
-	When on the icon of the window will be set to the name of the file
-	currently being edited.  Only the last part of the name is used.
+	When on, the icon text of the window will be set to the name of the
+	file currently being edited.  Only the last part of the name is used.
 	Overridden by the 'iconstring' option.
 	Only works if the terminal supports setting window icons (currently
 	only Unix xterm and iris-ansi).  When Vim was compiled with HAVE_X11
 	defined, the original icon will be restored if possible |X11|.
+	See |X11-icon| for changing the icon on X11.
 
 						*'iconstring'*
 'iconstring'		string	(default "")
@@ -1808,16 +1813,27 @@ A jump table for the options with a short description can be found at |X_op|.
 	GUI, see |gui-mouse|.
 	The mouse can be enabled for different modes:
 		n	Normal mode
+		N	Normal mode (see below)
 		v	Visual mode
 		i	Insert mode
+		I	Insert mode (see below)
 		c	Command-line mode
 		h	all previous modes when editing a help file
-		a	all previous modes
+		a	all previous modes except 'N' and 'I'
+		A	all previous modes except 'n' and 'i'
 		r	for |hit-return| prompt
 	Normally you would enable the mouse in all four modes with:
-		:set mouse=a
-	Note: Normal copy/paste in an xterm can still be used by pressing the
-	shift key when the mouse is being used by Vim.  See |mouse-using|.
+>		:set mouse=a
+	When the mouse is not enabled, the GUI will still use the mouse for
+	xterm-like selection.  This doesn't move the text cursor.
+	When 'N' or 'I' is included, the mouse is recognized in Normal or
+	Insert mode, but it only moves the cursor.  It doesn't start Visual
+	mode.  xterm-like selection is used.  This mostly works Windows-like.
+	The normal way to start this is:
+>		:set mouse=A
+	Note: When enabling the mouse in an xterm, the xterm copy/paste can
+	still be used by keeping the shift key pressed.
+	See |mouse-using|.
 
 			*'mousehide'* *'mh'* *'nomousehide'* *'nomh'*
 'mousehide' 'mh'	toggle	(default off)
@@ -2446,6 +2462,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	tags searching slower when a full match exists, but faster when no
 	full match exists.  The number of tags found doesn't change, only the
 	order in which they are found.
+	When the tags file is not sorted, or sorted in a wrong way (not on
+	ASCII byte value), 'tagbsearch' should be off.
 	This option doesn't affect the |:tselect| command, and other commands
 	that find all matching tags (e.g., command line completion).
 	{Vi: always uses binary search in some versions}
@@ -2481,10 +2499,15 @@ A jump table for the options with a short description can be found at |X_op|.
 
 						*'term'*
 'term'			string	(default is $TERM, if that fails:
-					 on Unix: "ansi"
+				      in the GUI: "builtin_gui"
 				        on Amiga: "amiga"
+					 on BeOS: "beos-ansi"
+					  on Mac: "mac-ansi"
+				         on MiNT: "vt52"
 				       on MS-DOS: "pcterm"
 				         on OS/2: "os2ansi"
+					 on Unix: "ansi"
+					  on VMS: "ansi"
 				       on Win 32: "win32")
 			global
 	Name of the terminal.  Used for choosing the terminal control

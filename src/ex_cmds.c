@@ -716,7 +716,13 @@ do_shell(cmd, flags)
 	for (buf = firstbuf; buf; buf = buf->b_next)
 	    if (buf_changed(buf))
 	    {
+#ifdef USE_GUI_WIN32
+		starttermcap();	    /* don't want a message box here */
+#endif
 		MSG_PUTS("[No write since last change]\n");
+#ifdef USE_GUI_WIN32
+		stoptermcap();
+#endif
 		break;
 	    }
 
@@ -967,6 +973,23 @@ do_filter(line1, line2, buff, do_in, do_out)
 	must_redraw = CLEAR;
 	wait_return(FALSE);
     }
+
+#ifdef USE_GUI_WIN32
+    /*
+     * Under win32s, the shell returns before the command is finished, so we
+     * must wait in order to process results.  TODO: find a real solution!
+     */
+    if (gui_is_win32s())
+    {
+	int	no_wait_return_save = no_wait_return;
+
+	no_wait_return = FALSE;
+	MSG_PUTS("\nWaiting for DOS completion....\n");
+	wait_return(FALSE);
+	no_wait_return = no_wait_return_save;
+    }
+#endif
+
     need_check_timestamps = TRUE;
 
     if (do_out)
@@ -1212,7 +1235,11 @@ write_viminfo(file, forceit)
 # ifdef SHORT_FNAME
 					TRUE,
 # else
+#  ifdef USE_GUI_WIN32
+					gui_is_win32s(),
+#  else
 					FALSE,
+#  endif
 # endif
 #endif
 					       file, (char_u *)".tmp", FALSE);
@@ -2329,11 +2356,8 @@ outofmem:
 	    emsg(e_interr);
 	else if (got_match)	/* did find something but nothing substituted */
 	    MSG("");
-	else			/* nothing found */
-	{
-	    if (do_error)
-		emsg(e_nomatch);
-	}
+	else if (do_error)	/* nothing found */
+	    emsg2(e_patnotf2, pat);
     }
 
     vim_free(prog);
@@ -2489,9 +2513,9 @@ do_glob(eap)
  * pass 2: execute the command for each line that has been marked
  */
     if (got_int)
-	MSG("Interrupted");
+	MSG(e_interr);
     else if (ndone == 0)
-	msg(e_nomatch);
+	smsg(e_patnotf2, pat);
     else
     {
 	/*
@@ -2871,7 +2895,7 @@ find_help_tags(arg, num_matches, matches)
     *matches = (char_u **)"";
     *num_matches = 0;
     if (find_tags(IObuff, num_matches, matches,
-			       TAG_HELP | TAG_WILD | TAG_NAMES, MAXCOL) == OK)
+			     TAG_HELP | TAG_REGEXP | TAG_NAMES, MAXCOL) == OK)
 #ifdef HAVE_QSORT
 	/*
 	 * Sort the matches found on the heuristic number that is after the

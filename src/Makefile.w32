@@ -4,20 +4,33 @@
 # and all four NT platforms: i386, Alpha, MIPS, and PowerPC.  The NT/i386
 # binary and the Windows 95 binary are identical.
 #
-# To build the GUI version with Microsoft Visual C++, use Gvim_vc.mak.
+# This makefile can build the console, gui, OLE-enable, Perl-enabled and
+# Python-enabled versions of vim for Win32 platforms.
+#
+# When compiling different versions, do "nmake clean" first!
+#
+# The basic command line to build vim is:
+#	nmake -f Makefile.w32
+# This will build the console version of vim with no additional interfaces.
+# To add interfaces, define any of the following:
+#	GUI interface: GUI=yes
+#	OLE interface: OLE=yes
+#	Perl interface: PERL=[Path to Perl directory]
+#	Python interface: PYTHON=[Path to Python directory]
+#	Debug version: DEBUG=1
+#
+# You can combine any of these interfaces
+#
+# Example: To build the non-debug, gui version with Perl interface:
+#	nmake -f Makefile.w32 GUI=yes PERL=C:\Perl
+#
 # To build using Borland C++, use Makefile.bor.
 #
-
-# to build the retail version:
-#	nmake -f Makefile.w32
-# to build the debug version:
-#	nmake DEBUG=1 -f Makefile.w32
 
 ### See feature.h for a list of optionals.
 # If you want to build some optional features without modifying the source,
 # you can set DEFINES on the command line, e.g.,
 #	nmake -f makefile.w32 "DEFINES=-DEMACS_TAGS"
-
 
 # Build on both Windows NT and Windows 95
 
@@ -90,11 +103,13 @@ DEL_TREE = deltree /y
 !endif
 
 !ifdef NODEBUG
+INTDIR=.\Objects
 OUTDIR=.\Objects
 VIM = vim
 CFLAGS = $(CFLAGS) -DNDEBUG /Ox
 RCFLAGS = $(rcflags) $(rcvars) -DNDEBUG
 !else  # DEBUG
+INTDIR=.\Debug
 OUTDIR=.\Debug
 VIM = vimd
 # MSVC 4.1
@@ -107,10 +122,8 @@ CFLAGS = $(CFLAGS) -D_DEBUG -DDEBUG /Zi /Od
 RCFLAGS = $(rcflags) $(rcvars) -D_DEBUG -DDEBUG
 !endif # DEBUG
 
-
 INCL =	vim.h os_win32.h ascii.h feature.h globals.h keymap.h macros.h \
 	proto.h option.h structs.h term.h
-
 
 OBJ = \
 	$(OUTDIR)\buffer.obj \
@@ -146,20 +159,74 @@ OBJ = \
 	$(OUTDIR)\window.obj \
 	$(OUTDIR)\vim.res
 
+!if "$(OLE)" == "yes"
+# Force gui version to be built
+GUI = yes
+CFLAGS = $(CFLAGS) -DHAVE_OLE
+OLE_OBJ = $(OUTDIR)\if_ole.obj
+OLE_IDL = if_ole.idl
+OLE_LIBS = ole32.lib oleaut32.lib uuid.lib 
+!endif
+
+!if "$(GUI)" == "yes"
+SUBSYSTEM = windows
+CFLAGS = $(CFLAGS) -DUSE_GUI_WIN32 -DWIN32
+VIM = g$(VIM)
+GUI_INCL = \
+	gui.h \
+	regexp.h \
+	ascii.h \
+	ex_cmds.h \
+	farsi.h \
+	feature.h \
+	globals.h \
+	gui.h \
+	keymap.h \
+	macros.h \
+	option.h \
+	os_dos.h \
+	os_win32.h
+GUI_OBJ = \
+	$(OUTDIR)\gui.obj \
+	$(OUTDIR)\gui_w32.obj \
+	$(OUTDIR)\os_w32exe.obj
+GUI_LIBS = \
+	libc.lib oldnames.lib kernel32.lib gdi32.lib \
+	winspool.lib comdlg32.lib advapi32.lib shell32.lib \
+	/machine:I386 /nodefaultlib
+!else
+SUBSYSTEM = console
+!endif
+
 # PYTHON interface
-!ifdef PYTHON_BASE
-!message Python detected - root dir is "$(PYTHON_BASE)"
+!ifdef PYTHON
+!message Python detected - root dir is "$(PYTHON)"
 CFLAGS    = $(CFLAGS) -DHAVE_PYTHON
 PYTHONOBJ = $(OUTDIR)\if_python.obj
-PYTHONINC = /I "$(PYTHON_BASE)\Include" /I "$(PYTHON_BASE)\PC"
-PYTHONLIB = $(PYTHON_BASE)\vc40\python14.lib
+PYTHONINC = /I "$(PYTHON)\Include" /I "$(PYTHON)\PC"
+PYTHONLIB = $(PYTHON)\vc40\python14.lib
 !endif
+
+# Perl interface
+!ifdef PERL 
+!message Perl detected - root dir is "$(PERL)"
+!message
+CFLAGS	= $(CFLAGS) -DHAVE_PERL_INTERP
+PERLEXE = $(PERL)\Bin\perl
+PERLOBJ	= $(OUTDIR)\if_perl.obj $(OUTDIR)\if_perlsfio.obj
+PERLINC	= /I $(PERL)\Lib\Core
+PERLLIB	= $(PERL)\Lib\Core\perl.lib
+XSUBPP	= $(PERL)\lib\ExtUtils\xsubpp
+XSUBPP_TYPEMAP = $(PERL)\lib\ExtUtils\typemap
+!endif
+
+conflags = /nologo /subsystem:$(SUBSYSTEM) /incremental:no
 
 all:	$(VIM) ctags/ctags.exe xxd/xxd.exe
 
-$(VIM): $(OUTDIR) $(OBJ) $(PYTHONOBJ) $(OUTDIR)\version.obj
-	$(link) $(linkdebug) $(conflags) -out:$*.exe $(OBJ) $(PYTHONOBJ) \
-		$(OUTDIR)\version.obj $(CONLIBS) user32.lib $(PYTHONLIB) $(LINK_PDB)
+$(VIM): $(OUTDIR) $(OBJ) $(GUI_OBJ) $(OLE_OBJ) $(OLE_IDL) $(PERLOBJ) $(PYTHONOBJ) $(OUTDIR)\version.obj
+	$(link) $(linkdebug) $(conflags) -out:$*.exe $(OBJ) $(GUI_OBJ) $(OLE_OBJ) $(PERLOBJ) $(PYTHONOBJ) \
+		$(OUTDIR)\version.obj $(CONLIBS) $(GUI_LIBS) $(OLE_LIBS) user32.lib $(PERLLIB) $(PYTHONLIB) $(LINK_PDB)
         del $(OUTDIR)\version.obj
 
 $(VIM).exe: $(VIM)
@@ -191,6 +258,7 @@ clean:
 	- del $(VIM).pdb
 	- del $(VIM).map
 	- del $(VIM).ncb
+	- del if_perl.c
 
 test:
 	cd testdir
@@ -229,9 +297,26 @@ $(OUTDIR)/fileio.obj:	$(OUTDIR) fileio.c  $(INCL)
 $(OUTDIR)/getchar.obj:	$(OUTDIR) getchar.c  $(INCL)
 	$(CC) $(CFLAGS) getchar.c /Fo$(OUTDIR)/getchar.obj $(PDB)
 
+$(OUTDIR)/gui.obj:	$(OUTDIR) gui.c  $(INCL) $(GUI_INCL)
+	$(CC) $(CFLAGS) gui.c /Fo$(OUTDIR)/gui.obj $(PDB)
+
+$(OUTDIR)/gui_w32.obj:	$(OUTDIR) gui_w32.c  $(INCL) $(GUI_INCL)
+	$(CC) $(CFLAGS) gui_w32.c /Fo$(OUTDIR)/gui_w32.obj $(PDB)
+
+if_perl.c : if_perl.xs typemap
+	$(PERLEXE) $(XSUBPP) -prototypes -typemap $(XSUBPP_TYPEMAP) -typemap typemap if_perl.xs > if_perl.c
+
+$(OUTDIR)/if_perl.obj: $(OUTDIR) if_perl.c  $(INCL)
+	$(CC) $(CFLAGS) $(PERLINC) if_perl.c /Fo$(OUTDIR)/if_perl.obj $(PDB)
+
+$(OUTDIR)/if_perlsfio.obj: $(OUTDIR) if_perlsfio.c  $(INCL)
+	$(CC) $(CFLAGS) $(PERLINC) if_perlsfio.c /Fo$(OUTDIR)/if_perlsfio.obj $(PDB)
+
 $(OUTDIR)/if_python.obj: $(OUTDIR) if_python.c  $(INCL)
-	$(CC) $(CFLAGS) $(PYTHONINC) if_python.c \
-		/Fo$(OUTDIR)/if_python.obj $(PDB)
+	$(CC) $(CFLAGS) $(PYTHONINC) if_python.c /Fo$(OUTDIR)/if_python.obj $(PDB)
+
+$(OUTDIR)/if_ole.obj: $(OUTDIR) if_ole.cpp  $(INCL) if_ole.h
+	$(CC) $(CFLAGS) if_ole.cpp /Fo$(OUTDIR)/if_ole.obj $(PDB)
 
 $(OUTDIR)/main.obj:	$(OUTDIR) main.c  $(INCL)
 	$(CC) $(CFLAGS) main.c /Fo$(OUTDIR)/main.obj $(PDB)
@@ -265,6 +350,9 @@ $(OUTDIR)/ops.obj:	$(OUTDIR) ops.c  $(INCL)
 
 $(OUTDIR)/os_win32.obj:	$(OUTDIR) os_win32.c  $(INCL) os_win32.h
 	$(CC) $(CFLAGS) os_win32.c /Fo$(OUTDIR)/os_win32.obj $(PDB)
+
+$(OUTDIR)/os_w32exe.obj:	$(OUTDIR) os_w32exe.c  $(INCL)
+	$(CC) $(CFLAGS) os_w32exe.c /Fo$(OUTDIR)/os_w32exe.obj $(PDB)
 
 $(OUTDIR)/quickfix.obj:	$(OUTDIR) quickfix.c  $(INCL)
 	$(CC) $(CFLAGS) quickfix.c /Fo$(OUTDIR)/quickfix.obj $(PDB)
@@ -302,6 +390,10 @@ $(OUTDIR)/window.obj:	$(OUTDIR) window.c  $(INCL)
 $(OUTDIR)/vim.res:	$(OUTDIR) vim.rc version.h
 	$(RC) /l 0x409 /Fo$(OUTDIR)/vim.res $(RCFLAGS) vim.rc
 
+iid_ole.c if_ole.h vim.tlb: if_ole.idl $(INTDIR) $(OUTDIR)
+	midl /proxy nul /iid iid_ole.c /tlb vim.tlb /header if_ole.h if_ole.idl
+
+# End Custom Build
 proto.h: \
 	proto/buffer.pro \
 	proto/charset.pro \
@@ -334,3 +426,4 @@ proto.h: \
 	proto/ui.pro \
 	proto/undo.pro \
 	proto/window.pro
+

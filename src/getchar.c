@@ -1146,19 +1146,7 @@ vgetorpeek(advance)
     if (vgetc_busy)
 	return NUL;
 
-    /*
-     * VISUAL and OP_PENDING State are never set, it is used only here,
-     * therefore a check is made if NORMAL state is actually VISUAL or
-     * OP_PENDING state.
-     */
-    local_State = State;
-    if ((State & NORMAL))
-    {
-	if (VIsual_active)
-	    local_State = VISUAL;
-	else if (finish_op)
-	    local_State = OP_PENDING;
-    }
+    local_State = get_real_state();
 
 /*
  * get a character: 1. from a previously ungotten character
@@ -1518,7 +1506,7 @@ vgetorpeek(advance)
 
 			save_State = State;
 			State = NORMAL;
-			gui_update_cursor(TRUE);
+			gui_update_cursor(TRUE, FALSE);
 			State = save_State;
 			shape_changed = TRUE;
 		    }
@@ -1672,7 +1660,7 @@ vgetorpeek(advance)
 #ifdef USE_GUI
     /* may unshow different cursor shape */
     if (gui.in_use && shape_changed)
-	gui_update_cursor(TRUE);
+	gui_update_cursor(TRUE, FALSE);
 #endif
 
     vgetc_busy = FALSE;
@@ -1789,6 +1777,15 @@ inchar(buf, maxlen, wait_time)
      */
     for (i = len; --i >= 0; ++buf)
     {
+#ifdef USE_GUI
+	/* Any character can come after a CSI, don't escape it. */
+	if (buf[0] == CSI && i >= 2)
+	{
+	    buf += 2;
+	    i   -= 2;
+	    continue;
+	}
+#endif
 	if (buf[0] == NUL || (buf[0] == K_SPECIAL && c < 0))
 	{
 	    vim_memmove(buf + 3, buf + 1, (size_t)i);
@@ -1904,9 +1901,18 @@ do_map(maptype, keys, mode, abbrev)
     if (hasarg)
 	arg = replace_termcodes(arg, &arg_buf, FALSE);
 
-/*
- * check arguments and translate function keys
- */
+#ifdef FKMAP
+    /*
+     * when in right-to-left mode and alternate keymap option set,
+     * reverse the character flow in the arg in Farsi.
+     */
+    if (p_altkeymap && curwin->w_p_rl)
+	lrswap(arg);
+#endif
+
+    /*
+     * check arguments and translate function keys
+     */
     if (haskey)
     {
 	len = STRLEN(keys);
@@ -2099,15 +2105,6 @@ do_map(maptype, keys, mode, abbrev)
 	retval = 4;	    /* no mem */
 	goto theend;
     }
-
-#ifdef FKMAP
-    /*
-     ** when in right-to-left mode and alternate keymap option set,
-     ** reverse the character flow in the arg in Farsi.
-     */
-    if (p_altkeymap && curwin->w_p_rl)
-	lrswap(arg);
-#endif
 
     mp->m_keys = vim_strsave(keys);
     mp->m_str = vim_strsave(arg);

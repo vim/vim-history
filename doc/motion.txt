@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 5.0.  Last modification: 1998 Feb 11
+*motion.txt*    For Vim version 5.1.  Last modification: 1998 Apr 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -539,8 +539,8 @@ unrelated.
 '0 - '9		numbered marks, set from .viminfo file
 
 Lowercase marks 'a to 'z are remembered as long as the file remains in the
-buffer list.  If you remove the file from the buffer list, change a character
-in a line or delete a line that contains a mark, that mark is erased.
+buffer list.  If you remove the file from the buffer list, all its marks are
+lost.  If you delete a line that contains a mark, that mark is erased.
 Lowercase marks can be used in combination with operators.  For example: "d't"
 deletes the lines from the cursor position to mark 't'.  Hint: Use mark 't' for
 Top, 'b' for Bottom, etc..  Lowercase marks are restored when using undo and
@@ -618,11 +618,13 @@ operator, file-read or put command has been used yet in the current file.
 							*'quote*
 '"			To the first non-blank character of the line where
 			the cursor was the last time the current buffer was
-			exited (linewise).  {not in Vi}.
+			exited (linewise).  Defaults to the first line.  {not
+			in Vi}.
 
 							*`quote*
 `"			To the cursor position when last exiting the current
-			buffer (exclusive).  {not in Vi}.
+			buffer (exclusive).  Defaults to the first character
+			of the first line.  {not in Vi}.
 
 A "jump" is one of the following commands: "'", "`", "G", "/", "?", "n",
 "N", "%", "(", ")", "[[", "]]", "{", "}", ":s", ":tag", "L", "M", "H" and

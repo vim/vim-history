@@ -2,8 +2,7 @@
 " Language:    VHDL
 " Maintainer:  Stephan Hegel <ea273@fen.baynet.de>
 " Credits:     Czo (Olivier Sirol) <sirol@cao-vlsi.ibp.fr>
-" Last change: 1997 Dec 07
-" $Id: vhdl.vim,v 1.3 1997/12/08 16:41:13 steve Exp $
+" $Id: vhdl.vim,v 1.4 1998/03/28 19:37:33 steve Exp $
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -52,6 +51,7 @@ syn keyword vhdlType std_ulogic std_ulogic_vector
 " Predefined non standard VHDL types for Mentor Graphics Sys1076/QuickHDL
 syn keyword vhdlType qsim_state qsim_state_vector
 syn keyword vhdlType qsim_12state qsim_12state_vector
+syn keyword vhdlType qsim_strength
 
 " array attributes
 syn match vhdlAttribute "\'high"
@@ -128,8 +128,8 @@ syn keyword vhdlOperator mod rem abs not
 syn match   vhdlOperator "[&><=:+\-*\/|]"
 syn match   vhdlSpecial  "[().,;]"
 " time
-syn match vhdlTime "[0-9]\+ \+\(\([fpnum]s\)\|\(sec\)\|\(hr\)\)"
-syn match vhdlTime "[0-9]\+\.[0-9]\+ \+\(\([fpnum]s\)\|\(sec\)\|\(hr\)\)"
+syn match vhdlTime "\<[0-9]\+\s\+\(\([fpnum]s\)\|\(sec\)\|\(min\)\|\(hr\)\)\>"
+syn match vhdlTime "\<[0-9]\+\.[0-9]\+\s\+\(\([fpnum]s\)\|\(sec\)\|\(min\)\|\(hr\)\)\>"
 
 syn match vhdlComment "--.*$"
 " syn match vhdlGlobal "[\'$#~!%@?\^\[\]{}\\]"

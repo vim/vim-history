@@ -566,6 +566,9 @@ mch_input_isatty()
 }
 
 #if defined(HAVE_X11) && defined(WANT_X11)
+
+static int get_x11_thing __ARGS((int get_title, int test_only));
+
 /*
  * X Error handler, otherwise X just exits!  (very rude) -- webb
  */
@@ -699,26 +702,14 @@ get_x11_windis()
  */
     static int
 get_x11_title(test_only)
-    int	    test_only;
+    int		test_only;
 {
-    XTextProperty   text_prop;
-    int		    retval = FALSE;
+    int		retval;
 
-    if (get_x11_windis() == OK)
-    {
-	    /* Get window name if any */
-	if (XGetWMName(x11_display, x11_window, &text_prop))
-	{
-	    if (text_prop.value != NULL)
-	    {
-		retval = TRUE;
-		if (!test_only)
-		    oldtitle = vim_strsave((char_u *)text_prop.value);
-	    }
-	    XFree((void *)text_prop.value);
-	}
-    }
-    if (oldtitle == NULL && !test_only)	    /* could not get old title */
+    retval = get_x11_thing(TRUE, test_only);
+
+    /* could not get old title */
+    if (oldtitle == NULL && !test_only)
 	oldtitle = fixedtitle;
 
     return retval;
@@ -727,36 +718,86 @@ get_x11_title(test_only)
 /*
  * Determine original x11 Window icon
  */
-
     static int
 get_x11_icon(test_only)
-    int	    test_only;
+    int		test_only;
 {
-    XTextProperty   text_prop;
-    int		    retval = FALSE;
+    int		retval = FALSE;
 
-    if (get_x11_windis() == OK)
-    {
-	    /* Get icon name if any */
-	if (XGetWMIconName(x11_display, x11_window, &text_prop))
-	{
-	    if (text_prop.value != NULL)
-	    {
-		retval = TRUE;
-		if (!test_only)
-		    oldicon = vim_strsave((char_u *)text_prop.value);
-	    }
-	    XFree((void *)text_prop.value);
-	}
-    }
+    retval = get_x11_thing(FALSE, test_only);
 
-	/* could not get old icon, use terminal name */
+    /* could not get old icon, use terminal name */
     if (oldicon == NULL && !test_only)
     {
 	if (STRNCMP(T_NAME, "builtin_", 8) == 0)
 	    oldicon = T_NAME + 8;
 	else
 	    oldicon = T_NAME;
+    }
+
+    return retval;
+}
+
+    static int
+get_x11_thing(get_title, test_only)
+    int		get_title;	/* get title string */
+    int		test_only;
+{
+    XTextProperty	text_prop;
+    int			retval = FALSE;
+    Status		status;
+
+    if (get_x11_windis() == OK)
+    {
+        /* Get window/icon name if any */
+	if (get_title)
+	    status = XGetWMName(x11_display, x11_window, &text_prop);
+	else
+	    status = XGetWMIconName(x11_display, x11_window, &text_prop);
+
+        /*
+	 * If terminal is xterm, then x11_window may be a child window of the
+	 * outer xterm window that actually contains the window/icon name, so
+	 * keep traversing up the tree until a window with a title/icon is
+	 * found.
+         */
+        if (vim_is_xterm(T_NAME))
+        {
+            Window          root;
+            Window          parent;
+            Window          win = x11_window;
+            Window         *children;
+            unsigned int    num_children;
+
+            while (!status || text_prop.value == NULL)
+            {
+                if (!XQueryTree(x11_display, win, &root, &parent, &children, 
+							       &num_children))
+		    break;
+                if (children)
+                    XFree((void *)children);
+                if (parent == root || parent == 0)
+                    break;
+
+                win = parent;
+		if (get_title)
+		    status = XGetWMName(x11_display, win, &text_prop);
+		else
+		    status = XGetWMIconName(x11_display, win, &text_prop);
+            }
+        }
+        if (status && text_prop.value != NULL)
+        {
+            retval = TRUE;
+            if (!test_only)
+	    {
+		if (get_title)
+		    oldtitle = vim_strsave((char_u *)text_prop.value);
+		else
+		    oldicon = vim_strsave((char_u *)text_prop.value);
+	    }
+	    XFree((void *)text_prop.value);
+        }
     }
 
     return retval;

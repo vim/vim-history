@@ -1837,7 +1837,7 @@ vim_getenv(char_u *lognam)
     if (sys$trnlnm(&attrib, &d_file_dev, &d_lognam, NULL,&itmlst) == SS$_NORMAL)
     {
 	buffer[lengte] = '\0';
-	if (cp = (char_u *)malloc((size_t)(lengte+1)))
+	if (cp = (char_u *)alloc((unsigned)(lengte+1)))
 	    strcpy((char *)cp, buffer);
 	return(cp);
     }

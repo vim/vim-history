@@ -1,5 +1,5 @@
 /*****************************************************************************
-*   $Id: entry.c,v 5.2 1998/02/26 05:32:07 darren Exp $
+*   $Id: entry.c,v 5.3 1998/03/13 04:19:11 darren Exp $
 *
 *   Copyright (c) 1996-1997, Darren Hiebert
 *
@@ -51,8 +51,9 @@ static void truncateTagLine __ARGS((char *const line, const char *const token, c
 static int writeEtagsEntry __ARGS((const tagInfo *const tag, const memberInfo *const pMember, const tagScope scope, const tagType type));
 static const char *getTypeString __ARGS((const memberType mType));
 static int addExtensionFlags __ARGS((const memberInfo *const pMember, const tagScope scope, const tagType type));
-static int writeLineNumberEntry __ARGS((const tagInfo *const tag, const memberInfo *const pMember, const tagScope scope, const tagType type));
-static int writePatternEntry __ARGS((const tagInfo *const tag, const memberInfo *const pMember, const tagScope scope, const tagType type));
+static int writeLineNumberEntry __ARGS((const tagInfo *const tag));
+static int writePatternEntry __ARGS((const tagInfo *const tag, const tagType type));
+static int writeCtagsEntry __ARGS((const tagInfo *const tag, const memberInfo *const pMember, const tagScope scope, const tagType type, const boolean useLineNumber));
 static void writeTagEntry __ARGS((const tagInfo *const tag, const memberInfo *const pMember, const tagScope scope, const tagType type, const boolean useLineNumber));
 static boolean includeTag __ARGS((const tagScope scope, const tagType type));
 static void makeTagEntry __ARGS((const tagInfo *const tag, const memberInfo *const pMember, const tagScope scope, const tagType type, const boolean useLineNumber));
@@ -293,29 +294,14 @@ static int addExtensionFlags( pMember, scope, type )
     return length;
 }
 
-static int writeLineNumberEntry( tag, pMember, scope, type )
+static int writeLineNumberEntry( tag )
     const tagInfo *const tag;
-    const memberInfo *const pMember;
-    const tagScope scope;
-    const tagType type;
 {
-    int length = 0;
-
-    length += fprintf(TagFile.fp, "%s\t%s\t%lu",
-		      tag->name, File.name, tag->lineNumber);
-
-    if (includeExtensionFlags())
-	length += addExtensionFlags(pMember, scope, type);
-
-    length += fprintf(TagFile.fp, "\n");
-
-    return length;
+    return fprintf(TagFile.fp, "%lu", tag->lineNumber);
 }
 
-static int writePatternEntry( tag, pMember, scope, type )
+static int writePatternEntry( tag, type )
     const tagInfo *const tag;
-    const memberInfo *const pMember;
-    const tagScope scope;
     const tagType type;
 {
     char *const line = getSourceLine(&TagFile.line, tag->location);
@@ -327,11 +313,27 @@ static int writePatternEntry( tag, pMember, scope, type )
 	truncateTagLine(line, tag->name, FALSE);
     newlineTerminated = (boolean)(line[strlen(line) - 1] == '\n');
 
-    length += fprintf(TagFile.fp, "%s\t%s\t", tag->name, File.name);
     length += fprintf(TagFile.fp, "%c^", searchChar);
     length += writeSourceLine(TagFile.fp, line);
     length += fprintf(TagFile.fp, "%s%c", newlineTerminated ? "$":"",
 		      searchChar);
+
+    return length;
+}
+
+static int writeCtagsEntry( tag, pMember, scope, type, useLineNumber )
+    const tagInfo *const tag;
+    const memberInfo *const pMember;
+    const tagScope scope;
+    const tagType type;
+    const boolean useLineNumber;
+{
+    int length = fprintf(TagFile.fp, "%s\t%s\t", tag->name, File.name);
+
+    if (useLineNumber || type == TAG_SOURCE_FILE)
+	length += writeLineNumberEntry(tag);
+    else
+	length += writePatternEntry(tag, type);
 
     if (includeExtensionFlags())
 	length += addExtensionFlags(pMember, scope, type);
@@ -352,10 +354,8 @@ static void writeTagEntry( tag, pMember, scope, type, useLineNumber )
 
     if (Option.etags)
 	length = writeEtagsEntry(tag, pMember, scope, type);
-    else if (useLineNumber || type == TAG_SOURCE_FILE)
-	length = writeLineNumberEntry(tag, pMember, scope, type);
     else
-	length = writePatternEntry(tag, pMember, scope, type);
+	length = writeCtagsEntry(tag, pMember, scope, type, useLineNumber);
 
     ++TagFile.numTags.added;
     rememberMaxLengths(strlen(tag->name), length);
@@ -407,8 +407,34 @@ static void makeTagEntry( tag, pMember, scope, type, useLineNumber )
 	if (Option.xref)
 	    writeXrefEntry(tag, type);
 	else
+	{
 	    writeTagEntry(tag, pMember, scope, type, useLineNumber);
 
+	    /*  When appropriate, add an extra tag entry of the form
+	     *  class::member.
+	     */
+	    if (Option.include.classPrefix  && (pMember->type == MEMBER_CLASS ||
+		pMember->type == MEMBER_STRUCT)  &&  pMember->parent[0] != '0')
+	    {
+		switch (type)
+		{
+		    case TAG_FUNCDECL:
+		    case TAG_FUNCTION:
+		    case TAG_MEMBER:
+		    case TAG_VARIABLE:
+		    {
+			tagInfo prefixedTag;
+
+			prefixedTag = *tag;
+			sprintf(prefixedTag.name, "%s::%s",
+				pMember->parent, tag->name);
+			writeTagEntry(&prefixedTag, pMember, scope, type,
+				    useLineNumber);
+		    }
+		    default: break;
+		}
+	    }
+	}
 	DebugStatement( debugEntry(scope, type, tag->name, pMember); )
     }
 }

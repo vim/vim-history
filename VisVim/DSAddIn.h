@@ -40,6 +40,10 @@ class CDSAddIn :
 	STDMETHOD (OnDisconnection) (THIS_ VARIANT_BOOL bLastTime);
 
     protected:
+	bool AddCommand (IApplication* pApp, char* MethodName, char* CmdName,
+			 UINT StrResId, UINT GlyphIndex, VARIANT_BOOL bFirstTime);
+
+    protected:
 	CCommandsObj * m_pCommands;
 	DWORD m_dwCookie;
 };

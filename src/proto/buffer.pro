@@ -3,7 +3,7 @@ int open_buffer __ARGS((int read_stdin));
 int buf_valid __ARGS((BUF *buf));
 void close_buffer __ARGS((WIN *win, BUF *buf, int free_buf, int del_buf));
 void buf_clear __ARGS((BUF *buf));
-void buf_freeall __ARGS((BUF *buf));
+void buf_freeall __ARGS((BUF *buf, int del_buf));
 char_u *do_bufdel __ARGS((int command, char_u *arg, int addr_count, int start_bnr, int end_bnr, int forceit));
 int do_buffer __ARGS((int action, int start, int dir, int count, int forceit));
 BUF *buflist_new __ARGS((char_u *ffname, char_u *sfname, linenr_t lnum, int use_curbuf));

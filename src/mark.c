@@ -29,9 +29,6 @@ static char_u *namedfm_names[NMARKS + EXTRA_MARKS];	/* name for namedfm[] */
 
 static void show_one_mark __ARGS((int, char_u *, FPOS *, char_u *));
 static void cleanup_jumplist __ARGS((void));
-#ifdef VIMINFO
-static int removable __ARGS((char_u *name));
-#endif
 
 /*
  * setmark(c) - set named mark 'c' at current cursor position
@@ -370,8 +367,10 @@ clrallmarks(buf)
 
     for (i = 0; i < NMARKS; i++)
 	buf->b_namedm[i].lnum = 0;
-    buf->b_op_start.lnum = 0;	    /* start/end op mark cleared */
+    buf->b_op_start.lnum = 0;		/* start/end op mark cleared */
     buf->b_op_end.lnum = 0;
+    buf->b_last_cursor.lnum = 1;	/* '" mark cleared */
+    buf->b_last_cursor.col = 0;
 }
 
 /*
@@ -773,7 +772,7 @@ write_viminfo_filemarks(fp)
 /*
  * Return TRUE if "name" is on removable media (depending on 'viminfo').
  */
-    static int
+    int
 removable(name)
     char_u  *name;
 {

@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 5.0.  Last modification: 1998 Feb 18
+*cmdline.txt*   For Vim version 5.1.  Last modification: 1998 Mar 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -325,6 +325,10 @@ it must be preceded with a backslash.  Example:
 >	:r !date<NL>-join
 This reads the current date into the file and joins it with the previous line.
 
+Note that when the command before the '|' generates an error, the following
+commands will not be executed.
+
+
 Because of Vi compatibility the following strange commands are supported:
 >	:|			print current line (like ":p")
 >	:3|			print line 3 (like ":3p")
@@ -454,8 +458,8 @@ three lines:
 5. Ex special characters				*cmdline-special*
 
 In Ex commands, at places where a file name can be used, the following
-characters have a special meaning.  These can also be used in an expression
-|expression-syntax|.
+characters have a special meaning.  These can also be used in the expression
+function expand() |expand()|.
 	%	   is replaced with the current file name		*:_%*
 	#	   is replaced with the alternate file name		*:_#*
 	#n	   (where n is a number) is replaced with the file name of

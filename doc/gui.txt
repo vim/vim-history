@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 5.0.  Last modification: 1998 Jan 28
+*gui.txt*       For Vim version 5.1.  Last modification: 1998 Feb 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -51,7 +51,7 @@ When the GUI starts up initializations are carried out, in this order:
   - If the user gvimrc file exists, it is sourced.  The name of this file is
     normally "$HOME/.gvimrc".  You can check this with ":version".
   - For Win32, when $HOME is not set, "$VIM\_gvimrc" is used.
-  - When a "_gvimrc" file is not found, ".gvimrc" is tried too.  And vise
+  - When a "_gvimrc" file is not found, ".gvimrc" is tried too.  And vice
     versa.
 - If the 'exrc' option is set (which is NOT the default) the file ./.gvimrc
   is sourced, if it exists and isn't the same file as the system or user
@@ -142,23 +142,30 @@ scrolled as far as possible left and right.
 3. Mouse Control					*gui-mouse*
 
 The mouse only works if the appropriate flag in the 'mouse' option is set.
-When the GUI is switched on the 'mouse' option is set to "a", enabling it for
-all modes except for the |hit-return| prompt.  This can be changed in the
-"gvimrc" file.
+When the GUI is switched on, the 'mouse' option is automatically set to "a",
+enabling it for all modes except for the |hit-return| prompt.  If you don't
+want this, a good place to change the 'mouse' option is the "gvimrc" file.
 
 
 3.1 Moving Cursor with Mouse				*gui-mouse-move*
 
-Click the left mouse button where you want the cursor to go, and it does!
-This works in Normal mode (if 'mouse' contains 'n' or 'a'), Visual mode (if
-'mouse' contains 'v' or 'a') and Insert mode (if 'mouse' contains 'i' or
-'a'), if you click the mouse somewhere in a text buffer. You may use this
-with an operator such as 'd' to delete text from the current cursor position
-to the position you point to with the mouse.  That is, you hit 'd' and then
-click the mouse somewhere.  If you are on the ':' line (or '/' or '?'), then
-clicking the left or right mouse button will position the cursor on the ':'
-line (if 'mouse' contains 'c' or 'a').  In any situation the middle mouse
-button may be clicked to paste the current selection.
+Click the left mouse button somewhere in a text buffer where you want the
+cursor to go, and it does!
+This works in	    when 'mouse contains ~
+Normal mode	    'n', 'N', 'a' or 'A'
+Visual mode	    'v',      'a' or 'A'
+Insert mode	    'i', 'I', 'a' or 'A'
+
+You may use this with an operator such as 'd' to delete text from the current
+cursor position to the position you point to with the mouse.  That is, you hit
+'d' and then click the mouse somewhere.
+
+If you are on the ':' line (or '/' or '?'), then clicking the left or right
+mouse button will position the cursor on the ':' line (if 'mouse' contains
+'c', 'a' or 'A').
+
+In any situation the middle mouse button may be clicked to paste the current
+selection.
 
 
 3.2 Visual Selection with Mouse				*gui-mouse-select*

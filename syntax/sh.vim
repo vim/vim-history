@@ -17,6 +17,12 @@
 " 	Sync included with thanks to Dr. Charles E. Campbell Jr <cec@gryphon.gsfc.nasa.gov>
 "	Echo included with thanks to Éric Brunet
 "	[ \t] removed using \s instead
+" Updated 1998 March 24
+"       Error in case statement corrected with thanks to  Ronald.Schild rs@dps.de
+" Updated 1998 March 25
+"       Error correction from Dr. Charles E. Campbell Jr 
+" Updated 1998 March 29
+"	added sh_minlines (Bram Moolenaar)
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -39,6 +45,19 @@ syn region shEmbeddedEcho contained matchgroup=shStatement start="\<echo\>" skip
  	" `echo bla` be correct
 syn region shEcho matchgroup=shStatement start="\<echo\>" skip="\\$" matchgroup=shOperator end="$" matchgroup=NONE end="[<>;&|]"me=e-1 end="[0-9][<>]"me=e-2 end="#"me=e-1 contains=shNumber,shCommandSub,shSinglequote,shDeref,shSpecialVar,shSpecial,shOperator,shDoubleQuote
 
+"Error Codes
+syn match   shDoError "\<done\>"
+syn match   shIfError "\<fi\>"
+syn match   shInError "\<in\>"
+syn match   shCaseError ";;"
+syn match   shEsacError "\<esac\>"
+syn match   shCurlyError "}"
+syn match   shParenError ")"
+if exists("is_kornshell")
+syn match     shDTestError "]]"
+endif
+syn match     shTestError "]"
+
 " Tests
 "======
 if exists("is_kornshell")
@@ -53,7 +72,7 @@ syn region  shIf transparent matchgroup=shStatement start="\<if\>" end="\<fi\>" 
 syn region  shFor  matchgroup=shStatement start="\<for\>" end="\<in\>" contains=ALLBUT,shFunction,shInError,shCase
 syn region shCaseEsac transparent matchgroup=shStatement start="\<case\>" matchgroup=NONE end="\<in\>"me=s-1 contains=ALLBUT,shFunction,shCaseError nextgroup=shCaseEsac
 syn region shCaseEsac matchgroup=shStatement start="\<in\>" end="\<esac\>" contains=ALLBUT,shFunction,shCaseError
-syn region shCase matchgroup=shStatement contained start="\s*.\+)"  end=";;" contains=ALLBUT,shFunction,shCaseError,shCase
+syn region shCase matchgroup=shStatement contained start=")"  end=";;" contains=ALLBUT,shFunction,shCaseError,shCase
 syn region  shNone transparent matchgroup=shOperator start="{" end="}" contains=ALLBUT,shCurlyError,shCase
 syn region  shSubSh transparent matchgroup=shOperator start="(" end=")" contains=ALLBUT,shParenError,shCase
 
@@ -73,8 +92,10 @@ syn match	shRedir	"[0-9]\=>\(&[-0-9]\)\="
 syn match	shRedir	"[0-9]\=>>-\="
 syn match	shRedir	"[0-9]\=<\(&[-0-9]\)\="
 syn match	shRedir	"[0-9]<<-\="
-" Future:
-"syn region      shRedir start="<<\([! 	;&|]\+" end="\1"
+
+" Shell Input Redirection (Here Documents)
+syn region shHereDoc matchgroup=shRedir start="<<-\=\s*\**END[a-zA-Z_0-9]*\**" matchgroup=shRedir end="^END[a-zA-Z_0-9]*$"
+syn region shHereDoc matchgroup=shRedir start="<<-\=\s*\**EOF\**" matchgroup=shRedir end="^EOF$"
 
 " Identifiers
 "============
@@ -93,19 +114,6 @@ syn region  shFunction transparent matchgroup=shFunctionName 	start="^\s*\<[a-zA
 syn region shDeref	     start="\${" end="}"
 syn match  shDeref	     "\$\<[a-zA-Z_][a-zA-Z0-9_]*\>"
 syn match  shSpecialShellVar "\$[-#@*$?!0-9]"
-
-"Error Codes
-syn match   shDoError "\<done\>"
-syn match   shIfError "\<fi\>"
-syn match   shInError "\<in\>"
-syn match     shCaseError ";;"
-syn match   shEsacError "\<esac\>"
-syn match     shCurlyError "}"
-syn match     shParenError ")"
-if exists("is_kornshell")
-syn match     shDTestError "]]"
-endif
-syn match     shTestError "]"
 
 " A bunch of useful sh keywords
 syn keyword shStatement    break cd chdir continue eval exec
@@ -131,7 +139,10 @@ endif
 
 " Syncs
 " =====
-syn sync minlines=50
+if !exists("sh_minlines")
+  let sh_minlines = 100
+endif
+exec "syn sync minlines=" . sh_minlines
 syn sync match shDoSync       grouphere  shDo       "\<do\>"
 syn sync match shDoSync       groupthere shDo       "\<done\>"
 syn sync match shIfSync       grouphere  shIf       "\<if\>"
@@ -146,6 +157,7 @@ if !exists("did_sh_syntax_inits")
 " The default methods for highlighting.  Can be overridden later
   hi link shSinglequote		shString
   hi link shDoubleQuote		shString
+  hi link shHereDoc		shString
   hi link shSource		shOperator
   hi link shWrapLineOperator	shOperator
   hi link shColon		shStatement

@@ -1,4 +1,4 @@
-*os_dos.txt*    For Vim version 5.0.  Last modification: 1998 Jan 25
+*os_dos.txt*    For Vim version 5.1.  Last modification: 1998 Mar 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -21,9 +21,14 @@ versions of Vim.  Also see |os_win32.txt| and |os_msdos.txt|.
 ==============================================================================
 1. File locations					*dos-locations*
 
-You should set the environment variable "VIM" to the directory where the Vim
-documentation files are.  If "VIM" is used but not defined, "HOME" is tried
-too.
+If you keep the Vim executable in the same directory as the help and syntax
+files, there is no need to do anything special for Vim to work.  No registry
+entries or environment variables need to be set.  Just make sure that the
+directory is in your search path, or use a shortcut on the desktop.
+
+If the executable is in a different directory than the support files, you
+should set the environment variable $VIM to the directory where the Vim
+documentation files are.  If $VIM is used but not defined, $HOME is tried too.
 
 Under Windows 95, $VIM can be set in your C:\autoexec.bat file.  For example:
 >  set VIM=D:\vim
@@ -31,14 +36,14 @@ Under Windows NT, you can set environment variables for each user separately,
 under "Start/Settings/Control Panel->System".  Or get the properties from the
 menu of "My Computer", in the Environment Tab.
 
-If the HOME environment variable is not set, the value "C:/" is used as a
+If the $HOME environment variable is not set, the value "C:/" is used as a
 default.
 
-If no VIM or HOME environment variables are set, then vim (gvim) will
+If no $VIM or $HOME environment variables are set, then vim (gvim) will
 find the  _vimrc file in the same directory as the vim (gvim) executable.
 
 Likewise, the documentation will be found in the doc subdirectory of that
-place, and the '$VIM' internal variable will be set to the exe place.  This
+place, and the $VIM internal variable will be set to the exe place.  This
 means you will be able to edit the _vimrc file by doing:
 >  :e $VIM/_vimrc
 
@@ -50,12 +55,12 @@ where the help file is.  Also see |$VIM| and |'helpfile'|.
 
 Vim will look for initializations in eight places.  The first that is found
 is used and the others are ignored.  The order is:
-	-  The environment variable VIMINIT
+	-  The environment variable $VIMINIT
 	-  The file "$VIM/_vimrc"
 	-  The file "$HOME/_vimrc"
 	-  The file "$VIM/.vimrc"
 	-  The file "$HOME/.vimrc"
-	-  The environment variable EXINIT
+	-  The environment variable $EXINIT
 	-  The file "$VIM/_exrc"
 	-  The file "$HOME/_exrc"
 
@@ -113,8 +118,18 @@ The default output method for the screen is to use bios calls.  This will work
 right away on most systems.  You do not need ansi.sys.  You can use ":mode" to
 set the current screen mode.  See |:mode|.
 
-You can set the color used in five modes with nine termcap options.  Which of
-the five modes is used for which action depends on the |'highlight'| option.
+To change the screen colors that Vim uses, the |:highlight| command can be
+used.  The Normal highlight group has the colors to be used for normal text.
+For example, to get grey text on a blue background:
+	:hi Normal ctermbg=Blue ctermfg=grey
+See |highlight-groups| for other groups that can be used.
+
+A DOS console does not support attributes like bold and underlining.  You can
+set the color used in five modes with nine termcap options.  Note that this is
+not really needed, since you can set the color directly with the ":highlight"
+command.  This is for backwards compatibility with older Vim versions.
+Which of the five modes is used for which action depends on the |'highlight'|
+option.
 
 	":set t_mr=^V^[\|xxm"		start of invert mode
 	":set t_md=^V^[\|xxm"		start of bold mode

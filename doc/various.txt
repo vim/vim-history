@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 5.0.  Last modification: 1998 Feb 14
+*various.txt*   For Vim version 5.1.  Last modification: 1998 Feb 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -182,6 +182,7 @@ ga			Print the ascii value of the character under the
 *+insert_expand*	|insert_expand| Insert mode completion
 *+langmap*		|'langmap'|
 *+lispindent*		|'lisp'|
+*+mouse*		Mouse handling |mouse-using|
 *+mouse_dec*		Unix only: Dec terminal mouse handling
 *+mouse_netterm*	Unix only: netterm mouse handling
 *+mouse_xterm*		Unix only: xterm mouse handling

@@ -73,7 +73,8 @@ static int	undo_undoes = FALSE;
     int
 u_save_cursor()
 {
-    return (u_save((linenr_t)(curwin->w_cursor.lnum - 1), (linenr_t)(curwin->w_cursor.lnum + 1)));
+    return (u_save((linenr_t)(curwin->w_cursor.lnum - 1),
+				      (linenr_t)(curwin->w_cursor.lnum + 1)));
 }
 
 /*

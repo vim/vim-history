@@ -442,6 +442,12 @@ asdf;
 misplacedline;
 }
 
+{
+	if (clipboard.state == SELECT_DONE
+	&& ((row == clipboard.start.lnum
+	&& col >= clipboard.start.col)
+	|| row > clipboard.start.lnum))
+}
 
 /* end of AUTO */
 

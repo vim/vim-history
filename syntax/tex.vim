@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language   : TeX
 " Maintainer : Dr. Charles E. Campbell, Jr. <cec@gryphon.gsfc.nasa.gov>
-" Last change: December 4, 1997
+" Last change: February 23, 1998
 "
 " Notes:
 " 1. If you have a \begin{verbatim} that appears to overrun its boundaries,
@@ -38,9 +38,9 @@ syn region texMatcher matchgroup=Delimiter start="\["	end="]"	              cont
 syn region texParen	start="("		end=")"	              contains=ALLBUT,texError,texCmdName,texCmdArgs,texCmdBody,texDefName,texMathMatcher,texMathParen,texMathOper
 syn match  texError	"[}\])]"
 
-syn region texMathMatcher   matchgroup=Delimiter start="{"  skip="\(\\\\\)*\\}"  end="}"	contained contains=ALLBUT,texError,texCmdName,texCmdArgs,texCmdBody,texDefName,texOnlyMath,texMatcher,texParen,texBadMath
-syn region texMathMatcher   matchgroup=Delimiter start="\[" skip="\(\\\\\)*\\\]" end="]"	contained contains=ALLBUT,texError,texCmdName,texCmdArgs,texCmdBody,texDefName,texOnlyMath,texMatcher,texParen,texBadMath
-syn region texMathParen	start="(" end=")"				contained contains=ALLBUT,texError,texCmdName,texCmdArgs,texCmdBody,texDefName,texOnlyMath,texMatcher,texParen,texBadMath
+syn region texMathMatcher   matchgroup=Delimiter start="{"  skip="\(\\\\\)*\\}"  end="}"	contained contains=ALLBUT,texError,texCmdName,texCmdArgs,texCmdBody,texDefName,texOnlyMath,texMatcher,texParen,texBadMath,texAccent
+syn region texMathMatcher   matchgroup=Delimiter start="\[" skip="\(\\\\\)*\\\]" end="]"	contained contains=ALLBUT,texError,texCmdName,texCmdArgs,texCmdBody,texDefName,texOnlyMath,texMatcher,texParen,texBadMath,texAccent
+syn region texMathParen	start="(" end=")"				contained contains=ALLBUT,texError,texCmdName,texCmdArgs,texCmdBody,texDefName,texOnlyMath,texMatcher,texParen,texBadMath,texAccent
 
 " TeX/LaTeX keywords
 " Instead of trying to be All Knowing, I just match \..alphameric..
@@ -59,20 +59,34 @@ syn match texSection "\\\(title\|author\|part\|chapter\|paragraph\|subparagraph\
 syn match texSection "\\begin{abstract}\|\\end{abstract}"
 
 " Math Zones
-syn region texMathZone	start="\\begin{equation}"	end="\\end{equation}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,TexMathDelim,texComment,texRefZone
-syn region texMathZone	start="\\begin{equation\*}"	end="\\end{equation\*}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,TexMathDelim,texComment,texRefZone
-syn region texMathZone	start="\\begin{eqnarray}"	end="\\end{eqnarray}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,TexMathDelim,texComment,texRefZone
-syn region texMathZone	start="\\begin{eqnarray\*}"	end="\\end{eqnarray\*}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,TexMathDelim,texComment,texRefZone
-syn region texMathZone	start="\\begin{math}"	end="\\end{math}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,TexMathDelim,texComment,texRefZone
-syn region texMathZone	start="\\begin{math\*}"	end="\\end{math\*}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,TexMathDelim,texComment,texRefZone
-syn region texMathZone start="\\begin{displaymath}"   end="\\end{displaymath}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,TexMathDelim,texComment,texRefZone
-syn region texMathZone start="\\begin{displaymath\*}" end="\\end{displaymath\*}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,TexMathDelim,texComment,texRefZone
-syn region texMathZone	matchgroup=Delimiter start="\\("		matchgroup=Delimiter end="\\)\|%stopzone"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,TexMathDelim,texRefZone
-syn region texMathZone	matchgroup=Delimiter start="\\\["		matchgroup=Delimiter end="\\]\|%stopzone"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,TexMathDelim,texRefZone
-syn region texMathZone	matchgroup=Delimiter start="\$"		skip="\(\\\\\)*\\\$"	matchgroup=Delimiter end="\$\|%stopzone" keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,TexMathDelim,texRefZone
-syn region texMathZone	matchgroup=Delimiter start="\$\$"		matchgroup=Delimiter end="\$\$\|%stopzone" keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,TexMathDelim,texRefZone
+syn region texMathZone	start="\\begin{align\*}"	end="\\end{align\*}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,texMathDelim,texComment,texRefZone
+syn region texMathZone	start="\\begin{alignat\*}"	end="\\end{alignat\*}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,texMathDelim,texComment,texRefZone
+syn region texMathZone	start="\\begin{alignat}"	end="\\end{alignat}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,texMathDelim,texComment,texRefZone
+syn region texMathZone	start="\\begin{align}"	end="\\end{align}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,texMathDelim,texComment,texRefZone
+syn region texMathZone	start="\\begin{eqnarray\*}"	end="\\end{eqnarray\*}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,texMathDelim,texComment,texRefZone
+syn region texMathZone	start="\\begin{eqnarray}"	end="\\end{eqnarray}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,texMathDelim,texComment,texRefZone
+syn region texMathZone	start="\\begin{equation\*}"	end="\\end{equation\*}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,texMathDelim,texComment,texRefZone
+syn region texMathZone	start="\\begin{equation}"	end="\\end{equation}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,texMathDelim,texComment,texRefZone
+syn region texMathZone	start="\\begin{flalign\*}"	end="\\end{flalign\*}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,texMathDelim,texComment,texRefZone
+syn region texMathZone	start="\\begin{flalign}"	end="\\end{flalign}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,texMathDelim,texComment,texRefZone
+syn region texMathZone	start="\\begin{gather\*}"	end="\\end{gather\*}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,texMathDelim,texComment,texRefZone
+syn region texMathZone	start="\\begin{gather}"	end="\\end{gather}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,texMathDelim,texComment,texRefZone
+syn region texMathZone	start="\\begin{math\*}"	end="\\end{math\*}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,texMathDelim,texComment,texRefZone
+syn region texMathZone	start="\\begin{math}"	end="\\end{math}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,texMathDelim,texComment,texRefZone
+syn region texMathZone	start="\\begin{multline}"	end="\\end{multline}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,texMathDelim,texComment,texRefZone
+syn region texMathZone	start="\\begin{split}"	end="\\end{split}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,texMathDelim,texComment,texRefZone
+syn region texMathZone start="\\begin{displaymath\*}"	end="\\end{displaymath\*}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,texMathDelim,texComment,texRefZone
+syn region texMathZone start="\\begin{displaymath}"	end="\\end{displaymath}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,texMathDelim,texComment,texRefZone
+syn region texMathZone start="\\begin{multline\*}"	end="\\end{multline\*}"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,texMathDelim,texComment,texRefZone
+
+syn region texMathZone	matchgroup=Delimiter start="\\("	matchgroup=Delimiter end="\\)\|%stopzone"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,texMathDelim,texRefZone
+syn region texMathZone	matchgroup=Delimiter start="\\\["	matchgroup=Delimiter end="\\]\|%stopzone"	keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,texMathDelim,texRefZone
+syn region texMathZone	matchgroup=Delimiter start="\$"	skip="\(\\\\\)*\\\$"	matchgroup=Delimiter end="\$\|%stopzone" keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,texMathDelim,texRefZone
+syn region texMathZone	matchgroup=Delimiter start="\$\$"	matchgroup=Delimiter end="\$\$\|%stopzone" keepend contains=texTypeStyle,texTypeSize,texStatement,texDelimiter,texComment,texLength,texMathMatcher,texMathParen,texMathOper,texError,texMathDelim,texRefZone
+
 syn match texMathOper	"[_^=]" contained
-syn match TexMathDelim	"\\\(\left\|\right\)\([()[\]\.|]\|\\[uU]parrow\|\\[dD]ownarrow\|\\[uU]pdownarrow\|\\[lr]floor\|\\[lr]ceil\|\\[lr]\angle\|\\backslash\|\\|\)\>" contained
+syn match texMathDelim	"\\\(\left\|\right\)\([()[\]\.|]\|\\[uU]parrow\|\\[dD]ownarrow\|\\[uU]pdownarrow\|\\[lr]floor\|\\[lr]ceil\|\\[lr]\angle\|\\backslash\|\\|\)\>" contained
+syn match texBadMath	"\\end{\(split\|align\|gather\|alignat\|flalign\|multline\)"
 syn match texBadMath        "\\end{\(equation\|eqnarray\|displaymath\)\*\=}"
 syn match texBadMath	"\\[\])]"
 
@@ -96,11 +110,18 @@ syn match texSpecialChar	"\\[SP@][^a-zA-Z]"me=e-1
 syn match texSpecialChar	"\\\\"
 syn match texOnlyMath	"[_^]"
 
+" texAccent (tnx to Karim Belabas) avoids annoying highlighting for accents
+syn match texAccent	"\\[bcdvuH][^a-zA-Z]"me=e-1
+syn match texAccent	"\\[bcdvuH]$"
+syn match texAccent	+\\[=^.\~"`']+
+syn match texLigature	"\\\([ijoL]\|ae\|oe\|ss\|AA\|AE\|OE\)[^a-zA-Z]"me=e-1
+syn match texLigature	"\\\([ijoL]\|ae\|oe\|ss\|AA\|AE\|OE\)$"
+
 " handle newcommands
 syn match  texNewCmd		"\\newcommand"		nextgroup=texCmdName skipwhite skipnl
 syn region texCmdName contained matchgroup=Delimiter start="{"rs=s+1  end="}"	nextgroup=texCmdArgs,texCmdBody skipwhite skipnl
 syn region texCmdArgs contained matchgroup=Delimiter start="\["rs=s+1 end="]"	nextgroup=texCmdBody skipwhite skipnl
-syn region texCmdBody contained matchgroup=Delimiter start="{"rs=s+1 skip="\(\\\\\)\\[{}]" matchgroup=Delimiter end="}" contains=ALLBUT,texZone,texMatcher,texError,texCmdName,texCmdArgs,texDefCmd,texDefName,texMathZone,texParen,texMathParen,texMathMatcher,texBadMath,texOnlyMath
+syn region texCmdBody contained matchgroup=Delimiter start="{"rs=s+1 skip="\(\\\\\)\\[{}]" matchgroup=Delimiter end="}" contains=ALLBUT,texZone,texMatcher,texError,texCmdName,texCmdArgs,texDefCmd,texDefName,texMathZone,texParen,texMathParen,texMathMatcher,texBadMath,texOnlyMath,texAccent
 
 syn match texDefCmd		"\\def"			nextgroup=texDefName skipwhite skipnl
 syn match texDefName contained	"\\[a-zA-Z]\+"		nextgroup=texCmdBody skipwhite skipnl
@@ -123,6 +144,7 @@ if !exists("did_tex_syntax_inits")
  hi link texMath	Special
  hi link texDef	Statement
  hi link texType	Type
+ hi link texLigature	texSpecialChar
 
  " The default methods for highlighting. Can be overridden later
  hi link texBadMath         Error
@@ -134,7 +156,7 @@ if !exists("did_tex_syntax_inits")
  hi link texDelimiter	Delimiter
  hi link texError	Error
  hi link texInput	Todo
- hi link TexMathDelim	Delimiter
+ hi link texMathDelim	Delimiter
  hi link texLength	Number
  hi link texMathMatcher     texMath
  hi link texMathParen       texMath

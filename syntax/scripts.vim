@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1997 August 26
+" Last change:	1998 April 1 (really!)
 
 " This file is called by an autocommand for every file that has just been
 " loaded into a buffer.  It checks if the first line of the file is recognized
@@ -54,6 +54,10 @@ if !has("syntax_items")
   " Expect scripts
   elseif getline(1) =~ '^#!.*[/\\]expect\>'
     so <sfile>:p:h/expect.vim
+
+  " Makefiles
+  elseif getline(1) =~ '^#!.*[/\\][^/\\]*make\>'
+    so <sfile>:p:h/make.vim
 
   " Perl
   elseif getline(1) =~ '^#!.*[/\\][^/\\]*perl[^/\\]*\>'

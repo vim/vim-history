@@ -1,4 +1,4 @@
-*if_ole.txt*    For Vim version 5.0.  Last modification: 1998 Jan 25
+*if_ole.txt*    For Vim version 5.1.  Last modification: 1998 Mar 20
 
 		  VIM REFERENCE MANUAL    by Paul Moore
 
@@ -109,6 +109,13 @@ moving, deleting, or upgrading Vim, the registry entries should be removed
 using the "-unregister" switch.
 
 >	gvim -unregister
+
+The OLE mechanism will use the first registered Vim it finds.  If a Vim is
+already running, this one will be used.  If you want to have (several) Vim
+sessions open that should not react to OLE commands, use the non-OLE version,
+and put it in a different directory.  The OLE version should then be put in a
+directory that is not in your normal path, so that typing "gvim" will start
+the non-OLE version.
 
 ==============================================================================
  vim:tw=78:ts=8:sw=8:

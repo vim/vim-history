@@ -174,7 +174,12 @@ enum key_extra
     KE_TAB,		/* unshifted TAB key */
     KE_S_TAB,		/* shifted TAB key */
 
-    KE_SNIFF		/* SNiFF+ input waiting */
+    KE_SNIFF,		/* SNiFF+ input waiting */
+
+    KE_XF1,		/* extra vt100 function keys for xterm */
+    KE_XF2,
+    KE_XF3,
+    KE_XF4
 };
 
 /*
@@ -192,6 +197,12 @@ enum key_extra
 #define K_S_RIGHT	TERMCAP2KEY('%', 'i')
 #define K_TAB		TERMCAP2KEY(KS_EXTRA, KE_TAB)
 #define K_S_TAB		TERMCAP2KEY(KS_EXTRA, KE_S_TAB)
+
+/* extra set of function keys F1-F4, for vt100 compatible xterm */
+#define K_XF1		TERMCAP2KEY(KS_EXTRA, KE_XF1)
+#define K_XF2		TERMCAP2KEY(KS_EXTRA, KE_XF2)
+#define K_XF3		TERMCAP2KEY(KS_EXTRA, KE_XF3)
+#define K_XF4		TERMCAP2KEY(KS_EXTRA, KE_XF4)
 
 #define K_F1		TERMCAP2KEY('k', '1')	/* function keys */
 #define K_F2		TERMCAP2KEY('k', '2')
@@ -311,12 +322,16 @@ enum key_extra
 #define K_SNIFF		    TERMCAP2KEY(KS_EXTRA, KE_SNIFF)
 
 /* Bits for modifier mask */
+/* 0x01 cannot be used, because the modifier must be 0x02 or higher */
 #define MOD_MASK_SHIFT	    0x02
 #define MOD_MASK_CTRL	    0x04
 #define MOD_MASK_ALT	    0x08
 #define MOD_MASK_2CLICK	    0x10
 #define MOD_MASK_3CLICK	    0x20
 #define MOD_MASK_4CLICK	    0x40
+#ifdef macintosh
+# define MOD_MASK_CMD        0x80
+#endif
 
 #define MOD_MASK_MULTI_CLICK	(MOD_MASK_2CLICK|MOD_MASK_3CLICK|MOD_MASK_4CLICK)
 

@@ -9,41 +9,30 @@
 /*
  * os_mac.c -- code for the MacOS
  *
- * This file manly based on os_unix.c.
+ * This file mainly based on os_unix.c.
  */
 
 #include "vim.h"
 #include "globals.h"
 #include "option.h"
 #include "proto.h"
-#include <unistd.h>
-#include <utsname.h>
-#include <signal.h>
-#include <errno.h>
-#include <stdio.h>
 
-#ifdef HAVE_FCNTL_H
-# include <fcntl.h>
-#endif
-
-#include <Memory.h>
-#include <OSUtils.h>
-#include <Files.h>
-
+#define USE_NEW_CODE
 
 /*
  * Recursively build up a list of files in "gap" matching the first wildcard
  * in `path'.  Called by expand_wildcards().
  */
     int
-mch_expandpath(
+mac_expandpath(
     struct growarray	*gap,
     char_u		*path,
-    int			flags)
+    int			flags,
+    short		start_at, 
+    short		as_full)
 {
     /*
-     * TODO: +Support for unix path type
-     *	      (within caller??)
+     * TODO: 
      *       +Get Volumes (when looking for files in current dir)
      *       +Make it work when working dir not on select volume
      *       +Cleanup
@@ -55,7 +44,244 @@ mch_expandpath(
     long	dirID;
     char_u      *new_name;
     CInfoPBRec  gMyCPB;
+    HParamBlockRec gMyHPBlock;
+    FSSpec         usedDir;
 
+    char_u	    *buf;
+    char_u	    *p, *s, *e;
+    int		    start_len, c;
+    char	    dummy;
+    char_u	    *pat;
+    vim_regexp	*prog;
+    int		    matches;
+
+    start_len = gap->ga_len;
+    buf = alloc(STRLEN(path) + BASENAMELEN + 5);/* make room for file name */
+    if (buf == NULL)
+    	return 0;
+
+/*
+ * Find the first part in the path name that contains a wildcard.
+ * Copy it into buf, including the preceding characters.
+ */
+    p = buf;
+    s = NULL;
+    e = NULL;
+#if 1
+    STRNCPY(buf, path, start_at);
+    p += start_at;
+    path += start_at;
+#endif
+
+    while (*path)
+    {
+	    if (*path == ':')
+	    {
+    	    if (e)
+			break;
+		else
+			s = p;
+	    }
+	    /* should use  WILCARDLIST but ehat about ` */
+/*	    if (vim_strchr((char_u *)"*?[{~$", *path) != NULL)*/
+	    if (vim_strchr((char_u *)WILDCHAR_LIST, *path) != NULL)
+		e = p;
+    	*p++ = *path++;
+    }
+    e = p;
+    if (s != NULL)
+	    s++;
+    else
+	    s = buf;
+
+    /* now we have one wildcard component between s and e */
+    *e = NUL;
+
+    /* convert the file pattern to a regexp pattern */
+    pat = file_pat_to_reg_pat(s, e, NULL);
+    if (pat == NULL)
+    {
+	    vim_free(buf);
+	    return 0;
+    }
+
+    /* compile the regexp into a program */
+    reg_ic = FALSE;				/* Don't ever ignore case */
+    prog = vim_regcomp(pat, TRUE);
+    vim_free(pat);
+
+    if (prog == NULL)
+    {
+	    vim_free(buf);
+	    return 0;
+    }
+
+    /* open the directory for scanning */
+    c = *s;
+    *s = NUL;
+
+    if (*buf == NUL)
+    {
+	as_full = TRUE;
+#if 0
+	(void) mch_dirname (&dirname[1], 254);
+	dirname[0] = STRLEN(&dirname[1]);
+#endif
+    }
+    else
+    {
+	if (*buf == ':')  /* relative path */
+	{
+	    (void) mch_dirname (&dirname[1], 254);
+	    new_name=concat_fnames(&dirname[1], buf+1, TRUE);
+	    STRCPY(&dirname[1], new_name);
+	    dirname[0] = STRLEN(new_name);
+	    vim_free(new_name);
+	}
+	else
+	{
+	    STRCPY(&dirname[1], buf);
+	    backslash_halve (&dirname[1], TRUE);
+	    dirname[0] = STRLEN(buf);
+	}
+    }
+    *s = c;
+
+    FSMakeFSSpec (0, 0, dirname, &usedDir);
+    
+    gMyCPB.dirInfo.ioNamePtr    = dirname;
+    gMyCPB.dirInfo.ioVRefNum    = usedDir.vRefNum;
+    gMyCPB.dirInfo.ioFDirIndex  = 0;
+    gMyCPB.dirInfo.ioDrDirID    = 0;
+
+    gErr = PBGetCatInfo(&gMyCPB, false);
+
+    gMyCPB.dirInfo.ioCompletion = NULL;
+    dirID = gMyCPB.dirInfo.ioDrDirID;
+    do
+    {
+	gMyCPB.hFileInfo.ioFDirIndex = index;
+	gMyCPB.hFileInfo.ioDirID     = dirID;
+
+	gErr = PBGetCatInfo(&gMyCPB,false);
+
+	if (gErr == noErr)
+	{
+	    STRNCPY (cfilename, &dirname[1], dirname[0]);
+	    cfilename[dirname[0]] = 0;
+	    if (vim_regexec(prog, cfilename, TRUE))
+	    {
+		if (s[-1] != ':')
+		{
+		    STRCPY(s+1, cfilename);
+		    s[0] = ':';
+		}
+		else
+		{
+		    STRCPY(s, cfilename);
+		}
+		start_at = STRLEN(buf);
+		STRCAT(buf, path);
+		if (mch_has_wildcard(path))	/* handle more wildcard */
+		    (void)mac_expandpath(gap, buf, flags, start_at, FALSE);
+		else
+		{
+#ifdef DONT_ADD_PATHSEP_TO_DIR
+		    if ((gMyCPB.hFileInfo.ioFlAttrib & ioDirMask) !=0 )
+			STRCAT(buf, PATHSEPSTR);
+#endif
+		    addfile(gap, buf, flags);
+		}
+	    }
+	    if ((gMyCPB.hFileInfo.ioFlAttrib & ioDirMask) !=0 )
+	    {
+	    }
+	    else
+	    {
+	    }
+	}
+	index++;
+    }
+    while (gErr == noErr);
+    
+    if (as_full)
+    {
+	index = 1;
+	do
+	{
+	    gMyHPBlock.volumeParam.ioNamePtr = (char_u *) dirname;
+	    gMyHPBlock.volumeParam.ioVRefNum =0;
+	    gMyHPBlock.volumeParam.ioVolIndex = index;
+	    
+	    gErr = PBHGetVInfo (&gMyHPBlock,false);
+	    if (gErr == noErr)
+	    {
+		STRNCPY (cfilename, &dirname[1], dirname[0]);
+		cfilename[dirname[0]] = 0;
+		if (vim_regexec(prog, cfilename, TRUE))
+		{
+		    STRCPY(s, cfilename);
+		    STRCAT(buf, path);
+		    if (mch_has_wildcard(path))	/* handle more wildcard */
+			(void)mac_expandpath(gap, buf, flags, 0, FALSE);
+		    else
+		    {
+    #ifdef DONT_ADD_PATHSEP_TO_DIR
+/*			if ((gMyCPB.hFileInfo.ioFlAttrib & ioDirMask) !=0 )
+*/			    STRCAT(buf, PATHSEPSTR);
+    #endif
+			addfile(gap, buf, flags);
+		    }
+#if 0
+		    STRCAT(cfilename, PATHSEPSTR);
+		    addfile (gap, cfilename, flags);
+#endif
+		}
+	    }
+	    index++;
+	}
+	while (gErr == noErr);
+    }
+    
+    return gap->ga_len - start_len;
+}
+/*
+ * Recursively build up a list of files in "gap" matching the first wildcard
+ * in `path'.  Called by expand_wildcards().
+ */
+    int
+mch_expandpath(
+    struct growarray	*gap,
+    char_u		*path,
+    int			flags)
+{
+
+    char_u first = *path;
+    short  scan_volume;
+    
+    slash_n_colon_adjust (path);
+   
+    scan_volume = (first != *path);
+    
+    return mac_expandpath (gap, path, flags, 0, scan_volume);
+
+#if 0
+    /*
+     * TODO: 
+     *       +Get Volumes (when looking for files in current dir)
+     *       +Make it work when working dir not on select volume
+     *       +Cleanup
+     */
+    short       index = 1;
+    OSErr       gErr;
+    char_u      dirname[256];
+    char_u      cfilename[256];
+    long	dirID;
+    char_u      *new_name;
+    CInfoPBRec  gMyCPB;
+    short       show_volume = 1;
+    HParamBlockRec gMyHPBlock;
+    
     char_u	    *buf;
     char_u	    *p, *s, *e;
     int		    start_len, c;
@@ -85,6 +311,7 @@ mch_expandpath(
 		else
 			s = p;
 	    }
+	    /* should use  WILCARDLIST but ehat about ` */
 	    if (vim_strchr((char_u *)"*?[{~$", *path) != NULL)
 		e = p;
     	*p++ = *path++;
@@ -181,7 +408,13 @@ mch_expandpath(
 		if (mch_has_wildcard(path))	/* handle more wildcard */
 		    (void)mch_expandpath(gap, buf, flags);
 		else
+		{
+#ifdef DONT_ADD_PATHSEP_TO_DIR
+		    if ((gMyCPB.hFileInfo.ioFlAttrib & ioDirMask) !=0 )
+			STRCAT(buf, PATHSEPSTR);
+#endif
 		    addfile(gap, buf, flags);
+		}
 	    }
 	    if ((gMyCPB.hFileInfo.ioFlAttrib & ioDirMask) !=0 )
 	    {
@@ -194,7 +427,33 @@ mch_expandpath(
     }
     while (gErr == noErr);
 
+    if (show_volume)
+    {
+	index = 1;
+	do
+	{
+	    gMyHPBlock.volumeParam.ioNamePtr = (char_u *) dirname;
+	    gMyHPBlock.volumeParam.ioVRefNum =0;
+	    gMyHPBlock.volumeParam.ioVolIndex = index;
+	    
+	    gErr = PBHGetVInfo (&gMyHPBlock,false);
+	    if (gErr == noErr)
+	    {
+		STRNCPY (cfilename, &dirname[1], dirname[0]);
+		cfilename[dirname[0]] = 0;
+		if (vim_regexec(prog, cfilename, TRUE))
+		{
+		    STRCAT(cfilename, PATHSEPSTR);
+		    addfile (gap, cfilename, flags);
+		}
+	    }
+	    index++;
+	}
+	while (gErr == noErr);
+    }
+    
     return gap->ga_len - start_len;
+#endif
 }
 
     int
@@ -223,16 +482,7 @@ fname_case (name)
      *       within setfname, fix_fname, do_ecmd
      */
 }
-/*
-static int	WaitForChar __ARGS((long));
-static int	RealWaitForChar __ARGS((int, long));
-static int		do_resize = FALSE;
-*/
 static char_u	*oldtitle = NULL;
-/*
-static char_u	*fixedtitle = (char_u *)"Thanks for flying Vim";
-static char_u	*oldicon = NULL;
-*/
 
 /*
  * check for an "interrupt signal": CTRL-break or CTRL-C
@@ -245,6 +495,35 @@ mch_breakcheck()
      *       or only go proccess event?
      *       or do nothing
      */
+    EventRecord theEvent;
+
+    if (EventAvail (keyDownMask, &theEvent))
+	if ((theEvent.message & charCodeMask) == Ctrl('C'))
+	    got_int = TRUE;
+#if 0
+    short	i = 0;
+    Boolean     found = false;
+    EventRecord theEvent;
+
+    while ((i < 10) && (!found))
+    {
+	found = EventAvail (keyDownMask, &theEvent);
+	if (found)
+	{
+	  if ((theEvent.modifiers & controlKey) != 0)
+	    found = false;
+	  if ((theEvent.what == keyDown))
+	    found = false;
+	  if ((theEvent.message & charCodeMask) == Ctrl('C'))
+	    {
+		found = false;
+		got_int = TRUE;
+	    }
+	}
+	i++;
+    }
+#endif
+
 }
 
     long_u
@@ -254,8 +533,12 @@ mch_avail_mem(special)
     /*
      * TODO: Use MaxBlock, FreeMeM, PurgeSpace, MaxBlockSys FAQ-266
      *       figure out what the special is for
+     *
+     * FreeMem  ->   returns all avail memory is application heap
+     * MaxBlock ->   returns the biggest contigeous block in application heap 
+     * PurgeSpace -> 
      */
-    return 0x7fffffff; /* in bytes */
+    return MaxBlock();
 }
 
     void
@@ -263,6 +546,9 @@ mch_delay(msec, ignoreinput)
     long	msec;
     int		ignoreinput;
 {
+#if __MWERKS__ >= 0x2000
+    unsigned
+#endif
     long   finalTick;
 
     if (ignoreinput)
@@ -466,7 +752,7 @@ slash_n_colon_adjust (buf)
     {
 	if (*scanning == '/')
 	{
-	    if (scanning[1] != '/')
+	    if ((scanning[1] != '/') && (scanning[-1] != ':'))
 	    {
 		*filling++ = ':';
 		scanning++;
@@ -579,6 +865,9 @@ mch_FullName(fname, buf, len, force)
 */
 		if ((p = vim_strrchr(fname, ':')) != NULL)
 		{
+#ifdef USE_NEW_CODE
+		    p++;
+#endif
 			if (mch_dirname(olddir, MAXPATHL) == FAIL)
 			{
 				p = NULL;		/* can't get current dir: don't chdir */
@@ -591,7 +880,11 @@ mch_FullName(fname, buf, len, force)
 				if (vim_chdir((char *)fname))
 					retval = FAIL;
 				else
+#ifndef USE_NEW_CODE
 					fname = p + 1;
+#else
+					fname = p;
+#endif
 				*p = c;
 			}
 		}
@@ -811,9 +1104,65 @@ mch_has_wildcard(p)
     {
 	if (*p == '\\' && p[1] != NUL)
 	    ++p;
-	else if (vim_strchr((char_u *) WILDCARD_LIST, *p) != NULL)
+	else if (vim_strchr((char_u *) WILDCHAR_LIST, *p) != NULL)
 	    return TRUE;
     }
     return FALSE;
+}
+
+/*
+ * Convert a FSSpec to a fuill path
+ */
+ 
+void GetFullPathFromFSSpec (char_u *fname, FSSpec file)
+{
+    /* 
+     * TODO: Add protection for 256 char max.
+     */
+    CInfoPBRec  theCPB;
+    Str255      directoryName;
+    OSErr       error;
+    int         folder = 1;
+
+    *fname = 0;
+    
+    theCPB.dirInfo.ioNamePtr = directoryName;
+    theCPB.dirInfo.ioDrParID = file.parID;
+	
+    if ((file.parID != fsRtDirID) && (file.parID != fsRtParID))
+    do
+    {
+        theCPB.dirInfo.ioVRefNum   = file.vRefNum;
+        theCPB.dirInfo.ioFDirIndex = -1;
+        theCPB.dirInfo.ioDrDirID   = theCPB.dirInfo.ioDrParID;
+
+        error = PBGetCatInfo (&theCPB,false);
+
+        directoryName[directoryName[0] + 1] = 0;
+        STRCAT(&directoryName[1], ":");
+        STRCAT(&directoryName[1], fname);
+        STRCPY(fname, &directoryName[1]);
+    }
+    while (theCPB.dirInfo.ioDrDirID != fsRtDirID);
+      
+    STRNCAT(fname, &file.name[1], file.name[0]);
+    STRCAT (fname, ":");
+    STRCPY(&directoryName[1], fname);
+    directoryName[0] = STRLEN(&directoryName[1]);
+    
+    /*
+     * Find back if the original file
+     * is a folder or a file
+     */
+    theCPB.dirInfo.ioNamePtr = directoryName;
+    theCPB.dirInfo.ioVRefNum = fsRtDirID;
+    theCPB.dirInfo.ioFDirIndex = 0;  /* Scan for NamePtr in VRefNum */
+    theCPB.dirInfo.ioDrDirID = 0;
+	
+    error = PBGetCatInfo (&theCPB, false);
+	
+    if ((theCPB.hFileInfo.ioFlAttrib & ioDirMask) == 0)
+        fname[directoryName[0]-1] = 0;
+		
 }
 

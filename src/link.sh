@@ -13,6 +13,7 @@
 #   Date: 1997 Apr 7
 
 echo "$LINK" >link.cmd
+exit_value=0
 
 #
 # If link.sed already exists, use it.  We assume a previous run of link.sh has
@@ -61,6 +62,8 @@ else
       echo "link.sh: Linked fine, no libraries can be removed"
       touch link3.sed
     fi
+  else
+    exit_value=$?
   fi
 fi
 
@@ -72,8 +75,10 @@ if test -s link.sed; then
   sed -f link.sed <link.cmd >linkit.sh
   cat linkit.sh
   if sh linkit.sh; then
+    exit_value=0
     echo "link.sh: Linked fine with a few libraries removed"
   else
+    exit_value=$?
     echo "link.sh: Linking failed, making link.sed empty and trying again"
     mv -f link.sed link2.sed
     touch link.sed
@@ -85,10 +90,14 @@ if test -f link.sed -a ! -s link.sed -a ! -f link3.sed; then
   echo "link.sh: Using unmodified link command"
   cat link.cmd
   if sh link.cmd; then
+    exit_value=0
     echo "link.sh: Linked OK"
-  elif test -f link2.sed; then
-    echo "link.sh: Linking doesn't work at all, removing link.sed"
-    rm -f link.sed
+  else
+    exit_value=$?
+    if test -f link2.sed; then
+      echo "link.sh: Linking doesn't work at all, removing link.sed"
+      rm -f link.sed
+    fi
   fi
 fi
 
@@ -96,5 +105,10 @@ fi
 # cleanup
 #
 rm -f link.cmd linkit.sh link1.sed link2.sed link3.sed linkit2.sh
+
+#
+# return an error code if something went wrong
+#
+exit $exit_value
 
 # vim:set sw=2 et:

@@ -1,4 +1,4 @@
-*os_win32.txt*  For Vim version 5.0.  Last modification: 1998 Feb 18
+*os_win32.txt*  For Vim version 5.1.  Last modification: 1998 Apr 06
 
 
 		  VIM REFERENCE MANUAL    by George Reilly
@@ -8,14 +8,16 @@
 This file documents the idiosyncrasies of the Win32 version of Vim.
 
 The Win32 version of Vim works on both Windows NT and Windows 95.  There are
-both console and GUI versions. It will not run in the Win32s subsystem in
-Windows 3.1; use the 32-bit DOS version of Vim instead.  See |os_msdos.txt|.
+both console and GUI versions.  There is GUI version for use in the Win32s
+subsystem in Windows 3.1[1].  You can also use the 32-bit DOS version of Vim
+instead.  See |os_msdos.txt|.
 
 1. Known problems		|win32-problems|
 2. Term option			|win32-term|
 3. Restore screen contents	|win32-restore|
 4. Using the mouse		|win32-mouse|
-5. Win32 mini FAQ		|win32-faq|
+5. Running under Windows 3.1	|win32-win3.1|
+6. Win32 mini FAQ		|win32-faq|
 
 Additionally, there are a number of common Win32 and DOS items:
 File locations			|dos-locations|
@@ -82,7 +84,31 @@ When the mouse doesn't work, try disabling the "Quick Edit Mode" feature of
 the console.
 
 ==============================================================================
-5. Win32 mini FAQ					*win32-faq*
+5. Running under Windows 3.1				*win32-win3.1*
+
+						*win32s* *windows-3.1*
+There is a special version of Gvim that runs under Windows 3.1 and 3.11.  You
+need the gvim.exe that was compiled with Visual C++ 4.1.
+
+To run the Win32 version under Windows 3.1, you need to install Win32s.  You
+might have it already when you installed other Win32 applications.  If Vim
+doesn't seem to be running properly, get the latest version: 1.30c.  You can
+find it at:
+
+	http://support.microsoft.com/download/support/mslfiles/pw1118.exe
+
+(hopefully Micrsoft didn't move it again!).
+
+The reason for having two versions of gvim.exe is that the Win32s version was
+compiled with VC++ 4.1.  This is the last version of VC that supports Win32s
+programs.  VC++ 5.0 is better, so that one was used for the Win32 version.
+
+The Win32s and the Win32 versions should work the same way.  But in the Win32s
+version, you cannot use long file names, because Windows 3.1 doesn't support
+them!
+
+==============================================================================
+6. Win32 mini FAQ					*win32-faq*
 
 Q. Why does the Win32 version of Vim update the screen so slowly on Windows 95?
 A. The support for Win32 console mode applications is very buggy in Win95.

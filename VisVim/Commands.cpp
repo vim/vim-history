@@ -13,9 +13,9 @@ static char THIS_FILE[] = __FILE__;
 
 
 // Change directory before opening file?
-#define CD_SOURCE		0	// cd to source path
-#define CD_SOURCE_PARENT	1	// cd to parent directory of source path
-#define CD_NONE			2	// no cd
+#define CD_SOURCE		0	// Cd to source path
+#define CD_SOURCE_PARENT	1	// Cd to parent directory of source path
+#define CD_NONE			2	// No cd
 
 
 static BOOL g_bEnableVim = TRUE;	// Vim enabled
@@ -24,6 +24,14 @@ static int g_ChangeDir = CD_NONE;	// CD after file open?
 
 
 static COleAutomationControl VimOle;	// OLE automation object for com. with Vim
+
+
+static void VimSetEnableState (BOOL bEnableState);
+static BOOL VimOpenFile (BSTR& FileName, long LineNr);
+static DISPID VimGetDispatchId (char* Method);
+static void VimErrDiag ();
+static void VimChangeDir (BSTR& FileName, DISPID DispatchId);
+static void DebugMsg (char* Msg, char* Arg = NULL);
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -152,136 +160,47 @@ HRESULT CCommands::XApplicationEvents::DocumentOpen (IDispatch * theDocument)
 
 	// First get the current file name and line number
 
+	// Get the document object
 	CComQIPtr < ITextDocument, &IID_ITextDocument > pDoc (theDocument);
 	if (! pDoc)
 		return S_OK;
 
 	BSTR FileName;
 	long LineNr = -1;
-	HRESULT hr;
 
-	hr = pDoc->get_FullName (&FileName);
-	if (FAILED (hr))
+	// Get the document name
+	if (FAILED (pDoc->get_FullName (&FileName)))
 		return S_OK;
 
-	LPDISPATCH lpdisp;
-	hr = pDoc->get_Selection (&lpdisp);
-	if (SUCCEEDED (hr))
+	LPDISPATCH pDispSel;
+
+	// Get a selection object dispatch pointer
+	if (SUCCEEDED (pDoc->get_Selection (&pDispSel)))
 	{
-		CComQIPtr < ITextSelection, &IID_ITextSelection > pSel (lpdisp);
-		if (! pSel)
+		// Get the selection object
+		CComQIPtr < ITextSelection, &IID_ITextSelection > pSel (pDispSel);
+
+		if (pSel)
+			// Get the selection line number
+			pSel->get_CurrentLine (&LineNr);
+
+		pDispSel->Release ();
+	}
+
+	// Open the file in Vim and position to the current line
+	if (VimOpenFile (FileName, LineNr))
+	{
+		if (! g_bDevStudioEditor)
 		{
-			lpdisp->Release ();
-			return S_OK;
+			// Close the document in developer studio
+			CComVariant vSaveChanges = dsSaveChangesPrompt;
+			DsSaveStatus Saved;
+
+			pDoc->Close (vSaveChanges, &Saved);
 		}
-
-		hr = pSel->get_CurrentLine (&LineNr);
-
-		lpdisp->Release ();
 	}
 
-	// Initialize Vim OLE connection if not already done
-	if (! VimOle.IsCreated ())
-	{
-		if (! VimOle.CreateObject ("Vim.Application"))
-			goto OleError;
-	}
-
-	// Get the dispatch id for the SendKeys method.
-	// By doing this, we are checking if Vim is still there...
-	DISPID DispatchId;
-	DispatchId = VimOle.GetDispatchId ("SendKeys");
-	if (! DispatchId)
-	{
-		// We can't get a dispatch id.
-		// This means that probably Vim has been terminated.
-		// Don't issue an error message here, instead
-		// destroy the OLE object and try to connect once more
-		VimOle.DeleteObject ();
-		if (! VimOle.CreateObject ("Vim.Application"))
-			// If this create fails, it's time for an error msg
-			goto OleError;
-
-		if (! (DispatchId = VimOle.GetDispatchId ("SendKeys")))
-			// There is something wrong...
-			goto OleError;
-	}
-
-	// Make Vim open the file
-	OLECHAR Buf[MAX_OLE_STR];
-	char VimCmd[MAX_OLE_STR];
-	char* s;
-
-	if (g_ChangeDir != CD_NONE)
-	{
-		// Do a :cd first
-
-		// Get the path name of the file ("dir/")
-		CString StrFileName = FileName;
-		char Drive[_MAX_DRIVE];
-		char Dir[_MAX_DIR];
-		_splitpath (StrFileName, Drive, Dir, NULL, NULL);
-		// Convert to unix path name format
-		for (char* s = Dir; *s; ++s)
-			if (*s == '\\')
-				*s = '/';
-
-		// Construct the cd command; append /.. if cd to parent
-		// directory and not in root directory
-		sprintf (VimCmd, ":cd %s%s%s\n", Drive, Dir,
-			 g_ChangeDir == CD_SOURCE_PARENT && Dir[1] ? ".." : "");
-		VimOle.Method (DispatchId, "s", TO_OLE_STR_BUF (VimCmd, Buf));
-	}
-
-	// Open file
-	sprintf (VimCmd, ":e %S\n", (char*) FileName);
-	// convert all \ to / 
-	for (s = VimCmd; *s; ++s)
-		if (*s == '\\')
-			*s = '/';
-	if (! VimOle.Method (DispatchId, "s", TO_OLE_STR_BUF (VimCmd, Buf)))
-		goto OleError;
-
-	if (LineNr > 0)
-	{
-		// Goto line
-		sprintf (VimCmd, ":%d\n", LineNr);
-		if (! VimOle.Method (DispatchId, "s", TO_OLE_STR_BUF (VimCmd, Buf)))
-			goto OleError;
-	}
-
-	// Make Vim come to the foreground
-	if (! VimOle.Method ("SetForeground"))
-		VimOle.ErrDiag ();
-
-	if (! g_bDevStudioEditor)
-	{
-		// Close the document in developer studio
-		CComVariant vSaveChanges = dsSaveChangesPrompt;
-		DsSaveStatus Saved;
-
-		pDoc->Close (vSaveChanges, &Saved);
-	}
-
-	// We're done
-	return S_OK;
-
-    OleError:
-	// There was an OLE error
-	// Check if it's the "unknown class string" error
-	SCODE sc = GetScode (VimOle.GetResult ());
-	if (sc == CO_E_CLASSSTRING)
-	{
-		char Buf[256];
-		sprintf (Buf, "There is no registered OLE automation server named "
-			 "\"Vim.Application\".\n"
-			 "Use the OLE-enabled version of Vim with VisVim and "
-			 "make sure to register Vim by running \"vim -register\".");
-		MessageBox (NULL, Buf, "OLE Error", MB_OK);
-	}
-	else
-		VimOle.ErrDiag ();
-
+	// We're done here
 	return S_OK;
 }
 
@@ -300,6 +219,37 @@ HRESULT CCommands::XApplicationEvents::DocumentSave (IDispatch * theDocument)
 HRESULT CCommands::XApplicationEvents::NewDocument (IDispatch * theDocument)
 {
 	AFX_MANAGE_STATE (AfxGetStaticModuleState ());
+
+	if (! g_bEnableVim)
+		// Vim not enabled or empty command line entered
+		return S_OK;
+
+	// First get the current file name and line number
+
+	CComQIPtr < ITextDocument, &IID_ITextDocument > pDoc (theDocument);
+	if (! pDoc)
+		return S_OK;
+
+	BSTR FileName;
+	HRESULT hr;
+
+	hr = pDoc->get_FullName (&FileName);
+	if (FAILED (hr))
+		return S_OK;
+
+	// Open the file in Vim and position to the current line
+	if (VimOpenFile (FileName, 0))
+	{
+		if (! g_bDevStudioEditor)
+		{
+			// Close the document in developer studio
+			CComVariant vSaveChanges = dsSaveChangesPrompt;
+			DsSaveStatus Saved;
+
+			pDoc->Close (vSaveChanges, &Saved);
+		}
+	}
+
 	return S_OK;
 }
 
@@ -348,11 +298,10 @@ HRESULT CCommands::XDebuggerEvents::BreakpointHit (IDispatch * pBreakpoint)
 class CMainDialog : public CDialog
 {
     public:
-	CMainDialog (CWnd * pParent = NULL);	// standard constructor
+	CMainDialog (CWnd * pParent = NULL);	// Standard constructor
 
 	//{{AFX_DATA(CMainDialog)
 	enum { IDD = IDD_ADDINMAIN };
-	BOOL	m_bEnableVim;
 	BOOL	m_bDevStudioEditor;
 	int	m_ChangeDir;
 	//}}AFX_DATA
@@ -374,7 +323,6 @@ CMainDialog::CMainDialog (CWnd * pParent /* =NULL */ )
 	: CDialog (CMainDialog::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CMainDialog)
-	m_bEnableVim = TRUE;
 	m_bDevStudioEditor = FALSE;
 	m_ChangeDir = -1;
 	//}}AFX_DATA_INIT
@@ -389,24 +337,8 @@ void CMainDialog::DoDataExchange (CDataExchange * pDX)
 	//}}AFX_DATA_MAP
 }
 
-void CMainDialog::OnEnable ()
-{
-	m_bEnableVim = TRUE;
-	UpdateData (true);
-	EndDialog (IDOK);
-}
-
-void CMainDialog::OnDisable ()
-{
-	m_bEnableVim = FALSE;
-	UpdateData (true);
-	EndDialog (IDOK);
-}
-
 BEGIN_MESSAGE_MAP (CMainDialog, CDialog)
- //{{AFX_MSG_MAP(CMainDialog)
-	ON_BN_CLICKED(IDC_ENABLE, OnEnable)
-	ON_BN_CLICKED(IDC_DISABLE, OnDisable)
+	//{{AFX_MSG_MAP(CMainDialog)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP ()
 
@@ -414,7 +346,7 @@ END_MESSAGE_MAP ()
 /////////////////////////////////////////////////////////////////////////////
 // CCommands methods
 
-STDMETHODIMP CCommands::VisVimMethod ()
+STDMETHODIMP CCommands::VisVimDialog ()
 {
 	AFX_MANAGE_STATE (AfxGetStaticModuleState ());
 
@@ -427,12 +359,10 @@ STDMETHODIMP CCommands::VisVimMethod ()
 
 	CMainDialog Dlg;
 
-	Dlg.m_bEnableVim = g_bEnableVim;
 	Dlg.m_bDevStudioEditor = g_bDevStudioEditor;
 	Dlg.m_ChangeDir = g_ChangeDir;
 	if (Dlg.DoModal () == IDOK)
 	{
-		g_bEnableVim = Dlg.m_bEnableVim;
 		g_bDevStudioEditor = Dlg.m_bDevStudioEditor;
 		g_ChangeDir = Dlg.m_ChangeDir;
 
@@ -443,7 +373,6 @@ STDMETHODIMP CCommands::VisVimMethod ()
 			HKEY hSectionKey = GetSectionKey (hAppKey, "VisVim");
 			if (hSectionKey)
 			{
-				WriteRegistryInt (hSectionKey, "EnableVim", g_bEnableVim);
 				WriteRegistryInt (hSectionKey, "DevStudioEditor",
 						  g_bDevStudioEditor);
 				WriteRegistryInt (hSectionKey, "ChangeDir", g_ChangeDir);
@@ -456,4 +385,247 @@ STDMETHODIMP CCommands::VisVimMethod ()
 	VERIFY_OK (m_pApplication->EnableModeless (VARIANT_TRUE));
 	return S_OK;
 }
+
+STDMETHODIMP CCommands::VisVimEnable ()
+{
+	AFX_MANAGE_STATE (AfxGetStaticModuleState ());
+	VimSetEnableState (true);
+	return S_OK;
+}
+
+STDMETHODIMP CCommands::VisVimDisable ()
+{
+	AFX_MANAGE_STATE (AfxGetStaticModuleState ());
+	VimSetEnableState (false);
+	return S_OK;
+}
+
+STDMETHODIMP CCommands::VisVimToggle ()
+{
+	AFX_MANAGE_STATE (AfxGetStaticModuleState ());
+	VimSetEnableState (! g_bEnableVim);
+	return S_OK;
+}
+
+STDMETHODIMP CCommands::VisVimLoad ()
+{
+	AFX_MANAGE_STATE (AfxGetStaticModuleState ());
+
+	// Use m_pApplication to access the Developer Studio Application object,
+	// and VERIFY_OK to see error strings in DEBUG builds of your add-in
+	// (see stdafx.h)
+	//
+	VERIFY_OK (m_pApplication->EnableModeless (VARIANT_FALSE));
+
+	CComBSTR bStr;
+	// Define dispatch pointers for document and selection objects
+	CComPtr < IDispatch > pDispDoc, pDispSel;
+
+	// Get a document object dispatch pointer
+	VERIFY_OK (m_pApplication->get_ActiveDocument (&pDispDoc));
+	if (! pDispDoc)
+		return S_OK;
+
+	BSTR FileName;
+	long LineNr = -1;
+
+	// Get the document object
+	CComQIPtr < ITextDocument, &IID_ITextDocument > pDoc (pDispDoc);
+
+	if (! pDoc)
+		return S_OK;
+
+	// Get the document name
+	if (FAILED (pDoc->get_FullName (&FileName)))
+		return S_OK;
+
+	// Get a selection object dispatch pointer
+	if (SUCCEEDED (pDoc->get_Selection (&pDispSel)))
+	{
+		// Get the selection object
+		CComQIPtr < ITextSelection, &IID_ITextSelection > pSel (pDispSel);
+
+		if (pSel)
+			// Get the selection line number
+			pSel->get_CurrentLine (&LineNr);
+	}
+
+	// Open the file in Vim
+	VimOpenFile (FileName, LineNr);
+
+	return S_OK;
+}
+
+
+//
+// Here we do the actual processing and communication with Vim
+//
+
+// Set the enable state and save to registry
+//
+static void VimSetEnableState (BOOL bEnableState)
+{
+	g_bEnableVim = bEnableState;
+	HKEY hAppKey = GetAppKey ("Vim");
+	if (hAppKey)
+	{
+		HKEY hSectionKey = GetSectionKey (hAppKey, "VisVim");
+		if (hSectionKey)
+			WriteRegistryInt (hSectionKey, "EnableVim", g_bEnableVim);
+		RegCloseKey (hAppKey);
+	}
+}
+
+// Open the file 'FileName' in Vim and goto line 'LineNr'
+// 'FileName' is expected to contain an absolute DOS path including the drive
+// letter.
+// 'LineNr' must contain a valid line number or 0, e. g. for a new file
+//
+static BOOL VimOpenFile (BSTR& FileName, long LineNr)
+{
+	// Get a dispatch id for the SendKeys method of Vim;
+	// enables connection to Vim if necessary
+	DISPID DispatchId;
+	DispatchId = VimGetDispatchId ("SendKeys");
+	if (! DispatchId)
+		// OLE error, can't obtain dispatch id
+		goto OleError;
+
+	// Change Vim working directory to where the file is if desired
+	VimChangeDir (FileName, DispatchId);
+
+	// Make Vim open the file
+	OLECHAR Buf[MAX_OLE_STR];
+	char VimCmd[MAX_OLE_STR];
+	char* s;
+
+	// Open file
+	sprintf (VimCmd, ":e %S\n", (char*) FileName);
+	// Convert all \ to / 
+	for (s = VimCmd; *s; ++s)
+		if (*s == '\\')
+			*s = '/';
+	if (! VimOle.Method (DispatchId, "s", TO_OLE_STR_BUF (VimCmd, Buf)))
+		goto OleError;
+
+	if (LineNr > 0)
+	{
+		// Goto line
+		sprintf (VimCmd, ":%d\n", LineNr);
+		if (! VimOle.Method (DispatchId, "s", TO_OLE_STR_BUF (VimCmd, Buf)))
+			goto OleError;
+	}
+
+	// Make Vim come to the foreground
+	if (! VimOle.Method ("SetForeground"))
+		VimOle.ErrDiag ();
+
+	// We're done
+	return true;
+
+    OleError:
+	// There was an OLE error
+	// Check if it's the "unknown class string" error
+	VimErrDiag ();
+	return false;
+}
+
+// Return the dispatch id for the Vim method 'Method'
+// Create the Vim OLE object if necessary
+// Returns a valid dispatch id or null on error
+//
+static DISPID VimGetDispatchId (char* Method)
+{
+	// Initialize Vim OLE connection if not already done
+	if (! VimOle.IsCreated ())
+	{
+		if (! VimOle.CreateObject ("Vim.Application"))
+			return NULL;
+	}
+
+	// Get the dispatch id for the SendKeys method.
+	// By doing this, we are checking if Vim is still there...
+	DISPID DispatchId = VimOle.GetDispatchId ("SendKeys");
+	if (! DispatchId)
+	{
+		// We can't get a dispatch id.
+		// This means that probably Vim has been terminated.
+		// Don't issue an error message here, instead
+		// destroy the OLE object and try to connect once more
+		VimOle.DeleteObject ();
+		if (! VimOle.CreateObject ("Vim.Application"))
+			// If this create fails, it's time for an error msg
+			return NULL;
+
+		if (! (DispatchId = VimOle.GetDispatchId ("SendKeys")))
+			// There is something wrong...
+			return NULL;
+	}
+
+	return DispatchId;
+}
+
+// Output an error message for an OLE error
+// Check on the classstring error, which probably means Vim wasn't registered.
+//
+static void VimErrDiag ()
+{
+	SCODE sc = GetScode (VimOle.GetResult ());
+	if (sc == CO_E_CLASSSTRING)
+	{
+		char Buf[256];
+		sprintf (Buf, "There is no registered OLE automation server named "
+			 "\"Vim.Application\".\n"
+			 "Use the OLE-enabled version of Vim with VisVim and "
+			 "make sure to register Vim by running \"vim -register\".");
+		MessageBox (NULL, Buf, "OLE Error", MB_OK);
+	}
+	else
+		VimOle.ErrDiag ();
+}
+
+// Change directory to the directory the file 'FileName' is in or it's parent
+// directory according to the setting of the global 'g_ChangeDir':
+// 'FileName' is expected to contain an absolute DOS path including the drive
+// letter.
+//	CD_NONE
+//	CD_SOURCE_PATH
+//	CD_SOURCE_PARENT
+//
+static void VimChangeDir (BSTR& FileName, DISPID DispatchId)
+{
+	if (g_ChangeDir != CD_NONE)
+	{
+		// Do a :cd first
+
+		// Get the path name of the file ("dir/")
+		CString StrFileName = FileName;
+		char Drive[_MAX_DRIVE];
+		char Dir[_MAX_DIR];
+		_splitpath (StrFileName, Drive, Dir, NULL, NULL);
+		// Convert to unix path name format
+		for (char* s = Dir; *s; ++s)
+			if (*s == '\\')
+				*s = '/';
+
+		// Construct the cd command; append /.. if cd to parent
+		// directory and not in root directory
+		OLECHAR Buf[MAX_OLE_STR];
+		char VimCmd[MAX_OLE_STR];
+		sprintf (VimCmd, ":cd %s%s%s\n", Drive, Dir,
+			 g_ChangeDir == CD_SOURCE_PARENT && Dir[1] ? ".." : "");
+		VimOle.Method (DispatchId, "s", TO_OLE_STR_BUF (VimCmd, Buf));
+	}
+}
+
+#ifdef _DEBUG
+// Print out a debug message
+//
+static void DebugMsg (char* Msg, char* Arg)
+{
+	char Buf[400];
+	sprintf (Buf, Msg, Arg);
+	AfxMessageBox (Buf);
+}
+#endif
 

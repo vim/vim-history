@@ -41,3 +41,4 @@ int check_termcode __ARGS((int max_offset));
 char_u *replace_termcodes __ARGS((char_u *from, char_u **bufp, int from_part));
 void show_termcodes __ARGS((void));
 int show_one_termcode __ARGS((char_u *name, char_u *code, int printit));
+void update_tcap __ARGS((int attr));

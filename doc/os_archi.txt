@@ -1,4 +1,4 @@
-*os_archi.txt*  For Vim version 5.0.  Last modification: 1997 Sep 01
+*os_archi.txt*  For Vim version 5.1.  Last modification: 1997 Sep 01
 
 
 		  VIM REFERENCE MANUAL    by Alun Jones

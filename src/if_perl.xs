@@ -43,6 +43,7 @@
 
 static void *perl_interp = NULL;
 static void xs_init __ARGS((void));
+static void VIM_init __ARGS((void));
 
 /*
  * perl_init(): initialize perl interpreter
@@ -59,6 +60,7 @@ perl_init()
     perl_construct(perl_interp);
     perl_parse(perl_interp, xs_init, 3, args, 0);
     perl_call_argv("VIM::bootstrap", G_DISCARD, bootargs);
+    VIM_init();
 #ifdef USE_SFIO
     sfdisc(PerlIO_stdout(), sfdcnewvim());
     sfdisc(PerlIO_stderr(), sfdcnewvim());
@@ -82,26 +84,13 @@ perl_end()
 }
 
 /*
- * perl_eval(): evaluate a string
- * We don't use mortal SVs because no one will clean up after us.
- */
-    static void
-perl_eval(string)
-    char *string;
-{
-    SV* sv = newSVpv(string, 0);
-
-    perl_eval_sv(sv, G_DISCARD | G_NOARGS);
-    SvREFCNT_dec(sv);
-}
-
-/*
  * msg_split(): send a message to the message handling routines
  * split at '\n' first though.
  */
     void
-msg_split(s)
-    char_u  *s;
+msg_split(s, attr)
+    char_u	*s;
+    int		attr;	/* highlighting attributes */
 {
     char *next;
     char *token = (char *)s;
@@ -109,11 +98,11 @@ msg_split(s)
     while ((next = strchr(token, '\n')))
     {
 	*next++ = '\0';			/* replace \n with \0 */
-	MSG(token);
+	msg_attr((char_u *)token, attr);
 	token = next;
     }
     if (*token)
-	MSG(token);
+	msg_attr((char_u *)token, attr);
 }
 
 #ifndef WANT_EVAL
@@ -183,36 +172,88 @@ perl_buf_free(bp)
     return;
 }
 
+#ifndef PROTO
+I32 cur_val(IV iv, SV *sv);
+
+/*
+ * Handler for the magic variables $main::curwin and $main::curbuf.
+ * The handler is put into the magic vtbl for these variables.
+ * (This is effectively a C-level equivalent of a tied variable).
+ * There is no "set" function as the variables are read-only.
+ */
+I32 cur_val(IV iv, SV *sv)
+{
+    SV *rv;
+    if (iv == 0)
+	rv = newWINrv(newSV(0), curwin);
+    else
+	rv = newBUFrv(newSV(0), curbuf);
+    sv_setsv(sv, rv);
+    return 0;
+}
+#endif /* !PROTO */
+
+struct ufuncs cw_funcs = { cur_val, 0, 0 };
+struct ufuncs cb_funcs = { cur_val, 0, 1 };
+
+/*
+ * VIM_init(): Vim-specific initialisation.
+ * Make the magical main::curwin and main::curbuf variables
+ */
+    static void
+VIM_init()
+{
+    static char cw[] = "main::curwin";
+    static char cb[] = "main::curbuf";
+    MAGIC *m;
+    SV *sv;
+
+    sv = perl_get_sv(cw, TRUE);
+    sv_magic(sv, NULL, 'U', cw, strlen(cw));
+    m = mg_find(sv, 'U');
+    m->mg_ptr = (char *)&cw_funcs;
+    SvREADONLY_on(sv);
+
+    sv = perl_get_sv(cb, TRUE);
+    sv_magic(sv, NULL, 'U', cb, strlen(cb));
+    m = mg_find(sv, 'U');
+    m->mg_ptr = (char *)&cb_funcs;
+    SvREADONLY_on(sv);
+}
+
     int
 do_perl(eap)
     EXARG	*eap;
 {
-    static SV	*svcurwin = 0;
     char	*err;
     STRLEN	length;
+    SV		*sv;
+    dSP;
 
-    if (!svcurwin)
+    if (!perl_interp)
     {
-	if (!perl_interp)
-	{
-	    perl_init();
-	}
-	SvREADONLY_on(svcurwin = perl_get_sv("curwin", TRUE));
+	perl_init();
+	SPAGAIN;
     }
 
-    newWINrv(svcurwin, curwin);
+    ENTER;
+    SAVETMPS;
 
-    perl_eval(eap->arg);
+    sv = newSVpv((char *)eap->arg, 0);
+    perl_eval_sv(sv, G_DISCARD | G_NOARGS);
+    SvREFCNT_dec(sv);
+
     err = SvPV(GvSV(errgv), length);
 
-    SvREFCNT_dec(SvRV(svcurwin));
-    SvROK_off(svcurwin);
+    FREETMPS;
+    LEAVE;
 
     if (!length)
 	return OK;
 
-    msg_split((char_u *)err);
+    msg_split((char_u *)err, highlight_attr[HLF_E]);
     return FAIL;
+    
 }
 
     static int
@@ -232,6 +273,7 @@ replace_line(line, end)
 	ml_delete((*line)--, FALSE);
 	(*end)--;
     }
+    CHANGED;
     return OK;
 }
 
@@ -296,7 +338,7 @@ do_perldo(eap)
 	return OK;
 
 err:
-    msg_split((char_u *)str);
+    msg_split((char_u *)str, highlight_attr[HLF_E]);
     return FAIL;
 }
 
@@ -308,7 +350,7 @@ extern void boot_VIM _((CV* cv));
     static void
 xs_init()
 {
-#ifndef UNIX
+#if 0
     dXSUB_SYS;	    /* causes an error with Perl 5.003_97 */
 #endif
     char *file = __FILE__;
@@ -323,12 +365,26 @@ typedef BUF *	VIBUF;
 MODULE = VIM	    PACKAGE = VIM
 
 void
-Msg(text)
-    char    *text
+Msg(text, hl=NULL)
+    char	*text;
+    char	*hl;
 
-    CODE:
+    PREINIT:
+    int		attr;
+    int		id;
+
+    PPCODE:
     if (text != NULL)
-	msg_split((char_u *)text);
+    {
+	attr = 0;
+	if (hl != NULL)
+	{
+	    id = syn_name2id((char_u *)hl);
+	    if (id != 0)
+		attr = syn_id2attr(id);
+	}
+	msg_split((char_u *)text, attr);
+    }
 
 void
 SetOption(line)
@@ -355,7 +411,7 @@ Eval(str)
 	char_u *value;
     PPCODE:
 	value = eval_to_string((char_u *)str, (char_u**)0);
-	if (value==NULL)
+	if (value == NULL)
 	{
 	    XPUSHs(sv_2mortal(newSViv(0)));
 	    XPUSHs(sv_2mortal(newSVpv("", 0)));
@@ -364,7 +420,7 @@ Eval(str)
 	{
 	    XPUSHs(sv_2mortal(newSViv(1)));
 	    XPUSHs(sv_2mortal(newSVpv((char *)value, 0)));
-	    free(value);
+	    vim_free(value);
 	}
 
 void
@@ -373,38 +429,46 @@ Buffers(...)
     PREINIT:
     BUF *vimbuf;
     int i, b;
-    char text[50];
 
     PPCODE:
-    if(items == 0)
+    if (items == 0)
     {
-	if(GIMME == G_SCALAR)
+	if (GIMME == G_SCALAR)
 	{
-	    XPUSHs(sv_2mortal(newSViv(buflist_maxbufnr())));
+	    i = 0;
+	    for (vimbuf = firstbuf; vimbuf; vimbuf = vimbuf->b_next)
+		++i;
+
+	    XPUSHs(sv_2mortal(newSViv(i)));
 	}
 	else
 	{
-	  for(i=0; i<=buflist_maxbufnr(); i++)
-	  {
-	    vimbuf = buflist_findnr(i);
-	    if(vimbuf)
-	    {
+	    for (vimbuf = firstbuf; vimbuf; vimbuf = vimbuf->b_next)
 		XPUSHs(newBUFrv(newSV(0), vimbuf));
-	    }
-	  }
 	}
     }
     else
     {
-	for(i=0; i<items; i++)
+	for (i = 0; i < items; i++)
 	{
-	    sprintf(text, "calling args");
-	    msg_split((char_u *)text);
-	    b = SvIV(ST(i));
-	    vimbuf = buflist_findnr(b);
-	    if(vimbuf)
+	    SV *sv = ST(i);
+	    if (SvIOK(sv))
+		b = SvIV(ST(i));
+	    else
 	    {
-		XPUSHs(newBUFrv(newSV(0), vimbuf));
+		char_u *pat;
+		int len;
+		pat = (char_u *)SvPV(sv, len);
+		++emsg_off;
+		b = buflist_findpat(pat, pat+len);
+		--emsg_off;
+	    }
+
+	    if (b >= 0)
+	    {
+		vimbuf = buflist_findnr(b);
+		if (vimbuf)
+		    XPUSHs(newBUFrv(newSV(0), vimbuf));
 	    }
 	}
     }
@@ -414,40 +478,27 @@ Windows(...)
 
     PREINIT:
     WIN *vimwin;
-    int i, b;
-    char text[50];
+    int i, w;
 
     PPCODE:
-    if(items == 0)
+    if (items == 0)
     {
-	if(GIMME == G_SCALAR)
-	{
+	if (GIMME == G_SCALAR)
 	    XPUSHs(sv_2mortal(newSViv(win_count())));
-	}
 	else
 	{
-	    for(i=0; i<=buflist_maxbufnr(); i++)
-	    {
-	      vimwin = win_goto_nr(i);
-	      if(vimwin)
-	      {
-		  XPUSHs(newBUFrv(newSV(0), vimwin));
-	      }
-	    }
+	    for (vimwin = firstwin; vimwin != NULL; vimwin = vimwin->w_next)
+		XPUSHs(newWINrv(newSV(0), vimwin));
 	}
     }
     else
     {
-	for(i=0; i<items; i++)
+	for (i = 0; i < items; i++)
 	{
-	    sprintf(text, "calling args");
-	    msg_split((char_u *)text);
-	    b = SvIV(ST(i));
-	    vimwin = win_goto_nr(b);
-	    if(vimwin)
-	    {
-		XPUSHs(newBUFrv(newSV(0), vimwin));
-	    }
+	    w = SvIV(ST(i));
+	    vimwin = win_goto_nr(w);
+	    if (vimwin)
+		XPUSHs(newWINrv(newSV(0), vimwin));
 	}
     }
 
@@ -532,6 +583,7 @@ Name(vimbuf)
     PPCODE:
     if (!buf_valid(vimbuf))
 	vimbuf = curbuf;
+    /* No file name returns an empty string */
     if (vimbuf->b_fname == NULL)
 	XPUSHs(sv_2mortal(newSVpv("", 0)));
     else
@@ -557,7 +609,7 @@ Get(vimbuf, ...)
     PPCODE:
     if (buf_valid(vimbuf))
     {
-	for(i=1; i<items; i++)
+	for (i = 1; i < items; i++)
 	{
 	    lnum = SvIV(ST(i));
 	    if (lnum > 0 && lnum <= vimbuf->b_ml.ml_line_count)
@@ -592,7 +644,10 @@ Set(vimbuf, ...)
 		savebuf = curbuf;
 		curbuf = vimbuf;
 		if (u_savesub(lnum) == OK)
+		{
 		    ml_replace(lnum, (char_u *)line, TRUE);
+		    CHANGED;
+		}
 		curbuf = savebuf;
 		update_curbuf(NOT_VALID);
 	    }
@@ -638,6 +693,7 @@ Delete(vimbuf, ...)
 		    {
 			mark_adjust(lnum, lnum, MAXLNUM, -1);
 			ml_delete(lnum, 0);
+			CHANGED;
 		    }
 		    curbuf = savebuf;
 		    update_curbuf(NOT_VALID);
@@ -673,6 +729,7 @@ Append(vimbuf, ...)
 		{
 		    mark_adjust(lnum + 1, MAXLNUM, 1L, 0L);
 		    ml_append(lnum, (char_u *)line, (colnr_t)0, FALSE);
+		    CHANGED;
 		}
 		curbuf = savebuf;
 		update_curbuf(NOT_VALID);

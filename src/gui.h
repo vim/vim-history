@@ -124,6 +124,7 @@
 #define GUI_MON_INVERT		0x02	    /* invert the characters */
 #define GUI_MON_IS_CURSOR	0x04	    /* drawing cursor */
 #define GUI_MON_TRS_CURSOR	0x08	    /* drawing transparent cursor */
+#define GUI_MON_NOCLEAR		0x10	    /* don't clear selection */
 
 /* Flags for gui_mch_draw_string() */
 #define DRAW_TRANSP		0x01	    /* draw with transparant bg */
@@ -154,7 +155,6 @@ typedef struct GuiMenu
 #endif
 #ifdef macintosh
     MenuHandle	id;
-    struct GuiMenu *father;	    /* The father of the menu */
     short	index;		    /* the item index within the father menu */
     short	menu_id;	    /* the menu id to which this item belong */
     short	submenu_id;	    /* the menu id of the children (could be
@@ -274,9 +274,6 @@ typedef struct Gui
 #endif
 #ifdef USE_GUI_MAC
     WindowPtr	VimWindow;
-    FontInfo	VimFont;	    /* contians width height ascent,descent*/
-    short	VimFontID;
-
     GuiColor	menu_fg_pixel;	    /* Color of menu foregound */
     GuiColor	menu_bg_pixel;	    /* Color of menu backgound */
     GuiColor	scroll_fg_pixel;    /* Color of scrollbar foregrnd */

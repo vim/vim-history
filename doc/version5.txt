@@ -1,4 +1,4 @@
-*version5.txt*  For Vim version 5.0.  Last modification: 1998 Feb 19
+*version5.txt*  For Vim version 5.1.  Last modification: 1998 Apr 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -46,6 +46,8 @@ IMPROVEMENTS				|improvements|
 COMPILE TIME CHANGES			|compile-changes|
 
 BUG FIXES 				|bug-fixes|
+
+VERSION 5.1				|version-5.1|
 
 ==============================================================================
 				 INCOMPATIBLE
@@ -1591,5 +1593,334 @@ overwrite the file, ":w!" is required.
 
 ":gui longfilename", when forking is enabled, could leave part of the
 longfilename at the shell prompt.
+
+==============================================================================
+VERSION 5.1						*version-5.1*
+
+Improvements made between version 5.0 and 5.1.
+
+Changed:
+
+The expand() function now separates file names with <NL> instead of a space.
+This avoids problems for file names with embedded spaces.  To get the old
+result, use substitute(expand(foo), "\n", " ", "g").
+
+For Insert-expanding dictionaries allow a backslash to be used for
+wildchars.  Allows expanding "ze\kra", when 'isk' includes a backslash.
+
+New icon for the Win32 GUI.
+
+":tag", ":tselect" etc. only use the argument as a regexp when it starts
+with '/'.  Avoids that ":tag xx~" gives an error message: "No previous sub.
+regexp".  Also, when the :tag argument contained wildcard characters, it was
+not Vi compatible.
+When using '/', the argument is taken literally too, with a higher priority,
+so it's found before wildcard matches.
+Only when the '/' is used are matches with different case found, even though
+'ignorecase' isn't set.
+Changed "g^]" to only do ":tselect" when there is more than on matching tag.
+
+Changed some of the default colors, because they were not very readable on a
+dark background.
+
+A character offset to a search pattern can move the cursor to the next or
+previous line.  Also fixes that "/pattern/e+2" got stuck on "pattern" at the
+end of a line.
+
+Double-clicks in the status line do no longer start Visual mode.  Dragging a
+status line no longer stops Visual mode.
+
+Perl interface: Buffers() and Windows() now use more logical arguments, like
+they are used in the rest of Vim (Moore).
+
+Init '" mark to the first character of the first line.  Makes it possible to
+use '" in an autocommand without getting an error message.
+
+
+Added:
+
+"shell_error" internal variable: result of last shell command.
+
+":echohl" command: Set highlighting for ":echo".
+
+'A', 'N' and 'I' flags to 'mouse': Do position the cursor, but don't start
+Visual mode, only start xterm-like selection.
+
+'S' flag in 'highlight' and StatusLineNC highlight group: highlighting for
+status line of not-current window.  Default is to use bold for current
+window.
+
+Added buffer_name() and buffer_number() functions (Aaron).
+Added flags argument "g" to substitute() function (Aaron).
+Added winheight() function.
+
+Win32: When an external command starts with "start ", no console is opened
+for it (Aaron).
+
+Win32 console: Use termcap codes for bold/reverse based on the current
+console attributes.
+
+Configure check for "strip". (Napier)
+
+CTRL-R CTRL-R x in Insert mode: Insert the contents of a register literally,
+instead of as typed.
+
+Made a few "No match" error messages more informative by adding the pattern
+that didn't match.
+
+"make install" now also copies the macro files.
+
+tools/tcltags, a shell script to generate a tags file from a TCL file.
+
+"--with-tlib" setting for configure.  Easy way to use termlib: "./configure
+--with-tlib=termlib".
+
+'u' flag in 'cino' for setting the indent for contained () parts.
+
+When Win32 OLE version can't load the registered type library, ask the user
+if he wants to register Vim now. (Erhardt)
+Win32 with OLE: When registered automatically, exit Vim.
+Included VisVim 1.1b, with a few enhancements and the new icon (Heiko
+Erhardt).
+
+Added patch from Vince Negri for Win32s support.  Needs to be compiled with
+VC 4.1!
+
+Perl interface: Added $curbuf.  Rationalised Buffers() and Windows().
+(Moore) Added "group" argument to Msg().
+
+Included Perl files in DOS source archive.  Changed Makefile.bor and
+Makefile.w32 to support building a Win32 version with Perl included.
+
+Included new Makefile.w32 from Ken Scott.  Now it's able to make all Win32
+versions, including OLE, Perl and Python.
+
+Added CTRL-W g ] and CTRL-W g ^]: split window and do g] or g^].
+
+Added "g]" to always do ":tselect" for the ident under the cursor.
+Added ":tjump" and ":stjump" commands.
+Improved listing of ":tselect" when tag names are a bit long.
+
+Included patches for the Macintosh version. Also for Python interface.
+(St-Amant)
+
+":buf foo" now also restores cursor column, when the buffer was used before.
+
+Adjusted the Makefile for different final destinations for the syntax files
+and scripts (for Debian Linux).
+
+Amiga: $VIM can be used everywhere.  When $VIM is not defined, "VIM:" is
+used.  This fixes that "VIM:" had to be assinged for the help files, and
+$VIM set for the syntax files.  Now either of these work.
+
+Some xterms send vt100 compatible function keys F1-F4.  Since it's not
+possible to detect this, recognize both type of keys and translate them to
+<F1> - <F4>.
+
+Added "VimEnter" autocommand.  Executed after loading all the startup stuff.
+
+BeOS version now also runs on Intel CPUs (Seibert).
+
+
+Fixed:
+
+":ts" changed position in the tag stack when cancelled with <CR>.
+":ts" changed the cursor position for CTRL-T when cancelled with <CR>.
+":tn" would always jump to the second match.	Was using the wrong entry in
+the tag stack.
+Doing "tag foo", then ":tselect", overwrote the original cursor postition in
+the tag stack.
+
+"make install" changed the vim.1 manpage in a wrong way, causing "doc/doc"
+to appear for the documentation files.
+
+When compiled with MAX_FEAT, xterm mouse handling failed.  Was caused by DEC
+mouse handling interfering.
+
+Was leaking memory when using selection in X11.
+
+CTRL-D halfway a command line left some characters behind the first line(s)
+of the listing.
+
+When expanding directories for ":set path=", put two extra backslashes
+before a space in a directory name.
+
+When 'lisp' set, first line of a function would be indented.  Now its indent
+is set to zero.  And use the indent of the first previous line that is at
+the same () level.  Added test33.
+
+"so<Esc>u" in an empty file didn't work.
+
+DOS: "seek error in swap file write" errors, when using DOS 6.2 share.exe,
+because the swap file was made hidden.  It's no longer hidden.
+
+":global" command would sometimes not execute on a matching line.  Happened
+when a data block is full in ml_replace().
+
+For AIX use a tgetent buffer of 2048 bytes, instead of 1024.
+
+Win32 gvim now only sets the console size for external commands to 25x80
+on Windows 95, not on NT.
+
+Win32 console: Dead key could cause a crash, because of a missing "WINAPI"
+(Deshpande).
+
+The right mouse button started Visual mode, even when 'mouse' is empty, and
+in the command line, a left click moved the cursor when 'mouse' is empty.
+In Visual mode, 'n' in 'mouse' would be used instead of 'v'.
+
+A blinking cursor or focus change cleared a non-Visual selection.
+
+CTRL-Home and CTRL-End didn't work for MS-DOS versions.
+
+Could include NUL in 'iskeyword', causing a crash when doing insert mode
+completion.
+
+Use _dos_commit() to flush the swap file to disk for MSDOS 16 bit version.
+
+In mappings, CTRL-H was replaced by the backspace key code.  This caused
+problems when it was used as text, e.g. ":map _U :%s/.^H//g<CR>".
+
+":set t_Co=0" was not handled like a normal term.  Now it's translated into
+":set t_Co=", which works.
+
+For ":syntax keyword" the "transpararent" option did work, althought not
+mentioned in the help.  But synID() returned wrong name.
+
+"gqG" in a file with one-word-per-line (e.g. a dictionary) was very slow and
+not interruptable.
+
+"gq" operator inserted screen lines in the wrong situation.  Now screen
+lines are inserted or deleted when this speeds up displaying.
+
+cindent was wrong when an "if" contained "((".
+
+'r' flag in 'viminfo' was not used for '%'.  Could get files in the buffer
+list from removable media.
+
+Win32 GUI with OLE: if_ole_vc.mak could not be converted into a project.
+Hand-edited to fix this...
+
+With 'nosol' set, doing "$kdw" below an empty line positioned the cursor at
+the end of the line.
+
+Dos32 version changed "\dir\file" into "/dir/file", to work around a DJGPP
+bug.  That bug appears to have been fixed, therefore this translation has
+been removed.
+
+"/^*" didn't work (find '*' in first column).
+
+"<afile>" was not always set for autocommands.  E.g., for ":au BufEnter *
+let &tags = expand("<afile>:p:h") . "/tags".
+
+In an xterm, the window may be a child of the outer xterm window.  Use the
+parent window when getting the title and icon names. (Smith)
+
+When starting with "gvim -bg black -fg white", the value of 'background' is
+only set after reading the .gvimrc file.  This causes a ":syntax on" to use
+the wrong colors.  Now allow using ":gui" to open the GUI window and set the
+colors.  Previously ":gui" in a gvimrc crashed Vim.
+
+tempname() returned the same name all the time, unless the file was actually
+created.  Now there are at least 26 different names.
+
+File name used for <afile> was sometimes full path, sometimes file name
+relative to current directory.
+
+When 'background' was set after the GUI window was opened, it could change
+colors that were set by the user in the .gvimrc file.  Now it only changes
+colors that have not been set by the user.
+
+Ignore special characters after a CSI in the GUI version.  These could be
+interpreted as special characters in a wrong way. (St-Amant)
+
+Memory leak in farsi code, when using search or ":s" command.
+Farsi string reversing for a mapping was only done for new mappings.  Now it
+also works for replacing a mapping.
+
+Crash in Win32 when using a file name longer than _MAX_PATH. (Aaron)
+
+When BufDelete autocommands were executed, some things for the buffer were
+already deleted (esp. Perl stuff).
+
+Perl interface: Buffer specific items were deleted too soon; fixes "screen
+no longer exists" messages.  (Moore)
+
+The Perl functions didn't set the 'modified' flag.
+
+link.sh did not return an error on exit, which may cause Vim to start
+installing, even though there is no executable to install. (Riehm)
+
+Vi incompatibility: In Vi "." redoes the "y" command.  Added the 'y' flag to
+'cpoptions'.  Only for 'compatible' mode.
+
+":echohl" defined a new group, when the argument was not an existing group.
+
+"syn on" and ":syn off" could move the cursor, if there is a hidden buffer
+that is shorter that the current cursor position.
+
+The " mark was not set when doing ":b file".
+
+When a "nextgroup" is used with "skipwhite" in syntax highlighting, space at
+the end of the line made the nextgroup also be found in the next line.
+
+":he g<CTRL-D>", then ":" and backspace to the start didn't redraw.
+
+X11 GUI: "gvim -rv" reversed the colors twice on Sun.  Now Vim checks if the
+result is really reverse video (background darker than foreground).
+
+"cat link.sh | vim -" didn't set syntax highlighting.
+
+Win32: Expanding "file.sw?" matched ".file.swp".  This is an error of
+FindnextFile() that we need to work around.  (Kilgore)
+
+"gqgq" gave an "Invalid lnum" error on the last line.
+Formatting with "gq" didn't format the first line after a change of comment
+leader.
+
+There was no check for out-of-memory in win_alloc().
+
+"vim -h" didn't mention "-register" and "-unregister" for the OLE version.
+
+Could not increase 'cmdheight' when the last window is only one line.  Now
+other windows are also made smaller, when necessary.
+
+Added a few {} to avoid "suggest braces around" warnings from gcc 2.8.x.
+Changed return type of main() from void to int. (Nam)
+
+Using '~' twice in a substitute pattern caused a crash.
+
+"syn on" and ":syn off" could scroll the window, if there is a hidden buffer
+that is shorter that the current cursor position.
+
+":if 0 | if 1 | endif | endif" didn't work.  Same for ":while" and "elseif".
+
+With two windows on modified files, with 'autowrite' set, cursor in second
+window, ":qa" gave a warning for the file in the first window, but then
+auto-wrote the file in the second window. (Webb)
+
+Win32 GUI scrollbar could only handle 32767 lines.  Also makes the
+intellimouse wheel use the configurable number of scrolls. (Robinson)
+ 
+When using 'patchmode', and the backup file is on another partition, the file
+copying messed up the write-file message.
+
+GUI X11: Alt-Backspace and Alt-Delete didn't work.
+
+"`0" could put the cursor after the last character in the line, causing
+trouble for other commands, like "i".
+
+When completing tags in insert mode with ^X^], some matches were skipped,
+because the compare with other tags was wrong.  E.g., when "mnuFileSave" was
+already there, "mnuFile" would be skipped. (Negri)
+
+When scrolling up/down, a syntax item with "keepend" didn't work properly.
+Now the flags are also stored for the syntax state a the start of each line.
+
+When 'ic' was changed while 'hlsearch' is on, there was no redraw to show the
+effect.
+
+Win32 GUI: Don't display "No write since last chance" in a message box, but in
+the Vim window.
 
  vim:ts=8:sw=8:tw=78:

@@ -600,6 +600,7 @@ $VIM-use	version5.txt	/*$VIM-use*
 +insert_expand	various.txt	/*+insert_expand*
 +langmap	various.txt	/*+langmap*
 +lispindent	various.txt	/*+lispindent*
++mouse	various.txt	/*+mouse*
 +mouse_dec	various.txt	/*+mouse_dec*
 +mouse_netterm	various.txt	/*+mouse_netterm*
 +mouse_xterm	various.txt	/*+mouse_xterm*
@@ -900,6 +901,8 @@ $VIM-use	version5.txt	/*$VIM-use*
 :e	editing.txt	/*:e*
 :ec	eval.txt	/*:ec*
 :echo	eval.txt	/*:echo*
+:echoh	eval.txt	/*:echoh*
+:echohl	eval.txt	/*:echohl*
 :echon	eval.txt	/*:echon*
 :edit	editing.txt	/*:edit*
 :edit!	editing.txt	/*:edit!*
@@ -1165,6 +1168,8 @@ $VIM-use	version5.txt	/*$VIM-use*
 :sta	windows.txt	/*:sta*
 :stag	windows.txt	/*:stag*
 :star	cmdline.txt	/*:star*
+:stj	tagsearch.txt	/*:stj*
+:stjump	tagsearch.txt	/*:stjump*
 :stop	starting.txt	/*:stop*
 :sts	tagsearch.txt	/*:sts*
 :stselect	tagsearch.txt	/*:stselect*
@@ -1217,6 +1222,8 @@ $VIM-use	version5.txt	/*$VIM-use*
 :ta	tagsearch.txt	/*:ta*
 :tag	tagsearch.txt	/*:tag*
 :tags	tagsearch.txt	/*:tags*
+:tj	tagsearch.txt	/*:tj*
+:tjump	tagsearch.txt	/*:tjump*
 :tl	tagsearch.txt	/*:tl*
 :tlast	tagsearch.txt	/*:tlast*
 :tn	tagsearch.txt	/*:tn*
@@ -1444,6 +1451,8 @@ CTRL-W_b	windows.txt	/*CTRL-W_b*
 CTRL-W_c	windows.txt	/*CTRL-W_c*
 CTRL-W_d	tagsearch.txt	/*CTRL-W_d*
 CTRL-W_f	windows.txt	/*CTRL-W_f*
+CTRL-W_g]	windows.txt	/*CTRL-W_g]*
+CTRL-W_g_CTRL-]	windows.txt	/*CTRL-W_g_CTRL-]*
 CTRL-W_i	tagsearch.txt	/*CTRL-W_i*
 CTRL-W_j	windows.txt	/*CTRL-W_j*
 CTRL-W_k	windows.txt	/*CTRL-W_k*
@@ -1519,6 +1528,7 @@ User-function	tips.txt	/*User-function*
 V	visual.txt	/*V*
 VIMINIT	starting.txt	/*VIMINIT*
 Vi	intro.txt	/*Vi*
+VimEnter	autocmd.txt	/*VimEnter*
 VimLeave	autocmd.txt	/*VimLeave*
 Visual-mode	visual.txt	/*Visual-mode*
 W	motion.txt	/*W*
@@ -1528,6 +1538,7 @@ WinEnter	autocmd.txt	/*WinEnter*
 WinLeave	autocmd.txt	/*WinLeave*
 X	change.txt	/*X*
 X11	options.txt	/*X11*
+X11-icon	gui_x11.txt	/*X11-icon*
 X_ab	help.txt	/*X_ab*
 X_ac	help.txt	/*X_ac*
 X_ai	help.txt	/*X_ai*
@@ -1679,9 +1690,11 @@ beos-dragndrop	os_beos.txt	/*beos-dragndrop*
 beos-fonts	os_beos.txt	/*beos-fonts*
 beos-general	os_beos.txt	/*beos-general*
 beos-gui	os_beos.txt	/*beos-gui*
+beos-launch	os_beos.txt	/*beos-launch*
 beos-meta	os_beos.txt	/*beos-meta*
 beos-mouse	os_beos.txt	/*beos-mouse*
 beos-perl	os_beos.txt	/*beos-perl*
+beos-ppc	os_beos.txt	/*beos-ppc*
 beos-timeout	os_beos.txt	/*beos-timeout*
 beos-unicode	os_beos.txt	/*beos-unicode*
 beos-utf8	os_beos.txt	/*beos-utf8*
@@ -1693,6 +1706,8 @@ buffer-list	windows.txt	/*buffer-list*
 buffer-menu	tips.txt	/*buffer-menu*
 buffer-write	windows.txt	/*buffer-write*
 buffer_exists()	eval.txt	/*buffer_exists()*
+buffer_name()	eval.txt	/*buffer_name()*
+buffer_number()	eval.txt	/*buffer_number()*
 buffers	windows.txt	/*buffers*
 bug-fixes	version5.txt	/*bug-fixes*
 bug-reports	intro.txt	/*bug-reports*
@@ -1763,6 +1778,7 @@ cmdline-lines	cmdline.txt	/*cmdline-lines*
 cmdline-ranges	cmdline.txt	/*cmdline-ranges*
 cmdline-special	cmdline.txt	/*cmdline-special*
 cmdline.txt	cmdline.txt	/*cmdline.txt*
+cobol.vim	syntax.txt	/*cobol.vim*
 col()	eval.txt	/*col()*
 color-xterm	syntax.txt	/*color-xterm*
 coloring	syntax.txt	/*coloring*
@@ -1850,6 +1866,7 @@ edit-files	editing.txt	/*edit-files*
 edit-intro	editing.txt	/*edit-intro*
 edit-no-break	tips.txt	/*edit-no-break*
 editing.txt	editing.txt	/*editing.txt*
+eiffel.vim	syntax.txt	/*eiffel.vim*
 emacs-keys	tips.txt	/*emacs-keys*
 emacs-tags	tagsearch.txt	/*emacs-tags*
 emacs_tags	tagsearch.txt	/*emacs_tags*
@@ -1949,11 +1966,13 @@ gD	pattern.txt	/*gD*
 gE	motion.txt	/*gE*
 gI	insert.txt	/*gI*
 gU	change.txt	/*gU*
+g]	tagsearch.txt	/*g]*
 g^	motion.txt	/*g^*
 g_CTRL-G	editing.txt	/*g_CTRL-G*
 ga	various.txt	/*ga*
 gd	pattern.txt	/*gd*
 ge	motion.txt	/*ge*
+getcwd()	eval.txt	/*getcwd()*
 getline()	eval.txt	/*getline()*
 gex	starting.txt	/*gex*
 gf	editing.txt	/*gf*
@@ -1999,6 +2018,7 @@ gui-w32	gui_w32.txt	/*gui-w32*
 gui-w32-printing	gui_w32.txt	/*gui-w32-printing*
 gui-w32-start	gui_w32.txt	/*gui-w32-start*
 gui-w32-various	gui_w32.txt	/*gui-w32-various*
+gui-w32s	gui_w32.txt	/*gui-w32s*
 gui-x11	gui_x11.txt	/*gui-x11*
 gui-x11-compiling	gui_x11.txt	/*gui-x11-compiling*
 gui-x11-printing	gui_x11.txt	/*gui-x11-printing*
@@ -2031,6 +2051,7 @@ highlight-ctermbg	syntax.txt	/*highlight-ctermbg*
 highlight-ctermfg	syntax.txt	/*highlight-ctermfg*
 highlight-default	syntax.txt	/*highlight-default*
 highlight-font	syntax.txt	/*highlight-font*
+highlight-groups	syntax.txt	/*highlight-groups*
 highlight-gui	syntax.txt	/*highlight-gui*
 highlight-guibg	syntax.txt	/*highlight-guibg*
 highlight-guifg	syntax.txt	/*highlight-guifg*
@@ -2043,22 +2064,19 @@ hit-return	message.txt	/*hit-return*
 hl-Cursor	syntax.txt	/*hl-Cursor*
 hl-Directory	syntax.txt	/*hl-Directory*
 hl-ErrorMsg	syntax.txt	/*hl-ErrorMsg*
-hl-ErrorMsg-dark	syntax.txt	/*hl-ErrorMsg-dark*
 hl-IncSearch	syntax.txt	/*hl-IncSearch*
 hl-LineNr	syntax.txt	/*hl-LineNr*
-hl-LineNr-dark	syntax.txt	/*hl-LineNr-dark*
 hl-Menu	syntax.txt	/*hl-Menu*
 hl-ModeMsg	syntax.txt	/*hl-ModeMsg*
 hl-MoreMsg	syntax.txt	/*hl-MoreMsg*
 hl-NonText	syntax.txt	/*hl-NonText*
 hl-Normal	syntax.txt	/*hl-Normal*
-hl-Normal-dark	syntax.txt	/*hl-Normal-dark*
 hl-Question	syntax.txt	/*hl-Question*
 hl-Scrollbar	syntax.txt	/*hl-Scrollbar*
 hl-Search	syntax.txt	/*hl-Search*
-hl-Search-dark	syntax.txt	/*hl-Search-dark*
 hl-SpecialKey	syntax.txt	/*hl-SpecialKey*
 hl-StatusLine	syntax.txt	/*hl-StatusLine*
+hl-StatusLineNC	syntax.txt	/*hl-StatusLineNC*
 hl-Title	syntax.txt	/*hl-Title*
 hl-Visual	syntax.txt	/*hl-Visual*
 hl-WarningMsg	syntax.txt	/*hl-WarningMsg*
@@ -2080,6 +2098,7 @@ i_<C-End>	insert.txt	/*i_<C-End>*
 i_<C-Home>	insert.txt	/*i_<C-Home>*
 i_<C-Left>	insert.txt	/*i_<C-Left>*
 i_<C-R>	insert.txt	/*i_<C-R>*
+i_<C-R>_<C-R>	insert.txt	/*i_<C-R>_<C-R>*
 i_<C-Right>	insert.txt	/*i_<C-Right>*
 i_<CR>	insert.txt	/*i_<CR>*
 i_<Del>	insert.txt	/*i_<Del>*
@@ -2119,6 +2138,7 @@ i_CTRL-O	insert.txt	/*i_CTRL-O*
 i_CTRL-P	insert.txt	/*i_CTRL-P*
 i_CTRL-Q	insert.txt	/*i_CTRL-Q*
 i_CTRL-R	insert.txt	/*i_CTRL-R*
+i_CTRL-R_CTRL-R	insert.txt	/*i_CTRL-R_CTRL-R*
 i_CTRL-T	insert.txt	/*i_CTRL-T*
 i_CTRL-U	insert.txt	/*i_CTRL-U*
 i_CTRL-V	insert.txt	/*i_CTRL-V*
@@ -2184,11 +2204,13 @@ key-codes	intro.txt	/*key-codes*
 key-codes-changed	version4.txt	/*key-codes-changed*
 key-mapping	map.txt	/*key-mapping*
 key-notation	intro.txt	/*key-notation*
+keycodes	intro.txt	/*keycodes*
 keypad-end	intro.txt	/*keypad-end*
 keypad-home	intro.txt	/*keypad-home*
 keypad-page-down	intro.txt	/*keypad-page-down*
 keypad-page-up	intro.txt	/*keypad-page-up*
 l	motion.txt	/*l*
+lace.vim	syntax.txt	/*lace.vim*
 last_buffer_nr()	eval.txt	/*last_buffer_nr()*
 left-right-motions	motion.txt	/*left-right-motions*
 limits	vi_diff.txt	/*limits*
@@ -2208,6 +2230,7 @@ macintosh	os_mac.txt	/*macintosh*
 mail-list	intro.txt	/*mail-list*
 map-comments	map.txt	/*map-comments*
 map-examples	map.txt	/*map-examples*
+map-listing	map.txt	/*map-listing*
 map-modes	map.txt	/*map-modes*
 map-overview	map.txt	/*map-overview*
 map-self-destroy	tips.txt	/*map-self-destroy*
@@ -2387,6 +2410,7 @@ repeat.txt	repeat.txt	/*repeat.txt*
 repeating	repeat.txt	/*repeating*
 replace-mode	insert.txt	/*replace-mode*
 retab-example	change.txt	/*retab-example*
+rexx.vim	syntax.txt	/*rexx.vim*
 rgb.txt	gui_w32.txt	/*rgb.txt*
 rgview	starting.txt	/*rgview*
 rgvim	starting.txt	/*rgvim*
@@ -2416,6 +2440,7 @@ sentence	motion.txt	/*sentence*
 set-option	options.txt	/*set-option*
 sh.vim	syntax.txt	/*sh.vim*
 shell-window	tips.txt	/*shell-window*
+shell_error-variable	eval.txt	/*shell_error-variable*
 shift	intro.txt	/*shift*
 short-name-changed	version4.txt	/*short-name-changed*
 simple-change	change.txt	/*simple-change*
@@ -2676,6 +2701,7 @@ various-cmds	various.txt	/*various-cmds*
 various-motions	motion.txt	/*various-motions*
 various.txt	various.txt	/*various.txt*
 verbose	starting.txt	/*verbose*
+version-5.1	version5.txt	/*version-5.1*
 version-variable	eval.txt	/*version-variable*
 version4.txt	version4.txt	/*version4.txt*
 version5.txt	version5.txt	/*version5.txt*
@@ -2695,6 +2721,7 @@ viminfo-file-name	starting.txt	/*viminfo-file-name*
 viminfo-read	starting.txt	/*viminfo-read*
 viminfo-write	starting.txt	/*viminfo-write*
 vimrc	starting.txt	/*vimrc*
+vimrc-intro	starting.txt	/*vimrc-intro*
 virtcol()	eval.txt	/*virtcol()*
 visual-block	visual.txt	/*visual-block*
 visual-change	visual.txt	/*visual-change*
@@ -2708,7 +2735,10 @@ visual-start	visual.txt	/*visual-start*
 visual-use	visual.txt	/*visual-use*
 visual.txt	visual.txt	/*visual.txt*
 vt100-cursor-keys	term.txt	/*vt100-cursor-keys*
+vt100-function-keys	term.txt	/*vt100-function-keys*
 w	motion.txt	/*w*
+white-space	pattern.txt	/*white-space*
+whitespace	pattern.txt	/*whitespace*
 win32	os_win32.txt	/*win32*
 win32-colors	gui_w32.txt	/*win32-colors*
 win32-compiling	os_win32.txt	/*win32-compiling*
@@ -2717,6 +2747,8 @@ win32-mouse	os_win32.txt	/*win32-mouse*
 win32-problems	os_win32.txt	/*win32-problems*
 win32-restore	os_win32.txt	/*win32-restore*
 win32-term	os_win32.txt	/*win32-term*
+win32-win3.1	os_win32.txt	/*win32-win3.1*
+win32s	os_win32.txt	/*win32s*
 window-contents	intro.txt	/*window-contents*
 window-exit	windows.txt	/*window-exit*
 window-move-cursor	windows.txt	/*window-move-cursor*
@@ -2725,10 +2757,12 @@ window-resize	windows.txt	/*window-resize*
 window-size	term.txt	/*window-size*
 window-tag	windows.txt	/*window-tag*
 windows	windows.txt	/*windows*
+windows-3.1	os_win32.txt	/*windows-3.1*
 windows-intro	windows.txt	/*windows-intro*
 windows-starting	windows.txt	/*windows-starting*
 windows.txt	windows.txt	/*windows.txt*
 windows95	os_win32.txt	/*windows95*
+winheight()	eval.txt	/*winheight()*
 word	motion.txt	/*word*
 word-motions	motion.txt	/*word-motions*
 workbench	starting.txt	/*workbench*
@@ -2743,8 +2777,10 @@ xterm-color	syntax.txt	/*xterm-color*
 xterm-copy-paste	term.txt	/*xterm-copy-paste*
 xterm-cursor-keys	term.txt	/*xterm-cursor-keys*
 xterm-end-home-keys	term.txt	/*xterm-end-home-keys*
+xterm-function-keys	term.txt	/*xterm-function-keys*
 xterm-save-screen	tips.txt	/*xterm-save-screen*
 xterm-screens	tips.txt	/*xterm-screens*
+xterm-scroll-region	term.txt	/*xterm-scroll-region*
 y	change.txt	/*y*
 yank	change.txt	/*yank*
 ye-option-gone	version4.txt	/*ye-option-gone*

@@ -21,7 +21,7 @@
 // A C++ automation controller that does the same can be written as follows:
 // the helper functions:
 //
-//   void FormLoad ()
+//   Void FormLoad ()
 //   {
 //       COleAutomationControl Aut;
 //       Aut.CreateObject("Word.Basic");
@@ -137,7 +137,7 @@ DISPID COleAutomationControl::GetDispatchId (char* Name)
 //  Format    Format string that describes the variable list of parameters that
 //            follows. The format string can contain the follwoing characters.
 //            & = mark the following format character as VT_BYREF
-//            b = VT_BOOL
+//            B = VT_BOOL
 //            i = VT_I2
 //            I = VT_I4
 //            r = VT_R2
@@ -226,7 +226,7 @@ bool COleAutomationControl::Invoke (WORD Flags, DISPID DispatchId,
 	DISPPARAMS DispatchParams;
 	memset (&DispatchParams, 0, sizeof (DispatchParams));
 
-	// determine number of arguments
+	// Determine number of arguments
 	if (Format)
 		CountArgsInFormat (Format, &ArgCount);
 
@@ -246,7 +246,7 @@ bool COleAutomationControl::Invoke (WORD Flags, DISPID DispatchId,
 
 	if (ArgCount)
 	{
-		// allocate memory for all VARIANTARG parameters
+		// Allocate memory for all VARIANTARG parameters
 		ArgVector = (VARIANTARG*) CoTaskMemAlloc (
 				ArgCount * sizeof (VARIANTARG));
 		if (! ArgVector)
@@ -256,10 +256,10 @@ bool COleAutomationControl::Invoke (WORD Flags, DISPID DispatchId,
 		}
 		memset (ArgVector, 0, sizeof (VARIANTARG) * ArgCount);
 
-		// get ready to walk vararg list
+		// Get ready to walk vararg list
 		LPCTSTR s = Format;
 
-		VARIANTARG *p = ArgVector + ArgCount - 1;  // params go in opposite order
+		VARIANTARG *p = ArgVector + ArgCount - 1;  // Params go in opposite order
 
 		for (;;)
 		{
@@ -366,7 +366,7 @@ bool COleAutomationControl::Invoke (WORD Flags, DISPID DispatchId,
 				break;
 			}
 
-			--p;	// get ready to fill next argument
+			--p;	// Get ready to fill next argument
 		}
 	}
 
@@ -377,13 +377,13 @@ bool COleAutomationControl::Invoke (WORD Flags, DISPID DispatchId,
 	// NULL if return value is not expected.
 	VariantInit (&m_VariantResult);
 
-	// make the call
+	// Make the call
 	m_hResult = m_pDispatch->Invoke (DispatchId, IID_NULL, LOCALE_USER_DEFAULT,
 					 Flags, &DispatchParams, &m_VariantResult,
 					 &m_ExceptionInfo, &m_nErrArg);
 
     Cleanup:
-	// cleanup any arguments that need cleanup
+	// Cleanup any arguments that need cleanup
 	if (ArgCount)
 	{
 		VARIANTARG* p = ArgVector;

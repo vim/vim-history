@@ -1,4 +1,4 @@
-*digraph.txt*   For Vim version 5.0.  Last modification: 1998 Jan 25
+*digraph.txt*   For Vim version 5.1.  Last modification: 1998 Mar 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -97,7 +97,7 @@ meant for or if you print it.
 The decimal number is the ASCII code for the character.
 
 							*digraph-table*
-Default digraphs on non-MS-DOS, non-Win32 machines:
+Default digraphs for machines that are not mentioned below:
 ~! ° 161   c| ¢ 162   $$ £ 163   ox § 164   Y- • 165   || ¶ 166   pa ß 167
 "" ® 168   cO © 169   a- ™ 170   << ´ 171   -, ¨ 172   -- ≠ 173   rO Æ 174
 -= Ø 175   ~o ∞ 176   +- ± 177   22 ≤ 178   33 ≥ 179   '' ¥ 180   ju µ 181
@@ -131,7 +131,7 @@ Y" Ó 238   y" Ô 239   p-  240   p~ Ò 241   ~. Ú 242   ju Û 243   Pp Ù 244
 xx ¸ 252   >> ˝ 253   +- ˛ 254   nu ˇ 255
 
 
-Default digraphs on MS-DOS and Win32:
+Default digraphs on MS-DOS, OS/2 and Win32-console:
 C, Ä 128   u" Å 129   e' Ç 130   a^ É 131   a" Ñ 132   a` Ö 133   a@ Ü 134
 c, á 135   e^ à 136   e" â 137   e` ä 138   i" ã 139   i^ å 140   i` ç 141
 A" é 142   A@ è 143   E' ê 144   ae ë 145   AE í 146   o^ ì 147   o" î 148

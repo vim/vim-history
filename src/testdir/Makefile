@@ -9,7 +9,8 @@ SCRIPTS = test1.out test2.out test3.out test4.out test5.out test6.out \
 		test12.out  test13.out test14.out test15.out test17.out \
 		test18.out test19.out test20.out test21.out test22.out \
 		test23.out test24.out test25.out test26.out test27.out \
-		test28.out test29.out test30.out test31.out test32.out
+		test28.out test29.out test30.out test31.out test32.out \
+		test33.out
 
 SCRIPTS_GUI = test16.out
 

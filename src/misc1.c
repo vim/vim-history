@@ -731,7 +731,7 @@ open_line(dir, redraw, del_spaces, old_indent)
 	{
 	    if (trunc_line)
 	    {
-		    /* find start of trailing white space */
+		/* find start of trailing white space */
 		for (n = STRLEN(saved_line); n > 0 &&
 					  vim_iswhite(saved_line[n - 1]); --n)
 		    ;
@@ -1857,9 +1857,11 @@ expand_env(src, dst, dstlen)
 				    pend -= 4;
 			    }
 #endif
+#ifndef macintosh
 			    /* remove trailing path separator */
 			    if (pend > p && vim_ispathsep(pend[-1]))
 				--pend;
+#endif
 			    var = vim_strnsave(p, (int)(pend - p));
 			    mustfree = TRUE;
 			    if (!mch_isdir(var))
@@ -2903,7 +2905,7 @@ get_c_indent()
     int ind_no_brace = 0;
 
     /*
-     * column where the first { of a function should be located
+     * column where the first { of a function should be located }
      */
     int ind_first_open = 0;
 
@@ -2967,6 +2969,12 @@ get_c_indent()
      * spaces from the indent of the line with an unclosed parentheses
      */
     int ind_unclosed = curbuf->b_p_sw * 2;
+
+    /*
+     * spaces from the indent of the line with an unclosed parentheses, which
+     * itself is also unclosed
+     */
+    int ind_unclosed2 = curbuf->b_p_sw;
 
     /*
      * spaces from the comment opener when there is nothing after it.
@@ -3065,6 +3073,7 @@ get_c_indent()
 	    case 'c': ind_in_comment = n; break;
 	    case '+': ind_continuation = n; break;
 	    case '(': ind_unclosed = n; break;
+	    case 'u': ind_unclosed2 = n; break;
 	    case ')': ind_maxparen = n; break;
 	    case '*': ind_maxcomment = n; break;
 	    case 'g': ind_scopedecl = n; break;
@@ -3207,7 +3216,7 @@ get_c_indent()
 	}
 
 	/*
-	 * Line up with line where the matching paren is.
+	 * Line up with line where the matching paren is. XXX
 	 * If the line starts with a '(' or the indent for unclosed
 	 * parentheses is zero, line up with the unclosed parentheses.
 	 */
@@ -3217,7 +3226,6 @@ get_c_indent()
 	    if (theline[0] == ')' || ind_unclosed == 0 ||
 						      *skipwhite(look) == '(')
 	    {
-
 		/*
 		 * If we're looking at a close paren, line up right there;
 		 * otherwise, line up with the next non-white character.
@@ -3242,7 +3250,38 @@ get_c_indent()
 		amount = col;
 	    }
 	    else
-		amount += ind_unclosed;
+	    {
+		/* add ind_unclosed2 for each '(' before our matching one */
+		col = our_paren_pos.col;
+		while (our_paren_pos.col > 0)
+		{
+		    --our_paren_pos.col;
+		    switch (*ml_get_pos(&our_paren_pos))
+		    {
+			case '(': amount += ind_unclosed2;
+				  col = our_paren_pos.col;
+				  break;
+			case ')': amount -= ind_unclosed2;
+				  col = MAXCOL;
+				  break;
+		    }
+		}
+
+		/* Use ind_unclosed once, when the first '(' is not inside
+		 * braces */
+		if (col == MAXCOL)
+		    amount += ind_unclosed;
+		else
+		{
+		    curwin->w_cursor.lnum = our_paren_pos.lnum;
+		    curwin->w_cursor.col = col;
+		    if ((trypos = find_match_paren(ind_maxparen,
+						     ind_maxcomment)) != NULL)
+			amount += ind_unclosed2;
+		    else
+			amount += ind_unclosed;
+		}
+	    }
 	}
     }
 
@@ -4073,11 +4112,12 @@ find_match(lookfor, ourscope, ind_maxparen, ind_maxcomment)
 get_lisp_indent()
 {
     FPOS	*pos, realpos;
-    long	amount = 0;
+    int		amount;
     char_u	*that;
     colnr_t	col;
     colnr_t	maybe;
     colnr_t	firsttry;
+    int		count = 0;
 
 
     realpos = curwin->w_cursor;
@@ -4085,69 +4125,85 @@ get_lisp_indent()
 
     if ((pos = findmatch(NULL, '(')) != NULL)
     {
-	curwin->w_cursor.lnum = pos->lnum;
-	curwin->w_cursor.col = pos->col;
-	col = pos->col;
-
-	that = ml_get_curline();
-	maybe = get_indent();	    /* XXX */
-
-	if (maybe == 0)
-	    amount = 2;
-	else
+	/* Extra trick: Take the indent of the first previous non-white line
+	 * that is at the same () level. */
+	amount = -1;
+	while (--curwin->w_cursor.lnum >= pos->lnum)
 	{
-	    while (*that && col)
+	    if (linewhite(curwin->w_cursor.lnum))
+		continue;
+	    for (that = ml_get_curline(); *that; ++that)
 	    {
-		amount += lbr_chartabsize(that, (colnr_t)amount);
-		col--;
-		that++;
+		if (*that == '(')
+		    ++count;
+		else if (*that == ')')
+		    --count;
 	    }
-
-	    that++;
-	    amount++;
-	    firsttry = amount;
-
-	    /*
-	     * Go to the start of the second word.
-	     * If there is no second word, go back to firsttry.
-	     * Also stop at a '('.
-	     */
-
-	    while (vim_iswhite(*that))
+	    if (count == 0)
 	    {
-		amount += lbr_chartabsize(that, (colnr_t)amount);
-		that++;
-	    }
-	    while (*that && !vim_iswhite(*that) && *that != '(')
-	    {
-		amount += lbr_chartabsize(that, (colnr_t)amount);
-		that++;
-	    }
-	    while (vim_iswhite(*that))
-	    {
-		amount += lbr_chartabsize(that, (colnr_t)amount);
-		that++;
-	    }
-	    if (! *that)
-		amount = firsttry;
-	}
-    }
-    else    /* no matching '(' found, use indent of previous non-empty line */
-    {
-	while (curwin->w_cursor.lnum > 1)
-	{
-	    --curwin->w_cursor.lnum;
-	    if (!linewhite(curwin->w_cursor.lnum))
+		amount = get_indent();
 		break;
+	    }
 	}
-	amount = get_indent();	    /* XXX */
+
+	/* get the indent from where the matching '(' is */
+	if (amount == -1)
+	{
+	    curwin->w_cursor.lnum = pos->lnum;
+	    curwin->w_cursor.col = pos->col;
+	    col = pos->col;
+
+	    that = ml_get_curline();
+	    maybe = get_indent();
+
+	    if (maybe == 0)
+		amount = 2;
+	    else
+	    {
+		amount = 0;
+		while (*that && col)
+		{
+		    amount += lbr_chartabsize(that, (colnr_t)amount);
+		    col--;
+		    that++;
+		}
+
+		that++;
+		amount++;
+		firsttry = amount;
+
+		/*
+		 * Go to the start of the second word.
+		 * If there is no second word, go back to firsttry.
+		 * Also stop at a '('.
+		 */
+
+		while (vim_iswhite(*that))
+		{
+		    amount += lbr_chartabsize(that, (colnr_t)amount);
+		    that++;
+		}
+		while (*that && !vim_iswhite(*that) && *that != '(')
+		{
+		    amount += lbr_chartabsize(that, (colnr_t)amount);
+		    that++;
+		}
+		while (vim_iswhite(*that))
+		{
+		    amount += lbr_chartabsize(that, (colnr_t)amount);
+		    that++;
+		}
+		if (*that == NUL)
+		    amount = firsttry;
+	    }
+	}
     }
+    else    /* no matching '(' found, use zero indent */
+	amount = 0;
 
     curwin->w_cursor = realpos;
 
-    if (amount < 0)
-	amount = 0;
-    return (int)amount;
+    return amount;
 }
 #endif /* LISPINDENT */
 
@@ -4387,8 +4443,10 @@ addfile(gap, f, flags)
     /*
      * Append a slash or backslash after directory names.
      */
+#ifndef DONT_ADD_PATHSEP_TO_DIR 
     if (isdir)
 	STRCAT(p, PATHSEPSTR);
+#endif
     ((char_u **)gap->ga_data)[gap->ga_len++] = p;
     --gap->ga_room;
 }

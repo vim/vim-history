@@ -1,4 +1,4 @@
-*tagsearch.txt* For Vim version 5.0.  Last modification: 1998 Feb 18
+*tagsearch.txt* For Vim version 5.1.  Last modification: 1998 Apr 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -190,8 +190,20 @@ the same entry.
 			Does ":tselect[!] [ident]" and splits the window for
 			the selected tag.  {not in Vi}
 
+							*g]*
+g]			Like CTRL-], but use ":tselect" instead of ":tag".
+			{not in Vi}
+
+							*:tj* *:tjump*
+:tj[ump][!] [ident]	Like ":tselect", but jump to the tag directly when
+			there is only one match.  {not in Vi}
+
+							*:stj* *:stjump*
+:stj[ump][!] [ident]	Does ":tjump[!] [ident]" and splits the window for the
+			selected tag.  {not in Vi}
+
 							*gCTRL-]*
-g CTRL-]		Like CTRL-], but use ":tselect" instead of ":tag".
+g CTRL-]		Like CTRL-], but use ":tjump" instead of ":tag".
 			{not in Vi}
 
 							*:tn* *:tnext*
@@ -247,22 +259,25 @@ If you really want the old Vi behaviour, set the 't' flag in 'cpoptions'.
 							*tag-binary-search*
 Vim uses binary searching in the tags file to find the desired tag quickly
 (when enabled at compile time |+tag_binary|).  But this only works if the
-tags file was sorted.  Therefore, if no match was found, another try is done
-with a linear search.  If you don't want this, reset the 'tagbsearch' option.
-Or better: Sort the tags file!
+tags file was sorted on ASCII byte value.  Therefore, if no match was found,
+another try is done with a linear search.  If you don't want this, reset the
+'tagbsearch' option.  Or better: Sort the tags file!
 
 							*tag-regexp*
 The ":tag" and "tselect" commands accept a regular expression argument.  See
 |pattern| for the special characters that can be used.
-If no special characters are used, the argument is taken as a full tag name.
-When special characters are used, the argument is used as a pattern.
+When the argument starts with '/', it is used as a pattern.  If the argument
+does not start with '/', it is taken literally, as a full tag name.
 Examples:
 >    :tag main
-jumps to the tag "main" that has the highest priority.
->    :tag ^get
-jumps to the tag that starts with "get" and has the highest priority.
->    :tag norm.*
-lists all the tags that contain "norm".
+  jumps to the tag "main" that has the highest priority.
+>    :tag /^get
+  jumps to the tag that starts with "get" and has the highest priority.
+>    :tag /norm
+  lists all the tags that contain "norm", including "id_norm".
+When the argument both exists literally, and match when used as a regexp, a
+literal match has a higher priority.  For example, ":tag /open" matches "open"
+before "open_file" and "file_open".
 
 							*tag-!*
 If the tag is in the current file this will always work.  Otherwise the
@@ -447,7 +462,8 @@ The first lines in the tags file can contain lines that start with
 These are sorted to the first lines, only rare tags that start with "!" can
 sort to before them.  Vim only recognizes the line that indicates if the file
 was sorted.  When this line is found, Vim uses binary searching for the tags
-file: !_TAG_FILE_SORTED<Tab>1
+file:
+>	!_TAG_FILE_SORTED<Tab>1
 
 							*tag-search*
 The command can be any Ex command, but often it is a search command.

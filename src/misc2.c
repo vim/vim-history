@@ -904,6 +904,9 @@ static struct modmasktable
     {MOD_MASK_2CLICK,	(char_u)'2'},
     {MOD_MASK_3CLICK,	(char_u)'3'},
     {MOD_MASK_4CLICK,	(char_u)'4'},
+#ifdef macintosh
+    {MOD_MASK_CMD,      (char_u)'D'},
+#endif
     {0x0,		NUL}
 };
 
@@ -1049,6 +1052,11 @@ static struct key_name_entry
     {K_F33,		(char_u *)"F33"},
     {K_F34,		(char_u *)"F34"},
     {K_F35,		(char_u *)"F35"},
+
+    {K_XF1,		(char_u *)"F1"},
+    {K_XF2,		(char_u *)"F2"},
+    {K_XF3,		(char_u *)"F3"},
+    {K_XF4,		(char_u *)"F4"},
 
     {K_HELP,		(char_u *)"Help"},
     {K_UNDO,		(char_u *)"Undo"},
@@ -1595,19 +1603,39 @@ call_shell(cmd, opt)
     int		opt;
 {
     char_u	*ncmd;
-    int		retval = FAIL;
 
     if (cmd == NULL || *p_sxq == NUL)
-	return mch_call_shell(cmd, opt);
-
-    ncmd = alloc((unsigned)(STRLEN(cmd) + STRLEN(p_sxq) * 2 + 1));
-    if (ncmd != NULL)
+	call_shell_retval = mch_call_shell(cmd, opt);
+    else
     {
-	STRCPY(ncmd, p_sxq);
-	STRCAT(ncmd, cmd);
-	STRCAT(ncmd, p_sxq);
-	retval = mch_call_shell(ncmd, opt);
-	vim_free(ncmd);
+	ncmd = alloc((unsigned)(STRLEN(cmd) + STRLEN(p_sxq) * 2 + 1));
+	if (ncmd != NULL)
+	{
+	    STRCPY(ncmd, p_sxq);
+	    STRCAT(ncmd, cmd);
+	    STRCAT(ncmd, p_sxq);
+	    call_shell_retval = mch_call_shell(ncmd, opt);
+	    vim_free(ncmd);
+	}
+	else
+	    call_shell_retval = FAIL;
     }
-    return retval;
+    return call_shell_retval;
+}
+
+/*
+ * VISUAL and OP_PENDING State are never set, they are equal to NORMAL State
+ * with a condition.  This function returns the real State.
+ */
+    int
+get_real_state()
+{
+    if ((State & NORMAL))
+    {
+	if (VIsual_active)
+	    return VISUAL;
+	else if (finish_op)
+	    return OP_PENDING;
+    }
+    return State;
 }

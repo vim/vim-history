@@ -9,7 +9,37 @@
 /*
  * Macintosh machine-dependent things.
  */
+#include <QuickDraw.h>
+#include <ToolUtils.h>
+#include <LowMem.h>
+#include <Scrap.h>
+#include <Sound.h>
+#include <TextUtils.h>
+#include <Memory.h>
+#include <OSUtils.h>
+#include <Files.h>
 
+#include <unistd.h>
+#include <utsname.h>
+#include <signal.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stat.h>
+#include <unix.h>
+
+/*
+ * Use Macintosh subroutine to alloc the memory.
+ * (malloc generate Ptr format hard to debug with ZoneRanger)
+ */
+#define malloc(x) NewPtr(x)
+#define free(x)   DisposePtr((char *) x)
+
+/* This will go away when CMD_KEY fully tested */
+#define USE_CMD_KEY
+
+#define DONT_ADD_PATHSEP_TO_DIR
+#define USE_EXE_NAME		    /* to find  $VIM */
 #define CASE_INSENSITIVE_FILENAME   /* ignore case when comparing file names */
 #define SPACE_IN_FILENAME
 #define COLON_AS_PATHSEP
@@ -26,7 +56,6 @@
 #define HAVE_STRCSPN
 #define HAVE_MEMSET
 #define USE_TMPNAM		    /* use tmpnam() instead of mktemp() */
-/* #define HAVE_LOCALE_H */
 #define HAVE_FCNTL_H
 #define HAVE_QSORT
 #if defined(__DATE__) && defined(__TIME__)
@@ -40,17 +69,34 @@
 #else
 # define SIZEOF_INT 2
 #endif
+
+#ifndef __POWERPC__
+# if !defined(__fourbyteints__) || !__option(enumsalwaysint)
+   ERROR: you must compile the projecct with 4-byte ints and enums always int
+# endif
+#endif
+
 /*
  * Names for the EXRC, HELP and temporary files.
  * Some of these may have been defined in the makefile.
  */
 
+#ifndef SYS_VIMRC_FILE
+# define SYS_VIMRC_FILE "$VIM:vimrc"
+#endif
+#ifndef SYS_GVIMRC_FILE
+# define SYS_GVIMRC_FILE "$VIM:gvimrc"
+#endif
+#ifndef SYS_MENU_FILE
+# define SYS_MENU_FILE "$VIM:menu.vim"
+#endif
+
 #ifdef USE_GUI
 # ifndef USR_GVIMRC_FILE
-#  define USR_GVIMRC_FILE ".gvimrc"
+#  define USR_GVIMRC_FILE "$VIM:.gvimrc"
 # endif
 # ifndef GVIMRC_FILE
-#  define GVIMRC_FILE	".gvimrc"
+#  define GVIMRC_FILE	"_gvimrc"
 # endif
 #endif
 #ifndef USR_VIMRC_FILE
@@ -58,19 +104,19 @@
 #endif
 
 #ifndef USR_EXRC_FILE
-# define USR_EXRC_FILE	"$VIM\:.exrc"
+# define USR_EXRC_FILE	"$VIM:.exrc"
 #endif
 
 #ifndef VIMRC_FILE
-# define VIMRC_FILE	".vimrc"
+# define VIMRC_FILE	"_vimrc"
 #endif
 
 #ifndef EXRC_FILE
-# define EXRC_FILE	".exrc"
+# define EXRC_FILE	"_exrc"
 #endif
 
 #ifndef VIM_HLP
-# define VIM_HLP	"$VIM:vim_help.txt"
+# define VIM_HLP	"$VIM:doc:help.txt"
 #endif
 
 #ifdef VIMINFO
@@ -90,17 +136,12 @@
 #define ERRORFILE   "errors.err"
 #define MAKEEF	    "vim##.err"
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <stat.h>
-#include <unix.h>
-
 /*
- * Win32 has plenty of memory, use large buffers
+ * Macintosh has plenty of memory, use large buffers
  */
 #define CMDBUFFSIZE 1024	/* size of the command processing buffer */
 
-#define MAXPATHL    1024	/** Mac has long paths and plenty of memory **/
+#define MAXPATHL    256 	/* Limited by the Pascal Strings */
 
 #define BASENAMELEN	(MAXPATHL-5)	/* length of base of filename */
 
@@ -112,4 +153,4 @@
 # define MAXMEMTOT	2048	/* use up to 2048 Kbyte for Vim */
 #endif
 
-#define WILDCARD_LIST "*?[{`~$"
+#define WILDCHAR_LIST "*?[{`$"

@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-// returns key for HKEY_CURRENT_USER\"Software"\Company\AppName
+// Returns key for HKEY_CURRENT_USER\"Software"\Company\AppName
 // creating it if it doesn't exist
 // responsibility of the caller to call RegCloseKey() on the returned HKEY
 //
@@ -22,7 +22,7 @@ HKEY GetAppKey (char* AppName)
 	return hAppKey;
 }
 
-// returns key for
+// Returns key for
 // HKEY_CURRENT_USER\"Software"\RegistryKey\AppName\Section
 // creating it if it doesn't exist.
 // responsibility of the caller to call RegCloseKey () on the returned HKEY

@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1998 Feb 12
+" Last change:	1998 Feb 24
 
 " This is the startup file for syntax highlighting.
 " 1. Set the default highlight groups.
@@ -23,23 +23,21 @@ if has("syntax")
     hi Comment	term=bold ctermfg=Cyan guifg=#80a0ff
     hi Constant	term=underline ctermfg=Magenta guifg=#ffa0a0
     hi Special	term=bold ctermfg=LightRed guifg=Orange
-    hi Identifier term=underline ctermfg=DarkCyan guifg=#40ffff
+    hi Identifier term=underline cterm=bold ctermfg=Cyan guifg=#40ffff
     hi Statement term=bold ctermfg=Yellow guifg=#ffff60 gui=bold
     hi PreProc	term=underline ctermfg=LightBlue guifg=#ff80ff
     hi Type	term=underline ctermfg=LightGreen guifg=#60ff60 gui=bold
   else
-    hi Comment	term=bold ctermfg=Blue guifg=Blue
-    hi Constant	term=underline ctermfg=Magenta guifg=Magenta
-    hi Special	term=bold ctermfg=DarkBlue guifg=SlateBlue
+    hi Comment	term=bold ctermfg=DarkBlue guifg=Blue
+    hi Constant	term=underline ctermfg=DarkRed guifg=Magenta
+    hi Special	term=bold ctermfg=DarkMagenta guifg=SlateBlue
     hi Identifier term=underline ctermfg=DarkCyan guifg=DarkCyan
     hi Statement term=bold ctermfg=Brown gui=bold guifg=Brown
-    hi PreProc	term=underline ctermfg=Magenta guifg=Purple
+    hi PreProc	term=underline ctermfg=DarkMagenta guifg=Purple
     hi Type	term=underline ctermfg=DarkGreen guifg=SeaGreen gui=bold
   endif
-
-  " These two change the background
-  hi Error	term=reverse ctermbg=Red guibg=Orange
-  hi Todo	term=standout ctermbg=Yellow guifg=Blue guibg=Yellow
+  hi Error	term=reverse ctermbg=Red ctermfg=White guibg=Red guifg=White
+  hi Todo	term=standout ctermbg=Yellow ctermfg=Black guifg=Blue guibg=Yellow
 
   " Common groups that link to default highlighting.
   " You can specify other highlighting easily.
@@ -90,6 +88,9 @@ if has("syntax")
   " Awk
   au BufNewFile,BufRead *.awk			so $VIM/syntax/awk.vim
 
+  " BASIC
+  au BufNewFile,BufRead *.bas			so $VIM/syntax/basic.vim
+
   " Batch file for MSDOS
   au BufNewFile,BufRead *.bat,*.sys		so $VIM/syntax/dosbatch.vim
 
@@ -105,6 +106,9 @@ if has("syntax")
   else
     au BufNewFile,BufRead *.cpp,*.cc,*.cxx,*.c++,*.h,*.hh,*.hxx,*.hpp,*.inl so $VIM/syntax/cpp.vim
   endif
+
+  " Cascading Style Sheets
+  au BufNewFile,BufRead *.css			so $VIM/syntax/css.vim
 
   " Century Term Command Scripts
   au BufNewFile,BufRead *.cmd,*.con		so $VIM/syntax/cterm.vim
@@ -122,13 +126,16 @@ if has("syntax")
   au BufNewFile,BufRead drac.*,*.drac,*.drc,*lvs,*lpe so $VIM/syntax/dracula.vim
 
   " Eiffel
-  au BufNewFile,BufReadPost *.e			so $VIM/syntax/eiffel.vim
+  au BufNewFile,BufRead *.e,*.E			so $VIM/syntax/eiffel.vim
 
   " Elm Filter Rules file
   au BufNewFile,BufReadPost filter-rules	so $VIM/syntax/elmfilt.vim
 
   " ESQL-C
   au BufNewFile,BufRead *.ec,*.EC		so $VIM/syntax/esqlc.vim
+
+  " Exports
+  au BufNewFile,BufRead exports			so $VIM/syntax/exports.vim
 
   " Fortran
   au BufNewFile,BufRead *.f,*.F,*.for,*.fpp	so $VIM/syntax/fortran.vim
@@ -157,11 +164,18 @@ if has("syntax")
   " JavaScript
   au BufNewFile,BufRead *.js,*.javascript	so $VIM/syntax/javascript.vim
 
+  " Lace (ISE)
+  au BufNewFile,BufRead *.ace,*.ACE		so $VIM/syntax/lace.vim
+
   " Lex
   au BufNewFile,BufRead *.lex,*.l		so $VIM/syntax/lex.vim
 
   " Lisp
-  au BufNewFile,BufRead *.lsp,*.L		so $VIM/syntax/lisp.vim
+  if has("fname_case")
+    au BufNewFile,BufRead *.lsp,*.L		so $VIM/syntax/lisp.vim
+  else
+    au BufNewFile,BufRead *.lsp			so $VIM/syntax/lisp.vim
+  endif
 
   " Lynx style file
   au BufNewFile,BufRead *.lss			so $VIM/syntax/lss.vim
@@ -203,10 +217,13 @@ if has("syntax")
   au BufNewFile,BufRead *.ps,*.eps		so $VIM/syntax/postscr.vim
 
   " Povray
-  au BufNewFile,BufRead *.pov			so $VIM/syntax/pov.vim
+  au BufNewFile,BufRead *.pov,*.inc		so $VIM/syntax/pov.vim
+
+  " Printcap
+  au BufNewFile,BufRead printcap		so $VIM/syntax/pcap.vim
 
   " Procmail
-  au BufNewFile,BufRead .procmail		so $VIM/syntax/procmail.vim
+  au BufNewFile,BufRead .procmail,.procmailrc	so $VIM/syntax/procmail.vim
 
   " Prolog
   au BufNewFile,BufRead *.pdb			so $VIM/syntax/prolog.vim
@@ -214,11 +231,17 @@ if has("syntax")
   " Python
   au BufNewFile,BufRead *.py			so $VIM/syntax/python.vim
 
+  " Rexx
+  au BufNewFile,BufRead *.rexx,*.rex,*.r	so $VIM/syntax/rexx.vim
+
   " S-lang
   au BufNewFile,BufRead *.sl			so $VIM/syntax/slang.vim
 
   " Sather
   au BufNewFile,BufRead *.sa			so $VIM/syntax/sather.vim
+
+  " SDL
+  au BufNewFile,BufRead *.sdl,*.pr		so $VIM/syntax/sdl.vim
 
   " Sendmail
   au BufNewFile,BufRead sendmail.cf		so $VIM/syntax/sm.vim
@@ -230,6 +253,16 @@ if has("syntax")
   " Z-Shell script
   au BufNewFile,BufRead .z*,zsh*,zlog*		so $VIM/syntax/zsh.vim
 
+  " Simula
+  au BufNewFile,BufRead *.sim			so $VIM/syntax/simula.vim
+
+  " Skill
+  au BufNewFile,BufRead *.il,*.rul		so $VIM/syntax/skill.vim
+
+  " SLRN
+  au BufNewFile,BufRead .slrnrc			so $VIM/syntax/slrnrc.vim
+  au BufNewFile,BufRead *.score			so $VIM/syntax/slrnsc.vim
+
   " Smalltalk
   au BufNewFile,BufRead *.st,*.cls		so $VIM/syntax/st.vim
 
@@ -238,6 +271,12 @@ if has("syntax")
 
   " SQL
   au BufNewFile,BufRead *.sql			so $VIM/syntax/sql.vim
+
+  " Tags
+  au BufNewFile,BufRead tags			so $VIM/syntax/tags.vim
+
+  " Tcl
+  au BufNewFile,BufRead *.tcl			so $VIM/syntax/tcl.vim
 
   " Telix Salt
   au BufNewFile,BufRead *.slt			so $VIM/syntax/tsalt.vim
@@ -250,9 +289,6 @@ if has("syntax")
 
   " Verilog HDL
   au BufNewFile,BufRead *.v			so $VIM/syntax/verilog.vim
-
-  " Tcl
-  au BufNewFile,BufRead *.tcl			so $VIM/syntax/tcl.vim
 
   " VHDL
   au BufNewFile,BufRead *.hdl,*.vhd,*.vhdl,*.vhdl_[0-9]*,*.vbe,*.vst  so $VIM/syntax/vhdl.vim
@@ -283,7 +319,7 @@ if has("syntax")
   au BufNewFile,BufRead *.y			so $VIM/syntax/yacc.vim
 
   " Various scripts, without a specific extension
-  au BufNewFile,BufRead *			so $VIM/syntax/scripts.vim
+  au BufNewFile,BufRead,StdinReadPost *		so $VIM/syntax/scripts.vim
 
   augroup END
 
@@ -295,9 +331,11 @@ if has("syntax")
     50amenu Syntax.ABCDE.ASN\.1		:so $VIM/syntax/asn.vim
     50amenu Syntax.ABCDE.Atlas		:so $VIM/syntax/atlas.vim
     50amenu Syntax.ABCDE.Awk		:so $VIM/syntax/awk.vim
+    50amenu Syntax.ABCDE.BASIC		:so $VIM/syntax/basic.vim
     50amenu Syntax.ABCDE.BibFile	:so $VIM/syntax/bib.vim
     50amenu Syntax.ABCDE.C		:so $VIM/syntax/c.vim
     50amenu Syntax.ABCDE.C++		:so $VIM/syntax/cpp.vim
+    50amenu Syntax.ABCDE.Cascading\ Style\ Sheets :so $VIM/syntax/css.vim
     50amenu Syntax.ABCDE.Century\ Term	:so $VIM/syntax/cterm.vim
     50amenu Syntax.ABCDE.Csh\ shell\ script :so $VIM/syntax/csh.vim
     50amenu Syntax.ABCDE.Clean		:so $VIM/syntax/clean.vim
@@ -308,6 +346,7 @@ if has("syntax")
     50amenu Syntax.ABCDE.Elm\ Filter	:so $VIM/syntax/elmfilt.vim
     50amenu Syntax.ABCDE.ESQL-C		:so $VIM/syntax/esqlc.vim
     50amenu Syntax.ABCDE.Expect		:so $VIM/syntax/expect.vim
+    50amenu Syntax.FGHIJ.Exports	:so $VIM/syntax/exports.vim
     50amenu Syntax.FGHIJ.Fortran	:so $VIM/syntax/fortran.vim
     50amenu Syntax.FGHIJ.GP		:so $VIM/syntax/gp.vim
     50amenu Syntax.FGHIJ.HTML		:so $VIM/syntax/html.vim
@@ -316,6 +355,7 @@ if has("syntax")
     50amenu Syntax.FGHIJ.Java		:so $VIM/syntax/java.vim
     50amenu Syntax.FGHIJ.JavaCC		:so $VIM/syntax/javacc.vim
     50amenu Syntax.FGHIJ.JavaScript	:so $VIM/syntax/javascript.vim
+    50amenu Syntax.KLMNO.Lace		:so $VIM/syntax/lace.vim
     50amenu Syntax.KLMNO.Lex		:so $VIM/syntax/lex.vim
     50amenu Syntax.KLMNO.Lisp		:so $VIM/syntax/lisp.vim
     50amenu Syntax.KLMNO.Lynx\ Style	:so $VIM/syntax/lss.vim
@@ -336,19 +376,27 @@ if has("syntax")
     50amenu Syntax.PQRST.Pike		:so $VIM/syntax/pike.vim
     50amenu Syntax.PQRST.PostScript	:so $VIM/syntax/postscr.vim
     50amenu Syntax.PQRST.Povray		:so $VIM/syntax/pov.vim
+    50amenu Syntax.PQRST.Printcap	:so $VIM/syntax/pcap.vim
     50amenu Syntax.PQRST.Procmail	:so $VIM/syntax/procmail.vim
     50amenu Syntax.PQRST.Prolog		:so $VIM/syntax/prolog.vim
     50amenu Syntax.PQRST.Python		:so $VIM/syntax/python.vim
+    50amenu Syntax.PQRST.Rexx		:so $VIM/syntax/rexx.vim
     50amenu Syntax.PQRST.S-lang		:so $VIM/syntax/slang.vim
     50amenu Syntax.PQRST.Sather		:so $VIM/syntax/sather.vim
+    50amenu Syntax.PQRST.SDL		:so $VIM/syntax/sdl.vim
     50amenu Syntax.PQRST.Sendmail\.cf	:so $VIM/syntax/sm.vim
     50amenu Syntax.PQRST.Sh\ shell\ script :so $VIM/syntax/sh.vim
+    50amenu Syntax.PQRST.Simula		:so $VIM/syntax/simula.vim
+    50amenu Syntax.PQRST.Skill		:so $VIM/syntax/skill.vim
+    50amenu Syntax.PQRST.SLRN\ rc	:so $VIM/syntax/slrnrc.vim
+    50amenu Syntax.PQRST.SLRN\ score	:so $VIM/syntax/slrnsc.vim
     50amenu Syntax.PQRST.SmallTalk	:so $VIM/syntax/st.vim
     50amenu Syntax.PQRST.SNMP\ MIB	:so $VIM/syntax/mib.vim
     50amenu Syntax.PQRST.SQL		:so $VIM/syntax/sql.vim
+    50amenu Syntax.PQRST.Tags		:so $VIM/syntax/tags.vim
+    50amenu Syntax.PQRST.Tcl		:so $VIM/syntax/tcl.vim
     50amenu Syntax.PQRST.Telix\ Salt	:so $VIM/syntax/tsalt.vim
     50amenu Syntax.PQRST.Tex		:so $VIM/syntax/tex.vim
-    50amenu Syntax.PQRST.Tcl		:so $VIM/syntax/tcl.vim
     50amenu Syntax.UVWXYZ.UIT/UIL	:so $VIM/syntax/uil.vim
     50amenu Syntax.UVWXYZ.Verilog\ HDL	:so $VIM/syntax/verilog.vim
     50amenu Syntax.UVWXYZ.VHDL		:so $VIM/syntax/vhdl.vim
@@ -361,7 +409,7 @@ if has("syntax")
     50amenu Syntax.UVWXYZ.Yacc		:so $VIM/syntax/yacc.vim
     50amenu Syntax.UVWXYZ.Zsh\ shell\ script :so $VIM/syntax/zsh.vim
     50amenu Syntax.color\ test		:sp $VIM/syntax/colortest.vim|so %
-    50amenu Syntax.highlight\ test	:sp $VIM/syntax/hitest.vim|so %
+    50amenu Syntax.highlight\ test	:new|so $VIM/syntax/hitest.vim
     50amenu Syntax.manual		:normal :augroup syntax:au!:augroup END:syn clear:aunmenu Syntax.manual:50amenu Syntax.automatic :aunmenu Syntax.automatic|so $VIM/syntax/syntax.vim
     50amenu Syntax.convert\ to\ HTML	:so $VIM/syntax/2html.vim
   endif

@@ -31,7 +31,7 @@
 #define HAVE_FCNTL_H
 #define HAVE_QSORT
 #define USE_FNAME_CASE		/* adjust case of file names */
-#ifndef USE_MOUSE
+#ifdef DOS_MOUSE
 # define USE_MOUSE		/* include mouse support */
 #endif
 #ifndef USE_CLIPBOARD

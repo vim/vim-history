@@ -1,5 +1,5 @@
 /*****************************************************************************
-*   $Id: options.c,v 5.2 1998/02/26 05:32:07 darren Exp $
+*   $Id: options.c,v 5.3 1998/03/13 04:19:11 darren Exp $
 *
 *   Copyright (c) 1996-1997, Darren Hiebert
 *
@@ -82,6 +82,7 @@ optionValues Option = {
 	TRUE,		/* -it */
 	TRUE,		/* -iu */
 	TRUE,		/* -iv */
+	FALSE,		/* -iC */
 	FALSE,		/* -iF */
 	TRUE,		/* -iS */
     },
@@ -157,6 +158,7 @@ static optionDescription LongOptionDescription[] = {
  {1,"          u   union names [on]"},
  {1,"          v   variable declarations [on]"},
  {1,"       In addition, the following modifiers are accepted:"},
+ {1,"          C   include extra \"class::member\" tag entries [off]"},
  {1,"          F   include source filenames as tags [off]"},
  {1,"          S   include static tags (special case of above types) [on]"},
  {1,"  -I <list | file>"},
@@ -343,19 +345,19 @@ static void readExtensionList( list )
 
 static void clearTagList()
 {
-    Option.include.classNames	= FALSE;
-    Option.include.defines	= FALSE;
-    Option.include.enumerators	= FALSE;
-    Option.include.enumNames	= FALSE;
-    Option.include.functions	= FALSE;
-    Option.include.members	= FALSE;
-    Option.include.prototypes	= FALSE;
-    Option.include.structNames	= FALSE;
-    Option.include.typedefs	= FALSE;
-    Option.include.unionNames	= FALSE;
-    Option.include.variables	= FALSE;
-    Option.include.sourceFiles	= FALSE;
-    Option.include.statics	= FALSE;
+    Option.include.classNames	= FALSE;	/* -ic */
+    Option.include.defines	= FALSE;	/* -id */
+    Option.include.enumerators	= FALSE;	/* -ie */
+    Option.include.functions	= FALSE;	/* -if */
+    Option.include.enumNames	= FALSE;	/* -ig */
+    Option.include.members	= FALSE;	/* -im */
+    Option.include.prototypes	= FALSE;	/* -ip */
+    Option.include.structNames	= FALSE;	/* -is */
+    Option.include.typedefs	= FALSE;	/* -it */
+    Option.include.unionNames	= FALSE;	/* -iu */
+    Option.include.variables	= FALSE;	/* -iC */
+    Option.include.sourceFiles	= FALSE;	/* -iF */
+    Option.include.statics	= FALSE;	/* -iS */
 }
 
 static void applyTagInclusionList( list )
@@ -386,6 +388,7 @@ static void applyTagInclusionList( list )
 	    case 't':	Option.include.typedefs		= mode;		break;
 	    case 'u':	Option.include.unionNames	= mode;		break;
 	    case 'v':	Option.include.variables	= mode;		break;
+	    case 'C':	Option.include.classPrefix	= mode;		break;
 	    case 'F':	Option.include.sourceFiles	= mode;		break;
 	    case 'S':	Option.include.statics		= mode;		break;
 

@@ -17,21 +17,30 @@ let &cpo = ""
 9999amenu Help.Copying			:help uganda<CR>
 
 " File menu
-10amenu File.Open\ \ \ \ \ \ \ \ \ :e	:e<Space>
-10amenu File.Split-Open\ \ \ :sp	:sp<Space>
-10amenu File.Save\ \ \ \ \ \ \ \ \ :w	:w<CR>
-10amenu File.Close\ \ \ \ \ \ \ \ :q	:q<CR>
-if has("unix")
-  10amenu File.Print			:w !lpr<CR>
-  10vmenu File.Print			:w !lpr<CR>
-elseif has("win32")
+if has("win32")
+  10amenu File.Open\	:e		:e<Space>
+  10amenu File.Split-Open\	:sp	:sp<Space>
+  10amenu File.Save\	:w		:w<CR>
+  10amenu File.Close\	:q		:q<CR>
   " Use Notepad for printing.
   10amenu File.Print :let ttt=tempname()<Bar>exec ":w! ".ttt<Bar>exec "!start notepad /p ".ttt<Bar>exec "!del ".ttt<CR>
   10vmenu File.Print <Esc>:let ttt=tempname()<Bar>exec ":'<,'>w! ".ttt<Bar>exec "!start notepad /p ".ttt<Bar>exec "!del ".ttt<CR>
+  10amenu File.Save-Exit\	:wqa	:wqa<CR>
+  10amenu File.Exit\	:qa		:qa<CR>
+  10amenu File.Exit\ NO\ Save\	:qa!	:qa!<CR>
+else
+  10amenu File.Open\ \ \ \ \ \ \ \ \ :e	:e<Space>
+  10amenu File.Split-Open\ \ \ :sp	:sp<Space>
+  10amenu File.Save\ \ \ \ \ \ \ \ \ :w	:w<CR>
+  10amenu File.Close\ \ \ \ \ \ \ \ :q	:q<CR>
+  if has("unix")
+    10amenu File.Print			:w !lpr<CR>
+    10vmenu File.Print			:w !lpr<CR>
+  endif
+  10amenu File.Save-Exit\ \ \ \ :wqa	:wqa<CR>
+  10amenu File.Exit\ \ \ \ \ \ \ \ \ :qa	:qa<CR>
+  10amenu File.Exit\ NO\ Save\ :qa!	:qa!<CR>
 endif
-10amenu File.Save-Exit\ \ \ \ :wqa	:wqa<CR>
-10amenu File.Exit\ \ \ \ \ \ \ \ \ :qa	:qa<CR>
-10amenu File.Exit\ NO\ Save\ :qa!	:qa!<CR>
 
 " Edit menu
 20amenu Edit.Undo			u
@@ -46,8 +55,8 @@ endif
 20vmenu Edit.Paste			""xi<C-R>*<Esc>
 20menu! Edit.Paste			<C-R>*
 20amenu Edit.Search			/
-20amenu Edit.Search\ \&\ Replace	:%s/
-20vmenu Edit.Search\ \&\ Replace	:s/
+20amenu Edit.Search\ and\ Replace	:%s/
+20vmenu Edit.Search\ and\ Replace	:s/
 
 " Window menu			    
 30amenu Window.New			<C-W>n

@@ -13,7 +13,8 @@
  * Vim originated from Stevie version 3.6 (Fish disk 217) by GRWalter (Fred)
  * It has been changed beyond recognition since then.
  *
- * Differences between version 4.x and 5.0 can be found with ":help version5".
+ * Differences between version 4.x and 5.0, and between 5.0 and 5.1 can be
+ * found with ":help version5".
  * Differences between version 3.0 and 4.x can be found with ":help version4".
  * All the remarks about older versions have been removed, they are not very
  * interesting.
@@ -53,7 +54,13 @@ do_version(arg)
 	msg_putchar('\n');
 	MSG(longVersion);
 #ifdef WIN32
-	MSG_PUTS("\nWindows NT / Windows 95 version");
+# ifdef USE_GUI_WIN32
+	MSG_PUTS("\nWindows 32 bit GUI version");
+	if (gui_is_win32s())
+	    MSG_PUTS(" in Win32s mode");
+# else
+	MSG_PUTS("\nWindows 32 bit console version");
+# endif
 #endif
 #ifdef MSDOS
 # ifdef DJGPP
@@ -61,6 +68,9 @@ do_version(arg)
 # else
 	MSG_PUTS("\n16 bit MS-DOS version");
 # endif
+#endif
+#ifdef macintosh
+	MSG_PUTS("\nMacOS version");
 #endif
 	MSG_PUTS("\nCompiled with (+) or without (-):\n");
 #ifdef AMIGA		/* only for Amiga systems */
@@ -162,6 +172,11 @@ do_version(arg)
 	version_msg("+lispindent ");
 #else
 	version_msg("-lispindent ");
+#endif
+#ifdef USE_MOUSE
+	version_msg("+mouse ");
+# else
+	version_msg("-mouse ");
 #endif
 #ifdef UNIX
 # ifdef DEC_MOUSE
@@ -289,7 +304,7 @@ do_version(arg)
 #endif
 	msg_putchar('\n');
 #ifdef USR_VIMRC_FILE
-	version_msg("   user vimrc file: \"");
+	version_msg("	user vimrc file: \"");
 	version_msg(USR_VIMRC_FILE);
 	version_msg("\" ");
 #endif
@@ -299,7 +314,7 @@ do_version(arg)
 	version_msg("\" ");
 #endif
 #ifdef USR_EXRC_FILE
-	version_msg("    user exrc file: \"");
+	version_msg("	 user exrc file: \"");
 	version_msg(USR_EXRC_FILE);
 	version_msg("\" ");
 #endif

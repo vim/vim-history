@@ -1626,6 +1626,13 @@ skip_address:
 		do_tag(ea.arg, DT_SELECT, 0, ea.forceit);
 		break;
 
+	case CMD_stjump:
+		postponed_split = -1;
+		/*FALLTHROUGH*/
+	case CMD_tjump:
+		do_tag(ea.arg, DT_JUMP, 0, ea.forceit);
+		break;
+
 	case CMD_pop:		do_ex_tag(&ea, DT_POP); break;
 	case CMD_tnext:		do_ex_tag(&ea, DT_NEXT); break;
 	case CMD_tNext:
@@ -1991,13 +1998,17 @@ skip_address:
 #endif
 
 	case CMD_highlight:
-		do_highlight(ea.arg, ea.forceit);
+		do_highlight(ea.arg, ea.forceit, FALSE);
 		break;
 
 #ifdef WANT_EVAL
 	case CMD_echo:
 	case CMD_echon:
 		do_echo(&ea, ea.cmdidx == CMD_echo);
+		break;
+
+	case CMD_echohl:
+		do_echohl(ea.arg);
 		break;
 
 	case CMD_execute:
@@ -2142,6 +2153,7 @@ set_one_cmd_context(buff)
 
     expand_pattern = buff;
     expand_context = EXPAND_COMMANDS;	/* Default until we get past command */
+    expand_set_path = FALSE;
 
 /*
  * 2. skip comment lines and leading space, colons or bars
@@ -2508,6 +2520,12 @@ set_one_cmd_context(buff)
 	    set_context_in_syntax_cmd(arg);
 	    break;
 #endif
+#ifdef WANT_EVAL
+	case CMD_echohl:
+	    expand_context = EXPAND_HIGHLIGHT;
+	    expand_pattern = arg;
+	    break;
+#endif
 	case CMD_highlight:
 	    set_context_in_highlight_cmd(arg);
 	    break;
@@ -2777,7 +2795,7 @@ can_abandon(buf, forceit)
 }
 
 /*
- * return TRUE if any buffer was changed and cannot be abandoned.
+ * Return TRUE if any buffer was changed and cannot be abandoned.
  * That changed buffer becomes the current buffer.
  */
     int
@@ -2786,35 +2804,40 @@ check_changed_any()
     BUF	    *buf;
     int	    save;
 
-    for (buf = firstbuf; buf != NULL; buf = buf->b_next)
+    /* check curbuf first: if it was changed we can't abondon it */
+    if (buf_changed(curbuf))
+	buf = curbuf;
+    else
     {
-	if (buf_changed(buf))
-	{
-	    exiting = FALSE;
-	    /* There must be a wait_return for this message, do_buffer()
-	     * may cause a redraw.  But wait_return() is a no-op when vgetc()
-	     * is busy (Quit used from window menu), then make sure we don't
-	     * cause a scroll up. */
-	    if (vgetc_busy)
-	    {
-		msg_row = cmdline_row;
-		msg_col = 0;
-		msg_didout = FALSE;
-	    }
-	    if (EMSG2("No write since last change for buffer \"%s\"",
-		    buf->b_fname == NULL ? (char_u *)"No File" :
-		    buf->b_fname))
-	    {
-		save = no_wait_return;
-		no_wait_return = FALSE;
-		wait_return(FALSE);
-		no_wait_return = save;
-	    }
-	    (void)do_buffer(DOBUF_GOTO, DOBUF_FIRST, FORWARD, buf->b_fnum, 0);
-	    return TRUE;
-	}
+	for (buf = firstbuf; buf != NULL; buf = buf->b_next)
+	    if (buf_changed(buf))
+		break;
     }
-    return FALSE;
+    if (buf == NULL)
+	return FALSE;
+
+    exiting = FALSE;
+    /* There must be a wait_return for this message, do_buffer()
+     * may cause a redraw.  But wait_return() is a no-op when vgetc()
+     * is busy (Quit used from window menu), then make sure we don't
+     * cause a scroll up. */
+    if (vgetc_busy)
+    {
+	msg_row = cmdline_row;
+	msg_col = 0;
+	msg_didout = FALSE;
+    }
+    if (EMSG2("No write since last change for buffer \"%s\"",
+	    buf->b_fname == NULL ? (char_u *)"No File" :
+	    buf->b_fname))
+    {
+	save = no_wait_return;
+	no_wait_return = FALSE;
+	wait_return(FALSE);
+	no_wait_return = save;
+    }
+    (void)do_buffer(DOBUF_GOTO, DOBUF_FIRST, FORWARD, buf->b_fnum, 0);
+    return TRUE;
 }
 
 /*
@@ -3310,7 +3333,7 @@ do_ecmd(fnum, ffname, sfname, command, newlnum, flags)
     {
 	if (newlnum == 0)
 	    newlnum = curwin->w_cursor.lnum;
-	buf_freeall(curbuf);		/* free all things for buffer */
+	buf_freeall(curbuf, FALSE);	/* free all things for buffer */
 	buf_clear(curbuf);
 	curbuf->b_op_start.lnum = 0;	/* clear '[ and '] marks */
 	curbuf->b_op_end.lnum = 0;
@@ -4232,7 +4255,7 @@ do_next(eap)
     }
 }
 
-#if defined(USE_GUI_WIN32) || defined(USE_GUI_BEOS) || defined(PROTO)
+#if defined(USE_GUI_WIN32) || defined(USE_GUI_BEOS) || defined(PROTO) || defined(macintosh)
 /*
  * Handle a file drop. The code is here because a drop is *nearly* like an
  * :args command, but not quite (we have a list of exact filenames, so we
@@ -5044,6 +5067,8 @@ do_if(eap, cstack)
 {
     char_u	*errormsg = NULL;
     int		error;
+    int		skip;
+    int		result;
 
     if (cstack->cs_idx == CSTACK_LEN - 1)
 	errormsg = (char_u *)":if nesting too deep";
@@ -5051,10 +5076,22 @@ do_if(eap, cstack)
     {
 	++cstack->cs_idx;
 	cstack->cs_flags[cstack->cs_idx] = 0;
-	if (cstack->cs_idx == 0
-		|| (cstack->cs_flags[cstack->cs_idx - 1] & CSF_ACTIVE))
+
+	/*
+	 * Don't do something when there is a surrounding conditional and it
+	 * was not active.
+	 */
+	skip = (cstack->cs_idx > 0
+		&& !(cstack->cs_flags[cstack->cs_idx - 1] & CSF_ACTIVE));
+	if (skip)
+	    ++emsg_off;
+	result = eval_to_bool(eap->arg, &error, &eap->nextcmd);
+	if (skip)
+	    --emsg_off;
+
+	if (!skip)
 	{
-	    if (eval_to_bool(eap->arg, &error, &eap->nextcmd))
+	    if (result)
 		cstack->cs_flags[cstack->cs_idx] = CSF_ACTIVE | CSF_TRUE;
 	    if (error)
 		--cstack->cs_idx;
@@ -5074,6 +5111,8 @@ do_else(eap, cstack)
 {
     char_u	*errormsg = NULL;
     int		error;
+    int		skip;
+    int		result = FALSE;
 
     if (cstack->cs_idx < 0 || (cstack->cs_flags[cstack->cs_idx] & CSF_WHILE))
     {
@@ -5085,22 +5124,31 @@ do_else(eap, cstack)
     else
     {
 	/*
-	 * Only do something when there is no surrounding conditional, or the
-	 * surrounding conditional was active.
+	 * Don't do something when there is a surrounding conditional and it
+	 * was not active.
 	 */
-	if (cstack->cs_idx == 0
-		     || (cstack->cs_flags[cstack->cs_idx - 1] & CSF_ACTIVE))
+	skip = (cstack->cs_idx > 0
+		&& !(cstack->cs_flags[cstack->cs_idx - 1] & CSF_ACTIVE));
+	if (!skip)
 	{
 	    /* if the ":if" was TRUE, reset active, otherwise set it */
 	    if (cstack->cs_flags[cstack->cs_idx] & CSF_TRUE)
 		cstack->cs_flags[cstack->cs_idx] = CSF_TRUE;
 	    else
 		cstack->cs_flags[cstack->cs_idx] = CSF_ACTIVE;
+	}
 
-	    if (eap->cmdidx == CMD_elseif
-		    && (cstack->cs_flags[cstack->cs_idx] & CSF_ACTIVE))
+	if (eap->cmdidx == CMD_elseif)
+	{
+	    if (skip)
+		++emsg_off;
+	    result = eval_to_bool(eap->arg, &error, &eap->nextcmd);
+	    if (skip)
+		--emsg_off;
+
+	    if (!skip && (cstack->cs_flags[cstack->cs_idx] & CSF_ACTIVE))
 	    {
-		if (eval_to_bool(eap->arg, &error, &eap->nextcmd))
+		if (result)
 		    cstack->cs_flags[cstack->cs_idx] = CSF_ACTIVE | CSF_TRUE;
 		else
 		    cstack->cs_flags[cstack->cs_idx] = 0;
@@ -5123,6 +5171,8 @@ do_while(eap, cstack)
 {
     char_u	*errormsg = NULL;
     int		error;
+    int		skip;
+    int		result;
 
     if (cstack->cs_idx == CSTACK_LEN - 1)
 	errormsg = (char_u *)":while nesting too deep";
@@ -5139,10 +5189,21 @@ do_while(eap, cstack)
 	}
 	cstack->cs_flags[cstack->cs_idx] = CSF_WHILE;
 
-	if (cstack->cs_idx == 0
-		|| (cstack->cs_flags[cstack->cs_idx - 1] & CSF_ACTIVE))
+	/*
+	 * Don't do something when there is a surrounding conditional and it
+	 * was not active.
+	 */
+	skip = (cstack->cs_idx > 0
+		&& !(cstack->cs_flags[cstack->cs_idx - 1] & CSF_ACTIVE));
+	if (skip)
+	    ++emsg_off;
+	result = eval_to_bool(eap->arg, &error, &eap->nextcmd);
+	if (skip)
+	    --emsg_off;
+
+	if (!skip)
 	{
-	    if (eval_to_bool(eap->arg, &error, &eap->nextcmd))
+	    if (result)
 		cstack->cs_flags[cstack->cs_idx] |= CSF_ACTIVE | CSF_TRUE;
 	    if (error)
 		--cstack->cs_idx;

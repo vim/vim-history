@@ -22,6 +22,9 @@
 #include <limits.h>
 
 #include <Python.h>
+#ifdef macintosh
+# include "macglue.h"
+#endif
 #undef main /* Defined in python.h - aargh */
 #undef HAVE_FCNTL_H /* Clash with os_win32.h */
 
@@ -103,7 +106,11 @@ Python_Init(void)
 {
     if (!initialised)
     {
+#ifndef macintosh
 	Py_Initialize();
+#else
+	PyMac_Initialize();
+#endif
 
 	if (PythonIO_Init())
 	    goto fail;
@@ -135,6 +142,10 @@ fail:
     static int
 DoPythonCommand(EXARG *eap, const char *cmd)
 {
+#ifdef macintosh
+    GrafPtr oldPort;
+    GetPort (&oldPort);
+#endif
     if (Python_Init())
 	return FAIL;
 
@@ -146,6 +157,9 @@ DoPythonCommand(EXARG *eap, const char *cmd)
     Python_SaveThread();	    /* leave python */
     Python_Lock_Vim();		    /* enter vim */
     PythonIO_Flush();
+#ifdef macintosh
+    SetPort (oldPort);
+#endif
     return OK;
 }
 
@@ -376,7 +390,7 @@ buffer_ensure(int n)
 
     if (new_size != buffer_size)
     {
-	new_buffer = malloc(new_size);
+	new_buffer = alloc((unsigned)new_size);
 
 	if (new_buffer == NULL)
 	{
@@ -387,7 +401,7 @@ buffer_ensure(int n)
 	if (buffer)
 	{
 	    memcpy(new_buffer, buffer, buffer_len);
-	    free(buffer);
+	    vim_free(buffer);
 	}
 
 	buffer = new_buffer;
@@ -498,7 +512,6 @@ WindowObject;
 
 #define INVALID_WINDOW_VALUE ((WIN*)(-1))
 
-static PyTypeObject WindowType;
 #define WindowType_Check(obj) ((obj)->ob_type == &WindowType)
 
 static PyObject *WindowNew(WIN *);
@@ -521,7 +534,6 @@ BufferObject;
 
 #define INVALID_BUFFER_VALUE ((BUF*)(-1))
 
-static PyTypeObject BufferType;
 #define BufferType_Check(obj) ((obj)->ob_type == &BufferType)
 
 static PyObject *BufferNew (BUF *);
@@ -553,7 +565,6 @@ typedef struct
 }
 RangeObject;
 
-static PyTypeObject RangeType;
 #define RangeType_Check(obj) ((obj)->ob_type == &RangeType)
 
 static PyObject *RangeNew(BUF *, int, int);
@@ -1915,7 +1926,7 @@ SetBufferLineList(BUF *buf, int lo, int hi, PyObject *list, int *len_change)
 	char **array;
 	BUF *savebuf;
 
-	array = (char **) alloc(n * sizeof(char *));
+	array = (char **)alloc((unsigned)(n * sizeof(char *)));
 	if (array == NULL)
 	{
 	    PyErr_NoMemory();
@@ -2085,7 +2096,7 @@ InsertBufferLines(BUF *buf, int n, PyObject *lines, int *len_change)
 	char **array;
 	BUF *savebuf;
 
-	array = (char **) alloc(size * sizeof(char *));
+	array = (char **)alloc((unsigned)(size * sizeof(char *)));
 	if (array == NULL)
 	{
 	    PyErr_NoMemory();
@@ -2234,7 +2245,7 @@ StringToLine(PyObject *obj)
     /* Create a copy of the string, with internal nulls replaced by
      * newline characters, as is the vim convention.
      */
-    save = (char *)alloc(len+1);
+    save = (char *)alloc((unsigned)(len+1));
     if (save == NULL)
     {
 	PyErr_NoMemory();

@@ -427,7 +427,7 @@ mf_put(mfp, hp, dirty, infile)
     flags = hp->bh_flags;
 
     if ((flags & BH_LOCKED) == 0)
-	printf("block was not locked");
+	EMSG("block was not locked");
     flags &= ~BH_LOCKED;
     if (dirty)
     {
@@ -551,13 +551,13 @@ mf_sync(mfp, flags)
 	    sync();
 # endif
 #endif
-#ifdef DJGPP
+#ifdef MSDOS
 	if (_dos_commit(mfp->mf_fd))
 	    status = FAIL;
 #else
 # ifdef SYNC_DUP_CLOSE
 	/*
-	 * MSdos is a bit more work: Duplicate the file handle and close it.
+	 * Win32 is a bit more work: Duplicate the file handle and close it.
 	 * This should flush the file to disk.
 	 */
 	if ((fd = dup(mfp->mf_fd)) >= 0)

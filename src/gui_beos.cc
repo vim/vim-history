@@ -1,7 +1,7 @@
 /* vi:set ts=8 sts=4 sw=4:
  *
  * VIM - Vi IMproved			by Bram Moolenaar
- *			    BeBox GUI support Copyright 1997 by Olaf Seibert.
+ *			    BeBox GUI support Copyright 1998 by Olaf Seibert.
  *			    All Rights Reserved.
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
@@ -9,8 +9,7 @@
  *
  * BeOS GUI.
  *
- * GUI support for the Buzzword Enhanced Operating System, PPC only.
- * See os_beos.c for details.
+ * GUI support for the Buzzword Enhanced Operating System.
  *
  */
 
@@ -26,6 +25,30 @@
  *    This thread is doing the bulk of the work.
  * 3. Sooner or later, a window is opened by the main() thread. This
  *    causes a second message loop to be created: the window thread.
+ *
+ * == alternatively ===
+ * 
+ * #if RUN_BAPPLICATION_IN_NEW_THREAD...
+ *
+ * 1. The initial thread. In gui_mch_prepare() this gets to spawn
+ *    thread 2. After doing that, it returns to main() to do the
+ *    bulk of the work, being the main() thread.
+ * 2. Runs the BApplication.
+ * 3. The window thread, just like in the first case.
+ *
+ * This second alternative is cleaner from Vim's viewpoint. However,
+ * the BeBook seems to assume everywhere that the BApplication *must*
+ * run in the initial thread. So perhaps doing otherwise is very wrong.
+ *
+ * However, from a B_SINGLE_LAUNCH viewpoint, the first is better.
+ * If Vim is marked "Single Launch" in its application resources,
+ * and a file is dropped on the Vim icon, and another Vim is already
+ * running, the file is passed on to the earlier Vim. This happens
+ * in BApplication::Run(). So we want Vim to terminate if
+ * BApplication::Run() terminates. (See the BeBook, on BApplication.
+ * However, it seems that the second copy of Vim isn't even started
+ * in this case... which is for the better since I wouldn't know how
+ * to detect this case.)
  *
  * Communication between these threads occurs mostly by translating
  * BMessages that come in and posting an appropriate translation on
@@ -71,6 +94,16 @@ extern "C" {
 #include <be/storage/Path.h>
 #include <be/storage/Directory.h>
 #include <be/app/Application.h>
+
+/*
+ * The macro B_PIXEL_ALIGNMENT shows us which version
+ * of the header files we're using.
+ */
+#if defined(B_PIXEL_ALIGNMENT)
+#define HAVE_R3_OR_LATER    1
+#else
+#define HAVE_R3_OR_LATER    0
+#endif
 
 class VimApp;
 class VimFormView;
@@ -190,12 +223,6 @@ private:
     int_u	    vimMouseButton;
     int_u	    vimMouseModifiers;
 };
-
-#if __INTEL__
-
-#error "I told you that you were not permitted to compile this code for this CPU!"
-
-#else
 
 class VimScrollBar: public BScrollBar
 {
@@ -423,11 +450,32 @@ RefsReceived(BMessage *m, bool changedir)
     uint32 type;
     int32 count;
 
-    m->GetInfo("refs", &type, &count);
-    if (type != B_REF_TYPE) {
+    //m->PrintToStream();
+    switch (m->what) {
+    case B_REFS_RECEIVED:
+    case B_SIMPLE_DATA:
+	m->GetInfo("refs", &type, &count);
+	if (type != B_REF_TYPE)
+	    goto bad;
+	break;
+    case B_ARGV_RECEIVED:
+	m->GetInfo("argv", &type, &count);
+	if (type != B_STRING_TYPE)
+	    goto bad;
+	if (changedir) {
+	    char *dirname;
+	    if (m->FindString("cwd", &dirname) == B_OK) {
+		chdir(dirname);
+		do_cmdline((char_u *)"cd .", NULL, 0, DOCMD_NOWAIT);
+	    }
+	}
+	break;
+    default:
+    bad:
+	//fprintf(stderr, "bad!\n");
 	delete m;
 	return;
-    }
+    } 
 
     /* reset_VIsual(); */
     if (VIsual_active)
@@ -440,38 +488,59 @@ RefsReceived(BMessage *m, bool changedir)
     fnames = (char_u **) alloc(count * sizeof(char_u *));
     int fname_index = 0;
 
-    for (int i = 0; i < count; ++i)
-    {
-	entry_ref ref;
-	if (m->FindRef("refs", i, &ref) == B_OK) {
-	    BEntry entry(&ref, false);
-	    BPath path; 
-	    entry.GetPath(&path);
+    switch (m->what) {
+    case B_REFS_RECEIVED:
+    case B_SIMPLE_DATA:
+	//fprintf(stderr, "case B_REFS_RECEIVED\n");
+	for (int i = 0; i < count; ++i)
+	{
+	    entry_ref ref;
+	    if (m->FindRef("refs", i, &ref) == B_OK) {
+		BEntry entry(&ref, false);
+		BPath path; 
+		entry.GetPath(&path);
 
-	    /* Change to parent directory? */
-	    if (changedir) {
-		BPath parentpath;
-		path.GetParent(&parentpath);
-		docd(parentpath);
+		/* Change to parent directory? */
+		if (changedir) {
+		    BPath parentpath;
+		    path.GetParent(&parentpath);
+		    docd(parentpath);
+		}
+
+		/* Is it a directory? If so, cd into it. */
+		BDirectory bdir(&ref);
+		if (bdir.InitCheck() == B_OK) {
+		    /* don't cd if we already did it */
+		    if (!changedir)
+			docd(path);
+		} else {
+		    mch_dirname(IObuff, IOSIZE);
+		    char_u *fname = shorten_fname((char_u *)path.Path(), IObuff);
+		    if (fname == NULL)
+			fname = (char_u *)path.Path();
+		    fnames[fname_index++] = vim_strsave(fname);
+		    //fprintf(stderr, "%s\n", fname);
+		}
+
+		/* Only do it for the first file/dir */
+		changedir = false;
 	    }
-
-	    /* Is it a directory? If so, cd into it. */
-	    BDirectory bdir(&ref);
-	    if (bdir.InitCheck() == B_OK) {
-		/* don't cd if we already did it */
-		if (!changedir)
-		    docd(path);
-	    } else {
-		mch_dirname(IObuff, IOSIZE);
-		char_u *fname = shorten_fname((char_u *)path.Path(), IObuff);
-		if (fname == NULL)
-		    fname = (char_u *)path.Path();
-		fnames[fname_index++] = vim_strsave(fname);
-	    }
-
-	    /* Only do it for the first file/dir */
-	    changedir = false;
 	}
+	break;
+    case B_ARGV_RECEIVED:
+	//fprintf(stderr, "case B_ARGV_RECEIVED\n");
+	for (int i = 1; i < count; ++i)
+	{
+	    char *fname;
+
+	    if (m->FindString("argv", i, &fname) == B_OK) {
+		fnames[fname_index++] = vim_strsave((char_u *)fname);
+	    }
+	}
+	break;
+    default:
+	//fprintf(stderr, "case default\n");
+	break;
     }
 
     delete m;
@@ -512,6 +581,17 @@ VimApp::ReadyToRun()
     void
 VimApp::ArgvReceived(int32 arg_argc, char **arg_argv)
 {
+    if (!IsLaunching()) {
+	/*
+	 * This can happen if we are set to Single or Exclusive
+	 * Launch. Be nice and open the file(s).
+	 */
+	if (gui.vimWindow)
+	    gui.vimWindow->Minimize(false);
+	BMessage *m = CurrentMessage();
+	DetachCurrentMessage();
+	SendRefs(m, true);
+    }
 }
 
     void
@@ -542,7 +622,7 @@ VimApp::SendRefs(BMessage *m, bool changedir)
     rm.message = m;
     rm.changedir = changedir;
 
-    write_port(gui.vdcmp, htonl(VimMsg::Refs), &rm, sizeof(rm));
+    write_port(gui.vdcmp, VimMsg::Refs, &rm, sizeof(rm));
     // calls ::RefsReceived
 }
 
@@ -559,7 +639,7 @@ VimWindow::VimWindow():
     BWindow(BRect(40, 40, 150, 150), 
 	    "Vim", 
 	    B_TITLED_WINDOW, 
-	    0, //B_NOT_CLOSABLE, 
+	    0,
 	    B_CURRENT_WORKSPACE)
 
 {
@@ -622,7 +702,7 @@ VimWindow::WindowActivated(bool active)
     struct VimFocusMsg fm;
     fm.active = active;
 
-    write_port(gui.vdcmp, htonl(VimMsg::Focus), &fm, sizeof(fm));
+    write_port(gui.vdcmp, VimMsg::Focus, &fm, sizeof(fm));
 }
 
     bool
@@ -632,7 +712,7 @@ VimWindow::QuitRequested()
     km.length = 5;
     memcpy((char *)km.chars, "\033:qa\r", km.length);
 
-    write_port(gui.vdcmp, htonl(VimMsg::Key), &km, sizeof(km));
+    write_port(gui.vdcmp, VimMsg::Key, &km, sizeof(km));
 
     return false;
 }
@@ -721,6 +801,7 @@ VimFormView::FrameResized(float new_width, float new_height)
     new_width += 1;	    // adjust from width to number of pixels occupied
     new_height += 1;
 
+#if !HAVE_R3_OR_LATER
     int adjust_h, adjust_w;
 
     adjust_w = ((int)new_width - gui_get_base_width()) % gui.char_width;
@@ -729,17 +810,20 @@ VimFormView::FrameResized(float new_width, float new_height)
     if (adjust_w > 0 || adjust_h > 0) {
 	/*
 	 * This will generate a new FrameResized() message.
+	 * If we're running R3 or later, SetWindowAlignment() should make
+	 * sure that this does not happen.
 	 */
 	w->ResizeBy(-adjust_w, -adjust_h);
 
 	return;
     }
+#endif
 
     struct VimResizeMsg sm;
     sm.width = new_width;
     sm.height = new_height;
 
-    write_port(gui.vdcmp, htonl(VimMsg::Resize), &sm, sizeof(sm));
+    write_port(gui.vdcmp, VimMsg::Resize, &sm, sizeof(sm));
     // calls gui_resize_window(new_width, new_height);
 
     return;
@@ -984,7 +1068,7 @@ VimTextAreaView::KeyDown(const char *bytes, int32 numBytes)
 	km.length += len;
     }
 
-    write_port(gui.vdcmp, htonl(VimMsg::Key), &km, sizeof(km));
+    write_port(gui.vdcmp, VimMsg::Key, &km, sizeof(km));
 
     /*
      * blank out the pointer if necessary
@@ -1011,7 +1095,7 @@ VimTextAreaView::guiSendMouseEvent(
     mm.repeated_click = repeated_click;
     mm.modifiers = modifiers;
 
-    write_port(gui.vdcmp, htonl(VimMsg::Mouse), &mm, sizeof(mm));
+    write_port(gui.vdcmp, VimMsg::Mouse, &mm, sizeof(mm));
     // calls gui_send_mouse_event()
 
     /*
@@ -1141,7 +1225,7 @@ VimTextAreaView::MessageReceived(BMessage *m)
 	    mm.guiMenu = NULL;	/* in case no pointer in msg */
 	    m->FindPointer("GuiMenu", (void **)&mm.guiMenu);
 
-	    write_port(gui.vdcmp, htonl(VimMsg::Menu), &mm, sizeof(mm));
+	    write_port(gui.vdcmp, VimMsg::Menu, &mm, sizeof(mm));
 	}
 	break;
     default:
@@ -1348,12 +1432,12 @@ VimTextAreaView::mchInsertLines(int row, int num_lines)
 	dest.bottom = dest.top + height;
 
 	/* XXX Attempt at a hack: */
-#if 0
-	if (gui.vimWindow->NeedsUpdate())
-	    fprintf(stderr, "mchInsertLines: NeedsUpdate!\n");
-#endif
 	gui.vimWindow->UpdateIfNeeded();
 #if 0
+	/* XXX Attempt at a hack: */
+	if (gui.vimWindow->NeedsUpdate())
+	    fprintf(stderr, "mchInsertLines: NeedsUpdate!\n");
+	gui.vimWindow->UpdateIfNeeded();
 	while (gui.vimWindow->NeedsUpdate())
 	    snooze(2);
 #endif
@@ -1440,7 +1524,7 @@ VimScrollBar::ValueChanged(float newValue)
     sm.value = newValue;
     sm.stillDragging = TRUE;
 
-    write_port(gui.vdcmp, htonl(VimMsg::ScrollBar), &sm, sizeof(sm));
+    write_port(gui.vdcmp, VimMsg::ScrollBar, &sm, sizeof(sm));
 
     // calls gui_drag_scrollbar(sb, newValue, TRUE);
 }
@@ -1466,7 +1550,7 @@ VimScrollBar::MouseUp(BPoint where)
     sm.value = Value();
     sm.stillDragging = FALSE;
 
-    write_port(gui.vdcmp, htonl(VimMsg::ScrollBar), &sm, sizeof(sm));
+    write_port(gui.vdcmp, VimMsg::ScrollBar, &sm, sizeof(sm));
 
     // calls gui_drag_scrollbar(sb, newValue, FALSE);
 
@@ -1520,7 +1604,7 @@ VimFont::init()
 /* ---------------- ---------------- */
 
 // some global variables
-static char appsig[] = "application/x-vnd.Rhialto-Vim-5.0";
+static char appsig[] = "application/x-vnd.Rhialto-Vim-5";
 key_map *keyMap;
 char *keyMapChars;
 int main_exitcode = 127;
@@ -1528,11 +1612,6 @@ int main_exitcode = 127;
     status_t
 gui_beos_process_event(bigtime_t timeout)
 {
-#if 0
-    if (timeout == -1)
-	timeout = B_INFINITE_TIMEOUT;
-#endif
-
     struct VimMsg vm;
     long what;
     ssize_t size;
@@ -1597,7 +1676,7 @@ gui_beos_process_event(bigtime_t timeout)
 	    if (gui.dragged_sb) {
 		gui.dragged_sb = SBAR_NONE;
 	    }
-	    gui_update_cursor(TRUE);
+	    gui_update_cursor(TRUE, FALSE);
 	    if (!gui.in_focus)
 		check_for_bebox();
 	    break;
@@ -1642,6 +1721,23 @@ vim_unlock_screen()
 	gui.vimWindow->Unlock();
 }
 
+#define RUN_BAPPLICATION_IN_NEW_THREAD	0
+
+#if RUN_BAPPLICATION_IN_NEW_THREAD
+
+    int32
+run_vimapp(void *args)
+{
+    VimApp app(appsig);
+
+    gui.vimApp = &app;
+    app.Run();			    /* Run until Quit() called */
+
+    return 0;
+}
+
+#else
+
     int32
 call_main(void *args)
 {
@@ -1649,6 +1745,7 @@ call_main(void *args)
 
     return main(ma->argc, ma->argv);
 }
+#endif
 
 extern "C" {
 
@@ -1673,6 +1770,15 @@ gui_mch_prepare(
 	/* May need the port very early on to process RefsReceived() */
 	gui.vdcmp = create_port(B_MAX_PORT_COUNT, "vim VDCMP");
 
+#if RUN_BAPPLICATION_IN_NEW_THREAD
+	thread_id tid = spawn_thread(run_vimapp, "vim VimApp",
+						tinfo.priority, NULL);
+	if (tid >= B_OK) {
+	    resume_thread(tid);
+	} else {
+	    getout(1);
+	}
+#else
 	MainArgs ma = { *argc, argv };
 	thread_id tid = spawn_thread(call_main, "vim main()",
 						tinfo.priority, &ma);
@@ -1688,6 +1794,7 @@ gui_mch_prepare(
 	     * gui.vimApp is set now.
 	     */
 	    app.Run();			    /* Run until Quit() called */
+	    //fprintf(stderr, "app.Run() returned...\n");
 	    status_t dummy_exitcode;
 	    (void)wait_for_thread(tid, &dummy_exitcode);
 
@@ -1698,6 +1805,7 @@ gui_mch_prepare(
 	     */
 	    exit(main_exitcode);
 	}
+#endif
     }
     /* Don't fork() when starting the GUI. Spawned threads are not
      * duplicated with a fork(). The result is a mess.
@@ -1823,19 +1931,32 @@ gui_mch_exit(int vim_exitcode)
 	wait_for_thread(tid, &exitcode);
     }
     delete_port(gui.vdcmp);
+#if !RUN_BAPPLICATION_IN_NEW_THREAD
     /*
      * We are in the main() thread - quit the App thread and
      * quit ourselves (passing on the exitcode). Use a global since the
      * value from exit_thread() is only used if wait_for_thread() is
      * called in time (race condition).
      */
+#endif
     if (gui.vimApp) {
 	VimTextAreaView::guiBlankMouse(false);
 
 	main_exitcode = vim_exitcode;
+#if RUN_BAPPLICATION_IN_NEW_THREAD
+	thread_id tid = gui.vimApp->Thread();
+	int32 exitcode;
+	gui.vimApp->Lock();
 	gui.vimApp->Quit();
+	gui.vimApp->Unlock();
+	wait_for_thread(tid, &exitcode);
+#else
+	gui.vimApp->Lock();
+	gui.vimApp->Quit();
+	gui.vimApp->Unlock();
 	/* suicide */
 	exit_thread(vim_exitcode);
+#endif
     }
     /* If we are somehow still here, let mch_windexit() handle things. */
 }
@@ -1868,7 +1989,25 @@ gui_mch_set_winsize(
 	gui.vimWindow->SetSizeLimits(min_width, maxWidth,
 				     min_height, maxHeight);
 
+#if HAVE_R3_OR_LATER
+	/*
+	 * Set the resizing alignment depending on font size.
+	 * XXX This is untested, since I don't have R3 yet.
+	 */
+	SetWindowAlignment(
+	    B_PIXEL_ALIGNMENT,		// window_alignment mode,
+	    1,				// int32 h, 
+	    0,				// int32 hOffset = 0, 
+	    gui.char_width,		// int32 width = 0, 
+	    base_width,			// int32 widthOffset = 0, 
+	    1,				// int32 v = 0, 
+	    0,				// int32 vOffset = 0, 
+	    gui.char_height,		// int32 height = 0, 
+	    base_height			// int32 heightOffset = 0
+	);
+#else
 	/* don't know what to do with base_{width,height}. */
+#endif
 
 	gui.vimWindow->Unlock();
     }
@@ -2072,7 +2211,7 @@ gui_mch_stop_blink()
 	blink_timer = 0;
     }
     if (blink_state == BLINK_OFF)
-	gui_update_cursor(TRUE);
+	gui_update_cursor(TRUE, FALSE);
     blink_state = BLINK_NONE;
 }
 
@@ -2091,7 +2230,7 @@ gui_mch_start_blink()
     {
 	blink_timer = 1; //XtAppAddTimeOut(app_context, blink_waittime,
 	blink_state = BLINK_ON;
-	gui_update_cursor(TRUE);
+	gui_update_cursor(TRUE, FALSE);
     }
 }
 
@@ -3059,4 +3198,3 @@ gui_mch_get_rgb(
 
 } /* extern "C" */
 
-#endif	    /* __INTEL__ */

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	povray screen description language
 " Maintainer:	T. Scott Urban <urban@blarg.net>
-" Last change:	1997 Dec 29
+" Last change:	1998 Mar 29
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -34,7 +34,7 @@ syn keyword povRepeat		while for do
 " String and Character constants
 " Highlight special characters (those which have a backslash) differently
 syn match   povSpecial contained "\\[0-9][0-9][0-9]\|\\."
-syn region  povString		  start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=cSpecial
+syn region  povString		  start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=povSpecial
 syn match   povCharacter	  "'[^\\]'"
 syn match   povSpecialCharacter  "'\\.'"
 
@@ -64,13 +64,13 @@ syn keyword povType		signed unsigned float double
 syn keyword povStructure	struct union enum typedef
 syn keyword povStorageClass	static register auto volatile extern const
 
-syn region povPreCondit	start="^[ \t]*#[ \t]*\(if\>\|ifdef\>\|ifndef\>\|elif\>\|else\>\|endif\>\)"  skip="\\$"  end="$" contains=cComment,cString,cCharacter,cNumber,cCommentError
+syn region povPreCondit	start="^[ \t]*#[ \t]*\(if\>\|ifdef\>\|ifndef\>\|elif\>\|else\>\|endif\>\)"  skip="\\$"  end="$" contains=povComment,povString,povCharacter,povNumber,povCommentError
 "syn match  cLineSkip	"\\$"
-syn region povDefine		start="^[ \t]*#[ \t]*\(define\>\|undef\>\)" skip="\\$" end="$" contains=ALLBUT,cPreCondit,cIncluded,cInclude,cDefine,cInParen
-syn region povPreProc		start="^[ \t]*#[ \t]*\(pragma\>\|line\>\|warning\>\|warn\>\|error\>\)" skip="\\$" end="$" contains=ALLBUT,cPreCondit,cIncluded,cInclude,cDefine,cInParen
+syn region povDefine		start="^[ \t]*#[ \t]*\(define\>\|undef\>\)" skip="\\$" end="$" contains=ALLBUT,povPreCondit,povIncluded,povInclude,povDefine,povInParen
+syn region povPreProc		start="^[ \t]*#[ \t]*\(pragma\>\|line\>\|warning\>\|warn\>\|error\>\)" skip="\\$" end="$" contains=ALLBUT,povPreCondit,povIncluded,povInclude,povDefine,povInParen
 
 " Highlight User Labels
-syn region	povMulti		transparent start='?' end=':' contains=ALLBUT,cIncluded,cSpecial,cTodo,cUserLabel
+syn region	povMulti		transparent start='?' end=':' contains=ALLBUT,povIncluded,povSpecial,povTodo,povUserLabel
 " Avoid matching foo::bar() in C++ by requiring that the next char is not ':'
 syn match	povUserLabel	"^[ \t]*[a-zA-Z0-9_]\+[ \t]*:$"
 syn match	povUserLabel	";[ \t]*[a-zA-Z0-9_]\+[ \t]*:$"

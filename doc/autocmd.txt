@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 5.0.  Last modification: 1998 Feb 17
+*autocmd.txt*   For Vim version 5.1.  Last modification: 1998 Apr 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -253,11 +253,14 @@ WinLeave			Before leaving a window.  If the window to be
 				entered next is for a different buffer, Vim
 				executes the BufLeave autocommands before the
 				WinLeave autocommands.
+							*VimEnter*
+VimEnter			After doing all the startup stuff, including
+				loading .vimrc files, executing the "-c cmd"
+				arguments, creating all windows and loading
+				the buffers in them.
 							*VimLeave*
-VimLeave			Before exiting Vim, just before writing the
-				.viminfo file.  There is no VimEnter event,
-				because you can use the .vimrc for that.
-
+VimLeave			Before exiting Vim, just after writing the
+				.viminfo file.
 							*User*
 User				Never executed automatically.  To be used for
 				autocommands that are only executed with
@@ -285,8 +288,8 @@ events.
 ==============================================================================
 6. Patterns						*autocmd-patterns*
 
-The file pattern is tested for a match against the file name in one of two
-ways:
+The file pattern {pat} is tested for a match against the file name in one of
+two ways:
 1. When there is no '/' in the pattern, Vim checks for a match against only
    the tail part of the file name (without its leading directory path).
 2. When there is a '/' in the pattern,  Vim checks for a match against the
@@ -294,21 +297,29 @@ ways:
    expanding it to a full path and resolving symbolic links).
 
 Examples:
->	:autocmd BufRead /vim/src/*.c	set wrap
->	:autocmd BufRead /tmp/*.c	set ts=5
-The first matches for all files that have a path that ends in "/vim/src/*.c".
-If you have a link from "/tmp/test.c" to "/home/nobody/vim/src/test.c", and
-you start editing "/tmp/test.c", the example autocommand will both match.
+>	:autocmd BufRead *.txt		set et
+Set the 'et' option for all text files.
 
-Note:  Do not use a leading "/" to match the root directory; this can match
-any '/' in the file name.  To match the root directory, use "^/".
+>	:autocmd BufRead /vim/src/*.c	set cindent
+Set the 'cindent' option for C files in the /vim/src directory.
+
+>	:autocmd BufRead /tmp/*.c	set ts=5
+If you have a link from "/tmp/test.c" to "/home/nobody/vim/src/test.c", and
+you start editing "/tmp/test.c", this autocommand will match.
+
+Note:  To match part of a path, but not from the root directory, use a '*' as
+the first character.  Example:
+>	:autocmd BufRead */doc/*.txt	set tw=78
+This autocommand will for example be executed for "/tmp/doc/xx.txt" and
+"/usr/home/piet/doc/yy.txt".  The number of directories does not matter here.
+
 
 Note that for all systems the '/' character is used for path separator (even
 MS-DOS and OS/2).  This was done because the backslash is difficult to use
 in a pattern and to make the autocommands portable accross different systems.
 
 Note that using ~ in a file name (for home directory) doesn't work.  Use a
-pattern that matches the full path name, for example "*home/user/.cshrc".
+pattern that matches the full path name, for example "*home/piet/.cshrc".
 
 ==============================================================================
 7. Groups						*autocmd-groups*
@@ -404,9 +415,9 @@ name).
 
 Examples for reading compressed files:
 > :autocmd! BufReadPre,FileReadPre   *.gz set bin
-> :autocmd  BufReadPost,FileReadPost *.gz '[,']!gunzip
+> :autocmd! BufReadPost,FileReadPost *.gz '[,']!gunzip
 > :autocmd  BufReadPost,FileReadPost *.gz set nobin
-> :autocmd  BufReadPost,FileReadPost *.gz execute ":doautocmd BufReadPost " . %:r
+> :autocmd  BufReadPost,FileReadPost *.gz execute ":doautocmd BufReadPost " . expand("%:r")
 
 NOTE: These examples remove any existing autocommands for the same
 event/pattern combination because of the '!'.

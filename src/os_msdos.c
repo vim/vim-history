@@ -899,7 +899,7 @@ mch_FullName(fname, buf, len, force)
 slash_adjust(p)
     char_u  *p;
 {
-#ifdef DJGPP
+#ifdef OLD_DJGPP    /* this seems to have been fixed in DJGPP 2.01 */
     /* DJGPP can't handle a file name that starts with a backslash, and when it
      * starts with a slash there should be no backslashes */
     if (*p == '\\' || *p == '/')
@@ -962,14 +962,8 @@ mch_setperm(name, perm)
 mch_hide(name)
     char_u	*name;
 {
-    int	r;
-
-    r = _chmod((char *)name, 0, 0);
-    if (r >= 0)
-    {
-	r |= FA_HIDDEN;
-	_chmod((char *)name, 1, r);
-    }
+    /* DOS 6.2 share.exe causes "seek error on file write" errors when making
+     * the swap file hidden.  Thus don't do it. */
 }
 
 /*

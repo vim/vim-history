@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 5.0.  Last modification: 1998 Feb 07
+*pattern.txt*   For Vim version 5.1.  Last modification: 1998 Apr 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -17,15 +17,15 @@ Patterns and search commands				*pattern-searches*
 			{pattern} (exclusive).
 
 /{pattern}/{offset}<CR>	Search forward for the [count]'th occurrence of
-			{pattern} and go {offset} lines up or down (see
-			below).  (linewise).
+			{pattern} and go |{offset}| lines up or down.
+			(linewise).
 
 							*/<CR>*
 /<CR>			Search forward for the [count]'th latest used
-			pattern with latest used {offset}.
+			pattern with latest used |{offset}|.
 
 //{offset}<CR>		Search forward for the [count]'th latest used
-			pattern with new {offset}.  If {offset} is empty no
+			pattern with new |{offset}|.  If {offset} is empty no
 			offset is used.
 
 							*?*
@@ -33,15 +33,15 @@ Patterns and search commands				*pattern-searches*
 			occurrence of {pattern} (exclusive).
 
 ?{pattern}?{offset}<CR>	Search backward for the [count]'th previous
-			occurrence of {pattern} and go {offset} lines up or
-			down (see below) (linewise).
+			occurrence of {pattern} and go |{offset}| lines up or
+			down (linewise).
 
 							*?<CR>*
 ?<CR>			Search backward for the [count]'th latest used
-			pattern with latest used {offset}.
+			pattern with latest used |{offset}|.
 
 ??{offset}<CR>		Search backward for the [count]'th latest used
-			pattern with new {offset}.  If {offset} is empty no
+			pattern with new |{offset}|.  If {offset} is empty no
 			offset is used.
 
 							*n*
@@ -66,11 +66,10 @@ N			Repeat the latest "/" or "?" [count] times in
 			command "/\<keyword\>".  (exclusive)  {not in Vi}
 
 							*#*
-#			Same as "*", but search backward.  The English pound
-			sign (character 163) also works.  If the "#" key works
-			as backspace, try using "stty erase <BS>" before
-			starting Vim (<BS> is CTRL-H or a real backspace).
-			{not in Vi}
+#			Same as "*", but search backward.  The pound sign
+			(character 163) also works.  If the "#" key works as
+			backspace, try using "stty erase <BS>" before starting
+			Vim (<BS> is CTRL-H or a real backspace).  {not in Vi}
 
 							*gstar*
 g*			Like "*", but don't put "\<" and "\>" around the word.
@@ -116,11 +115,11 @@ use <Esc> to abandon the search.
 All matches for the last used search pattern will be highlighted if you set
 the 'hlsearch' option.
 
+					*search-offset* *{offset}*
 These commands search for the specified pattern.  With "/" and "?" an
 additional offset may be given.  There are two types of offsets: line offsets
 and character offsets.  {the character offsets are not in Vi}
 
-					*search-offset* *{offset}*
 The offset gives the cursor position relative to the found match:
     [num]	[num] lines downwards, in column 1
     +[num]	[num] lines downwards, in column 1
@@ -164,11 +163,11 @@ This is like executing two search commands after each other, except that:
   search command.
 - When an error occurs the cursor is not moved at all.
 
-The last used <pattern> and <offset> are remembered.  They can be used to
-repeat the search, possibly in another direction or with another count.  Note
-that two patterns are remembered: one for 'normal' search commands and one
-for the substitute command ":s".  Each time an empty <pattern> is given, the
-previously used <pattern> is used.
+The last used pattern and offset are remembered.  They can be used to repeat
+the search, possibly in another direction or with another count.  Note that
+two patterns are remembered: one for 'normal' search commands and one for the
+substitute command ":s".  Each time an empty pattern is given, the previously
+used pattern is used.
 
 All matches for the last used search pattern will be highlighted if you set
 the 'hlsearch' option.
@@ -303,8 +302,9 @@ Patterns may contain special characters, depending on the setting of the
 	\p	\p	matches any printable character (see		*/\p*
 			'isprint' option) {not in Vi}
 	\P	\P	like "\p", but excluding digits {not in Vi}	*/\P*
-	\s	\s	matches a whitespace character: space and <Tab>	*/\s*
-			{not in Vi}
+						*whitespace* *white-space*
+	\s	\s	matches a whitespace character: <Space> and	*/\s*
+			<Tab> {not in Vi}
 	\S	\S	matches a non-whitespace character; opposite	*/\S*
 			of \s  {not in Vi}
 	\e	\e	<Esc>						*/\e*
@@ -386,7 +386,7 @@ they are shown as "^@".  The translation is done when reading and writing
 files.  To match a <Nul> with a search pattern you can just enter CTRL-@ or
 "CTRL-V 000".  This is probably just what you expect.  Internally the
 character is replaced with a <NL> in the search pattern.  What is unusual is
-that typing CTRL-V CTRL-J also inserts a <NL>, thus also searches for a
-<Nul> in the file.  {Vi cannot handle <Nul> characters in the file at all}
+that typing CTRL-V CTRL-J also inserts a <NL>, thus also searches for a <Nul>
+in the file.  {Vi cannot handle <Nul> characters in the file at all}
 
  vim:tw=78:ts=8:sw=8:

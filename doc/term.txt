@@ -1,4 +1,4 @@
-*term.txt*      For Vim version 5.0.  Last modification: 1998 Feb 08
+*term.txt*      For Vim version 5.1.  Last modification: 1998 Mar 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -140,6 +140,17 @@ This requires the keys to be hit withing 100msec.  When you type you normally
 are not that fast.  The cursor key codes arrive within 100 msec, so they are
 still recognized.
 
+				*vt100-function-keys* *xterm-function-keys*
+An xterm can send function keys F1 to F4 in two modes: vt100 compatible or
+not.  Because Vim cannot know what the xterm is sending, both types of keys
+are recognized:
+	                normal		vt100 ~
+	<F1>>	t_k1	<Esc>[11~	<Esc>OP
+	<F2>	t_k2	<Esc>[12~	<Esc>OQ
+	<F3>	t_k3	<Esc>[13~	<Esc>OR
+	<F4>	t_k4	<Esc>[14~	<Esc>OS
+
+							*xterm-scroll-region*
 The default termcap entry for xterm on sun and other platforms does not
 contain the entry for scroll regions.  Add ":cs=\E[%i%d;%dr:" to the xterm
 entry in /etc/termcap and everything should work.
@@ -410,26 +421,32 @@ screen updating a lot slower, making it possible to see what is happening.
 5. Using the mouse					*mouse-using*
 
 This section is about using the mouse on a terminal or a terminal window.  How
-to use the mouse in a GUI window is explained in |gui-mouse|.  Don't forget to
-do ":set mouse=a", otherwise Vim won't recognize the mouse in all modes (See
-'mouse').
+to use the mouse in a GUI window is explained in |gui-mouse|.
+
+Don't forget to enable the mouse with either one of these commands:
+>	:set mouse=a
+>	:set mouse=A
+Otherwise Vim won't recognize the mouse in all modes (See 'mouse').
 
 Currently the mouse is supported for Unix in an xterm window and for MS-DOS.
 Mouse clicks can be used to position the cursor, select the Visual area and
-paste.  There are no menus, use the GUI version for that.
+paste.  The GUI also has menus.
 
 The characters in the 'mouse' option tell in which situations the mouse will
 be used by Vim:
 		n	Normal mode
+		N	Normal mode, xterm-like selection
 		v	Visual mode
 		i	Insert mode
+		I	Insert mode, xterm-like selection
 		c	Command-line mode
 		h	all previous modes when in a help file
-		a	all previous modes
+		a	all previous modes, except 'N' and 'I'
+		A	all previous modes, except 'n' and 'i'
 		r	for |hit-return| prompt
 
 The default for 'mouse' is empty, the mouse is not used.  Normally you would do
-	:set mouse=a
+>	:set mouse=a
 to start using the mouse (this is equivalent to setting 'mouse' to "nvich").
 If you only want to use the mouse in a few modes or also want to use it for
 the two questions you will have to concatenate the letters for those modes.
@@ -439,6 +456,11 @@ Will make the mouse work in Normal mode and Visual mode.
 >	:set mouse=h
 Will make the mouse work in help files only (so you can use "g<LeftMouse>" to
 jump to tags).
+
+The 'N' and 'I' flags allow the cursor to be positioned by the mouse, but
+dragging the mouse doesn't start Visual mode.  Instead, xterm-like selection
+is used.  In the Command-line mode this always happens.  This behaviour is
+similar to how Windows programs work.
 
 In an xterm, with the currently active mode included in the 'mouse' option,
 normal mouse clicks are used by Vim, mouse clicks with the shift or ctrl key

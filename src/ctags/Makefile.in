@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 5.2 1998/02/26 05:32:07 darren Exp $
+# $Id: Makefile.in,v 5.3 1998/03/07 20:57:09 darren Exp $
 #
 # Makefile for Exuberant Ctags
 #
@@ -26,6 +26,7 @@ bindir	= @bindir@
 srcdir	= @srcdir@
 mandir	= @mandir@
 SLINK	= @LN_S@
+STRIP	= @STRIP@
 CC	= @CC@
 DEFS	= @DEFS@
 CFLAGS	= @CFLAGS@
@@ -41,6 +42,7 @@ LIBOBJS	= @LIBOBJS@
 #bindir	= /usr/local/bin
 #mandir	= /usr/local/man
 #SLINK	= ln -s
+#STRIP	= strip
 #CC	= cc
 #DEFS	= -DHAVE_CONFIG_H
 #CFLAGS	= -O
@@ -119,7 +121,7 @@ install-ebin: $(DEST_ETAGS)
      
 $(DEST_CTAGS): $(CTAGS_EXEC) $(bindir) FORCE
 	$(INSTALL_PROG) $(CTAGS_EXEC) $@  &&  chmod 755 $@
-	strip $(DEST_CTAGS)
+	$(STRIP) $(DEST_CTAGS)
 
 $(DEST_ETAGS): $(DEST_CTAGS)
 	- cd $(bindir) && $(SLINK) $(CTAGS_EXEC) $(ETAGS_EXEC)

@@ -50,6 +50,8 @@ static CVim *app = 0;
 #define MYPROGID "Vim.Application.1"
 #define MYVIPROGID "Vim.Application"
 
+#define MAX_CLSID_LEN 100
+
 /*****************************************************************************
  2. The application object
 *****************************************************************************/
@@ -62,7 +64,7 @@ class CVim : public IVim
 {
 public:
     ~CVim();
-    static CVim *Create();
+    static CVim *Create(int* pbDoRestart);
 
     // IUnknown members
     STDMETHOD(QueryInterface)(REFIID riid, void ** ppv);
@@ -95,12 +97,14 @@ private:
  * --------------
  */
 
-CVim *CVim::Create()
+CVim *CVim::Create(int* pbDoRestart)
 {
     HRESULT hr;
     CVim *me = 0;
     ITypeLib *typelib = 0;
     ITypeInfo *typeinfo = 0;
+
+    *pbDoRestart = FALSE;
 
     // Create the object
     me = new CVim();
@@ -115,8 +119,14 @@ CVim *CVim::Create()
 
     if (FAILED(hr))
     {
-	MessageBox(0, "Cannot load registered type library", "Vim Initialisation", 0);
 	delete me;
+	if (MessageBox(0, "Cannot load registered type library.\nDo you want to register Vim now?",
+		    "Vim Initialisation", MB_YESNO | MB_ICONQUESTION) == IDYES)
+	{
+	    RegisterMe();
+	    MessageBox(0, "You must restart Vim in order for the registration to take effect.", "Vim Initialisation", 0);
+	    *pbDoRestart = TRUE;
+	}
 	return NULL; 
     }
 
@@ -451,6 +461,9 @@ extern "C" void RegisterMe()
 
     ::GetModuleFileName(NULL, module, MAX_PATH);
 
+    // Unregister first (quietly)
+    UnregisterMe(FALSE);
+
     // Convert the CLSID into a char
     char clsid[GUID_STRING_SIZE];
     GUIDtochar(MYCLSID, clsid, sizeof(clsid));
@@ -460,7 +473,7 @@ extern "C" void RegisterMe()
     GUIDtochar(MYLIBID, libid, sizeof(libid));
 
     // Build the key CLSID\\{...}
-    char Key[64];
+    char Key[MAX_CLSID_LEN];
     strcpy(Key, "CLSID\\");
     strcat(Key, clsid);
 
@@ -486,7 +499,7 @@ extern "C" void RegisterMe()
     ITypeLib *typelib = NULL;
     if (FAILED(LoadTypeLib(w_module, &typelib)))
     {
-	MessageBox(0, "Cannot register type library", "Vim Registration", 0);
+	MessageBox(0, "Cannot load type library to register", "Vim Registration", 0);
 	ok = FALSE;
     }
     else
@@ -507,7 +520,7 @@ extern "C" void RegisterMe()
 //
 // Note: There is little error checking in this code, to allow incomplete
 // or failed registrations to be undone.
-extern "C" void UnregisterMe()
+extern "C" void UnregisterMe(int bNotifyUser)
 {
     // Unregister the type library
     ITypeLib *typelib;
@@ -528,7 +541,7 @@ extern "C" void UnregisterMe()
     GUIDtochar(MYCLSID, clsid, sizeof(clsid));
 
     // Build the key CLSID\\{...}
-    char Key[80];
+    char Key[MAX_CLSID_LEN];
     strcpy(Key, "CLSID\\");
     strcat(Key, clsid);
 
@@ -541,7 +554,8 @@ extern "C" void UnregisterMe()
     // Delete the ProgID key
     RecursiveDeleteKey(HKEY_CLASSES_ROOT, MYPROGID);
 
-    MessageBox(0, "Unregistered successfully", "Vim", 0);
+    if (bNotifyUser)
+	MessageBox(0, "Unregistered successfully", "Vim", 0);
 }
 
 /****************************************************************************/
@@ -571,8 +585,9 @@ static void RecursiveDeleteKey(HKEY hKeyParent, const char* child)
 
     // Enumerate all of the decendents of this child
     FILETIME time;
-    char buffer[256];
-    DWORD size = 256;
+    char buffer[1024];
+    DWORD size = 1024;
+
     while (RegEnumKeyEx(hKeyChild, 0, buffer, &size, NULL,
 			NULL, NULL, &time) == S_OK)
     {
@@ -622,9 +637,11 @@ static void SetKeyAndValue(const char* key, const char* subkey, const char* valu
 /*****************************************************************************
  5. OLE Initialisation and shutdown processing
 *****************************************************************************/
-extern "C" void InitOLE()
+extern "C" void InitOLE(int* pbDoRestart)
 {
     HRESULT hr;
+
+    *pbDoRestart = FALSE;
 
     // Initialize the OLE libraries
     hr = OleInitialize(NULL);
@@ -635,7 +652,7 @@ extern "C" void InitOLE()
     }
 
     // Create the application object
-    app = CVim::Create();
+    app = CVim::Create(pbDoRestart);
     if (app == NULL)
 	goto error1;
 

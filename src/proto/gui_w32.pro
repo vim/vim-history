@@ -1,4 +1,5 @@
 /* gui_w32.c */
+int gui_is_win32s __ARGS((void));
 void gui_mch_set_blinking __ARGS((long wait, long on, long off));
 void gui_mch_stop_blink __ARGS((void));
 void gui_mch_start_blink __ARGS((void));

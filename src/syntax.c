@@ -19,32 +19,38 @@
  */
 struct hl_group
 {
-    char_u	    *sg_name;	    /* highlight group name */
-    char_u	    *sg_name_u;	    /* uppercase of sg_name */
+    char_u	*sg_name;	/* highlight group name */
+    char_u	*sg_name_u;	/* uppercase of sg_name */
 /* for normal terminals */
-    int		    sg_term;	    /* "term=" highlighting attributes */
-    char_u	    *sg_start;	    /* terminal string for start highl */
-    char_u	    *sg_stop;	    /* terminal string for stop highl */
-    int		    sg_term_attr;   /* NextScreen attr for term mode */
+    int		sg_term;	/* "term=" highlighting attributes */
+    char_u	*sg_start;	/* terminal string for start highl */
+    char_u	*sg_stop;	/* terminal string for stop highl */
+    int		sg_term_attr;	/* NextScreen attr for term mode */
 /* for color terminals */
-    int		    sg_cterm;	    /* "cterm=" highlighting attr */
-    int		    sg_cterm_bold;  /* bold attr was set for light color */
-    int		    sg_cterm_fg;    /* terminal fg color number + 1 */
-    int		    sg_cterm_bg;    /* terminal bg color number + 1 */
-    int		    sg_cterm_attr;  /* NextScreen attr for color term mode */
+    int		sg_cterm;	/* "cterm=" highlighting attr */
+    int		sg_cterm_bold;	/* bold attr was set for light color */
+    int		sg_cterm_fg;	/* terminal fg color number + 1 */
+    int		sg_cterm_bg;	/* terminal bg color number + 1 */
+    int		sg_cterm_attr;	/* NextScreen attr for color term mode */
 #ifdef USE_GUI
 /* for when using the GUI */
-    int		    sg_gui;	    /* "gui=" highlighting attributes */
-    GuiColor	    sg_gui_fg;	    /* GUI foreground color handle + 1 */
-    char_u	    *sg_gui_fg_name;/* GUI foreground color name */
-    GuiColor	    sg_gui_bg;	    /* GUI background color handle + 1 */
-    char_u	    *sg_gui_bg_name;/* GUI background color name */
-    GuiFont	    sg_font;	    /* GUI font handle */
-    char_u	    *sg_font_name;  /* GUI font name */
-    int		    sg_gui_attr;    /* NextScreen attr for GUI mode */
+    int		sg_gui;		/* "gui=" highlighting attributes */
+    GuiColor	sg_gui_fg;	/* GUI foreground color handle + 1 */
+    char_u	*sg_gui_fg_name;/* GUI foreground color name */
+    GuiColor	sg_gui_bg;	/* GUI background color handle + 1 */
+    char_u	*sg_gui_bg_name;/* GUI background color name */
+    GuiFont	sg_font;	/* GUI font handle */
+    char_u	*sg_font_name;  /* GUI font name */
+    int		sg_gui_attr;    /* NextScreen attr for GUI mode */
 #endif
-    int		    sg_link;	    /* link to this highlight group ID */
+    int		sg_link;	/* link to this highlight group ID */
+    int		sg_set;		/* combination of SG_* */
 };
+
+#define SG_TERM		1	/* term has been set */
+#define SG_CTERM	2	/* cterm has been set */
+#define SG_GUI		4	/* gui has been set */
+#define SG_LINK		8	/* link has been set */
 
 static struct growarray highlight_ga;	    /* highlight groups for
 					       'highlight' option */
@@ -69,7 +75,6 @@ static void syn_unadd_group __ARGS((void));
 static void set_hl_attr __ARGS((int idx));
 static int highlight_list_arg __ARGS((int id, int didh, int type, int iarg, char_u *sarg, char *name));
 static int syn_add_group __ARGS((char_u *name));
-static int syn_id2attr __ARGS((int hl_id));
 static int syn_list_header __ARGS((int did_header, int outlen, int id));
 static void highlight_clear __ARGS((int idx));
 
@@ -165,7 +170,16 @@ struct syn_pattern
 #define SF_CCOMMENT	0x01	/* sync on a C-style comment */
 #define SF_MATCH	0x02	/* sync by matching a pattern */
 
-#define SYN_STATE_P(ssp)    ((int *)((ssp)->ga_data))
+/*
+ * Struct used to store states for the start of some lines for a buffer.
+ */
+struct buf_state
+{
+    int	    bs_idx;		/* index of pattern */
+    int	    bs_flags;		/* flags for pattern */
+};
+
+#define SYN_STATE_P(ssp)    ((struct buf_state *)((ssp)->ga_data))
 
 /*
  * Settings for keyword hash table.  It uses a simplistic hash function: add
@@ -257,9 +271,7 @@ static void syn_start_line __ARGS((void));
 static void syn_free_all_states __ARGS((BUF *buf));
 static void syn_clear_states __ARGS((int start, int end));
 static void store_current_state __ARGS((void));
-static void invalidate_state __ARGS((struct growarray *sp));
 static void invalidate_current_state __ARGS((void));
-static void validate_state __ARGS((struct growarray *sp));
 static void validate_current_state __ARGS((void));
 static void copy_state_to_current __ARGS((struct syn_state *from));
 static void move_state __ARGS((int from, int to));
@@ -793,12 +805,17 @@ syn_free_all_states(buf)
  */
     static void
 syn_clear_states(start, end)
-    int	    start, end;
+    int		start, end;
 {
-    int	    idx;
+    int		idx;
+    struct	growarray *sp;
 
     for (idx = start; idx < end; ++idx)
-	invalidate_state(&(syn_buf->b_syn_states[idx].sst_ga));
+    {
+	sp = &(syn_buf->b_syn_states[idx].sst_ga);
+	ga_clear(sp);
+	sp->ga_itemsize = 0;
+    }
 }
 
 /*
@@ -818,12 +835,18 @@ store_current_state()
 	to = &(syn_buf->b_syn_states[idx].sst_ga);
 	if (to->ga_data != NULL)
 	    ga_clear(to);
-	else if (INVALID_STATE(to))
-	    validate_state(to);
+	else if (to->ga_itemsize == 0)
+	{
+	    to->ga_itemsize = sizeof(struct buf_state);
+	    to->ga_growsize = 3;
+	}
 	if (current_state.ga_len && ga_grow(to, current_state.ga_len) != FAIL)
 	{
 	    for (i = 0; i < current_state.ga_len; ++i)
-		SYN_STATE_P(to)[i] = CUR_STATE(i).si_idx;
+	    {
+		SYN_STATE_P(to)[i].bs_idx = CUR_STATE(i).si_idx;
+		SYN_STATE_P(to)[i].bs_flags = CUR_STATE(i).si_flags;
+	    }
 	    to->ga_len = current_state.ga_len;
 	    to->ga_room -= to->ga_len;
 	}
@@ -849,7 +872,8 @@ copy_state_to_current(from)
     {
 	for (i = 0; i < ga->ga_len; ++i)
 	{
-	    CUR_STATE(i).si_idx = SYN_STATE_P(ga)[i];
+	    CUR_STATE(i).si_idx = SYN_STATE_P(ga)[i].bs_idx;
+	    CUR_STATE(i).si_flags = SYN_STATE_P(ga)[i].bs_flags;
 	    CUR_STATE(i).si_m_endcol = 0;
 	    CUR_STATE(i).si_m_startcol = 0;
 	    CUR_STATE(i).si_m_lnum = 0;
@@ -862,34 +886,12 @@ copy_state_to_current(from)
     current_next_flags = from->sst_next_flags;
 }
 
-/*
- * Invalidate a state stack by freeing it and setting ga_itemsize to zero.
- */
-    static void
-invalidate_state(sp)
-    struct growarray *sp;
-{
-    ga_clear(sp);
-    sp->ga_itemsize = 0;
-}
-
     static void
 invalidate_current_state()
 {
     ga_clear(&current_state);
     current_state.ga_itemsize = 0;
     current_next_list = NULL;
-}
-
-/*
- * Validate a state stack by setting ga_itemsize and ga_growsize.
- */
-    static void
-validate_state(sp)
-    struct growarray *sp;
-{
-    sp->ga_itemsize = sizeof(int);	/* for b_syn_states[] */
-    sp->ga_growsize = 3;
 }
 
     static void
@@ -957,7 +959,7 @@ syntax_check_changed(lnum)
 							 == current_next_list)
 	    {
 		for (i = current_state.ga_len; --i >= 0; )
-		    if (SYN_STATE_P(ssp)[i] != CUR_STATE(i).si_idx)
+		    if (SYN_STATE_P(ssp)[i].bs_idx != CUR_STATE(i).si_idx)
 			break;
 		/*
 		 * If still the same state, return FALSE, syntax didn't change.
@@ -1173,10 +1175,17 @@ syn_current_attr(syncing, line)
 			if (flags & HL_TRANSP)
 			{
 			    if (current_state.ga_len < 2)
+			    {
 				cur_si->si_attr = 0;
+				cur_si->si_trans_id = 0;
+			    }
 			    else
+			    {
 				cur_si->si_attr = CUR_STATE(
 					current_state.ga_len - 2).si_attr;
+				cur_si->si_trans_id = CUR_STATE(
+					current_state.ga_len - 2).si_trans_id;
+			    }
 			}
 			else
 			    cur_si->si_attr = syn_id2attr(syn_id);
@@ -1364,10 +1373,10 @@ syn_current_attr(syncing, line)
 	     * - we are on white space and the "skipwhite" option was given
 	     */
 	    if (!found_match
-		    && ((vim_iswhite(line[current_col])
-				       && (current_next_flags & HL_SKIPWHITE))
-			|| (*line == NUL
-				     && (current_next_flags & HL_SKIPEMPTY))))
+		    && (   ((current_next_flags & HL_SKIPWHITE)
+			    && vim_iswhite(line[current_col]))
+			|| ((current_next_flags & HL_SKIPEMPTY)
+			    && *line == NUL)))
 		break;
 
 	    /*
@@ -1417,6 +1426,12 @@ syn_current_attr(syncing, line)
 	    --current_col;
 	}
     }
+    
+    /* nextgroup ends at end of line, unless "skipnl" or "skipemtpy" present */
+    if (current_next_list != NULL
+	    && line[current_col + 1] == NUL
+	    && !(current_next_flags & (HL_SKIPNL | HL_SKIPEMPTY)))
+	current_next_list = NULL;
 
     return current_attr;
 }
@@ -1550,7 +1565,7 @@ check_state_ends(line)
 		current_next_flags = cur_si->si_flags;
 		if (!(current_next_flags & (HL_SKIPNL | HL_SKIPEMPTY))
 			&& line[current_col] == NUL)
-		    current_next_list = 0;
+		    current_next_list = NULL;
 		pop_current();
 
 		if (current_state.ga_len == 0)
@@ -1578,8 +1593,8 @@ check_state_ends(line)
 }
 
 /*
- * Update an entry in the current_state stack for a match or start-skip-end
- * pattern.  This fills in si_attr and si_cont_list.
+ * Update an entry in the current_state stack for a match or region.  This
+ * fills in si_attr and si_cont_list.
  */
     static void
 update_si_attr(idx)
@@ -3921,35 +3936,41 @@ static char *(highlight_init_both[]) =
 #ifdef USE_GUI
 	"Cursor guibg=fg guifg=bg",
 #endif
-	"SpecialKey term=bold ctermfg=Blue guifg=Blue",
-	"NonText term=bold cterm=bold gui=bold guifg=Blue",
-	"Directory term=bold ctermfg=Blue guifg=Blue",
-	"MoreMsg term=bold cterm=bold ctermfg=Green gui=bold guifg=SeaGreen",
-	"ModeMsg term=bold cterm=bold gui=bold",
-	"Question term=standout cterm=bold ctermfg=Green gui=bold guifg=SeaGreen",
-	"StatusLine term=reverse cterm=reverse gui=reverse",
-	"Title term=bold cterm=bold ctermfg=Blue gui=bold guifg=Blue",
-	"Visual term=reverse cterm=reverse gui=reverse",
+	"ErrorMsg term=standout ctermbg=DarkRed ctermfg=White guibg=Red guifg=White",
 	"link IncSearch Visual",
-	"WarningMsg term=standout ctermfg=Red guifg=Red",
+	"ModeMsg term=bold cterm=bold gui=bold",
+	"NonText term=bold ctermfg=Blue gui=bold guifg=Blue",
+	"StatusLine term=reverse,bold cterm=reverse,bold gui=reverse,bold",
+	"StatusLineNC term=reverse cterm=reverse gui=reverse",
+	"Visual term=reverse cterm=reverse gui=reverse",
 	NULL
     };
 
 static char *(highlight_init_light[]) =
     {
-	"Normal gui=NONE",
+	"Directory term=bold ctermfg=DarkBlue guifg=Blue",
 	"LineNr term=underline ctermfg=Brown guifg=Brown",
-	"ErrorMsg term=standout ctermbg=LightRed ctermfg=NONE guibg=Orange guifg=NONE",
+	"MoreMsg term=bold ctermfg=DarkGreen gui=bold guifg=SeaGreen",
+	"Normal gui=NONE",
+	"Question term=standout ctermfg=DarkGreen gui=bold guifg=SeaGreen",
 	"Search term=reverse ctermbg=Yellow ctermfg=NONE guibg=Yellow guifg=NONE",
+	"SpecialKey term=bold ctermfg=DarkBlue guifg=Blue",
+	"Title term=bold ctermfg=DarkMagenta gui=bold guifg=Magenta",
+	"WarningMsg term=standout ctermfg=DarkRed guifg=Red",
 	NULL
     };
 
 static char *(highlight_init_dark[]) =
     {
-	"Normal gui=NONE",
+	"Directory term=bold ctermfg=LightCyan guifg=Blue",
 	"LineNr term=underline ctermfg=Yellow guifg=Yellow",
-	"ErrorMsg term=standout ctermbg=LightRed ctermfg=Black guibg=Orange guifg=Black",
+	"MoreMsg term=bold ctermfg=LightGreen gui=bold guifg=SeaGreen",
+	"Normal gui=NONE",
+	"Question term=standout ctermfg=LightGreen gui=bold guifg=Green",
 	"Search term=reverse ctermbg=Yellow ctermfg=Black guibg=Yellow guifg=Black",
+	"SpecialKey term=bold ctermfg=LightBlue guifg=Blue",
+	"Title term=bold ctermfg=LightMagenta gui=bold guifg=Magenta",
+	"WarningMsg term=standout ctermfg=LightRed guifg=Red",
 	NULL
     };
 
@@ -3964,7 +3985,7 @@ init_highlight(both)
     {
 	pp = highlight_init_both;
 	for (i = 0; pp[i] != NULL; ++i)
-	    do_highlight((char_u *)pp[i], FALSE);
+	    do_highlight((char_u *)pp[i], FALSE, TRUE);
     }
 
     if (TO_LOWER(*p_bg) == 'l')
@@ -3972,16 +3993,17 @@ init_highlight(both)
     else
 	pp = highlight_init_dark;
     for (i = 0; pp[i] != NULL; ++i)
-	do_highlight((char_u *)pp[i], FALSE);
+	do_highlight((char_u *)pp[i], FALSE, TRUE);
 }
 
 /*
  * Handle the ":highlight .." command.
  */
     void
-do_highlight(line, forceit)
+do_highlight(line, forceit, init)
     char_u	*line;
     int		forceit;
+    int		init;	    /* TRUE when called for initializing */
 {
     char_u	*name_end;
     char_u	*p;
@@ -4074,13 +4096,13 @@ do_highlight(line, forceit)
 	else
 	    to_id = syn_check_group(to_start, (int)(to_end - to_start));
 
-	if (from_id > 0)
+	if (from_id > 0 && (!init || HL_TABLE()[from_id - 1].sg_set == 0))
 	{
 	    /*
 	     * Don't allow a link when there already is some highlighting
 	     * for the group, unless '!' is used
 	     */
-	    if (to_id > 0 && !forceit
+	    if (to_id > 0 && !forceit && !init
 		    &&	  (HL_TABLE()[from_id - 1].sg_term_attr != 0
 			|| HL_TABLE()[from_id - 1].sg_cterm_attr != 0
 #ifdef USE_GUI
@@ -4092,7 +4114,11 @@ do_highlight(line, forceit)
 		    EMSG("group has settings, highlight link ignored");
 	    }
 	    else
+	    {
+		if (!init)
+		    HL_TABLE()[from_id - 1].sg_set |= SG_LINK;
 		HL_TABLE()[from_id - 1].sg_link = to_id;
+	    }
 	}
 
 	redraw_curbuf_later(NOT_VALID);
@@ -4160,7 +4186,12 @@ do_highlight(line, forceit)
 
 	if (STRCMP(key, "NONE") == 0)
 	{
-	    highlight_clear(idx);
+	    if (!init || HL_TABLE()[idx].sg_set == 0)
+	    {
+		if (!init)
+		    HL_TABLE()[idx].sg_set |= SG_TERM+SG_CTERM+SG_GUI;
+		highlight_clear(idx);
+	    }
 	    continue;
 	}
 
@@ -4238,15 +4269,34 @@ do_highlight(line, forceit)
 	    if (error)
 		break;
 	    if (*key == 'T')
-		HL_TABLE()[idx].sg_term = attr;
+	    {
+		if (!init || !(HL_TABLE()[idx].sg_set & SG_TERM))
+		{
+		    if (!init)
+			HL_TABLE()[idx].sg_set |= SG_TERM;
+		    HL_TABLE()[idx].sg_term = attr;
+		}
+	    }
 	    else if (*key == 'C')
 	    {
-		HL_TABLE()[idx].sg_cterm = attr;
-		HL_TABLE()[idx].sg_cterm_bold = FALSE;
+		if (!init || !(HL_TABLE()[idx].sg_set & SG_CTERM))
+		{
+		    if (!init)
+			HL_TABLE()[idx].sg_set |= SG_CTERM;
+		    HL_TABLE()[idx].sg_cterm = attr;
+		    HL_TABLE()[idx].sg_cterm_bold = FALSE;
+		}
 	    }
 #ifdef USE_GUI
 	    else
-		HL_TABLE()[idx].sg_gui = attr;
+	    {
+		if (!init || !(HL_TABLE()[idx].sg_set & SG_GUI))
+		{
+		    if (!init)
+			HL_TABLE()[idx].sg_set |= SG_GUI;
+		    HL_TABLE()[idx].sg_gui = attr;
+		}
+	    }
 #endif
 	}
 	else if (STRCMP(key, "FONT") == 0)
@@ -4261,6 +4311,11 @@ do_highlight(line, forceit)
 	}
 	else if (STRCMP(key, "CTERMFG") == 0 || STRCMP(key, "CTERMBG") == 0)
 	{
+	  if (!init || !(HL_TABLE()[idx].sg_set & SG_CTERM))
+	  {
+	    if (!init)
+		HL_TABLE()[idx].sg_set |= SG_CTERM;
+
 	    /* When setting the foreground color, and previously the "bold"
 	     * flag was set for a light color, reset it now */
 	    if (key[5] == 'F' && HL_TABLE()[idx].sg_cterm_bold)
@@ -4370,49 +4425,71 @@ do_highlight(line, forceit)
 				    i ? (char_u *)"dark" : (char_u *)"light");
 		}
 	    }
+	  }
 	}
 	else if (STRCMP(key, "GUIFG") == 0)
 	{
 #ifdef USE_GUI	    /* in non-GUI guifg colors are simply ignored */
+	  if (!init || !(HL_TABLE()[idx].sg_set & SG_GUI))
+	  {
+	    if (!init)
+		HL_TABLE()[idx].sg_set |= SG_GUI;
+
 	    /* Add one to the argument, to avoid zero */
 	    i = color_name2handle(arg) + 1;
 	    if (i > 0 || STRCMP(arg, "NONE") == 0 || !gui.in_use)
 	    {
 		HL_TABLE()[idx].sg_gui_fg = i;
 		vim_free(HL_TABLE()[idx].sg_gui_fg_name);
-		HL_TABLE()[idx].sg_gui_fg_name = vim_strsave(arg);
-#ifdef USE_GUI_X11
+		if (STRCMP(arg, "NONE"))
+		    HL_TABLE()[idx].sg_gui_fg_name = vim_strsave(arg);
+		else
+		    HL_TABLE()[idx].sg_gui_fg_name = NULL;
+# ifdef USE_GUI_X11
 		if (is_menu_group)
 		    gui.menu_fg_pixel = i - 1;
 		if (is_scrollbar_group)
 		    gui.scroll_fg_pixel = i - 1;
-#endif
+# endif
 	    }
+	  }
 #endif
 	}
 	else if (STRCMP(key, "GUIBG") == 0)
 	{
 #ifdef USE_GUI	    /* in non-GUI guibg colors are simply ignored */
+	  if (!init || !(HL_TABLE()[idx].sg_set & SG_GUI))
+	  {
+	    if (!init)
+		HL_TABLE()[idx].sg_set |= SG_GUI;
+
 	    /* Add one to the argument, to avoid zero */
 	    i = color_name2handle(arg) + 1;
 	    if (i > 0 || STRCMP(arg, "NONE") == 0 || !gui.in_use)
 	    {
 		HL_TABLE()[idx].sg_gui_bg = i;
 		vim_free(HL_TABLE()[idx].sg_gui_bg_name);
-		HL_TABLE()[idx].sg_gui_bg_name = vim_strsave(arg);
-#ifdef USE_GUI_X11
+		if (STRCMP(arg, "NONE"))
+		    HL_TABLE()[idx].sg_gui_bg_name = vim_strsave(arg);
+		else
+		    HL_TABLE()[idx].sg_gui_bg_name = NULL;
+# ifdef USE_GUI_X11
 		if (is_menu_group)
 		    gui.menu_bg_pixel = i - 1;
 		if (is_scrollbar_group)
 		    gui.scroll_bg_pixel = i - 1;
-#endif
+# endif
 	    }
+	  }
 #endif
 	}
 	else if (STRCMP(key, "START") == 0 || STRCMP(key, "STOP") == 0)
 	{
 	    char_u	buf[100];
 	    char_u	*tname;
+
+	    if (!init)
+		HL_TABLE()[idx].sg_set |= SG_TERM;
 
 	    /*
 	     * The "start" and "stop"  arguments can be a literal escape
@@ -4498,7 +4575,8 @@ do_highlight(line, forceit)
 	/*
 	 * When highlighting has been given for a group, don't link it.
 	 */
-	HL_TABLE()[idx].sg_link = 0;
+	if (!init || !(HL_TABLE()[idx].sg_set & SG_LINK))
+	    HL_TABLE()[idx].sg_link = 0;
 
 	/*
 	 * Continue with next argument.
@@ -5310,7 +5388,7 @@ syn_unadd_group()
 /*
  * Translate a group ID to highlight attributes.
  */
-    static int
+    int
 syn_id2attr(hl_id)
     int			hl_id;
 {
@@ -5449,7 +5527,7 @@ highlight_changed()
 
     /* Check the HLF_ enums, they must be in the same order! */
     static int flags[HLF_COUNT] = {'8', '@', 'd', 'e', 'h', 'i', 'l', 'm', 'M',
-				   'n', 'r', 's', 't', 'v', 'w'};
+				   'n', 'r', 's', 'S', 't', 'v', 'w'};
 
     need_highlight_changed = FALSE;
 

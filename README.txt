@@ -1,4 +1,4 @@
-README for version 5.0 of Vim: Vi IMproved.
+README.txt for version 5.1 of Vim: Vi IMproved.
 
 Vim is an almost compatible version of the UNIX editor Vi.  Many new features
 have been added: multi level undo, syntax highlighting, command line history,

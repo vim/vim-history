@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 5.1 1998/02/19 03:47:18 darren Exp $
+dnl $Id: configure.in,v 5.2 1998/03/07 20:57:09 darren Exp $
 
 dnl	Copyright (c) 1996-1997, Darren Hiebert
 dnl
@@ -104,6 +104,7 @@ dnl -------------------
 
 AC_PROG_CC
 AC_PROG_LN_S
+AC_CHECK_PROG(STRIP, strip, strip, :)
 
 
 dnl Checks for typedefs, structures, and compiler characteristics

@@ -1,16 +1,20 @@
-# Microsoft Developer Studio Generated NMAKE File, Based on Gvim_vc.dsp
+# Microsoft Developer Studio Generated NMAKE File, Format Version 4.20
+# ** DO NOT EDIT **
+
+# TARGTYPE "Win32 (x86) Console Application" 0x0103
+
 !IF "$(CFG)" == ""
 CFG=Vim - Win32 Release
-!MESSAGE No configuration specified. Defaulting to Vim - Win32 Release.
+!MESSAGE No configuration specified.  Defaulting to Vim - Win32 Release.
 !ENDIF 
 
 !IF "$(CFG)" != "Vim - Win32 Release" && "$(CFG)" != "Vim - Win32 Debug" &&\
  "$(CFG)" != "Vim - Win32 Release with Debug"
 !MESSAGE Invalid configuration "$(CFG)" specified.
-!MESSAGE You can specify a configuration when running NMAKE
-!MESSAGE by defining the macro CFG on the command line. For example:
+!MESSAGE You can specify a configuration when running NMAKE on this makefile
+!MESSAGE by defining the macro CFG on the command line.  For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "Gvim_vc.mak" CFG="Vim - Win32 Release"
+!MESSAGE NMAKE /f "Gvim_vc.mak" CFG="Vim - Win32 Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
@@ -27,23 +31,28 @@ NULL=
 !ELSE 
 NULL=nul
 !ENDIF 
+################################################################################
+# Begin Project
+# PROP Target_Last_Scanned "Vim - Win32 Release with Debug"
+CPP=cl.exe
+RSC=rc.exe
 
 !IF  "$(CFG)" == "Vim - Win32 Release"
 
-OUTDIR=.\Release
-INTDIR=.\Release
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "oleRel"
+# PROP BASE Intermediate_Dir "oleRel"
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "oleRel"
+# PROP Intermediate_Dir "oleRel"
+OUTDIR=.\oleRel
+INTDIR=.\oleRel
 
-!IF "$(RECURSE)" == "0" 
+ALL : ".\vim.tlb" ".\iid_ole.c" ".\if_ole.h" ".\gvim.exe"
 
-ALL : "vim.tlb" "iid_ole.c" "if_ole.h" ".\gvim.exe"
-
-!ELSE 
-
-ALL : "vim.tlb" "iid_ole.c" "if_ole.h" ".\gvim.exe"
-
-!ENDIF 
-
-CLEAN :
+CLEAN : 
 	-@erase "$(INTDIR)\buffer.obj"
 	-@erase "$(INTDIR)\charset.obj"
 	-@erase "$(INTDIR)\digraph.obj"
@@ -78,65 +87,43 @@ CLEAN :
 	-@erase "$(INTDIR)\term.obj"
 	-@erase "$(INTDIR)\ui.obj"
 	-@erase "$(INTDIR)\undo.obj"
-	-@erase "$(INTDIR)\vc50.idb"
 	-@erase "$(INTDIR)\version.obj"
 	-@erase "$(INTDIR)\vim.res"
 	-@erase "$(INTDIR)\window.obj"
 	-@erase ".\gvim.exe"
-	-@erase "if_ole.h"
-	-@erase "iid_ole.c"
-	-@erase "vim.tlb"
+	-@erase ".\if_ole.h"
+	-@erase ".\iid_ole.c"
+	-@erase ".\vim.tlb"
 
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
-CPP=cl.exe
-CPP_PROJ=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32" /D\
- "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-CPP_OBJS=.\Release/
-CPP_SBRS=.
-
-.c{$(CPP_OBJS)}.obj::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
-
-.cpp{$(CPP_OBJS)}.obj::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
-
-.cxx{$(CPP_OBJS)}.obj::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
-
-.c{$(CPP_SBRS)}.sbr::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
-
-.cpp{$(CPP_SBRS)}.sbr::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
-
-.cxx{$(CPP_SBRS)}.sbr::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
-
-RSC=rc.exe
-RSC_PROJ=/l 0x409 /fo"$(INTDIR)\vim.res" /d "NDEBUG" /d "HAVE_OLE" 
+"$(OUTDIR)/vim.bsc" : $(OUTDIR)  $(BSC32_SBRS)
+# ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /Iproto /FR /YX /c
+# ADD CPP /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fd"$(INTDIR)\\" /FD /c
+# SUBTRACT CPP /Fr /YX
+CPP_PROJ=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c 
+CPP_OBJS=.\oleRel/
+CPP_SBRS=.\.
+# ADD BASE RSC /l 0x409 /d "NDEBUG" /d "HAVE_OLE"
+# ADD RSC /l 0x409 /d "NDEBUG" /d "HAVE_OLE"
+RSC_PROJ=/l 0x409 /fo"$(INTDIR)/vim.res" /d "NDEBUG" /d "HAVE_OLE" 
 BSC32=bscmake.exe
-BSC32_FLAGS=/nologo /o"$(OUTDIR)\Gvim_vc.bsc" 
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+BSC32_FLAGS=/nologo /o"$(OUTDIR)/Gvim_vc.bsc" 
 BSC32_SBRS= \
 	
 LINK32=link.exe
-LINK32_FLAGS=libcmt.lib oldnames.lib kernel32.lib user32.lib gdi32.lib\
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
+# ADD LINK32 libc.lib oldnames.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib /nologo /subsystem:windows /machine:I386 /nodefaultlib /out:"gvim.exe"
+# SUBTRACT LINK32 /pdb:none
+LINK32_FLAGS=libc.lib oldnames.lib kernel32.lib user32.lib gdi32.lib\
  winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib\
- uuid.lib /nologo /subsystem:windows /incremental:no /pdb:"$(OUTDIR)\gvim.pdb"\
- /machine:I386 /nodefaultlib /out:".\gvim.exe" 
+ uuid.lib /nologo /subsystem:windows\
+ /incremental:no /pdb:"$(OUTDIR)/gvim.pdb" /machine:I386 /nodefaultlib\
+ /out:"gvim.exe" 
 LINK32_OBJS= \
 	"$(INTDIR)\buffer.obj" \
 	"$(INTDIR)\charset.obj" \
@@ -183,23 +170,20 @@ LINK32_OBJS= \
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
 
-OUTDIR=.\Debug
-INTDIR=.\Debug
-# Begin Custom Macros
-OutDir=.\.\Debug
-# End Custom Macros
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "oleDbg"
+# PROP BASE Intermediate_Dir "oleDbg"
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "oleDbg"
+# PROP Intermediate_Dir "oleDbg"
+OUTDIR=.\oleDbg
+INTDIR=.\oleDbg
 
-!IF "$(RECURSE)" == "0" 
+ALL : ".\vim.tlb" ".\iid_ole.c" ".\if_ole.h" ".\gvimd.exe" "$(OUTDIR)\Gvim_vc.bsc"
 
-ALL : ".\gvimd.exe" "$(OUTDIR)\Gvim_vc.bsc"
-
-!ELSE 
-
-ALL : ".\gvimd.exe" "$(OUTDIR)\Gvim_vc.bsc"
-
-!ENDIF 
-
-CLEAN :
+CLEAN : 
 	-@erase "$(INTDIR)\buffer.obj"
 	-@erase "$(INTDIR)\buffer.sbr"
 	-@erase "$(INTDIR)\charset.obj"
@@ -268,8 +252,8 @@ CLEAN :
 	-@erase "$(INTDIR)\ui.sbr"
 	-@erase "$(INTDIR)\undo.obj"
 	-@erase "$(INTDIR)\undo.sbr"
-	-@erase "$(INTDIR)\vc50.idb"
-	-@erase "$(INTDIR)\vc50.pdb"
+	-@erase "$(INTDIR)\vc40.idb"
+	-@erase "$(INTDIR)\vc40.pdb"
 	-@erase "$(INTDIR)\version.obj"
 	-@erase "$(INTDIR)\version.sbr"
 	-@erase "$(INTDIR)\vim.res"
@@ -277,50 +261,27 @@ CLEAN :
 	-@erase "$(INTDIR)\window.sbr"
 	-@erase "$(OUTDIR)\Gvim_vc.bsc"
 	-@erase ".\gvimd.exe"
+	-@erase ".\if_ole.h"
+	-@erase ".\iid_ole.c"
+	-@erase ".\vim.tlb"
 
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
-CPP=cl.exe
+"$(OUTDIR)/vim.bsc" : $(OUTDIR)  $(BSC32_SBRS)
+# ADD BASE CPP /nologo /W3 /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /Iproto /FR /YX /c
+# ADD CPP /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR /c
 CPP_PROJ=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-CPP_OBJS=.\Debug/
-CPP_SBRS=.\Debug/
-
-.c{$(CPP_OBJS)}.obj::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
-
-.cpp{$(CPP_OBJS)}.obj::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
-
-.cxx{$(CPP_OBJS)}.obj::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
-
-.c{$(CPP_SBRS)}.sbr::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
-
-.cpp{$(CPP_SBRS)}.sbr::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
-
-.cxx{$(CPP_SBRS)}.sbr::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
-
-RSC=rc.exe
-RSC_PROJ=/l 0x409 /fo"$(INTDIR)\vim.res" /d "_DEBUG" /d "HAVE_OLE" 
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c 
+CPP_OBJS=.\oleDbg/
+CPP_SBRS=.\oleDbg/
+# ADD BASE RSC /l 0x409 /d "_DEBUG" /d "HAVE_OLE"
+# ADD RSC /l 0x409 /d "_DEBUG" /d "HAVE_OLE"
+RSC_PROJ=/l 0x409 /fo"$(INTDIR)/vim.res" /d "_DEBUG"  /d "HAVE_OLE"
 BSC32=bscmake.exe
-BSC32_FLAGS=/nologo /o"$(OUTDIR)\Gvim_vc.bsc" 
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+BSC32_FLAGS=/nologo /o"$(OUTDIR)/Gvim_vc.bsc" 
 BSC32_SBRS= \
 	"$(INTDIR)\buffer.sbr" \
 	"$(INTDIR)\charset.sbr" \
@@ -365,9 +326,12 @@ BSC32_SBRS= \
 <<
 
 LINK32=link.exe
-LINK32_FLAGS=libcmtd.lib oldnames.lib kernel32.lib user32.lib gdi32.lib\
- winspool.lib comdlg32.lib advapi32.lib shell32.lib /nologo /subsystem:windows\
- /profile /debug /machine:I386 /nodefaultlib /out:".\gvimd.exe" 
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386
+# ADD LINK32 libcd.lib oldnames.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib /nologo /subsystem:windows /profile /debug /machine:I386 /nodefaultlib /out:"gvimd.exe"
+LINK32_FLAGS=libcd.lib oldnames.lib kernel32.lib user32.lib gdi32.lib\
+ winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib\
+ uuid.lib /nologo /subsystem:windows\
+ /profile /debug /machine:I386 /nodefaultlib /out:"gvimd.exe" 
 LINK32_OBJS= \
 	"$(INTDIR)\buffer.obj" \
 	"$(INTDIR)\charset.obj" \
@@ -414,20 +378,20 @@ LINK32_OBJS= \
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
 
-OUTDIR=.\RelDebug
-INTDIR=.\RelDebug
-
-!IF "$(RECURSE)" == "0" 
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "oleRelDbg"
+# PROP BASE Intermediate_Dir "oleRelDbg"
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "oleRelDbg"
+# PROP Intermediate_Dir "oleRelDbg"
+OUTDIR=.\oleRelDbg
+INTDIR=.\oleRelDbg
 
 ALL : ".\gvimrwd.exe"
 
-!ELSE 
-
-ALL : ".\gvimrwd.exe"
-
-!ENDIF 
-
-CLEAN :
+CLEAN : 
 	-@erase "$(INTDIR)\buffer.obj"
 	-@erase "$(INTDIR)\charset.obj"
 	-@erase "$(INTDIR)\digraph.obj"
@@ -462,8 +426,8 @@ CLEAN :
 	-@erase "$(INTDIR)\term.obj"
 	-@erase "$(INTDIR)\ui.obj"
 	-@erase "$(INTDIR)\undo.obj"
-	-@erase "$(INTDIR)\vc50.idb"
-	-@erase "$(INTDIR)\vc50.pdb"
+	-@erase "$(INTDIR)\vc40.idb"
+	-@erase "$(INTDIR)\vc40.pdb"
 	-@erase "$(INTDIR)\version.obj"
 	-@erase "$(INTDIR)\vim.res"
 	-@erase "$(INTDIR)\window.obj"
@@ -472,52 +436,30 @@ CLEAN :
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
-CPP=cl.exe
+"$(OUTDIR)/vim.bsc" : $(OUTDIR)  $(BSC32_SBRS)
+# ADD BASE CPP /nologo /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /Iproto /c
+# SUBTRACT BASE CPP /Fr /YX
+# ADD CPP /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /c
+# SUBTRACT CPP /Fr /YX
 CPP_PROJ=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-CPP_OBJS=.\RelDebug/
-CPP_SBRS=.
-
-.c{$(CPP_OBJS)}.obj::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
-
-.cpp{$(CPP_OBJS)}.obj::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
-
-.cxx{$(CPP_OBJS)}.obj::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
-
-.c{$(CPP_SBRS)}.sbr::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
-
-.cpp{$(CPP_SBRS)}.sbr::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
-
-.cxx{$(CPP_SBRS)}.sbr::
-   $(CPP) @<<
-   $(CPP_PROJ) $< 
-<<
-
-RSC=rc.exe
-RSC_PROJ=/l 0x409 /fo"$(INTDIR)\vim.res" /d "NDEBUG" /d "HAVE_OLE" 
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c 
+CPP_OBJS=.\oleRelDbg/
+CPP_SBRS=.\.
+# ADD BASE RSC /l 0x409 /d "NDEBUG" /d "HAVE_OLE"
+# ADD RSC /l 0x409 /d "NDEBUG" /d "HAVE_OLE"
+RSC_PROJ=/l 0x409 /fo"$(INTDIR)/vim.res" /d "NDEBUG" /d "HAVE_OLE"
 BSC32=bscmake.exe
-BSC32_FLAGS=/nologo /o"$(OUTDIR)\Gvim_vc.bsc" 
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+BSC32_FLAGS=/nologo /o"$(OUTDIR)/Gvim_vc.bsc" 
 BSC32_SBRS= \
 	
 LINK32=link.exe
-LINK32_FLAGS=libcmtd.lib oldnames.lib kernel32.lib user32.lib gdi32.lib\
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386 /out:"vim.exe"
+# ADD LINK32 libcd.lib oldnames.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib /nologo /subsystem:windows /profile /debug /machine:I386 /nodefaultlib /out:"gvimrwd.exe"
+LINK32_FLAGS=libcd.lib oldnames.lib kernel32.lib user32.lib gdi32.lib\
  winspool.lib comdlg32.lib advapi32.lib shell32.lib /nologo /subsystem:windows\
- /profile /debug /machine:I386 /nodefaultlib /out:".\gvimrwd.exe" 
+ /profile /debug /machine:I386 /nodefaultlib /out:"gvimrwd.exe" 
 LINK32_OBJS= \
 	"$(INTDIR)\buffer.obj" \
 	"$(INTDIR)\charset.obj" \
@@ -564,313 +506,45 @@ LINK32_OBJS= \
 
 !ENDIF 
 
+.c{$(CPP_OBJS)}.obj:
+   $(CPP) $(CPP_PROJ) $<  
 
-!IF "$(CFG)" == "Vim - Win32 Release" || "$(CFG)" == "Vim - Win32 Debug" ||\
- "$(CFG)" == "Vim - Win32 Release with Debug"
-SOURCE=.\buffer.c
-DEP_CPP_BUFFE=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_BUFFE=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
+.cpp{$(CPP_OBJS)}.obj:
+   $(CPP) $(CPP_PROJ) $<  
+
+.cxx{$(CPP_OBJS)}.obj:
+   $(CPP) $(CPP_PROJ) $<  
+
+.c{$(CPP_SBRS)}.sbr:
+   $(CPP) $(CPP_PROJ) $<  
+
+.cpp{$(CPP_SBRS)}.sbr:
+   $(CPP) $(CPP_PROJ) $<  
+
+.cxx{$(CPP_SBRS)}.sbr:
+   $(CPP) $(CPP_PROJ) $<  
+
+################################################################################
+# Begin Target
+
+# Name "Vim - Win32 Release"
+# Name "Vim - Win32 Debug"
+# Name "Vim - Win32 Release with Debug"
 
 !IF  "$(CFG)" == "Vim - Win32 Release"
 
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\buffer.obj" : $(SOURCE) $(DEP_CPP_BUFFE) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
 !ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\buffer.obj"	"$(INTDIR)\buffer.sbr" : $(SOURCE) $(DEP_CPP_BUFFE)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
 
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\buffer.obj" : $(SOURCE) $(DEP_CPP_BUFFE) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
 !ENDIF 
 
-SOURCE=.\charset.c
-DEP_CPP_CHARS=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_CHARS=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\charset.obj" : $(SOURCE) $(DEP_CPP_CHARS) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\charset.obj"	"$(INTDIR)\charset.sbr" : $(SOURCE) $(DEP_CPP_CHARS)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\charset.obj" : $(SOURCE) $(DEP_CPP_CHARS) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ENDIF 
-
-SOURCE=.\digraph.c
-DEP_CPP_DIGRA=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_DIGRA=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\digraph.obj" : $(SOURCE) $(DEP_CPP_DIGRA) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\digraph.obj"	"$(INTDIR)\digraph.sbr" : $(SOURCE) $(DEP_CPP_DIGRA)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\digraph.obj" : $(SOURCE) $(DEP_CPP_DIGRA) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ENDIF 
+################################################################################
+# Begin Source File
 
 SOURCE=.\edit.c
 DEP_CPP_EDIT_=\
 	".\ascii.h"\
-	".\ex_cmds.h"\
 	".\feature.h"\
 	".\globals.h"\
 	".\gui.h"\
@@ -879,98 +553,56 @@ DEP_CPP_EDIT_=\
 	".\option.h"\
 	".\os_win32.h"\
 	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
 	".\regexp.h"\
 	".\structs.h"\
 	".\term.h"\
 	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
 	
 NODEP_CPP_EDIT_=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
 	
 
 !IF  "$(CFG)" == "Vim - Win32 Release"
 
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+# SUBTRACT CPP /Fr /YX
 
 "$(INTDIR)\edit.obj" : $(SOURCE) $(DEP_CPP_EDIT_) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
 
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
 
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
-"$(INTDIR)\edit.obj"	"$(INTDIR)\edit.sbr" : $(SOURCE) $(DEP_CPP_EDIT_)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
 
+"$(INTDIR)\edit.obj" : $(SOURCE) $(DEP_CPP_EDIT_) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\edit.sbr" : $(SOURCE) $(DEP_CPP_EDIT_) "$(INTDIR)"
+   $(BuildCmds)
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
 
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
 
 "$(INTDIR)\edit.obj" : $(SOURCE) $(DEP_CPP_EDIT_) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
 
 
 !ENDIF 
 
-SOURCE=.\eval.c
-DEP_CPP_EVAL_=\
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\buffer.c
+DEP_CPP_BUFFE=\
 	".\ascii.h"\
-	".\ex_cmds.h"\
 	".\feature.h"\
 	".\globals.h"\
 	".\gui.h"\
@@ -979,78 +611,1405 @@ DEP_CPP_EVAL_=\
 	".\option.h"\
 	".\os_win32.h"\
 	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
 	".\regexp.h"\
 	".\structs.h"\
 	".\term.h"\
 	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
 	
-NODEP_CPP_EVAL_=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
+NODEP_CPP_BUFFE=\
 	
 
 !IF  "$(CFG)" == "Vim - Win32 Release"
 
+# SUBTRACT CPP /Fr /YX
 
-"$(INTDIR)\eval.obj" : $(SOURCE) $(DEP_CPP_EVAL_) "$(INTDIR)"
+"$(INTDIR)\buffer.obj" : $(SOURCE) $(DEP_CPP_BUFFE) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
 
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
 
 
-"$(INTDIR)\eval.obj"	"$(INTDIR)\eval.sbr" : $(SOURCE) $(DEP_CPP_EVAL_)\
- "$(INTDIR)"
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\buffer.obj" : $(SOURCE) $(DEP_CPP_BUFFE) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\buffer.sbr" : $(SOURCE) $(DEP_CPP_BUFFE) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\buffer.obj" : $(SOURCE) $(DEP_CPP_BUFFE) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\fileio.c
+DEP_CPP_FILEI=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_FILEI=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\fileio.obj" : $(SOURCE) $(DEP_CPP_FILEI) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\fileio.obj" : $(SOURCE) $(DEP_CPP_FILEI) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\fileio.sbr" : $(SOURCE) $(DEP_CPP_FILEI) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\fileio.obj" : $(SOURCE) $(DEP_CPP_FILEI) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\quickfix.c
+DEP_CPP_QUICK=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_QUICK=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\quickfix.obj" : $(SOURCE) $(DEP_CPP_QUICK) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\quickfix.obj" : $(SOURCE) $(DEP_CPP_QUICK) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\quickfix.sbr" : $(SOURCE) $(DEP_CPP_QUICK) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\quickfix.obj" : $(SOURCE) $(DEP_CPP_QUICK) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\memline.c
+DEP_CPP_MEMLI=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_MEMLI=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\memline.obj" : $(SOURCE) $(DEP_CPP_MEMLI) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\memline.obj" : $(SOURCE) $(DEP_CPP_MEMLI) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\memline.sbr" : $(SOURCE) $(DEP_CPP_MEMLI) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\memline.obj" : $(SOURCE) $(DEP_CPP_MEMLI) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\getchar.c
+DEP_CPP_GETCH=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_GETCH=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\getchar.obj" : $(SOURCE) $(DEP_CPP_GETCH) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\getchar.obj" : $(SOURCE) $(DEP_CPP_GETCH) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\getchar.sbr" : $(SOURCE) $(DEP_CPP_GETCH) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\getchar.obj" : $(SOURCE) $(DEP_CPP_GETCH) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\charset.c
+DEP_CPP_CHARS=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_CHARS=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\charset.obj" : $(SOURCE) $(DEP_CPP_CHARS) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\charset.obj" : $(SOURCE) $(DEP_CPP_CHARS) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\charset.sbr" : $(SOURCE) $(DEP_CPP_CHARS) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\charset.obj" : $(SOURCE) $(DEP_CPP_CHARS) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\version.c
+DEP_CPP_VERSI=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\version.h"\
+	".\vim.h"\
+	
+NODEP_CPP_VERSI=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\version.obj" : $(SOURCE) $(DEP_CPP_VERSI) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\version.obj" : $(SOURCE) $(DEP_CPP_VERSI) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\version.sbr" : $(SOURCE) $(DEP_CPP_VERSI) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\version.obj" : $(SOURCE) $(DEP_CPP_VERSI) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\memfile.c
+DEP_CPP_MEMFI=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_MEMFI=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\memfile.obj" : $(SOURCE) $(DEP_CPP_MEMFI) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\memfile.obj" : $(SOURCE) $(DEP_CPP_MEMFI) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\memfile.sbr" : $(SOURCE) $(DEP_CPP_MEMFI) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\memfile.obj" : $(SOURCE) $(DEP_CPP_MEMFI) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\message.c
+DEP_CPP_MESSA=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_MESSA=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\message.obj" : $(SOURCE) $(DEP_CPP_MESSA) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\message.obj" : $(SOURCE) $(DEP_CPP_MESSA) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\message.sbr" : $(SOURCE) $(DEP_CPP_MESSA) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\message.obj" : $(SOURCE) $(DEP_CPP_MESSA) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\normal.c
+DEP_CPP_NORMA=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_NORMA=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\normal.obj" : $(SOURCE) $(DEP_CPP_NORMA) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\normal.obj" : $(SOURCE) $(DEP_CPP_NORMA) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\normal.sbr" : $(SOURCE) $(DEP_CPP_NORMA) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\normal.obj" : $(SOURCE) $(DEP_CPP_NORMA) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\search.c
+DEP_CPP_SEARC=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_SEARC=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\search.obj" : $(SOURCE) $(DEP_CPP_SEARC) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\search.obj" : $(SOURCE) $(DEP_CPP_SEARC) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\search.sbr" : $(SOURCE) $(DEP_CPP_SEARC) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\search.obj" : $(SOURCE) $(DEP_CPP_SEARC) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\mark.c
+DEP_CPP_MARK_=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_MARK_=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\mark.obj" : $(SOURCE) $(DEP_CPP_MARK_) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\mark.obj" : $(SOURCE) $(DEP_CPP_MARK_) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\mark.sbr" : $(SOURCE) $(DEP_CPP_MARK_) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\mark.obj" : $(SOURCE) $(DEP_CPP_MARK_) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\misc1.c
+DEP_CPP_MISC1=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_MISC1=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\misc1.obj" : $(SOURCE) $(DEP_CPP_MISC1) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\misc1.obj" : $(SOURCE) $(DEP_CPP_MISC1) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\misc1.sbr" : $(SOURCE) $(DEP_CPP_MISC1) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\misc1.obj" : $(SOURCE) $(DEP_CPP_MISC1) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\term.c
+DEP_CPP_TERM_=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_TERM_=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\term.obj" : $(SOURCE) $(DEP_CPP_TERM_) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\term.obj" : $(SOURCE) $(DEP_CPP_TERM_) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\term.sbr" : $(SOURCE) $(DEP_CPP_TERM_) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\term.obj" : $(SOURCE) $(DEP_CPP_TERM_) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\tag.c
+DEP_CPP_TAG_C=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_TAG_C=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\tag.obj" : $(SOURCE) $(DEP_CPP_TAG_C) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\tag.obj" : $(SOURCE) $(DEP_CPP_TAG_C) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\tag.sbr" : $(SOURCE) $(DEP_CPP_TAG_C) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\tag.obj" : $(SOURCE) $(DEP_CPP_TAG_C) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\screen.c
+DEP_CPP_SCREE=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_SCREE=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\screen.obj" : $(SOURCE) $(DEP_CPP_SCREE) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\screen.obj" : $(SOURCE) $(DEP_CPP_SCREE) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\screen.sbr" : $(SOURCE) $(DEP_CPP_SCREE) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\screen.obj" : $(SOURCE) $(DEP_CPP_SCREE) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\ops.c
+DEP_CPP_OPS_C=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_OPS_C=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\ops.obj" : $(SOURCE) $(DEP_CPP_OPS_C) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\ops.obj" : $(SOURCE) $(DEP_CPP_OPS_C) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\ops.sbr" : $(SOURCE) $(DEP_CPP_OPS_C) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\ops.obj" : $(SOURCE) $(DEP_CPP_OPS_C) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\regexp.c
+DEP_CPP_REGEX=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_REGEX=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\regexp.obj" : $(SOURCE) $(DEP_CPP_REGEX) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\regexp.obj" : $(SOURCE) $(DEP_CPP_REGEX) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\regexp.sbr" : $(SOURCE) $(DEP_CPP_REGEX) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\regexp.obj" : $(SOURCE) $(DEP_CPP_REGEX) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\window.c
+DEP_CPP_WINDO=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_WINDO=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\window.obj" : $(SOURCE) $(DEP_CPP_WINDO) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\window.obj" : $(SOURCE) $(DEP_CPP_WINDO) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\window.sbr" : $(SOURCE) $(DEP_CPP_WINDO) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\window.obj" : $(SOURCE) $(DEP_CPP_WINDO) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\undo.c
+DEP_CPP_UNDO_=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_UNDO_=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\undo.obj" : $(SOURCE) $(DEP_CPP_UNDO_) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\undo.obj" : $(SOURCE) $(DEP_CPP_UNDO_) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\undo.sbr" : $(SOURCE) $(DEP_CPP_UNDO_) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\undo.obj" : $(SOURCE) $(DEP_CPP_UNDO_) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\digraph.c
+DEP_CPP_DIGRA=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_DIGRA=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\digraph.obj" : $(SOURCE) $(DEP_CPP_DIGRA) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\digraph.obj" : $(SOURCE) $(DEP_CPP_DIGRA) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\digraph.sbr" : $(SOURCE) $(DEP_CPP_DIGRA) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\digraph.obj" : $(SOURCE) $(DEP_CPP_DIGRA) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\main.c
+DEP_CPP_MAIN_=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_MAIN_=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\main.obj" : $(SOURCE) $(DEP_CPP_MAIN_) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\main.obj" : $(SOURCE) $(DEP_CPP_MAIN_) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\main.sbr" : $(SOURCE) $(DEP_CPP_MAIN_) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\main.obj" : $(SOURCE) $(DEP_CPP_MAIN_) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\option.c
+DEP_CPP_OPTIO=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_OPTIO=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\option.obj" : $(SOURCE) $(DEP_CPP_OPTIO) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\option.obj" : $(SOURCE) $(DEP_CPP_OPTIO) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\option.sbr" : $(SOURCE) $(DEP_CPP_OPTIO) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\option.obj" : $(SOURCE) $(DEP_CPP_OPTIO) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\vim.rc
+DEP_RSC_VIM_R=\
+	".\version.h"\
+	".\vim.ico"\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+
+"$(INTDIR)\vim.res" : $(SOURCE) $(DEP_RSC_VIM_R) "$(INTDIR)"
+   $(RSC) $(RSC_PROJ) $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+"$(INTDIR)\vim.res" : $(SOURCE) $(DEP_RSC_VIM_R) "$(INTDIR)"
+   $(RSC) $(RSC_PROJ) $(SOURCE)
 
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
 
 
-"$(INTDIR)\eval.obj" : $(SOURCE) $(DEP_CPP_EVAL_) "$(INTDIR)"
+"$(INTDIR)\vim.res" : $(SOURCE) $(DEP_RSC_VIM_R) "$(INTDIR)"
+   $(RSC) $(RSC_PROJ) $(SOURCE)
 
 
 !ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\ui.c
+DEP_CPP_UI_C32=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_UI_C32=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+
+"$(INTDIR)\ui.obj" : $(SOURCE) $(DEP_CPP_UI_C32) "$(INTDIR)"
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+"$(INTDIR)\ui.obj" : $(SOURCE) $(DEP_CPP_UI_C32) "$(INTDIR)"
+
+"$(INTDIR)\ui.sbr" : $(SOURCE) $(DEP_CPP_UI_C32) "$(INTDIR)"
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+
+"$(INTDIR)\ui.obj" : $(SOURCE) $(DEP_CPP_UI_C32) "$(INTDIR)"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
 
 SOURCE=.\ex_cmds.c
 DEP_CPP_EX_CM=\
@@ -1064,56 +2023,12 @@ DEP_CPP_EX_CM=\
 	".\option.h"\
 	".\os_win32.h"\
 	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
 	".\regexp.h"\
 	".\structs.h"\
 	".\term.h"\
 	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
 	
 NODEP_CPP_EX_CM=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
 	
 
 !IF  "$(CFG)" == "Vim - Win32 Release"
@@ -1125,8 +2040,9 @@ NODEP_CPP_EX_CM=\
 !ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
 
 
-"$(INTDIR)\ex_cmds.obj"	"$(INTDIR)\ex_cmds.sbr" : $(SOURCE) $(DEP_CPP_EX_CM)\
- "$(INTDIR)"
+"$(INTDIR)\ex_cmds.obj" : $(SOURCE) $(DEP_CPP_EX_CM) "$(INTDIR)"
+
+"$(INTDIR)\ex_cmds.sbr" : $(SOURCE) $(DEP_CPP_EX_CM) "$(INTDIR)"
 
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
@@ -1136,6 +2052,10 @@ NODEP_CPP_EX_CM=\
 
 
 !ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
 
 SOURCE=.\ex_docmd.c
 DEP_CPP_EX_DO=\
@@ -1149,56 +2069,12 @@ DEP_CPP_EX_DO=\
 	".\option.h"\
 	".\os_win32.h"\
 	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
 	".\regexp.h"\
 	".\structs.h"\
 	".\term.h"\
 	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
 	
 NODEP_CPP_EX_DO=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
 	
 
 !IF  "$(CFG)" == "Vim - Win32 Release"
@@ -1210,8 +2086,9 @@ NODEP_CPP_EX_DO=\
 !ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
 
 
-"$(INTDIR)\ex_docmd.obj"	"$(INTDIR)\ex_docmd.sbr" : $(SOURCE) $(DEP_CPP_EX_DO)\
- "$(INTDIR)"
+"$(INTDIR)\ex_docmd.obj" : $(SOURCE) $(DEP_CPP_EX_DO) "$(INTDIR)"
+
+"$(INTDIR)\ex_docmd.sbr" : $(SOURCE) $(DEP_CPP_EX_DO) "$(INTDIR)"
 
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
@@ -1221,11 +2098,14 @@ NODEP_CPP_EX_DO=\
 
 
 !ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
 
 SOURCE=.\ex_getln.c
 DEP_CPP_EX_GE=\
 	".\ascii.h"\
-	".\ex_cmds.h"\
 	".\feature.h"\
 	".\globals.h"\
 	".\gui.h"\
@@ -1234,56 +2114,12 @@ DEP_CPP_EX_GE=\
 	".\option.h"\
 	".\os_win32.h"\
 	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
 	".\regexp.h"\
 	".\structs.h"\
 	".\term.h"\
 	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
 	
 NODEP_CPP_EX_GE=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
 	
 
 !IF  "$(CFG)" == "Vim - Win32 Release"
@@ -1295,8 +2131,9 @@ NODEP_CPP_EX_GE=\
 !ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
 
 
-"$(INTDIR)\ex_getln.obj"	"$(INTDIR)\ex_getln.sbr" : $(SOURCE) $(DEP_CPP_EX_GE)\
- "$(INTDIR)"
+"$(INTDIR)\ex_getln.obj" : $(SOURCE) $(DEP_CPP_EX_GE) "$(INTDIR)"
+
+"$(INTDIR)\ex_getln.sbr" : $(SOURCE) $(DEP_CPP_EX_GE) "$(INTDIR)"
 
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
@@ -1307,10 +2144,13 @@ NODEP_CPP_EX_GE=\
 
 !ENDIF 
 
-SOURCE=.\fileio.c
-DEP_CPP_FILEI=\
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\syntax.c
+DEP_CPP_SYNTA=\
 	".\ascii.h"\
-	".\ex_cmds.h"\
 	".\feature.h"\
 	".\globals.h"\
 	".\gui.h"\
@@ -1319,198 +2159,43 @@ DEP_CPP_FILEI=\
 	".\option.h"\
 	".\os_win32.h"\
 	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
 	".\regexp.h"\
 	".\structs.h"\
 	".\term.h"\
 	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
 	
-NODEP_CPP_FILEI=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
+NODEP_CPP_SYNTA=\
 	
 
 !IF  "$(CFG)" == "Vim - Win32 Release"
 
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
-"$(INTDIR)\fileio.obj" : $(SOURCE) $(DEP_CPP_FILEI) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
+"$(INTDIR)\syntax.obj" : $(SOURCE) $(DEP_CPP_SYNTA) "$(INTDIR)"
 
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
 
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
-"$(INTDIR)\fileio.obj"	"$(INTDIR)\fileio.sbr" : $(SOURCE) $(DEP_CPP_FILEI)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
+"$(INTDIR)\syntax.obj" : $(SOURCE) $(DEP_CPP_SYNTA) "$(INTDIR)"
+
+"$(INTDIR)\syntax.sbr" : $(SOURCE) $(DEP_CPP_SYNTA) "$(INTDIR)"
 
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
 
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
-"$(INTDIR)\fileio.obj" : $(SOURCE) $(DEP_CPP_FILEI) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
+"$(INTDIR)\syntax.obj" : $(SOURCE) $(DEP_CPP_SYNTA) "$(INTDIR)"
 
 
 !ENDIF 
 
-SOURCE=.\getchar.c
-DEP_CPP_GETCH=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_GETCH=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\getchar.obj" : $(SOURCE) $(DEP_CPP_GETCH) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\getchar.obj"	"$(INTDIR)\getchar.sbr" : $(SOURCE) $(DEP_CPP_GETCH)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\getchar.obj" : $(SOURCE) $(DEP_CPP_GETCH) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ENDIF 
+# End Source File
+################################################################################
+# Begin Source File
 
 SOURCE=.\gui.c
 DEP_CPP_GUI_C=\
 	".\ascii.h"\
-	".\ex_cmds.h"\
 	".\feature.h"\
 	".\globals.h"\
 	".\gui.h"\
@@ -1519,56 +2204,12 @@ DEP_CPP_GUI_C=\
 	".\option.h"\
 	".\os_win32.h"\
 	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
 	".\regexp.h"\
 	".\structs.h"\
 	".\term.h"\
 	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
 	
 NODEP_CPP_GUI_C=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
 	
 
 !IF  "$(CFG)" == "Vim - Win32 Release"
@@ -1580,8 +2221,9 @@ NODEP_CPP_GUI_C=\
 !ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
 
 
-"$(INTDIR)\gui.obj"	"$(INTDIR)\gui.sbr" : $(SOURCE) $(DEP_CPP_GUI_C)\
- "$(INTDIR)"
+"$(INTDIR)\gui.obj" : $(SOURCE) $(DEP_CPP_GUI_C) "$(INTDIR)"
+
+"$(INTDIR)\gui.sbr" : $(SOURCE) $(DEP_CPP_GUI_C) "$(INTDIR)"
 
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
@@ -1592,13 +2234,13 @@ NODEP_CPP_GUI_C=\
 
 !ENDIF 
 
-SOURCE=.\gui_w32.c
+# End Source File
+################################################################################
+# Begin Source File
 
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-DEP_CPP_GUI_W=\
+SOURCE=.\eval.c
+DEP_CPP_EVAL_=\
 	".\ascii.h"\
-	".\ex_cmds.h"\
 	".\feature.h"\
 	".\globals.h"\
 	".\gui.h"\
@@ -1607,1577 +2249,115 @@ DEP_CPP_GUI_W=\
 	".\option.h"\
 	".\os_win32.h"\
 	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
 	".\regexp.h"\
 	".\structs.h"\
 	".\term.h"\
 	".\vim.h"\
 	
-
-"$(INTDIR)\gui_w32.obj" : $(SOURCE) $(DEP_CPP_GUI_W) "$(INTDIR)"
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-DEP_CPP_GUI_W=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_GUI_W=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-
-"$(INTDIR)\gui_w32.obj"	"$(INTDIR)\gui_w32.sbr" : $(SOURCE) $(DEP_CPP_GUI_W)\
- "$(INTDIR)"
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-DEP_CPP_GUI_W=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_GUI_W=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-
-"$(INTDIR)\gui_w32.obj" : $(SOURCE) $(DEP_CPP_GUI_W) "$(INTDIR)"
-
-
-!ENDIF 
-
-SOURCE=.\if_ole.cpp
-
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-DEP_CPP_IF_OL=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\if_ole.h"\
-	".\iid_ole.c"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	
-
-"$(INTDIR)\if_ole.obj" : $(SOURCE) $(DEP_CPP_IF_OL) "$(INTDIR)"
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-DEP_CPP_IF_OL=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\if_ole.h"\
-	".\iid_ole.c"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_IF_OL=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-
-"$(INTDIR)\if_ole.obj"	"$(INTDIR)\if_ole.sbr" : $(SOURCE) $(DEP_CPP_IF_OL)\
- "$(INTDIR)"
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-DEP_CPP_IF_OL=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\if_ole.h"\
-	".\iid_ole.c"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_IF_OL=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-
-"$(INTDIR)\if_ole.obj" : $(SOURCE) $(DEP_CPP_IF_OL) "$(INTDIR)"
-
-
-!ENDIF 
-
-SOURCE=.\main.c
-
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-DEP_CPP_MAIN_=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\main.obj" : $(SOURCE) $(DEP_CPP_MAIN_) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-DEP_CPP_MAIN_=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_MAIN_=\
-	".\config.h"\
-	".\farsi.c"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\main.obj"	"$(INTDIR)\main.sbr" : $(SOURCE) $(DEP_CPP_MAIN_)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-DEP_CPP_MAIN_=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_MAIN_=\
-	".\config.h"\
-	".\farsi.c"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\main.obj" : $(SOURCE) $(DEP_CPP_MAIN_) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ENDIF 
-
-SOURCE=.\mark.c
-DEP_CPP_MARK_=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_MARK_=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\mark.obj" : $(SOURCE) $(DEP_CPP_MARK_) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\mark.obj"	"$(INTDIR)\mark.sbr" : $(SOURCE) $(DEP_CPP_MARK_)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\mark.obj" : $(SOURCE) $(DEP_CPP_MARK_) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ENDIF 
-
-SOURCE=.\memfile.c
-DEP_CPP_MEMFI=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_MEMFI=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\memfile.obj" : $(SOURCE) $(DEP_CPP_MEMFI) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\memfile.obj"	"$(INTDIR)\memfile.sbr" : $(SOURCE) $(DEP_CPP_MEMFI)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\memfile.obj" : $(SOURCE) $(DEP_CPP_MEMFI) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ENDIF 
-
-SOURCE=.\memline.c
-DEP_CPP_MEMLI=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_MEMLI=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\memline.obj" : $(SOURCE) $(DEP_CPP_MEMLI) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\memline.obj"	"$(INTDIR)\memline.sbr" : $(SOURCE) $(DEP_CPP_MEMLI)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\memline.obj" : $(SOURCE) $(DEP_CPP_MEMLI) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ENDIF 
-
-SOURCE=.\message.c
-DEP_CPP_MESSA=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_MESSA=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\message.obj" : $(SOURCE) $(DEP_CPP_MESSA) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\message.obj"	"$(INTDIR)\message.sbr" : $(SOURCE) $(DEP_CPP_MESSA)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\message.obj" : $(SOURCE) $(DEP_CPP_MESSA) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ENDIF 
-
-SOURCE=.\misc1.c
-DEP_CPP_MISC1=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_MISC1=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\misc1.obj" : $(SOURCE) $(DEP_CPP_MISC1) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\misc1.obj"	"$(INTDIR)\misc1.sbr" : $(SOURCE) $(DEP_CPP_MISC1)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\misc1.obj" : $(SOURCE) $(DEP_CPP_MISC1) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ENDIF 
-
-SOURCE=.\misc2.c
-DEP_CPP_MISC2=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_MISC2=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
+NODEP_CPP_EVAL_=\
 	
 
 !IF  "$(CFG)" == "Vim - Win32 Release"
 
 
-"$(INTDIR)\misc2.obj" : $(SOURCE) $(DEP_CPP_MISC2) "$(INTDIR)"
+"$(INTDIR)\eval.obj" : $(SOURCE) $(DEP_CPP_EVAL_) "$(INTDIR)"
 
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
 
 
-"$(INTDIR)\misc2.obj"	"$(INTDIR)\misc2.sbr" : $(SOURCE) $(DEP_CPP_MISC2)\
- "$(INTDIR)"
+"$(INTDIR)\eval.obj" : $(SOURCE) $(DEP_CPP_EVAL_) "$(INTDIR)"
+
+"$(INTDIR)\eval.sbr" : $(SOURCE) $(DEP_CPP_EVAL_) "$(INTDIR)"
 
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
 
 
-"$(INTDIR)\misc2.obj" : $(SOURCE) $(DEP_CPP_MISC2) "$(INTDIR)"
+"$(INTDIR)\eval.obj" : $(SOURCE) $(DEP_CPP_EVAL_) "$(INTDIR)"
 
 
 !ENDIF 
 
-SOURCE=.\normal.c
-DEP_CPP_NORMA=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_NORMA=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\normal.obj" : $(SOURCE) $(DEP_CPP_NORMA) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\normal.obj"	"$(INTDIR)\normal.sbr" : $(SOURCE) $(DEP_CPP_NORMA)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\normal.obj" : $(SOURCE) $(DEP_CPP_NORMA) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ENDIF 
-
-SOURCE=.\ops.c
-DEP_CPP_OPS_C=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_OPS_C=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\ops.obj" : $(SOURCE) $(DEP_CPP_OPS_C) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\ops.obj"	"$(INTDIR)\ops.sbr" : $(SOURCE) $(DEP_CPP_OPS_C)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\ops.obj" : $(SOURCE) $(DEP_CPP_OPS_C) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ENDIF 
-
-SOURCE=.\option.c
-DEP_CPP_OPTIO=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_OPTIO=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\option.obj" : $(SOURCE) $(DEP_CPP_OPTIO) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\option.obj"	"$(INTDIR)\option.sbr" : $(SOURCE) $(DEP_CPP_OPTIO)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\option.obj" : $(SOURCE) $(DEP_CPP_OPTIO) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ENDIF 
+# End Source File
+################################################################################
+# Begin Source File
 
 SOURCE=.\os_w32exe.c
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
 DEP_CPP_OS_W3=\
 	".\ascii.h"\
-	".\ex_cmds.h"\
 	".\feature.h"\
 	".\globals.h"\
 	".\gui.h"\
 	".\keymap.h"\
 	".\macros.h"\
-	".\option.h"\
 	".\os_win32.h"\
 	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
 	".\regexp.h"\
 	".\structs.h"\
 	".\term.h"\
 	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
 	
 NODEP_CPP_OS_W3=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
 	
-
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
 
 "$(INTDIR)\os_w32exe.obj" : $(SOURCE) $(DEP_CPP_OS_W3) "$(INTDIR)"
 
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
 
+DEP_CPP_OS_W3=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_OS_W3=\
+	
 
-"$(INTDIR)\os_w32exe.obj"	"$(INTDIR)\os_w32exe.sbr" : $(SOURCE)\
- $(DEP_CPP_OS_W3) "$(INTDIR)"
+"$(INTDIR)\os_w32exe.obj" : $(SOURCE) $(DEP_CPP_OS_W3) "$(INTDIR)"
+
+"$(INTDIR)\os_w32exe.sbr" : $(SOURCE) $(DEP_CPP_OS_W3) "$(INTDIR)"
 
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
 
+DEP_CPP_OS_W3=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_OS_W3=\
+	
 
 "$(INTDIR)\os_w32exe.obj" : $(SOURCE) $(DEP_CPP_OS_W3) "$(INTDIR)"
 
 
 !ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
 
 SOURCE=.\os_win32.c
 
@@ -3185,7 +2365,6 @@ SOURCE=.\os_win32.c
 
 DEP_CPP_OS_WI=\
 	".\ascii.h"\
-	".\ex_cmds.h"\
 	".\feature.h"\
 	".\globals.h"\
 	".\gui.h"\
@@ -3194,45 +2373,12 @@ DEP_CPP_OS_WI=\
 	".\option.h"\
 	".\os_win32.h"\
 	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
 	".\regexp.h"\
 	".\structs.h"\
 	".\term.h"\
 	".\vim.h"\
+	
+NODEP_CPP_OS_WI=\
 	
 
 "$(INTDIR)\os_win32.obj" : $(SOURCE) $(DEP_CPP_OS_WI) "$(INTDIR)"
@@ -3242,7 +2388,6 @@ DEP_CPP_OS_WI=\
 
 DEP_CPP_OS_WI=\
 	".\ascii.h"\
-	".\ex_cmds.h"\
 	".\feature.h"\
 	".\globals.h"\
 	".\gui.h"\
@@ -3251,67 +2396,23 @@ DEP_CPP_OS_WI=\
 	".\option.h"\
 	".\os_win32.h"\
 	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
 	".\regexp.h"\
 	".\structs.h"\
 	".\term.h"\
 	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
 	
 NODEP_CPP_OS_WI=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
 	
 
-"$(INTDIR)\os_win32.obj"	"$(INTDIR)\os_win32.sbr" : $(SOURCE) $(DEP_CPP_OS_WI)\
- "$(INTDIR)"
+"$(INTDIR)\os_win32.obj" : $(SOURCE) $(DEP_CPP_OS_WI) "$(INTDIR)"
+
+"$(INTDIR)\os_win32.sbr" : $(SOURCE) $(DEP_CPP_OS_WI) "$(INTDIR)"
 
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
 
 DEP_CPP_OS_WI=\
 	".\ascii.h"\
-	".\ex_cmds.h"\
 	".\feature.h"\
 	".\globals.h"\
 	".\gui.h"\
@@ -3320,56 +2421,12 @@ DEP_CPP_OS_WI=\
 	".\option.h"\
 	".\os_win32.h"\
 	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
 	".\regexp.h"\
 	".\structs.h"\
 	".\term.h"\
 	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
 	
 NODEP_CPP_OS_WI=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
 	
 
 "$(INTDIR)\os_win32.obj" : $(SOURCE) $(DEP_CPP_OS_WI) "$(INTDIR)"
@@ -3377,10 +2434,106 @@ NODEP_CPP_OS_WI=\
 
 !ENDIF 
 
-SOURCE=.\quickfix.c
-DEP_CPP_QUICK=\
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\if_ole.cpp
+DEP_CPP_IF_OL=\
 	".\ascii.h"\
-	".\ex_cmds.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\if_ole.h"\
+	".\iid_ole.c"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_IF_OL=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+
+"$(INTDIR)\if_ole.obj" : $(SOURCE) $(DEP_CPP_IF_OL) "$(INTDIR)"
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+"$(INTDIR)\if_ole.obj" : $(SOURCE) $(DEP_CPP_IF_OL) "$(INTDIR)"
+
+"$(INTDIR)\if_ole.sbr" : $(SOURCE) $(DEP_CPP_IF_OL) "$(INTDIR)"
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+
+"$(INTDIR)\if_ole.obj" : $(SOURCE) $(DEP_CPP_IF_OL) "$(INTDIR)"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\misc2.c
+DEP_CPP_MISC2=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_MISC2=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+
+"$(INTDIR)\misc2.obj" : $(SOURCE) $(DEP_CPP_MISC2) "$(INTDIR)"
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+"$(INTDIR)\misc2.obj" : $(SOURCE) $(DEP_CPP_MISC2) "$(INTDIR)"
+
+"$(INTDIR)\misc2.sbr" : $(SOURCE) $(DEP_CPP_MISC2) "$(INTDIR)"
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+
+"$(INTDIR)\misc2.obj" : $(SOURCE) $(DEP_CPP_MISC2) "$(INTDIR)"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\gui_w32.c
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+DEP_CPP_GUI_W=\
+	".\ascii.h"\
 	".\feature.h"\
 	".\globals.h"\
 	".\gui.h"\
@@ -3389,98 +2542,21 @@ DEP_CPP_QUICK=\
 	".\option.h"\
 	".\os_win32.h"\
 	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
 	".\regexp.h"\
 	".\structs.h"\
 	".\term.h"\
 	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
 	
-NODEP_CPP_QUICK=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
+NODEP_CPP_GUI_W=\
 	
 
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\quickfix.obj" : $(SOURCE) $(DEP_CPP_QUICK) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
+"$(INTDIR)\gui_w32.obj" : $(SOURCE) $(DEP_CPP_GUI_W) "$(INTDIR)"
 
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
 
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\quickfix.obj"	"$(INTDIR)\quickfix.sbr" : $(SOURCE) $(DEP_CPP_QUICK)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\quickfix.obj" : $(SOURCE) $(DEP_CPP_QUICK) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ENDIF 
-
-SOURCE=.\regexp.c
-DEP_CPP_REGEX=\
+DEP_CPP_GUI_W=\
 	".\ascii.h"\
-	".\ex_cmds.h"\
 	".\feature.h"\
 	".\globals.h"\
 	".\gui.h"\
@@ -3489,98 +2565,23 @@ DEP_CPP_REGEX=\
 	".\option.h"\
 	".\os_win32.h"\
 	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
 	".\regexp.h"\
 	".\structs.h"\
 	".\term.h"\
 	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
 	
-NODEP_CPP_REGEX=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
+NODEP_CPP_GUI_W=\
 	
 
-!IF  "$(CFG)" == "Vim - Win32 Release"
+"$(INTDIR)\gui_w32.obj" : $(SOURCE) $(DEP_CPP_GUI_W) "$(INTDIR)"
 
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\regexp.obj" : $(SOURCE) $(DEP_CPP_REGEX) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\regexp.obj"	"$(INTDIR)\regexp.sbr" : $(SOURCE) $(DEP_CPP_REGEX)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
+"$(INTDIR)\gui_w32.sbr" : $(SOURCE) $(DEP_CPP_GUI_W) "$(INTDIR)"
 
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
 
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\regexp.obj" : $(SOURCE) $(DEP_CPP_REGEX) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ENDIF 
-
-SOURCE=.\screen.c
-DEP_CPP_SCREE=\
+DEP_CPP_GUI_W=\
 	".\ascii.h"\
-	".\ex_cmds.h"\
 	".\feature.h"\
 	".\globals.h"\
 	".\gui.h"\
@@ -3589,890 +2590,58 @@ DEP_CPP_SCREE=\
 	".\option.h"\
 	".\os_win32.h"\
 	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
 	".\regexp.h"\
 	".\structs.h"\
 	".\term.h"\
 	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
 	
-NODEP_CPP_SCREE=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
+NODEP_CPP_GUI_W=\
 	
 
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\screen.obj" : $(SOURCE) $(DEP_CPP_SCREE) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\screen.obj"	"$(INTDIR)\screen.sbr" : $(SOURCE) $(DEP_CPP_SCREE)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\screen.obj" : $(SOURCE) $(DEP_CPP_SCREE) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
+"$(INTDIR)\gui_w32.obj" : $(SOURCE) $(DEP_CPP_GUI_W) "$(INTDIR)"
 
 
 !ENDIF 
 
-SOURCE=.\search.c
-DEP_CPP_SEARC=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_SEARC=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\search.obj" : $(SOURCE) $(DEP_CPP_SEARC) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\search.obj"	"$(INTDIR)\search.sbr" : $(SOURCE) $(DEP_CPP_SEARC)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\search.obj" : $(SOURCE) $(DEP_CPP_SEARC) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ENDIF 
-
-SOURCE=.\syntax.c
-DEP_CPP_SYNTA=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_SYNTA=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-
-"$(INTDIR)\syntax.obj" : $(SOURCE) $(DEP_CPP_SYNTA) "$(INTDIR)"
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-
-"$(INTDIR)\syntax.obj"	"$(INTDIR)\syntax.sbr" : $(SOURCE) $(DEP_CPP_SYNTA)\
- "$(INTDIR)"
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-
-"$(INTDIR)\syntax.obj" : $(SOURCE) $(DEP_CPP_SYNTA) "$(INTDIR)"
-
-
-!ENDIF 
-
-SOURCE=.\tag.c
-DEP_CPP_TAG_C=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_TAG_C=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\tag.obj" : $(SOURCE) $(DEP_CPP_TAG_C) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\tag.obj"	"$(INTDIR)\tag.sbr" : $(SOURCE) $(DEP_CPP_TAG_C)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\tag.obj" : $(SOURCE) $(DEP_CPP_TAG_C) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ENDIF 
-
-SOURCE=.\term.c
-DEP_CPP_TERM_=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_TERM_=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\term.obj" : $(SOURCE) $(DEP_CPP_TERM_) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\term.obj"	"$(INTDIR)\term.sbr" : $(SOURCE) $(DEP_CPP_TERM_)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\term.obj" : $(SOURCE) $(DEP_CPP_TERM_) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ENDIF 
-
-SOURCE=.\ui.c
-DEP_CPP_UI_C40=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_UI_C40=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-
-"$(INTDIR)\ui.obj" : $(SOURCE) $(DEP_CPP_UI_C40) "$(INTDIR)"
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-
-"$(INTDIR)\ui.obj"	"$(INTDIR)\ui.sbr" : $(SOURCE) $(DEP_CPP_UI_C40) "$(INTDIR)"
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-
-"$(INTDIR)\ui.obj" : $(SOURCE) $(DEP_CPP_UI_C40) "$(INTDIR)"
-
-
-!ENDIF 
-
-SOURCE=.\undo.c
-DEP_CPP_UNDO_=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_UNDO_=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\undo.obj" : $(SOURCE) $(DEP_CPP_UNDO_) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\undo.obj"	"$(INTDIR)\undo.sbr" : $(SOURCE) $(DEP_CPP_UNDO_)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\undo.obj" : $(SOURCE) $(DEP_CPP_UNDO_) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ENDIF 
-
-SOURCE=.\version.c
-DEP_CPP_VERSI=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\version.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_VERSI=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\version.obj" : $(SOURCE) $(DEP_CPP_VERSI) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\version.obj"	"$(INTDIR)\version.sbr" : $(SOURCE) $(DEP_CPP_VERSI)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\version.obj" : $(SOURCE) $(DEP_CPP_VERSI) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ENDIF 
-
-SOURCE=.\vim.rc
-DEP_RSC_VIM_R=\
-	".\version.h"\
-	".\VIM.TLB"\
-	".\vim.ico"\
-	
-
-"$(INTDIR)\vim.res" : $(SOURCE) $(DEP_RSC_VIM_R) "$(INTDIR)"
-	$(RSC) $(RSC_PROJ) $(SOURCE)
-
-
-SOURCE=.\window.c
-DEP_CPP_WINDO=\
-	".\ascii.h"\
-	".\ex_cmds.h"\
-	".\feature.h"\
-	".\globals.h"\
-	".\gui.h"\
-	".\keymap.h"\
-	".\macros.h"\
-	".\option.h"\
-	".\os_win32.h"\
-	".\proto.h"\
-	".\proto\buffer.pro"\
-	".\proto\charset.pro"\
-	".\proto\digraph.pro"\
-	".\proto\edit.pro"\
-	".\proto\eval.pro"\
-	".\proto\ex_cmds.pro"\
-	".\proto\ex_docmd.pro"\
-	".\proto\ex_getln.pro"\
-	".\proto\fileio.pro"\
-	".\proto\getchar.pro"\
-	".\proto\gui.pro"\
-	".\proto\gui_w32.pro"\
-	".\proto\if_ole.pro"\
-	".\proto\if_python.pro"\
-	".\proto\main.pro"\
-	".\proto\mark.pro"\
-	".\proto\memfile.pro"\
-	".\proto\memline.pro"\
-	".\proto\message.pro"\
-	".\proto\misc1.pro"\
-	".\proto\misc2.pro"\
-	".\proto\normal.pro"\
-	".\proto\ops.pro"\
-	".\proto\option.pro"\
-	".\proto\os_win32.pro"\
-	".\proto\quickfix.pro"\
-	".\proto\regexp.pro"\
-	".\proto\screen.pro"\
-	".\proto\search.pro"\
-	".\proto\syntax.pro"\
-	".\proto\tag.pro"\
-	".\proto\term.pro"\
-	".\proto\ui.pro"\
-	".\proto\undo.pro"\
-	".\proto\version.pro"\
-	".\proto\window.pro"\
-	".\regexp.h"\
-	".\structs.h"\
-	".\term.h"\
-	".\vim.h"\
-	{$(INCLUDE)}"sys\stat.h"\
-	{$(INCLUDE)}"sys\types.h"\
-	
-NODEP_CPP_WINDO=\
-	".\config.h"\
-	".\farsi.h"\
-	".\osdef.h"\
-	".\proto\os_vms.pro"\
-	".\SniffVim.h"\
-	".\vms.h"\
-	
-
-!IF  "$(CFG)" == "Vim - Win32 Release"
-
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
- /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\window.obj" : $(SOURCE) $(DEP_CPP_WINDO) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)\\" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\window.obj"	"$(INTDIR)\window.sbr" : $(SOURCE) $(DEP_CPP_WINDO)\
- "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
-
-CPP_SWITCHES=/nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
- "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\window.obj" : $(SOURCE) $(DEP_CPP_WINDO) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ENDIF 
+# End Source File
+################################################################################
+# Begin Source File
 
 SOURCE=.\if_ole.idl
 
 !IF  "$(CFG)" == "Vim - Win32 Release"
 
+# Begin Custom Build
 InputPath=.\if_ole.idl
 
-"iid_ole.c"	"if_ole.h"	"vim.tlb"	 : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	midl /tlb vim.tlb /iid iid_ole.c /proxy nul /header if_ole.h $(InputPath)
+".\iid_ole.c"	".\if_ole.h"	".\vim.tlb"	 : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	midl /tlb .\vim.tlb /iid .\iid_ole.c /proxy nul /header .\if_ole.h $(InputPath)
+
+# End Custom Build
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
 
+# Begin Custom Build
+InputPath=.\if_ole.idl
+
+".\iid_ole.c"	".\if_ole.h"	".\vim.tlb"	 : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	midl /tlb .\vim.tlb /iid .\iid_ole.c /proxy nul /header .\if_ole.h $(InputPath)
+
+# End Custom Build
+
 !ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
 
+# Begin Custom Build
+InputPath=.\if_ole.idl
+
+".\iid_ole.c"	".\if_ole.h"	".\vim.tlb"	 : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	midl /tlb .\vim.tlb /iid .\iid_ole.c /proxy nul /header .\if_ole.h $(InputPath)
+
+# End Custom Build
+
 !ENDIF 
 
-
-!ENDIF 
-
+# End Source File
+# End Target
+# End Project
+################################################################################

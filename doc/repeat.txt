@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 5.0.  Last modification: 1998 Jan 25
+*repeat.txt*    For Vim version 5.1.  Last modification: 1998 Mar 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -14,7 +14,9 @@ Repeating commands					*repeating*
 1. Single repeats					*single-repeat*
 
 							*.*
-.			Repeat last change with count replaced with [count].
+.			Repeat last change, with count replaced with [count].
+			Also repeat a yank command, when the 'y' flag is
+			included in 'cpoptions'.
 
 Simple changes can be repeated with the "." command.  Without a count, the
 count of the last change is used.  If you enter a count, it will replace the
@@ -48,7 +50,8 @@ marking each line where a match occurs.  In a second scan the [cmd] is
 executed for each marked line with its line number prepended.  If a line is
 changed or deleted its mark disappears.  The default for [range] is the whole
 buffer (1,$).  Use "CTRL-C" to interrupt the command.  If an error message is
-given for a line the global command aborts.
+given for a line, the command for that line is aborted and the global command
+continues with the next matching line.
 
 To repeat a non-Ex command, you can use the ":normal" command:
 	:g/pat/normal {commands}
@@ -85,7 +88,7 @@ q			Stops recording.  (Implementation note: The 'q' that
 @<0-9a-z".=>		Execute the contents of register <0-9a-z".=> [count]
 			times.  Note that register '%' (name of the current
 			file) and '#' (name of the alternate file) cannot be
-			used.  For "@=" you are promted to enter an
+			used.  For "@=" you are prompted to enter an
 			expression.  The result of the expression is then
 			executed.  See also |@:|.  {Vi: only named registers}
 

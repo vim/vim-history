@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 5.0.  Last modification: 1998 Feb 14
+*change.txt*    For Vim version 5.1.  Last modification: 1998 Apr 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -796,7 +796,8 @@ gq{motion}		Format the lines that were moved over.  The length of
 			used (with a maximum of 79).  {not in Vi}
 			NOTE: The "Q" command was formerly used for this.  If
 			you still want to use "Q" for formatting, use this
-			mapping: ":nnoremap Q gq"
+			mapping:
+>				:nnoremap Q gq
 
 							*v_gq*
 {Visual}gq		Format the highlighted text.  (see the chapter on
@@ -818,6 +819,8 @@ If the 'autoindent' option is on, the indent of the first line is used for
 the following lines.
 
 Empty lines are left unchanged (but lines with spaces or tabs are!).
+
+The 'joinspaces' option is used where lines are joined together.
 
 The 'formatprg' option can be set to the name of an external program, which
 will be used instead of the internal function.  The 'textwidth' and other
@@ -1222,13 +1225,21 @@ too: "-0.5s" is minus half a 'shiftwidth'.  The examples given below assume a
 	      with '(' line up with the unclosed parentheses.  (default
 	      'shiftwidth' * 2).
 
-	        cino=                     cino=(0
-		  if (c1 && (c2 ||          if (c1 && (c2 ||
-		      	  c3))                         c3))
-		      foo;                      foo;
+		cino=			  cino=(0
+		  if (c1 && (c2 ||	    if (c1 && (c2 ||
+			      c3)		       c3))
+		      foo;			foo;
 		  if (c1 &&		    if (c1 &&
-		          (c2 || c3)            (c2 || c3)
-		     }                         }
+			  (c2 || c3)		(c2 || c3)
+		     }			       }
+
+	uN    Same as (N, but for when one level deeper.  (default
+	      'shiftwidth').
+
+		cino=			  cino=u2
+		  if (c123456789	    if (c123456789	 
+			  && (c22345		    && (c22345	 
+			      || c3))		      || c3))  
 
 	)N    Unclosed parentheses will be searched for at most N lines away.
 	      This is just to limit the time needed to search for parentheses.

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Verilog
 " Maintainer:	Mun Johl <mj@core.rose.hp.com>
-" Last change:  Wed Sep 17 12:58:29 PDT 1997
+" Last Update:  Fri Feb 20 08:47:46 PST 1998
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -9,7 +9,7 @@ syn clear
 " A bunch of useful Verilog keywords
 syn keyword verilogStatement   disable assign deassign force release
 syn keyword verilogStatement   parameter function endfunction
-syn keyword verilogStatement   always initial module endmodule
+syn keyword verilogStatement   always initial module endmodule or
 syn keyword verilogStatement   task endtask
 syn keyword verilogStatement   input output inout reg wire
 syn keyword verilogStatement   posedge negedge wait

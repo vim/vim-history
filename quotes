@@ -1,9 +1,17 @@
 Here are some quotes about VIM that I collected from news and mail (only the
-good ones, of course).
+good ones, of course :-).
 
+vim (vim) noun - Ebullient vitality and energy.  [Latin, accusative of vis,
+strength] (Dictionary)
 
 VIM is so much better than vi that a great many of my old vi :map's became
 immediately obsolete! (Tony Nugent, Australia)
+
+Boy, I thought I knew almost everything about Vim, but every time I browse the
+online documentation, I hit upon a minor but cool aspect of a Vim feature that
+I didn't know before!  I must say the documentation is one the finest I've
+ever seen in a product -- even better than most commercial products.
+(Gautam Mudunuri)
 
 VIM 4.5 is really a fantastic editor.  It has sooooo many features and more
 importantly, the defaults are so well thought out that you really dont have to
@@ -16,6 +24,10 @@ Vim clones?  (Darren Hiebert)
 I read about [auto-positioning-in-file-based-on-the-errors-from-make] in one
 of those "Perfect Programmer's Editor" threads and was delighted to discover
 that VIM already supports it.  (Brendan Macmillan, Australia)
+
+I just discovered VIM (5.0) and I'm telling everyone I know about it!
+I tell them VIM stands for VI for the new (M)illenium. Thanks so much!
+(Matt F. Valentine)
 
 I think from now on "vi" should be called "Vim Imitation", not the other way
 around.  (Rungun Ramanathan)

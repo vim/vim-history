@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language   : C-shell (csh)
 " Maintainer : Charles E. Campbell, Jr.
-" Last change: December 23, 1997
+" Last change: March 30, 1997
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -90,7 +90,7 @@ syn match cshNumber	"-\=\<[0-9]\+\>"
 if !exists("did_csh_syntax_inits")
   let did_csh_syntax_inits = 1
   " The default methods for highlighting.  Can be overridden later
-  hi link cshArgv	cshVariables
+  hi link cshArgv		cshVariables
   hi link cshBckQuote	cshCommand
   hi link cshDblQuote	cshString
   hi link cshExprUsing	cshStatement
@@ -108,11 +108,11 @@ if !exists("did_csh_syntax_inits")
   hi link cshCommand	Statement
   hi link cshComment	Comment
   hi link cshConditional	Conditional
-"  hi link cshIdentifier	Identifier
   hi link cshIdentifier	Error
   hi link cshModifier	Special
   hi link cshNoEndline	Error
   hi link cshNumber	Number
+  hi link cshOperator	Operator
   hi link cshRedir	Statement
   hi link cshRepeat	Repeat
   hi link cshShellVariables	Special
@@ -122,8 +122,6 @@ if !exists("did_csh_syntax_inits")
   hi link cshSubstError	Error
   hi link cshTodo	Todo
   hi link cshVariables	Type
-
-  hi cshOperator	term=bold cterm=NONE gui=NONE gui=bold guifg=purple cterm=bold ctermfg=5
 endif
 
 let b:current_syntax = "csh"

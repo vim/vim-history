@@ -1303,7 +1303,10 @@ do_pending_operator(cap, searchbuff,
     if ((VIsual_active || finish_op) && oap->op_type != OP_NOP)
     {
 	oap->is_VIsual = VIsual_active;
-	if (oap->op_type != OP_YANK && !VIsual_active)	/* can't redo yank */
+
+	/* only redo yank when 'y' flag is in 'cpoptions' */
+	if ((vim_strchr(p_cpo, CPO_YANK) != NULL || oap->op_type != OP_YANK)
+		&& !VIsual_active)
 	{
 	    prep_redo(oap->regname, cap->count0, oap->op_prechar,
 			op_chars[oap->op_type - 1], cap->cmdchar, cap->nchar);
@@ -1436,8 +1439,10 @@ do_pending_operator(cap, searchbuff,
 		    resel_VIsual_col = oap->end.col - oap->start.col + 1;
 		resel_VIsual_line_count = oap->line_count;
 	    }
-						/* can't redo yank and : */
-	    if (oap->op_type != OP_YANK && oap->op_type != OP_COLON)
+
+	    /* can't redo yank (unless 'y' is in 'cpoptions') and ":" */
+	    if ((vim_strchr(p_cpo, CPO_YANK) != NULL || oap->op_type != OP_YANK)
+		    && oap->op_type != OP_COLON)
 	    {
 		prep_redo(oap->regname, 0L, NUL, 'v', oap->op_prechar,
 						  op_chars[oap->op_type - 1]);
@@ -1635,9 +1640,9 @@ do_pending_operator(cap, searchbuff,
 	    /*
 	     * if 'sol' not set, go back to old column for some commands
 	     */
-	    if (!p_sol && oap->motion_type == MLINE &&
-		    (oap->op_type == OP_LSHIFT || oap->op_type == OP_RSHIFT ||
-						   oap->op_type == OP_DELETE))
+	    if (!p_sol && oap->motion_type == MLINE && !oap->end_adjusted
+		    && (oap->op_type == OP_LSHIFT || oap->op_type == OP_RSHIFT
+						|| oap->op_type == OP_DELETE))
 		coladvance(curwin->w_curswant = old_col);
 	    oap->op_type = OP_NOP;
 	}
@@ -1764,9 +1769,9 @@ do_mouse(oap, c, dir, count, fix_indent)
     int	    jump_flags = 0;	/* flags for jump_to_mouse() */
     FPOS    start_visual;
     FPOS    end_visual;
-    BUF	    *save_buffer;
     int	    diff;
     int	    moved;		/* Has cursor moved? */
+    int	    in_status_line;	/* mouse in status line */
     int	    c1, c2;
     int	    VIsual_was_active = VIsual_active;
     int	    regname;
@@ -1896,7 +1901,7 @@ do_mouse(oap, c, dir, count, fix_indent)
 	else if (State & INSERT)
 	{
 	    if (regname == '.')
-		insert_reg(regname);
+		insert_reg(regname, TRUE);
 	    else
 	    {
 #ifdef USE_CLIPBOARD
@@ -1904,10 +1909,7 @@ do_mouse(oap, c, dir, count, fix_indent)
 		    regname = '*';
 #endif
 		if (State == REPLACE && !yank_register_mline(regname))
-		{
-		    stuffcharReadbuff(Ctrl('R'));
-		    stuffcharReadbuff(regname == 0 ? '"' : regname);
-		}
+		    insert_reg(regname, TRUE);
 		else
 		{
 		    do_put(regname, BACKWARD, 1L, fix_indent);
@@ -1917,8 +1919,9 @@ do_mouse(oap, c, dir, count, fix_indent)
 		    if (gchar_cursor() != NUL)
 			++curwin->w_cursor.col;
 
-		    /* Repeat it with CTRL-R x, not exactly the same, but
-		     * mostly works fine. */
+		    /* Repeat it with CTRL-R CTRL-R x.  Not exactly the same,
+		     * but mostly works fine. */
+		    AppendCharToRedobuff(Ctrl('R'));
 		    AppendCharToRedobuff(Ctrl('R'));
 		    AppendCharToRedobuff(regname == 0 ? '"' : regname);
 		}
@@ -1930,7 +1933,7 @@ do_mouse(oap, c, dir, count, fix_indent)
     }
 
     if (!is_click)
-	jump_flags |= MOUSE_FOCUS;
+	jump_flags |= MOUSE_FOCUS | MOUSE_DID_MOVE;
 
     start_visual.lnum = 0;
 
@@ -1941,11 +1944,10 @@ do_mouse(oap, c, dir, count, fix_indent)
 	{
 	    if (is_click)
 	    {
+		/* stop Visual mode for a left click in a window, but not when
+		 * on a status line */
 		if (VIsual_active)
-		{
-		    end_visual_mode();
-		    update_curbuf(NOT_VALID);
-		}
+		    jump_flags |= MOUSE_MAY_STOP_VIS;
 	    }
 	    else
 		jump_flags |= MOUSE_MAY_VIS;
@@ -1973,35 +1975,25 @@ do_mouse(oap, c, dir, count, fix_indent)
 	}
     }
 
-    if (!is_drag)
+    /*
+     * If an operator is pending, ignore all drags and releases until the
+     * next mouse click.
+     */
+    if (!is_drag && oap != NULL && oap->op_type != OP_NOP)
     {
-	/*
-	 * If an operator is pending, ignore all drags and releases until the
-	 * next mouse click.
-	 */
-	if (oap != NULL && oap->op_type != OP_NOP)
-	{
-	    got_click = FALSE;		/* ignore drag&release now */
-	    oap->motion_type = MCHAR;
-	}
+	got_click = FALSE;
+	oap->motion_type = MCHAR;
     }
 
     /*
      * Jump!
      */
-    if (!is_click)
-	jump_flags |= MOUSE_DID_MOVE;
-    save_buffer = curbuf;
-    moved = (jump_to_mouse(jump_flags,
-		      oap == NULL ? NULL : &(oap->inclusive)) & CURSOR_MOVED);
+    jump_flags = jump_to_mouse(jump_flags,
+				      oap == NULL ? NULL : &(oap->inclusive));
+    moved = (jump_flags & CURSOR_MOVED);
+    in_status_line = ((jump_flags & IN_STATUS_LINE) == IN_STATUS_LINE);
 
-    /* When jumping to another buffer, stop visual mode */
-    if (curbuf != save_buffer && VIsual_active)
-    {
-	end_visual_mode();
-	update_curbuf(NOT_VALID);	/* delete the inversion */
-    }
-    else if (start_visual.lnum)	    /* right click in visual mode */
+    if (start_visual.lnum)		/* right click in visual mode */
     {
 	/*
 	 * In Visual-block mode, divide the area in four, pick up the corner
@@ -2160,7 +2152,9 @@ do_mouse(oap, c, dir, count, fix_indent)
 	    stuffcharReadbuff('#');
     }
 
-    /* Handle double clicks */
+    /* Handle double clicks, unless on status line */
+    else if (in_status_line)
+	;
     else if ((mod_mask & MOD_MASK_MULTI_CLICK) && (State & (NORMAL | INSERT)))
     {
 	if (is_click || !VIsual_active)
@@ -3004,7 +2998,7 @@ do_ident(cap, searchp)
     int		g_cmd;		/* "g" command */
     char_u	*aux_ptr;
 
-    if (cap->cmdchar == 'g')	/* "g*", "g#" and "gCTRL-]" */
+    if (cap->cmdchar == 'g')	/* "g*", "g#", "g]" and "gCTRL-]" */
     {
 	cmdchar = cap->nchar;
 	g_cmd = TRUE;
@@ -3016,9 +3010,9 @@ do_ident(cap, searchp)
     }
 
     /*
-     * The "CTRL-]" and "K" commands accept an argument in Visual mode.
+     * The "]", "CTRL-]" and "K" commands accept an argument in Visual mode.
      */
-    if (cmdchar == Ctrl(']') || cmdchar == 'K')
+    if (cmdchar == ']' || cmdchar == Ctrl(']') || cmdchar == 'K')
     {
 	if (VIsual_active)	/* :ta to visual highlighted text */
 	{
@@ -3090,11 +3084,15 @@ do_ident(cap, searchp)
 	    }
 	    break;
 
+	case ']':
+	    stuffReadbuff((char_u *)":ts ");
+	    break;
+
 	default:
 	    if (curbuf->b_help)
 		stuffReadbuff((char_u *)":he ");
 	    else if (g_cmd)
-		stuffReadbuff((char_u *)":ts ");
+		stuffReadbuff((char_u *)":tj ");
 	    else
 		stuffReadbuff((char_u *)":ta ");
     }
@@ -3821,6 +3819,8 @@ do_gomark(cap, flag)
     {
 	if (flag)
 	    beginline(BL_WHITE | BL_FIX);
+	else
+	    adjust_cursor();
     }
     else
 	do_cursormark(cap, flag, pos);
@@ -4235,7 +4235,8 @@ do_g_cmd(cap, searchp)
 	break;
 #endif
 
-    case Ctrl(']'):		/* :tpick for current identifier */
+    case Ctrl(']'):		/* :tag or :tselect for current identifier */
+    case ']':			/* :tselect for current identifier */
 	do_ident(cap, searchp);
 	break;
 

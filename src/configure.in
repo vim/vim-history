@@ -15,6 +15,9 @@ AC_PROG_CPP	dnl required by header file checks
 AC_ISC_POSIX	dnl required by AC_C_CROSS
 AC_PROG_AWK	dnl required for "make html" in ../doc
 
+dnl Don't strip if we don't have it
+AC_CHECK_PROG(STRIP, strip, strip, :)
+
 dnl Set default value for CFLAGS if none is defined or it's empty
 if test -z "$CFLAGS"; then
   CFLAGS="-O"
@@ -53,10 +56,9 @@ fi
 
 dnl Check user requested features.
 
-dnl If the user wants a Perl interpreter in vim, try using it.
 AC_MSG_CHECKING(if perlinterp option enabled)
 AC_ARG_ENABLE(perlinterp,
-	[  --enable-perlinterp     Include a Perl interpreter in vi.], ,
+	[  --enable-perlinterp     Include Perl interpreter.], ,
 	[enable_perlinterp="yes"])
 AC_MSG_RESULT($enable_perlinterp)
 if test "$enable_perlinterp" = "yes"; then
@@ -102,10 +104,9 @@ AC_SUBST(PERL_OBJ)
 AC_SUBST(PERL_PRO)
 AC_SUBST(PERL_CFLAGS)
 
-dnl If the user wants a Python interpreter in vim, try it.
 AC_MSG_CHECKING(if pythoninterp option enabled)
 AC_ARG_ENABLE(pythoninterp,
-        [  --enable-pythoninterp   Include a Python interpreter in vi.], ,
+        [  --enable-pythoninterp   Include Python interpreter.], ,
 	[enable_pythoninterp="yes"])
 AC_MSG_RESULT($enable_pythoninterp)
 
@@ -446,9 +447,13 @@ AC_EGREP_CPP(yes,
 ], LIBS="$LIBS -linet" AC_MSG_RESULT(yes), AC_MSG_RESULT(no))
 
 olibs="$LIBS"
-if test -n "$TERM_LIB"; then
-	LIBS="$LIBS $TERM_LIB"
+AC_MSG_CHECKING(--with-tlib argument)
+AC_ARG_WITH(tlib, [  --with-tlib=library     terminal library to be used ],)
+if test -n "$with_tlib"; then
+	AC_MSG_RESULT($with_tlib)
+	LIBS="$LIBS -l$with_tlib"
 else
+	AC_MSG_RESULT([automatic terminal library selection])
 	dnl  On HP-UX 10.10 termcap or termlib should be used instead of
 	dnl  curses, because curses is much slower.
 	dnl  Newer versions of ncurses are preferred over anything.

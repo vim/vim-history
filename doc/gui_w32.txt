@@ -1,4 +1,4 @@
-*gui_w32.txt*   For Vim version 5.0.  Last modification: 1998 Feb 17
+*gui_w32.txt*   For Vim version 5.1.  Last modification: 1998 Apr 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -42,6 +42,10 @@ standard Windows font selector.
 
 Setting the menu height doesn't work for the Win32 GUI.
 
+								*gui-w32s*
+There is a specific version of gvim.exe that runs under the Win32s subsystem
+of Windows 3.1 or 3.11.  See |win32s|.
+
 ==============================================================================
 2. Vim as default editor				*vim-default-editor*
 
@@ -51,6 +55,9 @@ To set Vim as the default editor for a file type:
 3. Select the path to gvim for every file type that you want to use it for.
    (you can also use three spaces in the file type field, for files without an
    extension).
+   In the "open" action, use
+>	gvim "%1"
+   The quotes are required for using file names with embedded spaces.
 
 							*send-to-menu*
 You can also install Vim in the "Send To" menu:

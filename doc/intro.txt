@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 5.0.  Last modification: 1998 Feb 16
+*intro.txt*     For Vim version 5.1.  Last modification: 1998 Mar 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -85,6 +85,9 @@ If you want to join, send a message to
 Make sure that your "From:" address is correct.  Then the list server will
 give you help on how to subscribe.
 
+You can retrieve old messages from the maillist software, and an index of
+messages.  Ask vim-help for instructions.
+
 An archive is kept at:
 <URL:ftp://ftp.ii.uib.no/pub/vim/mail-archive/vim/maillist.html>
 <URL:ftp://ftp.ii.uib.no/pub/vim/mail-archive/vimdev/maillist.html>
@@ -163,7 +166,7 @@ Vim would never have become what it is now, without the help of these people!
 	Bill Foster		Athena GUI port
 	Loic Grenie		xvim (ideas for multi windows version)
 	Sven Guckes		Vim WWW page maintainer
-	Darren Hiebert		Exhuberant ctags
+	Darren Hiebert		Exuberant ctags
 	Steve Kirkendall	Elvis
 	Sergey Laskavy		Vim's help from Moscow
 	Felix von Leitner	Maintainer of Vim Mailing Lists
@@ -267,7 +270,7 @@ CTRL-{char}	{char} typed as a control character; that is, typing {char}
 "command"	In examples, the commands you can type are enclosed in double
 		quotes.
 
-						*key-notation* *key-codes*
+					*key-notation* *key-codes* *keycodes*
 These names for keys are used in the documentation.  They can also be used
 with the ":map" command.
 

@@ -163,6 +163,13 @@ static struct
 static int dead_key = 0;	/* 0 - no dead key, 1 - dead key pressed */
 #endif
 
+/*
+ * The scrollbar stuff can handle only up to 32767 lines.  When the file is
+ * longer, scroll_shift is set to the number of shifts to reduce the count.
+ */
+static int scroll_shift = 0;
+
+static int mouse_scroll_lines = 0;
 
 #ifdef DEBUG
 /* Print out the last Windows error message */
@@ -181,7 +188,8 @@ print_windows_error(void)
 #endif /* DEBUG */
 
 /*
- * Return TRUE when running under Windows NT 3.x.
+ * Return TRUE when running under Windows NT 3.x or Win32s, both of which have
+ * less fancy GUI APIs.
  */
     static int
 is_winnt_3(void)
@@ -193,8 +201,26 @@ is_winnt_3(void)
 	ovi.dwOSVersionInfoSize = sizeof(ovi);
 	GetVersionEx(&ovi);
     }
-    return (ovi.dwPlatformId == VER_PLATFORM_WIN32_NT
-	    && ovi.dwMajorVersion == 3);
+    return ((ovi.dwPlatformId == VER_PLATFORM_WIN32_NT
+		&& ovi.dwMajorVersion == 3)
+	    || (ovi.dwPlatformId == VER_PLATFORM_WIN32s));
+}
+
+/*
+ * Return TRUE when running under Win32s.
+ */
+    int
+gui_is_win32s(void)
+{
+    static OSVERSIONINFO ovi;
+
+    if (ovi.dwOSVersionInfoSize != sizeof(ovi))
+    {
+	ovi.dwOSVersionInfoSize = sizeof(ovi);
+	GetVersionEx(&ovi);
+    }
+
+    return (ovi.dwPlatformId == VER_PLATFORM_WIN32s);
 }
 
 /*
@@ -307,7 +333,7 @@ _OnBlinkTimer(
     }
     else
     {
-	gui_update_cursor(TRUE);
+	gui_update_cursor(TRUE, FALSE);
 	blink_state = BLINK_ON;
 	blink_timer = SetTimer(NULL, 0, (UINT)blink_ontime,
 						    (TIMERPROC)_OnBlinkTimer);
@@ -337,7 +363,7 @@ gui_mch_stop_blink(void)
 {
     gui_w32_rm_blink_timer();
     if (blink_state == BLINK_OFF)
-	gui_update_cursor(TRUE);
+	gui_update_cursor(TRUE, FALSE);
     blink_state = BLINK_NONE;
 }
 
@@ -356,7 +382,7 @@ gui_mch_start_blink(void)
 	blink_timer = SetTimer(NULL, 0, (UINT)blink_waittime,
 						    (TIMERPROC)_OnBlinkTimer);
 	blink_state = BLINK_ON;
-	gui_update_cursor(TRUE);
+	gui_update_cursor(TRUE, FALSE);
     }
 }
 
@@ -806,6 +832,8 @@ _OnScroll(
 	    /* TRACE("SB_THUMBTRACK, %d\n", pos); */
 	    val = pos;
 	    dragging = TRUE;
+	    if (scroll_shift > 0)
+		val <<= scroll_shift;
 	    break;
 	case SB_LINEDOWN:
 	    /* TRACE("SB_LINEDOWN\n"); */
@@ -839,7 +867,10 @@ _OnScroll(
 	     */
 	    /* TRACE("SB_ENDSCROLL\n"); */
 	    val = GetScrollPos(hwndCtl, SB_CTL);
+	    if (scroll_shift > 0)
+		val <<= scroll_shift;
 	    break;
+
 	default:
 	    /* TRACE("Unknown scrollbar event %d\n", code); */
 	    return 0;
@@ -847,7 +878,10 @@ _OnScroll(
 
     si.cbSize = sizeof(si);
     si.fMask = SIF_POS;
-    si.nPos = val;
+    if (scroll_shift > 0)
+	si.nPos = val >> scroll_shift;
+    else
+	si.nPos = val;
     SetScrollInfo(hwndCtl, SB_CTL, &si, TRUE);
 
     /*
@@ -970,6 +1004,56 @@ _OnScroll(
     return 0;
 }
 
+/* Find the number of lines to scroll if the mouse wheel is used
+ * (this was stolen from the MFC source with only a few modifications)
+ */
+    static void
+get_mouse_scroll_lines(void)
+{
+    
+#ifndef SPI_GETWHEELSCROLLLINES
+# define SPI_GETWHEELSCROLLLINES    104
+#endif
+    
+    UINT msgGetScrollLines = 0;
+    WORD nRegisteredMessage = 0;
+    OSVERSIONINFO ver;
+    HKEY hKey;
+    char szData[128];
+    DWORD dwKeyDataType;
+    DWORD dwDataBufSize = sizeof(szData);
+
+    /* try system settings */
+
+    memset(&ver, 0, sizeof(ver));
+    ver.dwOSVersionInfoSize = sizeof(ver);
+
+    mouse_scroll_lines = 3; /* reasonable default */
+    if (!GetVersionEx(&ver))
+	return;
+
+    if ((ver.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS ||
+	  ver.dwPlatformId == VER_PLATFORM_WIN32_NT)
+	&& ver.dwMajorVersion < 4)
+    {
+	if (RegOpenKeyEx(HKEY_CURRENT_USER,  "Control Panel\\Desktop",
+			 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+	{
+	    if (RegQueryValueEx(hKey, "WheelScrollLines", NULL, &dwKeyDataType,
+			    (LPBYTE) &szData, &dwDataBufSize) == ERROR_SUCCESS)
+	    {
+		mouse_scroll_lines = strtoul(szData, NULL, 10);
+	    }
+	    RegCloseKey(hKey);
+	}
+    }
+    else if (ver.dwPlatformId == VER_PLATFORM_WIN32_NT && ver.dwMajorVersion >= 4)
+    {
+	SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &mouse_scroll_lines, 0);
+    }
+    return;
+}
+
 /* Intellimouse wheel handler */
     static void
 _OnMouseWheel(
@@ -977,18 +1061,34 @@ _OnMouseWheel(
     short zDelta)
 {
 /* Treat a mouse wheel event as if it were a scroll request */
+    int i;
+    int size;
     HWND hwndCtl;
+    
     if (curwin->w_scrollbars[SBAR_RIGHT].id != 0)
-	    hwndCtl = curwin->w_scrollbars[SBAR_RIGHT].id;
+    {
+	hwndCtl = curwin->w_scrollbars[SBAR_RIGHT].id;
+	size = curwin->w_scrollbars[SBAR_RIGHT].size;
+    }
     else if (curwin->w_scrollbars[SBAR_LEFT].id != 0)
-		    hwndCtl = curwin->w_scrollbars[SBAR_LEFT].id;
+    {
+	hwndCtl = curwin->w_scrollbars[SBAR_LEFT].id;
+	size = curwin->w_scrollbars[SBAR_LEFT].size;
+    }
     else
-	    return;
+	return;
 
-    // emulate three scroll-arrow-pushes
-    _OnScroll(hwnd, hwndCtl, (zDelta >= 0) ? SB_LINEUP: SB_LINEDOWN ,0);
-    _OnScroll(hwnd, hwndCtl, (zDelta >= 0) ? SB_LINEUP: SB_LINEDOWN ,0);
-    _OnScroll(hwnd, hwndCtl, (zDelta >= 0) ? SB_LINEUP: SB_LINEDOWN ,0);
+    if (mouse_scroll_lines == 0)
+	get_mouse_scroll_lines();
+
+    if (mouse_scroll_lines > 0
+	    && mouse_scroll_lines < (size > 2 ? size - 2 : 1))
+    {
+	for (i = mouse_scroll_lines; i > 0; --i)
+	    _OnScroll(hwnd, hwndCtl, zDelta >= 0 ? SB_LINEUP : SB_LINEDOWN, 0);
+    }
+    else
+	_OnScroll(hwnd, hwndCtl, zDelta >= 0 ? SB_PAGEUP : SB_PAGEDOWN, 0);
 }
 
     static void
@@ -1514,6 +1614,18 @@ gui_mch_set_scrollbar_thumb(
 {
     SCROLLINFO	info;
 
+    scroll_shift = 0;
+    while (max > 32767)
+    {
+	max = max + 1 >> 1;
+	val  >>= 1;
+	size >>= 1;
+	++scroll_shift;
+    }
+
+    if (scroll_shift > 0)
+	++size;
+
     info.cbSize = sizeof(info);
     info.fMask = SIF_POS | SIF_RANGE | SIF_PAGE;
     info.nPos = val;
@@ -1742,6 +1854,7 @@ get_logfont(
     char_u	*p;
     CHOOSEFONT	cf;
     int		i;
+    static LOGFONT *lastlf = NULL;
 
     *lf = s_lfDefault;
     if (name == NULL)
@@ -1753,11 +1866,13 @@ get_logfont(
 	memset(&cf, 0, sizeof(cf));
 	cf.lStructSize = sizeof(cf);
 	cf.hwndOwner = NULL;
-	cf.Flags = CF_SCREENFONTS | CF_FIXEDPITCHONLY;
+	cf.Flags = CF_SCREENFONTS | CF_FIXEDPITCHONLY | CF_INITTOLOGFONTSTRUCT;
+	if (lastlf != NULL)
+	    *lf = *lastlf;
 	cf.lpLogFont = lf;
 	cf.nFontType = REGULAR_FONTTYPE;
 	if (ChooseFont(&cf))
-	    return 1;
+	    goto theend;
     }
 
     /*
@@ -1834,6 +1949,13 @@ get_logfont(
 	    p++;
     }
 
+theend:
+    /* ron: init lastlf */
+    vim_free(lastlf);
+    lastlf = (LOGFONT *)alloc(sizeof(LOGFONT));
+    if (lastlf != NULL)
+	vim_memmove(lastlf, lf, sizeof(LOGFONT));
+    
     return 1;
 }
 

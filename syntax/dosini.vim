@@ -1,5 +1,5 @@
 " Vim syntax file
-" Language:	Configuraion File (ini file) for MSDOS/MS Windows
+" Language:	Configuration File (ini file) for MSDOS/MS Windows
 " Maintainer:	Sean M. McKee <mckee@misslink.net>
 " Last change:	1997/12/15
 " Version Info: @(#)dosini.vim	1.6	97/12/15 08:54:12

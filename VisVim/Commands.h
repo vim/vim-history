@@ -113,7 +113,11 @@ class CCommands :
 
     public:
 	// ICommands methods
-	STDMETHOD (VisVimMethod) (THIS);
+	STDMETHOD (VisVimDialog) (THIS);
+	STDMETHOD (VisVimEnable) (THIS);
+	STDMETHOD (VisVimDisable) (THIS);
+	STDMETHOD (VisVimToggle) (THIS);
+	STDMETHOD (VisVimLoad) (THIS);
 };
 
 typedef CComObject < CCommands > CCommandsObj;

@@ -1,13 +1,13 @@
 " Vim syntax file
 " Language:	C
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1998 Jan 6
+" Last change:	1998 March 31
 
 " Remove any old syntax stuff hanging around
 syn clear
 
 " A bunch of useful C keywords
-syn keyword cStatement	goto break return continue asm
+syn keyword cStatement		goto break return continue asm
 syn keyword cLabel		case default
 syn keyword cConditional	if else switch
 syn keyword cRepeat		while for do
@@ -24,7 +24,7 @@ syn match cSpecialCharacter	"'\\[0-7][0-7]'"
 syn match cSpecialCharacter	"'\\[0-7][0-7][0-7]'"
 
 "catch errors caused by wrong parenthesis
-syn region cParen		transparent start='(' end=')' contains=ALLBUT,cParenError,cIncluded,cSpecial,cTodo,cUserLabel,cBitField
+syn region cParen		transparent start='(' end=')' contains=ALLBUT,cParenError,cIncluded,cSpecial,cTodo,cUserCont,cUserLabel,cBitField
 syn match cParenError		")"
 syn match cInParen contained	"[{}]"
 
@@ -72,22 +72,27 @@ syn region cIncluded contained start=+"+ skip=+\\\\\|\\"+ end=+"+
 syn match cIncluded contained "<[^>]*>"
 syn match cInclude		"^\s*#\s*include\>\s*["<]" contains=cIncluded
 "syn match cLineSkip	"\\$"
-syn region cDefine		start="^\s*#\s*\(define\>\|undef\>\)" skip="\\$" end="$" contains=ALLBUT,cPreCondit,cIncluded,cInclude,cDefine,cInParen
-syn region cPreProc		start="^\s*#\s*\(pragma\>\|line\>\|warning\>\|warn\>\|error\>\)" skip="\\$" end="$" contains=ALLBUT,cPreCondit,cIncluded,cInclude,cDefine,cInParen
+syn region cDefine		start="^\s*#\s*\(define\>\|undef\>\)" skip="\\$" end="$" contains=ALLBUT,cPreCondit,cIncluded,cInclude,cDefine,cInParen,cUserLabel
+syn region cPreProc		start="^\s*#\s*\(pragma\>\|line\>\|warning\>\|warn\>\|error\>\)" skip="\\$" end="$" contains=ALLBUT,cPreCondit,cIncluded,cInclude,cDefine,cInParen,cUserCont,cUserLabel
 
 " Highlight User Labels
-syn region	cMulti		transparent start='?' end=':' contains=ALLBUT,cIncluded,cSpecial,cTodo,cUserLabel,cBitField
+syn region	cMulti		transparent start='?' end=':' contains=ALLBUT,cIncluded,cSpecial,cTodo,cUserCont,cUserLabel,cBitField
 " Avoid matching foo::bar() in C++ by requiring that the next char is not ':'
-syn match	cUserLabel	"^\s*\I\i*\s*:$"
-syn match	cUserLabel	";\s*\I\i*\s*:$"ms=s+1
-syn match	cUserLabel	"^\s*\I\i*\s*:[^:]"me=e-1
-syn match	cUserLabel	";\s*\I\i*\s*:[^:]"ms=s+1,me=e-1
+syn match	cUserCont	"^\s*\I\i*\s*:$" contains=cUserLabel
+syn match	cUserCont	";\s*\I\i*\s*:$" contains=cUserLabel
+syn match	cUserCont	"^\s*\I\i*\s*:[^:]" contains=cUserLabel
+syn match	cUserCont	";\s*\I\i*\s*:[^:]" contains=cUserLabel
+
+syn match	cUserLabel	"\I\i*" contained
 
 " Avoid recognizing most bitfields as labels
 syn match	cBitField	"^\s*\I\i*\s*:\s*[1-9]"me=e-1
 syn match	cBitField	";\s*\I\i*\s*:\s*[1-9]"me=e-1
 
-syn sync ccomment cComment minlines=10
+if !exists("c_minlines")
+  let c_minlines = 10
+endif
+exec "syn sync ccomment cComment minlines=" . c_minlines
 
 if !exists("did_c_syntax_inits")
   let did_c_syntax_inits = 1

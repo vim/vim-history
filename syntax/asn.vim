@@ -2,22 +2,29 @@
 " Language:	ASN.1
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/asn.vim
-" Last change:	1998 Jan 12
+" Last change:	1998 Mar 7
 
 " Remove any old syntax stuff hanging around
 syn clear
 
 " keyword definitions
-syn keyword asnExternal       DEFINITIONS TAGS BEGIN END IMPLICIT DEFAULT IMPORTS EXPORTS FROM
-syn keyword asnTypeInfo       ABSENT PRESENT OPTIONAL FROM SIZE UNVERSAL APPLICATION PRIVATE
+syn keyword asnExternal       DEFINITIONS BEGIN END IMPORTS EXPORTS FROM
+syn match   asnExternal       "\<IMPLICIT\s\+TAGS\>"
+syn match   asnExternal       "\<EXPLICIT\s\+TAGS\>"
+syn keyword asnFieldOption    DEFAULT OPTIONAL
+syn keyword asnTagModifier    IMPLICIT EXPLICIT
+syn keyword asnTypeInfo       ABSENT PRESENT SIZE UNIVERSAL APPLICATION PRIVATE
 syn keyword asnBoolValue      TRUE FALSE
+syn keyword asnNumber         MIN MAX
 syn match   asnNumber         "\<PLUS-INFINITY\>"
 syn match   asnNumber         "\<MINUS-INFINITY\>"
 syn keyword asnType           INTEGER REAL STRING BIT BOOLEAN OCTET NULL EMBEDDED PDV
 syn keyword asnType           BMPString IA5String TeletexString GeneralString GraphicString ISO646String NumericString PrintableString T61String UniversalString VideotexString VisibleString
+syn keyword asnType           ANY DEFINED
 syn match   asnType           "\.\.\."
 syn match   asnType           "OBJECT\s\+IDENTIFIER"
 syn match   asnType           "TYPE-IDENTIFIER"
+syn keyword asnType           UTF8String
 syn keyword asnStructure      CHOICE SEQUENCE SET OF ENUMERATED CONSTRAINED BY WITH COMPONENTS CLASS
 
 " Strings and constants
@@ -52,6 +59,8 @@ if !exists("did_asn_syntax_inits")
   hi link asnTypeInfo         PreProc
   hi link asnValue            Number
   hi link asnExternal         Include
+  hi link asnTagModifier      Function
+  hi link asnFieldOption      Type
 endif
 
 let b:current_syntax = "asn"

@@ -1,6 +1,6 @@
 /* if_perl.c */
 void perl_end __ARGS((void));
-void msg_split __ARGS((char_u *s));
+void msg_split __ARGS((char_u *s, int attr));
 void perl_win_free __ARGS((WIN *wp));
 void perl_buf_free __ARGS((BUF *bp));
 int do_perl __ARGS((EXARG *eap));

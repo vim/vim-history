@@ -1,92 +1,156 @@
-" Vim syntax file
+" Eiffel syntax file
 " Language:	Eiffel
-" Maintainer:	Reimer Behrends <behrends@student.uni-kl.de>
-" Last change:	1998 Feb 5
-" Note: There should be better handling of multi-line strings
+" Maintainer:	Reimer Behrends <reimer.behrends@usa.net>
+"               With much input from Jocelyn Fiat <fiat@eiffel.com>
+" Last change:	1998 March 26
 
 " Remove any old syntax stuff hanging around
+
 syn clear
 
-" keyword definitions
-syn keyword eiffelKeyword        indexing expanded class obsolete
-syn keyword eiffelKeyword        separate
-syn keyword eiffelKeyword        inherit rename redefine undefine as
-syn keyword eiffelKeyword        select export
+" Option handling
+
+if exists("eiffel_ignore_case")
+  syn case ignore
+else
+  syn case match
+  if exists("eiffel_pedantic")
+    syn keyword eiffelError          current void result precursor none
+    syn keyword eiffelError          CURRENT VOID RESULT PRECURSOR None
+  endif
+  if exists("eiffel_lower_case_predef")
+    syn keyword eiffelPredefined     current void result precursor
+  endif
+endif
+
+if exists("eiffel_hex_constants")
+  syn match  eiffelNumber          "[0-9][0-9a-fA-F]*[xX]"
+endif
+
+" Keyword definitions
+
+syn keyword eiffelTopStruct      indexing class feature creation inherit
+syn match   eiffelKeyword	 "\<end\>"
+syn match   eiffelTopStruct      "^end\>\(\s*--\s\+class\s\+\<[A-Z][A-Z0-9_]*\>\)\=" contains=eiffelClassName
+syn keyword eiffelDeclaration    is do once deferred unique local
+syn keyword eiffelDeclaration    Unique
+syn keyword eiffelProperty       expanded obsolete separate frozen
+syn keyword eiffelProperty       prefix infix
+syn keyword eiffelInheritClause  rename redefine undefine select export as
+syn keyword eiffelAll            all
 syn keyword eiffelKeyword        external alias
-syn keyword eiffelKeyword        if else elseif end inspect
-syn keyword eiffelKeyword        when then
-syn keyword eiffelKeyword        check debug require ensure
-syn keyword eiffelKeyword        from until invariant variant loop
-syn keyword eiffelKeyword        feature creation is do once
-syn keyword eiffelKeyword        deferred frozen unique local
-syn keyword eiffelKeyword        prefix infix
-syn keyword eiffelKeyword        rescue retry
+syn keyword eiffelStatement      if else elseif inspect
+syn keyword eiffelStatement      when then 
+syn match   eiffelAssertion      "\<require\(\s\+else\)\=\>"
+syn match   eiffelAssertion      "\<ensure\(\s\+then\)\=\>"
+syn keyword eiffelAssertion      check
+syn keyword eiffelDebug          debug
+syn keyword eiffelStatement      from until loop
+syn keyword eiffelAssertion      variant
+syn match   eiffelAssertion      "\<invariant\>"
+syn match   eiffelTopStruct      "^invariant\>"
+syn keyword eiffelException      rescue retry
 
-syn keyword eiffelValue          Current Void Result Precursor
-" Uncomment the following line if you want to be warned against accidentally
-" using certain reserved words as variables.
-
-" syntax keyword eiffelError	    current result precursor void
+syn keyword eiffelPredefined     Current Void Result Precursor
 
 " Operators
-syn match eiffelOperator         "\<and\([ \t]\+then\)\=\>"
-syn match eiffelOperator         "\<or\([ \t]\+else\)\=\>"
-syn keyword eiffelOperator       xor not
+syn match   eiffelOperator       "\<and\(\s\+then\)\=\>"
+syn match   eiffelOperator       "\<or\(\s\+else\)\=\>"
+syn keyword eiffelOperator       xor implies not
 syn keyword eiffelOperator       strip old
-syn match eiffelOperator         "[!{}[\]]"
-syn match eiffelOperator         "<<"
-syn match eiffelOperator         ">>"
-syn match eiffelOperator         "->"
-syn match eiffelOperator         "[@#|&][^ \e\t\b%]*"
+syn keyword eiffelOperator	 Strip
+syn match   eiffelOperator       "\$"
+syn match   eiffelBrackets       "[[\]]"
+syn match   eiffelCreation       "!"
+syn match   eiffelExport         "[{}]"
+syn match   eiffelArray          "<<"
+syn match   eiffelArray          ">>"
+syn match   eiffelConstraint     "->"
+syn match   eiffelOperator       "[@#|&][^ \e\t\b%]*"
 
-" Classes
-syn keyword eiffelKeyword        like BIT
-syn match   eiffelClassName      "\<[A-Z][A-Z0-9_]*\>"
+" Special classes
+syn keyword eiffelAnchored	 like
+syn keyword eiffelBitType        BIT
 
 " Constants
-syn keyword eiffelConst          true false
-syn region  eiffelString         start=+"+  skip=+%"+  end=+"+ contains=eiffelSpecial,eiffelStringError
-syn match   eiffelSpecial	    contained "%[^/]"
-syn match   eiffelSpecial	    contained "%/[0-9]\+/"
-syn match   eiffelSpecial	    contained "^[ \t]*%"
-syn match   eiffelSpecial	    contained "%[ \t]*$"
+syn keyword eiffelBool           true false
+syn keyword eiffelBool		 True False
+syn region  eiffelString         start=+"+ skip=+%"+ end=+"+ contains=eiffelEscape,eiffelStringError
+syn match   eiffelEscape 	 contained "%[^/]"
+syn match   eiffelEscape 	 contained "%/[0-9]\+/"
+syn match   eiffelEscape 	 contained "^[ \t]*%"
+syn match   eiffelEscape 	 contained "%[ \t]*$"
 syn match   eiffelStringError    contained "%/[^0-9]"
 syn match   eiffelStringError    contained "%/[0-9]\+[^0-9/]"
-syn match   eiffelStringError    "'\(%[^/]\|%/[0-9]\+/\|[^'%]\)\+'"
-syn match   eiffelCharacter      "'\(%[^/]\|%/[0-9]\+/\|[^'%]\)'" contains=eiffelSpecial
-syn match   eiffelNumber         "-\=\<[0-9]\+"
+syn match   eiffelBadConstant    "'\(%[^/]\|%/[0-9]\+/\|[^'%]\)\+'"
+syn match   eiffelBadConstant    "''"
+syn match   eiffelCharacter      "'\(%[^/]\|%/[0-9]\+/\|[^'%]\)'" contains=eiffelEscape
+syn match   eiffelNumber         "-\=\<[0-9]\+\(_[0-9]\+\)*\>"
 syn match   eiffelNumber         "\<[01]\+[bB]\>"
-syn match   eiffelNumber         "-\=\<[0-9]\+\.[0-9]*\([eE]-\=[0-9]\+\)\="
-syn match   eiffelNumber         "-\=\.[0-9]\+\([eE]-\=[0-9]\+\)\="
-syn match   eiffelComment        "--.*"
+syn match   eiffelNumber         "-\=\<[0-9]\+\(_[0-9]\+\)*\.\([0-9]\+\(_[0-9]\+\)*\)\=\([eE][-+]\=[0-9]\+\(_[0-9]\+\)*\)\="
+syn match   eiffelNumber         "-\=\.[0-9]\+\(_[0-9]\+\)*\([eE][-+]\=[0-9]\+\(_[0-9]\+\)*\)\="
+syn match   eiffelComment        "--.*" contains=eiffelTodo
+
+syn case match
+
+" Case sensitive stuff
+
+syn keyword eiffelTodo           contained TODO XXX FIXME
+syn match   eiffelClassName      "\<[A-Z][A-Z0-9_]*\>"
 
 " Catch mismatched parentheses
-syn region eiffelGeneric         transparent start="\[" end="\]" contains=ALLBUT,eiffelBracketError
-syn region eiffelParen           transparent start="(" end=")" contains=ALLBUT,eiffelParenError
 syn match eiffelParenError       ")"
-syn match eiffelBracketError     "]"
+syn match eiffelBracketError     "\]"
+syn region eiffelGeneric         transparent matchgroup=eiffelBrackets start="\[" end="\]" contains=ALLBUT,eiffelBracketError
+syn region eiffelParen           transparent start="(" end=")" contains=ALLBUT,eiffelParenError
 
-syn sync lines=10
+" Should suffice for even very long strings and expressions
+syn sync lines=40
 
 if !exists("did_eiffel_syntax_inits")
   let did_eiffel_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link eiffelClassName 	Type
+  " The default methods for hilighting.  Can be overridden later
   hi link eiffelKeyword		Statement
-  hi link eiffelBoolValue 	Boolean
+  hi link eiffelProperty	Statement
+  hi link eiffelInheritClause	Statement
+  hi link eiffelStatement	Statement
+  hi link eiffelDeclaration	Statement
+  hi link eiffelAssertion	Statement
+  hi link eiffelDebug		Statement
+  hi link eiffelException	Statement
+
+  hi link eiffelTopStruct	PreProc
+
+  hi link eiffelAll		Special
+  hi link eiffelAnchored	Special
+  hi link eiffelBitType		Special
+
+  hi link eiffelEscape 		Special
+
+  hi link eiffelBool	 	Boolean
   hi link eiffelString 		String
   hi link eiffelCharacter	Character
-  hi link eiffelSpecial 	Special
+  hi link eiffelClassName 	Type
   hi link eiffelNumber 		Number
+
   hi link eiffelOperator	Special
+  hi link eiffelArray		Special
+  hi link eiffelExport		Special
+  hi link eiffelCreation	Special
+  hi link eiffelBrackets	Special
+  hi link eiffelConstraint	Special
+
+  hi link eiffelPredefined	Constant
+
   hi link eiffelComment		Comment
-  hi link eiffelType		Statement
-  hi link eiffelValue		String
-  hi link eiffelConst		String
+
   hi link eiffelError		Error
+  hi link eiffelBadConstant	Error
   hi link eiffelStringError	Error
   hi link eiffelParenError	Error
   hi link eiffelBracketError	Error
+
+  hi link eiffelTodo		Todo
 endif
 
 let b:current_syntax = "eiffel"

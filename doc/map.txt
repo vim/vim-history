@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 5.0.  Last modification: 1998 Feb 07
+*map.txt*       For Vim version 5.1.  Last modification: 1998 Feb 26
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -130,6 +130,7 @@ first define it for all three modes, then unmap it for Operator-pending mode:
 Likewise for a mapping for Visual and Operator-pending mode or Normal and
 Operator-pending mode.
 
+							*map-listing*
 When listing mappings the characters in the first two columns are:
 
 	CHAR		MODE	~

@@ -9,7 +9,7 @@
 /*
  * farsi.c: functions for Farsi language
  *
- * Included by main.c, shen FKMAP is defined.
+ * Included by main.c, when FKMAP is defined.
  */
 
 static int toF_Xor_X_ __ARGS((int c));
@@ -18,6 +18,7 @@ static int F_is_TyC_TyD __ARGS((int c));
 static int F_is_TyB_TyC_TyD __ARGS((int src, int offset));
 static int toF_TyB __ARGS((int c));
 static void put_curr_and_l_to_X __ARGS((int c));
+static void put_and_redo __ARGS((int c));
 static void chg_c_toX_orX __ARGS((void));
 static void chg_c_to_X_orX_ __ARGS((void));
 static void chg_c_to_X_or_X __ARGS((void));
@@ -30,6 +31,7 @@ static int canF_Ljoin __ARGS((int c));
 static int canF_Rjoin __ARGS((int c));
 static int F_isterm __ARGS((int c));
 static int toF_ending __ARGS((int c));
+static void lrswapbuf __ARGS((char_u *buf, int len));
 
 /*
 ** Convert the given Farsi character into a _X or _X_ type
@@ -364,6 +366,13 @@ put_curr_and_l_to_X(c)
 	}
     }
 
+    put_and_redo(c);
+}
+
+    static void
+put_and_redo(c)
+    int c;
+{
     pchar_cursor(c);
     AppendCharToRedobuff(K_BS);
     AppendCharToRedobuff(c);
@@ -489,12 +498,8 @@ chg_c_toX_orX()
 		tempc = 0;
     }
 
-    if ( tempc )
-    {
-	pchar_cursor(tempc);
-	AppendCharToRedobuff(K_BS);
-	AppendCharToRedobuff(tempc);
-    }
+    if (tempc)
+	put_and_redo(tempc);
 }
 
 /*
@@ -545,13 +550,8 @@ chg_c_to_X_orX_()
 		tempc = 0;
     }
 
-    if ( tempc )
-    {
-	pchar_cursor(tempc);
-	AppendCharToRedobuff(K_BS);
-	AppendCharToRedobuff(tempc);
-    }
-
+    if (tempc)
+	put_and_redo(tempc);
 }
 
 /*
@@ -574,9 +574,7 @@ chg_c_to_X_or_X ()
 
 	    dec_cursor();
 
-	    pchar_cursor(tempc);
-	    AppendCharToRedobuff(K_BS);
-	    AppendCharToRedobuff(tempc);
+	    put_and_redo(tempc);
 	    return;
 	}
 
@@ -584,11 +582,7 @@ chg_c_to_X_or_X ()
     }
 
     if ((tempc = toF_Xor_X_(tempc)))
-    {
-	pchar_cursor(tempc);
-	AppendCharToRedobuff(K_BS);
-	AppendCharToRedobuff(tempc);
-    }
+	put_and_redo(tempc);
 }
 
 /*
@@ -650,12 +644,8 @@ chg_l_to_X_orX_ ()
 		tempc = 0;
     }
 
-    if ( tempc )
-    {
-	pchar_cursor(tempc);
-	AppendCharToRedobuff(K_BS);
-	AppendCharToRedobuff(tempc);
-    }
+    if (tempc)
+	put_and_redo(tempc);
 
     if (p_ri)
 	inc_cursor();
@@ -723,12 +713,8 @@ chg_l_toXor_X ()
 		tempc = 0;
     }
 
-    if ( tempc )
-    {
-	pchar_cursor(tempc);
-	AppendCharToRedobuff(K_BS);
-	AppendCharToRedobuff(tempc);
-    }
+    if (tempc)
+	put_and_redo(tempc);
 
     if (p_ri)
 	inc_cursor();
@@ -753,11 +739,7 @@ int tempc, c;
 	tempc = gchar_cursor();
 
 	if ((c = toF_Xor_X_(tempc)))
-	{
-	    pchar_cursor(c);
-	    AppendCharToRedobuff(K_BS);
-	    AppendCharToRedobuff(c);
-	}
+	    put_and_redo(c);
 
 	if (!p_ri)
 	    inc_cursor();
@@ -1258,7 +1240,7 @@ fkmap(c)
 
 	    if (gchar_cursor() == _LAM)
 	    {
-		chg_l_toXor_X ();
+		chg_l_toXor_X();
 		del_char(FALSE);
 		AppendCharToRedobuff(K_BS);
 
@@ -1885,109 +1867,100 @@ int lnum, llen, i;
 }
 
 /*
-** swap all the characters in reverse direction
-*/
-    char_u
-*lrswap(ibuf)
-    char_u *ibuf;
+ * left-right swap the characters in buf[len].
+ */
+    static void
+lrswapbuf(buf, len)
+    char_u	*buf;
+    int		len;
 {
-char_u *tmpbuf;
-int i,j,len;
+    char_u	*s, *e;
+    int		c;
 
-    if (ibuf == NULL)
-	return ibuf;
+    s = buf;
+    e = buf + len - 1;
 
-    len = j = STRLEN(ibuf);
+    while (e > s)
+    {
+	c = *s;
+	*s = *e;
+	*e = c;
+	++s;
+	--e;
+    }
+}
 
-    if (!len || (tmpbuf = (char_u *)malloc((size_t)len+1)) == NULL)
-	return ibuf;
-
-    STRCPY(tmpbuf, ibuf);
-
-    i=0;
-    while (len)
-	ibuf[i++]=tmpbuf[--len];
-
-    free(tmpbuf);
+/*
+ * swap all the characters in reverse direction
+ */
+    char_u *
+lrswap(ibuf)
+    char_u	*ibuf;
+{
+    if (ibuf != NULL && *ibuf != NUL)
+	lrswapbuf(ibuf, (int)STRLEN(ibuf));
     return ibuf;
 }
 
 /*
-** swap all the Farsi characters in reverse direction
-*/
-
-    char_u
-*lrFswap(cmdbuf, len)
-    char_u *cmdbuf;
-    int	len;
+ * swap all the Farsi characters in reverse direction
+ */
+    char_u *
+lrFswap(cmdbuf, len)
+    char_u	*cmdbuf;
+    int		len;
 {
-char_u *tmpbuf;
-int i,cnt;
+    int		i, cnt;
 
     if (cmdbuf == NULL)
 	return cmdbuf;
 
-    if (!len)
-	len=STRLEN(cmdbuf);
-
-    if (!len || (tmpbuf = (char_u *)malloc((size_t)len)) == NULL)
+    if (len == 0 && (len = STRLEN(cmdbuf)) == 0)
 	return cmdbuf;
 
-    for ( i=0; i<len; i++)
+    for (i = 0; i < len; i++)
     {
-	cnt=0;
+	for (cnt = 0; i + cnt < len
+			&& (F_isalpha(cmdbuf[i + cnt])
+			    || F_isdigit(cmdbuf[i + cnt])
+			    || cmdbuf[i + cnt] == ' '); ++cnt)
+	    ;
 
-	while (F_isalpha(cmdbuf[i+cnt]) || F_isdigit(cmdbuf[i+cnt]) ||
-						 cmdbuf[i+cnt] == ' ' )
-		tmpbuf[cnt]=cmdbuf[i+cnt++];
-
-	while (cnt)
-	    cmdbuf[i++]=tmpbuf[--cnt];
+	lrswapbuf(cmdbuf + i, cnt);
+	i += cnt;
     }
-    free(tmpbuf);
     return cmdbuf;
 }
 
 /*
-** Reverse the characters in the seach path and substitude section accordingly
-*/
-
+ * Reverse the characters in the seach path and substitude section accordingly
+ */
     char_u *
 lrF_sub(ibuf)
-    char_u  *ibuf;
+    char_u	*ibuf;
 {
-    char_u *p, *ep, *tmpbuf;
-    int i, cnt;
-
-    if ((tmpbuf = (char_u *)malloc(STRLEN(ibuf))) == NULL)
-	return ibuf;
+    char_u	*p, *ep;
+    int		i, cnt;
 
     p = ibuf;
-    /*
-    ** Find the boundry of the search path
-    */
 
-    while ((p = vim_strchr(++p, '/')) && p[-1] == '\\');
+    /* Find the boundry of the search path */
+    while ((p = vim_strchr(++p, '/')) && p[-1] == '\\')
+	;
 
-    if (!p)
+    if (p == NULL)
 	return ibuf;
 
-    /*
-    ** Reverse the Farsi characters in the search path.
-    */
+    /* Reverse the Farsi characters in the search path. */
     lrFswap(ibuf, (int)(p-ibuf));
 
-    /*
-    ** Now find the boundry of the substitute section
-    */
+    /* Now find the boundry of the substitute section */
     if ((ep = (char_u *)strrchr((char *)++p, '/')))
 	cnt = ep - p;
     else
 	cnt = STRLEN(p);
 
-    /*
-    ** Reverse the characters in the substitute section and take care of '\'
-    */
+    /* Reverse the characters in the substitute section and take care of '\' */
     for (i = 0; i < cnt-1; i++)
 	if (p[i] == '\\')
 	{
@@ -1995,12 +1968,7 @@ lrF_sub(ibuf)
 	    p[++i] = '\\';
 	}
 
-    i = 0;
-    while (cnt)
-	tmpbuf[i++] = p[--cnt];
-
-    while (i--)
-	p[i] = tmpbuf[i] ;
+    lrswapbuf(p, cnt);
 
     return ibuf;
 }

@@ -1,4 +1,4 @@
-// stdafx.cpp : source file that includes just the standard includes
+// Stdafx.cpp : source file that includes just the standard includes
 //	VisEmacs.pch will be the pre-compiled header
 //	stdafx.obj will contain the pre-compiled type information
 

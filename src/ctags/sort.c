@@ -1,5 +1,5 @@
 /*****************************************************************************
-*   $Id: sort.c,v 5.1 1998/02/19 03:47:18 darren Exp $
+*   $Id: sort.c,v 5.2 1998/03/13 04:19:42 darren Exp $
 *
 *   Copyright (c) 1996-1997, Darren Hiebert
 *
@@ -106,7 +106,9 @@ extern void externalSortTags( toStdout )
 	ret = system(cmd);
 	free(cmd);
 
-	if (ret == 0  &&  Option.warnings)
+	if (ret != 0)
+	    error(FATAL, "cannot sort tag file");
+	else if (Option.warnings)
 	    reportWarnings();
     }
     if (toStdout)

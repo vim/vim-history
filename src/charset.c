@@ -109,7 +109,7 @@ init_chartab()
 		else
 		    c2 = *p++;
 	    }
-	    if (c < 0 || (c2 < c && c2 != -1) || c2 >= 256 ||
+	    if (c <= 0 || (c2 < c && c2 != -1) || c2 >= 256 ||
 						    !(*p == NUL || *p == ','))
 		return FAIL;
 
@@ -443,7 +443,9 @@ lbr_chartabsize(s, col)
     colnr_t	    col;
 {
     if (!curwin->w_p_lbr && *p_sbr == NUL)
+    {
 	RET_WIN_BUF_CHARTABSIZE(curwin, curbuf, *s, col)
+    }
 
     return win_lbr_chartabsize(curwin, s, col, NULL);
 }
@@ -471,7 +473,9 @@ win_lbr_chartabsize(wp, s, col, head)
  * No 'linebreak' and 'showbreak': return quickly.
  */
     if (!wp->w_p_lbr && *p_sbr == NUL)
+    {
 	RET_WIN_BUF_CHARTABSIZE(wp, wp->w_buffer, c, col)
+    }
 
 /*
  * First get normal size, without 'linebreak'

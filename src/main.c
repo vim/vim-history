@@ -89,6 +89,10 @@ usage()
 
     mch_errmsg("\n\nOptions:\n");
     mch_errmsg("   --\t\t\tEnd of options\n");
+#ifdef HAVE_OLE
+    mch_errmsg("   -register\t\tRegister this gvim for OLE\n");
+    mch_errmsg("   -unregister\t\tUnregister gvim for OLE\n");
+#endif
 #ifdef USE_GUI
     mch_errmsg("   -g\t\t\tRun using GUI (like \"gvim\")\n");
     mch_errmsg("   -f\t\t\tForeground: Don't fork when starting GUI\n");
@@ -175,7 +179,7 @@ usage()
 #define MAX_ARG_CMDS 10
 
 #ifndef PROTO	    /* don't want a prototype for main() */
-    void
+    int
 #ifdef VIMDLL
 _export
 #endif
@@ -212,10 +216,11 @@ main(argc, argv)
     int		    stdout_isatty;	    /* is stdout a terminal? */
     int		    input_isatty;	    /* is active input a terminal? */
     OPARG	    oa;			    /* operator arguments */
+    WIN		    *wp;
 
 #if defined(MSDOS) || defined(WIN32) || defined(OS2)
     /*
-     * Default mapping for some often used keys.
+     * Default mappings for some often used keys.
      * Use the Windows (CUA) keybindings.
      */
     static struct initmap
@@ -225,12 +230,9 @@ main(argc, argv)
     } initmappings[] =
     {
 # ifdef USE_GUI
-	/* Normal and Visual mode */
 	{(char_u *)"<C-PageUp> H", NORMAL+VISUAL},
-	{(char_u *)"<C-PageDown> L$", NORMAL+VISUAL},
-
-	/* Insert mode */
 	{(char_u *)"<C-PageUp> <C-O>H",INSERT},
+	{(char_u *)"<C-PageDown> L$", NORMAL+VISUAL},
 	{(char_u *)"<C-PageDown> <C-O>L<C-O>$", INSERT},
 
 	/* paste, copy and cut */
@@ -243,13 +245,14 @@ main(argc, argv)
 	{(char_u *)"<C-X> \"\"d", VISUAL},
 	/* Missing: CTRL-C (can't be mapped) and CTRL-V (means something) */
 # else
-	/* Normal and Visual mode */
 	{(char_u *)"\316\204 H", NORMAL+VISUAL},    /* CTRL-PageUp is "H" */
-	{(char_u *)"\316v L$", NORMAL+VISUAL},	    /* CTRL-PageDown is "L$" */
-
-	/* Insert mode */
 	{(char_u *)"\316\204 \017H",INSERT},	    /* CTRL-PageUp is "^OH"*/
+	{(char_u *)"\316v L$", NORMAL+VISUAL},	    /* CTRL-PageDown is "L$" */
 	{(char_u *)"\316v \017L\017$", INSERT},	    /* CTRL-PageDown ="^OL^O$"*/
+	{(char_u *)"\316w <C-Home>", NORMAL+VISUAL},
+	{(char_u *)"\316w <C-Home>", INSERT+CMDLINE},
+	{(char_u *)"\316u <C-End>", NORMAL+VISUAL},
+	{(char_u *)"\316u <C-End>", INSERT+CMDLINE},
 
 	/* paste, copy and cut */
 #  ifdef USE_CLIPBOARD
@@ -272,6 +275,27 @@ main(argc, argv)
     };
 #endif
 
+#if defined(macintosh)
+    /*
+     * Default mappings for some often used keys.
+     * Use the Standard MacOS binding.
+     */
+    static struct initmap
+    {
+	char_u	    *arg;
+	int	    mode;
+    } initmappings[] =
+    {
+	/* paste, copy and cut */
+	{(char_u *)"<D-v> \"*P", NORMAL},
+	{(char_u *)"<D-v> \"\"d\"*P", VISUAL},
+	{(char_u *)"<D-v> <C-R>*", INSERT+CMDLINE},
+	{(char_u *)"<D-c> \"*y", VISUAL},
+	{(char_u *)"<D-x> \"*d", VISUAL},
+	{(char_u *)"<Backspace> \"\"d", VISUAL},
+    };
+#endif
+
 #ifdef __EMX__
     _wildcard(&argc, &argv);
 #endif
@@ -280,8 +304,7 @@ main(argc, argv)
     setlocale(LC_ALL, "");	/* for ctype() and the like */
 #endif
 
-#ifdef USE_GUI_WIN32
-# ifdef HAVE_OLE
+#if defined(USE_GUI_WIN32) && defined(HAVE_OLE)
     /* Check for special OLE command line parameters */
     if (argc == 2 && (argv[1][0] == '-' || argv[1][0] == '/'))
     {
@@ -295,7 +318,7 @@ main(argc, argv)
 	/* Unregister Vim as an OLE Automation server */
 	if (STRICMP(argv[1] + 1, "unregister") == 0)
 	{
-	    UnregisterMe();
+	    UnregisterMe(TRUE);
 	    mch_windexit(0);
 	}
 
@@ -308,8 +331,14 @@ main(argc, argv)
 	    argc = 1;
     }
 
-    InitOLE();
-# endif
+    {
+	int	bDoRestart = FALSE;
+
+	InitOLE(&bDoRestart);
+	/* automatically exit after registering */
+	if (bDoRestart)
+	    mch_windexit(0);
+    }
 #endif
 
 #ifdef USE_GUI
@@ -839,7 +868,7 @@ main(argc, argv)
     msg_scroll = TRUE;
     no_wait_return = TRUE;
 
-#if defined(MSDOS) || defined(WIN32) || defined(OS2)
+#if defined(MSDOS) || defined(WIN32) || defined(OS2) || defined(macintosh)
     /*
      * Default mappings for some often used keys.
      * Need to put string in allocated memory, because do_map() will modify it.
@@ -847,7 +876,7 @@ main(argc, argv)
     {
 	char_u *cpo_save = p_cpo;
 
-	p_cpo = "";	/* Allow <> notation */
+	p_cpo = (char_u *)"";	/* Allow <> notation */
 	for (i = 0; i < sizeof(initmappings) / sizeof(struct initmap); ++i)
 	{
 	    initstr = vim_strsave(initmappings[i].arg);
@@ -1307,6 +1336,10 @@ main(argc, argv)
     if (p_im)
 	need_start_insertmode = TRUE;
 
+#ifdef AUTOCMD
+    apply_autocmds(EVENT_VIMENTER, NULL, NULL, FALSE);
+#endif
+
     /*
      * main command loop
      */
@@ -1360,6 +1393,9 @@ main(argc, argv)
 		update_screen(must_redraw);
 	    else if (redraw_cmdline || clear_cmdline)
 		showmode();
+	    for (wp = firstwin; wp; wp = wp->w_next)
+		if (wp->w_redr_status)
+		    win_redr_status(wp);
 	    /* display message after redraw */
 	    if (keep_msg != NULL)
 		msg_attr(keep_msg, keep_msg_attr);
@@ -1394,6 +1430,9 @@ main(argc, argv)
 	    normal_cmd(&oa, TRUE);
     }
     /*NOTREACHED*/
+#if !defined(MSDOS) || defined(DJGPP)
+    return 0;	/* Borland C++ gives a "not reached" error message here */
+#endif
 }
 #endif /* PROTO */
 

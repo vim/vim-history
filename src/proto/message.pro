@@ -8,6 +8,7 @@ char_u *msg_trunc __ARGS((char_u *s));
 void wait_return __ARGS((int redraw));
 void msg_start __ARGS((void));
 void msg_putchar __ARGS((int c));
+void msg_putchar_attr __ARGS((int c, int attr));
 void msg_outnum __ARGS((long n));
 void msg_home_replace __ARGS((char_u *fname));
 void msg_home_replace_hl __ARGS((char_u *fname));
