@@ -3095,29 +3095,34 @@ f_col(argvars, retvar)
     fp = var2fpos(&argvars[0], FALSE);
     if (fp != NULL)
     {
-	col = fp->col + 1;
-#ifdef FEAT_VIRTUALEDIT
-	/* col(".") when the cursor is on the NUL at the end of the line
-	 * because of "coladd" can be seen as an extra column. */
-	if (virtual_active() && fp == &curwin->w_cursor)
+	if (fp->col == MAXCOL)
+	    col = MAXCOL;
+	else
 	{
-	    char_u	*p = ml_get_cursor();
-
-	    if (curwin->w_cursor.coladd >= (colnr_T)chartabsize(p,
-				 curwin->w_virtcol - curwin->w_cursor.coladd))
+	    col = fp->col + 1;
+#ifdef FEAT_VIRTUALEDIT
+	    /* col(".") when the cursor is on the NUL at the end of the line
+	     * because of "coladd" can be seen as an extra column. */
+	    if (virtual_active() && fp == &curwin->w_cursor)
 	    {
-# ifdef FEAT_MBYTE
-		int		l;
+		char_u	*p = ml_get_cursor();
 
-		if (*p != NUL && p[(l = (*mb_ptr2len_check)(p))] == NUL)
-		    col += l;
+		if (curwin->w_cursor.coladd >= (colnr_T)chartabsize(p,
+				 curwin->w_virtcol - curwin->w_cursor.coladd))
+		{
+# ifdef FEAT_MBYTE
+		    int		l;
+
+		    if (*p != NUL && p[(l = (*mb_ptr2len_check)(p))] == NUL)
+			col += l;
 # else
-		if (*p != NUL && p[1] == NUL)
-		    ++col;
+		    if (*p != NUL && p[1] == NUL)
+			++col;
 # endif
+		}
 	    }
-	}
 #endif
+	}
     }
     retvar->var_val.var_number = col;
 }
