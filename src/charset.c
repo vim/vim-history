@@ -1079,7 +1079,7 @@ win_lbr_chartabsize(wp, s, col, headp)
 	}
 	if (col == 0 || col + size > (colnr_T)W_WIDTH(wp))
 	{
-	    added = (int)STRLEN(p_sbr);
+	    added = vim_strsize(p_sbr);
 	    if (tab_corr)
 		size += (added / wp->w_buffer->b_p_ts) * wp->w_buffer->b_p_ts;
 	    else

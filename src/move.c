@@ -1007,7 +1007,7 @@ curs_columns(scroll)
 	     * mode, the 'showbreak' string isn't shown, backup to first
 	     * column */
 	    if (*p_sbr && *ml_get_cursor() == NUL
-		    && curwin->w_wcol == (int)STRLEN(p_sbr))
+		    && curwin->w_wcol == (int)vim_strsize(p_sbr))
 		curwin->w_wcol = 0;
 #endif
 	}
