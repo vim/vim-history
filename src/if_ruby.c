@@ -11,10 +11,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef __MINGW32__
-# include "dyn-ming.h"
-#endif
-
 #ifdef _WIN32
 # define NT
 # ifndef DYNAMIC_RUBY

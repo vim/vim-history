@@ -22,12 +22,12 @@
 # updated 2003 Jan 20
 
 #>>>>> choose options:
-# set to '1' for a debug build
-DEBUG=0
+# set to yes for a debug build
+DEBUG=no
 # set to 1 for size, 0 for speed
 OPTSIZE=0
-# set to 1 to make gvim, 0 for vim
-GUI=1
+# set to yes to make gvim, no for vim
+GUI=yes
 # FEATURES=[TINY | SMALL  | NORMAL | BIG | HUGE]
 # set to TINY to make minimal version (few features)
 FEATURES=BIG
@@ -35,12 +35,16 @@ FEATURES=BIG
 CPUNR=i686
 # set to same choices as 'CPUNR', but will prevent running on 'lower' cpus:
 ARCH=i386
-# set to '1' to cross-compile from unix; 0=native Windows
-CROSS=0
+# set to yes to cross-compile from unix; no=native Windows
+CROSS=no
 # set to path to iconv.h and libiconv.a to enable using 'iconv.dll'
 #ICONV="."
-# set to 1 to enable writing a postscript file with :hardcopy
-POSTSCRIPT=0
+# set to yes to include IME support
+IME=no
+# set to yes to enable writing a postscript file with :hardcopy
+POSTSCRIPT=no
+# set to yes to enable OLE support
+OLE=no
 
 # Added by E.F. Amatria <eferna1@platea.ptic.mec.es> 2001 Feb 23
 # Uncomment the first line and one of the following three if you want Native Language
@@ -71,18 +75,20 @@ INTLLIB=gnu_gettext
 #INTLLIB=intl
 
 # uncomment 'PERL' if you want a perl-enabled version
-#PERL=perl
+#PERL=C:/perl
 ifdef PERL
 ifndef PERL_VER
 PERL_VER=56
 endif
+ifndef DYNAMIC_PERL
+DYNAMIC_PERL=yes
 endif
-DYNAMIC_PERL=perl$(PERL_VER).dll
 # on Linux, for cross-compile, it's here:
 #PERLLIB=/home/ron/ActivePerl/lib
 # on NT, it's here:
-PERLLIB=c:/perl/lib
+PERLLIB=$(PERL)/lib
 PERLLIBS=$(PERLLIB)/Core
+endif
 
 # Python support -- works with the ActiveState python 2.0 release (and others
 # too, probably)
@@ -100,21 +106,40 @@ PERLLIBS=$(PERLLIB)/Core
 # on my NT box, it's here:
 #PYTHON=c:/python20
 
-# to make a vim version that autoloads python if available.  You do want this!
-PYTHON_VER=20
-DYNAMIC_PYTHON=python$(PYTHON_VER).dll
-
 ifdef PYTHON
 ifndef DYNAMIC_PYTHON
+DYNAMIC_PYTHON=yes
+endif
+
+ifndef PYTHON_VER
+PYTHON_VER=20
+endif
+
+ifeq (no,$(DYNAMIC_PYTHON))
 PYTHONLIB=-L$(PYTHON)/libs -lpython$(PYTHON_VER)
 endif
 # my include files are in 'win32inc' on Linux, and 'include' in the standard
 # NT distro (ActiveState)
-ifeq ($(CROSS),0)
+ifeq ($(CROSS),no)
 PYTHONINC=-I $(PYTHON)/include
 else
 PYTHONINC=-I $(PYTHON)/win32inc
 endif
+endif
+
+#	TCL interface:
+#	  TCL=[Path to TCL directory]
+#	  DYNAMIC_TCL=yes (to load the TCL DLL dynamically)
+#	  TCL_VER=[TCL version, eg 83, 84] (default is 83)
+#TCL=c:/tcl
+ifdef TCL
+ifndef DYNAMIC_TCL
+DYNAMIC_TCL=yes
+endif
+ifndef TCL_VER
+TCL_VER = 83
+endif
+TCLINC += -I$(TCL)/include
 endif
 
 
@@ -125,11 +150,10 @@ endif
 #	  RUBY_VER_LONG=[Ruby version, eg 1.6, 1.7] (default is 1.6)
 #	    You must set RUBY_VER_LONG when change RUBY_VER.
 #RUBY=c:/ruby
-DYNAMIC_RUBY=yes
-#
-# Support Ruby interface
-#
 ifdef RUBY
+ifndef DYNAMIC_RUBY
+DYNAMIC_RUBY=yes
+endif
 #  Set default value
 ifndef RUBY_VER
 RUBY_VER = 16
@@ -142,9 +166,8 @@ RUBY_PLATFORM = i586-mswin32
 endif
 RUBY_INSTALL_NAME = mswin32-ruby$(RUBY_VER)
 
-#RUBY_OBJ = $(OUTDIR)\if_ruby.obj
 RUBYINC =-I $(RUBY)/lib/ruby/$(RUBY_VER_LONG)/$(RUBY_PLATFORM)
-ifndef DYNAMIC_RUBY
+ifeq (no, $(DYNAMIC_RUBY))
 RUBYLIB = -L$(RUBY)/lib -l$(RUBY_INSTALL_NAME)
 endif
 
@@ -155,7 +178,7 @@ endif # RUBY
 DEF_GUI=-DFEAT_GUI_W32 -DFEAT_CLIPBOARD -DFEAT_BIG
 DEF_MIN=-DFEAT_SMALL
 DEFINES=-DWIN32 -DPC
-ifeq ($(CROSS),1)
+ifeq ($(CROSS),yes)
 # cross-compiler:
 CC = i586-pc-mingw32msvc-gcc
 DEL = rm
@@ -184,38 +207,48 @@ GETTEXTLIB = $(INTLPATH)
 ifdef DYNAMIC_GETTEXT
 DEFINES +=-D$(DYNAMIC_GETTEXT)
 ifdef GETTEXT_DYNAMIC
-DEFINES += -DGETTEXT_DYNAMIC
+DEFINES += -DGETTEXT_DYNAMIC -DGETTEXT_DLL=\"$(GETTEXT_DYNAMIC)\"
 endif
 endif
 endif
 
 ifdef PERL
 CFLAGS += -I$(PERLLIBS) -DFEAT_PERL -L$(PERLLIBS)
-ifdef DYNAMIC_PERL
-CFLAGS += -DDYNAMIC_PERL
+ifeq (yes, $(DYNAMIC_PERL))
+CFLAGS += -DDYNAMIC_PERL -DDYNAMIC_PERL_DLL=\"perl$(PERL_VER).dll\"
 endif
 endif
 
 ifdef RUBY
 CFLAGS += -DFEAT_RUBY $(RUBYINC)
-ifdef DYNAMIC_RUBY
-CFLAGS += -DDYNAMIC_RUBY
-DYNAMIC_RUBY_DLL = "$(RUBY_INSTALL_NAME).dll"
+ifeq (yes, $(DYNAMIC_RUBY))
+CFLAGS += -DDYNAMIC_RUBY -DDYNAMIC_RUBY_DLL=\"$(RUBY_INSTALL_NAME).dll\"
 endif
 endif
 
 ifdef PYTHON
 CFLAGS += -DFEAT_PYTHON $(PYTHONINC)
-ifdef DYNAMIC_PYTHON
-CFLAGS += -DDYNAMIC_PYTHON
+ifeq (yes, $(DYNAMIC_PYTHON))
+CFLAGS += -DDYNAMIC_PYTHON -DDYNAMIC_PYTHON_DLL=\"python$(PYTHON_VER).dll\"
 endif
 endif
 
-ifeq ($(POSTSCRIPT),1)
+ifdef TCL
+CFLAGS += -DFEAT_TCL $(TCLINC)
+ifeq (yes, $(DYNAMIC_TCL))
+CFLAGS += -DDYNAMIC_TCL -DDYNAMIC_TCL_DLL=\"tcl$(TCL_VER).dll\"
+endif
+endif
+
+ifeq ($(POSTSCRIPT),yes)
 CFLAGS += -DMSWINPS
 endif
 
-ifeq ($(DEBUG),1)
+ifeq (yes, $(OLE))
+CFLAGS += -DFEAT_OLE
+endif
+
+ifeq ($(DEBUG),yes)
 CFLAGS += -g -fstack-check
 else
 CFLAGS += -s
@@ -227,12 +260,12 @@ else
 CFLAGS += -O3
 endif
 endif
-ifeq ($(GUI),1)
+ifeq ($(GUI),yes)
 TARGET := gvim.exe
 else
 TARGET := vim.exe
 endif
-ifeq ($(MIN),1)
+ifeq ($(MIN),yes)
 DEFINES += $(DEF_MIN)
 endif
 
@@ -251,6 +284,9 @@ SRC += if_python.c
 endif
 ifdef RUBY
 SRC += if_ruby.c
+endif
+ifdef TCL
+SRC += if_tcl.c
 endif
 
 
@@ -271,9 +307,28 @@ endif
 endif
 
 ifdef PERL
-ifndef DYNAMIC_PERL
-LIB += -lperl
+ifeq (no, $(DYNAMIC_PERL))
+LIB += -lperl$(PERL_VER)
 endif
+endif
+
+ifdef TCL
+LIB += -L$(TCL)/lib
+ifeq (yes, $(DYNAMIC_TCL))
+LIB += -ltclstub$(TCL_VER)
+else
+LIB += -ltcl$(TCL_VER)
+endif
+endif
+
+ifeq (yes, $(OLE))
+LIB += -loleaut32 -lstdc++
+OBJ += if_ole.o
+endif
+
+ifeq (yes, $(IME))
+DEFINES += -DFEAT_MBYTE_IME -DDYNAMIC_IME
+LIB += -limm32
 endif
 
 ifdef ICONV
@@ -323,7 +378,6 @@ ifneq (sh.exe, $(SHELL))
 else
 	-$(DEL) xxd\*.exe
 endif
-	-$(DEL) dyn-ming.h
 ifdef PERL
 	-$(DEL) if_perl.c
 endif
@@ -341,49 +395,11 @@ INCL = vim.h feature.h os_win32.h os_dos.h ascii.h keymap.h term.h macros.h \
 
 $(OBJ) $(GUIOBJ): $(INCL)
 
-if_ruby.c: dyn-ming.h
-
-if_python.c: dyn-ming.h
-
-if_perl.c: dyn-ming.h if_perl.xs typemap
-	$(PERL) $(PERLLIB)/ExtUtils/xsubpp -prototypes -typemap $(PERLLIB)/ExtUtils/typemap if_perl.xs > $@
-
-os_win32.c: dyn-ming.h
-
-# $(SHELL) is set to sh.exe by default, it is reset to the ABSOLUT path if a
-# sh.exe is found; therefore ifeq ("sh.exe", $(SHELL)) means no sh was found
-# and the shell used is the dos shell
-dyn-ming.h:
-ifneq (sh.exe, $(SHELL))
-	@echo \/\* created by make \*\/ > dyn-ming.h
-else
-	@echo /* created by make */ > dyn-ming.h
-endif
-ifdef DYNAMIC_PERL
-ifneq (sh.exe, $(SHELL))
-	@echo \#define DYNAMIC_PERL_DLL \"$(DYNAMIC_PERL)\" >> dyn-ming.h
-else
-	@echo #define DYNAMIC_PERL_DLL "$(DYNAMIC_PERL)" >> dyn-ming.h
-endif
-endif
-ifdef DYNAMIC_RUBY
-ifneq (sh.exe, $(SHELL))
-	@echo \#define DYNAMIC_RUBY_DLL \"$(DYNAMIC_RUBY_DLL)\" >> dyn-ming.h
-else
-	@echo #define DYNAMIC_RUBY_DLL "$(DYNAMIC_RUBY_DLL)" >> dyn-ming.h
-endif
-endif
-ifdef DYNAMIC_PYTHON
-ifneq (sh.exe, $(SHELL))
-	@echo \#define DYNAMIC_PYTHON_DLL \"$(DYNAMIC_PYTHON)\" >> dyn-ming.h
-else
-	@echo #define DYNAMIC_PYTHON_DLL "$(DYNAMIC_PYTHON)" >> dyn-ming.h
-endif
-endif
-ifdef GETTEXT_DYNAMIC
-ifneq (sh.exe, $(SHELL))
-	@echo \#define GETTEXT_DLL \"$(GETTEXT_DYNAMIC)\" >> dyn-ming.h
-else
-	@echo #define GETTEXT_DLL "$(GETTEXT_DYNAMIC)" >> dyn-ming.h
-endif
-endif
+if_ole.o: if_ole.cpp
+	$(CC) $(CFLAGS) -D__IID_DEFINED__ -c -o if_ole.o if_ole.cpp
+	
+if_ruby.o: if_ruby.c
+	$(CC) $(CFLAGS) -U_WIN32 -c -o if_ruby.o if_ruby.c
+	
+if_perl.c: if_perl.xs typemap
+	perl $(PERLLIB)/ExtUtils/xsubpp -prototypes -typemap $(PERLLIB)/ExtUtils/typemap if_perl.xs > $@

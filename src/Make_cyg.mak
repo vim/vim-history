@@ -4,7 +4,7 @@
 # This compiles Vim as a Windows application.  If you want Vim to run as a
 # Cygwin application use the Makefile (just like on Unix).
 #
-# Last updated by Dan Sharp.  Last Change: 2003 Mar 14
+# Last updated by Dan Sharp.  Last Change: 2003 Mar 20
 #
 # GUI		no or yes: set to yes if you want the GUI version (yes)
 # PERL		define to path to Perl dir to get Perl support (not defined)
@@ -21,6 +21,7 @@
 #   DYNAMIC_RUBY no or yes: use yes to load the Ruby DLL dynamically (yes)
 # GETTEXT	no or yes: set to yes for dynamic gettext support (yes)
 # ICONV		no or yes: set to yes for dynamic iconv support (yes)
+# IME		no or yes: set to yes to include IME support (no)
 # OLE		no or yes: set to yes to make OLE gvim (no)
 # DEBUG		no or yes: set to yes if you wish a DEBUGging build (no)
 # CPUNR		i386 through pentium4: select -mcpu argument to compile with (i386)
@@ -44,6 +45,10 @@ endif
 
 ifndef ICONV
 ICONV = yes
+endif
+
+ifndef IME
+IME = no
 endif
 
 ifndef USEDLL
@@ -147,6 +152,12 @@ endif
 ##############################
 ifeq (yes, $(ICONV))
 DEFINES += -DDYNAMIC_ICONV
+endif
+
+##############################
+ifeq (yes, $(IME))
+DEFINES += -DFEAT_MBYTE_IME -DDYNAMIC_IME
+EXTRA_LIBS += -limm32
 endif
 
 ##############################
@@ -293,7 +304,6 @@ endif
 	-$(DEL) *.exe
 	-$(DEL) *.~
 	-$(DEL) *~
-	-$(DEL) dyn-ming.h
 	-$(DEL) if_perl.c
 	-$(DEL) pathdef.c
 	cd xxd ; $(MAKE) -f Make_cyg.mak clean; cd ..
@@ -352,24 +362,24 @@ if_perl.c: if_perl.xs typemap
 	perl $(PERL)/lib/ExtUtils/xsubpp -prototypes -typemap \
 	     $(PERL)/lib/ExtUtils/typemap if_perl.xs > $@
 
-$(OUTDIR)/if_perl.o:	if_perl.c $(INCL) dyn-ming.h
+$(OUTDIR)/if_perl.o:	if_perl.c $(INCL)
 ifeq (no, $(USEDLL))
 	$(CC) -c $(CFLAGS) if_perl.c -o $(OUTDIR)/if_perl.o
 else
 	$(CC) -c $(CFLAGS) -I/usr/include/mingw -D__MINGW32__ if_perl.c -o $(OUTDIR)/if_perl.o
 endif
 
-$(OUTDIR)/if_python.o:	if_python.c $(INCL) dyn-ming.h
+$(OUTDIR)/if_python.o:	if_python.c $(INCL)
 	$(CC) -c $(CFLAGS) if_python.c -o $(OUTDIR)/if_python.o
 
-$(OUTDIR)/if_ruby.o:	if_ruby.c $(INCL) dyn-ming.h
+$(OUTDIR)/if_ruby.o:	if_ruby.c $(INCL)
 ifeq (no, $(USEDLL))
 	$(CC) -c $(CFLAGS) -U_WIN32 if_ruby.c -o $(OUTDIR)/if_ruby.o
 else
 	$(CC) -c $(CFLAGS) if_ruby.c -o $(OUTDIR)/if_ruby.o
 endif
 
-$(OUTDIR)/if_tcl.o:	if_tcl.c $(INCL) dyn-ming.h
+$(OUTDIR)/if_tcl.o:	if_tcl.c $(INCL)
 	$(CC) -c $(CFLAGS) if_tcl.c -o $(OUTDIR)/if_tcl.o
 
 $(OUTDIR)/main.o:	main.c $(INCL)
@@ -458,16 +468,6 @@ $(OUTDIR)/vimrc.o:	vim.rc $(INCL)
 
 $(OUTDIR)/window.o:	window.c $(INCL)
 	$(CC) -c $(CFLAGS) window.c -o $(OUTDIR)/window.o
-
-# If USEDLL=no, then __MINGW32__ is defined and this file is included by
-# the interfaces.  It is not really needed, so just make a dummy file to 
-# placate the compile.
-dyn-ming.h:
-ifneq (sh.exe, $(SHELL))
-	@echo \/\* created by make \*\/ > dyn-ming.h
-else
-	@echo /* created by make */ > dyn-ming.h
-endif
 
 pathdef.c:
 	@echo creating pathdef.c
