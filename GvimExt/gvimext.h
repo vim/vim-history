@@ -101,7 +101,7 @@ class CShellExt : public IContextMenu,
 protected:
     ULONG	 m_cRef;
     LPDATAOBJECT m_pDataObj;
-    BOOLEAN	 m_multiFiles;
+    UINT	 m_edit_existing_off;
 
     // For some reason, this callback must be static
     static BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam);
@@ -123,7 +123,8 @@ protected:
 	    LPCSTR pszWorkingDir,
 	    LPCSTR pszCmd,
 	    LPCSTR pszParam,
-	    int iShowCmd);
+	    int iShowCmd,
+	    bool useDiff);
 
 public:
     int		 m_cntOfHWnd;

@@ -591,8 +591,18 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
 		idCmd++,
 		_("Edit with single &Vim"));
 
-	// set flag
-	m_multiFiles = TRUE;
+	if (cbFiles <= 4)
+	{
+	    // Can edit up to 4 files in diff mode
+	    InsertMenu(hMenu,
+		    indexMenu++,
+		    MF_STRING|MF_BYPOSITION,
+		    idCmd++,
+		    _("&Diff with Vim"));
+	    m_edit_existing_off = 3;
+	}
+	else
+	    m_edit_existing_off = 2;
 
     }
     else
@@ -602,9 +612,7 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
 		MF_STRING|MF_BYPOSITION,
 		idCmd++,
 		_("Edit with &Vim"));
-
-	// set flag
-	m_multiFiles = FALSE;
+	m_edit_existing_off = 1;
     }
 
     // Now display all the vim instances
@@ -666,7 +674,17 @@ STDMETHODIMP CShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     {
 	UINT idCmd = LOWORD(lpcmi->lpVerb);
 
-	if (m_multiFiles == TRUE)
+	if (idCmd >= m_edit_existing_off)
+	{
+	    // Existing with vim instance
+	    hr = PushToWindow(lpcmi->hwnd,
+		    lpcmi->lpDirectory,
+		    lpcmi->lpVerb,
+		    lpcmi->lpParameters,
+		    lpcmi->nShow,
+		    idCmd - m_edit_existing_off);
+	}
+	else
 	{
 	    switch (idCmd)
 	    {
@@ -682,37 +700,16 @@ STDMETHODIMP CShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 			    lpcmi->lpDirectory,
 			    lpcmi->lpVerb,
 			    lpcmi->lpParameters,
-			    lpcmi->nShow);
+			    lpcmi->nShow,
+			    false);
 		    break;
-		default:
-		    // Existing vim instance
-		    hr = PushToWindow(lpcmi->hwnd,
+		case 2:
+		    hr = InvokeSingleGvim(lpcmi->hwnd,
 			    lpcmi->lpDirectory,
 			    lpcmi->lpVerb,
 			    lpcmi->lpParameters,
 			    lpcmi->nShow,
-			    idCmd - 2);
-		    break;
-	    }
-	}
-	else{
-	    switch (idCmd)
-	    {
-		case 0:
-		    hr = InvokeGvim(lpcmi->hwnd,
-			    lpcmi->lpDirectory,
-			    lpcmi->lpVerb,
-			    lpcmi->lpParameters,
-			    lpcmi->nShow);
-		    break;
-		default:
-		    // Existing vim instance
-		    hr = PushToWindow(lpcmi->hwnd,
-			    lpcmi->lpDirectory,
-			    lpcmi->lpVerb,
-			    lpcmi->lpParameters,
-			    lpcmi->nShow,
-			    idCmd - 1);
+			    true);
 		    break;
 	    }
 	}
@@ -916,7 +913,8 @@ STDMETHODIMP CShellExt::InvokeSingleGvim(HWND hParent,
 				   LPCSTR pszWorkingDir,
 				   LPCSTR pszCmd,
 				   LPCSTR pszParam,
-				   int iShowCmd)
+				   int iShowCmd,
+				   bool useDiff)
 {
     char	m_szFileUserClickedOn[MAX_PATH];
     char	*cmdStr;
@@ -927,6 +925,8 @@ STDMETHODIMP CShellExt::InvokeSingleGvim(HWND hParent,
     cmdlen = MAX_PATH;
     cmdStr = (char *)malloc(cmdlen);
     getGvimName(cmdStr, 0);
+    if (useDiff)
+	strcat(cmdStr, " -d");
     for (i = 0; i < cbFiles; i++)
     {
 	DragQueryFile((HDROP)medium.hGlobal,
