@@ -571,7 +571,12 @@ clip_modeless(button, is_click, is_drag)
     else if (is_click)
 	clip_start_selection(mouse_col, mouse_row, repeat);
     else if (is_drag)
-	clip_process_selection(button, mouse_col, mouse_row, repeat);
+    {
+	/* Don't try extending a selection if there isn't one.  Happens when
+	 * button-down is in the cmdline and them moving mouse upwards. */
+	if (clip_star.state != SELECT_CLEARED)
+	    clip_process_selection(button, mouse_col, mouse_row, repeat);
+    }
     else /* release */
 	clip_process_selection(MOUSE_RELEASE, mouse_col, mouse_row, FALSE);
 }
