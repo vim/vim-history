@@ -934,7 +934,7 @@ do_buffer(action, start, dir, count, forceit)
 	{
 	    /* don't warn when deleting */
 	    if (!unload)
-		EMSGN(_("E86: Cannot go to buffer %ld"), count);
+		EMSGN(_("E86: Buffer %ld does not exist"), count);
 	}
 	else if (dir == FORWARD)
 	    EMSG(_("E87: Cannot go beyond last buffer"));
