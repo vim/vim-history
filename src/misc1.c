@@ -3212,10 +3212,11 @@ expand_env_esc(src, dst, dstlen, esc)
 		{
 		    expand_T	xpc;
 
+		    ExpandInit(&xpc);
 		    xpc.xp_context = EXPAND_FILES;
-		    xpc.xp_backslash = XP_BS_NONE;
 		    var = ExpandOne(&xpc, dst, NULL,
 				WILD_ADD_SLASH|WILD_SILENT, WILD_EXPAND_FREE);
+		    ExpandCleanup(&xpc);
 		    mustfree = TRUE;
 		}
 

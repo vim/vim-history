@@ -3933,9 +3933,10 @@ f_expand(argvars, retvar)
 	 * for 'suffixes' and 'wildignore' */
 	if (argvars[1].var_type != VAR_UNKNOWN && get_var_number(&argvars[1]))
 	    flags |= WILD_KEEP_ALL;
+	ExpandInit(&xpc);
 	xpc.xp_context = EXPAND_FILES;
-	xpc.xp_backslash = XP_BS_NONE;
 	retvar->var_val.var_string = ExpandOne(&xpc, s, NULL, flags, WILD_ALL);
+	ExpandCleanup(&xpc);
     }
 }
 
@@ -4543,11 +4544,12 @@ f_glob(argvars, retvar)
 {
     expand_T	xpc;
 
+    ExpandInit(&xpc);
     xpc.xp_context = EXPAND_FILES;
-    xpc.xp_backslash = XP_BS_NONE;
     retvar->var_type = VAR_STRING;
     retvar->var_val.var_string = ExpandOne(&xpc, get_var_string(&argvars[0]),
 				     NULL, WILD_USE_NL|WILD_SILENT, WILD_ALL);
+    ExpandCleanup(&xpc);
 }
 
 /*
