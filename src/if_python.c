@@ -451,20 +451,30 @@ fail:
     return -1;
 }
 
-/* External interface
+/*
+ * External interface
  */
     static void
 DoPythonCommand(exarg_T *eap, const char *cmd)
 {
+    static int recursive = 0;
+
+    if (recursive)
+    {
+	EMSG(_("E659: Cannot invoke Python recursively"));
+	return;
+    }
+    ++recursive;
+
 #if defined(MACOS) && !defined(MACOS_X_UNIX)
     GrafPtr oldPort;
     GetPort (&oldPort);
     /* Check if the Python library is available */
     if ( (Ptr) PyMac_Initialize == (Ptr) kUnresolvedCFragSymbolAddress)
-	return;
+	goto theend;
 #endif
     if (Python_Init())
-	return;
+	goto theend;
 
     RangeStart = eap->line1;
     RangeEnd = eap->line2;
@@ -477,6 +487,9 @@ DoPythonCommand(exarg_T *eap, const char *cmd)
 #if defined(MACOS) && !defined(MACOS_X_UNIX)
     SetPort (oldPort);
 #endif
+
+theend:
+    --recursive;
 }
 
 /*
