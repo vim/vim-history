@@ -1,4 +1,4 @@
-*options.txt*	For Vim version 6.2.  Last change: 2003 May 29
+*options.txt*	For Vim version 6.2.  Last change: 2003 Aug 12
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -5379,7 +5379,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	normal text.  Each status line item is of the form:
 	  %-0{minwid}.{maxwid}{item}
 	All fields except the {item} is optional.  A single percent sign can
-	be given as "%%".
+	be given as "%%".  Up to 80 items can be specified.
 
 	Note that the only effect of 'ruler' when this option is set (and
 	'laststatus' is 2) is controlling the output of |CTRL-G|.
