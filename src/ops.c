@@ -1922,8 +1922,8 @@ op_replace(oap, c)
 	for ( ; curwin->w_cursor.lnum <= oap->end.lnum; ++curwin->w_cursor.lnum)
 	{
 	    block_prep(oap, &bd, curwin->w_cursor.lnum, TRUE);
-	    if (bd.textlen == 0 && !virtual_op)	/* nothing to delete */
-		continue;
+	    if (bd.textlen == 0 && (!virtual_op || bd.is_MAX))
+		continue;	    /* nothing to replace */
 
 	    /* n == number of extra chars required
 	     * If we split a TAB, it may be replaced by several characters.
