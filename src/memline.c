@@ -1318,7 +1318,7 @@ recover_names(fname, list, nr)
 	if (num_names == 0)
 	    num_files = 0;
 	else if (expand_wildcards(num_names, names, &num_files, &files,
-						   EW_FILE|EW_SILENT) == FAIL)
+					EW_KEEPALL|EW_FILE|EW_SILENT) == FAIL)
 	    num_files = 0;
 
 	/*
