@@ -3893,6 +3893,12 @@ replace_termcodes(from, bufp, from_part, do_lt)
 		break;
 	    }
 	}
+
+#ifdef MULTI_BYTE
+	/* skip multibyte char correctly */
+	if (is_dbcs && IsLeadByte(*src) && src[1] != NUL)
+	    result[dlen++] = *src++;
+#endif
 	result[dlen++] = *src++;
     }
     result[dlen] = NUL;
