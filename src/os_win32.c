@@ -1742,7 +1742,8 @@ RestoreConsoleBuffer(
      * restore the cursor position and window information.  Doing this now
      * prevents old buffer contents from "flashing" onto the screen.
      */
-    ClearConsoleBuffer(cb->Info.wAttributes);
+    if (RestoreScreen)
+	ClearConsoleBuffer(cb->Info.wAttributes);
 
     FitConsoleWindow(cb->Info.dwSize, TRUE);
     if (!SetConsoleScreenBufferSize(g_hConOut, cb->Info.dwSize))
