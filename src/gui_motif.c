@@ -34,10 +34,8 @@
 
 #include "vim.h"
 
-#ifdef FEAT_GUI_DIALOG
-
+#if defined(FEAT_GUI_DIALOG) && defined(HAVE_X11_XPM_H)
 # include <X11/xpm.h>
-
 # include "../pixmaps/alert.xpm"
 # include "../pixmaps/error.xpm"
 # include "../pixmaps/generic.xpm"
@@ -1040,7 +1038,6 @@ gui_mch_destroy_menu(menu)
     if (menu->id != (Widget)0)
     {
 	Widget	    parent;
-	Cardinal    num_children;
 
 	parent = XtParent(menu->id);
 #if defined(FEAT_TOOLBAR) && defined(FEAT_BEVAL)
@@ -1066,6 +1063,8 @@ gui_mch_destroy_menu(menu)
 #ifdef FEAT_TOOLBAR
 	else if (parent == toolBar)
 	{
+	    Cardinal    num_children;
+
 	    /* When removing last toolbar item, don't display the toolbar. */
 	    XtVaGetValues(toolBar, XmNnumChildren, &num_children, NULL);
 	    if (num_children == 0)
@@ -1575,6 +1574,8 @@ gui_motif_set_fontlist(wg)
     }
 }
 
+#ifdef HAVE_X11_XPM_H
+
 static Widget create_pixmap_label(Widget parent, String name, char **data, ArgList args, Cardinal arg);
 
     static Widget
@@ -1585,19 +1586,14 @@ create_pixmap_label(parent, name, data, args, arg)
     ArgList	args;
     Cardinal	arg;
 {
-    Widget	label;
-    Display	*dsp;
-    Screen	*scr;
-    int		depth;
-    Pixmap	pixmap = 0;
-    XpmAttributes XpmAttr;
-    Boolean	rs;
-    Pixel	bg;
-    Pixel	fg;
-    Pixel	bsc;
-    Pixel	tsc;
-    Pixel	hsc;
-    XpmColorSymbol color[5] =
+    Widget		label;
+    Display		*dsp;
+    Screen		*scr;
+    int			depth;
+    Pixmap		pixmap = 0;
+    XpmAttributes	attr;
+    Boolean		rs;
+    XpmColorSymbol	color[5] =
     {
 	{"background", NULL, 0},
 	{"foreground", NULL, 0},
@@ -1618,26 +1614,20 @@ create_pixmap_label(parent, name, data, args, arg)
     XtVaGetValues(XtIsSubclass(label, coreWidgetClass)
 	    ?  label : XtParent(label),
 		  XmNdepth, &depth,
-		  XmNbackground, &bg,
-		  XmNforeground, &fg,
-		  XmNbottomShadowColor, &bsc,
-		  XmNtopShadowColor, &tsc,
-		  XmNhighlight, &hsc,
+		  XmNbackground, &color[0].pixel,
+		  XmNforeground, &color[1].pixel,
+		  XmNbottomShadowColor, &color[2].pixel,
+		  XmNtopShadowColor, &color[3].pixel,
+		  XmNhighlight, &color[4].pixel,
 		  NULL);
 
-    color[0].pixel = bg;
-    color[1].pixel = fg;
-    color[2].pixel = bsc;
-    color[3].pixel = tsc;
-    color[4].pixel = hsc;
-
-    XpmAttr.valuemask = XpmColorSymbols | XpmCloseness | XpmDepth;
-    XpmAttr.colorsymbols = color;
-    XpmAttr.numsymbols = 5;
-    XpmAttr.closeness = 65535;
-    XpmAttr.depth = depth;
+    attr.valuemask = XpmColorSymbols | XpmCloseness | XpmDepth;
+    attr.colorsymbols = color;
+    attr.numsymbols = 5;
+    attr.closeness = 65535;
+    attr.depth = depth;
     XpmCreatePixmapFromData(dsp, RootWindowOfScreen(scr),
-		    data, &pixmap, NULL, &XpmAttr);
+		    data, &pixmap, NULL, &attr);
 
     XtVaGetValues(label, XmNrecomputeSize, &rs, NULL);
     XtVaSetValues(label, XmNrecomputeSize, True, NULL);
@@ -1649,6 +1639,7 @@ create_pixmap_label(parent, name, data, args, arg)
 
     return label;
 }
+#endif
 
 /* ARGSUSED */
     int
@@ -1675,6 +1666,9 @@ gui_mch_dialog(type, title, message, button_names, dfltbutton, textfield)
     char		**icon_data = NULL;
     int			n;
     Arg			args[6];
+#ifdef HAVE_X11_XPM_H
+    Widget		dialogpixmap = NULL;
+#endif
 
     if (title == NULL)
 	title = (char_u *)_("Vim dialog");
@@ -1863,62 +1857,65 @@ gui_mch_dialog(type, title, message, button_names, dfltbutton, textfield)
 	    XmNtopAttachment, XmATTACH_FORM,
 	    NULL);
     XtManageChild(form);
+
+#ifdef HAVE_X11_XPM_H
+    /* Add a pixmap, left of the message. */
+    switch (type)
     {
-	Widget	    dialogpixmap = NULL;
-
-	/* Add pixmap */
-	switch (type)
-	{
-	    case VIM_GENERIC:
-		icon_data = generic_xpm;
-		break;
-	    case VIM_ERROR:
-		icon_data = error_xpm;
-		break;
-	    case VIM_WARNING:
-		icon_data = alert_xpm;
-		break;
-	    case VIM_INFO:
-		icon_data = info_xpm;
-		break;
-	    case VIM_QUESTION:
-		icon_data = quest_xpm;
-		break;
-	    default:
-		icon_data = generic_xpm;
-	}
-
-	n = 0;
-	XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
-	XtSetArg(args[n], XmNtopOffset, 8); n++;
-	XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
-	XtSetArg(args[n], XmNbottomOffset, 8); n++;
-	XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
-	XtSetArg(args[n], XmNleftOffset, 8); n++;
-
-	dialogpixmap = create_pixmap_label(form, "dialogPixmap",
-		icon_data, args, n);
-	XtManageChild(dialogpixmap);
-
-	/* Create the dialog message. */
-	label = XmStringLtoRCreate((char *)message, STRING_TAG);
-	if (label == NULL)
-	    return -1;
-	(void)XtVaCreateManagedWidget("dialogMessage",
-		xmLabelWidgetClass, form,
-		XmNlabelString, label,
-		XmNtopAttachment, XmATTACH_FORM,
-		XmNtopOffset, 8,
-		XmNleftAttachment, XmATTACH_WIDGET,
-		XmNleftWidget, dialogpixmap,
-		XmNleftOffset, 8,
-		XmNrightAttachment, XmATTACH_FORM,
-		XmNrightOffset, 8,
-		XmNbottomAttachment, XmATTACH_FORM,
-		XmNbottomOffset, 8,
-		NULL);
-	XmStringFree(label);
+	case VIM_GENERIC:
+	    icon_data = generic_xpm;
+	    break;
+	case VIM_ERROR:
+	    icon_data = error_xpm;
+	    break;
+	case VIM_WARNING:
+	    icon_data = alert_xpm;
+	    break;
+	case VIM_INFO:
+	    icon_data = info_xpm;
+	    break;
+	case VIM_QUESTION:
+	    icon_data = quest_xpm;
+	    break;
+	default:
+	    icon_data = generic_xpm;
     }
+
+    n = 0;
+    XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNtopOffset, 8); n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNbottomOffset, 8); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNleftOffset, 8); n++;
+
+    dialogpixmap = create_pixmap_label(form, "dialogPixmap",
+	    icon_data, args, n);
+    XtManageChild(dialogpixmap);
+#endif
+
+    /* Create the dialog message. */
+    label = XmStringLtoRCreate((char *)message, STRING_TAG);
+    if (label == NULL)
+	return -1;
+    (void)XtVaCreateManagedWidget("dialogMessage",
+				xmLabelWidgetClass, form,
+				XmNlabelString, label,
+				XmNtopAttachment, XmATTACH_FORM,
+				XmNtopOffset, 8,
+#ifdef HAVE_X11_XPM_H
+				XmNleftAttachment, XmATTACH_WIDGET,
+				XmNleftWidget, dialogpixmap,
+#else
+				XmNleftAttachment, XmATTACH_FORM,
+#endif
+				XmNleftOffset, 8,
+				XmNrightAttachment, XmATTACH_FORM,
+				XmNrightOffset, 8,
+				XmNbottomAttachment, XmATTACH_FORM,
+				XmNbottomOffset, 8,
+				NULL);
+    XmStringFree(label);
 
     if (textfield != NULL)
     {

@@ -1435,10 +1435,11 @@ clip_gen_request_selection(cbd)
 #ifdef VMS
 # define INBUFLEN 10000 /* for proper cut/paste between X windows in ch. mode */
 #else
-# ifdef FEAT_SUN_WORKSHOP
+# if defined(FEAT_SUN_WORKSHOP) || defined(FEAT_XCMDSRV)
    /*
     * Sun WorkShop stuffs debugger commands into the input buffer. This requires
     * a larger buffer...
+    * (Madsen) Go with this for remote input as well ...
     */
 #  define INBUFLEN 4096
 # else

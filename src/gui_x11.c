@@ -16,7 +16,8 @@
 #include <X11/cursorfont.h>
 
 #include "vim.h"
-#ifdef FEAT_SIGN_ICONS
+
+#ifdef HAVE_X11_XPM_H
 # include <X11/xpm.h>
 #endif
 
@@ -111,6 +112,9 @@ static void gui_x11_mouse_cb __ARGS((Widget w, XtPointer data, XEvent *event, Bo
 static void gui_x11_sniff_request_cb __ARGS((XtPointer closure, int *source, XtInputId *id));
 #endif
 static void gui_x11_check_copy_area __ARGS((void));
+#ifdef FEAT_XCMDSRV
+static void gui_x11_send_event_handler __ARGS((Widget, XtPointer, XEvent *, Boolean *));
+#endif
 static void gui_x11_wm_protocol_handler __ARGS((Widget, XtPointer, XEvent *, Boolean *));
 static void gui_x11_blink_cb __ARGS((XtPointer timed_out, XtIntervalId *interval_id));
 static Cursor gui_x11_create_blank_mouse __ARGS((void));
@@ -1285,8 +1289,9 @@ gui_mch_init()
     */
     if (vim_strchr(p_go, GO_ICON) != NULL)
     {
-#include "vim_icon.xbm"
-#include "vim_mask.xbm"
+#ifndef HAVE_X11_XPM_H
+# include "vim_icon.xbm"
+# include "vim_mask.xbm"
 
 	Arg	arg[2];
 
@@ -1303,6 +1308,76 @@ gui_mch_init()
 		    vim_mask_icon_width,
 		    vim_mask_icon_height));
 	XtSetValues(vimShell, arg, (Cardinal)2);
+#else
+/* Use Pixmaps, looking much nicer. */
+
+/* If you get an error message here, you still need to unpack the runtime
+ * archive! */
+# ifdef magick
+#  undef magick
+# endif
+# define magick vim32x32
+# include "../runtime/vim32x32.xpm"
+# undef magick
+# define magick vim16x16
+# include "../runtime/vim16x16.xpm"
+# undef magick
+# define magick vim48x48
+# include "../runtime/vim48x48.xpm"
+# undef magick
+
+    static Pixmap	icon = 0;
+    static Pixmap	icon_mask = 0;
+    static char		**magick = vim32x32;
+    Window		root_window;
+    XIconSize		*size;
+    int			number_sizes;
+    Display		*dsp;
+    Screen		*scr;
+    XpmAttributes	attr;
+    Colormap		cmap;
+
+    /*
+     * Adjust the icon to the preferences of the actual window manager.
+     */
+    root_window = XRootWindowOfScreen(XtScreen(vimShell));
+    if (XGetIconSizes(XtDisplay(vimShell), root_window,
+						   &size, &number_sizes) != 0)
+    {
+
+	if (number_sizes > 0)
+	{
+	    if (size->max_height >= 48 && size->max_height >= 48)
+		magick = vim48x48;
+	    else if (size->max_height >= 32 && size->max_height >= 32)
+		magick = vim32x32;
+	    else if (size->max_height >= 16 && size->max_height >= 16)
+		magick = vim16x16;
+	}
+    }
+
+    dsp = XtDisplay(vimShell);
+    scr = XtScreen(vimShell);
+
+    cmap = DefaultColormap(dsp, DefaultScreen(dsp));
+    XtVaSetValues(vimShell, XtNcolormap, cmap, NULL);
+
+    attr.valuemask = 0L;
+    attr.valuemask = XpmCloseness | XpmReturnPixels | XpmColormap | XpmDepth;
+    attr.closeness = 65535;	/* accuracy isn't crucial */
+    attr.colormap = cmap;
+    attr.depth = DefaultDepthOfScreen(scr);
+
+    if (!icon)
+	XpmCreatePixmapFromData(dsp, root_window, magick, &icon,
+							   &icon_mask, &attr);
+
+# ifdef FEAT_GUI_ATHENA
+    XtVaSetValues(vimShell, XtNiconPixmap, icon, XtNiconMask, icon_mask, NULL);
+# else
+    XtVaSetValues(vimShell, XmNiconPixmap, icon, XmNiconMask, icon_mask, NULL);
+# endif
+#endif
     }
 
     if (gui.color_approx)
@@ -1394,6 +1469,18 @@ gui_mch_open()
     XtAddEventHandler(vimShell, 0, True, _XEditResCheckMessages,
 	    (XtPointer)NULL);
 #endif
+
+#ifdef FEAT_XCMDSRV
+    /*
+     * Cannot handle "widget-less" windows with XtProcessEvent() we'll
+     * have to change the "send" registration to that of the main window
+     * If we have not opened the send stuff yet, remember the window
+     */
+    serverChangeRegisteredWindow(gui.dpy, XtWindow(vimShell));
+    XtAddEventHandler(vimShell, PropertyChangeMask, False,
+	              gui_x11_send_event_handler, NULL);
+#endif
+
 
 #if defined(FEAT_MENU) && defined(FEAT_GUI_ATHENA)
     /* The Athena GUI needs this again after opening the window */
@@ -1957,14 +2044,17 @@ gui_mch_get_color(reqname)
 	    /* The X11 system is trying to resolve named colors only by names
 	     * corresponding to the current locale language.  But Vim scripts
 	     * usually contain the English color names.  Therefore we have to
-	     * try a second time here with the native "C" locale set. */
-	    old = setlocale(LC_MESSAGES, NULL);
+	     * try a second time here with the native "C" locale set.
+	     * Hopefully, restoring the old locale this way works on all
+	     * systems...
+	     */
+	    old = setlocale(LC_ALL, NULL);
 	    if (old != NULL && STRCMP(old, "C") != 0)
 	    {
 		old = (char *)vim_strsave((char_u *)old);
-		setlocale(LC_MESSAGES, "C");
+		setlocale(LC_ALL, "C");
 		i = XParseColor(gui.dpy, colormap, (char *)name, &color);
-		setlocale(LC_MESSAGES, old);
+		setlocale(LC_ALL, old);
 		vim_free(old);
 	    }
 	}
@@ -2727,6 +2817,28 @@ gui_x11_wm_protocol_handler(w, client_data, event, dum)
 
     gui_shell_closed();
 }
+
+#ifdef FEAT_XCMDSRV
+/*
+ * Function called when property changed. Check for incoming commands
+ */
+/*ARGSUSED*/
+    static void
+gui_x11_send_event_handler(w, client_data, event, dum)
+    Widget	w;
+    XtPointer	client_data;
+    XEvent	*event;
+    Boolean	*dum;
+{
+    XPropertyEvent *e = (XPropertyEvent *) event;
+
+    if (e->type == PropertyNotify && e->window == commWindow
+	&& e->atom == commProperty &&  e->state == PropertyNewValue)
+    {
+	serverEventProc(gui.dpy, event);
+    }
+}
+#endif
 
 /*
  * Cursor blink functions.

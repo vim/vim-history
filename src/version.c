@@ -542,6 +542,11 @@ static char *(features[]) =
 	"-xim",
 #endif
 #ifdef UNIX
+# ifdef FEAT_XCMDSRV
+	"+xcmdsrv",
+# else
+	"-xcmdsrv",
+# endif
 # ifdef FEAT_XCLIPBOARD
 	"+xterm_clipboard",
 # else
@@ -892,8 +897,10 @@ intro_message(colon)
 #ifdef FEAT_WINDOWS
     /* Don't overwrite a statusline.  Depends on 'cmdheight'. */
     if (p_ls > 1)
-	blanklines -= p_ch;
+	blanklines -= Rows - topframe->fr_height;
 #endif
+    if (blanklines < 0)
+	blanklines = 0;
 
     /* start displaying the message lines after half of the blank lines */
     row = blanklines / 2;
@@ -923,6 +930,7 @@ intro_message(colon)
 	}
 #endif
     }
+    msg_row = row;
 }
 
     static void

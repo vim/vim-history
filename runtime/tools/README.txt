@@ -31,4 +31,7 @@ vimm:		Shell script to start Vim on a DEC terminal with mouse
 
 vimspell.*:	Shell script for highlighting spelling mistakes.
 
-[ctags, xxd and tee can be found in the src directory]
+xcmdsrv_client.c:  Example for a client program that communicates with a Vim
+		   server through the X-Windows interface.
+
+[xxd (and tee for OS/2) can be found in the src directory]

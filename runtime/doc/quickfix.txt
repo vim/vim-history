@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0aj.  Last change: 2001 Jun 10
+*quickfix.txt*  For Vim version 6.0ak.  Last change: 2001 Jun 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -201,7 +201,8 @@ The format of the file from the Aztec compiler is:
 	errornumber	number of the error (for lookup in the manual)
 	errormessage	description of the error
 
-			*errorformat* *E372* *E373* *E374* *E375* *E376* *E377* *E378*
+					*errorformat* *E372* *E373* *E374*
+						*E375* *E376* *E377* *E378*
 Another compiler is likely to use a different format.  You should set the
 'errorformat' option to a scanf-like string that describes the format.
 First, you need to know how scanf works.  Look in the documentation of your
@@ -209,7 +210,11 @@ C compiler.  Vim will understand the following conversion characters.
 Others are invalid.
 	%f		file name (finds a string)
 	%l		line number (finds a number)
-	%c		column number (finds a number)
+	%c		column number (finds a number representing character
+			column of the error, (1 <tab> == 1 character column))
+	%v		virtual column number (finds a number representing
+			screen column of the error (1 <tab> == |'tabstop'|
+			screen columns)
 	%t		error type (finds a single character)
 	%n		error number (finds a number)
 	%m		error message (finds a string)

@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.0aj.  Last change: 2001 Jun 06
+*map.txt*       For Vim version 6.0ak.  Last change: 2001 Jun 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -144,6 +144,9 @@ Example of what will fail: >
 
 "<buffer>", "<script>" and "<unique>" can be used in any order.  They must
 appear right after the command, before any other arguments.
+
+
+MAPPING AND MODES
 
 There are five sets of mappings
 - For Normal mode: When typing commands.
@@ -757,6 +760,8 @@ just like a built-in command (it can have a range or arguments, arguments can
 be completed as filenames or buffer names, etc), except that when the command
 is executed, it is transformed into a normal ex command and then executed.
 
+For starters: See section |40.2| in the user manual.
+
 							*E183*
 All user defined commands must start with an uppercase letter, to avoid
 confusion with builtin commands. (There are a few builtin commands, notably
@@ -834,8 +839,8 @@ command can take arguments, using the -nargs attribute. Valid cases are:
 Arguments are considered to be separated by (unescaped) spaces or Tabs in this
 context.
 
-Completion behavior					*E179* *E180* *E181*
-
+Completion behavior				*:command-completion*
+							*E179* *E180* *E181*
 By default, the arguments of user defined commands do not undergo completion.
 However, by specifying one or the other of the following attributes, argument
 completion can be enabled:

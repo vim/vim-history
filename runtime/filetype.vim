@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Jun 10
+" Last change:	2001 Jun 15
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -547,6 +547,10 @@ au BufNewFile,BufRead *.m			call FTCheck_m()
 fun! FTCheck_m()
   let n = 1
   while n < 10
+    if getline(n) =~ '^\s*#include' || getline(n) =~ '^\s*#import'
+      set ft=objc
+      return
+    endif
     if getline(n) =~ '^\s*%'
       setf matlab
       return

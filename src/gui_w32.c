@@ -307,7 +307,6 @@ gui_mswin_get_menu_height(
 }
 #endif /*FEAT_MENU*/
 
-
     static void
 _OnDropFiles(
     HWND hwnd,
@@ -1141,6 +1140,10 @@ gui_mch_set_shellsize(int width, int height, int min_width, int min_height,
     int	    win_xpos, win_ypos;
     WINDOWPLACEMENT wndpl;
 
+    /* Don't change the size when maximized. */
+    if (IsZoomed(s_hwnd))
+	return;
+
     /* try to keep window completely on screen */
     /* get size of the screen work area (excludes taskbar, appbars) */
     SystemParametersInfo(SPI_GETWORKAREA, 0, &workarea_rect, 0);
@@ -1521,13 +1524,12 @@ im_set_position(int row, int col)
 }
 
 /*
- * Set IM status.  If status is not 0, IM would be turn on.  If status is 0,
- * IM would be turn off.
+ * Set IM status on ("active" is TRUE) or off ("active" is FALSE).
  */
     void
 im_set_active(int active)
 {
-    HIMC    hImc;
+    HIMC	hImc;
 
     if ((hImc = ImmGetContext(s_hwnd)))
     {
@@ -1542,8 +1544,8 @@ im_set_active(int active)
     int
 im_get_status()
 {
-    int status = 0;
-    HIMC    hImc;
+    int		status = 0;
+    HIMC	hImc;
 
     if ((hImc = ImmGetContext(s_hwnd)))
     {
@@ -1574,8 +1576,7 @@ im_set_position(int row, int col)
 }
 
 /*
- * Set IM status.  If status is not 0, IM would be turn on.  If status is 0,
- * IM would be turn off.
+ * Set IM status on ("active" is TRUE) or off ("active" is FALSE).
  */
     void
 im_set_active(int active)
@@ -2508,7 +2509,7 @@ gui_mch_dialog(
 
     // Dialog needs to be taller if contains an edit box.
     editboxheight = fontHeight + dlgPaddingY + 4 * DLG_VERT_PADDING_Y;
-    if (type == VIM_QUESTION)
+    if (textfield != NULL)
 	dlgheight += editboxheight;
 
     add_word(PixelToDialogY(dlgheight));

@@ -1,4 +1,4 @@
-*fold.txt*      For Vim version 6.0aj.  Last change: 2001 Jun 09
+*fold.txt*      For Vim version 6.0ak.  Last change: 2001 Jun 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -468,8 +468,8 @@ expression.  It can use these special Vim variables:
 	v:foldstart	line number of first line in the fold
 	v:foldend	line number of last line in the fold
 	v:folddashes	a string that contains dashes to represent the
-			foldlevel.  The length can be used to get the
 			foldlevel.
+	v:foldlevel	the foldlevel of the fold
 
 In the result a TAB is replaced with a space and unprintable characters are
 made into printable characters.

@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0aj.  Last change: 2001 Jun 10
+*eval.txt*      For Vim version 6.0ak.  Last change: 2001 Jun 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -400,7 +400,7 @@ variable		internal variable
 See below |internal-variables|.
 
 
-function call			*expr-function* *E116* *E117* *E118* *E119* *E120* 
+function call		*expr-function* *E116* *E117* *E118* *E119* *E120* 
 -------------
 function(expr1, ...)	function call
 See below |functions|.
@@ -608,8 +608,12 @@ v:errmsg	Last given error message.  It's allowed to set this variable.
 <		"errmsg" also works, for backwards compatibility.
 
 					*v:folddashes* *folddashes-variable*
-v:folddashes	Used for 'foldtext': dashes representing foldlevel of closed
+v:folddashes	Used for 'foldtext': dashes representing foldlevel of a closed
 		fold.
+		Read-only. |fold-foldtext|
+
+					*v:foldlevel* *foldlevel-variable*
+v:foldlevel	Used for 'foldtext': foldlevel of closed fold.
 		Read-only. |fold-foldtext|
 
 					*v:foldend* *foldend-variable*
@@ -657,6 +661,9 @@ v:ctype		The current locale setting for characters of the runtime
 v:lnum		Line number for the 'foldexpr' and 'indentexpr' expressions.
 		Only valid while onf of these expressions is being evaluated.
 		Read-only. |fold-expr| 'indentexpr'
+
+					*v:servername* *servername-variable*
+v:servername	The resulting registered |x11-command-server| name if any.
 
 					*v:shell_error* *shell_error-variable*
 v:shell_error	Result of the last shell command.  When non-zero, the last
@@ -706,12 +713,15 @@ v:warningmsg	Last given warning message.  It's allowed to set this variable.
 ==============================================================================
 4. Builtin Functions					*functions*
 
+See |function-list| for a list grouped by what the function is used for.
+
 (Use CTRL-] on the function name to jump to the full explanation)
 
 USAGE				RESULT	DESCRIPTION	~
 
 append( {lnum}, {string})	Number  append {string} below line {lnum}
 argc()				Number	number of files in the argument list
+argidx()			Number  current index in the argument list
 argv( {nr})			String	{nr} entry of the argument list
 browse( {save}, {title}, {initdir}, {default})
 				String	put up a file requester
@@ -798,6 +808,7 @@ strpart( {src}, {start}[, {len}])
 				String	{len} characters of {src} at {start}
 strridx( {haystack}, {needle})	Number	last index of {needle} in {haystack}
 strtrans( {expr})		String	translate string to make it printable
+submatch( {nr})			String  specific match in ":substitute"
 substitute( {expr}, {pat}, {sub}, {flags})
 				String	all {pat} in {expr} replaced with {sub}
 synID( {line}, {col}, {trans})	Number	syntax ID at {line} and {col}
@@ -2358,8 +2369,9 @@ winaltkeys		Compiled with 'winaltkeys' option.
 win16			Win16 version of Vim (Windows 3.1).
 win32			Win32 version of Vim (Windows 95/NT).
 writebackup		Compiled with 'writebackup' default on.
-xim			Compiled with X input method support |xim|.
+xcmdsrv			Compiled with |x11-command-server| support.
 xfontset		Compiled with X fontset support |xfontset|.
+xim			Compiled with X input method support |xim|.
 xterm_clipboard		Compiled with support for xterm clipboard.
 xterm_save		Compiled with support for saving and restoring the
 			xterm screen.

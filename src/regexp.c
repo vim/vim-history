@@ -1116,18 +1116,22 @@ regconcat(flagp)
 	    case Magic('v'):
 			    reg_magic = MAGIC_ALL;
 			    skipchr_keepstart();
+			    curchr = -1;
 			    break;
 	    case Magic('m'):
 			    reg_magic = MAGIC_ON;
 			    skipchr_keepstart();
+			    curchr = -1;
 			    break;
 	    case Magic('M'):
 			    reg_magic = MAGIC_OFF;
 			    skipchr_keepstart();
+			    curchr = -1;
 			    break;
 	    case Magic('V'):
 			    reg_magic = MAGIC_NONE;
 			    skipchr_keepstart();
+			    curchr = -1;
 			    break;
 	    default:
 			    latest = regpiece(&flags);
@@ -1566,8 +1570,7 @@ regatom(flagp)
 			      char_u	*br;
 
 			      ret = NULL;
-			      while ((c = getchr()) != (reg_magic == MAGIC_ALL
-							  ? Magic(']') : ']'))
+			      while ((c = getchr()) != ']')
 			      {
 				  if (c == NUL)
 				      EMSG_M_RET_NULL("E69: Missing ] after %s%%[",
@@ -2347,14 +2350,19 @@ skipchr()
 
 /*
  * Skip a character while keeping the value of prev_at_start for at_start.
+ * prevchr and prevprevchr are also kept.
  */
     static void
 skipchr_keepstart()
 {
     int as = prev_at_start;
+    int pr = prevchr;
+    int prpr = prevprevchr;
 
     skipchr();
     at_start = as;
+    prevchr = pr;
+    prevprevchr = prpr;
 }
 
     static int
@@ -2751,16 +2759,17 @@ vim_regexec_both(line, col)
 	else
 #endif
 	    c = regline[col];
-	if (prog->regstart != NUL
-		&& prog->regstart != c
-		&& (!ireg_ic
+	if (prog->regstart == NUL
+		|| prog->regstart == c
+		|| (ireg_ic && ((
 #ifdef FEAT_MBYTE
-		    || c > 255 || prog->regstart > 255
+			(enc_utf8 && utf_fold(prog->regstart) == utf_fold(c)))
+			|| (c < 255 && prog->regstart < 255 &&
 #endif
-		    || TO_LOWER(prog->regstart) != TO_LOWER(c)))
-	    retval = 0;
-	else
+			    TO_LOWER(prog->regstart) == TO_LOWER(c)))))
 	    retval = regtry(prog, col);
+	else
+	    retval = 0;
     }
     else
     {
@@ -3351,7 +3360,11 @@ regmatch(scan)
 		opnd = OPERAND(scan);
 		/* Inline the first byte, for speed. */
 		if (*opnd != *reginput
-			&& (!ireg_ic || TO_LOWER(*opnd) != TO_LOWER(*reginput)))
+			&& (!ireg_ic || (
+#ifdef FEAT_MBYTE
+			    !enc_utf8 &&
+#endif
+			    TO_LOWER(*opnd) != TO_LOWER(*reginput))))
 		    return FALSE;
 		if (opnd[1] == NUL)
 		    ++reginput;		/* matched a single char */
@@ -5062,38 +5075,7 @@ cstrncmp(s1, s2, n)
 {
     if (!ireg_ic)
 	return STRNCMP(s1, s2, n);
-#ifdef FEAT_MBYTE
-    if (has_mbyte)
-    {
-	int	i, l;
-
-	for (i = 0; i < n && s1[i] != NUL; i += l)
-	{
-	    l = (*mb_ptr2len_check)(s1 + i);
-	    if (l == 1)
-	    {
-		/* single byte: ignore case. */
-		if (s1[i] != s2[i] && TO_LOWER(s1[i]) != TO_LOWER(s2[i]))
-		    return 1;
-	    }
-	    else
-	    {
-		/* For multi-byte only ignore case for Unicode. */
-		if (l > n - i)
-		    l = n - i;
-		if (enc_utf8)
-		{
-		    if (utf_fold(utf_ptr2char(s1 + i))
-					    != utf_fold(utf_ptr2char(s2 + i)))
-			return 1;
-		}
-		else if (STRNCMP(s1 + i, s2 + i, l) != 0)
-		    return 1;
-	    }
-	}
-    }
-#endif
-    return STRNICMP(s1, s2, n);
+    return MB_STRNICMP(s1, s2, n);
 }
 
 /*

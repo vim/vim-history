@@ -39,6 +39,7 @@ static XtIntervalId timer = 0;	    /* 0 = expired, otherwise active */
 static vimmenu_T *a_cur_menu = NULL;
 static Cardinal	athena_calculate_ins_pos __ARGS((Widget));
 
+static Pixmap gui_athena_create_pullright_pixmap __ARGS((void));
 static void gui_athena_menu_timeout __ARGS((XtPointer, XtIntervalId *));
 static void gui_athena_popup_callback __ARGS((Widget, XtPointer, XtPointer));
 static void gui_athena_delayed_arm_action __ARGS((Widget, XEvent *, String *,
@@ -63,14 +64,7 @@ static void gui_athena_scroll_colors __ARGS((Widget id));
 
 #ifdef FEAT_MENU
 static XtTranslations	popupTrans, parentTrans, menuTrans, supermenuTrans;
-static Pixmap		pullerBitmap;
-static char_u puller_bits[] =
-{
-    0x00,0x00,0xf8,0x00,0x00,0xf8,0xf8,0x7f,0xf8,0x04,0x80,0xf8,0x04,0x80,0xf9,
-    0x84,0x81,0xf9,0x84,0x83,0xf9,0x84,0x87,0xf9,0x84,0x8f,0xf9,0x84,0x8f,0xf9,
-    0x84,0x87,0xf9,0x84,0x83,0xf9,0x84,0x81,0xf9,0x04,0x80,0xf9,0x04,0x80,0xf9,
-    0xf8,0xff,0xf9,0xf0,0x7f,0xf8,0x00,0x00,0xf8,0x00,0x00,0xf8
-};
+static Pixmap		pullerBitmap = None;
 #endif
 
 /*
@@ -276,13 +270,71 @@ gui_x11_create_widgets()
     XtAppAddActions(XtWidgetToApplicationContext(vimForm), pullAction,
 		    XtNumber(pullAction));
 
-    pullerBitmap = XCreateBitmapFromData(gui.dpy, DefaultRootWindow(gui.dpy),
-			    (char *)puller_bits, puller_width, puller_height);
+    pullerBitmap = gui_athena_create_pullright_pixmap();
 #endif
 
     /* Pretend we don't have input focus, we will get an event if we do. */
     gui.in_focus = FALSE;
 }
+
+#ifdef FEAT_MENU
+/*
+ * Calculates the Pixmap based on the size of the current menu font.
+ */
+    static Pixmap
+gui_athena_create_pullright_pixmap()
+{
+    Pixmap  retval;
+    XFontStruct	*font;
+
+    if (gui.menu_font == NOFONT)
+    {
+	XrmValue from, to;
+
+	from.size = strlen(from.addr = XtDefaultFont);
+	if (XtConvertAndStore(menuBar, XtRString, &from, XtRFontStruct, &to)
+		== False)
+	    return NULL;
+	font = *(XFontStruct **)to.addr;
+    }
+    else
+	font = (XFontStruct *)gui.menu_font;
+
+    {
+	int	    width, height;
+	GC	    draw_gc, undraw_gc;
+	XGCValues   gc_values;
+	XPoint	    points[3];
+
+	height = font->max_bounds.ascent + font->max_bounds.descent;
+	width = height - 2;
+	retval = XCreatePixmap(gui.dpy,DefaultRootWindow(gui.dpy),width,
+			       height, 1);
+	gc_values.foreground = 1;
+	gc_values.background = 0;
+	draw_gc = XCreateGC(gui.dpy, retval,
+		    GCForeground | GCBackground,
+		    &gc_values);
+	gc_values.foreground = 0;
+	gc_values.background = 1;
+	undraw_gc = XCreateGC(gui.dpy, retval,
+			      GCForeground | GCBackground,
+			      &gc_values);
+	points[0].x = 0;
+	points[0].y = 0;
+	points[1].x = width - 1;
+	points[1].y = (height - 1) / 2;
+	points[2].x = 0;
+	points[2].y = height - 1;
+	XFillRectangle(gui.dpy, retval, undraw_gc, 0, 0, height, height);
+	XFillPolygon(gui.dpy, retval, draw_gc, points, XtNumber(points),
+		     Convex, CoordModeOrigin);
+	XFreeGC(gui.dpy, draw_gc);
+	XFreeGC(gui.dpy, undraw_gc);
+    }
+    return retval;
+}
+#endif
 
 /*
  * Called when the GUI is not going to start after all.
@@ -607,6 +659,8 @@ gui_athena_menu_font(id)
 	else
 #endif
 	    XtVaSetValues(id, XtNfont, gui.menu_font, NULL);
+	if (has_submenu(id))
+	    XtVaSetValues(id, XtNrightBitmap, pullerBitmap, NULL);
 
 	/* Force the widget to recalculate it's geometry now. */
 	if (managed)
@@ -618,8 +672,16 @@ gui_athena_menu_font(id)
     void
 gui_mch_new_menu_font()
 {
+    Pixmap oldpuller = None;
+
     if (menuBar == (Widget)0)
 	return;
+
+    if (pullerBitmap != None)
+    {
+	oldpuller = pullerBitmap;
+	pullerBitmap = gui_athena_create_pullright_pixmap();
+    }
     gui_mch_submenu_change(root_menu, FALSE);
 
     {
@@ -679,6 +741,8 @@ gui_mch_new_menu_font()
     }
     gui_set_shellsize(TRUE);
     ui_new_shellsize();
+    if (oldpuller != None)
+	XFreePixmap(gui.dpy, oldpuller);
 }
 
 

@@ -1718,6 +1718,43 @@ utf_isupper(a)
     return (utf_tolower(a) != a);
 }
 
+/*
+ * Version of strnicmp() that handles multi-byte characters.
+ * Returns zero if s1 and s2 are equal (ignoring case), one otherwise.
+ */
+    int
+mb_strnicmp(s1, s2, n)
+    char_u	*s1, *s2;
+    int		n;
+{
+    int	i, l;
+
+    for (i = 0; i < n && s1[i] != NUL; i += l)
+    {
+	l = (*mb_ptr2len_check)(s1 + i);
+	if (l == 1)
+	{
+	    /* single byte: ignore case. */
+	    if (s1[i] != s2[i] && TO_LOWER(s1[i]) != TO_LOWER(s2[i]))
+		return 1;
+	}
+	else
+	{
+	    /* For multi-byte only ignore case for Unicode. */
+	    if (l > n - i)
+		l = n - i;
+	    if (enc_utf8)
+	    {
+		if (utf_fold(utf_ptr2char(s1 + i))
+					    != utf_fold(utf_ptr2char(s2 + i)))
+		    return 1;
+	    }
+	    else if (STRNCMP(s1 + i, s2 + i, l) != 0)
+		return 1;
+	}
+    }
+    return 0;
+}
 
 /*
  * "g8": show bytes of the UTF-8 char under the cursor.  Doesn't matter what
@@ -2522,36 +2559,50 @@ iconv_end()
 
 #if defined(FEAT_XIM) || defined(PROTO)
 
-static int	xim_has_focus = 0;
+static int	xim_is_active = FALSE;  /* XIM should be active in the current
+					   mode */
+static int	xim_has_focus = FALSE;	/* XIM is really being used for Vim */
 #ifdef FEAT_GUI_X11
 static XIMStyle	input_style;
 static int	status_area_enabled = TRUE;
 #endif
 
 #ifdef FEAT_GUI_GTK
-static int xim_input_style;
+static int	xim_input_style;
 static gboolean	use_status_area = 0;
 #endif
 
+/*
+ * Switch using XIM on/off.  This is used by the code that changes "State".
+ */
     void
 im_set_active(active)
     int		active;
 {
-    xim_set_focus(active);
+    /* Remember the active state, it is needed when Vim gets keyboard focus. */
+    xim_is_active = active;
+    xim_set_focus(TRUE);
 }
 
+/*
+ * Adjust using XIM for gaining or losing keyboard focus.  Also called when
+ * "xim_is_active" changes.
+ */
     void
 xim_set_focus(int focus)
 {
     if (xic == NULL)
 	return;
 
-    if (focus)
+    /*
+     * XIM only gets focus when the Vim window has keyboard focus and XIM has
+     * been set active for the current mode.
+     */
+    if (focus && xim_is_active)
     {
-	/* In Normal mode, do not connect to IM. */
-	if (!xim_has_focus && !(State & NORMAL))
+	if (!xim_has_focus)
 	{
-	    xim_has_focus = 1;
+	    xim_has_focus = TRUE;
 #ifdef FEAT_GUI_GTK
 	    gdk_im_begin(xic, gui.drawarea->window);
 #else
@@ -2563,7 +2614,7 @@ xim_set_focus(int focus)
     {
 	if (xim_has_focus)
 	{
-	    xim_has_focus = 0;
+	    xim_has_focus = FALSE;
 #ifdef FEAT_GUI_GTK
 	    gdk_im_end();
 #else

@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 6.0aj.  Last change: 2001 Jun 09
+*help.txt*	For Vim version 6.0ak.  Last change: 2001 Jun 17
 
 			VIM - main help file
 									 k
@@ -70,8 +70,8 @@ Editing Effectively ~
 |usr_31.txt|  Exploiting the GUI
 
 Tuning Vim ~
-|usr_40.txt|  Write a Vim script
-|usr_41.txt|  Make new commands
+|usr_40.txt|  Make new commands
+|usr_41.txt|  Write a Vim script
 |usr_42.txt|  Add new menus
 |usr_43.txt|  Using filetypes
 |usr_44.txt|  Your own syntax highlighted
@@ -179,9 +179,6 @@ Standard plugins	*standard-plugin-list* ~
 |pi_expl.txt|	File explorer
 
 LOCAL ADDITIONS:
-|example.txt|	Example for a locally added help file
-|test.txt|	Testing the help command now
-|typecorr.txt|	Plugin for correcting typing mistakes
 
 ------------------------------------------------------------------------------
 *bars*		Bars example

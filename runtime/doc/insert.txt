@@ -1,4 +1,4 @@
-*insert.txt*    For Vim version 6.0aj.  Last change: 2001 Jun 03
+*insert.txt*    For Vim version 6.0ak.  Last change: 2001 Jun 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -545,6 +545,26 @@ a bit easier (although they will hide other commands):
     :inoremap ^F ^X^F
     :inoremap ^D ^X^D
     :inoremap ^L ^X^L
+
+As a special case, typing CTRL-R to perform register insertion (see
+|i_CTRL-R|) will not exit CTRL-X mode.  This is primarily to allow the use of
+the '=' register to call some function to determine the next operation.  If
+the contents of the register (or result of the '=' register evaluation) are
+not valid CTRL-X mode keys, then CTRL-X mode will be exited as if those keys
+had been typed.
+
+For example, the following will map <Tab> to either actually insert a <Tab> if
+the current line is currently only whitespace, or start/continue a CTRL-N
+completion operation: >
+
+	function! CleverTab()
+	   if strpart( getline('.'), 1, col('.')-1 ) =~ '^\s*$'
+	      return "\<Tab>"
+	   else
+	      return "\<C-N>"
+	endfunction
+	inoremap <Tab> <C-R>=CleverTab()<CR>
+
 
 
 Completing whole lines					*compl-whole-line*

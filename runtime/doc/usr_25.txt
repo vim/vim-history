@@ -1,4 +1,4 @@
-*usr_25.txt*	For Vim version 6.0aj.  Last change: 2001 Jun 07
+*usr_25.txt*	For Vim version 6.0ak.  Last change: 2001 Jun 12
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -275,7 +275,7 @@ that it looks the same.  It changes spans of white space into tabs and spaces
 for this.  You can now write the file.  Next time you edit it the indents will
 be right without setting an option.
    Warning: When using ":retab" on a program, it may change white space inside
-a string definition.
+a string constat.
 
 ==============================================================================
 *25.4*	Dealing with long lines

@@ -1,4 +1,4 @@
-*usr_05.txt*	For Vim version 6.0aj.  Last change: 2001 Jun 07
+*usr_05.txt*	For Vim version 6.0ak.  Last change: 2001 Jun 15
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -58,7 +58,7 @@ For this new line to take effect you need to exit Vim and start it again.
 Later you will learn how to do this without exiting Vim.
 
 This chapter only explains the most basic items.  For more information on how
-to write a Vim script file: |usr_40.txt|.
+to write a Vim script file: |usr_41.txt|.
 
 ==============================================================================
 *05.2*  The example vimrc file explained
@@ -148,7 +148,7 @@ them.
 This switches on syntax highlighting, but only if colors are available.  And
 the 'hlsearch' option tells Vim to highlight matches with the last used search
 pattern.  The "if" command is very useful to set options only when some
-condition is met.  More about that in |usr_40.txt|.
+condition is met.  More about that in |usr_41.txt|.
 
 							*vimrc-filetype*  >
 	filetype plugin indent on

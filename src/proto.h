@@ -188,6 +188,9 @@ extern char *vim_SelFile __ARGS((Widget toplevel, char *prompt, char *init_path,
 #  ifdef FEAT_GUI_X11
 #   include "gui_x11.pro"
 #  endif
+#  ifdef FEAT_XCMDSRV
+#   include "if_xcmdsrv.pro"
+#  endif
 #  if defined(FEAT_GUI_AMIGA)
 #    include "gui_amiga.pro"
 #  endif

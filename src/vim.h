@@ -229,6 +229,15 @@
 #  define MAXPATHL  256
 # endif
 #endif
+#ifdef BACKSLASH_IN_FILENAME
+# define PATH_ESC_CHARS ((char_u *)" *?[{`%#")
+#else
+# ifdef COLON_AS_PATHSEP
+#  define PATH_ESC_CHARS ((char_u *)" *?[{`$%#/")
+# else
+#  define PATH_ESC_CHARS ((char_u *)" *?[{`$\\%#'\"|")
+# endif
+#endif
 
 #define NUMBUFLEN 30	    /* length of a buffer to store a number in ASCII */
 
@@ -1099,6 +1108,7 @@ enum hlf_value
 #  define STRICMP(d, s)	    vim_stricmp((char *)(d), (char *)(s))
 # endif
 #endif
+
 #ifdef HAVE_STRNCASECMP
 # define STRNICMP(d, s, n)  strncasecmp((char *)(d), (char *)(s), (size_t)(n))
 #else
@@ -1108,6 +1118,15 @@ enum hlf_value
 #  define STRNICMP(d, s, n) vim_strnicmp((char *)(d), (char *)(s), (size_t)(n))
 # endif
 #endif
+
+#ifdef FEAT_MBYTE
+# define MB_STRICMP(d, s)	(has_mbyte ? mb_strnicmp((char_u *)(d), (char_u *)(s), (int)MAXCOL) : STRICMP((d), (s)))
+# define MB_STRNICMP(d, s, n)	(has_mbyte ? mb_strnicmp((char_u *)(d), (char_u *)(s), (int)(n)) : STRNICMP((d), (s), (n)))
+#else
+# define MB_STRICMP(d, s)	STRICMP((d), (s))
+# define MB_STRNICMP(d, s, n)	STRNICMP((d), (s), (n))
+#endif
+
 #define STRCAT(d, s)	    strcat((char *)(d), (char *)(s))
 #define STRNCAT(d, s, n)    strncat((char *)(d), (char *)(s), (size_t)(n))
 
@@ -1180,8 +1199,8 @@ void mch_memmove __ARGS((void *, void *, size_t));
 #  define fnamecmp(x, y) vim_fnamecmp((x), (y))
 #  define fnamencmp(x, y, n) vim_fnamencmp((x), (y), (size_t)(n))
 # else
-#  define fnamecmp(x, y) STRICMP((x), (y))
-#  define fnamencmp(x, y, n) STRNICMP((x), (y), (n))
+#  define fnamecmp(x, y) MB_STRICMP((x), (y))
+#  define fnamencmp(x, y, n) MB_STRNICMP((x), (y), (n))
 # endif
 #else
 # define fnamecmp(x, y) strcmp((char *)(x), (char *)(y))
@@ -1320,8 +1339,10 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 #define VV_FOLDSTART	22
 #define VV_FOLDEND	23
 #define VV_FOLDDASHES	24
-#define VV_PROGNAME	25
-#define VV_LEN		26	/* number of v: vars */
+#define VV_FOLDLEVEL	25
+#define VV_PROGNAME	26
+#define VV_SEND_SERVER	27
+#define VV_LEN		28	/* number of v: vars */
 
 #ifdef FEAT_CLIPBOARD
 

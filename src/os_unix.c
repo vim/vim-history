@@ -4552,6 +4552,7 @@ save_patterns(num_pat, pat, num_file, file)
 }
 #endif
 
+
 /*
  * Return TRUE if the string "p" contains a wildcard.
  * Don't recognize '~' at the end as a wildcard.
@@ -5135,8 +5136,22 @@ clear_xterm_clip()
     static void
 xterm_update()
 {
+    XEvent event;
+
     while (XtAppPending(app_context) && !vim_is_input_buf_full())
-	XtAppProcessEvent(app_context, (XtInputMask)XtIMAll);
+    {
+        XtAppNextEvent(app_context, &event);
+#ifdef FEAT_XCMDSRV
+	{
+	    XPropertyEvent *e = (XPropertyEvent *)&event;
+
+	    if (e->type == PropertyNotify && e->window == commWindow
+		  && e->atom == commProperty &&  e->state == PropertyNewValue)
+		serverEventProc(xterm_dpy, &event);
+	}
+#endif
+	XtDispatchEvent(&event);
+    }
 }
 
     int

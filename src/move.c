@@ -965,15 +965,6 @@ curs_columns(scroll)
     curwin->w_wcol = curwin->w_virtcol + extra;
     endcol += extra;
 
-#ifdef FEAT_VIRTUALEDIT
-    if (ve_flags == VE_ALL
-# ifdef FEAT_FOLDING
-	    && !curwin->w_cline_folded
-# endif
-	    )
-	startcol = endcol = curwin->w_wcol;
-#endif
-
     /*
      * Now compute w_wrow, counting screen lines from w_cline_row.
      */

@@ -770,7 +770,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60aj
+VIMRTDIR = /vim60ak
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
 SYNSUBDIR = /syntax
@@ -1146,6 +1146,7 @@ BASIC_SRC = \
 	fold.c \
 	getchar.c \
 	if_cscope.c \
+	if_xcmdsrv.c \
 	main.c \
 	mark.c \
 	memfile.c \
@@ -1210,6 +1211,7 @@ OBJ = \
 	objects/getchar.o \
 	$(HANGULIN_OBJ) \
 	objects/if_cscope.o \
+	objects/if_xcmdsrv.o \
 	objects/main.o \
 	objects/mark.o \
 	objects/memfile.o \
@@ -1261,6 +1263,7 @@ PRO_AUTO = \
 	getchar.pro \
 	hangulin.pro \
 	if_cscope.pro \
+	if_xcmdsrv.pro \
 	if_python.pro \
 	if_ruby.pro \
 	main.pro \
@@ -1977,6 +1980,9 @@ objects/hangulin.o: hangulin.c
 objects/if_cscope.o: if_cscope.c
 	$(CCC) -o $@ if_cscope.c
 
+objects/if_xcmdsrv.o: if_xcmdsrv.c
+	$(CCC) -o $@ if_xcmdsrv.c
+
 objects/if_perl.o: auto/if_perl.c
 	$(CCC) -o $@ auto/if_perl.c
 
@@ -2146,6 +2152,9 @@ objects/getchar.o: getchar.c vim.h auto/config.h feature.h os_unix.h \
 objects/if_cscope.o: if_cscope.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h option.h ex_cmds.h proto.h globals.h farsi.h if_cscope.h
+objects/if_xcmdsrv.o: if_xcmdsrv.c vim.h auto/config.h feature.h os_unix.h \
+ auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/main.o: main.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
  ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h option.h \
  ex_cmds.h proto.h globals.h farsi.h farsi.c
@@ -2265,8 +2274,9 @@ objects/gui_gtk_x11.o: gui_gtk_x11.c vim.h auto/config.h feature.h os_unix.h \
  ../runtime/vim48x48.xpm
 objects/gui_x11.o: gui_x11.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h option.h ex_cmds.h proto.h globals.h farsi.h vim_icon.xbm \
- vim_mask.xbm ../pixmaps/tb_new.xpm ../pixmaps/tb_open.xpm \
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h \
+ ../runtime/vim32x32.xpm ../runtime/vim16x16.xpm \
+ ../runtime/vim48x48.xpm ../pixmaps/tb_new.xpm ../pixmaps/tb_open.xpm \
  ../pixmaps/tb_close.xpm ../pixmaps/tb_save.xpm \
  ../pixmaps/tb_print.xpm ../pixmaps/tb_cut.xpm ../pixmaps/tb_copy.xpm \
  ../pixmaps/tb_paste.xpm ../pixmaps/tb_find.xpm \

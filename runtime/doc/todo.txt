@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0aj.  Last change: 2001 Jun 10
+*todo.txt*      For Vim version 6.0ak.  Last change: 2001 Jun 17
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,19 +29,11 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Win32: When the gvim window is maximized and selecting another font, the
-window no longer fills the screen.
+Win32: Try out new Make_ivc.mak.  Should make it a lot shorter, but keep it
+working for VC 4.0 to VC 7, and with nmake.
 
-Win32: Editing a file by its short name should expand into the long name.
-Worked OK in 6.0ae.  (Webb)
-
-Win32: Try out new Make_ivc.mak.  Include it when it works.
-
-Multibyte: Use new upper/lower case code for STRICMP() and STRNICMP().
-
-Add X-Windows patch to communicate between two Vims?  (Flemming Madsen)
-
-Toolbar icons from Steve Wall?
+Win32: search for "expression" in doc/eval.txt.  When wrapping around all the
+text gets red? (Chan)  I can't reproduce it.
 
 Add Cscope patch. (Jason Duell)  Wait for comments from Andy Kahn.
 
@@ -75,15 +67,9 @@ J.  User Friendlier
 
 E. Virtual edit:
 -   Still some work to do.  Need to test various commands.
--   When doing Visual selection and including space after the end-of-line it
-    is not included in the operation.  Should this be changed to include the
-    space after the end-of-line?
--   'fdc' set to 2, 'sidescroll' to 1, 'nowrap': using ' ' to go past the end
-    of the line, the "0" to go to the start: text disappears under the
-    foldcolumn. (Pritesh Mistry)
 -   Visual selection of virtual space does not work when 'list' is on.
 -   Add more documentation.
--   Use vpos_T instead of fpos_T for positions that can have a coladd?
+-   Use lpos_T instead of pos_T for positions that do not have a coladd?
 -   coladvance2() can be a bit slow.  Check with profiling.
 -   Add a mode where the cursor is only allowed to go one character after the
     end of the line?
@@ -618,14 +604,7 @@ Macintosh:
 
 
 VMS:
-8   VAX doesn't have rmdir(), required in vim_deltempdir().
 8   vimdiff doesn't work, because the diff output looks different.
-8   VMS: Inserts <NL> every 8291 bytes when writing. (Howie)  4.5 didn't have
-    this problem.  It's caused by the write() function, need to write() every
-    line separately.  It seems read() also returns a single line.  Switch I/O
-    to binary mode somehow?
-7   Lots of code in common with os_unix.c, but many fixes are missing.  Move
-    shared code to a common file?  Use one file with #ifdefs?
 
 
 "Small" problems:
@@ -917,6 +896,7 @@ Folding:
 -   'foldmethod' "syntax": "fold=3": set fold level for a region.
 -   Can set 'foldtext' to empty string: don't display any line.  How to
     implement this?
+-   Apply a new foldlevel to a range of lines. (Steve Litt)
 
 
 Multi-byte characters:
@@ -1967,7 +1947,8 @@ Visual mode:
 
 Quickfix:
 8   Quickfix mode: Column number should be interpreted with an 8-character
-    tabstop.
+    tabstop.  Add a "%v" item for this, so that the old "%c" remains working
+    as it did.
 
 
 More advanced repeating commands:

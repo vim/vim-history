@@ -56,6 +56,9 @@
 #endif
 /* ---------------------------------------- */
 
+/* Macro to do an error check I was typing over and over */
+#define CHECK_REG_ERROR(code, func_name) if( code != ERROR_SUCCESS ) { printf("%s error number:  %d\n", func_name, code); return; }
+
 #include "version.h"
 
 #define BUFSIZE 512		/* long enough to hold a file name path */
@@ -1496,6 +1499,134 @@ init_vimrc_choices(void)
     ++choice_count;
 }
 
+
+#ifdef WIN3264
+/*
+ * If there are old "Edit with Vim" entries in the registry, uninstall them.
+ */
+    static void
+uninstall_old_popups()
+{
+    HKEY key_handle;
+    HKEY uninstall_key_handle;
+    char *uninstall_key = "software\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
+    char subkey_name_buff[BUFSIZE];
+    char temp_string_buffer[BUFSIZE];
+    char uninstall_string[BUFSIZE];
+    long local_bufsize = BUFSIZE;
+    PFILETIME temp_pfiletime;
+    DWORD key_index;
+    char input;
+    long code;
+    long value_type;
+    long orig_num_keys;
+    long new_num_keys;
+
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, uninstall_key, 0, KEY_READ, &key_handle);
+    CHECK_REG_ERROR(code, "RegOpenKeyEx");
+
+    for(key_index = 0;
+        RegEnumKeyEx(key_handle, key_index, subkey_name_buff, &local_bufsize, NULL, NULL, NULL, temp_pfiletime) != ERROR_NO_MORE_ITEMS;
+        key_index++)
+    {
+        local_bufsize = BUFSIZE;
+        if(strncmp("Vim", subkey_name_buff, 3) == 0)
+        {
+            /* Open the key named Vim* */
+            code = RegOpenKeyEx(key_handle, subkey_name_buff, 0, KEY_READ, &uninstall_key_handle);
+            CHECK_REG_ERROR(code, "RegOpenKeyEx");
+
+            /* get the DisplayName out of it to show the user */
+            code = RegQueryValueEx(uninstall_key_handle, "displayname", 0, &value_type, temp_string_buffer, &local_bufsize);
+            local_bufsize = BUFSIZE;
+            CHECK_REG_ERROR(code, "RegQueryValueEx");
+
+            printf("\n*********************************************************\n");
+            printf("Vim Install found what may be a previous version of the\n");
+            printf("\"Edit with Vim\" popup menu entry.  The name of the entry is:\n");
+            printf("\n        \"%s\"\n", temp_string_buffer);
+
+            printf("\nYou will now be given the choice of whether to uninstall this entry.\n");
+            printf("If you do not uninstall it now, the new \"Edit with Vim\" can still be\n");
+            printf("installed, and you may uninstall old versions manually at a later date by\n");
+            printf("Start Menu->Settings->Control Panel->Add/Remove Programs and selecting\n");
+            printf("\"%s\" from the list.\n", subkey_name_buff);
+
+            printf("\nDo you want to uninstall \"%s\" now?\n    (y)es (n)o)\n\n", temp_string_buffer);
+            
+            input = 'n';
+            do
+            {
+                if(input != 'n')
+                {
+                    printf("%c is an invalid option.  Please enter either 'y' or 'n'\n", input);
+                }
+
+                fflush(stdin);
+                fscanf(stdin, "%c", &input);
+                switch(input)
+                {
+                    case 'y':
+                    case 'Y':
+                    {
+                        /* Uninstall the old entry */
+
+                        code = RegQueryValueEx(uninstall_key_handle, "uninstallstring", 0, &value_type, temp_string_buffer, &local_bufsize);
+                        CHECK_REG_ERROR(code, "RegQueryInfoKey");
+
+                        if (value_type == REG_EXPAND_SZ)
+                        {
+                            /* There are environment variables (%WINDIR% for example) in the
+                             * path */
+                            ExpandEnvironmentStrings(temp_string_buffer, uninstall_string, BUFSIZE);
+                        }
+                        else
+                        {
+                            /* no environment variables, just copy the result to the pointer we
+                             * got */
+                            strcpy(uninstall_string, temp_string_buffer);
+                        }
+
+                        printf("Vim install is about to Execute uninstaller: \"%s\"\n", temp_string_buffer);
+                        printf("Please answer the questions when prompted by the uninstaller.\n");
+                        printf("When the uninstall is complete, you will return to this install program.\n");
+                        printf("\n------------ Executing external uninstall -----------\n\n");
+
+                        /* save the number of uninstall keys so we can know if it changed */
+                        RegQueryInfoKey(key_handle, NULL, NULL, NULL, &orig_num_keys, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+
+                        /* Execute the uninstallstring */
+                        system(temp_string_buffer);
+
+                        /* Check if an unistall reg key was deleted.
+                         * if it was, we want to decrement key_index.
+                         * if we don't do this, we will skip the key
+                         * immediately after any key that we delete.
+                         */
+                        RegQueryInfoKey(key_handle, NULL, NULL, NULL, &new_num_keys, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                        if(new_num_keys < orig_num_keys)
+                        {
+                            key_index--;
+                        }
+                        key_index--;
+
+                        printf("\n--------- Done Executing external uninstall ---------\n\n");
+                        break;
+                    }
+                    case 'n':
+                    case 'N':
+                        /* Do not uninstall */
+                        break;
+                    default: /* just drop through and redo the loop */
+                        break;
+                }
+                
+            }while((input != 'n') && (input != 'y'));
+        }
+    }
+}
+#endif /* WIN3264 */
+
 /*
  * Add some entries to the registry to add "Edit with Vim" to the context
  * menu.
@@ -1504,6 +1635,10 @@ init_vimrc_choices(void)
 install_popup(int idx)
 {
     FILE	*fd;
+
+#ifdef WIN3264
+    uninstall_old_popups();
+#endif
 
     fd = fopen("vim.reg", "w");
     if (fd == NULL)
@@ -1628,7 +1763,7 @@ create_shortcut(
 	const char *workingdir
 	)
 {
-   IShellLinkA	    *shelllink_ptr;
+   IShellLink	    *shelllink_ptr;
    HRESULT	    hres;
    IPersistFile	    *persistfile_ptr;
 

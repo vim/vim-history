@@ -372,7 +372,7 @@ typedef struct dsc$descriptor   DESC;
 #  endif
 # endif
 #endif
-  
+
 #define DFLT_ERRORFILE		"errors.err"
 #define DFLT_MAKEEF		""
 
@@ -394,7 +394,9 @@ typedef struct dsc$descriptor   DESC;
 # define TEMPNAMELEN	128
 #else
 # ifdef VMS
-#  define VMS_TEMPNAM    /* to fix default .LIS extension */
+#  ifndef VAX
+#   define VMS_TEMPNAM    /* to fix default .LIS extension */
+#  endif
 #  define TEMPNAME       "TMP:v?XXXXXX.txt"
 #  define TEMPNAMELEN    28
 # else

@@ -86,7 +86,7 @@ vimrun.exe: vimrun.c
 	$(CC) $(CFLAGS) -s -o vimrun.exe vimrun.c  -lkernel32 -luser32 -lgdi32 -ladvapi32
 
 install.exe: dosinst.c
-	$(CC) $(CFLAGS) -s -o install.exe dosinst.c  -lkernel32 -luser32 -lgdi32 -ladvapi32
+	$(CC) $(CFLAGS) -s -o install.exe dosinst.c  -lkernel32 -luser32 -lgdi32 -ladvapi32 -luuid -lcomctl32 -lole32
 
 uninstall.exe: uninstal.c
 	$(CC) $(CFLAGS) -s -o uninstall.exe uninstal.c  -lkernel32 -luser32 -lgdi32 -ladvapi32

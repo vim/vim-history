@@ -1561,13 +1561,13 @@ line_read_in:
 		}
 		else if (state == TS_SKIP_BACK)
 		{
-		    if (STRNICMP(tagp.tagname, pathead, cmplen) != 0)
+		    if (MB_STRNICMP(tagp.tagname, pathead, cmplen) != 0)
 			state = TS_STEP_FORWARD;
 		    continue;
 		}
 		else if (state == TS_STEP_FORWARD)
 		{
-		    if (STRNICMP(tagp.tagname, pathead, cmplen))
+		    if (MB_STRNICMP(tagp.tagname, pathead, cmplen) != 0)
 		    {
 			if ((off_t)ftell(fp) > search_info.match_offset)
 			    break;	/* past last match */
@@ -1578,7 +1578,7 @@ line_read_in:
 		else
 #endif
 		    /* skip this match if it can't match */
-		    if (STRNICMP(tagp.tagname, pathead, cmplen))
+		    if (MB_STRNICMP(tagp.tagname, pathead, cmplen) != 0)
 		    continue;
 
 		/*
@@ -1635,7 +1635,7 @@ line_read_in:
 	    {
 		if (regmatch.rm_ic)
 		{
-		    match = (STRNICMP(tagp.tagname, pat, cmplen) == 0);
+		    match = (MB_STRNICMP(tagp.tagname, pat, cmplen) == 0);
 		    if (match)
 			match_no_ic = (STRNCMP(tagp.tagname, pat, cmplen) == 0);
 		}

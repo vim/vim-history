@@ -905,6 +905,12 @@ EXTERN Display	*xterm_dpy INIT(= NULL);	/* xterm display pointer */
 EXTERN XtAppContext app_context INIT(= (XtAppContext)NULL);
 #endif
 
+#ifdef FEAT_XCMDSRV
+Window		commWindow INIT(= None);
+Atom		commProperty INIT(= None);
+char_u		*serverName INIT(= NULL);
+#endif
+
 #if defined(UNIX) || defined(VMS)
 EXTERN int	term_is_xterm INIT(= FALSE);	/* xterm-like 'term' */
 #endif

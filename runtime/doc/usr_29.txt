@@ -1,16 +1,20 @@
-*usr_29.txt*	For Vim version 6.0aj.  Last change: 2001 Jun 09
+*usr_29.txt*	For Vim version 6.0ak.  Last change: 2001 Jun 11
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 			    Moving through program
 
 
 The creator of Vim is a computer programmer.  It's no surprise that Vim
 contains many features to aid in writing programs.  Jump around to find where
-identifiers are defined and used.  Automatically indent the lines.  And much
-more.
+identifiers are defined and used.  Preview declarations in a separate window.
+There is more in the next chapter.
 
 |29.1|	Using tags
+|29.2|	The preview window
+|29.3|	Moving through a program
+|29.4|	Finding global identifiers
+|29.5|	Finding local identifiers
 
      Next chapter: |usr_30.txt|  Editing programs
  Previous chapter: |usr_28.txt|  Search commands and patterns
@@ -120,7 +124,7 @@ When you have files in many directories, you can create a tags file in each of
 them.  Vim will then only be able to jump to tags within that directory.
    To find more tags files, set the 'tags' option to include all the relevant
 tags files.  Example: >
-	
+
 	:set tags=./tags,./../tags,./*/tags
 
 This finds a tags file in the same directory as the current file, one
@@ -260,6 +264,12 @@ doesn't work if the tags file isn't sorted.
 The 'taglength' option can be used to tell Vim the number of significant
 characters in a tag.
 
+When you use the SNiFF+ program, you can use the Vim interfact to it |sniff|.
+SNiFF+ is a commercial program.
+
+Cscope is a free program.  I does not only find places where an identifier is
+declared, but also where it is used.  See |cscope|.
+
 ==============================================================================
 *29.2*	The preview window
 
@@ -398,31 +408,174 @@ MOVING IN COMMENTS
 To move back to the start of a comment use "[/".  Move forward to the end of a
 comment with "]/".  This only works for /* - */ comments.
 
-          +->  +-> /*
-          |    |    * A comment about      --+
-       [/ |    +--  * wonderful life.        | ]/
-          |         */                     <-+
+          +->     +-> /*
+          |    [/ |    * A comment about      --+
+       [/ |       +--  * wonderful life.        | ]/
+          |            */                     <-+
           |
-          +--       foo = bar * 3;         --+
-                                             | ]/
-	            /* a short comment */  <-+
+          +--          foo = bar * 3;         --+
+                                                | ]/
+	               /* a short comment */  <-+
 
 ==============================================================================
-*29.4*	Finding identifiers
+*29.4*	Finding global identifiers
 
 You are editing a C program and wonder if a variable is declared as "int" or
 "unsigned".  A quick way to find this is with the "[I" command.
    Suppose the cursor is on the word "column".  Type: >
-   
+
    	[I
 
 Vim will list the matching lines it can find.  Not only in the current file,
-but also in all included files (and files included in them).  The result can
-look like this:
+but also in all included files (and files included in them, etc.).  The result
+looks like this:
 
 	structs.h ~
 	 1:   29     unsigned     column;    /* column number */ ~
 
+The advantage over using tags or the preview window is that included files are
+searched.  In most cases this results in the right declaration to be found.
+Also when the tags file is out of date.  Also when you don't have tags for the
+included files.
+   However, a few things must be right for "[I" to do its work.  First of all,
+the 'include' option must specify how a file is included.  The default value
+works for C and C++.  For other languages you will have to change it.
+
+
+LOCATING INCLUDED FILES
+
+   Vim will find included files in the places specified with the 'path'
+option.  If a directory is missing, some include files will not be found.  You
+can discover this with this command: >
+
+	:checkpath
+
+It will list the include files that could not be found.  Also files included
+by the files that could be found.  An example of the output:
+
+	--- Included files not found in path --- ~
+	<io.h> ~
+	vim.h --> ~
+	  <functions.h> ~
+	  <clib/exec_protos.h> ~
+
+The "io.h" file is included by the current file and can't be found.  "vim.h"
+can be found, thus ":checkpath" goes into this file and checks what it
+includes.  The "functions.h" and "clib/exec_protos.h" files, included by
+"vim.h" are not found.
+
+	Note:
+	Vim is not a compiler.  It does not recognize "#ifdef" statements.
+	This means every "#include" statement is used, also when it comes
+	after "#if NEVER".
+
+To fix the files that could not be found, add a directory to the 'path'
+option.  A good place to find out about this is the Makefile.  Look out for
+lines that contain "-I" items, like "-I/usr/local/X11".  To add this directory
+use: >
+
+	:set path+=/usr/local/X11
+
+When there are many subdirectories, you an use the "*" wildcard.  Example: >
+
+	:set path+=/usr/*/include
+
+This would find files in "/usr/local/include" as well as "/usr/X11/include".
+
+When working on a project with a whole nested tree of included files, the "**"
+items is useful.  This will search down in all subdirectories.  Example: >
+
+	:set path+=/projects/invent/**/include
+
+This will find files in the directories:
+
+	/projects/invent/include ~
+	/projects/invent/main/include ~
+	/projects/invent/main/os/include ~
+	etc.
+
+There are even more possibilities.  Check out the 'path' option for info.
+
+
+JUMPING TO A MATCH
+
+"[I" produces a list with only one line of text.  When you want to have a
+closer look at the first item, you can jump to that line with the command: >
+
+	[<Tab>
+
+You can also use "[ CTRL-I", since CTRL-I is the same as pressing <Tab>.
+
+The list that "[I" produces has a number at the start of each line.  When you
+want to jump to another item than the first one, type the number first: >
+
+	3[<Tab>
+
+Will jump to the third item in the list.  Remember that you can use CTRL-O to
+jump back to where you started from.
+
+
+RELATED COMMANDS
+
+	[i		only lists the first match
+	]I		only lists items below the cursor
+	]i		only lists the first item below the cursor
+
+
+FINDING DEFINED IDENTIFIERS
+
+The "[I" command finds any identifier.  To find only macros, defined with
+"#define" use: >
+
+	[D
+
+Again, this searches in included files.  The 'define' option specifies what a
+line looks like that defines the items for "[D".  You could change it to make
+it work with other languages than C or C++.
+   The commands related to "[D" are:
+
+	[d		only lists the first match
+	]D		only lists items below the cursor
+	]d		only lists the first item below the cursor
+
+==============================================================================
+*29.5*	Finding local identifiers
+
+The "[I" command searches included files.  To search in the current file only,
+and jump to the first place where the word under the cursor is used: >
+
+	gD
+
+Hint: Goto Definition.  This command is very useful to find a variable or
+function that was declared locally ("static", in C terms).  Example (cursor on
+"counter"):
+
+	   +->   static int counter = 0;
+	   |
+	   |     int get_counter(void)
+	gD |     {
+	   |	     ++counter;
+	   +--	     return counter;
+	         }
+
+To restrict the search even further, and look only in the current function,
+use this command: >
+
+	gd
+
+This will go back to the start of the current function and find the first
+occurrence of the word under the cursor.  Actually, it searches backwards to
+an empty line above the a "{" in the first column.  From there it searches
+forward for the identifier.  Example (cursor on "idx"):
+
+		int find_entry(char *name)
+		{
+	   +->	    int idx;
+	   |
+	gd |	    for (idx = 0; idx < table_len; ++idx)
+	   |		if (strcmp(table[idx].name, name) == 0)
+	   +--		    return idx;
+		}
 
 ==============================================================================
 

@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0aj.  Last change: 2001 Jun 10
+*version6.txt*  For Vim version 6.0ak.  Last change: 2001 Jun 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -47,6 +47,7 @@ Window for command-line editing		|new-cmdwin|
 Debugging mode				|new-debug-mode|
 Cursor in virtual position		|new-virtedit|
 Debugger interface			|new-debug-itf|
+Communication between Vims		|new-vim-server|
 Buffer types				|new-buftype|
 Printing				|new-printing|
 Ports					|ports-6|
@@ -735,9 +736,9 @@ To be able to make this work, several features were added:
   ":setglobal" sets or displays the global value for a local option.
   ":setlocal name<" sets a local option to its global value.
 - Added the buffer-local value for some global options: 'equalprg', 'makeprg',
-  'grepprg', 'path', 'dictionary', 'thesaurus', 'tags' and 'define'.  This
-  allows setting a local value for these global options, without making it
-  incompatible.
+  'errorformat', 'grepprg', 'path', 'dictionary', 'thesaurus', 'tags' and
+  'define'.  This allows setting a local value for these global options,
+  without making it incompatible.
 - Added mappings and abbreviations local to a buffer: ":map <buffer>".
 - In a mapping "<Leader>" can be used to get the value of the "mapleader"
   variable.  This simplifies mappings that use "mapleader".  "<Leader>"
@@ -802,6 +803,7 @@ Cursor in virtual position				*new-virtedit*
 character in Insert mode, Visual mode or allways. (Matthias Kramm)
 This is especially useful in Visual-block mode.  It allows positioning a
 corner of the area where there is no text character.
+(Many improvements by Chase Tingley)
 
 
 Debugger interface					*new-debug-itf*
@@ -819,6 +821,19 @@ Added balloon stuff: 'balloondelay' and 'ballooneval' options.
 
 Added "icon=" argument for ":menu".  Allows defining a specific icon for a
 ToolBar item.
+
+
+Communication between Vims				*new-vim-server*
+--------------------------
+
+Added X-Windows communication between two Vims.  Makes it possible to send
+commands from one Vim to another.  Works much like the MS-Windows OLE version,
+but for the versions using X-Windows.  See |x11-command-server|.
+
+Use "--remote" to have files be edited in an already running Vim.
+Use "--serversend" or ":serversend" to send commands from one Vim to another.
+
+(implemented by Flemming Madsen)
 
 
 Buffer types						*new-buftype*
@@ -1264,7 +1279,9 @@ Ziefle)
 Added runtime/macros/less.vim: Vim script to simulate less, but with syntax
 highlighting.
 
-The Win32 install program can now create shortcuts. (Jon Merz)
+MS-Windows install program: (Jon Merz)
+- The Win32 program can now create shortcuts.
+- Possibly remove old "Edit with Vim" entries.
 
 Generate a self-installing Vim package for MS-Windows.  This uses NSIS. (Jon
 Merz)
@@ -1335,6 +1352,9 @@ Insert mode:
   completion.  Added 's' flag in 'complete'.
 - Made CTRL-X CTRL-L in Insert mode use the 'complete' option.  It now also
   scans other loaded buffers for matching lines.
+- CTRL-R now also works in Insert mode while doing completion with CTRL-X or
+  CTRL-N. (Neil Bird)
+
 
 Performance:
 - Made display updating more efficient.  Insert/delete lines may be used for
@@ -1463,6 +1483,8 @@ GUI:
 - Made the 'toolbar' option work for Athena and Motif.  Can now switch between
   text and icons on the fly.  (David Harrison)
 - Support menu separator lines for Athena.  (David Harrison)
+- Athena: Adjust the arrow pixmap used in a pullright menu to the size of the
+  font. (David Harrison)
 - Win32: Added "c" flag to 'guifont' to be able to specify the charset. (Artem
   Khodush)
 - When no --enable-xim argument is given, automatically enable it when a X GUI
@@ -1686,8 +1708,6 @@ line.
 
 Added a number of Lisp names after which the indent isn't increased that much.
 
-Added a default 'errorformat' value for VMS. (Jim Bush)
-
 When asked to display the value of a hidden option, tell it's not supported.
 
 GTK GUI: When dropping a file on Vim, remove extra slashes from the start of
@@ -1698,6 +1718,8 @@ shortcut itself.  (Yasuhiro Matsumoto)
 
 Let "%p" in 'errorformat' (column of error indicated by a row of characters)
 also accept a line of dots.
+Added "%v" item in 'errorformat': Virtual column number. (Dan Sharp)
+Added a default 'errorformat' value for VMS. (Jim Bush)
 
 The "p" command can now be used in Visual mode.  It overwrites the selected
 text with the contents of a register.
@@ -1744,6 +1766,9 @@ No longer warn for a changed directory.  This avoids that the file explorer
 produces warnings.
 Checking timestamps is only done for buffers that are not hidden.  These will
 be checked when they become unhidden.
+When checking the timestamp, first check if the file size changed, to avoid a
+file compare then.  Makes it quicker for large (log) files that are appended
+to.
 
 For ":python" and ":tcl" accept an in-line script. (Johannes Zellner)
 Also for ":ruby" and ":perl". (Benoit Cerrina)
@@ -1765,6 +1790,18 @@ Motif: (Martin Dalecki)
 - Added find and find/replace dialogs.
 - For the menus, change "iso-8859" to "iso_8859", Linux appears to need this.
 - Added icon to dialogs, like for GTK.
+- Use XPM bitmaps for the icon when possible.
+
+Sniff interface: (Anton Leherbauer)
+- fixed windows code, esp. the event handling stuff
+- adaptations for sniff 4.x ($SNIFF_DIR4)
+- support for adding sniff requests at runtime
+
+Support the notation <A-x> as an alias for <M-x>.  This logical, since the Alt
+key is used.
+
+":find" accepts a count, which means that the count'th match in 'path' is
+used.
 
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
@@ -1838,6 +1875,12 @@ on MS-Windows as well (needs to be tested).
 
 Merged a large part of os_vms.c with os_unix.c.  The code was duplicated in
 the past which made maintenance more work.  (Zoltan Arpadffy)
+
+Updated the Borland C version 5 Makefile: (Dan Sharp)
+- Fixed the Perl build
+- Added python and tcl builds
+- Added dynamic perl and dynamic python builds
+- Added uninstal.exe build
 
 ==============================================================================
 BUG FIXES						*bug-fixes-6*
@@ -2660,5 +2703,26 @@ Didn't give an error message for ":digraph a".
 
 When using Ex mode in the GUI and typing a special key, <BS> didn't delete it
 correctly.  Now display '?' for a special key.
+
+When an operator is pending, clicking in another window made it apply to that
+window, even though the line numbers could be beyond the end of the buffer.
+
+When a function call doesn't have a terminating ")" Vim could crash.
+
+Perl interface: could crash on exit with perl 5.6.1. (Anduin Withers)
+
+Using %P in 'errorformat' wasn't handled correctly. (Tomas Zellerin)
+
+Using a syntax cluster that includes itself made Vim crash.
+
+GUI: With 'ls' set to 2, dragging the status line all the way up, then making
+the Vim window smaller: Could not the drag status line anymore.
+
+"vim -c startinsert! file" placed cursor on last char of a line, instead of
+after it.  A ":set" command in the buffer menu set w_set_curswant.  Now don't
+do this when w_curswant is MAXCOL.
+
+Win32: When the gvim window was maximized and selecting another font, the
+window would no longer fill the screen.
 
  vim:tw=78:

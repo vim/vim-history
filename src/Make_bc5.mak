@@ -12,6 +12,7 @@
 #	8/1998 - ron - updated with new targets, fixed some stuff
 #	3/2000 - Bram: Made it work with BC 5.5 free command line compiler,
 #			cleaned up variables.
+#	6/2001 - Dan - Added support for compiling Python and TCL
 #
 # It builds on Windows 95 and NT-Intel, producing the same binary in either
 # case.  To build using Microsoft Visual C++, use Make_mvc.mak.
@@ -34,6 +35,8 @@
 #		$(BOR)\bin\ilink32 otherwise)
 # GUI		0 or 1: set to 1 if you want the GUI version (1)
 # PERL		define to "perl.exe" to get Perl support (not defined)
+# PYTHON	define to path to Python dir to get PYTHON support (not defined)
+# TCL		define to path to TCL dir to get TCL support (not defined)
 # OLE		0 or 1: set to 1 to make OLE gvim (0)
 # OSTYPE	DOS16 or WIN32 (WIN32)
 # DEBUG		set to "-v" if you wish a DEBUGging build (not defined)
@@ -61,8 +64,13 @@ GUI = 1
 #
 ### PERL: uncommented this line if you want perl support in vim
 #	'USEDLL' doesn't seem to work with perl, don't know why.
-# PERL=perl.exe
-PERLLIB=c:\perl\lib
+# PERL=c:\perl
+#
+### PYTHON: uncommented this line if you want python support in vim
+# PYTHON=c:\python20
+#
+### TCL: uncommented this line if you want tcl support in vim
+# TCL=c:\tcl
 #
 ### OLE: 0 for normal gvim, 1 for OLE-capable gvim (only works with GUI)
 #OLE = 1
@@ -105,7 +113,9 @@ ALIGN = 4
 !endif
 #
 ### FASTCALL: 1 to use FASTCALL calling convention (RECOMMENDED!), 0 otherwise
-!if ("$(FASTCALL)"=="")
+#   Incompatible when calling external functions (like MSVC-compiled DLLs), so
+#   don't use FASTCALL when linking with external libs.
+!if ("$(FASTCALL)"=="") && ("$(PYTHON)"=="") && ("$(PERL)"=="") && ("$(TCL)"=="")
 FASTCALL = 1
 !endif
 #
@@ -169,9 +179,40 @@ DEFINES = -DWIN32 -DPC $(WINVER)
 #
 !ifdef PERL
 DEFINES = $(DEFINES) -DFEAT_PERL
-INCLUDE = $(PERLLIB)\core;$(INCLUDE)
+INCLUDE = $(PERL)\lib\core;$(INCLUDE)
+!  ifndef PERL_VER
+PERL_VER = 56
+!  endif
+!  if ("$(DYNAMIC_PERL)" == "yes")
+!    if ($(PERL_VER) > 55)
+DEFINES = $(DEFINES) -DDYNAMIC_PERL -DDYNAMIC_PERL_DLL=\"perl$(PERL_VER).dll\"
+PERL_LIB_FLAG = /nodefaultlib:
+!    else
+!      message "Cannot dynamically load Perl versions less than 5.6.  Loading statically..."
+!    endif
+!  endif
 !endif
 #
+!ifdef PYTHON
+DEFINES = $(DEFINES) -DFEAT_PYTHON
+INCLUDE = $(PYTHON)\include;$(INCLUDE)
+!ifndef PYTHON_VER
+PYTHON_VER = 15
+!endif
+!if "$(DYNAMIC_PYTHON)" == "yes"
+DEFINES = $(DEFINES) -DDYNAMIC_PYTHON -DDYNAMIC_PYTHON_DLL=\"python$(PYTHON_VER).dll\"
+PYTHON_LIB_FLAG = /nodefaultlib:
+!endif
+!endif
+#
+!ifdef TCL
+DEFINES = $(DEFINES) -DFEAT_TCL
+INCLUDE = $(TCL)\include;$(INCLUDE)
+!ifndef TCL_VER
+TCL_VER = 83
+!endif
+!endif
+# 
 # DO NOT change below:
 #
 CPU = -$(CPU)
@@ -335,6 +376,16 @@ vimobj = $(vimobj) \
     $(OBJDIR)\if_perl.obj
 !endif
 
+!ifdef PYTHON
+vimobj = $(vimobj) \
+    $(OBJDIR)\if_python.obj
+!endif
+
+!ifdef TCL
+vimobj = $(vimobj) \
+    $(OBJDIR)\if_tcl.obj
+!endif
+
 !if ($(VIMDLL)==1)
 vimdllobj = $(vimobj)
 !ifdef DEBUG
@@ -382,6 +433,21 @@ MSG = $(MSG) DEBUG
 !ifdef CODEGUARD
 MSG = $(MSG) CODEGUARD
 !endif
+!ifdef PERL
+MSG = $(MSG) PERL
+! ifdef DYNAMIC_PERL
+MSG = $(MSG)(dynamic)
+! endif
+!endif
+!ifdef PYTHON
+MSG = $(MSG) PYTHON
+! ifdef DYNAMIC_PYTHON
+MSG = $(MSG)(dynamic)
+! endif
+!endif
+!ifdef TCL
+MSG = $(MSG) TCL
+!endif
 MSG = $(MSG) cpu=$(CPU)
 MSG = $(MSG) Align=$(ALIGN)
 
@@ -397,7 +463,7 @@ TARGETS = $(TARGETS) $(TARGET)
 !endif
 
 # Targets:
-all: vim vimrun.exe install.exe xxd
+all: vim vimrun.exe install.exe xxd uninstal.exe
 
 vim: $(OSTYPE) $(OBJDIR) $(OBJDIR)\bcc.cfg $(TARGETS)
 	@del $(OBJDIR)\version.obj
@@ -418,6 +484,13 @@ install.exe: dosinst.c
 	$(CC) $(CCARG) -WC -DWIN32 -einstall dosinst.c
 !else
 	$(CC) $(CCARG) -WC -einstall dosinst.c
+!endif
+
+uninstal.exe: uninstal.c
+!if ($(OSTYPE)==WIN32)
+	$(CC) $(CCARG) -WC -DWIN32 -O2 -euninstal uninstal.c
+!else
+	$(CC) $(CCARG) -WC -O2 -euninstal uninstal.c
 !endif
 
 clean:
@@ -451,7 +524,13 @@ $(DLLTARGET): $(OBJDIR) $(vimdllobj)
 !if ($(OSTYPE)==WIN32)
 	import32.lib+
 !ifdef PERL
-	$(PERLLIB)\core\perl.lib+
+	$(PERL_LIB_FLAG)perl.lib+
+!endif
+!ifdef PYTHON
+	$(PYTHON_LIB_FLAG)python.lib+
+!endif
+!ifdef TCL
+	tcl.lib+
 !endif
 !if ($(USEDLL)==1)
 	cw32i.lib
@@ -487,7 +566,13 @@ $(TARGET): $(OBJDIR) $(vimobj) $(RESFILE)
 !endif
 	import32.lib+
 !ifdef PERL
-	$(PERLLIB)\core\perl.lib+
+	$(PERL_LIB_FLAG)perl.lib+
+!endif
+!ifdef PYTHON
+	$(PYTHON_LIB_FLAG)python.lib+
+!endif
+!ifdef TCL
+	tcl.lib+
 !endif
 !if ($(USEDLL)==1)
 	cw32i.lib
@@ -594,16 +679,30 @@ $(OBJDIR)\if_ole.obj: if_ole.cpp
 $(OBJDIR)\os_w32exe.obj: os_w32exe.c
 	$(CC) $(CCARG) $(CC1) -I$(INCLUDE) -WE $(CC2)$@ os_w32exe.c
 
-$(OBJDIR)\if_perl.obj: if_perl.c
+$(OBJDIR)\if_perl.obj: if_perl.c perl.lib
 	$(CC) $(CCARG) $(CC1) $(CC2)$@ -pc if_perl.c
 
-
 if_perl.c: if_perl.xs typemap
-	$(PERL) $(PERLLIB)\ExtUtils\xsubpp -prototypes -typemap \
-	    $(PERLLIB)\ExtUtils\typemap if_perl.xs > $@
+	$(PERL)\bin\perl.exe $(PERL)\lib\ExtUtils\xsubpp -prototypes -typemap \
+	    $(PERL)\lib\ExtUtils\typemap if_perl.xs > $@
+
+$(OBJDIR)\if_python.obj: if_python.c python.lib
+	$(CC) $(CCARG) $(CC1) $(CC2)$@ -pc if_python.c
+
+$(OBJDIR)\if_tcl.obj: if_tcl.c tcl.lib
+	$(CC) $(CCARG) $(CC1) $(CC2)$@ -pc if_tcl.c
 
 vim.res: vim.rc version.h tools.bmp tearoff.bmp vim.ico vim_error.ico vim_alert.ico vim_info.ico vim_quest.ico
     $(BRC) $(DEFINES) -i $(BOR)\include -w32 -r $*.rc
+
+perl.lib: $(PERL)\lib\CORE\perl$(PERL_VER).lib
+	coff2omf $(PERL)\lib\CORE\perl$(PERL_VER).lib $@
+
+python.lib: $(PYTHON)\libs\python$(PYTHON_VER).lib
+	coff2omf $(PYTHON)\libs\python$(PYTHON_VER).lib $@
+
+tcl.lib: $(TCL)\lib\tcl$(TCL_VER).lib
+	coff2omf $(TCL)\lib\tcl$(TCL_VER).lib $@
 
 # vimrun.exe:
 vimrun.exe: vimrun.c

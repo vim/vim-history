@@ -973,21 +973,48 @@ static UINT CALLBACK PrintHookProc(
 	LPARAM lParam	// message parameter
 	)
 {
+    HWND hwndOwner;
+    RECT rc, rcDlg, rcOwner;
     PRINTDLG  *pPD;
 
-    switch (uiMsg)
+    if (uiMsg == WM_INITDIALOG)
     {
-	case WM_INITDIALOG :
-	    /*  tackle the printdlg copiesctrl problem */
-	    pPD = (PRINTDLG *)lParam;
-	    pPD->nCopies = (WORD)pPD->lCustData;
-	    SetDlgItemInt( hDlg, edt3, pPD->nCopies, FALSE );
-            /*  Bring the window to top */
-	    BringWindowToTop(GetParent(hDlg));
-	    SetForegroundWindow(hDlg);
-	    return 0;
+	// Get the owner window and dialog box rectangles.
+	if ((hwndOwner = GetParent(hDlg)) == NULL)
+	    hwndOwner = GetDesktopWindow();
 
+	GetWindowRect(hwndOwner, &rcOwner);
+	GetWindowRect(hDlg, &rcDlg);
+	CopyRect(&rc, &rcOwner);
+
+	// Offset the owner and dialog box rectangles so that
+	// right and bottom values represent the width and
+	// height, and then offset the owner again to discard
+	// space taken up by the dialog box.
+
+	OffsetRect(&rcDlg, -rcDlg.left, -rcDlg.top);
+	OffsetRect(&rc, -rc.left, -rc.top);
+	OffsetRect(&rc, -rcDlg.right, -rcDlg.bottom);
+
+	// The new position is the sum of half the remaining
+	// space and the owner's original position.
+
+	SetWindowPos(hDlg,
+		HWND_TOP,
+		rcOwner.left + (rc.right / 2),
+		rcOwner.top + (rc.bottom / 2),
+		0, 0,		// ignores size arguments
+		SWP_NOSIZE);
+
+	/*  tackle the printdlg copiesctrl problem */
+	pPD = (PRINTDLG *)lParam;
+	pPD->nCopies = (WORD)pPD->lCustData;
+	SetDlgItemInt( hDlg, edt3, pPD->nCopies, FALSE );
+	/*  Bring the window to top */
+	BringWindowToTop(GetParent(hDlg));
+	SetForegroundWindow(hDlg);
     }
+
     return FALSE;
 }
 #endif

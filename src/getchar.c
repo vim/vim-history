@@ -2338,6 +2338,7 @@ vgetorpeek(advance)
 			edit_unputchar();
 		    if (State & CMDLINE)
 			unputcmdline();
+		    setcursor();	/* put cursor back where it belongs */
 		}
 
 		if (c < 0)

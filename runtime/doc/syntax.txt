@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0aj.  Last change: 2001 Jun 03
+*syntax.txt*    For Vim version 6.0ak.  Last change: 2001 Jun 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -18,7 +18,7 @@ terminals have very limited highlighting possibilities, it works best in the
 GUI version, gvim.
 
 In the User Manual:
-|usr_07.txt| introduces syntax highlighting.
+|usr_06.txt| introduces syntax highlighting.
 |usr_44.txt| introduces writing a syntax file.
 
 1.  Quick start			|:syn-qstart|
@@ -2148,7 +2148,7 @@ The 'foldnestmax' option limits the nesting of syntax folds.
 {not available when Vim was compiled without |+folding| feature}
 
 
-				*:syn-contains* *E405* *E406* *E407* *E408* *E409*
+			*:syn-contains* *E405* *E406* *E407* *E408* *E409*
 contains={groupname},..
 
 The "contains" argument is followed by a list of syntax group names.  These
@@ -2173,14 +2173,14 @@ contains=TOP
 		groups will be accepted that don't have the "contained"
 		argument.
 contains=TOP,{group-name},..
-		Like "TOP", but excluding the the groups that are listed.
+		Like "TOP", but excluding the groups that are listed.
 
 contains=CONTAINED
 		If the first item in the contains list is "CONTAINED", then
 		all groups will be accepted that have the "contained"
 		argument.
 contains=CONTAINED,{group-name},..
-		Like "CONTAINED", but excluding the the groups that are
+		Like "CONTAINED", but excluding the groups that are
 		listed.
 
 

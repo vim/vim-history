@@ -1639,6 +1639,10 @@ backspace_until_column(col)
 vim_is_ctrl_x_key(c)
     int	    c;
 {
+    /* Always allow ^R - let it's results then be checked */
+    if (c == Ctrl_R)
+        return TRUE;
+
     switch (ctrl_x_mode)
     {
 	case 0:		    /* Not in any CTRL-X mode */
@@ -2142,6 +2146,9 @@ ins_compl_prep(c)
 	    case Ctrl_K:
 		ctrl_x_mode = CTRL_X_DICTIONARY;
 		break;
+            case Ctrl_R:
+                /* Simply allow ^R to happen without affecting ^X mode */
+                break;
 	    case Ctrl_T:
 		ctrl_x_mode = CTRL_X_THESAURUS;
 		break;
@@ -2198,7 +2205,7 @@ ins_compl_prep(c)
     }
     else if (ctrl_x_mode != 0)
     {
-	/* We we're already in CTRL-X mode, do we stay in it? */
+	/* We're already in CTRL-X mode, do we stay in it? */
 	if (!vim_is_ctrl_x_key(c))
 	{
 	    if (ctrl_x_mode == CTRL_X_SCROLL)
@@ -2217,7 +2224,7 @@ ins_compl_prep(c)
 	 * showing what mode we are in.
 	 */
 	showmode();
-	if ((ctrl_x_mode == 0 && c != Ctrl_N && c != Ctrl_P)
+	if ((ctrl_x_mode == 0 && c != Ctrl_N && c != Ctrl_P && c != Ctrl_R)
 		|| ctrl_x_mode == CTRL_X_FINISHED)
 	{
 	    /* Get here when we have finished typing a sequence of ^N and
@@ -4864,12 +4871,23 @@ get_replace_stack_virtcol()
     colnr_T	vcol = 0;
     int		i;
     pos_T	pos;
+#ifdef FEAT_MBYTE
+    char_u	*top = ml_get_curline();
+#endif
 
     /* First, find the character that was pushed at the start of the line */
     i = replace_stack_nr;
     while (i >= 0 && col--)
+    {
 	while (--i >= 0 && replace_stack[i] != NUL)
 	    ;
+#ifdef FEAT_MBYTE
+	/* When we (virtual) replace characters with a multibyte character,
+	 * col depends on current line's text.  Check it.  */
+	if (has_mbyte && col > 0)
+	    col -= (*mb_head_off)(top, top + col);
+#endif
+    }
 
     /* If col is not less than zero, then we ran out of replace stack.  This
      * means that replacing must have started earlier on this line.  Initialise
@@ -5157,7 +5175,7 @@ in_cinkeys(keytyped, when, line_is_empty)
 				break;
 		    if (s + (p - look) <= line + curwin->w_cursor.col
 			    && (icase
-				? STRNICMP(s, look, p - look)
+				? MB_STRNICMP(s, look, p - look)
 				: STRNCMP(s, look, p - look)) == 0)
 			match = TRUE;
 		}
@@ -5170,7 +5188,7 @@ in_cinkeys(keytyped, when, line_is_empty)
 		    if ((curwin->w_cursor.col == (colnr_T)(p - look)
 				|| !vim_iswordc(line[-(p - look) - 1]))
 			    && (icase
-				? STRNICMP(line - (p - look), look, p - look)
+				? MB_STRNICMP(line - (p - look), look, p - look)
 				: STRNCMP(line - (p - look), look, p - look))
 									 == 0)
 			match = TRUE;

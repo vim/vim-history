@@ -148,6 +148,9 @@ static FINDREPLACE	s_findrep_struct;
 #endif
 
 static HINSTANCE	s_hinst = NULL;
+#if !defined(FEAT_SNIFF) && !defined(FEAT_GUI)
+static
+#endif
 HWND			s_hwnd = NULL;
 static HDC		s_hdc = NULL;
 static HBRUSH	s_brush = NULL;
@@ -1054,6 +1057,7 @@ gui_mch_open(void)
 
     return OK;
 }
+
 /*
  * Get the position of the top left corner of the window.
  */
@@ -1814,12 +1818,16 @@ process_message(void)
 #endif
 
 #ifdef FEAT_SNIFF
-    if (msg.message == WM_USER && sniff_request_waiting)
+    if (sniff_request_waiting && want_sniff_request)
     {
-	add_to_input_buf((char_u *)"\33", 1); /* just add a single escape */
+	static char_u bytes[3] = {CSI, (char_u)KS_EXTRA, (char_u)KE_SNIFF};
+	add_to_input_buf(bytes,3); /* K_SNIFF */
+	sniff_request_waiting = 0;
+	want_sniff_request = 0;	
 	/* request is handled in normal.c */
-	return;
     }
+    if(msg.message == WM_USER)
+    	return;
 #endif
 
 #ifdef MSWIN_FIND_REPLACE
@@ -2048,7 +2056,7 @@ gui_mch_wait_for_chars(int wtime)
 
 	if (s_need_activate)
 	{
-	    (void) SetActiveWindow(s_hwnd);
+	    (void)SetActiveWindow(s_hwnd);
 	    s_need_activate = FALSE;
 	}
 
@@ -2878,6 +2886,36 @@ gui_mch_init_font(char_u *font_name, int fontset)
 #endif
 
     return OK;
+}
+
+/*
+ * Return TRUE if the GUI window is maximized, filling the whole screen.
+ */
+    int
+gui_mch_maximized()
+{
+    return IsZoomed(s_hwnd);
+}
+
+/*
+ * Called when the font changed while the window is maximized.  Compute the
+ * new Rows and Columsn.
+ */
+    void
+gui_mch_newfont()
+{
+    RECT	rect;
+
+    GetWindowRect(s_hwnd, &rect);
+    gui_resize_shell(rect.right - rect.left
+			- GetSystemMetrics(SM_CXFRAME) * 2,
+		     rect.bottom - rect.top
+		        - GetSystemMetrics(SM_CYFRAME) * 2
+			- GetSystemMetrics(SM_CYCAPTION)
+#ifdef FEAT_MENU
+			- gui_mswin_get_menu_height(FALSE)
+#endif
+	    );
 }
 
 /*

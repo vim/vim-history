@@ -152,10 +152,7 @@ PFNGCKLN    s_pfnGetConsoleKeyboardLayoutName = NULL;
 
 #ifndef FEAT_GUI_W32
 /* Win32 Console handles for input and output */
-# ifndef FEAT_SNIFF	/* used in if_sniff.c */
-static
-# endif
-       HANDLE g_hConIn	= INVALID_HANDLE_VALUE;
+static HANDLE g_hConIn  = INVALID_HANDLE_VALUE;
 static HANDLE g_hConOut = INVALID_HANDLE_VALUE;
 
 /* Win32 Screen buffer,coordinate,console I/O information */
@@ -1191,19 +1188,24 @@ mch_inchar(
 
 
 #ifdef FEAT_SNIFF
-    if (sniff_request_waiting)
+    if (want_sniff_request)
     {
-	/* return K_SNIFF */
-	*buf++ = '\233';
-	*buf++ = 's';
-	*buf++ = 'n';
-	*buf++ = 'i';
-	*buf++ = 'f';
-	*buf++ = 'f';
-	len += 6;
-	sniff_request_waiting = 0;
-	want_sniff_request = 0;
-	return len;
+	if(sniff_request_waiting && maxlen-len >=3)
+	{
+	    /* return K_SNIFF */
+	    *buf++ = CSI;
+	    *buf++ = (char_u)KS_EXTRA;
+	    *buf++ = (char_u)KE_SNIFF;
+	    len += 3;
+	    sniff_request_waiting = 0;
+	    want_sniff_request = 0;
+	    return len;
+	}
+	else if(time < 0 || time > 250)
+	{
+	    /* don't wait too long, a request might be pending */
+	    time = 250;
+	}
     }
 #endif
 

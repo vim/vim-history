@@ -1538,7 +1538,7 @@ find_replace_dialog_create(char_u *arg, int do_replace)
     gtk_container_border_width(GTK_CONTAINER(table), 4);
 
     tmp = gtk_label_new(_("Find what:"));
-    gtk_misc_set_alignment(GTK_MISC(tmp), 1.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(tmp), (float)1.0, (float)0.5);
     gtk_table_attach(GTK_TABLE(table), tmp, 0, 1, 0, 1,
 		     GTK_FILL, GTK_EXPAND, 2, 2);
     frdp->what = gtk_entry_new();
@@ -1556,7 +1556,7 @@ find_replace_dialog_create(char_u *arg, int do_replace)
     if (do_replace)
     {
 	tmp = gtk_label_new(_("Replace with:"));
-	gtk_misc_set_alignment(GTK_MISC(tmp), 1.0, 0.5);
+	gtk_misc_set_alignment(GTK_MISC(tmp), (float)1.0, (float)0.5);
 	gtk_table_attach(GTK_TABLE(table), tmp, 0, 1, 1, 2,
 			 GTK_FILL, GTK_EXPAND, 2, 2);
 	frdp->with = gtk_entry_new();

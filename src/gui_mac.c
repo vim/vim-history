@@ -1085,7 +1085,7 @@ gui_mch_get_color(name)
     }
     else
     {
-	if (STRICMP (name, "hilite") == 0)
+	if (STRICMP(name, "hilite") == 0)
 	{
 	    LMGetHiliteRGB (&MacColor);
 	    return (RGB (MacColor.red >> 8, MacColor.green >> 8, MacColor.blue >>8));

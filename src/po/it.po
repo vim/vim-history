@@ -3614,7 +3614,7 @@ msgstr "E337: Menu non trovato - controlla nomi Menu"
 #: message.c:461
 #, c-format
 msgid "Error detected while processing %s:"
-msgstr "Trovato errore nel trattare %s:"
+msgstr "Errore/i eseguendo %s:"
 
 #: message.c:477
 #, c-format
