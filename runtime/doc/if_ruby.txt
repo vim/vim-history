@@ -1,4 +1,4 @@
-*if_ruby.txt*   For Vim version 6.0ac.  Last change: 2001 Apr 05
+*if_ruby.txt*   For Vim version 6.0ad.  Last change: 2001 Apr 27
 
 
 		  VIM REFERENCE MANUAL    by Shugo Maeda
@@ -24,7 +24,35 @@ For MS-Windows you might find a Ruby library here:
 1. Commands						*ruby-commands*
 
 							*:ruby* *:rub*
-:rub[y] {cmd}		Execute Ruby command {cmd}. {not in Vi}
+:rub[y] {cmd}		Execute Ruby command {cmd}.
+
+:rub[y] << {endpattern}
+{script}
+{endpattern}
+			Execute Ruby script {script}.
+			{endpattern} must NOT be preceeded by any white space.
+			If {endpattern} is omitted, it defaults to a dot '.'
+			like for the |:append| and |:insert| commands. This
+			form of the |:ruby| command is mainly useful for
+			including ruby code in vim scripts.
+
+Example Vim script: >
+
+	function! RedGem()
+	ruby << EOF
+	class Garnet
+		def initialize(s)
+			@buffer = VIM::Buffer.current
+			vimputs(s)
+		end
+		def vimputs(s)
+			@buffer.append(@buffer.count,s)
+		end
+	end
+	gem = Garnet.new("pretty")
+	EOF
+	endfunction
+<
 
 							*:rubydo* *:rubyd*
 :[range]rubyd[o] {cmd}	Evaluate Ruby command {cmd} for each line in the
@@ -33,12 +61,10 @@ For MS-Windows you might find a Ruby library here:
 			the text, but note that it is not possible to add or
 			delete lines using this command.
 			The default for [range] is the whole file: "1,$".
-			{not in Vi}
 
 							*:rubyfile* *:rubyf*
 :rubyf[ile] {file}	Execute the Ruby script in {file}.  This is the same as
 			":ruby load 'file'", but allows file name completion.
-			{not in Vi}
 
 ==============================================================================
 2. The VIM module					*ruby-vim*

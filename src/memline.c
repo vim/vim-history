@@ -1857,7 +1857,7 @@ ml_get_buf(buf, lnum, will_change)
 
     if (lnum > buf->b_ml.ml_line_count)	/* invalid line number */
     {
-	EMSGN(_("ml_get: invalid lnum: %ld"), lnum);
+	EMSGN(_("(em2) ml_get: invalid lnum: %ld"), lnum);
 errorret:
 	STRCPY(IObuff, "???");
 	return IObuff;
@@ -2511,7 +2511,7 @@ ml_delete_int(buf, lnum, message)
     {
 	if (message)
 	{
-	    keep_msg = (char_u *)_(no_lines_msg);
+	    set_keep_msg((char_u *)_(no_lines_msg));
 	    keep_msg_attr = 0;
 	}
 	/* FEAT_BYTEOFF already handled in there, dont worry 'bout it below */
@@ -3603,7 +3603,7 @@ findswapname(buf, dirp, old_fname)
 		    process_still_running = FALSE;
 #endif
 		    ++no_wait_return;
-		    (void)EMSG(_("ATTENTION"));
+		    (void)EMSG(_("(ea1) ATTENTION"));
 		    MSG_PUTS(_("\nFound a swap file by the name \""));
 		    msg_home_replace(fname);
 		    MSG_PUTS(_("\"\n"));

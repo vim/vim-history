@@ -207,6 +207,12 @@ update_topline()
 		check_topline = TRUE;
 	    else if (check_top_offset())
 		check_topline = TRUE;
+#ifdef FEAT_DIFF
+	    /* Check if there are more filler lines than allowed. */
+	    else if (curwin->w_topfill > diff_check_fill(curwin,
+							   curwin->w_topline))
+		check_topline = TRUE;
+#endif
 	}
 
 	if (check_topline)
@@ -462,8 +468,7 @@ changed_window_setting()
 {
     curwin->w_lines_valid = 0;
     changed_line_abv_curs();
-    invalidate_botline();
-    update_topline();
+    curwin->w_valid &= ~(VALID_BOTLINE|VALID_BOTLINE_AP|VALID_TOPLINE);
     redraw_later(NOT_VALID);
 }
 

@@ -889,7 +889,8 @@ do_filter(line1, line2, eap, cmd, do_in, do_out)
 							     (long)linecount);
 		if (msg(msg_buf) && !msg_scroll)
 		{
-		    keep_msg = msg_buf;	    /* display message after redraw */
+		    /* save message to display it after redraw */
+		    set_keep_msg(msg_buf);
 		    keep_msg_attr = 0;
 		}
 	    }
@@ -1091,7 +1092,7 @@ do_shell(cmd, flags)
     }
 
     /* display any error messages now */
-    mch_display_error();
+    display_errors();
 }
 
 /*
@@ -2302,7 +2303,7 @@ not_writing()
 {
     if (p_write)
 	return FALSE;
-    EMSG(_("File not written: Writing is disabled by 'write' option"));
+    EMSG(_("(ew1) File not written: Writing is disabled by 'write' option"));
     return TRUE;
 }
 
@@ -3994,7 +3995,8 @@ do_sub_msg()
 							    (long)sub_nlines);
 	if (msg(msg_buf))
 	{
-	    keep_msg = msg_buf;
+	    /* save message to display it after redraw */
+	    set_keep_msg(msg_buf);
 	    keep_msg_attr = 0;
 	}
 	return TRUE;

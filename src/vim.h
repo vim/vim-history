@@ -1114,8 +1114,21 @@ typedef unsigned short disptick_T;	/* display tick type */
 
 #define MAXLNUM (0x7fffffffL)		/* maximum (invalid) line number */
 
+/*
+ * Well, you won't believe it, but some S/390 machines ("host", now also known
+ * as zServer) us 31 bit pointers. There are also some newer machines, that
+ * use 64 bit pointers. I don't know how to distinguish between 31 and 64 bit
+ * machines, so the best way is to assume 31 bits whenever we detect OS/390
+ * Unix.
+ * With this we restrict the maximum line length to 1073741823. I guess this is
+ * not a real problem. BTW:  Longer lines are split.
+ */
 #if SIZEOF_INT >= 4
-# define MAXCOL	(0x7fffffffL)		/* maximum column number, 31 bits */
+# ifdef __MVS__
+#  define MAXCOL (0x3fffffffL)		/* maximum column number, 30 bits */
+# else
+#  define MAXCOL (0x7fffffffL)		/* maximum column number, 31 bits */
+# endif
 #else
 # define MAXCOL	(0x7fff)		/* maximum column number, 15 bits */
 #endif
@@ -1265,18 +1278,20 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 #define VV_TERMRESPONSE	10
 #define VV_FNAME	11
 #define VV_LANG		12
-#define VV_CTYPE	13
-#define VV_CC_FROM	14
-#define VV_CC_TO	15
-#define VV_FNAME_IN	16
-#define VV_FNAME_OUT	17
-#define VV_FNAME_NEW	18
-#define VV_FNAME_DIFF	19
-#define VV_CMDARG	20
-#define VV_FOLDSTART	21
-#define VV_FOLDEND	22
-#define VV_FOLDDASHES	23
-#define VV_LEN		24	/* number of v: vars */
+#define VV_LC_TIME	13
+#define VV_CTYPE	14
+#define VV_CC_FROM	15
+#define VV_CC_TO	16
+#define VV_FNAME_IN	17
+#define VV_FNAME_OUT	18
+#define VV_FNAME_NEW	19
+#define VV_FNAME_DIFF	20
+#define VV_CMDARG	21
+#define VV_FOLDSTART	22
+#define VV_FOLDEND	23
+#define VV_FOLDDASHES	24
+#define VV_ALL_COLORS	25
+#define VV_LEN		26	/* number of v: vars */
 
 #ifdef FEAT_CLIPBOARD
 
@@ -1361,6 +1376,20 @@ typedef int VimClipboard;	/* This is required for the prototypes. */
 #include "option.h"	    /* option variables and defines */
 #include "ex_cmds.h"	    /* Ex command defines */
 #include "proto.h"	    /* function prototypes */
+
+/* This has to go after the include of proto.h, as proto/gui.pro declares
+ * functions of these names. The declarations would break if the defines had
+ * been seen at that stage.  But it must be before globals.h, where error_ga
+ * is declared. */
+#if !defined(FEAT_GUI_W32) && !defined(FEAT_GUI_X11) \
+	&& !defined(FEAT_GUI_GTK) && !defined(macintosh)
+# define mch_errmsg(str)	fprintf(stderr, "%s", (str))
+# define display_errors()	fflush(stderr)
+# define mch_msg(str)		printf("%s", (str))
+#else
+# define USE_MCH_ERRMSG
+#endif
+
 #include "globals.h"	    /* global variables and messages */
 
 #ifdef FEAT_SNIFF
@@ -1369,18 +1398,6 @@ typedef int VimClipboard;	/* This is required for the prototypes. */
 
 #ifndef FEAT_VIRTUALEDIT
 # define getvvcol(w, p, s, c, e) getvcol(w, p, s, c, e)
-#endif
-
-/* This has to go after the include of proto.h, as proto/os_win32.pro declares
- * functions of these names. The declarations would break if the defines had
- * been seen at that stage.
- */
-#if !defined(FEAT_GUI_W32) && !defined(macintosh)
-# define mch_errmsg(str)	fprintf(stderr, "%s", (str))
-# define mch_display_error()	fflush(stderr)
-# define mch_msg(str)		printf("%s", (str))
-#else
-# define mch_msg(str)		mch_errmsg((str))
 #endif
 
 /*

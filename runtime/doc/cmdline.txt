@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.0ac.  Last change: 2001 Mar 19
+*cmdline.txt*   For Vim version 6.0ad.  Last change: 2001 Apr 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -490,7 +490,7 @@ argument for the command, which has a different meaning.  For example:
 			"name"
 
 ==============================================================================
-4. Ex command-line ranges			*cmdline-ranges* *[range]*
+4. Ex command-line ranges		*cmdline-ranges* *[range]* *er4*
 
 Some Ex commands accept a line range in front of them.  This is noted as
 [range].  It consists of one or more line specifiers, separated with ',' or
@@ -511,7 +511,7 @@ commands ":write" and ":global" have the whole file (1,$) as default.
 If more line specifiers are given than required for the command, the first
 one(s) will be ignored.
 
-Line numbers may be specified with:			*:range*
+Line numbers may be specified with:			*:range* *er3*
 	{number}	an absolute line number
 	.		the current line			  *:.*
 	$		the last line in the file		  *:$*
@@ -811,7 +811,7 @@ in Normal mode and Insert mode.
 It is possible to use ":", "/" and other commands that use the command-line,
 but it's not possible to open another command-line window then.  There is no
 nesting.
-
+							*ec4*
 It is not possible to move to another window or edit another buffer.  All
 commands that would do this are disabled in the command-line window.
 

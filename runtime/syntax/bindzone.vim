@@ -1,18 +1,27 @@
 " Vim syntax file
 " Language:	BIND 8.x zone files (RFC1035)
 " Maintainer:	glory hump <rnd@web-drive.ru>
-" Last change:	Sun Dec 24 03:59:15 SAMT 2000
+" Last change:	Thu Apr 26 02:16:18 SAMST 2001
 " Filenames:	/var/named/*
 " URL:	http://rnd.web-drive.ru/vim/syntax/bindzone.vim
 " $Id$
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
 syn case match
-setlocal iskeyword=.,-,48-58,A-Z,a-z,_
+
+if version >= 600
+  setlocal iskeyword=.,-,48-58,A-Z,a-z,_
+else
+  set iskeyword=.,-,48-58,A-Z,a-z,_
+endif
+
 
 " Master File Format (rfc 1035)
 
@@ -56,21 +65,33 @@ syn match	zoneErrParen	/)/
 syn region	zoneParen	contained start=+(+ end=+)+ contains=zoneSerial,zoneTTL,zoneComment
 syn match	zoneComment	";.*"
 
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_bind_zone_syn_inits")
+  if version < 508
+    let did_bind_zone_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-" The default highlighting.
-hi def link zoneComment	Comment
-hi def link zoneDirective	Macro
-hi def link zoneLHSDomain	Statement
-hi def link zoneLHSIP	Statement
-hi def link zoneClass	Include
-hi def link zoneSpecial	Special
-hi def link zoneRRType	Type
-hi def link zoneError	Error
-hi def link zoneErrParen	Error
-hi def link zoneIllegalDom	Error
-hi def link zoneSerial	Todo
-hi def link zoneIPaddr	Number
-hi def link zoneDomain	Identifier
+  HiLink zoneComment	Comment
+  HiLink zoneDirective	Macro
+  HiLink zoneLHSDomain	Statement
+  HiLink zoneLHSIP	Statement
+  HiLink zoneClass	Include
+  HiLink zoneSpecial	Special
+  HiLink zoneRRType	Type
+  HiLink zoneError	Error
+  HiLink zoneErrParen	Error
+  HiLink zoneIllegalDom	Error
+  HiLink zoneSerial	Todo
+  HiLink zoneIPaddr	Number
+  HiLink zoneDomain	Identifier
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "bindzone"
 

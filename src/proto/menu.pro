@@ -17,5 +17,5 @@ void gui_show_popupmenu __ARGS((void));
 void gui_mch_toggle_tearoffs __ARGS((int enable));
 void ex_emenu __ARGS((exarg_T *eap));
 vimmenu_T *gui_find_menu __ARGS((char_u *path_name));
-void ex_menutrans __ARGS((exarg_T *eap));
+void ex_menutranslate __ARGS((exarg_T *eap));
 /* vim: set ft=c : */

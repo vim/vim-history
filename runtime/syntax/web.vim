@@ -1,15 +1,18 @@
 " Vim syntax file
 " Language:	WEB
 " Maintainer:	Andreas Scherer <andreas.scherer@pobox.com>
-" Last Change:	August 23, 1999
+" Last Change:	April 29, 2001
 
 " Details of the WEB language can be found in the article by Donald E. Knuth,
 " "The WEB System of Structured Documentation", included as "webman.tex" in
 " the standard WEB distribution, available for anonymous ftp at
 " ftp://labrea.stanford.edu/pub/tex/web/.
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -17,12 +20,15 @@ endif
 " we base this syntax file on the modern superset, CWEB.  Note: This shortcut
 " may introduce some illegal constructs, e.g., CWEB's "@c" does _not_ start a
 " code section in WEB.  Anyway, I'm not a WEB programmer.
-runtime! syntax/cweb.vim
+if version < 600
+  source <sfile>:p:h/cweb.vim
+else
+  runtime! syntax/cweb.vim
+endif
 unlet b:current_syntax
 
 " Replace C/C++ syntax by Pascal syntax.
 syntax include @webIncludedC <sfile>:p:h/pascal.vim
-unlet b:current_syntax
 
 " Double-@ means single-@, anywhere in the WEB source (as in CWEB).
 " Don't misinterpret "@'" as the start of a Pascal string.

@@ -543,7 +543,7 @@ gui_mch_init(void)
 #endif
 
     /* Display any pending error messages */
-    mch_display_error();
+    display_errors();
 
     gui.scrollbar_width = GetSystemMetrics(SM_CXVSCROLL);
     gui.scrollbar_height = GetSystemMetrics(SM_CYHSCROLL);

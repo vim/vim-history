@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0ac.  Last change: 2001 Apr 03
+*change.txt*    For Vim version 6.0ad.  Last change: 2001 Apr 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -259,13 +259,11 @@ When 'cpo' doesn't contain the 'D' flag, this character can also be entered
 like |digraphs|.  First type CTRL-K and then the two digraph characters.
 {not available when compiled without the |+digraphs| feature}
 
-						*case* *locale* *$LANG*
+						*case*
 The following commands change the case of letters.  The currently active
-locale is used.  This depends on your system  On Unix, setting the $LANG
-environment variable can make a difference.  For example, to enable changing
-the case of letters with umlauts: >
-	setenv LANG de
-<							*~*
+|locale| is used.  See |:language|.  The LC_CTYPE value matters here.
+
+							*~*
 ~			'notildeop' option: Switch case of the character
 			under the cursor and move the cursor to the right.
 			If a [count] is given, do that many characters. {Vi:
@@ -913,7 +911,7 @@ to their previous contents.
 5. Read-only registers ":, "., "% and "#
 These are '%', '#', ':' and '.'.  You can use them only with the "p", "P",
 and ":put" commands and with CTRL-R.  {not in Vi}
-							*quote_.* *quote.*
+						*quote_.* *quote.* *ei1*
 	".	Contains the last inserted text (the same as what is inserted
 		with the insert mode commands CTRL-A and CTRL-@).  Note: this
 		doesn't work with CTRL-R on the command-line.  It works a bit
@@ -923,7 +921,7 @@ and ":put" commands and with CTRL-R.  {not in Vi}
 	"%	Contains the name of the current file.
 							*quote_#* *quote#*
 	"#	Contains the name of the alternate file.
-							*quote_:* *quote:*
+						*quote_:* *quote:* *ec6*
 	":	Contains the most recent executed command-line.  Example: Use
 		"@:" to repeat the previous command-line command.
 		The command-line is only stored in this register when at least

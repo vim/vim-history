@@ -959,7 +959,7 @@ gui_mch_init(void)
 #endif
 
     /* Display any pending error messages */
-    mch_display_error();
+    display_errors();
 
     /* Return here if the window was already opened (happens when
      * gui_mch_dialog() is called early). */
@@ -3326,7 +3326,7 @@ get_toolbar_bitmap(char_u *name)
 	char_u fname[MAXPATHL];
 	HANDLE hbitmap = NULL;
 
-	if (gui_find_bitmap(name, fname, ".bmp") == OK)
+	if (gui_find_bitmap(name, fname, "bmp") == OK)
 	    hbitmap = LoadImage(
 		    NULL,
 		    fname,
@@ -3372,65 +3372,4 @@ gui_mch_set_foreground(void)
 	 SendMessage(s_hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
     SetForegroundWindow(s_hwnd);
 }
-#endif
-
-#if 0	    /* DISABLED - has been reported not to work */
-#ifdef FEAT_MBYTE
-/*
- * locale-aware TranslateMessage replacement
- *
- * lpMsg should be WM_KEYDOWN message (not checked)
- */
-    static BOOL
-LCTranslateMessage(CONST MSG *lpMsg)
-{
-    MSG		charMsg;
-    BYTE	lpKeyState[256];	/* keyboard state array */
-    WCHAR	pwszBuff[4];		/* translated key buffer.  usually
-					   doesn't hold more than 2 chars */
-    int		i, ccount;
-    int		len;
-    char_u	string[MB_MAXBYTES];
-
-    /* This only works on NT. */
-    if (os_version.dwPlatformId != VER_PLATFORM_WIN32_NT)
-	return TranslateMessage(lpMsg);
-
-    GetKeyboardState(lpKeyState);
-
-    /*
-     * If Ctrl or Left Alt key is depressed, call base processing.
-     * NB: Right Alt key is used in some keyboard layouts
-     * (it also sets the Ctrl key flag), so it is disregarded here.
-     */
-    if (!(lpKeyState[VK_RMENU] & 128)
-	&& ((lpKeyState[VK_CONTROL] & 128) || (lpKeyState[VK_MENU] & 128)))
-	return TranslateMessage(lpMsg);
-
-    ccount = ToUnicode(lpMsg->wParam, (lpMsg->lParam >> 16) & 0xFF,
-						  lpKeyState, pwszBuff, 4, 0);
-    switch (ccount)
-    {
-	case -1:	/* dead key */
-	    charMsg.hwnd = lpMsg->hwnd;
-	    charMsg.lParam = lpMsg->lParam;
-	    charMsg.message = WM_DEADCHAR;
-	    charMsg.wParam = pwszBuff[0];
-	    DispatchMessage(&charMsg);
-	    break;
-
-	case 0:		/* key does not have translation in current keymap */
-	    return TranslateMessage(lpMsg);
-
-	default:	/* one or more unicode chars returned */
-	    for (i = 0; i < ccount; i++)
-	    {
-		len = (*mb_char2bytes)(pwszBuff[i], string);
-		add_to_input_buf(string, len);
-	    }
-	    break;
-    }
-    return TRUE;
-}
-#endif
 #endif

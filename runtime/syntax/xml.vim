@@ -3,7 +3,7 @@
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
 "		Author and previous maintainer:
 "		Paul Siegmann <pauls@euronet.nl>
-" Last Change:	Fre, 13 Apr 2001 23:10:08 +0200
+" Last Change:	Don, 26 Apr 2001 22:34:15 +0200
 " Filenames:	*.xml
 " URL:		http://www.zellner.org/vim/syntax/xml.vim
 " $Id$
@@ -124,7 +124,7 @@ syn match   xmlEndTag
 " </tag>
 " 
 syn region   xmlRegion
-    \ start=+<\z([^ /!?>"']\+\)\(\(\_[^>]*[^/!?]>\)\|>\)+
+    \ start=+<\z([^ /!?>"']\+\)\(\(\_[^>]*[^/!?]>\)\|\_[>]\)+
     \ end=+</\z1>+
     \ fold
     \ contains=xmlTag,xmlEndTag,xmlCdata,@xmlRegionCluster,xmlComment,xmlEntity,xmlProcessing,@xmlRegionHook
@@ -189,7 +189,7 @@ syn region  xmlProcessing matchgroup=xmlProcessingDelim start="<?" end="?>" cont
 syn region  xmlDocType matchgroup=xmlDocTypeDecl start="<!DOCTYPE"he=s+2,rs=s+2 end=">" contains=xmlDocTypeKeyword,xmlInlineDTD,xmlString
 syn keyword xmlDocTypeKeyword contained DOCTYPE PUBLIC SYSTEM
 syn region  xmlInlineDTD contained start="\[" end="]" contains=@xmlDTD
-syn include @xmlDTD <sfile>:p:h/dtd.vim
+syn include @xmlDTD syntax/dtd.vim
 unlet b:current_syntax
 
 

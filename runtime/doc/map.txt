@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.0ac.  Last change: 2001 Apr 20
+*map.txt*       For Vim version 6.0ad.  Last change: 2001 Apr 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -752,7 +752,7 @@ feature}.
 ==============================================================================
 4. User-defined commands				*user-commands*
 
-It is possible to define your own ex commands. A user-defined command can act
+It is possible to define your own Ex commands. A user-defined command can act
 just like a built-in command (it can have a range or arguments, arguments can
 be completed as filenames or buffer names, etc), except that when the command
 is executed, it is transformed into a normal ex command and then executed.

@@ -1,15 +1,16 @@
 " Vim syntax file
 " Language:	Remind
 " Maintainer:	Davide Alberani <alberanid@bigfoot.com>
-" Last Change:	03 Dec 1999
-" Version:	0.1
-" URL:		http://members.xoom.com/alberanid/vim/syntax/remind.vim
+" Last Change:	28 Apr 2001
+" Version:	0.2
+" URL:		http://digilander.iol.it/alberanid/vim/syntax/remind.vim
 "
 " remind is a sophisticated reminder service
-" you can download remind from ftp://ftp.doe.carleton.ca/pub/remind-3.0/
+" you can download remind from http://www.roaringpenguin.com/remind.html
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -32,22 +33,32 @@ syn match remindVar		"\$[_a-zA-Z][_a-zA-Z0-9]*"
 syn match remindSubst		"%[^ ]"
 syn match remindAdvanceNumber	"\(\*\|+\|-\|++\|--\)[0-9]\+"
 
-" The default highlighting.
-hi def link remindCommands	Function
-hi def link remindExpiry	Repeat
-hi def link remindTag		Label
-hi def link remindTimed		Statement
-hi def link remindMove		Statement
-hi def link remindSpecial	Include
-hi def link remindRun		Function
-hi def link remindConditional	Conditional
-hi def link remindComment	Comment
-hi def link remindString	String
-hi def link remindDebug		Debug
-hi def link remindVar		Identifier
-hi def link remindSubst		Constant
-hi def link remindAdvanceNumber	Number
+if version >= 508 || !exists("did_remind_syn_inits")
+  if version < 508
+    let did_remind_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink remindCommands		Function
+  HiLink remindExpiry		Repeat
+  HiLink remindTag		Label
+  HiLink remindTimed		Statement
+  HiLink remindMove		Statement
+  HiLink remindSpecial		Include
+  HiLink remindRun		Function
+  HiLink remindConditional	Conditional
+  HiLink remindComment		Comment
+  HiLink remindString		String
+  HiLink remindDebug		Debug
+  HiLink remindVar		Identifier
+  HiLink remindSubst		Constant
+  HiLink remindAdvanceNumber	Number
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "remind"
 
-"EOF	vim: ts=8 noet tw=100 sw=8 sts=0
+" vim: ts=8 sw=2

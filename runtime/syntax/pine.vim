@@ -1,14 +1,21 @@
 " Vim syntax file
 " Language:	Pine (email program) run commands
 " Maintainer:	David Pascoe <David.Pascoe@jtec.com.au>
-" Last Change:	Wed Oct 13 11:02:15 WST 1999, update for pine 4.20
+" Last Change:	Thu Apr 26 10:39:41 WST 2001, updated for pine 4.33
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
-setlocal iskeyword=@,48-57,_,128-167,224-235,-,
+if version >= 600
+  setlocal iskeyword=@,48-57,_,128-167,224-235,-,
+else
+  set iskeyword=@,48-57,_,128-167,224-235,-,
+endif
 
 syn keyword pineConfig addrbook-sort-rule
 syn keyword pineConfig address-book
@@ -299,10 +306,22 @@ syn keyword pineOption vertical-folder-list
 
 syn match  pineComment  "^#.*$"
 
-" The default highlighting.
-hi def link pineConfig	Type
-hi def link pineComment	Comment
-hi def link pineOption	Macro
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_pine_syn_inits")
+  if version < 508
+    let did_pine_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink pineConfig	Type
+  HiLink pineComment	Comment
+  HiLink pineOption	Macro
+  delcommand HiLink
+endif
 
 let b:current_syntax = "pine"
 

@@ -2640,19 +2640,7 @@ win_line(wp, lnum, startrow, endrow)
 		else
 		    shl->endp = line + MAXCOL;
 		/* Highlight one character for an empty match. */
-#if 0
-		if (*shl->startp == NUL && shl->startp > line)
-		{
-#ifdef FEAT_MBYTE
-		    if (has_mbyte)
-			shl->startp = mb_prevptr(line, shl->startp);
-		    else
-#endif
-			--shl->startp;
-		}
-		else
-#endif
-		    if (shl->startp == shl->endp)
+		if (shl->startp == shl->endp)
 		{
 #ifdef FEAT_MBYTE
 		    if (has_mbyte)
@@ -2801,8 +2789,8 @@ win_line(wp, lnum, startrow, endrow)
 		if (filler_todo > 0)
 		{
 		    /* Draw "deleted" diff line(s). */
-		    if (vim_iswhite(fill_diff) || char2cells(fill_diff) > 1)
-			c_extra = 'x';
+		    if (char2cells(fill_diff) > 1)
+			c_extra = '-';
 		    else
 			c_extra = fill_diff;
 		    n_extra = W_WIDTH(wp) - col;
@@ -2932,20 +2920,6 @@ win_line(wp, lnum, startrow, endrow)
 				    shl->endp = line + shl->rm.endpos[0].col;
 				else
 				    shl->endp = line + MAXCOL;
-#if 0
-				/* Matching end-of-line: highlight last
-				 * character in the line. */
-				if (*shl->startp == NUL && shl->startp > line)
-				{
-#ifdef FEAT_MBYTE
-				    if (has_mbyte)
-					shl->startp =
-						mb_prevptr(line, shl->startp);
-				    else
-#endif
-					--shl->startp;
-				}
-#endif
 
 				/* for a non-null match, loop to check if the
 				 * match starts at the current position */
@@ -3175,6 +3149,26 @@ win_line(wp, lnum, startrow, endrow)
 		}
 		else
 		    ptr += mb_l - 1;
+
+		/* If a double-width char doesn't fit at the left side display
+		 * a '<' in the first column. */
+		if (n_skip > 0 && mb_l > 1)
+		{
+		    extra[0] = '<';
+		    p_extra = extra;
+		    n_extra = 1;
+		    c_extra = NUL;
+		    c = ' ';
+		    if (area_attr == 0 && search_attr == 0)
+		    {
+			n_attr = n_extra + 1;
+			extra_attr = hl_attr(HLF_AT);
+			saved_attr2 = char_attr; /* save current attr */
+		    }
+		    mb_c = c;
+		    mb_utf8 = FALSE;
+		    mb_l = 1;
+		}
 
 	    }
 #endif
@@ -5380,12 +5374,17 @@ screen_char_2(off, row, col)
     int		row;
     int		col;
 {
-    /*
-     * Outputting the last character on the screen may scrollup the screen.
-     * Don't to it!  At the same time check for illegal values, just in case.
-     */
-    if (off + 2 >= (unsigned)(screen_Rows * screen_Columns))
+    /* Check for illegal values (could be wrong when screen was resized). */
+    if (off + 1 >= (unsigned)(screen_Rows * screen_Columns))
 	return;
+
+    /* Outputting the last character on the screen may scrollup the screen.
+     * Don't to it!  Mark the character invalid (update it when scrolled up) */
+    if (row == screen_Rows - 1 && col >= screen_Columns - 2)
+    {
+	ScreenAttrs[off] = (sattr_T)-1;
+	return;
+    }
 
     /* Output the first byte normally (positions the cursor), then write the
      * second byte directly. */

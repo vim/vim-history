@@ -1,6 +1,6 @@
 " Menu Translations:	Afrikaas
 " Maintainer:	        Danie Roux <droux@tuks.co.za>
-" Last Change:	        2001 Apr 18
+" Last Change:	        2001 apr 26
 
 menutrans clear
 let did_menu_trans = 1
@@ -97,8 +97,8 @@ menutrans Select\ &Line		Kies\ een\ &Reël
 menutrans Select\ &Block	Kies\ een\ &Blok
 menutrans Select\ &All		Kies\ &Alles
  
-" The GUI toolbar (for Win32 or GTK)
-if has("win32") || has("gui_gtk")
+" The GUI toolbar
+if has("toolbar")
   if exists("*Do_toolbar_tmenu")
     delfun Do_toolbar_tmenu
   endif

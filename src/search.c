@@ -1797,9 +1797,9 @@ findmatchlimit(oap, initc, flags, maxtravel)
 		    do_quotes = 1;
 		    if (start_in_quotes == MAYBE)
 		    {
-			inquote = !at_start;
-			if (inquote)
-			    start_in_quotes = TRUE;
+			/* Do we need to use at_start here? */
+			inquote = TRUE;
+			start_in_quotes = TRUE;
 		    }
 		    else if (backwards)
 			inquote = TRUE;

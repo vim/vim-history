@@ -2,10 +2,13 @@
 " Language:	Makefile
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/make.vim
-" Last Change:	2001 Jan 15
+" Last Change:	2001 Apr 26
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -77,21 +80,33 @@ syn region  makeDString start=+"+  skip=+\\"+  end=+"+  contains=makeIdent
 syn region  makeSString start=+'+  skip=+\\'+  end=+'+  contains=makeIdent
 syn region  makeBString start=+`+  skip=+\\`+  end=+`+  contains=makeIdent,makeSString,makeDString,makeNextLine
 
-" The default highlighting.
-hi def link makeNextLine	makeSpecial
-hi def link makeSpecTarget	Statement
-hi def link makeImplicit	Function
-hi def link makeTarget		Function
-hi def link makeInclude		Include
-hi def link makePreCondit	PreCondit
-hi def link makeStatement	Statement
-hi def link makeIdent		Identifier
-hi def link makeSpecial		Special
-hi def link makeComment		Comment
-hi def link makeDString		String
-hi def link makeSString		String
-hi def link makeBString		Function
-hi def link makeError		Error
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_make_syn_inits")
+  if version < 508
+    let did_make_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink makeNextLine	makeSpecial
+  HiLink makeSpecTarget	Statement
+  HiLink makeImplicit	Function
+  HiLink makeTarget		Function
+  HiLink makeInclude		Include
+  HiLink makePreCondit	PreCondit
+  HiLink makeStatement	Statement
+  HiLink makeIdent		Identifier
+  HiLink makeSpecial		Special
+  HiLink makeComment		Comment
+  HiLink makeDString		String
+  HiLink makeSString		String
+  HiLink makeBString		Function
+  HiLink makeError		Error
+  delcommand HiLink
+endif
 
 let b:current_syntax = "make"
 

@@ -1,10 +1,11 @@
 " Vim syntax file
-" Language:	gp (version 2.0)
+" Language:	gp (version 2.1)
 " Maintainer:	Karim Belabas <Karim.Belabas@math.u-psud.fr>
-" Last change:	2001 Jan 15
+" Last change:	2001 Apr 17
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -12,7 +13,7 @@ endif
 syntax keyword gpStatement	break return next
 syntax keyword gpConditional	if
 syntax keyword gpRepeat		until while for fordiv forprime forstep forvec
-syntax keyword gpLocal          local
+syntax keyword gpScope          local global
 
 syntax keyword gpInterfaceKey	buffersize colors compatible debug debugmem
 syntax keyword gpInterfaceKey	echo format help histsize log logfile output
@@ -46,25 +47,33 @@ syntax region gpParen		transparent start='(' end=')' contains=ALLBUT,gpParenErro
 syntax match gpParenError	")"
 syntax match gpInParen contained "[{}]"
 
-" The default highlighting.
-hi def link gpConditional	Conditional
-hi def link gpRepeat		Repeat
-hi def link gpError		Error
-hi def link gpParenError	gpError
-hi def link gpInParen		gpError
-hi def link gpStatement		Statement
-hi def link gpString		String
-hi def link gpComment		Comment
-hi def link gpInterface		Type
-hi def link gpInput		Type
-hi def link gpInterfaceKey	Statement
-hi def link gpFunction		Function
-hi def link gpLocal		Type
+if version >= 508 || !exists("did_gp_syn_inits")
+  if version < 508
+    let did_gp_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
+  HiLink gpConditional		Conditional
+  HiLink gpRepeat		Repeat
+  HiLink gpError		Error
+  HiLink gpParenError		gpError
+  HiLink gpInParen		gpError
+  HiLink gpStatement		Statement
+  HiLink gpString		String
+  HiLink gpComment		Comment
+  HiLink gpInterface		Type
+  HiLink gpInput		Type
+  HiLink gpInterfaceKey		Statement
+  HiLink gpFunction		Function
+  HiLink gpScope 		Type
   " contained ones
-hi def link gpSpecial		Special
-hi def link gpTodo		Todo
-hi def link gpArgs		Type
+  HiLink gpSpecial		Special
+  HiLink gpTodo			Todo
+  HiLink gpArgs			Type
+  delcommand HiLink
+endif
 
 let b:current_syntax = "gp"
 " vim: ts=8

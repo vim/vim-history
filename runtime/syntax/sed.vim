@@ -1,14 +1,17 @@
 " Vim syntax file
 " Language:	sed
 " Maintainer:	Haakon Riiser <haakon@riiser.net>
-" Last Change:	2001 Apr 16
+" Last Change:	2001 Apr 25
 "
 " Special thanks go to Preben "Peppe" Guldberg for a lot of help, and, in
 " particular, his clever way of matching the substitute command.
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
-  finish
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+    syn clear
+elseif exists("b:current_syntax")
+    finish
 endif
 
 syn match sedError	"\S"
@@ -74,34 +77,45 @@ syn region sedReplacement64 matchgroup=Special start=+@\(\\\\\|\\@\)*+ skip=+[^\
 " (y) does not allow any flags.  To save memory, I ignore this problem.
 syn match sedST	"[sy]" nextgroup=sedRegexp\d\+
 
-hi def link sedAddress		Macro
-hi def link sedACI		NONE
-hi def link sedBranch		Label
-hi def link sedComment		Comment
-hi def link sedDelete		Function
-hi def link sedError		Error
-hi def link sedFlag		Type
-hi def link sedFlagwrite	Constant
-hi def link sedFunction		Function
-hi def link sedLabel		Label
-hi def link sedLineCont		Special
-hi def link sedPutHoldspc	Function
-hi def link sedReplaceMeta	Special
-hi def link sedRegexpMeta	Special
-hi def link sedRW		Constant
-hi def link sedSemicolon	Special
-hi def link sedST		Function
-hi def link sedSpecial		Special
-hi def link sedWhitespace	NONE
-if exists("highlight_sedtabs")
-    hi def link sedTab		Todo
+if version >= 508 || !exists("did_sed_syntax_inits")
+    if version < 508
+	let did_sed_syntax_inits = 1
+	command -nargs=+ HiLink hi link <args>
+    else
+	command -nargs=+ HiLink hi def link <args>
+    endif
+
+    HiLink sedAddress		Macro
+    HiLink sedACI		NONE
+    HiLink sedBranch		Label
+    HiLink sedComment		Comment
+    HiLink sedDelete		Function
+    HiLink sedError		Error
+    HiLink sedFlag		Type
+    HiLink sedFlagwrite		Constant
+    HiLink sedFunction		Function
+    HiLink sedLabel	    	Label
+    HiLink sedLineCont	    	Special
+    HiLink sedPutHoldspc	Function
+    HiLink sedReplaceMeta	Special
+    HiLink sedRegexpMeta	Special
+    HiLink sedRW		Constant
+    HiLink sedSemicolon		Special
+    HiLink sedST		Function
+    HiLink sedSpecial		Special
+    HiLink sedWhitespace	NONE
+    if exists("highlight_sedtabs")
+        HiLink sedTab		Todo
+    endif
+    let __sed_i = 32
+    while __sed_i <= 126
+	exe "HiLink sedRegexp".__sed_i		"Macro"
+	exe "HiLink sedReplacement".__sed_i	"NONE"
+	let __sed_i = __sed_i + 1
+    endwhile
+
+    delcommand HiLink
 endif
-let __sed_i = 32
-while __sed_i <= 126
-    exe "hi def link sedRegexp".__sed_i		"Macro"
-    exe "hi def link sedReplacement".__sed_i	"NONE"
-    let __sed_i = __sed_i + 1
-endwhile
 
 unlet __sed_i __sed_delimiter __sed_metacharacters
 

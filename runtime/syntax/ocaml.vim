@@ -4,13 +4,17 @@
 " Maintainers:   Markus Mottl     <mottl@miss.wu-wien.ac.at>
 "                Karl-Heinz Sylla <Karl-Heinz.Sylla@gmd.de>
 " URL:           http://miss.wu-wien.ac.at/~mottl/vim/syntax/ocaml.vim
-" Last Change:   2001 Jan 15
+" Last Change:   2001 Apr 26 - upgraded for new Vim version
+"                2001 Feb 19 - small fix for functors
+"                2000 May 05 - small fix for optional arguments
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
-  finish
-endif
-
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600                                             
+  syntax clear                                               
+elseif exists("b:current_syntax")                            
+  finish                                                     
+endif                                                        
 
 " OCAML is case sensitive.
 syn case match
@@ -107,13 +111,13 @@ syn region   ocamlPreMPRestr start="."me=e-1 end=")"me=e-1 contained contains=@o
 
 syn region   ocamlMPRestr start=":" end="."me=e-1 contained contains=@ocamlComment skipwhite skipempty nextgroup=ocamlMPRestr1,ocamlMPRestr2,ocamlMPRestr3
 syn region   ocamlMPRestr1 matchgroup=ocamlModule start="\ssig\s\=" matchgroup=ocamlModule end="\<end\>" contained contains=ALLBUT,@ocamlContained,ocamlEndErr,ocamlModule
-syn region   ocamlMPRestr2 start="\sfunctor\(\s\|(\)\="me=e-1 matchgroup=ocamlKeyword end="->" contained contains=@ocamlAllErrs,ocamlComment,ocamlModParam skipwhite skipempty nextgroup=ocamlFuncWith
+syn region   ocamlMPRestr2 start="\sfunctor\(\s\|(\)\="me=e-1 matchgroup=ocamlKeyword end="->" contained contains=@ocamlAllErrs,ocamlComment,ocamlModParam skipwhite skipempty nextgroup=ocamlFuncWith,ocamlMPRestr2
 syn match    ocamlMPRestr3 "\w\(\w\|'\)*\(\.\w\(\w\|'\)*\)*" contained
 syn match  ocamlModPreRHS "=" contained skipwhite skipempty nextgroup=ocamlModParam,ocamlFullMod
 syn region  ocamlModRHS start="." end=".\w\|([^*]"me=e-2 contained contains=ocamlComment skipwhite skipempty nextgroup=ocamlModParam,ocamlFullMod
 syn match   ocamlFullMod "\<\u\(\w\|'\)*\(\.\u\(\w\|'\)*\)*" contained skipwhite skipempty nextgroup=ocamlFuncWith
 
-syn region  ocamlFuncWith start="("me=e-1 end=")" contained contains=ocamlComment,ocamlWith,ocamlFuncStruct
+syn region  ocamlFuncWith start="("me=e-1 end=")" contained contains=ocamlComment,ocamlWith,ocamlFuncStruct skipwhite skipempty nextgroup=ocamlFuncWith
 syn region  ocamlFuncStruct matchgroup=ocamlModule start="[^a-zA-Z]struct\>"hs=s+1 matchgroup=ocamlModule end="\<end\>" contains=ALLBUT,@ocamlContained,ocamlEndErr
 
 syn match    ocamlModTypeRestr "\<\w\(\w\|'\)*\(\.\w\(\w\|'\)*\)*\>" contained
@@ -186,7 +190,7 @@ syn region   ocamlLabel transparent matchgroup=ocamlLabel start="?(\(\l\|_\)\(\w
 
 
 " Synchronization
-syn sync minlines=20
+syn sync minlines=50
 syn sync maxlines=500
 
 syn sync match ocamlDoSync      grouphere  ocamlDo      "\<do\>"
@@ -198,59 +202,72 @@ syn sync match ocamlStructSync  groupthere ocamlStruct  "\<end\>"
 syn sync match ocamlSigSync     grouphere  ocamlSig     "\<sig\>"
 syn sync match ocamlSigSync     groupthere ocamlSig     "\<end\>"
 
-" The default highlighting.
-hi def link ocamlBraceErr     Error
-hi def link ocamlBrackErr     Error
-hi def link ocamlParenErr     Error
-hi def link ocamlArrErr       Error
+" Define the default highlighting.                                          
+" For version 5.7 and earlier: only when not done already                   
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_ocaml_syntax_inits")
+  if version < 508                            
+    let did_ocaml_syntax_inits = 1                   
+    command -nargs=+ HiLink hi link <args>    
+  else                                        
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-hi def link ocamlCommentErr   Error
+  HiLink ocamlBraceErr     Error
+  HiLink ocamlBrackErr     Error
+  HiLink ocamlParenErr     Error
+  HiLink ocamlArrErr       Error
 
-hi def link ocamlCountErr     Error
-hi def link ocamlDoErr        Error
-hi def link ocamlDoneErr      Error
-hi def link ocamlEndErr       Error
-hi def link ocamlThenErr      Error
+  HiLink ocamlCommentErr   Error
 
-hi def link ocamlCharErr      Error
+  HiLink ocamlCountErr     Error
+  HiLink ocamlDoErr        Error
+  HiLink ocamlDoneErr      Error
+  HiLink ocamlEndErr       Error
+  HiLink ocamlThenErr      Error
 
-hi def link ocamlComment      Comment
+  HiLink ocamlCharErr      Error
 
-hi def link ocamlModPath      Include
-hi def link ocamlModule       Include
-hi def link ocamlModParam1    Include
-hi def link ocamlModType      Include
-hi def link ocamlMPRestr3     Include
-hi def link ocamlFullMod      Include
-hi def link ocamlModTypeRestr Include
-hi def link ocamlWith         Include
-hi def link ocamlMTDef        Include
+  HiLink ocamlComment      Comment
 
-hi def link ocamlConstructor  Constant
+  HiLink ocamlModPath      Include
+  HiLink ocamlModule       Include
+  HiLink ocamlModParam1    Include
+  HiLink ocamlModType      Include
+  HiLink ocamlMPRestr3     Include
+  HiLink ocamlFullMod      Include
+  HiLink ocamlModTypeRestr Include
+  HiLink ocamlWith         Include
+  HiLink ocamlMTDef        Include
 
-hi def link ocamlModPreRHS    Keyword
-hi def link ocamlMPRestr2     Keyword
-hi def link ocamlKeyword      Keyword
-hi def link ocamlFunDef       Keyword
-hi def link ocamlRefAssign    Keyword
-hi def link ocamlKeyChar      Keyword
-hi def link ocamlAnyVar       Keyword
-hi def link ocamlTopStop      Keyword
-hi def link ocamlOperator     Keyword
+  HiLink ocamlConstructor  Constant
 
-hi def link ocamlBoolean      Boolean
-hi def link ocamlCharacter    Character
-hi def link ocamlNumber       Number
-hi def link ocamlFloat        Float
-hi def link ocamlString       String
+  HiLink ocamlModPreRHS    Keyword
+  HiLink ocamlMPRestr2     Keyword
+  HiLink ocamlKeyword      Keyword
+  HiLink ocamlFunDef       Keyword
+  HiLink ocamlRefAssign    Keyword
+  HiLink ocamlKeyChar      Keyword
+  HiLink ocamlAnyVar       Keyword
+  HiLink ocamlTopStop      Keyword
+  HiLink ocamlOperator     Keyword
 
-hi def link ocamlLabel        Identifier
+  HiLink ocamlBoolean      Boolean
+  HiLink ocamlCharacter    Character
+  HiLink ocamlNumber       Number
+  HiLink ocamlFloat        Float
+  HiLink ocamlString       String
 
-hi def link ocamlType         Type
+  HiLink ocamlLabel        Identifier
 
-hi def link ocamlTodo         Todo
+  HiLink ocamlType         Type
 
-hi def link ocamlEncl         Keyword
+  HiLink ocamlTodo         Todo
+
+  HiLink ocamlEncl         Keyword
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "ocaml"
 

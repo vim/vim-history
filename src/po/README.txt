@@ -5,6 +5,20 @@ Each file contains the translation of English Vim messages for one language.
 The files are in "po" format, used by the gettext package.  Please refer to
 the gettext documentation for more information.
 
+The GNU gettext library, starting with version 0.10.37, supports converting
+messages from one encoding to another.  This requires that it was compiled
+with HAVE_ICONV.  The result is that the messages may be in any encoding
+supported by iconv and will be automatically converted to the currently used
+encoding.
+
+The GNU gettext library, starting with version 0.10.36, uses a new format for
+some encodings.  This folows the C99 standard for strings.  It means that when
+a multi-byte character includes the 0x5c byte, this is not recognized as a
+backslash.  Since this format is incompatible with Solaris, Vim uses the old
+format.  This is done by setting the OLD_PO_FILE_OUTPUT and OLD_PO_FILE_INPUT
+environment variables.  When you use the Makefile in this directory that will
+be done for you.  This does NOT work with gettext 0.10.36.  Don't use it.
+
 
 WHEN THERE IS A MISTAKE
 

@@ -1,78 +1,187 @@
-*multibyte.txt* For Vim version 6.0ac.  Last change: 2001 Apr 19
+*multibyte.txt* For Vim version 6.0ad.  Last change: 2001 Apr 28
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
 
 
 Multi-byte support				*multibyte* *multi-byte*
-
 						*Chinese* *Japanese* *Korean*
-There are languages which have many characters that can not be represented
-using one byte (one octet).  These are Chinese (simplified or traditional),
-Japanese and Korean.  These languages uses more than one byte to represent a
-character.
+This is about editing text in languages which have many characters that can
+not be represented using one byte (one octet).  Examples are Chinese, Japanese
+and Korean.  Unicode is also covered here.
 
-This is limited information on the support in Vim to edit files that use more
-than one byte per character.  Actually, only two-byte codes are currently
-supported.
+For changing the language of messages and menus see |multilang.txt|.
 
-For changing the messages and menus that Vim uses see |multilang.txt|.
+{not available when compiled without the +multi_byte feature}
 
-Also see |+multi_byte| and |'fileencoding'|.
 
-1. Introduction				|multibyte-intro|
-2. Compiling				|multibyte-compiling|
-3. Options				|multibyte-options|
-4. Display (X fontset support)		|multibyte-display|
-5. Input (XIM support)			|multibyte-input|
-6. Input (Windows IME support)		|multibyte-ime|
-7. UTF-8				|UTF-8|
-8. UTF-8 in XFree86 xterm		|UTF8-xterm|
-9. Unfinished snippets			|mbyte-snippets|
+1.  Getting started			|mbyte-first|
+2.  Locale				|mbyte-locale|
+3.  Encoding				|mbyte-encoding|
+4.  Using a terminal			|mbyte-terminal|
+5.  Fonts on X11			|mbyte-fonts-X11|
+6.  Fonts on MS-Windows			|mbyte-fonts-MSwin|
+7.  Input on X11			|mbyte-XIM|
+8.  Input on MS-Windows			|mbyte-IME|
+9.  Input with a keymap			|mbyte-keymap|
+10. Using UTF-8				|mbyte-utf8|
+11. Overview of options			|mbyte-options|
 
 ==============================================================================
-1. Introduction						*multibyte-intro*
+1. Getting started					*mbyte-first*
+
+This is a summary of the multibyte features in Vim.  If you are lucky it works
+as described and you can start using Vim without much trouble.  If something
+doesn't work you will have to read the rest.  Don't be surprised if it takes
+quite a bit of work and experimenting to make Vim use all the multi-byte
+features.  Unfortunately, every system has its own way to deal with multibyte
+languages and it is quite complicated.
+
+
+COMPILING
+
+If you already have a compiled Vim program, check if the |+multi_byte| feature
+is included.  The |:version| command can be used for this.
+
+If +multi_byte is not included, you should compile Vim with "big" features.
+You can further tune what features are included.  See the INSTALL files in the
+source directory.
+
 
 LOCALE
-							*locale-multibyte*
-There are a number of languages in the world.  And there are different
-cultures and environments at least as much as the number of languages.	A
-linguistic environment corresponding to an area is called "|locale|".  The
-POSIX standard defines a concept of |locale|, which includes a lot of
-information about |charset|, collating order for sorting, date format,
-currency format and so on.
 
-Your system need to support the |locale| system and the language |locale| of
-your choice.  Some system has a few language |locale|s, so the |locale| of the
-language which you want to use may not be on your system.  If so, you have to
-add the language |locale|.  But on some systems, it is not possible to add
-other |locale|s.  In this case, install X |locale|s by installing X compiled
-with X_LOCALE.  Add "-DX_LOCALE" to the CFLAGS if your X lib support X_LOCALE.
-For example, When you are using Linux system and you want to use Japanese, set
-up your system one of the followings.
-    - libc5     + X compiled with X_LOCALE
-    - glibc-2.0 + libwcsmbs + X compiled without X_LOCALE
-    - glibc-2.1 + locale-ja + X compiled without X_LOCALE
+First of all, you must make sure your current locale is set correctly.  If
+your system has been installed to use the language, it probably works right
+away.  If not, you can often make it work by setting the $LANG environment
+variable in your shell: >
 
-The location in which the |locale|s are installed varies system to system.
-For example, "/usr/share/locale", "/usr/lib/locale", etc.  See your system's
+	setenv lang ja_JP.EUC
+
+Unfortunately, the name of the locale depends on your system.  Japanese might
+also be called "ja_JP.EUCjp" or just "ja".  To see what is currently used: >
+
+	:language
+
+To change the locale inside Vim use: >
+
+	:language ja_JP.EUC
+
+Vim will give an error message if this doesn't work.  This is a good way to
+experiment and find the locale name you want to use.  But it's always better
+to set the locale in the shell, so that it is used right from the start.
+
+See |mbyte-locale| for details.
+
+
+ENCODING
+
+If your locale works properly, Vim will try to set the 'encoding' option
+accordingly.  If this doesn't work you can overrule its value: >
+
+	:set encoding=utf-8
+
+See |encoding-values| for a list of acceptable values.
+
+The result is that all the text that is used inside Vim will be in this
+encoding.  Not only the text in the buffers, but also in registers, variables,
+etc.  This also means that changing the value of 'encoding' makes the existing
+text invalid!  The text doesn't change, but it will be displayed wrong.
+
+You can edit files in another encoding than what 'encoding' is set to.  Vim
+will convert the file when you read it and convert it back when you write it.
+See 'fileencoding', 'fileencodings' and |++enc|.
+
+
+DISPLAY AND FONTS
+
+If you are working in a terminal (emulator) you must make sure it accepts the
+same encoding as which Vim is working with.  If this is not the case, you can
+use the 'termencoding' option to make Vim convert text automatically.
+
+For the GUI you must select fonts that work with the current 'encoding'.  This
+is the difficult part.  It depends on the system you are using, the locale and
+a few other things.  See the chapters on fonts: |mbyte-fonts-X11| for
+X-Windows and |mbyte-fonts-MSwin| for MS-Windows.
+
+For X11 you can set the 'guifontset' option to a list of fonts that together
+cover the characters that are used.  Example for Korean: >
+
+	:set guifontset=k12,r12
+
+Alternatively, you can set 'guifont' and 'guifontwide'.  'guifont' is used for
+the single-width characters, 'guifontwide' for the double-width characters.
+Thus the 'guifontwide' font must be exactly twice as wide as 'guifont'.
+Example for UTF-8: >
+
+	:set guifont=-misc-fixed-medium-r-normal-*-18-120-100-100-c-90-iso10646-1
+	:set guifontwide=-misc-fixed-medium-r-normal-*-18-120-100-100-c-180-iso10646-1
+
+You can also set 'guifont' alone, Vim will try to find a matching
+'guifontwide' for you.
+
+
+INPUT
+
+There are several ways to enter multi-byte characters:
+- For X11 XIM can be used.  See |XIM|.
+- For MS-Windows IME can be used.  See |IME|.
+- For all systems keymaps can be used.  See |mbyte-keymap|.
+
+==============================================================================
+2.  Locale						*mbyte-locale*
+
+The easiest setup is when your whole system uses the locale you want to work
+in.  But it's also possible to set the locale for one shell you are working
+in, or just use a certain locale inside Vim.
+
+
+WHAT IS A LOCALE?					*locale*
+
+There are many of languages in the world.  And there are different cultures
+and environments at least as much as the number of languages.	A linguistic
+environment corresponding to an area is called "locale".  This includes
+information about the used language, the charset, collating order for sorting,
+date format, currency format and so on.  For Vim only the language and charset
+really matter.
+
+You can only use a locale if your system has support for it.  Some systems
+have only a few locales, especially in the USA.  The language which you want
+to use may not be on your system.  In that case you might be able to install
+it as an extra package.  Check your system documentation for how to do that.
+
+The location in which the locales are installed varies from system to system.
+For example, "/usr/share/locale" or "/usr/lib/locale".  See your system's
 setlocale() man page.
 
-					*locale-name* *$LANG-multibyte*
-The format of |locale| name is:
-    language[_territory[. codeset]]
-Territory means the country, codeset means the |charset|.  For example, the
-|locale| name "ja_JP.eucJP" means the language is Japanese, the country is
-Japan, the codeset is EUC-JP.  But it also could be "ja", "ja_JP.EUC",
-"ja_JP.ujis", etc.  And unfortunately, the |locale| name for a specific
-language, territory and codeset is not unified and depends on your system.
-This name is used for the LANG environment value.  When you want to use Korean
-and the |locale| name is "ko", do this:
-    sh:  export LANG=ko
-    csh: setenv LANG ko
+Looking in these directories will show you the exact name of each locale.
+Mostly upper/lower case matters, thus "ja_JP.EUC" and "ja_jp.euc" are
+different.  Some systems have a locale.alias file, which allows translation
+from a short name like "nl" to the full name "nl_NL.ISO_8859-1".
+
+Note that X-windows has its own locale stuff.  And unfortunately uses locale
+names different from what is used elsewhere.  This is confusing!  For Vim it
+matters what the setlocale() function uses, which is generally NOT the
+X-windows stuff.  You might have to do some experiments to find out what
+really works.
+
+							*locale-name*
+The (simplified) format of |locale| name is:
+
+	language
+or	language_territory
+or	language_territory.codeset
+
+Territory means the country (or part of it), codeset means the |charset|.  For
+example, the locale name "ja_JP.eucJP" means:
+	ja	the language is Japanese
+	JP	the country is Japan
+	eucJP	the codeset is EUC-JP
+But it also could be "ja", "ja_JP.EUC", "ja_JP.ujis", etc.  And unfortunately,
+the locale name for a specific language, territory and codeset is not unified
+and depends on your system.
 
 Examples of locale name:
-    |charset|	    language		  |locale-name|
+    charset	    language		  locale name ~
     GB2312	    Chinese (simplified)  zh_CN.EUC, zh_CN.GB2312
     Big5	    Chinese (traditional) zh_TW.BIG5, zh_TW.Big5
     CNS-11643	    Chinese (traditional) zh_TW
@@ -80,65 +189,210 @@ Examples of locale name:
     Shift_JIS	    Japanese		  ja_JP.SJIS, ja_JP.Shift_JIS
     EUC-KR	    Korean		  ko, ko_KR.EUC
 
-Even if your system does not have the multibyte language |locale| of your
-choice, or does not have a enough implementation of the locale, Vim can
-somehow handle the multibyte languages.  Add "--enable-broken-locale" flag at
-compile time.
+
+USING A LOCALE
+
+To start using a locale for the whole system, see the documentation of your
+system.  Mostly you need to set it in a configuration file in "/etc".
+
+To use a locale in a shell, set the $LANG environment value.  When you want to
+use Korean and the |locale| name is "ko", do this:
+
+    sh:    export LANG=ko
+    csh:   setenv LANG ko
+
+You can put this in your ~/.profile or ~/.cshrc file to always use it.
+
+To use a locale in Vim only, use the |:language| command: >
+
+	:language ko
+
+Put this in your ~/.vimrc file to use it always.
+
+Or specify $LANG when starting Vim:
+
+   sh:    LANG=ko vim {vim-arguments}
+   csh:	  env LANG=ko vim {vim-arguments}
+
+You could make a small shell script for this.
+
+==============================================================================
+3.  Encoding				*mbyte-encoding*
+
+Vim uses the 'encoding' option to specify how characters identified and
+encoded when they are used inside Vim.  This applies to all the places where
+text is used, including buffers (files loaded into memory), registers and
+variables.
+
+							*charset* *codeset*
+Charset is another name for encoding.  There are subtle differences, but these
+don't matter when using Vim.  "codeset" is another similar name.
+
+Each characters is encoded as one or more bytes.  When all characters are
+encoded with one byte, we call this a single-byte encoding.  The most often
+used one is called "latin1".  This limits the number of characters to 256.
+Some of these are control characters, thus even less can be used for text.
+
+When some characters use two or more bytes, we call this a multi-byte
+encoding.  This allows using much more than 256 characters, which is required
+for most East Asian languages.
+
+Most multi-byte encodings use one byte for the first 127 characters.  These
+are equal to ASCII, which makes it easy to exchange plain-ASCII text, no
+matter what language is used.  Thus you might see the right text even when the
+encoding was set wrong.
+
+							*encoding-names*
+Vim can use many different character encodings.  There are three major groups:
+
+1   8bit	Single-byte encodings, 256 different characters.  Mostly used
+		in USA and Europe.  Example: ISO-8859-1 (Latin1).  All
+		characters occupy one screen cell only.
+
+2   2byte	Double-byte encodings, over 10000 different characters.
+		Mostly used in Asian countries.  Example: euc-kr (Korean)
+		The number of screen cells is equal to the number of bytes
+		(except for euc-jp when the first byte is 0x8e).
+
+u   Unicode	Universal encoding, can replace all others.  ISO 10646.
+		Millions of different characters.  Example: UTF-8.  The
+		relation between bytes and screen cells is complex.
+
+Other encodings cannot be used by Vim internally.  But files in other
+encodings can be edited by using conversion, see 'fileencoding'.
+Note that all encodings must use ASCII for the characters up to 128 (except
+when compiled for EBCDIC).
+
+Supported 'encoding' values are:			*encoding-values*
+1   latin1	8-bit characters (ISO 8859-1)
+1   iso-8859-n	ISO_8859 variant (n = 2 to 15)
+1   8bit-{name} any 8-bit encoding (Vim specific name)
+1   cp{number}	MS-Windows: any installed single-byte codepage
+2   cp932	Japanese (Windows only)
+2   euc-jp	Japanese (Unix only)
+2   sjis	Japanese (Unix only)
+2   cp949	Korean (Unix and Windows)
+2   euc-kr	Korean (Unix only)
+2   cp936	simplified Chinese (Windows only)
+2   euc-cn	simplified Chinese (Unix only, on Windows an alias for cp936)
+2   cp950	traditional Chinese (on Unix alias for big5)
+2   big5	traditional Chinese (on Windows alias for cp950)
+2   euc-tw	traditional Chinese (Unix only)
+2   2byte-{name} Unix: any double-byte encoding (Vim specific name)
+2   cp{number}	MS-Windows: any installed double-byte codepage
+u   utf-8	32 bit UTF-8 encoded Unicode (ISO/IEC 10646-1)
+u   ucs-2	16 bit UCS-2 encoded Unicode (ISO/IEC 10646-1)
+u   ucs-2le	like ucs-2, little endian
+u   utf-16	ucs-2 extended with double-words for more characters
+u   utf-16le	like utf-16, little endian
+u   ucs-4	32 bit UCS-4 encoded Unicode (ISO/IEC 10646-1)
+u   ucs-4le	like ucs-4, little endian
+    cp{number}	MS-Windows: any installed codepage which is single-byte or
+		double-byte
+
+The {name} can be any encoding name that your system supports.  It is passed
+to iconv() to convert between the encoding of the file and the current locale.
+For MS-Windows "cp{number}" means using codepage {number}.
+Examples: >
+		:set encoding=8bit-cp1252
+		:set encoding=2byte-cp932
+<
+Several aliases can be used, they are translated to one of the names above.
+An incomplete list:
+
+1   ansi	same as latin1 (obsolete, for backward compatibility)
+2   japan	Japanese: on Unix "euc-jp", on MS-Windows shift-JIS (cp932)
+2   korea	Korean: on Unix "euc-kr", on MS-Windows cp949
+2   prc		simplified Chinese: on Unix "chinese", on MS-Windows cp936
+2   taiwan	traditional Chinese: on Unix "euc-tw", on MS-Windows cp950
+u   utf8	same as utf-8
+u   unicode	same as ucs-2
+u   ucs2be	same as ucs-2 (big endian)
+u   ucs-2be	same as ucs-2 (big endian)
+u   ucs-4be	same as ucs-4 (big endian)
+
+For the UCS codes the byte order matters.  This is tricky, use UTF-8 whenever
+you can.  The default is to use big-endian (most significant byte comes
+first):
+	    name	bytes		char ~
+	    ucs-2	      11 22	    1122
+	    ucs-2le	      22 11	    1122
+	    ucs-4	11 22 33 44	11223344
+	    ucs-4le	44 33 22 11	11223344
+
+On MS-Windows systems you often want to use "ucs-2le", because it uses little
+endian UCS-2.
 
 
-CODED CHARACTER SET (CCS)
-					*coded-character-set* *CCS*
-|CCS| is a mapping from a set of characters to a set of integers.  For
-example, ((65, A), (66, B), (67, C)) is a |CCS| and ((0x41, A), (0x42, B),
-(0x43, C)) is also a |CCS|.  Examples of |CCS| are ISO 10646, US-ASCII,
-ISO-8859 series, JIS X 0208, JIS X 0201, KS C 5601 (KS X 1001) and KS C 5636
-(KS X 1003).
+							*encoding-table*
+Normally 'encoding' is equal to your current locale and 'termencoding' is
+empty.  This means that your keyboard and display work with characters encoded
+in your current locale, and Vim uses the same characters internally.
 
-The term "integer" means code point or character number and is different from
-octets or bit combination.
+You can make Vim use characters in a different encoding by setting the
+'encoding' option to a different value.  Since the keyboard and display still
+use the current locale, conversion needs to be done.  The 'termencoding' then
+takes over the value of the current locale, so Vim converts between 'encoding'
+and 'termencoding'.  Example: >
+	:let &termencoding = &encoding
+	:set encoding=utf-8
 
-Typically, a |CCS| is a character table.  Representing the column/line as
-hexadecimal number becomes the code point of the character.  For example,
-US-ASCII CCS has 8x16 character table, the column number start with 0 and end
-with 7, the line number start with 0 end with F.  The code point of the
-character at 4/1 is 0x41.
+However, not all combinations of values are possible.  The table below tells
+you how each of the nine combinations works.  This is further restricted by
+not all conversions being possible, iconv() being present, etc.  Since this
+depends on the system used, no detailed list can be given.
 
+('tenc' is the short name for 'termencoding' and 'enc' short for 'encoding')
 
-CHARACTER ENCODING SCHEME (CES)
+'tenc'	    'enc'	remark ~
 
-					*character-encode-scheme* *CES*
-|CES| is a mapping from a sequence of elements in one or more |CCS|es to a
-sequence of octets.  Examples of |CES| are EUC-JP, EUC-KR, EUC-CN (GB 2312),
-EUC-TW (CNS-11643), ISO-2022-JP, ISO-2022-KR, ISO-2022-CN, UTF-8, etc.
+ 8bit	    8bit	Works.  When 'termencoding' is different from
+			'encoding' typing and displaying may be wrong for some
+			characters, Vim does NOT perform conversion (set
+			'encoding' to "utf-8" to get this).
+ 8bit      2byte	MS-Windows: works for all codepages installed on your
+			system; you can only type 8bit characters;
+			Other systems: does NOT work.
+ 8bit	   Unicode	Works, but you can only type 8bit characters; in a
+			terminal you can only see 8bit characters; the GUI can
+			show all characters that the 'guifont' supports.
 
+ 2byte	    8bit	Works, but typing non-ASCII characters might
+			be a problem.
+ 2byte	   2byte	MS-Windows: works for all codepages installed on your
+			system; typing characters might be a problem when
+			locale is different from 'encoding'.
+			Other systems: Only works when 'termencoding' is equal
+			to 'encoding', you might as well leave it empty.
+ 2byte	   Unicode	works, Vim will translate typed characters.
 
-CHARSET
-							*charset*
-|charset| is a method of converting a sequence of octets into a sequence of
-characters, the combination of one or more |CCS|es and a |CES|.  For example,
-ISO-2022-JP |charset| is the combination of ASCII, JIS X 0201, JIS X 0208
-|CCS|es and ISO-2022-JP |CES|.  Examples of |charset| are US-ASCII, ISO-8859
-series, GB2312, EUC-JP, EUC-KR, Shift_JIS, Big5, UTF-8, etc.
+ Unicode    8bit	works (unusual)
+ Unicode    2byte	does NOT work
+ Unicode   Unicode	works very well (leaving 'termencoding' empty works
+			the same way, because all Unicode is handled
+			internally as UTF-8)
 
-Note that this is not a term used by other standards bodies, such as ISO, but
-a term defined in RFC 2130.  The term "codeset" in POSIX has the same meaning
-as |charset| here.  |charset| does not mean character set (a set of
-characters) and the term "character repertoire" means a collection of distinct
-characters.  There are historical reasons, see RFC 2130.
+CONVERSION						*charset-conversion*
 
-						*charset-conversion*
-One language could have some |charset|s.  For example, Japanese has
-ISO-2022-JP, EUC-JP and Shift_JIS |charset|s.  ISO-2022-JP |charset| is used
-mainly for internet messages, because it is encoded in 7-bit scheme.  EUC-JP
-is mainly used on Unix, Shift_JIS is mainly used on Windows and MacOS.
+Vim will automatically convert from one to another encoding in several places:
+- When reading a file and 'fileencoding' is different from 'encoding'
+- When writing a file and 'fileencoding' is different from 'encoding'
+- When displaying characters and 'termencoding' is different from 'encoding'
+- When reading input and 'termencoding' is different from 'encoding'
+- When displaying messages and the encoding used for LC_MESSAGES differs from
+  'encoding' (requires a gettext version that supports this).
+- When reading a Vim script where |:scriptencoding| is different from
+  'encoding'.
+- When reading or writing a |viminfo| file.
+Most of these require the |+iconv| feature.  Conversion for reading and
+writing files may also be specified with the 'charconvert' option.
 
-Vim does not convert automatically to the locale's |charset| at display time.
-So, if a file's |charset| differs from your locale's |charset|, the file is
-not displayed correctly.  So, you must know the file's |charset| by any way:
-guessing, using some utilities, etc, and convert the |charset| to the locale's
-|charset| manually.
+Useful utilities for converting the charset:
+    All:	    iconv
+        GNU iconv can convert most encodings.  Unicode is used as the
+	intermediate encoding, which allows conversion from and to all other
+	encodings.  See http://www.gnu.org/directory/libiconv.html.
 
-Useful utilities for converting the |charset|:
     Japanese:	    nkf
 	Nkf is "Network Kanji code conversion Filter".  One of the most unique
 	facility of nkf is the guess of the input Kanji code.  So, you don't
@@ -148,14 +402,17 @@ Useful utilities for converting the |charset|:
 	    :%!nkf -e
 	Nkf can be found at:
 	http://www.sfc.wide.ad.jp/~max/FreeBSD/ports/distfiles/nkf-1.62.tar.gz
+
     Chinese:	    hc
 	Hc is "Hanzi Converter".  Hc convert a GB file to a Big5 file, or Big5
 	file to GB file.  Hc can be found at:
 	ftp://ftp.cuhk.hk/pub/chinese/ifcss/software/unix/convert/hc-30.tar.gz
+
     Korean:	    hmconv
 	Hmconv is Korean code conversion utility especially for E-mail. It can
 	convert between EUC-KR and ISO-2022-KR.  Hmconv can be found at:
 	ftp://ftp.kaist.ac.kr/pub/hangul/code/hmconv/hmconv1.0pl3
+
     Multilingual:   lv
 	Lv is a Powerful Multilingual File Viewer.  And it can be worked as
 	|charset| converter.  Supported |charset|: ISO-2022-CN, ISO-2022-JP,
@@ -163,11 +420,79 @@ Useful utilities for converting the |charset|:
 	series, Shift_JIS, Big5 and HZ. Lv can be found at:
 	http://www.ff.iij4u.or.jp/~nrt/freeware/lv4493.tar.gz
 
+==============================================================================
+4. Using a terminal					*mbyte-terminal*
+
+The GUI fully supports multi-byte characters.  It is also possible in a
+terminal, if the terminal supports the same encoding that Vim uses.  Thus this
+is less flexible.
+
+For example, you can run Vim in a xterm with added multi-byte support and/or
+|XIM|.  Examples are kterm (Kanji term) and hanterm (for Korean), Eterm
+(Enlightened terminal) and rxvt.
+
+If your terminal does not support the right encoding, you can set the
+'termencoding' option.  Vim will then convert the typed characters from
+'termencoding' to 'encoding'.  And displayed text will be converted from
+'encoding' to 'termencoding'.  If the encoding supported by the terminal
+doesn't include all the characters that Vim uses, this leads to lost
+characters.  This may mess up the display.  If you use a terminal that
+supports Unicode, such as the xterm mentioned below, it should work just fine,
+since nearly every character set can be converted to Unicode without loss of
+information.
+
+
+UTF-8 IN XFREE86 XTERM					*UTF8-xterm*
+
+This is a short explanation of how to use UTF-8 character encoding in the
+xterm that comes with XFree86 by Thomas Dickey (text by Markus Kuhn).
+
+Get the latest xterm version which has now UTF-8 support:
+
+	http://www.clark.net/pub/dickey/xterm/xterm.tar.gz
+
+Compile it with "./configure --enable-wide-chars ; make"
+
+Also get the ISO 10646-1 version of various fonts, which is available on
+
+	http://www.cl.cam.ac.uk/~mgk25/download/ucs-fonts.tar.gz
+
+and install the font as described in the README file.
+
+Now start xterm with >
+
+  xterm -u8 -fn -misc-fixed-medium-r-semicondensed--13-120-75-75-c-60-iso10646-1
+or, for bigger character: >
+  xterm -u8 -fn -misc-fixed-medium-r-normal--15-140-75-75-c-90-iso10646-1
+
+and you will have a working UTF-8 terminal emulator. Try both >
+
+   cat utf-8-demo.txt
+   vim utf-8-demo.txt
+
+with the demo text that comes with ucs-fonts.tar.gz in order to see
+whether there are any problems with UTF-8 in your xterm.
+
+For Vim you may need to set 'encoding' to "utf-8", see |utf-8-in-xterm|.
+
+==============================================================================
+5.  Fonts on X11					*mbyte-fonts-X11*
+
+Unfortunately, using fonts in X11 is complicated.  The name of a single-byte
+font is a long string.  For multi-byte fonts we need several of these...
+
+First of all, Vim only accepts fixed-width fonts.  You cannot use
+proportionally spaced fonts.  This excludes many of the available (and nicer
+looking) fonts.
+
+Note that Display and Input are independent.  It is possible to see your
+language even though you have no input method for it.
+
 
 X LOGICAL FONT DESCRIPTION (XLFD)
 							*XLFD*
 XLFD is the X font name and contains the information about the font size,
-|CCS|, etc.  The name is in this format:
+charset, etc.  The name is in this format:
 
 FOUNDRY-FAMILY-WEIGHT-SLANT-WIDTH-STYLE-PIXEL-POINT-X-Y-SPACE-AVE-CR-CE
 
@@ -179,7 +504,7 @@ Each field means:
 - WEIGHT:   WEIGHT_NAME field.  How thick the letters are.  (light, medium,
 	    bold, etc)
 - SLANT:    SLANT field.
-		r:  Roman
+		r:  Roman (no slant
 		i:  Italic
 		o:  Oblique
 		ri: Reverse Italic
@@ -199,11 +524,10 @@ Each field means:
 		m:  Monospaced
 		c:  CharCell
 - AVE:	    AVERAGE_WIDTH field.  Ten times average width in pixels.
-- CR:	    CHARSET_REGISTRY field.  Indicates the name of the font |CCS| name.
-- CE:	    CHARSET_ENCODING field.  In some CCSes, such as ISO-8859 series,
-	    this field is the part of |CCS| name.  In other CCSes, such as JIS
-	    X 0208, if this field is 0, code points has the same value as GL,
-	    and GR if 1.
+- CR:	    CHARSET_REGISTRY field.  The name of the charset group.
+- CE:	    CHARSET_ENCODING field.  The rest of the charset name.  For some
+	    charsets, such as JIS X 0208, if this field is 0, code points has
+	    the same value as GL, and GR if 1.
 
 For example, in case of a 14 dots font corresponding to JIS X 0208, it is
 written like:
@@ -212,75 +536,143 @@ written like:
 
 X FONTSET
 						*fontset* *xfontset*
-A |CCS| is typically associated with one font.  The languages which must
-manage multiple |CCS|es needs to manage multiple fonts.  In X11R5, for the
-internationalization of output API, FontSet was introduced.  By using this,
-Xlib takes care of switching of fonts for the display.  Till X11R4, the
-application themselves had to manage this.
+A single-byte charset is typically associated with one font.  For multi-byte
+charsets a combination of fonts is often used.  This means that one group of
+characters are used from one font and another group from another font (which
+might be double wide).  This collection of fonts is called a fontset.
 
-|locale| database has the information about the |charset| of the |locale|,
-which |CCS|(es) is needed and which |CES| the locale uses.  When you use a
-locale which must manage multiple |CCS|es, you have to specify all the
-|CCS|'s font in 'guifontset' option.
+Which fonts are required in a fontset depends on the current locale.  X
+windows maintains a table of which groups of characters are required for a
+locale.  You have to specify all the fonts that a locale requires in the
+'guifontset' option.
+
+NOTE: The fontset always uses the current locale, even though 'encoding' may
+be set to use a different charset.  In that situation you might want to use
+'guifont' and 'guifontwide' instead of 'guifontset'.
 
 Example:
-    |charset| language		    |CCS|es
+    |charset| language		    "groups of characters" ~
     GB2312    Chinese (simplified)  ISO-8859-1 and GB 2312
     Big5      Chinese (traditional) ISO-8859-1 and Big5
     CNS-11643 Chinese (traditional) ISO-8859-1, CNS 11643-1 and CNS 11643-2
     EUC-JP    Japanese		    JIS X 0201 and JIS X 0208
     EUC-KR    Korean		    ISO-8859-1 and KS C 5601 (KS X 1001)
 
-The |XLFD| contains the information of |CCS|.  So, by searching in fonts.dir,
-you can find the |CCS|'s font.  The fonts.dir is in the fonts directory (e.g.
-/usr/X11R6/lib/X11/fonts/*), the format of the file is:
-    First line:	the number of fonts which are contained in this fonts.dir
-    other line:	FILENAME  |XLFD|
-Or, you can search fonts using xlsfonts command.  For example, when you're
-searching for the font for KS C 5601: >
+You can search for fonts using the xlsfonts command.  For example, when you're
+searching for a font for KS C 5601: >
     xlsfonts | grep ksc5601
-will show you the list of it.
+
+This is complicated and confusing.  You might want to consult the X-Windows
+documentation if there is something you don't understand.
 
 						*base_font_name_list*
-In 'guifontset' option and ~/.Xdefaults, you specify the
-|base_font_name_list|, which is a list of |XLFD| font names that Xlib uses to
-load the fonts needed for the |locale|.  The base font names is a
-list of names, separated by commas.
+When you have found the names of the fonts you want to use, you need to set
+the 'guifontset' option.  You specify the list by concatenating the font names
+and putting a comma in between them.
 
-For example, when you use the ja_JP.eucJP |locale|, which require JIS X 0201
-and JIS X 0208 |CCS|es.  You could supply a |base_font_name_list| that
-explicitly specifies the charsets, like: >
+For example, when you use the ja_JP.eucJP locale, this requires JIS X 0201
+and JIS X 0208.  You could supply a list of fonts that explicitly specifies
+the charsets, like: >
 
  :set guifontset=-misc-fixed-medium-r-normal--14-130-75-75-c-140-jisx0208.1983-0,
 	\-misc-fixed-medium-r-normal--14-130-75-75-c-70-jisx0201.1976-0
 
-Alternatively, the user could supply a base font name list that omits the
-|CCS| name, letting Xlib select font characters required for the locale. For
+Alternatively, you can supply a base font name list that omits the charset
+name, letting X-Windows select font characters required for the locale.  For
 example: >
 
  :set guifontset=-misc-fixed-medium-r-normal--14-130-75-75-c-140,
 	\-misc-fixed-medium-r-normal--14-130-75-75-c-70
 
-Alternatively, the user could supply a single base font name that allows Xlib
-to select from all available fonts.  For example: >
+Alternatively, you can supply a single base font name that allows X-Windows to
+select from all available fonts.  For example: >
 
  :set guifontset=-misc-fixed-medium-r-normal--14-*
 
-Alternatively, the user could specify the alias name.  See fonts.alias in
-the fonts directory. >
+Alternatively, you can specify alias names.  See the fonts.alias file in the
+fonts directory (e.g., /usr/X11R6/lib/X11/fonts/).  For example: >
 
  :set guifontset=k14,r14
 
 Note that in East Asian fonts, the standard character cell is square.  When
-mixing Latin font and East Asian font, East Asian font width should be twice
-the Latin font width.  And GVIM needs fixed width font.
+mixing a Latin font and an East Asian font, the East Asian font width should
+be twice the Latin font width.
+
+If 'guifontset' is not empty, the "font" argument of the |:highlight| command
+is also interpreted as a fontset.  For example, you should use for
+highlighting: >
+	:hi Comment font=english_font,your_font
+If you use a wrong "font" argument you will get an error message.
+Also make sure that you set 'guifontset' before setting fonts for highlight
+groups.
 
 
-X INPUT METHOD (XIM)				*XIM* *xim* *x-input-method*
+USING DEFAULT FILES
 
-XIM (X Input Method) is an international input module for X.  There are two
-kind of structures, Xlib unit type and |IM-server| (Input-Method server) type.
-|IM-server| type is suitable for complex inputting, like CJK inputting.
+Instead of specifying 'guifontset', you can set X11 resources and Vim will
+pick them up.  This is only for people who know how X resource files work.
+
+For Motif and Athena insert these three lines in your $HOME/.Xdefaults file:
+
+	Vim.font: |base_font_name_list|
+	Vim*fontSet: |base_font_name_list|
+	Vim*fontList: your_language_font
+
+Note: Vim.font is for text area.
+      Vim*fontSet is for menu.
+      Vim*fontList is for menu (for Motif GUI)
+
+For example, when you are using Japanese and a 14 dots font, >
+
+	Vim.font: -misc-fixed-medium-r-normal--14-*
+	Vim*fontSet: -misc-fixed-medium-r-normal--14-*
+	Vim*fontList: -misc-fixed-medium-r-normal--14-*
+<
+or: >
+
+	Vim*font: k14,r14
+	Vim*fontSet: k14,r14
+	Vim*fontList: k14,r14
+<
+To have them take effect immediately you will have to do >
+
+	xrdb -merge ~/.Xdefaults
+
+Otherwise you will have to stop and restart the X server before the changes
+take effect.
+
+
+The GTK+ version of GUI Vim does not use .Xdefaults, use ~/.gtkrc instead.
+The default mostly works OK.  But for the menus you might have to change
+it.  Example: >
+
+	style "default"
+	{
+		fontset="-*-*-medium-r-normal--14-*-*-*-c-*-*-*"
+	}
+	widget_class "*" style "default"
+
+==============================================================================
+6.  Fonts on MS-Windows				*mbyte-fonts-MSwin*
+
+The simplest is to use the font dialog to select fonts and try them out.  You
+can find this at the "Window/Select Font..." menu.  Once you find a font name
+that works well you can use this command to see its name: >
+
+	:set guifont
+
+Then add a command to your |gvimrc| file to set 'guifont': >
+
+	:set guifont=courier_new:h12
+
+==============================================================================
+7.  Input on X11				*mbyte-XIM*
+
+X INPUT METHOD (XIM) BACKGROUND			*XIM* *xim* *x-input-method*
+
+XIM is an international input module for X.  There are two kind of structures,
+Xlib unit type and |IM-server| (Input-Method server) type.  |IM-server| type
+is suitable for complex input, such as CJK.
 
 - IM-server
 							*IM-server*
@@ -320,7 +712,7 @@ kind of structures, Xlib unit type and |IM-server| (Input-Method server) type.
   ftp://ftp.nec.co.jp/pub/Canna/
 
 There is a good input system: Wnn4.2.  Wnn 4.2 contains,
-    xwnmo (|multilingualized| |IM-server|)
+    xwnmo (|IM-server|)
     jserver (Japanese Kana-Kanji conversion server)
     cserver (Chinese PinYin or ZhuYin to simplified HanZi conversion server)
     tserver (Chinese PinYin or ZhuYin to traditional HanZi conversion server)
@@ -375,215 +767,63 @@ Wnn 4.2 can be found at:
     window specific to the input method.
 
 
-LOCALIZATION, INTERNATIONALIZATION AND MULTILINGUALIZATION
-
-					*localized* *Localization* *L10N*
-Localization (L10N)		To fit a system or an application with a
-				specific language.
-			    *internationalized* *Internationalization* *I18N*
-Internationalization (I18N)	To enable a system or an application to fit
-				with a specific language according to the
-				|locale|.
-			    *multilingualized* *Multilingualization* *M17N*
-Multilingualization (M17N)	To enable a system or an application to be
-				able to use multiple languages at the same
-				time.
-For example, JVim (Japanized version Vim 3.0) is a |localized| application for
-Japanese.  Cxterm (|localized| xterm for Chinese), kterm (|localized| xterm
-for Japanese) and hanterm (|localized| xterm for Korean) is also a |localized|
-application.  Gnome is an |internationalized| application.  It can be
-|localized| for many languages according to the |locale|.  Mule (Multilingual
-Enhancement for GNU Emacs) is a |multilingualized| application.  It can handle
-multiple |charset|s and can maintain a mixture of languages in a single
-buffer.
-
-Vim is an |internationalized| application.  So, you can change the language
-specifying the |locale| and some options at start time.
-
-==============================================================================
-2. Compiling						*multibyte-compiling*
-
--.  Before you start to compile Vim, be sure that your system has the language
-    |locale| of your choice.  You might need to add "-DX_LOCALE" to CFLAGS.
-
--.  Compiling Vim: >
-	./configure --with-x --enable-multibyte --enable-fontset --enable-xim
-	make
-
--.  You can use multi-byte in the Vim GUI, which fully supports the
-    |+multi_byte| feature.  If you only use console Vim, low-level multibyte
-    input/output depends on your console.  For example, if you run Vim in an
-    xterm, you should use a |localized| xterm or an xterm which support |XIM|.
-    |localized| xterms are kterm (Kanji term) or hanterm (for Korean) for
-    example.  Known |XIM| supporting xterms are Eterm (Enlightened terminal)
-    and rxvt.
-
-==============================================================================
-3. Options						*multibyte-options*
-
-These options are relevant for editing multi-byte files.  Check the help in
-options.txt for detailed information.
-
-'encoding'	Encoding used for the keyboard and display.  it is alse the
-		default encoding for files.
-'fileencoding'	Encoding of a file.  When it's different from 'encoding'
-		conversion is done when reading or writing the file.
-'fileencodings'	List of possible encodings of a file.  When opening a file
-		these will be tried and the first one that doesn't cause an
-		error is used for 'fileencoding'
-'charconvert'	Expression used to convert files from one encoding to another.
-
-'formatoptions' The 'm' flag can be included to have formatting break a line
-		at a multibyte character of 256 or higher.  Thus is useful for
-		languages where a sequence of characters can be broken
-		anywhere.
-
-==============================================================================
-4. Display						*multibyte-display*
-
-Note that Display and Input are independent.  It is possible to see your
-language even though you have no input method for it.
-
-Multibyte output uses |xfontset| feature.
-
--.  Be sure that your system has the fonts corresponding to the |CCS|es, which
-    the |locale| needs to manage.  See: |xfontset|.
-
--.  Following are requirements to use multibyte language.
-
-    If needed, insert the lines below in your $HOME/.Xdefaults file.
-
-    These 3 lines are specific for Vim:
-
-	Vim.font: |base_font_name_list|
-	Vim*fontSet: |base_font_name_list|
-	Vim*fontList: your_language_font:
-
-	Note: Vim.font is for text area.
-	      Vim*fontSet is for menu.
-	      Vim*fontList is for menu (for Motif GUI)
-
-	For example, when you are using Japanese and 14 dots font, >
-
-	Vim.font: -misc-fixed-medium-r-normal--14-*
-	Vim*fontSet: -misc-fixed-medium-r-normal--14-*
-	Vim*fontList: -misc-fixed-medium-r-normal--14-*
-<
-	or >
-
-	Vim*font: k14,r14
-	Vim*fontSet: k14,r14
-	Vim*fontList: k14,r14
-<
-    The GTK+ version of GUI Vim does not use .Xdefaults, use ~/.gtkrc instead.
-    The default mostly works OK.  But for the menus you might have to change
-    it.  Example: >
-
-	style "default"
-	{
-		fontset="-*-*-medium-r-normal--14-*-*-*-c-*-*-*"
-	}
-	widget_class "*" style "default"
-<
-
-    You should set the 'guifontset' option to display a multi-byte language.
-    Example: >
-
-	:set guifontset=|base_font_name_list|
-
-<	For example, when you are using Japanese and 14 dots font, >
-
-	set guifontset=-misc-fixed-medium-r-normal--14-*
-
-<	or >
-
-	set guifontset=k14,r14
-
-<	Note: You can not use IM unless you specify 'guifontset'.
-	      Therefore, Latin users, you have to also use 'guifontset'
-	      if you use IM.
-
-    You should not set 'guifont'. If it is set, Vim ignores 'guifontset'.
-    It means Vim runs without fontset support, you can see only English. The
-    multi-byte characters are displayed corrupted.
-
-    After the |+xfontset| feature is enabled as explained above, Vim does not
-    allow using 'font'.  For example, if you use: >
-	:set guifontset=eng_font,your_font
-<   in your .gvimrc, then you should use for highlighting: >
-	:hi Comment font=another_eng_font,another_your_font
-<   If you would do >
-	:hi Comment font=another_eng_font
-<   VIM will also try to use it as a fontset. So, if it cannot display your
-    |locale| dependent codeset, you will see a error message.
-
--.  In your .vimrc, add this >
-	set fileencoding=korea
-<<  You can change "korea" to the some other name such as japan, taiwan.
-    See |'fileencoding'| for the supported encodings.
-
--.  If a file's charset is different from your |locale|'s charset, you need to
-    convert the charset.  See |charset-conversion|.
-
-==============================================================================
-5. Input (XIM, X Input Method support)			*multibyte-input*
+USING XIM 						*multibyte-input*
 
 Note that Display and Input are independent.  It is possible to see your
 language even though you have no input method for it.  But when your Display
 method doesn't match your Input method, the text will be displayed wrong.
 
--.  To input your language you should run the |IM-server| which supports your
-    language and |conversion-server| if needed.  Multibyte input uses |XIM|
-    feature.
+	Note: You can not use IM unless you specify 'guifontset'.
+	      Therefore, Latin users, you have to also use 'guifontset'
+	      if you use IM.
 
-    Next 3 lines are common for all X applications which uses |XIM|.
-    If you already use |XIM|, don't care. >
+To input your language you should run the |IM-server| which supports your
+language and |conversion-server| if needed.
+
+The next 3 lines should be put in your ~/.Xdefaults file.  They are common for
+all X applications which uses |XIM|.  If you already use |XIM|, you can skip
+this. >
 
 	*international: True
 	*.inputMethod: your_input_server_name
 	*.preeditType: your_input_style
 <
-	Note: input_server_name is your |IM-server| name (check your
-	      |IM-server| manual).
-	      your_input_style is one of |OverTheSpot|, |OffTheSpot|, |Root|.
-	      See also |xim-input-style|.
-	      *international may not necessary if you use X11R6.
-	      *.inputMethod and *.preeditType is a optional if you use X11R6.
+input_server_name	is your |IM-server| name (check your |IM-server|
+			manual).
+your_input_style	is one of |OverTheSpot|, |OffTheSpot|, |Root|.  See
+			also |xim-input-style|.
 
-	For example, when you are using kinput2 as |IM-server|, >
+*international may not necessary if you use X11R6.
+*.inputMethod and *.preeditType are optional if you use X11R6.
+
+For example, when you are using kinput2 as |IM-server|, >
 
 	*international: True
 	*.inputMethod: kinput2
 	*.preeditType: OverTheSpot
 <
-    When using |OverTheSpot|, GUI Vim always connects to the IM Server even in
-    Normal mode, so you can input your language with commands like "f" and
-    "r".  But when using one of the other two methods, GUI Vim connects to the
-    IM Server only if it is not in Normal mode.
+When using |OverTheSpot|, GUI Vim always connects to the IM Server even in
+Normal mode, so you can input your language with commands like "f" and "r".
+But when using one of the other two methods, GUI Vim connects to the IM Server
+only if it is not in Normal mode.
 
-    If your IM Server does not support |OverTheSpot|, and if you want to use
-    your language with some Normal mode command like "f" or "r", then you
-    should use a |localized| xterm  or an xterm which supports |XIM|
+If your IM Server does not support |OverTheSpot|, and if you want to use your
+language with some Normal mode command like "f" or "r", then you should use a
+localized xterm  or an xterm which supports |XIM|
 
--.  If needed, you can set the XMODIFIERS env. var.
+If needed, you can set the XMODIFIERS environment variable:
 
 	sh:  export XMODIFIERS="@im=input_server_name"
 	csh: setenv XMODIFIERS "@im=input_server_name"
 
-	For example, when you are using kinput2 as |IM-server| and sh, >
+For example, when you are using kinput2 as |IM-server| and sh, >
 
 	export XMODIFIERS="@im=kinput2"
 
-
-Contributions specifically for the multi-byte features by:
-	Chi-Deok Hwang <hwang@mizi.co.kr>
-	Nam SungHyun <namsh@lge.com>
-	K.Nagano <nagano@atese.advantest.co.jp>
-	Taro Muraoka  <koron@tka.att.ne.jp>
-	Yasuhiro Matsumoto <mattn@mail.goo.ne.jp>
-
 ==============================================================================
-6. Input (Windows IME support)				*multibyte-ime*
+8.  Input on MS-Windows					*mbyte-IME*
+
+(Windows IME support)				*multibyte-ime* *IME*
 
 {only works Windows GUI and compiled with the |+multi_byte_ime| feature}
 
@@ -645,7 +885,119 @@ system" the default locale is set to your language.  The exact location of
 this depends on the version of Windows you use.
 
 ==============================================================================
-7. UTF-8						*UTF-8* *utf-8* *utf8*
+9. Input with a keymap					*mbyte-keymap*
+
+When the keyboard doesn't produce the characters you want to enter in your
+text, you can use the 'keymap' option.  This will translate one or more
+(English) characters to another (non-English) character.  This only happens
+when typing text, not when typing Vim commands.  This avoids having to switch
+between two keyboard settings.
+
+The value of the 'keymap' option specifies a keymap file to use.  The name of
+this file is one of these two:
+
+	keymap/{keymap}_{encoding}.vim
+	keymap/{keymap}.vim
+
+Here {keymap} is the value of the 'keymap' option and {encoding} of the
+'encoding' option.  The file name with the {encoding} included is tried first.
+
+'runtimepath' is used to find these files.  To see an overview of all
+available keymap files, use this: >
+	echo globpath(&rtp, "keymap/*.vim")
+
+In Insert and Command-line mode you can use CTRL-^ to toggle between using the
+keyboard map or not. |i_CTRL-^| |c_CTRL-^|
+This flag is remembered for Insert mode.  When leaving and entering Insert
+mode the previous value is used.  The same value is also used for commands
+that take a single character argument, like |f| and |r|.
+For Command-line mode the flag is NOT remembered.  You are expected to type an
+Ex command first, which is ASCII.
+
+It is possible to give the GUI cursor another color when the language mappings
+are being used.  This is disabled by default, to avoid that the cursor becomes
+invisible when you use a non-standard background color.  Here is an example to
+use a brightly colored cursor: >
+	:highlight Cursor guifg=NONE guibg=Green
+	:highlight lCursor guifg=NONE guibg=Cyan
+<
+				*keymap-file-format* *:loadk* *:loadkeymap*
+The keymap file looks something like this: >
+
+	" Maintainer:	name <email@address>
+	" Last Changed:	2001 Jan 1
+
+	let b:keymap_name = "short"
+
+	loadkeymap
+	a	A
+	b	B	comment
+
+The lines starting with a " are comments and will be ignored.  Blank lines are
+also ignored.  The lines with the mappings may have a comment after the useful
+text.
+
+The "b:keymap_name" can be set to a short name, which will be shown in the
+status line.  The idea is that this takes less room than the value of
+'keymap', which might be long to distinguish between different languages,
+keyboards and encodings.
+
+The actual mappings are in the lines below "loadkeymap".  In the example "a"
+is mapped to "A" and "b" to "B".  Thus the first item is mapped to the second
+item.  This is done for each line, until the end of the file.
+These items are exactly the same as what can be used in a |:lnoremap| command.
+You can check the result with this command: >
+	:lmap
+The two items must be separated by white space.  You cannot include white
+space inside an item, use the special names "<Tab>" and "<Space>" instead.
+The length of the two items together must not exceed 200 bytes.
+
+It's possible to have more than one character in the first column.  This works
+like a dead key.  Example: >
+	'a	á
+Since Vim doesn't know if the next character after a quote is really an "a",
+it will wait for the next character.  To be able to insert a single quote,
+also add this line: >
+	''	'
+Since the mapping is defined with |:lnoremap| the resulting quote will not be
+used for the start of another character.
+
+Although it's possible to have more than one character in the second column,
+this is unusual.  But you can use various ways to specify the character: >
+	A	a		literal character
+	A	<char-97>	decimal value
+	A	<char-0x61>	hexadecimal value
+	A	<char-0141>	octal value
+	x	<Space>		special key name
+
+The characters are assumed to be encoded for the current value of 'encoding'.
+It's possible to use ":scriptencoding" when all characters are given
+literally.  That doesn't work when using the <char-> construct, because the
+conversion is done on the keymap file, not on the resulting character.
+
+The lines after "loadkeymap" are interpreted with 'cpoptions' set to "C".
+This means that continuation lines are not used and a backslash has a special
+meaning in the mappings.  Examples: >
+
+	" a comment line
+	\"	x	maps " to x
+	\\	y	maps \ to y
+
+If you write a keymap file that will be useful for others, consider submitting
+it to the Vim author for inclusion in the distribution: <Bram@vim.org>
+
+==============================================================================
+10. Using UTF-8				*mbyte-utf8* *UTF-8* *utf-8* *utf8*
+
+The Unicode character set was designed to include all characters from other
+character sets.  Therefore it is possible to write text in any language using
+Unicode (with a few rarely used languages excluded).  And it's mostly possible
+to mix these languages in one file, which is impossible with other encodings.
+
+Unicode can be encoded in several ways.  The two most popular ones are UCS-2,
+which uses 16-bit words and UTF-8, which uses one or more bytes for each
+character.  Vim can support all of these encodings, but always uses UTF-8
+internally.
 
 Vim has comprehensive UTF-8 support.  It appears to work in:
 - xterm with utf-8 support enabled
@@ -687,7 +1039,7 @@ Useful commands:
   characters, as hex numbers.
 
 
-USING UTF-8
+STARTING VIM
 
 If your current locale is in an utf-8 encoding, Vim will automatically start
 in utf-8 mode.
@@ -768,7 +1120,11 @@ utf-8.
 
 If your system does not provide support for typing utf-8, you can use the
 'keymap' feature.  This allows writing a keymap file, which defines a utf-8
-character as a sequence of ASCII characters.  See |multilang-typing|.
+character as a sequence of ASCII characters.  See |mbyte-keymap|.
+
+Another method is to set the current locale to the language you want to use
+and for which you have a XIM available.  Then set 'termencoding' to that
+language and Vim will convert the typed characters to 'encoding' for you.
 
 If everything else fails, you can type any character as four hex bytes: >
 
@@ -793,190 +1149,42 @@ searching for a character with a composing character, this will only find
 matches with that composing character.  It was implemented this way, because
 not everybody is able to type a composing character.
 
-==============================================================================
-8. UTF-8 in XFree86 xterm				*UTF8-xterm*
-
-This is a short explanation of how to use UTF-8 character encoding in the
-xterm that comes with XFree86 by Thomas Dickey (text by Markus Kuhn).
-
-Get the latest xterm version which has now UTF-8 support:
-
-	http://www.clark.net/pub/dickey/xterm/xterm.tar.gz
-
-Compile it with "./configure --enable-wide-chars ; make"
-
-Also get the ISO 10646-1 version of various fonts, which is available on
-
-	http://www.cl.cam.ac.uk/~mgk25/download/ucs-fonts.tar.gz
-
-and install the font as described in the README file.
-
-Now start xterm with >
-
-  xterm -u8 -fn -misc-fixed-medium-r-semicondensed--13-120-75-75-c-60-iso10646-1
-or, for bigger character: >
-  xterm -u8 -fn -misc-fixed-medium-r-normal--15-140-75-75-c-90-iso10646-1
-
-and you will have a working UTF-8 terminal emulator. Try both >
-
-   cat utf-8-demo.txt
-   vim utf-8-demo.txt
-
-with the demo text that comes with ucs-fonts.tar.gz in order to see
-whether there are any problems with UTF-8 in your xterm.
-
-For Vim you may need to set 'encoding' to "utf-8", see |utf-8-in-xterm|.
 
 ==============================================================================
-9. Unfinished snippets					*mbyte-snippets*
+11. Overview of options					*mbyte-options*
 
-							*encoding-names*
-Vim can use many different character encodings.  There are three major groups:
+These options are relevant for editing multi-byte files.  Check the help in
+options.txt for detailed information.
 
-1   8bit	Single-byte encodings, 256 different characters.  Mostly used
-		in USA and Europe.  Example: ISO-8859-1 (Latin1).  All
-		characters occupy one screen cell only.
+'encoding'	Encoding used for the keyboard and display.  it is alse the
+		default encoding for files.
 
-2   2byte	Double-byte encodings, over 10000 different characters.
-		Mostly used in Asian countries.  Example: euc-jp (Japanese).
-		The number of screen cells is equal to the number of bytes.
+'fileencoding'	Encoding of a file.  When it's different from 'encoding'
+		conversion is done when reading or writing the file.
 
-u   Unicode	Universal encoding, should replace all others.  ISO 10646.
-		Millions of different characters.  Example: UTF-8.  The
-		relation between bytes and screen cells is complex.
+'fileencodings'	List of possible encodings of a file.  When opening a file
+		these will be tried and the first one that doesn't cause an
+		error is used for 'fileencoding'
 
-Other encodings cannot be used by Vim internally.  Files in other encodings
-can be edited by using conversion, see 'fileencoding'.
-Note that all encodings must use ASCII for the characters up to 128 (except
-when compiled for EBCDIC).
+'charconvert'	Expression used to convert files from one encoding to another.
 
-Supported 'encoding' values are:
-1   latin1	8-bit characters (ISO 8859-1)
-1   iso-8859-n	ISO_8859 variant (n = 2 to 15)
-1   8bit-{name} any 8-bit encoding (Vim specific name)
-1   cp{number}	MS-Windows: any installed single-byte codepage
-2   cp932	Japanese (Windows only)
-2   euc-jp	Japanese (Unix only)
-2   sjis	Japanese (Unix only)
-2   cp949	Korean (Windows only)
-2   euc-kr	Korean (Unix only)
-2   cp936	simplified Chinese (Windows only)
-2   chinese	simplified Chinese (Unix only, on Windows an alias for cp936)
-2   cp950	traditional Chinese (on Unix alias for big5)
-2   big5	traditional Chinese (on Windows alias for cp950)
-2   euc-tw	traditional Chinese (Unix only)
-2   2byte-{name} Unix: any double-byte encoding (Vim specific name)
-2   cp{number}	MS-Windows: any installed double-byte codepage
-u   utf-8	32 bit UTF-8 encoded Unicode (ISO/IEC 10646-1)
-u   ucs-2	16 bit UCS-2 encoded Unicode (ISO/IEC 10646-1)
-u   ucs-2le	like ucs-2, little endian
-u   ucs-4	32 bit UCS-4 encoded Unicode (ISO/IEC 10646-1)
-u   ucs-4le	like ucs-4, little endian
-    cp{number}	MS-Windows: any installed codepage which is single-byte or
-		double-byte
+'formatoptions' The 'm' flag can be included to have formatting break a line
+		at a multibyte character of 256 or higher.  Thus is useful for
+		languages where a sequence of characters can be broken
+		anywhere.
 
-The {name} can be any encoding name that your system supports.  It is passed
-to iconv() to convert between the encoding of the file and the current locale.
-For MS-Windows "cp{number}" means using codepage {number}.
-Examples: >
-		:set encoding=8bit-cp1252
-		:set encoding=2byte-cp932
-<
-Several aliases can be used, they are translated to one of the names above.
-An incomplete list:
+'guifontset'	The list of font names used for a multi-byte endoding.  When
+		this option is not empty, it replaces 'guifont'.
 
-1   ansi	same as latin1 (obsolete, for backward compatibility)
-2   japan	Japanese: on Unix "euc-jp", on MS-Windows shift-JIS (cp932)
-2   korea	Korean: on Unix "euc-kr", on MS-Windows cp949
-2   prc		simplified Chinese: on Unix "chinese", on MS-Windows cp936
-2   taiwan	traditional Chinese: on Unix "euc-tw", on MS-Windows cp950
-u   utf8	same as utf-8
-u   unicode	same as ucs-2
-u   ucs2be	same as ucs-2 (big endian)
-u   ucs-2be	same as ucs-2 (big endian)
-u   ucs-4be	same as ucs-4 (big endian)
+'keymap'	Specify the name of a keyboard mapping.
 
-For the UCS codes the byte order matters.  This is tricky, use UTF-8 whenever
-you can.  The default is to use big-endian (most significant byte comes
-first):
-	    name	bytes		char ~
-	    ucs-2	      11 22	    1122
-	    ucs-2be	      11 22	    1122
-	    ucs-2le	      22 11	    1122
-	    ucs-4	11 22 33 44	11223344
-	    ucs-4be	11 22 33 44	11223344
-	    ucs-4le	44 33 22 11	11223344
+==============================================================================
 
-On MS-Windows systems you often want to use "ucs-2le", because it uses little
-endian UCS-2.
-
-
-							*encoding-table*
-Normally 'encoding' is equal to your current locale and 'termencoding' is
-empty.  This means that your keyboard and display work with characters encoded
-in your current locale, and Vim uses the same characters internally.
-
-You can make Vim use characters in a different encoding by setting the
-'encoding' option to a different value.  Since the keyboard and display still
-use the current locale, conversion needs to be done.  The 'termencoding' then
-takes over the value of the current locale, so Vim converts between 'encoding'
-and 'termencoding'.  Example: >
-	:let &termencoding = &encoding
-	:set encoding=utf-8
-
-However, not all combinations of values are possible.  The table below tells
-you how each of the nine combinations works.  This is further restricted by
-not all conversions being possible, iconv() being present, etc.  Since this
-depends on the system used, no detailed list can be given.
-
-('tenc' is the short name for 'termencoding' and 'enc' short for 'encoding')
-
-'tenc'	    'enc'	remark ~
-
- 8bit	    8bit	Works.  When 'termencoding' is different from
-			'encoding' typing and displaying may be wrong for some
-			characters, Vim does NOT perform conversion (set
-			'encoding' to "utf-8" to get this).
- 8bit      2byte	MS-Windows: works for all codepages installed on your
-			system; you can only type 8bit characters;
-			Other systems: does NOT work.
- 8bit	   Unicode	Works, but you can only type 8bit characters; in a
-			terminal you can only see 8bit characters; the GUI can
-			show all characters that the 'guifont' supports.
-
- 2byte	    8bit	Works, but typing non-ASCII characters might
-			be a problem.
- 2byte	   2byte	MS-Windows: works for all codepages installed on your
-			system; typing characters might be a problem when
-			locale is different from 'encoding'.
-			Other systems: Only works when 'termencoding' is equal
-			to 'encoding', you might as well leave it empty.
- 2byte	   Unicode	works, Vim will translate typed characters.
-
- Unicode    8bit	works (unusual)
- Unicode    2byte	does NOT work
- Unicode   Unicode	works very well (leaving 'termencoding' empty works
-			the same way, because all Unicode is handled
-			internally as UTF-8)
-
-
-WINDOWS MESSAGE TRANSLATIONS				*win32-gettext*
-
-Get the libintl.dll file if you don't have it yet:
-	http://ixeris.bios.ics.saitama-u.ac.jp/~koron/software/gettext/gettext-0.10.35-w32.tar.bz2
-
-This also contains tools xgettext, msgformat and others.
-
-libintl.dll should be placed in same directory with (g)vim.exe, or some
-place where PATH environment value describe.  Message file (vim.mo)
-have to  be placed $VIMRUNTIME/lang/*/LC_MESSAGES as like as UNIX.
-Method of generate message file is same with UNIX.  Ex: >
-   cd vim60aa
-   mkdir runtime\lang\ja\LC_MESSAGES
-   msgfmt -o runtime\lang\ja\LC_MESSAGES\vim.mo src\po\ja.po
-And set LANG environment on vim. >
-  :let $LANG = 'ja'
-
-(text by Muraoka Taro)
+Contributions specifically for the multi-byte features by:
+	Chi-Deok Hwang <hwang@mizi.co.kr>
+	Nam SungHyun <namsh@lge.com>
+	K.Nagano <nagano@atese.advantest.co.jp>
+	Taro Muraoka  <koron@tka.att.ne.jp>
+	Yasuhiro Matsumoto <mattn@mail.goo.ne.jp>
 
  vim:tw=78:

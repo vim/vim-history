@@ -14,7 +14,7 @@
 
 #include "vim.h"
 
-#ifdef FEAT_MENU
+#if defined(FEAT_MENU) || defined(PROTO)
 
 #define MENUDEPTH   10		/* maximum depth of menus */
 
@@ -620,6 +620,11 @@ add_menu_path(menu_path, modes, pri_tab,
 		menu->noremap[i] = noremap;
 	    }
 	}
+#ifdef FEAT_GUI_X11
+	/* Need to update the menu tip. */
+	if (modes & MENU_TIP_MODE)
+	    gui_mch_menu_set_tip(menu);
+#endif
     }
     return OK;
 
@@ -2064,7 +2069,7 @@ static garray_T menutrans_ga = {0, 0, 0, 0, NULL};
  * case the commands are ignored.
  */
     void
-ex_menutrans(eap)
+ex_menutranslate(eap)
     exarg_T	*eap;
 {
 #ifdef FEAT_MULTI_LANG

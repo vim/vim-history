@@ -1,14 +1,17 @@
 " Vim syntax file
 " Language:	AceDB model files
 " Maintainer:	Stewart Morris (Stewart.Morris@ed.ac.uk)
-" Last change:	Monday January 29 08:55:12 GMT 2001
+" Last change:	Thu Apr 26 10:38:01 BST 2001
 " URL:		http://www.ed.ac.uk/~swmorris/vim/acedb.vim
 
 " Syntax file to handle all $ACEDB/wspec/*.wrm files, primarily models.wrm
 " AceDB software is available from http://www.acedb.org
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -82,23 +85,36 @@ syn region	acedbString	start=/"/ end=/"/ skip=/\\"/ oneline
 
 " Rest of syntax highlighting rules start here
 
-" The default highlighting.
-hi def link acedbMagic		Special
-hi def link acedbHyb		Special
-hi def link acedbType		Type
-hi def link acedbOption		Type
-hi def link acedbSubclass	Type
-hi def link acedbSubtag		Include
-hi def link acedbFlag		Include
-hi def link acedbTag		Include
-hi def link acedbClass		Todo
-hi def link acedbHelp		Todo
-hi def link acedbXref		Identifier
-hi def link acedbModifier	Label
-hi def link acedbComment	Comment
-hi def link acedbBlock		ModeMsg
-hi def link acedbNumber		Number
-hi def link acedbString		String
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_acedb_syn_inits")
+  if version < 508
+    let did_acedb_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink acedbMagic	Special
+  HiLink acedbHyb	Special
+  HiLink acedbType	Type
+  HiLink acedbOption	Type
+  HiLink acedbSubclass	Type
+  HiLink acedbSubtag	Include
+  HiLink acedbFlag	Include
+  HiLink acedbTag	Include
+  HiLink acedbClass	Todo
+  HiLink acedbHelp	Todo
+  HiLink acedbXref	Identifier
+  HiLink acedbModifier	Label
+  HiLink acedbComment	Comment
+  HiLink acedbBlock	ModeMsg
+  HiLink acedbNumber	Number
+  HiLink acedbString	String
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "acedb"
 

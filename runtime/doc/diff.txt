@@ -1,4 +1,4 @@
-*diff.txt*      For Vim version 6.0ac.  Last change: 2001 Apr 21
+*diff.txt*      For Vim version 6.0ad.  Last change: 2001 Apr 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

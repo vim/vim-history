@@ -909,7 +909,7 @@ mch_init()
 mch_windexit(r)
     int     r;
 {
-    mch_display_error();
+    display_errors();
 
     ml_close_all(TRUE);		/* remove all memfiles */
     exit(r);

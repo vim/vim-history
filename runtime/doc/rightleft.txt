@@ -1,4 +1,4 @@
-*rightleft.txt* For Vim version 6.0ac.  Last change: 2001 Feb 02
+*rightleft.txt* For Vim version 6.0ad.  Last change: 2001 Apr 29
 
 
 		  VIM REFERENCE MANUAL    by Avner Lottem
@@ -13,6 +13,7 @@ Phone:  +972-4-8307322
 
 {Vi does not have any of these commands}
 
+							*eh2*
 All this is only available when the |+rightleft| feature was enabled at
 compile time.
 
@@ -34,6 +35,9 @@ particular version of the original (English) software and when it continued
 developing, the Hebrew version stayed behind.  Therefore this particular
 support to Vim tries to be as simple (and short) as possible, so that it could
 be incorporated into the official source.
+
+Note that most of the other documentation files ignore rightleft mode and talk
+about movement and character positions as if there was no rightleft mode.
 
 
 Highlights

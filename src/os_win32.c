@@ -998,12 +998,7 @@ mch_update_cursor(void)
 handle_focus_event(INPUT_RECORD ir)
 {
     g_fJustGotFocus = ir.Event.FocusEvent.bSetFocus;
-    if (g_fJustGotFocus)
-	check_timestamps(FALSE);
-#ifdef FEAT_AUTOCMD
-    apply_autocmds(g_fJustGotFocus ? EVENT_FOCUSGAINED
-				: EVENT_FOCUSLOST, NULL, NULL, FALSE, curbuf);
-#endif
+    ui_focus_change((int)g_fJustGotFocus);
 }
 
 /*

@@ -2,18 +2,20 @@
 " Language:     WebMacro
 " Maintainer:   Claudio Fleiner <claudio@fleiner.com>
 " URL:          http://www.fleiner.com/vim/syntax/webmacro.vim
-" Last Change:  2001 Jan 15
+" Last Change:  2001 Apr 26
 
 " webmacro is a nice little language that you should
 " check out if you use java servlets.
 " webmacro: http://www.webmacro.org
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if !exists("main_syntax")
+  if version < 600
+    syntax clear
+  elseif exists("b:current_syntax")
   finish
 endif
-
-if !exists("main_syntax")
   let main_syntax = 'webmacro'
 endif
 
@@ -42,20 +44,32 @@ syn match webmacroBracesError "[{}]"
 syn match webmacroComment "##.*$" 
 syn match webmacroHash "[#{}\$]" contained
 
-" The default highlighting.
-hi def link webmacroComment CommentTitle
-hi def link webmacroVariable PreProc
-hi def link webmacroIf webmacroStatement
-hi def link webmacroForeach webmacroStatement
-hi def link webmacroSet webmacroStatement
-hi def link webmacroInclude webmacroStatement
-hi def link webmacroParse webmacroStatement
-hi def link webmacroStatement Function
-hi def link webmacroNumber Number
-hi def link webmacroBoolean Boolean
-hi def link webmacroSpecial Special
-hi def link webmacroString String
-hi def link webmacroBracesError Error
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_webmacro_syn_inits")
+  if version < 508
+    let did_webmacro_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink webmacroComment CommentTitle
+  HiLink webmacroVariable PreProc
+  HiLink webmacroIf webmacroStatement
+  HiLink webmacroForeach webmacroStatement
+  HiLink webmacroSet webmacroStatement
+  HiLink webmacroInclude webmacroStatement
+  HiLink webmacroParse webmacroStatement
+  HiLink webmacroStatement Function
+  HiLink webmacroNumber Number
+  HiLink webmacroBoolean Boolean
+  HiLink webmacroSpecial Special
+  HiLink webmacroString String
+  HiLink webmacroBracesError Error
+  delcommand HiLink
+endif
 
 let b:current_syntax = "webmacro"
 

@@ -20,7 +20,7 @@ syn match procmailVar "$[a-zA-Z0-9_]\+"
 
 syn match procmailCondition contained "^\s*\*.*"
 
-syn match procmailActionFolder contained "^\s*[-_a-zA-Z/]\+"
+syn match procmailActionFolder contained "^\s*[-_a-zA-Z0-9/]\+"
 syn match procmailActionVariable contained "^\s*$[a-zA-Z_]\+"
 syn region procmailActionForward start=+^\s*!+ skip=+\\$+ end=+$+
 syn region procmailActionPipe start=+^\s*|+ skip=+\\$+ end=+$+

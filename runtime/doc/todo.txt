@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0ac.  Last change: 2001 Apr 22
+*todo.txt*      For Vim version 6.0ad.  Last change: 2001 Apr 29
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,13 +29,20 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-GUI: Make inputdialog() work for Win16, Win32, Photon, Amiga, Mac, RiscOS.
+Add ID to more messages?
 
-Should find a simple way to make the same syntax file usable for Vim 5.7.25
-and Vim 6.0.  Recommend this format to all syntax file maintainers.
+Win32 GUI: In diff mode, dragging the scrollbar doesn't update the scrollbound
+windows.
+
+Win32 GUI: Edit/Keymap and Edit/Color Scheme are empty.
+
+GUI: Make inputdialog() work for Win16, Win32, Photon, Amiga, Mac, RiscOS.
 
 Athena: using a fontset for menus doesn't work.  Check code for menu_fontset
 marked with EXPERIMENTAL.  Perhaps use fontsets for everything?
+
+May 6: Adjust the syntax files that didn't get updated by the maintainer, to
+make them portable between 5.x and 6.0.
 
 
 Main items for 6.0:
@@ -56,8 +63,7 @@ G.  Edit command line with Vi commands
 H.  More automatic testing
 	Nothing done yet.
 I.  Multi-language support
-	Message translation works.
-	":menutrans" works, but how to handle different encodings?
+	Works.
 J.  User Friendlier
 	Write user manual.
 	Enhance Windows install program.
@@ -65,6 +71,7 @@ J.  User Friendlier
 
 E. Virtual edit:
 -   Still a lot of work to do.  Test various commands.
+-   "ax" in Virtual space causes a crash.
 -   Add a mode where the cursor is only allowed to go one character after the
     end of the line.
 -   Allow specifying it separately for Tabs and beyond end-of-line?
@@ -106,38 +113,16 @@ F. Sun Visual Workshop patch from Gordon Prieur:
 
 H. More automatic testing:
 -   Check all commands for:
-    - handling folds (moving vertically, updating folds)
-    - vertical splits (displaying with w_wincol, updating w_width and other
+    - Handling folds (moving vertically, updating folds)
+    - Vertical splits (displaying with w_wincol, updating w_width and other
       windows)
-    - use of multi-byte characters.
+    - Use with virtualedit.
+    - Working with filler lines.
+    - Use of multi-byte characters.
     - Make test for multi-line regexp and ":s".
 
 
-I. Multi-language support:
--   Check: The call to bind_textdomain_codeset() doesn't work yet.  It should
-    work with new version of gettext library.
--   Make an archive with the .mo files for Windows, unzipping them in the
-    right directory.  Can the files generated on Unix be used?
-8   Windows NT/2000: LCTranslateMessage() doesn't work properly.  It's
-    disabled for now.  What is the right solution?
--   Improve multibyte.txt using patch
-    ~/ftp/vim/unreleased/patches/vim-5.6-dalecki-4.gz.
-
-
 J. User Friendlier
-9   Add more options to the Edit.Settings menu?
-9   Add a way to load a color scheme.  Add a menu entry for it.  Also set good
-    colors for diff mode.
--   Add a way to save local settings and mappings into a new plugin file.
-    ":mkplugin <file>"?
-9   Add buffer-local menu.  Should offer a choice between removing the menu or
-    disabling it.  Be careful that tear-offs don't disappear (keep one empty
-    item?).
-    Alternative: use BufEnter and BufLeave autocommands.
-9   Buffer-local autocommands?
-	:au BufEnter <current> menu enable ...
-	:au BufLeave <current> menu disable ...
--   Add mappings local to a window: ":map <window> ..."?
 9   Printing:
     -	On Win32, use conversion to HTML and "rundll" (Dan Sharp)  At least
 	mention this in the text.  Or use ShellExecute("print").
@@ -160,15 +145,10 @@ J. User Friendlier
 
 
 Messages:
--   In the message history, add a help tag for each message and number the
-    messages.  ":msghelp <nr>" could then be used to jump to help for the
-    message. (Charles Campbell)
-    Add the ID to each error message, like: "a7: No match found"?
 -   Need to hit return after selecting entry for ":ts".
 -   Remember message line for redraw.  Use instead of keep_msg.  Integrate the
     command line in update_screen().
--   Make keep_msg allocated.  Using IObuff is dangerous.
--   Check: ":cn" message is sometimes cleared.
+-   Check: ":cn" message is sometimes cleared.  Should be truncated.
 
 
 Various recent:
@@ -204,8 +184,6 @@ Various recent:
     Without Gnome it does work.
     Not all Gnome arguments get to gnome_init().
 8   Add "display" argument to many items in syntax files, to speed up parsing.
-8   Make ":syntax include" to search 'runtimepath' for the included syntax
-    file if the argument is relative.
 -   update $VIMRUNTIME/optwin for new options.
 -   When using the file browser in GTK the absolute file name is used.  Should
     try to simplify it. (Lohner)
@@ -428,6 +406,11 @@ Win32 GUI known bugs:
     comes available. (Poucet)  It works OK on Win 98 but doesn't work on Win
     NT 4.0.  Leaves a grey area where the scrollbar was.  ":set go+=r" also
     doesn't work properly.
+8   The dialog boxes don't have an indication of which button is the default.
+    E.g., the dialog for a changed file. (Webb)
+8   When Vim is minimized and when maximizing it a file-changed dialog pops
+    up, Vim isn't maximized.  It should be done before the dialog, so that it
+    appears in the right position. (Webb)
 9   Check dosinst.c with Vim in "Program Files" (long filename).  Does it use
     the short filename instead and does the path compare work?
 8   When activating window with mouse click, don't move cursor to mouse click.
@@ -499,7 +482,6 @@ Athena GUI:
     unmanaged.  The destoyed Widgets are remembered, this list is never
     cleaned up.
 9   When closing the confirm() dialog, Vim exits.
-9   Menu ordering doesn't work.
 9   When using "menu a.b.c.d lll", the "b" submenu does not disappear.
 9   When dragging the scrollbar thum very fast, focus is only obtained in
     scrollbar itself.
@@ -766,6 +748,8 @@ VMS:
     Or ask for permission to overwrite it (if file can be made writable) and
     restore file to readonly afterwards.
 8   Buffers menu, when torn-off, disappears when being refreshed.
+8   Buffers menu looks bad with very long file names.  Make long names shorter
+    by putting "..." in the middle. (Ron Aaron)
 8   Is calling msg_start() in main() really needed?  Any printed message
     should include it already.
 8   When in Insert mode with 'scrolloff' set, inserting text at the end of the
@@ -1056,6 +1040,19 @@ Multi-byte characters:
     But it's very complicated...
 
 
+Ease of use:
+-   Add a way to save local settings and mappings into a new plugin file.
+    ":mkplugin <file>"?
+9   Buffer-local autocommands?
+	:au BufEnter <current> menu enable ...
+	:au BufLeave <current> menu disable ...
+-   Add mappings local to a window: ":map <window> ..."?
+9   Add buffer-local menu.  Should offer a choice between removing the menu or
+    disabling it.  Be careful that tear-offs don't disappear (keep one empty
+    item?).
+    Alternative: use BufEnter and BufLeave autocommands.
+
+
 Syntax highlighting:
 8   Allow the user to add items to the Syntax menu sorted, without having to
     change this for each release.
@@ -1290,9 +1287,6 @@ Built-in script language:
     "a-5-6".  But how to do array assignment and concatenation?
 
 
-Code cleanup:
-
-
 Performance:
 8   Avoid alloc() for scratch buffer use, esp. in syntax.c.  It's very slow on
     Win16.
@@ -1373,8 +1367,6 @@ Performance:
 
 
 Code size:
-8   Can't optimize normal.c, because of the big switch.  Make it into a table
-    of functions?
 8   GUI: When NO_CONSOLE is defined, more code can be excluded.
 -   Put getline() and cookie in a struct, so only one argument has to be
     passed to do_cmdline() and other functions.
@@ -1858,16 +1850,6 @@ Insert mode:
 	/*
 	** formatted with comments=sr:/*,mb:**,ex:*/
 	*/
-9   Indent follows "if" instead of "do": (Robert Webb)
-	do
-	{
-		switch (blah)
-		{
-			case 1: if (thing)
-					blah;
-		}
-	} while (blah);
-				here;
 9   One indent to much when doing "o" below this "while": (Rouben Rostamian)
 	{
 	    do
@@ -1917,7 +1899,6 @@ Insert mode:
 9   Wrong indent for cino=(4, removing the (void) fixes it: (Zellner)
 	(void) MyFancyFunction(
 			       argument);
-7   Make indenting more flexible, like syntax highlighting.
 -   Make smartindenting configurable. Add 'sioptions', e.g. '#' setting the
     indent to 0 should be switched on/off.
 7   Support ANSI style function header, with each argument on its own line.
@@ -2142,6 +2123,8 @@ Incsearch:
     (or not at all, when there was no match).  See oldmail/webb/in.872.
 -   With incsearch, use CTRL-N/CTRL-P to go to next/previous match, some other
     key to copy matched word to search pattern (Alexander Schmid).
+-   How to make a "package java.util" cause all classes in the package to be
+    searched?  Also for "import java.util.*". (Mark Brophy)
 
 
 Searching:

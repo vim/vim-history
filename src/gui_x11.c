@@ -1306,7 +1306,7 @@ gui_mch_init()
     }
 
     if (gui.color_approx)
-	EMSG(_("Vim: Cannot allocate colormap entry, some colors may be incorrect"));
+	EMSG(_("Vim ec1: Cannot allocate colormap entry, some colors may be incorrect"));
 
 #ifdef FEAT_SUN_WORKSHOP
     if (usingSunWorkShop)
@@ -1984,7 +1984,7 @@ gui_mch_get_color(reqname)
 	    }
 	}
     }
-    EMSG2(_("Cannot allocate color %s"), reqname);
+    EMSG2(_("(ec2) Cannot allocate color %s"), reqname);
 
     return (guicolor_T)-1;
 }
@@ -3425,5 +3425,32 @@ createXpmImages(path, xpm, sen, insen)
 
     XtFree((char *)attrs.colorsymbols);
     XpmFreeAttributes(&attrs);
+}
+#endif
+
+#ifdef FEAT_BEVAL
+/*
+ * Set the balloon-eval used for the tooltip of a toolbar menu item.
+ */
+    void
+gui_mch_menu_set_tip(menu)
+    vimmenu_T	*menu;
+{
+    if (menu->id != NULL)
+    {
+	/* Always destroy and create the balloon, in case the string was
+	 * changed. */
+	if (menu->tip != NULL)
+	{
+	    gui_mch_destroy_beval_area(menu->tip);
+	    menu->tip = NULL;
+	}
+	if (menu->strings[MENU_INDEX_TIP] != NULL)
+	    menu->tip = gui_mch_create_beval_area(
+		    menu->id,
+		    menu->strings[MENU_INDEX_TIP],
+		    NULL,
+		    NULL);
+    }
 }
 #endif

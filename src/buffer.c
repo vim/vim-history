@@ -1426,6 +1426,7 @@ free_buf_options(buf, free_p_ff)
     clear_string_option(&buf->b_p_dict);
     clear_string_option(&buf->b_p_tsr);
 #endif
+    buf->b_p_ar = -1;
 }
 
 /*
@@ -1446,7 +1447,9 @@ buflist_getfile(n, lnum, options, forceit)
     int		forceit;
 {
     buf_T	*buf;
+#ifdef FEAT_WINDOWS
     win_T	*wp = NULL;
+#endif
     pos_T	*fpos;
     colnr_T	col;
 
@@ -1479,19 +1482,18 @@ buflist_getfile(n, lnum, options, forceit)
     else
 	col = 0;
 
+#ifdef FEAT_WINDOWS
     if (options & GETF_SWITCH)
     {
 	/* use existing open window for buffer if wanted */
 	if (vim_strchr(p_swb, 'u'))     /* useopen */
 	    wp = buf_jump_open_win(buf);
 	/* split window if wanted ("split") */
-	if (wp == NULL && vim_strchr(p_swb, 't')
-#ifdef FEAT_WINDOWS
-		&& !win_split(0, 0)
-#endif
-		)
+	if (wp == NULL && vim_strchr(p_swb, 't') && !bufempty()
+		&& win_split(0, 0) == FAIL)
 	    return FAIL;
     }
+#endif
 
     ++RedrawingDisabled;
     if (getfile(buf->b_fnum, NULL, NULL, (options & GETF_SETMARK),

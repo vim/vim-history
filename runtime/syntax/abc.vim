@@ -1,14 +1,16 @@
 " Vim syntax file
 " Language:	abc music notation language
 " Maintainer:	James Allwright <J.R.Allwright@westminster.ac.uk>
-" URL:		http://perun.hscs.wmin.ac.uk/vim/syntax/abc.vim
-" Last Change:	26th May 1999
+" URL:		http://perun.hscs.wmin.ac.uk/~jra/vim/syntax/abc.vim
+" Last Change:	27th April 2001
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
-
 
 " tags
 syn region abcGuitarChord start=+"[A-G]+ end=+"+ contained
@@ -32,16 +34,30 @@ syn region abcHeader start="^X:" end="^K:.*$" contained contains=abcHeadField,ab
 syn region abcTune start="^X:" end="^ *$" contains=abcHeader,abcComment,abcBar,abcNote,abcBodyField,abcGuitarChord,abcTuple,abcBroken,abcTie
 syn match abcComment "%.*$"
 
-" The default highlighting.
-hi def link abcComment		Comment
-hi def link abcHeadField	Type
-hi def link abcBodyField	Special
-hi def link abcBar			Statement
-hi def link abcTuple		Statement
-hi def link abcBroken		Statement
-hi def link abcTie			Statement
-hi def link abcGuitarChord	Identifier
-hi def link abcNote			Constant
+
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_abc_syn_inits")
+  if version < 508
+    let did_abc_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink abcComment		Comment
+  HiLink abcHeadField		Type
+  HiLink abcBodyField		Special
+  HiLink abcBar			Statement
+  HiLink abcTuple			Statement
+  HiLink abcBroken			Statement
+  HiLink abcTie			Statement
+  HiLink abcGuitarChord	Identifier
+  HiLink abcNote			Constant
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "abc"
 

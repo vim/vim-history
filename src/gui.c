@@ -92,6 +92,12 @@ gui_start()
 
     vim_free(old_term);
 
+#if defined(FEAT_GUI_GTK) || defined(FEAT_GUI_X11)
+    if (gui.in_use)
+	/* Display error messages in a dialog now. */
+	display_errors();
+#endif
+
 #if defined(UNIX) && !defined(__BEOS__)
     /*
      * Quit the current process and continue in the child.
@@ -281,11 +287,12 @@ gui_init()
 
 	/*
 	 * If -U option given, use only the initializations from that file and
-	 * nothing else.  Skip all initializations for "-U NONE".
+	 * nothing else.  Skip all initializations for "-U NONE" or "-u NORC".
 	 */
 	if (use_gvimrc != NULL)
 	{
 	    if (STRCMP(use_gvimrc, "NONE") != 0
+		    && STRCMP(use_gvimrc, "NORC") != 0
 		    && do_source(use_gvimrc, FALSE, FALSE) != OK)
 		EMSG2(_("Cannot read from \"%s\""), use_gvimrc);
 	}
@@ -383,6 +390,13 @@ gui_init()
     gui.in_use = TRUE;		/* Must be set after menus have been set up */
     if (gui_mch_init() == FAIL)
 	goto error;
+
+    /* Avoid a delay for an error message that was printed in the terminal
+     * where Vim was started. */
+    emsg_on_display = FALSE;
+    msg_scrolled = 0;
+    need_wait_return = FALSE;
+    msg_didany = FALSE;
 
     /*
      * Check validity of any generic resources that may have been loaded.
@@ -3066,6 +3080,7 @@ gui_drag_scrollbar(sb, value, still_dragging)
     }
 # endif
     out_flush();
+    gui_update_cursor(FALSE, TRUE);
 #else
     add_long_to_buf((long)value, bytes + byte_count);
     add_to_input_buf(bytes, byte_count + sizeof(long_u));
@@ -3579,9 +3594,6 @@ gui_new_scrollbar_colors()
 gui_focus_change(in_focus)
     int		in_focus;
 {
-    static time_t	last_time;
-    int			need_redraw = FALSE;
-
     gui.in_focus = in_focus;
     out_flush();		/* make sure output has been written */
     gui_update_cursor(TRUE, FALSE);
@@ -3590,43 +3602,7 @@ gui_focus_change(in_focus)
     xim_set_focus(in_focus);
 #endif
 
-    /* When activated: Check if any file was modified outside of Vim.
-     * Only do this when not done within the last two seconds (could get
-     * several events in a row). */
-    if (in_focus && last_time + 2 < time(NULL))
-    {
-	need_redraw = check_timestamps(TRUE);
-	last_time = time(NULL);
-    }
-
-#ifdef FEAT_AUTOCMD
-    /*
-     * Fire the focus gained/lost autocommand.
-     */
-    need_redraw |= apply_autocmds(in_focus ? EVENT_FOCUSGAINED
-				: EVENT_FOCUSLOST, NULL, NULL, FALSE, curbuf);
-#endif
-
-    if (need_redraw)
-    {
-	/* Something was executed, make sure the cursor is put back where it
-	 * belongs. */
-	need_wait_return = FALSE;
-
-	if (State & CMDLINE)
-	    redrawcmdline();
-	else if (State == HITRETURN || State == SETWSIZE || State == ASKMORE
-		|| State == EXTERNCMD || State == CONFIRM || exmode_active)
-	    repeat_message();
-	else if ((State & NORMAL) || (State & INSERT))
-	{
-	    if (must_redraw != 0)
-		update_screen(0);
-	    setcursor();
-	}
-	cursor_on();	    /* redrawing may have switched it off */
-	out_flush();
-    }
+    ui_focus_change(in_focus);
 }
 
 /*
@@ -3871,5 +3847,48 @@ gui_find_bitmap(name, buffer, ext)
     if (do_in_runtimepath(buffer, FALSE, gfp_setname) == FAIL || *buffer == NUL)
 	return FAIL;
     return OK;
+}
+#endif
+
+#if defined(FEAT_GUI_GTK) || defined(FEAT_GUI_X11) || defined(PROTO)
+    void
+display_errors()
+{
+    char_u	*p;
+
+    if (isatty(2))
+	fflush(stderr);
+    else if (error_ga.ga_data != NULL)
+    {
+	/* avoid putting up a message box with blanks only */
+	for (p = (char_u *)error_ga.ga_data; *p != NUL; ++p)
+	    if (!isspace(*p))
+	    {
+		/* Truncate a very long message, it will go off-screen. */
+		if (STRLEN(p) > 2000)
+		    STRCPY(p + 2000 - 14, "...(truncated)");
+		(void)do_dialog(VIM_ERROR, (char_u *)_("Error"),
+					      p, (char_u *)_("&Ok"), 1, NULL);
+		break;
+	    }
+	ga_clear(&error_ga);
+    }
+}
+#endif
+
+#if defined(NO_CONSOLE_INPUT) || defined(PROTO)
+/*
+ * Return TRUE if still starting up and there is no place to enter text.
+ * For GTK and X11 we check if stderr is not a tty, which means we were
+ * (probably) started from the desktop.
+ */
+    int
+no_console_input()
+{
+    return ((!gui.in_use || gui.starting)
+# ifndef NO_CONSOLE
+	    && !isatty(2)
+# endif
+	    );
 }
 #endif

@@ -1,17 +1,19 @@
 " Vim syntax file
 " Language:	SNNS pattern file
 " Maintainer:	Davide Alberani <alberanid@bigfoot.com>
-" Last Change:	29 Jan 2000
-" Version:	0.1
-" URL:		http://members.xoom.com/alberanid/vim/syntax/snnspat.vim
+" Last Change:	28 Apr 2001
+" Version:	0.2
+" URL:		http://digilander.iol.it/alberanid/vim/syntax/snnspat.vim
 "
 " SNNS http://www-ra.informatik.uni-tuebingen.de/SNNS/
 " is a simulator for neural networks.
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
+
 
 " anything that isn't part of the header, a comment or a number
 " is wrong
@@ -29,7 +31,7 @@ syn match	snnspatNoHeader	"No\. of variable input dimensions\s*:\s*" contained
 syn match	snnspatNoHeader	"No\. of variable output dimensions\s*:\s*" contained
 syn match	snnspatNoHeader	"Maximum input dimensions\s*:\s*" contained
 syn match	snnspatNoHeader	"Maximum output dimensions\s*:\s*" contained
-syn match	snnspatGen	"generated at.*" contained contains=snnspatNumbers
+syn match 	snnspatGen	"generated at.*" contained contains=snnspatNumbers
 syn match	snnspatGen	"SNNS pattern definition file [Vv]\d\.\d" contained contains=snnspatNumbers
 
 " the header, what is not an accepted field, is an error
@@ -40,17 +42,27 @@ syn match	snnspatNumbers	"\d" contained
 syn match	snnspatComment	"#.*$" contains=snnspatTodo
 syn keyword	snnspatTodo	TODO XXX FIXME contained
 
-" The default highlighting.
-hi def link snnspatGen		Statement
-hi def link snnspatHeader	Error
-hi def link snnspatNoHeader	Define
-hi def link snnspatNumbers	Number
-hi def link snnspatComment	Comment
-hi def link snnspatError	Error
-hi def link snnspatTodo		Todo
-hi def link snnspatAccepted	NONE
-hi def link snnspatBrac		NONE
+if version >= 508 || !exists("did_snnspat_syn_inits")
+  if version < 508
+    let did_snnspat_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink snnspatGen		Statement
+  HiLink snnspatHeader		Error
+  HiLink snnspatNoHeader	Define
+  HiLink snnspatNumbers		Number
+  HiLink snnspatComment		Comment
+  HiLink snnspatError		Error
+  HiLink snnspatTodo		Todo
+  HiLink snnspatAccepted	NONE
+  HiLink snnspatBrac		NONE
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "snnspat"
 
-" vim: ts=8
+" vim: ts=8 sw=2

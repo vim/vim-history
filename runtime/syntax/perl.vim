@@ -1,14 +1,14 @@
 " Vim syntax file
 " Language:	Perl
 " Maintainer:	Nick Hibma <n_hibma@webweaving.org>
-" Last Change:	2001 Apr 20
+" Last Change:	2001 Apr 29
 " Location:	http://www.etla.net/~n_hibma/vim/syntax/perl.vim
 "
 " Please download most recent version first before mailing
 " any comments.
 " See also the file perl.vim.regression.pl to check whether your
 " modifications work in the most odd cases
-"	http://www.etla.net/~n_hibma/vim/syntax/perl.vim.regression.pl
+" http://www.etla.net/~n_hibma/vim/syntax/perl.vim.regression.pl
 "
 " Original version: Sonia Heimann <niania@netsurf.org>
 " Thanks to many people for their contribution. They made it work, not me.
@@ -25,10 +25,19 @@
 " let perl_sync_dist = 100
 " unlet perl_fold
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" Remove any old syntax stuff that was loaded (5.x) or quit when a syntax file
+" was already loaded (6.x).
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
+
+" Unset perl_fold if it set but vim doesn't support it.
+if version < 600 && exists("perl_fold")
+  unlet perl_fold
+endif
+
 
 " POD starts with ^=<word> and ends with ^=cut
 
@@ -49,7 +58,13 @@ syn keyword perlConditional		if elsif unless switch eq ne gt lt ge le cmp not an
 syn keyword perlConditional		else nextgroup=perlElseIfError skipwhite skipnl skipempty
 syn keyword perlRepeat			while for foreach do until
 syn keyword perlOperator		defined undef and or not bless ref
-syn keyword perlControl			BEGIN END
+if exists("perl_fold")
+  " in Vim if BEGIN/END is a keyword the perlBEGINENDFold does not work
+  syn match perlControl			"BEGIN" contained
+  syn match perlControl			"END" contained
+else
+  syn keyword perlControl		BEGIN END
+endif
 
 syn keyword perlStatementStorage	my local our
 syn keyword perlStatementControl	goto return last next continue redo
@@ -57,7 +72,7 @@ syn keyword perlStatementScalar		chomp chop chr crypt index lc lcfirst length or
 syn keyword perlStatementRegexp		pos quotemeta split study
 syn keyword perlStatementNumeric	abs atan2 cos exp hex int log oct rand sin sqrt srand
 syn keyword perlStatementList		splice unshift shift push pop split join reverse grep map sort unpack
-syn keyword perlStatementHash		each exists keys values
+syn keyword perlStatementHash		each exists keys values tie tied
 syn keyword perlStatementIOfunc		carp confess croak dbmclose dbmopen die syscall
 syn keyword perlStatementFiledesc	binmode close closedir eof fileno getc lstat print printf readdir rewinddir select stat tell telldir write nextgroup=perlFiledescStatementNocomma
 syn keyword perlStatementFiledesc	fcntl flock ioctl open opendir read seek seekdir sysopen sysread sysseek syswrite truncate nextgroup=perlFiledescStatementComma
@@ -113,10 +128,10 @@ syn match  perlPackageRef	 "\(\h\w*\)\=\(::\|'\)\I"me=e-1 contained
 
 if exists("perl_want_scope_in_variables")
   syn match  perlVarPlain	"\\\=\([@%$]\|\$#\)\$*\(\I\i*\)\=\(\(::\|'\)\I\i*\)*\>" contains=perlPackageRef nextgroup=perlVarMember,perlVarSimpleMember
-  syn match  perlFunctionName	"\\\=\&\$*\(\I\i*\)\=\(\(::\|'\)\I\i*\)*\>" contains=perlPackageRef nextgroup=perlVarMember,perlVarSimpleMember
+  syn match  perlFunctionName	"\\\=&\$*\(\I\i*\)\=\(\(::\|'\)\I\i*\)*\>" contains=perlPackageRef nextgroup=perlVarMember,perlVarSimpleMember
 else
   syn match  perlVarPlain	"\\\=\([@%$]\|\$#\)\$*\(\I\i*\)\=\(\(::\|'\)\I\i*\)*\>" nextgroup=perlVarMember,perlVarSimpleMember
-  syn match  perlFunctionName	"\\\=\&\$*\(\I\i*\)\=\(\(::\|'\)\I\i*\)*\>" nextgroup=perlVarMember,perlVarSimpleMember
+  syn match  perlFunctionName	"\\\=&\$*\(\I\i*\)\=\(\(::\|'\)\I\i*\)*\>" nextgroup=perlVarMember,perlVarSimpleMember
 endif
 
 if exists("perl_extended_vars")
@@ -260,21 +275,38 @@ syn region perlQQ		matchgroup=perlStringStartEnd start=+\<qr/+  end=+/[imosx]*+ 
 
 " Constructs such as print <<EOF [...] EOF, 'here' documents
 "
-syn match perlStringStartEnd	"<<EOF"
-syn match perlStringStartEnd	"<<\s*\(["']\)\(EOF\)\=\1"
-syn match perlUntilEOFstart	"<<EOF.*" nextgroup=perlUntilEOFDQ skipnl transparent
-syn match perlUntilEOFstart	"<<\s*\"EOF\".*" nextgroup=perlUntilEOFDQ skipnl transparent
-syn match perlUntilEOFstart	"<<\s*'EOF'.*" nextgroup=perlUntilEOFSQ skipnl transparent
-syn match perlUntilEOFstart	"<<\s*\"\".*" nextgroup=perlUntilEmptyDQ skipnl transparent
-syn match perlUntilEOFstart	"<<\s*''.*" nextgroup=perlUntilEmptySQ skipnl transparent
-syn region perlUntilEOFDQ	matchgroup=perlStringStartEnd start=++ end="^EOF$" contains=@perlInterpDQ contained
-syn region perlUntilEOFSQ	matchgroup=perlStringStartEnd start=++ end="^EOF$" contains=@perlInterpSQ contained
-syn region perlUntilEmptySQ	matchgroup=perlStringStartEnd start=++ end="^$" contains=@perlInterpDQ,perlNotEmptyLine contained
-syn region perlUntilEmptyDQ	matchgroup=perlStringStartEnd start=++ end="^$" contains=@perlInterpSQ,perlNotEmptyLine contained
+if version >= 600
+  " XXX Any statements after the identifier are in perlString colour (i.e.
+  " 'if $a' in 'print <<EOF if $a').
+  if exists("perl_fold")
+    syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\z(\I\i*\)+     end=+^\z1$+ contains=@perlInterpDQ fold
+    syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\s*"\z(\S\+\)"+ end=+^\z1$+ contains=@perlInterpDQ fold
+    syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\s*'\z(\S\+\)'+ end=+^\z1$+ contains=@perlInterpSQ fold
+    syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\s*""+          end=+^$+    contains=@perlInterpDQ,perlNotEmptyLine fold
+    syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\s*''+          end=+^$+    contains=@perlInterpSQ,perlNotEmptyLine fold
+  else
+    syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\z(\I\i*\)+     end=+^\z1$+ contains=@perlInterpDQ
+    syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\s*"\z(\S\+\)"+ end=+^\z1$+ contains=@perlInterpDQ
+    syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\s*'\z(\S\+\)'+ end=+^\z1$+ contains=@perlInterpSQ
+    syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\s*""+          end=+^$+    contains=@perlInterpDQ,perlNotEmptyLine
+    syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\s*''+          end=+^$+    contains=@perlInterpSQ,perlNotEmptyLine
+  endif
+else
+  syn match perlUntilEOFstart	"<<EOF.*" nextgroup=perlUntilEOFDQ skipnl transparent
+  syn match perlUntilEOFstart	"<<\s*\"EOF\".*" nextgroup=perlUntilEOFDQ skipnl transparent
+  syn match perlUntilEOFstart	"<<\s*'EOF'.*" nextgroup=perlUntilEOFSQ skipnl transparent
+  syn match perlUntilEOFstart	"<<\s*\"\".*" nextgroup=perlUntilEmptyDQ skipnl transparent
+  syn match perlUntilEOFstart	"<<\s*''.*" nextgroup=perlUntilEmptySQ skipnl transparent
+  syn region perlUntilEOFDQ	matchgroup=perlStringStartEnd start=++ end="^EOF$" contains=@perlInterpDQ contained
+  syn region perlUntilEOFSQ	matchgroup=perlStringStartEnd start=++ end="^EOF$" contains=@perlInterpSQ contained
+  syn region perlUntilEmptySQ	matchgroup=perlStringStartEnd start=++ end="^$" contains=@perlInterpDQ,perlNotEmptyLine contained
+  syn region perlUntilEmptyDQ	matchgroup=perlStringStartEnd start=++ end="^$" contains=@perlInterpSQ,perlNotEmptyLine contained
+endif
+
 
 " Class declarations
 "
-syn match  perlPackageDecl	"^\s*package\>[^;]*" contains=perlStatementPackage
+syn match  perlPackageDecl	"^\s*package\s\+\S\+" contains=perlStatementPackage
 syn keyword perlStatementPackage	package contained
 
 " Functions
@@ -306,118 +338,139 @@ syn match  perlFormatField	"@[^A-Za-z_|<>~#*]"me=e-1 contained
 syn match  perlFormatField	"@$" contained
 
 " __END__ and __DATA__ clauses
-syntax region perlDATA		start="^__\(DATA\|END\)__$" skip="." end="." contains=perlPOD
-
+if exists("perl_fold")
+  syntax region perlDATA		start="^__\(DATA\|END\)__$" skip="." end="." contains=perlPOD fold
+else
+  syntax region perlDATA		start="^__\(DATA\|END\)__$" skip="." end="." contains=perlPOD
+endif
 
 
 "
 " Folding
 
-if version >= 600 && exists("perl_fold")
-  syn region myFold start="\s*sub\>" end="^}" transparent fold
+if exists("perl_fold")
+  syn region perlPackageFold start="^package \S\+;$" end="^1;$" transparent fold keepend
+  syn region perlSubFold     start="^\z(\s*\)sub\>.*[^};]$" end="^\z1}\s*$" transparent fold
+  syn region perlBEGINENDFold start="^\z(\s*\)BEGIN\>.*[^};]$" end="^\z1}\s*$" transparent fold
   syn sync fromstart
   setlocal foldmethod=syntax
 endif
 
 
-" The default highlighting.
-hi def link perlSharpBang		PreProc
-hi def link perlControl		PreProc
-hi def link perlInclude		Include
-hi def link perlSpecial		Special
-hi def link perlString		String
-hi def link perlCharacter		Character
-hi def link perlNumber		Number
-hi def link perlType		Type
-hi def link perlIdentifier	Identifier
-hi def link perlLabel		Label
-hi def link perlStatement		Statement
-hi def link perlConditional	Conditional
-hi def link perlRepeat		Repeat
-hi def link perlOperator		Operator
-hi def link perlFunction		Function
-hi def link perlFunctionPrototype	perlFunction
-hi def link perlComment		Comment
-hi def link perlTodo		Todo
-hi def link perlList		perlStatement
-hi def link perlMisc		perlStatement
-hi def link perlVarPlain		perlIdentifier
-hi def link perlFiledescRead	perlIdentifier
-hi def link perlFiledescStatement	perlIdentifier
-hi def link perlVarSimpleMember	perlIdentifier
-hi def link perlVarSimpleMemberName	perlString
-hi def link perlVarNotInMatches	perlIdentifier
-hi def link perlVarSlash		perlIdentifier
-hi def link perlQQ		perlString
-hi def link perlUntilEOFDQ	perlString
-hi def link perlUntilEOFSQ	perlString
-hi def link perlUntilEmptyDQ	perlString
-hi def link perlUntilEmptySQ	perlString
-hi def link perlUntilEOF		perlString		
-hi def link perlStringUnexpanded	perlString
-hi def link perlSubstitutionSQ		perlString
-hi def link perlSubstitutionDQ		perlString
-hi def link perlSubstitutionSlash		perlString
-hi def link perlSubstitutionHash		perlString
-hi def link perlSubstitutionBracket	perlString
-hi def link perlSubstitutionCurly 	perlString
-hi def link perlSubstitutionPling		perlString
-hi def link perlTranslationSlash		perlString
-hi def link perlTranslationHash		perlString
-hi def link perlTranslationBracket	perlString
-hi def link perlTranslationCurly		perlString
-hi def link perlMatch		perlString
-hi def link perlMatchStartEnd	perlStatement
-if exists("perl_string_as_statement")
-  hi def link perlStringStartEnd	perlStatement
-else
-  hi def link perlStringStartEnd	perlString
+if version >= 508 || !exists("did_perl_syn_inits")
+  if version < 508
+    let did_perl_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  " The default highlighting.
+  HiLink perlSharpBang		PreProc
+  HiLink perlControl		PreProc
+  HiLink perlInclude		Include
+  HiLink perlSpecial		Special
+  HiLink perlString		String
+  HiLink perlCharacter		Character
+  HiLink perlNumber		Number
+  HiLink perlType		Type
+  HiLink perlIdentifier		Identifier
+  HiLink perlLabel		Label
+  HiLink perlStatement		Statement
+  HiLink perlConditional	Conditional
+  HiLink perlRepeat		Repeat
+  HiLink perlOperator		Operator
+  HiLink perlFunction		Function
+  HiLink perlFunctionPrototype	perlFunction
+  HiLink perlComment		Comment
+  HiLink perlTodo		Todo
+  if exists("perl_string_as_statement")
+    HiLink perlStringStartEnd	perlStatement
+  else
+    HiLink perlStringStartEnd	perlString
+  endif
+  HiLink perlList		perlStatement
+  HiLink perlMisc		perlStatement
+  HiLink perlVarPlain		perlIdentifier
+  HiLink perlFiledescRead	perlIdentifier
+  HiLink perlFiledescStatement	perlIdentifier
+  HiLink perlVarSimpleMember	perlIdentifier
+  HiLink perlVarSimpleMemberName perlString
+  HiLink perlVarNotInMatches	perlIdentifier
+  HiLink perlVarSlash		perlIdentifier
+  HiLink perlQQ			perlString
+  if version >= 600
+    HiLink perlHereDoc		perlString
+  else
+    HiLink perlUntilEOFStart	perlStringStartEnd
+    HiLink perlUntilEOFDQ	perlString
+    HiLink perlUntilEOFSQ	perlString
+    HiLink perlUntilEmptyDQ	perlString
+    HiLink perlUntilEmptySQ	perlString
+    HiLink perlUntilEOF		perlString		
+  endif
+  HiLink perlStringUnexpanded	perlString
+  HiLink perlSubstitutionSQ	perlString
+  HiLink perlSubstitutionDQ	perlString
+  HiLink perlSubstitutionSlash	perlString
+  HiLink perlSubstitutionHash	perlString
+  HiLink perlSubstitutionBracket perlString
+  HiLink perlSubstitutionCurly 	perlString
+  HiLink perlSubstitutionPling	perlString
+  HiLink perlTranslationSlash	perlString
+  HiLink perlTranslationHash	perlString
+  HiLink perlTranslationBracket	perlString
+  HiLink perlTranslationCurly	perlString
+  HiLink perlMatch		perlString
+  HiLink perlMatchStartEnd	perlStatement
+  HiLink perlFormatName		perlIdentifier
+  HiLink perlFormatField	perlString
+  HiLink perlPackageDecl	perlType
+  HiLink perlStorageClass	perlType
+  HiLink perlPackageRef		perlType
+  HiLink perlStatementPackage	perlStatement
+  HiLink perlStatementSub	perlStatement
+  HiLink perlStatementStorage	perlStatement
+  HiLink perlStatementControl	perlStatement
+  HiLink perlStatementScalar	perlStatement
+  HiLink perlStatementRegexp	perlStatement
+  HiLink perlStatementNumeric	perlStatement
+  HiLink perlStatementList	perlStatement
+  HiLink perlStatementHash	perlStatement
+  HiLink perlStatementIOfunc	perlStatement
+  HiLink perlStatementFiledesc	perlStatement
+  HiLink perlStatementVector	perlStatement
+  HiLink perlStatementFiles	perlStatement
+  HiLink perlStatementFlow	perlStatement
+  HiLink perlStatementScope	perlStatement
+  HiLink perlStatementInclude	perlStatement
+  HiLink perlStatementProc	perlStatement
+  HiLink perlStatementSocket	perlStatement
+  HiLink perlStatementIPC	perlStatement
+  HiLink perlStatementNetwork	perlStatement
+  HiLink perlStatementPword	perlStatement
+  HiLink perlStatementTime	perlStatement
+  HiLink perlStatementMisc	perlStatement
+  HiLink perlFunctionName	perlIdentifier
+  HiLink perlFunctionPRef	perlType
+  HiLink perlPOD		perlComment
+  HiLink perlShellCommand	perlString
+  HiLink perlSpecialAscii	perlSpecial
+  HiLink perlSpecialDollar	perlSpecial
+  HiLink perlSpecialString	perlSpecial
+  HiLink perlSpecialStringU	perlSpecial
+  HiLink perlSpecialMatch	perlSpecial
+  HiLink perlSpecialBEOM	perlSpecial
+  HiLink perlDATA		perlComment
+  
+  HiLink perlBrackets		Error
+  
+  " Possible errors
+  HiLink perlNotEmptyLine	Error
+  HiLink perlElseIfError	Error
+
+  delcommand HiLink
 endif
-hi def link perlFormatName	perlIdentifier
-hi def link perlFormatField	perlString
-hi def link perlPackageDecl	perlType
-hi def link perlStorageClass	perlType
-hi def link perlPackageRef	perlType
-hi def link perlStatementPackage	perlStatement
-hi def link perlStatementSub	perlStatement
-hi def link perlStatementStorage	perlStatement
-hi def link perlStatementControl	perlStatement
-hi def link perlStatementScalar	perlStatement
-hi def link perlStatementRegexp	perlStatement
-hi def link perlStatementNumeric	perlStatement
-hi def link perlStatementList	perlStatement
-hi def link perlStatementHash	perlStatement
-hi def link perlStatementIOfunc	perlStatement
-hi def link perlStatementFiledesc	perlStatement
-hi def link perlStatementVector	perlStatement
-hi def link perlStatementFiles	perlStatement
-hi def link perlStatementFlow	perlStatement
-hi def link perlStatementScope	perlStatement
-hi def link perlStatementInclude	perlStatement
-hi def link perlStatementProc	perlStatement
-hi def link perlStatementSocket	perlStatement
-hi def link perlStatementIPC	perlStatement
-hi def link perlStatementNetwork	perlStatement
-hi def link perlStatementPword	perlStatement
-hi def link perlStatementTime	perlStatement
-hi def link perlStatementMisc	perlStatement
-hi def link perlFunctionName	perlIdentifier
-hi def link perlFunctionPRef	perlType
-hi def link perlPOD		perlComment
-hi def link perlShellCommand	perlString
-hi def link perlSpecialAscii	perlSpecial
-hi def link perlSpecialDollar	perlSpecial
-hi def link perlSpecialString	perlSpecial
-hi def link perlSpecialStringU	perlSpecial
-hi def link perlSpecialMatch	perlSpecial
-hi def link perlSpecialBEOM	perlSpecial
-hi def link perlDATA		perlComment
-
-hi def link perlBrackets		Error
-
-" Possible errors
-hi def link perlNotEmptyLine	Error
-hi def link perlElseIfError	Error
 
 " Syncing to speed up processing
 "

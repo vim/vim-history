@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Apr 22
+" Last Change:	2001 Apr 29
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -53,7 +53,10 @@ amenu 9999.70 &Help.&Version			:version<CR>
 amenu 9999.80 &Help.&About			:intro<CR>
 
 fun! s:Helpfind()
-  let h = inputdialog("Enter a command or word to find help on:\n\nPrepend i_ for Input mode commands (Ex: i_CTRL-X)\nPrepend c_ for command-line editing commands (Ex: c_<Del>)\nPrepend ' for an option name (Ex: 'shiftwidth')")
+  if !exists("g:find_help_dialog")
+    let g:find_help_dialog = "Enter a command or word to find help on:\n\nPrepend i_ for Input mode commands (e.g.: i_CTRL-X)\nPrepend c_ for command-line editing commands (e.g.: c_<Del>)\nPrepend ' for an option name (e.g.: 'shiftwidth')"
+  endif
+  let h = inputdialog(g:find_help_dialog)
   if h != ""
     let v:errmsg = ""
     silent! exe "help " . h
@@ -162,39 +165,88 @@ endif
 amenu 20.425 &Edit.-SEP3-			:
 amenu 20.430 &Edit.Settings\ &Window		:options<CR>
 
-" Edit/Settings
+" Edit/Global Settings
+amenu 20.440.100 &Edit.Global\ Settings.Toggle\ Pattern\ Highlight<Tab>:set\ hls!	:set hls! hls?<CR>
+amenu 20.440.110 &Edit.Global\ Settings.Toggle\ ignore-case<Tab>:set\ ic!	:set ic! ic?<CR>
+amenu 20.440.110 &Edit.Global\ Settings.Toggle\ showmatch<Tab>:set\ sm!	:set sm! sm?<CR>
+
+amenu 20.440.120 &Edit.Global\ Settings.Context\ lines.\ 1\  :set so=1<CR>
+amenu 20.440.120 &Edit.Global\ Settings.Context\ lines.\ 2\  :set so=2<CR>
+amenu 20.440.120 &Edit.Global\ Settings.Context\ lines.\ 3\  :set so=3<CR>
+amenu 20.440.120 &Edit.Global\ Settings.Context\ lines.\ 4\  :set so=4<CR>
+amenu 20.440.120 &Edit.Global\ Settings.Context\ lines.\ 5\  :set so=5<CR>
+amenu 20.440.120 &Edit.Global\ Settings.Context\ lines.\ 7\  :set so=7<CR>
+amenu 20.440.120 &Edit.Global\ Settings.Context\ lines.\ 10\  :set so=10<CR>
+amenu 20.440.120 &Edit.Global\ Settings.Context\ lines.\ 100\  :set so=100<CR>
+
+amenu 20.440.130.40 &Edit.Global\ Settings.Virtual\ Edit.Never :set ve=<CR>
+amenu 20.440.130.50 &Edit.Global\ Settings.Virtual\ Edit.Block\ Selection :set ve=block<CR>
+amenu 20.440.130.60 &Edit.Global\ Settings.Virtual\ Edit.Insert\ mode :set ve=insert<CR>
+amenu 20.440.130.70 &Edit.Global\ Settings.Virtual\ Edit.Block\ and\ Insert :set ve=block,insert<CR>
+amenu 20.440.130.80 &Edit.Global\ Settings.Virtual\ Edit.Always :set ve=all<CR>
+
+amenu 20.440.140 &Edit.Global\ Settings.Toggle\ Insert\ mode<Tab>:set\ im!	:set im!<CR>
+
+amenu 20.440.150 &Edit.Global\ Settings.Search\ Path\.\.\.  :call <SID>SearchP()<CR>
+fun! s:SearchP()
+  let n = inputdialog("Enter search path for files.\nSeparate directory names with a comma.", substitute(&path, '\\ ', ' ', 'g'))
+  if n != ""
+    let &path = substitute(n, ' ', '\\ ', 'g')
+  endif
+endfun
+
+amenu 20.440.160 &Edit.Global\ Settings.Tag\ Files\.\.\.  :call <SID>TagFiles()<CR>
+fun! s:TagFiles()
+  let n = inputdialog("Enter names of tag files.\nSeparate the names with a comma.", substitute(&tags, '\\ ', ' ', 'g'))
+  if n != ""
+    let &tags = substitute(n, ' ', '\\ ', 'g')
+  endif
+endfun
+
+" GUI options
+amenu 20.440.300 &Edit.Global\ Settings.-SEP1-	    :
+amenu 20.440.310 &Edit.Global\ Settings.Toggle\ Toolbar		:call <SID>ToggleGuiOption("T")<CR>
+amenu 20.440.320 &Edit.Global\ Settings.Toggle\ Bottom\ Scrollbar	:call <SID>ToggleGuiOption("b")<CR>
+amenu 20.440.330 &Edit.Global\ Settings.Toggle\ Left\ Scrollbar	:call <SID>ToggleGuiOption("l")<CR>
+amenu 20.440.340 &Edit.Global\ Settings.Toggle\ Right\ Scrolbar	:call <SID>ToggleGuiOption("r")<CR>
+
 fun <SID>ToggleGuiOption(option)
     " If a:option is already set in guioptions, then we want to remove it
     if match(&guioptions, a:option) > -1
-	exec "set guioptions-=" . a:option
+	exec "set go-=" . a:option
     else
-	exec "set guioptions+=" . a:option
+	exec "set go+=" . a:option
     endif
 endfun
 
-" Build boolean options
-amenu 20.440.100 &Edit.Se&ttings.Toggle\ Line\ Numbering<Tab>:set\ nu!	:set nu!<CR>
-amenu 20.440.110 &Edit.Se&ttings.Toggle\ Line\ Wrap<Tab>:set\ wrap!		:set wrap!<CR>
-amenu 20.440.120 &Edit.Se&ttings.Toggle\ Search\ Patn\ Highl<Tab>:set\ hls!	:set hls!<CR>
-amenu 20.440.130 &Edit.Se&ttings.Toggle\ expand-tab<Tab>:set\ et!	:set et!<CR>
-amenu 20.440.140 &Edit.Se&ttings.Toggle\ auto-indent<Tab>:set\ ai!	:set ai!<CR>
+" Edit/File Settings
 
-" Build GUI options
-amenu 20.440.300 &Edit.Se&ttings.-SEP1-	    :
-amenu 20.440.310 &Edit.Se&ttings.Toggle\ Toolbar		:call <SID>ToggleGuiOption("T")<CR>
-amenu 20.440.320 &Edit.Se&ttings.Toggle\ Bottom\ Scrollbar	:call <SID>ToggleGuiOption("b")<CR>
-amenu 20.440.330 &Edit.Se&ttings.Toggle\ Left\ Scrollbar	:call <SID>ToggleGuiOption("l")<CR>
-amenu 20.440.340 &Edit.Se&ttings.Toggle\ Right\ Scrolbar	:call <SID>ToggleGuiOption("r")<CR>
+" Boolean options
+amenu 20.440.100 &Edit.File\ Settings.Toggle\ Line\ Numbering<Tab>:set\ nu!	:set nu! nu?<CR>
+amenu 20.440.110 &Edit.File\ Settings.Toggle\ List\ Mode<Tab>:set\ list!	:set list! list?<CR>
+amenu 20.440.120 &Edit.File\ Settings.Toggle\ Line\ Wrap<Tab>:set\ wrap!	:set wrap! wrap?<CR>
+amenu 20.440.130 &Edit.File\ Settings.Toggle\ Wrap\ at\ word<Tab>:set\ lbr!	:set lbr! lbr?<CR>
+amenu 20.440.160 &Edit.File\ Settings.Toggle\ expand-tab<Tab>:set\ et!	:set et! et?<CR>
+amenu 20.440.170 &Edit.File\ Settings.Toggle\ auto-indent<Tab>:set\ ai!	:set ai! ai?<CR>
+amenu 20.440.180 &Edit.File\ Settings.Toggle\ C-indenting<Tab>:set\ cin!	:set cin! cin?<CR>
 
-" Build variable options
-amenu 20.440.600 &Edit.Se&ttings.-SEP2-	    :
-amenu 20.440.610.20 &Edit.Se&ttings.Shiftwidth.2   :set shiftwidth=2<CR>
-amenu 20.440.610.30 &Edit.Se&ttings.Shiftwidth.3   :set shiftwidth=3<CR>
-amenu 20.440.610.40 &Edit.Se&ttings.Shiftwidth.4   :set shiftwidth=4<CR>
-amenu 20.440.610.50 &Edit.Se&ttings.Shiftwidth.5   :set shiftwidth=5<CR>
-amenu 20.440.610.60 &Edit.Se&ttings.Shiftwidth.6   :set shiftwidth=6<CR>
-amenu 20.440.610.80 &Edit.Se&ttings.Shiftwidth.8   :set shiftwidth=8<CR>
-amenu 20.440.620 &Edit.Se&ttings.Text\ Width\.\.\.  :call <SID>TextWidth()<CR>
+" other options
+amenu 20.440.600 &Edit.File\ Settings.-SEP2-	    :
+amenu 20.440.610.20 &Edit.File\ Settings.Shiftwidth.2   :set sw=2 sw?<CR>
+amenu 20.440.610.30 &Edit.File\ Settings.Shiftwidth.3   :set sw=3 sw?<CR>
+amenu 20.440.610.40 &Edit.File\ Settings.Shiftwidth.4   :set sw=4 sw?<CR>
+amenu 20.440.610.50 &Edit.File\ Settings.Shiftwidth.5   :set sw=5 sw?<CR>
+amenu 20.440.610.60 &Edit.File\ Settings.Shiftwidth.6   :set sw=6 sw?<CR>
+amenu 20.440.610.80 &Edit.File\ Settings.Shiftwidth.8   :set sw=8 sw?<CR>
+
+amenu 20.440.620.20 &Edit.File\ Settings.Soft\ Tabstop.2   :set sts=2 sts?<CR>
+amenu 20.440.620.30 &Edit.File\ Settings.Soft\ Tabstop.3   :set sts=3 sts?<CR>
+amenu 20.440.620.40 &Edit.File\ Settings.Soft\ Tabstop.4   :set sts=4 sts?<CR>
+amenu 20.440.620.50 &Edit.File\ Settings.Soft\ Tabstop.5   :set sts=5 sts?<CR>
+amenu 20.440.620.60 &Edit.File\ Settings.Soft\ Tabstop.6   :set sts=6 sts?<CR>
+amenu 20.440.620.80 &Edit.File\ Settings.Soft\ Tabstop.8   :set sts=8 sts?<CR>
+
+amenu 20.440.630 &Edit.File\ Settings.Text\ Width\.\.\.  :call <SID>TextWidth()<CR>
 fun! s:TextWidth()
   let n = inputdialog("Enter new text width (0 to disable formatting): ", &tw)
   if n != ""
@@ -202,6 +254,72 @@ fun! s:TextWidth()
     let &tw = substitute(n, "^0*", "", "")
   endif
 endfun
+amenu 20.440.640 &Edit.File\ Settings.File\ Format\.\.\.  :call <SID>FileFormat()<CR>
+fun! s:FileFormat()
+  if &ff == "dos"
+    let def = 2
+  elseif &ff == "mac"
+    let def = 3
+  else
+    let def = 1
+  endif
+  let n = confirm("Select format for writing the file", "&Unix\n&Dos\n&Mac",
+	\ def, "Question")
+  if n == 1
+    set ff=unix
+  elseif n == 2
+    set ff=dos
+  elseif n == 3
+    set ff=mac
+  endif
+endfun
+
+" Setup the Edit.Color Scheme submenu
+if exists("*expandpath")
+  let s:n = expandpath("colors/*.vim", &runtimepath)
+  let s:idx = 100
+  while strlen(s:n) > 0
+    let s:i = stridx(s:n, "\n")
+    if s:i < 0
+      let s:name = s:n
+      let s:n = ""
+    else
+      let s:name = strpart(s:n, 0, s:i)
+      let s:n = strpart(s:n, s:i + 1, 19999)
+    endif
+    let s:name = substitute(s:name, '.*\W\(\w*\)\.vim', '\1', '')
+    exe "amenu 20.450." . s:idx . ' &Edit.Color\ Scheme.' . s:name . " :colors " . s:name . "<CR>"
+    unlet s:name
+    unlet s:i
+    let s:idx = s:idx + 10
+  endwhile
+  unlet s:n
+  unlet s:idx
+endif
+
+" Setup the Edit.Keymap submenu
+if has("keymap")
+  amenu 20.460.90 &Edit.Keymap.None :set keymap=<CR>
+  let s:n = expandpath("keymap/*.vim", &runtimepath)
+  let s:idx = 100
+  while strlen(s:n) > 0
+    let s:i = stridx(s:n, "\n")
+    if s:i < 0
+      let s:name = s:n
+      let s:n = ""
+    else
+      let s:name = strpart(s:n, 0, s:i)
+      let s:n = strpart(s:n, s:i + 1, 19999)
+    endif
+    let s:name = substitute(s:name, '.*[/\\:]\([0-9a-zA-Z_-]*\)\.vim', '\1', '')
+    exe "amenu 20.460." . s:idx . ' &Edit.Keymap.' . s:name . " :set keymap=" . s:name . "<CR>"
+    unlet s:name
+    unlet s:i
+    let s:idx = s:idx + 10
+  endwhile
+  unlet s:n
+  unlet s:idx
+endif
 
 " Programming menu
 amenu 40.300 &Tools.&Jump\ to\ this\ tag<Tab>g^] g<C-]>
@@ -239,17 +357,23 @@ if has("folding")
   amenu 40.340.240 &Tools.&Folding.Delete\ &All\ Folds<Tab>zD	zD
   " moving around in folds
   amenu 40.340.300 &Tools.&Folding.-SEP2-			:
-  amenu 40.340.310.10 &Tools.&Folding.Fold\ column\ &width.0	:set fdc=0<CR>
-  amenu 40.340.310.20 &Tools.&Folding.Fold\ column\ &width.2	:set fdc=2<CR>
-  amenu 40.340.310.30 &Tools.&Folding.Fold\ column\ &width.3	:set fdc=3<CR>
-  amenu 40.340.310.40 &Tools.&Folding.Fold\ column\ &width.4	:set fdc=4<CR>
-  amenu 40.340.310.50 &Tools.&Folding.Fold\ column\ &width.5	:set fdc=5<CR>
-  amenu 40.340.310.60 &Tools.&Folding.Fold\ column\ &width.6	:set fdc=6<CR>
-  amenu 40.340.310.70 &Tools.&Folding.Fold\ column\ &width.7	:set fdc=7<CR>
-  amenu 40.340.310.80 &Tools.&Folding.Fold\ column\ &width.8	:set fdc=8<CR>
+  amenu 40.340.310.10 &Tools.&Folding.Fold\ column\ &width.\ 0\ 	:set fdc=0<CR>
+  amenu 40.340.310.20 &Tools.&Folding.Fold\ column\ &width.\ 2\ 	:set fdc=2<CR>
+  amenu 40.340.310.30 &Tools.&Folding.Fold\ column\ &width.\ 3\ 	:set fdc=3<CR>
+  amenu 40.340.310.40 &Tools.&Folding.Fold\ column\ &width.\ 4\ 	:set fdc=4<CR>
+  amenu 40.340.310.50 &Tools.&Folding.Fold\ column\ &width.\ 5\ 	:set fdc=5<CR>
+  amenu 40.340.310.60 &Tools.&Folding.Fold\ column\ &width.\ 6\ 	:set fdc=6<CR>
+  amenu 40.340.310.70 &Tools.&Folding.Fold\ column\ &width.\ 7\ 	:set fdc=7<CR>
+  amenu 40.340.310.80 &Tools.&Folding.Fold\ column\ &width.\ 8\ 	:set fdc=8<CR>
 endif  " has folding
 
-amenu 40.350 &Tools.-SEP2-			:
+if has("diff")
+  amenu 40.350.100 &Tools.&Diff.&Update		:diffupdate<CR>
+  amenu 40.350.110 &Tools.&Diff.&Get\ Block 	:diffget<CR>
+  amenu 40.350.120 &Tools.&Diff.&Put\ Block 	:diffput<CR>
+endif
+
+amenu 40.358 &Tools.-SEP2-			:
 amenu 40.360 &Tools.&Make<Tab>:make		:make<CR>
 amenu 40.370 &Tools.&List\ Errors<Tab>:cl	:cl<CR>
 amenu 40.380 &Tools.L&ist\ Messages<Tab>:cl!	:cl!<CR>
@@ -526,7 +650,7 @@ amenu 1.90 PopUp.Select\ &Block	<C-Q>
 amenu 1.100 PopUp.Select\ &All	ggVG
 
 " The GUI toolbar (for MS-Windows and GTK)
-if has("win32") || has("win16") || has("gui_gtk") || has("gui_motif") || has("gui_athena")
+if has("toolbar")
   amenu 1.10 ToolBar.Open	:browse e<CR>
   amenu 1.20 ToolBar.Save	:w<CR>
   amenu 1.30 ToolBar.SaveAll	:wa<CR>
@@ -809,6 +933,7 @@ SynMenu EFG.Focus\ Master:master
 SynMenu EFG.FORM:form
 SynMenu EFG.Forth:forth
 SynMenu EFG.Fortran:fortran
+SynMenu EFG.FoxPro:foxpro
 SynMenu EFG.Fvwm\ configuration:fvwm1
 SynMenu EFG.Fvwm2\ configuration:fvwm2
 SynMenu EFG.GDB\ command\ file:gdb
@@ -1000,6 +1125,7 @@ SynMenu WXYZ.Wdiff:wdiff
 SynMenu WXYZ.Whitespace\ (add):whitespace
 SynMenu WXYZ.WinBatch/Webbatch:winbatch
 SynMenu WXYZ.Windows\ Scripting\ Host:wsh
+SynMenu WXYZ.X\ Keyboard\ Extension:xkb
 SynMenu WXYZ.X\ Pixmap:xpm
 SynMenu WXYZ.X\ Pixmap\ (2):xpm2
 SynMenu WXYZ.X\ resources:xdefaults

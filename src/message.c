@@ -75,6 +75,7 @@ static int msg_hist_off = FALSE;	/* don't add messages to history */
  *		    Set: When the ruler or typeahead display is overwritten,
  *		    scrolling the screen for some message.
  * keep_msg	    Message to be displayed after redrawing the screen.
+ *		    This is an allocated string or NULL when not used.
  */
 
 /*
@@ -774,7 +775,7 @@ wait_return(redraw)
 	 * Avoid that the mouse-up event causes visual mode to start.
 	 */
 	if (c == K_LEFTMOUSE || c == K_MIDDLEMOUSE || c == K_RIGHTMOUSE)
-	    (void)jump_to_mouse(MOUSE_SETPOS, NULL);
+	    (void)jump_to_mouse(MOUSE_SETPOS, NULL, 0);
 	else
 #endif
 	    if (vim_strchr((char_u *)"\r\n ", c) == NULL)
@@ -826,7 +827,10 @@ wait_return(redraw)
     reset_last_sourcing();
     if (keep_msg != NULL && vim_strsize(keep_msg) >=
 				  (Rows - cmdline_row - 1) * Columns + sc_col)
+    {
+	vim_free(keep_msg);
 	keep_msg = NULL;	    /* don't redisplay message, it's too long */
+    }
 
     if (tmpState == SETWSIZE)	    /* got resize event while in vgetc() */
     {
@@ -862,6 +866,20 @@ hit_return_msg()
 }
 
 /*
+ * Set "keep_msg" to "s".  Free the old value and check for NULL pointer.
+ */
+    void
+set_keep_msg(s)
+    char_u	*s;
+{
+    vim_free(keep_msg);
+    if (s != NULL)
+	keep_msg = vim_strsave(s);
+    else
+	keep_msg = NULL;
+}
+
+/*
  * Prepare for outputting characters in the command line.
  */
     void
@@ -869,6 +887,7 @@ msg_start()
 {
     int		did_return = FALSE;
 
+    vim_free(keep_msg);
     keep_msg = NULL;			/* don't display old message now */
     if (!msg_scroll && full_screen)	/* overwrite last message */
     {
@@ -1274,6 +1293,7 @@ msg_prt_line(s)
 #ifdef FEAT_MBYTE
 	else if (has_mbyte && (l = (*mb_ptr2len_check)(s)) > 1)
 	{
+	    col += (*mb_ptr2cells)(s);
 	    s = screen_puts_mbyte(s, l, attr);
 	    continue;
 	}
@@ -1763,6 +1783,84 @@ msg_use_printf()
 	       );
 }
 
+#if defined(USE_MCH_ERRMSG) || defined(PROTO)
+
+#ifdef mch_errmsg
+# undef mch_errmsg
+#endif
+#ifdef mch_msg
+# undef mch_msg
+#endif
+
+/*
+ * collect error messages until the GUI has started and they can be
+ * displayed in a message box.
+ */
+    void
+mch_errmsg(str)
+    char	*str;
+{
+    int		len;
+
+#ifdef UNIX
+    /* On Unix use stderr if it's a tty. */
+    if (isatty(2))
+    {
+	fprintf(stderr, "%s", str);
+	return;
+    }
+#endif
+
+    /* avoid a delay for a message that isn't there */
+    emsg_on_display = FALSE;
+
+    len = STRLEN(str) + 1;
+    if (error_ga.ga_growsize == 0)
+    {
+	error_ga.ga_growsize = 80;
+	error_ga.ga_itemsize = 1;
+    }
+    if (ga_grow(&error_ga, len) == OK)
+    {
+	mch_memmove((char_u *)error_ga.ga_data + error_ga.ga_len,
+							  (char_u *)str, len);
+#ifdef UNIX
+	/* remove CR characters, they are displayed */
+	{
+	    char_u	*p;
+
+	    p = (char_u *)error_ga.ga_data + error_ga.ga_len;
+	    for (;;)
+	    {
+		p = vim_strchr(p, '\r');
+		if (p == NULL)
+		    break;
+		*p = ' ';
+	    }
+	}
+#endif
+	--len;		/* don't count the NUL at the end */
+	error_ga.ga_len += len;
+	error_ga.ga_room -= len;
+    }
+}
+
+    void
+mch_msg(str)
+    char	*str;
+{
+#ifdef UNIX
+    /* On Unix use stdout if it's a tty. */
+    if (isatty(1))
+    {
+	printf("%s", str);
+	return;
+    }
+#endif
+    mch_errmsg(str);
+}
+#endif /* USE_MCH_ERRMSG */
+
     static void
 msg_screen_putchar(c, attr)
     int	    c;
@@ -1984,13 +2082,14 @@ give_warning(message, hl)
 #ifdef VIMBUDDY
     VimBuddyText(message, 1);
 #else
+    vim_free(keep_msg);
     keep_msg = NULL;
     if (hl)
 	keep_msg_attr = hl_attr(HLF_W);
     else
 	keep_msg_attr = 0;
     if (msg_attr(message, keep_msg_attr) && msg_scrolled == 0)
-	keep_msg = message;
+	set_keep_msg(message);
     msg_didout = FALSE;	    /* overwrite this message */
     msg_nowait = TRUE;	    /* don't wait for this message */
     msg_col = 0;

@@ -1856,7 +1856,7 @@ line_read_in:
 #ifdef FEAT_TAG_BINS
 	if (sort_error)
 	{
-	    EMSG2(_("Tags file not sorted: %s"), tag_fname);
+	    EMSG2(_("(et2) Tags file not sorted: %s"), tag_fname);
 	    sort_error = FALSE;
 	}
 #endif

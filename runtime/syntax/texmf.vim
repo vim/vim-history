@@ -1,58 +1,91 @@
 " Vim syntax file
 " Language: Web2C TeX texmf.cnf configuration file
-" Maintainer: David Necas (Yeti) <yeti@physics.muni.cz>
-" Last Change: 2001 Apr 20
-" URL: http://physics.muni.cz/~yeti/download/texmf.vim
-"
-" Remove any old syntax stuff hanging around
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
-  finish
+" Maintainer: David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>
+" Last Change: 2001-04-26
+" URI: http://physics.muni.cz/~yeti/download/texmf.vim
+" TODO: add `display' where appropriate
+
+" Setup {{{
+" React to possibly already-defined syntax.
+" For version 5.x: Clear all syntax items unconditionally
+" For version 6.x: Quit when a syntax file was already loaded
+if version >= 600
+  if exists("b:current_syntax")
+    finish
+  endif
+else
+  syntax clear
 endif
 
 syn case match
-setlocal iskeyword=a-z,A-Z,48-57,-,_
-
+" }}}
+" Comments {{{
 syn match texmfComment "%..\+$" contains=texmfTodo
 syn match texmfComment "%\s*$" contains=texmfTodo
+syn keyword texmfTodo TODO FIXME contained
+" }}}
+" Constants and parameters {{{
 syn match texmfPassedParameter "[-+]\=%\w\W"
 syn match texmfPassedParameter "[-+]\=%\w$"
-syn keyword texmfTodo TODO FIXME contained
 syn match texmfNumber "\<\d\+\>"
 syn match texmfVariable "\$\(\w\k*\|{\w\k*}\)"
-syn region texmfString start=+"+ end=+"+ skip=+\\"\\\\+ contains=texmfVariable,texmfSpecial,texmfPassedParameter
 syn match texmfSpecial +\\"\|\\$+
+syn region texmfString start=+"+ end=+"+ skip=+\\"\\\\+ contains=texmfVariable,texmfSpecial,texmfPassedParameter
+" }}}
+" Assignments {{{
 syn match texmfLHSStart "^\s*\w\k*" nextgroup=texmfLHSDot,texmfEquals
 syn match texmfLHSVariable "\w\k*" contained nextgroup=texmfLHSDot,texmfEquals
 syn match texmfLHSDot "\." contained nextgroup=texmfLHSVariable
 syn match texmfEquals "\s*=" contained
-syn region texmfBrace matchgroup=texmfBraceBrace start="{" end="}" contains=ALLBUT,texmfTodo,texmfBraceError,texmfLHSVariable,texmfLHSDot transparent
+" }}}
+" Specialities {{{
 syn match texmfComma "," contained
 syn match texmfColons ":\|;"
 syn match texmfDoubleExclam "!!" contained
+" }}}
+" Catch errors caused by wrong parenthesization {{{
+syn region texmfBrace matchgroup=texmfBraceBrace start="{" end="}" contains=ALLBUT,texmfTodo,texmfBraceError,texmfLHSVariable,texmfLHSDot transparent
 syn match texmfBraceError "}"
+" }}}
+" Define the default highlighting {{{
+" For version 5.7 and earlier: Only when not done already
+" For version 5.8 and later: Only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_texmf_syntax_inits")
+  if version < 508
+    let did_texmf_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-" the default highlighting.
-hi def link texmfComment Comment
-hi def link texmfTodo Todo
-hi def link texmfVariable Identifier
-hi def link texmfNumber Number
-hi def link texmfString String
-hi def link texmfLHSStart texmfLHS
-hi def link texmfLHSVariable texmfLHS
-hi def link texmfLHSDot texmfLHS
-hi def link texmfLHS Type
-hi def link texmfEquals Normal
-hi def link texmfBraceBrace texmfDelimiter
-hi def link texmfComma texmfDelimiter
-hi def link texmfColons texmfDelimiter
-hi def link texmfDelimiter Preproc
-hi def link texmfDoubleExclam Statement
-hi def link texmfPassedParameter texmfVariable
-hi def link texmfSpecial Special
-hi def link texmfBraceError texmfError
-hi def link texmfError Error
+  HiLink texmfComment         Comment
+  HiLink texmfTodo            Todo
 
+  HiLink texmfPassedParameter texmfVariable
+  HiLink texmfVariable        Identifier
+
+  HiLink texmfNumber          Number
+  HiLink texmfString          String
+
+  HiLink texmfLHSStart        texmfLHS
+  HiLink texmfLHSVariable     texmfLHS
+  HiLink texmfLHSDot          texmfLHS
+  HiLink texmfLHS             Type
+
+  HiLink texmfEquals          Normal
+
+  HiLink texmfBraceBrace      texmfDelimiter
+  HiLink texmfComma           texmfDelimiter
+  HiLink texmfColons          texmfDelimiter
+  HiLink texmfDelimiter       Preproc
+
+  HiLink texmfDoubleExclam    Statement
+  HiLink texmfSpecial         Special
+
+  HiLink texmfBraceError      texmfError
+  HiLink texmfError           Error
+
+  delcommand HiLink
+endif
+" }}}
 let b:current_syntax = "texmf"
-
-" vim: ts=8

@@ -885,14 +885,16 @@ selection_received_event(GtkWidget * widget, GtkSelectionData * data)
 
 	count = gdk_text_property_to_text_list(data->type, data->format,
 					     data->data, data->length, &list);
-	len = 0;
-	for (i = 0; i < count; i++)
-	    g_string_append(str, list[i]);
+	if (count > 0)
+	{
+	    for (i = 0; i < count; i++)
+		g_string_append(str, list[i]);
+	    gdk_free_text_list(list);
+	}
 
 	p = (char_u *)str->str;
 	len = str->len;
 	g_string_free(str, FALSE);
-	gdk_free_text_list(list);
 	free_p = TRUE;
     }
     else
@@ -1736,19 +1738,13 @@ gui_mch_init()
 
 #ifdef FEAT_TOOLBAR
     /* create the toolbar */
-    if (p_toolbar)
-    {
-	if (strstr((const char *)p_toolbar, "text")
-		&& strstr((const char *)p_toolbar, "icons"))
-	    gui.toolbar =
-		gtk_toolbar_new(GTK_ORIENTATION_HORIZONTAL, GTK_TOOLBAR_BOTH);
-	else if (strstr((const char *)p_toolbar, "text"))
-	    gui.toolbar =
-		gtk_toolbar_new(GTK_ORIENTATION_HORIZONTAL, GTK_TOOLBAR_TEXT);
-	else
-	    gui.toolbar =
-		gtk_toolbar_new(GTK_ORIENTATION_HORIZONTAL, GTK_TOOLBAR_ICONS);
-    }
+    if (strstr((const char *)p_toolbar, "text")
+	    && strstr((const char *)p_toolbar, "icons"))
+	gui.toolbar =
+	    gtk_toolbar_new(GTK_ORIENTATION_HORIZONTAL, GTK_TOOLBAR_BOTH);
+    else if (strstr((const char *)p_toolbar, "text"))
+	gui.toolbar =
+	    gtk_toolbar_new(GTK_ORIENTATION_HORIZONTAL, GTK_TOOLBAR_TEXT);
     else
 	gui.toolbar =
 	    gtk_toolbar_new(GTK_ORIENTATION_HORIZONTAL, GTK_TOOLBAR_ICONS);
@@ -2217,7 +2213,6 @@ gui_mch_show_toolbar(int showit)
     }
     else
     {
-	g_assert(p_toolbar != NULL);
 	if (strstr((const char *)p_toolbar, "text")
 		&& strstr((const char *)p_toolbar, "icons"))
 	    gtk_toolbar_set_style(GTK_TOOLBAR(gui.toolbar), GTK_TOOLBAR_BOTH);

@@ -58,8 +58,10 @@ static void scroll_cb __ARGS((Widget w, XtPointer client_data, XtPointer call_da
 #ifdef FEAT_TOOLBAR
 static void toolbar_enter_cb __ARGS((Widget, XtPointer, XEvent *, Boolean *));
 static void toolbar_leave_cb __ARGS((Widget, XtPointer, XEvent *, Boolean *));
+# ifdef FEAT_FOOTER
 static void toolbarbutton_enter_cb __ARGS((Widget, XtPointer, XEvent *, Boolean *));
 static void toolbarbutton_leave_cb __ARGS((Widget, XtPointer, XEvent *, Boolean *));
+# endif
 #endif
 #ifdef FEAT_FOOTER
 static int gui_mch_compute_footer_height __ARGS((void));
@@ -315,7 +317,8 @@ gui_x11_set_back_color()
 #endif
 }
 
-#if defined(FEAT_MENU) || defined(FEAT_SUN_WORKSHOP) || defined(PROTO)
+#if defined(FEAT_MENU) || defined(FEAT_SUN_WORKSHOP) \
+	|| defined(FEAT_GUI_DIALOG) || defined(PROTO)
 /*
  * Encapsulate the way an XmFontList is created.
  */
@@ -342,7 +345,9 @@ gui_motif_create_fontlist(font)
 #endif
     return font_list;
 }
+#endif
 
+#if defined(FEAT_MENU) || defined(PROTO)
 /*
  * Menu stuff.
  */
@@ -799,22 +804,20 @@ gui_mch_add_menu_item(menu, idx)
 		XtAddCallback(menu->id,
 			XmNactivateCallback, gui_x11_menu_cb, menu);
 
+# ifdef FEAT_FOOTER
 		XtAddEventHandler(menu->id, EnterWindowMask, False,
 			toolbarbutton_enter_cb, menu);
 		XtAddEventHandler(menu->id, LeaveWindowMask, False,
 			toolbarbutton_leave_cb, menu);
-#ifdef FEAT_BEVAL
-		if (menu->strings[MENU_INDEX_TIP] && menu->tip == NULL)
-		    menu->tip = gui_mch_create_beval_area(
-					menu->id,
-					menu->strings[MENU_INDEX_TIP],
-					NULL,
-					NULL);
-#endif
+# endif
 	    }
 	}
 	else
 	    XtSetValues(menu->id, args, n);
+
+#ifdef FEAT_BEVAL
+	gui_mch_menu_set_tip(menu);
+#endif
 
 	menu->parent = parent;
 	menu->submenu_id = NULL;
@@ -1483,14 +1486,18 @@ keyhit_callback(w, client_data, event, cont)
     Boolean		*cont;
 {
     char	buf[2];
+    KeySym	key_sym;
 
-    if (XLookupString(&(event->xkey), buf, 2, NULL, NULL) == 1)
+    if (XLookupString(&(event->xkey), buf, 2, &key_sym, NULL) == 1)
     {
 	if (*buf == CR)
 	    dialogStatus = 1;
 	else if (*buf == ESC)
 	    dialogStatus = 2;
     }
+    if ((key_sym == XK_Left || key_sym == XK_Right)
+	    && !(event->xkey.state & ShiftMask))
+	XmTextFieldClearSelection(w, XtLastTimestampProcessed(gui.dpy));
 }
 
 /* ARGSUSED */
@@ -1811,6 +1818,8 @@ gui_mch_show_toolbar(int showit)
 {
     Cardinal	numChildren;	    /* how many children toolBar has */
 
+    if (toolBar == (Widget)0)
+	return;
     XtVaGetValues(toolBar, XmNnumChildren, &numChildren, NULL);
     if (showit && numChildren > 0)
     {
@@ -1921,6 +1930,7 @@ toolbar_leave_cb(w, client_data, event, cont)
     XmProcessTraversal(textArea, XmTRAVERSE_CURRENT);
 }
 
+# ifdef FEAT_FOOTER
 /*
  * The next toolbar enter/leave callbacks should really do balloon help.  But
  * I have to use footer help for backwards compatability.  Hopefully both will
@@ -1938,10 +1948,8 @@ toolbarbutton_enter_cb(w, client_data, event, cont)
 
     if (menu->strings[MENU_INDEX_TIP] != NULL)
     {
-# ifdef FEAT_FOOTER
 	if (vim_strchr(p_go, GO_FOOTER) != NULL)
 	    gui_mch_set_footer(menu->strings[MENU_INDEX_TIP]);
-# endif
     }
 }
 
@@ -1953,10 +1961,9 @@ toolbarbutton_leave_cb(w, client_data, event, cont)
     XEvent	*event;
     Boolean	*cont;
 {
-# ifdef FEAT_FOOTER
     gui_mch_set_footer((char_u *) "");
-# endif
 }
+# endif
 
     void
 gui_mch_get_toolbar_colors(bgp, fgp)

@@ -792,7 +792,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60ac
+VIMRTDIR = /vim60ad
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 INDSUBDIR = /indent

@@ -575,8 +575,8 @@ codepage_invalid:
 				 (char_u *)"ucs-bom,utf-8,latin1", OPT_FREE);
 
 #ifdef HAVE_BIND_TEXTDOMAIN_CODESET
-    /* GNU gettext supports this feature: set the codeset used for translated
-     * messages independently from the current locale. */
+    /* GNU gettext 0.10.37 supports this feature: set the codeset used for
+     * translated messages independently from the current locale. */
     (void)bind_textdomain_codeset(VIMPACKAGE,
 					  enc_utf8 ? "utf-8" : (char *)p_enc);
 #endif

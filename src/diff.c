@@ -47,9 +47,6 @@ static int	diff_invalid = TRUE;	/* list of diffs is outdated */
 
 static int	diff_busy = FALSE;	/* ex_diffgetput() is busy */
 
-/* Values set from 'diffopt'. */
-static int	diff_context = 6;	/* context for folds */
-
 /* flags obtained from the 'diffopt' option */
 #define DIFF_FILLER	1	/* display filler lines */
 #define DIFF_ICASE	2	/* ignore case */
@@ -58,9 +55,13 @@ static int	diff_flags = DIFF_FILLER;
 
 static int diff_buf_idx __ARGS((buf_T *buf));
 static void diff_check_unchanged __ARGS((diff_T *dp));
+static void diff_redraw __ARGS((int dofold));
 static void diff_clear __ARGS((void));
 static int diff_equal_entry __ARGS((diff_T *dp, int idx1, int idx2));
 static int diff_cmp __ARGS((char_u *s1, char_u *s2));
+#ifdef FEAT_FOLDING
+static void diff_fold_update __ARGS((diff_T *dp, int skip_idx));
+#endif
 static void diff_read __ARGS((int idx_orig, int idx_new, char_u *fname));
 static void diff_copy_entry __ARGS((diff_T *dprev, diff_T *dp, int idx_orig, int idx_new));
 static diff_T *diff_alloc_new __ARGS((diff_T *dprev, diff_T *dp));
@@ -394,7 +395,7 @@ diff_mark_adjust(line1, line2, amount, amount_after)
 	}
 
     }
-    diff_redraw();
+    diff_redraw(TRUE);
 }
 
 /*
@@ -496,8 +497,9 @@ diff_check_unchanged(dp)
 /*
  * Mark all diff buffers for redraw.
  */
-    void
-diff_redraw()
+    static void
+diff_redraw(dofold)
+    int		dofold;	    /* also recompute the folds */
 {
     win_T	*wp;
 
@@ -506,7 +508,7 @@ diff_redraw()
 	{
 	    redraw_win_later(wp, NOT_VALID);
 #ifdef FEAT_FOLDING
-	    if (foldmethodIsDiff(wp))
+	    if (dofold && foldmethodIsDiff(wp))
 		foldUpdateAll(wp);
 #endif
 	}
@@ -594,7 +596,7 @@ ex_diffupdate(eap)
     }
     mch_remove(tmp_orig);
 
-    diff_redraw();
+    diff_redraw(TRUE);
 
 theend:
     vim_free(tmp_orig);
@@ -1061,16 +1063,23 @@ diff_check(wp, lnum)
 
     if (lnum < dp->df_lnum[idx] + dp->df_count[idx])
     {
+	int	zero = FALSE;
+
 	/* Changed or inserted line.  If the other buffers have a count of
 	 * zero, the lines were inserted.  If the other buffers have the same
 	 * count, check if the lines are identical. */
 	cmp = FALSE;
 	for (i = 0; i < DB_COUNT; ++i)
-	    if (i != idx && diffbuf[i] != NULL && dp->df_count[i] != 0)
+	    if (i != idx && diffbuf[i] != NULL)
 	    {
-		if (dp->df_count[i] != dp->df_count[idx])
-		    return -1;	    /* nr of lines changed. */
-		cmp = TRUE;
+		if (dp->df_count[i] == 0)
+		    zero = TRUE;
+		else
+		{
+		    if (dp->df_count[i] != dp->df_count[idx])
+			return -1;	    /* nr of lines changed. */
+		    cmp = TRUE;
+		}
 	    }
 	if (cmp)
 	{
@@ -1081,6 +1090,13 @@ diff_check(wp, lnum)
 		    if (!diff_equal_entry(dp, idx, i))
 			return -1;
 	}
+	/* If there is no buffer with zero lines then there is no difference
+	 * any longer.  Happens when making a change (or undo) that removes
+	 * the difference.  Can't remove the entry here, we might be halfway
+	 * updating the window.  Just report the text as unchanged.  Other
+	 * windows might still show the change though. */
+	if (zero == FALSE)
+	    return 0;
 	return -2;
     }
 
@@ -1337,7 +1353,7 @@ diffopt_changed()
     diff_flags = diff_flags_new;
     diff_context = diff_context_new;
 
-    diff_redraw();
+    diff_redraw(TRUE);
 
     /* recompute the scroll binding with the new option value, may
      * remove or add filler lines */
@@ -1448,9 +1464,9 @@ diff_infold(wp, lnum)
     if (diff_invalid)
 	ex_diffupdate(NULL);		/* update after a big change */
 
-    /* Return if there are no diff blocks. */
+    /* Return if there are no diff blocks.  All lines will be folded. */
     if (first_diff == NULL)
-	return FALSE;
+	return TRUE;
 
     for (dp = first_diff; dp != NULL; dp = dp->df_next)
     {
@@ -1486,7 +1502,6 @@ ex_diffgetput(eap)
     int		i;
     int		added;
     char_u	*p;
-    win_T	*wp;
     aco_save_T	aco;
     buf_T	*buf;
 
@@ -1612,17 +1627,26 @@ ex_diffgetput(eap)
 
 	    /* Adjust marks.  This will change the following entries! */
 	    if (added != 0)
+	    {
 		mark_adjust(lnum, lnum + count, (long)MAXLNUM, (long)added);
+		if (curwin->w_cursor.lnum >= lnum)
+		{
+		    /* Adjust the cursor position if it's in/after the changed
+		     * lines. */
+		    if (curwin->w_cursor.lnum >= lnum + count)
+			curwin->w_cursor.lnum += added;
+		    else if (added < 0)
+			curwin->w_cursor.lnum = lnum;
+		}
+	    }
 	    changed_lines(lnum, 0, lnum + count, (long)added);
 
 	    if (dfree != NULL)
 	    {
 		/* Diff is deleted, update folds in other windows. */
-		for (wp = firstwin; wp != NULL; wp = wp->w_next)
-		    for (i = 0; i < DB_COUNT; ++i)
-			if (diffbuf[i] == wp->w_buffer && i != idx_to)
-			    foldUpdate(wp, dfree->df_lnum[i],
-				      dfree->df_lnum[i] + dfree->df_count[i]);
+#ifdef FEAT_FOLDING
+		diff_fold_update(dfree, idx_to);
+#endif
 		vim_free(dfree);
 	    }
 	    else
@@ -1648,9 +1672,36 @@ ex_diffgetput(eap)
 
     diff_busy = FALSE;
 
-    /* Also need to redraw the "from" buffer. */
-    redraw_buf_later(diffbuf[idx_from], NOT_VALID);
+    /* Check that the cursor is on a valid character and update it's position.
+     * When there were filler lines the topline has become invalid. */
+    check_cursor();
+    changed_line_abv_curs();
+
+    /* Also need to redraw the other buffers. */
+    diff_redraw(FALSE);
 }
+
+#ifdef FEAT_FOLDING
+/*
+ * Update folds for all diff buffers for entry "dp".
+ * Skip buffer with index "skip_idx".
+ * When there are no diffs, all folds are removed.
+ */
+    static void
+diff_fold_update(dp, skip_idx)
+    diff_T	*dp;
+    int		skip_idx;
+{
+    int		i;
+    win_T	*wp;
+
+    for (wp = firstwin; wp != NULL; wp = wp->w_next)
+	for (i = 0; i < DB_COUNT; ++i)
+	    if (diffbuf[i] == wp->w_buffer && i != skip_idx)
+		foldUpdate(wp, dp->df_lnum[i],
+					    dp->df_lnum[i] + dp->df_count[i]);
+}
+#endif
 
 /*
  * Return TRUE if buffer "buf" is in diff-mode.

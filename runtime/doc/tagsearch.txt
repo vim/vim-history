@@ -1,4 +1,4 @@
-*tagsearch.txt* For Vim version 6.0ac.  Last change: 2001 Jan 30
+*tagsearch.txt* For Vim version 6.0ad.  Last change: 2001 Apr 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -158,7 +158,10 @@ commands explained above the tag stack will look like this:
    # TO tag	FROM line in file
    1 main	       1  harddisk2:text/vim/test
    2 FuncB	      59  harddisk2:text/vim/src/main.c
- >
+
+ 							*et1*
+When you try to use the tag stack while it doesn't contain anything you will
+get an error message.
 
 ==============================================================================
 3. Tag match list					*tag-matchlist*

@@ -1,13 +1,14 @@
 " Vim syntax file
 " Language:	SGML-linuxdoc (supported by old sgmltools-1.x)
 "		(for more information, visit www.sgmltools.org)
-" Maintainer:	Sung-Hyun Nam <namsh@kldp.org>
-"		If you want to enhance and maintain, You can remove my name
-"		and insert yours.
-" Last Change:	2001 Jan 15
+" Maintainer:	Nam SungHyun <namsh@kldp.org>
+" Last Change:	2001 Apr 26
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -35,20 +36,33 @@ syn match   sgmllnxTagName contained "sect\d\+"
 syn region sgmllnxComment start=+<!--+ end=+-->+
 syn region sgmllnxDocType start=+<!doctype+ end=+>+
 
-" The default highlighting.
-hi def link sgmllnxTag2		Function
-hi def link sgmllnxTagN2	Function
-hi def link sgmllnxTag		Special
-hi def link sgmllnxEndTag	Special
-hi def link sgmllnxParen	Special
-hi def link sgmllnxEntity	Type
-hi def link sgmllnxDocEnt	Type
-hi def link sgmllnxTagName	Statement
-hi def link sgmllnxComment	Comment
-hi def link sgmllnxSpecial	Special
-hi def link sgmllnxDocType	PreProc
-hi def link sgmllnxTagError	Error
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_sgmllnx_syn_inits")
+  if version < 508
+    let did_sgmllnx_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink sgmllnxTag2	    Function
+  HiLink sgmllnxTagN2	    Function
+  HiLink sgmllnxTag	    Special
+  HiLink sgmllnxEndTag	    Special
+  HiLink sgmllnxParen	    Special
+  HiLink sgmllnxEntity	    Type
+  HiLink sgmllnxDocEnt	    Type
+  HiLink sgmllnxTagName	    Statement
+  HiLink sgmllnxComment	    Comment
+  HiLink sgmllnxSpecial	    Special
+  HiLink sgmllnxDocType	    PreProc
+  HiLink sgmllnxTagError    Error
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "sgmllnx"
 
-" vim:set tw=78 ts=8 sts=8 sw=8 noet com=nb\:":
+" vim:set tw=78 ts=8 sts=2 sw=2 noet:

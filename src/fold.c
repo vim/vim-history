@@ -1928,6 +1928,18 @@ foldUpdateIEMS(wp, top, bot)
 	setSmallMaybe(&wp->w_folds);
     }
 
+#ifdef FEAT_DIFF
+    /* add the context for "diff" folding */
+    if (foldmethodIsDiff(wp))
+    {
+	if (top > diff_context)
+	    top -= diff_context;
+	else
+	    top = 1;
+	bot += diff_context;
+    }
+#endif
+
     /* When deleting lines at the end of the buffer "top" can be past the end
      * of the buffer. */
     if (top > wp->w_buffer->b_ml.ml_line_count)

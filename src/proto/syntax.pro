@@ -13,6 +13,7 @@ char_u *get_syntax_name __ARGS((expand_T *xp, int idx));
 int syn_get_id __ARGS((long lnum, long col, int trans));
 int syn_get_foldlevel __ARGS((win_T *wp, long lnum));
 void init_highlight __ARGS((int both));
+int load_colors __ARGS((char_u *p));
 void do_highlight __ARGS((char_u *line, int forceit, int init));
 void set_normal_colors __ARGS((void));
 char_u *hl_get_font_name __ARGS((void));

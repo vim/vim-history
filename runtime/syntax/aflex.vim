@@ -1,20 +1,27 @@
 " Vim syntax file
 " Language:	AfLex (from Lex syntax file)
 " Maintainer:	Mathieu Clabaut <mathieu.clabaut@free.fr>
-" Last change:	03 Jul 2000
+" LastChange:	25 Apr 2001 
 " Original:	Lex, maintained by Dr. Charles E. Campbell, Jr.
 "				<Charles.Campbell@gsfc.nasa.gov>
 " Comment:          Replaced sourcing c.vim file by ada.vim and rename lex*
 "		in aflex*
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
-  finish
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+   syntax clear
+elseif exists("b:current_syntax")
+   finish
 endif
 
 " Read the Ada syntax to start with
-runtime! syntax/ada.vim
-unlet b:current_syntax
+if version < 600
+  so <sfile>:p:h/ada.vim
+else
+  runtime! syntax/ada.vim
+  unlet b:current_syntax
+endif
 
 " --- AfLex stuff ---
 
@@ -60,19 +67,32 @@ syn sync match aflexSyncPat	grouphere  aflexPatBlock	"^%[a-zA-Z]"
 syn sync match aflexSyncPat	groupthere aflexPatBlock	"^<$"
 syn sync match aflexSyncPat	groupthere aflexPatBlock	"^%%$"
 
-" The default highlighting.
-hi def link aflexSlashQuote	aflexPat
-hi def link aflexBrace	aflexPat
-hi def link aflexAbbrvComment	aflexPatComment
-hi def link aflexAbbrv	SpecialChar
-hi def link aflexAbbrvRegExp	Macro
-hi def link aflexCFunctions	Function
-hi def link aflexMorePat	SpecialChar
-hi def link aflexPat	Function
-hi def link aflexPatComment	Comment
-hi def link aflexPatString	Function
-hi def link aflexPatTag	Special
-hi def link aflexSep	Delimiter
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+
+if version >= 508 || !exists("did_aflex_syntax_inits")
+   if version < 508
+      let did_aflex_syntax_inits = 1
+      command -nargs=+ HiLink hi link <args>
+   else
+      command -nargs=+ HiLink hi def link <args>
+   endif
+  HiLink	aflexSlashQuote	aflexPat
+  HiLink	aflexBrace		aflexPat
+  HiLink aflexAbbrvComment	aflexPatComment
+
+  HiLink	aflexAbbrv		SpecialChar
+  HiLink	aflexAbbrvRegExp	Macro
+  HiLink	aflexCFunctions	Function
+  HiLink	aflexMorePat	SpecialChar
+  HiLink	aflexPat		Function
+  HiLink	aflexPatComment	Comment
+  HiLink	aflexPatString	Function
+  HiLink	aflexPatTag		Special
+  HiLink	aflexSep		Delimiter
+  delcommand HiLink
+endif
 
 let b:current_syntax = "aflex"
 

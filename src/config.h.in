@@ -198,6 +198,7 @@
 #undef HAVE_STRINGS_H
 #undef HAVE_STROPTS_H
 #undef HAVE_SYS_ACL_H
+#undef HAVE_SYS_ACCESS_H
 #undef HAVE_SYS_DIR_H
 #undef HAVE_SYS_IOCTL_H
 #undef HAVE_SYS_NDIR_H
@@ -271,7 +272,9 @@
 #undef FEAT_SNIFF
 
 /* Define if you want to add support for ACL */
-#undef HAVE_ACL
+#undef HAVE_POSIX_ACL
+#undef HAVE_SOLARIS_ACL
+#undef HAVE_AIX_ACL
 
 /* Define if you want to add support of GPM (Linux console mouse daemon) */
 #undef HAVE_GPM

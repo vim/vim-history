@@ -1,6 +1,6 @@
 " Menu Translations:	Japanese (for Windows)
 " Translated By: 	Muraoka Taro  <koron@tka.att.ne.jp>
-" Last Change:		19:29:17 18-Apr-2001.
+" Last Change:		2001 apr 26
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -161,8 +161,8 @@ menutrans Select\ &Line		行選択(&L)
 menutrans Select\ &Block	ブロック選択
 menutrans Select\ &All		すべて選択
  
-" The GUI toolbar (for Win32 or GTK)
-if has("win32") || has("gui_gtk")
+" The GUI toolbar
+if has("toolbar")
   if exists("*Do_toolbar_tmenu")
     delfun Do_toolbar_tmenu
   endif

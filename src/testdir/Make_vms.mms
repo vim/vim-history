@@ -4,9 +4,14 @@
 # Authors:	Zoltan Arpadffy, <arpadffy@altavista.net>
 #		Sandor Kopanyi,  <sandor.kopanyi@altavista.net>
 #
-#	Execute with:
+# Last change:  2001 Apr 26
+#
+# This has been tested on VMS 6.2 to 7.2 on DEC Alpha and VAX.
+# Edit the lines in the Configuration section below to select.
+#
+# Execute with:
 #		mms/descrip=Make_vms.mms
-#				or
+#			   or
 #		mmk/descrip=Make_vms.mms
 #
 # NOTE: You can run this script just in X/Window environment. It will
@@ -31,15 +36,15 @@
 #######################################################################
 # End of configuration section.
 #
-# Please, do not change anything below without OpenVMS experience.
+# Please, do not change anything below without programming experience.
 #######################################################################
 
 VIMPROG = create/term/wait mc <->vim.exe
 
 .SUFFIXES : .out .in
 
-SCRIPT = test1.out test2.out test3.out test4.out test5.out \
-	 test6.out test7.out test8.out test9.out test10.out \
+SCRIPT = test1.out  test2.out  test3.out  test4.out  test5.out  \
+	 test6.out  test7.out  test8.out  test9.out  test10a.out\
 	 test13.out test14.out test15.out test17.out \
 	 test18.out test19.out test20.out test21.out test22.out \
 	 test23.out test24.out test26.out \
@@ -54,7 +59,7 @@ GUI_OPTION = -g
 .ENDIF
 
 .IFDEF WANT_UNIX
-SCRIPT_UNIX = test12.out test25.out test27.out test30.out
+SCRIPT_UNIX = test10.out test12.out test25.out test27.out test30.out
 .ENDIF
 
 .IFDEF HAVE_GZIP
@@ -67,9 +72,9 @@ SCRIPT_GZIP = test11.out
 	-@ write sys$output "                "$*" "
 	-@ write sys$output "-----------------------------------------------"
 	-@ $(VIMPROG) $(GUI_OPTION) -u vms.vim --noplugin -s dotest.in $*.in
-	-@ differences test.out $*.ok;
-	-@ rename test.out $*.out
-	-@ if "''F$SEARCH("Xdotest.*")'" .NES. "" then delete/noconfirm/nolog Xdotest.*.*
+	-@ if "''F$SEARCH("test.out.*")'" .NES. "" then differences test.out $*.ok;
+	-@ if "''F$SEARCH("test.out.*")'" .NES. "" then rename test.out $*.out
+	-@ if "''F$SEARCH("Xdotest.*")'"  .NES. "" then delete/noconfirm/nolog Xdotest.*.*
 
 all : clean nolog $(SCRIPT) $(SCRIPT_GUI) $(SCRIPT_UNIX) $(SCRIPT_GZIP)
 	-@ write sys$output " "
@@ -95,7 +100,7 @@ nolog :
 	-@ type VMS.VIM
 
 clean :
-	-@ if "''F$SEARCH("*.out")'" .NES. ""  then delete/noconfirm/nolog *.out.*
-	-@ if "''F$SEARCH("test.log")'" .NES. "" then delete/noconfirm/nolog test.log.*
+	-@ if "''F$SEARCH("*.out")'"     .NES. "" then delete/noconfirm/nolog *.out.*
+	-@ if "''F$SEARCH("test.log")'"  .NES. "" then delete/noconfirm/nolog test.log.*
 	-@ if "''F$SEARCH("Xdotest.*")'" .NES. "" then delete/noconfirm/nolog Xdotest.*.*
-	-@ if "''F$SEARCH("*.*_sw*")'" .NES. "" then delete/noconfirm/nolog *.*_sw*.*
+	-@ if "''F$SEARCH("*.*_sw*")'"   .NES. "" then delete/noconfirm/nolog *.*_sw*.*
