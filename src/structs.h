@@ -623,7 +623,7 @@ struct file_buffer
     int		b_p_ai;		/* 'autoindent' */
     int		b_p_ai_nopaste;	/* b_p_ai saved for paste mode */
     int		b_p_bin;	/* 'binary' */
-#ifdef FEAT_QUICKFIX
+#if defined(FEAT_QUICKFIX)
     char_u	*b_p_bt;	/* 'buftype' */
 #endif
 #ifdef FEAT_CINDENT

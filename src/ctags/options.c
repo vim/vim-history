@@ -1400,10 +1400,6 @@ static void printProgramIdentification()
     printfFeatureList();
 }
 
-#ifdef AMIGA
-const char *VERsion = "$VER: "PROGRAM_NAME" "PROGRAM_VERSION" "__AMIGADATE__" "AUTHOR_NAME" $";
-#endif
-
 static void printInvocationDescription()
 {
     printf(INVOCATION, getExecutableName());
@@ -1734,6 +1730,9 @@ static void processShortOption( option, parameter )
 	    break;
 	case 'V':
 	    Option.verbose = TRUE;
+	    break;
+	case 'w':
+	    /* silently ignored */
 	    break;
 	case 'x':
 	    checkOptionOrder(option);

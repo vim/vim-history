@@ -38,7 +38,7 @@ PERLLIBS=$(PERLLIB)/core
 
 # See feature.h for a list of options.
 # Any other defines can be included here.
-DEF_GUI=-DFEAT_GUI_W32 -DUSE_CLIPBOARD -DFEAT_BIG
+DEF_GUI=-DFEAT_GUI_W32 -DFEAT_CLIPBOARD -DFEAT_BIG
 DEF_MIN=-DFEAT_SMALL
 DEFINES=-DWIN32 -DPC
 CC = gcc
@@ -50,7 +50,7 @@ CFLAGS = -Iproto $(DEFINES) -pipe -malign-double -mwide-multiply
 CFLAGS += -march=$(ARCH) -mcpu=$(CPU) -Wall
 
 ifdef PERL
-CFLAGS += -I$(PERLLIBS) -DHAVE_PERL_INTERP -L$(PERLLIBS)
+CFLAGS += -I$(PERLLIBS) -DFEAT_PERL -L$(PERLLIBS)
 endif
 
 ifeq ($(DEBUG),1)

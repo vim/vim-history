@@ -35,32 +35,28 @@ DECC = YES
 CC      = cc
 
 .IFDEF DECC
-CC_DEF  = $(CC)/decc
-PREFIX  = /prefix=all
+CC_DEF  = $(CC)/decc/prefix=all
+EXTRA_OBJS =
 .ELSE
 CC_DEF  = $(CC)
-PREFIX  =
+EXTRA_OBJS = argproc.obj
 .ENDIF
 
 LD_DEF  = link
 
 .IFDEF DEBUG
 TARGET  = dctags.exe
-CFLAGS  = /debug/noopt$(PREFIX)/cross_reference/include=[]
+CFLAGS  = /debug/noopt/cross_reference/include=[]
 LDFLAGS = /debug
 .ELSE
 TARGET  = ctags.exe
-CFLAGS  = /opt$(PREFIX)/include=[]
+CFLAGS  = /opt/include=[]
 LDFLAGS =
 .ENDIF
 
 .SUFFIXES : .obj .c
 
-OBJS = \
-	args.obj asm.obj awk.obj eiffel.obj beta.obj c.obj cobol.obj \
-	entry.obj fortran.obj get.obj keyword.obj lisp.obj main.obj \
-	options.obj parse.obj perl.obj python.obj read.obj scheme.obj \
-	sh.obj sort.obj strlist.obj tcl.obj vim.obj vstring.obj
+.INCLUDE source.mak
 
 all : $(TARGET)
         ! $@
@@ -68,7 +64,7 @@ all : $(TARGET)
 .obj.c :  
         $(CC_DEF) $(CFLAGS) $<
 
-$(TARGET) :  $(OBJS) 
+$(TARGET) :  $(OBJS) $(EXTRA_OBJS)
         $(LD_DEF) $(LDFLAGS) /exe=$(TARGET) $+
 
 clean :

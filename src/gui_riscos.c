@@ -3132,7 +3132,7 @@ ro_build_menu(menu)
     /* Find out how big the menu is so we can allocate memory for it */
     for (item = menu-> children; item; item = item-> next)
     {
-	if (item-> hidden == FALSE && !is_menu_separator(item->name))
+	if (item-> hidden == FALSE && !menu_is_separator(item->name))
 	    size += 24;
     }
 
@@ -3152,7 +3152,7 @@ ro_build_menu(menu)
 
     for (item = menu-> children; item; item = item-> next)
     {
-	if (is_menu_separator(item-> name))
+	if (menu_is_separator(item-> name))
 	{
 	    /* This menu entry is actually a separator. If it is not the first
 	     * menu entry then mark the previous menu item as needing a dotted

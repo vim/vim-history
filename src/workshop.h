@@ -18,14 +18,7 @@
 #include "integration.h" /* was "EditPlugin/integration.h" */
 
 #ifdef WSDEBUG
-#  ifndef DEBUG
-#    define DOUNDEFDEBUG
-#    define DEBUG
-#  endif
-#  ifdef DOUNDEFDEBUG
-#    undef DEBUG
-#    undef DOUNDEFDEBUG
-#  endif
+# include "wsdebug.h"
 #endif
 
 extern int	usingSunWorkShop;	/* set if -ws flag is used */
@@ -49,8 +42,8 @@ extern int	usingSunWorkShop;	/* set if -ws flag is used */
 
 #define WSDLEVEL(flags)		(debug != NULL && (dlevel & (flags)))
 
-#if defined(USE_WDDUMP)
-#include "/set/extend/extend2/workshop/gordonp/grp/include/WDump/wdump.h"
+#ifdef USE_WDDUMP
+#include "wdump.h"
 #endif
 
 #else

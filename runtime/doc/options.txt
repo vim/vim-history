@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0e.  Last change: 2000 Aug 04
+*options.txt*   For Vim version 6.0f.  Last change: 2000 Aug 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -29,7 +29,7 @@ achieve special effects.  These options come in three forms:
 
 :se[t] termcap		Show all terminal options.  Note that in the GUI the
 			key codes are not shown, because they are generated
-			interally and can't be changed.  Changing the terminal
+			internally and can't be changed.  Changing the terminal
 			codes in the GUI is not useful either...
 
 :se[t] {option}?	Show value of {option}.
@@ -231,6 +231,17 @@ Command		set global value    set local value ~
 :setlocal	     no			yes
 :setglobal	     yes		perhaps
 
+
+:setf[iletype] {filetype}			*:setf* *:setfiletype*
+			Set the 'filetype' option to {filetype}, but only if
+			not done yet.  This is short for: >
+				:if !did_filetype()
+				:  setlocal filetype={filetype}
+				:endif
+<			This command is used in a filetype.vim file to avoid
+			setting the 'filetype' option twice, causing different
+			settings and syntax files to be loaded.
+			{not in Vi}
 
 :bro[wse] se[t]			*:set-browse* *:browse-set* *:opt* *:options*
 :opt[ions]		Open a window for viewing and setting all options.
@@ -644,9 +655,9 @@ A jump table for the options with a short description can be found at |X_op|.
 'autowrite' 'aw'	boolean	(default off)
 			global
 	Write the contents of the file, if it has been modified, on each
-	:next, :rewind, :previous, :stop, :suspend, :tag, :!, :make, CTRL-]
-	and CTRL-^ command; and when a CTRL-O, CTRL-I, '{A-Z0-9}, or `{A-Z0-9}
-	command takes one to another file.
+	:next, :rewind, :last, :first, :previous, :stop, :suspend, :tag, :!,
+	:make, CTRL-] and CTRL-^ command; and when a CTRL-O, CTRL-I,
+	'{A-Z0-9}, or `{A-Z0-9} command takes one to another file.
 
 							*'background'* *'bg'*
 'background' 'bg'	string	(default "dark" or "light")
@@ -844,8 +855,20 @@ A jump table for the options with a short description can be found at |X_op|.
 	When this option is set, the buffer is handled in a special way.
 	These values are allowed:
 	  ""		normal buffer
+	  "nofile"  	buffer without file contact.
 	  "quickfix"	quickfix buffer, contains list of errors. |:cwindow|
 	Be careful with changing this option, it can have many side effects!
+
+	Setting 'buftype' to "nofile" has the following consequences:
+	- The buffer will never be written to disk (Vim knows no associated
+	  file).
+	- The buffer name shown in the status line is no longer modified in
+	  response to a :cd (see |:cd|) command (it freezes like it was before
+	  setting the option).
+	- The swapfile option is set to off (see |'swapfile'|) and cannot be
+	  enabled.
+	- The buffer behaves as though |'hidden'| were enabled.
+
 
 						*'cdpath'* *'cd'*
 'cdpath' 'cd'		string	(default: equivalent to $CDPATH or ",,")
@@ -931,7 +954,7 @@ A jump table for the options with a short description can be found at |X_op|.
 			{not in Vi}
 	An expression that is used for character encoding conversion.  It is
 	evaluated when a file that is to be read or has been written has a
-	different encoding thatn what is desired.
+	different encoding from what is desired.
 	The expression must return zero or an empty string for success,
 	non-zero for failure.
 	The possible charcode names encountered are in 'charcode'.
@@ -1017,7 +1040,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	unnamed		When included, Vim will use the clipboard register '*'
 			for all yank, delete and put operations which would
 			normally go to the unnamed register.  When a register
-			is explictly specified, it will always be used
+			is explicitly specified, it will always be used
 			regardless of whether "unnamed" is in 'clipboard' or
 			not.  The clipboard register can always be explicitly
 			accessed using the "* notation.  Also see
@@ -1225,7 +1248,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	NOTE: This option is set to the Vi default value when 'compatible' is
 	set and to the Vim default value when 'compatible' is reset.
 
-	    contains	behaviour	~
+	    contains	behavior	~
 		a	When included, a ":read" command with a file name
 			argument will set the alternate file name for the
 			current window.
@@ -1313,7 +1336,7 @@ A jump table for the options with a short description can be found at |X_op|.
 			next search.
 		O	Don't complain if a file is being overwritten, even
 			when it didn't exist when editing it.  This is a
-			protection agains a file unexpectedly created by
+			protection against a file unexpectedly created by
 			someone else.  Vi didn't complain about this.
 		p	Vi compatible Lisp indenting.  When not present, a
 			slightly better algorithm is used.
@@ -1982,8 +2005,10 @@ A jump table for the options with a short description can be found at |X_op|.
 	line.  The placeholder "$*" is allowed to specify where the arguments
 	will be included.  Environment variables are expanded |:set_env|.  See
 	|option-backslash| about including spaces and backslashes.
-
-	See also the section |:make_makeprg|, since most of the comments there
+	When your "grep" accepts the "-H" argument, use this to make ":grep"
+	also work well with a single file: >
+		:set grepprg=grep\ -nH
+<	See also the section |:make_makeprg|, since most of the comments there
 	apply equally to 'grepprg'.
 	When this option is set from a |modeline|, while the 'secure' option
 	is set, you will get a warning message.
@@ -2121,7 +2146,7 @@ A jump table for the options with a short description can be found at |X_op|.
 			{only available when compiled with GUI enabled and
 			with the |+xfontset| feature}
 	When not empty, specifies two (or more) fonts to be used.  The first
-	one for normal english, the second one for your special language.  See
+	one for normal English, the second one for your special language.  See
 	|xfontset|.
 	Setting this option also means that all font names will be handled as
 	a fontset name.  Also the ones used for the "font" argument of the
@@ -2674,7 +2699,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	have to change the keyboard mode to be able to execute normal mode
 	commands.
 
-	Example (for greek):					*greek*  >
+	Example (for Greek):					*greek*  >
 	    :set langmap=ÁA,ÂB,ØC,ÄD,ÅE,ÖF,ÃG,ÇH,ÉI,ÎJ,ÊK,ËL,ÌM,ÍN,ÏO,ÐP,QQ,ÑR,ÓS,ÔT,ÈU,ÙV,WW,×X,ÕY,ÆZ,áa,âb,øc,äd,åe,öf,ãg,çh,éi,îj,êk,ël,ìm,ín,ïo,ðp,qq,ñr,ós,ôt,èu,ùv,òw,÷x,õy,æz
 <	Example (exchanges meaning of z and y for commands): >
 	    :set langmap=zy,yz,ZY,YZ
@@ -3144,14 +3169,14 @@ A jump table for the options with a short description can be found at |X_op|.
 		:set showbreak=\ \ \ \ \ \ \ \ 
 
 					*'osfiletype'* *'oft'*
-'osfiletype' 'oft'	string (RISC OS default: "Text",
+'osfiletype' 'oft'	string (RISC-OS default: "Text",
 				others default: "")
 			local to buffer
 			{not in Vi}
 			{only available when compiled with the |+osfiletype|
 			feature}
 	Some operating systems store extra information about files besides
-	name, datastamp and permissions.  This option contains the extra
+	name, datestamp and permissions.  This option contains the extra
 	information, the nature of which will vary between systems.
 	The value of this option is usually set when the file is loaded, and
 	use to set the file type when file is written.
@@ -3417,11 +3442,23 @@ A jump table for the options with a short description can be found at |X_op|.
 
 						*'runtimepath'* *'rtp'*
 'runtimepath' 'rtp'	string	(default: "$VIMRUNTIME",
-					on Unix: "~/.vim,$VIMRUNTIME")
+				 Unix: "$HOME/.vim,$VIM/vimfiles,$VIMRUNTIME")
+				 Amiga: "home:vimfiles,s:vimfiles,$VIM/vimfiles,$VIMRUNTIME"
+				 PC, OS/2: "$HOME/vimfiles,$VIM/vimfiles,$VIMRUNTIME"
+				 Macintosh: "$VIM/vimfiles,$VIMRUNTIME"
+				 RISC-OS: "Choices:vimfiles,$VIMRUNTIME"
+				 VMS: "sys$login:vimfiles,$VIM/vimfiles,$VIMRUNTIME"
 			global
 			{not in Vi}
 	This is a list of directories which will be searched for runtime
 	files: Syntax files, filetype settings files, menu.vim, etc.
+
+	The defaults for most systems are setup to search three locations:
+	1. In your home directory, for your personal preferences.
+	2. In a system-wide Vim directory, for preferences from the system
+	   administrator.
+	3. In $VIMRUNTIME, for files distributed with the Vim version.
+
 	Note that, unlike 'path', no wildcards like "*" or "**" are allowed.
 	See |:runtime|.
 	Example: >
@@ -4390,6 +4427,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	for thesesaurus completion commands |i_CTRL-X_CTRL-T|.  Each line in
 	the file should contain words with similar meaning, separated by
 	non-keyword characters (white space is preferred).
+	To obtain a file to be used here, check out the wordlist FAQ at
+        http://www.hyphenologist.co.uk .
 	To include a comma in a file name precede it with a backslash.  Spaces
 	after a comma are ignored, otherwise spaces are included in the file
 	name.  See |option-backslash| about using backslashes.
@@ -4682,6 +4721,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	created for all buffers that have 'swapfile' set.  When 'updatecount'
 	is set to zero, existing swap files are not deleted.
 	Also see |'swapsync'|.
+	This option has no meaning in buffers where |'buftype'| is "nofile".
 
 						*'updatetime'* *'ut'*
 'updatetime' 'ut'	number	(default 4000)
@@ -4699,10 +4739,11 @@ A jump table for the options with a short description can be found at |X_op|.
 	Currently, these messages are given:
 	>= 1	When a file is ":source"'ed.
 	>= 1	When the viminfo file is read or written.
+	>= 5	Every searched tags file.
 	>= 8	Files for which a group of autocommands is executed.
 	>= 9	Every executed autocommand.
-	>= 12	Every sourced line.
-	>= 15	Every executed function line.
+	>= 12	Every executed function
+	>= 15	Every executed Ex command (truncated at 200 characters)
 
 	This option can also be set with the "-V" argument.  See |-V|.
 

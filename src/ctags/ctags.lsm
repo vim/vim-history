@@ -1,7 +1,7 @@
 Begin3
 Title:		Exuberant Ctags
-Version:	4.0
-Entered-date:	22JUN00
+Version:	4.0.3
+Entered-date:	16JUL00
 Description:	An improved ctags with support for Assembler, AWK, BETA,
 		Bourne Shell, C, C++, COBOL, Eiffel, Fortran, Java, Lisp, Perl,
 		Python, Scheme, Tcl, and Vim. It is capable of generating tags
@@ -12,9 +12,9 @@ Keywords:	tag tags ctags etags ftags ptags Exuberant Assembler AWK Bourne
 		Scheme Tcl Vim tool utility source index
 Author:		darren@hiebert.com (Darren Hiebert)
 Primary-site:	sunsite.unc.edu /pub/Linux/devel/lang/c
-		149kB ctags-4.0.tar.gz
-Original-site:	http://darren.hiebert.com/ctags
-		149kB archives/ctags-4.0.tar.gz
+		156kB ctags-4.0.3.tar.gz
+Original-site:	http://ctags.sourceforge.net
+		156kB archives/ctags-4.0.3.tar.gz
 Platforms:	UNIX, MSDOS, Windows 95/NT, OS/2, QNX, Amiga, QDOS, VMS, Cray
 Copying-policy: GNU General Public License
 End

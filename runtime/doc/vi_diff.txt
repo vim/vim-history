@@ -1,4 +1,4 @@
-*vi_diff.txt*   For Vim version 6.0e.  Last change: 2000 Jul 07
+*vi_diff.txt*   For Vim version 6.0f.  Last change: 2000 Aug 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -66,7 +66,7 @@ Maximum line length	   On machines with 16-bit ints (Amiga and MS-DOS real
 Maximum number of lines	   2147483647 lines.
 Maximum file size	   2147483647 bytes (2 Gbyte) when a long integer is
 			   32 bits.  Much more for 64 bit longs.  Also limited
-			   by available disk space for the swap file.
+			   by available disk space for the |swap-file|.
 Length of a file path	   Unix and Win32: 1024 characters, otherwise 256
 			   characters (or as much as the system supports).
 Length of an expanded string option

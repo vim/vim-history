@@ -368,7 +368,7 @@ free_buffer(buf)
  * do_bufdel() - delete or unload buffer(s)
  *
  * addr_count == 0: ":bdel" - delete current buffer
- * addr_count == 1: ":N bdel" or ":bdel N [N ..] - first delete
+ * addr_count == 1: ":N bdel" or ":bdel N [N ..]" - first delete
  *		    buffer "end_bnr", then any other arguments.
  * addr_count == 2: ":N,N bdel" - delete buffers in range
  *
@@ -455,7 +455,7 @@ do_bufdel(command, arg, addr_count, start_bnr, end_bnr, forceit)
 		    command == DOBUF_UNLOAD ? _("unloaded") : _("deleted"));
 	    errormsg = IObuff;
 	}
-	else /* should 'report' be used here? */
+	else if (deleted >= p_report)
 	    smsg((char_u *)(deleted == 1
 			? _("%d buffer %s") : _("%d buffers %s")),
 		    deleted,
@@ -747,7 +747,7 @@ do_buffer(action, start, dir, count, forceit)
 #endif
 	if (buf_valid(delbuf))
 	    close_buffer(delbuf == curwin->w_buffer ? curwin : NULL, delbuf,
-		    (action == DOBUF_GOTO && !P_HID && !bufIsChanged(delbuf))
+		    (action == DOBUF_GOTO && !P_HID(delbuf) && !bufIsChanged(delbuf))
 			     || action == DOBUF_UNLOAD || action == DOBUF_DEL,
 		      action == DOBUF_DEL);
     }
@@ -2323,12 +2323,12 @@ do_arg_all(count, forceit)
 
 	if (i == arg_file_count)		/* close this window */
 	{
-	    if (P_HID || forceit || wp->w_buffer->b_nwindows > 1
+	    if (P_HID(wp->w_buffer) || forceit || wp->w_buffer->b_nwindows > 1
 						|| !bufIsChanged(wp->w_buffer))
 	    {
 		/* If the buffer was changed, and we would like to hide it,
 		 * try autowriting. */
-		if (!P_HID && wp->w_buffer->b_nwindows <= 1
+		if (!P_HID(wp->w_buffer) && wp->w_buffer->b_nwindows <= 1
 						 && bufIsChanged(wp->w_buffer))
 		{
 		    autowrite(wp->w_buffer, FALSE);
@@ -2348,7 +2348,7 @@ do_arg_all(count, forceit)
 #ifdef FEAT_WINDOWS
 		else
 		{
-		    win_close(wp, !P_HID && !bufIsChanged(wp->w_buffer));
+		    win_close(wp, !P_HID(wp->w_buffer) && !bufIsChanged(wp->w_buffer));
 # ifdef FEAT_AUTOCMD
 		    /* check if autocommands removed the next window */
 		    if (!win_valid(wpnext))
@@ -2414,7 +2414,7 @@ do_arg_all(count, forceit)
 	    curwin->w_arg_idx = i;
 	    /* edit file i */
 	    (void)do_ecmd(0, arg_files[i], NULL, NULL, ECMD_ONE,
-		   ((P_HID || bufIsChanged(curwin->w_buffer)) ? ECMD_HIDE : 0)
+		   ((P_HID(curwin->w_buffer) || bufIsChanged(curwin->w_buffer)) ? ECMD_HIDE : 0)
 							       + ECMD_OLDBUF);
 #ifdef FEAT_AUTOCMD
 	    if (use_firstwin)
@@ -2583,7 +2583,7 @@ do_buffer_all(eap)
      */
     for (wp = lastwin; open_wins > count; )
     {
-	r = (P_HID || !bufIsChanged(wp->w_buffer)
+	r = (P_HID(wp->w_buffer) || !bufIsChanged(wp->w_buffer)
 				     || autowrite(wp->w_buffer, FALSE) == OK);
 #ifdef FEAT_AUTOCMD
 	if (!win_valid(wp))
@@ -2595,7 +2595,7 @@ do_buffer_all(eap)
 #endif
 	    if (r)
 	{
-	    win_close(wp, !P_HID);
+	    win_close(wp, !P_HID(wp->w_buffer));
 	    --open_wins;
 	    wp = lastwin;
 	}
@@ -2843,8 +2843,19 @@ buf_spname(buf)
     buf_t	*buf;
 {
 #if defined(FEAT_QUICKFIX) && defined(FEAT_WINDOWS)
-    if (qf_isqbuf(buf))
+    if (bt_quickfix(buf))
 	return _("[Error List]");
+#endif
+#ifdef FEAT_QUICKFIX
+    /* There is no _file_ for a NONDISKBUF, b_sfname contains the name as
+     * specified by the user */
+    if (bt_nofile(buf))
+    {
+	if (buf->b_sfname != NULL)
+	    return (char *)buf->b_sfname;
+	else
+	    return "";
+    }
 #endif
     if (buf->b_fname == NULL)
 	return _("[No File]");

@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.0e.  Last change: 2000 Jul 31
+*repeat.txt*    For Vim version 6.0f.  Last change: 2000 Aug 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -126,15 +126,20 @@ q			Stops recording.  (Implementation note: The 'q' that
 :so[urce]! {file}	Read Vim commands from {file}.  {not in Vi}
 
 							*:ru* *:runtime*
-:ru[ntime] {file}	Read Ex commands from {file} in each directory given
+:ru[ntime][!] {file}	Read Ex commands from {file} in each directory given
 			by 'runtimepath'.  There is no error for non-existing
 			files.  Example: >
 				:runtime syntax/c.vim
-<			When {file} contains wildcards all matching files are
-			sourced.  Example: >
-				:runtime plugin/*.vim
+<			When [!] is included, all found files are sourced.
+			When it is not included only the first found file is
+			sourced.
+			When {file} contains wildcards it is expanded to all
+			matching files.  Example: >
+				:runtime! plugin/*.vim
 <			This is what Vim uses to load the plugin files when
-			starting up.
+			starting up. This similar command: >
+				:runtime plugin/*.vim
+<			will source the first file only.
 			Only one file name can be given, spaces are considered
 			to be part of the name, except at the start and end.
 

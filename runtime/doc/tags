@@ -1193,6 +1193,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :bdelete	windows.txt	/*:bdelete*
 :be	gui.txt	/*:be*
 :behave	gui.txt	/*:behave*
+:bf	windows.txt	/*:bf*
+:bfirst	windows.txt	/*:bfirst*
 :bl	windows.txt	/*:bl*
 :blast	windows.txt	/*:blast*
 :bm	windows.txt	/*:bm*
@@ -1231,6 +1233,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :center	change.txt	/*:center*
 :cf	quickfix.txt	/*:cf*
 :cfile	quickfix.txt	/*:cfile*
+:cfir	quickfix.txt	/*:cfir*
+:cfirst	quickfix.txt	/*:cfirst*
 :ch	change.txt	/*:ch*
 :change	change.txt	/*:change*
 :chd	editing.txt	/*:chd*
@@ -1362,6 +1366,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :find	editing.txt	/*:find*
 :fini	repeat.txt	/*:fini*
 :finish	repeat.txt	/*:finish*
+:fir	editing.txt	/*:fir*
+:first	editing.txt	/*:first*
 :fix	options.txt	/*:fix*
 :fixdel	options.txt	/*:fixdel*
 :fo	fold.txt	/*:fo*
@@ -1555,6 +1561,9 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :perldo	if_perl.txt	/*:perldo*
 :po	tagsearch.txt	/*:po*
 :pop	tagsearch.txt	/*:pop*
+:popu	gui.txt	/*:popu*
+:popup	gui.txt	/*:popup*
+:popup	gui.txt	/*:popup*
 :pp	windows.txt	/*:pp*
 :ppop	windows.txt	/*:ppop*
 :pr	various.txt	/*:pr*
@@ -1571,6 +1580,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :ptNext	tagsearch.txt	/*:ptNext*
 :pta	windows.txt	/*:pta*
 :ptag	windows.txt	/*:ptag*
+:ptf	tagsearch.txt	/*:ptf*
+:ptfirst	tagsearch.txt	/*:ptfirst*
 :ptj	tagsearch.txt	/*:ptj*
 :ptjump	tagsearch.txt	/*:ptjump*
 :ptl	tagsearch.txt	/*:ptl*
@@ -1641,6 +1652,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :sbNext	windows.txt	/*:sbNext*
 :sba	windows.txt	/*:sba*
 :sball	windows.txt	/*:sball*
+:sbf	windows.txt	/*:sbf*
+:sbfirst	windows.txt	/*:sbfirst*
 :sbl	windows.txt	/*:sbl*
 :sblast	windows.txt	/*:sblast*
 :sbm	windows.txt	/*:sbm*
@@ -1665,12 +1678,16 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :set^@	options.txt	/*:set^@*
 :set_@	options.txt	/*:set_@*
 :set_env	options.txt	/*:set_env*
+:setf	options.txt	/*:setf*
+:setfiletype	options.txt	/*:setfiletype*
 :setg	options.txt	/*:setg*
 :setglobal	options.txt	/*:setglobal*
 :setl	options.txt	/*:setl*
 :setlocal	options.txt	/*:setlocal*
 :sf	windows.txt	/*:sf*
 :sfind	windows.txt	/*:sfind*
+:sfir	windows.txt	/*:sfir*
+:sfirst	windows.txt	/*:sfirst*
 :sh	various.txt	/*:sh*
 :shell	various.txt	/*:shell*
 :si	gui_w32.txt	/*:si*
@@ -1784,6 +1801,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :tclfile	if_tcl.txt	/*:tclfile*
 :te	gui_w32.txt	/*:te*
 :tearoff	gui_w32.txt	/*:tearoff*
+:tf	tagsearch.txt	/*:tf*
+:tfirst	tagsearch.txt	/*:tfirst*
 :tj	tagsearch.txt	/*:tj*
 :tjump	tagsearch.txt	/*:tjump*
 :tl	tagsearch.txt	/*:tl*
@@ -3517,7 +3536,6 @@ myfiletypefile	filetype.txt	/*myfiletypefile*
 myscriptsfile	filetype.txt	/*myscriptsfile*
 mysyntaxfile	syntax.txt	/*mysyntaxfile*
 mysyntaxfile-add	syntax.txt	/*mysyntaxfile-add*
-mysyntaxfile-file	syntax.txt	/*mysyntaxfile-file*
 mysyntaxfile-replace	syntax.txt	/*mysyntaxfile-replace*
 n	pattern.txt	/*n*
 nasm.vim	syntax.txt	/*nasm.vim*
@@ -4364,9 +4382,10 @@ word-motions	motion.txt	/*word-motions*
 workbench	starting.txt	/*workbench*
 workshop-commands	workshop.txt	/*workshop-commands*
 workshop-compiling	workshop.txt	/*workshop-compiling*
-workshop-install	workshop.txt	/*workshop-install*
+workshop-configure	workshop.txt	/*workshop-configure*
 workshop-intro	workshop.txt	/*workshop-intro*
 workshop-support	workshop.txt	/*workshop-support*
+workshop-xpm	workshop.txt	/*workshop-xpm*
 workshop.txt	workshop.txt	/*workshop.txt*
 wrap-off	intro.txt	/*wrap-off*
 write-fail	editing.txt	/*write-fail*

@@ -1,4 +1,4 @@
-*usr_43.txt*	For Vim version 6.0e.  Last change: 2000 Aug 04
+*usr_43.txt*	For Vim version 6.0f.  Last change: 2000 Aug 07
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -47,16 +47,20 @@ defined, which quotes lines.
 But you probably are not satisfied with the default settings, because they
 have been kept minimal.  Suppose that for C files you want to set the
 'softtabstop' option to 4 and define a mapping to insert a three-line comment.
-You do this with four steps:				*your-runtime-dir*
+You do this with only two steps:			*your-runtime-dir*
+
 1. Create your own runtime directory.  For example >
-	mkdir ~/vim
+	mkdir ~/.vim
 <  In this directory create the "settings" directory: >
-	mkdir ~/vim/settings
-2. Add the name of this directory to the 'runtimepath' option.  It's best to
-   prepend it (in case we want to skip the default settings file): >
-	:set vimruntime^=~/vim/settings
-<  Put this line in your startup vimrc file.
-3. Create the file "~/vim/settings/c.vim", with the contents: >
+	mkdir ~/.vim/settings
+<  Check the value of the 'runtimepath' option to see where Vim will look for
+   the "settings" directory: >
+   	set runtimepath
+<  You would normally use the first directory name (before the comma).  You
+   might want to set this option in your |vimrc| file if you don't like the
+   default value.
+
+2. Create the file "~/.vim/settings/c.vim", with the contents: >
 	setlocal softtabstop=4
 	map <buffer> ,c o/**************<CR><CR>/<Esc>
 
@@ -68,8 +72,8 @@ set for that buffer.  For a new buffer it will get the value last set with a
 ":set" command or the default value.
 
 The mapping for ",c" will also disappear when editing another buffer.  The
-":map <buffer>" command creates a mapping that is local the the current
-buffer.  This works with any mapping command: ":map!", ":vmap", etc.
+":map <buffer>" command creates a mapping that is local to the current buffer.
+This works with any mapping command: ":map!", ":vmap", etc.
 
 
 Suppose you do want to use most of the default filetype settings, but not for

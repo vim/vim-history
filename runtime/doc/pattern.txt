@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.0e.  Last change: 2000 Jul 26
+*pattern.txt*   For Vim version 6.0f.  Last change: 2000 Aug 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -158,6 +158,16 @@ the cursor position before and after the search is affected.  However, if a
 line offset is given, the whole lines between the two cursor positions are
 affected.
 
+An example of how to search for matches with a pattern and change the match
+with another word: >
+	/foo<CR>	find "foo"
+	c//e		change until end of match
+	bar<Esc>	type replacement
+	//<CR>		go to start of next match
+	c//e		change until end of match
+	beep<Esc>	type another replacement
+			etc.
+<
 							*//;*
 A very special offset is ';' followed by another search command.  For example: >
 
@@ -187,6 +197,11 @@ will result in the pattern to match other text.
 
 All matches for the last used search pattern will be highlighted if you set
 the 'hlsearch' option.
+
+To clear the last used search pattern: >
+	:let @/ = ""
+This will not set the pattern to an empty string, because that would match
+everywhere.  The pattern is really cleared, like when starting Vim.
 
 In Vi the ":tag" command sets the last search pattern when the tag is searched
 for.  In Vim this is not done, the previous search pattern is still remembered,

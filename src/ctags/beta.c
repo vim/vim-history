@@ -274,7 +274,7 @@ extern void createBetaTags()
 		{
 		    /* Found pattern name, get start and end */
 		    int eoname = pos;
-		    int soname = pos;
+		    int soname;
 		    while (eoname && isspace(vStringChar(line, eoname-1)))
 			eoname--;
 		foundanothername:

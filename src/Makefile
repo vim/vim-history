@@ -291,6 +291,7 @@ CC=
 
 include auto/config.mk
 #.include "auto/config.mk"
+CClink = $(CC)
 
 # Include the configuration choices first, so we can override everything
 # below. As shipped, this file contains a target that causes to run
@@ -567,11 +568,12 @@ LINT_OPTIONS = -beprxzF
 ### Solaris with Forte Developer and FEAT_SUN_WORKSHOP
 # The Xpm library is available from ftp://koala.inria.fr/pub/xpm.
 #CC		= cc
-#XPM_DIR	= /usr/local/xpm/xpm-3.4k-solaris
-#XPM_LIB	= -L$(XPM_DIR)/lib -R$(XPM_DIR)/lib -lXpm
+#XPM_DIR		= /usr/local/xpm/xpm-3.4k-solaris
+#XPM_LIB		= -L$(XPM_DIR)/lib -R$(XPM_DIR)/lib -lXpm
 #XPM_IPATH	= -I$(XPM_DIR)/include
 #EXTRA_LIBS	= $(XPM_LIB)
 #EXTRA_IPATHS	= $(XPM_IPATH)
+#EXTRA_DEFS	= -xCC -DHAVE_X11_XPM_H
 
 ### UTS2 for Amdahl UTS 2.1.x
 #EXTRA_DEFS = -DUTS2
@@ -780,7 +782,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and some things
 ### might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60e
+VIMRTDIR = /vim60f
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 LANGSUBDIR = /lang
@@ -1137,7 +1139,7 @@ BASIC_SRC = \
 	$(OS_EXTRA_SRC)
 
 SRC =	$(BASIC_SRC) $(GUI_SRC) $(HANGULIN_SRC) $(PERL_SRC) $(PYTHON_SRC) \
-	$(TCL_SRC) $(SNIFF_SRC) $(WORKSHOP_SRC)
+	$(TCL_SRC) $(SNIFF_SRC) $(WORKSHOP_SRC) $(WSDEBUG_SRC)
 
 TAGS_SRC = *.c *.cpp if_perl.xs
 
@@ -1151,7 +1153,7 @@ ALL_SRC = $(BASIC_SRC) $(ALL_GUI_SRC) $(EXTRA_SRC)
 # checks more, but may not work well for checking a GUI that wasn't configured.
 # The perl sources also don't work well with lint.
 LINT_SRC = $(BASIC_SRC) $(GUI_SRC) $(HANGULIN_SRC) $(PYTHON_SRC) $(TCL_SRC) \
-	$(SNIFF_SRC) $(WORKSHOP_SRC)
+	$(SNIFF_SRC) $(WORKSHOP_SRC) $(WSDEBUG_SRC)
 #LINT_SRC = $(SRC)
 #LINT_SRC = $(ALL_SRC)
 
@@ -1199,7 +1201,8 @@ OBJ = \
 	$(PYTHON_OBJ) \
 	$(TCL_OBJ) \
 	$(OS_EXTRA_OBJ) \
-	$(WORKSHOP_OBJ)
+	$(WORKSHOP_OBJ) \
+	$(WSDEBUG_OBJ)
 
 PRO_AUTO = \
 	buffer.pro \
@@ -1301,7 +1304,7 @@ CCC = $(CC) -c -I$(srcdir) $(ALL_CFLAGS)
 # A shell script is used to try linking without unneccesary libraries.
 $(VIMTARGET): auto/config.mk objects $(OBJ) version.c version.h
 	$(CCC) version.c -o objects/version.o
-	@LINK="$(PURIFY) $(SHRPENV) $(CC) $(LDFLAGS) $(ALL_LIB_DIRS) \
+	@LINK="$(PURIFY) $(SHRPENV) $(CClink) $(LDFLAGS) $(ALL_LIB_DIRS) \
 		-o $(VIMTARGET) $(OBJ) objects/version.o $(ALL_LIBS)" \
 		MAKE="$(MAKE)" sh $(srcdir)/link.sh
 
@@ -2128,7 +2131,7 @@ objects/gui_beval.o: gui_beval.c auto/config.h feature.h vim.h os_unix.h \
  proto/gui_beval.pro
 objects/workshop.o: workshop.c auto/config.h integration.h vim.h feature.h \
  os_unix.h auto/osdef.h ascii.h keymap.h term.h macros.h structs.h \
- regexp.h gui.h globals.h farsi.h option.h ex_cmds.h proto.h \
+ regexp.h gui.h globals.h farsi.h option.h ex_cmds.h proto.h version.h \
  gui_beval.h proto/gui_beval.pro workshop.h
 objects/integration.o: integration.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \

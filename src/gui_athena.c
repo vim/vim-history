@@ -328,7 +328,7 @@ gui_mch_add_menu(menu, parent, idx)
 
     if (parent == NULL)
     {
-	if (popup_menu(menu->dname))
+	if (menu_is_popup(menu->dname))
 	{
 	    menu->submenu_id = XtVaCreatePopupShell((char *)menu->dname,
 		simpleMenuWidgetClass, vimShell,
@@ -336,7 +336,7 @@ gui_mch_add_menu(menu, parent, idx)
 		XtNbackground, gui.menu_bg_pixel,
 		NULL);
 	}
-	else if (menubar_menu(menu->dname))
+	else if (menu_is_menubar(menu->dname))
 	{
 	    menu->id = XtVaCreateManagedWidget((char *)menu->dname,
 		menuButtonWidgetClass, menuBar,
@@ -429,7 +429,7 @@ gui_mch_add_menu_item(menu, parent, idx)
     int		idx;
 {
     /* Don't add menu separator */
-    if (is_menu_separator(menu->name))
+    if (menu_is_separator(menu->name))
 	return;
 
     if (parent != NULL && parent->submenu_id != (Widget)0)

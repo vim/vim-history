@@ -40,7 +40,7 @@
 
 #define DFLT_ERRORFILE		"AztecC.Err"
 #define DFLT_MAKEEF		"t:vim##.Err"
-#define DFLT_RUNTIMEPATH	"$VIMRUNTIME"
+#define DFLT_RUNTIMEPATH	"home:vimfiles,s:vimfiles,$VIM/vimfiles,$VIMRUNTIME"
 
 #define BASENAMELEN	26	/* Amiga */
 

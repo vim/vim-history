@@ -46,7 +46,7 @@ static hashEntry **HashTable = NULL;
 ============================================================================*/
 static hashEntry **getHashTable __ARGS((void));
 static hashEntry *getHashTableEntry __ARGS((unsigned int hashedValue));
-static unsigned int hashValue __ARGS((const char *const string));
+static unsigned long hashValue __ARGS((const char *const string));
 static hashEntry *newEntry __ARGS((const char *const string, langType language, int value));
 
 /*============================================================================
@@ -83,7 +83,7 @@ static hashEntry *getHashTableEntry( hashedValue )
     return entry;
 }
 
-static unsigned int hashValue( string )
+static unsigned long hashValue( string )
     const char *const string;
 {
     unsigned long value = 0;
@@ -139,7 +139,7 @@ extern void addKeyword( string, language, value )
     langType language;
     int value;
 {
-    const unsigned int hashedValue = hashValue(string);
+    const unsigned long hashedValue = hashValue(string);
     hashEntry *tableEntry = getHashTableEntry(hashedValue);
     hashEntry *entry = tableEntry;
 
@@ -178,7 +178,7 @@ extern int lookupKeyword( string, language )
     const char *const string;
     langType language;
 {
-    const unsigned int hashedValue = hashValue(string);
+    const unsigned long hashedValue = hashValue(string);
     hashEntry *entry = getHashTableEntry(hashedValue);
     int value = 0;
 

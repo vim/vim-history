@@ -155,7 +155,7 @@ debug: obj $(OBJ) version.c version.h
 	$(LN) $(LNFLAGS) -m -g -o Vim $(OBJ) obj/version.o $(LIBS)
 
 ctags/Ctags: ctags/main.c
-	$(SHELL) -c cd ctags; make -f Makefile.amiga; cd ..
+	$(SHELL) -c cd ctags; make -f Makefile.manx; cd ..
 
 xxd/Xxd: xxd/xxd.c
 	$(SHELL) -c cd xxd; make -f Make_amiga.mak; cd ..

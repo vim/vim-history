@@ -1941,11 +1941,15 @@ do_write(eap)
 	setaltfname(ffname, fname, (linenr_t)1);
 
     /*
-     * writing to the current file is not allowed in readonly mode
-     * and need a file name
+     * Writing to the current file is not allowed in readonly mode
+     * and need a file name.
+     * "nofile" buffers cannot be written implicitly either.
      */
-    if (!other
-	    && (check_fname() == FAIL || check_readonly(&eap->forceit, curbuf)))
+    if (!other && (
+#ifdef FEAT_QUICKFIX
+		bt_nofile(curbuf) ||
+#endif
+		check_fname() == FAIL || check_readonly(&eap->forceit, curbuf)))
 	goto theend;
 
     if (!other)
@@ -2214,7 +2218,7 @@ getfile(fnum, ffname, sfname, setpm, lnum, forceit)
 
     if (other)
 	++no_wait_return;	    /* don't wait for autowrite message */
-    if (other && !forceit && curbuf->b_nwindows == 1 && !P_HID
+    if (other && !forceit && curbuf->b_nwindows == 1 && !P_HID(curbuf)
 		   && curbufIsChanged() && autowrite(curbuf, forceit) == FAIL)
     {
 	if (other)
@@ -2236,7 +2240,7 @@ getfile(fnum, ffname, sfname, setpm, lnum, forceit)
 	retval = 0;	/* it's in the same file */
     }
     else if (do_ecmd(fnum, ffname, sfname, NULL, lnum,
-		(P_HID ? ECMD_HIDE : 0) + (forceit ? ECMD_FORCEIT : 0)) == OK)
+		(P_HID(curbuf) ? ECMD_HIDE : 0) + (forceit ? ECMD_FORCEIT : 0)) == OK)
 	retval = -1;	/* opened another file */
     else
 	retval = 1;	/* error encountered */
@@ -4217,7 +4221,9 @@ help_heuristic(matched_string, offset, wrong_case)
 	offset *= 200;
     if (wrong_case)
 	offset += 5000;
-    if (matched_string[0] == '+')
+    /* Features are less interesting than the subjects themselves, but "+"
+     * alone is not a feature. */
+    if (matched_string[0] == '+' && matched_string[1] != NUL)
 	offset += 100;
     return (int)(100 * num_letters + STRLEN(matched_string) + offset);
 }

@@ -507,7 +507,7 @@ static void sortTagFile()
 static void resizeTagFile( newSize )
     const long newSize;
 {
-    int result = 0;
+    int result;
 
 #ifdef USE_REPLACEMENT_TRUNCATE
     result = replacementTruncate(TagFile.name, newSize);
@@ -517,7 +517,9 @@ static void resizeTagFile( newSize )
 # else
     const int fd = open(TagFile.name, O_RDWR);
 
-    if (fd != -1)
+    if (fd == -1)
+	result = -1;
+    else
     {
 #  ifdef HAVE_FTRUNCATE
 	result = ftruncate(fd, (off_t)newSize);
@@ -736,16 +738,8 @@ static int writeEtagsEntry( tag )
 	if (tag->truncateLine)
 	    truncateTagLine(line, tag->name, TRUE);
 	else
-	{
-	    char *p;
+	    line[strlen(line) - 1] = '\0';
 
-	    for (p = line  ;  *p != '\0'  ;  ++p)
-		if (strchr("\n\r", *p) != NULL)
-		{
-		    *p = '\0';
-		    break;
-		}
-	}
 	length = fprintf(TagFile.etags.fp, "%s\177%s\001%lu,%ld\n", line,
 			 tag->name, tag->lineNumber, seekValue);
     }
@@ -765,7 +759,7 @@ static int addExtensionFlags( tag )
      */
     if (Option.kindLong)
     {
-	if (tag->kindName == NULL)
+	if (tag->kindName != NULL)
 	{
 	    length += fprintf(TagFile.fp, "%s%s", prefix, tag->kindName);
 	    haveFlags = TRUE;
@@ -810,7 +804,7 @@ static int writePatternEntry( tag )
 
     if (tag->truncateLine)
 	truncateTagLine(line, tag->name, FALSE);
-    newlineTerminated = (boolean)(strchr("\n\r", line[strlen(line)-1]) != NULL);
+    newlineTerminated = (boolean)(line[strlen(line)-1] == '\n');
 
     length += fprintf(TagFile.fp, "%c^", searchChar);
     length += writeSourceLine(TagFile.fp, line);
@@ -874,6 +868,8 @@ extern void initTagEntry( e, name )
     tagEntryInfo *const e;
     const char *const name;
 {
+    Assert(File.source.name != NULL);
+
     e->lineNumberEntry	= (boolean)(Option.locate == EX_LINENUM);
     e->lineNumber	= getFileLine();
     e->filePosition	= getFilePosition();

@@ -1784,16 +1784,16 @@ mch_FullName(
 
 
 /*
- * return TRUE if `fname' is an absolute path name
+ * Return TRUE if "fname" does not depend on the current directory.
  */
     int
-mch_isFullName(
-    char_u *fname)
+mch_isFullName(char_u *fname)
 {
-    char szName[_MAX_PATH+1];
+    char szName[_MAX_PATH + 1];
 
-    /* A name like "d:/foo" is always absolute */
-    if (fname[0] && fname[1] == ':' && (fname[2] == '/' || fname[2] == '\\'))
+    /* A name like "d:/foo" and "//server/share" is absolute */
+    if ((fname[0] && fname[1] == ':' && (fname[2] == '/' || fname[2] == '\\'))
+	    || (fname[0] == fname[1] && fname[0] == '/' || fname[0] == '\\'))
 	return TRUE;
 
     mch_FullName(fname, szName, _MAX_PATH, FALSE);

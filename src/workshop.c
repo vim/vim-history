@@ -34,11 +34,10 @@
 #include "integration.h"	/* <EditPlugin/integration.h> */
 
 #include "vim.h"
+#include "version.h"
 #include "globals.h"
 #include "gui_beval.h"
 #include "workshop.h"
-
-#define wsdebug(x) /* nothing */
 
 void		 workshop_hotkeys(Boolean);
 
@@ -576,28 +575,6 @@ workshop_get_mark_lineno(
 }
 
 
-/*
- * Toolbar code
- */
-
-#if 0 /* not used */
-/*
- * From selection.c
- * Update a position across buffer modifications specified by
- * "modPos", "nDeleted", and "nInserted".
- */
-    static void
-maintainPosition(int *position, int modPos, int nInserted, int nDeleted)
-{
-    if (modPos > *position)
-	return;
-    if (modPos+nDeleted <= *position)
-	*position += nInserted - nDeleted;
-    else
-	*position = modPos;
-}
-#endif
-
     void
 workshop_adjust_marks(Widget *window, int pos,
 			int inserted, int deleted)
@@ -688,7 +665,6 @@ workshop_footer_message(
  * workshop_menu_begin() is passed the menu name. We determine its mnemonic here
  * and store its name and priority.
  */
-
     void
 workshop_menu_begin(
 	char		*label)
@@ -717,7 +693,7 @@ workshop_menu_begin(
     mnembuf[idx++] = 'H';		/* H is mnemonic for Help */
     for (menu = root_menu; menu != NULL; menu = menu->next)
     {
-	if (menubar_menu(menu->name))
+	if (menu_is_menubar(menu->name))
 	{
 	    p = strchr((char *)menu->name, '&');
 	    if (p != NULL)
@@ -745,7 +721,7 @@ workshop_submenu_begin(
 	char		*label)
 {
 #ifdef WSDEBUG_TRACE
-    if (debug  && dlevel & WS_TRACE
+    if (ws_debug  && ws_dlevel & WS_TRACE
 	    && strncmp(curMenuName, "ToolBar", 7) != 0)
     {
 	wstrace("workshop_submenu_begin(%s)\n", label);
@@ -808,7 +784,7 @@ workshop_menu_item(
     if (WSDLEVEL(WS_TRACE_VERBOSE)
 	    && strncmp(curMenuName, "ToolBar", 7) != 0)
     {
-	if (dlevel & WS_TRACE_VERBOSE)
+	if (ws_dlevel & WS_TRACE_VERBOSE)
 	{
 	    wsdebug("workshop_menu_item(\n"
 		    "\tlabel = \"%s\",\n"
@@ -828,7 +804,7 @@ workshop_menu_item(
 		    filepos && *filepos ? filepos : "<None>",
 		    sensitive);
 	}
-	else if (dlevel & WS_TRACE)
+	else if (ws_dlevel & WS_TRACE)
 	{
 	    wstrace("workshop_menu_item(\"%s\", %s)\n",
 		    label && *label ? label : "<None>",
@@ -838,7 +814,7 @@ workshop_menu_item(
     }
 #endif
 #ifdef WSDEBUG_SENSE
-    if (debug)
+    if (ws_debug)
     {
 	wstrace("menu:   %-21.20s%-21.20s(%s)\n", label, verb,
 		*sensitive == '1' ? "Sensitive" : "Insensitive");
@@ -863,7 +839,7 @@ workshop_menu_item(
 
     if (*sensitive == '0')
     {
-	sprintf(cbuf, "sense %s off", namebuf);
+	sprintf(cbuf, "amenu disable %s", namebuf);
 	coloncmd(cbuf, True);
     }
 }
@@ -899,7 +875,7 @@ workshop_toolbar_begin()
     }
 #endif
 
-    coloncmd("aunmenu ToolBar.*", True);
+    coloncmd("aunmenu ToolBar", True);
     tbpri = 10;
 }
 
@@ -971,7 +947,7 @@ workshop_toolbar_button(
     }
 #endif
 #ifdef WSDEBUG_SENSE
-    if (debug)
+    if (ws_debug)
     {
 	wsdebug("button: %-21.20s%-21.20s(%s)\n", label, verb,
 		*sense == '1' ? "Sensitive" : "Insensitive");
@@ -996,7 +972,7 @@ workshop_toolbar_button(
     if (*sense == '0')
     {
 	/* If menu isn't sensitive at startup... */
-	sprintf(cbuf, "sense %s %s", namebuf, "off");
+	sprintf(cbuf, "amenu disable %s", namebuf);
 	coloncmd(cbuf, True);
     }
 
@@ -1019,6 +995,7 @@ workshop_frame_sensitivities(
     char	*menu_name;	/* used in menu lookup */
     char	*sense;		/* to move ?: out of loop */
     int		 cnt;		/* count of verbs to skip */
+    int		 len;		/* length of nonvariant part of command */
     char	 cbuf[4096];
 
 #ifdef WSDEBUG_TRACE
@@ -1037,7 +1014,7 @@ workshop_frame_sensitivities(
     }
 #endif
 #ifdef WSDEBUG_SENSE
-    if (debug)
+    if (ws_debug)
     {
 	for (vp = vs; vp->verb != NULL; vp++)
 	{
@@ -1052,20 +1029,21 @@ workshop_frame_sensitivities(
      * Look for all matching menu entries for the verb. There may be more
      * than one if the verb has both a menu and toolbar entry.
      */
-    strcpy(cbuf, "sense");
     for (vp = vs; vp->verb != NULL; vp++)
     {
 	cnt = 0;
-	sense = vp->sense ? "on" : "off";
+	sense = vp->sense ? "enable" : "disable";
+	strcpy(cbuf, "amenu");
+	strcat(cbuf, " ");
+	strcat(cbuf, sense);
+	strcat(cbuf, " ");
+	len = strlen(cbuf);
 	while ((menu_name = lookupVerb(vp->verb, cnt++)) != NULL)
 	{
-	    strcat(cbuf, " ");
-	    strcat(cbuf, menu_name);
-	    strcat(cbuf, " ");
-	    strcat(cbuf, sense);
+	    strcpy(&cbuf[len], menu_name);
+	    coloncmd(cbuf, True);
 	}
     }
-    coloncmd(cbuf, True);
 }
 
     void
@@ -1114,22 +1092,28 @@ workshop_set_option(
 
 	case 'w':
 	    /* this option is set by a direct call */
+#ifdef WSDEBUG
 	    wsdebug("workshop_set_option: "
 		    "Got unexpected workshopkeys option");
+#endif
 	    break;
 
 	case 'b':	/* these options are set from direct calls */
 	    if (option[7] == NULL && strcmp(option, "balloon") == 0)
 	    {
+#ifdef WSDEBUG
 		/* set by direct call to workshop_balloon_mode */
 		wsdebug("workshop_set_option: "
 			"Got unexpected ballooneval option");
+#endif
 	    }
 	    else if (strcmp(option, "balloondelay") == 0)
 	    {
+#ifdef WSDEBUG
 		/* set by direct call to workshop_balloon_delay */
 		wsdebug("workshop_set_option: "
 			"Got unexpected balloondelay option");
+#endif
 	    }
 	    break;
     }
@@ -1425,25 +1409,6 @@ load_buffer_by_name(
     sprintf(cbuf, "e %s %s", lnumbuf, filename);
     coloncmd(cbuf, False);
 }
-
-#if 0 /* not used */
-    static void
-load_buffer_by_number(
-	int	 b_fnum,		/* buffer number */
-	int	 lnum)			/* optional line number (or 0) */
-{
-    char	 lnumbuf[16];		/* make line number option for :e */
-    char	 cbuf[BUFSIZ];		/* command buffer */
-
-    if (lnum > 0)
-	sprintf(lnumbuf, "+%d", lnum);
-    else
-	lnumbuf[0] = NULL;
-
-    sprintf(cbuf, "e %s #%d", lnumbuf, b_fnum);
-    coloncmd(cbuf, False);
-}
-#endif
 
 
     static void
@@ -1916,6 +1881,24 @@ addMenu(
 }
 
     static char *
+nameStrip(
+	char		*raw)		/* menu name, possibly with & chars */
+{
+    static char		 buf[BUFSIZ];	/* build stripped name here */
+    char		*bp = buf;
+
+    while (*raw)
+    {
+	if (*raw != '&')
+	    *bp++ = *raw;
+	raw++;
+    }
+    *bp = NULL;
+    return buf;
+}
+
+
+    static char *
 lookupVerb(
 	char		*verb,
 	int		 skip)		/* number of matches to skip */
@@ -1926,7 +1909,7 @@ lookupVerb(
     {
 	if (strcmp(menuMap[i].verb, verb) == NULL && skip-- == 0)
 	{
-	    return menuMap[i].name;
+	    return nameStrip(menuMap[i].name);
 	}
     }
 
@@ -1942,6 +1925,12 @@ coloncmd(
     int		 row;		/* save pre-command row position */
     int		 col;		/* save pre-command column position */
 
+#ifdef WSDEBUG
+    if (WSDLEVEL(WS_TRACE_COLONCMD))
+    {
+	wsdebug("Cmd: %s\n", cmd);
+    }
+#endif
     row = gui.cursor_row;
     col = gui.cursor_col;
 
@@ -1977,8 +1966,8 @@ setDollarVim(
      * First case: Running from <install-dir>/SUNWspro/bin
      */
     strcpy(buf, rundir);
-    strcat(buf,
-	    "/../contrib/contrib6/vim5.6/share/vim/vim56/syntax/syntax.vim");
+    strcat(buf, "/../contrib/contrib6/vim" VIM_VERSION_SHORT "/share/vim/"
+        VIM_VERSION_NODOT "/syntax/syntax.vim");
     if (access(buf, R_OK) == 0)
     {
 	strcpy(buf, "SPRO_WSDIR=");
@@ -1986,13 +1975,14 @@ setDollarVim(
 	cp = strrchr(buf, '/');
 	if (cp != NULL)
 	{
-	    strcpy(cp, "/WS6");
+	    strcpy(cp, "/WS6U1");
 	}
 	putenv(strdup(buf));
 
 	strcpy(buf, "VIM=");
 	strcat(buf, rundir);
-	strcat(buf, "/../contrib/contrib6/vim5.6/share/vim/vim56");
+	strcat(buf, "/../contrib/contrib6/vim" VIM_VERSION_SHORT "/share/vim/"
+            VIM_VERSION_NODOT);
 	putenv(strdup(buf));
 	return;
     }
@@ -2002,8 +1992,8 @@ setDollarVim(
      *		<install-dir>/SUNWspro/contrib/contrib6/vim5.6/bin
      */
     strcpy(buf, rundir);
-    strcat(buf,
-	    "/../../../contrib/contrib6/vim5.6/share/vim/vim56/syntax/syntax.vim");
+    strcat(buf, "/../../../contrib/contrib6/vim" VIM_VERSION_SHORT
+        "/share/vim/" VIM_VERSION_NODOT "/syntax/syntax.vim");
     if (access(buf, R_OK) == 0)
     {
 	strcpy(buf, "SPRO_WSDIR=");
@@ -2011,14 +2001,14 @@ setDollarVim(
 	cp = strrchr(buf, '/');
 	if (cp != NULL)
 	{
-	    strcpy(cp, "../../../../WS6");
+	    strcpy(cp, "../../../../WS6U1");
 	}
 	putenv(strdup(buf));
 
 	strcpy(buf, "VIM=");
 	strcat(buf, rundir);
-	strcat(buf,
-		"/../../../contrib/contrib6/vim5.6/share/vim/vim56");
+	strcat(buf, "/../../../contrib/contrib6/vim" VIM_VERSION_SHORT
+	    "/share/vim/" VIM_VERSION_NODOT);
 	putenv(strdup(buf));
 	return;
     }

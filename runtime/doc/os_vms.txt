@@ -1,4 +1,4 @@
-*os_vms.txt*    For Vim version 6.0e.  Last change: 2000 Jul 20
+*os_vms.txt*    For Vim version 6.0f.  Last change: 2000 Aug 07
 
 
 		  VIM REFERENCE MANUAL
@@ -364,10 +364,10 @@ recommended to avoid fast terminal option with: >
 8.7 Hex-editing and other external tools
 
 A very important difference between OpenVMS and other systems is that VMS uses
-special commands to execute executables:
+special commands to execute executables: >
 
->       RUN <path>filename             
->       MCR <path>filename <parameters> 
+	RUN <path>filename             
+	MCR <path>filename <parameters> 
 
 OpenVMS users always have to be aware that the Vim command :! "just" drop them
 to DCL prompt. This feature is possible to use without any problem with all
@@ -376,12 +376,12 @@ we're running into trouble if we following the Vim documentation (see: help
 xxd).
 
 Solution: Execute with the MC command and add the full path to the executable. 
-Example: Instead of :%!xxd command use:
+Example: Instead of :%!xxd command use: >
 
->       :%!mc vim:xxd
+	:%!mc vim:xxd
 
-... or in general:
->       :!mc <path>filename <parameters>
+... or in general: >
+	:!mc <path>filename <parameters>
 
 Note: from version 6.0 you can use XXD, and CTAGS from GUI menu.
 
@@ -394,8 +394,8 @@ If you want to use your .vimrc and .gvimrc from other platforms (e.g. Windows)
 you can get in trouble if you ftp that file(s): VMS has different end-of-line
 indication.
 The symptom is that ViM is not sourcing your .vimrc/.gvimrc, even if you say:
-
->       :so sys$login:.vimrc
+>
+	:so sys$login:.vimrc
 
 One trick is to compress (e.g. zip) the files on the other platform and
 uncompress it on VMS; if you have the same symptom, try to create the files
@@ -410,7 +410,7 @@ machine, e.g. an Xterm on Windows or telnet to Windows from VMS).
 To be able to print from Vim (running in GUI mode) under VMS you have to set up 
 $TMP logical which should point to some temporary directory and logical SYS$PRINT
 to your default print queue. 
-Example:>
+Example: >
 
         $define SYS$PRINT HP5ANSI
 

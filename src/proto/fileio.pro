@@ -7,6 +7,7 @@ void shorten_fnames __ARGS((int force));
 char_u *modname __ARGS((char_u *fname, char_u *ext, int prepend_dot));
 char_u *buf_modname __ARGS((int shortname, char_u *fname, char_u *ext, int prepend_dot));
 int vim_fgets __ARGS((char_u *buf, int size, FILE *fp));
+int tag_fgets __ARGS((char_u *buf, int size, FILE *fp));
 int vim_rename __ARGS((char_u *from, char_u *to));
 void check_timestamps __ARGS((int focus));
 int buf_check_timestamp __ARGS((buf_t *buf, int focus));

@@ -1642,12 +1642,15 @@ slash_adjust(char_u *p)
 }
 
 /*
- * return TRUE is fname is an absolute path name
+ * Return TRUE if "fname" does not depend on the current directory.
  */
     int
 mch_isFullName(char_u *fname)
 {
-    return (vim_strchr(fname, ':') != NULL);
+    /* A name like "d:/foo" and "//server/share" is absolute */
+    return (fname[0] && fname[1] == ':'
+				     && (fname[2] == '/' || fname[2] == '\\'))
+	|| (fname[0] == fname[1] && (fname[0] == '/' || fname[0] == '\\'));
 }
 
 /*

@@ -1,4 +1,4 @@
-*insert.txt*    For Vim version 6.0e.  Last change: 2000 Jul 21
+*insert.txt*    For Vim version 6.0f.  Last change: 2000 Aug 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -655,13 +655,13 @@ CTRL-X CTRL-T		Works as CTRL-X CTRL-K, but in a special way. It uses
 			matches, even though they don't complete the word.
 			Thus a word can be completely replaced.
 
-			For an example, imagine the 'thesaurus file has a line
-			like this: >
+			For an example, imagine the 'thesaurus' file has a
+			line like this: >
 				angry furious mad enraged
-<			Placing the cursor after the letters 'ang' and typing
-			CTRL-X CTRL-T would complete the word 'angry';
-			subsequent presses would change the word to 'furious',
-			'mad' etc.
+<			Placing the cursor after the letters "ang" and typing
+			CTRL-X CTRL-T would complete the word "angry";
+			subsequent presses would change the word to "furious",
+			"mad" etc.
 			Other uses include translation between two languages,
 			or grouping API functions by keyword.
 

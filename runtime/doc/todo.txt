@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0e.  Last change: 2000 Aug 06
+*todo.txt*      For Vim version 6.0f.  Last change: 2000 Aug 13
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,6 +29,9 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
+Test3 fails, because of the change to use 'comments' for 'cindent'.
+Use the old method when there is no match in 'comments'.
+
 Win32: mouseshape doesn't return to normal after a ":set" command. (Timothy)
 
 Win32 GUI: (on no file), :vs<CR>:q<CR> leaves a trail of pixels down the
@@ -38,6 +41,10 @@ Win32 GUI: :split<CR> :vs<CR> ^W <right> :new<CR> :q<CR> :q<CR> leaves the top
 window with no scrollbar. (Paul Moore)
 
 Win32 GUI: mouse wheel always scrolls rightmost window.
+
+Win32: "make test" has errors in test11 and test30.
+
+":sview" keeps 'readonly' option for an existing buffer, it should be set.
 
 GTK GUI: comma in 'guifont' not recognized and it's used for the Normal
 highlighing? (Ron Aaron)
@@ -50,13 +57,14 @@ have a line longer than the window's width, ('wrap' being on), the whole
 continuation line is highlighted in the 'nontext' style. (Rafael
 Garcia-Suarez)
 
-VMS: Include ~/vim/patches/kluka_vms.patch?
+When dragging the Visual selection with the mouse, the text doesn't scroll if
+only the last line is on the screen. (Nam)
 
-Find in path stuff: When 'tags' is "tags,TAGS", the TAGS file will not be
-found, because the same directories are searched.  Make the vim_findfile..()
-functions remember the visited directories in combination with the file name.
+Displaying signs doesn't always work properly.  Should use a flag in the
+window for the sign column: it is set as soon as a sign is drawn and reset
+when editing another file.
+When drawing the first sign the display isn't updated properly.
 
-Win32: "make test" has errors in test11 and test30.
 
 Main items for 6.0 (Item J first now!):
 A.  Folding
@@ -84,7 +92,7 @@ I.  Multi-language support
 	Added gettext() stuff.  Needs to be tested.
 	":menutrans" works, but how to handle different encodings?
 J.  User Friendlier
-	Don't copy modeline settings to next buffer or window.
+	Enhance Windows install program.
 
 
 A. Folding:
@@ -102,6 +110,7 @@ A. Folding:
     open/close of the fold depend on whether it's inside an open/closed fold.
     Otherwise closed folds appear when inserting lines in a fold that was
     opened with "zO".
+-   When moving over a fold, always put the cursor on the first line.
 -   In Insert mode, not only show the line the cursor is in but the whole
     fold.
 -   Add ":foldclose": close folds in a range of lines.
@@ -274,16 +283,12 @@ E. Virtual edit:
 
 
 F. Sun Visual Workshop patch from Gordon Prieur:
--   glyph mixed in with attr???
--   don't use pixel offset for glyph, use column in text so that it works for
-    all GUIs and console.  Use two character cells for now (may need more for
-    bigger glyphs).
--   rename "glyph" to "sign".
--   remove ":glyphs", use ":glyph" without arguments to show glyphs.
+-   sign mixed in with highlighting, is that what we want?
+-   Check that rename from "glyph" to "sign" is correct.
+-   remove ":signs", use ":sign" without arguments to show signs
 -   docs for 'balloon*' options.
 -   docs for 'F' flag in 'guioptions'.
 -   add stdarg.h include file in os_unix.h?
--   Cleanup debug stuff (workshop.h).
 -   Add code to handle folding.
 
 
@@ -310,8 +315,16 @@ I. Multi-language support:
 
 
 J. User Friendlier
-9   Default for 'runtimepath' on non-Unix systems: Which directory to use for
-    user plugins?  After selecting this, adjust text in usr_06.txt.
+9   Make Windows install program better:
+    Test the current version in various environments.
+    Offer help choice, give explanation for each menu choice.
+    Instead of using the first directory in $PATH, always write the vim.bat in
+    the Windows directory?
+    OR: use $VIM/runtime for default version, $VIM/vim<version> for others.
+    Install should check if $VIM/runtime exists and rename it.
+    Add an icon on the Desktop, if the user wants this.
+    Add Vim to the Start/Programs menu if the user wants this.
+
 8   Write about how to write a plugin in usr_40.txt.  Require that there is
     a "loaded_<name>_plugin" to avoid loading it (twice).
 8   Add explanation how to add local documentation files (by sysadm).  Check:
@@ -319,8 +332,9 @@ J. User Friendlier
 9   Add buffer-local menu.  Should offer a choice between removing the menu or
     disabling it.  Be careful that tear-offs don't disappear (keep one empty
     item?).
-9   Also support a "post_<filetype>.vim" file, to do adjustments after loading
-    a standard settings or syntax file?
+-   Is it possible to add a "Save Settings" command?  All manual :set, :map
+    etc. should be stored in a file.  Automatically set options _not_.  How do
+    we know what to write and what not?
 -   Use "session default" for options: use this value when opening a new
     window or editing a new buffer.
     original default: set at compile time or depending on terminal
@@ -343,10 +357,16 @@ Messages:
 
 
 Various recent:
+-   GUI: Implement ":popup" for other systems than Windows.
+-   GUI: <C--> cannot be mapped.  Should be possible to recognize this as a
+    normal "-" with the Ctrl modifier.
 8   Add "display" argument to many items in syntax files, to speed up parsing.
 -   update $VIMRUNTIME/optwin for new options.
 -   When using the file browser in GTK the absolute file name is used.  Should
     try to simplify it. (Lohner)
+-   When dragging the Visual selection with the mouse and 'scrolloff' is zero,
+    behave like 'scrolloff' is one, so that the text scrolls when the pointer
+    is in the top line.
 -   When checking if a file exists on Unix, uses lstat(), otherwise a symlink
     will not be found.
 -   Check all use of islower()/isupper() for negative value (special key).
@@ -375,8 +395,6 @@ Various recent:
     "q" == 32 more).
 -   "/$" in 'list' mode should put the highlighting on the "$" character, also
     for empty lines.
--   Add a $(DESTDIR) to the makefile, for all items that are installed.
-    (Akkerman)
 8   Use $install_prefix? (Cabric)
 -   Write little program to join lines ending in "\" for VAXC compiler.
     (Arpadffy)
@@ -393,7 +411,8 @@ Various recent:
     line 2, while the "cannot open display" is somewhere else.
 -   Win32 GUI bug: When inserting a /* or removing it (changing the
     highlighting) a line of the screen is deleted.
--   Insert completion doesn't show match while searching for others.
+-   Insert completion doesn't show match while searching for others.  Also try
+    with "disable cursor" removed.
 -   ":syn keyword" should accept "display" as a keyword.
 -   When swap file message sees that date of file is newer as date of swap
     file, add message "more recent than swap file".
@@ -446,10 +465,6 @@ Various recent:
     (e.g. writing a hidden buffer, autocommands) use a NULL curwin or window
     argument.  Remove saving/restoring curwin/curbuf in fileio.c buf_write().
 -   Add "gG": like what "gj" is to "j": go the the N'th window line.
-8   Add documentation for thesaurus completion. (Negri)
-    For thesaurus link see ~/info/wordlists.txt .
-8   Add documentation for 'mouseshape'. (Negri)
-    Update names of modes and shapes supported.
 8   When appending to a file, say "appended" instead of "written".
 9   :he \^= gives an error for using \_
 9   :he ^= doesn't find tag :set^=.  Even "he :set^=" doesn't find it.
@@ -461,6 +476,8 @@ Various recent:
 -   When using the arglist, use a flag for each file in it that indicates if
     it has been edited.  When using ":q" check if all flags are set.  Helps
     when using buffer commands to go to the files.
+-   Add something to 'listchars' to mark the start of a line that doesn't
+    start in column 1 when scrolling horizontally ('nowrap').
 
 
 Considered for release 6.0:
@@ -470,15 +487,6 @@ Considered for release 6.0:
 -   When $CFLAGS is set, don't change it in configure. (Griffis)
     Give a warning that CFLAGS from the environment is being used.
 8   Use configure to set absolute paths in tools scripts when installing.
-8   Make Windows install program better.  Offer help button choice, give
-    explanation for each menu choice.
-    Find a way to avoid that shortcuts need to be changed.  Make a difference
-    between a "main" vim.exe/gvim.exe (in $VIM) and a version-specific one (in
-    $VIM/vim<version>).  Never move the .exe in install.vim, only adjust
-    $PATH?
-    OR: use $VIM/runtime for default version, $VIM/vim<version> for others.
-    Install should check if $VIM/runtime exists and rename it.
-    For autoexec.bat use $SYSTEMDRIVE if it exists, C: otherwise. (Bruehe)
 9   Add "mswin" feature, for Win16 and Win32.  Include gui_w16.c? (Negri)
 8   Windows (and others): When using the scrollbar to scroll, don't move the
     cursor position.  When moving the cursor scroll to the cursor position.
@@ -1328,6 +1336,7 @@ Syntax highlighting:
 8   Add spell checking.  Use "ispell -a" somehow.
     ~/vim/patches/wm_vim-5_4d.zip  can be used as an example (includes ispell
     inside Vim).
+7   Command line completion for ":find" should search in 'path'.
 8   Add more command line completion for :syntax.
 8   Add more command line completion for :highlight.
 7   Should find a better way to parse the :syntax and :highlight commands.
@@ -2525,7 +2534,10 @@ Options:
     default value.
 8   Should ":mksession" restore the current directory when writing the
     session, or the directory where the session file is?  Probably need a word
-    in 'sessionoptions' to make a choice.
+    in 'sessionoptions' to make a choice:
+    "curdir" (cd to current directory when session file was generated)
+    "sessiondir" (cd to directory of session file)
+    "nodir" (don't cd at all)
 8   Make "old" number options that really give a number of effects into string
     options that are a comma separated list.  The old number values should
     also be supported.
@@ -2819,7 +2831,6 @@ Various improvements:
     noticable.
 9   When using ":w <fname>" it's possible that this file is loaded in another
     buffer.  Give a warning right away, don't wait for a shell command.
-8   Add ":first", ":bfirst", etc. to complement ":last", ":blast, etc.
 -   Make 'smartcase' work even though 'ic' isn't set (Webb).
 7   When formatting text, allow to break the line at a number of characters.
     Use an option for this: 'breakchars'?  Useful for formatting Fortran code.

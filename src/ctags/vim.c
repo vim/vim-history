@@ -53,10 +53,12 @@ extern void createVimTags()
     {
 	if (strncmp(line, "fu", (size_t)2) == 0)
 	{
-	    const unsigned char *cp = (const unsigned char*)line + 2;
-	    if (strncmp(line + 2, "nction", (size_t)6) == 0)
-		cp += 6;
-	    if (*cp == '!')
+	    const unsigned char *cp = (const unsigned char*)line + 1;
+	    if ((int)*++cp == 'n'  &&  (int)*++cp == 'c'  &&
+		(int)*++cp == 't'  &&  (int)*++cp == 'i'  &&
+		(int)*++cp == 'o'  &&  (int)*++cp == 'n')
+		    ++cp;
+	    if ((int)*cp == '!')
 		++cp;
 	    if (isspace((int)*cp))
 	    {

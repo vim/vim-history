@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0e.  Last change: 2000 Jul 07
+*editing.txt*   For Vim version 6.0f.  Last change: 2000 Aug 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -657,6 +657,10 @@ expression functions |argc()| and |argv()|.
 			Start editing the first file in the argument list.
 			Discard any changes to the buffer.  Also see |++opt|
 			and |+cmd|. {Vi: no ++opt}
+
+							*:fir* *:first*
+:fir[st][!] [++opt] [+cmd]
+			Other name for ":rewind". {not in Vi}
 
 							*:la* *:last*
 :la[st] [++opt] [+cmd]

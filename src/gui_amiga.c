@@ -574,7 +574,7 @@ gui_mch_add_menu_item(vimmenu_t *menu, vimmenu_t *parent, int idx)
     assert(parent != NULL);
 
     /* Don't add menu separator */
-    if (is_menu_separator(menu->name))
+    if (menu_is_separator(menu->name))
 	return;
 
     if (parent->menuItemPtr == NULL)
@@ -670,7 +670,7 @@ gui_mch_add_menu(vimmenu_t *menu, vimmenu_t *parent, int idx)
     struct Menu	*newMenu;
     int		pos = 0;
 
-    if (!menubar_menu(menu->name))
+    if (!menu_is_menubar(menu->name))
 	return;
 
     menu->menuPtr = newMenu = getMenu(gui.window->RPort, 0, menu->dname);

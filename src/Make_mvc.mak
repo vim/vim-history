@@ -101,7 +101,7 @@ CTAGS = ctags
 SNIFF_INCL  = if_sniff.h
 SNIFF_OBJ   = $(OBJDIR)/if_sniff.obj
 SNIFF_LIB    = shell32.lib
-SNIFF_DEFS  = -DUSE_SNIFF
+SNIFF_DEFS  = -DFEAT_SNIFF
 # The SNiFF integration needs multithreaded libraries!
 MULTITHREADED = yes
 !endif
@@ -110,8 +110,13 @@ MULTITHREADED = yes
 CVARS = $(cvarsmt)
 CON_LIB = $(conlibsmt)
 !else
+!ifdef NODEBUG
 CVARS = $(cvars)
 CON_LIB = $(conlibs)
+!else
+CVARS= $(cvarsd)
+CON_LIB = $(conlibsd)
+!endif
 !endif
 
 # If you have a fixed directory for $VIM or $VIMRUNTIME, other than the normal
@@ -249,7 +254,7 @@ SUBSYSTEM = console
 # TCL interface
 !ifdef TCL
 !message Tcl detected - root dir is "$(TCL)"
-CFLAGS  = $(CFLAGS) -DHAVE_TCL
+CFLAGS  = $(CFLAGS) -DFEAT_TCL
 TCL_OBJ	= $(OUTDIR)\if_tcl.obj
 TCL_INC	= /I "$(TCL)\Include" /I "$(TCL)"
 #TCL_LIB = $(TCL)\lib\tcl80vc.lib
@@ -260,7 +265,7 @@ TCL_LIB = $(TCL)\lib\tcl83vc.lib
 # Adjust the version number in "python14", if needed.
 !ifdef PYTHON
 !message Python detected - root dir is "$(PYTHON)"
-CFLAGS    = $(CFLAGS) -DHAVE_PYTHON
+CFLAGS    = $(CFLAGS) -DFEAT_PYTHON
 PYTHON_OBJ = $(OUTDIR)\if_python.obj
 PYTHON_INC = /I "$(PYTHON)\Include" /I "$(PYTHON)\PC"
 PYTHON_LIB = $(PYTHON)\libs\python15.lib
@@ -270,7 +275,7 @@ PYTHON_LIB = $(PYTHON)\libs\python15.lib
 !ifdef PERL
 !message Perl detected - root dir is "$(PERL)"
 !message
-CFLAGS	 = $(CFLAGS) -DHAVE_PERL_INTERP
+CFLAGS	 = $(CFLAGS) -DFEAT_PERL
 PERL_EXE = $(PERL)\Bin\perl
 PERL_OBJ = $(OUTDIR)\if_perl.obj $(OUTDIR)\if_perlsfio.obj
 PERL_INC = /I $(PERL)\Lib\Core
@@ -282,7 +287,7 @@ XSUBPP_TYPEMAP = $(PERL)\lib\ExtUtils\typemap
 conflags = /nologo /subsystem:$(SUBSYSTEM) /incremental:no
 
 LINKARGS1 = $(linkdebug) $(conflags)
-LINKARGS2 = $(CON_LIB) $(GUI_LIB) $(OLE_LIB)  user32.lib $(SNIFF_LIB) \
+LINKARGS2 = $(CON_LIB) $(GUI_LIB) $(LIBC) $(OLE_LIB)  user32.lib $(SNIFF_LIB) \
 		$(PERL_LIB) $(PYTHON_LIB) $(TCL_LIB) $(LINK_PDB)
 
 all:	$(VIM) vimrun.exe install.exe uninstal.exe ctags/ctags.exe xxd/xxd.exe
@@ -300,15 +305,15 @@ $(OUTDIR):
 	if not exist $(OUTDIR)/nul    mkdir $(OUTDIR)
 
 install.exe: dosinst.c
-	$(CC) -DWIN32 dosinst.c kernel32.lib shell32.lib
+	$(CC) -DNDEBUG -DWIN32 dosinst.c kernel32.lib shell32.lib
 	- del install.exe
 	ren dosinst.exe install.exe
 
 uninstal.exe: uninstal.c
-	$(CC) -DWIN32 uninstal.c advapi32.lib
+	$(CC) -DNDEBUG -DWIN32 uninstal.c advapi32.lib
 
 vimrun.exe: vimrun.c
-	$(CC) vimrun.c
+	$(CC) -DNDEBUG vimrun.c
 
 ctags/ctags.exe: ctags/main.c
 	cd ctags
@@ -514,10 +519,10 @@ auto/pathdef.c: auto
 	@echo creating auto/pathdef.c
 	@echo /* pathdef.c */ > auto\pathdef.c
 	@echo #include "vim.h" >> auto\pathdef.c
-	@echo char_u *default_vim_dir = (char_u *)"$(VIMRCLOC)"; >> auto\pathdef.c
-	@echo char_u *default_vimruntime_dir = (char_u *)"$(VIMRUNTIMEDIR)"; >> auto\pathdef.c
-	@echo char_u *all_cflags = (char_u *)"$(CC) $(CFLAGS)"; >> auto\pathdef.c
-	@echo char_u *all_lflags = (char_u *)"$(link) $(LINKARGS1) $(LINKARGS2)"; >> auto\pathdef.c
+	@echo char_u *default_vim_dir = (char_u *)"$(VIMRCLOC:\=\\)"; >> auto\pathdef.c
+	@echo char_u *default_vimruntime_dir = (char_u *)"$(VIMRUNTIMEDIR:\=\\)"; >> auto\pathdef.c
+	@echo char_u *all_cflags = (char_u *)"$(CC:\=\\) $(CFLAGS)"; >> auto\pathdef.c
+	@echo char_u *all_lflags = (char_u *)"$(link:\=\\) $(LINKARGS1:\=\\) $(LINKARGS2:\=\\)"; >> auto\pathdef.c
 	@echo char_u *compiled_user = (char_u *)"$(USERNAME)"; >> auto\pathdef.c
 	@echo char_u *compiled_sys = (char_u *)"$(USERDOMAIN)"; >> auto\pathdef.c
 

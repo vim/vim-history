@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0e.  Last change: 2000 Aug 06
+*version6.txt*  For Vim version 6.0f.  Last change: 2000 Aug 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -113,10 +113,10 @@ filetype detection changed			*filetypedetect-changed*
 
 The filetype detection previously was using the "filetype" autocommand group.
 This caused confusion with the FileType event name.  The group is now called
-"filetypedetect".
-The support for 'runtimepath' has made the "myfiletypefile" mechanism
-obsolete.  It still works, but if the "filetype" group is used the
+"filetypedetect".  It still works, but if the "filetype" group is used the
 autocommands will not be removed by ":filetype off".
+The support for 'runtimepath' has made the "myfiletypefile" and "mysyntaxfile"
+mechanism obsolete.  They are still used for backwards compatibility.
 The connection between the FileType event and setting the 'syntax' option was
 previously in the "syntax" autocommand group.  That caused confusion with the
 Syntax event name.  The group is now called "syntaxset".
@@ -128,7 +128,7 @@ CTRL-U in Command-line mode			*CTRL-U-changed*
 CTRL-U in the command line cleared the whole line.  Most shells only delete
 the characters before the cursor.  Made it like that. (Steve Wall)
 You can get the old behavior with CTRL-E CTRL-U: >
-	:cmap <C-U> <C-E><C-U>
+	:cnoremap <C-U> <C-E><C-U>
 
 
 Documentation					*documentation-6*
@@ -316,6 +316,8 @@ loaded.  For Unix, the directory "~/.vim/plugin" is used by default.  The
 'runtimepath' option can be set to look in other directories for plugins.
 |load-plugins| |add-plugin|
 
+The |:runtime| has been added to load one or more files in 'runtimepath'.
+
 
 Filetype settings				*new-filetype-settings*
 -----------------
@@ -342,6 +344,9 @@ To be able to make this work, several features were added:
   When the "localmapchar" variable has been set by the user, it will be
   prepended to mappings in the settings file.
 
+The new ":setfiletype" command is used in the filetype detection autocommands,
+to avoid that 'filetype' is set twice.
+
 
 Cursor in virtual position				*new-virtedit*
 --------------------------
@@ -367,7 +372,9 @@ This was originally made to work with Sun Visual Workshop. (Gordon Prieur)
 Buffer types						*new-buftype*
 ------------
 
-'buftype' option: special buffer type.  Currently 'quickfix' is allowed.
+'buftype' option: special buffer type.
+"quickfix": Shows the error list, allowing to jump to the error location.
+"nofile": A buffer that's not associated with any file.
 
 
 Ports							*ports-6*
@@ -379,6 +386,8 @@ Port to OS/390 Unix (Ralf Schandl)
 
 Included jsbmouse support. (Darren Garth)
 Support for dec mouse in Unix. (Steve Wall)
+
+Port to 16-bit MS Windows (Windows 3.1x) (Vince Negri)
 
 
 Quickfix extended					*quickfix-6*
@@ -424,6 +433,9 @@ Various new items					*new-items-6*
 :finish		Finish sourcing a file.  Can be used to skip the rest of a Vim
 		script. |:finish|
 
+:first, :bfirst, :ptfirst, etc.
+		Alias for ":rewind".  It's more logical compared to ":last".
+
 :enew		Edit a new, unnamed buffer.  This is needed, because ":edit"
 		re-edits the same file. (Wall)
 
@@ -439,6 +451,10 @@ Various new items					*new-items-6*
 :hide {command}
 		Execute {command} with 'hidden' set.
 
+:emenu		in Visual mode to execute a ":vmenu" entry.
+
+:popup		pop up a popup menu.
+
 [', [`, ]' and ]`
 		move the cursor to the next/previous lowercase mark.
 
@@ -451,14 +467,24 @@ New marks:
 New functions:
 search()	Search for a pattern.
 
+The ":command" command now accepts a "-bar" argument.  This allows the user
+command to be followed by "| command|.
+
 ==============================================================================
 IMPROVEMENTS						*improvements-6*
 
-Included Exuberant ctags 4.0. (Darren Hiebert)
+Included Exuberant ctags 4.03. (Darren Hiebert)
 It now additionally supports Assembler, COBOL, LISP, PERL, Scheme, AWK, Bourne
 Shell, BETA, Python, TCL, and Vim scripts.
 When there is a format error in a tags file, the byte position is reported so
 that the error can be located.
+
+Allow a tags file to have CR, CR-LF or LF line separator.  Useful on the
+Macintosh.
+
+The DOS/Windows install program has been enhanced.  The Vim executable is
+never moved or $PATH changed.  A small batch file is created in a directory in
+$PATH.  Less choices to be made.
 
 Added "b:changedtick" variable.  Incremented at each change, also for undo.
 Can be used to take action only if the buffer has been changed.
@@ -556,6 +582,9 @@ command-line editing and completion. (Ulf Carlsson)
 Redirect messages to the clipboard ":redir @*" and to the unnamed register
 ":redir @"". (Wall)
 
+":let @/ = ''" clears the search pattern, instead of setting it to an empty
+string.
+
 Expression evaluation:
 "? :" can be used like in C.
 col("$") returns the length of the cursor line. (Stephen P. Wall)
@@ -607,6 +636,10 @@ actual key codes used.
 ":browse set" now also works in the console mode.  ":browse edit" will give an
 error message.
 
+":bdelete" and ":bunload" only report the number of deleted/unloaded buffers
+when more than 'report'.  The message was annoying when deleting a buffer in a
+script.
+
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
 
@@ -653,5 +686,14 @@ with "syntax".
 
 When exanding a file name caused an error (e.g., for <amatch>) it was produced
 even when inside an "if 0".
+
+'cindent' formatted C comments differently from what the 'comments' option
+specified. (Steve Wall)
+
+Default for 'grepprg' didn't include the file name when only grepping in one
+file.  Now /dev/null has been added for Unix.
+
+Opening the option window twice caused trouble.  Now the cursor goes to the
+existing option window.
 
  vim:tw=78:

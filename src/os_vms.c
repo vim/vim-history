@@ -1198,9 +1198,8 @@ mch_FullName(char_u *fname, char_u *buf, int len, int force)
 }
 
 /*
- *	mch_isFullName	return TRUE is fname is an absolute path name
+ * Return TRUE if "fname" does not depend on the current directory.
  */
-
     int
 mch_isFullName(char_u *fname)
 {

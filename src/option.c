@@ -107,7 +107,7 @@ typedef enum
  */
 static int	p_ai;
 static int	p_bin;
-#ifdef FEAT_QUICKFIX
+#if defined(FEAT_QUICKFIX)
 static char_u	*p_bt;
 #endif
 #ifdef FEAT_CINDENT
@@ -361,7 +361,7 @@ static struct vimoption options[] =
 #endif
 			    },
     {"buftype",	    "bt",   P_STRING|P_ALLOCED|P_VI_DEF,
-#ifdef FEAT_QUICKFIX
+#if defined(FEAT_QUICKFIX)
 			    (char_u *)&p_bt, PV_BT,
 			    {(char_u *)"", (char_u *)0L}
 #else
@@ -709,7 +709,13 @@ static struct vimoption options[] =
 			    /* may be changed to "grep -n" in os_win32.c */
 			    (char_u *)"findstr /n",
 # else
-			    (char_u *)"grep -n",
+#  ifdef UNIX
+			    /* Add an extra file name so that grep will always
+			     * insert a file name in the match line. */
+			    (char_u *)"grep -n $* /dev/null",
+#  else
+			    (char_u *)"grep -n ",
+#endif
 # endif
 			    (char_u *)0L},
 #else
@@ -1905,8 +1911,8 @@ static char *(p_ead_values[]) = {"both", "ver", "hor", NULL};
 #ifdef FEAT_CLIPBOARD
 static char *(p_cb_values[]) = {"unnamed", "autoselect", NULL};
 #endif
-#ifdef FEAT_QUICKFIX
-static char *(p_buftype_values[]) = {"quickfix", NULL};
+#if defined(FEAT_QUICKFIX)
+static char *(p_buftype_values[]) = {"nofile", "quickfix", NULL};
 #endif
 static char *(p_bs_values[]) = {"indent", "eol", "start", NULL};
 #ifdef FEAT_FOLDING
@@ -3411,7 +3417,7 @@ check_win_options(win)
 check_buf_options(buf)
     buf_t	*buf;
 {
-#ifdef FEAT_QUICKFIX
+#if defined(FEAT_QUICKFIX)
     if (buf->b_p_bt == NULL)
 	buf->b_p_bt = empty_option;
 #endif
@@ -4168,12 +4174,31 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf, local)
     }
 #endif
 
-#ifdef FEAT_QUICKFIX
+#if defined(FEAT_QUICKFIX)
     /* When 'buftype' is set, check for valid value. */
     else if (varp == &(curbuf->b_p_bt))
     {
 	if (check_opt_strings(curbuf->b_p_bt, p_buftype_values, FALSE) != OK)
 	    errmsg = e_invarg;
+	else
+	{
+	    if (bt_nofile(curbuf))
+	    {
+		/* also close and forbid swapfile */
+		mf_close_file(curbuf, TRUE);	/* remove the swap file */
+		curbuf->b_p_swf = FALSE;	/* set noswapfile option */
+	    }
+	    else
+	    {
+		/* reset swapfile to global default */
+		curbuf->b_p_swf = p_swf;
+	    }
+	    if (curwin->w_status_height)
+	    {
+		curwin->w_redr_status = TRUE;
+		redraw_later(VALID);
+	    }
+	}
     }
 #endif
 
@@ -4661,6 +4686,15 @@ set_bool_option(opt_idx, varp, value, local)
     /* when 'swf' is set create swapfile, when reset remove swapfile */
     else if ((int *)varp == &curbuf->b_p_swf)
     {
+#ifdef FEAT_QUICKFIX
+	/* disallow swapfile in nofile buffers */
+	if (bt_nofile(curbuf))
+	{
+	    curbuf->b_p_swf = FALSE;
+	    return (char_u *)"You cannot :set swapfile if 'buftype' is \"nofile\"";
+	}
+#endif
+
 	if (curbuf->b_p_swf && p_uc)
 	    ml_open_file(curbuf);		/* create the swap file */
 	else
@@ -5780,7 +5814,7 @@ get_varp(p)
 
 	case PV_AI:	return (char_u *)&(curbuf->b_p_ai);
 	case PV_BIN:	return (char_u *)&(curbuf->b_p_bin);
-#ifdef FEAT_QUICKFIX
+#if defined(FEAT_QUICKFIX)
 	case PV_BT:	return (char_u *)&(curbuf->b_p_bt);
 #endif
 #ifdef FEAT_CINDENT
@@ -6015,7 +6049,7 @@ buf_copy_options(buf, flags)
 		buf->b_p_fcc = vim_strsave(p_fcc);
 #endif
 		buf->b_p_ff = vim_strsave(p_ff);
-#ifdef FEAT_QUICKFIX
+#if defined(FEAT_QUICKFIX)
 		buf->b_p_bt = empty_option;
 #endif
 	    }

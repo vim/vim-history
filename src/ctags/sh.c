@@ -69,12 +69,16 @@ extern void createShTags()
     {
 	if (line[0] == '#')
 	    continue;
-	if (strstr(line, "()") != NULL)
+
+	if (strchr(line, '(') != NULL)
 	{
 	    const unsigned char* cp = (const unsigned char*)line;
 
-	    if (strncmp(line, "function", (size_t)8) == 0  &&
-		isspace((int)line[8]))
+	    while (isspace (*cp))
+		cp++;
+
+	    if (strncmp((const char*)cp, "function", (size_t)8) == 0  &&
+		isspace((int)cp[8]))
 	    {
 		cp += 8;
 	    }
@@ -88,8 +92,13 @@ extern void createShTags()
 	    vStringTerminate(name);
 	    while (isspace((int)*cp))
 		++cp;
-	    if (*cp++ == '('  &&  *cp++ == ')'  && ! hackReject (name))
-		makeFunctionTag(name);
+	    if (*cp++ == '(')
+	    {
+		while (isspace((int)*cp))
+		    ++cp;
+		if (*cp == ')'  && ! hackReject (name))
+		    makeFunctionTag(name);
+	    }
 	    vStringClear(name);
 	}
     }

@@ -45,20 +45,39 @@ static void makeSubTag( name )
 
 /* Algorithm adapted from from GNU etags.
  * Perl support by Bart Robinson <lomew@cs.utah.edu>
- * Perl sub names: look for /^sub[ \t\n]+[^ \t\n{]+/
+ * Perl sub names: look for /^[ \t\n]sub[ \t\n]+[^ \t\n{]+/
  */
 extern void createPerlTags()
 {
     vString *vLine = vStringNew();
     vString *name = vStringNew();
+    boolean skipPodDoc = FALSE;
     const char *line;
 
     while ((line = fileReadLine(vLine)) != NULL)
     {
 	const unsigned char *cp = (const unsigned char*)line;
 
-	if (line[0] != '#'  &&
-	    *cp++ == 's' && *cp++ == 'u' && *cp++ == 'b' && isspace(*cp))
+	if (skipPodDoc)
+	{
+	    if (strcmp(line, "=cut") == 0)
+		skipPodDoc = FALSE;
+	    continue;
+	}
+	else if (line[0] == '=')
+	{
+	    skipPodDoc = (boolean)(strncmp(line + 1, "cut", (size_t)3) != 0);
+	    continue;
+	}
+	else if (strcmp(line, "__END__") == 0)
+	    break;
+	else if (line[0] == '#')
+	    continue;
+
+	while (isspace (*cp))
+	    cp++;
+
+	if (*cp++ == 's' && *cp++ == 'u' && *cp++ == 'b' && isspace(*cp))
 	{
 	    while (isspace (*cp))
 		cp++;
@@ -68,7 +87,8 @@ extern void createPerlTags()
 		cp++;
 	    }
 	    vStringTerminate(name);
-	    makeSubTag(name);
+	    if (vStringLength(name) > 0)
+		makeSubTag(name);
 	    vStringClear(name);
 	}
     }

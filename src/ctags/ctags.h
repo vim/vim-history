@@ -15,10 +15,10 @@
 =   General defines
 ============================================================================*/
 #ifndef PROGRAM_VERSION
-# define PROGRAM_VERSION "4.0"
+# define PROGRAM_VERSION "4.0.3"
 #endif
 #define PROGRAM_NAME	"Exuberant Ctags"
-#define PROGRAM_URL	"http://darren.hiebert.com/ctags/"
+#define PROGRAM_URL	"http://ctags.sourceforge.net"
 #define AUTHOR_NAME	"Darren Hiebert"
 #define AUTHOR_EMAIL	"darren@hiebert.com"
 

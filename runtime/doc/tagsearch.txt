@@ -1,4 +1,4 @@
-*tagsearch.txt* For Vim version 6.0e.  Last change: 2000 Jul 07
+*tagsearch.txt* For Vim version 6.0f.  Last change: 2000 Aug 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -236,6 +236,9 @@ g CTRL-]		Like CTRL-], but use ":tjump" instead of ":tag".
 			to [count]th matching tag.  See |tag-!| for [!].  {not
 			in Vi}
 
+							*:tf* *:tfirst*
+:[count]tf[irst][!]	Same as ":trewind". {not in Vi}
+
 							*:tl* *:tlast*
 :tl[ast][!]		Jump to last matching tag.  See |tag-!| for [!].  {not
 			in Vi}
@@ -285,6 +288,9 @@ the same as above, with a "p" prepended.
 							*:ptr* *:ptrewind*
 :[count]ptr[ewind][!]	":trewind" in the preview window.  See |:ptag|.
 			{not in Vi}
+
+							*:ptf* *:ptfirst*
+:[count]ptf[irst][!]	Same as ":ptrewind". {not in Vi}
 
 							*:ptl* *:ptlast*
 :ptl[ast][!]		":tlast" in the preview window.  See |:ptag|.

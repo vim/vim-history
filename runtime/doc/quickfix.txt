@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0e.  Last change: 2000 Aug 05
+*quickfix.txt*  For Vim version 6.0f.  Last change: 2000 Aug 08
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -71,6 +71,9 @@ The following commands can be used if you are in QuickFix mode:
 							*:crewind* *:cr*
 :cr[ewind][!] [nr]	Display error [nr].  If [nr] is omitted, the FIRST
 			error is displayed.  See |:cc|.
+
+							*:cfirst* *:cfir*
+:cfir[st][!] [nr]	Same as ":crewind".
 
 							*:clast* *:cla*
 :cla[st][!] [nr]	Display error [nr].  If [nr] is omitted, the LAST
@@ -152,9 +155,10 @@ instead.  If the buffer in the used window has changed, and the error is in
 another file, jumping to the error will fail.  You will first have to make
 sure the window contains a buffer which can be abandoned.
 
-When the quickfix window has been filled, the BufReadPost autocommand event is
-triggered.  This can be used to perform some action on the listed errors.
-Example: >
+When the quickfix window has been filled, two autocommand events are
+triggered.  First the 'filetype' option is set to "qf", which triggers the
+FileType event.  Then the BufReadPost event is triggered.  This can be used to
+perform some action on the listed errors.  Example: >
 	au BufReadPost quickfix  silent g/^/s//\=line(".")." "/
 This prepends the line number to each line.  Note the use of "\=" in the
 substitute string of the ":s" command, which is used to evaluate an

@@ -2125,7 +2125,7 @@ gui_mch_add_menu(menu, parent, idx)
     long	len;
     short	index;
 
-    if (/* !menubar_menu(menu->name)
+    if (/* !menu_is_menubar(menu->name)
 	    || */ (parent != NULL && parent->submenu_id == 0))
 	return;
 
@@ -2168,7 +2168,7 @@ gui_mch_add_menu(menu, parent, idx)
 	    menu->submenu_id = kHMHelpMenuID;
 	else
 #endif
-	if (menubar_menu(menu->name))
+	if (menu_is_menubar(menu->name))
 	    InsertMenu (menu->submenu_handle, idx); /* before */
 	else
 	    InsertMenu (menu->submenu_handle, hierMenu); /* before */
@@ -2215,7 +2215,7 @@ gui_mch_add_menu_item(menu, parent, idx)
 	return;
 
     /* Don't add menu separator */
-/*  if (is_menu_separator(menu->name))
+/*  if (menu_is_separator(menu->name))
 	return;
 */
     len = STRLEN(menu->dname);

@@ -975,7 +975,7 @@ qf_jump(dir, errornr, forceit)
      * If currently in the quickfix window, find another window to show the
      * file in.
      */
-    if (qf_isqbuf(curbuf))
+    if (bt_quickfix(curbuf))
     {
 	win_t	*win;
 	int	save_p_sb;
@@ -1015,7 +1015,7 @@ qf_jump(dir, errornr, forceit)
 	    win = curwin->w_prev;
 	    for (;;)
 	    {
-		if (win == NULL || qf_isqbuf(win->w_buffer))
+		if (win == NULL || bt_quickfix(win->w_buffer))
 		{
 		    /* Didn't find it, go to the window above the quickfix
 		     * window. */
@@ -1420,7 +1420,7 @@ ex_cwindow(eap)
      * Find existing quickfix window, or open a new one.
      */
     for (win = firstwin; win != NULL; win = win->w_next)
-	if (qf_isqbuf(win->w_buffer))
+	if (bt_quickfix(win->w_buffer))
 	    break;
     if (win != NULL)
 	win_goto(win);
@@ -1445,7 +1445,6 @@ ex_cwindow(eap)
 	    /* switch off 'swapfile' */
 	    set_option_value((char_u *)"swf", 0L, NULL, TRUE);
 	    set_option_value((char_u *)"bt", 0L, (char_u *)"quickfix", TRUE);
-	    set_option_value((char_u *)"ft", 0L, (char_u *)"qf", TRUE);
 	}
 	else
 	    (void)do_buffer(DOBUF_GOTO, DOBUF_FIRST, FORWARD, buf->b_fnum,
@@ -1468,7 +1467,7 @@ qf_find_buf()
     buf_t	*buf;
 
     for (buf = firstbuf; buf != NULL; buf = buf->b_next)
-	if (qf_isqbuf(buf))
+	if (bt_quickfix(buf))
 	    break;
     return buf;
 }
@@ -1576,6 +1575,11 @@ qf_fill_buffer()
     /* correct cursor position */
     check_lnums(TRUE);
 
+    /* Set the 'filetype' to "qf" each time after filling the buffer.  This
+     * resembles reading a file into a buffer, it's more logical when using
+     * autocommands. */
+    set_option_value((char_u *)"ft", 0L, (char_u *)"qf", TRUE);
+
 #ifdef FEAT_AUTOCMD
     apply_autocmds(EVENT_BUFREADPOST, (char_u *)"quickfix", NULL,
 							       FALSE, curbuf);
@@ -1585,15 +1589,27 @@ qf_fill_buffer()
     redraw_curbuf_later(NOT_VALID);
 }
 
+#endif /* FEAT_WINDOWS */
+
 /*
  * Return TRUE if "buf" is the quickfix buffer.
  */
     int
-qf_isqbuf(buf)
+bt_quickfix(buf)
     buf_t	*buf;
 {
-    return (STRCMP(buf->b_p_bt, "quickfix") == 0);
+    return (buf->b_p_bt[0] == 'q');
 }
-#endif /* FEAT_WINDOWS */
+
+
+/*
+ * Return TRUE if "buf" is a "nofile" buffer.
+ */
+    int
+bt_nofile(buf)
+    buf_t	*buf;
+{
+    return (buf->b_p_bt[0] == 'n');
+}
 
 #endif /* FEAT_QUICKFIX */

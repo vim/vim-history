@@ -18,11 +18,12 @@ DOS_VER_FILES=	ctags.h ctags.1 ctags.lsm NEWS
 VERSION_FILES=	$(DOS_VER_FILES) configure.in
 
 DIST_FILES	=	COPYING FAQ INSTALL INSTALL.DOS QUOTES README configure.in \
-				acconfig.h mkinstalldirs Makefile.in Makefile.amiga \
-				Makefile.bc3 Makefile.bc5 Makefile.djg Makefile.maint \
+				acconfig.h mkinstalldirs Makefile.in Makefile.bc3 \
+				Makefile.bc5 Makefile.djg Makefile.maint Makefile.manx \
 				Makefile.mvc Makefile.os2 Makefile.qdos Makefile.ming \
-				descrip.mms source.mak \
-				$(DSOURCES) qdos.c strstr.c $(HEADERS) ctags.1 ctags.lsm NEWS
+				Makefile.sas descrip.mms source.mak \
+				$(DSOURCES) argproc.c qdos.c strstr.c $(HEADERS) \
+				ctags.1 ctags.lsm NEWS
 
 DOS_FILES	=	COPYING FAQ INSTALL.DOS QUOTES README \
 				Makefile.bc3 Makefile.bc5 Makefile.djg Makefile.os2 \
@@ -66,9 +67,9 @@ ctags dctags ctags.prof ctags.cov:
 	$(MAKE) config.h
 	$(MAKE) $(MAKECMDGOALS)
 else
-all: dctags ctags tags syntax.vim
+all: dctags tags syntax.vim
 
-include $(DSOURCES:%.c=$(DEP_DIR)/%.d)
+-include $(DSOURCES:%.c=$(DEP_DIR)/%.d)
 
 #
 # Executable targets
@@ -112,7 +113,10 @@ config.h.in: acconfig.h configure.in
 configure: configure.in
 	autoconf
 
-config.h: config.h.in configure
+config.status: configure
+	./config.status --recheck
+
+config.h: config.h.in config.status
 	./configure --enable-maintainer-mode
 	@ touch $@
 
@@ -281,25 +285,25 @@ $(DEP_DIR)/%.d: %.c Makefile.maint
 #
 # Compilation rules
 #
-%.o: %.c $(DEP_DIR)/%.d
+%.o: %.c
 	@ echo "-- Compiling $<"
 	@ $(CC) $(CFLAGS) -DEXTERNAL_SORT $(OPT) $(WARNINGS) -Wuninitialized -O -c $<  $(REDIR)
 
-%.od: %.c $(DEP_DIR)/%.d
+%.od: %.c
 	@ echo "-- Compiling (debug) $<"
 	@ $(CC) -g $(DCFLAGS) $(WARNINGS) -o $*.od -c $<  $(REDIR)
 
-%.om: %.c $(DEP_DIR)/%.d
+%.om: %.c
 	@ echo "-- Compiling (safe alloc) $<"
 	@ $(CC) -g -DTRAP_MEMORY_CALLS $(DCFLAGS) $(WARNINGS) -o $*.om -c $<  $(REDIR)
 
-%.i: %.c $(DEP_DIR)/%.d FORCE
+%.i: %.c FORCE
 	$(CC) $(DCFLAGS) $(WARNINGS) -Wuninitialized -O -E $< > $@ $(REDIR)
 
-%.ic: %.c $(DEP_DIR)/%.d FORCE
+%.ic: %.c FORCE
 	$(CC) $(DCFLAGS) $(WARNINGS) -Wuninitialized -O -E $< | noblanks > $@ $(REDIR)
 
-%.s: %.c $(DEP_DIR)/%.d FORCE
+%.s: %.c FORCE
 	$(CC) $(DCFLAGS) $(WARNINGS) -S $< > $@ $(REDIR)
 
 %.err: %.c

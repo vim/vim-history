@@ -5,4 +5,5 @@ void qf_list __ARGS((exarg_t *eap));
 void qf_age __ARGS((exarg_t *eap));
 void qf_mark_adjust __ARGS((linenr_t line1, linenr_t line2, long amount, long amount_after));
 void ex_cwindow __ARGS((exarg_t *eap));
-int qf_isqbuf __ARGS((buf_t *buf));
+int bt_quickfix __ARGS((buf_t *buf));
+int bt_nofile __ARGS((buf_t *buf));

@@ -2020,43 +2020,6 @@ syn_current_attr(syncing, displaying)
 }
 
 
-#if defined(FEAT_LINE_HL) || defined(PROTO)
-/*
- * Search all highlights for one with sg_sign_type == type
- */
-    int
-get_debug_highlight(idx)
-    int	    idx;
-{
-    int	    i;
-
-    for (i = 1; i <= highlight_ga.ga_len; i++)
-	if (HL_TABLE()[i].sg_sign_idx == idx)
-	    return HL_TABLE()[i].sg_gui_attr;
-
-    return 0;
-}
-#endif
-
-#if defined(FEAT_SIGNS) || defined(PROTO)
-    XImage *
-get_debug_sign(idx)
-    int	    idx;		    /* the attribute which may have a sign */
-{
-    int	    i;
-    struct hl_group *hp;
-
-    for (i = 0; i < highlight_ga.ga_len; i++)
-    {
-	hp = &HL_TABLE()[i];
-	if (hp->sg_sign_idx == idx && hp->sg_sign != NULL)
-	    return hp->sg_sign;
-    }
-    return NULL;
-}
-#endif
-
-
 /*
  * Check if we already matched pattern "idx" at the current column.
  */
@@ -5432,9 +5395,11 @@ syn_get_id(lnum, col, trans)
     long	col;
     int		trans;	    /* remove transparancy */
 {
+    /* When the position is not after the current position and in the same
+     * line of the same buffer, need to restart parsing. */
     if (curwin->w_buffer != syn_buf
-	    || col >= (long)current_col
-	    || lnum != current_lnum)
+	    || lnum != current_lnum
+	    || col <= (long)current_col)
 	syntax_start(curwin, lnum);
 
     (void)get_syntax_attr((colnr_t)col);
@@ -6504,6 +6469,43 @@ hl_do_font(idx, arg, do_normal)
 	    gui_init_font(arg, FALSE);
     }
 }
+
+#if defined(FEAT_LINE_HL) || defined(PROTO)
+/*
+ * Search all highlights for one with sg_sign_type == type
+ */
+    int
+get_debug_highlight(idx)
+    int	    idx;
+{
+    int	    i;
+
+    for (i = 1; i <= highlight_ga.ga_len; i++)
+	if (HL_TABLE()[i].sg_sign_idx == idx)
+	    return HL_TABLE()[i].sg_gui_attr;
+
+    return 0;
+}
+#endif
+
+#if defined(FEAT_SIGNS) || defined(PROTO)
+    XImage *
+get_debug_sign(idx)
+    int	    idx;		    /* the attribute which may have a sign */
+{
+    int	    i;
+    struct hl_group *hp;
+
+    for (i = 0; i < highlight_ga.ga_len; i++)
+    {
+	hp = &HL_TABLE()[i];
+	if (hp->sg_sign_idx == idx && hp->sg_sign != NULL)
+	    return hp->sg_sign;
+    }
+    return NULL;
+}
+#endif
+
 
 #endif /* FEAT_GUI */
 

@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.0e.  Last change: 2000 Jul 26
+*windows.txt*   For Vim version 6.0f.  Last change: 2000 Aug 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -455,7 +455,7 @@ The minimal height and width of a window is set with 'winminheight' and
 2. :[N]next [file ..]	12. :[N]bnext [N]	to Nth next arg/buf
 3. :[N]Next [N]		13. :[N]bNext [N]	to Nth previous arg/buf
 4. :[N]previous	[N]	14. :[N]bprevious [N]	to Nth previous arg/buf
-5. :rewind		15. :brewind		to first arg/buf
+5. :rewind / :first	15. :brewind / :bfirst	to first arg/buf
 6. :last		16. :blast		to last arg/buf
 7. :all			17. :ball		edit all args/buffers
 			18. :unhide		edit all loaded buffers
@@ -466,7 +466,7 @@ The minimal height and width of a window is set with 'winminheight' and
 22. :[N]snext [file ..] 32. :[N]sbnext [N]      split + to Nth next arg/buf
 23. :[N]sNext [N]       33. :[N]sbNext [N]      split + to Nth previous arg/buf
 24. :[N]sprevious [N]   34. :[N]sbprevious [N]  split + to Nth previous arg/buf
-25. :srewind		35. :sbrewind		split + to first arg/buf
+25. :srewind / :sfirst	35. :sbrewind / :sbfirst split + to first arg/buf
 26. :slast		36. :sblast		split + to last arg/buf
 27. :sall		37: :sball		edit all args/buffers
 			38. :sunhide		edit all loaded buffers
@@ -534,6 +534,10 @@ can also get to them with the buffer list commands, like ":bnext".
 		Short for ":split | rewind": split window and go to first
 		argument.  But when there is no argument list, the window is
 		not split.  Also see |++opt| and |+cmd|.
+
+						*:sfir* *:sfirst*
+:sfir[st [++opt] [+cmd]
+		Same as ":srewind".
 
 						*:sla* *:slast*
 :sla[st][!] [++opt] [+cmd]
@@ -788,9 +792,15 @@ Be careful: there may be more hidden, modified buffers!
 							*:br* *:brewind*
 :br[ewind][!]	Go to first buffer in buffer list.  See |:buffer-!| for [!].
 
+							*:bf* *:bfirst*
+:bf[irst	Same as ":brewind".
+
 							*:sbr* *:sbrewind*
 :sbr[ewind]	Split window and go to first buffer in buffer list.
 		Respects 'switchbuf' option.
+
+							*:sbf* *:sbfirst*
+:sbf[irst]	Same as ":sbrewind".
 
 							*:bl* *:blast*
 :bl[ast][!]	Go to last buffer in buffer list.  See |:buffer-!| for [!].

@@ -165,7 +165,7 @@
 
 #define DFLT_ERRORFILE		"errors.err"
 #define DFLT_MAKEEF		"vim##.err"
-#define DFLT_RUNTIMEPATH	"$VIMRUNTIME"
+#define DFLT_RUNTIMEPATH	"$VIM:vimfiles,$VIMRUNTIME"
 
 /*
  * Macintosh has plenty of memory, use large buffers

@@ -893,12 +893,15 @@
  * +tgetent
  */
 
-#ifdef FEAT_SUN_WORKSHOP
+#if defined(FEAT_SUN_WORKSHOP) && defined(FEAT_GUI_MOTIF)
 /*
  * The following features are (currently) only used by Sun Visual WorkShop 6.
  * These features could be used with other integrations with debuggers so I've
  * used separate feature defines.
  */
+#if !defined(FEAT_MENU)
+# define FEAT_MENU
+#endif
 
 /*
  *			Use an alternative method of X input for a secondary

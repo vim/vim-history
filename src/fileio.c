@@ -2937,6 +2937,7 @@ shorten_fname(full_path, dir_name)
  * edited, both for file name and swap file name.  Try to shorten the file
  * names a bit, if safe to do so.
  * When "force" is FALSE: Only try to shorten absolute file names.
+ * For buffers that have buftype "nofile": never change the file name.
  */
     void
 shorten_fnames(force)
@@ -2950,6 +2951,9 @@ shorten_fnames(force)
     for (buf = firstbuf; buf != NULL; buf = buf->b_next)
     {
 	if (buf->b_fname != NULL
+#ifdef FEAT_QUICKFIX
+	        && (!bt_nofile(buf))
+#endif
 		&& (force
 		    || buf->b_sfname == NULL
 		    || mch_isFullName(buf->b_sfname)))
@@ -3204,8 +3208,7 @@ buf_modname(shortname, fname, ext, prepend_dot)
     return retval;
 }
 
-/* vim_fgets();
- *
+/*
  * Like fgets(), but if the file line is too long, it is truncated and the
  * rest of the line is thrown away.  Returns TRUE for end-of-file.
  */
@@ -3233,6 +3236,47 @@ vim_fgets(buf, size, fp)
 	} while (tbuf[FGETS_SIZE - 2] != NUL && tbuf[FGETS_SIZE - 2] != '\n');
     }
     return (eof == NULL);
+}
+
+/*
+ * Like vim_fgets(), but accept any line terminator: CR, CR-LF or LF.
+ * Returns TRUE for end-of-file.
+ */
+    int
+tag_fgets(buf, size, fp)
+    char_u	*buf;
+    int		size;
+    FILE	*fp;
+{
+    int		i = 0;
+    int		c;
+    int		eof = FALSE;
+
+    for (;;)
+    {
+	c = fgetc(fp);
+	if (c == EOF)
+	{
+	    eof = TRUE;
+	    break;
+	}
+	if (c == '\r')
+	{
+	    /* Always store a NL for end-of-line. */
+	    if (i < size - 1)
+		buf[i++] = '\n';
+	    c = fgetc(fp);
+	    if (c != '\n')	/* Macintosh format: single CR. */
+		ungetc(c, fp);
+	    break;
+	}
+	if (i < size - 1)
+	    buf[i++] = c;
+	if (c == '\n')
+	    break;
+    }
+    buf[i] = NUL;
+    return eof;
 }
 
 /*

@@ -30,6 +30,7 @@ respw32: $(SOURCES) Makefile.bc5
 
 clean:
 	- del *.obj
+	- del *.tds
 	- del ctags.exe
 	- del dctags.exe
 	- del respw32

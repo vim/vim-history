@@ -298,6 +298,8 @@ static boolean createTagsForFile( fileName, language, passCount )
 	Assert(entry != NULL);
 	Assert(entry->language == language);
 
+	makeFileTag(fileName);
+
 	if (entry->parseSimple != NULL)
 	    entry->parseSimple();
 	else if (entry->parseRescan != NULL)
@@ -337,8 +339,7 @@ extern boolean parseFile( fileName )
     const char* const fileName;
 {
     boolean tagFileResized = FALSE;
-    langType language = Option.language == LANG_AUTO ?
-	     getFileLanguage(fileName) : Option.language;
+    langType language;
 
     if (Option.language != LANG_AUTO)
 	language = Option.language;
@@ -354,7 +355,6 @@ extern boolean parseFile( fileName )
 	if (Option.filter)
 	    openTagFile();
 
-	makeFileTag(fileName);
 	tagFileResized = createTagsWithFallback(fileName, language);
 
 	if (Option.filter)

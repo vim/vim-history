@@ -24,6 +24,9 @@
 #include "vim.h"
 #include "version.h"	/* used by dialog box routine for default title */
 #include <windows.h>
+#ifdef DEBUG
+#include <tchar.h>
+#endif /* DEBUG */
 #ifndef __MINGW32__
 #include <shellapi.h>
 #endif
@@ -1880,6 +1883,7 @@ _WndProc(
 	    if (pMenu)
 	    {
 		idx = MENU_INDEX_TIP;
+		msg_clr_cmdline();
 		if (pMenu->strings[idx])
 		    msg(pMenu->strings[idx]);
 		else
@@ -4390,7 +4394,7 @@ gui_mch_set_menu_pos(
     /* It will be in the right place anyway */
 }
 
-#ifdef FEAT_MENU
+#if defined(FEAT_MENU) || defined(PROTO)
 /*
  * Add a sub menu to the menu bar.
  */
@@ -4404,7 +4408,7 @@ gui_mch_add_menu(
     menu->id = s_menu_id++;
     menu->parent = parent;
 
-    if (menubar_menu(menu->name))
+    if (menu_is_menubar(menu->name))
     {
 	if (is_winnt_3())
 	{
@@ -4435,6 +4439,18 @@ gui_mch_add_menu(
     else if (IsWindow(parent->tearoff_handle))
 	rebuild_tearoff(parent);
 }
+    void
+gui_mch_show_popupmenu_at(vimmenu_t *menu, int x, int y)
+{
+    (void)TrackPopupMenu( (HMENU)menu->submenu_id, TPM_LEFTALIGN | TPM_LEFTBUTTON,
+	     x, y,
+	     (int)0,	    /*reserved param*/
+	     s_hwnd, NULL);
+    /*
+     * NOTE: The pop-up menu can eat the mouse up event.
+     * We deal with this in normal.c.
+     */
+}
 
     void
 gui_mch_show_popupmenu(vimmenu_t *menu)
@@ -4443,18 +4459,27 @@ gui_mch_show_popupmenu(vimmenu_t *menu)
 
     if (GetCursorPos((LPPOINT)&mp))
     {
-	(void)TrackPopupMenu(
-		 (HMENU)menu->submenu_id,
-		 TPM_LEFTALIGN | TPM_LEFTBUTTON,
-		 (int)mp.x,
-		 (int)mp.y,
-		 (int)0,	    /*reserved param*/
-		 s_hwnd,
-		 NULL);
-	/*
-	 * NOTE: The pop-up menu can eat the mouse up event.
-	 * We deal with this in normal.c.
-	 */
+	gui_mch_show_popupmenu_at(menu, (int)mp.x, (int)mp.y);
+    }
+}
+
+    void
+gui_make_popup(char_u *path_name)
+{
+    vimmenu_t	*menu = gui_find_menu(path_name);
+
+    if (menu!=NULL)
+    {
+	/* Find the position of the current cursor */
+	POINT	p;
+	GetDCOrgEx(s_hdc,&p);
+	if (curwin!=NULL)
+	{
+	    p.x+= TEXT_X(W_WINCOL(curwin) + curwin->w_wcol +1);
+	    p.y+= TEXT_Y(W_WINROW(curwin) + curwin->w_wrow +1);
+	}
+	msg_scroll = FALSE;
+	gui_mch_show_popupmenu_at(menu, (int)p.x, (int)p.y);
     }
 }
 
@@ -4465,62 +4490,11 @@ gui_mch_show_popupmenu(vimmenu_t *menu)
     void
 gui_make_tearoff(char_u *path_name)
 {
-    vimmenu_t	**menup;
-    vimmenu_t	*menu = NULL;
-    vimmenu_t	*parent = NULL;
-    char_u	*name;
-    char_u	*saved_name;
-    char_u	*p;
-
-    menup = &root_menu;
-
-    saved_name = vim_strsave(path_name);
-    if (saved_name == NULL)
-	return;
-
-    name = saved_name;
-    while (*name)
-    {
-	/* Find in the menu hierarchy */
-	p = menu_name_skip(name);
-
-	menu = *menup;
-	while (menu != NULL)
-	{
-	    if (STRCMP(name, menu->name) == 0 || STRCMP(name, menu->dname) == 0)
-	    {
-		if (*p == NUL && menu->children == NULL)
-		{
-		    /* not allowed to tear off one item*/
-		    EMSG(_("Menu path must lead to a sub-menu"));
-		    vim_free(saved_name);
-		    return;
-		}
-		else if (*p != NUL && menu->children == NULL)
-		{
-		    EMSG(_("Part of menu-item path is not sub-menu"));
-		    vim_free(saved_name);
-		    return;
-		}
-		break;
-	    }
-	    menup = &menu->next;
-	    menu = menu->next;
-	}
-
-	menup = &menu->children;
-	parent = menu;
-	name = p;
-    }
-    vim_free(saved_name);
-    if (menu == NULL)
-    {
-	EMSG(_("Menu not found - check menu names"));
-	return;
-    }
+    vimmenu_t	*menu = gui_find_menu(path_name);
 
     /* Found the menu, so tear it off. */
-    gui_mch_tearoff(menu->dname, menu, 0xffffL, 0xffffL);
+    if (menu!=NULL)
+	gui_mch_tearoff(menu->dname, menu, 0xffffL, 0xffffL);
 }
 
 /*
@@ -4547,7 +4521,7 @@ gui_mch_add_menu_item(
 	TBBUTTON newtb;
 
 	vim_memset(&newtb, 0, sizeof(newtb));
-	if (is_menu_separator(menu->name))
+	if (menu_is_separator(menu->name))
 	{
 	    newtb.iBitmap = 0;
 	    newtb.fsStyle = TBSTYLE_SEP;
@@ -4568,7 +4542,7 @@ gui_mch_add_menu_item(
     else
     {
 	InsertMenu(parent->submenu_id, (UINT)idx,
-		(is_menu_separator(menu->name) ? MF_SEPARATOR : MF_STRING)
+		(menu_is_separator(menu->name) ? MF_SEPARATOR : MF_STRING)
 							      | MF_BYPOSITION,
 		(UINT)menu->id, (LPCTSTR)menu->name);
 	if (IsWindow(parent->tearoff_handle))
@@ -4598,7 +4572,7 @@ gui_mch_destroy_menu(vimmenu_t *menu)
 #endif
     {
 	if (menu->parent != NULL
-		&& popup_menu(menu->parent->dname)
+		&& menu_is_popup(menu->parent->dname)
 		&& menu->parent->submenu_id != NULL)
 	    RemoveMenu(menu->parent->submenu_id, menu->id, MF_BYCOMMAND);
 	else
@@ -5748,7 +5722,7 @@ gui_mch_tearoff(
 
     for ( ; menu != NULL; menu = menu->next)
     {
-	if (is_menu_separator(menu->dname))
+	if (menu_is_separator(menu->dname))
 	{
 	    sepPadding += 3;
 	    continue;
@@ -5934,7 +5908,7 @@ initialise_toolbar(void)
 		    s_hwnd,
 		    WS_CHILD | TBSTYLE_TOOLTIPS | TBSTYLE_FLAT,
 		    4000,		//any old big number
-		    28,			//number of images in inital bitmap
+		    31,			//number of images in inital bitmap
 		    s_hinst,
 		    IDR_TOOLBAR1,	// id of initial bitmap
 		    NULL,
