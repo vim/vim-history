@@ -420,10 +420,8 @@ edit(cmdchar, startln, count)
 	}
     }
     else
-    {
 	arrow_used = FALSE;
-	o_eol = FALSE;
-    }
+    o_eol = FALSE;
 
     /* we are in insert mode now, don't need to start it anymore */
     need_start_insertmode = FALSE;
