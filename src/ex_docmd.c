@@ -2770,19 +2770,25 @@ set_one_cmd_context(xp, buff)
 #ifdef FEAT_USR_CMDS
 	case CMD_USER:
 	case CMD_USER_BUF:
-	    /* XFILE: file names are handled above */
-	    if (compl != EXPAND_NOTHING && !(argt & XFILE))
+	    if (compl != EXPAND_NOTHING)
 	    {
+		/* XFILE: file names are handled above */
+		if (!(argt & XFILE))
+		{
 # ifdef FEAT_MENU
-		if (compl == EXPAND_MENUS)
-		    return set_context_in_menu_cmd(xp, cmd, arg, forceit);
+		    if (compl == EXPAND_MENUS)
+			return set_context_in_menu_cmd(xp, cmd, arg, forceit);
 # endif
-		if (compl == EXPAND_COMMANDS)
-		    return arg;
-		while ((xp->xp_pattern = vim_strchr(arg, ' ')) != NULL)
-		    arg = xp->xp_pattern + 1;
+		    if (compl == EXPAND_COMMANDS)
+			return arg;
+		    if (compl == EXPAND_MAPPINGS)
+			return set_context_in_map_cmd(xp, (char_u *)"map",
+					 arg, forceit, FALSE, FALSE, CMD_map);
+		    while ((xp->xp_pattern = vim_strchr(arg, ' ')) != NULL)
+			arg = xp->xp_pattern + 1;
+		    xp->xp_pattern = arg;
+		}
 		xp->xp_context = compl;
-		xp->xp_pattern = arg;
 	    }
 	    break;
 #endif
