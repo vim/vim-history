@@ -86,8 +86,8 @@
 /* Define if struct sigcontext is present */
 #define HAVE_SIGCONTEXT
 
-/* Define if touuper/tolower only work on lower/upercase characters */
-/* #undef BROKEN_TOUPPER */
+/* Define if toupper/tolower only work on lower/upercase characters */
+/* #define BROKEN_TOUPPER */
 
 /* Define if tgetstr() has a second argument that is (char *) */
 /* #undef TGETSTR_CHAR_P */
@@ -105,7 +105,6 @@
 /* #undef HAVE_SIGSET */
 
 #define HAVE_GETCWD
-#define HAVE_SELECT
 #define HAVE_STRCSPN
 #define HAVE_STRTOL
 #define HAVE_TGETENT
@@ -118,7 +117,6 @@
 #define HAVE_FSYNC
 #define HAVE_GETPWUID
 #define HAVE_GETPWNAM
-#define HAVE_SELECT
 #define	HAVE_STDLIB_H
 #define	HAVE_STRING_H
 #define	HAVE_ERRNO_H
@@ -134,13 +132,12 @@
 #undef	HAVE_UNION_WAIT
 #undef  HAVE_SYS_SELECT_H
 #undef  HAVE_SYS_UTSNAME_H
+#undef  HAVE_SYS_SYSTEMINFO_H
 #undef  HAVE_TERMCAP_H
 #undef	HAVE_SGTTY_H
 #undef	HAVE_SYS_IOCTL_H
 #undef	HAVE_TERMIO_H
 #undef	HAVE_STROPTS_H
-#undef	HAVE_STRINGS_H
-#undef	HAVE_SYS_SYSTEMINFO_H
 #undef	HAVE_SYS_STREAM_H
 #undef	HAVE_SYS_PTEM_H
 #undef	HAVE_TERMIOS_H
@@ -150,36 +147,45 @@
 #undef	HAVE_PWD_H
 #undef  HAVE_FCHDIR
 
-#ifdef VAX
+/* Hardware specific */
+#ifdef  VAX
 #undef  HAVE_GETTIMEOFDAY
 #undef  HAVE_USLEEP
 #undef  HAVE_STRCASECMP
+#undef  HAVE_STRINGS_H
 #else
 #define HAVE_GETTIMEOFDAY
 #define HAVE_USLEEP
-#undef  HAVE_STRCASECMP
+#define HAVE_STRCASECMP
+#define HAVE_STRINGS_H
 #endif
 
+/* Compiler specific */
 #ifdef  VAXC
+#undef  HAVE_SELECT
 #undef  HAVE_FCNTL_H
 #undef  HAVE_UNISTD_H
 #undef  HAVE_SYS_TIME_H
 #undef  HAVE_LOCALE_H
 #define BROKEN_LOCALE
+#undef  HAVE_ICONV_H
+#undef  HAVE_ICONV
+#undef  DYNAMIC_ICONV
 #else
+#define HAVE_SELECT
 #define HAVE_FCNTL_H
 #define HAVE_UNISTD_H 1
 #define HAVE_SYS_TIME_H
 #define HAVE_LOCALE_H
+#define BROKEN_LOCALE
+#undef  HAVE_ICONV_H
+#undef  HAVE_ICONV
+#undef  DYNAMIC_ICONV
 #endif
 
-#ifdef FEAT_GUI_MOTIF
-/* Define unless no X support found */
+/* GUI support defines */
+#ifdef FEAT_GUI_MOTIF   
 #define HAVE_X11
-
-/* Define if you want to include fontset support. */
 #define USE_FONTSET
-
-/* Define if your X has own locale library */
-/* #undef X_LOCALE */
+#undef  X_LOCALE 
 #endif

@@ -2515,7 +2515,7 @@ set_init_1()
 	    (char_u *)"system('copy' . ' ' . v:fname_in . ' ' . &printdevice) . delete(v:fname_in)"
 # else
 #  ifdef VMS
-	    (char_u *)"system('print' . (&printdevice == '' ? '' : ' /queue=' . &printdevice) . ' ' . v:fname_in) . delete(v:fname_in)"
+	    (char_u *)"system('print/delete' . (&printdevice == '' ? '' : ' /queue=' . &printdevice) . ' ' . v:fname_in)"
 
 #  else
 	    (char_u *)"system('lpr' . (&printdevice == '' ? '' : ' -P' . &printdevice) . ' ' . v:fname_in) . delete(v:fname_in) + v:shell_error"

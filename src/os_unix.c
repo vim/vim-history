@@ -1793,7 +1793,11 @@ mch_get_host_name(s, len)
     char_u  *s;
     int	    len;
 {
+# ifdef VAXC
+    vaxc$gethostname((char *)s, len);
+# else
     gethostname((char *)s, len);
+# endif
 }
 #endif /* HAVE_SYS_UTSNAME_H */
 
