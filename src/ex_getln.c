@@ -1261,6 +1261,16 @@ getcmdline(firstc, count, indent)
 		putcmdline('^', TRUE);
 		c = get_literal();	    /* get next (two) character(s) */
 		do_abbr = FALSE;	    /* don't do abbreviation now */
+#ifdef FEAT_MBYTE
+		/* may need to remove ^ when composing char was typed */
+		if (enc_utf8 && utf_iscomposing(c) && !cmd_silent)
+		{
+		    msg_outtrans_len(ccline.cmdbuff + ccline.cmdpos,
+					       ccline.cmdlen - ccline.cmdpos);
+		    msg_putchar(' ');
+		    cursorcmd();
+		}
+#endif
 		break;
 
 #ifdef FEAT_DIGRAPHS
