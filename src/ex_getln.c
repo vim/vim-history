@@ -4764,7 +4764,7 @@ read_viminfo_history(virp)
 		    sep = val[1];
 		    --len;
 		    mch_memmove(val, val + 2, (size_t)len);
-		    val[len + 1] = (sep == ' ' ? NUL : sep);
+		    val[len] = (sep == ' ' ? NUL : sep);
 		}
 		else
 		{
