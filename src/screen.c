@@ -4830,7 +4830,12 @@ win_redr_status_matches(xp, num_matches, matches, match, showtail)
     if (matches == NULL)	/* interrupted completion? */
 	return;
 
-    buf = alloc((unsigned)Columns + 1);
+#ifdef FEAT_MBYTE
+    if (has_mbyte)
+	buf = alloc((unsigned)Columns * MB_MAXBYTES + 1);
+    else
+#endif
+	buf = alloc((unsigned)Columns + 1);
     if (buf == NULL)
 	return;
 
