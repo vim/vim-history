@@ -143,6 +143,7 @@ static int get_lit_string_var __ARGS((char_u **arg, VAR retvar, int evaluate));
 static int get_env_var __ARGS((char_u **arg, VAR retvar, int evaluate));
 static int find_internal_func __ARGS((char_u *name));
 static int get_func_var __ARGS((char_u *name, int len, VAR retvar, char_u **arg, linenr_t firstline, linenr_t lastline, int *doesrange, int evaluate));
+static linenr_t get_arg_lnum __ARGS((VAR argvars, VAR retvar));
 static void f_append __ARGS((VAR argvars, VAR retvar));
 static void f_argc __ARGS((VAR argvars, VAR retvar));
 static void f_argv __ARGS((VAR argvars, VAR retvar));
@@ -2133,6 +2134,26 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
     return ret;
 }
 
+/*
+ * Get the lnum from the first argument.  Also accepts ".", "$", etc.
+ */
+    static linenr_t
+get_arg_lnum(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    long	lnum;
+
+    lnum = get_var_number(&argvars[0]);
+    if (lnum == 0)  /* no valid number, try using line() */
+    {
+	f_line(argvars, retvar);
+	lnum = retvar->var_val.var_number;
+	clear_var(retvar);
+    }
+    return lnum;
+}
+
 /*********************************************
  * Implementation of the built-in functions
  */
@@ -2147,13 +2168,7 @@ f_append(argvars, retvar)
 {
     long	lnum;
 
-    lnum = get_var_number(&argvars[0]);
-    if (lnum == 0)  /* no valid number, try using line() */
-    {
-	f_line(argvars, retvar);
-	lnum = retvar->var_val.var_number;
-	clear_var(retvar);
-    }
+    lnum = get_arg_lnum(argvars, retvar);
     retvar->var_val.var_number = 1; /* Default: Failed */
 
     if (lnum >= 0 && lnum <= curbuf->b_ml.ml_line_count
@@ -2747,14 +2762,7 @@ f_getline(argvars, retvar)
     linenr_t	lnum;
     char_u	*p;
 
-    lnum = get_var_number(&argvars[0]);
-    if (lnum == 0)  /* no valid number, try using line() */
-    {
-	f_line(argvars, retvar);
-	lnum = retvar->var_val.var_number;
-	clear_var(retvar);
-    }
-
+    lnum = get_arg_lnum(argvars, retvar);
     if (lnum >= 1 && lnum <= curbuf->b_ml.ml_line_count)
 	p = ml_get(lnum);
     else
@@ -3390,7 +3398,7 @@ f_line2byte(argvars, retvar)
 #else
     linenr_t	lnum;
 
-    lnum = get_var_number(&argvars[0]);
+    lnum = get_arg_lnum(argvars, retvar);
     if (lnum < 1 || lnum > curbuf->b_ml.ml_line_count + 1)
 	retvar->var_val.var_number = -1;
     else
@@ -3598,7 +3606,7 @@ f_setline(argvars, retvar)
     linenr_t	lnum;
     char_u	*line;
 
-    lnum = get_var_number(&argvars[0]);
+    lnum = get_arg_lnum(argvars, retvar);
     line = get_var_string(&argvars[1]);
     retvar->var_val.var_number = 1;		/* FAIL is default */
 
@@ -3722,7 +3730,7 @@ f_synID(argvars, retvar)
     long	col;
     int		trans;
 
-    line = get_var_number(&argvars[0]);
+    line = get_arg_lnum(argvars, retvar);
     col = get_var_number(&argvars[1]) - 1;
     trans = get_var_number(&argvars[2]);
 
