@@ -2049,10 +2049,14 @@ find_command(eap, full)
 			k++;
 		    if (k == len || (*np == NUL && isdigit(eap->cmd[k])))
 		    {
-			if (k == len && found)
+			/* If finding a second match, the command is
+			 * ambiguous.  But not if a buffer-local command
+			 * wasn't a full match and a global command is a full
+			 * match. */
+			if (k == len && found && *np != NUL)
 			    return NULL;
 
-			if (!found)
+			if (!found || (k == len && *np == NUL))
 			{
 			    /* If we matched up to a digit, then there could
 			     * be another command including the digit that we
@@ -2084,7 +2088,7 @@ find_command(eap, full)
 		    }
 		}
 
-		/* Stop if we found a match of searched all. */
+		/* Stop if we found a full match or searched all. */
 		if (j < gap->ga_len || gap == &ucmds)
 		    break;
 		gap = &ucmds;
