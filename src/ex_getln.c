@@ -1394,7 +1394,7 @@ cmdline_changed:
 		out_flush();
 		++emsg_off;    /* So it doesn't beep if bad expr */
 		i = do_search(NULL, firstc, ccline.cmdbuff, count,
-				      SEARCH_KEEP + SEARCH_OPT + SEARCH_NOOF);
+			SEARCH_KEEP + SEARCH_OPT + SEARCH_NOOF + SEARCH_PEEK);
 		--emsg_off;
 		/* if interrupted while searching, behave like it failed */
 		if (got_int)
@@ -1403,6 +1403,9 @@ cmdline_changed:
 		    got_int = FALSE;	/* don't abandon the command line */
 		    i = 0;
 		}
+		else if (char_avail())
+		    /* cancelled searching because a char was typed */
+		    incsearch_postponed = TRUE;
 	    }
 	    if (i)
 		highlight_match = TRUE;		/* highlight position */
