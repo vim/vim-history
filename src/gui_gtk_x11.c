@@ -1519,90 +1519,101 @@ gui_mch_init_font(char_u * font_name)
     /* Set the fontname, which will be used for information purposes */
     hl_set_font_name(font_name);
 
-    /* There is only one excuse I can give for the following attempt
-     * to manage font styles:
-     *
-     * I HATE THE BRAIN DEAD WAY X11 IS HANDLING FONTS (--mdcki)
-     */
-    if ((sdup = g_strdup((const char *)font_name)) == NULL)
-	return FAIL;
+    if (font->type != GDK_FONT_FONTSET)
+    {
+	/* There is only one excuse I can give for the following attempt
+	 * to manage font styles:
+	 *
+	 * I HATE THE BRAIN DEAD WAY X11 IS HANDLING FONTS (--mdcki)
+	 */
+	if ((sdup = g_strdup((const char *)font_name)) == NULL)
+	    return FAIL;
 
-    /* slipt up the whole */
-    i = 0;
-    for (tmp = sdup; *tmp != '\0'; ++tmp) {
-	if (*tmp == '-') {
-	    *tmp = '\0';
-	    chunk[i] = tmp + 1;
-	    ++i;
-	}
-    }
-    g_free(sdup);
+	/* slipt up the whole */
+	i = 0;
+	for (tmp = sdup; *tmp != '\0'; ++tmp)
+	    if (*tmp == '-')
+	    {
+		*tmp = '\0';
+		chunk[i] = tmp + 1;
+		++i;
+	    }
 
-    if (i == 14) {
-	char *bold_name = NULL;
-	char *ital_name = NULL;
-	char *italbold_name = NULL;
+	g_free(sdup);
 
-	/* font name was compleate */
-	len = strlen((const char *)font_name) + 32;
-	bold_name = (char *)alloc(len);
-	ital_name = (char *)alloc(len);
-	italbold_name = (char *)alloc(len);
-	if (bold_name == NULL || ital_name == NULL || italbold_name == NULL) {
+	if (i == 14)
+	{
+	    char *bold_name = NULL;
+	    char *ital_name = NULL;
+	    char *italbold_name = NULL;
+
+	    /* font name was compleate */
+	    len = strlen((const char *)font_name) + 32;
+	    bold_name = (char *)alloc(len);
+	    ital_name = (char *)alloc(len);
+	    italbold_name = (char *)alloc(len);
+	    if (bold_name == NULL || ital_name == NULL || italbold_name == NULL)
+	    {
+		vim_free(bold_name);
+		vim_free(ital_name);
+		vim_free(italbold_name);
+		return FAIL;
+	    }
+
+	    *bold_name = '\0';
+	    *ital_name = '\0';
+	    *italbold_name = '\0';
+
+	    for (i = 0; i < 14; ++i)
+	    {
+		strcat(bold_name, "-");
+		strcat(ital_name, "-");
+		strcat(italbold_name, "-");
+		strcat(bold_name, (i != 2) ? chunk[i] : "bold");
+		strcat(ital_name, (i != 3) ? chunk[i] : "o");
+
+		if (i != 2 && i != 3)
+		    strcat(italbold_name, chunk[i]);
+		else
+		{
+		    if (i == 2)
+			strcat(italbold_name, "bold");
+		    else if (i == 3)
+			strcat(italbold_name, "o");
+		}
+	    }
+
+	    font = gui_mch_get_font((char_u *)bold_name, FALSE);
+	    if (font != NULL)
+		gui.bold_font = font;
+	    else if (gui.bold_font)
+	    {
+		gdk_font_unref(gui.bold_font);
+		gui.bold_font = NULL;
+	    }
+
+	    font = gui_mch_get_font((char_u *)ital_name, FALSE);
+	    if (font != NULL)
+		gui.ital_font = font;
+	    else if (gui.ital_font)
+	    {
+		gdk_font_unref(gui.ital_font);
+		gui.ital_font = NULL;
+	    }
+
+	    font = gui_mch_get_font((char_u *)italbold_name, FALSE);
+	    if (font != NULL)
+		gui.boldital_font = font;
+	    else if (gui.boldital_font)
+	    {
+		gdk_font_unref(gui.boldital_font);
+		gui.boldital_font = NULL;
+	    }
+
 	    vim_free(bold_name);
 	    vim_free(ital_name);
 	    vim_free(italbold_name);
-	    return FAIL;
 	}
-
-	*bold_name = '\0';
-	*ital_name = '\0';
-	*italbold_name = '\0';
-
-	for (i = 0; i < 14; ++i) {
-	    strcat(bold_name, "-");
-	    strcat(ital_name, "-");
-	    strcat(italbold_name, "-");
-	    strcat(bold_name, (i != 2) ? chunk[i] : "bold");
-	    strcat(ital_name, (i != 3) ? chunk[i] : "o");
-
-	    if (i != 2 && i != 3)
-		strcat(italbold_name, chunk[i]);
-	    else {
-		if (i == 2)
-		    strcat(italbold_name, "bold");
-		else if (i == 3)
-		    strcat(italbold_name, "o");
-	    }
-	}
-
-	font = gui_mch_get_font((char_u *)bold_name, FALSE);
-	if (font != NULL)
-	    gui.bold_font = font;
-	else if (gui.bold_font) {
-	    gdk_font_unref(gui.bold_font);
-	    gui.bold_font = NULL;
-	}
-
-	font = gui_mch_get_font((char_u *)ital_name, FALSE);
-	if (font != NULL)
-	    gui.ital_font = font;
-	else if (gui.ital_font) {
-	    gdk_font_unref(gui.ital_font);
-	    gui.ital_font = NULL;
-	}
-
-	font = gui_mch_get_font((char_u *)italbold_name, FALSE);
-	if (font != NULL)
-	    gui.boldital_font = font;
-	else if (gui.boldital_font)     {
-	    gdk_font_unref(gui.boldital_font);
-	    gui.boldital_font = NULL;
-	}
-
-	vim_free(bold_name);
-	vim_free(ital_name);
-	vim_free(italbold_name);
     }
 
     /* Synchronize the fonts used in user input dialogs, since otherwise
