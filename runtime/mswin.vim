@@ -1,7 +1,7 @@
 " Set options and add mapping such that Vim behaves a lot like MS-Windows
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Aug 23
+" Last change:	2001 Oct 30
 
 " set the 'cpoptions' to its Vim default
 if 1	" only do this when compiled with expression evaluation
@@ -27,18 +27,32 @@ vnoremap <C-C> "+y
 vnoremap <C-Insert> "+y
 
 " CTRL-V and SHIFT-Insert are Paste
-nnoremap <silent> <SID>Paste "=@+.'xy'<CR>gPFx"_2x
-map <C-V>		<SID>Paste
-map <S-Insert>		<SID>Paste
-
-imap <C-V>		x<Esc><SID>Paste"_s
-imap <S-Insert>		x<Esc><SID>Paste"_s
+map <C-V>		"+gP
+map <S-Insert>		"+gP
 
 cmap <C-V>		<C-R>+
 cmap <S-Insert>		<C-R>+
 
-vmap <C-V>		"-cx<Esc><SID>Paste"_x
-vmap <S-Insert>		"-cx<Esc><SID>Paste"_x
+" Pasting blockwise and linewise selections is not possible in Insert and
+" Visual mode without the +virtualedit feature.  They are pasted as if they
+" were characterwise instead.
+if has("virtualedit")
+  nnoremap <silent> <SID>Paste :call <SID>Paste()<CR>
+  func! <SID>Paste()
+    let ove = &ve
+    set ve=all
+    normal `^"+gPi
+    let &ve = ove
+  endfunc
+  imap <C-V>		<Esc><SID>Pastegi
+  vmap <C-V>		"-c<Esc><SID>Paste
+else
+  nnoremap <silent> <SID>Paste "=@+.'xy'<CR>gPFx"_2x
+  imap <C-V>		x<Esc><SID>Paste"_s
+  vmap <C-V>		"-c<Esc>gix<Esc><SID>Paste"_x
+endif
+imap <S-Insert>      	<C-V>
+vmap <S-Insert>      	<C-V>
 
 " Use CTRL-Q to do what CTRL-V used to do
 noremap <C-Q>		<C-V>
