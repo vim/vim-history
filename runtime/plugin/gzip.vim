@@ -1,6 +1,6 @@
 " Vim plugin for editing compressed files.
 " Maintainer: Bram Moolenaar <Bram@vim.org>
-" Last Change: 2002 Aug 21
+" Last Change: 2002 Oct 01
 
 " Exit quickly when:
 " - this plugin was already loaded
@@ -57,6 +57,9 @@ fun s:read(cmd)
   " make 'patchmode' empty, we don't want a copy of the written file
   let pm_save = &pm
   set pm=
+  " remove 'a' and 'A' from 'cpo' to avoid the alternate file changes
+  let cpo_save = &cpo
+  set cpo-=a cpo-=A
   " set 'modifiable'
   let ma_save = &ma
   setlocal ma
@@ -84,6 +87,7 @@ fun s:read(cmd)
   silent! exe "bwipe " . tmp
   silent! exe "bwipe " . tmpe
   let &pm = pm_save
+  let &cpo = cpo_save
   let &l:ma = ma_save
   " When uncompressed the whole buffer, do autocommands
   if empty
