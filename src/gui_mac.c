@@ -236,6 +236,7 @@ QDGlobals qd;
 #define vk_Space	0x31	/* -> 20 */
 #define vk_Tab		0x30	/* -> 09 */
 #define vk_Return	0x24	/* -> 0D */
+/* This is wrong for OSX, what is it for? */
 #define vk_Delete	0X08	/* -> 08 BackSpace */
 
 #define vk_Help		0x72	/* -> 05 */
@@ -293,7 +294,10 @@ static struct
 
 /*  {XK_Help,		'%', '1'}, */
 /*  {XK_Undo,		'&', '8'}, */
+/*  {XK_BackSpace,	'k', 'b'}, */
+#ifndef MACOS_X
     {vk_Delete,		'k', 'b'},
+#endif
     {vk_Insert,		'k', 'I'},
     {vk_FwdDelete,	'k', 'D'},
     {vk_Home,		'k', 'h'},
@@ -307,9 +311,6 @@ static struct
 
     /* End of list marker: */
     {(KeySym)0,		0, 0}
-
-/** {XK_BackSpace,	'k', 'b'}, **/
-
 };
 
 /*
