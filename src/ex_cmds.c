@@ -5111,7 +5111,7 @@ ex_helptags(eap)
 	    s = ((char_u **)ga.ga_data)[i];
 	    if (STRNCMP(s, "help-tags\t", 10) == 0)
 		/* help-tags entry was added in formatted form */
-		fprintf(fd_tags, s);
+		fprintf(fd_tags, (char *)s);
 	    else
 	    {
 		fprintf(fd_tags, "%s\t/*", s);
