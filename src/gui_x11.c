@@ -1422,9 +1422,6 @@ gui_mch_init()
     if (usingSunWorkShop)
 	workshop_connect(app_context);
 #endif
-#ifdef FEAT_SIGN_ICONS
-    sign_gui_started();
-#endif
 
 # ifdef FEAT_BEVAL
     gui_init_tooltip_font();
