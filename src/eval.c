@@ -6242,7 +6242,7 @@ f_virtcol(argvars, retvar)
     fp = var2fpos(&argvars[0], FALSE);
     if (fp != NULL && fp->lnum <= curbuf->b_ml.ml_line_count)
     {
-	getvcol(curwin, fp, NULL, NULL, &vcol);
+	getvvcol(curwin, fp, NULL, NULL, &vcol);
 	++vcol;
     }
 
