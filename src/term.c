@@ -4053,6 +4053,9 @@ check_termcode(max_offset, buf, buflen)
 		}
 #   ifdef FEAT_MOUSE_XTERM
 		else if (held_button == MOUSE_RELEASE
+#    ifdef FEAT_GUI
+			&& !gui.in_use
+#    endif
 			&& (mouse_code == 0x23 || mouse_code == 0x24))
 		{
 		    /* Apparently used by rxvt scroll wheel. */
