@@ -2078,15 +2078,15 @@ scroll_cursor_halfway(atend)
     lineoff_T	boff;
 
     loff.lnum = boff.lnum = curwin->w_cursor.lnum;
+#ifdef FEAT_FOLDING
+    (void)hasFolding(loff.lnum, &loff.lnum, &boff.lnum);
+#endif
 #ifdef FEAT_DIFF
     used = plines_nofill(loff.lnum);
     loff.fill = 0;
     boff.fill = 0;
 #else
     used = plines(loff.lnum);
-#endif
-#ifdef FEAT_FOLDING
-    (void)hasFolding(boff.lnum, NULL, &boff.lnum);
 #endif
     topline = loff.lnum;
     while (topline > 1)
