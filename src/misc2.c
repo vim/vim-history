@@ -304,15 +304,27 @@ coladvance2(pos, addspaces, finetune, wcol)
 
     if (finetune)
     {
-	int a = col;
-	int b = wcol - a;
+	if (wcol == MAXCOL)
+	{
+	    /* The width of the last character is used to set coladd. */
+	    if (!one_more)
+	    {
+		colnr_T	    scol, ecol;
 
-	/* 'virtualedit' is set: The difference between wcol and col is used
-	 * to set coladd. */
-	if (b > 0 && b < (MAXCOL - 2 * W_WIDTH(curwin)))
-	    pos->coladd = b;
+		getvcol(curwin, pos, &scol, NULL, &ecol);
+		pos->coladd = ecol - scol;
+	    }
+	}
+	else
+	{
+	    int b = (int)wcol - (int)col;
 
-	col += b;
+	    /* The difference between wcol and col is used to set coladd. */
+	    if (b > 0 && b < (MAXCOL - 2 * W_WIDTH(curwin)))
+		pos->coladd = b;
+
+	    col += b;
+	}
     }
 #endif
 
