@@ -250,7 +250,7 @@ static const struct nv_cmd
     {Ctrl_Y,	nv_scroll_line,	0,			FALSE},
     {Ctrl_Z,	nv_suspend,	0,			0},
     {ESC,	nv_esc,		0,			FALSE},
-    {Ctrl_BSL,	nv_normal,	0,			0},
+    {Ctrl_BSL,	nv_normal,	NV_NCH_ALW,		0},
     {Ctrl_RSB,	nv_ident,	NV_NCW,			0},
     {Ctrl_HAT,	nv_hat,		NV_NCW,			0},
     {Ctrl__,	nv_error,	0,			0},
@@ -880,7 +880,8 @@ getcount:
 #ifdef FEAT_CMDL_INFO
 	    need_flushbuf |= add_to_showcmd(ca.nchar);
 #endif
-	    if (ca.nchar == 'r' || ca.nchar == '\'' || ca.nchar == '`')
+	    if (ca.nchar == 'r' || ca.nchar == '\'' || ca.nchar == '`'
+						      || ca.nchar == Ctrl_BSL)
 	    {
 		cp = &ca.extra_char;	/* need to get a third character */
 		if (ca.nchar != 'r')
@@ -990,6 +991,43 @@ getcount:
 		    *cp = fkmap(*cp);
 # endif
 #endif
+	    }
+
+	    /*
+	     * When the next character is CTRL-\ a following CTRL-N means the
+	     * command is aborted and we go to Normal mode.
+	     */
+	    if (cp == &ca.extra_char
+		    && ca.nchar == Ctrl_BSL
+		    && (ca.extra_char == Ctrl_N || ca.extra_char == Ctrl_G))
+	    {
+		ca.cmdchar = Ctrl_BSL;
+		ca.nchar = ca.extra_char;
+		idx = find_command(ca.cmdchar);
+	    }
+	    else if (*cp == Ctrl_BSL)
+	    {
+		long towait = (p_ttm >= 0 ? p_ttm : p_tm);
+
+		/* There is a busy wait here when typing "f<C-\>" and then
+		 * something different from CTRL-N.  Can't be avoided. */
+		while ((c = vpeekc()) <= 0 && towait > 0L)
+		{
+		    do_sleep(towait > 50L ? 50L : towait);
+		    towait -= 50L;
+		}
+		if (c > 0)
+		{
+		    c = safe_vgetc();
+		    if (c != Ctrl_N && c != Ctrl_G)
+			vungetc(c);
+		    else
+		    {
+			ca.cmdchar = Ctrl_BSL;
+			ca.nchar = c;
+			idx = find_command(ca.cmdchar);
+		    }
+		}
 	    }
 
 #ifdef FEAT_MBYTE
@@ -7746,9 +7784,7 @@ nv_goto(cap)
 nv_normal(cap)
     cmdarg_T	*cap;
 {
-    int c = safe_vgetc();
-
-    if (c == Ctrl_N || c == Ctrl_G)
+    if (cap->nchar == Ctrl_N || cap->nchar == Ctrl_G)
     {
 	clearop(cap->oap);
 	if (restart_edit != 0 && p_smd)
@@ -7766,7 +7802,7 @@ nv_normal(cap)
 	}
 #endif
 	/* CTRL-\ CTRL-G restarts Insert mode when 'insertmode' is set. */
-	if (c == Ctrl_G && p_im)
+	if (cap->nchar == Ctrl_G && p_im)
 	    restart_edit = 'a';
     }
     else
