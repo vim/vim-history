@@ -361,7 +361,7 @@ static struct option options[] =
 #endif
 	{"modelines",	"mls",	P_NUM,				(char_u *)&p_mls,
 							(char_u *)5L},
-	{"modified",	"mod",	P_BOOL|P_IND,		(char_u *)PV_MOD,
+	{"modified",	"mod",	P_BOOL|P_IND|P_NO_MKRC,	(char_u *)PV_MOD,
 							(char_u *)FALSE},
 	{"more",		NULL,	P_BOOL,				(char_u *)&p_more,
 #ifdef COMPATIBLE
@@ -437,7 +437,7 @@ static struct option options[] =
 #elif defined(WIN32)
 							(char_u *)""},		/* set in set_init_1() */
 #elif defined(__EMX__)
-							(char_u *)"cmd"},
+							(char_u *)"cmd.exe"},
 #elif defined(ARCHIE)
 							(char_u *)"gos"},
 #else
@@ -808,7 +808,10 @@ set_init_1()
  * Find default value for 'shell' option.
  */
 	if ((p = vim_getenv((char_u *)"SHELL")) != NULL
-#if defined(MSDOS) || defined(WIN32)
+#if defined(MSDOS) || defined(WIN32) || defined(OS2)
+# ifdef __EMX__
+			|| (p = vim_getenv((char_u *)"EMXSHELL")) != NULL
+# endif
 			|| (p = vim_getenv((char_u *)"COMSPEC")) != NULL
 # ifdef WIN32
 			|| (p = default_shell()) != NULL
@@ -971,8 +974,13 @@ set_init_3()
 	 * For known shells it is changed here to include stderr.
 	 */
 	p = gettail(p_sh);
-	if (	 STRCMP(p, "csh") == 0 ||
-			 STRCMP(p, "tcsh") == 0)
+	if (	fnamecmp(p, "csh") == 0 ||
+			fnamecmp(p, "tcsh") == 0
+# ifdef OS2			/* also check with .exe extension */
+			|| fnamecmp(p, "csh.exe") == 0
+			|| fnamecmp(p, "tcsh.exe") == 0
+# endif
+											)
 	{
 		if (do_sp)
 		{
@@ -985,13 +993,13 @@ set_init_3()
 			options[idx2].def_val = p_srr;
 		}
 	}
-	else if (STRCMP(p, "sh") == 0 ||
-			 STRCMP(p, "ksh") == 0 ||
-			 STRCMP(p, "zsh") == 0 ||
-#ifdef OS2	/* perhaps don't test for OS2 here; any unixen with shell==cmd? */
-			 STRCMP(p, "cmd") == 0 ||
-#endif
-			 STRCMP(p, "bash") == 0)
+	else
+# ifndef OS2	/* Always use bourne shell style redirection if we reach this */
+		if (	STRCMP(p, "sh") == 0 ||
+				STRCMP(p, "ksh") == 0 ||
+				STRCMP(p, "zsh") == 0 ||
+				STRCMP(p, "bash") == 0)
+# endif
 	{
 		if (do_sp)
 		{
@@ -1044,7 +1052,8 @@ do_set(arg)
 	char_u		errbuf[80];
 	char_u		*startarg;
 	int			prefix;	/* 1: nothing, 0: "no", 2: "inv" in front of name */
-	int 		nextchar;
+	int 		nextchar;			/* next non-white char after option name */
+	int			afterchar;			/* character just after option name */
 	int 		len;
 	int			i;
 	int			key;
@@ -1165,6 +1174,9 @@ do_set(arg)
 			else
 				flags = P_STRING;
 
+			/* remember character after option name */
+			afterchar = nextchar;
+
 			/* skip white space, allow ":set ai  ?" */
 			while (vim_iswhite(nextchar))
 				nextchar = arg[++len];
@@ -1208,7 +1220,7 @@ do_set(arg)
 						(void)show_one_termcode(name, p, TRUE);
 				}
 				if (nextchar != '?' && nextchar != NUL &&
-													   !vim_iswhite(nextchar))
+													  !vim_iswhite(afterchar))
 					errmsg = e_trailing;
 			}
 			else
@@ -1510,6 +1522,10 @@ do_set(arg)
 						{
 							if (term_strings[KS_NAME][0] == NUL)
 								errmsg = (char_u *)"Cannot set 'term' to empty string";
+#ifdef USE_GUI
+							if (gui.in_use)
+								errmsg = (char_u *)"Cannot change term in GUI";
+#endif
 							else if (set_termname(term_strings[KS_NAME]) ==
 																		 FAIL)
 								errmsg = (char_u *)"Not found in termcap";
@@ -1783,6 +1799,11 @@ skip:
 			{
 				errmsg = e_positive;
 				curbuf->b_p_ts = 8;
+			}
+			if (curbuf->b_p_tw < 0)
+			{
+				errmsg = e_positive;
+				curbuf->b_p_tw = 0;
 			}
 			if (p_tm < 0)
 			{
@@ -3142,19 +3163,29 @@ file_pat_to_reg_pat(pat, pat_end, allow_directories)
 			case '\\':
 				if (p[1] == NUL)
 					break;
+#ifdef BACKSLASH_IN_FILENAME
+				/* translate "\x" to "\\x", "\*" to "\\.*", and "\?" to "\\." */
+				if (isfilechar(p[1]) || p[1] == '*' || p[1] == '?')
+				{
+					reg_pat[i++] = '\\';
+					reg_pat[i++] = '\\';
+					if (allow_directories != NULL)
+						*allow_directories = TRUE;
+					break;
+				}
+				++p;
+#else
 				if (*++p == '?')
 					reg_pat[i++] = '?';
-				else if (*p == ',')
+				else
+#endif
+					 if (*p == ',')
 					reg_pat[i++] = ',';
 				else
 				{
 					if (allow_directories != NULL && ispathsep(*p))
 						*allow_directories = TRUE;
 					reg_pat[i++] = '\\';
-#ifdef BACKSLASH_IN_FILENAME
-					if (isfilechar(*p))
-						reg_pat[i++] = '\\';
-#endif
 					reg_pat[i++] = *p;
 				}
 				break;
@@ -3220,6 +3251,8 @@ show_autocmd(ap, event)
 {
 	AutoCmd *ac;
 
+	if (got_int)				/* "q" hit for "--more--" */
+		return;
 	msg_outchar('\n');
 	if (got_int)				/* "q" hit for "--more--" */
 		return;
@@ -3703,7 +3736,11 @@ apply_autocmds(event, fname, fname_io)
 
 	for (ap = first_autopat[event]; ap != NULL; ap = ap->next)
 	{
+#ifdef CASE_INSENSITIVE_FILENAME
+		reg_ic = TRUE;		/* Always ignore case */
+#else
 		reg_ic = FALSE;		/* Don't ever ignore case */
+#endif
 		reg_magic = TRUE;	/* Always use magic */
 		prog = vim_regcomp(ap->reg_pat);
 
@@ -3871,7 +3908,8 @@ langmap_set()
 			}
 			if (to == NUL)
 			{
-				EMSG2("'langmap': Matching character missing for %c", from);
+				EMSG2("'langmap': Matching character missing for %s",
+															 transchar(from));
 				return;
 			}
 			langmap_mapchar[from] = to;

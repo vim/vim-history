@@ -1,4 +1,4 @@
-*vim_diff.txt*  For Vim version 4.0.  Last modification: 1996 May 27
+*vim_diff.txt*  For Vim version 4.1.  Last modification: 1996 June 11
 
 This is a summary of the differences between VIM and vi. It is not complete.
 see also |vim_ref.txt|, look for comments in {}, like "{not in Vi}".
@@ -115,7 +115,7 @@ Command-line completion.				|cmdline_completion|
 	<Tab> can be typed to complete
 	   what		example
 	- command	:e<Tab>
-	- tag		:ta no<Tab>
+	- tag		:ta scr<Tab>
 	- option	:set sc<Tab>
 	- option value  :set hf=<Tab>
 	- filename	:e ve<Tab>
@@ -150,7 +150,7 @@ Edit-compile-edit speedup.				|quickfix|
 	the first error.  Alternatively Vim can be started with the "-e"
 	option from the compiler.  A file with compiler error messages is
 	interpreted.  Vim starts editing at the first error.
-	
+
 	Each line in the error file is scanned for the name of a file, line
 	number and error message.  The 'errorformat' option can be set to a
 	list of scanf-like strings to handle output from many compilers.
@@ -255,7 +255,7 @@ Automatic commands					|new_autocmd|
 	Execute commands for a specific file type.
 	Can be used to set options to a different value for C code, plain
 	text e-mail, etc.
-	
+
 Text objects						|new_textobj|
 	After an operator and in visual mode text object commands can be used
 	to quickly select a word, line or paragraph.

@@ -1,4 +1,4 @@
-*vim_rlh.txt*   For Vim version 4.0.  Last modification: 1996 May 23
+*vim_rlh.txt*   For Vim version 4.1.  Last modification: 1996 June 11
 
 Right to Left and Hebrew Mapping for Vim		*hebrew*
 ========================================
@@ -104,7 +104,7 @@ Change details
 
         q w e r t y u i o p 		The characters in the mapping shown
         / ' ÷ ø à è å ï í ô		here are for ISO 8859-8.
-	 				
+
 	 a s d f g h j k l ; '
          ù ã â ë ò é ç ì ê ó ,
 
@@ -125,7 +125,7 @@ o  Does not support reverse insert and rightleft modes on the command-line.
 o  Somewhat slower in right-to-left mode, because right-to-left motion is
    emulated inside Vim, not by the controlling terminal.
 
-o  Does not support 7 bit terminals.  Only a terminal with complete 
+o  Does not support 7 bit terminals.  Only a terminal with complete
    Hebrew English font (without need to send escape sequences to switch
    between Hebrew and English) is supported.
 

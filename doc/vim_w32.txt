@@ -1,4 +1,4 @@
-*vim_w32.txt*   For Vim version 4.0.  Last modification: 1996 May 27
+*vim_w32.txt*   For Vim version 4.1.  Last modification: 1996 June 11
 
 This file documents the idiosyncrasies of the Win32 version of Vim.
 
@@ -120,7 +120,7 @@ documentation files are.  If "VIM" is used but not defined, "HOME" is tried
 too.
 
 The default help filename is "$VIM\vim_help.txt".  If the environment variable
-$VIM is not defined or the file is not found, the Win32 search path is used to 
+$VIM is not defined or the file is not found, the Win32 search path is used to
 search for the file "vim_help.txt".  If you do not want to put "vim_help.txt"
 in your search path, use the command ":set helpfile=pathname" to tell Vim
 where the help file is.					|'helpfile'|
@@ -175,10 +175,14 @@ Q. Why does the Win32 version of Vim update the screen so slowly on Windows 95?
 A. The support for Win32 console mode applications is very buggy in Win95.
    For some unknown reason, the screen updates very slowly when Vim is run at
    one of the standard resolutions (80x25, 80x43, or 80x50) and the 16-bit DOS
-   version updates the screen much more quickly.  However, if the screen is
-   set to some other resolution, such as by ":set columns=100" or ":set
-   lines=40", screen updating becomes about as fast as it is with the 16-bit
-   version.
+   version updates the screen much more quickly than the Win32 version.
+   However, if the screen is set to some other resolution, such as by ":set
+   columns=100" or ":set lines=40", screen updating becomes about as fast as
+   it is with the 16-bit version.
+
+   WARNING: Changing 'columns' may make Windows 95 crash while updating the
+   window (complaints --> Microsoft).  Since this mostly works, this has not
+   been disabled, but be careful with changing 'columns'.
 
    Changing the screen resolution makes updates faster, but it brings problems
    with it of its own.  External commands (e.g., ":!dir") can cause Vim to
@@ -194,7 +198,7 @@ A. The support for Win32 console mode applications is very buggy in Win95.
    matter how many 'lines' or 'columns' the window is set to, and external
    commands will not cause Vim to freeze.
 
-Q. So if Win32 version updates the screen so slowly on Windows 95 and the
+Q. So if the Win32 version updates the screen so slowly on Windows 95 and the
    16-bit DOS version updates the screen quickly, why would I want to run the
    Win32 version?
 A. Firstly, the Win32 version isn't that slow, especially when the screen is
@@ -206,12 +210,12 @@ A. Firstly, the Win32 version isn't that slow, especially when the screen is
    screen, the mouse, and the keyboard than the DJGPP version is.
 
 Q. And what about the 16-bit DOS version versus the Win32 version on NT?
-A. There are no good reasons to run the 16-bit DOS version on NT.  All of the
-   above disadvantages apply.  The Win32 version updates the screen just as
-   fast as the 16-bit version when running on NT.  Finally, 16-bit DOS
-   applications can take a long time to start up and will run more slowly.
-   On non-Intel NT platforms, the DOS version is almost unusably slow, because
-   it runs on top of a 80x86 emulator.
+A. There are no good reasons to run the 16-bit DOS version on NT.  The Win32
+   version updates the screen just as fast as the 16-bit version does when
+   running on NT.  All of the above disadvantages apply.  Finally, DOS
+   applications can take a long time to start up and will run more slowly.  On
+   non-Intel NT platforms, the DOS version is almost unusably slow, because it
+   runs on top of an 80x86 emulator.
 
 Q. Why can't I paste into Vim when running Windows 95?
 A. In the properties dialog box for the MS-DOS window, go to "MS-DOS
@@ -225,7 +229,7 @@ Q. How do I type dead keys on Windows 95?
    on.  Very useful for most European languages.  English-language keyboard
    layouts don't use dead keys, as far as we know.)
 A. You don't.  The console mode input routines simply do not work correctly in
-   Windows 95, and we have not been able to work around them.  In the words
+   Windows 95, and I have not been able to work around them.  In the words
    of a senior developer at Microsoft:
 	Win95 console support has always been and will always be flaky.
 
@@ -244,11 +248,14 @@ A. You don't.  The console mode input routines simply do not work correctly in
    You may be able to fashion some sort of workaround with the digraphs
    mechanism.							|digraphs|
 
+   Alternatively, you can try one of the DOS versions of Vim where dead keys
+   reportedly do work.
+
 Q. How do I type dead keys on Windows NT?
 A. Dead keys work on NT.  Just type them as you would in any other application.
 
 Q. When will a real GUI version of Vim (gvim) for Win32 with scrollbars,
-   menus, and so on become available?
+   menus, pasting from the clipboard, and so on become available?
 A. A few months after Vim 4.0 is released.  Apart from the features you
    might expect in gvim (see |vim_gui.txt|), it is expected that a real GUI
    version will also be able to handle dead keys correctly and that the

@@ -5,9 +5,9 @@ xxd: xxd.exe
 
 xxd.exe: xxd.c
 # if using Microsoft Visual C++
-     cl xxd.c -DWIN32 /link setargv.obj
+     cl -DWIN32 xxd.c /link setargv.obj
 # if using Borland C++
-#    bcc32 xxd.c -DWIN32 c:\bc45\lib\32bit\wildargs.obj
+#    bcc32 -DWIN32 xxd.c c:\bc45\lib\32bit\wildargs.obj
 
 clean:
      - del xxd.obj

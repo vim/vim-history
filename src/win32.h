@@ -84,6 +84,9 @@
  * Win32 has plenty of memory, use large buffers
  */
 #define CMDBUFFSIZE	1024		/* size of the command processing buffer */
+#ifdef _MAX_FNAME				/* just in case it's not defined for Borland */
+# define MAXNAMLEN	_MAX_FNAME
+#endif
 #define MAXPATHL	_MAX_PATH	/* Win32 has long paths and plenty of memory */
 
 #ifndef MAXMEM

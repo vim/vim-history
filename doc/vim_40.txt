@@ -1,10 +1,11 @@
-*vim_40.txt*    For Vim version 4.0.  Last modification: 1996 May 27
+*vim_40.txt*    For Vim version 4.1.  Last modification: 1996 June 11
 
 
 Welcome to Vim Version 4.0!
 
 This document lists the differences between Vim 3.0 and Vim 4.0.
 See |vim_diff.txt| for a short overview.
+Although 4.0 is mentioned here, this is also for version 4.1, 4.2, etc..
 
 CONTENTS:
 
@@ -47,6 +48,7 @@ NEW AND IMPROVED FEATURES				|new_features|
     Graphical User Interface (GUI)			|new_gui|
     Support for Windows NT and Windows 95		|new_win32|
     Support for OS/2					|new_os2|
+    Support for MiNT					|new_mint|
     Miscellaneous					|new_misc|
 
 VI COMPATIBILITY IMPROVEMENTS				|vi_compat|
@@ -112,9 +114,9 @@ first part of the swap file can now be understood on a machine with a
 different byte order or sizeof(int).  When you try to recover a file on such a
 machine, you will get an error message that this is not possible.
 
-Because of this change, swap files cannot be exchanged between 3.0 and 4.0.  If
-you have a swap file from a crashed session with 3.0, use Vim 3.0 to recover
-the file---don't use 4.0.				|swap_file|
+Because of this change, swap files cannot be exchanged between 3.0 and 4.0.
+If you have a swap file from a crashed session with 3.0, use Vim 3.0 to
+recover the file---don't use 4.0.			|swap_file|
 
 
 "-w scriptout" argument changed				*scriptout_changed*
@@ -212,7 +214,7 @@ old name	new name	  old code	old MS-DOS code
 <SC_DOWN>	<S-Down>	0x85	133     0xb5	181
 <SC_LEFT>	<S-Left>	0x86	134     0xb6	182
 <SC_RIGHT>	<S-Right>	0x87	135     0xb7	183
-							   
+
 <F1>		<F1>		0x88	136     0xb8	184
 <F2>		<F2>		0x89	137     0xb9	185
 <F3>		<F3>		0x8a	138     0xba	186
@@ -223,7 +225,7 @@ old name	new name	  old code	old MS-DOS code
 <F8>		<F8>		0x8f	143     0xbf	191
 <F9>		<F9>		0x90	144     0xc0	192
 <F10>		<F10>		0x91	145     0xc1	193
-							   
+
 <SF1>		<S-F1>		0x92	146     0xc2	194
 <SF2>		<S-F2>		0x93	147     0xc3	195
 <SF3>		<S-F3>		0x94	148     0xc4	196
@@ -234,10 +236,10 @@ old name	new name	  old code	old MS-DOS code
 <SF8>		<S-F8>		0x99	153     0xc9	201
 <SF9>		<S-F9>		0x9a	154     0xca	202
 <SF10>		<S-F10>		0x9b	155     0xcb	203
-							   
+
 <HELP>		<Help>		0x9c	156     0xcc	204
 <UNDO>		<Undo>		0x9d	157     0xcd	205
-							   
+
 		(not used)	0x9e	158     0xce	206
 		(not used)	0x9f	159     0xcf	207
 
@@ -536,7 +538,7 @@ that doesn't conform to what is supported by 'cindent'.
 Improvements for 'smartindent':				|'smartindent'|
 - When entering '{', indent is not rounded to 'shiftwidth'.
 - When entering '}' and the matching '{' is preceded with a '(', set indent to
-  the line containing the matching ')' 
+  the line containing the matching ')'
 - Ignore lines starting with '#'.
 - When typing '{' after "O", delete one indent, unless indent of previous line
   is less or equal.
@@ -645,10 +647,10 @@ illegal characters.  Also for 'highlight' option.
 Environment variables in options are now replaced at any position, not just at
 the start.						|:set_env|
 
-For string options, a Tab ends the string; this is Vi-compatible.  When setting
-a hidden string option, skip backslashed blanks.  When expanding the value of a
-string option, insert a backslash before a Tab.  Updated makeset() and
-putescstr() for putting a backslash before the Tab.	|:set|
+For string options, a Tab ends the string; this is Vi-compatible.  When
+setting a hidden string option, skip backslashed blanks.  When expanding the
+value of a string option, insert a backslash before a Tab.  Updated makeset()
+and putescstr() for putting a backslash before the Tab.	|:set|
 
 Names in 'tags', 'path', 'dictionary', and 'suffixes' options can also be
 separated with commas.  Commas in environment variables and file names are no
@@ -971,8 +973,8 @@ The mouse can be used for:
 - inserting (previously) selected text at the cursor positon |<MiddleMouse>|
 - moving a status line					|drag_status_line|
 - selecting the active window				|<LeftMouse>|
-- jumping to a tag in the text			|<C-LeftMouse>| |g<LeftMouse>|
-- popping a position from the tag stack		|<C-RightMouse>| |g<RightMouse>|
+- jumping to a tag in the text		      |<C-LeftMouse>| |g<LeftMouse>|
+- popping a position from the tag stack	      |<C-RightMouse>| |g<RightMouse>|
 - confirming the "Hit return to continue" message	|'mouse'|.
 - etc.
 
@@ -1022,6 +1024,14 @@ this port quite easy.  It mostly uses the Unix files and settings.
 							|vim_os2.txt|
 
 
+Support for MiNT						*new_mint*
+----------------
+
+There is now a version of Vim for MiNT.  It was compiled with gcc under
+a Unix-like environment.
+							|vim_mint.txt|
+
+
 Miscellaneous new features				*new_misc*
 --------------------------
 
@@ -1031,8 +1041,8 @@ hexadecimal numbers.					|CTRL-A| |CTRL-X|
 "%" now works to match comments of the form "/* Comment /* */".	|%|
 
 Added "gd", Go Declaration: search for identifier under cursor from the start
-of the current function.  "gD" searches from start of the file.  Included files
-are not used.						|gd| |gD|
+of the current function.  "gD" searches from start of the file.  Included
+files are not used.					|gd| |gD|
 
 Added commands ":ascii" and "ga", show value of character under the cursor in
 several ways.						|ga| |:ascii|
@@ -1086,8 +1096,8 @@ height (all lines were taken/given from/to the last window).
 When using the 'c' flag for the ":substitute" command, accept CTRL-E and
 CTRL-Y to scroll the window up/down.
 For ":s///c", the complete match is highlighted (like with incsearch).
-When doing ":s/$/asdf/c", highlight one character beyond the end of the line to
-show where the substitute will take place.
+When doing ":s/$/asdf/c", highlight one character beyond the end of the line
+to show where the substitute will take place.
 Added 'a' reply to substitute with confirmation: like 'y' for all remaining
 replacements.						|:s_c|
 
@@ -1126,7 +1136,7 @@ few consecutive paragraphs.				|Q|
 
 Formatting with "Q" fixes up the indent of the first line (replace with
 minimal number of tabs/spaces).				|Q|
- 
+
 After "Q", put cursor at first non-blank of the last formatted line.  This
 makes it easier to repeat the formatting.
 Made "Q}" put the cursor on the line after the paragraph (where the "}"
@@ -1137,8 +1147,8 @@ When formatting with "Q" while 'tw' and 'wm' are both zero, use a textwidth of
 79, or the screen width minus one if that is smaller.  Joining all the lines
 doesn't make sense for the "Q" command.			|Q|
 
-Added CTRL-W CTRL-T (go to top window) and CTRL-W CTRL-B (go to bottom window).
-							|CTRL-W_CTRL-T|.
+Added CTRL-W CTRL-T (go to top window) and CTRL-W CTRL-B (go to bottom
+window).						|CTRL-W_CTRL-T|.
 
 When in Insert mode and wrapping from column one to the last character, don't
 stick at the end but in the column with a following "k" or "j" command.
@@ -1375,9 +1385,9 @@ again for restoring later, as it might have changed.	|'title'|
 Expanding shell variables works now.  Also made ":e $VAR^I", ":e this$VAR^I",
 and ":e `echo hi`^I" expand correctly by not adding a "*" in these cases.
 
-Command-line expansion: Command after '+' will be expanded; e.g., in ":e +s^D".
-Where file names may be expanded, support for back-quotes has been added.
-							|+cmd|
+Command-line expansion: Command after '+' will be expanded; e.g., in
+":e +s^D".  Where file names may be expanded, support for back-quotes has been
+added.							|+cmd|
 
 Set '[ and '] marks to start and end of undone/redone lines.
 Set '[ and '] to start/end of inserted text after inserting text. |'[|
@@ -1458,8 +1468,8 @@ it, display "((3) of 5)" instead of "(3 of 5)".
 
 Added termcap options for "da" and "db".  On terminals that have "da", scroll
 reverse moves lines from above down onto the screen; on terminals that have
-"db", deleting a line moves lines from below onto the screen.  These lines need
-to be cleared.						|t_da| |t_db|
+"db", deleting a line moves lines from below onto the screen.  These lines
+need to be cleared.					|t_da| |t_db|
 
 Added termcap options for "cd", clear until end of display.  Works faster than
 repeating "ce", clear to end of line.			|t_cd|
@@ -1493,8 +1503,8 @@ When replacing home directory with "~", and it's not followed by anything,
 make it "~/".  Looks more like a path name and can't be confused with "~" for
 'backupext'.						|home_replace|
 
-Added 'aleph', 'hkmap', and 'rightleft' options.  Can be used to edit text that
-is written from right to left (e.g., Hebrew).  Improvement above reverse
+Added 'aleph', 'hkmap', and 'rightleft' options.  Can be used to edit text
+that is written from right to left (e.g., Hebrew).  Improvement above reverse
 insert.  Only when RIGHTLEFT is defined at compile time.
 							|vim_rlh.txt|
 

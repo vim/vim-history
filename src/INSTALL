@@ -1,12 +1,12 @@
 INSTALL - Installation of Vim on different machines.
 
 This file contains instructions for compiling Vim. If you have an executable
-version of Vim you don't need this.
+version of Vim, you don't need this.
 
 Contents:
 1. Generic
 2. Amiga
-3. MSDOS
+3. MS-DOS
 4. Win32 (Windows NT and Windows 95)
 5. Archimedes
 6. Macintosh
@@ -44,8 +44,8 @@ You will have to set the "VIM" environment variable to the location of the
 documentation files.
 
 
-3. MSDOS
-========
+3. MS-DOS
+=========
 
 Summary:
 ren makefile makefile.uni
@@ -53,21 +53,21 @@ ren makefile.bcc makefile; make		Borland C++ and Turbo C++
 ren makefile.dos makefile; make		Turbo C
 make -f makefile.djg			DJGPP 2.0
 
-Warning: Be sure to use the right make.exe. Microsoft C make doesn't work,
-Borland make only works with makefile.bcc and makefile.dos, DJGPP/GNU make
+Warning: Be sure to use the right make.exe.  Microsoft C make doesn't work;
+Borland make only works with makefile.bcc and makefile.dos; DJGPP/GNU make
 must be used for makefile.djg.
 
-The Borland C++ compiler has been used to generate the MS-DOS executable, it
+The Borland C++ compiler has been used to generate the MS-DOS executable; it
 should work without problems. You will probably have to change the paths for
 LIBPATH and INCLUDEPATH in the start of the makefile. If you don't have the
-spawno library, try to get it (e.g. from Simtel), or follow the instructions
+spawno library, try to get it (e.g., from Simtel), or follow the instructions
 in the makefile to remove the use of spawno. You will get two warnings which
 can be ignored (one about _chmod and one about precompiled header files).
 
 The Turbo C makefile has not been tested much lately. It is included for those
 that don't have C++. You may need to make a few changes to get it to work.
 
-DJGPP needs to be installed properly to compile Vim, you need a lot of things
+DJGPP needs to be installed properly to compile Vim; you need a lot of things
 before it works. When your setup is OK, Vim should compile with just one
 warning (about an argument to signal()).
 
@@ -80,15 +80,10 @@ documentation files.
 
 Summary:
 nmake -f Makefile.w32		Win32 SDK or Microsoft Visual C++
-nmake -f Makefile.b32		Borland C++ 4.5
-nmake -f vim.mak		Microsoft Visual C++
+make -f Makefile.b32		Borland C++ 4.5
 
 These files have been supplied by George V. Reilly and Ben Singer; they should
-work.  Vim.mak isn't all that useful to most people (it doesn't build cmdtab.h
-correctly, it doesn't handle dependencies correctly, and it doesn't
-rebuild version.obj every time that vim is built), so unless you are
-debugging Vim in the MSVC IDE, you should build with Makefile.w32 instead.
-The Makefile.b32 has not been tested much, use Makefile.w32 if you can.
+work.  Makefile.b32 has not been tested much; use Makefile.w32 if you can.
 
 You will have to set the "VIM" environment variable to the location of the
 documentation files.
@@ -107,7 +102,7 @@ Nobody is currently working on this.
 ============
 
 Vim should work on the Macintosh, but I don't have a makefile for it.
-Work is being done to update the Macintosh port.  It's a lot of work, don't
+Work is being done to update the Macintosh port.  It's a lot of work; don't
 expect it soon.
 
 
@@ -119,18 +114,18 @@ Summary:
 2. make install		installation in /usr/local
 
 This will include the GUI and X11 libraries, if you have them.  If you want a
-version of Vim that is small and starts up quickly, see the Makefile how to
-disable the GUI and X11.  If you don't have Motif and/or X11 these features
+version of Vim that is small and starts up quickly, see the Makefile for how to
+disable the GUI and X11.  If you don't have Motif and/or X11, these features
 will be disabled automatically.
 
 See the start of Makefile for more detailed instructions about how to compile
 Vim.
 
 If you are compiling Vim for several machines, for each machine:
-a.	make shadow
-b.	mv shadow machine_name
-c.	cd machine_name
-d.	points 1 and 2 above
+  a.    make shadow
+  b.    mv shadow machine_name
+  c.    cd machine_name
+  d.    points 1 and 2 above
 
 [don't use a path for machine_name, just a directory name, otherwise the links
 that "make shadow" create won't work]
@@ -138,11 +133,11 @@ that "make shadow" create won't work]
 GNU Autoconf and a few other tools have been used to make Vim work on many
 different Unix systems. The advantage of this is that Vim should compile
 on most sytems without any adjustments. The disadvantage is that when
-adjustments are required it takes some time to understand what is happening.
+adjustments are required, it takes some time to understand what is happening.
 
-If configure finds all library files, and when linking it complains that some
+If configure finds all library files and then complains when linking that some
 of them can't be found, your linker doesn't return an error code for missing
-libraries.  Vim would be linked fine anyway, just ignore these errors.
+libraries.  Vim should be linked fine anyway; just ignore these errors.
 
 On Linux, when using -g to compile (which is default for gcc), the executable
 will probably be statically linked.  If you don't want this, remove the -g
@@ -157,11 +152,11 @@ want, but maybe not!
 =======
 
 Summary:
-ren makefile makefile.unix
-ren makefile.os2 makefile
+ren Makefile Makefile.unix
+ren makefile.os2 Makefile
 make
 
-This alpha port of Vim to OS/2 is based on the emx environment together
+This port of Vim to OS/2 is based on the emx environment together
 with GNU C. The main design goal of emx is to simplify porting Unix
 software to OS/2 and DOS. Because of this, almost all the Unix defines
 etc. already existing in the Vim source code could be reused. Only where
@@ -169,19 +164,17 @@ OS/2 specifics came into play were additional changes necessary. Those
 places can be found by searching for "OS2" and "__EMX__" (I've tried to
 keep emx-specific things separate from generic OS/2 stuff).
 
-Warning! Not tested well yet; report problems to paul@wau.mis.ah.nl
-         (email valid up to at least August 1996). Take care with
-         textmode / notextmode (notextmode will be silently converted
-         to textmode (always!)), and binary mode (0% tested). Other
-         problems are sure to exist as well, so keep an up to date
-         copy of files you plan to edit with Vim!!!
+Note: This OS/2 port works well for me and an additional OS/2 user on
+      the Vim development team (Karsten Sievert); however, since I
+      haven't had any other feedback from other people, that either
+      means no (OS/2-specific) bugs exist, or no one has yet created
+      a situation in which any bugs are apparent.
+      Report any problems or other comments to paul@wau.mis.ah.nl
+      (email valid up to at least September 1996, after that try
+      paul@wurtel.hobby.nl, paul@murphy.nl, or paulS@toecompst.nl).
+      Textmode/notextmode and binary mode both seem to work well.
 
 Prerequisites:
-- Make sure to use an HPFS partition for the sources! FAT partitions
-  deserve to die.
-- I've set some things up that expect the sources in
-  c:/local/src/vim-3.24/src and Vim system .vimrc and help files in
-  c:/local/lib/vim. If you want to change that, change patd_os2.c.
 - To compile, you need the emx environment (at least rev. 0.9b), GCC,
   some make utility (GNU make works fine). These are generally
   available as (ask Archie about them):
@@ -191,21 +184,28 @@ Prerequisites:
     gnudev1.zip   GNU development tools compiled for emx (part 1)
     gnudev2.zip   GNU development tools compiled for emx (part 2)
     gnumake.zip   GNU make
-- To run Vim, emx.dll should be available in one of the directories
-  listed in your LIBPATH.
 - Don't set a TERM environment variable; Vim defaults to os2ansi
   which is available as a builtin termcap entry. Using other values
-  may give problems! (OS/2 ANSI emulation is quite limited.)
+  may give problems! (OS/2 ANSI emulation is quite limited.) If you
+  need to set TERM for other programs, you may consider putting
+  set term=os2ansi in the vimrc file.
 
-Check vim_os2.txt for additional info.
+Check vim_os2.txt for additional info on running Vim.
 
 
 9. Atari MiNT
 =============
 
-The changes for Atari MiNT are not included in the distribution yet.  A
-Makefile is also missing.  It is almost the same as the Unix stuff.
-This will be made available later.
+
+To compile Vim for MiNT you may either copy makefile.mint to Makefile or use
+the Unix Makefile adapted for the MiNT configuration.
+
+Now proceed as described in the Unix section.
+
+Prerequisites:
+
+You need a curses or termcap library that supports non-alphanumeric
+termcap names. If you don't have any, link with termlib.o.
 
 -----------------------------------------------------------------------------
 

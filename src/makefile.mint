@@ -1,7 +1,7 @@
 #
 # Makefile for Vim on MiNT				vim:ts=8:sw=8:tw=78
 #
-# This is a modified version of the original vim 3.29 Makefile. It is
+# This is a modified version of the original vim 4.0 Makefile. It is
 # configured to accompany the MiNT distribution of Vim.
 # The GUI, Win32, Amiga, MS-Dos, and cproto stuff has been deleted because 
 # the relevant files are not included in the MiNT distribution.
@@ -10,7 +10,7 @@
 #
 # This Makefile is loosely based on the GNU Makefile conventions found in
 # standards.info.
-
+#
 # Compiling Vim, summary:
 #
 #	3. make
@@ -47,8 +47,9 @@
 #		make config
 #		make
 #    The configuration phase creates/overwrites config.h and config.mk.
-#    Configure is created with autoconf. It can detect different systems and
-#    act accordingly. However, it is not correct for all systems.
+#    Configure is created with autoconf.  It can detect different features of
+#    your system and act accordingly.  However, it is not correct for all
+#    systems.
 #    If you changed something do this to run configure again:
 #		make distclean
 #		make config
@@ -86,7 +87,12 @@
 
 #system:              configurations:    	     version (*) tested by:
 #-------------        ------------------------       -------  -  ----------
-#MiNT 1.12.5             gcc-2.6.1                      3.28     Jens Felderhoff
+#MiNT 1.12.5             gcc gcc-2.6.1		     	3.29 (M) Jens Felderhoff
+
+
+# (*)  Remarks:
+#
+# (M)  See below for details.
 
 #DO NOT CHANGE the next line, we need it for configure to find the compiler
 #instead of using the default from the "make" program.
@@ -115,6 +121,7 @@ include config.mk
 # Change this to your desire and do 'make config' afterwards
 
 ### For creating a plain Vim without any X11 related fancies use this one:
+### (otherwise Vim configure will try to include xterm titlebar access)
 CONF_OPT_X = --without-x
 
 ### COMPILER -- the default from configure will mostly be fine, no need to
@@ -141,6 +148,14 @@ CONF_OPT_X = --without-x
 #CFLAGS = -O6 -fno-strength-reduce -Wall -Wshadow -Wmissing-prototypes
 #CFLAGS = -g -DDEBUG -Wall -Wshadow -Wmissing-prototypes
 
+#####################################################
+###  Specific systems, check if yours is listed!  ###
+#####################################################
+
+### Uncomment things here only if the values chosen by configure are wrong.
+### It's better to adjust configure.in and run autoconf, if you can!
+### Then send the required changes to configure.in to the bugs list.
+
 ### (M)  MiNT with gcc 2.6.1 and gdb 3.5
 CC = gcc -mint
 CFLAGS = -g -O
@@ -148,10 +163,6 @@ EXTRA_DEFS = -DMINT
 POSTPROCESS = fixstk 20k $(TARGET)
 DBGLDFLAGS = -B/gnu/bin/sym-
 DBGTARGET = $(TARGET).sym
-
-#####################################################
-###  Specific systems, check if yours is listed!  ###
-#####################################################
 
 ### If you want to use ncurses library instead of the automatically found one
 ### after changing this, you need to do "make distclean; make".
@@ -162,6 +173,7 @@ DBGTARGET = $(TARGET).sym
 ### Name of target(s)
 TARGET = vim
 GTARGET = gvim
+#DBGTARGET = $(TARGET)
 
 ### Installation directory. Default from configure is "/usr/local".
 ### EXEC_PREFIX is for the executable, PREFIX is for other files (they may be
@@ -192,6 +204,7 @@ HELPSUBLOC = $(HELPLOC)$(HELPSUBDIR)
 ### These go into pathdef.c
 VIM_HLP = $(HELPSUBLOC)/vim_help.txt
 SYS_VIMRC_FILE  = $(HELPSUBLOC)/vimrc
+SYS_GVIMRC_FILE = $(HELPSUBLOC)/gvimrc
 
 ### Program to run on installed binary
 STRIP = strip
@@ -211,6 +224,10 @@ DIRMOD = 755
 # Where to copy the man and help files from
 HELPSOURCE = ../doc
 
+# If you are using Linux, you might want to use this to make vim the
+# default vi editor, it will create a link to Vim when doing "make install".
+#LINKIT = -ln -f -s /usr/bin/vi $(BINLOC)/$(TARGET)
+
 ### our grand parent directory should know who we are...
 ### only used for "make tar"
 VIMVERSION = `eval "basename \`cd ../../; pwd\`"`
@@ -219,23 +236,7 @@ VIMVERSION = `eval "basename \`cd ../../; pwd\`"`
 ### prototype headers are ignored due to -DPROTO, system 
 ### headers #include <...> are ignored if we use the -MM option, as
 ### e.g. provided by gcc-cpp.
-### Include USE_GUI to get gependency on gui.h
-CPP_DEPEND = $(CC) -M$(CPP_MM) -DPROTO -DUSE_GUI $(DEFS) $(GUI_DEFS) $(EXTRA_DEFS) $(GUI_IPATH) $(X_CFLAGS)
-
-# flags for cproto
-#     __inline and __attribute__ are not recognized by cproto
-#     maybe the "/usr/bin/cc -E" has to be adjusted for some systems
-
-NO_ATTR = -D__inline= -D"__attribute__\\(x\\)="
-
-# This is for cproto 3.5 patchlevel 3:
-# PROTO_FLAGS = -f4 -m__PARMS -d -E"$(CPP)" $(NO_ATTR)
-#
-# Use this for cproto 3 patchlevel 6 or below (use "cproto -V" to check):
-# PROTO_FLAGS = -f4 -m__PARMS -d -E"$(CPP)" $(NO_ATTR)
-# 
-# Use this for cproto 3 patchlevel 7 or above (use "cproto -V" to check):
-PROTO_FLAGS = -m -M__PARMS -d -E"$(CPP)" $(NO_ATTR)
+CPP_DEPEND = $(CC) -M$(CPP_MM) -DPROTO $(DEFS) $(EXTRA_DEFS) 
 
 
 ################################################
@@ -247,15 +248,13 @@ SHELL = /bin/sh
 .SUFFIXES:
 .SUFFIXES: .c .o .pro
 
-ALL_CFLAGS = $(DEFS) $(GUI_DEFS) $(EXTRA_DEFS) $(GUI_IPATH) $(CFLAGS) $(X_CFLAGS)
+ALL_CFLAGS = $(DEFS) $(EXTRA_DEFS) $(CFLAGS) 
 
-ALL_LIBS = $(GUI_LIBS_DIR) $(X_LIBS_DIR) $(GUI_LIBS) $(X_PRE_LIBS) $(GUI_X_LIBS) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS) $(EXTRA_LIBS)
+ALL_LIBS = $(LIBS) $(EXTRA_LIBS)
 
-PFLAGS = $(PROTO_FLAGS) -DPROTO $(DEFS) $(GUI_DEFS) $(EXTRA_DEFS) $(GUI_IPATH) $(X_CFLAGS)
+PFLAGS = $(PROTO_FLAGS) -DPROTO $(DEFS) $(EXTRA_DEFS) 
 
 #     BASIC_INCL and BASIC_SRC: files that are always used
-#         GUI_INCL and GUI_SRC: extra GUI files for current configuration
-# ALL_GUI_INCL and ALL_GUI_SRC: all GUI files
 #
 #                 INCL and SRC: files used for current configuration
 #                     ALL_INCL: files used for make depend and ctags
@@ -264,9 +263,9 @@ PFLAGS = $(PROTO_FLAGS) -DPROTO $(DEFS) $(GUI_DEFS) $(EXTRA_DEFS) $(GUI_IPATH) $
 BASIC_INCL = vim.h globals.h option.h keymap.h macros.h ascii.h term.h unix.h \
 	unixunix.h structs.h proto.h osdef.h config.h
 
-INCL =  $(BASIC_INCL) $(GUI_INCL)
+INCL =  $(BASIC_INCL) 
 
-ALL_INCL = $(BASIC_INCL) $(ALL_GUI_INCL)
+ALL_INCL = $(BASIC_INCL) 
 
 BASIC_SRC =	alloc.c buffer.c charset.c \
 	cmdcmds.c cmdline.c csearch.c \
@@ -278,9 +277,9 @@ BASIC_SRC =	alloc.c buffer.c charset.c \
 	search.c tables.c tag.c term.c \
 	undo.c unix.c version.c window.c
 
-SRC =	$(BASIC_SRC) $(GUI_SRC)
+SRC =	$(BASIC_SRC) 
 
-ALL_SRC = $(BASIC_SRC) $(ALL_GUI_SRC)
+ALL_SRC = $(BASIC_SRC) 
 
 OBJ =	alloc.o unix.o buffer.o charset.o \
 	cmdcmds.o cmdline.o csearch.o \
@@ -292,26 +291,13 @@ OBJ =	alloc.o unix.o buffer.o charset.o \
 	search.o tables.o tag.o term.o \
 	undo.o window.o $(GUI_OBJ)
 
-PRO_AUTO = unix.pro $(ALL_GUI_PRO) \
-	alloc.pro buffer.pro charset.pro cmdcmds.pro \
-	cmdline.pro csearch.pro digraph.pro edit.pro \
-	fileio.pro getchar.pro help.pro linefunc.pro \
-	main.pro mark.pro memfile.pro memline.pro \
-	message.pro misccmds.pro normal.pro ops.pro \
-	option.pro quickfix.pro regexp.pro regsub.pro \
-	screen.pro search.pro tables.pro tag.pro \
-	term.pro termlib.pro undo.pro version.pro window.pro
-
-PRO_MANUAL = amiga.pro msdos.pro win32.pro
-
 # Default target is making the executable
 all: $(TARGET)
 
 # Run ./configure with all the setting above.
 config: configure
-	GUI_INC_LOC="$(GUI_INC_LOC)" GUI_LIB_LOC="$(GUI_LIB_LOC)" \
-		CC="$(CC)" CFLAGS="$(CFLAGS)" TERM_LIB="$(TERM_LIB)" \
-	$(CONF_SHELL) ./configure $(CONF_OPT_GUI) $(CONF_OPT_X)
+	CC="$(CC)" CFLAGS="$(CFLAGS)" TERM_LIB="$(TERM_LIB)" \
+	$(CONF_SHELL) ./configure 
 
 # When configure.in has changed, run autoconf to produce configure
 # If you don't have autoconf, use the configure that's there
@@ -340,38 +326,10 @@ debug: $(OBJ) version.c
 	$(CC) -c $(ALL_CFLAGS) version.c
 	$(CC) $(LDFLAGS) $(DBGLDFLAGS) -o $(DBGTARGET) -g $(OBJ) version.o $(ALL_LIBS) 
 
-# Generate function prototypes.  This is not needed to compile vim, but if
-# you want to use it, cproto is out there on the net somewhere -- Webb
-#
-# When generating amiga.pro, msdos.pro and win32.pro there will be a few
-# include files that can not be found, that's OK.
-
-proto: $(PRO_AUTO) $(PRO_MANUAL)
-
-### Would be nice if this would work for "normal" make.
-### Currently it only works for (Free)BSD make.
-#$(PRO_AUTO): $$(*F).c
-#	cproto $(PFLAGS) -DUSE_GUI $(*F).c > $@
-
-# Always define USE_GUI.  This will generate a few warnings if it's also
-# defined in config.h, you can ignore that.
-.c.pro:
-	cproto $(PFLAGS) -DUSE_GUI $< > proto/$@
-
-amiga.pro: amiga.c
-	cproto $(PFLAGS) -DAMIGA -UHAVE_CONFIG_H -DBPTR=char* amiga.c > proto/amiga.pro
-
-msdos.pro: msdos.c
-	cproto $(PFLAGS) -DMSDOS -UHAVE_CONFIG_H msdos.c > proto/msdos.pro
-
-win32.pro: win32.c
-	cproto $(PFLAGS) -DWIN32 -UHAVE_CONFIG_H win32.c > proto/win32.pro
-
 notags:
 	rm -f tags
 
-# Note: tags is made for the currently configured version, can't include both
-# Motif and Athena GUI
+# Note: tags is made for the currently configured version.
 ctags tags TAGS: notags
 	$(CTAGS) $(SRC) $(ALL_INCL)
 
@@ -462,28 +420,6 @@ depend:
 			$(CPP_DEPEND) $$i >> tmp_make; done
 	mv tmp_make Makefile
 
-# use this in case the files have been transported via an MSDOS system
-
-FILES = *.c *.h Makefile *.in makefile.* *.sh cmdtab.tab proto/*.pro tags configure
-
-dos2unix:
-	-mv arp_prot.h arp_proto.h
-	-mv makefile.arc makefile.arch
-	-mv makefile.dic makefile.dice
-	-mv makefile.man makefile.manx
-	-mv makefile Makefile
-	-mv config_h.in config.h.in || mv configxh.in config.h.in || mv configh.in config.h.in
-	-mv config_m.in config.mk.in || mv configxm.in config.mk.in || mv configmk.in config.mk.in
-	-mv osdef1_h.in osdef1.h.in || mv osdef1xh.in osdef1.h.in || mv osdef1h.in osdef1.h.in
-	-mv osdef2_h.in osdef2.h.in || mv osdef2xh.in osdef2.h.in || mv osdef2h.in osdef2.h.in
-	-mv configur.in configure.in
-	-mv configur configure
-	-mv gui_moti.c gui_motif.c
-	-mv gui_athe.c gui_athena.c
-	-mv gui_at_s.c gui_at_sb.c
-	-mv gui_at_s.h gui_at_sb.h
-	for i in $(FILES); do tr -d '\r\032' < $$i > ~tmp~; mv ~tmp~ $$i; echo $$i; done
-
 ###########################################################################
 
 # Used when .o files are in src directory
@@ -532,84 +468,72 @@ mkcmdtab: mkcmdtab.c osdef.h
 ###############################################################################
 ### (automatically generated by 'make depend')
 ### Dependencies:
-alloc.o: alloc.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
-  macros.h structs.h gui.h globals.h proto.h regexp.h
-buffer.o: buffer.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
-  macros.h structs.h gui.h globals.h proto.h regexp.h option.h
-charset.o: charset.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h \
-  term.h macros.h structs.h gui.h globals.h proto.h regexp.h option.h
-cmdcmds.o: cmdcmds.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h \
-  term.h macros.h structs.h gui.h globals.h proto.h regexp.h option.h
-cmdline.o: cmdline.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h \
-  term.h macros.h structs.h gui.h globals.h proto.h regexp.h option.h cmdtab.h \
+alloc.o: alloc.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h keymap.h \
+  term.h macros.h structs.h globals.h proto.h regexp.h
+buffer.o: buffer.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h keymap.h \
+  term.h macros.h structs.h globals.h proto.h regexp.h option.h
+charset.o: charset.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h \
+  keymap.h term.h macros.h structs.h globals.h proto.h regexp.h option.h
+cmdcmds.o: cmdcmds.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h \
+  keymap.h term.h macros.h structs.h globals.h proto.h regexp.h option.h
+cmdline.o: cmdline.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h \
+  keymap.h term.h macros.h structs.h globals.h proto.h regexp.h option.h cmdtab.h \
   ops.h
-csearch.o: csearch.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h \
-  term.h macros.h structs.h gui.h globals.h proto.h regexp.h option.h
-digraph.o: digraph.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h \
-  term.h macros.h structs.h gui.h globals.h proto.h regexp.h option.h
-edit.o: edit.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
-  macros.h structs.h gui.h globals.h proto.h regexp.h option.h ops.h
-fileio.o: fileio.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
-  macros.h structs.h gui.h globals.h proto.h regexp.h option.h
-getchar.o: getchar.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h \
-  term.h macros.h structs.h gui.h globals.h proto.h regexp.h option.h
-help.o: help.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
-  macros.h structs.h gui.h globals.h proto.h regexp.h option.h
-linefunc.o: linefunc.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h \
-  term.h macros.h structs.h gui.h globals.h proto.h regexp.h
-main.o: main.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
-  macros.h structs.h gui.h globals.h proto.h regexp.h option.h
-mark.o: mark.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
-  macros.h structs.h gui.h globals.h proto.h regexp.h option.h
-memfile.o: memfile.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h \
-  term.h macros.h structs.h gui.h globals.h proto.h regexp.h option.h
-memline.o: memline.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h \
-  term.h macros.h structs.h gui.h globals.h proto.h regexp.h option.h
-message.o: message.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h \
-  term.h macros.h structs.h gui.h globals.h proto.h regexp.h option.h
-misccmds.o: misccmds.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h \
-  term.h macros.h structs.h gui.h globals.h proto.h regexp.h option.h
-normal.o: normal.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
-  macros.h structs.h gui.h globals.h proto.h regexp.h option.h ops.h
-ops.o: ops.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
-  macros.h structs.h gui.h globals.h proto.h regexp.h option.h ops.h
-option.o: option.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
-  macros.h structs.h gui.h globals.h proto.h regexp.h option.h
-pathdef.o: pathdef.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h \
-  term.h macros.h structs.h gui.h
-quickfix.o: quickfix.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h \
-  term.h macros.h structs.h gui.h globals.h proto.h regexp.h option.h
-regexp.o: regexp.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
-  macros.h structs.h gui.h globals.h proto.h regexp.h option.h
-regsub.o: regsub.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
-  macros.h structs.h gui.h globals.h proto.h regexp.h
-screen.o: screen.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
-  macros.h structs.h gui.h globals.h proto.h regexp.h option.h ops.h
-search.o: search.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
-  macros.h structs.h gui.h globals.h proto.h regexp.h option.h ops.h
-tables.o: tables.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
-  macros.h structs.h gui.h globals.h proto.h regexp.h option.h
-tag.o: tag.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
-  macros.h structs.h gui.h globals.h proto.h regexp.h option.h
-term.o: term.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
-  macros.h structs.h gui.h globals.h option.h proto.h regexp.h
-undo.o: undo.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
-  macros.h structs.h gui.h globals.h proto.h regexp.h option.h
-unix.o: unix.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
-  macros.h structs.h gui.h globals.h option.h proto.h regexp.h unixunix.h
-version.o: version.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h \
-  term.h macros.h structs.h gui.h globals.h proto.h regexp.h
-window.o: window.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
-  macros.h structs.h gui.h globals.h proto.h regexp.h option.h
-gui.o: gui.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h term.h \
-  macros.h structs.h gui.h globals.h proto.h regexp.h option.h
-gui_motif.o: gui_motif.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h \
-  term.h macros.h structs.h gui.h globals.h proto.h regexp.h option.h ops.h
-gui_x11.o: gui_x11.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h \
-  term.h macros.h structs.h gui.h globals.h proto.h regexp.h option.h ops.h
-gui_athena.o: gui_athena.c vim.h config.h feature.h unix.h osdef.h ascii.h \
-  keymap.h term.h macros.h structs.h gui.h globals.h proto.h regexp.h option.h \
-  ops.h gui_at_sb.h
-gui_at_sb.o: gui_at_sb.c vim.h config.h feature.h unix.h osdef.h ascii.h keymap.h \
-  term.h macros.h structs.h gui.h gui_at_sb.h
-
+csearch.o: csearch.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h \
+  keymap.h term.h macros.h structs.h globals.h proto.h regexp.h option.h
+digraph.o: digraph.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h \
+  keymap.h term.h macros.h structs.h globals.h proto.h regexp.h option.h
+edit.o: edit.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h keymap.h \
+  term.h macros.h structs.h globals.h proto.h regexp.h option.h ops.h
+fileio.o: fileio.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h keymap.h \
+  term.h macros.h structs.h globals.h proto.h regexp.h option.h
+getchar.o: getchar.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h \
+  keymap.h term.h macros.h structs.h globals.h proto.h regexp.h option.h
+help.o: help.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h keymap.h \
+  term.h macros.h structs.h globals.h proto.h regexp.h option.h
+linefunc.o: linefunc.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h \
+  keymap.h term.h macros.h structs.h globals.h proto.h regexp.h
+main.o: main.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h keymap.h \
+  term.h macros.h structs.h globals.h proto.h regexp.h option.h
+mark.o: mark.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h keymap.h \
+  term.h macros.h structs.h globals.h proto.h regexp.h option.h
+memfile.o: memfile.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h \
+  keymap.h term.h macros.h structs.h globals.h proto.h regexp.h option.h
+memline.o: memline.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h \
+  keymap.h term.h macros.h structs.h globals.h proto.h regexp.h option.h
+message.o: message.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h \
+  keymap.h term.h macros.h structs.h globals.h proto.h regexp.h option.h
+misccmds.o: misccmds.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h \
+  keymap.h term.h macros.h structs.h globals.h proto.h regexp.h option.h
+normal.o: normal.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h keymap.h \
+  term.h macros.h structs.h globals.h proto.h regexp.h option.h ops.h
+ops.o: ops.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h keymap.h term.h \
+  macros.h structs.h globals.h proto.h regexp.h option.h ops.h
+option.o: option.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h keymap.h \
+  term.h macros.h structs.h globals.h proto.h regexp.h option.h
+pathdef.o: pathdef.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h \
+  keymap.h term.h macros.h structs.h
+quickfix.o: quickfix.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h \
+  keymap.h term.h macros.h structs.h globals.h proto.h regexp.h option.h
+regexp.o: regexp.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h keymap.h \
+  term.h macros.h structs.h globals.h proto.h regexp.h option.h
+regsub.o: regsub.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h keymap.h \
+  term.h macros.h structs.h globals.h proto.h regexp.h
+screen.o: screen.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h keymap.h \
+  term.h macros.h structs.h globals.h proto.h regexp.h option.h ops.h
+search.o: search.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h keymap.h \
+  term.h macros.h structs.h globals.h proto.h regexp.h option.h ops.h
+tables.o: tables.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h keymap.h \
+  term.h macros.h structs.h globals.h proto.h regexp.h option.h
+tag.o: tag.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h keymap.h term.h \
+  macros.h structs.h globals.h proto.h regexp.h option.h
+term.o: term.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h keymap.h \
+  term.h macros.h structs.h globals.h option.h proto.h regexp.h
+undo.o: undo.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h keymap.h \
+  term.h macros.h structs.h globals.h proto.h regexp.h option.h
+unix.o: unix.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h keymap.h \
+  term.h macros.h structs.h globals.h option.h proto.h regexp.h unixunix.h
+version.o: version.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h \
+  keymap.h term.h macros.h structs.h globals.h proto.h regexp.h
+window.o: window.c vim.h config.h feature.h unix.h osdef.h mint.h ascii.h keymap.h \
+  term.h macros.h structs.h globals.h proto.h regexp.h option.h

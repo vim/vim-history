@@ -1,4 +1,4 @@
-*vim_tips.txt*  For Vim version 4.0.  Last modification: 1996 May 26
+*vim_tips.txt*  For Vim version 4.1.  Last modification: 1996 June 11
 
 Contents:
 
@@ -13,6 +13,7 @@ Renaming files						|rename-files|
 Speeding up external commands				|speed-up|
 Useful mappings						|useful-mappings|
 Compressing the help files				|gzip-helpfile|
+Executing shell commands in a window			|shell_window|
 
 
 Editing C programs					*C-editing*
@@ -26,6 +27,7 @@ is an overview with tags to jump to:
 |=|			Re-indent a few lines.
 |format_comments|	Format comments.
 
+|:checkpath|		Show all recursively included files.
 |[i|			Search for identifier under cursor in current and
 			included files.
 |[_CTRL-I|		Jump to match for "[i"
@@ -41,7 +43,6 @@ is an overview with tags to jump to:
 |gD|			Go to Declaration of global variable under cursor.
 
 |gf|			Go to file name under the cursor.
-|:checkpath|		Show all recursively included files.
 
 |%|			Go to matching (), {}, [], /* */, #if, #else, #endif.
 |[/|			Go to previous start of comment.
@@ -60,20 +61,20 @@ is an overview with tags to jump to:
 Editing local HTML files (WWW)				*html-editing*
 ==============================
 
-Vim has some features which can help simplify the creation and
-maintenance of HTML files, provided that the files you are editing are
-available on the local file system. The "]f", "gf" and "CTRL-W f" commands can
-be used to jump to the file whose name appears under the cursor, thus not only
-checking that the link is valid (at least the file name part of the URL) but
-also providing a quick and easy way to edit many related HTML pages at once.
-						|gf|
+Vim has some features which can help simplify the creation and maintenance of
+HTML files, provided that the files you are editing are available on the local
+file system.  The "]f", "gf" and "CTRL-W f" commands can be used to jump to
+the file whose name appears under the cursor, thus not only checking that the
+link is valid (at least the file name part of the URL) but also providing a
+quick and easy way to edit many related HTML pages at once.  |gf|
+A set of macros to help with editing html can be found on the Vim pages. |www|
 
 
 Editing paragraphs without a line break			*edit-no-break*
 =======================================
 
 If you are typing text in Vim that will later go to a word processor, it is
-useful to keep a paragraph as a single line.  To make this more easy, use:
+useful to keep a paragraph as a single line.  To make this more easy:
 - set 'wrap' on, to make lines wrap				|'wrap'|
 - set 'linebreak' on, to make wrapping happen at a blank	|'linebreak'|
 - use "gk" and "gj" to move one screen line up or down		|gj|
@@ -105,20 +106,20 @@ In your particular problem, you are looking for the control sequences
 buffer. As a quick workaround a command sequence like
 	echo -n "^[[?47h"; vim ... ; echo -n "^[[?47l"
 may do what you want. (My notation ^[ means the ESC character, further down
-you'll that the databases use \E instead).
+you'll see that the databases use \E instead).
 
 On startup, vim echoes the value of the termcap variable ti (terminfo:
 smcup) to the terminal. When exiting, it echoes te (terminfo: rmcup). Thus
 these two variables are the correct place where the above mentioned control
-sequences should go. 
+sequences should go.
 
-Compare your xterm termcap entry (found in /etc/termcap) with your xterm 
-terminfo entry (retrieved with /usr/5bin/infocmp -C xterm). Both should 
+Compare your xterm termcap entry (found in /etc/termcap) with your xterm
+terminfo entry (retrieved with /usr/5bin/infocmp -C xterm). Both should
 contain entries similar to:
 	:te=\E[2J\E[?47l\E8:ti=\E7\E[?47h:
 
-PS: If you find any difference, someone (your sysadmin?) should better check 
-    the complete termcap and terminfo database for consistency. 
+PS: If you find any difference, someone (your sysadmin?) should better check
+    the complete termcap and terminfo database for consistency.
 
 NOTE: If you recompile Vim with SAVE_XTERM_SCREEN defined in feature.h, the
 builtin xterm will include the mentioned "te" and "ti" entries.
@@ -155,8 +156,8 @@ If you like the scrolling to go a bit smoother, you can use these mappings:
 Correcting common typing mistakes			*type-mistakes*
 =================================
 
-When there are a few words that you keep on typing in the wrong way, make a
-few abbreviations that correct them:
+When there are a few words that you keep on typing in the wrong way, make
+abbreviations that correct them.  For example:
 	:ab teh the
 	:ab fro for
 
@@ -204,7 +205,8 @@ Another way is to include the "-f" flag in the 'shell' option, e.g.:
 	:set shell=csh\ -f
 
 (the backslash is needed to include the space in the option).
-This will make csh completely skip the use of the .cshrc file.
+This will make csh completely skip the use of the .cshrc file.  This may cause
+some things to stop working though.
 
 
 Useful mappings						*useful-mappings*
@@ -213,9 +215,8 @@ Useful mappings						*useful-mappings*
 Here are a few mappings that some people like to use.
 
 	:map ' `
-Make the single quote work like a backtick.  Puts the cursor on the column,
-instead of going to the first non-blank character in the line.
-
+Make the single quote work like a backtick.  Puts the cursor on the column of
+a mark, instead of going to the first non-blank character in the line.
 
 							*emacs_keys*
 For Emacs-style editing on the command-line:
@@ -251,7 +252,8 @@ Compressing the help files				*gzip-helpfile*
 ==========================
 
 For those of you who are really short on disk space, you can compress the help
-files and still be able to view them with Vim.
+files and still be able to view them with Vim.  This makes accessing the help
+files a bit slower.
 
 (1) Compress all the help files: "gzip doc/*.txt".
 
@@ -270,5 +272,18 @@ Where <dirname> is the directory where the help files are.  If you have
 already included autocommands to edit ".gz" files, you should omit the three
 "autocmd" lines.  Setting the command height to two is to avoid having to hit
 return; it is not mandatory.
+
+
+Executing shell commands in a window			*shell_window*
+====================================
+
+There have been questions for the possibility to execute a shell in a window
+inside Vim.  The answer: you can't!  Including this would add a lot of code to
+Vim, which is a good reason not to do this.  After all, Vim is an editor, it
+is not supposed to do non-editing tasks.  However, to get something like this,
+you might try splitting your terminal screen or display window with the
+"splitvt" program.  You can probably find it on some ftp server.  The person
+that knows more about this is Sam Lantinga (slouken@cs.ucdavis.edu).
+
 
  vim:ts=8:sw=8:js:tw=78:

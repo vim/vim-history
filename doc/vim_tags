@@ -1285,6 +1285,7 @@ backup_changed	vim_40.txt	/\*backup_changed\*
 backup_extension	vim_40.txt	/\*backup_extension\*
 backup_table	vim_ref.txt	/\*backup_table\*
 bar	vim_ref.txt	/\*bar\*
+bars	vim_help.txt	/\*bars\*
 beep	vim_ref.txt	/\*beep\*
 bug_fixes	vim_40.txt	/\*bug_fixes\*
 bugs	vim_help.txt	/\*bugs\*
@@ -1597,6 +1598,7 @@ new_gui	vim_40.txt	/\*new_gui\*
 new_help	vim_40.txt	/\*new_help\*
 new_include	vim_40.txt	/\*new_include\*
 new_keys	vim_40.txt	/\*new_keys\*
+new_mint	vim_40.txt	/\*new_mint\*
 new_misc	vim_40.txt	/\*new_misc\*
 new_mouse	vim_40.txt	/\*new_mouse\*
 new_msg	vim_40.txt	/\*new_msg\*
@@ -1668,6 +1670,7 @@ search_pattern	vim_ref.txt	/\*search_pattern\*
 section	vim_ref.txt	/\*section\*
 sentence	vim_ref.txt	/\*sentence\*
 set_option	vim_ref.txt	/\*set_option\*
+shell_window	vim_tips.txt	/\*shell_window\*
 shift	vim_ref.txt	/\*shift\*
 short_name_changed	vim_40.txt	/\*short_name_changed\*
 simple_change	vim_ref.txt	/\*simple_change\*
@@ -1871,7 +1874,9 @@ vim_idx.txt	vim_idx.txt	/\*vim_idx.txt\*
 vim_kcc.txt	vim_kcc.txt	/\*vim_kcc.txt\*
 vim_mac.txt	vim_mac.txt	/\*vim_mac.txt\*
 vim_menu.txt	vim_menu.txt	/\*vim_menu.txt\*
+vim_mint.txt	vim_mint.txt	/\*vim_mint.txt\*
 vim_modes	vim_ref.txt	/\*vim_modes\*
+vim_os2.txt	vim_os2.txt	/\*vim_os2.txt\*
 vim_ref.txt	vim_ref.txt	/\*vim_ref.txt\*
 vim_rlh.txt	vim_rlh.txt	/\*vim_rlh.txt\*
 vim_tags	vim_tags	1

@@ -278,8 +278,8 @@ VIM(1)                                                     VIM(1)
        vim_<machine>.txt
                       Machine  specific  comments.  <machine> can
                       be ami (Amiga),  arch  (Archimedes),  unix,
-                      w32  (Windows  95/NT), dos (MS-DOS) and mac
-                      (Macintosh).
+                      w32  (Windows  95/NT),  dos  (MS-DOS), mint
+                      (Atari MiNT) and mac (Macintosh).
 
        vim_gui.txt    Specific comments about the GUI version.
 

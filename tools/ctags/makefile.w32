@@ -1,8 +1,8 @@
-#
-# Makefile for ctags on Win32 (Windows NT and Windows 95), using MS SDK
-# and MSVC 2.0 or 2.2 compilers.  Also works with MSVC 4.x compilers.
-# It is not known if it will build with other compilers or on non-Intel
-# platforms, but it shouldn't be too difficult to get it to do so.
+# Makefile for ctags on Win32 (Windows NT and Windows 95), using the
+# Microsoft Visual C++ 2.x and MSVC 4.x compilers.  It builds on Windows 95
+# and all four NT platforms: i386, Alpha, MIPS, and PowerPC.  The NT/i386
+# binary and the Windows 95 binary are identical.  To build using Borland C++,
+# use Makefile.b32.
 #
 
 # to build the retail version
@@ -20,13 +20,13 @@ TARGETOS = BOTH
 !ifdef PROCESSOR_ARCHITECTURE
 # We're on Windows NT
 CPU = $(PROCESSOR_ARCHITECTURE)
-! if "$(PROCESSOR_ARCHITECTURE)" == "x86"
+! if "$(CPU)" == "x86"
 CPU = i386
 ! endif
-!else
+!else  # !PROCESSOR_ARCHITECTURE
 # We're on Windows 95
 CPU = i386
-!endif
+!endif # !PROCESSOR_ARCHITECTURE
 
 
 # Build a retail version by default

@@ -53,6 +53,9 @@
 # include <sys/statfs.h>
 # define STATFS statfs
 # define F_BSIZE f_bsize
+# ifdef MINT
+#  define fstatfs(fd, buf, len, nul) fstat((fd), (buf))
+# endif
 #else
 # define STATFS stat
 # define F_BSIZE st_blksize

@@ -105,6 +105,10 @@
 # include "win32.h"
 #endif
 
+#ifdef MINT
+# include "mint.h"
+#endif
+
 /*
  * maximum length of a file name and a path	(for non-unix systems)
  */

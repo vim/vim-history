@@ -1,0 +1,45 @@
+Announcing: Exuberant Ctags 1.2
+Author    : Darren Hiebert
+
+This is to announce the release of my new, better ctags utility. I am quite
+pleased with it, and others who have used it have been enthusiastic about the
+greater reliability and functionality it provides.
+
+You can find it at any of:
+
+	http://fly.hiwaay.net/~darren/ctags.html (Web site)
+	ftp://sunsite.unc.edu/pub/Linux/devel/lang/c/ctags-1.2.tar.gz
+	ftp://ftp.halcyon.com/local/gvr/ctags-1.2.tar.gz
+
+What makes this ctags desirable?
+
+1.  It can find *all* types of C language tags, including all of the
+    following:
+
+            macro definitions
+            enumerated values (values inside enum{...})
+            function and method definitions
+            enum/struct/union tags
+            external function prototypes (optional)
+            typedefs
+            variable declarations
+
+2.  It is far less easily fooled by code containing #if preprocessor
+    conditional constructs, using a conditional path selection algorithm
+    to resolve complicated choices, and a fall-back algorithm when this one
+    fails.
+
+3.  Can also be used to print out a list of selected objects found in source
+    files.
+
+4.  Supports UNIX, MSDOS, WindowsNT, Windows95, OS/2 and the Amiga. In some
+    cases, you may need to play with the include files, depending upon you
+    compiler. Some pre-compiled binaries may become available on the web site.
+
+I wrote this because of my disappointment with the other ctags utilities that
+are available. However, it does have a couple of minor limitations (you be the
+judge):
+
+1)  Support for C++ is limited.
+2)  Supports only C; not Lisp, shell scripts, or anything else you might
+    think of.

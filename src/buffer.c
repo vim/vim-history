@@ -397,6 +397,8 @@ do_buffer(action, start, dir, count, forceit)
 				EMSG("Cannot unload last buffer");
 				return FAIL;
 			}
+			/* Close any other windows on this buffer */
+			close_others(FALSE);
 			buf = curbuf;
 			setpcmark();
 			retval = do_ecmd(0, NULL, NULL, NULL, FALSE, (linenr_t)1, FALSE);
@@ -1295,17 +1297,6 @@ fileinfo(fullname, shorthelp, dont_truncate)
 		msg_trunc(buffer);
 
 	vim_free(buffer);
-
-	/*
-	 * In visual mode the message will be overwritten by the mode message.
-	 * Wait a bit, until a key is hit.
-	 */
-	if (VIsual_active && KeyTyped)
-	{
-		setcursor();
-		flushbuf();
-		mch_delay(10000L, FALSE);
-	}
 }
 
 /*

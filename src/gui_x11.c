@@ -1289,8 +1289,11 @@ gui_mch_wait_for_chars(wtime)
 	 * Make these static, in case gui_x11_timer_cb is called after leaving
 	 * this function (otherwise a random value on the stack may be changed).
 	 */
-	static int		timed_out = FALSE;
-	static int		do_updatescript = FALSE;
+	static int		timed_out;
+	static int		do_updatescript;
+
+	timed_out = FALSE;
+	do_updatescript = FALSE;
 
 	/*
 	 * If we're going to wait a bit, update the menus for the current State.

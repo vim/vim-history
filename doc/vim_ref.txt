@@ -1,4 +1,4 @@
-*vim_ref.txt*   For Vim version 4.0.  Last modification: 1996 May 29
+*vim_ref.txt*   For Vim version 4.1.  Last modification: 1996 June 12
 
 
 			     VIM REFERENCE MANUAL
@@ -53,6 +53,7 @@ document, there is a separate document for each supported system:
 	  system			    see
 	Amiga				|vim_ami.txt|
 	Archimedes			|vim_arch.txt|
+	Atari MiNT              	|vim_mint.txt|
 	Macintosh			|vim_mac.txt|
 	MS-DOS				|vim_dos.txt|
 	OS/2				|vim_os2.txt|
@@ -477,7 +478,7 @@ resizing.  Under Amiga DOS 1.3, it is advised to use the fastfonts program,
 3.4 Initialization				*initialization* *startup*
 
 This section is about the non-GUI version of Vim.  See |gui_fork| for
-additional initialization when starting the GUI.  
+additional initialization when starting the GUI.
 
 At startup, Vim checks environment variables and files and sets values
 accordingly.  Vim proceeds in this order:
@@ -945,7 +946,7 @@ CTRL-_		This key is only available if Vim was compiled with RIGHTLEFT.
 		   since English will likely be inserted in this case.
 		-  When in a norightleft window, revins and hkmap are toggled,
 		   since Hebrew will likely be inserted in this case.
-		
+
 		CTRL-_ moves the cursor to the end of the typed text, unlike
 		CTRL-B which leaves the cursor in the same place.
 
@@ -2196,7 +2197,7 @@ event	      position	   Visual	  change  action
 <MiddleMouse>   yes	  if active	    no	   yank and put
 <RightMouse>    yes	start or extend     yes
 <S-RightMouse>  yes	   no change	    yes	   "#" (2)    *<S-RightMouse>*
-<C-RightMouse>  no     	   no change	    no	   "CTRL-T" 
+<C-RightMouse>  no     	   no change	    no	   "CTRL-T"
 <RightDrag>     yes	    extend	    no		      *<RightDrag>*
 <RightRelease>  yes	    extend	    no		      *<RightRelease>*
 
@@ -2235,7 +2236,7 @@ In Normal and Visual mode clicking the right mouse button causes the Visual
 area to be extended.  When clicking in a window which is editing another
 buffer, the Visual mode is stopped.
 
-Double, triple and quadruple clicks are supported when the GUI is active, 
+Double, triple and quadruple clicks are supported when the GUI is active,
 for MS-DOS and Win32, and for an xterm (if the gettimeofday() function is
 available).  Double clicking may be done to make the selection word-wise,
 triple clicking makes it line-wise, and quadruple clicking makes it
@@ -2358,6 +2359,7 @@ All the help files must be in the same directory.  The files are:
 	vim_os2.txt	OS/2 specific remarks		      |vim_os2.txt|
 	vim_arch.txt	Archimedes specific remarks	      |vim_arch.txt|
 	vim_mac.txt	Macintosh specific remarks	      |vim_mac.txt|
+	vim_mint.txt    Atari MiNT specific remarks           |vim_mint.txt|
 
 	vim_tags	tags file for documentation
 
@@ -2850,7 +2852,7 @@ session or with another command (e.g., a filter command).  Then you will know
 which version of the file you want to keep.
 
 							*backup*
-If you write to an existing file (but do not append) while the 'backup', 
+If you write to an existing file (but do not append) while the 'backup',
 'writebackup' or 'patchmode' option is on, a backup of the original file is
 made.  On Unix systems the file is copied, on other systems the file is
 renamed.  After the file has been successfully written and when the
@@ -3280,7 +3282,7 @@ WinEnter			After entering another window.  Not done for
 				BufEnter autocommands are executed after the
 				WinEnter autocommands.
 							*WinLeave*
-WinLeave			Before leaving to another window.  If the 
+WinLeave			Before leaving to another window.  If the
 				window to be entered is for a different
 				buffer, the BufLeave autocommands are executed
 				before the WinLeave autocommands.
@@ -3391,7 +3393,7 @@ For makefiles (makefile, Makefile, imakefile, makefile.unix, etc.):
 To always start editing C files at the first function:
 
   :autocmd BufRead   *.c,*.h	1;/^{
- 
+
 Without the "1;" above, the search would start from wherever the file was
 entered, rather than from the start of the file.
 
@@ -4380,6 +4382,7 @@ the current line is included.  You can then use "%" to go to the matching line.
 H			To line [count] from top (Home) of screen (default:
 			first line on the screen) on the first non-blank
 			character (linewise).  See also 'startofline' option.
+			Cursor is adjusted for 'scrolloff' option.
 
 						*M*
 M			To Middle line of screen, on the first non-blank
@@ -4389,6 +4392,7 @@ M			To Middle line of screen, on the first non-blank
 L			To line [count] from bottom of screen (default: Last
 			line on the screen) on the first non-blank character
 			(linewise).  See also 'startofline' option.
+			Cursor is adjusted for 'scrolloff' option.
 
 <LeftMouse>		Moves to the position on the screen where the mouse
 			click is (inclusive).  See also |<LeftMouse>|.  If the
@@ -5775,7 +5779,7 @@ Characters that can be prepended:
 
 When the key is not preceded with a '!' or '*' the reindenting will be done
 after inserting the key.  So ';' will set the indentation of the line
-including the ';'. 
+including the ';'.
 
 '0'	When a zero is used before the key (but after '!' or '*') it will only
 	trigger reindenting if the key is the first character typed in the
@@ -5829,14 +5833,14 @@ too: "-0.5s" is minus half a 'shiftwidth'.  The examples given below assume a
 	      different indent when the '{' is at the start of the line from
 	      when '{' is at the end of the line.  (default 0).
 
-	        cino=               cino=e2             cino=e-2        
-	          if (cond) {         if (cond) {         if (cond) {    
-	              foo;                  foo;            foo;     
-	          }                   }                   }              
-	          else                else                else           
+	        cino=               cino=e2             cino=e-2
+	          if (cond) {         if (cond) {         if (cond) {
+	              foo;                  foo;            foo;
+	          }                   }                   }
+	          else                else                else
 	          {                   {                   {
-	              bar;                bar;                bar;       
-	          }                   }                   }              
+	              bar;                bar;                bar;
+	          }                   }                   }
 
 	nN    Add N to the prevailing indent for a statement after an "if",
 	      "while", etc., if it is Not inside a set of braces.  This is
@@ -5844,13 +5848,13 @@ too: "-0.5s" is minus half a 'shiftwidth'.  The examples given below assume a
 	      before the statement from when there is a '{' before it.
 	      (default 0).
 
-	        cino=               cino=n2             cino=n-2        
-	          if (cond)           if (cond)           if (cond)    
-	              foo;                  foo;            foo;     
-	          else                else                else           
+	        cino=               cino=n2             cino=n-2
+	          if (cond)           if (cond)           if (cond)
+	              foo;                  foo;            foo;
+	          else                else                else
 	          {                   {                   {
-	              bar;                bar;                bar;       
-	          }                   }                   }              
+	              bar;                bar;                bar;
+	          }                   }                   }
 
 	fN    The First opening brace of a function or other block is placed
 	      in column N.  Only for an opening brace that is not inside other
@@ -5862,7 +5866,7 @@ too: "-0.5s" is minus half a 'shiftwidth'.  The examples given below assume a
 		  {                     {                     {
 		      int foo;              int foo;              int foo;
 
-	{N    Opening braces are placed N characters from the prevailing 
+	{N    Opening braces are placed N characters from the prevailing
 	      indent.  Only for opening braces that are inside
 	      other braces.  (default 0).
 
@@ -5884,15 +5888,15 @@ too: "-0.5s" is minus half a 'shiftwidth'.  The examples given below assume a
 	      opening brace is in column 0.  This is used to have a different
 	      indent for whole of a function (some may like to set it to a
 	      negative number).  (default 0).
-	        
+
 		cino=               cino=^-2            cino=^-s
-		  func()              func()              func()    
-		  {                   {                   {         
-		      if (cond)         if (cond)         if (cond) 
-		      {		        {                 {         
+		  func()              func()              func()
+		  {                   {                   {
+		      if (cond)         if (cond)         if (cond)
+		      {		        {                 {
 			  a = b;            a = b;            a = b;
-		      }		        }                 }         
-		  }                   }                   }         
+		      }		        }                 }
+		  }                   }                   }
 
 	:N    Case labels are placed N characters from the indent of the
 	      switch().  (default 'shiftwidth').
@@ -6041,7 +6045,7 @@ Lines are put in column 1 if:
 :[line]pu[t]! [x]	Put the text [from register x] before [line] (default
 			current line).
 
-["x]]p		    or					*]p* *]<MiddleMouse>*	
+["x]]p		    or					*]p* *]<MiddleMouse>*
 ["x]]<MiddleMouse>  	Like "p", but adjust the indent to the current line.
 			Using the mouse only works when 'mouse' contains 'n'
 			or 'a'.  {not in Vi}
@@ -6428,7 +6432,7 @@ ga			Print the ascii value of the character under the
 			'cpoptions').  But not when there is a backslash
 			before the '!', then that backslash is removed.
 			Example: ":!ls" followed by ":!echo ! \! \\!"
-			executes "echo ls ! \!".
+			executes "echo ls ! \!".  Also see |shell_window|.
 
 							*:!!*
 :!!			Repeat last ":!{cmd}".
@@ -6705,7 +6709,7 @@ There are commands to enter new mappings, remove mappings and list mappings:
 			Map the key sequence {lhs} to {rhs} for the modes
 			where the map command applies.
 
-		
+
 :no[remap]  {lhs} {rhs}					*:no*  *:noremap*
 :nn[oremap] {lhs} {rhs}					*:nn*  *:nnoremap*
 :vn[oremap] {lhs} {rhs}					*:vn*  *:vnoremap*
@@ -6716,7 +6720,7 @@ There are commands to enter new mappings, remove mappings and list mappings:
 			where the map command applies.  Disallow mapping of
 			{rhs}. {not in Vi}
 
-	
+
 :unm[ap]  {lhs}						*:unm*  *:unmap*
 :nun[map] {lhs}						*:nun*  *:nunmap*
 :vu[nmap] {lhs}						*:vu*   *:vunmap*
@@ -6898,7 +6902,7 @@ There are three ways to map a special key:
    you have to type CTRL-V before hitting the function key.  Note that when
    the key code for the key is in the termcap (the t_ options), it will
    automatically be translated into the internal code and become the second
-   way of mapping.
+   way of mapping (unless the 'k' flag is included in 'cpoptions').
 2. The second method is to use the internal code for the function key.  To
    enter such a mapping type CTRL-K and then hit the function key, or use
    the form "#1", "#2", .. "#9", "#0", "<Up>", "<S-Down>", "<S-F7>", etc.
@@ -6906,11 +6910,13 @@ There are three ways to map a special key:
    first ten function keys can be defined in two ways: Just the number, like
    "#2", and with "<F>", like "<F2>".  Both stand for function key 2.  "#0"
    refers to function key 10, defined with option 't_f10', which may be
-   function key zero on some keyboards.
+   function key zero on some keyboards.  The <> form cannot be used when
+   'cpoptions' includes the '<' flag.
 3. Use the termcap entry, with the form <t_xx>, where "xx" is the name of the
    termcap entry.  Any string entry can be used.  For example:
    	:map <t_F3> G
-   Maps function key 13 to "G".
+   Maps function key 13 to "G".  This does not work if 'cpoptions' includes
+   the '<' flag.
 
 The advantage of the second and third method is that the mapping will work on
 different terminals without modification (the function key will be
@@ -7255,7 +7261,7 @@ to set options automatically for one or more files:
 3. If you start editing a new file, and the 'modeline' option is on, a
    number of lines at the beginning and end of the file are checked for
    modelines.  This is explained here.
-  
+
 							*modeline*
 There are two forms of modelines.  The first form:
 	[text]{white}{vi:|vim:|ex:}[white]{options}
@@ -7329,9 +7335,9 @@ a trojan horse text file with modelines).
 These commands will write ":map" and ":set" commands to a file, in such a way
 that when these commands are executed, the current key mappings and options
 will be set to the same values.  The options 'columns', 'endofline', 'lines',
-'scroll', 'term' and 'ttyfast' are not included, because these are terminal
-or file dependent.  Note that the options 'binary', 'textmode', 'paste' and
-'readonly' are included, this might not always be what you want.
+'modified', 'scroll', 'term' and 'ttyfast' are not included, because these are
+terminal or file dependent.  Note that the options 'binary', 'textmode',
+'paste' and 'readonly' are included, this might not always be what you want.
 
 A common method is to use a default ".vimrc" file, make some modifications
 with ":map" and ":set" commands and write the modified file.  First read the
@@ -7386,7 +7392,7 @@ aleph (al)		number  (default 128 for MS-DOS, 224 otherwise)
 	outputs the Hebrew characters in the range [aleph..aleph+26].
 	aleph=128 applies to PC code, and aleph=224 applies to ISO 8859-8.
 	See |vim_rlh.txt|.
-	
+
 			       *'autoindent'* *'ai'* *'noautoindent'* *'noai'*
 autoindent (ai)		toggle	(default off)
 			local to buffer
@@ -7589,7 +7595,7 @@ compatible (cp)		toggle	(default off, on when compiled with COMPATIBLE
 	backspace	0		normal backspace
 	backup		off		no backup file
 	cindent		off		no C code indentation
-	cpoptions	"bcefFmorsStx$!%"	vi-compatible flags
+	cpoptions	"bcefFkmorsStx$!%"	vi-compatible flags
 	digraph		off		no digraphs
 	esckeys		off		no <Esc>-keys in Insert mode
 	expandtab	off		tabs not expanded to spaces
@@ -7648,15 +7654,17 @@ cpoptions (cpo)		string	(default "BceFs", unless compiled with
 			Remove this flag to be able to use a backslash like a
 			CTRL-V.  This flag must be removed to be able to fully
 			use the <> notation.  For example, the command
-			":map x \<Esc>" results in ('<' excluded):
+			":map X \<Esc>" results in X being mapped to:
 				'B' included:	"\^["    (^[ is a real <Esc>)
 				'B' excluded:   "<Esc>"  (5 characters)
-		<	Disable the recognition of special key codes in
-			mappings, abbreviations, and the "to" part of menu
-			commands.  For example, the command ":map x <Tab>"
-			results in:
+				('<' excluded in both cases)
+		<	Disable the recognition of special key codes in <>
+			form in mappings, abbreviations, and the "to" part of
+			menu commands.  For example, the command
+			":map X <Tab>" results in X being mapped to:
 				'<' included:   "<Tab>"  (5 characters)
 				'<' excluded:   "^I"     (^I is a real <Tab>)
+			Also see the 'k' flag below.
 		c	Searching continues at the end of any match at the
 			cursor position.  When not present searching continues
 			one character from the cursor position.  With 'c'
@@ -7674,6 +7682,14 @@ cpoptions (cpo)		string	(default "BceFs", unless compiled with
 		F	When included, a ":write" command with a file name
 			argument will set the file name for the current buffer,
 			if the current buffer doesn't have a file name yet.
+		k	Disable the recognition of raw key codes in
+			mappings, abbreviations, and the "to" part of menu
+			commands.  For example, if <Key> sends ^[OA (where ^[
+			is <Esc>), the command ":map X ^[OA" results in X
+			being mapped to:
+				'k' included:   "^[OA"   (3 characters)
+				'k' excluded:   "<Key>"  (one key code)
+			Also see the '<' flag above.
 		m	When included, a showmatch will always wait half a
 			second.  When not included, a showmatch will wait half
 			a second or until a character is typed.  |'showmatch'|
@@ -7733,7 +7749,7 @@ define (def)		string	(default "^#[ \t]*define")
 			{not in Vi}
 	Pattern to be used to find a macro definition.  It is a search
 	pattern, just like for the "/" command.  The default value is for C
-	programs.  This option is used for the commands like "[g" and "[d"
+	programs.  This option is used for the commands like "[i" and "[d"
 	|include_search|.  The 'isident' option is used to recognize the
 	identifier name after the match.  See |option_backslash| about
 	inserting backslashes to include a space or backslash.
@@ -7969,7 +7985,7 @@ guioptions (go)		string  (default "agmr")
 		editor to finish (e.g., an e-mail program).  Altenatively you
 		can use "gvim -f" or ":gui -f" to start the GUI in the
 		foreground.  |gui_fork|
-	
+
 	  'm'	Menu bar is present when 'm' is included.
 	  'g'	Grey menu items: Make menu items that are not active grey.  If
 		'g' is not included inactive menu items are not shown at all.
@@ -8093,7 +8109,7 @@ include (inc)		string	(default "^#[ \t]*include")
 	Pattern to be used to find an include command.  It is a search
 	pattern, just like for the "/" command (See 6.6, "Pattern
 	searches" |search_pattern|).  The default value is for C programs.
-	This option is used for the commands "[g", "]g", "[d", etc..  The
+	This option is used for the commands "[i", "]I", "[d", etc..  The
 	'isfname' option is used to recognize the file name that comes after
 	the matched pattern.  See |option_backslash| about including spaces
 	and backslashes.
@@ -8283,7 +8299,7 @@ laststatus (ls)		number	(default 1)
 linebreak (lbr)		toggle	(default off)
 			local to window
 			{not in Vi}
-	If on Vim will wrap long lines at a character in 'breakat' rather 
+	If on Vim will wrap long lines at a character in 'breakat' rather
 	than at the last character that fits on the screen.  Unlike
 	'wrapmargin' and 'textwidth', this does not insert newline characters
 	in the file, it only affects the way the file is displayed, not its
@@ -8319,6 +8335,8 @@ list			toggle	(default off)
 			local to window
 	List mode: Show tabs as CTRL-I, show end of line with $.  Useful to
 	see the difference between tabs and spaces and for trailing blanks.
+	Note that this will also affect formatting (set with 'textwidth' or
+	'wrapmargin').
 
 						*'magic'* *'nomagic'*
 magic			toggle	(default on)
@@ -8723,7 +8741,7 @@ shortmess (shm)		string	(default "")
 	file messages, for example  with CTRL-G, and to avoid some other
 	messages.  It is a list of flags:
 	 flag	meaning when present
-	  l	use "999L, 888C" instead of "999 lines, 888 characters" 
+	  l	use "999L, 888C" instead of "999 lines, 888 characters"
 	  m	use "[+]" instead of "[Modified]"
 	  r	use "[RO]" instead of "[readonly]"
 	  x	use "[tx]" instead of "[textmode]" and "[notx]" instead of
@@ -9038,7 +9056,7 @@ ttimeoutlen (ttm)	number	(default -1)
 		ttimeoutlen	mapping delay	   key code delay
 	           < 0          'timeoutlen'       'timeoutlen'
 	          >= 0          'timeoutlen'       'ttimeoutlen'
-	
+
 	The timeout only happens when the 'timeout' and 'ttimeout' options
 	tell so.  A useful setting would be
 		:set timeout timeoutlen=3000 ttimeloutlen=100
@@ -9633,6 +9651,10 @@ This will redraw the window instead of scroll it.
 If your terminal scrolls very slowly, but redrawing is not slow, set the
 'ttyscroll' option to a small number, e.g., 3.  This will make Vim redraw the
 screen instead of scrolling, when there are more than 3 lines to be scrolled.
+
+If you are using Vim over a slow serial line, you might want to try running
+Vim inside the "screen" program.  Screen will optimize the terminal I/O quite
+a bit.
 
 If you are testing termcap options, but you cannot see what is happening,
 you might want to set the 'writedelay' option.  When non-zero, one character

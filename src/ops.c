@@ -968,6 +968,7 @@ do_change()
 	}
 #endif
 
+	op_type = NOP;			/* don't want op_type == CHANGED in Insert mode */
 	return edit(NUL, FALSE, (linenr_t)1);
 }
 
@@ -1246,7 +1247,6 @@ do_put(dir, count, fix_indent)
 	int			incr = 0;
 	long		j;
 	FPOS		new_cursor;
-	char_u		temp[2];
 	int			indent;
 	int			orig_indent = 0;			/* init for gcc */
 	int			indent_diff = 0;			/* init for gcc */
@@ -1270,7 +1270,7 @@ do_put(dir, count, fix_indent)
 
 	/*
 	 * Using inserted text works differently, because the buffer includes
-	 * special characters (newlines, etc.)
+	 * special characters (newlines, etc.).
 	 */
 	if (yankbuffer == '.')
 	{
@@ -1322,9 +1322,7 @@ do_put(dir, count, fix_indent)
 
 	if (y_size == 0 || y_array == NULL)
 	{
-		temp[0] = yankbuffer;
-		temp[1] = NUL;
-		EMSG2("Nothing in register %s", temp);
+		EMSG2("Nothing in register %s", transchar(yankbuffer));
 		return;
 	}
 
@@ -1556,11 +1554,17 @@ do_put(dir, count, fix_indent)
 				}
 			}
 
-			curbuf->b_op_end.lnum = lnum;		/* for "']" command */
+			/* put '] at last inserted character */
+			curbuf->b_op_end.lnum = lnum;
+			col = STRLEN(y_array[y_size - 1]);
+			if (col > 1)
+				curbuf->b_op_end.col = col - 1;
+			else
+				curbuf->b_op_end.col = 0;
+
 			if (y_type == MLINE)
 			{
 				curwin->w_cursor.col = 0;
-				curbuf->b_op_end.col = 0;
 				if (dir == FORWARD)
 				{
 					updateScreen(NOT_VALID);	/* recomp. curwin->w_botline */
@@ -1572,12 +1576,6 @@ do_put(dir, count, fix_indent)
 			else		/* put cursor on first inserted character */
 			{
 				curwin->w_cursor = new_cursor;
-						/* put '] at last inserted character */
-				col = STRLEN(y_array[y_size - 1]);
-				if (col > 1)
-					curbuf->b_op_end.col = col - 1;
-				else
-					curbuf->b_op_end.col = 0;
 			}
 
 error:

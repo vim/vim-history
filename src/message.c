@@ -157,6 +157,12 @@ emsg(s)
 emsg2(s, a1)
 	char_u *s, *a1;
 {
+	/* Check for NULL strings (just in case) */
+	if (a1 == NULL)
+		a1 = (char_u *)"[NULL]";
+	/* Check for very long strings (can happen with ":help ^A<CR>") */
+	if (STRLEN(s) + STRLEN(a1) >= IOSIZE)
+		a1 = (char_u *)"[string too long]";
 	sprintf((char *)IObuff, (char *)s, (char *)a1);
 	return emsg(IObuff);
 }
@@ -319,7 +325,10 @@ wait_return(redraw)
 		keep_msg = NULL;			/* don't redisplay message, it's too long */
 
 	if (tmpState == SETWSIZE)		/* got resize event while in vgetc() */
+	{
+		starttermcap();				/* start termcap before redrawing */
 		set_winsize(0, 0, FALSE);
+	}
 	else if (!skip_redraw && (redraw == TRUE || (msg_scrolled && redraw != -1)))
 	{
 		starttermcap();				/* start termcap before redrawing */
@@ -613,7 +622,7 @@ msg_outstr(s)
 		if (msg_row >= Rows - 1 && (*s == '\n' || msg_col >= Columns - 1 ||
 							  (*s == TAB && msg_col >= ((Columns - 1) & ~7))))
 		{
-			screen_del_lines(0, 0, 1, (int)Rows);		/* always works */
+			screen_del_lines(0, 0, 1, (int)Rows, TRUE);	/* always works */
 			msg_row = Rows - 2;
 			if (msg_col >= Columns)		/* can happen after screen resize */
 				msg_col = Columns - 1;

@@ -163,6 +163,38 @@ init_chartab()
 	return OK;
 }
 
+/*
+ * Translate any special characters in buf[bufsize].
+ * If there is not enough room, not all characters will be translated.
+ */
+	void
+trans_characters(buf, bufsize)
+	char_u	*buf;
+	int		bufsize;
+{
+	int		len;			/* length of string needing translation */
+	int		room;			/* room in buffer after string */
+	char_u	*new;			/* translated character */
+	int		new_len;		/* length of new[] */
+
+	len = STRLEN(buf);
+	room = bufsize - len;
+	while (*buf)
+	{
+		new = transchar(*buf);
+		new_len = STRLEN(new);
+		if (new_len > 1)
+		{
+			room -= new_len - 1;
+			if (room <= 0)
+				return;
+			vim_memmove(buf + new_len, buf + 1, (size_t)len);
+		}
+		vim_memmove(buf, new, (size_t)new_len);
+		buf += new_len;
+		--len;
+	}
+}
 
 /*
  * Catch 22: chartab[] can't be initialized before the options are

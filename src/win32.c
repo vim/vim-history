@@ -1663,14 +1663,14 @@ mch_get_pid()
 
 /*
  * Get name of current directory into buffer 'buf' of length 'len' bytes.
- * Return non-zero for success.
+ * Return OK for success, FAIL for failure.
  */
 	int
 mch_dirname(
 	char_u *buf,
 	int len)
 {
-    return (getcwd(buf, len) != NULL);
+    return (getcwd(buf, len) != NULL ? OK : FAIL);
 }
 
 

@@ -890,7 +890,10 @@ buf_write(buf, fname, sfname, start, end, append, forceit,
 						  buf->b_mtime_read != st_old.st_mtime && overwriting)
 		{
 			msg_scroll = TRUE;		/* don't overwrite messages here */
-			EMSG("WARNING: The file has been changed since reading it!!!");
+			(void)set_highlight('e');	/* set highlight for error messages */
+			msg_highlight = TRUE;
+			/* don't use emsg() here, don't want to flush the buffers */
+			MSG("WARNING: The file has been changed since reading it!!!");
 			if (ask_yesno((char_u *)"Do you really want to write to it",
 																 TRUE) == 'n')
 			{

@@ -529,6 +529,17 @@ dozet:
 			break;
 			/* print full name if count given or :cd used */
 		fileinfo(did_cd | (int)Prenum, FALSE, FALSE);
+
+		/*
+		 * In Visual mode and "^O^G" in Insert mode, the message will be
+		 * overwritten by the mode message.  Wait a bit, until a key is hit.
+		 */
+		if ((VIsual_active || (restart_edit && p_smd)) && KeyTyped)
+		{
+			setcursor();
+			flushbuf();
+			mch_delay(10000L, FALSE);
+		}
 		break;
 
 	  case K_CCIRCM:			/* CTRL-^, short for ":e #" */
@@ -1405,6 +1416,7 @@ docsearch:
 				if (current_par(c, Prenum1) == FAIL)
 					clearopbeep();
 			}
+			curwin->w_set_curswant = TRUE;
 		}
 		else
 		{
@@ -1433,6 +1445,7 @@ docsearch:
 		{
 			if (current_word(Prenum1, type) == FAIL)
 				clearopbeep();
+			curwin->w_set_curswant = TRUE;
 		}
 		else
 		{
@@ -1596,12 +1609,14 @@ dooperator:
 			{
 				if (current_sent(Prenum1) == FAIL)
 					clearopbeep();
+				curwin->w_set_curswant = TRUE;
 				break;
 			}
 			if (c == 'S')		/* block with () */
 			{
 				if (current_block('(', Prenum1) == FAIL)
 					clearopbeep();
+				curwin->w_set_curswant = TRUE;
 				break;
 			}
 		}
@@ -2472,7 +2487,7 @@ do_pending_operator(c, nchar, finish_op, searchbuff, command_busy,
 			break;
 
 		  case CHANGE:
-			*command_busy = do_change();
+			*command_busy = do_change();	/* will set op_type to NOP */
 			break;
 
 		  case FILTER:
@@ -2757,6 +2772,12 @@ do_mouse(c, dir, count, fix_indent)
 					yankbuffer = '*';
 #endif
 				do_put(BACKWARD, 1L, fix_indent);
+
+				/* Put cursor after the end of the just pasted text. */
+				curwin->w_cursor = curbuf->b_op_end;
+				if (gchar_cursor() != NUL)
+					++curwin->w_cursor.col;
+
 				/* Repeat it with CTRL-R x, not exactly the same, but mostly
 				 * works fine. */
 				AppendCharToRedobuff(Ctrl('R'));
@@ -2764,8 +2785,6 @@ do_mouse(c, dir, count, fix_indent)
 					AppendCharToRedobuff('"');
 				else
 					AppendCharToRedobuff(yankbuffer);
-				if (gchar_cursor() != NUL)
-					++curwin->w_cursor.col;
 			}
 			return FALSE;
 		}
@@ -2930,12 +2949,11 @@ do_mouse(c, dir, count, fix_indent)
 		if (restart_edit)
 			where_paste_started = curwin->w_cursor;
 		do_put(dir, count, fix_indent);
-		/*
-		 * Always put cursor at the end of the just pasted text.
-		 */
+
+		/* Put cursor at the end of the just pasted text. */
 		curwin->w_cursor = curbuf->b_op_end;
-		if (restart_edit)
-			++curwin->w_cursor.col;			/* put cursor after new text */
+		if (restart_edit && gchar_cursor() != NUL)
+			++curwin->w_cursor.col;			/* put cursor after the text */
 	}
 
 	/*

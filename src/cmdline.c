@@ -2205,7 +2205,7 @@ donextfile:		if (i < 0 || i >= arg_count)
 				if (i == arg_count - 1)
 					arg_had_last = TRUE;
 				(void)do_ecmd(0, arg_files[curwin->w_arg_idx],
-									 NULL, do_ecmd_cmd, p_hid, do_ecmd_lnum, FALSE);
+							   NULL, do_ecmd_cmd, p_hid, do_ecmd_lnum, FALSE);
 				break;
 
 		case CMD_previous:
@@ -3616,6 +3616,7 @@ check_arg_idx()
 	int		t;
 
 	if (arg_count > 1 && (curbuf->b_filename == NULL ||
+						  curwin->w_arg_idx >= arg_count ||
 				(t = fullpathcmp(arg_files[curwin->w_arg_idx],
 						   curbuf->b_filename)) == FPC_DIFF || t == FPC_DIFFX))
 		curwin->w_arg_idx_invalid = TRUE;
@@ -3732,8 +3733,7 @@ check_more(message)
 	{
 		if (message)
 		{
-			emsg2((char_u *)"%ld more files to edit",
-						(char_u *)(long)(arg_count - curwin->w_arg_idx - 1));
+			EMSGN("%ld more files to edit", arg_count - curwin->w_arg_idx - 1);
 			quitmore = 2;			/* next try to quit is allowed */
 		}
 		return FAIL;
@@ -4440,7 +4440,7 @@ do_source(fname, check_other)
 	if (fp == NULL && check_other)
 	{
 		/*
-		 * Try again, replacing file name ".vimrc" by "_vimrc" or vise versa
+		 * Try again, replacing file name ".vimrc" by "_vimrc" or vice versa
 		 * (if applicable)
 		 */
 		len = STRLEN(NameBuff);

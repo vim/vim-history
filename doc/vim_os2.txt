@@ -1,14 +1,18 @@
-*vim_os2.txt*   For Vim version 4.0.  Last modification: 1996 May 26
+*vim_os2.txt*   For Vim version 4.1.  Last modification: 1996 June 11
 
 This file contains the particularities for the OS/2 version of Vim.
 
 
-Warning! This has not been tested as well as the other ports of Vim!
-	 Report problems to paul@wau.mis.ah.nl (email valid up to at least
-	 August 1996).  Watch out for binary mode (tested a bit and it looked
-	 OK, but make sure it does what you think it does). Other problems are
-	 sure to exist as well; as always when testing beta software, keep an
-	 up to date backup of files use this software on!
+Note: This OS/2 port works well for me and an additional OS/2 user on the Vim
+      development team (Karsten Sievert); however, since I haven't had any
+      other feedback from other people, that either means no (OS/2-specific)
+      bugs exist, or no one has yet created a situation in which any bugs are
+      apparent.  Report any problems or other comments to paul@wau.mis.ah.nl
+      (email valid up to at least September 1996, after that try
+      paul@wurtel.hobby.nl, paul@murphy.nl, or paulS@toecompst.nl).
+      Textmode/notextmode, binary mode, and FAT handling all seem to work
+      well, which would seem to be the most likely places for trouble.
+
 
 Prerequisites:
 
@@ -20,7 +24,7 @@ Prerequisites:
   I've included a copy of emx.dll, which should be copied to one of the
   directories listed in your LIBPATH. Emx is GPL'ed, but the emx.dll library
   is not (read COPYING.EMX to find out what that means to you).
-  
+
   This emx.dll is from the emxfix04.zip package, which unfortunately has a bug
   in select().  Versions of Vim before 3.27 will appear to hang when starting
   (actually, while processing vimrc). Hit return a couple of times until Vim
@@ -43,6 +47,11 @@ network drive (including .vimrc; this is then called the "system" vimrc file),
 and then use a personal copy of .vimrc (the "user" vimrc file). This should be
 located in a directory indicated by the HOME environment variable.
 
+This HOME environment variable is also used when using ~ in file names, so
+":e ~/textfile" will edit the file "textfile" in the directory referred to by
+HOME.  Additionally you can use other environment variables in file names, as
+as ":n $SRC/*.c".
+
 Use "os2ansi" as the TERM environment variable (or don't set it at all, as the
 default is the correct value). You can set term to os2ansi in the .vimrc, in
 case you need TERM to be a different value for other applications.  The
@@ -51,21 +60,11 @@ delete line, for example).
 
 Using slashes ('/') and backslashes ('\') can be a bit of a problem (see
 vim_dos.txt for more explanation), but in almost all cases Vim does "The Right
-Thing".  Vim prefers backslashes in file names, but will happily accept
-forward slashes if they are entered. Note that ":n doc\*.txt" will say
-"doc\*.txt [New File]", as the backslash serves to escape the *.
-":n doc/*.txt" will work as expected.
+Thing".  Vim itself uses backslashes in file names, but will happily accept
+forward slashes if they are entered (in fact, often that works better!). Note
+that ":n doc\*.txt" may say "doc\*.txt [New File]", as the backslash serves to
+escape the *.  ":n doc/*.txt" will work as expected.
 
-Due to an oversight, ":n *.c *.h" will NOT work.  Sorry.  Starting Vim with
-"vim *.c *.h" works correctly.
-
-
-Try and test it as much as possible; when a problem is found, try to recreate
-it as simply as possible, ans then try it again on another platform (dos or
-unix for example) if at all possible, to separate generic Vim bugs from
-genuine OS/2 problems.  Report bugs to me: paul@wau.mis.ah.nl (up to at least
-August 1996) or paul@wurtel.hobby.nl (permanent, but only infrequently
-checked).
 
 Paul Slootman
 

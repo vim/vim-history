@@ -1,4 +1,4 @@
-*vim_digr.txt*  For Vim version 4.0.  Last modification: 1996 May 21
+*vim_digr.txt*  For Vim version 4.1.  Last modification: 1996 June 8
 
 These are the default digraph characters for Vim.
 
@@ -61,4 +61,15 @@ a- ª 170   12 « 171   14 ¬ 172   ~! ­ 173   << ® 174   >> ¯ 175   ss á 225
 ju æ 230   o/ í 237   +- ñ 241   >= ò 242   <= ó 243   :- ö 246   ~~ ÷ 247
 ~o ø 248   22 ý 253
 
+
+Default digraphs for MiNT:
+C, € 128  u"  129  e' ‚ 130  a^ ƒ 131  a" „ 132  a` … 133  a@ † 134
+c, ‡ 135  e^ ˆ 136  e" ‰ 137  e` Š 138  i" ‹ 139  i^ Œ 140  i`  141
+A" Ž 142  A@  143  E'  144  ae ‘ 145  AE ’ 146  o^ “ 147  o" ” 148
+o` • 149  u^ – 150  u` — 151  y" ˜ 152  O" ™ 153  U" š 154  c| › 155
+$$ œ 156  Y-  157  ss ž 158  ff Ÿ 159  a'   160  i' ¡  161  o' ¢  162
+u' £  163  n~ ¤  164  N~ ¥  165  aa ¦  166  oo §  167  ~? ¨  168  -a ©  169
+a- ª  170  12 «  171  14 ¬  172  ~! ­  173  << ®  174  >> ¯  175  ju æ  230
+o/ í  237  +- ñ  241  >= ò  242  <= ó  243  :- ö  246  ~~ ÷  247  ~o ø  248
+22 ý  253
  vim:ts=8:sw=8:js:tw=78:

@@ -501,20 +501,63 @@ struct builtin_term builtin_termcaps[] =
 	{K_PAGEUP,		"\316I"},
 # endif
 
-# ifdef ALL_BUILTIN_TCAPS
+# if defined(ALL_BUILTIN_TCAPS) || defined(MINT)
 /*
  * Ordinary vt52
  */
-	{KS_NAME,	 "	vt52"},
+	{KS_NAME,	 	"vt52"},
 	{KS_CE,			"\033K"},
 	{KS_CD,			"\033J"},
+	{KS_CM,			"\033Y%+ %+ "},
+#  ifdef MINT
+	{KS_AL,			"\033L"},
+	{KS_DL,			"\033M"},
+	{KS_CL,			"\033E"},
+	{KS_SR,			"\033I"},
+	{KS_VE,			"\033e"},
+	{KS_VI,			"\033f"},
+	{KS_SO,			"\033p"},
+	{KS_SE,			"\033q"},
+	{K_UP,			"\033A"},
+	{K_DOWN,		"\033B"},
+	{K_LEFT,		"\033D"},
+	{K_RIGHT,		"\033C"},
+	{K_S_UP,		"\033a"},
+	{K_S_DOWN,		"\033b"},
+	{K_S_LEFT,		"\033d"},
+	{K_S_RIGHT,		"\033c"},
+	{K_F1,			"\033P"},
+	{K_F2,			"\033Q"},
+	{K_F3,			"\033R"},
+	{K_F4,			"\033S"},
+	{K_F5,			"\033T"},
+	{K_F6,			"\033U"},
+	{K_F7,			"\033V"},
+	{K_F8,			"\033W"},
+	{K_F9,			"\033X"},
+	{K_F10,			"\033Y"},
+	{K_S_F1,		"\033p"},
+	{K_S_F2,		"\033q"},
+	{K_S_F3,		"\033r"},
+	{K_S_F4,		"\033s"},
+	{K_S_F5,		"\033t"},
+	{K_S_F6,		"\033u"},
+	{K_S_F7,		"\033v"},
+	{K_S_F8,		"\033w"},
+	{K_S_F9,		"\033x"},
+	{K_S_F10,		"\033y"},
+	{K_INS,			"\033I"},
+	{K_HOME,		"\033E"},
+	{K_PAGEDOWN,	"\033b"},
+	{K_PAGEUP,		"\033a"},
+#  else
 	{KS_AL,			"\033T"},
 	{KS_DL,			"\033U"},
 	{KS_CL,			"\033H\033J"},
 	{KS_ME,			"\033SO"},
 	{KS_MR,			"\033S2"},
 	{KS_MS,			"\001"},
-	{KS_CM,			"\033Y%+ %+ "},
+#  endif
 # endif
 
 # if defined(UNIX) || defined(ALL_BUILTIN_TCAPS) || defined(SOME_BUILTIN_TCAPS) || defined(__EMX__)
@@ -827,9 +870,13 @@ struct builtin_term builtin_termcaps[] =
 # define DEFAULT_TERM	(char_u *)"pcterm"
 #endif /* MSDOS */
 
-#ifdef UNIX
+#if defined(UNIX) && !defined(MINT)
 # define DEFAULT_TERM	(char_u *)"ansi"
 #endif /* UNIX */
+
+#ifdef MINT
+# define DEFAULT_TERM	(char_u *)"vt52"
+#endif /* MINT */
 
 #ifdef __EMX__
 # define DEFAULT_TERM	(char_u *)"os2ansi"
@@ -2642,7 +2689,7 @@ check_termcode(max_offset)
  * '<'.  Also unshifts shifted special keys.
  * K_SPECIAL by itself is replaced by K_SPECIAL KS_SPECIAL K_FILLER.
  *
- * The replacement is done in NameBuff and finally copied into allocated
+ * The replacement is done in result[] and finally copied into allocated
  * memory. If this all works well *bufp is set to the allocated memory and a
  * pointer to it is returned. If something fails *bufp is set to NULL and from
  * is returned.
@@ -2670,10 +2717,24 @@ replace_termcodes(from, bufp, from_part)
 	int		dlen = 0;
 	char_u	*src;
 	int		do_backslash;		/* backslash is a special character */
-	int		do_special;			/* recognize special key codes */
+	int		do_special;			/* recognize <> key codes */
+	int		do_key_code;		/* recognize raw key codes */
+	char_u	*result;			/* buffer for resulting string */
 
 	do_backslash = (vim_strchr(p_cpo, CPO_BSLASH) == NULL);
 	do_special = (vim_strchr(p_cpo, CPO_SPECI) == NULL);
+	do_key_code = (vim_strchr(p_cpo, CPO_KEYCODE) == NULL);
+
+	/*
+	 * Allocate space for the translation.  Worst case a single character is
+	 * replaced by 6 bytes (shifted special key), plus a NUL at the end.
+	 */
+	result = alloc((unsigned)STRLEN(from) * 6 + 1);
+	if (result == NULL)			/* out of memory */
+	{
+		*bufp = NULL;
+		return from;
+	}
 
 	src = from;
 
@@ -2682,29 +2743,20 @@ replace_termcodes(from, bufp, from_part)
 	 */
 	if (from_part && src[0] == '#' && isdigit(src[1]))		/* function key */
 	{
-		NameBuff[dlen++] = K_SPECIAL;
-		NameBuff[dlen++] = 'k';
+		result[dlen++] = K_SPECIAL;
+		result[dlen++] = 'k';
 		if (src[1] == '0')
-			NameBuff[dlen++] = ';';		/* #0 is F10 is "k;" */
+			result[dlen++] = ';';		/* #0 is F10 is "k;" */
 		else
-			NameBuff[dlen++] = src[1];	/* #3 is F3 is "k3" */
+			result[dlen++] = src[1];	/* #3 is F3 is "k3" */
 		src += 2;
 	}
 
 	/*
-	 * Copy each byte from *from to NameBuff[dlen]
+	 * Copy each byte from *from to result[dlen]
 	 */
 	while (*src != NUL)
 	{
-		/*
-		 * Check if there is room to replace the character by 6 others
-		 */
-		if (dlen + 6 + 2 >= MAXNAMLEN)
-		{
-			*bufp = NULL;
-			return from;
-		}
-
 		/*
 		 * If 'cpoptions' does not contain '<', check for special key codes.
 		 */
@@ -2764,7 +2816,7 @@ replace_termcodes(from, bufp, from_part)
 							if (modifiers & MOD_MASK_ALT)
 								key |= 0x80;
 							src = end_of_name;
-							NameBuff[dlen++] = key;
+							result[dlen++] = key;
 							continue;
 						}
 
@@ -2777,9 +2829,9 @@ replace_termcodes(from, bufp, from_part)
 							/* Put the appropriate modifier in a string */
 							if (modifiers != 0)
 							{
-								NameBuff[dlen++] = K_SPECIAL;
-								NameBuff[dlen++] = KS_MODIFIER;
-								NameBuff[dlen++] = modifiers;
+								result[dlen++] = K_SPECIAL;
+								result[dlen++] = KS_MODIFIER;
+								result[dlen++] = modifiers;
 								/*
 								 * Special trick: for <S-TAB>  K_TAB is used
 								 * instead of TAB (there are two keys for the
@@ -2791,23 +2843,26 @@ replace_termcodes(from, bufp, from_part)
 
 							if (IS_SPECIAL(key))
 							{
-								NameBuff[dlen++] = K_SPECIAL;
-								NameBuff[dlen++] = KEY2TERMCAP0(key);
-								NameBuff[dlen++] = KEY2TERMCAP1(key);
+								result[dlen++] = K_SPECIAL;
+								result[dlen++] = KEY2TERMCAP0(key);
+								result[dlen++] = KEY2TERMCAP1(key);
 							}
 							else
-								NameBuff[dlen++] = key;		/* only modifiers */
+								result[dlen++] = key;		/* only modifiers */
 							src = end_of_name;
 							continue;
 						}
 					}
 				}
 			}
+		}
 
-			/*
-			 * See if it's an actual key-code.
-			 * Note that this is also checked after replacing the <> form.
-			 */
+		/*
+		 * If 'cpoptions' does not contain 'k', see if it's an actual key-code.
+		 * Note that this is also checked after replacing the <> form.
+		 */
+		if (do_key_code)
+		{
 			for (i = 0; i < tc_len; ++i)
 			{
 				slen = termcodes[i].len;
@@ -2822,13 +2877,13 @@ replace_termcodes(from, bufp, from_part)
 					 */
 					if (unshift_special_key(&key_name[0]))
 					{
-						NameBuff[dlen++] = K_SPECIAL;
-						NameBuff[dlen++] = KS_MODIFIER;
-						NameBuff[dlen++] = MOD_MASK_SHIFT;
+						result[dlen++] = K_SPECIAL;
+						result[dlen++] = KS_MODIFIER;
+						result[dlen++] = MOD_MASK_SHIFT;
 					}
-					NameBuff[dlen++] = K_SPECIAL;
-					NameBuff[dlen++] = key_name[0];
-					NameBuff[dlen++] = key_name[1];
+					result[dlen++] = K_SPECIAL;
+					result[dlen++] = key_name[0];
+					result[dlen++] = key_name[1];
 					src += slen;
 					break;
 				}
@@ -2845,9 +2900,9 @@ replace_termcodes(from, bufp, from_part)
 
 		if (*src == K_SPECIAL)
 		{
-			NameBuff[dlen++] = K_SPECIAL;
-			NameBuff[dlen++] = KS_SPECIAL;
-			NameBuff[dlen++] = K_FILLER;
+			result[dlen++] = K_SPECIAL;
+			result[dlen++] = KS_SPECIAL;
+			result[dlen++] = K_FILLER;
 			++src;
 			continue;
 		}
@@ -2865,20 +2920,21 @@ replace_termcodes(from, bufp, from_part)
 			if (*src == NUL)
 			{
 				if (from_part)
-					NameBuff[dlen++] = key;
+					result[dlen++] = key;
 				break;
 			}
 		}
-		NameBuff[dlen++] = *src++;
+		result[dlen++] = *src++;
 	}
-	NameBuff[dlen] = NUL;
+	result[dlen] = NUL;
 
 	/*
 	 * Copy the new string to allocated memory.
 	 * If this fails, just return from.
 	 */
-	if ((*bufp = strsave(NameBuff)) != NULL)
-		return *bufp;
+	if ((*bufp = strsave(result)) != NULL)
+		from = *bufp;
+	vim_free(result);
 	return from;
 }
 

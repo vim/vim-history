@@ -17,15 +17,88 @@
  * All the remarks about older versions have been removed, they are not very
  * interesting.  Differences between version 3.0 and 4.0 can be found in
  * "../doc/vim_40.txt".
-*/
+ *
+ * Changes between version 4.0 and 4.1:
+ *
+ * - Included xxd.c version 1.3m.
+ * - Included ctags version 1.2.
+ * - Included tools/efm_filt.er.
+ * - Included changes for port to Atari MiNT, including makefile.mint.
+ * - Included a few changes for OS/2: Improved executing external commands,
+ *   depending on the shell; Handle resize after executing an external
+ *   command; Handle wildcard expansion for more than one argument (e.g.
+ *   ":n *.c *.h").
+ * - Include a lot of small changes to the docs.
+ * - Fixed: GUI version would busy-loop and mappings didn't work.  Was caused
+ *   by gui_mch_wait_for_chars() not working properly.  This fix was the main
+ *   reason for releasing 4.1.
+ * - Fixed: setting 'term' while GUI is active was possible, and caused
+ *   problems.
+ * - Fixed: When the "to" part of a mapping or menu command was long (more
+ *   than 24 chars on 32 bit MS-DOS, 128 chars on other systems), any <> were
+ *   not translated and CTRL-Vs not removed.
+ * - Fixed: 'modified' option was included for ":mkvimrc", it shouldn't.
+ * - Included a few changes for that Atari MiNT port (vt52 builtin term
+ *   entry).
+ * - Fixed: on MS-DOS a file name pattern for an autocommand that contains
+ *   "\*" or "\?" didn't work.
+ * - On MS-DOS and Amiga, ignore case when matching the file name pattern for
+ *   autocommands.
+ * - Fixed: using :set to show the value of two options gave an error message
+ *   (e.g. ":set so sj").
+ * - Fixed: Non-printable characters in a file name caused trouble when
+ *   displayed in a status line.
+ * - Pack the MS-DOS zip files with Infozip, under Unix.  Preserves the long
+ *   filenames and case.  Files with two dots don't work though, the first dot
+ *   is replaced with an underscore.
+ * - Fixed: Pasting more than one line with the mouse in insert mode, didn't
+ *   put the cursor after the last pasted character.
+ * - When pasting linewise text, put the '] mark on the last character of the
+ *   last line, instead of the first character of the last line.
+ * - Fixed: on some Unix systems, when resizing the window while in a external
+ *   command (e.g., ":!cat"), Vim would stop waiting for the child, causing
+ *   trouble, because the child is still running.
+ * - Fixed: resizing the window while executing an external command, and
+ *   't_ti' and 't_te' are defined to swap display buffers, Vim would redraw
+ *   in the wrong display buffer after the "hit RETURN" message.
+ * - Fixed: "va", "vA", "Vp", "VP", "Vs" and "VS" didn't set the cursor
+ *   position used for up/down movements (e.g., when using "j" after them).
+ * - Fixed: in GUI version, after using "cw" visual selection by dragging the
+ *   mouse didn't work.
+ * - Fixed: setting 'ttyscroll' to 0 caused scrolling of message to stop
+ *   working.
+ * - Fixed: the "WARNING: file changed" message caused buffers to be flushed
+ *   and subsequent commands not to be executed.
+ * - Fixed: in Insert mode, the message from "^O^G" would be
+ *   overwritten by the mode message if 'showmode' set.
+ * - Fixed: Using ":bdel" when there is only one buffer with two windows,
+ *   could cause a crash.
+ * - Changed: the '<' flag in 'cpoptions' now only switches off the
+ *   recognizing of the <> form of key codes.  The 'k' flag is now used for
+ *   the recognizing of raw key codes.
+ * - Fixed: Typing ':' at the --more-- prompt, when displaying autocommands,
+ *   caused extra linefeeds to be produced.
+ * - Fixed: Using 'tagrelative' and ":set tags=./../tags", filenames would
+ *   contain "../" as many times as CTRL-] would be used.  These are removed
+ *   now.
+ * - Fixed: Extremely long error message could cause a crash (e.g., when
+ *   using ":help ^A<CR>").
+ * - Added check for negative value of 'textwidth'.
+ * - Fixed: On MS-DOS, getting the value of $HOME would cause the current
+ *   directory for the drive to be changed.
+ */
 
-/* Don't forget to update the numbers in version.h for Win32!!! */
+/*
+ * Version[] is copied into the swap file (max. length is 10 chars).
+ * longVersion[] is used for the ":version" command and "Vim -h".
+ * Don't forget to update the numbers in version.h for Win32!!!
+ */
 
-char		   *Version = "VIM 4.0";
+char		   *Version = "VIM 4.1";
 #ifdef HAVE_DATE_TIME
-char		   *longVersion = "VIM - Vi IMproved 4.0 (1996 May 29, compiled " __DATE__ " " __TIME__ ")";
+char		   *longVersion = "VIM - Vi IMproved 4.1 BETA (1996 June 12, compiled " __DATE__ " " __TIME__ ")";
 #else
-char		   *longVersion = "VIM - Vi IMproved 4.0 (1996 May 29)";
+char		   *longVersion = "VIM - Vi IMproved 4.1 BETA (1996 June 12)";
 #endif
 
 static void version_msg __ARGS((char *s));

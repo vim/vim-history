@@ -1,9 +1,9 @@
-*vim_idx.txt*   For Vim version 4.0.  Last modification: 1996 May 27
+*vim_idx.txt*   For Vim version 4.1.  Last modification: 1996 June 9
 
 This file contains a list of all commands for each mode, with a tag and a
 short description.  The list is sorted on ASCII value.
 
-When looking for certain functionality use the search command. For example,
+When looking for certain functionality use the search command.  For example,
 to look for deleting something, use: "/delete".
 
 		    Sections:

@@ -1602,10 +1602,11 @@ vim_beep()
 /*
  * To get the "real" home directory:
  * - get value of $HOME
- * - go to that directory
- * - do mch_dirname() to get the real name of that directory.
- *
- * This also works with mounts and links.
+ * For Unix:
+ *	- go to that directory
+ *	- do mch_dirname() to get the real name of that directory.
+ *	This also works with mounts and links.
+ *	Don't do this for MS-DOS, it will change the "current dir" for a drive.
  */
 static char_u	*homedir = NULL;
 
@@ -1617,12 +1618,14 @@ init_homedir()
 	var = vim_getenv((char_u *)"HOME");
 	if (var != NULL)
 	{
+#ifdef UNIX
 		if (mch_dirname(NameBuff, MAXPATHL) == OK)
 		{
 			if (!vim_chdir((char *)var) && mch_dirname(IObuff, IOSIZE) == OK)
 				var = IObuff;
 			vim_chdir((char *)NameBuff);
 		}
+#endif
 		homedir = strsave(var);
 	}
 }
@@ -1698,6 +1701,7 @@ expand_env(src, dst, dstlen)
 			{
 				/* cannot expand user's home directory, so don't try */
 				var = NULL;
+				tail = "";	/* shut gcc up about "may be used uninitialized" */
 			}
 # else
 			{

@@ -1,4 +1,4 @@
-*vim_dos.txt*   For Vim version 4.0.  Last modification: 1996 May 27
+*vim_dos.txt*   For Vim version 4.1.  Last modification: 1996 June 9
 
 This file contains the particularities for the MS-DOS version of Vim.
 
@@ -182,10 +182,12 @@ is used instead.  External commands are started with "command /c
 
 MS-DOS allows for only one filename extension.  Therefore, when appending an
 extension, the '.' in the original filename is replaced with a '_', the name
-is truncated to 8 characters, and the new extension ".vim" or ".bak" is
-appended.  Two examples: "test.c" becomes "test_c.bak", "ditiseen.tst" becomes
-"ditiseen.bak".  The 'shortname' option is not available, because it would
-always be set.
+is truncated to 8 characters, and the new extension (e.g., ".swp") is
+appended.  Two examples: "test.c" becomes "test_c.bak", "thisisat.est"
+becomes "thisisat.bak".  To reduce these problems, the default for
+'backupext' is "~" instead of ".bak".  The backup file for "thisisat.est"
+then becomes "thisisat.es~".  The 'shortname' option is not available,
+because it would always be set.
 
 If the 32-bit DOS version is run on Windows 95 or Windows NT, it can use long
 filenames, as can the Win32 version.

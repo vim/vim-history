@@ -28,6 +28,7 @@ static int jumpto_tag __ARGS((char_u *, char_u *));
 #endif
 static int test_for_static __ARGS((char_u **, char_u *, char_u *, char_u *));
 static char_u *expand_rel_name __ARGS((char_u *fname, char_u *tag_fname));
+static void simplify_filename __ARGS((char_u *filename));
 #ifdef EMACS_TAGS
 static int test_for_current __ARGS((int, char_u *, char_u *, char_u *));
 #else
@@ -1293,9 +1294,90 @@ expand_rel_name(fname, tag_fname)
 		STRCPY(NameBuff, tag_fname);
 		STRNCPY(NameBuff + (p - tag_fname), fname,
 												 MAXPATHL - (p - tag_fname));
+		/*
+		 * Translate names like "src/a/../b/file.c" into "src/b/file.c".
+		 */
+		simplify_filename(NameBuff);
 		fname = NameBuff;
 	}
 	return fname;
+}
+
+/*
+ * Moves the tail part of the path (including the terminating NUL) pointed to
+ * by "tail" to the new location pointed to by "here". This should accomodate
+ * an overlapping move.
+ */
+#define movetail(here, tail)  vim_memmove(here, tail, STRLEN(tail) + (size_t)1)
+
+/*
+ * For MS-DOS we should check for backslash too, but that is complicated.
+ */
+#define DIR_SEP		'/'			/* the directory separator character */
+
+/*
+ * Converts a filename into a canonical form. It simplifies a filename into
+ * its simplest form by stripping out unneeded components, if any.  The
+ * resulting filename is simplified in place and will either be the same
+ * length as that supplied, or shorter.
+ */
+	static void
+simplify_filename(filename)
+	char_u *filename;
+{
+	int		absolute = FALSE;
+	int		components = 0;
+	char_u	*p, *tail;
+
+	p = filename;
+	if (*p == DIR_SEP)
+	{
+		absolute = TRUE;
+		++p;
+	}
+	do
+	{
+		/*  Always leave "p" pointing to character following next "/". */
+		if (*p == DIR_SEP)
+			movetail(p, p+1);				/* strip duplicate "/" */
+		else if (STRNCMP(p, "./", 2) == 0)
+			movetail(p, p+2);				/* strip "./" */
+		else if (STRNCMP(p, "../", 3) == 0)
+		{
+			if (components > 0)				/* strip any prev. component */
+			{
+				*(p - 1) = 0;				/* delete "/" before  "../" */
+				tail  = p + 2;				/* skip to "/" of "../" */
+				p = vim_strrchr(filename, DIR_SEP);	 /* find preceding sep. */
+				if (p != NULL)				/* none found */
+					++p;					/* skip to char after "/" */
+				else
+				{
+					++tail;					/* strip leading "/" from tail*/
+					p = filename;			/* go back to beginning */
+					if (absolute)			/* skip over any leading "/" */
+						++p;
+				}
+				movetail(p, tail);			/* strip previous component */
+				--components;
+			}
+			else if (absolute)				/* no parent to root... */
+				movetail(p, p+3);			/*   so strip "../" */
+			else							/* leading series of "../" */
+			{
+				p = vim_strchr(p, DIR_SEP);	/* skip to next "/" */
+				if (p != NULL)
+					++p;					/* skip to char after "/" */
+			}
+		}
+		else
+		{
+			++components;					/* simple path component */
+			p = vim_strchr(p, DIR_SEP);			/* skip to next "/" */
+			if (p != NULL)
+				++p;						/* skip to char after "/" */
+		}
+	} while (p != NULL && *p != NUL);
 }
 
 /*

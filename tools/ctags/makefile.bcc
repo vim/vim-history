@@ -85,4 +85,4 @@ ctags.cfg: makefile
 -DPC;MSDOS;__STDC__=1
 | ctags.cfg
 
-### See makefile.txt for a list of defines that can be included
+

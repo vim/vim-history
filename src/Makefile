@@ -95,9 +95,9 @@
 #system:              configurations:    	     version (*) tested by:
 #-------------        ------------------------       -------  -  ----------
 #AIX 3                cc            +X11 +GUI -GUI      3.19     Ali Albayrak
-#AIX 3                cc            +X11 +GUI -GUI      3.29 (9) Stephen Riehm
+#AIX 3                cc gcc        +X11 +GUI -GUI      4.0      Stephen Riehm
 #AIX 4                cc gcc-2.7.2  +X11 -GUI           3.27 (4) Axel Kielhorn
-#A/UX 3.1.1           gcc           +X11                3.27 (6) Jim Jagielski
+#A/UX 3.1.1           gcc           +X11                4.0  (6) Jim Jagielski
 #Alpha OSF1           cc gcc-2.6.3   +X11 +GUI          3.23     Robert Webb
 #Alpha OSF1 V3.2      cc            +X11                3.22     Heiko Nardmann
 #Apollo               cc             -X11 -GUI          3.23     Robert Webb
@@ -110,8 +110,8 @@
 #FreeBSD 2.1.0           gcc-2.6.3   X11R6 Lesstif 0.35 4.0  (5) Bram Moolenaar
 #FreeBSD 2.1.0           gcc-2.6.3   +X11 -GUI +Athena  4.0      Bram Moolenaar
 #HP-UX 9.00           c89 cc         X11R5 Motif 1.2    3.24 (2) Bram Moolenaar
-#HP-UX 9.01           gcc            +X11 +GUI          3.28     Mun Johl
-#HP-UX 9.01 (400)     gcc            +X11               3.27     Axel Kielhorn
+#HP-UX 9.01           gcc            +X11 +GUI          4.0      Mun Johl
+#HP-UX 9.01 (400)     gcc 2.7.2      +X11 +Athena       3.29     Axel Kielhorn
 #HP-UX 9.01 (400)     cc89           +X11 +Motif 1.2    3.27     Axel Kielhorn
 #HP-UX 9.01 (700)     gcc            +X11 +Motif 1.2    3.27     Axel Kielhorn
 #HP-UX 9.01 (700)     cc89         +X11 +Athena +Motif  3.27     Axel Kielhorn
@@ -121,8 +121,9 @@
 #HP-UX 9.05           cc             -X11 -GUI          3.27     Juergen Weigert
 #HP-UX 9.05           cc             +X11 -GUI  X11R5   3.25     Robert Colon
 #HP-UX 9.05	      c89 gcc-2.7.2 (HP 700)            3.18 (Y) Axel Kielhorn
-#HP-UX 9.05           gcc-2.7.2      +X11R6.1 Athena3d  3.29     L. Duperval
-#HP-UX 9.05           gcc-2.7.2      -X11 -GUI          3.29     L. Duperval
+#HP-UX 9.05           gcc-2.7.2      +X11R6.1 Athena3d  4.0      L.  Duperval
+#HP-UX 9.05           gcc-2.7.2      -X11 -GUI          4.0      L.  Duperval
+#HP-UX 9.05           gcc-2.7.2      +X11 -GUI          4.0      L.  Duperval
 #HP-UX 9.05 (700)     cc             X11R5 Motif 1.2    3.27     Bram Moolenaar
 #HP-UX 9.07           c89            X11R5 Motif 1.2    3.23 (Y) Nikhil Patel
 #HP-UX 10.01A         cc gcc-2.6.3   X11R5 Motif 1.2    3.25     Kayhan Demirel
@@ -130,16 +131,16 @@
 #HP-UX 10.01          cc             -X11 -GUI          3.27     Juergen Weigert
 #HP-UX 10.10          cc             X11R5 Motif 1.2    3.22     Nikhil Patel
 #HP-UX 10.10          c89            X11R5 Motif 1.2    3.23 (Z) Nikhil Patel
-#HP-UX 10.10          cc             X11R5 Motif 1.2    3.29     Stephen Riehm
+#HP-UX 10.10          cc             X11R5 Motif 1.2    4.0      Stephen Riehm
 #Irix 5.2/5.3         cc gcc-2.6.3   +X11 +GUI          3.22     Robert Webb
 #Irix 5.3             cc             -X11 -GUI          3.27     Juergen Weigert
-#Irix 5.3             cc             +X11 +Motif        3.26     Ives Aerts
+#Irix 5.3             cc gcc-2.7.2   +X11 +Motif        4.0      Ives Aerts
 #Irix-5.3 (IP22 mips)    gcc-2.7.2   +X11 Motif Athena  3.29     Lennart Schultz
 #Irix 6.2             cc             +X11 +GUI (Motif)  3.24     Bruce Templeton
 #KSR OS R1.2.2        cc             -X11 -GUI          3.21     Juergen Weigert
 #Linux/LST            gcc            +X11R6 +GUI=Athena 3.27     Juergen Weigert
 #Linux 1.2.13 (x86)   cc (gcc-2.7.0) X11R6              3.17     Eric Fischer
-#Linux 1.2.13-ELF        gcc-2.7.0   X11R6 +GUI         3.27     Tony Nugent
+#Linux 1.2.13-ELF        gcc-2.7.0   X11R6 +GUI         3.29     Tony Nugent
 #Linux 1.2.13            gcc-2.7.0   +X11 -GUI X11R6    3.25     Robert Colon
 #Linux 1.2.13-ELF        gcc-2.7.0   -X11 -GUI          3.21     Juergen Weigert
 #Linux 1.3.3 #2 i586  gcc 2.6.3      +X11R6 +GUI        3.26     Renate Schmidt
@@ -147,9 +148,10 @@
 #Linux 1.3.94-ELF        gcc-2.7.0   +X11 +GUI Athena   3.25     Paul Slootman
 #Linux 1.3.97-ELF        gcc-2.7.2   +X11 +GUI Athena   3.26     Iva Cabric
 #Linux 1.3.98-ELF        gcc-2.7.2   +X11 Athena Motif  3.27     Bill Foster
-#Linux 1.3.39            gcc-2.7.2   +X11R6 Athena3d    3.28     L. Duperval
+#Linux 1.3.39            gcc-2.7.2   +X11R6 Athena3d    4.0      L. Duperval
 #Linux 1.99.7            gcc-2.7.0   +X11 Athena        3.29     Lennart Schultz
 #Linux 1.99.7            gcc-2.7.0   +X11 +GUI Athena   3.29     Paul Slootman
+#Linux 1.99.8(pre-2.0.8) gcc-2.7.2   X11R6 +GUI         3.29     Tony Nugent
 #mot88 R32V3          cc             -X11 -GUI          3.21     Juergen Weigert
 #NCR Tower 32/450 SVR3   cc          -X11               3.22     Paul Slootman
 #NCR Tower 32/450 SVR3   gcc-2.4.3   -X11               3.22     Paul Slootman
@@ -170,18 +172,20 @@
 #Solaris 2.4 (x86)       gcc-2.6.0   +X11 +GUI openwin  3.29     Paul Slootman
 #Solaris 2.4 (sun4m)     gcc-2.7.2   +X11 Motif Athena  3.29     Lennart Schultz
 #Solaris 2.4 (Sparc)  cc             +X11 +GUI          3.29     Glauber
-#Solaris 2.4 sun4m    gcc 2.7.2      +X11R6 Motif       3.29     L. Duperval
-#Solaris 2.4 sun4m    gcc 2.7.2      -X11R6 -GUI        3.29     L. Duperval
+#Solaris 2.4 sun4m    gcc 2.7.2      +X11R6 Motif       4.0      L.  Duperval
+#Solaris 2.4 sun4m    gcc 2.7.2      -X11 -GUI          4.0      L.  Duperval
+#Solaris 2.4 sun4m    gcc 2.7.2      +X11 -GUI          4.0      L.  Duperval
 #Solaris 2.4          gcc-2.7.2      +X11 +GUI Motif    3.26     Iva Cabric
 #Solaris 2.4/2.5      clcc           +X11 -GUI  openwin 3.20 (7) Robert Colon
 #Solaris 2.4/2.5      cc (SUNWspro)  +X11 -GUI  openwin 3.25     Robert Colon
 #Solaris 2.5          cc             -X11 -GUI          3.27     Juergen Weigert
 #Solaris 2.5          cc        +X11=openwin +GUI=Motif 3.27     Juergen Weigert
 #Solaris 2.5          gcc-2.7.2      +X11 +GUI Motif    3.26     Iva Cabric
-#Solaris 2.5          gcc 2.7.2      +X11R6 +GUI        3.29     Renate Schmidt
-#Solaris 2.5 (sun4m)     gcc-2.7.2   +X11R6 +GUI (CDE)  3.29     Andrew Large
-#Solaris 2.5 (sun4m)   cc (SC3.0.1)  +X11R6 +GUI (CDE)  3.29     Andrew Large
+#Solaris 2.5          gcc 2.7.2      +X11R6 +GUI        4.0      Renate Schmidt
+#Solaris 2.5 (sun4m)     gcc-2.7.2   +X11R6 +GUI (CDE)  4.0      Andrew Large
+#Solaris 2.5 (sun4m)   cc (SC3.0.1)  +X11R6 +GUI (CDE)  4.0      Andrew Large
 #Solaris 2.5 (sun4u)     gcc-2.7.2   +X11 Motif Athena  3.29     Lennart Schultz
+#SunOS 4.1.1          gcc 2.7.2      +X11 -GUI          4.0      L.  Duperval
 #SunOS 4.1.1 (sun4c)     cc          -X11               3.29     Lennart Schultz
 #SunOS 4.1.2 (sun4c)     cc          -X11               3.29     Lennart Schultz
 #SunOS 4.1.3 (sun4c)     cc          -X11               3.29     Lennart Schultz
@@ -193,7 +197,7 @@
 #SunOS 4.1.4          cc gcc-2.6.3   +X11 +GUI          3.23     Robert Webb
 #SunOS 4.1.4 (sparc)  cc gcc-2.6.3       openwin        3.17     Eric Fischer
 #SunOS 4.1.4 (sun4c)     gcc-2.7.2   +X11 Athena        3.29     Lennart Schultz
-#SunOS 4.1.4          gcc            +X11 +GUI Motif    3.29     Karsten Sievert
+#SunOS 4.1.4          gcc            +X11 +GUI Motif    4.0      Karsten Sievert
 #SUPER-UX 6.1.r1 (SX-4)   cc         +X11 Motif         3.29     Lennart Schultz
 #Ultrix               cc             -X11 +X11          3.23 (3) Bram Moolenaar
 #Unisys 6035          cc                 X11 Motif      3.29 (8) Glauber
@@ -214,7 +218,6 @@
 # (6)  See below for a few lines to uncomment
 # (7)  See below for lines which enable the use of clcc
 # (8)  Needs some EXTRA_LIBS, search for Unisys below
-# (9)  GCC does not work
 # (A)  needs EXTRA_LIB, see below
 # (B)  Can't compile GUI because there is no waitpid()...  Disable GUI below.
 # (X)  Need to use the .include "config.mk" line below
@@ -294,7 +297,7 @@ CONF_OPT_GUI = --enable-gui=yes
 ### Linux: When using -g, you will probably get a statically linked
 ### executable!!
 ### When not defined, configure will try to use -O2 -g for gcc and -O for cc.
-CFLAGS = -g
+#CFLAGS = -g
 #CFLAGS = -O
 #CFLAGS = -g -O2 -fno-strength-reduce -Wall -Wshadow -Wmissing-prototypes
 
@@ -380,6 +383,7 @@ CFLAGS = -g
 #EXTRA_LIBS = -lposix -lbsd -ltermcap -lX11
 
 ### (A)  SCO Open Server 5 (Jan Christiaan van Winkel)
+###      Also use the TERM_LIB below!
 #EXTRA_LIBS = -lgen
 
 ### (C)  On SCO Unix v3.2.5 (and probably other versions) the termcap library,

@@ -1,5 +1,6 @@
 /* charset.c */
 int init_chartab __PARMS((void));
+void trans_characters __PARMS((char_u *buf, int bufsize));
 char_u *transchar __PARMS((int c));
 void transchar_nonprint __PARMS((char_u *buf, int c));
 int charsize __PARMS((register int c));

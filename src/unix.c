@@ -30,6 +30,9 @@
 #ifdef HAVE_FCNTL_H
 # include <fcntl.h>
 #endif
+#ifdef __EMX__
+# include <glob.h>
+#endif
 
 #include "unixunix.h"		/* unix includes for unix.c only */
 
@@ -103,8 +106,8 @@ static int		do_resize = FALSE;
 static char_u	*oldtitle = NULL;
 static char_u	*fixedtitle = (char_u *)"Thanks for flying Vim";
 static char_u	*oldicon = NULL;
-static char_u	*extra_shell_arg = NULL;
 #ifndef __EMX__
+static char_u	*extra_shell_arg = NULL;
 static int		show_shell_mess = TRUE;
 #endif
 static int		core_dump = FALSE;			/* core dump in mch_windexit() */
@@ -1639,34 +1642,62 @@ call_shell(cmd, options)
 #ifdef USE_SYSTEM		/* use system() to start the shell: simple but slow */
 
 	int		x;
-	char_u	newcmd[1024];
+#ifndef __EMX__
+	char_u	newcmd[1024];	/* only needed for unix */
+#else /* __EMX__ */
+	/*
+	 * Set the preferred shell in the EMXSHELL environment variable (but
+	 * only if it is different from what is already in the environment).
+	 * Emx then takes care of whether to use "/c" or "-c" in an
+	 * intelligent way. Simply pass the whole thing to emx's system() call.
+	 * Emx also starts an interactive shell if system() is passed an empty
+	 * string.
+	 */
+	char_u *p, *old;
+
+	if (((old = getenv("EMXSHELL")) == NULL) || strcmp(old, p_sh))
+	{
+		/* should check HAVE_SETENV, but I know we don't have it. */
+		p = alloc(10 + strlen(p_sh));
+		if (p)
+		{
+			sprintf(p, "EMXSHELL=%s", p_sh);
+			putenv(p);	/* don't free the pointer! */
+		}
+	}
+#endif
 
 	flushbuf();
 
 	if (options & SHELL_COOKED)
 		settmode(0); 				/* set to cooked mode */
 
+#ifdef __EMX__
+	if (cmd == NULL)
+		x = system("");	/* this starts an interactive shell in emx */
+	else
+		x = system(cmd);
+	if (x == -1) /* system() returns -1 when error occurs in starting shell */
+	{
+		MSG_OUTSTR("\nCannot execute shell ");
+		msg_outstr(p_sh);
+		msg_outchar('\n');
+	}
+#else /* not __EMX__ */
 	if (cmd == NULL)
 		x = system(p_sh);
 	else
 	{
-#ifdef __EMX__
-		sprintf(newcmd, "%s %s /c \"%s\"", p_sh,
-#else
 		sprintf(newcmd, "%s %s -c \"%s\"", p_sh,
-#endif
 					extra_shell_arg == NULL ? "" : (char *)extra_shell_arg,
 					(char *)cmd);
 		x = system(newcmd);
 	}
 	if (x == 127)
 	{
-#ifdef __EMX__
-		MSG_OUTSTR("\nCannot execute shell cmd.exe\n");
-#else
  		MSG_OUTSTR("\nCannot execute shell sh\n");
-#endif
 	}
+#endif	/* __EMX__ */
 	else if (x && !expand_interactively)
 	{
 		msg_outchar('\n');
@@ -1675,6 +1706,10 @@ call_shell(cmd, options)
 	}
 
 	settmode(1); 						/* set to raw mode */
+#ifdef OS2
+	/* external command may change the window size in OS/2, so check it */
+	mch_get_winsize();
+#endif
 	resettitle();
 	return (x ? FAIL : OK);
 
@@ -2126,7 +2161,16 @@ finished:
 				close(fromshell_fd);
 			}
 #endif /* USE_GUI */
+			/*
+			 * Wait until child has exited.
+			 */
+#ifdef EINTR
+			/* Don't stop waiting when a signal is received */
+			while (wait(&status) == -1 && errno == EINTR)
+				;
+#else
 			wait(&status);
+#endif
 			settmode(1); 		/* set to raw mode right now, otherwise a
 								   CTRL-C after catch_signals will kill Vim */
 			did_settmode = TRUE;
@@ -2405,67 +2449,74 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	int				list_notfound;
 {
 	int		i;
-	size_t	len;
 	char_u	*p;
 #ifdef __EMX__
+	char_u	expandbuf[512];
+	char_u  **mypat;
+	glob_t  globinfo;
+	int		rc;
 
 	*num_file = 0;		/* default: no files found */
+	*file = (char_u **)"";
 
-	if (vim_strchr(*pat, '$') || vim_strchr(*pat, '~'))
+	mypat = (char_u **)alloc(sizeof(char_u *) * (num_pat + 1));
+	if (!mypat)
 	{
-		/* expand environment var or home dir */
-		char_u	*buf = alloc(1024);
-		expand_env(*pat, buf, 1024);
-		if (mch_has_wildcard(buf))	/* still wildcards in there? */
+		emsg(e_outofmem);
+		return FAIL;
+	}
+	/* first copy pat into mypat, expanding any $VAR or ~/ */
+	for (i = 0; i < num_pat; i++)
+	{
+		if (vim_strchr(pat[i], '$') || vim_strchr(pat[i], '~'))
 		{
-			*file = (char_u **)_fnexplode(buf);
+			/* expand environment var or home dir */
+			expand_env(pat[i], expandbuf, sizeof(expandbuf));
+			mypat[i] = strsave(expandbuf);
 		}
 		else
 		{
-			*file = (char_u **)alloc(sizeof(char_u **) * 2);
-			(*file)[0] = strsave(buf);
-			(*file)[1] = NULL;
+			mypat[i] = strsave(pat[i]);
 		}
-		vim_free(buf);
 	}
-	else
-	{
-		*file = (char_u **)_fnexplode(*pat);
-	}
-	if (!*file)
+	mypat[i] = NULL;	/* NULL terminated */
+
+	/* now handle each pattern in turn. Emx has the handy glob() function. */
+	for (i = 0; i < num_pat; i++)
 	{
 		/*
-		 * _fnexplode() returns NULL if there are no matches.
-		 * We return a zero count and OK to indicate no matches.
+		 * First time, don't pass GLOB_APPEND as a flag.
+		 * GLOB_MARK means add a trailing slash to directory names.
+		 * GLOB_NOESCAPE means that a backslash doesn't escape glob chars.
+		 * GLOB_NOCHECK means add non-matching pattern to results.
+		 * The NULL could also be an error-handling function for unreadable
+		 * directories.
 		 */
-		*file = (char_u **)"";
-		*num_file = 0;
-		return OK;
+		rc = glob(mypat[i],
+				  (i?GLOB_APPEND:0) | GLOB_MARK | GLOB_NOESCAPE | GLOB_NOCHECK,
+				  NULL, &globinfo);
 	}
-	/*
-	 * Count number of names resulting from expansion,
-	 * At the same time add a backslash to the end of names that happen to be
-	 * directories, and replace slashes with backslashes.
-	 */
-	for (i = 0; (p = (*file)[i]) != NULL; i++)
+
+	*num_file = globinfo.gl_pathc;
+	*file = (char_u **)alloc(*num_file * sizeof(char_u *));
+
+	for (i = 0; i < globinfo.gl_pathc; i++)
 	{
-		slash_adjust(p);
-		if (mch_isdir(p))
+		p = strsave(globinfo.gl_pathv[i]);
+		if (p)
 		{
-			len = strlen(p);
-			(*file)[i] = p = realloc(p, len + 2);
-			p += len;
-			*p++ = '\\';
-			*p = 0;
+			slash_adjust(p);
+			(*file)[i] = p;
 		}
 	}
-	*num_file = i;
+	globfree(&globinfo);
 	return OK;
 
 #else /* __EMX__ */
 
 	int		dir;
 	char_u	tmpname[TMPNAMELEN];
+	size_t	len;
 	char_u	*command;
 	FILE	*fd;
 	char_u	*buffer;

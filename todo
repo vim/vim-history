@@ -75,7 +75,6 @@ MSDOS: When using smardrive with write-back buffering, writing to a readonly
 When doing a CTRL-Z and typing a command for the shell, while Vim is busy
 	(e.g. writing a file), the command for the shell is sometimes eaten by
 	Vim, because the terminal mode is changed from RAW to CBREAK.
-Set boolean options on/off with ":set paste=off", ":set paste=on".
 
 
 Main changes for version 5.0:
@@ -650,6 +649,7 @@ Add "+=" and "-=" to option setting: add or remove parts of a string option,
 	add or subtract a number from a number option.  How do we insert in
 	front/at the end of a sting option?  Automatically add a comma?
 Support mapping for replace mode and "r" command (Vi doesn't do this)?
+Set boolean options on/off with ":set paste=off", ":set paste=on".
 
 From Elvis:
 fontchanges recognized "\\fB" etc.

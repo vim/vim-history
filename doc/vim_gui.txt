@@ -1,4 +1,4 @@
-*vim_gui.txt*   For Vim version 4.0.  Last modification: 1996 May 29
+*vim_gui.txt*   For Vim version 4.1.  Last modification: 1996 June 11
 
 
 		       Vim's Graphical User Interface
@@ -97,7 +97,7 @@ Vim*menuBar*font:		7x13
 The first three of these are standard resources on Silicon Graphics machines
 which make Motif applications look even better, highly recommended!
 
-Don't use "Vim*geometry" in de defaults.  This will break the menus.  Use
+Don't use "Vim*geometry" in the defaults.  This will break the menus.  Use
 "Vim.geometry" instead.
 
 The resources can also be set with arguments to vim:
@@ -172,7 +172,7 @@ only useful when 'nowrap' is set.
 
 Each Vim window has a scrollbar next to it which may be scrolled up and down
 to move through the text in that buffer.  The size of the scrollbar-thumb
-indicates the fraction of the buffer which can be seen in the window.  
+indicates the fraction of the buffer which can be seen in the window.
 When the scrollbar is dragged all the way down, the last line of the file
 will appear in the top of the window.
 
@@ -334,6 +334,9 @@ the mouse button down on this will pop up a menu containing the item
 "Big Changes", which is a sub-menu containing the item "Delete All Spaces",
 which when selected, performs the operation.
 
+Note that the '<' and 'k' flags in 'cpoptions' also apply here (when
+included they make the <> form and raw key codes not being recognized).
+
 
 5.3 Showing What Menus Are Mapped To			*gui_showing_menus*
 
@@ -371,14 +374,16 @@ To remove all menus use:
 Here is an example on how to add menu items with menu's!  You can add a menu
 item for the keyword under the cursor.  The register "z" is used.
 
-:nmenu Words.Add\\ Var	  wb"zye:menu! Words.<C-R>z <C-R>z<CR>
-:nmenu Words.Remove\\ Var  wb"zye:unmenu! Words.<C-R>z<CR>
-:vmenu Words.Add\\ Var	  "zy:menu! Words.<C-R>z <C-R>z <CR>
-:vmenu Words.Remove\\ Var  "zy:unmenu! Words.<C-R>z<CR>
-:imenu Words.Add\\ Var	  <Esc>wb"zye:menu! Words.<C-R>z <C-R>z<CR>a
-:imenu Words.Remove\\ Var  <Esc>wb"zye:unmenu! Words.<C-R>z<CR>a
+:nmenu Words.Add\ Var	  wb"zye:menu! Words.<C-R>z <C-R>z<CR>
+:nmenu Words.Remove\ Var  wb"zye:unmenu! Words.<C-R>z<CR>
+:vmenu Words.Add\ Var	  "zy:menu! Words.<C-R>z <C-R>z <CR>
+:vmenu Words.Remove\ Var  "zy:unmenu! Words.<C-R>z<CR>
+:imenu Words.Add\ Var	  <Esc>wb"zye:menu! Words.<C-R>z <C-R>z<CR>a
+:imenu Words.Remove\ Var  <Esc>wb"zye:unmenu! Words.<C-R>z<CR>a
 
-(<> notation: \\ is backslash, <C-R> is CTRL-R |<>|)
+(the rhs is in <> notation, you can copy/paste this text to try out the
+mappings, or put these lines in your gvimrc; "<C-R>" is CTRL-R, "<CR>" is
+the <CR> key.  |<>|)
 
 
 	6. Extras					*gui_extras*

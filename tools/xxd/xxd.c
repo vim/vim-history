@@ -26,6 +26,12 @@
  * Added binify ioctl for same reason. (Enough Doze stress for 1996!)
  * -p improved, removed occasional superfluous linefeed.  16.5.96
  * -l 0 fixed. tried to read anyway. 20.5.96
+ * -i fixed. now honours -u, and prepends __ to numeric filenames. 21.5.96
+ * compile -DWIN32 for NT or W95. George V. Reilly, * -v improved :-)
+ * support --gnuish-longhorn-options
+ * MAC support added: CodeWarrior already uses ``outline'' in Types.h which is
+ *     included by MacHeaders (Axel Kielhorn 1996/05/25). Renamed to xxdline().
+ *     jw.
  *
  * (c) 1990-1996 by Juergen Weigert (jnweiger@informatik.uni-erlangen.de)
  *
@@ -38,6 +44,9 @@
 #ifdef __TSC__
 # define MSDOS
 #endif
+#if !defined(OS2) && defined(__EMX__)
+# define OS2
+#endif
 #if defined(MSDOS) || defined(WIN32) || defined(OS2)
 # include <io.h>	/* for setmode() */
 #else
@@ -46,11 +55,14 @@
 #include <stdlib.h>
 #include <string.h>	/* for strncmp() */
 #include <ctype.h>	/* for isalnum() */
+#if __MWERKS__
+# include <unix.h>	/* for fdopen() on MAC */
+#endif
 
 extern long int strtol();
 extern long int ftell();
 
-char version[] = "xxd V1.1m 21may96 by Juergen Weigert";
+char version[] = "xxd V1.3m 30may96 by Juergen Weigert";
 
 #if defined(MSDOS) || defined(WIN32) || defined(OS2)
 # define BIN_READ(yes)  ((yes) ? "rb" : "rt")
@@ -61,6 +73,27 @@ char version[] = "xxd V1.1m 21may96 by Juergen Weigert";
 # define BIN_WRITE(dummy) "w"
 # define BIN_ASSIGN(fp, dummy) fp
 #endif
+
+/* open has only to arguments on the Mac */
+#if __MWERKS__		
+# define OPEN(name, mode, umask) open(name, mode)
+#else
+# define OPEN(name, mode, umask) open(name, mode, umask)
+#endif
+
+#ifndef __P
+# ifdef __STDC__
+#  define __P(a) a
+# else
+#  define __P(a) ()
+# endif
+#endif
+
+/* Let's collect some prototypes */
+/* CodeWarrior is really picky about missing prototypes */
+static void exit_with_usage __P((char *));
+static int huntype __P((FILE *, FILE *, FILE *, char *, int, int, long));
+static void xxdline __P((FILE *, char *, int));
 
 #define TRY_SEEK 	/* attempt to use lseek, or skip forward by reading */
 #define COLS 64		/* change here, if you ever need more columns */
@@ -73,7 +106,7 @@ char hexxa[] = "0123456789abcdef0123456789ABCDEF", *hexx = hexxa;
 #define HEX_POSTSCRIPT 1
 #define HEX_CINCLUDE 2
 
-void
+static void
 exit_with_usage(pname)
 char *pname;
 {
@@ -106,7 +139,7 @@ char *pname;
  *
  * The name is historic and came from 'undo type opt h'.
  */
-int
+static int
 huntype(fpi, fpo, fperr, pname, cols, hextype, base_off)
 FILE *fpi, *fpo, *fperr;
 char *pname;
@@ -208,19 +241,19 @@ long base_off;
 }
 
 /*
- * Print line l. If nz is false, outline regards the line a line of 
+ * Print line l. If nz is false, xxdline regards the line a line of 
  * zeroes. If there are three or more consecutive lines of zeroes,
  * they are replaced by a single '*' character. 
  *
  * If the output ends with more than two lines of zeroes, you
- * should call outline again with l being the last line and nz 
+ * should call xxdline again with l being the last line and nz 
  * negative. This ensures that the last line is shown even when
  * it is all zeroes.
  * 
  * If nz is always positive, lines are never suppressed.
  */
 static void
-outline(fp, l, nz)
+xxdline(fp, l, nz)
 FILE *fp;
 char *l;
 int nz;
@@ -270,15 +303,21 @@ char *argv[];
 
   while (argc >= 2)
     {
-           if (!strncmp(argv[1], "-a", 2)) autoskip = 1 - autoskip;
-      else if (!strncmp(argv[1], "-u", 2)) hexx = hexxa + 16;
-      else if (!strncmp(argv[1], "-p", 2)) hextype = HEX_POSTSCRIPT;
-      else if (!strncmp(argv[1], "-i", 2)) hextype = HEX_CINCLUDE;
-      else if (!strncmp(argv[1], "-r", 2)) revert++;
-      else if (!strncmp(argv[1], "-c", 2))
+      pp = argv[1] + (!strncmp(argv[1], "--", 2) && argv[1][2]);
+           if (!strncmp(pp, "-a", 2)) autoskip = 1 - autoskip;
+      else if (!strncmp(pp, "-u", 2)) hexx = hexxa + 16;
+      else if (!strncmp(pp, "-p", 2)) hextype = HEX_POSTSCRIPT;
+      else if (!strncmp(pp, "-i", 2)) hextype = HEX_CINCLUDE;
+      else if (!strncmp(pp, "-r", 2)) revert++;
+      else if (!strncmp(pp, "-v", 2)) 
+        {
+	  fprintf(stderr, "%s\n", version);
+	  exit(0);
+	}
+      else if (!strncmp(pp, "-c", 2))
 	{
-	  if (argv[1][2] && strncmp("ols", argv[1] + 2, 3))
-	    cols = (int)strtol(argv[1] + 2, NULL, 0);
+	  if (pp[2] && strncmp("ols", pp + 2, 3))
+	    cols = (int)strtol(pp + 2, NULL, 0);
 	  else
 	    {
 	      if (!argv[2])
@@ -288,20 +327,19 @@ char *argv[];
 	      argc--;
 	    }
 	}
-      else if (!strncmp(argv[1], "-s", 2))
+      else if (!strncmp(pp, "-s", 2))
 	{
 	  relseek = 0;
 	  negseek = 0;
-	  if (argv[1][2] && 
-	      strncmp("kip", argv[1] +2, 3) && strncmp("eek", argv[1] +2, 3))
+	  if (pp[2] && strncmp("kip", pp+2, 3) && strncmp("eek", pp+2, 3))
 	    {
 #ifdef TRY_SEEK
-	      if (argv[1][2] == '+')
+	      if (pp[2] == '+')
 	        relseek++;
-	      if (argv[1][2+relseek] == '-')
+	      if (pp[2+relseek] == '-')
 	        negseek++;
 #endif
-	      seekoff = strtol(argv[1] + 2+relseek+negseek, (char **)NULL, 0);
+	      seekoff = strtol(pp + 2+relseek+negseek, (char **)NULL, 0);
 	    }
 	  else
 	    {
@@ -318,10 +356,10 @@ char *argv[];
 	      argc--;
 	    }
 	}
-      else if (!strncmp(argv[1], "-l", 2))
+      else if (!strncmp(pp, "-l", 2))
 	{
-	  if (argv[1][2] && strncmp("en", argv[1] + 2, 2))
-	    length = strtol(argv[1] + 2, (char **)NULL, 0);
+	  if (pp[2] && strncmp("en", pp + 2, 2))
+	    length = strtol(pp + 2, (char **)NULL, 0);
 	  else
 	    {
 	      if (!argv[2])
@@ -331,18 +369,13 @@ char *argv[];
 	      argc--;
 	    }
 	}
-      else if (!strcmp(argv[1], "-v"))
-        {
-	  fprintf(stderr, "%s\n", version);
-	  exit(0);
-	}
-      else if (!strcmp(argv[1], "--"))	/* end of options */
+      else if (!strcmp(pp, "--"))	/* end of options */
         {
 	  argv++;
 	  argc--;
 	  break;
 	}
-      else if (argv[1][0] == '-' && argv[1][1])	/* unknown option */
+      else if (pp[0] == '-' && pp[1])	/* unknown option */
         exit_with_usage(pname);
       else 
         break;				/* not an option */
@@ -387,7 +420,7 @@ char *argv[];
     {
       int fd;
 
-      if (((fd = open(argv[2], O_WRONLY | O_CREAT, 0666)) < 0) ||
+      if (((fd = OPEN(argv[2], O_WRONLY | O_CREAT, 0666)) < 0) ||
           (fpo = fdopen(fd, BIN_WRITE(revert))) == NULL)
 	{
 	  fprintf(stderr, "%s: ", pname);
@@ -436,7 +469,7 @@ char *argv[];
     {
       if (fp != stdin)
 	{
-	  fprintf(fpo, "unsigned char ");
+	  fprintf(fpo, "unsigned int %s", isdigit(argv[1][0]) ? "__" : "");
 	  for (e = 0; (c = argv[1][e]); e++)
 	    putc(isalnum(c) ? c : '_', fpo);
 	  fputs("[] = {\n", fpo);
@@ -445,7 +478,8 @@ char *argv[];
       p = 0;
       while ((length < 0 || p < length) && (c = getc(fp)) != EOF)
 	{
-	  fprintf(fpo, "%s0x%02x", (p % cols) ? ", " : ",\n  "+2*!p,  c);
+	  fprintf(fpo, (hexx == hexxa) ? "%s0x%02x" : "%s0X%02X",
+	    (p % cols) ? ", " : ",\n  "+2*!p,  c);
 	  p++;
 	}
 
@@ -454,7 +488,7 @@ char *argv[];
 
       if (fp != stdin)
 	{
-	  fprintf(fpo, "unsigned int ");
+	  fprintf(fpo, "unsigned int %s", isdigit(argv[1][0]) ? "__" : "");
 	  for (e = 0; (c = argv[1][e]); e++)
 	    putc(isalnum(c) ? c : '_', fpo);
 	  fprintf(fpo, "_len = %d;\n", p);
@@ -504,7 +538,7 @@ char *argv[];
       if (++p == cols)
 	{
 	  l[c = (11 + (5 * cols - 1) / 2 + p)] = '\n'; l[++c] = '\0';
-	  outline(fpo, l, autoskip ? nonzero : 1);
+	  xxdline(fpo, l, autoskip ? nonzero : 1);
 	  nonzero = 0;
 	  p = 0;
 	}
@@ -512,10 +546,10 @@ char *argv[];
   if (p)
     {
       l[c = (11 + (5 * cols - 1) / 2 + p)] = '\n'; l[++c] = '\0';
-      outline(fpo, l, 1);
+      xxdline(fpo, l, 1);
     }
   else if (autoskip)
-    outline(fpo, l, -1);	/* last chance to flush out supressed lines */
+    xxdline(fpo, l, -1);	/* last chance to flush out supressed lines */
     
   fclose(fp);
   fclose(fpo);

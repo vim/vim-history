@@ -43,6 +43,7 @@
 #define CPO_EXECBUF		'e'
 #define CPO_FNAMER		'f'		/* set file name for ":r file" */
 #define CPO_FNAMEW		'F'		/* set file name for ":w file" */
+#define CPO_KEYCODE		'k'		/* don't recognize raw key code in mappings */
 #define CPO_SHOWMATCH	'm'
 #define CPO_LINEOFF		'o'
 #define CPO_REDO		'r'
@@ -55,7 +56,7 @@
 #define CPO_MATCH		'%'
 #define CPO_SPECI		'<'		/* don't recognize <> in mappings */
 #define CPO_DEFAULT		"BceFs"
-#define CPO_ALL			"bBcefFmorsStx$!%<"
+#define CPO_ALL			"bBcefFkmorsStx$!%<"
 
 /* characters for p_ww option: */
 #define WW_ALL			"bshl<>[],"

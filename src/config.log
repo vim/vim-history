@@ -14,6 +14,7 @@ ld: -lnsl: no match
 configure:1304: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -lsocket   1>&5
 ld: -lsocket: no match
 configure:1358: gcc -c -O2 -fno-strength-reduce -Wall -Wshadow -I/usr/X11R6/include   conftest.c 1>&5
+configure:1509: gcc -c -O2 -fno-strength-reduce -Wall -Wshadow -I/usr/X11R6/include   conftest.c 1>&5
 configure:1555: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow    -L/usr/X11R6/lib conftest.c -lXext -lX11   1>&5
 configure:1645: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap   1>&5
 configure:1812: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
@@ -99,7 +100,7 @@ configure:2959: warning: return-type defaults to `int'
 configure: In function `main':
 configure:2963: warning: implicit declaration of function `getcwd'
 configure:3011: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
-/var/tmp/cc0032151.o: Undefined symbol `_sigset' referenced from text segment
+/var/tmp/cc0015651.o: Undefined symbol `_sigset' referenced from text segment
 configure:3011: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
 configure:3011: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
 configure:3011: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
@@ -128,54 +129,23 @@ configure:3223: warning: implicit declaration of function `memmove'
 configure:3224: warning: implicit declaration of function `strncmp'
 etags: not found
 etags: not found
-Ctags, Ver. 0.42 Beta, by Darren Hiebert
-Usage: ctags [-aBdFLsStTwWx] [-{f|o} tagfile] [-h list] [-i types] file(s)
-    -a   Append the tags to an existing tag file.
-    -B   Use backward searching patterns (?...?).
-    -F   Use forward searching patterns (/.../) (default).
-    -o   Alternative for -f.
-    -w   Exclude warnings about duplicate tags (default).
-    -W   Generate warnings about duplicate tags.
-    -x   Print a tabular cross reference file to standard output.
-    -f <tagfile>
-         Output tags to the specified file (default is "tags").
-    -h <list>
-         Specifies a list of file extensions used for headers.
-         The default list is ".h.H.hpp.hxx.h++".
-    -i <types>
-         Specifies the list of tag types to include in the output file.
-         "Types" is a group of letters designating the types of tags
-         affected. Each letter or group of letters may be preceded by
-         either a '+' sign (default, if omitted) to add it to those already
-         included, a '-' sign to exclude it from the list (e.g. to exclude
-         a default tag type), or an '=' sign to include its corresponding
-         tag type at the exclusion of those not listed. A space separating
-         the option letter from the list is optional. The following tag
-         types are supported:
-            d   macro definitions
-            e   enumerated values (values inside enum{...})
-            f   function and method definitions
-            g   enum/struct/union tags (or new C++ types)
-            p   external function prototypes
-            t   typedefs
-            v   variable declarations
-         In addition, the following two modifiers are accepted:
-            P   prefix static tags with "filename:" (Elvis style).
-            S   include static tags (special case of above types)
-         The default value of list is "=defgtvS" (i.e all tag types
-         except for function prototypes; include static tags but do not
-         prefix them).
-    -L <listfile>
-         A list of source file names are read from the specified file
-
-  The following tag control options are accepted only for backwards
-  compatibility with other versions of ctags and (except for -s) are
-  selected by default in this version. Use of the -i option is preferred.
-    -d   Include macro definitions (equiv. to -i+d).
-    -s   Include static tags prefixed by "filename:" (equiv. to -i+SP).
-    -S   Include static tags without filename prefix (equiv. to -i+S-P).
-    -t   Include typedefs (equiv. to -i+t).
-    -T   Include typedefs and enum/struct/union tags (equiv. to -i+gt).
+Ctags, Ver. 1.0, by Darren Hiebert
+Usage: ctags [-aBdFsStTuwWx] [-{f|o} name] [-h list] [-i [+-=]types]
+             [-L file] [--help] file(s)
+    --help     Prints a more detailed help message
+    -a         Append tags to existing tag file
+    -B         Use backward searching patterns (?...?)
+    -f <name>  Name for output tag file (default "tags")
+    -F         Use forward searching patterns (/.../) (default)
+    -h <list>  List of header file extensions (default ".h.H.hpp.hxx.h++")
+    -i <types> List of tag types to include [defgptvPS] (default "=defgtvS")
+    -L <file>  List of source file names are read from specified file
+    -o <name>  Alternative for -f
+    -u         Unsorted. Do not sort tags.
+    -w         Exclude warnings about duplicate tags (default)
+    -W         Generate warnings about duplicate tags
+    -x         Print tabular cross reference file to standard output
+    -[dsStT]   Backward compatibility options. See --help for more info.
 
 Error: Invalid option character: 'v'
 

@@ -608,7 +608,10 @@ win_redr_status(wp)
 		if (p == NULL)
 			STRCPY(NameBuff, "[No File]");
 		else
+		{
 			home_replace(wp->w_buffer, p, NameBuff, MAXPATHL);
+			trans_characters(NameBuff, MAXPATHL);
+		}
 		p = NameBuff;
 		len = STRLEN(p);
 
@@ -2012,7 +2015,7 @@ scroll_cursor_bot(min_scroll, set_topline)
 			used += i;
 			if (used > curwin->w_height)
 				break;
-			if (extra < p_so)
+			if (extra < p_so || scrolled < min_scroll)
 			{
 				extra += i;
 				if (cln + sline >= curwin->w_botline)
@@ -2460,7 +2463,8 @@ win_ins_lines(wp, row, line_count, invalid, mayclear)
 	did_delete = FALSE;
 	if (wp->w_next || wp->w_status_height)
 	{
-		if (screen_del_lines(0, wp->w_winpos + wp->w_height - line_count, line_count, (int)Rows) == OK)
+		if (screen_del_lines(0, wp->w_winpos + wp->w_height - line_count,
+										  line_count, (int)Rows, FALSE) == OK)
 			did_delete = TRUE;
 		else if (wp->w_next)
 			return FAIL;
@@ -2550,7 +2554,7 @@ win_del_lines(wp, row, line_count, invalid, mayclear)
 	{
 		scroll_region_set(wp, row);
 		retval = screen_del_lines(wp->w_winpos + row, 0, line_count,
-														  wp->w_height - row);
+												   wp->w_height - row, FALSE);
 		scroll_region_reset();
 		return retval;
 	}
@@ -2558,7 +2562,8 @@ win_del_lines(wp, row, line_count, invalid, mayclear)
 	if (wp->w_next && p_tf)		/* don't delete/insert on fast terminal */
 		return FAIL;
 
-	if (screen_del_lines(0, wp->w_winpos + row, line_count, (int)Rows) == FAIL)
+	if (screen_del_lines(0, wp->w_winpos + row, line_count,
+													(int)Rows, FALSE) == FAIL)
 		return FAIL;
 
 	/*
@@ -2700,7 +2705,7 @@ screen_ins_lines(off, row, line_count, end)
 	 */
 	if (type == USE_T_CD || type == USE_T_CDL ||
 										 type == USE_T_CE || type == USE_T_DL)
-		return screen_del_lines(off, row, line_count, end);
+		return screen_del_lines(off, row, line_count, end, FALSE);
 
 	/*
 	 * If text is retained below the screen, first clear or delete as many
@@ -2708,7 +2713,7 @@ screen_ins_lines(off, row, line_count, end)
 	 * the deleted lines won't later surface during a screen_del_lines.
 	 */
 	if (*T_DB)
-		screen_del_lines(off, end - line_count, line_count, end);
+		screen_del_lines(off, end - line_count, line_count, end, FALSE);
 
 	if (*T_CSC != NUL)     /* cursor relative to region */
 		cursor_row = row;
@@ -2779,11 +2784,12 @@ screen_ins_lines(off, row, line_count, end)
  * Return OK for success, FAIL if the lines are not deleted.
  */
 	int
-screen_del_lines(off, row, line_count, end)
+screen_del_lines(off, row, line_count, end, force)
 	int				off;
 	int 			row;
 	int 			line_count;
 	int				end;
+	int				force;		/* even when line_count > p_ttyscroll */
 {
 	int 		j;
 	int 		i;
@@ -2801,7 +2807,8 @@ screen_del_lines(off, row, line_count, end)
 	 * - the line count is less than one
 	 * - the line count is more than 'ttyscroll'
 	 */
-	if (!screen_valid(TRUE) || line_count <= 0 || line_count > p_ttyscroll)
+	if (!screen_valid(TRUE) || line_count <= 0 ||
+										 (!force && line_count > p_ttyscroll))
 		return FAIL;
 
 	/*

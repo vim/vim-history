@@ -60,7 +60,7 @@ EXTERN int		mod_mask INIT(= 0x0);			/* current key modifiers */
  * When the cmdline gets longer than the available space the screen gets
  * scrolled up. After a CTRL-D (show matches), after hitting ':' after
  * "hit return", and for the :global command, the command line is
- * temporaraly moved. The old position is restored with the next call to
+ * temporarily moved. The old position is restored with the next call to
  * updateScreen().
  */
 EXTERN int		cmdline_row;

@@ -1,0 +1,27 @@
+Begin3
+Title:          Exuberant Ctags
+Version:        1.2
+Entered-date:   04JUN96
+Description:    A better ctags which generates tags for all possible tag
+		types: macro definitions, enumerated values (values inside
+		enum{...}), function and method definitions, enum/struct/union
+		tags, external function prototypes (optional), typedefs, and 
+		variable declarations. It is far less easily fooled by code
+		containing #if preprocessor conditional constructs, using a
+		conditional path selection algorithm to resolve complicated
+		choices, and a fall-back algorithm when this one fails. Can
+		also be used to print out a list of selected objects found in
+		source files.
+Keywords:       ctags, tags, exuberant
+Author:         darren@sirsi.com (Darren Hiebert)
+		darren@hiwaay.net (Darren Hiebert)
+Maintained-by:  darren@sirsi.com (Darren Hiebert)
+		darren@hiwaay.net (Darren Hiebert)
+Primary-site:   sunsite.unc.edu /pub/Linux/devel/lang/c
+		28kB ctags-1.2.tar.gz
+Alternate-site: www.halcyon.com /local/gvr
+		28kB ctags-1.2.tar.gz
+Original-site:  
+Platforms:      UNIX, MSDOS, WindowsNT, Windows95, OS/2, Amiga
+Copying-policy: Public domain
+End

@@ -36,7 +36,7 @@ void scrollup_clamp __PARMS((void));
 int win_ins_lines __PARMS((WIN *wp, int row, int line_count, int invalid, int mayclear));
 int win_del_lines __PARMS((WIN *wp, int row, int line_count, int invalid, int mayclear));
 void win_rest_invalid __PARMS((WIN *wp));
-int screen_del_lines __PARMS((int off, int row, int line_count, int end));
+int screen_del_lines __PARMS((int off, int row, int line_count, int end, int force));
 void showmode __PARMS((void));
 void delmode __PARMS((void));
 void showruler __PARMS((int always));
