@@ -34,6 +34,7 @@ do_debug(cmd)
     int		save_cmd_silent = cmd_silent;
     int		save_msg_silent = msg_silent;
     int		save_emsg_silent = emsg_silent;
+    int		save_redir_off = redir_off;
     tasave_T	typeaheadbuf;
 # ifdef FEAT_EX_EXTRA
     int		save_ex_normal_busy;
@@ -70,6 +71,7 @@ do_debug(cmd)
     cmd_silent = FALSE;		/* display commands */
     msg_silent = FALSE;		/* display messages */
     emsg_silent = FALSE;	/* display error messages */
+    redir_off = TRUE;		/* don't redirect debug commands */
 
     State = NORMAL;
 #ifdef FEAT_SNIFF
@@ -206,6 +208,7 @@ do_debug(cmd)
     cmd_silent = save_cmd_silent;
     msg_silent = save_msg_silent;
     emsg_silent = save_emsg_silent;
+    redir_off = save_redir_off;
 
     /* Only print the message again when typing a command before coming back
      * here. */
