@@ -1270,6 +1270,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :make_makeprg	quickfix.txt	/*:make_makeprg*
 :map	map.txt	/*:map*
 :map!	map.txt	/*:map!*
+:map-special-keys	map.txt	/*:map-special-keys*
+:map-undo	map.txt	/*:map-undo*
 :map_l	map.txt	/*:map_l*
 :map_l!	map.txt	/*:map_l!*
 :mapc	map.txt	/*:mapc*
@@ -1946,6 +1948,7 @@ Farsi	farsi.txt	/*Farsi*
 FileAppendPost	autocmd.txt	/*FileAppendPost*
 FileAppendPre	autocmd.txt	/*FileAppendPre*
 FileChangedShell	autocmd.txt	/*FileChangedShell*
+FileEncoding	autocmd.txt	/*FileEncoding*
 FileReadPost	autocmd.txt	/*FileReadPost*
 FileReadPre	autocmd.txt	/*FileReadPre*
 FileType	autocmd.txt	/*FileType*
@@ -2359,6 +2362,7 @@ changed-5.3	version5.txt	/*changed-5.3*
 changed-5.4	version5.txt	/*changed-5.4*
 changed-5.5	version5.txt	/*changed-5.5*
 changed-5.6	version5.txt	/*changed-5.6*
+changed-5.7	version5.txt	/*changed-5.7*
 changing	change.txt	/*changing*
 char2nr()	eval.txt	/*char2nr()*
 character-encode-scheme	multibyte.txt	/*character-encode-scheme*

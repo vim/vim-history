@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 5.7a.  Last change: 2000 Jan 01
+*gui.txt*       For Vim version 5.7.  Last change: 2000 Jun 22
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -440,9 +440,9 @@ create floating menus that do not appear on the main menu bar.
 To create a new menu item, use the ":menu" commands.  They are exactly like
 the ":map" set of commands but the first argument is a menu item name, given
 as a path of menus and submenus with a '.' between them. eg:
->   :menu File.Save  :w^M
->   :inoremenu File.Save  ^O:w^M
->   :menu Edit.Big\ Changes.Delete\ All\ Spaces  :%s/[ ^I]//g^M
+>   :menu File.Save  :w<CR>
+>   :inoremenu File.Save  <C-O>:w<CR>
+>   :menu Edit.Big\ Changes.Delete\ All\ Spaces  :%s/[ ^I]//g<CR>
 
 This last one will create a new item in the menu bar called "Edit", holding
 the mouse button down on this will pop up a menu containing the item

@@ -1,0 +1,46 @@
+INSTALL_mac.txt - Installation of Vim on Macintosh
+
+This file contains instructions for compiling Vim. If you already have an
+executable version of Vim, you don't need this.
+
+NOTE: Users of more recent CodeWarrior version may have to reset the library
+      path, and change the mch_delay in os_mac.c so the finalTick is unsigned.
+
+Compilation instructions:
+
+1. Visit the Vim ftp site (see ftp://ftp.vim.org/pub/vim/MIRRORS)
+   and obtain the following three files:
+
+   unix/vim-X.X-src.tar.gz
+   unix/vim-X.X-rt.tar.gz
+   extra/vim-X.X-extra.tar.gz
+
+   where X.X is the version number.
+
+2. Expand the three archives.
+
+3. Apply patches if they exist.  (Patch files are found in the ftp
+   site in the "patches" directory.)
+
+4. Edit vim-X.X/src/feature.h for your preference.  (You can skip
+   this, then you will get the default behavior as is documented,
+   which should be fine for most people.)
+
+   For example, if you want to add the MULTI_BYTE feature, turn on
+   #define MULTI_BYTE
+
+5. Expand the following two files:
+
+   - vim-X.X/src/os_mac.rsr.hqx (to produce vim-X.X/src/gui_mac.rsrc)
+   - vim-X.X/src/os_mac.cw5.hqx (to produce vim-X.X/src/vim.mcp)
+
+   The latter file is the CodeWarrior project file to be used.
+
+6. Launch CodeWarrior by double clicking vim.mcp.
+
+7. Check additional files if you include non-standard features.
+
+   For example, if you added the MULTI_BYTE feature, check
+   Extras/multbyte.c in the project window.
+
+8. Compile and you will obtain binaries: vimPPC, Vim 68k, and/or vimFAT.

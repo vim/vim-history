@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 5.7a.  Last change: 2000 Apr 22
+*various.txt*   For Vim version 5.7.  Last change: 2000 Apr 22
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

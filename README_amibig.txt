@@ -1,4 +1,4 @@
-README_amibig.txt for version 5.7a of Vim: Vi IMproved.
+README_amibig.txt for version 5.7 of Vim: Vi IMproved.
 
 See "README.txt" for general information about Vim.
 See "README_ami.txt" for installation instructions for the Amiga.

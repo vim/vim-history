@@ -1,4 +1,4 @@
-*version5.txt*  For Vim version 5.7a.  Last change: 2000 Jun 09
+*version5.txt*  For Vim version 5.7.  Last change: 2000 Jun 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -106,6 +106,7 @@ Added					|added-5.6|
 Fixed					|fixed-5.6|
 
 VERSION 5.7			|version-5.7|
+Changed					|changed-5.7|
 Added					|added-5.7|
 Fixed					|fixed-5.7|
 
@@ -5834,7 +5835,7 @@ Files:	    src/globals.h, src/gui_x11.c, src/os_vms.mms, src/os_unix.c,
 	    src/os_vms.c, src/ui.c, src/proto/os_unix.pro, src/proto/ui.pro
 
 Renamed AdjustCursorForMultiByteCharacter() to AdjustCursorForMultiByteChar()
-to avoid symbol length limit of 31 characters. (Stephone P. Wall)
+to avoid symbol length limit of 31 characters. (Steve P. Wall)
 
 Patch 5.5b.1
 Problem:    SASC complains about dead assignments and implicit type casts.
@@ -6634,6 +6635,12 @@ VERSION 5.7						*version-5.7*
 
 Version 5.7 is a bug-fix version of 5.6.
 
+Changed							*changed-5.7*
+-------
+
+Renamed src/INSTALL.mac to INSTALL_mac.txt to avoid it being recognized with a
+wrong file type.  Also renamed src/INSTALL.amiga to INSTALL_ami.txt.
+
 
 Added							*added-5.7*
 -----
@@ -6657,6 +6664,7 @@ sml		SML (Fabrizio Zeno Cornelli)
 cvs		CVS commit (Matt Dunford)
 aspperl		ASP Perl (Aaron Hope)
 bc		BC calculator (Vladimir Scholtz)
+latte		Latte (Nick Moffitt)
 
 Included Exuberant ctags 3.5.1. (Darren Hiebert)
 
@@ -6664,6 +6672,8 @@ Included Exuberant ctags 3.5.1. (Darren Hiebert)
 are ignored now.
 
 strftime() function for the Macintosh.
+
+macros/explorer.vim: A file browser script (M A Aziz Ahmed)
 
 
 Fixed							*fixed-5.7*
@@ -6712,6 +6722,11 @@ Many fixes to Macintosh specific parts: (mostly by Dany StAmant)
   Draw multi-byte character correctly.
   Don't use mblen() but highest bit of char to detect multi-byte char.
   Display value of multi-byte in statusline (also for other systems).
+- mouse button was not initialized properly to MOUSE_LEFT when
+  USE_CTRLCLICKMENU not defined.
+- With Japanese SJIS characters: Make "w", "b", and "e" work
+  properly.  (Kenichi Asai)
+- Replaced old CodeWarrior file os_mac.CW9.hqx with os_mac.cw5.sit.hqx.
 
 Fixes for VMS: (Zoltan Arpadffy) (also see patch 5.6.045 below)
 - Added Makefile_vms.mms and vimrc.vms to src/testdir to be able to run the
@@ -7379,5 +7394,65 @@ Problem:    Unix: When editing many files, startup can be slow. (Paul
 Solution:   Halve the number of stat() calls used to add a file to the buffer
 	    list.
 Files:	    src/buffer.c
+
+Patch 5.7a.001
+Problem:    GTK doesn't respond on drag&drop from ROX-Filer.
+Solution:   Add "text/uri-list" target. (Thomas Leonard)
+	    Also: fix problem with checking for trash arguments.
+Files:	    src/gui_gtk_x11.c
+
+Patch 5.7a.002
+Problem:    Multi-byte: 'showmatch' is performed when second byte of an
+	    inserted double-byte char is a paren or brace.
+Solution:   Check IsTrailByte() before calling showmatch(). (Taro Muraoka)
+Files:	    src/misc1.c
+
+Patch 5.7a.003
+Problem:    Multi-byte: After using CTRL-O in Insert mode with the cursor at
+	    the end of the line on a multi-byte character the cursor moves to
+	    the left.
+Solution:   Check for multi-byte character at end-of-line. (Taro Muraoka)
+	    Also: fix cls() to detect a double-byte character. (Chong-Dae Park)
+Files:	    src/edit.c, src/search.c
+
+Patch 5.7a.004
+Problem:    When reporting the search pattern offset, the string could be
+	    unterminated, which may cause a crash.
+Solution:   Terminate the string for the search offset. (Stephen P. Wall)
+Files:	    src/search.c
+
+Patch 5.7a.005
+Problem:    When ":s//~/" doesn't find a match it reports "[NULL]" for the
+	    pattern.
+Solution:   Use get_search_pat() to obtain the actually used pattern.
+Files:	    src/ex_cmds.c, src/proto/search.pro, src/search.c
+
+Patch 5.7a.006 (extra)
+Problem:    VMS: Various problems, also with the VAXC compiler.
+Solution:   In many places use the Unix code for VMS too.
+	    Added time, date and compiler version to version message.
+	    (Zoltan Arpadffy)
+Files:	    src/ex_cmds.c, src/ex_docmd.c, src/globals.h, src/gui_vms_conf.h,
+	    src/main.c, src/message.c, src/misc1.c, src/os_vms.c,
+	    src/os_vms.h, src/os_vms.mms, src/os_vms_conf.h,
+	    src/proto/os_vms.pro, src/proto/version.pro, src/term.c,
+	    src/version.c, src/xxd/os_vms.mms, src/xxd/xxd.c
+
+Patch 5.7a.007
+Problem:    Motif and Athena GUI: CTRL-@ is interpreted as CTRL-C.
+Solution:   Only use "intr_char" when it has been set.
+Files:	    src/gui_x11.c
+
+Patch 5.7a.008
+Problem:    GTK GUI: When using CTRL-L the screen is redrawn twice, causing
+	    trouble for bold characters.  Also happens when moving with the
+	    scrollbar.  Best seen when 'writedelay' is non-zero.
+	    When starting the GUI with ":gui" the screen is redrawn once with
+	    the wrong colors.
+Solution:   Only set the geometry hints when the window size really changed.
+	    This avoids setting it each time the scrollbar is forcefully
+	    redrawn.
+	    Don't redraw in expose_event() when gui.starting is still set.
+Files:	    src/gui_gtk_x11.c
 
  vim:ts=8:sw=8:tw=78:

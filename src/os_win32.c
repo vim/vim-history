@@ -2291,6 +2291,9 @@ mch_display_error()
 	for (p = (char *)error_ga.ga_data; *p; ++p)
 	    if (!isspace(*p))
 	    {
+		/* Truncate a very long message, it will go off-screen. */
+		if (STRLEN(p) > 2000)
+		    STRCPY(p + 2000 - 14, "...(truncated)");
 		MessageBox(0, p, "Vim", MB_TASKMODAL|MB_SETFOREGROUND);
 		break;
 	    }

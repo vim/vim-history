@@ -1,4 +1,4 @@
-*os_vms.txt*    For Vim version 5.7a   Last change: 2000 Jun 07
+*os_vms.txt*    For Vim version 5.7   Last change: 2000 Jun 20
 
 
 		  VIM REFERENCE MANUAL
@@ -359,7 +359,30 @@ recommended to avoid fast terminal option with:
 
 >	set nottyfast
 
-(Zoltan Arpadffy, <arpadffy@altavista.net> Vim 5.6-3(VMS))
+
+8.7 Hex-editing and other external tools
+
+A very important difference between OpenVMS and other systems is that VMS uses
+special commands to execute executables:
+
+>       RUN <path>filename             
+>       MCR <path>filename <parameters> 
+
+OpenVMS users always have to be aware that the Vim command :! "just" drop them
+to DCL prompt. This feature is possible to use without any problem with all
+DCL commands, but if we want to execute some program as XXD, CTAGS, JTAGS etc.
+we're running into trouble if we following the Vim documentation (see: help
+xxd).
+
+Solution: Execute with the MC command and add the full path to the executable. 
+Example: Instead of :%!xxd command use:
+
+>       :%!mc vim:xxd
+
+... or in general:
+>       :!mc <path>filename <parameters>
+
+(Zoltan Arpadffy, <arpadffy@altavista.net> Vim 5.6-70)
 
 ==============================================================================
 
