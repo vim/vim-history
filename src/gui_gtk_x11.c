@@ -3753,6 +3753,7 @@ gui_mch_set_winpos(int x, int y)
 }
 
 #ifdef HAVE_GTK2
+#if 0
 static int resize_idle_installed = FALSE;
 /*
  * Idle handler to force resize.  Used by gui_mch_set_shellsize() to ensure
@@ -3760,7 +3761,12 @@ static int resize_idle_installed = FALSE;
  * ignored our size request.  Usually this happens if the window is maximized.
  *
  * FIXME: It'd be nice if we could find a little more orthodox solution.
- * See also the rant below in gui_mch_set_shellsize().
+ * See also the remark below in gui_mch_set_shellsize().
+ *
+ * DISABLED: When doing ":set lines+=1" this function would first invoke
+ * gui_resize_shell() with the old size, then the normal callback would
+ * report the new size through form_configure_event().  That caused the window
+ * layout to be messed up.
  */
 /*ARGSUSED0*/
     static gboolean
@@ -3784,6 +3790,7 @@ force_shell_resize_idle(gpointer data)
     resize_idle_installed = FALSE;
     return FALSE; /* don't call me again */
 }
+#endif
 #endif /* HAVE_GTK2 */
 
 /*
@@ -3823,22 +3830,20 @@ gui_mch_set_shellsize(int width, int height,
 
     gtk_window_resize(GTK_WINDOW(gui.mainwin), width, height);
 
+#if 0
     if (!resize_idle_installed)
     {
 	g_idle_add_full(GDK_PRIORITY_EVENTS + 10,
 			&force_shell_resize_idle, NULL, NULL);
 	resize_idle_installed = TRUE;
     }
+#endif
     /*
      * Wait until all events are processed to prevent a crash because the
      * real size of the drawing area doesn't reflect Vim's internal ideas.
      *
-     * This is obviously a hack and only necessary because the entire GUI
-     * code of Vim is a hack as well.  The root cause of the problem is that
-     * Vim tries really hard to ignore the asynchronous nature of X.  The
-     * whole *concept* of the GUI code is badly broken beyond repair.  It's
-     * almost a philosophical issue: instead of trying to control everything
-     * Vim should rather try to cooperate for a change.
+     * This is a bit of a hack, since Vim is a terminal application with a GUI
+     * on top, while the GUI expects to be the boss.
      */
     gui_mch_update();
 #endif
