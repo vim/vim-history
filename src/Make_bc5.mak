@@ -72,6 +72,9 @@
 #		(BIG for WIN32, SMALL for DOS16)
 # WINVER	0x400 or 0x500: minimum Win32 version to support (0x400)
 # CSCOPE	no or yes: include support for Cscope interface (yes)
+# NETBEANS	no or yes: include support for Netbeans interface (yes if GUI
+#		is yes)
+# XPM		define to path to XPM dir to get support for loading XPM images.
 
 ### BOR: root of the BC installation
 !if ("$(BOR)"=="")
@@ -112,6 +115,11 @@ ICONV = yes
 ### CSCOPE: yes to enable Cscope support, no to disable it
 !if ("$(CSCOPE)"=="")
 CSCOPE = yes
+!endif
+
+### NETBEANS: yes to enable NetBeans interface support, no to disable it
+!if ("$(NETBEANS)"=="") && ("$(GUI)"=="yes")
+NETBEANS = yes
 !endif
 
 ### PERL: uncomment this line if you want perl support in vim
@@ -190,7 +198,8 @@ ALIGN = 4
 	("$(RUBY)"=="") && \
 	("$(ICONV)"!="yes") && \
 	("$(IME)"!="yes") && \
-	("$(MBYTE)"!="yes")
+	("$(MBYTE)"!="yes") && \
+	("$(XPM)"=="")
 FASTCALL = yes
 !endif
 
@@ -372,6 +381,19 @@ MBDEFINES = $(MBDEFINES) -DDYNAMIC_GETTEXT
 DEFINES = $(DEFINES) -DFEAT_CSCOPE
 !endif
 
+!if ("$(NETBEANS)"=="yes")
+DEFINES = $(DEFINES) -DFEAT_NETBEANS_INTG
+!if ("$(DEBUG)"=="yes")
+DEFINES = $(DEFINES) -DNBDEBUG
+NBDEBUG_DEP = nbdebug.h nbdebug.c
+!endif
+!endif
+
+!ifdef XPM
+DEFINES = $(DEFINES) -DFEAT_XPM_W32
+INCLUDE = $(XPM)\include;$(INCLUDE)
+!endif
+
 !if ("$(GUI)"=="yes")
 DEFINES = $(DEFINES) -DFEAT_GUI_W32 -DFEAT_CLIPBOARD
 !if ("$(DEBUG)"=="yes")
@@ -448,7 +470,7 @@ BRC = $(BOR)\BIN\brc32
 LINK	= $(BOR)\BIN\ILink32
 !endif
 CC   = $(BOR)\BIN\Bcc32
-LFLAGS	= -OS -r -Tpe -c -m -L$(LIB) $(DEBUG_FLAG) $(LINK2)
+LFLAGS	= -OS -Tpe -c -m -L$(LIB) $(DEBUG_FLAG) $(LINK2)
 LFLAGSDLL  = -Tpd -c -m -L$(LIB) $(DEBUG_FLAG) $(LINK2)
 CFLAGS = -w-aus -w-par -w-pch -I$(INCLUDE) -d -x- -RT- -k- -Oi $(HEADERS) -f-
 !endif
@@ -512,7 +534,6 @@ vimobj = $(vimwinmain) \
 	$(OBJDIR)\normal.obj \
 	$(OBJDIR)\ops.obj \
 	$(OBJDIR)\option.obj \
-	$(OBJDIR)\pathdef.obj \
 	$(OBJDIR)\quickfix.obj \
 	$(OBJDIR)\regexp.obj \
 	$(OBJDIR)\screen.obj \
@@ -523,7 +544,8 @@ vimobj = $(vimwinmain) \
 	$(OBJDIR)\ui.obj \
 	$(OBJDIR)\undo.obj \
 	$(OBJDIR)\version.obj \
-	$(OBJDIR)\window.obj
+	$(OBJDIR)\window.obj \
+	$(OBJDIR)\pathdef.obj
 
 !if ("$(OLE)"=="yes")
 vimobj = $(vimobj) \
@@ -550,9 +572,19 @@ vimobj = $(vimobj) \
     $(OBJDIR)\if_tcl.obj
 !endif
 
-!ifdef CSCOPE
+!if ("$(CSCOPE)"=="yes")
 vimobj = $(vimobj) \
     $(OBJDIR)\if_cscope.obj
+!endif
+
+!if ("$(NETBEANS)"=="yes")
+vimobj = $(vimobj) \
+    $(OBJDIR)\netbeans.obj $(OBJDIR)\gui_beval.obj
+!endif
+
+!ifdef XPM
+vimobj = $(vimobj) \
+    $(OBJDIR)\xpm_w32.obj
 !endif
 
 !if ("$(VIMDLL)"=="yes")
@@ -619,6 +651,12 @@ MSG = $(MSG) CODEGUARD
 !endif
 !if ("$(CSCOPE)"=="yes")
 MSG = $(MSG) CSCOPE
+!endif
+!if ("$(NETBEANS)"=="yes")
+MSG = $(MSG) NETBEANS
+!endif
+!ifdef XPM
+MSG = $(MSG) XPM
 !endif
 !ifdef PERL
 MSG = $(MSG) PERL
@@ -728,6 +766,9 @@ clean:
 !ifdef TCL
 	-@del tcl.lib
 !endif
+!ifdef XPM
+	-@del xpm.lib
+!endif
 	cd xxd
 	$(MAKE) /f Make_bc5.mak BOR="$(BOR)" clean
 	cd ..
@@ -761,6 +802,9 @@ $(DLLTARGET): $(OBJDIR) $(vimdllobj)
 !endif
 !ifdef TCL
 	$(TCL_LIB_FLAG)tcl.lib+
+!endif
+!ifdef XPM
+	xpm.lib+
 !endif
 !if ("$(USEDLL)"=="yes")
 	cw32i.lib
@@ -808,6 +852,9 @@ $(TARGET): $(OBJDIR) $(vimobj) $(OBJDIR)\$(RESFILE)
 !ifdef TCL
 	$(TCL_LIB_FLAG)tcl.lib+
 !endif
+!ifdef XPM
+	xpm.lib+
+!endif
 !if ("$(USEDLL)"=="yes")
 	cw32i.lib
 !else
@@ -841,6 +888,12 @@ $(OBJDIR)\if_ruby.obj: if_ruby.c ruby.lib
 
 $(OBJDIR)\if_tcl.obj: if_tcl.c tcl.lib
 	$(CC) $(CCARG) $(CC1) $(CC2)$@ -pc if_tcl.c
+
+$(OBJDIR)\xpm_w32.obj: xpm_w32.c xpm.lib
+	$(CC) $(CCARG) $(CC1) $(CC2)$@ -pc xpm_w32.c
+
+$(OBJDIR)\netbeans.obj: netbeans.c $(NBDEBUG_DEP)
+	$(CC) $(CCARG) $(CC1) $(CC2)$@ netbeans.c
 
 $(OBJDIR)\vim.res: vim.rc version.h tools.bmp tearoff.bmp \
 		vim.ico vim_error.ico vim_alert.ico vim_info.ico vim_quest.ico
@@ -876,6 +929,11 @@ python.lib: $(PYTHON)\libs\python$(PYTHON_VER).lib
 
 ruby.lib: $(RUBY)\lib\$(RUBY_INSTALL_NAME).lib
 	coff2omf $(RUBY)\lib\$(RUBY_INSTALL_NAME).lib $@
+
+# For some reason, the coff2omf method doesn't work on libXpm.lib, so
+# we have to manually generate an import library straight from the DLL.
+xpm.lib: $(XPM)\lib\libXpm.lib
+	implib -a $@ $(XPM)\bin\libXpm.dll
 
 tcl.lib: $(TCL_LIB)
 !if ("$(DYNAMIC_TCL)" == "yes")

@@ -140,6 +140,7 @@
 # define TRACE1(sz, p1)		Trace(_T(sz), p1)
 # define TRACE2(sz, p1, p2)	Trace(_T(sz), p1, p2)
 # define TRACE3(sz, p1, p2, p3) Trace(_T(sz), p1, p2, p3)
+# define TRACE4(sz, p1, p2, p3, p4) Trace(_T(sz), p1, p2, p3, p4)
 
 /* In debug version, writes trace messages to debug stream */
 void __cdecl
@@ -156,6 +157,7 @@ Trace(char *pszFormat, ...);
 # define TRACE1(sz, p1)
 # define TRACE2(sz, p1, p2)
 # define TRACE3(sz, p1, p2, p3)
+# define TRACE4(sz, p1, p2, p3, p4)
 
 #endif /* !_DEBUG */
 

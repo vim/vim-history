@@ -2,6 +2,7 @@
  *
  * VIM - Vi IMproved	by Bram Moolenaar
  *			Netbeans integration by David Weatherford
+ *			Adopted for Win32 by Sergey Khorev
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
@@ -20,13 +21,34 @@
 #if defined(FEAT_NETBEANS_INTG) || defined(PROTO)
 
 /* Note: when making changes here also adjust configure.in. */
-#include <stdarg.h>
-#include <fcntl.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#ifdef HAVE_LIBGEN_H
-# include <libgen.h>
+# include <stdarg.h>
+# include <fcntl.h>
+#ifdef WIN32
+# ifdef DEBUG
+#  include <tchar.h>	/* for _T definition for TRACEn macros */
+# endif
+# include <io.h>
+# include <winsock2.h>
+/* WinSock API is separated from C API
+ * So we can't use read, write, errno...
+ */
+# define sock_errno WSAGetLastError()
+# define ECONNREFUSED WSAECONNREFUSED
+# define sock_write(sd, buf, len) send(sd, buf, len, 0)
+# define sock_read(sd, buf, len) recv(sd, buf, len, 0)
+# define sock_close(sd) closesocket(sd)
+# define sleep(t) Sleep(t*1000) /* WinAPI Sleep() accepts milliseconds */
+#else
+# include <netdb.h>
+# include <netinet/in.h>
+# include <sys/socket.h>
+# ifdef HAVE_LIBGEN_H
+#  include <libgen.h>
+# endif
+# define sock_errno errno
+# define sock_write(sd, buf, len) write(sd, buf, len)
+# define sock_read(sd, buf, len) read(sd, buf, len)
+# define sock_close(sd) close(sd)
 #endif
 
 #include "version.h"
@@ -68,6 +90,10 @@ static XtInputId inputHandler;		/* Cookie for input */
 #endif
 #ifdef FEAT_GUI_GTK
 static gint inputHandler;		/* Cookie for input */
+#endif
+#ifdef FEAT_GUI_W32
+static int  inputHandler = -1;		/* simply ret.value of WSAAsyncSelect() */
+extern HWND s_hwnd;			/* Gvim's Window handle */
 #endif
 static int cmdno;			/* current command number for reply */
 static int haveConnection = FALSE;	/* socket is connected and
@@ -160,13 +186,49 @@ netbeans_disconnect(void)
 }
 #endif /* FEAT_GUI_GTK */
 
+#if defined(FEAT_GUI_W32) || defined(PROTO)
+    void
+netbeans_w32_connect(void)
+{
+    netbeans_connect();
+    if (sd > 0)
+    {
+	/*
+	 * Tell Windows we are interested in receiving message when there
+	 * is input on the editor connection socket
+	 */
+	inputHandler = WSAAsyncSelect(sd, s_hwnd, WM_NETBEANS, FD_READ);
+    }
+}
+
+    static void
+netbeans_disconnect(void)
+{
+    if (inputHandler == 0)
+    {
+	WSAAsyncSelect(sd, s_hwnd, 0, 0);
+	inputHandler = -1;
+    }
+    sd = -1;
+    haveConnection = FALSE;
+
+    /* It seems that Motif and GTK versions also need this: */
+    gui_mch_destroy_beval_area(balloonEval);
+    balloonEval = NULL;
+}
+#endif /* FEAT_GUI_W32 */
+
     static void
 netbeans_connect(void)
 {
 #ifdef INET_SOCKETS
     struct sockaddr_in	server;
     struct hostent *	host;
+# ifdef FEAT_GUI_W32
+    u_short		port;
+# else
     int			port;
+#endif
 #else
     struct sockaddr_un	server;
 #endif
@@ -243,10 +305,10 @@ netbeans_connect(void)
     /* Connect to server */
     if (connect(sd, (struct sockaddr *)&server, sizeof(server)))
     {
-	nbdebug(("netbeans_connect: Connect failed with errno %d\n", errno));
-	if (errno == ECONNREFUSED)
+	nbdebug(("netbeans_connect: Connect failed with errno %d\n", sock_errno));
+	if (sock_errno == ECONNREFUSED)
 	{
-	    close(sd);
+	    sock_close(sd);
 #ifdef INET_SOCKETS
 	    if ((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 	    {
@@ -265,7 +327,7 @@ netbeans_connect(void)
 		int retries = 36;
 		int success = FALSE;
 		while (retries--
-			     && ((errno == ECONNREFUSED) || (errno == EINTR)))
+			     && ((sock_errno == ECONNREFUSED) || (sock_errno == EINTR)))
 		{
 		    nbdebug(("retrying...\n"));
 		    sleep(5);
@@ -509,14 +571,20 @@ nb_parse_messages(void)
  * Read and process a command from netbeans.
  */
 /*ARGSUSED*/
-#ifdef FEAT_GUI_MOTIF
+#if defined(FEAT_GUI_W32) || defined(PROTO)
+/* Use this one when generating prototypes, the others are static. */
+    void
+messageFromNetbeansW32()
+#else
+# ifdef FEAT_GUI_MOTIF
     static void
 messageFromNetbeans(XtPointer clientData, int *unused1, XtInputId *unused2)
-#endif
-#ifdef FEAT_GUI_GTK
+# endif
+# ifdef FEAT_GUI_GTK
     static void
 messageFromNetbeans(gpointer clientData, gint unused1,
 						    GdkInputCondition unused2)
+# endif
 #endif
 {
     static char_u	*buf = NULL;
@@ -543,14 +611,13 @@ messageFromNetbeans(gpointer clientData, gint unused1,
     /* Keep on reading for as long as there is something to read. */
     for (;;)
     {
-	len = read(sd, buf, MAXMSGSIZE);
+	len = sock_read(sd, buf, MAXMSGSIZE);
 	if (len <= 0)
 	    break;	/* error or nothing more to read */
 
 	/* Store the read message in the queue. */
 	save(buf, len);
 	readlen += len;
-
 	if (len < MAXMSGSIZE)
 	    break;	/* did read everything that's available */
     }
@@ -600,7 +667,7 @@ nb_parse_cmd(char_u *cmd)
     {
 	/* We assume the server knows that we can safely exit! */
 	if (sd >= 0)
-	    close(sd);
+	    sock_close(sd);
 	/* Disconnect before exiting, Motif hangs in a Select error
 	 * message otherwise. */
 	netbeans_disconnect();
@@ -612,7 +679,7 @@ nb_parse_cmd(char_u *cmd)
     {
 	/* The IDE is breaking the connection. */
 	if (sd >= 0)
-	    close(sd);
+	    sock_close(sd);
 	netbeans_disconnect();
 	return;
     }
@@ -660,21 +727,14 @@ nb_parse_cmd(char_u *cmd)
 struct nbbuf_struct
 {
     buf_T		*bufp;
-#if 0 /* never used */
-    unsigned int	 netbeansOwns:1;
-    unsigned int	 fireCaret:1;
-#endif
     unsigned int	 fireChanges:1;
     unsigned int	 initDone:1;
     unsigned int	 modified:1;
-#if 0  /* never used */
-    char		*internalname;
-#endif
     char		*displayname;
     char_u		*partial_line;
     int			*signmap;
-    ushort		 signmaplen;
-    ushort		 signmapused;
+    short_u		 signmaplen;
+    short_u		 signmapused;
 };
 
 typedef struct nbbuf_struct nbbuf_T;
@@ -796,7 +856,7 @@ netbeans_end(void)
 	nbdebug(("EVT: %s", buf));
 /*	nb_send(buf, "netbeans_end");    avoid "write failed" messages */
 	if (sd >= 0)
-	    write(sd, buf, STRLEN(buf));  /* ignore errors */
+	    sock_write(sd, buf, STRLEN(buf));  /* ignore errors */
     }
 
     /* Give NetBeans a chance to write some clean-up cmds to the socket before
@@ -811,10 +871,24 @@ netbeans_end(void)
     static void
 nb_send(char *buf, char *fun)
 {
+    /* Avoid giving pages full of error messages when the other side has
+     * exited, only mention the first error until the connection works again. */
+    static int did_error = FALSE;
+
     if (sd < 0)
-	EMSG2("E630: %s(): write while not connected", fun);
-    else if (write(sd, buf, STRLEN(buf)) != STRLEN(buf))
-	EMSG2("E631: %s(): write failed", fun);
+    {
+	if (!did_error)
+	    EMSG2("E630: %s(): write while not connected", fun);
+	did_error = TRUE;
+    }
+    else if (sock_write(sd, buf, STRLEN(buf)) != (int)STRLEN(buf))
+    {
+	if (!did_error)
+	    EMSG2("E631: %s(): write failed", fun);
+	did_error = TRUE;
+    }
+    else
+	did_error = FALSE;
 }
 
 /*
@@ -888,6 +962,8 @@ nb_quote(char_u *txt)
     char_u *p = txt;
     char_u *q = buf;
 
+    if (buf == NULL)
+	return NULL;
     for (; *p; p++)
     {
 	switch (*p)
@@ -1244,6 +1320,12 @@ nb_do_cmd(
 	    }
 	    else if (args != NULL)
 	    {
+		/* We need to detect EOL style
+		 * because addAnno passes char-offset
+		 */
+		int    ff_detected = EOL_UNKNOWN;
+		int    buf_was_empty = (buf->bufp->b_ml.ml_flags & ML_EMPTY);
+
 		oldFire = netbeansFireChanges;
 		netbeansFireChanges = 0;
 
@@ -1295,13 +1377,36 @@ nb_do_cmd(
 			nbdebug(("    PARTIAL[%d]: %s\n", lnum, args));
 			break;
 		    }
+		    /* EOL detecting.
+		     * Not sure how to deal with '\n' on Mac
+		     * it will fail already in nl = ... above
+		     */
+		    if (buf_was_empty && /* There is need to detect EOLs */
+			    /* AND: string is empty */
+			    (args == nl
+			     /* OR hasn't '\r' at the end */
+			    || *(nl - 1) != '\r'))
+			ff_detected = EOL_UNIX;
+
 		    *nl = '\0';
 		    nbdebug(("    INSERT[%d]: %s\n", lnum, args));
 		    ml_append((linenr_T)(lnum++ - 1), args,
 						     STRLEN(args) + 1, FALSE);
 		    args = nl + 1;
 		}
+
 		appended_lines_mark(pos->lnum - 1, lnum - pos->lnum);
+
+		/* We can change initial ff without consequences
+		 * Isn't it a kind of hacking?
+		 */
+		if (buf_was_empty)
+		{
+		    if (ff_detected == EOL_UNKNOWN)
+			ff_detected = EOL_DOS;
+		    set_fileformat(ff_detected, OPT_LOCAL);
+		    buf->bufp->b_start_ffc = *buf->bufp->b_p_ff;
+		}
 
 		if (*args)
 		{
@@ -1596,6 +1701,9 @@ nb_do_cmd(
 	    {
 		curwin->w_cursor = *pos;
 		check_cursor();
+#ifdef FEAT_FOLDING
+		foldOpenCursor();
+#endif
 	    }
 	    else
 		nbdebug(("    BAD POSITION in setDot: %s\n", s));
@@ -1661,6 +1769,7 @@ nb_do_cmd(
 	    int typeNum;
 	    char_u *typeName;
 	    char_u *tooltip;
+	    char_u *p;
 	    char_u *glyphFile;
 	    int use_fg = 0;
 	    int use_bg = 0;
@@ -1679,7 +1788,11 @@ nb_do_cmd(
 	    args = skipwhite(args + 1);
 	    tooltip = (char_u *)nb_unquote(args, &args);
 	    args = skipwhite(args + 1);
-	    glyphFile = (char_u *)nb_unquote(args, &args);
+
+	    p = (char_u *)nb_unquote(args, &args);
+	    glyphFile = vim_strsave_escaped(p, escape_chars);
+	    vim_free(p);
+
 	    args = skipwhite(args + 1);
 	    if (STRNCMP(args, "none", 4) == 0)
 		args += 5;
@@ -2049,7 +2162,7 @@ netbeans_beval_cb(
     char_u	*text;
     int		line;
     int		col;
-    char	buf[MAXPATHLEN * 2 + 25];
+    char	buf[MAXPATHL * 2 + 25];
     char_u	*p;
 
     /* Don't do anything when 'ballooneval' is off, messages scrolled the
@@ -2061,7 +2174,7 @@ netbeans_beval_cb(
     {
 	/* Send debugger request.  Only when the text is of reasonable
 	 * length. */
-	if (text != NULL && text[0] != NUL && STRLEN(text) < MAXPATHLEN)
+	if (text != NULL && text[0] != NUL && STRLEN(text) < MAXPATHL)
 	{
 	    p = nb_quote(text);
 	    if (p != NULL)
@@ -2089,7 +2202,8 @@ netbeans_startup_done(void)
     nbdebug(("EVT: %s", cmd));
     nb_send(cmd, "netbeans_startup_done");
 
-# if defined(FEAT_BEVAL) && defined(FEAT_GUI_MOTIF)
+#ifdef FEAT_BEVAL
+# ifdef FEAT_GUI_MOTIF
     if (gui.in_use)
     {
 	/*
@@ -2102,10 +2216,18 @@ netbeans_startup_done(void)
 	if (!p_beval)
 	    gui_mch_disable_beval_area(balloonEval);
     }
+# else
+#  if defined(FEAT_GUI_W32) && defined(FEAT_BEVAL)
+	balloonEval = gui_mch_create_beval_area(NULL, NULL,
+						    &netbeans_beval_cb, NULL);
+	if (!p_beval)
+	    gui_mch_disable_beval_area(balloonEval);
+#  endif
 # endif
+#endif
 }
 
-#if defined(FEAT_GUI_MOTIF) || defined(PROTO)
+#if defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_W32) || defined(PROTO)
 /*
  * Tell netbeans that the window was moved or resized.
  */
@@ -2130,17 +2252,22 @@ netbeans_frame_moved(int new_x, int new_y)
     void
 netbeans_file_opened(char *filename)
 {
-    char buffer[2*MAXPATHLEN];
+    char    buffer[2*MAXPATHL];
+    char_u  *q;
 
     if (!haveConnection)
 	return;
 
+    q = nb_quote((char_u *)filename);
+    if (q == NULL)
+	return;
     sprintf(buffer, "0:fileOpened=%d \"%s\" %s %s\n",
 	    0,
-	    nb_quote((char_u *)filename),
+	    (char *)q,
 	    "F",  /* open in NetBeans */
 	    "F"); /* modified */
 
+    vim_free(q);
     nbdebug(("EVT: %s", buffer));
 
     nb_send(buffer, "netbeans_file_opened");
@@ -2156,7 +2283,7 @@ netbeans_file_closed(buf_T *bufp)
 {
     int		bufno = nb_getbufno(bufp);
     nbbuf_T	*nbbuf = nb_get_buf(bufno);
-    char	buffer[2*MAXPATHLEN];
+    char	buffer[2*MAXPATHL];
 
     if (!haveConnection)
 	return;
@@ -2265,11 +2392,13 @@ netbeans_inserted(
     newtxt[newlen] = '\0';
     p = nb_quote(newtxt);
     if (p != NULL)
+    {
 	sprintf((char *)buf, "%d:insert=%d %ld \"%s\"\n", bufno, cmdno, off, p);
+	nbdebug(("EVT: %s", buf));
+	nb_send((char *)buf, "netbeans_inserted");
+    }
     vim_free(p);
     vim_free(newtxt);
-    nbdebug(("EVT: %s", buf));
-    nb_send((char *)buf, "netbeans_inserted");
     vim_free(buf);
 }
 
@@ -2339,10 +2468,11 @@ netbeans_unmodified(buf_T *bufp)
     void
 netbeans_keycommand(int key)
 {
-    char	buf[2*MAXPATHLEN];
+    char	buf[2*MAXPATHL];
     int		bufno;
     char	keyName[60];
     long	off;
+    char_u	*q;
 
     if (!haveConnection)
 	return;
@@ -2355,11 +2485,16 @@ netbeans_keycommand(int key)
     if (bufno == -1)
     {
 	nbdebug(("got keycommand for non-NetBeans buffer, opening...\n"));
+	q = curbuf->b_ffname == NULL ? (char_u *)""
+						 : nb_quote(curbuf->b_ffname);
+	if (q == NULL)
+	    return;
 	sprintf(buf, "0:fileOpened=%d \"%s\" %s %s\n", 0,
-		curbuf->b_ffname == NULL ? (char_u *)""
-						 : nb_quote(curbuf->b_ffname),
+		q,
 		"T",  /* open in NetBeans */
 		"F"); /* modified */
+	if (curbuf->b_ffname != NULL)
+	    vim_free(q);
 	nbdebug(("EVT: %s", buf));
 	nb_send(buf, "netbeans_keycommand");
 
@@ -2372,6 +2507,11 @@ netbeans_keycommand(int key)
     sprintf(buf, "%d:newDotAndMark=%d %ld %ld\n", bufno, cmdno, off, off);
     nbdebug(("EVT: %s", buf));
     nb_send(buf, "netbeans_keycommand");
+
+    /* To work on Win32 you must apply patch to ExtEditor module
+     * from ExtEdCaret.java.diff - make EVT_newDotAndMark handler
+     * more synchronous
+     */
 
     /* now send keyCommand event */
     sprintf(buf, "%d:keyCommand=%d \"%s\"\n", bufno, cmdno, keyName);

@@ -28,7 +28,7 @@
 #ifndef __MINGW32__
 # include <shellapi.h>
 #endif
-#ifdef FEAT_TOOLBAR
+#if defined(FEAT_TOOLBAR) || defined(FEAT_BEVAL)
 # include <commctrl.h>
 #endif
 #ifdef WIN16
@@ -113,11 +113,13 @@ typedef int RECT;
 typedef int UINT;
 typedef int WORD;
 typedef int WPARAM;
-typedef void * HINSTANCE;
-typedef void * HMENU;
-typedef void * HWND;
+typedef void *HINSTANCE;
+typedef void *HMENU;
+typedef void *HWND;
 typedef void *HDC;
 typedef void VOID;
+typedef int LPNMHDR;
+typedef int LONG;
 #endif
 
 #ifndef GET_X_LPARAM
@@ -228,6 +230,9 @@ static struct
     {VK_F20,		'F', 'A'},
 
     {VK_F21,		'F', 'B'},
+#ifdef FEAT_NETBEANS_INTG
+    {VK_PAUSE,		'F', 'B'},	/* Pause == F21 (see gui_gtk_x11.c) */
+#endif
     {VK_F22,		'F', 'C'},
     {VK_F23,		'F', 'D'},
     {VK_F24,		'F', 'E'},	/* winuser.h defines up to F24 */
@@ -278,6 +283,12 @@ static UINT		s_kFlags_pending;
 static UINT		s_wait_timer = 0;   /* Timer for get char from user */
 static int		s_timed_out = FALSE;
 static int		dead_key = 0;	/* 0 - no dead key, 1 - dead key pressed */
+
+#ifdef FEAT_BEVAL
+/* balloon-eval WM_NOTIFY_HANDLER */
+void Handle_WM_Notify __ARGS((HWND hwnd, LPNMHDR pnmh));
+void TrackUserActivity __ARGS((UINT uMsg));
+#endif
 
 /*
  * For control IME.
@@ -900,6 +911,10 @@ _TextAreaWndProc(
     s_wParam = wParam;
     s_lParam = lParam;
 
+#ifdef FEAT_BEVAL
+    TrackUserActivity(uMsg);
+#endif
+
     switch (uMsg)
     {
 	HANDLE_MSG(hwnd, WM_LBUTTONDBLCLK,_OnMouseButtonDown);
@@ -917,6 +932,11 @@ _TextAreaWndProc(
 	HANDLE_MSG(hwnd, WM_XBUTTONDBLCLK,_OnMouseButtonDown);
 	HANDLE_MSG(hwnd, WM_XBUTTONDOWN,_OnMouseButtonDown);
 	HANDLE_MSG(hwnd, WM_XBUTTONUP,	_OnMouseMoveOrRelease);
+#endif
+
+#ifdef FEAT_BEVAL
+	case WM_NOTIFY: Handle_WM_Notify(hwnd, (LPNMHDR)lParam);
+	    return TRUE;
 #endif
 
     default:
@@ -1468,6 +1488,14 @@ process_message(void)
 	char_u *str = (char_u *)msg.lParam;
 	add_to_input_buf(str, (int)STRLEN(str));
 	vim_free(str);
+	return;
+    }
+#endif
+
+#ifdef FEAT_NETBEANS_INTG
+    if (msg.message == WM_NETBEANS)
+    {
+	messageFromNetbeansW32();
 	return;
     }
 #endif

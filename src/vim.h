@@ -17,7 +17,8 @@
     defined(FEAT_TCL) || \
     defined(DYNAMIC_GETTEXT) || \
     defined(DYNAMIC_ICONV) || \
-    defined(DYNAMIC_IME)
+    defined(DYNAMIC_IME) || \
+    defined(XPM)
 #  pragma option -pc
 # else
 #  pragma option -pr
@@ -1463,6 +1464,10 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 # ifdef FEAT_GUI_W32
 #  ifdef FEAT_OLE
 #   define WM_OLE (WM_APP+0)
+#  endif
+#  ifdef FEAT_NETBEANS_INTG
+    /* message for Netbeans socket event */
+#   define WM_NETBEANS (WM_APP+1)
 #  endif
 # endif
 

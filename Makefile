@@ -438,6 +438,8 @@ SRC_DOS =	\
 		src/vim16.rc \
 		src/vimrun.c \
 		src/vimtbar.h \
+		src/xpm_w32.c \
+		src/xpm_w32.h \
 		src/xxd/Make_bc3.mak \
 		src/xxd/Make_bc5.mak \
 		src/xxd/Make_cyg.mak \
@@ -564,6 +566,7 @@ SRC_EXTRA =	\
 		src/gui_riscos.h \
 		src/if_sniff.c \
 		src/if_sniff.h \
+		src/infplist.xml \
 		src/link.390 \
 		src/os_beos.c \
 		src/os_beos.h \

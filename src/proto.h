@@ -172,6 +172,11 @@ extern char_u *vimpty_getenv __ARGS((const char_u *string));	/* from pty.c */
 #  ifdef FEAT_GUI_W16
 #   include "gui_w16.pro"
 #  endif
+    /* Ugly solution for "BalloonEval" not being defined while it's used in
+     * the prototypes. */
+#  ifndef FEAT_BEVAL
+#   define BalloonEval int
+#  endif
 #  ifdef FEAT_GUI_W32
 #   include "gui_w32.pro"
 #  endif

@@ -163,6 +163,7 @@ static HWND s_hwnd = 0;	    /* console window handle, set by GetConsoleHwnd() */
 # endif
 #endif
 
+extern int WSInitialized;
 
 /* Don't generate prototypes here, because some systems do have these
  * functions. */
@@ -229,6 +230,13 @@ mch_exit(int r)
 
 # ifdef FEAT_OLE
     UninitOLE();
+# endif
+# ifdef FEAT_NETBEANS_INTG
+    if (WSInitialized)
+    {
+	WSInitialized = FALSE;
+        WSACleanup();
+    }
 # endif
 #ifdef DYNAMIC_GETTEXT
     dyn_libintl_end();

@@ -1,4 +1,4 @@
-*netbeans.txt*  For Vim version 6.2.  Last change: 2003 Jun 01
+*netbeans.txt*  For Vim version 6.2.  Last change: 2003 Sep 12
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -67,6 +67,11 @@ should always have the latest key bindings, even when NetBeans changes them.
 ==============================================================================
 3. Configuring Vim for NetBeans			*netbeans-configure*
 
+For more help installing vim, please read |usr_90.txt| in the Vim User Manual.
+
+
+On Unix
+
 When running configure without arguments the NetBeans interface should be
 included.  That is, if the configure check to find out if your system supports
 the required features succeeds.
@@ -81,7 +86,14 @@ there is only GUI support for GTK, GNOME, and Motif.
 If Motif support is required the user must supply XPM libraries. See
 |workshop-xpm| for details on obtaining the latest version of XPM.
 
-For more help installing vim, please read |usr_90.txt| in the Vim User Manual.
+
+On MS-Windows
+
+The Win32 support is now in beta stage.
+
+To use XPM signs on Win32 (e.g. when using with Netbeans) you can compile
+XPM by yourself or use precompiled libraries from http://iamphet.nm.ru/xpm
+(for MS Visual C++) or http://gnuwin32.sourceforge.net (for MinGW).
 
 ==============================================================================
 4. Downloading NetBeans					*netbeans-download*
@@ -391,7 +403,8 @@ setContentType
 		Not implemented.
 
 setDot off	Make the buffer the current buffer and set the cursor at the
-		specified position.
+		specified position.  If there are folds they are opened to
+		make the cursor line visible.
 		In version 2.1 "lnum/col" can be used instead of "off".
 
 setExitDelay seconds

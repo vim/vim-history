@@ -12,6 +12,9 @@
 
 #if defined(FEAT_BEVAL) || defined(PROTO)
 
+/* on Win32 only gui_mch_get_beval_info is required */
+#if !defined(FEAT_GUI_W32) || defined(PROTO)
+
 #ifdef FEAT_GUI_GTK
 # include <gdk/gdkkeysyms.h>
 # include <gtk/gtk.h>
@@ -194,6 +197,7 @@ gui_mch_currently_showing_beval()
     return current_beval;
 }
 #endif
+#endif /* !FEAT_GUI_W32 */
 
 #if defined(FEAT_SUN_WORKSHOP) || defined(FEAT_NETBEANS_INTG) || defined(PROTO)
 /*
@@ -256,10 +260,10 @@ gui_mch_get_beval_info(beval, filename, line, text, idx)
 		    if (VIsual_active
 			    && wp->w_buffer == curwin->w_buffer
 			    && (lnum == spos->lnum
-				? col >= spos->col
+				? col >= (int)spos->col
 				: lnum > spos->lnum)
 			    && (lnum == epos->lnum
-				? col <= epos->col
+				? col <= (int)epos->col
 				: lnum < epos->lnum))
 		    {
 			/* Visual mode and pointing to the line with the
@@ -300,6 +304,8 @@ gui_mch_get_beval_info(beval, filename, line, text, idx)
     return FAIL;
 }
 
+# if !defined(FEAT_GUI_W32) || defined(PROTO)
+
 /*
  * Show a balloon with "mesg".
  */
@@ -314,8 +320,10 @@ gui_mch_post_balloon(beval, mesg)
     else
 	undrawBalloon(beval);
 }
-#endif
+# endif /* FEAT_GUI_W32 */
+#endif /* FEAT_SUN_WORKSHOP || FEAT_NETBEANS_INTG || PROTO */
 
+#if !defined(FEAT_GUI_W32) || defined(PROTO)
 #if defined(FEAT_BEVAL_TIP) || defined(PROTO)
 /*
  * Hide the given balloon.
@@ -1255,5 +1263,6 @@ createBalloonEvalWindow(beval)
 }
 
 #endif /* !FEAT_GUI_GTK */
+#endif /* !FEAT_GUI_W32 */
 
 #endif /* FEAT_BEVAL */

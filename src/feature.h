@@ -1109,10 +1109,10 @@
 #endif
 
 /*
- * The Netbeans features currently only work with Motif and GTK.
+ * The Netbeans features currently only work with Motif and GTK and Win32.
  * It also requires +listcmds and +eval.
  */
-#if ((!defined(FEAT_GUI_MOTIF) && !defined(FEAT_GUI_GTK)) \
+#if ((!defined(FEAT_GUI_MOTIF) && !defined(FEAT_GUI_GTK) && !defined(FEAT_GUI_W32)) \
 		|| !defined(FEAT_LISTCMDS) || !defined(FEAT_EVAL)) \
 	&& defined(FEAT_NETBEANS_INTG)
 # undef FEAT_NETBEANS_INTG
@@ -1139,12 +1139,14 @@
  *			Currently only for Athena and Motif.
  */
 #if (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA) \
-			     || defined(FEAT_GUI_GTK)) \
-	&& (   (defined(FEAT_TOOLBAR) && !defined(FEAT_GUI_GTK)) \
+	|| defined(FEAT_GUI_GTK) || defined(FEAT_GUI_W32)) \
+	&& (   (defined(FEAT_TOOLBAR) \
+		&& !defined(FEAT_GUI_GTK) && !defined(FEAT_GUI_W32)) \
 	    || defined(FEAT_SUN_WORKSHOP) \
 	    || defined(FEAT_NETBEANS_INTG))
 # define FEAT_BEVAL
-# if !defined(FEAT_XFONTSET) && !defined(FEAT_GUI_GTK)
+# if !defined(FEAT_XFONTSET) && !defined(FEAT_GUI_GTK) \
+	&& !defined(FEAT_GUI_W32)
 #  define FEAT_XFONTSET
 # endif
 #endif
