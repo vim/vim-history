@@ -1,5 +1,5 @@
 " Vim syntax file
-" Language:	    GNU Arch inventory file. 
+" Language:	    GNU Arch inventory file.
 " Maintainer:	    Nikolai Weibull <source@pcppopper.org>
 " URL:		    http://www.pcppopper.org/vim/syntax/pcp/arch/
 " Latest Revision:  2004-04-26
@@ -34,7 +34,7 @@ syn keyword archKeyword  untagged-source
 syn keyword archKeyword  exclude junk backup precious unrecognized source skipwhite nextgroup=archRegex
 
 " Regexes
-syn match   archRegex    contained '\s*\zs.*' 
+syn match   archRegex    contained '\s*\zs.*'
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already

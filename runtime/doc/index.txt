@@ -1,4 +1,4 @@
-*index.txt*     For Vim version 6.3a.  Last change: 2004 May 04
+*index.txt*     For Vim version 6.3b.  Last change: 2004 May 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -187,10 +187,10 @@ tag		char	      note action in Normal mode	~
 		CTRL-K		   not used
 |CTRL-L|	CTRL-L		   redraw screen
 |<CR>|		<CR>		1  cursor to the first CHAR N lines lower
-|CTRL-M|	CTRL-M>		1  same as <CR>
+|CTRL-M|	CTRL-M		1  same as <CR>
 |CTRL-N|	CTRL-N		1  same as "j"
 |CTRL-O|	CTRL-O		1  go to N older entry in jump list
-|CTRL-P|	CTRL-P		1  cursor N lines upward
+|CTRL-P|	CTRL-P		1  same as "k"
 		CTRL-Q		   (used for terminal control flow)
 |CTRL-R|	CTRL-R		2  redo changes which were undone with 'u'
 		CTRL-S		   (used for terminal control flow)

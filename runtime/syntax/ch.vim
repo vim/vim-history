@@ -1,10 +1,10 @@
 " Vim syntax file
 " Language:     Ch
 " Maintainer:   SoftIntegration, Inc. <info@softintegration.com>
-" URL:          http://www.softintegration.com/download/vim/syntax/ch.vim
-" Last change:  2003 Aug 05
-"               Created based on cpp.vim
-" 
+" URL:		http://www.softintegration.com/download/vim/syntax/ch.vim
+" Last change:	2004 May 16
+"		Created based on cpp.vim
+"
 " Ch is a C/C++ interpreter with many high level extensions
 "
 
@@ -27,10 +27,10 @@ endif
 " Ch extentions
 
 syn keyword	chStatement	new delete this
-syn keyword     chAccess        public private 
+syn keyword	chAccess	public private
 syn keyword	chStorageClass	__declspec(global) __declspec(local)
 syn keyword	chStructure	class
-syn keyword	chType          string_t array
+syn keyword	chType		string_t array
 
 " Default highlighting
 if version >= 508 || !exists("did_ch_syntax_inits")
@@ -43,7 +43,7 @@ if version >= 508 || !exists("did_ch_syntax_inits")
   HiLink chAccess		chStatement
   HiLink chExceptions		Exception
   HiLink chStatement		Statement
-  HiLink chType		        Type
+  HiLink chType			Type
   HiLink chStructure		Structure
   delcommand HiLink
 endif

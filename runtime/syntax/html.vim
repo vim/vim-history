@@ -2,7 +2,7 @@
 " Language:	HTML
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/html.vim
-" Last Change:  2003 Nov 8
+" Last Change:  2004 May 16
 
 " Please check :help html.vim for some comments and a description of the options
 
@@ -169,11 +169,11 @@ if main_syntax != 'java' || exists("java_javascript")
 
   " html events (i.e. arguments that include javascript commands)
   if exists("html_extended_events")
-    syn region htmlEvent        contained start=+\<on\a\+\s*=[\t ]*'+ end=+'+ contains=htmlEventSQ
-    syn region htmlEvent        contained start=+\<on\a\+\s*=[\t ]*"+ end=+"+ contains=htmlEventDQ
+    syn region htmlEvent	contained start=+\<on\a\+\s*=[\t ]*'+ end=+'+ contains=htmlEventSQ
+    syn region htmlEvent	contained start=+\<on\a\+\s*=[\t ]*"+ end=+"+ contains=htmlEventDQ
   else
-    syn region htmlEvent        contained start=+\<on\a\+\s*=[\t ]*'+ end=+'+ keepend contains=htmlEventSQ
-    syn region htmlEvent        contained start=+\<on\a\+\s*=[\t ]*"+ end=+"+ keepend contains=htmlEventDQ
+    syn region htmlEvent	contained start=+\<on\a\+\s*=[\t ]*'+ end=+'+ keepend contains=htmlEventSQ
+    syn region htmlEvent	contained start=+\<on\a\+\s*=[\t ]*"+ end=+"+ keepend contains=htmlEventDQ
   endif
   syn region htmlEventSQ	contained start=+'+ms=s+1 end=+'+me=s-1 contains=@htmlJavaScript
   syn region htmlEventDQ	contained start=+"+ms=s+1 end=+"+me=s-1 contains=@htmlJavaScript

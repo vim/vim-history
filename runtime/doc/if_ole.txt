@@ -1,4 +1,4 @@
-*if_ole.txt*    For Vim version 6.3a.  Last change: 2003 Jun 19
+*if_ole.txt*    For Vim version 6.3b.  Last change: 2003 Jun 19
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore

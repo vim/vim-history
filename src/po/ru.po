@@ -9,10 +9,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Vim 6.2\n"
+"Project-Id-Version: Vim 6.3a\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-05-05 03:01+0400\n"
-"PO-Revision-Date: 2004-04-26 10:57+0400\n"
+"POT-Creation-Date: 2004-05-10 21:37+0400\n"
+"PO-Revision-Date: 2004-05-10 21:37+0400\n"
 "Last-Translator: vassily ragosin <vrr@users.sourceforge.net>\n"
 "Language-Team: vassily ragosin <vrr@users.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -144,7 +144,7 @@ msgstr "[Новый файл]"
 msgid "[Read errors]"
 msgstr "[Ошибки чтения]"
 
-#: buffer.c:2726 fileio.c:2105
+#: buffer.c:2726 fileio.c:2112
 msgid "[readonly]"
 msgstr "[только для чтения]"
 
@@ -232,36 +232,36 @@ msgstr "    строка=%ld  id=%d  имя=%s"
 msgid "E96: Can not diff more than %ld buffers"
 msgstr "E96: Следить за отличиями можно не более чем в %ld буферах"
 
-#: diff.c:709
+#: diff.c:713
 msgid "E97: Cannot create diffs"
 msgstr "E97: Невозможно создать файлы отличий"
 
-#: diff.c:814
+#: diff.c:818
 msgid "Patch file"
 msgstr "Файл-заплатка"
 
-#: diff.c:1065
+#: diff.c:1069
 msgid "E98: Cannot read diff output"
 msgstr "E98: Невозможно прочитать вывод команды diff"
 
-#: diff.c:1815
+#: diff.c:1819
 msgid "E99: Current buffer is not in diff mode"
 msgstr "E99: Активный буфер не находится в режиме отличий"
 
-#: diff.c:1827
+#: diff.c:1831
 msgid "E100: No other buffer in diff mode"
 msgstr "E100: Больше нет буферов в режиме отличий"
 
-#: diff.c:1835
+#: diff.c:1839
 msgid "E101: More than two buffers in diff mode, don't know which one to use"
 msgstr "E101: В режиме отличий более двух буферов, не могу выбрать"
 
-#: diff.c:1858
+#: diff.c:1862
 #, c-format
 msgid "E102: Can't find buffer \"%s\""
 msgstr "E102: Не могу найти буфер \"%s\""
 
-#: diff.c:1864
+#: diff.c:1868
 #, c-format
 msgid "E103: Buffer \"%s\" is not in diff mode"
 msgstr "E103: Буфер \"%s\" не находится в режиме отличий"
@@ -473,7 +473,7 @@ msgstr "E120: <SID> используется вне сценария: %s"
 #. * this way has the compelling advantage that translations need not to
 #. * be touched at all.  See below what 'ok' and 'ync' are used for.
 #.
-#: eval.c:3687 gui.c:4376 gui_gtk.c:2059
+#: eval.c:3687 gui.c:4382 gui_gtk.c:2059
 msgid "&Ok"
 msgstr "&Ok"
 
@@ -841,7 +841,7 @@ msgstr ""
 "# Последняя строка для замены:\n"
 "$"
 
-#: ex_cmds.c:4598 ex_docmd.c:2011
+#: ex_cmds.c:4598
 msgid "E478: Don't panic!"
 msgstr "E478: Спокойствие, только спокойствие!"
 
@@ -972,7 +972,7 @@ msgstr "%3d  %s %s стр. %ld"
 msgid "Save changes to \"%.*s\"?"
 msgstr "Сохранить изменения в \"%.*s\"?"
 
-#: ex_cmds2.c:788 ex_docmd.c:9380
+#: ex_cmds2.c:788 ex_docmd.c:9378
 msgid "Untitled"
 msgstr "Без имени"
 
@@ -1203,49 +1203,49 @@ msgstr "E464: Неоднозначное использование команды пользователя"
 msgid "E492: Not an editor command"
 msgstr "E492: Это не команда редактора"
 
-#: ex_docmd.c:2030
+#: ex_docmd.c:2028
 msgid "E493: Backwards range given"
 msgstr "E493: Задан обратный диапазон"
 
-#: ex_docmd.c:2039
+#: ex_docmd.c:2037
 msgid "Backwards range given, OK to swap"
 msgstr "Задан обратный диапазон, меняем границы местами"
 
-#: ex_docmd.c:2162
+#: ex_docmd.c:2160
 msgid "E494: Use w or w>>"
 msgstr "E494: Используйте w или w>>"
 
-#: ex_docmd.c:3788
+#: ex_docmd.c:3786
 msgid "E319: Sorry, the command is not available in this version"
 msgstr "E319: Извините, эта команда недоступна в данной версии"
 
-#: ex_docmd.c:3991
+#: ex_docmd.c:3989
 msgid "E172: Only one file name allowed"
 msgstr "E172: Разрешено использовать только одно имя файла"
 
-#: ex_docmd.c:4571
+#: ex_docmd.c:4569
 msgid "1 more file to edit.  Quit anyway?"
 msgstr "1 файл ожидает редактирования. Выйти?"
 
-#: ex_docmd.c:4574
+#: ex_docmd.c:4572
 #, c-format
 msgid "%d more files to edit.  Quit anyway?"
 msgstr "Есть неотредактированные файлы (%d). Выйти?"
 
-#: ex_docmd.c:4581
+#: ex_docmd.c:4579
 msgid "E173: 1 more file to edit"
 msgstr "E173: 1 файл ожидает редактирования."
 
-#: ex_docmd.c:4583
+#: ex_docmd.c:4581
 #, c-format
 msgid "E173: %ld more files to edit"
 msgstr "E173: Есть неотредактированные файлы (%d)."
 
-#: ex_docmd.c:4678
+#: ex_docmd.c:4676
 msgid "E174: Command already exists: add ! to replace it"
 msgstr "E174: Команда уже существует. Добавьте ! для замены."
 
-#: ex_docmd.c:4789
+#: ex_docmd.c:4787
 msgid ""
 "\n"
 "    Name        Args Range Complete  Definition"
@@ -1253,177 +1253,177 @@ msgstr ""
 "\n"
 "    Имя      Парам. Диап. Дополн.    Определение"
 
-#: ex_docmd.c:4878
+#: ex_docmd.c:4876
 msgid "No user-defined commands found"
 msgstr "Команды, определённые пользователем, не обнаружены."
 
-#: ex_docmd.c:4910
+#: ex_docmd.c:4908
 msgid "E175: No attribute specified"
 msgstr "E175: параметр не задан"
 
-#: ex_docmd.c:4962
+#: ex_docmd.c:4960
 msgid "E176: Invalid number of arguments"
 msgstr "E176: Неправильное количество параметров"
 
-#: ex_docmd.c:4977
+#: ex_docmd.c:4975
 msgid "E177: Count cannot be specified twice"
 msgstr "E177: Число-приставку нельзя указывать дважды"
 
-#: ex_docmd.c:4987
+#: ex_docmd.c:4985
 msgid "E178: Invalid default value for count"
 msgstr "E178: Неправильное значение числа-приставки по умолчанию"
 
-#: ex_docmd.c:5018
+#: ex_docmd.c:5016
 msgid "E179: argument required for complete"
 msgstr "E179: для завершения требуется указать параметр"
 
-#: ex_docmd.c:5050
+#: ex_docmd.c:5048
 #, c-format
 msgid "E180: Invalid complete value: %s"
 msgstr "E180: Неправильное значение дополнения: %s"
 
-#: ex_docmd.c:5059
+#: ex_docmd.c:5057
 msgid "E468: Completion argument only allowed for custom completion"
 msgstr ""
 "E468: Параметр автодополнения можно использовать только с особым дополнением"
 
-#: ex_docmd.c:5065
+#: ex_docmd.c:5063
 msgid "E467: Custom completion requires a function argument"
 msgstr "E467: Особое дополнение требует указания параметра функции"
 
-#: ex_docmd.c:5076
+#: ex_docmd.c:5074
 #, c-format
 msgid "E181: Invalid attribute: %s"
 msgstr "E181: Неправильный атрибут: %s"
 
-#: ex_docmd.c:5119
+#: ex_docmd.c:5117
 msgid "E182: Invalid command name"
 msgstr "E182: Неправильное имя команды"
 
-#: ex_docmd.c:5134
+#: ex_docmd.c:5132
 msgid "E183: User defined commands must start with an uppercase letter"
 msgstr "E183: Команда пользователя должна начинаться с заглавной буквы"
 
-#: ex_docmd.c:5205
+#: ex_docmd.c:5203
 #, c-format
 msgid "E184: No such user-defined command: %s"
 msgstr "E184: Нет такой команды пользователя: %s"
 
-#: ex_docmd.c:5666
+#: ex_docmd.c:5664
 #, c-format
 msgid "E185: Cannot find color scheme %s"
 msgstr "E185: Цветовая схема %s не найдена"
 
-#: ex_docmd.c:5674
+#: ex_docmd.c:5672
 msgid "Greetings, Vim user!"
 msgstr "Привет, пользователь Vim!"
 
-#: ex_docmd.c:6391
+#: ex_docmd.c:6389
 msgid "Edit File in new window"
 msgstr "Редактировать файл в новом окне"
 
-#: ex_docmd.c:6686
+#: ex_docmd.c:6684
 msgid "No swap file"
 msgstr "Без своп-файла"
 
-#: ex_docmd.c:6790
+#: ex_docmd.c:6788
 msgid "Append File"
 msgstr "Добавить файл"
 
-#: ex_docmd.c:6854
+#: ex_docmd.c:6852
 msgid "E186: No previous directory"
 msgstr "E186: Нет предыдущего каталога"
 
-#: ex_docmd.c:6936
+#: ex_docmd.c:6934
 msgid "E187: Unknown"
 msgstr "E187: Неизвестно"
 
-#: ex_docmd.c:7021
+#: ex_docmd.c:7019
 msgid "E465: :winsize requires two number arguments"
 msgstr "E465: команда :winsize требует указания двух числовых параметров"
 
-#: ex_docmd.c:7077
+#: ex_docmd.c:7075
 #, c-format
 msgid "Window position: X %d, Y %d"
 msgstr "Положение окна: X %d, Y %d"
 
-#: ex_docmd.c:7082
+#: ex_docmd.c:7080
 msgid "E188: Obtaining window position not implemented for this platform"
 msgstr "E188: В данной системе определение положения окна не работает"
 
-#: ex_docmd.c:7092
+#: ex_docmd.c:7090
 msgid "E466: :winpos requires two number arguments"
 msgstr "E466: команда :winpos требует указания двух числовых параметров"
 
-#: ex_docmd.c:7370
+#: ex_docmd.c:7368
 msgid "Save Redirection"
 msgstr "Перенаправление записи"
 
-#: ex_docmd.c:7560
+#: ex_docmd.c:7558
 msgid "Save View"
 msgstr "Сохранение вида"
 
-#: ex_docmd.c:7561
+#: ex_docmd.c:7559
 msgid "Save Session"
 msgstr "Сохранение сеанса"
 
-#: ex_docmd.c:7563
+#: ex_docmd.c:7561
 msgid "Save Setup"
 msgstr "Сохранение настроек"
 
-#: ex_docmd.c:7715
+#: ex_docmd.c:7713
 #, c-format
 msgid "E189: \"%s\" exists (add ! to override)"
 msgstr "E189: \"%s\" существует (!, чтобы обойти проверку)"
 
-#: ex_docmd.c:7720
+#: ex_docmd.c:7718
 #, c-format
 msgid "E190: Cannot open \"%s\" for writing"
 msgstr "E190: Невозможно открыть для записи \"%s\""
 
 #. set mark
-#: ex_docmd.c:7744
+#: ex_docmd.c:7742
 msgid "E191: Argument must be a letter or forward/backward quote"
 msgstr "E191: Параметр должен быть прямой/обратной кавычкой или буквой"
 
-#: ex_docmd.c:7786
+#: ex_docmd.c:7784
 msgid "E192: Recursive use of :normal too deep"
 msgstr "E192: Слишком глубокая рекурсия при использовании команды :normal"
 
-#: ex_docmd.c:8304
+#: ex_docmd.c:8302
 msgid "E194: No alternate file name to substitute for '#'"
 msgstr "E194: Нет соседнего имени файла для замены '#'"
 
-#: ex_docmd.c:8335
+#: ex_docmd.c:8333
 msgid "E495: no autocommand file name to substitute for \"<afile>\""
 msgstr "E495: Нет автокомандного имени файла для замены \"<afile>\""
 
-#: ex_docmd.c:8343
+#: ex_docmd.c:8341
 msgid "E496: no autocommand buffer number to substitute for \"<abuf>\""
 msgstr "E496: Нет автокомандного номера буфера для замены \"<abuf>\""
 
-#: ex_docmd.c:8354
+#: ex_docmd.c:8352
 msgid "E497: no autocommand match name to substitute for \"<amatch>\""
 msgstr "E497: Нет автокомандного имени соответствия для замены \"<amatch>\""
 
-#: ex_docmd.c:8364
+#: ex_docmd.c:8362
 msgid "E498: no :source file name to substitute for \"<sfile>\""
 msgstr "E498: нет имени файла :source для замены \"<sfile>\""
 
-#: ex_docmd.c:8405
+#: ex_docmd.c:8403
 #, no-c-format
 msgid "E499: Empty file name for '%' or '#', only works with \":p:h\""
 msgstr "E499: Пустое имя файла для '%' или '#', возможно только c \":p:h\""
 
-#: ex_docmd.c:8407
+#: ex_docmd.c:8405
 msgid "E500: Evaluates to an empty string"
 msgstr "E500: Результатом выражения является пустая строка"
 
-#: ex_docmd.c:9362
+#: ex_docmd.c:9360
 msgid "E195: Cannot open viminfo file for reading"
 msgstr "E195: Невозможно открыть файл viminfo для чтения"
 
-#: ex_docmd.c:9535
+#: ex_docmd.c:9533
 msgid "E196: No digraphs in this version"
 msgstr "E196: В этой версии диграфы не работают"
 
@@ -1482,7 +1482,7 @@ msgstr "Исключительная ситуация"
 msgid "Error and interrupt"
 msgstr "Ошибка и прерывание"
 
-#: ex_eval.c:754 gui.c:4375
+#: ex_eval.c:754 gui.c:4381
 msgid "Error"
 msgstr "Ошибка"
 
@@ -1607,7 +1607,7 @@ msgstr "E199: Удалено активное окно или буфер"
 msgid "Illegal file name"
 msgstr "Недопустимое имя файла"
 
-#: fileio.c:401 fileio.c:535 fileio.c:2906 fileio.c:2947
+#: fileio.c:401 fileio.c:535 fileio.c:2913 fileio.c:2954
 msgid "is a directory"
 msgstr "является каталогом"
 
@@ -1615,7 +1615,7 @@ msgstr "является каталогом"
 msgid "is not a file"
 msgstr "не является файлом"
 
-#: fileio.c:557 fileio.c:4124
+#: fileio.c:557 fileio.c:4131
 msgid "[New File]"
 msgstr "[Новый файл]"
 
@@ -1644,194 +1644,194 @@ msgstr "Выполняется чтение из стандартного потока ввода stdin..."
 msgid "E202: Conversion made file unreadable!"
 msgstr "E202: В результате преобразования файл стал нечитаемым!"
 
-#: fileio.c:2083
+#: fileio.c:2090
 msgid "[fifo/socket]"
 msgstr "[fifo/гнездо]"
 
-#: fileio.c:2090
+#: fileio.c:2097
 msgid "[fifo]"
 msgstr "[fifo]"
 
-#: fileio.c:2097
+#: fileio.c:2104
 msgid "[socket]"
 msgstr "[гнездо]"
 
-#: fileio.c:2105
+#: fileio.c:2112
 msgid "[RO]"
 msgstr "[RO]"
 
-#: fileio.c:2115
+#: fileio.c:2122
 msgid "[CR missing]"
 msgstr "[пропущены символы CR]"
 
-#: fileio.c:2120
+#: fileio.c:2127
 msgid "[NL found]"
 msgstr "[Обнаружены символы NL]"
 
-#: fileio.c:2125
+#: fileio.c:2132
 msgid "[long lines split]"
 msgstr "[длинные строки разбиты]"
 
-#: fileio.c:2131 fileio.c:4108
+#: fileio.c:2138 fileio.c:4115
 msgid "[NOT converted]"
 msgstr "[БЕЗ преобразований]"
 
-#: fileio.c:2136 fileio.c:4113
+#: fileio.c:2143 fileio.c:4120
 msgid "[converted]"
 msgstr "[перекодировано]"
 
-#: fileio.c:2143 fileio.c:4138
+#: fileio.c:2150 fileio.c:4145
 msgid "[crypted]"
 msgstr "[зашифровано]"
 
-#: fileio.c:2150
+#: fileio.c:2157
 msgid "[CONVERSION ERROR]"
 msgstr "[ОШИБКА ПРЕОБРАЗОВАНИЯ]"
 
-#: fileio.c:2156
+#: fileio.c:2163
 #, c-format
 msgid "[ILLEGAL BYTE in line %ld]"
 msgstr "[НЕДОПУСТИМЫЙ БАЙТ в строке %ld]"
 
-#: fileio.c:2163
+#: fileio.c:2170
 msgid "[READ ERRORS]"
 msgstr "[ОШИБКИ ЧТЕНИЯ]"
 
-#: fileio.c:2379
+#: fileio.c:2386
 msgid "Can't find temp file for conversion"
 msgstr "Временный файл для перекодирования не найден"
 
-#: fileio.c:2386
+#: fileio.c:2393
 msgid "Conversion with 'charconvert' failed"
 msgstr "Преобразование с помощью 'charconvert' не выполнено"
 
-#: fileio.c:2389
+#: fileio.c:2396
 msgid "can't read output of 'charconvert'"
 msgstr "невозможно прочитать вывод 'charconvert'"
 
-#: fileio.c:2789
+#: fileio.c:2796
 msgid "E203: Autocommands deleted or unloaded buffer to be written"
 msgstr ""
 "E203: Буфер, который требовалось записать, удалён или выгружен автокомандой"
 
-#: fileio.c:2812
+#: fileio.c:2819
 msgid "E204: Autocommand changed number of lines in unexpected way"
 msgstr "E204: Количество строк изменено автокомандой неожиданным образом"
 
-#: fileio.c:2850
+#: fileio.c:2857
 msgid "NetBeans dissallows writes of unmodified buffers"
 msgstr "NetBeans не позволяет выполнять запись неизменённых буферов"
 
-#: fileio.c:2858
+#: fileio.c:2865
 msgid "Partial writes disallowed for NetBeans buffers"
 msgstr "Частичная запись буферов NetBeans не допускается"
 
-#: fileio.c:2912 fileio.c:2930
+#: fileio.c:2919 fileio.c:2937
 msgid "is not a file or writable device"
 msgstr "не является файлом или устройством, доступным для записи"
 
-#: fileio.c:2982
+#: fileio.c:2989
 msgid "is read-only (add ! to override)"
 msgstr "открыт только для чтения (!, чтобы обойти проверку)"
 
-#: fileio.c:3328
+#: fileio.c:3335
 msgid "E506: Can't write to backup file (add ! to override)"
 msgstr "E506: Запись в резервный файл невозможна (!, чтобы обойти проверку)"
 
-#: fileio.c:3340
+#: fileio.c:3347
 msgid "E507: Close error for backup file (add ! to override)"
 msgstr "E507: Ошибка закрытия резервного файла (!, чтобы обойти проверку)"
 
-#: fileio.c:3342
+#: fileio.c:3349
 msgid "E508: Can't read file for backup (add ! to override)"
 msgstr "E508: Невозможно прочитать резервный файл (!, чтобы обойти проверку)"
 
-#: fileio.c:3358
+#: fileio.c:3365
 msgid "E509: Cannot create backup file (add ! to override)"
 msgstr "E509: Невозможно создать резервный файл (!, чтобы обойти проверку)"
 
-#: fileio.c:3461
+#: fileio.c:3468
 msgid "E510: Can't make backup file (add ! to override)"
 msgstr "E510: Невозможно создать резервный файл (!, чтобы обойти проверку)"
 
-#: fileio.c:3523
+#: fileio.c:3530
 msgid "E460: The resource fork would be lost (add ! to override)"
 msgstr "E460: Вилка ресурса будет потеряна (!, чтобы обойти проверку)"
 
-#: fileio.c:3633
+#: fileio.c:3640
 msgid "E214: Can't find temp file for writing"
 msgstr "E214: Временный файл для записи не найден"
 
-#: fileio.c:3651
+#: fileio.c:3658
 msgid "E213: Cannot convert (add ! to write without conversion)"
 msgstr "E213: Перекодировка невозможна (! для записи без перекодировки)"
 
-#: fileio.c:3686
+#: fileio.c:3693
 msgid "E166: Can't open linked file for writing"
 msgstr "E166: Невозможно открыть связанный файл для записи"
 
-#: fileio.c:3690
+#: fileio.c:3697
 msgid "E212: Can't open file for writing"
 msgstr "E212: Невозможно открыть файл для записи"
 
-#: fileio.c:3952
+#: fileio.c:3959
 msgid "E667: Fsync failed"
 msgstr "E667: Не удалось выполнить функцию fsync()"
 
-#: fileio.c:3959
+#: fileio.c:3966
 msgid "E512: Close failed"
 msgstr "E512: Операция закрытия не удалась"
 
-#: fileio.c:4030
+#: fileio.c:4037
 msgid "E513: write error, conversion failed"
 msgstr "E513: Ошибка записи, преобразование не удалось"
 
-#: fileio.c:4036
+#: fileio.c:4043
 msgid "E514: write error (file system full?)"
 msgstr "E514: ошибка записи (нет свободного места?)"
 
-#: fileio.c:4103
+#: fileio.c:4110
 msgid " CONVERSION ERROR"
 msgstr " ОШИБКА ПРЕОБРАЗОВАНИЯ"
 
-#: fileio.c:4119
+#: fileio.c:4126
 msgid "[Device]"
 msgstr "[Устройство]"
 
-#: fileio.c:4124
+#: fileio.c:4131
 msgid "[New]"
 msgstr "[Новый]"
 
-#: fileio.c:4146
+#: fileio.c:4153
 msgid " [a]"
 msgstr " [a]"
 
-#: fileio.c:4146
+#: fileio.c:4153
 msgid " appended"
 msgstr " добавлено"
 
-#: fileio.c:4148
+#: fileio.c:4155
 msgid " [w]"
 msgstr " [w]"
 
-#: fileio.c:4148
+#: fileio.c:4155
 msgid " written"
 msgstr " записано"
 
-#: fileio.c:4198
+#: fileio.c:4205
 msgid "E205: Patchmode: can't save original file"
 msgstr "E205: Режим заплатки: невозможно сохранение исходного файла"
 
-#: fileio.c:4220
+#: fileio.c:4227
 msgid "E206: patchmode: can't touch empty original file"
 msgstr ""
 "E206: Режим заплатки: невозможно сменить параметры пустого исходного файла"
 
-#: fileio.c:4235
+#: fileio.c:4242
 msgid "E207: Can't delete backup file"
 msgstr "E207: Невозможно удалить резервный файл"
 
-#: fileio.c:4299
+#: fileio.c:4306
 msgid ""
 "\n"
 "WARNING: Original file may be lost or damaged\n"
@@ -1839,96 +1839,96 @@ msgstr ""
 "\n"
 "ПРЕДУПРЕЖДЕНИЕ: Исходный файл может быть утрачен или повреждён\n"
 
-#: fileio.c:4301
+#: fileio.c:4308
 msgid "don't quit the editor until the file is successfully written!"
 msgstr "не выходите из редактора, пока файл не будет успешно записан!"
 
-#: fileio.c:4390
+#: fileio.c:4397
 msgid "[dos]"
 msgstr "[dos]"
 
-#: fileio.c:4390
+#: fileio.c:4397
 msgid "[dos format]"
 msgstr "[формат dos]"
 
-#: fileio.c:4397
+#: fileio.c:4404
 msgid "[mac]"
 msgstr "[mac]"
 
-#: fileio.c:4397
+#: fileio.c:4404
 msgid "[mac format]"
 msgstr "[формат mac]"
 
-#: fileio.c:4404
+#: fileio.c:4411
 msgid "[unix]"
 msgstr "[unix]"
 
-#: fileio.c:4404
+#: fileio.c:4411
 msgid "[unix format]"
 msgstr "[формат unix]"
 
-#: fileio.c:4431
+#: fileio.c:4438
 msgid "1 line, "
 msgstr "1 строка, "
 
-#: fileio.c:4433
+#: fileio.c:4440
 #, c-format
 msgid "%ld lines, "
 msgstr "строк: %ld, "
 
-#: fileio.c:4436
+#: fileio.c:4443
 msgid "1 character"
 msgstr "1 символ"
 
-#: fileio.c:4438
+#: fileio.c:4445
 #, c-format
 msgid "%ld characters"
 msgstr "символов: %ld"
 
-#: fileio.c:4448
+#: fileio.c:4455
 msgid "[noeol]"
 msgstr "[noeol]"
 
-#: fileio.c:4448
+#: fileio.c:4455
 msgid "[Incomplete last line]"
 msgstr "[Незавершённая последняя строка]"
 
 #. don't overwrite messages here
 #. must give this prompt
 #. don't use emsg() here, don't want to flush the buffers
-#: fileio.c:4467
+#: fileio.c:4474
 msgid "WARNING: The file has been changed since reading it!!!"
 msgstr "ПРЕДУПРЕЖДЕНИЕ: Файл изменён с момента чтения!!!"
 
-#: fileio.c:4469
+#: fileio.c:4476
 msgid "Do you really want to write to it"
 msgstr "Серьёзно хотите записать в этот файл"
 
-#: fileio.c:5715
+#: fileio.c:5726
 #, c-format
 msgid "E208: Error writing to \"%s\""
 msgstr "E208: Ошибка записи в \"%s\""
 
-#: fileio.c:5722
+#: fileio.c:5733
 #, c-format
 msgid "E209: Error closing \"%s\""
 msgstr "E209: Ошибка закрытия \"%s\""
 
-#: fileio.c:5725
+#: fileio.c:5736
 #, c-format
 msgid "E210: Error reading \"%s\""
 msgstr "E210: Ошибка чтения \"%s\""
 
-#: fileio.c:5959
+#: fileio.c:5970
 msgid "E246: FileChangedShell autocommand deleted buffer"
 msgstr "E246: Буфер удалён при выполнении автокоманды FileChangedShell"
 
-#: fileio.c:5966
+#: fileio.c:5977
 #, c-format
 msgid "E211: Warning: File \"%s\" no longer available"
 msgstr "E211: Предупреждение: файл \"%s\" больше не доступен"
 
-#: fileio.c:5980
+#: fileio.c:5991
 #, c-format
 msgid ""
 "W12: Warning: File \"%s\" has changed and the buffer was changed in Vim as "
@@ -1937,34 +1937,34 @@ msgstr ""
 "W12: Предупреждение: файл \"%s\" и буфер Vim были изменены независимо друг "
 "от друга"
 
-#: fileio.c:5983
+#: fileio.c:5994
 #, c-format
 msgid "W11: Warning: File \"%s\" has changed since editing started"
 msgstr ""
 "W11: Предупреждение: файл \"%s\" был изменён после начала редактирования"
 
-#: fileio.c:5985
+#: fileio.c:5996
 #, c-format
 msgid "W16: Warning: Mode of file \"%s\" has changed since editing started"
 msgstr ""
 "W16: Предупреждение: режим доступа к файлу \"%s\" был изменён после начала "
 "редактирования"
 
-#: fileio.c:5995
+#: fileio.c:6006
 #, c-format
 msgid "W13: Warning: File \"%s\" has been created after editing started"
 msgstr ""
 "W13: Предупреждение: файл \"%s\" был создан после начала редактирования"
 
-#: fileio.c:6008
+#: fileio.c:6019
 msgid "See \":help W11\" for more info."
 msgstr "См. дополнительную информацию в \":help W11\"."
 
-#: fileio.c:6022
+#: fileio.c:6033
 msgid "Warning"
 msgstr "Предупреждение"
 
-#: fileio.c:6023
+#: fileio.c:6034
 msgid ""
 "&OK\n"
 "&Load File"
@@ -1972,43 +1972,43 @@ msgstr ""
 "&OK\n"
 "&Загрузить файл"
 
-#: fileio.c:6129
+#: fileio.c:6140
 #, c-format
 msgid "E462: Could not prepare for reloading \"%s\""
 msgstr "E462: Невозможно подготовиться к перезагрузке \"%s\""
 
-#: fileio.c:6148
+#: fileio.c:6159
 #, c-format
 msgid "E321: Could not reload \"%s\""
 msgstr "E321: Невозможно выполнить перезагрузку \"%s\""
 
-#: fileio.c:6729
+#: fileio.c:6740
 msgid "--Deleted--"
 msgstr "--Удалено--"
 
 #. the group doesn't exist
-#: fileio.c:6889
+#: fileio.c:6900
 #, c-format
 msgid "E367: No such group: \"%s\""
 msgstr "E367: Группа \"%s\" не существует"
 
-#: fileio.c:7015
+#: fileio.c:7026
 #, c-format
 msgid "E215: Illegal character after *: %s"
 msgstr "E215: Недопустимые символы после *: %s"
 
-#: fileio.c:7027
+#: fileio.c:7038
 #, c-format
 msgid "E216: No such event: %s"
 msgstr "E216: Несуществующее событие: %s"
 
-#: fileio.c:7029
+#: fileio.c:7040
 #, c-format
 msgid "E216: No such group or event: %s"
 msgstr "E216: Несуществующая группа или событие: %s"
 
 #. Highlight title
-#: fileio.c:7187
+#: fileio.c:7198
 msgid ""
 "\n"
 "--- Auto-Commands ---"
@@ -2016,39 +2016,39 @@ msgstr ""
 "\n"
 "--- Автокоманды ---"
 
-#: fileio.c:7458
+#: fileio.c:7469
 msgid "E217: Can't execute autocommands for ALL events"
 msgstr "E217: Невозможно выполнить автокоманды для ВСЕХ событий"
 
-#: fileio.c:7481
+#: fileio.c:7492
 msgid "No matching autocommands"
 msgstr "Нет подходящих автокоманд"
 
-#: fileio.c:7802
+#: fileio.c:7813
 msgid "E218: autocommand nesting too deep"
 msgstr "E218: слишком глубоко вложенные автокоманды"
 
-#: fileio.c:8077
+#: fileio.c:8088
 #, c-format
 msgid "%s Auto commands for \"%s\""
 msgstr "%s Автокоманды для \"%s\""
 
-#: fileio.c:8085
+#: fileio.c:8096
 #, c-format
 msgid "Executing %s"
 msgstr "Выполнение %s"
 
 #. always scroll up, don't overwrite
-#: fileio.c:8153
+#: fileio.c:8164
 #, c-format
 msgid "autocommand %s"
 msgstr "автокоманда %s"
 
-#: fileio.c:8720
+#: fileio.c:8731
 msgid "E219: Missing {."
 msgstr "E219: Пропущена {."
 
-#: fileio.c:8722
+#: fileio.c:8733
 msgid "E220: Missing }."
 msgstr "E220: Пропущена }."
 
@@ -2170,7 +2170,7 @@ msgstr "Полоса прокрутки: не могу определить геометрию ползунка"
 msgid "Vim dialog"
 msgstr "Диалоговое окно Vim"
 
-#: gui_beval.c:101 gui_w32.c:3830
+#: gui_beval.c:101 gui_w32.c:3829
 msgid "E232: Cannot create BalloonEval with both message and callback"
 msgstr ""
 "E232: \"Пузырь\" для вычислений, включающий и сообщение, и обратный вызов, "
@@ -2257,7 +2257,7 @@ msgstr "Vim: Основное окно было неожиданно закрыто\n"
 msgid "Font Selection"
 msgstr "Выбор шрифта"
 
-#: gui_gtk_x11.c:6035 ui.c:2117
+#: gui_gtk_x11.c:6035 ui.c:2120
 msgid "Used CUT_BUFFER0 instead of empty selection"
 msgstr "Вместо пустого выделения используется CUT_BUFFER0"
 
@@ -2303,7 +2303,7 @@ msgstr ""
 "\n"
 "Отправка сообщения для уничтожения процесса-потомка.\n"
 
-#: gui_w32.c:830
+#: gui_w32.c:829
 #, c-format
 msgid "E243: Argument not supported: \"-%s\"; Use the OLE version."
 msgstr "E243: Параметр не поддерживается: \"-%s\"; используйте версию OLE."
@@ -2353,9 +2353,8 @@ msgid "Font1: %s\n"
 msgstr "Font1: %s\n"
 
 #: gui_x11.c:2184
-#, c-format
-msgid "Font%d width is not twice that of font0\n"
-msgstr "Ширина шрифта font%d должна быть вдвое больше ширины шрифта font0\n"
+msgid "Font%ld width is not twice that of font0\n"
+msgstr "Ширина шрифта font%ld должна быть вдвое больше ширины шрифта font0\n"
 
 #: gui_x11.c:2185
 #, c-format
@@ -4227,12 +4226,12 @@ msgstr "Удалено строк: %ld"
 msgid " (Interrupted)"
 msgstr " (Прервано)"
 
-#: misc1.c:7582
+#: misc1.c:7588
 msgid "Vim: preserving files...\n"
 msgstr "Vim: сохраняются файлы...\n"
 
 #. close all memfiles, without deleting
-#: misc1.c:7592
+#: misc1.c:7598
 msgid "Vim: Finished.\n"
 msgstr "Vim: Готово.\n"
 
@@ -4273,44 +4272,44 @@ msgstr "E341: Внутренняя ошибка: lalloc(%ld, )"
 msgid "E342: Out of memory!  (allocating %lu bytes)"
 msgstr "E342: Не хватает памяти! (выделяется %lu байт)"
 
-#: misc2.c:2593
+#: misc2.c:2594
 #, c-format
 msgid "Calling shell to execute: \"%s\""
 msgstr "Вызов оболочки для исполнения: \"%s\""
 
-#: misc2.c:2815
+#: misc2.c:2816
 msgid "E545: Missing colon"
 msgstr "E545: Пропущено двоеточие"
 
-#: misc2.c:2817 misc2.c:2844
+#: misc2.c:2818 misc2.c:2845
 msgid "E546: Illegal mode"
 msgstr "E546: Недопустимый режим"
 
-#: misc2.c:2883
+#: misc2.c:2884
 msgid "E547: Illegal mouseshape"
 msgstr "E547: Недопустимая форма курсора"
 
-#: misc2.c:2923
+#: misc2.c:2924
 msgid "E548: digit expected"
 msgstr "E548: требуется ввести цифру"
 
-#: misc2.c:2928
+#: misc2.c:2929
 msgid "E549: Illegal percentage"
 msgstr "E549: Недопустимое значение процентов"
 
-#: misc2.c:3238
+#: misc2.c:3239
 msgid "Enter encryption key: "
 msgstr "Введите пароль для шифрования: "
 
-#: misc2.c:3239
+#: misc2.c:3240
 msgid "Enter same key again: "
 msgstr "        Повторите ввод пароля:"
 
-#: misc2.c:3249
+#: misc2.c:3250
 msgid "Keys don't match!"
 msgstr "Введённые пароли не совпадают!"
 
-#: misc2.c:3798
+#: misc2.c:3799
 #, c-format
 msgid ""
 "E343: Invalid path: '**[number]' must be at the end of the path or be "
@@ -4319,35 +4318,35 @@ msgstr ""
 "E343: Неправильно задан путь: '**[число]' должно быть либо в конце пути, "
 "либо за ним должно следовать '%s'"
 
-#: misc2.c:5077
+#: misc2.c:5078
 #, c-format
 msgid "E344: Can't find directory \"%s\" in cdpath"
 msgstr "E344: Каталог \"%s\" не найден в пути для смены каталога"
 
-#: misc2.c:5080
+#: misc2.c:5081
 #, c-format
 msgid "E345: Can't find file \"%s\" in path"
 msgstr "E345: Файл \"%s\" в известных каталогах не найден"
 
-#: misc2.c:5086
+#: misc2.c:5087
 #, c-format
 msgid "E346: No more directory \"%s\" found in cdpath"
 msgstr "E346: В пути смены каталога больше нет каталогов \"%s\""
 
-#: misc2.c:5089
+#: misc2.c:5090
 #, c-format
 msgid "E347: No more file \"%s\" found in path"
 msgstr "E347: В известных каталогах больше нет файлов \"%s\""
 
-#: misc2.c:5323
+#: misc2.c:5324
 msgid "E550: Missing colon"
 msgstr "E550: Пропущено двоеточие"
 
-#: misc2.c:5335
+#: misc2.c:5336
 msgid "E551: Illegal component"
 msgstr "E551: Недопустимый компонент"
 
-#: misc2.c:5343
+#: misc2.c:5344
 msgid "E552: digit expected"
 msgstr "E552: Требуется указать цифру"
 
@@ -4370,7 +4369,7 @@ msgstr ""
 msgid "read from Netbeans socket"
 msgstr "чтение из гнезда NetBeans"
 
-#: netbeans.c:1638
+#: netbeans.c:1643
 #, c-format
 msgid "E658: NetBeans connection lost for buffer %ld"
 msgstr "E658: Потеряно соединение с NetBeans для буфера %ld"
@@ -4392,19 +4391,19 @@ msgid "E352: Cannot erase folds with current 'foldmethod'"
 msgstr ""
 "E352: Невозможно стереть складки с текущим значением опции 'foldmethod'"
 
-#: normal.c:6708
+#: normal.c:6740
 msgid "E664: changelist is empty"
 msgstr "E664: список изменений пустой"
 
-#: normal.c:6710
+#: normal.c:6742
 msgid "E662: At start of changelist"
 msgstr "E662: В начале списка изменений"
 
-#: normal.c:6712
+#: normal.c:6744
 msgid "E663: At end of changelist"
 msgstr "E662: В конце списка изменений"
 
-#: normal.c:7973
+#: normal.c:8005
 msgid "Type  :quit<Enter>  to exit Vim"
 msgstr "Введите :quit<Enter>  для выхода из Vim"
 
@@ -4447,36 +4446,36 @@ msgstr "Изменены отступы в строках (%ld) "
 msgid "cannot yank; delete anyway"
 msgstr "скопировать не удалось, удаление выполнено"
 
-#: ops.c:2216
+#: ops.c:2261
 msgid "1 line changed"
 msgstr "изменена 1 строка"
 
-#: ops.c:2218
+#: ops.c:2263
 #, c-format
 msgid "%ld lines changed"
 msgstr "изменено строк: %ld"
 
-#: ops.c:2602
+#: ops.c:2647
 #, c-format
 msgid "freeing %ld lines"
 msgstr "очищено строк: %ld"
 
-#: ops.c:2883
+#: ops.c:2928
 msgid "1 line yanked"
 msgstr "скопирована одна строка"
 
-#: ops.c:2885
+#: ops.c:2930
 #, c-format
 msgid "%ld lines yanked"
 msgstr "скопировано строк: %ld"
 
-#: ops.c:3170
+#: ops.c:3215
 #, c-format
 msgid "E353: Nothing in register %s"
 msgstr "E353: В регистре %s ничего нет"
 
 #. Highlight title
-#: ops.c:3721
+#: ops.c:3766
 msgid ""
 "\n"
 "--- Registers ---"
@@ -4484,11 +4483,11 @@ msgstr ""
 "\n"
 "--- Регистры ---"
 
-#: ops.c:5028
+#: ops.c:5075
 msgid "Illegal register name"
 msgstr "Недопустимое имя регистра"
 
-#: ops.c:5116
+#: ops.c:5163
 #, c-format
 msgid ""
 "\n"
@@ -4497,32 +4496,32 @@ msgstr ""
 "\n"
 "# Регистры:\n"
 
-#: ops.c:5166
+#: ops.c:5213
 #, c-format
 msgid "E574: Unknown register type %d"
 msgstr "E574: Неизвестный тип регистра %d"
 
-#: ops.c:5651
+#: ops.c:5698
 #, c-format
 msgid "E354: Invalid register name: '%s'"
 msgstr "E354: Недопустимое имя регистра: '%s'"
 
-#: ops.c:6011
+#: ops.c:6058
 #, c-format
 msgid "%ld Cols; "
 msgstr "Колонок: %ld; "
 
-#: ops.c:6018
+#: ops.c:6065
 #, c-format
 msgid "Selected %s%ld of %ld Lines; %ld of %ld Words; %ld of %ld Bytes"
 msgstr "Выделено %s%ld из %ld строк; %ld из %ld слов; %ld из %ld байт"
 
-#: ops.c:6034
+#: ops.c:6081
 #, c-format
 msgid "Col %s of %s; Line %ld of %ld; Word %ld of %ld; Byte %ld of %ld"
 msgstr "Кол. %s из %s;  стр. %ld из %ld; слово %ld из %ld; байт %ld из %ld"
 
-#: ops.c:6045
+#: ops.c:6092
 #, c-format
 msgid "(+%ld for BOM)"
 msgstr "(+%ld с учётом BOM)"
@@ -4976,33 +4975,33 @@ msgstr "Невозможно загрузить vim32.dll!"
 msgid "Could not fix up function pointers to the DLL!"
 msgstr "Невозможно исправить указатели функций для DLL!"
 
-#: os_win16.c:342 os_win32.c:3197
+#: os_win16.c:342 os_win32.c:3216
 #, c-format
 msgid "shell returned %d"
 msgstr "завершение работы оболочки с кодом %d"
 
-#: os_win32.c:2655
+#: os_win32.c:2674
 #, c-format
 msgid "Vim: Caught %s event\n"
 msgstr "Vim: Перехвачено событие %s\n"
 
-#: os_win32.c:2657
+#: os_win32.c:2676
 msgid "close"
 msgstr "закрытие"
 
-#: os_win32.c:2659
+#: os_win32.c:2678
 msgid "logoff"
 msgstr "отключение"
 
-#: os_win32.c:2660
+#: os_win32.c:2679
 msgid "shutdown"
 msgstr "завершение"
 
-#: os_win32.c:3150
+#: os_win32.c:3169
 msgid "E371: Command not found"
 msgstr "E371: Команда не найдена"
 
-#: os_win32.c:3163
+#: os_win32.c:3182
 msgid ""
 "VIMRUN.EXE not found in your $PATH.\n"
 "External commands will not pause after completion.\n"
@@ -5012,7 +5011,7 @@ msgstr ""
 "Внешние команды не будут останавливаться после выполнения.\n"
 "Дополнительная информация в :help win32-vimrun"
 
-#: os_win32.c:3166
+#: os_win32.c:3185
 msgid "Vim Warning"
 msgstr "Предупреждение Vim"
 
@@ -5319,53 +5318,53 @@ msgstr "E385: поиск закончен в КОНЦЕ документа; %s не найдено"
 msgid "E386: Expected '?' or '/'  after ';'"
 msgstr "E386: После ';' ожидается ввод '?' или '/'"
 
-#: search.c:3758
+#: search.c:3759
 msgid " (includes previously listed match)"
 msgstr " (включает раннее показанные соответствия)"
 
 #. cursor at status line
-#: search.c:3778
+#: search.c:3779
 msgid "--- Included files "
 msgstr "--- Включённые файлы "
 
-#: search.c:3780
+#: search.c:3781
 msgid "not found "
 msgstr "не найдено "
 
-#: search.c:3781
+#: search.c:3782
 msgid "in path ---\n"
 msgstr "по пути ---\n"
 
-#: search.c:3820
+#: search.c:3839
 msgid "  (Already listed)"
 msgstr " (Уже показано)"
 
-#: search.c:3822
+#: search.c:3841
 msgid "  NOT FOUND"
 msgstr " НЕ НАЙДЕНО"
 
-#: search.c:3874
+#: search.c:3893
 #, c-format
 msgid "Scanning included file: %s"
 msgstr "Просмотр включённых файлов: %s"
 
-#: search.c:4092
+#: search.c:4111
 msgid "E387: Match is on current line"
 msgstr "E387: Соответствие в текущей строке"
 
-#: search.c:4235
+#: search.c:4254
 msgid "All included files were found"
 msgstr "Найдены все включённые файлы"
 
-#: search.c:4237
+#: search.c:4256
 msgid "No included files"
 msgstr "Включённых файлов нет"
 
-#: search.c:4253
+#: search.c:4272
 msgid "E388: Couldn't find definition"
 msgstr "E388: Определение не найдено"
 
-#: search.c:4255
+#: search.c:4274
 msgid "E389: Couldn't find pattern"
 msgstr "E389: Шаблон не найден"
 
@@ -5790,7 +5789,7 @@ msgid "E440: undo line missing"
 msgstr "E440: потеряна строка отмены"
 
 #. Only MS VC 4.1 and earlier can do Win32s
-#: version.c:1753
+#: version.c:721
 msgid ""
 "\n"
 "MS-Windows 16/32 bit GUI version"
@@ -5798,7 +5797,7 @@ msgstr ""
 "\n"
 "Версия с графическим интерфейсом для MS-Windows 16/32 бит"
 
-#: version.c:1755
+#: version.c:723
 msgid ""
 "\n"
 "MS-Windows 32 bit GUI version"
@@ -5806,15 +5805,15 @@ msgstr ""
 "\n"
 "Версия с графическим интерфейсом для MS-Windows 32 бит"
 
-#: version.c:1758
+#: version.c:726
 msgid " in Win32s mode"
 msgstr " в режиме Win32s"
 
-#: version.c:1760
+#: version.c:728
 msgid " with OLE support"
 msgstr " с поддержкой OLE"
 
-#: version.c:1763
+#: version.c:731
 msgid ""
 "\n"
 "MS-Windows 32 bit console version"
@@ -5822,7 +5821,7 @@ msgstr ""
 "\n"
 "Консольная версия для MS-Windows 32 бит"
 
-#: version.c:1767
+#: version.c:735
 msgid ""
 "\n"
 "MS-Windows 16 bit version"
@@ -5830,7 +5829,7 @@ msgstr ""
 "\n"
 "Версия для MS-Windows 16 бит"
 
-#: version.c:1771
+#: version.c:739
 msgid ""
 "\n"
 "32 bit MS-DOS version"
@@ -5838,7 +5837,7 @@ msgstr ""
 "\n"
 "Версия для MS-DOS 32 бит"
 
-#: version.c:1773
+#: version.c:741
 msgid ""
 "\n"
 "16 bit MS-DOS version"
@@ -5846,7 +5845,7 @@ msgstr ""
 "\n"
 "Версия для MS-DOS 16 бит"
 
-#: version.c:1779
+#: version.c:747
 msgid ""
 "\n"
 "MacOS X (unix) version"
@@ -5854,7 +5853,7 @@ msgstr ""
 "\n"
 "Версия для MacOS X (unix)"
 
-#: version.c:1781
+#: version.c:749
 msgid ""
 "\n"
 "MacOS X version"
@@ -5862,7 +5861,7 @@ msgstr ""
 "\n"
 "Версия для MacOS X"
 
-#: version.c:1784
+#: version.c:752
 msgid ""
 "\n"
 "MacOS version"
@@ -5870,7 +5869,7 @@ msgstr ""
 "\n"
 "Версия для MacOS"
 
-#: version.c:1789
+#: version.c:757
 msgid ""
 "\n"
 "RISC OS version"
@@ -5878,7 +5877,7 @@ msgstr ""
 "\n"
 "Версия для RISC OS"
 
-#: version.c:1799
+#: version.c:767
 msgid ""
 "\n"
 "Included patches: "
@@ -5886,11 +5885,11 @@ msgstr ""
 "\n"
 "Заплатки: "
 
-#: version.c:1825 version.c:2193
+#: version.c:793 version.c:1161
 msgid "Modified by "
 msgstr "С изменениями, внесёнными "
 
-#: version.c:1832
+#: version.c:800
 msgid ""
 "\n"
 "Compiled "
@@ -5898,11 +5897,11 @@ msgstr ""
 "\n"
 "Скомпилирован "
 
-#: version.c:1835
+#: version.c:803
 msgid "by "
 msgstr " "
 
-#: version.c:1847
+#: version.c:815
 msgid ""
 "\n"
 "Huge version "
@@ -5910,7 +5909,7 @@ msgstr ""
 "\n"
 "Огромная версия "
 
-#: version.c:1850
+#: version.c:818
 msgid ""
 "\n"
 "Big version "
@@ -5918,7 +5917,7 @@ msgstr ""
 "\n"
 "Большая версия "
 
-#: version.c:1853
+#: version.c:821
 msgid ""
 "\n"
 "Normal version "
@@ -5926,7 +5925,7 @@ msgstr ""
 "\n"
 "Обычная версия "
 
-#: version.c:1856
+#: version.c:824
 msgid ""
 "\n"
 "Small version "
@@ -5934,7 +5933,7 @@ msgstr ""
 "\n"
 "Малая версия "
 
-#: version.c:1858
+#: version.c:826
 msgid ""
 "\n"
 "Tiny version "
@@ -5942,231 +5941,231 @@ msgstr ""
 "\n"
 "Версия \"Кроха\" "
 
-#: version.c:1864
+#: version.c:832
 msgid "without GUI."
 msgstr "без графического интерфейса."
 
-#: version.c:1869
+#: version.c:837
 msgid "with GTK2-GNOME GUI."
 msgstr "с графическим интерфейсом GTK2-GNOME."
 
-#: version.c:1871
+#: version.c:839
 msgid "with GTK-GNOME GUI."
 msgstr "с графическим интерфейсом GTK-GNOME."
 
-#: version.c:1875
+#: version.c:843
 msgid "with GTK2 GUI."
 msgstr "с графическим интерфейсом GTK2."
 
-#: version.c:1877
+#: version.c:845
 msgid "with GTK GUI."
 msgstr "с графическим интерфейсом GTK."
 
-#: version.c:1882
+#: version.c:850
 msgid "with X11-Motif GUI."
 msgstr "с графическим интерфейсом X11-Motif."
 
-#: version.c:1886
+#: version.c:854
 msgid "with X11-neXtaw GUI."
 msgstr "с графическим интерфейсом X11-neXtaw."
 
-#: version.c:1888
+#: version.c:856
 msgid "with X11-Athena GUI."
 msgstr "с графическим интерфейсом X11-Athena."
 
-#: version.c:1892
+#: version.c:860
 msgid "with BeOS GUI."
 msgstr "с графическим интерфейсом BeOS."
 
-#: version.c:1895
+#: version.c:863
 msgid "with Photon GUI."
 msgstr "с графическим интерфейсом Photon."
 
-#: version.c:1898
+#: version.c:866
 msgid "with GUI."
 msgstr "с графическим интерфейсом."
 
-#: version.c:1901
+#: version.c:869
 msgid "with Carbon GUI."
 msgstr "с графическим интерфейсом Carbon."
 
-#: version.c:1904
+#: version.c:872
 msgid "with Cocoa GUI."
 msgstr "с графическим интерфейсом Cocoa."
 
-#: version.c:1907
+#: version.c:875
 msgid "with (classic) GUI."
 msgstr "с классическим графическим интерфейсом."
 
-#: version.c:1918
+#: version.c:886
 msgid "  Features included (+) or not (-):\n"
 msgstr "  Включённые (+) и отключённые (-) особенности:\n"
 
-#: version.c:1930
+#: version.c:898
 msgid "   system vimrc file: \""
 msgstr "            общесистемный файл vimrc: \""
 
-#: version.c:1935
+#: version.c:903
 msgid "     user vimrc file: \""
 msgstr "         пользовательский файл vimrc: \""
 
-#: version.c:1940
+#: version.c:908
 msgid " 2nd user vimrc file: \""
 msgstr "  второй пользовательский файл vimrc: \""
 
-#: version.c:1945
+#: version.c:913
 msgid " 3rd user vimrc file: \""
 msgstr "  третий пользовательский файл vimrc: \""
 
-#: version.c:1950
+#: version.c:918
 msgid "      user exrc file: \""
 msgstr "          пользовательский файл exrc: \""
 
-#: version.c:1955
+#: version.c:923
 msgid "  2nd user exrc file: \""
 msgstr "   второй пользовательский файл exrc: \""
 
-#: version.c:1961
+#: version.c:929
 msgid "  system gvimrc file: \""
 msgstr "           общесистемный файл gvimrc: \""
 
-#: version.c:1965
+#: version.c:933
 msgid "    user gvimrc file: \""
 msgstr "        пользовательский файл gvimrc: \""
 
-#: version.c:1969
+#: version.c:937
 msgid "2nd user gvimrc file: \""
 msgstr " второй пользовательский файл gvimrc: \""
 
-#: version.c:1974
+#: version.c:942
 msgid "3rd user gvimrc file: \""
 msgstr " третий пользовательский файл gvimrc: \""
 
-#: version.c:1981
+#: version.c:949
 msgid "    system menu file: \""
 msgstr "             общесистемный файл меню: \""
 
-#: version.c:1989
+#: version.c:957
 msgid "  fall-back for $VIM: \""
 msgstr "          значение $VIM по умолчанию: \""
 
-#: version.c:1995
+#: version.c:963
 msgid " f-b for $VIMRUNTIME: \""
 msgstr "   значение $VIMRUNTIME по умолчанию: \""
 
-#: version.c:1999
+#: version.c:967
 msgid "Compilation: "
 msgstr "Параметры компиляции: "
 
-#: version.c:2005
+#: version.c:973
 msgid "Compiler: "
 msgstr "Компилятор: "
 
-#: version.c:2010
+#: version.c:978
 msgid "Linking: "
 msgstr "Сборка: "
 
-#: version.c:2015
+#: version.c:983
 msgid "  DEBUG BUILD"
 msgstr "  ОТЛАДОЧНАЯ СБОРКА"
 
-#: version.c:2054
+#: version.c:1022
 msgid "VIM - Vi IMproved"
 msgstr "VIM ::: Vi IMproved (Улучшенный Vi) ::: Русская версия"
 
-#: version.c:2056
+#: version.c:1024
 msgid "version "
 msgstr "версия "
 
-#: version.c:2057
+#: version.c:1025
 msgid "by Bram Moolenaar et al."
 msgstr "Брам Мооленаар и другие"
 
-#: version.c:2061
+#: version.c:1029
 msgid "Vim is open source and freely distributable"
 msgstr "Vim это свободно распространяемая программа с открытым кодом"
 
-#: version.c:2063
+#: version.c:1031
 msgid "Help poor children in Uganda!"
 msgstr "Бедным детям в Уганде нужна ваша помощь!"
 
-#: version.c:2064
+#: version.c:1032
 msgid "type  :help iccf<Enter>       for information "
 msgstr "наберите :help iccf<Enter>       для дополнительной информации"
 
-#: version.c:2066
+#: version.c:1034
 msgid "type  :q<Enter>               to exit         "
 msgstr "наберите :q<Enter>               чтобы выйти из программы     "
 
-#: version.c:2067
+#: version.c:1035
 msgid "type  :help<Enter>  or  <F1>  for on-line help"
 msgstr "наберите :help<Enter> или <F1>   для получения справки        "
 
-#: version.c:2068
+#: version.c:1036
 msgid "type  :help version6<Enter>   for version info"
 msgstr "наберите :help version6<Enter>   чтобы узнать об этой версии  "
 
-#: version.c:2071
+#: version.c:1039
 msgid "Running in Vi compatible mode"
 msgstr "Работа в Vi-совместимом режиме"
 
-#: version.c:2072
+#: version.c:1040
 msgid "type  :set nocp<Enter>        for Vim defaults"
 msgstr "наберите :set nocp<Enter>        для перехода в режим Vim     "
 
-#: version.c:2073
+#: version.c:1041
 msgid "type  :help cp-default<Enter> for info on this"
 msgstr "наберите :help cp-default<Enter> для дополнительной информации"
 
-#: version.c:2088
+#: version.c:1056
 msgid "menu  Help->Orphans           for information    "
 msgstr "меню Справка->Сироты             для получения информации     "
 
-#: version.c:2090
+#: version.c:1058
 msgid "Running modeless, typed text is inserted"
 msgstr "Безрежимная работы, вставка введённого текста"
 
-#: version.c:2091
+#: version.c:1059
 msgid "menu  Edit->Global Settings->Toggle Insert Mode  "
 msgstr "меню Правка->Общие Настройки->Режим Вставки                     "
 
-#: version.c:2092
+#: version.c:1060
 msgid "                              for two modes      "
 msgstr "                                 для двух режимов               "
 
-#: version.c:2096
+#: version.c:1064
 msgid "menu  Edit->Global Settings->Toggle Vi Compatible"
 msgstr "меню Правка->Общие Настройки->Совместимость с Vi                "
 
-#: version.c:2097
+#: version.c:1065
 msgid "                              for Vim defaults   "
 msgstr "                                 для перехода в режим Vim       "
 
-#: version.c:2144
+#: version.c:1112
 msgid "Sponsor Vim development!"
 msgstr "Помогите в разработке Vim!"
 
-#: version.c:2145
+#: version.c:1113
 msgid "Become a registered Vim user!"
 msgstr "Станьте зарегистрированным пользователем Vim!"
 
-#: version.c:2148
+#: version.c:1116
 msgid "type  :help sponsor<Enter>    for information "
 msgstr "наберите :help sponsor<Enter>    для получения информации     "
 
-#: version.c:2149
+#: version.c:1117
 msgid "type  :help register<Enter>   for information "
 msgstr "наберите :help register<Enter>   для получения информации     "
 
-#: version.c:2151
+#: version.c:1119
 msgid "menu  Help->Sponsor/Register  for information    "
 msgstr "меню Справка->Помощь/Регистрация для получения информации       "
 
-#: version.c:2161
+#: version.c:1129
 msgid "WARNING: Windows 95/98/ME detected"
 msgstr "ПРЕДУПРЕЖДЕНИЕ: обнаружена Windows 95/98/ME"
 
-#: version.c:2164
+#: version.c:1132
 msgid "type  :help windows95<Enter>  for info on this"
 msgstr "наберите :help windows95<Enter>  для получения информации     "
 

@@ -97,7 +97,7 @@ if version >= 600
   endif
   au BufReadCmd  ftp://*,rcp://*,scp://*,http://*,dav://*,rsync://*,sftp://*	exe "doau BufReadPre ".expand("<afile>")|exe "Nread 0r ".expand("<afile>")|exe "doau BufReadPost ".expand("<afile>")
   au FileReadCmd ftp://*,rcp://*,scp://*,http://*,dav://*,rsync://*,sftp://*	exe "doau BufReadPre ".expand("<afile>")|exe "Nread "   .expand("<afile>")|exe "doau BufReadPost ".expand("<afile>")
-  au BufWriteCmd ftp://*,rcp://*,scp://*,dav://*,rsync://*,sftp://*    		exe "Nwrite "  .expand("<afile>")|call <SID>NetRestorePosn()
+  au BufWriteCmd ftp://*,rcp://*,scp://*,dav://*,rsync://*,sftp://*		exe "Nwrite "  .expand("<afile>")|call <SID>NetRestorePosn()
  augroup END
 endif
 
@@ -865,8 +865,8 @@ fun! s:NetMethod(choice)  " globals: method machine id passwd fname
  " rcphf    : [user@]host:filename		    Use rcp
  " scpurm   : scp://[user@]host[[#:]port]/filename  Use scp
  " httpurm  : http://[user@]host/filename	    Use wget
- " davurm   : dav://host[:port]/path                Use cadaver
- " rsyncurm : rsync://host[:port]/path              Use rsync
+ " davurm   : dav://host[:port]/path		    Use cadaver
+ " rsyncurm : rsync://host[:port]/path		    Use rsync
  " fetchurm : fetch://[user@]host[:http]/filename   Use fetch (defaults to ftp, override for http)
  " sftpurm  : sftp://[user@]host/filename  Use scp
  let mipf     = '\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)'
@@ -1115,11 +1115,11 @@ endfun
 
 " ------------------------------------------------------------------------
 " NetReadFixup: this sort of function is typically written by the user {{{1
-"               to handle extra junk that their system's ftp dumps
-"               into the transfer.  This function is provided as an
-"               example and as a fix for a Windows 95 problem: in my
-"               experience, win95's ftp always dumped four blank lines
-"               at the end of the transfer.
+"		to handle extra junk that their system's ftp dumps
+"		into the transfer.  This function is provided as an
+"		example and as a fix for a Windows 95 problem: in my
+"		experience, win95's ftp always dumped four blank lines
+"		at the end of the transfer.
 if has("win95") && g:netrw_win95ftp
  fun! NetReadFixup(method, line1, line2)
 "   call Dfunc("NetReadFixup(method<".a:method."> line1=".a:line1." line2=".a:line2.")")

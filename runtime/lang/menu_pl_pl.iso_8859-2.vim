@@ -89,7 +89,7 @@ menutrans &Virtual\ Edit	Obróbka\ &wirtualna
 menutrans Never			Nigdy
 menutrans Block\ Selection	Zaznaczanie\ zakresu
 menutrans Insert\ mode		Tryb\ wprowadzania
-menutrans Toggle\ Vi\ C&ompatible<Tab>:set\ cp!	Tryb\ zg&odno¶ci\ z\ Vi<Tab>:set cp!
+menutrans Toggle\ Vi\ C&ompatible<Tab>:set\ cp!	Tryb\ zg&odno¶ci\ z\ Vi<Tab>:set\ cp!
 menutrans Block\ and\ Insert	Zakres\ i\ wprowadzanie
 menutrans Always		Zawsze
 
@@ -243,6 +243,7 @@ endif
 
 " Syntax menu
 menutrans &Syntax &Sk³adnia
+menutrans &Show\ filetypes\ in\ menu	Poka¿\ typy\ &plików\ w\ menu
 menutrans Set\ '&syntax'\ only	Ustaw\ tylko\ '&syntax'
 menutrans Set\ '&filetype'\ too	Ustaw\ równie¿\ '&filetype'
 menutrans &Off			&Wy³±cz

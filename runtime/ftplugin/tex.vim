@@ -1,8 +1,8 @@
 " LaTeX filetype plugin
 " Language:     LaTeX (ft=tex)
 " Maintainer:   Benji Fisher, Ph.D. <benji@member.AMS.org>
-" Version:	1.1.1
-" Last Change: Tue Dec 30 06:00 PM 2003 EST
+" Version:	1.2
+" Last Change:	Tue 11 May 2004 04:49:20 PM EDT
 "  URL:		http://www.vim.org/script.php?script_id=411
 
 " Only do this when not done yet for this buffer
@@ -89,10 +89,9 @@ let &l:define='\\\([egx]\|char\|mathchar\|count\|dimen\|muskip\|skip\|toks\)\='
 " Tell Vim how to recognize LaTeX \include{foo} and plain \input bar :
 setlocal include=\\\\input\\\\|\\\\include{
 setlocal suffixesadd=.tex
-" On some file systems, "}" is inluded in 'isfname'.  In case the
-" TeX file has \include{fname} (LaTeX only), strip the "}" and
-" any other trailing characters.
-setlocal includeexpr=substitute(v:fname,'}.*','','')
+" On some file systems, "{" and "}" are inluded in 'isfname'.  In case the
+" TeX file has \include{fname} (LaTeX only), strip everything except "fname".
+let &l:includeexpr = "substitute(v:fname, '^.\\{-}{\\|}.*', '', 'g')"
 " fun! TexIncludeExpr()
 "   let fname = substitute(v:fname, '}.*', '', '')
 "   return fname

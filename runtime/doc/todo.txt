@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.3a.  Last change: 2004 May 06
+*todo.txt*      For Vim version 6.3b.  Last change: 2004 May 16
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,9 +29,6 @@ be worked on, but only if you sponsor Vim development.  See |sponsor|.
 
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
-
-DJGPP: test32 fails
-
 
 Vi incompatibility:
 8   With undo/redo only marks in the changed lines should be changed.  Other
@@ -127,11 +124,11 @@ GTK+ GUI known bugs:
 
 
 Win32 GUI known bugs:
-8   Win32: even though the title is converted to UCS2, it still shows "???"
-    for multi-byte characters.  This happens when the environment uses latin1
-    and 'encoding' is "utf-8".
 8   In eval.c, io.h is included when MSWIN32 is defined.  Shouldn't this be
     WIN32?  Or can including io.h be moved to vim.h? (Dan Sharp)
+7   Windows XP: When using "ClearType" for text smoothing, a column of yellow
+    pixels remains when typing spaces in front of a "D" ('guifont' set to
+    "lucida_console:h8").
 6   Win32 GUI: With "-u NONE -U NONE" and doing "CTRL-W v" "CTRL-W o", the ":"
     of ":only" is highlighted like the cursor.  (Lipelis)
 7   When font smoothing is enabled, redrawing can become very slow.  The reason
@@ -143,9 +140,8 @@ Win32 GUI known bugs:
 8   Win32: Multi-byte characters are not displayed, even though the same font
     in Notepad can display them. (Srinath Avadhanula)  Try with the
     UTF-8-demo.txt page with Andale Mono.
-8   Unicode characters in the file name are not handled properly.  Also
-    displaying the in the window title can be wrong. (Camillo)  Use Unicode
-    functions for file I/O?
+7   The cursor color indicating IME mode doesn't work properly. (Shizhu Pan,
+    2004 May 9)
 8   Win32: When clicking on the gvim title bar, which gives it focus, produces
     a file-changed dialog, after clicking on a button in that dialog the gvim
     window follows the mouse.  The button-up event is lost.  Only with
@@ -198,7 +194,8 @@ Win32 GUI known bugs:
     "/min" as the command name. (Rogall)
 6   Drawing text transparently doesn't seem to work (when drawing part cursor).
 8   CTRL key doesn't always work in combination with ALT key.  It does work
-    for function keys, not for alphabetic characters.
+    for function keys, not for alphabetic characters.  Perhaps this is because
+    CTRL-ALT is used by Windows as AltGr?
 8   CTRL-- doesn't work for AZERTY, because it's CTRL-[ for QWERTY.  How do we
     know which keyboard is being used?
 7   When scrolling, and a background color is dithered, the dither pattern
@@ -211,8 +208,6 @@ Win32 GUI known bugs:
 
 
 Athena and Motif:
-8   The "-X" argument can't be undone once Vim is running (e.g., when doing
-    ":gui").  Make the x_no_connect flag available through an option?
 9   Can configure be changed to disable netbeans if the Xpm library is
     required and it's missing?
 8   When using the resource "Vim*borderwidth 2" the widgets are positioned
@@ -232,6 +227,9 @@ Athena and Motif:
     the tooltips work though...
 7   Motif: when using a file selection dialog, the specified file name is not
     always used (when specifying a filter or another directory).
+8   When 'encoding' is different from the current locale (e.g., utf-8) the
+    menu strings don't work.  Requires conversion from 'encoding' to the
+    current locale.  Workaround: set 'langmenu'.
 
 
 Athena GUI:
@@ -460,7 +458,7 @@ Macintosh:
     to arrive as upper and lower bytes. (David Brown, 2004 April 17)
 8   Typing Unicode characters doesn't work at all in the GUI.
 8   Patch to add 'transparency' option.  Disadvantage: it's slow. (Eckehard
-    Berns, 2004 Jan 31) http://ecki.to/vim-icns/TransBack.diff
+    Berns, 2004 May 9) http://ecki.to/vim-icns/TransBack.diff
 8   Patches from "Rain Dog" Cucka:
     - guifont selector (2002 Dec 15)
     - scrollbar (2002 Dec 8)
@@ -483,6 +481,14 @@ Macintosh:
 
 
 "Small" problems:
+7   Vimtutor leaves escape sequence in terminal. This is the xterm response to
+    requesting the version number.  (Yasuhiro Matsumoto)
+8   When redirecting and using ":silent" the current column for displaying and
+    redirection can be different.  Use a separate variable to hold the column
+    for redirection.
+7   There is no way to change directory and go back without changing the local
+    and/or global directory.  Add a way to find out if the current window uses
+    a local directory.  Add cdcmd() that returns ":cd" or ":lcd"?
 7   After running "make test" the window title is sometimes not restored.
     Mostly sticks at "test3.in", but not always.  Appears to happen more often
     when compiled with Python (threading).
@@ -822,7 +828,7 @@ Problems that will (probably) not be solved:
 -   When using an xterm that supports the termresponse feature, and the 't_Co'
     termcap option was wrong when Vim started, it will be corrected when the
     termresponse is received.  Since the number of colors changes, the
-    highlighting needs to be initialized again.  This may cause color defined
+    highlighting needs to be initialized again.  This may cause colors defined
     in the vimrc file to be lost.
 -   On Windows NT 4.0 the number of files passed to Vim with drag&drop and
     "Edit with Vim" is limited.  The maximum command line length is 255 chars.
@@ -937,6 +943,7 @@ Folding:
 8   Add a way to add fold-plugins.  Johannes Zellner has one for VB.
 7   When using 2html.vim, also reproduce folds as you can see them.  When
     someone doesn't want the folds he can disable them before converting.
+    First attempt by Carl Osterwisch, 2004 May 10.
 7   When using manual folding, the undo command should also restore folds.
 -   Allow completely hiding a closed fold.  Require showing a character in
     'foldcolumn' to avoid the missing line goes unnoticed.
@@ -1268,6 +1275,7 @@ Built-in script language:
 	perl(cmd)		call Perl and return string
 	shorten(fname)		shorten a file name, like home_replace()
 	input(prompt, complete)	like input() but do specified completion
+	inputrl()		like input() but right-to-left
 	virtualmode()		add argument to obtain whether "$" was used in
 				Visual block mode.
 	tagtype(tag)		get type of tag (also checks if it exists)
@@ -2002,6 +2010,8 @@ Insert mode:
     Perhaps it can be allowed a single time, to be able to do
     "<C-O>10axyz<Esc>".  Nesting this further is confusing.
     ":map <F2> 5aabc<Esc>" works only once from Insert mode.
+7   Use CTRL-G <count> to repeat what follows.  Useful for inserting a
+    character multiple times or repeating CTRL-Y.
 7   Make ":startinsert" command work directly for functions and scripts?
     Also make it possible to append (it's difficult at end of line).
     And add ":startreplace" (patch by Charles Campbell, 2004 Jan 9,
@@ -3306,6 +3316,10 @@ Far future and "big" extensions:
     with a netbeans connection; for console: start a program that splits the
     terminal, runs the debugger in one window and reconnect Vim I/O to the
     other window.
+    Wishes for NetBeans commands:
+    - make it possible to have 'defineAnnoType' also handle terminal colors.
+    - send 'balloonText' events for the cursor position (using CursorHold ?)
+      in terminal mode.
 -   Add a way of scrolling that leaves the cursor where it is.  Especially
     when using the scrollbar.  Typing a cursor-movement command scrolls back
     to where the cursor is.

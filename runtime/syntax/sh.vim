@@ -15,8 +15,8 @@
 "   is_bash		if none of the previous three variables are
 "		defined, then if is_bash is set b:is_bash is default
 " g:sh_fold_enabled	if non-zero, syntax folding is enabled
-"   sh_minlines                 sets up syn sync minlines  (default: 200)
-"   sh_maxlines                 sets up syn sync maxlines  (default: twice sh_minlines)
+"   sh_minlines		sets up syn sync minlines  (default: 200)
+"   sh_maxlines		sets up syn sync maxlines  (default: twice sh_minlines)
 "
 " This file includes many ideas from Éric Brunet (eric.brunet@ens.fr)
 

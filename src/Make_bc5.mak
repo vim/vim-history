@@ -421,7 +421,7 @@ TARGET = gvim.exe
 EXETYPE=-WD
 DEFINES = $(DEFINES) -DVIMDLL
 !else
-EXETYPE=-WE
+EXETYPE=-W
 !endif
 STARTUPOBJ = c0w32.obj
 LINK2 = -aa
@@ -471,6 +471,7 @@ DEFINES = $(DEFINES) -DMSWINPS
 
 ##### BASE COMPILER/TOOLS RULES #####
 MAKE = $(BOR)\bin\make
+CFLAGS = -w-aus -w-par -w-pch -w-ngu -w-csu -I$(INCLUDE)
 !if ($(OSTYPE)==DOS16)
 BRC =
 !if ("$(LINK)"=="")
@@ -479,7 +480,7 @@ LINK	= $(BOR)\BIN\TLink
 CC   = $(BOR)\BIN\Bcc
 LFLAGS	= -Tde -c -m -L$(LIB) $(DEBUG_FLAG) $(LINK2)
 LFLAGSDLL  =
-CFLAGS = -w-aus -w-par -w-pch -I$(INCLUDE) -H- $(HEADERS)
+CFLAGS = $(CFLAGS) -H- $(HEADERS)
 !else
 BRC = $(BOR)\BIN\brc32
 !if ("$(LINK)"=="")
@@ -488,7 +489,7 @@ LINK	= $(BOR)\BIN\ILink32
 CC   = $(BOR)\BIN\Bcc32
 LFLAGS	= -OS -Tpe -c -m -L$(LIB) $(DEBUG_FLAG) $(LINK2)
 LFLAGSDLL  = -Tpd -c -m -L$(LIB) $(DEBUG_FLAG) $(LINK2)
-CFLAGS = -w-aus -w-par -w-pch -I$(INCLUDE) -d -RT- -k- -Oi $(HEADERS) -f-
+CFLAGS = $(CFLAGS) -d -RT- -k- -Oi $(HEADERS) -f-
 !endif
 
 CC1 = -c
@@ -930,14 +931,15 @@ $(OBJDIR)\pathdef.obj:	auto\pathdef.c
 # the # character as something other than a comment without messing up
 # the preprocessor directive.
 auto\pathdef.c::
+	-@md auto
 	@echo creating auto/pathdef.c
-	@copy &&|
+	@copy /y &&|
 /* pathdef.c */
 /*"*/#include "vim.h"/*"*/
 
 char_u *default_vim_dir = (char_u *)"$(VIMRCLOC:\=\\)";
 char_u *default_vimruntime_dir = (char_u *)"$(VIMRUNTIMEDIR:\=\\)";
-char_u *all_cflags = (char_u *)"$(CC:\=\\) $(CFLAGS:\=\\) $(DEFINES) $(MBDEFINES) $(INTERP_DEFINES:"=\\") $(OPT) $(EXETYPE) $(CPUARG) $(ALIGNARG) $(DEBUG_FLAG) $(CODEGUARD_FLAG)";
+char_u *all_cflags = (char_u *)"$(CC:\=\\) $(CFLAGS:\=\\) $(DEFINES) $(MBDEFINES) $(INTERP_DEFINES:\=\\) $(OPT) $(EXETYPE) $(CPUARG) $(ALIGNARG) $(DEBUG_FLAG) $(CODEGUARD_FLAG)";
 char_u *all_lflags = (char_u *)"$(LINK:\=\\) $(LFLAGS:\=\\)";
 char_u *compiled_user = (char_u *)"$(USERNAME)";
 char_u *compiled_sys = (char_u *)"$(USERDOMAIN)";
@@ -982,7 +984,7 @@ vimrun.exe: vimrun.c
 
 # The dependency on $(OBJDIR) is to have bcc.cfg generated each time.
 $(OBJDIR)\bcc.cfg: Make_bc5.mak $(OBJDIR)
-  copy &&|
+  copy /y &&|
 	$(CFLAGS)
 	-L$(LIB)
 	$(DEFINES)

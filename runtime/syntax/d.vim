@@ -2,8 +2,8 @@
 "
 " Language:     D
 " Maintainer:   Jason Mills<jmills@cs.mun.ca>
-" URL:           
-" Last Change:  2004 Apr 21
+" URL:
+" Last Change:  2004 May 16
 " Version:      0.6
 "
 " Options:
@@ -29,18 +29,18 @@ if exists("b:current_syntax")
 endif
 
 " Keyword definitions
-" 
-syn keyword dExternal        import module extern
-syn keyword dConditional     if else switch 
-syn keyword dBranch          goto break continue 
-syn keyword dRepeat          while for do foreach
-syn keyword dBoolean         true false
-syn keyword dConstant        null 
-syn keyword dTypedef         alias typedef 
-syn keyword dStructure       template interface class enum struct union 
-syn keyword dOperator        new delete typeof cast align is
-syn keyword dOperator        this super 
-if exists("d_hl_operator_overload") 
+"
+syn keyword dExternal	     import module extern
+syn keyword dConditional     if else switch
+syn keyword dBranch	     goto break continue
+syn keyword dRepeat	     while for do foreach
+syn keyword dBoolean	     true false
+syn keyword dConstant	     null
+syn keyword dTypedef	     alias typedef
+syn keyword dStructure	     template interface class enum struct union
+syn keyword dOperator	     new delete typeof cast align is
+syn keyword dOperator	     this super
+if exists("d_hl_operator_overload")
   syn keyword dOpOverload  opNeg opCom opPostInc opPostDec opAdd opSub opSub_r
   syn keyword dOpOverload  opMul opDiv opDiv_r opMod opMod_r opAnd opOr opXor
   syn keyword dOpOverload  opShl opShl_r opShr opShr_r opUShr opUShr_r opCat
@@ -50,19 +50,19 @@ if exists("d_hl_operator_overload")
   syn keyword dOpOverload  opShlAssign opShrAssign opUShrAssign opCatAssign
   syn keyword dOpOverload  opIndex opCall opSlice
 endif
-syn keyword dType            ushort int uint long ulong float 
-syn keyword dType            void byte ubyte double bit char wchar ucent cent
-syn keyword dType            short bool dchar
-syn keyword dType            real ireal ifloat idouble creal cfloat cdouble
-syn keyword dDebug           deprecated unittest 
-syn keyword dExceptions      throw try catch finally 
-syn keyword dScopeDecl       public protected private export 
+syn keyword dType	     ushort int uint long ulong float
+syn keyword dType	     void byte ubyte double bit char wchar ucent cent
+syn keyword dType	     short bool dchar
+syn keyword dType	     real ireal ifloat idouble creal cfloat cdouble
+syn keyword dDebug	     deprecated unittest
+syn keyword dExceptions      throw try catch finally
+syn keyword dScopeDecl       public protected private export
 syn keyword dStatement       version debug return with invariant body
-syn keyword dStatement       in out inout asm 
+syn keyword dStatement       in out inout asm
 syn keyword dStatement       function delegate
 syn keyword dStorageClass    auto static override final const abstract volatile
-syn keyword dStorageClass    synchronized 
-syn keyword dPragma          pragma
+syn keyword dStorageClass    synchronized
+syn keyword dPragma	     pragma
 
 
 " Assert is a statement and a module name.
@@ -82,16 +82,16 @@ syn match dAssert "[^.]\s*\<assert\>"ms=s+1
 "
 " We contain dScopeDecl so public: private: etc. are not highlighted like labels
 syn match   dUserLabel       "^\s*[_$a-zA-Z][_$a-zA-Z0-9_]*\s*:"he=e-1 contains=dLabel,dScopeDecl
-syn keyword dLabel           case default
+syn keyword dLabel	     case default
 
 " Comments
 "
-syn keyword dTodo             contained TODO FIXME TEMP XXX
+syn keyword dTodo	      contained TODO FIXME TEMP XXX
 syn match   dCommentStar      contained "^\s*\*[^/]"me=e-1
 syn match   dCommentStar      contained "^\s*\*$"
 syn match   dCommentPlus      contained "^\s*+[^/]"me=e-1
 syn match   dCommentPlus      contained "^\s*+$"
-if exists("d_comment_strings") 
+if exists("d_comment_strings")
    syn region  dBlockCommentString   contained  start=+"+ end=+"+ end=+\*/+me=s-1,he=s-1 contains=dCommentStar,dUnicode,dEscSequence,@Spell
    syn region  dNestedCommentString  contained  start=+"+ end=+"+ end="+"me=s-1,he=s-1 contains=dCommentPlus,dUnicode,dEscSequence,@Spell
    syn region  dLineCommentString    contained start=+"+  end=+$\|"+ contains=dUnicode,dEscSequence,@Spell
@@ -119,9 +119,9 @@ syn match dSpecialCharError contained "[^']"
 " Escape sequences (oct,specal char,hex,wchar). These are not contained
 " because they are considered string litterals
 syn match dEscSequence "\\\(\o\{1,3}\|[\"\\'\\?ntbrfva]\|u\x\{4}\|U\x\{8}\|x\x\x\)"
-syn match dCharacter	"'[^']*'" contains=dEscSequence,dSpecialCharError
-syn match dCharacter	"'\\''" contains=dEscSequence
-syn match dCharacter	"'[^\\]'"
+syn match dCharacter  "'[^']*'" contains=dEscSequence,dSpecialCharError
+syn match dCharacter  "'\\''" contains=dEscSequence
+syn match dCharacter  "'[^\\]'"
 
 " Unicode characters
 "
@@ -171,51 +171,51 @@ syn case match
 
 " Pragma (preprocessor) support
 " TODO: Highlight following Integer and optional Filespec.
-syn region	dPragma start="#\s*\(line\>\)" skip="\\$" end="$"
+syn region  dPragma start="#\s*\(line\>\)" skip="\\$" end="$"
 
 
 " The default highlighting.
-" 
-hi def link dBinary                  Number
-hi def link dInt                     Number
-hi def link dHex                     Number
-hi def link dOctal                   Number
-hi def link dFloat                   Float 
-hi def link dHexFloat                Float 
-hi def link dDebug                   Debug
-hi def link dBranch                  Conditional
-hi def link dConditional             Conditional
-hi def link dLabel                   Label
-hi def link dUserLabel               Label
-hi def link dRepeat                  Repeat
-hi def link dExceptions              Exception
-hi def link dAssert                  Statement
-hi def link dStatement               Statement
-hi def link dScopeDecl               dStorageClass
-hi def link dStorageClass            StorageClass
-hi def link dBoolean                 Boolean
-hi def link dUnicode                 Special
-hi def link dRawString               String
-hi def link dString                  String
-hi def link dHexString               String
-hi def link dCharacter               Character
-hi def link dEscSequence             SpecialChar
-hi def link dSpecialCharError        Error
-hi def link dOctalError              Error
-hi def link dOperator                Operator
-hi def link dOpOverload              Operator
-hi def link dConstant                Constant
-hi def link dTypedef                 Typedef
-hi def link dStructure               Structure
-hi def link dTodo                    Todo
-hi def link dType                    Type
-hi def link dLineComment             Comment
-hi def link dBlockComment            Comment
-hi def link dNestedComment           Comment
-hi def link dExternal                Include
-hi def link dPragma                  PreProc
+"
+hi def link dBinary		     Number
+hi def link dInt		     Number
+hi def link dHex		     Number
+hi def link dOctal		     Number
+hi def link dFloat		     Float
+hi def link dHexFloat		     Float
+hi def link dDebug		     Debug
+hi def link dBranch		     Conditional
+hi def link dConditional	     Conditional
+hi def link dLabel		     Label
+hi def link dUserLabel		     Label
+hi def link dRepeat		     Repeat
+hi def link dExceptions		     Exception
+hi def link dAssert		     Statement
+hi def link dStatement		     Statement
+hi def link dScopeDecl		     dStorageClass
+hi def link dStorageClass	     StorageClass
+hi def link dBoolean		     Boolean
+hi def link dUnicode		     Special
+hi def link dRawString		     String
+hi def link dString		     String
+hi def link dHexString		     String
+hi def link dCharacter		     Character
+hi def link dEscSequence	     SpecialChar
+hi def link dSpecialCharError	     Error
+hi def link dOctalError		     Error
+hi def link dOperator		     Operator
+hi def link dOpOverload		     Operator
+hi def link dConstant		     Constant
+hi def link dTypedef		     Typedef
+hi def link dStructure		     Structure
+hi def link dTodo		     Todo
+hi def link dType		     Type
+hi def link dLineComment	     Comment
+hi def link dBlockComment	     Comment
+hi def link dNestedComment	     Comment
+hi def link dExternal		     Include
+hi def link dPragma		     PreProc
 
 
 let b:current_syntax = "d"
 
-" vim: ts=2
+" vim: ts=8

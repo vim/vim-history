@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Perl
 " Maintainer:	Nick Hibma <n_hibma@van-laarhoven.org>
-" Last Change:	2004 April 16
+" Last Change:	2004 May 16
 " Location:	http://www.van-laarhoven.org/vim/syntax/perl.vim
 "
 " Please download most recent version first before mailing
@@ -460,7 +460,7 @@ if version >= 508 || !exists("did_perl_syn_inits")
     HiLink perlUntilEOFSQ	perlString
     HiLink perlUntilEmptyDQ	perlString
     HiLink perlUntilEmptySQ	perlString
-    HiLink perlUntilEOF		perlString		
+    HiLink perlUntilEOF		perlString
   endif
   HiLink perlStringUnexpanded	perlString
   HiLink perlSubstitutionSQ	perlString
@@ -517,9 +517,9 @@ if version >= 508 || !exists("did_perl_syn_inits")
   HiLink perlSpecialMatch	perlSpecial
   HiLink perlSpecialBEOM	perlSpecial
   HiLink perlDATA		perlComment
-  
+
   HiLink perlBrackets		Error
-  
+
   " Possible errors
   HiLink perlNotEmptyLine	Error
   HiLink perlElseIfError	Error

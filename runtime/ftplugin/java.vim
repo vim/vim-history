@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	Java
 " Maintainer:	Dan Sharp <dwsharp at hotmail dot com>
-" Last Change:  2003 Sep 25
+" Last Change:  2004 May 16
 " URL:		http://mywebpage.netscape.com/sharppeople/vim/ftplugin
 
 if exists("b:did_ftplugin") | finish | endif
@@ -30,7 +30,7 @@ endif
 set suffixes+=.class
 
 " Enable gf on import statements.  Convert . in the package
-" name to / and append .java to the name, then search the path. 
+" name to / and append .java to the name, then search the path.
 setlocal includeexpr=substitute(v:fname,'\\.','/','g')
 setlocal suffixesadd=.java
 if exists("g:ftplugin_java_source_path")

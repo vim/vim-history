@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.3a.  Last change: 2004 May 05
+*starting.txt*  For Vim version 6.3b.  Last change: 2004 May 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -455,6 +455,9 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		When the X11 Session Management Protocol (XSMP) handler has
 		been built in, the -X option also disables that connection as
 		it, too, may have undesirable delays.
+		When the connection is desired later anyway (e.g., for
+		client-server messages), call the |serverlist()| function.
+		This does not enable the XSMP handler though.
 		{not in Vi}
 
 							*-s*
@@ -536,7 +539,7 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		restoring the session on login.  See |gui-gnome-session|
 		{not in Vi}
 
--P {parent-title}					*-P*
+-P {parent-title}					*-P* *MDI*
 		Win32 only: Specify the title of the parent application.  When
 		possible, Vim will run in an MDI window inside the
 		application.

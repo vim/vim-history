@@ -1,7 +1,7 @@
 " Vim Keymap file for Persian Standard Keyboard Layout
 " Maintainers: Behnam Esfahbod <behnam@bamdad.org>,
-"              Amir Hedayaty <amir@bamdad.org>
-" Last Change: 2003 Aug 18
+"	       Amir Hedayaty <amir@bamdad.org>
+" Last Change: 2004 May 16
 
 " All characters are given literally, conversion to another encoding (e.g.,
 " UTF-8) should work.

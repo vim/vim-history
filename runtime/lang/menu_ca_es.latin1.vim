@@ -1,7 +1,7 @@
 " Menu translations for Catalan
-" 
+"
 " Maintainer:	Ernest Adrogué <eadrogue@gmx.net>
-" Last Change:	18 Jan 2004 
+" Last Change:	18 Jan 2004
 "
 
 " Quit when menu translations have already been done.
@@ -86,7 +86,7 @@ menutrans &Global\ Settings		Opcions\ &globals
   menutrans Toggle\ &Toolbar				&Barra\ d'eines
   menutrans Toggle\ &Bottom\ Scrollbar			Barra\ de\ &desplaçament\ inferior
   menutrans Toggle\ &Left\ Scrollbar			Barra\ de\ desplaçament\ e&squerra
-  menutrans Toggle\ &Right\ Scrollbar			Barra\ de\ desplaçament\ dre&ta 
+  menutrans Toggle\ &Right\ Scrollbar			Barra\ de\ desplaçament\ dre&ta
 menutrans F&ile\ Settings				Opcions\ del\ f&itxer
 " submenú Edita/Opcions del fitxer
   menutrans Toggle\ Line\ &Numbering<Tab>:set\ nu!	&Ennumera\ les\ línies<Tab>:set\ nu!
@@ -146,9 +146,9 @@ menutrans Jump\ &back<Tab>^T		Salta\ en&rere<Tab>^T
 menutrans Build\ &Tags\ File		Crea\ un\ fitxer\ d'eti&quetes
 menutrans &Folding			&Plecs
 " submenú Eines/Plecs
-  menutrans &Enable/Disable\ folds<Tab>zi  &Habilita/Deshabilita\ els\ plecs<Tab>zi               
-  menutrans &View\ Cursor\ Line<Tab>zv	&Línia\ del\ cursor\ visible<Tab>zv               
-  menutrans Vie&w\ Cursor\ Line\ only<Tab>zMzx  &Només\ visible\ la\ línia\ del\ cursor<Tab>zMzx  
+  menutrans &Enable/Disable\ folds<Tab>zi  &Habilita/Deshabilita\ els\ plecs<Tab>zi
+  menutrans &View\ Cursor\ Line<Tab>zv	&Línia\ del\ cursor\ visible<Tab>zv
+  menutrans Vie&w\ Cursor\ Line\ only<Tab>zMzx  &Només\ visible\ la\ línia\ del\ cursor<Tab>zMzx
   menutrans C&lose\ more\ folds<Tab>zm	&Tanca\ més\ plecs<Tab>zm
   menutrans &Close\ all\ folds<Tab>zM	Tanca\ t&ots\ els\ plecs<Tab>zM
   menutrans O&pen\ more\ folds<Tab>zr	Obre\ &més\ plecs<Tab>zr

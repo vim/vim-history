@@ -1,6 +1,6 @@
 " Menu Translations:    Swedish
-" Maintainer:           Johan Svedberg <johan@svedberg.pp.se>
-" Last Change:          2003 Sep 23
+" Maintainer:		Johan Svedberg <johan@svedberg.pp.se>
+" Last Change:		2004 May 16
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")

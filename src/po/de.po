@@ -3,20 +3,20 @@
 # Do ":help uganda"  in Vim to read copying and usage conditions.
 # Do ":help credits" in Vim to see a list of people who contributed.
 #
-# FIRST AUTHOR Marcin Dalecki <dalecki@cyber.cs.net.pl>, 2000
+# Previous-Translator(s): Johannes Zellner <johannes@zellner.org>
 #
 # thoughts (Gedanken)
 #
-# - mark    : Markierung oder Marke ?
+# - mark    : Markierung oder Marke?
 # - ambigous: Mehrdeutig, Nicht-eindeutig
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Vim(deutsch)\n"
 "POT-Creation-Date: 2002-04-20 18:15+0200\n"
-"PO-Revision-Date: Sun, 21 Apr 2002 15:36:19 CEST\n"
-"Last-Translator: Johannes Zellner <johannes@zellner.org>\n"
-"Language-Team: Deutsch <johannes@zellner.org>\n"
+"PO-Revision-Date: 2004-05-12 20:49+0200\n"
+"Last-Translator: Gerfried Fuchs <alfie@ist.org>\n"
+"Language-Team: German <de@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=ISO_8859-1\n"
 "Content-Transfer-Encoding: 8-bit\n"
@@ -232,15 +232,15 @@ msgstr "    Zeile=%ld  id=%d  Name=%s"
 #: diff.c:133
 #, c-format
 msgid "E96: Can not diff more than %ld buffers"
-msgstr "E96: \"diff\" ist nicht möglich für mehr als %ld Puffer"
+msgstr "E96: \"diff\" ist für mehr als %ld Puffer nicht möglich"
 
 #: diff.c:648
 msgid "E97: Cannot create diffs"
-msgstr "E97: Kann keine \"diffs\" anlegen"
+msgstr "E97: Kann keine \"diffs\" erstellen"
 
 #: diff.c:747
 msgid "Patch file"
-msgstr "\"patch\"-Datei"
+msgstr "Patch-Datei"
 
 #: diff.c:991
 msgid "E98: Cannot read diff output"
@@ -270,7 +270,7 @@ msgstr "E103: Puffer \"%s\" ist nicht im \"diff\"-Modus"
 
 #: digraph.c:2172
 msgid "E104: Escape not allowed in digraph"
-msgstr "E104: 'Escape' ist nicht erlaubt in einem Digraphen"
+msgstr "E104: 'Escape' ist in einem Digraphen nicht erlaubt"
 
 #: digraph.c:2344
 msgid "Keymap file not found"
@@ -287,7 +287,7 @@ msgstr " Stichwort-Ergänzung (^N/^P)"
 #. ctrl_x_mode == 0, ^P/^N compl.
 #: edit.c:41
 msgid " ^X mode (^E/^Y/^L/^]/^F/^I/^K/^D/^V/^N/^P)"
-msgstr " ^X Modus (^E/^Y/^L/^]/^F/^I/^K/^D/^V/^N/^P)"
+msgstr " ^X-Modus (^E/^Y/^L/^]/^F/^I/^K/^D/^V/^N/^P)"
 
 #. Scroll has it's own msgs, in it's place there is the msg for local
 #. * ctrl_x_mode = 0 (eg continue_status & CONT_LOCAL)  -- Acevedo
@@ -486,15 +486,15 @@ msgstr ""
 
 #: eval.c:5626
 msgid "E240: No connection to Vim server"
-msgstr "E240: Keine Verbindung zum Vim 'Server'"
+msgstr "E240: Keine Verbindung zum Vim-Server"
 
 #: eval.c:5716
 msgid "E277: Unable to read a server reply"
-msgstr "E277: 'Server' Antwort kann nicht gelesen werden"
+msgstr "E277: Server-Antwort kann nicht gelesen werden"
 
 #: eval.c:5741
 msgid "E258: Unable to send to client"
-msgstr "E258: Kann nicht zum 'Client' senden"
+msgstr "E258: Kann nicht zum Client senden"
 
 #: eval.c:5786
 #, c-format
@@ -688,7 +688,7 @@ msgstr ""
 
 #: ex_cmds.c:1614
 msgid "# Value of 'encoding' when this file was written\n"
-msgstr "# Wert von 'encoding' als diese Datei geschrieben wurde\n"
+msgstr "# Wert von 'encoding', als diese Datei geschrieben wurde\n"
 
 #: ex_cmds.c:1713
 msgid "Illegal starting char"
@@ -735,7 +735,7 @@ msgid ""
 "'readonly' option is set for \"%.*s\".\n"
 "Do you wish to write anyway?"
 msgstr ""
-"'readonly'-Option ist gesetzt für \"%.*s\".\n"
+"'readonly'-Option ist für \"%.*s\" gesetzt.\n"
 "Möchten Sie trotzdem schreiben?"
 
 #: ex_cmds.c:2538
@@ -817,7 +817,7 @@ msgstr "E149: Schade, keine Hilfe für %s"
 #: ex_cmds.c:4455
 #, c-format
 msgid "Sorry, help file \"%s\" not found"
-msgstr "Hilfe Datei \"%s\" nicht gefunden"
+msgstr "Hilfe-Datei \"%s\" nicht gefunden"
 
 #: ex_cmds.c:4917
 #, c-format
@@ -842,7 +842,7 @@ msgstr "E154: Tag \"%s\" ist mehrmals in der Datei %s"
 #: ex_cmds.c:5139
 #, c-format
 msgid "E160: Unknown sign command: %s"
-msgstr "E160: Unbekannter 'sign' Befehl: %s"
+msgstr "E160: Unbekannter \"sign\"-Befehl: %s"
 
 #: ex_cmds.c:5159
 msgid "E156: Missing sign name"
@@ -882,7 +882,7 @@ msgstr "[gelöscht]"
 
 #: ex_cmds2.c:70
 msgid "Entering Debug mode.  Type \"cont\" to leave."
-msgstr "Debug Modus.  Geben Sie \"cont\" zum Beenden ein."
+msgstr "Debug-Modus. Geben Sie \"cont\" zum Verlassen ein."
 
 #: ex_cmds2.c:74 ex_docmd.c:771
 #, c-format
@@ -897,16 +897,16 @@ msgstr "Befehl: %s"
 #: ex_cmds2.c:224
 #, c-format
 msgid "Breakpoint in \"%s%s\" line %ld"
-msgstr "\"Breakpoint\" in \"%s%s\" Zeile %ld"
+msgstr "Haltepunkt in \"%s%s\" Zeile %ld"
 
 #: ex_cmds2.c:388
 #, c-format
 msgid "E161: Breakpoint not found: %s"
-msgstr "E161: \"Breakpoint\" nicht gefunden: %s"
+msgstr "E161: Haltepunkt nicht gefunden: %s"
 
 #: ex_cmds2.c:414
 msgid "No breakpoints defined"
-msgstr "Keine \"Breakpoints\" definiert"
+msgstr "Keine Haltepunkte definiert"
 
 #: ex_cmds2.c:419
 #, c-format
@@ -916,7 +916,7 @@ msgstr "%3d  %s %s  Zeile %ld"
 #: ex_cmds2.c:625
 #, c-format
 msgid "Save changes to \"%.*s\"?"
-msgstr "Änderungen in \"%.*s\" speichern ?"
+msgstr "Änderungen in \"%.*s\" speichern?"
 
 #: ex_cmds2.c:627 ex_docmd.c:8673
 msgid "Untitled"
@@ -958,7 +958,7 @@ msgstr "Suche nach \"%s\""
 #: ex_cmds2.c:1680
 #, c-format
 msgid "not found in 'runtimepath': \"%s\""
-msgstr "nicht gefunden im 'runtimepath': \"%s\""
+msgstr "im 'runtimepath' nicht gefunden: \"%s\""
 
 #: ex_cmds2.c:1714
 msgid "Source Vim script"
@@ -1045,7 +1045,7 @@ msgstr "E456: Datei \"%s\" kann nicht geöffnet werden"
 #: ex_cmds2.c:4091
 #, c-format
 msgid "E457: Can't read PostScript resource file \"%s\""
-msgstr "E457: PostScript 'resource' Datei \"%s\" kann nicht gelesen werden"
+msgstr "E457: PostScript 'resource'-Datei \"%s\" kann nicht gelesen werden"
 
 #: ex_cmds2.c:4289
 msgid "Sending to printer..."
@@ -1072,7 +1072,7 @@ msgstr "E197: Sprache kann nicht auf \"%s\" gesetzt werden"
 #: ex_docmd.c:490
 msgid "Entering Ex mode.  Type \"visual\" to go to Normal mode."
 msgstr ""
-"Ex Modus.  Geben Sie \"visual\" ein, um zum Normalen Modus zurückzukehren."
+"Ex-Modus.  Geben Sie \"visual\" ein, um zum Normal-Modus zurückzukehren."
 
 #. must be at EOF
 #: ex_docmd.c:526
@@ -1117,7 +1117,7 @@ msgstr "Bereichsgrenzen rückwärts"
 
 #: ex_docmd.c:1469
 msgid "Backwards range given, OK to swap"
-msgstr "Bereichsgrenzen rückwärts, vertauschen"
+msgstr "Bereichsgrenzen rückwärts; vertauschen"
 
 #: ex_docmd.c:1580
 msgid "Use w or w>>"
@@ -1336,7 +1336,7 @@ msgstr "kein :source Dateiname zur Ersetzung mit \"<sfile>\""
 #: ex_docmd.c:7720
 #, no-c-format
 msgid "Empty file name for '%' or '#', only works with \":p:h\""
-msgstr "Leerer Dateiname für '%' oder '#', arbeitet nur mit \":p:h\""
+msgstr "Leerer Dateiname für '%' oder '#', funktioniert nur mit \":p:h\""
 
 #: ex_docmd.c:7722
 msgid "Evaluates to an empty string"
@@ -1455,7 +1455,7 @@ msgstr "[RO]"
 
 #: fileio.c:1787
 msgid "[CR missing]"
-msgstr "[CR fehlt]'"
+msgstr "[CR fehlt]"
 
 #: fileio.c:1792
 msgid "[NL found]"
@@ -1539,7 +1539,7 @@ msgstr "Backup-Datei kann nicht erstellt werden (erzwinge mit !)"
 
 #: fileio.c:3080
 msgid "The resource fork will be lost (use ! to override)"
-msgstr "Der Resourcefork geht verloren (erzwinge mit!)"
+msgstr "Der Resourcefork geht verloren (erzwinge mit !)"
 
 #: fileio.c:3169
 msgid "E214: Can't find temp file for writing"
@@ -1547,7 +1547,7 @@ msgstr "E214: temporäre Datei kann nicht zum Schreiben geöffnet werden"
 
 #: fileio.c:3187
 msgid "E213: Cannot convert (use ! to write without conversion)"
-msgstr "E213: Fehler bei der Umwandlung (schreibe ohne Umwandlung mit '!')"
+msgstr "E213: Fehler bei der Umwandlung (schreibe ohne Umwandlung mit !)"
 
 #: fileio.c:3222
 msgid "E166: Can't open linked file for writing"
@@ -1937,8 +1937,8 @@ msgstr "VIM - Dialog..."
 #: gui_beval.c:68
 msgid "E232: Cannot create BalloonEval with both message and callback"
 msgstr ""
-"E232: BalloonEval kann NICHT sowohl mit 'message' als auch 'callback' "
-"erzeugt werden"
+"E232: BalloonEval kann nicht mit sowohl \"message\" und \"callback\" erzeugt "
+"werden"
 
 #: gui_gtk.c:1190
 msgid "Vim dialog..."
@@ -2065,7 +2065,8 @@ msgstr ""
 #: gui_w32.c:840
 #, c-format
 msgid "E243: Argument not supported: \"-%s\"; Use the OLE version."
-msgstr "E243: Argument wird nicht unterstützt: \"-%s\"; Verwende OLE Version."
+msgstr ""
+"E243: Argument wird nicht unterstützt: \"-%s\"; verwende die OLE Version."
 
 #. TODO: May be changed this message
 #: gui_w32.c:3448 gui_w32.c:3481 gui_x11.c:3252
@@ -2083,14 +2084,14 @@ msgstr "Suche & Ersetze (use '\\\\' um ein '\\' zu finden)"
 #: gui_x11.c:1419
 msgid "Vim E458: Cannot allocate colormap entry, some colors may be incorrect"
 msgstr ""
-"Vim E458: 'Colormap'-Eintrag kann nicht alloziert werden, einige Farben "
+"Vim E458: \"Colormap\"-Eintrag kann nicht alloziert werden, einige Farben "
 "können falsch sein"
 
 #: gui_x11.c:1989
 #, c-format
 msgid "E250: Fonts for the following charsets are missing in fontset %s:"
 msgstr ""
-"E250: Schriftarten für die folgenden Zeichensätze fehlen im 'fontset' %s:"
+"E250: Schriftarten für die folgenden Zeichensätze fehlen im \"fontset\" %s:"
 
 #: gui_x11.c:2032
 #, c-format
@@ -2100,7 +2101,7 @@ msgstr "E252: Fontset Name: %s"
 #: gui_x11.c:2033
 #, c-format
 msgid "Font '%s' is not fixed-width"
-msgstr "Schriftart \"%s\" hat keine feste breite"
+msgstr "Schriftart '%s' hat keine feste breite"
 
 #: gui_x11.c:2052
 #, c-format
@@ -2333,7 +2334,7 @@ msgstr "OutputObject-Attribute können nicht gelöscht werden"
 
 #: if_python.c:599
 msgid "softspace must be an integer"
-msgstr "'softspace' muss eine ganze Zahl sein"
+msgstr "\"softspace\" muss eine ganze Zahl sein"
 
 #: if_python.c:607
 msgid "invalid attribute"
@@ -2654,7 +2655,7 @@ msgstr "Befehls-Server Name kann nicht registriert werden"
 #: if_xcmdsrv.c:434 os_mswin.c:2108
 #, c-format
 msgid "E247: no registered server named \"%s\""
-msgstr "E247: Kein registrierter 'Server' Name \"%s\""
+msgstr "E247: Kein registrierter Server-Name \"%s\""
 
 #: if_xcmdsrv.c:463
 msgid "E248: Failed to send command to the destination program"
@@ -2749,11 +2750,11 @@ msgid ""
 "More info with: \"vim -h\"\n"
 msgstr ""
 "\n"
-"Mehr Informationen mit: \"vim -h\"\n"
+"Weitere Informationen mit: \"vim -h\"\n"
 
 #: main.c:2242
 msgid "[file ..]       edit specified file(s)"
-msgstr "[Datei ..]      editiere die gegebenen Datei(-en)"
+msgstr "[Datei ..]      editiere die angegebenen Datei(-en)"
 
 #: main.c:2243
 msgid "-               read text from stdin"
@@ -2801,11 +2802,11 @@ msgstr ""
 
 #: main.c:2266
 msgid "--\t\t\tOnly file names after this"
-msgstr "--\t\t\tNur Datei-Namen nach '--'"
+msgstr "--\t\t\tHiernach nur Datei-Namen"
 
 #: main.c:2268
 msgid "--literal\t\tDon't expand wildcards"
-msgstr "--literal\t\t'wildcards' werden nicht erweitert"
+msgstr "--literal\t\tPlatzhalter werden nicht ausgewertet"
 
 #: main.c:2271
 msgid "-register\t\tRegister this gvim for OLE"
@@ -2841,7 +2842,7 @@ msgstr "-d\t\t\tDiff Modus (wie \"vimdiff\")"
 
 #: main.c:2284
 msgid "-y\t\t\tEasy mode (like \"evim\", modeless)"
-msgstr "-y\t\t\tLeichter Modus (wie \"evim\", ohne verschiedene Moden)"
+msgstr "-y\t\t\tLeichter Modus (wie \"evim\", ohne Modi)"
 
 #: main.c:2285
 msgid "-R\t\t\tReadonly mode (like \"view\")"
@@ -2929,7 +2930,7 @@ msgstr "-U <gvimrc>\t\tBenutze <gvimrc> anstatt jeglicher .gvimrc"
 
 #: main.c:2316
 msgid "--noplugin\t\tDon't load plugin scripts"
-msgstr "--noplugin\t\tlade keine \"plugin\" Skripte"
+msgstr "--noplugin\t\tlade keine \"plugin\"-Skripte"
 
 #: main.c:2317
 msgid "-o[N]\t\tOpen N windows (default: one for each file)"
@@ -3680,7 +3681,7 @@ msgid ""
 "Found a swap file by the name \""
 msgstr ""
 "\n"
-"Auslagerungs-Datei mit folgendem Namen gefunden \""
+"Auslagerungs-Datei mit folgendem Namen gefunden: \""
 
 #: memline.c:3675
 msgid "While opening file \""
@@ -3995,7 +3996,7 @@ msgid ""
 "[calls] total re/malloc()'s %lu, total free()'s %lu\n"
 "\n"
 msgstr ""
-"[Aufrufe] gesamt re/malloc()'s %lu, gesamt free()'s %lu\n"
+"[Aufrufe] gesamt re/malloc()s %lu, gesamt free()s %lu\n"
 "\n"
 
 #: misc2.c:743
@@ -4055,8 +4056,8 @@ msgid ""
 "E343: Invalid path: '**[number]' must be at the end of the path or be "
 "followed by '%s'."
 msgstr ""
-"E343: Ungültiger Pfad: '**[Nummer]' muss am Ende des Pfads sein, oder von'%"
-"s' gefolgt werden. Siehe :help path."
+"E343: Ungültiger Pfad: '**[Nummer]' muss am Ende des Pfads sein, oder von "
+"'%s' gefolgt werden. Siehe :help path."
 
 #: misc2.c:4984
 #, c-format
@@ -4076,7 +4077,7 @@ msgstr "E346: Kein weiteres Verzeichnis \"%s\" im 'cdpath' gefunden"
 #: misc2.c:4996
 #, c-format
 msgid "E347: No more file \"%s\" found in path"
-msgstr "E347: Keine weitere Datei \"%s\" im 'path' gefunden"
+msgstr "E347: Keine weitere Datei \"%s\" im Pfad gefunden"
 
 #: misc2.c:5242
 msgid "Illegal component"
@@ -4147,7 +4148,7 @@ msgstr "1 Zeile ~"
 #: ops.c:2081
 #, c-format
 msgid "%ld lines changed"
-msgstr "%ld Zeilen ~"
+msgstr "%ld Zeilen geändert"
 
 #: ops.c:2438
 #, c-format
@@ -4287,7 +4288,7 @@ msgstr "Komma fehlt"
 
 #: option.c:4727
 msgid "Must specify a ' value"
-msgstr "ein Wert muss angegeben werden"
+msgstr "ein '-Wert muss angegeben werden"
 
 #: option.c:4767
 msgid "contains unprintable character"
@@ -4538,7 +4539,7 @@ msgstr "E245: Unzulässiges Zeichen '%c' in der Schriftart \"%s\""
 
 #: os_riscos.c:1256
 msgid "E366: Invalid 'osfiletype' option - using Text"
-msgstr "E366: Unzulässige 'filetype'-Option - verwende Text"
+msgstr "E366: Unzulässige 'osfiletype'-Option - verwende Text"
 
 #: os_unix.c:862
 msgid "Vim: Double signal, exiting\n"
@@ -5006,20 +5007,20 @@ msgstr " Zeilen-Umbrüche"
 
 #: syntax.c:4078
 msgid "E393: group[t]here not accepted here"
-msgstr "E393: 'group[t]here' ist an dieser Stelle ungültig"
+msgstr "E393: \"group[t]here\" ist an dieser Stelle ungültig"
 
 #: syntax.c:4102
 #, c-format
 msgid "E394: Didn't find region item for %s"
-msgstr "E394: 'region'-Element für \"%s\" konnte nicht gefunden werden"
+msgstr "E394: \"region\"-Element für \"%s\" konnte nicht gefunden werden"
 
 #: syntax.c:4130
 msgid "E395: contains argument not accepted here"
-msgstr "E395: 'contains' Argument ist an dieser Stelle ungültig"
+msgstr "E395: \"contains\"-Argument ist an dieser Stelle ungültig"
 
 #: syntax.c:4141
 msgid "E396: containedin argument not accepted here"
-msgstr "E396: 'containedin' Argument ist an dieser Stelle ungültig"
+msgstr "E396: \"containedin\"-Argument ist an dieser Stelle ungültig"
 
 #: syntax.c:4219
 msgid "E397: Filename required"
@@ -5245,12 +5246,12 @@ msgstr "tags file %s wird durchsucht"
 #: tag.c:1356
 #, c-format
 msgid "E430: Tag file path truncated for %s\n"
-msgstr "E430: Tag-Datei-Pfad wurde abgeschnitten für %s\n"
+msgstr "E430: Tag-Dateipfad wurde abgeschnitten für %s\n"
 
 #: tag.c:1847
 #, c-format
 msgid "E431: Format error in tags file \"%s\""
-msgstr "E431: Format Fehler im tags file \"%s\""
+msgstr "E431: Format Fehler in Tag-Datei \"%s\""
 
 #: tag.c:1851
 #, c-format
@@ -5303,7 +5304,7 @@ msgstr "E436: Kein \"%s\" Eintrag in termcap"
 
 #: term.c:2752
 msgid "E437: terminal capability \"cm\" required"
-msgstr "E437: Terminal Fähigkeit \"cm\" wird benötigt"
+msgstr "E437: Terminal-Fähigkeit \"cm\" wird benötigt"
 
 #. Highlight title
 #: term.c:4891
@@ -5552,55 +5553,55 @@ msgstr " Ein- (+) oder ausschließlich (-) der Eigenschaften:\n"
 
 #: version.c:856
 msgid "   system vimrc file: \""
-msgstr "        System-vimrc-Datei: \""
+msgstr "          System-vimrc-Datei: \""
 
 #: version.c:861
 msgid "     user vimrc file: \""
-msgstr "        System-vimrc-Datei: \""
+msgstr "        Benutzer-vimrc-Datei: \""
 
 #: version.c:866
 msgid " 2nd user vimrc file: \""
-msgstr " zweite Nutzer-vimrc-Datei: \""
+msgstr " zweite Benutzer-vimrc-Datei: \""
 
 #: version.c:871
 msgid " 3rd user vimrc file: \""
-msgstr " dritte Nutzer-vimrc-Datei: \""
+msgstr " dritte Benutzer-vimrc-Datei: \""
 
 #: version.c:876
 msgid "      user exrc file: \""
-msgstr "         Nutzer-exrc-Datei: \""
+msgstr "         Benutzer-exrc-Datei: \""
 
 #: version.c:881
 msgid "  2nd user exrc file: \""
-msgstr " zweite Nutzer-vimrc-Datei: \""
+msgstr " zweite Benutzer-vimrc-Datei: \""
 
 #: version.c:887
 msgid "  system gvimrc file: \""
-msgstr "       System-gvimrc-Datei: \""
+msgstr "         System-gvimrc-Datei: \""
 
 #: version.c:891
 msgid "    user gvimrc file: \""
-msgstr "       Nutzer-gvimrc-Datei: \""
+msgstr "       Benutzer-gvimrc-Datei: \""
 
 #: version.c:895
 msgid "2nd user gvimrc file: \""
-msgstr "zweite Nutzer-gvimrc-Datei: \""
+msgstr "zweite Benutzer-gvimrc-Datei: \""
 
 #: version.c:900
 msgid "3rd user gvimrc file: \""
-msgstr "dritte Nutzer-vimrc-Datei: \""
+msgstr "dritte Benutzer-gvimrc-Datei: \""
 
 #: version.c:907
 msgid "    system menu file: \""
-msgstr "         System-Menü-Datei: \""
+msgstr "           System-Menü-Datei: \""
 
 #: version.c:915
 msgid "  fall-back for $VIM: \""
-msgstr "   Voreinstellung für $VIM: \""
+msgstr "     Voreinstellung für $VIM: \""
 
 #: version.c:921
 msgid " f-b for $VIMRUNTIME: \""
-msgstr "       und für $VIMRUNTIME: \""
+msgstr "         und für $VIMRUNTIME: \""
 
 #: version.c:925
 msgid "Compilation: "
@@ -5632,7 +5633,7 @@ msgstr "von Bram Moolenaar und Anderen"
 
 #: version.c:984
 msgid "Vim is open source and freely distributable"
-msgstr "Vim ist \"open source\" und kostenlos zu vertreiben"
+msgstr "Vim ist Open Source und kann frei weitergegeben werden"
 
 #: version.c:986
 msgid "Help poor children in Uganda!"
@@ -5660,7 +5661,7 @@ msgstr "Vi kompatible Einstellung"
 
 #: version.c:995
 msgid "type  :set nocp<Enter>        for Vim defaults"
-msgstr "tippe  :set nocp<Enter>         für Vim Voreinstellungen  "
+msgstr "tippe  :set nocp<Enter>         für Vim-Voreinstellungen  "
 
 #: version.c:996
 msgid "type  :help cp-default<Enter> for info on this"
@@ -5680,7 +5681,7 @@ msgstr "Menü  Editieren->Globale Einstellung->Einfüge-Modus ein- und ausschalten
 
 #: version.c:1015
 msgid "                              for two modes      "
-msgstr "                              für zwei Moden      "
+msgstr "                              für zwei Modi       "
 
 #: version.c:1019
 msgid "menu  Edit->Global Settings->Toggle Vi Compatible"
@@ -5756,7 +5757,7 @@ msgstr "Editiere die ausgewählten Datei(en) mit Vim"
 
 #: ../GvimExt/gvimext.cpp:891 ../GvimExt/gvimext.cpp:969
 msgid "Error creating process: Check if gvim is in your path!"
-msgstr "Fehler beim Erzeugen des Prozesses: Ist gvim im 'Pfad' ?"
+msgstr "Fehler beim Starten des Prozesses: Ist gvim im Pfad?"
 
 #: ../GvimExt/gvimext.cpp:892 ../GvimExt/gvimext.cpp:906
 #: ../GvimExt/gvimext.cpp:970
@@ -5957,12 +5958,12 @@ msgstr "temp-Datei kann nicht erzeugt werden"
 #: globals.h:1107
 #, c-format
 msgid "Can't open file %s"
-msgstr "Datei \"%s\" kann nicht geöffnet werden"
+msgstr "Datei %s kann nicht geöffnet werden"
 
 #: globals.h:1108
 #, c-format
 msgid "Can't read file %s"
-msgstr "Datei \"%s\" kann nicht gelesen werden"
+msgstr "Datei %s kann nicht gelesen werden"
 
 #: globals.h:1109
 msgid "E37: No write since last change (use ! to override)"
@@ -5980,7 +5981,7 @@ msgstr "E39: Nummer erwartet"
 #: globals.h:1115
 #, c-format
 msgid "E40: Can't open errorfile %s"
-msgstr "E40: Fehler-Datei \"%s\" kann nicht geöffnet werden"
+msgstr "E40: Fehler-Datei %s kann nicht geöffnet werden"
 
 #: globals.h:1118
 msgid "E41: Out of memory!"
@@ -6027,7 +6028,7 @@ msgstr "E47: Fehler während des Lesens der Fehler-Datei"
 
 #: globals.h:1138
 msgid "E48: Not allowed in sandbox"
-msgstr "E48: Nicht erlaubt in einer 'Sandbox'"
+msgstr "E48: In einer Sandbox nicht erlaubt"
 
 #: globals.h:1140
 msgid "E49: Invalid scroll size"
@@ -6071,7 +6072,7 @@ msgstr "E78: Unbekannte Mark"
 
 #: globals.h:1150
 msgid "E79: Cannot expand wildcards"
-msgstr "E79: Kann 'wildcards' nicht erweitern"
+msgstr "E79: Kann \"wildcards\" nicht erweitern"
 
 #: globals.h:1151
 msgid "E80: Error while writing"
@@ -6088,540 +6089,3 @@ msgstr "E81: <SID> wurde nicht in einer Skript-Umgebung benutzt"
 #: globals.h:1157
 msgid "E449: Invalid expression received"
 msgstr "E449: ungültiger Ausdruck"
-
-#~ msgid "Run Macro"
-#~ msgstr "Führe Makro aus"
-
-#~ msgid "E221: 'commentstring' is empty"
-#~ msgstr "E221: Die Option 'commentstring' ist leer"
-
-#~ msgid "E242: Color name not recognized: %s"
-#~ msgstr "E242: Name der Farbe unbekannt: %s"
-
-#~ msgid "E242: Missing color: %s"
-#~ msgstr "E242: Farbe fehlt: %s"
-
-#~ msgid "E155: Missing sign ID"
-#~ msgstr "E155: fehlende Vorzeichen ID"
-
-#~ msgid "E160: Cannot find buffer: %s"
-#~ msgstr "E160: Puffer %s kann nicht gefunden werden"
-
-#~ msgid "&OK"
-#~ msgstr "&OK"
-
-#~ msgid "E250: During loading fontset %s"
-#~ msgstr "E250: Fehler: Beim Laden des fontsets %s"
-
-#~ msgid "E258: no matches found in cscope connections"
-#~ msgstr "E258: keine Treffer gefunden in cscope Verbindungen"
-
-#~ msgid "Retrieve next symbol"
-#~ msgstr "Beziehe nächstes Symbol"
-
-#~ msgid "-- SNiFF+ commands --"
-#~ msgstr "-- SNiFF+ Befehle --"
-
-#~ msgid "E277: Unrecognized sniff request [%s]"
-#~ msgstr "E277: Unbekannte sniff Anfrage [%s]"
-
-#~ msgid "(ez3) over-the-spot style requires fontset"
-#~ msgstr "(ez3) der Über-dem-Punkt Stil benötigt fontset"
-
-#~ msgid "(ez4) Can't create input context."
-#~ msgstr "(ez4) Eingabe-Kontext kann nicht erzeugt werden"
-
-#~ msgid "PC (32 bits Vim)"
-#~ msgstr "PC (32 Bit Vim)"
-
-#~ msgid "PC (16 bits Vim)"
-#~ msgstr "PC (16 Bit Vim)"
-
-#~ msgid "E362: Unsupported screen mode"
-#~ msgstr "E362: Bildschirm Modus wird nicht unterstützt"
-
-#~ msgid "E364: Library call failed"
-#~ msgstr "E364: Bibliotheks-Aufruf schlug Fehl"
-
-#~ msgid "Vim: Caught %s %s\n"
-#~ msgstr "Vim: Erhielt %s %s\n"
-
-#~ msgid "deadly signal"
-#~ msgstr "tödliches Signal"
-
-#~ msgid "some"
-#~ msgstr "ein"
-
-#~ msgid ""
-#~ "\n"
-#~ "Detach failed"
-#~ msgstr ""
-#~ "\n"
-#~ "Ablösung fehlgeschlagen"
-
-#~ msgid "Error %d"
-#~ msgstr "Fehler %d"
-
-#~ msgid "VIM - Help on..."
-#~ msgstr "VIM - Hilfe zu..."
-
-#~ msgid "Topic:"
-#~ msgstr "Thema:"
-
-#~ msgid "locale is not set correctly"
-#~ msgstr "'locale' ist nicht richtig gesetzt"
-
-#~ msgid "Set LANG environment variable to your locale"
-#~ msgstr "Setzen Sie die LANG Umgebungsvariable auf Ihre 'locale'"
-
-#~ msgid "For korean:"
-#~ msgstr "Für koreanisch:"
-
-#~ msgid "   csh: setenv LANG ko"
-#~ msgstr "   csh: setenv LANG de"
-
-#~ msgid "   sh : export LANG=ko"
-#~ msgstr "   sh : export LANG=de"
-
-#~ msgid "fontset name: %s"
-#~ msgstr "Fontset Name: %s"
-
-#~ msgid "Your language Font missing"
-#~ msgstr "Der Schriftsatz für Ihre Sprache fehlt"
-
-#~ msgid "loaded fontname: %s"
-#~ msgstr "Schriftsatz geladen: %s"
-
-#~ msgid "Cannot allocate memory for debugger sign"
-#~ msgstr "Speicher für Debugger Symbol kann nicht alloziert werden"
-
-#~ msgid "automata ERROR: internal"
-#~ msgstr "Interner FEHLER im Automaten"
-
-#~ msgid "cs_add_common: alloc fail #1"
-#~ msgstr "cs_add_common: Fehler in alloc #1"
-
-#~ msgid "cs_add_common: alloc fail #2"
-#~ msgstr "cs_add_common: Fehler in alloc #2"
-
-#~ msgid "cs_add_common: alloc fail #3"
-#~ msgstr "cs_add_common: Fehler in alloc #3"
-
-#~ msgid "cs_add_common: alloc fail #4"
-#~ msgstr "cs_add_common: Fehler in alloc #4"
-
-#~ msgid "Sorry, deleting a menu is not possible in the Athena version"
-#~ msgstr "Löschen eines Menüs ist in der Athena Version nicht möglich"
-
-#~ msgid "Out of memory"
-#~ msgstr "Speicher erschöpft"
-
-#~ msgid "Cannot clear all highlight groups"
-#~ msgstr "Nicht alle Hervorhebungs-Gruppen konnten gelöscht werden"
-
-#~ msgid "GUI is not running"
-#~ msgstr "GUI läuft nicht"
-
-#~ msgid "Command too long"
-#~ msgstr "Befehl zu lang"
-
-#~ msgid "Cannot use :normal from event handler"
-#~ msgstr ""
-#~ ":normal kann nicht von einem \"Event-Handler\" heraus verwendet werden"
-
-#~ msgid "[scratch]"
-#~ msgstr "[temporäre Datei]"
-
-#~ msgid "Security error: new viminfo file is a symbolic link"
-#~ msgstr "Sicherheits-Fehler: neue viminfo-Datei ist ein symbolischer Link"
-
-#~ msgid "Missing sign id"
-#~ msgstr "fehlende Vorzeichen id"
-
-#~ msgid "line ~%ld: %s"
-#~ msgstr "Zeile ~%ld: %s"
-
-#~ msgid "makeef option not set"
-#~ msgstr "Option makeef ist nicht gesetzt"
-
-#~ msgid "Ambiguous mapping"
-#~ msgstr "Nicht-eindeutige Zuordnung"
-
-#~ msgid "Ambiguous mapping, conflicts with \"%s\""
-#~ msgstr "Nicht-eindeutige Zuordnung, kollidiert mit \"%s\""
-
-#~ msgid "Security error: filter output is a symbolic link: %s"
-#~ msgstr "Sicherheits-Fehler: Filter-Ausgabe ist ein symbolischer Link: %s"
-
-#~ msgid "Security error: 'charconvert' output is a symbolic link"
-#~ msgstr "Sicherheits-Fehler: 'charconvert' ist ein symbolischer Link"
-
-#~ msgid "Security error: filter input is a symbolic link: %s"
-#~ msgstr "Sicherheits-Fehler: Filter-Eingabe ist ein symbolischer Link: %s"
-
-#~ msgid "closing"
-#~ msgstr "schließe"
-
-#~ msgid "reading"
-#~ msgstr "lese"
-
-#~ msgid "Error %s '%s'"
-#~ msgstr "Fehler %s \"%s\""
-
-#~ msgid "Fold must be at least two lines"
-#~ msgstr "Faltung muss mindestens zwei Zeilen groß sein"
-
-#~ msgid "No fold at this line"
-#~ msgstr "Keine Faltung an dieser Zeile"
-
-#~ msgid " vim [options] "
-#~ msgstr " vim [Optionen] "
-
-#~ msgid ""
-#~ "\n"
-#~ "\n"
-#~ "Options:\n"
-#~ msgstr ""
-#~ "\n"
-#~ "\n"
-#~ "Optionen:\n"
-
-#~ msgid "--\t\t\tEnd of options"
-#~ msgstr "--\t\t\tEnde der Optionen"
-
-#~ msgid "The file "
-#~ msgstr "Die Datei "
-
-#~ msgid "Security error: shell command output is a symbolic link"
-#~ msgstr ""
-#~ "Sicherheits-Fehler: Shell-Kommando-Ausgabe ist ein symbolischer Link"
-
-#~ msgid "Warning: %s option changed from modeline"
-#~ msgstr "Warnung: %s Option wurde von einer 'modeline' aus verändert"
-
-#~ msgid ""
-#~ "\n"
-#~ "Press any key to close this window..."
-#~ msgstr ""
-#~ "\n"
-#~ "Drücke beliebige Taste um dieses Fenster zu schließen..."
-
-#~ msgid ""
-#~ "\n"
-#~ "shell returned %ld."
-#~ msgstr ""
-#~ "\n"
-#~ "Shell gab %ld zurück."
-
-#~ msgid "Change dir debugging enabled."
-#~ msgstr "Debuggen von Verzeichnisswechseln eingeschaltet"
-
-#~ msgid "Not a proper file name: '%s'"
-#~ msgstr "Ungültiger Dateiname: \"%s\""
-
-#~ msgid "File name '%s' is valid"
-#~ msgstr "Der Dateiname \"%s\" ist gültig"
-
-#~ msgid "Leave: %s"
-#~ msgstr "Verlasse: %s"
-
-#~ msgid "Unmatched \\)"
-#~ msgstr "nicht-zugewiesenes \\)"
-
-#~ msgid "*, \\+ or \\{ operand could be empty"
-#~ msgstr "*, \\+, oder \\{ Operand könnte leer sein"
-
-#~ msgid "invalid character after \\@"
-#~ msgstr "Unzulässiges Zeichen nach \\@"
-
-#~ msgid "Too many complex \\{...}s"
-#~ msgstr "Zu viele komplexe \\{...}"
-
-#~ msgid "Nested *, \\=, \\+, \\! or \\{"
-#~ msgstr "Verschachtelte \\*, \\=, \\+, oder \\{"
-
-#~ msgid "invalid use of \\_"
-#~ msgstr "unzulässiger Gebrauch von \\_"
-
-#~ msgid "\\= follows nothing"
-#~ msgstr "\\= nach Nichts"
-
-#~ msgid "\\+ follows nothing"
-#~ msgstr "\\+ nach Nichts"
-
-#~ msgid "\\@ follows nothing"
-#~ msgstr "\\@ nach Nichts"
-
-#~ msgid "\\{ follows nothing"
-#~ msgstr "\\{ nach Nichts"
-
-#~ msgid "\\* follows nothing"
-#~ msgstr "\\* nach Nichts"
-
-#~ msgid "Illegal back reference"
-#~ msgstr "Unerlaubte Rück-Referenz"
-
-#~ msgid "\\z( not allowed here"
-#~ msgstr "\\z( ist an dieser Stelle unzulässig"
-
-#~ msgid "\\z1 et al. not allowed here"
-#~ msgstr "\\z1 ist an dieser Stelle unzulässig"
-
-#~ msgid "unattached \\z"
-#~ msgstr "nicht-zugewiesenes \\z"
-
-#~ msgid "Unexpected magic character; check META."
-#~ msgstr "Unerwartetes magisches Zeichen; überprüfe META."
-
-#~ msgid "type  :help uganda<Enter>     if you like Vim "
-#~ msgstr "tippe  :help uganda<Enter>      wenn Du Vim magst         "
-
-#~ msgid "     WARNING: Intel CPU detected.    "
-#~ msgstr "     ACHTUNG: Intel CPU festgestellt.    "
-
-# :-)
-#~ msgid " PPC has a much better architecture. "
-#~ msgstr " PPC ist viel zu teuer. "
-
-#~ msgid "WARNING: tag command changed a buffer!!!"
-#~ msgstr "WARNUNG: Tag Befehl veränderte einen Puffer!!!"
-
-#~ msgid "xterm sent more codes than Vim asked for"
-#~ msgstr "xterm schickte mehr Steuerzeichen als Vim anforderte"
-
-#~ msgid ""
-#~ "\n"
-#~ "Huge"
-#~ msgstr ""
-#~ "\n"
-#~ "Monster"
-
-#~ msgid ""
-#~ "\n"
-#~ "Big"
-#~ msgstr ""
-#~ "\n"
-#~ "Große"
-
-#~ msgid ""
-#~ "\n"
-#~ "Normal"
-#~ msgstr ""
-#~ "\n"
-#~ "Normale"
-
-#~ msgid ""
-#~ "\n"
-#~ "Small"
-#~ msgstr ""
-#~ "\n"
-#~ "Kleine"
-
-#~ msgid ""
-#~ "\n"
-#~ "Tiny"
-#~ msgstr ""
-#~ "\n"
-#~ "Winzige"
-
-#~ msgid "with"
-#~ msgstr "mit"
-
-#~ msgid "Too many \\("
-#~ msgstr "zu viele \\("
-
-#~ msgid "Too many \\z("
-#~ msgstr "zu viele \\z("
-
-#~ msgid "%d buffer %s"
-#~ msgstr "%d Puffer %s"
-
-#~ msgid "All %d matches have now been found"
-#~ msgstr "Alle %d Treffer sind jetzt gefunden"
-
-#~ msgid "There are %d matching file names"
-#~ msgstr "Es gibt %d passende Dateinamen"
-
-#~ msgid "There are %d matching tags"
-#~ msgstr "Es gibt %d passende Tags"
-
-#~ msgid "There are %d matches"
-#~ msgstr "Es gibt %d Treffer"
-
-#~ msgid "Cannot open \""
-#~ msgstr "Öffnen unmöglich für\""
-
-#~ msgid "\" for reading\n"
-#~ msgstr "\" zu Lesen\n"
-
-#~ msgid "cannot open \""
-#~ msgstr "Öffnen unmöglich für \""
-
-#~ msgid "\" for output\n"
-#~ msgstr "\" für die Ausgabe\n"
-
-#~ msgid "Illegal file mark name"
-#~ msgstr "Unzulässiger Name einer Datei-Marke"
-
-#~ msgid ""
-#~ "\n"
-#~ "(1) Another program may be editing the same file.\n"
-#~ msgstr ""
-#~ "\n"
-#~ "(1) Ein anderes Programm editiert möglicherweise diese Datei.\n"
-
-#~ msgid "    If this is the case, be careful not to end up with two\n"
-#~ msgstr ""
-#~ "    Wenn dies der Fall ist, so seien Sie vorsichtig, um nicht mit zwei\n"
-
-#~ msgid "    different instances of the same file when making changes.\n"
-#~ msgstr ""
-#~ "    verschiedenen Instanzen der selben Datei während der Änderungen zu "
-#~ "enden.\n"
-
-#~ msgid "%ld %s lines %s"
-#~ msgstr "%ld Zeilen %s %s"
-
-#~ msgid "more"
-#~ msgstr "mehr"
-
-#~ msgid "fewer"
-#~ msgstr "weniger"
-
-#~ msgid "ed 1 time"
-#~ msgstr " 1 Mal"
-
-#~ msgid "ed %d times"
-#~ msgstr " %d Male"
-
-#~ msgid "%d returned"
-#~ msgstr "%d zurückgeliefert"
-
-#~ msgid "Too many \\)"
-#~ msgstr "zu viele \\)"
-
-#~ msgid "function returning"
-#~ msgstr "Funktion ergibt"
-
-#~ msgid "function line %s"
-#~ msgstr "Funktionszeile %s"
-
-#~ msgid "display argument not accepted here"
-#~ msgstr "'display' Argument ist an dieser Stelle ungültig"
-
-#~ msgid "Expression evaluation cannot be used: Not enabled at compile time"
-#~ msgstr ""
-#~ "Ausdrücke können nicht benutzt werden: wurde zum Zeitpunkt des "
-#~ "Übersetzens nicht eingeschaltet."
-
-#~ msgid " [help]"
-#~ msgstr " [Hilfe]"
-
-#~ msgid " [Preview]"
-#~ msgstr " [Voransicht]"
-
-#~ msgid "%ld line --%d%%--"
-#~ msgstr "%ld Zeilen --%d%%--"
-
-#~ msgid "Cannot set font(s)"
-#~ msgstr "Schriftart kann nicht eingestellt werden"
-
-#~ msgid "VIMRUN.EXE not found in your $PATH.\n"
-#~ msgstr "VIMRUN.EXE wurde nicht im $PATH gefunden.\n"
-
-#~ msgid "External commands will not pause after completion.\n"
-#~ msgstr ""
-#~ "Externe Kommandos werden keine Pause bis zu ihrem Abschluß machen.\n"
-
-#~ msgid "See  :help win32-vimrun  for more information."
-#~ msgstr "Siehe :help win32-vimrun  für weitere Informationen."
-
-#~ msgid "file "
-#~ msgstr "Datei "
-
-#~ msgid "(%d) of %d)"
-#~ msgstr "(%d) von %d)"
-
-#~ msgid "empty line"
-#~ msgstr "leere Zeile"
-
-#~ msgid "%s  %d %d,  Hex %02x %02x,  Octal %03o %03o"
-#~ msgstr "%s  %d %d,  Hex %02x %02x,  Oktal %03o %03o"
-
-#~ msgid "do_sub internal error: old_match < old_line"
-#~ msgstr "do_sub interner Fehler: old_match < old_line"
-
-#~ msgid "%s%ld substitution on %ld line"
-#~ msgstr "%s%ld Ersetzung in %ld Zeile"
-
-#~ msgid "%s%ld substitutions on %ld line"
-#~ msgstr "%s%ld Ersetzungen in %ld Zeile"
-
-#~ msgid "%s%ld substitutions on %ld lines"
-#~ msgstr "%s%ld Ersetzungen in %ld Zeilen"
-
-#~ msgid "%ld line, %ld character"
-#~ msgstr "%ld Zeile, %ld Zeichen"
-
-#~ msgid "%ld lines, %ld character"
-#~ msgstr "%ld Zeilen, %ld Zeichen"
-
-#~ msgid "%ld lines, %ld characters"
-#~ msgstr "%ld Zeilen, %ld Zeichen"
-
-#~ msgid "VIM - Dialog..."
-#~ msgstr "VIM - Dialog..."
-
-#~ msgid "XIM requires guifontset setting"
-#~ msgstr "XIM verlangt das Setzen von guifontset"
-
-#~ msgid "1 line to indent... "
-#~ msgstr "1 Zeile zum Einrücken... "
-
-#~ msgid "WARNING: Intel \"architecture\" detected!"
-#~ msgstr "ACHTUNG: Intel \"Architektur\" vorgefunden!"
-
-#~ msgid "PPC is much better!"
-#~ msgstr "PPC is zu langsam!"
-
-#~ msgid "Waiter, there is a fly in my soup!"
-#~ msgstr "Ober, da ist eine Fliege in meiner Suppe!"
-
-#~ msgid "\"Intel Inside\" is a governmental health warning."
-#~ msgstr "\"Intel Inside\" habe ich nicht aufgeklebt."
-
-#~ msgid "This program works better on a real BeBox."
-#~ msgstr "Eine BeBox wäre viel langsamer als mein Athlon."
-
-#~ msgid " minval %d, maxval %d"
-#~ msgstr " minval %d, maxval %d"
-
-#~ msgid "start `%c' "
-#~ msgstr "Anfang `%c' "
-
-#~ msgid "anchored "
-#~ msgstr "verankert"
-
-#~ msgid "must have \"%s\""
-#~ msgstr "muss \"%s\" haben"
-
-#~ msgid ""
-#~ "\n"
-#~ "# hlsearch on (H) or off (h):\n"
-#~ "~%c"
-#~ msgstr ""
-#~ "\n"
-#~ "# hlsearch An (H) oder Aus (h):\n"
-#~ "~%c"
-
-#~ msgid ""
-#~ "\n"
-#~ "# Last %sSearch Pattern:\n"
-#~ "~"
-#~ msgstr ""
-#~ "\n"
-#~ "# Letzte %sSuchmuster:\n"
-#~ "~"
-
-#~ msgid ", with (+) or without (-):\n"
-#~ msgstr ", mit (+) oder ohne (-):\n"

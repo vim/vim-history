@@ -1,9 +1,9 @@
 "   Vim indent file
 "   Language:	    Objective-C
 "   Maintainer:	    Kazunobu Kuriyama <kazunobu.kuriyama@nifty.com>
-"   Last Change:    2003 Dec 21
-"   
- 
+"   Last Change:    2004 May 16
+"
+
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")

@@ -4,7 +4,7 @@
 " Notes:	1) does not indent pure non-xml code (e.g. embedded scripts)
 "		2) will be confused by unbalanced tags in comments
 "		or CDATA sections.
-" TODO: 	implement pre-like tags, see xml_indent_open / xml_indent_close
+" TODO:		implement pre-like tags, see xml_indent_open / xml_indent_close
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")

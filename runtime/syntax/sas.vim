@@ -2,10 +2,10 @@
 " Language:	SAS
 " Maintainer:	James Kidd <james.kidd@covance.com>
 " Last Change:	02 Jun 2003
-" 		Added highlighting for additional keywords and such;
-" 		Attempted to match SAS default syntax colors;
-" 		Changed syncing so it doesn't lose colors on large blocks;
-" 		Much thanks to Bob Heckel for knowledgeable tweaking.
+"		Added highlighting for additional keywords and such;
+"		Attempted to match SAS default syntax colors;
+"		Changed syncing so it doesn't lose colors on large blocks;
+"		Much thanks to Bob Heckel for knowledgeable tweaking.
 "  For version 5.x: Clear all syntax items
 "  For version 6.x: Quit when a syntax file was already loaded
 if version < 600

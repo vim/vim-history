@@ -113,17 +113,17 @@ if version >= 508 || !exists("did_verilog_syn_inits")
    " The default highlighting.
    HiLink verilogCharacter       Character
    HiLink verilogConditional     Conditional
-   HiLink verilogRepeat          Repeat
-   HiLink verilogString          String
-   HiLink verilogTodo            Todo
-   HiLink verilogComment         Comment
-   HiLink verilogConstant        Constant
-   HiLink verilogLabel           Label
-   HiLink verilogNumber          Number
-   HiLink verilogOperator        Special
-   HiLink verilogStatement       Statement
-   HiLink verilogGlobal          Define
-   HiLink verilogDirective       SpecialComment
+   HiLink verilogRepeat		 Repeat
+   HiLink verilogString		 String
+   HiLink verilogTodo		 Todo
+   HiLink verilogComment	 Comment
+   HiLink verilogConstant	 Constant
+   HiLink verilogLabel		 Label
+   HiLink verilogNumber		 Number
+   HiLink verilogOperator	 Special
+   HiLink verilogStatement	 Statement
+   HiLink verilogGlobal		 Define
+   HiLink verilogDirective	 SpecialComment
    HiLink verilogEscape		 Special
 
    delcommand HiLink

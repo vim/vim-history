@@ -8,7 +8,7 @@
 " everything after the "command"). This is because blindly highlighting tcsh
 " statements as keywords caused way too many false positives. Eg:
 "
-" 	set history=200
+"	set history=200
 "
 " causes history to come up as a keyword, which we want to avoid.
 

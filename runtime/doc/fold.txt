@@ -1,4 +1,4 @@
-*fold.txt*      For Vim version 6.3a.  Last change: 2004 Mar 02
+*fold.txt*      For Vim version 6.3b.  Last change: 2004 May 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -122,7 +122,7 @@ Try to avoid the "=", "a" and "s" return values, since Vim often has to search
 backwards for a line for which the fold level is defined.  This can be slow.
 
 |foldlevel()| can be useful to compute a fold level relative to a previous
-fold level.  But note that foldlevel() may return -1 if the level is now known
+fold level.  But note that foldlevel() may return -1 if the level is not known
 yet.  And it returns the level at the start of the line, while a fold might
 end in that line.
 

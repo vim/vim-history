@@ -1,5 +1,5 @@
 " Vim syntax file
-" Language:	    calendar(1) file. 
+" Language:	    calendar(1) file.
 " Maintainer:	    Nikolai Weibull <source@pcppopper.org>
 " URL:		    http://www.pcppopper.org/vim/syntax/pcp/calendar/
 " Latest Revision:  2004-04-21
@@ -42,7 +42,7 @@ syn keyword calendarKeyword	Easter Pashka
 syn case match
 
 " Dates
-syn case ignore 
+syn case ignore
 syn match   calendarNumber	'\<\d\+\>'
 syn keyword calendarMonth	Jan[uary] Feb[ruary] Mar[ch] Apr[il] May Jun[e]
 syn keyword calendarMonth	Jul[y] Aug[ust] Sep[tember] Oct[ober]

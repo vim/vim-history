@@ -1,7 +1,7 @@
 " Menu Translations:	Norwegian / Norsk (Bokmål)
 " Maintainer:		Øyvind A. Holm <sunny@sunbase.org>
-" Last Change:		2004/01/22 00:10:53
-" menu_no_no.latin1.vim,v 1.8 2004/01/22 00:10:53 sunny Exp
+" Last Change:		2004-05-13 11:47:45 +0200
+" menu_no_no.latin1.vim 284 2004-05-13 09:47:45Z sunny
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")

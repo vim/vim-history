@@ -656,7 +656,7 @@ mf_sync(mfp, flags)
 #endif
 #ifdef AMIGA
 # ifdef __AROS__
-        if (fsync(mfp->mf_fd) != 0)
+	if (fsync(mfp->mf_fd) != 0)
 	    status = FAIL;
 # else
 	/*
@@ -686,7 +686,7 @@ mf_sync(mfp, flags)
 
 	    if (fh != 0)
 		Flush(fh);
-        }
+	}
 #   else /* assume Manx */
 	    Flush(_devtab[mfp->mf_fd].fd);
 #   endif

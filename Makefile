@@ -71,7 +71,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 3a
+MINOR = 3b
 
 # Uncomment this line if the Win32s version is to be included.
 #DOSBIN_S =  dosbin_s
@@ -79,9 +79,9 @@ MINOR = 3a
 # CHECKLIST for creating a new version:
 #
 # - Update Vim version number.  For a test version in: src/version.h, Contents,
-#   MAJOR/MINOR above, VIMRTDIR in src/Makefile, README*.txt, runtime/doc/*.txt
-#   and nsis/gvim.nsi.  For a minor/major version: src/GvimExt/GvimExt.reg,
-#   src/vim16.def.
+#   MAJOR/MINOR above, VIMRTDIR and VERSION in src/Makefile, README*.txt,
+#   runtime/doc/*.txt and nsis/gvim.nsi.  For a minor/major version:
+#   src/GvimExt/GvimExt.reg, src/vim16.def.
 # - Correct included_patches[] in src/version.c.
 # - Compile Vim with GTK, Perl, Python, TCL, Ruby, Cscope and "huge" features.
 # - With these features: "make proto" (requires cproto and Motif installed;
@@ -106,9 +106,11 @@ MINOR = 3a
 # - "make unixall", "make extra", "make lang", "make html"
 #
 # Amiga:
-# - "make amisrc", move the archive to the Amiga and compile (will use "big"
-#   features by default).  Place the executables Vim and Xxd in this directory
-#   (set the executable flag).
+# - "make amisrc", move the archive to the Amiga and compile:
+#   "make -f Make_manx.mak" (will use "big" features by default).
+# - Run the tests: "make -f Make_manx.mak test"
+# - Place the executables Vim and Xxd in this directory (set the executable
+#   flag).
 # - "make amirt", "make amibin".
 #
 # PC:
@@ -252,7 +254,6 @@ SRC_ALL1 =	\
 		src/xxd/xxd.c \
 
 SRC_ALL2 =	\
-		main.aap \
 		src/main.aap \
 		src/testdir/main.aap \
 		src/testdir/*.in \
@@ -816,6 +817,7 @@ LANG_GEN = \
 		runtime/tutor/tutor.gr.* \
 		runtime/tutor/tutor.ja.* \
 		runtime/tutor/tutor.pl.* \
+		runtime/tutor/tutor.ru.* \
 		runtime/tutor/tutor.zh.* \
 
 # all files for lang archive
@@ -1075,7 +1077,7 @@ dosrt_unix2dos: dist prepare no_title.vim
 		$(RT_AMI_DOS) \
 		$(LANG_GEN) \
 		| (cd dist/vim/$(VIMRTDIR); tar xf -)
-	find dist/vim/$(VIMRTDIR)/runtime -type f -exec $(VIM) -e -u no_title.vim -c ":set tx|wq" {} \;
+	find dist/vim/$(VIMRTDIR) -type f -exec $(VIM) -e -u no_title.vim -c ":set tx|wq" {} \;
 	tar cf - \
 		$(RT_UNIX_DOS_BIN) \
 		$(RT_ALL_BIN) \

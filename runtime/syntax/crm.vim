@@ -1,5 +1,5 @@
 " Vim syntax file
-" Language:	    CRM114 
+" Language:	    CRM114
 " Maintainer:	    Nikolai Weibull <source@pcppopper.org>
 " URL:		    http://www.pcppopper.org/vim/syntax/pcp/crm/
 " Latest Revision:  2004-04-22
@@ -18,16 +18,16 @@ syn region  crmComment	    matchgroup=crmComment start='#' end='$' end='\\#' con
 
 " Variables
 syn match   crmVariable    ':[*#@]:[^:]\{-1,}:'
- 
+
 " Special Characters
-syn match   crmSpecial	    '\\\%(x\x\x\|o\o\o\o\|[]nrtabvf0>)};/\\]\)' 
+syn match   crmSpecial	    '\\\%(x\x\x\|o\o\o\o\|[]nrtabvf0>)};/\\]\)'
 
 " Statements
 syn keyword crmStatement    insert noop accept alius alter classify eval exit
 syn keyword crmStatement    fail fault goto hash intersect isolate input learn
 syn keyword crmStatement    liaf match output syscall trap union window
 
-" Regexes 
+" Regexes
 syn region   crmRegex	    matchgroup=crmRegex start='/' skip='\\/' end='/' contains=crmVariable
 
 " Labels

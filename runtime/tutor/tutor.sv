@@ -30,7 +30,7 @@
 	     k		Tips:
        < h	 l >	h-tangenten är till vänster och flyttar till vänster.
 	     j		l-tangenten är till höger och flyttar till höger.
-	     v	        j-tangenten ser ut som en pil ned.
+	     v		j-tangenten ser ut som en pil ned.
   1. Flytta runt markören på skärmen tills du känner dig bekväm.
 
   2. Håll ned tangenten pil ned (j) tills att den repeterar.
@@ -39,11 +39,11 @@
   3. Flytta till Lektion 1.2, med hjälp av ned tangenten.
 
 Notera: Om du är osäker på någonting du skrev, tryck <ESC> för att placera dig
-        dig i Normal-läge. Skriv sedan om kommandot.
+	dig i Normal-läge. Skriv sedan om kommandot.
 
 Notera: Piltangenterna borde också fungera.  Men om du använder hjkl så kommer
-        du att kunna flytta omkring mycket snabbare, när du väl vant dig vid
-        det.
+	du att kunna flytta omkring mycket snabbare, när du väl vant dig vid
+	det.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		     Lektion 1.2: STARTA OCH AVSLUTA VIM
@@ -88,7 +88,7 @@ Notera: Piltangenterna borde också fungera.  Men om du använder hjkl så kommer
   5. Nu när raden är korrekt, gå till Lektion 1.4.
 
 NOTERA: När du går igenom den här handledningen, försök inte att memorera, lär
-        genom användning.
+	genom användning.
 
 
 
@@ -126,7 +126,7 @@ NOTERA: När du går igenom den här handledningen, försök inte att memorera, lär
   2. För att starta Vim (från %-prompten) skriv:  vim FILNAMN <ENTER>
 
   3. För att avsluta Vim skriv:  <ESC>  :q!  <ENTER>  för att kasta ändringar.
-	           ELLER skriv:  <ESC>  :wq  <ENTER>  för att spara ändringar.
+		   ELLER skriv:  <ESC>	:wq  <ENTER>  för att spara ändringar.
 
   4. För att ta bort tecknet under markören i Normal-läge skriv:  x
 
@@ -134,7 +134,7 @@ NOTERA: När du går igenom den här handledningen, försök inte att memorera, lär
 	 i     skriv in text	<ESC>
 
 NOTERA: Genom att trycka <ESC> kommer du att placeras i Normal-läge eller
-        avbryta ett delvis färdigskrivet kommando.
+	avbryta ett delvis färdigskrivet kommando.
 
 Fortsätt nu med Lektion 2.
 
@@ -203,8 +203,8 @@ Fortsätt nu med Lektion 2.
     $ - från markören till slutet på raden.
 
 NOTERA:  För den äventyrslystne, genom att bara trycka på objektet i
-         Normal-läge (utan kommando) så kommer markören att flyttas som
-         angivet i objektlistan.
+	 Normal-läge (utan kommando) så kommer markören att flyttas som
+	 angivet i objektlistan.
 
 
 
@@ -247,7 +247,7 @@ NOTERA:  För den äventyrslystne, genom att bara trycka på objektet i
   4. Rätta den här gången alla felen på raden med  x-kommandot.
   5. Skriv nu  U  för att återställa raden till dess ursprungliga utseende.
   6. Skriv nu  u  några gånger för att ångra  U  och tidigare kommandon.
-  7. Tryck nu CTRL-R (håll inne CTRL samtidigt som du trycker R) några gånger 
+  7. Tryck nu CTRL-R (håll inne CTRL samtidigt som du trycker R) några gånger
      för att upprepa kommandona (ångra ångringarna).
 
 ---> Fiixa felen ppå deen häär meningen och återskapa dem med ångra.
@@ -460,7 +460,7 @@ Notera: När sökningen når slutet på filen kommer den att fortsätta vid början.
 ---> Det ( här är en testrad med (, [ ] och { } i den. ))
 
 Notera: Det här är väldigt användbart vid avlusning av ett program med icke
-        matchande parenteser!
+	matchande parenteser!
 
 
 
@@ -525,12 +525,12 @@ Notera: Det här är väldigt användbart vid avlusning av ett program med icke
   2. Skriv nu  !  (utropstecken).  Detta låter dig köra ett godtyckligt externt
      skalkommando.
 
-  3. Som ett exempel skriv   ls   efter ! och tryck sedan <ENTER>. Detta kommer 
+  3. Som ett exempel skriv   ls   efter ! och tryck sedan <ENTER>. Detta kommer
      att visa dig en listning av din katalog, precis som om du kört det vid
      skalprompten. Använd  :!dir  om ls inte fungerar.
 
 Notera:  Det är möjligt att köra vilket externt kommando som helst på det här
-         sättet.
+	 sättet.
 
 Notera:  Alla  :-kommandon måste avslutas med att trycka på <ENTER>
 
@@ -554,7 +554,7 @@ Notera:  Alla  :-kommandon måste avslutas med att trycka på <ENTER>
      För att verifiera detta, skriv    :!dir   igen för att se din katalog
 
 Notera: Om du skulle avsluta Vim och sedan öppna igen med filnamnet TEST så
-        skulle filen vara en exakt kopia av handledningen när du sparade den.
+	skulle filen vara en exakt kopia av handledningen när du sparade den.
 
   5. Ta nu bort filen genom att skriva (MS-DOS):  :!del TEST
 				   eller (Unix):  :!rm TEST
@@ -566,7 +566,7 @@ Notera: Om du skulle avsluta Vim och sedan öppna igen med filnamnet TEST så
 
 	** För att spara en del av en fil, skriv   :#,# w FILNAMN **
 
-  1. Ännu en gång, skriv  :!dir  eller  :!ls  för att få en listning av din 
+  1. Ännu en gång, skriv  :!dir  eller  :!ls  för att få en listning av din
      katalog och välj ett passande filnamn som t.ex. TEST.
 
   2. Flytta markören högst upp på den här sidan och tryck  Ctrl-g  för att få
@@ -596,7 +596,7 @@ Notera: Om du skulle avsluta Vim och sedan öppna igen med filnamnet TEST så
   2. Placera markören högst upp på den här sidan.
 
 NOTERA:  Efter att du kört Steg 3 kommer du att se Lektion 5.3.
-         Flytta då NED till den här lektionen igen.
+	 Flytta då NED till den här lektionen igen.
 
   3. Ta nu emot din TEST-fil med kommandot   :r TEST   där TEST är namnet på
      filen.
@@ -668,9 +668,9 @@ NOTERA:  Filen du tar emot placeras där markören är placerad.
   2. Skriv ett  a  (litet a) för att lägga till text EFTER tecknet under
      markören.  (Stort  A  lägger till i slutet av raden.)
 
-Notera: Detta undviker att behöva skriva  i , det sista tecknet, texten att 
-        infoga, <ESC>, högerpil, och slutligen, x, bara för att lägga till i 
-        slutet på en rad!
+Notera: Detta undviker att behöva skriva  i , det sista tecknet, texten att
+	infoga, <ESC>, högerpil, och slutligen, x, bara för att lägga till i
+	slutet på en rad!
 
   3. Gör nu färdigt den första raden. Notera också att lägga till är likadant
       som Infoga-läge, enda skillnaden är positionen där texten blir infogad.
@@ -692,7 +692,7 @@ Notera: Detta undviker att behöva skriva  i , det sista tecknet, texten att
      med den andra raden markerad ---> (ordet "sista").
 
   3. Skriv nu  R  och ersätt resten av texten på den första raden genom att
-     skriva över den gamla texten så att den första raden blir likadan som 
+     skriva över den gamla texten så att den första raden blir likadan som
      den andra.
 
 ---> För att få den första raden lika som den sista, använd tangenterna.
@@ -802,8 +802,8 @@ Notera: Detta undviker att behöva skriva  i , det sista tecknet, texten att
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  Detta avslutar handledningen i Vim. Den var avsedd att ge en kort översikt av 
-  redigeraren Vim, bara tillräckligt för att du ska kunna använda redigeraren 
+  Detta avslutar handledningen i Vim. Den var avsedd att ge en kort översikt av
+  redigeraren Vim, bara tillräckligt för att du ska kunna använda redigeraren
   relativt enkelt. Den är långt ifrån komplett eftersom Vim har många många fler
   kommandon. Läs användarmanualen härnäst: ":help user-manual".
 

@@ -3,11 +3,11 @@
 " Maintainer:	Nam SungHyun <namsh@kldp.org>
 " Previous Maintainer:	Gautam H. Mudunuri <gmudunur@informatica.com>
 " Version Info:
-" Last Change:	2003 Jul 29
+" Last Change:	2004 May 16
 
 " Additional highlighting by Johannes Tanzler <johannes.tanzler@aon.at>:
-" 	* manSubHeading
-" 	* manSynopsis (only for sections 2 and 3)
+"	* manSubHeading
+"	* manSynopsis (only for sections 2 and 3)
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -58,7 +58,7 @@ if version >= 508 || !exists("did_man_syn_inits")
   HiLink manReference	    PreProc
   HiLink manSubHeading      Function
   HiLink manCFuncDefinition Function
-  
+
   delcommand HiLink
 endif
 

@@ -21,14 +21,14 @@
    activada i premeu la tecla   j   per moure el cursor avall, fins que
    la lliçó 1.1 ocupi completament la pantalla.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                         Lliçó 1.1:  MOURE EL CURSOR
+			 Lliçó 1.1:  MOURE EL CURSOR
 
 
   ** Per moure el cursor premeu les tecles h,j,k,l tal com està indicat. **
        ^
        k	Pista: La h és a l'esquerra i mou el cursor cap a l'esquerra.
-  < h     l >          La l és a la dreta i mou el cursor cap a la dreta.
-       j               La j sembla una fletxa cap avall.
+  < h	  l >	       La l és a la dreta i mou el cursor cap a la dreta.
+       j	       La j sembla una fletxa cap avall.
        v
   1. Moveu el cursor per la pantalla fins que us sentiu confortables.
 
@@ -44,7 +44,7 @@ Nota: Les tecles de moviment del cursor (fletxes) també funcionen. Però usant
       hjkl anireu més ràpid, quan us hi hàgiu acostumant.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                     Lliçó 1.2: ENTRAR I SORTIR DEL VIM
+		     Lliçó 1.2: ENTRAR I SORTIR DEL VIM
 
 
   !! NOTA: Abans de seguir els passos següents llegiu *tota* la lliçó!!
@@ -59,7 +59,7 @@ Nota: Les tecles de moviment del cursor (fletxes) també funcionen. Però usant
 
   3. Quan vegeu l'introductor de la shell escriviu l'ordre amb la qual heu
      arribat a aquest tutor. Podria ser:   vimtutor <ENTRAR>
-                             O bé:         vim tutor <ENTRAR>
+			     O bé:	   vim tutor <ENTRAR>
 
 ---> 'vim' és l'editor vim, i 'tutor' és el fitxer que voleu editar.
 
@@ -67,7 +67,7 @@ Nota: Les tecles de moviment del cursor (fletxes) també funcionen. Però usant
      per sortir i tornar a entrar a l'editor. Llavors moveu el cursor avall
      fins la lliçó 1.3.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                      Lliçó 1.3: EDITAR TEXT - ESBORRAR
+		      Lliçó 1.3: EDITAR TEXT - ESBORRAR
 
 
   ** En mode Normal premeu  x  per esborrar el caràcter de sota el cursor. **
@@ -90,10 +90,10 @@ NOTA: Mentre aneu fent no tracteu de memoritzar, practiqueu i prou.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                     Lliçó 1.4: EDITAR TEXT - INSERIR
+		     Lliçó 1.4: EDITAR TEXT - INSERIR
 
 
-            ** En mode Normal premeu   i   per inserir text. **
+	    ** En mode Normal premeu   i   per inserir text. **
 
   1. Moveu el cursor avall fins la primera línia marcada amb --->.
 
@@ -113,7 +113,7 @@ NOTA: Mentre aneu fent no tracteu de memoritzar, practiqueu i prou.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                             LLIÇÓ 1 SUMARI
+			     LLIÇÓ 1 SUMARI
 
 
   1. El cursor es mou amb les fletxes o bé amb les tecles hjkl.
@@ -136,7 +136,7 @@ Ara continueu amb la lliçó 2.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                     Lliçó 2.1: ORDRES PER ESBORRAR
+		     Lliçó 2.1: ORDRES PER ESBORRAR
 
 
        ** Teclegeu  dw  per esborrar fins al final d'una paraula. **
@@ -159,10 +159,10 @@ NOTA: Les lletres dw apareixeran a la línia de baix de la pantalla mentre
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    Lliçó 2.2: MÉS ORDRES PER ESBORRAR
+		    Lliçó 2.2: MÉS ORDRES PER ESBORRAR
 
 
-        ** Escriviu  d$  per esborrar fins al final de la línia. **
+	** Escriviu  d$  per esborrar fins al final de la línia. **
 
   1. Premeu  <ESC>  per estar segurs que esteu en el mode Normal.
 
@@ -182,7 +182,7 @@ NOTA: Les lletres dw apareixeran a la línia de baix de la pantalla mentre
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                     Lliçó 2.3: SOBRE ORDRES I OBJECTES
+		     Lliçó 2.3: SOBRE ORDRES I OBJECTES
 
 
   El format de l'ordre d'esborrar  d  és el següent:
@@ -205,10 +205,10 @@ NOTA:  Per als aventurers: si teclegeu només l'objecte, en el mode Normal,
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                  Lliçó 2.4: UNA EXCEPCIÓ A 'ORDRE-OBJECTE'
+		  Lliçó 2.4: UNA EXCEPCIÓ A 'ORDRE-OBJECTE'
 
 
-               ** Teclegeu   dd   esborrar tota la línia. **
+	       ** Teclegeu   dd   esborrar tota la línia. **
 
   Com que molt sovint s'han d'eliminar línies senceres els dissenyadors del
   Vi van creure que seria més fàcil teclejar dd per esborrar tota la línia.
@@ -228,7 +228,7 @@ NOTA:  Per als aventurers: si teclegeu només l'objecte, en el mode Normal,
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                          Lliçó 2.5: L'ORDRE DESFER
+			  Lliçó 2.5: L'ORDRE DESFER
 
 
  ** Premeu  u  per desfer els últims canvis,  U  per arreglar tota la línia. **
@@ -250,7 +250,7 @@ NOTA:  Per als aventurers: si teclegeu només l'objecte, en el mode Normal,
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                               LLIÇÓ 2 SUMARI
+			       LLIÇÓ 2 SUMARI
 
 
   1. Per esborrar del cursor al final de la paraula teclegeu:     dw
@@ -266,14 +266,14 @@ NOTA:  Per als aventurers: si teclegeu només l'objecte, en el mode Normal,
        nombre  - és quants cops repetir l'ordre
        ordre   - és què fer, com ara  d  per esborrar
        objecte - és amb què s'ha d'actuar, com ara  w  (paraula),
-                 $ (fins a final de línia), etc.
+		 $ (fins a final de línia), etc.
 
-  5. Per desfer les accions anteriors premeu:           u
-     Per desfer tots el canvis en una línia premeu:     U
-     Per desfer l'ordre desfer premeu:                  CTRL-R
+  5. Per desfer les accions anteriors premeu:		u
+     Per desfer tots el canvis en una línia premeu:	U
+     Per desfer l'ordre desfer premeu:			CTRL-R
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                        Lliçó 3.1: L'ORDRE 'POSAR'
+			Lliçó 3.1: L'ORDRE 'POSAR'
 
 
  ** Premeu  p  per posar l'última cosa que heu esborrat després del cursor. **
@@ -296,7 +296,7 @@ NOTA:  Per als aventurers: si teclegeu només l'objecte, en el mode Normal,
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                       Lliçó 3.2: L'ORDRE SUBSTITUIR
+		       Lliçó 3.2: L'ORDRE SUBSTITUIR
 
 
  ** Premeu  r  i un caràcter per substituir el caràcter de sota el cursor. **
@@ -319,10 +319,10 @@ NOTA: Recordeu que heu de practicar, no memoritzar.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                         Lliçó 3.3: L'ORDRE CANVIAR
+			 Lliçó 3.3: L'ORDRE CANVIAR
 
 
-        ** Per canviar una part o tota la paraula, escriviu  cw . **
+	** Per canviar una part o tota la paraula, escriviu  cw . **
 
   1. Moveu el cursor a la primera línia de sota marcada amb --->.
 
@@ -342,7 +342,7 @@ Noteu que  cw  no només canvia la paraula, també us posa en mode d'inserció.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                        Lliçó 3.4: MÉS CANVIS AMB c
+			Lliçó 3.4: MÉS CANVIS AMB c
 
 
  ** L'ordre canviar s'usa amb els mateixos objectes que l'ordre esborrar. **
@@ -365,7 +365,7 @@ Noteu que  cw  no només canvia la paraula, també us posa en mode d'inserció.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                                LLIÇÓ 3 SUMARI
+				LLIÇÓ 3 SUMARI
 
 
   1. Per tornar a posar el text que s'ha esborrat, premeu  p . Això posa el
@@ -388,7 +388,7 @@ Ara aneu a la pròxima lliçó.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    Lliçó 4.1: SITUACIÓ I ESTAT DEL FITXER
+		    Lliçó 4.1: SITUACIÓ I ESTAT DEL FITXER
 
 
   ** Premeu CTRL-g per veure la situació dins del fitxer i el seu estat.
@@ -411,10 +411,10 @@ Ara aneu a la pròxima lliçó.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                          Lliçó 4.2: L'ORDRE CERCAR
+			  Lliçó 4.2: L'ORDRE CERCAR
 
 
-           ** Premeu  /  seguit de la frase que vulgueu cercar. **
+	   ** Premeu  /  seguit de la frase que vulgueu cercar. **
 
   1. En el mode Normal premeu el caràcter  / . Noteu que el cursor apareix
      a la part de baix de la pantalla igual que amb l'ordre  : .
@@ -434,10 +434,10 @@ Note: Quan la cerca arribi al final del fitxer continuarà a l'inici.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                       Lliçó 4.3: CERCA DE PARÈNTESIS
+		       Lliçó 4.3: CERCA DE PARÈNTESIS
 
 
-           ** Premeu  %  per cercar el ),], o } corresponent. **
+	   ** Premeu  %  per cercar el ),], o } corresponent. **
 
   1. Poseu el cursor en qualsevol (, [, o { de la línia marcada amb --->.
 
@@ -457,7 +457,7 @@ Nota: Això és molt útil per trobar errors en programes informàtics!
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                  Lliçó 4.4: UNA MANERA DE CANVIAR ERRORS
+		  Lliçó 4.4: UNA MANERA DE CANVIAR ERRORS
 
 
        ** Escriviu  :s/vell/nou/g  per substituir 'vell' per 'nou'. **
@@ -497,13 +497,13 @@ Nota: Això és molt útil per trobar errors en programes informàtics!
 
   4. Per substituir el primer 'vell' per 'nou' en una línia   :s/vell/nou
      Per substituir tots els 'vell' per 'nou' en una línia    :s/vell/nou/g
-     Per substituir frases entre les línies # i #             :#,#s/vell/nou/g
+     Per substituir frases entre les línies # i #	      :#,#s/vell/nou/g
      Per substituir totes les coincidències en el fitxer      :%s/vell/nou/g
-     Per demanar confirmació cada cop afegiu 'c'              :%s/vell/nou/gc
-     
+     Per demanar confirmació cada cop afegiu 'c'	      :%s/vell/nou/gc
+
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                 Lliçó 5.1: COM EXECUTAR UNA ORDRE EXTERNA
+		 Lliçó 5.1: COM EXECUTAR UNA ORDRE EXTERNA
 
 
        ** Teclegeu  :!  seguit d'una ordre externa per executar-la. **
@@ -526,10 +526,10 @@ Nota:  Totes les ordres  :  s'han d'acabar amb la tecla <ENTRAR>
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-               Lliçó 5.2: MÉS SOBRE L'ESCRIPTURA DE FITXERS
+	       Lliçó 5.2: MÉS SOBRE L'ESCRIPTURA DE FITXERS
 
 
-          ** Per desar els canvis fets, escriviu  :w  FITXER. ***
+	  ** Per desar els canvis fets, escriviu  :w  FITXER. ***
 
   1. Escriviu  :!dir  o bé  :!ls  per obtenir un llistat del directori.
      Ja sabeu que heu de prémer <ENTRAR> després d'això.
@@ -545,14 +545,14 @@ Note: Si sortiu del Vim i entreu una altra vegada amb el fitxer PROVA, el
       fitxer serà una còpia exacta del tutor que heu desat.
 
   5. Ara esborreu el fitxer teclejant (MS-DOS):   :!del PROVA
-                                   o bé (Unix):   :!rm PROVA
+				   o bé (Unix):   :!rm PROVA
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                 Lliçó 5.3: UNA ORDRE SELECTIVA PER DESAR
+		 Lliçó 5.3: UNA ORDRE SELECTIVA PER DESAR
 
 
-        ** Per desar una part del fitxer, escriviu  :#,# w FITXER **
+	** Per desar una part del fitxer, escriviu  :#,# w FITXER **
 
   1. Un altre cop, feu  :!dir  o  :!ls  per obtenir un llistat del directori
      i trieu un nom de fitxer adequat com ara PROVA.
@@ -572,10 +572,10 @@ Note: Si sortiu del Vim i entreu una altra vegada amb el fitxer PROVA, el
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    Lliçó 5.4: OBTENIR I AJUNTAR FITXERS
+		    Lliçó 5.4: OBTENIR I AJUNTAR FITXERS
 
 
-         ** Per inserir el contingut d'un fitxer, feu  :r FITXER **
+	 ** Per inserir el contingut d'un fitxer, feu  :r FITXER **
 
   1. Assegureu-vos, amb l'ordre  :!dir , que el fitxer PROVA encara hi és.
 
@@ -595,14 +595,14 @@ NOTA:  El fitxer que obtingueu es posa en el lloc on hi hagi el cursor.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                                LLIÇÓ 5 SUMARI
+				LLIÇÓ 5 SUMARI
 
 
   1.  :!ordre  executa una ordre externa.
 
       Alguns exemples útils són:
 	 (MS-DOS)	  (Unix)
-          :!dir            :!ls          -  mostra un llistat del directori
+	  :!dir		   :!ls		 -  mostra un llistat del directori
 	  :!del FITXER     :!rm FITXER   -  esborra el fitxer FITXER
 
   2.  :w FITXER  escriu el fitxer editat al disc dur, amb el nom FITXER.
@@ -618,7 +618,7 @@ NOTA:  El fitxer que obtingueu es posa en el lloc on hi hagi el cursor.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                          Lliçó 6.1: L'ORDRE OBRIR
+			  Lliçó 6.1: L'ORDRE OBRIR
 
 
 ** Premeu  o  per obrir una línia sota el cursor i entrar en mode inserció. **
@@ -641,10 +641,10 @@ Obriu una línia sobre aquesta amb Shift-O amb el cursor en aquesta línia.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                        Lliçó 6.2: L'ORDRE AFEGIR
+			Lliçó 6.2: L'ORDRE AFEGIR
 
 
-            ** Premeu  a  per afegir text DESPRÉS del cursor. **
+	    ** Premeu  a  per afegir text DESPRÉS del cursor. **
 
   1. Moveu el cursor al final de la primera línia de sota marcada
      amb ---> prement  $  en el mode Normal.
@@ -664,7 +664,7 @@ Nota: Així s'evita haver de prémer  i , l'últim caràcter, el text a inserir,
 ---> Aquesta línia us permetrà practicar afegir text a final de línia.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                  Lliçó 6.3: UNA ALTRA MANERA DE SUBSTITUIR
+		  Lliçó 6.3: UNA ALTRA MANERA DE SUBSTITUIR
 
 
       ** Teclegeu una  R  majúscula per substituir més d'un caràcter. **
@@ -687,10 +687,10 @@ Nota: Així s'evita haver de prémer  i , l'últim caràcter, el text a inserir,
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                        Lliçó 6.4: ESTABLIR OPCIONS
+			Lliçó 6.4: ESTABLIR OPCIONS
 
       ** Feu que les ordres cercar o substituir ignorin les diferències
-                     entre majúscules i minúscules **
+		     entre majúscules i minúscules **
 
   1. Cerqueu la paraula 'ignorar' amb: /ignorar
      Repetiu-ho uns quants cops amb la tecla n.
@@ -710,7 +710,7 @@ Nota: Així s'evita haver de prémer  i , l'últim caràcter, el text a inserir,
   6. Per treure el ressalt dels resultats, feu:
      :nohlsearch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                              LLIÇÓ 6 SUMARI
+			      LLIÇÓ 6 SUMARI
 
 
   1. L'ordre  o  obre una línia SOTA la del cursor i mou el cursor a la nova
@@ -733,10 +733,10 @@ Nota: Així s'evita haver de prémer  i , l'últim caràcter, el text a inserir,
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                          LLIÇÓ 7: ORDRES D'AJUDA
+			  LLIÇÓ 7: ORDRES D'AJUDA
 
 
-                 ** Utilitzeu el sistema intern d'ajuda **
+		 ** Utilitzeu el sistema intern d'ajuda **
 
   El Vim té un extens sistema d'ajuda. Per llegir una introducció proveu una
   d'aquestes tres coses:
@@ -756,9 +756,9 @@ Nota: Així s'evita haver de prémer  i , l'últim caràcter, el text a inserir,
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                       LLIÇÓ 8: CREAR UN SCRIPT D'INICI
+		       LLIÇÓ 8: CREAR UN SCRIPT D'INICI
 
-                     ** Activar funcions automàticament **
+		     ** Activar funcions automàticament **
 
  El Vim té moltes més funcions que el Vi, però moltes estan desactivades per
  omissió. Per començar a utilitzar més funcions heu de crear un fitxer "vimrc".
@@ -786,8 +786,8 @@ Nota: Així s'evita haver de prémer  i , l'últim caràcter, el text a inserir,
   Llegiu el manual de l'usuari: ":help user-manual".
 
   Per un estudi més profund us recomanem el següent llibre:
-        Vim - Vi Improved - de Steve Oualline
-        Editorial: New Riders
+	Vim - Vi Improved - de Steve Oualline
+	Editorial: New Riders
   És el primer llibre dedicat completament al Vim, especialment útil per a
   usuaris novells. Té molts exemples i dibuixos.
   Vegeu http://iccf-holland.org/click5.html

@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.3a.  Last change: 2004 Apr 23
+*motion.txt*    For Vim version 6.3b.  Last change: 2004 May 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -560,7 +560,8 @@ a)							*v_a)* *a)* *a(*
 a(							*v_ab* *v_a(* *ab*
 ab			"a block", select [count] blocks, from "[count] [(" to
 			the matching ')', including the '(' and ')' (see
-			|[(|).
+			|[(|).  Does not include white space outside of the
+			parenthesis.
 			When used in Visual mode it is made characterwise.
 
 i)							*v_i)* *i)* *i(*

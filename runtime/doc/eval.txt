@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.3a.  Last change: 2004 May 02
+*eval.txt*      For Vim version 6.3b.  Last change: 2004 May 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -2288,8 +2288,8 @@ server2client( {clientid}, {string})			*server2client()*
 <
 serverlist()					*serverlist()*
 		Return a list of available server names, one per line.
-		When there are no servers an empty string is returned.
-		See also |clientserver|.
+		When there are no servers or the information is not available
+		an empty string is returned.  See also |clientserver|.
 		{only available when compiled with the |+clientserver| feature}
 		Example: >
 			:echo serverlist()

@@ -34,7 +34,7 @@ function GetXF86ConfIndent()
     elseif getline(v:lnum) =~? '^\s*End'
 	let ind = ind - &sw
     endif
-	
+
     return ind
 endfunction
 

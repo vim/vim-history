@@ -1,4 +1,4 @@
-*os_vms.txt*    For Vim version 6.3a.  Last change: 2004 May 3
+*os_vms.txt*    For Vim version 6.3b.  Last change: 2004 May 16
 
 
 		  VIM REFERENCE MANUAL
@@ -50,11 +50,11 @@ To use the precompiled binary version, you need one of these archives:
   vim-XX-exe-alpha-gui.zip      Alpha GUI/Motif executables
   vim-XX-exe-alpha-gtk.zip      Alpha GUI/GTK executables
   vim-XX-exe-alpha-term.zip     Alpha console executables
-  vim-XX-exe-vax-gui.zip        VAX GUI executables
+  vim-XX-exe-vax-gui.zip	VAX GUI executables
   vim-XX-exe-vax-term.zip       VAX console executables
 
 and of course
-  vim-XX-runtime.zip            runtime files
+  vim-XX-runtime.zip		runtime files
 
 The binary archives contain: vim.exe, ctags.exe, xxd.exe, mms_vim.exe files.
 

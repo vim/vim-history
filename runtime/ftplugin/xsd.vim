@@ -28,7 +28,7 @@ if exists("b:browsefilter")
 endif
 
 " Change the :browse e filter to primarily show xsd-related files.
-if has("gui_win32") 
+if has("gui_win32")
     let  b:browsefilter="XSD Files (*.xsd)\t*.xsd\n" . s:browsefilter
 endif
 

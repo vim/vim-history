@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	NSIS script, for version of NSIS 1.91 and later
 " Maintainer:	Alex Jakushev <Alex.Jakushev@kemek.lt>
-" Last Change:	2004 May 02
+" Last Change:	2004 May 12
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -214,6 +214,9 @@ syn keyword nsisStatement	AddSize
 
 "STATEMENTS - functions
 syn keyword nsisStatement	Function FunctionEnd
+
+"STATEMENTS - pages
+syn keyword nsisStatement	Page UninstPage PageEx PageExEnc PageCallbacks
 
 
 "ERROR

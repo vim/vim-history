@@ -1,8 +1,8 @@
 " Vim compiler file
 " Compiler:	se (SmartEiffel Compiler)
 " Maintainer:	Doug Kearns <djkea2@mugca.its.monash.edu.au>
-" URL:		http://mugca.its.monash.edu.au/~djkea2/vim/compiler/se.vim  
-" Last Change:	2004 Mar 27
+" URL:		http://mugca.its.monash.edu.au/~djkea2/vim/compiler/se.vim
+" Last Change:	2004 May 16
 
 if exists("current_compiler")
   finish

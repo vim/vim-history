@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	html
 " Maintainer:	Dan Sharp <dwsharp at hotmail dot com>
-" Last Changed: 2003 Sep 29
+" Last Changed: 2004 May 11
 " URL:		http://mywebpage.netscape.com/sharppeople/vim/ftplugin
 
 if exists("b:did_ftplugin") | finish | endif
@@ -14,12 +14,13 @@ set cpo-=C
 
 setlocal commentstring=<!--%s-->
 
-" HTML:  thanks to Johannes Zellner.
+" HTML:  thanks to Johannes Zellner and Benji Fisher.
 if exists("loaded_matchit")
     let b:match_ignorecase = 1
     let b:match_skip = 's:Comment'
     let b:match_words = '<:>,' .
-    \ '<\@<=[ou]l[^>]*\%(>\|$\):<\@<=li>:<\@<=/[ou]l>,' .
+    \ '<\@<=[ou]l\>[^>]*\%(>\|$\):<\@<=li\>:<\@<=/[ou]l>,' .
+    \ '<\@<=dl\>[^>]*\%(>\|$\):<\@<=d[td]\>:<\@<=/dl>,' .
     \ '<\@<=\([^/][^ \t>]*\)[^>]*\%(>\|$\):<\@<=/\1>'
 endif
 

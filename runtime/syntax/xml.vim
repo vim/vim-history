@@ -48,13 +48,13 @@ syn match xmlError "[<&]"
 " EXAMPLE:
 "
 " <tag foo.attribute = "value">
-"                      ^^^^^^^
+"		       ^^^^^^^
 syn region  xmlString contained start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=xmlEntity display
 syn region  xmlString contained start=+'+ skip=+\\\\\|\\'+ end=+'+ contains=xmlEntity display
 
 
 " punctuation (within attributes) e.g. <tag xml:foo.attribute ...>
-"                                              ^   ^
+"					       ^   ^
 " syn match   xmlAttribPunct +[-:._]+ contained display
 syn match   xmlAttribPunct +[:.]+ contained display
 
