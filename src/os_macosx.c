@@ -13,12 +13,17 @@
  */
 
 #ifdef MACOS_X_UNIX
-# include "vim.h"
+# ifdef HAVE_CONFIG_H	    /* Using Makefile. */
+#  include "vim.h"
+# else
+#  include "os_unix.c"	    /* Using Project Builder */
+# endif
 #else
 # include "os_mac.c"
 # include <TextEncodingConverter.h>
 #endif
 
+#ifdef _DEBUG
     void
 Trace(char* fmt, ...)
 {
@@ -30,6 +35,7 @@ Trace(char* fmt, ...)
     fprintf(stderr, "%s", buf);
     va_end(args);
 }
+#endif
 
 #ifdef MACOS_X_ICONVEMU
 /*

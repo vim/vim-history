@@ -74,6 +74,10 @@
 #if defined(MACOS_X) && defined(MACOS_CLASSIC)
     Error: To compile for both MACOS X and Classic use a Classic Carbon
 #endif
+/* Unless made through the Makefile enforce GUI on Mac */
+#if defined(MACOS) && !defined(HAVE_CONFIG_H)
+# define FEAT_GUI_MAC
+#endif
 
 
 #if defined(FEAT_GUI_MOTIF) \
