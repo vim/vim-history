@@ -256,7 +256,7 @@ all: tags vim.man vimdiff.man vimtutor.man xxd.man
 # Use Vim to generate the tags file.  Can only be used when Vim has been
 # compiled and installed.  Supports multiple languages.
 vimtags: $(DOCS)
-	$(VIMEXE) -e -s -c "helptags ." -c quit
+	$(VIMEXE) -e -s -X -c "helptags ." -c quit
 
 # Use "doctags" to generate the tags file.  Only works for English!
 tags: doctags $(DOCS)
