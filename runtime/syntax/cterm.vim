@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Century Term Command Script
 " Maintainer:	Sean M. McKee <mckee@misslink.net>
-" Last Change:	2001 Sep 02
+" Last Change:	2002 Apr 13
 " Version Info: @(#)cterm.vim	1.7	97/12/15 09:23:14
 
 " For version 5.x: Clear all syntax items
@@ -39,7 +39,7 @@ syn keyword ctermFunction	terminal time trans type usend version
 syn keyword ctermFunction	vi vidblink vidcard vidout vidunder wait
 syn keyword ctermFunction	wildsize wclose wopen wordlen wru wruchar
 syn keyword ctermFunction	xfer xmit xprot
-syn match ctermFunction		"\?"
+syn match ctermFunction		"?"
 "syn keyword ctermFunction	comment remark
 
 "END FUNCTIONS
