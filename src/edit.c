@@ -4256,7 +4256,7 @@ auto_format()
     pold = old;
     while (1)
     {
-	if (curwin->w_cursor.lnum >= curbuf->b_ml.ml_line_count)
+	if (curwin->w_cursor.lnum > curbuf->b_ml.ml_line_count)
 	{
 	    curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
 	    curwin->w_cursor.col = MAXCOL;
