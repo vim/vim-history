@@ -3974,7 +3974,7 @@ do_xterm_trace()
     int			win_x, win_y;
     int			row, col;
     int_u		mask_return;
-    char_u		term_str[50];
+    char_u		buf[50];
     char_u		*strp;
     long		got_hints;
     static char_u	*mouse_code;
@@ -4032,13 +4032,13 @@ do_xterm_trace()
     if (row == prev_row && col == prev_col)
 	return TRUE;
 
-    STRCPY(term_str, mouse_code);
-    strp = term_str + STRLEN(term_str);
+    STRCPY(buf, mouse_code);
+    strp = buf + STRLEN(buf);
     *strp++ = xterm_button | MOUSE_DRAG;
     *strp++ = (char_u)(col + ' ' + 1);
     *strp++ = (char_u)(row + ' ' + 1);
     *strp = 0;
-    add_to_input_buf(term_str, STRLEN(term_str));
+    add_to_input_buf(buf, STRLEN(buf));
 
     prev_row = row;
     prev_col = col;
