@@ -182,13 +182,18 @@ CON_LIB = advapi32.lib shell32.lib gdi32.lib comdlg32.lib ole32.lib uuid.lib
 CON_LIB = $(CON_LIB) /DELAYLOAD:comdlg32.dll /DELAYLOAD:ole32.dll DelayImp.lib
 !endif
 
+### Set the default $(WINVER) to make it work with VC++7.0 (VS.NET)
+!ifndef WINVER
+WINVER = -DWINVER=0x400
+!endif
+
 # If you have a fixed directory for $VIM or $VIMRUNTIME, other than the normal
 # default, use these lines.
 #VIMRCLOC = somewhere
 #VIMRUNTIMEDIR = somewhere
 
 CFLAGS = -c /W3 /nologo $(CVARS) -I. -Iproto -DHAVE_PATHDEF -DWIN32 \
-		$(SNIFF_DEFS) $(DEFINES)
+		$(WINVER) $(SNIFF_DEFS) $(DEFINES)
 
 #>>>>> end of choices
 ###########################################################################
