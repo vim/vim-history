@@ -4500,7 +4500,10 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 		*varp = p;
 	    }
 	    if (varp == &p_enc)
+	    {
 		errmsg = mb_init();
+		need_maketitle = TRUE;
+	    }
 	}
 
 	if (errmsg == NULL)
