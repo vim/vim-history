@@ -3904,6 +3904,9 @@ regmatch(scan)
 			    /* backup to last char of previous line */
 			    --reglnum;
 			    regline = reg_getline(reglnum);
+			    /* Just in case regrepeat() didn't count right. */
+			    if (regline == NULL)
+				return FALSE;
 			    reginput = regline + STRLEN(regline);
 			    fast_breakcheck();
 			    if (got_int || out_of_stack)
@@ -4158,7 +4161,9 @@ regrepeat(p, maxcount)
 	while (count < maxcount)
 	{
 	    if (vim_isIDc(*scan) && (testval || !isdigit(*scan)))
-		++scan;
+	    {
+		ADVANCE_P(scan);
+	    }
 	    else if (*scan == NUL)
 	    {
 		if (!WITH_NL(OP(p)) || reglnum == reg_maxline)
