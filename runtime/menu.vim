@@ -2,7 +2,7 @@
 " You can also use this as a start for your own set of menus.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2004 May 04
+" Last Change:	2004 May 09
 
 " Note that ":an" (short for ":anoremenu") is often used to make a menu work
 " in all modes and avoid side effects from mappings defined by the user.
@@ -161,7 +161,10 @@ else
   vnoremap <script> <SID>vPaste	"-c<Esc>gix<Esc><SID>Paste"_x
   inoremap <script> <SID>iPaste	x<Esc><SID>Paste"_s
 endif
-nnoremap <SID>SelectAll	:exe "norm gg" . (&slm == "" ? "VG" : "gH\<C-O>G")<CR>
+
+func! <SID>SelectAll()
+  exe "norm gg" . (&slm == "" ? "VG" : "gH\<C-O>G")
+endfunc
 
 
 " Edit menu
@@ -184,8 +187,9 @@ inoremenu	 &Edit.Put\ &After<Tab>]p	<C-O>]p
 if has("win32") || has("win16")
   vnoremenu 20.390 &Edit.&Delete<Tab>x		x
 endif
-noremenu  <script> <silent> 20.400 &Edit.&Select\ All<Tab>ggVG	<C-\><C-N><SID>SelectAll
-noremenu! <script> <silent> 20.400 &Edit.&Select\ All<Tab>ggVG	<C-\><C-N><SID>SelectAll
+noremenu  <script> <silent> 20.400 &Edit.&Select\ All<Tab>ggVG	:<C-U>call <SID>SelectAll()<CR>
+inoremenu <script> <silent> 20.400 &Edit.&Select\ All<Tab>ggVG	<C-O>:call <SID>SelectAll()<CR>
+cnoremenu <script> <silent> 20.400 &Edit.&Select\ All<Tab>ggVG	<C-U>call <SID>SelectAll()<CR>
 
 an 20.405	 &Edit.-SEP2-				<Nop>
 if has("win32")  || has("win16") || has("gui_gtk") || has("gui_motif")
@@ -583,10 +587,10 @@ func! s:BMShow(...)
   let cpo_save = &cpo
   set cpo&vim
   exe 'an <silent> ' . g:bmenu_priority . ".2 &Buffers.&Refresh\\ menu :call <SID>BMShow()<CR>"
-  exe 'an ' . g:bmenu_priority . ".4 &Buffers.&Delete :bd<CR>"
-  exe 'an ' . g:bmenu_priority . ".6 &Buffers.&Alternate :b #<CR>"
-  exe 'an ' . g:bmenu_priority . ".7 &Buffers.&Next :bnext<CR>"
-  exe 'an ' . g:bmenu_priority . ".8 &Buffers.&Previous :bprev<CR>"
+  exe 'an ' . g:bmenu_priority . ".4 &Buffers.&Delete :confirm bd<CR>"
+  exe 'an ' . g:bmenu_priority . ".6 &Buffers.&Alternate :confirm b #<CR>"
+  exe 'an ' . g:bmenu_priority . ".7 &Buffers.&Next :confirm bnext<CR>"
+  exe 'an ' . g:bmenu_priority . ".8 &Buffers.&Previous :confirm bprev<CR>"
   exe 'an ' . g:bmenu_priority . ".9 &Buffers.-SEP- :"
   let &cpo = cpo_save
   unmenu &Buffers.Dummy
@@ -671,7 +675,7 @@ func! s:BMFilename(name, num)
   " set 'cpo' to include the <CR>
   let cpo_save = &cpo
   set cpo&vim
-  exe name . ' :b' . a:num . '<CR>'
+  exe name . ' :confirm b' . a:num . '<CR>'
   let &cpo = cpo_save
 endfunc
 
@@ -783,8 +787,9 @@ vnoremenu 1.60 PopUp.Select\ Blockwise	<C-V>
 an 1.70 PopUp.Select\ &Word		vaw
 an 1.80 PopUp.Select\ &Line		V
 an 1.90 PopUp.Select\ &Block		<C-V>
-noremenu  <script> <silent> 1.100 PopUp.Select\ &All	<C-\><C-N><SID>SelectAll
-noremenu! <script> <silent> 1.100 PopUp.Select\ &All	<C-\><C-N><SID>SelectAll
+noremenu  <script> <silent> 1.100 PopUp.Select\ &All	:<C-U>call <SID>SelectAll()<CR>
+inoremenu <script> <silent> 1.100 PopUp.Select\ &All	<C-O>:call <SID>SelectAll()<CR>
+cnoremenu <script> <silent> 1.100 PopUp.Select\ &All	<C-U>call <SID>SelectAll()<CR>
 
 
 " The GUI toolbar (for MS-Windows and GTK)
