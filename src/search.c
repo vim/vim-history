@@ -3546,7 +3546,7 @@ extend:
 		++end_lnum;
 	}
 
-	if (i == 0 && white_in_front)
+	if (i == 0 && white_in_front && include)
 	    break;
 
 	/*
