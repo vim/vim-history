@@ -1205,6 +1205,10 @@ mch_has_exp_wildcard(p)
 	    ++p;
 	else if (vim_strchr((char_u *)WILDCHAR_LIST, *p) != NULL)
 	    return TRUE;
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	    p += (*mb_ptr2len_check)(p) - 1;
+#endif
     }
     return FALSE;
 }
