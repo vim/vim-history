@@ -506,10 +506,22 @@ RUBY_VER = 16
 !ifndef RUBY_VER_LONG
 RUBY_VER_LONG = 1.6
 !endif
+
+!if $(RUBY_VER) >= 18
+!ifndef RUBY_PLATFORM
+RUBY_PLATFORM = i386-mswin32
+!endif
+!ifndef RUBY_INSTALL_NAME
+RUBY_INSTALL_NAME = msvcrt-ruby$(RUBY_VER)
+!endif
+!else
 !ifndef RUBY_PLATFORM
 RUBY_PLATFORM = i586-mswin32
 !endif
+!ifndef RUBY_INSTALL_NAME
 RUBY_INSTALL_NAME = mswin32-ruby$(RUBY_VER)
+!endif
+!endif # $(RUBY_VER) >= 18
 
 !message Ruby requested (version $(RUBY_VER)) - root dir is "$(RUBY)"
 CFLAGS = $(CFLAGS) -DFEAT_RUBY
@@ -519,7 +531,7 @@ RUBY_LIB = $(RUBY)\lib\$(RUBY_INSTALL_NAME).lib
 # Do we want to load Ruby dynamically?
 !if "$(DYNAMIC_RUBY)" == "yes"
 !message Ruby DLL will be loaded dynamically
-CFLAGS = $(CFLAGS) -DDYNAMIC_RUBY -DDYNAMIC_RUBY_DLL=\"$(RUBY_INSTALL_NAME).dll\"
+CFLAGS = $(CFLAGS) -DDYNAMIC_RUBY -DDYNAMIC_RUBY_DLL=\"$(RUBY_INSTALL_NAME).dll\" -DDYNAMIC_RUBY_VER=$(RUBY_VER)
 !undef RUBY_LIB
 !endif
 !endif # RUBY
