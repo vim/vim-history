@@ -3686,7 +3686,7 @@ insertchar(c, flags, second_indent)
     textwidth = comp_textwidth(flags & INSCHAR_FORMAT);
     fo_ins_blank = has_format_option(FO_INS_BLANK);
 #ifdef FEAT_MBYTE
-    fo_multibyte = has_format_option(FO_MULTIBYTE);
+    fo_multibyte = has_format_option(FO_MBYTE_BREAK);
 #endif
 
     /*
@@ -3799,27 +3799,13 @@ insertchar(c, flags, second_indent)
 
 	    /*
 	     * Find position to break at.
-	     * Stop at start of line.
 	     * Stop at first entered white when 'formatoptions' has 'v'
 	     */
-	    while (curwin->w_cursor.col > 0
-		    && ((!fo_ins_blank && !has_format_option(FO_INS_VI))
+	    while ((!fo_ins_blank && !has_format_option(FO_INS_VI))
 			|| curwin->w_cursor.lnum != Insstart.lnum
-			|| curwin->w_cursor.col >= Insstart.col))
+			|| curwin->w_cursor.col >= Insstart.col)
 	    {
 		cc = gchar_cursor();
-#ifdef FEAT_MBYTE
-		if (cc >= 0x100 && fo_multibyte)
-		{
-		    /* Break at a multi-byte character. */
-		    end_foundcol = curwin->w_cursor.col;
-		    foundcol = curwin->w_cursor.col;
-		    dec_cursor();
-		    if (curwin->w_cursor.col < (colnr_T)wantcol)
-			break;
-		    continue;
-		}
-#endif
 		if (vim_iswhite(cc))
 		{
 		    /* remember position of blank just before text */
@@ -3862,6 +3848,20 @@ insertchar(c, flags, second_indent)
 		    if (curwin->w_cursor.col < (colnr_T)wantcol)
 			break;
 		}
+#ifdef FEAT_MBYTE
+		else if (cc >= 0x100 && fo_multibyte
+				  && curwin->w_cursor.col <= (colnr_T)wantcol)
+		{
+		    /* Break after or before a multi-byte character. */
+		    foundcol = curwin->w_cursor.col;
+		    if (curwin->w_cursor.col < (colnr_T)wantcol)
+			foundcol += (*mb_char2len)(cc);
+		    end_foundcol = foundcol;
+		    break;
+		}
+#endif
+		if (curwin->w_cursor.col == 0)
+		    break;
 		dec_cursor();
 	    }
 
