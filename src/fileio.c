@@ -2523,6 +2523,11 @@ buf_modname(shortname, fname, ext, prepend_dot)
 	if (retval == NULL)
 	    return NULL;
 	STRCPY(retval, fname);
+#ifdef VMS
+	ptr = (char_u *)strrchr((char *)retval, ';');
+	if (ptr != NULL)
+	    *ptr = '\0';
+#endif
     }
 
     /*
