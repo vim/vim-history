@@ -611,7 +611,6 @@ _WndProc(
 	HANDLE_MSG(hwnd, WM_DEADCHAR,	_OnDeadChar);
 	HANDLE_MSG(hwnd, WM_SYSDEADCHAR, _OnDeadChar);
 	/* HANDLE_MSG(hwnd, WM_ACTIVATE,    _OnActivate); */
-	HANDLE_MSG(hwnd, WM_CHAR,	_OnChar);
 	HANDLE_MSG(hwnd, WM_CLOSE,	_OnClose);
 	/* HANDLE_MSG(hwnd, WM_COMMAND,	_OnCommand); */
 	HANDLE_MSG(hwnd, WM_DESTROY,	_OnDestroy);
@@ -643,6 +642,12 @@ _WndProc(
 	    _OnEndSession();
 	break;
 
+    case WM_CHAR:
+	/* Don't use HANDLE_MSG() for WM_CHAR, it truncates wParam to a single
+	 * byte while we want the UTF-16 character value. */
+	_OnChar(hwnd, wParam, (int)(short)LOWORD(lParam));
+	return 0L;
+
     case WM_SYSCHAR:
 	/*
 	 * if 'winaltkeys' is "no", or it's "menu" and it's not a menu
@@ -655,7 +660,10 @@ _WndProc(
 		|| (p_wak[0] == 'm' && !gui_is_menu_shortcut((int)wParam))
 		)
 #endif
-	    return HANDLE_WM_SYSCHAR((hwnd), (wParam), (lParam), (_OnSysChar));
+	{
+	    _OnSysChar(hwnd, wParam, (int)(short)LOWORD(lParam));
+	    return 0L;
+	}
 #ifdef FEAT_MENU
 	else
 	    return MyWindowProc(hwnd, uMsg, wParam, lParam);
@@ -663,7 +671,7 @@ _WndProc(
 
     case WM_SYSKEYUP:
 #ifdef FEAT_MENU
-	/* Thus used to be done only when menu is active: ALT key is used for
+	/* This used to be done only when menu is active: ALT key is used for
 	 * that.  But that caused problems when menu is disabled and using
 	 * Alt-Tab-Esc: get into a strange state where no mouse-moved events
 	 * are received, mouse pointer remains hidden. */
