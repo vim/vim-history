@@ -4966,6 +4966,11 @@ check_timestamps(focus)
     int		didit = 0;
     int		n;
 
+    /* Don't check timestamps while system() or another low-level function may
+     * cause us to lose and gain focus. */
+    if (no_check_timestamps > 0)
+	return FALSE;
+
     /* Avoid doing a check twice.  The OK/Reload dialog can cause a focus
      * event and we would keep on checking if the file is steadily growing.
      * Do check again after typing something. */

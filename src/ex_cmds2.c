@@ -2390,7 +2390,9 @@ ex_checktime(eap)
     exarg_T	*eap;
 {
     buf_T	*buf;
+    int		save_no_check_timestamps = no_check_timestamps;
 
+    no_check_timestamps = 0;
     if (eap->addr_count == 0)	/* default is all buffers */
 	check_timestamps(FALSE);
     else
@@ -2399,6 +2401,7 @@ ex_checktime(eap)
 	if (buf != NULL)	/* cannot happen? */
 	    (void)buf_check_timestamp(buf, FALSE);
     }
+    no_check_timestamps = save_no_check_timestamps;
 }
 #endif
 

@@ -7042,8 +7042,12 @@ get_cmd_output(cmd, flags)
 
     /*
      * Call the shell to execute the command (errors are ignored).
+     * Don't check timestamps here.
      */
+    ++no_check_timestamps;
     call_shell(command, SHELL_DOOUT | SHELL_EXPAND | flags);
+    --no_check_timestamps;
+
     vim_free(command);
 
     /*
