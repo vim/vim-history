@@ -2025,6 +2025,20 @@ dialog_add_buttons(GtkDialog *dialog, char_u *button_string)
     button_string = vim_strsave(button_string); /* must be writable */
     if (button_string == NULL)
 	return;
+
+    /* Check 'v' flag in 'guioptions': vertical button placement. */
+    if (vim_strchr(p_go, GO_VERTICAL) != NULL)
+    {
+	GtkWidget	*vbutton_box;
+
+	vbutton_box = gtk_vbutton_box_new();
+	gtk_widget_show(vbutton_box);
+	gtk_box_pack_end(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+						 vbutton_box, TRUE, FALSE, 0);
+	/* Overrule the "action_area" value, hopefully this works... */
+	GTK_DIALOG(dialog)->action_area = vbutton_box;
+    }
+
     /*
      * Yes this is ugly, I don't particularly like it either.  But doing it
      * this way has the compelling advantage that translations need not to
@@ -2037,8 +2051,10 @@ dialog_add_buttons(GtkDialog *dialog, char_u *button_string)
     /*
      * Yes, the buttons are in reversed order to match the GNOME 2 desktop
      * environment.  Don't hit me -- it's all about consistency.
+     * Well, apparently somebody changed his mind: with GTK 2.2.4 it works the
+     * other way around...
      */
-    for (index = n_buttons; index > 0; --index)
+    for (index = 1; index <= n_buttons; ++index)
     {
 	char	*label;
 	char_u	*label8;
@@ -2165,6 +2181,19 @@ gui_mch_dialog(int	type,	    /* type of dialog */
 	    CONVERT_FROM_UTF8_FREE(text);
 	}
 	gtk_widget_destroy(dialog);
+    }
+
+    /* Terrible hack: When the text area still has focus when we remove the
+     * dialog, somehow gvim loses window focus.  This is with "point to type"
+     * in the KDE 3.1 window manager.  Warp the mouse pointer to outside the
+     * window and back to avoid that. */
+    if (!gui.in_focus)
+    {
+	int x, y;
+
+	gdk_window_get_pointer(gui.drawarea->window, &x, &y, NULL);
+	gui_mch_setmouse(-100, -100);
+	gui_mch_setmouse(x, y);
     }
 
     return response > 0 ? response : 0;
