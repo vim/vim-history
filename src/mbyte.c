@@ -1265,6 +1265,44 @@ utfc_ptr2len_check(p)
 }
 
 /*
+ * Return the number of bytes the UTF-8 encoding of the character at "p[size]"
+ * takes.  This includes following composing characters.
+ */
+    int
+utfc_ptr2len_check_len(p, size)
+    char_u	*p;
+    int		size;
+{
+    int		len;
+
+    if (*p == NUL)
+	return 0;
+    if (p[0] < 0x80 && (size == 1 || p[1] < 0x80)) /* be quick for ASCII */
+	return 1;
+
+    /* Skip over first UTF-8 char, stopping at a NUL byte. */
+    len = utf_ptr2len_check_len(p, size);
+
+    /* Check for illegal byte. */
+    if (len == 1 && p[0] >= 0x80)
+	return 1;
+
+    /*
+     * Check for composing characters.  We can handle only the first two, but
+     * skip all of them (otherwise the cursor would get stuck).
+     */
+    while (len < size)
+    {
+	if (p[len] < 0x80 || !utf_iscomposing(utf_ptr2char(p + len)))
+	    break;
+
+	/* Skip over composing char */
+	len += utf_ptr2len_check_len(p + len, size - len);
+    }
+    return len;
+}
+
+/*
  * Return the number of bytes the UTF-8 encoding of character "c" takes.
  * This does not include composing characters.
  */
