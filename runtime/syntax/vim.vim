@@ -1,8 +1,8 @@
 " Vim syntax file
-" Language:	Vim 5.6a script
+" Language:	Vim 5.6 script
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	January 05, 2000
-" Version:	5.6a-02
+" Last Change:	January 19, 2000
+" Version:	5.6-02
 
 " Remove old syntax
 syn clear
@@ -75,7 +75,7 @@ syn match   vimCommand contained	"z[-+^.=]"
 
 " All vimCommands are contained by vimIsCommands.
 syn match vimCmdSep	"[:|]\+"	skipwhite nextgroup=vimAddress,vimAutoCmd,vimMark,vimFilter,vimUserCmd,vimSet,vimLet,vimCommand
-syn match vimIsCommand	"\<\a\+\>"	transparent contains=vimCommand
+syn match vimIsCommand	"\<\a\+\>"	contains=vimCommand
 
 " vimOptions are caught only when contained in a vimSet
 syn keyword vimOption contained	:	ep	keywordprg	sc	tagstack
@@ -289,7 +289,7 @@ syn keyword vimFTOption contained	on	off
 " Functions
 " =========
 syn cluster vimFuncList	contains=vimCommand
-syn cluster vimFuncBodyList	contains=vimIsCommand,vimFunction,vimFunctionError,vimFuncBody,vimSpecFile,vimOper,vimNumber,vimComment,vimString,vimSubst,vimMark,vimRegister,vimAddress,vimFilter,vimCmplxRepeat,vimComment,vimLet,vimSet,vimAutoCmd,vimRegion,vimSynLine,vimNotation,vimIsCommand,vimCtrlChar,vimFuncVar
+syn cluster vimFuncBodyList	contains=vimIsCommand,vimFunction,vimFunctionError,vimFuncBody,vimSpecFile,vimOper,vimNumber,vimComment,vimString,vimSubst,vimMark,vimRegister,vimAddress,vimFilter,vimCmplxRepeat,vimComment,vimLet,vimSet,vimAutoCmd,vimRegion,vimSynLine,vimNotation,vimCtrlChar,vimFuncVar
 syn match   vimFunction	"\<\(function\|functio\|functi\|funct\|func\|fun\|fu\)!\=\s\+\u\w*("me=e-1	contains=@vimFuncList nextgroup=vimFuncBody
 syn match   vimFunctionError	"\<\(function\|functio\|functi\|funct\|func\|fun\|fu\)!\=\s\+\U.\{-}("me=e-1	contains=vimCommand   nextgroup=vimFuncBody
 syn region  vimFuncBody contained	start=")"	end="\<endf"	contains=@vimFuncBodyList
@@ -310,11 +310,11 @@ syn match vimSpecFileMod	"\(:[phtre]\)\+"		contained
 syn match vimOper	"||\|&&\|!=\|>=\|<=\|=\~\|!\~\|>\|<\|+\|-\|=\|\." skipwhite nextgroup=vimString,vimSpecFile
 
 " User-Specified Commands
-syn cluster vimUserCmdList	contains=vimAddress,vimSyntax,vimHighlight,vimAutoCmd,vimCmplxRepeat,vimComment,vimCtrlChar,vimEscapeBrace,vimFilter,vimFunc,vimFunction,vimIsCommand,vimIsCommand,vimMark,vimNotation,vimNumber,vimOper,vimRegion,vimRegister,vimLet,vimSet,vimSetEqual,vimSetString,vimSpecFile,vimString,vimSubst,vimSubstEnd,vimSubstRange,vimSynLine
+syn cluster vimUserCmdList	contains=vimAddress,vimSyntax,vimHighlight,vimAutoCmd,vimCmplxRepeat,vimComment,vimCtrlChar,vimEscapeBrace,vimFilter,vimFunc,vimFunction,vimIsCommand,vimMark,vimNotation,vimNumber,vimOper,vimRegion,vimRegister,vimLet,vimSet,vimSetEqual,vimSetString,vimSpecFile,vimString,vimSubst,vimSubstEnd,vimSubstRange,vimSynLine
 syn match   vimUserCmd	"\<\(command\|comman\|comma\|comm\|com\)!\=\>.*$"	contains=vimUserAttrb,@vimUserCmdList
-syn match   vimUserAttrb	contained	"-\(nargs\|narg\|nar\|na\|n\)=[01*?+]"		contains=vimUserAttrbKey,vimOper
-syn match   vimUserAttrb	contained	"-\(complete\|complet\|comple\|compl\|comp\|com\)=\(augroup\|buffer\|command\|dir\|event\|file\|help\|highlight\|menu\|option\|tag\|var\)"	contains=vimUserAttrbKey,vimUserAttrbCmplt,vimOper
-syn match   vimUserAttrb	contained	"-\(range\|rang\|ran\|ra\)\(=%\|=\d\+\)\="	contains=vimNumber,vimOper,vimUserAttrbKey
+syn match   vimUserAttrb 	contained	"-\(nargs\|narg\|nar\|na\|n\)=[01*?+]"		contains=vimUserAttrbKey,vimOper
+syn match   vimUserAttrb 	contained	"-\(complete\|complet\|comple\|compl\|comp\|com\)=\(augroup\|buffer\|command\|dir\|event\|file\|help\|highlight\|menu\|option\|tag\|var\)"	contains=vimUserAttrbKey,vimUserAttrbCmplt,vimOper
+syn match   vimUserAttrb 	contained	"-\(range\|rang\|ran\|ra\)\(=%\|=\d\+\)\="	contains=vimNumber,vimOper,vimUserAttrbKey
 syn match   vimUserAttrb	contained	"-\(count\|coun\|cou\)=\d\+"		contains=vimNumber,vimOper,vimUserAttrbKey
 syn match   vimUserAttrb	contained	"-\(bang\|ban\|ba\|b\)"		contains=vimOper,vimUserAttrbKey
 syn match   vimUserAttrb	contained	"-\(register\|registe\|regist\|regis\|regi\|reg\|re\)"	contains=vimOper,vimUserAttrbKey
@@ -410,8 +410,8 @@ syn match   vimLetVar	contained	"\I\i*"
 
 " Autocmd
 " =======
-syn match   vimAutoEventList	contained	"\(\a\+,\)*\a\+"	contains=vimAutoEvent nextgroup=vimAutoCmdSpace
-syn match   vimAutoCmdSpace	contained	"\s\+"	nextgroup=vimAutoCmdSfxList
+syn match   vimAutoEventList	contained	"\(!\s\+\)\=\(\a\+,\)*\a\+"	contains=vimAutoEvent nextgroup=vimAutoCmdSpace
+syn match   vimAutoCmdSpace	contained	"\s\+"		nextgroup=vimAutoCmdSfxList
 syn match   vimAutoCmdSfxList	contained	"\S*"
 syn keyword vimAutoCmd		au[tocmd] do[autocmd] doautoa[ll]	skipwhite nextgroup=vimAutoEventList
 
@@ -560,7 +560,7 @@ syn match vimCtrlChar	"[--]"
 " Beginners - Patterns that involve ^
 " =========
 syn match  vimLineComment	+^[ \t:]*".*$+		contains=vimTodo,vimCommentString,vimCommentTitle
-syn match  vimCommentTitle	'"\s*\(\u\a*\s*\)\+:'ms=s+1	contained
+syn match  vimCommentTitle	'"\s*\u\a*\(\s\+\u\a*\)*:'ms=s+1	contained
 syn match  vimContinue	"^\s*\\"
 
 " Highlighting Settings
