@@ -6170,6 +6170,7 @@ term_again:
 			 *  }
 			 *  case 2:
 			 *	stat;
+			 * }
 			 */
 			iscase = (ind_keep_case_label && cin_iscase(l));
 
@@ -6504,6 +6505,7 @@ get_expr_indent()
 {
     int		indent;
     pos_T	pos;
+    int		save_State;
 
     pos = curwin->w_cursor;
     set_vim_var_nr(VV_LNUM, curwin->w_cursor.lnum);
@@ -6511,9 +6513,14 @@ get_expr_indent()
     indent = eval_to_number(curbuf->b_p_inde);
     --sandbox;
 
-    /* restore the cursor position so that 'indentexpr' doesn't need to */
+    /* Restore the cursor position so that 'indentexpr' doesn't need to.
+     * Pretend to be in Insert mode, allow cursor past end of line for "o"
+     * command. */
+    save_State = State;
+    State = INSERT;
     curwin->w_cursor = pos;
     check_cursor();
+    State = save_State;
 
     /* If there is an error, just keep the current indent. */
     if (indent < 0)
