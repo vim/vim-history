@@ -292,8 +292,13 @@ ignorecase(pat)
 		p += l;
 	    else
 #endif
-		if (isupper(*p++))
+		if (*p == '\\' && p[1] != NUL)	/* skip "\S" et al. */
+		    p += 2;
+		else if (isupper(*p++))
+		{
 		    ic = FALSE;
+		    break;
+		}
 	}
     }
     no_smartcase = FALSE;
@@ -2247,10 +2252,10 @@ cls()
     if (c == ' ' || c == '\t' || c == NUL)
 	return 0;
 #ifdef FEAT_MBYTE
-    if (cc_dbcs && c > 0xFF)
+    if (enc_dbcs && c > 0xFF)
     {
 	/* If stype is non-zero, report these as class 1. */
-	if (cc_dbcs == DBCS_KOR && stype != 0)
+	if (enc_dbcs == DBCS_KOR && stype != 0)
 	    return 1;
 
 	/* process code leading/trailing bytes */
@@ -3997,9 +4002,8 @@ show_pat_in_path(line, type, did_show, action, fp, lnum, count)
 
 #ifdef FEAT_VIMINFO
     int
-read_viminfo_search_pattern(line, fp, force)
-    char_u	*line;
-    FILE	*fp;
+read_viminfo_search_pattern(virp, force)
+    vir_t	*virp;
     int		force;
 {
     char_u	*lp;
@@ -4030,7 +4034,7 @@ read_viminfo_search_pattern(line, fp, force)
      * <last>: '~' last used pattern
      * <which>: '/' search pat, '&' subst. pat
      */
-    lp = line;
+    lp = virp->vir_line;
     if (lp[0] == '~' && (lp[1] == 'm' || lp[1] == 'M'))	/* new line type */
     {
 	if (lp[1] == 'M')		/* magic on */
@@ -4063,7 +4067,8 @@ read_viminfo_search_pattern(line, fp, force)
     {
 	if (force || spats[idx].pat == NULL)
 	{
-	    val = viminfo_readstring(lp + 1, fp);
+	    val = viminfo_readstring(virp, (int)(lp - virp->vir_line + 1),
+									TRUE);
 	    if (val != NULL)
 	    {
 		set_last_search_pat(val, idx, magic, setlast);
@@ -4079,12 +4084,12 @@ read_viminfo_search_pattern(line, fp, force)
 	    }
 	}
     }
-    return vim_fgets(line, LSIZE, fp);
+    return viminfo_readline(virp);
 }
 
     void
 write_viminfo_search_pattern(fp)
-    FILE    *fp;
+    FILE	*fp;
 {
     if (get_viminfo_parameter('/') != 0)
     {

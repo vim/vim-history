@@ -3685,6 +3685,7 @@ findswapname(buf, dirp, old_fname)
 
 			/* pretend screen didn't scroll, need redraw anyway */
 			msg_scrolled = 0;
+			redraw_all_later(NOT_VALID);
 
 			/* If the file was deleted this fname can be used. */
 			if (mch_getperm(fname) < 0)

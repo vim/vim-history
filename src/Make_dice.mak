@@ -32,6 +32,7 @@ SRC = \
 	edit.c \
 	eval.c \
 	ex_cmds.c \
+	ex_cmds2.c \
 	ex_docmd.c \
 	ex_getln.c \
 	fileio.c \
@@ -45,6 +46,7 @@ SRC = \
 	message.c \
 	misc1.c \
 	misc2.c \
+	move.c \
 	multibyte.c \
 	normal.c \
 	ops.c \
@@ -68,6 +70,7 @@ OBJ =	o/buffer.o \
 	o/edit.o \
 	o/eval.o \
 	o/ex_cmds.o \
+	o/ex_cmds2.o \
 	o/ex_docmd.o \
 	o/ex_getln.o \
 	o/fileio.o \
@@ -81,6 +84,7 @@ OBJ =	o/buffer.o \
 	o/message.o \
 	o/misc1.o \
 	o/misc2.o \
+	o/move.o \
 	o/multibyte.o \
 	o/normal.o \
 	o/ops.o \
@@ -127,7 +131,9 @@ o/edit.o:	edit.c	$(SYMS)
 
 o/eval.o:	eval.c  $(SYMS)
 
-o/ex_cmds.o:	ex_cmds.c  $(SYMS) ex_cmds.h
+o/ex_cmds.o:	ex_cmds.c  $(SYMS)
+
+o/ex_cmds2.o:	ex_cmds2.c  $(SYMS)
 
 o/ex_docmd.o:	ex_docmd.c  $(SYMS) ex_cmds.h
 
@@ -154,6 +160,8 @@ o/message.o:	message.c  $(SYMS)
 o/misc1.o:	misc1.c  $(SYMS)
 
 o/misc2.o:	misc2.c  $(SYMS)
+
+o/move.o:	move.c  $(SYMS)
 
 o/multibyte.o:	multibyte.c  $(SYMS)
 

@@ -1227,11 +1227,11 @@ edit_putchar(c, highlight)
 	else
 	    attr = 0;
 	pc_row = W_WINROW(curwin) + curwin->w_wrow;
-	pc_col = W_WINCOL(curwin) +
+	pc_col = W_WINCOL(curwin) + (
 #ifdef FEAT_RIGHTLEFT
 		curwin->w_p_rl ? (int)W_WIDTH(curwin) - 1 - curwin->w_wcol :
 #endif
-							 curwin->w_wcol;
+							 curwin->w_wcol);
 	/* save the character to be able to put it back */
 	pc_char = screen_getchar(pc_row, pc_col, &pc_attr);
 	screen_putchar(c, pc_row, pc_col, attr);
@@ -2253,8 +2253,8 @@ ins_compl_next_buf(buf, flag)
 	while ((buf = buf->b_next != NULL ? buf->b_next : firstbuf) != curbuf
 		&& ((flag == 'U'
 			? buf->b_p_bl
-			: (!buf->b_p_bl || buf->b_ml.ml_mfp == NULL)
-							     != (flag == 'u'))
+			: (!buf->b_p_bl
+			    || (buf->b_ml.ml_mfp == NULL) != (flag == 'u')))
 		    || buf->b_scanned))
 	    ;
     return buf;
@@ -2325,7 +2325,7 @@ ins_compl_get_exp(ini, dir)
 		last_match_pos = first_match_pos;
 		type = 0;
 	    }
-	    else if (vim_strchr((char_u *)"buwS", *e_cpt) != NULL
+	    else if (vim_strchr((char_u *)"buwU", *e_cpt) != NULL
 		 && (ins_buf = ins_compl_next_buf(ins_buf, *e_cpt)) != curbuf)
 	    {
 		/* Scan a buffer, but not the current one. */
@@ -4525,7 +4525,7 @@ ins_replace_pop(cc)
     else
 	ins_char(cc);
 
-    if (cc_utf8)
+    if (enc_utf8)
 	/* Handle composing chars. */
 	for (;;)
 	{

@@ -1240,16 +1240,16 @@ main
 	gui_start();		/* will set full_screen to TRUE */
 #endif
 
+#ifdef SPAWNO		/* special MSDOS swapping library */
+    init_SPAWNO("", SWAP_ANY);
+#endif
+
 #ifdef FEAT_VIMINFO
     /*
      * Read in registers, history etc, but not marks, from the viminfo file
      */
     if (*p_viminfo != NUL)
 	read_viminfo(NULL, TRUE, FALSE, FALSE);
-#endif
-
-#ifdef SPAWNO		/* special MSDOS swapping library */
-    init_SPAWNO("", SWAP_ANY);
 #endif
 
 #ifdef FEAT_QUICKFIX

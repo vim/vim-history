@@ -1,4 +1,5 @@
 /* multibyte.c */
+int enc_canon_props __ARGS((char_u *name));
 char_u *mb_init __ARGS((void));
 int bomb_size __ARGS((void));
 int mb_get_class __ARGS((char_u *p));
@@ -32,6 +33,12 @@ int mb_charlen __ARGS((char_u *str));
 int mb_dec __ARGS((pos_t *lp));
 int mb_isbyte1 __ARGS((char_u *buf, int x));
 int mb_lefthalve __ARGS((int row, int col));
+char_u *enc_skip __ARGS((char_u *p));
+char_u *enc_canonize __ARGS((char_u *enc));
+int enc_default __ARGS((void));
+void *my_iconv_open __ARGS((char_u *to, char_u *from));
+int iconv_enabled __ARGS((void));
+void iconv_end __ARGS((void));
 void xim_set_focus __ARGS((int focus));
 void xim_set_preedit __ARGS((void));
 void xim_set_status_area __ARGS((void));
@@ -41,4 +48,7 @@ void xim_reset __ARGS((void));
 int xim_queue_key_press_event __ARGS((GdkEvent *ev));
 void xim_init __ARGS((void));
 int xim_get_status_area_height __ARGS((void));
+void convert_setup __ARGS((vimconv_t *vcp, char_u *from, char_u *to));
+int convert_input __ARGS((char_u *ptr, int len, int maxlen));
+char_u *string_convert __ARGS((vimconv_t *vcp, char_u *ptr, int *lenp));
 /* vim: set ft=c : */

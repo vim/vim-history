@@ -291,6 +291,7 @@ vimobj = $(vimwinmain) \
 	$(OBJDIR)\edit.obj \
 	$(OBJDIR)\eval.obj \
 	$(OBJDIR)\ex_cmds.obj \
+	$(OBJDIR)\ex_cmds2.obj \
 	$(OBJDIR)\ex_docmd.obj \
 	$(OBJDIR)\ex_getln.obj \
 	$(OBJDIR)\fileio.obj \
@@ -304,6 +305,7 @@ vimobj = $(vimwinmain) \
 	$(OBJDIR)\message.obj \
 	$(OBJDIR)\misc1.obj \
 	$(OBJDIR)\misc2.obj \
+	$(OBJDIR)\move.obj \
 	$(OBJDIR)\multibyte.obj \
 	$(OBJDIR)\normal.obj \
 	$(OBJDIR)\ops.obj \
@@ -506,7 +508,9 @@ $(OBJDIR)\edit.obj:  edit.c
 
 $(OBJDIR)\eval.obj:  eval.c
 
-$(OBJDIR)\ex_cmds.obj:	ex_cmds.c ex_cmds.h
+$(OBJDIR)\ex_cmds.obj:	ex_cmds.c
+
+$(OBJDIR)\ex_cmds2.obj:	ex_cmds2.c
 
 $(OBJDIR)\ex_docmd.obj:  ex_docmd.c ex_cmds.h
 
@@ -533,6 +537,8 @@ $(OBJDIR)\message.obj:	message.c
 $(OBJDIR)\misc1.obj:  misc1.c
 
 $(OBJDIR)\misc2.obj:  misc2.c
+
+$(OBJDIR)\move.obj:  move.c
 
 $(OBJDIR)\multibyte.obj:  multibyte.c
 

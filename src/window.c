@@ -728,9 +728,18 @@ win_split(size, flags)
 	}
 	else
 	    curfrp = topframe;
+	before = (flags & WSP_TOP);
     }
     else
+    {
 	curfrp = oldwin->w_frame;
+#ifdef FEAT_VERTSPLIT
+	if (flags & WSP_VERT)
+	    before = !p_spr;
+	else
+#endif
+	    before = !p_sb;
+    }
     if (curfrp->fr_parent == NULL || curfrp->fr_parent->fr_layout != layout)
     {
 	/* Need to create a new frame in the tree to make a branch. */
@@ -756,6 +765,12 @@ win_split(size, flags)
     frp->fr_parent = curfrp->fr_parent;
     frp->fr_win = wp;
     wp->w_frame = frp;
+
+    /* Insert the new frame at the right place in the frame list. */
+    if (before)
+	frame_insert(curfrp, frp);
+    else
+	frame_append(curfrp, frp);
 
 #ifdef FEAT_VERTSPLIT
     if (flags & WSP_VERT)
@@ -785,32 +800,30 @@ win_split(size, flags)
 	/* "new_size" of the current window goes to the new window, use
 	 * one column for the vertical separator */
 	wp->w_width = new_size;
+	if (before)
+	    wp->w_vsep_width = 1;
+	else
+	{
+	    wp->w_vsep_width = oldwin->w_vsep_width;
+	    oldwin->w_vsep_width = 1;
+	}
 	if (flags & (WSP_TOP | WSP_BOT))
 	{
 	    if (flags & WSP_BOT)
 		frame_add_vsep(curfrp);
-	    /* Set width of neighbor frame, will also add separator */
+	    /* Set width of neighbor frame */
 	    frame_new_width(curfrp, curfrp->fr_width - (new_size + 1),
 							     flags & WSP_TOP);
-	    before = (flags & WSP_TOP);
 	}
 	else
-	{
 	    oldwin->w_width -= new_size + 1;
-	    before = !p_spr;
-	}
 	if (before)	/* new window left of current one */
 	{
 	    wp->w_wincol = oldwin->w_wincol;
-	    wp->w_vsep_width = 1;
 	    oldwin->w_wincol += new_size + 1;
 	}
 	else		/* new window right of current one */
-	{
 	    wp->w_wincol = oldwin->w_wincol + oldwin->w_width + 1;
-	    wp->w_vsep_width = oldwin->w_vsep_width;
-	    oldwin->w_vsep_width = 1;
-	}
 	frame_fix_width(oldwin);
 	frame_fix_width(wp);
     }
@@ -838,16 +851,10 @@ win_split(size, flags)
 	 * one row for the status line */
 	win_new_height(wp, new_size);
 	if (flags & (WSP_TOP | WSP_BOT))
-	{
 	    frame_new_height(curfrp, curfrp->fr_height
 			       - (new_size + STATUS_HEIGHT), flags & WSP_TOP);
-	    before = (flags & WSP_TOP);
-	}
 	else
-	{
 	    win_new_height(oldwin, oldwin_height - (new_size + STATUS_HEIGHT));
-	    before = !p_sb;
-	}
 	if (before)	/* new window above current one */
 	{
 	    wp->w_winrow = oldwin->w_winrow;
@@ -867,12 +874,6 @@ win_split(size, flags)
 	frame_fix_height(wp);
 	frame_fix_height(oldwin);
     }
-
-    /* Insert the new frame at the right place in the frame list. */
-    if (before)
-	frame_insert(curfrp, frp);
-    else
-	frame_append(curfrp, frp);
 
     if (flags & (WSP_TOP | WSP_BOT))
 	(void)win_comp_pos();
@@ -1714,9 +1715,7 @@ win_close(win, free_buf)
 	 * window will occupy the full height of the screen. */
 	if (frp2->fr_win != NULL
 		&& (frp2->fr_next != NULL
-		    || frp2->fr_prev != NULL
-		    || frp2->fr_parent == NULL
-		    || frp2->fr_parent->fr_parent == NULL)
+		    || frp2->fr_prev != NULL)
 		&& (frp2->fr_win->w_p_pvw
 		    || bt_quickfix(frp2->fr_win->w_buffer)))
 	    old_height = frp2->fr_win->w_height;

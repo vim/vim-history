@@ -1,4 +1,4 @@
-*vi_diff.txt*   For Vim version 6.0u.  Last change: 2001 Jan 25
+*vi_diff.txt*   For Vim version 6.0v.  Last change: 2001 Feb 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -75,6 +75,7 @@ Length of an expanded string option
 Maximum display width	   Unix and Win32: 1024 characters, otherwise 255
 			   characters
 Maximum lhs of a mapping   50 characters.
+Number of highligthing different types: 223
 
 Information for undo and text in registers is kept in memory, thus when making
 (big) changes the amount of (virtual) memory available limits the number of

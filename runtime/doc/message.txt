@@ -1,4 +1,4 @@
-*message.txt*   For Vim version 6.0u.  Last change: 2001 Feb 04
+*message.txt*   For Vim version 6.0v.  Last change: 2001 Feb 08
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -90,7 +90,7 @@ file.  Also see 'secure'.
 When writing a file and the text "CONVERSION ERROR" appears, this means that
 some bits were lost when converting text from the internally used UTF-8 to the
 format of the file.  The file will not be marked unmodified.  If you care
-about the loss of information, set the 'filecharcode' option to another value
+about the loss of information, set the 'fileencoding' option to another value
 that can handle the characters in the buffer and write again.  If you don't
 care, you can abandon the buffer or reset the 'modified' option.
 
@@ -236,6 +236,13 @@ files are not properly sorted, reset the |'tagbsearch'| option.
 This message is only given when Vim detects a problem when searching for a
 tag.  Sometimes this message is not given, even thought the tags file is not
 properly sorted.
+
+>
+  Too many different highlighting attributes in use
+
+Vim can only handle about 223 different kinds of highlighting.  If you run
+into this limit, you have used too many |:highlight| commands with different
+arguments.
 
 >
   Too many file names

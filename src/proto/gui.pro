@@ -44,4 +44,6 @@ void gui_new_scrollbar_colors __ARGS((void));
 void gui_focus_change __ARGS((int in_focus));
 void gui_mouse_moved __ARGS((int x, int y));
 void gui_mouse_correct __ARGS((void));
+void ex_gui __ARGS((exarg_t *eap));
+void ex_drop __ARGS((exarg_t *eap));
 /* vim: set ft=c : */

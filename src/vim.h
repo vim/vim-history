@@ -344,6 +344,34 @@ typedef unsigned short u8char_t;
 #define HINT_INS_CHAR	2	    /* insert character */
 
 /*
+ * Flags for w_valid.
+ * These are set when something in a window structure becomes invalid, except
+ * when the cursor is moved.  Call check_cursor_moved() before testing one of
+ * the flags.
+ * These are reset when that thing has been updated and is valid again.
+ *
+ * Every function that invalidates one of these must call one of the
+ * invalidate_* functions.
+ *
+ * w_valid is supposed to be used only in screen.c.  From other files, use the
+ * functions that set or reset the flags.
+ *
+ * VALID_BOTLINE    VALID_BOTLINE_AP
+ *     on		on		w_botline valid
+ *     off		on		w_botline approximated
+ *     off		off		w_botline not valid
+ *     on		off		not possible
+ */
+#define VALID_WROW	0x01	/* w_wrow (window row) is valid */
+#define VALID_WCOL	0x02	/* w_wcol (window col) is valid */
+#define VALID_VIRTCOL	0x04	/* w_virtcol (file col) is valid */
+#define VALID_CHEIGHT	0x08	/* w_cline_height and w_cline_folded valid */
+#define VALID_CROW	0x10	/* w_cline_row is valid */
+#define VALID_BOTLINE	0x20	/* w_botine and w_empty_rows are valid */
+#define VALID_BOTLINE_AP 0x40	/* w_botine is approximated */
+#define VALID_TOPLINE	0x80	/* w_topline is valid (for cursor position) */
+
+/*
  * Terminal highlighting attribute bits.
  * Attibutes above HL_ALL are used for syntax highlighting.
  */
@@ -580,6 +608,7 @@ typedef unsigned short u8char_t;
 #define READ_NEW	0x01	/* read a file into a new buffer */
 #define READ_FILTER	0x02	/* read filter output */
 #define READ_STDIN	0x04	/* read from stdin */
+#define READ_BUFFER	0x08	/* read from curbuf (converting stdin) */
 
 /* Values for change_indent() */
 #define INDENT_SET	1	/* set indent */
@@ -837,7 +866,7 @@ enum auto_event
     EVENT_VIMLEAVEPRE,		/* before exiting Vim and writing .viminfo */
     EVENT_WINENTER,		/* after entering a window */
     EVENT_WINLEAVE,		/* before leaving a window */
-    EVENT_CHARCODE,		/* after changing the 'charcode' option */
+    EVENT_ENCODINGCHANGED,	/* after changing the 'encoding' option */
     EVENT_CURSORHOLD,		/* cursor in same position for a while */
     EVENT_FUNCUNDEFINED,	/* if calling a function which doesn't exist */
     NUM_EVENTS			/* MUST be the last one */
@@ -1345,6 +1374,30 @@ typedef struct VimClipboard
  */
 # define MB_BYTE2LEN(b)	mb_bytelen_tab[b]
 # define MB_BYTE2LEN_CHECK(b)	(((b) < 0 || (b) > 255) ? 1 : mb_bytelen_tab[b])
+
+/* properties used in enc_canon_table[] (first three mutually exclusive) */
+# define ENC_8BIT	0x01
+# define ENC_DBCS	0x02
+# define ENC_UNICODE	0x04
+
+# define ENC_ENDIAN_B	0x10	    /* Unicode: Big endian */
+# define ENC_ENDIAN_L	0x20	    /* Unicode: Little endian */
+# define ENC_2BYTE	0x40	    /* Unicode: UCS-2 */
+# define ENC_4BYTE	0x80	    /* Unicode: UCS-4 */
+
+# define ENC_LATIN1	0x100	    /* Latin1 */
+
+# ifdef USE_ICONV
+/* On Win32 iconv.dll is dynamically loaded. */
+#  ifdef DYNAMIC_ICONV
+#   define ICONV_ENABLED iconv_enabled()
+#   define ICONV_ERRNO (*iconv_errno)
+#  else
+#   define ICONV_ENABLED 1
+#   define ICONV_ERRNO errno
+#  endif
+# endif
+
 #endif
 
 /* ISSYMLINK(mode) tests if a file is a symbolic link. */

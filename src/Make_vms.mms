@@ -22,58 +22,55 @@
 ######################################################################
 # Configuration section.
 ######################################################################
+
 # GUI or terminal mode executable.
 # Comment out if you want just the character terminal mode only.
-######################################################################
 GUI = YES
 
-#####################################################################
 # Compiler selection.
 # Comment out if you use the VAXC compiler
-######################################################################
 DECC = YES
 
-######################################################################
 # Comment out if you want the compiler version with :ver command.
 # NOTE: This part can make some complications if you're using some
 # predefined symbols/flags for your compiler. If does, just leave behind
 # the comment varialbe CCVER.
-######################################################################
 CCVER = YES
 
-######################################################################
 # Used to fix some dependecies problem during development.
 # Development purpose only! Normally, it should not be defined. !!!
-######################################################################
 # DEVELOPMENT = YES
 
-######################################################################
 # Uncomment if want a debug version. Resulting executable is DVIM.EXE
 # Development purpose only! Normally, it should not be defined. !!!
-######################################################################
 # DEBUG = YES
 
-######################################################################
 # Languages support for Perl, Python, TCL etc.
 # If you don't need it really, leave them behind the comment.
 # You will need special libs etc.
-######################################################################
 # VIM_TCL    = YES
 # VIM_PERL   = YES
 # VIM_SNIFF  = YES
 # VIM_PYTHON = YES
+# VIM_RUBY   = YES
+
+# X Input Method.  For entering special languages like chinese and
+# Japanese. Please define just one: VIM_XIM or VIM_HANGULIN
+# If you don't need it really, leave it behind the comment.
+# VIM_XIM = YES
+
+# Internal Hangul input method. GUI only. 
+# If you don't need it really, leave it behind the comment.
+# VIM_HANGULIN = YES
 
 ######################################################################
 # Library and include files configuration section.
-#
-# Normally you need not to change anything below.
+# Normally you need not to change anything below. !
 # These may need to be defined if things are not in standard locations
 ######################################################################
 
 .IFDEF GUI
-######################################################################
 # X/Motif executable  (also works in terminal mode )
-######################################################################
 DEFS	 = "HAVE_CONFIG_H","FEAT_GUI_MOTIF"
 LIBS	 = ,OS_VMS.OPT/OPT
 CONFIG_H = gui_vms_conf.h
@@ -88,18 +85,14 @@ GUI_INC  = gui.h
 # EXTRA_LIB   =
 
 .ELSE
-######################################################################
 # Character terminal only executable
-######################################################################
 DEFS	 = "HAVE_CONFIG_H"
 LIBS	 =
 CONFIG_H = os_vms_conf.h
 .ENDIF
 
 .IFDEF VIM_PERL
-######################################################################
 # Perl related setup.
-######################################################################
 PERL_DEF = ,"FEAT_PERL"
 PERL_SRC = if_perlsfio.c if_perl.xs
 PERL_OBJ = if_perlsfio.obj if_perl.obj
@@ -107,9 +100,7 @@ PERL_LIB =
 .ENDIF
 
 .IFDEF VIM_PYTHON
-######################################################################
 # Python related setup.
-######################################################################
 PYTHON_DEF = ,"FEAT_PYTHON"
 PYTHON_SRC = if_python.c
 PYTHON_OBJ = if_python.obj
@@ -117,9 +108,7 @@ PYTHON_LIB =
 .ENDIF
 
 .IFDEF VIM_TCL
-######################################################################
 # TCL related setup.
-######################################################################
 TCL_DEF = ,"FEAT_TCL"
 TCL_SRC = if_tcl.c
 TCL_OBJ = if_tcl.obj
@@ -127,18 +116,39 @@ TCL_LIB =
 .ENDIF
 
 .IFDEF VIM_SNIFF
-######################################################################
 # SNIFF related setup.
-######################################################################
 SNIFF_DEF = ,"FEAT_SNIFF"
 SNIFF_SRC = if_sniff.c
 SNIFF_OBJ = if_sniff.obj
 SNIFF_LIB =
 .ENDIF
 
+.IFDEF VIM_RUBY
+# RUBY related setup.
+RUBY_DEF = ,"FEAT_RUBY"
+RUBY_SRC = if_ruby.c
+RUBY_OBJ = if_ruby.obj
+RUBY_LIB =
+.ENDIF
+
+.IFDEF VIM_XIM
+# XIM related setup.
+.IFDEF GUI 
+XIM_DEF = ,"FEAT_XIM"
+.ENDIF
+.ENDIF
+
+.IFDEF VIM_HANGULIN
+# HANGULIN related setup.
+.IFDEF GUI
+HANGULIN_DEF = ,"FEAT_HANGULIN"
+HANGULIN_SRC = hangulin.c
+HANGULIN_OBJ = hangulin.obj
+.ENDIF
+.ENDIF
+
 ######################################################################
 # End of configuration section.
-#
 # Please, do not change anything below without programming experience.
 ######################################################################
 
@@ -165,41 +175,37 @@ CFLAGS	= /opt$(PREFIX)/include=[.proto]
 LDFLAGS	=
 .ENDIF
 
-########################################################################
 # These go into pathdef.c
-########################################################################
 VIMLOC  = ""
 VIMRUN  = ""
 VIMUSER = "''f$extract(f$locate(",",f$user())+1,f$length(f$user())-f$locate(",",f$user())-2,f$user())'"
 VIMHOST = "''f$extract(0,f$length(f$trnlnm("sys$node"))-2,f$trnlnm("sys$node"))' (''f$trnlnm("ucx$inet_host")'.''f$trnlnm("ucx$inet_domain")')"
 
-########################################################################
-
 .SUFFIXES : .obj .c .pro .xs
 
-ALL_CFLAGS = /def=($(DEFS) $(PERL_DEF) $(PYTHON_DEF) $(TCL_DEF) $(SNIFF_DEF)) $(CFLAGS)
+ALL_CFLAGS = /def=($(DEFS) $(PERL_DEF) $(PYTHON_DEF) $(TCL_DEF) $(SNIFF_DEF) $(RUBY_DEF) $(XIM_DEF) $(HANGULIN_DEF)) $(CFLAGS)
 
 ALL_LIBS = $(LIBS) $(GUI_LIB_DIR) $(X_LIB_DIR) $(GUI_LIB) $(X_LIB) $(EXTRA_LIB)\
-	   $(PERL_LIB) $(PYTHON_LIB) $(TCL_LIB) $(SNIFF_LIB)
+	   $(PERL_LIB) $(PYTHON_LIB) $(TCL_LIB) $(SNIFF_LIB) $(RUBY_LIB) 
 
 INCL =  vim.h globals.h option.h keymap.h macros.h ascii.h term.h os_unix.h \
 	unixunix.h structs.h proto.h [.auto]osdef.h [.auto]config.h \
 	$(GUI_INC)
 
-SRC =	buffer.c charset.c digraph.c edit.c eval.c ex_cmds.c ex_docmd.c \
+SRC =	buffer.c charset.c digraph.c edit.c eval.c ex_cmds.c ex_cmds2.c ex_docmd.c \
 	ex_getln.c fileio.c fold.c getchar.c main.c mark.c menu.c multibyte.c \
-	memfile.c memline.c message.c misc1.c misc2.c normal.c ops.c option.c \
+	memfile.c memline.c message.c misc1.c misc2.c move.c normal.c ops.c option.c \
 	pty.c quickfix.c regexp.c search.c syntax.c tag.c term.c termlib.c \
 	ui.c undo.c version.c screen.c window.c os_vms.c pathdef.c \
-	$(GUI_SRC) $(PERL_SRC) $(PYTHON_SRC) $(TCL_SRC) $(SNIFF_SRC)
+	$(GUI_SRC) $(PERL_SRC) $(PYTHON_SRC) $(TCL_SRC) $(SNIFF_SRC) $(RUBY_SRC) $(HANGULIN_SRC)
 
-OBJ =	buffer.obj charset.obj digraph.obj edit.obj eval.obj ex_cmds.obj \
+OBJ =	buffer.obj charset.obj digraph.obj edit.obj eval.obj ex_cmds.obj ex_cmds2.obj \
 	ex_docmd.obj ex_getln.obj fileio.obj fold.obj getchar.obj \
 	main.obj mark.obj menu.obj memfile.obj memline.obj message.obj misc1.obj \
-	misc2.obj multibyte.obj normal.obj ops.obj option.obj pty.obj quickfix.obj \
+	misc2.obj move.obj multibyte.obj normal.obj ops.obj option.obj pty.obj quickfix.obj \
 	regexp.obj search.obj syntax.obj tag.obj term.obj termlib.obj ui.obj \
 	undo.obj screen.obj window.obj os_vms.obj pathdef.obj \
-	$(GUI_OBJ) $(PERL_OBJ) $(PYTHON_OBJ) $(TCL_OBJ) $(SNIFF_OBJ)
+	$(GUI_OBJ) $(PERL_OBJ) $(PYTHON_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) $(RUBY_OBJ) $(HANGULIN_OBJ)
 
 # Default target is making the executable
 all : $(TARGET) mms_vim
@@ -235,8 +241,6 @@ $(TARGET) : $(OBJ) version.obj
 
 FILES = *.c *.h make_vms.mms *.in makefile.* *.sh cmdtab.tab tags [.auto]configure
 
-###########################################################################
-
 # Used when .obj files are in src directory
 .c.obj :
 	$(CC_DEF) $(ALL_CFLAGS) $<
@@ -269,7 +273,6 @@ mkcmdtab.exe : mkcmdtab.obj
 mkcmdtab.obj : mkcmdtab.c
 	$(CC_DEF) $(ALL_CFLAGS) mkcmdtab.c
 
-###############################################################################
 ui.obj : ui.c vim.h
 	$(CC_DEF) $(ALL_CFLAGS) $<
 syntax.obj : syntax.c vim.h
@@ -278,11 +281,15 @@ misc1.obj : misc1.c vim.h
 	$(CC_DEF) $(ALL_CFLAGS) $<
 misc2.obj : misc2.c vim.h
 	$(CC_DEF) $(ALL_CFLAGS) $<
+move.obj : move.c vim.h
+	$(CC_DEF) $(ALL_CFLAGS) $<
 ex_getln.obj : ex_getln.c vim.h
 	$(CC_DEF) $(ALL_CFLAGS) $<
 ex_docmd.obj : ex_docmd.c vim.h ex_cmds.h
 	$(CC_DEF) $(ALL_CFLAGS) $<
 ex_cmds.obj : ex_cmds.c vim.h
+	$(CC_DEF) $(ALL_CFLAGS) $<
+ex_cmds2.obj : ex_cmds2.c vim.h
 	$(CC_DEF) $(ALL_CFLAGS) $<
 alloc.obj : alloc.c vim.h [.auto]config.h feature.h os_unix.h osdef.h \
 	ascii.h keymap.h term.h macros.h structs.h gui.h globals.h proto.h regexp.h
@@ -320,6 +327,9 @@ getchar.obj : getchar.c vim.h [.auto]config.h feature.h os_unix.h osdef.h ascii.
 help.obj : help.c vim.h [.auto]config.h feature.h os_unix.h osdef.h ascii.h keymap.h term.h \
 	macros.h structs.h gui.h globals.h proto.h regexp.h option.h
 	$(CC_DEF) $(ALL_CFLAGS) $<
+hangulin.obj : hangulin.c vim.h [.auto]config.h feature.h os_unix.h osdef.h ascii.h keymap.h term.h \
+        macros.h structs.h gui.h globals.h proto.h regexp.h option.h
+        $(CC_DEF) $(ALL_CFLAGS) $<
 linefunc.obj : linefunc.c vim.h [.auto]config.h feature.h os_unix.h osdef.h ascii.h keymap.h \
 	term.h macros.h structs.h gui.h globals.h proto.h regexp.h
 	$(CC_DEF) $(ALL_CFLAGS) $<
@@ -386,6 +396,9 @@ regexp.obj : regexp.c vim.h [.auto]config.h feature.h os_unix.h osdef.h ascii.h 
 regsub.obj : regsub.c vim.h [.auto]config.h feature.h os_unix.h osdef.h ascii.h keymap.h \
 	term.h macros.h structs.h gui.h globals.h proto.h regexp.h
 	$(CC_DEF) $(ALL_CFLAGS) $<
+ruby.obj : ruby.c vim.h [.auto]config.h feature.h os_unix.h osdef.h ascii.h keymap.h \
+        term.h macros.h structs.h gui.h globals.h proto.h regexp.h
+        $(CC_DEF) $(ALL_CFLAGS) $<
 screen.obj : screen.c vim.h [.auto]config.h feature.h os_unix.h osdef.h ascii.h keymap.h term.h \
 	macros.h structs.h gui.h globals.h proto.h regexp.h option.h
 	$(CC_DEF) $(ALL_CFLAGS) $<
@@ -437,10 +450,8 @@ mms_vim.obj :	os_vms_mms.c
 	copy os_vms_mms.obj mms_vim.obj
 
 .IFDEF CCVER
-#########################################################################
-# This part can make come complications if you're using some predefined
+# This part can make some complications if you're using some predefined
 # symbols/flags for your compiler. If does, just comment out CCVER variable
-##########################################################################
 check_ccver :
 	-@ define sys$output cc_ver.tmp
 	-@ $(CC)/version

@@ -8,6 +8,8 @@ if exists("did_menu_trans")
 endif
 let did_menu_trans = 1
 
+scriptencoding ujis
+
 " Help menu
 menutrans &Help			¥Ø¥ë¥×(&H)
 menutrans &Overview<Tab><F1>	³µÎ¬(&O)<Tab><F1>

@@ -31,7 +31,7 @@ void do_do_join __ARGS((long count, int insert_space));
 int do_join __ARGS((int insert_space));
 void op_format __ARGS((oparg_t *oap));
 int do_addsub __ARGS((int command, linenr_t Prenum1));
-int read_viminfo_register __ARGS((char_u *line, FILE *fp, int force));
+int read_viminfo_register __ARGS((vir_t *virp, int force));
 void write_viminfo_registers __ARGS((FILE *fp));
 void clip_free_selection __ARGS((void));
 void clip_get_selection __ARGS((void));

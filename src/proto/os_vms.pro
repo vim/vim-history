@@ -57,3 +57,4 @@ void *vms_fixfilename __ARGS((void *instring));
 void *vms_remove_version __ARGS((void *fname));
 /* vim: set ft=c : */
 /* vim: set ft=c : */
+/* vim: set ft=c : */

@@ -59,6 +59,7 @@ CLEAN :
 	-@erase "$(INTDIR)\edit.obj"
 	-@erase "$(INTDIR)\eval.obj"
 	-@erase "$(INTDIR)\ex_cmds.obj"
+	-@erase "$(INTDIR)\ex_cmds2.obj"
 	-@erase "$(INTDIR)\ex_docmd.obj"
 	-@erase "$(INTDIR)\ex_getln.obj"
 	-@erase "$(INTDIR)\fileio.obj"
@@ -75,6 +76,7 @@ CLEAN :
 	-@erase "$(INTDIR)\message.obj"
 	-@erase "$(INTDIR)\misc1.obj"
 	-@erase "$(INTDIR)\misc2.obj"
+	-@erase "$(INTDIR)\move.obj"
 	-@erase "$(INTDIR)\multibyte.obj"
 	-@erase "$(INTDIR)\normal.obj"
 	-@erase "$(INTDIR)\ops.obj"
@@ -135,6 +137,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\edit.obj" \
 	"$(INTDIR)\eval.obj" \
 	"$(INTDIR)\ex_cmds.obj" \
+	"$(INTDIR)\ex_cmds2.obj" \
 	"$(INTDIR)\ex_docmd.obj" \
 	"$(INTDIR)\ex_getln.obj" \
 	"$(INTDIR)\fileio.obj" \
@@ -151,6 +154,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\message.obj" \
 	"$(INTDIR)\misc1.obj" \
 	"$(INTDIR)\misc2.obj" \
+	"$(INTDIR)\move.obj" \
 	"$(INTDIR)\multibyte.obj" \
 	"$(INTDIR)\normal.obj" \
 	"$(INTDIR)\ops.obj" \
@@ -204,6 +208,8 @@ CLEAN :
 	-@erase "$(INTDIR)\eval.sbr"
 	-@erase "$(INTDIR)\ex_cmds.obj"
 	-@erase "$(INTDIR)\ex_cmds.sbr"
+	-@erase "$(INTDIR)\ex_cmds2.obj"
+	-@erase "$(INTDIR)\ex_cmds2.sbr"
 	-@erase "$(INTDIR)\ex_docmd.obj"
 	-@erase "$(INTDIR)\ex_docmd.sbr"
 	-@erase "$(INTDIR)\ex_getln.obj"
@@ -236,6 +242,8 @@ CLEAN :
 	-@erase "$(INTDIR)\misc1.sbr"
 	-@erase "$(INTDIR)\misc2.obj"
 	-@erase "$(INTDIR)\misc2.sbr"
+	-@erase "$(INTDIR)\move.obj"
+	-@erase "$(INTDIR)\move.sbr"
 	-@erase "$(INTDIR)\multibyte.obj"
 	-@erase "$(INTDIR)\multibyte.sbr"
 	-@erase "$(INTDIR)\normal.obj"
@@ -305,6 +313,7 @@ BSC32_SBRS= \
 	"$(INTDIR)\edit.sbr" \
 	"$(INTDIR)\eval.sbr" \
 	"$(INTDIR)\ex_cmds.sbr" \
+	"$(INTDIR)\ex_cmds2.sbr" \
 	"$(INTDIR)\ex_docmd.sbr" \
 	"$(INTDIR)\ex_getln.sbr" \
 	"$(INTDIR)\fileio.sbr" \
@@ -321,6 +330,7 @@ BSC32_SBRS= \
 	"$(INTDIR)\message.sbr" \
 	"$(INTDIR)\misc1.sbr" \
 	"$(INTDIR)\misc2.sbr" \
+	"$(INTDIR)\move.sbr" \
 	"$(INTDIR)\multibyte.sbr" \
 	"$(INTDIR)\normal.sbr" \
 	"$(INTDIR)\ops.sbr" \
@@ -359,6 +369,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\edit.obj" \
 	"$(INTDIR)\eval.obj" \
 	"$(INTDIR)\ex_cmds.obj" \
+	"$(INTDIR)\ex_cmds2.obj" \
 	"$(INTDIR)\ex_docmd.obj" \
 	"$(INTDIR)\ex_getln.obj" \
 	"$(INTDIR)\fileio.obj" \
@@ -375,6 +386,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\message.obj" \
 	"$(INTDIR)\misc1.obj" \
 	"$(INTDIR)\misc2.obj" \
+	"$(INTDIR)\move.obj" \
 	"$(INTDIR)\multibyte.obj" \
 	"$(INTDIR)\normal.obj" \
 	"$(INTDIR)\ops.obj" \
@@ -422,6 +434,7 @@ CLEAN :
 	-@erase "$(INTDIR)\edit.obj"
 	-@erase "$(INTDIR)\eval.obj"
 	-@erase "$(INTDIR)\ex_cmds.obj"
+	-@erase "$(INTDIR)\ex_cmds2.obj"
 	-@erase "$(INTDIR)\ex_docmd.obj"
 	-@erase "$(INTDIR)\ex_getln.obj"
 	-@erase "$(INTDIR)\fileio.obj"
@@ -438,6 +451,7 @@ CLEAN :
 	-@erase "$(INTDIR)\message.obj"
 	-@erase "$(INTDIR)\misc1.obj"
 	-@erase "$(INTDIR)\misc2.obj"
+	-@erase "$(INTDIR)\move.obj"
 	-@erase "$(INTDIR)\multibyte.obj"
 	-@erase "$(INTDIR)\normal.obj"
 	-@erase "$(INTDIR)\ops.obj"
@@ -495,6 +509,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\edit.obj" \
 	"$(INTDIR)\eval.obj" \
 	"$(INTDIR)\ex_cmds.obj" \
+	"$(INTDIR)\ex_cmds2.obj" \
 	"$(INTDIR)\ex_docmd.obj" \
 	"$(INTDIR)\ex_getln.obj" \
 	"$(INTDIR)\fileio.obj" \
@@ -511,6 +526,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\message.obj" \
 	"$(INTDIR)\misc1.obj" \
 	"$(INTDIR)\misc2.obj" \
+	"$(INTDIR)\move.obj" \
 	"$(INTDIR)\multibyte.obj" \
 	"$(INTDIR)\normal.obj" \
 	"$(INTDIR)\ops.obj" \
@@ -2205,6 +2221,52 @@ NODEP_CPP_EX_CM=\
 ################################################################################
 # Begin Source File
 
+SOURCE=.\ex_cmds2.c
+DEP_CPP_EX_CMT=\
+	".\ascii.h"\
+	".\ex_cmds.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_EX_CM=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+
+"$(INTDIR)\ex_cmds2.obj" : $(SOURCE) $(DEP_CPP_EX_CMT) "$(INTDIR)"
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+"$(INTDIR)\ex_cmds2.obj" : $(SOURCE) $(DEP_CPP_EX_CMT) "$(INTDIR)"
+
+"$(INTDIR)\ex_cmds2.sbr" : $(SOURCE) $(DEP_CPP_EX_CMT) "$(INTDIR)"
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+
+"$(INTDIR)\ex_cmds2.obj" : $(SOURCE) $(DEP_CPP_EX_CMT) "$(INTDIR)"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
 SOURCE=.\ex_docmd.c
 DEP_CPP_EX_DO=\
 	".\ascii.h"\
@@ -2747,6 +2809,50 @@ NODEP_CPP_MISC2=\
 
 
 "$(INTDIR)\misc2.obj" : $(SOURCE) $(DEP_CPP_MISC2) "$(INTDIR)"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\move.c
+DEP_CPP_MOVE=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_MISC2=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+
+"$(INTDIR)\move.obj" : $(SOURCE) $(DEP_CPP_MOVE) "$(INTDIR)"
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+"$(INTDIR)\move.obj" : $(SOURCE) $(DEP_CPP_MOVE) "$(INTDIR)"
+
+"$(INTDIR)\move.sbr" : $(SOURCE) $(DEP_CPP_MOVE) "$(INTDIR)"
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+
+"$(INTDIR)\move.obj" : $(SOURCE) $(DEP_CPP_MOVE) "$(INTDIR)"
 
 
 !ENDIF 

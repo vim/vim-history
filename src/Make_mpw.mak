@@ -25,6 +25,7 @@ SrcFiles        =  è
 				  :src:edit.c è
 				  :src:eval.c è
 				  :src:ex_cmds.c è
+				  :src:ex_cmds2.c è
 				  :src:ex_docmd.c è
 				  :src:ex_getln.c è
 				  :src:fileio.c è
@@ -41,6 +42,7 @@ SrcFiles        =  è
 				  :src:message.c è
 				  :src:misc1.c è
 				  :src:misc2.c è
+				  :src:move.c è
 				  :src:multibyte.c è
 				  :src:normal.c è
 				  :src:ops.c è
@@ -71,6 +73,7 @@ ObjFiles-PPC    =  è
 				  "{ObjDir}edit.c.x" è
 				  "{ObjDir}eval.c.x" è
 				  "{ObjDir}ex_cmds.c.x" è
+				  "{ObjDir}ex_cmds2.c.x" è
 				  "{ObjDir}ex_docmd.c.x" è
 				  "{ObjDir}ex_getln.c.x" è
 				  "{ObjDir}fileio.c.x" è
@@ -87,6 +90,7 @@ ObjFiles-PPC    =  è
 				  "{ObjDir}message.c.x" è
 				  "{ObjDir}misc1.c.x" è
 				  "{ObjDir}misc2.c.x" è
+				  "{ObjDir}move.c.x" è
 				  "{ObjDir}multibyte.c.x" è
 				  "{ObjDir}normal.c.x" è
 				  "{ObjDir}ops.c.x" è
@@ -148,6 +152,7 @@ VIm  üü  {ObjFiles-PPC} {LibFiles-PPC} {*MondoBuild*}
 "{ObjDir}edit.c.x"  ü  :src:edit.c
 "{ObjDir}eval.c.x"  ü  :src:eval.c
 "{ObjDir}ex_cmds.c.x"  ü  :src:ex_cmds.c
+"{ObjDir}ex_cmds2.c.x"  ü  :src:ex_cmds2.c
 "{ObjDir}ex_docmd.c.x"  ü  :src:ex_docmd.c
 "{ObjDir}ex_getln.c.x"  ü  :src:ex_getln.c
 "{ObjDir}fileio.c.x"  ü  :src:fileio.c
@@ -164,6 +169,7 @@ VIm  üü  {ObjFiles-PPC} {LibFiles-PPC} {*MondoBuild*}
 "{ObjDir}message.c.x"  ü  :src:message.c
 "{ObjDir}misc1.c.x"  ü  :src:misc1.c
 "{ObjDir}misc2.c.x"  ü  :src:misc2.c
+"{ObjDir}move.c.x"  ü  :src:move.c
 "{ObjDir}multibyte.c.x"  ü  :src:multibyte.c
 "{ObjDir}normal.c.x"  ü  :src:normal.c
 "{ObjDir}ops.c.x"  ü  :src:ops.c
@@ -233,6 +239,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -247,6 +254,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -309,6 +317,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -323,6 +332,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -385,6 +395,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -399,6 +410,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -461,6 +473,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -475,6 +488,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -538,6 +552,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -552,6 +567,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -614,6 +630,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -628,6 +645,85 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
+	:src:proto:multibyte.pro è
+	:src:proto:normal.pro è
+	:src:proto:ops.pro è
+	:src:proto:option.pro è
+	:src:proto:quickfix.pro è
+	:src:proto:regexp.pro è
+	:src:proto:screen.pro è
+	:src:proto:search.pro è
+	:src:proto:syntax.pro è
+	:src:proto:tag.pro è
+	:src:proto:term.pro è
+	:src:proto:termlib.pro è
+	:src:proto:ui.pro è
+	:src:proto:undo.pro è
+	:src:proto:version.pro è
+	:src:proto:window.pro è
+	:src:proto:if_python.pro è
+	:src:proto:if_tcl.pro è
+	:src:proto:if_ruby.pro è
+	:src:proto:gui.pro è
+	:src:proto:pty.pro è
+	:src:proto:gui_gtk.pro è
+	:src:proto:gui_gtk_x11.pro è
+	:src:proto:gui_motif.pro è
+	:src:proto:gui_athena.pro è
+	:src:proto:gui_mac.pro è
+	:src:proto:gui_x11.pro è
+	:src:proto:workshop.pro è
+	:src:proto:if_perl.pro è
+	:src:proto:if_perlsfio.pro
+
+:obj:ex_cmds2.c.x	ü  è
+	:src:ex_cmds2.c è
+	:src:vim.h è
+	:src:auto:config.h è
+	:src:feature.h è
+	:src:os_unix.h è
+	:src:os_mac.h è
+	:src:workshop.h è
+	:src:ascii.h è
+	:src:keymap.h è
+	:src:term.h è
+	:src:macros.h è
+	:src:structs.h è
+	:src:globals.h è
+	:src:option.h è
+	:src:ex_cmds.h è
+	:src:proto.h è
+	:src:integration.h è
+	:src:wsdebug.h è
+	:src:regexp.h è
+	:src:gui.h è
+	:src:farsi.h è
+	:src:proto:os_unix.pro è
+	:src:proto:os_mac.pro è
+	:src:proto:buffer.pro è
+	:src:proto:charset.pro è
+	:src:proto:if_cscope.pro è
+	:src:proto:digraph.pro è
+	:src:proto:edit.pro è
+	:src:proto:eval.pro è
+	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
+	:src:proto:ex_docmd.pro è
+	:src:proto:ex_getln.pro è
+	:src:proto:fileio.pro è
+	:src:proto:fold.pro è
+	:src:proto:getchar.pro è
+	:src:proto:hangulin.pro è
+	:src:proto:main.pro è
+	:src:proto:mark.pro è
+	:src:proto:memfile.pro è
+	:src:proto:memline.pro è
+	:src:proto:menu.pro è
+	:src:proto:message.pro è
+	:src:proto:misc1.pro è
+	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -690,6 +786,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -704,6 +801,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -766,6 +864,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -780,6 +879,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -842,6 +942,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -856,6 +957,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -918,6 +1020,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -932,6 +1035,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -994,6 +1098,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -1008,6 +1113,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -1070,6 +1176,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -1084,6 +1191,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -1146,6 +1254,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -1160,6 +1269,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -1248,6 +1358,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -1262,6 +1373,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -1325,6 +1437,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -1339,6 +1452,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -1401,6 +1515,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -1415,6 +1530,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -1477,6 +1593,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -1491,6 +1608,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -1553,6 +1671,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -1567,6 +1686,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -1629,6 +1749,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -1643,6 +1764,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -1705,6 +1827,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -1719,6 +1842,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -1782,6 +1906,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -1796,6 +1921,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -1858,6 +1984,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -1872,6 +1999,85 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
+	:src:proto:multibyte.pro è
+	:src:proto:normal.pro è
+	:src:proto:ops.pro è
+	:src:proto:option.pro è
+	:src:proto:quickfix.pro è
+	:src:proto:regexp.pro è
+	:src:proto:screen.pro è
+	:src:proto:search.pro è
+	:src:proto:syntax.pro è
+	:src:proto:tag.pro è
+	:src:proto:term.pro è
+	:src:proto:termlib.pro è
+	:src:proto:ui.pro è
+	:src:proto:undo.pro è
+	:src:proto:version.pro è
+	:src:proto:window.pro è
+	:src:proto:if_python.pro è
+	:src:proto:if_tcl.pro è
+	:src:proto:if_ruby.pro è
+	:src:proto:gui.pro è
+	:src:proto:pty.pro è
+	:src:proto:gui_gtk.pro è
+	:src:proto:gui_gtk_x11.pro è
+	:src:proto:gui_motif.pro è
+	:src:proto:gui_athena.pro è
+	:src:proto:gui_mac.pro è
+	:src:proto:gui_x11.pro è
+	:src:proto:workshop.pro è
+	:src:proto:if_perl.pro è
+	:src:proto:if_perlsfio.pro
+
+:obj:move.c.x	ü  è
+	:src:move.c è
+	:src:vim.h è
+	:src:auto:config.h è
+	:src:feature.h è
+	:src:os_unix.h è
+	:src:os_mac.h è
+	:src:workshop.h è
+	:src:ascii.h è
+	:src:keymap.h è
+	:src:term.h è
+	:src:macros.h è
+	:src:structs.h è
+	:src:globals.h è
+	:src:option.h è
+	:src:ex_cmds.h è
+	:src:proto.h è
+	:src:integration.h è
+	:src:wsdebug.h è
+	:src:regexp.h è
+	:src:gui.h è
+	:src:farsi.h è
+	:src:proto:os_unix.pro è
+	:src:proto:os_mac.pro è
+	:src:proto:buffer.pro è
+	:src:proto:charset.pro è
+	:src:proto:if_cscope.pro è
+	:src:proto:digraph.pro è
+	:src:proto:edit.pro è
+	:src:proto:eval.pro è
+	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
+	:src:proto:ex_docmd.pro è
+	:src:proto:ex_getln.pro è
+	:src:proto:fileio.pro è
+	:src:proto:fold.pro è
+	:src:proto:getchar.pro è
+	:src:proto:hangulin.pro è
+	:src:proto:main.pro è
+	:src:proto:mark.pro è
+	:src:proto:memfile.pro è
+	:src:proto:memline.pro è
+	:src:proto:menu.pro è
+	:src:proto:message.pro è
+	:src:proto:misc1.pro è
+	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -1934,6 +2140,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -1948,6 +2155,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -2010,6 +2218,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -2024,6 +2233,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -2086,6 +2296,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -2100,6 +2311,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -2162,6 +2374,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -2176,6 +2389,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -2238,6 +2452,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -2252,6 +2467,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -2314,6 +2530,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -2328,6 +2545,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -2390,6 +2608,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -2404,6 +2623,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -2466,6 +2686,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -2480,6 +2701,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -2542,6 +2764,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -2556,6 +2779,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -2618,6 +2842,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -2632,6 +2857,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -2694,6 +2920,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -2708,6 +2935,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -2770,6 +2998,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -2784,6 +3013,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -2846,6 +3076,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -2860,6 +3091,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -2923,6 +3155,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -2937,6 +3170,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -2998,6 +3232,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -3012,6 +3247,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -3074,6 +3310,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -3088,6 +3325,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -3151,6 +3389,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -3165,6 +3404,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -3227,6 +3467,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -3241,6 +3482,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è
@@ -3303,6 +3545,7 @@ MakeDepend
 	:src:proto:edit.pro è
 	:src:proto:eval.pro è
 	:src:proto:ex_cmds.pro è
+	:src:proto:ex_cmds2.pro è
 	:src:proto:ex_docmd.pro è
 	:src:proto:ex_getln.pro è
 	:src:proto:fileio.pro è
@@ -3317,6 +3560,7 @@ MakeDepend
 	:src:proto:message.pro è
 	:src:proto:misc1.pro è
 	:src:proto:misc2.pro è
+	:src:proto:move.pro è
 	:src:proto:multibyte.pro è
 	:src:proto:normal.pro è
 	:src:proto:ops.pro è

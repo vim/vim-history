@@ -1,0 +1,38 @@
+/* ex_cmds2.c */
+void do_debug __ARGS((char_u *cmd));
+void ex_debug __ARGS((exarg_t *eap));
+void dbg_check_breakpoint __ARGS((exarg_t *eap));
+void ex_breakadd __ARGS((exarg_t *eap));
+void ex_breakdel __ARGS((exarg_t *eap));
+void ex_breaklist __ARGS((exarg_t *eap));
+linenr_t dbg_find_breakpoint __ARGS((int file, char_u *fname, linenr_t after));
+void dbg_breakpoint __ARGS((char_u *name, linenr_t lnum));
+int autowrite __ARGS((buf_t *buf, int forceit));
+void autowrite_all __ARGS((void));
+int check_changed __ARGS((buf_t *buf, int checkaw, int mult_win, int forceit, int allbuf));
+void dialog_changed __ARGS((buf_t *buf, int checkall));
+int can_abandon __ARGS((buf_t *buf, int forceit));
+int check_changed_any __ARGS((int hidden));
+int check_fname __ARGS((void));
+int buf_write_all __ARGS((buf_t *buf, int forceit));
+void check_arg_idx __ARGS((win_t *win));
+void ex_args __ARGS((exarg_t *eap));
+void ex_previous __ARGS((exarg_t *eap));
+void ex_rewind __ARGS((exarg_t *eap));
+void ex_last __ARGS((exarg_t *eap));
+void ex_argument __ARGS((exarg_t *eap));
+void do_argfile __ARGS((exarg_t *eap, int argn));
+void ex_next __ARGS((exarg_t *eap));
+void ex_argedit __ARGS((exarg_t *eap));
+void ex_argadd __ARGS((exarg_t *eap));
+void ex_argdelete __ARGS((exarg_t *eap));
+void ex_listdo __ARGS((exarg_t *eap));
+int do_source __ARGS((char_u *fname, int check_other, int is_vimrc));
+void ex_scriptnames __ARGS((exarg_t *eap));
+char_u *get_scriptname __ARGS((scid_t id));
+char *fgets_cr __ARGS((char *s, int n, FILE *stream));
+char_u *getsourceline __ARGS((int c, void *cookie, int indent));
+void ex_scriptencoding __ARGS((exarg_t *eap));
+void ex_finish __ARGS((exarg_t *eap));
+int source_finished __ARGS((void *cookie));
+/* vim: set ft=c : */

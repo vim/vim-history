@@ -83,3 +83,5 @@ test37.out: test37.in
 test38.out: test38.in
 test39.out: test39.in
 test40.out: test40.in
+test41.out: test41.in
+test42.out: test42.in

@@ -188,6 +188,11 @@ static char *(features[]) =
 #else
 	"-find_in_path",
 #endif
+#ifdef FEAT_FOLDING
+	"+folding"
+#else
+	"-folding"
+#endif
 #ifdef FEAT_FOOTER
 	"+footer",
 #else
@@ -808,4 +813,118 @@ version_msg(s)
     if (len < (int)Columns && msg_col + len >= (int)Columns)
 	msg_putchar('\n');
     MSG_PUTS(s);
+}
+
+/*
+ * Give an introductory message about Vim.
+ * Only used when starting Vim on an empty file, without a file name.
+ * Or with the ":intro" command (for Sven :-).
+ */
+    void
+intro_message()
+{
+    int		i;
+    int		row;
+    int		col;
+    int		blanklines;
+    char_u	vers[20];
+    static char	*(lines[]) =
+    {
+	N_("VIM - Vi IMproved"),
+	"",
+	N_("version "),
+	N_("by Bram Moolenaar et al."),
+	"",
+	N_("Vim is freely distributable"),
+	N_("type  :help uganda<Enter>     if you like Vim "),
+	"",
+	N_("type  :q<Enter>               to exit         "),
+	N_("type  :help<Enter>  or  <F1>  for on-line help"),
+	N_("type  :help version6<Enter>   for version info"),
+	NULL,
+	"",
+	N_("Running in Vi compatible mode"),
+	N_("type  :set nocp<Enter>        for Vim defaults"),
+	N_("type  :help cp-default<Enter> for info on this"),
+    };
+
+    /* blanklines = screen height - # message lines */
+    blanklines = (int)Rows - ((sizeof(lines) / sizeof(char *)) - 1);
+    if (!p_cp)
+	blanklines += 4;  /* add 4 for not showing "Vi compatible" message */
+#if defined(WIN32) && !defined(FEAT_GUI_W32)
+    if (mch_windows95())
+	blanklines -= 3;  /* subtract 3 for showing "Windows 95" message */
+#endif
+#if defined(__BEOS__) && defined(__INTEL__)
+    blanklines -= 3;      /* subtract 3 for showing "BEOS on Intel" message */
+#endif
+
+    /* start displaying the message lines after half of the blank lines */
+    row = blanklines / 2;
+    if (row >= 2 && Columns >= 50)
+    {
+	for (i = 0; i < (int)(sizeof(lines) / sizeof(char *)); ++i)
+	{
+	    if (lines[i] == NULL)
+	    {
+		if (!p_cp)
+		    break;
+		continue;
+	    }
+	    if (*lines[i] != NUL)
+	    {
+		col = strlen(_(lines[i]));
+		if (i == 2)
+		{
+		    STRCPY(vers, mediumVersion);
+		    if (highest_patch())
+		    {
+			/* Check for 9.9x, alpha/beta version */
+			if (isalpha((int)mediumVersion[3]))
+			    sprintf((char *)vers + 4, ".%d%s", highest_patch(),
+							   mediumVersion + 4);
+			else
+			    sprintf((char *)vers + 3, ".%d", highest_patch());
+		    }
+		    col += STRLEN(vers);
+		}
+		col = (Columns - col) / 2;
+		if (col < 0)
+		    col = 0;
+		screen_puts((char_u *)_(lines[i]), row, col, 0);
+		if (i == 2)
+		    screen_puts(vers, row, col + 8, 0);
+	    }
+	    ++row;
+	}
+#if defined(WIN32) && !defined(FEAT_GUI_W32)
+	if (mch_windows95())
+	{
+	    screen_puts((char_u *)_("WARNING: Windows 95/98/ME detected"),
+					    row + 1, col + 6, hl_attr(HLF_E));
+	    screen_puts((char_u *)_("type  :help windows95<Enter>  for info on this"),
+							     row + 2, col, 0);
+	}
+#endif
+#if defined(__BEOS__) && defined(__INTEL__)
+	screen_puts((char_u *)_("     WARNING: Intel CPU detected.    "),
+					    row + 1, col + 4, hl_attr(HLF_E));
+	screen_puts((char_u *)_(" PPC has a much better architecture. "),
+					    row + 2, col + 4, hl_attr(HLF_E));
+#endif
+    }
+}
+
+/*
+ * ":intro": clear screen, display intro screen and wait for return.
+ */
+/*ARGSUSED*/
+    void
+ex_intro(eap)
+    exarg_t	*eap;
+{
+    screenclear();
+    intro_message();
+    wait_return(TRUE);
 }

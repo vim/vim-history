@@ -2617,24 +2617,46 @@ do_put(regname, dir, count, flags)
 
     yanklen = STRLEN(y_array[0]);
 
+#ifdef FEAT_VIRTUALEDIT
+    if (ve_flags == VE_ALL && y_type == MCHAR)
+    {
+	if (gchar_cursor() == TAB)
+	{
+	    if (dir == FORWARD || curwin->w_coladd)
+		coladvance_force(getviscol());
+	}
+	else if (curwin->w_coladd)
+	{
+	    if (dir == FORWARD)
+		coladvance_force(getviscol() + 1);
+	    else
+	    {
+		coladvance_force(getviscol());
+		curwin->w_cursor.col++;
+	    }
+	}
+    }
+#endif
+
     lnum = curwin->w_cursor.lnum;
     col = curwin->w_cursor.col;
-
-#ifdef FEAT_VIRTUALEDIT
-    if (ve_flags == VE_ALL
-	    && curwin->w_coladd
-	    && (y_type == MBLOCK || y_type == MCHAR))
-	coladvance_force(getviscol() + 1);
-#endif
 
     /*
      * Block mode
      */
     if (y_type == MBLOCK)
     {
-	if (dir == FORWARD && gchar_cursor() != NUL)
+	char	c = gchar_cursor();
+	colnr_t	endcol2 = 0;
+
+	if (dir == FORWARD && c != NUL)
 	{
-	    getvcol(curwin, &curwin->w_cursor, NULL, NULL, &col);
+#ifdef FEAT_VIRTUALEDIT
+	    if (ve_flags == VE_ALL)
+		getvcol(curwin, &curwin->w_cursor, &col, NULL, &endcol2);
+	    else
+#endif
+		getvcol(curwin, &curwin->w_cursor, NULL, NULL, &col);
 
 #ifdef FEAT_MBYTE
 	    if (has_mbyte)
@@ -2642,11 +2664,38 @@ do_put(regname, dir, count, flags)
 		curwin->w_cursor.col += bytelen;
 	    else
 #endif
+#ifdef FEAT_VIRTUALEDIT
+	    if (c != TAB || ve_flags != VE_ALL)
+#endif
 		++curwin->w_cursor.col;
 	    ++col;
 	}
 	else
-	    getvcol(curwin, &curwin->w_cursor, &col, NULL, NULL);
+	    getvcol(curwin, &curwin->w_cursor, &col, NULL, &endcol2);
+
+#ifdef FEAT_VIRTUALEDIT
+	col += curwin->w_coladd;
+	if (ve_flags == VE_ALL && curwin->w_coladd)
+	{
+	    if (dir == FORWARD && c == NUL)
+		++col;
+	    if (dir != FORWARD && c != NUL)
+		++curwin->w_cursor.col;
+	    if (c == TAB)
+	    {
+		if (dir == BACKWARD && curwin->w_cursor.col)
+		    curwin->w_cursor.col--;
+		if (dir == FORWARD && col - 1 == endcol2)
+		    curwin->w_cursor.col++;
+	    }
+	}
+	curwin->w_coladd = 0;
+#endif
+
+#ifdef FEAT_VIRTUALEDIT
+	col += curwin->w_coladd;
+	curwin->w_coladd = 0;
+#endif
 
 	for (i = 0; i < y_size; ++i)
 	{
@@ -4117,9 +4166,8 @@ do_addsub(command, Prenum1)
 
 #ifdef FEAT_VIMINFO
     int
-read_viminfo_register(line, fp, force)
-    char_u	*line;
-    FILE	*fp;
+read_viminfo_register(virp, force)
+    vir_t	*virp;
     int		force;
 {
     int		eof;
@@ -4132,7 +4180,7 @@ read_viminfo_register(line, fp, force)
     char_u	**array = NULL;
 
     /* We only get here (hopefully) if line[0] == '"' */
-    str = line + 1;
+    str = virp->vir_line + 1;
     if (*str == '"')
     {
 	set_prev = TRUE;
@@ -4140,7 +4188,7 @@ read_viminfo_register(line, fp, force)
     }
     if (!isalnum(*str) && *str != '-')
     {
-	if (viminfo_error(_("Illegal register name"), line))
+	if (viminfo_error(_("Illegal register name"), virp->vir_line))
 	    return TRUE;	/* too many errors, pretend end-of-file */
 	do_it = FALSE;
     }
@@ -4168,8 +4216,8 @@ read_viminfo_register(line, fp, force)
 	y_current->y_width = getdigits(&str);
     }
 
-    while (!(eof = vim_fgets(line, LSIZE, fp))
-					&& (line[0] == TAB || line[0] == '<'))
+    while (!(eof = viminfo_readline(virp))
+		    && (virp->vir_line[0] == TAB || virp->vir_line[0] == '<'))
     {
 	if (do_it)
 	{
@@ -4183,7 +4231,7 @@ read_viminfo_register(line, fp, force)
 		limit *= 2;
 		array = y_current->y_array;
 	    }
-	    str = viminfo_readstring(line + 1, fp);
+	    str = viminfo_readstring(virp, 1, TRUE);
 	    if (str != NULL)
 		array[size++] = str;
 	    else

@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.0u.  Last change: 2000 Nov 20
+*map.txt*       For Vim version 6.0v.  Last change: 2001 Feb 08
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -111,7 +111,7 @@ define a new mapping or abbreviation, the mapping will only remap mappings
 that were defined local to a script, starting with "<SID>".  This can be used
 to avoid that mappings from outside a script interfere (e.g., when CTRL-V is
 remapped in mswin.vim), but do use other mappings defined in the script.
-Note: ":map <script>" and ":noremap <script>" to the same thing.  The
+Note: ":map <script>" and ":noremap <script>" do the same thing.  The
 "<script>" overrules the command name.  Using ":noremap <script>" is
 preferred, because it's clearer that remapping is (mostly) disabled.
 

@@ -74,14 +74,14 @@ struct stat
 #define CASE_INSENSITIVE_FILENAME   /* ignore case when comparing file names */
 #define SPACE_IN_FILENAME
 #define COLON_AS_PATHSEP
-/* #define USE_FNAME_CASE	    /* adjust case of file names */
+/* #define USE_FNAME_CASE	     adjust case of file names */
 #define BINARY_FILE_IO
 #define EOL_DEFAULT EOL_MAC
 #define USE_CR
 #define NO_CONSOLE		    /* don't include console mode */
 #define HAVE_AVAIL_MEM
 
-/* #define SYNC_DUP_CLOSE	    /* sync() a file with dup() and close() */
+/* #define SYNC_DUP_CLOSE	     sync() a file with dup() and close() */
 #define HAVE_STRING_H
 #define HAVE_STRCSPN
 #define HAVE_MEMSET

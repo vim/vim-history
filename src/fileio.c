@@ -46,9 +46,9 @@
 #endif
 
 #ifdef FEAT_MBYTE
-static char_u *next_fcc __ARGS((char_u **pp));
+static char_u *next_fenc __ARGS((char_u **pp));
 # ifdef FEAT_EVAL
-static char_u *readfile_charconvert __ARGS((char_u *fname, char_u *fcc, int *fdp));
+static char_u *readfile_charconvert __ARGS((char_u *fname, char_u *fenc, int *fdp));
 # endif
 #endif
 #ifdef FEAT_VIMINFO
@@ -74,57 +74,13 @@ static int apply_autocmds_exarg __ARGS((EVENT_T event, char_u *fname, char_u *fn
 # define HAS_BW_FLAGS
 # define FIO_UCS2	0x01	/* convert UCS-2 */
 # define FIO_UCS4	0x02	/* convert UCS-4 */
-# define FIO_LATIN1	0x04	/* convert Latin-1 */
+# define FIO_LATIN1	0x04	/* convert Latin1 */
 # define FIO_UTF8	0x08	/* convert UTF-8 */
 # define FIO_ENDIAN_L	0x10	/* little endian */
-# define FIO_ENDIAN_LB	0x20	/* little-big endian */
-# define FIO_ENDIAN_BL	0x40	/* big-little endian */
 # define FIO_ENCRYPTED	0x1000	/* encrypt written bytes */
-# define FIO_NOCONVERT	0x2000	/* skip charcode conversion */
+# define FIO_NOCONVERT	0x2000	/* skip encoding conversion */
 # define FIO_UCSBOM	0x4000	/* check for BOM at start of file */
 # define FIO_ALL	-1	/* allow all formats */
-#endif
-
-#ifdef USE_ICONV
-# ifdef HAVE_ICONV_H
-#  include <iconv.h>
-# else
-#  include <errno.h>
-typedef void *iconv_t;
-# endif
-
-/*
- * On Win32 iconv.dll is dynamically loaded.
- */
-# ifndef DYNAMIC_ICONV
-#  define ICONV_ENABLED 1
-#else
-#  define ICONV_ENABLED iconv_enabled()
-static int iconv_runtime_link_init(char *libname, char *rtlibname);
-HINSTANCE hIconvDLL = 0;
-HINSTANCE hMsvcrtDLL = 0;
-/* Pointer to functions and variables to be loaded at runtime */
-static size_t (*iconv) (iconv_t cd, const char* * inbuf,
-	size_t *inbytesleft, char* * outbuf, size_t *outbytesleft);
-static iconv_t (*iconv_open) (const char* tocode, const char* fromcode);
-static int (*iconv_close) (iconv_t cd);
-static int (*iconvctl) (iconv_t cd, int request, void* argument);
-static int *iconv_errno = 0;
-#  define errno (*iconv_errno)
-#  ifndef DYNAMIC_ICONV_DLL
-#   define DYNAMIC_ICONV_DLL "iconv.dll"
-#  endif
-#  ifndef DYNAMIC_MSVCRT_DLL
-#   ifndef DEBUG
-#    define DYNAMIC_MSVCRT_DLL "msvcrt.dll"
-#   else
-#    define DYNAMIC_MSVCRT_DLL "msvcrtd.dll"
-#   endif
-#  endif
-# endif
-
-static iconv_t	my_iconv_open __ARGS((char_u *to, char_u *from));
-
 #endif
 
 /* When converting, a read() or write() may leave some bytes to be converted
@@ -163,7 +119,7 @@ static int  buf_write_bytes __ARGS((struct bw_info *ip));
 
 #ifdef FEAT_MBYTE
 static int ucs2bytes __ARGS((unsigned c, char_u **pp, int flags));
-static int same_charcode __ARGS((char_u *a, char_u *b));
+static int same_encoding __ARGS((char_u *a, char_u *b));
 static int get_fio_flags __ARGS((char_u *ptr));
 static char_u *check_for_bom __ARGS((char_u *p, long size, int *lenp, int flags));
 static int make_bom __ARGS((char_u *buf, char_u *name));
@@ -206,7 +162,7 @@ filemess(buf, name, s, attr)
 }
 
 /*
- * Read lines from file 'fname' into the buffer after line 'from'.
+ * Read lines from file "fname" into the buffer after line "from".
  *
  * 1. We allocate blocks with lalloc, as big as possible.
  * 2. Each block is filled with characters from the file with a single read().
@@ -214,14 +170,16 @@ filemess(buf, name, s, attr)
  *
  * (caller must check that fname != NULL, unless READ_STDIN is used)
  *
- * lines_to_skip is the number of lines that must be skipped
- * lines_to_read is the number of lines that are appended
+ * "lines_to_skip" is the number of lines that must be skipped
+ * "lines_to_read" is the number of lines that are appended
  * When not recovering lines_to_skip is 0 and lines_to_read MAXLNUM.
  *
  * flags:
  * READ_NEW	starting to edit a new buffer
  * READ_FILTER	reading filter output
  * READ_STDIN	read from stdin instead of a file
+ * READ_BUFFER	read from curbuf instead of a file (converting after reading
+ *		stdin)
  *
  * return FAIL for failure, OK otherwise
  */
@@ -235,11 +193,14 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
     exarg_t	*eap;			/* can be NULL! */
     int		flags;
 {
-    int		fd;
+    int		fd = 0;
     int		newfile = (flags & READ_NEW);
     int		check_readonly;
     int		filtering = (flags & READ_FILTER);
     int		read_stdin = (flags & READ_STDIN);
+    int		read_buffer = (flags & READ_BUFFER);
+    linenr_t	read_buf_lnum = 1;	/* next line to read from curbuf */
+    colnr_t	read_buf_col = 0;	/* next char to read from this line */
     char_u	c;
     linenr_t	lnum = from;
     char_u	*ptr = NULL;		/* pointer into read buffer */
@@ -284,10 +245,10 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
     int		conv_error = FALSE;	/* conversion error detected */
     char_u	*tmpname = NULL;	/* name of 'charconvert' output file */
     int		fio_flags = 0;
-    char_u	*fcc;			/* filecharcode to use; when fcc_next
+    char_u	*fenc;			/* fileencoding to use; when fenc_next
 					   != NULL it's in allocated memory */
-    char_u	*fcc_next = NULL;	/* next item in 'fccs' or NULL */
-    int		advance_fcc = FALSE;
+    char_u	*fenc_next = NULL;	/* next item in 'fencs' or NULL */
+    int		advance_fenc = FALSE;
     long	real_size = 0;
 # ifdef USE_ICONV
     iconv_t	iconv_fd = (iconv_t)-1;	/* descriptor for iconv() or -1 */
@@ -313,7 +274,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
      * Don't do this for a read from a filter.
      * Only do this when 'cpoptions' contains the 'f' flag.
      */
-    if (curbuf->b_ffname == NULL && !filtering && !read_stdin
+    if (curbuf->b_ffname == NULL && !filtering && fname != NULL
 				     && vim_strchr(p_cpo, CPO_FNAMER) != NULL)
     {
 	if (setfname(fname, sfname, FALSE) == OK)
@@ -337,7 +298,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
      * The BufReadCmd and FileReadCmd events intercept the reading process by
      * executing the associated commands instead.
      */
-    if (!filtering && !read_stdin)
+    if (!filtering && !read_stdin && !read_buffer)
     {
 	pos_t	    pos = curbuf->b_op_start;
 
@@ -386,7 +347,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
      * On Unix it is possible to read a directory, so we have to
      * check for it before the mch_open().
      */
-    if (!read_stdin)
+    if (!read_stdin && !read_buffer)
     {
 	perm = mch_getperm(fname);
 	if (perm >= 0 && !S_ISREG(perm)		    /* not a regular file ... */
@@ -428,7 +389,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
     if (check_readonly && !readonlymode)    /* default: set file not readonly */
 	curbuf->b_p_ro = FALSE;
 
-    if (newfile && !read_stdin)
+    if (newfile && !read_stdin && !read_buffer)
     {
 	/* Remember time of file.
 	 * For RISCOS, also remember the filetype.
@@ -476,8 +437,13 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
  */
     file_readonly = FALSE;
     if (read_stdin)
-	fd = 0;
-    else
+    {
+#if defined(MSDOS) || defined(MSWIN) || defined(OS2)
+	/* Force binary I/O on stdin to avoid CR-LF -> LF conversion. */
+	setmode(0, O_BINARY);
+#endif
+    }
+    else if (!read_buffer)
     {
 #ifdef USE_MCH_ACCESS
 	if (
@@ -582,7 +548,8 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
     /* If "Quit" selected at ATTENTION dialog, don't load the file */
     if (swap_exists_action == SEA_QUIT)
     {
-	close(fd);
+	if (!read_buffer)
+	    close(fd);
 	return FAIL;
     }
 #endif
@@ -596,6 +563,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
     curbuf->b_op_start.col = 0;
 
 #ifdef FEAT_AUTOCMD
+    if (!read_buffer)
     {
 	int	m = msg_scroll;
 	int	n = msg_scrolled;
@@ -672,7 +640,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 	    }
 #endif
 	}
-	else
+	else if (!read_buffer)
 	    filemess(curbuf, sfname, (char_u *)"", 0);
     }
 
@@ -686,31 +654,31 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 
 #ifdef FEAT_MBYTE
     /*
-     * Decide which 'charcode' to use first.
+     * Decide which 'encoding' to use first.
      */
-    if (eap != NULL && eap->force_fcc != 0)
-	fcc = eap->cmd + eap->force_fcc;
+    if (eap != NULL && eap->force_enc != 0)
+	fenc = enc_canonize(eap->cmd + eap->force_enc);
     else if (curbuf->b_p_bin)
-	fcc = (char_u *)"";		/* binary: don't convert */
-    else if (*p_fccs == NUL)
-	fcc = curbuf->b_p_fcc;		/* use format from buffer */
+	fenc = (char_u *)"";		/* binary: don't convert */
+    else if (*p_fencs == NUL)
+	fenc = curbuf->b_p_fenc;	/* use format from buffer */
     else
     {
-	fcc_next = p_fccs;		/* try items in 'filecharcodes' */
-	fcc = next_fcc(&fcc_next);
+	fenc_next = p_fencs;		/* try items in 'fileencodings' */
+	fenc = next_fenc(&fenc_next);
     }
 #endif
 
     /*
      * Jump back here to retry reading the file in different ways.
      * Reasons to retry:
-     * - charcode conversion failed: try another one from "fcc_next"
-     * - BOM detected and fcc was set, need to setup conversion
+     * - encoding conversion failed: try another one from "fenc_next"
+     * - BOM detected and fenc was set, need to setup conversion
      * - "fileformat" check failed: try another
      *
      * Variables set for special retry actions:
      * "file_rewind"	Rewind the file to start reading it again.
-     * "advance_fcc"	Advance "fcc" using "fcc_next".
+     * "advance_fenc"	Advance "fenc" using "fenc_next".
      * "skip_read"	Re-use already read bytes (BOM detected).
      * "did_iconv"	iconv() conversion failed, try 'charconvert'.
      * "keep_fileformat" Don't reset "fileformat".
@@ -724,7 +692,12 @@ retry:
 
     if (file_rewind)
     {
-	if (read_stdin || lseek(fd, (off_t)0L, SEEK_SET) != 0)
+	if (read_buffer)
+	{
+	    read_buf_lnum = 1;
+	    read_buf_col = 0;
+	}
+	else if (read_stdin || lseek(fd, (off_t)0L, SEEK_SET) != 0)
 	{
 	    /* Can't rewind the file, give up. */
 	    error = TRUE;
@@ -742,7 +715,7 @@ retry:
     }
 
     /*
-     * When retrying with another "fcc" and the first time "fileformat"
+     * When retrying with another "fenc" and the first time "fileformat"
      * will be reset.
      */
     if (keep_fileformat)
@@ -769,30 +742,31 @@ retry:
     }
 # endif
 
-    if (advance_fcc)
+    if (advance_fenc)
     {
 	/*
-	 * Try the next entry in 'filecharcodes'.
+	 * Try the next entry in 'fileencodings'.
 	 */
-	advance_fcc = FALSE;
+	advance_fenc = FALSE;
 
-	if (eap != NULL && eap->force_fcc != 0)
+	if (eap != NULL && eap->force_enc != 0)
 	{
 	    /* Conversion given with "++cc=" wasn't possible, read
 	     * without conversion. */
 	    notconverted = TRUE;
 	    conv_error = FALSE;
-	    fcc = (char_u *)"";
+	    vim_free(fenc);
+	    fenc = (char_u *)"";
 	}
 	else
 	{
-	    if (fcc_next != NULL)
+	    if (fenc_next != NULL)
 	    {
-		vim_free(fcc);
-		fcc = next_fcc(&fcc_next);
+		vim_free(fenc);
+		fenc = next_fenc(&fenc_next);
 	    }
 	    else
-		fcc = (char_u *)"";
+		fenc = (char_u *)"";
 	}
 	if (tmpname != NULL)
 	{
@@ -804,30 +778,30 @@ retry:
 
     /*
      * Conversion is required when the encoding of the file is different
-     * from 'charcode' or 'charcode' is UCS-2 or UCS-4 (requires
+     * from 'encoding' or 'encoding' is UCS-2 or UCS-4 (requires
      * conversion to UTF-8).
      */
     fio_flags = 0;
-    converted = (*fcc != NUL && !same_charcode(p_cc, fcc));
-    if (converted || cc_unicode != 0)
+    converted = (*fenc != NUL && !same_encoding(p_enc, fenc));
+    if (converted || enc_unicode != 0)
     {
 
 	/* "ucs-bom" means we need to check the first bytes of the file
 	 * for a BOM. */
-	if (STRCMP(fcc, CC_UCSBOM) == 0)
+	if (STRCMP(fenc, ENC_UCSBOM) == 0)
 	    fio_flags = FIO_UCSBOM;
 
 	/*
-	 * Check if UCS-2/4 or Latin-1 to UTF-8 conversion needs to be
+	 * Check if UCS-2/4 or Latin1 to UTF-8 conversion needs to be
 	 * done.  This is handled below after read().  Prepare the
 	 * fio_flags to avoid having to parse the string each time.
-	 * Also check for Unicode to Latin-1 conversion, because iconv()
+	 * Also check for Unicode to Latin1 conversion, because iconv()
 	 * appears not to handle this correctly.  This works just like
 	 * conversion to UTF-8 except how the resulting character is put in
 	 * the buffer.
 	 */
-	else if (cc_utf8 || !has_mbyte)
-	    fio_flags = get_fio_flags(fcc);
+	else if (enc_utf8 || !has_mbyte)
+	    fio_flags = get_fio_flags(fenc);
 
 # ifdef USE_ICONV
 	/*
@@ -838,7 +812,8 @@ retry:
 		&& !did_iconv
 #  endif
 		&& ICONV_ENABLED)
-	    iconv_fd = my_iconv_open(cc_utf8 ? (char_u *)"utf-8" : p_cc, fcc);
+	    iconv_fd = (iconv_t)my_iconv_open(
+				  enc_utf8 ? (char_u *)"utf-8" : p_enc, fenc);
 # endif
 
 # ifdef FEAT_EVAL
@@ -846,7 +821,7 @@ retry:
 	 * Use the 'charconvert' expression when conversion is required
 	 * and we can't do it internally or with iconv().
 	 */
-	if (fio_flags == 0 && !read_stdin && *p_ccv != NUL
+	if (fio_flags == 0 && !read_stdin && !read_buffer && *p_ccv != NUL
 #  ifdef USE_ICONV
 						    && iconv_fd == (iconv_t)-1
 #  endif
@@ -859,11 +834,11 @@ retry:
 	     * "fileformat"). */
 	    if (tmpname == NULL)
 	    {
-		tmpname = readfile_charconvert(fname, fcc, &fd);
+		tmpname = readfile_charconvert(fname, fenc, &fd);
 		if (tmpname == NULL)
 		{
 		    /* Conversion failed.  Try another one. */
-		    advance_fcc = TRUE;
+		    advance_fenc = TRUE;
 		    if (fd < 0)
 		    {
 			/* Re-opening the original file failed! */
@@ -885,18 +860,18 @@ retry:
 	       )
 	    {
 		/* Conversion wanted but we can't.
-		 * Try the next conversion in 'filecharcodes' */
-		advance_fcc = TRUE;
+		 * Try the next conversion in 'fileencodings' */
+		advance_fenc = TRUE;
 		goto retry;
 	    }
 	}
     }
 
     /* Set can_retry when it's possible to rewind the file and try with
-     * another "fcc" value.  It's FALSE when no other "fcc" to try, reading
-     * stdin or "fcc" was specified with "++cc=". */
-    can_retry = *fcc != NUL && !read_stdin
-				      && (eap == NULL || eap->force_fcc == 0);
+     * another "fenc" value.  It's FALSE when no other "fenc" to try, reading
+     * stdin or "fenc" was specified with "++enc=". */
+    can_retry = (*fenc != NUL && !read_stdin
+				     && (eap == NULL || eap->force_enc == 0));
 #endif
 
     if (!skip_read)
@@ -959,7 +934,7 @@ retry:
 		/* May need room to translate into.
 		 * For iconv() we don't really know the required space, use a
 		 * factor ICONV_MULT.
-		 * latin-1 to utf-8: 1 byte becomes up to 2 bytes
+		 * latin1 to utf-8: 1 byte becomes up to 2 bytes
 		 * ucs-2 to utf-8: 2 bytes become up to 3 bytes, size must be
 		 * multiple of 2
 		 * ucs-4 to utf-8: 4 bytes become up to 6 bytes, size must be
@@ -990,10 +965,56 @@ retry:
 		}
 #endif
 
-		/*
-		 * Read bytes from the file.
-		 */
-		size = read(fd, (char *)ptr, (size_t)size);
+		if (read_buffer)
+		{
+		    /*
+		     * Read bytes from curbuf.  Used for converting text read
+		     * from stdin.
+		     */
+		    if (read_buf_lnum > from)
+			size = 0;
+		    else
+		    {
+			int	n;
+			long	tlen;
+
+			tlen = 0;
+			for (;;)
+			{
+			    p = ml_get(read_buf_lnum) + read_buf_col;
+			    n = STRLEN(p);
+			    if ((int)tlen + n + 1 > size)
+			    {
+				/* Filled up to "size", append partial line. */
+				n = size - tlen;
+				mch_memmove(ptr + tlen, p, n);
+				read_buf_col += n;
+				break;
+			    }
+			    else
+			    {
+				/* Append whole line and new-line. */
+				mch_memmove(ptr + tlen, p, n);
+				tlen += n;
+				ptr[tlen++] = NL;
+				read_buf_col = 0;
+				if (++read_buf_lnum > from)
+				{
+				    size = tlen;
+				    break;
+				}
+			    }
+			}
+		    }
+		}
+		else
+		{
+		    /*
+		     * Read bytes from the file.
+		     */
+		    size = read(fd, (char *)ptr, (size_t)size);
+		}
+
 		if (size <= 0)
 		{
 		    if (size < 0)		    /* read error */
@@ -1037,7 +1058,7 @@ retry:
 		    && (fio_flags == FIO_UCSBOM
 			|| (!curbuf->b_p_bomb
 			    && tmpname == NULL
-			    && (*fcc == 'u' || (*fcc == NUL && cc_utf8)))))
+			    && (*fenc == 'u' || (*fenc == NUL && enc_utf8)))))
 	    {
 		char_u	*ccname;
 		int	blen;
@@ -1047,7 +1068,7 @@ retry:
 		    ccname = NULL;
 		else
 		    ccname = check_for_bom(ptr, size, &blen,
-		      fio_flags == FIO_UCSBOM ? FIO_ALL : get_fio_flags(fcc));
+		      fio_flags == FIO_UCSBOM ? FIO_ALL : get_fio_flags(fenc));
 		if (ccname != NULL)
 		{
 		    /* Remove BOM from the text */
@@ -1063,18 +1084,18 @@ retry:
 		    if (ccname == NULL)
 		    {
 			/* No BOM detected: retry with next encoding. */
-			advance_fcc = TRUE;
+			advance_fenc = TRUE;
 		    }
 		    else
 		    {
-			/* BOM detected: set "fcc" and jump back */
-			if (fcc_next != NULL)
+			/* BOM detected: set "fenc" and jump back */
+			if (fenc_next != NULL)
 			{
-			    vim_free(fcc);
-			    fcc = vim_strsave(ccname);
+			    vim_free(fenc);
+			    fenc = vim_strsave(ccname);
 			}
 			else
-			    fcc = ccname;
+			    fenc = ccname;
 		    }
 		    /* retry reading without getting new bytes or rewinding */
 		    skip_read = TRUE;
@@ -1099,7 +1120,7 @@ retry:
 	    if (iconv_fd != (iconv_t)-1)
 	    {
 		/*
-		 * Attempt conversion of the read bytes to 'charcode' using
+		 * Attempt conversion of the read bytes to 'encoding' using
 		 * iconv().
 		 */
 		const char	*fromp;
@@ -1118,7 +1139,7 @@ retry:
 		 * another conversion.
 		 */
 		if ((iconv(iconv_fd, &fromp, &from_size, &top, &to_size)
-			    == (size_t)-1 && errno != EINVAL)
+			    == (size_t)-1 && ICONV_ERRNO != EINVAL)
 						  || from_size > CONV_RESTLEN)
 		    goto rewind_retry;
 
@@ -1158,8 +1179,8 @@ retry:
 		}
 
 		/*
-		 * "cc_utf8" set: Convert Unicode or Latin-1 to UTF-8.
-		 * "cc_utf8" not set: Convert Unicode to Latin-1.
+		 * "enc_utf8" set: Convert Unicode or Latin1 to UTF-8.
+		 * "enc_utf8" not set: Convert Unicode to Latin1.
 		 * Go from end to start through the buffer, because the number
 		 * of bytes may increase.
 		 * "dest" points to after where the UTF-8 bytes go, "p" points
@@ -1199,20 +1220,6 @@ retry:
 			    u8c += (*--p << 8);
 			    u8c += *--p;
 			}
-			else if (fio_flags & FIO_ENDIAN_LB)
-			{
-			    u8c = (*--p << 16);
-			    u8c += (*--p << 24);
-			    u8c += *--p;
-			    u8c += (*--p << 8);
-			}
-			else if (fio_flags & FIO_ENDIAN_BL)
-			{
-			    u8c = (*--p << 8);
-			    u8c += *--p;
-			    u8c += (*--p << 24);
-			    u8c += (*--p << 16);
-			}
 			else	/* big endian */
 			{
 			    u8c = *--p;
@@ -1231,7 +1238,7 @@ retry:
 			    if (len == 0)
 			    {
 				/* Not a valid UTF-8 character, retry with
-				 * another fcc when possible, otherwise just
+				 * another fenc when possible, otherwise just
 				 * report the error. */
 				if (can_retry)
 				    goto rewind_retry;
@@ -1241,18 +1248,18 @@ retry:
 			    u8c = utf_ptr2char(p);
 			}
 		    }
-		    if (cc_utf8)	/* produce UTF-8 */
+		    if (enc_utf8)	/* produce UTF-8 */
 		    {
 			dest -= utf_char2len(u8c);
 			(void)utf_char2bytes(u8c, dest);
 		    }
-		    else		/* produce Latin-1 */
+		    else		/* produce Latin1 */
 		    {
 			--dest;
 			if (u8c >= 0x100)
 			{
-			    /* character doesn't fit in latin-1, retry with
-			     * another fcc when possible, otherwise just
+			    /* character doesn't fit in latin1, retry with
+			     * another fenc when possible, otherwise just
 			     * report the error. */
 			    if (can_retry)
 				goto rewind_retry;
@@ -1270,7 +1277,7 @@ retry:
 		size = (ptr + real_size) - dest;
 		ptr = dest;
 	    }
-	    else if (cc_utf8 && !conv_error && !curbuf->b_p_bin)
+	    else if (enc_utf8 && !conv_error && !curbuf->b_p_bin)
 	    {
 		/* Converting to UTF-8: Check if the bytes are valid UTF-8.
 		 * Need to start before "ptr" when part of the character was
@@ -1301,13 +1308,13 @@ rewind_retry:
 			    did_iconv = TRUE;
 			else
 # endif
-			    /* use next item from 'filecharcodes' */
-			    advance_fcc = TRUE;
+			    /* use next item from 'fileencodings' */
+			    advance_fenc = TRUE;
 			file_rewind = TRUE;
 			goto retry;
 		    }
 
-		    /* There is no alternative fcc, just report the error. */
+		    /* There is no alternative fenc, just report the error. */
 		    conv_error = TRUE;
 		}
 	    }
@@ -1340,7 +1347,7 @@ rewind_retry:
 		    /* Don't give in to EOL_UNIX if EOL_MAC is more likely */
 		    if (fileformat == EOL_UNIX && try_mac)
 		    {
-			/* Need to reset the counters when retrying fcc. */
+			/* Need to reset the counters when retrying fenc. */
 			try_mac = 1;
 			try_unix = 1;
 			for (; p >= ptr && *p != CR; p--)
@@ -1445,9 +1452,10 @@ rewind_retry:
 			     */
 			    else if (ff_error != EOL_DOS)
 			    {
-				if (	   try_unix
-					&& !read_stdin
-					&& lseek(fd, (off_t)0L, SEEK_SET) == 0)
+				if (   try_unix
+				    && !read_stdin
+				    && (read_buffer
+					|| lseek(fd, (off_t)0L, SEEK_SET) == 0))
 				{
 				    fileformat = EOL_UNIX;
 				    if (newfile)
@@ -1519,11 +1527,13 @@ failed:
 #endif
 
 #ifdef FEAT_MBYTE
-    /* If editing a new file: set 'fcc' for the current buffer. */
+    /* If editing a new file: set 'fenc' for the current buffer. */
     if (newfile)
-	set_string_option_direct((char_u *)"fcc", -1, fcc, OPT_FREE|OPT_LOCAL);
-    if (fcc_next != NULL)
-	vim_free(fcc);
+	set_string_option_direct((char_u *)"fenc", -1, fenc,
+							  OPT_FREE|OPT_LOCAL);
+    if (fenc_next != NULL
+	    || (eap != NULL && eap->force_enc != 0 && *fenc != NUL))
+	vim_free(fenc);
 # ifdef USE_ICONV
     if (iconv_fd != (iconv_t)-1)
     {
@@ -1533,7 +1543,8 @@ failed:
 # endif
 #endif
 
-    close(fd);				/* errors are ignored */
+    if (!read_buffer)
+	close(fd);				/* errors are ignored */
     vim_free(buffer);
 
 #ifdef FEAT_MBYTE
@@ -1686,13 +1697,13 @@ failed:
 #ifdef ALWAYS_USE_GUI
 	    /* Don't show the message when reading stdin, it would end up in a
 	     * message box (which might be shown when exiting!) */
-	    if (read_stdin)
+	    if (read_stdin || read_buffer)
 		keep_msg = msg_may_trunc(FALSE, IObuff);
 	    else
 #endif
 		keep_msg = msg_trunc_attr(IObuff, FALSE, 0);
 	    keep_msg_attr = 0;
-	    if (read_stdin || restart_edit != 0)
+	    if (read_stdin || read_buffer || restart_edit != 0)
 	    {
 		/* When reading from stdin, the screen will be cleared next;
 		 * keep the message to repeat it later.
@@ -1748,16 +1759,17 @@ failed:
 #endif
 
 #ifdef FEAT_AUTOCMD
+    /*
+     * Trick: We remember if the last line of the read didn't have
+     * an eol for when writing it again.  This is required for
+     * ":autocmd FileReadPost *.gz set bin|'[,']!gunzip" to work.
+     */
+    write_no_eol_lnum = read_no_eol_lnum;
+
+    if (!read_stdin && !read_buffer)
     {
 	int m = msg_scroll;
 	int n = msg_scrolled;
-
-	/*
-	 * Trick: We remember if the last line of the read didn't have
-	 * an eol for when writing it again.  This is required for
-	 * ":autocmd FileReadPost *.gz set bin|'[,']!gunzip" to work.
-	 */
-	write_no_eol_lnum = read_no_eol_lnum;
 
 	/*
 	 * The output from the autocommands should not overwrite anything and
@@ -1767,9 +1779,6 @@ failed:
 	msg_scroll = TRUE;
 	if (filtering)
 	    apply_autocmds_exarg(EVENT_FILTERREADPOST, NULL, sfname,
-							  FALSE, curbuf, eap);
-	else if (read_stdin)
-	    apply_autocmds_exarg(EVENT_STDINREADPOST, NULL, sfname,
 							  FALSE, curbuf, eap);
 	else if (newfile)
 	    apply_autocmds_exarg(EVENT_BUFREADPOST, NULL, sfname,
@@ -1789,14 +1798,14 @@ failed:
 
 #ifdef FEAT_MBYTE
 /*
- * Find next filecharcode to use from 'filecharcodes'.
- * "pp" points to fcc_next.  It's advanced to the next item.
+ * Find next fileencoding to use from 'fileencodings'.
+ * "pp" points to fenc_next.  It's advanced to the next item.
  * When there are no more items, an empty string is returned and *pp is set to
  * NULL.
  * When *pp is not set to NULL, the result is in allocated memory.
  */
     static char_u *
-next_fcc(pp)
+next_fenc(pp)
     char_u	**pp;
 {
     char_u	*p;
@@ -1810,13 +1819,19 @@ next_fcc(pp)
     p = vim_strchr(*pp, ',');
     if (p == NULL)
     {
-	r = vim_strsave(*pp);
+	r = enc_canonize(*pp);
 	*pp += STRLEN(*pp);
     }
     else
     {
 	r = vim_strnsave(*pp, (int)(p - *pp));
 	*pp = p + 1;
+	if (r != NULL)
+	{
+	    p = enc_canonize(r);
+	    vim_free(r);
+	    r = p;
+	}
     }
     if (r == NULL)	/* out of memory */
     {
@@ -1836,9 +1851,9 @@ next_fcc(pp)
  * Returns NULL if the conversion failed ("*fdp" is not set) .
  */
     static char_u *
-readfile_charconvert(fname, fcc, fdp)
+readfile_charconvert(fname, fenc, fdp)
     char_u	*fname;		/* name of input file */
-    char_u	*fcc;		/* converted from */
+    char_u	*fenc;		/* converted from */
     int		*fdp;		/* in/out: file descriptor of file */
 {
     char_u	*tmpname;
@@ -1851,7 +1866,7 @@ readfile_charconvert(fname, fcc, fdp)
     {
 	close(*fdp);		/* close the input file, ignore errors */
 	*fdp = -1;
-	if (eval_charconvert(fcc, cc_utf8 ? (char_u *)"utf-8" : p_cc,
+	if (eval_charconvert(fenc, enc_utf8 ? (char_u *)"utf-8" : p_enc,
 						      fname, tmpname) == FAIL)
 	    errmsg = (char_u *)_("Conversion with 'charconvert' failed");
 	if (errmsg == NULL && (*fdp = mch_open((char *)tmpname,
@@ -2007,7 +2022,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     char_u	    *fname;
     char_u	    *sfname;
     linenr_t	    start, end;
-    exarg_t	    *eap;		/* for forced 'ff' and 'fcc', can be
+    exarg_t	    *eap;		/* for forced 'ff' and 'fenc', can be
 					   NULL! */
     int		    append;
     int		    forceit;
@@ -2056,7 +2071,8 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 #ifdef FEAT_MBYTE
     int		    converted = FALSE;
     int		    notconverted = FALSE;
-    char_u	    *fcc;		/* effective 'filecharcode' */
+    char_u	    *fenc;		/* effective 'fileencoding' */
+    char_u	    *fenc_tofree = NULL; /* allocated "fenc" */
 #endif
 #ifdef HAS_BW_FLAGS
     int		    wb_flags = 0;
@@ -2849,26 +2865,30 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     wfname = fname;
 
 #ifdef FEAT_MBYTE
-    /* Check for forced 'filecharcode' from "++opt=val" argument. */
-    if (eap != NULL && eap->force_fcc != 0)
-	fcc = eap->cmd + eap->force_fcc;
+    /* Check for forced 'fileencoding' from "++opt=val" argument. */
+    if (eap != NULL && eap->force_enc != 0)
+    {
+	fenc = eap->cmd + eap->force_enc;
+	fenc = enc_canonize(fenc);
+	fenc_tofree = fenc;
+    }
     else
-	fcc = buf->b_p_fcc;
+	fenc = buf->b_p_fenc;
 
     /*
-     * The file needs to be converted when 'filecharcode' is set and
-     * 'filecharcode' differs from 'charcode'.
+     * The file needs to be converted when 'fileencoding' is set and
+     * 'fileencoding' differs from 'encoding'.
      */
-    converted = (*fcc != NUL && !same_charcode(p_cc, fcc));
+    converted = (*fenc != NUL && !same_encoding(p_enc, fenc));
 
     /*
-     * Check if UTF-8 to UCS-2/4 or Latin-1 conversion needs to be done.  Or
-     * Latin-1 to Unicode conversion.  This is handled in buf_write_bytes().
+     * Check if UTF-8 to UCS-2/4 or Latin1 conversion needs to be done.  Or
+     * Latin1 to Unicode conversion.  This is handled in buf_write_bytes().
      * Prepare the flags for it and allocate bw_conv_buf when needed.
      */
-    if (converted && (cc_utf8 || !has_mbyte))
+    if (converted && (enc_utf8 || !has_mbyte))
     {
-	wb_flags = get_fio_flags(fcc);
+	wb_flags = get_fio_flags(fenc);
 	if (wb_flags & (FIO_UCS2 | FIO_UCS4 | FIO_UTF8))
 	{
 	    /* Need to allocate a buffer to translate into. */
@@ -2892,8 +2912,8 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	 * internally.
 	 */
 	if (ICONV_ENABLED)
-	    write_info.bw_iconv_fd = my_iconv_open(fcc,
-					  cc_utf8 ? (char_u *)"utf-8" : p_cc);
+	    write_info.bw_iconv_fd = (iconv_t)my_iconv_open(fenc,
+					enc_utf8 ? (char_u *)"utf-8" : p_enc);
 	else
 	    write_info.bw_iconv_fd = (iconv_t)-1;
 	if (write_info.bw_iconv_fd != (iconv_t)-1)
@@ -3075,7 +3095,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
      */
     if (buf->b_p_bomb && !buf->b_p_bin)
     {
-	write_info.bw_len = make_bom(buffer, fcc);
+	write_info.bw_len = make_bom(buffer, fenc);
 	if (write_info.bw_len > 0)
 	{
 	    /* don't convert, do encryption */
@@ -3230,7 +3250,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	 */
 	if (end != 0)
 	{
-	    if (eval_charconvert(cc_utf8 ? (char_u *)"utf-8" : p_cc, fcc,
+	    if (eval_charconvert(enc_utf8 ? (char_u *)"utf-8" : p_enc, fenc,
 						       wfname, fname) == FAIL)
 	    {
 		write_info.bw_conv_error = TRUE;
@@ -3468,6 +3488,7 @@ nofail:
     if (buffer != smallbuf)
 	vim_free(buffer);
 #ifdef FEAT_MBYTE
+    vim_free(fenc_tofree);
     vim_free(write_info.bw_conv_buf);
 # ifdef USE_ICONV
     if (write_info.bw_iconv_fd != (iconv_t)-1)
@@ -3669,7 +3690,7 @@ time_differs(t1, t2)
 
 /*
  * Call write() to write a number of bytes to the file.
- * Also handles encryption and 'charcode' conversion.
+ * Also handles encryption and 'encoding' conversion.
  *
  * Return FAIL for failure, OK otherwise.
  */
@@ -3697,7 +3718,7 @@ buf_write_bytes(ip)
 	if (flags & FIO_UTF8)
 	{
 	    /*
-	     * Convert latin-1 in the buffer to UTF-8 in the file.
+	     * Convert latin1 in the buffer to UTF-8 in the file.
 	     */
 	    p = ip->bw_conv_buf;	/* translate to buffer */
 	    for (wlen = 0; wlen < len; ++wlen)
@@ -3708,7 +3729,7 @@ buf_write_bytes(ip)
 	else if (flags & (FIO_UCS4 | FIO_UCS2 | FIO_LATIN1))
 	{
 	    /*
-	     * Convert UTF-8 bytes in the buffer to UCS-2, UCS-4 or Latin-1
+	     * Convert UTF-8 bytes in the buffer to UCS-2, UCS-4 or Latin1
 	     * chars in the file.
 	     */
 	    if (flags & FIO_LATIN1)
@@ -3837,7 +3858,7 @@ buf_write_bytes(ip)
 	     * If iconv() has an error or there is not enough room, fail.
 	     */
 	    if ((iconv(ip->bw_iconv_fd, &from, &fromlen, &to, &tolen)
-			== (size_t)-1 && errno != EINVAL)
+			== (size_t)-1 && ICONV_ERRNO != EINVAL)
 						    || fromlen > CONV_RESTLEN)
 	    {
 		ip->bw_conv_error = TRUE;
@@ -3903,20 +3924,6 @@ ucs2bytes(c, pp, flags)
 	    *p++ = (c >> 16);
 	    *p++ = (c >> 24);
 	}
-	else if (flags & FIO_ENDIAN_LB)
-	{
-	    *p++ = (c >> 8);
-	    *p++ = c;
-	    *p++ = (c >> 24);
-	    *p++ = (c >> 16);
-	}
-	else if (flags & FIO_ENDIAN_BL)
-	{
-	    *p++ = (c >> 16);
-	    *p++ = (c >> 24);
-	    *p++ = c;
-	    *p++ = (c >> 8);
-	}
 	else
 	{
 	    *p++ = (c >> 24);
@@ -3940,7 +3947,7 @@ ucs2bytes(c, pp, flags)
 	    *p++ = c;
 	}
     }
-    else    /* Latin-1 */
+    else    /* Latin1 */
     {
 	if (c >= 0x100)
 	{
@@ -3956,11 +3963,11 @@ ucs2bytes(c, pp, flags)
 }
 
 /*
- * Return TRUE if "a" and "b" are the same 'charcode'.
- * Ignores difference between "ansi" and "latin-1", "ucs-4" and "ucs-4be", etc.
+ * Return TRUE if "a" and "b" are the same 'encoding'.
+ * Ignores difference between "ansi" and "latin1", "ucs-4" and "ucs-4be", etc.
  */
     static int
-same_charcode(a, b)
+same_encoding(a, b)
     char_u	*a;
     char_u	*b;
 {
@@ -3973,41 +3980,46 @@ same_charcode(a, b)
 }
 
 /*
- * Check "ptr" for a unicode charcode and return the FIO_ flags needed for the
+ * Check "ptr" for a unicode encoding and return the FIO_ flags needed for the
  * internal conversion.
- * if "ptr" is an empty string, use 'charcode'.
+ * if "ptr" is an empty string, use 'encoding'.
  */
     static int
 get_fio_flags(ptr)
     char_u	*ptr;
 {
-    if (*ptr == NUL)
-	ptr = p_cc;
+    int		prop;
 
-    if (STRCMP(ptr, CC_UCS2) == 0 || STRCMP(ptr, CC_UCS2BE) == 0
-					      || STRCMP(ptr, CC_UNICODE) == 0)
-	return FIO_UCS2;
-    if (STRCMP(ptr, CC_UCS2LE) == 0)
-	return FIO_UCS2 | FIO_ENDIAN_L;
-    if (STRCMP(ptr, CC_UCS4) == 0 || STRCMP(ptr, CC_UCS4BE) == 0)
-	return FIO_UCS4;
-    if (STRCMP(ptr, CC_UCS4LE) == 0)
-	return FIO_UCS4 | FIO_ENDIAN_L;
-    if (STRCMP(ptr, CC_UCS4BL) == 0)
-	return FIO_UCS4 | FIO_ENDIAN_BL;
-    if (STRCMP(ptr, CC_UCS4LB) == 0)
-	return FIO_UCS4 | FIO_ENDIAN_LB;
-    if (STRCMP(ptr, CC_LATIN1) == 0 || STRCMP(ptr, CC_ANSI) == 0)
-	return FIO_LATIN1;
-    if (STRCMP(ptr, CC_UTF8) == 0)
+    if (*ptr == NUL)
+	ptr = p_enc;
+
+    prop = enc_canon_props(ptr);
+    if (prop & ENC_UNICODE)
+    {
+	if (prop & ENC_2BYTE)
+	{
+	    if (prop & ENC_ENDIAN_L)
+		return FIO_UCS2 | FIO_ENDIAN_L;
+	    return FIO_UCS2;
+	}
+	if (prop & ENC_4BYTE)
+	{
+	    if (prop & ENC_ENDIAN_L)
+		return FIO_UCS4 | FIO_ENDIAN_L;
+	    return FIO_UCS4;
+	}
 	return FIO_UTF8;
+    }
+    if (prop & ENC_LATIN1)
+	return FIO_LATIN1;
+    /* must be ENC_DBCS, requires iconv() */
     return 0;
 }
 
 /*
  * Check for a Unicode BOM (Byte Order Mark) at the start of p[size].
  * "size" must be at least 2.
- * Return the name of the charcode and set "*lenp" to the length.
+ * Return the name of the encoding and set "*lenp" to the length.
  * Returns NULL when no BOM found.
  */
     static char_u *
@@ -4037,31 +4049,16 @@ check_for_bom(p, size, lenp, flags)
 	else if (flags == FIO_ALL || flags == (FIO_UCS2 | FIO_ENDIAN_L))
 	    name = "ucs-2le";	/* FF FE */
     }
-    else if (p[0] == 0xfe && p[1] == 0xff)
+    else if (p[0] == 0xfe && p[1] == 0xff
+	    && (flags == FIO_ALL || flags == FIO_UCS2))
     {
-	if (size >= 4 && p[2] == 0 && p[3] == 0
-		&& (flags == FIO_ALL || flags == (FIO_UCS4 | FIO_ENDIAN_LB)))
-	{
-	    name = "ucs-4lb";		/* FE FF 00 00 */
-	    len = 4;
-	}
-	else if (flags == FIO_ALL || flags == FIO_UCS2)
-	    name = "ucs-2";		/* FE FF */
+	name = "ucs-2";		/* FE FF */
     }
-    else if (size >= 4 && p[0] == 0 && p[1] == 0)
+    else if (size >= 4 && p[0] == 0 && p[1] == 0 && p[2] == 0xfe
+	    && p[3] == 0xff && (flags == FIO_ALL || flags == FIO_UCS4))
     {
-	if (p[2] == 0xfe && p[3] == 0xff
-		&& (flags == FIO_ALL || flags == FIO_UCS4))
-	{
-	    name = "ucs-4";		/* 00 00 FE FF */
-	    len = 4;
-	}
-	else if (p[2] == 0xff && p[3] == 0xfe
-		&& (flags == FIO_ALL || flags == (FIO_UCS4 | FIO_ENDIAN_BL)))
-	{
-	    name = "ucs-4bl";		/* 00 00 FF FE */
-	    len = 4;
-	}
+	name = "ucs-4";		/* 00 00 FE FF */
+	len = 4;
     }
 
     *lenp = len;
@@ -4069,7 +4066,7 @@ check_for_bom(p, size, lenp, flags)
 }
 
 /*
- * Generate a BOM in "buf[4]" for charcode "name".
+ * Generate a BOM in "buf[4]" for encoding "name".
  * Return the length of the BOM (zero when no BOM).
  */
     static int
@@ -5094,8 +5091,8 @@ static struct event_name
     {"BufWriteCmd",	EVENT_BUFWRITECMD},
     {"CmdwinEnter",	EVENT_CMDWINENTER},
     {"CmdwinLeave",	EVENT_CMDWINLEAVE},
-    {"CharCode",	EVENT_CHARCODE},
-    {"FileEncoding",	EVENT_CHARCODE},
+    {"EncodingChanged",	EVENT_ENCODINGCHANGED},
+    {"FileEncoding",	EVENT_ENCODINGCHANGED},
     {"CursorHold",	EVENT_CURSORHOLD},
     {"FileAppendPost",	EVENT_FILEAPPENDPOST},
     {"FileAppendPre",	EVENT_FILEAPPENDPRE},
@@ -7035,150 +7032,3 @@ file_pat_to_reg_pat(pat, pat_end, allow_dirs, no_bslash)
     }
     return reg_pat;
 }
-
-#if defined(USE_ICONV) || defined(PROTO)
-static char_u *alt_charset __ARGS((char_u *name));
-
-/*
- * Find an alternate charset name for "name".
- * Return NULL when none found.
- */
-    static char_u *
-alt_charset(name)
-    char_u	*name;
-{
-    static char *trans[][2] =
-    {
-	{"latin-1", "latin1"},
-	{"ansi", "latin1"},
-	{"ucs-2le", "ucs-2"},
-	{"ucs-2be", "ucs-2"},
-	{"ucs-4be", "ucs-4"},
-	{"ucs-4le", "ucs-4"},
-	{"ucs-4bl", "ucs-4"},
-	{"ucs-4lb", "ucs-4"},
-	{"unicode", "ucs-2"},
-#if defined(WIN32) || defined(WIN32UNIX)
-	{"japan", "cp932"},
-#else
-	{"japan", "euc-jp"},
-#endif
-	{"korea", "euc-kr"},
-	{"prc", "chinese"},
-	{"taiwan", "euc-tw"},
-    };
-    int		idx;
-
-    for (idx = 0; idx < sizeof(trans) / sizeof(char *[2]); ++idx)
-	if (STRCMP(name, trans[idx][0]) == 0)
-	    return (char_u *)trans[idx][1];
-    return NULL;
-}
-
-/*
- * Call iconv_open() with a few retries for similar charset names.
- * Also checks if iconv() works properly (there are broken versions).
- * Returns (iconv_t)-1 if failed.
- */
-    static iconv_t
-my_iconv_open(to, from)
-    char_u	*to;
-    char_u	*from;
-{
-    iconv_t	fd;
-    char_u	*to_alt;
-    char_u	*from_alt;
-#define ICONV_TESTLEN 400
-    char_u	tobuf[ICONV_TESTLEN];
-    char	*p;
-    size_t	tolen;
-    static int	iconv_ok = -1;
-
-    if (iconv_ok == FALSE)
-	return (iconv_t)-1;	/* detected a broken iconv() previously */
-
-    fd = iconv_open((char *)to, (char *)from);
-    if (fd == (iconv_t)-1)
-    {
-	to_alt = alt_charset(to);
-	from_alt = alt_charset(from);
-	if (to_alt != NULL)
-	    fd = iconv_open((char *)to_alt, (char *)from);
-	if (fd == (iconv_t)-1 && from_alt != NULL)
-	{
-	    fd = iconv_open((char *)to, (char *)from_alt);
-	    if (fd == (iconv_t)-1 && to_alt != NULL)
-		fd = iconv_open((char *)to_alt, (char *)from_alt);
-	}
-    }
-
-    if (fd != (iconv_t)-1 && iconv_ok == -1)
-    {
-	/*
-	 * Do a dummy iconv() call to check if it actually works.  There is a
-	 * version of iconv() on Linux that is broken.  We can't ignore it,
-	 * because it's wide-spread.  The symptoms are that after outputting
-	 * the initial shift state the "to" pointer is NULL and conversion
-	 * stops for no apparent reason after about 8160 characters.
-	 */
-	p = (char *)tobuf;
-	tolen = ICONV_TESTLEN;
-	(void)iconv(fd, NULL, NULL, &p, &tolen);
-	if (p == NULL)
-	{
-	    iconv_ok = FALSE;
-	    iconv_close(fd);
-	    fd = (iconv_t)-1;
-	}
-	else
-	    iconv_ok = TRUE;
-    }
-
-    return fd;
-}
-
-# if (defined(USE_ICONV) && defined(DYNAMIC_ICONV)) || defined(PROTO)
-    int
-iconv_enabled()
-{
-    return iconv_runtime_link_init(DYNAMIC_ICONV_DLL, DYNAMIC_MSVCRT_DLL);
-}
-
-    static int
-iconv_runtime_link_init(char *libname, char *rtlibname)
-{
-    if (hIconvDLL && hMsvcrtDLL)
-	return 1;
-    hIconvDLL = LoadLibrary(libname);
-    hMsvcrtDLL = LoadLibrary(rtlibname);
-    if (!hIconvDLL || !hMsvcrtDLL)
-    {
-	iconv_end();
-	return 0;
-    }
-    *((FARPROC*)&iconv)		= GetProcAddress(hIconvDLL, "libiconv");
-    *((FARPROC*)&iconv_open)	= GetProcAddress(hIconvDLL, "libiconv_open");
-    *((FARPROC*)&iconv_close)	= GetProcAddress(hIconvDLL, "libiconv_close");
-    *((FARPROC*)&iconvctl)	= GetProcAddress(hIconvDLL, "libiconvctl");
-    *((FARPROC*)&iconv_errno)	= GetProcAddress(hMsvcrtDLL, "_errno");
-    if (!iconv || !iconv_open || !iconv_close || !iconvctl || !iconv_errno)
-    {
-	iconv_end();
-	return 0;
-    }
-    return 1;
-}
-
-    void
-iconv_end()
-{
-    if (hIconvDLL)
-	FreeLibrary(hIconvDLL);
-    if (hMsvcrtDLL)
-	FreeLibrary(hMsvcrtDLL);
-    hIconvDLL = 0;
-    hMsvcrtDLL = 0;
-}
-# endif /* defined(DYNAMIC_ICONV) */
-
-#endif /* defined(USE_ICONV) */

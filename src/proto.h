@@ -70,6 +70,7 @@
 # include "edit.pro"
 # include "eval.pro"
 # include "ex_cmds.pro"
+# include "ex_cmds2.pro"
 # include "ex_docmd.pro"
 # include "ex_getln.pro"
 # include "fileio.pro"
@@ -107,6 +108,7 @@ char_u *vim_strpbrk __ARGS((char_u *s, char_u *charset));
 /* Use our own qsort(), don't define the prototype when not used. */
 void qsort __ARGS((void *base, size_t elm_count, size_t elm_size, int (*cmp)(const void *, const void *)));
 #endif
+# include "move.pro"
 # if defined(FEAT_MBYTE) || defined(FEAT_XIM)
 #  include "multibyte.pro"
 # endif

@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 6.0u.  Last change: 2001 Jan 31
+*autocmd.txt*   For Vim version 6.0v.  Last change: 2001 Feb 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -435,13 +435,12 @@ VimLeavePre			Before exiting Vim, just before writing the
 VimLeave			Before exiting Vim, just after writing the
 				.viminfo file.  Executed only once, like
 				VimLeavePre.
+							*EncodingChanged*
+EncodingChanged			Fires off when the 'encoding' option is
+				changed.  Useful to set up fonts, for example.
 							*FileEncoding*
 FileEncoding			Obsolete.  It still works and is equivalent
-				to |CharCode|.
-							*CharCode*
-CharCode			Fires off when you change the 'charcode'
-				option.  Useful to set up fonts or other
-				language sensitive settings.
+				to |EncodingChanged|.
 							*TermChanged*
 TermChanged			After the value of 'term' has changed.  Useful
 				for re-loading the syntax file to update the
@@ -822,7 +821,14 @@ making it impossible to read or write the matching files!  Make sure you test
 your autocommands properly.  Best is to use a pattern that will never match a
 normal file name, for example "ftp://*".
 
-The |v:cmdarg| variable holds the "++cc=" and "++ff=" argument that are
+When defining a BufReadCmd it will be difficult for Vim to recover a crashed
+editing session.  When recovering from the original file, Vim reads only those
+parts of a file that are not found in the swap file.  Since that is not
+possible with a BufReadCmd, use the |:preserve| command to make sure the
+original file isn't needed for recovery.  You might want to do this only when
+you expect the file to be modified.
+
+The |v:cmdarg| variable holds the "++enc=" and "++ff=" argument that are
 effective.  These should be used for the command that reads/writes the file.
 
 See the $VIMRUNTIME/netrw.vim for examples.

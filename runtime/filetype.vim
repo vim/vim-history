@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Feb 04
+" Last change:	2001 Feb 07
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -198,9 +198,9 @@ au BufNewFile,BufRead *.cpp
 
 " C++
 if has("fname_case")
-  au BufNewFile,BufRead *.cxx,*.c++,*.C,*.H,*.hh,*.hxx,*.hpp,*.tcc,*.inl setf cpp
+  au BufNewFile,BufRead *.cxx,*.c++,*.C,*.H,*.hh,*.hxx,*.hpp,*.moc,*.tcc,*.inl setf cpp
 else
-  au BufNewFile,BufRead *.cxx,*.c++,*.hh,*.hxx,*.hpp,*.tcc,*.inl setf cpp
+  au BufNewFile,BufRead *.cxx,*.c++,*.hh,*.hxx,*.hpp,*.moc,*.tcc,*.inl setf cpp
 endif
 
 " .h files can be C or C++, set c_syntax_for_h if you want C

@@ -1,4 +1,4 @@
-*usr_toc.txt*	For Vim version 6.0u.  Last change: 2001 Jan 21
+*usr_toc.txt*	For Vim version 6.0v.  Last change: 2001 Feb 08
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -181,7 +181,7 @@ Make Vim work as you like it.
 		regions, synchronizing)
 
 |usr_45.txt|  Select your language
-		(multi-lang features, menutrans, 'charcode')
+		(multi-lang features, menutrans, 'encoding')
 
 ==============================================================================
 Making Vim Run ~

@@ -5483,7 +5483,7 @@ nv_replace(cap)
     if (ve_flags == VE_ALL && curwin->w_coladd)
     {
 	u_save_cursor();
-	coladvance_force(getviscol());
+	coladvance_force(getviscol() + 1);
     }
 #endif
 
@@ -5682,7 +5682,7 @@ nv_Replace(cap)
 	    /* If virtual editing is ON, we have to make sure the cursor
 	     * position is identical with the text position. */
 	    if (ve_flags == VE_ALL && curwin->w_coladd)
-		coladvance_force(getviscol());
+		coladvance_force(getviscol() + 1);
 #endif
 	    /* This is a new edit command, not a restart.  We don't edit
 	     * recursively. */

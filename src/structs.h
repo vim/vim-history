@@ -581,6 +581,44 @@ typedef struct attr_entry
     } ae_u;
 } attrentry_t;
 
+#ifdef USE_ICONV
+# ifdef HAVE_ICONV_H
+#  include <iconv.h>
+# else
+#  include <errno.h>
+typedef void *iconv_t;
+# endif
+#endif
+
+/*
+ * Used for conversion of terminal I/O and script files.
+ */
+typedef struct
+{
+    int		vc_type;		/* zero or one of the CONV_ values */
+    int		vc_factor;		/* max. expansion factor */
+# ifdef USE_ICONV
+    iconv_t	vc_fd;			/* for CONV_ICONV */
+# endif
+} vimconv_t;
+
+/*
+ * Structure used for reading from the viminfo file.
+ */
+typedef struct
+{
+    char_u	*vir_line;	/* text of the current line */
+    FILE	*vir_fd;	/* file descriptor */
+#ifdef FEAT_MBYTE
+    vimconv_t	vir_conv;	/* encoding conversion */
+#endif
+} vir_t;
+
+#define CONV_NONE	0
+#define CONV_TO_UTF8	1
+#define CONV_TO_LATIN1	2
+#define CONV_ICONV	3
+
 /*
  * Structure used for mappings and abbreviations.
  */
@@ -595,6 +633,15 @@ struct mapblock
     int		m_noremap;	/* if non-zero no re-mapping for m_str */
     scid_t	m_script_ID;	/* ID of script where map was defined,
 				   used for s: variables and functions */
+};
+
+/*
+ * Used for highlighting in the status line.
+ */
+struct stl_hlrec
+{
+    char_u	*start;
+    int		userhl;
 };
 
 /*
@@ -776,7 +823,7 @@ struct file_buffer
     int		b_p_et;		/* 'expandtab' */
     int		b_p_et_nobin;	/* b_p_et saved for binary mode */
 #ifdef FEAT_MBYTE
-    char_u	*b_p_fcc;	/* 'filecharcode' */
+    char_u	*b_p_fenc;	/* 'fileencoding' */
 #endif
     char_u	*b_p_ff;	/* 'fileformat' */
 #ifdef FEAT_AUTOCMD
@@ -857,7 +904,7 @@ struct file_buffer
 
     int		b_start_ffc;	/* first char of 'ff' when edit started */
 #ifdef FEAT_MBYTE
-    char_u	*b_start_fcc;	/* 'filecharcode' when edit started or NULL */
+    char_u	*b_start_fenc;	/* 'fileencoding' when edit started or NULL */
 #endif
 
 #ifdef FEAT_EVAL

@@ -1,4 +1,4 @@
-README_amisrc.txt for version 6.0u of Vim: Vi IMproved.
+README_amisrc.txt for version 6.0v of Vim: Vi IMproved.
 
 See "README.txt" for general information about Vim.
 See "README_ami.txt" for installation instructions for the Amiga.

@@ -56,7 +56,7 @@ static void	clear_wininfo __ARGS((buf_t *buf));
     int
 open_buffer(read_stdin, eap)
     int		read_stdin;	    /* read file from stdin */
-    exarg_t	*eap;		    /* for forced 'ff' and 'fcc' or NULL */
+    exarg_t	*eap;		    /* for forced 'ff' and 'fenc' or NULL */
 {
     int		retval = OK;
 #ifdef FEAT_AUTOCMD
@@ -112,8 +112,40 @@ open_buffer(read_stdin, eap)
     }
     else if (read_stdin)
     {
+	int		save_bin = curbuf->b_p_bin;
+	linenr_t	line_count;
+
+	/*
+	 * First read the text in binary mode into the buffer.
+	 * Then read from that same buffer and append at the end.  This makes
+	 * it possible to retry when 'fileformat' or 'fileencoding' was
+	 * guessed wrong.
+	 */
+	curbuf->b_p_bin = TRUE;
 	retval = readfile(NULL, NULL, (linenr_t)0,
 		  (linenr_t)0, (linenr_t)MAXLNUM, eap, READ_NEW + READ_STDIN);
+	curbuf->b_p_bin = save_bin;
+	if (retval == OK)
+	{
+	    line_count = curbuf->b_ml.ml_line_count;
+	    retval = readfile(NULL, NULL, (linenr_t)line_count,
+			    (linenr_t)0, (linenr_t)MAXLNUM, eap, READ_BUFFER);
+	    if (retval == OK)
+	    {
+		/* Delete the binary lines. */
+		while (--line_count >= 0)
+		    ml_delete((linenr_t)1, FALSE);
+	    }
+	    else
+	    {
+		/* Delete the converted lines. */
+		while (curbuf->b_ml.ml_line_count > line_count)
+		    ml_delete(line_count, FALSE);
+	    }
+#ifdef FEAT_AUTOCMD
+	    apply_autocmds(EVENT_STDINREADPOST, NULL, NULL, FALSE, curbuf);
+#endif
+	}
     }
 
     /* if first time loading this buffer, init b_chartab[] */
@@ -336,8 +368,10 @@ close_buffer(win, buf, action)
 	     * ":bdel" compatible with Vim 5.7. */
 	    free_buffer_stuff(buf);
 
+	    /* Make it look like a new buffer. */
+	    buf->b_flags = BF_CHECK_RO | BF_NEVERLOADED;
+
 	    /* Init the options when loaded again. */
-	    buf->b_flags |= BF_NOTEDITED;
 	    buf->b_p_initialized = FALSE;
 	}
 	buf_clear_file(buf);
@@ -446,8 +480,8 @@ free_buffer_stuff(buf)
 #endif
     free_buf_options(buf, TRUE);
 #ifdef FEAT_MBYTE
-    vim_free(buf->b_start_fcc);
-    buf->b_start_fcc = NULL;
+    vim_free(buf->b_start_fenc);
+    buf->b_start_fenc = NULL;
 #endif
 }
 
@@ -469,6 +503,72 @@ clear_wininfo(buf)
 	vim_free(wip);
     }
 }
+
+#if defined(FEAT_LISTCMDS) || defined(PROTO)
+/*
+ * Go to another buffer.  Handles the result of the ATTENTION dialog.
+ */
+    void
+goto_buffer(eap, start, dir, count)
+    exarg_t	*eap;
+    int		start;
+    int		dir;
+    int		count;
+{
+# if defined(FEAT_WINDOWS) \
+		&& (defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG))
+    buf_t	*old_curbuf = curbuf;
+
+    swap_exists_action = SEA_DIALOG;
+# endif
+    (void)do_buffer(*eap->cmd == 's' ? DOBUF_SPLIT : DOBUF_GOTO,
+					     start, dir, count, eap->forceit);
+# if defined(FEAT_WINDOWS) \
+		&& (defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG))
+    if (swap_exists_action == SEA_QUIT && *eap->cmd == 's')
+    {
+	/* Quitting means closing the split window, nothing else. */
+	win_close(curwin, TRUE);
+	swap_exists_action = SEA_NONE;
+    }
+    else
+	handle_swap_exists(old_curbuf);
+# endif
+}
+#endif
+
+#if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG) || defined(PROTO)
+/*
+ * Handle the situation of swap_exists_action being set.
+ * It is allowed for "old_curbuf" to be NULL or invalid.
+ */
+    void
+handle_swap_exists(old_curbuf)
+    buf_t	*old_curbuf;
+{
+    if (swap_exists_action == SEA_QUIT)
+    {
+	/* User selected Quit at ATTENTION prompt.  Go back to previous
+	 * buffer.  If that buffer is gone or the same as the current one,
+	 * open a new, empty buffer. */
+	swap_exists_action = SEA_NONE;	/* don't want it again */
+	close_buffer(curwin, curbuf, DOBUF_UNLOAD);
+	if (!buf_valid(old_curbuf) || old_curbuf == curbuf)
+	    old_curbuf = buflist_new(NULL, NULL, 1L, TRUE, TRUE);
+	enter_buffer(old_curbuf);
+    }
+    else if (swap_exists_action == SEA_RECOVER)
+    {
+	/* User selected Recover at ATTENTION prompt. */
+	msg_scroll = TRUE;
+	ml_recover();
+	MSG_PUTS("\n");	/* don't overwrite the last message */
+	cmdline_row = msg_row;
+	do_modelines();
+    }
+    swap_exists_action = SEA_NONE;
+}
+#endif
 
 #if defined(FEAT_LISTCMDS) || defined(PROTO)
 /*
@@ -544,7 +644,7 @@ do_bufdel(command, arg, addr_count, start_bnr, end_bnr, forceit)
 		if (!isdigit(*arg))
 		{
 		    p = skiptowhite_esc(arg);
-		    bnr = buflist_findpat(arg, p);
+		    bnr = buflist_findpat(arg, p, command == DOBUF_WIPE);
 		    if (bnr < 0)	    /* failed */
 			break;
 		    arg = p;
@@ -711,6 +811,11 @@ do_buffer(action, start, dir, count, forceit)
     {
 	int	forward;
 	int	retval;
+
+	/* When unloading or deleting a buffer that's already unloaded and
+	 * unlisted: fail silently. */
+	if (action != DOBUF_WIPE && buf->b_ml.ml_mfp == NULL && !buf->b_p_bl)
+	    return FAIL;
 
 	if (!forceit && bufIsChanged(buf))
 	{
@@ -1182,7 +1287,7 @@ buflist_new(ffname, sfname, lnum, use_curbuf, listed)
 /*
  * Free the memory for the options of a buffer.
  * If "free_p_ff" is TRUE also free 'fileformat', 'buftype' and
- * 'filecharcode'.
+ * 'fileencoding'.
  */
     void
 free_buf_options(buf, free_p_ff)
@@ -1192,7 +1297,7 @@ free_buf_options(buf, free_p_ff)
     if (free_p_ff)
     {
 #ifdef FEAT_MBYTE
-	clear_string_option(&buf->b_p_fcc);
+	clear_string_option(&buf->b_p_fenc);
 #endif
 	clear_string_option(&buf->b_p_ff);
 #ifdef FEAT_QUICKFIX
@@ -1413,9 +1518,10 @@ buflist_findname_stat(ffname, stp)
  * Return < 0 for error.
  */
     int
-buflist_findpat(pattern, pattern_end)
+buflist_findpat(pattern, pattern_end, unlisted)
     char_u	*pattern;
     char_u	*pattern_end;	/* pointer to first char after pattern */
+    int		unlisted;	/* find unlisted buffers */
 {
     buf_t	*buf;
     regprog_t	*prog;
@@ -1465,7 +1571,8 @@ buflist_findpat(pattern, pattern_end)
 	    }
 
 	    for (buf = firstbuf; buf != NULL; buf = buf->b_next)
-		if (buflist_match(prog, buf) != NULL)
+		if ((buf->b_p_bl || unlisted)
+			&& buflist_match(prog, buf) != NULL)
 		{
 		    if (match >= 0)		/* already found a match */
 		    {
@@ -1539,6 +1646,8 @@ ExpandBufnames(pat, num_file, file, options)
 	    count = 0;
 	    for (buf = firstbuf; buf != NULL; buf = buf->b_next)
 	    {
+		if (!buf->b_p_bl)	/* skip unlisted buffers */
+		    continue;
 		p = buflist_match(prog, buf);
 		if (p != NULL)
 		{
@@ -2393,7 +2502,7 @@ maketitle()
 	{
 #ifdef FEAT_STL_OPT
 	    if (stl_syntax & STL_IN_TITLE)
-		build_stl_str(curwin, t_str, p_titlestring, 0, maxlen);
+		build_stl_str_hl(curwin, t_str, p_titlestring, 0, maxlen, NULL);
 	    else
 #endif
 		t_str = p_titlestring;
@@ -2486,7 +2595,7 @@ maketitle()
 	{
 #ifdef FEAT_STL_OPT
 	    if (stl_syntax & STL_IN_ICON)
-		build_stl_str(curwin, i_str, p_iconstring, 0, 0);
+		build_stl_str_hl(curwin, i_str, p_iconstring, 0, 0, NULL);
 	    else
 #endif
 		i_str = p_iconstring;
@@ -2544,6 +2653,636 @@ resettitle()
     mch_settitle(lasttitle, lasticon);
 }
 #endif /* FEAT_TITLE */
+
+#if defined(FEAT_STL_OPT) || defined(PROTO)
+/*
+ * Build a string from the status line items in fmt, return length of string.
+ *
+ * Items are drawn interspersed with the text that surrounds it
+ * Specials: %-<wid>(xxx%) => group, %= => middle marker, %< => truncation
+ * Item: %-<minwid>.<maxwid><itemch> All but <itemch> are optional
+ *
+ * if maxlen is not zero, the string will be filled at any middle marker
+ * or truncated if too long, fillchar is used for all whitespace
+ */
+    int
+build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
+    win_t	*wp;
+    char_u	*out;
+    char_u	*fmt;
+    int		fillchar;
+    int		maxlen;
+    struct stl_hlrec *hl;
+{
+    char_u	*p;
+    char_u	*s;
+    char_u	*t;
+    char_u	*linecont;
+#ifdef FEAT_EVAL
+    win_t	*o_curwin;
+    buf_t	*o_curbuf;
+#endif
+    int		empty_line;
+    colnr_t	virtcol;
+    long	l;
+    long	n;
+    int		prevchar_isflag;
+    int		prevchar_isitem;
+    int		itemisflag;
+    char_u	*str;
+    long	num;
+    int		itemcnt;
+    int		curitem;
+    int		groupitem[STL_MAX_ITEM];
+    int		groupdepth;
+    struct stl_item
+    {
+	char_u		*start;
+	int		minwid;
+	int		maxwid;
+	enum
+	{
+	    Normal,
+	    Empty,
+	    Group,
+	    Middle,
+	    Highlight,
+	    Trunc
+	}		type;
+    }		item[STL_MAX_ITEM];
+    int		minwid;
+    int		maxwid;
+    int		zeropad;
+    char_u	base;
+    char_u	opt;
+    char_u	tmp[70];
+
+    if (!fillchar)
+	fillchar = ' ';
+    /*
+     * Get line & check if empty (cursorpos will show "0-1").
+     * If inversion is possible we use it. Else '=' characters are used.
+     */
+    linecont = ml_get_buf(wp->w_buffer, wp->w_cursor.lnum, FALSE);
+    empty_line = (*linecont == NUL);
+
+    groupdepth = 0;
+    p = out;
+    curitem = 0;
+    prevchar_isflag = TRUE;
+    prevchar_isitem = FALSE;
+    for (s = fmt; *s;)
+    {
+	if (*s && *s != '%')
+	    prevchar_isflag = prevchar_isitem = FALSE;
+	while (*s && *s != '%')
+	    *p++ = *s++;
+	if (!*s)
+	    break;
+	s++;
+	if (*s == '%')
+	{
+	    *p++ = *s++;
+	    prevchar_isflag = prevchar_isitem = FALSE;
+	    continue;
+	}
+	if (*s == STL_MIDDLEMARK)
+	{
+	    s++;
+	    if (groupdepth > 0)
+		continue;
+	    item[curitem].type = Middle;
+	    item[curitem++].start = p;
+	    continue;
+	}
+	if (*s == STL_TRUNCMARK)
+	{
+	    s++;
+	    item[curitem].type = Trunc;
+	    item[curitem++].start = p;
+	    continue;
+	}
+	if (*s == ')')
+	{
+	    s++;
+	    if (groupdepth < 1)
+		continue;
+	    groupdepth--;
+	    l = p - item[groupitem[groupdepth]].start;
+	    if (curitem > groupitem[groupdepth] + 1
+		    && item[groupitem[groupdepth]].minwid == 0)
+	    {			    /* remove group if all items are empty */
+		for (n = groupitem[groupdepth] + 1; n < curitem; n++)
+		    if (item[n].type == Normal)
+			break;
+		if (n == curitem)
+		    p = item[groupitem[groupdepth]].start;
+	    }
+	    if (item[groupitem[groupdepth]].maxwid < l)
+	    {					    /* truncate */
+		n = item[groupitem[groupdepth]].maxwid;
+		mch_memmove(item[groupitem[groupdepth]].start,
+			    item[groupitem[groupdepth]].start + l - n,
+			    (size_t)n);
+		t = item[groupitem[groupdepth]].start;
+		*t = '<';
+		l -= n;
+		p -= l;
+		for (n = groupitem[groupdepth] + 1; n < curitem; n++)
+		{
+		    item[n].start -= l;
+		    if (item[n].start < t)
+			item[n].start = t;
+		}
+	    }
+	    else if (abs(item[groupitem[groupdepth]].minwid) > l)
+	    {					    /* fill */
+		n = item[groupitem[groupdepth]].minwid;
+		if (n < 0)
+		{
+		    n = 0 - n;
+		    while (l++ < n)
+			*p++ = fillchar;
+		}
+		else
+		{
+		    mch_memmove(item[groupitem[groupdepth]].start + n - l,
+			        item[groupitem[groupdepth]].start,
+			        (size_t)l);
+		    l = n - l;
+		    p += l;
+		    for (n = groupitem[groupdepth] + 1; n < curitem; n++)
+			item[n].start += l;
+		    for (t = item[groupitem[groupdepth]].start; l > 0; l--)
+			*t++ = fillchar;
+		}
+	    }
+	    continue;
+	}
+	minwid = 0;
+	maxwid = 50;
+	zeropad = FALSE;
+	l = 1;
+	if (*s == '0')
+	{
+	    s++;
+	    zeropad = TRUE;
+	}
+	if (*s == '-')
+	{
+	    s++;
+	    l = -1;
+	}
+	while (*s && isdigit(*s))
+	{
+	    minwid *= 10;
+	    minwid += *s - '0';
+	    s++;
+	}
+	if (*s == STL_HIGHLIGHT)
+	{
+	    item[curitem].type = Highlight;
+	    item[curitem].start = p;
+	    item[curitem].minwid = minwid > 9 ? 1 : minwid;
+	    s++;
+	    curitem++;
+	    continue;
+	}
+	if (*s == '.')
+	{
+	    s++;
+	    if (isdigit(*s))
+		maxwid = 0;
+	    while (*s && isdigit(*s))
+	    {
+		maxwid *= 10;
+		maxwid += *s - '0';
+		s++;
+	    }
+	}
+	minwid = (minwid > 50 ? 50 : minwid) * l;
+	if (*s == '(')
+	{
+	    groupitem[groupdepth++] = curitem;
+	    item[curitem].type = Group;
+	    item[curitem].start = p;
+	    item[curitem].minwid = minwid;
+	    item[curitem].maxwid = maxwid;
+	    s++;
+	    curitem++;
+	    continue;
+	}
+	if (vim_strchr(STL_ALL, *s) == NULL)
+	{
+	    s++;
+	    continue;
+	}
+	opt = *s++;
+
+	/* OK - now for the real work */
+	base = 'D';
+	itemisflag = FALSE;
+	num = -1;
+	str = NULL;
+	switch (opt)
+	{
+	case STL_FILEPATH:
+	case STL_FULLPATH:
+	case STL_FILENAME:
+	    if (buf_spname(wp->w_buffer) != NULL)
+		STRCPY(NameBuff, buf_spname(wp->w_buffer));
+	    else
+	    {
+		t = (opt == STL_FULLPATH) ? wp->w_buffer->b_ffname
+					: wp->w_buffer->b_fname;
+		home_replace(wp->w_buffer, t, NameBuff, MAXPATHL, TRUE);
+		trans_characters(NameBuff, MAXPATHL);
+	    }
+	    if (opt != STL_FILENAME)
+		str = NameBuff;
+	    else
+		str = gettail(NameBuff);
+	    break;
+
+	case STL_VIM_EXPR: /* '{' */
+	    itemisflag = TRUE;
+	    t = p;
+	    while (*s != '}')
+		*p++ = *s++;
+	    s++;
+	    *p = 0;
+	    p = t;
+
+#ifdef FEAT_EVAL
+	    sprintf((char *)tmp, "%d", curbuf->b_fnum);
+	    set_internal_string_var((char_u *)"actual_curbuf", tmp);
+
+	    o_curbuf = curbuf;
+	    o_curwin = curwin;
+	    curwin = wp;
+	    curbuf = wp->w_buffer;
+
+	    str = eval_to_string_safe(p, &t);
+
+	    curwin = o_curwin;
+	    curbuf = o_curbuf;
+	    do_unlet((char_u *)"g:actual_curbuf");
+
+	    if (str != NULL && *str != 0)
+	    {
+		t = str;
+		if (*t == '-')
+		    t++;
+		while (*t && isdigit(*t))
+		    t++;
+		if (*t == 0)
+		{
+		    num = atoi((char *) str);
+		    vim_free(str);
+		    str = NULL;
+		    itemisflag = FALSE;
+		}
+	    }
+#endif
+	    break;
+
+	case STL_LINE:
+	    num = (wp->w_buffer->b_ml.ml_flags & ML_EMPTY)
+		  ? 0L : (long)(wp->w_cursor.lnum);
+	    break;
+
+	case STL_NUMLINES:
+	    num = wp->w_buffer->b_ml.ml_line_count;
+	    break;
+
+	case STL_COLUMN:
+	    num = !(State & INSERT) && empty_line
+		  ? 0 : (int)wp->w_cursor.col + 1;
+	    break;
+
+	case STL_VIRTCOL:
+	case STL_VIRTCOL_ALT:
+	    /* In list mode virtcol needs to be recomputed */
+	    virtcol = wp->w_virtcol;
+	    if (wp->w_p_list && lcs_tab1 == NUL)
+	    {
+		wp->w_p_list = FALSE;
+		getvcol(wp, &wp->w_cursor, NULL, &virtcol, NULL);
+		wp->w_p_list = TRUE;
+	    }
+	    /* Don't display %V if it's the same as %c. */
+	    if (opt == STL_VIRTCOL_ALT
+		    && (virtcol == (colnr_t)(!(State & INSERT) && empty_line
+			    ? 0 : (int)wp->w_cursor.col)))
+		break;
+	    num = (long)virtcol + 1;
+	    break;
+
+	case STL_PERCENTAGE:
+	    num = (int)(((long)wp->w_cursor.lnum * 100L) /
+			(long)wp->w_buffer->b_ml.ml_line_count);
+	    break;
+
+	case STL_ALTPERCENT:
+	    str = tmp;
+	    get_rel_pos(wp, str);
+	    break;
+
+	case STL_ARGLISTSTAT:
+	    tmp[0] = 0;
+	    if (append_arg_number(wp, tmp, FALSE, (int)sizeof(tmp)))
+		str = tmp;
+	    break;
+
+	case STL_BUFNO:
+	    num = wp->w_buffer->b_fnum;
+	    break;
+
+	case STL_OFFSET_X:
+	    base= 'X';
+	case STL_OFFSET:
+#ifdef FEAT_BYTEOFF
+	    l = ml_find_line_or_offset(wp->w_buffer, wp->w_cursor.lnum, NULL);
+	    num = (wp->w_buffer->b_ml.ml_flags & ML_EMPTY) || l < 0 ?
+		  0L : l + 1 + (!(State & INSERT) && empty_line ?
+			        0 : (int)wp->w_cursor.col);
+#endif
+	    break;
+
+	case STL_BYTEVAL_X:
+	    base= 'X';
+	case STL_BYTEVAL:
+	    if ((State & INSERT) || empty_line)
+		num = 0;
+	    else
+	    {
+		num = linecont[wp->w_cursor.col];
+#ifdef FEAT_MBYTE
+		if (enc_dbcs && MB_BYTE2LEN((int)num) > 1)
+		    num = (num << 8) + linecont[wp->w_cursor.col + 1];
+		else if (enc_utf8)
+		    num = utf_ptr2char(linecont + wp->w_cursor.col);
+#endif
+	    }
+	    if (num == NL)
+		num = 0;
+	    else if (num == CR && get_fileformat(wp->w_buffer) == EOL_MAC)
+		num = NL;
+	    break;
+
+	case STL_ROFLAG:
+	case STL_ROFLAG_ALT:
+	    itemisflag = TRUE;
+	    if (wp->w_buffer->b_p_ro)
+		str = (char_u *)((opt == STL_ROFLAG_ALT) ? ",RO" : "[RO]");
+	    break;
+
+	case STL_HELPFLAG:
+	case STL_HELPFLAG_ALT:
+	    itemisflag = TRUE;
+	    if (wp->w_buffer->b_help)
+		str = (char_u *)((opt == STL_HELPFLAG_ALT) ? ",HLP"
+							       : _("[help]"));
+	    break;
+
+#ifdef FEAT_AUTOCMD
+	case STL_FILETYPE:
+	    if (*wp->w_buffer->b_p_ft != NUL)
+	    {
+		sprintf((char *)tmp, "[%s]", wp->w_buffer->b_p_ft);
+		str = tmp;
+	    }
+	    break;
+
+	case STL_FILETYPE_ALT:
+	    itemisflag = TRUE;
+	    if (*wp->w_buffer->b_p_ft != NUL)
+	    {
+		sprintf((char *)tmp, ",%s", wp->w_buffer->b_p_ft);
+		for (t = tmp; *t != 0; t++)
+                    *t = TO_UPPER(*t);
+		str = tmp;
+	    }
+	    break;
+#endif
+
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
+	case STL_PREVIEWFLAG:
+	case STL_PREVIEWFLAG_ALT:
+	    itemisflag = TRUE;
+	    if (wp->w_p_pvw)
+		str = (char_u *)((opt == STL_PREVIEWFLAG_ALT) ? ",PRV"
+							    : _("[Preview]"));
+	    break;
+#endif
+
+	case STL_MODIFIED:
+	case STL_MODIFIED_ALT:
+	    itemisflag = TRUE;
+	    switch ((opt == STL_MODIFIED_ALT)
+		    + bufIsChanged(wp->w_buffer) * 2
+		    + (!wp->w_buffer->b_p_ma) * 4)
+	    {
+		case 2: str = (char_u *)"[+]"; break;
+		case 3: str = (char_u *)",+"; break;
+		case 4: str = (char_u *)"[-]"; break;
+		case 5: str = (char_u *)",-"; break;
+		case 6: str = (char_u *)"[+-]"; break;
+		case 7: str = (char_u *)",+-"; break;
+	    }
+	    break;
+	}
+
+	item[curitem].start = p;
+	item[curitem].type = Normal;
+	if (str != NULL && *str)
+	{
+	    t = str;
+	    if (itemisflag)
+	    {
+		if ((t[0] && t[1])
+			&& ((!prevchar_isitem && *t == ',')
+			      || (prevchar_isflag && *t == ' ')))
+		    t++;
+		prevchar_isflag = TRUE;
+	    }
+	    l = STRLEN(t);
+	    if (l > 0)
+		prevchar_isitem = TRUE;
+	    if (l > maxwid)
+	    {
+		t += (l - maxwid + 1);
+		*p++ = '<';
+	    }
+	    if (minwid > 0)
+	    {
+		for (; l < minwid; l++)
+		    *p++ = fillchar;
+		minwid = 0;
+	    }
+	    else
+		minwid *= -1;
+	    while (*t)
+	    {
+		*p++ = *t++;
+		if (p[-1] == ' ')
+		    p[-1] = fillchar;
+	    }
+	    for (; l < minwid; l++)
+		*p++ = fillchar;
+	}
+	else if (num >= 0)
+	{
+	    int nbase = (base == 'D' ? 10 : (base == 'O' ? 8 : 16));
+	    char_u nstr[20];
+
+	    prevchar_isitem = TRUE;
+	    t = nstr;
+	    if (opt == STL_VIRTCOL_ALT)
+	    {
+		*t++ = '-';
+		minwid--;
+	    }
+	    *t++ = '%';
+	    if (zeropad)
+		*t++ = '0';
+	    *t++ = '*';
+	    *t++ = nbase == 16 ? base : (nbase == 8 ? 'o' : 'd');
+	    *t = 0;
+
+	    for (n = num, l = 1; n >= nbase; n /= nbase)
+		l++;
+	    if (opt == STL_VIRTCOL_ALT)
+		l++;
+	    if (l > maxwid)
+	    {
+		l += 2;
+		n = l - maxwid;
+		while (l-- > maxwid)
+		    num /= nbase;
+		*t++ = '>';
+		*t++ = '%';
+		*t = t[-3];
+		*++t = 0;
+		sprintf((char *) p, (char *) nstr, 0, num, n);
+	    }
+	    else
+		sprintf((char *) p, (char *) nstr, minwid, num);
+	    p += STRLEN(p);
+	}
+	else
+	    item[curitem].type = Empty;
+
+	if (opt == STL_VIM_EXPR)
+	    vim_free(str);
+
+	if (num >= 0 || (!itemisflag && str && *str))
+	    prevchar_isflag = FALSE;	    /* Item not NULL, but not a flag */
+	curitem++;
+    }
+    *p = 0;
+    itemcnt = curitem;
+    num = STRLEN(out);
+
+    if (maxlen && num > maxlen)
+    {					    /* Apply STL_TRUNC */
+	for (l = 0; l < itemcnt; l++)
+	    if (item[l].type == Trunc)
+		break;
+	if (itemcnt == 0)
+	    s = out;
+	else
+	{
+	    l = l == itemcnt ? 0 : l;
+	    s = item[l].start;
+	}
+	if ((int) (s - out) > maxlen)
+	{   /* Truncation mark is beyond max length */
+	    s = out + maxlen - 1;
+	    for (l = 0; l < itemcnt; l++)
+		if (item[l].start > s)
+		    break;
+	    *s++ = '>';
+	    *s = 0;
+	    itemcnt = l;
+	}
+	else
+	{
+	    int		shift = num - maxlen;
+
+	    p = s + shift;
+	    mch_memmove(s, p, STRLEN(p) + 1);
+	    *s = '<';
+	    for (; l < itemcnt; l++)
+	    {
+		if (item[l].start - shift >= out)
+		    item[l].start -= shift;
+		else
+		    item[l].start = out;
+	    }
+	}
+	num = maxlen;
+    }
+    else if (num < maxlen)
+    {					    /* Apply STL_MIDDLE if any */
+	for (l = 0; l < itemcnt; l++)
+	    if (item[l].type == Middle)
+		break;
+	if (l < itemcnt)
+	{
+	    p = item[l].start + maxlen - num;
+	    mch_memmove(p, item[l].start, STRLEN(item[l].start) + 1);
+	    for (s = item[l].start; s < p; s++)
+		*s = fillchar;
+	    for (l++; l < itemcnt; l++)
+		item[l].start += maxlen - num;
+	    num = maxlen;
+	}
+    }
+
+    if (hl != NULL)
+    {
+	for (l = 0; l < itemcnt; l++)
+	{
+	    if (item[l].type == Highlight)
+	    {
+		hl->start = item[l].start;
+		hl->userhl = item[l].minwid;
+		hl++;
+	    }
+	}
+	hl->start = NULL;
+	hl->userhl = 0;
+    }
+
+    return (int)num;
+}
+#endif /* FEAT_STL_OPT */
+
+#if defined(FEAT_STL_OPT) || defined(FEAT_CMDL_INFO) || defined(PROTO)
+/*
+ * Get relative cursor position in window, in the form 99%, using "Top", "Bot"
+ * or "All" when appropriate.
+ */
+    void
+get_rel_pos(wp, str)
+    win_t	*wp;
+    char_u	*str;
+{
+    long	above; /* number of lines above window */
+    long	below; /* number of lines below window */
+
+    above = wp->w_topline - 1;
+    below = wp->w_buffer->b_ml.ml_line_count - wp->w_botline + 1;
+    if (below <= 0)
+	STRCPY(str, above == 0 ? _("All") : _("Bot"));
+    else if (above <= 0)
+	STRCPY(str, _("Top"));
+    else
+	sprintf((char *)str, "%2d%%",
+		(int)(above * 100 / (above + below)));
+}
+#endif
 
 /*
  * Append (file 2 of 8) to 'buf', if editing more than one file.
@@ -3175,9 +3914,8 @@ chk_modeline(lnum)
 
 #ifdef FEAT_VIMINFO
     int
-read_viminfo_bufferlist(line, fp, writing)
-    char_u	*line;
-    FILE	*fp;
+read_viminfo_bufferlist(virp, writing)
+    vir_t	*virp;
     int		writing;
 {
     char_u	*tab;
@@ -3188,7 +3926,7 @@ read_viminfo_bufferlist(line, fp, writing)
     char_u	*xline;
 
     /* Handle long line and escaped characters. */
-    xline = viminfo_readstring(line + 1, fp);
+    xline = viminfo_readstring(virp, 1, FALSE);
 
     /* don't read in if there are files on the command-line or if writing: */
     if (xline != NULL && !writing && ARGCOUNT == 0
@@ -3229,7 +3967,7 @@ read_viminfo_bufferlist(line, fp, writing)
     }
     vim_free(xline);
 
-    return vim_fgets(line, LSIZE, fp);
+    return viminfo_readline(virp);
 }
 
     void

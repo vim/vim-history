@@ -1,12 +1,14 @@
 " Menu Translations:	Italian
 " Maintainer:		Antonio Colombo <antonio.colombo@jrc.org>
-" Last Change:	2001 Jan 16
+" Last Change:	2001 Feb 11
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
   finish
 endif
 let did_menu_trans = 1
+
+scriptencoding iso-8859-1
 
 " Help menu
 menutrans &Help			&Aiuto

@@ -525,7 +525,7 @@
 #endif
 
 /*
- * Add "debug" for 'charcode': make uppercase ASCII characters be handled like
+ * Add "debug" for 'encoding': make uppercase ASCII characters be handled like
  * double-byte characters.
  */
 #define MB_DEBUG

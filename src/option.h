@@ -76,28 +76,11 @@
 
 
 #ifdef FEAT_MBYTE
-/* Possible values for 'charcode' */
-# define CC_ANSI	"ansi"
-# define CC_LATIN1	"latin-1"
-# define CC_UNICODE	"unicode"
-# define CC_UCS2	"ucs-2"
-# define CC_UCS2BE	"ucs-2be"
-# define CC_UCS2LE	"ucs-2le"
-# define CC_UCS4	"ucs-4"
-# define CC_UCS4BE	"ucs-4be"
-# define CC_UCS4LE	"ucs-4le"
-# define CC_UCS4BL	"ucs-4bl"
-# define CC_UCS4LB	"ucs-4lb"
-# define CC_UCSBOM	"ucs-bom"	/* check for BOM at start of file */
-# define CC_UTF8	"utf-8"
-# define CC_DBJPN	"japan"
-# define CC_DBKOR	"korea"
-# define CC_DBCHT	"taiwan"
-# define CC_DBCHS	"prc"
-# define CC_DEBUG	"debug"		/* for debugging only */
+/* Possible values for 'encoding' */
+# define ENC_UCSBOM	"ucs-bom"	/* check for BOM at start of file */
 
-/* default value for 'charcode' */
-# define CC_DFLT	CC_LATIN1
+/* default value for 'encoding' */
+# define ENC_DFLT	"latin1"
 #endif
 
 /* end-of-line style */
@@ -305,7 +288,7 @@ EXTERN int	p_consk;	/* 'conskey' */
 EXTERN char_u	*p_breakat;	/* 'breakat' */
 #endif
 #ifdef FEAT_MBYTE
-EXTERN char_u	*p_cc;		/* 'charcode' */
+EXTERN char_u	*p_enc;		/* 'encoding' */
 EXTERN int	p_deco;		/* 'delcombine' */
 # ifdef FEAT_EVAL
 EXTERN char_u	*p_ccv;		/* 'charconvert' */
@@ -361,7 +344,7 @@ EXTERN char_u	*p_ei;		/* 'eventignore' */
 EXTERN int	p_ek;		/* 'esckeys' */
 EXTERN int	p_exrc;		/* 'exrc' */
 #ifdef FEAT_MBYTE
-EXTERN char_u	*p_fccs;	/* 'filecharcodes' */
+EXTERN char_u	*p_fencs;	/* 'fileencodings' */
 #endif
 EXTERN char_u	*p_ffs;		/* 'fileformats' */
 #ifdef FEAT_FOLDING
@@ -594,6 +577,9 @@ EXTERN long	p_tl;		/* 'taglength' */
 EXTERN int	p_tr;		/* 'tagrelative' */
 EXTERN char_u	*p_tags;	/* 'tags' */
 EXTERN int	p_tgst;		/* 'tagstack' */
+#ifdef FEAT_MBYTE
+EXTERN char_u	*p_tenc;	/* 'termencoding' */
+#endif
 EXTERN int	p_terse;	/* 'terse' */
 EXTERN int	p_ta;		/* 'textauto' */
 EXTERN int	p_to;		/* 'tildeop' */
@@ -649,9 +635,9 @@ EXTERN unsigned ve_flags;
 # ifdef IN_OPTION_C
 static char *(p_ve_values[]) = {"block", "insert", "all", NULL};
 # endif
-# define VE_BLOCK	1	/* flag */
-# define VE_INSERT	2	/* flag */
-# define VE_ALL		7	/* mask */
+# define VE_BLOCK	5	/* includes "all" */
+# define VE_INSERT	6	/* includes "all" */
+# define VE_ALL		4
 #endif
 EXTERN long	p_verbose;	/* 'verbose' */
 EXTERN int	p_warn;		/* 'warn' */

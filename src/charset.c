@@ -27,9 +27,9 @@ static int    chartab_initialized = FALSE;
  * characters for current buffer.
  *
  * Depends on the option settings 'iskeyword', 'isident', 'isfname',
- * 'isprint' and 'charcode'.
+ * 'isprint' and 'encoding'.
  *
- * The index in chartab[] depends on 'charcode':
+ * The index in chartab[] depends on 'encoding':
  * - For non-multi-byte index with the byte (same as the character).
  * - For DBCS index with the first byte.
  * - For UTF-8 index with the character (when first byte is up to 0x80 it is
@@ -96,10 +96,10 @@ buf_init_chartab(buf, global)
 	{
 #ifdef FEAT_MBYTE
 	    /* UTF-8: can't tell width from first byte unless it's ASCII */
-	    if (cc_utf8 && c >= 0xa0)
+	    if (enc_utf8 && c >= 0xa0)
 		chartab[c++] = CT_PRINT_CHAR + 1;
 	    /* double-byte chars can be printable AND double-width */
-	    else if (cc_dbcs && MB_BYTE2LEN(c) == 2)
+	    else if (enc_dbcs && MB_BYTE2LEN(c) == 2)
 		chartab[c++] = CT_PRINT_CHAR + 2;
 	    else
 #endif
@@ -110,7 +110,7 @@ buf_init_chartab(buf, global)
 #ifdef FEAT_MBYTE
 	/* Assume that every multi-byte char is a filename character. */
 	for (c = 1; c < 256; ++c)
-	    if ((cc_dbcs && MB_BYTE2LEN(c) > 1) || (cc_utf8 && c >= 0xa0))
+	    if ((enc_dbcs && MB_BYTE2LEN(c) > 1) || (enc_utf8 && c >= 0xa0))
 		chartab[c] |= CT_FNAME_CHAR;
 #endif
     }
@@ -122,7 +122,7 @@ buf_init_chartab(buf, global)
     {
 #ifdef FEAT_MBYTE
 	/* double-byte characters are probably word characters */
-	if (cc_dbcs && MB_BYTE2LEN(c) == 2)
+	if (enc_dbcs && MB_BYTE2LEN(c) == 2)
 	    buf->b_chartab[c] = TRUE;
 	else
 #endif
@@ -223,7 +223,7 @@ buf_init_chartab(buf, global)
 #ifdef FEAT_MBYTE
 				/* For double-byte we keep the cell width, so
 				 * that we can detect it from the first byte. */
-				&& !(cc_dbcs && MB_BYTE2LEN(c) == 2)
+				&& !(enc_dbcs && MB_BYTE2LEN(c) == 2)
 #endif
 			   )
 			{
@@ -412,7 +412,7 @@ transchar_nonprint(buf, c)
 	buf[2] = NUL;
     }
 #ifdef FEAT_MBYTE
-    else if (cc_utf8 && c >= 0x80)
+    else if (enc_utf8 && c >= 0x80)
     {
 	transchar_hex(buf, c);
     }
@@ -475,7 +475,7 @@ byte2cells(b)
     int		b;
 {
 #ifdef FEAT_MBYTE
-    if (cc_utf8 && b >= 0x80)
+    if (enc_utf8 && b >= 0x80)
 	return 0;
 #endif
     return (chartab[b] & CT_CELL_MASK);
@@ -496,10 +496,10 @@ char2cells(c)
     if (c >= 0x80)
     {
 	/* UTF-8: above 0x80 need to check the value */
-	if (cc_utf8)
+	if (enc_utf8)
 	    return utf_char2cells(c);
 	/* DBCS: double-byte means double-width */
-	if (cc_dbcs && c >= 0x100)
+	if (enc_dbcs && c >= 0x100)
 	    return 2;
     }
 #endif
@@ -516,7 +516,7 @@ ptr2cells(p)
 {
 #ifdef FEAT_MBYTE
     /* For UTF-8 we need to look at more bytes if the first byte is >= 0x80. */
-    if (cc_utf8 && *p >= 0x80)
+    if (enc_utf8 && *p >= 0x80)
 	return mb_ptr2cells(p);
     /* For DBCS we can tell the cell count from the first byte. */
 #endif
@@ -831,19 +831,16 @@ win_lbr_chartabsize(wp, s, col, headp)
      * Set *headp to the size of what we add.
      */
     added = 0;
-    if (*p_sbr != NUL && wp->w_p_wrap && col != 0
-# ifdef FEAT_VERTSPLIT
-					     && wp->w_width != 0
-# endif
-	    )
+    if (*p_sbr != NUL && wp->w_p_wrap && col != 0)
     {
 	numberextra = win_col_off(wp);
 	col += numberextra;
 	if (col >= (colnr_t)W_WIDTH(wp))
 	{
 	    col -= W_WIDTH(wp);
-	    numberextra -= win_col_off2(wp);
-	    col = col % (W_WIDTH(wp) - numberextra);
+	    numberextra = W_WIDTH(wp) - (numberextra - win_col_off2(wp));
+	    if (numberextra > 0)
+		col = col % numberextra;
 	}
 	if (col == 0 || col + size > (colnr_t)W_WIDTH(wp))
 	{
@@ -981,7 +978,7 @@ getvcol(wp, pos, start, cursor, end)
 		{
 		    /* For utf-8, if the byte is >= 0x80, need to look at
 		     * further bytes to find the cell width. */
-		    if (cc_utf8 && c >= 0x80)
+		    if (enc_utf8 && c >= 0x80)
 			incr = mb_ptr2cells(ptr);
 		    else
 			incr = CHARSIZE(c);
@@ -1391,3 +1388,65 @@ nr2hex(c)
     return (c & 0xf) - 10 + 'A';
 }
 #endif
+
+/*
+ * Return TRUE if "str" starts with a backslash that should be removed.
+ * For MS-DOS, WIN32 and OS/2 this is only done when the character after the
+ * backslash is not a normal file name character.
+ * '$' is a valid file name character, we don't remove the backslash before
+ * it.  This means it is not possible to use an environment variable after a
+ * backslash.  "C:\$VIM\doc" is taken literally, only "$VIM\doc" works.
+ * Although "\ name" is valid, the backslash in "Program\ files" must be
+ * removed.  Assume a file name doesn't start with a space.
+ * For multi-byte names, never remove a backslash before a non-ascii
+ * character, assume that all multi-byte characters are valid file name
+ * characters.
+ */
+    int
+rem_backslash(str)
+    char_u  *str;
+{
+#ifdef BACKSLASH_IN_FILENAME
+    return (str[0] == '\\'
+# ifdef FEAT_MBYTE
+	    && str[1] < 0x80
+# endif
+	    && (str[1] == ' '
+		|| (str[1] != NUL
+		    && str[1] != '*'
+		    && str[1] != '?'
+		    && !vim_isfilec(str[1]))));
+#else
+    return (str[0] == '\\' && str[1] != NUL);
+#endif
+}
+
+/*
+ * Halve the number of backslashes in a file name argument.
+ * For MS-DOS we only do this if the character after the backslash
+ * is not a normal file character.
+ */
+    void
+backslash_halve(p)
+    char_u	*p;
+{
+    for ( ; *p; ++p)
+	if (rem_backslash(p))
+	    STRCPY(p, p + 1);
+}
+
+/*
+ * backslash_halve() plus save the result in allocated memory.
+ */
+    char_u *
+backslash_halve_save(p)
+    char_u	*p;
+{
+    char_u	*res;
+
+    res = vim_strsave(p);
+    if (res == NULL)
+	return p;
+    backslash_halve(res);
+    return res;
+}

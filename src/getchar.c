@@ -2013,7 +2013,7 @@ inchar(buf, maxlen, wait_time)
 {
     int		len = 0;	    /* init for GCC */
     int		retesc = FALSE;	    /* return ESC with gotint */
-    int		c;
+    int		script_char;
     int		i;
 
     if (wait_time == -1L || wait_time > 100L)  /* flush output before waiting */
@@ -2038,12 +2038,13 @@ inchar(buf, maxlen, wait_time)
      * first try script file
      *	If interrupted: Stop reading script files.
      */
-    c = -1;
-    while (scriptin[curscript] != NULL && c < 0)
+    script_char = -1;
+    while (scriptin[curscript] != NULL && script_char < 0)
     {
-	if (got_int || (c = getc(scriptin[curscript])) < 0) /* reached EOF */
+	if (got_int || (script_char = getc(scriptin[curscript])) < 0)
 	{
-	    /* Careful: closescript() frees typebuf[] and buf[] may point
+	    /* Reached EOF.
+	     * Careful: closescript() frees typebuf[] and buf[] may point
 	     * inside typebuf[].  Don't use buf[] after this! */
 	    closescript();
 	    /*
@@ -2058,12 +2059,12 @@ inchar(buf, maxlen, wait_time)
 	}
 	else
 	{
-	    buf[0] = c;
+	    buf[0] = script_char;
 	    len = 1;
 	}
     }
 
-    if (c < 0)		/* did not get a character from script */
+    if (script_char < 0)	/* did not get a character from script */
     {
 	/*
 	 * If we got an interrupt, skip all previously typed characters and
@@ -2111,7 +2112,7 @@ inchar(buf, maxlen, wait_time)
 	    continue;
 	}
 #endif
-	if (buf[0] == NUL || (buf[0] == K_SPECIAL && c < 0))
+	if (buf[0] == NUL || (buf[0] == K_SPECIAL && script_char < 0))
 	{
 	    mch_memmove(buf + 3, buf + 1, (size_t)i);
 	    buf[2] = K_THIRD(buf[0]);

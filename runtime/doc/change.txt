@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0u.  Last change: 2001 Feb 03
+*change.txt*    For Vim version 6.0v.  Last change: 2001 Feb 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -535,8 +535,10 @@ The flags that you can use for the substitute commands:
 	    <Esc>   to skip this match
 	    'a'	    to substitute this and all remaining matches {not in Vi}
 	    'q'	    to quit substituting {not in Vi}
-	    CTRL-E  to scroll the screen up {not in Vi}
-	    CTRL-Y  to scroll the screen down {not in Vi}.
+	    CTRL-E  to scroll the screen up {not in Vi, not available when
+			compiled without the +insert_expand feature}
+	    CTRL-Y  to scroll the screen down {not in Vi, not available when
+			compiled without the +insert_expand feature}
 	If the 'edcompatible' option is on, Vim remembers the [c] flag and
 	toggles it each time you use it, but resets it when you give a new
 	search pattern.

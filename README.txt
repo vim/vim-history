@@ -1,4 +1,4 @@
-README.txt for version 6.0u of Vim: Vi IMproved.
+README.txt for version 6.0v of Vim: Vi IMproved.
 
 
 WHAT IS VIM
@@ -43,10 +43,6 @@ Vim is Charityware.  You can use and copy it as much as you like, but you are
 encouraged to make a donation to orphans in Uganda.  Please read the file
 "doc/uganda.txt" for details.
 
-If you include Vim on a CD-ROM, I would like to receive a copy.  Just so I
-know which Vim distributions exists in the world (and to show off to my
-friends :-)).
-
 There are no restrictions on distributing an unmodified copy of Vim.  Parts of
 Vim may also be distributed, but this text must always be included.  You are
 allowed to include executables that you made from the unmodified Vim sources,
@@ -67,7 +63,7 @@ available to the maintainer.
 The current maintainer is Bram Moolenaar <Bram@vim.org>.  If this changes, it
 will be announced in appropriate places (most likely www.vim.org and
 comp.editors).  When it is completely impossible to contact the maintainer,
-the obligation to send him modified source code is dropped.
+the obligation to send him modified source code ceases.
 
 It is not allowed to remove these restrictions from the distribution of the
 Vim sources or parts of it.  These restrictions may also be used for previous

@@ -7,7 +7,71 @@
  * Do ":help credits" in Vim to see a list of people who contributed.
  */
 /*
- * file : multibyte.c
+ * multibyte.c: Code specifically for handling multi-byte characters.
+ *
+ * The encoding used in the core is set with 'encoding'.  When 'encoding' is
+ * changed, the following four variables are set (for speed).
+ * Currently these types of character encodings are supported:
+ *
+ * "enc_dbcs"	    When non-zero it tells the type of double byte character
+ *		    encoding (Chinese, Korean, Japanese, etc.).
+ *		    The cell width on the display is always equal to the
+ *		    number of bytes.
+ *		    Recognizing the first or second byte is difficult, it
+ *		    requires checking a byte sequence from the start.
+ * "enc_utf8"	    When TRUE use Unicode characters in UTF-8 encoding.
+ *		    The cell width on the display needs to be determined from
+ *		    the character value.
+ *		    Recognizing bytes is easy: 0xxx.xxxx is a single-byte
+ *		    char, 10xx.xxxx is a trailing byte, 11xx.xxxx is a leading
+ *		    byte of a multi-byte character.
+ *		    To make things complicated, up to two composing characters
+ *		    are allowed.  These are drawn on top of the first char.
+ *		    For most editing the sequence of bytes with composing
+ *		    characters included is considered to be one character.
+ * "enc_unicode"    When 2 use 16-bit Unicode characters.
+ *		    When 4 use 32-but Unicode characters.
+ *		    Internally characters are stored in UTF-8 encoding to
+ *		    avoid NUL bytes.  Conversion happens when doing I/O.
+ *		    "enc_utf8" will also be TRUE.
+ *
+ * "has_mbyte" is set when "enc_dbcs" or "enc_utf8" is non-zero.
+ *
+ * If none of these is TRUE, 8-bit bytes are used for a character.  The
+ * encoding isn't currently specified (TODO).
+ *
+ * 'encoding' specifies the encoding used in the core.  This is in registers,
+ * text manipulation, buffers, etc.  Conversion has to be done when characters
+ * in another encoding are received or send:
+ *
+ *		       clipboard
+ *			   ^
+ *			   | (2)
+ *			   V
+ *		   +---------------+
+ *	      (1)  |		   | (3)
+ *  keyboard ----->|	 core	   |-----> display
+ *		   |		   |
+ *		   +---------------+
+ *			   ^
+ *			   | (4)
+ *			   V
+ *			 file
+ *
+ * (1) Typed characters arrive in the current locale.  Conversion is to be
+ *     done when 'encoding' is different from 'termencoding'.
+ * (2) Text will be made available with the encoding specified with
+ *     'encoding'.  If this is not sufficient, system-specific conversion
+ *     might be required.
+ * (3) For the GUI the correct font must be selected, no conversion done.
+ *     Otherwise, conversion is to be done when 'encoding' differs from
+ *     'termencoding'.
+ * (4) The encoding of the file is specified with 'fileencoding'.  Conversion
+ *     is to be done when it's different from 'encoding'.
+ *
+ * The viminfo file is a special case: Only text is converted, not file names.
+ * Vim scripts may contain an ":encoding" command.  This has an effect for
+ * some commands, like ":menutrans"
  */
 
 #include "vim.h"
@@ -28,69 +92,7 @@
 
 #if defined(FEAT_MBYTE) || defined(PROTO)
 
-/*
- * Code specifically for handling multi-byte characters.
- *
- * The encoding used in the core is set with 'charcode'.  When 'charcode' is
- * changed, the following four variables are set (for speed).
- * Currently these types of character encodings are supported:
- *
- * "cc_dbcs"	    When non-zero it tells the type of double byte character
- *		    encoding (Chinese, Korean, Japanese, etc.).
- *		    The cell width on the display is always equal to the
- *		    number of bytes.
- *		    Recognizing the first or second byte is difficult, it
- *		    requires checking a byte sequence from the start.
- * "cc_utf8"	    When TRUE use Unicode characters in UTF-8 encoding.
- *		    The cell width on the display needs to be determined from
- *		    the character value.
- *		    Recognizing bytes is easy: 0xxx.xxxx is a single-byte
- *		    char, 10xx.xxxx is a trailing byte, 11xx.xxxx is a leading
- *		    byte of a multi-byte character.
- *		    To make things complicated, up to two composing characters
- *		    are allowed.  These are drawn on top of the first char.
- *		    For most editing the sequence of bytes with composing
- *		    characters included is considered to be one character.
- * "cc_unicode"	    When 2 use 16-bit Unicode characters.
- *		    When 4 use 32-but Unicode characters.
- *		    Internally characters are stored in UTF-8 encoding to
- *		    avoid NUL bytes.  Conversion happens when doing I/O.
- *		    "cc_utf8" will also be TRUE.
- *
- * "has_mbyte" is set when "cc_dbcs" or "cc_utf8" is non-zero.
- *
- * If none of these is TRUE, 8-bit bytes are used for a character.  The
- * encoding isn't currently specified (TODO).
- *
- * 'charcode' specifies the encoding used in the core.  This is in registers,
- * text manipulation, buffers, etc.  Conversion has to be done when characters
- * in another encoding are received or send:
- *
- *		       clipboard
- *			   ^
- *			   | (2)
- *			   V
- *		   +---------------+
- *	      (1)  |		   | (3)
- *  keyboard ----->|	 core	   |-----> display
- *		   |		   |
- *		   +---------------+
- *			   ^
- *			   | (4)
- *			   V
- *			 file
- *
- * (1) Typed characters arrive in the current locale.  Conversion is to be
- *     done when 'charcode' is different from the locale.
- * (2) Text will be made available with the encoding specified with
- *     'charcode'.  If this is not sufficient, system-specific conversion
- *     might be required.
- * (3) For the GUI the correct font must be selected, no conversion done.
- *     Otherwise, conversion is to be done when 'charcode' differs from the
- *     locale.
- * (4) The encoding of the file is specified with 'filecharcode'.  Conversion
- *     is to be done when it's different from 'charcode'.
- */
+static int enc_alias_search __ARGS((char_u *name));
 
 /* Lookup table to quickly get the length in bytes of a UTF-8 character from
  * the first byte of a UTF-8 string.  Bytes which are illegal when used as the
@@ -108,79 +110,324 @@ static char utf8len_tab[256] =
 };
 
 /*
+ * Canonical encoding names and their properties.
+ * "iso-8859-n" is handled by enc_canonize() directly.
+ */
+static struct
+{   char *name;		int prop;		int codepage;}
+enc_canon_table[] =
+{
+#define IDX_LATIN_1	0
+    {"latin1",		ENC_8BIT + ENC_LATIN1,	0},
+#define IDX_ISO_2	1
+    {"iso-8859-2",	ENC_8BIT,		0},
+#define IDX_ISO_3	2
+    {"iso-8859-3",	ENC_8BIT,		0},
+#define IDX_ISO_4	3
+    {"iso-8859-4",	ENC_8BIT,		0},
+#define IDX_ISO_5	4
+    {"iso-8859-5",	ENC_8BIT,		0},
+#define IDX_ISO_6	5
+    {"iso-8859-6",	ENC_8BIT,		0},
+#define IDX_ISO_7	6
+    {"iso-8859-7",	ENC_8BIT,		0},
+#define IDX_ISO_8	7
+    {"iso-8859-8",	ENC_8BIT,		0},
+#define IDX_ISO_9	8
+    {"iso-8859-9",	ENC_8BIT,		0},
+#define IDX_ISO_10	9
+    {"iso-8859-10",	ENC_8BIT,		0},
+#define IDX_ISO_11	10
+    {"iso-8859-11",	ENC_8BIT,		0},
+#define IDX_ISO_13	11
+    {"iso-8859-13",	ENC_8BIT,		0},
+#define IDX_ISO_14	12
+    {"iso-8859-14",	ENC_8BIT,		0},
+#define IDX_ISO_15	13
+    {"iso-8859-15",	ENC_8BIT,		0},
+#define IDX_UTF8	14
+    {"utf-8",		ENC_UNICODE,		0},
+#define IDX_UCS2	15
+    {"ucs-2",		ENC_UNICODE + ENC_ENDIAN_B + ENC_2BYTE, 0},
+#define IDX_UCS2LE	16
+    {"ucs-2le",		ENC_UNICODE + ENC_ENDIAN_L + ENC_2BYTE, 0},
+#define IDX_UCS4	17
+    {"ucs-4",		ENC_UNICODE + ENC_ENDIAN_B + ENC_4BYTE, 0},
+#define IDX_UCS4LE	18
+    {"ucs-4le",		ENC_UNICODE + ENC_ENDIAN_L + ENC_4BYTE, 0},
+#ifdef WIN32
+# define IDX_CP932	19
+    {"cp932",		ENC_DBCS,		DBCS_JPN},
+# define IDX_CP949	20
+    {"cp949",		ENC_DBCS,		DBCS_KOR},
+# define IDX_CP936	21
+    {"cp936",		ENC_DBCS,		DBCS_CHS},
+# define IDX_CP950	22
+    {"cp950",		ENC_DBCS,		DBCS_CHT},
+#else
+# define IDX_EUC_JP	19
+    {"euc-jp",		ENC_DBCS,		DBCS_JPN},
+# define IDX_EUC_KR	20
+    {"euc-kr",		ENC_DBCS,		DBCS_KOR},
+# define IDX_CHINESE	21
+    {"chinese",		ENC_DBCS,		DBCS_CHS},
+# define IDX_EUC_TW	22
+    {"euc-tw",		ENC_DBCS,		DBCS_CHT},
+#endif
+#define IDX_DEBUG	23
+    {"debug",		ENC_DBCS,		DBCS_DEBUG},
+#define IDX_COUNT	24
+};
+
+/*
+ * Aliases for encoding names.
+ */
+static struct
+{   char *name;		int canon;}
+enc_alias_table[] =
+{
+    {"ansi",		IDX_LATIN_1},
+    {"iso-8859-1",	IDX_LATIN_1},
+    {"latin2",		IDX_ISO_2},
+    {"latin3",		IDX_ISO_3},
+    {"latin4",		IDX_ISO_4},
+    {"cyrillic",	IDX_ISO_5},
+    {"arabic",		IDX_ISO_6},
+    {"greek",		IDX_ISO_7},
+    {"hebrew",		IDX_ISO_8},
+    {"latin5",		IDX_ISO_9},
+    {"turkish",		IDX_ISO_9}, /* ? */
+    {"latin6",		IDX_ISO_10},
+    {"nordic",		IDX_ISO_10}, /* ? */
+    {"thai",		IDX_ISO_11}, /* ? */
+    {"latin7",		IDX_ISO_13},
+    {"latin8",		IDX_ISO_14},
+    {"latin9",		IDX_ISO_15},
+    {"utf8",		IDX_UTF8},
+    {"unicode",		IDX_UCS2},
+    {"ucs2",		IDX_UCS2},
+    {"ucs-2be",		IDX_UCS2},
+    {"ucs2be",		IDX_UCS2},
+    {"ucs2le",		IDX_UCS2LE},
+    {"ucs4",		IDX_UCS4},
+    {"ucs-4be",		IDX_UCS4},
+    {"ucs4be",		IDX_UCS4},
+    {"ucs4le",		IDX_UCS4LE},
+#if defined(WIN32) || defined(WIN32UNIX)
+    {"japan",		IDX_CP932},
+    {"shift-jis",	IDX_CP932}, /* not exactly the same */
+    {"korea",		IDX_CP949},
+    {"euc-kr",		IDX_CP949}, /* ? */
+    {"euckr",		IDX_CP949}, /* ? */
+    {"prc",		IDX_CP936},
+    {"chinese",		IDX_CP936},
+    {"taiwan",		IDX_CP950},
+    {"euc-tw",		IDX_CP950}, /* ? */
+    {"euctw",		IDX_CP950}, /* ? */
+    {"big5",		IDX_CP950}, /* ? */
+#else
+    {"japan",		IDX_EUC_JP},
+    {"eucjp",		IDX_EUC_JP},
+    {"unix-jis",	IDX_EUC_JP},
+    {"ujis",		IDX_EUC_JP},
+    {"korea",		IDX_EUC_KR},
+    {"euckr",		IDX_EUC_KR},
+    {"cp949",		IDX_EUC_KR}, /* ? */
+    {"prc",		IDX_CHINESE},
+    {"cp936",		IDX_CHINESE}, /* ? */
+    {"taiwan",		IDX_EUC_TW},
+    {"euctw",		IDX_EUC_TW},
+    {"cp950",		IDX_EUC_TW}, /* ? */
+    {"big5",		IDX_EUC_TW}, /* ? */
+#endif
+    {NULL,		0}
+};
+
+/*
+ * Find encoding "name" in the list of canonical encoding names.
+ * Returns -1 if not found.
+ */
+    static int
+enc_canon_search(name)
+    char_u	*name;
+{
+    int		i;
+
+    for (i = 0; i < IDX_COUNT; ++i)
+	if (STRCMP(name, enc_canon_table[i].name) == 0)
+	    return i;
+    return -1;
+}
+
+/*
+ * Find canonical encoding "name" in the list and return its properties.
+ * Returns 0 if not found.
+ */
+    int
+enc_canon_props(name)
+    char_u	*name;
+{
+    int		i;
+
+    i = enc_canon_search(name);
+    if (i >= 0)
+	return enc_canon_table[i].prop;
+#ifdef WIN32
+    if (name[0] == 'c' && name[1] == 'p' && isdigit(name[2]))
+    {
+	CPINFO	cpinfo;
+
+	/* Get info on this codepage to find out what it is. */
+	if (GetCPInfo(atoi(name + 2), &cpinfo) != 0)
+	{
+	    if (cpinfo.MaxCharSize == 1) /* some single-byte encoding */
+		return ENC_8BIT;
+	    if (cpinfo.MaxCharSize == 2
+		    && (cpinfo.LeadByte[0] != 0 || cpinfo.LeadByte[1] != 0))
+		/* must be a DBCS encoding */
+		return ENC_DBCS;
+	}
+	return 0;
+    }
+#endif
+    if (STRNCMP(name, "2byte-", 6) == 0)
+	return ENC_DBCS;
+    if (STRNCMP(name, "8bit-", 5) == 0 || STRNCMP(name, "iso-8859-", 9) == 0)
+	return ENC_8BIT;
+    return 0;
+}
+
+/*
  * Set up for using multi-byte characters.
- * Called when 'charcode' has been changed.
- * Sets cc_unicode, cc_utf8 and cc_dbcs flags for new value of 'charcode'.
- * Fills mb_bytelen_tab[].
+ * Called in three cases:
+ * - by main() to initialize (p_enc == NULL)
+ * - by set_init_1() after 'encoding' was set to its default.
+ * - by do_set() when 'encoding' has been set.
+ * p_enc must have been passed through enc_canonize() already.
+ * Sets the "enc_unicode", "enc_utf8", "enc_dbcs" and "has_mbyte" flags.
+ * Fills mb_bytelen_tab[] and returns NULL when there are no problems.
  * When there is something wrong: Returns an error message and doesn't change
- * anything.  Returns NULL when there are no problems.
+ * anything.
  */
     char_u *
 mb_init()
 {
     int		i;
+    int		idx;
     int		n;
-    int		cc_dbcs_new = 0;
+    int		enc_dbcs_new = 0;
 
-    if (p_cc == NULL)
+    if (p_enc == NULL)
     {
 	/* Just starting up: set the whole table to one's. */
 	for (i = 0; i < 256; ++i)
 	    mb_bytelen_tab[i] = 1;
+	input_conv.vc_type = CONV_NONE;
+	input_conv.vc_factor = 1;
+	output_conv.vc_type = CONV_NONE;
+#ifdef USE_ICONV
+	input_conv.vc_fd = (iconv_t)-1;
+	output_conv.vc_fd = (iconv_t)-1;
+#endif
 	return NULL;
     }
 
-    cc_unicode = 0;
-    cc_utf8 = FALSE;
-    if (STRCMP(p_cc, CC_DBJPN) == 0)
-	cc_dbcs_new = DBCS_JPN;
-    else if (STRCMP(p_cc, CC_DBKOR) == 0)
-	cc_dbcs_new = DBCS_KOR;
-    else if (STRCMP(p_cc, CC_DBCHT) == 0)
-	cc_dbcs_new = DBCS_CHT;
-    else if (STRCMP(p_cc, CC_DBCHS) == 0)
-	cc_dbcs_new = DBCS_CHS;
-    else if (STRCMP(p_cc, CC_UNICODE) == 0
-	    || STRCMP(p_cc, CC_UCS2) == 0
-	    || STRCMP(p_cc, CC_UCS2BE) == 0
-	    || STRCMP(p_cc, CC_UCS2LE) == 0)
+#ifdef WIN32
+    if (p_enc[0] == 'c' && p_enc[1] == 'p' && isdigit(p_enc[2]))
     {
-	/* 16 bit Unicode is stored internally as UTF-8 */
-	cc_unicode = 2;
-	cc_utf8 = TRUE;
-    }
-    else if (STRCMP(p_cc, CC_UCS4) == 0
-	    || STRCMP(p_cc, CC_UCS4BE) == 0
-	    || STRCMP(p_cc, CC_UCS4LE) == 0
-	    || STRCMP(p_cc, CC_UCS4BL) == 0
-	    || STRCMP(p_cc, CC_UCS4LB) == 0)
-    {
-	/* 32 bit Unicode is stored internally as UTF-8 */
-	cc_unicode = 4;
-	cc_utf8 = TRUE;
-    }
-    else if (STRCMP(p_cc, CC_UTF8) == 0)
-	cc_utf8 = TRUE;
-#ifdef MB_DEBUG
-    else if (STRCMP(p_cc, CC_DEBUG) == 0)
-	cc_dbcs_new = -1;
-#endif
-    /* else: must be "ansi" or "latin-1". */
+	CPINFO	cpinfo;
 
-#ifdef FEAT_GUI_W32
-    if (cc_dbcs_new != 0)
-    {
-	/* Check if the DBCS code page is OK. */
-	if (!IsValidCodePage(cc_dbcs_new))
+	/* Get info on this codepage to find out what it is. */
+	if (GetCPInfo(atoi(p_enc + 2), &cpinfo) != 0)
+	{
+	    if (cpinfo.MaxCharSize == 1)
+	    {
+		/* some single-byte encoding */
+		enc_unicode = 0;
+		enc_utf8 = FALSE;
+	    }
+	    else if (cpinfo.MaxCharSize == 2
+		    && (cpinfo.LeadByte[0] != 0 || cpinfo.LeadByte[1] != 0))
+	    {
+		/* must be a DBCS encoding, check below */
+		enc_dbcs_new = atoi(p_enc + 2);
+	    }
+	    else
+		goto codepage_invalid;
+	}
+	else if (GetLastError() == ERROR_INVALID_PARAMETER)
+	{
+codepage_invalid:
 	    return (char_u *)N_("Not a valid codepage");
+	}
     }
 #endif
-    cc_dbcs = cc_dbcs_new;
+    else if (STRNCMP(p_enc, "8bit-", 5) == 0
+	    || STRNCMP(p_enc, "iso-8859-", 9) == 0)
+    {
+	/* Accept any "8bit-" or "iso-8859-" name. */
+	enc_unicode = 0;
+	enc_utf8 = FALSE;
+    }
+    else if (STRNCMP(p_enc, "2byte-", 6) == 0)
+    {
+#ifdef WIN32
+	/* Windows: accept only valid codepage numbers, check below. */
+	if (p_enc[6] != 'c' || p_enc[7] != 'p'
+				      || (enc_dbcs_new = atoi(p_enc + 8)) == 0)
+	    return e_invarg;
+#else
+	/* Unix: accept any "2byte-" name, assume current locale. */
+	enc_dbcs_new = DBCS_2BYTE;
+#endif
+    }
+    else if ((idx = enc_canon_search(p_enc)) >= 0)
+    {
+	i = enc_canon_table[idx].prop;
+	if (i & ENC_UNICODE)
+	{
+	    /* Unicode */
+	    enc_utf8 = TRUE;
+	    if (i & ENC_2BYTE)
+		enc_unicode = 2;
+	    else if (i & ENC_4BYTE)
+		enc_unicode = 4;
+	    else
+		enc_unicode = 0;
+	}
+	else if (i & ENC_DBCS)
+	{
+	    /* 2byte, handle below */
+	    enc_dbcs_new = enc_canon_table[idx].codepage;
+	}
+	else
+	{
+	    /* Must be 8-bit. */
+	    enc_unicode = 0;
+	    enc_utf8 = FALSE;
+	}
+    }
+    else    /* Don't know what encoding this is, reject it. */
+	return e_invarg;
+
+    if (enc_dbcs_new != 0)
+    {
+#ifdef WIN32
+	/* Check if the DBCS code page is OK. */
+	if (!IsValidCodePage(enc_dbcs_new))
+	    goto codepage_invalid;
+#endif
+	enc_unicode = 0;
+	enc_utf8 = FALSE;
+    }
+    enc_dbcs = enc_dbcs_new;
+
 #ifdef FEAT_GUI_W32
-    is_funky_dbcs = cc_dbcs && ((int)GetACP() != cc_dbcs);
+    /* Check for codepage which is not the current one. */
+    is_funky_dbcs = (enc_dbcs != 0 && ((int)GetACP() != enc_dbcs));
 #endif
 
-    has_mbyte = (cc_dbcs || cc_utf8);
+    has_mbyte = (enc_dbcs || enc_utf8);
 
     /*
      * Fill the mb_bytelen_tab[] for MB_BYTE2LEN().
@@ -189,12 +436,12 @@ mb_init()
     {
 	/* Our own function to reliably check the lenght of UTF-8 characters,
 	 * independent of mblen(). */
-	if (cc_utf8)
+	if (enc_utf8)
 	    n = utf8len_tab[i];
-	else if (cc_dbcs == 0)
+	else if (enc_dbcs == 0)
 	    n = 1;
 #ifdef MB_DEBUG
-	else if (cc_dbcs == -1)
+	else if (enc_dbcs == -1)
 	{
 	    /* Debugging DBCS: make 0xc0-0xff chars double-width. */
 	    if (i >= 0xc0)
@@ -206,10 +453,10 @@ mb_init()
 	else
 	{
 #if defined(WIN32) || defined(WIN32UNIX)
-	    /* cc_dbcs is set by setting 'filecharcode'.  It becomes a Windows
+	    /* enc_dbcs is set by setting 'fileencoding'.  It becomes a Windows
 	     * CodePage identifier, which we can pass directly in to Windows
 	     * API */
-	    n = IsDBCSLeadByteEx(cc_dbcs, (BYTE)i) ? 2 : 1;
+	    n = IsDBCSLeadByteEx(enc_dbcs, (BYTE)i) ? 2 : 1;
 #else
 # ifdef macintosh
 	    /*
@@ -253,18 +500,18 @@ mb_init()
     /* The cell width depends on the type of multi-byte characters. */
     (void)init_chartab();
 
-    /* When cc_utf8 is set or reset, (de)allocate ScreenLinesUC[] */
+    /* When enc_utf8 is set or reset, (de)allocate ScreenLinesUC[] */
     screenalloc(FALSE);
 
-    /* When using Unicode, set default for 'filecharcodes'. */
-    if (cc_utf8 && !option_was_set((char_u *)"fccs"))
-	set_string_option_direct((char_u *)"fccs", -1,
-				 (char_u *)"ucs-bom,utf-8,latin-1", OPT_FREE);
+    /* When using Unicode, set default for 'fileencodings'. */
+    if (enc_utf8 && !option_was_set((char_u *)"fencs"))
+	set_string_option_direct((char_u *)"fencs", -1,
+				 (char_u *)"ucs-bom,utf-8,latin1", OPT_FREE);
 
 #ifdef FEAT_AUTOCMD
     /* Fire an autocommand to let people do custom font setup. This must be
-     * after Vim has been setup for the new charcode. */
-    apply_autocmds(EVENT_CHARCODE, NULL, (char_u *)"", FALSE, curbuf);
+     * after Vim has been setup for the new encoding. */
+    apply_autocmds(EVENT_ENCODINGCHANGED, NULL, (char_u *)"", FALSE, curbuf);
 #endif
 
     return NULL;
@@ -284,21 +531,21 @@ bomb_size()
 
     if (curbuf->b_p_bomb && !curbuf->b_p_bin)
     {
-	if (*curbuf->b_p_fcc == NUL)
+	if (*curbuf->b_p_fenc == NUL)
 	{
-	    if (cc_utf8)
+	    if (enc_utf8)
 	    {
-		if (cc_unicode != 0)
-		    n = cc_unicode;
+		if (enc_unicode != 0)
+		    n = enc_unicode;
 		else
 		    n = 3;
 	    }
 	}
-	else if (STRCMP(curbuf->b_p_fcc, "utf-8") == 0)
+	else if (STRCMP(curbuf->b_p_fenc, "utf-8") == 0)
 	    n = 3;
-	else if (STRNCMP(curbuf->b_p_fcc, "ucs-2", 5) == 0)
+	else if (STRNCMP(curbuf->b_p_fenc, "ucs-2", 5) == 0)
 	    n = 2;
-	else if (STRNCMP(curbuf->b_p_fcc, "ucs-4", 5) == 0)
+	else if (STRNCMP(curbuf->b_p_fenc, "ucs-4", 5) == 0)
 	    n = 4;
     }
     return n;
@@ -313,7 +560,7 @@ mb_get_class(p)
 {
     int this_class = 0;
 
-    if (cc_dbcs && p[0] != NUL && p[1] != NUL && MB_BYTE2LEN(p[0]) > 1)
+    if (enc_dbcs && p[0] != NUL && p[1] != NUL && MB_BYTE2LEN(p[0]) > 1)
 	this_class = mb_class(p[0], p[1]);
     return this_class;
 }
@@ -326,7 +573,7 @@ mb_class(lead, trail)
     unsigned	lead;
     unsigned	trail;
 {
-    switch (cc_dbcs)
+    switch (enc_dbcs)
     {
 	/* please add classfy routine for your language in here */
 
@@ -493,10 +740,10 @@ mb_char2len(c)
     if (c < 0x80 || !has_mbyte)	/* be quick for ASCII */
 	return 1;
 
-    if (cc_utf8)
+    if (enc_utf8)
 	return utf_char2len(c);
 
-    /* cc_dbcs */
+    /* enc_dbcs */
     if (c >= 0x100)
 	return 2;
     return 1;
@@ -517,10 +764,10 @@ mb_char2bytes(c, buf)
 	return 1;
     }
 
-    if (cc_utf8)
+    if (enc_utf8)
 	return utf_char2bytes(c, buf);
 
-    /* cc_dbcs */
+    /* enc_dbcs */
     if (c >= 0x100)
     {
 	buf[0] = (unsigned)c >> 8;
@@ -541,10 +788,10 @@ mb_ptr2len_check(p)
 {
     int		len;
 
-    if (cc_utf8)
+    if (enc_utf8)
 	return utfc_ptr2len_check(p);
 
-    /* Latin-1 or DBCS: up to two bytes */
+    /* Latin1 or DBCS: up to two bytes */
     len = MB_BYTE2LEN(*p);
     if (len == 1 || p[1] == NUL)
 	return 1;
@@ -587,11 +834,11 @@ mb_ptr2cells(p)
     int		c;
 
     /* For DBCS we only need to check the first byte. */
-    if (cc_dbcs != 0)
+    if (enc_dbcs != 0)
 	return MB_BYTE2LEN(*p);
 
     /* For UTF-8 we need to convert to a wide character. */
-    if (cc_utf8 && *p >= 0x80)
+    if (enc_utf8 && *p >= 0x80)
     {
 	c = utf_ptr2char(p);
 	/* An illegal byte is displayed as <xx>. */
@@ -615,11 +862,11 @@ mb_char2cells(c)
     int		c;
 {
     /* For DBCS we only need to check the first byte. */
-    if (cc_dbcs != 0)
+    if (enc_dbcs != 0)
 	return MB_BYTE2LEN((unsigned)c >> 8);
 
     /* For UTF-8 we need to check the value. */
-    if (cc_utf8)
+    if (enc_utf8)
 	return utf_char2cells(c);
 
     return 1;
@@ -633,9 +880,9 @@ mb_char2cells(c)
 mb_off2cells(off)
     unsigned	off;
 {
-    if (cc_dbcs != 0)
+    if (enc_dbcs != 0)
 	return MB_BYTE2LEN(ScreenLines[off]);
-    if (cc_utf8)
+    if (enc_utf8)
 	return ScreenLines[off + 1] == 0 ? 2 : 1;
     return 1;
 }
@@ -647,9 +894,9 @@ mb_off2cells(off)
 mb_ptr2char(p)
     char_u	*p;
 {
-    if (cc_utf8)
+    if (enc_utf8)
 	return utf_ptr2char(p);
-    if (cc_dbcs && MB_BYTE2LEN(*p) > 1)
+    if (enc_dbcs && MB_BYTE2LEN(*p) > 1)
 	return (p[0] << 8) + p[1];
     return *p;
 }
@@ -973,7 +1220,7 @@ utf_iscomposing(c)
     int max = sizeof(combining) / sizeof(struct interval) - 1;
     int mid;
 
-    /* first quick check for Latin-1 etc. characters */
+    /* first quick check for Latin1 etc. characters */
     if (c < combining[0].first)
 	return 0;
 
@@ -994,7 +1241,7 @@ utf_iscomposing(c)
 
 /*
  * "g8": show bytes of the UTF-8 char under the cursor.  Doesn't matter what
- * 'charcode' has been set to.
+ * 'encoding' has been set to.
  */
     void
 show_utf8()
@@ -1043,12 +1290,12 @@ mb_head_off(base, p)
 {
     char_u	*q;
 
-    if (cc_utf8)
+    if (enc_utf8)
 	return utf_head_off(base, p);
 
     /* It can't be a trailing byte when not using DBCS, at the start of the
      * string or the previous byte can't start a double-byte. */
-    if (cc_dbcs == 0 || p <= base || MB_BYTE2LEN(p[-1]) == 1)
+    if (enc_dbcs == 0 || p <= base || MB_BYTE2LEN(p[-1]) == 1)
 	return 0;
 
     /* This is slow: need to start at the base and go forward until the
@@ -1103,7 +1350,7 @@ mb_off_next(base, p)
     int		i;
     int		j;
 
-    if (cc_utf8)
+    if (enc_utf8)
     {
 	if (*p < 0x80)		/* be quick for ASCII */
 	    return 0;
@@ -1143,7 +1390,7 @@ mb_tail_off(base, p)
     if (*p == NUL)
 	return 0;
 
-    if (cc_utf8)
+    if (enc_utf8)
     {
 	/* Find the last character that is 10xx.xxxx */
 	for (i = 0; (p[i + 1] & 0xc0) == 0x80; ++i)
@@ -1159,7 +1406,7 @@ mb_tail_off(base, p)
 
     /* It can't be the first byte if a double-byte when not using DBCS, at the
      * end of the string or the byte can't start a double-byte. */
-    if (cc_dbcs == 0 || p[1] == NUL || MB_BYTE2LEN(*p) == 1)
+    if (enc_dbcs == 0 || p[1] == NUL || MB_BYTE2LEN(*p) == 1)
 	return 0;
 
     /* Return 1 when on the lead byte, 0 when on the tail byte. */
@@ -1245,11 +1492,11 @@ mb_isbyte1(buf, x)
     char_u	*buf;
     int		x;
 {
-    if (cc_utf8)
+    if (enc_utf8)
 	return (buf[x] & 0xc0) == 0xc0;
 
     /* Check with MB_BYTE2LEN() first, mb_head_off() is slow! */
-    return (cc_dbcs != 0
+    return (enc_dbcs != 0
 	    && MB_BYTE2LEN(buf[x]) > 1
 	    && mb_head_off(buf, buf + x) == 0);
 }
@@ -1268,14 +1515,350 @@ mb_lefthalve(row, col)
     if (composing_hangul)
 	return TRUE;
 #endif
-    if (cc_dbcs)
+    if (enc_dbcs)
 	return MB_BYTE2LEN(ScreenLines[LineOffset[row] + col]) > 1;
-    if (cc_utf8)
+    if (enc_utf8)
 	return (col + 1 < Columns
 		&& ScreenLines[LineOffset[row] + col + 1] == 0);
     return FALSE;
 }
 #endif
+
+/*
+ * Skip the Vim specific head of a 'encoding' name.
+ */
+    char_u *
+enc_skip(p)
+    char_u	*p;
+{
+    if (STRNCMP(p, "2byte-", 6) == 0)
+	return p + 6;
+    if (STRNCMP(p, "8bit-", 5) == 0)
+	return p + 5;
+    return p;
+}
+
+/*
+ * Find the canonical name for encoding "enc".
+ * When the name isn't recognized, returns "enc" itself, but with all lower
+ * case characters and '_' replaced with '-'.
+ * Returns an allocated string.  NULL for out-of-memory.
+ */
+    char_u *
+enc_canonize(enc)
+    char_u	*enc;
+{
+    char_u	*r;
+    char_u	*p, *s;
+    int		i;
+
+    /* copy "enc" to allocted memory, with room for two '-' */
+    r = alloc((unsigned)(STRLEN(enc) + 3));
+    if (r != NULL)
+    {
+	/* Make it all lower case and replace '_' with '-'. */
+	p = r;
+	for (s = enc; *s != NUL; ++s)
+	{
+	    if (*s == '_')
+		*p++ = '-';
+	    else
+		*p++ = TO_LOWER(*s);
+	}
+	*p = NUL;
+
+	/* Skip "2byte-" and "8bit-". */
+	p = enc_skip(r);
+
+	/* "iso8859" -> "iso-8859" */
+	if (STRNCMP(p, "iso8859", 7) == 0)
+	{
+	    mch_memmove(p + 4, p + 3, STRLEN(p + 2));
+	    p[3] = '-';
+	}
+
+	/* "iso-8859n" -> "iso-8859-n" */
+	if (STRNCMP(p, "iso-8859", 8) == 0 && p[8] != '-')
+	{
+	    mch_memmove(p + 9, p + 8, STRLEN(p + 7));
+	    p[8] = '-';
+	}
+
+	/* "latin-N" -> "latinN" */
+	if (STRNCMP(p, "latin-", 6) == 0)
+	    mch_memmove(p + 5, p + 6, STRLEN(p + 5));
+
+	if (enc_canon_search(p) >= 0)
+	{
+	    /* canonical name can be used unmodified */
+	    if (p != r)
+		mch_memmove(r, p, STRLEN(p) + 1);
+	}
+	else if ((i = enc_alias_search(p)) >= 0)
+	{
+	    /* alias recognized, get canonical name */
+	    vim_free(r);
+	    r = vim_strsave((char_u *)enc_canon_table[i].name);
+	}
+    }
+    return r;
+}
+
+/*
+ * Search for an encoding alias of "name".
+ * Returns -1 when not found.
+ */
+    static int
+enc_alias_search(name)
+    char_u	*name;
+{
+    int		i;
+
+    for (i = 0; enc_alias_table[i].name != NULL; ++i)
+	if (STRCMP(name, enc_alias_table[i].name) == 0)
+	    return enc_alias_table[i].canon;
+    return -1;
+}
+
+/*
+ * Return the default value for 'encoding' in an allocated string.
+ * Returns NULL when out of memory or no usable default could be found.
+ */
+    int
+enc_default()
+{
+#ifndef WIN32
+    char	*s;
+    char	*p;
+    int		i;
+#endif
+    char	buf[50];
+    char_u	*save_enc;
+#ifdef WIN32
+    long	acp = GetACP();
+
+    if (acp == 1200)
+	STRCPY(buf, "ucs-2le");
+    else if (acp == 1252)
+	STRCPY(buf, "latin1");
+    else
+	sprintf(buf, "cp%ld", acp);
+#else
+# ifdef HAVE_NL_LANGINFO_CODESET
+    if ((s = nl_langinfo(CODESET)) == NULL || *s == NUL)
+# endif
+# if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
+	if ((s = setlocale(LC_CTYPE, NULL)) == NULL || *s == NUL)
+# endif
+	    if ((s = getenv("LC_ALL")) == NULL || *s == NUL)
+		if ((s = getenv("LC_CTYPE")) == NULL || *s == NUL)
+		    s = getenv("LANG");
+
+    /* The most generic locale format is:
+     * language[_territory][.codeset][@modifier][+special][,[sponsor][_revision]]
+     * If there is a '.' remove the part before it.
+     * if there is something after the codeset, remove it.
+     * Make the name lowercase and replace '_' with '-'.
+     */
+    if ((p = (char *)vim_strchr((char_u *)s, '.')) != NULL)
+	s = p + 1;
+    for (i = 0; s[i] != NUL && i < sizeof(buf) - 1; ++i)
+    {
+	if (s[i] == '_' || s[i] == '-')
+	    buf[i] = '-';
+	else if (isalnum(s[i]))
+	    buf[i] = TO_LOWER(s[i]);
+	else
+	    break;
+    }
+    buf[i] = NUL;
+#endif
+
+    /*
+     * Try setting 'encoding' and check if the value is valid.
+     * If not, go back to the default "latin1".
+     */
+    save_enc = p_enc;
+    p_enc = enc_canonize((char_u *)buf);
+    if (p_enc != NULL && mb_init() == NULL)
+	return OK;
+    vim_free(p_enc);
+    p_enc = save_enc;
+
+    return FAIL;
+}
+
+# if defined(USE_ICONV) || defined(PROTO)
+
+static char_u *iconv_string __ARGS((iconv_t fd, char_u *str, int strlen));
+
+/*
+ * Call iconv_open() with a check if iconv() works properly (there are broken
+ * versions).
+ * Returns (void *)-1 if failed.
+ * (should return iconv_t, but that causes problems with prototypes).
+ */
+    void *
+my_iconv_open(to, from)
+    char_u	*to;
+    char_u	*from;
+{
+    iconv_t	fd;
+#define ICONV_TESTLEN 400
+    char_u	tobuf[ICONV_TESTLEN];
+    char	*p;
+    size_t	tolen;
+    static int	iconv_ok = -1;
+
+    if (iconv_ok == FALSE)
+	return (void *)-1;	/* detected a broken iconv() previously */
+
+    fd = iconv_open((char *)enc_skip(to), (char *)enc_skip(from));
+
+    if (fd != (iconv_t)-1 && iconv_ok == -1)
+    {
+	/*
+	 * Do a dummy iconv() call to check if it actually works.  There is a
+	 * version of iconv() on Linux that is broken.  We can't ignore it,
+	 * because it's wide-spread.  The symptoms are that after outputting
+	 * the initial shift state the "to" pointer is NULL and conversion
+	 * stops for no apparent reason after about 8160 characters.
+	 */
+	p = (char *)tobuf;
+	tolen = ICONV_TESTLEN;
+	(void)iconv(fd, NULL, NULL, &p, &tolen);
+	if (p == NULL)
+	{
+	    iconv_ok = FALSE;
+	    iconv_close(fd);
+	    fd = (iconv_t)-1;
+	}
+	else
+	    iconv_ok = TRUE;
+    }
+
+    return (void *)fd;
+}
+
+/*
+ * Convert the string "str[strlen]" with iconv().
+ * Returns the converted string in allocated memory.  NULL for an error.
+ */
+    static char_u *
+iconv_string(fd, str, strlen)
+    iconv_t	fd;
+    char_u	*str;
+    int		strlen;
+{
+    const char	*from;
+    size_t	fromlen;
+    char	*to;
+    size_t	tolen;
+    size_t	len = 0;
+    size_t	done = 0;
+    char_u	*result = NULL;
+    char_u	*p;
+
+    from = (char *)str;
+    fromlen = strlen;
+    for (;;)
+    {
+	len = len + fromlen * 2 + 40;	/* enough room for most conversions */
+	p = alloc(len);
+	if (p != NULL && done > 0)
+	    mch_memmove(p, result, done);
+	vim_free(result);
+	result = p;
+	if (result == NULL)	/* out of memory */
+	    break;
+
+	to = (char *)result + done;
+	tolen = len - done - 1;
+	if (iconv(fd, &from, &fromlen, &to, &tolen) != (size_t)-1)
+	{
+	    /* Finished, append a NUL. */
+	    *to = NUL;
+	    break;
+	}
+	if (ICONV_ERRNO != E2BIG)
+	{
+	    /* conversion failed */
+	    vim_free(result);
+	    result = NULL;
+	    break;
+	}
+	/* Not enough room, increase the buffer size. */
+	done = to - (char *)result;
+    }
+    return result;
+}
+
+#  if defined(DYNAMIC_ICONV) || defined(PROTO)
+/*
+ * Dynamically load the "iconv.dll" on Win32.
+ */
+static int iconv_runtime_link_init(char *libname, char *rtlibname);
+
+#ifndef DYNAMIC_ICONV	    /* just generating prototypes */
+# define HINSTANCE int
+#endif
+HINSTANCE hIconvDLL = 0;
+HINSTANCE hMsvcrtDLL = 0;
+
+#  ifndef DYNAMIC_ICONV_DLL
+#   define DYNAMIC_ICONV_DLL "iconv.dll"
+#  endif
+#  ifndef DYNAMIC_MSVCRT_DLL
+#   ifndef DEBUG
+#    define DYNAMIC_MSVCRT_DLL "msvcrt.dll"
+#   else
+#    define DYNAMIC_MSVCRT_DLL "msvcrtd.dll"
+#   endif
+#  endif
+
+    int
+iconv_enabled()
+{
+    return iconv_runtime_link_init(DYNAMIC_ICONV_DLL, DYNAMIC_MSVCRT_DLL);
+}
+
+    static int
+iconv_runtime_link_init(char *libname, char *rtlibname)
+{
+    if (hIconvDLL && hMsvcrtDLL)
+	return 1;
+    hIconvDLL = LoadLibrary(libname);
+    hMsvcrtDLL = LoadLibrary(rtlibname);
+    if (!hIconvDLL || !hMsvcrtDLL)
+    {
+	iconv_end();
+	return 0;
+    }
+    *((FARPROC*)&iconv)		= GetProcAddress(hIconvDLL, "libiconv");
+    *((FARPROC*)&iconv_open)	= GetProcAddress(hIconvDLL, "libiconv_open");
+    *((FARPROC*)&iconv_close)	= GetProcAddress(hIconvDLL, "libiconv_close");
+    *((FARPROC*)&iconvctl)	= GetProcAddress(hIconvDLL, "libiconvctl");
+    *((FARPROC*)&iconv_errno)	= GetProcAddress(hMsvcrtDLL, "_errno");
+    if (!iconv || !iconv_open || !iconv_close || !iconvctl || !iconv_errno)
+    {
+	iconv_end();
+	return 0;
+    }
+    return 1;
+}
+
+    void
+iconv_end()
+{
+    if (hIconvDLL)
+	FreeLibrary(hIconvDLL);
+    if (hMsvcrtDLL)
+	FreeLibrary(hMsvcrtDLL);
+    hIconvDLL = 0;
+    hMsvcrtDLL = 0;
+}
+#  endif /* DYNAMIC_ICONV */
+# endif /* USE_ICONV */
 
 #endif /* FEAT_MBYTE */
 
@@ -1955,6 +2538,28 @@ xim_back_delete(int n)
 	add_to_input_buf(str, 3);
 }
 
+/*
+ * Add "str[len]" to the input buffer while escaping CSI bytes.
+ */
+    static void
+add_to_input_buf_csi(char_u *str, int len)
+{
+    int		i;
+    char_u	buf[2];
+
+    for (i = 0; i < len; ++i)
+    {
+	add_to_input_buf(str + i, 1);
+	if (str[i] == CSI)
+	{
+	    /* Turn CSI into K_CSI. */
+	    buf[0] = KS_EXTRA;
+	    buf[1] = KE_CSI;
+	    add_to_input_buf(buf, 2);
+	}
+    }
+}
+
 static GSList *key_press_event_queue = NULL;
 static int preedit_buf_len = 0;
 static gboolean processing_queued_event = FALSE;
@@ -1964,27 +2569,47 @@ static gboolean processing_queued_event = FALSE;
 preedit_draw_cbproc(XIC xic, XPointer client_data, XPointer call_data)
 {
     XIMPreeditDrawCallbackStruct *draw_data;
-    XIMText *text;
-    GdkWChar *wstr = NULL;
-    char *src;
-    GSList *event_queue;
+    XIMText	*text;
+    char	*src;
+    GSList	*event_queue;
 
     draw_data = (XIMPreeditDrawCallbackStruct *) call_data;
     text = (XIMText *) draw_data->text;
 
     if (draw_data->chg_length > 0)
     {
-	xim_back_delete(draw_data->chg_length);
-	preedit_buf_len -= draw_data->chg_length;
+	int bs_cnt;
+
+	if (draw_data->chg_length > preedit_buf_len)
+	    bs_cnt = preedit_buf_len;
+	else
+	    bs_cnt = draw_data->chg_length;
+	xim_back_delete(bs_cnt);
+	preedit_buf_len -= bs_cnt;
     }
-    if (text && (src = text->string.multi_byte))
+    if (text != NULL && (src = text->string.multi_byte) != NULL)
     {
-	int len = strlen(src);
+	int		len = strlen(src);
+#ifdef FEAT_MBYTE
+	char_u		*buf;
+#endif
+	GdkWChar	*wstr = NULL;
 
 	wstr = g_new(GdkWChar, len);
 	preedit_buf_len += gdk_mbstowcs(wstr, src, len);
 	g_free(wstr);
-	add_to_input_buf((char_u *)src, len);
+#ifdef FEAT_MBYTE
+	if (input_conv.vc_type != CONV_NONE
+		&& (buf = string_convert(&input_conv,
+						 (char_u *)src, &len)) != NULL)
+	{
+	    /* Converted from 'termencoding' to 'encoding'. */
+	    add_to_input_buf_csi(buf, len);
+	    vim_free(buf);
+	}
+	else
+#endif
+	    add_to_input_buf_csi((char_u *)src, len);
     }
     event_queue = key_press_event_queue;
     processing_queued_event = TRUE;
@@ -2028,7 +2653,7 @@ xim_reset(void)
     {
 	text = XmbResetIC(((GdkICPrivate *)xic)->xic);
 	if (text != NULL && !(xim_input_style & GDK_IM_PREEDIT_CALLBACKS))
-	    add_to_input_buf((char_u *)text, strlen(text));
+	    add_to_input_buf_csi((char_u *)text, strlen(text));
 	else
 	    preedit_buf_len = 0;
 	if (text != NULL)
@@ -2199,3 +2824,181 @@ xim_get_status_area_height(void)
 }
 
 #endif /* FEAT_XIM */
+
+#if defined(FEAT_MBYTE) || defined(PROTO)
+
+/*
+ * Setup "vcp" for conversion from "from" to "to".
+ * The names must have been made canonical with enc_canonize().
+ * Note: cannot be used for conversion from/to ucs-2 and ucs-4 (will use utf-8
+ * instead).
+ */
+    void
+convert_setup(vcp, from, to)
+    vimconv_t	*vcp;
+    char_u	*from;
+    char_u	*to;
+{
+    int		from_prop;
+    int		to_prop;
+
+    /* Reset to no conversion. */
+    vcp->vc_type = CONV_NONE;
+    vcp->vc_factor = 1;
+# ifdef USE_ICONV
+    if (vcp->vc_fd != (iconv_t)-1)
+    {
+	iconv_close(vcp->vc_fd);
+	vcp->vc_fd = (iconv_t)-1;
+    }
+# endif
+
+    /* No conversion when one of the names is empty or they are equal. */
+    if (*from == NUL || *to == NUL || STRCMP(from, to) == 0)
+	return;
+
+    from_prop = enc_canon_props(from);
+    to_prop = enc_canon_props(to);
+    if ((from_prop & ENC_LATIN1) && (to_prop & ENC_UNICODE))
+    {
+	/* Internal latin1 -> utf-8 conversion. */
+	vcp->vc_type = CONV_TO_UTF8;
+	vcp->vc_factor = 2;	/* up to twice as long */
+    }
+    else if ((from_prop & ENC_UNICODE) && (to_prop & ENC_LATIN1))
+    {
+	/* Internal utf-8 -> latin1 conversion. */
+	vcp->vc_type = CONV_TO_LATIN1;
+    }
+# ifdef USE_ICONV
+    else
+    {
+	/* Use iconv() for conversion. */
+	vcp->vc_fd = (iconv_t)my_iconv_open(
+		(to_prop & ENC_UNICODE) ? (char_u *)"utf-8" : to,
+		(from_prop & ENC_UNICODE) ? (char_u *)"utf-8" : from);
+	if (vcp->vc_fd != (iconv_t)-1)
+	{
+	    vcp->vc_type = CONV_ICONV;
+	    vcp->vc_factor = 4;	/* could be longer too... */
+	}
+    }
+# endif
+}
+
+/*
+ * Do conversion on typed input characters in-place.
+ * Returns the length after conversion.
+ */
+    int
+convert_input(ptr, len, maxlen)
+    char_u	*ptr;
+    int		len;
+    int		maxlen;
+{
+    char_u	*d;
+    int		l;
+
+    d = string_convert(&input_conv, ptr, &len);
+    if (d != NULL)
+    {
+	l = STRLEN(d);
+	if (l <= maxlen)
+	{
+	    mch_memmove(ptr, d, l);
+	    len = l;
+	}
+	vim_free(d);
+    }
+    return len;
+}
+
+/*
+ * Convert text "ptr[*lenp]" according to "vcp".
+ * Returns the result in allocated memory and sets "*lenp".
+ * When "lenp" is NULL, use NUL terminated strings.
+ * When something goes wrong, NULL is returned.
+ */
+    char_u *
+string_convert(vcp, ptr, lenp)
+    vimconv_t	*vcp;
+    char_u	*ptr;
+    int		*lenp;
+{
+    char_u	*retval = NULL;
+    char_u	*d;
+    int		len;
+    int		i;
+    int		l;
+    int		c;
+
+    if (lenp == NULL)
+	len = STRLEN(ptr);
+    else
+	len = *lenp;
+
+    switch (vcp->vc_type)
+    {
+	case CONV_TO_UTF8:	/* latin1 to utf-8 conversion */
+	    retval = alloc(len * 2 + 1);
+	    if (retval == NULL)
+		break;
+	    d = retval;
+	    for (i = 0; i < len; ++i)
+	    {
+		if (ptr[i] < 0x80)
+		    *d++ = ptr[i];
+		else
+		{
+		    *d++ = 0xc0 + ((unsigned)ptr[i] >> 6);
+		    *d++ = 0x80 + (ptr[i] & 0x3f);
+		}
+	    }
+	    *d = NUL;
+	    if (lenp != NULL)
+		*lenp = d - retval;
+	    break;
+
+	case CONV_TO_LATIN1:	/* utf-8 to latin1 conversion */
+	    retval = alloc(len + 1);
+	    if (retval == NULL)
+		break;
+	    d = retval;
+	    for (i = 0; i < len; ++i)
+	    {
+		l = utf_ptr2len_check(ptr + i);
+		if (l <= 1)
+		    *d++ = ptr[i];
+		else
+		{
+		    c = utf_ptr2char(ptr + i);
+		    if (!utf_iscomposing(c))	/* skip composing chars */
+		    {
+			if (c < 0x100)
+			    *d++ = c;
+			else
+			{
+			    *d++ = 0xbf;
+			    if (utf_char2cells(c) > 1)
+				*d++ = '?';
+			}
+		    }
+		    i += l - 1;
+		}
+	    }
+	    *d = NUL;
+	    if (lenp != NULL)
+		*lenp = d - retval;
+	    break;
+
+# ifdef USE_ICONV
+	case CONV_ICONV:	/* conversion with output_conv.vc_fd */
+	    retval = iconv_string(vcp->vc_fd, ptr, len);
+	    if (retval != NULL && lenp != NULL)
+		*lenp = STRLEN(retval);
+# endif
+    }
+
+    return retval;
+}
+#endif

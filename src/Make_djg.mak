@@ -25,6 +25,7 @@ OBJ = \
 	obj/edit.o \
 	obj/eval.o \
 	obj/ex_cmds.o \
+	obj/ex_cmds2.o \
 	obj/ex_docmd.o \
 	obj/ex_getln.o \
 	obj/fileio.o \
@@ -38,6 +39,7 @@ OBJ = \
 	obj/message.o \
 	obj/misc1.o \
 	obj/misc2.o \
+	obj/move.o \
 	obj/multibyte.o \
 	obj/normal.o \
 	obj/ops.o \
@@ -103,8 +105,11 @@ obj/edit.o:	edit.c $(INCL)
 obj/eval.o:	eval.c $(INCL)
 	$(CC) -c $(CFLAGS) eval.c -o obj/eval.o
 
-obj/ex_cmds.o:	ex_cmds.c $(INCL) ex_cmds.h
+obj/ex_cmds.o:	ex_cmds.c $(INCL)
 	$(CC) -c $(CFLAGS) ex_cmds.c -o obj/ex_cmds.o
+
+obj/ex_cmds2.o:	ex_cmds2.c $(INCL)
+	$(CC) -c $(CFLAGS) ex_cmds2.c -o obj/ex_cmds2.o
 
 obj/ex_docmd.o:	ex_docmd.c $(INCL) ex_cmds.h
 	$(CC) -c $(CFLAGS) ex_docmd.c -o obj/ex_docmd.o
@@ -144,6 +149,9 @@ obj/misc1.o:	misc1.c $(INCL)
 
 obj/misc2.o:	misc2.c $(INCL)
 	$(CC) -c $(CFLAGS) misc2.c -o obj/misc2.o
+
+obj/move.o:	move.c $(INCL)
+	$(CC) -c $(CFLAGS) move.c -o obj/move.o
 
 obj/multibyte.o: multibyte.c $(INCL)
 	$(CC) -c $(CFLAGS) multibyte.c -o obj/multibyte.o

@@ -69,7 +69,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0u
+MINOR = 0v
 
 # CHECKLIST for creating a new version:
 #
@@ -160,6 +160,7 @@ SRC_ALL =	\
 		src/eval.c \
 		src/ex_cmds.c \
 		src/ex_cmds.h \
+		src/ex_cmds2.c \
 		src/ex_docmd.c \
 		src/ex_getln.c \
 		src/farsi.c \
@@ -181,6 +182,7 @@ SRC_ALL =	\
 		src/message.c \
 		src/misc1.c \
 		src/misc2.c \
+		src/move.c \
 		src/multibyte.c \
 		src/normal.c \
 		src/ops.c \
@@ -193,6 +195,7 @@ SRC_ALL =	\
 		src/proto/edit.pro \
 		src/proto/eval.pro \
 		src/proto/ex_cmds.pro \
+		src/proto/ex_cmds2.pro \
 		src/proto/ex_docmd.pro \
 		src/proto/ex_getln.pro \
 		src/proto/fileio.pro \
@@ -207,6 +210,7 @@ SRC_ALL =	\
 		src/proto/message.pro \
 		src/proto/misc1.pro \
 		src/proto/misc2.pro \
+		src/proto/move.pro \
 		src/proto/multibyte.pro \
 		src/proto/normal.pro \
 		src/proto/ops.pro \

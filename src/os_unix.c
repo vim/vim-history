@@ -265,8 +265,8 @@ static struct signalinfo
 
     void
 mch_write(s, len)
-    char_u  *s;
-    int	    len;
+    char_u	*s;
+    int		len;
 {
     write(1, (char *)s, len);
     if (p_wd)		/* Unix is too fast, slow down a bit more */
@@ -283,9 +283,9 @@ mch_write(s, len)
  */
     int
 mch_inchar(buf, maxlen, wtime)
-    char_u  *buf;
-    int	    maxlen;
-    long    wtime;	    /* don't use "time", MIPS cannot handle it */
+    char_u	*buf;
+    int		maxlen;
+    long	wtime;	    /* don't use "time", MIPS cannot handle it */
 {
     int		len;
 #ifdef FEAT_AUTOCMD
@@ -2018,16 +2018,19 @@ mch_init()
 mch_windexit(r)
     int r;
 {
-    settmode(TMODE_COOK);
     exiting = TRUE;
 #ifdef FEAT_GUI
     if (!gui.in_use)
 #endif
     {
+	settmode(TMODE_COOK);
 #ifdef FEAT_TITLE
 	mch_restore_title(3);	/* restore xterm title and icon name */
 #endif
+	/* Stop termcap first: May need to check for T_CRV response, which
+	 * requires RAW mode. */
 	stoptermcap();
+
 	/*
 	 * A newline is only required after a message in the alternate screen.
 	 * This is set to TRUE by wait_return().

@@ -45,6 +45,7 @@ OBJ = \
 	edit.o \
 	eval.o \
 	ex_cmds.o \
+	ex_cmds2.o \
 	ex_docmd.o \
 	ex_getln.o \
 	fileio.o \
@@ -58,6 +59,7 @@ OBJ = \
 	message.o \
 	misc1.o \
 	misc2.o \
+	move.o \
 	multibyte.o \
 	normal.o \
 	ops.o \
@@ -109,7 +111,8 @@ charset.o:	charset.c  $(INCL)
 digraph.o:	digraph.c  $(INCL)
 edit.o:		edit.c  $(INCL)
 eval.o:		eval.c  $(INCL)
-ex_cmds.o:	ex_cmds.c  $(INCL) ex_cmds.h
+ex_cmds.o:	ex_cmds.c  $(INCL)
+ex_cmds2.o:	ex_cmds2.c  $(INCL)
 ex_docmd.o:	ex_docmd.c  $(INCL) ex_cmds.h
 ex_getln.o:	ex_getln.c  $(INCL)
 fileio.o:	fileio.c  $(INCL)
@@ -123,6 +126,7 @@ menu.o:		menu.c  $(INCL)
 message.o:	message.c  $(INCL)
 misc1.o:	misc1.c  $(INCL)
 misc2.o:	misc2.c  $(INCL)
+move.o:		move.c  $(INCL)
 multibyte.o:	multibyte.c  $(INCL)
 normal.o:	normal.c  $(INCL)
 ops.o:		ops.c  $(INCL)

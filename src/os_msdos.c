@@ -929,7 +929,9 @@ got3:			    s += 3;
 	    myputch(*s++);
 	}
     else
+    {
 	write(1, s, (unsigned)len);
+    }
 }
 
 /*
@@ -1094,6 +1096,13 @@ mch_inchar(
 		{
 		    *buf++ = c;
 		    len++;
+#ifdef FEAT_MBYTE
+		    /* Convert from 'termencoding' to 'encoding'. Only
+		     * translate normal characters, not key codes. */
+		    if (input_conv.vc_type != CONV_NONE
+					    && (len == 1 || buf[-2] != K_NUL))
+			len += convert_input(buf - 1, 1, maxlen - len + 1) - 1;
+#endif
 		}
 		else
 		    nextchar = c;

@@ -1,13 +1,15 @@
 " Menu Translations:	Polish
 " Maintainer:  		Rafal M. Sulejman <rms@poczta.onet.pl>
 " Initial Translation: 	Marcin Dalecki <dalecki@cs.net.pl>
-" Last Change:      	2001 Feb 02
+" Last Change:      	2001 Feb 11
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
   finish
 endif
 let did_menu_trans = 1
+
+scriptencoding iso-8859-2
 
 " Help menu
 menutrans &Help			Po&moc

@@ -223,20 +223,9 @@ static int	opage = 24;
     void
 mch_write(char_u *s, int len)
 {
-#ifdef FEAT_GUI
-    if (gui.in_use && !gui.dying)
-    {
-	gui_write(s, len);
-	if (p_wd)
-	    gui_wait_for_chars(p_wd);
-    }
-    else
-#endif
-    {
-	while (len-- > 0)
-	    vms_outchar(*s++);
-	vms_flushbuf();
-    }
+    while (len-- > 0)
+	vms_outchar(*s++);
+    vms_flushbuf();
 }
 
 /*

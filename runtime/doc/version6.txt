@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0u.  Last change: 2001 Feb 04
+*version6.txt*  For Vim version 6.0v.  Last change: 2001 Feb 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -21,7 +21,7 @@ Cursor position in Visual mode		|curpos-visual|
 substitute command			|substitute-CR|
 'include' option local			|include-local|
 global option values used		|new-global-values|
-'fileencoding' obsolete			|fileencoding-obsolete|
+'fileencoding' changed			|fileencoding-changed|
 Digraphs changed			|digraphs-changed|
 Filetype detection changed		|filetypedetect-changed|
 Unlisted buffers introduced		|new-unlisted-buffers|
@@ -113,14 +113,18 @@ sets both the local and global values, this is still compatible.  But a
 modeline only sets the local value, this is not backwards compatible.
 
 
-'fileencoding' obsolete				*fileencoding-obsolete*
------------------------
+'fileencoding' changed				*fileencoding-changed*
+----------------------
 
-'fileencoding' is no longer to be used.  It is now equivalent to the new
-'charcode' option, which is global.  'fileencoding' was local to a buffer, but
-it could never be different between buffers, because it changed the way text
-in all buffers was interpreted.  The FileEncoding autocommand now does the
-same as the new CharCode event.
+'fileencoding' was used in Vim 5.x to set the encoding used inside all of Vim.
+This was a bit strange, because it was local to a buffer and worked for all
+buffers.  It could never be different between buffers, because it changed the
+way text in all buffers was interpreted.
+It is now used for the encoding of the file related to the buffer.  If you
+still set 'fileencoding' it is likely to be overwritten by the detected
+encoding from 'fileencodings'.
+The FileEncoding autocommand now does the same as the new EncodingChanged
+event.
 
 
 Digraphs changed				*digraphs-changed*
@@ -432,21 +436,23 @@ characters are supported, they overprint the preceding character.
 Double-width characters are also supported.  See |UTF-8|.
 
 UCS-2 and UCS-4 encodings are supported too, they are converted to UTF-8
-internally.  There is also support for editing Unicode files in a Latin-1
+internally.  There is also support for editing Unicode files in a Latin1
 environment.  Other encodings are converted with iconv() or an external
 converter specified with 'charconvert'.
 
 Many new items for Multi-byte support:
-- Added 'charcode' option: specifies character coding used inside Vim.
-- Added 'filecharcode' and 'filecharcodes': specify character coding in a
+- Added 'encoding' option: specifies character coding used inside Vim.  It can
+  be any 8-bit encoding, some double-byte encodings or Unicode.
+  It is initialized from the environment when a supported value is found.
+- Added 'fileencoding' and 'fileencodings': specify character coding in a
   file, similar to 'fileformat' and 'fileformats'.
-  When 'charcode' is "utf-8" and 'filecharcodes' is "utf-8,latin-1" this will
-  automatically switch to latin-1 if a file does not contain valid UTF-8.
+  When 'encoding' is "utf-8" and 'fileencodings' is "utf-8,latin1" this will
+  automatically switch to latin1 if a file does not contain valid UTF-8.
 - Added 'guifontwide' for double-width font.
 - Added Korean support for character class detection.  Also fix cls() in
   search.c. (Chong-Dae Park)
 - Added 'bomb' option and detection of a BOM at the start of a file.  Can be
-  used with "ucs-bom" in 'filecharcodes' to automatically detect a Unicode
+  used with "ucs-bom" in 'fileencodings' to automatically detect a Unicode
   file if it starts with a BOM.  Especially useful on MS-Windows (NT and
   2000), which uses ucs-2le files with a BOM (e.g., when exporting the
   registry).
@@ -455,6 +461,15 @@ Many new items for Multi-byte support:
 - Win32 with MSVC: dynamically load iconv.dll library. (Muraoka Taro)
 - Added 'delcombing' option: Delete combining character separately. (Ron
   Aaron)
+- When 'viminfo' contains the 'c' flag, the viminfo file is converted from the
+  'encoding' it was written with to the current 'encoding'.
+- Added the 'termencoding' option: Specifies the encoding used for the
+  terminal.  Useful to put Vim in utf-8 mode while in a non-Unicode locale: >
+    :let &termencoding = &encoding
+    :set encoding=utf-8
+- Added ":scriptencoding" command: convert lines in a sourced script to
+  'encoding'.  Useful for menu files.
+- Made "\<" and "\>" in regexp work for UTF-8. (Muraoka Taro)
 
 Allow defining digraphs for multi-byte characters.
 Added RFC1345 digraphs for Unicode.
@@ -871,6 +886,7 @@ getfsize()	Return the size of a file.
 getwinvar()	gets the value of an option or local variable in a window (Ron
 		Aaron)
 hasmapto()	Detect if a mapping to a string is already present.
+iconv()		Convert a string from one encoding to another.
 indent()	gets the indent of a line (Ron Aaron)
 inputsecret()	Ask the user to type a string without showing the typed keys.
 		(Charles Campbell)
@@ -976,9 +992,14 @@ When doing ":qall" and there is a change in a buffer that is being edited in
 another window, jump to that window, instead of editing that buffer in the
 current window.
 
-Added the "++cc=" and "++ff=" arguments to file read/write commands to force
-using the given 'charcode' or 'fileformat'.  And the "v:cmdarg" variable, to
+Added the "++enc=" and "++ff=" arguments to file read/write commands to force
+using the given 'encoding' or 'fileformat'.  And the "v:cmdarg" variable, to
 be used for FileReadCmd autocommands that read/write the file themselves.
+
+When reading stdin, first read the text in binary mode and then re-read it
+with automatic selection of 'fileformat' and 'fileencoding'.  This avoids
+problems with not being able to rewind the file (e.g., when a line near the
+end of the file ends in LF instead of CR-LF).
 
 Insert mode:
 "CTRL-G j" and "CTRL-G k" can be used to insert in another line in the same
@@ -1170,9 +1191,16 @@ Internal changes:
   it was not set.
 - Removed the use of the stuff buffer for "*", "K", CTRL-], etc.  Avoids
   problem with autocommands.
+- Moved some code from ex_docmd.c to ex_cmds2.c.  The file was getting too
+  big.  Also moved some code from screen.c to move.c.
+- Don't include the CRC table for encryption, generate it.  Saves quite a bit
+  of space in the source code. (Matthias Kramm)
 
 Support for xterm with 88 or 256 colors.  The right color numbers will be used
 for the name used in a ":highlight" command. (Steve Wall)
+
+Adjusted colortest.vim: Included colors on normal background and reduced the
+size by using a while loop. (Rafael Garcia-Suarez)
 
 When an xterm is in 8-bit mode this is detected by the code returned for
 |t_RV|.  All key codes are automatically converted to their 8-bit versions.
@@ -1689,5 +1717,27 @@ equal.
 
 Mac: In Vi-compatible mode didn't read files with CR line separators. (Dany
 St-Amant)
+
+Multibyte GDK XIM: While composing a multibyte-word, if user presses a
+mouse button, then the word is removed.  It should remain and composing end.
+(Sung-Hyun Nam)
+
+MS-DOS, MS-Windows and OS/2: When reading from stdin, automatic CR-LF
+conversion by the C library got in the way of detecting a "dos" 'fileformat'.
+
+When 'smartcase' is set, patterns with "\S" would also make 'ignorecase'
+reset.
+
+When clicking the mouse in a column larger than 222, it moved to the first
+column.  Can't encode a larger number in a character.  Now limit the number to
+222, don't jump back to the first column.
+
+GUI: In some versions CSI would cause trouble, either when typed directly or
+when part of a multi-byte sequence.
+
+When using multibyte characters in a ":normal" command, a trailing byte that
+is CSI or K_SPECIAL caused problems.
+
+Wildmenu didn't handle multi-byte characters.
 
  vim:tw=78:

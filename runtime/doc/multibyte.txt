@@ -1,4 +1,4 @@
-*multibyte.txt* For Vim version 6.0u.  Last change: 2000 Aug 16
+*multibyte.txt* For Vim version 6.0v.  Last change: 2001 Feb 10
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -28,6 +28,7 @@ Also see |+multi_byte| and |'fileencoding'|.
 6. Input (Windows IME support)		|multibyte-ime|
 7. UTF-8				|UTF-8|
 8. UTF-8 in XFree86 xterm		|UTF8-xterm|
+9. Unfinished snippets			|mbyte-snippets|
 
 ==============================================================================
 1. Introduction						*multibyte-intro*
@@ -424,13 +425,13 @@ specifying the |locale| and some options at start time.
 These options are relevant for editing multi-byte files.  Check the help in
 options.txt for detailed information.
 
-'charcode'	Encoding used for the keyboard and display.  it is alse the
+'encoding'	Encoding used for the keyboard and display.  it is alse the
 		default encoding for files.
-'filecharcode'	Encoding of a file.  When it's different from 'charcode'
+'fileencoding'	Encoding of a file.  When it's different from 'encoding'
 		conversion is done when reading or writing the file.
-'filecharcodes'	List of possible encodings of a file.  When opening a file
+'fileencodings'	List of possible encodings of a file.  When opening a file
 		these will be tried and the first one that doesn't cause an
-		error is used for 'filecharcode'
+		error is used for 'fileencoding'
 'charconvert'	Expression used to convert files from one encoding to another.
 
 ==============================================================================
@@ -631,7 +632,7 @@ WHAT IS GLOBAL IME					*global-ime*
 
 Vim currently has limited UTF-8 support.  It appears to work in an xterm and
 with the Athena and Motif GUI.  To use it:
-- set 'charcode' to "utf-8".
+- set 'encoding' to "utf-8".
 - set 'guifont' or 'guifontset' to a font that contains the characters you
   use.  For xterm see |UTF8-xterm|.  For the X11 GUI this should work: >
 	:set guifont=-misc-fixed-medium-r-normal--15-140-75-75-c-90-iso10646-1
@@ -706,6 +707,121 @@ and you will have a working UTF-8 terminal emulator. Try both >
 with the demo text that comes with ucs-fonts.tar.gz in order to see
 whether there are any problems with UTF-8 in your xterm.
 
-For Vim you may need to set 'charcode' to "utf-8".
+For Vim you may need to set 'encoding' to "utf-8".
+
+==============================================================================
+9. Unfinished snippets					*mbyte-snippets*
+
+							*encoding-names*
+Vim can use many different character encodings.  There are three major groups:
+
+1   8bit	Single-byte encodings, 256 different characters.  Mostly used
+		in USA and Europe.  Example: ISO-8859-1 (Latin1).  All
+		characters occupy one screen cell only.
+
+2   2byte	Double-byte encodings, over 10000 different characters.
+		Mostly used in Asian countries.  Example: euc-jp (Japanese).
+		The number of screen cells is equal to the number of bytes.
+
+u   Unicode	Universal encoding, should replace all others.  ISO 10646.
+		Millions of different characters.  Example: UTF-8.  The
+		relation between bytes and screen cells is complex.
+
+Other encodings cannot be used by Vim internally.  Files in other encodings
+can be edited by using conversion, see 'fileencoding'.
+Note that all encodings must use ASCII for the characters up to 128 (except
+when compiled for EBCDIC).
+
+Supported 'encoding' values are:
+1   latin1	8-bit characters (ISO 8859-1)
+1   ansi	same as latin1 (obsolete, for backward compatibility)
+1   iso-8859-n	ISO_8859 variant (n = 2 to 15)
+1   8bit-{name} any 8-bit encoding (Vim specific name)
+2   japan	Japanese: on Unix "euc-jp", on MS-Windows shift-JIS (cp932)
+2   korea	Korean: on Unix "euc-kr", on MS-Windows cp949
+2   prc		simplified Chinese: on Unix "chinese", on MS-Windows cp936
+2   taiwan	traditional Chinese: on Unix "euc-tw", on MS-Windows cp950
+2   2byte-{name} Unix: any double-byte encoding (Vim specific name)
+2   2byte-cp{number} MS-Windows: any double-byte codepage (Vim specific name)
+u   utf-8	32 bit UTF-8 encoded Unicode (ISO/IEC 10646-1)
+u   ucs-2	16 bit UCS-2 encoded Unicode (ISO/IEC 10646-1)
+u   unicode	same as ucs-2
+u   ucs-2be	same as ucs-2 (big endian)
+u   ucs-2le	like ucs-2, little endian
+u   ucs-4	32 bit UCS-4 encoded Unicode (ISO/IEC 10646-1)
+u   ucs-4be	same as ucs-4 (big endian)
+u   ucs-4le	like ucs-4, little endian
+    cp{number}	MS-Windows: any installed codepage which is single-byte or
+		double-byte
+
+The {name} can be any encoding name that your system supports.  It is passed
+to iconv() to convert between the encoding of the file and the current locale.
+For MS-Windows "cp{number}" means using codepage {number}.
+Examples: >
+		:set encoding=8bit-cp1252
+		:set encoding=2byte-cp932
+<
+For the UCS codes the byte order matters.  This is tricky, use UTF-8 whenever
+you can.  The default is to use big-endian (most significant byte comes
+first):
+	    name	bytes		char ~
+	    ucs-2	      11 22	    1122
+	    ucs-2be	      11 22	    1122
+	    ucs-2le	      22 11	    1122
+	    ucs-4	11 22 33 44	11223344
+	    ucs-4be	11 22 33 44	11223344
+	    ucs-4le	44 33 22 11	11223344
+
+On MS-Windows systems you often want to use "ucs-2le", because it uses little
+endian UCS-2.
+
+
+							*encoding-table*
+Normally 'encoding' is equal to your current locale and 'termencoding' is
+empty.  This means that your keyboard and display work with characters encoded
+in your current locale, and Vim uses the same characters internally.
+
+You can make Vim use characters in a different encoding by setting the
+'encoding' option to a different value.  Since the keyboard and display still
+use the current locale, conversion needs to be done.  The 'termencoding' then
+takes over the value of the current locale, so Vim converts between 'encoding'
+and 'termencoding'.  Example: >
+	:let &termencoding = &encoding
+	:set encoding=utf-8
+
+However, not all combinations of values are possible.  The table below tells
+you how each of the nine combinations works.  This is further restricted by
+not all conversions being possible, iconv() being present, etc.  Since this
+depends on the system used, no detailed list can be given.
+
+('tenc' is the short name for 'termencoding' and 'enc' short for 'encoding')
+
+'tenc'	    'enc'	remark ~
+
+ 8bit	    8bit	Works.  When 'termencoding' is different from
+			'encoding' typing and displaying may be wrong for some
+			characters, Vim does NOT perform conversion (set
+			'encoding' to "utf-8" to get this).
+ 8bit      2byte	MS-Windows: works for all codepages installed on your
+			system; you can only type 8bit characters;
+			Other systems: does NOT work.
+ 8bit	   Unicode	Works, but you can only type 8bit characters; in a
+			terminal you can only see 8bit characters; the GUI can
+			show all characters that the 'guifont' supports.
+
+ 2byte	    8bit	Works, but typing non-ASCII characters might
+			be a problem.
+ 2byte	   2byte	MS-Windows: works for all codepages installed on your
+			system; typing characters might be a problem when
+			locale is different from 'encoding'.
+			Other systems: Only works when 'termencoding' is equal
+			to 'encoding', you might as well leave it empty.
+ 2byte	   Unicode	works, Vim will translate typed characters.
+
+ Unicode    8bit	works (unusual)
+ Unicode    2byte	does NOT work
+ Unicode   Unicode	works very well (leaving 'termencoding' empty works
+			the same way, because all Unicode is handled
+			internally as UTF-8)
 
  vim:tw=78:

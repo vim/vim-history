@@ -37,4 +37,7 @@ int vim_isblankline __ARGS((char_u *lbuf));
 void vim_str2nr __ARGS((char_u *start, int *hexp, int *len, int dooct, int dohex, long *nptr, unsigned long *unptr));
 int hex2nr __ARGS((int c));
 int hexhex2nr __ARGS((char_u *p));
+int rem_backslash __ARGS((char_u *str));
+void backslash_halve __ARGS((char_u *p));
+char_u *backslash_halve_save __ARGS((char_u *p));
 /* vim: set ft=c : */

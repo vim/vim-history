@@ -156,7 +156,7 @@ msg_strtrunc(s)
 	if (len > room)
 	{
 #ifdef FEAT_MBYTE
-	    if (cc_utf8)
+	    if (enc_utf8)
 		/* may have up to 18 bytes per cell (6 per char, up to two
 		 * composing chars) */
 		buf = alloc((room + 2) * 18);
@@ -192,7 +192,7 @@ msg_strtrunc(s)
 
 		/* Last part: End of the string. */
 #ifdef FEAT_MBYTE
-		if (cc_dbcs)
+		if (enc_dbcs)
 		{
 		    /* For DBCS going backwards in a string is slow, but
 		     * computing the cell width isn't too slow: go forward
@@ -200,7 +200,7 @@ msg_strtrunc(s)
 		    while (len + vim_strsize(s + i) >= room)
 			++i;
 		}
-		else if (cc_utf8)
+		else if (enc_utf8)
 		{
 		    /* For UTF-8 we can go backwards easily. */
 		    for (i = STRLEN(s) - 1; len < room; --i)
@@ -783,7 +783,8 @@ wait_return(redraw)
 	starttermcap();		    /* start termcap before redrawing */
 	shell_resized();
     }
-    else if (!skip_redraw && (redraw == TRUE || (msg_scrolled && redraw != -1)))
+    else if (!skip_redraw
+	    && (redraw == TRUE || (msg_scrolled != 0 && redraw != -1)))
     {
 	starttermcap();		    /* start termcap before redrawing */
 	redraw_later(VALID);
@@ -1902,7 +1903,7 @@ give_warning(message, hl)
 	keep_msg_attr = hl_attr(HLF_W);
     else
 	keep_msg_attr = 0;
-    if (msg_attr(message, keep_msg_attr) && !msg_scrolled)
+    if (msg_attr(message, keep_msg_attr) && msg_scrolled == 0)
 	keep_msg = message;
     msg_didout = FALSE;	    /* overwrite this message */
     msg_nowait = TRUE;	    /* don't wait for this message */

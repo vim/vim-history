@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Vim .viminfo file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jan 15
+" Last Change:	2001 Feb 07
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")
@@ -15,11 +15,14 @@ syn match viminfoError "^[^\t].*"
 syn match viminfoStatement "^[/&$@:?=%!<]"
 
 " The two-character one-liners that are recognized
-syn match viminfoStatement "^['->"]."
+syn match viminfoStatement "^[-'>"]."
 syn match viminfoStatement +^"".+
 syn match viminfoStatement "^\~[/&]"
 syn match viminfoStatement "^\~[hH]"
 syn match viminfoStatement "^\~[mM][sS][lL][eE]\d\+\~\=[/&]"
+
+syn match viminfoOption "^\*.*=" contains=viminfoOptionName
+syn match viminfoOptionName "\*\a*"ms=s+1 contained
 
 " Comments
 syn match viminfoComment "^#.*"
@@ -28,6 +31,8 @@ syn match viminfoComment "^#.*"
 hi def link viminfoComment	Comment
 hi def link viminfoError	Error
 hi def link viminfoStatement	Statement
+hi def link viminfoOption	viminfoStatement
+hi def link viminfoOptionName	PreProc
 
 let b:current_syntax = "viminfo"
 

@@ -78,7 +78,6 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'buflisted'	options.txt	/*'buflisted'*
 'buftype'	options.txt	/*'buftype'*
 'cb'	options.txt	/*'cb'*
-'cc'	options.txt	/*'cc'*
 'ccv'	options.txt	/*'ccv'*
 'cd'	options.txt	/*'cd'*
 'cdpath'	options.txt	/*'cdpath'*
@@ -86,7 +85,6 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'cf'	options.txt	/*'cf'*
 'ch'	options.txt	/*'ch'*
 'character'	intro.txt	/*'character'*
-'charcode'	options.txt	/*'charcode'*
 'charconvert'	options.txt	/*'charconvert'*
 'cin'	options.txt	/*'cin'*
 'cindent'	options.txt	/*'cindent'*
@@ -146,6 +144,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'efm'	options.txt	/*'efm'*
 'ei'	options.txt	/*'ei'*
 'ek'	options.txt	/*'ek'*
+'enc'	options.txt	/*'enc'*
+'encoding'	options.txt	/*'encoding'*
 'endofline'	options.txt	/*'endofline'*
 'eol'	options.txt	/*'eol'*
 'ep'	options.txt	/*'ep'*
@@ -160,8 +160,6 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'ex'	options.txt	/*'ex'*
 'expandtab'	options.txt	/*'expandtab'*
 'exrc'	options.txt	/*'exrc'*
-'fcc'	options.txt	/*'fcc'*
-'fccs'	options.txt	/*'fccs'*
 'fcl'	options.txt	/*'fcl'*
 'fcs'	options.txt	/*'fcs'*
 'fdc'	options.txt	/*'fdc'*
@@ -173,13 +171,13 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'fdn'	options.txt	/*'fdn'*
 'fdo'	options.txt	/*'fdo'*
 'fdt'	options.txt	/*'fdt'*
-'fe'	options.txt	/*'fe'*
 'fen'	options.txt	/*'fen'*
+'fenc'	options.txt	/*'fenc'*
+'fencs'	options.txt	/*'fencs'*
 'ff'	options.txt	/*'ff'*
 'ffs'	options.txt	/*'ffs'*
-'filecharcode'	options.txt	/*'filecharcode'*
-'filecharcodes'	options.txt	/*'filecharcodes'*
 'fileencoding'	options.txt	/*'fileencoding'*
+'fileencodings'	options.txt	/*'fileencodings'*
 'fileformat'	options.txt	/*'fileformat'*
 'fileformats'	options.txt	/*'fileformats'*
 'filetype'	options.txt	/*'filetype'*
@@ -772,7 +770,9 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'tb'	options.txt	/*'tb'*
 'tbi'	options.txt	/*'tbi'*
 'tbs'	options.txt	/*'tbs'*
+'tenc'	options.txt	/*'tenc'*
 'term'	options.txt	/*'term'*
+'termencoding'	options.txt	/*'termencoding'*
 'terse'	options.txt	/*'terse'*
 'textauto'	options.txt	/*'textauto'*
 'textmode'	options.txt	/*'textmode'*
@@ -909,6 +909,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 +fork	various.txt	/*+fork*
 +gettext	various.txt	/*+gettext*
 +hangul_input	various.txt	/*+hangul_input*
++iconv	various.txt	/*+iconv*
 +insert_expand	various.txt	/*+insert_expand*
 +langmap	various.txt	/*+langmap*
 +libcall	various.txt	/*+libcall*
@@ -1809,6 +1810,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :sbrewind	windows.txt	/*:sbrewind*
 :sbuffer	windows.txt	/*:sbuffer*
 :scrip	repeat.txt	/*:scrip*
+:scripte	repeat.txt	/*:scripte*
+:scriptencoding	repeat.txt	/*:scriptencoding*
 :scriptnames	repeat.txt	/*:scriptnames*
 :se	options.txt	/*:se*
 :search-args	tagsearch.txt	/*:search-args*
@@ -2359,7 +2362,6 @@ CTRL-\_CTRL-N	intro.txt	/*CTRL-\\_CTRL-N*
 CTRL-]	tagsearch.txt	/*CTRL-]*
 CTRL-^	editing.txt	/*CTRL-^*
 CTRL-{char}	intro.txt	/*CTRL-{char}*
-CharCode	autocmd.txt	/*CharCode*
 Chinese	multibyte.txt	/*Chinese*
 Cmd-event	autocmd.txt	/*Cmd-event*
 Cmdline	cmdline.txt	/*Cmdline*
@@ -2383,6 +2385,7 @@ E	motion.txt	/*E*
 EX	intro.txt	/*EX*
 EXINIT	starting.txt	/*EXINIT*
 Elvis	intro.txt	/*Elvis*
+EncodingChanged	autocmd.txt	/*EncodingChanged*
 Eterm	syntax.txt	/*Eterm*
 Ex	intro.txt	/*Ex*
 Ex-mode	intro.txt	/*Ex-mode*
@@ -3079,6 +3082,8 @@ eiffel.vim	syntax.txt	/*eiffel.vim*
 emacs-keys	tips.txt	/*emacs-keys*
 emacs-tags	tagsearch.txt	/*emacs-tags*
 emacs_tags	tagsearch.txt	/*emacs_tags*
+encoding-names	multibyte.txt	/*encoding-names*
+encoding-table	multibyte.txt	/*encoding-table*
 encryption	editing.txt	/*encryption*
 end	intro.txt	/*end*
 enlightened-terminal	syntax.txt	/*enlightened-terminal*
@@ -3193,7 +3198,7 @@ file-searching	editing.txt	/*file-searching*
 file-type	filetype.txt	/*file-type*
 file-types	filetype.txt	/*file-types*
 file_readable()	eval.txt	/*file_readable()*
-fileencoding-obsolete	version6.txt	/*fileencoding-obsolete*
+fileencoding-changed	version6.txt	/*fileencoding-changed*
 filename-backslash	cmdline.txt	/*filename-backslash*
 filename-modifiers	cmdline.txt	/*filename-modifiers*
 filereadable()	eval.txt	/*filereadable()*
@@ -3602,6 +3607,7 @@ iccf	uganda.txt	/*iccf*
 icon-changed	version4.txt	/*icon-changed*
 iconise	starting.txt	/*iconise*
 iconize	starting.txt	/*iconize*
+iconv()	eval.txt	/*iconv()*
 ident-search	tips.txt	/*ident-search*
 if_cscope.txt	if_cscope.txt	/*if_cscope.txt*
 if_ole.txt	if_ole.txt	/*if_ole.txt*
@@ -3772,6 +3778,7 @@ masm.vim	syntax.txt	/*masm.vim*
 match()	eval.txt	/*match()*
 matchend()	eval.txt	/*matchend()*
 matchstr()	eval.txt	/*matchstr()*
+mbyte-snippets	multibyte.txt	/*mbyte-snippets*
 menu-changes-5.4	version5.txt	/*menu-changes-5.4*
 menu-examples	gui.txt	/*menu-examples*
 menu-priority	gui.txt	/*menu-priority*
@@ -4691,6 +4698,7 @@ vim-variable	eval.txt	/*vim-variable*
 vim:	options.txt	/*vim:*
 vimdev	intro.txt	/*vimdev*
 viminfo	starting.txt	/*viminfo*
+viminfo-encoding	starting.txt	/*viminfo-encoding*
 viminfo-errors	starting.txt	/*viminfo-errors*
 viminfo-file	starting.txt	/*viminfo-file*
 viminfo-file-marks	starting.txt	/*viminfo-file-marks*

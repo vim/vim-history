@@ -780,7 +780,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and some things
 ### might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60u
+VIMRTDIR = /vim60v
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 INDSUBDIR = /indent
@@ -1145,6 +1145,7 @@ BASIC_SRC = \
 	edit.c \
 	eval.c \
 	ex_cmds.c \
+	ex_cmds2.c \
 	ex_docmd.c \
 	ex_getln.c \
 	fileio.c \
@@ -1159,6 +1160,7 @@ BASIC_SRC = \
 	message.c \
 	misc1.c \
 	misc2.c \
+	move.c \
 	multibyte.c \
 	normal.c \
 	ops.c \
@@ -1205,6 +1207,7 @@ OBJ = \
 	objects/edit.o \
 	objects/eval.o \
 	objects/ex_cmds.o \
+	objects/ex_cmds2.o \
 	objects/ex_docmd.o \
 	objects/ex_getln.o \
 	objects/fileio.o \
@@ -1220,6 +1223,7 @@ OBJ = \
 	objects/message.o \
 	objects/misc1.o \
 	objects/misc2.o \
+	objects/move.o \
 	objects/multibyte.o \
 	objects/normal.o \
 	objects/ops.o \
@@ -1253,6 +1257,7 @@ PRO_AUTO = \
 	edit.pro \
 	eval.pro \
 	ex_cmds.pro \
+	ex_cmds2.pro \
 	ex_docmd.pro \
 	ex_getln.pro \
 	fileio.pro \
@@ -1270,6 +1275,7 @@ PRO_AUTO = \
 	message.pro \
 	misc1.pro \
 	misc2.pro \
+	move.pro \
 	multibyte.pro \
 	normal.pro \
 	ops.pro \
@@ -1349,7 +1355,7 @@ CCC = $(CC) -c -I$(srcdir) $(ALL_CFLAGS)
 # A shell script is used to try linking without unneccesary libraries.
 $(VIMTARGET): auto/config.mk objects $(OBJ) version.c version.h
 	$(CCC) version.c -o objects/version.o
-	@LINK="$(PURIFY) $(SHRPENV) $(CClink) $(LDFLAGS) $(ALL_LIB_DIRS) \
+	@LINK="$(PURIFY) $(SHRPENV) $(CClink) $(ALL_LIB_DIRS) $(LDFLAGS) \
 		-o $(VIMTARGET) $(OBJ) objects/version.o $(ALL_LIBS)" \
 		MAKE="$(MAKE)" sh $(srcdir)/link.sh
 
@@ -1790,7 +1796,7 @@ auto/pathdef.c: Makefile auto/config.mk
 	-@echo 'char_u *default_vim_dir = (char_u *)"$(VIMRCLOC)";' >> $@
 	-@echo 'char_u *default_vimruntime_dir = (char_u *)"$(VIMRUNTIMEDIR)";' >> $@
 	-@echo 'char_u *all_cflags = (char_u *)"$(CC) -c -I$(srcdir) $(ALL_CFLAGS)";' >>  $@
-	-@echo 'char_u *all_lflags = (char_u *)"$(CC) $(LDFLAGS) $(ALL_LIB_DIRS) -o $(VIMTARGET) $(ALL_LIBS) ";' >>  $@
+	-@echo 'char_u *all_lflags = (char_u *)"$(CC) $(ALL_LIB_DIRS) $(LDFLAGS) -o $(VIMTARGET) $(ALL_LIBS) ";' >>  $@
 	-@echo 'char_u *compiled_user = (char_u *)"' | tr -d $(NL) >> $@
 	-@if test -n "$(COMPILEDBY)"; then \
 		echo "$(COMPILEDBY)" | tr -d $(NL) >> $@; \
@@ -1825,6 +1831,9 @@ objects/eval.o: eval.c
 
 objects/ex_cmds.o: ex_cmds.c
 	$(CCC) -o $@ ex_cmds.c
+
+objects/ex_cmds2.o: ex_cmds2.c
+	$(CCC) -o $@ ex_cmds2.c
 
 objects/ex_docmd.o: ex_docmd.c
 	$(CCC) -o $@ ex_docmd.c
@@ -1922,6 +1931,9 @@ objects/misc1.o: misc1.c
 objects/misc2.o: misc2.c
 	$(CCC) -o $@ misc2.c
 
+objects/move.o: move.c
+	$(CCC) -o $@ move.c
+
 objects/multibyte.o: multibyte.c
 	$(CCC) -o $@ multibyte.c
 
@@ -2016,6 +2028,9 @@ objects/eval.o: eval.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
 objects/ex_cmds.o: ex_cmds.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+objects/ex_cmds2.o: ex_cmds2.c vim.h auto/config.h feature.h os_unix.h \
+ auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
+ gui.h globals.h farsi.h option.h ex_cmds.h proto.h
 objects/ex_docmd.o: ex_docmd.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h globals.h farsi.h option.h ex_cmds.h proto.h
@@ -2056,6 +2071,9 @@ objects/misc1.o: misc1.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
  ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
  farsi.h option.h ex_cmds.h proto.h version.h
 objects/misc2.o: misc2.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
+ ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h
+objects/move.o: move.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
  ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h globals.h \
  farsi.h option.h ex_cmds.h proto.h
 objects/multibyte.o: multibyte.c vim.h auto/config.h feature.h os_unix.h \

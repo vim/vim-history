@@ -621,13 +621,14 @@ focus_out_event(GtkWidget * widget, GdkEventFocus *focus, gpointer data)
     static gint
 key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
 {
-    char_u string[256], string2[256];
-    guint key_sym;
-    int len;
-    int i;
-    int modifiers;
-    int key;
-    guint state;
+    char_u	string[256], string2[256];
+    guint	key_sym;
+    int		len;
+    int		i;
+    int		modifiers;
+    int		key;
+    guint	state;
+    char_u	*s, *d;
 
     key_sym = event->keyval;
     len = event->length;
@@ -657,9 +658,30 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
 	len = 0;
     else
 #endif
-
-    for (i = 0; i < len; ++i)
-	string[i] = event->string[i];
+    {
+#ifdef FEAT_MBYTE
+	if (input_conv.vc_type != CONV_NONE)
+	{
+	    mch_memmove(string2, event->string, len);
+	    len = convert_input(string2, len, sizeof(string2));
+	    s = string2;
+	}
+	else
+#endif
+	    s = (char_u *)event->string;
+	d = string;
+	for (i = 0; i < len; ++i)
+	{
+	    *d++ = s[i];
+	    if (d[-1] == CSI && d + 2 < string + sizeof(string))
+	    {
+		/* Turn CSI into K_CSI. */
+		*d++ = KS_EXTRA;
+		*d++ = KE_CSI;
+	    }
+	}
+	len = d - string;
+    }
 
     /* Shift-Tab results in Left_Tab, but we want <S-Tab> */
     if (key_sym == GDK_ISO_Left_Tab)
@@ -737,7 +759,7 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
 	/* It seems GDK returns GDK_VoidSymbol if the len is 3 and it
 	 * contains multi-byte characters. Is next is right?
 	 */
-	if (!cc_dbcs || key_sym != GDK_VoidSymbol)
+	if (!enc_dbcs || key_sym != GDK_VoidSymbol)
 #endif
 	{
 	    /*
@@ -751,6 +773,8 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
 		key = string[0];
 
 	    key = simplify_key(key, &modifiers);
+	    if (key == CSI)
+		key = K_CSI;
 	    if (IS_SPECIAL(key))
 	    {
 		string[0] = CSI;
@@ -778,14 +802,6 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
     {
 	trash_input_buf();
 	got_int = TRUE;
-    }
-
-    if (len == 1 && string[0] == CSI)
-    {
-	/* Turn CSI into K_CSI. */
-	string[1] = KS_EXTRA;
-	string[2] = KE_CSI;
-	len = 3;
     }
 
     add_to_input_buf(string, len);
@@ -2727,7 +2743,7 @@ gui_mch_draw_string(int row, int col, char_u *s, int len, int flags)
 	while (p < s + len)
 	{
 #ifdef FEAT_MBYTE
-	    if (cc_utf8)
+	    if (enc_utf8)
 	    {
 		c = utf_ptr2char(p);
 		if (c >= 0x10000)	/* show chars > 0xffff as ? */

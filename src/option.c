@@ -63,7 +63,7 @@ typedef enum
     , PV_EOL
     , PV_EP
     , PV_ET
-    , PV_FCC
+    , PV_FENC
     , PV_FDC
     , PV_FDE
     , PV_FDI
@@ -158,7 +158,7 @@ static char_u	*p_cpt;
 static int	p_eol;
 static int	p_et;
 #ifdef FEAT_MBYTE
-static char_u	*p_fcc;
+static char_u	*p_fenc;
 #endif
 static char_u	*p_ff;
 static char_u	*p_fo;
@@ -451,15 +451,6 @@ static struct vimoption options[] =
 			    {(char_u *)0L, (char_u *)0L}
 #endif
 			    },
-    {"charcode",    "cc",   P_STRING|P_VI_DEF|P_RSTAT|P_RBUF,
-#ifdef FEAT_MBYTE
-			    (char_u *)&p_cc, PV_NONE,
-			    {(char_u *)CC_DFLT, (char_u *)0L}
-#else
-			    (char_u *)NULL, PV_NONE,
-			    {(char_u *)0L, (char_u *)0L}
-#endif
-			    },
     {"cedit",	    NULL,   P_STRING,
 #ifdef FEAT_CMDWIN
 			    (char_u *)&p_cedit, PV_NONE,
@@ -661,6 +652,15 @@ static struct vimoption options[] =
     {"edcompatible","ed",   P_BOOL|P_VI_DEF,
 			    (char_u *)&p_ed, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)0L}},
+    {"encoding",    "enc",  P_STRING|P_VI_DEF|P_RCLR,
+#ifdef FEAT_MBYTE
+			    (char_u *)&p_enc, PV_NONE,
+			    {(char_u *)ENC_DFLT, (char_u *)0L}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)0L, (char_u *)0L}
+#endif
+			    },
     {"endofline",   "eol",  P_BOOL|P_NO_MKRC|P_VI_DEF|P_RSTAT,
 			    (char_u *)&p_eol, PV_EOL,
 			    {(char_u *)TRUE, (char_u *)0L}},
@@ -707,28 +707,19 @@ static struct vimoption options[] =
     {"exrc",	    "ex",   P_BOOL|P_VI_DEF|P_SECURE,
 			    (char_u *)&p_exrc, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)0L}},
-    {"filecharcode","fcc",  P_STRING|P_ALLOCED|P_VI_DEF|P_RSTAT|P_RBUF|P_NO_MKRC,
+    {"fileencoding","fenc", P_STRING|P_ALLOCED|P_VI_DEF|P_RSTAT|P_RBUF|P_NO_MKRC,
 #ifdef FEAT_MBYTE
-			    (char_u *)&p_fcc, PV_FCC,
+			    (char_u *)&p_fenc, PV_FENC,
 			    {(char_u *)"", (char_u *)0L}
 #else
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)0L, (char_u *)0L}
 #endif
 			    },
-    {"filecharcodes","fccs", P_STRING|P_VI_DEF,
+    {"fileencodings","fencs", P_STRING|P_VI_DEF,
 #ifdef FEAT_MBYTE
-			    (char_u *)&p_fccs, PV_NONE,
+			    (char_u *)&p_fencs, PV_NONE,
 			    {(char_u *)"ucs-bom", (char_u *)0L}
-#else
-			    (char_u *)NULL, PV_NONE,
-			    {(char_u *)0L, (char_u *)0L}
-#endif
-			    },
-    {"fileencoding", "fe",  P_STRING|P_NODEFAULT|P_VI_DEF|P_RSTAT|P_RBUF,
-#ifdef FEAT_MBYTE
-			    (char_u *)&p_cc, PV_NONE,
-			    {(char_u *)CC_DFLT, (char_u *)0L}
 #else
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)0L, (char_u *)0L}
@@ -1757,6 +1748,15 @@ static struct vimoption options[] =
     {"term",	    NULL,   P_STRING|P_EXPAND|P_NODEFAULT|P_NO_MKRC|P_VI_DEF|P_RALL,
 			    (char_u *)&T_NAME, PV_NONE,
 			    {(char_u *)"", (char_u *)0L}},
+    {"termencoding", "tenc", P_STRING|P_VI_DEF|P_RCLR,
+#ifdef FEAT_MBYTE
+			    (char_u *)&p_tenc, PV_NONE,
+			    {(char_u *)"", (char_u *)0L}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)0L, (char_u *)0L}
+#endif
+			    },
     {"terse",	    NULL,   P_BOOL|P_VI_DEF,
 			    (char_u *)&p_terse, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)0L}},
@@ -2092,16 +2092,6 @@ static char *(p_bg_values[]) = {"light", "dark", NULL};
 static char *(p_bkc_values[]) = {"yes", "auto", "no", NULL};
 static char *(p_nf_values[]) = {"octal", "hex", "alpha", NULL};
 static char *(p_ff_values[]) = {FF_UNIX, FF_DOS, FF_MAC, NULL};
-#ifdef FEAT_MBYTE
-static char *(p_cc_values[]) = {CC_ANSI, CC_LATIN1, CC_UNICODE, CC_UCS2,
-				CC_UCS2LE, CC_UCS2BE, CC_UCS4, CC_UCS4BE,
-				CC_UCS4LE, CC_UCS4BL, CC_UCS4LB, CC_UTF8,
-				CC_DBJPN, CC_DBKOR, CC_DBCHT, CC_DBCHS,
-#ifdef MB_DEBUG
-				CC_DEBUG,
-#endif
-				NULL};
-#endif
 #ifdef FEAT_WAK
 static char *(p_wak_values[]) = {"yes", "menu", "no", NULL};
 #endif
@@ -2375,27 +2365,13 @@ set_init_1()
 #endif
 
 #ifdef FEAT_MBYTE
+    /* enc_default() will try setting p_enc to a value depending on the
+     * current locale */
+    if (enc_default() == OK)
     {
-	char	    *s;
-
-	/* Set 'charcode' default from the environment.
-	 * The most generic locale format is:
-	 * language[_territory][.codeset][@modifier][+special][,[sponsor][_revision]]
-	 * This could be more strict:
-	 * - search for "." after language_territory.
-	 * - only allow "UTF-8" upper case and "utf8" lower case.
-	 */
-	if ((((s = getenv("LC_ALL")) != NULL && *s != NUL)
-		    || ((s = getenv("LC_CTYPE")) != NULL && *s != NUL)
-		    || ((s = getenv("LANG")) != NULL && *s != NUL))
-		&& (vim_stristr((char_u *)s, (char_u *)"UTF-8") != NULL
-		    || vim_stristr((char_u *)s, (char_u *)"utf8") != NULL))
-	{
-	    p_cc = (char_u *)"utf-8";
-	    opt_idx = findoption((char_u *)"charcode");
-	    options[opt_idx].def_val[VI_DEFAULT] = p_cc;
-	    (void)mb_init();
-	}
+	opt_idx = findoption((char_u *)"encoding");
+	options[opt_idx].def_val[VI_DEFAULT] = p_enc;
+	options[opt_idx].flags |= P_DEF_ALLOCED;
     }
 #endif
 }
@@ -3746,7 +3722,7 @@ check_buf_options(buf)
     check_string_option(&buf->b_p_bt);
 #endif
 #ifdef FEAT_MBYTE
-    check_string_option(&buf->b_p_fcc);
+    check_string_option(&buf->b_p_fenc);
 #endif
     check_string_option(&buf->b_p_ff);
 #ifdef FEAT_FIND_ID
@@ -3988,7 +3964,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     int		did_chartab = FALSE;
 
     /* Disallow changing some options from secure mode */
-    if ((p_secure
+    if ((secure
 #ifdef HAVE_SANDBOX
 		|| sandbox != 0
 #endif
@@ -4154,23 +4130,28 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 #endif
 
 #ifdef FEAT_MBYTE
-    /* 'charcode' (previously 'fileencoding') */
-    else if (varp == &p_cc)
+    /* 'encoding' and 'fileencoding' */
+    else if (varp == &p_enc || varp == &curbuf->b_p_fenc || varp == &p_tenc)
     {
-	/* Make it all lower case. */
-	for (p = p_cc; *p; ++p)
-	    *p = TO_LOWER(*p);
-	if (check_opt_strings(p_cc, p_cc_values, FALSE) != OK)
-	    errmsg = e_invarg;
-	else
+	/* canonize the value, so that STRCMP() can be used on it */
+	p = enc_canonize(*varp);
+	if (p != NULL)
+	{
+	    vim_free(*varp);
+	    *varp = p;
+	}
+	if (varp == &p_enc)
 	    errmsg = mb_init();
-    }
 
-    /* 'filecharcodes' and 'filecharcode' must be lower case */
-    else if (varp == &p_fccs || varp == &curbuf->b_p_fcc)
-    {
-	for (p = *varp; *p; ++p)
-	    *p = TO_LOWER(*p);
+	/* When 'termencoding' is not empty and 'encoding' changes or when
+	 * 'termencoding' changes, need to setup for keyboard input and
+	 * display output conversion. */
+	if (errmsg == NULL
+		&& ((varp == &p_enc && *p_tenc != NUL) || varp == &p_tenc))
+	{
+	    convert_setup(&input_conv, p_tenc, p_enc);
+	    convert_setup(&output_conv, p_enc, p_tenc);
+	}
     }
 #endif
 
@@ -4300,7 +4281,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	for (s = p_viminfo; *s;)
 	{
 	    /* Check it's a valid character */
-	    if (vim_strchr((char_u *)"\"'%!fhrn:/", *s) == NULL)
+	    if (vim_strchr((char_u *)"!\"%'/:cfhnr", *s) == NULL)
 	    {
 		errmsg = illegal_char(errbuf, *s);
 		break;
@@ -4314,8 +4295,8 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 		while (*++s && *s != ',')
 		    ;
 	    }
-	    else if (*s == '%' || *s == '!' || *s == 'h') /* no extra chars */
-		++s;
+	    else if (*s == '%' || *s == '!' || *s == 'h' || *s == 'c')
+		++s;		/* no extra chars */
 	    else		/* must have a number */
 	    {
 		while (isdigit(*++s))
@@ -4656,7 +4637,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 		s++;
 	    if (!*s)
 		break;
-	    if (vim_strchr((char_u *)".wbuksid]t", *s) == NULL)
+	    if (vim_strchr((char_u *)".wbuksid]tU", *s) == NULL)
 	    {
 		errmsg = illegal_char(errbuf, *s);
 		break;
@@ -5071,7 +5052,7 @@ set_bool_option(opt_idx, varp, value, opt_flags)
 #endif
 
     /* Disallow changing some options from secure mode */
-    if ((p_secure
+    if ((secure
 #ifdef HAVE_SANDBOX
 		|| sandbox != 0
 #endif
@@ -5273,45 +5254,50 @@ set_bool_option(opt_idx, varp, value, opt_flags)
 	    curwin->w_leftcol = 0;
     }
 
-    /*
-     * End of handling side effects for bool options.
-     */
-
 #ifdef FEAT_WINDOWS
-    if (p_ea && !old_value)
-	win_equal(curwin, 0);
+    else if ((int *)varp == &p_ea)
+    {
+	if (p_ea && !old_value)
+	    win_equal(curwin, 0);
+    }
 #endif
 
-    /*
-     * When 'weirdinvert' changed, set/reset 't_xs'.
-     * Then set 'weirdinvert' according to value of 't_xs'.
-     */
-    if (p_wiv && !old_value)
-	T_XS = (char_u *)"y";
-    else if (!p_wiv && old_value)
-	T_XS = empty_option;
-    p_wiv = (*T_XS != NUL);
+    else if ((int *)varp == &p_wiv)
+    {
+	/*
+	 * When 'weirdinvert' changed, set/reset 't_xs'.
+	 * Then set 'weirdinvert' according to value of 't_xs'.
+	 */
+	if (p_wiv && !old_value)
+	    T_XS = (char_u *)"y";
+	else if (!p_wiv && old_value)
+	    T_XS = empty_option;
+	p_wiv = (*T_XS != NUL);
+    }
 
 #ifdef FEAT_FKMAP
+    else if ((int *)varp == &p_altkeymap)
+    {
+	if (old_value != p_altkeymap)
+	{
+	    if (!p_altkeymap)
+	    {
+		p_hkmap = p_fkmap;
+		p_fkmap = 0;
+	    }
+	    else
+	    {
+		p_fkmap = p_hkmap;
+		p_hkmap = 0;
+	    }
+	    (void)init_chartab();
+	}
+    }
+
     /*
      * In case some second language keymapping options have changed, check
      * and correct the setting in a consistent way.
      */
-    if (old_value != p_altkeymap)
-    {
-	if (!p_altkeymap)
-	{
-	    p_hkmap = p_fkmap;
-	    p_fkmap = 0;
-	}
-	else
-	{
-	    p_fkmap = p_hkmap;
-	    p_hkmap = 0;
-	}
-	(void)init_chartab();
-    }
-
     /*
      * If hkmap set, reset Farsi keymapping.
      */
@@ -5332,6 +5318,10 @@ set_bool_option(opt_idx, varp, value, opt_flags)
 	(void)init_chartab();
     }
 #endif
+
+    /*
+     * End of handling side effects for bool options.
+     */
 
     options[opt_idx].flags |= P_WAS_SET;
 
@@ -6559,7 +6549,7 @@ get_varp(p)
 	case PV_EOL:	return (char_u *)&(curbuf->b_p_eol);
 	case PV_ET:	return (char_u *)&(curbuf->b_p_et);
 #ifdef FEAT_MBYTE
-	case PV_FCC:	return (char_u *)&(curbuf->b_p_fcc);
+	case PV_FENC:	return (char_u *)&(curbuf->b_p_fenc);
 #endif
 	case PV_FF:	return (char_u *)&(curbuf->b_p_ff);
 #ifdef FEAT_AUTOCMD
@@ -6803,7 +6793,7 @@ buf_copy_options(buf, flags)
 		buf->b_p_ro = FALSE;		/* don't copy readonly */
 		buf->b_p_tx = p_tx;
 #ifdef FEAT_MBYTE
-		buf->b_p_fcc = vim_strsave(p_fcc);
+		buf->b_p_fenc = vim_strsave(p_fenc);
 #endif
 		buf->b_p_ff = vim_strsave(p_ff);
 #if defined(FEAT_QUICKFIX)
@@ -7059,7 +7049,7 @@ set_context_in_set_cmd(xp, arg, opt_flags)
 	}
     }
     /* handle "-=" and "+=" */
-    if ((nextchar == '-' || nextchar == '+') && p[1] == '=')
+    if ((nextchar == '-' || nextchar == '+' || nextchar == '^') && p[1] == '=')
     {
 	++p;
 	nextchar = '=';
@@ -7867,7 +7857,7 @@ can_bs(what)
 }
 
 /*
- * Save the current values of 'fileformat' and 'filecharcode', so that we know
+ * Save the current values of 'fileformat' and 'fileencoding', so that we know
  * the file must be considered changed when the value is different.
  */
     void
@@ -7876,13 +7866,13 @@ save_file_ff(buf)
 {
     buf->b_start_ffc = *buf->b_p_ff;
 #ifdef FEAT_MBYTE
-    vim_free(buf->b_start_fcc);
-    buf->b_start_fcc = vim_strsave(buf->b_p_fcc);
+    vim_free(buf->b_start_fenc);
+    buf->b_start_fenc = vim_strsave(buf->b_p_fenc);
 #endif
 }
 
 /*
- * Return TRUE if 'fileformat' and/or 'filecharcode' has a different value
+ * Return TRUE if 'fileformat' and/or 'fileencoding' has a different value
  * from when editing started (save_file_ff() called).
  */
     int
@@ -7892,9 +7882,9 @@ file_ff_differs(buf)
     if (buf->b_start_ffc != *buf->b_p_ff)
 	return TRUE;
 #ifdef FEAT_MBYTE
-    if (buf->b_start_fcc == NULL)
-	return (*buf->b_p_fcc != NUL);
-    return (STRCMP(buf->b_start_fcc, buf->b_p_fcc) != 0);
+    if (buf->b_start_fenc == NULL)
+	return (*buf->b_p_fenc != NUL);
+    return (STRCMP(buf->b_start_fenc, buf->b_p_fenc) != 0);
 #else
     return FALSE;
 #endif
