@@ -1602,6 +1602,7 @@ typedef struct oparg
 				   do_format()) */
     pos_T	start;		/* start of the operator */
     pos_T	end;		/* end of the operator */
+    pos_T	cursor_start;	/* cursor position before motion for "gw" */
 
     long	line_count;	/* number of lines from op_start to op_end
 				   (inclusive) */
